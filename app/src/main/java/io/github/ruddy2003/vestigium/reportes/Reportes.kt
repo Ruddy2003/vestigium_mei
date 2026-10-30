@@ -101,6 +101,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.CIBER -> R.font.sharetech_mono           // la consola: monoespaciada de terminal
     TemaId.NEON -> R.font.sharetech_mono           // la consola: monoespaciada de terminal
     TemaId.HELENO -> R.font.garamond_medium
+    TemaId.EGIPTO -> R.font.messiri_bold            // la de los títulos, redonda y firme
     TemaId.MEDIEVAL -> R.font.gotica_semibold       // la gótica del copista, en su corte más claro
     TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
     TemaId.REFUGIO -> R.font.plex_mono_semibold     // la máquina del refugio: mono, gruesa
@@ -127,6 +128,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.CIBER -> "vestigium@mei:~\$"
     TemaId.NEON -> "vestigium@mei:~\$"
     TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ · Vestigium Mei"
+    TemaId.EGIPTO -> "☥ Vestigium Mei · papiro del escriba"
     TemaId.MEDIEVAL -> "Liber vestigii mei"
     TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
     TemaId.REFUGIO -> "REFUGIO · BITÁCORA VESTIGIUM-MEI"
@@ -230,6 +232,31 @@ object Reportes {
                     }
                     c.drawPath(path, pa)
                     c.drawLine(M, base + 7f, x, base + 7f, L.trazo(L.primario, 1.2f))
+                    y += 62f
+                }
+                TemaId.EGIPTO -> {
+                    // Friso de lotos abiertos y capullos, como en las tumbas tebanas, sobre una cenefa de rectángulos de colores.
+                    val base = yy + 30f; val paso = 44f
+                    val pa = L.trazo(L.primario, 2f); val flor = L.relleno(L.primario); val capullo = L.relleno(L.secundario)
+                    var x = M + paso / 2
+                    while (x + paso / 2 <= W - M) {
+                        c.drawLine(x, base, x, base - 10f, pa)
+                        val p = Path()
+                        p.moveTo(x, base - 10f); p.lineTo(x - 11f, base - 26f); p.lineTo(x - 4f, base - 22f); p.lineTo(x, base - 31f)
+                        p.lineTo(x + 4f, base - 22f); p.lineTo(x + 11f, base - 26f); p.close()
+                        c.drawPath(p, flor)
+                        val xb = x + paso / 2
+                        if (xb + 6f < W - M) {
+                            c.drawLine(xb, base, xb, base - 8f, pa)
+                            val q = Path()
+                            q.moveTo(xb, base - 8f); q.quadTo(xb - 6f, base - 14f, xb, base - 22f); q.quadTo(xb + 6f, base - 14f, xb, base - 8f); q.close()
+                            c.drawPath(q, capullo)
+                        }
+                        x += paso
+                    }
+                    val colores = intArrayOf(L.primario, L.terciario, L.secundario, L.terciario)
+                    var xr = M; var k = 0
+                    while (xr + 12f <= W - M) { c.drawRect(xr, base + 4f, xr + 12f, base + 12f, L.relleno(colores[k % 4])); xr += 14f; k++ }
                     y += 62f
                 }
                 TemaId.MEDIEVAL -> {

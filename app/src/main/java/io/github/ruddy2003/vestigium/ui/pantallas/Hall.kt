@@ -67,6 +67,7 @@ import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.LibroDiario
 import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.SalonesTema
+import io.github.ruddy2003.vestigium.ui.signoEgipcio
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.Vacio
@@ -85,6 +86,7 @@ private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.CIBER -> Color(0xFF00E676)
     TemaId.NEON -> Color(0xFF00E676)
     TemaId.HELENO -> Color(0xFF1E5F8C)
+    TemaId.EGIPTO -> Color(0xFFC9971C)
     TemaId.MEDIEVAL -> Color(0xFF7A5C2E)
     TemaId.DISTOPIA -> Color(0xFF5D6670)
     TemaId.REFUGIO -> Color(0xFF3FA7A0)
@@ -184,6 +186,8 @@ object PiezasLogro {
         TemaId.CIBER -> Trazo(u, 0.9f, StrokeCap.Square, StrokeJoin.Miter, floatArrayOf(2.2f, 1.1f), 0f, false, Color(0xFFC8F7D2))
         TemaId.NEON -> Trazo(u, 0.9f, StrokeCap.Square, StrokeJoin.Miter, floatArrayOf(2.2f, 1.1f), 0f, false, Color(0xFFC8F7D2))
         TemaId.HELENO -> Trazo(u, 0.95f, StrokeCap.Butt, StrokeJoin.Bevel, null, 0f, true, Color(0xFFE9EEF4))
+        // El cálamo del escriba, con su tinta que se corta un poco, sobre papiro.
+        TemaId.EGIPTO -> Trazo(u, 1.05f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(4f, 0.8f), 0.6f, false, Color(0xFFEDDDAA))
         TemaId.MEDIEVAL -> Trazo(u, 1.25f, StrokeCap.Round, StrokeJoin.Round, null, 0f, false, Color(0xFFEADBB8))
         TemaId.DISTOPIA -> Trazo(u, 1.1f, StrokeCap.Butt, StrokeJoin.Miter, floatArrayOf(5f, 1.6f), 0f, false, Color(0xFFD9D9D4))
         TemaId.REFUGIO -> Trazo(u, 1.05f, StrokeCap.Round, StrokeJoin.Round, null, 2.5f, false, Color(0xFFFFF1CF))
@@ -276,6 +280,8 @@ object PiezasLogro {
             TemaId.CIBER -> for (i in 0 until 28) { val p = en(i * PI / 14, 0.91f); drawRect(pri, Offset(p.x - 1.3f * u, p.y - 1.3f * u), Size(2.6f * u, 2.6f * u)) }
             TemaId.NEON -> for (i in 0 until 28) { val p = en(i * PI / 14, 0.91f); drawRect(pri, Offset(p.x - 1.3f * u, p.y - 1.3f * u), Size(2.6f * u, 2.6f * u)) }
             TemaId.HELENO -> for (i in 0 until 40) drawLine(m, en(i * PI / 20, 0.86f), en(i * PI / 20, 0.95f), 1.1f * u)
+            // La cenefa de rectángulos, curvada alrededor: oro y el color del tema, uno y uno.
+            TemaId.EGIPTO -> for (i in 0 until 32) { val a = i * PI / 16; drawLine(if (i % 2 == 0) pri else m, en(a - 0.07, 0.9f), en(a + 0.07, 0.9f), 2.6f * u) }
             TemaId.MEDIEVAL -> drawCircle(t, r * 0.9f, c, style = Stroke(2.2f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 3 * u))))
             TemaId.DISTOPIA -> {
                 drawCircle(t, r * 0.9f, c, style = Stroke(1.2f * u)); drawCircle(t, r * 0.84f, c, style = Stroke(0.8f * u))
@@ -356,6 +362,8 @@ object PiezasLogro {
             TemaId.CIBER -> { drawLine(tinta, Offset(cx, y), Offset(cx, y - 6 * u), 1 * u); drawRect(tinta, Offset(cx - 0.8f * u, y - 7.6f * u), Size(1.6f * u, 1.6f * u)) }
             TemaId.NEON -> { drawLine(tinta, Offset(cx, y), Offset(cx, y - 6 * u), 1 * u); drawRect(tinta, Offset(cx - 0.8f * u, y - 7.6f * u), Size(1.6f * u, 1.6f * u)) }
             TemaId.HELENO -> { tri(3.5f * u, x - 0.6f * u, x + an + 0.6f * u); drawCircle(tinta, 0.9f * u, Offset(cx, y - 4.2f * u)) }
+            // Azotea plana con su gola.
+            TemaId.EGIPTO -> { drawRect(tinta, Offset(x - 0.8f * u, y - 2.2f * u), Size(an + 1.6f * u, 2.2f * u)); drawLine(tinta, Offset(x - 1.4f * u, y - 2.8f * u), Offset(x + an + 1.4f * u, y - 2.8f * u), 0.8f * u) }
             TemaId.MEDIEVAL -> { val m = an / 5; for (k in 0 until 3) drawRect(tinta, Offset(x + k * 2 * m, y - 3 * u), Size(m, 3 * u)) }
             TemaId.DISTOPIA -> { drawLine(tinta, Offset(cx, y), Offset(cx, y - 3 * u), 0.8f * u); drawRect(tinta, Offset(cx - an * 0.4f, y - 6 * u), Size(an * 0.8f, 3 * u)) }
             TemaId.REFUGIO -> drawPath(Path().apply { moveTo(x - 2 * u, y - 4 * u); lineTo(x + an + 2 * u, y - 1 * u); lineTo(x + an + 2 * u, y); lineTo(x - 2 * u, y - 3 * u); close() }, tinta)
@@ -426,6 +434,11 @@ object PiezasLogro {
                 traza(Path().apply { moveTo(x0 + l, y0); lineTo(x0, y0); lineTo(x0, y1); lineTo(x0 + l, y1); moveTo(x1 - l, y0); lineTo(x1, y0); lineTo(x1, y1); lineTo(x1 - l, y1) })
             }
             TemaId.HELENO -> { traza(circulo(c, 27 * u)); drawCircle(tinto, 23 * u, c, style = Stroke(0.8f * u)) }
+            // Un cartucho tendido, con la barra del nudo a la derecha.
+            TemaId.EGIPTO -> {
+                traza(Path().apply { addRoundRect(RoundRect(c.x - 27 * u, c.y - 18 * u, c.x + 23 * u, c.y + 18 * u, CornerRadius(18 * u))) })
+                drawLine(tinto, Offset(c.x + 27 * u, c.y - 18 * u), Offset(c.x + 27 * u, c.y + 18 * u), 2.4f * u)
+            }
             TemaId.MEDIEVAL -> traza(Path().apply {
                 for (i in 0 until 36) {
                     val a = i * PI / 18; val rr = 27 * u * (1f + 0.05f * sin(i * 2.3).toFloat())
@@ -645,6 +658,19 @@ object PiezasLogro {
                 for (i in 0 until 5) drawRect(tinta, Offset(c.x - 22 * u + i * 10 * u, base - 24 * u), Size(4 * u, 22 * u))
                 drawRect(tinta, Offset(c.x - 28 * u, base - 2 * u), Size(56 * u, 4 * u))
             }
+            // El pilono del templo: dos torres en talud con su gola, la puerta en medio y los mástiles con banderolas.
+            TemaId.EGIPTO -> {
+                listOf(-1f, 1f).forEach { s ->
+                    drawPath(Path().apply { moveTo(c.x + s * 4 * u, base); lineTo(c.x + s * 4 * u, base - 34 * u); lineTo(c.x + s * 22 * u, base - 34 * u); lineTo(c.x + s * 26 * u, base); close() }, tinta)
+                    drawLine(hueco, Offset(c.x + s * 5 * u, base - 30 * u), Offset(c.x + s * 22.5f * u, base - 30 * u), 0.8f * u)
+                    drawLine(tinta, Offset(c.x + s * 10 * u, base - 34 * u), Offset(c.x + s * 10 * u, base - 44 * u), 1 * u)
+                    drawPath(Path().apply { moveTo(c.x + s * 10 * u, base - 44 * u); lineTo(c.x + s * 15 * u, base - 42 * u); lineTo(c.x + s * 10 * u, base - 40 * u); close() }, tinta)
+                }
+                drawRect(tinta, Offset(c.x - 4 * u, base - 24 * u), Size(8 * u, 3 * u))
+                drawRect(hueco, Offset(c.x - 3 * u, base - 21 * u), Size(6 * u, 21 * u))
+                drawCircle(hueco, 1.6f * u, Offset(c.x, base - 22.5f * u))
+                suelo()
+            }
             TemaId.MEDIEVAL -> {
                 drawRect(tinta, Offset(c.x - 24 * u, base - 18 * u), Size(32 * u, 18 * u))
                 drawPath(Path().apply { moveTo(c.x - 26 * u, base - 18 * u); lineTo(c.x - 8 * u, base - 27 * u); lineTo(c.x + 10 * u, base - 18 * u); close() }, tinta)
@@ -848,6 +874,13 @@ object PiezasLogro {
                 drawCircle(claro, 2.5f * u, s)
                 drawPath(Path().apply { moveTo(px, c.y - 33 * u); quadraticTo(px + 3 * u, c.y - 29 * u, px, c.y - 25 * u); quadraticTo(px - 3 * u, c.y - 29 * u, px, c.y - 33 * u); close() }, tinta)
             }
+            // El mástil del pilono con su banderola de dos puntas, y el ankh pintado en ella.
+            TemaId.EGIPTO -> {
+                asta()
+                pano(Path().apply { moveTo(px, arriba); lineTo(c.x + 16 * u, arriba + 3 * u); lineTo(c.x + 11 * u, arriba + 9 * u); lineTo(c.x + 16 * u, arriba + 15 * u); lineTo(px, arriba + 18 * u); close() })
+                signoEgipcio(0, Offset(c.x + 1 * u, arriba + 9 * u), 12 * u, claro, 1.2f * u)
+                drawPath(Path().apply { moveTo(px - 2.5f * u, c.y - 26 * u); lineTo(px, c.y - 31 * u); lineTo(px + 2.5f * u, c.y - 26 * u); close() }, tinta)
+            }
             TemaId.MEDIEVAL -> {
                 val x0 = c.x - 14 * u; val x1 = c.x + 14 * u
                 asta(c.x, c.y - 30 * u); travesano(x0, x1)
@@ -1041,6 +1074,12 @@ object PiezasLogro {
                 drawRect(tinta, Offset(c.x - 9 * u, c.y - 9 * u), Size(18 * u, 18 * u), style = Stroke(1 * u))
                 letra("Δ", c, 12 * u, tinta)
             }
+            // El deben: Egipto no tuvo monedas; se pesaba en anillos de cobre. Este lleva tres rayas de peso.
+            TemaId.EGIPTO -> {
+                drawCircle(tono.copy(alpha = 0.45f), R, c, style = Stroke(9 * u))
+                contorno(tz, circulo(c, R + 4.5f * u), tinta, 1.2f * u); contorno(tz, circulo(c, R - 4.5f * u), tinta, 1.2f * u)
+                for (k in 0 until 3) drawLine(tinta, Offset(c.x - 3 * u + k * 3 * u, c.y - 4 * u), Offset(c.x - 3 * u + k * 3 * u, c.y + 4 * u), 1.2f * u)
+            }
             TemaId.MEDIEVAL -> {
                 forma(irregular(18, 0.07f), 1.4f * u)
                 listOf(-1.2f, 1.2f).forEach { d -> drawLine(tinta, Offset(c.x + d * u, c.y - R), Offset(c.x + d * u, c.y + R), 0.9f * u); drawLine(tinta, Offset(c.x - R, c.y + d * u), Offset(c.x + R, c.y + d * u), 0.9f * u) }
@@ -1202,6 +1241,12 @@ object PiezasLogro {
                 drawRect(papel, Offset(c.x - 18 * u, c.y - 12 * u), Size(36 * u, 24 * u)); contorno(tz, caja(c.x - 18 * u, c.y - 12 * u, c.x + 18 * u, c.y + 12 * u), tinta, 0.8f * u)
                 listOf(-1f, 1f).forEach { s -> val x = c.x + s * 21 * u; tapa(x - 3 * u, c.y - 14 * u, x + 3 * u, c.y + 14 * u, papel, 3 * u); drawCircle(tono, 2 * u, Offset(x, c.y - 16 * u)); drawCircle(tono, 2 * u, Offset(x, c.y + 16 * u)) }
                 listOf(-14f, 2f).forEach { x0 -> for (k in 0 until 5) fina(tz, tinta.copy(alpha = 0.6f), Offset(c.x + x0 * u, c.y - 8 * u + k * 4 * u), Offset(c.x + (x0 + 11) * u, c.y - 8 * u + k * 4 * u), 0.8f * u) }
+            }
+            // Un papiro a medio desenrollar, sin varillas, escrito en columnas; la primera, en rojo de rúbrica.
+            TemaId.EGIPTO -> {
+                drawRect(papel, Offset(c.x - 18 * u, c.y - 12 * u), Size(36 * u, 24 * u)); contorno(tz, caja(c.x - 18 * u, c.y - 12 * u, c.x + 18 * u, c.y + 12 * u), tinta, 0.8f * u)
+                listOf(-1f, 1f).forEach { s -> val x = c.x + s * 21 * u; tapa(x - 4 * u, c.y - 13 * u, x + 4 * u, c.y + 13 * u, papel, 4 * u) }
+                for (k in 0 until 6) { val x = c.x - 13 * u + k * 5 * u; fina(tz, if (k == 0) Color(0xFFB8471E) else tinta.copy(alpha = 0.6f), Offset(x, c.y - 8 * u), Offset(x, c.y + 8 * u), 0.9f * u) }
             }
             TemaId.MEDIEVAL -> {
                 drawRect(papel, Offset(c.x - 14 * u, c.y - 20 * u), Size(30 * u, 42 * u))
@@ -1378,6 +1423,14 @@ object PiezasLogro {
                 listOf(-7f, 7f).forEach { dx -> fina(tz, tinta.copy(alpha = 0.4f), Offset(c.x + dx * u, c.y - 10 * u), Offset(c.x + dx * u, c.y + 10 * u), 0.7f * u) }
                 drawLine(tinta, Offset(c.x - 20 * u, c.y), Offset(c.x + 20 * u, c.y), 0.8f * u)
                 drawCircle(Color(0xFFB0643A), 4.5f * u, c); drawCircle(tinta, 4.5f * u, c, style = Stroke(0.7f * u))
+            }
+            // La carta egipcia: el papiro doblado en una tira estrecha, atado con hilo, sellado con barro y con la dirección escrita.
+            TemaId.EGIPTO -> {
+                hoja(c.x - 24 * u, c.y - 5 * u, c.x + 24 * u, c.y + 5 * u, papel, 1 * u)
+                listOf(-6f, -3f).forEach { dx -> drawLine(Color(0xFFCDBB8E), Offset(c.x + dx * u, c.y - 7 * u), Offset(c.x + dx * u, c.y + 7 * u), 1.2f * u) }
+                drawOval(Color(0xFF6E4A2E), Offset(c.x - 9.5f * u, c.y + 2 * u), Size(9 * u, 7 * u))
+                for (k in 0 until 3) fina(tz, tinta.copy(alpha = 0.6f), Offset(c.x + 2 * u + k * 6 * u, c.y - 2 * u), Offset(c.x + 6 * u + k * 6 * u, c.y - 2 * u), 0.8f * u)
+                fina(tz, Color(0xFFB8471E), Offset(c.x + 2 * u, c.y + 2 * u), Offset(c.x + 18 * u, c.y + 2 * u), 0.8f * u)
             }
             TemaId.MEDIEVAL -> {
                 hoja(c.x - 22 * u, c.y - 18 * u, c.x + 22 * u, c.y + 6 * u)

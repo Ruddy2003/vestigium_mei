@@ -63,6 +63,11 @@ FUENTES = [
     # ANT: libro de crónicas
     ("vollkorn/Vollkorn[wght].ttf", {"wght": 400}, "vollkorn_regular", None, LATINO),
     ("vollkorn/Vollkorn[wght].ttf", {"wght": 600}, "vollkorn_semibold", None, LATINO),
+    # EGI: Gentium (SIL), con las letras de la transliteración egiptológica (ꜣ, ꜥ, ḥ, ḫ, š…); títulos en El Messiri, de un diseñador egipcio
+    ("gentiumbookplus/GentiumBookPlus-Regular.ttf", None, "escriba_regular", "Escriba Vestigium", LATINO + ",U+A722-A725"),
+    ("gentiumbookplus/GentiumBookPlus-Bold.ttf", None, "escriba_bold", "Escriba Vestigium", LATINO + ",U+A722-A725"),
+    ("elmessiri/ElMessiri[wght].ttf", {"wght": 500}, "messiri_medium", None, LATINO),
+    ("elmessiri/ElMessiri[wght].ttf", {"wght": 700}, "messiri_bold", None, LATINO),
     # Títulos: ANT (uncial de los caminos) y REV (los carteles de la Convención)
     ("uncialantiqua/UncialAntiqua-Regular.ttf", None, "camino_titulo", "Camino Vestigium", LATINO),
     ("playfairdisplay/PlayfairDisplay[wght].ttf", {"wght": 400}, "convencion_titulo", "Convencion Vestigium", LATINO),

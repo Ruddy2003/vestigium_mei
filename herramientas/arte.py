@@ -191,6 +191,34 @@ def papeles_lote7():
     a[motas] = a[motas] * 0.55 + col('#6A625A') * 0.45
     guardar_p(a * grano(130, 0.1), 'papel_urss.jpg')
 
+def papel_egipto():
+    """Egipto: papiro. Las tiras de la médula en dos capas cruzadas (las horizontales, encima, más marcadas), fibras finas,
+    las uniones de las hojas pegadas que forman el rollo y alguna mota oscura de la planta."""
+    W, H = 720, 1280
+    r = np.random.default_rng(141)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    a = mezcla(col('#ECDDAA'), col('#DCC78C'), ruido_rect(W, H, 60, 142) * 0.7)
+    var = 0.6 + 0.8 * ruido_rect(W, H, 40, 144)[..., None]     # las tiras no son parejas: el tono cambia a lo largo
+    y = 0
+    while y < H:
+        alto = int(r.integers(5, 15)); t = (r.random() - 0.5) * 0.07
+        a[y:y + alto] *= (1 + t * var[y:y + alto]); a[y:y + 1] *= 0.96
+        y += alto
+    x = 0
+    while x < W:
+        ancho = int(r.integers(10, 26)); t = (r.random() - 0.5) * 0.02
+        a[:, x:x + ancho] *= (1 + t); x += ancho
+    fib = ruido_rect(W, H, 0.7, 143)
+    fib = np.array(Image.fromarray((fib * 255).astype(np.uint8)).resize((W // 30, H), Image.BILINEAR).resize((W, H), Image.BILINEAR)).astype(np.float32) / 255
+    a = a * (0.95 + 0.08 * fib[..., None])
+    for x0 in (250, 530):
+        a[:, x0:x0 + 14] *= 0.94; a[:, x0:x0 + 2] *= 0.9
+    motas = r.random((H, W)) > 0.9985
+    a[motas] = a[motas] * 0.6 + col('#5A4524') * 0.4
+    dist = np.sqrt(((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2) / math.sqrt(2)
+    a = mezcla(a, col('#B99C5E'), np.clip((dist - 0.55) / 0.45, 0, 1) * 0.45)
+    a_img(a).save(os.path.join(OUT, 'papel_egipto.jpg'), quality=86)
+
 def papeles_fuente():
     """Los papeles que vienen de un raster viejo: se copian tal cual desde `fuentes/`."""
     aqui = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fuentes')
@@ -202,5 +230,6 @@ if __name__ == '__main__':
     papeles()
     papel_antiguas()
     papeles_lote7()
+    papel_egipto()
     papeles_fuente()
     print('papeles listos')

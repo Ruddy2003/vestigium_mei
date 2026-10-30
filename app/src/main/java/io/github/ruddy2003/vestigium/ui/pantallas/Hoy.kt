@@ -381,6 +381,16 @@ fun FraseDelDia(fecha: String) {
             Box(Modifier.padding(horizontal = 6.dp, vertical = 8.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»", centrado = true) }
             Canvas(Modifier.fillMaxWidth().height(8.dp)) { meandroFrase(cs.primary.copy(alpha = 0.7f)) }
         }
+        // El friso de lotos y capullos arriba, la enseñanza con su ankh y la cenefa de colores abajo.
+        TemaId.EGIPTO -> Column(arriba) {
+            Canvas(Modifier.fillMaxWidth().height(10.dp)) { frisoLotoFrase(cs.primary.copy(alpha = 0.7f), cs.secondary.copy(alpha = 0.7f)) }
+            Box(Modifier.padding(horizontal = 8.dp, vertical = 8.dp)) { CuerpoFrase(f, fecha, rotulo, "☥ ", "") }
+            Canvas(Modifier.fillMaxWidth().height(5.dp)) {
+                val u = 1.dp.toPx(); val colores = listOf(cs.primary, cs.tertiary, cs.secondary, cs.tertiary)
+                var x = 0f; var k = 0
+                while (x < size.width) { drawRect(colores[k % 4].copy(alpha = 0.65f), Offset(x, 0f), Size(minOf(5 * u, size.width - x), size.height)); x += 6 * u; k++ }
+            }
+        }
         // Doble filete de rúbrica y oro a la izquierda, y la capitular iluminada en gótica.
         TemaId.MEDIEVAL -> Row(arriba.height(IntrinsicSize.Min)) {
             Box(Modifier.width(3.dp).fillMaxHeight().background(cs.primary))
@@ -577,6 +587,18 @@ private val OJIVA_FRASE = GenericShape { s, _ ->
 }
 
 /** Una tira de meandros (ganchos sobre una línea) del alto del lienzo. */
+/** Friso de lotos abiertos y capullos, alternados, sobre una línea. */
+private fun DrawScope.frisoLotoFrase(flor: Color, capullo: Color) {
+    val u = 1.dp.toPx(); val w = size.width; val h = size.height
+    drawLine(flor, Offset(0f, h - 0.5f * u), Offset(w, h - 0.5f * u), u)
+    var x = 6 * u; var i = 0
+    while (x < w - 4 * u) {
+        if (i % 2 == 0) drawPath(Path().apply { moveTo(x, h); lineTo(x - 4 * u, 1 * u); lineTo(x - 1.4f * u, 3 * u); lineTo(x, 0f); lineTo(x + 1.4f * u, 3 * u); lineTo(x + 4 * u, 1 * u); close() }, flor)
+        else drawPath(Path().apply { moveTo(x, h); quadraticTo(x - 2.4f * u, h * 0.5f, x, 1.5f * u); quadraticTo(x + 2.4f * u, h * 0.5f, x, h); close() }, capullo)
+        x += 8 * u; i++
+    }
+}
+
 private fun DrawScope.meandroFrase(c: Color) {
     val u = 1.dp.toPx(); val w = size.width; val h = size.height
     val p = Path()
@@ -785,6 +807,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.CIBER -> c(Letra.terminal, FontWeight.Normal, 24f, 0.8f)
         TemaId.NEON -> c(Letra.terminal, FontWeight.Normal, 24f, 0.8f)
         TemaId.HELENO -> c(Letra.inscripcion, FontWeight.SemiBold, 21f, 1.4f, "lnum")
+        TemaId.EGIPTO -> c(Letra.messiri, FontWeight.Bold, 22f, 0.6f, "lnum, tnum")
         TemaId.MEDIEVAL -> base.copy(fontFamily = Letra.garamond, fontWeight = FontWeight.SemiBold, fontSize = 23.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum, tnum")
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
         TemaId.REFUGIO -> c(LetraExtra.vt323, FontWeight.Normal, 30f, 0.4f)
@@ -1012,6 +1035,12 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             pinta(caja(w * 0.12f, top + fr, w * 0.76f, barH - fr))
                             pinta(Path().apply { moveTo(0f, top + fr); lineTo(w / 2, top); lineTo(w, top + fr); close() })
                             drawLine(if (color != null) Color.Black.copy(alpha = 0.22f) else linea, Offset(0f, top + fr), Offset(w, top + fr), u)
+                        }
+                        // Obeliscos: el fuste que se adelgaza y el piramidión en la punta, separado por una línea.
+                        TemaId.EGIPTO -> {
+                            val pp = minOf(w * 0.5f, barH * 0.25f)
+                            pinta(Path().apply { moveTo(w * 0.1f, top + barH); lineTo(w * 0.2f, top + pp); lineTo(w / 2, top); lineTo(w * 0.8f, top + pp); lineTo(w * 0.9f, top + barH); close() })
+                            drawLine(if (color != null) Color.Black.copy(alpha = 0.22f) else linea, Offset(w * 0.2f, top + pp), Offset(w * 0.8f, top + pp), u)
                         }
                         // Franjas iluminadas: arco de medio punto y filete dorado.
                         TemaId.MEDIEVAL -> {

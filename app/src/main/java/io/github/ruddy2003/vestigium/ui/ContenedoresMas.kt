@@ -49,7 +49,7 @@ object ContenedoresMas {
             Contenedor.VUELO -> Color(0xFFF4F6FA)
             Contenedor.TETRAD -> Color(0xFFF7F3E6)
             // Las libretas de [Contenedores] tienen su papel allá.
-            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> return Contenedores.papel(c, cs, oscuro)
+            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> return Contenedores.papel(c, cs, oscuro)
         }
         return if (oscuro) lerp(claro, Color.Black, 0.76f) else claro
     }
@@ -365,7 +365,7 @@ object ContenedoresMas {
                 listOf(0.3f, 0.7f).forEach { f -> drawRect(Color(0xFFC3C6CA), Offset(W * 0.015f, H * f - 6 * d), Size(2 * d, 12 * d)) }
             }
             // Estas las dibuja [Contenedores].
-            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
         }
     }
 
@@ -508,7 +508,7 @@ object ContenedoresMas {
                 drawLine(Color(0xFFC1121F).copy(alpha = 0.55f), Offset(size.width - 26 * d, 0f), Offset(size.width - 26 * d, size.height), 1.2f * d)
             }
             // Estas las dibuja [Contenedores].
-            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
         }
     }
 
@@ -602,7 +602,7 @@ object ContenedoresMas {
                 listOf(0.3f, 0.7f).forEach { f -> val y = size.height * f; drawRect(Color(0xFFC3C6CA), Offset(14 * d, y - 9 * d), Size(3 * d, 18 * d)); drawRect(Color.Black.copy(alpha = 0.25f), Offset(17 * d, y - 9 * d), Size(1 * d, 18 * d)) }
             }
             // Estas las dibuja [Contenedores].
-            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
         }
     }
 }

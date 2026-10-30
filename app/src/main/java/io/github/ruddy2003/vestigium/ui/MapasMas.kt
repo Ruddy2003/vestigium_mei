@@ -37,6 +37,8 @@ object MapasMas {
         // La marcha de Alejandro: Pella y Anfípolis al norte del Egeo, Troya en la costa de Asia, Sardes, Gordio, Tarso junto
         // al mar del sur y Babilonia sobre el Éufrates.
         TemaId.HELENO -> listOf(Offset(0.07f, 0.17f), Offset(0.19f, 0.13f), Offset(0.31f, 0.36f), Offset(0.42f, 0.62f), Offset(0.55f, 0.3f), Offset(0.71f, 0.72f), Offset(0.91f, 0.48f))
+        // El Nilo río arriba, de norte (arriba) a sur: el Delta, Menfis, Hermópolis, Abidos, Tebas, Edfu y Elefantina, en la primera catarata.
+        TemaId.EGIPTO -> listOf(Offset(0.52f, 0.1f), Offset(0.49f, 0.22f), Offset(0.45f, 0.36f), Offset(0.55f, 0.48f), Offset(0.62f, 0.62f), Offset(0.58f, 0.76f), Offset(0.54f, 0.9f))
         // El Camino de Santiago, de los Pirineos a Galicia (el este queda a la izquierda): Roncesvalles, Pamplona, Logroño,
         // Burgos, León, Astorga y Santiago.
         TemaId.MEDIEVAL -> geo(listOf(-1.32 to 43.01, -1.64 to 42.81, -2.45 to 42.47, -3.7 to 42.34, -5.57 to 42.6, -6.06 to 42.46, -8.54 to 42.88), -1.0, -9.0, 41.8, 43.6)
@@ -331,6 +333,34 @@ object MapasMas {
                 drawPath(Path().apply { moveTo(w * 0.84f, 0f); cubicTo(w * 0.87f, h * 0.24f, w * 0.89f, h * 0.38f, w * 0.91f, h * 0.48f); cubicTo(w * 0.93f, h * 0.62f, w * 0.95f, h * 0.8f, w * 0.97f, h) }, agua.copy(alpha = agua.alpha * 2), style = Stroke(1.8f * d))
                 drawPath(Path().apply { moveTo(w * 0.93f, 0f); cubicTo(w * 0.95f, h * 0.3f, w * 0.97f, h * 0.6f, w * 0.99f, h) }, agua.copy(alpha = agua.alpha * 1.6f), style = Stroke(1.4f * d))
             }
+            TemaId.EGIPTO -> {
+                // Las Dos Tierras de norte a sur: el desierto rojo (deshret) a los lados, la tierra negra (kemet) a lo largo
+                // del Nilo, el abanico del Delta y el mar arriba, las pirámides al oeste de Menfis y la primera catarata abajo.
+                drawRect(Color(0xFFE2C48A).copy(alpha = if (oscuro) 0.1f else 0.3f), Offset.Zero, size)
+                val curso = listOf(0.53f to 0.12f, 0.5f to 0.22f, 0.47f to 0.36f, 0.56f to 0.48f, 0.64f to 0.62f, 0.6f to 0.76f, 0.56f to 0.9f, 0.55f to 1f)
+                val rio = Path().apply { curso.forEachIndexed { i, (x, y) -> if (i == 0) moveTo(w * x, h * y) else lineTo(w * x, h * y) } }
+                drawPath(rio, Color(0xFF5E7A3A).copy(alpha = if (oscuro) 0.22f else 0.32f), style = Stroke(26 * d, cap = StrokeCap.Round))
+                drawPath(rio, agua.copy(alpha = agua.alpha * 2.2f), style = Stroke(4.5f * d, cap = StrokeCap.Round))
+                val cima = Offset(w * 0.53f, h * 0.12f)
+                listOf(-0.2f, -0.1f, 0f, 0.1f, 0.2f).forEach { dx -> drawLine(agua.copy(alpha = agua.alpha * 1.8f), cima, Offset(cima.x + w * dx, h * 0.02f), 1.8f * d) }
+                drawPath(Path().apply { moveTo(cima.x, cima.y); lineTo(cima.x - w * 0.2f, h * 0.02f); lineTo(cima.x + w * 0.2f, h * 0.02f); close() }, Color(0xFF5E7A3A).copy(alpha = if (oscuro) 0.15f else 0.22f))
+                drawRect(agua.copy(alpha = agua.alpha * 1.2f), Offset.Zero, Size(w, h * 0.022f))
+                // Las pirámides, al oeste del río.
+                listOf(0.31f to 0.25f, 0.35f to 0.245f, 0.385f to 0.26f).forEachIndexed { i, (x, y) ->
+                    val s = (8 - i * 1.6f) * d
+                    drawPath(Path().apply { moveTo(w * x - s, h * y); lineTo(w * x, h * y - s * 1.1f); lineTo(w * x + s, h * y); close() }, tinta.copy(alpha = 0.6f))
+                }
+                // La primera catarata: piedras en el agua.
+                val az = java.util.Random(31)
+                repeat(9) { drawCircle(tinta.copy(alpha = 0.5f), (1.2f + az.nextFloat() * 1.4f) * d, Offset(w * (0.555f + (az.nextFloat() - 0.5f) * 0.08f), h * (0.93f + az.nextFloat() * 0.05f))) }
+                // Palmeras en las orillas y dunas en el desierto.
+                for (k in 0 until 6) {
+                    val x = w * (if (k % 2 == 0) 0.41f else 0.7f); val y = h * (0.32f + k * 0.1f)
+                    drawLine(tinta, Offset(x, y), Offset(x, y - 7 * d), 1f * d)
+                    listOf(-1f, -0.4f, 0.4f, 1f).forEach { a -> drawLine(tinta, Offset(x, y - 7 * d), Offset(x + a * 4 * d, y - 7 * d + kotlin.math.abs(a) * 2 * d), 0.9f * d) }
+                }
+                for (k in 0 until 6) monte(w * (0.12f + (k % 2) * 0.74f), h * (0.42f + k * 0.09f), 6 * d, tinta)
+            }
             TemaId.MEDIEVAL -> {
                 // Pergamino con el mar Cantábrico arriba, el Atlántico a la derecha, los Pirineos al principio, los montes de la meseta
                 // y la rosa de los vientos.
@@ -484,6 +514,15 @@ object MapasMas {
             TemaId.ROMANO -> { drawPath(p, Color(0xFF8C8478).copy(alpha = 0.7f), style = Stroke(5 * d)); drawPath(p, cs.surface, style = Stroke(3 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 1.2f * d)))) }
             // La ruta de la marcha, punteada en púrpura macedonio sobre un filete blanco.
             TemaId.HELENO -> { drawPath(p, Color.White.copy(alpha = 0.6f), style = Stroke(3.4f * d)); drawPath(p, Color(0xFF5B2A6E), style = Stroke(1.6f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * d, 4 * d)))) }
+            // La estela de la barca sobre el río: un filete claro, puntos de lapislázuli y, cada tanto, la cuña del agua que abre la proa.
+            TemaId.EGIPTO -> {
+                drawPath(p, cs.surface.copy(alpha = 0.7f), style = Stroke(3.6f * d))
+                drawPath(p, Color(0xFF1D2F7A), style = Stroke(1.6f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 3 * d))))
+                aLoLargo(p, 26 * d) { o, t ->
+                    val n = Offset(-t.y, t.x)
+                    drawLine(Color(0xFFB8471E), o - t * (3 * d) + n * (3 * d), o, 1.2f * d); drawLine(Color(0xFFB8471E), o - t * (3 * d) - n * (3 * d), o, 1.2f * d)
+                }
+            }
             // Los pasos del peregrino, en tinta parda.
             TemaId.MEDIEVAL -> drawPath(p, Color(0xFF6B2E1A).copy(alpha = 0.7f), style = Stroke(1.4f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 3 * d))))
             // El cordel del maestro de obras.
@@ -573,6 +612,14 @@ object MapasMas {
             TemaId.ROMANO -> { drawRect(col, Offset(c.x - r * 0.55f, c.y - r), Size(r * 1.1f, r * 1.8f)); drawOval(col, Offset(c.x - r * 0.55f, c.y - r * 1.25f), Size(r * 1.1f, r * 0.5f)); drawRect(col, Offset(c.x - r * 0.8f, c.y + r * 0.7f), Size(r * 1.6f, r * 0.35f)) }
             // Una isla en el mar o una ciudad en tierra: un círculo con la greca alrededor.
             TemaId.HELENO -> { drawCircle(col, r, c); drawCircle(Color(0xFFC9A04A), r * 1.25f, c, style = Stroke(1.2f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 1.5f * d)))) }
+            // Un pilono: las dos torres en talud y la puerta; en la meta, el disco del sol encima.
+            TemaId.EGIPTO -> {
+                listOf(-1f, 1f).forEach { s ->
+                    drawPath(Path().apply { moveTo(c.x + s * r * 1.1f, c.y + r * 0.8f); lineTo(c.x + s * r * 0.9f, c.y - r * 0.8f); lineTo(c.x + s * r * 0.15f, c.y - r * 0.8f); lineTo(c.x + s * r * 0.15f, c.y + r * 0.8f); close() }, col)
+                }
+                drawRect(col, Offset(c.x - r * 0.15f, c.y - r * 0.35f), Size(r * 0.3f, r * 0.14f))
+                if (meta) drawCircle(Color(0xFFC9971C), r * 0.4f, Offset(c.x, c.y - r * 1.35f))
+            }
             // La venera del peregrino.
             TemaId.MEDIEVAL -> {
                 val p = Path().apply { moveTo(c.x, c.y + r); for (k in 0..6) { val a = PI + k * PI / 6; val x = c.x + (r * 1.15f * cos(a)).toFloat(); val y = c.y - r * 0.1f + (r * 1.1f * sin(a)).toFloat(); lineTo(x, y) }; close() }
@@ -629,6 +676,14 @@ object MapasMas {
             TemaId.REVOLUCION -> { alfiler(); drawPath(Path().apply { moveTo(g.x - r * 0.7f, g.y + r * 0.6f); cubicTo(g.x - r * 0.8f, g.y - r * 0.4f, g.x, g.y - r, g.x + r * 0.7f, g.y - r * 0.4f); lineTo(g.x + r * 0.5f, g.y); lineTo(g.x + r * 0.7f, g.y + r * 0.6f); close() }, Color(0xFFB22234)) }
             TemaId.NAPOLEON -> { alfiler(); drawPath(Path().apply { moveTo(g.x - r, g.y + r * 0.3f); quadraticTo(g.x, g.y - r * 1.2f, g.x + r, g.y + r * 0.3f); close() }, Color(0xFF1A1A22)) }
             TemaId.HELENO -> { alfiler(); drawPath(Path().apply { moveTo(g.x - r * 0.6f, g.y - r * 0.6f); lineTo(g.x + r * 0.6f, g.y - r * 0.6f); lineTo(g.x + r * 0.7f, g.y + r * 0.4f); lineTo(g.x - r * 0.7f, g.y + r * 0.4f); close() }, Color.White) }
+            // La barca del Nilo con su vela cuadrada: río arriba se navega a vela, con el viento del norte.
+            TemaId.EGIPTO -> {
+                val y0 = c.y - 6 * d - alto
+                drawPath(Path().apply { moveTo(c.x - 11 * d, y0 - 3 * d); quadraticTo(c.x, y0 + 6 * d, c.x + 11 * d, y0 - 3 * d); quadraticTo(c.x, y0 + 1.5f * d, c.x - 11 * d, y0 - 3 * d); close() }, Color(0xFF6E4A2E))
+                drawLine(Color(0xFF3E2C1A), Offset(c.x, y0), Offset(c.x, y0 - 17 * d), 1.2f * d)
+                drawRect(Color(0xFFF2E6C4), Offset(c.x - 6 * d, y0 - 16 * d), Size(12 * d, 11 * d))
+                drawRect(color, Offset(c.x - 6 * d, y0 - 16 * d), Size(12 * d, 11 * d), style = Stroke(0.9f * d))
+            }
             TemaId.SEDA -> { alfiler(); drawOval(Color(0xFFC0392B), Offset(g.x - r * 0.6f, g.y - r * 0.8f), Size(r * 1.2f, r * 1.6f)) }
             TemaId.MONGOL -> { alfiler(); drawRoundRect(Color(0xFFD4AF37), Offset(g.x - r * 0.45f, g.y - r * 0.9f), Size(r * 0.9f, r * 1.8f), androidx.compose.ui.geometry.CornerRadius(r * 0.45f)) }
             TemaId.NAVIDAD -> { alfiler(); with(TrofeosTema) { estrella(g, r * 0.9f, r * 0.38f, 5, Brush.linearGradient(listOf(Color(0xFFD4AF37), Color(0xFFD4AF37)))) } }

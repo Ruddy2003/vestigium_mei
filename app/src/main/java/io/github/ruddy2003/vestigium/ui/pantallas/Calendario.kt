@@ -230,6 +230,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.CIBER -> RectangleShape
     TemaId.NEON -> RectangleShape
     TemaId.HELENO -> RoundedCornerShape(2.dp)
+    TemaId.EGIPTO -> RoundedCornerShape(topStart = 2.dp, topEnd = 9.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
     TemaId.MEDIEVAL -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 7.dp, bottomStart = 1.dp)
     TemaId.DISTOPIA -> RectangleShape
     TemaId.REFUGIO -> RoundedCornerShape(7.dp)
@@ -299,6 +300,19 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             drawLine(col, Offset(0f, h - g / 2), Offset(w, h - g / 2), g); drawLine(col, Offset(0f, h - 2.2f * s), Offset(w, h - 2.2f * s), g * 0.6f)
             drawLine(col.copy(alpha = 0.5f), Offset(0.4f * s, 0f), Offset(0.4f * s, h), 0.6f * s); drawLine(col.copy(alpha = 0.5f), Offset(w - 0.4f * s, 0f), Offset(w - 0.4f * s, h), 0.6f * s)
             if (hoy) drawPath(Path().apply { moveTo(w / 2 - 6f * s, 3.2f * s); lineTo(w / 2 + 6f * s, 3.2f * s); lineTo(w / 2, 0f); close() }, oro)
+            if (sellado) sello(oro)
+        }
+        // La cenefa de rectángulos al pie; hoy, la cenefa también arriba, en colores, y el disco del sol en la esquina.
+        TemaId.EGIPTO -> {
+            val lado = 2.2f * s; val paso = lado + 1f * s
+            var x = 0f; var i = 0
+            while (x < w) {
+                val col = if (!hoy) linea else if (i % 2 == 0) acento else oro
+                drawRect(col, Offset(x, h - lado * 0.8f), Size(lado, lado * 0.8f))
+                if (hoy) drawRect(col, Offset(x, 0f), Size(lado, lado * 0.8f))
+                x += paso; i++
+            }
+            if (hoy) drawCircle(oro, 2.6f * s, Offset(w - 5f * s, 6f * s))
             if (sellado) sello(oro)
         }
         // Folio: la rúbrica roja al margen y la esquina gastada; el día sellado lleva lacre.

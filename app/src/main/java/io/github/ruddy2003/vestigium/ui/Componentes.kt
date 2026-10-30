@@ -115,6 +115,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.CIBER -> Circuito(modifier)
         TemaId.NEON -> Circuito(modifier)
         TemaId.HELENO -> Greca(modifier, color)
+        TemaId.EGIPTO -> BandaJeker(modifier)
         TemaId.MEDIEVAL -> Zarcillo(modifier)
         TemaId.DISTOPIA -> BandaExpediente(modifier)
         TemaId.REFUGIO -> Destellos(modifier)
@@ -323,6 +324,34 @@ private fun Greca(modifier: Modifier, color: Color) {
         }
         p.lineTo(size.width, b)
         drawPath(p, color, style = Stroke(width = 1.5f, cap = StrokeCap.Square, join = StrokeJoin.Miter))
+    }
+}
+
+/**
+ * Friso jeker, el remate de los muros de las tumbas egipcias: haces de juncos atados, con su copete redondo, alternando
+ * lapislázuli y cornalina, sobre la cenefa de rectángulos de colores que enmarca las pinturas.
+ */
+@Composable
+private fun BandaJeker(modifier: Modifier) {
+    val e = MaterialTheme.colorScheme
+    Canvas(modifier.fillMaxWidth().height(16.dp)) {
+        val f = 1.dp.toPx(); val h = size.height
+        val paso = 7f * f; val n = (size.width / paso).toInt(); val x0 = (size.width - n * paso) / 2
+        val alto = h * 0.64f
+        for (i in 0 until n) {
+            val cx = x0 + (i + 0.5f) * paso
+            val col = (if (i % 2 == 0) e.primary else e.secondary).copy(alpha = 0.72f)
+            drawRect(col, Offset(cx - 1.3f * f, h * 0.3f), Size(2.6f * f, alto - h * 0.3f))
+            drawCircle(col, 2.1f * f, Offset(cx, h * 0.2f))
+            drawLine(e.tertiary, Offset(cx - 1.9f * f, h * 0.42f), Offset(cx + 1.9f * f, h * 0.42f), 0.9f * f)
+        }
+        val y = alto + 1.6f * f
+        val colores = listOf(e.primary, e.tertiary, e.secondary, e.tertiary)
+        var x = 0f; var k = 0
+        while (x < size.width) {
+            drawRect(colores[k % 4].copy(alpha = 0.7f), Offset(x, y), Size(minOf(5f * f, size.width - x), h - y - 0.5f * f))
+            x += 6f * f; k++
+        }
     }
 }
 
@@ -912,6 +941,11 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "☉", igual = "· ", nulo = "οὐδέν", elegido = "✓", riel = RolColor.SECUNDARIO, quitar = "✕", listaVacia = "( κενόν )", flecha = "⟶",
         sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.5f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.DOBLE,
         guiones = floatArrayOf(5f, 2f), tamBoton = 14, letraBoton = null, borde = RolColor.TERCIARIO, grosor = 1f)
+    // Rúbricas en rojo, como las de los escribas: el margen del editor y el prefijo van en cornalina.
+    TemaId.EGIPTO -> PielComponentes(sep = "  ⁞  ", cerrada = "▷", abierta = "▽", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
+        aviso = "☥", igual = "∶ ", nulo = "sin signo", elegido = "☉", riel = RolColor.PRIMARIO, quitar = "⨯", listaVacia = "[ rollo vacío ]", flecha = "⇢",
+        sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.8f, colorPrefijo = RolColor.SECUNDARIO, renglones = false, margen = MargenEditor.ROJO,
+        guiones = floatArrayOf(6f, 2f, 1f, 2f), tamBoton = 15, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1.5f)
     TemaId.MEDIEVAL -> PielComponentes(sep = "  ⁖  ", cerrada = "❦", abierta = "☙", numeral = RolColor.PRIMARIO, centrar = true, rellena = true,
         aviso = "✠", igual = "— ", nulo = "sine nota", elegido = "✚", riel = RolColor.TERCIARIO, quitar = "✗", listaVacia = "( folio en blanco )", flecha = "❧",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.2f, colorPrefijo = RolColor.PRIMARIO, renglones = true, margen = MargenEditor.ROJO,
@@ -1003,6 +1037,13 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             drawLine(e.tertiary, Offset(0f, y - 2.5.dp.toPx()), Offset(size.width, y - 2.5.dp.toPx()), 0.8.dp.toPx())
             drawLine(e.tertiary, Offset(0f, y), Offset(size.width, y), 0.8.dp.toPx())
         }.padding(bottom = 5.dp))
+        // La cenefa de rectángulos de colores bajo el título, y el punto rojo de rúbrica al final.
+        TemaId.EGIPTO -> Text(buildAnnotatedString { append(nombre); withStyle(SpanStyle(color = e.secondary)) { append(" •") } }, style = estilo, modifier = peso.drawBehind {
+            val f = 1.dp.toPx(); val y = size.height - 3 * f
+            val colores = listOf(e.primary, e.tertiary, e.secondary, e.tertiary)
+            var x = 0f; var k = 0
+            while (x < size.width) { drawRect(colores[k % 4].copy(alpha = 0.75f), Offset(x, y), Size(minOf(4f * f, size.width - x), 2.5f * f)); x += 5f * f; k++ }
+        }.padding(bottom = 7.dp))
         // Capitular en rojo, como las rúbricas de los manuscritos.
         TemaId.MEDIEVAL -> Text(buildAnnotatedString {
             withStyle(SpanStyle(color = e.primary, fontSize = estilo.fontSize * 1.55f)) { append(nombre.take(1)) }
@@ -1089,6 +1130,12 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.NEON -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
     // Frontón de templo, muy bajo.
     TemaId.HELENO -> GenericShape { s, _ -> moveTo(0f, s.height * 0.18f); lineTo(s.width / 2, 0f); lineTo(s.width, s.height * 0.18f); lineTo(s.width, s.height); lineTo(0f, s.height); close() }
+    // Cartucho: redondo a la izquierda y cerrado a la derecha por la barra del nudo.
+    TemaId.EGIPTO -> GenericShape { s, _ ->
+        val r = s.height / 2
+        moveTo(r, 0f); lineTo(s.width, 0f); lineTo(s.width, s.height); lineTo(r, s.height)
+        arcTo(Rect(0f, 0f, 2 * r, s.height), 90f, 180f, false); close()
+    }
     // Esquinas cóncavas, como un marco de miniatura.
     TemaId.MEDIEVAL -> GenericShape { s, _ ->
         val w = s.width; val h = s.height; val r = h * 0.14f
@@ -1158,6 +1205,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.CIBER -> "~/vm/$archivo"
         TemaId.NEON -> "~/vm/$archivo"
         TemaId.HELENO -> "πάπυρος · $es"
+        TemaId.EGIPTO -> "rollo del escriba · $es"
         TemaId.MEDIEVAL -> "pluma y tintero · $es"
         TemaId.DISTOPIA -> "FORMULARIO 7-B · ${es.uppercase()}"
         TemaId.REFUGIO -> "BITÁCORA DEL REFUGIO > $es"
@@ -1240,6 +1288,13 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             // Una vuelta de greca en cada esquina.
             val p = Path().apply { moveTo(i, i + u * 1.2f); lineTo(i, i); lineTo(i + u * 1.2f, i); lineTo(i + u * 1.2f, i + u * 0.8f); lineTo(i + u * 0.45f, i + u * 0.8f); lineTo(i + u * 0.45f, i + u * 0.4f) }
             drawPath(p, e.tertiary.copy(alpha = 0.8f), style = Stroke(fino * 1.2f, cap = StrokeCap.Square))
+        }
+        TemaId.EGIPTO -> enLasCuatro {
+            // En cada esquina, el cuadrito de cornalina donde se cruzan las dos cenefas del marco pintado.
+            drawRect(e.secondary.copy(alpha = 0.75f), Offset(i, i), Size(u * 0.55f, u * 0.55f))
+            drawLine(e.primary.copy(alpha = 0.6f), Offset(i + u * 0.75f, i + u * 0.27f), Offset(i + u * 2f, i + u * 0.27f), fino * 1.6f)
+            drawLine(e.primary.copy(alpha = 0.6f), Offset(i + u * 0.27f, i + u * 0.75f), Offset(i + u * 0.27f, i + u * 2f), fino * 1.6f)
+            drawCircle(e.tertiary.copy(alpha = 0.8f), fino * 0.9f, Offset(i + u * 2.3f, i + u * 0.27f))
         }
         TemaId.MEDIEVAL -> enLasCuatro {
             // Esquina de pan de oro: un cuarto de anillo con su punto, y un punto rojo de rúbrica.
@@ -1382,6 +1437,13 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawArc(l, 180f, 180f, false, Offset(0f, f(0.3f)), Size(f(0.16f), f(0.14f)), style = tr)
             drawArc(l, 180f, 180f, false, Offset(f(0.84f), f(0.3f)), Size(f(0.16f), f(0.14f)), style = tr)
         }
+        TemaId.EGIPTO -> {
+            // Un cartucho vacío: el óvalo de cuerda, sin nombre todavía, con su barra abajo.
+            drawRoundRect(l, Offset(f(0.3f), f(0.06f)), Size(f(0.4f), f(0.76f)), CornerRadius(f(0.2f)), style = tr)
+            drawLine(l, Offset(f(0.24f), f(0.9f)), Offset(f(0.76f), f(0.9f)), tr.width * 1.6f)
+            drawLine(a, Offset(f(0.42f), f(0.82f)), Offset(f(0.42f), f(0.9f)), tr.width)
+            drawLine(a, Offset(f(0.58f), f(0.82f)), Offset(f(0.58f), f(0.9f)), tr.width)
+        }
         TemaId.MEDIEVAL -> {
             // Tintero seco y la pluma apoyada.
             drawRoundRect(l, Offset(f(0.14f), f(0.58f)), Size(f(0.4f), f(0.32f)), CornerRadius(f(0.06f)), style = tr)
@@ -1520,6 +1582,11 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
         TemaId.CIBER -> drawRect(c, Offset.Zero, Size(d * 0.75f, h))
         TemaId.NEON -> drawRect(c, Offset.Zero, Size(d * 0.75f, h))
         TemaId.HELENO -> drawPath(Path().apply { moveTo(w / 2 - d * 1.6f, h); lineTo(w / 2, h - d * 1.4f); lineTo(w / 2 + d * 1.6f, h); close() }, c)
+        // Una pirámide pequeña con su piramidión de oro.
+        TemaId.EGIPTO -> {
+            drawPath(Path().apply { moveTo(w / 2 - d * 1.8f, h); lineTo(w / 2, h - d * 2f); lineTo(w / 2 + d * 1.8f, h); close() }, c)
+            drawPath(Path().apply { moveTo(w / 2 - d * 0.45f, h - d * 1.5f); lineTo(w / 2, h - d * 2f); lineTo(w / 2 + d * 0.45f, h - d * 1.5f); close() }, fondo.copy(alpha = 0.5f))
+        }
         TemaId.MEDIEVAL -> drawCircle(c, d * 0.8f, Offset(w / 2, d * 1.4f))
         TemaId.DISTOPIA -> drawRect(c, Offset.Zero, Size(w, d))
         TemaId.REFUGIO -> drawCircle(c, d * 0.9f, Offset(w / 2, h - d * 1.6f), style = Stroke(d * 0.5f))
@@ -1586,6 +1653,12 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         }
         // El arquitrabe bajo el frontón.
         TemaId.HELENO -> drawLine(c, Offset(w * 0.06f, h * 0.24f), Offset(w * 0.94f, h * 0.24f), fino)
+        // La barra del nudo del cartucho, a la derecha, y la cuerda por dentro del borde.
+        TemaId.EGIPTO -> {
+            drawRect(c, Offset(w - m * 1.1f, m * 0.6f), Size(fino * 2.2f, h - m * 1.2f))
+            drawLine(c.copy(alpha = c.alpha * 0.6f), Offset(h / 2, m * 0.8f), Offset(w - m * 1.6f, m * 0.8f), fino * 0.8f)
+            drawLine(c.copy(alpha = c.alpha * 0.6f), Offset(h / 2, h - m * 0.8f), Offset(w - m * 1.6f, h - m * 0.8f), fino * 0.8f)
+        }
         // Cuatro puntos de oro junto a las esquinas cóncavas.
         TemaId.MEDIEVAL -> listOf(Offset(m * 2f, m * 2f), Offset(w - m * 2f, m * 2f), Offset(m * 2f, h - m * 2f), Offset(w - m * 2f, h - m * 2f)).forEach { drawCircle(e.tertiary, fino * 1.6f, it) }
         // Doble recuadro de sello de goma.
@@ -1693,6 +1766,13 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawRect(l, Offset(f(0.2f), f(0.22f)), Size(f(0.6f), f(0.56f)), style = tr)
             drawRoundRect(a, Offset(f(0.04f), f(0.1f)), Size(f(0.16f), f(0.8f)), CornerRadius(f(0.08f)), style = tr)
             drawRoundRect(a, Offset(f(0.8f), f(0.1f)), Size(f(0.16f), f(0.8f)), CornerRadius(f(0.08f)), style = tr)
+        }
+        TemaId.EGIPTO -> {
+            // La paleta del escriba: la tablilla larga con sus dos pocillos (negro y rojo) y el cálamo en su ranura.
+            drawRoundRect(l, Offset(f(0.32f), f(0.04f)), Size(f(0.36f), f(0.92f)), CornerRadius(f(0.06f)), style = tr)
+            drawCircle(a, f(0.06f), Offset(f(0.43f), f(0.16f)), style = tr)
+            drawCircle(a, f(0.06f), Offset(f(0.57f), f(0.16f)))
+            drawLine(l, Offset(f(0.5f), f(0.32f)), Offset(f(0.5f), f(0.88f)), tr.width)
         }
         TemaId.MEDIEVAL -> {
             // Pluma y tintero.
@@ -1845,6 +1925,12 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
         TemaId.HELENO -> {
             drawRect(c, Offset.Zero, Size(1.4f * d, h))
             drawRect(c, Offset(3.2f * d, 0f), Size(1.4f * d, h))
+        }
+        // La cenefa vertical de rectángulos de colores: cornalina, oro y lapislázuli.
+        TemaId.EGIPTO -> {
+            val colores = listOf(c, e.tertiary, e.primary, e.tertiary)
+            var y = 0f; var k = 0
+            while (y < h) { drawRect(colores[k % 4], Offset(0f, y), Size(3 * d, minOf(5 * d, h - y))); y += 6 * d; k++ }
         }
         TemaId.MEDIEVAL -> {
             drawRect(e.tertiary, Offset(d, 0f), Size(1.2f * d, h))

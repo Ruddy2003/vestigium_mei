@@ -35,6 +35,8 @@ object TrofeosTema {
             "Gente" to "Puente", "Constancia" to "Faro", "Curiosos" to "Anfiteatro", "Tuyos" to "Templo"),
         TemaId.HELENO to mapOf("Diario" to "Ánfora", "Mundo" to "Trirreme", "Cuerpo" to "Corona de olivo", "Mente" to "Columna jónica", "Cultura" to "Lira",
             "Gente" to "Crátera", "Constancia" to "Columna dórica", "Curiosos" to "Trípode", "Tuyos" to "Columna corintia"),
+        TemaId.EGIPTO to mapOf("Diario" to "Paleta de escriba", "Mundo" to "Barca solar", "Cuerpo" to "Collar ancho", "Mente" to "Pluma de la Maat", "Cultura" to "Sistro",
+            "Gente" to "Mesa de ofrendas", "Constancia" to "Pilar djed", "Curiosos" to "Clepsidra", "Tuyos" to "Cartucho"),
         TemaId.MEDIEVAL to mapOf("Diario" to "Capitular", "Mundo" to "Mapamundi", "Cuerpo" to "Sello de cera", "Mente" to "Nudo entrelazado", "Cultura" to "Códice",
             "Gente" to "Cenefa", "Constancia" to "Llave", "Curiosos" to "Tintero", "Tuyos" to "Rúbrica"),
         TemaId.GOTICO to mapOf("Diario" to "Vitral del libro", "Mundo" to "Rosetón", "Cuerpo" to "Vitral de la cruz", "Mente" to "Vitral de la estrella", "Cultura" to "Vitral del lirio",
@@ -101,6 +103,17 @@ object TrofeosTema {
                 val c = if (p.hecho) Color(0xFFE8E2D4) else ped
                 for (k in 0 until 3) drawRect(piedra(lerp(c, Color.Black, k * 0.06f)), Offset(w * (0.22f - k * 0.05f), h * (0.79f + k * 0.055f)), Size(w * (0.56f + k * 0.1f), h * 0.055f))
             }
+            TemaId.EGIPTO -> {
+                // Un zócalo de piedra arenisca con la gola arriba y, ganado el trofeo, la cenefa de rectángulos de colores.
+                val c = if (p.hecho) Color(0xFFC9AE7A) else ped
+                drawRect(piedra(c), Offset(w * 0.2f, h * 0.81f), Size(w * 0.6f, h * 0.14f))
+                drawPath(Path().apply { moveTo(w * 0.2f, h * 0.81f); lineTo(w * 0.16f, h * 0.775f); lineTo(w * 0.84f, h * 0.775f); lineTo(w * 0.8f, h * 0.81f); close() }, piedra(lerp(c, Color.White, 0.1f)))
+                if (p.hecho) {
+                    val colores = listOf(Color(0xFF1D2F7A), Color(0xFFC9971C), Color(0xFFB8471E), Color(0xFFC9971C))
+                    var x = w * 0.22f; var k = 0
+                    while (x < w * 0.78f) { drawRect(colores[k % 4], Offset(x, h * 0.9f), Size(w * 0.03f, h * 0.025f)); x += w * 0.04f; k++ }
+                }
+            }
             TemaId.MEDIEVAL -> {
                 // Atril de madera inclinado.
                 val c = if (p.hecho) Color(0xFF5A3A22) else ped
@@ -152,6 +165,7 @@ object TrofeosTema {
         when (tema) {
             TemaId.ROMANO -> romano(categoria, p)
             TemaId.HELENO -> heleno(categoria, p)
+            TemaId.EGIPTO -> egipto(categoria, p)
             TemaId.MEDIEVAL -> medieval(categoria, p)
             TemaId.GOTICO -> gotico(categoria, p)
             TemaId.RENACIMIENTO -> renacimiento(categoria, p)
@@ -392,6 +406,102 @@ object TrofeosTema {
                     drawPath(Path().apply { moveTo(p.x(cx - 0.05f), p.y(yy)); quadraticTo(p.x(cx), p.y(yy - 0.12f), p.x(cx + 0.05f), p.y(yy)); close() }, p.metal(cx - 0.05f, cx + 0.05f))
                 }
                 caja(p, 0.28f, 0.1f, 0.72f, 0.13f); caja(p, 0.34f, 0.74f, 0.66f, 0.77f)
+            }
+        }
+    }
+
+    // ================================================================== Egipto
+
+    /** Los trofeos de Egipto: los objetos del escriba, del templo y del ajuar, sin figuras humanas ni animales. */
+    private fun DrawScope.egipto(cat: String, p: Pincel) {
+        val lw = p.w * 0.01f
+        val lapis = if (p.hecho) Color(0xFF1D2F7A) else p.sombra
+        val cornalina = if (p.hecho) Color(0xFFB8471E) else p.sombra
+        when (cat) {
+            "Diario" -> {
+                // La paleta del escriba: la tablilla larga con sus dos pocillos (negro y rojo) y los cálamos en la ranura.
+                drawRoundRect(p.metal(0.38f, 0.62f), Offset(p.x(0.38f), p.y(0.08f)), Size(p.x(0.24f), p.y(0.68f)), CornerRadius(p.w * 0.02f))
+                drawCircle(if (p.hecho) Color(0xFF1E160C) else p.sombra, p.w * 0.035f, Offset(p.x(0.46f), p.y(0.16f)))
+                drawCircle(cornalina, p.w * 0.035f, Offset(p.x(0.54f), p.y(0.16f)))
+                drawRect(p.linea, Offset(p.x(0.485f), p.y(0.28f)), Size(p.x(0.03f), p.y(0.42f)))
+                listOf(0.47f, 0.5f, 0.53f).forEach { xx -> drawLine(p.claro, Offset(p.x(xx), p.y(0.3f)), Offset(p.x(xx), p.y(0.68f)), lw * 0.5f) }
+            }
+            "Mundo" -> {
+                // La barca solar: el casco curvo de papiro atado, la cabina y el disco del sol encima.
+                drawPath(Path().apply {
+                    moveTo(p.x(0.06f), p.y(0.42f)); quadraticTo(p.x(0.2f), p.y(0.66f), p.x(0.5f), p.y(0.64f)); quadraticTo(p.x(0.8f), p.y(0.66f), p.x(0.94f), p.y(0.42f))
+                    quadraticTo(p.x(0.8f), p.y(0.56f), p.x(0.5f), p.y(0.56f)); quadraticTo(p.x(0.2f), p.y(0.56f), p.x(0.06f), p.y(0.42f)); close()
+                }, p.metal(0.06f, 0.94f))
+                caja(p, 0.4f, 0.44f, 0.6f, 0.56f)
+                drawCircle(cornalina, p.w * 0.1f, Offset(p.x(0.5f), p.y(0.3f)))
+                drawCircle(p.metal(0.4f, 0.6f), p.w * 0.1f, Offset(p.x(0.5f), p.y(0.3f)), style = Stroke(lw * 1.2f))
+                for (k in 0 until 4) drawArc(lapis, 0f, 180f, false, Offset(p.x(0.1f + k * 0.2f), p.y(0.68f)), Size(p.x(0.2f), p.y(0.05f)), style = Stroke(lw))
+            }
+            "Cuerpo" -> {
+                // El collar ancho (usej): hileras de cuentas en media luna, con sus dos remates.
+                val c = Offset(p.x(0.5f), p.y(0.18f))
+                listOf(0.16f, 0.24f, 0.32f, 0.4f).forEachIndexed { i, r ->
+                    val pincel = when (i) { 0 -> SolidColor(lapis); 2 -> SolidColor(cornalina); else -> p.metal(0.1f, 0.9f) }
+                    drawArc(pincel, 20f, 140f, false, Offset(c.x - p.w * r, c.y - p.w * r), Size(p.w * r * 2, p.w * r * 2), style = Stroke(lw * 3.2f))
+                }
+                listOf(-1f, 1f).forEach { s -> drawCircle(p.metal(0.2f, 0.8f), p.w * 0.04f, Offset(c.x + s * p.w * 0.38f, c.y + p.w * 0.12f)) }
+            }
+            "Mente" -> {
+                // La pluma de la Maat, lo justo: alta, con la punta curva, sobre su base.
+                drawPath(Path().apply {
+                    moveTo(p.x(0.44f), p.y(0.72f)); lineTo(p.x(0.4f), p.y(0.26f)); quadraticTo(p.x(0.42f), p.y(0.06f), p.x(0.62f), p.y(0.1f))
+                    quadraticTo(p.x(0.54f), p.y(0.28f), p.x(0.56f), p.y(0.72f)); close()
+                }, p.metal(0.4f, 0.62f))
+                drawLine(p.linea, Offset(p.x(0.5f), p.y(0.72f)), Offset(p.x(0.49f), p.y(0.2f)), lw * 0.8f)
+                if (p.hecho) for (k in 0 until 6) {
+                    val yy = 0.3f + k * 0.07f
+                    drawLine(p.linea.copy(alpha = 0.4f), Offset(p.x(0.49f), p.y(yy)), Offset(p.x(0.43f), p.y(yy + 0.04f)), lw * 0.5f)
+                    drawLine(p.linea.copy(alpha = 0.4f), Offset(p.x(0.5f), p.y(yy)), Offset(p.x(0.55f), p.y(yy + 0.04f)), lw * 0.5f)
+                }
+                caja(p, 0.36f, 0.72f, 0.64f, 0.77f)
+            }
+            "Cultura" -> {
+                // El sistro de Hathor: el aro con sus varillas y plaquitas sueltas, y el mango.
+                drawPath(Path().apply {
+                    moveTo(p.x(0.36f), p.y(0.5f)); lineTo(p.x(0.36f), p.y(0.24f)); quadraticTo(p.x(0.36f), p.y(0.06f), p.x(0.5f), p.y(0.06f))
+                    quadraticTo(p.x(0.64f), p.y(0.06f), p.x(0.64f), p.y(0.24f)); lineTo(p.x(0.64f), p.y(0.5f))
+                }, p.metal(0.34f, 0.66f), style = Stroke(lw * 2.4f))
+                listOf(0.2f, 0.3f, 0.4f).forEach { yy ->
+                    drawLine(p.linea, Offset(p.x(0.31f), p.y(yy)), Offset(p.x(0.69f), p.y(yy)), lw)
+                    listOf(0.43f, 0.57f).forEach { xx -> drawRect(p.metal(xx - 0.02f, xx + 0.02f), Offset(p.x(xx - 0.02f), p.y(yy - 0.025f)), Size(p.x(0.04f), p.y(0.05f))) }
+                }
+                caja(p, 0.34f, 0.5f, 0.66f, 0.54f); caja(p, 0.47f, 0.54f, 0.53f, 0.76f)
+            }
+            "Gente" -> {
+                // La mesa de ofrendas de un pie, con dos panes y una jarra, para compartir.
+                caja(p, 0.2f, 0.5f, 0.8f, 0.55f); caja(p, 0.46f, 0.55f, 0.54f, 0.74f); caja(p, 0.36f, 0.74f, 0.64f, 0.77f)
+                listOf(0.3f, 0.42f).forEach { cx -> drawArc(p.metal(cx - 0.05f, cx + 0.05f), 180f, 180f, true, Offset(p.x(cx - 0.05f), p.y(0.42f)), Size(p.x(0.1f), p.y(0.16f))) }
+                drawPath(Path().apply {
+                    moveTo(p.x(0.58f), p.y(0.5f)); quadraticTo(p.x(0.52f), p.y(0.36f), p.x(0.62f), p.y(0.22f)); lineTo(p.x(0.66f), p.y(0.22f))
+                    quadraticTo(p.x(0.76f), p.y(0.36f), p.x(0.7f), p.y(0.5f)); close()
+                }, p.metal(0.52f, 0.76f))
+                if (p.hecho) drawLine(lapis, Offset(p.x(0.56f), p.y(0.34f)), Offset(p.x(0.72f), p.y(0.34f)), lw)
+            }
+            "Constancia" -> {
+                // El pilar djed, lo que se mantiene firme: el fuste y sus cuatro travesaños arriba.
+                caja(p, 0.43f, 0.26f, 0.57f, 0.74f)
+                for (k in 0 until 4) caja(p, 0.3f, 0.08f + k * 0.045f, 0.7f, 0.11f + k * 0.045f)
+                caja(p, 0.36f, 0.74f, 0.64f, 0.77f)
+                if (p.hecho) listOf(0.4f, 0.5f, 0.6f).forEach { yy -> drawLine(p.linea, Offset(p.x(0.43f), p.y(yy)), Offset(p.x(0.57f), p.y(yy)), lw * 0.6f) }
+            }
+            "Curiosos" -> {
+                // La clepsidra de Karnak: la vasija de piedra que se vacía por un agujero, con las marcas de las horas.
+                drawPath(Path().apply { moveTo(p.x(0.24f), p.y(0.14f)); lineTo(p.x(0.76f), p.y(0.14f)); lineTo(p.x(0.66f), p.y(0.66f)); lineTo(p.x(0.34f), p.y(0.66f)); close() }, p.metal(0.24f, 0.76f))
+                caja(p, 0.22f, 0.11f, 0.78f, 0.15f)
+                if (p.hecho) for (k in 0 until 5) { val yy = 0.22f + k * 0.09f; drawLine(p.linea, Offset(p.x(0.32f + k * 0.017f), p.y(yy)), Offset(p.x(0.4f + k * 0.017f), p.y(yy)), lw * 0.6f) }
+                drawLine(if (p.hecho) Color(0xFF4F86B8) else p.sombra, Offset(p.x(0.5f), p.y(0.66f)), Offset(p.x(0.5f), p.y(0.74f)), lw * 0.8f)
+                caja(p, 0.3f, 0.74f, 0.7f, 0.77f)
+            }
+            else -> {
+                // El cartucho: el óvalo de cuerda que encierra un nombre, con su barra; dentro, tres signos.
+                drawRoundRect(p.metal(0.3f, 0.7f), Offset(p.x(0.3f), p.y(0.06f)), Size(p.x(0.4f), p.y(0.64f)), CornerRadius(p.x(0.2f)), style = Stroke(lw * 2.4f))
+                caja(p, 0.26f, 0.7f, 0.74f, 0.74f)
+                for (k in 0 until 3) signoEgipcio(k, Offset(p.x(0.5f), p.y(0.18f + k * 0.18f)), p.y(0.13f), lapis, lw * 0.9f)
             }
         }
     }

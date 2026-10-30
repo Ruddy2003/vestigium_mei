@@ -304,6 +304,8 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.CIBER -> listOf(0xFFFF2E88, 0xFF1A2232, 0xFF00E5FF, 0xFF00E5FF)
     TemaId.NEON -> listOf(0xFFFF2E88, 0xFF1A2232, 0xFF00E5FF, 0xFF00E5FF)
     TemaId.HELENO -> if (oscuro) listOf(0xFFB04A6A, 0xFF2A2440, 0xFF5FA8D8, 0xFFD8B45C) else listOf(0xFF8E2C48, 0xFFE9E3D6, 0xFF1F6E9C, 0xFFA27B22)
+    // Lo malo en cornalina, lo neutro en papiro y lo bueno en el verde de la fayenza (el verde «wadj» del papiro vivo).
+    TemaId.EGIPTO -> if (oscuro) listOf(0xFFD9653E, 0xFF2C2218, 0xFF4FB8A6, 0xFFE3B341) else listOf(0xFFB0441E, 0xFFE3D3A2, 0xFF1F7A6C, 0xFF9A7212)
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFFC9473B, 0xFF2A2016, 0xFF8DA5E0, 0xFFD5A84A) else listOf(0xFF9E1B1B, 0xFFE5D6B4, 0xFF1F3F8F, 0xFFA97C1E)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFFE0262F, 0xFF2A2C2E, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFFB3121B, 0xFFCFCBC0, 0xFF2E3B44, 0xFFB3121B)
     TemaId.REFUGIO -> if (oscuro) listOf(0xFFFFB23F, 0xFF112016, 0xFF3DFF7F, 0xFF3DFF7F) else listOf(0xFFD9572B, 0xFFE6DAB8, 0xFF1C6E6A, 0xFF1C6E6A)
@@ -330,6 +332,7 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.CIBER -> listOf(0xFF00E5FF, 0xFFE8FF3A, 0xFFFF2E88)
     TemaId.NEON -> listOf(0xFF00E5FF, 0xFFE8FF3A, 0xFFFF2E88)
     TemaId.HELENO -> if (oscuro) listOf(0xFF5FA8D8, 0xFFD8B45C, 0xFFB992EA) else listOf(0xFF1F6E9C, 0xFFA27B22, 0xFF5A2A82)
+    TemaId.EGIPTO -> if (oscuro) listOf(0xFF7895F0, 0xFFE3B341, 0xFFE8774E) else listOf(0xFF1D2F7A, 0xFF9A7212, 0xFFB8471E)
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFF8DA5E0, 0xFFD5A84A, 0xFFC9473B) else listOf(0xFF1F3F8F, 0xFFA97C1E, 0xFF9E1B1B)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFF6D7377, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFF6D7377, 0xFF2E3B44, 0xFFB3121B)
     TemaId.REFUGIO -> if (oscuro) listOf(0xFF1E8A45, 0xFF3DFF7F, 0xFFFFB23F) else listOf(0xFF1C6E6A, 0xFFB98A15, 0xFFD9572B)

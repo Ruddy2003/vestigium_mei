@@ -76,6 +76,7 @@ object Musica {
         TemaId.CIBER -> R.raw.s_ciber_presentacion
         TemaId.NEON -> R.raw.s_neon_presentacion
         TemaId.HELENO -> R.raw.s_heleno_presentacion
+        TemaId.EGIPTO -> R.raw.s_egipto_presentacion
         TemaId.MEDIEVAL -> R.raw.s_medieval_presentacion
         TemaId.DISTOPIA -> R.raw.s_distopia_presentacion
         TemaId.REFUGIO -> R.raw.s_refugio_presentacion
@@ -101,6 +102,7 @@ object Musica {
         TemaId.CIBER -> R.raw.s_ciber_anual
         TemaId.NEON -> R.raw.s_neon_anual
         TemaId.HELENO -> R.raw.s_heleno_anual
+        TemaId.EGIPTO -> R.raw.s_egipto_anual
         TemaId.MEDIEVAL -> R.raw.s_medieval_anual
         TemaId.DISTOPIA -> R.raw.s_distopia_anual
         TemaId.REFUGIO -> R.raw.s_refugio_anual
@@ -125,6 +127,7 @@ object Musica {
         TemaId.CIBER -> R.raw.t_ciber_llamada
         TemaId.NEON -> R.raw.t_neon_llamada
         TemaId.HELENO -> R.raw.t_heleno_llamada
+        TemaId.EGIPTO -> R.raw.t_egipto_llamada
         TemaId.MEDIEVAL -> R.raw.t_medieval_llamada
         TemaId.DISTOPIA -> R.raw.t_distopia_llamada
         TemaId.REFUGIO -> R.raw.t_refugio_llamada
@@ -149,6 +152,7 @@ object Musica {
         TemaId.CIBER -> R.raw.t_ciber_notificacion
         TemaId.NEON -> R.raw.t_neon_notificacion
         TemaId.HELENO -> R.raw.t_heleno_notificacion
+        TemaId.EGIPTO -> R.raw.t_egipto_notificacion
         TemaId.MEDIEVAL -> R.raw.t_medieval_notificacion
         TemaId.DISTOPIA -> R.raw.t_distopia_notificacion
         TemaId.REFUGIO -> R.raw.t_refugio_notificacion
@@ -333,6 +337,36 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             for (k in 1..2) drawLine(c.copy(alpha = 0.5f), Offset(x + k * u * 14 / 3, base + u * 12), Offset(x + k * u * 14 / 3, h - u * 26), u * 0.8f)
         }
         listOf(h - u * 22 to u * 6, h - u * 14 to u * 3, h - u * 6 to 0f).forEach { (y, m) -> drawLine(c, Offset(m, y), Offset(w - m, y), l) }
+    }
+    // El pilono del templo: dos torres en talud con su gola, los mástiles con banderolas y la puerta con el disco alado.
+    TemaId.EGIPTO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre.uppercase(), "☥  ·  toca para entrar al templo",
+        comillas = "«" to "»", arriba = 84.dp, abajo = 40.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.tertiary.copy(alpha = 0.75f); val l = u * 1.4f
+        val top = u * 30; val pie = h - u * 8
+        val torre = w * 0.36f
+        listOf(0f to 1f, w to -1f).forEach { (x0, s) ->
+            val xe = x0 + s * u * 6; val xi = x0 + s * torre
+            drawPath(Path().apply { moveTo(xe, pie); lineTo(xe + s * u * 14, top); lineTo(xi, top); lineTo(xi, pie); close() }, c, style = Stroke(l))
+            drawLine(c, Offset(xe + s * u * 13, top + u * 6), Offset(xi, top + u * 6), u * 0.8f)
+            var k = 0f
+            while (k < torre - u * 22) { drawLine(c.copy(alpha = 0.4f), Offset(xe + s * (u * 16 + k), top), Offset(xe + s * (u * 16 + k), top + u * 6), u * 0.7f); k += u * 4 }
+            listOf(0.35f, 0.7f).forEach { f ->
+                val xm = xe + s * (u * 14 + (torre - u * 20) * f)
+                drawLine(c.copy(alpha = 0.6f), Offset(xm, pie - u * 10), Offset(xm, top - u * 22), u)
+                drawPath(Path().apply { moveTo(xm, top - u * 22); lineTo(xm - s * u * 9, top - u * 18); lineTo(xm, top - u * 14); close() }, e.secondary.copy(alpha = 0.6f))
+            }
+        }
+        val gx = w / 2; val gw = w * 0.26f
+        drawRect(c, Offset(gx - gw / 2, top + u * 30), Size(gw, pie - top - u * 30), style = Stroke(l))
+        drawCircle(e.secondary.copy(alpha = 0.7f), u * 5, Offset(gx, top + u * 20))
+        listOf(-1f, 1f).forEach { s ->
+            drawPath(Path().apply {
+                moveTo(gx + s * u * 6, top + u * 18); quadraticTo(gx + s * u * 20, top + u * 12, gx + s * gw * 0.5f, top + u * 17)
+                lineTo(gx + s * gw * 0.46f, top + u * 21); quadraticTo(gx + s * u * 18, top + u * 21, gx + s * u * 6, top + u * 23); close()
+            }, c)
+        }
+        drawLine(c, Offset(0f, pie), Offset(w, pie), l)
     }
     // Folio de códice: pauta roja de márgenes, anillos de pan de oro donde se cruzan y la frase con capitular.
     TemaId.MEDIEVAL -> DisenoPresentacion(OrdenPresentacion.TITULO_ARRIBA, true, t.nombre, "¶ toca la foja e prosigue", capitular = true, emblema = 112.dp) { e ->

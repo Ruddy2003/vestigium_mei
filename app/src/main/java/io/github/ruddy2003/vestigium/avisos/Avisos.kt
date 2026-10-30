@@ -39,6 +39,7 @@ object Avisos {
         TemaId.CIBER -> R.raw.n_ciber_aviso to R.raw.n_ciber_solemne
         TemaId.NEON -> R.raw.n_neon_aviso to R.raw.n_neon_solemne
         TemaId.HELENO -> R.raw.n_heleno_aviso to R.raw.n_heleno_solemne
+        TemaId.EGIPTO -> R.raw.n_egipto_aviso to R.raw.n_egipto_solemne
         TemaId.MEDIEVAL -> R.raw.n_medieval_aviso to R.raw.n_medieval_solemne
         TemaId.DISTOPIA -> R.raw.n_distopia_aviso to R.raw.n_distopia_solemne
         TemaId.REFUGIO -> R.raw.n_refugio_aviso to R.raw.n_refugio_solemne
@@ -191,6 +192,13 @@ object Avisos {
             "ἘΠΙΣΤΟΛΗ · carta de tu yo del pasado", "Llegó el día que elegiste para abrirla.",
             "Corona de olivo", "coronas de olivo nuevas",
             "Tu %d ya es historia", "Un año entero en historias, como en Heródoto: lo que más hiciste, lo único, lo curioso.")
+        TemaId.EGIPTO -> Voz("☥ El heraldo pregunta: ¿cómo está tu corazón?", "Dos toques: cuánto agrado y cuánta fuerza tiene tu ka.",
+            "☥ Lo que mostró la noche", "Anótalo antes de dejar la estera: los sueños se van con la primera luz de Ra.",
+            "☥ El papiro de hoy", "Llena el día antes de que se ponga el sol. Si fue un día torcido, basta con un número.",
+            "Día torcido: un número", "La Casa de la Vida pregunta hoy:",
+            "☥ Un papiro sellado de tu yo del pasado", "Llegó el día del año civil que elegiste para romper el sello.",
+            "Amuleto de oro ganado", "amuletos de oro nuevos",
+            "Los anales de %d están escritos", "Un año entero en relieves, como en los muros de un templo: lo que más hiciste, lo único, lo curioso.")
         TemaId.MEDIEVAL -> Voz("¶ ¿Cómo está tu ánima agora?", "Dos toques: cuán placentero y cuánto brío.",
             "¶ De las visiones de la noche", "Asiéntalas antes de levantarte, que el recuerdo se borra como tinta fresca.",
             "¶ Completas: ¿cómo fue el día?", "Asienta el día. Si fue de pesar, basta con un número.",
@@ -327,6 +335,7 @@ object Avisos {
         TemaId.CIBER -> VozEnfoque("> pausa", "Despega la vista de la pantalla. Agua.", "> pausa terminada", "> wake: hora de despertar", "> proceso completado")
         TemaId.NEON -> VozEnfoque("> pausa", "Despega la vista de la pantalla. Agua.", "> pausa terminada", "> wake: hora de despertar", "> proceso completado")
         TemaId.HELENO -> VozEnfoque("Σχολή · pausa", "Levántate, bebe agua de la fuente.", "Terminó la pausa", "Llega Eos: hora de despertar", "Τέλος · terminaste")
+        TemaId.EGIPTO -> VozEnfoque("Reposo del escriba", "Deja el cálamo, bebe agua de la jarra.", "Vuelve a la paleta", "Ra sale del horizonte: hora de despertar", "Columna terminada")
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA")
         TemaId.REFUGIO -> VozEnfoque("DESCANSO DE TURNO", "Levántate, bebe agua filtrada.", "FIN DEL DESCANSO", "HORA DE DESPERTAR, RESIDENTE", "TURNO COMPLETADO")

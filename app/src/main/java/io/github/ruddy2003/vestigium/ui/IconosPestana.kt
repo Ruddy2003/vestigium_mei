@@ -101,6 +101,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.HELENO -> { p { m(2.5f, 8.5f); t(21.5f, 8.5f); q(21.5f, 19.5f, 12f, 19.5f); q(2.5f, 19.5f, 2.5f, 8.5f); close() }
             rayos(12f, 8.5f, 5, 2.6f, 8f, 30.0, 150.0, 1.1f); p(relleno = true) { m(12f, 8.5f); t(12f, 3.2f); t(16.5f, 8.5f); close() }
             l(12f, 19.5f, 12f, 21.5f); l(9f, 21.5f, 15f, 21.5f) }                                                                         // reloj de sol: cuenco, horas y gnomon
+        TemaId.EGIPTO -> { ci(12f, 11f, 3.8f, relleno = true); p { m(2f, 19f); q(5.5f, 10f, 9f, 19f) }; p { m(15f, 19f); q(18.5f, 10f, 22f, 19f) }
+            l(2f, 19.5f, 22f, 19.5f) }                                                                                                       // el horizonte (ajet): el sol entre dos montes
         TemaId.MEDIEVAL -> { r(9f, 10f, 6f, 10.5f, 0.8f); l(12f, 10f, 12f, 8.6f, 1.1f); l(6.5f, 21f, 17.5f, 21f)
             p(relleno = true) { m(12f, 2.8f); q(14.6f, 5.8f, 12f, 8f); q(9.4f, 5.8f, 12f, 2.8f); close() } }                               // vela
         TemaId.DISTOPIA -> { p { m(2.5f, 12f); q(12f, 3f, 21.5f, 12f); q(12f, 21f, 2.5f, 12f); close() }; ci(12f, 12f, 3.3f, relleno = true) } // ojo
@@ -139,6 +141,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             l(9f, 6.5f, 15f, 6.5f, 1.1f); l(9f, 10f, 14f, 10f, 1.1f); l(9f, 13.5f, 15f, 13.5f, 1.1f)
             p(st = fino) { m(9f, 16f); t(10.6f, 17.2f); t(9f, 18.4f) }; l(11.8f, 18.4f, 14f, 18.4f, 1.1f) }                                // papel continuo de teletipo con su «>_»
         TemaId.HELENO -> momentos(tm)
+        TemaId.EGIPTO -> { ov(3f, 4f, 4f, 16f); l(5f, 4f, 20.5f, 4f); l(5f, 20f, 20.5f, 20f); l(20.5f, 4f, 20.5f, 20f)
+            l(10f, 7f, 10f, 17f, 1.1f); l(13.5f, 7f, 13.5f, 17f, 1.1f); l(17f, 7f, 17f, 13.5f, 1.1f) }                                      // papiro a medio desenrollar, escrito en columnas
         TemaId.MEDIEVAL -> { p { m(12f, 6.5f); q(8f, 4f, 3f, 5f); t(3f, 18.5f); q(8f, 17.5f, 12f, 19.5f); q(16f, 17.5f, 21f, 18.5f); t(21f, 5f); q(16f, 4f, 12f, 6.5f) }; l(12f, 6.5f, 12f, 19.5f, 1.1f) } // códice abierto
         TemaId.DISTOPIA -> { r(5f, 4f, 14f, 17.5f, 0.6f); r(8.5f, 2.5f, 7f, 3.2f, 0.4f, relleno = true); l(8f, 10f, 16f, 10f); l(8f, 13.5f, 16f, 13.5f); l(8f, 17f, 12.5f, 17f) } // expediente
         TemaId.REFUGIO -> momentos(tm)
@@ -167,6 +171,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.NEON -> p { m(13f, 2.5f); t(5f, 13.5f); t(11f, 13.5f); t(10f, 21.5f); t(19f, 10f); t(13f, 10f); close() }                        // rayo
         TemaId.HELENO -> { p { m(7.5f, 4f); q(4f, 12f, 8f, 19f) }; p { m(16.5f, 4f); q(20f, 12f, 16f, 19f) }; l(6f, 6.5f, 18f, 6.5f); l(8f, 19f, 16f, 19f)
             l(10f, 6.5f, 10f, 19f, 1.1f); l(12f, 6.5f, 12f, 19f, 1.1f); l(14f, 6.5f, 14f, 19f, 1.1f) }                                         // lira
+        TemaId.EGIPTO -> { p { m(8f, 14f); t(8f, 7f); q(8f, 2.5f, 12f, 2.5f); q(16f, 2.5f, 16f, 7f); t(16f, 14f) }; l(8f, 14f, 16f, 14f)
+            l(6.5f, 7f, 17.5f, 7f, 1.1f); l(6.5f, 10.5f, 17.5f, 10.5f, 1.1f); l(12f, 14f, 12f, 21.5f) }                                    // sistro, la sonaja de Hathor
         TemaId.MEDIEVAL -> { p { m(20.5f, 3f); q(10f, 5f, 6.5f, 16f); t(8.5f, 17f); q(17.5f, 13f, 20.5f, 3f); close() }; l(6.5f, 16f, 4f, 21f); l(18f, 5.5f, 9.5f, 13.5f, 1.1f) } // pluma
         TemaId.DISTOPIA -> { p { m(2.5f, 12f); q(12f, 3f, 21.5f, 12f); q(12f, 21f, 2.5f, 12f); close() }; ci(12f, 12f, 3.3f, relleno = true) }  // ojo
         TemaId.REFUGIO -> { ci(12f, 16f, 1.8f, relleno = true); p { m(8f, 13f); q(12f, 9f, 16f, 13f) }; p { m(5f, 10f); q(12f, 3.5f, 19f, 10f) }; l(12f, 17.5f, 12f, 21f) } // radio
@@ -200,6 +206,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.CIBER -> { ci(12f, 12f, 9f); ci(12f, 12f, 4.8f, st = fino); l(12f, 12f, 18.4f, 5.6f); ci(15.5f, 9f, 1.2f, relleno = true) }           // radar
         TemaId.NEON -> { ci(12f, 12f, 9f); ci(12f, 12f, 4.8f, st = fino); l(12f, 12f, 18.4f, 5.6f); ci(15.5f, 9f, 1.2f, relleno = true) }           // radar
         TemaId.HELENO -> { ci(12f, 12f, 8.6f); p(relleno = true) { m(12f, 5f); t(13.8f, 12f); t(10.2f, 12f); close() }; p(st = fino) { m(10.2f, 12f); t(12f, 19f); t(13.8f, 12f) } } // brújula
+        TemaId.EGIPTO -> { p { m(3f, 11f); q(12f, 4f, 21f, 11f); q(12f, 15.5f, 3f, 11f); close() }; ci(12f, 10.5f, 2.2f, relleno = true)
+            p { m(3f, 6.5f); q(12f, 2f, 21.5f, 6f) }; l(10.5f, 13.5f, 9f, 20f); p { m(13f, 13.5f); q(17f, 20f, 19.5f, 16.5f) } }        // el ojo de Horus, el que todo lo ve
         TemaId.MEDIEVAL -> { ci(12f, 12f, 8.6f); l(3.6f, 12f, 20.4f, 12f); l(12f, 12f, 12f, 20.4f) }                                              // mapamundi en T-O
         TemaId.DISTOPIA -> { ci(7f, 15f, 4f); ci(17f, 15f, 4f); l(4.5f, 11.8f, 6.5f, 5.5f); l(19.5f, 11.8f, 17.5f, 5.5f); l(6.5f, 5.5f, 10f, 5.5f); l(14f, 5.5f, 17.5f, 5.5f); l(10.5f, 9f, 13.5f, 9f) } // binoculares
         TemaId.REFUGIO -> { p { m(12f, 21f); q(5f, 13f, 5f, 9.5f); q(5f, 3f, 12f, 3f); q(19f, 3f, 19f, 9.5f); q(19f, 13f, 12f, 21f); close() }; ci(12f, 9.5f, 2.6f) } // marcador de mapa
@@ -234,6 +242,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.NEON -> { r(4f, 4f, 6.5f, 6.5f, 0.6f); r(13.5f, 4f, 6.5f, 6.5f, 0.6f); r(4f, 13.5f, 6.5f, 6.5f, 0.6f); r(13.5f, 13.5f, 6.5f, 6.5f, 0.6f, true) } // módulos
         TemaId.HELENO -> { l(4f, 4f, 20f, 4f); ci(6.5f, 6.3f, 1.8f, st = fino); ci(17.5f, 6.3f, 1.8f, st = fino); l(6.5f, 8f, 17.5f, 8f, 1.1f)
             l(8f, 8f, 8f, 19f, 1.1f); l(12f, 8f, 12f, 19f, 1.1f); l(16f, 8f, 16f, 19f, 1.1f); l(6f, 19.5f, 18f, 19.5f); l(5f, 21.5f, 19f, 21.5f) } // columna jónica
+        TemaId.EGIPTO -> { p { m(5.5f, 3.5f); t(18.5f, 3.5f); t(14f, 8.5f); t(10f, 8.5f); close() }; l(10f, 8.5f, 10f, 19f); l(14f, 8.5f, 14f, 19f)
+            l(10f, 10.5f, 14f, 10.5f, 1.1f); l(10f, 12.5f, 14f, 12.5f, 1.1f); l(7.5f, 19.5f, 16.5f, 19.5f); l(6.5f, 21.5f, 17.5f, 21.5f) } // columna papiriforme con el capitel abierto
         TemaId.MEDIEVAL -> { ci(7.5f, 8f, 4f); l(10.3f, 10.8f, 20f, 20.5f); l(15.5f, 16f, 17.7f, 13.8f); l(18f, 18.5f, 20.2f, 16.3f) }           // llave
         TemaId.DISTOPIA -> { r(5f, 3f, 14f, 18f, 0.5f); l(5f, 9f, 19f, 9f, 1.1f); l(5f, 15f, 19f, 15f, 1.1f); l(10.5f, 6f, 13.5f, 6f); l(10.5f, 12f, 13.5f, 12f); l(10.5f, 18f, 13.5f, 18f) } // archivero
         TemaId.REFUGIO -> { l(6f, 18f, 14.5f, 9.5f, 2.6f); p { m(14.5f, 9.5f); q(12.5f, 5f, 16.5f, 3.5f); t(15f, 6.5f); t(17.5f, 9f); t(20.5f, 7.5f); q(19f, 11.5f, 14.5f, 9.5f) } } // llave inglesa
@@ -274,6 +284,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.HELENO -> { p(st = fino) { m(4.5f, 20.5f); q(9.5f, 11f, 19.5f, 3.5f) }
             hoja(6.6f, 13.2f, 5.2f, 2.2f, -110f); hoja(11.6f, 13.6f, 5.2f, 2.2f, 5f); hoja(10.8f, 7.4f, 5.2f, 2.2f, -110f); hoja(16.6f, 8.2f, 4.6f, 2f, 10f)
             ci(8.6f, 18.4f, 1.4f, relleno = true); ci(14.2f, 11.6f, 1.2f, relleno = true) }                                             // rama de olivo con aceitunas
+        TemaId.EGIPTO -> { ov(9f, 2.5f, 6f, 8f); l(5.5f, 11.5f, 18.5f, 11.5f); l(12f, 10.5f, 12f, 21.5f) }                                // el ankh, la vida
         TemaId.MEDIEVAL -> { ci(12f, 13.5f, 7.5f); ci(12f, 13.5f, 1.4f, relleno = true); rayos(12f, 13.5f, 6, 1.4f, 7.5f, -90.0, 270.0, 1.2f)
             p(relleno = true) { m(9f, 5.6f); t(9f, 2f); t(10.5f, 3.6f); t(12f, 1.5f); t(13.5f, 3.6f); t(15f, 2f); t(15f, 5.6f); close() } } // rueda de la fortuna coronada
         TemaId.DISTOPIA -> { r(2.5f, 5f, 19f, 14f, 1f); r(5f, 8f, 5.5f, 7.5f, 0.3f); ci(7.75f, 10.4f, 1.3f, st = fino); p(st = fino) { m(5.6f, 15.5f); q(7.75f, 11.8f, 9.9f, 15.5f) }
@@ -331,6 +342,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             l(12f, 8f, 12f, 16f, 2.2f); l(8f, 12f, 16f, 12f, 2.2f) }                                                                         // [+]
         TemaId.HELENO -> { p { m(4f, 7f); t(9f, 3.5f); t(17f, 4f); t(20.5f, 9.5f); t(19f, 17f); t(13f, 20.5f); t(5.5f, 18.5f); t(3f, 12.5f); close() }
             l(12f, 8.5f, 12f, 15.5f, 2f); l(8.5f, 12f, 15.5f, 12f, 2f) }                                                                     // óstrakon con el «+» grabado
+        TemaId.EGIPTO -> { r(7.5f, 2.5f, 9f, 19f, 1.5f); ci(10.4f, 5.2f, 1.1f, relleno = true); ci(13.6f, 5.2f, 1.1f)
+            l(12f, 10f, 12f, 17.5f, 2f); l(9.5f, 13.75f, 14.5f, 13.75f, 2f) }                                                              // la paleta del escriba con sus dos pocillos y el «+»
         TemaId.MEDIEVAL -> p(relleno = true) { m(10.6f, 10.6f); t(9f, 3f); t(15f, 3f); t(13.4f, 10.6f); t(21f, 9f); t(21f, 15f); t(13.4f, 13.4f); t(15f, 21f); t(9f, 21f); t(10.6f, 13.4f); t(3f, 15f); t(3f, 9f); close() } // cruz patada
         TemaId.DISTOPIA -> { ci(12f, 4.6f, 2.3f); r(10.5f, 6.9f, 3f, 4.6f, 0.3f); r(5f, 11.6f, 14f, 4f, 0.6f, relleno = true); r(6.5f, 18.5f, 11f, 3f, 0.3f) } // sello de goma y su marca
         TemaId.REFUGIO -> { ci(12f, 12f, 8.8f); ci(12f, 12f, 6.4f, st = fino); l(12f, 8.5f, 12f, 15.5f, 2f); l(8.5f, 12f, 15.5f, 12f, 2f) } // botón de panel
@@ -376,6 +389,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.NEON -> { l(6f, 3f, 6f, 21f, 1.1f); l(12f, 3f, 12f, 21f, 1.1f); l(18f, 3f, 18f, 21f, 1.1f)
             r(4f, 13f, 4f, 3f, 0.4f, true); r(10f, 6f, 4f, 3f, 0.4f, true); r(16f, 15f, 4f, 3f, 0.4f, true) }                             // deslizadores
         TemaId.HELENO -> { engrane(9.5f, 10f, 6.6f, 5f, 8); ci(9.5f, 10f, 1.8f); engrane(17f, 17f, 4.6f, 3.4f, 6); ci(17f, 17f, 1.1f, relleno = true) } // dos engranes que encajan
+        TemaId.EGIPTO -> { r(10f, 9f, 4f, 12f, 0.6f); l(6.5f, 3.5f, 17.5f, 3.5f, 1.5f); l(6.5f, 5.5f, 17.5f, 5.5f, 1.5f); l(6.5f, 7.5f, 17.5f, 7.5f, 1.5f)
+            l(7.5f, 21.5f, 16.5f, 21.5f) }                                                                                                   // el pilar djed, lo que se mantiene firme
         TemaId.MEDIEVAL -> { ci(7f, 18.6f, 2.6f); ci(17f, 18.6f, 2.6f); l(8.6f, 16.5f, 17.6f, 3.5f); l(15.4f, 16.5f, 6.4f, 3.5f); ci(12f, 10f, 0.9f, relleno = true) } // tijeras del copista
         TemaId.DISTOPIA -> { r(4f, 15f, 16f, 6f, 0.6f); l(8f, 18f, 16f, 18f, 1.1f); l(12f, 17f, 16.8f, 5.6f, 1.8f); ci(17.4f, 4.2f, 2.2f, relleno = true) } // palanca de mando
         TemaId.REFUGIO -> { ci(12f, 10f, 7f); rayos(12f, 10f, 4, 1.6f, 7f, 45.0, 405.0); ci(12f, 10f, 1.6f, relleno = true); l(12f, 17f, 12f, 19f); r(4f, 19f, 16f, 3f, 0.5f) } // válvula de rueda

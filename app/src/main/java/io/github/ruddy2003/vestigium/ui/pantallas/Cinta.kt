@@ -86,6 +86,8 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.NEON -> PielCinta(0f, false, RellenoCinta.RAYAS, floatArrayOf(1.5f, 3f), StrokeCap.Butt)
     // Bloques con su contorno, como relieves.
     TemaId.HELENO -> PielCinta(2f, false, RellenoCinta.CONTORNO, floatArrayOf(6f, 3f), StrokeCap.Round)
+    // Bloques en segmentos, como la cenefa de rectángulos de las pinturas, y las horas en trazos cortos de cálamo.
+    TemaId.EGIPTO -> PielCinta(3f, false, RellenoCinta.SEGMENTOS, floatArrayOf(2f, 4f), StrokeCap.Square)
     // Tinta que se carga arriba y se aclara.
     TemaId.MEDIEVAL -> PielCinta(1f, false, RellenoCinta.DEGRADADO, null, StrokeCap.Round)
     // Sello rayado del expediente.

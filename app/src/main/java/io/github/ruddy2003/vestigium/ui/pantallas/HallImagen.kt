@@ -111,6 +111,7 @@ object HallImagen {
         TemaId.CIBER -> "usuario@vestigium:~/hall$ ls" to "[proceso terminado · código 0]"
         TemaId.NEON -> "usuario@vestigium:~/hall$ ls" to "[proceso terminado · código 0]"
         TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ · VESTIGIUM MEI" to "ΜΝΗΜΗΣ ΧΑΡΙΝ"
+        TemaId.EGIPTO -> "☥ VESTIGIUM MEI · PAPIRO DEL ESCRIBA" to "Que su nombre viva por siempre"
         TemaId.MEDIEVAL -> "Liber vestigiorum meorum" to "Explicit liber · Deo gratias"
         TemaId.DISTOPIA -> "EXPEDIENTE 07-118 · VESTIGIUM MEI" to "DOCUMENTO REVISADO · ARCHÍVESE"
         TemaId.REFUGIO -> "REFUGIO · REGISTRO DEL RESIDENTE" to "Todo en orden bajo tierra"

@@ -153,6 +153,7 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.CIBER -> listOf("rango: usuario", "rango: operador", "rango: admin", "rango: root")
     TemaId.NEON -> listOf("rango: usuario", "rango: operador", "rango: admin", "rango: root")
     TemaId.HELENO -> listOf("χάλκεος", "ἀργύρεος", "χρύσεος", "ἀθάνατος")
+    TemaId.EGIPTO -> listOf("amuleto de fayenza", "amuleto de cobre", "amuleto de oro", "el oro de los dioses")
     TemaId.MEDIEVAL -> listOf("en tinta", "en minio", "en pan de oro", "códice purpúreo")
     TemaId.DISTOPIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
     TemaId.REFUGIO -> listOf("residente", "jefe de turno", "jefe de sector", "director del refugio")
@@ -282,6 +283,27 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                 val base = m * 0.09f
                 val p1 = pt(base, a - ancho); val p2 = pt(largo, a); val p3 = pt(base, a + ancho)
                 drawPath(Path().apply { moveTo(p1.x, p1.y); lineTo(p2.x, p2.y); lineTo(p3.x, p3.y); close() }, oro.copy(alpha = 0.09f))
+            }
+        }
+        TemaId.EGIPTO -> {
+            // El Atón de Amarna: un disco del que bajan rayos que terminan en manos abiertas; los rayos respiran despacio.
+            val oro = if (oscuro) cs.primary else cs.tertiary
+            val centro = Offset(c.x, c.y - m * 0.2f)
+            drawCircle(oro.copy(alpha = 0.12f), m * 0.12f, centro)
+            drawCircle(oro.copy(alpha = 0.2f), m * 0.12f, centro, style = Stroke(1.5f * u))
+            val pulso = 0.9f + 0.1f * sin(giro * PI / 90).toFloat()
+            for (i in 0 until 13) {
+                val a = PI * (0.12 + 0.76 * i / 12)
+                val ini = Offset(centro.x + (m * 0.14f * cos(a)).toFloat(), centro.y + (m * 0.14f * sin(a)).toFloat())
+                val largo = m * 0.52f * pulso
+                val fin = Offset(centro.x + (largo * cos(a)).toFloat(), centro.y + (largo * sin(a)).toFloat())
+                drawLine(oro.copy(alpha = 0.11f), ini, fin, 1.6f * u)
+                // La mano: la palma y cuatro dedos que se abren hacia afuera del rayo.
+                drawCircle(oro.copy(alpha = 0.16f), 3f * u, fin)
+                for (d in -1..2) {
+                    val ad = a + d * 0.32
+                    drawLine(oro.copy(alpha = 0.14f), fin, Offset(fin.x + (5f * u * cos(ad)).toFloat(), fin.y + (5f * u * sin(ad)).toFloat()), 1.1f * u)
+                }
             }
         }
         TemaId.MEDIEVAL -> rotate(giro * 0.25f, c) {

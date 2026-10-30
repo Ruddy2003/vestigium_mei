@@ -102,6 +102,7 @@ object SalonesMas {
             // Los pedestales de los siete primeros están en [SalonesTema.pedestal]: no llegan aquí.
             TemaId.ROMANO -> Unit
             TemaId.HELENO -> Unit
+            TemaId.EGIPTO -> Unit
             TemaId.MEDIEVAL -> Unit
             TemaId.GOTICO -> Unit
             TemaId.RENACIMIENTO -> Unit

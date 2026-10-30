@@ -65,7 +65,7 @@ import kotlin.math.sqrt
 
 /** La forma con que el tema nuevo se abre sobre el anterior. */
 private enum class BarridoTema {
-    ARCO, PIXELES, SOL, ROMBO, OJO, ESCOTILLA, ENGRANE, MEMBRANA, COLUMNAS, CORTINA, HOJA,
+    ARCO, PIXELES, SOL, PIRAMIDE, ROMBO, OJO, ESCOTILLA, ENGRANE, MEMBRANA, COLUMNAS, CORTINA, HOJA,
     COPO, ABANICO, OJIVA, CIRCULO, OCHO, HORIZONTE, VITRUVIO, ESTRELLA, BANDAS, HEXAGONO
 }
 
@@ -92,6 +92,8 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.NEON -> MatizMovimiento(BarridoTema.PIXELES, 640, SALTOS_CONSOLA, 0f, 6f, 1f, 260, 40, SALTOS_RENGLON, 0.8f, 1f, 2500f)
     // El sol de Vergina, de dieciséis rayos.
     TemaId.HELENO -> MatizMovimiento(BarridoTema.SOL, 820, FastOutSlowInEasing, 0f, 14f, 0.98f, 480, 60, FastOutSlowInEasing, 1f, 0.5f, 800f)
+    // Una pirámide que crece desde el toque; los bloques suben desde abajo, pesados y sin rebote, como sillares.
+    TemaId.EGIPTO -> MatizMovimiento(BarridoTema.PIRAMIDE, 860, CubicBezierEasing(0.6f, 0f, 0.2f, 1f), 0f, 16f, 1f, 520, 65, LinearOutSlowInEasing, 0.92f, 0.9f, 620f)
     // Rombo de miniatura; todo lento, a paso de pluma.
     TemaId.MEDIEVAL -> MatizMovimiento(BarridoTema.ROMBO, 900, LinearOutSlowInEasing, 0f, 10f, 1f, 560, 70, LinearOutSlowInEasing, 0.9f, 0.75f, 500f)
     // El ojo que se abre; los expedientes entran de lado y el sello cae seco.
@@ -189,7 +191,7 @@ internal enum class VivoTema(val periodo: Int) {
     LUCERNA(16000), FOSFORO(5000), OLIVO(30000), RAYO_ORO(26000), CENIZA(28000), VAPOR(18000), FRAGUA(7000),
     BURBUJAS(16000), GACETA(40000), CHARRETERAS(9000), HORMIGAS(70000), LUCIERNAGAS(9000), NIEVE(24000),
     ARENA(14000), VITRAL(80000), ESTRELLAS(9000), AGUA(14000), NUBES(180000), SAMARAS(24000), ESTRELLAS_ROJAS(36000),
-    CONFETI(22000), RUNAS(14000)
+    CONFETI(22000), RUNAS(14000), JEROGLIFOS(20000)
 }
 
 /** El tipo de fondo vivo de cada tema (solo el Botánico cambia entre el día y la noche; el Refugio suma el barrido de noche). */
@@ -198,6 +200,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.CIBER -> VivoTema.FOSFORO             // columnas de fósforo con el cursor por cabeza
     TemaId.NEON -> VivoTema.FOSFORO             // columnas de fósforo con el cursor por cabeza
     TemaId.HELENO -> VivoTema.OLIVO              // hojas de olivo que bajan girando
+    TemaId.EGIPTO -> VivoTema.JEROGLIFOS         // signos de un muro que la lámpara ilumina y deja en sombra
     TemaId.MEDIEVAL -> VivoTema.RAYO_ORO         // un rayo de luz con polvo de oro suspendido
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
     TemaId.REFUGIO -> VivoTema.VAPOR             // vapor que sube, de día y de noche
@@ -245,6 +248,48 @@ internal fun DrawScope.runaVivo(trazos: FloatArray, c: Offset, alto: Float, colo
         drawLine(color, Offset(c.x + (trazos[i] - 0.3f) * alto, c.y + (trazos[i + 1] - 0.5f) * alto),
             Offset(c.x + (trazos[i + 2] - 0.3f) * alto, c.y + (trazos[i + 3] - 0.5f) * alto), grosor, cap = StrokeCap.Round)
         i += 4
+    }
+}
+
+/**
+ * Cuatro signos egipcios dibujados con trazos, centrados en [c] y de [alto] de alto: 0 el ankh (la vida), 1 el ojo udyat
+ * (el ojo protector), 2 la pluma de la Maat (lo justo) y 3 el escarabajo (Jepri, el sol que renace).
+ */
+internal fun DrawScope.signoEgipcio(tipo: Int, c: Offset, alto: Float, color: Color, grosor: Float) {
+    val a = alto; val tr = Stroke(grosor, cap = StrokeCap.Round)
+    when (Math.floorMod(tipo, 4)) {
+        0 -> {
+            drawOval(color, Offset(c.x - 0.2f * a, c.y - 0.5f * a), Size(0.4f * a, 0.42f * a), style = tr)
+            drawLine(color, Offset(c.x - 0.32f * a, c.y - 0.04f * a), Offset(c.x + 0.32f * a, c.y - 0.04f * a), grosor, StrokeCap.Round)
+            drawLine(color, Offset(c.x, c.y - 0.08f * a), Offset(c.x, c.y + 0.5f * a), grosor, StrokeCap.Round)
+        }
+        1 -> {
+            drawPath(Path().apply {
+                moveTo(c.x - 0.45f * a, c.y - 0.05f * a); quadraticTo(c.x, c.y - 0.36f * a, c.x + 0.45f * a, c.y - 0.05f * a)
+                quadraticTo(c.x, c.y + 0.2f * a, c.x - 0.45f * a, c.y - 0.05f * a); close()
+            }, color, style = tr)
+            drawCircle(color, 0.1f * a, Offset(c.x, c.y - 0.06f * a))
+            drawPath(Path().apply { moveTo(c.x - 0.48f * a, c.y - 0.3f * a); quadraticTo(c.x, c.y - 0.52f * a, c.x + 0.5f * a, c.y - 0.32f * a) }, color, style = tr)
+            drawLine(color, Offset(c.x - 0.04f * a, c.y + 0.1f * a), Offset(c.x - 0.12f * a, c.y + 0.46f * a), grosor, StrokeCap.Round)
+            drawPath(Path().apply { moveTo(c.x + 0.06f * a, c.y + 0.1f * a); quadraticTo(c.x + 0.3f * a, c.y + 0.5f * a, c.x + 0.42f * a, c.y + 0.28f * a) }, color, style = tr)
+        }
+        2 -> {
+            drawPath(Path().apply {
+                moveTo(c.x - 0.06f * a, c.y + 0.5f * a); lineTo(c.x - 0.12f * a, c.y - 0.18f * a)
+                quadraticTo(c.x - 0.06f * a, c.y - 0.5f * a, c.x + 0.24f * a, c.y - 0.46f * a)
+                quadraticTo(c.x + 0.12f * a, c.y - 0.2f * a, c.x + 0.1f * a, c.y + 0.5f * a)
+            }, color, style = tr)
+            drawLine(color, Offset(c.x - 0.02f * a, c.y + 0.5f * a), Offset(c.x + 0.02f * a, c.y - 0.3f * a), grosor * 0.7f, StrokeCap.Round)
+        }
+        else -> {
+            drawOval(color, Offset(c.x - 0.22f * a, c.y - 0.2f * a), Size(0.44f * a, 0.62f * a), style = tr)
+            drawOval(color, Offset(c.x - 0.13f * a, c.y - 0.42f * a), Size(0.26f * a, 0.2f * a), style = tr)
+            drawLine(color, Offset(c.x, c.y - 0.2f * a), Offset(c.x, c.y + 0.42f * a), grosor * 0.7f)
+            for (s in listOf(-1f, 1f)) for (k in 0 until 3) {
+                val y = c.y - 0.08f * a + k * 0.2f * a
+                drawLine(color, Offset(c.x + s * 0.22f * a, y), Offset(c.x + s * 0.4f * a, y + (k - 1) * 0.12f * a), grosor * 0.8f, StrokeCap.Round)
+            }
+        }
     }
 }
 
@@ -556,6 +601,23 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 runaVivo(runa, o, alto, al(luz, (if (oscuro) 0.5f else 0.35f) * brillo), 1.2f * u)
             }
         }
+        VivoTema.JEROGLIFOS -> {
+            // Un muro de signos en columnas, como se escribe en los templos: la luz de una lámpara pasa despacio de un lado
+            // a otro y los signos que alcanza se encienden en oro y vuelven a la sombra.
+            val columnas = 7; val ancho = w / columnas
+            val lampara = 0.5f + 0.5f * senoVuelta(t)
+            motas.take(28).forEachIndexed { i, m ->
+                val col = i % columnas
+                val x = (col + 0.5f) * ancho
+                val y = (((m.y + 0.04f * senoVuelta(t + m.fase)) * 0.92f + 0.04f) * h)
+                val cerca = (1f - abs(col / (columnas - 1f) - lampara) * 2.2f).coerceIn(0f, 1f)
+                val brillo = cerca * (0.55f + 0.45f * senoVuelta(t * vueltas(m) + m.fase).coerceAtLeast(0f))
+                val alto = 15f * u * (0.8f + m.tam * 0.3f)
+                val tinta = e.primary
+                signoEgipcio(i + m.tono, Offset(x, y), alto, al(tinta, 0.05f + (if (oscuro) 0.38f else 0.22f) * brillo), 1.3f * u)
+            }
+            for (k in 1 until columnas) drawLine(al(e.onBackground, 0.03f), Offset(k * ancho, 0f), Offset(k * ancho, h), 0.6f * u)
+        }
     }
 }
 
@@ -653,6 +715,11 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
         BarridoTema.ESCOTILLA -> ruta.poligonoBarrido(c, 4, r * 1.1f, r * 1.1f, 22.5f + 45f * p)
         BarridoTema.HEXAGONO -> ruta.poligonoBarrido(c, 3, r * 1.2f, r * 1.2f, 30f)
         BarridoTema.SOL -> ruta.poligonoBarrido(c, 16, r * 2f, r * 1.2f, 20f * p)
+        // Triángulo equilátero con el vértice arriba: su círculo inscrito tiene radio r, así que sus vértices van a 2r.
+        BarridoTema.PIRAMIDE -> {
+            val s = r * 2.05f
+            ruta.moveTo(c.x, c.y - s); ruta.lineTo(c.x + s * 0.866f, c.y + s * 0.5f); ruta.lineTo(c.x - s * 0.866f, c.y + s * 0.5f); ruta.close()
+        }
         BarridoTema.COPO -> ruta.poligonoBarrido(c, 6, r * 2f, r * 1.25f, 0f)
         BarridoTema.OCHO -> ruta.poligonoBarrido(c, 8, r * 1.75f, r * 1.3f, 22.5f)
         BarridoTema.ESTRELLA -> ruta.poligonoBarrido(c, 5, r * 2.6f, r * 1.25f, 0f)

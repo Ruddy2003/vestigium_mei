@@ -138,6 +138,7 @@ object LibroDiario {
         TemaId.CIBER -> Fuentes(R.font.sharetech_mono, R.font.plex_mono_regular)
         TemaId.NEON -> Fuentes(R.font.sharetech_mono, R.font.plex_mono_regular)
         TemaId.HELENO -> Fuentes(R.font.garamond_medium, R.font.garamond_regular)
+        TemaId.EGIPTO -> Fuentes(R.font.messiri_bold, R.font.escriba_regular)
         TemaId.MEDIEVAL -> Fuentes(R.font.gotica_regular, R.font.cardo_regular)
         TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
         TemaId.REFUGIO -> Fuentes(R.font.vt323, R.font.courier_regular)
@@ -206,6 +207,9 @@ object LibroDiario {
             TemaId.NEON -> "article{border-top:1px dashed $p}.fecha::before{content:'> ';color:$p}.meta::before{content:'// '}.nota::first-letter{background:$p;color:$b}"
             TemaId.HELENO -> "h1{text-align:center}article{border-top:0}article::before{content:'';display:block;height:5px;margin-bottom:14px;border-top:1px solid $p;" +
                 "border-bottom:1px solid $p;background:repeating-linear-gradient(90deg,$p 0 3px,transparent 3px 9px)}" + capitular("2.4em", tinta)
+            // La cenefa de rectángulos de colores sobre cada entrada y la primera línea en rojo, como las rúbricas de los escribas.
+            TemaId.EGIPTO -> "h1{text-align:center;letter-spacing:.04em}article{border-top:0}article::before{content:'';display:block;height:6px;margin-bottom:14px;" +
+                "background:repeating-linear-gradient(90deg,$p 0 6px,transparent 6px 8px,$s 8px 14px,transparent 14px 16px)}.fecha{color:$s}.nota::first-line{color:$s}"
             TemaId.MEDIEVAL -> "article{border-top:2px solid $p;border-left:3px double $s;padding-left:14px}" + capitular("3.2em", p)
             TemaId.DISTOPIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
             TemaId.REFUGIO -> "article{border:1px solid $p;border-radius:14px;padding:18px;margin-bottom:18px}.nota::first-letter{background:$p;color:$b;font-size:1.6em;padding:0 3px;margin-right:2px}"
@@ -344,6 +348,7 @@ object LibroDiario {
             TemaId.CIBER -> Medidas(11f, 1.35f)
             TemaId.NEON -> Medidas(11f, 1.35f)
             TemaId.HELENO -> Medidas(12.5f, aire)
+            TemaId.EGIPTO -> Medidas(if (carta) 12.5f else 11.5f, aire + 0.04f)
             TemaId.MEDIEVAL -> Medidas(12.5f, aire)
             TemaId.DISTOPIA -> Medidas(11f, aire)
             TemaId.REFUGIO -> Medidas(11f, 1.35f)
@@ -381,6 +386,8 @@ object LibroDiario {
         TemaId.NEON -> Inicial(R.font.sharetech_mono, 1f, invertida = true, prefijo = "> ")
         // La letra que sale al margen, en negro, como en los papiros griegos.
         TemaId.HELENO -> Inicial(R.font.garamond_semibold, 2.3f, tinta = true)
+        // La primera palabra en rojo, como una rúbrica, con el ankh delante.
+        TemaId.EGIPTO -> Inicial(R.font.messiri_bold, 1.15f, palabra = true, prefijo = "☥ ")
         // La capitular roja del copista.
         TemaId.MEDIEVAL -> Inicial(R.font.gotica_regular, 2.2f)
         // La primera palabra en mayúsculas sobre la franja roja del formulario.
@@ -475,6 +482,13 @@ object LibroDiario {
                 val u = 2.6f; val fino = Paint(linea).apply { strokeWidth = 0.6f }
                 meandro(cv, x0, x1, y, u, Paint(trazo).apply { strokeWidth = 0.8f })
                 cv.drawLine(x0, y - 2 * u, x1, y - 2 * u, fino); cv.drawLine(x0, y + 2 * u, x1, y + 2 * u, fino)
+            }
+            TemaId.EGIPTO -> {
+                // La cenefa de rectángulos de colores entre dos filetes, como bajo las pinturas de las tumbas.
+                val fino = Paint(linea).apply { strokeWidth = 0.6f }
+                var x = x0; var k = 0
+                while (x + 4f <= x1) { cv.drawRect(x, y - 2f, x + 4f, y + 2f, Paint(relleno).apply { alpha = if (k % 2 == 0) 255 else 110 }); x += 6f; k++ }
+                cv.drawLine(x0, y - 4f, x1, y - 4f, fino); cv.drawLine(x0, y + 4f, x1, y + 4f, fino)
             }
             TemaId.MEDIEVAL -> {
                 // Un cuadrifolio rojo con el botón de tinta.
@@ -628,6 +642,13 @@ object LibroDiario {
                 // Un filete y el meandro arriba y abajo.
                 rect(22f, trazo)
                 listOf(30f, B - 29f).forEach { y -> meandro(cv, 34f, A - 34f, y, 3f, Paint(trazo).apply { strokeWidth = 0.8f }) }
+            }
+            TemaId.EGIPTO -> {
+                // Un filete y, arriba, la gola del templo: hojas de palma pintadas en franjas; abajo, la línea del suelo.
+                rect(22f, trazo)
+                var x = 26f; while (x < A - 26f) { cv.drawRect(x, 26f, minOf(x + 4f, A - 26f), 38f, relleno); x += 7f }
+                cv.drawLine(26f, 40f, A - 26f, 40f, trazo)
+                cv.drawLine(26f, B - 30f, A - 26f, B - 30f, trazo)
             }
             TemaId.MEDIEVAL -> {
                 // Rojo grueso por fuera y azul fino por dentro.

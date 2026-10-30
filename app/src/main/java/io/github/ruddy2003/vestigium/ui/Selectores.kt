@@ -253,6 +253,8 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     TemaId.NEON -> CutCornerShape(topEndPercent = 28)
     // Frontón.
     TemaId.HELENO -> GenericShape { s, _ -> moveTo(0f, s.height * 0.24f); lineTo(s.width / 2, 0f); lineTo(s.width, s.height * 0.24f); lineTo(s.width, s.height); lineTo(0f, s.height); close() }
+    // Mastaba: muros en talud con la cornisa que sobresale arriba.
+    TemaId.EGIPTO -> GenericShape { s, _ -> moveTo(0f, 0f); lineTo(s.width, 0f); lineTo(s.width * 0.94f, s.height * 0.12f); lineTo(s.width, s.height); lineTo(0f, s.height); lineTo(s.width * 0.06f, s.height * 0.12f); close() }
     // Esquinas cóncavas de miniatura.
     TemaId.MEDIEVAL -> GenericShape { s, _ ->
         val w = s.width; val h = s.height; val r = minOf(w, h) * 0.22f
@@ -336,6 +338,8 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         TemaId.CIBER -> {}
         TemaId.NEON -> {}
         TemaId.HELENO -> {}
+        // El baquetón bajo la cornisa de la mastaba.
+        TemaId.EGIPTO -> drawLine(fondo.copy(alpha = 0.5f), Offset(s.width * 0.06f, s.height * 0.15f), Offset(s.width * 0.94f, s.height * 0.15f), minOf(s.width, s.height) * 0.04f)
         TemaId.MEDIEVAL -> {}
         TemaId.DISTOPIA -> {}
         TemaId.REFUGIO -> {}

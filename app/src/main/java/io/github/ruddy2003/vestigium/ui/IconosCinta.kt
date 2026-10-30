@@ -59,6 +59,14 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
             drawLine(c, Offset(w * 0.14f, h * 0.86f), Offset(w * 0.86f, h * 0.86f), g * 0.6f)
             drawLine(c, Offset(w * 0.04f, h * 0.95f), Offset(w * 0.96f, h * 0.95f), g)
         }
+        // Pilono: los muros en talud y la gola que se abre arriba.
+        TemaId.EGIPTO -> {
+            drawPath(Path().apply {
+                moveTo(w * 0.1f, h * 0.96f); lineTo(w * 0.18f, h * 0.2f); quadraticTo(w * 0.15f, h * 0.07f, w * 0.04f, h * 0.04f)
+                lineTo(w * 0.96f, h * 0.04f); quadraticTo(w * 0.85f, h * 0.07f, w * 0.82f, h * 0.2f); lineTo(w * 0.9f, h * 0.96f); close()
+            }, c, style = Stroke(g * 0.8f))
+            drawLine(c, Offset(w * 0.17f, h * 0.2f), Offset(w * 0.83f, h * 0.2f), g * 0.5f)
+        }
         // Recuadro de miniatura con las cuatro esquinas doradas.
         TemaId.MEDIEVAL -> {
             drawRect(c, Offset(w * 0.06f, h * 0.06f), Size(w * 0.88f, h * 0.88f), style = Stroke(g * 0.6f))
@@ -241,6 +249,16 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
         }
         // El sol de Vergina: dieciséis rayos.
         TemaId.HELENO -> { drawPath(figEstrella(c, r, r * 0.48f, 16), color); drawCircle(hueco.copy(alpha = 0.35f), r * 0.22f, c) }
+        // Un escarabajo de fayenza, con su cabeza, la raya de los élitros y las patas.
+        TemaId.EGIPTO -> {
+            drawOval(color, Offset(c.x - r * 0.62f, c.y - r * 0.5f), Size(r * 1.24f, r * 1.4f))
+            drawOval(color, Offset(c.x - r * 0.36f, c.y - r * 0.98f), Size(r * 0.72f, r * 0.5f))
+            drawLine(hueco.copy(alpha = 0.45f), Offset(c.x, c.y - r * 0.42f), Offset(c.x, c.y + r * 0.84f), r * 0.1f)
+            for (s in listOf(-1f, 1f)) {
+                drawLine(color, Offset(c.x + s * r * 0.5f, c.y - r * 0.1f), Offset(c.x + s * r, c.y - r * 0.45f), r * 0.14f)
+                drawLine(color, Offset(c.x + s * r * 0.5f, c.y + r * 0.45f), Offset(c.x + s * r, c.y + r * 0.85f), r * 0.14f)
+            }
+        }
         // Sello de lacre con la cruz impresa.
         TemaId.MEDIEVAL -> {
             drawPath(figOndulado(c, r, 9, 0.16f), color)

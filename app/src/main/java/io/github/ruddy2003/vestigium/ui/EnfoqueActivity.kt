@@ -435,6 +435,27 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             }
             drawCircle(color, 3 * u, en(p, r - 8 * u))
         }
+        // Las doce horas, cada una con su estrella de cinco puntas (como en los relojes estelares de los techos de las
+        // tumbas), y la barca del sol que las recorre.
+        TemaId.EGIPTO -> {
+            drawCircle(tenue.copy(alpha = 0.45f), r - 8 * u, c, style = Stroke(1.2f * u))
+            val n = 12
+            for (k in 0 until n) {
+                val q = en((k + 0.5f) / n, r - 2 * u); val s = 5.5f * u
+                val estrella = Path().apply {
+                    for (i in 0 until 10) {
+                        val ang = -Math.PI / 2 + Math.PI * i / 5; val rr = if (i % 2 == 0) s else s * 0.4f
+                        val px = q.x + (rr * cos(ang)).toFloat(); val py = q.y + (rr * sin(ang)).toFloat()
+                        if (i == 0) moveTo(px, py) else lineTo(px, py)
+                    }
+                    close()
+                }
+                drawPath(estrella, if (pasado(k, n)) color else pista)
+            }
+            val b = en(p, r - 10 * u)
+            drawPath(Path().apply { moveTo(b.x - 7 * u, b.y - 2 * u); quadraticTo(b.x, b.y + 5 * u, b.x + 7 * u, b.y - 2 * u); quadraticTo(b.x, b.y + 1.5f * u, b.x - 7 * u, b.y - 2 * u); close() }, color)
+            drawCircle(e.secondary, 2.4f * u, Offset(b.x, b.y - 2.5f * u))
+        }
         // Reloj de arena: la arena baja, tenue, por detrás de la cuenta; afuera, un aro de rúbrica con doce rombos de oro.
         TemaId.MEDIEVAL -> {
             drawCircle(pista, r, c, style = Stroke(1.2f * u))
@@ -774,6 +795,12 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
         TemaId.HELENO -> {
             val d = minOf(h * 0.5f, w / 2)
             moveTo(x, y + h / 2); lineTo(x + d, y); lineTo(x + w - d, y); lineTo(x + w, y + h / 2); lineTo(x + w - d, y + h); lineTo(x + d, y + h); close()
+        }
+        // Cartuchos: redondos a la izquierda y cerrados por la barra a la derecha.
+        TemaId.EGIPTO -> {
+            val rr = minOf(h / 2, w / 2)
+            moveTo(x + rr, y); lineTo(x + w, y); lineTo(x + w, y + h); lineTo(x + rr, y + h)
+            arcTo(Rect(x, y, x + 2 * rr, y + h), 90f, 180f, false); close()
         }
         TemaId.MEDIEVAL -> {
             val a = h * 0.15f; val l = 10 * u

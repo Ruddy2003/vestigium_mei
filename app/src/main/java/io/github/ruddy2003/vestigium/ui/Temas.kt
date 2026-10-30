@@ -109,6 +109,15 @@ object Temas {
         "11-30" to "seguridad", "12-09" to "Hopper", "12-10" to "Lovelace")
     private val MARCAS_HELENO = mapOf("03-20" to "Equinoccio", "06-21" to "Año ático", "08-15" to "Panateneas", "08-20" to "Termópilas",
         "09-12" to "Maratón", "09-25" to "Misterios", "09-28" to "Salamina", "12-21" to "Solsticio")
+    /**
+     * Egipto: los cinco días añadidos (epagómenos), en que nacieron Osiris, Horus, Seth, Isis y Neftis, y el Año nuevo
+     * (1 de Tot), en las fechas que les da el año alejandrino fijo (el que sigue hoy el calendario copto); el comienzo de
+     * Peret y de Shemu; los dos días en que el sol entra hasta el fondo de Abu Simbel; la carta de Champollion a Dacier
+     * (27 de septiembre de 1822) y el primer escalón de la tumba de Tutankamón (4 de noviembre de 1922).
+     */
+    private val MARCAS_EGIPTO = mapOf("09-06" to "Osiris", "09-07" to "Horus", "09-08" to "Seth", "09-09" to "Isis", "09-10" to "Neftis",
+        "09-11" to "Año nuevo", "01-09" to "Peret", "05-09" to "Shemu", "02-22" to "Abu Simbel", "10-22" to "Abu Simbel",
+        "09-27" to "Champollion", "11-04" to "Tutankamón")
     private val MARCAS_DISTOPIA = mapOf("01-01" to "CENSO", "04-15" to "DECLARACIÓN", "05-01" to "CUOTA", "07-01" to "INVENTARIO",
         "10-01" to "PLAN", "11-15" to "REVISIÓN", "12-31" to "CIERRE")
     private val MARCAS_REFUGIO = mapOf("01-15" to "FILTROS", "04-01" to "SIMULACRO", "06-01" to "INVENTARIO", "07-16" to "TRINITY",
@@ -146,6 +155,7 @@ object Temas {
             TemaId.CIBER -> MARCAS_CIBER[md]
             TemaId.NEON -> MARCAS_NEON[md]
             TemaId.HELENO -> MARCAS_HELENO[md]
+            TemaId.EGIPTO -> MARCAS_EGIPTO[md]
             TemaId.MEDIEVAL -> FIESTAS[md]
             TemaId.DISTOPIA -> MARCAS_DISTOPIA[md]
             TemaId.REFUGIO -> MARCAS_REFUGIO[md]
@@ -252,6 +262,8 @@ object Temas {
         TemaId.CIBER -> null
         TemaId.NEON -> null
         TemaId.HELENO -> null
+        // Egipto tiene todo su diccionario en `NombresEgipto` y `NombresNuevos`.
+        TemaId.EGIPTO -> null
         TemaId.MEDIEVAL -> MEDIEVAL[titulo]
         TemaId.DISTOPIA -> DISTOPIA[titulo]
         TemaId.REFUGIO -> REFUGIO[titulo]
@@ -278,6 +290,7 @@ object Temas {
             TemaId.CIBER -> mapOf("animo" to "> ánimo", "momento" to "> momento", "gasto" to "> gasto", "sueno" to "> sueño", "habitos" to "> hábitos", "hoy" to "> hoy", "cifra" to "> cifra", "foto" to "> foto", "enfoque" to "> enfoque")
             TemaId.NEON -> mapOf("animo" to "> ánimo", "momento" to "> momento", "gasto" to "> gasto", "sueno" to "> sueño", "habitos" to "> hábitos", "hoy" to "> hoy", "cifra" to "> cifra", "foto" to "> foto", "enfoque" to "> enfoque")
             TemaId.HELENO -> mapOf("animo" to "ΘΥΜΟΣ", "momento" to "ΚΑΙΡΟΙ", "gasto" to "ΔΑΠΑΝΑΙ", "sueno" to "ΥΠΝΟΣ", "habitos" to "ΕΘΗ", "hoy" to "ΗΜΕΡΑ", "cifra" to "ΑΡΙΘΜΟΣ", "foto" to "ΕΙΚΩΝ", "enfoque" to "ΣΧΟΛΗ")
+            TemaId.EGIPTO -> mapOf("animo" to "Corazón (ib)", "momento" to "Anales", "gasto" to "Raciones", "sueno" to "Estera", "habitos" to "Maat", "hoy" to "Hru", "cifra" to "Cuenta del escriba", "foto" to "Relieve", "enfoque" to "Copia")
             TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
             TemaId.REFUGIO -> mapOf("animo" to "ESTADO", "momento" to "SUCESO", "gasto" to "SUMINISTROS", "sueno" to "DESCANSO", "habitos" to "PROTOCOLOS", "hoy" to "BITÁCORA", "cifra" to "LECTURA", "foto" to "FOTO", "enfoque" to "TURNO")

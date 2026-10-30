@@ -88,6 +88,7 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.CIBER -> MarcoRecuadro(RectangleShape, 9.dp)
     TemaId.NEON -> MarcoRecuadro(RectangleShape, 9.dp)
     TemaId.HELENO -> MarcoRecuadro(RoundedCornerShape(4.dp), 13.dp)
+    TemaId.EGIPTO -> MarcoRecuadro(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomEnd = 2.dp, bottomStart = 2.dp), 14.dp)
     TemaId.MEDIEVAL -> MarcoRecuadro(RoundedCornerShape(3.dp), 11.dp)
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
     TemaId.REFUGIO -> MarcoRecuadro(RoundedCornerShape(12.dp), 10.dp)
@@ -157,6 +158,11 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
         }
         // Meandros arriba y abajo.
         TemaId.HELENO -> { grecaRel(3 * u, c.copy(alpha = 0.5f), u); grecaRel(h - 9 * u, c.copy(alpha = 0.5f), u) }
+        // La cenefa de rectángulos de colores arriba y abajo, como el marco de una pintura de tumba.
+        TemaId.EGIPTO -> listOf(3 * u, h - 6 * u).forEach { y ->
+            var x = 6 * u; var k = 0
+            while (x < w - 6 * u) { drawRect(c.copy(alpha = if (k % 2 == 0) 0.55f else 0.25f), Offset(x, y), Size(4 * u, 3 * u)); x += 6 * u; k++ }
+        }
         // Marco de rúbrica y cuatro puntos de oro en cada esquina.
         TemaId.MEDIEVAL -> {
             drawRect(c.copy(alpha = 0.5f), Offset(3 * u, 3 * u), Size(w - 6 * u, h - 6 * u), style = Stroke(0.8f * u))
@@ -376,6 +382,17 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 val d = if (i % 2 == 0) -1f else 1f
                 drawPath(hojaRel(Offset(x, y), Offset(x + l, y + d * l * 0.75f), 1.6f * u + grosor * 0.15f), col)
                 x += 9 * u; i++
+            }
+        }
+        // Un tallo de papiro con flores de loto abiertas, una arriba y otra abajo: más gruesas cuanto más fuerte el lazo.
+        TemaId.EGIPTO -> {
+            drawLine(col, Offset(0f, y), Offset(w, y), grosor * 0.55f + 0.6f * u, cap = StrokeCap.Round, pathEffect = punteado)
+            val l = 4 * u + grosor * 0.5f
+            var x = 8 * u; var i = 0
+            while (x < w - 8 * u) {
+                val d = if (i % 2 == 0) -1f else 1f
+                drawPath(Path().apply { moveTo(x, y); lineTo(x - l * 0.55f, y + d * l); lineTo(x, y + d * l * 0.7f); lineTo(x + l * 0.55f, y + d * l); close() }, col)
+                x += 10 * u; i++
             }
         }
         // Filacteria: una cinta ondulada con cola de golondrina en cada punta.

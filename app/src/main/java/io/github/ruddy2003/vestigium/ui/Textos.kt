@@ -55,6 +55,21 @@ object Textos {
         "widget_discreto_momento" to "γράφε",
     )
 
+    private val EGIPTO: Map<String, String> = mapOf(
+        "pestana_dia" to "Hru",
+        "pestana_diario" to "Papiros",
+        "pestana_registrar" to "Cálamo",
+        "pestana_vida" to "Ankh",
+        "pestana_entender" to "Sia",
+        "escala_vacia" to "papiro en blanco · toca o desliza",
+        "lista_anadir" to "+ al rollo",
+        "palabras" to "%d palabras en el papiro",
+        "widget_animo" to "¿cómo está tu corazón (ib)?",
+        "widget_momento" to "mi corazón dice…",
+        "widget_discreto_animo" to "ib",
+        "widget_discreto_momento" to "al cálamo",
+    )
+
     private val MEDIEVAL: Map<String, String> = mapOf(
         "pestana_dia" to "Hogaño",
         "pestana_diario" to "Libro",
@@ -330,6 +345,7 @@ object Textos {
         TemaId.CIBER -> CIBER
         TemaId.NEON -> NEON
         TemaId.HELENO -> HELENO
+        TemaId.EGIPTO -> EGIPTO
         TemaId.MEDIEVAL -> MEDIEVAL
         TemaId.DISTOPIA -> DISTOPIA
         TemaId.REFUGIO -> REFUGIO

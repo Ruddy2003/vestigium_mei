@@ -71,6 +71,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.DrawStyle
@@ -234,6 +235,11 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
         val g = 16 * d
         moveTo(0f, g); lineTo(w / 2, 0f); lineTo(w, g); lineTo(w, h); lineTo(0f, h); close()
     }, 8.dp, 0.dp, true, 1.dp)
+    // Estela de remate redondo: un arco rebajado arriba, recta abajo.
+    TemaId.EGIPTO -> PielDialogo(FormaDp { w, h, d ->
+        val g = 14 * d
+        moveTo(0f, h); lineTo(0f, g); quadraticTo(w / 2, -g * 0.8f, w, g); lineTo(w, h); close()
+    }, 12.dp, 0.dp, true, 1.dp)
     // Esquinas cóncavas de miniatura.
     TemaId.MEDIEVAL -> PielDialogo(FormaDp { w, h, d ->
         val r = 14 * d
@@ -346,6 +352,24 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             drawCircle(e.tertiary, 2.2f * d, Offset(w / 2, 13 * d))
             var x = 10 * d
             while (x < w - 13 * d) { drawRect(e.tertiary.copy(alpha = 0.5f), Offset(x, h - 9 * d), Size(3.5f * d, 3 * d)); x += 7 * d }
+        }
+        TemaId.EGIPTO -> {
+            // El disco solar alado bajo el arco de la estela, y la cenefa de colores al pie.
+            val g = 14 * d
+            drawPath(Path().apply { moveTo(6 * d, g + 6 * d); quadraticTo(w / 2, -g * 0.8f + 12 * d, w - 6 * d, g + 6 * d) }, e.tertiary.copy(alpha = 0.6f), style = Stroke(d))
+            val c = Offset(w / 2, 16 * d)
+            listOf(-1f, 1f).forEach { s ->
+                drawPath(Path().apply {
+                    moveTo(c.x + s * 5 * d, c.y - 2 * d); quadraticTo(c.x + s * 18 * d, c.y - 7 * d, c.x + s * 34 * d, c.y - 3 * d)
+                    lineTo(c.x + s * 30 * d, c.y + 1 * d); quadraticTo(c.x + s * 18 * d, c.y + 1 * d, c.x + s * 5 * d, c.y + 3 * d); close()
+                }, e.primary.copy(alpha = 0.75f))
+                for (k in 1..3) drawLine(e.tertiary.copy(alpha = 0.7f), Offset(c.x + s * (8 + k * 6) * d, c.y - 3.5f * d), Offset(c.x + s * (8 + k * 6) * d, c.y + 1.5f * d), 0.7f * d)
+            }
+            drawCircle(e.secondary, 4.5f * d, c)
+            drawCircle(e.tertiary, 4.5f * d, c, style = Stroke(0.8f * d))
+            val colores = listOf(e.primary, e.tertiary, e.secondary, e.tertiary)
+            var x = 10 * d; var k = 0
+            while (x < w - 13 * d) { drawRect(colores[k % 4].copy(alpha = 0.55f), Offset(x, h - 9 * d), Size(4.5f * d, 3 * d)); x += 6 * d; k++ }
         }
         TemaId.MEDIEVAL -> {
             // Cuartos de anillo de oro en las esquinas cóncavas y el doble pautado rojo del copista en el margen.
@@ -567,6 +591,12 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             }
             drawPath(p, e.tertiary, style = Stroke(d, cap = StrokeCap.Square))
             drawLine(e.tertiary, Offset(0f, cy + 4 * d), Offset(w, cy + 4 * d), d)
+        }
+        // Un filete con el ankh en medio.
+        TemaId.EGIPTO -> {
+            drawLine(e.tertiary.copy(alpha = 0.7f), Offset(0f, cy), Offset(w / 2 - 9 * d, cy), d)
+            drawLine(e.tertiary.copy(alpha = 0.7f), Offset(w / 2 + 9 * d, cy), Offset(w, cy), d)
+            signoEgipcio(0, Offset(w / 2, cy), 12 * d, e.primary, 1.3f * d)
         }
         // Rúbrica roja con puntos de oro y un trébol en medio.
         TemaId.MEDIEVAL -> {
@@ -855,6 +885,21 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
                 drawPath(p, activo, style = Stroke(maxOf(g * 0.28f, d)))
             }
         }
+        // Lo recorrido es el signo del agua: una línea en zigzag de puntas agudas, como el Nilo escrito.
+        TemaId.EGIPTO -> {
+            linea(inactivo, x, w, g * 0.3f)
+            if (x > 0f) {
+                val a = g * 0.42f; val per = maxOf(g * 1.6f, 3 * d)
+                val p = Path(); var px = 0f; var arriba = true
+                p.moveTo(0f, cy)
+                while (px < x) {
+                    val sig = minOf(px + per / 2, x)
+                    p.lineTo(sig, if (arriba) cy - a else cy + a)
+                    px = sig; arriba = !arriba
+                }
+                drawPath(p, activo, style = Stroke(maxOf(g * 0.26f, d), join = StrokeJoin.Miter))
+            }
+        }
         // Puntos de rúbrica sin recorrer; tinta corrida y un punto de oro al final.
         TemaId.MEDIEVAL -> {
             var px = x + g
@@ -1031,6 +1076,12 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             }
             drawCircle(color, r * 0.42f, c)
             drawCircle(hueco, r * 0.15f, c)
+        }
+        // El anillo shen (lo que no tiene fin): un aro de cuerda atado con su barra abajo.
+        TemaId.EGIPTO -> {
+            drawCircle(color, r * 0.72f, Offset(c.x, c.y - r * 0.1f), style = Stroke(r * 0.3f))
+            drawRect(color, Offset(c.x - r * 0.75f, c.y + r * 0.6f), Size(r * 1.5f, r * 0.28f))
+            drawCircle(hueco, r * 0.22f, Offset(c.x, c.y - r * 0.1f))
         }
         // Sello de lacre con el borde ondulado.
         TemaId.MEDIEVAL -> {

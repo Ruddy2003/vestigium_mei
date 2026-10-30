@@ -225,6 +225,13 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
                 while (x + 2 * p <= w - 6 * u) { lineTo(x, y0); lineTo(x + p, y0); lineTo(x + p, y0 + p); lineTo(x + 2 * p, y0 + p); x += 2 * p }
             }, tenue, style = Stroke(1f * u))
         }
+        // El friso jeker arriba y la cenefa de rectángulos abajo.
+        TemaId.EGIPTO -> {
+            var x = 8 * u
+            while (x < w - 8 * u) { drawRect(tenue, Offset(x - 1 * u, 18 * u), Size(2 * u, 6 * u)); drawCircle(tenue, 1.5f * u, Offset(x, 17 * u)); x += 5 * u }
+            var x2 = 6 * u; var k = 0
+            while (x2 < w - 6 * u) { drawRect(if (k % 2 == 0) tenue else tenue.copy(alpha = tenue.alpha * 0.5f), Offset(x2, h - 20 * u), Size(4 * u, 3 * u)); x2 += 5 * u; k++ }
+        }
         // Cuadrifolios en las esquinas y la raya roja del margen.
         TemaId.MEDIEVAL -> {
             linea(10 * u, 8 * u, 10 * u, h - 8 * u, a.copy(alpha = 0.6f), 1.2f * u)

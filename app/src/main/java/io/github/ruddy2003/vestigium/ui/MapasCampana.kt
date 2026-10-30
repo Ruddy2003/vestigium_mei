@@ -68,6 +68,21 @@ object MapasCampana {
                 estrella(c, 10 * d, 3.4f * d, 16, Brush.linearGradient(listOf(oro, oro)))
                 drawCircle(purpura, 2.6f * d, c); drawCircle(oro, 1.5f * d, c)
             }
+            TemaId.EGIPTO -> {
+                // Un obelisco recién alzado en Elefantina: el piramidión dorado brilla y el sol sale detrás, entre sus rayos.
+                val base = Offset(m.x, m.y - 4 * d); val alto = 36 * d
+                val sol = Offset(base.x, base.y - 22 * d)
+                for (k in 0 until 9) {
+                    val a = PI * (1.0 + k / 8.0)
+                    drawLine(oro.copy(alpha = 0.55f), Offset(sol.x + (14 * d * cos(a)).toFloat(), sol.y + (14 * d * sin(a)).toFloat()),
+                        Offset(sol.x + (22 * d * cos(a)).toFloat(), sol.y + (22 * d * sin(a)).toFloat()), 1.4f * d)
+                }
+                drawCircle(Color(0xFFB8471E), 9 * d, sol)
+                drawPath(Path().apply { moveTo(base.x - 5 * d, base.y); lineTo(base.x - 3.6f * d, base.y - alto); lineTo(base.x + 3.6f * d, base.y - alto); lineTo(base.x + 5 * d, base.y); close() }, Color(0xFF9C7E64))
+                drawPath(Path().apply { moveTo(base.x - 3.6f * d, base.y - alto); lineTo(base.x, base.y - alto - 6 * d); lineTo(base.x + 3.6f * d, base.y - alto); close() }, oro)
+                for (k in 1..4) drawLine(Color(0xFF5E4A38), Offset(base.x - 1.2f * d, base.y - alto * k / 5f), Offset(base.x + 1.2f * d, base.y - alto * k / 5f), 0.8f * d)
+                drawRect(Color(0xFF6E5A46), Offset(base.x - 8 * d, base.y), Size(16 * d, 3 * d))
+            }
             TemaId.MEDIEVAL -> {
                 // La cruz de Santiago en rojo, con la hoja de espada hacia abajo y flores de lis en las otras tres puntas.
                 val rojo = Color(0xFFB0281E); val x = m.x; val y = m.y - 30 * d

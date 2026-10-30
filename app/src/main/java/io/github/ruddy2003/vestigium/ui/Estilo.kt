@@ -24,6 +24,7 @@ object Estilo {
         TemaId.CIBER -> "# "
         TemaId.NEON -> "# "
         TemaId.HELENO -> "∴ "
+        TemaId.EGIPTO -> "☥ "
         TemaId.MEDIEVAL -> "¶ "
         TemaId.DISTOPIA -> "▪ "
         TemaId.REFUGIO -> "> "
@@ -53,6 +54,7 @@ object Estilo {
         TemaId.CIBER -> true           // consola
         TemaId.NEON -> true           // consola
         TemaId.HELENO -> true          // capitales epigráficas
+        TemaId.EGIPTO -> false         // hierático: la letra de corrido de los escribas
         TemaId.MEDIEVAL -> false       // gótica de libro
         TemaId.DISTOPIA -> true        // cartel
         TemaId.REFUGIO -> true         // pantalla de fósforo
@@ -85,6 +87,7 @@ object Estilo {
             TemaId.CIBER -> null
             TemaId.NEON -> null
             TemaId.HELENO -> null
+            TemaId.EGIPTO -> if (igual) null else "☥ $t"
             TemaId.DISTOPIA -> if (pantalla) "EXPEDIENTE Nº %04d · %s".format(folio(titulo, 1000, 9000), t) else if (igual) null else "▪ $t"
             TemaId.LABORATORIO -> if (pantalla) "protocolo VM-%03d · %s".format(folio(titulo, 100, 900), t) else if (igual) null else "· $t"
             TemaId.REFUGIO -> if (igual) null else "[ $t ]"
@@ -114,6 +117,7 @@ object Estilo {
             TemaId.CIBER -> (nombreNuevo(titulo) ?: titulo.uppercase()) to "${comentario}sys.${slug(la ?: titulo)}"
             TemaId.NEON -> (nombreNuevo(titulo) ?: titulo.uppercase()) to "${comentario}sys.${slug(la ?: titulo)}"
             TemaId.HELENO -> Griego.nombre(titulo)?.let { it to comentario + titulo.lowercase() } ?: (titulo.uppercase() to null)
+            TemaId.EGIPTO -> propio(titulo, true)
             TemaId.MEDIEVAL -> propio(titulo, true)
             TemaId.DISTOPIA -> propio(titulo, true)
             TemaId.REFUGIO -> propio(titulo, true)
@@ -149,6 +153,7 @@ object Estilo {
         TemaId.CIBER -> false
         TemaId.NEON -> false
         TemaId.HELENO -> false
+        TemaId.EGIPTO -> false
         TemaId.MEDIEVAL -> false
         TemaId.REFUGIO -> false
         TemaId.ORDEN -> false
@@ -187,6 +192,7 @@ object Estilo {
             TemaId.CIBER -> nombreNuevo(titulo)?.let { "> $it" to comentario + titulo.lowercase() } ?: ("> ${titulo.lowercase()}" to null)
             TemaId.NEON -> nombreNuevo(titulo)?.let { "> $it" to comentario + titulo.lowercase() } ?: ("> ${titulo.lowercase()}" to null)
             TemaId.HELENO -> Griego.nombre(titulo)?.let { it to comentario + titulo.lowercase() } ?: (titulo.uppercase() to null)
+            TemaId.EGIPTO -> propio(titulo, false)
             TemaId.MEDIEVAL -> propio(titulo, false)
             TemaId.DISTOPIA -> propio(titulo, false)
             TemaId.REFUGIO -> propio(titulo, false)
@@ -213,6 +219,8 @@ object Estilo {
         TemaId.CIBER -> if (n < 100) "[%02d]".format(n) else "0x%X".format(n)
         TemaId.NEON -> if (n < 100) "[%02d]".format(n) else "0x%X".format(n)
         TemaId.HELENO -> Griego.numeral(n)
+        // Numerales jeroglíficos: trazos, asas, rollos de cuerda, flores de loto y dedos (ver [Egipcio.numeral]).
+        TemaId.EGIPTO -> Egipcio.numeral(n)
         TemaId.MEDIEVAL -> Temas.copista(n)
         TemaId.DISTOPIA -> if (n < 100) "Nº%02d".format(n) else "Nº$n"
         TemaId.REFUGIO -> if (n < 100) "#%02d".format(n) else "#$n"
@@ -253,6 +261,7 @@ object Estilo {
         TemaId.CIBER -> runCatching { val d = Fechas.parse(iso); "%04d.%02d.%02d // %s".format(d.year, d.monthValue, d.dayOfMonth, SEMANA_ES[d.dayOfWeek.value - 1]) }.getOrDefault(iso)
         TemaId.NEON -> runCatching { val d = Fechas.parse(iso); "%04d.%02d.%02d // %s".format(d.year, d.monthValue, d.dayOfMonth, SEMANA_ES[d.dayOfWeek.value - 1]) }.getOrDefault(iso)
         TemaId.HELENO -> Griego.fecha(iso)
+        TemaId.EGIPTO -> Egipcio.fecha(iso)
         TemaId.MEDIEVAL -> runCatching { val d = Fechas.parse(iso); "${Temas.copista(d.dayOfMonth)} de ${Temas.MESES_MEDIEVALES[d.monthValue - 1]} de ${Temas.copista(d.year)}" }.getOrDefault(iso)
         TemaId.DISTOPIA -> runCatching { val d = Fechas.parse(iso); "JORNADA %03d · AÑO %d".format(d.dayOfYear, d.year) }.getOrDefault(iso)
         TemaId.REFUGIO -> runCatching {
@@ -289,6 +298,8 @@ object Estilo {
             TemaId.CIBER -> MESES_ES[i].lowercase() + (anio?.let { ".$it" } ?: "")
             TemaId.NEON -> MESES_ES[i].lowercase() + (anio?.let { ".$it" } ?: "")
             TemaId.HELENO -> Griego.MESES[i]
+            // El mes del año civil que ocupa la mayor parte del mes gregoriano, con su estación: «Paofi (II Ajet)».
+            TemaId.EGIPTO -> Egipcio.mes(n, anio)
             TemaId.MEDIEVAL -> Temas.MESES_MEDIEVALES[i]
             TemaId.DISTOPIA -> "MES %02d".format(n) + (anio?.let { " · $it" } ?: "")
             TemaId.REFUGIO -> MESES_LARGOS[i].uppercase() + (anio?.let { " $it" } ?: "")
@@ -323,6 +334,7 @@ object Estilo {
         TemaId.CIBER -> listOf("lun", "mar", "mié", "jue", "vie", "sáb", "dom")
         TemaId.NEON -> listOf("lun", "mar", "mié", "jue", "vie", "sáb", "dom")
         TemaId.HELENO -> Griego.SEMANA
+        TemaId.EGIPTO -> Egipcio.SEMANA
         // Los monjes contaban «ferias»: el lunes es la segunda, el martes la tercera…
         TemaId.MEDIEVAL -> listOf("ij", "iij", "iiij", "v", "vj", "Sab", "Dom")
         // Las letras de los formularios oficiales (con la X del miércoles).
@@ -356,6 +368,7 @@ object Estilo {
         TemaId.CIBER -> listOf("lu", "ma", "mi", "ju", "vi", "sá", "do")
         TemaId.NEON -> listOf("lu", "ma", "mi", "ju", "vi", "sá", "do")
         TemaId.HELENO -> semana.map { it.take(2) }
+        TemaId.EGIPTO -> listOf("Ia", "De", "Se", "We", "Du", "Ka", "Ra")
         TemaId.MEDIEVAL -> listOf("ij", "iij", "iv", "v", "vj", "Sb", "Dm")
         TemaId.DISTOPIA -> semana
         TemaId.REFUGIO -> semana
@@ -385,6 +398,7 @@ object Estilo {
         TemaId.CIBER -> "> streak --días $n"
         TemaId.NEON -> "> streak --días $n"
         TemaId.HELENO -> "ΣΥΝΕΧΕΙΣ ΗΜΕΡΑΙ · $n"
+        TemaId.EGIPTO -> "$n días seguidos ante el cálamo"
         TemaId.MEDIEVAL -> "$n días seguidos en el libro"
         TemaId.DISTOPIA -> "CONTINUIDAD ACREDITADA: $n DÍAS"
         TemaId.REFUGIO -> "DÍAS SIN INCIDENTES: $n"
@@ -410,6 +424,7 @@ object Estilo {
         TemaId.CIBER -> "<< cd .."
         TemaId.NEON -> "<< cd .."
         TemaId.HELENO -> "← ὀπίσω"
+        TemaId.EGIPTO -> "← río abajo"
         TemaId.MEDIEVAL -> "← tornar"
         TemaId.DISTOPIA -> "◄ RETROCEDER"
         TemaId.REFUGIO -> "< SALIR"
@@ -434,6 +449,7 @@ object Estilo {
         TemaId.CIBER -> "$ "
         TemaId.NEON -> "$ "
         TemaId.HELENO -> "· "
+        TemaId.EGIPTO -> "△ "
         TemaId.MEDIEVAL -> "¶ "
         TemaId.DISTOPIA -> "▪ "
         TemaId.REFUGIO -> "> "
@@ -463,6 +479,7 @@ object Estilo {
         TemaId.CIBER -> "_"
         TemaId.NEON -> "_"
         TemaId.HELENO -> ""
+        TemaId.EGIPTO -> ""
         TemaId.MEDIEVAL -> ""
         TemaId.DISTOPIA -> ""
         TemaId.REFUGIO -> ""
@@ -492,6 +509,7 @@ object Estilo {
         TemaId.CIBER -> EstiloFecha(1.0f, 0.4f, abre = "↓")
         TemaId.NEON -> EstiloFecha(1.0f, 0.4f, abre = "↓")
         TemaId.HELENO -> EstiloFecha(1.12f, 3.0f, peso = 500, abre = "▿")
+        TemaId.EGIPTO -> EstiloFecha(1.1f, 0.8f, peso = 700, abre = "▽")
         TemaId.MEDIEVAL -> EstiloFecha(1.1f, 0.3f)
         TemaId.DISTOPIA -> EstiloFecha(1.12f, 1.6f, peso = 700, abre = "▼")
         TemaId.REFUGIO -> EstiloFecha(1.15f, 0.8f, abre = "▼")
@@ -532,6 +550,7 @@ object Estilo {
             TemaId.CIBER -> CLAVES_CIBER[k]
             TemaId.NEON -> CLAVES_NEON[k]
             TemaId.HELENO -> CLAVES_GRIEGO[k]
+            TemaId.EGIPTO -> es(CLAVES_EGIPTO)
             TemaId.MEDIEVAL -> Claves.CASTELLANO_ANTIGUO[k]
             TemaId.DISTOPIA -> es(Claves.DISTOPIA)?.uppercase()
             TemaId.REFUGIO -> es(Claves.REFUGIO)
@@ -606,6 +625,18 @@ object Estilo {
         "svmptvs" to "δαπάνη", "memorabilia" to "μνημεῖα", "ascensvs" to "ἀνάβασις",
         "dies" to "ἡμέραι", "quaestiones" to "ἐρωτήσεις", "celeritas" to "ταχύτης", "bibliotheca" to "βιβλιοθήκη", "synchronia" to "συγχρονία", "opera" to "ἔργα", "iudicium" to "κρίσις", "citatio" to "χωρίον", "sententia" to "γνώμη", "orbis" to "οἰκουμένη", "nova" to "νέα", "mirabilia" to "θαύματα", "somnium" to "ὄνειρος", "epistulae" to "ἐπιστολαί", "aperta" to "ἀνοιχθεῖσα", "initium" to "ἀρχή", "finis" to "τέλος", "pessimus" to "κάκιστος", "personae" to "πρόσωπα", "themata" to "θέματα", "praeclarum" to "ἄριστον", "dies felix" to "εὐτυχὴς ἡμέρα",
         "consuetudo" to "ἔθη", "series" to "σειρά", "palmae" to "νῖκαι", "reditus" to "πρόσοδος",
+    )
+    /** Las claves del día en la jerga de la oficina del escriba: el corazón, la estera, la paleta, el pan y la cerveza. */
+    private val CLAVES_EGIPTO = mapOf(
+        "horologium" to "clepsidra", "somnus" to "sueño_en_la_estera", "stadia" to "horas_de_la_noche", "cor" to "latido", "passus" to "pasos", "motus" to "andar",
+        "iter" to "camino", "exercitatio" to "trabajo_del_cuerpo", "loca" to "orillas", "telephonum" to "paleta", "telephon" to "paleta", "usus" to "uso_de_la_paleta",
+        "monita" to "heraldos", "musica" to "arpa", "imagines" to "relieves", "fasti" to "rollo_de_los_días", "caelum" to "cielo_de_Nut", "lux" to "luz_de_Ra",
+        "aer" to "aire", "corpus" to "cuerpo", "nutritio" to "pan_y_cerveza", "cibus" to "comidas", "robur" to "fuerza", "musculi" to "miembros",
+        "voces" to "mensajeros", "soni" to "sonidos", "retia" to "canales", "lumen" to "lámpara", "vis" to "carga", "lectio" to "lectura",
+        "strepitus" to "ruido", "luna" to "luna_de_Jonsu", "dias" to "días", "animus" to "corazón", "optimus" to "lo_mejor", "momenta" to "sucesos",
+        "svmptvs" to "raciones", "memorabilia" to "estelas", "ascensvs" to "subida",
+        "dies" to "días", "quaestiones" to "preguntas", "celeritas" to "reflejo", "bibliotheca" to "casa_de_los_libros", "synchronia" to "copias", "opera" to "obras", "iudicium" to "juicio", "citatio" to "enseñanza", "sententia" to "máxima", "orbis" to "mundo", "nova" to "nuevo", "mirabilia" to "maravillas", "somnium" to "lo_soñado", "epistulae" to "papiros_sellados", "aperta" to "abierto", "initium" to "comienzo", "finis" to "fin", "pessimus" to "lo_peor", "personae" to "rostros", "themata" to "asuntos", "praeclarum" to "lo_más_justo", "dies felix" to "día_feliz",
+        "consuetudo" to "costumbres", "series" to "racha", "palmae" to "ofrendas", "reditus" to "ingresos",
     )
     private val CLAVES_ES = mapOf(
         "horologium" to "reloj", "somnus" to "sueño", "stadia" to "fases", "cor" to "corazón", "passus" to "pasos", "motus" to "movimiento",
@@ -703,4 +734,74 @@ object Griego {
         "Llenar el día" to "ΕΣΠΕΡΑ", "Entender" to "ΓΙΓΝΩΣΚΕΙΝ", "Registros especiales" to "ΑΝΑΓΡΑΦΑΙ", "Apariencia" to "ΚΟΣΜΟΣ", "Avisos y recordatorios" to "ΣΗΜΕΙΑ", "Biblioteca del diario" to "ΒΙΒΛΟΣ ΗΜΕΡΩΝ", "Entrada" to "ΣΕΛΙΣ", "Hoy" to "ΣΗΜΕΡΟΝ", "Línea de tiempo" to "ΧΡΟΝΟΣ", "Ahora mismo estoy…" to "ΝΥΝ",
     )
     fun nombre(titulo: String): String? = io.github.ruddy2003.vestigium.ui.nombres.NombresCompletos.de(TemaId.HELENO, titulo) ?: NOMBRES[titulo] ?: NombresNuevos.de(TemaId.HELENO, titulo)
+}
+
+/**
+ * Egipto: numerales jeroglíficos y el año civil de tres estaciones (Ajet, la inundación; Peret, la siembra; Shemu, la
+ * cosecha), cada una de cuatro meses de 30 días, más 5 días añadidos (epagómenos). Es una aproximación: el año faraónico
+ * no tenía bisiesto y se corría un día cada cuatro años respecto de las estaciones; aquí se usa la forma fija que le dio
+ * Augusto en Alejandría, la misma que sigue hoy el calendario copto (1 de Tot = 11 de septiembre, o 12 antes de un año
+ * bisiesto gregoriano). Los nombres de los meses son los de época tardía, que son los que conserva el copto.
+ */
+object Egipcio {
+    /** Día juliano del 1 de Tot del año 1 de la era alejandrina-copta (29 de agosto del 284, juliano). */
+    private const val EPOCA = 1825030L
+
+    val MESES = listOf("Tot", "Paofi", "Hatir", "Koiak", "Tobi", "Meshir", "Paremhat", "Parmuti", "Pashons", "Paoni", "Epep", "Mesori")
+    val ESTACIONES = listOf("Ajet", "Peret", "Shemu")
+    private val ROMANOS = listOf("I", "II", "III", "IV")
+    /** Los cinco días añadidos son los nacimientos de Osiris, Horus, Seth, Isis y Neftis; el sexto solo existe en los años bisiestos. */
+    private val DIOSES = listOf("Osiris", "Horus", "Seth", "Isis", "Neftis", "el sexto")
+
+    /**
+     * Los días de la semana, de lunes a domingo. Egipto no tenía semana de siete días (contaba décadas de diez), así que
+     * se toman los nombres egipcios de los astros que dan nombre a los días: Iah (la Luna), «Horus rojo» (Desher, Marte),
+     * Sebeg (Mercurio), «Horus que abre las Dos Tierras» (Wepsha, Júpiter), «el de la mañana» (Duai, Venus), «Horus toro
+     * del cielo» (Kapet, Saturno) y Ra (el Sol). Las formas cortas son propias.
+     */
+    val SEMANA = listOf("Iah", "Desher", "Sebeg", "Wepsha", "Duai", "Kapet", "Ra")
+
+    /** Año, mes (1 a 12, o 13 para los días añadidos) y día del año civil fijo. */
+    fun civil(d: java.time.LocalDate): Triple<Int, Int, Int> {
+        val j = d.toEpochDay() + 2440588L
+        val y = Math.floorDiv(4 * (j - EPOCA) + 1463, 1461L)
+        val ini = EPOCA + 365 * (y - 1) + Math.floorDiv(y, 4L)
+        val m = (j - ini) / 30 + 1
+        return Triple(y.toInt(), m.toInt(), (j - ini - 30 * (m - 1) + 1).toInt())
+    }
+
+    /** «II Ajet 7» (el segundo mes de la inundación, día 7), o «día añadido 3 (Seth)». */
+    fun dia(d: java.time.LocalDate): String {
+        val (_, m, dd) = civil(d)
+        return if (m == 13) "día añadido $dd (${DIOSES[(dd - 1).coerceIn(0, 5)]})" else "${ROMANOS[(m - 1) % 4]} ${ESTACIONES[(m - 1) / 4]} $dd"
+    }
+
+    fun fecha(iso: String): String = runCatching {
+        val d = Fechas.parse(iso)
+        val m = civil(d).second
+        dia(d) + (if (m <= 12) " · " + MESES[m - 1] else "") + " · ${d.year}"
+    }.getOrDefault(iso)
+
+    /** El mes civil que cubre la mayor parte del mes gregoriano [n]: Tot ≈ septiembre, Paofi ≈ octubre… */
+    fun mes(n: Int, anio: Int? = null): String {
+        val i = (n.coerceIn(1, 12) + 3) % 12
+        return "${MESES[i]} (${ROMANOS[i % 4]} ${ESTACIONES[i / 4]})" + (anio?.let { " · $it" } ?: "")
+    }
+
+    /**
+     * Numerales jeroglíficos, de mayor a menor: dedos (10 000), flores de loto (1000), rollos de cuerda (100), asas (10) y
+     * trazos (1). Cada cifra usa el signo agrupado de Unicode («7 trazos» es un solo signo). La letra del tema no los trae:
+     * los dibuja la letra de jeroglíficos del sistema (Noto Sans Egyptian Hieroglyphs). De 100 000 en adelante, cifras.
+     */
+    fun numeral(n: Int): String {
+        if (n <= 0 || n >= 100000) return n.toString()
+        val bases = intArrayOf(0x130AD, 0x131BC, 0x13362, 0x13386, 0x133FA)
+        val sb = StringBuilder(); var x = n; var div = 10000
+        for (b in bases) {
+            val c = x / div
+            if (c > 0) sb.appendCodePoint(b + c - 1)
+            x %= div; div /= 10
+        }
+        return sb.toString()
+    }
 }
