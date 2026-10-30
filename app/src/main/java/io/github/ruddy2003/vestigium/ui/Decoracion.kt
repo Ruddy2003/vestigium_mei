@@ -551,7 +551,7 @@ private fun DrawScope.calaveraRosa(c: Offset, r: Float, hueso: Color, tinta: Col
         for (i in 0 until 8) {
             val a = rad(-90.0 + 45.0 * i)
             val largo = r * (if (i % 2 == 0) 0.98f else 0.66f); val ancho = r * (if (i % 2 == 0) 0.16f else 0.12f)
-            val punta = c.mas(largo, a); val izq = c.mas(ancho, a - PI / 2); val der = c.mas(ancho, a + PI / 2)
+            val punta = c.mas(largo, a); val izq = c.mas(ancho, a - PI.toFloat() / 2); val der = c.mas(ancho, a + PI.toFloat() / 2)
             drawPath(Path().apply { moveTo(c.x, c.y); lineTo(izq.x, izq.y); lineTo(punta.x, punta.y); close() }, laton)
             drawPath(Path().apply { moveTo(c.x, c.y); lineTo(der.x, der.y); lineTo(punta.x, punta.y); close() }, tinta.copy(alpha = 0.85f))
         }
@@ -2014,7 +2014,7 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             // El sol de las cartas antiguas: rayos rectos y rayos ondulados, uno y uno.
             TemaId.PIRATA -> { drawCircle(color, r * 0.4f, c); rayos(8, 0.52f, 0.98f, 0.09f)
                 for (i in 0 until 8) { val a = rad(22.5 + 45.0 * i); val p = Path(); p.moveTo(c.mas(r * 0.5f, a).x, c.mas(r * 0.5f, a).y)
-                    val m1 = c.mas(r * 0.62f, a + 0.16); val m2 = c.mas(r * 0.74f, a - 0.16); val f = c.mas(r * 0.84f, a)
+                    val m1 = c.mas(r * 0.62f, a + 0.16f); val m2 = c.mas(r * 0.74f, a - 0.16f); val f = c.mas(r * 0.84f, a)
                     p.cubicTo(m1.x, m1.y, m2.x, m2.y, f.x, f.y); drawPath(p, color, style = Stroke(r * 0.07f, cap = StrokeCap.Round)) } }
             // Sol que sale de una esquina, con rayos en abanico, como en los carteles.
             TemaId.URSS -> { val o = Offset(c.x - r * 0.6f, c.y + r * 0.6f); drawArc(color, -90f, 90f, true, Offset(o.x - r * 0.6f, o.y - r * 0.6f), Size(r * 1.2f, r * 1.2f))
