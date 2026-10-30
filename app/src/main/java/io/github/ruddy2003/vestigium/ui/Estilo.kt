@@ -52,7 +52,7 @@ object Estilo {
         TemaId.PIRATA -> "✷ "
         TemaId.REVOLUCION -> "✶ "
         TemaId.ANTIGUAS -> "⟡ "
-        TemaId.CUEVA -> "⁘ "
+        TemaId.CUEVA -> "∵ "
     }
 
     /**
