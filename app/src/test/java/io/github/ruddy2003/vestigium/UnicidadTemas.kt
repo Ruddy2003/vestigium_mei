@@ -50,9 +50,14 @@ class UnicidadTemas {
         r["radio"] = iguales { radioDe(it) }
 
         // Sonido y vibración. La escala que falta se cuenta en la cobertura, no aquí.
-        r["escala_toque"] = iguales { Sentidos.acordeToque(it)?.contentToString() }
+        r["escala_toque"] = iguales { Sentidos.acordeToque(it).contentToString() }
         r["vibracion"] = iguales { t -> Sentidos.Evento.entries.joinToString(" | ") { Sentidos.patron(t, it).toString() } }
-        r["sonido_archivos"] = CoberturaTemas.SONIDOS_TEMA.flatMap { s -> iguales { t -> huellaDe("raw", s.replace("<id>", t.id)) } }.toSet()
+        // Elegir, abrir, cambio y error eran comunes a varios temas: cada uno, por separado, también es propio.
+        listOf(Sentidos.Evento.ELEGIR, Sentidos.Evento.ABRIR, Sentidos.Evento.CAMBIO, Sentidos.Evento.ERROR).forEach { e ->
+            r["vibracion_${e.name.lowercase()}"] = iguales { Sentidos.patron(it, e).toString() }
+        }
+        r["vibracion_rascar"] = iguales { Sentidos.patronRascar(it).toString() }
+        r["sonido_archivos"] = (CoberturaTemas.SONIDOS_TEMA + CoberturaTemas.SONIDOS_LOTE6).flatMap { s -> iguales { t -> huellaDe("raw", s.replace("<id>", t.id)) } }.toSet()
 
         // Nombres de trofeos, de etapas y de campañas; la libreta (la de respaldo se cuenta en la cobertura).
         r["trofeos_nombres"] = comparten { t -> CATEGORIAS.mapNotNull { TrofeosTema.nombre(t, it) } }
@@ -88,8 +93,6 @@ class UnicidadTemas {
         val PANTALLAS = listOf("Hoy", "Diario", "Momentos", "Gastos", "Logros", "Cartas", "Salud", "Mapas", "Campañas", "Línea de tiempo", "Tu gente", "Más")
 
         /** Lo repetido hoy, por superficie. Cada lote borra lo que vuelve propio. */
-        val PENDIENTES: Map<String, Set<String>> = mapOf(
-            "escala_toque" to setOf("romano", "ciber", "heleno", "colonos", "gotico", "espacio"),
-        )
+        val PENDIENTES: Map<String, Set<String>> = emptyMap()
     }
 }

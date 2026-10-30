@@ -58,7 +58,7 @@ Lo que pidió el autor:
      - `ic_launcher_<id>.xml`;
      - `logo_<id>`, `logo_fondo_<id>`, `huella_<id>`, `huella_fondo_<id>` y `papel_<id>`;
      - los 4 drawables de widget y su copia en v31;
-     - los 13 archivos de `raw` más `s_tecla_<id>`, `s_<id>_error` y `s_<id>_cambio`;
+     - los 13 archivos de `raw` más `s_tecla_<id>`, `s_rascar_<id>`, `s_<id>_error` y `s_<id>_cambio`;
      - las claves `<id>_c` y `<id>_o` en `assets/gato/gato.json`, con sus 2 acciones especiales.
    - **(c) Prueba de unicidad.** Para todo lo que se puede comparar como valor, exige que no haya dos temas iguales:
      - textos y nombres de pantalla;
@@ -623,7 +623,7 @@ Los ids `egipto` y `edo` coinciden con ids de vidas de `BASE` (`OtrasVidas.kt:11
 - **Lanzador:** `mipmap-anydpi-v26/ic_launcher_<id>.xml`, con `logo_fondo_<id>`, `logo_<id>` y `logo_mono`.
 - **`AndroidManifest.xml`:** `<activity-alias android:name=".Icono<Id>" android:enabled="false" android:exported="true" android:icon/roundIcon="@mipmap/ic_launcher_<id>" android:targetActivity=".ui.MainActivity">`, con el intent-filter MAIN/LAUNCHER y `meta-data android.app.shortcuts=@xml/accesos`.
 - **Sonidos** (`raw/`):
-  - de `afinados.py` (función `<id>()`, `S['<id>']` y la tupla `todos`): `s_<id>_{toque,guardar,logro,pasar,elegir,abrir,tema,error,cambio}.ogg`, `n_<id>_{aviso,solemne}.ogg` y `s_tecla_<id>.ogg`;
+  - de `afinados.py` (función `<id>()`, `S['<id>']`, su llamada a `nuevos(...)` dentro de `azar_propio('<id>')` y la tupla `todos`): `s_<id>_{toque,guardar,logro,pasar,elegir,abrir,tema,error,cambio}.ogg`, `n_<id>_{aviso,solemne}.ogg`, `s_tecla_<id>.ogg` y `s_rascar_<id>.ogg`;
   - de `musica.py` (`P['<id>']` y `ARGS['<id>']`): `s_<id>_presentacion.ogg`, `s_<id>_anual.ogg`, `t_<id>_llamada.ogg` y `t_<id>_notificacion.ogg`.
 - **Fuente** (`font/`): `<familia>_<peso>.ttf`, recortada y, si hace falta, renombrada.
 - **Arranque** (`values/themes.xml`): `Theme.Vestigium.Arranque.<Id>`.

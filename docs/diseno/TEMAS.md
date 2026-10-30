@@ -47,7 +47,7 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 | 3 | Completar las superficies que ya existen | hecho 29 oct 2026 |
 | 4 | Pantallas genéricas, gráficas, controles y arranque | hecho 29 oct 2026 |
 | 5 | Textos y tipografía | hecho 29 oct 2026 |
-| 6 | Sonido y vibración | pendiente |
+| 6 | Sonido y vibración | hecho 30 oct 2026 |
 | 7 | Limpieza y cierre: sin `else`, sin ramas agrupadas, pruebas sin pendientes, todo en P | pendiente |
 | 8 | Terminal y 13 temas nuevos (de 21 a 34) | pendiente |
 | 9 | El gato de cada tema | pendiente (la rama del gato aún no está en `main`) |
@@ -58,27 +58,27 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 
 | Tema | P | S | C | G | ✗ |
 |---|---|---|---|---|---|
-| ROM | 117 | 1 | 2 | 2 | 3 |
-| CIB | 115 | 1 | 2 | 2 | 3 |
-| HEL | 117 | 1 | 2 | 2 | 3 |
-| MED | 117 | 1 | 1 | 2 | 4 |
-| DIS | 114 | 2 | 1 | 2 | 4 |
-| REF | 114 | 2 | 1 | 2 | 4 |
-| ORD | 115 | 3 | 1 | 2 | 4 |
-| LAB | 117 | 2 | 1 | 2 | 3 |
-| COL | 116 | 2 | 2 | 2 | 3 |
-| NAP | 114 | 2 | 1 | 2 | 4 |
-| BOT | 118 | 1 | 1 | 2 | 3 |
-| NAV | 114 | 2 | 1 | 2 | 4 |
-| SED | 117 | 1 | 2 | 2 | 3 |
-| GOT | 117 | 1 | 2 | 2 | 3 |
-| ESP | 114 | 2 | 2 | 2 | 3 |
-| AND | 118 | 1 | 1 | 2 | 3 |
-| MON | 117 | 1 | 1 | 2 | 4 |
-| REN | 117 | 1 | 1 | 2 | 4 |
-| URS | 115 | 3 | 1 | 2 | 4 |
-| REV | 118 | 1 | 1 | 2 | 3 |
-| ANT | 116 | 1 | 2 | 2 | 4 |
+| ROM | 122 | 1 | 0 | 0 | 2 |
+| CIB | 120 | 1 | 0 | 0 | 2 |
+| HEL | 122 | 1 | 0 | 0 | 2 |
+| MED | 122 | 1 | 0 | 0 | 2 |
+| DIS | 119 | 2 | 0 | 0 | 2 |
+| REF | 120 | 1 | 0 | 0 | 2 |
+| ORD | 121 | 2 | 0 | 0 | 2 |
+| LAB | 121 | 2 | 0 | 0 | 2 |
+| COL | 121 | 2 | 0 | 0 | 2 |
+| NAP | 119 | 2 | 0 | 0 | 2 |
+| BOT | 122 | 1 | 0 | 0 | 2 |
+| NAV | 119 | 2 | 0 | 0 | 2 |
+| SED | 122 | 1 | 1 | 0 | 1 |
+| GOT | 122 | 1 | 0 | 0 | 2 |
+| ESP | 120 | 1 | 0 | 0 | 2 |
+| AND | 122 | 1 | 0 | 0 | 2 |
+| MON | 122 | 1 | 0 | 0 | 2 |
+| REN | 122 | 1 | 0 | 0 | 2 |
+| URS | 121 | 2 | 0 | 0 | 2 |
+| REV | 123 | 1 | 0 | 0 | 1 |
+| ANT | 121 | 1 | 1 | 0 | 2 |
 
 Desde el lote 2 ningún tema cae en los respaldos de trofeos, salón, campaña ni libreta.
 
@@ -234,12 +234,12 @@ Las filas con valor comparable las vigila `UnicidadTemas` (y las que faltan, `Co
 
 | Superficie | Dónde | ROM | CIB | HEL | MED | DIS | REF | ORD | LAB | COL | NAP | BOT | NAV | SED | GOT | ESP | AND | MON | REN | URS | REV | ANT | Nota |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Escala del toque | `Sentidos.acordeToque` (`ui/Sentidos.kt:302`) | C | C | C | ✗ | ✗ | ✗ | ✗ | P | C | ✗ | P | ✗ | ✗ | C | C | P | ✗ | ✗ | ✗ | ✗ | ✗ | Sin escala: 12 temas. ROM = ESP, CIB = GOT, HEL = COL. |
-| Tecla del diario | `Sentidos.tecla` (`:375`) | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | 4 sonidos para 21 temas (máquina, pluma, digital, suave). Falta `s_tecla_<id>`. |
-| Vibración (elegir, abrir, cambio, error) | `Sentidos.patron` (`:41`) | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | El error es igual en todos; elegir, abrir y cambio van por grupos o caen en `else`. |
-| Sonidos de error y de cambio | `res/raw/s_<id>_error`, `s_<id>_cambio` | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | El error no suena y el cambio reutiliza el de abrir. |
-| Rascar | `Sentidos.rascar` (`:387`) | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Un solo sonido y una sola vibración. |
-| Música: presentación y anual | `herramientas/musica.py` | P | P | P | P | P | S | S | P | P | P | P | P | P | P | S | P | P | P | S | P | P | El plan pide enriquecer ESP, ORD, URS y REF. |
+| Escala del toque | `Sentidos.afinacion` (`ui/Sentidos.kt`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 6: escala propia en los 21 (las de ruido, en pasos cortos de su modo); `giros` y qué sonidos son ruido, también por tema. |
+| Tecla del diario | `Sentidos.tecla`, `res/raw/s_tecla_<id>` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 6: estilo sobre cera, cálamo, pluma, lápiz, pincel, plumilla, máquinas de escribir, consolas, cincel… |
+| Vibración (elegir, abrir, cambio, error) | `Sentidos.patron` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 6: `when (tema)` exhaustivo; cada uno de los cuatro eventos, distinto en cada tema (lo vigila `UnicidadTemas`). |
+| Sonidos de error y de cambio | `res/raw/s_<id>_error`, `s_<id>_cambio` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 6: el error siempre baja y se apaga; el cambio sube, con los instrumentos del tema. |
+| Rascar | `Sentidos.rascar`, `patronRascar`, `res/raw/s_rascar_<id>` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 6: el sonido y la vibración del metal de la lámina de cada tema. |
+| Música: presentación y anual | `herramientas/musica.py` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 6: REF, ORD, URS y ESP con ocho compases y más voces (`hacer_enriquecidos`). Tonos del teléfono emparejados en volumen (`parejo`). |
 
 ## Lotes 8 y 9 · Recursos de cada tema, gato y otra vida
 

@@ -58,7 +58,7 @@ class CoberturaTemas {
         superficie("salon") { it !in SalonesTema.TEMAS }
         superficie("campana_mapa") { it !in MapasCampana.TEMAS }
         superficie("libreta") { contenedorDe(it) == Contenedor.ESPIRAL }
-        superficie("escala_toque") { Sentidos.acordeToque(it) == null }
+        superficie("escala_toque") { Sentidos.acordeToque(it).isEmpty() }
 
         // Recursos.
         val manifiesto = Pendientes.main("AndroidManifest.xml").readText()
@@ -74,6 +74,7 @@ class CoberturaTemas {
         superficie("sonido_tecla") { !recurso("raw", "s_tecla_${it.id}") }
         superficie("sonido_error") { !recurso("raw", "s_${it.id}_error") }
         superficie("sonido_cambio") { !recurso("raw", "s_${it.id}_cambio") }
+        superficie("sonido_rascar") { !recurso("raw", "s_rascar_${it.id}") }
         val temas = Pendientes.main("res/values/themes.xml").readText()
         superficie("arranque") { "Theme.Vestigium.Arranque.${Id(it)}\"" !in temas }
 
@@ -96,14 +97,13 @@ class CoberturaTemas {
         val SONIDOS_TEMA = listOf("toque", "guardar", "logro", "pasar", "elegir", "abrir", "tema", "presentacion", "anual").map { "s_<id>_$it" } +
             listOf("n_<id>_aviso", "n_<id>_solemne", "t_<id>_llamada", "t_<id>_notificacion")
 
+        /** Los del lote 6: error, cambio, la tecla del diario y el rascado de la lámina. */
+        val SONIDOS_LOTE6 = listOf("s_<id>_error", "s_<id>_cambio", "s_tecla_<id>", "s_rascar_<id>")
+
         /** Lo que falta hoy, por superficie. Cada lote borra lo que completa. */
         val PENDIENTES: Map<String, Set<String>> = mapOf(
-            "escala_toque" to setOf("medieval", "distopia", "refugio", "orden", "napoleon", "navidad", "seda", "urss", "mongol", "renacimiento", "revolucion", "antiguas"),
             "gato" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
             "papel" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento"),
-            "sonido_cambio" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
-            "sonido_error" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
-            "sonido_tecla" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
             "vidas" to setOf("antiguas"),
         )
 
@@ -112,9 +112,6 @@ class CoberturaTemas {
             "ui/Bases.kt · agrupadas" to 6,
             "ui/IconoApp.kt · comparaciones" to 2,
             "ui/SalonesMas.kt · else" to 2,
-            "ui/Sentidos.kt · agrupadas" to 9,
-            "ui/Sentidos.kt · comparaciones" to 2,
-            "ui/Sentidos.kt · else" to 5,
             "ui/TrofeosMas.kt · else" to 2,
         )
     }

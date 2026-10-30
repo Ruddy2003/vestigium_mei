@@ -7,6 +7,7 @@ como ruido. Además: el «tema» (lo que suena al elegir ese tema), las teclas d
 Uso: python3 afinados.py <carpeta res/raw>
 """
 import os, sys, subprocess, tempfile, wave
+from contextlib import contextmanager
 import numpy as np
 from scipy.signal import fftconvolve, butter, sosfilt
 
@@ -167,6 +168,37 @@ def acorde(inst, notas, d, g=1.0, arpegio=0.0, **kw):
 def melodia(inst, notas, paso, d, g=0.5, **kw):
     return mezclar(*[(i * paso, inst(hz(n), d, **kw), g) for i, n in enumerate(notas) if n is not None])
 
+# ------------------------------------------------------------------ error, cambio, tecla y rascado (lote 6)
+
+X = {}   # archivo → señal: las teclas del diario y el rascado del mapa, que no llevan el prefijo s_<tema>_
+
+@contextmanager
+def azar_propio(nombre):
+    """Los sonidos del lote 6 usan su propio azar, sembrado con su nombre: agregarlos no mueve el de los de antes."""
+    global rng
+    antes = rng; rng = np.random.default_rng(sum(ord(c) * (i + 1) for i, c in enumerate(nombre)))
+    try: yield
+    finally: rng = antes
+
+def nuevos(tema, error, cambio, tecla, rascar):
+    """El error (algo salió mal: siempre baja y se apaga), el cambio (encender o apagar algo), la tecla del diario y el rascado."""
+    S[tema].update(error=error, cambio=cambio)
+    X[f's_tecla_{tema}'] = tecla; X[f's_rascar_{tema}'] = rascar
+
+def rascado(banda, rebaba, aspereza=90, pasadas=((0.0, 0.28), (0.33, 0.28), (0.66, 0.3))):
+    """Una moneda que raspa la lámina: tres pasadas con el ruido de su metal ([banda]) y la [rebaba], el metal que resuena al final."""
+    fin = pasadas[-1][0] + pasadas[-1][1]
+    x = np.zeros(int((fin + 0.02) * SR))
+    for ini, dur in pasadas:
+        n = int(dur * SR); r = filtro(ruido(dur), 'banda', banda) * (0.5 + 0.5 * np.abs(filtro(ruido(dur), 'bajo', aspereza)))
+        r *= np.sin(np.pi * np.arange(n) / n) ** 0.6
+        k = int(ini * SR); x[k:k + n] += r
+    return mezclar((0, x, 1.0), (fin - 0.08, rebaba, 0.22))
+
+def trazo(banda, d=0.045, ondas=20, caida=0.025):
+    """Una tecla de escritura a mano: la punta que raspa (pluma, cálamo, lápiz, pincel), con su temblor."""
+    return filtro(ruido(d), 'banda', banda) * env(int(d * SR), 0.004, caida, 4) * (0.7 + 0.3 * np.sin(np.linspace(0, ondas, int(d * SR))))
+
 # ------------------------------------------------------------------ los temas
 
 S = {}   # tema → dict(toque, elegir, pasar, abrir, guardar, logro, tema, aviso, solemne)
@@ -188,6 +220,15 @@ def romano():
         solemne=reverb(mezclar(*[(0.9 * i, acorde(lambda f, d: metal(f, d, 2500), [T + a for a in ch], 0.85), 0.55) for i, ch in enumerate([[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7, 12]])],
                                *[(0.9 * i, tambor(hz(T - 24), 0.5), 0.5) for i in range(4)], (2.7, campana(hz(T + 24), 2.0, 2.0, 1.5, 2), 0.3)), 2.0, 0.3))
 
+    # Error: el cornu que se quiebra medio tono abajo. Cambio: dos golpes de mármol que suben a la quinta.
+    # Tecla: el estilo sobre la tablilla de cera. Rascar: oro imperial, blando y cálido.
+    with azar_propio('romano'):
+        nuevos('romano',
+               error=mezclar((0, cornu(T + 7, 0.12), 0.45), (0.13, cornu(T + 6, 0.3), 0.45), (0.13, tambor(hz(T - 24), 0.3, 0.2), 0.4)),
+               cambio=mezclar((0, marmol(T + 19), 1), (0.08, marmol(T + 26), 1)),
+               tecla=mezclar((0, trazo((1200, 4200), 0.04, 10), 1), (0, filtro(ruido(0.015), 'bajo', 700) * env(int(0.015 * SR), 0.001, 0.008), 0.3)),
+               rascar=rascado((1400, 6000), campana(hz(T + 24), 0.7, 2.0, 1.0, 4)))
+
 def ciber():
     # Mi menor: blips de onda cuadrada y arpegios de sintetizador.
     T = 7    # Mi5
@@ -205,6 +246,15 @@ def ciber():
                                  for i, ch in enumerate([[0, 3, 7], [-4, 0, 3], [-7, -3, 0], [-5, -2, 2], [0, 3, 7, 12]])],
                                *[(0.2 * i, cuadrada(hz(T + [12, 19, 15, 19][i % 4]), 0.08, 0.06), 0.18) for i in range(20)]), 1.8, 0.35))
 
+    # Error: el zumbido que baja un tritono. Cambio: un interruptor de bits que sube a la octava.
+    # Tecla: la tecla de membrana con su blip. Rascar: la placa de consola, con chisporroteo de fósforo.
+    with azar_propio('ciber'):
+        nuevos('ciber',
+               error=mezclar((0, cuadrada(hz(T), 0.08, 0.06), 0.5), (0.09, cuadrada(hz(T - 6), 0.2, 0.12), 0.5), (0.09, filtro(ruido(0.12), 'bajo', 1200) * env(int(0.12 * SR), 0.002, 0.08), 0.25)),
+               cambio=melodia(lambda f, d: cuadrada(f, d, 0.03), [T + 12, T + 24], 0.035, 0.05),
+               tecla=mezclar((0, clic(0.007, (3500, 9500)), 0.7), (0.002, cuadrada(hz(T + 31), 0.012, 0.006), 0.08)),
+               rascar=rascado((2500, 9500), mezclar(*[(0.03 * i, cuadrada(hz(T + n), 0.05, 0.03), 0.4) for i, n in enumerate([24, 19, 31])]), aspereza=160))
+
 def heleno():
     # La mayor pentatónico: lira.
     T = -12  # La3
@@ -219,6 +269,15 @@ def heleno():
         aviso=reverb(mezclar(melodia(lambda f, d: pluck(f, d, 0.5), [T + 19, T + 21, T + 19, T + 16, T + 12, None, T + 16, T + 19], 0.2, 0.9), (0, lira(T - 12, 2.0, 0.2), 0.3)), 1.4, 0.28),
         solemne=reverb(mezclar(melodia(flauta, [T + 24, T + 26, T + 28, T + 31, T + 28, T + 26, T + 24, T + 21, T + 24], 0.45, 0.43, g=0.3),
                                *[(1.8 * i, acorde(lambda f, d: pluck(f, d, 0.4), [T + a for a in ch], 1.8, arpegio=0.04), 0.6) for i, ch in enumerate([[0, 7, 12, 16], [-3, 4, 9, 12], [2, 9, 14, 21], [0, 7, 12, 16, 24]])]), 2.0, 0.3))
+
+    # Error: la lira apagada que roza el semitono. Cambio: una cuerda y su quinta. Tecla: el cálamo sobre el papiro.
+    # Rascar: electro, la aleación pálida de oro y plata.
+    with azar_propio('heleno'):
+        nuevos('heleno',
+               error=mezclar((0, lira(T + 12, 0.25, 0.2), 0.5), (0.12, lira(T + 11, 0.45, 0.15), 0.5)),
+               cambio=mezclar((0, lira(T + 19, 0.3, 0.6), 0.5), (0.07, lira(T + 26, 0.35, 0.6), 0.5)),
+               tecla=trazo((1800, 5600), 0.05, 14),
+               rascar=rascado((1600, 6500), campana(hz(T + 31), 0.6, 2.4, 1.0, 5)))
 
 def medieval():
     # Re dórico: pluma y pergamino, campanitas y canto llano.
@@ -237,6 +296,15 @@ def medieval():
                                melodia(coro, [T + n for n in [0, 2, 3, 5, 7, 5, 3, 2, 0]], 0.6, 0.62, g=0.32),
                                (5.2, camp(T + 24, 2.0), 0.35), (5.2, camp(T + 19, 2.0), 0.25)), 2.6, 0.4))
 
+    # Error: el sello que cae torcido y una campanita desafinada. Cambio: dos campanitas que suben.
+    # Tecla: la pluma de ave sobre el pergamino. Rascar: pan de oro sobre bol rojo, que casi no suena.
+    with azar_propio('medieval'):
+        nuevos('medieval',
+               error=mezclar((0, tambor(hz(T - 24), 0.25, 0.5), 0.6), (0.06, camp(T + 13, 0.5), 0.3), (0.06, camp(T + 12, 0.5), 0.3)),
+               cambio=mezclar((0, camp(T + 24, 0.4), 0.4), (0.1, camp(T + 31, 0.5), 0.4)),
+               tecla=trazo((2500, 8000), 0.045, 20),
+               rascar=rascado((1200, 5000), camp(T + 24, 0.6), aspereza=60))
+
 def distopia():
     # Do menor: máquina de escribir, sellos; el timbre del carro y el carillón del ministerio.
     T = 3    # Do5
@@ -254,6 +322,16 @@ def distopia():
         solemne=reverb(mezclar(*[(1.0 * i, acorde(organo, [T - 12 + a for a in ch], 1.0), 0.5) for i, ch in enumerate([[0, 3, 7], [-4, 0, 3], [-5, -1, 2], [0, 3, 7]])],
                                (3.9, ding(T + 12, 1.4), 0.4)), 2.0, 0.3))
 
+    # Error: el zumbador del ministerio, dos veces. Cambio: el interruptor de baquelita.
+    # Tecla: la máquina de escribir. Rascar: la chapa gris, sin brillo.
+    with azar_propio('distopia'):
+        zumbador = lambda d: filtro(np.tanh(4 * np.sin(2 * np.pi * hz(T - 24) * t_(d))) + 0.4 * np.sin(2 * np.pi * hz(T - 18) * t_(d)), 'bajo', 1800) * env(int(d * SR), 0.005, d * 0.9, 1.5)
+        nuevos('distopia',
+               error=mezclar((0, zumbador(0.14), 0.5), (0.18, zumbador(0.22), 0.5)),
+               cambio=mezclar((0, clic(0.012, (600, 2500)), 1), (0.03, clic(0.02, (300, 1500)), 0.8), (0.03, tambor(hz(T - 36), 0.05, 0.3), 0.3)),
+               tecla=mezclar((0, clic(0.018, (900, 3800)), 1), (0.004, clic(0.01, (400, 1500)), 0.6), (0.01, filtro(ruido(0.02), 'bajo', 600) * env(int(0.02 * SR), 0.001, 0.01), 0.4)),
+               rascar=rascado((900, 4200), ding(T + 12, 0.4), aspereza=50))
+
 def refugio():
     # Fa mayor pentatónico: relés, contador Geiger y el vibráfono optimista de los cincuenta.
     T = 8    # Fa5
@@ -270,6 +348,16 @@ def refugio():
         solemne=reverb(mezclar(*[(1.1 * i, acorde(vibrafono, [T - 12 + a for a in ch], 1.6, arpegio=0.03), 0.6) for i, ch in enumerate([[0, 4, 7, 12], [5, 9, 12, 17], [7, 11, 14, 19], [0, 4, 7, 12, 16]])],
                                *[(1.1 * i, acorde(lambda f, d: organo(f, d, 0.2), [T - 24 + a for a in ch], 1.1), 0.25) for i, ch in enumerate([[0, 7], [5, 12], [7, 14], [0, 7]])]), 1.8, 0.3))
 
+    # Error: el contador Geiger que se dispara y el vibráfono que baja un tritono. Cambio: el relé y una nota que sube.
+    # Tecla: la terminal del refugio, con su relé. Rascar: chapa galvanizada.
+    with azar_propio('refugio'):
+        geiger = mezclar(*[(t, clic(0.004, (2000, 7000)), 0.8) for t in (0, 0.02, 0.05, 0.06, 0.1, 0.13)])
+        nuevos('refugio',
+               error=mezclar((0, geiger, 0.6), (0.05, vib(T + 6, 0.5), 0.4), (0.05, vib(T, 0.6), 0.35)),
+               cambio=mezclar((0, clic(0.012, (800, 3000)), 0.9), (0.04, vib(T + 12, 0.4), 0.4)),
+               tecla=mezclar((0, clic(0.014, (700, 2800)), 1), (0.005, zumbido(0.02) * env(int(0.02 * SR), 0.001, 0.012), 0.25)),
+               rascar=rascado((1800, 7000), vib(T + 24, 0.5), aspereza=120))
+
 def orden():
     # Sol menor: servos, armadura y trompas.
     T = -2   # Sol4
@@ -285,6 +373,16 @@ def orden():
         aviso=reverb(mezclar(*[(0.24 * i, trompa(T + n, 0.26 if i < 3 else 0.8), 0.5) for i, n in enumerate([-5, 0, 3, 0])], (0, tambor(hz(T - 24), 0.4), 0.5), (0.72, tambor(hz(T - 24), 0.5), 0.6)), 1.6, 0.3),
         solemne=reverb(mezclar(*[(1.0 * i, acorde(trompa, [T - 12 + a for a in ch], 1.0), 0.55) for i, ch in enumerate([[0, 3, 7], [-4, 0, 3], [-2, 2, 5], [0, 3, 7, 12]])],
                                *[(1.0 * i, tambor(hz(T - 24), 0.6), 0.6) for i in range(4)]), 2.2, 0.32))
+
+    # Error: el servo que se traba y la trompa que cae. Cambio: el servo que sube y un clic de armadura.
+    # Tecla: el teclado blindado de la consola. Rascar: acero pavonado.
+    with azar_propio('orden'):
+        servo = lambda a, b, d: filtro(barrido(hz(a), hz(b), d, 'sierra'), 'bajo', 1500) * env(int(d * SR), 0.01, d * 0.85, 2)
+        nuevos('orden',
+               error=mezclar((0, servo(T - 5, T - 12, 0.16), 0.45), (0.14, trompa(T - 13, 0.35), 0.35), (0.14, tambor(hz(T - 24), 0.3, 0.4), 0.5)),
+               cambio=mezclar((0, servo(T - 12, T - 5, 0.1), 0.4), (0.1, clic(0.01, (600, 2500)), 0.8)),
+               tecla=mezclar((0, clic(0.012, (500, 2200)), 1), (0, tambor(hz(T - 24), 0.03, 0.2), 0.25)),
+               rascar=rascado((2200, 8000), campana(hz(T + 24), 0.5, 2.76, 2.0, 7), aspereza=140))
 
 def laboratorio():
     # Re menor: el instituto bajo tierra. Senos fríos, colchones de sintetizador, aire filtrado y un pulso grave lejano.
@@ -307,6 +405,15 @@ def laboratorio():
         solemne=sala(mezclar(*[(1.4 * i, acorde(lambda f, d: sinte(f, d, 1000, 0.5, 0.8), [T - 12 + a for a in ch], 1.6), 0.5) for i, ch in enumerate([[0, 7, 14, 15], [-2, 5, 9, 14], [-5, 2, 5, 10], [-3, 4, 7, 9], [0, 7, 12, 15]])],
                              *[(1.4 * i + 0.6, frio(hz(T + n), 1.0), 0.25) for i, n in enumerate([14, 17, 15, 16, 12])], *[(1.4 * i, sub(0.9), 0.4) for i in range(5)]), 3.0, 0.45))
 
+    # Error: dos tonos fríos que bajan a la cuarta aumentada, en la sala. Cambio: el vidrio que sube.
+    # Tecla: el teclado de laboratorio, suave. Rascar: aluminio de instrumento, agudo.
+    with azar_propio('laboratorio'):
+        nuevos('laboratorio',
+               error=sala(mezclar((0, frio(hz(T + 24), 0.2), 0.5), (0.12, frio(hz(T + 18), 0.35), 0.5), (0.12, sub(0.3), 0.4)), 1.0, 0.3),
+               cambio=mezclar((0, frio(hz(T + 19), 0.1), 0.5), (0.05, frio(hz(T + 26), 0.18), 0.5)),
+               tecla=mezclar((0, clic(0.006, (2500, 7000)), 0.5), (0, filtro(ruido(0.012), 'banda', (900, 2400)) * env(int(0.012 * SR), 0.001, 0.006), 0.35)),
+               rascar=rascado((3000, 10000), frio(hz(T + 36), 0.4), aspereza=200))
+
 def colonos():
     # Sol mayor pentatónico: madera afinada (marimba), crujidos y violín de pueblo.
     T = -2
@@ -320,6 +427,15 @@ def colonos():
         aviso=reverb(melodia(marimba, [T + 12, T + 9, T + 7, T + 4, T + 7, None, T + 12], 0.16, 0.7), 1.2, 0.22),
         solemne=reverb(mezclar(melodia(lambda f, d: arco(f, d, 5), [T + n for n in [0, 2, 4, 7, 4, 2, 0, -3, 0]], 0.55, 0.6, g=0.35),
                                *[(1.1 * i, acorde(marimba, [T - 12 + a for a in ch], 1.0, arpegio=0.06), 0.5) for i, ch in enumerate([[0, 7, 12], [5, 12, 17], [7, 14, 19], [0, 7, 12, 16]])]), 1.6, 0.25))
+
+    # Error: la madera que suena sorda, dos veces y bajando. Cambio: el pestillo de la puerta y una tabla que sube.
+    # Tecla: el lápiz sobre el cuaderno de la granja. Rascar: cobre.
+    with azar_propio('colonos'):
+        nuevos('colonos',
+               error=mezclar((0, madera(T, 0.12), 0.8), (0.14, madera(T - 1, 0.16), 0.8)),
+               cambio=mezclar((0, clic(0.01, (500, 2000)), 0.6), (0.03, madera(T + 7, 0.07), 0.7), (0.1, madera(T + 12, 0.08), 0.7)),
+               tecla=trazo((1500, 5000), 0.06, 30, 0.035),
+               rascar=rascado((1200, 5500), marimba(hz(T + 24), 0.5), aspereza=70))
 
 def napoleon():
     # Si bemol mayor: tambor de marcha y corneta (solo notas de la serie armónica).
@@ -341,6 +457,15 @@ def napoleon():
         aviso=reverb(mezclar(*[(0.18 * i, corneta(T + n, 0.17 if i < 5 else 0.7), 0.5) for i, n in enumerate([-5, 0, 4, 7, 4, 0])], (1.1, redoble(0.3), 0.5)), 1.4, 0.25),
         solemne=reverb(mezclar(*[(1.0 * i, acorde(lambda f, d: metal(f, d, 2800), [T - 12 + a for a in ch], 1.0), 0.55) for i, ch in enumerate([[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7, 12]])],
                                (0, redoble(0.8), 0.4), (2.9, redoble(1.0), 0.45), (3.0, filtro(ruido(1.2), 'alto', 5000) * env(int(1.2 * SR), 0.005, 0.8, 3), 0.15)), 2.0, 0.3))
+
+    # Error: el tambor apagado y la corneta que se cae medio tono. Cambio: dos golpes y la corneta a la quinta.
+    # Tecla: la plumilla de acero del despacho. Rascar: bronce dorado del Imperio.
+    with azar_propio('napoleon'):
+        nuevos('napoleon',
+               error=mezclar((0, tambor(hz(T - 24), 0.25, 0.4), 0.6), (0.06, corneta(T + 7, 0.12), 0.4), (0.18, corneta(T + 6, 0.3), 0.4)),
+               cambio=mezclar((0, golpe(), 0.6), (0.06, corneta(T, 0.1), 0.4), (0.16, corneta(T + 7, 0.16), 0.45)),
+               tecla=trazo((3000, 9000), 0.035, 12, 0.02),
+               rascar=rascado((1500, 6500), corneta(T + 24, 0.25), aspereza=100))
 
 def botanico():
     # Sol dórico: el cuaderno del naturalista. Guitarra de cuerdas de tripa, madera, la pluma que raspa, grillos afinados y un violonchelo.
@@ -364,6 +489,15 @@ def botanico():
                                *[(1.5 * i, mezclar(*[(0.06 * k, guitarra(hz(T - 12 + a), 1.8), 0.4) for k, a in enumerate(ch)]), 1) for i, ch in enumerate([[0, 7, 12, 15], [5, 12, 16, 19], [3, 10, 15, 19], [0, 7, 12, 15, 19]])],
                                *[(0.8 + 1.1 * i, gr(T + 36 + [0, 3, 0][i % 3]), 0.12) for i in range(5)], (0, pluma(0.5), 0.1)), 2.0, 0.28))
 
+    # Error: la cuerda de tripa que zumba medio tono abajo. Cambio: un grillo y la guitarra a la quinta.
+    # Tecla: el lápiz de grafito del cuaderno de campo. Rascar: bronce con verdín.
+    with azar_propio('botanico'):
+        nuevos('botanico',
+               error=mezclar((0, guitarra(hz(T + 7), 0.4, 0.2), 0.5), (0.13, guitarra(hz(T + 6), 0.7, 0.15), 0.5), (0.13, madera(T - 12, 0.12), 0.35)),
+               cambio=mezclar((0, gr(T + 36, 0.08, 2), 0.4), (0.06, guitarra(hz(T + 7), 0.4), 0.45), (0.14, guitarra(hz(T + 14), 0.5), 0.45)),
+               tecla=trazo((1100, 4200), 0.05, 26, 0.03),
+               rascar=rascado((1300, 5500), cello(T + 12, 0.4), aspereza=60))
+
 def navidad():
     # La mayor: cascabeles, caja de música y campanas.
     T = 0    # La4
@@ -383,6 +517,15 @@ def navidad():
         solemne=reverb(mezclar(*[(1.0 * i, acorde(lambda f, d: campana(f, d, 2.0, 1.5, 1.5), [T - 12 + a for a in ch], 1.5, arpegio=0.04), 0.5) for i, ch in enumerate([[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7, 12]])],
                                melodia(cajita, [T + n for n in [12, 16, 19, 21, 19, 16, 14, 16, 12]], 0.45, 0.9, g=0.25), (3.0, cascabel(0.5), 0.2)), 2.0, 0.3))
 
+    # Error: la caja de música que se desafina al bajar. Cambio: cascabeles y una púa que sube.
+    # Tecla: la tecla de madera suave. Rascar: plata escarchada, con cascabeles.
+    with azar_propio('navidad'):
+        nuevos('navidad',
+               error=mezclar((0, cajita(hz(T + 19), 0.3), 0.45), (0.13, cajita(hz(T + 18) * 0.995, 0.6), 0.45)),
+               cambio=mezclar((0, cascabel(0.1), 0.35), (0.05, cajita(hz(T + 24), 0.4), 0.45), (0.12, cajita(hz(T + 31), 0.5), 0.4)),
+               tecla=mezclar((0, filtro(ruido(0.02), 'banda', (600, 2500)) * env(int(0.02 * SR), 0.001, 0.01, 6), 1), (0, filtro(ruido(0.012), 'bajo', 400) * env(int(0.012 * SR), 0.001, 0.006), 0.5)),
+               rascar=rascado((3500, 9500), cascabel(0.3), aspereza=180))
+
 def seda():
     # La menor pentatónico: seda, címbalos de dedo, gong y cítara.
     T = 0
@@ -401,6 +544,16 @@ def seda():
         solemne=reverb(mezclar((0, gong(3.0), 0.5), melodia(lambda f, d: pluck(f, d, 0.65, 0.995), [None if n is None else T + n for n in [0, 3, 5, 7, 10, 7, 5, 3, 0, None, 7, 12]], 0.42, 1.2, g=0.4),
                                (0, filtro(seno(hz(T - 24), 5.5) + 0.5 * seno(hz(T - 17), 5.5), 'bajo', 600) * np.minimum(1, t_(5.5) / 0.8) * np.minimum(1, (5.5 - t_(5.5)) / 1.0), 0.15)), 2.0, 0.3))
 
+    # Error: el gong pequeño apagado y la cítara que se dobla hacia abajo. Cambio: el címbalo de dedo y su quinta.
+    # Tecla: el pincel sobre el papel de arroz. Rascar: bronce de moneda.
+    with azar_propio('seda'):
+        doblada = lambda a, b, d: barrido(hz(a), hz(b), d) * env(int(d * SR), 0.003, d * 0.6, 3)
+        nuevos('seda',
+               error=mezclar((0, campana(hz(T - 12), 0.5, 1.48, 3, 6), 0.4), (0.04, doblada(T + 12, T + 10, 0.35), 0.4)),
+               cambio=mezclar((0, cimbalo(T + 24, 0.4), 0.4), (0.08, cimbalo(T + 31, 0.5), 0.4)),
+               tecla=filtro(ruido(0.07), 'banda', (1500, 6000)) * env(int(0.07 * SR), 0.015, 0.04, 3),
+               rascar=rascado((1400, 6000), cimbalo(T + 36, 0.5), aspereza=80))
+
 def urss():
     # Do menor: prensa, yunque, silbato de fábrica (acorde menor) y metales.
     T = 3
@@ -417,6 +570,16 @@ def urss():
         aviso=reverb(mezclar(*[(0.2 * i, bronce(T + n, 0.2 if i < 3 else 0.8), 0.5) for i, n in enumerate([-5, 0, 3, 7])], (0.6, tambor(hz(T - 36), 0.5), 0.6)), 1.5, 0.28),
         solemne=reverb(mezclar(*[(1.0 * i, acorde(lambda f, d: metal(f, d, 2200), [T - 12 + a for a in ch], 1.0), 0.55) for i, ch in enumerate([[0, 3, 7], [-4, 0, 3], [3, 7, 10], [-5, -1, 2], [0, 3, 7, 12]])],
                                *[(1.0 * i, tambor(hz(T - 36), 0.6), 0.55) for i in range(5)]), 2.2, 0.32))
+
+    # Error: la sirena de la fábrica, corta y desafinada hacia abajo. Cambio: la palanca de la prensa y un metal que sube.
+    # Tecla: la máquina de escribir pesada del soviet. Rascar: acero ennegrecido.
+    with azar_propio('urss'):
+        sirena = lambda d: filtro(barrido(hz(T + 6), hz(T - 1), d, 'sierra'), 'bajo', 2200) * np.minimum(1, t_(d) / 0.04) * np.minimum(1, (d - t_(d)) / 0.1)
+        nuevos('urss',
+               error=mezclar((0, sirena(0.4), 0.35), (0, tambor(hz(T - 36), 0.2, 0.6), 0.6)),
+               cambio=mezclar((0, clic(0.02, (500, 2500)), 0.8), (0.05, bronce(T + 7, 0.1), 0.35), (0.14, bronce(T + 12, 0.16), 0.4)),
+               tecla=mezclar((0, clic(0.022, (600, 3000)), 1), (0.006, clic(0.014, (300, 1200)), 0.7), (0, tambor(hz(T - 36), 0.03, 0.4), 0.3)),
+               rascar=rascado((1600, 7000), campana(hz(T + 19), 0.35, 2.9, 2.5, 12), aspereza=110))
 
 def gotico():
     # La menor (con tercera de picardía al final): órgano y campanas en una nave de piedra.
@@ -435,6 +598,15 @@ def gotico():
         aviso=nave(mezclar((0, campana(hz(T - 5), 2.5, 2.0, 2.5, 1.5), 0.6), (0.9, campana(hz(T - 5), 2.5, 2.0, 2.5, 1.5), 0.5), (1.8, campana(hz(T - 12), 3.0, 2.0, 2.5, 1.2), 0.6)), 3.0, 0.4),
         solemne=nave(mezclar(*[(1.4 * i, org(ch, 1.5), 0.6) for i, ch in enumerate([[T - 12, T - 9, T - 5], [T - 16, T - 12, T - 9], [T - 7, T - 4, T], [T - 5, T - 1, T + 2], [T - 12, T - 8, T - 5, T]])],
                              (5.6, campana(hz(T), 2.8, 2.0, 2, 1.5), 0.35), (6.3, campana(hz(T - 5), 2.5, 2.0, 2, 1.5), 0.3)), 3.0, 0.42))
+
+    # Error: el órgano en una segunda menor, en la nave. Cambio: dos campanas que suben a la quinta.
+    # Tecla: la pluma sobre la vitela, más lenta. Rascar: peltre de cáliz.
+    with azar_propio('gotico'):
+        nuevos('gotico',
+               error=nave(org([T - 12, T - 11], 0.35), 1.6, 0.35),
+               cambio=mezclar((0, campana(hz(T + 12), 0.5, 2.0, 1.6, 6), 0.4), (0.12, campana(hz(T + 19), 0.6, 2.0, 1.6, 6), 0.4)),
+               tecla=trazo((2000, 6000), 0.06, 16, 0.04),
+               rascar=rascado((1500, 6000), campana(hz(T + 24), 0.8, 2.0, 2, 4), aspereza=70))
 
 def espacio():
     # Mi mayor: pitidos de la sala de control y una nave que respira.
@@ -455,6 +627,15 @@ def espacio():
         solemne=reverb(mezclar((0, pad([T - 24, T - 17, T - 12], 6.5), 0.18), *[(0.8 + 0.9 * i, seno(hz(T + n), 1.2) * env(int(1.2 * SR), 0.05, 1.0, 2), 0.2) for i, n in enumerate([0, 4, 7, 11, 12, 16])],
                                (6.0, tono(T + 24), 0.15)), 2.5, 0.35))
 
+    # Error: la alarma maestra, dos pitidos graves que chocan. Cambio: el interruptor del tablero y un pitido arriba.
+    # Tecla: la pantalla táctil de la cabina. Rascar: titanio anodizado.
+    with azar_propio('espacio'):
+        nuevos('espacio',
+               error=mezclar((0, pip(hz(T - 12), 0.1), 0.5), (0, pip(hz(T - 11), 0.1), 0.5), (0.16, pip(hz(T - 12), 0.12), 0.5), (0.16, pip(hz(T - 11), 0.12), 0.5)),
+               cambio=mezclar((0, clic(0.008, (1500, 5000)), 0.6), (0.03, pip(hz(T + 19), 0.05), 0.5), (0.08, pip(hz(T + 26), 0.06), 0.5)),
+               tecla=mezclar((0, clic(0.005, (4000, 10000)), 0.6), (0, pip(hz(T + 36), 0.008), 0.06)),
+               rascar=rascado((2800, 9500), tono(T + 31, 0.3), aspereza=170))
+
 def andalus():
     # Re hiyaz: laúd (oud), darbuka y qanún.
     T = -7
@@ -473,6 +654,15 @@ def andalus():
         aviso=reverb(mezclar(*[(0.28 * i, oud(g, 0.9), 0.55) for i, g in enumerate([4, 5, 7, 5, 4])], (0, dum(), 0.4), (0.56, dum(), 0.4), (1.12, dum(), 0.4)), 1.4, 0.25),
         solemne=reverb(mezclar(*[(0.45 * i, oud(g, 1.2), 0.55) for i, g in enumerate([7, 5, 4, 2, 1, 2, 4, 1, 0])], *[(0.9 * i, dum(), 0.35) for i in range(5)], *[(0.9 * i + 0.45, tek(), 0.25) for i in range(5)],
                                (4.2, mezclar(*[(i * 0.05, qanun(g, 1.2), 0.3) for i, g in enumerate([0, 2, 4, 7])]), 1)), 2.0, 0.3))
+
+    # Error: el dum y el laúd que baja el semitono del hiyaz. Cambio: el tek y el qanún que sube.
+    # Tecla: el cálamo de caña, que raspa dos veces. Rascar: latón de las lámparas nazaríes.
+    with azar_propio('andalus'):
+        nuevos('andalus',
+               error=mezclar((0, dum(), 0.6), (0.04, oud(1, 0.3), 0.5), (0.18, oud(0, 0.5), 0.5)),
+               cambio=mezclar((0, tek(), 0.5), (0.05, qanun(4, 0.3), 0.4), (0.12, qanun(7, 0.4), 0.4)),
+               tecla=mezclar((0, trazo((2200, 7000), 0.03, 10), 1), (0.035, trazo((2200, 7000), 0.025, 8), 0.7)),
+               rascar=rascado((1500, 6500), qanun(9, 0.5), aspereza=90))
 
 def mongol():
     # Mi mayor pentatónico: cascos, morin juur y canto difónico sobre un Mi grave.
@@ -497,6 +687,15 @@ def mongol():
         aviso=reverb(mezclar(*[(0.5 * i, arco(hz(T + penta[g]), 0.6), 0.45) for i, g in enumerate([4, 3, 2, 3, 4])], (0, galope(), 0.4), (1.0, galope(), 0.4)), 1.8, 0.3),
         solemne=reverb(mezclar((0, joomii(6.8), 0.5), *[(0.9 + 0.7 * i, arco(hz(T + penta[g]), 0.9), 0.35) for i, g in enumerate([2, 3, 4, 6, 4, 3, 2, 0])]), 2.5, 0.35))
 
+    # Error: el morin juur que resbala medio tono abajo y un casco. Cambio: dos cascos y una cuerda a la quinta.
+    # Tecla: el pincel de fieltro. Rascar: plata sobredorada.
+    with azar_propio('mongol'):
+        nuevos('mongol',
+               error=mezclar((0, casco(), 0.6), (0.04, arco(hz(T + 7), 0.15), 0.4), (0.18, arco(hz(T + 6), 0.3), 0.4)),
+               cambio=mezclar((0, casco(), 0.5), (0.07, casco(), 0.5), (0.1, pluck(hz(T + 7), 0.4, 0.4), 0.45)),
+               tecla=filtro(ruido(0.06), 'banda', (900, 3800)) * env(int(0.06 * SR), 0.01, 0.035, 4),
+               rascar=rascado((1400, 6000), pluck(hz(T + 24), 0.5, 0.7), aspereza=85))
+
 def renacimiento():
     # La mayor: pluma, hojas, laúd y flauta dulce.
     T = 0
@@ -513,6 +712,15 @@ def renacimiento():
         aviso=reverb(mezclar(*[(0.25 * i, laud(n, 0.9), 0.55) for i, n in enumerate([7, 9, 7, 4, 0])], (1.3, rasgueo([-12, 0, 4, 7]), 0.7)), 1.4, 0.25),
         solemne=reverb(mezclar(*[(0.5 * i, flauta(hz(n + 12), 0.48), 0.3) for i, n in enumerate([0, 2, 4, 5, 7, 5, 4, 2, 4, 0])],
                                *[(1.0 * i, rasgueo(c), 0.45) for i, c in enumerate([[-12, 0, 4, 7], [-7, -3, 0, 5], [-5, -1, 2, 7], [-12, -5, 0, 4], [-12, 0, 4, 7, 12]])]), 2.0, 0.3))
+
+    # Error: el laúd apagado en una segunda menor. Cambio: un rasgueo corto que sube.
+    # Tecla: la pluma de ganso del taller. Rascar: bronce de taller, pardo.
+    with azar_propio('renacimiento'):
+        nuevos('renacimiento',
+               error=mezclar((0, pluck(hz(T + 7), 0.3, 0.2), 0.5), (0.12, pluck(hz(T + 6), 0.5, 0.15), 0.5)),
+               cambio=mezclar((0, laud(T + 4, 0.4), 0.4), (0.05, laud(T + 7, 0.4), 0.4), (0.1, laud(T + 12, 0.5), 0.45)),
+               tecla=trazo((3000, 9000), 0.04, 22, 0.025),
+               rascar=rascado((1300, 5800), laud(T + 24, 0.5), aspereza=75))
 
 def revolucion():
     # Sol mayor: pífano y tambor de las milicias, el papel de los carteles; en lo solemne, cuerdas de himno y bombo.
@@ -536,6 +744,15 @@ def revolucion():
         solemne=reverb(mezclar(*[(1.0 * i, acorde(lambda f, d: arco(f, d, 5), [T - 12 + a for a in ch], 1.0), 0.45) for i, ch in enumerate([[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7, 12]])],
                                *[(1.0 * i, tambor(hz(T - 36), 0.4, 0.2), 0.5) for i in range(4)], (0, redoble(0.8), 0.35), (2.9, redoble(1.0), 0.4)), 2.0, 0.3))
 
+    # Error: el pífano que se cae y el tambor destemplado. Cambio: dos golpes y el pífano a la quinta.
+    # Tecla: los tipos de la imprenta de los carteles. Rascar: estaño de botón de uniforme.
+    with azar_propio('revolucion'):
+        nuevos('revolucion',
+               error=mezclar((0, pifano(T + 7, 0.1), 0.45), (0.12, pifano(T + 6, 0.25), 0.45), (0.12, tambor(hz(T - 24), 0.25, 0.5), 0.45)),
+               cambio=mezclar((0, golpe(), 0.5), (0.05, pifano(T, 0.08), 0.4), (0.13, pifano(T + 7, 0.14), 0.45)),
+               tecla=mezclar((0, clic(0.014, (900, 3500)), 1), (0.003, clic(0.008, (2500, 6000)), 0.5)),
+               rascar=rascado((1200, 5200), campana(hz(T + 19), 0.4, 2.2, 1.2, 8), aspereza=55))
+
 def antiguas():
     # Re dórico: arpa, cuerno grave y piedra; en lo solemne, coro grave, cuerno y tambor de salón.
     T = -7   # Re4
@@ -552,34 +769,40 @@ def antiguas():
         solemne=reverb(mezclar(*[(1.0 * i, acorde(coro, [T - 12 + a for a in ch], 1.1), 0.45) for i, ch in enumerate([[0, 3, 7], [-2, 2, 5], [5, 9, 12], [0, 3, 7, 12]])],
                                *[(1.0 * i, tambor(hz(T - 36), 0.5, 0.15), 0.45) for i in range(4)], (0, cuerno(T, 2.0), 0.3)), 2.2, 0.35))
 
-# ------------------------------------------------------------------ teclas del diario y el rascado del mapa
+    # Error: la piedra que asienta mal y el arpa que baja medio tono. Cambio: dos cuerdas del arpa a la quinta.
+    # Tecla: el cincel sobre la piedra. Rascar: hierro viejo de las minas.
+    with azar_propio('antiguas'):
+        nuevos('antiguas',
+               error=mezclar((0, piedra(), 0.6), (0.06, arpa(T + 3, 0.3), 0.45), (0.2, arpa(T + 2, 0.5), 0.45)),
+               cambio=mezclar((0, arpa(T + 12, 0.4), 0.45), (0.08, arpa(T + 19, 0.5), 0.45)),
+               tecla=mezclar((0, clic(0.012, (400, 2000)), 1), (0, filtro(ruido(0.02), 'bajo', 500) * env(int(0.02 * SR), 0.001, 0.01), 0.5)),
+               rascar=rascado((900, 4500), cuerno(T + 12, 0.4), aspereza=45))
 
-def comunes():
-    maquina = mezclar((0, clic(0.018, (900, 3800)), 1), (0.004, clic(0.01, (400, 1500)), 0.6), (0.01, filtro(ruido(0.02), 'bajo', 600) * env(int(0.02 * SR), 0.001, 0.01), 0.4))
-    pluma = filtro(ruido(0.045), 'banda', (2500, 8000)) * env(int(0.045 * SR), 0.004, 0.025, 4) * (0.7 + 0.3 * np.sin(np.linspace(0, 20, int(0.045 * SR))))
-    suave = mezclar((0, filtro(ruido(0.02), 'banda', (600, 2500)) * env(int(0.02 * SR), 0.001, 0.01, 6), 1), (0, filtro(ruido(0.012), 'bajo', 400) * env(int(0.012 * SR), 0.001, 0.006), 0.5))
-    digital = mezclar((0, clic(0.008, (3000, 9000)), 0.7), (0, filtro(ruido(0.01), 'banda', (1200, 3000)) * env(int(0.01 * SR), 0.0005, 0.005), 0.5))
-    escribir('s_tecla_maquina', maquina, rms_db=-24)
-    escribir('s_tecla_pluma', pluma, rms_db=-26)
-    escribir('s_tecla_suave', suave, rms_db=-26)
-    escribir('s_tecla_digital', digital, rms_db=-27)
-    # Una moneda que raspa la lámina: tres pasadas con su rebaba metálica.
-    d = 1.0; x = np.zeros(int(d * SR))
-    for i, (ini, dur) in enumerate([(0.0, 0.28), (0.33, 0.28), (0.66, 0.3)]):
-        n = int(dur * SR); r = filtro(ruido(dur), 'banda', (1800, 7500)) * (0.5 + 0.5 * np.abs(filtro(ruido(dur), 'bajo', 90)))
-        r *= np.sin(np.pi * np.arange(n) / n) ** 0.6
-        k = int(ini * SR); x[k:k + n] += r
-    escribir('s_rascar', x, rms_db=-21)
+# ------------------------------------------------------------------ el aviso de los lugares especiales
+
+def lugar():
+    """n_lugar: llegaste a un lugar especial. Tres campanas claras (Mi, Sol, Si) que se quedan sonando."""
+    with azar_propio('lugar'):
+        camp = lambda n, d=2.2: campana(hz(n), d, 2.76, 1.0, 2.6)
+        X['n_lugar'] = reverb(mezclar((0, camp(7), 0.5), (0.18, camp(10), 0.5), (0.32, camp(14), 0.55)), 0.8, 0.18)
 
 if __name__ == '__main__':
+    # python3 afinados.py <res/raw> [temas] [claves]: [temas] separados por comas (o «todos»); con [claves] (por ejemplo
+    # «error,cambio,tecla,rascar,lugar») solo se escriben esos sonidos y los demás archivos se quedan como están.
     todos = (romano, ciber, heleno, medieval, distopia, refugio, orden, laboratorio, colonos, napoleon, botanico, navidad, seda, urss, gotico, espacio, andalus, mongol, renacimiento, revolucion, antiguas)
-    solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
+    solo = sys.argv[2].split(',') if len(sys.argv) > 2 and sys.argv[2] != 'todos' else None
+    claves = sys.argv[3].split(',') if len(sys.argv) > 3 else None
     for f in todos:
         if solo is None or f.__name__ in solo: f()
-    if solo is not None and 'comunes' in solo: comunes()
+    lugar()
     for tema, d in S.items():
         for k, x in d.items():
+            if claves is not None and k not in claves: continue
             if k in ('aviso', 'solemne'): escribir(f'n_{tema}_{k}', x, calidad=4, rms_db=-16.0)
             else: escribir(f's_{tema}_{k}', x)
         print('listo', tema, flush=True)
-    if solo is None: comunes()
+    for nombre, x in X.items():
+        clase = nombre.split('_')[1]
+        if claves is not None and clase not in claves: continue
+        if nombre == 'n_lugar': escribir(nombre, x, calidad=4, rms_db=-20.5)
+        else: escribir(nombre, x, rms_db={'tecla': -26.0, 'rascar': -21.0}[clase])

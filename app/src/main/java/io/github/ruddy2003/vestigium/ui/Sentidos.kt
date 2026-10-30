@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import io.github.ruddy2003.vestigium.R
 import io.github.ruddy2003.vestigium.data.Repo
+import kotlin.math.pow
 
 /**
  * Vibraciones y sonidos de cada tema. Cada evento tiene su propio patrón: el golpe de cincel romano,
@@ -38,151 +39,178 @@ object Sentidos {
 
     private fun g(p: Int, f: Float, e: Int = 0) = Golpe(p, f, e)
 
-    internal fun patron(tema: TemaId, e: Evento): List<Golpe> = when (e) {
-        Evento.ELEGIR -> when (tema) {
-            TemaId.CIBER -> listOf(g(TICK, 0.8f))
-            TemaId.DISTOPIA -> listOf(g(CLICK, 0.45f))
-            TemaId.ORDEN, TemaId.MEDIEVAL, TemaId.COLONOS -> listOf(g(TICK_GRAVE, 0.7f))
-            else -> listOf(g(TICK, 0.5f))
+    /**
+     * El patrón de cada tema y evento, todo propio: elegir, abrir, cambiar (encender o apagar algo) y el error también son
+     * del tema (antes eran comunes a varios). Logro y tema comparten patrón: los dos celebran.
+     */
+    internal fun patron(tema: TemaId, e: Evento): List<Golpe> = when (tema) {
+        // Cincel sobre mármol.
+        TemaId.ROMANO -> when (e) {
+            Evento.TOQUE -> listOf(g(CLICK, 0.5f)); Evento.PASAR -> listOf(g(TICK, 0.6f))
+            Evento.GUARDAR -> listOf(g(THUD, 0.8f), g(CLICK, 0.6f, 60))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.55f), g(TICK, 0.3f, 40)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.45f), g(CLICK, 0.7f, 40))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.5f), g(CLICK, 0.8f, 60)); Evento.ERROR -> listOf(g(THUD, 0.7f), g(BAJA, 0.5f, 50))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.4f), g(CLICK, 0.6f, 70), g(CLICK, 0.9f, 70))
         }
-        Evento.ERROR -> listOf(g(BAJA, 0.8f), g(CLICK, 0.6f, 60))
-        Evento.ABRIR -> when (tema) {
-            TemaId.CIBER, TemaId.ESPACIO, TemaId.LABORATORIO -> listOf(g(SUBE, 0.5f), g(TICK, 0.7f, 30))
-            TemaId.DISTOPIA, TemaId.URSS, TemaId.ORDEN -> listOf(g(CLICK, 0.8f), g(THUD, 0.6f, 50))
-            else -> listOf(g(SUBE_LENTO, 0.45f), g(TICK_GRAVE, 0.6f, 20))
+        // Ráfagas digitales.
+        TemaId.CIBER -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 1f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.8f), g(TICK_GRAVE, 0.8f, 25))
+            Evento.GUARDAR -> listOf(g(TICK, 1f), g(TICK, 1f, 20), g(CLICK, 0.8f, 20))
+            Evento.ELEGIR -> listOf(g(TICK, 0.8f)); Evento.ABRIR -> listOf(g(SUBE, 0.5f), g(TICK, 0.7f, 30))
+            Evento.CAMBIO -> listOf(g(TICK, 1f), g(TICK, 1f, 15)); Evento.ERROR -> listOf(g(TICK_GRAVE, 1f), g(TICK_GRAVE, 1f, 25), g(TICK_GRAVE, 1f, 25), g(BAJA, 0.6f, 20))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE, 0.8f), g(CLICK, 1f, 10), g(TICK, 1f, 40), g(TICK, 1f, 30))
         }
-        Evento.CAMBIO -> when (tema) {
-            TemaId.HELENO -> listOf(g(SPIN, 0.6f))
-            TemaId.REFUGIO -> listOf(g(CLICK, 0.7f), g(SUBE_LENTO, 0.5f, 30))
-            else -> listOf(g(SUBE_LENTO, 0.55f), g(CLICK, 0.7f, 30))
+        // Cuerda de lira y el sol que gira.
+        TemaId.HELENO -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 0.7f)); Evento.PASAR -> listOf(g(BAJA, 0.5f))
+            Evento.GUARDAR -> listOf(g(SUBE_LENTO, 0.6f), g(CLICK, 0.5f, 10))
+            Evento.ELEGIR -> listOf(g(TICK, 0.6f), g(TICK, 0.3f, 50)); Evento.ABRIR -> listOf(g(SPIN, 0.4f), g(TICK, 0.5f, 40))
+            Evento.CAMBIO -> listOf(g(SPIN, 0.6f)); Evento.ERROR -> listOf(g(BAJA, 0.6f), g(TICK_GRAVE, 0.5f, 80))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(SPIN, 0.7f), g(CLICK, 0.6f, 60))
         }
-        else -> when (tema) {
-            // Cincel sobre mármol.
-            TemaId.ROMANO -> when (e) {
-                Evento.TOQUE -> listOf(g(CLICK, 0.5f)); Evento.PASAR -> listOf(g(TICK, 0.6f))
-                Evento.GUARDAR -> listOf(g(THUD, 0.8f), g(CLICK, 0.6f, 60))
-                else -> listOf(g(CLICK, 0.4f), g(CLICK, 0.6f, 70), g(CLICK, 0.9f, 70))
-            }
-            // Ráfagas digitales.
-            TemaId.CIBER -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK, 1f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.8f), g(TICK_GRAVE, 0.8f, 25))
-                Evento.GUARDAR -> listOf(g(TICK, 1f), g(TICK, 1f, 20), g(CLICK, 0.8f, 20))
-                else -> listOf(g(SUBE, 0.8f), g(CLICK, 1f, 10), g(TICK, 1f, 40), g(TICK, 1f, 30))
-            }
-            // Cuerda de lira y el sol que gira.
-            TemaId.HELENO -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK, 0.7f)); Evento.PASAR -> listOf(g(BAJA, 0.5f))
-                Evento.GUARDAR -> listOf(g(SUBE_LENTO, 0.6f), g(CLICK, 0.5f, 10))
-                else -> listOf(g(SPIN, 0.7f), g(CLICK, 0.6f, 60))
-            }
-            // Pluma, página y sello de cera.
-            TemaId.MEDIEVAL -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.8f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.6f), g(TICK, 0.3f, 40))
-                Evento.GUARDAR -> listOf(g(SUBE, 0.3f), g(THUD, 1f, 20))
-                else -> listOf(g(THUD, 0.8f), g(THUD, 0.45f, 300))
-            }
-            // Máquina de escribir y sello de goma.
-            TemaId.DISTOPIA -> when (e) {
-                Evento.TOQUE -> listOf(g(CLICK, 1f)); Evento.PASAR -> listOf(g(CLICK, 0.6f))
-                Evento.GUARDAR -> listOf(g(THUD, 1f), g(CLICK, 1f, 70))
-                else -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
-            }
-            // Relé y contador Geiger.
-            TemaId.REFUGIO -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK, 0.9f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.7f))
-                Evento.GUARDAR -> listOf(g(CLICK, 0.7f), g(CLICK, 0.7f, 35), g(SUBE, 0.5f, 40))
-                else -> listOf(g(TICK, 0.9f), g(TICK, 0.9f, 30), g(TICK, 0.9f, 80), g(TICK, 0.9f, 20), g(TICK, 0.9f, 120), g(TICK, 0.9f, 40), g(SUBE, 0.6f, 80))
-            }
-            // Servo y pisada de armadura.
-            TemaId.ORDEN -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK_GRAVE, 1f)); Evento.PASAR -> listOf(g(SUBE, 0.4f))
-                Evento.GUARDAR -> listOf(g(SUBE_LENTO, 0.8f), g(THUD, 1f, 10))
-                else -> listOf(g(THUD, 1f), g(THUD, 1f, 180), g(THUD, 1f, 180))
-            }
-            // Limpio y suave.
-            TemaId.LABORATORIO -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK, 0.4f)); Evento.PASAR -> listOf(g(TICK, 0.3f))
-                Evento.GUARDAR -> listOf(g(CLICK, 0.4f), g(SUBE, 0.3f, 20))
-                else -> listOf(g(SUBE, 0.5f), g(BAJA, 0.5f, 40))
-            }
-            // Nudillos sobre madera.
-            TemaId.COLONOS -> when (e) {
-                Evento.TOQUE -> listOf(g(CLICK, 0.6f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.7f))
-                Evento.GUARDAR -> listOf(g(THUD, 0.9f), g(THUD, 0.9f, 110))
-                else -> listOf(g(CLICK, 0.5f), g(CLICK, 0.5f, 90), g(CLICK, 0.5f, 90), g(THUD, 0.9f, 120))
-            }
-            // Tambor de marcha y cañonazo lejano.
-            TemaId.NAPOLEON -> when (e) {
-                Evento.TOQUE -> listOf(g(CLICK, 0.7f)); Evento.PASAR -> listOf(g(TICK, 0.6f), g(TICK, 0.6f, 50))
-                Evento.GUARDAR -> listOf(g(CLICK, 0.6f), g(CLICK, 0.6f, 60), g(THUD, 1f, 60))
-                else -> listOf(g(CLICK, 0.5f), g(CLICK, 0.5f, 50), g(CLICK, 0.5f, 50), g(CLICK, 0.5f, 50), g(THUD, 1f, 160), g(THUD, 0.6f, 240))
-            }
-            // Hojas que se rozan y un pájaro que canta.
-            TemaId.BOTANICO -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.5f)); Evento.PASAR -> listOf(g(SUBE, 0.3f), g(BAJA, 0.3f, 20))
-                Evento.GUARDAR -> listOf(g(SUBE_LENTO, 0.5f), g(CLICK, 0.4f, 30))
-                else -> listOf(g(TICK, 0.6f), g(TICK, 0.8f, 70), g(TICK, 0.6f, 50), g(SUBE, 0.5f, 60))
-            }
-            // Órgano y campanas de la capilla.
-            TemaId.GOTICO -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.6f)); Evento.PASAR -> listOf(g(SUBE_LENTO, 0.35f))
-                Evento.GUARDAR -> listOf(g(THUD, 0.8f), g(SUBE_LENTO, 0.5f, 40))
-                else -> listOf(g(THUD, 0.9f), g(THUD, 0.6f, 260), g(THUD, 0.4f, 260))
-            }
-            // Pitidos de la sala de control.
-            TemaId.ESPACIO -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK, 0.8f)); Evento.PASAR -> listOf(g(SUBE, 0.5f))
-                Evento.GUARDAR -> listOf(g(TICK, 0.9f), g(TICK, 0.9f, 60), g(SUBE_LENTO, 0.6f, 40))
-                else -> listOf(g(SUBE_LENTO, 0.9f), g(CLICK, 1f, 10), g(SPIN, 0.5f, 60))
-            }
-            // Laúd y darbuka: dum, tek, tek.
-            TemaId.ANDALUS -> when (e) {
-                Evento.TOQUE -> listOf(g(CLICK, 0.5f)); Evento.PASAR -> listOf(g(TICK, 0.5f), g(TICK_GRAVE, 0.5f, 60))
-                Evento.GUARDAR -> listOf(g(THUD, 0.8f), g(TICK, 0.6f, 90), g(TICK, 0.6f, 90))
-                else -> listOf(g(THUD, 0.9f), g(TICK, 0.7f, 120), g(TICK, 0.7f, 60), g(THUD, 0.8f, 120), g(SPIN, 0.4f, 80))
-            }
-            // Cascos al galope y el tambor de la horda.
-            TemaId.MONGOL -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.8f)); Evento.PASAR -> listOf(g(CLICK, 0.6f), g(CLICK, 0.6f, 50), g(CLICK, 0.8f, 50))
-                Evento.GUARDAR -> listOf(g(THUD, 0.9f), g(THUD, 0.5f, 70))
-                else -> listOf(g(CLICK, 0.6f), g(CLICK, 0.6f, 50), g(CLICK, 0.8f, 50), g(CLICK, 0.6f, 140), g(CLICK, 0.6f, 50), g(CLICK, 0.8f, 50), g(THUD, 1f, 140))
-            }
-            // Pluma que raspa el papel y un laúd.
-            TemaId.RENACIMIENTO -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK, 0.5f)); Evento.PASAR -> listOf(g(BAJA, 0.4f))
-                Evento.GUARDAR -> listOf(g(SUBE, 0.3f), g(CLICK, 0.6f, 30))
-                else -> listOf(g(SUBE_LENTO, 0.5f), g(TICK, 0.7f, 40), g(TICK, 0.7f, 80), g(TICK, 0.9f, 80))
-            }
-            // Cascabeles.
-            TemaId.NAVIDAD -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK, 0.7f)); Evento.PASAR -> listOf(g(TICK, 0.5f), g(TICK, 0.4f, 30))
-                Evento.GUARDAR -> listOf(g(TICK, 0.8f), g(TICK, 0.7f, 35), g(TICK, 0.8f, 35), g(CLICK, 0.6f, 50))
-                else -> listOf(g(SUBE, 0.6f), g(TICK, 0.9f, 30), g(TICK, 0.8f, 40), g(TICK, 0.9f, 40), g(TICK, 0.8f, 40), g(CLICK, 0.7f, 60))
-            }
-            // Gong y pasos de camello.
-            TemaId.SEDA -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.7f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.5f), g(TICK_GRAVE, 0.4f, 160))
-                Evento.GUARDAR -> listOf(g(THUD, 0.8f), g(SPIN, 0.35f, 30))
-                else -> listOf(g(THUD, 1f), g(SPIN, 0.5f, 40), g(SUBE_LENTO, 0.4f, 200))
-            }
-            // Prensa de fábrica y sirena.
-            TemaId.URSS -> when (e) {
-                Evento.TOQUE -> listOf(g(CLICK, 0.9f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.9f))
-                Evento.GUARDAR -> listOf(g(THUD, 1f), g(THUD, 1f, 90))
-                else -> listOf(g(THUD, 1f), g(THUD, 1f, 120), g(THUD, 1f, 120), g(SUBE_LENTO, 0.8f, 120))
-            }
-            // Piedra que asienta y cuerda de arpa.
-            TemaId.ANTIGUAS -> when (e) {
-                Evento.TOQUE -> listOf(g(THUD, 0.6f)); Evento.PASAR -> listOf(g(BAJA, 0.35f))
-                Evento.GUARDAR -> listOf(g(THUD, 0.7f), g(TICK, 0.6f, 60), g(TICK, 0.7f, 120))
-                else -> listOf(g(THUD, 0.9f), g(SUBE_LENTO, 0.5f, 80), g(TICK, 0.7f, 90), g(TICK, 0.8f, 90), g(TICK, 1f, 90))
-            }
-            // Tambor de las milicias: redoble y golpe.
-            TemaId.REVOLUCION -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.7f)); Evento.PASAR -> listOf(g(TICK, 0.5f), g(TICK, 0.5f, 40))
-                Evento.GUARDAR -> listOf(g(TICK, 0.6f), g(TICK, 0.6f, 30), g(TICK, 0.7f, 30), g(THUD, 0.9f, 50))
-                else -> listOf(g(TICK, 0.6f), g(TICK, 0.6f, 30), g(TICK, 0.6f, 30), g(TICK, 0.7f, 30), g(TICK, 0.8f, 30), g(THUD, 1f, 60), g(SUBE, 0.6f, 120))
-            }
+        // Pluma, página y sello de cera.
+        TemaId.MEDIEVAL -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.8f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.6f), g(TICK, 0.3f, 40))
+            Evento.GUARDAR -> listOf(g(SUBE, 0.3f), g(THUD, 1f, 20))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.7f)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.4f), g(THUD, 0.6f, 30))
+            Evento.CAMBIO -> listOf(g(TICK_GRAVE, 0.6f), g(CLICK, 0.5f, 90)); Evento.ERROR -> listOf(g(THUD, 0.8f), g(THUD, 0.4f, 120))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.8f), g(THUD, 0.45f, 300))
+        }
+        // Máquina de escribir y sello de goma.
+        TemaId.DISTOPIA -> when (e) {
+            Evento.TOQUE -> listOf(g(CLICK, 1f)); Evento.PASAR -> listOf(g(CLICK, 0.6f))
+            Evento.GUARDAR -> listOf(g(THUD, 1f), g(CLICK, 1f, 70))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.45f)); Evento.ABRIR -> listOf(g(CLICK, 0.8f), g(THUD, 0.6f, 50))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
+        }
+        // Relé y contador Geiger.
+        TemaId.REFUGIO -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 0.9f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.7f))
+            Evento.GUARDAR -> listOf(g(CLICK, 0.7f), g(CLICK, 0.7f, 35), g(SUBE, 0.5f, 40))
+            Evento.ELEGIR -> listOf(g(TICK, 0.9f), g(TICK, 0.5f, 20)); Evento.ABRIR -> listOf(g(CLICK, 0.6f), g(SUBE, 0.5f, 30))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.7f), g(SUBE_LENTO, 0.5f, 30)); Evento.ERROR -> listOf(g(TICK, 0.9f), g(TICK, 0.9f, 20), g(TICK, 0.9f, 50), g(TICK, 0.9f, 10), g(TICK, 0.9f, 40), g(BAJA, 0.5f, 40))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(TICK, 0.9f), g(TICK, 0.9f, 30), g(TICK, 0.9f, 80), g(TICK, 0.9f, 20), g(TICK, 0.9f, 120), g(TICK, 0.9f, 40), g(SUBE, 0.6f, 80))
+        }
+        // Servo y pisada de armadura.
+        TemaId.ORDEN -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK_GRAVE, 1f)); Evento.PASAR -> listOf(g(SUBE, 0.4f))
+            Evento.GUARDAR -> listOf(g(SUBE_LENTO, 0.8f), g(THUD, 1f, 10))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.8f)); Evento.ABRIR -> listOf(g(SUBE, 0.5f), g(THUD, 0.9f, 30))
+            Evento.CAMBIO -> listOf(g(SUBE, 0.4f), g(CLICK, 0.8f, 40)); Evento.ERROR -> listOf(g(BAJA, 0.7f), g(THUD, 1f, 40))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 1f), g(THUD, 1f, 180), g(THUD, 1f, 180))
+        }
+        // Limpio y suave.
+        TemaId.LABORATORIO -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 0.4f)); Evento.PASAR -> listOf(g(TICK, 0.3f))
+            Evento.GUARDAR -> listOf(g(CLICK, 0.4f), g(SUBE, 0.3f, 20))
+            Evento.ELEGIR -> listOf(g(TICK, 0.35f)); Evento.ABRIR -> listOf(g(SUBE, 0.4f), g(TICK, 0.5f, 40))
+            Evento.CAMBIO -> listOf(g(TICK, 0.4f), g(SUBE, 0.3f, 30)); Evento.ERROR -> listOf(g(BAJA, 0.45f), g(BAJA, 0.35f, 90))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE, 0.5f), g(BAJA, 0.5f, 40))
+        }
+        // Nudillos sobre madera.
+        TemaId.COLONOS -> when (e) {
+            Evento.TOQUE -> listOf(g(CLICK, 0.6f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.7f))
+            Evento.GUARDAR -> listOf(g(THUD, 0.9f), g(THUD, 0.9f, 110))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.6f), g(TICK, 0.3f, 30)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.4f), g(CLICK, 0.6f, 60))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.6f), g(TICK_GRAVE, 0.6f, 50)); Evento.ERROR -> listOf(g(THUD, 0.6f), g(THUD, 0.5f, 140))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.5f), g(CLICK, 0.5f, 90), g(CLICK, 0.5f, 90), g(THUD, 0.9f, 120))
+        }
+        // Tambor de marcha y cañonazo lejano.
+        TemaId.NAPOLEON -> when (e) {
+            Evento.TOQUE -> listOf(g(CLICK, 0.7f)); Evento.PASAR -> listOf(g(TICK, 0.6f), g(TICK, 0.6f, 50))
+            Evento.GUARDAR -> listOf(g(CLICK, 0.6f), g(CLICK, 0.6f, 60), g(THUD, 1f, 60))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.6f), g(CLICK, 0.4f, 40)); Evento.ABRIR -> listOf(g(SUBE, 0.6f), g(THUD, 0.7f, 40))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.5f), g(CLICK, 0.7f, 60), g(THUD, 0.5f, 60)); Evento.ERROR -> listOf(g(THUD, 0.8f), g(BAJA, 0.6f, 60))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.5f), g(CLICK, 0.5f, 50), g(CLICK, 0.5f, 50), g(CLICK, 0.5f, 50), g(THUD, 1f, 160), g(THUD, 0.6f, 240))
+        }
+        // Hojas que se rozan y un pájaro que canta.
+        TemaId.BOTANICO -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.5f)); Evento.PASAR -> listOf(g(SUBE, 0.3f), g(BAJA, 0.3f, 20))
+            Evento.GUARDAR -> listOf(g(SUBE_LENTO, 0.5f), g(CLICK, 0.4f, 30))
+            Evento.ELEGIR -> listOf(g(TICK, 0.5f), g(TICK, 0.7f, 60)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.4f), g(TICK, 0.4f, 50))
+            Evento.CAMBIO -> listOf(g(SUBE, 0.3f), g(TICK, 0.5f, 40)); Evento.ERROR -> listOf(g(BAJA, 0.4f), g(TICK_GRAVE, 0.4f, 70))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(TICK, 0.6f), g(TICK, 0.8f, 70), g(TICK, 0.6f, 50), g(SUBE, 0.5f, 60))
+        }
+        // Órgano y campanas de la capilla.
+        TemaId.GOTICO -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.6f)); Evento.PASAR -> listOf(g(SUBE_LENTO, 0.35f))
+            Evento.GUARDAR -> listOf(g(THUD, 0.8f), g(SUBE_LENTO, 0.5f, 40))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.5f), g(TICK_GRAVE, 0.3f, 100)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.5f), g(THUD, 0.7f, 60))
+            Evento.CAMBIO -> listOf(g(THUD, 0.5f), g(TICK_GRAVE, 0.5f, 120)); Evento.ERROR -> listOf(g(THUD, 0.7f), g(THUD, 0.7f, 40))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.9f), g(THUD, 0.6f, 260), g(THUD, 0.4f, 260))
+        }
+        // Pitidos de la sala de control.
+        TemaId.ESPACIO -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 0.8f)); Evento.PASAR -> listOf(g(SUBE, 0.5f))
+            Evento.GUARDAR -> listOf(g(TICK, 0.9f), g(TICK, 0.9f, 60), g(SUBE_LENTO, 0.6f, 40))
+            Evento.ELEGIR -> listOf(g(TICK, 0.7f), g(TICK, 0.7f, 45)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.6f), g(TICK, 0.8f, 30))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.6f), g(TICK, 0.8f, 30)); Evento.ERROR -> listOf(g(TICK, 1f), g(TICK, 1f, 60), g(TICK, 1f, 60))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE_LENTO, 0.9f), g(CLICK, 1f, 10), g(SPIN, 0.5f, 60))
+        }
+        // Laúd y darbuka: dum, tek, tek.
+        TemaId.ANDALUS -> when (e) {
+            Evento.TOQUE -> listOf(g(CLICK, 0.5f)); Evento.PASAR -> listOf(g(TICK, 0.5f), g(TICK_GRAVE, 0.5f, 60))
+            Evento.GUARDAR -> listOf(g(THUD, 0.8f), g(TICK, 0.6f, 90), g(TICK, 0.6f, 90))
+            Evento.ELEGIR -> listOf(g(TICK, 0.5f), g(TICK_GRAVE, 0.4f, 40)); Evento.ABRIR -> listOf(g(THUD, 0.6f), g(TICK, 0.5f, 90), g(TICK, 0.5f, 50))
+            Evento.CAMBIO -> listOf(g(TICK, 0.6f), g(TICK, 0.6f, 50), g(THUD, 0.5f, 60)); Evento.ERROR -> listOf(g(THUD, 0.8f), g(BAJA, 0.5f, 60))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.9f), g(TICK, 0.7f, 120), g(TICK, 0.7f, 60), g(THUD, 0.8f, 120), g(SPIN, 0.4f, 80))
+        }
+        // Cascos al galope y el tambor de la horda.
+        TemaId.MONGOL -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.8f)); Evento.PASAR -> listOf(g(CLICK, 0.6f), g(CLICK, 0.6f, 50), g(CLICK, 0.8f, 50))
+            Evento.GUARDAR -> listOf(g(THUD, 0.9f), g(THUD, 0.5f, 70))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.5f), g(CLICK, 0.6f, 50)); Evento.ABRIR -> listOf(g(CLICK, 0.5f), g(CLICK, 0.6f, 50), g(THUD, 0.8f, 60))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.6f), g(CLICK, 0.6f, 70)); Evento.ERROR -> listOf(g(CLICK, 0.7f), g(BAJA, 0.6f, 60))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.6f), g(CLICK, 0.6f, 50), g(CLICK, 0.8f, 50), g(CLICK, 0.6f, 140), g(CLICK, 0.6f, 50), g(CLICK, 0.8f, 50), g(THUD, 1f, 140))
+        }
+        // Pluma que raspa el papel y un laúd.
+        TemaId.RENACIMIENTO -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 0.5f)); Evento.PASAR -> listOf(g(BAJA, 0.4f))
+            Evento.GUARDAR -> listOf(g(SUBE, 0.3f), g(CLICK, 0.6f, 30))
+            Evento.ELEGIR -> listOf(g(TICK, 0.45f), g(BAJA, 0.2f, 20)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.4f), g(TICK, 0.6f, 60), g(TICK, 0.6f, 40))
+            Evento.CAMBIO -> listOf(g(TICK, 0.5f), g(TICK, 0.7f, 50)); Evento.ERROR -> listOf(g(BAJA, 0.5f), g(TICK_GRAVE, 0.5f, 60))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE_LENTO, 0.5f), g(TICK, 0.7f, 40), g(TICK, 0.7f, 80), g(TICK, 0.9f, 80))
+        }
+        // Cascabeles.
+        TemaId.NAVIDAD -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 0.7f)); Evento.PASAR -> listOf(g(TICK, 0.5f), g(TICK, 0.4f, 30))
+            Evento.GUARDAR -> listOf(g(TICK, 0.8f), g(TICK, 0.7f, 35), g(TICK, 0.8f, 35), g(CLICK, 0.6f, 50))
+            Evento.ELEGIR -> listOf(g(TICK, 0.6f), g(TICK, 0.4f, 25)); Evento.ABRIR -> listOf(g(SUBE, 0.5f), g(TICK, 0.7f, 30), g(TICK, 0.6f, 30))
+            Evento.CAMBIO -> listOf(g(TICK, 0.7f), g(TICK, 0.7f, 30), g(TICK, 0.7f, 30)); Evento.ERROR -> listOf(g(BAJA, 0.5f), g(TICK, 0.4f, 60), g(TICK, 0.3f, 40))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE, 0.6f), g(TICK, 0.9f, 30), g(TICK, 0.8f, 40), g(TICK, 0.9f, 40), g(TICK, 0.8f, 40), g(CLICK, 0.7f, 60))
+        }
+        // Gong y pasos de camello.
+        TemaId.SEDA -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.7f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.5f), g(TICK_GRAVE, 0.4f, 160))
+            Evento.GUARDAR -> listOf(g(THUD, 0.8f), g(SPIN, 0.35f, 30))
+            Evento.ELEGIR -> listOf(g(TICK, 0.5f), g(SPIN, 0.25f, 30)); Evento.ABRIR -> listOf(g(THUD, 0.6f), g(SPIN, 0.4f, 40))
+            Evento.CAMBIO -> listOf(g(SPIN, 0.35f), g(TICK, 0.6f, 60)); Evento.ERROR -> listOf(g(THUD, 0.6f), g(BAJA, 0.5f, 100))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 1f), g(SPIN, 0.5f, 40), g(SUBE_LENTO, 0.4f, 200))
+        }
+        // Prensa de fábrica y sirena.
+        TemaId.URSS -> when (e) {
+            Evento.TOQUE -> listOf(g(CLICK, 0.9f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.9f))
+            Evento.GUARDAR -> listOf(g(THUD, 1f), g(THUD, 1f, 90))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.8f)); Evento.ABRIR -> listOf(g(CLICK, 0.8f), g(THUD, 0.9f, 60))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(THUD, 0.6f, 40)); Evento.ERROR -> listOf(g(SUBE_LENTO, 0.7f), g(BAJA, 0.9f, 60))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 1f), g(THUD, 1f, 120), g(THUD, 1f, 120), g(SUBE_LENTO, 0.8f, 120))
+        }
+        // Piedra que asienta y cuerda de arpa.
+        TemaId.ANTIGUAS -> when (e) {
+            Evento.TOQUE -> listOf(g(THUD, 0.6f)); Evento.PASAR -> listOf(g(BAJA, 0.35f))
+            Evento.GUARDAR -> listOf(g(THUD, 0.7f), g(TICK, 0.6f, 60), g(TICK, 0.7f, 120))
+            Evento.ELEGIR -> listOf(g(THUD, 0.4f), g(TICK, 0.4f, 40)); Evento.ABRIR -> listOf(g(THUD, 0.6f), g(SUBE_LENTO, 0.4f, 60))
+            Evento.CAMBIO -> listOf(g(TICK, 0.6f), g(TICK, 0.8f, 70)); Evento.ERROR -> listOf(g(THUD, 0.8f), g(BAJA, 0.4f, 80))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.9f), g(SUBE_LENTO, 0.5f, 80), g(TICK, 0.7f, 90), g(TICK, 0.8f, 90), g(TICK, 1f, 90))
+        }
+        // Tambor de las milicias: redoble y golpe.
+        TemaId.REVOLUCION -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.7f)); Evento.PASAR -> listOf(g(TICK, 0.5f), g(TICK, 0.5f, 40))
+            Evento.GUARDAR -> listOf(g(TICK, 0.6f), g(TICK, 0.6f, 30), g(TICK, 0.7f, 30), g(THUD, 0.9f, 50))
+            Evento.ELEGIR -> listOf(g(TICK, 0.6f), g(TICK, 0.4f, 30)); Evento.ABRIR -> listOf(g(TICK, 0.5f), g(TICK, 0.5f, 30), g(TICK, 0.5f, 30), g(THUD, 0.7f, 40))
+            Evento.CAMBIO -> listOf(g(TICK, 0.6f), g(THUD, 0.6f, 40)); Evento.ERROR -> listOf(g(TICK, 0.5f), g(TICK, 0.5f, 30), g(BAJA, 0.7f, 40))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(TICK, 0.6f), g(TICK, 0.6f, 30), g(TICK, 0.6f, 30), g(TICK, 0.7f, 30), g(TICK, 0.8f, 30), g(THUD, 1f, 60), g(SUBE, 0.6f, 120))
         }
     }
 
@@ -237,30 +265,37 @@ object Sentidos {
 
     // ---------------------------------------------------------------- sonido
 
-    /** Por tema: toque, guardar, logro, pasar (cambiar de pantalla), elegir, abrir y el sonido del propio tema (al elegirlo). */
-    internal val SONIDOS = mapOf(
-        "romano" to intArrayOf(R.raw.s_romano_toque, R.raw.s_romano_guardar, R.raw.s_romano_logro, R.raw.s_romano_pasar, R.raw.s_romano_elegir, R.raw.s_romano_abrir, R.raw.s_romano_tema),
-        "ciber" to intArrayOf(R.raw.s_ciber_toque, R.raw.s_ciber_guardar, R.raw.s_ciber_logro, R.raw.s_ciber_pasar, R.raw.s_ciber_elegir, R.raw.s_ciber_abrir, R.raw.s_ciber_tema),
-        "heleno" to intArrayOf(R.raw.s_heleno_toque, R.raw.s_heleno_guardar, R.raw.s_heleno_logro, R.raw.s_heleno_pasar, R.raw.s_heleno_elegir, R.raw.s_heleno_abrir, R.raw.s_heleno_tema),
-        "medieval" to intArrayOf(R.raw.s_medieval_toque, R.raw.s_medieval_guardar, R.raw.s_medieval_logro, R.raw.s_medieval_pasar, R.raw.s_medieval_elegir, R.raw.s_medieval_abrir, R.raw.s_medieval_tema),
-        "distopia" to intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro, R.raw.s_distopia_pasar, R.raw.s_distopia_elegir, R.raw.s_distopia_abrir, R.raw.s_distopia_tema),
-        "refugio" to intArrayOf(R.raw.s_refugio_toque, R.raw.s_refugio_guardar, R.raw.s_refugio_logro, R.raw.s_refugio_pasar, R.raw.s_refugio_elegir, R.raw.s_refugio_abrir, R.raw.s_refugio_tema),
-        "orden" to intArrayOf(R.raw.s_orden_toque, R.raw.s_orden_guardar, R.raw.s_orden_logro, R.raw.s_orden_pasar, R.raw.s_orden_elegir, R.raw.s_orden_abrir, R.raw.s_orden_tema),
-        "laboratorio" to intArrayOf(R.raw.s_laboratorio_toque, R.raw.s_laboratorio_guardar, R.raw.s_laboratorio_logro, R.raw.s_laboratorio_pasar, R.raw.s_laboratorio_elegir, R.raw.s_laboratorio_abrir, R.raw.s_laboratorio_tema),
-        "colonos" to intArrayOf(R.raw.s_colonos_toque, R.raw.s_colonos_guardar, R.raw.s_colonos_logro, R.raw.s_colonos_pasar, R.raw.s_colonos_elegir, R.raw.s_colonos_abrir, R.raw.s_colonos_tema),
-        "napoleon" to intArrayOf(R.raw.s_napoleon_toque, R.raw.s_napoleon_guardar, R.raw.s_napoleon_logro, R.raw.s_napoleon_pasar, R.raw.s_napoleon_elegir, R.raw.s_napoleon_abrir, R.raw.s_napoleon_tema),
-        "botanico" to intArrayOf(R.raw.s_botanico_toque, R.raw.s_botanico_guardar, R.raw.s_botanico_logro, R.raw.s_botanico_pasar, R.raw.s_botanico_elegir, R.raw.s_botanico_abrir, R.raw.s_botanico_tema),
-        "navidad" to intArrayOf(R.raw.s_navidad_toque, R.raw.s_navidad_guardar, R.raw.s_navidad_logro, R.raw.s_navidad_pasar, R.raw.s_navidad_elegir, R.raw.s_navidad_abrir, R.raw.s_navidad_tema),
-        "seda" to intArrayOf(R.raw.s_seda_toque, R.raw.s_seda_guardar, R.raw.s_seda_logro, R.raw.s_seda_pasar, R.raw.s_seda_elegir, R.raw.s_seda_abrir, R.raw.s_seda_tema),
-        "urss" to intArrayOf(R.raw.s_urss_toque, R.raw.s_urss_guardar, R.raw.s_urss_logro, R.raw.s_urss_pasar, R.raw.s_urss_elegir, R.raw.s_urss_abrir, R.raw.s_urss_tema),
-        "gotico" to intArrayOf(R.raw.s_gotico_toque, R.raw.s_gotico_guardar, R.raw.s_gotico_logro, R.raw.s_gotico_pasar, R.raw.s_gotico_elegir, R.raw.s_gotico_abrir, R.raw.s_gotico_tema),
-        "espacio" to intArrayOf(R.raw.s_espacio_toque, R.raw.s_espacio_guardar, R.raw.s_espacio_logro, R.raw.s_espacio_pasar, R.raw.s_espacio_elegir, R.raw.s_espacio_abrir, R.raw.s_espacio_tema),
-        "andalus" to intArrayOf(R.raw.s_andalus_toque, R.raw.s_andalus_guardar, R.raw.s_andalus_logro, R.raw.s_andalus_pasar, R.raw.s_andalus_elegir, R.raw.s_andalus_abrir, R.raw.s_andalus_tema),
-        "mongol" to intArrayOf(R.raw.s_mongol_toque, R.raw.s_mongol_guardar, R.raw.s_mongol_logro, R.raw.s_mongol_pasar, R.raw.s_mongol_elegir, R.raw.s_mongol_abrir, R.raw.s_mongol_tema),
-        "renacimiento" to intArrayOf(R.raw.s_renacimiento_toque, R.raw.s_renacimiento_guardar, R.raw.s_renacimiento_logro, R.raw.s_renacimiento_pasar, R.raw.s_renacimiento_elegir, R.raw.s_renacimiento_abrir, R.raw.s_renacimiento_tema),
-        "revolucion" to intArrayOf(R.raw.s_revolucion_toque, R.raw.s_revolucion_guardar, R.raw.s_revolucion_logro, R.raw.s_revolucion_pasar, R.raw.s_revolucion_elegir, R.raw.s_revolucion_abrir, R.raw.s_revolucion_tema),
-        "antiguas" to intArrayOf(R.raw.s_antiguas_toque, R.raw.s_antiguas_guardar, R.raw.s_antiguas_logro, R.raw.s_antiguas_pasar, R.raw.s_antiguas_elegir, R.raw.s_antiguas_abrir, R.raw.s_antiguas_tema),
-    )
+    /**
+     * Por tema, en este orden: toque, guardar, logro, pasar (cambiar de pantalla), elegir, abrir, el sonido del propio tema
+     * (al elegirlo), error, cambio (encender o apagar algo), la tecla del diario y el rascado de la lámina del mapa.
+     * Todos salen de `herramientas/afinados.py`.
+     */
+    private fun sonidos(tema: TemaId): IntArray = when (tema) {
+        TemaId.ROMANO -> intArrayOf(R.raw.s_romano_toque, R.raw.s_romano_guardar, R.raw.s_romano_logro, R.raw.s_romano_pasar, R.raw.s_romano_elegir, R.raw.s_romano_abrir, R.raw.s_romano_tema, R.raw.s_romano_error, R.raw.s_romano_cambio, R.raw.s_tecla_romano, R.raw.s_rascar_romano)
+        TemaId.CIBER -> intArrayOf(R.raw.s_ciber_toque, R.raw.s_ciber_guardar, R.raw.s_ciber_logro, R.raw.s_ciber_pasar, R.raw.s_ciber_elegir, R.raw.s_ciber_abrir, R.raw.s_ciber_tema, R.raw.s_ciber_error, R.raw.s_ciber_cambio, R.raw.s_tecla_ciber, R.raw.s_rascar_ciber)
+        TemaId.HELENO -> intArrayOf(R.raw.s_heleno_toque, R.raw.s_heleno_guardar, R.raw.s_heleno_logro, R.raw.s_heleno_pasar, R.raw.s_heleno_elegir, R.raw.s_heleno_abrir, R.raw.s_heleno_tema, R.raw.s_heleno_error, R.raw.s_heleno_cambio, R.raw.s_tecla_heleno, R.raw.s_rascar_heleno)
+        TemaId.MEDIEVAL -> intArrayOf(R.raw.s_medieval_toque, R.raw.s_medieval_guardar, R.raw.s_medieval_logro, R.raw.s_medieval_pasar, R.raw.s_medieval_elegir, R.raw.s_medieval_abrir, R.raw.s_medieval_tema, R.raw.s_medieval_error, R.raw.s_medieval_cambio, R.raw.s_tecla_medieval, R.raw.s_rascar_medieval)
+        TemaId.DISTOPIA -> intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro, R.raw.s_distopia_pasar, R.raw.s_distopia_elegir, R.raw.s_distopia_abrir, R.raw.s_distopia_tema, R.raw.s_distopia_error, R.raw.s_distopia_cambio, R.raw.s_tecla_distopia, R.raw.s_rascar_distopia)
+        TemaId.REFUGIO -> intArrayOf(R.raw.s_refugio_toque, R.raw.s_refugio_guardar, R.raw.s_refugio_logro, R.raw.s_refugio_pasar, R.raw.s_refugio_elegir, R.raw.s_refugio_abrir, R.raw.s_refugio_tema, R.raw.s_refugio_error, R.raw.s_refugio_cambio, R.raw.s_tecla_refugio, R.raw.s_rascar_refugio)
+        TemaId.ORDEN -> intArrayOf(R.raw.s_orden_toque, R.raw.s_orden_guardar, R.raw.s_orden_logro, R.raw.s_orden_pasar, R.raw.s_orden_elegir, R.raw.s_orden_abrir, R.raw.s_orden_tema, R.raw.s_orden_error, R.raw.s_orden_cambio, R.raw.s_tecla_orden, R.raw.s_rascar_orden)
+        TemaId.LABORATORIO -> intArrayOf(R.raw.s_laboratorio_toque, R.raw.s_laboratorio_guardar, R.raw.s_laboratorio_logro, R.raw.s_laboratorio_pasar, R.raw.s_laboratorio_elegir, R.raw.s_laboratorio_abrir, R.raw.s_laboratorio_tema, R.raw.s_laboratorio_error, R.raw.s_laboratorio_cambio, R.raw.s_tecla_laboratorio, R.raw.s_rascar_laboratorio)
+        TemaId.COLONOS -> intArrayOf(R.raw.s_colonos_toque, R.raw.s_colonos_guardar, R.raw.s_colonos_logro, R.raw.s_colonos_pasar, R.raw.s_colonos_elegir, R.raw.s_colonos_abrir, R.raw.s_colonos_tema, R.raw.s_colonos_error, R.raw.s_colonos_cambio, R.raw.s_tecla_colonos, R.raw.s_rascar_colonos)
+        TemaId.NAPOLEON -> intArrayOf(R.raw.s_napoleon_toque, R.raw.s_napoleon_guardar, R.raw.s_napoleon_logro, R.raw.s_napoleon_pasar, R.raw.s_napoleon_elegir, R.raw.s_napoleon_abrir, R.raw.s_napoleon_tema, R.raw.s_napoleon_error, R.raw.s_napoleon_cambio, R.raw.s_tecla_napoleon, R.raw.s_rascar_napoleon)
+        TemaId.BOTANICO -> intArrayOf(R.raw.s_botanico_toque, R.raw.s_botanico_guardar, R.raw.s_botanico_logro, R.raw.s_botanico_pasar, R.raw.s_botanico_elegir, R.raw.s_botanico_abrir, R.raw.s_botanico_tema, R.raw.s_botanico_error, R.raw.s_botanico_cambio, R.raw.s_tecla_botanico, R.raw.s_rascar_botanico)
+        TemaId.GOTICO -> intArrayOf(R.raw.s_gotico_toque, R.raw.s_gotico_guardar, R.raw.s_gotico_logro, R.raw.s_gotico_pasar, R.raw.s_gotico_elegir, R.raw.s_gotico_abrir, R.raw.s_gotico_tema, R.raw.s_gotico_error, R.raw.s_gotico_cambio, R.raw.s_tecla_gotico, R.raw.s_rascar_gotico)
+        TemaId.ESPACIO -> intArrayOf(R.raw.s_espacio_toque, R.raw.s_espacio_guardar, R.raw.s_espacio_logro, R.raw.s_espacio_pasar, R.raw.s_espacio_elegir, R.raw.s_espacio_abrir, R.raw.s_espacio_tema, R.raw.s_espacio_error, R.raw.s_espacio_cambio, R.raw.s_tecla_espacio, R.raw.s_rascar_espacio)
+        TemaId.ANDALUS -> intArrayOf(R.raw.s_andalus_toque, R.raw.s_andalus_guardar, R.raw.s_andalus_logro, R.raw.s_andalus_pasar, R.raw.s_andalus_elegir, R.raw.s_andalus_abrir, R.raw.s_andalus_tema, R.raw.s_andalus_error, R.raw.s_andalus_cambio, R.raw.s_tecla_andalus, R.raw.s_rascar_andalus)
+        TemaId.MONGOL -> intArrayOf(R.raw.s_mongol_toque, R.raw.s_mongol_guardar, R.raw.s_mongol_logro, R.raw.s_mongol_pasar, R.raw.s_mongol_elegir, R.raw.s_mongol_abrir, R.raw.s_mongol_tema, R.raw.s_mongol_error, R.raw.s_mongol_cambio, R.raw.s_tecla_mongol, R.raw.s_rascar_mongol)
+        TemaId.RENACIMIENTO -> intArrayOf(R.raw.s_renacimiento_toque, R.raw.s_renacimiento_guardar, R.raw.s_renacimiento_logro, R.raw.s_renacimiento_pasar, R.raw.s_renacimiento_elegir, R.raw.s_renacimiento_abrir, R.raw.s_renacimiento_tema, R.raw.s_renacimiento_error, R.raw.s_renacimiento_cambio, R.raw.s_tecla_renacimiento, R.raw.s_rascar_renacimiento)
+        TemaId.NAVIDAD -> intArrayOf(R.raw.s_navidad_toque, R.raw.s_navidad_guardar, R.raw.s_navidad_logro, R.raw.s_navidad_pasar, R.raw.s_navidad_elegir, R.raw.s_navidad_abrir, R.raw.s_navidad_tema, R.raw.s_navidad_error, R.raw.s_navidad_cambio, R.raw.s_tecla_navidad, R.raw.s_rascar_navidad)
+        TemaId.SEDA -> intArrayOf(R.raw.s_seda_toque, R.raw.s_seda_guardar, R.raw.s_seda_logro, R.raw.s_seda_pasar, R.raw.s_seda_elegir, R.raw.s_seda_abrir, R.raw.s_seda_tema, R.raw.s_seda_error, R.raw.s_seda_cambio, R.raw.s_tecla_seda, R.raw.s_rascar_seda)
+        TemaId.URSS -> intArrayOf(R.raw.s_urss_toque, R.raw.s_urss_guardar, R.raw.s_urss_logro, R.raw.s_urss_pasar, R.raw.s_urss_elegir, R.raw.s_urss_abrir, R.raw.s_urss_tema, R.raw.s_urss_error, R.raw.s_urss_cambio, R.raw.s_tecla_urss, R.raw.s_rascar_urss)
+        TemaId.ANTIGUAS -> intArrayOf(R.raw.s_antiguas_toque, R.raw.s_antiguas_guardar, R.raw.s_antiguas_logro, R.raw.s_antiguas_pasar, R.raw.s_antiguas_elegir, R.raw.s_antiguas_abrir, R.raw.s_antiguas_tema, R.raw.s_antiguas_error, R.raw.s_antiguas_cambio, R.raw.s_tecla_antiguas, R.raw.s_rascar_antiguas)
+        TemaId.REVOLUCION -> intArrayOf(R.raw.s_revolucion_toque, R.raw.s_revolucion_guardar, R.raw.s_revolucion_logro, R.raw.s_revolucion_pasar, R.raw.s_revolucion_elegir, R.raw.s_revolucion_abrir, R.raw.s_revolucion_tema, R.raw.s_revolucion_error, R.raw.s_revolucion_cambio, R.raw.s_tecla_revolucion, R.raw.s_rascar_revolucion)
+    }
+    internal val SONIDOS: Map<String, IntArray> = TemaId.entries.associate { it.id to sonidos(it) }
+    private const val TECLA = 9
+    private const val RASCAR = 10
 
     private var pool: SoundPool? = null
     private val azar = java.util.Random()
@@ -281,45 +316,80 @@ object Sentidos {
     /** Deja listos los sonidos del tema para que el primero no llegue tarde. */
     fun preparar(ctx: Context) {
         if (!Repo.config.sonidos) return
-        runCatching { SONIDOS[Estilo.tema.id]?.forEach { r -> if (r !in cargados) cargados[r] = pool().load(ctx.applicationContext, r, 1) } }
+        runCatching { SONIDOS[Estilo.tema.id]?.take(TECLA)?.forEach { r -> if (r !in cargados) cargados[r] = pool().load(ctx.applicationContext, r, 1) } }
     }
 
     /**
-     * Afinación: los sonidos con nota (laúd, lira, campanas, pitidos…) nunca se desafinan. El toque, si tiene nota,
-     * va recorriendo las notas del acorde del tema; pasar de pantalla y elegir, si tienen nota, se transponen a la cuarta
-     * o la quinta (los acordes I, IV y V de la tonalidad), así cada pestaña suena distinta pero todo queda en el mismo tono.
+     * Afinación: los sonidos con nota (laúd, lira, campanas, pitidos…) nunca se desafinan. El toque va recorriendo las
+     * notas de la escala de su tema; pasar de pantalla y elegir, si tienen nota, se transponen a los grados del tema
+     * ([Afinacion.giros]), así cada pestaña suena distinta pero todo queda en el mismo tono.
      * Nunca se repite la misma nota dos veces seguidas, y se mueve por pasos, como una melodía.
      * Los que son puro ruido (papel, pluma, madera, teclas) varían un poco de altura al azar.
      */
-    private val MAYOR = floatArrayOf(1f, 1.2599f, 1.4983f, 2f)
-    private val MENOR = floatArrayOf(0.7492f, 1f, 1.1892f, 1.4983f)
-    private val PENTA = floatArrayOf(1f, 1.1225f, 1.2599f, 1.4983f, 1.6818f)
-    private val DORICO = floatArrayOf(0.7492f, 1f, 1.1892f, 1.4983f, 1.6818f)
-    private val MISTERIO = floatArrayOf(0.7492f, 1f, 1.1225f, 1.1892f, 1.4983f)
-    private val HIYAZ = floatArrayOf(1f, 1.0595f, 1.2599f, 1.3348f, 1.4983f)
-    /** I, IV y V (y la quinta grave): sirve para acordes y frases enteras, no solo para notas sueltas. */
-    private val CUARTAS = floatArrayOf(0.7492f, 1f, 1.3348f, 1.4983f)
-    internal fun acordeToque(tema: TemaId): FloatArray? = when (tema) {
-        TemaId.ROMANO, TemaId.ESPACIO -> MAYOR
-        TemaId.LABORATORIO -> MISTERIO
-        TemaId.CIBER, TemaId.GOTICO -> MENOR
-        TemaId.HELENO, TemaId.COLONOS -> PENTA
-        TemaId.BOTANICO -> DORICO
-        TemaId.ANDALUS -> HIYAZ
-        else -> null
+    /**
+     * La afinación de cada tema. [toque]: las notas que va recorriendo el toque, en semitonos desde su nota (si el toque
+     * es ruido, como la pluma o la máquina de escribir, son pasos cortos de su modo: cada tecla suena un poco distinta
+     * sin salirse del tono). [giros]: los grados a los que se transponen pasar de pantalla y elegir cuando tienen nota
+     * (null si ninguno la tiene). [pasarRuido] y [elegirRuido]: esos sonidos son ruido y solo varían un poco al azar.
+     */
+    internal class Afinacion(val toque: FloatArray, val giros: FloatArray?, val pasarRuido: Boolean, val elegirRuido: Boolean)
+    private fun st(vararg semitonos: Int) = FloatArray(semitonos.size) { 2.0.pow(semitonos[it] / 12.0).toFloat() }
+    internal fun afinacion(tema: TemaId): Afinacion = when (tema) {
+        // Re mayor: el acorde de la tónica; mármol y papel.
+        TemaId.ROMANO -> Afinacion(st(0, 4, 7, 12), st(-5, 0, 5, 7), pasarRuido = true, elegirRuido = false)
+        // Mi menor, en blips.
+        TemaId.CIBER -> Afinacion(st(-5, 0, 3, 7), st(-5, 0, 3, 7), pasarRuido = false, elegirRuido = false)
+        // La pentatónico de la lira.
+        TemaId.HELENO -> Afinacion(st(0, 2, 4, 7, 9), st(-5, 0, 2, 7), pasarRuido = false, elegirRuido = false)
+        // Re dórico; la pluma solo da pasos cortos del modo.
+        TemaId.MEDIEVAL -> Afinacion(st(-2, 0, 2, 3), null, pasarRuido = true, elegirRuido = true)
+        // Do menor; la máquina de escribir, un semitono abajo y un tono arriba.
+        TemaId.DISTOPIA -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
+        // Fa pentatónico; el relé sube por tonos enteros.
+        TemaId.REFUGIO -> Afinacion(st(0, 2, 4), null, pasarRuido = true, elegirRuido = true)
+        // Sol menor; el servo baja a la cuarta.
+        TemaId.ORDEN -> Afinacion(st(-5, -2, 0), st(-5, 0, 3, 5), pasarRuido = false, elegirRuido = false)
+        // Re menor con la novena: misterio.
+        TemaId.LABORATORIO -> Afinacion(st(-5, 0, 2, 3, 7), st(-5, 0, 1, 6), pasarRuido = false, elegirRuido = false)
+        // Sol pentatónico con la quinta grave de la marimba.
+        TemaId.COLONOS -> Afinacion(st(-5, 0, 2, 4, 7), st(-7, 0, 5, 7), pasarRuido = false, elegirRuido = false)
+        // Si bemol: el tambor afinado en las notas de la corneta.
+        TemaId.NAPOLEON -> Afinacion(st(-5, 0, 4, 7), null, pasarRuido = true, elegirRuido = true)
+        // Sol dórico.
+        TemaId.BOTANICO -> Afinacion(st(-5, 0, 3, 7, 9), st(-5, 0, 2, 5), pasarRuido = true, elegirRuido = false)
+        // La menor con la sexta menor del órgano.
+        TemaId.GOTICO -> Afinacion(st(-5, 0, 3, 7, 8), st(-5, 0, 3, 8), pasarRuido = false, elegirRuido = false)
+        // Mi lidio: la cuarta aumentada de la sala de control.
+        TemaId.ESPACIO -> Afinacion(st(0, 4, 6, 7, 11), st(-5, 0, 6, 7), pasarRuido = true, elegirRuido = false)
+        // Re hiyaz.
+        TemaId.ANDALUS -> Afinacion(st(0, 1, 4, 5, 7), st(-5, 0, 1, 5), pasarRuido = false, elegirRuido = true)
+        // Mi pentatónico; los cascos, en pasos del modo.
+        TemaId.MONGOL -> Afinacion(st(-5, -3, 0, 2), st(-5, 0, 2, 4), pasarRuido = true, elegirRuido = false)
+        // La mayor; la pluma da pasos de la escala.
+        TemaId.RENACIMIENTO -> Afinacion(st(-1, 0, 2, 4), st(-5, 0, 4, 5), pasarRuido = true, elegirRuido = false)
+        // La mayor: cascabeles en el acorde.
+        TemaId.NAVIDAD -> Afinacion(st(-3, 0, 4, 7), st(0, 5, 7, 12), pasarRuido = true, elegirRuido = false)
+        // La menor pentatónico; la seda da pasos del modo.
+        TemaId.SEDA -> Afinacion(st(-2, 0, 3, 5), st(-7, -5, 0, 3), pasarRuido = true, elegirRuido = false)
+        // Do menor; la prensa baja a la quinta.
+        TemaId.URSS -> Afinacion(st(-5, -3, 0), st(-9, -5, 0, 3), pasarRuido = true, elegirRuido = false)
+        // Re dórico; la piedra, en pasos graves del modo.
+        TemaId.ANTIGUAS -> Afinacion(st(-5, -2, 0, 3), st(-5, -2, 0, 5), pasarRuido = true, elegirRuido = false)
+        // Sol mayor; el tambor, en la quinta y el tono.
+        TemaId.REVOLUCION -> Afinacion(st(-5, 0, 2), st(-7, 0, 4, 7), pasarRuido = true, elegirRuido = false)
     }
-    /** ¿Ese sonido de ese tema es ruido sin nota? */
+    internal fun acordeToque(tema: TemaId): FloatArray = afinacion(tema).toque
+    /** ¿Ese sonido de ese tema es ruido sin nota? El toque siempre tiene escala. */
     private fun ruidoso(tema: TemaId, i: Int): Boolean = when (i) {
-        0 -> acordeToque(tema) == null
-        3 -> tema in setOf(TemaId.ROMANO, TemaId.MEDIEVAL, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.NAPOLEON, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.SEDA, TemaId.URSS, TemaId.MONGOL, TemaId.RENACIMIENTO, TemaId.ESPACIO, TemaId.REVOLUCION, TemaId.ANTIGUAS)
-        4 -> tema in setOf(TemaId.MEDIEVAL, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.NAPOLEON, TemaId.ANDALUS)
+        3 -> afinacion(tema).pasarRuido
+        4 -> afinacion(tema).elegirRuido
         else -> false
     }
     /** Qué notas puede tomar cada evento con nota. */
     private fun notas(tema: TemaId, i: Int): FloatArray? = when {
-        ruidoso(tema, i) -> null
         i == 0 -> acordeToque(tema)
-        i == 3 || i == 4 -> CUARTAS
+        ruidoso(tema, i) -> null
+        i == 3 || i == 4 -> afinacion(tema).giros
         else -> null
     }
 
@@ -345,11 +415,11 @@ object Sentidos {
     }
 
     private fun sonar(ctx: Context, tema: TemaId, e: Evento) {
-        val i = when (e) { Evento.TOQUE -> 0; Evento.GUARDAR -> 1; Evento.LOGRO -> 2; Evento.PASAR -> 3; Evento.ELEGIR -> 4; Evento.ABRIR, Evento.CAMBIO -> 5; Evento.TEMA -> 6; else -> return }
+        val i = when (e) { Evento.TOQUE -> 0; Evento.GUARDAR -> 1; Evento.LOGRO -> 2; Evento.PASAR -> 3; Evento.ELEGIR -> 4; Evento.ABRIR -> 5; Evento.TEMA -> 6; Evento.ERROR -> 7; Evento.CAMBIO -> 8 }
         val audio = ctx.getSystemService(AudioManager::class.java)
         if (audio != null && audio.ringerMode != AudioManager.RINGER_MODE_NORMAL) return
         val r = SONIDOS[tema.id]?.get(i) ?: return
-        val vol = when (i) { 0, 4 -> 0.45f; 3 -> 0.38f; 5 -> 0.6f; 6 -> 0.75f; else -> 0.8f }
+        val vol = when (i) { 0, 4 -> 0.45f; 3 -> 0.38f; 5, 7 -> 0.6f; 8 -> 0.5f; 6 -> 0.75f; else -> 0.8f }
         val escala = notas(tema, i)
         val tono = when {
             escala != null -> escala[siguiente(tema, i, escala.size)]
@@ -371,22 +441,47 @@ object Sentidos {
         return audio == null || audio.ringerMode == AudioManager.RINGER_MODE_NORMAL
     }
 
-    /** Una tecla del diario: máquina de escribir, pluma, madera suave o pantalla, según el tema. */
+    /** Una tecla del diario, propia de cada tema: estilo sobre cera, cálamo, pluma, lápiz, pincel, máquina de escribir, consola… */
     fun tecla(ctx: Context, tema: TemaId) {
         if (!puedeSonar(ctx)) return
-        val r = when (tema) {
-            TemaId.DISTOPIA, TemaId.URSS, TemaId.NAPOLEON, TemaId.COLONOS -> R.raw.s_tecla_maquina
-            TemaId.MEDIEVAL, TemaId.GOTICO, TemaId.RENACIMIENTO, TemaId.ROMANO, TemaId.HELENO, TemaId.ANDALUS, TemaId.SEDA, TemaId.REVOLUCION, TemaId.ANTIGUAS -> R.raw.s_tecla_pluma
-            TemaId.CIBER, TemaId.REFUGIO, TemaId.ESPACIO, TemaId.ORDEN, TemaId.LABORATORIO -> R.raw.s_tecla_digital
-            else -> R.raw.s_tecla_suave
-        }
+        val r = SONIDOS[tema.id]?.get(TECLA) ?: return
         runCatching { tocar(ctx, r, 0.32f, 0.95f + azar.nextFloat() * 0.1f) }
     }
 
-    /** Una moneda que raspa la lámina del mapa. */
+    /** Tres pasadas de la moneda: [golpes] golpes de [prim] cada [paso] ms, con un respiro entre pasada y pasada. */
+    private fun pasadas(prim: Int, fuerza: Float, paso: Int, golpes: Int): List<Golpe> =
+        (0 until 3).flatMap { p -> (0 until golpes).map { k -> g(prim, fuerza * (if (k == golpes - 1) 1.15f else 1f), if (k == 0) (if (p == 0) 0 else 120) else paso) } }
+
+    /** Cómo se siente rascar la lámina de cada tema: el metal blando apenas raspa y el acero golpetea. */
+    internal fun patronRascar(tema: TemaId): List<Golpe> = when (tema) {
+        TemaId.ROMANO -> pasadas(TICK, 0.5f, 60, 3)   // oro imperial, blando
+        TemaId.CIBER -> pasadas(TICK, 0.9f, 30, 5)   // la placa de consola
+        TemaId.HELENO -> pasadas(TICK, 0.55f, 55, 3)   // electro
+        TemaId.MEDIEVAL -> pasadas(TICK_GRAVE, 0.5f, 70, 3)   // pan de oro
+        TemaId.DISTOPIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
+        TemaId.REFUGIO -> pasadas(TICK, 0.8f, 35, 4)   // chapa galvanizada
+        TemaId.ORDEN -> pasadas(CLICK, 0.8f, 45, 3)   // acero pavonado
+        TemaId.LABORATORIO -> pasadas(TICK, 0.4f, 30, 5)   // aluminio
+        TemaId.COLONOS -> pasadas(TICK_GRAVE, 0.7f, 55, 3)   // cobre
+        TemaId.NAPOLEON -> pasadas(CLICK, 0.6f, 50, 3)   // bronce dorado
+        TemaId.BOTANICO -> pasadas(TICK_GRAVE, 0.45f, 65, 3)   // bronce con verdín
+        TemaId.GOTICO -> pasadas(TICK_GRAVE, 0.6f, 80, 3)   // peltre
+        TemaId.ESPACIO -> pasadas(TICK, 0.85f, 28, 5)   // titanio
+        TemaId.ANDALUS -> pasadas(TICK, 0.6f, 45, 4)   // latón
+        TemaId.MONGOL -> pasadas(CLICK, 0.55f, 55, 3)   // plata sobredorada
+        TemaId.RENACIMIENTO -> pasadas(TICK, 0.5f, 65, 3)   // bronce de taller
+        TemaId.NAVIDAD -> pasadas(TICK, 0.7f, 25, 5)   // plata escarchada
+        TemaId.SEDA -> pasadas(TICK, 0.6f, 50, 3)   // bronce de moneda
+        TemaId.URSS -> pasadas(CLICK, 0.9f, 40, 3)   // acero ennegrecido
+        TemaId.ANTIGUAS -> pasadas(TICK_GRAVE, 0.8f, 60, 3)   // hierro viejo
+        TemaId.REVOLUCION -> pasadas(CLICK, 0.45f, 50, 4)   // estaño
+    }
+
+    /** Una moneda que raspa la lámina del mapa: el sonido y la vibración de su metal. */
     fun rascar(ctx: Context) {
-        if (Repo.config.vibracion) runCatching { vibrar(ctx, listOf(g(TICK, 0.5f), g(TICK, 0.6f, 60), g(TICK, 0.5f, 60), g(TICK, 0.7f, 120), g(TICK, 0.5f, 60), g(TICK, 0.6f, 60), g(TICK, 0.7f, 120), g(TICK, 0.5f, 60))) }
-        if (puedeSonar(ctx)) runCatching { tocar(ctx, R.raw.s_rascar, 0.7f) }
+        val tema = Estilo.tema
+        if (Repo.config.vibracion) runCatching { vibrar(ctx, patronRascar(tema)) }
+        if (puedeSonar(ctx)) runCatching { SONIDOS[tema.id]?.get(RASCAR)?.let { tocar(ctx, it, 0.7f) } }
     }
 }
 
