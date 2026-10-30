@@ -30,7 +30,6 @@ object ArranqueTema {
         TemaId.DISTOPIA -> if (oscuro) R.style.Theme_Vestigium_Arranque_Distopia_Oscuro else R.style.Theme_Vestigium_Arranque_Distopia
         TemaId.REFUGIO -> if (oscuro) R.style.Theme_Vestigium_Arranque_Refugio_Oscuro else R.style.Theme_Vestigium_Arranque_Refugio
         TemaId.ORDEN -> if (oscuro) R.style.Theme_Vestigium_Arranque_Orden_Oscuro else R.style.Theme_Vestigium_Arranque_Orden
-        TemaId.VAPOR -> if (oscuro) R.style.Theme_Vestigium_Arranque_Vapor_Oscuro else R.style.Theme_Vestigium_Arranque_Vapor
         TemaId.LABORATORIO -> if (oscuro) R.style.Theme_Vestigium_Arranque_Laboratorio_Oscuro else R.style.Theme_Vestigium_Arranque_Laboratorio
         TemaId.COLONOS -> if (oscuro) R.style.Theme_Vestigium_Arranque_Colonos_Oscuro else R.style.Theme_Vestigium_Arranque_Colonos
         TemaId.NAPOLEON -> if (oscuro) R.style.Theme_Vestigium_Arranque_Napoleon_Oscuro else R.style.Theme_Vestigium_Arranque_Napoleon

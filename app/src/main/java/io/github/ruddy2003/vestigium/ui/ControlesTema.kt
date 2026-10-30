@@ -266,12 +266,6 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     TemaId.REFUGIO -> PielDialogo(RoundedCornerShape(24.dp), 0.dp, 0.dp, false, 1.5.dp)
     // Placa de acero ochavada.
     TemaId.ORDEN -> PielDialogo(CutCornerShape(12.dp), 0.dp, 0.dp, false, 1.5.dp)
-    // El billete de tren de cartón: las cuatro esquinas recortadas hacia dentro.
-    TemaId.VAPOR -> PielDialogo(FormaDp { w, h, d ->
-        val f = 12 * d
-        moveTo(f, 0f); lineTo(w - f, 0f); quadraticTo(w - f, f, w, f); lineTo(w, h - f); quadraticTo(w - f, h - f, w - f, h)
-        lineTo(f, h); quadraticTo(f, h - f, 0f, h - f); lineTo(0f, f); quadraticTo(f, f, f, 0f); close()
-    }, 4.dp, 0.dp, false, 1.5.dp)
     // Frasco: redondo arriba, casi recto abajo.
     TemaId.LABORATORIO -> PielDialogo(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp, bottomEnd = 6.dp, bottomStart = 6.dp), 0.dp, 0.dp, false, 1.dp)
     // Hoja de gaceta con el borde de abajo perforado en dientes.
@@ -503,14 +497,6 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             }, e.secondary.copy(alpha = 0.8f), style = Stroke(1.2f * d))
             esquinasCtl { drawCircle(e.secondary, 2 * d, Offset(12 * d, 12 * d)) }
             drawRect(e.primary, Offset(20 * d, i), Size(minOf(w * 0.3f, 90 * d), 3 * d))
-        }
-        TemaId.VAPOR -> {
-            // Una hilera de remaches de latón por dentro del borde y, arriba a la derecha, el manómetro de la caldera.
-            val i = 9 * d
-            drawRect(e.primary.copy(alpha = 0.35f), Offset(i, i), Size(w - 2 * i, h - 2 * i), style = Stroke(0.8f * d))
-            var x = i + 14 * d
-            while (x < w - i - 40 * d) { remacheVapor(Offset(x, i + 5 * d), 1.6f * d, e.primary.copy(alpha = 0.7f)); x += 18 * d }
-            manometroVapor(Offset(w - i - 16 * d, i + 14 * d), 12 * d, e.primary, e.surface, e.onSurface, e.tertiary, 0.6f)
         }
         TemaId.LABORATORIO -> {
             // Graduación por el borde derecho y la etiqueta de muestra arriba.
@@ -840,14 +826,6 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
                 val x = w - 16 * d + k * 5 * d
                 drawPath(Path().apply { moveTo(x, cy - 3 * d); lineTo(x + 3 * d, cy); lineTo(x, cy + 3 * d) }, e.secondary, style = Stroke(1.2f * d))
             }
-        }
-        // El tubo de vapor con una brida en medio y la rueda de la llave de paso.
-        TemaId.VAPOR -> {
-            drawLine(e.primary.copy(alpha = 0.6f), Offset(0f, cy), Offset(w, cy), 2.4f * d)
-            drawRect(e.primary, Offset(w / 2 - 1.5f * d, cy - 4 * d), Size(3 * d, 8 * d))
-            val llave = Offset(w * 0.82f, cy)
-            drawCircle(e.surface, 5 * d, llave); drawCircle(e.tertiary, 5 * d, llave, style = Stroke(1.2f * d))
-            drawLine(e.tertiary, llave - Offset(4 * d, 0f), llave + Offset(4 * d, 0f), 1f * d); drawLine(e.tertiary, llave - Offset(0f, 4 * d), llave + Offset(0f, 4 * d), 1f * d)
         }
         // Regla graduada.
         TemaId.LABORATORIO -> {
@@ -1228,13 +1206,6 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             if (x > 0f) drawRect(activo, Offset(0f, cy - g / 2), Size(x, g))
             for (k in 1..3) drawCircle(e.secondary, g * 0.35f, Offset(w * k / 4f, cy))
         }
-        // La vía: lo que falta son dos carriles sobre sus traviesas; lo recorrido, la barra de latón de la biela.
-        TemaId.VAPOR -> {
-            var px = x + g * 0.4f
-            while (px < w) { drawLine(inactivo, Offset(px, cy - g * 0.6f), Offset(px, cy + g * 0.6f), maxOf(g * 0.18f, 0.6f * d)); px += maxOf(g * 1.2f, 1f) }
-            linea(inactivo, x, w, maxOf(g * 0.12f, 0.5f * d), cy - g * 0.32f); linea(inactivo, x, w, maxOf(g * 0.12f, 0.5f * d), cy + g * 0.32f)
-            if (x > 0f) { drawRect(activo, Offset(0f, cy - g * 0.35f), Size(x, g * 0.7f)); drawCircle(e.tertiary, g * 0.3f, Offset(x, cy)) }
-        }
         // Pipeta: línea base graduada y el líquido hasta donde va.
         TemaId.LABORATORIO -> {
             val base = cy + g * 0.35f
@@ -1507,13 +1478,6 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             drawPath(p, color)
             drawPath(p, e.secondary, style = Stroke(r * 0.1f))
             drawLine(e.secondary, Offset(c.x, c.y - r * 0.7f), Offset(c.x, c.y + r * 0.6f), r * 0.1f)
-        }
-        // La esfera de un manómetro de latón, con sus marcas y la aguja.
-        TemaId.VAPOR -> {
-            drawCircle(color, r * 0.9f, c); drawCircle(hueco, r * 0.66f, c)
-            for (k in 0..6) { val a = Math.toRadians(135.0 + 45.0 * k); drawLine(color, Vapor.en(c, r * 0.6f, a), Vapor.en(c, r * 0.44f, a), r * 0.08f) }
-            drawLine(e.tertiary, c, Vapor.en(c, r * 0.5f, Math.toRadians(300.0)), r * 0.1f, StrokeCap.Round)
-            drawCircle(color, r * 0.12f, c)
         }
         // Gota.
         TemaId.LABORATORIO -> {

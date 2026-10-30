@@ -168,8 +168,6 @@ enum class FormaPunto {
     PATADA,
     /** Prehistoria: la mano de ocre. */
     MANO,
-    /** Vapor victoriano: el engrane. */
-    ENGRANE,
 }
 
 /** Lo que acompaña al trazo de una serie. */
@@ -259,10 +257,6 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Orden: escudo, trazo de estarcido (con puentes), eje remachado y placas biseladas.
     TemaId.ORDEN -> EstiloGrafica(FormaPunto.ESCUDO, 2.2f, listOf(7f, 1.6f), StrokeCap.Butt, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(0.1f, 2.4f),
         Rejilla.DISCONTINUA, 0.5f, Eje.REMACHES, FormaBarra.BISEL, R.font.saira_stencil, FontWeight.Normal, null, 0.06f, 1f)
-    // Vapor victoriano: engranes por puntos, trazo continuo con sombra, el papel milimetrado del plano, el eje con remates
-    // y las barras enmarcadas como las columnas de una memoria; las cifras, en la egipcia de los horarios.
-    TemaId.VAPOR -> EstiloGrafica(FormaPunto.ENGRANE, 2.4f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.SOMBRA, listOf(6f, 2f),
-        Rejilla.MILIMETRADO, 0.4f, Eje.REMATES, FormaBarra.MARCO, R.font.bitter_semibold, FontWeight.SemiBold, "lnum, tnum", 0.02f, 1f)
     // Laboratorio: hexágono, trazo fino, papel milimetrado, eje de regla y barras huecas de probeta.
     TemaId.LABORATORIO -> EstiloGrafica(FormaPunto.HEXAGONO, 1.4f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(1.5f, 1.5f),
         Rejilla.MILIMETRADO, 0.6f, Eje.REGLA, FormaBarra.HUECA, R.font.jost_regular, FontWeight.Normal, "tnum", 0.03f, 1.05f)
@@ -523,7 +517,6 @@ fun DrawScope.puntoGrafica(e: EstiloGrafica, centro: Offset, radio: Float, color
             }
             drawRect(color, Offset(b.x - rr, b.y), Size(2 * rr, max(g, 0.28f * r)))
         }
-        FormaPunto.ENGRANE -> { figura(Vapor.engrane(c, r * 1.2f, 8, 0.72f)); if (!hueco) drawCircle(color.copy(alpha = color.alpha * 0.35f), r * 1.7f, c, style = Stroke(g * 0.5f)) }
     }
 }
 

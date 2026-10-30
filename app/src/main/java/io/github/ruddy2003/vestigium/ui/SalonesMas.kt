@@ -103,14 +103,6 @@ object SalonesMas {
                 drawRect(Color(0xFFD6B25A), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.12f))
                 listOf(0.18f, 0.3f, 0.7f, 0.82f).forEach { x -> drawCircle(Color(0xFF2A2E33), h * 0.1f, Offset(w * x, h * 0.55f)) }
             }
-            TemaId.VAPOR -> {
-                // Un capitel de hierro fundido, con la banda de latón arriba y el engrane de la compañía al frente.
-                drawRect(piedra(Color(0xFF3B3835)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h))
-                drawRect(Color(0xFFC9A04A), Offset(w * 0.1f, 0f), Size(w * 0.8f, h * 0.16f))
-                drawPath(Vapor.engrane(Offset(w * 0.5f, h * 0.56f), h * 0.32f, 10, 0.78f), Color(0xFFC9A04A))
-                drawCircle(Color(0xFF3B3835), h * 0.12f, Offset(w * 0.5f, h * 0.56f))
-                listOf(0.2f, 0.8f).forEach { x -> drawCircle(Color(0xFF9C4A32), h * 0.09f, Offset(w * x, h * 0.56f)) }
-            }
             TemaId.LABORATORIO -> {
                 // La cubierta blanca de la mesa con su canto cian.
                 drawRoundRect(piedra(Color(0xFFE6EDF2)), Offset(w * 0.1f, 0f), Size(w * 0.8f, h), CornerRadius(h * 0.2f))
@@ -822,56 +814,6 @@ object SalonesMas {
         // El piso de placa antiderrapante.
         drawRect(acero.copy(alpha = acero.alpha * 0.6f), Offset(0f, h - 14 * d), Size(w, 14 * d))
         var xr = 4 * d; var k = 0; while (xr < w) { val yy = h - 7 * d; drawLine(sombraA, Offset(xr - 2 * d, yy + (if (k % 2 == 0) 2 else -2) * d), Offset(xr + 2 * d, yy - (if (k % 2 == 0) 2 else -2) * d), 1.2f * d); xr += 8 * d; k++ }
-    }
-
-    /**
-     * Vapor victoriano: la nave de una gran exposición del XIX. Arcos de hierro fundido con su vidriera de cuadrícula,
-     * columnas acanaladas con capitel, el zócalo de ladrillo con ventanas en arco, lámparas de gas colgadas con su halo y,
-     * en la pared, un volante enorme detrás de cada arco.
-     */
-    internal fun DrawScope.naveExposicion(cs: ColorScheme, oscuro: Boolean, n: Int) {
-        val w = size.width; val h = size.height; val d = density
-        val hierro = (if (oscuro) Color(0xFF5E5850) else Color(0xFF3B3835)).copy(alpha = 0.6f)
-        val vidrio = (if (oscuro) Color(0xFF8FB8C8) else Color(0xFF5E8FA0)).copy(alpha = if (oscuro) 0.08f else 0.1f)
-        val ladrillo = Color(0xFF9C4A32).copy(alpha = if (oscuro) 0.4f else 0.32f)
-        val laton = Color(0xFFC9A04A).copy(alpha = 0.7f)
-        val paso = w / n
-        // La vidriera del techo: cuadrícula de hierro sobre el vidrio.
-        drawRect(vidrio, Offset(0f, 0f), Size(w, h * 0.55f))
-        var x = 0f; while (x < w) { drawLine(hierro.copy(alpha = 0.25f), Offset(x, 0f), Offset(x, h * 0.55f), 0.8f * d); x += 14 * d }
-        var y = 0f; while (y < h * 0.55f) { drawLine(hierro.copy(alpha = 0.25f), Offset(0f, y), Offset(w, y), 0.8f * d); y += 14 * d }
-        for (i in 0 until n) {
-            val x0 = i * paso; val x1 = (i + 1) * paso; val cx = (x0 + x1) / 2
-            // El volante de la pared, detrás del arco.
-            val v = Offset(cx, h * 0.42f); val rv = paso * 0.32f
-            drawCircle(hierro.copy(alpha = 0.3f), rv, v, style = Stroke(6 * d))
-            for (k in 0 until 6) { val a = k * PI / 3; drawLine(hierro.copy(alpha = 0.25f), v, Offset(v.x + (rv * cos(a)).toFloat(), v.y + (rv * sin(a)).toFloat()), 3 * d) }
-            // El arco de hierro fundido, con su celosía de círculos.
-            drawArc(hierro, 180f, 180f, false, Offset(x0 + 6 * d, 18 * d), Size(paso - 12 * d, paso * 0.7f), style = Stroke(5 * d))
-            drawArc(hierro.copy(alpha = 0.4f), 180f, 180f, false, Offset(x0 + 14 * d, 26 * d), Size(paso - 28 * d, paso * 0.6f), style = Stroke(2 * d))
-            // La lámpara de gas colgada del arco, con su halo amarillo.
-            drawLine(hierro, Offset(cx, 18 * d), Offset(cx, 46 * d), 1 * d)
-            drawCircle(Brush.radialGradient(listOf(Color(0xFFF2C46A).copy(alpha = if (oscuro) 0.3f else 0.18f), Color.Transparent), Offset(cx, 52 * d), 46 * d), 46 * d, Offset(cx, 52 * d))
-            drawPath(Path().apply { moveTo(cx - 6 * d, 46 * d); lineTo(cx + 6 * d, 46 * d); lineTo(cx + 4 * d, 58 * d); lineTo(cx - 4 * d, 58 * d); close() }, laton)
-        }
-        // El zócalo de ladrillo con sus hiladas y ventanas en arco.
-        val z = h * 0.78f
-        drawRect(ladrillo, Offset(0f, z), Size(w, h - z))
-        var yy = z; var fila = 0
-        while (yy < h) { drawLine(Color(0xFFD9C7A8).copy(alpha = 0.18f), Offset(0f, yy), Offset(w, yy), 0.8f * d); var xx = if (fila % 2 == 0) 0f else 9 * d; while (xx < w) { drawLine(Color(0xFFD9C7A8).copy(alpha = 0.18f), Offset(xx, yy), Offset(xx, yy + 6 * d), 0.8f * d); xx += 18 * d }; yy += 6 * d; fila++ }
-        for (i in 0 until n) {
-            val cx = (i + 0.5f) * paso
-            drawArc(hierro.copy(alpha = 0.5f), 180f, 180f, true, Offset(cx - 9 * d, z + 6 * d), Size(18 * d, 14 * d))
-            drawRect(hierro.copy(alpha = 0.5f), Offset(cx - 9 * d, z + 13 * d), Size(18 * d, 12 * d))
-        }
-        // Las columnas de hierro, acanaladas, con el capitel y la basa de latón.
-        for (i in 0..n) {
-            val xc = i * paso
-            drawRect(hierro, Offset(xc - 6 * d, 0f), Size(12 * d, h))
-            listOf(-3f, 0f, 3f).forEach { dx -> drawLine(Color.Black.copy(alpha = 0.18f), Offset(xc + dx * d, 30 * d), Offset(xc + dx * d, h - 20 * d), 0.8f * d) }
-            drawRect(laton, Offset(xc - 10 * d, 22 * d), Size(20 * d, 6 * d))
-            drawRect(laton, Offset(xc - 10 * d, h - 20 * d), Size(20 * d, 6 * d))
-        }
     }
 
     /**

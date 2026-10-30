@@ -98,7 +98,7 @@ class CoberturaTemas {
 
         /** Lo que falta hoy, por superficie. Desde el lote 7 solo queda el gato, que llega con el lote 9. */
         val PENDIENTES: Map<String, Set<String>> = mapOf(
-            "gato" to setOf("romano", "ciber", "neon", "heleno", "abismo", "templario", "egipto", "pirata", "ruinas", "urbe", "arcano", "meso", "cueva", "deco", "vapor", "edo", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
+            "gato" to setOf("romano", "ciber", "neon", "heleno", "abismo", "templario", "egipto", "pirata", "ruinas", "urbe", "arcano", "meso", "cueva", "deco", "edo", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
         )
 
         /** Despachos que el compilador no vigila, por archivo y tipo. Cada lote baja los suyos. */

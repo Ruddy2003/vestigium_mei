@@ -160,7 +160,6 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.DISTOPIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
     TemaId.REFUGIO -> listOf("residente", "jefe de turno", "jefe de sector", "director del refugio")
     TemaId.ORDEN -> listOf("escudero", "caballero", "paladín", "gran maestre")
-    TemaId.VAPOR -> listOf("mención del jurado", "medalla de plata de la Exposición", "gran medalla de oro", "miembro de la Real Sociedad")
     TemaId.LABORATORIO -> listOf("hipótesis", "resultado", "replicado", "ley natural")
     TemaId.COLONOS -> listOf("nota breve", "crónica", "primera plana", "edición extra")
     TemaId.NAPOLEON -> listOf("citation", "croix d'argent", "Légion d'honneur", "maréchal d'Empire")
@@ -397,33 +396,6 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             }
             val c2 = Offset(c.x + m * 0.40f, c.y - m * 0.46f)
             rotate(-giro * 0.8f, c2) { drawPath(engraneLogro(c2, 10, m * 0.16f, m * 0.12f), cs.secondary.copy(alpha = 0.16f), style = Stroke(1.6f * u)) }
-        }
-        TemaId.VAPOR -> {
-            // El volante de una máquina de vapor, con su llanta gruesa y seis radios curvos, y encima el regulador de bolas
-            // de Watt: las dos bolas giran alrededor del eje y se ven de lado, acercándose y alejándose.
-            val laton = cs.primary
-            rotate(giro, c) {
-                drawCircle(laton.copy(alpha = 0.12f), m * 0.42f, c, style = Stroke(7f * u))
-                drawCircle(laton.copy(alpha = 0.10f), m * 0.355f, c, style = Stroke(1.2f * u))
-                for (i in 0 until 6) {
-                    val a = 2 * PI * i / 6
-                    val p0 = pt(m * 0.07f, a); val pm = pt(m * 0.24f, a + 0.12); val p1 = pt(m * 0.39f, a + 0.38)
-                    drawPath(Path().apply { moveTo(p0.x, p0.y); quadraticTo(pm.x, pm.y, p1.x, p1.y) }, laton.copy(alpha = 0.14f), style = Stroke(3f * u, cap = StrokeCap.Round))
-                }
-                drawCircle(laton.copy(alpha = 0.16f), m * 0.07f, c)
-                for (i in 0 until 6) drawCircle(cs.secondary.copy(alpha = 0.22f), 2.2f * u, pt(m * 0.42f, 2 * PI * i / 6 + PI / 6))
-            }
-            val tope = Offset(c.x, c.y - m * 0.64f); val base = Offset(c.x, c.y - m * 0.30f)
-            val eje = cs.secondary.copy(alpha = 0.22f)
-            drawLine(eje, tope, base, 2f * u)
-            val ang = Math.toRadians(giro * 2.0)
-            for (lado in listOf(1.0, -1.0)) {
-                val x = (lado * cos(ang)).toFloat(); val fondo = (lado * sin(ang)).toFloat()
-                val bola = Offset(c.x + x * m * 0.17f, c.y - m * 0.44f)
-                drawLine(eje, Offset(tope.x, tope.y + 4f * u), bola, 1.6f * u)
-                drawLine(eje.copy(alpha = 0.14f), bola, Offset(c.x, c.y - m * 0.36f), 1.2f * u)
-                drawCircle(cs.secondary.copy(alpha = 0.16f + 0.08f * fondo), (6.5f + 1.5f * fondo) * u, bola)
-            }
         }
         TemaId.LABORATORIO -> {
             // Ondas que se abren como en un líquido y un anillo de hexágonos, como una red de moléculas.

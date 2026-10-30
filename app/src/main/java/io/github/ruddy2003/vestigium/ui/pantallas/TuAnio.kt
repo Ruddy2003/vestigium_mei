@@ -149,7 +149,6 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.TEMPLARIO -> "Crónica de la casa en el año del Señor ${Temas.puntos(anio)}"
     TemaId.REFUGIO -> "REGISTRO DEL REFUGIO · AÑO $anio BAJO TIERRA"
     TemaId.ORDEN -> "PARTE DE CUSTODIA DE LA ORDEN · $anio"
-    TemaId.VAPOR -> "Memoria anual de la compañía · ejercicio de $anio"
     TemaId.LABORATORIO -> "Protocolo $anio · resultados del año"
     TemaId.COLONOS -> "Almanaque del año $anio"
     TemaId.NAPOLEON -> "BOLETÍN DE LA GRANDE ARMÉE · $anio"

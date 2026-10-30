@@ -20,7 +20,6 @@ object NombresCompletos {
         TemaId.DISTOPIA -> NombresDistopia.M[titulo]
         TemaId.REFUGIO -> NombresRefugio.M[titulo]
         TemaId.ORDEN -> NombresOrden.M[titulo]
-        TemaId.VAPOR -> NombresVapor.M[titulo]
         TemaId.LABORATORIO -> NombresLaboratorio.M[titulo]
         TemaId.COLONOS -> NombresColonos.M[titulo]
         TemaId.NAPOLEON -> NombresNapoleon.M[titulo]

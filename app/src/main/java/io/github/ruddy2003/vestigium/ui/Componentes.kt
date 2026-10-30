@@ -121,7 +121,6 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.DISTOPIA -> BandaExpediente(modifier)
         TemaId.REFUGIO -> Destellos(modifier)
         TemaId.ORDEN -> Galones(modifier)
-        TemaId.VAPOR -> BandaVia(modifier)
         TemaId.LABORATORIO -> BandaProbeta(modifier)
         TemaId.COLONOS -> BandaGaceta(modifier)
         TemaId.NAPOLEON -> Laureles(modifier)
@@ -1051,12 +1050,6 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "⚙", igual = "» ", nulo = "N/D", elegido = "◆", riel = RolColor.SECUNDARIO, quitar = "⊠", listaVacia = "[ SIN REGISTRO ]", flecha = "⟫",
         sufijo = " ::", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 2f, colorPrefijo = RolColor.SECUNDARIO, renglones = false, margen = MargenEditor.DOBLE,
         guiones = floatArrayOf(4.5f, 1f), tamBoton = 14, letraBoton = null, borde = RolColor.SECUNDARIO, grosor = 1.5f)
-    // La memoria descriptiva de una patente: «Fig. 3 ·», el manicule de los carteles, la aguja del manómetro en cero y el
-    // margen doble de la lámina; el botón principal, en la egipcia de los horarios.
-    TemaId.VAPOR -> PielComponentes(sep = " · Fig. ", cerrada = "⊕", abierta = "⊖", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
-        aviso = "☛", igual = " ⟶ ", nulo = "aguja en cero", elegido = "⊙", riel = RolColor.PRIMARIO, quitar = "⊗", listaVacia = "( ninguna pieza acoplada )", flecha = "⇢",
-        sufijo = ".—", caja = CajaEtiqueta.CAPITAL, espaciado = 0.6f, colorPrefijo = RolColor.TERCIARIO, renglones = true, margen = MargenEditor.DOBLE,
-        guiones = floatArrayOf(8f, 2f, 2f, 2f), tamBoton = 15, letraBoton = LetraExtra.bitter, borde = RolColor.TERCIARIO, grosor = 1.8f)
     TemaId.LABORATORIO -> PielComponentes(sep = "  /  ", cerrada = "＋", abierta = "－", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
         aviso = "⚗", igual = "≈ ", nulo = "n.d.", elegido = "●", riel = RolColor.PRIMARIO, quitar = "−", listaVacia = "( muestra vacía )", flecha = "↦",
         sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0.4f, colorPrefijo = RolColor.SECUNDARIO, renglones = true, margen = MargenEditor.PUNTOS,
@@ -1205,13 +1198,6 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             drawRect(e.secondary, Offset(0f, size.height - g), Size(minOf(size.width, 56.dp.toPx()), g))
             drawRect(e.primary, Offset(0f, size.height - g), Size(minOf(size.width, 14.dp.toPx()), g))
         }.padding(bottom = 5.dp))
-        // La placa de nombre: un filete de latón con el remate en arco por encima y un remache a cada lado.
-        TemaId.VAPOR -> Text(nombre, style = estilo.copy(letterSpacing = 0.6.sp), modifier = peso.drawBehind {
-            val g = 1.dp.toPx(); val w = size.width; val h = size.height
-            drawPath(Path().apply { moveTo(0f, h); lineTo(0f, h * 0.35f); quadraticTo(w / 2, -h * 0.25f, w, h * 0.35f); lineTo(w, h) }, e.primary.copy(alpha = 0.7f), style = Stroke(1.4f * g))
-            drawLine(e.primary, Offset(0f, h), Offset(w, h), 2f * g)
-            listOf(5f * g, w - 5f * g).forEach { x -> remacheVapor(Offset(x, h * 0.62f), 1.8f * g, e.tertiary) }
-        }.padding(horizontal = 16.dp, vertical = 4.dp))
         // Pestaña de protocolo: una barra violeta al lado.
         TemaId.LABORATORIO -> Text(nombre, style = estilo, modifier = peso.drawBehind { drawRect(e.secondary, Offset.Zero, Size(3.dp.toPx(), size.height)) }.padding(start = 10.dp))
         // Raya inglesa de gaceta: gruesa y fina.
@@ -1360,7 +1346,6 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.DISTOPIA -> RectangleShape
     TemaId.REFUGIO -> RoundedCornerShape(50)
     TemaId.ORDEN -> CutCornerShape(6.dp)
-    TemaId.VAPOR -> RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomEnd = 3.dp, bottomStart = 3.dp)
     TemaId.LABORATORIO -> RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomEnd = 4.dp, bottomStart = 4.dp)
     // Boleto de feria: una muesca a cada lado.
     TemaId.COLONOS -> GenericShape { s, _ ->
@@ -1468,7 +1453,6 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.DISTOPIA -> "FORMULARIO 7-B · ${es.uppercase()}"
         TemaId.REFUGIO -> "BITÁCORA DEL REFUGIO > $es"
         TemaId.ORDEN -> "CRÓNICA DE LA ORDEN · ${es.uppercase()}"
-        TemaId.VAPOR -> "Plano n.º ${(base.hashCode() and 0xffff) % 900 + 100} · $es"
         TemaId.LABORATORIO -> "cuaderno de laboratorio · $es"
         TemaId.COLONOS -> "a máquina · $es"
         TemaId.NAPOLEON -> "dépêche · $es"
@@ -1604,11 +1588,6 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             // Chaflán de placa de acero con su perno de latón.
             drawLine(e.secondary, Offset(i, i + u * 1.4f), Offset(i + u * 1.4f, i), fino * 1.6f)
             drawCircle(e.secondary, u * 0.22f, Offset(i + u * 1.25f, i + u * 1.25f))
-        }
-        TemaId.VAPOR -> enLasCuatro {
-            // Cantonera de latón curva, como las de los libros mayores, con su remache.
-            drawPath(Path().apply { moveTo(i, i); lineTo(i + u * 1.6f, i); quadraticTo(i + u * 0.7f, i + u * 0.7f, i, i + u * 1.6f); close() }, e.primary.copy(alpha = 0.75f))
-            remacheVapor(Offset(i + u * 0.45f, i + u * 0.45f), u * 0.16f, e.tertiary)
         }
         TemaId.LABORATORIO -> {
             // Etiqueta de muestra arriba a la derecha y una graduación por el borde izquierdo.
@@ -1852,14 +1831,6 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             }, l, style = tr)
             drawLine(a, Offset(f(0.24f), f(0.94f)), Offset(f(0.76f), f(0.94f)), tr.width)
         }
-        TemaId.VAPOR -> {
-            // Un manómetro con la aguja en cero: la caldera está fría.
-            drawCircle(l, f(0.4f), Offset(f(0.5f), f(0.5f)), style = tr)
-            for (k in 0..8) { val ang = Math.toRadians(135.0 + 33.75 * k); val c0 = Offset(f(0.5f), f(0.5f)); drawLine(l, Vapor.en(c0, f(0.32f), ang), Vapor.en(c0, f(if (k % 4 == 0) 0.24f else 0.28f), ang), tr.width * 0.8f) }
-            drawLine(a, Offset(f(0.5f), f(0.5f)), Vapor.en(Offset(f(0.5f), f(0.5f)), f(0.26f), Math.toRadians(135.0)), tr.width * 1.4f)
-            drawCircle(a, f(0.04f), Offset(f(0.5f), f(0.5f)))
-            drawLine(l, Offset(f(0.5f), f(0.9f)), Offset(f(0.5f), f(0.98f)), tr.width * 2f)
-        }
         TemaId.LABORATORIO -> rotate(18f) {
             // Tubo de ensayo vacío, con su graduación.
             drawLine(l, Offset(f(0.38f), f(0.08f)), Offset(f(0.38f), f(0.72f)), tr.width)
@@ -2056,8 +2027,6 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
         TemaId.DISTOPIA -> drawRect(c, Offset.Zero, Size(w, d))
         TemaId.REFUGIO -> drawCircle(c, d * 0.9f, Offset(w / 2, h - d * 1.6f), style = Stroke(d * 0.5f))
         TemaId.ORDEN -> drawPath(Path().apply { moveTo(w / 2 - d * 1.5f, h - d * 0.6f); lineTo(w / 2, h - d * 1.8f); lineTo(w / 2 + d * 1.5f, h - d * 0.6f) }, c, style = Stroke(d * 0.55f))
-        // La aguja de un manómetro que sube desde la esquina de abajo.
-        TemaId.VAPOR -> { drawLine(c, Offset(d, h - d), Offset(d * 3.2f, h - d * 3.2f), d * 0.5f); drawCircle(c, d * 0.6f, Offset(d, h - d)) }
         TemaId.LABORATORIO -> {
             for (n in -1..1) {
                 val x = w / 2 + n * d * 1.4f
@@ -2179,11 +2148,6 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         TemaId.REFUGIO -> estrellaComp(Offset(m * 3.2f, h / 2), m * 1.1f, c, puntas = 4, dentro = 0.3f)
         // Remaches a los lados.
         TemaId.ORDEN -> listOf(m * 2f, w - m * 2f).forEach { x -> drawCircle(c, fino * 2f, Offset(x, h / 2)) }
-        // Dos filetes arriba y abajo, como en los billetes de tren de cartón, y una muesca de picado a la derecha.
-        TemaId.VAPOR -> {
-            listOf(m, h - m).forEach { y -> drawLine(c, Offset(m * 2f, y), Offset(w - m * 2f, y), fino * 0.7f) }
-            drawCircle(c, fino * 2.2f, Offset(w - m * 1.6f, h / 2), style = Stroke(fino * 0.8f))
-        }
         // Graduación por abajo.
         TemaId.LABORATORIO -> {
             var x = m * 2; var n = 0
@@ -2376,14 +2340,6 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             // Placa de datos remachada.
             drawRect(l, Offset(f(0.06f), f(0.16f)), Size(f(0.88f), f(0.68f)), style = tr)
             listOf(Offset(0.18f, 0.28f), Offset(0.82f, 0.28f), Offset(0.18f, 0.72f), Offset(0.82f, 0.72f)).forEach { drawCircle(e.secondary, f(0.07f), Offset(f(it.x), f(it.y))) }
-        }
-        TemaId.VAPOR -> {
-            // La lámina del plano con su escuadra y el compás abierto.
-            drawRect(l, Offset(f(0.08f), f(0.1f)), Size(f(0.7f), f(0.82f)), style = tr)
-            drawPath(Path().apply { moveTo(f(0.16f), f(0.82f)); lineTo(f(0.16f), f(0.46f)); lineTo(f(0.52f), f(0.82f)); close() }, l, style = tr)
-            drawLine(a, Offset(f(0.8f), f(0.12f)), Offset(f(0.64f), f(0.62f)), tr.width)
-            drawLine(a, Offset(f(0.8f), f(0.12f)), Offset(f(0.94f), f(0.6f)), tr.width)
-            drawCircle(a, f(0.05f), Offset(f(0.8f), f(0.12f)))
         }
         TemaId.LABORATORIO -> {
             // Cuaderno de laboratorio cuadriculado.
@@ -2603,11 +2559,6 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
             p.moveTo(0f, 0f)
             while (y < h) { p.lineTo(w * 0.8f, y + 3 * d); p.lineTo(0f, y + 6 * d); y += 6 * d }
             drawPath(p, c, style = Stroke(1.4f * d))
-        }
-        // El tubo de vapor vertical con sus bridas.
-        TemaId.VAPOR -> {
-            drawRect(e.primary.copy(alpha = 0.8f), Offset(0f, 0f), Size(3 * d, h))
-            var y = 4 * d; while (y < h) { drawRect(e.primary, Offset(-1 * d, y), Size(5 * d, 1.6f * d)); y += 14 * d }
         }
         TemaId.LABORATORIO -> {
             drawRect(c, Offset.Zero, Size(d, h))

@@ -476,37 +476,6 @@ def papel_edo():
                 for t in np.linspace(0, 1, 9)], fill=c, width=1)
     img.save(os.path.join(OUT, 'papel_edo.jpg'), quality=86)
 
-def papel_vapor():
-    """Vapor victoriano: el papel de oficio crema de una memoria de patente, con las manchas pardas de la humedad
-    (foxing), la huella de hollín de unos dedos en la esquina de abajo y, arriba a la derecha, el sello en seco de la
-    oficina de patentes: un anillo con un engrane, en relieve sin tinta."""
-    W, H = 720, 1280
-    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
-    a = mezcla(col('#F3EAD4'), col('#E6D8B8'), ruido_rect(W, H, 60, 151) * 0.75)
-    # Las manchas de humedad: puntos pardos de borde difuso, más en los márgenes.
-    rng = np.random.default_rng(152)
-    for _ in range(26):
-        cx, cy = rng.random() * W, rng.random() * H
-        r = 3 + rng.random() * 10
-        d = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
-        borde = min(cx, W - cx, cy, H - cy) / (W / 2)
-        a = mezcla(a, col('#B08A55'), np.clip(1 - d / r, 0, 1) ** 1.5 * (0.35 - 0.2 * min(borde, 1)))
-    # El hollín de los dedos del fogonero, abajo a la izquierda: dos o tres manchas alargadas y grises.
-    for k, (cx, cy) in enumerate(((W * 0.1, H * 0.93), (W * 0.16, H * 0.955), (W * 0.06, H * 0.9))):
-        d = np.sqrt(((xx - cx) / 1.6) ** 2 + (yy - cy) ** 2)
-        a = mezcla(a, col('#4A443C'), np.clip(1 - d / (24 - k * 4), 0, 1) * (0.5 + 0.5 * ruido_rect(W, H, 5, 153 + k)) * 0.4)
-    # El sello en seco: un anillo con dientes de engrane, en relieve (luz arriba a la izquierda, sombra abajo a la derecha).
-    sx, sy, sr = W * 0.8, H * 0.1, W * 0.085
-    d = np.sqrt((xx - sx) ** 2 + (yy - sy) ** 2)
-    ang = np.arctan2(yy - sy, xx - sx)
-    dientes = sr * 0.62 + sr * 0.08 * (np.cos(ang * 12) > 0)
-    figura = (np.abs(d - sr) < 3).astype(np.float32) + ((d < dientes) & (d > sr * 0.3)).astype(np.float32)
-    figura = np.clip(figura, 0, 1)
-    gy, gx = np.gradient(np.asarray(Image.fromarray((figura * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.5)), np.float32) / 255)
-    a = a * (1 + np.clip(-(gx + gy) * 3.5, -0.08, 0.08))[..., None]
-    a = a * (0.97 + 0.05 * ruido_rect(W, H, 0.8, 156)[..., None])
-    a_img(a).save(os.path.join(OUT, 'papel_vapor.jpg'), quality=86)
-
 if __name__ == '__main__':
     OUT = sys.argv[1]
     papeles()
@@ -525,5 +494,4 @@ if __name__ == '__main__':
     papel_deco()
     papel_urbe()
     papel_edo()
-    papel_vapor()
     print('papeles listos')

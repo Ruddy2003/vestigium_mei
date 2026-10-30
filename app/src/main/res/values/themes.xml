@@ -78,14 +78,8 @@
     <style name="Theme.Vestigium.Arranque.Orden" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_orden</item>
     </style>
-    <style name="Theme.Vestigium.Arranque.Vapor" parent="Theme.Vestigium.Arranque">
-        <item name="android:windowBackground">@color/arranque_vapor</item>
-    </style>
     <style name="Theme.Vestigium.Arranque.Orden.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_orden_oscuro</item>
-    </style>
-    <style name="Theme.Vestigium.Arranque.Vapor.Oscuro" parent="Theme.Vestigium.Arranque">
-        <item name="android:windowBackground">@color/arranque_vapor_oscuro</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Laboratorio" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_laboratorio</item>

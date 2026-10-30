@@ -458,24 +458,6 @@ object MapasCampana {
                 drawPath(Path().apply { moveTo(m.x, m.y - 44 * d); lineTo(m.x + 16 * d, m.y - 44 * d); lineTo(m.x + 16 * d, m.y - 32 * d); lineTo(m.x + 8 * d, m.y - 35 * d); lineTo(m.x, m.y - 32 * d); close() }, Color(0xFF9E1B22))
                 drawCircle(Color(0xFFD6B25A), 2.6f * d, Offset(m.x + 8 * d, m.y - 39.5f * d))
             }
-            // La llegada a la terminal: la marquesina de hierro en arco sobre el andén, el reloj de la estación y la
-            // locomotora entrando, con su gran penacho de vapor.
-            TemaId.VAPOR -> {
-                val hierro = Color(0xFF3B3A37); val laton = Color(0xFFB8862B); val ladrillo = Color(0xFF9C3D24)
-                val c = Offset(m.x.coerceIn(30 * d, size.width - 30 * d), m.y - 14 * d)
-                drawRect(ladrillo, Offset(c.x - 26 * d, c.y - 16 * d), Size(52 * d, 18 * d))
-                drawArc(hierro, 180f, 180f, false, Offset(c.x - 26 * d, c.y - 34 * d), Size(52 * d, 36 * d), style = Stroke(2 * d))
-                for (k in 1..4) { val x = c.x - 26 * d + k * 52 * d / 5; drawLine(hierro.copy(alpha = 0.6f), Offset(x, c.y - 16 * d), Offset(x, c.y - 30 * d + kotlin.math.abs(k - 2.5f) * 4 * d), 1 * d) }
-                val reloj = Offset(c.x, c.y - 24 * d)
-                drawCircle(Color(0xFFEADCC0), 5.5f * d, reloj); drawCircle(laton, 5.5f * d, reloj, style = Stroke(1.2f * d))
-                drawLine(hierro, reloj, reloj + Offset(0f, -3.6f * d), 0.9f * d); drawLine(hierro, reloj, reloj + Offset(2.6f * d, 0.6f * d), 0.9f * d)
-                drawLine(hierro, Offset(c.x - 34 * d, c.y + 2 * d), Offset(c.x + 34 * d, c.y + 2 * d), 1.6f * d)
-                val lx = c.x - 14 * d; val ly = c.y
-                drawRect(laton, Offset(lx - 8 * d, ly - 9 * d), Size(11 * d, 6 * d)); drawRect(hierro, Offset(lx + 3 * d, ly - 12 * d), Size(6 * d, 9 * d))
-                drawRect(hierro, Offset(lx - 6.5f * d, ly - 13 * d), Size(2.4f * d, 4 * d))
-                listOf(lx - 5 * d, lx, lx + 6 * d).forEach { x -> drawCircle(hierro, 2.2f * d, Offset(x, ly - 1.6f * d)) }
-                listOf(Offset(-5f, -17f) to 3f, Offset(-1f, -21f) to 3.6f, Offset(4f, -24f) to 4.2f, Offset(10f, -26f) to 3.4f).forEach { (o, rr) -> drawCircle(Color.White.copy(alpha = 0.6f), rr * d, Offset(lx + o.x * d, ly + o.y * d)) }
-            }
             // El cultivo completo: las colonias que llenan la placa de Petri.
             TemaId.LABORATORIO -> {
                 val az = java.util.Random(13)

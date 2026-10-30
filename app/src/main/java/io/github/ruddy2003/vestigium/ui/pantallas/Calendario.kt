@@ -237,7 +237,6 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.DISTOPIA -> RectangleShape
     TemaId.REFUGIO -> RoundedCornerShape(7.dp)
     TemaId.ORDEN -> CutCornerShape(topEnd = 8.dp)
-    TemaId.VAPOR -> RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
     TemaId.LABORATORIO -> RoundedCornerShape(5.dp)
     TemaId.COLONOS -> RoundedCornerShape(2.dp)
     TemaId.NAPOLEON -> CutCornerShape(2.dp)
@@ -374,13 +373,6 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             contorno(if (hoy) oro else linea, if (hoy) 1.3f else 0.8f)
             if (hoy) drawLine(oro, Offset(w - 10.5f * s, 0f), Offset(w, 10.5f * s), s)
             for (k in 0 until 3) drawRect(linea.copy(alpha = 0.7f), Offset(w - 3.4f * s, h * 0.22f + k * 3.2f * s), Size(1.4f * s, 2.2f * s))
-            if (sellado) sello(acento)
-        }
-        // Una casilla de horario: dos remaches abajo; hoy, la esferita de un manómetro arriba a la derecha.
-        TemaId.VAPOR -> {
-            contorno(if (hoy) oro else linea, if (hoy) 1.3f else 0.8f)
-            listOf(3.5f * s, w - 3.5f * s).forEach { x -> drawCircle(linea.copy(alpha = 0.8f), 1f * s, Offset(x, h - 3.5f * s)) }
-            if (hoy) { val o = Offset(w - 6 * s, 6 * s); drawCircle(oro, 3.4f * s, o, style = Stroke(0.9f * s)); drawLine(oro, o, o + Offset(2 * s, -1.6f * s), 0.9f * s) }
             if (sellado) sello(acento)
         }
         // Papel milimétrico; hoy, las marcas de la mira en los cuatro lados.

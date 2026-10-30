@@ -67,10 +67,6 @@ object LetraExtra {
     val barlow = FontFamily(Font(R.font.barlow_regular, FontWeight.Normal), Font(R.font.barlow_semibold, FontWeight.SemiBold))
     /** Saira: la hermana de texto del estarcido de la orden. */
     val saira = FontFamily(Font(R.font.saira_regular, FontWeight.Normal), Font(R.font.saira_semibold, FontWeight.SemiBold))
-    /** «Caldera Vestigium» (Abril Fatface renombrada): la «fat face» de los carteles de ferrocarril y de las exposiciones del XIX. */
-    val caldera = FontFamily(Font(R.font.caldera_titulo, FontWeight.Normal), Font(R.font.caldera_titulo, FontWeight.Medium), Font(R.font.caldera_titulo, FontWeight.SemiBold), Font(R.font.caldera_titulo, FontWeight.Bold))
-    /** Bitter: egipcia de remates cuadrados, la familia de las letras de los horarios y los billetes de tren, para leer en párrafos. */
-    val bitter = FontFamily(Font(R.font.bitter_regular, FontWeight.Normal), Font(R.font.bitter_regular, FontWeight.Medium), Font(R.font.bitter_semibold, FontWeight.SemiBold), Font(R.font.bitter_semibold, FontWeight.Bold))
     /** Old Standard: la letra de los periódicos del siglo XIX. */
     val gaceta = FontFamily(Font(R.font.oldstandard_regular, FontWeight.Normal), Font(R.font.oldstandard_bold, FontWeight.Bold), Font(R.font.oldstandard_bold, FontWeight.SemiBold))
     /** Crimson Pro: el libro del naturalista. */
@@ -216,18 +212,6 @@ internal val ordenClaro = esquema(false, 0xFFE2E5E8, 0xFFEEF0F2, 0xFFD3D7DC, 0xF
 internal val ordenOscuro = esquema(true, 0xFF101215, 0xFF171A1E, 0xFF22262B, 0xFF3A4048, 0xFFDDE2E7, 0xFF9DA6B0,
     0xFFD0333B, 0xFFFFFFFF, 0xFF3A1416, 0xFFF5DADB, 0xFFD6B25A, 0xFF33290F, 0xFF8FB3C8, 0xFFFF7A7A)
 internal val tipoOrden = tipografia(LetraExtra.estarcido, FontWeight.Normal, 1.05f, 1.6f, LetraExtra.saira, 0.98f, LetraExtra.saira, 1f)
-
-// ---------------------------------------------------------------------
-//  Vapor victoriano: de día, el papel crema de los planos de patente, con la tinta de hollín, el latón bruñido, el
-//  cardenillo (la pátina verde del cobre y del latón) y el ladrillo de las fábricas; de noche, la sala de máquinas a la
-//  luz del gas: hollín, el latón que brilla, el cardenillo aclarado y el ladrillo al rojo.
-// ---------------------------------------------------------------------
-internal val vaporClaro = esquema(false, 0xFFE9DFC8, 0xFFF4ECD9, 0xFFDCCEAF, 0xFFB9A47C, 0xFF231B14, 0xFF5F5040,
-    0xFF8A5A14, 0xFFFFF6E4, 0xFFF0DDB6, 0xFF2A1D0A, 0xFF2F6B5E, 0xFFD2E4DC, 0xFF9C3D24, 0xFF8E1F14)
-internal val vaporOscuro = esquema(true, 0xFF14110E, 0xFF1D1914, 0xFF29231B, 0xFF453A2B, 0xFFEADCC0, 0xFFB09F82,
-    0xFFDBA641, 0xFF1E1404, 0xFF3D2D10, 0xFFF5E6C6, 0xFF74B8A4, 0xFF1D3630, 0xFFE27A55, 0xFFFF8A76)
-/** Caldera (Abril Fatface) en los títulos, apenas espaciada como en los carteles; Bitter, egipcia de horario, en el texto y los datos. */
-internal val tipoVapor = tipografia(LetraExtra.caldera, FontWeight.Normal, 1.06f, 0.3f, LetraExtra.bitter, 0.98f, LetraExtra.bitter, 1.0f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Laboratorio: blanco clínico, cian y violeta; geometría limpia.
@@ -452,8 +436,6 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFFE0262F, 0xFF2A2C2E, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFFB3121B, 0xFFCFCBC0, 0xFF2E3B44, 0xFFB3121B)
     TemaId.REFUGIO -> if (oscuro) listOf(0xFFFFB23F, 0xFF112016, 0xFF3DFF7F, 0xFF3DFF7F) else listOf(0xFFD9572B, 0xFFE6DAB8, 0xFF1C6E6A, 0xFF1C6E6A)
     TemaId.ORDEN -> if (oscuro) listOf(0xFFD0333B, 0xFF262A30, 0xFF8FB3C8, 0xFFD6B25A) else listOf(0xFF9E1B22, 0xFFD3D7DC, 0xFF2F4858, 0xFF7E6219)
-    // Del ladrillo (bajo) al cardenillo (alto), pasando por el papel de plano o el hollín; fuerte, el latón.
-    TemaId.VAPOR -> if (oscuro) listOf(0xFFE27A55, 0xFF29231B, 0xFF74B8A4, 0xFFDBA641) else listOf(0xFF9C3D24, 0xFFDCCEAF, 0xFF2F6B5E, 0xFF8A5A14)
     TemaId.LABORATORIO -> if (oscuro) listOf(0xFFFF7A9A, 0xFF18222F, 0xFF3CD2E5, 0xFF3CD2E5) else listOf(0xFFC0466A, 0xFFE6EDF2, 0xFF0B8FA1, 0xFF0B8FA1)
     TemaId.COLONOS -> if (oscuro) listOf(0xFFE07A62, 0xFF1E2838, 0xFF8FB3E0, 0xFFE3C27A) else listOf(0xFFA23B2A, 0xFFE7DDC8, 0xFF1F3A5F, 0xFF7A5A2E)
     TemaId.NAPOLEON -> if (oscuro) listOf(0xFFE05A6A, 0xFF1B2550, 0xFF9DB4FF, 0xFFD9B25B) else listOf(0xFFA3172E, 0xFFEAE1CB, 0xFF1E3A8A, 0xFFB8892B)
@@ -491,8 +473,6 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFF6D7377, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFF6D7377, 0xFF2E3B44, 0xFFB3121B)
     TemaId.REFUGIO -> if (oscuro) listOf(0xFF1E8A45, 0xFF3DFF7F, 0xFFFFB23F) else listOf(0xFF1C6E6A, 0xFFB98A15, 0xFFD9572B)
     TemaId.ORDEN -> if (oscuro) listOf(0xFF8FB3C8, 0xFFD6B25A, 0xFFD0333B) else listOf(0xFF2F4858, 0xFF7E6219, 0xFF9E1B22)
-    // Como una caldera que se calienta: cardenillo frío, latón tibio, ladrillo al rojo.
-    TemaId.VAPOR -> if (oscuro) listOf(0xFF5E9C8A, 0xFFDBA641, 0xFFE8603A) else listOf(0xFF2F6B5E, 0xFFB8862B, 0xFF9C3D24)
     TemaId.LABORATORIO -> if (oscuro) listOf(0xFF3CD2E5, 0xFF9D93FF, 0xFFFF7A9A) else listOf(0xFF0B8FA1, 0xFF5E4FD1, 0xFFC0466A)
     TemaId.COLONOS -> if (oscuro) listOf(0xFF8FB3E0, 0xFFE3C27A, 0xFFE07A62) else listOf(0xFF1F3A5F, 0xFF7A5A2E, 0xFFA23B2A)
     TemaId.NAPOLEON -> if (oscuro) listOf(0xFF9DB4FF, 0xFFD9B25B, 0xFFE05A6A) else listOf(0xFF1E3A8A, 0xFFB8892B, 0xFFA3172E)

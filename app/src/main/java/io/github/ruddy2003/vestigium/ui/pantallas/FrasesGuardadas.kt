@@ -213,13 +213,6 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             moveTo(3f * u, 3f * u); lineTo(21f * u, 3f * u); lineTo(21f * u, 11f * u); quadraticTo(21f * u, 18f * u, 12f * u, 22f * u); quadraticTo(3f * u, 18f * u, 3f * u, 11f * u); close()
             addPath(poligono(11f, 6f, 13f, 6f, 13f, 9.5f, 17f, 9.5f, 17f, 11.5f, 13f, 11.5f, 13f, 17f, 11f, 17f, 11f, 11.5f, 7f, 11.5f, 7f, 9.5f, 11f, 9.5f))
         })
-        // Un corazón de latón con un engrane calado.
-        TemaId.VAPOR -> pinta(Path().apply {
-            fillType = PathFillType.EvenOdd
-            moveTo(12f * u, 21f * u); cubicTo(2f * u, 14f * u, 2f * u, 5f * u, 8f * u, 5f * u); cubicTo(10.5f * u, 5f * u, 12f * u, 7f * u, 12f * u, 8f * u)
-            cubicTo(12f * u, 7f * u, 13.5f * u, 5f * u, 16f * u, 5f * u); cubicTo(22f * u, 5f * u, 22f * u, 14f * u, 12f * u, 21f * u); close()
-            addPath(io.github.ruddy2003.vestigium.ui.Vapor.engrane(p(12f, 12f), 3.6f * u, 8, 0.7f))
-        })
         // Anillo de benceno: hexágono con su círculo.
         TemaId.LABORATORIO -> pinta(estrella(12f, 12f, 3, 10.5f, 10.5f).also { it.fillType = PathFillType.EvenOdd; circulo(it, 12f, 12f, 5f) })
         // Una casa con chimenea: el pueblo que se reconstruye.

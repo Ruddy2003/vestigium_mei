@@ -54,7 +54,6 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     TICKETS("Pincho de tickets", "ticket"),
     CARPETA("Carpeta del supervisor", "informe"),
     TECNICO("Códice técnico", "lámina"),
-    PATENTES("Cuaderno de patentes", "patente"),
     CUADERNO("Cuaderno de laboratorio", "experimento"),
     VUELO("Bitácora de vuelo", "órbita"),
     INMERSION("Bitácora del batiscafo", "inmersión"),
@@ -91,7 +90,6 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.NEON -> Contenedor.TICKETS
     TemaId.REFUGIO -> Contenedor.CARPETA
     TemaId.ORDEN -> Contenedor.TECNICO
-    TemaId.VAPOR -> Contenedor.PATENTES
     TemaId.LABORATORIO -> Contenedor.CUADERNO
     TemaId.ESPACIO -> Contenedor.VUELO
     TemaId.ABISMO -> Contenedor.INMERSION
@@ -153,7 +151,6 @@ object Contenedores {
         Contenedor.BOLSA -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.SUPERVIVIENTE -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.TICKETS -> ContenedoresMas.papel(c, cs, oscuro)
-        Contenedor.PATENTES -> ContenedoresMas.papel(c, cs, oscuro)
     }
 
     // ================================================================== cerrado
@@ -181,7 +178,6 @@ object Contenedores {
             Contenedor.BOLSA -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
             Contenedor.SUPERVIVIENTE -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
             Contenedor.TICKETS -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
-            Contenedor.PATENTES -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
         }
     }
 
@@ -685,7 +681,6 @@ object Contenedores {
             Contenedor.BOLSA -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.SUPERVIVIENTE -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.TICKETS -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
-            Contenedor.PATENTES -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
         }
     }
 
@@ -777,7 +772,6 @@ object Contenedores {
             Contenedor.BOLSA -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.SUPERVIVIENTE -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.TICKETS -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
-            Contenedor.PATENTES -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
         }
     }
 }

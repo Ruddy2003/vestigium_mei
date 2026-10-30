@@ -145,7 +145,6 @@ object LibroDiario {
         TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
         TemaId.REFUGIO -> Fuentes(R.font.vt323, R.font.courier_regular)
         TemaId.ORDEN -> Fuentes(R.font.saira_stencil, R.font.saira_regular)
-        TemaId.VAPOR -> Fuentes(R.font.caldera_titulo, R.font.bitter_regular)
         TemaId.LABORATORIO -> Fuentes(R.font.jost_medium, R.font.jost_regular)
         TemaId.COLONOS -> Fuentes(R.font.fell, R.font.oldstandard_regular)
         TemaId.NAPOLEON -> Fuentes(R.font.bodoni_titulo, R.font.bodoni_texto)
@@ -232,10 +231,6 @@ object LibroDiario {
             TemaId.DISTOPIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
             TemaId.REFUGIO -> "article{border:1px solid $p;border-radius:14px;padding:18px;margin-bottom:18px}.nota::first-letter{background:$p;color:$b;font-size:1.6em;padding:0 3px;margin-right:2px}"
             TemaId.ORDEN -> "article{border-top:3px solid $p;outline:1px solid $v;outline-offset:6px;margin:18px 0;padding:18px}.fecha{text-transform:uppercase;letter-spacing:.1em}" + capitular("2.6em", p)
-            // La lámina del plano: cuadrícula tenue, filete doble arriba y la fecha con el «⊙» del manómetro.
-            TemaId.VAPOR -> "article{border-top:4px double $p;border-left:1px solid $v;padding:14px 18px;background-image:linear-gradient(${v}18 1px,transparent 1px)," +
-                "linear-gradient(90deg,${v}18 1px,transparent 1px);background-size:100% 20px,20px 100%}.fecha{font-variant:small-caps;letter-spacing:.04em}" +
-                ".fecha::before{content:'\\2299  ';color:$s}" + capitular("3em", p)
             TemaId.LABORATORIO -> "article{border-top:1px solid $p;padding:18px;background-image:linear-gradient(${v}22 1px,transparent 1px),linear-gradient(90deg,${v}22 1px,transparent 1px);" +
                 "background-size:100% 24px,24px 100%}.meta::before{content:'Obs. — '}"
             TemaId.COLONOS -> "article{border-top:3px solid $p}article::before{content:'';display:block;border-top:1px solid $p;margin:2px 0 14px}" + capitular("3em", tinta)
@@ -403,7 +398,6 @@ object LibroDiario {
             TemaId.DISTOPIA -> Medidas(11f, aire)
             TemaId.REFUGIO -> Medidas(11f, 1.35f)
             TemaId.ORDEN -> Medidas(11f, aire)
-            TemaId.VAPOR -> Medidas(11.5f, aire)
             TemaId.LABORATORIO -> Medidas(11f, aire)
             TemaId.COLONOS -> Medidas(12.5f, aire)
             TemaId.NAPOLEON -> Medidas(12.5f, aire)
@@ -459,8 +453,6 @@ object LibroDiario {
         TemaId.REFUGIO -> Inicial(R.font.vt323, 1.9f, invertida = true)
         // La letra de estarcido.
         TemaId.ORDEN -> Inicial(R.font.saira_stencil, 2.2f, mayusculas = true)
-        // La capitular en «fat face», grande como en los carteles de las exposiciones.
-        TemaId.VAPOR -> Inicial(R.font.caldera_titulo, 2.8f)
         // «Obs. —» y la primera palabra en negrita, como en un cuaderno de laboratorio.
         TemaId.LABORATORIO -> Inicial(R.font.jost_semibold, 1f, palabra = true, prefijo = "Obs. — ")
         // La letra de grabado de la gaceta, en negro de imprenta.
@@ -617,16 +609,6 @@ object LibroDiario {
                 val diente = Paint(linea).apply { strokeWidth = 1.6f }
                 for (j in 0 until 8) { val a = j * Math.PI / 4; cv.drawLine(cx + 4.2f * cos(a).toFloat(), y + 4.2f * sin(a).toFloat(), cx + 6.4f * cos(a).toFloat(), y + 6.4f * sin(a).toFloat(), diente) }
                 cv.drawCircle(cx, y, 1.2f, relleno)
-            }
-            TemaId.VAPOR -> {
-                // Un manómetro chico: la esfera, cinco marcas y la aguja.
-                lados(10f)
-                cv.drawCircle(cx, y, 5f, Paint(trazo).apply { strokeWidth = 1.1f })
-                val marca = Paint(linea).apply { strokeWidth = 0.8f }
-                for (j in 0..4) { val a = Math.toRadians(135.0 + 67.5 * j); cv.drawLine(cx + 3.2f * cos(a).toFloat(), y + 3.2f * sin(a).toFloat(), cx + 4.6f * cos(a).toFloat(), y + 4.6f * sin(a).toFloat(), marca) }
-                val ag = Math.toRadians(300.0)
-                cv.drawLine(cx, y, cx + 3.6f * cos(ag).toFloat(), y + 3.6f * sin(ag).toFloat(), Paint(linea).apply { strokeWidth = 1.2f })
-                cv.drawCircle(cx, y, 0.9f, relleno)
             }
             TemaId.LABORATORIO -> {
                 // Una regla con sus marcas.
@@ -854,15 +836,6 @@ object LibroDiario {
                 rect(22f, Paint(trazo).apply { strokeWidth = 1.4f })
                 var x = 22f; while (x <= A - 22f) { cv.drawCircle(x, 22f, 1.8f, relleno); cv.drawCircle(x, B - 22f, 1.8f, relleno); x += 24f }
                 var y = 46f; while (y <= B - 46f) { cv.drawCircle(22f, y, 1.8f, relleno); cv.drawCircle(A - 22f, y, 1.8f, relleno); y += 24f }
-            }
-            TemaId.VAPOR -> {
-                // El marco doble de una lámina de patente y la cartela de abajo a la derecha, con sus casillas.
-                rect(22f, Paint(trazo).apply { strokeWidth = 1.6f })
-                rect(27f, Paint(trazo).apply { strokeWidth = 0.6f })
-                val x0 = A - 27f - 130f; val y0 = B - 27f - 44f
-                cv.drawRect(x0, y0, A - 27f, B - 27f, Paint(trazo).apply { strokeWidth = 0.8f })
-                cv.drawLine(x0, y0 + 22f, A - 27f, y0 + 22f, Paint(trazo).apply { strokeWidth = 0.6f })
-                cv.drawLine(x0 + 70f, y0, x0 + 70f, B - 27f, Paint(trazo).apply { strokeWidth = 0.6f })
             }
             TemaId.LABORATORIO -> {
                 // Un filete fino con las marcas de una regla en los bordes de arriba y de la izquierda.

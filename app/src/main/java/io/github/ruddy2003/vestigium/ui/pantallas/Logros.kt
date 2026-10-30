@@ -222,14 +222,6 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(sombra, r * 0.62f, c, style = Stroke(g))
             drawCircle(luz, r * 0.52f, c, style = Stroke(r * 0.04f))
         }
-        // La esfera de un manómetro: el disco con su bisel, la escala de 270°, la zona roja y seis remaches.
-        TemaId.VAPOR -> {
-            forma(disco(c, r * 0.97f))
-            drawCircle(sombra, r * 0.78f, c, style = Stroke(g * 0.8f))
-            for (k in 0..10) { val a = Math.toRadians(135.0 + 27.0 * k); drawLine(sombra, io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * 0.7f, a), io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * (if (k % 5 == 0) 0.52f else 0.6f), a), r * 0.035f) }
-            drawLine(luz, c, io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * 0.55f, Math.toRadians(330.0)), r * 0.06f)
-            for (k in 0 until 6) drawCircle(sombra, r * 0.04f, io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * 0.88f, k * Math.PI / 3 + Math.PI / 6))
-        }
         // Placa hexagonal con el anillo de benceno.
         TemaId.LABORATORIO -> {
             forma(figPoligono(c, r * 0.97f, 6, 0f))

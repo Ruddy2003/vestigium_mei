@@ -32,8 +32,6 @@ Regla Vestigium — versión reducida y renombrada de Gentium Book Plus: Copyrig
 Cruzada Vestigium — versión reducida y renombrada de MedievalSharp: Copyright (c) 2011, wmk69 (wmk69@o2.pl), with Reserved Font Name MedievalSharp.
 Barlow (recortada) — Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)
 Saira (instancias estáticas, recortadas) — Copyright 2020 The Saira Project Authors (https://github.com/Omnibus-Type/Saira)
-Caldera Vestigium — versión reducida y renombrada de Abril Fatface: Copyright (c) 2011, TypeTogether (www.type-together.com), with Reserved Font Names "Abril" and "Abril Fatface"
-Bitter (instancias estáticas, recortadas) — Copyright 2011 The Bitter Project Authors (https://github.com/solmatas/BitterPro)
 Old Standard TT (recortada) — Copyright 2011 The Old Standard Project Authors (amkryukov@gmail.com)
 Poiret One (recortada) — Copyright 2011 The Poiret One Project Authors (https://github.com/alexeiva/poiretone)
 Pasaje Vestigium — instancias estáticas, reducidas y renombradas de Josefin Sans: Copyright 2010 The Josefin Sans Project Authors (https://github.com/ThomasJockin/JosefinSansFont-master), with Reserved Font Name "Josefin Sans".
