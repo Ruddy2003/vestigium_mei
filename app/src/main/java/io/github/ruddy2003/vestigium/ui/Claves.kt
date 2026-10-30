@@ -132,6 +132,16 @@ internal object Claves {
         "orbis" to "empire",
     )
 
+    /** La jerga de a bordo y del salón de baile de los años veinte (Art déco). Lo que no está aquí queda en el español común. */
+    val DECO: Map<String, String> = mapOf(
+        "somnus" to "camarote", "passus" to "pasos_de_baile", "cor" to "compás", "animus" to "talante", "svmptvs" to "la_cuenta",
+        "loca" to "puertos", "personae" to "invitados", "palmae" to "ovaciones", "iter" to "travesía", "caelum" to "parte_del_puente",
+        "lux" to "claraboya", "musica" to "orquesta", "imagines" to "fotogramas", "epistulae" to "telegramas", "momenta" to "ecos_de_sociedad",
+        "orbis" to "ultramar", "reditus" to "dividendos", "consuetudo" to "etiqueta", "cibus" to "menú", "telephonum" to "cinematógrafo",
+        "telephon" to "cinematógrafo", "strepitus" to "bullicio", "dies" to "jornadas_a_bordo", "lumen" to "marquesina", "vis" to "calderas",
+        "robur" to "gimnasio_de_a_bordo", "aer" to "aire_de_cubierta", "lectio" to "sala_de_lectura", "series" to "galas_seguidas",
+    )
+
     /** Palabras de la Convención que reemplazan al francés común. */
     val REVOLUCION: Map<String, String> = mapOf(
         "somnus" to "repos", "animus" to "esprit", "personae" to "citoyens", "palmae" to "honneurs", "consuetudo" to "vertus",

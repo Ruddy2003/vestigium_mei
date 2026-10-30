@@ -232,6 +232,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.COLONOS -> LaminaRascar(0xFF6E3A1C.toInt(), 0xFFB87A4A.toInt(), 0xFFF0CDA6.toInt())
     // Bronce dorado del Imperio, amarillo limón.
     TemaId.NAPOLEON -> LaminaRascar(0xFF6E5A10.toInt(), 0xFFD9B82E.toInt(), 0xFFFFF4B0.toInt())
+    // Laca negra con pan de oro: al rascar sale el brillo de champán.
+    TemaId.DECO -> LaminaRascar(0xFF16130E.toInt(), 0xFFB8952E.toInt(), 0xFFF6E7BE.toInt())
     // Bronce con verdín.
     TemaId.BOTANICO -> LaminaRascar(0xFF3E4A30.toInt(), 0xFF7E8F5E.toInt(), 0xFFD8E2B8.toInt())
     // Hormigón gris con su polvo.
@@ -439,6 +441,13 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawCircle(x, y - s * 0.85f, s * 0.32f, relleno)
             c.drawOval(RectF(x - s * 1.25f, y - s * 0.75f, x - s * 0.15f, y + s * 0.05f), linea)
             c.drawOval(RectF(x + s * 0.15f, y - s * 0.75f, x + s * 1.25f, y + s * 0.05f), linea)
+        }
+        // Abanicos de rayos en tresbolillo, como el papel pintado de un vestíbulo.
+        TemaId.DECO -> tresbolillo { x, y ->
+            val s = l * 0.16f
+            for (i in 0 until 7) if (i % 2 == 0) c.drawArc(RectF(x - s, y - s, x + s, y + s), 180f + i * 180f / 7, 180f / 7, true, relleno)
+            c.drawArc(RectF(x - s * 1.25f, y - s * 1.25f, x + s * 1.25f, y + s * 1.25f), 180f, 180f, false, linea)
+            c.drawLine(x - s * 1.25f, y, x + s * 1.25f, y, linea)
         }
         TemaId.BOTANICO -> {
             // Una fronda de helecho: el raquis y sus pinnas, más cortas hacia la punta.

@@ -157,6 +157,14 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(CLICK, 0.5f), g(CLICK, 0.7f, 60), g(THUD, 0.5f, 60)); Evento.ERROR -> listOf(g(THUD, 0.8f), g(BAJA, 0.6f, 60))
             Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.5f), g(CLICK, 0.5f, 50), g(CLICK, 0.5f, 50), g(CLICK, 0.5f, 50), g(THUD, 1f, 160), g(THUD, 0.6f, 240))
         }
+        // La escobilla sobre el platillo de una orquesta de jazz: golpes en ritmo de swing (largo, corto) y el remate del bombo.
+        TemaId.DECO -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 0.55f), g(TICK, 0.32f, 30)); Evento.PASAR -> listOf(g(SUBE, 0.35f), g(TICK, 0.5f, 70))
+            Evento.GUARDAR -> listOf(g(TICK, 0.5f), g(TICK, 0.5f, 90), g(CLICK, 0.8f, 45))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.6f), g(TICK, 0.45f, 55)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.5f), g(CLICK, 0.6f, 110))
+            Evento.CAMBIO -> listOf(g(SPIN, 0.4f), g(TICK, 0.6f, 80), g(TICK, 0.4f, 40)); Evento.ERROR -> listOf(g(BAJA, 0.7f), g(TICK_GRAVE, 0.7f, 90), g(TICK_GRAVE, 0.5f, 45))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(TICK, 0.5f), g(TICK, 0.5f, 90), g(TICK, 0.5f, 45), g(TICK, 0.6f, 90), g(TICK, 0.6f, 45), g(CLICK, 0.9f, 90), g(SUBE, 0.7f, 120))
+        }
         // Hojas que se rozan y un pájaro que canta.
         TemaId.BOTANICO -> when (e) {
             Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.5f)); Evento.PASAR -> listOf(g(SUBE, 0.3f), g(BAJA, 0.3f, 20))
@@ -351,6 +359,7 @@ object Sentidos {
         TemaId.LABORATORIO -> intArrayOf(R.raw.s_laboratorio_toque, R.raw.s_laboratorio_guardar, R.raw.s_laboratorio_logro, R.raw.s_laboratorio_pasar, R.raw.s_laboratorio_elegir, R.raw.s_laboratorio_abrir, R.raw.s_laboratorio_tema, R.raw.s_laboratorio_error, R.raw.s_laboratorio_cambio, R.raw.s_tecla_laboratorio, R.raw.s_rascar_laboratorio)
         TemaId.COLONOS -> intArrayOf(R.raw.s_colonos_toque, R.raw.s_colonos_guardar, R.raw.s_colonos_logro, R.raw.s_colonos_pasar, R.raw.s_colonos_elegir, R.raw.s_colonos_abrir, R.raw.s_colonos_tema, R.raw.s_colonos_error, R.raw.s_colonos_cambio, R.raw.s_tecla_colonos, R.raw.s_rascar_colonos)
         TemaId.NAPOLEON -> intArrayOf(R.raw.s_napoleon_toque, R.raw.s_napoleon_guardar, R.raw.s_napoleon_logro, R.raw.s_napoleon_pasar, R.raw.s_napoleon_elegir, R.raw.s_napoleon_abrir, R.raw.s_napoleon_tema, R.raw.s_napoleon_error, R.raw.s_napoleon_cambio, R.raw.s_tecla_napoleon, R.raw.s_rascar_napoleon)
+        TemaId.DECO -> intArrayOf(R.raw.s_deco_toque, R.raw.s_deco_guardar, R.raw.s_deco_logro, R.raw.s_deco_pasar, R.raw.s_deco_elegir, R.raw.s_deco_abrir, R.raw.s_deco_tema, R.raw.s_deco_error, R.raw.s_deco_cambio, R.raw.s_tecla_deco, R.raw.s_rascar_deco)
         TemaId.BOTANICO -> intArrayOf(R.raw.s_botanico_toque, R.raw.s_botanico_guardar, R.raw.s_botanico_logro, R.raw.s_botanico_pasar, R.raw.s_botanico_elegir, R.raw.s_botanico_abrir, R.raw.s_botanico_tema, R.raw.s_botanico_error, R.raw.s_botanico_cambio, R.raw.s_tecla_botanico, R.raw.s_rascar_botanico)
         TemaId.RUINAS -> intArrayOf(R.raw.s_ruinas_toque, R.raw.s_ruinas_guardar, R.raw.s_ruinas_logro, R.raw.s_ruinas_pasar, R.raw.s_ruinas_elegir, R.raw.s_ruinas_abrir, R.raw.s_ruinas_tema, R.raw.s_ruinas_error, R.raw.s_ruinas_cambio, R.raw.s_tecla_ruinas, R.raw.s_rascar_ruinas)
         TemaId.GOTICO -> intArrayOf(R.raw.s_gotico_toque, R.raw.s_gotico_guardar, R.raw.s_gotico_logro, R.raw.s_gotico_pasar, R.raw.s_gotico_elegir, R.raw.s_gotico_abrir, R.raw.s_gotico_tema, R.raw.s_gotico_error, R.raw.s_gotico_cambio, R.raw.s_tecla_gotico, R.raw.s_rascar_gotico)
@@ -437,6 +446,8 @@ object Sentidos {
         TemaId.COLONOS -> Afinacion(st(-5, 0, 2, 4, 7), st(-7, 0, 5, 7), pasarRuido = false, elegirRuido = false)
         // Si bemol: el tambor afinado en las notas de la corneta.
         TemaId.NAPOLEON -> Afinacion(st(-5, 0, 4, 7), null, pasarRuido = true, elegirRuido = true)
+        // Do mayor con sexta y novena, el acorde con que cierran las orquestas de jazz de los años veinte.
+        TemaId.DECO -> Afinacion(st(0, 4, 7, 9, 14), st(-5, 0, 2, 9), pasarRuido = false, elegirRuido = false)
         // Sol dórico.
         TemaId.BOTANICO -> Afinacion(st(-5, 0, 3, 7, 9), st(-5, 0, 2, 5), pasarRuido = true, elegirRuido = false)
         // Re mixolidio con quintas al aire, como una flauta en una plaza vacía; el viento entre los edificios al pasar y al elegir.
@@ -558,6 +569,7 @@ object Sentidos {
         TemaId.LABORATORIO -> pasadas(TICK, 0.4f, 30, 5)   // aluminio
         TemaId.COLONOS -> pasadas(TICK_GRAVE, 0.7f, 55, 3)   // cobre
         TemaId.NAPOLEON -> pasadas(CLICK, 0.6f, 50, 3)   // bronce dorado
+        TemaId.DECO -> pasadas(TICK, 0.48f, 38, 6)   // laca con pan de oro, lisa y dura
         TemaId.BOTANICO -> pasadas(TICK_GRAVE, 0.45f, 65, 3)   // bronce con verdín
         TemaId.RUINAS -> pasadas(THUD, 0.38f, 58, 4)   // hormigón áspero
         TemaId.GOTICO -> pasadas(TICK_GRAVE, 0.6f, 80, 3)   // peltre

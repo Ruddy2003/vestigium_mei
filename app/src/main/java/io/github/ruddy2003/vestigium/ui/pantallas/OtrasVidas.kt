@@ -565,6 +565,16 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawRect(color, Offset.Zero, Size(fw, h)); drawRect(oro, Offset.Zero, Size(fw, 1.6f * d)); drawRect(oro, Offset(0f, h - 1.6f * d), Size(fw, 1.6f * d))
             }
         }
+        // La barra de un rascacielos tumbado: el cuerpo lleno y la punta que se estrecha en tres escalones, con su aguja.
+        TemaId.DECO -> {
+            drawRect(pista, Offset.Zero, size)
+            if (fw > 0f) {
+                val m = minOf(h * 0.4f, fw * 0.2f)
+                drawRect(color, Offset.Zero, Size((fw - 3 * m).coerceAtLeast(0f), h))
+                listOf(0.14f, 0.28f, 0.42f).forEachIndexed { k, f -> drawRect(color, Offset((fw - (3 - k) * m).coerceAtLeast(0f), h * f), Size(m, h * (1 - 2 * f))) }
+                drawLine(Color(0xFFD4AF37), Offset(0f, h / 2), Offset((fw - 3 * m).coerceAtLeast(0f), h / 2), 0.8f * d)
+            }
+        }
         // Un tallo con hojas alternas y un botón en la punta.
         TemaId.BOTANICO -> {
             drawLine(color.copy(alpha = 0.25f), Offset(0f, h / 2), Offset(w, h / 2), d)
@@ -904,6 +914,12 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
                 rotate(a, p) { drawOval(cs.tertiary.copy(alpha = 0.7f), Offset(p.x - 1.3f * d, p.y - 3f * d), Size(2.6f * d, 6f * d)) }
             }
             figuraTema(tema, cs.tertiary.copy(alpha = 0.35f), c, rc * 0.45f, cs.surface)
+        }
+        // El reloj de un vestíbulo: un sol de rayos largos y cortos alrededor de la esfera y el abanico al centro.
+        TemaId.DECO -> {
+            for (k in 0 until 48) { val a = k * 7.5f - 90f; drawLine(cs.primary.copy(alpha = if (k % 4 == 0) 0.7f else 0.3f), polarFig(c, ro + 2f * d, a), polarFig(c, ro + (if (k % 4 == 0) 10f else 5f) * d, a), (if (k % 4 == 0) 1.6f else 0.8f) * d) }
+            drawCircle(cs.primary.copy(alpha = 0.4f), ro + 12f * d, c, style = Stroke(0.8f * d))
+            figuraTema(tema, cs.primary.copy(alpha = 0.35f), c, rc * 0.45f, cs.surface)
         }
         // El reloj de flores: doce pétalos.
         TemaId.BOTANICO -> {

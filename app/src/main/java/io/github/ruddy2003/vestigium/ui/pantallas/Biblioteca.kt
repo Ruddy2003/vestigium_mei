@@ -289,6 +289,12 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
         TemaId.NAPOLEON -> for (fila in 0 until 3) for (col in 0 until 3) {
             if ((fila + col) % 2 == 0) drawPath(simboloCalificacion(t, Offset(w * (0.2f + 0.3f * col), h * (0.62f + 0.13f * fila)), 3.2f * u), a.copy(alpha = 0.35f))
         }
+        // Un abanico de rayos que sube desde el pie de la portada y tres filetes escalonados encima.
+        TemaId.DECO -> {
+            val b = Offset(w / 2, h * 0.92f); val r = w * 0.36f
+            for (i in 0 until 11) if (i % 2 == 0) drawArc(tenue, 180f + i * 180f / 11, 180f / 11, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+            listOf(0.7f, 0.5f, 0.3f).forEachIndexed { k, f -> linea(w * (1 - f) / 2, h * (0.46f - k * 0.04f), w * (1 + f) / 2, h * (0.46f - k * 0.04f)) }
+        }
         // Un helecho que sube por el borde izquierdo.
         TemaId.BOTANICO -> {
             val x0 = 9 * u

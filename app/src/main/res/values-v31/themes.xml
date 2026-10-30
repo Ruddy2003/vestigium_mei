@@ -152,6 +152,16 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_napoleon_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_napoleon</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Deco" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_deco</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_deco</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_deco</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Deco.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_deco_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_deco_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_deco</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Botanico" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_botanico</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_botanico</item>

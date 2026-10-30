@@ -29,6 +29,8 @@
     <color name="arranque_colonos_oscuro">#0E1420</color>
     <color name="arranque_napoleon">#F4EEDF</color>
     <color name="arranque_napoleon_oscuro">#0B1230</color>
+    <color name="arranque_deco">#F3ECDC</color>
+    <color name="arranque_deco_oscuro">#0D0C0A</color>
     <color name="arranque_botanico">#EFE8D6</color>
     <color name="arranque_botanico_oscuro">#14120D</color>
     <color name="arranque_ruinas">#E4E3DC</color>

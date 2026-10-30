@@ -119,6 +119,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.LABORATORIO -> { p { m(9.5f, 3f); t(9.5f, 9f); t(4.5f, 19f); q(4f, 21f, 6f, 21f); t(18f, 21f); q(20f, 21f, 19.5f, 19f); t(14.5f, 9f); t(14.5f, 3f) }; l(8f, 3f, 16f, 3f); l(7.2f, 15f, 16.8f, 15f, 1.1f) } // matraz
         TemaId.COLONOS -> { p { m(6.5f, 17f); q(6.5f, 11.5f, 12f, 11.5f); q(17.5f, 11.5f, 17.5f, 17f) }; l(3f, 17f, 21f, 17f); rayos(12f, 17f, 5, 7.5f, 10f, -160.0, -20.0); l(7f, 20.5f, 17f, 20.5f) } // amanecer
         TemaId.NAPOLEON -> { p { m(2.5f, 15.5f); q(12f, 2.5f, 21.5f, 15.5f); q(12f, 11.5f, 2.5f, 15.5f); close() }; ci(12f, 9.8f, 1.6f, st = fino); l(12f, 8.2f, 12f, 4.5f, 1.1f) } // bicornio
+        TemaId.DECO -> { arco(4f, 7f, 16f, 16f, 180f, 180f); rayos(12f, 15f, 5, 3.5f, 7.2f, -160.0, -20.0, 1.2f); l(2.5f, 15f, 21.5f, 15f); l(6f, 18f, 18f, 18f, 1.4f); l(9f, 21f, 15f, 21f, 1.2f) } // abanico solar sobre su base escalonada
         TemaId.BOTANICO -> { p { m(5f, 19f); q(5f, 5f, 19f, 5f); q(19f, 19f, 5f, 19f); close() }; l(4f, 20f, 15.5f, 8.5f, 1.2f)
             l(8.5f, 15.5f, 8.5f, 11.5f, 1.1f); l(11.5f, 12.5f, 11.5f, 8.5f, 1.1f); l(8.5f, 15.5f, 12.5f, 15.5f, 1.1f); l(11.5f, 12.5f, 15.5f, 12.5f, 1.1f) } // hoja con nervios
         TemaId.RUINAS -> { r(8.5f, 2.5f, 7f, 15f, 2f); ci(12f, 5.8f, 1.5f, st = fino); ci(12f, 10f, 1.5f, st = fino); ci(12f, 14.2f, 1.8f, relleno = true)
@@ -168,6 +169,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.LABORATORIO -> momentos(tm)
         TemaId.COLONOS -> momentos(tm)
         TemaId.NAPOLEON -> momentos(tm)
+        TemaId.DECO -> { r(5f, 2.5f, 12.5f, 17.5f, 0.4f); arco(8f, 6f, 6.5f, 6.5f, 180f, 180f, fino); l(7.5f, 9.25f, 15f, 9.25f, 1.1f); l(8f, 13f, 14.5f, 13f, 1.1f); l(8f, 16f, 13f, 16f, 1.1f)
+            l(17.5f, 17.5f, 20.5f, 21.5f, 1.1f); r(19.6f, 20.8f, 1.8f, 1.8f, 0.3f, true) }                                                   // carnet de baile con su lápiz colgando
         TemaId.BOTANICO -> momentos(tm)
         TemaId.RUINAS -> momentos(tm)
         TemaId.NAVIDAD -> momentos(tm)
@@ -211,6 +214,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             l(6.5f, 19.8f, 17.5f, 19.8f); p(relleno = true) { m(12f, 9.5f); q(14.3f, 12.5f, 12f, 15f); q(9.7f, 12.5f, 12f, 9.5f); close() } }   // farol
         TemaId.NAPOLEON -> { p { m(5f, 15f); t(5f, 20.5f); t(13f, 20.5f); t(13f, 15f); q(13f, 13.5f, 11.5f, 13.5f); t(6.5f, 13.5f); q(5f, 13.5f, 5f, 15f); close() }
             p { m(9f, 14f); q(13f, 6f, 21f, 2.5f); q(18f, 9f, 9f, 14f); close() } }                                                       // tintero y pluma
+        TemaId.DECO -> { p { m(4f, 6f); q(4.5f, 12.5f, 12f, 12.5f); q(19.5f, 12.5f, 20f, 6f); close() }; l(12f, 12.5f, 12f, 19f); l(7.5f, 20.5f, 16.5f, 20.5f)
+            ci(14.5f, 3.2f, 0.9f, st = fino); ci(10.5f, 2.2f, 0.6f, st = fino) }                                                         // copa de champán con sus burbujas
         TemaId.BOTANICO -> { r(5f, 3f, 14f, 18f, 0.8f); l(8f, 3f, 8f, 21f, 1.1f); p(relleno = true) { m(10.5f, 16.5f); q(10.5f, 8f, 16.5f, 7f); q(17f, 15f, 10.5f, 16.5f); close() } } // cuaderno con hoja prensada
         TemaId.RUINAS -> { r(5f, 3f, 14f, 18f, 0.8f); r(5f, 3f, 3.2f, 18f, 0.4f, true); l(15.5f, 2f, 15.5f, 22f, 1.1f)
             p(relleno = true) { m(11f, 15.5f); t(8.8f, 14.6f); t(8f, 12.2f); t(9.9f, 12.2f); t(11f, 9.2f); t(12.1f, 12.2f); t(14f, 12.2f); t(13.2f, 14.6f); close() } } // cuaderno con cinta, liga y hoja prensada
@@ -259,6 +264,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.COLONOS -> { l(4f, 19f, 9.5f, 13.5f, 3.4f); l(9.5f, 13.5f, 14.5f, 8.5f, 2.6f); l(14.5f, 8.5f, 19f, 4f, 1.9f); l(7f, 21f, 9.5f, 18.5f, 1.1f) } // catalejo
         TemaId.NAPOLEON -> { p { m(3f, 6f); t(9f, 4f); t(15f, 6f); t(21f, 4f); t(21f, 18f); t(15f, 20f); t(9f, 18f); t(3f, 20f); close() }; l(9f, 4f, 9f, 18f, 1.1f); l(15f, 6f, 15f, 20f, 1.1f)
             ci(17.8f, 10.5f, 1.4f, relleno = true) }                                                                                          // mapa de campaña
+        TemaId.DECO -> { p { m(2f, 13.5f); t(22f, 13.5f); t(19f, 18.5f); t(5f, 18.5f); close() }; r(6.5f, 7.5f, 2.6f, 6f, 0.3f); r(10.7f, 6.5f, 2.6f, 7f, 0.3f); r(14.9f, 7.5f, 2.6f, 6f, 0.3f)
+            l(3f, 21.5f, 21f, 21.5f, 1.1f); for (x in listOf(8f, 11f, 14f, 17f)) ci(x, 16f, 0.5f, relleno = true) }                       // trasatlántico de tres chimeneas
         TemaId.BOTANICO -> { ci(10f, 10f, 6.5f); l(14.8f, 14.8f, 20.5f, 20.5f, 2.4f); s.drawOval(c, o(7.4f, 8.2f), Size(5.2f * u, 3.6f * u))
             l(10f, 8.2f, 10f, 11.8f, 0.9f); l(7.4f, 10f, 12.6f, 10f, 0.9f) }                                                                // lupa sobre un escarabajo
         TemaId.RUINAS -> { ci(7f, 15.5f, 4f); ci(17f, 15.5f, 4f); r(4.8f, 5f, 4.4f, 7f, 1f); r(14.8f, 5f, 4.4f, 7f, 1f); l(11f, 13.5f, 13f, 13.5f)
@@ -307,6 +314,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.COLONOS -> { p { m(3.5f, 11f); t(12f, 4f); t(20.5f, 11f) }; r(6f, 10f, 12f, 10.5f, 0.4f); r(10.5f, 15f, 3f, 5.5f, 0.3f) }          // casa del cabildo
         TemaId.NAPOLEON -> { p { m(5f, 7f); q(12f, 3.5f, 19f, 7f); q(12f, 10.5f, 5f, 7f); close() }; l(5f, 7f, 5f, 17f); l(19f, 7f, 19f, 17f); p { m(5f, 17f); q(12f, 20.5f, 19f, 17f) }
             p(st = fino) { m(5f, 10.5f); t(8.5f, 16.5f); t(12f, 10.5f); t(15.5f, 16.5f); t(19f, 10.5f) } }                                // tambor
+        TemaId.DECO -> { p { m(7f, 21.5f); t(7f, 10f); t(9f, 10f); t(9f, 7f); t(11f, 7f); t(11f, 3.5f); t(13f, 3.5f); t(13f, 7f); t(15f, 7f); t(15f, 10f); t(17f, 10f); t(17f, 21.5f); close() }
+            l(12f, 3.5f, 12f, 1f, 1.1f); l(10f, 12.5f, 10f, 19f, 1.1f); l(14f, 12.5f, 14f, 19f, 1.1f); l(4f, 21.5f, 20f, 21.5f, 1.2f) } // rascacielos escalonado con su aguja
         TemaId.BOTANICO -> { p { m(6f, 13f); t(18f, 13f); t(16f, 21f); t(8f, 21f); close() }; l(5f, 13f, 19f, 13f); l(12f, 13f, 12f, 7f)
             p(relleno = true) { m(12f, 9f); q(6f, 9f, 5.5f, 3.5f); q(11f, 3.5f, 12f, 9f); close() }; p(relleno = true) { m(12f, 7.5f); q(18f, 7.5f, 18.5f, 2.5f); q(13f, 2.5f, 12f, 7.5f); close() } } // maceta
         TemaId.RUINAS -> { p { m(6f, 10f); q(6f, 5f, 12f, 5f); q(18f, 5f, 18f, 10f); t(18f, 21f); t(6f, 21f); close() }; r(8.5f, 13.5f, 7f, 5f, 1f)
@@ -367,6 +376,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             r(10.5f, 11.5f, 3f, 2.6f, 0.3f, true); r(4f, 15f, 16f, 6f, 0.6f); l(4f, 18f, 20f, 18f, 1.1f) }                                // pozo del pueblo
         TemaId.NAPOLEON -> { ci(12f, 13.5f, 7.5f); l(12f, 6f, 12f, 4.6f); ci(12f, 3f, 1.5f, st = fino); rayos(12f, 13.5f, 4, 5.6f, 7.5f, -90.0, 270.0, 1.2f)
             l(12f, 13.5f, 12f, 9f, 1.4f); l(12f, 13.5f, 15f, 15.2f, 1.4f) }                                                               // reloj de bolsillo
+        TemaId.DECO -> { r(3.5f, 3.5f, 17f, 17f, 0.3f); rayos(12f, 12f, 12, 5.4f, 7.4f, 0.0, 360.0, 1.0f); ci(12f, 12f, 1.2f, relleno = true)
+            l(12f, 12f, 12f, 7.2f, 1.4f); l(12f, 12f, 15.2f, 13.6f, 1.4f) }                                                               // reloj cuadrado de vestíbulo, con su sol de rayos
         TemaId.BOTANICO -> { l(12f, 7f, 12f, 18.5f, 1.6f); p(st = fino) { m(12f, 7f); q(10.5f, 3.5f, 8.5f, 3f) }; p(st = fino) { m(12f, 7f); q(13.5f, 3.5f, 15.5f, 3f) }
             p { m(12f, 9.5f); q(4f, 3f, 3.5f, 9.5f); q(4f, 13.5f, 12f, 12.5f) }; p { m(12f, 9.5f); q(20f, 3f, 20.5f, 9.5f); q(20f, 13.5f, 12f, 12.5f) }
             p { m(12f, 12.5f); q(5f, 13.5f, 6.5f, 18.5f); q(9f, 21f, 12f, 15.5f) }; p { m(12f, 12.5f); q(19f, 13.5f, 17.5f, 18.5f); q(15f, 21f, 12f, 15.5f) } } // mariposa
@@ -431,6 +442,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.COLONOS -> { r(10f, 3f, 4f, 18f, 0.4f); r(3f, 10f, 18f, 4f, 0.4f); for ((x, y) in listOf(12f to 5f, 12f to 19f, 5f to 12f, 19f to 12f)) ci(x, y, 0.7f, relleno = true) } // tablas cruzadas y clavadas
         TemaId.NAPOLEON -> { p { m(5f, 19.5f); q(9f, 11f, 19.5f, 4f) }; p { m(19f, 19.5f); q(15f, 11f, 4.5f, 4f) }
             l(4f, 16.6f, 7.8f, 19.8f, 1.6f); l(20f, 16.6f, 16.2f, 19.8f, 1.6f); ci(3.8f, 21f, 1f, relleno = true); ci(20.2f, 21f, 1f, relleno = true) } // sables cruzados
+        TemaId.DECO -> { p { m(12f, 2.5f); t(16.5f, 11f); t(12f, 21.5f); t(7.5f, 11f); close() }; l(12f, 11.5f, 12f, 21f, 1.1f); ci(12f, 11f, 1.2f, relleno = true)
+            l(9.2f, 7f, 14.8f, 7f, 1.1f) }                                                                                                  // plumín de estilográfica
         TemaId.BOTANICO -> { ci(15f, 6f, 2.6f, relleno = true); l(13.6f, 7.4f, 5f, 18f, 1.4f); l(18f, 13.5f, 18f, 20.5f, 1.8f); l(14.5f, 17f, 21.5f, 17f, 1.8f) } // alfiler de entomólogo y un ejemplar más
         TemaId.RUINAS -> { r(10.4f, 2.5f, 3.2f, 19f, 0.4f); r(2.5f, 10.4f, 19f, 3.2f, 0.4f); ci(12f, 12f, 0.9f, relleno = true)
             ci(12f, 4.5f, 0.6f, relleno = true); ci(12f, 19.5f, 0.6f, relleno = true); ci(4.5f, 12f, 0.6f, relleno = true); ci(19.5f, 12f, 0.6f, relleno = true) } // dos tablas clavadas en cruz
@@ -487,6 +500,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             rayos(12f, 9f, 4, 1.6f, 8f, 45.0, 405.0); ci(12f, 9f, 1.3f, relleno = true) }                                                   // molino de viento
         TemaId.NAPOLEON -> { p { m(4f, 12.4f); t(17.2f, 6.4f); t(18.4f, 9.2f); t(5.2f, 15.2f); close() }; ci(9f, 16f, 4.5f); rayos(9f, 16f, 6, 0.8f, 4.5f, 0.0, 360.0, 1.1f)
             l(11.5f, 17.5f, 20.5f, 21f) }                                                                                                     // cañón
+        TemaId.DECO -> { arco(3f, 5f, 18f, 18f, 180f, 180f); rayos(12f, 14f, 7, 6.2f, 8.4f, -180.0, 0.0, 1.1f); l(2.5f, 14f, 21.5f, 14f)
+            l(12f, 14f, 16f, 8.5f, 1.6f); ci(12f, 14f, 1.6f, relleno = true); l(7f, 18f, 17f, 18f, 1.2f) }                                // la esfera del ascensor con su aguja
         TemaId.BOTANICO -> { r(5f, 10f, 10f, 10.5f, 1.5f); l(15f, 13f, 20.5f, 7f, 1.5f); l(19.4f, 5.8f, 21.8f, 8.2f, 1.9f); p(st = fino) { m(6.5f, 10f); q(10f, 3.6f, 13.5f, 10f) } } // regadera
         TemaId.RUINAS -> { l(7.4f, 16.6f, 15f, 9f, 2.8f); ci(17.4f, 6.6f, 3.4f); l(17.4f, 6.6f, 20.5f, 3.5f, 2.6f); ci(5.6f, 18.4f, 2.4f) } // llave inglesa oxidada
         TemaId.NAVIDAD -> { ov(3.5f, 3.5f, 7.5f, 9f); ov(13f, 3.5f, 7.5f, 9f); r(10.6f, 6f, 2.8f, 4f, 0.5f, true); l(12f, 10f, 12f, 20.5f); l(9.5f, 20.5f, 14.5f, 20.5f); l(12f, 16.5f, 14.5f, 16.5f, 1.2f) } // llave de cuerda

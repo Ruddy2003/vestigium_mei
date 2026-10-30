@@ -285,6 +285,12 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     }
     // Rombo de condecoración.
     TemaId.NAPOLEON -> GenericShape { s, _ -> moveTo(s.width / 2, 0f); lineTo(s.width, s.height / 2); lineTo(s.width / 2, s.height); lineTo(0f, s.height / 2); close() }
+    // Un abanico: medio disco sobre su base recta.
+    TemaId.DECO -> GenericShape { s, _ ->
+        moveTo(0f, s.height); lineTo(0f, s.height * 0.5f)
+        arcTo(Rect(0f, 0f, s.width, s.height), 180f, 180f, false)
+        lineTo(s.width, s.height); close()
+    }
     // Hoja.
     TemaId.BOTANICO -> RoundedCornerShape(topStartPercent = 50, topEndPercent = 6, bottomEndPercent = 50, bottomStartPercent = 6)
     // Un adoquín desportillado.
@@ -375,6 +381,11 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         TemaId.LABORATORIO -> {}
         TemaId.COLONOS -> {}
         TemaId.NAPOLEON -> {}
+        // Los rayos del abanico, vaciados en la celda.
+        TemaId.DECO -> {
+            val b = Offset(s.width / 2, s.height); val r = minOf(s.width, s.height) * 0.48f
+            for (i in 1..4) { val a = Math.PI + i * Math.PI / 5; drawLine(fondo.copy(alpha = 0.35f), b, Offset(b.x + r * kotlin.math.cos(a).toFloat(), b.y + r * kotlin.math.sin(a).toFloat()), 1.2f) }
+        }
         TemaId.BOTANICO -> {}
         TemaId.RUINAS -> drawLine(fondo.copy(alpha = 0.35f), Offset(s.width * 0.7f, 0f), Offset(s.width * 0.62f, s.height * 0.3f), 1.5f)   // una grieta
         TemaId.GOTICO -> {}

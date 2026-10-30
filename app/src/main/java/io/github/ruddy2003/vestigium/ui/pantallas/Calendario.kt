@@ -240,6 +240,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.LABORATORIO -> RoundedCornerShape(5.dp)
     TemaId.COLONOS -> RoundedCornerShape(2.dp)
     TemaId.NAPOLEON -> CutCornerShape(2.dp)
+    TemaId.DECO -> CutCornerShape(5.dp)   // la placa de ascensor de esquinas cortadas
     TemaId.BOTANICO -> RoundedCornerShape(topStart = 9.dp, topEnd = 1.dp, bottomEnd = 9.dp, bottomStart = 1.dp)
     TemaId.RUINAS -> CutCornerShape(topStart = 0.dp, topEnd = 6.dp, bottomEnd = 0.dp, bottomStart = 2.dp)   // baldosa desportillada
     TemaId.NAVIDAD -> RoundedCornerShape(4.dp)
@@ -396,6 +397,13 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             val m = 1.6f * s
             drawRect(oro.copy(alpha = if (hoy) 1f else 0.6f), Offset(m, m), Size(w - 2 * m, h - 2 * m), style = Stroke(0.5f * s))
             listOf(Offset(m, m), Offset(w - m, m), Offset(m, h - m), Offset(w - m, h - m)).forEach { drawCircle(oro, 0.9f * s, it) }
+            if (sellado) sello(acento)
+        }
+        // Placa de esquinas cortadas con tres líneas de velocidad abajo; hoy, además, el abanico de oro arriba.
+        TemaId.DECO -> {
+            contorno(if (hoy) acento else linea, if (hoy) 1.4f else 0.6f)
+            for (k in 0..2) drawLine(oro.copy(alpha = if (hoy) 0.9f else 0.45f), Offset(w * (0.2f + k * 0.08f), h - (2.4f + k * 1.4f) * s), Offset(w * (0.8f - k * 0.08f), h - (2.4f + k * 1.4f) * s), 0.6f * s)
+            if (hoy) { val r = 3.5f * s; drawArc(oro, 180f, 180f, true, Offset(w / 2 - r, 1.2f * s), Size(2 * r, 2 * r)) }
             if (sellado) sello(acento)
         }
         // Hoja de herbario: forma de hoja con su nervadura; hoy, clavada con alfiler.

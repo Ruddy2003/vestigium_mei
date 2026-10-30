@@ -111,6 +111,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.LABORATORIO -> R.font.jost_medium
     TemaId.COLONOS -> R.font.garamond_semibold      // el tipo de la gaceta
     TemaId.NAPOLEON -> R.font.bodoni_titulo         // Didot
+    TemaId.DECO -> R.font.poiret_titulo         // las cifras finas de las marquesinas
     TemaId.BOTANICO -> R.font.fraunces_titulo
     TemaId.RUINAS -> R.font.letrero_titulo        // el letrero pintado a mano
     TemaId.NAVIDAD -> R.font.cinzel_deco_bold
@@ -144,6 +145,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.LABORATORIO -> "Vestigium Mei — cuaderno de laboratorio"
     TemaId.COLONOS -> "La Gaceta de Vestigium Mei"
     TemaId.NAPOLEON -> "BULLETIN DE VESTIGIUM MEI"
+    TemaId.DECO -> "VESTIGIUM MEI · PROGRAMA DE LA TEMPORADA"
     TemaId.BOTANICO -> "Herbarium · Vestigium Mei"
     TemaId.RUINAS -> "Cuaderno del superviviente · Vestigium Mei"
     TemaId.NAVIDAD -> "Cartas al fuego · Vestigium Mei"
@@ -420,6 +422,29 @@ object Reportes {
                         c.drawLine(x - 4f, yc + 5f, x + 4f, yc + 5f, raya); c.drawLine(x - 4f, yc + 10f, x + 4f, yc + 10f, raya)
                     }
                     y += 50f
+                }
+                TemaId.DECO -> {
+                    // El abanico solar sobre su base, con sus rayos alternos, y a cada lado tres filetes que bajan en
+                    // escalones, como la corona de un rascacielos.
+                    val base = yy + 40f
+                    val oro = L.primario
+                    val fino = L.trazo(oro, 1.6f).apply { strokeCap = Paint.Cap.BUTT }
+                    for (k in 0..2) {
+                        val dy = base - 4f - k * 7f; val medio = 62f + k * 26f
+                        c.drawLine(M + k * 24f, dy, cx - medio, dy, fino); c.drawLine(cx + medio, dy, W - M - k * 24f, dy, fino)
+                    }
+                    val r = 46f
+                    c.drawArc(RectF(cx - r, base - r, cx + r, base + r), 180f, 180f, true, L.relleno(L.mezcla(oro, L.fondo, 0.7)))
+                    val rayo = L.relleno(oro)
+                    for (i in 0 until 9) {
+                        if (i % 2 == 1) continue
+                        val a0 = 180f + i * 20f
+                        c.drawArc(RectF(cx - r, base - r, cx + r, base + r), a0, 20f, true, rayo)
+                    }
+                    c.drawArc(RectF(cx - 14f, base - 14f, cx + 14f, base + 14f), 180f, 180f, true, L.relleno(L.secundario))
+                    c.drawArc(RectF(cx - r - 6f, base - r - 6f, cx + r + 6f, base + r + 6f), 180f, 180f, false, fino)
+                    c.drawRect(cx - r - 10f, base, cx + r + 10f, base + 4f, rayo)
+                    y += 62f
                 }
                 TemaId.BOTANICO -> {
                     // Una fronda a tinta: el tallo cruza la hoja con hojitas alternas, más grandes al centro, como en un herbario.

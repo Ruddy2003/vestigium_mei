@@ -327,6 +327,26 @@ def hacer_urbe():
         P['urbe'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: campana(f, d, 3.01, 1.3, 4.0), [12, 16, 19], 0.13, 0.8))
         ARGS['urbe'] = (T, pz, ac, mel, kw)
 
+def hacer_deco():
+    # --- Art déco: Do mayor, un charlestón de orquesta de baile de los años veinte (melodía propia), con su síncopa de
+    # «uno y el de antes del tres». La trompeta con sordina canta, el piano marca los acordes con sexta, el contrabajo
+    # pulsa, la escobilla da el dos y el cuatro y el platillo, el contratiempo; al final, el vibráfono. Con su propio azar.
+    with A.azar_propio('musica_deco'):
+        T = 3; pz = 0.36
+        ac = compases([0, 4, 7, 9], [-3, 1, 4, 7], [2, 5, 9, 12], [7, 11, 14, 17], [0, 4, 9, 14])
+        mel = frase(0, "7:1.5 9:0.5 r:0.5 7:1.5 | 4:1 1:1 4:1 7:1 | 9:1.5 12:0.5 r:0.5 9:1.5 | 11:1 9:0.5 7:0.5 5:1 2:1 | 4:1 9:1 0:2")
+        trompeta = lambda f, d: filtro(metal(f, d, 2200, 0.02), 'bajo', 2600)
+        piano = lambda f, d: mezclar((0, pluck(f, min(d, 1.1), 0.62, 0.995), 0.8), (0, pluck(f * 2, min(d, 0.6), 0.45, 0.993), 0.2))
+        bajo = lambda f, d: pluck(f, min(d, 0.6), 0.3, 0.996)
+        escobilla = lambda: filtro(ruido(0.1), 'banda', (2500, 8000)) * env(int(0.1 * SR), 0.01, 0.08, 2)
+        platillo = lambda: filtro(ruido(0.25), 'alto', 6000) * env(int(0.25 * SR), 0.002, 0.25, 4)
+        perc = cada(20, escobilla, 0.16, desde=1, paso=2) + cada(20, platillo, 0.07, desde=0.66, paso=1)
+        final = vibrafono(hz(T + 21), 1.6)
+        kw = dict(inst_mel=trompeta, inst_ac=piano, bajo=bajo, perc=perc, extra=[(17.5 * pz, final, 0.22)],
+                  g_mel=0.5, g_ac=0.26, g_bajo=0.32, oct_mel=0, oct_ac=-12, legato=0.92, rev=0.24)
+        P['deco'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, vibrafono, [16, 19, 21, 26], 0.11, 0.9))
+        ARGS['deco'] = (T, pz, ac, mel, kw)
+
 def hacer_revolucion():
     # --- Revolución: Sol mayor, marcha de pífano y tambor (melodía propia) sobre cuerdas
     T = -2; pz = 0.36
@@ -546,6 +566,7 @@ if __name__ == '__main__':
     hacer_templario()
     hacer_pirata()
     hacer_urbe()
+    hacer_deco()
     hacer_revolucion()
     hacer_antiguas()
     hacer_neon()

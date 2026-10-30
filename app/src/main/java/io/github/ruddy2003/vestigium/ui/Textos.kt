@@ -220,6 +220,21 @@ object Textos {
         "widget_discreto_momento" to "DÉPÊCHE",
     )
 
+    private val DECO: Map<String, String> = mapOf(
+        "pestana_dia" to "A BORDO",
+        "pestana_diario" to "CARNET",
+        "pestana_registrar" to "FIRMAR",
+        "pestana_vida" to "LA TRAVESÍA",
+        "pestana_entender" to "EL PUENTE",
+        "escala_vacia" to "telón cerrado · toca o desliza",
+        "lista_anadir" to "+ al programa",
+        "palabras" to "%d palabras en el carnet de baile",
+        "widget_animo" to "¿qué tal la velada?",
+        "widget_momento" to "esta noche suena…",
+        "widget_discreto_animo" to "velada",
+        "widget_discreto_momento" to "apunte",
+    )
+
     private val BOTANICO: Map<String, String> = mapOf(
         "pestana_dia" to "Lámina",
         "pestana_diario" to "Herbario",
@@ -460,6 +475,7 @@ object Textos {
         TemaId.LABORATORIO -> LABORATORIO
         TemaId.COLONOS -> COLONOS
         TemaId.NAPOLEON -> NAPOLEON
+        TemaId.DECO -> DECO
         TemaId.BOTANICO -> BOTANICO
         TemaId.RUINAS -> RUINAS
         TemaId.NAVIDAD -> NAVIDAD

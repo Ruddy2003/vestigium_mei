@@ -56,6 +56,8 @@ object ContenedoresMas {
             Contenedor.TETRAD -> Color(0xFFF7F3E6)
             // El pergamino blanqueado de la regla de la orden.
             Contenedor.REGLA -> Color(0xFFF4EFE2)
+            // El papel marfil del carnet de baile, grueso y satinado.
+            Contenedor.LACA -> Color(0xFFF6F0E1)
             // El papel de un cuaderno escolar italiano, apenas amarillo.
             Contenedor.BOLETOS -> Color(0xFFF5EEDC)
             // Las libretas de [Contenedores] tienen su papel allá.
@@ -497,6 +499,32 @@ object ContenedoresMas {
                 drawCircle(Color(0xFF7A2A16), 9 * d, sello); drawCircle(lerp(Color(0xFF7A2A16), Color.Black, 0.3f), 6.5f * d, sello, style = Stroke(1 * d))
                 drawPath(cruzPatada(sello, 4.5f * d), lerp(Color(0xFF7A2A16), Color.Black, 0.35f))
             }
+            Contenedor.LACA -> {
+                // La libreta de laca negra: un abanico solar de oro y nácar incrustado en la tapa, el marco de filetes con
+                // las esquinas escalonadas y el cierre de jade; del canto asoman las cintas de los programas guardados.
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 2 * d); canto(w, h, grosor, d, Color(0xFFF6F0E1))
+                val n = (1 + hojas / 30).coerceAtMost(5)
+                for (k in 0 until n) drawRect(listOf(Color(0xFFB5523B), Color(0xFF1F6B57), Color(0xFFC9A54A))[k % 3], Offset(w * (0.2f + 0.1f * k), h - 2 * d), Size(4 * d, grosor + 10 * d + (k % 2) * 6 * d))
+                val laca = Color(0xFF14120F)
+                drawRoundRect(Brush.linearGradient(listOf(Color(0xFF2E2A24), laca, Color(0xFF060504)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h), CornerRadius(2 * d))
+                // El brillo de la laca: una franja diagonal muy tenue.
+                drawPath(Path().apply { moveTo(w * 0.55f, 0f); lineTo(w * 0.75f, 0f); lineTo(w * 0.35f, h); lineTo(w * 0.15f, h); close() }, Color.White.copy(alpha = 0.05f))
+                val m = w * 0.08f
+                drawRect(ORO.copy(alpha = 0.8f), Offset(m, m), Size(w - 2 * m, h - 2 * m), style = Stroke(1.4f * d))
+                drawRect(ORO.copy(alpha = 0.4f), Offset(m * 1.5f, m * 1.5f), Size(w - 3 * m, h - 3 * m), style = Stroke(0.7f * d))
+                listOf(Offset(m, m) to Offset(1f, 1f), Offset(w - m, m) to Offset(-1f, 1f), Offset(m, h - m) to Offset(1f, -1f), Offset(w - m, h - m) to Offset(-1f, -1f)).forEach { (o, s) ->
+                    for (k in 1..3) drawRect(ORO.copy(alpha = 0.7f), Offset(if (s.x > 0) o.x else o.x - k * 4 * d, if (s.y > 0) o.y else o.y - (4 - k) * 4 * d), Size(k * 4 * d, (4 - k) * 4 * d))
+                }
+                // El abanico: rayos de oro alternos con nácar, el medio sol de jade y la base escalonada.
+                val b = Offset(w / 2, h * 0.56f); val r = w * 0.28f
+                for (i in 0 until 11) drawArc(if (i % 2 == 0) ORO else Color(0xFFEDE6DA).copy(alpha = 0.85f), 180f + i * 180f / 11, 180f / 11, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+                drawArc(Color(0xFF1F6B57), 180f, 180f, true, Offset(b.x - r * 0.32f, b.y - r * 0.32f), Size(r * 0.64f, r * 0.64f))
+                drawArc(ORO, 180f, 180f, false, Offset(b.x - r * 1.08f, b.y - r * 1.08f), Size(r * 2.16f, r * 2.16f), style = Stroke(1.2f * d))
+                listOf(1.1f, 0.8f, 0.5f).forEachIndexed { k, f -> drawRect(ORO, Offset(b.x - r * f, b.y + k * 5 * d), Size(2 * r * f, 3.5f * d)) }
+                // El cierre de jade con su pasador de oro.
+                drawRoundRect(Color(0xFF1F6B57), Offset(w - 9 * d, h * 0.44f), Size(9 * d + grosor, h * 0.12f), CornerRadius(2 * d))
+                drawCircle(ORO, 2.4f * d, Offset(w - 4 * d, h * 0.5f))
+            }
             Contenedor.BOLETOS -> {
                 // El cuaderno de tapa ocre con el elástico rojo, la etiqueta para el nombre y, asomando por arriba, los
                 // boletos de tranvía y de autobús que se van guardando entre las hojas: más escrito, más boletos.
@@ -732,6 +760,21 @@ object ContenedoresMas {
                 drawCircle(rojo.copy(alpha = 0.07f), 26 * d, s); drawCircle(rojo.copy(alpha = 0.12f), 22 * d, s, style = Stroke(1 * d))
                 drawPath(cruzPatada(s, 14 * d), rojo.copy(alpha = 0.08f))
             }
+            Contenedor.LACA -> {
+                // La página del carnet de baile: cabecera con el abanico y tres filetes que bajan en escalones, renglones
+                // de oro muy finos, el margen doble y, al pie, el número de la pieza como en los carnets de los bailes.
+                val oro = Color(0xFFB8952E)
+                val cx = size.width / 2 + margen / 2
+                drawArc(oro.copy(alpha = 0.5f), 180f, 180f, true, Offset(cx - 14 * d, 40 * d), Size(28 * d, 28 * d))
+                for (i in 1..4) { val a = PI + i * PI / 5; drawLine(Color.White.copy(alpha = if (oscuro) 0.2f else 0.8f), Offset(cx, 54 * d), Offset(cx + 14 * d * cos(a).toFloat(), 54 * d + 14 * d * sin(a).toFloat()), 0.8f * d) }
+                listOf(0.9f, 0.6f, 0.3f).forEachIndexed { k, f ->
+                    val ancho = (size.width - margen) * f
+                    drawLine(oro.copy(alpha = 0.5f - k * 0.1f), Offset(cx - ancho / 2, (60 + k * 4) * d), Offset(cx + ancho / 2, (60 + k * 4) * d), 0.8f * d)
+                }
+                var y = 96 * d; while (y < size.height) { drawLine(oro.copy(alpha = if (oscuro) 0.16f else 0.13f), Offset(margen - 8 * d, y), Offset(size.width - 12 * d, y), 0.6f * d); y += renglon }
+                listOf(margen - 12 * d, margen - 15 * d).forEach { x -> drawLine(oro.copy(alpha = 0.3f), Offset(x, 70 * d), Offset(x, size.height), 0.7f * d) }
+                drawRect(tinta.copy(alpha = 0.06f), Offset(size.width - 54 * d, size.height - 38 * d), Size(40 * d, 22 * d), style = Stroke(0.8f * d))
+            }
             Contenedor.BOLETOS -> {
                 // Los renglones del cuaderno escolar, con el margen a lápiz; arriba a la derecha, un boleto pegado con cinta.
                 val raya = if (oscuro) Color(0xFF9DB0C8) else Color(0xFF6A84A8)
@@ -880,6 +923,17 @@ object ContenedoresMas {
                     drawRect(correa, Offset(0f, y - 5 * d), Size(30 * d, 10 * d))
                     drawCircle(HIERRO, 2 * d, Offset(24 * d, y))
                 }
+            }
+            Contenedor.LACA -> {
+                // El lomo de laca con tres anillas de oro y, atado a la del medio, el lápiz de baile con su cordón de seda.
+                val laca = if (oscuro) Color(0xFF2A2620) else Color(0xFF16130E)
+                drawRect(laca, Offset(4 * d, 0f), Size(20 * d, size.height))
+                drawRect(Color.White.copy(alpha = 0.06f), Offset(8 * d, 0f), Size(3 * d, size.height))
+                listOf(0.2f, 0.5f, 0.8f).forEach { f -> val y = size.height * f; drawOval(ORO, Offset(8 * d, y - 6 * d), Size(14 * d, 12 * d), style = Stroke(2 * d)) }
+                val y0 = size.height * 0.5f
+                drawLine(Color(0xFFB5523B).copy(alpha = 0.8f), Offset(15 * d, y0 + 6 * d), Offset(18 * d, y0 + 60 * d), 1.2f * d)
+                drawRect(ORO, Offset(14 * d, y0 + 60 * d), Size(8 * d, 34 * d))
+                drawPath(Path().apply { moveTo(14 * d, y0 + 94 * d); lineTo(22 * d, y0 + 94 * d); lineTo(18 * d, y0 + 104 * d); close() }, Color(0xFF2E2A24))
             }
             Contenedor.BOLETOS -> {
                 // El lomo de tela ocre, cosido con hilo grueso, y el elástico rojo que cruza el borde.

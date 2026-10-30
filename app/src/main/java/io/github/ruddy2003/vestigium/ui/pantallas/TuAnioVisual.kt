@@ -242,6 +242,12 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawLine(Color(0xFFA3172E), Offset(x0 + w * 0.5f, y0), Offset(x0 + w * 0.5f, y0 + h), 1.6f * d)
             drawCircle(Color(0xFFA3172E), h * 0.28f, Offset(x0 + w * 0.5f, cy))
         }
+        // Un tomo de laca negra con la tapa en el color del mes y tres bandas de oro escalonadas.
+        TemaId.DECO -> {
+            drawRect(Color(0xFF16130E), o, s)
+            drawRect(lerp(c, Color(0xFF16130E), 0.25f), Offset(x0 + w * 0.12f, y0 + h * 0.12f), Size(w * 0.76f, h * 0.76f))
+            listOf(0.9f, 0.66f, 0.42f).forEachIndexed { k, f -> drawRect(Color(0xFFD4AF37), Offset(x0 + w * (1 - f) / 2, y0 + h * (0.2f + k * 0.1f)), Size(w * f, 0.9f * d)) }
+        }
         // Herbario: cuaderno de campo verde con una hoja.
         TemaId.BOTANICO -> {
             drawRoundRect(lerp(c, Color(0xFF3F6A3A), 0.35f), o, s, CornerRadius(2 * d))
@@ -703,6 +709,12 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             }
             close()
         })
+        // La ficha en forma de abanico: medio disco sobre su base.
+        TemaId.DECO -> lleno(Path().apply {
+            moveTo(c.x - r, c.y + r * 0.55f); lineTo(c.x - r, c.y + r * 0.35f)
+            arcTo(androidx.compose.ui.geometry.Rect(c.x - r, c.y - r * 0.65f, c.x + r, c.y + r * 1.35f), 180f, 180f, false)
+            lineTo(c.x + r, c.y + r * 0.55f); close()
+        })
         // Etiqueta de herbario con su ojal.
         TemaId.BOTANICO -> {
             lleno(Path().apply { moveTo(x - r * 0.55f, y - r * 0.85f); lineTo(x + r, y - r * 0.85f); lineTo(x + r, y + r * 0.85f); lineTo(x - r * 0.55f, y + r * 0.85f); lineTo(x - r, y); close() })
@@ -1102,6 +1114,24 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
                 drawOval(col, Offset(x - r * 0.95f, y - r * 0.6f), Size(r * 0.7f, r * 0.5f), style = Stroke(0.9f * d))
                 drawOval(col, Offset(x + r * 0.25f, y - r * 0.6f), Size(r * 0.7f, r * 0.5f), style = Stroke(0.9f * d))
                 listOf(0.05f, 0.3f).forEach { f -> drawLine(fondo, Offset(x - r * 0.3f, y + f * r), Offset(x + r * 0.3f, y + f * r), 0.7f * d) }
+            }
+            else -> return false
+        }
+        TemaId.DECO -> when (forma) {
+            // Un trasatlántico chico: el casco y sus tres chimeneas.
+            "alfiler" -> {
+                drawPath(Path().apply { moveTo(x - r, y); lineTo(x + r, y); lineTo(x + r * 0.75f, y + r * 0.45f); lineTo(x - r * 0.75f, y + r * 0.45f); close() }, col)
+                listOf(-0.45f, 0f, 0.45f).forEach { dx -> drawRect(col, Offset(x + dx * r - r * 0.13f, y - r * 0.6f), Size(r * 0.26f, r * 0.55f)) }
+            }
+            // El telegrama, con las dos tiras de cinta pegadas.
+            "sobre" -> {
+                drawRect(col, Offset(x - r, y - r * 0.65f), Size(2 * r, r * 1.3f))
+                listOf(-0.25f, 0.2f).forEach { f -> drawRect(fondo, Offset(x - r * 0.8f, y + f * r), Size(r * 1.6f, r * 0.22f)) }
+            }
+            // La estrella de rayos rectos de los vestíbulos: ocho rayos largos y ocho cortos.
+            "estrella" -> {
+                for (k in 0 until 16) { val a = k * PI / 8; drawLine(col, c, Offset(x + (r * (if (k % 2 == 0) 1f else 0.55f) * kotlin.math.cos(a)).toFloat(), y + (r * (if (k % 2 == 0) 1f else 0.55f) * kotlin.math.sin(a)).toFloat()), (if (k % 2 == 0) 1.4f else 0.8f) * d) }
+                drawCircle(fondo, r * 0.18f, c); drawCircle(col, r * 0.18f, c, style = Stroke(0.8f * d))
             }
             else -> return false
         }

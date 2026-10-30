@@ -608,6 +608,20 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             for (k in 0 until 12) drawCircle(e.tertiary, if (k % 3 == 0) 2.6f * u else 1.6f * u, en(k / 12f, r - g * 0.9f))
             estrellaEnfoque(en(p, r), 8 * u, e.tertiary)
         }
+        // La esfera del reloj de un vestíbulo de rascacielos: un sol de rayos rectos que salen del centro, anillos de oro
+        // y, sobre la pista, un abanico chico que avanza con el tiempo.
+        TemaId.DECO -> {
+            for (k in 0 until 48) drawLine(e.primary.copy(alpha = if (k % 2 == 0) 0.16f else 0.08f), en(k / 48f, r * 0.18f), en(k / 48f, if (k % 4 == 0) r - g * 0.9f else r - g * 1.6f), (if (k % 4 == 0) 1.6f else 0.8f) * u)
+            drawCircle(e.primary.copy(alpha = 0.7f), R - u, c, style = Stroke(1.4f * u))
+            drawCircle(e.primary.copy(alpha = 0.45f), R - 4 * u, c, style = Stroke(0.6f * u))
+            drawCircle(e.secondary.copy(alpha = 0.5f), r * 0.16f, c)
+            arco(pista, 0f, 1f, r, 4 * u)
+            arco(color, 0f, p, r, 4 * u)
+            for (k in 0 until 12) { val q = en(k / 12f, r - g * 0.9f); drawRect(e.primary, Offset(q.x - 1.4f * u, q.y - 1.4f * u), Size(2.8f * u, 2.8f * u)) }
+            val m = en(p, r)
+            drawArc(e.primary, 180f, 180f, true, Offset(m.x - 7 * u, m.y - 5 * u), Size(14 * u, 14 * u))
+            drawRect(e.primary, Offset(m.x - 7 * u, m.y + 2 * u), Size(14 * u, 2 * u))
+        }
         // Reloj floral: doce pétalos que se abren uno a uno alrededor de un tallo punteado.
         TemaId.BOTANICO -> {
             drawCircle(e.primary.copy(alpha = 0.35f), r - g * 0.75f, c, style = Stroke(u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * u, 3 * u))))
@@ -948,6 +962,12 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
         TemaId.NAPOLEON -> {
             val d = minOf(h * 0.45f, w * 0.5f)
             moveTo(x, y); lineTo(x + w - d, y); lineTo(x + w, y + h / 2); lineTo(x + w - d, y + h); lineTo(x, y + h); close()
+        }
+        // Una placa con las cuatro esquinas metidas en un escalón.
+        TemaId.DECO -> {
+            val a = minOf(h * 0.25f, w * 0.25f)
+            moveTo(x + a, y); lineTo(x + w - a, y); lineTo(x + w - a, y + a); lineTo(x + w, y + a); lineTo(x + w, y + h - a); lineTo(x + w - a, y + h - a)
+            lineTo(x + w - a, y + h); lineTo(x + a, y + h); lineTo(x + a, y + h - a); lineTo(x, y + h - a); lineTo(x, y + a); lineTo(x + a, y + a); close()
         }
         TemaId.BOTANICO -> {
             moveTo(x, y + h / 2); quadraticTo(x + w / 2, y - h / 2, x + w, y + h / 2); quadraticTo(x + w / 2, y + h * 1.5f, x, y + h / 2); close()

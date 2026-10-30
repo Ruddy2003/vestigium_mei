@@ -205,6 +205,22 @@ object MapasCampana {
                 drawCircle(oro, 1.3f * d, Offset(m.x, top - 6.8f * d))
                 listOf(-1f, 1f).forEach { s -> drawPath(Path().apply { moveTo(m.x, top - 3.5f * d); lineTo(m.x + s * 6.5f * d, top - 9 * d); lineTo(m.x + s * 5.5f * d, top - 5 * d); lineTo(m.x + s * 7 * d, top - 3.5f * d); lineTo(m.x + s * 1.5f * d, top - 1 * d); close() }, oro) }
             }
+            TemaId.DECO -> {
+                // La llegada a Nueva York: el trasatlántico de tres chimeneas, de laca y oro, delante de un sol de rayos y
+                // del perfil escalonado de los rascacielos.
+                val sol = Offset(m.x, m.y - 14 * d)
+                for (k in 0 until 11) { val a = PI + (k + 0.5) * PI / 11; drawLine(oro.copy(alpha = 0.7f), sol, Offset(sol.x + (30 * d * cos(a)).toFloat(), sol.y + (30 * d * sin(a)).toFloat()), (if (k % 2 == 0) 2f else 1f) * d) }
+                val torre = cs.onSurface.copy(alpha = 0.35f)
+                listOf(-20f to 18f, -9f to 26f, 12f to 22f, 22f to 14f).forEach { (dx, a) ->
+                    drawRect(torre, Offset(m.x + dx * d - 4 * d, m.y - 6 * d - a * d * 0.7f), Size(8 * d, a * d * 0.7f))
+                    drawRect(torre, Offset(m.x + dx * d - 2.5f * d, m.y - 6 * d - a * d), Size(5 * d, a * d * 0.3f))
+                }
+                val laca = Color(0xFF16130E)
+                drawPath(Path().apply { moveTo(m.x - 22 * d, m.y - 6 * d); lineTo(m.x + 22 * d, m.y - 6 * d); lineTo(m.x + 17 * d, m.y + 2 * d); lineTo(m.x - 18 * d, m.y + 2 * d); close() }, laca)
+                drawLine(oro, Offset(m.x - 20 * d, m.y - 3.5f * d), Offset(m.x + 20 * d, m.y - 3.5f * d), 1 * d)
+                drawRect(Color(0xFFF3EAD4), Offset(m.x - 15 * d, m.y - 10 * d), Size(28 * d, 4 * d))
+                listOf(-9f, -1f, 7f).forEach { dx -> drawRect(oro, Offset(m.x + dx * d - 2 * d, m.y - 17 * d), Size(4 * d, 7 * d)); drawRect(laca, Offset(m.x + dx * d - 2 * d, m.y - 17 * d), Size(4 * d, 1.6f * d)) }
+            }
             TemaId.REVOLUCION -> {
                 // La fiesta de la Federación: la bandera azul, blanca y roja que ondea en su asta, con el gorro frigio en la punta.
                 val top = m.y - 36 * d
