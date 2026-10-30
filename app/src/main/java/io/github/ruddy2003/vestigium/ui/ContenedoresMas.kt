@@ -284,7 +284,8 @@ object ContenedoresMas {
                 // La púa que lo atraviesa.
                 drawLine(metal, Offset(cx, pisoY - 8 * d), Offset(cx, ty0 - 10 * d), 2.4f * d)
                 drawCircle(lerp(metal, Color.White, 0.4f), 2 * d, Offset(cx, ty0 - 10 * d))
-                drawRect(Brush.verticalGradient(listOf(Color(0xFFFF3D9A).copy(alpha = 0.25f), Color.Transparent), 0f, H * 0.3f), Offset.Zero, Size(W, H * 0.3f))
+                // El reflejo: un halo redondo que se pierde hacia los lados, sin bordes rectos.
+                drawCircle(Brush.radialGradient(listOf(Color(0xFFFF3D9A).copy(alpha = 0.22f), Color.Transparent), Offset(cx, ty0 - 10 * d), W * 0.45f), W * 0.45f, Offset(cx, ty0 - 10 * d))
             }
             Contenedor.CARPETA -> {
                 // La carpeta del supervisor: cartón verde azulado con su pestaña naranja, las hojas que asoman, el broche

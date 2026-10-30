@@ -610,7 +610,7 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
         // El cabo de sondeo: la raya con sus marcas y, lo hecho, una columna de agua con burbujas que acaba en la plomada.
         TemaId.ABISMO -> {
             drawLine(pista, Offset(0f, h / 2), Offset(w, h / 2), d)
-            var x = 0f; var k = 0; while (x <= w) { drawLine(pista, Offset(x, h / 2 - (if (k % 5 == 0) 3 else 1.5f) * d), Offset(x, h / 2 + (if (k % 5 == 0) 3 else 1.5f) * d), d); x += 6 * d; k++ }
+            var x = 0f; var k = 0; while (x <= w) { drawLine(pista, Offset(x, h / 2 - (if (k % 5 == 0) 3f else 1.5f) * d), Offset(x, h / 2 + (if (k % 5 == 0) 3f else 1.5f) * d), d); x += 6 * d; k++ }
             if (fw > 0f) {
                 drawRoundRect(color.copy(alpha = 0.35f), Offset(0f, h * 0.15f), Size(fw, h * 0.7f), CornerRadius(h * 0.2f))
                 var b = h * 0.5f; var j = 0
