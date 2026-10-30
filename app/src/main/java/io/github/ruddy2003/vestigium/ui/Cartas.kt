@@ -155,6 +155,8 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.ABISMO -> Papeleria(Color(0xFF2C5A6B), Color(0xFF15333F), Color(0xFF4D8597), Color(0xFFE6DFC6), Color(0xFFB8913E), Color(0xFFCDB88C), Color(0xFFE4EEEA))
     // Papel de Xàtiva, forro de cuero, la estrella verde y el cordón de oro.
     TemaId.ANDALUS -> Papeleria(Color(0xFFF3E7CC), Color(0xFFBFA77A), Color(0xFFFBF3DE), Color(0xFF7A3B1E), Color(0xFF1E6B5C), Color(0xFFD9B25B), Color(0xFF2A1A12))
+    // Papel amate de corteza, forro de azul maya, el sello de barro con cinabrio y el cordel de henequén.
+    TemaId.MESO -> Papeleria(Color(0xFFD9C29A), Color(0xFF9C8058), Color(0xFFEBDBBA), Color(0xFF3E8FA8), Color(0xFFA3301E), Color(0xFFC9B27E), Color(0xFF2A1810))
     // Fieltro crema, forro de cielo azul, la paiza de oro y la bufanda azul.
     TemaId.MONGOL -> Papeleria(Color(0xFFEDE6D3), Color(0xFFB5AC92), Color(0xFFF8F3E6), Color(0xFF1F5FA8), Color(0xFFC48A1E), Color(0xFF2E6DB4), Color(0xFF18202E))
     // Papel del cuaderno de taller, forro de cartón, la cera de sanguina y el cordel sepia.
@@ -207,6 +209,7 @@ internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
     TemaId.ESPACIO -> FormaSobre(SolapaSobre.REDONDA, 0.08f, CierreSobre.PRECINTO)
     TemaId.ABISMO -> FormaSobre(SolapaSobre.ONDAS, 0.06f, CierreSobre.BANDA)
     TemaId.ANDALUS -> FormaSobre(SolapaSobre.ESCALON, 0.03f, CierreSobre.DOBLE)
+    TemaId.MESO -> FormaSobre(SolapaSobre.ESCALON, 0.01f, CierreSobre.CRUZ)      // el perfil de la pirámide; el códice atado en cruz
     TemaId.MONGOL -> FormaSobre(SolapaSobre.PARABOLA, 0.06f, CierreSobre.CRUZ)
     TemaId.RENACIMIENTO -> FormaSobre(SolapaSobre.BISEL, 0.02f, CierreSobre.DOBLE)
     TemaId.PIRATA -> FormaSobre(SolapaSobre.ONDAS, 0.012f, CierreSobre.DOBLE)
@@ -655,6 +658,24 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawCircle(oro, r * 0.42f, c, style = Stroke(r * 0.05f))
             for (j in 0 until 8) { val ang = j * PI / 4; drawCircle(oro, r * 0.06f, Offset(c.x + (r * 0.24f * cos(ang)).toFloat(), c.y + (r * 0.24f * sin(ang)).toFloat())) }
         }
+        TemaId.MESO -> {
+            // Un sello de barro pintado con cinabrio, de borde escalonado, con el cartucho de un glifo de día en el centro.
+            val escalon = Path().apply {
+                val n = 12
+                for (j in 0 until n * 2) {
+                    val rr = if (j % 2 == 0) r else r * 0.9f
+                    val a0 = (j * PI / n).toFloat(); val a1 = ((j + 1) * PI / n).toFloat()
+                    val p0 = Offset(c.x + rr * cos(a0), c.y + rr * sin(a0)); val p1 = Offset(c.x + rr * cos(a1), c.y + rr * sin(a1))
+                    if (j == 0) moveTo(p0.x, p0.y) else lineTo(p0.x, p0.y)
+                    lineTo(p1.x, p1.y)
+                }
+                close()
+            }
+            translate(r * 0.05f, r * 0.08f) { drawPath(escalon, sombra) }
+            drawPath(escalon, col); drawPath(escalon, hondo, style = Stroke(r * 0.05f))
+            drawCircle(claro, r * 0.7f, c, style = Stroke(r * 0.05f))
+            cartuchoMaya(Offset(c.x, c.y - r * 0.04f), r * 0.42f, claro, hondo, claro, 2)
+        }
         TemaId.MONGOL -> {
             // La paiza: la tablilla de oro del salvoconducto, colgada de su cordón, con la escritura en columnas.
             val w = r * 1.1f; val arriba = c.y - r * 1.05f; val abajo = c.y + r * 1.05f
@@ -947,6 +968,18 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
             var y = top + H * 0.2f
             while (y < top + H * 0.66f) { val c = Offset(l + W * 0.05f, y); val rr = H * 0.04f; drawPath(estrellaRuta(c, rr, rr * 0.62f, 8), Color(0xFFD9B25B).copy(alpha = 0.8f)); drawCircle(Color(0xFF1E6B5C), rr * 0.3f, c); y += H * 0.11f }
         }
+        TemaId.MESO -> {
+            // La columna de glifos de un códice: bloques de cartucho con sus numerales, y una greca escalonada abajo.
+            val tinta = Color(0xFF2A1810).copy(alpha = 0.55f); val cinabrio = Color(0xFFA3301E).copy(alpha = 0.7f)
+            var y = top + H * 0.18f; var k = 0
+            while (y < top + H * 0.62f) {
+                val c = Offset(l + W * 0.07f, y); val rr = H * 0.045f
+                drawRoundRect(cinabrio, Offset(c.x - rr, c.y - rr), Size(rr * 2, rr * 2), CornerRadius(rr * 0.4f), style = Stroke(1.4f))
+                numeralMaya(3 + k * 4, c, rr * 1.2f, tinta)
+                y += H * 0.12f; k++
+            }
+            grecaEscalonada(l + W * 0.04f, r - W * 0.04f, bot - H * 0.12f, bot - H * 0.05f, cinabrio, 1.6f)
+        }
         TemaId.MONGOL -> {
             // La costura del fieltro y una nube en espiral.
             val m = W * 0.035f; val azul = Color(0xFF2E6DB4).copy(alpha = 0.6f)
@@ -1216,6 +1249,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Querido yo de la superficie…", "Escribe antes de soltar el lastre…", "Boya para %s lastrada en el fondo", "No sube antes de su fecha.", "Toca para escribir en la bitácora…")
     TemaId.ANDALUS -> VozCarta("Ya puedes abrirla, con la venia", "Sellada con la estrella", "Para mi yo del %s", "A mi yo · %s", "Para mi yo de otra luna",
         "Querido yo de otra luna…", "Escribe tu carta en el patio…", "Carta para %s sellada con la estrella", "No se abre antes de su luna.", "Toca para tomar el cálamo de caña…")
+    TemaId.MESO -> VozCarta("Llegó su día en la cuenta: desátalo", "Atado con henequén", "Para mi yo del %s", "Al que seré · %s", "Para el que seré en otro katún",
+        "A ti, que vives en otro día de la cuenta…", "Pinta tu mensaje en el amate…", "Códice para %s atado con su cordel", "No se desata antes de su día.", "Toca para mojar el pincel en el cinabrio…")
     TemaId.MONGOL -> VozCarta("Llegó el jinete: ábrela", "Sellada con la paiza", "Para el jinete del %s", "Jinete de %s", "Para el jinete que seré",
         "Bajo el Cielo Azul, querido yo…", "Dicta tu mensaje al jinete…", "Mensaje para %s con el jinete", "Ningún jinete la entrega antes.", "Toca para dictar al escriba…")
     TemaId.RENACIMIENTO -> VozCarta("Ya puedes abrirla, maestro", "Sellada con sanguina", "Al maestro que seré el %s", "Al maestro de %s", "Al maestro que seré",
@@ -1256,6 +1291,7 @@ private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.ESPACIO -> LetraExtra.orbita
     TemaId.ABISMO -> LetraExtra.batiscafo
     TemaId.ANDALUS -> LetraExtra.amiri
+    TemaId.MESO -> LetraExtra.codice
     TemaId.MONGOL -> LetraExtra.filosofo
     TemaId.RENACIMIENTO -> LetraExtra.cormorant
     TemaId.PIRATA -> LetraExtra.corsario

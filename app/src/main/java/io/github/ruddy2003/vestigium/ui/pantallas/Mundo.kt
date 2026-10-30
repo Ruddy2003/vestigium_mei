@@ -252,6 +252,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.ABISMO -> LaminaRascar(0xFF1F4A46.toInt(), 0xFF3F8A78.toInt(), 0xFFB8E6D6.toInt())
     // Latón verdoso de las lámparas nazaríes.
     TemaId.ANDALUS -> LaminaRascar(0xFF5C5418.toInt(), 0xFFB5A646.toInt(), 0xFFEDE6A8.toInt())
+    // Estuco pintado de cinabrio, como los muros de los templos.
+    TemaId.MESO -> LaminaRascar(0xFF5A1A10.toInt(), 0xFFA3301E.toInt(), 0xFFE8B49A.toInt())
     // Plata sobredorada de la estepa.
     TemaId.MONGOL -> LaminaRascar(0xFF6A5030.toInt(), 0xFFC09A68.toInt(), 0xFFF4E2C4.toInt())
     // Bronce de taller, pardo.
@@ -534,6 +536,17 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
                 val m = l * 0.05f
                 c.drawPath(Path().apply { moveTo(x, y - m); lineTo(x + m, y); lineTo(x, y + m); lineTo(x - m, y); close() }, relleno)
             }
+        }
+        TemaId.MESO -> {
+            // Grecas escalonadas (tres gradas y el gancho en espiral) y, entre ellas, puntos como los de los numerales.
+            tresbolillo { x, y ->
+                val s = l * 0.05f
+                c.drawPath(Path().apply {
+                    moveTo(x - 3 * s, y + 2 * s); lineTo(x - 2 * s, y + 2 * s); lineTo(x - 2 * s, y + s); lineTo(x - s, y + s); lineTo(x - s, y); lineTo(x, y)
+                    lineTo(x, y - 2 * s); lineTo(x + 3 * s, y - 2 * s); lineTo(x + 3 * s, y + s); lineTo(x + 1.2f * s, y + s); lineTo(x + 1.2f * s, y - 0.6f * s)
+                }, linea)
+            }
+            for ((x, y) in listOf(l / 2 to 0f, 0f to l / 2, l to l / 2, l / 2 to l)) c.drawCircle(x, y, l * 0.025f, relleno)
         }
         TemaId.MONGOL -> tresbolillo { x, y ->
             // Cuerno de carnero: dos espirales que se abren desde un tallo.

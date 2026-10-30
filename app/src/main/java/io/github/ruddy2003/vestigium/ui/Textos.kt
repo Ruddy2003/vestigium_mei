@@ -385,6 +385,21 @@ object Textos {
         "widget_discreto_momento" to "دوّن",
     )
 
+    private val MESO: Map<String, String> = mapOf(
+        "pestana_dia" to "K'in",
+        "pestana_diario" to "Códice",
+        "pestana_registrar" to "Pintar",
+        "pestana_vida" to "Kuxtal",
+        "pestana_entender" to "La cuenta",
+        "escala_vacia" to "sin pintar · toca o desliza",
+        "lista_anadir" to "+ pintar otro glifo",
+        "palabras" to "%d palabras en el biombo",
+        "widget_animo" to "¿cómo amanece tu corazón?",
+        "widget_momento" to "en este k'in…",
+        "widget_discreto_animo" to "óol",
+        "widget_discreto_momento" to "pincel",
+    )
+
     private val MONGOL: Map<String, String> = mapOf(
         "pestana_dia" to "ӨНӨӨДӨР",
         "pestana_diario" to "ДЭВТЭР",
@@ -486,6 +501,7 @@ object Textos {
         TemaId.ESPACIO -> ESPACIO
         TemaId.ABISMO -> ABISMO
         TemaId.ANDALUS -> ANDALUS
+        TemaId.MESO -> MESO
         TemaId.MONGOL -> MONGOL
         TemaId.RENACIMIENTO -> RENACIMIENTO
         TemaId.PIRATA -> PIRATA

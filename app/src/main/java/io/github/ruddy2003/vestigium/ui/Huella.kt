@@ -76,6 +76,7 @@ fun textoSello(tema: TemaId): String = when (tema) {
     TemaId.ESPACIO -> "TRANSMISIÓN COMPLETA"
     TemaId.ABISMO -> "COTA ALCANZADA"
     TemaId.ANDALUS -> "Sellado · خُتِم"
+    TemaId.MESO -> "Pintado en el códice"
     TemaId.MONGOL -> "ТАМГА ДАРАВ · sellado"
     TemaId.RENACIMIENTO -> "Fatto."
     TemaId.PIRATA -> "Asentado en la bitácora."
@@ -129,6 +130,7 @@ fun recursosHuella(t: TemaId): Pair<Int, Int> = when (t) {
     TemaId.ESPACIO -> R.drawable.huella_fondo_espacio to R.drawable.huella_espacio
     TemaId.ABISMO -> R.drawable.huella_fondo_abismo to R.drawable.huella_abismo
     TemaId.ANDALUS -> R.drawable.huella_fondo_andalus to R.drawable.huella_andalus
+    TemaId.MESO -> R.drawable.huella_fondo_meso to R.drawable.huella_meso
     TemaId.MONGOL -> R.drawable.huella_fondo_mongol to R.drawable.huella_mongol
     TemaId.RENACIMIENTO -> R.drawable.huella_fondo_renacimiento to R.drawable.huella_renacimiento
     TemaId.PIRATA -> R.drawable.huella_fondo_pirata to R.drawable.huella_pirata

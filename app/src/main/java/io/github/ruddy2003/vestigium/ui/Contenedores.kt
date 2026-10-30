@@ -38,6 +38,7 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     LEGAJO("Legajo de despachos", "despacho"),
     CAHIER("Cahier de momentos", "página"),
     MANUSCRITO("Manuscrito de momentos", "folio"),
+    BIOMBO("Códice en biombo", "página pintada"),
     ACORDEON("Libro plegado de momentos", "pliegue"),
     FUKURO("Cuaderno cosido de momentos", "hoja doblada"),
     ORDENES("Rollo de órdenes", "mandato"),
@@ -71,6 +72,7 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.NAPOLEON -> Contenedor.LEGAJO
     TemaId.REVOLUCION -> Contenedor.CAHIER
     TemaId.ANDALUS -> Contenedor.MANUSCRITO
+    TemaId.MESO -> Contenedor.BIOMBO
     TemaId.SEDA -> Contenedor.ACORDEON
     TemaId.EDO -> Contenedor.FUKURO
     TemaId.MONGOL -> Contenedor.ORDENES
@@ -102,6 +104,12 @@ object Contenedores {
     private val LAPIS = Color(0xFF1D2F7A)
     private val CORNALINA = Color(0xFFB8471E)
     private val PERGAMINO = Color(0xFFF1E6C8)
+    /** El códice maya: la tira de amate cubierta de estuco blanco, el cinabrio de los renglones, la piel de jaguar de las tapas y el henequén. */
+    private val ESTUCO = Color(0xFFF2E8D2)
+    private val CINABRIO = Color(0xFFA3301E)
+    private val JAGUAR = Color(0xFFC98B3C)
+    private val HENEQUEN = Color(0xFFCDB585)
+    private val JADE = Color(0xFF2F7D57)
     /** La vitela fina y blanca del libro de horas (el códice va en pergamino más grueso y amarillo). */
     private val VITELA = Color(0xFFF7F1E3)
     private val AZUR = Color(0xFF1F3A9E)
@@ -131,6 +139,7 @@ object Contenedores {
         Contenedor.SINGLADURAS -> if (oscuro) lerp(PERGAMINO_HUMEDO, Color.Black, 0.76f) else PERGAMINO_HUMEDO
         Contenedor.LEGAJO -> if (oscuro) lerp(Color(0xFFF3EEDF), Color.Black, 0.78f) else Color(0xFFF7F2E4)
         Contenedor.CAHIER -> if (oscuro) lerp(Color(0xFFF8F6EE), Color.Black, 0.8f) else Color(0xFFF8F6EE)
+        Contenedor.BIOMBO -> if (oscuro) lerp(ESTUCO, Color.Black, 0.78f) else ESTUCO
         // Las libretas del lote 2 tienen su papel en [ContenedoresMas].
         Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.FUKURO, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.INMERSION, Contenedor.TETRAD, Contenedor.BOLETOS -> ContenedoresMas.papel(c, cs, oscuro)
@@ -156,6 +165,7 @@ object Contenedores {
             Contenedor.SINGLADURAS -> bitacoraCerrada(grosor, d, oscuro)
             Contenedor.LEGAJO -> legajoCerrado(grosor, d, tapa)
             Contenedor.CAHIER -> cahierCerrado(grosor, d)
+            Contenedor.BIOMBO -> biomboCerrado(hojas, d)
             Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.FUKURO, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.INMERSION, Contenedor.TETRAD, Contenedor.BOLETOS -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
             Contenedor.SUPERVIVIENTE -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
@@ -244,6 +254,39 @@ object Contenedores {
         listOf(-3f, 3f).forEach { o -> drawLine(LINO, Offset(xh + o * d, y0 - 2 * d), Offset(xh + o * d, y0 + alto + 2 * d), 1.8f * d) }
         drawOval(BARRO, Offset(xh - 9 * d, y0 + alto - 6 * d), Size(18 * d, 13 * d))
         drawOval(lerp(BARRO, Color.Black, 0.35f), Offset(xh - 5 * d, y0 + alto - 3 * d), Size(10 * d, 7 * d), style = Stroke(1 * d))
+    }
+
+    /**
+     * El códice maya plegado en biombo: una tira larga de amate doblada en zigzag, alta y angosta, entre dos tapas de
+     * madera forradas de piel de jaguar. Por el canto se ven los pliegues (más cuanto más escrito); lo ata un cordel de
+     * henequén con una cuenta de jade.
+     */
+    private fun DrawScope.biomboCerrado(hojas: Int, d: Float) {
+        val w = size.width; val h = size.height
+        val ancho = w * 0.42f; val x0 = (w - ancho) / 2 - 6 * d; val y0 = h * 0.06f; val alto = h * 0.88f
+        val pliegues = (4 + hojas / 8).coerceAtMost(16)
+        val canto = (pliegues * 1.6f + 4f) * d
+        sombra(Offset(x0 + 6 * d, y0 + 8 * d), Size(ancho + canto, alto), 3 * d)
+        // El canto: el zigzag de las páginas dobladas, con el filo rojo del marco de cada una.
+        for (k in 0 until pliegues) {
+            val x = x0 + ancho + k * canto / pliegues
+            drawRect(if (k % 2 == 0) ESTUCO else lerp(ESTUCO, Color.Black, 0.12f), Offset(x, y0 + 2 * d), Size(canto / pliegues + 0.5f, alto - 4 * d))
+            drawLine(CINABRIO.copy(alpha = 0.5f), Offset(x, y0 + 2 * d), Offset(x, y0 + alto - 2 * d), 0.6f * d)
+        }
+        // La tapa de piel de jaguar, con sus rosetas.
+        drawRect(Brush.linearGradient(listOf(lerp(JAGUAR, Color.White, 0.15f), JAGUAR, lerp(JAGUAR, Color.Black, 0.25f)), Offset(x0, y0), Offset(x0 + ancho, y0 + alto)), Offset(x0, y0), Size(ancho, alto))
+        val azar = java.util.Random(260)
+        repeat(16) {
+            val c = Offset(x0 + ancho * (0.1f + azar.nextFloat() * 0.8f), y0 + alto * (0.05f + azar.nextFloat() * 0.9f)); val r = (3f + azar.nextFloat() * 2.5f) * d
+            for (k in 0 until 5) { val a = k * 1.2566f + azar.nextFloat() * 0.4f; drawCircle(Color(0xFF2A1A10).copy(alpha = 0.75f), r * 0.32f, Offset(c.x + r * cos(a), c.y + r * sin(a))) }
+            drawCircle(lerp(JAGUAR, Color.Black, 0.18f), r * 0.5f, c)
+        }
+        drawRect(lerp(JAGUAR, Color.Black, 0.5f), Offset(x0, y0), Size(ancho, alto), style = Stroke(1.4f * d))
+        // El cordel de henequén en dos vueltas y la cuenta de jade.
+        val yc = y0 + alto * 0.55f
+        listOf(-3f, 3f).forEach { o -> drawLine(HENEQUEN, Offset(x0 - 3 * d, yc + o * d), Offset(x0 + ancho + canto + 3 * d, yc + o * d), 2 * d) }
+        drawCircle(JADE, 5.5f * d, Offset(x0 + ancho * 0.5f, yc))
+        drawCircle(Color.White.copy(alpha = 0.35f), 1.8f * d, Offset(x0 + ancho * 0.5f - 1.8f * d, yc - 1.8f * d))
     }
 
     /** Un libro encuadernado: tapa, canto de hojas, nervios en el lomo, esquineras y broches. */
@@ -531,6 +574,22 @@ object Contenedores {
                 while (xc < size.width) { drawRect(colores[j % 4].copy(alpha = if (oscuro) 0.5f else 0.6f), Offset(xc, 70 * d), Size(minOf(7 * d, size.width - xc), 4 * d)); xc += 9 * d; j++ }
                 var yy = 96 * d; while (yy < size.height) { drawCircle(CORNALINA.copy(alpha = if (oscuro) 0.6f else 0.5f), 1.6f * d, Offset(margen - 12 * d, yy - 4 * d)); yy += renglon }
             }
+            Contenedor.BIOMBO -> {
+                // La página del códice: el estuco con alguna grieta, el marco rojo y los renglones rojos que la parten en
+                // registros; en el margen, la cuenta de cada renglón en puntos y barras, en rojo y negro como los escribas.
+                val rojo = CINABRIO.copy(alpha = if (oscuro) 0.55f else 0.45f)
+                val m = 6 * d
+                drawRect(rojo, Offset(m, m), Size(size.width - 2 * m, size.height - 2 * m), style = Stroke(1.2f * d))
+                val azar = java.util.Random(13)
+                repeat(6) { val x = azar.nextFloat() * size.width; val y = azar.nextFloat() * size.height
+                    drawLine(tinta.copy(alpha = 0.06f), Offset(x, y), Offset(x + (azar.nextFloat() - 0.5f) * 30 * d, y + azar.nextFloat() * 18 * d), 0.6f * d) }
+                var y = 96 * d; var k = 1
+                while (y < size.height - m) {
+                    if (k % 4 == 0) drawLine(rojo, Offset(m, y + 3 * d), Offset(size.width - m, y + 3 * d), 1.1f * d)
+                    numeralMaya(k, Offset(margen - 12 * d, y - 6 * d), 9 * d, if (k % 2 == 0) rojo else tinta.copy(alpha = if (oscuro) 0.4f else 0.35f))
+                    y += renglon; k++
+                }
+            }
             Contenedor.CODICE -> {
                 // Los pinchazos del margen y el reglado a punta seca, con las dos líneas de justificación a cada lado.
                 val regla = Color(0xFF6E5530).copy(alpha = if (oscuro) 0.2f else 0.12f)
@@ -642,6 +701,13 @@ object Contenedores {
                 drawOval(BARRO, Offset(30 * d, yh + 24 * d), Size(16 * d, 12 * d))
                 drawLine(lerp(BARRO, Color.Black, 0.4f), Offset(34 * d, yh + 26 * d), Offset(40 * d, yh + 34 * d), 1 * d)
                 if (oscuro) drawRect(Color.Black.copy(alpha = 0.5f), Offset(2 * d, 2 * d), Size(22 * d, size.height - 4 * d))
+            }
+            Contenedor.BIOMBO -> {
+                // La página anterior, doblada hacia atrás: una franja que se va a la sombra en el pliegue, con su filo rojo.
+                drawRect(Brush.horizontalGradient(listOf(lerp(ESTUCO, Color.Black, 0.35f), ESTUCO, lerp(ESTUCO, Color.Black, 0.2f)), 2 * d, 20 * d), Offset(2 * d, 0f), Size(18 * d, size.height))
+                drawLine(CINABRIO.copy(alpha = 0.6f), Offset(19 * d, 0f), Offset(19 * d, size.height), 1 * d)
+                var y = 12 * d; while (y < size.height - 12 * d) { drawLine(Color.Black.copy(alpha = 0.08f), Offset(4 * d, y), Offset(18 * d, y + 6 * d), 0.7f * d); y += 16 * d }
+                if (oscuro) drawRect(Color.Black.copy(alpha = 0.5f), Offset(2 * d, 0f), Size(18 * d, size.height))
             }
             Contenedor.CODICE -> {
                 // El pliegue del cuadernillo: sombra del lomo y las puntadas.

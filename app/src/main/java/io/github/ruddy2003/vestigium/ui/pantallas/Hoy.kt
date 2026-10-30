@@ -87,6 +87,7 @@ import io.github.ruddy2003.vestigium.sensores.Ubicacion
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonSecundario
 import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.grecaEscalonada
 import io.github.ruddy2003.vestigium.ui.Etiqueta
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Frases
@@ -557,6 +558,14 @@ fun FraseDelDia(fecha: String) {
                 drawPath(estrellaFrase(Offset(size.width / 2, 14 * u), 8, 7 * u, 5.4f * u), cs.tertiary.copy(alpha = 0.8f), style = Stroke(1.1f * u))
             }.padding(start = 18.dp, end = 18.dp, top = 28.dp, bottom = 12.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»", centrado = true) }
         }
+        // La palabra antigua bajo la bóveda en saledizo, con la greca escalonada en el dintel.
+        TemaId.MESO -> Surface(shape = CutCornerShape(topStart = 22.dp, topEnd = 22.dp, bottomStart = 0.dp, bottomEnd = 0.dp), color = cs.surface,
+            border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.6f)), modifier = arriba) {
+            Box(Modifier.drawBehind {
+                val u = 1.dp.toPx()
+                grecaEscalonada(size.width * 0.28f, size.width * 0.72f, 7 * u, 17 * u, cs.primary.copy(alpha = 0.7f), 1.1f * u)
+            }.padding(start = 18.dp, end = 18.dp, top = 28.dp, bottom = 12.dp)) { CuerpoFrase(f, fecha, rotulo, "⁘ ", " ⁘", centrado = true) }
+        }
         // Fieltro con su costura punteada por dentro.
         TemaId.MONGOL -> Surface(shape = RoundedCornerShape(8.dp), color = cs.surfaceVariant, border = BorderStroke(2.dp, cs.primary.copy(alpha = 0.8f)), modifier = arriba) {
             Box(Modifier.drawBehind {
@@ -907,6 +916,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.ESPACIO -> c(LetraExtra.orbita, FontWeight.Medium, 20f, 1.4f)
         TemaId.ABISMO -> c(LetraExtra.batiscafo, FontWeight.SemiBold, 25f, 0.5f, "tnum")
         TemaId.ANDALUS -> c(LetraExtra.kufi, FontWeight.Medium, 22f, 0.4f)
+        TemaId.MESO -> c(LetraExtra.codice, FontWeight.Bold, 23f, 0.8f, "lnum, tnum")
         TemaId.MONGOL -> c(LetraExtra.filosofo, FontWeight.Bold, 23f, 0.6f)
         TemaId.RENACIMIENTO -> base.copy(fontFamily = LetraExtra.cormorant, fontWeight = FontWeight.Medium, fontSize = 25.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum")
         TemaId.PIRATA -> c(LetraExtra.caslon, FontWeight.SemiBold, 23f, 0.3f, "lnum, tnum")
@@ -1308,6 +1318,21 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             }
                             pinta(p)
                             if (color != null) drawPath(p, oro, style = Stroke(u))
+                        }
+                        // Estelas: la piedra de remate redondo con su columna de bloques de glifos.
+                        TemaId.MESO -> {
+                            val bx = w * 0.16f; val bw = w * 0.68f; val curva = minOf(bw * 0.35f, barH * 0.4f)
+                            val p = Path().apply {
+                                moveTo(bx, h); lineTo(bx, top + curva); quadraticTo(bx, top, bx + bw / 2, top); quadraticTo(bx + bw, top, bx + bw, top + curva)
+                                lineTo(bx + bw, h); close()
+                            }
+                            pinta(p)
+                            val marca = if (color != null) Color.Black.copy(alpha = 0.22f) else linea
+                            var y = top + curva + 2 * u
+                            while (y + bw * 0.5f < h - 2 * u) {
+                                drawRoundRect(marca, Offset(bx + bw * 0.2f, y), Size(bw * 0.6f, bw * 0.5f), androidx.compose.ui.geometry.CornerRadius(bw * 0.14f), style = Stroke(0.8f * u))
+                                y += bw * 0.66f
+                            }
                         }
                         // Estandartes de la estepa: lanza arriba y crines que cuelgan.
                         TemaId.MONGOL -> {

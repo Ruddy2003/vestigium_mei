@@ -173,6 +173,7 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.ESPACIO -> listOf("magnitud 3", "magnitud 2", "magnitud 1", "supernova")
     TemaId.ABISMO -> listOf("a 200 m", "a 1,000 m", "a 4,000 m", "al fondo de la fosa")
     TemaId.ANDALUS -> listOf("feluz de cobre", "dírham de plata", "dinar de oro", "dinar de la Alhambra")
+    TemaId.MESO -> listOf("grano de cacao", "cuenta de jade", "pluma de quetzal", "máscara de jade del señor")
     TemaId.MONGOL -> listOf("paiza de madera", "paiza de plata", "paiza de oro", "paiza del Gran Kan")
     TemaId.RENACIMIENTO -> listOf("bronzo", "argento", "oro", "capolavoro")
     TemaId.PIRATA -> listOf("real de a ocho", "escudo de oro", "doblón de a ocho", "el cofre del capitán")
@@ -584,6 +585,24 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                 }
             }
             drawPath(estrellaLogro(c, 16, m * 0.56f, m * 0.52f, 0.0), cs.primary.copy(alpha = 0.12f), style = Stroke(1.4f * u))
+        }
+        TemaId.MESO -> rotate(giro * 0.2f, c) {
+            // El sol K'in con un anillo de veinte cartuchos, uno por cada signo de día del tzolk'in, y otro de trece puntos,
+            // como en las piedras de la cuenta de los días; el anillo de afuera gira al revés que el de adentro.
+            val col = cs.primary; val jade = cs.tertiary
+            for (k in 0 until 4) rotate(45f + 90f * k, c) { drawOval(col.copy(alpha = 0.12f), Offset(c.x - m * 0.05f, c.y - m * 0.16f), Size(m * 0.1f, m * 0.12f)) }
+            drawCircle(col.copy(alpha = 0.14f), m * 0.05f, c)
+            drawCircle(col.copy(alpha = 0.12f), m * 0.2f, c, style = Stroke(1.4f * u))
+            for (i in 0 until 13) drawCircle(jade.copy(alpha = 0.16f), 2.2f * u, pt(m * 0.25f, 2 * PI * i / 13))
+            drawCircle(col.copy(alpha = 0.1f), m * 0.3f, c, style = Stroke(1f * u))
+            rotate(-giro * 0.5f, c) {
+                for (i in 0 until 20) {
+                    val q = pt(m * 0.38f, 2 * PI * i / 20); val s = m * 0.045f
+                    drawRoundRect(col.copy(alpha = 0.14f), Offset(q.x - s, q.y - s), Size(2 * s, 2 * s), androidx.compose.ui.geometry.CornerRadius(s * 0.4f), style = Stroke(1.2f * u))
+                    drawCircle(col.copy(alpha = 0.1f), s * 0.3f, q)
+                }
+            }
+            drawCircle(col.copy(alpha = 0.1f), m * 0.45f, c, style = Stroke(1.4f * u))
         }
         TemaId.MONGOL -> rotate(giro * 0.25f, c) {
             // La corona de una yurta vista desde abajo: el aro, sus varas en cruz y las veinticuatro varas del techo.

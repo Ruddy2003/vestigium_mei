@@ -189,6 +189,8 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     // Una burbuja: el aro y su brillo.
     TemaId.ABISMO -> mas(menos(circulo(c, r), circulo(c, r * 0.76f)), circulo(c + Offset(-r * 0.3f, -r * 0.3f), r * 0.2f))
     TemaId.ANDALUS -> mas(poligono(c, r, 4, 0.0), poligono(c, r, 4, PI / 4))
+    // Una cuenta de jade, con su perforación.
+    TemaId.MESO -> menos(circulo(c, r), circulo(c, r * 0.28f))
     TemaId.MONGOL -> mas(estrella(c, r, 8, 0.5f), circulo(c, r * 0.45f))
     TemaId.RENACIMIENTO -> mas(menos(circulo(c, r), circulo(c, r * 0.8f)), poligono(c, r * 0.8f, 4, -PI / 2))
     // El doblón: la moneda con la cruz calada de sus cuatro cuarteles.

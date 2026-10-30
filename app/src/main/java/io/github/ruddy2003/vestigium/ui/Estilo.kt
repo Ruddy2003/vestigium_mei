@@ -45,6 +45,7 @@ object Estilo {
         TemaId.ESPACIO -> "⋆ "
         TemaId.ABISMO -> "≈ "
         TemaId.ANDALUS -> "❋ "
+        TemaId.MESO -> "⁘ "
         TemaId.MONGOL -> "◆ "
         TemaId.RENACIMIENTO -> "❧ "
         TemaId.PIRATA -> "✷ "
@@ -82,6 +83,7 @@ object Estilo {
         TemaId.ESPACIO -> true         // tablero de misión
         TemaId.ABISMO -> true          // rótulos estrechos de instrumento
         TemaId.ANDALUS -> true         // cúfica de friso
+        TemaId.MESO -> false           // la letra ya va en versalitas, como los rótulos pintados del códice
         TemaId.MONGOL -> true          // cirílico de rótulo
         TemaId.RENACIMIENTO -> false   // cancilleresca
         TemaId.PIRATA -> false         // letra negra de carta de marear
@@ -126,6 +128,8 @@ object Estilo {
             // Cada pantalla tiene su cota fija, como si estuviera a esa profundidad: «cota 3,412 m · hoy».
             TemaId.ABISMO -> if (pantalla) String.format(java.util.Locale.US, "cota %,d m · %s", folio(titulo, 10, 10900), t) else if (igual) null else "≈ $t"
             TemaId.ANDALUS -> if (igual) null else "❋ $t ❋"
+            // Cada pantalla es un bloque de la inscripción, leído por columna y fila como lo citan los epigrafistas: «⁘ bloque C7 · hoy».
+            TemaId.MESO -> if (pantalla) "⁘ bloque %s%d · %s".format("ABCDEFGH"[folio(titulo, 0, 8)], folio(titulo + "·", 1, 20), t) else if (igual) null else "⁘ $t"
             TemaId.MONGOL -> if (igual) null else "◆ $t"
             TemaId.RENACIMIENTO -> if (igual) null else "❧ $t"
             TemaId.PIRATA -> if (igual) null else "✷ $t"
@@ -163,6 +167,7 @@ object Estilo {
             TemaId.ESPACIO -> propio(titulo, true)
             TemaId.ABISMO -> propio(titulo, true)
             TemaId.ANDALUS -> propio(titulo, true)
+            TemaId.MESO -> propio(titulo, true)
             TemaId.MONGOL -> propio(titulo, true)
             TemaId.RENACIMIENTO -> propio(titulo, true)
             TemaId.PIRATA -> propio(titulo, true)
@@ -204,6 +209,7 @@ object Estilo {
         TemaId.ESPACIO -> false
         TemaId.ABISMO -> true
         TemaId.ANDALUS -> false
+        TemaId.MESO -> true
         TemaId.MONGOL -> false
         TemaId.RENACIMIENTO -> false
         TemaId.PIRATA -> false
@@ -252,6 +258,7 @@ object Estilo {
             TemaId.ESPACIO -> propio(titulo, false)
             TemaId.ABISMO -> propio(titulo, false)
             TemaId.ANDALUS -> propio(titulo, false)
+            TemaId.MESO -> propio(titulo, false)
             TemaId.MONGOL -> propio(titulo, false)
             TemaId.RENACIMIENTO -> propio(titulo, false)
             TemaId.PIRATA -> propio(titulo, false)
@@ -304,6 +311,8 @@ object Estilo {
         // La flecha que baja: cada número es un tramo más hondo, «▾17».
         TemaId.ABISMO -> if (n in 1..9999) "▾$n" else "$n"
         TemaId.ANDALUS -> Temas.arabe(n)
+        // Puntos y barras, en base veinte (ver [Maya.numeral]).
+        TemaId.MESO -> Maya.numeral(n)
         TemaId.REVOLUCION -> if (n < 100) "N° $n" else "$n"
         // La cuenta de jornadas y lunas del camino: «17ª».
         TemaId.ANTIGUAS -> if (n in 1..999) "${n}ª" else "$n"
@@ -366,6 +375,8 @@ object Estilo {
             diasDesdeInicio(iso)?.takeIf { it > 0 }?.let { "INMERSIÓN $it · $base" } ?: base
         }.getOrDefault(iso)
         TemaId.ANDALUS -> runCatching { val d = Fechas.parse(iso); Temas.fechaHegira(d) + " · ${d.dayOfMonth} ${MESES_ANDALUSIES[d.monthValue - 1].lowercase()}" }.getOrDefault(iso)
+        // El tzolk'in, el haab y la cuenta larga: «8 Lamat 1 Sak' · 13.0.14.0.8».
+        TemaId.MESO -> Maya.fecha(iso)
         TemaId.MONGOL -> runCatching { val d = Fechas.parse(iso); Temas.anioMongol(d) + " · " + Temas.fechaMongol(d) }.getOrDefault(iso)
         TemaId.RENACIMIENTO -> runCatching { Temas.fechaItaliana(Fechas.parse(iso)) }.getOrDefault(iso)
         // «Singladura 290 · 17 de 8bre de 2026», contada desde el primer registro (o, sin registros, desde el 1 de enero);
@@ -423,6 +434,8 @@ object Estilo {
             TemaId.ABISMO -> "▾ " + MESES_LARGOS[i].uppercase() + (anio?.let { " · $it" } ?: "")
             // Los andalusíes nombraban los meses del sol con palabras salidas del latín: yannayr, fibrayr, mars…
             TemaId.ANDALUS -> MESES_ANDALUSIES[i] + (anio?.let { " $it" } ?: "")
+            // Los meses de veinte días del haab que caen en este mes: «Yax–Sak' (oct.)».
+            TemaId.MESO -> Maya.mes(n, anio)
             // Los meses de la estepa se nombran por la estación: primero, medio y último mes del otoño…
             TemaId.MONGOL -> Temas.MESES_MONGOLES[i] + (anio?.let { " · $it" } ?: "")
             TemaId.RENACIMIENTO -> Temas.MESES_ITALIANOS[i].replaceFirstChar { it.uppercase() } + (anio?.let { " $it" } ?: "")
@@ -471,6 +484,7 @@ object Estilo {
         // Abreviados con punto, como en las casillas de la bitácora de inmersiones.
         TemaId.ABISMO -> listOf("LUN.", "MAR.", "MIÉ.", "JUE.", "VIE.", "SÁB.", "DOM.")
         TemaId.ANDALUS -> listOf("اثن", "ثلا", "أرب", "خمي", "جمع", "سبت", "أحد")
+        TemaId.MESO -> Maya.SEMANA
         TemaId.MONGOL -> listOf("ДА", "МЯ", "ЛХ", "ПҮ", "БА", "БЯ", "НЯ")
         TemaId.RENACIMIENTO -> listOf("Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom")
         // Abreviados como en las bitácoras de entonces.
@@ -507,6 +521,7 @@ object Estilo {
         TemaId.ESPACIO -> semana
         TemaId.ABISMO -> listOf("L.", "M.", "X.", "J.", "V.", "S.", "D.")
         TemaId.ANDALUS -> semana.map { it.take(2) }
+        TemaId.MESO -> listOf("Ju", "Ka", "Óo", "Kn", "Jo", "Wa", "Wu")
         TemaId.MONGOL -> semana
         TemaId.RENACIMIENTO -> semana.map { it.take(2) }
         TemaId.PIRATA -> listOf("Lu", "Mt", "Mc", "Ju", "Vi", "Sb", "Do")
@@ -544,6 +559,7 @@ object Estilo {
         // Cada día seguido baja diez metros: la presión sube un bar por cada diez metros, más el de la superficie.
         TemaId.ABISMO -> String.format(java.util.Locale.US, "COTA −%,d m · %d bar", n * 10, n + 1)
         TemaId.ANDALUS -> "$n días seguidos · متتالية"
+        TemaId.MESO -> "$n soles seguidos pintados en el códice"
         TemaId.MONGOL -> "$n ӨДӨР ДАРААЛАН"
         TemaId.RENACIMIENTO -> "$n giorni di fila"
         TemaId.PIRATA -> "$n singladuras sin tocar puerto"
@@ -578,6 +594,7 @@ object Estilo {
         TemaId.ESPACIO -> "◄ RETORNO"
         TemaId.ABISMO -> "▲ EMERGER"
         TemaId.ANDALUS -> "← رجوع"
+        TemaId.MESO -> "← de vuelta por el sacbé"
         TemaId.MONGOL -> "◄ БУЦАХ"
         TemaId.RENACIMIENTO -> "← indietro"
         TemaId.PIRATA -> "← virar de bordo"
@@ -610,6 +627,7 @@ object Estilo {
         TemaId.ESPACIO -> "◦ "
         TemaId.ABISMO -> "↓ "
         TemaId.ANDALUS -> "◈ "
+        TemaId.MESO -> "⁙ "
         TemaId.MONGOL -> "▹ "
         TemaId.RENACIMIENTO -> "✎ "
         TemaId.PIRATA -> "➳ "
@@ -646,6 +664,7 @@ object Estilo {
         TemaId.ESPACIO -> ""
         TemaId.ABISMO -> " ▾"                 // la flecha de bajada
         TemaId.ANDALUS -> ""
+        TemaId.MESO -> ""
         TemaId.MONGOL -> ""
         TemaId.RENACIMIENTO -> ""
         TemaId.PIRATA -> ""
@@ -683,6 +702,7 @@ object Estilo {
         TemaId.ESPACIO -> EstiloFecha(0.92f, 2.8f, peso = 500, abre = "▼")
         TemaId.ABISMO -> EstiloFecha(1.12f, 1.2f, peso = 600, abre = "⤓")
         TemaId.ANDALUS -> EstiloFecha(1.06f, 1.0f, peso = 500)
+        TemaId.MESO -> EstiloFecha(1.08f, 1.4f, peso = 700, abre = "⁘")
         TemaId.MONGOL -> EstiloFecha(1.1f, 1.8f, peso = 700, abre = "▼")
         TemaId.RENACIMIENTO -> EstiloFecha(1.14f, 0f)
         TemaId.PIRATA -> EstiloFecha(1.06f, 0.9f, abre = "⇣")
@@ -732,6 +752,7 @@ object Estilo {
             TemaId.ESPACIO -> es(Claves.ESPACIO)?.uppercase()
             TemaId.ABISMO -> es(Claves.ABISMO)?.uppercase()
             TemaId.ANDALUS -> Claves.ARABE[k]
+            TemaId.MESO -> es(CLAVES_MESO)
             TemaId.MONGOL -> Claves.MONGOL[k]
             TemaId.RENACIMIENTO -> CLAVES_IT[k]
             TemaId.PIRATA -> es(Claves.PIRATA)
@@ -804,6 +825,18 @@ object Estilo {
         "svmptvs" to "raciones", "memorabilia" to "estelas", "ascensvs" to "subida",
         "dies" to "días", "quaestiones" to "preguntas", "celeritas" to "reflejo", "bibliotheca" to "casa_de_los_libros", "synchronia" to "copias", "opera" to "obras", "iudicium" to "juicio", "citatio" to "enseñanza", "sententia" to "máxima", "orbis" to "mundo", "nova" to "nuevo", "mirabilia" to "maravillas", "somnium" to "lo_soñado", "epistulae" to "papiros_sellados", "aperta" to "abierto", "initium" to "comienzo", "finis" to "fin", "pessimus" to "lo_peor", "personae" to "rostros", "themata" to "asuntos", "praeclarum" to "lo_más_justo", "dies felix" to "día_feliz",
         "consuetudo" to "costumbres", "series" to "racha", "palmae" to "ofrendas", "reditus" to "ingresos",
+    )
+    /** Las claves del día en la voz del escriba del códice: el petate, el sacbé, el espejo de obsidiana, el maíz y el cacao. */
+    private val CLAVES_MESO = mapOf(
+        "horologium" to "cuenta_del_sol", "somnus" to "sueño_en_el_petate", "stadia" to "tramos_de_la_noche", "cor" to "pulso", "passus" to "pasos_en_el_sacbé", "motus" to "andanza",
+        "iter" to "camino_blanco", "exercitatio" to "esfuerzo", "loca" to "parajes", "telephonum" to "espejo_de_obsidiana", "telephon" to "espejo_de_obsidiana", "usus" to "uso_del_espejo",
+        "monita" to "caracolas", "musica" to "tambor_y_flauta", "imagines" to "pinturas", "fasti" to "cuenta_de_los_días", "caelum" to "cielo", "lux" to "luz_del_sol",
+        "aer" to "viento", "corpus" to "cuerpo", "nutritio" to "maíz_y_cacao", "cibus" to "comidas", "robur" to "fuerza", "musculi" to "brazos",
+        "voces" to "voces", "soni" to "sonidos", "retia" to "redes", "lumen" to "tea", "vis" to "carga", "lectio" to "lectura_de_glifos",
+        "strepitus" to "ruido", "luna" to "luna", "dias" to "días", "animus" to "ánimo", "optimus" to "lo_mejor", "momenta" to "sucesos",
+        "svmptvs" to "cacao_gastado", "memorabilia" to "monumentos", "ascensvs" to "gradas_subidas",
+        "dies" to "días", "quaestiones" to "preguntas", "celeritas" to "reflejos", "bibliotheca" to "casa_de_los_códices", "synchronia" to "copias", "opera" to "obras", "iudicium" to "juicio", "citatio" to "palabra_antigua", "sententia" to "dicho", "orbis" to "mundo", "nova" to "nuevo", "mirabilia" to "maravillas", "somnium" to "lo_soñado", "epistulae" to "mensajes_pintados", "aperta" to "abierto", "initium" to "comienzo", "finis" to "fin", "pessimus" to "lo_peor", "personae" to "gente", "themata" to "asuntos", "praeclarum" to "lo_más_alto", "dies felix" to "día_propicio",
+        "consuetudo" to "costumbres", "series" to "cuenta_seguida", "palmae" to "plumas_de_quetzal", "reditus" to "tributo",
     )
     private val CLAVES_ES = mapOf(
         "horologium" to "reloj", "somnus" to "sueño", "stadia" to "fases", "cor" to "corazón", "passus" to "pasos", "motus" to "movimiento",

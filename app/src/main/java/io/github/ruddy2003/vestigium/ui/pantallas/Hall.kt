@@ -63,6 +63,11 @@ import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.cuentaJade
+import io.github.ruddy2003.vestigium.ui.granoCacao
+import io.github.ruddy2003.vestigium.ui.numeralMaya
+import io.github.ruddy2003.vestigium.ui.piramideMaya
+import io.github.ruddy2003.vestigium.ui.plumaQuetzal
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.LibroDiario
@@ -107,6 +112,7 @@ private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.ESPACIO -> Color(0xFF7B1FA2)
     TemaId.ABISMO -> Color(0xFF0F8A86)          // el verde azul del agua honda
     TemaId.ANDALUS -> Color(0xFF1F7A6B)
+    TemaId.MESO -> Color(0xFFA3301E)          // el cinabrio de los códices
     TemaId.MONGOL -> Color(0xFF1E88E5)
     TemaId.RENACIMIENTO -> Color(0xFFB5562F)
     TemaId.PIRATA -> Color(0xFF2F5D62)
@@ -221,6 +227,8 @@ object PiezasLogro {
         // Trazo blando, de esquinas redondeadas por el agua; el material es el cristal verdoso de un ojo de buey.
         TemaId.ABISMO -> Trazo(u, 1f, StrokeCap.Round, StrokeJoin.Round, null, 3f, false, Color(0xFFDCEFF2))
         TemaId.ANDALUS -> Trazo(u, 1f, StrokeCap.Butt, StrokeJoin.Miter, null, 1f, true, Color(0xFFF1E3C8))
+        // Trazo de pincel de escriba, en tramos con su punto; el material es el estuco blanco del códice.
+        TemaId.MESO -> Trazo(u, 1.2f, StrokeCap.Square, StrokeJoin.Miter, floatArrayOf(5f, 1.5f, 0.6f, 1.5f), 0f, true, Color(0xFFF2E8D2))
         TemaId.MONGOL -> Trazo(u, 1.3f, StrokeCap.Round, StrokeJoin.Bevel, floatArrayOf(3f, 1.5f), 0f, false, Color(0xFFE8DCC8))
         TemaId.RENACIMIENTO -> Trazo(u, 0.7f, StrokeCap.Round, StrokeJoin.Round, null, 0f, true, Color(0xFFEFD9C0))
         // Trazo de cabo: grueso, con las vueltas del cordón (raya larga, punto), sobre pergamino húmedo.
@@ -369,6 +377,12 @@ object PiezasLogro {
                 for (i in 0 until 16) { val a0 = i * PI / 8; val a1 = (i + 1) * PI / 8; val p0 = en(a0, 0.86f); val pm = en((a0 + a1) / 2, 0.99f); val p1 = en(a1, 0.86f); if (i == 0) p.moveTo(p0.x, p0.y); p.quadraticTo(pm.x, pm.y, p1.x, p1.y) }
                 drawPath(p, m, style = Stroke(1.3f * u))
             }
+            // Veinte bloques de glifo alrededor, como los signos de días del tzolk'in.
+            TemaId.MESO -> for (i in 0 until 20) {
+                val p = en(i * PI / 10, 0.91f); val l = 2.2f * u
+                drawRoundRect(m, Offset(p.x - l, p.y - l), Size(2 * l, 2 * l), CornerRadius(0.8f * u), style = Stroke(0.8f * u))
+                if (i % 5 == 0) drawCircle(pri, 0.8f * u, p)
+            }
             TemaId.MONGOL -> {
                 drawCircle(m, r * 0.94f, c, style = Stroke(0.9f * u)); drawCircle(m, r * 0.84f, c, style = Stroke(0.9f * u))
                 for (i in 0 until 4) { val p = en(i * PI / 2, 0.89f); drawPath(Path().apply { moveTo(p.x, p.y - 3.5f * u); lineTo(p.x + 3.5f * u, p.y); lineTo(p.x, p.y + 3.5f * u); lineTo(p.x - 3.5f * u, p.y); close() }, m) }
@@ -474,6 +488,12 @@ object PiezasLogro {
             TemaId.ANDALUS -> {
                 val m = (an - 2 * u) / 5
                 for (k in 0 until 3) { val mx = x + 1 * u + k * 2 * m; drawRect(tinta, Offset(mx, y - 1.6f * u), Size(m, 1.6f * u)); drawRect(tinta, Offset(mx + m * 0.25f, y - 3.2f * u), Size(m * 0.5f, 1.6f * u)) }
+            }
+            // La crestería calada sobre el templo, con sus dos vanos.
+            TemaId.MESO -> {
+                drawRect(tinta, Offset(x - 0.6f * u, y - 2f * u), Size(an + 1.2f * u, 2f * u))
+                listOf(-1f, 1f).forEach { sx -> drawRect(tinta, Offset(cx + sx * an * 0.12f - an * 0.1f, y - 7.5f * u), Size(an * 0.2f, 5.5f * u)) }
+                drawRect(tinta, Offset(cx - an * 0.24f, y - 8.5f * u), Size(an * 0.48f, 1.2f * u))
             }
             TemaId.MONGOL -> { drawArc(tinta, 180f, 180f, true, Offset(x, y - an * 0.25f), Size(an, an * 0.5f)); drawCircle(tinta, 1.1f * u, Offset(cx, y - an * 0.25f - 0.6f * u)) }
             TemaId.RENACIMIENTO -> { val d = an - 3 * u; drawArc(tinta, 180f, 180f, true, Offset(cx - d / 2, y - d / 2), Size(d, d)); drawLine(tinta, Offset(cx, y - d / 2), Offset(cx, y - d / 2 - 3 * u), 1 * u) }
@@ -584,6 +604,14 @@ object PiezasLogro {
                 drawPath(ola, tinto, style = tz.st(1.2f * u))
             }
             TemaId.ANDALUS -> traza(estrellaN(c, 31 * u, 8, 0.8f))
+            // La cruz escalonada de los cuatro rumbos.
+            TemaId.MESO -> traza(Path().apply {
+                val a = 9 * u; val b = 18 * u; val e = 27 * u
+                moveTo(c.x - a, c.y - e); lineTo(c.x + a, c.y - e); lineTo(c.x + a, c.y - b); lineTo(c.x + b, c.y - b); lineTo(c.x + b, c.y - a); lineTo(c.x + e, c.y - a)
+                lineTo(c.x + e, c.y + a); lineTo(c.x + b, c.y + a); lineTo(c.x + b, c.y + b); lineTo(c.x + a, c.y + b); lineTo(c.x + a, c.y + e); lineTo(c.x - a, c.y + e)
+                lineTo(c.x - a, c.y + b); lineTo(c.x - b, c.y + b); lineTo(c.x - b, c.y + a); lineTo(c.x - e, c.y + a); lineTo(c.x - e, c.y - a); lineTo(c.x - b, c.y - a)
+                lineTo(c.x - b, c.y - b); lineTo(c.x - a, c.y - b); close()
+            })
             TemaId.MONGOL -> traza(Path().apply { moveTo(c.x, c.y - 32 * u); lineTo(c.x + 32 * u, c.y); lineTo(c.x, c.y + 32 * u); lineTo(c.x - 32 * u, c.y); close() })
             TemaId.RENACIMIENTO -> { traza(caja(c.x - 25 * u, c.y - 25 * u, c.x + 25 * u, c.y + 25 * u)); drawCircle(tinto, 25 * u, c, style = Stroke(0.7f * u)) }
             // La rueda del timón: el aro y las ocho cabillas que asoman.
@@ -940,6 +968,11 @@ object PiezasLogro {
                 drawRect(hueco, Offset(c.x - 13 * u, base - 29 * u), Size(26 * u, 29 * u), style = Stroke(0.8f * u))
                 for (k in 0 until 6) drawPath(Path().apply { val x = c.x - 22 * u + k * 8 * u; moveTo(x, base - 30 * u); lineTo(x + 2 * u, base - 33 * u); lineTo(x + 4 * u, base - 33 * u); lineTo(x + 6 * u, base - 30 * u); close() }, tinta)
             }
+            // La pirámide escalonada con su escalinata y el templo arriba.
+            TemaId.MESO -> {
+                piramideMaya(Offset(c.x, base), 54 * u, 46 * u, tinta, hueco, tinta, gradas = 4)
+                suelo()
+            }
             TemaId.MONGOL -> {
                 drawRect(tinta, Offset(c.x - 22 * u, base - 14 * u), Size(44 * u, 14 * u))
                 drawPath(Path().apply { moveTo(c.x - 25 * u, base - 13 * u); quadraticTo(c.x - 12 * u, base - 24 * u, c.x - 3 * u, base - 27 * u); lineTo(c.x + 3 * u, base - 27 * u); quadraticTo(c.x + 12 * u, base - 24 * u, c.x + 25 * u, base - 13 * u); close() }, tinta)
@@ -1217,6 +1250,14 @@ object PiezasLogro {
                 listOf(arriba, arriba + 22 * u).forEach { y -> drawLine(tinta, Offset(c.x + 20 * u, y), Offset(c.x + 20 * u, y + 4 * u), 0.9f * u); drawCircle(tono, 1.6f * u, Offset(c.x + 20 * u, y + 5 * u)) }
                 listOf(2.4f, 1.9f, 1.4f).forEachIndexed { i, rr -> drawCircle(tinta, rr * u, Offset(px, c.y - 27 * u - i * 4.4f * u)) }
             }
+            // Un estandarte de tela pintada con puntos de jade y, en lo alto del asta, un manojo de plumas de quetzal.
+            TemaId.MESO -> {
+                asta()
+                pano(caja(px, arriba, c.x + 10 * u, arriba + 30 * u))
+                for (k in 0 until 3) drawCircle(claro, 1.6f * u, Offset(px + 12 * u, arriba + 7 * u + k * 8 * u))
+                drawRect(claro, Offset(px + 3 * u, arriba + 26 * u), Size(18 * u, 1.6f * u))
+                listOf(-70f, -95f, -120f).forEach { ang -> plumaQuetzal(Offset(px, c.y - 26 * u), 14 * u, ang, tono, tinta) }
+            }
             TemaId.MONGOL -> {
                 raya(tz, tinta, Offset(c.x, c.y + 26 * u), Offset(c.x, c.y - 30 * u), 2 * u)
                 listOf(-5f, 0f, 5f).forEach { dx -> drawLine(tinta, Offset(c.x + dx * u, c.y - 26 * u), Offset(c.x + dx * u, c.y - (if (dx == 0f) 36 else 32) * u), 1.4f * u) }
@@ -1443,6 +1484,12 @@ object PiezasLogro {
                 drawRect(tinta, Offset(c.x - 9 * u, c.y - 9 * u), Size(18 * u, 18 * u), style = Stroke(1.2f * u))
                 for (k in 0 until 3) fina(tz, tinta, Offset(c.x - 6 * u, c.y - 4 * u + k * 4 * u), Offset(c.x + 6 * u, c.y - 4 * u + k * 4 * u), 0.9f * u)
                 for (i in 0 until 4) drawCircle(tinta, 1.2f * u, en(PI / 4 + i * PI / 2, 0.84f))
+            }
+            // No había monedas: se pagaba con granos de cacao. El grano, en su disco.
+            TemaId.MESO -> {
+                disco()
+                granoCacao(c, R * 0.62f, tinta.copy(alpha = 0.7f), claro)
+                for (i in 0 until 8) drawCircle(tinta, 1.1f * u, en(PI / 8 + i * PI / 4, 0.84f))
             }
             TemaId.MONGOL -> {
                 forma(caja(c.x - 10 * u, c.y - 22 * u, c.x + 10 * u, c.y + 22 * u, 9 * u))
@@ -1700,6 +1747,15 @@ object PiezasLogro {
                 drawPath(solapa, lerp(tono, tinta, 0.25f)); contorno(tz, solapa, tinta, 0.9f * u)
                 drawPath(estrellaN(Offset(c.x - 9 * u, c.y), 6 * u, 8, 0.72f), papel)
             }
+            // El códice plegado en biombo: cuatro páginas en zigzag, con su marco rojo y algún numeral.
+            TemaId.MESO -> {
+                for (k in 0 until 4) {
+                    val x0 = c.x - 24 * u + k * 12 * u; val d = if (k % 2 == 0) 0f else 4 * u
+                    val pag = Path().apply { moveTo(x0, c.y - 18 * u + d); lineTo(x0 + 12 * u, c.y - 18 * u + 4 * u - d); lineTo(x0 + 12 * u, c.y + 18 * u + 4 * u - d); lineTo(x0, c.y + 18 * u + d); close() }
+                    drawPath(pag, if (k % 2 == 0) papel else lerp(papel, tinta, 0.12f)); contorno(tz, pag, tinta, 0.9f * u)
+                    numeralMaya(k * 5 + 3, Offset(x0 + 6 * u, c.y - 6 * u + d), 6 * u, tono)
+                }
+            }
             TemaId.MONGOL -> {
                 tapa(c.x - 26 * u, c.y + 3 * u, c.x + 26 * u, c.y + 9 * u, tono, 1 * u)
                 drawRect(papel, Offset(c.x - 25 * u, c.y - 6 * u), Size(50 * u, 9 * u))
@@ -1953,6 +2009,12 @@ object PiezasLogro {
                 }
                 drawPath(s, lerp(papel, tinta, 0.08f)); contorno(tz, s, tinta, 1 * u)
                 drawPath(estrellaN(Offset(c.x, c.y + 3 * u), 5.5f * u, 8, 0.72f), tono)
+            }
+            // El códice atado: el paquete de amate con el cordel de henequén en cruz y una cuenta de jade en el nudo.
+            TemaId.MESO -> {
+                hoja(c.x - 24 * u, c.y - 15 * u, c.x + 24 * u, c.y + 15 * u, lerp(papel, Color(0xFFC9A86E), 0.4f), 2 * u)
+                drawLine(tinta, Offset(c.x - 24 * u, c.y), Offset(c.x + 24 * u, c.y), 1.2f * u); drawLine(tinta, Offset(c.x, c.y - 15 * u), Offset(c.x, c.y + 15 * u), 1.2f * u)
+                cuentaJade(c, 4 * u, tono, Color.White)
             }
             TemaId.MONGOL -> rotate(-30f, c) {
                 raya(tz, tinta, Offset(c.x - 26 * u, c.y), Offset(c.x + 22 * u, c.y), 1.4f * u)

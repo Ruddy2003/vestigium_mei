@@ -38,6 +38,13 @@ object SalonesMas {
                 for (k in 0 until 5) { val cx = w * (0.22f + k * 0.14f); val r = h * 0.32f
                     drawPath(Path().apply { moveTo(cx, h / 2 - r); lineTo(cx + r, h / 2); lineTo(cx, h / 2 + r); lineTo(cx - r, h / 2); close() }, if (k % 2 == 0) Color(0xFF1E6B5A) else Color(0xFF1E4F8A)) }
             }
+            // Un altar de piedra en dos gradas, con la franja de cinabrio y una fila de cuentas de jade al frente.
+            TemaId.MESO -> {
+                drawRect(piedra(Color(0xFFE2D6BC)), Offset(w * 0.2f, 0f), Size(w * 0.6f, h * 0.45f))
+                drawRect(piedra(Color(0xFFD6C8A8)), Offset(w * 0.1f, h * 0.45f), Size(w * 0.8f, h * 0.55f))
+                drawRect(Color(0xFFA3301E), Offset(w * 0.2f, h * 0.12f), Size(w * 0.6f, h * 0.1f))
+                for (k in 0 until 5) drawCircle(Color(0xFF2F7D57), h * 0.08f, Offset(w * (0.22f + k * 0.14f), h * 0.72f))
+            }
             TemaId.SEDA -> { drawRoundRect(piedra(Color(0xFF8E1B1B)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.55f), CornerRadius(h * 0.2f)); drawRect(Color(0xFFD4AF37), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.1f))
                 listOf(0.2f, 0.8f).forEach { x -> drawRect(Color(0xFF8E1B1B), Offset(w * x - w * 0.03f, h * 0.5f), Size(w * 0.06f, h * 0.5f)) } }
             // Sanbō: la bandeja de ofrendas de madera lacada en negro, sobre su caja con el vano recortado (kurikata).
@@ -174,6 +181,48 @@ object SalonesMas {
                 var y = 12 * d
                 while (y < h) { drawLine(yeso.copy(alpha = 0.4f), Offset(cx - ancho, y), Offset(cx + ancho, y + ancho * 2), 1f); drawLine(yeso.copy(alpha = 0.4f), Offset(cx + ancho, y), Offset(cx - ancho, y + ancho * 2), 1f); y += 8 * d }
             }
+        }
+    }
+
+    // ------------------------------------------------------------------ Mesoamérica
+
+    /**
+     * La plaza de las estelas: cada columna de piezas bajo la bóveda en saledizo de un vano de templo (sus lados suben en
+     * gradas hasta la losa), un friso de greca escalonada arriba, la franja de cinabrio del estuco y, entre vano y vano,
+     * una estela de piedra con su columna de bloques de glifos. Abajo, el piso de estuco de la plaza.
+     */
+    internal fun DrawScope.plazaMaya(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val piedra = (if (oscuro) Color(0xFF3E4446) else Color(0xFFE2D6BC)).copy(alpha = 0.7f)
+        val cinabrio = Color(0xFFA3301E).copy(alpha = if (oscuro) 0.45f else 0.35f)
+        val jade = Color(0xFF2F7D57).copy(alpha = if (oscuro) 0.5f else 0.4f)
+        val paso = w / n
+        // Friso: franja roja y greca.
+        drawRect(cinabrio, Offset(0f, 0f), Size(w, 6 * d))
+        grecaEscalonada(0f, w, 8 * d, 20 * d, piedra, 2 * d)
+        // Piso de la plaza.
+        val piso = 18 * d
+        drawRect(piedra.copy(alpha = piedra.alpha * 0.6f), Offset(0f, h - piso), Size(w, piso))
+        drawLine(cinabrio, Offset(0f, h - piso), Offset(w, h - piso), 1.2f * d)
+        for (i in 0 until n) {
+            val x0 = i * paso + 10 * d; val x1 = (i + 1) * paso - 10 * d; val g = (x1 - x0) * 0.08f; val top = 30 * d
+            // La bóveda: jambas rectas y, arriba, tres gradas por lado hasta la losa.
+            val arco = Path().apply {
+                moveTo(x0, h - piso); lineTo(x0, top + 4 * g)
+                for (k in 0 until 3) { lineTo(x0 + (k + 1) * g, top + (4 - k) * g); lineTo(x0 + (k + 1) * g, top + (3 - k) * g) }
+                lineTo(x1 - 3 * g, top + g)
+                for (k in 3 downTo 1) { lineTo(x1 - k * g, top + (5 - k) * g); lineTo(x1 - (k - 1) * g, top + (5 - k) * g) }
+                lineTo(x1, h - piso)
+            }
+            drawPath(arco, piedra, style = Stroke(5 * d))
+            drawPath(arco, cinabrio, style = Stroke(1 * d))
+        }
+        // Las estelas entre los vanos.
+        for (i in 0..n) {
+            val cx = i * paso; val ancho = 7 * d; val alto = h * 0.42f; val y0 = h - piso - alto
+            drawRoundRect(piedra, Offset(cx - ancho, y0), Size(2 * ancho, alto), CornerRadius(ancho * 0.6f))
+            var y = y0 + 5 * d
+            while (y < h - piso - 10 * d) { drawRoundRect(jade, Offset(cx - ancho * 0.6f, y), Size(ancho * 1.2f, ancho * 1.2f), CornerRadius(ancho * 0.3f), style = Stroke(0.8f * d)); y += ancho * 1.5f }
         }
     }
 

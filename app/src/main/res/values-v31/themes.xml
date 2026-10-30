@@ -257,10 +257,20 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_andalus</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_andalus</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Meso" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_meso</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_meso</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_meso</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Andalus.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_andalus_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_andalus_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_andalus</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Meso.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_meso_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_meso_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_meso</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Mongol" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_mongol</item>

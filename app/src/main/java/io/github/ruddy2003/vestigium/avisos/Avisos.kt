@@ -60,6 +60,7 @@ object Avisos {
         TemaId.ESPACIO -> R.raw.n_espacio_aviso to R.raw.n_espacio_solemne
         TemaId.ABISMO -> R.raw.n_abismo_aviso to R.raw.n_abismo_solemne
         TemaId.ANDALUS -> R.raw.n_andalus_aviso to R.raw.n_andalus_solemne
+        TemaId.MESO -> R.raw.n_meso_aviso to R.raw.n_meso_solemne
         TemaId.MONGOL -> R.raw.n_mongol_aviso to R.raw.n_mongol_solemne
         TemaId.RENACIMIENTO -> R.raw.n_renacimiento_aviso to R.raw.n_renacimiento_solemne
         TemaId.PIRATA -> R.raw.n_pirata_aviso to R.raw.n_pirata_solemne
@@ -346,6 +347,13 @@ object Avisos {
             "رسالة · carta de tu yo del pasado", "Llegó el día que elegiste para abrirla.",
             "Azulejo nuevo en tu patio", "azulejos nuevos",
             "El libro de %d está listo", "Un año entero en historias: lo más hecho, lo único, lo curioso.")
+        TemaId.MESO -> Voz("⁘ Suena la caracola: ¿cómo está tu corazón?", "Dos toques: cuánto agrado y cuánta fuerza trae este día del tzolk'in.",
+            "⁘ Lo que pintó la noche", "Anótalo antes de dejar el petate: los sueños se van con el humo del copal.",
+            "⁘ La página de hoy del códice", "Pinta el día antes de que el sol baje al inframundo. Si fue un día pesado, basta con un número de puntos y barras.",
+            "Día pesado: un número", "El guardián de los días pregunta hoy:",
+            "⁘ Un códice atado de tu yo del pasado", "Llegó el día de la cuenta que elegiste para desatarlo.",
+            "Pluma de quetzal ganada", "plumas de quetzal nuevas",
+            "El códice de %d está pintado", "Un año entero pintado como en las páginas de un biombo: lo que más hiciste, lo único, lo curioso.")
         TemaId.MONGOL -> Voz("СЭТГЭЛ · ¿cómo va tu espíritu?", "Dos toques: agrado y fuerza, como el viento de la estepa.",
             "ЗҮҮД · ¿qué soñaste en la yurta?", "Anótalo antes de salir; el sueño se lo lleva el viento.",
             "ӨДӨР · ¿cómo fue la jornada?", "Llena el día. Si fue dura, basta con un número.",
@@ -412,6 +420,7 @@ object Avisos {
         TemaId.ESPACIO -> VozEnfoque("PAUSA ORBITAL", "Despega del asiento. Hidrátate.", "FIN DE LA PAUSA ORBITAL", "DESPERTAR DE LA TRIPULACIÓN", "MISIÓN COMPLETADA")
         TemaId.ABISMO -> VozEnfoque("PARADA DE DESCOMPRESIÓN", "Sube despacio: levántate y toma agua.", "FIN DE LA PARADA", "EMERSIÓN: HORA DE DESPERTAR", "INMERSIÓN COMPLETADA")
         TemaId.ANDALUS -> VozEnfoque("Pausa en el patio", "Levántate, bebe agua de la fuente.", "Terminó la pausa en el patio", "Al alba: hora de despertar", "¡Obra acabada!")
+        TemaId.MESO -> VozEnfoque("Descanso del pintor", "Deja el pincel, bebe agua del cenote.", "Vuelve al códice", "K'in sale por el oriente: hora de despertar", "Página pintada")
         TemaId.MONGOL -> VozEnfoque("Alto en la estepa", "Levántate, bebe agua.", "A caballo otra vez", "El sol sale sobre la estepa: despierta", "¡Jornada ganada!")
         TemaId.RENACIMIENTO -> VozEnfoque("Pausa", "Lascia il pennello: levántate, toma agua.", "Fine della pausa", "Sveglia: hora de despertar", "Opera compiuta")
         TemaId.PIRATA -> VozEnfoque("Se volteó la ampolleta", "Estira las piernas en cubierta y bebe agua dulce.", "Otra vuelta de ampolleta", "Toque de diana: a cubierta", "¡Guardia cumplida!")

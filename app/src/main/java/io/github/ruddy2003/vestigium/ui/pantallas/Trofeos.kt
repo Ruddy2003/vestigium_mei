@@ -53,6 +53,7 @@ import io.github.ruddy2003.vestigium.ciencia.Logros
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.grecaEscalonada
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.TrofeosTema
 import io.github.ruddy2003.vestigium.ui.esOscuro
@@ -420,6 +421,8 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             drawCircle(col, s * 0.16f, Offset(o.x - s * 0.28f, o.y - s * 0.28f))
         }
         TemaId.ANDALUS -> drawPath(estrellada(o, s, s * 0.74f, 8), Color(0xFFF5D27A))
+        // Chispas de jade: una cuenta con su brillo, o un punto de numeral.
+        TemaId.MESO -> { drawCircle(Color(0xFF6FCB8F), s * 0.45f, o); drawCircle(Color.White.copy(alpha = 0.6f), s * 0.15f, Offset(o.x - s * 0.15f, o.y - s * 0.15f)) }
         TemaId.MONGOL -> {
             val col = Color(0xFF8FD3FF)
             drawPath(Path().apply { moveTo(o.x, o.y - s); lineTo(o.x + s, o.y); lineTo(o.x, o.y + s); lineTo(o.x - s, o.y); close() }, col, style = Stroke(s * 0.12f))
@@ -477,6 +480,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.ESPACIO -> Color(0xFF1B2140)
     TemaId.ABISMO -> Color(0xFF0B2A3A)          // el agua honda tras el cristal
     TemaId.ANDALUS -> Color(0xFFE2C98F)
+    TemaId.MESO -> Color(0xFFE6D6B6)          // el estuco de la sala del templo
     TemaId.MONGOL -> Color(0xFF4F86C6)
     TemaId.RENACIMIENTO -> Color(0xFFD9B98F)
     TemaId.PIRATA -> Color(0xFF7A5634)          // la tablazón de roble de la cámara
@@ -681,6 +685,12 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
             }
         }
         TemaId.ANDALUS -> { val t = 28 * d; var y = t / 2; while (y < h) { var x = t / 2; while (x < w) { drawPath(estrellada(Offset(x, y), t * 0.42f, t * 0.32f, 8), v, style = Stroke(d)); x += t }; y += t } }
+        // Muro de sillares con el friso de grecas escalonadas arriba.
+        TemaId.MESO -> {
+            val alto = 16 * d; var y = 30 * d; var fila = 0
+            while (y < h) { drawLine(v, Offset(0f, y), Offset(w, y), d); var x = if (fila % 2 == 0) 0f else 14 * d; while (x < w) { drawLine(v, Offset(x, y), Offset(x, y + alto), d); x += 28 * d }; y += alto; fila++ }
+            grecaEscalonada(0f, w, 6 * d, 22 * d, a, 1.6f * d)
+        }
         TemaId.MONGOL -> {
             val t = 18 * d; var x = -h
             while (x < w) { drawLine(v, Offset(x, 0f), Offset(x + h, h), d); drawLine(v, Offset(x + h, 0f), Offset(x, h), d); x += t }
@@ -912,6 +922,12 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             x = 0f
             while (x < w) { drawPath(Path().apply { moveTo(x, h * 0.6f); lineTo(x + 5 * d, h); lineTo(x + 10 * d, h * 0.6f); close() }, lerp(c, Color.Black, 0.15f)); x += 10 * d }
         }
+        // Una banca de piedra estucada con la franja de cinabrio y una fila de cuentas de jade.
+        TemaId.MESO -> {
+            val c = m(Color(0xFFE2D6BC)); tabla(c)
+            drawRect(m(Color(0xFFA3301E)), Offset(0f, h * 0.12f), Size(w, h * 0.16f))
+            var x = 6 * d; while (x < w) { drawCircle(m(Color(0xFF2F7D57)), h * 0.12f, Offset(x, h * 0.62f)); x += 14 * d }
+        }
         TemaId.MONGOL -> {
             tabla(m(Color(0xFFC2551F))); val oro = m(Color(0xFFE0B040))
             drawRect(oro, Offset.Zero, Size(w, 1.5f * d)); drawRect(oro, Offset(0f, h - 1.5f * d), Size(w, 1.5f * d))
@@ -1119,6 +1135,16 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
                 lineTo(w, h); close()
             }
             drawPath(p, fondo); drawPath(p, borde, style = fino)
+        }
+        // La placa con la bóveda en saledizo arriba: los lados suben en dos gradas hasta la losa.
+        TemaId.MESO -> {
+            val g = 4 * d
+            val p = Path().apply {
+                moveTo(0f, h); lineTo(0f, 2 * g); lineTo(g, 2 * g); lineTo(g, g); lineTo(2 * g, g); lineTo(2 * g, 0f)
+                lineTo(w - 2 * g, 0f); lineTo(w - 2 * g, g); lineTo(w - g, g); lineTo(w - g, 2 * g); lineTo(w, 2 * g); lineTo(w, h); close()
+            }
+            drawPath(p, fondo); drawPath(p, borde, style = fino)
+            drawLine(ac, Offset(3 * g, g * 0.6f), Offset(w - 3 * g, g * 0.6f), d)
         }
         TemaId.MONGOL -> {
             val e = 6 * d; val azul = Color(0xFF4FA3E0)

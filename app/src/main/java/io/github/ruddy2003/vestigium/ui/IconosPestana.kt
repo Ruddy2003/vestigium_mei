@@ -134,6 +134,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             p(st = fino) { m(8f, 12f); q(6.5f, 16f, 8.5f, 20.5f) }; p(st = fino) { m(12f, 12.2f); q(13.6f, 16.5f, 12f, 21f) }; p(st = fino) { m(16f, 12f); q(17.5f, 16f, 15.5f, 20.5f) } } // medusa
         TemaId.ANDALUS -> { p { m(7f, 21f); t(7f, 15f); q(4f, 12f, 5.5f, 8f); q(8f, 3f, 12f, 3f); q(16f, 3f, 18.5f, 8f); q(20f, 12f, 17f, 15f); t(17f, 21f) }
             l(4f, 21f, 20f, 21f); l(12f, 3f, 12f, 5.5f, 1.1f); l(7.2f, 6f, 8.9f, 7.6f, 1.1f); l(16.8f, 6f, 15.1f, 7.6f, 1.1f) }                // arco de herradura
+        TemaId.MESO -> { ci(12f, 12f, 3f); hoja(12f, 5f, 5.4f, 2.1f, 90f, relleno = false); hoja(12f, 19f, 5.4f, 2.1f, 90f, relleno = false)
+            hoja(5f, 12f, 5.4f, 2.1f, 0f, relleno = false); hoja(19f, 12f, 5.4f, 2.1f, 0f, relleno = false); rayos(12f, 12f, 4, 5.2f, 8.4f, 45.0, 405.0, 1.1f) } // K'in, el sol: la flor de cuatro pétalos
         TemaId.MONGOL -> { p { m(3f, 20.5f); t(3f, 13f); q(12f, 5f, 21f, 13f); t(21f, 20.5f); close() }; r(10f, 15f, 4f, 5.5f, 0.3f); ci(12f, 8.6f, 1.3f, st = fino)
             l(3f, 13f, 21f, 13f, 1.1f) }                                                                                                      // yurta
         TemaId.RENACIMIENTO -> { l(12f, 4f, 6.5f, 21f); l(12f, 4f, 17.5f, 21f); ci(12f, 3.2f, 1.4f); p(st = fino) { m(5f, 16f); q(12f, 21f, 19f, 16f) } } // compás
@@ -184,6 +186,9 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.ABISMO -> { r(3.5f, 3f, 13f, 18f, 2.2f); l(6.5f, 8f, 13.5f, 8f, 1.1f); l(6.5f, 12f, 13.5f, 12f, 1.1f); l(6.5f, 16f, 11f, 16f, 1.1f)
             l(19.5f, 3.5f, 19.5f, 16f, 2f); p(relleno = true) { m(18.4f, 16f); t(20.6f, 16f); t(19.5f, 19.5f); close() } }                   // pizarra de buceo y lápiz
         TemaId.ANDALUS -> momentos(tm)
+        TemaId.MESO -> { p { m(2.5f, 7f); t(7.2f, 5f); t(12f, 7f); t(16.8f, 5f); t(21.5f, 7f); t(21.5f, 19f); t(16.8f, 17f); t(12f, 19f); t(7.2f, 17f); t(2.5f, 19f); close() }
+            l(7.2f, 5f, 7.2f, 17f, 1.1f); l(12f, 7f, 12f, 19f, 1.1f); l(16.8f, 5f, 16.8f, 17f, 1.1f)
+            ci(4.8f, 10.5f, 0.75f, relleno = true); l(3.9f, 13f, 5.8f, 13f, 1.1f); ci(14.4f, 10.5f, 0.75f, relleno = true); ci(19.2f, 9.8f, 0.75f, relleno = true) } // el códice plegado en biombo
         TemaId.MONGOL -> momentos(tm)
         TemaId.RENACIMIENTO -> momentos(tm)
         TemaId.PIRATA -> momentos(tm)
@@ -229,6 +234,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             ci(11.1f, 16.1f, 1.1f, relleno = true); l(5f, 11f, 4f, 13.5f, 1.1f); l(19f, 11f, 20f, 13.5f, 1.1f) }                             // batiscafo: flotador y esfera
         TemaId.ANDALUS -> { l(5f, 21f, 19f, 13f); l(5f, 13f, 19f, 21f); p { m(4f, 12.5f); q(8f, 9.5f, 12f, 12.5f); q(16f, 9.5f, 20f, 12.5f); t(20f, 5.5f); q(16f, 2.5f, 12f, 5.5f); q(8f, 2.5f, 4f, 5.5f); close() }
             l(12f, 5.5f, 12f, 12.5f, 1.1f) }                                                                                                  // libro sobre su atril
+        TemaId.MESO -> { r(4f, 3f, 16f, 14f, 3.4f); ci(8.4f, 19.6f, 1.6f); ci(12f, 19.6f, 1.6f); ci(15.6f, 19.6f, 1.6f)
+            p(relleno = true) { m(7.5f, 6.2f); t(16.5f, 6.2f); t(16.5f, 8.4f); t(13.4f, 8.4f); t(13.4f, 14f); t(10.6f, 14f); t(10.6f, 8.4f); t(7.5f, 8.4f); close() } } // el cartucho de un glifo de día (Ik')
         TemaId.MONGOL -> { p { m(7f, 3f); q(17f, 12f, 7f, 21f) }; l(7f, 3f, 7f, 21f, 1f); l(3f, 12f, 20f, 12f, 1.3f); p(relleno = true) { m(21.5f, 12f); t(18.5f, 10.3f); t(18.5f, 13.7f); close() }
             l(3f, 12f, 4.5f, 10.5f, 1f); l(3f, 12f, 4.5f, 13.5f, 1f) }                                                                       // arco y flecha
         TemaId.RENACIMIENTO -> { r(4f, 4f, 12f, 16f, 0.6f); l(6.5f, 9f, 13f, 9f, 1.1f); l(6.5f, 12f, 13f, 12f, 1.1f); l(6.5f, 15f, 11f, 15f, 1.1f)
@@ -278,6 +285,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             ci(12f, 12f, 0.9f, relleno = true) }                                                                                              // pantalla del sonar
         TemaId.ANDALUS -> { l(12f, 2f, 12f, 4.5f, 1.1f); p { m(8f, 8f); q(12f, 3.5f, 16f, 8f); close() }; p { m(8f, 8f); t(16f, 8f); t(17.5f, 15f); t(12f, 21f); t(6.5f, 15f); close() }
             l(8f, 8f, 12f, 21f, 0.9f); l(16f, 8f, 12f, 21f, 0.9f); l(6.5f, 15f, 17.5f, 15f, 0.9f) }                                          // lámpara nazarí
+        TemaId.MESO -> { p { m(2f, 21f); t(2f, 18f); t(4.5f, 18f); t(4.5f, 15f); t(7f, 15f); t(7f, 12f); t(9f, 12f); t(9f, 9f); t(15f, 9f); t(15f, 12f); t(17f, 12f); t(17f, 15f); t(19.5f, 15f); t(19.5f, 18f); t(22f, 18f); t(22f, 21f); close() }
+            r(9.6f, 4f, 4.8f, 5f, 0.4f); l(12f, 2f, 12f, 4f, 1.1f); l(12f, 12f, 12f, 21f, 1.1f) } // la pirámide escalonada con su templo
         TemaId.MONGOL -> { ci(12f, 14.5f, 3.6f); p { m(7f, 8f); q(12f, 12.5f, 17f, 8f); q(12f, 10f, 7f, 8f); close() }; p(relleno = true) { m(12f, 2f); q(14.5f, 4.5f, 12f, 6.5f); q(9.5f, 4.5f, 12f, 2f); close() }
             l(6f, 20.5f, 18f, 20.5f) }                                                                                                        // sol, luna y fuego
         TemaId.RENACIMIENTO -> { p { m(2.5f, 13f); q(7f, 4f, 12f, 10f); q(17f, 4f, 21.5f, 13f); q(18f, 11f, 16.5f, 13.5f); q(14f, 11f, 12f, 13.5f); q(10f, 11f, 7.5f, 13.5f); q(6f, 11f, 2.5f, 13f); close() }
@@ -329,6 +338,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.ABISMO -> { ci(12f, 10.5f, 7.5f); ci(12f, 10.5f, 3f, st = fino); ci(6.4f, 11f, 1.3f, st = fino); ci(17.6f, 11f, 1.3f, st = fino)
             r(5.5f, 17.5f, 13f, 3.5f, 1.2f); l(9f, 19.2f, 9f, 19.2f, 1.6f); l(15f, 19.2f, 15f, 19.2f, 1.6f) }                                 // casco de buzo de latón
         TemaId.ANDALUS -> { p { m(5f, 5f); t(19f, 5f); t(19f, 19f); t(5f, 19f); close() }; p { m(12f, 2f); t(22f, 12f); t(12f, 22f); t(2f, 12f); close() }; ci(12f, 12f, 2.4f, st = fino) } // estrella de ocho puntas
+        TemaId.MESO -> { p { m(9f, 3f); t(15f, 3f); t(15f, 9f); t(21f, 9f); t(21f, 15f); t(15f, 15f); t(15f, 21f); t(9f, 21f); t(9f, 15f); t(3f, 15f); t(3f, 9f); t(9f, 9f); close() }
+            ci(12f, 12f, 1.6f, relleno = true); ci(12f, 5.8f, 0.9f, relleno = true); ci(12f, 18.2f, 0.9f, relleno = true); ci(5.8f, 12f, 0.9f, relleno = true); ci(18.2f, 12f, 0.9f, relleno = true) } // la cruz de los cuatro rumbos y el centro
         TemaId.MONGOL -> { p { m(8f, 21f); t(16f, 21f); t(15f, 14f); t(9f, 14f); close() }; l(12f, 14f, 12f, 4.5f); p { m(12f, 4.5f); q(12f, 2f, 14.5f, 2.5f); q(16.5f, 3.5f, 15f, 6f); t(12f, 6f) }
             l(11f, 15f, 11f, 20f, 0.8f); l(13f, 15f, 13f, 20f, 0.8f) }                                                                       // morin juur
         TemaId.RENACIMIENTO -> { l(7.5f, 21.5f, 12f, 2.5f); l(16.5f, 21.5f, 12f, 2.5f); l(12f, 15f, 12f, 21.5f, 1.1f); r(6.5f, 6.5f, 11f, 8f, 0.3f); l(5.5f, 14.5f, 18.5f, 14.5f) } // caballete
@@ -403,6 +414,9 @@ private class Trazo(val s: DrawScope, val c: Color) {
             p(relleno = true) { m(12f, 17f); q(14.6f, 20f, 12f, 22f); q(9.4f, 20f, 12f, 17f); close() } }                                  // las capas del mar y la plomada
         TemaId.ANDALUS -> { ci(12f, 14f, 7f); p { m(9.5f, 7.6f); t(9f, 4.4f); t(10.8f, 5.9f); t(12f, 3.6f); t(13.2f, 5.9f); t(15f, 4.4f); t(14.5f, 7.6f) }
             hoja(18.2f, 5.6f, 4.4f, 1.9f, -30f); p(st = fino) { m(7.8f, 15f); q(8.6f, 19f, 12.8f, 19.6f) } }                              // granada
+        TemaId.MESO -> { ov(8.6f, 3f, 6.8f, 14f); l(10.3f, 5f, 10.3f, 15.5f, 0.8f); l(13.7f, 5f, 13.7f, 15.5f, 0.8f)
+            for (k in 0 until 4) l(9f, 6f + k * 2.6f, 15f, 6f + k * 2.6f, 0.8f)
+            hoja(7f, 15.5f, 9f, 2.4f, 65f); hoja(17f, 15.5f, 9f, 2.4f, 115f); l(12f, 17f, 12f, 21.5f) } // la mazorca: la vida, que es de maíz
         TemaId.MONGOL -> { l(12f, 7f, 12f, 22f); p { m(9f, 2.5f); t(9f, 5f); q(9f, 7f, 12f, 7f); q(15f, 7f, 15f, 5f); t(15f, 2.5f) }; l(12f, 7f, 12f, 1.8f)
             p(relleno = true) { m(9f, 8.6f); q(7.8f, 14f, 10f, 17.5f); q(12f, 15.2f, 14f, 17.5f); q(16.2f, 14f, 15f, 8.6f); close() } }   // estandarte de crin
         TemaId.RENACIMIENTO -> { ci(12f, 11.5f, 9f, st = fino); p(st = fino) { m(4.5f, 5.5f); t(19.5f, 5.5f); t(19.5f, 20.5f); t(4.5f, 20.5f); close() }
@@ -467,6 +481,9 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.ANDALUS -> { p { m(4f, 15f); t(11f, 15f); t(11.5f, 20.5f); t(3.5f, 20.5f); close() }; l(6f, 15f, 6.5f, 13.5f, 1.1f); l(9f, 15f, 8.5f, 13.5f, 1.1f)
             l(8.4f, 13f, 18.5f, 3f, 1.8f); p(relleno = true) { m(7f, 14.6f); t(8.6f, 11.6f); t(10f, 13f); close() }
             l(17.5f, 13.5f, 17.5f, 20.5f, 1.8f); l(14f, 17f, 21f, 17f, 1.8f) }                                                               // cálamo y tintero
+        TemaId.MESO -> { p { m(2.5f, 17f); q(6.5f, 22f, 10.5f, 17f); close() }; ci(6.5f, 17.8f, 0.9f, relleno = true)
+            l(6.5f, 15.5f, 15.5f, 4.5f, 1.4f); p(relleno = true) { m(15.5f, 4.5f); q(17.5f, 1.8f, 19f, 2f); q(18.6f, 4.2f, 16.6f, 5.8f); close() }
+            l(17.5f, 13.5f, 17.5f, 20.5f, 1.8f); l(14f, 17f, 21f, 17f, 1.8f) } // el pincel y la concha de tinta
         TemaId.MONGOL -> { l(12f, 5.4f, 12f, 18.6f, 1.8f); l(5.4f, 12f, 18.6f, 12f, 1.8f); ci(12f, 12f, 2.4f, st = fino)
             p(relleno = true) { m(12f, 2f); t(14.2f, 5.6f); t(9.8f, 5.6f); close() }; p(relleno = true) { m(12f, 22f); t(14.2f, 18.4f); t(9.8f, 18.4f); close() }
             p(relleno = true) { m(2f, 12f); t(5.6f, 9.8f); t(5.6f, 14.2f); close() }; p(relleno = true) { m(22f, 12f); t(18.4f, 9.8f); t(18.4f, 14.2f); close() } } // las cuatro direcciones de la estepa
@@ -523,6 +540,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.ANDALUS -> { ci(12f, 11f, 8f); ci(12f, 11f, 2f, st = fino); rayos(12f, 11f, 8, 2f, 8f, 0.0, 360.0, 1.1f)
             for (k in 0 until 8) { val g = 22.5 + 45.0 * k; ci(px(12f, 8f, g), py(11f, 8f, g), 1.1f, relleno = true) }
             p(st = fino) { m(3f, 21f); q(6f, 19.5f, 9f, 21f); q(12f, 22.5f, 15f, 21f); q(18f, 19.5f, 21f, 21f) } }                          // noria
+        TemaId.MESO -> { engrane(12f, 12f, 9.5f, 7.6f, 13); ci(12f, 12f, 4.2f, st = fino)
+            ci(12f, 10.4f, 0.8f, relleno = true); l(9.8f, 13.2f, 14.2f, 13.2f, 1.2f) } // la rueda de los trece números del tzolk'in
         TemaId.MONGOL -> { ci(12f, 12f, 8.5f); ci(12f, 12f, 4f); for (k in 0 until 12) { val g = 15.0 + 30.0 * k; l(px(12f, 4.8f, g), py(12f, 4.8f, g), px(12f, 8.5f, g), py(12f, 8.5f, g), 1f) }
             l(10.8f, 8f, 10.8f, 16f, 1.1f); l(13.2f, 8f, 13.2f, 16f, 1.1f); l(8f, 10.8f, 16f, 10.8f, 1.1f); l(8f, 13.2f, 16f, 13.2f, 1.1f) } // corona de la yurta
         TemaId.RENACIMIENTO -> { l(4f, 2.5f, 20f, 2.5f, 1.8f); l(12f, 2.5f, 12f, 5.8f); ci(12f, 9f, 3.2f); ci(12f, 9f, 0.9f, relleno = true)

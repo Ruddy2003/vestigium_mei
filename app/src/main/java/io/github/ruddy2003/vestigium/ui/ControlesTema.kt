@@ -331,6 +331,13 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     }, 16.dp, 2.dp, false, 1.2.dp)
     // Arco de medio punto, muy redondo arriba.
     TemaId.ANDALUS -> PielDialogo(RoundedCornerShape(topStart = 48.dp, topEnd = 48.dp, bottomEnd = 4.dp, bottomStart = 4.dp), 12.dp, 4.dp, true, 1.dp)
+    // El vano de un templo maya: la bóveda en saledizo sube en tres gradas por cada lado hasta la losa de arriba.
+    TemaId.MESO -> PielDialogo(FormaDp { w, h, d ->
+        val g = 9 * d
+        moveTo(0f, h); lineTo(0f, 3 * g); lineTo(g, 3 * g); lineTo(g, 2 * g); lineTo(2 * g, 2 * g); lineTo(2 * g, g); lineTo(3 * g, g); lineTo(3 * g, 0f)
+        lineTo(w - 3 * g, 0f); lineTo(w - 3 * g, g); lineTo(w - 2 * g, g); lineTo(w - 2 * g, 2 * g); lineTo(w - g, 2 * g); lineTo(w - g, 3 * g); lineTo(w, 3 * g)
+        lineTo(w, h); close()
+    }, 14.dp, 2.dp, true, 1.2.dp)
     // Cúpula de ger: el borde de arriba se abomba.
     TemaId.MONGOL -> PielDialogo(FormaDp { w, h, d ->
         val b = 14 * d; val r = 10 * d
@@ -627,6 +634,15 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             var x = 18 * d
             while (x < w - 16 * d) { estrellaCtl(Offset(x, h - 12 * d), 4 * d, e.tertiary.copy(alpha = 0.65f), puntas = 8, dentro = 0.6f); x += 14 * d }
         }
+        TemaId.MESO -> {
+            // Una greca escalonada de cinabrio bajo la losa, el glifo del día al centro y, abajo, un renglón rojo de
+            // códice con cuentas de jade.
+            grecaEscalonada(30 * d, w - 30 * d, 31 * d, 40 * d, e.primary.copy(alpha = 0.7f), 1.2f * d)
+            cartuchoMaya(Offset(w / 2, 14 * d), 6 * d, e.primary, e.surface, e.onSurface, 3)
+            drawLine(e.primary.copy(alpha = 0.6f), Offset(12 * d, h - 10 * d), Offset(w - 12 * d, h - 10 * d), d)
+            var x = 20 * d
+            while (x < w - 16 * d) { drawCircle(e.tertiary.copy(alpha = 0.7f), 1.8f * d, Offset(x, h - 14 * d)); x += 16 * d }
+        }
         TemaId.MONGOL -> {
             // La corona de la ger (toono) con sus varas, y la costura del fieltro.
             val c = Offset(w / 2, 12 * d)
@@ -870,6 +886,12 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             drawLine(e.tertiary, Offset(w / 2 + 18 * d, cy), Offset(w, cy), d)
             estrellaCtl(Offset(w / 2, cy), 5.5f * d, e.tertiary, puntas = 8, dentro = 0.6f)
             drawCircle(e.tertiary, 1.3f * d, Offset(w / 2 - 13 * d, cy)); drawCircle(e.tertiary, 1.3f * d, Offset(w / 2 + 13 * d, cy))
+        }
+        // El renglón rojo del códice partido por un trece maya (tres puntos sobre dos barras).
+        TemaId.MESO -> {
+            drawLine(e.primary, Offset(0f, cy), Offset(w / 2 - 14 * d, cy), d)
+            drawLine(e.primary, Offset(w / 2 + 14 * d, cy), Offset(w, cy), d)
+            numeralMaya(13, Offset(w / 2, cy), 12 * d, e.tertiary)
         }
         // Montes de la estepa en zigzag.
         TemaId.MONGOL -> {
@@ -1237,6 +1259,16 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             var px = 0f; var k = 0
             while (px < x) { drawRect(if (k % 2 == 0) activo else e.tertiary, Offset(px, cy - g * 0.4f), Size(minOf(g * 1.6f, x - px), g * 0.8f)); px += g * 1.6f; k++ }
         }
+        // Lo recorrido se cuenta en puntos y barras: cuatro puntos de jade y una barra, y otra vez.
+        TemaId.MESO -> {
+            linea(inactivo, x, w, g * 0.3f)
+            var px = 0f; var k = 0
+            while (px < x) {
+                if (k % 5 == 4) { drawRect(activo, Offset(px, cy - g * 0.32f), Size(minOf(g * 2.4f, x - px), g * 0.64f)); px += g * 2.9f }
+                else { drawCircle(e.tertiary, g * 0.32f, Offset(minOf(px + g * 0.35f, x), cy)); px += g * 1.05f }
+                k++
+            }
+        }
         // Montes en zigzag hasta donde va; luego, la llanura.
         TemaId.MONGOL -> {
             linea(inactivo, x, w, g * 0.3f)
@@ -1471,6 +1503,11 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             drawRect(color, Offset(c.x - r * 0.62f, c.y - r * 0.62f), Size(r * 1.24f, r * 1.24f))
             rotate(45f, c) { drawRect(color, Offset(c.x - r * 0.62f, c.y - r * 0.62f), Size(r * 1.24f, r * 1.24f)) }
             drawCircle(e.tertiary, r * 0.25f, c)
+        }
+        // Una cuenta de jade engastada en un aro de cinabrio.
+        TemaId.MESO -> {
+            drawCircle(e.primary, r, c)
+            cuentaJade(c, r * 0.76f, color, Color.White)
         }
         // Punta de flecha de arquero.
         TemaId.MONGOL -> {

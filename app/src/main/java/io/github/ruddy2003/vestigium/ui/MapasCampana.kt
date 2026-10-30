@@ -341,6 +341,13 @@ object MapasCampana {
                 }
                 with(TrofeosMas) { estrellaLazo(Offset(c.x, c.y - R - 9 * d), 3 * d, Brush.linearGradient(listOf(dorado, dorado)), null, 0f) }
             }
+            TemaId.MESO -> {
+                // La llegada: la pirámide de la ciudad al final del sacbé, con su templo y la crestería, y una pluma de
+                // quetzal que ondea en lo alto.
+                val base = Offset(m.x, m.y - 6 * d)
+                piramideMaya(base, 30 * d, 34 * d, Color(0xFFE8DCC0), Color(0xFF8E7A58), Color(0xFFA3301E), gradas = 4)
+                plumaQuetzal(Offset(m.x, base.y - 36 * d), 14 * d, -60f, Color(0xFF2F9A6A), Color(0xFF1C5A3E))
+            }
             TemaId.MONGOL -> {
                 // El ovoo de la llegada: el montón de piedras, la vara en medio con su punta de tridente y las bufandas azules
                 // que ondean al viento.

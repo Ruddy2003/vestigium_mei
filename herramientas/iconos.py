@@ -165,6 +165,17 @@ def lazo(sem):           # Al-Ándalus: lazo de ocho, apenas grabado
     estrella = np.maximum(a, b)
     return (np.abs(estrella - 15) < 1) * -0.7 + ruido(sem, 0.25, 2)
 
+def amate(sem):          # Mesoamérica: papel amate, la corteza golpeada en una red de fibras que se cruzan sin orden
+    r = np.random.default_rng(sem)
+    campo = np.zeros((TAM, TAM), np.float32)
+    img = Image.new('L', (TAM, TAM), 0); d = ImageDraw.Draw(img)
+    for _ in range(260):
+        x, y = r.random() * TAM, r.random() * TAM
+        a = (r.random() - 0.5) * 0.9 + (0 if r.random() < 0.5 else math.pi / 2); l = 12 + r.random() * 40
+        d.line([(x, y), (x + math.cos(a) * l, y + math.sin(a) * l)], fill=255, width=1)
+    campo = np.asarray(img.filter(ImageFilter.GaussianBlur(0.6)), np.float32) / 255
+    return ruido(sem + 1, 0.5, 6) - campo * 0.9 + ruido(sem + 2, 0.25, 1)
+
 def fieltro(sem):        # Mongol: fieltro de yurta, grueso y moteado
     return ruido(sem, 1.0, 3) * 0.8 + ruido(sem + 1, 0.7, 10) + ruido(sem + 2, 0.4, 0.8)
 
@@ -288,6 +299,18 @@ def _estrellas(d, c, n=12, s=5.0, puntas=5):
             r = (s if k % 2 == 0 else s * 0.42) * K; u = -math.pi / 2 + k * math.pi / puntas
             p.append((x + r * math.cos(u), y + r * math.sin(u)))
         d.polygon(p, fill=c)
+
+def _puntos_barras(d, c, n=14):        # Mesoamérica: numerales mayas en el anillo, el siete: la barra por fuera y dos puntos por dentro
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        ca, sa = math.cos(a + math.pi / 2), math.sin(a + math.pi / 2)
+        x, y = _pos(a, RADIO + 4.6); l = 4.4 * K; g = 1.3 * K
+        cx, cy = math.cos(a), math.sin(a)
+        d.polygon([(x - ca * l - cx * g, y - sa * l - cy * g), (x + ca * l - cx * g, y + sa * l - cy * g),
+                   (x + ca * l + cx * g, y + sa * l + cy * g), (x - ca * l + cx * g, y - sa * l + cy * g)], fill=c)
+        for lado in (-1, 1):
+            px, py = _pos(a + lado * 0.045, RADIO - 4.4); r = 1.6 * K
+            d.ellipse([px - r, py - r, px + r, py + r], fill=c)
 
 def _hojas_alternas(d, c, n=18):
     for i in range(n):
@@ -426,6 +449,7 @@ TEMAS = {
     'espacio':      (polvo_estelar, '#0F1012', '#B0C8F2',   4, 4, 'fosforo',     _orbita),
     'abismo':       (agua_abisal,   '#06141D', '#7FE9D2',   6, 4, 'fosforo',     _burbujas),
     'andalus':      (lazo,          '#F0ECE4', '#1F3F5C',   6, 5, 'esmalte',     _estrellas),
+    'meso':         (amate,         '#E6D3AE', '#A3301E',  10, 5, 'tinta',       _puntos_barras),
     'mongol':       (fieltro,       '#EFEBE3', '#1F3D78',   6, 5, 'tinta',       _rombos),
     'renacimiento': (construccion,  '#EAE4D9', '#7C3B23',   8, 5, 'ferrogalica', _compas),
     'pirata':       (carta_nautica, '#E3D8BB', '#2E2214',   9, 5, 'tinta',       _rosa),

@@ -60,6 +60,7 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.esOscuro
 import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.numeralMaya
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -153,6 +154,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Al-Ándalus: arena y yeso; de noche, el jardín en verde azulado.
         TemaId.ANDALUS -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.6f, 0.82f, 0.78f, 2f, 8f, 6f)) }
             else { m.setSaturation(0.35f); m.postConcat(tinte(1.0f, 0.94f, 0.82f, 4f, 2f, 0f)) }
+        // Mesoamérica: el papel amate con el verde de la selva; de noche, la obsidiana con el azul maya.
+        TemaId.MESO -> if (oscuro) { m.setSaturation(0.12f); m.postConcat(invertir); m.postConcat(tinte(0.52f, 0.76f, 0.84f, 0f, 6f, 10f)) }
+            else { m.setSaturation(0.42f); m.postConcat(tinte(0.97f, 0.95f, 0.8f, 6f, 6f, -2f)) }
         // Mongol: la estepa bajo el cielo azul; de noche, el azul profundo.
         TemaId.MONGOL -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.55f, 0.68f, 0.95f, 2f, 6f, 18f)) }
             else { m.setSaturation(0.4f); m.postConcat(tinte(0.97f, 0.97f, 0.92f, 2f, 2f, 4f)) }
@@ -285,6 +289,9 @@ internal object Formas {
                 p.cubicTo(x - r * 0.95f, y - r * 0.2f, x - r * 0.4f, y - r * 0.7f, x, y - r * 1.35f); p.close() }
             // La estrella de ocho puntas hecha de dos cuadrados (los dos giran igual, así que se suman).
             TemaId.ANDALUS -> { p.reset(); sumarPoligono(x, y, r * 1.15f, 4, -90.0); sumarPoligono(x, y, r * 1.15f, 4, -45.0) }
+            // Una pirámide escalonada de tres cuerpos con el templo arriba.
+            TemaId.MESO -> figura(x, y, r, -1.15f, 0.95f, -1.15f, 0.5f, -0.8f, 0.5f, -0.8f, 0.05f, -0.45f, 0.05f, -0.45f, -0.4f, -0.22f, -0.4f, -0.22f, -1.05f,
+                0.22f, -1.05f, 0.22f, -0.4f, 0.45f, -0.4f, 0.45f, 0.05f, 0.8f, 0.05f, 0.8f, 0.5f, 1.15f, 0.5f, 1.15f, 0.95f)
             // La corona de la yurta (toono): un anillo con sus dos varas cruzadas.
             TemaId.MONGOL -> {
                 p.reset(); p.addCircle(x, y, r, horario); p.addCircle(x, y, r * 0.5f, antihorario)
@@ -333,6 +340,7 @@ internal object Formas {
             TemaId.ESPACIO -> c.drawOval(x - r * 1.45f, y - r * 0.4f, x + r * 1.45f, y + r * 0.4f, d)   // una órbita
             TemaId.ABISMO -> c.drawCircle(x - r * 0.3f, y + r * 0.15f, r * 0.24f, d)   // el brillo de la gota
             TemaId.ANDALUS -> c.drawCircle(x, y, r * 0.42f, d)
+            TemaId.MESO -> raya(c, x, y, r, 0f, -0.4f, 0f, 0.95f, d)   // la escalinata
             TemaId.MONGOL -> for (i in 0 until 8) {   // las varas del techo, que salen de la corona
                 val a = Math.PI / 4 * i; val cx = kotlin.math.cos(a).toFloat(); val sy = kotlin.math.sin(a).toFloat()
                 c.drawLine(x + cx * r * 1.08f, y + sy * r * 1.08f, x + cx * r * 1.42f, y + sy * r * 1.42f, d)
@@ -978,6 +986,15 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
             filete(4 * u, tinta.copy(alpha = 0.5f), 1.2f * u); filete(8 * u, acento.copy(alpha = 0.45f), 0.8f * u)
             esquinas(15 * u) { o, _, _ -> drawPath(estrellaDeCuadros(o, 7 * u), acento); drawCircle(fondo, 2.2f * u, o) }
         }
+        // El marco rojo del lienzo y, en cada esquina, un bloque de glifo con un seis maya.
+        TemaId.MESO -> {
+            filete(4 * u, acento.copy(alpha = 0.7f), 1.5f * u); filete(8 * u, tinta.copy(alpha = 0.35f), 0.7f * u)
+            esquinas(15 * u) { o, _, _ ->
+                drawRoundRect(fondo, Offset(o.x - 6 * u, o.y - 6 * u), Size(12 * u, 12 * u), androidx.compose.ui.geometry.CornerRadius(3 * u))
+                drawRoundRect(acento, Offset(o.x - 6 * u, o.y - 6 * u), Size(12 * u, 12 * u), androidx.compose.ui.geometry.CornerRadius(3 * u), style = Stroke(1 * u))
+                numeralMaya(6, o, 7 * u, tinta.copy(alpha = 0.7f))
+            }
+        }
         // Cuernos de carnero enroscados en las esquinas.
         TemaId.MONGOL -> {
             filete(4 * u, tinta.copy(alpha = 0.55f), 2 * u)
@@ -1239,6 +1256,14 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             drawCircle(fondo, r * 0.42f, c)
             for (i in 0 until 8) punta(n + 45.0 * i, if (i % 2 == 0) r * 0.95f else r * 0.6f, r * 0.08f, if (i == 0) acento else tinta.copy(alpha = 0.55f))
             drawCircle(secundario, r * 0.1f, c)
+        }
+        // Los cuatro rumbos con sus colores: blanco al norte, rojo al oriente, amarillo al sur y negro al poniente; la ceiba
+        // verde en el centro. Entre ellos, los rumbos intermedios, cortos.
+        TemaId.MESO -> {
+            for (i in 0 until 4) punta(n + 45.0 + 90.0 * i, r * 0.5f, r * 0.08f, tinta.copy(alpha = 0.45f))
+            listOf(Color(0xFFF2E8D2), Color(0xFFA3301E), Color(0xFFD9A63A), Color(0xFF2A1810)).forEachIndexed { i, col -> punta(n + 90.0 * i, r * 0.95f, r * 0.16f, col) }
+            punta(n, r * 0.95f, r * 0.16f, acento.copy(alpha = 0.35f))
+            drawCircle(Color(0xFF2F7D57), r * 0.15f, c)
         }
         // Cuatro puntas con la corona de la yurta en medio.
         TemaId.MONGOL -> {

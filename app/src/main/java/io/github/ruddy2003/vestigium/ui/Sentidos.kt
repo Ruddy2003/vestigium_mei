@@ -213,6 +213,14 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(TICK, 0.6f), g(TICK, 0.6f, 50), g(THUD, 0.5f, 60)); Evento.ERROR -> listOf(g(THUD, 0.8f), g(BAJA, 0.5f, 60))
             Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.9f), g(TICK, 0.7f, 120), g(TICK, 0.7f, 60), g(THUD, 0.8f, 120), g(SPIN, 0.4f, 80))
         }
+        // Las dos lengüetas del tunkul (el tambor de tronco hendido), la sonaja de semillas y las páginas del biombo al desplegarse.
+        TemaId.MESO -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.45f), g(TICK, 0.35f, 37)); Evento.PASAR -> listOf(g(TICK, 0.42f), g(TICK, 0.42f, 33), g(TICK, 0.42f, 33))
+            Evento.GUARDAR -> listOf(g(THUD, 0.75f), g(TICK_GRAVE, 0.55f, 110), g(TICK, 0.45f, 70))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.5f), g(TICK, 0.45f, 53)); Evento.ABRIR -> listOf(g(TICK, 0.4f), g(TICK, 0.45f, 41), g(TICK, 0.5f, 41), g(THUD, 0.6f, 67))
+            Evento.CAMBIO -> listOf(g(TICK_GRAVE, 0.55f), g(TICK_GRAVE, 0.55f, 73), g(TICK, 0.5f, 37)); Evento.ERROR -> listOf(g(BAJA, 0.7f), g(THUD, 0.6f, 83))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.85f), g(TICK_GRAVE, 0.7f, 130), g(THUD, 0.8f, 130), g(TICK, 0.6f, 65), g(TICK, 0.6f, 65), g(SPIN, 0.45f, 90))
+        }
         // Cascos al galope y el tambor de la horda.
         TemaId.MONGOL -> when (e) {
             Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.8f)); Evento.PASAR -> listOf(g(CLICK, 0.6f), g(CLICK, 0.6f, 50), g(CLICK, 0.8f, 50))
@@ -366,6 +374,7 @@ object Sentidos {
         TemaId.ESPACIO -> intArrayOf(R.raw.s_espacio_toque, R.raw.s_espacio_guardar, R.raw.s_espacio_logro, R.raw.s_espacio_pasar, R.raw.s_espacio_elegir, R.raw.s_espacio_abrir, R.raw.s_espacio_tema, R.raw.s_espacio_error, R.raw.s_espacio_cambio, R.raw.s_tecla_espacio, R.raw.s_rascar_espacio)
         TemaId.ABISMO -> intArrayOf(R.raw.s_abismo_toque, R.raw.s_abismo_guardar, R.raw.s_abismo_logro, R.raw.s_abismo_pasar, R.raw.s_abismo_elegir, R.raw.s_abismo_abrir, R.raw.s_abismo_tema, R.raw.s_abismo_error, R.raw.s_abismo_cambio, R.raw.s_tecla_abismo, R.raw.s_rascar_abismo)
         TemaId.ANDALUS -> intArrayOf(R.raw.s_andalus_toque, R.raw.s_andalus_guardar, R.raw.s_andalus_logro, R.raw.s_andalus_pasar, R.raw.s_andalus_elegir, R.raw.s_andalus_abrir, R.raw.s_andalus_tema, R.raw.s_andalus_error, R.raw.s_andalus_cambio, R.raw.s_tecla_andalus, R.raw.s_rascar_andalus)
+        TemaId.MESO -> intArrayOf(R.raw.s_meso_toque, R.raw.s_meso_guardar, R.raw.s_meso_logro, R.raw.s_meso_pasar, R.raw.s_meso_elegir, R.raw.s_meso_abrir, R.raw.s_meso_tema, R.raw.s_meso_error, R.raw.s_meso_cambio, R.raw.s_tecla_meso, R.raw.s_rascar_meso)
         TemaId.MONGOL -> intArrayOf(R.raw.s_mongol_toque, R.raw.s_mongol_guardar, R.raw.s_mongol_logro, R.raw.s_mongol_pasar, R.raw.s_mongol_elegir, R.raw.s_mongol_abrir, R.raw.s_mongol_tema, R.raw.s_mongol_error, R.raw.s_mongol_cambio, R.raw.s_tecla_mongol, R.raw.s_rascar_mongol)
         TemaId.RENACIMIENTO -> intArrayOf(R.raw.s_renacimiento_toque, R.raw.s_renacimiento_guardar, R.raw.s_renacimiento_logro, R.raw.s_renacimiento_pasar, R.raw.s_renacimiento_elegir, R.raw.s_renacimiento_abrir, R.raw.s_renacimiento_tema, R.raw.s_renacimiento_error, R.raw.s_renacimiento_cambio, R.raw.s_tecla_renacimiento, R.raw.s_rascar_renacimiento)
         TemaId.PIRATA -> intArrayOf(R.raw.s_pirata_toque, R.raw.s_pirata_guardar, R.raw.s_pirata_logro, R.raw.s_pirata_pasar, R.raw.s_pirata_elegir, R.raw.s_pirata_abrir, R.raw.s_pirata_tema, R.raw.s_pirata_error, R.raw.s_pirata_cambio, R.raw.s_tecla_pirata, R.raw.s_rascar_pirata)
@@ -460,6 +469,8 @@ object Sentidos {
         TemaId.ABISMO -> Afinacion(st(0, 2, 4, 6, 8, 10), st(-10, -6, -2, 0), pasarRuido = true, elegirRuido = true)
         // Re hiyaz.
         TemaId.ANDALUS -> Afinacion(st(0, 1, 4, 5, 7), st(-5, 0, 1, 5), pasarRuido = false, elegirRuido = true)
+        // Una pentatónica de flauta de barro (sin semitonos); la sonaja de pasar y el golpe de elegir son ruido.
+        TemaId.MESO -> Afinacion(st(-5, -3, 0, 2, 5), st(-7, -3, 0, 5), pasarRuido = true, elegirRuido = true)
         // Mi pentatónico; los cascos, en pasos del modo.
         TemaId.MONGOL -> Afinacion(st(-5, -3, 0, 2), st(-5, 0, 2, 4), pasarRuido = true, elegirRuido = false)
         // La mayor; la pluma da pasos de la escala.
@@ -576,6 +587,7 @@ object Sentidos {
         TemaId.ESPACIO -> pasadas(TICK, 0.85f, 28, 5)   // titanio
         TemaId.ABISMO -> pasadas(THUD, 0.5f, 95, 2)   // cobre con verdín de pecio, blando
         TemaId.ANDALUS -> pasadas(TICK, 0.6f, 45, 4)   // latón
+        TemaId.MESO -> pasadas(CLICK, 0.7f, 33, 5)   // una lámina de jade pulido
         TemaId.MONGOL -> pasadas(CLICK, 0.55f, 55, 3)   // plata sobredorada
         TemaId.RENACIMIENTO -> pasadas(TICK, 0.5f, 65, 3)   // bronce de taller
         TemaId.PIRATA -> pasadas(TICK, 0.65f, 40, 4)   // un doblón de oro

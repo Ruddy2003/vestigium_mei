@@ -74,6 +74,7 @@ import io.github.ruddy2003.vestigium.ciencia.TusNumeros
 import io.github.ruddy2003.vestigium.data.OtrasVidas
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.cartuchoMaya
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
@@ -667,6 +668,21 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 }
             }
         }
+        // Lo lleno se cuenta en puntos y barras: cuatro puntos y una barra, una y otra vez, sobre el cinabrio.
+        TemaId.MESO -> {
+            drawRoundRect(pista, Offset.Zero, size, CornerRadius(h * 0.3f))
+            if (fw > 0f) {
+                drawRoundRect(color, Offset.Zero, Size(fw, h), CornerRadius(h * 0.3f))
+                clipRect(right = fw) {
+                    var x = h * 0.5f; var k = 0
+                    while (x < fw + h) {
+                        if (k % 5 == 4) { drawRect(claro, Offset(x - h * 0.1f, h * 0.36f), Size(h * 1.1f, h * 0.28f)); x += h * 1.5f }
+                        else { drawCircle(claro, h * 0.16f, Offset(x, h / 2)); x += h * 0.55f }
+                        k++
+                    }
+                }
+            }
+        }
         // Fieltro con su zigzag cosido.
         TemaId.MONGOL -> {
             drawRoundRect(pista, Offset.Zero, size, CornerRadius(3f * d))
@@ -996,6 +1012,13 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawPath(figPoligono(c, rc * 0.5f, 4, -45f), cs.tertiary.copy(alpha = 0.6f), style = Stroke(d))
             drawCircle(cs.tertiary.copy(alpha = 0.4f), rc, c, style = Stroke(0.6f * d))
             marcas(72, 2f * d, 0.6f * d, cs.tertiary.copy(alpha = 0.55f)); marcas(24, 4f * d, d, cs.tertiary.copy(alpha = 0.7f))
+        }
+        // El día como la rueda del tzolk'in: veinte marcas de signo afuera, trece puntos adentro y el glifo de hoy al centro.
+        TemaId.MESO -> {
+            drawCircle(cs.primary.copy(alpha = 0.4f), rc, c, style = Stroke(0.8f * d))
+            for (k in 0 until 13) drawCircle(cs.tertiary.copy(alpha = 0.6f), 1.6f * d, polarFig(c, rc * 0.82f, k * 360f / 13 - 90f))
+            cartuchoMaya(c, rc * 0.36f, cs.primary.copy(alpha = 0.7f), cs.surface, tinta.copy(alpha = 0.7f), io.github.ruddy2003.vestigium.ui.Maya.tzolkinPartes(java.time.LocalDate.now()).second)
+            marcas(20, 4f * d, 1.2f * d, cs.primary.copy(alpha = 0.6f)); marcas(260, 1.5f * d, 0.4f * d, cs.tertiary.copy(alpha = 0.35f))
         }
         // El tono de la yurta: la rueda, sus dos barras cruzadas y las varas del techo.
         TemaId.MONGOL -> {

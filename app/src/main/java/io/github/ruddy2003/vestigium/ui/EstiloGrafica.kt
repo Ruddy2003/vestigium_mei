@@ -201,6 +201,8 @@ enum class Eje {
 enum class FormaBarra {
     RECTA, REDONDA, ARCO, PILDORA, BISEL, OJIVA, HERRADURA, TAPA, TORRE, BLOQUES, ROLLO, TANZAKU, BANDERIN, SESGADA, TERCIOS,
     ESTRIADA, OBELISCO, TABLAS, MARCO, PUNTEADO, LAZO, RAYADA, HUECA, BURBUJAS,
+    /** Mesoamérica: el extremo baja en gradas, como el perfil de un basamento escalonado. */
+    GRADAS,
 }
 
 /** Píxeles por dp en los reportes (la hoja mide 1080 px de ancho, como un teléfono de unos 540 dp). */
@@ -287,6 +289,10 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Al-Ándalus: estrella de ocho, cadena de rombos de azulejo, almenas y arcos de herradura.
     TemaId.ANDALUS -> EstiloGrafica(FormaPunto.OCTOGRAMA, 1.8f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(3f, 1.5f, 1f, 1.5f),
         Rejilla.ROMBOS, 0.5f, Eje.ALMENAS, FormaBarra.HERRADURA, R.font.kufi_medium, FontWeight.Medium, null, 0.02f, 1f)
+    // Mesoamérica: bloques de glifo como puntos, metas en puntos (los del numeral), los renglones rojos del códice, el eje
+    // ensartado de cuentas de jade y barras que rematan en gradas de pirámide.
+    TemaId.MESO -> EstiloGrafica(FormaPunto.CUADRADO, 1.9f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(0.1f, 3.2f),
+        Rejilla.FILETES, 0.5f, Eje.CUENTAS, FormaBarra.GRADAS, R.font.alegreya_sc_bold, FontWeight.Bold, "lnum, tnum", 0.03f, 1.08f)
     // Estepa: luna, costura de fieltro, cielo abierto (solo muescas), eje como flecha emplumada y barras de banderín.
     TemaId.MONGOL -> EstiloGrafica(FormaPunto.LUNA, 2f, listOf(9f, 2.4f), StrokeCap.Butt, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(0.1f, 3f),
         Rejilla.MUESCAS, 0.7f, Eje.FLECHA, FormaBarra.BANDERIN, R.font.philosopher_regular, FontWeight.Normal, null, 0.03f, 1.08f)
@@ -650,6 +656,14 @@ fun DrawScope.barraGrafica(e: EstiloGrafica, arriba: Offset, tam: Size, color: C
             if (tam.width > sw && tam.height > sw) drawRect(color, Offset(x0 + sw / 2, y0 + sw / 2), Size(tam.width - sw, tam.height - sw), style = Stroke(sw))
             else drawPath(silueta, color)
         }
+        FormaBarra.GRADAS -> {
+            // El cuerpo con su escalinata pintada a lo largo, en el color del acento.
+            drawPath(silueta, color)
+            if (grosor >= 6f * d && largo >= 8f * d) {
+                var u = grosor * 0.5f
+                while (u < largo - grosor * 0.7f) { raya(u, grosor * 0.38f, u, grosor * 0.62f, tinte, max(1f, 0.7f * d)); u += max(2.4f * d, grosor * 0.3f) }
+            }
+        }
         FormaBarra.BURBUJAS -> {
             // Una columna de agua: el cuerpo lleno y, por dentro, burbujas que suben hacia la punta.
             drawPath(silueta, color)
@@ -774,6 +788,12 @@ private fun egSilueta(forma: FormaBarra, t: EgBarra, d: Float): Path {
         FormaBarra.TANZAKU -> t.rect(0f, 0f, l, g)
         FormaBarra.BANDERIN -> { val n = min(g * 0.42f, l * 0.5f); t.ir(0f, 0f); t.a(l, 0f); t.a(l - n, g / 2); t.a(l, g); t.a(0f, g); t.cerrar() }
         FormaBarra.SESGADA -> { val s = min(g * 0.55f, l); t.ir(0f, 0f); t.a(l, 0f); t.a(l - s, g); t.a(0f, g); t.cerrar() }
+        FormaBarra.GRADAS -> {
+            // Tres cuerpos que se angostan hacia la punta, como una pirámide vista de lado.
+            val s = min(g * 0.3f, l / 4)
+            t.ir(0f, 0f); t.a(l - 2 * s, 0f); t.a(l - 2 * s, g * 0.17f); t.a(l - s, g * 0.17f); t.a(l - s, g * 0.34f); t.a(l, g * 0.34f)
+            t.a(l, g * 0.66f); t.a(l - s, g * 0.66f); t.a(l - s, g * 0.83f); t.a(l - 2 * s, g * 0.83f); t.a(l - 2 * s, g); t.a(0f, g); t.cerrar()
+        }
         FormaBarra.TERCIOS -> {
             if (g < 5f * d) t.rect(0f, 0f, l, g)
             else { val h = max(1f, g * 0.08f); val w3 = (g - 2 * h) / 3; t.rect(0f, 0f, l, w3); t.rect(0f, w3 + h, l, 2 * w3 + h); t.rect(0f, 2 * w3 + 2 * h, l, g) }

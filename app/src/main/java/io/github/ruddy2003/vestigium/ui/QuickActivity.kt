@@ -966,6 +966,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.ESPACIO -> 12.dp
     TemaId.ABISMO -> 9.dp
     TemaId.ANDALUS -> 18.dp
+    TemaId.MESO -> 16.dp
     TemaId.MONGOL -> 14.dp
     TemaId.RENACIMIENTO -> 6.dp
     TemaId.PIRATA -> 8.dp
@@ -1123,6 +1124,14 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         moveTo(0f, p); lineTo(x0, p)
         floatArrayOf(2f, 6f, 8f, 6f, 2f).forEachIndexed { i, k -> arcTo(Rect(Offset(x0 + r + 2 * r * i, p - k * u), r), 180f, 180f, false) }
         lineTo(x0 + 10 * r, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Un templo sobre la hoja: al centro, el borde sube en gradas como el perfil de una pirámide.
+    TemaId.MESO -> formaDp { w, h, u ->
+        val p = 16 * u; val g = 4 * u; val s = 10 * u; val x0 = w / 2 - 4 * s
+        moveTo(0f, p); lineTo(x0, p)
+        for (k in 0 until 3) { lineTo(x0 + k * s, p - (k + 1) * g); lineTo(x0 + (k + 1) * s, p - (k + 1) * g) }
+        for (k in 3 downTo 1) { lineTo(x0 + (9 - k) * s, p - k * g); lineTo(x0 + (9 - k) * s, p - (k - 1) * g) }
+        lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
     }
     // Esquinas escalonadas, como la orilla de un fieltro bordado.
     TemaId.MONGOL -> formaDp { w, h, u ->
@@ -1340,6 +1349,11 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             estrellaHoja(Offset(w / 2, 11 * u), 5 * u, e.tertiary, puntas = 8, dentro = 0.6f)
             drawLine(e.tertiary.copy(alpha = 0.6f), Offset(12 * u, 23 * u), Offset(w - 12 * u, 23 * u), 0.8f * u)
         }
+        // El cartucho del glifo del día en lo alto del templo y el renglón rojo del códice debajo.
+        TemaId.MESO -> {
+            cartuchoMaya(Offset(w / 2, 7 * u), 4.5f * u, e.primary, e.surface, e.onSurface, 1)
+            drawLine(e.primary.copy(alpha = 0.6f), Offset(12 * u, 21 * u), Offset(w - 12 * u, 21 * u), 0.9f * u)
+        }
         // La rueda del techo de la yurta al centro y la costura del fieltro.
         TemaId.MONGOL -> {
             val c = Offset(w / 2, 9 * u)
@@ -1487,6 +1501,8 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     }
     // Arco de medio punto, de radio fijo.
     TemaId.ANDALUS -> RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 0.dp, bottomStart = 0.dp)
+    // El bloque de un glifo: un cuadro de esquinas muy redondeadas.
+    TemaId.MESO -> RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomEnd = 14.dp, bottomStart = 14.dp)
     // Esquinas escalonadas, como la orilla del fieltro.
     TemaId.MONGOL -> formaDp { w, h, u ->
         val s = 4 * u

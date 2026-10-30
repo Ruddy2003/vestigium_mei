@@ -791,6 +791,36 @@ object Frases {
         f("עד אימתי חיב ללמד תורה? עד יום מותו… וכל זמן שלא יעסק בלמוד הוא שוכח", "¿Hasta cuándo hay que estudiar? Hasta el día de la muerte… y todo el tiempo que uno deja de estudiar, olvida.", "Maimónides, Mishné Torá, Leyes del estudio de la Torá 1, 10"),
     )
 
+    /**
+     * Mesoamérica: el Popol Vuh (en la versión de Adrián Recinos, 1947) y los libros de Chilam Balam (en la de Antonio
+     * Mediz Bolio, 1930), sin original porque el texto maya de esas versiones no se transcribe aquí; los cantares nahuas en
+     * náhuatl con la versión de Miguel León-Portilla (sus atribuciones a un poeta son las de los manuscritos del siglo XVI,
+     * no seguras); y lo que escribieron de los mayas y los mexicas los frailes, los conquistadores y los viajeros.
+     */
+    val MESO = listOf(
+        f(null, "Esta es la relación de cómo todo estaba en suspenso, todo en calma, en silencio; todo inmóvil, callado, y vacía la extensión del cielo.", "Popol Vuh, primera parte, capítulo 1 (versión de Adrián Recinos)"),
+        f(null, "¡Que aclare, que amanezca en el cielo y en la tierra! No habrá gloria ni grandeza en nuestra creación y formación hasta que exista la criatura humana, el hombre formado.", "Popol Vuh, primera parte, capítulo 1 (versión de Adrián Recinos)"),
+        f(null, "De maíz amarillo y de maíz blanco se hizo su carne; de masa de maíz se hicieron los brazos y las piernas del hombre.", "Popol Vuh, tercera parte, capítulo 1 (versión de Adrián Recinos)"),
+        f(null, "Fueron dotados de inteligencia; vieron y al punto se extendió su vista, alcanzaron a ver, alcanzaron a conocer todo lo que hay en el mundo.", "Popol Vuh, tercera parte, capítulo 2 (versión de Adrián Recinos)"),
+        f(null, "Existía el libro original, escrito antiguamente, pero está oculto a la vista del investigador y del pensador.", "Popol Vuh, preámbulo (versión de Adrián Recinos)"),
+        f(null, "Lo mismo sucede con los hijos de los señores, de los sabios y de los oradores: no se pierde, sino que la dejan a sus hijas y a sus hijos.", "Popol Vuh, segunda parte, capítulo 2, la calavera de Hun Hunahpú a Ixquic (versión de Adrián Recinos)"),
+        f(null, "Toda luna, todo año, todo día, todo viento camina y pasa también. También toda sangre llega al lugar de su quietud, como llega a su poder y a su trono.", "Libro de Chilam Balam de Chumayel (versión de Antonio Mediz Bolio)"),
+        f(null, "No había entonces enfermedad; no había dolor de huesos; no había fiebre para ellos. Rectamente erguido iba su cuerpo entonces.", "Libro de Chilam Balam de Chumayel, sobre el tiempo antes de la llegada de los extranjeros (versión de Antonio Mediz Bolio)"),
+        f("¿Cuix oc nelli nemohua in tlalticpac? An nochipa tlalticpac: zan achica ye nican.", "¿Acaso de veras se vive en la tierra? No para siempre en la tierra: sólo un poco aquí.", "Atribuido a Nezahualcóyotl, Romances de los señores de la Nueva España (versión de Miguel León-Portilla)"),
+        f("Tel ca chalchihuitl no xamani, no teocuitlatl in tlapani, no quetzalli poztequi.", "Aunque sea de jade se quiebra, aunque sea de oro se rompe, aunque sea plumaje de quetzal se desgarra.", "Atribuido a Nezahualcóyotl, Romances de los señores de la Nueva España (versión de Miguel León-Portilla)"),
+        f("Zan tontemiquico, zan toncochitlehuaco, ah nelli, ah nelli tinemico in tlalticpac.", "Sólo vinimos a dormir, sólo vinimos a soñar: no es verdad, no es verdad que vinimos a vivir en la tierra.", "Atribuido a Tochihuitzin Coyolchiuhqui, Cantares mexicanos (versión de Miguel León-Portilla)"),
+        f("in xochitl in cuicatl", "Flor y canto: así nombraban los nahuas a la poesía, con dos palabras que dicen una sola cosa.", "Difrasismo náhuatl, en los Cantares mexicanos"),
+        f(null, "¿A dónde iremos donde la muerte no exista?", "Atribuido a Nezahualcóyotl, Cantares mexicanos (versión de Miguel León-Portilla)"),
+        f(null, "Usaba también esta gente de ciertos caracteres o letras, con las cuales escribían en sus libros sus cosas antiguas y sus ciencias.", "Fray Diego de Landa, Relación de las cosas de Yucatán, c. 1566"),
+        f(null, "Hallámosles gran número de libros de estas sus letras, y porque no tenían cosa en que no hubiese superstición y falsedades del demonio, se los quemamos todos, lo cual sentían a maravilla y les daba pena.", "Fray Diego de Landa, Relación de las cosas de Yucatán, c. 1566, sobre el auto de fe de Maní (1562)"),
+        f(null, "El médico no puede acertadamente aplicar las medicinas al enfermo sin que primero conozca de qué humor o de qué causa procede la enfermedad.", "Fray Bernardino de Sahagún, Historia general de las cosas de Nueva España, prólogo del libro I"),
+        f(null, "Nos quedamos admirados y decíamos que parecía a las cosas de encantamiento que cuentan en el libro de Amadís.", "Bernal Díaz del Castillo, Historia verdadera de la conquista de la Nueva España, capítulo LXXXVII, al ver Tenochtitlan"),
+        f(null, "Y aun algunos de nuestros soldados decían que si aquello que veían, si era entre sueños.", "Bernal Díaz del Castillo, Historia verdadera de la conquista de la Nueva España, capítulo LXXXVII"),
+        f("The city was desolate. No remnant of this race hangs round the ruins, with traditions handed down from father to son and from generation to generation.", "La ciudad estaba desierta. Ningún resto de este pueblo ronda las ruinas, con tradiciones pasadas de padre a hijo y de generación en generación.", "John Lloyd Stephens, Incidentes de viaje en Centroamérica, Chiapas y Yucatán, 1841, en Copán"),
+        f("It lay before us like a shattered bark in the midst of the ocean, her masts gone, her name effaced, her crew perished, and none to tell whence she came.", "Estaba ante nosotros como un barco destrozado en medio del océano, sin mástiles, con el nombre borrado, la tripulación muerta y nadie que dijera de dónde venía.", "John Lloyd Stephens, Incidentes de viaje en Centroamérica, Chiapas y Yucatán, 1841, en Copán"),
+        f(null, "Que amanezca, que llegue la aurora: danos descendencia mientras camine el sol y haya claridad.", "Popol Vuh, tercera parte, la oración de los primeros padres al esperar el alba (versión resumida a partir de la de Adrián Recinos)"),
+    )
+
     val MONGOL = listOf(
         f(null, "En el origen hubo un lobo azulado, nacido con su destino del Cielo de arriba, y su compañera era una cierva leonada.", "Historia secreta de los mongoles §1, siglo XIII"),
         f(null, "Si fuerais cada uno una sola flecha, cualquiera os quebraría; juntos, como un haz de flechas, nadie podrá con vosotros.",
@@ -944,6 +974,7 @@ object Frases {
         TemaId.ESPACIO -> ESPACIO
         TemaId.ABISMO -> ABISMO
         TemaId.ANDALUS -> ANDALUS
+        TemaId.MESO -> MESO
         TemaId.MONGOL -> MONGOL
         TemaId.RENACIMIENTO -> RENACIMIENTO
         TemaId.PIRATA -> PIRATA
@@ -984,6 +1015,7 @@ object Frases {
         TemaId.ESPACIO -> "TRANSMISIÓN DEL DÍA"
         TemaId.ABISMO -> "LO QUE SUBIÓ LA SONDA HOY"
         TemaId.ANDALUS -> "حكمة اليوم · sentencia del día"
+        TemaId.MESO -> "Palabra antigua del día"
         TemaId.MONGOL -> "ӨНӨӨДРИЙН БИЛИГ · máxima del día"
         TemaId.RENACIMIENTO -> "Dal taccuino"
         TemaId.PIRATA -> "Escrito en la bitácora"

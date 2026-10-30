@@ -97,6 +97,7 @@ object Musica {
         TemaId.ESPACIO -> R.raw.s_espacio_presentacion
         TemaId.ABISMO -> R.raw.s_abismo_presentacion
         TemaId.ANDALUS -> R.raw.s_andalus_presentacion
+        TemaId.MESO -> R.raw.s_meso_presentacion
         TemaId.MONGOL -> R.raw.s_mongol_presentacion
         TemaId.RENACIMIENTO -> R.raw.s_renacimiento_presentacion
         TemaId.PIRATA -> R.raw.s_pirata_presentacion
@@ -130,6 +131,7 @@ object Musica {
         TemaId.ESPACIO -> R.raw.s_espacio_anual
         TemaId.ABISMO -> R.raw.s_abismo_anual
         TemaId.ANDALUS -> R.raw.s_andalus_anual
+        TemaId.MESO -> R.raw.s_meso_anual
         TemaId.MONGOL -> R.raw.s_mongol_anual
         TemaId.RENACIMIENTO -> R.raw.s_renacimiento_anual
         TemaId.PIRATA -> R.raw.s_pirata_anual
@@ -162,6 +164,7 @@ object Musica {
         TemaId.ESPACIO -> R.raw.t_espacio_llamada
         TemaId.ABISMO -> R.raw.t_abismo_llamada
         TemaId.ANDALUS -> R.raw.t_andalus_llamada
+        TemaId.MESO -> R.raw.t_meso_llamada
         TemaId.MONGOL -> R.raw.t_mongol_llamada
         TemaId.RENACIMIENTO -> R.raw.t_renacimiento_llamada
         TemaId.PIRATA -> R.raw.t_pirata_llamada
@@ -194,6 +197,7 @@ object Musica {
         TemaId.ESPACIO -> R.raw.t_espacio_notificacion
         TemaId.ABISMO -> R.raw.t_abismo_notificacion
         TemaId.ANDALUS -> R.raw.t_andalus_notificacion
+        TemaId.MESO -> R.raw.t_meso_notificacion
         TemaId.MONGOL -> R.raw.t_mongol_notificacion
         TemaId.RENACIMIENTO -> R.raw.t_renacimiento_notificacion
         TemaId.PIRATA -> R.raw.t_pirata_notificacion
@@ -747,6 +751,22 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         drawLine(c.copy(alpha = 0.5f), Offset(0f, 0f), Offset(w, 0f), u)
         drawLine(c.copy(alpha = 0.5f), Offset(0f, 0f), Offset(0f, pie), u)
         drawLine(c.copy(alpha = 0.5f), Offset(w, 0f), Offset(w, pie), u)
+    }
+    // Una página del códice: el marco rojo con las esquinas escalonadas, el número del día en puntos y barras arriba, la
+    // frase con capitular y, al pie, la greca escalonada y el glifo del día como sello.
+    TemaId.MESO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ABAJO, false, t.nombre, "⁘  ·  toca para desplegar el códice",
+        capitular = true, emblema = 110.dp, arriba = 52.dp, abajo = 44.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val rojo = e.primary.copy(alpha = 0.7f); val g = 9 * u
+        drawPath(Path().apply {
+            moveTo(2 * g, 0f); lineTo(w - 2 * g, 0f); lineTo(w - 2 * g, g); lineTo(w - g, g); lineTo(w - g, 2 * g); lineTo(w, 2 * g); lineTo(w, h)
+            lineTo(0f, h); lineTo(0f, 2 * g); lineTo(g, 2 * g); lineTo(g, g); lineTo(2 * g, g); close()
+        }, rojo, style = Stroke(1.6f * u))
+        drawLine(rojo.copy(alpha = 0.45f), Offset(3 * g, 6 * u), Offset(w - 3 * g, 6 * u), u)
+        val (n, _) = Maya.tzolkinPartes(java.time.LocalDate.now())
+        numeralMaya(n, Offset(2.4f * g, 3.4f * g), 14 * u, e.tertiary)
+        numeralMaya(n, Offset(w - 2.4f * g, 3.4f * g), 14 * u, e.tertiary)
+        grecaEscalonada(10 * u, w - 10 * u, h - 22 * u, h - 10 * u, rojo, 1.3f * u)
     }
     // Ger: la cúpula con su corona (toono) arriba, la frase bajo ella y la celosía (khana) al pie.
     TemaId.MONGOL -> DisenoPresentacion(OrdenPresentacion.FRASE_ARRIBA, false, t.nombre.uppercase(), "▹ УРАГШАА  ·  toca para levantar el campamento",

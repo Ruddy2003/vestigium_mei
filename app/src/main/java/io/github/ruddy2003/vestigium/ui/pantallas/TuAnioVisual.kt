@@ -323,6 +323,18 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             val mx = x0 + w * 0.43f; val mr = h * 0.28f
             drawPath(Path().apply { moveTo(mx - mr * 1.5f, cy); lineTo(mx, cy - mr); lineTo(mx + mr * 1.5f, cy); lineTo(mx, cy + mr); close() }, oro)
         }
+        // El códice plegado en biombo visto de canto: los pliegues en zigzag, las tapas de piel de jaguar y el cordel.
+        TemaId.MESO -> {
+            val jaguar = lerp(c, Color(0xFFB9803A), 0.5f)
+            drawRect(jaguar, o, Size(w * 0.1f, h)); drawRect(jaguar, Offset(x0 + w * 0.9f, y0), Size(w * 0.1f, h))
+            drawRect(lerp(Color(0xFFF2E8D2), c, 0.15f), Offset(x0 + w * 0.1f, y0 + h * 0.04f), Size(w * 0.8f, h * 0.92f))
+            val pliegues = 7
+            val zig = Path().apply { for (k in 0..pliegues) { val x = x0 + w * (0.1f + 0.8f * k / pliegues); if (k == 0) moveTo(x, y0 + h * 0.04f) else lineTo(x, if (k % 2 == 0) y0 + h * 0.04f else y0 + h * 0.1f) } }
+            drawPath(zig, oscuro, style = Stroke(0.6f * d))
+            for (k in 1 until pliegues) { val x = x0 + w * (0.1f + 0.8f * k / pliegues); drawLine(oscuro.copy(alpha = oscuro.alpha * 0.5f), Offset(x, y0 + h * 0.1f), Offset(x, y0 + h * 0.96f), 0.4f * d) }
+            drawLine(Color(0xFFA3301E), Offset(x0, cy), Offset(x0 + w, cy), 1.2f * d)
+            drawCircle(Color(0xFF2F7D57), h * 0.08f, Offset(x0 + w * 0.5f, cy))
+        }
         // Hojas sueltas entre dos tablas de madera, atadas con cordones.
         TemaId.MONGOL -> {
             val madera = lerp(Color(0xFF7A4E2A), c, 0.2f)
@@ -765,6 +777,11 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
         }
         // Estrella de ocho puntas del lazo.
         TemaId.ANDALUS -> lleno(estrellaCosa(c, r, 8, 0.77f))
+        // El cartucho de un glifo de día, sobre su pie de tres lóbulos.
+        TemaId.MESO -> lleno(Path().apply {
+            addRoundRect(androidx.compose.ui.geometry.RoundRect(x - r * 0.85f, y - r * 0.85f, x + r * 0.85f, y + r * 0.5f, androidx.compose.ui.geometry.CornerRadius(r * 0.36f)))
+            for (k in -1..1) addOval(androidx.compose.ui.geometry.Rect(Offset(x + k * r * 0.4f, y + r * 0.72f), r * 0.2f))
+        })
         // Rombo doble, como en los bordados del fieltro.
         TemaId.MONGOL -> {
             lleno(Path().apply { moveTo(x, y - r); lineTo(x + r, y); lineTo(x, y + r); lineTo(x - r, y); close() })
@@ -1331,6 +1348,28 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
                 drawRect(col, Offset(x - r * 0.9f, y - r * 0.65f), Size(r * 1.5f, r * 1.3f))
                 drawPath(Path().apply { moveTo(x + r * 0.6f, y - r * 0.65f); lineTo(x + r, y); lineTo(x + r * 0.6f, y + r * 0.65f); close() }, col)
                 drawPath(Path().apply { moveTo(x - r * 0.6f, y); lineTo(x - r * 0.15f, y - r * 0.35f); lineTo(x + r * 0.3f, y); lineTo(x - r * 0.15f, y + r * 0.35f); close() }, fondo)
+            }
+            else -> return false
+        }
+        TemaId.MESO -> when (forma) {
+            // La pirámide escalonada con su templo.
+            "alfiler" -> {
+                for (k in 0 until 3) { val a = r * (0.95f - k * 0.27f); drawRect(col, Offset(x - a, y + r * (0.55f - k * 0.38f)), Size(2 * a, r * 0.38f)) }
+                drawRect(col, Offset(x - r * 0.22f, y - r * 0.85f), Size(r * 0.44f, r * 0.34f))
+                drawRect(fondo, Offset(x - r * 0.08f, y - r * 0.2f), Size(r * 0.16f, r * 1.13f))
+            }
+            // El vaso de cacao, alto y derecho, con la espuma encima y su banda de glifos.
+            "taza" -> {
+                drawRect(col, Offset(x - r * 0.5f, y - r * 0.55f), Size(r * 1f, r * 1.4f))
+                drawOval(col, Offset(x - r * 0.55f, y - r * 0.85f), Size(r * 1.1f, r * 0.5f))
+                for (k in 0 until 3) drawRect(fondo, Offset(x - r * 0.38f + k * r * 0.28f, y - r * 0.2f), Size(r * 0.18f, r * 0.18f))
+                drawLine(fondo, Offset(x - r * 0.5f, y + r * 0.55f), Offset(x + r * 0.5f, y + r * 0.55f), r * 0.08f)
+            }
+            // El códice atado con su cordel en cruz.
+            "sobre" -> {
+                drawRect(col, Offset(x - r * 0.9f, y - r * 0.6f), Size(r * 1.8f, r * 1.2f))
+                drawLine(fondo, Offset(x - r * 0.9f, y), Offset(x + r * 0.9f, y), r * 0.1f); drawLine(fondo, Offset(x, y - r * 0.6f), Offset(x, y + r * 0.6f), r * 0.1f)
+                drawCircle(fondo, r * 0.18f, Offset(x, y))
             }
             else -> return false
         }
