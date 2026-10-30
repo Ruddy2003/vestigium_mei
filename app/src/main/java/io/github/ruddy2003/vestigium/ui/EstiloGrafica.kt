@@ -156,6 +156,7 @@ data class EstiloGrafica(
 /** Formas del punto de datos. */
 enum class FormaPunto {
     CIRCULO, TRIANGULO, PIXEL, SOL, FLOR, DIANA, CRUZ, ESCUDO, HEXAGONO, CUADRADO, DESTELLO, HOJA, COPO, MONEDA,
+    HIEDRA,
     ROMBO, ANILLO, OCTOGRAMA, LUNA, MIRA,
     /** La «X» de las cartas del tesoro. */
     EQUIS,
@@ -254,6 +255,10 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Naturalista: hoja, espécimen con sombra, hileras de hormigas, eje con brotes y barras punteadas de grabado.
     TemaId.BOTANICO -> EstiloGrafica(FormaPunto.HOJA, 1.6f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.SOMBRA, listOf(0.1f, 3f),
         Rejilla.PUNTEADA, 0.6f, Eje.BROTES, FormaBarra.PUNTEADO, R.font.fraunces_titulo, FontWeight.Normal, null, 0f, 1.05f)
+    // Ciudad verde: hoja de hiedra, trazo con su sombra en el hormigón, metas como la línea discontinua de una calle, rejilla de
+    // cruces (las juntas de las losas), eje con marcas, barras de bloques de hormigón apilados y cifras de letrero pintado.
+    TemaId.RUINAS -> EstiloGrafica(FormaPunto.HIEDRA, 2f, null, StrokeCap.Butt, StrokeJoin.Bevel, AdornoTrazo.SOMBRA, listOf(8f, 5f),
+        Rejilla.CRUCES, 0.5f, Eje.MARCAS, FormaBarra.BLOQUES, R.font.letrero_titulo, FontWeight.Normal, "tnum", 0.02f, 1.08f)
     // Navidad: copo, bastón de caramelo, guirnaldas, eje de foquitos y barras con lazo de regalo.
     TemaId.NAVIDAD -> EstiloGrafica(FormaPunto.COPO, 2.2f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.RAYAS, listOf(4f, 2.5f),
         Rejilla.GUIRNALDA, 0.5f, Eje.CUENTAS, FormaBarra.LAZO, R.font.cinzel_deco_regular, FontWeight.Normal, null, 0.04f, 1f)
@@ -391,6 +396,12 @@ fun DrawScope.puntoGrafica(e: EstiloGrafica, centro: Offset, radio: Float, color
             })
             if (!hueco && r >= 3f) drawLine(egTinte(color), a, b, max(1f, r * 0.12f))
         }
+        // Hoja de hiedra de cinco puntas, la del centro hacia arriba.
+        FormaPunto.HIEDRA -> figura(Path().apply {
+            val s = r * 1.15f
+            moveTo(c.x, c.y + 0.75f * s); lineTo(c.x - 0.55f * s, c.y + 0.55f * s); lineTo(c.x - 0.95f * s, c.y); lineTo(c.x - 0.38f * s, c.y - 0.05f * s)
+            lineTo(c.x, c.y - 0.95f * s); lineTo(c.x + 0.38f * s, c.y - 0.05f * s); lineTo(c.x + 0.95f * s, c.y); lineTo(c.x + 0.55f * s, c.y + 0.55f * s); close()
+        })
         FormaPunto.COPO -> {
             for (k in 0 until 3) {
                 val ang = (k * 60f + 90f) * (PI.toFloat() / 180f)

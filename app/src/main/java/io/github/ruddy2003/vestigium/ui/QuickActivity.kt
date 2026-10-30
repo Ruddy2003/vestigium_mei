@@ -955,6 +955,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.COLONOS -> 4.dp
     TemaId.NAPOLEON -> 14.dp
     TemaId.BOTANICO -> 8.dp
+    TemaId.RUINAS -> 10.dp
     TemaId.NAVIDAD -> 7.dp
     TemaId.SEDA -> 14.dp
     TemaId.GOTICO -> 18.dp
@@ -1052,6 +1053,11 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
     TemaId.BOTANICO -> formaDp { w, h, u ->
         addRoundRect(RoundRect(0f, 0f, w, h, topLeftCornerRadius = CornerRadius(30 * u), topRightCornerRadius = CornerRadius(2 * u),
             bottomRightCornerRadius = CornerRadius.Zero, bottomLeftCornerRadius = CornerRadius.Zero))
+    }
+    // Una losa de hormigón con el borde de arriba quebrado y la esquina derecha desprendida en escalones.
+    TemaId.RUINAS -> formaDp { w, h, u ->
+        moveTo(0f, 6 * u); lineTo(w * 0.3f, 3 * u); lineTo(w * 0.34f, 7 * u); lineTo(w * 0.62f, 2 * u); lineTo(w - 26 * u, 4 * u)
+        lineTo(w - 18 * u, 10 * u); lineTo(w - 10 * u, 8 * u); lineTo(w, 16 * u); lineTo(w, h); lineTo(0f, h); close()
     }
     // Glaseado de nieve: festones arriba.
     TemaId.NAVIDAD -> formaDp { w, h, u ->
@@ -1237,6 +1243,19 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
                 drawOval(col, Offset(x - 3 * u, y + dy - 1.8f * u), Size(6 * u, 3.6f * u)); x += 9 * u; k++
             }
         }
+        TemaId.RUINAS -> {
+            // Una guía de hiedra que cuelga del borde quebrado, con hojas de cinco puntas, y una grieta que baja.
+            val col = e.primary.copy(alpha = 0.7f)
+            drawLine(col, Offset(24 * u, 6 * u), Offset(30 * u, 40 * u), 0.9f * u)
+            listOf(12f to 1f, 20f to -1f, 28f to 1f, 36f to -1f).forEach { (yy, lado) ->
+                val q = Offset(24 * u + yy * 0.18f * u + lado * 5 * u, yy * u); val r = 5 * u
+                drawPath(Path().apply {
+                    moveTo(q.x, q.y - r * 0.5f); lineTo(q.x - r * 0.55f, q.y - r * 0.35f); lineTo(q.x - r * 0.8f, q.y + r * 0.05f); lineTo(q.x - r * 0.32f, q.y + r * 0.05f)
+                    lineTo(q.x, q.y + r * 0.5f); lineTo(q.x + r * 0.32f, q.y + r * 0.05f); lineTo(q.x + r * 0.8f, q.y + r * 0.05f); lineTo(q.x + r * 0.55f, q.y - r * 0.35f); close()
+                }, col)
+            }
+            drawPath(Path().apply { moveTo(w * 0.62f, 2 * u); lineTo(w * 0.6f, 10 * u); lineTo(w * 0.63f, 16 * u); lineTo(w * 0.61f, 24 * u) }, e.onSurface.copy(alpha = 0.3f), style = Stroke(0.8f * u))
+        }
         // Nieve en cada festón y una baya roja entre dos.
         TemaId.NAVIDAD -> {
             val n = (w / (44 * u)).toInt().coerceAtLeast(3); val paso = w / n
@@ -1386,6 +1405,8 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     }
     // Hoja: dos esquinas redondas y dos en punta.
     TemaId.BOTANICO -> RoundedCornerShape(topStart = 16.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 2.dp)
+    // Un bloque desportillado: dos esquinas cortadas, desiguales.
+    TemaId.RUINAS -> CutCornerShape(topStart = 3.dp, topEnd = 10.dp, bottomEnd = 3.dp, bottomStart = 6.dp)
     // Caja de regalo con su cinta: esquinas suaves y una muesca arriba al centro.
     TemaId.NAVIDAD -> formaDp { w, h, u ->
         val r = 8 * u; val n = 5 * u

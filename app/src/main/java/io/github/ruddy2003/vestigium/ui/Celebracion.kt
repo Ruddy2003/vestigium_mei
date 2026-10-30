@@ -163,6 +163,7 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.COLONOS -> listOf("nota breve", "crónica", "primera plana", "edición extra")
     TemaId.NAPOLEON -> listOf("citation", "croix d'argent", "Légion d'honneur", "maréchal d'Empire")
     TemaId.BOTANICO -> listOf("ejemplar común", "ejemplar raro", "especie nueva", "género nuevo")
+    TemaId.RUINAS -> listOf("hallazgo", "rescate", "tesoro entre escombros", "el árbol que rompió el asfalto")
     TemaId.NAVIDAD -> listOf("cascabel", "campana de plata", "estrella de oro", "milagro de Navidad")
     TemaId.SEDA -> listOf("moneda de cobre", "lingote de plata", "oro de Samarcanda", "seda del emperador")
     TemaId.GOTICO -> listOf("cirio", "cáliz de plata", "custodia de oro", "reliquia")
@@ -418,6 +419,29 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                 hojaLogro(pt(m * 0.28f, a + PI / 16), (a + PI / 16).toFloat(), m * 0.13f, 0.32f, cs.secondary.copy(alpha = 0.07f))
                 hojaLogro(pt(m * 0.30f, a), a.toFloat(), m * 0.17f, 0.28f, cs.primary.copy(alpha = 0.08f))
                 drawLine(cs.primary.copy(alpha = 0.10f), pt(m * 0.15f, a), pt(m * 0.45f, a), 0.8f * u)
+            }
+        }
+        TemaId.RUINAS -> rotate(giro / 6f, c) {
+            // Un anillo de hiedra (doce hojas de tres lóbulos sobre su tallo) y seis grietas que se abren hacia fuera, como en el hormigón.
+            val rt = m * 0.33f
+            drawCircle(cs.primary.copy(alpha = 0.10f), rt, c, style = Stroke(1.2f * u))
+            for (i in 0 until 12) {
+                val a = 2 * PI * i / 12
+                val hoja = cs.primary.copy(alpha = if (i % 2 == 0) 0.13f else 0.09f)
+                val p = pt(rt + (if (i % 2 == 0) 1f else -1f) * m * 0.035f, a)
+                val ang = a.toFloat() + (if (i % 2 == 0) 0f else PI.toFloat())
+                hojaLogro(p, ang, m * 0.045f, 0.38f, hoja)
+                hojaLogro(p, ang + 0.9f, m * 0.03f, 0.4f, hoja)
+                hojaLogro(p, ang - 0.9f, m * 0.03f, 0.4f, hoja)
+            }
+            for (i in 0 until 6) {
+                val a = 2 * PI * i / 6 + PI / 6
+                val grieta = Path().apply {
+                    var r = m * 0.42f; val p0 = pt(r, a); moveTo(p0.x, p0.y)
+                    var k = 0
+                    while (r < m * 0.62f) { r += m * 0.035f; val q = pt(r, a + (if (k % 2 == 0) 0.05 else -0.05)); lineTo(q.x, q.y); k++ }
+                }
+                drawPath(grieta, (if (oscuro) cs.secondary else cs.onBackground).copy(alpha = 0.10f), style = Stroke(1f * u))
             }
         }
         TemaId.NAVIDAD -> rotate(giro / 6f, c) {

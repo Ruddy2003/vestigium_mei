@@ -70,6 +70,8 @@ object Marcas {
         RECORTE,
         /** Etiqueta colgante con su ojal. */
         ETIQUETA,
+        /** Un óvalo de tiza trazado dos veces a mano alrededor de la palabra, como las marcas en los muros. */
+        TIZA,
         /** Cinta con las puntas en cola de golondrina. */
         CINTA, ZIGZAG,
         /** Arco apuntado sobre la palabra. */
@@ -125,6 +127,7 @@ object Marcas {
             TemaId.COLONOS -> if (persona) Aspecto(p, p, Forma.RECORTE, negrita = true) else Aspecto(s, s, Forma.ONDULADO)
             TemaId.NAPOLEON -> if (persona) Aspecto(p, t, Forma.SUBRAYADO, negrita = true, cursiva = true) else Aspecto(s, s, Forma.NINGUNA, cursiva = true)
             TemaId.BOTANICO -> if (persona) Aspecto(p, s, Forma.ETIQUETA, negrita = true) else Aspecto(t, t, Forma.MARCADOR)
+            TemaId.RUINAS -> if (persona) Aspecto(p, s, Forma.TIZA, negrita = true) else Aspecto(t, t, Forma.GUIONES, cursiva = true)
             TemaId.NAVIDAD -> if (persona) Aspecto(p, p, Forma.CINTA, negrita = true) else Aspecto(s, s, Forma.ZIGZAG)
             TemaId.SEDA -> if (persona) Aspecto(cs.onPrimary, p, Forma.SELLO, negrita = true) else Aspecto(s, s, Forma.RECUADRO)
             TemaId.GOTICO -> if (persona) Aspecto(p, t, Forma.OJIVA, negrita = true) else Aspecto(s, s, Forma.SUBRAYADO, cursiva = true)
@@ -145,6 +148,7 @@ object Marcas {
         Forma.SELLO, Forma.TERMINAL, Forma.BARRA, Forma.PARALELO -> c
         Forma.MARCADOR, Forma.CINTA, Forma.PLACA, Forma.ETIQUETA -> c.copy(alpha = 0.22f)
         Forma.RECUADRO, Forma.CORCHETES, Forma.CARTELA, Forma.CARTUCHO, Forma.GOMA, Forma.RECORTE, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PIEDRA, Forma.ESCOTILLA -> c.copy(alpha = 0.12f)
+        Forma.TIZA -> c.copy(alpha = 0.12f)
         Forma.NINGUNA, Forma.SUBRAYADO, Forma.ONDULADO, Forma.GRECA, Forma.PUNTEADO, Forma.DOBLE, Forma.ESCALA, Forma.ZIGZAG, Forma.GUIONES,
         Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS, Forma.BURBUJAS -> Color.Unspecified
         Forma.CABO -> Color.Unspecified
@@ -158,6 +162,7 @@ object Marcas {
         Forma.CABO, Forma.BURBUJAS -> true
         Forma.NINGUNA, Forma.MARCADOR, Forma.RECUADRO, Forma.SELLO, Forma.CORCHETES, Forma.CARTELA, Forma.CARTUCHO, Forma.TERMINAL, Forma.BARRA, Forma.GOMA,
         Forma.PLACA, Forma.RECORTE, Forma.ETIQUETA, Forma.CINTA, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PARALELO, Forma.PIEDRA, Forma.ESCOTILLA -> false
+        Forma.TIZA -> false
         Forma.ESCUDETE -> true
     }
 
@@ -387,6 +392,13 @@ object Marcas {
                     drawCircle(c.copy(alpha = 0.85f), r, Offset(x, baja - (k % 2) * 1.2f * u), style = Stroke(0.7f * u))
                     x += 4.5f * u; k++
                 }
+            }
+            Forma.TIZA -> {
+                // Dos vueltas de tiza, un poco corridas una de otra, y la punta que se pasa al cerrar.
+                val iz = rr.left - 4 * u; val de = rr.right + 4 * u; val t = rr.top + h * 0.02f; val b = rr.bottom
+                drawOval(c.copy(alpha = 0.75f), Offset(iz, t), Size(de - iz, b - t), style = Stroke(1.1f * u))
+                rotate(-2.5f, Offset(rr.center.x, rr.center.y)) { drawOval(c.copy(alpha = 0.45f), Offset(iz + 1.5f * u, t - 1f * u), Size(de - iz - 2 * u, b - t + 1.5f * u), style = Stroke(0.8f * u)) }
+                drawLine(c.copy(alpha = 0.6f), Offset(de - 6 * u, t - 1.5f * u), Offset(de + 1 * u, t + 2.5f * u), 0.9f * u, StrokeCap.Round)
             }
             Forma.MUESCAS -> {
                 val y = baja

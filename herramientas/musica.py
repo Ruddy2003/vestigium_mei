@@ -380,6 +380,21 @@ def hacer_egipto():
         P['egipto'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: pluck(f, d, 0.5, 0.9965), [12, 13, 17, 19], 0.1, 0.8))
         ARGS['egipto'] = (T, pz, ac, mel, kw)
 
+def hacer_ruinas():
+    # --- Ciudad verde: Re mixolidio. La flauta en una plaza vacía sobre una kalimba arpegiada; de fondo, gotas que caen del
+    # techo roto, el viento entre los edificios y el golpe hueco del hormigón cada dos compases. Con su propio azar.
+    with A.azar_propio('musica_ruinas'):
+        T = -7; pz = 0.44
+        ac = compases([0, 4, 7], [-2, 2, 5], [5, 9, 12], [0, 4, 7], [2, 5, 9], [-2, 2, 5], [5, 9, 12], [0, 4, 7, 12])
+        mel = frase(0, "12:1 14:1 16:2 | 14:1 12:1 10:2 | 12:1 9:1 7:2 | 7:4 | 16:1 17:1 19:2 | 17:1 16:1 14:2 | 12:1 10:1 9:1 10:1 | 12:4")
+        gota = lambda: barrido(hz(T + 31) * 1.25, hz(T + 31), 0.12) * env(int(0.12 * SR), 0.001, 0.05, 5)
+        viento = lambda: filtro(ruido(1.6), 'banda', (300, 1400)) * env(int(1.6 * SR), 0.6, 0.9, 2)
+        golpe = lambda: mezclar((0, filtro(ruido(0.06), 'bajo', 700) * env(int(0.06 * SR), 0.001, 0.04, 6), 1.0), (0, tambor(hz(T - 24), 0.1, 0.3), 0.5))
+        perc = [(1.5 + 2.75 * i, gota(), 0.12) for i in range(11)] + cada(32, viento, 0.18, paso=4) + cada(32, golpe, 0.3, paso=2)
+        kw = dict(inst_mel=flauta, inst_ac=lambda f, d: kalimba(f, 0.9), arpegio=True, perc=perc, g_mel=0.42, g_ac=0.3, oct_mel=0, oct_ac=-12, legato=0.9, rev=0.3)
+        P['ruinas'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: kalimba(f, 0.9), [12, 16, 19], 0.12, 1.0))
+        ARGS['ruinas'] = (T, pz, ac, mel, kw)
+
 def hacer_enriquecidos():
     """Lote 6: la presentación y la música anual de Refugio, Orden, Soviético y Espacio, más ricas. Ocho compases en lugar
     de cuatro o cinco, con más voces (bajo que camina, coro, cuerdas, arpegios) y su percusión. Corre después de [hacer]
@@ -490,6 +505,7 @@ if __name__ == '__main__':
     hacer_antiguas()
     hacer_neon()
     hacer_egipto()
+    hacer_ruinas()
     hacer_enriquecidos()
     hacer_abismo()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None

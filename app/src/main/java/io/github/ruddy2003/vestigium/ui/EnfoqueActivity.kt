@@ -605,6 +605,21 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
                 drawCircle(e.tertiary, 1.8f * u, en(f, r - g * 0.75f))
             }
         }
+        TemaId.RUINAS -> {
+            // Una corona de hiedra de 24 hojas que se van poniendo verdes conforme pasa el tiempo, sobre un tallo que da la vuelta.
+            drawCircle(tenue.copy(alpha = 0.4f), r, c, style = Stroke(0.8f * u))
+            val n = 24
+            for (k in 0 until n) {
+                val f = (k + 0.5f) / n; val q = en(f, r)
+                rotate(f * 360f + (if (k % 2 == 0) 20f else -20f), q) {
+                    val s = g * 1.1f
+                    drawPath(Path().apply {
+                        moveTo(q.x, q.y + s * 0.4f); lineTo(q.x - s * 0.5f, q.y + s * 0.25f); lineTo(q.x - s * 0.7f, q.y - s * 0.15f); lineTo(q.x - s * 0.28f, q.y - s * 0.12f)
+                        lineTo(q.x, q.y - s * 0.6f); lineTo(q.x + s * 0.28f, q.y - s * 0.12f); lineTo(q.x + s * 0.7f, q.y - s * 0.15f); lineTo(q.x + s * 0.5f, q.y + s * 0.25f); close()
+                    }, if (pasado(k, n)) color else pista)
+                }
+            }
+        }
         // Corona de pino con doce bolas que se encienden y un moño arriba.
         TemaId.NAVIDAD -> {
             val pino = Path(); val m = 120
@@ -894,6 +909,10 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
         }
         TemaId.BOTANICO -> {
             moveTo(x, y + h / 2); quadraticTo(x + w / 2, y - h / 2, x + w, y + h / 2); quadraticTo(x + w / 2, y + h * 1.5f, x, y + h / 2); close()
+        }
+        TemaId.RUINAS -> {
+            // Un adoquín desportillado: cuatro lados desiguales.
+            moveTo(x, y); lineTo(x + w, y + h * 0.1f); lineTo(x + w - h * 0.2f, y + h); lineTo(x + h * 0.15f, y + h * 0.9f); close()
         }
         TemaId.NAVIDAD -> {
             val f = h * 0.25f; val n = (w / (h * 0.9f)).toInt().coerceAtLeast(1); val paso = w / n

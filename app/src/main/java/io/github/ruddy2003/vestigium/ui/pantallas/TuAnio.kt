@@ -137,6 +137,7 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.CIBER -> "> cat year_$anio.log"
     TemaId.NEON -> "LOS LETREROS DE $anio"
     TemaId.BOTANICO -> "Catálogo de especímenes · $anio"
+    TemaId.RUINAS -> "Lo que quedó escrito tras el silencio · $anio"
     // «Apologismós»: la rendición de cuentas.
     TemaId.HELENO -> "ΑΠΟΛΟΓΙΣΜΟΣ · ΕΤΟΣ ${Griego.numeral(anio)}"
     // Los anales: lo que se grababa del año de cada rey, con el año en numerales jeroglíficos.

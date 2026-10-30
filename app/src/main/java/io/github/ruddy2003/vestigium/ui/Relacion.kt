@@ -99,6 +99,7 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.COLONOS -> MarcoRecuadro(RoundedCornerShape(1.dp), 12.dp)
     TemaId.NAPOLEON -> MarcoRecuadro(RoundedCornerShape(5.dp), 11.dp)
     TemaId.BOTANICO -> MarcoRecuadro(RoundedCornerShape(8.dp), 12.dp)
+    TemaId.RUINAS -> MarcoRecuadro(CutCornerShape(topStart = 2.dp, topEnd = 10.dp, bottomEnd = 2.dp, bottomStart = 5.dp), 12.dp)   // losa desportillada
     TemaId.NAVIDAD -> MarcoRecuadro(RoundedCornerShape(10.dp), 12.dp)
     TemaId.SEDA -> MarcoRecuadro(CutCornerShape(3.dp), 11.dp)
     TemaId.GOTICO -> MarcoRecuadro(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp, bottomStart = 3.dp, bottomEnd = 3.dp), 14.dp)
@@ -222,6 +223,13 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
             drawLine(e.onSurfaceVariant.copy(alpha = 0.6f), Offset(w / 2, 2 * u), Offset(w / 2 + 2 * u, 8 * u), 0.7f * u)
             drawCircle(e.secondary, 2 * u, Offset(w / 2, 3 * u))
             drawLine(c.copy(alpha = 0.35f), Offset(8 * u, h - 5 * u), Offset(w - 8 * u, h - 5 * u), 0.6f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * u, 2 * u)))
+        }
+        TemaId.RUINAS -> {
+            // Una hoja de hiedra que cuelga arriba al centro de su tallito y una grieta que sube desde la esquina de abajo.
+            drawLine(c.copy(alpha = 0.6f), Offset(w / 2, 0f), Offset(w / 2 + u, 5 * u), 0.8f * u)
+            val c = Offset(w / 2 + u, 9 * u); val s = 9 * u
+            drawPath(Path().apply { moveTo(c.x, c.y + s * 0.5f); lineTo(c.x - s * 0.55f, c.y + s * 0.35f); lineTo(c.x - s * 0.8f, c.y - s * 0.05f); lineTo(c.x - s * 0.32f, c.y - s * 0.05f); lineTo(c.x, c.y - s * 0.5f); lineTo(c.x + s * 0.32f, c.y - s * 0.05f); lineTo(c.x + s * 0.8f, c.y - s * 0.05f); lineTo(c.x + s * 0.55f, c.y + s * 0.35f); close() }, e.primary.copy(alpha = 0.8f))
+            drawPath(Path().apply { moveTo(w - 10 * u, h); lineTo(w - 13 * u, h - 6 * u); lineTo(w - 9 * u, h - 11 * u); lineTo(w - 12 * u, h - 18 * u) }, e.onSurfaceVariant.copy(alpha = 0.4f), style = Stroke(0.8f * u))
         }
         // Ramita de acebo en la esquina.
         TemaId.NAVIDAD -> {
@@ -492,6 +500,15 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 val x = w * f; val y0 = y + 4 * u * sin(2 * PI * f * 1.5).toFloat()
                 val a = kotlin.math.atan2((4 * u * 2 * PI * 1.5 / w * kotlin.math.cos(2 * PI * f * 1.5)).toFloat(), 1f)
                 hormiga(Offset(x, y0 - grosor), 8 * u + grosor, a, col)
+            }
+        }
+        TemaId.RUINAS -> {
+            // Una guía de hiedra que une a las dos personas, con hojas de cinco puntas a un lado y al otro.
+            drawPath(onda(3 * u, 2f), col, style = Stroke(grosor * 0.8f, cap = StrokeCap.Round, pathEffect = punteado))
+            listOf(0.2f, 0.4f, 0.6f, 0.8f).forEachIndexed { k, f ->
+                val x = w * f; val y0 = y + 3 * u * sin(2 * PI * f * 2).toFloat()
+                val c = Offset(x, y0 + (if (k % 2 == 0) -1f else 1f) * (4 * u + grosor)); val s = 7 * u + grosor
+                drawPath(Path().apply { moveTo(c.x, c.y + s * 0.5f); lineTo(c.x - s * 0.55f, c.y + s * 0.35f); lineTo(c.x - s * 0.8f, c.y - s * 0.05f); lineTo(c.x - s * 0.32f, c.y - s * 0.05f); lineTo(c.x, c.y - s * 0.5f); lineTo(c.x + s * 0.32f, c.y - s * 0.05f); lineTo(c.x + s * 0.8f, c.y - s * 0.05f); lineTo(c.x + s * 0.55f, c.y + s * 0.35f); close() }, col)
             }
         }
         // Guirnalda con dos esferas colgando.

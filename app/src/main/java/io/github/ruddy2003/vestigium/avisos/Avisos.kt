@@ -49,6 +49,7 @@ object Avisos {
         TemaId.COLONOS -> R.raw.n_colonos_aviso to R.raw.n_colonos_solemne
         TemaId.NAPOLEON -> R.raw.n_napoleon_aviso to R.raw.n_napoleon_solemne
         TemaId.BOTANICO -> R.raw.n_botanico_aviso to R.raw.n_botanico_solemne
+        TemaId.RUINAS -> R.raw.n_ruinas_aviso to R.raw.n_ruinas_solemne
         TemaId.NAVIDAD -> R.raw.n_navidad_aviso to R.raw.n_navidad_solemne
         TemaId.SEDA -> R.raw.n_seda_aviso to R.raw.n_seda_solemne
         TemaId.URSS -> R.raw.n_urss_aviso to R.raw.n_urss_solemne
@@ -265,6 +266,13 @@ object Avisos {
             "Una carta prensada por tu yo del pasado", "Llegó la estación que elegiste para abrirla.",
             "Especie nueva en la colección", "especies nuevas",
             "El herbario de %d está listo", "Un año entero en láminas: lo más hecho, lo único, lo curioso.")
+        TemaId.RUINAS -> Voz("❦ ¿Cuánto aguante te queda?", "Dos toques, como dos marcas de tiza: agrado y energía.",
+            "❦ ¿Qué soñaste en la azotea?", "Apúntalo antes de bajar; se lo lleva el viento en minutos.",
+            "❦ Una hoja más del cuaderno", "Llena el día junto a la fogata. Si fue difícil, basta con un número.",
+            "Día difícil: una marca basta", "La ronda de hoy:",
+            "Un mensaje tapiado por tu yo del pasado", "Llegó la estación que elegiste para destapiarlo.",
+            "Rescate nuevo entre los escombros", "rescates nuevos",
+            "Las hojas prensadas de %d están listas", "Un año entero tras el silencio: lo que más hiciste, lo único, lo raro.")
         TemaId.NAVIDAD -> Voz("✦ ¿Cómo te sientes ahora?", "Dos toques junto al fuego: agrado y energía.",
             "✦ ¿Qué soñaste esta noche?", "Anótalo antes de salir de las cobijas; se derrite en minutos.",
             "✦ ¿Cómo estuvo tu día?", "Llena el día. Si fue difícil, con un número basta.",
@@ -369,6 +377,7 @@ object Avisos {
         TemaId.COLONOS -> VozEnfoque("Descanso", "Levántate, toma agua del pozo.", "Se acabó el descanso", "Hora de despertar", "¡Faena terminada!")
         TemaId.NAPOLEON -> VozEnfoque("Halte", "Levántate y bebe, soldado.", "Fin de la halte", "Diana: ¡arriba!", "Victoire!")
         TemaId.BOTANICO -> VozEnfoque("Pausa de campo", "Levántate y riégate: toma agua.", "Termina la pausa de campo", "Hora de despertar, como las flores", "Muestra completa")
+        TemaId.RUINAS -> VozEnfoque("Sombra bajo el puente", "Levántate y bebe del agua de lluvia que guardaste.", "Se acabó la sombra", "Ya salió el sol sobre las azoteas", "Faena cumplida, sigues en pie")
         TemaId.NAVIDAD -> VozEnfoque("Descanso junto al fuego", "Levántate, toma algo caliente o agua.", "Se acabó el descanso junto al fuego", "Hora de despertar", "¡Terminaste!")
         TemaId.SEDA -> VozEnfoque("Alto en el caravasar", "Levántate, bebe agua del pozo.", "La caravana sigue", "Hora de levantar el campamento", "Jornada cumplida")
         TemaId.URSS -> VozEnfoque("DESCANSO REGLAMENTARIO", "Levántate, toma agua, camarada.", "DE VUELTA AL TRABAJO", "¡ARRIBA, CAMARADA!", "¡NORMA CUMPLIDA!")

@@ -205,6 +205,15 @@ internal object Claves {
         "imagines" to "bocetos", "dies" to "singladuras", "strepitus" to "oleaje", "vis" to "pólvora", "lectio" to "lecturas_de_litera",
     )
 
+    /** Habla de los supervivientes de la Ciudad verde. Lo que no está aquí queda en el español común. */
+    val RUINAS: Map<String, String> = mapOf(
+        "somnus" to "descanso", "passus" to "andanzas", "cor" to "pulso", "animus" to "aguante", "svmptvs" to "trueque",
+        "loca" to "calles", "personae" to "supervivientes", "palmae" to "rescates", "iter" to "rodeo", "caelum" to "cielo",
+        "lux" to "sol", "strepitus" to "ecos", "musica" to "radio", "telephonum" to "señal", "telephon" to "señal",
+        "imagines" to "recuerdos", "momenta" to "hallazgos", "consuetudo" to "faenas", "cibus" to "provisiones",
+        "orbis" to "más_allá", "dies" to "soles", "epistulae" to "mensajes",
+    )
+
     /** Voz de la casa en Navidad. Lo que no está aquí queda en el español común. */
     val NAVIDAD: Map<String, String> = mapOf(
         "somnus" to "noche_de_paz", "animus" to "sentir", "svmptvs" to "regalos", "personae" to "familia", "palmae" to "estrellas",

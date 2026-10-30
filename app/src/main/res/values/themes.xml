@@ -96,8 +96,14 @@
     <style name="Theme.Vestigium.Arranque.Botanico" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_botanico</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Ruinas" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_ruinas</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Botanico.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_botanico_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Ruinas.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_ruinas_oscuro</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Navidad" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_navidad</item>

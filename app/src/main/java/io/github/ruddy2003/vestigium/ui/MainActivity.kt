@@ -240,6 +240,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.NAPOLEON -> BloqueoCentrado(TextosBloqueo("BULLETIN SCELLÉ", "— el despacho sólo se abre ante su destinatario", "ROMPER EL LACRE"), tituloArriba = false, sello = 150, reintentar = reintentar)
         TemaId.BOTANICO -> BloqueoLamina(TextosBloqueo("Herbarium Vestigii", "⁂ La prensa está cerrada: el ejemplar no se toca sin su colector.", "Abrir la prensa",
             listOf("Ejemplar: tu diario", "Estado: prensado y sellado", "Leg.: el titular")), reintentar)
+        TemaId.RUINAS -> BloqueoTapiado(TextosBloqueo("Puerta tapiada", "❦ Aquí vive alguien. La puerta solo se abre para quien la tapió.", "Quitar las tablas",
+            listOf("Dentro: tu cuaderno", "Lo guarda: quien sigue en pie")), reintentar)
         TemaId.NAVIDAD -> BloqueoCarta(TextosBloqueo("Querido diario:", "Te guardé bajo llave junto al fuego; sólo yo puedo abrirte.", "Desatar el lazo",
             listOf("— Vestigium Mei")), reintentar)
         TemaId.SEDA -> BloqueoMarco(TextosBloqueo("Vestigium Mei", "◇ Salvoconducto sellado: sólo su portador cruza la posta.", "Mostrar el salvoconducto"), arriba = 14, reintentar = reintentar) { cs -> bloqueoRollo(cs) }
@@ -426,6 +428,46 @@ private fun BloqueoLamina(tx: TextosBloqueo, reintentar: () -> Unit) {
                 tx.lineas.forEach { Text(it, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant) }
             }
         }
+        BotonPrincipal(tx.boton) { reintentar() }
+    }
+}
+
+/** Ciudad verde: una placa de calle con el título y la puerta tapiada, dos tablas clavadas en cruz delante del sello y hiedra que trepa por una. */
+@Composable
+private fun BloqueoTapiado(tx: TextosBloqueo, reintentar: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Column(Modifier.fillMaxSize().padding(horizontal = 26.dp, vertical = 36.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Box(Modifier.border(2.dp, cs.onSurface, androidx.compose.foundation.shape.RoundedCornerShape(6.dp)).padding(horizontal = 16.dp, vertical = 6.dp)) {
+            Text(tx.titulo, style = MaterialTheme.typography.titleLarge, color = cs.onSurface)
+        }
+        Box(Modifier.padding(top = 18.dp).size(200.dp).drawWithContent {
+            drawContent()
+            val u = 1.dp.toPx()
+            val madera = Color(0xFF8A7458); val veta = Color(0xFF5E4C36)
+            listOf(-28f, 28f).forEach { g ->
+                girar(g, center) {
+                    drawRect(madera.copy(alpha = 0.92f), Offset(-10 * u, center.y - 13 * u), Size(size.width + 20 * u, 26 * u))
+                    drawLine(veta.copy(alpha = 0.5f), Offset(0f, center.y - 4 * u), Offset(size.width, center.y - 3 * u), u)
+                    drawLine(veta.copy(alpha = 0.4f), Offset(0f, center.y + 6 * u), Offset(size.width, center.y + 5 * u), u)
+                    listOf(14 * u, size.width - 14 * u).forEach { x -> drawCircle(Color(0xFF3A3A3A), 2.4f * u, Offset(x, center.y)) }
+                }
+            }
+            // La hiedra que sube por la tabla de la izquierda, desde abajo.
+            val tallo = Path().apply { moveTo(size.width * 0.08f, size.height); cubicTo(size.width * 0.2f, size.height * 0.8f, size.width * 0.12f, size.height * 0.62f, size.width * 0.28f, size.height * 0.5f) }
+            drawPath(tallo, cs.primary, style = Stroke(1.4f * u))
+            listOf(0.92f to 30f, 0.8f to -40f, 0.68f to 35f, 0.56f to -30f).forEachIndexed { k, (f, g) ->
+                val q = Offset(size.width * (0.12f + 0.04f * k), size.height * f); val r = 7 * u
+                girar(g, q) {
+                    drawPath(Path().apply {
+                        moveTo(q.x, q.y); lineTo(q.x - r * 0.55f, q.y - r * 0.15f); lineTo(q.x - r * 0.8f, q.y - r * 0.55f); lineTo(q.x - r * 0.32f, q.y - r * 0.55f)
+                        lineTo(q.x, q.y - r); lineTo(q.x + r * 0.32f, q.y - r * 0.55f); lineTo(q.x + r * 0.8f, q.y - r * 0.55f); lineTo(q.x + r * 0.55f, q.y - r * 0.15f); close()
+                    }, cs.primary)
+                }
+            }
+        }, contentAlignment = Alignment.Center) { SelloHuella(Modifier.size(164.dp)) }
+        LemaBloqueo(tx.lema, modifier = Modifier.padding(top = 18.dp))
+        tx.lineas.forEach { Text(it, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant) }
+        Box(Modifier.height(22.dp))
         BotonPrincipal(tx.boton) { reintentar() }
     }
 }
@@ -793,6 +835,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.COLONOS -> true
     TemaId.NAPOLEON -> true
     TemaId.BOTANICO -> true
+    TemaId.RUINAS -> true
     TemaId.NAVIDAD -> false
     TemaId.SEDA -> false
     TemaId.GOTICO -> false
@@ -823,6 +866,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.COLONOS -> true
     TemaId.NAPOLEON -> true
     TemaId.BOTANICO -> true
+    TemaId.RUINAS -> true
     TemaId.NAVIDAD -> true
     TemaId.SEDA -> false
     TemaId.GOTICO -> true
@@ -949,6 +993,11 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
             }, c)
             drawLine(c, Offset(cx - 25 * u, cy), Offset(cx - 30 * u, cy + 3 * u), 1.4f * u)
         }
+        // Un trozo de hormigón partido, de borde quebrado, detrás del ícono.
+        TemaId.RUINAS -> drawPath(Path().apply {
+            moveTo(cx - 26 * u, cy - 12 * u); lineTo(cx + 6 * u, cy - 15 * u); lineTo(cx + 12 * u, cy - 10 * u); lineTo(cx + 27 * u, cy - 13 * u); lineTo(cx + 25 * u, cy + 12 * u)
+            lineTo(cx - 4 * u, cy + 15 * u); lineTo(cx - 10 * u, cy + 11 * u); lineTo(cx - 27 * u, cy + 13 * u); close()
+        }, c)
         // Lazo de regalo encima y un marco redondeado de cinta verde.
         TemaId.NAVIDAD -> {
             drawRoundRect(cs.secondary.copy(alpha = p), Offset(cx - 22 * u, 1 * u), Size(44 * u, 28 * u), CornerRadius(10 * u), style = Stroke(1.4f * u))
@@ -1134,6 +1183,16 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             }, c)
             drawLine(sobre.copy(alpha = 0.25f), Offset(6 * u, h - 6 * u), Offset(w - 8 * u, 8 * u), 1f * u)
         }
+        TemaId.RUINAS -> {
+            // Una señal octogonal de las de alto, despintada, con su filete interior y un rayón.
+            fun oct(r: Float) = Path().apply {
+                for (i in 0 until 8) { val a = Math.toRadians(22.5 + 45.0 * i); val x = cx + r * kotlin.math.cos(a).toFloat(); val y = cy + r * kotlin.math.sin(a).toFloat(); if (i == 0) moveTo(x, y) else lineTo(x, y) }
+                close()
+            }
+            drawPath(oct(26 * u), c)
+            drawPath(oct(22 * u), sobre.copy(alpha = 0.6f), style = Stroke(1.2f * u))
+            drawLine(sobre.copy(alpha = 0.25f), Offset(cx + 10 * u, cy - 20 * u), Offset(cx + 4 * u, cy - 8 * u), 1f * u)
+        }
         // Bola de árbol con su capuchón dorado.
         TemaId.NAVIDAD -> {
             drawCircle(c, 21.5f * u, Offset(cx, cy + 4 * u))
@@ -1260,6 +1319,16 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
             val p = Path().apply { moveTo(0f, 2.5f * u); var x = 0f; var i = 0; while (x < w) { quadraticTo(x + 6 * u, (if (i % 2 == 0) 0.5f else 4.5f) * u, x + 12 * u, 2.5f * u); x += 12 * u; i++ } }
             drawPath(p, acento, style = Stroke(0.9f * u))
             var x = 6 * u; while (x < w) { drawOval(acento, Offset(x - 1.5f * u, 0f), Size(3 * u, 1.6f * u)); x += 24 * u }
+        }
+        TemaId.RUINAS -> {
+            // El bordillo: un filete con grietas cada tanto y matas de hierba que asoman.
+            filete()
+            var x = 30 * u; var k = 0
+            while (x < w) {
+                if (k % 2 == 0) drawLine(base, Offset(x, 0f), Offset(x + 2 * u, 4 * u), 0.8f * u)
+                else for (j in -1..1) drawLine(acento, Offset(x + j * u, 0.5f * u), Offset(x + j * 2 * u, 4.5f * u), 0.8f * u)
+                x += 46 * u; k++
+            }
         }
         // Guirnalda colgante con cuentas.
         TemaId.NAVIDAD -> {
@@ -1583,6 +1652,8 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
             (fadeOut(t(160)) + scaleOut(t(160), targetScale = 0.97f))
         // Una hoja que crece desde abajo, como un brote.
         TemaId.BOTANICO -> (scaleIn(t(380), initialScale = 0.96f, transformOrigin = TransformOrigin(0.5f, 1f)) + fadeIn(t(320))) togetherWith fadeOut(t(180))
+        // El polvo que se asienta: la pantalla baja apenas y se aclara; la anterior se desmorona hacia abajo.
+        TemaId.RUINAS -> (slideInVertically(t(340)) { -it / 24 } + fadeIn(t(300))) togetherWith (slideOutVertically(t(220)) { it / 16 } + fadeOut(t(200)))
         // La luz atraviesa el vitral: aparece despacio, como cuando sale el sol detrás de la ventana.
         TemaId.GOTICO -> (fadeIn(t(460)) + expandVertically(t(420), expandFrom = Alignment.Bottom) { it / 4 * 3 }) togetherWith fadeOut(t(220))
         // Acoplamiento: entra desde lejos, pequeña, y se ajusta; la anterior se aleja hacia la cámara.

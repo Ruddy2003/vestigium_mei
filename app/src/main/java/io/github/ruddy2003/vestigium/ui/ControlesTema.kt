@@ -279,6 +279,12 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     }, 0.dp, 0.dp, false, 1.5.dp)
     // Hoja: dos esquinas muy redondas y dos en punta.
     TemaId.BOTANICO -> PielDialogo(RoundedCornerShape(topStart = 30.dp, topEnd = 4.dp, bottomEnd = 30.dp, bottomStart = 4.dp), 0.dp, 0.dp, false, 1.dp)
+    // Una losa de hormigón con la esquina de arriba a la derecha desprendida en escalones.
+    TemaId.RUINAS -> PielDialogo(FormaDp { w, h, d ->
+        val a = 14 * d
+        moveTo(0f, 0f); lineTo(w - a * 1.6f, 0f); lineTo(w - a, a * 0.4f); lineTo(w - a * 0.5f, a * 0.2f); lineTo(w, a)
+        lineTo(w, h - 4 * d); lineTo(w - 4 * d, h); lineTo(a * 0.6f, h); lineTo(0f, h - a * 0.5f); close()
+    }, 0.dp, 0.dp, false, 1.5.dp)
     // Tarjeta con el borde de arriba festoneado de nieve.
     TemaId.NAVIDAD -> PielDialogo(FormaDp { w, h, d ->
         val p = 18 * d; val f = 5 * d; val r = 14 * d
@@ -482,6 +488,21 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
                 drawLine(e.secondary.copy(alpha = 0.7f), q, Offset(q.x + l, q.y + l * 0.3f), 1.3f * d, cap = StrokeCap.Round)
                 drawLine(e.secondary.copy(alpha = 0.7f), q, Offset(q.x - l * 0.5f, q.y - l * 0.8f), 1.3f * d, cap = StrokeCap.Round)
             }
+        }
+        TemaId.RUINAS -> {
+            // Hiedra que cuelga del borde de arriba, desde la esquina izquierda, y una grieta que sube desde abajo a la derecha.
+            fun hoja(q: Offset, s: Float) = Path().apply {
+                moveTo(q.x, q.y); lineTo(q.x - s * 0.55f, q.y - s * 0.15f); lineTo(q.x - s * 0.8f, q.y - s * 0.55f); lineTo(q.x - s * 0.32f, q.y - s * 0.55f)
+                lineTo(q.x, q.y - s); lineTo(q.x + s * 0.32f, q.y - s * 0.55f); lineTo(q.x + s * 0.8f, q.y - s * 0.55f); lineTo(q.x + s * 0.55f, q.y - s * 0.15f); close()
+            }
+            val tallo = Path().apply { moveTo(0f, 6 * d); cubicTo(20 * d, 2 * d, 40 * d, 14 * d, 64 * d, 8 * d); cubicTo(76 * d, 5 * d, 84 * d, 18 * d, 82 * d, 34 * d) }
+            drawPath(tallo, e.primary.copy(alpha = 0.6f), style = Stroke(1.2f * d))
+            listOf(Offset(14 * d, 5 * d) to 160f, Offset(30 * d, 8 * d) to 200f, Offset(48 * d, 11 * d) to 170f, Offset(66 * d, 8 * d) to 210f,
+                Offset(80 * d, 22 * d) to 175f, Offset(82 * d, 34 * d) to 185f).forEach { (q, g) ->
+                rotate(g, q) { drawPath(hoja(q, 5.5f * d), e.primary.copy(alpha = 0.75f)) }
+            }
+            drawPath(Path().apply { moveTo(w - 18 * d, h); lineTo(w - 22 * d, h - 10 * d); lineTo(w - 16 * d, h - 18 * d); lineTo(w - 21 * d, h - 30 * d); moveTo(w - 16 * d, h - 18 * d); lineTo(w - 8 * d, h - 24 * d) },
+                e.onSurface.copy(alpha = 0.3f), style = Stroke(1 * d))
         }
         TemaId.NAVIDAD -> {
             // Copos bajo el festón y una ramita de acebo arriba a la derecha.
@@ -719,6 +740,15 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
         TemaId.BOTANICO -> {
             drawLine(e.onSurface.copy(alpha = 0.45f), Offset(14 * d, cy), Offset(w, cy), d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 3 * d)))
             rotate(-30f, Offset(6 * d, cy)) { drawOval(e.secondary, Offset(0f, cy - 2.5f * d), Size(11 * d, 5 * d)) }
+        }
+        // La línea de una calle, gastada y partida, con un brote en la grieta.
+        TemaId.RUINAS -> {
+            val m = w * 0.42f
+            drawLine(e.tertiary.copy(alpha = 0.7f), Offset(0f, cy), Offset(m - 3 * d, cy), 2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 6 * d)))
+            drawLine(e.tertiary.copy(alpha = 0.7f), Offset(m + 3 * d, cy), Offset(w, cy), 2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 6 * d)))
+            drawLine(e.primary, Offset(m, cy + d), Offset(m, cy - 5 * d), 1.2f * d)
+            rotate(-40f, Offset(m, cy - 4 * d)) { drawOval(e.primary, Offset(m, cy - 5.5f * d), Size(5 * d, 2.6f * d)) }
+            rotate(40f, Offset(m, cy - 3 * d)) { drawOval(e.primary, Offset(m - 5 * d, cy - 4.5f * d), Size(5 * d, 2.6f * d)) }
         }
         // Guirnalda que ondula, con bayas.
         TemaId.NAVIDAD -> {
@@ -1055,6 +1085,15 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
                 px += g * 2.4f; arriba = !arriba
             }
         }
+        // El riel es una calle: lo recorrido lleva la línea discontinua pintada; lo demás es asfalto con alguna grieta.
+        TemaId.RUINAS -> {
+            linea(inactivo, x, w, g * 0.3f)
+            linea(activo.copy(alpha = activo.alpha * 0.35f), 0f, x, g * 0.45f)
+            var px = g * 0.4f
+            while (px < x - g * 0.2f) { drawLine(activo, Offset(px, cy), Offset(minOf(px + g * 1.2f, x), cy), g * 0.22f); px += g * 2f }
+            var qx = x + g * 3f
+            while (qx < w - g) { drawLine(inactivo, Offset(qx, cy - g * 0.5f), Offset(qx + g * 0.3f, cy + g * 0.5f), g * 0.08f); qx += g * 6f }
+        }
         // Bastón de caramelo: franjas al sesgo.
         TemaId.NAVIDAD -> {
             linea(inactivo, x, w, g * 0.3f)
@@ -1260,6 +1299,15 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
         TemaId.BOTANICO -> rotate(-35f, c) {
             drawOval(color, Offset(c.x - r, c.y - r * 0.45f), Size(2 * r, r * 0.9f))
             drawLine(hueco.copy(alpha = 0.6f), Offset(c.x - r * 0.85f, c.y), Offset(c.x + r * 0.85f, c.y), r * 0.08f)
+        }
+        // Una tapa de alcantarilla: el disco de hierro con su cuadrícula y el borde gastado.
+        TemaId.RUINAS -> {
+            drawCircle(color, r, c)
+            drawCircle(hueco.copy(alpha = 0.5f), r * 0.86f, c, style = Stroke(r * 0.08f))
+            for (k in -1..1) {
+                drawLine(hueco.copy(alpha = 0.45f), Offset(c.x + k * r * 0.35f, c.y - r * 0.6f), Offset(c.x + k * r * 0.35f, c.y + r * 0.6f), r * 0.07f)
+                drawLine(hueco.copy(alpha = 0.45f), Offset(c.x - r * 0.6f, c.y + k * r * 0.35f), Offset(c.x + r * 0.6f, c.y + k * r * 0.35f), r * 0.07f)
+            }
         }
         // Bola del árbol con su capuchón y su brillo.
         TemaId.NAVIDAD -> {

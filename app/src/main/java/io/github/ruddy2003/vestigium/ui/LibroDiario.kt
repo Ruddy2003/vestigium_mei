@@ -148,6 +148,7 @@ object LibroDiario {
         TemaId.COLONOS -> Fuentes(R.font.fell, R.font.oldstandard_regular)
         TemaId.NAPOLEON -> Fuentes(R.font.bodoni_titulo, R.font.bodoni_texto)
         TemaId.BOTANICO -> Fuentes(R.font.fraunces_titulo, R.font.crimson_regular)
+        TemaId.RUINAS -> Fuentes(R.font.letrero_titulo, R.font.overpass_regular)
         TemaId.NAVIDAD -> Fuentes(R.font.cinzel_deco_regular, R.font.calida_regular)
         TemaId.SEDA -> Fuentes(R.font.almendra_regular, R.font.alegreya_regular)
         TemaId.URSS -> Fuentes(R.font.russo, R.font.obrera_regular)
@@ -225,6 +226,9 @@ object LibroDiario {
             TemaId.COLONOS -> "article{border-top:3px solid $p}article::before{content:'';display:block;border-top:1px solid $p;margin:2px 0 14px}" + capitular("3em", tinta)
             TemaId.NAPOLEON -> "h1{text-align:center;letter-spacing:.15em}article{border-top:1px solid $p;border-bottom:1px solid $p;outline:1px solid $s;outline-offset:4px;padding:18px;margin-bottom:18px}" + capitular("3em", p)
             TemaId.BOTANICO -> "article{border-top:0}article::before{content:'';display:block;height:8px;margin-bottom:12px;background:radial-gradient(ellipse 5px 3px at 6px 4px,$p 98%,transparent) 0 0/18px 8px repeat-x}" + capitular("2.8em", p)
+            // La línea discontinua de una calle sobre cada entrada y la fecha como una placa de calle.
+            TemaId.RUINAS -> "article{border-top:0}article::before{content:'';display:block;height:4px;margin-bottom:14px;background:repeating-linear-gradient(90deg,$s 0 22px,transparent 22px 34px)}" +
+                ".fecha{display:inline-block;border:1px solid $p;border-radius:4px;padding:0 8px}" + capitular("2.6em", p)
             TemaId.NAVIDAD -> "article{border-top:5px solid $p;border-image:repeating-linear-gradient(45deg,$p 0 8px,$b 8px 16px,$s 16px 24px) 5}" + capitular("2.8em", p)
             TemaId.SEDA -> "article{border-top:2px solid $p;border-right:6px solid $s;padding-right:14px}" + capitular("2.6em", p)
             TemaId.GOTICO -> "article{border-top:0;padding-top:24px;background:radial-gradient(circle at 9px 16px,transparent 7px,$p 7px 8px,transparent 8px) 0 0/18px 12px repeat-x}" + capitular("3.4em", p)
@@ -371,6 +375,7 @@ object LibroDiario {
             TemaId.COLONOS -> Medidas(12.5f, aire)
             TemaId.NAPOLEON -> Medidas(12.5f, aire)
             TemaId.BOTANICO -> Medidas(12.5f, aire)
+            TemaId.RUINAS -> Medidas(12f, aire)
             TemaId.NAVIDAD -> Medidas(12.5f, aire)
             TemaId.SEDA -> Medidas(12.5f, aire)
             TemaId.GOTICO -> Medidas(12.5f, aire)
@@ -420,6 +425,7 @@ object LibroDiario {
         TemaId.COLONOS -> Inicial(R.font.fell, 2.6f, tinta = true)
         TemaId.NAPOLEON -> Inicial(R.font.bodoni_titulo, 2.5f)
         TemaId.BOTANICO -> Inicial(R.font.fraunces_negrita, 2.3f)
+        TemaId.RUINAS -> Inicial(R.font.letrero_titulo, 2.4f)
         TemaId.NAVIDAD -> Inicial(R.font.cinzel_deco_bold, 2.3f)
         TemaId.SEDA -> Inicial(R.font.almendra_bold, 2.2f)
         // La capitular de los libros de horas, en letra textura.
@@ -577,6 +583,15 @@ object LibroDiario {
                 cv.drawPath(ruta { moveTo(x0, y); var x = x0; var s = 1f; while (x < x1) { quadTo(x + 6f, y - s * 3f, minOf(x + 12f, x1), y); x += 12f; s = -s } }, Paint(trazo).apply { strokeWidth = 0.8f })
                 var x = x0 + 6f; var s = 1f
                 while (x < x1) { cv.save(); cv.rotate(-35f * s, x, y - s * 2f); cv.drawOval(x - 3f, y - s * 2f - 1.2f, x + 3f, y - s * 2f + 1.2f, relleno); cv.restore(); x += 12f; s = -s }
+            }
+            TemaId.RUINAS -> {
+                // La línea discontinua de una calle, con una grieta a la mitad y una mata de hierba en la grieta.
+                val m = (x0 + x1) / 2
+                val pintura = Paint(trazo).apply { strokeWidth = 1.6f }; val finito = Paint(trazo).apply { strokeWidth = 0.7f }
+                var x = x0
+                while (x < x1) { val f = minOf(x + 10f, x1); if (f < m - 3f || x > m + 3f) cv.drawLine(x, y, f, y, pintura); x += 16f }
+                cv.drawPath(ruta { moveTo(m, y - 4f); lineTo(m - 1f, y); lineTo(m + 1f, y + 2f); lineTo(m, y + 5f) }, finito)
+                for (k in -1..1) cv.drawLine(m + k * 1.2f, y - 1f, m + k * 2.4f, y - 6f + (if (k == 0) 0f else 1f), finito)
             }
             TemaId.NAVIDAD -> {
                 // Una ramita de acebo: dos hojas verdes y tres bayas.
@@ -754,6 +769,17 @@ object LibroDiario {
                     val (sx, sy) = haciaDentro(x, y)
                     val base = Math.toDegrees(Math.atan2(sy.toDouble(), sx.toDouble())).toFloat()
                     listOf(-20f, 20f).forEach { g -> cv.save(); cv.rotate(base + g, x, y); cv.drawOval(x + 2f, y - 2.5f, x + 16f, y + 2.5f, relleno); cv.restore() }
+                }
+            }
+            TemaId.RUINAS -> {
+                // Un filete con dos esquinas desportilladas y una hoja de hiedra de cinco puntas en cada esquina, hacia dentro.
+                cv.drawPath(android.graphics.Path().apply { moveTo(36f, 24f); lineTo(A - 30f, 24f); lineTo(A - 24f, 32f); lineTo(A - 24f, B - 24f); lineTo(34f, B - 24f); lineTo(24f, B - 36f); lineTo(24f, 30f); close() }, fino)
+                esquinas.forEach { (x, y) ->
+                    val (sx, sy) = haciaDentro(x, y)
+                    val base = Math.toDegrees(Math.atan2(sy.toDouble(), sx.toDouble())).toFloat() + 90f
+                    cv.save(); cv.rotate(base, x, y)
+                    cv.drawPath(android.graphics.Path().apply { moveTo(x, y); lineTo(x - 5f, y - 1.5f); lineTo(x - 7f, y - 5f); lineTo(x - 2.5f, y - 5f); lineTo(x, y - 9f); lineTo(x + 2.5f, y - 5f); lineTo(x + 7f, y - 5f); lineTo(x + 5f, y - 1.5f); close() }, relleno)
+                    cv.restore()
                 }
             }
             TemaId.NAVIDAD -> {

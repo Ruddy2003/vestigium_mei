@@ -68,6 +68,7 @@ import kotlin.math.sqrt
 /** La forma con que el tema nuevo se abre sobre el anterior. */
 private enum class BarridoTema {
     ARCO, PIXELES, SOL, PIRAMIDE, ROMBO, OJO, ESCOTILLA, ENGRANE, MEMBRANA, COLUMNAS, CORTINA, HOJA,
+    GRIETA,
     COPO, ABANICO, OJIVA, CIRCULO, MAREA, OCHO, HORIZONTE, VITRUVIO, ROSA, ESTRELLA, BANDAS, HEXAGONO,
     PERSIANA,
     /** Templario: la cruz patada que crece sobre su disco. */
@@ -118,6 +119,8 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.NAPOLEON -> MatizMovimiento(BarridoTema.CORTINA, 740, FastOutSlowInEasing, 18f, 0f, 1f, 420, 55, FastOutSlowInEasing, 1.05f, 0.55f, 1000f)
     // Una hoja que se despliega; resorte de tallo.
     TemaId.BOTANICO -> MatizMovimiento(BarridoTema.HOJA, 860, CubicBezierEasing(0.3f, 0f, 0.2f, 1f), 0f, 16f, 0.97f, 520, 65, FastOutSlowInEasing, 0.95f, 0.45f, 600f)
+    // Un boquete de borde quebrado que se abre en el hormigón; las secciones se asientan como polvo y el botón pesa como una losa.
+    TemaId.RUINAS -> MatizMovimiento(BarridoTema.GRIETA, 820, CubicBezierEasing(0.6f, 0f, 0.4f, 1f), 0f, 14f, 1.02f, 480, 60, LinearOutSlowInEasing, 1.15f, 0.7f, 800f)
     // Copo de seis puntas; las cosas caen desde arriba, como nieve, y rebotan como cascabeles.
     TemaId.NAVIDAD -> MatizMovimiento(BarridoTema.COPO, 880, FastOutSlowInEasing, 0f, -14f, 1f, 500, 60, FastOutSlowInEasing, 1f, 0.35f, 700f)
     // Abanico que se despliega; la caravana llega desde la izquierda.
@@ -202,6 +205,7 @@ fun contando(valor: String): String {
 internal enum class VivoTema(val periodo: Int) {
     LUCERNA(16000), VOLCADO(6000), OLIVO(30000), RAYO_ORO(26000), CENIZA(28000), VAPOR(18000), FRAGUA(7000),
     BURBUJAS(16000), GACETA(40000), CHARRETERAS(9000), HORMIGAS(70000), LUCIERNAGAS(9000), NIEVE(24000),
+    VILANOS(30000), GOTERAS(12000),
     ARENA(14000), VITRAL(80000), ESTRELLAS(9000), MAR(15000), AGUA(14000), NUBES(180000), SAMARAS(24000), OLEAJE(30000), ESTRELLAS_ROJAS(36000),
     CONFETI(22000), RUNAS(14000), LLOVIZNA(6000),
     /** Templario: antorchas en la muralla. */
@@ -225,6 +229,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.COLONOS -> VivoTema.GACETA            // hojas de periódico que arrastra el viento
     TemaId.NAPOLEON -> VivoTema.CHARRETERAS      // destellos de oro de charreteras
     TemaId.BOTANICO -> if (oscuro) VivoTema.LUCIERNAGAS else VivoTema.HORMIGAS
+    TemaId.RUINAS -> if (oscuro) VivoTema.GOTERAS else VivoTema.VILANOS   // de día, vilanos y hiedra colgante; de noche, goteras del techo roto
     TemaId.NAVIDAD -> VivoTema.NIEVE             // nieve con algún copo
     TemaId.SEDA -> VivoTema.ARENA                // arena que el viento arrastra de lado
     TemaId.GOTICO -> VivoTema.VITRAL             // manchas de luz de vitral
@@ -525,6 +530,59 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 drawCircle(Brush.radialGradient(listOf(al(Color(0xFFD8F07A), 0.45f * a), Color.Transparent), center = Offset(x, y), radius = 9f * u), 9f * u, Offset(x, y))
                 drawCircle(al(Color(0xFFF2FFB0), 0.8f * a), 1.4f * u, Offset(x, y))
             }
+        }
+        VivoTema.VILANOS -> {
+            // Vilanos de diente de león que suben con el aire tibio entre los edificios: el aquenio y su sombrilla de pelos.
+            motas.take(18).forEach { m ->
+                val k = vueltas(m)
+                val sube = fraccionVivo(m.y + t * k)
+                val y = h * (1.05f - sube * 1.1f)
+                val x = (m.x + 0.05f * senoVuelta(t * 2 * k + m.fase) + 0.04f * sube) * w
+                val l = 5f * u * m.tam
+                rotate(18f * senoVuelta(t * 3 * k + m.fase), Offset(x, y)) {
+                    drawLine(al(e.onBackground, 0.16f), Offset(x, y), Offset(x, y - l), 0.5f * u)
+                    for (j in 0 until 7) {
+                        val a = PI + PI * j / 6
+                        drawLine(al(e.onBackground, 0.10f), Offset(x, y - l), Offset(x + (l * 0.8f * cos(a)).toFloat(), y - l + (l * 0.8f * sin(a)).toFloat()), 0.4f * u)
+                    }
+                    drawCircle(al(e.secondary, 0.3f), 0.9f * u, Offset(x, y))
+                }
+            }
+            // Tres guías de hiedra que cuelgan del borde de arriba y se mecen; cada hoja tiene cinco puntas.
+            fun hojaHiedra(p: Offset, r: Float, giro: Float, col: Color) = rotate(giro, p) {
+                drawPath(Path().apply {
+                    moveTo(p.x, p.y); lineTo(p.x - 0.55f * r, p.y + 0.15f * r); lineTo(p.x - 0.75f * r, p.y + 0.55f * r); lineTo(p.x - 0.3f * r, p.y + 0.55f * r)
+                    lineTo(p.x, p.y + r); lineTo(p.x + 0.3f * r, p.y + 0.55f * r); lineTo(p.x + 0.75f * r, p.y + 0.55f * r); lineTo(p.x + 0.55f * r, p.y + 0.15f * r); close()
+                }, col)
+            }
+            listOf(0.1f, 0.62f, 0.9f).forEachIndexed { i, fx ->
+                val largo = h * (0.10f + 0.05f * i)
+                val vaiven = 6f * u * senoVuelta(t * 2 + i * 0.3f)
+                val base = Offset(fx * w, 0f); val punta = Offset(fx * w + vaiven, largo)
+                drawLine(al(e.primary, 0.18f), base, punta, 0.8f * u)
+                for (j in 1..4) {
+                    val f = j / 5f
+                    hojaHiedra(Offset(base.x + (punta.x - base.x) * f, largo * f), 5f * u, if (j % 2 == 0) 35f else -35f, al(e.primary, 0.16f))
+                }
+            }
+        }
+        VivoTema.GOTERAS -> motas.take(9).forEach { m ->
+            // Goteras del techo roto: la gota cae acelerando y, al llegar a su charco, abre un anillo que se apaga.
+            val k = vueltas(m)
+            val f = fraccionVivo(m.fase + t * k)
+            val x = (0.06f + 0.88f * m.x) * w
+            val suelo = (0.55f + 0.4f * m.y) * h
+            val agua = if (oscuro) Color(0xFF9FD0C8) else e.primary
+            if (f < 0.6f) {
+                val c = f / 0.6f
+                val y = suelo * c * c
+                drawLine(al(agua, 0.35f), Offset(x, y - 5f * u), Offset(x, y), 1.4f * u, cap = StrokeCap.Round)
+            } else {
+                val c = (f - 0.6f) / 0.4f
+                val r = 14f * u * m.tam * c
+                drawOval(al(agua, 0.3f * (1f - c)), Offset(x - r, suelo - r * 0.3f), Size(2 * r, r * 0.6f), style = Stroke(0.8f * u))
+            }
+            drawOval(al(agua, 0.06f), Offset(x - 16f * u, suelo - 2.5f * u), Size(32f * u, 5f * u))
         }
         VivoTema.NIEVE -> motas.forEach { m ->
             val k = vueltas(m)
@@ -901,6 +959,19 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
             val l = r * 2.5f; val k = r * 2.7f
             val a = c - d * l; val z = c + d * l
             ruta.moveTo(a.x, a.y); ruta.quadraticTo(c.x + n.x * k, c.y + n.y * k, z.x, z.y); ruta.quadraticTo(c.x - n.x * k, c.y - n.y * k, a.x, a.y); ruta.close()
+        }
+        BarridoTema.GRIETA -> {
+            // Un boquete en el hormigón: borde quebrado de 22 vértices con radios desiguales (fijos, para que no tiemble).
+            // El vértice de dentro queda a 1.2·r o más, así el borde nunca pasa por dentro del círculo de radio r.
+            val n = 22
+            for (i in 0 until n) {
+                val a = 2 * PI * i / n + 0.3f * p
+                val ruido = (((i * 2654435761L) ushr 7) and 255L) / 255f
+                val rr = r * (if (i % 2 == 0) 1.55f + 0.35f * ruido else 1.2f + 0.15f * ruido)
+                val x = c.x + (rr * cos(a)).toFloat(); val y = c.y + (rr * sin(a)).toFloat()
+                if (i == 0) ruta.moveTo(x, y) else ruta.lineTo(x, y)
+            }
+            ruta.close()
         }
         BarridoTema.ESCOTILLA -> ruta.poligonoBarrido(c, 4, r * 1.1f, r * 1.1f, 22.5f + 45f * p)
         BarridoTema.HEXAGONO -> ruta.poligonoBarrido(c, 3, r * 1.2f, r * 1.2f, 30f)

@@ -232,6 +232,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.NAPOLEON -> LaminaRascar(0xFF6E5A10.toInt(), 0xFFD9B82E.toInt(), 0xFFFFF4B0.toInt())
     // Bronce con verdín.
     TemaId.BOTANICO -> LaminaRascar(0xFF3E4A30.toInt(), 0xFF7E8F5E.toInt(), 0xFFD8E2B8.toInt())
+    // Hormigón gris con su polvo.
+    TemaId.RUINAS -> LaminaRascar(0xFF5A5B52.toInt(), 0xFF9C9C92.toInt(), 0xFFDCDCD2.toInt())
     // Plata escarchada.
     TemaId.NAVIDAD -> LaminaRascar(0xFF5D6B7C.toInt(), 0xFFB9C7D6.toInt(), 0xFFF7FBFF.toInt())
     // Bronce de moneda con sombra de cinabrio.
@@ -432,6 +434,13 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
                 val y = l * (0.84f - i * 0.13f); val largo = l * (0.2f - i * 0.025f)
                 for (izquierda in listOf(true, false)) girado(l * 0.5f, y, if (izquierda) 200f else -20f) { c.drawOval(RectF(0f, -l * 0.03f, largo, l * 0.03f), relleno) }
             }
+        }
+        TemaId.RUINAS -> {
+            // Una hoja de hiedra grande y la grieta del hormigón que sale de su tallo.
+            val p = android.graphics.Path().apply { moveTo(l * 0.5f, l * 0.86f); lineTo(l * 0.24f, l * 0.72f); lineTo(l * 0.1f, l * 0.48f); lineTo(l * 0.34f, l * 0.48f); lineTo(l * 0.5f, l * 0.12f); lineTo(l * 0.66f, l * 0.48f); lineTo(l * 0.9f, l * 0.48f); lineTo(l * 0.76f, l * 0.72f); close() }
+            c.drawPath(p, relleno)
+            c.drawLine(l * 0.5f, l * 0.86f, l * 0.5f, l * 0.3f, linea)
+            c.drawLine(l * 0.5f, l * 0.86f, l * 0.42f, l * 0.94f, linea); c.drawLine(l * 0.42f, l * 0.94f, l * 0.47f, l, linea)
         }
         TemaId.NAVIDAD -> tresbolillo { x, y ->
             // Copos de seis brazos, cada brazo con su par de ramitas.

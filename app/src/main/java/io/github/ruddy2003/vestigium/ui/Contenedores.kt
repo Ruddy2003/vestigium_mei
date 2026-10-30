@@ -39,6 +39,7 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     ORDENES("Rollo de órdenes", "mandato"),
     BITACORA("Cuaderno del pueblo", "página"),
     HERBARIO("Herbario de momentos", "pliego"),
+    SUPERVIVIENTE("Cuaderno del superviviente", "hoja prensada"),
     ADVIENTO("Calendario de adviento", "casilla"),
     MAPAS("Libro de mapas", "mapa"),
     EXPEDIENTE("Expediente de momentos", "folio"),
@@ -68,6 +69,7 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.MONGOL -> Contenedor.ORDENES
     TemaId.COLONOS -> Contenedor.BITACORA
     TemaId.BOTANICO -> Contenedor.HERBARIO
+    TemaId.RUINAS -> Contenedor.SUPERVIVIENTE
     TemaId.NAVIDAD -> Contenedor.ADVIENTO
     TemaId.ANTIGUAS -> Contenedor.MAPAS
     TemaId.DISTOPIA -> Contenedor.EXPEDIENTE
@@ -119,6 +121,7 @@ object Contenedores {
         // Las libretas del lote 2 tienen su papel en [ContenedoresMas].
         Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.INMERSION, Contenedor.TETRAD -> ContenedoresMas.papel(c, cs, oscuro)
+        Contenedor.SUPERVIVIENTE -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.TICKETS -> ContenedoresMas.papel(c, cs, oscuro)
     }
 
@@ -141,6 +144,7 @@ object Contenedores {
             Contenedor.CAHIER -> cahierCerrado(grosor, d)
             Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.INMERSION, Contenedor.TETRAD -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
+            Contenedor.SUPERVIVIENTE -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
             Contenedor.TICKETS -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
         }
     }
@@ -505,6 +509,7 @@ object Contenedores {
             }
             Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.INMERSION, Contenedor.TETRAD -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
+            Contenedor.SUPERVIVIENTE -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.TICKETS -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
         }
     }
@@ -575,6 +580,7 @@ object Contenedores {
             }
             Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.INMERSION, Contenedor.TETRAD -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
+            Contenedor.SUPERVIVIENTE -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.TICKETS -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
         }
     }

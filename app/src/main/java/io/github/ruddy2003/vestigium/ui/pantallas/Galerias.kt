@@ -154,6 +154,11 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     // Un escarabajo: élitros, pronoto y cabeza.
     TemaId.BOTANICO -> listOf(ovalo(c + Offset(0f, r * 0.2f), r * 0.62f, r * 0.78f), ovalo(c + Offset(0f, -r * 0.58f), r * 0.44f, r * 0.24f),
         circulo(c + Offset(0f, -r * 0.86f), r * 0.17f)).reduce { a, b -> mas(a, b) }
+    // Una hoja de hiedra de cinco puntas.
+    TemaId.RUINAS -> Path().apply {
+        moveTo(c.x, c.y + r); lineTo(c.x - r * 0.62f, c.y + r * 0.62f); lineTo(c.x - r, c.y - r * 0.1f); lineTo(c.x - r * 0.4f, c.y - r * 0.12f)
+        lineTo(c.x, c.y - r); lineTo(c.x + r * 0.4f, c.y - r * 0.12f); lineTo(c.x + r, c.y - r * 0.1f); lineTo(c.x + r * 0.62f, c.y + r * 0.62f); close()
+    }
     TemaId.NAVIDAD -> estrella(c, r, 6, 0.32f)
     TemaId.SEDA -> menos(circulo(c, r), poligono(c, r * 0.36f, 4, PI / 4))
     // Un engrane de ocho dientes con la estrella calada en medio.

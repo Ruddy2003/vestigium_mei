@@ -178,6 +178,9 @@ object Temas {
         "09-22" to "República", "07-27" to "Termidor", "09-20" to "Valmy")
     private val MARCAS_BOTANICO = mapOf("05-23" to "Linneo", "02-12" to "Darwin", "09-14" to "Humboldt", "04-22" to "Tierra", "03-20" to "Equinoccio",
         "06-21" to "Solsticio", "09-22" to "Equinoccio", "12-21" to "Solsticio", "07-20" to "Mendel")
+    /** Los días en que se recuerda a la Tierra y a los bosques, el de Chernóbil (la ciudad que el bosque recuperó) y las estaciones. */
+    private val MARCAS_RUINAS = mapOf("04-26" to "Chernóbil", "03-21" to "Bosques", "03-22" to "Agua", "05-22" to "Biodiversidad", "06-05" to "Ambiente",
+        "04-22" to "Tierra", "03-20" to "Primavera", "06-21" to "Verano", "09-22" to "Otoño", "12-21" to "Invierno")
     private val MARCAS_GOTICO = mapOf("04-26" to "Consagr.", "08-25" to "S. Luis", "08-15" to "Asunción", "12-25" to "Navidad", "01-06" to "Epifanía", "11-01" to "Todos Santos", "09-29" to "S. Miguel")
     private val MARCAS_ESPACIO = mapOf("04-12" to "Gagarin", "07-20" to "Apolo 11", "10-04" to "Sputnik", "02-18" to "Plutón", "12-24" to "Earthrise",
         "03-20" to "Equinoccio", "06-21" to "Solsticio", "09-22" to "Equinoccio", "12-21" to "Solsticio", "04-24" to "Hubble")
@@ -216,6 +219,7 @@ object Temas {
             TemaId.COLONOS -> MARCAS_COLONOS[md]
             TemaId.NAPOLEON -> MARCAS_NAPOLEON[md]
             TemaId.BOTANICO -> MARCAS_BOTANICO[md]
+            TemaId.RUINAS -> MARCAS_RUINAS[md]
             TemaId.NAVIDAD -> MARCAS_NAVIDAD[md]
             TemaId.SEDA -> MARCAS_SEDA[md]
             TemaId.URSS -> MARCAS_URSS[md]
@@ -354,6 +358,7 @@ object Temas {
         TemaId.COLONOS -> COLONOS[titulo]
         TemaId.NAPOLEON -> NAPOLEON[titulo]
         TemaId.BOTANICO -> BOTANICO[titulo]
+        TemaId.RUINAS -> RUINAS[titulo]
         TemaId.GOTICO -> GOTICO[titulo]
         TemaId.ESPACIO -> ESPACIO[titulo]
         TemaId.ABISMO -> ABISMO[titulo]
@@ -384,6 +389,7 @@ object Temas {
             TemaId.COLONOS -> mapOf("animo" to "Ánimo", "momento" to "Sucesos", "gasto" to "Cuentas", "sueno" to "Descanso", "habitos" to "Faenas", "hoy" to "Jornada", "cifra" to "Número", "foto" to "Estampa", "enfoque" to "Faena")
             TemaId.NAPOLEON -> mapOf("animo" to "MORAL", "momento" to "DESPACHO", "gasto" to "TESORERÍA", "sueno" to "VIVAC", "habitos" to "CÓDIGO", "hoy" to "BOLETÍN", "cifra" to "CIFRA", "foto" to "RETRATO", "enfoque" to "ÉTUDE")
             TemaId.BOTANICO -> mapOf("animo" to "Ánimo", "momento" to "Observación", "gasto" to "Semillas", "sueno" to "Latencia", "habitos" to "Cuidados", "hoy" to "Herbario", "cifra" to "Medida", "foto" to "Lámina", "enfoque" to "Estudio")
+            TemaId.RUINAS -> mapOf("animo" to "Aguante", "momento" to "Hallazgo", "gasto" to "Trueque", "sueno" to "Descanso", "habitos" to "Faenas", "hoy" to "Tras el silencio", "cifra" to "Marca", "foto" to "Recuerdo", "enfoque" to "Vigía")
             TemaId.GOTICO -> mapOf("animo" to "Ánima", "momento" to "Horas", "gasto" to "Tesoro", "sueno" to "Maitines", "habitos" to "Regla", "hoy" to "Laudes", "cifra" to "Cuenta", "foto" to "Vidriera", "enfoque" to "Lectio")
             TemaId.ESPACIO -> mapOf("animo" to "ESTADO", "momento" to "EVENTO", "gasto" to "COMBUSTIBLE", "sueno" to "SUEÑO", "habitos" to "RUTINAS", "hoy" to "ÓRBITA", "cifra" to "TELEMETRÍA", "foto" to "IMAGEN", "enfoque" to "CONCENTRACIÓN")
             TemaId.ABISMO -> mapOf("animo" to "SONDEO", "momento" to "AVISTAMIENTO", "gasto" to "LASTRE", "sueno" to "LITERA", "habitos" to "MANIOBRAS", "hoy" to "COTA", "cifra" to "PROFUNDÍMETRO", "foto" to "OJO DE BUEY", "enfoque" to "INMERSIÓN")
@@ -602,6 +608,17 @@ object Temas {
         "Apariencia" to "Láminas", "Obras" to "Biblioteca natural", "Mapa" to "Hábitats", "Lugares" to "Hábitats", "Totales" to "Inventario de especies",
         "Momentos de este día" to "Observaciones del día", "Datos que faltan" to "Ejemplares perdidos", "Resumen semanal" to "La semana en el jardín",
         "Avisos y recordatorios" to "Cantos de pájaro", "Contexto" to "Condiciones", "Calendario" to "Fenología", "Tu año" to "Las estaciones",
+    )
+    private val RUINAS = mapOf(
+        "Mundo" to "Más allá de la ciudad", "Patrimonio Mundial" to "Maravillas que siguen en pie", "Mapa para rascar" to "El plano raspado", "Ciudades visitadas" to "Ruinas visitadas",
+        "Biblioteca de sueños" to "Sueños en la azotea", "Cartas" to "Mensajes en la pared", "Escribir una carta" to "Escribir en la pared", "Carta" to "Mensaje", "Conocerte" to "Quién sobrevive", "Brújula política" to "Cómo se reparte el campamento", "Mapas" to "Planos de la ciudad", "Salud" to "Botiquín", "Tus apps" to "Aparatos que aún prenden", "Otras vidas" to "Otros supervivientes", "Logros" to "Rescates", "Tu año en historias" to "Tu año tras el silencio", "Anoche" to "La noche pasada", "Selladas" to "Tapiadas", "Listas para abrir" to "Listas para destapiar", "A otras personas" to "Para otros campamentos", "Del pasado" to "De antes del silencio",
+        "Hoy" to "Tras el silencio", "Línea de tiempo" to "Las marcas del muro", "Ahora mismo estoy…" to "En esta esquina estoy…",
+        "Día" to "El día en la ciudad verde", "Diario" to "El diario del silencio", "Gastos" to "Trueques", "Entender" to "Leer las grietas", "Más" to "El sótano de las cosas",
+        "Llenar el día" to "Junto a la fogata", "Biblioteca del diario" to "Hojas prensadas", "Entrada" to "Hoja", "Tablero" to "Muro de avisos",
+        "Te falta hoy" to "Te falta en la ronda", "Hábitos" to "Faenas", "Sueño" to "Descanso", "Ánimo y cuerpo" to "Aguante y cuerpo", "Hitos" to "Señales",
+        "Apariencia" to "Pintura de la ciudad", "Obras" to "Lo que se salvó", "Mapa" to "Plano de calles", "Lugares" to "Esquinas", "Totales" to "Lo que llevas juntado",
+        "Momentos de este día" to "Hallazgos de este día", "Datos que faltan" to "Huecos en el rastro", "Resumen semanal" to "La semana entre la hiedra",
+        "Avisos y recordatorios" to "Silbidos", "Contexto" to "Cómo amaneció la ciudad", "Calendario" to "El muro de los días", "Tu año" to "Las estaciones tras el silencio",
     )
     private val GOTICO = mapOf(
         "Mundo" to "El orbe", "Patrimonio Mundial" to "Catedrales y maravillas", "Mapa para rascar" to "Mapa dorado", "Ciudades visitadas" to "Ciudades santas",

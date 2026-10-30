@@ -121,6 +121,7 @@ object HallImagen {
         TemaId.COLONOS -> "La Gaceta del Pueblo · Vestigium Mei" to "Impreso en el taller del pueblo"
         TemaId.NAPOLEON -> "Bulletin de la Grande Armée · Vestigium Mei" to "Fait au quartier général"
         TemaId.BOTANICO -> "Herbarium Vestigii Mei" to "Leg. et det. ipse"
+        TemaId.RUINAS -> "Lo rescatado · Vestigium Mei" to "Juntado entre las ruinas, día tras día"
         TemaId.NAVIDAD -> "Vestigium Mei · Felices fiestas" to "Escrito junto al fuego"
         TemaId.SEDA -> "我的足迹 · Vestigium Mei" to "丝路行记"
         TemaId.GOTICO -> "Vestigium Mei · Horae" to "Per vitrum lux"

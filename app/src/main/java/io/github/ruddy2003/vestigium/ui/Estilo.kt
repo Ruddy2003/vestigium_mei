@@ -34,6 +34,7 @@ object Estilo {
         TemaId.COLONOS -> "~ "
         TemaId.NAPOLEON -> "— "
         TemaId.BOTANICO -> "⁂ "
+        TemaId.RUINAS -> "❦ "
         TemaId.NAVIDAD -> "✦ "
         TemaId.SEDA -> "◇ "
         TemaId.URSS -> "★ "
@@ -67,6 +68,7 @@ object Estilo {
         TemaId.COLONOS -> false        // imprenta de pueblo
         TemaId.NAPOLEON -> true        // capitales de Bodoni
         TemaId.BOTANICO -> false       // lámina de herbario
+        TemaId.RUINAS -> false         // letrero pintado a mano
         TemaId.NAVIDAD -> false        // tarjeta escrita a mano
         TemaId.SEDA -> false           // manuscrito de caravana
         TemaId.URSS -> true            // cartel constructivista
@@ -104,6 +106,7 @@ object Estilo {
             TemaId.TEMPLARIO -> if (pantalla) "☩ art. %s de la regla · %s".format(Temas.puntos(folio(titulo, 1, 686)), t) else if (igual) null else "☩ $t"
             TemaId.NAPOLEON -> if (igual) null else "« $t »"
             TemaId.BOTANICO -> if (igual) null else "⁂ $t"
+            TemaId.RUINAS -> if (igual) null else "❦ $t"
             TemaId.NAVIDAD -> if (igual) null else "✦ $t ✦"
             TemaId.SEDA -> if (igual) null else "◇ $t ◇"
             TemaId.URSS -> if (igual) null else "★ $t"
@@ -138,6 +141,7 @@ object Estilo {
             TemaId.COLONOS -> propio(titulo, true)
             TemaId.NAPOLEON -> propio(titulo, true)
             TemaId.BOTANICO -> propio(titulo, true)
+            TemaId.RUINAS -> propio(titulo, true)
             TemaId.NAVIDAD -> propio(titulo, true)
             TemaId.SEDA -> propio(titulo, true)
             TemaId.URSS -> propio(titulo, true)
@@ -175,6 +179,7 @@ object Estilo {
         TemaId.COLONOS -> false
         TemaId.NAPOLEON -> false
         TemaId.BOTANICO -> false
+        TemaId.RUINAS -> false
         TemaId.NAVIDAD -> false
         TemaId.SEDA -> false
         TemaId.URSS -> false
@@ -219,6 +224,7 @@ object Estilo {
             TemaId.COLONOS -> propio(titulo, false)
             TemaId.NAPOLEON -> propio(titulo, false)
             TemaId.BOTANICO -> propio(titulo, false)
+            TemaId.RUINAS -> propio(titulo, false)
             TemaId.NAVIDAD -> propio(titulo, false)
             TemaId.SEDA -> propio(titulo, false)
             TemaId.URSS -> propio(titulo, false)
@@ -255,6 +261,8 @@ object Estilo {
         TemaId.NAPOLEON -> when { n == 1 -> "1ᵉʳ"; n in 2..999 -> "${n}ᵉ"; n in 1000..3999 -> Romano.de(n); else -> "$n" }
         // Número de pliego del herbario: «n.º 17».
         TemaId.BOTANICO -> if (n in 1..999) "n.º $n" else "$n"
+        // La lista del cuaderno del superviviente, a lápiz: «17)».
+        TemaId.RUINAS -> if (n in 1..999) "$n)" else "$n"
         // La puertita del calendario de Adviento.
         TemaId.NAVIDAD -> if (n in 1..999) "✦$n" else "$n"
         // Cifras mongolas tradicionales: ᠑᠗.
@@ -307,6 +315,11 @@ object Estilo {
         TemaId.REVOLUCION -> Temas.republicano(iso)
         TemaId.ANTIGUAS -> Temas.fechaAntigua(iso)
         TemaId.BOTANICO -> runCatching { val d = Fechas.parse(iso); "${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]} · ${Temas.estacion(d)}" }.getOrDefault(iso)
+        // «Día N tras el silencio», contado desde el primer registro, y la estación; sin registros, la fecha y la estación.
+        TemaId.RUINAS -> runCatching {
+            val d = Fechas.parse(iso)
+            (diasDesdeInicio(iso)?.takeIf { it > 0 }?.let { "día $it tras el silencio" } ?: "${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]}") + " · ${Temas.estacion(d)}"
+        }.getOrDefault(iso)
         TemaId.GOTICO -> runCatching {
             val d = Fechas.parse(iso)
             Temas.fechaLatina(d) + if (iso == Fechas.diaLogico()) " · ad ${Temas.horaCanonica(java.time.LocalTime.now().hour)}" else ""
@@ -357,6 +370,8 @@ object Estilo {
             TemaId.NAPOLEON -> Temas.MESES_FRANCESES[i].uppercase() + (anio?.let { " $it" } ?: "")
             // Las etiquetas de herbario escriben el mes en romanos: «X-2026».
             TemaId.BOTANICO -> Romano.de(n) + (anio?.let { "-$it" } ?: "")
+            // Los meses por lo que hace el bosque en la ciudad: la escarcha, la savia, los brotes… y la hojarasca de octubre.
+            TemaId.RUINAS -> listOf("Escarcha", "Savia", "Brotes", "Lluvias", "Flores", "Enjambres", "Moras", "Cigarras", "Semillas", "Hojarasca", "Setas", "Raíces")[i] + (anio?.let { " · $it" } ?: "")
             TemaId.NAVIDAD -> (if (n == 12) "Mes de la Navidad" else "Mes de " + MESES_LARGOS[i]) + (anio?.let { " de $it" } ?: "")
             TemaId.SEDA -> (anio?.let { Temas.anioChino(it) + " " } ?: "") + Temas.chino(n) + "月"
             TemaId.URSS -> Temas.MESES_RUSOS[i] + (anio?.let { " $it" } ?: "")
@@ -400,6 +415,8 @@ object Estilo {
         TemaId.NAPOLEON -> listOf("LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM")
         // Los signos de los planetas que Linneo usaba en sus cuadernos: ☽ lunes, ♂ martes, ☿ miércoles…
         TemaId.BOTANICO -> listOf("☽ lu", "♂ ma", "☿ mi", "♃ ju", "♀ vi", "♄ sá", "☉ do")
+        // Abreviados a máquina, con su punto, como en las etiquetas del cuaderno.
+        TemaId.RUINAS -> listOf("lun.", "mar.", "miér.", "jue.", "vier.", "sáb.", "dom.")
         TemaId.NAVIDAD -> listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
         TemaId.SEDA -> listOf("一", "二", "三", "四", "五", "六", "日")
         TemaId.URSS -> listOf("ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС")
@@ -434,6 +451,7 @@ object Estilo {
         TemaId.COLONOS -> semana
         TemaId.NAPOLEON -> semana.map { it.take(2) }
         TemaId.BOTANICO -> semana.map { it.take(1) }
+        TemaId.RUINAS -> listOf("l", "m", "x", "j", "v", "s", "d")
         TemaId.NAVIDAD -> listOf("L", "M", "M", "J", "V", "S", "D")
         TemaId.SEDA -> semana
         TemaId.URSS -> semana
@@ -467,6 +485,7 @@ object Estilo {
         TemaId.COLONOS -> "$n jornadas seguidas"
         TemaId.NAPOLEON -> "$n JOURS DE CAMPAGNE"
         TemaId.BOTANICO -> "$n días de herbario"
+        TemaId.RUINAS -> "$n amaneceres seguidos entre la hiedra"
         TemaId.NAVIDAD -> "$n noches junto al fuego"
         TemaId.SEDA -> "$n jornadas de caravana"
         TemaId.GOTICO -> "$n días de oficio sin falta"
@@ -497,6 +516,7 @@ object Estilo {
         TemaId.COLONOS -> "← pa' atrás"
         TemaId.NAPOLEON -> "← retirada"
         TemaId.BOTANICO -> "← regresar"
+        TemaId.RUINAS -> "← por donde vine"
         TemaId.NAVIDAD -> "← volver a casa"
         TemaId.SEDA -> "← desandar"
         TemaId.URSS -> "◄ НАЗАД"
@@ -525,6 +545,7 @@ object Estilo {
         TemaId.COLONOS -> "☞ "
         TemaId.NAPOLEON -> "» "
         TemaId.BOTANICO -> "⁂ "
+        TemaId.RUINAS -> "↳ "
         TemaId.NAVIDAD -> "✦ "
         TemaId.SEDA -> "◇ "
         TemaId.URSS -> "▶ "
@@ -558,6 +579,7 @@ object Estilo {
         TemaId.COLONOS -> ""
         TemaId.NAPOLEON -> ""
         TemaId.BOTANICO -> ""
+        TemaId.RUINAS -> ""
         TemaId.NAVIDAD -> ""
         TemaId.SEDA -> ""
         TemaId.GOTICO -> ""
@@ -591,6 +613,7 @@ object Estilo {
         TemaId.COLONOS -> EstiloFecha(1.06f, 0.5f, cursiva = true)
         TemaId.NAPOLEON -> EstiloFecha(1.04f, 2.2f, peso = 600)
         TemaId.BOTANICO -> EstiloFecha(1.0f, 0.2f, cursiva = true, abre = "▿")
+        TemaId.RUINAS -> EstiloFecha(1.08f, 0.9f, abre = "⌄")
         TemaId.NAVIDAD -> EstiloFecha(1.1f, 1.4f)
         TemaId.SEDA -> EstiloFecha(1.08f, 0.6f, abre = "▿")
         TemaId.GOTICO -> EstiloFecha(1.16f, 0.6f)
@@ -635,6 +658,7 @@ object Estilo {
             TemaId.COLONOS -> es(Claves.COLONOS)
             TemaId.NAPOLEON -> Claves.NAPOLEON[k] ?: Claves.FRANCES[k]
             TemaId.BOTANICO -> es(Claves.BOTANICO)
+            TemaId.RUINAS -> es(Claves.RUINAS)
             TemaId.NAVIDAD -> es(Claves.NAVIDAD)
             TemaId.SEDA -> Claves.CHINO[k]
             TemaId.URSS -> Claves.RUSO[k]

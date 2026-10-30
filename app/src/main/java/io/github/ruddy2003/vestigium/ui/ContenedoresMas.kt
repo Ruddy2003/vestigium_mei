@@ -38,6 +38,8 @@ object ContenedoresMas {
             Contenedor.ORDENES -> Color(0xFFEFE6D0)
             Contenedor.BITACORA -> Color(0xFFF0E7D2)
             Contenedor.HERBARIO -> Color(0xFFEFEADB)
+            // Papel reciclado, gris verdoso, de un cuaderno que se encontró entre los escombros.
+            Contenedor.SUPERVIVIENTE -> Color(0xFFE6E3D6)
             Contenedor.ADVIENTO -> Color(0xFFFBF7EE)
             Contenedor.MAPAS -> Color(0xFFE9DCC0)
             Contenedor.EXPEDIENTE -> Color(0xFFF2EFE6)
@@ -149,6 +151,35 @@ object ContenedoresMas {
                 drawRect(Color(0xFF3A2A14).copy(alpha = 0.4f), Offset(w * 0.3f, h * 0.7f), Size(w * 0.4f, h * 0.1f), style = Stroke(0.8f * d))
                 drawLine(Color(0xFFEFE2C0), Offset(-2 * d, h * 0.56f), Offset(w + grosor, h * 0.56f), 2.4f * d)
                 drawCircle(Color(0xFFEFE2C0), 3 * d, Offset(w, h * 0.56f))
+            }
+            Contenedor.SUPERVIVIENTE -> {
+                // Un cuaderno maltratado: tapa de lona verde con el lomo de cinta plateada, una liga que lo cierra y hojas
+                // prensadas que asoman por el canto (más cuanto más escrito); la esquina de abajo se perdió.
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 3 * d); canto(w, h, grosor, d, Color(0xFFE6E3D6))
+                val asoman = (1 + hojas / 15).coerceAtMost(6)
+                for (k in 0 until asoman) {
+                    val y = h * (0.15f + 0.13f * k); val x = w + grosor * 0.6f
+                    val hoja = if (k % 2 == 0) Color(0xFF4F7A33) else Color(0xFF8A6A2A)
+                    drawPath(Path().apply { moveTo(x - 6 * d, y); quadraticTo(x + 8 * d, y - 6 * d, x + 12 * d, y + 2 * d); quadraticTo(x + 6 * d, y + 6 * d, x - 6 * d, y + 3 * d); close() }, hoja.copy(alpha = 0.9f))
+                }
+                val lona = Color(0xFF5B6B45)
+                val tapa = Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, h * 0.86f); lineTo(w * 0.86f, h); lineTo(0f, h); close() }
+                drawPath(tapa, Brush.linearGradient(listOf(lerp(lona, Color.White, 0.1f), lona, lerp(lona, Color.Black, 0.25f)), Offset.Zero, Offset(w, h)))
+                // Manchas de agua y de óxido.
+                drawCircle(Color(0xFF8A4A22).copy(alpha = 0.25f), w * 0.12f, Offset(w * 0.7f, h * 0.25f))
+                drawCircle(Color.Black.copy(alpha = 0.08f), w * 0.2f, Offset(w * 0.3f, h * 0.7f))
+                // El lomo de cinta plateada, con sus arrugas.
+                drawRect(Color(0xFF9EA2A0), Offset.Zero, Size(w * 0.14f, h))
+                for (k in 1..6) drawLine(Color.Black.copy(alpha = 0.12f), Offset(0f, h * k / 7f), Offset(w * 0.14f, h * k / 7f + 3 * d), 0.8f * d)
+                // La etiqueta escrita a mano.
+                drawRect(Color(0xFFE6E3D6), Offset(w * 0.3f, h * 0.12f), Size(w * 0.5f, h * 0.14f))
+                drawLine(Color(0xFF1F2420).copy(alpha = 0.6f), Offset(w * 0.34f, h * 0.19f), Offset(w * 0.72f, h * 0.2f), 1.4f * d)
+                // Una hoja de hiedra pegada en la tapa.
+                val c = Offset(w * 0.55f, h * 0.52f); val s = w * 0.2f
+                drawPath(Path().apply { moveTo(c.x, c.y + s * 0.5f); lineTo(c.x - s * 0.55f, c.y + s * 0.35f); lineTo(c.x - s * 0.8f, c.y - s * 0.05f); lineTo(c.x - s * 0.32f, c.y - s * 0.05f); lineTo(c.x, c.y - s * 0.5f); lineTo(c.x + s * 0.32f, c.y - s * 0.05f); lineTo(c.x + s * 0.8f, c.y - s * 0.05f); lineTo(c.x + s * 0.55f, c.y + s * 0.35f); close() }, Color(0xFF7FA35A))
+                drawLine(Color(0xFF3E5A2A), Offset(c.x, c.y + s * 0.5f), Offset(c.x, c.y - s * 0.35f), 1 * d)
+                // La liga que lo cierra.
+                drawLine(Color(0xFF2A2A2A), Offset(w * 0.78f, -2 * d), Offset(w * 0.78f, h + grosor), 2.2f * d)
             }
             Contenedor.ADVIENTO -> {
                 // El calendario de adviento: una casita con 24 casillas; cada día escrito abre una (hasta las 24).
@@ -509,6 +540,20 @@ object ContenedoresMas {
                 for (k in 1..3) drawLine(tinta.copy(alpha = 0.08f), Offset(e.left + 6 * d, e.top + k * e.height / 4), Offset(e.right - 6 * d, e.top + k * e.height / 4), 0.6f * d)
                 var y = 96 * d; while (y < size.height - 80 * d) { drawLine(tinta.copy(alpha = 0.04f), Offset(margen, y), Offset(size.width - 16 * d, y), 0.5f * d); y += renglon }
             }
+            Contenedor.SUPERVIVIENTE -> {
+                // Renglones a lápiz, el aro de agua que dejó una lata, una hoja de hiedra prensada y, en el margen, la cuenta
+                // de los días de cinco en cinco.
+                var y = 96 * d; while (y < size.height) { drawLine(tinta.copy(alpha = 0.07f), Offset(margen, y), Offset(size.width - 12 * d, y), 0.6f * d); y += renglon }
+                drawCircle(Color(0xFF8A6A44).copy(alpha = if (oscuro) 0.08f else 0.1f), 34 * d, Offset(size.width - 70 * d, 150 * d), style = Stroke(3 * d))
+                val c = Offset(size.width - 60 * d, size.height - 90 * d); val s = 60 * d
+                drawPath(Path().apply { moveTo(c.x, c.y + s * 0.5f); lineTo(c.x - s * 0.55f, c.y + s * 0.35f); lineTo(c.x - s * 0.8f, c.y - s * 0.05f); lineTo(c.x - s * 0.32f, c.y - s * 0.05f); lineTo(c.x, c.y - s * 0.5f); lineTo(c.x + s * 0.32f, c.y - s * 0.05f); lineTo(c.x + s * 0.8f, c.y - s * 0.05f); lineTo(c.x + s * 0.55f, c.y + s * 0.35f); close() }, Color(0xFF4F7A33).copy(alpha = if (oscuro) 0.12f else 0.14f))
+                drawLine(Color(0xFF4F7A33).copy(alpha = 0.2f), Offset(c.x, c.y + s * 0.5f), Offset(c.x - 10 * d, c.y + s * 1.1f), 1.4f * d)
+                for (g in 0 until 3) {
+                    val x0 = 8 * d; val y0 = 110 * d + g * 22 * d
+                    for (k in 0 until 4) drawLine(tinta.copy(alpha = 0.14f), Offset(x0 + k * 4 * d, y0), Offset(x0 + k * 4 * d, y0 + 14 * d), 1 * d)
+                    drawLine(tinta.copy(alpha = 0.14f), Offset(x0 - 2 * d, y0 + 12 * d), Offset(x0 + 15 * d, y0 + 2 * d), 1 * d)
+                }
+            }
             Contenedor.ADVIENTO -> {
                 // Una cenefa de copos y pinos arriba, y la cinta roja y verde abajo.
                 var x = 8 * d; var k = 0
@@ -701,6 +746,14 @@ object ContenedoresMas {
                 var y = 20 * d; while (y < size.height - 10 * d) { drawLine(Color(0xFFE9DCC0).copy(alpha = 0.7f), Offset(12 * d, y), Offset(18 * d, y + 6 * d), 1.2f * d); y += 26 * d }
             }
             Contenedor.HERBARIO -> listOf(0.2f, 0.8f).forEach { f -> val y = size.height * f; drawLine(Color(0xFFEFE2C0), Offset(0f, y), Offset(24 * d, y), 3 * d, StrokeCap.Round); drawCircle(Color(0xFF6E7A4E), 3 * d, Offset(22 * d, y)) }
+            Contenedor.SUPERVIVIENTE -> {
+                // El lomo de cinta plateada y el lápiz de carpintero atado con un cordel.
+                drawRect(Color(0xFF9EA2A0).copy(alpha = if (oscuro) 0.35f else 0.85f), Offset(6 * d, 0f), Size(16 * d, size.height))
+                var y = 18 * d; while (y < size.height) { drawLine(Color.Black.copy(alpha = 0.12f), Offset(6 * d, y), Offset(22 * d, y + 4 * d), 0.8f * d); y += 30 * d }
+                drawLine(Color(0xFF8A7F68), Offset(14 * d, 40 * d), Offset(30 * d, 120 * d), 1.2f * d)
+                drawRoundRect(Color(0xFFC9A227), Offset(26 * d, 118 * d), Size(6 * d, 52 * d), CornerRadius(1.5f * d))
+                drawPath(Path().apply { moveTo(26 * d, 170 * d); lineTo(32 * d, 170 * d); lineTo(29 * d, 180 * d); close() }, Color(0xFF3A2A1A))
+            }
             Contenedor.ADVIENTO -> {
                 drawRect(Color(0xFFB3122E), Offset(12 * d, 0f), Size(8 * d, size.height))
                 val y = 60 * d

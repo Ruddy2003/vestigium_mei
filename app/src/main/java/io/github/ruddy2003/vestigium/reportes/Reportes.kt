@@ -111,6 +111,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.COLONOS -> R.font.garamond_semibold      // el tipo de la gaceta
     TemaId.NAPOLEON -> R.font.bodoni_titulo         // Didot
     TemaId.BOTANICO -> R.font.fraunces_titulo
+    TemaId.RUINAS -> R.font.letrero_titulo        // el letrero pintado a mano
     TemaId.NAVIDAD -> R.font.cinzel_deco_bold
     TemaId.SEDA -> R.font.almendra_bold
     TemaId.GOTICO -> R.font.gotica_textura          // la textura del vitral; sus números se leen bien
@@ -141,6 +142,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.COLONOS -> "La Gaceta de Vestigium Mei"
     TemaId.NAPOLEON -> "BULLETIN DE VESTIGIUM MEI"
     TemaId.BOTANICO -> "Herbarium · Vestigium Mei"
+    TemaId.RUINAS -> "Cuaderno del superviviente · Vestigium Mei"
     TemaId.NAVIDAD -> "Cartas al fuego · Vestigium Mei"
     TemaId.SEDA -> "Vestigium Mei · diario de caravana"
     TemaId.GOTICO -> "Liber horarum · Vestigium mei"
@@ -399,6 +401,32 @@ object Reportes {
                         val p = Path().apply { moveTo(x, yc); quadTo(x + 9f, yc - 8f, x + 22f, yc); quadTo(x + 9f, yc + 8f, x, yc); close() }
                         c.drawPath(p, hoja); c.restore()
                         x += 26f; i++
+                    }
+                    y += 46f
+                }
+                TemaId.RUINAS -> {
+                    // Una losa de hormigón partida por una grieta en zigzag; encima trepa una enredadera de hiedra con hojas de tres puntas.
+                    val yc = yy + 18f
+                    val losa = L.relleno(L.mezcla(L.linea, L.tinta, 0.25))
+                    c.drawRect(M, yc - 4f, cx - 12f, yc + 4f, losa); c.drawRect(cx + 8f, yc - 4f, W - M, yc + 4f, losa)
+                    val grieta = Path().apply { moveTo(cx - 12f, yc - 4f); lineTo(cx - 4f, yc - 1f); lineTo(cx - 10f, yc + 1.5f); lineTo(cx + 8f, yc + 4f) }
+                    c.drawPath(grieta, L.trazo(L.tinta, 1.4f))
+                    val tallo = Path(); tallo.moveTo(M, yc - 6f)
+                    val hojas = mutableListOf<Pair<Float, Float>>()
+                    var x = M; var i = 0
+                    while (x < W - M - 8f) {
+                        val alto = if (i % 2 == 0) yc - 20f else yc - 2f
+                        tallo.quadTo(x + 18f, alto, x + 36f, yc - 6f)
+                        hojas += (x + 18f) to (if (i % 2 == 0) yc - 13f else yc - 4f)
+                        x += 36f; i++
+                    }
+                    c.drawPath(tallo, L.trazo(L.mezcla(L.primario, L.tinta, 0.4), 1.3f))
+                    val verde = L.relleno(L.primario)
+                    hojas.forEachIndexed { k, (hx, hy) ->
+                        val s = 0.7f + 0.3f * (1f - abs(hx - cx) / (cx - M))
+                        c.save(); c.translate(hx, hy); c.rotate(if (k % 2 == 0) -25f else 155f); c.scale(s, s)
+                        val hoja = Path().apply { moveTo(0f, 0f); lineTo(-7f, -4f); lineTo(-9f, -12f); lineTo(-3f, -10f); lineTo(0f, -17f); lineTo(3f, -10f); lineTo(9f, -12f); lineTo(7f, -4f); close() }
+                        c.drawPath(hoja, verde); c.restore()
                     }
                     y += 46f
                 }

@@ -93,6 +93,27 @@ def papel_pirata():
         d.line([(x, y), (x + l * math.cos(ang), y + l * math.sin(ang))], fill=(90, 74, 50, 30), width=1)
     img.save(os.path.join(OUT, 'papel_pirata.jpg'), quality=86)
 
+def papel_ruinas():
+    """Ciudad verde: papel reciclado gris verdoso de un cuaderno rescatado, con fibras, manchas de agua y la sombra de dos hojas
+    de hiedra que estuvieron prensadas entre sus páginas."""
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    a = mezcla(col('#E8E6DA'), col('#D6D5C6'), ruido_rect(W, H, 26, 141) * 0.7)
+    agua = np.clip((ruido_rect(W, H, 40, 142) - 0.68) * 3.5, 0, 1)
+    a = mezcla(a, col('#C8C1A6'), agua * 0.45)
+    borde = np.clip(np.maximum(np.abs(xx - W / 2) / (W / 2), np.abs(yy - H / 2) / (H / 2)) - 0.82, 0, 1) * 5
+    a = mezcla(a, col('#A9A68E'), np.clip(borde, 0, 1) * 0.5)
+    a = a * (0.95 + 0.07 * ruido_rect(W, H, 0.8, 143)[..., None])
+    img = a_img(a); d = ImageDraw.Draw(img, 'RGBA'); r = np.random.default_rng(144)
+    for _ in range(260):
+        x, y = r.random() * W, r.random() * H; ang = r.random() * math.pi; l = 4 + r.random() * 12
+        d.line([(x, y), (x + l * math.cos(ang), y + l * math.sin(ang))], fill=(90, 100, 70, 28), width=1)
+    pts = [(0, 0.5), (-0.55, 0.35), (-0.8, -0.05), (-0.32, -0.05), (0, -0.5), (0.32, -0.05), (0.8, -0.05), (0.55, 0.35)]
+    for cx, cy, s, ang in ((W * 0.78, H * 0.82, 170, -0.5), (W * 0.2, H * 0.16, 110, 0.7)):
+        ca, sa = math.cos(ang), math.sin(ang)
+        d.polygon([(cx + (px * ca - py * sa) * s, cy + (px * sa + py * ca) * s) for px, py in pts], fill=(90, 110, 60, 22))
+    img.save(os.path.join(OUT, 'papel_ruinas.jpg'), quality=86)
+
 # ------------------------------------------------------------------ papeles
 def papeles():
     W, H = 720, 1280
@@ -305,6 +326,7 @@ def papel_templario():
 if __name__ == '__main__':
     OUT = sys.argv[1]
     papeles()
+    papel_ruinas()
     papel_antiguas()
     papel_pirata()
     papeles_lote7()

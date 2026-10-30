@@ -23,6 +23,7 @@ object NombresCompletos {
         TemaId.COLONOS -> NombresColonos.M[titulo]
         TemaId.NAPOLEON -> NombresNapoleon.M[titulo]
         TemaId.BOTANICO -> NombresBotanico.M[titulo]
+        TemaId.RUINAS -> NombresRuinas.M[titulo]
         TemaId.NAVIDAD -> NombresNavidad.M[titulo]
         TemaId.SEDA -> NombresSeda.M[titulo]
         TemaId.URSS -> NombresUrss.M[titulo]

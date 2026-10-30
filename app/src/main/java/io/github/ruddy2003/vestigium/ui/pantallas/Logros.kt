@@ -248,6 +248,17 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawLine(tallo, Offset(c.x - r * 0.32f, c.y + r * 0.78f), Offset(c.x + r * 0.32f, c.y + r * 0.62f), r * 0.04f)
             for (k in 0..2) { val x = c.x - r * 0.2f + k * r * 0.2f; drawOval(tallo, Offset(x - r * 0.06f, c.y + r * (0.5f - k * 0.05f)), Size(r * 0.12f, r * 0.22f)) }
         }
+        TemaId.RUINAS -> {
+            // Una chapa de botella hecha medalla: el borde dentado, el disco y una hoja de hiedra en relieve.
+            forma(Path().apply {
+                for (i in 0 until 42) { val a = i * kotlin.math.PI / 21; val rr = r * (if (i % 2 == 0) 0.98f else 0.86f); val x = c.x + (rr * kotlin.math.cos(a)).toFloat(); val y = c.y + (rr * kotlin.math.sin(a)).toFloat(); if (i == 0) moveTo(x, y) else lineTo(x, y) }
+                close()
+            })
+            drawCircle(luz, r * 0.72f, c, style = Stroke(r * 0.04f))
+            val verde = if (hecho) lerp(metal, Color(0xFF3F5A2A), 0.6f) else borde.copy(alpha = 0.45f); val s = r * 0.9f
+            drawPath(Path().apply { moveTo(c.x, c.y + s * 0.5f); lineTo(c.x - s * 0.55f, c.y + s * 0.35f); lineTo(c.x - s * 0.8f, c.y - s * 0.05f); lineTo(c.x - s * 0.32f, c.y - s * 0.05f); lineTo(c.x, c.y - s * 0.5f); lineTo(c.x + s * 0.32f, c.y - s * 0.05f); lineTo(c.x + s * 0.8f, c.y - s * 0.05f); lineTo(c.x + s * 0.55f, c.y + s * 0.35f); close() }, verde)
+            drawLine(sombra, Offset(c.x, c.y + s * 0.45f), Offset(c.x, c.y - s * 0.3f), r * 0.03f)
+        }
         // Esfera de árbol con su tapa, su gancho y una ola de escarcha.
         TemaId.NAVIDAD -> {
             val cb = c + Offset(0f, r * 0.1f)

@@ -285,6 +285,8 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     TemaId.NAPOLEON -> GenericShape { s, _ -> moveTo(s.width / 2, 0f); lineTo(s.width, s.height / 2); lineTo(s.width / 2, s.height); lineTo(0f, s.height / 2); close() }
     // Hoja.
     TemaId.BOTANICO -> RoundedCornerShape(topStartPercent = 50, topEndPercent = 6, bottomEndPercent = 50, bottomStartPercent = 6)
+    // Un adoquín desportillado.
+    TemaId.RUINAS -> GenericShape { s, _ -> moveTo(s.width * 0.08f, 0f); lineTo(s.width * 0.8f, 0f); lineTo(s.width, s.height * 0.22f); lineTo(s.width * 0.94f, s.height); lineTo(s.width * 0.14f, s.height * 0.94f); lineTo(0f, s.height * 0.6f); close() }
     // Caja de regalo (el lazo se dibuja aparte).
     TemaId.NAVIDAD -> RoundedCornerShape(12)
     // Moneda (el agujero se dibuja aparte).
@@ -364,6 +366,7 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         TemaId.COLONOS -> {}
         TemaId.NAPOLEON -> {}
         TemaId.BOTANICO -> {}
+        TemaId.RUINAS -> drawLine(fondo.copy(alpha = 0.35f), Offset(s.width * 0.7f, 0f), Offset(s.width * 0.62f, s.height * 0.3f), 1.5f)   // una grieta
         TemaId.GOTICO -> {}
         TemaId.ESPACIO -> {}
         // El brillo de la burbuja, arriba a la izquierda.

@@ -41,6 +41,8 @@ object TrofeosMas {
             "Cultura" to "Linterna", "Gente" to "Campana del pueblo", "Constancia" to "Yunque", "Curiosos" to "Barril", "Tuyos" to "Rueda de carreta"),
         TemaId.BOTANICO to mapOf("Diario" to "Lámina botánica", "Mundo" to "Caja de herborizar", "Cuerpo" to "Hoja de roble", "Mente" to "Lupa",
             "Cultura" to "Helecho", "Gente" to "Cerezas", "Constancia" to "Semilla que brota", "Curiosos" to "Campana de cristal", "Tuyos" to "Flor prensada"),
+        TemaId.RUINAS to mapOf("Diario" to "Cuaderno de lona", "Mundo" to "Brújula oxidada", "Cuerpo" to "Bicicleta rescatada", "Mente" to "Radio de manivela",
+            "Cultura" to "Libro salvado del agua", "Gente" to "Fogata del campamento", "Constancia" to "Árbol que rompió el asfalto", "Curiosos" to "Semáforo con hiedra", "Tuyos" to "Llave de la puerta tapiada"),
         TemaId.NAVIDAD to mapOf("Diario" to "Vela", "Mundo" to "Estrella", "Cuerpo" to "Bastón de caramelo", "Mente" to "Copo de nieve",
             "Cultura" to "Esfera", "Gente" to "Corona", "Constancia" to "Campana", "Curiosos" to "Regalo", "Tuyos" to "Piña"),
         TemaId.ANTIGUAS to mapOf("Diario" to "Libro de runas", "Mundo" to "Mapa de la travesía", "Cuerpo" to "Yelmo", "Mente" to "Cristal",
@@ -112,6 +114,16 @@ object TrofeosMas {
                 listOf(0.22f, 0.78f).forEach { x -> drawLine(hierro, Offset(w * x, h * 0.815f), Offset(w * x, h * 0.955f), w * 0.02f) }
                 drawPath(Path().apply { moveTo(w * 0.22f, h * 0.9f); quadraticTo(w * 0.5f, h * 0.83f, w * 0.78f, h * 0.9f) }, hierro, style = Stroke(w * 0.012f))
                 drawCircle(hierro, w * 0.03f, Offset(w * 0.5f, h * 0.87f), style = Stroke(w * 0.01f))
+            }
+            TemaId.RUINAS -> {
+                // Un bloque de hormigón partido, con musgo encima, una grieta y una varilla oxidada que asoma.
+                val c = if (p.hecho) Color(0xFF9C9C92) else ped
+                drawPath(Path().apply { moveTo(w * 0.16f, h * 0.79f); lineTo(w * 0.62f, h * 0.78f); lineTo(w * 0.68f, h * 0.8f); lineTo(w * 0.84f, h * 0.79f); lineTo(w * 0.84f, h * 0.955f); lineTo(w * 0.16f, h * 0.955f); close() }, piedra(c))
+                if (p.hecho) {
+                    drawOval(Color(0xFF4F7A33).copy(alpha = 0.75f), Offset(w * 0.18f, h * 0.77f), Size(w * 0.3f, h * 0.03f))
+                    drawLine(Color(0xFF8A4A22), Offset(w * 0.76f, h * 0.79f), Offset(w * 0.79f, h * 0.74f), w * 0.012f)
+                    drawLine(Color(0xFF3E3F38).copy(alpha = 0.5f), Offset(w * 0.64f, h * 0.8f), Offset(w * 0.6f, h * 0.9f), w * 0.006f)
+                }
             }
             TemaId.NAVIDAD -> {
                 // Un montoncito de nieve con una rama de acebo.
@@ -818,6 +830,118 @@ object TrofeosMas {
                     drawOval(p.c(Color(0xFF9A6AA8)).copy(alpha = if (p.hecho) 0.8f else 1f), Offset(c.x + (p.w * 0.09f * cos(a)).toFloat() - p.w * 0.07f, c.y + (p.w * 0.09f * sin(a)).toFloat() - p.w * 0.07f), Size(p.w * 0.14f, p.w * 0.14f)) }
                 drawCircle(p.c(Color(0xFFE2B34A)), p.w * 0.04f, c)
                 drawPath(Path().apply { moveTo(c.x, p.y(0.56f)); quadraticTo(c.x + p.w * 0.14f, p.y(0.5f), c.x + p.w * 0.2f, p.y(0.56f)); quadraticTo(c.x + p.w * 0.1f, p.y(0.6f), c.x, p.y(0.56f)); close() }, hojaClara)
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- Ciudad verde
+
+    /** Lo que se rescata en la ciudad que el bosque recuperó: objetos viejos, oxidados o salvados, y lo que vuelve a crecer. */
+    internal fun DrawScope.ruinas(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val hiedra = p.c(Color(0xFF4F7A33)); val hiedraClara = p.c(Color(0xFF7FA35A)); val oxido = p.c(Color(0xFFA34A1E))
+        val hormigon = p.c(Color(0xFF9C9C92)); val tinta = p.c(Color(0xFF2A2E28)); val papel = p.c(Color(0xFFE6E3D6))
+        fun hojaH(c: Offset, t: Float, color: Color) = drawPath(Path().apply { moveTo(c.x, c.y + t * 0.5f); lineTo(c.x - t * 0.55f, c.y + t * 0.35f); lineTo(c.x - t * 0.8f, c.y - t * 0.05f); lineTo(c.x - t * 0.32f, c.y - t * 0.05f); lineTo(c.x, c.y - t * 0.5f); lineTo(c.x + t * 0.32f, c.y - t * 0.05f); lineTo(c.x + t * 0.8f, c.y - t * 0.05f); lineTo(c.x + t * 0.55f, c.y + t * 0.35f); close() }, color)
+        when (cat) {
+            "Diario" -> {
+                // El cuaderno del superviviente: tapa de lona, lomo de cinta plateada, la liga y una hoja de hiedra pegada.
+                val lona = p.c(Color(0xFF5B6B45))
+                drawRect(papel, Offset(p.x(0.23f), p.y(0.13f)), Size(p.x(0.6f), p.y(0.62f)))
+                drawRect(Brush.linearGradient(listOf(lerp(lona, Color.White, 0.12f), lona, lerp(lona, Color.Black, 0.25f)), p.o(0.2f, 0.1f), p.o(0.8f, 0.72f)), p.o(0.2f, 0.1f), Size(p.x(0.6f), p.y(0.62f)))
+                caja(p, 0.2f, 0.1f, 0.29f, 0.72f)
+                hojaH(p.o(0.54f, 0.38f), p.w * 0.22f, hiedraClara)
+                drawLine(lerp(hiedraClara, Color.Black, 0.4f), p.o(0.54f, 0.49f), p.o(0.54f, 0.31f), lw * 0.6f)
+                drawLine(tinta, p.o(0.72f, 0.08f), p.o(0.72f, 0.74f), lw * 1.2f)
+            }
+            "Mundo" -> {
+                // La brújula oxidada: la caja redonda con su tapa abierta, la aguja y las manchas de óxido.
+                val c = p.o(0.5f, 0.46f); val r = p.w * 0.26f
+                drawOval(p.metal(0.24f, 0.76f), Offset(c.x - r, p.y(0.04f)), Size(2 * r, p.y(0.18f)))
+                drawCircle(p.metal(0.24f, 0.76f), r, c)
+                drawCircle(papel, r * 0.82f, c)
+                for (k in 0 until 8) { val a = k * PI / 4; drawLine(tinta.copy(alpha = 0.6f), Offset(c.x + (r * 0.68f * cos(a)).toFloat(), c.y + (r * 0.68f * sin(a)).toFloat()), Offset(c.x + (r * 0.8f * cos(a)).toFloat(), c.y + (r * 0.8f * sin(a)).toFloat()), lw * 0.5f) }
+                drawPath(Path().apply { moveTo(c.x, c.y - r * 0.66f); lineTo(c.x + r * 0.12f, c.y); lineTo(c.x - r * 0.12f, c.y); close() }, p.c(Color(0xFFB3261E)))
+                drawPath(Path().apply { moveTo(c.x, c.y + r * 0.66f); lineTo(c.x + r * 0.12f, c.y); lineTo(c.x - r * 0.12f, c.y); close() }, tinta)
+                drawCircle(oxido.copy(alpha = 0.55f), r * 0.2f, Offset(c.x + r * 0.7f, c.y + r * 0.5f))
+                drawCircle(oxido.copy(alpha = 0.45f), r * 0.12f, Offset(c.x - r * 0.75f, c.y - r * 0.4f))
+            }
+            "Cuerpo" -> {
+                // La bicicleta rescatada: dos ruedas con sus rayos, el cuadro, el manubrio y una guía de hiedra en la rueda de atrás.
+                val r1 = p.o(0.26f, 0.56f); val r2 = p.o(0.74f, 0.56f); val r = p.w * 0.17f
+                listOf(r1, r2).forEach { c ->
+                    drawCircle(tinta, r, c, style = Stroke(lw * 1.4f))
+                    for (k in 0 until 6) { val a = k * PI / 6; drawLine(tinta.copy(alpha = 0.5f), Offset(c.x - (r * cos(a)).toFloat(), c.y - (r * sin(a)).toFloat()), Offset(c.x + (r * cos(a)).toFloat(), c.y + (r * sin(a)).toFloat()), lw * 0.3f) }
+                }
+                val pedal = p.o(0.47f, 0.56f); val sillin = p.o(0.4f, 0.3f); val cuello = p.o(0.66f, 0.3f)
+                drawPath(Path().apply { moveTo(r1.x, r1.y); lineTo(sillin.x, sillin.y); lineTo(cuello.x, cuello.y); lineTo(pedal.x, pedal.y); close(); moveTo(sillin.x, sillin.y); lineTo(pedal.x, pedal.y); moveTo(cuello.x, cuello.y); lineTo(r2.x, r2.y) }, p.metal(0.2f, 0.8f), style = Stroke(lw * 1.3f))
+                drawLine(tinta, p.o(0.36f, 0.27f), p.o(0.45f, 0.27f), lw * 1.6f)
+                drawLine(tinta, p.o(0.64f, 0.24f), p.o(0.72f, 0.22f), lw * 1.2f)
+                hojaH(Offset(r1.x - r * 0.6f, r1.y - r * 0.7f), p.w * 0.08f, hiedra); hojaH(Offset(r1.x + r * 0.2f, r1.y + r * 0.9f), p.w * 0.07f, hiedraClara)
+            }
+            "Mente" -> {
+                // La radio de manivela: la caja con su rejilla, el dial, la antena y la manivela al costado.
+                caja(p, 0.16f, 0.3f, 0.84f, 0.74f)
+                drawRect(p.c(Color(0xFF3A3F38)), Offset(p.x(0.2f), p.y(0.36f)), Size(p.x(0.32f), p.y(0.32f)))
+                for (k in 0 until 6) drawLine(p.linea, Offset(p.x(0.22f), p.y(0.39f + k * 0.05f)), Offset(p.x(0.5f), p.y(0.39f + k * 0.05f)), lw * 0.5f)
+                drawCircle(papel, p.w * 0.1f, p.o(0.68f, 0.46f)); drawLine(p.c(Color(0xFFB3261E)), p.o(0.68f, 0.46f), p.o(0.74f, 0.4f), lw * 0.6f)
+                drawCircle(tinta, p.w * 0.04f, p.o(0.68f, 0.64f))
+                drawLine(p.linea, p.o(0.76f, 0.3f), p.o(0.9f, 0.04f), lw * 0.8f)
+                drawLine(tinta, p.o(0.84f, 0.52f), p.o(0.94f, 0.6f), lw * 1.2f); drawCircle(oxido, p.w * 0.025f, p.o(0.94f, 0.6f))
+            }
+            "Cultura" -> {
+                // Un libro salvado del agua: abierto, con las hojas onduladas, la mancha de humedad y un brote que salió entre sus páginas.
+                listOf(-1f, 1f).forEach { lado ->
+                    drawPath(Path().apply { moveTo(p.x(0.5f), p.y(0.66f)); quadraticTo(p.x(0.5f + lado * 0.2f), p.y(0.6f), p.x(0.5f + lado * 0.38f), p.y(0.66f)); lineTo(p.x(0.5f + lado * 0.38f), p.y(0.36f)); quadraticTo(p.x(0.5f + lado * 0.2f), p.y(0.3f), p.x(0.5f), p.y(0.36f)); close() }, papel)
+                    for (k in 0 until 4) drawLine(tinta.copy(alpha = 0.3f), Offset(p.x(0.5f + lado * 0.06f), p.y(0.42f + k * 0.05f)), Offset(p.x(0.5f + lado * 0.32f), p.y(0.42f + k * 0.05f)), lw * 0.4f)
+                }
+                drawOval(p.c(Color(0xFF8A6A44)).copy(alpha = 0.3f), Offset(p.x(0.56f), p.y(0.5f)), Size(p.x(0.22f), p.y(0.12f)))
+                drawLine(hiedra, p.o(0.5f, 0.38f), p.o(0.5f, 0.16f), lw * 0.9f)
+                hojaH(p.o(0.43f, 0.18f), p.w * 0.1f, hiedraClara); hojaH(p.o(0.58f, 0.13f), p.w * 0.11f, hiedra)
+                drawLine(p.linea, p.o(0.12f, 0.66f), p.o(0.88f, 0.66f), lw * 0.8f)
+            }
+            "Gente" -> {
+                // La fogata del campamento: los leños cruzados, las piedras alrededor y las llamas.
+                for (k in 0 until 7) drawOval(hormigon, Offset(p.x(0.14f + k * 0.1f), p.y(0.68f)), Size(p.x(0.1f), p.y(0.07f)))
+                drawLine(p.c(Color(0xFF5A3A22)), p.o(0.26f, 0.7f), p.o(0.7f, 0.56f), lw * 3f, StrokeCap.Round)
+                drawLine(p.c(Color(0xFF6A4A2A)), p.o(0.74f, 0.7f), p.o(0.3f, 0.56f), lw * 3f, StrokeCap.Round)
+                val fuego = p.c(Color(0xFFE07A2A)); val centro = p.c(Color(0xFFF2C14E))
+                fun llama(cx: Float, alto: Float, ancho: Float, col: Color) = drawPath(Path().apply {
+                    moveTo(p.x(cx), p.y(0.6f - alto)); cubicTo(p.x(cx + ancho), p.y(0.6f - alto * 0.5f), p.x(cx + ancho * 0.8f), p.y(0.6f), p.x(cx), p.y(0.62f))
+                    cubicTo(p.x(cx - ancho * 0.8f), p.y(0.6f), p.x(cx - ancho), p.y(0.6f - alto * 0.5f), p.x(cx), p.y(0.6f - alto)); close() }, col)
+                llama(0.5f, 0.46f, 0.16f, fuego); llama(0.4f, 0.28f, 0.08f, fuego); llama(0.6f, 0.32f, 0.08f, fuego); llama(0.5f, 0.26f, 0.08f, centro)
+            }
+            "Constancia" -> {
+                // El árbol que rompió el asfalto: la losa partida en dos y el tronco con su copa saliendo por la grieta.
+                drawPath(Path().apply { moveTo(p.x(0.06f), p.y(0.64f)); lineTo(p.x(0.44f), p.y(0.62f)); lineTo(p.x(0.4f), p.y(0.76f)); lineTo(p.x(0.06f), p.y(0.76f)); close() }, hormigon)
+                drawPath(Path().apply { moveTo(p.x(0.56f), p.y(0.6f)); lineTo(p.x(0.94f), p.y(0.66f)); lineTo(p.x(0.94f), p.y(0.76f)); lineTo(p.x(0.6f), p.y(0.76f)); close() }, hormigon)
+                drawLine(p.c(Color(0xFFE0B040)).copy(alpha = 0.8f), p.o(0.12f, 0.69f), p.o(0.3f, 0.685f), lw * 1.4f)
+                drawLine(p.c(Color(0xFF5A3A22)), p.o(0.5f, 0.76f), p.o(0.5f, 0.36f), lw * 3.2f)
+                drawLine(p.c(Color(0xFF5A3A22)), p.o(0.5f, 0.46f), p.o(0.62f, 0.34f), lw * 1.4f)
+                listOf(Triple(0.5f, 0.26f, 0.2f), Triple(0.34f, 0.32f, 0.13f), Triple(0.66f, 0.3f, 0.14f), Triple(0.5f, 0.14f, 0.12f)).forEach { (x, y, r) ->
+                    drawCircle(Brush.radialGradient(listOf(hiedraClara, hiedra), p.o(x - 0.04f, y - 0.04f), p.w * r * 1.4f), p.w * r, p.o(x, y))
+                }
+            }
+            "Curiosos" -> {
+                // El semáforo con hiedra: la caja en su poste, el rojo y el ámbar muertos, el verde encendido y las hojas que trepan.
+                drawRect(p.metal(0.46f, 0.54f), Offset(p.x(0.47f), p.y(0.5f)), Size(p.x(0.06f), p.y(0.28f)))
+                drawRoundRect(p.c(Color(0xFF2E332E)), p.o(0.36f, 0.06f), Size(p.x(0.28f), p.y(0.46f)), CornerRadius(p.w * 0.05f))
+                listOf(0.14f to oxido.copy(alpha = 0.5f), 0.29f to p.c(Color(0xFFB57A0E)).copy(alpha = 0.45f), 0.44f to p.c(Color(0xFF8FCB6A))).forEach { (y, col) -> drawCircle(col, p.w * 0.06f, p.o(0.5f, y)) }
+                if (p.hecho) drawCircle(Color(0xFF8FCB6A).copy(alpha = 0.25f), p.w * 0.11f, p.o(0.5f, 0.44f))
+                drawPath(Path().apply { moveTo(p.x(0.46f), p.y(0.78f)); cubicTo(p.x(0.58f), p.y(0.66f), p.x(0.4f), p.y(0.56f), p.x(0.6f), p.y(0.4f)) }, hiedra, style = Stroke(lw * 0.8f))
+                listOf(Triple(0.42f, 0.72f, 0.08f), Triple(0.58f, 0.62f, 0.09f), Triple(0.44f, 0.54f, 0.08f), Triple(0.66f, 0.4f, 0.09f), Triple(0.62f, 0.22f, 0.08f)).forEachIndexed { k, (x, y, t) ->
+                    hojaH(p.o(x, y), p.w * t, if (k % 2 == 0) hiedra else hiedraClara)
+                }
+            }
+            else -> {
+                // La llave de la puerta tapiada: el ojo, la caña y los dientes, atada a un trozo de cordel con una hoja.
+                val c = p.o(0.32f, 0.36f); val r = p.w * 0.13f
+                drawCircle(p.metal(0.18f, 0.46f), r, c, style = Stroke(lw * 2.4f))
+                drawLine(p.c(Color(0xFF8A7F68)), Offset(c.x - r * 0.4f, c.y - r * 0.9f), p.o(0.18f, 0.06f), lw * 0.6f)
+                caja(p, 0.44f, 0.33f, 0.86f, 0.39f)
+                caja(p, 0.72f, 0.39f, 0.76f, 0.5f); caja(p, 0.8f, 0.39f, 0.84f, 0.46f)
+                drawCircle(oxido.copy(alpha = 0.5f), p.w * 0.03f, p.o(0.6f, 0.36f))
+                hojaH(p.o(0.2f, 0.62f), p.w * 0.16f, hiedraClara)
+                drawLine(p.c(Color(0xFF8A7F68)), p.o(0.18f, 0.06f), p.o(0.2f, 0.53f), lw * 0.6f)
             }
         }
     }

@@ -125,6 +125,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.COLONOS -> BandaGaceta(modifier)
         TemaId.NAPOLEON -> Laureles(modifier)
         TemaId.BOTANICO -> Enredadera(modifier)
+        TemaId.RUINAS -> BandaCalle(modifier)
         TemaId.GOTICO -> Arqueria(modifier)
         TemaId.ESPACIO -> Orbita(modifier)
         TemaId.ABISMO -> TrazaSonar(modifier)
@@ -1005,6 +1006,10 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "✾", igual = "~ ", nulo = "sin espécimen", elegido = "✿", riel = RolColor.SECUNDARIO, quitar = "⊘", listaVacia = "( frasco vacío )", flecha = "⤳",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.1f, colorPrefijo = RolColor.SECUNDARIO, renglones = true, margen = MargenEditor.PUNTOS,
         guiones = floatArrayOf(0.5f, 1.8f), tamBoton = 14, letraBoton = null, borde = RolColor.CONTORNO, grosor = 1f)
+    TemaId.RUINAS -> PielComponentes(sep = "  ❦  ", cerrada = "▣", abierta = "▢", numeral = RolColor.TERCIARIO, centrar = false, rellena = true,
+        aviso = "⚠", igual = "· ", nulo = "sin marcar", elegido = "✔", riel = RolColor.PRIMARIO, quitar = "✕", listaVacia = "( mochila vacía )", flecha = "→",
+        sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 0.8f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.BARRA,
+        guiones = floatArrayOf(6f, 3f), tamBoton = 15, letraBoton = null, borde = RolColor.SECUNDARIO, grosor = 1.5f)
     TemaId.NAVIDAD -> PielComponentes(sep = "  ✶  ", cerrada = "❄", abierta = "❅", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
         aviso = "✉", igual = "✶ ", nulo = "sin abrir", elegido = "❆", riel = RolColor.SECUNDARIO, quitar = "⊖", listaVacia = "( ni un regalo )", flecha = "➝",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.4f, colorPrefijo = RolColor.SECUNDARIO, renglones = true, margen = MargenEditor.NINGUNO,
@@ -1118,6 +1123,13 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             drawLine(e.onBackground.copy(alpha = 0.5f), Offset(0f, size.height - 1.dp.toPx()), Offset(size.width, size.height - 1.dp.toPx()), 1.dp.toPx(),
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 3.dp.toPx())))
         }.padding(bottom = 4.dp))
+        // Subrayado de pintura de calle gastada, partido por una grieta, con una mata de hierba que brota al final.
+        TemaId.RUINAS -> Text(nombre, style = estilo, modifier = peso.drawBehind {
+            val y = size.height - 2.dp.toPx(); val g = 2.dp.toPx(); val corte = size.width * 0.38f
+            drawLine(e.tertiary.copy(alpha = 0.7f), Offset(0f, y), Offset(corte - 2.dp.toPx(), y), g)
+            drawLine(e.tertiary.copy(alpha = 0.7f), Offset(corte + 2.dp.toPx(), y), Offset(size.width * 0.86f, y), g)
+            for (j in -1..1) drawLine(e.primary, Offset(size.width * 0.93f + j * 1.5.dp.toPx(), y + g / 2), Offset(size.width * 0.93f + j * 3.dp.toPx(), y - (if (j == 0) 7f else 5f).dp.toPx()), 1.2.dp.toPx())
+        }.padding(bottom = 6.dp))
         // Rojo con una guirnalda verde que ondula debajo.
         TemaId.NAVIDAD -> Text(nombre, style = estilo, color = e.primary, modifier = peso.drawBehind {
             val y = size.height - 3.dp.toPx(); val amp = 1.5.dp.toPx(); val lam = 14.dp.toPx()
@@ -1223,6 +1235,8 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.NAPOLEON -> CutCornerShape(50)
     // Hoja: dos esquinas redondas y dos en punta.
     TemaId.BOTANICO -> RoundedCornerShape(topStart = 16.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 2.dp)
+    // Una losa con las esquinas desportilladas, cada una distinta.
+    TemaId.RUINAS -> CutCornerShape(topStart = 2.dp, topEnd = 9.dp, bottomEnd = 2.dp, bottomStart = 5.dp)
     TemaId.NAVIDAD -> RoundedCornerShape(10.dp)
     // Tablilla con alero, como el rótulo de una puerta.
     TemaId.SEDA -> GenericShape { s, _ ->
@@ -1293,6 +1307,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.COLONOS -> "a máquina · $es"
         TemaId.NAPOLEON -> "dépêche · $es"
         TemaId.BOTANICO -> "cuaderno de campo · $es"
+        TemaId.RUINAS -> "a lápiz, en el cuaderno del superviviente · $es"
         TemaId.NAVIDAD -> "carta junto al fuego · $es"
         TemaId.SEDA -> "pincel y tinta · $es"
         TemaId.GOTICO -> "breviario · $es"
@@ -1433,6 +1448,20 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             drawLine(e.onSurface.copy(alpha = 0.25f), c, Offset(c.x + u * 1.2f, c.y + u * 0.9f), fino * 1.2f)
             drawCircle(e.secondary, u * 0.38f, c)
             drawCircle(e.surface.copy(alpha = 0.6f), u * 0.13f, Offset(c.x - u * 0.12f, c.y - u * 0.12f))
+        }
+        TemaId.RUINAS -> {
+            // Una guía de hiedra que trepa desde la esquina de arriba a la izquierda, con tres hojas de cinco puntas.
+            val o = Offset(i, i)
+            val tallo = Path().apply { moveTo(o.x, o.y + u * 3.2f); quadraticTo(o.x + u * 0.4f, o.y + u * 0.4f, o.x + u * 3.4f, o.y) }
+            drawPath(tallo, e.primary.copy(alpha = 0.55f), style = Stroke(fino))
+            listOf(Offset(o.x + u * 0.25f, o.y + u * 2.2f) to 200f, Offset(o.x + u * 1.0f, o.y + u * 0.9f) to 135f, Offset(o.x + u * 2.4f, o.y + u * 0.15f) to 80f).forEach { (p, g) ->
+                rotate(g, p) {
+                    drawPath(Path().apply {
+                        moveTo(p.x, p.y); lineTo(p.x - u * 0.33f, p.y + u * 0.1f); lineTo(p.x - u * 0.45f, p.y + u * 0.35f); lineTo(p.x - u * 0.18f, p.y + u * 0.33f)
+                        lineTo(p.x, p.y + u * 0.62f); lineTo(p.x + u * 0.18f, p.y + u * 0.33f); lineTo(p.x + u * 0.45f, p.y + u * 0.35f); lineTo(p.x + u * 0.33f, p.y + u * 0.1f); close()
+                    }, e.primary.copy(alpha = 0.75f))
+                }
+            }
         }
         TemaId.NAVIDAD -> {
             // Una ramita de acebo arriba a la derecha: dos hojas y tres bayas.
@@ -1618,6 +1647,16 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawRect(a, Offset(f(0.3f), f(0.1f)), Size(f(0.4f), f(0.14f)), style = tr)
             drawRect(l, Offset(f(0.32f), f(0.5f)), Size(f(0.36f), f(0.18f)), style = Stroke(tr.width * 0.6f))
         }
+        TemaId.RUINAS -> {
+            // Una lata vacía, abierta, de la que asoma un brote.
+            drawRect(l, Offset(f(0.3f), f(0.36f)), Size(f(0.4f), f(0.52f)), style = tr)
+            drawOval(l, Offset(f(0.3f), f(0.31f)), Size(f(0.4f), f(0.1f)), style = tr)
+            drawLine(l, Offset(f(0.3f), f(0.55f)), Offset(f(0.7f), f(0.55f)), tr.width * 0.5f)
+            drawLine(l, Offset(f(0.3f), f(0.7f)), Offset(f(0.7f), f(0.7f)), tr.width * 0.5f)
+            drawLine(a, Offset(f(0.5f), f(0.36f)), Offset(f(0.52f), f(0.12f)), tr.width)
+            rotate(-35f, Offset(f(0.52f), f(0.2f))) { drawOval(a, Offset(f(0.52f), f(0.16f)), Size(f(0.18f), f(0.08f))) }
+            rotate(30f, Offset(f(0.51f), f(0.26f))) { drawOval(a, Offset(f(0.33f), f(0.22f)), Size(f(0.18f), f(0.08f))) }
+        }
         TemaId.NAVIDAD -> {
             // Calcetín colgado, sin regalos.
             drawPath(Path().apply {
@@ -1746,6 +1785,11 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
         }
         TemaId.NAPOLEON -> romboComp(Offset(w / 2, d * 1.3f), d * 0.8f, d, c)
         TemaId.BOTANICO -> rotate(-35f, Offset(w - d * 2.2f, h - d * 1.5f)) { drawOval(c, Offset(w - d * 3.4f, h - d * 2f), Size(d * 2.4f, d)) }
+        TemaId.RUINAS -> {
+            // Un semáforo diminuto arriba al centro: la caja y sus tres luces, la de abajo encendida.
+            drawRoundRect(c, Offset(w / 2 - d * 0.9f, 0f), Size(d * 1.8f, d * 4.4f), CornerRadius(d * 0.5f))
+            for (k in 0..2) drawCircle(if (k == 2) fondo else fondo.copy(alpha = 0.35f), d * 0.5f, Offset(w / 2, d * (0.8f + 1.4f * k)))
+        }
         TemaId.NAVIDAD -> {
             drawLine(c, Offset(w / 2, 0f), Offset(w / 2, d * 1.2f), d * 0.3f)
             drawCircle(c, d * 0.75f, Offset(w / 2, d * 1.9f))
@@ -1844,6 +1888,12 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         TemaId.BOTANICO -> {
             drawLine(c, Offset(m * 1.5f, h - m * 1.5f), Offset(m * 4.5f, h - m * 3.2f), fino)
             drawLine(c, Offset(w - m * 1.5f, m * 1.5f), Offset(w - m * 4.5f, m * 3.2f), fino)
+        }
+        // Una grieta que baja desde el borde de arriba y una mancha de musgo abajo a la izquierda.
+        TemaId.RUINAS -> {
+            drawPath(Path().apply { moveTo(w - m * 3f, 0f); lineTo(w - m * 3.4f, m * 1.2f); lineTo(w - m * 2.7f, m * 1.9f); lineTo(w - m * 3.1f, m * 3f) }, c, style = Stroke(fino))
+            drawOval(e.primary.copy(alpha = 0.35f), Offset(m * 0.6f, h - m * 1.6f), Size(m * 3.2f, m * 1.1f))
+            drawOval(e.primary.copy(alpha = 0.25f), Offset(m * 2.4f, h - m * 1.2f), Size(m * 1.8f, m * 0.8f))
         }
         // Nieve en el borde de arriba.
         TemaId.NAVIDAD -> {
@@ -2001,6 +2051,13 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             // Cuaderno de campo con una hoja prensada.
             drawRoundRect(l, Offset(f(0.14f), f(0.04f)), Size(f(0.72f), f(0.92f)), CornerRadius(f(0.06f)), style = tr)
             rotate(-30f, Offset(f(0.5f), f(0.5f))) { drawOval(a, Offset(f(0.3f), f(0.38f)), Size(f(0.4f), f(0.22f))) }
+        }
+        TemaId.RUINAS -> {
+            // Un muro de ladrillo y el trozo de carboncillo con que se escribe en él.
+            drawRect(l, Offset(f(0.06f), f(0.12f)), Size(f(0.88f), f(0.76f)), style = tr)
+            for (j in 1..3) drawLine(l, Offset(f(0.06f), f(0.12f + 0.19f * j)), Offset(f(0.94f), f(0.12f + 0.19f * j)), tr.width * 0.6f)
+            for (j in 0..3) { val x0 = if (j % 2 == 0) 0.35f else 0.6f; drawLine(l, Offset(f(x0), f(0.12f + 0.19f * j)), Offset(f(x0), f(0.31f + 0.19f * j)), tr.width * 0.6f) }
+            rotate(-40f, Offset(f(0.62f), f(0.55f))) { drawRoundRect(a, Offset(f(0.42f), f(0.5f)), Size(f(0.42f), f(0.12f)), CornerRadius(f(0.03f))) }
         }
         TemaId.NAVIDAD -> {
             // Carta con una ramita de acebo.
@@ -2173,6 +2230,14 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
             p.moveTo(3 * d, 0f)
             while (y <= h) { p.lineTo(3 * d + 1.8f * d * sin(y / (5 * d)), y); y += 2f }
             drawPath(p, c, style = Stroke(1.3f * d))
+        }
+        TemaId.RUINAS -> {
+            // Una valla de calle cortada: franjas en diagonal, óxido y ámbar.
+            var y = 0f; var n = 0
+            while (y < h) {
+                drawPath(Path().apply { moveTo(0f, y); lineTo(4 * d, y - 3 * d); lineTo(4 * d, y + 2 * d); lineTo(0f, y + 5 * d); close() }, if (n % 2 == 0) c else e.tertiary)
+                y += 5 * d; n++
+            }
         }
         TemaId.NAVIDAD -> {
             // Bastón de caramelo: tramos rojos y verdes.

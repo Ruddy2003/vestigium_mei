@@ -84,6 +84,11 @@ object Widgets {
             0xFFB8E06A.toInt(), 0xFFEAF0E2.toInt(), 0xFFA9B8A4.toInt(), 0xFF2D442F.toInt(),
             intArrayOf(0xFFF29BB8.toInt(), 0xFFE7A9BE.toInt(), 0xFFD9C3C0.toInt(), 0xFFEAF0E2.toInt(), 0xFFC8E3A8.toInt(), 0xFFA9DC80.toInt(), 0xFF8FD06A.toInt()),
             0xFF121D15.toInt(), 0xFF121A04.toInt())
+        // Ciudad verde: el ánimo va del óxido al musgo, pasando por el gris del hormigón.
+        TemaId.RUINAS -> Colores(R.drawable.widget_fondo_ruinas, R.drawable.widget_boton_ruinas, R.drawable.widget_boton_activo_ruinas, R.drawable.widget_boton_ambar_ruinas,
+            0xFF8FCB6A.toInt(), 0xFFE3E6DC.toInt(), 0xFFA2AB9E.toInt(), 0xFF26391C.toInt(),
+            intArrayOf(0xFFE08A55.toInt(), 0xFFD9A066.toInt(), 0xFFC9C2AE.toInt(), 0xFFE3E6DC.toInt(), 0xFFB8D79A.toInt(), 0xFF9FCB78.toInt(), 0xFF8FCB6A.toInt()),
+            0xFF141A16.toInt(), 0xFF0E1A08.toInt())
         TemaId.NAVIDAD -> Colores(R.drawable.widget_fondo_navidad, R.drawable.widget_boton_navidad, R.drawable.widget_boton_activo_navidad, R.drawable.widget_boton_ambar_navidad,
             0xFFF2C94C.toInt(), 0xFFF3EFE6.toInt(), 0xFFB5C2B8.toInt(), 0xFF2E4A39.toInt(),
             intArrayOf(0xFFE5484D.toInt(), 0xFFE77B7A.toInt(), 0xFFE9B2A8.toInt(), 0xFFF3EFE6.toInt(), 0xFFB5DDB7.toInt(), 0xFF8CCF8F.toInt(), 0xFF66BB6A.toInt()),
@@ -168,6 +173,7 @@ object Widgets {
         TemaId.COLONOS -> "Al paso" to "Apunte"
         TemaId.NAPOLEON -> "À PRÉSENT" to "DÉPÊCHE"
         TemaId.BOTANICO -> "En el campo" to "Libreta"
+        TemaId.RUINAS -> "En la ronda" to "Cuaderno"
         TemaId.NAVIDAD -> "Junto al fuego" to "Postal"
         TemaId.SEDA -> "Alto" to "Rollo"
         TemaId.GOTICO -> "Ad horam" to "Scribe"
@@ -202,6 +208,7 @@ object Widgets {
             TemaId.COLONOS -> R.font.fell to 1.08f
             TemaId.NAPOLEON -> R.font.bodoni_titulo to 1.05f
             TemaId.BOTANICO -> R.font.fraunces_titulo to 1.0f
+            TemaId.RUINAS -> R.font.letrero_titulo to 1.06f
             TemaId.NAVIDAD -> R.font.cinzel_deco_regular to 0.95f
             TemaId.SEDA -> R.font.almendra_regular to 1.08f
             TemaId.GOTICO -> R.font.gotica_textura to 1.12f

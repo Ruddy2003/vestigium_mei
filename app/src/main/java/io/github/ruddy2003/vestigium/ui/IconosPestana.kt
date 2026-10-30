@@ -119,6 +119,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.NAPOLEON -> { p { m(2.5f, 15.5f); q(12f, 2.5f, 21.5f, 15.5f); q(12f, 11.5f, 2.5f, 15.5f); close() }; ci(12f, 9.8f, 1.6f, st = fino); l(12f, 8.2f, 12f, 4.5f, 1.1f) } // bicornio
         TemaId.BOTANICO -> { p { m(5f, 19f); q(5f, 5f, 19f, 5f); q(19f, 19f, 5f, 19f); close() }; l(4f, 20f, 15.5f, 8.5f, 1.2f)
             l(8.5f, 15.5f, 8.5f, 11.5f, 1.1f); l(11.5f, 12.5f, 11.5f, 8.5f, 1.1f); l(8.5f, 15.5f, 12.5f, 15.5f, 1.1f); l(11.5f, 12.5f, 15.5f, 12.5f, 1.1f) } // hoja con nervios
+        TemaId.RUINAS -> { r(8.5f, 2.5f, 7f, 15f, 2f); ci(12f, 5.8f, 1.5f, st = fino); ci(12f, 10f, 1.5f, st = fino); ci(12f, 14.2f, 1.8f, relleno = true)
+            l(12f, 17.5f, 12f, 21.5f); hoja(16.2f, 19.2f, 5f, 1.6f, -35f) }                                                               // semáforo con su hoja de hiedra
         TemaId.GOTICO -> { p { m(6f, 21f); t(6f, 10f); q(6f, 3f, 12f, 2.5f); q(18f, 3f, 18f, 10f); t(18f, 21f); close() }; l(12f, 9.5f, 12f, 21f, 1.1f)
             ci(12f, 7.3f, 1.8f, st = fino); l(6f, 14.5f, 18f, 14.5f, 1.1f) }                                                                  // ventana de lanceta
         TemaId.ESPACIO -> { ci(12f, 12f, 5.4f); p { m(2.5f, 15f); q(4f, 10f, 12f, 9.6f); q(21f, 9.3f, 21.5f, 9f) }; p(st = fino) { m(2.5f, 15f); q(12f, 16.5f, 21.5f, 9f) }
@@ -161,6 +163,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.COLONOS -> momentos(tm)
         TemaId.NAPOLEON -> momentos(tm)
         TemaId.BOTANICO -> momentos(tm)
+        TemaId.RUINAS -> momentos(tm)
         TemaId.NAVIDAD -> momentos(tm)
         TemaId.SEDA -> momentos(tm)
         TemaId.GOTICO -> momentos(tm)
@@ -198,6 +201,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.NAPOLEON -> { p { m(5f, 15f); t(5f, 20.5f); t(13f, 20.5f); t(13f, 15f); q(13f, 13.5f, 11.5f, 13.5f); t(6.5f, 13.5f); q(5f, 13.5f, 5f, 15f); close() }
             p { m(9f, 14f); q(13f, 6f, 21f, 2.5f); q(18f, 9f, 9f, 14f); close() } }                                                       // tintero y pluma
         TemaId.BOTANICO -> { r(5f, 3f, 14f, 18f, 0.8f); l(8f, 3f, 8f, 21f, 1.1f); p(relleno = true) { m(10.5f, 16.5f); q(10.5f, 8f, 16.5f, 7f); q(17f, 15f, 10.5f, 16.5f); close() } } // cuaderno con hoja prensada
+        TemaId.RUINAS -> { r(5f, 3f, 14f, 18f, 0.8f); r(5f, 3f, 3.2f, 18f, 0.4f, true); l(15.5f, 2f, 15.5f, 22f, 1.1f)
+            p(relleno = true) { m(11f, 15.5f); t(8.8f, 14.6f); t(8f, 12.2f); t(9.9f, 12.2f); t(11f, 9.2f); t(12.1f, 12.2f); t(14f, 12.2f); t(13.2f, 14.6f); close() } } // cuaderno con cinta, liga y hoja prensada
         TemaId.GOTICO -> { ci(12f, 12f, 8.6f); ci(12f, 12f, 2.6f); rayos(12f, 12f, 8, 2.6f, 8.6f); for (i in 0 until 8) { val a = Math.toRadians(22.5 + 45.0 * i).toFloat(); ci(12f + 6.2f * cos(a), 12f + 6.2f * sin(a), 0.7f, relleno = true) } } // rosetón
         TemaId.ESPACIO -> { p { m(12f, 2.5f); q(17f, 7f, 15.5f, 15.5f); t(8.5f, 15.5f); q(7f, 7f, 12f, 2.5f); close() }; ci(12f, 9f, 1.8f, st = fino)
             p { m(8.5f, 12.5f); t(5.5f, 17f); t(8.8f, 15.5f) }; p { m(15.5f, 12.5f); t(18.5f, 17f); t(15.2f, 15.5f) }
@@ -240,6 +245,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             ci(17.8f, 10.5f, 1.4f, relleno = true) }                                                                                          // mapa de campaña
         TemaId.BOTANICO -> { ci(10f, 10f, 6.5f); l(14.8f, 14.8f, 20.5f, 20.5f, 2.4f); s.drawOval(c, o(7.4f, 8.2f), Size(5.2f * u, 3.6f * u))
             l(10f, 8.2f, 10f, 11.8f, 0.9f); l(7.4f, 10f, 12.6f, 10f, 0.9f) }                                                                // lupa sobre un escarabajo
+        TemaId.RUINAS -> { ci(7f, 15.5f, 4f); ci(17f, 15.5f, 4f); r(4.8f, 5f, 4.4f, 7f, 1f); r(14.8f, 5f, 4.4f, 7f, 1f); l(11f, 13.5f, 13f, 13.5f)
+            l(9.2f, 8f, 14.8f, 8f, 1.1f) }                                                                                                    // prismáticos para otear la ciudad
         TemaId.GOTICO -> { p { m(12f, 3f); q(15f, 7f, 12.8f, 12f); t(11.2f, 12f); q(9f, 7f, 12f, 3f); close() }; p { m(11f, 12f); q(4.5f, 12.5f, 4.5f, 7.5f); q(8f, 7.5f, 10f, 11f) }
             p { m(13f, 12f); q(19.5f, 12.5f, 19.5f, 7.5f); q(16f, 7.5f, 14f, 11f) }; l(7f, 13.5f, 17f, 13.5f); p { m(12f, 13.5f); q(12f, 19f, 8.5f, 20.5f) }; p { m(12f, 13.5f); q(12f, 19f, 15.5f, 20.5f) } } // flor de lis
         TemaId.ESPACIO -> { l(4f, 14f, 17f, 6.5f, 3.2f); l(17.5f, 6.2f, 20f, 4.8f, 2f); l(10.5f, 10.5f, 7f, 21f); l(10.5f, 10.5f, 14f, 21f); l(10.5f, 10.5f, 10.5f, 21f, 1.1f) } // telescopio
@@ -282,6 +289,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             p(st = fino) { m(5f, 10.5f); t(8.5f, 16.5f); t(12f, 10.5f); t(15.5f, 16.5f); t(19f, 10.5f) } }                                // tambor
         TemaId.BOTANICO -> { p { m(6f, 13f); t(18f, 13f); t(16f, 21f); t(8f, 21f); close() }; l(5f, 13f, 19f, 13f); l(12f, 13f, 12f, 7f)
             p(relleno = true) { m(12f, 9f); q(6f, 9f, 5.5f, 3.5f); q(11f, 3.5f, 12f, 9f); close() }; p(relleno = true) { m(12f, 7.5f); q(18f, 7.5f, 18.5f, 2.5f); q(13f, 2.5f, 12f, 7.5f); close() } } // maceta
+        TemaId.RUINAS -> { p { m(6f, 10f); q(6f, 5f, 12f, 5f); q(18f, 5f, 18f, 10f); t(18f, 21f); t(6f, 21f); close() }; r(8.5f, 13.5f, 7f, 5f, 1f)
+            p(st = fino) { m(9.5f, 5.6f); q(12f, 1.8f, 14.5f, 5.6f) }; l(6f, 11f, 18f, 11f, 1.1f) }                                          // mochila
         TemaId.GOTICO -> { p { m(8f, 21f); t(8f, 9f); t(12f, 2.5f); t(16f, 9f); t(16f, 21f) }; l(5f, 21f, 19f, 21f); p(st = fino) { m(10.5f, 16f); t(10.5f, 13f); q(10.5f, 11f, 12f, 10.5f); q(13.5f, 11f, 13.5f, 13f); t(13.5f, 16f) }
             l(8f, 9f, 16f, 9f, 1.1f) }                                                                                                        // campanario
         TemaId.ESPACIO -> { r(9.5f, 9.5f, 5f, 5f, 0.6f); r(2f, 10.5f, 6f, 3f, 0.3f, true); r(16f, 10.5f, 6f, 3f, 0.3f, true); l(8f, 12f, 9.5f, 12f, 1.1f); l(14.5f, 12f, 16f, 12f, 1.1f)
@@ -337,6 +346,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.BOTANICO -> { l(12f, 7f, 12f, 18.5f, 1.6f); p(st = fino) { m(12f, 7f); q(10.5f, 3.5f, 8.5f, 3f) }; p(st = fino) { m(12f, 7f); q(13.5f, 3.5f, 15.5f, 3f) }
             p { m(12f, 9.5f); q(4f, 3f, 3.5f, 9.5f); q(4f, 13.5f, 12f, 12.5f) }; p { m(12f, 9.5f); q(20f, 3f, 20.5f, 9.5f); q(20f, 13.5f, 12f, 12.5f) }
             p { m(12f, 12.5f); q(5f, 13.5f, 6.5f, 18.5f); q(9f, 21f, 12f, 15.5f) }; p { m(12f, 12.5f); q(19f, 13.5f, 17.5f, 18.5f); q(15f, 21f, 12f, 15.5f) } } // mariposa
+        TemaId.RUINAS -> { p { m(4f, 21f); t(4f, 10f); t(6.5f, 8f); t(8.5f, 11f); t(11.5f, 9f); t(11.5f, 21f) }; l(2.5f, 21f, 21.5f, 21f)
+            r(6f, 13f, 2f, 2.4f, 0.3f, true); r(6f, 17f, 2f, 2.4f, 0.3f, true); l(17f, 21f, 17f, 12.5f, 1.5f); ci(17f, 9f, 4f, relleno = true) } // árbol junto a un edificio roto
         TemaId.NAVIDAD -> { ci(12f, 16.5f, 5f); ci(12f, 8.5f, 3.4f); r(10f, 2f, 4f, 3f, 0.3f, true); l(8.6f, 5f, 15.4f, 5f, 1.5f)
             ci(12f, 15f, 0.8f, relleno = true); ci(12f, 18f, 0.8f, relleno = true); l(7.2f, 13.5f, 3.5f, 10.5f, 1.1f); l(16.8f, 13.5f, 20.5f, 10.5f, 1.1f) } // muñeco de nieve
         TemaId.SEDA -> { l(12f, 1.5f, 12f, 4.5f, 1.1f)
@@ -394,6 +405,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.NAPOLEON -> { p { m(5f, 19.5f); q(9f, 11f, 19.5f, 4f) }; p { m(19f, 19.5f); q(15f, 11f, 4.5f, 4f) }
             l(4f, 16.6f, 7.8f, 19.8f, 1.6f); l(20f, 16.6f, 16.2f, 19.8f, 1.6f); ci(3.8f, 21f, 1f, relleno = true); ci(20.2f, 21f, 1f, relleno = true) } // sables cruzados
         TemaId.BOTANICO -> { ci(15f, 6f, 2.6f, relleno = true); l(13.6f, 7.4f, 5f, 18f, 1.4f); l(18f, 13.5f, 18f, 20.5f, 1.8f); l(14.5f, 17f, 21.5f, 17f, 1.8f) } // alfiler de entomólogo y un ejemplar más
+        TemaId.RUINAS -> { r(10.4f, 2.5f, 3.2f, 19f, 0.4f); r(2.5f, 10.4f, 19f, 3.2f, 0.4f); ci(12f, 12f, 0.9f, relleno = true)
+            ci(12f, 4.5f, 0.6f, relleno = true); ci(12f, 19.5f, 0.6f, relleno = true); ci(4.5f, 12f, 0.6f, relleno = true); ci(19.5f, 12f, 0.6f, relleno = true) } // dos tablas clavadas en cruz
         TemaId.NAVIDAD -> { for (k in 0 until 6) { val g = -90.0 + 60.0 * k
                 l(12f, 12f, px(12f, 9.5f, g), py(12f, 9.5f, g))
                 for (d in listOf(-45.0, 45.0)) l(px(12f, 5.6f, g), py(12f, 5.6f, g), px(px(12f, 5.6f, g), 2.8f, g + d), py(py(12f, 5.6f, g), 2.8f, g + d), 1.2f) } } // copo de nieve
@@ -445,6 +458,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.NAPOLEON -> { p { m(4f, 12.4f); t(17.2f, 6.4f); t(18.4f, 9.2f); t(5.2f, 15.2f); close() }; ci(9f, 16f, 4.5f); rayos(9f, 16f, 6, 0.8f, 4.5f, 0.0, 360.0, 1.1f)
             l(11.5f, 17.5f, 20.5f, 21f) }                                                                                                     // cañón
         TemaId.BOTANICO -> { r(5f, 10f, 10f, 10.5f, 1.5f); l(15f, 13f, 20.5f, 7f, 1.5f); l(19.4f, 5.8f, 21.8f, 8.2f, 1.9f); p(st = fino) { m(6.5f, 10f); q(10f, 3.6f, 13.5f, 10f) } } // regadera
+        TemaId.RUINAS -> { l(7.4f, 16.6f, 15f, 9f, 2.8f); ci(17.4f, 6.6f, 3.4f); l(17.4f, 6.6f, 20.5f, 3.5f, 2.6f); ci(5.6f, 18.4f, 2.4f) } // llave inglesa oxidada
         TemaId.NAVIDAD -> { ov(3.5f, 3.5f, 7.5f, 9f); ov(13f, 3.5f, 7.5f, 9f); r(10.6f, 6f, 2.8f, 4f, 0.5f, true); l(12f, 10f, 12f, 20.5f); l(9.5f, 20.5f, 14.5f, 20.5f); l(12f, 16.5f, 14.5f, 16.5f, 1.2f) } // llave de cuerda
         TemaId.SEDA -> { r(3f, 3.5f, 18f, 17f, 0.8f); l(3f, 9f, 21f, 9f, 1.4f); for (x in listOf(7f, 12f, 17f)) l(x, 3.5f, x, 20.5f, 0.8f)
             for ((x, y) in listOf(7f to 5.2f, 12f to 6.6f, 17f to 5.2f, 7f to 11f, 7f to 13.4f, 12f to 15.8f, 12f to 18.2f, 17f to 11f)) ov(x - 1.8f, y - 1f, 3.6f, 2f, relleno = true) } // ábaco
