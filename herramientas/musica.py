@@ -308,6 +308,25 @@ def hacer_pirata():
                        notificacion(T, lambda f, d: campana(f, 1.6, 2.76, 1.4, 2.2), [12, 12, 19], 0.28, 1.6, 1.4))
         ARGS['pirata'] = (T, pz, ac, mel, kw)
 
+def hacer_urbe():
+    # --- Roma (la de hoy): Si bemol mayor, una canzone de trattoria a medio tempo (melodía propia). La mandolina en trémolo
+    # canta, el acordeón sostiene, el bajo pulsado camina y la escobilla marca el dos y el cuatro; al final, la campanilla
+    # del tranvía. Con su propio azar.
+    with A.azar_propio('musica_urbe'):
+        T = 1; pz = 0.42
+        ac = compases([0, 4, 7], [-3, 0, 4], [2, 5, 9], [7, 11, 14, 17], [0, 4, 7, 12])
+        mel = frase(0, "7:1 9:0.5 7:0.5 4:1 7:1 | 9:1.5 7:0.5 4:2 | 5:1 9:1 12:1 9:1 | 11:1 9:0.5 7:0.5 5:2 | 4:1 2:1 0:2")
+        mandolina = lambda f, d: mezclar(*[(0.06 * i, pluck(f, 0.22, 0.58, 0.994), 0.6 * 0.93 ** i) for i in range(max(1, int(d / 0.06)))])
+        fisarmonica = lambda f, d: filtro(organo(f, d, 0.05) + organo(f * 1.0045, d, 0.05), 'bajo', 2400) * 0.5
+        bajo = lambda f, d: pluck(f, min(d, 0.7), 0.35, 0.995)
+        escobilla = lambda: filtro(ruido(0.09), 'banda', (2000, 7000)) * env(int(0.09 * SR), 0.004, 0.06, 3)
+        perc = cada(20, escobilla, 0.18, desde=1, paso=2)
+        tranvia = campana(hz(T + 24), 1.2, 3.01, 1.3, 4.0)
+        kw = dict(inst_mel=mandolina, inst_ac=fisarmonica, bajo=bajo, perc=perc, extra=[(18.5 * pz, tranvia, 0.18)],
+                  g_mel=0.5, g_ac=0.22, g_bajo=0.3, oct_mel=0, oct_ac=-12, legato=1.0, rev=0.26)
+        P['urbe'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: campana(f, d, 3.01, 1.3, 4.0), [12, 16, 19], 0.13, 0.8))
+        ARGS['urbe'] = (T, pz, ac, mel, kw)
+
 def hacer_revolucion():
     # --- Revolución: Sol mayor, marcha de pífano y tambor (melodía propia) sobre cuerdas
     T = -2; pz = 0.36
@@ -501,6 +520,7 @@ if __name__ == '__main__':
     hacer()
     hacer_templario()
     hacer_pirata()
+    hacer_urbe()
     hacer_revolucion()
     hacer_antiguas()
     hacer_neon()

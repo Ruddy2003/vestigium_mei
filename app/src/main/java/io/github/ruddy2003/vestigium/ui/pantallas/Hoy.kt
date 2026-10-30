@@ -369,6 +369,15 @@ fun FraseDelDia(fecha: String) {
         }.padding(horizontal = 24.dp, vertical = 14.dp)) {
             CuerpoFrase(f, fecha, rotulo.replace(" ", " · "), "", "", centrado = true)
         }
+        // El recuadro de la cita en el periódico: raya gruesa arriba, fina abajo y las comillas grandes al margen.
+        TemaId.URBE -> Box(arriba.drawBehind {
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            drawLine(cs.onBackground.copy(alpha = 0.75f), Offset(0f, 1.5f * u), Offset(w, 1.5f * u), 3 * u)
+            drawLine(cs.onBackground.copy(alpha = 0.5f), Offset(0f, h - 0.5f * u), Offset(w, h - 0.5f * u), 1 * u)
+            drawRect(cs.primary.copy(alpha = 0.7f), Offset(0f, 9 * u), Size(3 * u, h - 18 * u))
+        }.padding(start = 14.dp, end = 8.dp, top = 14.dp, bottom = 12.dp)) {
+            CuerpoFrase(f, fecha, rotulo, "“", "”")
+        }
         // Consola: fondo de pantalla, el texto como salida de un comando y el cursor al final.
         TemaId.CIBER -> Surface(color = cs.surfaceVariant, shape = RectangleShape, border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.35f)), modifier = arriba) {
             Box(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) { CuerpoFrase(f, fecha, rotulo, "", " ▌", autor = "-- ${f.autor}") }
@@ -846,6 +855,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
             fontFeatureSettings = rasgos, fontStyle = if (cursiva) FontStyle.Italic else FontStyle.Normal)
     return when (Estilo.tema) {
         TemaId.ROMANO -> base.copy(fontFamily = Letra.codigo, fontSize = 21.sp, letterSpacing = 0.sp)
+        TemaId.URBE -> c(Letra.placa, FontWeight.Bold, 23f, 0.4f, "tnum")
         TemaId.CIBER -> c(Letra.terminal, FontWeight.Normal, 24f, 0.8f)
         TemaId.NEON -> c(Letra.letrero, FontWeight.SemiBold, 23f, 1.6f)
         TemaId.HELENO -> c(Letra.inscripcion, FontWeight.SemiBold, 21f, 1.4f, "lnum")
@@ -1059,6 +1069,17 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             if (color != null) for (k in 1..2) drawLine(Color.Black.copy(alpha = 0.18f), Offset(fx + fw * k / 3, top + cap), Offset(fx + fw * k / 3, h - cap), 1.dp.toPx())
                             drawRect(color ?: linea, Offset(0f, top), Size(w, cap), style = if (color == null) borde else Fill)
                             drawRect(color ?: linea, Offset(0f, h - cap), Size(w, cap), style = if (color == null) borde else Fill)
+                        }
+                        // Cada día es un edificio con su cúpula: el cuerpo con las ventanas y el casquete arriba.
+                        TemaId.URBE -> {
+                            val fx = w * 0.14f; val fw = w * 0.72f
+                            val cuerpo = Path().apply { moveTo(fx, h); lineTo(fx, top + fw / 2); arcTo(Rect(fx, top, fx + fw, top + fw), 180f, 180f, false); lineTo(fx + fw, h); close() }
+                            pinta(cuerpo)
+                            if (color != null) {
+                                var y = top + fw * 0.8f
+                                while (y < h - 5 * u) { drawRect(Color.Black.copy(alpha = 0.2f), Offset(fx + fw * 0.3f, y), Size(fw * 0.4f, 3 * u)); y += 7 * u }
+                            }
+                            drawRect(linea, Offset(w / 2 - 1 * u, top - 3 * u), Size(2 * u, 3 * u))
                         }
                         // Barras con líneas de escaneo.
                         TemaId.CIBER -> {

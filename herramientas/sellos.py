@@ -668,6 +668,40 @@ def pirata(tam):
     capa = a_rgba(rgb, alfa)
     guardar(fondo, capa, 'pirata')
 
+# ------------------------------------------------------------------ Roma (la de hoy)
+def urbe(tam):
+    """El muro ocre de una calle de Roma, con el revoque caído y el ladrillo a la vista, y encima la huella como un
+    timbre de oficina en tinta roja: entintada de más en los bordes y gastada en el centro."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+
+    def suave(s, semilla):   # ruido en coma flotante, sin los escalones del desenfoque en 8 bits
+        a = desenfocar(np.random.default_rng(semilla).random((tam, tam)).astype(np.float32), s)
+        return (a - a.min()) / max(1e-6, a.max() - a.min())
+    ocre = mezcla(col('#E2B172'), col('#C98E4E'), suave(tam / 14, 61) * 0.9)
+    ocre = ocre * (0.95 + 0.08 * ruido(tam, 0.8, 62)[..., None])
+    # Donde se cayó el revoque: ladrillo en hiladas, con su borde de cal.
+    caida = suave(tam / 26, 63)
+    hueco = np.clip((caida - 0.66) * 9, 0, 1)
+    borde = np.clip(1 - np.abs(caida - 0.64) * 30, 0, 1)
+    fila = (yy // (tam / 34)).astype(int)
+    junta = ((yy % (tam / 34)) < tam / 260) | (((xx + (fila % 2) * tam / 18) % (tam / 9)) < tam / 260)
+    ladrillo = mezcla(col('#A2553A'), col('#7F3B27'), ruido(tam, 2, 64))
+    ladrillo = np.where(junta[..., None], col('#D9CDB4'), ladrillo)
+    muro = mezcla(ocre, ladrillo, hueco)
+    muro = mezcla(muro, col('#F1E6CF'), borde * 0.45)
+    # Sombra suave arriba, como el alero de un tejado.
+    muro = muro * (0.86 + 0.14 * np.clip(yy / (tam * 0.25), 0, 1))[..., None]
+    fondo = a_img(muro)
+    # La huella: tinta de timbre, más cargada en los bordes de cada cresta y comida en el centro.
+    b = desenfocar(m, tam / 260)
+    filo = np.clip((m - b) * 3 + 0.0, 0, 1)
+    gasto = suave(tam / 30, 65)
+    alfa = m * np.clip(0.62 + 0.3 * filo + 0.25 * ruido(tam, 0.7, 66) - np.clip(gasto - 0.6, 0, 1) * 1.1, 0, 0.97)
+    rgb = mezcla(col('#9B1C1C'), col('#6E1414'), suave(tam / 40, 67))
+    capa = a_rgba(rgb, alfa)
+    guardar(fondo, capa, 'urbe')
+
 # ------------------------------------------------------------------ Tierras Antiguas
 def runas_pil(d, x, y, ancho, alto, n, color, grosor, semilla):
     """Signos inventados (trazos rectos y ángulos), como en TrofeosMas.runas."""
@@ -943,6 +977,7 @@ SIETE = [
     'gotico',
     'espacio',
     'abismo',
+    'urbe',
     'andalus',
     'egipto',
     'mongol',
@@ -953,6 +988,7 @@ SIETE = [
 ]
 ORDEN = [
     'romano',
+    'urbe',
     'ciber',
     'neon',
     'heleno',

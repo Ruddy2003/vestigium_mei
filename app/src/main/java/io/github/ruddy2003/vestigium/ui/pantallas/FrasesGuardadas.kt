@@ -144,6 +144,18 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             pinta(c, 1.2f)
             drawCircle(if (lleno) color else color.copy(alpha = 0.7f), 1.3f * u, p(12f, 21.2f))
         }
+        // El candado de los enamorados de los puentes: el arco del candado y el cuerpo, con un corazón calado.
+        TemaId.URBE -> {
+            drawArc(if (lleno) color else color.copy(alpha = 0.7f), 180f, 180f, false, p(7f, 3f), androidx.compose.ui.geometry.Size(10f * u, 10f * u), style = Stroke(1.8f * u))
+            listOf(7f, 17f).forEach { x -> drawLine(if (lleno) color else color.copy(alpha = 0.7f), p(x, 8f), p(x, 10f), 1.8f * u) }
+            val cuerpo = Path().apply {
+                fillType = PathFillType.EvenOdd
+                addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(4f * u, 10f * u, 20f * u, 22f * u), androidx.compose.ui.geometry.CornerRadius(2.4f * u)))
+                moveTo(12f * u, 19.5f * u); cubicTo(8.2f * u, 17f * u, 8.4f * u, 13.4f * u, 10.4f * u, 13.4f * u); cubicTo(11.3f * u, 13.4f * u, 11.8f * u, 14f * u, 12f * u, 14.6f * u)
+                cubicTo(12.2f * u, 14f * u, 12.7f * u, 13.4f * u, 13.6f * u, 13.4f * u); cubicTo(15.6f * u, 13.4f * u, 15.8f * u, 17f * u, 12f * u, 19.5f * u); close()
+            }
+            pinta(cuerpo, 1.4f)
+        }
         // Un corazón de píxeles, como en la consola; sin guardar, solo los píxeles del borde.
         TemaId.CIBER -> {
             val filas = listOf(".XX.XX.", "XXXXXXX", "XXXXXXX", ".XXXXX.", "..XXX..", "...X...")

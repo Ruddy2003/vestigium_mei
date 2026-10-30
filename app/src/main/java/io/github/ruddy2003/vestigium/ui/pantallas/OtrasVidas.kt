@@ -462,6 +462,16 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawRect(oscuro, Offset.Zero, Size(fw, 1.2f * d)); drawRect(oscuro, Offset(0f, h - 1.2f * d), Size(fw, 1.2f * d))
             }
         }
+        // El tranvía que avanza por su vía: la caja llena con sus ventanas claras, sobre el riel.
+        TemaId.URBE -> {
+            drawLine(pista, Offset(0f, h - 0.6f * d), Offset(w, h - 0.6f * d), 1.2f * d)
+            drawRect(pista, Offset(0f, 0f), Size(w, h - 2 * d))
+            if (fw > 0f) {
+                drawRect(color, Offset.Zero, Size(fw, h - 2 * d))
+                clipRect(right = fw - 1.5f * d) { var x = 2.5f * d; while (x < fw) { drawRect(claro, Offset(x, 1.6f * d), Size(3.2f * d, h - 5.5f * d)); x += 5.5f * d } }
+                drawLine(oscuro, Offset(0f, h - 0.6f * d), Offset(fw, h - 0.6f * d), 1.2f * d)
+            }
+        }
         // Celdas de consola: ▮▮▮▯▯.
         TemaId.CIBER -> {
             val paso = 5f * d; val celda = 3.6f * d
@@ -793,6 +803,14 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawPath(Path().apply { moveTo(c.x - rc * 0.12f, c.y + rc * 0.12f); lineTo(c.x + rc * 0.12f, c.y + rc * 0.12f); lineTo(c.x, c.y - rc * 0.55f); close() }, tinta.copy(alpha = 0.45f))
             drawCircle(tinta.copy(alpha = 0.4f), rc * 0.15f, c)
             marcas(24, 2.5f * d, d, linea)
+        }
+        // La plaza redonda con su obelisco: el anillo de sampietrini, la aguja al centro y las cuatro horas mayores marcadas.
+        TemaId.URBE -> {
+            for (k in 0 until 36) { val p = polarFig(c, rc, k * 10f); drawRect(linea.copy(alpha = 0.35f), p - Offset(1.2f * d, 1.2f * d), Size(2.4f * d, 2.4f * d)) }
+            drawPath(Path().apply { moveTo(c.x - rc * 0.07f, c.y + rc * 0.25f); lineTo(c.x - rc * 0.04f, c.y - rc * 0.45f); lineTo(c.x, c.y - rc * 0.55f); lineTo(c.x + rc * 0.04f, c.y - rc * 0.45f); lineTo(c.x + rc * 0.07f, c.y + rc * 0.25f); close() }, tinta.copy(alpha = 0.4f))
+            drawRect(tinta.copy(alpha = 0.3f), Offset(c.x - rc * 0.14f, c.y + rc * 0.25f), Size(rc * 0.28f, rc * 0.08f))
+            for (k in 0 until 4) drawLine(tinta.copy(alpha = 0.6f), polarFig(c, ro + 1.5f * d, k * 90f - 90f), polarFig(c, ro + 6.5f * d, k * 90f - 90f), 1.8f * d)
+            marcas(24, 2f * d, 0.7f * d, linea)
         }
         // Pantalla de consola: píxeles por hora y el cursor.
         TemaId.CIBER -> {

@@ -30,6 +30,11 @@ object Widgets {
             0xFFD2AE5A.toInt(), 0xFFE7E3DA.toInt(), 0xFF9AA0A6.toInt(), 0xFF5A4A24.toInt(),
             intArrayOf(0xFFE07A86.toInt(), 0xFFD9998C.toInt(), 0xFFD6BC8E.toInt(), 0xFFE7E3DA.toInt(), 0xFFB5D2BE.toInt(), 0xFF8CC8B9.toInt(), 0xFF67BBAE.toInt()),
             0xFF1A1F23.toInt(), 0xFF0E1113.toInt())
+        // La placa sobre el adoquinado de noche: luz de farola, travertino y, en el ánimo, del rojo pompeyano al verde de las persianas.
+        TemaId.URBE -> Colores(R.drawable.widget_fondo_urbe, R.drawable.widget_boton_urbe, R.drawable.widget_boton_activo_urbe, R.drawable.widget_boton_ambar_urbe,
+            0xFFE8955A.toInt(), 0xFFF1E6D2.toInt(), 0xFFB5A794.toInt(), 0xFF433830.toInt(),
+            intArrayOf(0xFFD9573A.toInt(), 0xFFE07A52.toInt(), 0xFFE3A266.toInt(), 0xFFE3C07A.toInt(), 0xFFB9C08A.toInt(), 0xFF9DB892.toInt(), 0xFF8DB596.toInt()),
+            0xFF2B2420.toInt(), 0xFF2A1405.toInt())
         TemaId.CIBER -> Colores(R.drawable.widget_fondo_ciber, R.drawable.widget_boton_ciber, R.drawable.widget_boton_activo_ciber, R.drawable.widget_boton_ambar_ciber,
             0xFF00E5FF.toInt(), 0xFFD6F3F7.toInt(), 0xFF7E98AB.toInt(), 0xFF15404A.toInt(),
             intArrayOf(0xFFFF2E88.toInt(), 0xFFE0559A.toInt(), 0xFFB77CA8.toInt(), 0xFF8C96A8.toInt(), 0xFF5FB4C8.toInt(), 0xFF2FCCE0.toInt(), 0xFF00E5FF.toInt()),
@@ -160,6 +165,7 @@ object Widgets {
      */
     private fun tituloDiscreto(t: TemaId): Pair<String, String> = when (t) {
         TemaId.ROMANO -> "NVNC" to "SCRIBERE"
+        TemaId.URBE -> "ADESSO" to "DUE RIGHE"
         TemaId.CIBER -> "> ping" to "> log"
         TemaId.NEON -> "LA NOCHE" to "LA CALLE"
         TemaId.HELENO -> "ΝΥΝ" to "ΓΡΑΦΕΙΝ"
@@ -195,6 +201,7 @@ object Widgets {
     private fun letraDe(ctx: Context, t: TemaId): Pair<android.graphics.Typeface, Float> {
         val (fuente, escala) = when (t) {
             TemaId.ROMANO -> R.font.cinzel_regular to 0.95f
+            TemaId.URBE -> R.font.titillium_semibold to 1.02f
             TemaId.CIBER -> R.font.sharetech_mono to 1.05f
             TemaId.NEON -> R.font.chakra_semibold to 1.0f
             TemaId.HELENO -> R.font.garamond_medium to 1.08f

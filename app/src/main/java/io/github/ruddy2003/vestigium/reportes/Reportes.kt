@@ -98,6 +98,7 @@ class Lienzo(private val ctx: Context, val tema: TemaId = Estilo.tema, val oscur
  */
 private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.ROMANO -> R.font.cinzel_regular          // capitales romanas, como sus títulos
+    TemaId.URBE -> R.font.titillium_bold          // las cifras de los letreros y de los números de autobús
     TemaId.CIBER -> R.font.sharetech_mono           // la consola: monoespaciada de terminal
     TemaId.NEON -> R.font.chakra_semibold          // la de los letreros
     TemaId.HELENO -> R.font.garamond_medium
@@ -129,6 +130,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
 /** El nombre de la app como lo firma cada tema arriba del reporte. */
 private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.ROMANO -> "VESTIGIVM MEI"
+    TemaId.URBE -> "ROMA · VESTIGIUM MEI"
     TemaId.CIBER -> "vestigium@mei:~\$"
     TemaId.NEON -> "屋台 · VESTIGIUM MEI · NIVEL −3"
     TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ · Vestigium Mei"
@@ -204,6 +206,34 @@ object Reportes {
                         x += paso
                     }
                     c.drawPath(path, pa); y += 3 * u + 34f
+                }
+                TemaId.URBE -> {
+                    // El perfil de los tejados: una cúpula grande con su linterna entre dos campanarios y dos cúpulas chicas,
+                    // sobre la línea de las cornisas.
+                    val base = yy + 44f
+                    val pa = L.relleno(L.primario)
+                    val sombra = L.relleno(L.mezcla(L.primario, L.fondo, 0.45))
+                    flancos(base, 150f, L.trazo(L.tenue, 1.6f))
+                    c.drawRect(cx - 150f, base - 6f, cx + 150f, base, sombra)
+                    // Cúpula mayor: tambor, casquete y linterna.
+                    c.drawRect(cx - 46f, base - 30f, cx + 46f, base - 6f, pa)
+                    c.drawArc(RectF(cx - 44f, base - 74f, cx + 44f, base + 14f), 180f, 180f, true, pa)
+                    c.drawRect(cx - 7f, base - 88f, cx + 7f, base - 70f, pa)
+                    c.drawCircle(cx, base - 92f, 4f, pa)
+                    val gajo = L.trazo(L.fondo, 1.4f)
+                    listOf(-26f, 0f, 26f).forEach { dx -> c.drawLine(cx + dx * 0.4f, base - 72f, cx + dx, base - 32f, gajo) }
+                    // Campanarios y cúpulas chicas a los lados.
+                    listOf(-1f, 1f).forEach { s ->
+                        val xt = cx + s * 82f
+                        c.drawRect(xt - 9f, base - 62f, xt + 9f, base - 6f, sombra)
+                        c.drawRect(xt - 4f, base - 54f, xt + 4f, base - 44f, L.relleno(L.fondo))
+                        val path = Path().apply { moveTo(xt - 11f, base - 62f); lineTo(xt, base - 74f); lineTo(xt + 11f, base - 62f); close() }
+                        c.drawPath(path, sombra)
+                        val xc = cx + s * 124f
+                        c.drawArc(RectF(xc - 18f, base - 36f, xc + 18f, base), 180f, 180f, true, sombra)
+                        c.drawRect(xc - 2.5f, base - 44f, xc + 2.5f, base - 34f, sombra)
+                    }
+                    y += 44f + 34f
                 }
                 TemaId.CIBER -> {
                     // La línea de órdenes: el indicador, una fila de puntos de fósforo y el cursor en bloque.

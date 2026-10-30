@@ -42,6 +42,8 @@ Sorts Mill Goudy (recortada) — Copyright (c) 2010, Barry Schwartz (chemoelectr
 Libre Caslon Text (instancias estáticas, recortadas) — Copyright 2018 The Libre Caslon Text Project Authors (https://github.com/thundernixon/Libre-Caslon)
 Corsario Vestigium — versión reducida y renombrada de Pirata One: Copyright (c) 2012, Rodrigo Fuenzalida, Nicolas Massi (www.taip.com.ar / abc.taip.com.ar), with Reserved Font Name 'Pirata'
 Ciudadana Vestigium — versión reducida y renombrada de Libre Baskerville: Copyright 2012 The Libre Baskerville Project Authors (https://github.com/impallari/Libre-Baskerville) with Reserved Font Name Libre Baskerville.
+Titillium Web (recortada) — Copyright (c) 2009-2011 by Accademia di Belle Arti di Urbino and students of MA course of Visual design.
+Newsreader (instancias estáticas, recortadas) — Copyright 2020 The Newsreader Project Authors (http://github.com/productiontype/Newsreader)
 Vollkorn (instancias estáticas, recortadas) — Copyright 2017 The Vollkorn Project Authors (https://github.com/FAlthausen/Vollkorn-Typeface)
 Escriba Vestigium — versión reducida y renombrada de Gentium Book Plus: Copyright (c) 2003-2022 SIL International (http://www.sil.org/), with Reserved Font Names "Gentium" and "SIL".
 El Messiri (instancias estáticas, recortadas) — Copyright 2015 The El Messiri Project Authors (https://github.com/Gue3bara/El-Messiri)

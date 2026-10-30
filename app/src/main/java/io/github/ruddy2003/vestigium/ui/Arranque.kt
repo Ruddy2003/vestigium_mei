@@ -20,6 +20,7 @@ object ArranqueTema {
     /** El estilo de arranque del tema, claro u oscuro (el que solo existe en oscuro tiene uno solo). */
     fun estilo(t: TemaId, oscuro: Boolean): Int = when (t) {
         TemaId.ROMANO -> if (oscuro) R.style.Theme_Vestigium_Arranque_Romano_Oscuro else R.style.Theme_Vestigium_Arranque_Romano
+        TemaId.URBE -> if (oscuro) R.style.Theme_Vestigium_Arranque_Urbe_Oscuro else R.style.Theme_Vestigium_Arranque_Urbe
         TemaId.CIBER -> R.style.Theme_Vestigium_Arranque_Ciber
         TemaId.NEON -> R.style.Theme_Vestigium_Arranque_Neon
         TemaId.HELENO -> if (oscuro) R.style.Theme_Vestigium_Arranque_Heleno_Oscuro else R.style.Theme_Vestigium_Arranque_Heleno

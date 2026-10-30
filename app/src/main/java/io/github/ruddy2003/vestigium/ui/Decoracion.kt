@@ -72,6 +72,7 @@ private fun Offset.mas(r: Float, ang: Float) = Offset(x + r * cos(ang), y + r * 
 /** Cuánto tarda en repetirse la animación de cada emblema, en ms. Cada tema tiene su propio pulso: no hay dos iguales. */
 private fun periodo(t: TemaId) = when (t) {
     TemaId.ROMANO -> 6000
+    TemaId.URBE -> 8200
     TemaId.CIBER -> 4200
     TemaId.NEON -> 3600
     TemaId.HELENO -> 60000
@@ -122,6 +123,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
     val r = size.minDimension / 2
     when (tema) {
         TemaId.ROMANO -> laurel(c, r, if (oscuro) e.primary else e.tertiary, t)
+        TemaId.URBE -> placaLoba(c, r, e.onBackground, e.primary, if (oscuro) e.surfaceVariant else e.surface, t)
         TemaId.CIBER -> consola(c, r, e.primary, e.secondary, t)
         TemaId.NEON -> letreroNeon(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.HELENO -> solVergina(c, r, if (oscuro) e.primary else e.tertiary, if (oscuro) e.tertiary else e.primary, t)
@@ -730,6 +732,43 @@ private fun DrawScope.laurel(c: Offset, r0: Float, color: Color, t: Float) {
     // Cinta abajo.
     drawLine(color, c.mas(r, rad(80.0)), c.mas(r * 1.18f, rad(105.0)), r0 * 0.07f, StrokeCap.Round)
     drawLine(color, c.mas(r, rad(100.0)), c.mas(r * 1.18f, rad(75.0)), r0 * 0.07f, StrokeCap.Round)
+}
+
+/**
+ * La silueta de la loba de la placa (de pie, mirando a la derecha, con la cola larga), centrada en [c] y de medio
+ * ancho [k]. La usan el emblema de Roma, la libreta y los trofeos.
+ */
+internal fun lobaRuta(c: Offset, k: Float): Path = Path().apply {
+    fun p(x: Float, y: Float) = Offset(c.x + x * k, c.y + y * k)
+    val a = p(-1f, -0.12f); moveTo(a.x, a.y)
+    p(-0.72f, -0.3f).let { lineTo(it.x, it.y) }
+    val q1 = p(-0.2f, -0.44f); val e1 = p(0.36f, -0.3f); quadraticTo(q1.x, q1.y, e1.x, e1.y)
+    listOf(p(0.55f, -0.44f), p(0.6f, -0.64f), p(0.7f, -0.48f), p(0.78f, -0.62f), p(0.82f, -0.42f), p(1f, -0.32f), p(0.98f, -0.22f),
+        p(0.75f, -0.2f), p(0.63f, 0f), p(0.6f, 0.52f), p(0.49f, 0.52f), p(0.46f, 0.1f)).forEach { lineTo(it.x, it.y) }
+    // El vientre, con las ubres de la loba que amamantó a los gemelos.
+    val q2 = p(0.05f, 0.26f); val e2 = p(-0.36f, 0.1f); quadraticTo(q2.x, q2.y, e2.x, e2.y)
+    listOf(p(-0.44f, 0.52f), p(-0.56f, 0.52f), p(-0.62f, 0.04f), p(-0.74f, -0.12f), p(-0.98f, -0.04f)).forEach { lineTo(it.x, it.y) }
+    close()
+}
+
+/**
+ * Roma de hoy: la placa de mármol de una esquina, con su marco, la loba arriba, dos renglones de nombre de calle y los
+ * tornillos que la sujetan. Un reflejo de sol la cruza despacio, como cuando pasa la luz entre los edificios.
+ */
+private fun DrawScope.placaLoba(c: Offset, r: Float, tinta: Color, rojo: Color, marmol: Color, t: Float) {
+    val placa = Rect(c.x - r * 0.96f, c.y - r * 0.68f, c.x + r * 0.96f, c.y + r * 0.68f)
+    drawRect(marmol, placa.topLeft, placa.size)
+    drawRect(tinta, placa.topLeft, placa.size, style = Stroke(r * 0.08f))
+    drawRect(tinta.copy(alpha = 0.6f), placa.topLeft + Offset(r * 0.13f, r * 0.13f), Size(placa.width - r * 0.26f, placa.height - r * 0.26f), style = Stroke(r * 0.035f))
+    drawPath(lobaRuta(Offset(c.x, c.y - r * 0.22f), r * 0.34f), rojo)
+    drawLine(tinta, Offset(c.x - r * 0.56f, c.y + r * 0.16f), Offset(c.x + r * 0.56f, c.y + r * 0.16f), r * 0.1f)
+    drawLine(tinta.copy(alpha = 0.7f), Offset(c.x - r * 0.38f, c.y + r * 0.36f), Offset(c.x + r * 0.38f, c.y + r * 0.36f), r * 0.07f)
+    listOf(placa.left + r * 0.07f, placa.right - r * 0.07f).forEach { x -> drawCircle(tinta, r * 0.045f, Offset(x, c.y)) }
+    // El reflejo: una franja clara que cruza en diagonal y vuelve a empezar.
+    val x = placa.left - r + (placa.width + 2 * r) * t
+    clipRect(placa.left, placa.top, placa.right, placa.bottom) {
+        drawPath(Path().apply { moveTo(x, placa.top); lineTo(x + r * 0.3f, placa.top); lineTo(x - r * 0.2f, placa.bottom); lineTo(x - r * 0.5f, placa.bottom); close() }, Color.White.copy(alpha = 0.22f))
+    }
 }
 
 /**
@@ -1605,6 +1644,40 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 puntos.addOval(Rect(x - rx, y - ry, x + rx, y + ry))
             }
         }
+        TemaId.URBE -> {
+            // El revoque de los muros del centro: aquí y allá se cayó el enlucido y asoman las hiladas de ladrillo (con su
+            // borde roto alrededor), y el resto lleva las manchitas del revoque a la cal.
+            color = (if (oscuro) esquema.tertiary else esquema.primary).copy(alpha = if (oscuro) 0.07f else 0.07f)
+            color2 = esquema.onBackground.copy(alpha = if (oscuro) 0.035f else 0.03f)
+            val azar = java.util.Random(2779)
+            val ladrillo = 5.dp.toPx(); val largo = 14.dp.toPx()
+            repeat(((w * h) / 220000f).toInt().coerceIn(3, 9)) {
+                val cx = azar.nextFloat() * w; val cy = azar.nextFloat() * h
+                val rx = (34f + azar.nextFloat() * 40f).dp.toPx(); val ry = rx * (0.45f + azar.nextFloat() * 0.3f)
+                // El borde roto del enlucido: un contorno irregular alrededor del hueco.
+                val lados = 14
+                for (k in 0..lados) {
+                    val a = 2 * PI.toFloat() * k / lados
+                    val f = 0.78f + azar.nextFloat() * 0.3f
+                    val x = cx + cos(a) * rx * f; val y = cy + sin(a) * ry * f
+                    if (k == 0) trazo.moveTo(x, y) else trazo.lineTo(x, y)
+                }
+                // Las hiladas, a tresbolillo, dentro del hueco (más cortas cerca de la orilla).
+                var y = cy - ry * 0.62f; var fila = 0
+                while (y < cy + ry * 0.62f) {
+                    val medio = rx * 0.7f * kotlin.math.sqrt((1f - ((y - cy) / (ry * 0.7f)).let { it * it }).coerceAtLeast(0f))
+                    trazo.moveTo(cx - medio, y); trazo.lineTo(cx + medio, y)
+                    var x = cx - medio + (if (fila % 2 == 0) 0f else largo / 2)
+                    while (x < cx + medio) { trazo.moveTo(x, y); trazo.lineTo(x, y + ladrillo); x += largo }
+                    y += ladrillo; fila++
+                }
+            }
+            repeat(((w * h) / 9000f).toInt().coerceAtMost(260)) {
+                val x = azar.nextFloat() * w; val y = azar.nextFloat() * h
+                val rr = (0.5f + azar.nextFloat() * 1.2f).dp.toPx()
+                puntos.addOval(Rect(x - rr, y - rr * 0.8f, x + rr, y + rr * 0.8f))
+            }
+        }
         TemaId.HELENO -> {
             // Mosaico de guijarros, como los de Pela: piedrecitas en hileras desiguales, y aquí y allá un sol de dieciséis rayos a punta de cincel.
             color = (if (oscuro) esquema.primary else esquema.tertiary).copy(alpha = if (oscuro) 0.06f else 0.07f)
@@ -1924,6 +1997,15 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         arcTo(Rect(0.1f * s.width, 0.02f * s.height, 0.9f * s.width, 0.82f * s.height), 180f, 180f, false)
         lineTo(0.9f * s.width, s.height); close()
     }
+    // La cúpula: tambor recto, casquete y la linterna arriba.
+    TemaId.URBE -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(0.06f * w, h); lineTo(0.06f * w, 0.56f * h)
+        arcTo(Rect(0.06f * w, 0.18f * h, 0.94f * w, 0.94f * h), 180f, 90f, false)
+        lineTo(0.44f * w, 0.18f * h); lineTo(0.44f * w, 0.02f * h); lineTo(0.56f * w, 0.02f * h); lineTo(0.56f * w, 0.18f * h)
+        arcTo(Rect(0.06f * w, 0.18f * h, 0.94f * w, 0.94f * h), 270f, 90f, false)
+        lineTo(0.94f * w, h); close()
+    }
     TemaId.CIBER -> RectangleShape
     TemaId.NEON -> androidx.compose.foundation.shape.RoundedCornerShape(50)   // la placa luminosa del puesto
     TemaId.HELENO -> poligonoBoton(0.08f to 1f, 0.08f to 0.3f, 0.5f to 0.02f, 0.92f to 0.3f, 0.92f to 1f)
@@ -2002,6 +2084,7 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
 /** La palabra bajo el engrane de «Más», en la voz de cada tema (la descripción para lectores de pantalla sigue en español). */
 private fun textoMas(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "Cetera"
+    TemaId.URBE -> "Di più"
     TemaId.CIBER -> "más_"
     TemaId.NEON -> "más ▸"
     TemaId.HELENO -> "Πλέον"
@@ -2056,6 +2139,10 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
         when (tema) {
             // Sol invicto: disco y ocho rayos rectos, largos y cortos.
             TemaId.ROMANO -> { drawCircle(color, r * 0.38f, c); for (i in 0 until 8) { val a = rad(45.0 * i); drawLine(color, c.mas(r * 0.55f, a), c.mas(r * (if (i % 2 == 0) 0.96f else 0.76f), a), r * 0.13f, StrokeCap.Round) } }
+            // El sol que se pone detrás de la cúpula: medio disco con sus rayos, sobre el perfil del tambor.
+            TemaId.URBE -> { drawArc(color, 180f, 180f, true, Offset(c.x - r * 0.5f, c.y - r * 0.4f), Size(r, r))
+                for (i in 0 until 7) { val a = rad(180.0 + 30.0 * i); drawLine(color, c.mas(r * 0.66f, a) + Offset(0f, r * 0.1f), c.mas(r * 0.96f, a) + Offset(0f, r * 0.1f), r * 0.11f, StrokeCap.Round) }
+                drawRect(color, Offset(c.x - r * 0.9f, c.y + r * 0.2f), Size(r * 1.8f, r * 0.12f)) }
             // Sol de píxeles.
             TemaId.CIBER -> { val p = r * 0.22f; drawRect(color, Offset(c.x - p * 1.5f, c.y - p * 1.5f), Size(p * 3, p * 3))
                 for (i in 0 until 8) { val q = c.mas(r * 0.82f, rad(45.0 * i)); drawRect(color, Offset(q.x - p / 2, q.y - p / 2), Size(p, p)) } }
@@ -2159,6 +2246,11 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
         when (tema) {
             // Lúnula: la luna con los cuernos arriba y su argolla, como el amuleto.
             TemaId.ROMANO -> { luna(0.72f, 0f, -0.36f, c + Offset(0f, r * 0.12f)); drawCircle(color, r * 0.14f, Offset(c.x, c.y - r * 0.72f), style = Stroke(r * 0.07f)) }
+            // La luna creciente sobre una cúpula con su linterna.
+            TemaId.URBE -> { luna(0.5f, 0.28f, -0.2f, c + Offset(r * 0.28f, -r * 0.42f))
+                drawArc(color, 180f, 180f, true, Offset(c.x - r * 0.62f, c.y + r * 0.0f), Size(r * 1.24f, r * 1.0f))
+                drawRect(color, Offset(c.x - r * 0.62f, c.y + r * 0.5f), Size(r * 1.24f, r * 0.34f))
+                drawRect(color, Offset(c.x - r * 0.07f, c.y - r * 0.18f), Size(r * 0.14f, r * 0.2f)) }
             // Luna de píxeles.
             TemaId.CIBER -> { val p = r * 0.34f
                 listOf(-1 to -2, 0 to -2, 1 to -2, -2 to -1, -1 to -1, -2 to 0, -1 to 0, -2 to 1, -1 to 1, -1 to 2, 0 to 2, 1 to 2).forEach { (i, j) ->
@@ -2258,6 +2350,10 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
     when (tema) {
         // Mango con remate de anillo.
         TemaId.ROMANO -> { lente(); mango(0.84f); drawCircle(color, r * 0.08f, Offset(r * 0.9f, r * 0.9f)) }
+        // El cristal con la ventanita de un portón dentro y el mango con su virola.
+        TemaId.URBE -> { lente(); mango(0.9f, 0.13f)
+            drawPath(Path().apply { moveTo(c.x - lr * 0.38f, c.y + lr * 0.42f); lineTo(c.x - lr * 0.38f, c.y - lr * 0.02f); quadraticTo(c.x, c.y - lr * 0.5f, c.x + lr * 0.38f, c.y - lr * 0.02f); lineTo(c.x + lr * 0.38f, c.y + lr * 0.42f) }, color, style = Stroke(r * 0.06f))
+            drawLine(color, Offset(r * 0.7f, r * 0.7f), Offset(r * 0.76f, r * 0.64f), r * 0.2f) }
         // Cristal cuadrado con un renglón dentro.
         TemaId.CIBER -> { drawRect(color, Offset(c.x - lr, c.y - lr), Size(lr * 2, lr * 2), style = Stroke(g)); mango(0.92f, 0.12f, 0.72f)
             drawLine(color, Offset(c.x - lr * 0.45f, c.y + lr * 0.3f), Offset(c.x + lr * 0.45f, c.y + lr * 0.3f), r * 0.08f) }
@@ -2399,6 +2495,7 @@ private class Particula(val ang: Float, val vel: Float, val giro: Float, val tam
 /** Si la lluvia de celebración de [tema] sube (burbujas, brasas, polvo de estrellas) en lugar de caer. */
 private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.ROMANO -> false
+    TemaId.URBE -> false
     TemaId.CIBER -> false
     TemaId.NEON -> false
     TemaId.HELENO -> false
@@ -2471,6 +2568,11 @@ fun CapaFiesta(fijo: Float? = null) {
                     // Hoja de laurel con su nervio.
                     TemaId.ROMANO -> { drawOval(col, Offset(pos.x - s, pos.y - s * 0.4f), Size(s * 2, s * 0.8f))
                         drawLine(e.background.copy(alpha = a * 0.5f), pos - Offset(s * 0.8f, 0f), pos + Offset(s * 0.8f, 0f), s * 0.08f) }
+                    // Pétalos de rosa, como los que caen por el óculo del Panteón en Pentecostés.
+                    TemaId.URBE -> { val rosa = lerp(Color(0xFFC8364A), col, 0.35f).copy(alpha = a)
+                        drawPath(Path().apply { moveTo(pos.x, pos.y + s * 0.7f); cubicTo(pos.x - s * 1.1f, pos.y, pos.x - s * 0.5f, pos.y - s * 0.9f, pos.x, pos.y - s * 0.55f)
+                            cubicTo(pos.x + s * 0.5f, pos.y - s * 0.9f, pos.x + s * 1.1f, pos.y, pos.x, pos.y + s * 0.7f); close() }, rosa)
+                        drawLine(e.background.copy(alpha = a * 0.35f), pos + Offset(0f, s * 0.5f), pos - Offset(0f, s * 0.3f), s * 0.07f) }
                     // Unos y ceros de fósforo.
                     TemaId.CIBER -> {
                         val fosforo = e.primary.copy(alpha = a)

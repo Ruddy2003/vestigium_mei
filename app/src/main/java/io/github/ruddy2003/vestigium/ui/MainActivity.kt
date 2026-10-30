@@ -219,6 +219,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
     when (Estilo.tema) {
         // Inscripción: el título va arriba, como en el friso, y el sello debajo.
         TemaId.ROMANO -> BloqueoCentrado(TextosBloqueo("VESTIGIVM MEI", "// tabulae obsignatae · tu diario está sellado", "Resignare"), tituloArriba = true, sello = 170, reintentar = reintentar)
+        // El portón del palacio, cerrado: hay que tocar el timbre para que abran.
+        TemaId.URBE -> BloqueoMarco(TextosBloqueo("VESTIGIUM MEI", "‖ portone chiuso · tu diario está cerrado con llave", "SUONA IL CAMPANELLO"), arriba = 30, reintentar = reintentar) { cs -> bloqueoPortone(cs) }
         TemaId.CIBER -> BloqueoConsola(TextosBloqueo("vestigium_mei", "> esperando huella_", "[ desbloquear ]",
             listOf("> montar /diario", "! acceso denegado: volumen cifrado", "> llave: huella del titular")), reintentar)
         // La persiana del puesto bajada, con el letrero de «cerrado» encendido arriba.
@@ -563,6 +565,24 @@ private fun DrawScope.bloqueoFalsaPuerta(cs: ColorScheme) {
     drawLine(c, Offset(-6 * u, h), Offset(w + 6 * u, h), 1.4f * u)
 }
 
+/**
+ * El portón de un palacio de Roma: el arco rebajado con su clave, las dos hojas de madera con sus cuarterones y el
+ * llamador, y el umbral de travertino abajo.
+ */
+private fun DrawScope.bloqueoPortone(cs: ColorScheme) {
+    val u = 1.dp.toPx(); val w = size.width; val h = size.height; val c = cs.primary.copy(alpha = 0.7f); val tenue = cs.onSurface.copy(alpha = 0.18f)
+    val f = 36 * u
+    drawPath(Path().apply { moveTo(0f, h); lineTo(0f, f); quadraticTo(w / 2, -f * 0.6f, w, f); lineTo(w, h) }, c, style = Stroke(1.8f * u, join = StrokeJoin.Round))
+    drawPath(Path().apply { moveTo(6 * u, h); lineTo(6 * u, f + 6 * u); quadraticTo(w / 2, -f * 0.6f + 12 * u, w - 6 * u, f + 6 * u); lineTo(w - 6 * u, h) }, c.copy(alpha = 0.35f), style = Stroke(0.8f * u))
+    drawPath(Path().apply { moveTo(w / 2 - 9 * u, 0f); lineTo(w / 2 + 9 * u, 0f); lineTo(w / 2 + 6 * u, 14 * u); lineTo(w / 2 - 6 * u, 14 * u); close() }, c)
+    // Las dos hojas: la juntura al medio y los cuarterones de abajo, a los lados del texto.
+    drawLine(tenue, Offset(w / 2, h * 0.86f), Offset(w / 2, h - 6 * u), 1f * u)
+    listOf(12 * u, w / 2 + 6 * u).forEach { x -> drawRect(tenue, Offset(x, h * 0.86f), Size(w / 2 - 18 * u, h * 0.14f - 10 * u), style = Stroke(0.8f * u)) }
+    drawCircle(cs.tertiary.copy(alpha = 0.7f), 4 * u, Offset(w / 2 - 12 * u, h * 0.8f), style = Stroke(1.2f * u))
+    drawCircle(cs.tertiary.copy(alpha = 0.7f), 4 * u, Offset(w / 2 + 12 * u, h * 0.8f), style = Stroke(1.2f * u))
+    drawLine(c, Offset(-8 * u, h), Offset(w + 8 * u, h), 3f * u)
+}
+
 /** Página iluminada: doble filete y una pieza de oro en cada esquina. */
 private fun DrawScope.bloqueoIluminado(cs: ColorScheme) {
     val u = 1.dp.toPx(); val w = size.width; val h = size.height
@@ -822,6 +842,7 @@ private fun EtiquetaPestana(nombre: String, sel: Boolean, color: Color) {
 /** ¿El indicador de la pestaña activa es una figura rellena (el ícono va en el color de encima) o solo un trazo? */
 private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.ROMANO -> false
+    TemaId.URBE -> true
     TemaId.CIBER -> false
     TemaId.NEON -> false
     TemaId.HELENO -> false
@@ -853,6 +874,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
 /** ¿El botón central es una figura rellena? Si no (consola, moneda con agujero, círculo de construcción), el ícono va en el color del tema. */
 private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.ROMANO -> true
+    TemaId.URBE -> true
     TemaId.CIBER -> false
     TemaId.NEON -> false
     TemaId.HELENO -> true
@@ -912,6 +934,14 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
             drawLine(oro, Offset(cx - a, y), Offset(cx + a, y), 2.2f * u)
             drawLine(oro, Offset(cx - a, y - 3 * u), Offset(cx - a, y + 3 * u), 1.4f * u)
             drawLine(oro, Offset(cx + a, y - 3 * u), Offset(cx + a, y + 3 * u), 1.4f * u)
+        }
+        // El boleto: una ficha llena con las dos muescas del talón, que crece al aparecer.
+        TemaId.URBE -> {
+            val a = 25 * u * (0.6f + 0.4f * p); val b = 13 * u; val n = 3 * u
+            drawPath(Path().apply {
+                moveTo(cx - a, cy - b); lineTo(cx + a * 0.45f - n, cy - b); quadraticTo(cx + a * 0.45f, cy - b + n * 1.4f, cx + a * 0.45f + n, cy - b); lineTo(cx + a, cy - b)
+                lineTo(cx + a, cy + b); lineTo(cx + a * 0.45f + n, cy + b); quadraticTo(cx + a * 0.45f, cy + b - n * 1.4f, cx + a * 0.45f - n, cy + b); lineTo(cx - a, cy + b); close()
+            }, c)
         }
         // Corchetes de consola que se cierran sobre el ícono.
         TemaId.CIBER -> {
@@ -1099,6 +1129,17 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
     when (tema) {
         // Clípeo: disco con un aro interior.
         TemaId.ROMANO -> { drawCircle(c, 25 * u, Offset(cx, cy)); drawCircle(sobre.copy(alpha = 0.55f), 21 * u, Offset(cx, cy), style = Stroke(1f * u)) }
+        // La cúpula: casquete sobre el tambor, con la linterna; un filete claro marca el anillo.
+        TemaId.URBE -> {
+            val base = cy + 18 * u
+            drawPath(Path().apply {
+                moveTo(cx - 24 * u, base); lineTo(cx - 24 * u, cy + 4 * u)
+                arcTo(Rect(cx - 24 * u, cy - 18 * u, cx + 24 * u, cy + 26 * u), 180f, 180f, false)
+                lineTo(cx + 24 * u, base); close()
+            }, c)
+            drawRect(c, Offset(cx - 4 * u, cy - 26 * u), Size(8 * u, 9 * u))
+            drawLine(sobre.copy(alpha = 0.5f), Offset(cx - 21 * u, cy + 6 * u), Offset(cx + 21 * u, cy + 6 * u), 1f * u)
+        }
         // Tecla de consola: solo esquinas, como corchetes.
         TemaId.CIBER -> {
             drawRect(c.copy(alpha = 0.12f), Offset(4 * u, 4 * u), Size(w - 8 * u, h - 8 * u))
@@ -1276,6 +1317,8 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
     when (tema) {
         // Doble filete fino.
         TemaId.ROMANO -> { filete(); drawLine(acento, Offset(0f, 3 * u), Offset(w, 3 * u), 0.7f * u) }
+        // Las vías del tranvía: dos rieles y sus durmientes.
+        TemaId.URBE -> { filete(0.6f * u, 0.8f * u); filete(4.2f * u, 0.8f * u); var x = 2 * u; while (x < w) { drawLine(acento, Offset(x, 0f), Offset(x, h), 1.6f * u); x += 10 * u } }
         // Línea de guiones.
         TemaId.CIBER -> drawLine(cs.primary.copy(alpha = 0.6f), Offset(0f, 1 * u), Offset(w, 1 * u), 1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 4 * u)))
         // El tubo de neón que recorre la fachada, con su halo.
@@ -1615,6 +1658,8 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
     return when (tema) {
         // Inscripción que aparece: sube apenas desde abajo y se aclara.
         TemaId.ROMANO -> (fadeIn(t(260)) + slideInVertically(t(260)) { dir * it / 24 }) togetherWith fadeOut(t(140))
+        // Como un tranvía que entra a la parada: llega de lado y frena; lo de antes se va un poco hacia el otro lado.
+        TemaId.URBE -> (fadeIn(t(220, frena)) + slideInHorizontally(t(320, frena)) { dir * it / 10 }) togetherWith (fadeOut(t(160)) + slideOutHorizontally(t(200)) { -dir * it / 18 })
         // Terminal: barrido rápido y lineal, de lado.
         TemaId.CIBER -> (fadeIn(t(140, lineal)) + slideInHorizontally(t(160, lineal)) { dir * it / 8 }) togetherWith fadeOut(t(90, lineal))
         // Letrero que se enciende: parpadea dos veces antes de quedarse prendido.

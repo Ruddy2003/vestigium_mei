@@ -234,6 +234,7 @@ object TrofeosMas {
             }
             // Los pedestales de los siete primeros están en [TrofeosTema.pedestal]: no llegan aquí.
             TemaId.ROMANO -> Unit
+            TemaId.URBE -> Unit
             TemaId.HELENO -> Unit
             TemaId.EGIPTO -> Unit
             TemaId.MEDIEVAL -> Unit

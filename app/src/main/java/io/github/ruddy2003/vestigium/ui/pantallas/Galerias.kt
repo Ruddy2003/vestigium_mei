@@ -110,6 +110,13 @@ private fun mas(a: Path, b: Path) = Path.combine(PathOperation.Union, a, b)
  */
 fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     TemaId.ROMANO -> Path().apply { moveTo(c.x - r, c.y + r * 0.35f); quadraticTo(c.x - r * 0.1f, c.y - r * 1.15f, c.x + r, c.y - r * 0.35f); quadraticTo(c.x + r * 0.1f, c.y + r * 1.15f, c.x - r, c.y + r * 0.35f); close() }
+    // Una cúpula con su linterna.
+    TemaId.URBE -> Path().apply {
+        moveTo(c.x - r, c.y + r * 0.6f); lineTo(c.x - r, c.y + r * 0.2f)
+        arcTo(Rect(c.x - r, c.y - r * 0.8f, c.x + r, c.y + r * 1.2f), 180f, 180f, false)
+        lineTo(c.x + r, c.y + r * 0.6f); close()
+        addRect(Rect(c.x - r * 0.18f, c.y - r * 1.15f, c.x + r * 0.18f, c.y - r * 0.78f))
+    }
     TemaId.HELENO -> mas(estrella(c, r, 16, 0.55f), circulo(c, r * 0.3f))
     // El ankh, la vida.
     TemaId.EGIPTO -> mas(mas(menos(ovalo(Offset(c.x, c.y - r * 0.5f), r * 0.42f, r * 0.5f), ovalo(Offset(c.x, c.y - r * 0.5f), r * 0.22f, r * 0.3f)),

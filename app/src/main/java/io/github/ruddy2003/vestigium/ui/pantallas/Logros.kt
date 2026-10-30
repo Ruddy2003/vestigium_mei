@@ -141,6 +141,13 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(luz, r * 0.76f, c, style = Stroke(r * 0.05f))
             for (k in 0 until 18) rotate(k * 20f, c) { drawOval(sombra, Offset(c.x - r * 0.045f, c.y - r * 0.93f), Size(r * 0.09f, r * 0.15f)) }
         }
+        // La tapa de alcantarilla de la calle: el aro, la reja de barras y los dos agujeros para levantarla.
+        TemaId.URBE -> {
+            forma(disco(c, r * 0.96f))
+            drawCircle(sombra, r * 0.8f, c, style = Stroke(r * 0.06f))
+            listOf(-0.45f, -0.15f, 0.15f, 0.45f).forEach { f -> val m = r * 0.68f * kotlin.math.sqrt(1f - f * f); drawLine(sombra, Offset(c.x - m, c.y + f * r), Offset(c.x + m, c.y + f * r), r * 0.07f) }
+            listOf(-0.55f, 0.55f).forEach { f -> drawCircle(luz, r * 0.05f, Offset(c.x + f * r, c.y)) }
+        }
         // Chip de consola: cuadro de esquinas cortadas con sus patas.
         TemaId.CIBER -> {
             val k = r * 0.8f; val q = r * 0.26f

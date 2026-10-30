@@ -85,6 +85,7 @@ private class MarcoRecuadro(val forma: Shape, val vertical: Dp)
 
 private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.ROMANO -> MarcoRecuadro(RoundedCornerShape(2.dp), 12.dp)
+    TemaId.URBE -> MarcoRecuadro(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomEnd = 3.dp, bottomStart = 3.dp), 13.dp)
     TemaId.CIBER -> MarcoRecuadro(RectangleShape, 9.dp)
     TemaId.NEON -> MarcoRecuadro(RoundedCornerShape(16.dp), 12.dp)
     TemaId.HELENO -> MarcoRecuadro(RoundedCornerShape(4.dp), 13.dp)
@@ -142,6 +143,13 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
             listOf(0f to 1f, w to -1f).forEach { (x0, d) ->
                 drawPath(Path().apply { moveTo(x0 + d * 5 * u, h / 2); lineTo(x0 + d * 1.5f * u, h / 2 - 5 * u); lineTo(x0 + d * 1.5f * u, h / 2 + 5 * u); close() }, c.copy(alpha = 0.4f))
             }
+        }
+        // La placa de la calle: el filete grueso y el fino, y un tornillo arriba en cada esquina.
+        TemaId.URBE -> {
+            val t = e.onSurface
+            drawLine(t.copy(alpha = 0.4f), Offset(4 * u, h - 3 * u), Offset(w - 4 * u, h - 3 * u), 1.6f * u)
+            drawRect(t.copy(alpha = 0.18f), Offset(6 * u, 8 * u), Size(w - 12 * u, h - 14 * u), style = Stroke(0.7f * u))
+            listOf(9 * u, w - 9 * u).forEach { x -> drawCircle(e.tertiary.copy(alpha = 0.6f), 1.5f * u, Offset(x, 11 * u)) }
         }
         // Corchetes de consola a los lados y el cursor abajo.
         TemaId.CIBER -> {
@@ -375,6 +383,13 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
             var x = 10 * u
             while (x < w - 8 * u) { drawLine(col, Offset(x - 2.5f * u, y - grosor / 2 - 2 * u), Offset(x + 2.5f * u, y + grosor / 2 + 2 * u), 1.2f * u); x += 11 * u }
             listOf(3 * u, w - 3 * u).forEach { drawCircle(col, grosor / 2 + 2 * u, Offset(it, y), style = Stroke(1.2f * u)) }
+        }
+        // Un puente sobre el Tíber: el tablero y, debajo, sus arcos; al medio, el ojo del puente.
+        TemaId.URBE -> {
+            drawLine(col, Offset(2 * u, y - 2 * u), Offset(w - 2 * u, y - 2 * u), grosor, pathEffect = punteado)
+            val n = 3; val ancho = (w - 4 * u) / n
+            for (k in 0 until n) drawArc(col, 180f, 180f, false, Offset(2 * u + k * ancho + 1.5f * u, y), Size(ancho - 3 * u, minOf(ancho * 0.5f, 14 * u)), style = Stroke(1.2f * u, pathEffect = punteado))
+            drawCircle(col, 2.4f * u, Offset(w / 2, y + 4 * u), style = Stroke(1f * u))
         }
         // Barra de progreso de la terminal: ocho celdas entre corchetes, llenas según la fuerza.
         TemaId.CIBER -> {

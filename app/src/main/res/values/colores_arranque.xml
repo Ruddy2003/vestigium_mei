@@ -5,6 +5,8 @@
     <color name="arranque_neutro">#0F1012</color>
     <color name="arranque_romano">#ECEDEA</color>
     <color name="arranque_romano_oscuro">#0E1113</color>
+    <color name="arranque_urbe">#EFE6D3</color>
+    <color name="arranque_urbe_oscuro">#171412</color>
     <color name="arranque_ciber_oscuro">#05070B</color>
     <color name="arranque_neon_oscuro">#0C0811</color>
     <color name="arranque_heleno">#F3EFE6</color>

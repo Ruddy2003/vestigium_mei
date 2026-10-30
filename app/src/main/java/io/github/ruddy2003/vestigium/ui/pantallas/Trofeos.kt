@@ -301,6 +301,9 @@ private fun Path.grecaRepisa(x0: Float, y0: Float, a: Float, ancho: Float) {
 private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
     when (tema) {
         TemaId.ROMANO -> drawPath(estrellada(o, s, s * 0.3f, 4), Color(0xFFFFF1C2).copy(alpha = 0.95f))
+        // La moneda que brilla al caer en la fuente: el disco y su destello.
+        TemaId.URBE -> { drawCircle(Color(0xFFE8C08A).copy(alpha = 0.95f), s * 0.42f, o); drawLine(Color.White.copy(alpha = 0.8f), Offset(o.x - s * 0.8f, o.y), Offset(o.x + s * 0.8f, o.y), s * 0.08f, StrokeCap.Round)
+            drawLine(Color.White.copy(alpha = 0.8f), Offset(o.x, o.y - s * 0.8f), Offset(o.x, o.y + s * 0.8f), s * 0.08f, StrokeCap.Round) }
         TemaId.CIBER -> {
             val q = s * 0.42f
             listOf(0 to 0, 1 to 0, -1 to 0, 0 to 1, 0 to -1).forEach { (dx, dy) ->
@@ -440,6 +443,7 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
 /** El tono de la pared de la sala de trofeos en cada tema (se mezcla, tenue, con la superficie). */
 private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.ROMANO -> Color(0xFFD9CBB0)
+    TemaId.URBE -> Color(0xFFE2B57A)
     TemaId.CIBER -> Color(0xFF06262C)
     TemaId.NEON -> Color(0xFF2A1430)
     TemaId.HELENO -> Color(0xFFC9D8E6)
@@ -482,6 +486,15 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
             val y0 = h * (0.06f + k * 0.15f)
             drawPath(Path().apply { moveTo(0f, y0); cubicTo(w * 0.28f, y0 - h * 0.05f, w * 0.52f, y0 + h * 0.07f, w * 0.74f, y0 + h * 0.01f); cubicTo(w * 0.86f, y0 - h * 0.02f, w * 0.94f, y0 + h * 0.04f, w, y0 + h * 0.03f) },
                 v, style = Stroke(1.3f * d))
+        }
+        // El muro de revoque ocre, con manchas donde se cayó el enlucido y asoma el ladrillo en hiladas.
+        TemaId.URBE -> listOf(0.2f to 0.25f, 0.72f to 0.6f, 0.35f to 0.85f).forEach { (fx, fy) ->
+            val cx = w * fx; val cy = h * fy; val rx = w * 0.16f; val ry = h * 0.07f
+            drawOval(a, Offset(cx - rx, cy - ry), Size(2 * rx, 2 * ry), style = Stroke(1.2f * d))
+            var y = cy - ry * 0.6f; var fila = 0
+            while (y < cy + ry * 0.6f) { drawLine(v, Offset(cx - rx * 0.8f, y), Offset(cx + rx * 0.8f, y), d)
+                var x = cx - rx * 0.8f + (if (fila % 2 == 0) 0f else 5 * d); while (x < cx + rx * 0.8f) { drawLine(v, Offset(x, y), Offset(x, y + 4 * d), d); x += 10 * d }
+                y += 4 * d; fila++ }
         }
         TemaId.CIBER -> {
             var y = 0f
@@ -707,6 +720,12 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             drawLine(lerp(c, Color.Black, 0.3f), Offset(0f, h * 0.5f), Offset(w, h * 0.5f), d)
             var x = 2 * d; while (x < w) { drawRect(lerp(c, Color.Black, 0.12f), Offset(x, h * 0.5f), Size(5 * d, h * 0.32f)); x += 8 * d }
         }
+        // El alféizar de travertino con sus poros alargados y, colgando debajo, una hilera de macetas de geranios.
+        TemaId.URBE -> {
+            val c = m(Color(0xFFE6D8BC)); tabla(c, 0f, h * 0.55f)
+            var x = 6 * d; var k = 0; while (x < w) { drawOval(lerp(c, Color.Black, 0.25f), Offset(x, h * (0.15f + (k % 3) * 0.12f)), Size(6 * d, 1.4f * d)); x += 13 * d; k++ }
+            x = 18 * d; while (x < w - 10 * d) { drawRect(m(Color(0xFFA8432A)), Offset(x, h * 0.55f), Size(8 * d, h * 0.3f)); drawCircle(m(Color(0xFFC8364A)), 2.4f * d, Offset(x + 4 * d, h * 0.55f)); x += 46 * d }
+        }
         TemaId.CIBER -> {
             tabla(m(Color(0xFF1A1F24)))
             var x = 6 * d; var k = 0
@@ -906,6 +925,13 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
                 lineTo(e, h); lineTo(e, h * 0.7f); lineTo(0f, h * 0.85f); lineTo(0f, h * 0.15f); lineTo(e, h * 0.3f); close()
             }
             drawPath(p, fondo); drawPath(p, borde, style = fino)
+        }
+        // La placa de la calle: mármol claro, marco doble y un tornillo a cada lado.
+        TemaId.URBE -> {
+            drawRect(Color(0xFFF4EEE2).copy(alpha = 0.35f * f), Offset.Zero, size)
+            drawRect(borde, Offset(d, d), Size(w - 2 * d, h - 2 * d), style = Stroke(1.8f * d))
+            drawRect(borde.copy(alpha = borde.alpha * 0.6f), Offset(4 * d, 4 * d), Size(w - 8 * d, h - 8 * d), style = fino)
+            listOf(7 * d, w - 7 * d).forEach { x -> drawCircle(ac, 1.6f * d, Offset(x, h / 2)) }
         }
         TemaId.CIBER -> {
             val l = 7 * d

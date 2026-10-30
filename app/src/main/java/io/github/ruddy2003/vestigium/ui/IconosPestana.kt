@@ -98,6 +98,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
     // ------------------------------------------------------------ Día
     private fun dia(tm: TemaId) { when (tm) {
         TemaId.ROMANO -> { ci(12f, 12f, 4f); rayos(12f, 12f, 8, 6.6f, 9.6f) }                                                              // sol
+        TemaId.URBE -> { arco(5f, 9.5f, 14f, 13f, 180f, 180f); l(4f, 16f, 20f, 16f); l(5.5f, 16f, 5.5f, 20f); l(18.5f, 16f, 18.5f, 20f); l(12f, 9.5f, 12f, 7f)
+            rayos(12f, 16f, 5, 12.5f, 14.5f, 215.0, 325.0, 1.3f) }                                                                          // el sol sobre la cúpula
         TemaId.CIBER -> { r(2.5f, 4f, 19f, 16f, 1f); p { m(6.5f, 9f); t(9.5f, 12f); t(6.5f, 15f) }; l(11.5f, 15f, 16.5f, 15f) }              // terminal
         TemaId.NEON -> { p { m(2f, 21f); t(2f, 14f); t(6f, 14f); t(6f, 10f); t(10f, 10f); t(10f, 16f); t(14f, 16f); t(14f, 7f); t(18f, 7f); t(18f, 12f); t(22f, 12f); t(22f, 21f) }
             arco(3f, 2f, 6f, 6f, 110f, 240f, fino) }                                                                                            // la noche sobre los edificios
@@ -146,6 +148,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
     // ------------------------------------------------------------ Diario
     private fun diario(tm: TemaId) { when (tm) {
         TemaId.ROMANO -> { r(4f, 3f, 16f, 18f, 1.5f); l(7.5f, 8f, 16.5f, 8f); l(7.5f, 12f, 16.5f, 12f); l(7.5f, 16f, 13f, 16f) }          // tablilla de cera
+        TemaId.URBE -> { r(4.5f, 3f, 14f, 18f, 1.5f); l(15.5f, 3f, 15.5f, 21f, 1.2f); r(6.8f, 6.5f, 6f, 4f, 0.6f); l(7.5f, 14.5f, 13f, 14.5f, 1.1f); l(7.5f, 17.5f, 11.5f, 17.5f, 1.1f) } // cuaderno con su elástico
         TemaId.CIBER -> { r(4.5f, 2.5f, 15f, 19f, 0.4f); for (y in listOf(5f, 9f, 13f, 17f)) { ci(6.6f, y, 0.7f, relleno = true); ci(17.4f, y, 0.7f, relleno = true) }
             l(9f, 6.5f, 15f, 6.5f, 1.1f); l(9f, 10f, 14f, 10f, 1.1f); l(9f, 13.5f, 15f, 13.5f, 1.1f)
             p(st = fino) { m(9f, 16f); t(10.6f, 17.2f); t(9f, 18.4f) }; l(11.8f, 18.4f, 14f, 18.4f, 1.1f) }                                // papel continuo de teletipo con su «>_»
@@ -183,6 +186,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
     private fun momentos(tm: TemaId) { when (tm) {
         TemaId.ROMANO -> { p { m(3f, 15f); q(3f, 11f, 9f, 11f); t(16f, 11f); q(20f, 11f, 21f, 14f); t(17f, 15f); q(14f, 18f, 9f, 18f); q(3f, 18f, 3f, 15f); close() }
             p(relleno = true) { m(19.8f, 10f); q(22f, 7f, 20.3f, 4.5f); q(18.4f, 7.5f, 19.8f, 10f); close() } }                              // lucerna
+        TemaId.URBE -> { r(2.5f, 7f, 19f, 10f, 0.8f); ci(15.5f, 9.2f, 0.6f, relleno = true); ci(15.5f, 12f, 0.6f, relleno = true); ci(15.5f, 14.8f, 0.6f, relleno = true)
+            l(5.2f, 10.5f, 12f, 10.5f, 1.1f); l(5.2f, 13.5f, 10f, 13.5f, 1.1f); r(17.3f, 10f, 2.4f, 4f, 0.3f, true) }                    // boleto de tranvía con su talón
         TemaId.CIBER -> p { m(13f, 2.5f); t(5f, 13.5f); t(11f, 13.5f); t(10f, 21.5f); t(19f, 10f); t(13f, 10f); close() }                        // rayo
         TemaId.NEON -> { r(2.5f, 4f, 19f, 12.5f, 6f); p { m(7f, 16.5f); t(6f, 21f); t(11f, 16.5f) }; ci(8f, 10.2f, 1f, relleno = true); ci(12f, 10.2f, 1f, relleno = true); ci(16f, 10.2f, 1f, relleno = true) } // el chisme
         TemaId.HELENO -> { p { m(7.5f, 4f); q(4f, 12f, 8f, 19f) }; p { m(16.5f, 4f); q(20f, 12f, 16f, 19f) }; l(6f, 6.5f, 18f, 6.5f); l(8f, 19f, 16f, 19f)
@@ -227,6 +232,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
     // ------------------------------------------------------------ Explorar
     private fun explorar(tm: TemaId) { when (tm) {
         TemaId.ROMANO -> { p { m(8f, 21f); t(8f, 7f); q(8f, 3f, 12f, 3f); q(16f, 3f, 16f, 7f); t(16f, 21f) }; l(5.5f, 21f, 18.5f, 21f); l(10f, 9f, 14f, 9f, 1.1f); l(10f, 12f, 14f, 12f, 1.1f); l(10f, 15f, 14f, 15f, 1.1f) } // miliario
+        TemaId.URBE -> { p { m(3f, 6f); t(9f, 4f); t(15f, 6f); t(21f, 4f); t(21f, 18f); t(15f, 20f); t(9f, 18f); t(3f, 20f); close() }
+            l(9f, 4f, 9f, 18f, 1.1f); l(15f, 6f, 15f, 20f, 1.1f); ci(12f, 11f, 1.2f, relleno = true) }                                        // el plano de la ciudad, plegado
         TemaId.CIBER -> { ci(12f, 12f, 9f); ci(12f, 12f, 4.8f, st = fino); l(12f, 12f, 18.4f, 5.6f); ci(15.5f, 9f, 1.2f, relleno = true) }           // radar
         TemaId.NEON -> { r(8f, 2.5f, 8f, 19f, 1f); r(10f, 5f, 4f, 3f, 0.3f, true); r(10f, 10.5f, 4f, 3f, 0.3f, true); r(10f, 16f, 4f, 3f, 0.3f, true); l(5f, 2.5f, 8f, 4f, 1.1f) } // el letrero vertical
         TemaId.HELENO -> { ci(12f, 12f, 8.6f); p(relleno = true) { m(12f, 5f); t(13.8f, 12f); t(10.2f, 12f); close() }; p(st = fino) { m(10.2f, 12f); t(12f, 19f); t(13.8f, 12f) } } // brújula
@@ -270,6 +277,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
     // ------------------------------------------------------------ Más
     private fun mas(tm: TemaId) { when (tm) {
         TemaId.ROMANO -> { r(6f, 5f, 12f, 14f, 0.5f); l(4.5f, 4f, 19.5f, 4f, 2.4f); l(4.5f, 20f, 19.5f, 20f, 2.4f); l(8.5f, 9f, 15.5f, 9f, 1.1f); l(8.5f, 12f, 15.5f, 12f, 1.1f); l(8.5f, 15f, 13f, 15f, 1.1f) } // rollo
+        TemaId.URBE -> { p { m(8f, 21f); t(9f, 13f); t(15f, 13f); t(16f, 21f); close() }; p { m(9f, 13f); t(8.5f, 11.5f); t(9.5f, 6f); t(14.5f, 6f); t(15.5f, 11.5f); t(15f, 13f) }
+            l(9.5f, 6f, 14.5f, 6f, 2f); ci(12f, 4.2f, 1f, relleno = true); p(st = fino) { m(15.5f, 8f); q(19.5f, 8f, 18.5f, 12f); t(15.5f, 16f) }; p(relleno = true) { m(9.5f, 7f); t(6.5f, 8.5f); t(9.2f, 9.5f); close() } } // la cafetera de la casa
         TemaId.CIBER -> { r(4f, 4f, 6.5f, 6.5f, 0.6f); r(13.5f, 4f, 6.5f, 6.5f, 0.6f); r(4f, 13.5f, 6.5f, 6.5f, 0.6f); r(13.5f, 13.5f, 6.5f, 6.5f, 0.6f, true) } // módulos
         TemaId.NEON -> { p { m(3.5f, 11f); t(20.5f, 11f); q(19.5f, 19.5f, 12f, 19.5f); q(4.5f, 19.5f, 3.5f, 11f); close() }; l(12f, 9f, 19f, 3f, 1.3f); l(14.5f, 9f, 21f, 4.5f, 1.3f) } // el tazón de fideos
         TemaId.HELENO -> { l(4f, 4f, 20f, 4f); ci(6.5f, 6.3f, 1.8f, st = fino); ci(17.5f, 6.3f, 1.8f, st = fino); l(6.5f, 8f, 17.5f, 8f, 1.1f)
@@ -317,6 +326,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             hoja(5.6f, 16.4f, 4.6f, 2.4f, -135f); hoja(4.1f, 11.8f, 4.6f, 2.4f, -105f); hoja(4.6f, 7.2f, 4.6f, 2.4f, -80f)
             hoja(18.4f, 16.4f, 4.6f, 2.4f, -45f); hoja(19.9f, 11.8f, 4.6f, 2.4f, -75f); hoja(19.4f, 7.2f, 4.6f, 2.4f, -100f)
             l(9.8f, 22f, 12f, 20.5f, 1.1f); l(14.2f, 22f, 12f, 20.5f, 1.1f) }                                                              // corona de laurel
+        TemaId.URBE -> { l(2f, 20f, 22f, 20f); p { m(4f, 20f); t(4f, 14f); t(7f, 14f); t(7f, 20f) }; arco(8.5f, 9f, 9f, 9f, 180f, 180f); l(8.5f, 13.5f, 8.5f, 20f); l(17.5f, 13.5f, 17.5f, 20f)
+            l(13f, 9f, 13f, 6f, 1.3f); ci(13f, 5.2f, 0.7f, relleno = true); p { m(18.5f, 20f); t(18.5f, 8f); t(20f, 6.5f); t(21.5f, 8f); t(21.5f, 20f) } } // los tejados: cúpula y campanario
         TemaId.CIBER -> { r(2.5f, 8f, 17f, 8f, 0.6f); l(21.2f, 10.5f, 21.2f, 13.5f, 2f)
             r(4.6f, 10f, 3.2f, 4f, 0.2f, true); r(8.8f, 10f, 3.2f, 4f, 0.2f, true); r(13f, 10f, 3.2f, 4f, 0.2f, true) }                // barra de energía a tres cuartos
         TemaId.NEON -> { ci(12f, 9f, 5.5f); p { m(7.2f, 11.8f); t(12f, 21.5f); t(16.8f, 11.8f) }; ci(12f, 9f, 2f, relleno = true) }         // el distrito, con su alfiler
@@ -386,6 +397,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
     private fun registrar(tm: TemaId) { when (tm) {
         TemaId.ROMANO -> { l(12f, 4.5f, 12f, 19.5f, 2.4f); l(4.5f, 12f, 19.5f, 12f, 2.4f)
             l(9.8f, 4.2f, 14.2f, 4.2f, 1.5f); l(9.8f, 19.8f, 14.2f, 19.8f, 1.5f); l(4.2f, 9.8f, 4.2f, 14.2f, 1.5f); l(19.8f, 9.8f, 19.8f, 14.2f, 1.5f) } // «+» de inscripción, con remates
+        TemaId.URBE -> { ci(12f, 12f, 9f); l(12f, 7f, 12f, 17f, 2.4f); l(7f, 12f, 17f, 12f, 2.4f) }                                   // «+» en el disco de la parada
         TemaId.CIBER -> { p { m(7f, 4f); t(4f, 4f); t(4f, 20f); t(7f, 20f) }; p { m(17f, 4f); t(20f, 4f); t(20f, 20f); t(17f, 20f) }
             l(12f, 8f, 12f, 16f, 2.2f); l(8f, 12f, 16f, 12f, 2.2f) }                                                                         // [+]
         TemaId.NEON -> { r(2.5f, 6f, 19f, 12f, 6f); l(12f, 8.8f, 12f, 15.2f, 2.2f); l(8.8f, 12f, 15.2f, 12f, 2.2f) }                        // «+» en la placa del puesto
@@ -439,6 +451,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
     private fun ajustes(tm: TemaId) { when (tm) {
         TemaId.ROMANO -> { l(12f, 8f, 12f, 21.5f, 1.8f); l(4f, 8f, 20f, 8f, 1.8f); l(8.5f, 5.5f, 15.5f, 10.5f, 1.2f); l(4f, 8f, 4f, 14.5f, 1f); l(20f, 8f, 20f, 14.5f, 1f)
             ci(4f, 15.6f, 1.2f, relleno = true); ci(20f, 15.6f, 1.2f, relleno = true); ci(12f, 8f, 1.3f, relleno = true); l(9f, 21.5f, 15f, 21.5f) } // groma del agrimensor
+        TemaId.URBE -> { ci(6.5f, 12f, 3.6f); ci(6.5f, 12f, 1.2f, relleno = true); l(10.1f, 12f, 21f, 12f, 1.8f); l(17f, 12f, 17f, 15.5f, 1.6f); l(20f, 12f, 20f, 16f, 1.6f); l(14.5f, 12f, 14.5f, 14.2f, 1.2f) } // la llave del portón
         TemaId.CIBER -> { l(6f, 3f, 6f, 21f, 1.1f); l(12f, 3f, 12f, 21f, 1.1f); l(18f, 3f, 18f, 21f, 1.1f)
             r(4f, 13f, 4f, 3f, 0.4f, true); r(10f, 6f, 4f, 3f, 0.4f, true); r(16f, 15f, 4f, 3f, 0.4f, true) }                             // deslizadores
         TemaId.NEON -> { r(4f, 3f, 16f, 18f, 1.5f); r(7f, 6f, 3.5f, 7f, 0.6f, true); r(13.5f, 10f, 3.5f, 7f, 0.6f, true); l(7f, 18f, 17f, 18f, 1.1f) } // la caja de fusibles

@@ -31,6 +31,7 @@ object SalonesTema {
         val n = columnas.coerceAtLeast(1)
         when (tema) {
             TemaId.ROMANO -> atrio(cs, oscuro, n)
+            TemaId.URBE -> facciata(cs, oscuro, n)
             TemaId.HELENO -> stoa(cs, oscuro, n)
             TemaId.EGIPTO -> hipostila(cs, oscuro, n)
             TemaId.MEDIEVAL -> salaGestas(cs, oscuro, n)
@@ -66,6 +67,14 @@ object SalonesTema {
         fun piedra(c: Color) = Brush.verticalGradient(listOf(lerp(c, Color.White, 0.2f), c, lerp(c, Color.Black, 0.25f)), 0f, h)
         when (tema) {
             TemaId.ROMANO -> { drawRect(piedra(Color(0xFF7C2433).copy(alpha = 0.75f)), Offset(w * 0.2f, h * 0.15f), Size(w * 0.6f, h * 0.7f)); drawRect(piedra(Color(0xFFE7E3DA)), Offset(w * 0.14f, 0f), Size(w * 0.72f, h * 0.18f)); drawRect(piedra(Color(0xFFE7E3DA)), Offset(w * 0.1f, h * 0.82f), Size(w * 0.8f, h * 0.18f)) }
+            // El pilón de travertino de una fuente de barrio, con la placa de mármol al frente.
+            TemaId.URBE -> {
+                drawRect(piedra(Color(0xFFE6D8BC)), Offset(w * 0.14f, h * 0.12f), Size(w * 0.72f, h * 0.88f))
+                drawRect(piedra(Color(0xFFCDBA92)), Offset(w * 0.08f, 0f), Size(w * 0.84f, h * 0.16f))
+                drawRect(Color(0xFFF4EEE2), Offset(w * 0.3f, h * 0.36f), Size(w * 0.4f, h * 0.36f))
+                drawRect(Color(0xFF2B2420).copy(alpha = 0.6f), Offset(w * 0.3f, h * 0.36f), Size(w * 0.4f, h * 0.36f), style = Stroke(h * 0.04f))
+                drawLine(Color(0xFF2B2420).copy(alpha = 0.6f), Offset(w * 0.38f, h * 0.54f), Offset(w * 0.62f, h * 0.54f), h * 0.05f)
+            }
             TemaId.HELENO -> for (k in 0 until 3) drawRect(piedra(Color(0xFFEDE7DA)), Offset(w * (0.24f - k * 0.07f), h * k / 3f), Size(w * (0.52f + k * 0.14f), h / 3f))
             // La mesa de ofrendas sobre su bloque: la losa con el filo de lapislázuli y el signo hotep (el pan sobre la estera) tallado.
             TemaId.EGIPTO -> {
@@ -195,6 +204,53 @@ object SalonesTema {
         for (i in 0..n) columnaClasica(i * paso, techo, abajo - 6 * d, 7 * d, marmol, 2)
         drawRect(marmol, Offset(0f, 12 * d), Size(w, 14 * d))
         greca(15 * d, 8 * d, cs.tertiary.copy(alpha = 0.45f))
+    }
+
+    /**
+     * Roma de hoy: la fachada de un palacio del centro, de revoque ocre, con sus ventanas de persianas verdes entre las
+     * piezas (una entreabierta), el alféizar con macetas de geranios, la cornisa de travertino arriba con las tejas y el
+     * cielo de la tarde, y abajo la acera de sampietrini con el «nasone», la fuentecita de hierro de las esquinas.
+     */
+    private fun DrawScope.facciata(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val ocre = Color(0xFFC98A3A).copy(alpha = if (oscuro) 0.16f else 0.14f)
+        val trav = (if (oscuro) Color(0xFF6A5A44) else Color(0xFFE6D8BC)).copy(alpha = 0.7f)
+        val persiana = Color(0xFF3D5E45).copy(alpha = if (oscuro) 0.35f else 0.28f)
+        val paso = w / n
+        val techo = 30 * d; val abajo = h - 24 * d
+        // El cielo de la tarde y las tejas.
+        drawRect(Brush.verticalGradient(listOf(Color(0xFFE8955A).copy(alpha = if (oscuro) 0.14f else 0.22f), Color.Transparent), 0f, 14 * d), Offset.Zero, Size(w, 14 * d))
+        var x = 0f; while (x < w) { drawArc(Color(0xFFA8432A).copy(alpha = 0.35f), 180f, 180f, false, Offset(x, 9 * d), Size(8 * d, 6 * d), style = Stroke(1.4f * d)); x += 8 * d }
+        // El muro ocre.
+        drawRect(ocre, Offset(0f, techo), Size(w, abajo - techo))
+        // Entre cada dos piezas, una ventana con su marco de travertino y las persianas abiertas a los lados.
+        for (i in 0..n) {
+            val cx = i * paso
+            val vw = 14 * d; val y0 = techo + 22 * d; val y1 = min(abajo - 40 * d, y0 + 70 * d)
+            if (y1 - y0 < 30 * d) continue
+            drawRect(trav, Offset(cx - vw / 2 - 3 * d, y0 - 4 * d), Size(vw + 6 * d, y1 - y0 + 8 * d))
+            drawRect(Color.Black.copy(alpha = if (oscuro) 0.3f else 0.12f), Offset(cx - vw / 2, y0), Size(vw, y1 - y0))
+            listOf(-1f, 1f).forEach { s ->
+                val px = cx + s * (vw / 2 + 3 * d) + (if (s < 0) -7 * d else 0f)
+                drawRect(persiana, Offset(px, y0), Size(7 * d, y1 - y0))
+                var y = y0 + 3 * d; while (y < y1) { drawLine(Color.Black.copy(alpha = 0.12f), Offset(px, y), Offset(px + 7 * d, y), 0.8f * d); y += 4 * d }
+            }
+            // El alféizar con sus geranios.
+            drawRect(trav, Offset(cx - vw / 2 - 6 * d, y1 + 4 * d), Size(vw + 12 * d, 3 * d))
+            listOf(-4f, 0f, 4f).forEach { dx -> drawCircle(Color(0xFFC8364A).copy(alpha = if (oscuro) 0.4f else 0.5f), 2.2f * d, Offset(cx + dx * d, y1 + 1.5f * d)) }
+        }
+        // La cornisa de travertino con su moldura.
+        drawRect(trav, Offset(0f, 15 * d), Size(w, techo - 15 * d))
+        drawLine(Color.Black.copy(alpha = 0.15f), Offset(0f, techo - 3 * d), Offset(w, techo - 3 * d), 1 * d)
+        // La acera de sampietrini y el nasone al centro.
+        drawRect(Color(0xFF3A3530).copy(alpha = if (oscuro) 0.4f else 0.2f), Offset(0f, abajo), Size(w, h - abajo))
+        var k = 0; x = 0f
+        while (x < w) { drawRect(Color.Black.copy(alpha = 0.12f), Offset(x, abajo + (if (k % 2 == 0) 4 * d else 12 * d)), Size(6 * d, 6 * d), style = Stroke(0.6f * d)); x += 7 * d; k++ }
+        val nx = w / 2; val hierro = Color(0xFF3F4A44).copy(alpha = if (oscuro) 0.6f else 0.5f)
+        drawRect(hierro, Offset(nx - 4 * d, abajo - 22 * d), Size(8 * d, 22 * d))
+        drawCircle(hierro, 4.5f * d, Offset(nx, abajo - 22 * d))
+        drawLine(hierro, Offset(nx + 4 * d, abajo - 14 * d), Offset(nx + 9 * d, abajo - 12 * d), 2 * d)
+        drawLine(Color(0xFF6FB3D9).copy(alpha = 0.6f), Offset(nx + 9 * d, abajo - 12 * d), Offset(nx + 10 * d, abajo), 1 * d)
     }
 
     /**

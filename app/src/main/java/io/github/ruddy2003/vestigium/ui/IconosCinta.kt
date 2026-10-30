@@ -44,6 +44,11 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
     when (tema) {
         // Clípeo: el escudo redondo con su doble canto.
         TemaId.ROMANO -> { drawCircle(c, w * 0.47f, o, style = Stroke(g)); drawCircle(c, w * 0.4f, o, style = Stroke(g * 0.5f)) }
+        // La placa de la parada del autobús: rectángulo de esquinas romas, con el poste que baja.
+        TemaId.URBE -> {
+            drawRoundRect(c, Offset(w * 0.06f, h * 0.1f), Size(w * 0.88f, h * 0.72f), CornerRadius(w * 0.1f), style = Stroke(g))
+            drawLine(c, Offset(w * 0.5f, h * 0.82f), Offset(w * 0.5f, h * 0.98f), g * 1.4f)
+        }
         // Corchetes de consola: [ ícono ].
         TemaId.CIBER -> drawPath(Path().apply {
             moveTo(w * 0.2f, h * 0.06f); lineTo(w * 0.04f, h * 0.06f); lineTo(w * 0.04f, h * 0.94f); lineTo(w * 0.2f, h * 0.94f)
@@ -259,6 +264,15 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawCircle(color, r, c)
             for (k in 0 until 12) drawCircle(hueco.copy(alpha = 0.6f), r * 0.08f, polarFig(c, r * 0.78f, k * 30f))
             drawCircle(hueco.copy(alpha = 0.45f), r * 0.3f, c)
+        }
+        // Un sampietrino visto de arriba: el adoquín de basalto puesto en rombo, gastado en las aristas, con su brillo.
+        TemaId.URBE -> {
+            val k = r * 0.98f; val q = r * 0.22f
+            drawPath(Path().apply {
+                moveTo(c.x, c.y - k + q); quadraticTo(c.x, c.y - k, c.x + q, c.y - k + q); lineTo(c.x + k - q, c.y - q); quadraticTo(c.x + k, c.y, c.x + k - q, c.y + q)
+                lineTo(c.x + q, c.y + k - q); quadraticTo(c.x, c.y + k, c.x - q, c.y + k - q); lineTo(c.x - k + q, c.y + q); quadraticTo(c.x - k, c.y, c.x - k + q, c.y - q); close()
+            }, color)
+            drawLine(hueco.copy(alpha = 0.45f), Offset(c.x - r * 0.38f, c.y - r * 0.12f), Offset(c.x - r * 0.08f, c.y - r * 0.42f), r * 0.14f, cap = StrokeCap.Round)
         }
         // Un píxel de fósforo encendido, con su halo y la raya del barrido.
         TemaId.CIBER -> {

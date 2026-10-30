@@ -10,6 +10,7 @@ import io.github.ruddy2003.vestigium.ui.TemaId
 object NombresCompletos {
     fun de(tema: TemaId, titulo: String): String? = when (tema) {
         TemaId.ROMANO -> NombresRomano.M[titulo]
+        TemaId.URBE -> NombresUrbe.M[titulo]
         TemaId.CIBER -> NombresCiber.M[titulo]
         TemaId.NEON -> NombresNeon.M[titulo]
         TemaId.HELENO -> NombresHeleno.M[titulo]

@@ -108,6 +108,7 @@ object HallImagen {
      */
     private fun marcaHall(tema: TemaId): Pair<String, String> = when (tema) {
         TemaId.ROMANO -> "VESTIGIVM MEI" to "SCRIPSIT ET SERVAVIT"
+        TemaId.URBE -> "VESTIGIUM MEI · ROMA" to "scritto e conservato in città"
         TemaId.CIBER -> "usuario@vestigium:~/hall$ ls" to "[proceso terminado · código 0]"
         TemaId.NEON -> "EL CALLEJÓN DE LAS FICHAS · 屋台" to "— se apagan los letreros —"
         TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ · VESTIGIUM MEI" to "ΜΝΗΜΗΣ ΧΑΡΙΝ"

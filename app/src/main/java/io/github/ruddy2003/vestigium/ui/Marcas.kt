@@ -54,6 +54,8 @@ object Marcas {
         CARTELA,
         /** Cartucho egipcio: el óvalo de cuerda que encierra un nombre, con la barra del nudo al final. */
         CARTUCHO,
+        /** La placa de mármol de una calle: fondo claro, doble filete y dos tornillos. */
+        TARGA,
         /** Vídeo inverso con el cursor de bloque detrás. */
         TERMINAL,
         /** Subrayado en greca (onda cuadrada). */
@@ -113,6 +115,8 @@ object Marcas {
         val p = cs.primary; val s = cs.secondary; val t = cs.tertiary
         return when (tema) {
             TemaId.ROMANO -> if (persona) Aspecto(p, t, Forma.CARTELA, negrita = true) else Aspecto(t, t, Forma.SUBRAYADO)
+            // La @persona, como el nombre de una calle en su placa; el #tema, subrayado a mano con una onda.
+            TemaId.URBE -> if (persona) Aspecto(cs.onBackground, p, Forma.TARGA, negrita = true) else Aspecto(s, s, Forma.ONDULADO, cursiva = true)
             TemaId.CIBER -> if (persona) Aspecto(cs.background, p, Forma.TERMINAL, negrita = true) else Aspecto(s, s, Forma.CORCHETES)
             TemaId.NEON -> if (persona) Aspecto(cs.background, p, Forma.MARCADOR, negrita = true) else Aspecto(s, s, Forma.ONDULADO)
             TemaId.HELENO -> if (persona) Aspecto(p, t, Forma.GRECA, negrita = true) else Aspecto(s, s, Forma.PUNTEADO)
@@ -147,7 +151,7 @@ object Marcas {
     private fun fondoCampo(f: Forma, c: Color): Color = when (f) {
         Forma.SELLO, Forma.TERMINAL, Forma.BARRA, Forma.PARALELO -> c
         Forma.MARCADOR, Forma.CINTA, Forma.PLACA, Forma.ETIQUETA -> c.copy(alpha = 0.22f)
-        Forma.RECUADRO, Forma.CORCHETES, Forma.CARTELA, Forma.CARTUCHO, Forma.GOMA, Forma.RECORTE, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PIEDRA, Forma.ESCOTILLA -> c.copy(alpha = 0.12f)
+        Forma.RECUADRO, Forma.CORCHETES, Forma.CARTELA, Forma.TARGA, Forma.CARTUCHO, Forma.GOMA, Forma.RECORTE, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PIEDRA, Forma.ESCOTILLA -> c.copy(alpha = 0.12f)
         Forma.TIZA -> c.copy(alpha = 0.12f)
         Forma.NINGUNA, Forma.SUBRAYADO, Forma.ONDULADO, Forma.GRECA, Forma.PUNTEADO, Forma.DOBLE, Forma.ESCALA, Forma.ZIGZAG, Forma.GUIONES,
         Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS, Forma.BURBUJAS -> Color.Unspecified
@@ -160,7 +164,7 @@ object Marcas {
         Forma.SUBRAYADO, Forma.ONDULADO, Forma.GRECA, Forma.PUNTEADO, Forma.DOBLE, Forma.ESCALA, Forma.ZIGZAG, Forma.GUIONES,
         Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS -> true
         Forma.CABO, Forma.BURBUJAS -> true
-        Forma.NINGUNA, Forma.MARCADOR, Forma.RECUADRO, Forma.SELLO, Forma.CORCHETES, Forma.CARTELA, Forma.CARTUCHO, Forma.TERMINAL, Forma.BARRA, Forma.GOMA,
+        Forma.NINGUNA, Forma.MARCADOR, Forma.RECUADRO, Forma.SELLO, Forma.CORCHETES, Forma.CARTELA, Forma.TARGA, Forma.CARTUCHO, Forma.TERMINAL, Forma.BARRA, Forma.GOMA,
         Forma.PLACA, Forma.RECORTE, Forma.ETIQUETA, Forma.CINTA, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PARALELO, Forma.PIEDRA, Forma.ESCOTILLA -> false
         Forma.TIZA -> false
         Forma.ESCUDETE -> true
@@ -270,6 +274,14 @@ object Marcas {
                 drawRoundRect(c.copy(alpha = 0.08f), Offset(iz, t), Size(de - iz, b - t), CornerRadius((b - t) / 2, (b - t) / 2))
                 drawRoundRect(c.copy(alpha = 0.85f), Offset(iz, t), Size(de - iz, b - t), CornerRadius((b - t) / 2, (b - t) / 2), style = Stroke(1.1f * u))
                 drawLine(c.copy(alpha = 0.85f), Offset(de + 1.8f * u, t - 1f * u), Offset(de + 1.8f * u, b + 1f * u), 1.8f * u)
+            }
+            Forma.TARGA -> {
+                // La placa de la calle: el mármol claro, el marco de dos filetes y un tornillo a cada lado.
+                val t = rr.top + h * 0.06f; val b = rr.bottom - h * 0.04f; val iz = rr.left - 5 * u; val de = rr.right + 5 * u
+                drawRect(Color(0xFFF4EEE2).copy(alpha = 0.55f), Offset(iz, t), Size(de - iz, b - t))
+                drawRect(c.copy(alpha = 0.85f), Offset(iz, t), Size(de - iz, b - t), style = Stroke(1.2f * u))
+                drawRect(c.copy(alpha = 0.45f), Offset(iz + 1.8f * u, t + 1.8f * u), Size(de - iz - 3.6f * u, b - t - 3.6f * u), style = Stroke(0.6f * u))
+                listOf(iz + 2.6f * u, de - 2.6f * u).forEach { x -> drawCircle(c.copy(alpha = 0.8f), 0.9f * u, Offset(x, medio)) }
             }
             Forma.TERMINAL -> {
                 // Vídeo inverso: la palabra sobre su bloque y el cursor esperando detrás.

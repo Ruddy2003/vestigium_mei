@@ -227,6 +227,11 @@ private fun pielDialogo(t: TemaId): PielDialogo = PIELES_DIALOGO.getValue(t)
 private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     // Placa de mármol con esquinas apenas romas.
     TemaId.ROMANO -> PielDialogo(RoundedCornerShape(3.dp), 0.dp, 0.dp, false, 1.dp)
+    // El portón de un palacio: arco rebajado arriba y pies rectos.
+    TemaId.URBE -> PielDialogo(FormaDp { w, h, d ->
+        val f = 16 * d
+        moveTo(0f, h); lineTo(0f, f); quadraticTo(w / 2, -f, w, f); lineTo(w, h); close()
+    }, 10.dp, 0.dp, true, 1.dp)
     // Ventana de consola con dos esquinas cortadas en diagonal.
     TemaId.CIBER -> PielDialogo(CutCornerShape(topEnd = 14.dp, bottomStart = 14.dp), 0.dp, 0.dp, false, 1.dp)
     // La placa luminosa del puesto: esquinas muy redondas.
@@ -356,6 +361,16 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
                 val x0 = if (s > 0f) 7 * d else w - 7 * d
                 drawPath(Path().apply { moveTo(x0, h / 2 - 9 * d); lineTo(x0 + s * 8 * d, h / 2); lineTo(x0, h / 2 + 9 * d); close() }, e.primary.copy(alpha = 0.5f))
             }
+        }
+        TemaId.URBE -> {
+            // La jamba del portón por dentro (sigue el arco) y, abajo, el umbral de travertino con sus dos tornillos.
+            val f = 16 * d
+            drawPath(Path().apply { moveTo(7 * d, h - 7 * d); lineTo(7 * d, f + 6 * d); quadraticTo(w / 2, -f + 14 * d, w - 7 * d, f + 6 * d); lineTo(w - 7 * d, h - 7 * d) },
+                e.onSurface.copy(alpha = 0.28f), style = Stroke(1.2f * d))
+            drawRect(e.tertiary.copy(alpha = 0.35f), Offset(7 * d, h - 10 * d), Size(w - 14 * d, 3 * d))
+            listOf(14 * d, w - 14 * d).forEach { x -> drawCircle(e.tertiary.copy(alpha = 0.7f), 1.8f * d, Offset(x, h - 15 * d)) }
+            // La clave del arco, arriba al centro.
+            drawPath(Path().apply { moveTo(w / 2 - 6 * d, 4 * d); lineTo(w / 2 + 6 * d, 4 * d); lineTo(w / 2 + 4 * d, 13 * d); lineTo(w / 2 - 4 * d, 13 * d); close() }, e.primary.copy(alpha = 0.55f))
         }
         TemaId.CIBER -> {
             // Recuadro punteado de consola, el indicador «>_» arriba y el cursor encendido abajo.
@@ -651,6 +666,12 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             drawLine(e.primary.copy(alpha = 0.5f), Offset(0f, cy), Offset(w / 2 - 8 * d, cy), d)
             drawLine(e.primary.copy(alpha = 0.5f), Offset(w / 2 + 8 * d, cy), Offset(w, cy), d)
             drawPath(Path().apply { moveTo(w / 2 - 4 * d, cy - 3 * d); lineTo(w / 2 + 4 * d, cy - 3 * d); lineTo(w / 2, cy + 3 * d); close() }, e.primary)
+        }
+        // Las vías del tranvía: dos rieles con sus durmientes.
+        TemaId.URBE -> {
+            drawLine(e.onSurface.copy(alpha = 0.4f), Offset(0f, cy - 2.5f * d), Offset(w, cy - 2.5f * d), 0.9f * d)
+            drawLine(e.onSurface.copy(alpha = 0.4f), Offset(0f, cy + 2.5f * d), Offset(w, cy + 2.5f * d), 0.9f * d)
+            var x = 3 * d; while (x < w) { drawLine(e.primary.copy(alpha = 0.45f), Offset(x, cy - 4 * d), Offset(x, cy + 4 * d), 1.6f * d); x += 9 * d }
         }
         // Guiones de consola que terminan en el cursor.
         TemaId.CIBER -> {
@@ -972,6 +993,14 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             linea(inactivo, x, w, g * 0.18f, cy - g * 0.3f); linea(inactivo, x, w, g * 0.18f, cy + g * 0.3f)
             if (x > 0f) drawRect(activo, Offset(0f, cy - g / 2), Size(x, g))
         }
+        // La vía del tranvía: dos rieles por recorrer; lo recorrido, el riel lleno con sus durmientes claros.
+        TemaId.URBE -> {
+            linea(inactivo, x, w, g * 0.16f, cy - g * 0.32f); linea(inactivo, x, w, g * 0.16f, cy + g * 0.32f)
+            if (x > 0f) {
+                drawRect(activo, Offset(0f, cy - g * 0.42f), Size(x, g * 0.84f))
+                var k = g * 0.7f; while (k < x) { drawLine(e.surface.copy(alpha = 0.45f), Offset(k, cy - g * 0.42f), Offset(k, cy + g * 0.42f), maxOf(g * 0.14f, 0.6f * d)); k += g * 1.6f }
+            }
+        }
         // Celdas de píxel: encendidas hasta donde va.
         TemaId.CIBER -> {
             val cw = maxOf(g * 1.3f, 2 * d); val paso = cw + maxOf(g * 0.5f, d)
@@ -1212,6 +1241,12 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
                 drawPath(Path().apply { moveTo(x0, c.y - b * 0.8f); lineTo(x0 + s * r * 0.3f, c.y); lineTo(x0, c.y + b * 0.8f); close() }, color)
             }
             drawRect(hueco.copy(alpha = 0.8f), Offset(c.x - a + r * 0.15f, c.y - b + r * 0.15f), Size(2 * a - r * 0.3f, 2 * b - r * 0.3f), style = Stroke(r * 0.07f))
+        }
+        // La tapa de alcantarilla de la calle, redonda, con su aro y la reja de barras.
+        TemaId.URBE -> {
+            drawCircle(color, r * 0.92f, c)
+            drawCircle(hueco.copy(alpha = 0.8f), r * 0.74f, c, style = Stroke(r * 0.08f))
+            listOf(-0.36f, 0f, 0.36f).forEach { f -> drawLine(hueco.copy(alpha = 0.75f), Offset(c.x - r * 0.62f * (1f - f * f * 1.2f), c.y + f * r), Offset(c.x + r * 0.62f * (1f - f * f * 1.2f), c.y + f * r), r * 0.08f) }
         }
         // Cursor de bloque con su subrayado.
         TemaId.CIBER -> {

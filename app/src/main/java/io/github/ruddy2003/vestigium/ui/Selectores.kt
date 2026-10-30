@@ -249,6 +249,8 @@ fun CuadriculaAfecto(valencia: Int?, activacion: Int?, modifier: Modifier = Modi
 private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     // Tesela de mosaico, apenas irregular.
     TemaId.ROMANO -> GenericShape { s, _ -> moveTo(s.width * 0.03f, 0f); lineTo(s.width, s.height * 0.04f); lineTo(s.width * 0.97f, s.height); lineTo(0f, s.height * 0.96f); close() }
+    // Sampietrino: el adoquín cuadrado de aristas gastadas.
+    TemaId.URBE -> RoundedCornerShape(22)
     // Píxel con una esquina cortada.
     TemaId.CIBER -> CutCornerShape(topEndPercent = 28)
     TemaId.NEON -> RoundedCornerShape(percent = 40)
@@ -347,6 +349,8 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
             drawRect(fondo, Offset(s.width / 2 - l / 2, s.height / 2 - l / 2), Size(l, l))
         }
         TemaId.ROMANO -> {}
+        // El brillo de la piedra pisada, en una arista.
+        TemaId.URBE -> drawLine(fondo.copy(alpha = 0.35f), Offset(s.width * 0.2f, s.height * 0.3f), Offset(s.width * 0.5f, s.height * 0.16f), minOf(s.width, s.height) * 0.06f)
         TemaId.CIBER -> {}
         // Una gota de lluvia que resbala por el letrero.
         TemaId.NEON -> {

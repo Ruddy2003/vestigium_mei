@@ -150,6 +150,7 @@ fun CapaLogro() {
 /** Los cuatro niveles de un logro (bronce, plata, oro y legendario) dichos en la voz de cada tema. */
 private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.ROMANO -> listOf("ex aere", "ex argento", "ex auro", "triumphalis")
+    TemaId.URBE -> listOf("di bronzo", "d'argento", "d'oro", "da Campidoglio")
     TemaId.CIBER -> listOf("rango: usuario", "rango: operador", "rango: admin", "rango: root")
     TemaId.NEON -> listOf("cliente de paso", "cliente de la casa", "vecino del nivel", "leyenda del callejón")
     TemaId.HELENO -> listOf("χάλκεος", "ἀργύρεος", "χρύσεος", "ἀθάνατος")
@@ -239,6 +240,24 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             val nudo = Offset(c.x, c.y + rl)
             drawLine(cs.primary.copy(alpha = 0.16f), nudo, Offset(nudo.x - 18f * u, nudo.y + 28f * u), 3f * u, cap = StrokeCap.Round)
             drawLine(cs.primary.copy(alpha = 0.16f), nudo, Offset(nudo.x + 18f * u, nudo.y + 28f * u), 3f * u, cap = StrokeCap.Round)
+        }
+        TemaId.URBE -> {
+            // La cúpula del Panteón vista desde abajo: cinco anillos de 28 casetones que se achican hacia el óculo, y el
+            // disco de luz que entra por él. Los anillos giran en sentidos alternos, de casetón en casetón.
+            val luz = if (oscuro) cs.tertiary else cs.primary
+            for (anillo in 0 until 5) {
+                val ra = m * (0.46f - anillo * 0.065f); val lado = m * (0.05f - anillo * 0.006f)
+                val sentido = if (anillo % 2 == 0) 1f else -1f
+                rotate(sentido * giro * (anillo + 1) / 28f, c) {
+                    for (k in 0 until 28) rotate(k * 360f / 28f, c) {
+                        drawRect(luz.copy(alpha = 0.12f), Offset(c.x - lado / 2, c.y - ra - lado / 2), Size(lado, lado))
+                        drawRect(luz.copy(alpha = 0.2f), Offset(c.x - lado * 0.3f, c.y - ra - lado * 0.3f), Size(lado * 0.6f, lado * 0.6f), style = Stroke(0.8f * u))
+                    }
+                }
+            }
+            val oculo = m * 0.11f
+            drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = if (oscuro) 0.16f else 0.3f), Color.Transparent), center = c, radius = oculo * 2.2f), oculo * 2.2f, c)
+            drawCircle(luz.copy(alpha = 0.3f), oculo, c, style = Stroke(1.6f * u))
         }
         TemaId.CIBER -> {
             // Haces de fósforo: renglones de luz que se acortan hacia arriba y abajo, un barrido que baja y escuadras de selección.

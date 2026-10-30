@@ -52,6 +52,7 @@ object Sello {
 /** Lo que dice la pantalla de la huella en cada tema. */
 fun textoSello(tema: TemaId): String = when (tema) {
     TemaId.ROMANO -> "DIES SIGNATVS"
+    TemaId.URBE -> "GIORNATA TIMBRATA"
     TemaId.CIBER -> "> día.commit() ✓"
     TemaId.NEON -> "ticket cerrado ◆ 済"
     TemaId.HELENO -> "ΕΣΦΡΑΓΙΣΘΗ"
@@ -102,6 +103,7 @@ fun CapaHuella() {
 /** La huella de cada tema: el fondo con su textura (papiro, terminal, lacre, cartel…) y la huella entintada encima. */
 fun recursosHuella(t: TemaId): Pair<Int, Int> = when (t) {
     TemaId.ROMANO -> R.drawable.huella_fondo_romano to R.drawable.huella_romano
+    TemaId.URBE -> R.drawable.huella_fondo_urbe to R.drawable.huella_urbe
     TemaId.CIBER -> R.drawable.huella_fondo_ciber to R.drawable.huella_ciber
     TemaId.NEON -> R.drawable.huella_fondo_neon to R.drawable.huella_neon
     TemaId.HELENO -> R.drawable.huella_fondo_heleno to R.drawable.huella_heleno

@@ -227,6 +227,7 @@ fun PantallaCalendario(nav: Nav) {
  */
 private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.ROMANO -> RoundedCornerShape(1.dp)
+    TemaId.URBE -> RoundedCornerShape(topStart = 1.dp, topEnd = 7.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
     TemaId.CIBER -> RectangleShape
     TemaId.NEON -> RoundedCornerShape(8.dp)
     TemaId.HELENO -> RoundedCornerShape(2.dp)
@@ -282,6 +283,17 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             while (x < w) { val col = if (!hoy) linea else if (i % 2 == 0) acento else oro; drawRect(col, Offset(x, 0f), Size(lado, lado)); drawRect(col, Offset(x, h - lado), Size(lado, lado)); x += paso; i++ }
             var y = paso
             while (y < h - lado) { val col = if (!hoy) linea else if (i % 2 == 0) acento else oro; drawRect(col, Offset(0f, y), Size(lado, lado)); drawRect(col, Offset(w - lado, y), Size(lado, lado)); y += paso; i++ }
+            if (sellado) sello(acento)
+        }
+        // Una ventana de la ciudad: el alféizar abajo y la cornisa arriba; hoy, con las persianas abiertas a los lados.
+        TemaId.URBE -> {
+            contorno(linea, if (hoy) 0.9f else 0.6f)
+            drawRect(if (hoy) oro else linea, Offset(0f, h - 2.4f * s), Size(w, 2.4f * s))
+            drawRect(linea, Offset(0f, 0f), Size(w, 1.4f * s))
+            if (hoy) listOf(0f, w - 2.6f * s).forEach { x ->
+                drawRect(acento, Offset(x, 2 * s), Size(2.6f * s, h - 5 * s))
+                var y = 4 * s; while (y < h - 4 * s) { drawLine(sobre.copy(alpha = 0.4f), Offset(x, y), Offset(x + 2.6f * s, y), 0.5f * s); y += 2.4f * s }
+            }
             if (sellado) sello(acento)
         }
         // Píxel de fósforo: líneas de barrido; hoy, el borde encendido con su halo y el cursor bajo el número.

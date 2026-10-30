@@ -25,6 +25,21 @@ object Textos {
         "widget_discreto_momento" to "scribere",
     )
 
+    private val URBE: Map<String, String> = mapOf(
+        "pestana_dia" to "OGGI",
+        "pestana_diario" to "QUADERNO",
+        "pestana_registrar" to "SEGNA",
+        "pestana_vida" to "LA VITA",
+        "pestana_entender" to "CAPIRE",
+        "escala_vacia" to "ancora niente · toca o desliza",
+        "lista_anadir" to "+ metti",
+        "palabras" to "%d parole scritte",
+        "widget_animo" to "come butta, adesso?",
+        "widget_momento" to "proprio adesso…",
+        "widget_discreto_animo" to "adesso",
+        "widget_discreto_momento" to "segna",
+    )
+
     private val CIBER: Map<String, String> = mapOf(
         "pestana_dia" to "hoy",
         "pestana_diario" to "diario",
@@ -417,6 +432,7 @@ object Textos {
 
     fun de(tema: TemaId, clave: String): String? = when (tema) {
         TemaId.ROMANO -> ROMANO
+        TemaId.URBE -> URBE
         TemaId.CIBER -> CIBER
         TemaId.NEON -> NEON
         TemaId.HELENO -> HELENO

@@ -33,6 +33,8 @@ object TrofeosTema {
     private val NOMBRES: Map<TemaId, Map<String, String>> = mapOf(
         TemaId.ROMANO to mapOf("Diario" to "Columna conmemorativa", "Mundo" to "Miliario", "Cuerpo" to "Acueducto", "Mente" to "Panteón", "Cultura" to "Arco de triunfo",
             "Gente" to "Puente", "Constancia" to "Faro", "Curiosos" to "Anfiteatro", "Tuyos" to "Templo"),
+        TemaId.URBE to mapOf("Diario" to "Quiosco de periódicos", "Mundo" to "Cupolone", "Cuerpo" to "Motoneta", "Mente" to "Nasone", "Cultura" to "Bobina de cine",
+            "Gente" to "Mesita de bar", "Constancia" to "Obelisco de la plaza", "Curiosos" to "Tranvía", "Tuyos" to "Placa de la calle"),
         TemaId.HELENO to mapOf("Diario" to "Ánfora", "Mundo" to "Trirreme", "Cuerpo" to "Corona de olivo", "Mente" to "Columna jónica", "Cultura" to "Lira",
             "Gente" to "Crátera", "Constancia" to "Columna dórica", "Curiosos" to "Trípode", "Tuyos" to "Columna corintia"),
         TemaId.EGIPTO to mapOf("Diario" to "Paleta de escriba", "Mundo" to "Barca solar", "Cuerpo" to "Collar ancho", "Mente" to "Pluma de la Maat", "Cultura" to "Sistro",
@@ -85,6 +87,17 @@ object TrofeosTema {
                         drawPath(Path().apply { moveTo(x, y0 + (y1 - y0) * 0.3f); lineTo(x + s * w * 0.06f, y0); lineTo(x + s * w * 0.06f, y1); lineTo(x, y1 - (y1 - y0) * 0.3f); close() }, porfido)
                     }
                     drawLine(Color(0xFFD4AF37).copy(alpha = 0.8f), Offset(w * 0.36f, (y0 + y1) / 2), Offset(w * 0.64f, (y0 + y1) / 2), h * 0.008f)
+                }
+            }
+            TemaId.URBE -> {
+                // Un trozo de acera: el bordillo de travertino y, encima, dos hileras de sampietrini de basalto.
+                val trav = if (p.hecho) Color(0xFFE2D3B2) else ped
+                val basalto = if (p.hecho) Color(0xFF4A4642) else ped
+                drawRect(piedra(trav), Offset(w * 0.1f, h * 0.9f), Size(w * 0.8f, h * 0.055f))
+                for (fila in 0 until 2) {
+                    val y0 = h * (0.775f + fila * 0.062f); val lado = h * 0.055f
+                    var x = w * 0.13f + (if (fila == 1) lado * 0.55f else 0f)
+                    while (x + lado < w * 0.87f) { drawRoundRect(piedra(lerp(basalto, Color.White, if ((x * 7).toInt() % 3 == 0) 0.08f else 0f)), Offset(x, y0), Size(lado, lado), CornerRadius(lado * 0.25f)); x += lado * 1.12f }
                 }
             }
             TemaId.RENACIMIENTO -> {
@@ -193,6 +206,7 @@ object TrofeosTema {
     fun DrawScope.figura(tema: TemaId, categoria: String, p: Pincel) {
         when (tema) {
             TemaId.ROMANO -> romano(categoria, p)
+            TemaId.URBE -> urbe(categoria, p)
             TemaId.HELENO -> heleno(categoria, p)
             TemaId.EGIPTO -> egipto(categoria, p)
             TemaId.MEDIEVAL -> medieval(categoria, p)
@@ -352,6 +366,113 @@ object TrofeosTema {
             }
             else -> templo(p)
         }
+    }
+
+    // ================================================================== Roma de hoy: las cosas de la calle
+
+    private fun DrawScope.urbe(cat: String, p: Pincel) {
+        val lw = p.w * 0.008f
+        val agua = Color(0xFF6FB3D9)
+        when (cat) {
+            "Diario" -> {
+                // El quiosco de periódicos: la caseta, el toldo y las revistas colgadas al frente.
+                drawPath(Path().apply { moveTo(p.x(0.14f), p.y(0.3f)); lineTo(p.x(0.22f), p.y(0.2f)); lineTo(p.x(0.78f), p.y(0.2f)); lineTo(p.x(0.86f), p.y(0.3f)); close() }, p.metal(0.14f, 0.86f))
+                caja(p, 0.2f, 0.3f, 0.8f, 0.77f)
+                if (p.hecho) for (f in 0 until 3) for (k in 0 until 4) {
+                    val x0 = 0.24f + k * 0.135f; val y0 = 0.35f + f * 0.13f
+                    drawRect(listOf(Color(0xFFA8432A), Color(0xFF3D5E45), Color(0xFFF4EEE2), Color(0xFFC98A3A))[(k + f) % 4].copy(alpha = 0.85f), Offset(p.x(x0), p.y(y0)), Size(p.x(0.1f), p.y(0.1f)))
+                }
+                caja(p, 0.18f, 0.74f, 0.82f, 0.77f)
+            }
+            "Mundo" -> {
+                // El Cupolone: el tambor con sus ventanas, el casquete con sus nervios, la linterna y la bola con la cruz.
+                caja(p, 0.24f, 0.52f, 0.76f, 0.77f)
+                drawArc(p.metal(0.24f, 0.76f), 180f, 180f, true, Offset(p.x(0.24f), p.y(0.52f) - p.x(0.26f)), Size(p.x(0.52f), p.x(0.52f)))
+                caja(p, 0.45f, 0.52f - 0.26f * p.w / p.h - 0.08f, 0.55f, 0.52f - 0.26f * p.w / p.h + 0.01f)
+                if (p.hecho) {
+                    for (k in 0 until 5) drawRect(p.linea.copy(alpha = 0.6f), Offset(p.x(0.29f + k * 0.095f), p.y(0.58f)), Size(p.x(0.04f), p.y(0.1f)))
+                    listOf(0.36f, 0.5f, 0.64f).forEach { fx -> drawLine(p.linea.copy(alpha = 0.5f), Offset(p.x(0.5f + (fx - 0.5f) * 0.3f), p.y(0.52f) - p.x(0.25f)), Offset(p.x(fx), p.y(0.52f)), lw) }
+                }
+                val top = p.y(0.52f) - p.x(0.26f) - p.y(0.08f)
+                drawCircle(p.metal(0.47f, 0.53f), p.w * 0.025f, Offset(p.x(0.5f), top - p.w * 0.03f))
+                drawLine(p.claro, Offset(p.x(0.5f), top - p.w * 0.055f), Offset(p.x(0.5f), top - p.w * 0.11f), lw * 1.4f)
+                drawLine(p.claro, Offset(p.x(0.475f), top - p.w * 0.09f), Offset(p.x(0.525f), top - p.w * 0.09f), lw * 1.4f)
+            }
+            "Cuerpo" -> {
+                // La motoneta: la carrocería redonda, el escudo de adelante, el asiento y las dos ruedas chicas.
+                drawPath(Path().apply {
+                    moveTo(p.x(0.12f), p.y(0.66f)); cubicTo(p.x(0.1f), p.y(0.4f), p.x(0.38f), p.y(0.4f), p.x(0.44f), p.y(0.58f)); lineTo(p.x(0.6f), p.y(0.58f))
+                    lineTo(p.x(0.66f), p.y(0.26f)); lineTo(p.x(0.76f), p.y(0.26f)); lineTo(p.x(0.82f), p.y(0.66f)); close()
+                }, p.metal(0.1f, 0.82f))
+                drawRoundRect(if (p.hecho) SolidColor(Color(0xFF2B2420)) else SolidColor(p.sombra), Offset(p.x(0.14f), p.y(0.4f)), Size(p.x(0.26f), p.y(0.06f)), CornerRadius(p.w * 0.03f))
+                drawLine(p.linea, Offset(p.x(0.71f), p.y(0.26f)), Offset(p.x(0.7f), p.y(0.12f)), lw * 2)
+                drawLine(p.claro, Offset(p.x(0.6f), p.y(0.12f)), Offset(p.x(0.8f), p.y(0.12f)), lw * 2)
+                listOf(0.24f, 0.74f).forEach { fx -> drawCircle(if (p.hecho) SolidColor(Color(0xFF2B2420)) else SolidColor(p.sombra), p.w * 0.085f, Offset(p.x(fx), p.y(0.7f))); drawCircle(p.metal(fx - 0.04f, fx + 0.04f), p.w * 0.035f, Offset(p.x(fx), p.y(0.7f))) }
+            }
+            "Mente" -> {
+                // El nasone: la fuentecita de hierro de las esquinas, con su caño curvo, el chorro y la rejilla del desagüe.
+                caja(p, 0.4f, 0.24f, 0.6f, 0.74f)
+                drawOval(p.metal(0.38f, 0.62f), Offset(p.x(0.38f), p.y(0.19f)), Size(p.x(0.24f), p.y(0.08f)))
+                drawPath(Path().apply { moveTo(p.x(0.6f), p.y(0.42f)); quadraticTo(p.x(0.72f), p.y(0.42f), p.x(0.72f), p.y(0.5f)) }, p.metal(0.6f, 0.74f), style = Stroke(p.w * 0.035f))
+                if (p.hecho) {
+                    drawLine(agua, Offset(p.x(0.72f), p.y(0.52f)), Offset(p.x(0.74f), p.y(0.74f)), p.w * 0.018f)
+                    for (k in 0 until 3) drawLine(p.linea.copy(alpha = 0.4f), Offset(p.x(0.42f), p.y(0.32f + k * 0.14f)), Offset(p.x(0.58f), p.y(0.32f + k * 0.14f)), lw)
+                }
+                caja(p, 0.3f, 0.74f, 0.86f, 0.77f)
+            }
+            "Cultura" -> {
+                // La bobina de cine de los estudios de la ciudad, con su tira de película que se desenrolla.
+                val c = Offset(p.x(0.42f), p.y(0.44f)); val r = p.w * 0.3f
+                val contorno = Path().apply { addOval(Rect(c, r)) }
+                conHuecos(p, 0.12f, 0.72f, contorno) {
+                    for (k in 0 until 5) { val a = -PI / 2 + k * 2 * PI / 5; addOval(Rect(Offset(c.x + (r * 0.58f * cos(a)).toFloat(), c.y + (r * 0.58f * sin(a)).toFloat()), r * 0.2f)) }
+                    addOval(Rect(c, r * 0.1f))
+                }
+                drawPath(Path().apply { moveTo(c.x + r * 0.7f, c.y + r * 0.7f); quadraticTo(p.x(0.86f), p.y(0.66f), p.x(0.9f), p.y(0.77f)); lineTo(p.x(0.8f), p.y(0.77f)); quadraticTo(p.x(0.74f), p.y(0.7f), c.x + r * 0.5f, c.y + r * 0.86f); close() }, p.metal(0.6f, 0.9f))
+                if (p.hecho) for (k in 0 until 4) drawRect(p.linea.copy(alpha = 0.6f), Offset(p.x(0.73f + k * 0.03f), p.y(0.66f + k * 0.025f)), Size(p.w * 0.012f, p.w * 0.012f))
+            }
+            "Gente" -> {
+                // La mesita redonda del bar, con dos tazzine encima: para sentarse con alguien.
+                drawOval(p.metal(0.16f, 0.84f), Offset(p.x(0.16f), p.y(0.36f)), Size(p.x(0.68f), p.y(0.1f)))
+                caja(p, 0.47f, 0.41f, 0.53f, 0.72f)
+                drawPath(Path().apply { moveTo(p.x(0.3f), p.y(0.77f)); lineTo(p.x(0.5f), p.y(0.7f)); lineTo(p.x(0.7f), p.y(0.77f)); close() }, p.metal(0.3f, 0.7f))
+                listOf(0.32f, 0.62f).forEach { fx ->
+                    drawOval(p.metal(fx - 0.07f, fx + 0.07f), Offset(p.x(fx - 0.07f), p.y(0.35f)), Size(p.x(0.14f), p.y(0.03f)))
+                    drawPath(Path().apply { moveTo(p.x(fx - 0.045f), p.y(0.27f)); lineTo(p.x(fx + 0.045f), p.y(0.27f)); lineTo(p.x(fx + 0.035f), p.y(0.355f)); lineTo(p.x(fx - 0.035f), p.y(0.355f)); close() }, if (p.hecho) SolidColor(Color(0xFFF4EEE2)) else SolidColor(p.sombra))
+                    if (p.hecho) drawArc(p.linea, -80f, 170f, false, Offset(p.x(fx + 0.03f), p.y(0.28f)), Size(p.x(0.04f), p.y(0.05f)), style = Stroke(lw))
+                }
+            }
+            "Constancia" -> {
+                // El obelisco de la plaza: la aguja que se angosta, el piramidión con la cruz de bronce y la basa de escalones.
+                drawPath(Path().apply { moveTo(p.x(0.44f), p.y(0.66f)); lineTo(p.x(0.465f), p.y(0.16f)); lineTo(p.x(0.535f), p.y(0.16f)); lineTo(p.x(0.56f), p.y(0.66f)); close() }, p.metal(0.44f, 0.56f))
+                drawPath(Path().apply { moveTo(p.x(0.465f), p.y(0.16f)); lineTo(p.x(0.5f), p.y(0.1f)); lineTo(p.x(0.535f), p.y(0.16f)); close() }, p.metal(0.46f, 0.54f))
+                drawLine(p.claro, Offset(p.x(0.5f), p.y(0.1f)), Offset(p.x(0.5f), p.y(0.04f)), lw * 1.4f)
+                drawLine(p.claro, Offset(p.x(0.48f), p.y(0.06f)), Offset(p.x(0.52f), p.y(0.06f)), lw * 1.4f)
+                caja(p, 0.38f, 0.66f, 0.62f, 0.71f); caja(p, 0.32f, 0.71f, 0.68f, 0.74f); caja(p, 0.26f, 0.74f, 0.74f, 0.77f)
+                if (p.hecho) for (k in 0 until 6) drawLine(p.linea.copy(alpha = 0.35f), Offset(p.x(0.48f), p.y(0.22f + k * 0.07f)), Offset(p.x(0.52f), p.y(0.22f + k * 0.07f)), lw)
+            }
+            "Curiosos" -> {
+                // El tranvía: la caja con sus ventanas, el pantógrafo arriba y las ruedas sobre el riel.
+                val contorno = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(p.r(0.06f, 0.36f, 0.94f, 0.7f), CornerRadius(p.w * 0.06f))) }
+                conHuecos(p, 0.06f, 0.94f, contorno) { for (k in 0 until 5) addRect(p.r(0.11f + k * 0.16f, 0.41f, 0.23f + k * 0.16f, 0.53f)) }
+                drawPath(Path().apply { moveTo(p.x(0.4f), p.y(0.36f)); lineTo(p.x(0.5f), p.y(0.22f)); lineTo(p.x(0.6f), p.y(0.36f)) }, p.metal(0.4f, 0.6f), style = Stroke(lw * 1.6f))
+                drawLine(p.claro, Offset(p.x(0.42f), p.y(0.22f)), Offset(p.x(0.58f), p.y(0.22f)), lw * 1.6f)
+                listOf(0.22f, 0.36f, 0.64f, 0.78f).forEach { fx -> drawCircle(if (p.hecho) SolidColor(Color(0xFF2B2420)) else SolidColor(p.sombra), p.w * 0.035f, Offset(p.x(fx), p.y(0.72f))) }
+                caja(p, 0.02f, 0.75f, 0.98f, 0.77f)
+                if (p.hecho) drawRect(Color(0xFFA8432A).copy(alpha = 0.6f), Offset(p.x(0.06f), p.y(0.6f)), Size(p.x(0.88f), p.y(0.04f)))
+            }
+            else -> placaCalle(p)
+        }
+    }
+
+    /** La placa de mármol de una calle, sujeta con sus tornillos, con el nombre grabado. */
+    private fun DrawScope.placaCalle(p: Pincel) {
+        caja(p, 0.08f, 0.3f, 0.92f, 0.7f)
+        val dentro = if (p.hecho) SolidColor(lerp(p.brillo, Color.White, 0.6f)) else SolidColor(p.sombra)
+        drawRect(dentro, Offset(p.x(0.12f), p.y(0.34f)), Size(p.x(0.76f), p.y(0.32f)))
+        drawRect(p.linea, Offset(p.x(0.15f), p.y(0.37f)), Size(p.x(0.7f), p.y(0.26f)), style = Stroke(p.w * 0.01f))
+        if (p.hecho) { texto("VIA", p, 0.5f, 0.45f, 0.12f, p.linea); drawLine(p.linea, Offset(p.x(0.3f), p.y(0.56f)), Offset(p.x(0.7f), p.y(0.56f)), p.w * 0.014f) }
+        listOf(0.1f, 0.9f).forEach { fx -> drawCircle(p.metal(fx - 0.02f, fx + 0.02f), p.w * 0.018f, Offset(p.x(fx), p.y(0.5f))) }
     }
 
     private fun DrawScope.templo(p: Pincel) {

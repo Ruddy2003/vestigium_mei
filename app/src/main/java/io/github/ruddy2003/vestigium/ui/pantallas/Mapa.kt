@@ -86,6 +86,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Romano: mármol desaturado de día, basalto de noche.
         TemaId.ROMANO -> if (oscuro) { m.setSaturation(0.2f); m.postConcat(invertir); m.postConcat(tinte(0.80f, 0.82f, 0.85f, 8f, 10f, 12f)) }
             else { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.95f, 6f, 6f, 4f)) }
+        // Roma de hoy: el plano cálido, tirando a ocre, de día; de noche, las calles a la luz de sodio.
+        TemaId.URBE -> if (oscuro) { m.setSaturation(0.25f); m.postConcat(invertir); m.postConcat(tinte(0.92f, 0.78f, 0.6f, 10f, 6f, 0f)) }
+            else { m.setSaturation(0.55f); m.postConcat(tinte(1.0f, 0.94f, 0.84f, 10f, 4f, -4f)) }
         // Terminal: plano nocturno en azul eléctrico (solo existe en oscuro, así que es igual con o sin «oscuro»).
         TemaId.CIBER -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.30f, 0.62f, 0.80f, 0f, 4f, 10f)) }
         // Ciudad neón: el plano de noche teñido de magenta y violeta, como bajo los letreros.
@@ -216,6 +219,13 @@ internal object Formas {
             // Tabula ansata: la placa de las inscripciones, con sus dos asas en cola de milano.
             TemaId.ROMANO -> figura(x, y, r, -0.8f, -0.7f, 0.8f, -0.7f, 0.8f, -0.12f, 1.3f, -0.5f, 1.3f, 0.5f, 0.8f, 0.12f,
                 0.8f, 0.7f, -0.8f, 0.7f, -0.8f, 0.12f, -1.3f, 0.5f, -1.3f, -0.5f, -0.8f, -0.12f)
+            // Una cúpula con su tambor y su linterna.
+            TemaId.URBE -> {
+                p.reset(); p.moveTo(x - r, y + r * 0.7f); p.lineTo(x - r, y)
+                p.arcTo(android.graphics.RectF(x - r, y - r, x + r, y + r), 180f, 180f, false)
+                p.lineTo(x + r, y + r * 0.7f); p.close()
+                p.addRect(x - r * 0.18f, y - r * 1.4f, x + r * 0.18f, y - r * 0.96f, horario)
+            }
             // El cursor de bloque de la consola.
             TemaId.CIBER -> { p.reset(); p.addRect(x - r * 0.55f, y - r * 0.9f, x + r * 0.55f, y + r * 0.9f, horario) }
             TemaId.NEON -> { p.reset(); p.addRoundRect(x - r * 1.15f, y - r * 0.62f, x + r * 1.15f, y + r * 0.62f, r * 0.62f, r * 0.62f, horario) }   // la placa del letrero
@@ -289,6 +299,7 @@ internal object Formas {
         val d = borde ?: return
         when (tema) {
             TemaId.ROMANO -> c.drawRect(x - r * 0.6f, y - r * 0.48f, x + r * 0.6f, y + r * 0.48f, d)   // el campo de la inscripción
+            TemaId.URBE -> { raya(c, x, y, r, -1f, 0.25f, 1f, 0.25f, d); raya(c, x, y, r, 0f, -0.95f, 0f, 0.25f, d) }   // la cornisa del tambor y el nervio del casquete
             TemaId.CIBER -> { raya(c, x, y, r, -1.55f, -0.45f, -0.95f, 0f, d); raya(c, x, y, r, -0.95f, 0f, -1.55f, 0.45f, d) }   // el «>» del indicador
             TemaId.NEON -> { raya(c, x, y, r, -0.6f, -0.15f, 0.6f, -0.15f, d); raya(c, x, y, r, -0.35f, 0.2f, 0.35f, 0.2f, d) }   // los renglones del letrero
             TemaId.HELENO -> c.drawCircle(x, y, r * 0.32f, d)
@@ -724,6 +735,16 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
             }
             esquinas(4 * u) { o, _, _ -> drawRect(acento, Offset(o.x - 3 * u, o.y - 3 * u), Size(6 * u, 6 * u)) }
         }
+        // Las vías del tranvía arriba y abajo, con sus durmientes, y un tornillo de placa en cada esquina.
+        TemaId.URBE -> {
+            filete(4 * u, tinta.copy(alpha = 0.5f), 1.4f * u)
+            listOf(9 * u, h - 9 * u).forEach { y ->
+                drawLine(tinta.copy(alpha = 0.4f), Offset(14 * u, y - 2 * u), Offset(w - 14 * u, y - 2 * u), 0.8f * u)
+                drawLine(tinta.copy(alpha = 0.4f), Offset(14 * u, y + 2 * u), Offset(w - 14 * u, y + 2 * u), 0.8f * u)
+                var x = 16 * u; while (x < w - 14 * u) { drawLine(tinta.copy(alpha = 0.3f), Offset(x, y - 3.5f * u), Offset(x, y + 3.5f * u), 1.4f * u); x += 7 * u }
+            }
+            esquinas(9 * u) { o, _, _ -> drawCircle(acento, 2.4f * u, o); drawLine(fondo, o - Offset(1.6f * u, 0f), o + Offset(1.6f * u, 0f), 0.7f * u) }
+        }
         // Líneas de barrido de la pantalla de fósforo, esquinas de mira y el cursor.
         TemaId.CIBER -> {
             var y = 0f
@@ -1018,6 +1039,12 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
         TemaId.ROMANO -> {
             for (i in 0 until 12) punta(n + 30.0 * i, if (i % 3 == 0) r * 0.95f else r * 0.6f, r * 0.11f, if (i == 0) acento else tenue)
             drawCircle(secundario, r * 0.1f, c)
+        }
+        // La rosa de los vientos de mármol de la plaza de San Pedro: dieciséis vientos alrededor del obelisco.
+        TemaId.URBE -> {
+            anillo(r * 0.78f, tenue.copy(alpha = 0.4f))
+            for (i in 0 until 16) punta(n + 22.5 * i, when { i % 4 == 0 -> r * 0.96f; i % 2 == 0 -> r * 0.7f; else -> r * 0.5f }, r * 0.08f, if (i == 0) acento else tenue)
+            drawRect(secundario, Offset(c.x - r * 0.05f, c.y - r * 0.05f), Size(r * 0.1f, r * 0.1f))
         }
         // Una mira de consola con su flecha.
         TemaId.CIBER -> {
