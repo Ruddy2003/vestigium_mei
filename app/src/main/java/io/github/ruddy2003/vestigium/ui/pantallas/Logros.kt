@@ -155,6 +155,19 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             })
             drawRect(luz, Offset(c.x - r * 0.6f, c.y - r * 0.6f), Size(r * 1.2f, r * 1.2f), style = Stroke(r * 0.04f))
         }
+        TemaId.NEON -> {
+            val k = r * 0.8f; val q = r * 0.26f
+            for (i in -1..1) {
+                val d = i * r * 0.36f
+                drawLine(canto, Offset(c.x + d, c.y - k), Offset(c.x + d, c.y - r), g); drawLine(canto, Offset(c.x + d, c.y + k), Offset(c.x + d, c.y + r), g)
+                drawLine(canto, Offset(c.x - k, c.y + d), Offset(c.x - r, c.y + d), g); drawLine(canto, Offset(c.x + k, c.y + d), Offset(c.x + r, c.y + d), g)
+            }
+            forma(Path().apply {
+                moveTo(c.x - k + q, c.y - k); lineTo(c.x + k - q, c.y - k); lineTo(c.x + k, c.y - k + q); lineTo(c.x + k, c.y + k - q)
+                lineTo(c.x + k - q, c.y + k); lineTo(c.x - k + q, c.y + k); lineTo(c.x - k, c.y + k - q); lineTo(c.x - k, c.y - k + q); close()
+            })
+            drawRect(luz, Offset(c.x - r * 0.6f, c.y - r * 0.6f), Size(r * 1.2f, r * 1.2f), style = Stroke(r * 0.04f))
+        }
         // El sol de Vergina: disco con dieciséis rayos cortos.
         TemaId.HELENO -> {
             forma(figEstrella(c, r, r * 0.66f, 16))

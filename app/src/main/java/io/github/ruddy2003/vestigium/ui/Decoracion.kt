@@ -73,6 +73,7 @@ private fun Offset.mas(r: Float, ang: Float) = Offset(x + r * cos(ang), y + r * 
 private fun periodo(t: TemaId) = when (t) {
     TemaId.ROMANO -> 6000
     TemaId.CIBER -> 4200
+    TemaId.NEON -> 4200
     TemaId.HELENO -> 60000
     TemaId.MEDIEVAL -> 5000
     TemaId.DISTOPIA -> 7000
@@ -117,6 +118,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
     when (tema) {
         TemaId.ROMANO -> laurel(c, r, if (oscuro) e.primary else e.tertiary, t)
         TemaId.CIBER -> consola(c, r, e.primary, e.secondary, t)
+        TemaId.NEON -> consola(c, r, e.primary, e.secondary, t)
         TemaId.HELENO -> solVergina(c, r, if (oscuro) e.primary else e.tertiary, if (oscuro) e.tertiary else e.primary, t)
         TemaId.MEDIEVAL -> roseton(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.DISTOPIA -> ojo(c, r, e.onBackground, e.primary, e.background, t)
@@ -1142,6 +1144,11 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             val p = 28.dp.toPx(); var x = 0f; while (x < w) { trazo.moveTo(x, 0f); trazo.lineTo(x, h); x += p }
             var y = 0f; while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += p }
         }
+        TemaId.NEON -> {
+            color = esquema.primary.copy(alpha = 0.045f)
+            val p = 28.dp.toPx(); var x = 0f; while (x < w) { trazo.moveTo(x, 0f); trazo.lineTo(x, h); x += p }
+            var y = 0f; while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += p }
+        }
         TemaId.MEDIEVAL -> {
             color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.06f); color2 = esquema.primary.copy(alpha = 0.12f)
             var y = 30.dp.toPx(); while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += 30.dp.toPx() }
@@ -1443,6 +1450,7 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         lineTo(0.9f * s.width, s.height); close()
     }
     TemaId.CIBER -> RectangleShape
+    TemaId.NEON -> RectangleShape
     TemaId.HELENO -> poligonoBoton(0.08f to 1f, 0.08f to 0.3f, 0.5f to 0.02f, 0.92f to 0.3f, 0.92f to 1f)
     TemaId.MEDIEVAL -> GenericShape { s, _ ->
         // Cuatro lóbulos que se cortan a 80,2° de su eje: un solo contorno, para que el borde no cruce por dentro.
@@ -1500,6 +1508,7 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
 private fun textoMas(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "Cetera"
     TemaId.CIBER -> "más_"
+    TemaId.NEON -> "más_"
     TemaId.HELENO -> "Πλέον"
     TemaId.MEDIEVAL -> "Ítem"
     TemaId.DISTOPIA -> "Anexo"
@@ -1549,6 +1558,8 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             TemaId.ROMANO -> { drawCircle(color, r * 0.38f, c); for (i in 0 until 8) { val a = rad(45.0 * i); drawLine(color, c.mas(r * 0.55f, a), c.mas(r * (if (i % 2 == 0) 0.96f else 0.76f), a), r * 0.13f, StrokeCap.Round) } }
             // Sol de píxeles.
             TemaId.CIBER -> { val p = r * 0.22f; drawRect(color, Offset(c.x - p * 1.5f, c.y - p * 1.5f), Size(p * 3, p * 3))
+                for (i in 0 until 8) { val q = c.mas(r * 0.82f, rad(45.0 * i)); drawRect(color, Offset(q.x - p / 2, q.y - p / 2), Size(p, p)) } }
+            TemaId.NEON -> { val p = r * 0.22f; drawRect(color, Offset(c.x - p * 1.5f, c.y - p * 1.5f), Size(p * 3, p * 3))
                 for (i in 0 until 8) { val q = c.mas(r * 0.82f, rad(45.0 * i)); drawRect(color, Offset(q.x - p / 2, q.y - p / 2), Size(p, p)) } }
             TemaId.HELENO -> sol(c, r * 0.95f, color)
             // Sol de miniatura: rayos rectos alternados con rayos ondulados.
@@ -1615,6 +1626,9 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             TemaId.ROMANO -> { luna(0.72f, 0f, -0.36f, c + Offset(0f, r * 0.12f)); drawCircle(color, r * 0.14f, Offset(c.x, c.y - r * 0.72f), style = Stroke(r * 0.07f)) }
             // Luna de píxeles.
             TemaId.CIBER -> { val p = r * 0.34f
+                listOf(-1 to -2, 0 to -2, 1 to -2, -2 to -1, -1 to -1, -2 to 0, -1 to 0, -2 to 1, -1 to 1, -1 to 2, 0 to 2, 1 to 2).forEach { (i, j) ->
+                    drawRect(color, Offset(c.x + (i - 0.5f) * p, c.y + (j - 0.5f) * p), Size(p * 0.9f, p * 0.9f)) } }
+            TemaId.NEON -> { val p = r * 0.34f
                 listOf(-1 to -2, 0 to -2, 1 to -2, -2 to -1, -1 to -1, -2 to 0, -1 to 0, -2 to 1, -1 to 1, -1 to 2, 0 to 2, 1 to 2).forEach { (i, j) ->
                     drawRect(color, Offset(c.x + (i - 0.5f) * p, c.y + (j - 0.5f) * p), Size(p * 0.9f, p * 0.9f)) } }
             // Luna con tres estrellas.
@@ -1685,6 +1699,8 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
         TemaId.ROMANO -> { lente(); mango(0.84f); drawCircle(color, r * 0.08f, Offset(r * 0.9f, r * 0.9f)) }
         // Cristal cuadrado con un renglón dentro.
         TemaId.CIBER -> { drawRect(color, Offset(c.x - lr, c.y - lr), Size(lr * 2, lr * 2), style = Stroke(g)); mango(0.92f, 0.12f, 0.72f)
+            drawLine(color, Offset(c.x - lr * 0.45f, c.y + lr * 0.3f), Offset(c.x + lr * 0.45f, c.y + lr * 0.3f), r * 0.08f) }
+        TemaId.NEON -> { drawRect(color, Offset(c.x - lr, c.y - lr), Size(lr * 2, lr * 2), style = Stroke(g)); mango(0.92f, 0.12f, 0.72f)
             drawLine(color, Offset(c.x - lr * 0.45f, c.y + lr * 0.3f), Offset(c.x + lr * 0.45f, c.y + lr * 0.3f), r * 0.08f) }
         // Cuentas alrededor, por dentro del cristal.
         TemaId.HELENO -> { lente(); mango(); for (i in 0 until 8) drawCircle(color, r * 0.035f, c.mas(lr * 0.55f, rad(45.0 * i))) }
@@ -1799,6 +1815,7 @@ private class Particula(val ang: Float, val vel: Float, val giro: Float, val tam
 private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.ROMANO -> false
     TemaId.CIBER -> false
+    TemaId.NEON -> false
     TemaId.HELENO -> false
     TemaId.MEDIEVAL -> false
     TemaId.DISTOPIA -> false
@@ -1866,6 +1883,15 @@ fun CapaFiesta(fijo: Float? = null) {
                         drawLine(e.background.copy(alpha = a * 0.5f), pos - Offset(s * 0.8f, 0f), pos + Offset(s * 0.8f, 0f), s * 0.08f) }
                     // Unos y ceros de fósforo.
                     TemaId.CIBER -> {
+                        val fosforo = e.primary.copy(alpha = a)
+                        if (p.tono == 0) {
+                            drawOval(fosforo, Offset(pos.x - s * 0.35f, pos.y - s * 0.6f), Size(s * 0.7f, s * 1.2f), style = Stroke(s * 0.2f))
+                        } else {
+                            drawLine(fosforo, pos - Offset(0f, s * 0.6f), pos + Offset(0f, s * 0.6f), s * 0.22f)
+                            drawLine(fosforo, pos - Offset(0f, s * 0.6f), pos - Offset(s * 0.3f, s * 0.35f), s * 0.2f)
+                        }
+                    }
+                    TemaId.NEON -> {
                         val fosforo = e.primary.copy(alpha = a)
                         if (p.tono == 0) {
                             drawOval(fosforo, Offset(pos.x - s * 0.35f, pos.y - s * 0.6f), Size(s * 0.7f, s * 1.2f), style = Stroke(s * 0.2f))

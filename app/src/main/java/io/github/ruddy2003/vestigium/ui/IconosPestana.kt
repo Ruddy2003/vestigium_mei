@@ -97,6 +97,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
     private fun dia(tm: TemaId) { when (tm) {
         TemaId.ROMANO -> { ci(12f, 12f, 4f); rayos(12f, 12f, 8, 6.6f, 9.6f) }                                                              // sol
         TemaId.CIBER -> { r(2.5f, 4f, 19f, 16f, 1f); p { m(6.5f, 9f); t(9.5f, 12f); t(6.5f, 15f) }; l(11.5f, 15f, 16.5f, 15f) }              // terminal
+        TemaId.NEON -> { r(2.5f, 4f, 19f, 16f, 1f); p { m(6.5f, 9f); t(9.5f, 12f); t(6.5f, 15f) }; l(11.5f, 15f, 16.5f, 15f) }              // terminal
         TemaId.HELENO -> { p { m(2.5f, 8.5f); t(21.5f, 8.5f); q(21.5f, 19.5f, 12f, 19.5f); q(2.5f, 19.5f, 2.5f, 8.5f); close() }
             rayos(12f, 8.5f, 5, 2.6f, 8f, 30.0, 150.0, 1.1f); p(relleno = true) { m(12f, 8.5f); t(12f, 3.2f); t(16.5f, 8.5f); close() }
             l(12f, 19.5f, 12f, 21.5f); l(9f, 21.5f, 15f, 21.5f) }                                                                         // reloj de sol: cuenco, horas y gnomon
@@ -134,6 +135,9 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.CIBER -> { r(4.5f, 2.5f, 15f, 19f, 0.4f); for (y in listOf(5f, 9f, 13f, 17f)) { ci(6.6f, y, 0.7f, relleno = true); ci(17.4f, y, 0.7f, relleno = true) }
             l(9f, 6.5f, 15f, 6.5f, 1.1f); l(9f, 10f, 14f, 10f, 1.1f); l(9f, 13.5f, 15f, 13.5f, 1.1f)
             p(st = fino) { m(9f, 16f); t(10.6f, 17.2f); t(9f, 18.4f) }; l(11.8f, 18.4f, 14f, 18.4f, 1.1f) }                                // papel continuo de teletipo con su «>_»
+        TemaId.NEON -> { r(4.5f, 2.5f, 15f, 19f, 0.4f); for (y in listOf(5f, 9f, 13f, 17f)) { ci(6.6f, y, 0.7f, relleno = true); ci(17.4f, y, 0.7f, relleno = true) }
+            l(9f, 6.5f, 15f, 6.5f, 1.1f); l(9f, 10f, 14f, 10f, 1.1f); l(9f, 13.5f, 15f, 13.5f, 1.1f)
+            p(st = fino) { m(9f, 16f); t(10.6f, 17.2f); t(9f, 18.4f) }; l(11.8f, 18.4f, 14f, 18.4f, 1.1f) }                                // papel continuo de teletipo con su «>_»
         TemaId.HELENO -> momentos(tm)
         TemaId.MEDIEVAL -> { p { m(12f, 6.5f); q(8f, 4f, 3f, 5f); t(3f, 18.5f); q(8f, 17.5f, 12f, 19.5f); q(16f, 17.5f, 21f, 18.5f); t(21f, 5f); q(16f, 4f, 12f, 6.5f) }; l(12f, 6.5f, 12f, 19.5f, 1.1f) } // códice abierto
         TemaId.DISTOPIA -> { r(5f, 4f, 14f, 17.5f, 0.6f); r(8.5f, 2.5f, 7f, 3.2f, 0.4f, relleno = true); l(8f, 10f, 16f, 10f); l(8f, 13.5f, 16f, 13.5f); l(8f, 17f, 12.5f, 17f) } // expediente
@@ -160,6 +164,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.ROMANO -> { p { m(3f, 15f); q(3f, 11f, 9f, 11f); t(16f, 11f); q(20f, 11f, 21f, 14f); t(17f, 15f); q(14f, 18f, 9f, 18f); q(3f, 18f, 3f, 15f); close() }
             p(relleno = true) { m(19.8f, 10f); q(22f, 7f, 20.3f, 4.5f); q(18.4f, 7.5f, 19.8f, 10f); close() } }                              // lucerna
         TemaId.CIBER -> p { m(13f, 2.5f); t(5f, 13.5f); t(11f, 13.5f); t(10f, 21.5f); t(19f, 10f); t(13f, 10f); close() }                        // rayo
+        TemaId.NEON -> p { m(13f, 2.5f); t(5f, 13.5f); t(11f, 13.5f); t(10f, 21.5f); t(19f, 10f); t(13f, 10f); close() }                        // rayo
         TemaId.HELENO -> { p { m(7.5f, 4f); q(4f, 12f, 8f, 19f) }; p { m(16.5f, 4f); q(20f, 12f, 16f, 19f) }; l(6f, 6.5f, 18f, 6.5f); l(8f, 19f, 16f, 19f)
             l(10f, 6.5f, 10f, 19f, 1.1f); l(12f, 6.5f, 12f, 19f, 1.1f); l(14f, 6.5f, 14f, 19f, 1.1f) }                                         // lira
         TemaId.MEDIEVAL -> { p { m(20.5f, 3f); q(10f, 5f, 6.5f, 16f); t(8.5f, 17f); q(17.5f, 13f, 20.5f, 3f); close() }; l(6.5f, 16f, 4f, 21f); l(18f, 5.5f, 9.5f, 13.5f, 1.1f) } // pluma
@@ -193,6 +198,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
     private fun explorar(tm: TemaId) { when (tm) {
         TemaId.ROMANO -> { p { m(8f, 21f); t(8f, 7f); q(8f, 3f, 12f, 3f); q(16f, 3f, 16f, 7f); t(16f, 21f) }; l(5.5f, 21f, 18.5f, 21f); l(10f, 9f, 14f, 9f, 1.1f); l(10f, 12f, 14f, 12f, 1.1f); l(10f, 15f, 14f, 15f, 1.1f) } // miliario
         TemaId.CIBER -> { ci(12f, 12f, 9f); ci(12f, 12f, 4.8f, st = fino); l(12f, 12f, 18.4f, 5.6f); ci(15.5f, 9f, 1.2f, relleno = true) }           // radar
+        TemaId.NEON -> { ci(12f, 12f, 9f); ci(12f, 12f, 4.8f, st = fino); l(12f, 12f, 18.4f, 5.6f); ci(15.5f, 9f, 1.2f, relleno = true) }           // radar
         TemaId.HELENO -> { ci(12f, 12f, 8.6f); p(relleno = true) { m(12f, 5f); t(13.8f, 12f); t(10.2f, 12f); close() }; p(st = fino) { m(10.2f, 12f); t(12f, 19f); t(13.8f, 12f) } } // brújula
         TemaId.MEDIEVAL -> { ci(12f, 12f, 8.6f); l(3.6f, 12f, 20.4f, 12f); l(12f, 12f, 12f, 20.4f) }                                              // mapamundi en T-O
         TemaId.DISTOPIA -> { ci(7f, 15f, 4f); ci(17f, 15f, 4f); l(4.5f, 11.8f, 6.5f, 5.5f); l(19.5f, 11.8f, 17.5f, 5.5f); l(6.5f, 5.5f, 10f, 5.5f); l(14f, 5.5f, 17.5f, 5.5f); l(10.5f, 9f, 13.5f, 9f) } // binoculares
@@ -225,6 +231,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
     private fun mas(tm: TemaId) { when (tm) {
         TemaId.ROMANO -> { r(6f, 5f, 12f, 14f, 0.5f); l(4.5f, 4f, 19.5f, 4f, 2.4f); l(4.5f, 20f, 19.5f, 20f, 2.4f); l(8.5f, 9f, 15.5f, 9f, 1.1f); l(8.5f, 12f, 15.5f, 12f, 1.1f); l(8.5f, 15f, 13f, 15f, 1.1f) } // rollo
         TemaId.CIBER -> { r(4f, 4f, 6.5f, 6.5f, 0.6f); r(13.5f, 4f, 6.5f, 6.5f, 0.6f); r(4f, 13.5f, 6.5f, 6.5f, 0.6f); r(13.5f, 13.5f, 6.5f, 6.5f, 0.6f, true) } // módulos
+        TemaId.NEON -> { r(4f, 4f, 6.5f, 6.5f, 0.6f); r(13.5f, 4f, 6.5f, 6.5f, 0.6f); r(4f, 13.5f, 6.5f, 6.5f, 0.6f); r(13.5f, 13.5f, 6.5f, 6.5f, 0.6f, true) } // módulos
         TemaId.HELENO -> { l(4f, 4f, 20f, 4f); ci(6.5f, 6.3f, 1.8f, st = fino); ci(17.5f, 6.3f, 1.8f, st = fino); l(6.5f, 8f, 17.5f, 8f, 1.1f)
             l(8f, 8f, 8f, 19f, 1.1f); l(12f, 8f, 12f, 19f, 1.1f); l(16f, 8f, 16f, 19f, 1.1f); l(6f, 19.5f, 18f, 19.5f); l(5f, 21.5f, 19f, 21.5f) } // columna jónica
         TemaId.MEDIEVAL -> { ci(7.5f, 8f, 4f); l(10.3f, 10.8f, 20f, 20.5f); l(15.5f, 16f, 17.7f, 13.8f); l(18f, 18.5f, 20.2f, 16.3f) }           // llave
@@ -261,6 +268,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             hoja(18.4f, 16.4f, 4.6f, 2.4f, -45f); hoja(19.9f, 11.8f, 4.6f, 2.4f, -75f); hoja(19.4f, 7.2f, 4.6f, 2.4f, -100f)
             l(9.8f, 22f, 12f, 20.5f, 1.1f); l(14.2f, 22f, 12f, 20.5f, 1.1f) }                                                              // corona de laurel
         TemaId.CIBER -> { r(2.5f, 8f, 17f, 8f, 0.6f); l(21.2f, 10.5f, 21.2f, 13.5f, 2f)
+            r(4.6f, 10f, 3.2f, 4f, 0.2f, true); r(8.8f, 10f, 3.2f, 4f, 0.2f, true); r(13f, 10f, 3.2f, 4f, 0.2f, true) }                // barra de energía a tres cuartos
+        TemaId.NEON -> { r(2.5f, 8f, 17f, 8f, 0.6f); l(21.2f, 10.5f, 21.2f, 13.5f, 2f)
             r(4.6f, 10f, 3.2f, 4f, 0.2f, true); r(8.8f, 10f, 3.2f, 4f, 0.2f, true); r(13f, 10f, 3.2f, 4f, 0.2f, true) }                // barra de energía a tres cuartos
         TemaId.HELENO -> { p(st = fino) { m(4.5f, 20.5f); q(9.5f, 11f, 19.5f, 3.5f) }
             hoja(6.6f, 13.2f, 5.2f, 2.2f, -110f); hoja(11.6f, 13.6f, 5.2f, 2.2f, 5f); hoja(10.8f, 7.4f, 5.2f, 2.2f, -110f); hoja(16.6f, 8.2f, 4.6f, 2f, 10f)
@@ -318,6 +327,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             l(9.8f, 4.2f, 14.2f, 4.2f, 1.5f); l(9.8f, 19.8f, 14.2f, 19.8f, 1.5f); l(4.2f, 9.8f, 4.2f, 14.2f, 1.5f); l(19.8f, 9.8f, 19.8f, 14.2f, 1.5f) } // «+» de inscripción, con remates
         TemaId.CIBER -> { p { m(7f, 4f); t(4f, 4f); t(4f, 20f); t(7f, 20f) }; p { m(17f, 4f); t(20f, 4f); t(20f, 20f); t(17f, 20f) }
             l(12f, 8f, 12f, 16f, 2.2f); l(8f, 12f, 16f, 12f, 2.2f) }                                                                         // [+]
+        TemaId.NEON -> { p { m(7f, 4f); t(4f, 4f); t(4f, 20f); t(7f, 20f) }; p { m(17f, 4f); t(20f, 4f); t(20f, 20f); t(17f, 20f) }
+            l(12f, 8f, 12f, 16f, 2.2f); l(8f, 12f, 16f, 12f, 2.2f) }                                                                         // [+]
         TemaId.HELENO -> { p { m(4f, 7f); t(9f, 3.5f); t(17f, 4f); t(20.5f, 9.5f); t(19f, 17f); t(13f, 20.5f); t(5.5f, 18.5f); t(3f, 12.5f); close() }
             l(12f, 8.5f, 12f, 15.5f, 2f); l(8.5f, 12f, 15.5f, 12f, 2f) }                                                                     // óstrakon con el «+» grabado
         TemaId.MEDIEVAL -> p(relleno = true) { m(10.6f, 10.6f); t(9f, 3f); t(15f, 3f); t(13.4f, 10.6f); t(21f, 9f); t(21f, 15f); t(13.4f, 13.4f); t(15f, 21f); t(9f, 21f); t(10.6f, 13.4f); t(3f, 15f); t(3f, 9f); close() } // cruz patada
@@ -361,6 +372,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.ROMANO -> { l(12f, 8f, 12f, 21.5f, 1.8f); l(4f, 8f, 20f, 8f, 1.8f); l(8.5f, 5.5f, 15.5f, 10.5f, 1.2f); l(4f, 8f, 4f, 14.5f, 1f); l(20f, 8f, 20f, 14.5f, 1f)
             ci(4f, 15.6f, 1.2f, relleno = true); ci(20f, 15.6f, 1.2f, relleno = true); ci(12f, 8f, 1.3f, relleno = true); l(9f, 21.5f, 15f, 21.5f) } // groma del agrimensor
         TemaId.CIBER -> { l(6f, 3f, 6f, 21f, 1.1f); l(12f, 3f, 12f, 21f, 1.1f); l(18f, 3f, 18f, 21f, 1.1f)
+            r(4f, 13f, 4f, 3f, 0.4f, true); r(10f, 6f, 4f, 3f, 0.4f, true); r(16f, 15f, 4f, 3f, 0.4f, true) }                             // deslizadores
+        TemaId.NEON -> { l(6f, 3f, 6f, 21f, 1.1f); l(12f, 3f, 12f, 21f, 1.1f); l(18f, 3f, 18f, 21f, 1.1f)
             r(4f, 13f, 4f, 3f, 0.4f, true); r(10f, 6f, 4f, 3f, 0.4f, true); r(16f, 15f, 4f, 3f, 0.4f, true) }                             // deslizadores
         TemaId.HELENO -> { engrane(9.5f, 10f, 6.6f, 5f, 8); ci(9.5f, 10f, 1.8f); engrane(17f, 17f, 4.6f, 3.4f, 6); ci(17f, 17f, 1.1f, relleno = true) } // dos engranes que encajan
         TemaId.MEDIEVAL -> { ci(7f, 18.6f, 2.6f); ci(17f, 18.6f, 2.6f); l(8.6f, 16.5f, 17.6f, 3.5f); l(15.4f, 16.5f, 6.4f, 3.5f); ci(12f, 10f, 0.9f, relleno = true) } // tijeras del copista

@@ -11,6 +11,7 @@ object NombresCompletos {
     fun de(tema: TemaId, titulo: String): String? = when (tema) {
         TemaId.ROMANO -> NombresRomano.M[titulo]
         TemaId.CIBER -> NombresCiber.M[titulo]
+        TemaId.NEON -> NombresNeon.M[titulo]
         TemaId.HELENO -> NombresHeleno.M[titulo]
         TemaId.MEDIEVAL -> NombresMedieval.M[titulo]
         TemaId.DISTOPIA -> NombresDistopia.M[titulo]

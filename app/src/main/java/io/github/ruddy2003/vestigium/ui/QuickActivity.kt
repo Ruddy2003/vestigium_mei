@@ -942,6 +942,7 @@ private fun formaDp(trazo: Path.(w: Float, h: Float, u: Float) -> Unit): Shape =
 private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.ROMANO -> 12.dp
     TemaId.CIBER -> 4.dp
+    TemaId.NEON -> 4.dp
     TemaId.HELENO -> 14.dp
     TemaId.MEDIEVAL -> 10.dp
     TemaId.DISTOPIA -> 12.dp
@@ -972,6 +973,10 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
     }
     // Ventana de consola con una esquina cortada.
     TemaId.CIBER -> formaDp { w, h, u ->
+        val c = 18 * u
+        moveTo(0f, 0f); lineTo(w - c, 0f); lineTo(w, c); lineTo(w, h); lineTo(0f, h); close()
+    }
+    TemaId.NEON -> formaDp { w, h, u ->
         val c = 18 * u
         moveTo(0f, 0f); lineTo(w - c, 0f); lineTo(w, c); lineTo(w, h); lineTo(0f, h); close()
     }
@@ -1105,6 +1110,12 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
         }
         // Barra de estado de la consola: la línea, tres rayas de señal y el cursor.
         TemaId.CIBER -> {
+            val y = 7 * u; val x = w * 0.55f
+            drawLine(e.primary.copy(alpha = 0.5f), Offset(10 * u, y), Offset(x, y), u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 3 * u)))
+            (0 until 3).forEach { k -> drawRect(e.primary.copy(alpha = 0.75f - k * 0.2f), Offset(x + (6 + k * 6) * u, y - 2.5f * u), Size(4 * u, 5 * u)) }
+            drawRect(e.secondary, Offset(x + 26 * u, y - 3 * u), Size(7 * u, 6 * u))
+        }
+        TemaId.NEON -> {
             val y = 7 * u; val x = w * 0.55f
             drawLine(e.primary.copy(alpha = 0.5f), Offset(10 * u, y), Offset(x, y), u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 3 * u)))
             (0 until 3).forEach { k -> drawRect(e.primary.copy(alpha = 0.75f - k * 0.2f), Offset(x + (6 + k * 6) * u, y - 2.5f * u), Size(4 * u, 5 * u)) }
@@ -1274,6 +1285,7 @@ private fun DrawScope.estrellaHoja(c: Offset, r: Float, color: Color, puntas: In
 private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     TemaId.ROMANO -> RoundedCornerShape(2.dp)
     TemaId.CIBER -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
+    TemaId.NEON -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
     // Frontón muy bajo.
     TemaId.HELENO -> formaDp { w, h, u -> val f = 8 * u; moveTo(0f, f); lineTo(w / 2, 0f); lineTo(w, f); lineTo(w, h); lineTo(0f, h); close() }
     // Esquinas cóncavas, como un marco de miniatura.

@@ -72,6 +72,7 @@ object NombresNuevos {
             "Impulsos y recaídas" to "EXPEDIENTE PERSONAL", "Estado de los datos" to "INFORME DE PRODUCCIÓN DE DATOS", "Enfoque y siestas" to "TRABAJO Y DESCANSO", "Ver tu vida" to "CARTELES",
             "Tus atajos" to "ACCESOS", "Logro conseguido" to "¡NORMA CUMPLIDA!", "Este día hace un año" to "HACE UN AÑO", "Elegir campaña" to "NUEVO PLAN", "Campañas anteriores" to "PLANES CUMPLIDOS"),
         TemaId.CIBER to emptyMap(),
+        TemaId.NEON to emptyMap(),
     )
 
     fun de(tema: TemaId, titulo: String): String? = NombresCompletos.de(tema, titulo) ?: M[tema]?.get(titulo)

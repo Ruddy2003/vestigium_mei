@@ -46,6 +46,7 @@ object SalonesTema {
             TemaId.ANTIGUAS -> with(SalonesMas) { salonPiedra(cs, oscuro, n) }
             TemaId.DISTOPIA -> with(SalonesMas) { archivo(cs, oscuro, n) }
             TemaId.CIBER -> with(SalonesMas) { salaCentral(cs, oscuro, n) }
+            TemaId.NEON -> with(SalonesMas) { salaCentral(cs, oscuro, n) }
             TemaId.REFUGIO -> with(SalonesMas) { salaComun(cs, oscuro, n) }
             TemaId.ORDEN -> with(SalonesMas) { salaCapitular(cs, oscuro, n) }
             TemaId.LABORATORIO -> with(SalonesMas) { laboratorioLimpio(cs, oscuro, n) }
@@ -78,6 +79,7 @@ object SalonesTema {
             TemaId.ANTIGUAS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.DISTOPIA -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.CIBER -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.NEON -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.REFUGIO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.ORDEN -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.LABORATORIO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }

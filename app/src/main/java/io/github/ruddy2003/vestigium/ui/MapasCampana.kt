@@ -290,6 +290,13 @@ object MapasCampana {
                 drawRect(cian, Offset(x - 3 * d, y - tam), Size(tw + 6 * d, tam * 1.5f), style = Stroke(1f * d))
                 mono(t, x, y, tam, cian, negrita = true)
             }
+            TemaId.NEON -> with(TrofeosMas) {
+                val cian = Color(0xFF00E5FF); val t = "ACCESO CONCEDIDO"; val tam = 8 * d
+                val tw = t.length * tam * 0.6f; val x = (m.x - tw / 2).coerceIn(3 * d, size.width - tw - 3 * d); val y = m.y - 30 * d
+                drawRect(Color(0xFF05070B), Offset(x - 3 * d, y - tam), Size(tw + 6 * d, tam * 1.5f))
+                drawRect(cian, Offset(x - 3 * d, y - tam), Size(tw + 6 * d, tam * 1.5f), style = Stroke(1f * d))
+                mono(t, x, y, tam, cian, negrita = true)
+            }
             // La salida a la superficie: el sol que asoma sobre la compuerta abierta.
             TemaId.REFUGIO -> {
                 val sol = Offset(m.x, m.y - 18 * d)

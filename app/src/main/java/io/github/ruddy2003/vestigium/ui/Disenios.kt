@@ -302,6 +302,7 @@ internal val tipoAntiguas = tipografia(LetraExtra.camino, FontWeight.Normal, 1.0
 internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema) {
     TemaId.ROMANO -> if (oscuro) listOf(0xFFA63A4D, 0xFF2A2F34, 0xFF3FA393, 0xFFD2AE5A) else listOf(0xFF9E3445, 0xFFE4E2DA, 0xFF2D7A6F, 0xFFB8892B)
     TemaId.CIBER -> listOf(0xFFFF2E88, 0xFF1A2232, 0xFF00E5FF, 0xFF00E5FF)
+    TemaId.NEON -> listOf(0xFFFF2E88, 0xFF1A2232, 0xFF00E5FF, 0xFF00E5FF)
     TemaId.HELENO -> if (oscuro) listOf(0xFFB04A6A, 0xFF2A2440, 0xFF5FA8D8, 0xFFD8B45C) else listOf(0xFF8E2C48, 0xFFE9E3D6, 0xFF1F6E9C, 0xFFA27B22)
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFFC9473B, 0xFF2A2016, 0xFF8DA5E0, 0xFFD5A84A) else listOf(0xFF9E1B1B, 0xFFE5D6B4, 0xFF1F3F8F, 0xFFA97C1E)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFFE0262F, 0xFF2A2C2E, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFFB3121B, 0xFFCFCBC0, 0xFF2E3B44, 0xFFB3121B)
@@ -327,6 +328,7 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
 internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema) {
     TemaId.ROMANO -> if (oscuro) listOf(0xFF3FA393, 0xFFD2AE5A, 0xFFE0604F) else listOf(0xFF2D7A6F, 0xFFB8892B, 0xFF9E3445)
     TemaId.CIBER -> listOf(0xFF00E5FF, 0xFFE8FF3A, 0xFFFF2E88)
+    TemaId.NEON -> listOf(0xFF00E5FF, 0xFFE8FF3A, 0xFFFF2E88)
     TemaId.HELENO -> if (oscuro) listOf(0xFF5FA8D8, 0xFFD8B45C, 0xFFB992EA) else listOf(0xFF1F6E9C, 0xFFA27B22, 0xFF5A2A82)
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFF8DA5E0, 0xFFD5A84A, 0xFFC9473B) else listOf(0xFF1F3F8F, 0xFFA97C1E, 0xFF9E1B1B)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFF6D7377, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFF6D7377, 0xFF2E3B44, 0xFFB3121B)

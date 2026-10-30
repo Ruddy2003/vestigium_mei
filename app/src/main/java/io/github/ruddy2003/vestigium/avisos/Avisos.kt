@@ -37,6 +37,7 @@ object Avisos {
     private fun sonidosDe(t: TemaId): Pair<Int, Int> = when (t) {
         TemaId.ROMANO -> R.raw.n_romano_aviso to R.raw.n_romano_solemne
         TemaId.CIBER -> R.raw.n_ciber_aviso to R.raw.n_ciber_solemne
+        TemaId.NEON -> R.raw.n_neon_aviso to R.raw.n_neon_solemne
         TemaId.HELENO -> R.raw.n_heleno_aviso to R.raw.n_heleno_solemne
         TemaId.MEDIEVAL -> R.raw.n_medieval_aviso to R.raw.n_medieval_solemne
         TemaId.DISTOPIA -> R.raw.n_distopia_aviso to R.raw.n_distopia_solemne
@@ -170,6 +171,13 @@ object Avisos {
             "Triunfo", "triunfos nuevos",
             "ANNALES %d · tu año está listo", "Un año entero en historias: lo que más hiciste, lo único, lo curioso. Toca para leerlo.")
         TemaId.CIBER -> Voz("> ping ánimo", "Dos toques: qué tan agradable y cuánta energía. _",
+            "> dump de sueños", "Guárdalo antes de levantarte: la memoria se libera en minutos.",
+            "> cierre del día", "Llena el día. Si fue un mal día, basta con un número.",
+            "modo mínimo: 1 número", "> pendiente:",
+            "> mensaje en cola de tu yo del pasado", "Se cumplió la fecha programada. Toca para descifrarlo.",
+            "> logro desbloqueado", "logros desbloqueados",
+            "> informe_%d listo", "Un año entero en historias: lo más frecuente, lo único, lo raro. Toca para ejecutar.")
+        TemaId.NEON -> Voz("> ping ánimo", "Dos toques: qué tan agradable y cuánta energía. _",
             "> dump de sueños", "Guárdalo antes de levantarte: la memoria se libera en minutos.",
             "> cierre del día", "Llena el día. Si fue un mal día, basta con un número.",
             "modo mínimo: 1 número", "> pendiente:",
@@ -317,6 +325,7 @@ object Avisos {
     internal fun vozEnfoque(t: TemaId = temaActual()): VozEnfoque = when (t) {
         TemaId.ROMANO -> VozEnfoque("Otium", "Levántate y bebe agua, como en las termas.", "Se acabó el otium", "Surge: hora de despertar", "Opus perfectum: terminaste")
         TemaId.CIBER -> VozEnfoque("> pausa", "Despega la vista de la pantalla. Agua.", "> pausa terminada", "> wake: hora de despertar", "> proceso completado")
+        TemaId.NEON -> VozEnfoque("> pausa", "Despega la vista de la pantalla. Agua.", "> pausa terminada", "> wake: hora de despertar", "> proceso completado")
         TemaId.HELENO -> VozEnfoque("Σχολή · pausa", "Levántate, bebe agua de la fuente.", "Terminó la pausa", "Llega Eos: hora de despertar", "Τέλος · terminaste")
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA")

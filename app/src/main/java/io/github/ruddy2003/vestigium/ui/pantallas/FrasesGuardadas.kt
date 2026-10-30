@@ -155,6 +155,17 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
                 }
             }
         }
+        TemaId.NEON -> {
+            val filas = listOf(".XX.XX.", "XXXXXXX", "XXXXXXX", ".XXXXX.", "..XXX..", "...X...")
+            fun hay(f: Int, c: Int) = f in filas.indices && c in 0 until 7 && filas[f][c] == 'X'
+            val px = 3f
+            filas.forEachIndexed { f, fila ->
+                fila.forEachIndexed { c, ch ->
+                    val borde = !hay(f - 1, c) || !hay(f + 1, c) || !hay(f, c - 1) || !hay(f, c + 1)
+                    if (ch == 'X' && (lleno || borde)) drawRect(if (lleno) color else color.copy(alpha = 0.7f), p(1.5f + c * px + 0.15f, 3f + f * px + 0.15f), Size((px - 0.3f) * u, (px - 0.3f) * u))
+                }
+            }
+        }
         // Sol de Vergina: dieciséis rayos y el disco al centro.
         TemaId.HELENO -> pinta(estrella(12f, 12f, 16, 11f, 5.6f).also { it.fillType = PathFillType.EvenOdd; circulo(it, 12f, 12f, 2.6f) }, 1.2f)
         // Cuadrifolio de las tracerías.

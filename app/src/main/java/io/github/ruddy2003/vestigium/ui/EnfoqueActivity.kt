@@ -407,6 +407,22 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
                 drawLine(col, o, Offset(o.x, o.y + s.y * l), 1.5f * u)
             }
         }
+        TemaId.NEON -> {
+            val n = 48; val lado = 6.5f * u; val sigue = (p * n).toInt()
+            for (k in 0 until n) {
+                val f = (k + 0.5f) / n; val q = en(f, r); val o = Offset(q.x - lado / 2, q.y - lado / 2)
+                rotate(f * 360f, q) {
+                    if (pasado(k, n)) drawRect(color, o, Size(lado, lado))
+                    else if (k == sigue) drawRect(e.secondary, o, Size(lado, lado))
+                    else drawRect(pista, o, Size(lado, lado), style = Stroke(u))
+                }
+            }
+            val l = 18 * u; val m = 2 * u; val col = color.copy(alpha = 0.7f); val w = size.width; val h = size.height
+            listOf(Offset(m, m) to Offset(1f, 1f), Offset(w - m, m) to Offset(-1f, 1f), Offset(m, h - m) to Offset(1f, -1f), Offset(w - m, h - m) to Offset(-1f, -1f)).forEach { (o, s) ->
+                drawLine(col, o, Offset(o.x + s.x * l, o.y), 1.5f * u)
+                drawLine(col, o, Offset(o.x, o.y + s.y * l), 1.5f * u)
+            }
+        }
         // Sol de Vergina: dieciséis rayos que se encienden uno a uno alrededor de un doble aro.
         TemaId.HELENO -> {
             drawCircle(tenue.copy(alpha = 0.5f), r - 8 * u, c, style = Stroke(1.2f * u))
@@ -748,6 +764,10 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             lineTo(x + r, y + h); quadraticTo(x + r, y + h - r, x, y + h - r); lineTo(x, y + r); quadraticTo(x + r, y + r, x + r, y); close()
         }
         TemaId.CIBER -> {
+            val n = (w / (h * 0.9f)).toInt().coerceAtLeast(1); val ancho = w / n
+            for (i in 0 until n) addRect(Rect(x + i * ancho, y, x + (i + 1) * ancho - minOf(1.5f * u, ancho * 0.3f), y + h))
+        }
+        TemaId.NEON -> {
             val n = (w / (h * 0.9f)).toInt().coerceAtLeast(1); val ancho = w / n
             for (i in 0 until n) addRect(Rect(x + i * ancho, y, x + (i + 1) * ancho - minOf(1.5f * u, ancho * 0.3f), y + h))
         }

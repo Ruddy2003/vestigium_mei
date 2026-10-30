@@ -83,6 +83,7 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.ROMANO -> PielCinta(0f, false, RellenoCinta.FILETE, null, StrokeCap.Square)
     // Bloques de fósforo con líneas de barrido y horas punteadas.
     TemaId.CIBER -> PielCinta(0f, false, RellenoCinta.RAYAS, floatArrayOf(1.5f, 3f), StrokeCap.Butt)
+    TemaId.NEON -> PielCinta(0f, false, RellenoCinta.RAYAS, floatArrayOf(1.5f, 3f), StrokeCap.Butt)
     // Bloques con su contorno, como relieves.
     TemaId.HELENO -> PielCinta(2f, false, RellenoCinta.CONTORNO, floatArrayOf(6f, 3f), StrokeCap.Round)
     // Tinta que se carga arriba y se aclara.

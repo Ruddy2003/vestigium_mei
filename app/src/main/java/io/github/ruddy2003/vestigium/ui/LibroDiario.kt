@@ -136,6 +136,7 @@ object LibroDiario {
     internal fun fuentes(t: TemaId) = when (t) {
         TemaId.ROMANO -> Fuentes(R.font.cinzel_regular, R.font.plex_sans_regular)
         TemaId.CIBER -> Fuentes(R.font.sharetech_mono, R.font.plex_mono_regular)
+        TemaId.NEON -> Fuentes(R.font.sharetech_mono, R.font.plex_mono_regular)
         TemaId.HELENO -> Fuentes(R.font.garamond_medium, R.font.garamond_regular)
         TemaId.MEDIEVAL -> Fuentes(R.font.gotica_regular, R.font.cardo_regular)
         TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
@@ -202,6 +203,7 @@ object LibroDiario {
         return when (t) {
             TemaId.ROMANO -> "h1{text-align:center;letter-spacing:.25em}article{border-top:3px double $p}.fecha{letter-spacing:.12em}.nota::first-line{font-variant:small-caps;letter-spacing:.04em}"
             TemaId.CIBER -> "article{border-top:1px dashed $p}.fecha::before{content:'> ';color:$p}.meta::before{content:'// '}.nota::first-letter{background:$p;color:$b}"
+            TemaId.NEON -> "article{border-top:1px dashed $p}.fecha::before{content:'> ';color:$p}.meta::before{content:'// '}.nota::first-letter{background:$p;color:$b}"
             TemaId.HELENO -> "h1{text-align:center}article{border-top:0}article::before{content:'';display:block;height:5px;margin-bottom:14px;border-top:1px solid $p;" +
                 "border-bottom:1px solid $p;background:repeating-linear-gradient(90deg,$p 0 3px,transparent 3px 9px)}" + capitular("2.4em", tinta)
             TemaId.MEDIEVAL -> "article{border-top:2px solid $p;border-left:3px double $s;padding-left:14px}" + capitular("3.2em", p)
@@ -340,6 +342,7 @@ object LibroDiario {
         return when (t) {
             TemaId.ROMANO -> Medidas(if (carta) 12.5f else 11f, aire)
             TemaId.CIBER -> Medidas(11f, 1.35f)
+            TemaId.NEON -> Medidas(11f, 1.35f)
             TemaId.HELENO -> Medidas(12.5f, aire)
             TemaId.MEDIEVAL -> Medidas(12.5f, aire)
             TemaId.DISTOPIA -> Medidas(11f, aire)
@@ -375,6 +378,7 @@ object LibroDiario {
         TemaId.ROMANO -> Inicial(R.font.cinzel_semibold, 1.25f, palabra = true, mayusculas = true)
         // El indicador de la consola y la primera letra en video inverso, como el cursor.
         TemaId.CIBER -> Inicial(R.font.sharetech_mono, 1f, invertida = true, prefijo = "> ")
+        TemaId.NEON -> Inicial(R.font.sharetech_mono, 1f, invertida = true, prefijo = "> ")
         // La letra que sale al margen, en negro, como en los papiros griegos.
         TemaId.HELENO -> Inicial(R.font.garamond_semibold, 2.3f, tinta = true)
         // La capitular roja del copista.
@@ -457,6 +461,11 @@ object LibroDiario {
                 cv.drawCircle(cx - 8f, y, 1.3f, relleno); cv.drawCircle(cx + 8f, y, 1.3f, relleno)
             }
             TemaId.CIBER -> {
+                // Una línea discontinua y el cursor al principio.
+                cv.drawPath(ruta { moveTo(x0 + 9f, y); lineTo(x1, y) }, Paint(trazo).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(4f, 3f), 0f) })
+                cv.drawRect(x0, y - 3f, x0 + 5f, y + 3f, relleno)
+            }
+            TemaId.NEON -> {
                 // Una línea discontinua y el cursor al principio.
                 cv.drawPath(ruta { moveTo(x0 + 9f, y); lineTo(x1, y) }, Paint(trazo).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(4f, 3f), 0f) })
                 cv.drawRect(x0, y - 3f, x0 + 5f, y + 3f, relleno)
@@ -608,6 +617,10 @@ object LibroDiario {
             }
             // Solo las escuadras de las esquinas, como en una pantalla.
             TemaId.CIBER -> esquinas.forEach { (x, y) ->
+                val (sx, sy) = haciaDentro(x, y); val p = Paint(trazo).apply { strokeWidth = 1.4f }
+                cv.drawLine(x, y, x + sx * 40f, y, p); cv.drawLine(x, y, x, y + sy * 40f, p)
+            }
+            TemaId.NEON -> esquinas.forEach { (x, y) ->
                 val (sx, sy) = haciaDentro(x, y); val p = Paint(trazo).apply { strokeWidth = 1.4f }
                 cv.drawLine(x, y, x + sx * 40f, y, p); cv.drawLine(x, y, x, y + sy * 40f, p)
             }

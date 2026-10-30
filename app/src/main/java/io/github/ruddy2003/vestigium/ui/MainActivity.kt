@@ -221,6 +221,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.ROMANO -> BloqueoCentrado(TextosBloqueo("VESTIGIVM MEI", "// tabulae obsignatae · tu diario está sellado", "Resignare"), tituloArriba = true, sello = 170, reintentar = reintentar)
         TemaId.CIBER -> BloqueoConsola(TextosBloqueo("vestigium_mei", "> esperando huella_", "[ desbloquear ]",
             listOf("> montar /diario", "! acceso denegado: volumen cifrado", "> llave: huella del titular")), reintentar)
+        TemaId.NEON -> BloqueoConsola(TextosBloqueo("vestigium_mei", "> esperando huella_", "[ desbloquear ]",
+            listOf("> montar /diario", "! acceso denegado: volumen cifrado", "> llave: huella del titular")), reintentar)
         TemaId.HELENO -> BloqueoMarco(TextosBloqueo("ΤΑ ΙΧΝΗ ΜΟΥ", "— ἐσφραγισμένον · tu diario está sellado", "ΑΝΟΙΞΟΝ"), arriba = 54, reintentar = reintentar) { cs -> bloqueoFronton(cs) }
         TemaId.MEDIEVAL -> BloqueoMarco(TextosBloqueo("Vestigium mei", "¶ Este libro está cerrado con sello: sólo su dueño lo abre.", "Romper el sello"), arriba = 0, reintentar = reintentar) { cs -> bloqueoIluminado(cs) }
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
@@ -680,6 +682,7 @@ private fun EtiquetaPestana(nombre: String, sel: Boolean, color: Color) {
 private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.ROMANO -> false
     TemaId.CIBER -> false
+    TemaId.NEON -> false
     TemaId.HELENO -> false
     TemaId.MEDIEVAL -> true
     TemaId.DISTOPIA -> false
@@ -705,6 +708,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
 private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.ROMANO -> true
     TemaId.CIBER -> false
+    TemaId.NEON -> false
     TemaId.HELENO -> true
     TemaId.MEDIEVAL -> true
     TemaId.DISTOPIA -> true
@@ -760,6 +764,11 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
         }
         // Corchetes de consola que se cierran sobre el ícono.
         TemaId.CIBER -> {
+            val d = (1 - p) * 6 * u
+            drawPath(Path().apply { moveTo(cx - 19 * u - d, 3 * u); lineTo(cx - 23 * u - d, 3 * u); lineTo(cx - 23 * u - d, 27 * u); lineTo(cx - 19 * u - d, 27 * u) }, c, style = linea)
+            drawPath(Path().apply { moveTo(cx + 19 * u + d, 3 * u); lineTo(cx + 23 * u + d, 3 * u); lineTo(cx + 23 * u + d, 27 * u); lineTo(cx + 19 * u + d, 27 * u) }, c, style = linea)
+        }
+        TemaId.NEON -> {
             val d = (1 - p) * 6 * u
             drawPath(Path().apply { moveTo(cx - 19 * u - d, 3 * u); lineTo(cx - 23 * u - d, 3 * u); lineTo(cx - 23 * u - d, 27 * u); lineTo(cx - 19 * u - d, 27 * u) }, c, style = linea)
             drawPath(Path().apply { moveTo(cx + 19 * u + d, 3 * u); lineTo(cx + 23 * u + d, 3 * u); lineTo(cx + 23 * u + d, 27 * u); lineTo(cx + 19 * u + d, 27 * u) }, c, style = linea)
@@ -915,6 +924,13 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
                 drawPath(Path().apply { moveTo(o.x + d.x * l, o.y); lineTo(o.x, o.y); lineTo(o.x, o.y + d.y * l) }, c, style = s)
             }
         }
+        TemaId.NEON -> {
+            drawRect(c.copy(alpha = 0.12f), Offset(4 * u, 4 * u), Size(w - 8 * u, h - 8 * u))
+            val l = 11 * u; val m = 4 * u; val s = Stroke(2f * u, cap = StrokeCap.Square)
+            listOf(Offset(m, m) to Offset(1f, 1f), Offset(w - m, m) to Offset(-1f, 1f), Offset(m, h - m) to Offset(1f, -1f), Offset(w - m, h - m) to Offset(-1f, -1f)).forEach { (o, d) ->
+                drawPath(Path().apply { moveTo(o.x + d.x * l, o.y); lineTo(o.x, o.y); lineTo(o.x, o.y + d.y * l) }, c, style = s)
+            }
+        }
         // Sol de Vergina: disco y dieciséis rayos, largos y cortos.
         TemaId.HELENO -> {
             drawCircle(c, 17.5f * u, Offset(cx, cy))
@@ -1042,6 +1058,7 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         TemaId.ROMANO -> { filete(); drawLine(acento, Offset(0f, 3 * u), Offset(w, 3 * u), 0.7f * u) }
         // Línea de guiones.
         TemaId.CIBER -> drawLine(cs.primary.copy(alpha = 0.6f), Offset(0f, 1 * u), Offset(w, 1 * u), 1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 4 * u)))
+        TemaId.NEON -> drawLine(cs.primary.copy(alpha = 0.6f), Offset(0f, 1 * u), Offset(w, 1 * u), 1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 4 * u)))
         // Astrágalo: filete y una fila de perlas.
         TemaId.HELENO -> { filete(); var x = 3 * u; while (x < w) { drawCircle(acento, 0.9f * u, Offset(x, 3 * u)); x += 6 * u } }
         // Filete con rombos de rúbrica.
@@ -1345,6 +1362,7 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.ROMANO -> (fadeIn(t(260)) + slideInVertically(t(260)) { dir * it / 24 }) togetherWith fadeOut(t(140))
         // Terminal: barrido rápido y lineal, de lado.
         TemaId.CIBER -> (fadeIn(t(140, lineal)) + slideInHorizontally(t(160, lineal)) { dir * it / 8 }) togetherWith fadeOut(t(90, lineal))
+        TemaId.NEON -> (fadeIn(t(140, lineal)) + slideInHorizontally(t(160, lineal)) { dir * it / 8 }) togetherWith fadeOut(t(90, lineal))
         // Frontón: la pantalla baja desde el centro de arriba, como un friso que se asienta.
         TemaId.HELENO -> (scaleIn(t(320), initialScale = 0.9f, transformOrigin = TransformOrigin(0.5f, 0f)) + fadeIn(t(280))) togetherWith
             (scaleOut(t(200), targetScale = 0.96f, transformOrigin = TransformOrigin(0.5f, 1f)) + fadeOut(t(200)))

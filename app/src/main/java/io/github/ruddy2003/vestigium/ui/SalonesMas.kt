@@ -61,6 +61,12 @@ object SalonesMas {
                 drawRect(Color(0xFF00E5FF).copy(alpha = 0.8f), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.1f))
                 for (k in 0 until 6) drawRect(Color(0xFF00E5FF).copy(alpha = if (k % 3 == 1) 0.3f else 0.85f), Offset(w * (0.2f + k * 0.1f), h * 0.42f), Size(w * 0.05f, h * 0.22f))
             }
+            TemaId.NEON -> {
+                // La tapa de un gabinete: chapa negra, filo cian y una hilera de luces de estado.
+                drawRect(piedra(Color(0xFF111925)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h))
+                drawRect(Color(0xFF00E5FF).copy(alpha = 0.8f), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.1f))
+                for (k in 0 until 6) drawRect(Color(0xFF00E5FF).copy(alpha = if (k % 3 == 1) 0.3f else 0.85f), Offset(w * (0.2f + k * 0.1f), h * 0.42f), Size(w * 0.05f, h * 0.22f))
+            }
             TemaId.REFUGIO -> {
                 // La placa de chapa verde azulado del refugio, con su franja amarilla y remaches.
                 drawRoundRect(piedra(Color(0xFF1C6E6A)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h), CornerRadius(h * 0.15f))

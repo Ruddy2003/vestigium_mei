@@ -85,6 +85,7 @@ enum class Epoca(val nombre: String) {
 enum class TemaId(val id: String, val nombre: String, val descripcion: String, val epoca: Epoca, val soloOscuro: Boolean = false) {
     ROMANO("romano", "Romano", "Mármol, pórfido y oro. Títulos en latín, fechas romanas, corona de laurel.", Epoca.ANTIGUEDAD),
     CIBER("ciber", "Terminal", "Pura consola: cian sobre negro, cursor parpadeante, ASCII y volcados de memoria. Todo en código. Solo oscuro.", Epoca.CONTEMPORANEA, soloOscuro = true),
+    NEON("neon", "Ciudad neón", "Los niveles bajos de una megaciudad: letreros de neón entre el vapor, puestos de comida y callejones. Magenta, ámbar y verde de sodio. Solo oscuro.", Epoca.FUTURO, soloOscuro = true),
     HELENO("heleno", "Helénico", "Púrpura macedonio, oro y azul del Egeo. Títulos en griego, el sol de Vergina.", Epoca.ANTIGUEDAD),
     MEDIEVAL("medieval", "Scriptorium", "Pergamino, tinta y pan de oro. Letra gótica, capitulares en rojo, numerales de copista.", Epoca.EDAD_MEDIA),
     DISTOPIA("distopia", "Distopía", "Gris de ministerio y rojo de cartel. Cada día es un expediente y un ojo lo mira todo.", Epoca.FUTURO),
@@ -130,6 +131,18 @@ internal val romanoOscuro = darkColorScheme(
 
 /** Neón cian y magenta sobre negro azulado. */
 internal val ciber = darkColorScheme(
+    primary = Color(0xFF00E5FF), onPrimary = Color(0xFF00161A), primaryContainer = Color(0xFF06282F), onPrimaryContainer = Color(0xFFBFF8FF),
+    secondary = Color(0xFFFF2E88), onSecondary = Color(0xFF1A0010), secondaryContainer = Color(0xFF2B0A1C), onSecondaryContainer = Color(0xFFFFD0E4),
+    tertiary = Color(0xFFE8FF3A),
+    background = Color(0xFF05070B), onBackground = Color(0xFFD6F3F7), surface = Color(0xFF0A0E15), onSurface = Color(0xFFD6F3F7),
+    surfaceVariant = Color(0xFF111925), onSurfaceVariant = Color(0xFF86A0B3), outline = Color(0xFF15404A), outlineVariant = Color(0xFF15404A),
+    error = Color(0xFFFF5470),
+    surfaceContainer = Color(0xFF0A0E15), surfaceContainerHigh = Color(0xFF111925), surfaceContainerHighest = Color(0xFF111925),
+    surfaceContainerLow = Color(0xFF0A0E15), surfaceContainerLowest = Color(0xFF05070B),
+).conInversos()
+
+/** Neón cian y magenta sobre negro azulado. */
+internal val neon = darkColorScheme(
     primary = Color(0xFF00E5FF), onPrimary = Color(0xFF00161A), primaryContainer = Color(0xFF06282F), onPrimaryContainer = Color(0xFFBFF8FF),
     secondary = Color(0xFFFF2E88), onSecondary = Color(0xFF1A0010), secondaryContainer = Color(0xFF2B0A1C), onSecondaryContainer = Color(0xFFFFD0E4),
     tertiary = Color(0xFFE8FF3A),
@@ -195,6 +208,22 @@ internal val tipoCiber = Typography(
     labelSmall = TextStyle(fontFamily = Letra.codigo, fontSize = 10.5.sp, letterSpacing = 0.4.sp),
 )
 
+/** Todo en monoespaciada: rótulos de terminal y texto de código. */
+internal val tipoNeon = Typography(
+    displaySmall = TextStyle(fontFamily = Letra.terminal, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = 1.5.sp),
+    headlineMedium = TextStyle(fontFamily = Letra.terminal, fontSize = 28.sp, lineHeight = 34.sp, letterSpacing = 1.6.sp),
+    headlineSmall = TextStyle(fontFamily = Letra.terminal, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = 1.2.sp),
+    titleLarge = TextStyle(fontFamily = Letra.terminal, fontSize = 17.sp, lineHeight = 22.sp, letterSpacing = 1.2.sp),
+    titleMedium = TextStyle(fontFamily = Letra.codigo, fontWeight = FontWeight.SemiBold, fontSize = 14.5.sp, lineHeight = 21.sp),
+    titleSmall = TextStyle(fontFamily = Letra.codigo, fontWeight = FontWeight.Medium, fontSize = 11.5.sp, lineHeight = 16.sp, letterSpacing = 0.2.sp),
+    bodyLarge = TextStyle(fontFamily = Letra.codigo, fontSize = 15.sp, lineHeight = 23.sp),
+    bodyMedium = TextStyle(fontFamily = Letra.codigo, fontSize = 13.5.sp, lineHeight = 20.sp),
+    bodySmall = TextStyle(fontFamily = Letra.codigo, fontSize = 12.sp, lineHeight = 17.sp),
+    labelLarge = TextStyle(fontFamily = Letra.codigo, fontWeight = FontWeight.Medium, fontSize = 13.sp, letterSpacing = 0.6.sp),
+    labelMedium = TextStyle(fontFamily = Letra.codigo, fontWeight = FontWeight.Medium, fontSize = 11.sp, letterSpacing = 0.4.sp),
+    labelSmall = TextStyle(fontFamily = Letra.codigo, fontSize = 10.5.sp, letterSpacing = 0.4.sp),
+)
+
 /** Garamond en todo: capitales griegas espaciadas en títulos, cifras alineadas en datos. */
 internal val tipoHeleno = Typography(
     displaySmall = TextStyle(fontFamily = Letra.garamond, fontWeight = FontWeight.Medium, fontSize = 32.sp, lineHeight = 38.sp, letterSpacing = 3.sp),
@@ -240,6 +269,7 @@ private fun formas(e: Esquinas) = Shapes(
 internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.ROMANO -> if (oscuro) romanoOscuro else romanoClaro
     TemaId.CIBER -> ciber
+    TemaId.NEON -> neon
     TemaId.HELENO -> if (oscuro) helenoOscuro else helenoClaro
     TemaId.MEDIEVAL -> if (oscuro) medievalOscuro else medievalClaro
     TemaId.DISTOPIA -> if (oscuro) distopiaOscuro else distopiaClaro
@@ -264,6 +294,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
 internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.ROMANO -> tipoRomano
     TemaId.CIBER -> tipoCiber
+    TemaId.NEON -> tipoNeon
     TemaId.HELENO -> tipoHeleno
     TemaId.MEDIEVAL -> tipoMedieval
     TemaId.DISTOPIA -> tipoDistopia
@@ -294,6 +325,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
 private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.ROMANO -> 58f to 1f          // Cinzel: capitales anchas
     TemaId.CIBER -> 62f to 0f           // Share Tech Mono
+    TemaId.NEON -> 62f to 0f           // Share Tech Mono
     TemaId.HELENO -> 66f to 1f          // Garamond, cifras alineadas
     TemaId.MEDIEVAL -> 66f to 0.5f      // gótica
     TemaId.DISTOPIA -> 70f to 1f        // Oswald, angosta
@@ -323,6 +355,7 @@ private fun Typography.conReloj(tema: TemaId): Typography {
 internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.ROMANO -> Esquinas(4, Esquina.REDONDA)
     TemaId.CIBER -> Esquinas(1, Esquina.REDONDA)
+    TemaId.NEON -> Esquinas(1, Esquina.REDONDA)
     TemaId.HELENO -> Esquinas(6, Esquina.REDONDA)
     TemaId.MEDIEVAL -> Esquinas(3, Esquina.REDONDA)
     TemaId.DISTOPIA -> Esquinas(4, Esquina.CORTADA)        // la carpeta del expediente
@@ -493,6 +526,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     val titulo = when (tema) {
         TemaId.ROMANO -> "DIES"
         TemaId.CIBER -> "DÍA_"
+        TemaId.NEON -> "DÍA_"
         TemaId.HELENO -> "ΗΜΕΡΑ"
         TemaId.MEDIEVAL -> "Del día"
         TemaId.DISTOPIA -> "PARTE"
@@ -516,6 +550,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     val linea = when (tema) {
         TemaId.ROMANO -> "XVII · X"
         TemaId.CIBER -> "2026.10.17"
+        TemaId.NEON -> "2026.10.17"
         TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ."
         TemaId.MEDIEVAL -> "xvij de otubre"
         TemaId.DISTOPIA -> "EXP. 0290"
@@ -541,6 +576,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     val (arriba, abajo) = when (tema) {
         TemaId.ROMANO -> 16 to 16
         TemaId.CIBER -> 16 to 16
+        TemaId.NEON -> 16 to 16
         TemaId.HELENO -> 20 to 12
         TemaId.MEDIEVAL -> 16 to 16
         TemaId.DISTOPIA -> 20 to 12
@@ -565,6 +601,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     val lados = when (tema) {
         TemaId.ROMANO -> 12
         TemaId.CIBER -> 10
+        TemaId.NEON -> 10
         TemaId.HELENO -> 10
         TemaId.MEDIEVAL -> 10
         TemaId.DISTOPIA -> 10
@@ -619,6 +656,7 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
     }
     // Panel de terminal con dos esquinas cortadas en diagonal.
     TemaId.CIBER -> CutCornerShape(topStart = 0.dp, topEnd = 12.dp, bottomEnd = 0.dp, bottomStart = 12.dp)
+    TemaId.NEON -> CutCornerShape(topStart = 0.dp, topEnd = 12.dp, bottomEnd = 0.dp, bottomStart = 12.dp)
     // Fachada con frontón.
     TemaId.HELENO -> GenericShape { s, _ ->
         val f = s.height * 0.1f
@@ -722,6 +760,7 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         TemaId.ROMANO -> { drawRect(c); drawRect(fondo.copy(alpha = 0.35f), Offset(w * 0.12f, h * 0.12f), Size(w * 0.76f, h * 0.76f), style = fino) }
         // Píxel encendido dentro de su celda.
         TemaId.CIBER -> { drawRect(c, style = fino); drawRect(c, Offset(w * 0.28f, h * 0.28f), Size(w * 0.44f, h * 0.44f)) }
+        TemaId.NEON -> { drawRect(c, style = fino); drawRect(c, Offset(w * 0.28f, h * 0.28f), Size(w * 0.44f, h * 0.44f)) }
         // Dracma.
         TemaId.HELENO -> { drawCircle(c, r); drawCircle(fondo.copy(alpha = 0.4f), r * 0.68f, style = fino) }
         // Losange de blasón.

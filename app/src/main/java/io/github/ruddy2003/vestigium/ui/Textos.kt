@@ -328,6 +328,7 @@ object Textos {
     fun de(tema: TemaId, clave: String): String? = when (tema) {
         TemaId.ROMANO -> ROMANO
         TemaId.CIBER -> CIBER
+        TemaId.NEON -> NEON
         TemaId.HELENO -> HELENO
         TemaId.MEDIEVAL -> MEDIEVAL
         TemaId.DISTOPIA -> DISTOPIA

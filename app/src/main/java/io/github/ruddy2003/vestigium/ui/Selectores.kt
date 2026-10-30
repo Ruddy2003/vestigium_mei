@@ -250,6 +250,7 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     TemaId.ROMANO -> GenericShape { s, _ -> moveTo(s.width * 0.03f, 0f); lineTo(s.width, s.height * 0.04f); lineTo(s.width * 0.97f, s.height); lineTo(0f, s.height * 0.96f); close() }
     // Píxel con una esquina cortada.
     TemaId.CIBER -> CutCornerShape(topEndPercent = 28)
+    TemaId.NEON -> CutCornerShape(topEndPercent = 28)
     // Frontón.
     TemaId.HELENO -> GenericShape { s, _ -> moveTo(0f, s.height * 0.24f); lineTo(s.width / 2, 0f); lineTo(s.width, s.height * 0.24f); lineTo(s.width, s.height); lineTo(0f, s.height); close() }
     // Esquinas cóncavas de miniatura.
@@ -333,6 +334,7 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         }
         TemaId.ROMANO -> {}
         TemaId.CIBER -> {}
+        TemaId.NEON -> {}
         TemaId.HELENO -> {}
         TemaId.MEDIEVAL -> {}
         TemaId.DISTOPIA -> {}

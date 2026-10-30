@@ -228,6 +228,7 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     TemaId.ROMANO -> PielDialogo(RoundedCornerShape(3.dp), 0.dp, 0.dp, false, 1.dp)
     // Ventana de consola con dos esquinas cortadas en diagonal.
     TemaId.CIBER -> PielDialogo(CutCornerShape(topEnd = 14.dp, bottomStart = 14.dp), 0.dp, 0.dp, false, 1.dp)
+    TemaId.NEON -> PielDialogo(CutCornerShape(topEnd = 14.dp, bottomStart = 14.dp), 0.dp, 0.dp, false, 1.dp)
     // Frontón de templo: un tímpano bajo arriba.
     TemaId.HELENO -> PielDialogo(FormaDp { w, h, d ->
         val g = 16 * d
@@ -323,6 +324,14 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             }
         }
         TemaId.CIBER -> {
+            // Recuadro punteado de consola, el indicador «>_» arriba y el cursor encendido abajo.
+            drawRect(e.primary.copy(alpha = 0.45f), Offset(5 * d, 5 * d), Size(w - 10 * d, h - 10 * d),
+                style = Stroke(d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * d, 3 * d))))
+            drawPath(Path().apply { moveTo(11 * d, 9 * d); lineTo(15 * d, 12 * d); lineTo(11 * d, 15 * d) }, e.secondary, style = Stroke(1.4f * d))
+            drawLine(e.secondary, Offset(17 * d, 15 * d), Offset(23 * d, 15 * d), 1.4f * d)
+            drawRect(e.secondary, Offset(w - 16 * d, h - 20 * d), Size(6 * d, 10 * d))
+        }
+        TemaId.NEON -> {
             // Recuadro punteado de consola, el indicador «>_» arriba y el cursor encendido abajo.
             drawRect(e.primary.copy(alpha = 0.45f), Offset(5 * d, 5 * d), Size(w - 10 * d, h - 10 * d),
                 style = Stroke(d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * d, 3 * d))))
@@ -539,6 +548,11 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
         }
         // Guiones de consola que terminan en el cursor.
         TemaId.CIBER -> {
+            var x = 0f
+            while (x < w - 14 * d) { drawLine(e.primary.copy(alpha = 0.7f), Offset(x, cy), Offset(x + 3 * d, cy), 1.2f * d); x += 6 * d }
+            drawRect(e.secondary, Offset(w - 8 * d, cy - 4 * d), Size(5 * d, 8 * d))
+        }
+        TemaId.NEON -> {
             var x = 0f
             while (x < w - 14 * d) { drawLine(e.primary.copy(alpha = 0.7f), Offset(x, cy), Offset(x + 3 * d, cy), 1.2f * d); x += 6 * d }
             drawRect(e.secondary, Offset(w - 8 * d, cy - 4 * d), Size(5 * d, 8 * d))
@@ -817,6 +831,15 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
                 cx += paso
             }
         }
+        TemaId.NEON -> {
+            val cw = maxOf(g * 1.3f, 2 * d); val paso = cw + maxOf(g * 0.5f, d)
+            var cx = 0f
+            while (cx < w) {
+                val ancho = minOf(cw, w - cx)
+                drawRect(if (cx + ancho / 2 <= x) activo else inactivo.copy(alpha = inactivo.alpha * 0.4f), Offset(cx, cy - g / 2), Size(ancho, g))
+                cx += paso
+            }
+        }
         // Greca en onda cuadrada sobre una línea fina.
         TemaId.HELENO -> {
             linea(inactivo, x, w, g * 0.3f)
@@ -992,6 +1015,10 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
         }
         // Cursor de bloque con su subrayado.
         TemaId.CIBER -> {
+            drawRect(color, Offset(c.x - r * 0.45f, c.y - r * 0.8f), Size(r * 0.9f, r * 1.4f))
+            drawRect(e.secondary, Offset(c.x - r * 0.55f, c.y + r * 0.75f), Size(r * 1.1f, r * 0.18f))
+        }
+        TemaId.NEON -> {
             drawRect(color, Offset(c.x - r * 0.45f, c.y - r * 0.8f), Size(r * 0.9f, r * 1.4f))
             drawRect(e.secondary, Offset(c.x - r * 0.55f, c.y + r * 0.75f), Size(r * 1.1f, r * 0.18f))
         }

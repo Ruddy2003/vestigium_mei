@@ -105,6 +105,19 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
         <activity-alias
+            android:name=".IconoNeon"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_neon"
+            android:roundIcon="@mipmap/ic_launcher_neon"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
             android:name=".IconoHeleno"
             android:enabled="false"
             android:exported="true"

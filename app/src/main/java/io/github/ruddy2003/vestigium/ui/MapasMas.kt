@@ -69,6 +69,7 @@ object MapasMas {
         TemaId.DISTOPIA -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
         // La traza de la red: saltos de servidor en servidor, de la máquina propia a la raíz.
         TemaId.CIBER -> listOf(Offset(0.07f, 0.52f), Offset(0.2f, 0.28f), Offset(0.34f, 0.6f), Offset(0.48f, 0.36f), Offset(0.62f, 0.7f), Offset(0.77f, 0.4f), Offset(0.93f, 0.6f))
+        TemaId.NEON -> listOf(Offset(0.07f, 0.52f), Offset(0.2f, 0.28f), Offset(0.34f, 0.6f), Offset(0.48f, 0.36f), Offset(0.62f, 0.7f), Offset(0.77f, 0.4f), Offset(0.93f, 0.6f))
         // Del dormitorio del nivel más hondo a la salida: pasillos y escaleras de nivel en nivel (las escaleras quedan a la mitad de cada tramo).
         TemaId.REFUGIO -> listOf(Offset(0.07f, 0.86f), Offset(0.22f, 0.68f), Offset(0.42f, 0.68f), Offset(0.54f, 0.5f), Offset(0.68f, 0.5f), Offset(0.8f, 0.32f), Offset(0.93f, 0.12f))
         // El avance en el mapa táctico: del campamento a la fortaleza, cuadro por cuadro.
@@ -171,6 +172,22 @@ object MapasMas {
                 drawRect(Color(0xFFC8102E).copy(alpha = 0.6f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.02f))
             }
             TemaId.CIBER -> {
+                // La red a oscuras: rejilla de puntos, servidores sueltos unidos por enlaces tenues y un volcado en hexadecimal a la derecha.
+                val cian = Color(0xFF00E5FF)
+                var y = 6 * d; while (y < h) { var x = 6 * d; while (x < w) { drawCircle(cian.copy(alpha = 0.09f), 0.8f * d, Offset(x, y)); x += 12 * d }; y += 12 * d }
+                val az = java.util.Random(23)
+                val nodos = List(12) { Offset(w * (0.04f + 0.8f * az.nextFloat()), h * (0.08f + 0.84f * az.nextFloat())) }
+                nodos.forEachIndexed { i, a -> drawLine(cian.copy(alpha = 0.1f), a, nodos[(i * 5 + 3) % nodos.size], 0.8f * d) }
+                nodos.forEach { drawRect(cian.copy(alpha = 0.18f), Offset(it.x - 4 * d, it.y - 3 * d), Size(8 * d, 6 * d), style = Stroke(0.8f * d)) }
+                val hex = "0123456789ABCDEF"
+                with(TrofeosMas) {
+                    var yy = 10 * d; while (yy < h) {
+                        val t = (0 until 4).joinToString(" ") { "" + hex[az.nextInt(16)] + hex[az.nextInt(16)] }
+                        mono(t, w - 4 * d, yy, 7 * d, cian.copy(alpha = 0.06f + 0.14f * avance), android.graphics.Paint.Align.RIGHT); yy += 9 * d
+                    }
+                }
+            }
+            TemaId.NEON -> {
                 // La red a oscuras: rejilla de puntos, servidores sueltos unidos por enlaces tenues y un volcado en hexadecimal a la derecha.
                 val cian = Color(0xFF00E5FF)
                 var y = 6 * d; while (y < h) { var x = 6 * d; while (x < w) { drawCircle(cian.copy(alpha = 0.09f), 0.8f * d, Offset(x, y)); x += 12 * d }; y += 12 * d }
@@ -424,6 +441,12 @@ object MapasMas {
                 drawPath(p, cian.copy(alpha = 0.75f), style = Stroke(1 * d))
                 aLoLargo(p, 15 * d) { o, _ -> drawRect(cian, Offset(o.x - 1.6f * d, o.y - 1.6f * d), Size(3.2f * d, 3.2f * d)) }
             }
+            TemaId.NEON -> {
+                val cian = Color(0xFF00E5FF)
+                drawPath(p, cian.copy(alpha = 0.16f), style = Stroke(6 * d))
+                drawPath(p, cian.copy(alpha = 0.75f), style = Stroke(1 * d))
+                aLoLargo(p, 15 * d) { o, _ -> drawRect(cian, Offset(o.x - 1.6f * d, o.y - 1.6f * d), Size(3.2f * d, 3.2f * d)) }
+            }
             // La franja de los pasillos: el trazo verde azulado (fósforo de noche) con las marcas amarillas del piso.
             TemaId.REFUGIO -> {
                 val oscuro = cs.background.luminance() < 0.5f
@@ -499,6 +522,13 @@ object MapasMas {
             TemaId.DISTOPIA -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
             // Un servidor: caja negra con su filo, dos ranuras y la luz.
             TemaId.CIBER -> {
+                drawRect(Color(0xFF05070B), Offset(c.x - r, c.y - r * 0.8f), Size(2 * r, 1.6f * r))
+                drawRect(col, Offset(c.x - r, c.y - r * 0.8f), Size(2 * r, 1.6f * r), style = Stroke(1.2f * d))
+                for (k in 0 until 2) drawLine(col, Offset(c.x - r * 0.6f, c.y - r * 0.3f + k * r * 0.55f), Offset(c.x + r * 0.15f, c.y - r * 0.3f + k * r * 0.55f), 0.9f * d)
+                drawCircle(col, r * 0.16f, Offset(c.x + r * 0.55f, c.y - r * 0.3f))
+                if (meta) drawRect(col.copy(alpha = 0.4f), Offset(c.x - r * 1.35f, c.y - r * 1.15f), Size(2.7f * r, 2.3f * r), style = Stroke(0.8f * d))
+            }
+            TemaId.NEON -> {
                 drawRect(Color(0xFF05070B), Offset(c.x - r, c.y - r * 0.8f), Size(2 * r, 1.6f * r))
                 drawRect(col, Offset(c.x - r, c.y - r * 0.8f), Size(2 * r, 1.6f * r), style = Stroke(1.2f * d))
                 for (k in 0 until 2) drawLine(col, Offset(c.x - r * 0.6f, c.y - r * 0.3f + k * r * 0.55f), Offset(c.x + r * 0.15f, c.y - r * 0.3f + k * r * 0.55f), 0.9f * d)
@@ -618,6 +648,7 @@ object MapasMas {
             TemaId.URSS -> { alfiler(); drawRect(Color(0xFF161414), Offset(g.x - r * 0.8f, g.y - r * 0.3f), Size(r * 1.4f, r * 0.7f)); drawRect(Color(0xFF161414), Offset(g.x + r * 0.1f, g.y - r * 0.8f), Size(r * 0.5f, r * 0.6f)); drawRect(Color(0xFF161414), Offset(g.x - r * 0.6f, g.y - r * 0.75f), Size(r * 0.2f, r * 0.45f)); drawRect(Color(0xFFC1121F), Offset(g.x - r * 0.8f, g.y + r * 0.05f), Size(r * 1.4f, r * 0.12f)); listOf(-0.45f, 0.05f).forEach { dx -> drawCircle(Color(0xFFC1121F), r * 0.22f, Offset(g.x + dx * r, g.y + r * 0.5f)) } }
             // El cursor de la consola.
             TemaId.CIBER -> { alfiler(); drawCircle(Color(0xFF05070B), r * 0.95f, g); drawRect(Color(0xFF00E5FF), Offset(g.x - r * 0.32f, g.y - r * 0.55f), Size(r * 0.64f, r * 1.1f)) }
+            TemaId.NEON -> { alfiler(); drawCircle(Color(0xFF05070B), r * 0.95f, g); drawRect(Color(0xFF00E5FF), Offset(g.x - r * 0.32f, g.y - r * 0.55f), Size(r * 0.64f, r * 1.1f)) }
         }
     }
 

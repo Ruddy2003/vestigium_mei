@@ -158,6 +158,7 @@ object FondosTelefono {
     fun marca(t: TemaId): String = when (t) {
         TemaId.ROMANO -> "VESTIGIVM · MEI"
         TemaId.CIBER -> "vestigium.mei"
+        TemaId.NEON -> "vestigium.mei"
         TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ"
         TemaId.MEDIEVAL -> "Liber vestigii mei"
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"
@@ -254,6 +255,14 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 }
             }
             TemaId.CIBER -> {
+                // Consola: borde punteado, escuadras de luz y un indicador con su cursor abajo.
+                drawRect(e.primary.copy(alpha = 0.22f), Offset(izq, arr), Size(der - izq, aba - arr), style = Stroke(1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 6 * u))))
+                escuadras(34 * u, 2 * u, e.primary.copy(alpha = 0.6f))
+                val py = aba - 16 * u
+                drawLine(col, Offset(izq + 12 * u, py - 5 * u), Offset(izq + 18 * u, py), 1.6f * u); drawLine(col, Offset(izq + 18 * u, py), Offset(izq + 12 * u, py + 5 * u), 1.6f * u)
+                drawRect(col, Offset(izq + 24 * u, py - 6 * u), Size(7 * u, 12 * u))
+            }
+            TemaId.NEON -> {
                 // Consola: borde punteado, escuadras de luz y un indicador con su cursor abajo.
                 drawRect(e.primary.copy(alpha = 0.22f), Offset(izq, arr), Size(der - izq, aba - arr), style = Stroke(1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 6 * u))))
                 escuadras(34 * u, 2 * u, e.primary.copy(alpha = 0.6f))
@@ -684,6 +693,7 @@ class FondoVivoServicio : WallpaperService() {
 private fun logo(t: TemaId): Int = when (t) {
     TemaId.ROMANO -> R.drawable.logo_romano
     TemaId.CIBER -> R.drawable.logo_ciber
+    TemaId.NEON -> R.drawable.logo_neon
     TemaId.HELENO -> R.drawable.logo_heleno
     TemaId.MEDIEVAL -> R.drawable.logo_medieval
     TemaId.DISTOPIA -> R.drawable.logo_distopia

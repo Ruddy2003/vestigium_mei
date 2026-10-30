@@ -22,6 +22,7 @@ object Estilo {
     val comentario: String get() = when (tema) {
         TemaId.ROMANO -> "// "
         TemaId.CIBER -> "# "
+        TemaId.NEON -> "# "
         TemaId.HELENO -> "∴ "
         TemaId.MEDIEVAL -> "¶ "
         TemaId.DISTOPIA -> "▪ "
@@ -50,6 +51,7 @@ object Estilo {
     val mayusculas: Boolean get() = when (tema) {
         TemaId.ROMANO -> true          // capitales de inscripción
         TemaId.CIBER -> true           // consola
+        TemaId.NEON -> true           // consola
         TemaId.HELENO -> true          // capitales epigráficas
         TemaId.MEDIEVAL -> false       // gótica de libro
         TemaId.DISTOPIA -> true        // cartel
@@ -81,6 +83,7 @@ object Estilo {
             // Romano, terminal y heleno arman su comentario en [pantalla] y [seccion].
             TemaId.ROMANO -> null
             TemaId.CIBER -> null
+            TemaId.NEON -> null
             TemaId.HELENO -> null
             TemaId.DISTOPIA -> if (pantalla) "EXPEDIENTE Nº %04d · %s".format(folio(titulo, 1000, 9000), t) else if (igual) null else "▪ $t"
             TemaId.LABORATORIO -> if (pantalla) "protocolo VM-%03d · %s".format(folio(titulo, 100, 900), t) else if (igual) null else "· $t"
@@ -109,6 +112,7 @@ object Estilo {
         return when (tema) {
             TemaId.ROMANO -> (la ?: titulo.uppercase()) to (if (la != null) comentario + titulo.lowercase() else null)
             TemaId.CIBER -> (nombreNuevo(titulo) ?: titulo.uppercase()) to "${comentario}sys.${slug(la ?: titulo)}"
+            TemaId.NEON -> (nombreNuevo(titulo) ?: titulo.uppercase()) to "${comentario}sys.${slug(la ?: titulo)}"
             TemaId.HELENO -> Griego.nombre(titulo)?.let { it to comentario + titulo.lowercase() } ?: (titulo.uppercase() to null)
             TemaId.MEDIEVAL -> propio(titulo, true)
             TemaId.DISTOPIA -> propio(titulo, true)
@@ -143,6 +147,7 @@ object Estilo {
         TemaId.LABORATORIO -> true
         TemaId.ROMANO -> false
         TemaId.CIBER -> false
+        TemaId.NEON -> false
         TemaId.HELENO -> false
         TemaId.MEDIEVAL -> false
         TemaId.REFUGIO -> false
@@ -180,6 +185,7 @@ object Estilo {
         return when (tema) {
             TemaId.ROMANO -> (la ?: titulo.uppercase()) to (if (la != null) comentario + titulo.lowercase() else null)
             TemaId.CIBER -> nombreNuevo(titulo)?.let { "> $it" to comentario + titulo.lowercase() } ?: ("> ${titulo.lowercase()}" to null)
+            TemaId.NEON -> nombreNuevo(titulo)?.let { "> $it" to comentario + titulo.lowercase() } ?: ("> ${titulo.lowercase()}" to null)
             TemaId.HELENO -> Griego.nombre(titulo)?.let { it to comentario + titulo.lowercase() } ?: (titulo.uppercase() to null)
             TemaId.MEDIEVAL -> propio(titulo, false)
             TemaId.DISTOPIA -> propio(titulo, false)
@@ -205,6 +211,7 @@ object Estilo {
     fun numeral(n: Int): String = when (tema) {
         TemaId.ROMANO -> Romano.de(n)
         TemaId.CIBER -> if (n < 100) "[%02d]".format(n) else "0x%X".format(n)
+        TemaId.NEON -> if (n < 100) "[%02d]".format(n) else "0x%X".format(n)
         TemaId.HELENO -> Griego.numeral(n)
         TemaId.MEDIEVAL -> Temas.copista(n)
         TemaId.DISTOPIA -> if (n < 100) "Nº%02d".format(n) else "Nº$n"
@@ -244,6 +251,7 @@ object Estilo {
     fun fecha(iso: String): String = when (tema) {
         TemaId.ROMANO -> Romano.fecha(iso)
         TemaId.CIBER -> runCatching { val d = Fechas.parse(iso); "%04d.%02d.%02d // %s".format(d.year, d.monthValue, d.dayOfMonth, SEMANA_ES[d.dayOfWeek.value - 1]) }.getOrDefault(iso)
+        TemaId.NEON -> runCatching { val d = Fechas.parse(iso); "%04d.%02d.%02d // %s".format(d.year, d.monthValue, d.dayOfMonth, SEMANA_ES[d.dayOfWeek.value - 1]) }.getOrDefault(iso)
         TemaId.HELENO -> Griego.fecha(iso)
         TemaId.MEDIEVAL -> runCatching { val d = Fechas.parse(iso); "${Temas.copista(d.dayOfMonth)} de ${Temas.MESES_MEDIEVALES[d.monthValue - 1]} de ${Temas.copista(d.year)}" }.getOrDefault(iso)
         TemaId.DISTOPIA -> runCatching { val d = Fechas.parse(iso); "JORNADA %03d · AÑO %d".format(d.dayOfYear, d.year) }.getOrDefault(iso)
@@ -279,6 +287,7 @@ object Estilo {
         return when (tema) {
             TemaId.ROMANO -> Romano.mes(n)
             TemaId.CIBER -> MESES_ES[i].lowercase() + (anio?.let { ".$it" } ?: "")
+            TemaId.NEON -> MESES_ES[i].lowercase() + (anio?.let { ".$it" } ?: "")
             TemaId.HELENO -> Griego.MESES[i]
             TemaId.MEDIEVAL -> Temas.MESES_MEDIEVALES[i]
             TemaId.DISTOPIA -> "MES %02d".format(n) + (anio?.let { " · $it" } ?: "")
@@ -312,6 +321,7 @@ object Estilo {
     val semana: List<String> get() = when (tema) {
         TemaId.ROMANO -> Romano.SEMANA
         TemaId.CIBER -> listOf("lun", "mar", "mié", "jue", "vie", "sáb", "dom")
+        TemaId.NEON -> listOf("lun", "mar", "mié", "jue", "vie", "sáb", "dom")
         TemaId.HELENO -> Griego.SEMANA
         // Los monjes contaban «ferias»: el lunes es la segunda, el martes la tercera…
         TemaId.MEDIEVAL -> listOf("ij", "iij", "iiij", "v", "vj", "Sab", "Dom")
@@ -344,6 +354,7 @@ object Estilo {
     val semanaCorta: List<String> get() = when (tema) {
         TemaId.ROMANO -> semana.map { it.take(2) }
         TemaId.CIBER -> listOf("lu", "ma", "mi", "ju", "vi", "sá", "do")
+        TemaId.NEON -> listOf("lu", "ma", "mi", "ju", "vi", "sá", "do")
         TemaId.HELENO -> semana.map { it.take(2) }
         TemaId.MEDIEVAL -> listOf("ij", "iij", "iv", "v", "vj", "Sb", "Dm")
         TemaId.DISTOPIA -> semana
@@ -372,6 +383,7 @@ object Estilo {
     fun racha(n: Int): String = when (tema) {
         TemaId.ROMANO -> "DIES CONTINVI · ${Romano.de(n)}"
         TemaId.CIBER -> "> streak --días $n"
+        TemaId.NEON -> "> streak --días $n"
         TemaId.HELENO -> "ΣΥΝΕΧΕΙΣ ΗΜΕΡΑΙ · $n"
         TemaId.MEDIEVAL -> "$n días seguidos en el libro"
         TemaId.DISTOPIA -> "CONTINUIDAD ACREDITADA: $n DÍAS"
@@ -396,6 +408,7 @@ object Estilo {
     val atras: String get() = when (tema) {
         TemaId.ROMANO -> "← cd .."
         TemaId.CIBER -> "<< cd .."
+        TemaId.NEON -> "<< cd .."
         TemaId.HELENO -> "← ὀπίσω"
         TemaId.MEDIEVAL -> "← tornar"
         TemaId.DISTOPIA -> "◄ RETROCEDER"
@@ -419,6 +432,7 @@ object Estilo {
     val prefijo: String get() = when (tema) {
         TemaId.ROMANO -> "› "
         TemaId.CIBER -> "$ "
+        TemaId.NEON -> "$ "
         TemaId.HELENO -> "· "
         TemaId.MEDIEVAL -> "¶ "
         TemaId.DISTOPIA -> "▪ "
@@ -447,6 +461,7 @@ object Estilo {
     val sufijoTitulo: String get() = when (tema) {
         TemaId.ROMANO -> ""
         TemaId.CIBER -> "_"
+        TemaId.NEON -> "_"
         TemaId.HELENO -> ""
         TemaId.MEDIEVAL -> ""
         TemaId.DISTOPIA -> ""
@@ -475,6 +490,7 @@ object Estilo {
     val fechaGrande: EstiloFecha get() = when (tema) {
         TemaId.ROMANO -> EstiloFecha(1.27f, 1.8f, peso = 400)
         TemaId.CIBER -> EstiloFecha(1.0f, 0.4f, abre = "↓")
+        TemaId.NEON -> EstiloFecha(1.0f, 0.4f, abre = "↓")
         TemaId.HELENO -> EstiloFecha(1.12f, 3.0f, peso = 500, abre = "▿")
         TemaId.MEDIEVAL -> EstiloFecha(1.1f, 0.3f)
         TemaId.DISTOPIA -> EstiloFecha(1.12f, 1.6f, peso = 700, abre = "▼")
@@ -514,6 +530,7 @@ object Estilo {
         val v = when (tema) {
             TemaId.ROMANO -> k
             TemaId.CIBER -> CLAVES_CIBER[k]
+            TemaId.NEON -> CLAVES_NEON[k]
             TemaId.HELENO -> CLAVES_GRIEGO[k]
             TemaId.MEDIEVAL -> Claves.CASTELLANO_ANTIGUO[k]
             TemaId.DISTOPIA -> es(Claves.DISTOPIA)?.uppercase()
@@ -557,6 +574,18 @@ object Estilo {
     fun conEspanol(t: String, espanol: String): String = if (ajeno(t)) "$t · $espanol" else t
 
     private val CLAVES_CIBER = mapOf(
+        "horologium" to "watch", "somnus" to "sleep", "stadia" to "stages", "cor" to "heart", "passus" to "steps", "motus" to "motion",
+        "iter" to "route", "exercitatio" to "workout", "loca" to "places", "telephonum" to "screen", "telephon" to "screen", "usus" to "usage",
+        "monita" to "notifs", "musica" to "music", "imagines" to "photos", "fasti" to "agenda", "caelum" to "sky", "lux" to "daylight",
+        "aer" to "air", "corpus" to "body", "nutritio" to "food", "cibus" to "meals", "robur" to "gym", "musculi" to "muscles",
+        "voces" to "calls", "soni" to "audio", "retia" to "wifi", "lumen" to "light", "vis" to "charge", "lectio" to "kindle",
+        "strepitus" to "noise", "luna" to "moon", "dias" to "days", "animus" to "mood", "optimus" to "best", "momenta" to "events",
+        "svmptvs" to "spent", "memorabilia" to "milestones", "ascensvs" to "climbing",
+        "dies" to "days", "quaestiones" to "tests", "celeritas" to "reaction", "bibliotheca" to "library", "synchronia" to "sync", "opera" to "works", "iudicium" to "review", "citatio" to "quote", "sententia" to "phrase", "orbis" to "world", "nova" to "new", "mirabilia" to "sites", "somnium" to "dream", "epistulae" to "letters", "aperta" to "opened", "initium" to "start", "finis" to "end", "pessimus" to "worst", "personae" to "people", "themata" to "topics", "praeclarum" to "top", "dies felix" to "best_day", "apps" to "apps",
+        "consuetudo" to "habits", "series" to "streak", "palmae" to "achievements", "reditus" to "income",
+    )
+
+    private val CLAVES_NEON = mapOf(
         "horologium" to "watch", "somnus" to "sleep", "stadia" to "stages", "cor" to "heart", "passus" to "steps", "motus" to "motion",
         "iter" to "route", "exercitatio" to "workout", "loca" to "places", "telephonum" to "screen", "telephon" to "screen", "usus" to "usage",
         "monita" to "notifs", "musica" to "music", "imagines" to "photos", "fasti" to "agenda", "caelum" to "sky", "lux" to "daylight",

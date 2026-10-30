@@ -306,6 +306,12 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
                 drawRect(Color(0xFF8CFFB0), Offset(o.x + dx * q - q * 0.45f, o.y + dy * q - q * 0.45f), Size(q * 0.9f, q * 0.9f))
             }
         }
+        TemaId.NEON -> {
+            val q = s * 0.42f
+            listOf(0 to 0, 1 to 0, -1 to 0, 0 to 1, 0 to -1).forEach { (dx, dy) ->
+                drawRect(Color(0xFF8CFFB0), Offset(o.x + dx * q - q * 0.45f, o.y + dy * q - q * 0.45f), Size(q * 0.9f, q * 0.9f))
+            }
+        }
         TemaId.HELENO -> {
             for (k in 0 until 16) {
                 val a = k * PI / 8; val l = if (k % 2 == 0) s else s * 0.6f
@@ -406,6 +412,7 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
 private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.ROMANO -> Color(0xFFD9CBB0)
     TemaId.CIBER -> Color(0xFF0B3D24)
+    TemaId.NEON -> Color(0xFF0B3D24)
     TemaId.HELENO -> Color(0xFFC9D8E6)
     TemaId.MEDIEVAL -> Color(0xFFD8C08E)
     TemaId.DISTOPIA -> Color(0xFF8E9296)
@@ -443,6 +450,11 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
                 v, style = Stroke(1.3f * d))
         }
         TemaId.CIBER -> {
+            var y = 0f
+            while (y < h) { drawLine(Color(0xFF39FF88).copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), d); y += 3 * d }
+            drawLine(Color(0xFF39FF88).copy(alpha = 0.12f), Offset(14 * d, 0f), Offset(14 * d, h), d)
+        }
+        TemaId.NEON -> {
             var y = 0f
             while (y < h) { drawLine(Color(0xFF39FF88).copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), d); y += 3 * d }
             drawLine(Color(0xFF39FF88).copy(alpha = 0.12f), Offset(14 * d, 0f), Offset(14 * d, h), d)
@@ -613,6 +625,15 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
                 x += 14 * d; k++
             }
         }
+        TemaId.NEON -> {
+            tabla(m(Color(0xFF1A1F24)))
+            var x = 6 * d; var k = 0
+            while (x < w) {
+                drawRect(Color.Black, Offset(x, h * 0.25f), Size(3 * d, 3 * d)); drawRect(Color.Black, Offset(x, h * 0.6f), Size(3 * d, 3 * d))
+                if (k % 4 == 1) drawCircle(if (k % 12 == 5) Color(0xFFFFB300) else Color(0xFF39FF88), 1.4f * d, Offset(x + 9 * d, h * 0.45f))
+                x += 14 * d; k++
+            }
+        }
         TemaId.HELENO -> { tabla(m(Color(0xFFE9E4D8))); drawPath(Path().apply { grecaRepisa(0f, h * 0.2f, h * 0.2f, w) }, m(Color(0xFF1E5F8C)), style = Stroke(1.2f * d)) }
         TemaId.MEDIEVAL -> {
             tabla(m(Color(0xFF6B4528)))
@@ -760,6 +781,12 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             drawPath(p, fondo); drawPath(p, borde, style = fino)
         }
         TemaId.CIBER -> {
+            val l = 7 * d
+            listOf(Offset(0f, 0f) to Offset(1f, 1f), Offset(w, 0f) to Offset(-1f, 1f), Offset(0f, h) to Offset(1f, -1f), Offset(w, h) to Offset(-1f, -1f)).forEach { (o, s) ->
+                drawLine(ac, o, Offset(o.x + s.x * l, o.y), 1.5f * d); drawLine(ac, o, Offset(o.x, o.y + s.y * l), 1.5f * d)
+            }
+        }
+        TemaId.NEON -> {
             val l = 7 * d
             listOf(Offset(0f, 0f) to Offset(1f, 1f), Offset(w, 0f) to Offset(-1f, 1f), Offset(0f, h) to Offset(1f, -1f), Offset(w, h) to Offset(-1f, -1f)).forEach { (o, s) ->
                 drawLine(ac, o, Offset(o.x + s.x * l, o.y), 1.5f * d); drawLine(ac, o, Offset(o.x, o.y + s.y * l), 1.5f * d)

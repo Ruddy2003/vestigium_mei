@@ -53,6 +53,7 @@ object Sello {
 fun textoSello(tema: TemaId): String = when (tema) {
     TemaId.ROMANO -> "DIES SIGNATVS"
     TemaId.CIBER -> "> día.commit() ✓"
+    TemaId.NEON -> "> día.commit() ✓"
     TemaId.HELENO -> "ΕΣΦΡΑΓΙΣΘΗ"
     TemaId.MEDIEVAL -> "Sellado y asentado"
     TemaId.DISTOPIA -> "DECLARACIÓN ARCHIVADA"
@@ -97,6 +98,7 @@ fun CapaHuella() {
 fun recursosHuella(t: TemaId): Pair<Int, Int> = when (t) {
     TemaId.ROMANO -> R.drawable.huella_fondo_romano to R.drawable.huella_romano
     TemaId.CIBER -> R.drawable.huella_fondo_ciber to R.drawable.huella_ciber
+    TemaId.NEON -> R.drawable.huella_fondo_neon to R.drawable.huella_neon
     TemaId.HELENO -> R.drawable.huella_fondo_heleno to R.drawable.huella_heleno
     TemaId.MEDIEVAL -> R.drawable.huella_fondo_medieval to R.drawable.huella_medieval
     TemaId.DISTOPIA -> R.drawable.huella_fondo_distopia to R.drawable.huella_distopia

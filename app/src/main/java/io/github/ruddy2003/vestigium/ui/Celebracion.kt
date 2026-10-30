@@ -151,6 +151,7 @@ fun CapaLogro() {
 private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.ROMANO -> listOf("ex aere", "ex argento", "ex auro", "triumphalis")
     TemaId.CIBER -> listOf("rango: usuario", "rango: operador", "rango: admin", "rango: root")
+    TemaId.NEON -> listOf("rango: usuario", "rango: operador", "rango: admin", "rango: root")
     TemaId.HELENO -> listOf("χάλκεος", "ἀργύρεος", "χρύσεος", "ἀθάνατος")
     TemaId.MEDIEVAL -> listOf("en tinta", "en minio", "en pan de oro", "códice purpúreo")
     TemaId.DISTOPIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
@@ -235,6 +236,24 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             drawLine(cs.primary.copy(alpha = 0.16f), nudo, Offset(nudo.x + 18f * u, nudo.y + 28f * u), 3f * u, cap = StrokeCap.Round)
         }
         TemaId.CIBER -> {
+            // Haces de fósforo: renglones de luz que se acortan hacia arriba y abajo, un barrido que baja y escuadras de selección.
+            val fosforo = cs.primary
+            for (k in -22..22) {
+                val f = 1f - abs(k) / 23f
+                val y = c.y + k * 8f * u
+                val mitad = size.width * 0.5f * f
+                drawLine(fosforo.copy(alpha = 0.08f * f), Offset(c.x - mitad, y), Offset(c.x + mitad, y), 1.4f * u)
+            }
+            val barrido = (giro / 60f) % 1f * size.height
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, fosforo.copy(alpha = 0.10f)), startY = barrido - 40f * u, endY = barrido), Offset(0f, barrido - 40f * u), Size(size.width, 40f * u))
+            val q = m * 0.34f; val l = 22f * u
+            listOf(Offset(-1f, -1f), Offset(1f, -1f), Offset(-1f, 1f), Offset(1f, 1f)).forEach { d ->
+                val o = Offset(c.x + d.x * q, c.y + d.y * q)
+                drawLine(fosforo.copy(alpha = 0.35f), o, Offset(o.x - d.x * l, o.y), 2f * u)
+                drawLine(fosforo.copy(alpha = 0.35f), o, Offset(o.x, o.y - d.y * l), 2f * u)
+            }
+        }
+        TemaId.NEON -> {
             // Haces de fósforo: renglones de luz que se acortan hacia arriba y abajo, un barrido que baja y escuadras de selección.
             val fosforo = cs.primary
             for (k in -22..22) {

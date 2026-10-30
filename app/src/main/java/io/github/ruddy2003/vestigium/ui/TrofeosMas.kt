@@ -48,6 +48,8 @@ object TrofeosMas {
             "Cultura" to "Documento censurado", "Gente" to "Credencial", "Constancia" to "Sello de goma", "Curiosos" to "Cámara de vigilancia", "Tuyos" to "Altavoz"),
         TemaId.CIBER to mapOf("Diario" to "Registro del sistema", "Mundo" to "Mapa de la red", "Cuerpo" to "Monitor de pulso", "Mente" to "Árbol de directorios",
             "Cultura" to "Disquete", "Gente" to "Canal de charla", "Constancia" to "Tiempo en línea", "Curiosos" to "Laberinto ASCII", "Tuyos" to "Llave de raíz"),
+        TemaId.NEON to mapOf("Diario" to "Registro del sistema", "Mundo" to "Mapa de la red", "Cuerpo" to "Monitor de pulso", "Mente" to "Árbol de directorios",
+            "Cultura" to "Disquete", "Gente" to "Canal de charla", "Constancia" to "Tiempo en línea", "Curiosos" to "Laberinto ASCII", "Tuyos" to "Llave de raíz"),
         TemaId.REFUGIO to mapOf("Diario" to "Placa del cronista", "Mundo" to "Medalla de la superficie", "Cuerpo" to "Insignia de salud", "Mente" to "Medalla del átomo",
             "Cultura" to "Disco de vinilo", "Gente" to "Placa de la puerta", "Constancia" to "Engrane de la compuerta", "Curiosos" to "Contador Geiger", "Tuyos" to "Lata de conservas"),
         TemaId.ORDEN to mapOf("Diario" to "Placa del juramento", "Mundo" to "Estandarte de campaña", "Cuerpo" to "Guantelete", "Mente" to "Calibre de acero",
@@ -127,6 +129,16 @@ object TrofeosMas {
                 }
             }
             TemaId.CIBER -> {
+                // Una unidad de rack: chapa negra con rejilla de ventilación y sus luces de estado.
+                val c = if (p.hecho) Color(0xFF111925) else ped
+                drawRect(piedra(c), Offset(w * 0.14f, h * 0.79f), Size(w * 0.72f, h * 0.16f))
+                if (p.hecho) {
+                    drawRect(Color(0xFF15404A), Offset(w * 0.14f, h * 0.79f), Size(w * 0.72f, h * 0.16f), style = Stroke(w * 0.008f))
+                    for (k in 0 until 8) drawLine(Color(0xFF05070B), Offset(w * (0.2f + k * 0.035f), h * 0.82f), Offset(w * (0.2f + k * 0.035f), h * 0.92f), w * 0.014f)
+                    for (k in 0 until 4) drawCircle(if (k == 2) Color(0xFF86A0B3) else Color(0xFF00E5FF), w * 0.016f, Offset(w * (0.6f + k * 0.06f), h * 0.87f))
+                }
+            }
+            TemaId.NEON -> {
                 // Una unidad de rack: chapa negra con rejilla de ventilación y sus luces de estado.
                 val c = if (p.hecho) Color(0xFF111925) else ped
                 drawRect(piedra(c), Offset(w * 0.14f, h * 0.79f), Size(w * 0.72f, h * 0.16f))

@@ -644,6 +644,7 @@ object Frases {
     fun de(tema: TemaId): List<Frase> = when (tema) {
         TemaId.ROMANO -> ROMANO
         TemaId.CIBER -> CIBER
+        TemaId.NEON -> NEON
         TemaId.HELENO -> HELENO
         TemaId.MEDIEVAL -> MEDIEVAL
         TemaId.DISTOPIA -> DISTOPIA
@@ -675,6 +676,7 @@ object Frases {
     fun rotulo(tema: TemaId = Estilo.tema): String = when (tema) {
         TemaId.ROMANO -> "SENTENTIA DIEI"
         TemaId.CIBER -> "> motd"
+        TemaId.NEON -> "> motd"
         TemaId.HELENO -> "ΓΝΩΜΗ ΤΗΣ ΗΜΕΡΑΣ"
         TemaId.MEDIEVAL -> "Sentencia del día"
         TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"

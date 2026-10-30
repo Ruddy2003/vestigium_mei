@@ -74,6 +74,7 @@ object Musica {
     fun presentacion(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.s_romano_presentacion
         TemaId.CIBER -> R.raw.s_ciber_presentacion
+        TemaId.NEON -> R.raw.s_neon_presentacion
         TemaId.HELENO -> R.raw.s_heleno_presentacion
         TemaId.MEDIEVAL -> R.raw.s_medieval_presentacion
         TemaId.DISTOPIA -> R.raw.s_distopia_presentacion
@@ -98,6 +99,7 @@ object Musica {
     fun anual(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.s_romano_anual
         TemaId.CIBER -> R.raw.s_ciber_anual
+        TemaId.NEON -> R.raw.s_neon_anual
         TemaId.HELENO -> R.raw.s_heleno_anual
         TemaId.MEDIEVAL -> R.raw.s_medieval_anual
         TemaId.DISTOPIA -> R.raw.s_distopia_anual
@@ -121,6 +123,7 @@ object Musica {
     fun llamada(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_llamada
         TemaId.CIBER -> R.raw.t_ciber_llamada
+        TemaId.NEON -> R.raw.t_neon_llamada
         TemaId.HELENO -> R.raw.t_heleno_llamada
         TemaId.MEDIEVAL -> R.raw.t_medieval_llamada
         TemaId.DISTOPIA -> R.raw.t_distopia_llamada
@@ -144,6 +147,7 @@ object Musica {
     fun notificacion(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_notificacion
         TemaId.CIBER -> R.raw.t_ciber_notificacion
+        TemaId.NEON -> R.raw.t_neon_notificacion
         TemaId.HELENO -> R.raw.t_heleno_notificacion
         TemaId.MEDIEVAL -> R.raw.t_medieval_notificacion
         TemaId.DISTOPIA -> R.raw.t_distopia_notificacion
@@ -292,6 +296,18 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
     }
     // Consola: una ventana de terminal con su barra, el emblema como ícono del proceso y la frase como salida.
     TemaId.CIBER -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "> " + t.nombre.lowercase() + "_", "[ pulsa para continuar ]_",
+        comillas = "> " to "", emblema = 84.dp, arriba = 44.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.primary
+        drawRect(c.copy(alpha = 0.7f), Offset.Zero, size, style = Stroke(u * 1.2f))
+        drawRect(c.copy(alpha = 0.16f), Offset.Zero, Size(w, u * 20))
+        drawLine(c.copy(alpha = 0.7f), Offset(0f, u * 20), Offset(w, u * 20), u)
+        for (i in 0 until 3) drawRect(if (i == 0) e.secondary else c.copy(alpha = 0.6f), Offset(w - u * (16 + i * 14f), u * 6), Size(u * 8, u * 8))
+        drawRect(c.copy(alpha = 0.6f), Offset(u * 8, u * 7), Size(u * 40, u * 6))
+        var y = u * 24
+        while (y < h) { drawLine(c.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), u * 0.8f); y += u * 4 }
+    }
+    TemaId.NEON -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "> " + t.nombre.lowercase() + "_", "[ pulsa para continuar ]_",
         comillas = "> " to "", emblema = 84.dp, arriba = 44.dp) { e ->
         val u = 1.dp.toPx(); val w = size.width; val h = size.height
         val c = e.primary

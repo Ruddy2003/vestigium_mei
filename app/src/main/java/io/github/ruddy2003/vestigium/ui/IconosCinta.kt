@@ -49,6 +49,10 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
             moveTo(w * 0.2f, h * 0.06f); lineTo(w * 0.04f, h * 0.06f); lineTo(w * 0.04f, h * 0.94f); lineTo(w * 0.2f, h * 0.94f)
             moveTo(w * 0.8f, h * 0.06f); lineTo(w * 0.96f, h * 0.06f); lineTo(w * 0.96f, h * 0.94f); lineTo(w * 0.8f, h * 0.94f)
         }, c, style = Stroke(g))
+        TemaId.NEON -> drawPath(Path().apply {
+            moveTo(w * 0.2f, h * 0.06f); lineTo(w * 0.04f, h * 0.06f); lineTo(w * 0.04f, h * 0.94f); lineTo(w * 0.2f, h * 0.94f)
+            moveTo(w * 0.8f, h * 0.06f); lineTo(w * 0.96f, h * 0.06f); lineTo(w * 0.96f, h * 0.94f); lineTo(w * 0.8f, h * 0.94f)
+        }, c, style = Stroke(g))
         // Templo: frontón arriba y gradas abajo.
         TemaId.HELENO -> {
             drawPath(Path().apply { moveTo(w * 0.04f, h * 0.19f); lineTo(w * 0.5f, h * 0.02f); lineTo(w * 0.96f, h * 0.19f); close() }, c, style = Stroke(g * 0.8f))
@@ -226,6 +230,11 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
         }
         // Un píxel de fósforo encendido, con su halo y la raya del barrido.
         TemaId.CIBER -> {
+            drawRect(color.copy(alpha = color.alpha * 0.3f), Offset(c.x - r, c.y - r), Size(r * 2, r * 2))
+            drawRect(color, Offset(c.x - r * 0.72f, c.y - r * 0.72f), Size(r * 1.44f, r * 1.44f))
+            drawLine(hueco.copy(alpha = 0.5f), Offset(c.x - r * 0.72f, c.y), Offset(c.x + r * 0.72f, c.y), r * 0.14f)
+        }
+        TemaId.NEON -> {
             drawRect(color.copy(alpha = color.alpha * 0.3f), Offset(c.x - r, c.y - r), Size(r * 2, r * 2))
             drawRect(color, Offset(c.x - r * 0.72f, c.y - r * 0.72f), Size(r * 1.44f, r * 1.44f))
             drawLine(hueco.copy(alpha = 0.5f), Offset(c.x - r * 0.72f, c.y), Offset(c.x + r * 0.72f, c.y), r * 0.14f)

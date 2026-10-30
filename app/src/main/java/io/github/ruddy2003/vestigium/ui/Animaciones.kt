@@ -89,6 +89,7 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.ROMANO -> MatizMovimiento(BarridoTema.ARCO, 760, FastOutSlowInEasing, 0f, 18f, 1f, 420, 55, FastOutSlowInEasing, 1f, 0.6f, 700f)
     // Rejilla de píxeles que se enciende a saltos; nada rebota.
     TemaId.CIBER -> MatizMovimiento(BarridoTema.PIXELES, 640, SALTOS_CONSOLA, 0f, 6f, 1f, 260, 40, SALTOS_RENGLON, 0.8f, 1f, 2500f)
+    TemaId.NEON -> MatizMovimiento(BarridoTema.PIXELES, 640, SALTOS_CONSOLA, 0f, 6f, 1f, 260, 40, SALTOS_RENGLON, 0.8f, 1f, 2500f)
     // El sol de Vergina, de dieciséis rayos.
     TemaId.HELENO -> MatizMovimiento(BarridoTema.SOL, 820, FastOutSlowInEasing, 0f, 14f, 0.98f, 480, 60, FastOutSlowInEasing, 1f, 0.5f, 800f)
     // Rombo de miniatura; todo lento, a paso de pluma.
@@ -195,6 +196,7 @@ internal enum class VivoTema(val periodo: Int) {
 internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.ROMANO -> VivoTema.LUCERNA            // chispas que suben de una lucerna de aceite
     TemaId.CIBER -> VivoTema.FOSFORO             // columnas de fósforo con el cursor por cabeza
+    TemaId.NEON -> VivoTema.FOSFORO             // columnas de fósforo con el cursor por cabeza
     TemaId.HELENO -> VivoTema.OLIVO              // hojas de olivo que bajan girando
     TemaId.MEDIEVAL -> VivoTema.RAYO_ORO         // un rayo de luz con polvo de oro suspendido
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos

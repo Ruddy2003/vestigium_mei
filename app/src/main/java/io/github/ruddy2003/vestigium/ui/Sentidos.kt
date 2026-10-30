@@ -60,6 +60,13 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(TICK, 1f), g(TICK, 1f, 15)); Evento.ERROR -> listOf(g(TICK_GRAVE, 1f), g(TICK_GRAVE, 1f, 25), g(TICK_GRAVE, 1f, 25), g(BAJA, 0.6f, 20))
             Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE, 0.8f), g(CLICK, 1f, 10), g(TICK, 1f, 40), g(TICK, 1f, 30))
         }
+        TemaId.NEON -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 1f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.8f), g(TICK_GRAVE, 0.8f, 25))
+            Evento.GUARDAR -> listOf(g(TICK, 1f), g(TICK, 1f, 20), g(CLICK, 0.8f, 20))
+            Evento.ELEGIR -> listOf(g(TICK, 0.8f)); Evento.ABRIR -> listOf(g(SUBE, 0.5f), g(TICK, 0.7f, 30))
+            Evento.CAMBIO -> listOf(g(TICK, 1f), g(TICK, 1f, 15)); Evento.ERROR -> listOf(g(TICK_GRAVE, 1f), g(TICK_GRAVE, 1f, 25), g(TICK_GRAVE, 1f, 25), g(BAJA, 0.6f, 20))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE, 0.8f), g(CLICK, 1f, 10), g(TICK, 1f, 40), g(TICK, 1f, 30))
+        }
         // Cuerda de lira y el sol que gira.
         TemaId.HELENO -> when (e) {
             Evento.TOQUE -> listOf(g(TICK, 0.7f)); Evento.PASAR -> listOf(g(BAJA, 0.5f))
@@ -273,6 +280,7 @@ object Sentidos {
     private fun sonidos(tema: TemaId): IntArray = when (tema) {
         TemaId.ROMANO -> intArrayOf(R.raw.s_romano_toque, R.raw.s_romano_guardar, R.raw.s_romano_logro, R.raw.s_romano_pasar, R.raw.s_romano_elegir, R.raw.s_romano_abrir, R.raw.s_romano_tema, R.raw.s_romano_error, R.raw.s_romano_cambio, R.raw.s_tecla_romano, R.raw.s_rascar_romano)
         TemaId.CIBER -> intArrayOf(R.raw.s_ciber_toque, R.raw.s_ciber_guardar, R.raw.s_ciber_logro, R.raw.s_ciber_pasar, R.raw.s_ciber_elegir, R.raw.s_ciber_abrir, R.raw.s_ciber_tema, R.raw.s_ciber_error, R.raw.s_ciber_cambio, R.raw.s_tecla_ciber, R.raw.s_rascar_ciber)
+        TemaId.NEON -> intArrayOf(R.raw.s_neon_toque, R.raw.s_neon_guardar, R.raw.s_neon_logro, R.raw.s_neon_pasar, R.raw.s_neon_elegir, R.raw.s_neon_abrir, R.raw.s_neon_tema, R.raw.s_neon_error, R.raw.s_neon_cambio, R.raw.s_tecla_neon, R.raw.s_rascar_neon)
         TemaId.HELENO -> intArrayOf(R.raw.s_heleno_toque, R.raw.s_heleno_guardar, R.raw.s_heleno_logro, R.raw.s_heleno_pasar, R.raw.s_heleno_elegir, R.raw.s_heleno_abrir, R.raw.s_heleno_tema, R.raw.s_heleno_error, R.raw.s_heleno_cambio, R.raw.s_tecla_heleno, R.raw.s_rascar_heleno)
         TemaId.MEDIEVAL -> intArrayOf(R.raw.s_medieval_toque, R.raw.s_medieval_guardar, R.raw.s_medieval_logro, R.raw.s_medieval_pasar, R.raw.s_medieval_elegir, R.raw.s_medieval_abrir, R.raw.s_medieval_tema, R.raw.s_medieval_error, R.raw.s_medieval_cambio, R.raw.s_tecla_medieval, R.raw.s_rascar_medieval)
         TemaId.DISTOPIA -> intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro, R.raw.s_distopia_pasar, R.raw.s_distopia_elegir, R.raw.s_distopia_abrir, R.raw.s_distopia_tema, R.raw.s_distopia_error, R.raw.s_distopia_cambio, R.raw.s_tecla_distopia, R.raw.s_rascar_distopia)
@@ -339,6 +347,7 @@ object Sentidos {
         TemaId.ROMANO -> Afinacion(st(0, 4, 7, 12), st(-5, 0, 5, 7), pasarRuido = true, elegirRuido = false)
         // Mi menor, en blips.
         TemaId.CIBER -> Afinacion(st(-5, 0, 3, 7), st(-5, 0, 3, 7), pasarRuido = false, elegirRuido = false)
+        TemaId.NEON -> Afinacion(st(-5, 0, 3, 7), st(-5, 0, 3, 7), pasarRuido = false, elegirRuido = false)
         // La pentatónico de la lira.
         TemaId.HELENO -> Afinacion(st(0, 2, 4, 7, 9), st(-5, 0, 2, 7), pasarRuido = false, elegirRuido = false)
         // Re dórico; la pluma solo da pasos cortos del modo.
@@ -456,6 +465,7 @@ object Sentidos {
     internal fun patronRascar(tema: TemaId): List<Golpe> = when (tema) {
         TemaId.ROMANO -> pasadas(TICK, 0.5f, 60, 3)   // oro imperial, blando
         TemaId.CIBER -> pasadas(TICK, 0.9f, 30, 5)   // la placa de consola
+        TemaId.NEON -> pasadas(TICK, 0.9f, 30, 5)   // la placa de consola
         TemaId.HELENO -> pasadas(TICK, 0.55f, 55, 3)   // electro
         TemaId.MEDIEVAL -> pasadas(TICK_GRAVE, 0.5f, 70, 3)   // pan de oro
         TemaId.DISTOPIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio

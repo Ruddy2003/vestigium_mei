@@ -130,6 +130,7 @@ fun soporte(t: TemaId): Soporte = when (t) {
     TemaId.NAVIDAD -> Soporte.SOBRE
     TemaId.DISTOPIA -> Soporte.CARPETA
     TemaId.CIBER -> Soporte.PANTALLA
+    TemaId.NEON -> Soporte.PANTALLA
     TemaId.REFUGIO -> Soporte.PANTALLA
     TemaId.ESPACIO -> Soporte.PANTALLA
 }
@@ -159,6 +160,7 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.NAVIDAD -> Materia(c(0xFFB71C1C), c(0xFF7A1010), c(0xFFD84343), c(0xFFC9A227), c(0xFF1B5E20), c(0xFFFBF6EC), c(0xFF1E2A22), extra = c(0xFFFF5252), textoCuerpo = c(0xFFFBF6EC))
     TemaId.DISTOPIA -> Materia(c(0xFFD8C08A), c(0xFFA88F58), c(0xFFE8D4A4), c(0xFFC8102E), c(0xFF141414), c(0xFFF2EFE6), c(0xFF141414))
     TemaId.CIBER -> Materia(c(0xFF0B121C), c(0xFF05080E), c(0xFF15202E), c(0xFF00E5FF), c(0xFFFF2E88), c(0xFF05080E), c(0xFFD6F3F7), extra = c(0xFFF2C94C))
+    TemaId.NEON -> Materia(c(0xFF0B121C), c(0xFF05080E), c(0xFF15202E), c(0xFF00E5FF), c(0xFFFF2E88), c(0xFF05080E), c(0xFFD6F3F7), extra = c(0xFFF2C94C))
     TemaId.REFUGIO -> Materia(c(0xFFC9C2A6), c(0xFF8E886F), c(0xFFE2DCC4), c(0xFF3DFF7F), c(0xFF2F8F4E), c(0xFF031A0B), c(0xFF7CF098))
     // Cuaderno de quejas: tapa de cartón azul, cinta tricolor y escarapela.
     TemaId.REVOLUCION -> Materia(c(0xFF2F4A7A), c(0xFF1A2A4A), c(0xFF4A6699), c(0xFFB22234), c(0xFFF0EADB), c(0xFFF2ECDD), c(0xFF1C1A17), extra = c(0xFFB22234))
@@ -191,6 +193,7 @@ private fun nocheDe(t: TemaId): NocheTema = when (t) {
     // La lucerna: luz de aceite sobre el pórfido de noche.
     TemaId.ROMANO -> NocheTema(c(0xFF1A1426), c(0xFFE9B860), 0.62f, 0.8f, c(0xFFF2DDB0))
     TemaId.CIBER -> NocheTema(c(0xFF0A0614), c(0xFFFF2E88), 0.8f, 0.9f, c(0xFFF0DAF7))
+    TemaId.NEON -> NocheTema(c(0xFF0A0614), c(0xFFFF2E88), 0.8f, 0.9f, c(0xFFF0DAF7))
     // Selene en plata sobre el Egeo.
     TemaId.HELENO -> NocheTema(c(0xFF0E1A33), c(0xFFDCE4F2), 0.7f, 0.86f, c(0xFFE4EAF6))
     // La vela del scriptorium.
@@ -244,6 +247,7 @@ fun materiaNoche(t: TemaId): Materia {
         // El fósforo verde se vuelve ámbar, como una pantalla en reposo.
         TemaId.REFUGIO -> Materia(c(0xFF6E6A58), c(0xFF3E3B30), c(0xFF8E886F), c(0xFFFFB23F), c(0xFFB3741E), c(0xFF1A1003), c(0xFFFFC870))
         TemaId.CIBER -> Materia(c(0xFF120B1F), c(0xFF07040D), c(0xFF22163A), c(0xFFFF2E88), c(0xFF9B5CFF), c(0xFF07040D), c(0xFFF0DAF7), extra = c(0xFF00E5FF))
+        TemaId.NEON -> Materia(c(0xFF120B1F), c(0xFF07040D), c(0xFF22163A), c(0xFFFF2E88), c(0xFF9B5CFF), c(0xFF07040D), c(0xFFF0DAF7), extra = c(0xFF00E5FF))
         TemaId.ESPACIO -> Materia(c(0xFF120A2A), c(0xFF06040F), c(0xFF241645), c(0xFFC59BFF), c(0xFF8AB4FF), c(0xFF06040F), c(0xFFECE6FA), extra = c(0xFFFF8AD8))
         TemaId.ROMANO -> materiaTenida(m, n)
         TemaId.HELENO -> materiaTenida(m, n)
@@ -276,6 +280,7 @@ fun paginaNoche(t: TemaId): Pagina {
     return when (t) {
         TemaId.REFUGIO -> Pagina(null, c(0xFF1A1003), c(0xFFFFC870), c(0xFFB3741E), c(0xFFFFB23F), c(0xFF7CF098), p.texto, p.tam, p.interlinea, true, p.rayas)
         TemaId.CIBER -> Pagina(null, c(0xFF0A0614), c(0xFFF0DAF7), c(0xFF7A5B8C), c(0xFFFF2E88), c(0xFF00E5FF), p.texto, p.tam, p.interlinea, true, p.rayas)
+        TemaId.NEON -> Pagina(null, c(0xFF0A0614), c(0xFFF0DAF7), c(0xFF7A5B8C), c(0xFFFF2E88), c(0xFF00E5FF), p.texto, p.tam, p.interlinea, true, p.rayas)
         TemaId.ESPACIO -> Pagina(null, c(0xFF07041A), c(0xFFECE6FA), c(0xFF8A7BB0), c(0xFFC59BFF), c(0xFFFF8AD8), p.texto, p.tam, p.interlinea, true, p.rayas)
         TemaId.ROMANO -> paginaTenida(p, n)
         TemaId.HELENO -> paginaTenida(p, n)
@@ -302,6 +307,7 @@ fun paginaNoche(t: TemaId): Pagina {
 fun rotuloSueno(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "SOMNIVM"
     TemaId.CIBER -> "~/suenos/"
+    TemaId.NEON -> "~/suenos/"
     TemaId.HELENO -> "ΟΝΕΙΡΟΣ · sueño"
     TemaId.MEDIEVAL -> "Visión de la noche"
     TemaId.DISTOPIA -> "INFORME DE ACTIVIDAD ONÍRICA"
@@ -327,6 +333,7 @@ fun rotuloSueno(t: TemaId): String = when (t) {
 fun colofonSueno(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "· EVIGILAVI ·"
     TemaId.CIBER -> "-- wake --"
+    TemaId.NEON -> "-- wake --"
     TemaId.HELENO -> "ἐξηγέρθην · desperté"
     TemaId.MEDIEVAL -> "Y en esto desperté."
     TemaId.DISTOPIA -> "FIN DEL INFORME NOCTURNO"
@@ -407,6 +414,7 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
         when (t) {
             TemaId.ROMANO -> drawCircle(col, r, o)
             TemaId.CIBER -> drawRect(col, o, Size(r * 1.6f, r * 1.6f))
+            TemaId.NEON -> drawRect(col, o, Size(r * 1.6f, r * 1.6f))
             TemaId.HELENO -> {
                 drawCircle(col, r, o)
                 if (r > max * 0.92f) { drawLine(col, o - Offset(r * 2.8f, 0f), o + Offset(r * 2.8f, 0f), 0.8f); drawLine(col, o - Offset(0f, r * 2.8f), o + Offset(0f, r * 2.8f), 0.8f) }
@@ -444,6 +452,19 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
         TemaId.ROMANO -> { drawCircle(luna.copy(alpha = 0.18f), r * 1.45f, ce); drawCircle(luna, r * 0.9f, ce); drawCircle(n.cielo.copy(alpha = 0.18f), r * 0.25f, ce + Offset(-r * 0.25f, -r * 0.1f)) }
         // Una media luna hecha de cuadritos, como en una consola.
         TemaId.CIBER -> {
+            val paso = r / 3.5f; var y = -r
+            while (y <= r) {
+                var x = -r
+                while (x <= r) {
+                    val dentro = x * x + y * y <= r * r
+                    val fuera = (x - r * 0.48f) * (x - r * 0.48f) + (y + r * 0.22f) * (y + r * 0.22f) > r * 0.88f * r * 0.88f
+                    if (dentro && fuera) drawRect(luna, Offset(ce.x + x - paso * 0.45f, ce.y + y - paso * 0.45f), Size(paso * 0.9f, paso * 0.9f))
+                    x += paso
+                }
+                y += paso
+            }
+        }
+        TemaId.NEON -> {
             val paso = r / 3.5f; var y = -r
             while (y <= r) {
                 var x = -r
@@ -592,6 +613,7 @@ fun CieloNoche(modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, conten
 fun textoGuardar(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "SIGNARE"
     TemaId.CIBER -> "git commit"
+    TemaId.NEON -> "git commit"
     TemaId.HELENO -> "γράφε · anotar"
     TemaId.MEDIEVAL -> "rubricar"
     TemaId.DISTOPIA -> "ARCHIVAR"
@@ -617,6 +639,7 @@ fun textoGuardar(t: TemaId): String = when (t) {
 fun colofon(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "· FINIS ·"
     TemaId.CIBER -> "-- EOF --"
+    TemaId.NEON -> "-- EOF --"
     TemaId.HELENO -> "ΤΕΛΟΣ"
     TemaId.MEDIEVAL -> "Aquí se acaba el folio."
     TemaId.DISTOPIA -> "FIN DE LA DECLARACIÓN"
@@ -642,6 +665,7 @@ fun colofon(t: TemaId): String = when (t) {
 private fun pistaDia(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "toca para desenrollar el volumen"
     TemaId.CIBER -> "> toca para abrir el editor_"
+    TemaId.NEON -> "> toca para abrir el editor_"
     TemaId.HELENO -> "toca para desplegar el rollo"
     TemaId.MEDIEVAL -> "toca para abrir el códice"
     TemaId.DISTOPIA -> "TOCA PARA ABRIR EL EXPEDIENTE"
@@ -667,6 +691,7 @@ private fun pistaDia(t: TemaId): String = when (t) {
 private fun pistaNoche(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "toca para contar el somnium"
     TemaId.CIBER -> "> toca para registrar el sueño_"
+    TemaId.NEON -> "> toca para registrar el sueño_"
     TemaId.HELENO -> "toca para contar lo que trajo Hipnos"
     TemaId.MEDIEVAL -> "toca para asentar la visión de la noche"
     TemaId.DISTOPIA -> "TOCA PARA DECLARAR LO SOÑADO"
@@ -692,6 +717,7 @@ private fun pistaNoche(t: TemaId): String = when (t) {
 private fun textoVacio(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "Nihil scriptum: este día quedó en blanco."
     TemaId.CIBER -> "// archivo vacío: nada escrito este día"
+    TemaId.NEON -> "// archivo vacío: nada escrito este día"
     TemaId.HELENO -> "Ἄγραφος: nada escrito este día."
     TemaId.MEDIEVAL -> "Folio en blanco: nada se asentó este día."
     TemaId.DISTOPIA -> "SIN DECLARACIÓN REGISTRADA PARA ESTA JORNADA."
@@ -717,6 +743,7 @@ private fun textoVacio(t: TemaId): String = when (t) {
 private fun textoSinSueno(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "Nullum somnium: no anotaste ningún sueño esa noche."
     TemaId.CIBER -> "// sin sueños registrados esa noche"
+    TemaId.NEON -> "// sin sueños registrados esa noche"
     TemaId.HELENO -> "Hipnos no dejó nada escrito esa noche."
     TemaId.MEDIEVAL -> "Ninguna visión se asentó esa noche."
     TemaId.DISTOPIA -> "SIN ACTIVIDAD ONÍRICA DECLARADA."
@@ -742,6 +769,7 @@ private fun textoSinSueno(t: TemaId): String = when (t) {
 private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
     TemaId.ROMANO -> "Optimum — " to "Pessimum — "
     TemaId.CIBER -> "// mejor: " to "// peor: "
+    TemaId.NEON -> "// mejor: " to "// peor: "
     TemaId.HELENO -> "Τὸ ἄριστον — " to "Τὸ χείριστον — "
     TemaId.MEDIEVAL -> "Lo bueno del día — " to "Lo amargo del día — "
     TemaId.DISTOPIA -> "MÉRITO — " to "FALTA — "
@@ -767,6 +795,7 @@ private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
 private fun pistaEscribir(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "Quid hodie? ¿Cómo fue el día?"
     TemaId.CIBER -> "// ¿cómo fue el día?"
+    TemaId.NEON -> "// ¿cómo fue el día?"
     TemaId.HELENO -> "Τί ἐγένετο; ¿Qué pasó hoy?"
     TemaId.MEDIEVAL -> "Asiéntese aquí lo acontecido en este día…"
     TemaId.DISTOPIA -> "DECLARE LAS ACTIVIDADES DE LA JORNADA."
@@ -792,6 +821,7 @@ private fun pistaEscribir(t: TemaId): String = when (t) {
 private fun pistaSonar(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "Quid somniavisti? ¿Qué soñaste?"
     TemaId.CIBER -> "// ¿qué soñaste?"
+    TemaId.NEON -> "// ¿qué soñaste?"
     TemaId.HELENO -> "¿Qué te mostró Hipnos esta noche?"
     TemaId.MEDIEVAL -> "Asiéntese la visión de la noche…"
     TemaId.DISTOPIA -> "DECLARE LA ACTIVIDAD ONÍRICA."
@@ -914,6 +944,9 @@ private fun formaObjeto(t: TemaId, m: Materia, e: ColorScheme, noche: Boolean, f
                 RotuloObjeto("EXPEDIENTE", LetraExtra.oswald, 11f, if (noche) LUNA else m.detalle, 0.07f, 0.035f),
             ))
         TemaId.CIBER -> FormaObjeto(dibujo = { terminalCiber(m) }, caja = listOf(0.05f, 0.22f, 0.05f, 0.06f), pista = pista, letra = Letra.codigo, tinta = m.tinta,
+            fecha = m.acento, tam = 13f, brilla = true, letraFecha = Letra.codigo, letraPie = Letra.codigo, palabras = { "[$it palabras]" },
+            cabecera = if (noche) "$ nano ~/suenos/$fecha.dream" else "$ nano ~/diario/$fecha.log")
+        TemaId.NEON -> FormaObjeto(dibujo = { terminalNeon(m) }, caja = listOf(0.05f, 0.22f, 0.05f, 0.06f), pista = pista, letra = Letra.codigo, tinta = m.tinta,
             fecha = m.acento, tam = 13f, brilla = true, letraFecha = Letra.codigo, letraPie = Letra.codigo, palabras = { "[$it palabras]" },
             cabecera = if (noche) "$ nano ~/suenos/$fecha.dream" else "$ nano ~/diario/$fecha.log")
         TemaId.REFUGIO -> FormaObjeto(dibujo = { monitorRefugio(m) }, caja = listOf(0.1f, 0.13f, 0.1f, 0.2f), pista = pista, letra = LetraExtra.vt323, tinta = m.tinta,
@@ -1405,6 +1438,18 @@ private fun DrawScope.terminalCiber(m: Materia) {
     drawLine(m.detalle.copy(alpha = 0.5f), Offset(3f, h * 0.15f), Offset(w * 0.4f, h * 0.15f), 2f)
 }
 
+/** Ventana de terminal con su barra de título y su barrido tenue. */
+private fun DrawScope.terminalNeon(m: Materia) {
+    val w = size.width; val h = size.height
+    drawRoundRect(m.cuerpo, Offset.Zero, size, CornerRadius(10f))
+    drawRoundRect(m.brillo, Offset.Zero, Size(w, h * 0.15f), CornerRadius(10f))
+    drawRect(m.brillo, Offset(0f, h * 0.08f), Size(w, h * 0.07f))
+    listOf(m.detalle, m.extra, m.acento).forEachIndexed { i, col -> drawCircle(col, h * 0.03f, Offset(w * 0.03f + i * h * 0.09f, h * 0.075f)) }
+    var y = h * 0.15f; while (y < h) { drawLine(m.acento.copy(alpha = 0.04f), Offset(0f, y), Offset(w, y), 1f); y += 4f }
+    drawRoundRect(m.acento.copy(alpha = 0.7f), Offset.Zero, size, CornerRadius(10f), style = Stroke(2f))
+    drawLine(m.detalle.copy(alpha = 0.5f), Offset(3f, h * 0.15f), Offset(w * 0.4f, h * 0.15f), 2f)
+}
+
 /** La tableta de la sala de control: carcasa con la pinza de la bitácora, barra de estado con luces, el parche de la misión y la telemetría al pie. */
 private fun DrawScope.tabletaControl(m: Materia) {
     val w = size.width; val h = size.height
@@ -1544,6 +1589,7 @@ fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, noche: Boolea
         TemaId.NAVIDAD -> Cartas(entradas, tema, m, noche, texto, conSonido) { e -> cartaNavidad(tema, m, e, noche) }
         TemaId.DISTOPIA -> Expedientes(entradas, m, noche, texto, conSonido)
         TemaId.CIBER -> Logs(entradas, m, noche, texto, conSonido, refugio = false)
+        TemaId.NEON -> Logs(entradas, m, noche, texto, conSonido, refugio = false)
         TemaId.REFUGIO -> Logs(entradas, m, noche, texto, conSonido, refugio = true)
         TemaId.ESPACIO -> RegistroDeVuelo(entradas, m, noche, texto, conSonido)
     }
@@ -1915,6 +1961,7 @@ fun pagina(t: TemaId): Pagina = when (t) {
     // La declaración, tecleada.
     TemaId.DISTOPIA -> Pagina(R.drawable.papel_distopia, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.terminal, 15.5f, 24f, false, Rayas.RENGLONES)
     TemaId.CIBER -> Pagina(R.drawable.papel_ciber, c(0xFF05080E), c(0xFFD6F3F7), c(0xFF4F6B78), c(0xFF00E5FF), c(0xFFFF2E88), Letra.codigo, 15f, 23f, true, Rayas.NUMEROS)
+    TemaId.NEON -> Pagina(R.drawable.papel_neon, c(0xFF05080E), c(0xFFD6F3F7), c(0xFF4F6B78), c(0xFF00E5FF), c(0xFFFF2E88), Letra.codigo, 15f, 23f, true, Rayas.NUMEROS)
     TemaId.REFUGIO -> Pagina(R.drawable.papel_refugio, c(0xFF031A0B), c(0xFF7CF098), c(0xFF2F8F4E), c(0xFF3DFF7F), c(0xFFFFB23F), LetraExtra.vt323, 22f, 26f, true, Rayas.NADA)
     TemaId.REVOLUCION -> Pagina(R.drawable.papel_revolucion, c(0xFFF2ECDD), c(0xFF1C1A17), c(0xFF5E584E), c(0xFFB22234), c(0xFF1F3A6E), LetraExtra.ciudadana, 17.5f, 28f, false, Rayas.NADA, LetraExtra.convencion)
     TemaId.ANTIGUAS -> Pagina(R.drawable.papel_antiguas, c(0xFFEDE2C6), c(0xFF1E1D1A), c(0xFF5E5646), c(0xFF8E1B24), c(0xFF2E5A3E), LetraExtra.vollkorn, 18f, 27f, false, Rayas.NADA, LetraExtra.camino)
@@ -1970,6 +2017,7 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                     var y = 0f; while (y < h) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(0f, y), Offset(w, y), 1.5f); y += 4.dp.toPx() }
                 }
                 TemaId.CIBER -> { var y = 0f; while (y < h) { drawLine(p.acento.copy(alpha = 0.03f), Offset(0f, y), Offset(w, y), 1f); y += 3.dp.toPx() } }
+                TemaId.NEON -> { var y = 0f; while (y < h) { drawLine(p.acento.copy(alpha = 0.03f), Offset(0f, y), Offset(w, y), 1f); y += 3.dp.toPx() } }
                 TemaId.BOTANICO -> {
                     // Marco de lámina y el número de la tabla.
                     drawRect(p.tinta.copy(alpha = 0.35f), Offset(12.dp.toPx(), 12.dp.toPx()), Size(w - 24.dp.toPx(), h - 24.dp.toPx()), style = Stroke(1.2f))
@@ -2108,6 +2156,7 @@ private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String, modo: Escrito 
         when (t) {
             TemaId.ROMANO -> { emblema(); Rubrica("ACTA · DIVRNA", Letra.inscripcion, 12f, p.acento, 3f) }
             TemaId.CIBER -> Text("~/vestigium/diario/$fecha.log", fontFamily = Letra.codigo, fontSize = 12.sp, color = p.tenue, modifier = Modifier.fillMaxWidth())
+            TemaId.NEON -> Text("~/vestigium/diario/$fecha.log", fontFamily = Letra.codigo, fontSize = 12.sp, color = p.tenue, modifier = Modifier.fillMaxWidth())
             TemaId.HELENO -> { emblema(); Rubrica("ΕΦΗΜΕΡΙΔΕΣ · diario", Letra.garamond, 13f, p.acento, 2f) }
             TemaId.MEDIEVAL -> Row(verticalAlignment = Alignment.CenterVertically) {
                 Emblema(t, 34.dp, MaterialTheme.colorScheme, animado = false)
@@ -2172,6 +2221,7 @@ private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String, modo: Escrito 
 private fun letraSueno(t: TemaId): Pair<FontFamily, Float> = when (t) {
     TemaId.ROMANO -> Letra.inscripcion to 12f
     TemaId.CIBER -> Letra.codigo to 12f
+    TemaId.NEON -> Letra.codigo to 12f
     TemaId.HELENO -> Letra.garamond to 13f
     TemaId.MEDIEVAL -> LetraExtra.gotica to 15f
     TemaId.DISTOPIA -> LetraExtra.oswald to 12f

@@ -211,6 +211,12 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
             linea(8 * u, h - 14 * u, 12 * u, h - 11 * u, a.copy(alpha = 0.7f)); linea(12 * u, h - 11 * u, 8 * u, h - 8 * u, a.copy(alpha = 0.7f))
             drawRect(a.copy(alpha = 0.7f), Offset(15 * u, h - 14 * u), Size(4 * u, 6 * u))
         }
+        TemaId.NEON -> {
+            var y = 0f
+            while (y < h) { linea(0f, y, w, y, a.copy(alpha = 0.08f), 0.6f * u); y += 3 * u }
+            linea(8 * u, h - 14 * u, 12 * u, h - 11 * u, a.copy(alpha = 0.7f)); linea(12 * u, h - 11 * u, 8 * u, h - 8 * u, a.copy(alpha = 0.7f))
+            drawRect(a.copy(alpha = 0.7f), Offset(15 * u, h - 14 * u), Size(4 * u, 6 * u))
+        }
         // Una greca arriba y otra abajo.
         TemaId.HELENO -> listOf(16 * u, h - 20 * u).forEach { y0 ->
             val p = 3.5f * u

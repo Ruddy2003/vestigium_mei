@@ -37,6 +37,11 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_ciber_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_ciber</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Neon" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_neon_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_neon_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_neon</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Heleno" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_heleno</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_heleno</item>

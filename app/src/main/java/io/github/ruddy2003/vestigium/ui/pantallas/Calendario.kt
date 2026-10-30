@@ -228,6 +228,7 @@ fun PantallaCalendario(nav: Nav) {
 private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.ROMANO -> RoundedCornerShape(1.dp)
     TemaId.CIBER -> RectangleShape
+    TemaId.NEON -> RectangleShape
     TemaId.HELENO -> RoundedCornerShape(2.dp)
     TemaId.MEDIEVAL -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 7.dp, bottomStart = 1.dp)
     TemaId.DISTOPIA -> RectangleShape
@@ -280,6 +281,12 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
         }
         // Píxel de fósforo: líneas de barrido; hoy, el borde encendido con su halo y el cursor bajo el número.
         TemaId.CIBER -> {
+            var y = 2f * s
+            while (y < h) { drawLine(Color.Black.copy(alpha = 0.14f), Offset(0f, y), Offset(w, y), 0.6f * s); y += 2.6f * s }
+            if (hoy) { contorno(acento.copy(alpha = 0.35f), 3f); contorno(acento, 1.2f); drawRect(acento, Offset(4f * s, 20f * s), Size(6f * s, 1.6f * s)) } else contorno(linea, 0.6f)
+            if (sellado) sello(acento)
+        }
+        TemaId.NEON -> {
             var y = 2f * s
             while (y < h) { drawLine(Color.Black.copy(alpha = 0.14f), Offset(0f, y), Offset(w, y), 0.6f * s); y += 2.6f * s }
             if (hoy) { contorno(acento.copy(alpha = 0.35f), 3f); contorno(acento, 1.2f); drawRect(acento, Offset(4f * s, 20f * s), Size(6f * s, 1.6f * s)) } else contorno(linea, 0.6f)

@@ -113,6 +113,7 @@ private val R4 @Composable get() = MaterialTheme.shapes.small
 fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)) {
     when (Estilo.tema) {
         TemaId.CIBER -> Circuito(modifier)
+        TemaId.NEON -> Circuito(modifier)
         TemaId.HELENO -> Greca(modifier, color)
         TemaId.MEDIEVAL -> Zarcillo(modifier)
         TemaId.DISTOPIA -> BandaExpediente(modifier)
@@ -903,6 +904,10 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "!", igual = ":= ", nulo = "null", elegido = "▣", riel = RolColor.SECUNDARIO, quitar = "[x]", listaVacia = "[ ]", flecha = ">>",
         sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0f, colorPrefijo = RolColor.SECUNDARIO, renglones = false, margen = MargenEditor.PUNTOS,
         guiones = floatArrayOf(1.5f, 1.5f), tamBoton = 14, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1f)
+    TemaId.NEON -> PielComponentes(sep = " ", cerrada = "[+]", abierta = "[-]", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
+        aviso = "!", igual = ":= ", nulo = "null", elegido = "▣", riel = RolColor.SECUNDARIO, quitar = "[x]", listaVacia = "[ ]", flecha = ">>",
+        sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0f, colorPrefijo = RolColor.SECUNDARIO, renglones = false, margen = MargenEditor.PUNTOS,
+        guiones = floatArrayOf(1.5f, 1.5f), tamBoton = 14, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1f)
     TemaId.HELENO -> PielComponentes(sep = "  —  ", cerrada = "◇", abierta = "◆", numeral = RolColor.TERCIARIO, centrar = false, rellena = true,
         aviso = "☉", igual = "· ", nulo = "οὐδέν", elegido = "✓", riel = RolColor.SECUNDARIO, quitar = "✕", listaVacia = "( κενόν )", flecha = "⟶",
         sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.5f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.DOBLE,
@@ -991,6 +996,7 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
         TemaId.ROMANO -> Text(nombre, style = estilo.copy(letterSpacing = 2.sp), modifier = peso)
         // Indicador de consola con el cursor detrás.
         TemaId.CIBER -> Text(buildAnnotatedString { append(nombre); withStyle(SpanStyle(color = e.secondary)) { append(" ▌") } }, style = estilo, color = e.primary, modifier = peso)
+        TemaId.NEON -> Text(buildAnnotatedString { append(nombre); withStyle(SpanStyle(color = e.secondary)) { append(" ▌") } }, style = estilo, color = e.primary, modifier = peso)
         // Doble filete de oro, como el borde de un vaso.
         TemaId.HELENO -> Text(nombre, style = estilo, modifier = peso.drawBehind {
             val y = size.height - 1.dp.toPx()
@@ -1080,6 +1086,7 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
 private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.ROMANO -> RoundedCornerShape(2.dp)
     TemaId.CIBER -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
+    TemaId.NEON -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
     // Frontón de templo, muy bajo.
     TemaId.HELENO -> GenericShape { s, _ -> moveTo(0f, s.height * 0.18f); lineTo(s.width / 2, 0f); lineTo(s.width, s.height * 0.18f); lineTo(s.width, s.height); lineTo(0f, s.height); close() }
     // Esquinas cóncavas, como un marco de miniatura.
@@ -1149,6 +1156,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
     return when (t) {
         TemaId.ROMANO -> "tabula · " + base.uppercase().replace('U', 'V')
         TemaId.CIBER -> "~/vm/$archivo"
+        TemaId.NEON -> "~/vm/$archivo"
         TemaId.HELENO -> "πάπυρος · $es"
         TemaId.MEDIEVAL -> "pluma y tintero · $es"
         TemaId.DISTOPIA -> "FORMULARIO 7-B · ${es.uppercase()}"
@@ -1217,6 +1225,12 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             }
         }
         TemaId.CIBER -> {
+            // Un led encendido arriba a la derecha y un tramo de pista abajo a la izquierda.
+            drawRect(e.secondary, Offset(w - i - u * 0.7f, i), Size(u * 0.7f, u * 0.35f))
+            drawLine(e.primary.copy(alpha = 0.7f), Offset(i, h - i), Offset(i + u * 3f, h - i), fino * 1.5f)
+            drawLine(e.primary.copy(alpha = 0.7f), Offset(i + u * 3f, h - i), Offset(i + u * 3.6f, h - i - u * 0.6f), fino * 1.5f)
+        }
+        TemaId.NEON -> {
             // Un led encendido arriba a la derecha y un tramo de pista abajo a la izquierda.
             drawRect(e.secondary, Offset(w - i - u * 0.7f, i), Size(u * 0.7f, u * 0.35f))
             drawLine(e.primary.copy(alpha = 0.7f), Offset(i, h - i), Offset(i + u * 3f, h - i), fino * 1.5f)
@@ -1348,6 +1362,12 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawArc(l, -90f, 180f, false, Offset(f(0.56f), f(0.14f)), Size(f(0.14f), f(0.2f)), style = tr)
         }
         TemaId.CIBER -> {
+            // Consola sin salida: el indicador y el cursor.
+            drawRect(l, Offset(f(0.06f), f(0.18f)), Size(f(0.88f), f(0.64f)), style = tr)
+            drawPath(Path().apply { moveTo(f(0.2f), f(0.36f)); lineTo(f(0.34f), f(0.5f)); lineTo(f(0.2f), f(0.64f)) }, a, style = tr)
+            drawLine(e.secondary, Offset(f(0.42f), f(0.64f)), Offset(f(0.62f), f(0.64f)), tr.width)
+        }
+        TemaId.NEON -> {
             // Consola sin salida: el indicador y el cursor.
             drawRect(l, Offset(f(0.06f), f(0.18f)), Size(f(0.88f), f(0.64f)), style = tr)
             drawPath(Path().apply { moveTo(f(0.2f), f(0.36f)); lineTo(f(0.34f), f(0.5f)); lineTo(f(0.2f), f(0.64f)) }, a, style = tr)
@@ -1498,6 +1518,7 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
     when (t) {
         TemaId.ROMANO -> drawRect(c, Offset(0f, h - d), Size(w, d))
         TemaId.CIBER -> drawRect(c, Offset.Zero, Size(d * 0.75f, h))
+        TemaId.NEON -> drawRect(c, Offset.Zero, Size(d * 0.75f, h))
         TemaId.HELENO -> drawPath(Path().apply { moveTo(w / 2 - d * 1.6f, h); lineTo(w / 2, h - d * 1.4f); lineTo(w / 2 + d * 1.6f, h); close() }, c)
         TemaId.MEDIEVAL -> drawCircle(c, d * 0.8f, Offset(w / 2, d * 1.4f))
         TemaId.DISTOPIA -> drawRect(c, Offset.Zero, Size(w, d))
@@ -1556,6 +1577,10 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         TemaId.ROMANO -> drawRect(c, Offset(m, m), Size(w - 2 * m, h - 2 * m), style = Stroke(fino * 0.8f))
         // Un led a la derecha y la pista abajo.
         TemaId.CIBER -> {
+            drawRect(c, Offset(w - m * 2.6f, h / 2 - m * 0.8f), Size(m * 0.9f, m * 1.6f))
+            drawLine(c, Offset(m * 2.5f, h - m), Offset(w * 0.4f, h - m), fino)
+        }
+        TemaId.NEON -> {
             drawRect(c, Offset(w - m * 2.6f, h / 2 - m * 0.8f), Size(m * 0.9f, m * 1.6f))
             drawLine(c, Offset(m * 2.5f, h - m), Offset(w * 0.4f, h - m), fino)
         }
@@ -1654,6 +1679,11 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawLine(a, Offset(f(0.6f), f(0.98f)), Offset(f(0.98f), f(0.2f)), tr.width)
         }
         TemaId.CIBER -> {
+            // Indicador de consola.
+            drawPath(Path().apply { moveTo(f(0.08f), f(0.2f)); lineTo(f(0.4f), f(0.5f)); lineTo(f(0.08f), f(0.8f)) }, a, style = tr)
+            drawLine(e.secondary, Offset(f(0.5f), f(0.82f)), Offset(f(0.92f), f(0.82f)), tr.width)
+        }
+        TemaId.NEON -> {
             // Indicador de consola.
             drawPath(Path().apply { moveTo(f(0.08f), f(0.2f)); lineTo(f(0.4f), f(0.5f)); lineTo(f(0.08f), f(0.8f)) }, a, style = tr)
             drawLine(e.secondary, Offset(f(0.5f), f(0.82f)), Offset(f(0.92f), f(0.82f)), tr.width)
@@ -1805,6 +1835,10 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
     when (t) {
         TemaId.ROMANO -> drawRect(c, Offset.Zero, Size(3 * d, h))
         TemaId.CIBER -> {
+            var y = 0f
+            while (y < h) { drawRect(c, Offset(0f, y), Size(2 * d, 4 * d)); y += 7 * d }
+        }
+        TemaId.NEON -> {
             var y = 0f
             while (y < h) { drawRect(c, Offset(0f, y), Size(2 * d, 4 * d)); y += 7 * d }
         }

@@ -104,6 +104,9 @@ object Temas {
     // Marcas del calendario: días que cada tema celebra o recuerda (cortas: van dentro de la celda del día).
     private val MARCAS_CIBER = mapOf("01-01" to "epoch", "03-14" to "π", "06-23" to "Turing", "08-06" to "www", "10-29" to "ARPANET",
         "11-30" to "seguridad", "12-09" to "Hopper", "12-10" to "Lovelace")
+
+    private val MARCAS_NEON = mapOf("01-01" to "epoch", "03-14" to "π", "06-23" to "Turing", "08-06" to "www", "10-29" to "ARPANET",
+        "11-30" to "seguridad", "12-09" to "Hopper", "12-10" to "Lovelace")
     private val MARCAS_HELENO = mapOf("03-20" to "Equinoccio", "06-21" to "Año ático", "08-15" to "Panateneas", "08-20" to "Termópilas",
         "09-12" to "Maratón", "09-25" to "Misterios", "09-28" to "Salamina", "12-21" to "Solsticio")
     private val MARCAS_DISTOPIA = mapOf("01-01" to "CENSO", "04-15" to "DECLARACIÓN", "05-01" to "CUOTA", "07-01" to "INVENTARIO",
@@ -141,6 +144,7 @@ object Temas {
         return when (tema) {
             TemaId.ROMANO -> Romano.marca(fecha)
             TemaId.CIBER -> MARCAS_CIBER[md]
+            TemaId.NEON -> MARCAS_NEON[md]
             TemaId.HELENO -> MARCAS_HELENO[md]
             TemaId.MEDIEVAL -> FIESTAS[md]
             TemaId.DISTOPIA -> MARCAS_DISTOPIA[md]
@@ -246,6 +250,7 @@ object Temas {
         // El romano y el heleno tienen su diccionario en `Romano` y `Griego`; la terminal solo usa el de [NombresNuevos].
         TemaId.ROMANO -> null
         TemaId.CIBER -> null
+        TemaId.NEON -> null
         TemaId.HELENO -> null
         TemaId.MEDIEVAL -> MEDIEVAL[titulo]
         TemaId.DISTOPIA -> DISTOPIA[titulo]
@@ -271,6 +276,7 @@ object Temas {
         val m = when (tema) {
             TemaId.ROMANO -> mapOf("animo" to "ANIMVS", "momento" to "MOMENTA", "gasto" to "SVMPTVS", "sueno" to "SOMNVS", "habitos" to "CONSVETVDINES", "hoy" to "DIES", "cifra" to "NVMERVS", "foto" to "IMAGO", "enfoque" to "STVDIVM")
             TemaId.CIBER -> mapOf("animo" to "> ánimo", "momento" to "> momento", "gasto" to "> gasto", "sueno" to "> sueño", "habitos" to "> hábitos", "hoy" to "> hoy", "cifra" to "> cifra", "foto" to "> foto", "enfoque" to "> enfoque")
+            TemaId.NEON -> mapOf("animo" to "> ánimo", "momento" to "> momento", "gasto" to "> gasto", "sueno" to "> sueño", "habitos" to "> hábitos", "hoy" to "> hoy", "cifra" to "> cifra", "foto" to "> foto", "enfoque" to "> enfoque")
             TemaId.HELENO -> mapOf("animo" to "ΘΥΜΟΣ", "momento" to "ΚΑΙΡΟΙ", "gasto" to "ΔΑΠΑΝΑΙ", "sueno" to "ΥΠΝΟΣ", "habitos" to "ΕΘΗ", "hoy" to "ΗΜΕΡΑ", "cifra" to "ΑΡΙΘΜΟΣ", "foto" to "ΕΙΚΩΝ", "enfoque" to "ΣΧΟΛΗ")
             TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")

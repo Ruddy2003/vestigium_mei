@@ -99,6 +99,7 @@ class Lienzo(private val ctx: Context, val tema: TemaId = Estilo.tema, val oscur
 private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.ROMANO -> R.font.cinzel_regular          // capitales romanas, como sus títulos
     TemaId.CIBER -> R.font.sharetech_mono           // la consola: monoespaciada de terminal
+    TemaId.NEON -> R.font.sharetech_mono           // la consola: monoespaciada de terminal
     TemaId.HELENO -> R.font.garamond_medium
     TemaId.MEDIEVAL -> R.font.gotica_semibold       // la gótica del copista, en su corte más claro
     TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
@@ -124,6 +125,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
 private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.ROMANO -> "VESTIGIVM MEI"
     TemaId.CIBER -> "vestigium@mei:~\$"
+    TemaId.NEON -> "vestigium@mei:~\$"
     TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ · Vestigium Mei"
     TemaId.MEDIEVAL -> "Liber vestigii mei"
     TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
@@ -194,6 +196,15 @@ object Reportes {
                     c.drawPath(path, pa); y += 3 * u + 34f
                 }
                 TemaId.CIBER -> {
+                    // La línea de órdenes: el indicador, una fila de puntos de fósforo y el cursor en bloque.
+                    c.drawText(">", M, yy + 24f, L.p(L.primario, 28f, L.mono))
+                    val punto = L.relleno(L.mezcla(L.primario, L.fondo, 0.45))
+                    var x = M + 34f
+                    while (x + 6f < W - M - 34f) { c.drawRect(x, yy + 14f, x + 6f, yy + 20f, punto); x += 16f }
+                    c.drawRect(W - M - 16f, yy + 2f, W - M, yy + 26f, L.relleno(L.primario))
+                    y += 48f
+                }
+                TemaId.NEON -> {
                     // La línea de órdenes: el indicador, una fila de puntos de fósforo y el cursor en bloque.
                     c.drawText(">", M, yy + 24f, L.p(L.primario, 28f, L.mono))
                     val punto = L.relleno(L.mezcla(L.primario, L.fondo, 0.45))

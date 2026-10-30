@@ -86,6 +86,7 @@ private class MarcoRecuadro(val forma: Shape, val vertical: Dp)
 private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.ROMANO -> MarcoRecuadro(RoundedCornerShape(2.dp), 12.dp)
     TemaId.CIBER -> MarcoRecuadro(RectangleShape, 9.dp)
+    TemaId.NEON -> MarcoRecuadro(RectangleShape, 9.dp)
     TemaId.HELENO -> MarcoRecuadro(RoundedCornerShape(4.dp), 13.dp)
     TemaId.MEDIEVAL -> MarcoRecuadro(RoundedCornerShape(3.dp), 11.dp)
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
@@ -137,6 +138,15 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
         }
         // Corchetes de consola a los lados y el cursor abajo.
         TemaId.CIBER -> {
+            val k = c.copy(alpha = 0.8f)
+            listOf(4 * u to 1f, w - 4 * u to -1f).forEach { (x, d) ->
+                drawLine(k, Offset(x, 4 * u), Offset(x, h - 4 * u), 1.5f * u)
+                drawLine(k, Offset(x, 4 * u), Offset(x + d * 4 * u, 4 * u), 1.5f * u)
+                drawLine(k, Offset(x, h - 4 * u), Offset(x + d * 4 * u, h - 4 * u), 1.5f * u)
+            }
+            drawRect(k, Offset(w - 14 * u, h - 7 * u), Size(5 * u, 1.6f * u))
+        }
+        TemaId.NEON -> {
             val k = c.copy(alpha = 0.8f)
             listOf(4 * u to 1f, w - 4 * u to -1f).forEach { (x, d) ->
                 drawLine(k, Offset(x, 4 * u), Offset(x, h - 4 * u), 1.5f * u)
@@ -332,6 +342,19 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
         }
         // Barra de progreso de la terminal: ocho celdas entre corchetes, llenas según la fuerza.
         TemaId.CIBER -> {
+            val n = 8; val llenas = (fuerza * n).roundToInt().coerceIn(0, n)
+            val m = 7 * u; val cw = (w - 2 * m) / n; val ch = grosor + 4 * u
+            listOf(m - 3 * u to 1f, w - m + 3 * u to -1f).forEach { (x, d) ->
+                drawLine(col, Offset(x, y - ch / 2 - u), Offset(x, y + ch / 2 + u), u)
+                drawLine(col, Offset(x, y - ch / 2 - u), Offset(x + d * 2 * u, y - ch / 2 - u), u)
+                drawLine(col, Offset(x, y + ch / 2 + u), Offset(x + d * 2 * u, y + ch / 2 + u), u)
+            }
+            for (i in 0 until n) {
+                val o = Offset(m + i * cw + 0.8f * u, y - ch / 2); val s = Size(cw - 1.6f * u, ch)
+                if (i < llenas) drawRect(col, o, s) else drawRect(col.copy(alpha = col.alpha * 0.5f), o, s, style = Stroke(0.8f * u, pathEffect = punteado))
+            }
+        }
+        TemaId.NEON -> {
             val n = 8; val llenas = (fuerza * n).roundToInt().coerceIn(0, n)
             val m = 7 * u; val cw = (w - 2 * m) / n; val ch = grosor + 4 * u
             listOf(m - 3 * u to 1f, w - m + 3 * u to -1f).forEach { (x, d) ->

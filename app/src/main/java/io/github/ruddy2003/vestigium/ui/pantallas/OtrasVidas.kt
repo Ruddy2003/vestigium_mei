@@ -469,6 +469,12 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
             while (x < w) { drawRect(pista, Offset(x, 0f), Size(celda, h)); x += paso }
             clipRect(right = fw) { x = 0f; while (x < fw) { drawRect(color, Offset(x, 0f), Size(celda, h)); x += paso } }
         }
+        TemaId.NEON -> {
+            val paso = 5f * d; val celda = 3.6f * d
+            var x = 0f
+            while (x < w) { drawRect(pista, Offset(x, 0f), Size(celda, h)); x += paso }
+            clipRect(right = fw) { x = 0f; while (x < fw) { drawRect(color, Offset(x, 0f), Size(celda, h)); x += paso } }
+        }
         // Friso: la barra entre dos filetes.
         TemaId.HELENO -> {
             drawLine(color.copy(alpha = 0.3f), Offset(0f, h / 2), Offset(w, h / 2), d)
@@ -743,6 +749,11 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
         }
         // Pantalla de consola: píxeles por hora y el cursor.
         TemaId.CIBER -> {
+            for (k in 0 until 24) drawRect(cs.primary.copy(alpha = if (k % 6 == 0) 0.9f else 0.35f), polarFig(c, ro + 3f * d, k * 15f - 90f) - Offset(1.2f * d, 1.2f * d), Size(2.4f * d, 2.4f * d))
+            drawCircle(cs.primary.copy(alpha = 0.3f), rc, c, style = Stroke(d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f * d, 2f * d))))
+            drawRect(cs.primary.copy(alpha = 0.6f), Offset(c.x - 3f * d, c.y - 5f * d), Size(6f * d, 10f * d))
+        }
+        TemaId.NEON -> {
             for (k in 0 until 24) drawRect(cs.primary.copy(alpha = if (k % 6 == 0) 0.9f else 0.35f), polarFig(c, ro + 3f * d, k * 15f - 90f) - Offset(1.2f * d, 1.2f * d), Size(2.4f * d, 2.4f * d))
             drawCircle(cs.primary.copy(alpha = 0.3f), rc, c, style = Stroke(d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f * d, 2f * d))))
             drawRect(cs.primary.copy(alpha = 0.6f), Offset(c.x - 3f * d, c.y - 5f * d), Size(6f * d, 10f * d))

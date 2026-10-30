@@ -21,6 +21,7 @@ object ArranqueTema {
     fun estilo(t: TemaId, oscuro: Boolean): Int = when (t) {
         TemaId.ROMANO -> if (oscuro) R.style.Theme_Vestigium_Arranque_Romano_Oscuro else R.style.Theme_Vestigium_Arranque_Romano
         TemaId.CIBER -> R.style.Theme_Vestigium_Arranque_Ciber
+        TemaId.NEON -> R.style.Theme_Vestigium_Arranque_Neon
         TemaId.HELENO -> if (oscuro) R.style.Theme_Vestigium_Arranque_Heleno_Oscuro else R.style.Theme_Vestigium_Arranque_Heleno
         TemaId.MEDIEVAL -> if (oscuro) R.style.Theme_Vestigium_Arranque_Medieval_Oscuro else R.style.Theme_Vestigium_Arranque_Medieval
         TemaId.DISTOPIA -> if (oscuro) R.style.Theme_Vestigium_Arranque_Distopia_Oscuro else R.style.Theme_Vestigium_Arranque_Distopia

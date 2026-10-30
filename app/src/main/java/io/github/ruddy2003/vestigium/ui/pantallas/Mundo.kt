@@ -208,6 +208,7 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.ROMANO -> LaminaRascar(0xFF7A5410.toInt(), 0xFFCFA03A.toInt(), 0xFFF8E3A0.toInt())
     // Placa de consola: metal oscuro con reflejo de fósforo.
     TemaId.CIBER -> LaminaRascar(0xFF0B2530.toInt(), 0xFF2C6F80.toInt(), 0xFF8FEFFF.toInt())
+    TemaId.NEON -> LaminaRascar(0xFF0B2530.toInt(), 0xFF2C6F80.toInt(), 0xFF8FEFFF.toInt())
     // Electro: la aleación pálida de oro y plata de las primeras monedas griegas.
     TemaId.HELENO -> LaminaRascar(0xFF6B6038.toInt(), 0xFFBDB27A.toInt(), 0xFFF4EFD2.toInt())
     // Pan de oro sobre bol rojo, como en las iniciales iluminadas.
@@ -305,6 +306,17 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawCircle(l * 0.86f, l * 0.2f, l * 0.035f, relleno); c.drawCircle(l * 0.8f, l * 0.13f, l * 0.035f, relleno)
         }
         TemaId.CIBER -> {
+            // Pistas de circuito impreso: una línea que cruza con su desvío a 45°, un bus vertical, un pad y un chip con patas.
+            c.drawPath(Path().apply {
+                moveTo(0f, l * 0.3f); lineTo(l * 0.3f, l * 0.3f); lineTo(l * 0.42f, l * 0.18f); lineTo(l * 0.7f, l * 0.18f); lineTo(l * 0.82f, l * 0.3f); lineTo(l, l * 0.3f)
+                moveTo(l * 0.15f, 0f); lineTo(l * 0.15f, l * 0.55f); lineTo(l * 0.28f, l * 0.68f); lineTo(l * 0.28f, l * 0.85f); lineTo(l * 0.15f, l * 0.98f); lineTo(l * 0.15f, l)
+                moveTo(l * 0.5f, l * 0.18f); lineTo(l * 0.5f, l * 0.5f)
+            }, linea)
+            c.drawCircle(l * 0.5f, l * 0.56f, l * 0.055f, linea)
+            c.drawRect(l * 0.62f, l * 0.58f, l * 0.9f, l * 0.84f, linea)
+            for (x in listOf(0.67f, 0.76f, 0.85f)) { c.drawLine(l * x, l * 0.52f, l * x, l * 0.58f, linea); c.drawLine(l * x, l * 0.84f, l * x, l * 0.9f, linea) }
+        }
+        TemaId.NEON -> {
             // Pistas de circuito impreso: una línea que cruza con su desvío a 45°, un bus vertical, un pad y un chip con patas.
             c.drawPath(Path().apply {
                 moveTo(0f, l * 0.3f); lineTo(l * 0.3f, l * 0.3f); lineTo(l * 0.42f, l * 0.18f); lineTo(l * 0.7f, l * 0.18f); lineTo(l * 0.82f, l * 0.3f); lineTo(l, l * 0.3f)

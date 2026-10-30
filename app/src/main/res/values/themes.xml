@@ -30,6 +30,9 @@
     <style name="Theme.Vestigium.Arranque.Ciber" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_ciber_oscuro</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Neon" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_neon_oscuro</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Heleno" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_heleno</item>
     </style>

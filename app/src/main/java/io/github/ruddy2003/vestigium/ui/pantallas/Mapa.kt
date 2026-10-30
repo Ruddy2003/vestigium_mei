@@ -88,6 +88,7 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
             else { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.95f, 6f, 6f, 4f)) }
         // Terminal: plano nocturno en azul eléctrico (solo existe en oscuro, así que es igual con o sin «oscuro»).
         TemaId.CIBER -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.30f, 0.62f, 0.80f, 0f, 4f, 10f)) }
+        TemaId.NEON -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.30f, 0.62f, 0.80f, 0f, 4f, 10f)) }
         // Helénico: pergamino de día, noche púrpura de noche.
         TemaId.HELENO -> if (oscuro) { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.78f, 0.70f, 0.92f, 6f, 4f, 14f)) }
             else { m.setSaturation(0.25f); m.postConcat(tinte(1.0f, 0.95f, 0.84f, 4f, 2f, 0f)) }
@@ -201,6 +202,7 @@ internal object Formas {
                 0.8f, 0.7f, -0.8f, 0.7f, -0.8f, 0.12f, -1.3f, 0.5f, -1.3f, -0.5f, -0.8f, -0.12f)
             // El cursor de bloque de la consola.
             TemaId.CIBER -> { p.reset(); p.addRect(x - r * 0.55f, y - r * 0.9f, x + r * 0.55f, y + r * 0.9f, horario) }
+            TemaId.NEON -> { p.reset(); p.addRect(x - r * 0.55f, y - r * 0.9f, x + r * 0.55f, y + r * 0.9f, horario) }
             // El sol de Vergina: dieciséis rayos.
             TemaId.HELENO -> poligono(x, y, r * 1.15f, 16, -90.0, 0.5f)
             TemaId.MEDIEVAL -> {   // sello de cera de borde ondulado
@@ -256,6 +258,7 @@ internal object Formas {
         when (tema) {
             TemaId.ROMANO -> c.drawRect(x - r * 0.6f, y - r * 0.48f, x + r * 0.6f, y + r * 0.48f, d)   // el campo de la inscripción
             TemaId.CIBER -> { raya(c, x, y, r, -1.55f, -0.45f, -0.95f, 0f, d); raya(c, x, y, r, -0.95f, 0f, -1.55f, 0.45f, d) }   // el «>» del indicador
+            TemaId.NEON -> { raya(c, x, y, r, -1.55f, -0.45f, -0.95f, 0f, d); raya(c, x, y, r, -0.95f, 0f, -1.55f, 0.45f, d) }   // el «>» del indicador
             TemaId.HELENO -> c.drawCircle(x, y, r * 0.32f, d)
             TemaId.MEDIEVAL -> { c.drawCircle(x, y, r * 0.62f, d); raya(c, x, y, r, -0.3f, 0f, 0.3f, 0f, d); raya(c, x, y, r, 0f, -0.3f, 0f, 0.3f, d) }   // la cruz del sello
             TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
@@ -691,6 +694,13 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
             esquinas(8 * u) { o, dx, dy -> drawLine(acento, o, o + Offset(dx * k, 0f), 2 * u); drawLine(acento, o, o + Offset(0f, dy * k), 2 * u) }
             drawRect(acento, Offset(14 * u, h - 24 * u), Size(7 * u, 11 * u))
         }
+        TemaId.NEON -> {
+            var y = 0f
+            while (y < h) { drawLine(acento.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), 0.6f * u); y += 3 * u }
+            val k = 22 * u
+            esquinas(8 * u) { o, dx, dy -> drawLine(acento, o, o + Offset(dx * k, 0f), 2 * u); drawLine(acento, o, o + Offset(0f, dy * k), 2 * u) }
+            drawRect(acento, Offset(14 * u, h - 24 * u), Size(7 * u, 11 * u))
+        }
         // Una greca arriba y otra abajo.
         TemaId.HELENO -> {
             filete(4 * u, tinta.copy(alpha = 0.5f), 1.2f * u)
@@ -916,6 +926,13 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
         }
         // Una mira de consola con su flecha.
         TemaId.CIBER -> {
+            drawRect(acento, Offset(c.x - r * 0.62f, c.y - r * 0.62f), Size(r * 1.24f, r * 1.24f), style = Stroke(1.2f * u))
+            drawLine(acento.copy(alpha = 0.6f), c + Offset(-r * 0.9f, 0f), c + Offset(r * 0.9f, 0f), 1f * u)
+            drawLine(acento, c + Offset(0f, r * 0.9f), c + Offset(0f, -r * 0.92f), 1.6f * u)
+            drawPath(Path().apply { moveTo(c.x - r * 0.3f, c.y - r * 0.6f); lineTo(c.x, c.y - r * 0.92f); lineTo(c.x + r * 0.3f, c.y - r * 0.6f) }, acento, style = Stroke(2f * u))
+            drawRect(acento, Offset(c.x - r * 0.1f, c.y - r * 0.1f), Size(r * 0.2f, r * 0.2f))
+        }
+        TemaId.NEON -> {
             drawRect(acento, Offset(c.x - r * 0.62f, c.y - r * 0.62f), Size(r * 1.24f, r * 1.24f), style = Stroke(1.2f * u))
             drawLine(acento.copy(alpha = 0.6f), c + Offset(-r * 0.9f, 0f), c + Offset(r * 0.9f, 0f), 1f * u)
             drawLine(acento, c + Offset(0f, r * 0.9f), c + Offset(0f, -r * 0.92f), 1.6f * u)

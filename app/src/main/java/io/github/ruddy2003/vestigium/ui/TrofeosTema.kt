@@ -136,6 +136,7 @@ object TrofeosTema {
             TemaId.ANTIGUAS -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.DISTOPIA -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.CIBER -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.NEON -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.REFUGIO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.ORDEN -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.LABORATORIO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
@@ -165,6 +166,7 @@ object TrofeosTema {
             TemaId.ANTIGUAS -> with(TrofeosMas) { antiguas(categoria, p) }
             TemaId.DISTOPIA -> with(TrofeosMas) { distopia(categoria, p) }
             TemaId.CIBER -> with(TrofeosMas) { terminal(categoria, p) }
+            TemaId.NEON -> with(TrofeosMas) { terminal(categoria, p) }
             TemaId.REFUGIO -> with(TrofeosMas) { refugio(categoria, p) }
             TemaId.ORDEN -> with(TrofeosMas) { orden(categoria, p) }
             TemaId.LABORATORIO -> with(TrofeosMas) { laboratorio(categoria, p) }

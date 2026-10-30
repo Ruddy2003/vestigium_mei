@@ -144,6 +144,13 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawLine(c.copy(alpha = 0.6f), Offset(x0 + w * 0.28f, cy), Offset(x0 + w * 0.62f, cy), 0.9f * d)
             drawRect(c, Offset(x0 + w * 0.68f, y0 + h * 0.28f), Size(w * 0.1f, h * 0.44f))
         }
+        TemaId.NEON -> {
+            drawRoundRect(lerp(c, Color.Black, 0.7f), o, s, CornerRadius(1.5f * d))
+            drawRoundRect(c, o, s, CornerRadius(1.5f * d), style = Stroke(0.8f * d))
+            drawPath(Path().apply { moveTo(x0 + w * 0.1f, y0 + h * 0.3f); lineTo(x0 + w * 0.2f, cy); lineTo(x0 + w * 0.1f, y0 + h * 0.7f) }, c, style = Stroke(0.8f * d))
+            drawLine(c.copy(alpha = 0.6f), Offset(x0 + w * 0.28f, cy), Offset(x0 + w * 0.62f, cy), 0.9f * d)
+            drawRect(c, Offset(x0 + w * 0.68f, y0 + h * 0.28f), Size(w * 0.1f, h * 0.44f))
+        }
         // Papiro griego: sin varilla, con la espiral del rollo a la vista, el cordón que lo ata y las fibras.
         TemaId.HELENO -> {
             val papiro = lerp(Color(0xFFDCC48A), c, 0.15f)
@@ -564,6 +571,12 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             drawPath(Path().apply { moveTo(x - r * 0.7f, y - r * 0.85f); lineTo(x - r, y - r * 0.85f); lineTo(x - r, y + r * 0.85f); lineTo(x - r * 0.7f, y + r * 0.85f) }, col, style = k)
             drawPath(Path().apply { moveTo(x + r * 0.7f, y - r * 0.85f); lineTo(x + r, y - r * 0.85f); lineTo(x + r, y + r * 0.85f); lineTo(x + r * 0.7f, y + r * 0.85f) }, col, style = k)
         }
+        TemaId.NEON -> {
+            drawRect(relleno, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r))
+            val k = Stroke(1.3f * d)
+            drawPath(Path().apply { moveTo(x - r * 0.7f, y - r * 0.85f); lineTo(x - r, y - r * 0.85f); lineTo(x - r, y + r * 0.85f); lineTo(x - r * 0.7f, y + r * 0.85f) }, col, style = k)
+            drawPath(Path().apply { moveTo(x + r * 0.7f, y - r * 0.85f); lineTo(x + r, y - r * 0.85f); lineTo(x + r, y + r * 0.85f); lineTo(x + r * 0.7f, y + r * 0.85f) }, col, style = k)
+        }
         // Hoplon: escudo redondo de borde grueso.
         TemaId.HELENO -> {
             drawCircle(relleno, r, c); drawCircle(borde, r * 0.9f, c, style = Stroke(2.2f * d)); drawCircle(borde, r * 0.7f, c, style = fino)
@@ -709,6 +722,24 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
             else -> return false
         }
         TemaId.CIBER -> when (forma) {
+            // Asterisco de consola.
+            "estrella" -> { for (k in 0 until 3) drawLine(col, polarCosa(c, r, PI / 2 + k * PI / 3), polarCosa(c, r, PI / 2 + k * PI / 3 + PI), 1.6f * d) }
+            // Retícula de coordenadas.
+            "alfiler" -> {
+                drawCircle(col, r * 0.6f, c, style = trazo); drawCircle(col, r * 0.14f, c)
+                for (k in 0 until 4) drawLine(col, polarCosa(c, r * 0.35f, k * PI / 2), polarCosa(c, r, k * PI / 2), 1.2f * d)
+            }
+            // Taza en píxeles, con su vapor.
+            "taza" -> {
+                drawRect(col, Offset(x - r * 0.7f, y - r * 0.35f), Size(r * 1.05f, r * 1.1f))
+                drawRect(col, Offset(x + r * 0.35f, y - r * 0.2f), Size(r * 0.45f, r * 0.2f))
+                drawRect(col, Offset(x + r * 0.6f, y - r * 0.2f), Size(r * 0.2f, r * 0.6f))
+                drawRect(col, Offset(x + r * 0.35f, y + r * 0.2f), Size(r * 0.45f, r * 0.2f))
+                drawRect(col, Offset(x - r * 0.45f, y - r * 0.85f), Size(r * 0.2f, r * 0.3f)); drawRect(col, Offset(x, y - r), Size(r * 0.2f, r * 0.3f))
+            }
+            else -> return false
+        }
+        TemaId.NEON -> when (forma) {
             // Asterisco de consola.
             "estrella" -> { for (k in 0 until 3) drawLine(col, polarCosa(c, r, PI / 2 + k * PI / 3), polarCosa(c, r, PI / 2 + k * PI / 3 + PI), 1.6f * d) }
             // Retícula de coordenadas.
