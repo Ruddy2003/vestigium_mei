@@ -35,9 +35,9 @@ object Widgets {
             intArrayOf(0xFFFF2E88.toInt(), 0xFFE0559A.toInt(), 0xFFB77CA8.toInt(), 0xFF8C96A8.toInt(), 0xFF5FB4C8.toInt(), 0xFF2FCCE0.toInt(), 0xFF00E5FF.toInt()),
             0xFF0B121C.toInt(), 0xFF00161A.toInt())
         TemaId.NEON -> Colores(R.drawable.widget_fondo_neon, R.drawable.widget_boton_neon, R.drawable.widget_boton_activo_neon, R.drawable.widget_boton_ambar_neon,
-            0xFF00E5FF.toInt(), 0xFFD6F3F7.toInt(), 0xFF7E98AB.toInt(), 0xFF15404A.toInt(),
-            intArrayOf(0xFFFF2E88.toInt(), 0xFFE0559A.toInt(), 0xFFB77CA8.toInt(), 0xFF8C96A8.toInt(), 0xFF5FB4C8.toInt(), 0xFF2FCCE0.toInt(), 0xFF00E5FF.toInt()),
-            0xFF0B121C.toInt(), 0xFF00161A.toInt())
+            0xFFFF3D9A.toInt(), 0xFFF4E7F0.toInt(), 0xFFB99DB2.toInt(), 0xFF4B2B47.toInt(),
+            intArrayOf(0xFF5A3A70.toInt(), 0xFF8A3A8C.toInt(), 0xFFC23C97.toInt(), 0xFFFF3D9A.toInt(), 0xFFFF7A6E.toInt(), 0xFFFFB238.toInt(), 0xFF8CFF5A.toInt()),
+            0xFF150E1B.toInt(), 0xFF1C0010.toInt())
         TemaId.HELENO -> Colores(R.drawable.widget_fondo_heleno, R.drawable.widget_boton_heleno, R.drawable.widget_boton_activo_heleno, R.drawable.widget_boton_ambar_heleno,
             0xFFD8B45C.toInt(), 0xFFEFE9DC.toInt(), 0xFFA69EBB.toInt(), 0xFF4A3D6E.toInt(),
             intArrayOf(0xFFC25A7A.toInt(), 0xFFCF8597.toInt(), 0xFFDDB3B7.toInt(), 0xFFEFE9DC.toInt(), 0xFFB5D2E8.toInt(), 0xFF8DBDE0.toInt(), 0xFF5FA8D8.toInt()),
@@ -136,7 +136,7 @@ object Widgets {
     private fun tituloDiscreto(t: TemaId): Pair<String, String> = when (t) {
         TemaId.ROMANO -> "NVNC" to "SCRIBERE"
         TemaId.CIBER -> "> ping" to "> log"
-        TemaId.NEON -> "> ping" to "> log"
+        TemaId.NEON -> "LA NOCHE" to "LA CALLE"
         TemaId.HELENO -> "ΝΥΝ" to "ΓΡΑΦΕΙΝ"
         TemaId.MEDIEVAL -> "Agora" to "Scriptura"
         TemaId.DISTOPIA -> "CONTROL" to "FORMULARIO"
@@ -166,7 +166,7 @@ object Widgets {
         val (fuente, escala) = when (t) {
             TemaId.ROMANO -> R.font.cinzel_regular to 0.95f
             TemaId.CIBER -> R.font.sharetech_mono to 1.05f
-            TemaId.NEON -> R.font.sharetech_mono to 1.05f
+            TemaId.NEON -> R.font.chakra_semibold to 1.0f
             TemaId.HELENO -> R.font.garamond_medium to 1.08f
             TemaId.MEDIEVAL -> R.font.gotica_regular to 1.1f
             TemaId.DISTOPIA -> R.font.oswald_medium to 1.05f

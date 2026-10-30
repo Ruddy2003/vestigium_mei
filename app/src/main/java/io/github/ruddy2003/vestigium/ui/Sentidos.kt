@@ -60,12 +60,13 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(TICK, 1f), g(TICK, 1f, 15)); Evento.ERROR -> listOf(g(TICK_GRAVE, 1f), g(TICK_GRAVE, 1f, 25), g(TICK_GRAVE, 1f, 25), g(BAJA, 0.6f, 20))
             Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE, 0.8f), g(CLICK, 1f, 10), g(TICK, 1f, 40), g(TICK, 1f, 30))
         }
+        // El zumbido del transformador de un letrero: golpes graves muy juntos.
         TemaId.NEON -> when (e) {
-            Evento.TOQUE -> listOf(g(TICK, 1f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.8f), g(TICK_GRAVE, 0.8f, 25))
-            Evento.GUARDAR -> listOf(g(TICK, 1f), g(TICK, 1f, 20), g(CLICK, 0.8f, 20))
-            Evento.ELEGIR -> listOf(g(TICK, 0.8f)); Evento.ABRIR -> listOf(g(SUBE, 0.5f), g(TICK, 0.7f, 30))
-            Evento.CAMBIO -> listOf(g(TICK, 1f), g(TICK, 1f, 15)); Evento.ERROR -> listOf(g(TICK_GRAVE, 1f), g(TICK_GRAVE, 1f, 25), g(TICK_GRAVE, 1f, 25), g(BAJA, 0.6f, 20))
-            Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE, 0.8f), g(CLICK, 1f, 10), g(TICK, 1f, 40), g(TICK, 1f, 30))
+            Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.9f), g(TICK, 0.35f, 12)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.6f), g(TICK_GRAVE, 0.6f, 12), g(TICK_GRAVE, 0.6f, 12))
+            Evento.GUARDAR -> listOf(g(CLICK, 0.9f), g(TICK_GRAVE, 0.7f, 14), g(TICK_GRAVE, 0.7f, 14), g(TICK, 0.9f, 40))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.7f), g(TICK_GRAVE, 0.4f, 10)); Evento.ABRIR -> listOf(g(TICK_GRAVE, 0.5f), g(TICK_GRAVE, 0.7f, 18), g(SUBE, 0.6f, 18))
+            Evento.CAMBIO -> listOf(g(TICK_GRAVE, 0.9f), g(TICK_GRAVE, 0.3f, 60), g(TICK_GRAVE, 0.9f, 25)); Evento.ERROR -> listOf(g(CLICK, 1f), g(TICK_GRAVE, 1f, 10), g(TICK_GRAVE, 1f, 10), g(TICK_GRAVE, 1f, 10), g(BAJA, 0.5f, 30))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(TICK_GRAVE, 0.6f), g(TICK_GRAVE, 0.2f, 40), g(TICK_GRAVE, 0.8f, 30), g(SUBE, 0.9f, 20), g(CLICK, 1f, 20))
         }
         // Cuerda de lira y el sol que gira.
         TemaId.HELENO -> when (e) {
@@ -347,7 +348,8 @@ object Sentidos {
         TemaId.ROMANO -> Afinacion(st(0, 4, 7, 12), st(-5, 0, 5, 7), pasarRuido = true, elegirRuido = false)
         // Mi menor, en blips.
         TemaId.CIBER -> Afinacion(st(-5, 0, 3, 7), st(-5, 0, 3, 7), pasarRuido = false, elegirRuido = false)
-        TemaId.NEON -> Afinacion(st(-5, 0, 3, 7), st(-5, 0, 3, 7), pasarRuido = false, elegirRuido = false)
+        // Fa sostenido menor con séptima, el acorde del synth-pop de los bares.
+        TemaId.NEON -> Afinacion(st(-3, 0, 3, 7, 10), st(-7, 0, 3, 10), pasarRuido = false, elegirRuido = true)
         // La pentatónico de la lira.
         TemaId.HELENO -> Afinacion(st(0, 2, 4, 7, 9), st(-5, 0, 2, 7), pasarRuido = false, elegirRuido = false)
         // Re dórico; la pluma solo da pasos cortos del modo.
@@ -465,7 +467,7 @@ object Sentidos {
     internal fun patronRascar(tema: TemaId): List<Golpe> = when (tema) {
         TemaId.ROMANO -> pasadas(TICK, 0.5f, 60, 3)   // oro imperial, blando
         TemaId.CIBER -> pasadas(TICK, 0.9f, 30, 5)   // la placa de consola
-        TemaId.NEON -> pasadas(TICK, 0.9f, 30, 5)   // la placa de consola
+        TemaId.NEON -> pasadas(TICK_GRAVE, 0.9f, 22, 6)   // la cortina metálica del puesto
         TemaId.HELENO -> pasadas(TICK, 0.55f, 55, 3)   // electro
         TemaId.MEDIEVAL -> pasadas(TICK_GRAVE, 0.5f, 70, 3)   // pan de oro
         TemaId.DISTOPIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio

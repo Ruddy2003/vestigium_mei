@@ -53,7 +53,7 @@ object Sello {
 fun textoSello(tema: TemaId): String = when (tema) {
     TemaId.ROMANO -> "DIES SIGNATVS"
     TemaId.CIBER -> "> día.commit() ✓"
-    TemaId.NEON -> "> día.commit() ✓"
+    TemaId.NEON -> "ticket cerrado ◆ 済"
     TemaId.HELENO -> "ΕΣΦΡΑΓΙΣΘΗ"
     TemaId.MEDIEVAL -> "Sellado y asentado"
     TemaId.DISTOPIA -> "DECLARACIÓN ARCHIVADA"

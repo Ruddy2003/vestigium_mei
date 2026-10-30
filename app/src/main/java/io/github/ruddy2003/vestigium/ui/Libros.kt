@@ -159,8 +159,8 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.NAPOLEON -> Materia(c(0xFFF1E6CC), c(0xFFC9B48A), c(0xFFFBF5E6), c(0xFFA3172E), c(0xFF1E3A8A), c(0xFFF6F0E0), c(0xFF14213D), extra = c(0xFFD9B25B))
     TemaId.NAVIDAD -> Materia(c(0xFFB71C1C), c(0xFF7A1010), c(0xFFD84343), c(0xFFC9A227), c(0xFF1B5E20), c(0xFFFBF6EC), c(0xFF1E2A22), extra = c(0xFFFF5252), textoCuerpo = c(0xFFFBF6EC))
     TemaId.DISTOPIA -> Materia(c(0xFFD8C08A), c(0xFFA88F58), c(0xFFE8D4A4), c(0xFFC8102E), c(0xFF141414), c(0xFFF2EFE6), c(0xFF141414))
-    TemaId.CIBER -> Materia(c(0xFF0B121C), c(0xFF05080E), c(0xFF15202E), c(0xFF00E5FF), c(0xFFFF2E88), c(0xFF05080E), c(0xFFD6F3F7), extra = c(0xFFF2C94C))
-    TemaId.NEON -> Materia(c(0xFF0B121C), c(0xFF05080E), c(0xFF15202E), c(0xFF00E5FF), c(0xFFFF2E88), c(0xFF05080E), c(0xFFD6F3F7), extra = c(0xFFF2C94C))
+    TemaId.CIBER -> Materia(c(0xFF0A1416), c(0xFF030708), c(0xFF132529), c(0xFF00E5FF), c(0xFF2C8C99), c(0xFF030708), c(0xFFBDEFF5), extra = c(0xFFC8FBFF))
+    TemaId.NEON -> Materia(c(0xFF1C1324), c(0xFF0C0811), c(0xFF33223E), c(0xFFFF3D9A), c(0xFFFFB238), c(0xFF0C0811), c(0xFFF4E7F0), extra = c(0xFF8CFF5A))
     TemaId.REFUGIO -> Materia(c(0xFFC9C2A6), c(0xFF8E886F), c(0xFFE2DCC4), c(0xFF3DFF7F), c(0xFF2F8F4E), c(0xFF031A0B), c(0xFF7CF098))
     // Cuaderno de quejas: tapa de cartón azul, cinta tricolor y escarapela.
     TemaId.REVOLUCION -> Materia(c(0xFF2F4A7A), c(0xFF1A2A4A), c(0xFF4A6699), c(0xFFB22234), c(0xFFF0EADB), c(0xFFF2ECDD), c(0xFF1C1A17), extra = c(0xFFB22234))
@@ -192,8 +192,10 @@ private class NocheTema(val cielo: Color, val luz: Color, val hunde: Float, val 
 private fun nocheDe(t: TemaId): NocheTema = when (t) {
     // La lucerna: luz de aceite sobre el pórfido de noche.
     TemaId.ROMANO -> NocheTema(c(0xFF1A1426), c(0xFFE9B860), 0.62f, 0.8f, c(0xFFF2DDB0))
-    TemaId.CIBER -> NocheTema(c(0xFF0A0614), c(0xFFFF2E88), 0.8f, 0.9f, c(0xFFF0DAF7))
-    TemaId.NEON -> NocheTema(c(0xFF0A0614), c(0xFFFF2E88), 0.8f, 0.9f, c(0xFFF0DAF7))
+    // El monitor en reposo: el fósforo cian baja de brillo.
+    TemaId.CIBER -> NocheTema(c(0xFF010304), c(0xFF00E5FF), 0.85f, 0.92f, c(0xFF9FE8F0))
+    // La calle a las tres de la mañana: solo quedan encendidos los letreros magenta.
+    TemaId.NEON -> NocheTema(c(0xFF0A0610), c(0xFFFF3D9A), 0.8f, 0.9f, c(0xFFF7DCEB))
     // Selene en plata sobre el Egeo.
     TemaId.HELENO -> NocheTema(c(0xFF0E1A33), c(0xFFDCE4F2), 0.7f, 0.86f, c(0xFFE4EAF6))
     // La vela del scriptorium.
@@ -246,8 +248,10 @@ fun materiaNoche(t: TemaId): Materia {
     return when (t) {
         // El fósforo verde se vuelve ámbar, como una pantalla en reposo.
         TemaId.REFUGIO -> Materia(c(0xFF6E6A58), c(0xFF3E3B30), c(0xFF8E886F), c(0xFFFFB23F), c(0xFFB3741E), c(0xFF1A1003), c(0xFFFFC870))
-        TemaId.CIBER -> Materia(c(0xFF120B1F), c(0xFF07040D), c(0xFF22163A), c(0xFFFF2E88), c(0xFF9B5CFF), c(0xFF07040D), c(0xFFF0DAF7), extra = c(0xFF00E5FF))
-        TemaId.NEON -> Materia(c(0xFF120B1F), c(0xFF07040D), c(0xFF22163A), c(0xFFFF2E88), c(0xFF9B5CFF), c(0xFF07040D), c(0xFFF0DAF7), extra = c(0xFF00E5FF))
+        // El monitor en reposo: el mismo cian, más bajo.
+        TemaId.CIBER -> Materia(c(0xFF061012), c(0xFF020607), c(0xFF0B1C20), c(0xFF00B8CC), c(0xFF2C8C99), c(0xFF020607), c(0xFF9FE8F0), extra = c(0xFFC8FBFF))
+        // Apagaron el ámbar de los puestos: queda el magenta y el verde de la farmacia de guardia.
+        TemaId.NEON -> Materia(c(0xFF1A0E22), c(0xFF0A050F), c(0xFF2C1838), c(0xFFFF3D9A), c(0xFF8CFF5A), c(0xFF0A050F), c(0xFFF7DCEB), extra = c(0xFFFFB238))
         TemaId.ESPACIO -> Materia(c(0xFF120A2A), c(0xFF06040F), c(0xFF241645), c(0xFFC59BFF), c(0xFF8AB4FF), c(0xFF06040F), c(0xFFECE6FA), extra = c(0xFFFF8AD8))
         TemaId.ROMANO -> materiaTenida(m, n)
         TemaId.HELENO -> materiaTenida(m, n)
@@ -279,8 +283,8 @@ fun paginaNoche(t: TemaId): Pagina {
     val p = pagina(t); val n = nocheDe(t)
     return when (t) {
         TemaId.REFUGIO -> Pagina(null, c(0xFF1A1003), c(0xFFFFC870), c(0xFFB3741E), c(0xFFFFB23F), c(0xFF7CF098), p.texto, p.tam, p.interlinea, true, p.rayas)
-        TemaId.CIBER -> Pagina(null, c(0xFF0A0614), c(0xFFF0DAF7), c(0xFF7A5B8C), c(0xFFFF2E88), c(0xFF00E5FF), p.texto, p.tam, p.interlinea, true, p.rayas)
-        TemaId.NEON -> Pagina(null, c(0xFF0A0614), c(0xFFF0DAF7), c(0xFF7A5B8C), c(0xFFFF2E88), c(0xFF00E5FF), p.texto, p.tam, p.interlinea, true, p.rayas)
+        TemaId.CIBER -> Pagina(null, c(0xFF010405), c(0xFF9FE8F0), c(0xFF3E7880), c(0xFF00E5FF), c(0xFF5FC4D2), p.texto, p.tam, p.interlinea, true, p.rayas)
+        TemaId.NEON -> Pagina(null, c(0xFF0A0610), c(0xFFF7DCEB), c(0xFF8A6A84), c(0xFFFF3D9A), c(0xFF8CFF5A), p.texto, p.tam, p.interlinea, true, p.rayas)
         TemaId.ESPACIO -> Pagina(null, c(0xFF07041A), c(0xFFECE6FA), c(0xFF8A7BB0), c(0xFFC59BFF), c(0xFFFF8AD8), p.texto, p.tam, p.interlinea, true, p.rayas)
         TemaId.ROMANO -> paginaTenida(p, n)
         TemaId.HELENO -> paginaTenida(p, n)
@@ -307,7 +311,7 @@ fun paginaNoche(t: TemaId): Pagina {
 fun rotuloSueno(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "SOMNIVM"
     TemaId.CIBER -> "~/suenos/"
-    TemaId.NEON -> "~/suenos/"
+    TemaId.NEON -> "夢 · LO QUE SOÑÉ"
     TemaId.HELENO -> "ΟΝΕΙΡΟΣ · sueño"
     TemaId.MEDIEVAL -> "Visión de la noche"
     TemaId.DISTOPIA -> "INFORME DE ACTIVIDAD ONÍRICA"
@@ -333,7 +337,7 @@ fun rotuloSueno(t: TemaId): String = when (t) {
 fun colofonSueno(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "· EVIGILAVI ·"
     TemaId.CIBER -> "-- wake --"
-    TemaId.NEON -> "-- wake --"
+    TemaId.NEON -> "— abre la persiana —"
     TemaId.HELENO -> "ἐξηγέρθην · desperté"
     TemaId.MEDIEVAL -> "Y en esto desperté."
     TemaId.DISTOPIA -> "FIN DEL INFORME NOCTURNO"
@@ -414,7 +418,8 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
         when (t) {
             TemaId.ROMANO -> drawCircle(col, r, o)
             TemaId.CIBER -> drawRect(col, o, Size(r * 1.6f, r * 1.6f))
-            TemaId.NEON -> drawRect(col, o, Size(r * 1.6f, r * 1.6f))
+            // Luces de dron y de grúa: rayitas que cruzan el cielo turbio.
+            TemaId.NEON -> drawLine(col, o, o + Offset(r * 3.2f, 0f), r * 0.7f, cap = StrokeCap.Round)
             TemaId.HELENO -> {
                 drawCircle(col, r, o)
                 if (r > max * 0.92f) { drawLine(col, o - Offset(r * 2.8f, 0f), o + Offset(r * 2.8f, 0f), 0.8f); drawLine(col, o - Offset(0f, r * 2.8f), o + Offset(0f, r * 2.8f), 0.8f) }
@@ -464,17 +469,15 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
                 y += paso
             }
         }
+        // Una luna de neón: el tubo curvo con su halo y, al lado, el letrero vertical de un bar (月, «luna»).
         TemaId.NEON -> {
-            val paso = r / 3.5f; var y = -r
-            while (y <= r) {
-                var x = -r
-                while (x <= r) {
-                    val dentro = x * x + y * y <= r * r
-                    val fuera = (x - r * 0.48f) * (x - r * 0.48f) + (y + r * 0.22f) * (y + r * 0.22f) > r * 0.88f * r * 0.88f
-                    if (dentro && fuera) drawRect(luna, Offset(ce.x + x - paso * 0.45f, ce.y + y - paso * 0.45f), Size(paso * 0.9f, paso * 0.9f))
-                    x += paso
-                }
-                y += paso
+            val tubo = Path().apply { addArc(Rect(ce.x - r, ce.y - r, ce.x + r, ce.y + r), 110f, 260f) }
+            drawPath(tubo, n.luz.copy(alpha = 0.25f), style = Stroke(r * 0.45f, cap = StrokeCap.Round))
+            drawPath(tubo, n.luz, style = Stroke(r * 0.14f, cap = StrokeCap.Round))
+            if (!sola) {
+                val o = Offset(ce.x + r * 1.9f, ce.y - r * 0.9f)
+                drawRect(n.luz.copy(alpha = 0.2f), o, Size(r * 0.8f, r * 2.2f), style = Stroke(r * 0.08f))
+                repeat(3) { k -> drawLine(n.luz.copy(alpha = 0.8f), o + Offset(r * 0.2f, r * (0.45f + k * 0.6f)), o + Offset(r * 0.6f, r * (0.45f + k * 0.6f)), r * 0.09f) }
             }
         }
         // Selene: la media luna tumbada como una barca, y las Pléyades al lado.
@@ -613,7 +616,7 @@ fun CieloNoche(modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, conten
 fun textoGuardar(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "SIGNARE"
     TemaId.CIBER -> "git commit"
-    TemaId.NEON -> "git commit"
+    TemaId.NEON -> "cerrar el ticket"
     TemaId.HELENO -> "γράφε · anotar"
     TemaId.MEDIEVAL -> "rubricar"
     TemaId.DISTOPIA -> "ARCHIVAR"
@@ -639,7 +642,7 @@ fun textoGuardar(t: TemaId): String = when (t) {
 fun colofon(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "· FINIS ·"
     TemaId.CIBER -> "-- EOF --"
-    TemaId.NEON -> "-- EOF --"
+    TemaId.NEON -> "— se apaga el letrero —"
     TemaId.HELENO -> "ΤΕΛΟΣ"
     TemaId.MEDIEVAL -> "Aquí se acaba el folio."
     TemaId.DISTOPIA -> "FIN DE LA DECLARACIÓN"
@@ -665,7 +668,7 @@ fun colofon(t: TemaId): String = when (t) {
 private fun pistaDia(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "toca para desenrollar el volumen"
     TemaId.CIBER -> "> toca para abrir el editor_"
-    TemaId.NEON -> "> toca para abrir el editor_"
+    TemaId.NEON -> "toca y cuenta cómo estuvo la calle"
     TemaId.HELENO -> "toca para desplegar el rollo"
     TemaId.MEDIEVAL -> "toca para abrir el códice"
     TemaId.DISTOPIA -> "TOCA PARA ABRIR EL EXPEDIENTE"
@@ -691,7 +694,7 @@ private fun pistaDia(t: TemaId): String = when (t) {
 private fun pistaNoche(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "toca para contar el somnium"
     TemaId.CIBER -> "> toca para registrar el sueño_"
-    TemaId.NEON -> "> toca para registrar el sueño_"
+    TemaId.NEON -> "toca y cuenta lo que soñaste entre el ruido"
     TemaId.HELENO -> "toca para contar lo que trajo Hipnos"
     TemaId.MEDIEVAL -> "toca para asentar la visión de la noche"
     TemaId.DISTOPIA -> "TOCA PARA DECLARAR LO SOÑADO"
@@ -717,7 +720,7 @@ private fun pistaNoche(t: TemaId): String = when (t) {
 private fun textoVacio(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "Nihil scriptum: este día quedó en blanco."
     TemaId.CIBER -> "// archivo vacío: nada escrito este día"
-    TemaId.NEON -> "// archivo vacío: nada escrito este día"
+    TemaId.NEON -> "Letrero apagado: este día no se escribió nada."
     TemaId.HELENO -> "Ἄγραφος: nada escrito este día."
     TemaId.MEDIEVAL -> "Folio en blanco: nada se asentó este día."
     TemaId.DISTOPIA -> "SIN DECLARACIÓN REGISTRADA PARA ESTA JORNADA."
@@ -743,7 +746,7 @@ private fun textoVacio(t: TemaId): String = when (t) {
 private fun textoSinSueno(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "Nullum somnium: no anotaste ningún sueño esa noche."
     TemaId.CIBER -> "// sin sueños registrados esa noche"
-    TemaId.NEON -> "// sin sueños registrados esa noche"
+    TemaId.NEON -> "Esa noche no quedó ningún sueño en el ticket."
     TemaId.HELENO -> "Hipnos no dejó nada escrito esa noche."
     TemaId.MEDIEVAL -> "Ninguna visión se asentó esa noche."
     TemaId.DISTOPIA -> "SIN ACTIVIDAD ONÍRICA DECLARADA."
@@ -769,7 +772,7 @@ private fun textoSinSueno(t: TemaId): String = when (t) {
 private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
     TemaId.ROMANO -> "Optimum — " to "Pessimum — "
     TemaId.CIBER -> "// mejor: " to "// peor: "
-    TemaId.NEON -> "// mejor: " to "// peor: "
+    TemaId.NEON -> "▲ lo mejor: " to "▼ lo peor: "
     TemaId.HELENO -> "Τὸ ἄριστον — " to "Τὸ χείριστον — "
     TemaId.MEDIEVAL -> "Lo bueno del día — " to "Lo amargo del día — "
     TemaId.DISTOPIA -> "MÉRITO — " to "FALTA — "
@@ -795,7 +798,7 @@ private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
 private fun pistaEscribir(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "Quid hodie? ¿Cómo fue el día?"
     TemaId.CIBER -> "// ¿cómo fue el día?"
-    TemaId.NEON -> "// ¿cómo fue el día?"
+    TemaId.NEON -> "¿Qué pasó hoy en la calle?"
     TemaId.HELENO -> "Τί ἐγένετο; ¿Qué pasó hoy?"
     TemaId.MEDIEVAL -> "Asiéntese aquí lo acontecido en este día…"
     TemaId.DISTOPIA -> "DECLARE LAS ACTIVIDADES DE LA JORNADA."
@@ -821,7 +824,7 @@ private fun pistaEscribir(t: TemaId): String = when (t) {
 private fun pistaSonar(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "Quid somniavisti? ¿Qué soñaste?"
     TemaId.CIBER -> "// ¿qué soñaste?"
-    TemaId.NEON -> "// ¿qué soñaste?"
+    TemaId.NEON -> "¿Qué soñaste con la ciudad zumbando afuera?"
     TemaId.HELENO -> "¿Qué te mostró Hipnos esta noche?"
     TemaId.MEDIEVAL -> "Asiéntese la visión de la noche…"
     TemaId.DISTOPIA -> "DECLARE LA ACTIVIDAD ONÍRICA."
@@ -946,9 +949,9 @@ private fun formaObjeto(t: TemaId, m: Materia, e: ColorScheme, noche: Boolean, f
         TemaId.CIBER -> FormaObjeto(dibujo = { terminalCiber(m) }, caja = listOf(0.05f, 0.22f, 0.05f, 0.06f), pista = pista, letra = Letra.codigo, tinta = m.tinta,
             fecha = m.acento, tam = 13f, brilla = true, letraFecha = Letra.codigo, letraPie = Letra.codigo, palabras = { "[$it palabras]" },
             cabecera = if (noche) "$ nano ~/suenos/$fecha.dream" else "$ nano ~/diario/$fecha.log")
-        TemaId.NEON -> FormaObjeto(dibujo = { terminalNeon(m) }, caja = listOf(0.05f, 0.22f, 0.05f, 0.06f), pista = pista, letra = Letra.codigo, tinta = m.tinta,
-            fecha = m.acento, tam = 13f, brilla = true, letraFecha = Letra.codigo, letraPie = Letra.codigo, palabras = { "[$it palabras]" },
-            cabecera = if (noche) "$ nano ~/suenos/$fecha.dream" else "$ nano ~/diario/$fecha.log")
+        TemaId.NEON -> FormaObjeto(dibujo = { cajaLuzNeon(m) }, caja = listOf(0.06f, 0.24f, 0.06f, 0.2f), pista = pista, letra = Letra.letrero, tinta = m.tinta,
+            fecha = m.extra, tam = 13.5f, brilla = true, letraFecha = Letra.letrero, letraPie = Letra.letrero, palabras = { "$it palabras en el ticket" },
+            cabecera = if (noche) "夢 · ticket de la noche · $fecha" else "屋台 · ticket del día · $fecha")
         TemaId.REFUGIO -> FormaObjeto(dibujo = { monitorRefugio(m) }, caja = listOf(0.1f, 0.13f, 0.1f, 0.2f), pista = pista, letra = LetraExtra.vt323, tinta = m.tinta,
             fecha = m.acento, tam = 17f, interlinea = 18f, brilla = true, letraFecha = LetraExtra.vt323, letraPie = LetraExtra.vt323, palabras = { "[$it PALABRAS]" })
         TemaId.ESPACIO -> FormaObjeto(dibujo = { tabletaControl(m) }, caja = listOf(0.06f, 0.32f, 0.2f, 0.14f), pista = pista, letra = LetraExtra.grotesk, tinta = m.tinta,
@@ -1426,28 +1429,51 @@ private fun DrawScope.monitorRefugio(m: Materia) {
     for (i in 0 until 6) drawLine(m.sombra, Offset(w * (0.1f + i * 0.03f), h * 0.89f), Offset(w * (0.1f + i * 0.03f), h * 0.94f), 2f)
 }
 
-/** Ventana de terminal con su barra de título y su barrido tenue. */
+/** El monitor de fósforo: carcasa gruesa, la pantalla abombada con su barrido, el cursor en bloque y el led de encendido. */
 private fun DrawScope.terminalCiber(m: Materia) {
-    val w = size.width; val h = size.height
-    drawRoundRect(m.cuerpo, Offset.Zero, size, CornerRadius(10f))
-    drawRoundRect(m.brillo, Offset.Zero, Size(w, h * 0.15f), CornerRadius(10f))
-    drawRect(m.brillo, Offset(0f, h * 0.08f), Size(w, h * 0.07f))
-    listOf(m.detalle, m.extra, m.acento).forEachIndexed { i, col -> drawCircle(col, h * 0.03f, Offset(w * 0.03f + i * h * 0.09f, h * 0.075f)) }
-    var y = h * 0.15f; while (y < h) { drawLine(m.acento.copy(alpha = 0.04f), Offset(0f, y), Offset(w, y), 1f); y += 4f }
-    drawRoundRect(m.acento.copy(alpha = 0.7f), Offset.Zero, size, CornerRadius(10f), style = Stroke(2f))
-    drawLine(m.detalle.copy(alpha = 0.5f), Offset(3f, h * 0.15f), Offset(w * 0.4f, h * 0.15f), 2f)
+    val w = size.width; val h = size.height; val bisel = h * 0.07f
+    drawRoundRect(m.brillo, Offset.Zero, size, CornerRadius(14f))
+    drawRoundRect(m.sombra, Offset(bisel * 0.5f, bisel * 0.5f), Size(w - bisel, h - bisel), CornerRadius(12f))
+    val pantalla = Rect(bisel, bisel, w - bisel, h - bisel * 1.6f)
+    drawRoundRect(m.cuerpo, pantalla.topLeft, pantalla.size, CornerRadius(18f))
+    drawRoundRect(Brush.radialGradient(listOf(m.acento.copy(alpha = 0.10f), Color.Transparent), pantalla.center, pantalla.width * 0.7f), pantalla.topLeft, pantalla.size, CornerRadius(18f))
+    var y = pantalla.top; while (y < pantalla.bottom) { drawLine(m.acento.copy(alpha = 0.05f), Offset(pantalla.left, y), Offset(pantalla.right, y), 1f); y += 3f }
+    drawRect(m.acento.copy(alpha = 0.85f), Offset(pantalla.right - h * 0.09f, pantalla.bottom - h * 0.12f), Size(h * 0.045f, h * 0.07f))
+    drawCircle(m.acento, h * 0.018f, Offset(w - bisel * 1.4f, h - bisel * 0.8f))
+    drawLine(m.detalle.copy(alpha = 0.6f), Offset(bisel * 1.4f, h - bisel * 0.8f), Offset(w * 0.3f, h - bisel * 0.8f), 1.5f)
 }
 
-/** Ventana de terminal con su barra de título y su barrido tenue. */
-private fun DrawScope.terminalNeon(m: Materia) {
+/**
+ * La caja de luz de un puesto de comida: el tubo de neón la enmarca con su halo, arriba la franja ámbar con el nombre en
+ * letreros, gotas de lluvia que bajan por el plástico y el ticket que asoma por abajo.
+ */
+private fun DrawScope.cajaLuzNeon(m: Materia) {
     val w = size.width; val h = size.height
-    drawRoundRect(m.cuerpo, Offset.Zero, size, CornerRadius(10f))
-    drawRoundRect(m.brillo, Offset.Zero, Size(w, h * 0.15f), CornerRadius(10f))
-    drawRect(m.brillo, Offset(0f, h * 0.08f), Size(w, h * 0.07f))
-    listOf(m.detalle, m.extra, m.acento).forEachIndexed { i, col -> drawCircle(col, h * 0.03f, Offset(w * 0.03f + i * h * 0.09f, h * 0.075f)) }
-    var y = h * 0.15f; while (y < h) { drawLine(m.acento.copy(alpha = 0.04f), Offset(0f, y), Offset(w, y), 1f); y += 4f }
-    drawRoundRect(m.acento.copy(alpha = 0.7f), Offset.Zero, size, CornerRadius(10f), style = Stroke(2f))
-    drawLine(m.detalle.copy(alpha = 0.5f), Offset(3f, h * 0.15f), Offset(w * 0.4f, h * 0.15f), 2f)
+    drawRoundRect(m.cuerpo, Offset.Zero, size, CornerRadius(6f))
+    drawRect(Brush.verticalGradient(listOf(m.brillo.copy(alpha = 0.6f), Color.Transparent), 0f, h * 0.5f), Offset.Zero, Size(w, h * 0.5f))
+    // La franja del nombre, con tres «letras» de letrero.
+    drawRect(m.detalle.copy(alpha = 0.9f), Offset(0f, 0f), Size(w, h * 0.16f))
+    repeat(3) { k ->
+        val x = w * 0.05f + k * h * 0.14f
+        drawRect(m.sombra, Offset(x, h * 0.035f), Size(h * 0.1f, h * 0.025f))
+        drawRect(m.sombra, Offset(x + h * 0.035f, h * 0.035f), Size(h * 0.025f, h * 0.09f))
+        drawRect(m.sombra, Offset(x, h * 0.1f), Size(h * 0.1f, h * 0.022f))
+    }
+    // Gotas que resbalan.
+    val az = java.util.Random(23)
+    repeat(14) { val x = az.nextFloat() * w; val y0 = h * (0.2f + az.nextFloat() * 0.6f); drawLine(m.tinta.copy(alpha = 0.08f), Offset(x, y0), Offset(x, y0 + h * (0.05f + az.nextFloat() * 0.1f)), 1.2f) }
+    // El tubo de neón del borde: halo ancho y núcleo fino.
+    drawRoundRect(m.acento.copy(alpha = 0.22f), Offset(3f, 3f), Size(w - 6f, h - 6f), CornerRadius(8f), style = Stroke(9f))
+    drawRoundRect(m.acento, Offset(3f, 3f), Size(w - 6f, h - 6f), CornerRadius(8f), style = Stroke(2.2f))
+    // El ticket que asoma, con su borde dentado.
+    val t0 = w * 0.62f; val t1 = w * 0.9f
+    drawPath(Path().apply {
+        moveTo(t0, h * 0.82f); lineTo(t1, h * 0.82f); lineTo(t1, h)
+        var x = t1; var arriba = true
+        while (x > t0) { x -= w * 0.02f; lineTo(maxOf(x, t0), if (arriba) h * 0.97f else h); arriba = !arriba }
+        close()
+    }, m.tinta.copy(alpha = 0.85f))
+    drawLine(m.extra, Offset(t0 + w * 0.02f, h * 0.88f), Offset(t1 - w * 0.06f, h * 0.88f), 1.5f)
 }
 
 /** La tableta de la sala de control: carcasa con la pinza de la bitácora, barra de estado con luces, el parche de la misión y la telemetría al pie. */
@@ -1589,7 +1615,13 @@ fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, noche: Boolea
         TemaId.NAVIDAD -> Cartas(entradas, tema, m, noche, texto, conSonido) { e -> cartaNavidad(tema, m, e, noche) }
         TemaId.DISTOPIA -> Expedientes(entradas, m, noche, texto, conSonido)
         TemaId.CIBER -> Logs(entradas, m, noche, texto, conSonido, refugio = false)
-        TemaId.NEON -> Logs(entradas, m, noche, texto, conSonido, refugio = false)
+        TemaId.NEON -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_REJILLA) { o, _ ->
+            // Cada lomo lleva un tubito de neón vertical con su halo, y un punto verde de «abierto».
+            val w = size.width; val hh = size.height
+            drawLine(m.acento.copy(alpha = 0.25f), Offset(o.x, o.y - hh * 0.12f), Offset(o.x, o.y + hh * 0.12f), w * 0.22f, cap = StrokeCap.Round)
+            drawLine(m.acento, Offset(o.x, o.y - hh * 0.12f), Offset(o.x, o.y + hh * 0.12f), w * 0.07f, cap = StrokeCap.Round)
+            drawCircle(m.extra, w * 0.06f, Offset(o.x, o.y + hh * 0.17f))
+        }
         TemaId.REFUGIO -> Logs(entradas, m, noche, texto, conSonido, refugio = true)
         TemaId.ESPACIO -> RegistroDeVuelo(entradas, m, noche, texto, conSonido)
     }
@@ -1597,6 +1629,13 @@ fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, noche: Boolea
 
 /** La tabla del estante: su madera (o piedra, o acero) y el detalle de su canto. */
 private class TablaEstante(val claro: Color, val oscuro: Color, val canto: DrawScope.() -> Unit = {})
+
+/** La rejilla de metal del puesto, con sus agujeros y el reflejo de un letrero en el canto. */
+private val ESTANTE_REJILLA = TablaEstante(Color(0xFF3A2E42), Color(0xFF150E1B)) {
+    val w = size.width; val h = size.height
+    var x = h * 0.4f; while (x < w) { drawCircle(Color(0xFF0C0811), h * 0.14f, Offset(x, h * 0.5f)); x += h * 0.55f }
+    drawLine(Color(0xFFFF3D9A).copy(alpha = 0.55f), Offset(0f, 1f), Offset(w, 1f), 1.5f)
+}
 
 /** Mármol con vetas y una fila de dentículos. */
 private val ESTANTE_MARMOL = TablaEstante(Color(0xFFE6E2D8), Color(0xFFA8A296)) {
@@ -1960,8 +1999,9 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.NAVIDAD -> Pagina(R.drawable.papel_navidad, c(0xFFFBF6EC), c(0xFF1E2A22), c(0xFF5E6B62), c(0xFFB71C1C), c(0xFF1B5E20), LetraExtra.italianno, 27f, 32f, false, Rayas.NADA, LetraExtra.cinzelDeco)
     // La declaración, tecleada.
     TemaId.DISTOPIA -> Pagina(R.drawable.papel_distopia, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.terminal, 15.5f, 24f, false, Rayas.RENGLONES)
-    TemaId.CIBER -> Pagina(R.drawable.papel_ciber, c(0xFF05080E), c(0xFFD6F3F7), c(0xFF4F6B78), c(0xFF00E5FF), c(0xFFFF2E88), Letra.codigo, 15f, 23f, true, Rayas.NUMEROS)
-    TemaId.NEON -> Pagina(R.drawable.papel_neon, c(0xFF05080E), c(0xFFD6F3F7), c(0xFF4F6B78), c(0xFF00E5FF), c(0xFFFF2E88), Letra.codigo, 15f, 23f, true, Rayas.NUMEROS)
+    TemaId.CIBER -> Pagina(R.drawable.papel_ciber, c(0xFF030708), c(0xFFBDEFF5), c(0xFF3E7880), c(0xFF00E5FF), c(0xFF5FC4D2), Letra.codigo, 15f, 23f, true, Rayas.NUMEROS)
+    // El reverso de un ticket térmico bajo la luz del letrero: oscuro, con la tinta clara y el corte en ámbar.
+    TemaId.NEON -> Pagina(R.drawable.papel_neon, c(0xFF120C17), c(0xFFF4E7F0), c(0xFF8E7488), c(0xFFFF3D9A), c(0xFFFFB238), Letra.letrero, 16f, 24f, true, Rayas.RENGLONES)
     TemaId.REFUGIO -> Pagina(R.drawable.papel_refugio, c(0xFF031A0B), c(0xFF7CF098), c(0xFF2F8F4E), c(0xFF3DFF7F), c(0xFFFFB23F), LetraExtra.vt323, 22f, 26f, true, Rayas.NADA)
     TemaId.REVOLUCION -> Pagina(R.drawable.papel_revolucion, c(0xFFF2ECDD), c(0xFF1C1A17), c(0xFF5E584E), c(0xFFB22234), c(0xFF1F3A6E), LetraExtra.ciudadana, 17.5f, 28f, false, Rayas.NADA, LetraExtra.convencion)
     TemaId.ANTIGUAS -> Pagina(R.drawable.papel_antiguas, c(0xFFEDE2C6), c(0xFF1E1D1A), c(0xFF5E5646), c(0xFF8E1B24), c(0xFF2E5A3E), LetraExtra.vollkorn, 18f, 27f, false, Rayas.NADA, LetraExtra.camino)
@@ -2017,7 +2057,13 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                     var y = 0f; while (y < h) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(0f, y), Offset(w, y), 1.5f); y += 4.dp.toPx() }
                 }
                 TemaId.CIBER -> { var y = 0f; while (y < h) { drawLine(p.acento.copy(alpha = 0.03f), Offset(0f, y), Offset(w, y), 1f); y += 3.dp.toPx() } }
-                TemaId.NEON -> { var y = 0f; while (y < h) { drawLine(p.acento.copy(alpha = 0.03f), Offset(0f, y), Offset(w, y), 1f); y += 3.dp.toPx() } }
+                TemaId.NEON -> {
+                    // El reflejo del letrero en la hoja mojada: una mancha magenta arriba y otra verde abajo, y el borde dentado del ticket.
+                    drawRect(Brush.radialGradient(listOf(p.acento.copy(alpha = 0.12f), Color.Transparent), center = Offset(w * 0.8f, 0f), radius = w * 0.7f))
+                    drawRect(Brush.radialGradient(listOf(Color(0xFF8CFF5A).copy(alpha = 0.06f), Color.Transparent), center = Offset(0f, h), radius = w * 0.6f))
+                    val d = 7.dp.toPx(); var x = 0f
+                    while (x < w) { drawPath(Path().apply { moveTo(x, h); lineTo(x + d / 2, h - d * 0.6f); lineTo(x + d, h); close() }, p.detalle.copy(alpha = 0.5f)); x += d }
+                }
                 TemaId.BOTANICO -> {
                     // Marco de lámina y el número de la tabla.
                     drawRect(p.tinta.copy(alpha = 0.35f), Offset(12.dp.toPx(), 12.dp.toPx()), Size(w - 24.dp.toPx(), h - 24.dp.toPx()), style = Stroke(1.2f))
@@ -2156,7 +2202,7 @@ private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String, modo: Escrito 
         when (t) {
             TemaId.ROMANO -> { emblema(); Rubrica("ACTA · DIVRNA", Letra.inscripcion, 12f, p.acento, 3f) }
             TemaId.CIBER -> Text("~/vestigium/diario/$fecha.log", fontFamily = Letra.codigo, fontSize = 12.sp, color = p.tenue, modifier = Modifier.fillMaxWidth())
-            TemaId.NEON -> Text("~/vestigium/diario/$fecha.log", fontFamily = Letra.codigo, fontSize = 12.sp, color = p.tenue, modifier = Modifier.fillMaxWidth())
+            TemaId.NEON -> { emblema(); Rubrica("屋台 · TICKET DEL DÍA · Nº $nDia", Letra.letrero, 13f, p.acento, 2f) }
             TemaId.HELENO -> { emblema(); Rubrica("ΕΦΗΜΕΡΙΔΕΣ · diario", Letra.garamond, 13f, p.acento, 2f) }
             TemaId.MEDIEVAL -> Row(verticalAlignment = Alignment.CenterVertically) {
                 Emblema(t, 34.dp, MaterialTheme.colorScheme, animado = false)
@@ -2221,7 +2267,7 @@ private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String, modo: Escrito 
 private fun letraSueno(t: TemaId): Pair<FontFamily, Float> = when (t) {
     TemaId.ROMANO -> Letra.inscripcion to 12f
     TemaId.CIBER -> Letra.codigo to 12f
-    TemaId.NEON -> Letra.codigo to 12f
+    TemaId.NEON -> Letra.letrero to 13f
     TemaId.HELENO -> Letra.garamond to 13f
     TemaId.MEDIEVAL -> LetraExtra.gotica to 15f
     TemaId.DISTOPIA -> LetraExtra.oswald to 12f

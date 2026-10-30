@@ -49,10 +49,11 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
             moveTo(w * 0.2f, h * 0.06f); lineTo(w * 0.04f, h * 0.06f); lineTo(w * 0.04f, h * 0.94f); lineTo(w * 0.2f, h * 0.94f)
             moveTo(w * 0.8f, h * 0.06f); lineTo(w * 0.96f, h * 0.06f); lineTo(w * 0.96f, h * 0.94f); lineTo(w * 0.8f, h * 0.94f)
         }, c, style = Stroke(g))
-        TemaId.NEON -> drawPath(Path().apply {
-            moveTo(w * 0.2f, h * 0.06f); lineTo(w * 0.04f, h * 0.06f); lineTo(w * 0.04f, h * 0.94f); lineTo(w * 0.2f, h * 0.94f)
-            moveTo(w * 0.8f, h * 0.06f); lineTo(w * 0.96f, h * 0.06f); lineTo(w * 0.96f, h * 0.94f); lineTo(w * 0.8f, h * 0.94f)
-        }, c, style = Stroke(g))
+        // Placa redonda de letrero, con el tubo y su halo.
+        TemaId.NEON -> {
+            drawRoundRect(c.copy(alpha = c.alpha * 0.3f), Offset(w * 0.05f, h * 0.05f), Size(w * 0.9f, h * 0.9f), androidx.compose.ui.geometry.CornerRadius(w * 0.3f), style = Stroke(g * 2.2f))
+            drawRoundRect(c, Offset(w * 0.05f, h * 0.05f), Size(w * 0.9f, h * 0.9f), androidx.compose.ui.geometry.CornerRadius(w * 0.3f), style = Stroke(g * 0.8f))
+        }
         // Templo: frontón arriba y gradas abajo.
         TemaId.HELENO -> {
             drawPath(Path().apply { moveTo(w * 0.04f, h * 0.19f); lineTo(w * 0.5f, h * 0.02f); lineTo(w * 0.96f, h * 0.19f); close() }, c, style = Stroke(g * 0.8f))
@@ -234,10 +235,12 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawRect(color, Offset(c.x - r * 0.72f, c.y - r * 0.72f), Size(r * 1.44f, r * 1.44f))
             drawLine(hueco.copy(alpha = 0.5f), Offset(c.x - r * 0.72f, c.y), Offset(c.x + r * 0.72f, c.y), r * 0.14f)
         }
+        // El tazón de fideos del letrero, con sus palillos.
         TemaId.NEON -> {
-            drawRect(color.copy(alpha = color.alpha * 0.3f), Offset(c.x - r, c.y - r), Size(r * 2, r * 2))
-            drawRect(color, Offset(c.x - r * 0.72f, c.y - r * 0.72f), Size(r * 1.44f, r * 1.44f))
-            drawLine(hueco.copy(alpha = 0.5f), Offset(c.x - r * 0.72f, c.y), Offset(c.x + r * 0.72f, c.y), r * 0.14f)
+            drawCircle(color.copy(alpha = color.alpha * 0.3f), r, c)
+            drawPath(Path().apply { moveTo(c.x - r * 0.75f, c.y - r * 0.05f); lineTo(c.x + r * 0.75f, c.y - r * 0.05f); quadraticTo(c.x + r * 0.7f, c.y + r * 0.7f, c.x, c.y + r * 0.72f); quadraticTo(c.x - r * 0.7f, c.y + r * 0.7f, c.x - r * 0.75f, c.y - r * 0.05f); close() }, color)
+            drawLine(color, Offset(c.x + r * 0.1f, c.y - r * 0.15f), Offset(c.x + r * 0.7f, c.y - r * 0.75f), r * 0.12f)
+            drawLine(color, Offset(c.x + r * 0.28f, c.y - r * 0.15f), Offset(c.x + r * 0.85f, c.y - r * 0.6f), r * 0.12f)
         }
         // El sol de Vergina: dieciséis rayos.
         TemaId.HELENO -> { drawPath(figEstrella(c, r, r * 0.48f, 16), color); drawCircle(hueco.copy(alpha = 0.35f), r * 0.22f, c) }

@@ -37,6 +37,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
@@ -250,7 +251,7 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     TemaId.ROMANO -> GenericShape { s, _ -> moveTo(s.width * 0.03f, 0f); lineTo(s.width, s.height * 0.04f); lineTo(s.width * 0.97f, s.height); lineTo(0f, s.height * 0.96f); close() }
     // Píxel con una esquina cortada.
     TemaId.CIBER -> CutCornerShape(topEndPercent = 28)
-    TemaId.NEON -> CutCornerShape(topEndPercent = 28)
+    TemaId.NEON -> RoundedCornerShape(percent = 40)
     // Frontón.
     TemaId.HELENO -> GenericShape { s, _ -> moveTo(0f, s.height * 0.24f); lineTo(s.width / 2, 0f); lineTo(s.width, s.height * 0.24f); lineTo(s.width, s.height); lineTo(0f, s.height); close() }
     // Esquinas cóncavas de miniatura.
@@ -334,7 +335,11 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         }
         TemaId.ROMANO -> {}
         TemaId.CIBER -> {}
-        TemaId.NEON -> {}
+        // Una gota de lluvia que resbala por el letrero.
+        TemaId.NEON -> {
+            val g = minOf(s.width, s.height) * 0.07f
+            drawLine(fondo.copy(alpha = 0.5f), Offset(s.width * 0.72f, s.height * 0.2f), Offset(s.width * 0.7f, s.height * 0.45f), g, StrokeCap.Round)
+        }
         TemaId.HELENO -> {}
         TemaId.MEDIEVAL -> {}
         TemaId.DISTOPIA -> {}

@@ -4,6 +4,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -290,12 +291,19 @@ object MapasCampana {
                 drawRect(cian, Offset(x - 3 * d, y - tam), Size(tw + 6 * d, tam * 1.5f), style = Stroke(1f * d))
                 mono(t, x, y, tam, cian, negrita = true)
             }
+            // Al fondo de la bajada, el puesto se enciende: el letrero «ABIERTO» con su halo, la cortina y dos farolitos.
             TemaId.NEON -> with(TrofeosMas) {
-                val cian = Color(0xFF00E5FF); val t = "ACCESO CONCEDIDO"; val tam = 8 * d
-                val tw = t.length * tam * 0.6f; val x = (m.x - tw / 2).coerceIn(3 * d, size.width - tw - 3 * d); val y = m.y - 30 * d
-                drawRect(Color(0xFF05070B), Offset(x - 3 * d, y - tam), Size(tw + 6 * d, tam * 1.5f))
-                drawRect(cian, Offset(x - 3 * d, y - tam), Size(tw + 6 * d, tam * 1.5f), style = Stroke(1f * d))
-                mono(t, x, y, tam, cian, negrita = true)
+                val magenta = Color(0xFFFF3D9A); val ambar = Color(0xFFFFB238); val t = "ABIERTO · 営業中"; val tam = 8 * d
+                val tw = t.length * tam * 0.62f; val x = (m.x - tw / 2).coerceIn(3 * d, size.width - tw - 3 * d); val y = m.y - 32 * d
+                drawRoundRect(magenta.copy(alpha = 0.22f), Offset(x - 6 * d, y - tam - 3 * d), Size(tw + 12 * d, tam * 1.5f + 6 * d), CornerRadius(8 * d), style = Stroke(5 * d))
+                drawRoundRect(Color(0xFF0C0811), Offset(x - 4 * d, y - tam - 1 * d), Size(tw + 8 * d, tam * 1.5f + 2 * d), CornerRadius(6 * d))
+                drawRoundRect(magenta, Offset(x - 4 * d, y - tam - 1 * d), Size(tw + 8 * d, tam * 1.5f + 2 * d), CornerRadius(6 * d), style = Stroke(1.4f * d))
+                mono(t, x, y, tam, ambar, negrita = true)
+                for (k in 0 until 4) drawRect(Color(0xFFFF6B5E).copy(alpha = 0.8f), Offset(m.x - 14 * d + k * 7 * d, m.y - 12 * d), Size(5 * d, 9 * d))
+                listOf(-20f, 20f).forEach { dx ->
+                    drawCircle(Brush.radialGradient(listOf(Color(0xFFFF6B5E).copy(alpha = 0.4f), Color.Transparent), Offset(m.x + dx * d, m.y - 16 * d), 9 * d), 9 * d, Offset(m.x + dx * d, m.y - 16 * d))
+                    drawOval(Color(0xFFFF6B5E), Offset(m.x + dx * d - 3 * d, m.y - 20 * d), Size(6 * d, 8 * d))
+                }
             }
             // La salida a la superficie: el sol que asoma sobre la compuerta abierta.
             TemaId.REFUGIO -> {

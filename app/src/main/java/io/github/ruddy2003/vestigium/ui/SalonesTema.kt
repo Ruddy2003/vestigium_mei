@@ -46,7 +46,7 @@ object SalonesTema {
             TemaId.ANTIGUAS -> with(SalonesMas) { salonPiedra(cs, oscuro, n) }
             TemaId.DISTOPIA -> with(SalonesMas) { archivo(cs, oscuro, n) }
             TemaId.CIBER -> with(SalonesMas) { salaCentral(cs, oscuro, n) }
-            TemaId.NEON -> with(SalonesMas) { salaCentral(cs, oscuro, n) }
+            TemaId.NEON -> with(SalonesMas) { callejon(cs, oscuro, n) }
             TemaId.REFUGIO -> with(SalonesMas) { salaComun(cs, oscuro, n) }
             TemaId.ORDEN -> with(SalonesMas) { salaCapitular(cs, oscuro, n) }
             TemaId.LABORATORIO -> with(SalonesMas) { laboratorioLimpio(cs, oscuro, n) }

@@ -1,6 +1,7 @@
 package io.github.ruddy2003.vestigium.ui
 
 import androidx.compose.material3.ColorScheme
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -69,7 +70,8 @@ object MapasMas {
         TemaId.DISTOPIA -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
         // La traza de la red: saltos de servidor en servidor, de la máquina propia a la raíz.
         TemaId.CIBER -> listOf(Offset(0.07f, 0.52f), Offset(0.2f, 0.28f), Offset(0.34f, 0.6f), Offset(0.48f, 0.36f), Offset(0.62f, 0.7f), Offset(0.77f, 0.4f), Offset(0.93f, 0.6f))
-        TemaId.NEON -> listOf(Offset(0.07f, 0.52f), Offset(0.2f, 0.28f), Offset(0.34f, 0.6f), Offset(0.48f, 0.36f), Offset(0.62f, 0.7f), Offset(0.77f, 0.4f), Offset(0.93f, 0.6f))
+        // La bajada: un nivel más hondo en cada parada, de arriba a la izquierda hasta el fondo a la derecha.
+        TemaId.NEON -> listOf(Offset(0.08f, 0.1f), Offset(0.24f, 0.23f), Offset(0.4f, 0.36f), Offset(0.54f, 0.5f), Offset(0.68f, 0.63f), Offset(0.82f, 0.77f), Offset(0.93f, 0.9f))
         // Del dormitorio del nivel más hondo a la salida: pasillos y escaleras de nivel en nivel (las escaleras quedan a la mitad de cada tramo).
         TemaId.REFUGIO -> listOf(Offset(0.07f, 0.86f), Offset(0.22f, 0.68f), Offset(0.42f, 0.68f), Offset(0.54f, 0.5f), Offset(0.68f, 0.5f), Offset(0.8f, 0.32f), Offset(0.93f, 0.12f))
         // El avance en el mapa táctico: del campamento a la fortaleza, cuadro por cuadro.
@@ -188,20 +190,22 @@ object MapasMas {
                 }
             }
             TemaId.NEON -> {
-                // La red a oscuras: rejilla de puntos, servidores sueltos unidos por enlaces tenues y un volcado en hexadecimal a la derecha.
-                val cian = Color(0xFF00E5FF)
-                var y = 6 * d; while (y < h) { var x = 6 * d; while (x < w) { drawCircle(cian.copy(alpha = 0.09f), 0.8f * d, Offset(x, y)); x += 12 * d }; y += 12 * d }
-                val az = java.util.Random(23)
-                val nodos = List(12) { Offset(w * (0.04f + 0.8f * az.nextFloat()), h * (0.08f + 0.84f * az.nextFloat())) }
-                nodos.forEachIndexed { i, a -> drawLine(cian.copy(alpha = 0.1f), a, nodos[(i * 5 + 3) % nodos.size], 0.8f * d) }
-                nodos.forEach { drawRect(cian.copy(alpha = 0.18f), Offset(it.x - 4 * d, it.y - 3 * d), Size(8 * d, 6 * d), style = Stroke(0.8f * d)) }
-                val hex = "0123456789ABCDEF"
-                with(TrofeosMas) {
-                    var yy = 10 * d; while (yy < h) {
-                        val t = (0 until 4).joinToString(" ") { "" + hex[az.nextInt(16)] + hex[az.nextInt(16)] }
-                        mono(t, w - 4 * d, yy, 7 * d, cian.copy(alpha = 0.06f + 0.14f * avance), android.graphics.Paint.Align.RIGHT); yy += 9 * d
+                // Corte de la megaciudad: siete losas de nivel una bajo otra, cada vez más oscuras y más llenas de letreros;
+                // la lluvia cae en diagonal y, a la izquierda, el número de cada nivel.
+                val magenta = Color(0xFFFF3D9A); val ambar = Color(0xFFFFB238); val verde = Color(0xFF8CFF5A)
+                val az = java.util.Random(31)
+                for (k in 0 until 7) {
+                    val y0 = h * (k / 7f); val y1 = h * ((k + 1) / 7f)
+                    drawRect(Color(0xFF0C0811).copy(alpha = 0.25f + k * 0.08f), Offset(0f, y0), Size(w, y1 - y0))
+                    drawLine(Color(0xFF4B2B47).copy(alpha = 0.8f), Offset(0f, y1), Offset(w, y1), 2 * d)
+                    repeat(3 + k) {
+                        val x = az.nextFloat() * w; val an = (6 + az.nextInt(10)) * d; val al = (y1 - y0) * (0.3f + 0.4f * az.nextFloat())
+                        val col = listOf(magenta, ambar, verde)[az.nextInt(3)].copy(alpha = 0.12f + 0.25f * avance)
+                        drawRect(col, Offset(x, y1 - al - 3 * d), Size(an, al), style = Stroke(1 * d))
                     }
+                    with(TrofeosMas) { mono("−${k + 1}", 4 * d, y0 + 11 * d, 8 * d, ambar.copy(alpha = 0.45f)) }
                 }
+                repeat(90) { val x = az.nextFloat() * w; val y = az.nextFloat() * h; drawLine(Color(0xFF9DB4D8).copy(alpha = 0.12f), Offset(x, y), Offset(x - 3 * d, y + 10 * d), 0.7f * d) }
             }
             TemaId.REFUGIO -> {
                 // El refugio en corte: la tierra rayada, los niveles con sus cuartos, las escaleras entre niveles y la superficie con su sol.
@@ -441,11 +445,12 @@ object MapasMas {
                 drawPath(p, cian.copy(alpha = 0.75f), style = Stroke(1 * d))
                 aLoLargo(p, 15 * d) { o, _ -> drawRect(cian, Offset(o.x - 1.6f * d, o.y - 1.6f * d), Size(3.2f * d, 3.2f * d)) }
             }
+            // Las escaleras de servicio: un tubo ámbar con su halo y peldaños a lo largo.
             TemaId.NEON -> {
-                val cian = Color(0xFF00E5FF)
-                drawPath(p, cian.copy(alpha = 0.16f), style = Stroke(6 * d))
-                drawPath(p, cian.copy(alpha = 0.75f), style = Stroke(1 * d))
-                aLoLargo(p, 15 * d) { o, _ -> drawRect(cian, Offset(o.x - 1.6f * d, o.y - 1.6f * d), Size(3.2f * d, 3.2f * d)) }
+                val ambar = Color(0xFFFFB238)
+                drawPath(p, ambar.copy(alpha = 0.18f), style = Stroke(7 * d, cap = StrokeCap.Round))
+                drawPath(p, ambar.copy(alpha = 0.85f), style = Stroke(1.3f * d, cap = StrokeCap.Round))
+                aLoLargo(p, 10 * d) { o, dir -> val n = Offset(-dir.y, dir.x) * (4 * d); drawLine(ambar.copy(alpha = 0.6f), o - n, o + n, 1 * d) }
             }
             // La franja de los pasillos: el trazo verde azulado (fósforo de noche) con las marcas amarillas del piso.
             TemaId.REFUGIO -> {
@@ -528,12 +533,14 @@ object MapasMas {
                 drawCircle(col, r * 0.16f, Offset(c.x + r * 0.55f, c.y - r * 0.3f))
                 if (meta) drawRect(col.copy(alpha = 0.4f), Offset(c.x - r * 1.35f, c.y - r * 1.15f), Size(2.7f * r, 2.3f * r), style = Stroke(0.8f * d))
             }
+            // Cada nivel, la puerta del elevador de carga con su letrero luminoso encima.
             TemaId.NEON -> {
-                drawRect(Color(0xFF05070B), Offset(c.x - r, c.y - r * 0.8f), Size(2 * r, 1.6f * r))
-                drawRect(col, Offset(c.x - r, c.y - r * 0.8f), Size(2 * r, 1.6f * r), style = Stroke(1.2f * d))
-                for (k in 0 until 2) drawLine(col, Offset(c.x - r * 0.6f, c.y - r * 0.3f + k * r * 0.55f), Offset(c.x + r * 0.15f, c.y - r * 0.3f + k * r * 0.55f), 0.9f * d)
-                drawCircle(col, r * 0.16f, Offset(c.x + r * 0.55f, c.y - r * 0.3f))
-                if (meta) drawRect(col.copy(alpha = 0.4f), Offset(c.x - r * 1.35f, c.y - r * 1.15f), Size(2.7f * r, 2.3f * r), style = Stroke(0.8f * d))
+                drawRect(Color(0xFF150E1B), Offset(c.x - r * 0.8f, c.y - r * 0.5f), Size(1.6f * r, 1.3f * r))
+                drawLine(col.copy(alpha = 0.6f), Offset(c.x, c.y - r * 0.5f), Offset(c.x, c.y + r * 0.8f), 0.8f * d)
+                drawRect(col, Offset(c.x - r * 0.8f, c.y - r * 0.5f), Size(1.6f * r, 1.3f * r), style = Stroke(1 * d))
+                drawRoundRect(col.copy(alpha = 0.3f), Offset(c.x - r * 0.7f, c.y - r * 1.05f), Size(1.4f * r, r * 0.4f), CornerRadius(r * 0.2f), style = Stroke(3 * d))
+                drawRoundRect(col, Offset(c.x - r * 0.7f, c.y - r * 1.05f), Size(1.4f * r, r * 0.4f), CornerRadius(r * 0.2f), style = Stroke(1 * d))
+                if (meta) drawRoundRect(col.copy(alpha = 0.4f), Offset(c.x - r * 1.3f, c.y - r * 1.4f), Size(2.6f * r, 2.6f * r), CornerRadius(r * 0.3f), style = Stroke(0.8f * d))
             }
             // La escotilla de cada nivel: rueda de manivela sobre la puerta redonda.
             TemaId.REFUGIO -> {
@@ -648,7 +655,8 @@ object MapasMas {
             TemaId.URSS -> { alfiler(); drawRect(Color(0xFF161414), Offset(g.x - r * 0.8f, g.y - r * 0.3f), Size(r * 1.4f, r * 0.7f)); drawRect(Color(0xFF161414), Offset(g.x + r * 0.1f, g.y - r * 0.8f), Size(r * 0.5f, r * 0.6f)); drawRect(Color(0xFF161414), Offset(g.x - r * 0.6f, g.y - r * 0.75f), Size(r * 0.2f, r * 0.45f)); drawRect(Color(0xFFC1121F), Offset(g.x - r * 0.8f, g.y + r * 0.05f), Size(r * 1.4f, r * 0.12f)); listOf(-0.45f, 0.05f).forEach { dx -> drawCircle(Color(0xFFC1121F), r * 0.22f, Offset(g.x + dx * r, g.y + r * 0.5f)) } }
             // El cursor de la consola.
             TemaId.CIBER -> { alfiler(); drawCircle(Color(0xFF05070B), r * 0.95f, g); drawRect(Color(0xFF00E5FF), Offset(g.x - r * 0.32f, g.y - r * 0.55f), Size(r * 0.64f, r * 1.1f)) }
-            TemaId.NEON -> { alfiler(); drawCircle(Color(0xFF05070B), r * 0.95f, g); drawRect(Color(0xFF00E5FF), Offset(g.x - r * 0.32f, g.y - r * 0.55f), Size(r * 0.64f, r * 1.1f)) }
+            // El farolito de papel rojo.
+            TemaId.NEON -> { alfiler(); drawOval(Color(0xFFFF6B5E), Offset(g.x - r * 0.6f, g.y - r * 0.8f), Size(r * 1.2f, r * 1.5f)); drawLine(Color(0xFF3A0D27), Offset(g.x - r * 0.6f, g.y), Offset(g.x + r * 0.6f, g.y), 0.8f * d); drawRect(Color(0xFF3A0D27), Offset(g.x - r * 0.25f, g.y - r * 0.95f), Size(r * 0.5f, r * 0.2f)) }
         }
     }
 

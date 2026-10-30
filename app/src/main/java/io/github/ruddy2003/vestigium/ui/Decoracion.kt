@@ -73,7 +73,7 @@ private fun Offset.mas(r: Float, ang: Float) = Offset(x + r * cos(ang), y + r * 
 private fun periodo(t: TemaId) = when (t) {
     TemaId.ROMANO -> 6000
     TemaId.CIBER -> 4200
-    TemaId.NEON -> 4200
+    TemaId.NEON -> 3600
     TemaId.HELENO -> 60000
     TemaId.MEDIEVAL -> 5000
     TemaId.DISTOPIA -> 7000
@@ -118,7 +118,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
     when (tema) {
         TemaId.ROMANO -> laurel(c, r, if (oscuro) e.primary else e.tertiary, t)
         TemaId.CIBER -> consola(c, r, e.primary, e.secondary, t)
-        TemaId.NEON -> consola(c, r, e.primary, e.secondary, t)
+        TemaId.NEON -> letreroNeon(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.HELENO -> solVergina(c, r, if (oscuro) e.primary else e.tertiary, if (oscuro) e.tertiary else e.primary, t)
         TemaId.MEDIEVAL -> roseton(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.DISTOPIA -> ojo(c, r, e.onBackground, e.primary, e.background, t)
@@ -629,6 +629,50 @@ private fun DrawScope.consola(c: Offset, r: Float, fosforo: Color, falla: Color,
     if ((t * 8).toInt() % 2 == 0) drawRect(fosforo, Offset(xi + escritos * ch, y - r * 0.11f), Size(ch * 0.75f, r * 0.22f))
 }
 
+/**
+ * El letrero de neón de un puesto de fideos, colgado de dos cadenas: el tubo ámbar del marco, el tazón magenta con sus
+ * palillos y el vapor verde que sube ondulando. El marco parpadea de vez en cuando, como los letreros viejos, y el letrero
+ * se mece apenas.
+ */
+private fun DrawScope.letreroNeon(c: Offset, r: Float, magenta: Color, ambar: Color, verde: Color, t: Float) {
+    val vaiven = sin(t * 2 * PI).toFloat() * 2.5f
+    rotate(vaiven, Offset(c.x, c.y - r)) {
+        val marco = Rect(c.x - r * 0.82f, c.y - r * 0.55f, c.x + r * 0.82f, c.y + r * 0.78f)
+        // Las cadenas.
+        listOf(marco.left + r * 0.25f, marco.right - r * 0.25f).forEach { x ->
+            var y = c.y - r; while (y < marco.top) { drawOval(ambar.copy(alpha = 0.5f), Offset(x - r * 0.03f, y), Size(r * 0.06f, r * 0.1f), style = Stroke(r * 0.02f)); y += r * 0.09f }
+        }
+        drawRoundRect(Color.Black.copy(alpha = 0.35f), marco.topLeft, marco.size, CornerRadius(r * 0.12f))
+        // El marco: se apaga un instante.
+        val apagado = t in 0.42f..0.46f || t in 0.5f..0.52f
+        val am = if (apagado) ambar.copy(alpha = 0.25f) else ambar
+        drawRoundRect(am.copy(alpha = am.alpha * 0.3f), marco.topLeft, marco.size, CornerRadius(r * 0.12f), style = Stroke(r * 0.14f))
+        drawRoundRect(am, marco.topLeft, marco.size, CornerRadius(r * 0.12f), style = Stroke(r * 0.045f))
+        // El tazón.
+        val tazon = Path().apply {
+            moveTo(c.x - r * 0.5f, c.y + r * 0.05f); lineTo(c.x + r * 0.5f, c.y + r * 0.05f)
+            quadraticTo(c.x + r * 0.45f, c.y + r * 0.55f, c.x, c.y + r * 0.58f); quadraticTo(c.x - r * 0.45f, c.y + r * 0.55f, c.x - r * 0.5f, c.y + r * 0.05f)
+        }
+        drawPath(tazon, magenta.copy(alpha = 0.3f), style = Stroke(r * 0.13f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        drawPath(tazon, magenta, style = Stroke(r * 0.045f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        // Los palillos.
+        listOf(0f, r * 0.09f).forEach { d ->
+            drawLine(magenta, Offset(c.x + r * 0.08f + d, c.y - r * 0.02f), Offset(c.x + r * 0.55f + d, c.y - r * 0.38f), r * 0.035f, StrokeCap.Round)
+        }
+        // El vapor, que ondula con el tiempo.
+        for (k in 0 until 3) {
+            val x0 = c.x - r * 0.25f + k * r * 0.2f
+            val fase = (t * 2 * PI + k).toFloat()
+            val vapor = Path().apply {
+                moveTo(x0, c.y - r * 0.02f)
+                cubicTo(x0 - r * 0.08f * sin(fase), c.y - r * 0.15f, x0 + r * 0.08f * sin(fase), c.y - r * 0.28f, x0, c.y - r * 0.42f)
+            }
+            drawPath(vapor, verde.copy(alpha = 0.25f), style = Stroke(r * 0.1f, cap = StrokeCap.Round))
+            drawPath(vapor, verde, style = Stroke(r * 0.03f, cap = StrokeCap.Round))
+        }
+    }
+}
+
 /** El sol de Vergina: dieciséis rayos alternos, largos y cortos. */
 internal fun DrawScope.sol(c: Offset, r: Float, color: Color) {
     for (i in 0 until 16) {
@@ -838,7 +882,7 @@ private fun DrawScope.farol(c: Offset, r: Float, marco: Color, llama: Color, oro
 }
 
 // =====================================================================
-//  Bandas ornamentales de los temas nuevos (el romano, el helénico y el cyberpunk están en Componentes)
+//  Bandas ornamentales de los temas nuevos (el romano, el helénico y Terminal están en Componentes)
 // =====================================================================
 
 /** Zarcillo de manuscrito: un tallo de oro que ondula, con hojas azules y puntos rojos. */
@@ -1145,9 +1189,15 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             var y = 0f; while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += p }
         }
         TemaId.NEON -> {
-            color = esquema.primary.copy(alpha = 0.045f)
-            val p = 28.dp.toPx(); var x = 0f; while (x < w) { trazo.moveTo(x, 0f); trazo.lineTo(x, h); x += p }
-            var y = 0f; while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += p }
+            // La llovizna que cae en diagonal y, abajo, la silueta de los edificios con sus ventanas.
+            color = esquema.secondary.copy(alpha = 0.07f); color2 = esquema.primary.copy(alpha = 0.05f)
+            val az = java.util.Random(77); val largo = 14.dp.toPx()
+            repeat(140) { val x = az.nextFloat() * w; val y = az.nextFloat() * h; trazo.moveTo(x, y); trazo.lineTo(x - largo * 0.25f, y + largo) }
+            var x = 0f
+            while (x < w) {
+                val ancho = (22 + az.nextInt(30)).dp.toPx(); val alto = h * (0.06f + az.nextFloat() * 0.12f)
+                puntos.addRect(Rect(x, h - alto, x + ancho - 3.dp.toPx(), h)); x += ancho
+            }
         }
         TemaId.MEDIEVAL -> {
             color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.06f); color2 = esquema.primary.copy(alpha = 0.12f)
@@ -1450,7 +1500,7 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         lineTo(0.9f * s.width, s.height); close()
     }
     TemaId.CIBER -> RectangleShape
-    TemaId.NEON -> RectangleShape
+    TemaId.NEON -> androidx.compose.foundation.shape.RoundedCornerShape(50)   // la placa luminosa del puesto
     TemaId.HELENO -> poligonoBoton(0.08f to 1f, 0.08f to 0.3f, 0.5f to 0.02f, 0.92f to 0.3f, 0.92f to 1f)
     TemaId.MEDIEVAL -> GenericShape { s, _ ->
         // Cuatro lóbulos que se cortan a 80,2° de su eje: un solo contorno, para que el borde no cruce por dentro.
@@ -1508,7 +1558,7 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
 private fun textoMas(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "Cetera"
     TemaId.CIBER -> "más_"
-    TemaId.NEON -> "más_"
+    TemaId.NEON -> "más ▸"
     TemaId.HELENO -> "Πλέον"
     TemaId.MEDIEVAL -> "Ítem"
     TemaId.DISTOPIA -> "Anexo"
@@ -1559,8 +1609,12 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             // Sol de píxeles.
             TemaId.CIBER -> { val p = r * 0.22f; drawRect(color, Offset(c.x - p * 1.5f, c.y - p * 1.5f), Size(p * 3, p * 3))
                 for (i in 0 until 8) { val q = c.mas(r * 0.82f, rad(45.0 * i)); drawRect(color, Offset(q.x - p / 2, q.y - p / 2), Size(p, p)) } }
-            TemaId.NEON -> { val p = r * 0.22f; drawRect(color, Offset(c.x - p * 1.5f, c.y - p * 1.5f), Size(p * 3, p * 3))
-                for (i in 0 until 8) { val q = c.mas(r * 0.82f, rad(45.0 * i)); drawRect(color, Offset(q.x - p / 2, q.y - p / 2), Size(p, p)) } }
+            // El sol entre el smog: un disco de tubo con su halo, cortado por tres franjas de neblina.
+            TemaId.NEON -> {
+                drawCircle(color.copy(alpha = 0.3f), r * 0.62f, c, style = Stroke(r * 0.3f))
+                drawCircle(color, r * 0.62f, c, style = Stroke(r * 0.1f))
+                listOf(0.15f, 0.38f, 0.6f).forEach { dy -> drawLine(fondo, Offset(c.x - r, c.y + r * dy), Offset(c.x + r, c.y + r * dy), r * 0.08f) }
+            }
             TemaId.HELENO -> sol(c, r * 0.95f, color)
             // Sol de miniatura: rayos rectos alternados con rayos ondulados.
             TemaId.MEDIEVAL -> { drawCircle(color, r * 0.36f, c)
@@ -1628,9 +1682,12 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             TemaId.CIBER -> { val p = r * 0.34f
                 listOf(-1 to -2, 0 to -2, 1 to -2, -2 to -1, -1 to -1, -2 to 0, -1 to 0, -2 to 1, -1 to 1, -1 to 2, 0 to 2, 1 to 2).forEach { (i, j) ->
                     drawRect(color, Offset(c.x + (i - 0.5f) * p, c.y + (j - 0.5f) * p), Size(p * 0.9f, p * 0.9f)) } }
-            TemaId.NEON -> { val p = r * 0.34f
-                listOf(-1 to -2, 0 to -2, 1 to -2, -2 to -1, -1 to -1, -2 to 0, -1 to 0, -2 to 1, -1 to 1, -1 to 2, 0 to 2, 1 to 2).forEach { (i, j) ->
-                    drawRect(color, Offset(c.x + (i - 0.5f) * p, c.y + (j - 0.5f) * p), Size(p * 0.9f, p * 0.9f)) } }
+            // Una luna de tubo de neón con su halo.
+            TemaId.NEON -> {
+                val arco = Path().apply { addArc(Rect(c.x - r * 0.7f, c.y - r * 0.7f, c.x + r * 0.7f, c.y + r * 0.7f), 100f, 250f) }
+                drawPath(arco, color.copy(alpha = 0.3f), style = Stroke(r * 0.28f, cap = StrokeCap.Round))
+                drawPath(arco, color, style = Stroke(r * 0.1f, cap = StrokeCap.Round))
+            }
             // Luna con tres estrellas.
             TemaId.HELENO -> { luna(); listOf(Offset(0.6f, -0.55f), Offset(0.85f, -0.1f), Offset(0.55f, 0.4f)).forEach { drawCircle(color, r * 0.08f, c + it * r) } }
             // Luna en su medallón de miniatura.
@@ -1700,8 +1757,8 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
         // Cristal cuadrado con un renglón dentro.
         TemaId.CIBER -> { drawRect(color, Offset(c.x - lr, c.y - lr), Size(lr * 2, lr * 2), style = Stroke(g)); mango(0.92f, 0.12f, 0.72f)
             drawLine(color, Offset(c.x - lr * 0.45f, c.y + lr * 0.3f), Offset(c.x + lr * 0.45f, c.y + lr * 0.3f), r * 0.08f) }
-        TemaId.NEON -> { drawRect(color, Offset(c.x - lr, c.y - lr), Size(lr * 2, lr * 2), style = Stroke(g)); mango(0.92f, 0.12f, 0.72f)
-            drawLine(color, Offset(c.x - lr * 0.45f, c.y + lr * 0.3f), Offset(c.x + lr * 0.45f, c.y + lr * 0.3f), r * 0.08f) }
+        // Lupa de tubo de neón: el aro con su halo.
+        TemaId.NEON -> { drawCircle(color.copy(alpha = 0.3f), lr, c, style = Stroke(g * 2.6f)); lente(); mango() }
         // Cuentas alrededor, por dentro del cristal.
         TemaId.HELENO -> { lente(); mango(); for (i in 0 until 8) drawCircle(color, r * 0.035f, c.mas(lr * 0.55f, rad(45.0 * i))) }
         // Mango rematado en flor de tres pétalos.
@@ -1891,14 +1948,10 @@ fun CapaFiesta(fijo: Float? = null) {
                             drawLine(fosforo, pos - Offset(0f, s * 0.6f), pos - Offset(s * 0.3f, s * 0.35f), s * 0.2f)
                         }
                     }
+                    // Tramitos de tubo de neón que caen encendidos, con su halo.
                     TemaId.NEON -> {
-                        val fosforo = e.primary.copy(alpha = a)
-                        if (p.tono == 0) {
-                            drawOval(fosforo, Offset(pos.x - s * 0.35f, pos.y - s * 0.6f), Size(s * 0.7f, s * 1.2f), style = Stroke(s * 0.2f))
-                        } else {
-                            drawLine(fosforo, pos - Offset(0f, s * 0.6f), pos + Offset(0f, s * 0.6f), s * 0.22f)
-                            drawLine(fosforo, pos - Offset(0f, s * 0.6f), pos - Offset(s * 0.3f, s * 0.35f), s * 0.2f)
-                        }
+                        drawLine(col.copy(alpha = a * 0.3f), pos - Offset(s * 0.7f, 0f), pos + Offset(s * 0.7f, 0f), s * 0.6f, StrokeCap.Round)
+                        drawLine(col, pos - Offset(s * 0.7f, 0f), pos + Offset(s * 0.7f, 0f), s * 0.2f, StrokeCap.Round)
                     }
                     // Soles de Vergina pequeños: disco y ocho rayos alternos.
                     TemaId.HELENO -> { for (i in 0 until 8) { val an = rad(45.0 * i); drawLine(col, pos.mas(s * 0.35f, an), pos.mas(if (i % 2 == 0) s else s * 0.7f, an), s * 0.16f, StrokeCap.Round) }

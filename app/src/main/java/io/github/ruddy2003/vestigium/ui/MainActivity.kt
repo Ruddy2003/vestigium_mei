@@ -221,8 +221,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.ROMANO -> BloqueoCentrado(TextosBloqueo("VESTIGIVM MEI", "// tabulae obsignatae · tu diario está sellado", "Resignare"), tituloArriba = true, sello = 170, reintentar = reintentar)
         TemaId.CIBER -> BloqueoConsola(TextosBloqueo("vestigium_mei", "> esperando huella_", "[ desbloquear ]",
             listOf("> montar /diario", "! acceso denegado: volumen cifrado", "> llave: huella del titular")), reintentar)
-        TemaId.NEON -> BloqueoConsola(TextosBloqueo("vestigium_mei", "> esperando huella_", "[ desbloquear ]",
-            listOf("> montar /diario", "! acceso denegado: volumen cifrado", "> llave: huella del titular")), reintentar)
+        // La persiana del puesto bajada, con el letrero de «cerrado» encendido arriba.
+        TemaId.NEON -> BloqueoMarco(TextosBloqueo("CERRADO · 閉店", "⌁ El puesto está cerrado: solo el dueño sube la persiana.", "SUBIR LA PERSIANA"), arriba = 40, reintentar = reintentar) { cs -> bloqueoPersiana(cs) }
         TemaId.HELENO -> BloqueoMarco(TextosBloqueo("ΤΑ ΙΧΝΗ ΜΟΥ", "— ἐσφραγισμένον · tu diario está sellado", "ΑΝΟΙΞΟΝ"), arriba = 54, reintentar = reintentar) { cs -> bloqueoFronton(cs) }
         TemaId.MEDIEVAL -> BloqueoMarco(TextosBloqueo("Vestigium mei", "¶ Este libro está cerrado con sello: sólo su dueño lo abre.", "Romper el sello"), arriba = 0, reintentar = reintentar) { cs -> bloqueoIluminado(cs) }
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
@@ -511,6 +511,18 @@ private fun DrawScope.bloqueoMampara(cs: ColorScheme) {
     }
 }
 
+/** Persiana metálica bajada: sus lamas, el candado abajo y, arriba, el letrero de neón con su halo. */
+private fun DrawScope.bloqueoPersiana(cs: ColorScheme) {
+    val u = 1.dp.toPx(); val w = size.width; val h = size.height
+    var y = 34 * u
+    while (y < h) { drawLine(cs.outline.copy(alpha = 0.55f), Offset(0f, y), Offset(w, y), 1.2f * u); y += 9 * u }
+    drawRect(cs.outline, Offset.Zero, size, style = Stroke(2f * u))
+    drawRoundRect(cs.primary.copy(alpha = 0.22f), Offset(w * 0.2f, 4 * u), Size(w * 0.6f, 22 * u), CornerRadius(11 * u), style = Stroke(7 * u))
+    drawRoundRect(cs.primary, Offset(w * 0.2f, 4 * u), Size(w * 0.6f, 22 * u), CornerRadius(11 * u), style = Stroke(2f * u))
+    drawRect(cs.secondary, Offset(w / 2 - 6 * u, h - 14 * u), Size(12 * u, 10 * u))
+    drawArc(cs.secondary, 180f, 180f, false, Offset(w / 2 - 4 * u, h - 20 * u), Size(8 * u, 10 * u), style = Stroke(1.6f * u))
+}
+
 /** Compuerta blindada: esquinas cortadas y una franja de aviso arriba. */
 private fun DrawScope.bloqueoCompuerta(cs: ColorScheme) {
     val u = 1.dp.toPx(); val w = size.width; val h = size.height; val k = 22 * u
@@ -768,10 +780,11 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
             drawPath(Path().apply { moveTo(cx - 19 * u - d, 3 * u); lineTo(cx - 23 * u - d, 3 * u); lineTo(cx - 23 * u - d, 27 * u); lineTo(cx - 19 * u - d, 27 * u) }, c, style = linea)
             drawPath(Path().apply { moveTo(cx + 19 * u + d, 3 * u); lineTo(cx + 23 * u + d, 3 * u); lineTo(cx + 23 * u + d, 27 * u); lineTo(cx + 19 * u + d, 27 * u) }, c, style = linea)
         }
+        // Un tubo de neón que se enciende bajo el ícono: primero el halo, luego el núcleo.
         TemaId.NEON -> {
-            val d = (1 - p) * 6 * u
-            drawPath(Path().apply { moveTo(cx - 19 * u - d, 3 * u); lineTo(cx - 23 * u - d, 3 * u); lineTo(cx - 23 * u - d, 27 * u); lineTo(cx - 19 * u - d, 27 * u) }, c, style = linea)
-            drawPath(Path().apply { moveTo(cx + 19 * u + d, 3 * u); lineTo(cx + 23 * u + d, 3 * u); lineTo(cx + 23 * u + d, 27 * u); lineTo(cx + 19 * u + d, 27 * u) }, c, style = linea)
+            val y = h - 1.5f * u; val a = 20 * u
+            drawLine(c.copy(alpha = c.alpha * 0.3f), Offset(cx - a, y), Offset(cx + a, y), 7 * u, StrokeCap.Round)
+            if (p > 0.5f) drawLine(c, Offset(cx - a, y), Offset(cx + a, y), 2 * u, StrokeCap.Round)
         }
         // Frontón encima y estilóbato debajo.
         TemaId.HELENO -> {
@@ -924,12 +937,10 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
                 drawPath(Path().apply { moveTo(o.x + d.x * l, o.y); lineTo(o.x, o.y); lineTo(o.x, o.y + d.y * l) }, c, style = s)
             }
         }
+        // La placa del puesto: una cápsula de tubo de neón con su halo.
         TemaId.NEON -> {
-            drawRect(c.copy(alpha = 0.12f), Offset(4 * u, 4 * u), Size(w - 8 * u, h - 8 * u))
-            val l = 11 * u; val m = 4 * u; val s = Stroke(2f * u, cap = StrokeCap.Square)
-            listOf(Offset(m, m) to Offset(1f, 1f), Offset(w - m, m) to Offset(-1f, 1f), Offset(m, h - m) to Offset(1f, -1f), Offset(w - m, h - m) to Offset(-1f, -1f)).forEach { (o, d) ->
-                drawPath(Path().apply { moveTo(o.x + d.x * l, o.y); lineTo(o.x, o.y); lineTo(o.x, o.y + d.y * l) }, c, style = s)
-            }
+            drawRoundRect(c.copy(alpha = 0.25f), Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u), CornerRadius(h), style = Stroke(6 * u))
+            drawRoundRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u), CornerRadius(h), style = Stroke(2 * u))
         }
         // Sol de Vergina: disco y dieciséis rayos, largos y cortos.
         TemaId.HELENO -> {
@@ -1058,7 +1069,8 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         TemaId.ROMANO -> { filete(); drawLine(acento, Offset(0f, 3 * u), Offset(w, 3 * u), 0.7f * u) }
         // Línea de guiones.
         TemaId.CIBER -> drawLine(cs.primary.copy(alpha = 0.6f), Offset(0f, 1 * u), Offset(w, 1 * u), 1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 4 * u)))
-        TemaId.NEON -> drawLine(cs.primary.copy(alpha = 0.6f), Offset(0f, 1 * u), Offset(w, 1 * u), 1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 4 * u)))
+        // El tubo de neón que recorre la fachada, con su halo.
+        TemaId.NEON -> { drawLine(cs.primary.copy(alpha = 0.25f), Offset(0f, 2 * u), Offset(w, 2 * u), 4 * u); drawLine(cs.primary, Offset(0f, 2 * u), Offset(w, 2 * u), 1.2f * u) }
         // Astrágalo: filete y una fila de perlas.
         TemaId.HELENO -> { filete(); var x = 3 * u; while (x < w) { drawCircle(acento, 0.9f * u, Offset(x, 3 * u)); x += 6 * u } }
         // Filete con rombos de rúbrica.
@@ -1362,7 +1374,11 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.ROMANO -> (fadeIn(t(260)) + slideInVertically(t(260)) { dir * it / 24 }) togetherWith fadeOut(t(140))
         // Terminal: barrido rápido y lineal, de lado.
         TemaId.CIBER -> (fadeIn(t(140, lineal)) + slideInHorizontally(t(160, lineal)) { dir * it / 8 }) togetherWith fadeOut(t(90, lineal))
-        TemaId.NEON -> (fadeIn(t(140, lineal)) + slideInHorizontally(t(160, lineal)) { dir * it / 8 }) togetherWith fadeOut(t(90, lineal))
+        // Letrero que se enciende: parpadea dos veces antes de quedarse prendido.
+        TemaId.NEON -> {
+            val parpadeo = androidx.compose.animation.core.Easing { f -> when { f < 0.12f -> f * 4f; f < 0.2f -> 0.1f; f < 0.3f -> 0.7f; f < 0.36f -> 0.2f; else -> f } }
+            (fadeIn(tween(360, 0, parpadeo)) + scaleIn(t(360), initialScale = 0.985f)) togetherWith fadeOut(t(120, lineal))
+        }
         // Frontón: la pantalla baja desde el centro de arriba, como un friso que se asienta.
         TemaId.HELENO -> (scaleIn(t(320), initialScale = 0.9f, transformOrigin = TransformOrigin(0.5f, 0f)) + fadeIn(t(280))) togetherWith
             (scaleOut(t(200), targetScale = 0.96f, transformOrigin = TransformOrigin(0.5f, 1f)) + fadeOut(t(200)))

@@ -28,6 +28,9 @@ FUENTES = [
     # REF: máquina de escribir del refugio
     ("courierprime/CourierPrime-Regular.ttf", None, "courier_regular", None, LATINO),
     ("courierprime/CourierPrime-Bold.ttf", None, "courier_bold", None, LATINO),
+    # NEON: la letra técnica y cuadrada de los letreros de la megaciudad (Chakra Petch)
+    ("chakrapetch/ChakraPetch-Regular.ttf", None, "chakra_regular", None, LATINO),
+    ("chakrapetch/ChakraPetch-SemiBold.ttf", None, "chakra_semibold", None, LATINO),
     # MED: la letra de los medievalistas
     ("cardo/Cardo-Regular.ttf", None, "cardo_regular", None, LATINO),
     ("cardo/Cardo-Bold.ttf", None, "cardo_bold", None, LATINO),

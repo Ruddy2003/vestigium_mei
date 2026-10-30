@@ -469,11 +469,13 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
             while (x < w) { drawRect(pista, Offset(x, 0f), Size(celda, h)); x += paso }
             clipRect(right = fw) { x = 0f; while (x < fw) { drawRect(color, Offset(x, 0f), Size(celda, h)); x += paso } }
         }
+        // Un tubo de neón: apagado de punta a punta y encendido, con su halo, hasta donde llega.
         TemaId.NEON -> {
-            val paso = 5f * d; val celda = 3.6f * d
-            var x = 0f
-            while (x < w) { drawRect(pista, Offset(x, 0f), Size(celda, h)); x += paso }
-            clipRect(right = fw) { x = 0f; while (x < fw) { drawRect(color, Offset(x, 0f), Size(celda, h)); x += paso } }
+            drawLine(pista, Offset(h / 2, h / 2), Offset(w - h / 2, h / 2), h * 0.5f, StrokeCap.Round)
+            if (fw > 0f) {
+                drawLine(color.copy(alpha = 0.3f), Offset(h / 2, h / 2), Offset(maxOf(fw - h / 2, h / 2), h / 2), h, StrokeCap.Round)
+                drawLine(color, Offset(h / 2, h / 2), Offset(maxOf(fw - h / 2, h / 2), h / 2), h * 0.45f, StrokeCap.Round)
+            }
         }
         // Friso: la barra entre dos filetes.
         TemaId.HELENO -> {
@@ -753,10 +755,12 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawCircle(cs.primary.copy(alpha = 0.3f), rc, c, style = Stroke(d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f * d, 2f * d))))
             drawRect(cs.primary.copy(alpha = 0.6f), Offset(c.x - 3f * d, c.y - 5f * d), Size(6f * d, 10f * d))
         }
+        // El reloj de un local de 24 horas: un aro de tubo con su halo y las cuatro horas marcadas en ámbar.
         TemaId.NEON -> {
-            for (k in 0 until 24) drawRect(cs.primary.copy(alpha = if (k % 6 == 0) 0.9f else 0.35f), polarFig(c, ro + 3f * d, k * 15f - 90f) - Offset(1.2f * d, 1.2f * d), Size(2.4f * d, 2.4f * d))
-            drawCircle(cs.primary.copy(alpha = 0.3f), rc, c, style = Stroke(d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f * d, 2f * d))))
-            drawRect(cs.primary.copy(alpha = 0.6f), Offset(c.x - 3f * d, c.y - 5f * d), Size(6f * d, 10f * d))
+            drawCircle(cs.primary.copy(alpha = 0.2f), rc, c, style = Stroke(4f * d))
+            drawCircle(cs.primary.copy(alpha = 0.8f), rc, c, style = Stroke(1.2f * d))
+            for (k in 0 until 4) drawLine(cs.secondary, polarFig(c, rc * 0.7f, k * 90f - 90f), polarFig(c, rc * 0.9f, k * 90f - 90f), 1.6f * d, StrokeCap.Round)
+            marcas(24, 2f * d, 0.8f * d, cs.primary.copy(alpha = 0.4f))
         }
         // El sol de Vergina en el centro.
         TemaId.HELENO -> {

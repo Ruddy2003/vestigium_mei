@@ -109,9 +109,10 @@ class Papeleria(val sobre: Color, val sombra: Color, val brillo: Color, val forr
 fun papeleria(t: TemaId): Papeleria = when (t) {
     // Papiro grueso forrado de pórfido, cordón de lino y cera roja para el anillo.
     TemaId.ROMANO -> Papeleria(Color(0xFFE4D0A0), Color(0xFFAE8A52), Color(0xFFF3E4BE), Color(0xFF7C2433), Color(0xFF8E2B1F), Color(0xFFBFA77A), Color(0xFF2A1E14))
-    // Un paquete de datos: grafito con la rejilla cian por dentro, el chip en cian y el precinto magenta.
-    TemaId.CIBER -> Papeleria(Color(0xFF0B121C), Color(0xFF05080E), Color(0xFF15202E), Color(0xFF06282F), Color(0xFF00E5FF), Color(0xFFFF2E88), Color(0xFFD6F3F7))
-    TemaId.NEON -> Papeleria(Color(0xFF0B121C), Color(0xFF05080E), Color(0xFF15202E), Color(0xFF06282F), Color(0xFF00E5FF), Color(0xFFFF2E88), Color(0xFFD6F3F7))
+    // Un paquete de datos: grafito con la rejilla cian por dentro, el chip en cian y el precinto en cian más tenue.
+    TemaId.CIBER -> Papeleria(Color(0xFF0B121C), Color(0xFF05080E), Color(0xFF15202E), Color(0xFF06282F), Color(0xFF00E5FF), Color(0xFF5FC4D2), Color(0xFFBDEFF5))
+    // La bolsa de entrega de plástico violeta, forrada de magenta, con la etiqueta adhesiva y la cinta ámbar.
+    TemaId.NEON -> Papeleria(Color(0xFF2A1C33), Color(0xFF140D1A), Color(0xFF3D2A48), Color(0xFF3A0D27), Color(0xFFFF3D9A), Color(0xFFFFB238), Color(0xFFF4E7F0))
     // Papiro claro forrado de púrpura macedonio, hilo negro y sello de arcilla.
     TemaId.HELENO -> Papeleria(Color(0xFFE9D7A8), Color(0xFFB5935E), Color(0xFFF5E8C6), Color(0xFF5B2A6E), Color(0xFFB5652F), Color(0xFF2B1D14), Color(0xFF1F1712))
     // Pergamino doblado con la cinta azul y el sello rojo que cuelga.
@@ -168,7 +169,7 @@ internal class FormaSobre(val solapa: SolapaSobre, val radio: Float, val cierre:
 internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
     TemaId.ROMANO -> FormaSobre(SolapaSobre.PICO, 0.03f, CierreSobre.CRUZ)
     TemaId.CIBER -> FormaSobre(SolapaSobre.RECTA, 0f, CierreSobre.PRECINTO)
-    TemaId.NEON -> FormaSobre(SolapaSobre.RECTA, 0f, CierreSobre.PRECINTO)
+    TemaId.NEON -> FormaSobre(SolapaSobre.DIENTES, 0.05f, CierreSobre.BANDA)
     TemaId.HELENO -> FormaSobre(SolapaSobre.REDONDA, 0.03f, CierreSobre.DOBLE)
     TemaId.MEDIEVAL -> FormaSobre(SolapaSobre.LENGUA, 0.015f, CierreSobre.VERTICAL)
     TemaId.DISTOPIA -> FormaSobre(SolapaSobre.RECTA, 0.01f, CierreSobre.HILO)
@@ -298,20 +299,16 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawLine(negro, Offset(c.x, c.y + r * 0.04f), Offset(c.x, c.y + r * 0.18f), r * 0.06f)
         }
         TemaId.NEON -> {
-            // El paquete de datos: un chip con sus patas y el candado; se parte al descifrarlo.
-            val s = r * 1.5f; val o = Offset(c.x - s / 2, c.y - s / 2)
-            for (i in -2..2) {
-                val d = i * s * 0.18f
-                drawLine(hondo, Offset(c.x + d, o.y - r * 0.22f), Offset(c.x + d, o.y + s + r * 0.22f), r * 0.08f)
-                drawLine(hondo, Offset(o.x - r * 0.22f, c.y + d), Offset(o.x + s + r * 0.22f, c.y + d), r * 0.08f)
-            }
-            val negro = k(Color(0xFF0B121C))
-            drawRoundRect(negro, o, Size(s, s), CornerRadius(r * 0.14f))
-            drawRoundRect(col, o, Size(s, s), CornerRadius(r * 0.14f), style = Stroke(r * 0.08f))
-            drawArc(col, 180f, 180f, false, Offset(c.x - r * 0.24f, c.y - r * 0.44f), Size(r * 0.48f, r * 0.5f), style = Stroke(r * 0.09f))
-            drawRoundRect(col, Offset(c.x - r * 0.34f, c.y - r * 0.2f), Size(r * 0.68f, r * 0.5f), CornerRadius(r * 0.06f))
-            drawCircle(negro, r * 0.08f, Offset(c.x, c.y + r * 0.02f))
-            drawLine(negro, Offset(c.x, c.y + r * 0.04f), Offset(c.x, c.y + r * 0.18f), r * 0.06f)
+            // La calcomanía redonda del puesto: el disco con su orilla clara, el rayo de «entrega rápida» y el halo.
+            drawCircle(k(col.copy(alpha = 0.3f)), r * 1.12f, c)
+            drawCircle(col, r * 0.95f, c)
+            drawCircle(claro, r * 0.95f, c, style = Stroke(r * 0.07f))
+            drawCircle(hondo, r * 0.72f, c, style = Stroke(r * 0.04f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(r * 0.12f, r * 0.08f))))
+            drawPath(Path().apply {
+                moveTo(c.x + r * 0.12f, c.y - r * 0.55f); lineTo(c.x - r * 0.3f, c.y + r * 0.08f); lineTo(c.x - r * 0.02f, c.y + r * 0.08f)
+                lineTo(c.x - r * 0.14f, c.y + r * 0.55f); lineTo(c.x + r * 0.3f, c.y - r * 0.1f); lineTo(c.x + r * 0.02f, c.y - r * 0.1f); close()
+            }, k(Color(0xFF1C0010)))
+            drawCircle(sombra, r * 0.95f, c + Offset(r * 0.06f, r * 0.08f), style = Stroke(r * 0.04f))
         }
         TemaId.HELENO -> {
             // Arcilla aplastada con el dedo, y el sol de Vergina de dieciséis rayos impreso.
@@ -582,14 +579,14 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
             }
         }
         TemaId.NEON -> {
-            // Líneas de barrido y la ventana del sobre, por donde asoma la dirección en cian.
-            var y = top; while (y < bot) { drawLine(Color(0xFF00E5FF).copy(alpha = 0.035f), Offset(l, y), Offset(r, y), 1f); y += 3f }
-            val o = Offset(l + W * 0.05f, top + H * 0.42f); val s = Size(W * 0.25f, H * 0.18f)
-            drawRect(Color.Black.copy(alpha = 0.55f), o, s); drawRect(Color(0xFF00E5FF).copy(alpha = 0.6f), o, s, style = Stroke(1.2f))
-            for (j in 0 until 3) {
-                val yy = o.y + s.height * (0.28f + j * 0.24f)
-                drawLine(Color(0xFF00E5FF).copy(alpha = 0.5f), Offset(o.x + s.width * 0.1f, yy), Offset(o.x + s.width * (0.85f - j * 0.2f), yy), 1.4f)
-            }
+            // Gotas de lluvia en el plástico y la etiqueta de entrega con su código de barras y el número del puesto.
+            val az = java.util.Random(19)
+            repeat(18) { val x = l + az.nextFloat() * W; val y = top + az.nextFloat() * H; drawLine(Color.White.copy(alpha = 0.07f), Offset(x, y), Offset(x, y + H * 0.05f), 1.5f, StrokeCap.Round) }
+            val o = Offset(l + W * 0.05f, top + H * 0.52f); val s = Size(W * 0.3f, H * 0.28f)
+            drawRect(Color(0xFFEFE3EA), o, s)
+            drawRect(pa.cordon, o, Size(s.width, s.height * 0.22f))
+            var x = o.x + s.width * 0.08f; var k = 0
+            while (x < o.x + s.width * 0.92f) { val g = if (k % 3 == 0) 2.2f else 1f; drawLine(Color(0xFF1C0010), Offset(x, o.y + s.height * 0.38f), Offset(x, o.y + s.height * 0.86f), g); x += 3.4f; k++ }
         }
         TemaId.HELENO -> {
             // Un meandro en columna junto al borde derecho, entre dos filetes.
@@ -899,8 +896,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Salve, yo del futuro…", "Escribe tu epístola…", "Epístola para %s sellada", "Ni el César podrá abrirla antes.", "Toca para tomar el cálamo…")
     TemaId.CIBER -> VozCarta("> clave liberada: abrir", "Cifrada", "> para mi yo del %s", "> yo@%s", "> para mi yo del futuro",
         "// hola, yo del futuro…", "// escribe tu mensaje…", "> mensaje para %s cifrado", "Sin la clave del tiempo no se descifra antes.", "> toca para escribir_")
-    TemaId.NEON -> VozCarta("> clave liberada: abrir", "Cifrada", "> para mi yo del %s", "> yo@%s", "> para mi yo del futuro",
-        "// hola, yo del futuro…", "// escribe tu mensaje…", "> mensaje para %s cifrado", "Sin la clave del tiempo no se descifra antes.", "> toca para escribir_")
+    TemaId.NEON -> VozCarta("Ya llegó tu pedido: ábrelo", "En camino", "Para mí, el de %s", "yo, de %s", "Para mí, el de más adelante",
+        "Oye, yo de más adelante:", "Cuéntale lo que pasa en la calle…", "Pedido para %s, en camino", "El repartidor no la entrega antes de la fecha.", "toca para escribir el recado")
     TemaId.HELENO -> VozCarta("Ya puedes desatarla", "Sellada en arcilla", "Para mí, el del %s", "Para mí, el de %s", "Para mí, el que vendrá",
         "Χαῖρε, yo del futuro…", "Escribe tu carta…", "Carta para %s sellada en arcilla", "Ni el oráculo la abrirá antes.", "Toca para tomar el estilo…")
     TemaId.MEDIEVAL -> VozCarta("Ya puede abrirse", "Lacrada y atada", "Al que seré el %s", "Al que seré en %s", "Al que seré algún día",
@@ -945,7 +942,7 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
 private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.ROMANO -> Letra.codigo
     TemaId.CIBER -> Letra.terminal
-    TemaId.NEON -> Letra.terminal
+    TemaId.NEON -> Letra.letrero
     TemaId.HELENO -> Letra.garamond
     TemaId.MEDIEVAL -> LetraExtra.gotica
     TemaId.DISTOPIA -> LetraExtra.oswald

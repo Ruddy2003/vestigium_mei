@@ -17,6 +17,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.material3.MaterialTheme
@@ -50,8 +53,10 @@ object Letra {
     val texto = FontFamily(Font(R.font.plex_sans_regular, FontWeight.Normal), Font(R.font.plex_sans_medium, FontWeight.Medium), Font(R.font.plex_sans_semibold, FontWeight.SemiBold))
     /** EB Garamond: tiene griego politónico, para el tema helénico. */
     val garamond = FontFamily(Font(R.font.garamond_regular, FontWeight.Normal), Font(R.font.garamond_medium, FontWeight.Medium), Font(R.font.garamond_semibold, FontWeight.SemiBold))
-    /** Share Tech Mono: rótulos de terminal para el tema cyberpunk. */
+    /** Share Tech Mono: rótulos de consola para el tema Terminal. */
     val terminal = FontFamily(Font(R.font.sharetech_mono, FontWeight.Normal))
+    /** Chakra Petch: la letra cuadrada de los letreros de Ciudad neón. */
+    val letrero = FontFamily(Font(R.font.chakra_regular, FontWeight.Normal), Font(R.font.chakra_semibold, FontWeight.SemiBold))
 }
 
 object Paleta {
@@ -129,28 +134,28 @@ internal val romanoOscuro = darkColorScheme(
     surfaceContainerLow = Paleta.basaltoAlto, surfaceContainerLowest = Paleta.basalto,
 ).conInversos()
 
-/** Neón cian y magenta sobre negro azulado. */
+/** Consola monocroma: cian de fósforo en tres intensidades sobre negro. El error es el único color que no es cian. */
 internal val ciber = darkColorScheme(
-    primary = Color(0xFF00E5FF), onPrimary = Color(0xFF00161A), primaryContainer = Color(0xFF06282F), onPrimaryContainer = Color(0xFFBFF8FF),
-    secondary = Color(0xFFFF2E88), onSecondary = Color(0xFF1A0010), secondaryContainer = Color(0xFF2B0A1C), onSecondaryContainer = Color(0xFFFFD0E4),
-    tertiary = Color(0xFFE8FF3A),
-    background = Color(0xFF05070B), onBackground = Color(0xFFD6F3F7), surface = Color(0xFF0A0E15), onSurface = Color(0xFFD6F3F7),
-    surfaceVariant = Color(0xFF111925), onSurfaceVariant = Color(0xFF86A0B3), outline = Color(0xFF15404A), outlineVariant = Color(0xFF15404A),
-    error = Color(0xFFFF5470),
-    surfaceContainer = Color(0xFF0A0E15), surfaceContainerHigh = Color(0xFF111925), surfaceContainerHighest = Color(0xFF111925),
-    surfaceContainerLow = Color(0xFF0A0E15), surfaceContainerLowest = Color(0xFF05070B),
+    primary = Color(0xFF00E5FF), onPrimary = Color(0xFF001417), primaryContainer = Color(0xFF04282E), onPrimaryContainer = Color(0xFFBFF8FF),
+    secondary = Color(0xFF5FC4D2), onSecondary = Color(0xFF001417), secondaryContainer = Color(0xFF0A1D21), onSecondaryContainer = Color(0xFFA6E7EF),
+    tertiary = Color(0xFFC8FBFF),
+    background = Color(0xFF020506), onBackground = Color(0xFFBDEFF5), surface = Color(0xFF060E10), onSurface = Color(0xFFBDEFF5),
+    surfaceVariant = Color(0xFF0B191C), onSurfaceVariant = Color(0xFF6FA3AB), outline = Color(0xFF1A464D), outlineVariant = Color(0xFF12333A),
+    error = Color(0xFFFF8F8F),
+    surfaceContainer = Color(0xFF060E10), surfaceContainerHigh = Color(0xFF0B191C), surfaceContainerHighest = Color(0xFF0F2125),
+    surfaceContainerLow = Color(0xFF040A0B), surfaceContainerLowest = Color(0xFF020506),
 ).conInversos()
 
-/** Neón cian y magenta sobre negro azulado. */
+/** Asfalto mojado de noche bajo letreros: magenta de neón, ámbar de farol y verde de sodio, entre vapor violáceo. */
 internal val neon = darkColorScheme(
-    primary = Color(0xFF00E5FF), onPrimary = Color(0xFF00161A), primaryContainer = Color(0xFF06282F), onPrimaryContainer = Color(0xFFBFF8FF),
-    secondary = Color(0xFFFF2E88), onSecondary = Color(0xFF1A0010), secondaryContainer = Color(0xFF2B0A1C), onSecondaryContainer = Color(0xFFFFD0E4),
-    tertiary = Color(0xFFE8FF3A),
-    background = Color(0xFF05070B), onBackground = Color(0xFFD6F3F7), surface = Color(0xFF0A0E15), onSurface = Color(0xFFD6F3F7),
-    surfaceVariant = Color(0xFF111925), onSurfaceVariant = Color(0xFF86A0B3), outline = Color(0xFF15404A), outlineVariant = Color(0xFF15404A),
-    error = Color(0xFFFF5470),
-    surfaceContainer = Color(0xFF0A0E15), surfaceContainerHigh = Color(0xFF111925), surfaceContainerHighest = Color(0xFF111925),
-    surfaceContainerLow = Color(0xFF0A0E15), surfaceContainerLowest = Color(0xFF05070B),
+    primary = Color(0xFFFF3D9A), onPrimary = Color(0xFF1C0010), primaryContainer = Color(0xFF3A0D27), onPrimaryContainer = Color(0xFFFFD3E8),
+    secondary = Color(0xFFFFB238), onSecondary = Color(0xFF1F1300), secondaryContainer = Color(0xFF35240A), onSecondaryContainer = Color(0xFFFFE1B0),
+    tertiary = Color(0xFF8CFF5A),
+    background = Color(0xFF0C0811), onBackground = Color(0xFFF4E7F0), surface = Color(0xFF150E1B), onSurface = Color(0xFFF4E7F0),
+    surfaceVariant = Color(0xFF221729), onSurfaceVariant = Color(0xFFB99DB2), outline = Color(0xFF4B2B47), outlineVariant = Color(0xFF33203A),
+    error = Color(0xFFFF6B5E),
+    surfaceContainer = Color(0xFF150E1B), surfaceContainerHigh = Color(0xFF221729), surfaceContainerHighest = Color(0xFF2A1C33),
+    surfaceContainerLow = Color(0xFF110B16), surfaceContainerLowest = Color(0xFF0C0811),
 ).conInversos()
 
 /** Pergamino y mármol con púrpura macedonio y azul del Egeo. */
@@ -208,20 +213,22 @@ internal val tipoCiber = Typography(
     labelSmall = TextStyle(fontFamily = Letra.codigo, fontSize = 10.5.sp, letterSpacing = 0.4.sp),
 )
 
-/** Todo en monoespaciada: rótulos de terminal y texto de código. */
+/** Chakra Petch en todo: títulos en mayúsculas anchas, como letreros, con un halo de neón; texto cuadrado y legible. */
 internal val tipoNeon = Typography(
-    displaySmall = TextStyle(fontFamily = Letra.terminal, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = 1.5.sp),
-    headlineMedium = TextStyle(fontFamily = Letra.terminal, fontSize = 28.sp, lineHeight = 34.sp, letterSpacing = 1.6.sp),
-    headlineSmall = TextStyle(fontFamily = Letra.terminal, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = 1.2.sp),
-    titleLarge = TextStyle(fontFamily = Letra.terminal, fontSize = 17.sp, lineHeight = 22.sp, letterSpacing = 1.2.sp),
-    titleMedium = TextStyle(fontFamily = Letra.codigo, fontWeight = FontWeight.SemiBold, fontSize = 14.5.sp, lineHeight = 21.sp),
-    titleSmall = TextStyle(fontFamily = Letra.codigo, fontWeight = FontWeight.Medium, fontSize = 11.5.sp, lineHeight = 16.sp, letterSpacing = 0.2.sp),
-    bodyLarge = TextStyle(fontFamily = Letra.codigo, fontSize = 15.sp, lineHeight = 23.sp),
-    bodyMedium = TextStyle(fontFamily = Letra.codigo, fontSize = 13.5.sp, lineHeight = 20.sp),
-    bodySmall = TextStyle(fontFamily = Letra.codigo, fontSize = 12.sp, lineHeight = 17.sp),
-    labelLarge = TextStyle(fontFamily = Letra.codigo, fontWeight = FontWeight.Medium, fontSize = 13.sp, letterSpacing = 0.6.sp),
-    labelMedium = TextStyle(fontFamily = Letra.codigo, fontWeight = FontWeight.Medium, fontSize = 11.sp, letterSpacing = 0.4.sp),
-    labelSmall = TextStyle(fontFamily = Letra.codigo, fontSize = 10.5.sp, letterSpacing = 0.4.sp),
+    displaySmall = TextStyle(fontFamily = Letra.letrero, fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = 2.sp,
+        shadow = Shadow(Color(0xCCFF3D9A), blurRadius = 18f)),
+    headlineMedium = TextStyle(fontFamily = Letra.letrero, fontWeight = FontWeight.SemiBold, fontSize = 27.sp, lineHeight = 33.sp, letterSpacing = 2.sp,
+        shadow = Shadow(Color(0xB3FF3D9A), blurRadius = 14f)),
+    headlineSmall = TextStyle(fontFamily = Letra.letrero, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = 1.6.sp),
+    titleLarge = TextStyle(fontFamily = Letra.letrero, fontWeight = FontWeight.SemiBold, fontSize = 18.sp, lineHeight = 23.sp, letterSpacing = 1.2.sp),
+    titleMedium = TextStyle(fontFamily = Letra.letrero, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, lineHeight = 21.sp, letterSpacing = 0.4.sp),
+    titleSmall = TextStyle(fontFamily = Letra.letrero, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, lineHeight = 16.sp, letterSpacing = 0.8.sp),
+    bodyLarge = TextStyle(fontFamily = Letra.letrero, fontSize = 16.sp, lineHeight = 24.sp),
+    bodyMedium = TextStyle(fontFamily = Letra.letrero, fontSize = 14.sp, lineHeight = 20.sp),
+    bodySmall = TextStyle(fontFamily = Letra.letrero, fontSize = 12.5.sp, lineHeight = 17.sp),
+    labelLarge = TextStyle(fontFamily = Letra.letrero, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, letterSpacing = 1.sp),
+    labelMedium = TextStyle(fontFamily = Letra.letrero, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, letterSpacing = 0.8.sp),
+    labelSmall = TextStyle(fontFamily = Letra.letrero, fontSize = 10.5.sp, letterSpacing = 0.6.sp),
 )
 
 /** Garamond en todo: capitales griegas espaciadas en títulos, cifras alineadas en datos. */
@@ -325,7 +332,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
 private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.ROMANO -> 58f to 1f          // Cinzel: capitales anchas
     TemaId.CIBER -> 62f to 0f           // Share Tech Mono
-    TemaId.NEON -> 62f to 0f           // Share Tech Mono
+    TemaId.NEON -> 58f to 2f           // Chakra Petch: cuadrada y ancha
     TemaId.HELENO -> 66f to 1f          // Garamond, cifras alineadas
     TemaId.MEDIEVAL -> 66f to 0.5f      // gótica
     TemaId.DISTOPIA -> 70f to 1f        // Oswald, angosta
@@ -355,7 +362,7 @@ private fun Typography.conReloj(tema: TemaId): Typography {
 internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.ROMANO -> Esquinas(4, Esquina.REDONDA)
     TemaId.CIBER -> Esquinas(1, Esquina.REDONDA)
-    TemaId.NEON -> Esquinas(1, Esquina.REDONDA)
+    TemaId.NEON -> Esquinas(10, Esquina.CORTADA)          // la placa del letrero
     TemaId.HELENO -> Esquinas(6, Esquina.REDONDA)
     TemaId.MEDIEVAL -> Esquinas(3, Esquina.REDONDA)
     TemaId.DISTOPIA -> Esquinas(4, Esquina.CORTADA)        // la carpeta del expediente
@@ -377,7 +384,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.ANTIGUAS -> Esquinas(4, Esquina.ARCO)           // la puerta de piedra
 }
 
-/** ¿Va en oscuro? Lo decide el botón de la app (claro, oscuro o como el teléfono); el cyberpunk siempre es oscuro. */
+/** ¿Va en oscuro? Lo decide el botón de la app (claro, oscuro o como el teléfono); Terminal y Ciudad neón siempre son oscuros. */
 @Composable
 fun modoOscuro(tema: TemaId = Estilo.tema): Boolean = tema.soloOscuro || when (Repo.config.modo) {
     "claro" -> false
@@ -526,7 +533,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     val titulo = when (tema) {
         TemaId.ROMANO -> "DIES"
         TemaId.CIBER -> "DÍA_"
-        TemaId.NEON -> "DÍA_"
+        TemaId.NEON -> "夜 · NOCHE"
         TemaId.HELENO -> "ΗΜΕΡΑ"
         TemaId.MEDIEVAL -> "Del día"
         TemaId.DISTOPIA -> "PARTE"
@@ -550,7 +557,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     val linea = when (tema) {
         TemaId.ROMANO -> "XVII · X"
         TemaId.CIBER -> "2026.10.17"
-        TemaId.NEON -> "2026.10.17"
+        TemaId.NEON -> "NIVEL −3 · 22:47"
         TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ."
         TemaId.MEDIEVAL -> "xvij de otubre"
         TemaId.DISTOPIA -> "EXP. 0290"
@@ -656,7 +663,8 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
     }
     // Panel de terminal con dos esquinas cortadas en diagonal.
     TemaId.CIBER -> CutCornerShape(topStart = 0.dp, topEnd = 12.dp, bottomEnd = 0.dp, bottomStart = 12.dp)
-    TemaId.NEON -> CutCornerShape(topStart = 0.dp, topEnd = 12.dp, bottomEnd = 0.dp, bottomStart = 12.dp)
+    // Letrero colgado de la fachada: placa con las cuatro esquinas cortadas.
+    TemaId.NEON -> CutCornerShape(10.dp)
     // Fachada con frontón.
     TemaId.HELENO -> GenericShape { s, _ ->
         val f = s.height * 0.1f
@@ -760,7 +768,12 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         TemaId.ROMANO -> { drawRect(c); drawRect(fondo.copy(alpha = 0.35f), Offset(w * 0.12f, h * 0.12f), Size(w * 0.76f, h * 0.76f), style = fino) }
         // Píxel encendido dentro de su celda.
         TemaId.CIBER -> { drawRect(c, style = fino); drawRect(c, Offset(w * 0.28f, h * 0.28f), Size(w * 0.44f, h * 0.44f)) }
-        TemaId.NEON -> { drawRect(c, style = fino); drawRect(c, Offset(w * 0.28f, h * 0.28f), Size(w * 0.44f, h * 0.44f)) }
+        // Tubo de neón doblado en «N», con su halo.
+        TemaId.NEON -> {
+            val n = Path().apply { moveTo(w * 0.24f, h * 0.8f); lineTo(w * 0.24f, h * 0.2f); lineTo(w * 0.76f, h * 0.8f); lineTo(w * 0.76f, h * 0.2f) }
+            drawPath(n, c.copy(alpha = 0.3f), style = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.26f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            drawPath(n, c, style = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.11f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        }
         // Dracma.
         TemaId.HELENO -> { drawCircle(c, r); drawCircle(fondo.copy(alpha = 0.4f), r * 0.68f, style = fino) }
         // Losange de blasón.

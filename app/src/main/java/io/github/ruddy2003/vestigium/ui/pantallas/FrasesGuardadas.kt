@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -155,16 +156,16 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
                 }
             }
         }
+        // El corazón de neón: un tubo de un solo trazo con su halo; lleno, encendido.
         TemaId.NEON -> {
-            val filas = listOf(".XX.XX.", "XXXXXXX", "XXXXXXX", ".XXXXX.", "..XXX..", "...X...")
-            fun hay(f: Int, c: Int) = f in filas.indices && c in 0 until 7 && filas[f][c] == 'X'
-            val px = 3f
-            filas.forEachIndexed { f, fila ->
-                fila.forEachIndexed { c, ch ->
-                    val borde = !hay(f - 1, c) || !hay(f + 1, c) || !hay(f, c - 1) || !hay(f, c + 1)
-                    if (ch == 'X' && (lleno || borde)) drawRect(if (lleno) color else color.copy(alpha = 0.7f), p(1.5f + c * px + 0.15f, 3f + f * px + 0.15f), Size((px - 0.3f) * u, (px - 0.3f) * u))
-                }
+            val tubo = Path().apply {
+                val a = p(12f, 20f); moveTo(a.x, a.y)
+                val b = p(2f, 9f); val c1 = p(4f, 2f); val m = p(12f, 7f); val c2 = p(20f, 2f); val d = p(22f, 9f)
+                quadraticTo(b.x, b.y, c1.x, c1.y); quadraticTo(p(8f, 0f).x, p(8f, 0f).y, m.x, m.y)
+                quadraticTo(p(16f, 0f).x, p(16f, 0f).y, c2.x, c2.y); quadraticTo(d.x, d.y, a.x, a.y)
             }
+            if (lleno) drawPath(tubo, color.copy(alpha = 0.3f), style = Stroke(4f * u, cap = StrokeCap.Round))
+            drawPath(tubo, if (lleno) color else color.copy(alpha = 0.6f), style = Stroke(1.5f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
         }
         // Sol de Vergina: dieciséis rayos y el disco al centro.
         TemaId.HELENO -> pinta(estrella(12f, 12f, 16, 11f, 5.6f).also { it.fillType = PathFillType.EvenOdd; circulo(it, 12f, 12f, 2.6f) }, 1.2f)

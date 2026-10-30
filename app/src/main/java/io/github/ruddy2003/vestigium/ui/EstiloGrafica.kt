@@ -209,8 +209,9 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Terminal: píxel de fósforo con halo, trazo en segmentos de barrido, matriz de puntos del monitor y barras de vúmetro.
     TemaId.CIBER -> EstiloGrafica(FormaPunto.PIXEL, 1.6f, listOf(4f, 1.2f), StrokeCap.Butt, StrokeJoin.Miter, AdornoTrazo.HALO, listOf(0.1f, 2.2f),
         Rejilla.MATRIZ, 0.6f, Eje.CORCHETES, FormaBarra.BLOQUES, R.font.sharetech_mono, FontWeight.Normal, null, 0.04f, 1.05f)
-    TemaId.NEON -> EstiloGrafica(FormaPunto.PIXEL, 1.6f, listOf(4f, 1.2f), StrokeCap.Butt, StrokeJoin.Miter, AdornoTrazo.HALO, listOf(0.1f, 2.2f),
-        Rejilla.MATRIZ, 0.6f, Eje.CORCHETES, FormaBarra.BLOQUES, R.font.sharetech_mono, FontWeight.Normal, null, 0.04f, 1.05f)
+    // Ciudad neón: tubos redondos con su halo, puntos como gotas de lluvia, rejilla de guiones y barras de cápsula, como letreros.
+    TemaId.NEON -> EstiloGrafica(FormaPunto.GOTA, 2f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.HALO, listOf(5f, 3f),
+        Rejilla.DISCONTINUA, 0.45f, Eje.LINEA, FormaBarra.PILDORA, R.font.chakra_semibold, FontWeight.SemiBold, "tnum", 0.06f, 1f)
     // El sol de Vergina, doble filete de vaso, barras como columnas estriadas.
     TemaId.HELENO -> EstiloGrafica(FormaPunto.SOL, 1.8f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(4f, 2f, 1f, 2f),
         Rejilla.DOBLE, 0.5f, Eje.DOBLE, FormaBarra.ESTRIADA, R.font.garamond_medium, FontWeight.Medium, "lnum, tnum", 0.03f, 1.12f)

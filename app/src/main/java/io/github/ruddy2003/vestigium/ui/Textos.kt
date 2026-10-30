@@ -40,6 +40,21 @@ object Textos {
         "widget_discreto_momento" to "> log",
     )
 
+    private val NEON: Map<String, String> = mapOf(
+        "pestana_dia" to "esta noche",
+        "pestana_diario" to "mi callejón",
+        "pestana_registrar" to "+ pedir",
+        "pestana_vida" to "distrito",
+        "pestana_entender" to "letreros",
+        "escala_vacia" to "apagado · toca o desliza",
+        "lista_anadir" to "+ al pedido",
+        "palabras" to "%d palabras en el ticket",
+        "widget_animo" to "¿cómo va la noche?",
+        "widget_momento" to "lo que pasa en la calle…",
+        "widget_discreto_animo" to "la noche",
+        "widget_discreto_momento" to "calle",
+    )
+
     private val HELENO: Map<String, String> = mapOf(
         "pestana_dia" to "ΣΗΜΕΡΟΝ",
         "pestana_diario" to "ΗΜΕΡΑΙ",

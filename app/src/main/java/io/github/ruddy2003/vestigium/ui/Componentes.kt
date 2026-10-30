@@ -101,19 +101,19 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** Esquinas según el tema (rectas en cyberpunk, suaves en helénico). */
+/** Esquinas según el tema (rectas en Terminal, suaves en helénico). */
 private val R4 @Composable get() = MaterialTheme.shapes.small
 
 /**
  * Banda ornamental bajo cada título, una por tema: ovas y dardos (romano), greca enmarcada (helénico), pista de
- * circuito (terminal), expediente con su ojo (distopía), regla con anillo de benceno (laboratorio), filete de gaceta
+ * circuito (terminal), tubo de neón con sus grapas (ciudad neón), expediente con su ojo (distopía), regla con anillo de benceno (laboratorio), filete de gaceta
  * (colonos), sarta de monedas con nudo y borla (seda), meandro de martillos entre costuras de fieltro (mongol)…
  */
 @Composable
 fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)) {
     when (Estilo.tema) {
         TemaId.CIBER -> Circuito(modifier)
-        TemaId.NEON -> Circuito(modifier)
+        TemaId.NEON -> TuboNeon(modifier)
         TemaId.HELENO -> Greca(modifier, color)
         TemaId.MEDIEVAL -> Zarcillo(modifier)
         TemaId.DISTOPIA -> BandaExpediente(modifier)
@@ -326,15 +326,15 @@ private fun Greca(modifier: Modifier, color: Color) {
     }
 }
 
-/** Pista de circuito: línea fina con nodos y un tramo encendido en magenta. */
+/** Pista de circuito en una sola tinta: línea fina con nodos y un tramo encendido al máximo brillo. */
 @Composable
 private fun Circuito(modifier: Modifier) {
     val cian = MaterialTheme.colorScheme.primary
-    val magenta = MaterialTheme.colorScheme.secondary
+    val vivo = MaterialTheme.colorScheme.tertiary
     Canvas(modifier.fillMaxWidth().height(10.dp)) {
         val y = size.height / 2
         drawLine(cian.copy(alpha = 0.35f), Offset(0f, y), Offset(size.width, y), 1.5f)
-        drawLine(magenta, Offset(0f, y), Offset(size.width * 0.16f, y), 2.5f)
+        drawLine(vivo, Offset(0f, y), Offset(size.width * 0.16f, y), 2.5f)
         drawLine(cian, Offset(size.width * 0.16f, y), Offset(size.width * 0.22f, y), 2.5f)
         val paso = 46.dp.toPx()
         var x = size.width * 0.28f
@@ -345,6 +345,26 @@ private fun Circuito(modifier: Modifier) {
             if (k % 4 == 1) drawLine(cian.copy(alpha = 0.4f), Offset(x, y), Offset(x + 10f, y - size.height / 2), 1.2f)
             x += paso; k++
         }
+    }
+}
+
+/**
+ * Tubo de neón: el tubo magenta con su halo, cortado donde se dobla hacia atrás, sujeto con grapas a la fachada, y un
+ * tramo ámbar que parpadea apagado (más tenue), como un letrero viejo.
+ */
+@Composable
+private fun TuboNeon(modifier: Modifier) {
+    val e = MaterialTheme.colorScheme
+    Canvas(modifier.fillMaxWidth().height(12.dp)) {
+        val y = size.height / 2; val w = size.width
+        val tramos = listOf(0f to 0.34f, 0.37f to 0.72f, 0.75f to 1f)
+        tramos.forEachIndexed { i, (a, b) ->
+            val col = if (i == 1) e.secondary.copy(alpha = 0.55f) else e.primary
+            drawLine(col.copy(alpha = 0.22f), Offset(w * a, y), Offset(w * b, y), 7.dp.toPx(), cap = StrokeCap.Round)
+            drawLine(col, Offset(w * a, y), Offset(w * b, y), 2.dp.toPx(), cap = StrokeCap.Round)
+        }
+        var x = 30.dp.toPx()
+        while (x < w) { drawRect(e.outline, Offset(x - 1.5f, y - 4.dp.toPx()), androidx.compose.ui.geometry.Size(3f, 8.dp.toPx())); x += 58.dp.toPx() }
     }
 }
 
@@ -904,10 +924,10 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "!", igual = ":= ", nulo = "null", elegido = "▣", riel = RolColor.SECUNDARIO, quitar = "[x]", listaVacia = "[ ]", flecha = ">>",
         sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0f, colorPrefijo = RolColor.SECUNDARIO, renglones = false, margen = MargenEditor.PUNTOS,
         guiones = floatArrayOf(1.5f, 1.5f), tamBoton = 14, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1f)
-    TemaId.NEON -> PielComponentes(sep = " ", cerrada = "[+]", abierta = "[-]", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
-        aviso = "!", igual = ":= ", nulo = "null", elegido = "▣", riel = RolColor.SECUNDARIO, quitar = "[x]", listaVacia = "[ ]", flecha = ">>",
-        sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0f, colorPrefijo = RolColor.SECUNDARIO, renglones = false, margen = MargenEditor.PUNTOS,
-        guiones = floatArrayOf(1.5f, 1.5f), tamBoton = 14, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1f)
+    TemaId.NEON -> PielComponentes(sep = "  ·  ", cerrada = "▶", abierta = "▼", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
+        aviso = "⚠", igual = " ▸ ", nulo = "apagado", elegido = "●", riel = RolColor.PRIMARIO, quitar = "✖", listaVacia = "( nada en el pedido )", flecha = "▸▸",
+        sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.4f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.NINGUNO,
+        guiones = floatArrayOf(6f, 2f), tamBoton = 15, letraBoton = null, borde = RolColor.SECUNDARIO, grosor = 1.5f)
     TemaId.HELENO -> PielComponentes(sep = "  —  ", cerrada = "◇", abierta = "◆", numeral = RolColor.TERCIARIO, centrar = false, rellena = true,
         aviso = "☉", igual = "· ", nulo = "οὐδέν", elegido = "✓", riel = RolColor.SECUNDARIO, quitar = "✕", listaVacia = "( κενόν )", flecha = "⟶",
         sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.5f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.DOBLE,
@@ -996,7 +1016,9 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
         TemaId.ROMANO -> Text(nombre, style = estilo.copy(letterSpacing = 2.sp), modifier = peso)
         // Indicador de consola con el cursor detrás.
         TemaId.CIBER -> Text(buildAnnotatedString { append(nombre); withStyle(SpanStyle(color = e.secondary)) { append(" ▌") } }, style = estilo, color = e.primary, modifier = peso)
-        TemaId.NEON -> Text(buildAnnotatedString { append(nombre); withStyle(SpanStyle(color = e.secondary)) { append(" ▌") } }, style = estilo, color = e.primary, modifier = peso)
+        // Letrero encendido: el nombre en magenta con halo, subrayado por un tubo ámbar.
+        TemaId.NEON -> Text(nombre, style = estilo.copy(shadow = androidx.compose.ui.graphics.Shadow(e.primary.copy(alpha = 0.8f), blurRadius = 14f)), color = e.primary,
+            modifier = peso.drawBehind { drawLine(e.secondary.copy(alpha = 0.7f), Offset(0f, size.height), Offset(size.width * 0.4f, size.height), 1.5.dp.toPx(), cap = StrokeCap.Round) }.padding(bottom = 4.dp))
         // Doble filete de oro, como el borde de un vaso.
         TemaId.HELENO -> Text(nombre, style = estilo, modifier = peso.drawBehind {
             val y = size.height - 1.dp.toPx()
@@ -1086,7 +1108,7 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
 private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.ROMANO -> RoundedCornerShape(2.dp)
     TemaId.CIBER -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
-    TemaId.NEON -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
+    TemaId.NEON -> CutCornerShape(6.dp)   // la placa del letrero
     // Frontón de templo, muy bajo.
     TemaId.HELENO -> GenericShape { s, _ -> moveTo(0f, s.height * 0.18f); lineTo(s.width / 2, 0f); lineTo(s.width, s.height * 0.18f); lineTo(s.width, s.height); lineTo(0f, s.height); close() }
     // Esquinas cóncavas, como un marco de miniatura.
@@ -1156,7 +1178,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
     return when (t) {
         TemaId.ROMANO -> "tabula · " + base.uppercase().replace('U', 'V')
         TemaId.CIBER -> "~/vm/$archivo"
-        TemaId.NEON -> "~/vm/$archivo"
+        TemaId.NEON -> "ticket · $es"
         TemaId.HELENO -> "πάπυρος · $es"
         TemaId.MEDIEVAL -> "pluma y tintero · $es"
         TemaId.DISTOPIA -> "FORMULARIO 7-B · ${es.uppercase()}"
@@ -1231,10 +1253,12 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             drawLine(e.primary.copy(alpha = 0.7f), Offset(i + u * 3f, h - i), Offset(i + u * 3.6f, h - i - u * 0.6f), fino * 1.5f)
         }
         TemaId.NEON -> {
-            // Un led encendido arriba a la derecha y un tramo de pista abajo a la izquierda.
-            drawRect(e.secondary, Offset(w - i - u * 0.7f, i), Size(u * 0.7f, u * 0.35f))
-            drawLine(e.primary.copy(alpha = 0.7f), Offset(i, h - i), Offset(i + u * 3f, h - i), fino * 1.5f)
-            drawLine(e.primary.copy(alpha = 0.7f), Offset(i + u * 3f, h - i), Offset(i + u * 3.6f, h - i - u * 0.6f), fino * 1.5f)
+            // Una escuadra de tubo de neón arriba a la izquierda, con su halo, y el foquito verde de «abierto» abajo a la derecha.
+            val p = Path().apply { moveTo(i, i + u * 2.4f); lineTo(i, i); lineTo(i + u * 2.4f, i) }
+            drawPath(p, e.primary.copy(alpha = 0.25f), style = Stroke(fino * 5f, cap = StrokeCap.Round))
+            drawPath(p, e.primary, style = Stroke(fino * 1.6f, cap = StrokeCap.Round))
+            drawCircle(e.tertiary.copy(alpha = 0.3f), u * 0.5f, Offset(w - i - u * 0.4f, h - i - u * 0.4f))
+            drawCircle(e.tertiary, u * 0.2f, Offset(w - i - u * 0.4f, h - i - u * 0.4f))
         }
         TemaId.HELENO -> enLasCuatro {
             // Una vuelta de greca en cada esquina.
@@ -1368,10 +1392,12 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawLine(e.secondary, Offset(f(0.42f), f(0.64f)), Offset(f(0.62f), f(0.64f)), tr.width)
         }
         TemaId.NEON -> {
-            // Consola sin salida: el indicador y el cursor.
-            drawRect(l, Offset(f(0.06f), f(0.18f)), Size(f(0.88f), f(0.64f)), style = tr)
-            drawPath(Path().apply { moveTo(f(0.2f), f(0.36f)); lineTo(f(0.34f), f(0.5f)); lineTo(f(0.2f), f(0.64f)) }, a, style = tr)
-            drawLine(e.secondary, Offset(f(0.42f), f(0.64f)), Offset(f(0.62f), f(0.64f)), tr.width)
+            // El puesto cerrado: la cortina metálica bajada y, encima, el letrero apagado.
+            drawRect(l.copy(alpha = 0.4f), Offset(f(0.1f), f(0.1f)), Size(f(0.8f), f(0.18f)), style = tr)
+            drawLine(a.copy(alpha = 0.35f), Offset(f(0.2f), f(0.19f)), Offset(f(0.8f), f(0.19f)), tr.width)
+            drawRect(l, Offset(f(0.14f), f(0.34f)), Size(f(0.72f), f(0.56f)), style = tr)
+            var y = f(0.42f); while (y < f(0.88f)) { drawLine(l.copy(alpha = 0.6f), Offset(f(0.14f), y), Offset(f(0.86f), y), tr.width * 0.7f); y += f(0.08f) }
+            drawCircle(e.secondary, f(0.03f), Offset(f(0.5f), f(0.86f)))
         }
         TemaId.HELENO -> {
             // Cílica vacía: copa baja con dos asas y pie.
@@ -1518,7 +1544,7 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
     when (t) {
         TemaId.ROMANO -> drawRect(c, Offset(0f, h - d), Size(w, d))
         TemaId.CIBER -> drawRect(c, Offset.Zero, Size(d * 0.75f, h))
-        TemaId.NEON -> drawRect(c, Offset.Zero, Size(d * 0.75f, h))
+        TemaId.NEON -> { drawRect(c.copy(alpha = c.alpha * 0.3f), Offset(0f, h - d * 2f), Size(w, d * 2f)); drawRect(c, Offset(0f, h - d * 0.9f), Size(w, d * 0.6f)) }   // el tubo encendido con su halo
         TemaId.HELENO -> drawPath(Path().apply { moveTo(w / 2 - d * 1.6f, h); lineTo(w / 2, h - d * 1.4f); lineTo(w / 2 + d * 1.6f, h); close() }, c)
         TemaId.MEDIEVAL -> drawCircle(c, d * 0.8f, Offset(w / 2, d * 1.4f))
         TemaId.DISTOPIA -> drawRect(c, Offset.Zero, Size(w, d))
@@ -1580,9 +1606,11 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
             drawRect(c, Offset(w - m * 2.6f, h / 2 - m * 0.8f), Size(m * 0.9f, m * 1.6f))
             drawLine(c, Offset(m * 2.5f, h - m), Offset(w * 0.4f, h - m), fino)
         }
+        // Dos grapas de letrero a los lados y un brillo de neón bajo el texto.
         TemaId.NEON -> {
-            drawRect(c, Offset(w - m * 2.6f, h / 2 - m * 0.8f), Size(m * 0.9f, m * 1.6f))
-            drawLine(c, Offset(m * 2.5f, h - m), Offset(w * 0.4f, h - m), fino)
+            drawRect(c, Offset(m * 0.8f, h / 2 - m), Size(fino * 1.6f, m * 2f))
+            drawRect(c, Offset(w - m * 0.8f - fino * 1.6f, h / 2 - m), Size(fino * 1.6f, m * 2f))
+            drawLine(c.copy(alpha = 0.35f), Offset(w * 0.25f, h - m * 0.8f), Offset(w * 0.75f, h - m * 0.8f), fino * 2.4f, cap = StrokeCap.Round)
         }
         // El arquitrabe bajo el frontón.
         TemaId.HELENO -> drawLine(c, Offset(w * 0.06f, h * 0.24f), Offset(w * 0.94f, h * 0.24f), fino)
@@ -1684,9 +1712,12 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawLine(e.secondary, Offset(f(0.5f), f(0.82f)), Offset(f(0.92f), f(0.82f)), tr.width)
         }
         TemaId.NEON -> {
-            // Indicador de consola.
-            drawPath(Path().apply { moveTo(f(0.08f), f(0.2f)); lineTo(f(0.4f), f(0.5f)); lineTo(f(0.08f), f(0.8f)) }, a, style = tr)
-            drawLine(e.secondary, Offset(f(0.5f), f(0.82f)), Offset(f(0.92f), f(0.82f)), tr.width)
+            // Un bolígrafo sobre el ticket con el borde dentado.
+            val tk = Path().apply { moveTo(f(0.12f), f(0.12f)); lineTo(f(0.72f), f(0.12f)); lineTo(f(0.72f), f(0.86f))
+                var x = f(0.72f); var arriba = true; while (x > f(0.12f)) { x -= f(0.06f); lineTo(maxOf(x, f(0.12f)), if (arriba) f(0.8f) else f(0.86f)); arriba = !arriba }; close() }
+            drawPath(tk, l, style = tr)
+            drawLine(l, Offset(f(0.22f), f(0.32f)), Offset(f(0.58f), f(0.32f)), tr.width); drawLine(l, Offset(f(0.22f), f(0.48f)), Offset(f(0.5f), f(0.48f)), tr.width)
+            drawLine(a, Offset(f(0.9f), f(0.18f)), Offset(f(0.5f), f(0.7f)), tr.width * 1.8f, cap = StrokeCap.Round)
         }
         TemaId.HELENO -> {
             // Papiro entre sus dos rodillos.
@@ -1838,9 +1869,10 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
             var y = 0f
             while (y < h) { drawRect(c, Offset(0f, y), Size(2 * d, 4 * d)); y += 7 * d }
         }
+        // La cinta de precaución de obra: franjas ámbar en diagonal.
         TemaId.NEON -> {
-            var y = 0f
-            while (y < h) { drawRect(c, Offset(0f, y), Size(2 * d, 4 * d)); y += 7 * d }
+            drawRect(c.copy(alpha = 0.25f), Offset.Zero, Size(4 * d, h))
+            var y = -4 * d; while (y < h) { drawPath(Path().apply { moveTo(0f, y + 3 * d); lineTo(4 * d, y); lineTo(4 * d, y + 3 * d); lineTo(0f, y + 6 * d); close() }, c); y += 8 * d }
         }
         TemaId.HELENO -> {
             drawRect(c, Offset.Zero, Size(1.4f * d, h))

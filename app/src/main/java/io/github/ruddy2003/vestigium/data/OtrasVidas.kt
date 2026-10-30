@@ -5,7 +5,7 @@ package io.github.ruddy2003.vestigium.data
  * Cada número dice qué tan seguro es: medido (estudios y censos), estimado (registros de la época), reconstruido (esqueletos,
  * restos y comparaciones) o inventado (los mundos de ficción de algunos temas: estimaciones razonables, no datos).
  *
- * Doce vidas reales para todos, y una más por tema que solo aparece dentro de ese tema (en los 21 temas).
+ * Doce vidas reales para todos, y una o dos más por tema que solo aparecen dentro de ese tema.
  */
 object OtrasVidas {
     enum class Certeza(val nombre: String, val explica: String) {
@@ -492,8 +492,25 @@ object OtrasVidas {
             fuentes = listOf("La vida en la estación (Agencia Espacial Canadiense)" to "https://www.asc-csa.gc.ca/eng/youth-educators/activities/fitness-and-nutrition/trading-spaces-living-and-earth-off-earth.asp",
                 "Estación Espacial Internacional" to "${W}International_Space_Station")),
 
+        Vida("operadora", "Carmen", "Operadora de computadora central, turno de noche", "El centro de cómputo de un banco, Ciudad de México", "1978", 1978, "tema", "ciber", edad = 27,
+            historia = listOf(
+                "Carmen entra a las diez de la noche a un cuarto frío, con piso falso y aire acondicionado todo el año, donde zumba la computadora central del banco. Su trabajo es que la máquina no se detenga: montar y desmontar cintas magnéticas, cargar los paquetes de tarjetas, cambiar el papel continuo de la impresora y vigilar la consola.",
+                "De noche corren los procesos largos: los saldos de todas las cuentas, la nómina, los estados de cuenta que saldrán por la mañana. Cuando algo falla, la consola escribe un mensaje en mayúsculas y hay que buscar en el manual qué significa y qué cinta pide.",
+                "Sale a las seis, cuando la ciudad empieza a moverse, y duerme de día con las cortinas cerradas. Sus amigas del turno de día casi no la ven; a cambio, entre cinta y cinta, lee novelas enteras.",
+            ),
+            dia = listOf(t(8.0, 15.0, Hacer.DORMIR), t(15.0, 17.0, Hacer.CUIDAR, "la casa y el mandado"), t(17.0, 18.0, Hacer.LIBRE), t(18.0, 21.5, Hacer.GENTE, "comida con la familia"),
+                t(21.5, 22.0, Hacer.CAMINO, "en camión"), t(22.0, 6.0, Hacer.TRABAJO, "cargar cintas, vigilar la consola, imprimir listados"), t(6.0, 6.5, Hacer.COMER, "un café y una torta"),
+                t(6.5, 8.0, Hacer.CAMINO, "el tráfico de la mañana")),
+            datos = mapOf("pasos" to e(6000), "km_anio" to e(9000, "Ida y vuelta en camión, todos los días."), "kcal" to e(2000), "proteina" to e(65), "azucar" to e(60, "Refrescos para aguantar la noche."),
+                "fibra" to e(25), "alcohol" to e(3), "sueno" to e(6.5, "De día, con ruido de la calle."), "dormir" to e(8.0), "trabajo" to e(48, "Seis turnos de ocho horas."), "aire_libre" to e(1.5),
+                "pantalla" to e(7, "La consola de la computadora, toda la noche."), "notificaciones" to e(40, "Mensajes de la consola y el timbre de la impresora."), "musica" to e(1.5, "La radio de la madrugada."),
+                "personas_dia" to e(15), "conocidas" to e(1500), "poblacion" to r(13000000, "La zona metropolitana, hacia 1980."), "lejos" to e(400), "estatura" to e(155),
+                "vida" to r(65), "vida_adulto" to r(72), "hijos" to r(5.0), "alfabetizacion" to r(83), "lectura" to e(20, "Entre cinta y cinta.")),
+            fuentes = listOf("Operador de computadoras (Wikipedia)" to "${W}Computer_operator", "IBM System/370 (Wikipedia)" to "${W}IBM_System/370",
+                "Cintas magnéticas de datos (Wikipedia)" to "${W}Magnetic-tape_data_storage", "La población de México (Wikipedia)" to "${W}Demographics_of_Mexico")),
+
         // ------------------------------------------------ mundos de ficción: estimaciones inventadas, con sentido
-        Vida("repartidora", "Kei", "Repartidora en bicicleta eléctrica", "Una megaciudad de neón", "2077", 2077, "tema", "ciber", edad = 26, ficticia = true,
+        Vida("repartidora", "Kei", "Repartidora en bicicleta eléctrica", "Una megaciudad de neón", "2077", 2077, "tema", "neon", edad = 26, ficticia = true,
             inspiracion = "Un mundo cyberpunk: megaciudades, implantes y corporaciones.",
             historia = listOf(
                 "Kei reparte de noche entre torres de cien pisos, guiada por flechas que solo ella ve: un implante en el ojo le pone el mapa, la música y los anuncios encima del mundo. La aplicación le cobra si llega tarde.",
@@ -506,6 +523,22 @@ object OtrasVidas {
                 "sueno" to i(5.0), "dormir" to i(30.0), "trabajo" to i(72), "aire_libre" to i(6), "pantalla" to i(16, "El implante nunca se apaga."), "notificaciones" to i(2500, "Anuncios en el ojo."),
                 "musica" to i(8), "personas_dia" to i(400), "conocidas" to i(20000), "poblacion" to i(30000000), "lejos" to i(50), "estatura" to i(166), "vida" to i(65), "vida_adulto" to i(70),
                 "hijos" to i(0.9), "alfabetizacion" to i(99), "lectura" to i(0)),
+            fuentes = emptyList()),
+
+        Vida("fideos", "Amaru", "Vendedor de fideos en un puesto de callejón", "Los niveles bajos de una megaciudad", "2077", 2077, "tema", "neon", edad = 47, ficticia = true,
+            inspiracion = "Los puestos de comida callejera que abren de noche bajo los letreros, llevados a una megaciudad del futuro.",
+            historia = listOf(
+                "Amaru abre su puesto cuando se encienden los letreros, en un callejón del nivel −3 donde nunca da el sol: seis bancos de plástico, una olla de caldo que lleva hirviendo desde la tarde y un letrero magenta con un tazón que parpadea.",
+                "Por la barra le pasan cientos de caras cada noche: repartidores, guardias que salen de turno, gente que no puede dormir. Conoce el pedido de muchos y el nombre de pocos. Su mejor amigo es el de la farmacia de guardia de enfrente.",
+                "Duerme de día, en el cuarto de arriba del puesto, con el zumbido del transformador del letrero metido en el sueño. Hace años que no sube a la superficie; dice que allá arriba la comida no sabe a nada.",
+            ),
+            dia = listOf(t(10.0, 17.0, Hacer.DORMIR), t(17.0, 18.0, Hacer.CUIDAR, "compra en el mercado flotante"), t(18.0, 4.0, Hacer.TRABAJO, "el puesto, entre vapor y letreros"),
+                t(4.0, 5.0, Hacer.COMER, "con los repartidores"), t(5.0, 10.0, Hacer.LIBRE)),
+            datos = mapOf("pasos" to i(4000, "Tres pasos entre la olla y la barra, miles de veces."), "km_anio" to i(300), "kcal" to i(2600), "proteina" to i(90), "azucar" to i(40), "fibra" to i(12),
+                "alcohol" to i(25, "Un trago con los últimos clientes."), "sueno" to i(6.0), "dormir" to i(10.0), "trabajo" to i(70), "aire_libre" to i(0.5, "Si el callejón cuenta como aire libre."),
+                "pantalla" to i(3), "notificaciones" to i(600, "Pedidos, pagos y los letreros del callejón."), "musica" to i(10, "La radio del puesto, toda la noche."), "personas_dia" to i(350),
+                "conocidas" to i(15000), "poblacion" to i(30000000), "lejos" to i(5), "estatura" to i(168), "vida" to i(70), "vida_adulto" to i(74), "hijos" to i(0.9),
+                "alfabetizacion" to i(99), "lectura" to i(1)),
             fuentes = emptyList()),
 
         Vida("funcionario", "Un funcionario", "Empleado de un ministerio", "La capital de un Estado que todo lo vigila", "1984", 1984, "tema", "distopia", edad = 39, ficticia = true,

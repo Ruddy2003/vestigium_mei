@@ -76,6 +76,34 @@ object Frases {
         f("This is for everyone.", "Esto es para todos.", "Tim Berners-Lee, inauguración de Londres 2012"),
     )
 
+    val NEON = listOf(
+        f("The sky above the port was the color of television, tuned to a dead channel.", "El cielo sobre el puerto tenía el color de un televisor sintonizado en un canal muerto.", "William Gibson, Neuromante, 1984"),
+        f("Night City was like a deranged experiment in social Darwinism, designed by a bored researcher who kept one thumb permanently on the fast-forward button.",
+            "Night City era como un experimento demente de darwinismo social, diseñado por un investigador aburrido que tenía el pulgar siempre en el botón de avance rápido.", "William Gibson, Neuromante, 1984"),
+        f("The street finds its own uses for things.", "La calle encuentra sus propios usos para las cosas.", "William Gibson, «Quemando cromo», 1982"),
+        f("I've seen things you people wouldn't believe.", "Yo he visto cosas que ustedes no creerían.", "Roy Batty (Rutger Hauer), Blade Runner, 1982"),
+        f("All those moments will be lost in time, like tears in rain.", "Todos esos momentos se perderán en el tiempo, como lágrimas en la lluvia.", "Roy Batty (Rutger Hauer), Blade Runner, 1982"),
+        f("Mittler zwischen Hirn und Händen muss das Herz sein!", "¡El mediador entre el cerebro y las manos ha de ser el corazón!", "Metrópolis, de Fritz Lang y Thea von Harbou, 1927"),
+        f("Stadtluft macht frei.", "El aire de la ciudad hace libre.", "Principio del derecho de las ciudades alemanas en la Edad Media"),
+        f("住めば都", "Donde vives, ahí está la capital.", "Proverbio japonés (sumeba miyako)"),
+        f("What is the city but the people?", "¿Qué es la ciudad sino la gente?", "William Shakespeare, Coriolano III, 1"),
+        f("Cities have the capability of providing something for everybody, only because, and only when, they are created by everybody.",
+            "Las ciudades pueden dar algo a todos solo porque, y solo cuando, las hacen todos.", "Jane Jacobs, Muerte y vida de las grandes ciudades, 1961"),
+        f("Lowly, unpurposeful and random as they may appear, sidewalk contacts are the small change from which a city's wealth of public life may grow.",
+            "Por humildes, casuales y sin propósito que parezcan, los encuentros en la banqueta son el cambio menudo del que crece la riqueza de la vida pública de una ciudad.", "Jane Jacobs, Muerte y vida de las grandes ciudades, 1961"),
+        f("The city is not a concrete jungle, it is a human zoo.", "La ciudad no es una jungla de concreto: es un zoológico humano.", "Desmond Morris, El zoo humano, 1969"),
+        f("The city is a fact in nature, like a cave, a run of mackerel or an ant-heap.", "La ciudad es un hecho de la naturaleza, como una cueva, un banco de caballas o un hormiguero.", "Lewis Mumford, La cultura de las ciudades, 1938"),
+        f("Di una città non godi le sette o le settantasette meraviglie, ma la risposta che dà a una tua domanda.",
+            "De una ciudad no disfrutas las siete o setenta y siete maravillas, sino la respuesta que da a una pregunta tuya.", "Italo Calvino, Las ciudades invisibles, 1972"),
+        f("Le città come i sogni sono costruite di desideri e di paure.", "Las ciudades, como los sueños, están hechas de deseos y de miedos.", "Italo Calvino, Las ciudades invisibles, 1972"),
+        f("La forme d'une ville change plus vite, hélas ! que le cœur d'un mortel.", "La forma de una ciudad cambia más deprisa, ¡ay!, que el corazón de un mortal.", "Charles Baudelaire, «El cisne», Las flores del mal, 1861"),
+        f("Multitude, solitude : termes égaux et convertibles pour le poète actif et fécond.", "Multitud, soledad: términos iguales e intercambiables para el poeta activo y fecundo.", "Charles Baudelaire, «Las multitudes», El spleen de París, 1869"),
+        f("Sich in einer Stadt nicht zurechtzufinden heißt nicht viel. In einer Stadt sich aber zu verirren, wie man in einem Walde sich verirrt, braucht Schulung.",
+            "No orientarse en una ciudad no significa gran cosa. Pero perderse en una ciudad como uno se pierde en un bosque requiere aprendizaje.", "Walter Benjamin, Infancia en Berlín hacia 1900"),
+        f(null, "La aurora de Nueva York tiene cuatro columnas de cieno y un huracán de negras palomas que chapotean las aguas podridas.", "Federico García Lorca, «La aurora», Poeta en Nueva York, 1940"),
+        f("The street is the river of life of the city.", "La calle es el río de la vida de la ciudad.", "William H. Whyte, City: Rediscovering the Center, 1988"),
+    )
+
     val HELENO = listOf(
         f("ὁ δὲ ἀνεξέταστος βίος οὐ βιωτὸς ἀνθρώπῳ", "Una vida sin examen no merece ser vivida.", "Sócrates, en la Apología de Platón"),
         f("γνῶθι σεαυτόν", "Conócete a ti mismo.", "Inscripción del templo de Delfos"),
@@ -676,7 +704,7 @@ object Frases {
     fun rotulo(tema: TemaId = Estilo.tema): String = when (tema) {
         TemaId.ROMANO -> "SENTENTIA DIEI"
         TemaId.CIBER -> "> motd"
-        TemaId.NEON -> "> motd"
+        TemaId.NEON -> "LO QUE DICE EL LETRERO"
         TemaId.HELENO -> "ΓΝΩΜΗ ΤΗΣ ΗΜΕΡΑΣ"
         TemaId.MEDIEVAL -> "Sentencia del día"
         TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"

@@ -97,6 +97,25 @@ def papeles():
     a = a * (0.96 + 0.06 * ruido_rect(W, H, 0.8, 74)[..., None])
     guardar_p(a, 'papel_renacimiento.jpg')
 
+# ------------------------------------------------------------------ Ciudad neón (lote 8)
+def papel_neon():
+    """El reverso de un ticket mojado bajo los letreros: violeta muy oscuro, con el reflejo magenta arriba, el ámbar
+    abajo, el grano del papel térmico y unas gotas que se secaron."""
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    a = mezcla(col('#140D1A'), col('#0C0811'), ruido_rect(W, H, 80, 201) * 0.6)
+    arriba = np.clip(1 - np.sqrt(((xx - W * 0.8) / (W * 0.7)) ** 2 + (yy / (H * 0.35)) ** 2), 0, 1) ** 2
+    abajo = np.clip(1 - np.sqrt((xx / (W * 0.6)) ** 2 + ((yy - H) / (H * 0.3)) ** 2), 0, 1) ** 2
+    a = mezcla(a, col('#5A1A42'), arriba * 0.55)
+    a = mezcla(a, col('#5A3A12'), abajo * 0.4)
+    r = np.random.default_rng(202)
+    for _ in range(40):
+        cx, cy, rr = r.random() * W, r.random() * H, 4 + r.random() * 14
+        d = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
+        a = mezcla(a, col('#24182C'), np.clip(1 - np.abs(d - rr) / 1.5, 0, 1) * 0.5)
+    a = a * (0.97 + 0.05 * ruido_rect(W, H, 0.8, 203)[..., None])
+    a_img(a).save(os.path.join(OUT, 'papel_neon.jpg'), quality=86)
+
 # ------------------------------------------------------------------ papeles del lote 7 (los temas que no tenían)
 def papeles_lote7():
     W, H = 720, 1280
@@ -202,5 +221,6 @@ if __name__ == '__main__':
     papeles()
     papel_antiguas()
     papeles_lote7()
+    papel_neon()
     papeles_fuente()
     print('papeles listos')

@@ -158,7 +158,7 @@ object FondosTelefono {
     fun marca(t: TemaId): String = when (t) {
         TemaId.ROMANO -> "VESTIGIVM · MEI"
         TemaId.CIBER -> "vestigium.mei"
-        TemaId.NEON -> "vestigium.mei"
+        TemaId.NEON -> "VESTIGIUM MEI · 屋台"
         TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ"
         TemaId.MEDIEVAL -> "Liber vestigii mei"
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"
@@ -263,12 +263,16 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 drawRect(col, Offset(izq + 24 * u, py - 6 * u), Size(7 * u, 12 * u))
             }
             TemaId.NEON -> {
-                // Consola: borde punteado, escuadras de luz y un indicador con su cursor abajo.
-                drawRect(e.primary.copy(alpha = 0.22f), Offset(izq, arr), Size(der - izq, aba - arr), style = Stroke(1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 6 * u))))
-                escuadras(34 * u, 2 * u, e.primary.copy(alpha = 0.6f))
-                val py = aba - 16 * u
-                drawLine(col, Offset(izq + 12 * u, py - 5 * u), Offset(izq + 18 * u, py), 1.6f * u); drawLine(col, Offset(izq + 18 * u, py), Offset(izq + 12 * u, py + 5 * u), 1.6f * u)
-                drawRect(col, Offset(izq + 24 * u, py - 6 * u), Size(7 * u, 12 * u))
+                // Un letrero enorme: el marco de tubo con su halo, la llovizna delante y un letrero vertical colgado a la derecha.
+                val r = androidx.compose.ui.geometry.CornerRadius(26 * u)
+                drawRoundRect(e.primary.copy(alpha = 0.16f), Offset(izq, arr), Size(der - izq, aba - arr), r, style = Stroke(10 * u))
+                drawRoundRect(e.primary.copy(alpha = 0.7f), Offset(izq, arr), Size(der - izq, aba - arr), r, style = Stroke(2 * u))
+                val az = java.util.Random(12)
+                repeat(70) { val x = izq + az.nextFloat() * (der - izq); val y = arr + az.nextFloat() * (aba - arr); drawLine(Color(0xFF9DB4D8).copy(alpha = 0.1f), Offset(x, y), Offset(x - 4 * u, y + 16 * u), u) }
+                val sx = der - 30 * u; val sy = arr + 50 * u
+                drawRect(e.secondary.copy(alpha = 0.2f), Offset(sx - 4 * u, sy - 4 * u), Size(22 * u, 128 * u), style = Stroke(6 * u))
+                drawRect(e.secondary.copy(alpha = 0.8f), Offset(sx, sy), Size(14 * u, 120 * u), style = Stroke(1.6f * u))
+                for (k in 0 until 4) drawRect(e.secondary.copy(alpha = 0.7f), Offset(sx + 3.5f * u, sy + (10 + k * 28) * u), Size(7 * u, 16 * u))
             }
             TemaId.HELENO -> {
                 // Un filete con una greca arriba y otra abajo.

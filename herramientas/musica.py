@@ -77,7 +77,7 @@ def hacer():
     P['romano'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, cornu, [7, 12, 16], 0.14, 0.5))
     ARGS['romano'] = (T, pz, ac, mel, kw)
 
-    # --- Cyberpunk: Mi menor, arpegios cuadrados, bajo de sierra y hi-hat
+    # --- Terminal: Mi menor, arpegios cuadrados, bajo de sierra y hi-hat
     T = 7; pz = 0.3
     ac = compases([0, 3, 7], [-4, 0, 3], [3, 7, 10], [-2, 2, 5], [0, 3, 7], [-4, 0, 3], [-2, 2, 5], [0, 3, 7])
     mel = frase(0, "12:1 15:1 19:1 17:1 | 15:2 12:1 14:1 | 10:1 14:1 19:1 17:1 | 14:4 | 12:1 15:1 19:1 22:1 | 20:2 19:1 15:1 | 17:1 14:1 17:1 19:1 | 12:4")
@@ -295,6 +295,22 @@ def hacer_antiguas():
     P['antiguas'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: pluck(f, 1.0, 0.62, 0.997), [7, 10, 14], 0.12, 1.0))
     ARGS['antiguas'] = (T, pz, ac, mel, kw)
 
+def hacer_neon():
+    # --- Ciudad neón: Fa sostenido menor con séptima, synth-pop de bar a medio tempo. Colchón tibio de sierras, bajo
+    # pulsado, melodía de sierra filtrada y, de fondo, la llovizna y un bombo suave. Con su propio azar.
+    with A.azar_propio('musica_neon'):
+        T = -3; pz = 0.36
+        ac = compases([0, 3, 7, 10], [-4, 0, 3, 7], [-7, -3, 0, 5], [-2, 2, 5, 9], [0, 3, 7, 10], [5, 8, 12, 15], [-2, 2, 5, 9], [0, 3, 7, 10])
+        mel = frase(0, "15:1 12:0.5 10:0.5 12:2 | 7:1 10:1 12:1 15:1 | 17:1.5 15:0.5 12:2 | 14:4 | 15:1 19:1 17:1 15:1 | 20:2 19:1 15:1 | 14:1 12:1 10:1 14:1 | 12:4")
+        lead = lambda f, d: filtro(barrido(f, f, d, 'sierra'), 'bajo', 2200) * np.minimum(1, t_(d) / 0.01) * np.minimum(1, (d - t_(d)) / 0.12)
+        bajo = lambda f, d: filtro(barrido(f, f, min(d, 0.3), 'sierra'), 'bajo', 500) * env(int(min(d, 0.3) * SR), 0.004, 0.25, 3)
+        bombo = lambda: tambor(hz(T - 36), 0.3, 0.05)
+        lluvia = lambda: filtro(ruido(0.5), 'banda', (2000, 7000)) * env(int(0.5 * SR), 0.2, 0.25, 2)
+        perc = cada(32, bombo, 0.45, paso=2) + cada(32, lluvia, 0.08, paso=1)
+        kw = dict(inst_mel=lead, inst_ac=lambda f, d: sinte(f, d, 1500, 0.1, 0.4), bajo=bajo, perc=perc, g_mel=0.45, g_ac=0.3, g_bajo=0.3, oct_mel=-12, legato=0.9, rev=0.32)
+        P['neon'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: filtro(barrido(f, f, d, 'sierra'), 'bajo', 2600) * env(int(d * SR), 0.003, d * 0.7, 3), [10, 15, 19], 0.1, 0.4))
+        ARGS['neon'] = (T, pz, ac, mel, kw)
+
 def hacer_enriquecidos():
     """Lote 6: la presentación y la música anual de Refugio, Orden, Soviético y Espacio, más ricas. Ocho compases en lugar
     de cuatro o cinco, con más voces (bajo que camina, coro, cuerdas, arpegios) y su percusión. Corre después de [hacer]
@@ -401,6 +417,7 @@ if __name__ == '__main__':
     hacer()
     hacer_revolucion()
     hacer_antiguas()
+    hacer_neon()
     hacer_enriquecidos()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     # Con un tercer argumento («presentacion,anual», por ejemplo) solo se escriben esas piezas.

@@ -135,7 +135,7 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.ROMANO -> "RES GESTAE · ANNO ${Romano.de(anio)}"
     TemaId.DISTOPIA -> "INFORME ANUAL DEL CIUDADANO · $anio"
     TemaId.CIBER -> "> cat year_$anio.log"
-    TemaId.NEON -> "> cat year_$anio.log"
+    TemaId.NEON -> "LOS LETREROS DE $anio"
     TemaId.BOTANICO -> "Catálogo de especímenes · $anio"
     // «Apologismós»: la rendición de cuentas.
     TemaId.HELENO -> "ΑΠΟΛΟΓΙΣΜΟΣ · ΕΤΟΣ ${Griego.numeral(anio)}"

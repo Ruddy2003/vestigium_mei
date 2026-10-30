@@ -40,6 +40,7 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     MAPAS("Libro de mapas", "mapa"),
     EXPEDIENTE("Expediente de momentos", "folio"),
     CONSOLA("Consola de registro", "entrada"),
+    TICKETS("Pincho de tickets", "ticket"),
     CARPETA("Carpeta del supervisor", "informe"),
     TECNICO("Códice técnico", "lámina"),
     CUADERNO("Cuaderno de laboratorio", "experimento"),
@@ -64,7 +65,7 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.ANTIGUAS -> Contenedor.MAPAS
     TemaId.DISTOPIA -> Contenedor.EXPEDIENTE
     TemaId.CIBER -> Contenedor.CONSOLA
-    TemaId.NEON -> Contenedor.CONSOLA
+    TemaId.NEON -> Contenedor.TICKETS
     TemaId.REFUGIO -> Contenedor.CARPETA
     TemaId.ORDEN -> Contenedor.TECNICO
     TemaId.LABORATORIO -> Contenedor.CUADERNO
@@ -97,6 +98,7 @@ object Contenedores {
         // Las libretas del lote 2 tienen su papel en [ContenedoresMas].
         Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.TETRAD -> ContenedoresMas.papel(c, cs, oscuro)
+        Contenedor.TICKETS -> ContenedoresMas.papel(c, cs, oscuro)
     }
 
     // ================================================================== cerrado
@@ -115,6 +117,7 @@ object Contenedores {
             Contenedor.CAHIER -> cahierCerrado(grosor, d)
             Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.TETRAD -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
+            Contenedor.TICKETS -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
         }
     }
 
@@ -373,6 +376,7 @@ object Contenedores {
             }
             Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.TETRAD -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
+            Contenedor.TICKETS -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
         }
     }
 
@@ -420,6 +424,7 @@ object Contenedores {
             }
             Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.TETRAD -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
+            Contenedor.TICKETS -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
         }
     }
 }

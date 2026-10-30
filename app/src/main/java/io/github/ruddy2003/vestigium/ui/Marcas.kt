@@ -102,7 +102,7 @@ object Marcas {
         return when (tema) {
             TemaId.ROMANO -> if (persona) Aspecto(p, t, Forma.CARTELA, negrita = true) else Aspecto(t, t, Forma.SUBRAYADO)
             TemaId.CIBER -> if (persona) Aspecto(cs.background, p, Forma.TERMINAL, negrita = true) else Aspecto(s, s, Forma.CORCHETES)
-            TemaId.NEON -> if (persona) Aspecto(cs.background, p, Forma.TERMINAL, negrita = true) else Aspecto(s, s, Forma.CORCHETES)
+            TemaId.NEON -> if (persona) Aspecto(cs.background, p, Forma.MARCADOR, negrita = true) else Aspecto(s, s, Forma.ONDULADO)
             TemaId.HELENO -> if (persona) Aspecto(p, t, Forma.GRECA, negrita = true) else Aspecto(s, s, Forma.PUNTEADO)
             TemaId.MEDIEVAL -> if (persona) Aspecto(p, p, Forma.NINGUNA, negrita = true, cursiva = true) else Aspecto(t, t, Forma.SUBRAYADO, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)

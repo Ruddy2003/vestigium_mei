@@ -307,17 +307,17 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         var y = u * 24
         while (y < h) { drawLine(c.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), u * 0.8f); y += u * 4 }
     }
-    TemaId.NEON -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "> " + t.nombre.lowercase() + "_", "[ pulsa para continuar ]_",
-        comillas = "> " to "", emblema = 84.dp, arriba = 44.dp) { e ->
+    // Letrero: la frase va primero, como el cartel de la calle; luego el emblema colgado y el nombre en tubo de neón,
+    // todo dentro de un marco de tubo magenta con su halo y la llovizna cayendo delante.
+    TemaId.NEON -> DisenoPresentacion(OrdenPresentacion.FRASE_ARRIBA, false, t.nombre.uppercase(), "toca para entrar a la calle  ▸",
+        comillas = "「" to "」", emblema = 120.dp, arriba = 40.dp, abajo = 40.dp) { e ->
         val u = 1.dp.toPx(); val w = size.width; val h = size.height
         val c = e.primary
-        drawRect(c.copy(alpha = 0.7f), Offset.Zero, size, style = Stroke(u * 1.2f))
-        drawRect(c.copy(alpha = 0.16f), Offset.Zero, Size(w, u * 20))
-        drawLine(c.copy(alpha = 0.7f), Offset(0f, u * 20), Offset(w, u * 20), u)
-        for (i in 0 until 3) drawRect(if (i == 0) e.secondary else c.copy(alpha = 0.6f), Offset(w - u * (16 + i * 14f), u * 6), Size(u * 8, u * 8))
-        drawRect(c.copy(alpha = 0.6f), Offset(u * 8, u * 7), Size(u * 40, u * 6))
-        var y = u * 24
-        while (y < h) { drawLine(c.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), u * 0.8f); y += u * 4 }
+        drawRoundRect(c.copy(alpha = 0.2f), Offset(u * 4, u * 4), Size(w - u * 8, h - u * 8), androidx.compose.ui.geometry.CornerRadius(u * 18), style = Stroke(u * 7))
+        drawRoundRect(c, Offset(u * 4, u * 4), Size(w - u * 8, h - u * 8), androidx.compose.ui.geometry.CornerRadius(u * 18), style = Stroke(u * 1.6f))
+        drawLine(e.secondary.copy(alpha = 0.6f), Offset(w * 0.3f, h - u * 14), Offset(w * 0.7f, h - u * 14), u * 2)
+        val az = java.util.Random(8)
+        repeat(60) { val x = az.nextFloat() * w; val y = az.nextFloat() * h; drawLine(Color(0xFF9DB4D8).copy(alpha = 0.09f), Offset(x, y), Offset(x - u * 3, y + u * 12), u * 0.8f) }
     }
     // Templo: frontón con su arquitrabe sobre el emblema, dos columnas estriadas a los lados y las gradas al pie.
     TemaId.HELENO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre.uppercase(), "πρόσω  ·  toca para seguir",

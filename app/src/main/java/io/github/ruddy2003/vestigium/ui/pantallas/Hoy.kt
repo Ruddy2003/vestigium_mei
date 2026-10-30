@@ -46,6 +46,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.drawText
@@ -372,8 +373,9 @@ fun FraseDelDia(fecha: String) {
         TemaId.CIBER -> Surface(color = cs.surfaceVariant, shape = RectangleShape, border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.35f)), modifier = arriba) {
             Box(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) { CuerpoFrase(f, fecha, rotulo, "", " ▌", autor = "-- ${f.autor}") }
         }
-        TemaId.NEON -> Surface(color = cs.surfaceVariant, shape = RectangleShape, border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.35f)), modifier = arriba) {
-            Box(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) { CuerpoFrase(f, fecha, rotulo, "", " ▌", autor = "-- ${f.autor}") }
+        // El cartel del puesto: una placa redondeada con el tubo magenta y la frase entre corchetes japoneses.
+        TemaId.NEON -> Surface(color = cs.surfaceVariant, shape = RoundedCornerShape(18.dp), border = BorderStroke(1.5.dp, cs.primary.copy(alpha = 0.8f)), modifier = arriba) {
+            Box(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) { CuerpoFrase(f, fecha, rotulo, "「", "」", autor = "◆ ${f.autor}") }
         }
         // Meandros arriba y abajo; el texto centrado.
         TemaId.HELENO -> Column(arriba) {
@@ -783,7 +785,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
     return when (Estilo.tema) {
         TemaId.ROMANO -> base.copy(fontFamily = Letra.codigo, fontSize = 21.sp, letterSpacing = 0.sp)
         TemaId.CIBER -> c(Letra.terminal, FontWeight.Normal, 24f, 0.8f)
-        TemaId.NEON -> c(Letra.terminal, FontWeight.Normal, 24f, 0.8f)
+        TemaId.NEON -> c(Letra.letrero, FontWeight.SemiBold, 23f, 1.6f)
         TemaId.HELENO -> c(Letra.inscripcion, FontWeight.SemiBold, 21f, 1.4f, "lnum")
         TemaId.MEDIEVAL -> base.copy(fontFamily = Letra.garamond, fontWeight = FontWeight.SemiBold, fontSize = 23.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum, tnum")
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
@@ -999,12 +1001,13 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                                 while (y < h) { drawLine(Color.Black.copy(alpha = 0.28f), Offset(0f, y), Offset(w, y), 1f); y += 3.dp.toPx() }
                             } else drawRect(linea, Offset(0f, top), Size(w, barH), style = borde)
                         }
+                        // Tubos de neón verticales: el halo y el núcleo; vacío, solo el tubo apagado.
                         TemaId.NEON -> {
+                            val cx = w / 2; val g = w * 0.32f
                             if (color != null) {
-                                drawRect(color, Offset(0f, top), Size(w, barH))
-                                var y = top + 2.dp.toPx()
-                                while (y < h) { drawLine(Color.Black.copy(alpha = 0.28f), Offset(0f, y), Offset(w, y), 1f); y += 3.dp.toPx() }
-                            } else drawRect(linea, Offset(0f, top), Size(w, barH), style = borde)
+                                drawLine(color.copy(alpha = 0.3f), Offset(cx, top + g), Offset(cx, h - g), g * 2.6f, StrokeCap.Round)
+                                drawLine(color, Offset(cx, top + g), Offset(cx, h - g), g, StrokeCap.Round)
+                            } else drawLine(linea, Offset(cx, top + g), Offset(cx, h - g), g * 0.6f, StrokeCap.Round)
                         }
                         // Estelas: un cuerpo de piedra con su frontón triangular.
                         TemaId.HELENO -> {

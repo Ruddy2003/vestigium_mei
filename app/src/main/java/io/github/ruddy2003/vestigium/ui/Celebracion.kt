@@ -151,7 +151,7 @@ fun CapaLogro() {
 private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.ROMANO -> listOf("ex aere", "ex argento", "ex auro", "triumphalis")
     TemaId.CIBER -> listOf("rango: usuario", "rango: operador", "rango: admin", "rango: root")
-    TemaId.NEON -> listOf("rango: usuario", "rango: operador", "rango: admin", "rango: root")
+    TemaId.NEON -> listOf("cliente de paso", "cliente de la casa", "vecino del nivel", "leyenda del callejón")
     TemaId.HELENO -> listOf("χάλκεος", "ἀργύρεος", "χρύσεος", "ἀθάνατος")
     TemaId.MEDIEVAL -> listOf("en tinta", "en minio", "en pan de oro", "códice purpúreo")
     TemaId.DISTOPIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
@@ -254,21 +254,18 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             }
         }
         TemaId.NEON -> {
-            // Haces de fósforo: renglones de luz que se acortan hacia arriba y abajo, un barrido que baja y escuadras de selección.
-            val fosforo = cs.primary
-            for (k in -22..22) {
-                val f = 1f - abs(k) / 23f
-                val y = c.y + k * 8f * u
-                val mitad = size.width * 0.5f * f
-                drawLine(fosforo.copy(alpha = 0.08f * f), Offset(c.x - mitad, y), Offset(c.x + mitad, y), 1.4f * u)
-            }
-            val barrido = (giro / 60f) % 1f * size.height
-            drawRect(Brush.verticalGradient(listOf(Color.Transparent, fosforo.copy(alpha = 0.10f)), startY = barrido - 40f * u, endY = barrido), Offset(0f, barrido - 40f * u), Size(size.width, 40f * u))
-            val q = m * 0.34f; val l = 22f * u
-            listOf(Offset(-1f, -1f), Offset(1f, -1f), Offset(-1f, 1f), Offset(1f, 1f)).forEach { d ->
-                val o = Offset(c.x + d.x * q, c.y + d.y * q)
-                drawLine(fosforo.copy(alpha = 0.35f), o, Offset(o.x - d.x * l, o.y), 2f * u)
-                drawLine(fosforo.copy(alpha = 0.35f), o, Offset(o.x, o.y - d.y * l), 2f * u)
+            // Los letreros de la calle se encienden alrededor: tubos verticales en los tres colores que parpadean al
+            // prenderse, y el halo magenta que baña el centro.
+            val tonos = listOf(cs.primary, cs.secondary, cs.tertiary)
+            drawCircle(Brush.radialGradient(listOf(cs.primary.copy(alpha = 0.14f), Color.Transparent), c, m * 0.5f), m * 0.5f, c)
+            for (k in 0 until 8) {
+                val x = c.x + (k - 3.5f) * m * 0.12f
+                val alto = m * (0.12f + 0.1f * ((k * 5) % 3))
+                val y = c.y + (if (k % 2 == 0) -1 else 1) * m * 0.22f
+                val prendido = ((giro / 20f).toInt() + k) % 7 != 0
+                val col = tonos[k % 3].copy(alpha = if (prendido) 0.6f else 0.12f)
+                drawLine(col.copy(alpha = col.alpha * 0.4f), Offset(x, y - alto / 2), Offset(x, y + alto / 2), 9f * u, StrokeCap.Round)
+                drawLine(col, Offset(x, y - alto / 2), Offset(x, y + alto / 2), 3f * u, StrokeCap.Round)
             }
         }
         TemaId.HELENO -> rotate(giro * 0.5f, c) {

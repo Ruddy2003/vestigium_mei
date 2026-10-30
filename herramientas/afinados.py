@@ -255,6 +255,38 @@ def ciber():
                tecla=mezclar((0, clic(0.007, (3500, 9500)), 0.7), (0.002, cuadrada(hz(T + 31), 0.012, 0.006), 0.08)),
                rascar=rascado((2500, 9500), mezclar(*[(0.03 * i, cuadrada(hz(T + n), 0.05, 0.03), 0.4) for i, n in enumerate([24, 19, 31])]), aspereza=160))
 
+def neon():
+    # Fa sostenido menor con séptima: synth-pop de bar. Pulsos de sierra tibios, el zumbido del transformador de un
+    # letrero y la llovizna de fondo.
+    T = -3   # Fa#4
+    ns = lambda n, d=0.18, c=2400: filtro(barrido(hz(n), hz(n), d, 'sierra'), 'bajo', c) * env(int(d * SR), 0.003, d * 0.7, 3)
+    zumbido = lambda d: (filtro(barrido(120, 120, d, 'sierra'), 'bajo', 600) * 0.5 + filtro(ruido(d), 'banda', (5000, 9000)) * 0.15) * env(int(d * SR), 0.01, d * 0.6, 2)
+    llovizna = lambda d: filtro(ruido(d), 'banda', (1500, 7000)) * env(int(d * SR), d * 0.3, d * 0.6, 2) * 0.25
+    # Con su propio azar también los sonidos de siempre: un tema nuevo no mueve el ruido de los que van después.
+    with azar_propio('neon_base'):
+        S['neon'] = dict(
+            toque=mezclar((0, ns(T + 12, 0.07, 3000), 0.8), (0, zumbido(0.05), 0.25)), elegir=ns(T + 19, 0.09, 2800),
+            pasar=mezclar((0, llovizna(0.16), 0.9), (0.02, ns(T + 7, 0.08, 1800), 0.35)),
+            abrir=mezclar((0, zumbido(0.12), 0.5), (0.1, melodia(lambda f, d: filtro(barrido(f, f, d, 'sierra'), 'bajo', 2600) * env(int(d * SR), 0.003, d * 0.7, 3), [T, T + 3, T + 7], 0.05, 0.12), 0.8)),
+            guardar=mezclar((0, ns(T + 7, 0.1), 0.8), (0.09, ns(T + 15, 0.22), 0.8), (0.09, zumbido(0.2), 0.2)),
+            logro=reverb(mezclar(melodia(lambda f, d: filtro(barrido(f, f, d, 'sierra'), 'bajo', 3200) * env(int(d * SR), 0.003, d * 0.7, 3), [T, T + 3, T + 7, T + 10, T + 12, T + 15], 0.08, 0.22, g=0.5),
+                                 (0.5, acorde(lambda f, d: sinte(f, d, 2000, 0.05, 0.3), [T - 12 + a for a in (0, 3, 7, 10)], 0.9), 0.5), (0, zumbido(0.5), 0.15)), 1.3, 0.3),
+            tema=mezclar((0, zumbido(0.3), 0.6), (0.12, zumbido(0.08), 0.0), (0.22, melodia(lambda f, d: filtro(barrido(f, f, d, 'sierra'), 'bajo', 2800) * env(int(d * SR), 0.003, d * 0.7, 3), [T + 7, T + 10, T + 15], 0.06, 0.16), 0.9)),
+            aviso=reverb(mezclar(*[(0.16 * i, ns(T + n, 0.16 if i < 5 else 0.5), 0.55) for i, n in enumerate([0, 7, 10, 15, 12, 10])], (0, llovizna(1.1), 0.5)), 1.2, 0.3),
+            solemne=reverb(mezclar(*[(0.85 * i, acorde(lambda f, d: sinte(f, d, 1600, 0.15, 0.4), [T - 12 + a for a in ch], 0.9), 0.55)
+                                     for i, ch in enumerate([[0, 3, 7, 10], [-4, 0, 3, 7], [-7, -3, 0, 5], [-2, 2, 5, 9], [0, 3, 7, 10]])],
+                                   (0, llovizna(4.2), 0.6), *[(0.85 * i + 0.4, ns(T + [15, 12, 10, 14, 19][i], 0.2), 0.25) for i in range(5)]), 1.8, 0.35))
+
+    # Error: el letrero que hace corto y se apaga con un chasquido. Cambio: el interruptor del letrero y su zumbido al prender.
+    # Tecla: la tecla de la caja registradora del puesto. Rascar: la cortina metálica que sube a jalones.
+    with azar_propio('neon'):
+        nuevos('neon',
+               error=mezclar((0, zumbido(0.12), 0.8), (0.1, clic(0.02, (800, 4000)), 0.6), (0.13, ns(T - 6, 0.25, 900), 0.6)),
+               cambio=mezclar((0, clic(0.012, (1500, 5000)), 0.6), (0.015, zumbido(0.14), 0.6), (0.03, ns(T + 12, 0.06, 2600), 0.4)),
+               tecla=mezclar((0, clic(0.01, (1200, 5000)), 0.8), (0.004, filtro(barrido(hz(T + 36), hz(T + 36), 0.03, 'cuadrada'), 'bajo', 5000) * env(int(0.03 * SR), 0.001, 0.02), 0.12)),
+               rascar=rascado((300, 3000), mezclar((0, tambor(hz(T - 24), 0.3, 0.6), 0.6), (0.02, clic(0.03, (600, 2500)), 0.6)), aspereza=40,
+                              pasadas=((0.0, 0.18), (0.24, 0.2), (0.5, 0.22), (0.78, 0.2))))
+
 def heleno():
     # La mayor pentatónico: lira.
     T = -12  # La3
@@ -792,6 +824,7 @@ if __name__ == '__main__':
     todos = (
         romano,
         ciber,
+        neon,
         heleno,
         medieval,
         distopia,

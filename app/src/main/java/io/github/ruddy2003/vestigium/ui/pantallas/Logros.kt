@@ -155,18 +155,12 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             })
             drawRect(luz, Offset(c.x - r * 0.6f, c.y - r * 0.6f), Size(r * 1.2f, r * 1.2f), style = Stroke(r * 0.04f))
         }
+        // La ficha de la máquina: disco con el canto dentado y el agujero cuadrado.
         TemaId.NEON -> {
-            val k = r * 0.8f; val q = r * 0.26f
-            for (i in -1..1) {
-                val d = i * r * 0.36f
-                drawLine(canto, Offset(c.x + d, c.y - k), Offset(c.x + d, c.y - r), g); drawLine(canto, Offset(c.x + d, c.y + k), Offset(c.x + d, c.y + r), g)
-                drawLine(canto, Offset(c.x - k, c.y + d), Offset(c.x - r, c.y + d), g); drawLine(canto, Offset(c.x + k, c.y + d), Offset(c.x + r, c.y + d), g)
-            }
-            forma(Path().apply {
-                moveTo(c.x - k + q, c.y - k); lineTo(c.x + k - q, c.y - k); lineTo(c.x + k, c.y - k + q); lineTo(c.x + k, c.y + k - q)
-                lineTo(c.x + k - q, c.y + k); lineTo(c.x - k + q, c.y + k); lineTo(c.x - k, c.y + k - q); lineTo(c.x - k, c.y - k + q); close()
-            })
-            drawRect(luz, Offset(c.x - r * 0.6f, c.y - r * 0.6f), Size(r * 1.2f, r * 1.2f), style = Stroke(r * 0.04f))
+            forma(disco(c, r * 0.95f))
+            for (k in 0 until 24) rotate(k * 15f, c) { drawRect(sombra, Offset(c.x - r * 0.03f, c.y - r * 0.95f), Size(r * 0.06f, r * 0.12f)) }
+            drawCircle(luz, r * 0.7f, c, style = Stroke(r * 0.05f))
+            drawRect(sombra, Offset(c.x - r * 0.18f, c.y - r * 0.18f), Size(r * 0.36f, r * 0.36f))
         }
         // El sol de Vergina: disco con dieciséis rayos cortos.
         TemaId.HELENO -> {

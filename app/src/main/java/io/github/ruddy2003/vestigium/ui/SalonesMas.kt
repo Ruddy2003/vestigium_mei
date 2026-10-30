@@ -62,10 +62,10 @@ object SalonesMas {
                 for (k in 0 until 6) drawRect(Color(0xFF00E5FF).copy(alpha = if (k % 3 == 1) 0.3f else 0.85f), Offset(w * (0.2f + k * 0.1f), h * 0.42f), Size(w * 0.05f, h * 0.22f))
             }
             TemaId.NEON -> {
-                // La tapa de un gabinete: chapa negra, filo cian y una hilera de luces de estado.
-                drawRect(piedra(Color(0xFF111925)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h))
-                drawRect(Color(0xFF00E5FF).copy(alpha = 0.8f), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.1f))
-                for (k in 0 until 6) drawRect(Color(0xFF00E5FF).copy(alpha = if (k % 3 == 1) 0.3f else 0.85f), Offset(w * (0.2f + k * 0.1f), h * 0.42f), Size(w * 0.05f, h * 0.22f))
+                // Una caja de cerveza de plástico verde, de cabeza, con sus asas caladas y el reflejo magenta del letrero.
+                drawRoundRect(piedra(Color(0xFF2F6B3A)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h), CornerRadius(h * 0.12f))
+                for (k in 0 until 5) drawRect(Color(0xFF173A1E), Offset(w * (0.18f + k * 0.135f), h * 0.3f), Size(w * 0.09f, h * 0.4f))
+                drawRect(Color(0xFFFF3D9A).copy(alpha = 0.55f), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.08f))
             }
             TemaId.REFUGIO -> {
                 // La placa de chapa verde azulado del refugio, con su franja amarilla y remaches.
@@ -437,6 +437,66 @@ object SalonesMas {
             }
             // La rejilla de ventilación.
             var yv = y1 - 24 * d; while (yv < y1 - 4 * d) { drawLine(Color(0xFF05070B), Offset(cx - ancho / 2 + 4 * d, yv), Offset(cx + ancho / 2 - 4 * d, yv), 1.4f * d); yv += 4 * d }
+        }
+    }
+
+    /**
+     * Ciudad neón: un callejón de noche. Paredes de ladrillo húmedo, letreros verticales de neón colgados entre las columnas
+     * de piezas (cada uno con sus tres «letras»), cables que cruzan de pared a pared con farolitos de papel, una tubería que
+     * suelta vapor y, en el suelo mojado, los charcos que reflejan los letreros.
+     */
+    internal fun DrawScope.callejon(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val magenta = Color(0xFFFF3D9A); val ambar = Color(0xFFFFB238); val verde = Color(0xFF8CFF5A)
+        val ladrillo = Color(0xFF2A1A2A).copy(alpha = 0.7f); val junta = Color(0xFF0C0811).copy(alpha = 0.8f)
+        // Los ladrillos, en hiladas trabadas.
+        val alto = 9 * d; val largo = 22 * d
+        var y = 0f; var fila = 0
+        while (y < h - 40 * d) {
+            drawRect(ladrillo, Offset(0f, y), Size(w, alto - 1.5f * d))
+            var x = if (fila % 2 == 0) 0f else -largo / 2
+            while (x < w) { drawLine(junta, Offset(x, y), Offset(x, y + alto), 1.5f * d); x += largo }
+            y += alto; fila++
+        }
+        // Los cables que cruzan arriba, con farolitos colgando.
+        listOf(18f, 46f).forEachIndexed { k, y0 ->
+            val cable = Path().apply { moveTo(0f, y0 * d); quadraticTo(w / 2, (y0 + 18) * d, w, y0 * d) }
+            drawPath(cable, Color.Black.copy(alpha = 0.8f), style = Stroke(1.2f * d))
+            val paso = w / (5 + k)
+            var xx = paso / 2
+            while (xx < w) {
+                val t = xx / w; val yy = (1 - t) * (1 - t) * y0 * d + 2 * (1 - t) * t * (y0 + 18) * d + t * t * y0 * d
+                drawCircle(Brush.radialGradient(listOf(Color(0xFFFF6B5E).copy(alpha = 0.35f), Color.Transparent), Offset(xx, yy + 7 * d), 16 * d), 16 * d, Offset(xx, yy + 7 * d))
+                drawOval(Color(0xFFFF6B5E).copy(alpha = 0.85f), Offset(xx - 4 * d, yy + 2 * d), Size(8 * d, 11 * d))
+                xx += paso
+            }
+        }
+        // Los letreros verticales entre las columnas.
+        val paso = w / n
+        val tonos = listOf(magenta, ambar, verde)
+        for (i in 0..n) {
+            val cx = i * paso; val y0 = 70 * d; val y1 = y0 + 120 * d; val an = 16 * d
+            val col = tonos[i % 3]
+            drawRect(Color(0xFF0C0811).copy(alpha = 0.9f), Offset(cx - an / 2, y0), Size(an, y1 - y0))
+            drawRect(col.copy(alpha = 0.22f), Offset(cx - an / 2 - 3 * d, y0 - 3 * d), Size(an + 6 * d, y1 - y0 + 6 * d), style = Stroke(5 * d))
+            drawRect(col, Offset(cx - an / 2, y0), Size(an, y1 - y0), style = Stroke(1.5f * d))
+            for (k in 0 until 3) {
+                val yy = y0 + 16 * d + k * 36 * d
+                drawLine(col, Offset(cx - 4 * d, yy), Offset(cx + 4 * d, yy), 1.6f * d)
+                drawLine(col, Offset(cx, yy), Offset(cx, yy + 16 * d), 1.6f * d)
+                drawLine(col, Offset(cx - 5 * d, yy + 16 * d), Offset(cx + 5 * d, yy + 16 * d), 1.6f * d)
+            }
+            drawLine(Color.Black, Offset(cx, y0 - 14 * d), Offset(cx, y0), 1.4f * d)
+        }
+        // La tubería con su vapor.
+        drawRect(Color(0xFF3A2E42).copy(alpha = 0.9f), Offset(w * 0.08f, 0f), Size(7 * d, h - 40 * d))
+        repeat(4) { k -> drawCircle(Color.White.copy(alpha = 0.05f), (18 + k * 10) * d, Offset(w * 0.08f + 12 * d + k * 8 * d, h * 0.5f - k * 22 * d)) }
+        // El suelo mojado y los charcos con el reflejo de los letreros.
+        drawRect(Color(0xFF0C0811), Offset(0f, h - 40 * d), Size(w, 40 * d))
+        for (i in 0..n) {
+            val cx = i * paso; val col = tonos[i % 3]
+            drawOval(Brush.verticalGradient(listOf(col.copy(alpha = 0.35f), Color.Transparent), h - 34 * d, h - 6 * d), Offset(cx - 24 * d, h - 34 * d), Size(48 * d, 26 * d))
+            drawLine(col.copy(alpha = 0.5f), Offset(cx, h - 32 * d), Offset(cx, h - 12 * d), 2 * d)
         }
     }
 

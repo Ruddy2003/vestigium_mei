@@ -303,14 +303,16 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
         TemaId.CIBER -> {
             val q = s * 0.42f
             listOf(0 to 0, 1 to 0, -1 to 0, 0 to 1, 0 to -1).forEach { (dx, dy) ->
-                drawRect(Color(0xFF8CFFB0), Offset(o.x + dx * q - q * 0.45f, o.y + dy * q - q * 0.45f), Size(q * 0.9f, q * 0.9f))
+                drawRect(Color(0xFFA6F4FF), Offset(o.x + dx * q - q * 0.45f, o.y + dy * q - q * 0.45f), Size(q * 0.9f, q * 0.9f))
             }
         }
+        // Un chispazo de letrero que se enciende: cuatro rayitas de tubo alrededor de un punto, en los tres colores.
         TemaId.NEON -> {
-            val q = s * 0.42f
-            listOf(0 to 0, 1 to 0, -1 to 0, 0 to 1, 0 to -1).forEach { (dx, dy) ->
-                drawRect(Color(0xFF8CFFB0), Offset(o.x + dx * q - q * 0.45f, o.y + dy * q - q * 0.45f), Size(q * 0.9f, q * 0.9f))
-            }
+            val col = listOf(Color(0xFFFF3D9A), Color(0xFFFFB238), Color(0xFF8CFF5A))[i % 3]
+            for (k in 0 until 4) { val a = k * PI / 2 + PI / 4; val dir = Offset(cos(a).toFloat(), sin(a).toFloat())
+                drawLine(col.copy(alpha = 0.3f), o + dir * (s * 0.3f), o + dir * s, s * 0.3f, StrokeCap.Round)
+                drawLine(col, o + dir * (s * 0.3f), o + dir * s, s * 0.1f, StrokeCap.Round) }
+            drawCircle(Color.White, s * 0.12f, o)
         }
         TemaId.HELENO -> {
             for (k in 0 until 16) {
@@ -411,8 +413,8 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
 /** El tono de la pared de la sala de trofeos en cada tema (se mezcla, tenue, con la superficie). */
 private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.ROMANO -> Color(0xFFD9CBB0)
-    TemaId.CIBER -> Color(0xFF0B3D24)
-    TemaId.NEON -> Color(0xFF0B3D24)
+    TemaId.CIBER -> Color(0xFF06262C)
+    TemaId.NEON -> Color(0xFF2A1430)
     TemaId.HELENO -> Color(0xFFC9D8E6)
     TemaId.MEDIEVAL -> Color(0xFFD8C08E)
     TemaId.DISTOPIA -> Color(0xFF8E9296)
@@ -451,13 +453,18 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
         }
         TemaId.CIBER -> {
             var y = 0f
-            while (y < h) { drawLine(Color(0xFF39FF88).copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), d); y += 3 * d }
-            drawLine(Color(0xFF39FF88).copy(alpha = 0.12f), Offset(14 * d, 0f), Offset(14 * d, h), d)
+            while (y < h) { drawLine(Color(0xFF00E5FF).copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), d); y += 3 * d }
+            drawLine(Color(0xFF00E5FF).copy(alpha = 0.12f), Offset(14 * d, 0f), Offset(14 * d, h), d)
         }
+        // La pared del callejón: ladrillos húmedos y el reflejo de un letrero que baña la mitad de arriba.
         TemaId.NEON -> {
-            var y = 0f
-            while (y < h) { drawLine(Color(0xFF39FF88).copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), d); y += 3 * d }
-            drawLine(Color(0xFF39FF88).copy(alpha = 0.12f), Offset(14 * d, 0f), Offset(14 * d, h), d)
+            var y = 0f; var fila = 0
+            while (y < h) {
+                drawLine(Color.Black.copy(alpha = 0.25f), Offset(0f, y), Offset(w, y), d)
+                var x = if (fila % 2 == 0) 0f else 11 * d; while (x < w) { drawLine(Color.Black.copy(alpha = 0.25f), Offset(x, y), Offset(x, y + 8 * d), d); x += 22 * d }
+                y += 8 * d; fila++
+            }
+            drawRect(Brush.verticalGradient(listOf(Color(0xFFFF3D9A).copy(alpha = 0.12f), Color.Transparent), 0f, h * 0.5f), Offset.Zero, Size(w, h * 0.5f))
         }
         TemaId.HELENO -> {
             var x = 8 * d; var k = 0
@@ -621,18 +628,16 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             var x = 6 * d; var k = 0
             while (x < w) {
                 drawRect(Color.Black, Offset(x, h * 0.25f), Size(3 * d, 3 * d)); drawRect(Color.Black, Offset(x, h * 0.6f), Size(3 * d, 3 * d))
-                if (k % 4 == 1) drawCircle(if (k % 12 == 5) Color(0xFFFFB300) else Color(0xFF39FF88), 1.4f * d, Offset(x + 9 * d, h * 0.45f))
+                if (k % 4 == 1) drawCircle(if (k % 12 == 5) Color(0xFFC8FBFF) else Color(0xFF00E5FF), 1.4f * d, Offset(x + 9 * d, h * 0.45f))
                 x += 14 * d; k++
             }
         }
+        // La repisa de la rejilla del puesto, con su borde de tubo de neón.
         TemaId.NEON -> {
-            tabla(m(Color(0xFF1A1F24)))
-            var x = 6 * d; var k = 0
-            while (x < w) {
-                drawRect(Color.Black, Offset(x, h * 0.25f), Size(3 * d, 3 * d)); drawRect(Color.Black, Offset(x, h * 0.6f), Size(3 * d, 3 * d))
-                if (k % 4 == 1) drawCircle(if (k % 12 == 5) Color(0xFFFFB300) else Color(0xFF39FF88), 1.4f * d, Offset(x + 9 * d, h * 0.45f))
-                x += 14 * d; k++
-            }
+            tabla(m(Color(0xFF3A2E42)))
+            var x = 8 * d; while (x < w) { drawCircle(Color(0xFF0C0811), 2.2f * d, Offset(x, h * 0.55f)); x += 10 * d }
+            drawLine(Color(0xFFFF3D9A).copy(alpha = 0.3f), Offset(0f, 1.5f * d), Offset(w, 1.5f * d), 4 * d)
+            drawLine(Color(0xFFFF3D9A), Offset(0f, 1.5f * d), Offset(w, 1.5f * d), 1.2f * d)
         }
         TemaId.HELENO -> { tabla(m(Color(0xFFE9E4D8))); drawPath(Path().apply { grecaRepisa(0f, h * 0.2f, h * 0.2f, w) }, m(Color(0xFF1E5F8C)), style = Stroke(1.2f * d)) }
         TemaId.MEDIEVAL -> {
@@ -786,11 +791,11 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
                 drawLine(ac, o, Offset(o.x + s.x * l, o.y), 1.5f * d); drawLine(ac, o, Offset(o.x, o.y + s.y * l), 1.5f * d)
             }
         }
+        // La placa como un letrerito con su tubo alrededor, redondeado, y dos grapas.
         TemaId.NEON -> {
-            val l = 7 * d
-            listOf(Offset(0f, 0f) to Offset(1f, 1f), Offset(w, 0f) to Offset(-1f, 1f), Offset(0f, h) to Offset(1f, -1f), Offset(w, h) to Offset(-1f, -1f)).forEach { (o, s) ->
-                drawLine(ac, o, Offset(o.x + s.x * l, o.y), 1.5f * d); drawLine(ac, o, Offset(o.x, o.y + s.y * l), 1.5f * d)
-            }
+            drawRoundRect(ac.copy(alpha = ac.alpha * 0.3f), Offset(1.5f * d, 1.5f * d), Size(w - 3 * d, h - 3 * d), CornerRadius(h * 0.3f), style = Stroke(4 * d))
+            drawRoundRect(ac, Offset(1.5f * d, 1.5f * d), Size(w - 3 * d, h - 3 * d), CornerRadius(h * 0.3f), style = Stroke(1.2f * d))
+            listOf(0.25f, 0.75f).forEach { f -> drawRect(tinta.copy(alpha = 0.6f), Offset(w * f - 1.5f * d, 0f), Size(3 * d, 4 * d)) }
         }
         TemaId.HELENO -> {
             val t = 5 * d

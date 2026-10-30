@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -66,7 +68,8 @@ import kotlin.math.sqrt
 /** La forma con que el tema nuevo se abre sobre el anterior. */
 private enum class BarridoTema {
     ARCO, PIXELES, SOL, ROMBO, OJO, ESCOTILLA, ENGRANE, MEMBRANA, COLUMNAS, CORTINA, HOJA,
-    COPO, ABANICO, OJIVA, CIRCULO, OCHO, HORIZONTE, VITRUVIO, ESTRELLA, BANDAS, HEXAGONO
+    COPO, ABANICO, OJIVA, CIRCULO, OCHO, HORIZONTE, VITRUVIO, ESTRELLA, BANDAS, HEXAGONO,
+    PERSIANA,
 }
 
 /**
@@ -89,7 +92,8 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.ROMANO -> MatizMovimiento(BarridoTema.ARCO, 760, FastOutSlowInEasing, 0f, 18f, 1f, 420, 55, FastOutSlowInEasing, 1f, 0.6f, 700f)
     // Rejilla de píxeles que se enciende a saltos; nada rebota.
     TemaId.CIBER -> MatizMovimiento(BarridoTema.PIXELES, 640, SALTOS_CONSOLA, 0f, 6f, 1f, 260, 40, SALTOS_RENGLON, 0.8f, 1f, 2500f)
-    TemaId.NEON -> MatizMovimiento(BarridoTema.PIXELES, 640, SALTOS_CONSOLA, 0f, 6f, 1f, 260, 40, SALTOS_RENGLON, 0.8f, 1f, 2500f)
+    // La persiana del puesto que sube de golpe; las secciones entran de lado, como letreros que se deslizan, y rebotan apenas.
+    TemaId.NEON -> MatizMovimiento(BarridoTema.PERSIANA, 620, CubicBezierEasing(0.2f, 0f, 0f, 1f), 14f, 0f, 1f, 320, 45, FastOutSlowInEasing, 1.05f, 0.55f, 1400f)
     // El sol de Vergina, de dieciséis rayos.
     TemaId.HELENO -> MatizMovimiento(BarridoTema.SOL, 820, FastOutSlowInEasing, 0f, 14f, 0.98f, 480, 60, FastOutSlowInEasing, 1f, 0.5f, 800f)
     // Rombo de miniatura; todo lento, a paso de pluma.
@@ -186,17 +190,17 @@ fun contando(valor: String): String {
  * vivo del teléfono, para que los dos digan lo mismo. [periodo]: cuánto dura una vuelta completa, en ms.
  */
 internal enum class VivoTema(val periodo: Int) {
-    LUCERNA(16000), FOSFORO(5000), OLIVO(30000), RAYO_ORO(26000), CENIZA(28000), VAPOR(18000), FRAGUA(7000),
+    LUCERNA(16000), VOLCADO(6000), OLIVO(30000), RAYO_ORO(26000), CENIZA(28000), VAPOR(18000), FRAGUA(7000),
     BURBUJAS(16000), GACETA(40000), CHARRETERAS(9000), HORMIGAS(70000), LUCIERNAGAS(9000), NIEVE(24000),
     ARENA(14000), VITRAL(80000), ESTRELLAS(9000), AGUA(14000), NUBES(180000), SAMARAS(24000), ESTRELLAS_ROJAS(36000),
-    CONFETI(22000), RUNAS(14000)
+    CONFETI(22000), RUNAS(14000), LLOVIZNA(6000)
 }
 
 /** El tipo de fondo vivo de cada tema (solo el Botánico cambia entre el día y la noche; el Refugio suma el barrido de noche). */
 internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.ROMANO -> VivoTema.LUCERNA            // chispas que suben de una lucerna de aceite
-    TemaId.CIBER -> VivoTema.FOSFORO             // columnas de fósforo con el cursor por cabeza
-    TemaId.NEON -> VivoTema.FOSFORO             // columnas de fósforo con el cursor por cabeza
+    TemaId.CIBER -> VivoTema.VOLCADO             // un volcado de memoria: columnas de hexadecimal que caen
+    TemaId.NEON -> VivoTema.LLOVIZNA             // la llovizna que cae entre letreros y salpica en los charcos
     TemaId.HELENO -> VivoTema.OLIVO              // hojas de olivo que bajan girando
     TemaId.MEDIEVAL -> VivoTema.RAYO_ORO         // un rayo de luz con polvo de oro suspendido
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
@@ -274,17 +278,47 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             drawCircle(Brush.radialGradient(listOf(al(brasa, 0.30f * a), Color.Transparent), center = Offset(x, y), radius = r), r, Offset(x, y))
             drawCircle(al(if (oscuro) Color(0xFFFFE2A8) else brasa, (if (oscuro) 0.6f else 0.35f) * a), 1.1f * u * m.tam, Offset(x, y))
         }
-        VivoTema.FOSFORO -> {
-            // Columnas de fósforo alineadas a la rejilla de la consola, con un bloque de cursor por cabeza.
-            val paso = 14f * u
+        VivoTema.VOLCADO -> {
+            // Un volcado de memoria: columnas de pares hexadecimales alineadas a la rejilla de la consola, que bajan; la
+            // cabeza va más brillante y la cola se apaga. Los dígitos cambian con la memoria que pasa.
+            val paso = 22f * u; val alto = 11f * u
+            val hex = "0123456789ABCDEF"
+            val pincel = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { typeface = android.graphics.Typeface.MONOSPACE; textSize = 9f * u }
+            val lienzo = drawContext.canvas.nativeCanvas
+            motas.take(24).forEach { m ->
+                val k = vueltas(m)
+                val cabeza = fraccionVivo(m.y + t * k) * (h + 120f * u) - 60f * u
+                val x = kotlin.math.round(m.x * w / paso) * paso
+                val largo = 4 + (m.tam * 6).toInt()
+                for (j in 0 until largo) {
+                    val y = cabeza - j * alto
+                    if (y < -alto || y > h + alto) continue
+                    val semilla = (m.fase * 997).toInt() + j * 7 + (t * k * 12).toInt()
+                    val texto = "" + hex[semilla and 15] + hex[(semilla * 5 + 3) and 15]
+                    pincel.color = al(e.primary, (if (j == 0) 0.42f else 0.2f * (1f - j.toFloat() / largo))).toArgb()
+                    lienzo.drawText(texto, x, y, pincel)
+                }
+            }
+        }
+        VivoTema.LLOVIZNA -> {
+            // La llovizna que cae en diagonal, teñida por los letreros (magenta, ámbar y verde), y las salpicaduras que
+            // abren anillos en los charcos de abajo. A la derecha, el reflejo de un letrero que parpadea.
+            val tonos = listOf(e.primary, e.secondary, e.tertiary)
             motas.forEach { m ->
                 val k = vueltas(m) + 1
-                val cabeza = fraccionVivo(m.y + t * k) * (h + 60f * u) - 30f * u
-                val x = kotlin.math.round(m.x * w / paso) * paso
-                val cola = 26f * u * m.tam
-                drawLine(Brush.verticalGradient(listOf(Color.Transparent, al(e.primary, 0.16f)), startY = cabeza - cola, endY = cabeza), Offset(x, cabeza - cola), Offset(x, cabeza), 1.2f * u)
-                drawRect(al(e.primary, if (m.tono == 0) 0.34f else 0.22f), Offset(x - 2f * u, cabeza), Size(4f * u, 6f * u))
+                val caida = fraccionVivo(m.y + t * k)
+                val y = caida * (h + 40f * u) - 20f * u
+                val x = (m.x - 0.08f * caida) * w
+                val l = 16f * u * (0.6f + m.tam * 0.6f)
+                drawLine(al(tonos[m.tono], 0.14f), Offset(x, y), Offset(x - l * 0.22f, y + l), 1f * u, StrokeCap.Round)
             }
+            motas.take(10).forEach { m ->
+                val f = fraccionVivo(m.fase + t * 2)
+                val c = Offset(m.x * w, h * (0.86f + 0.12f * m.y))
+                drawOval(al(tonos[m.tono], 0.18f * (1f - f)), Offset(c.x - 14f * u * f, c.y - 4f * u * f), Size(28f * u * f, 8f * u * f), style = Stroke(0.8f * u))
+            }
+            val parpadeo = if (fraccionVivo(t * 3) in 0.42f..0.47f) 0.02f else 0.07f
+            drawRect(Brush.horizontalGradient(listOf(Color.Transparent, al(e.primary, parpadeo)), startX = w * 0.7f, endX = w), Offset(w * 0.7f, 0f), Size(w * 0.3f, h))
         }
         VivoTema.OLIVO -> motas.take(16).forEach { m ->
             // Hojas de olivo, largas y estrechas, que bajan en diagonal girando.
@@ -702,6 +736,11 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
                     if (i == 1) ruta.addRect(Rect(ancho, h * (1f - q), 2 * ancho, h)) else ruta.addRect(Rect(i * ancho, 0f, (i + 1) * ancho, h * q))
                 }
             }
+        }
+        BarridoTema.PERSIANA -> {
+            // La persiana metálica que sube desde abajo, con la orilla en lamas.
+            val alto = h * p * 1.03f
+            ruta.addRect(Rect(0f, h - alto, w, h))
         }
         BarridoTema.CORTINA -> {
             val s = maxOf(c.x, w - c.x) * p * 1.02f

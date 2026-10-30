@@ -82,8 +82,8 @@ internal val METALES_HALL = listOf(Color(0xFFB27A45), Color(0xFFBFC6CF), Color(0
 /** El matiz de cada tema con el que se tiñen los metales del hall. */
 private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.ROMANO -> Color(0xFF9C2F3F)
-    TemaId.CIBER -> Color(0xFF00E676)
-    TemaId.NEON -> Color(0xFF00E676)
+    TemaId.CIBER -> Color(0xFF00E5FF)
+    TemaId.NEON -> Color(0xFFFF3D9A)
     TemaId.HELENO -> Color(0xFF1E5F8C)
     TemaId.MEDIEVAL -> Color(0xFF7A5C2E)
     TemaId.DISTOPIA -> Color(0xFF5D6670)
@@ -181,8 +181,8 @@ object PiezasLogro {
     /** El trazo y el material de las piezas en cada tema. */
     private fun trazoTema(t: TemaId, u: Float): Trazo = when (t) {
         TemaId.ROMANO -> Trazo(u, 1.2f, StrokeCap.Butt, StrokeJoin.Miter, null, 0f, false, Color(0xFFEDE6D6))
-        TemaId.CIBER -> Trazo(u, 0.9f, StrokeCap.Square, StrokeJoin.Miter, floatArrayOf(2.2f, 1.1f), 0f, false, Color(0xFFC8F7D2))
-        TemaId.NEON -> Trazo(u, 0.9f, StrokeCap.Square, StrokeJoin.Miter, floatArrayOf(2.2f, 1.1f), 0f, false, Color(0xFFC8F7D2))
+        TemaId.CIBER -> Trazo(u, 0.9f, StrokeCap.Square, StrokeJoin.Miter, floatArrayOf(2.2f, 1.1f), 0f, false, Color(0xFFC8FBFF))
+        TemaId.NEON -> Trazo(u, 1.15f, StrokeCap.Round, StrokeJoin.Round, null, 1.5f, true, Color(0xFFFFD3E8))   // tubo doble: el halo y el núcleo
         TemaId.HELENO -> Trazo(u, 0.95f, StrokeCap.Butt, StrokeJoin.Bevel, null, 0f, true, Color(0xFFE9EEF4))
         TemaId.MEDIEVAL -> Trazo(u, 1.25f, StrokeCap.Round, StrokeJoin.Round, null, 0f, false, Color(0xFFEADBB8))
         TemaId.DISTOPIA -> Trazo(u, 1.1f, StrokeCap.Butt, StrokeJoin.Miter, floatArrayOf(5f, 1.6f), 0f, false, Color(0xFFD9D9D4))
@@ -274,7 +274,11 @@ object PiezasLogro {
         when (tema) {
             TemaId.ROMANO -> for (i in 0 until 24) drawCircle(m, 1.4f * u, en(i * PI / 12, 0.92f))
             TemaId.CIBER -> for (i in 0 until 28) { val p = en(i * PI / 14, 0.91f); drawRect(pri, Offset(p.x - 1.3f * u, p.y - 1.3f * u), Size(2.6f * u, 2.6f * u)) }
-            TemaId.NEON -> for (i in 0 until 28) { val p = en(i * PI / 14, 0.91f); drawRect(pri, Offset(p.x - 1.3f * u, p.y - 1.3f * u), Size(2.6f * u, 2.6f * u)) }
+            // Un aro de tubo de neón con su halo, cortado en tramos como los letreros viejos.
+            TemaId.NEON -> {
+                drawCircle(pri.copy(alpha = pri.alpha * 0.3f), r * 0.91f, c, style = Stroke(4.5f * u))
+                drawCircle(pri, r * 0.91f, c, style = Stroke(1.3f * u, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(22 * u, 3 * u))))
+            }
             TemaId.HELENO -> for (i in 0 until 40) drawLine(m, en(i * PI / 20, 0.86f), en(i * PI / 20, 0.95f), 1.1f * u)
             TemaId.MEDIEVAL -> drawCircle(t, r * 0.9f, c, style = Stroke(2.2f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 3 * u))))
             TemaId.DISTOPIA -> {
@@ -354,7 +358,7 @@ object PiezasLogro {
         when (tema) {
             TemaId.ROMANO -> tri(5 * u)
             TemaId.CIBER -> { drawLine(tinta, Offset(cx, y), Offset(cx, y - 6 * u), 1 * u); drawRect(tinta, Offset(cx - 0.8f * u, y - 7.6f * u), Size(1.6f * u, 1.6f * u)) }
-            TemaId.NEON -> { drawLine(tinta, Offset(cx, y), Offset(cx, y - 6 * u), 1 * u); drawRect(tinta, Offset(cx - 0.8f * u, y - 7.6f * u), Size(1.6f * u, 1.6f * u)) }
+            TemaId.NEON -> { drawLine(tinta, Offset(cx - an * 0.3f, y), Offset(cx - an * 0.3f, y - 3 * u), 0.8f * u); drawLine(tinta, Offset(cx + an * 0.3f, y), Offset(cx + an * 0.3f, y - 3 * u), 0.8f * u); drawRect(tinta, Offset(cx - an * 0.45f, y - 6.5f * u), Size(an * 0.9f, 3.5f * u)) }   // el letrero de la azotea
             TemaId.HELENO -> { tri(3.5f * u, x - 0.6f * u, x + an + 0.6f * u); drawCircle(tinta, 0.9f * u, Offset(cx, y - 4.2f * u)) }
             TemaId.MEDIEVAL -> { val m = an / 5; for (k in 0 until 3) drawRect(tinta, Offset(x + k * 2 * m, y - 3 * u), Size(m, 3 * u)) }
             TemaId.DISTOPIA -> { drawLine(tinta, Offset(cx, y), Offset(cx, y - 3 * u), 0.8f * u); drawRect(tinta, Offset(cx - an * 0.4f, y - 6 * u), Size(an * 0.8f, 3 * u)) }
@@ -421,9 +425,12 @@ object PiezasLogro {
                 val x0 = c.x - 27 * u; val x1 = c.x + 27 * u; val y0 = c.y - 22 * u; val y1 = c.y + 22 * u; val l = 8 * u
                 traza(Path().apply { moveTo(x0 + l, y0); lineTo(x0, y0); lineTo(x0, y1); lineTo(x0 + l, y1); moveTo(x1 - l, y0); lineTo(x1, y0); lineTo(x1, y1); lineTo(x1 - l, y1) })
             }
+            // El letrero de «abierto»: una cápsula de tubo con su halo y una raya debajo.
             TemaId.NEON -> {
-                val x0 = c.x - 27 * u; val x1 = c.x + 27 * u; val y0 = c.y - 22 * u; val y1 = c.y + 22 * u; val l = 8 * u
-                traza(Path().apply { moveTo(x0 + l, y0); lineTo(x0, y0); lineTo(x0, y1); lineTo(x0 + l, y1); moveTo(x1 - l, y0); lineTo(x1, y0); lineTo(x1, y1); lineTo(x1 - l, y1) })
+                val capsula = Path().apply { addRoundRect(RoundRect(c.x - 28 * u, c.y - 16 * u, c.x + 28 * u, c.y + 16 * u, CornerRadius(16 * u))) }
+                drawPath(capsula, tinto.copy(alpha = 0.25f), style = Stroke(5 * u))
+                traza(capsula)
+                drawLine(tinto, Offset(c.x - 14 * u, c.y + 22 * u), Offset(c.x + 14 * u, c.y + 22 * u), 1.4f * u, StrokeCap.Round)
             }
             TemaId.HELENO -> { traza(circulo(c, 27 * u)); drawCircle(tinto, 23 * u, c, style = Stroke(0.8f * u)) }
             TemaId.MEDIEVAL -> traza(Path().apply {
@@ -625,18 +632,20 @@ object PiezasLogro {
                 drawRect(tinta, Offset(c.x - 12 * u, base - 40 * u), Size(24 * u, 40 * u))
                 for (k in 0 until 7) {
                     val y = base - 36 * u + k * 5 * u
-                    drawRect(hueco, Offset(c.x - 9 * u, y), Size(14 * u, 1.6f * u)); drawRect(if (k % 3 == 0) Color(0xFF39FF88) else hueco, Offset(c.x + 7 * u, y), Size(1.8f * u, 1.8f * u))
+                    drawRect(hueco, Offset(c.x - 9 * u, y), Size(14 * u, 1.6f * u)); drawRect(if (k % 3 == 0) Color(0xFFC8FBFF) else hueco, Offset(c.x + 7 * u, y), Size(1.8f * u, 1.8f * u))
                 }
                 raya(tz, tinta, Offset(c.x, base - 40 * u), Offset(c.x, base - 46 * u), 1 * u)
                 suelo()
             }
+            // Una torre de departamentos angosta, con ventanas encendidas al azar y su letrero vertical colgado al lado.
             TemaId.NEON -> {
-                drawRect(tinta, Offset(c.x - 12 * u, base - 40 * u), Size(24 * u, 40 * u))
-                for (k in 0 until 7) {
-                    val y = base - 36 * u + k * 5 * u
-                    drawRect(hueco, Offset(c.x - 9 * u, y), Size(14 * u, 1.6f * u)); drawRect(if (k % 3 == 0) Color(0xFF39FF88) else hueco, Offset(c.x + 7 * u, y), Size(1.8f * u, 1.8f * u))
-                }
-                raya(tz, tinta, Offset(c.x, base - 40 * u), Offset(c.x, base - 46 * u), 1 * u)
+                drawRect(tinta, Offset(c.x - 14 * u, base - 46 * u), Size(20 * u, 46 * u))
+                for (f in 0 until 9) for (k in 0 until 3) if ((f * 3 + k) % 4 != 1) drawRect(hueco.copy(alpha = if ((f + k) % 3 == 0) 0.9f else 0.35f), Offset(c.x - 11.5f * u + k * 6 * u, base - 42 * u + f * 4.6f * u), Size(3.5f * u, 2.4f * u))
+                drawRect(Color(0xFFFF3D9A).copy(alpha = 0.3f), Offset(c.x + 7 * u, base - 40 * u), Size(8 * u, 28 * u))
+                drawRect(Color(0xFFFF3D9A), Offset(c.x + 9 * u, base - 38 * u), Size(4 * u, 24 * u))
+                for (k in 0 until 3) drawRect(tinta, Offset(c.x + 9.8f * u, base - 35 * u + k * 7.5f * u), Size(2.4f * u, 4 * u))
+                raya(tz, tinta, Offset(c.x - 8 * u, base - 46 * u), Offset(c.x - 8 * u, base - 54 * u), 1 * u)
+                drawCircle(Color(0xFFFF6B5E), 1.2f * u, Offset(c.x - 8 * u, base - 54 * u))
                 suelo()
             }
             TemaId.HELENO -> {
@@ -831,14 +840,14 @@ object PiezasLogro {
                 }
                 drawRect(tinta, Offset(px - 2 * u, c.y - 30 * u), Size(4 * u, 4 * u))
             }
+            // La cortina del puesto: tela partida en tiras que cuelga de una barra, con un farolito de papel al lado.
             TemaId.NEON -> {
-                raya(tz, tinta, Offset(px, c.y + 26 * u), Offset(px, c.y - 26 * u), 2 * u)
-                val q = 4 * u
-                for (col in 0 until 8) {
-                    val dy = if (col % 4 == 1 || col % 4 == 2) -q / 2 else 0f
-                    for (fil in 0 until 5) drawRect(if ((col + fil) % 2 == 0) tono else tono.copy(alpha = 0.7f), Offset(px + col * q, arriba + fil * q + dy), Size(q - 0.6f * u, q - 0.6f * u))
-                }
-                drawRect(tinta, Offset(px - 2 * u, c.y - 30 * u), Size(4 * u, 4 * u))
+                asta()
+                travesano(px, px + 28 * u)
+                for (k in 0 until 4) pano(caja(px + 1 * u + k * 7 * u, arriba, px + 7 * u + k * 7 * u, c.y + 8 * u))
+                letra("麺", Offset(px + 14 * u, c.y - 10 * u), 11 * u, claro)
+                drawOval(Color(0xFFFF6B5E), Offset(px + 30 * u, arriba + 6 * u), Size(7 * u, 10 * u))
+                drawLine(tinta, Offset(px + 33.5f * u, arriba), Offset(px + 33.5f * u, arriba + 6 * u), 0.8f * u)
             }
             TemaId.HELENO -> {
                 asta()
@@ -1030,11 +1039,12 @@ object PiezasLogro {
                 for (j in 0 until 4) { val y = c.y - 9 * u + j * 6 * u; drawLine(tinta, Offset(c.x - R, y), Offset(c.x - R - 3 * u, y), 1.2f * u); drawLine(tinta, Offset(c.x + R, y), Offset(c.x + R + 3 * u, y), 1.2f * u) }
                 letra("0x01", c, 7 * u, tinta)
             }
+            // La ficha de la máquina del callejón: disco con el agujero cuadrado y el signo del crédito.
             TemaId.NEON -> {
-                val k = 5 * u
-                forma(Path().apply { moveTo(c.x - R + k, c.y - R); lineTo(c.x + R - k, c.y - R); lineTo(c.x + R, c.y - R + k); lineTo(c.x + R, c.y + R - k); lineTo(c.x + R - k, c.y + R); lineTo(c.x - R + k, c.y + R); lineTo(c.x - R, c.y + R - k); lineTo(c.x - R, c.y - R + k); close() })
-                for (j in 0 until 4) { val y = c.y - 9 * u + j * 6 * u; drawLine(tinta, Offset(c.x - R, y), Offset(c.x - R - 3 * u, y), 1.2f * u); drawLine(tinta, Offset(c.x + R, y), Offset(c.x + R + 3 * u, y), 1.2f * u) }
-                letra("0x01", c, 7 * u, tinta)
+                disco()
+                drawCircle(tinta, R * 0.82f, c, style = Stroke(0.8f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * u, 2 * u))))
+                drawRect(tinta, Offset(c.x - 3 * u, c.y - 11 * u), Size(6 * u, 6 * u))
+                letra("¥", Offset(c.x, c.y + 5 * u), 11 * u, tinta)
             }
             TemaId.HELENO -> {
                 forma(irregular(24, 0.06f))
@@ -1190,13 +1200,16 @@ object PiezasLogro {
                 drawRect(tono, Offset(c.x - 14 * u, y0 + 16 * u), Size(3 * u, 4 * u))
                 drawRect(tinta, Offset(c.x - 4 * u, c.y + 12 * u), Size(8 * u, 6 * u)); raya(tz, tinta, Offset(c.x - 12 * u, c.y + 19 * u), Offset(c.x + 12 * u, c.y + 19 * u), 1.6f * u)
             }
+            // El menú del puesto: una pizarra con platos y precios, enmarcada por un tubo ámbar.
             TemaId.NEON -> {
-                val p = caja(c.x - 24 * u, c.y - 18 * u, c.x + 24 * u, c.y + 12 * u, 3 * u); drawPath(p, tinta); contorno(tz, p, tono, 1 * u)
-                val y0 = c.y - 11 * u
-                drawLine(tono, Offset(c.x - 20 * u, y0 - 2 * u), Offset(c.x - 17 * u, y0), 1 * u); drawLine(tono, Offset(c.x - 17 * u, y0), Offset(c.x - 20 * u, y0 + 2 * u), 1 * u)
-                for (k in 0 until 3) fina(tz, tono, Offset(c.x - 14 * u, y0 + k * 6 * u), Offset(c.x + (4 + (k * 9) % 16) * u, y0 + k * 6 * u), 1.2f * u)
-                drawRect(tono, Offset(c.x - 14 * u, y0 + 16 * u), Size(3 * u, 4 * u))
-                drawRect(tinta, Offset(c.x - 4 * u, c.y + 12 * u), Size(8 * u, 6 * u)); raya(tz, tinta, Offset(c.x - 12 * u, c.y + 19 * u), Offset(c.x + 12 * u, c.y + 19 * u), 1.6f * u)
+                tapa(c.x - 24 * u, c.y - 20 * u, c.x + 24 * u, c.y + 16 * u, tinta, 3 * u)
+                drawRect(tono.copy(alpha = 0.3f), Offset(c.x - 22 * u, c.y - 18 * u), Size(44 * u, 32 * u), style = Stroke(3 * u))
+                for (k in 0 until 4) {
+                    val y = c.y - 11 * u + k * 7 * u
+                    fina(tz, papel, Offset(c.x - 18 * u, y), Offset(c.x + (2 + (k * 5) % 8) * u, y), 1.2f * u)
+                    var x = c.x + 6 * u; while (x < c.x + 13 * u) { drawCircle(papel.copy(alpha = 0.5f), 0.5f * u, Offset(x, y)); x += 2 * u }
+                    drawRect(tono, Offset(c.x + 14 * u, y - 1.5f * u), Size(4 * u, 3 * u))
+                }
             }
             TemaId.HELENO -> {
                 drawRect(papel, Offset(c.x - 18 * u, c.y - 12 * u), Size(36 * u, 24 * u)); contorno(tz, caja(c.x - 18 * u, c.y - 12 * u, c.x + 18 * u, c.y + 12 * u), tinta, 0.8f * u)
@@ -1367,11 +1380,12 @@ object PiezasLogro {
                 for (k in 0 until 10) { drawRect(tono, Offset(c.x - 24 * u, c.y - 15 * u + k * q), Size(lado, lado)); drawRect(tono, Offset(c.x + 21 * u, c.y - 15 * u + k * q), Size(lado, lado)) }
                 for (k in 0 until 7) { val y = c.y - 12 * u + k * 2 * u; drawRect(tono, Offset(c.x - 21 * u + k * q, y), Size(lado, lado)); drawRect(tono, Offset(c.x + 18 * u - k * q, y), Size(lado, lado)) }
             }
+            // El recado: una bolsa de papel de comida para llevar, doblada arriba y con la etiqueta del puesto.
             TemaId.NEON -> {
-                val q = 3 * u; val lado = q * 0.8f
-                for (k in 0 until 16) { drawRect(tono, Offset(c.x - 24 * u + k * q, c.y - 15 * u), Size(lado, lado)); drawRect(tono, Offset(c.x - 24 * u + k * q, c.y + 13 * u), Size(lado, lado)) }
-                for (k in 0 until 10) { drawRect(tono, Offset(c.x - 24 * u, c.y - 15 * u + k * q), Size(lado, lado)); drawRect(tono, Offset(c.x + 21 * u, c.y - 15 * u + k * q), Size(lado, lado)) }
-                for (k in 0 until 7) { val y = c.y - 12 * u + k * 2 * u; drawRect(tono, Offset(c.x - 21 * u + k * q, y), Size(lado, lado)); drawRect(tono, Offset(c.x + 18 * u - k * q, y), Size(lado, lado)) }
+                hoja(c.x - 18 * u, c.y - 12 * u, c.x + 18 * u, c.y + 18 * u, papel, 1.5f * u)
+                contorno(tz, Path().apply { moveTo(c.x - 18 * u, c.y - 12 * u); lineTo(c.x - 14 * u, c.y - 18 * u); lineTo(c.x + 14 * u, c.y - 18 * u); lineTo(c.x + 18 * u, c.y - 12 * u) }, tinta, 1.2f * u)
+                drawLine(tinta, Offset(c.x - 18 * u, c.y - 6 * u), Offset(c.x + 18 * u, c.y - 6 * u), 1 * u)
+                drawCircle(tono, 7 * u, Offset(c.x, c.y + 6 * u)); letra("夜", Offset(c.x, c.y + 6 * u), 8 * u, papel)
             }
             TemaId.HELENO -> {
                 hoja(c.x - 20 * u, c.y - 10 * u, c.x + 20 * u, c.y + 10 * u)

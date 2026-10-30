@@ -55,7 +55,7 @@ fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null,
                         // El nombre del tema con más contraste y el español al lado, del mismo tamaño y un poco más tenue (P-1).
                         if (espanol != null) withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)) { append(nombre) }
                         else append(nombre)
-                        // En cyberpunk el título termina con un cursor de terminal.
+                        // En Terminal el título termina con el cursor.
                         Estilo.sufijoTitulo.takeIf { it.isNotEmpty() }?.let { suf -> withStyle(SpanStyle(color = MaterialTheme.colorScheme.secondary)) { append(suf) } }
                         if (espanol != null) withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append(" · $espanol") }
                     },

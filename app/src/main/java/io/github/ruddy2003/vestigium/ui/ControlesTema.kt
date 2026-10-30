@@ -228,7 +228,8 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     TemaId.ROMANO -> PielDialogo(RoundedCornerShape(3.dp), 0.dp, 0.dp, false, 1.dp)
     // Ventana de consola con dos esquinas cortadas en diagonal.
     TemaId.CIBER -> PielDialogo(CutCornerShape(topEnd = 14.dp, bottomStart = 14.dp), 0.dp, 0.dp, false, 1.dp)
-    TemaId.NEON -> PielDialogo(CutCornerShape(topEnd = 14.dp, bottomStart = 14.dp), 0.dp, 0.dp, false, 1.dp)
+    // La placa luminosa del puesto: esquinas muy redondas.
+    TemaId.NEON -> PielDialogo(RoundedCornerShape(22.dp), 0.dp, 0.dp, false, 1.5.dp)
     // Frontón de templo: un tímpano bajo arriba.
     TemaId.HELENO -> PielDialogo(FormaDp { w, h, d ->
         val g = 16 * d
@@ -332,12 +333,11 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             drawRect(e.secondary, Offset(w - 16 * d, h - 20 * d), Size(6 * d, 10 * d))
         }
         TemaId.NEON -> {
-            // Recuadro punteado de consola, el indicador «>_» arriba y el cursor encendido abajo.
-            drawRect(e.primary.copy(alpha = 0.45f), Offset(5 * d, 5 * d), Size(w - 10 * d, h - 10 * d),
-                style = Stroke(d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * d, 3 * d))))
-            drawPath(Path().apply { moveTo(11 * d, 9 * d); lineTo(15 * d, 12 * d); lineTo(11 * d, 15 * d) }, e.secondary, style = Stroke(1.4f * d))
-            drawLine(e.secondary, Offset(17 * d, 15 * d), Offset(23 * d, 15 * d), 1.4f * d)
-            drawRect(e.secondary, Offset(w - 16 * d, h - 20 * d), Size(6 * d, 10 * d))
+            // El tubo de neón que bordea la placa, con su halo, y la ménsula de la que cuelga arriba.
+            drawRoundRect(e.primary.copy(alpha = 0.22f), Offset(5 * d, 5 * d), Size(w - 10 * d, h - 10 * d), CornerRadius(18 * d), style = Stroke(6 * d))
+            drawRoundRect(e.primary, Offset(5 * d, 5 * d), Size(w - 10 * d, h - 10 * d), CornerRadius(18 * d), style = Stroke(1.4f * d))
+            listOf(0.3f, 0.7f).forEach { f -> drawLine(e.outline, Offset(w * f, 0f), Offset(w * f, 6 * d), 1.6f * d) }
+            drawCircle(e.tertiary, 2.2f * d, Offset(w - 16 * d, h - 16 * d))
         }
         TemaId.HELENO -> {
             // El tímpano con su cornisa, un sol en el vértice y dentículos abajo.
@@ -552,10 +552,13 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             while (x < w - 14 * d) { drawLine(e.primary.copy(alpha = 0.7f), Offset(x, cy), Offset(x + 3 * d, cy), 1.2f * d); x += 6 * d }
             drawRect(e.secondary, Offset(w - 8 * d, cy - 4 * d), Size(5 * d, 8 * d))
         }
+        // Un tubo ámbar con su halo, partido al centro donde va un rombo magenta.
         TemaId.NEON -> {
-            var x = 0f
-            while (x < w - 14 * d) { drawLine(e.primary.copy(alpha = 0.7f), Offset(x, cy), Offset(x + 3 * d, cy), 1.2f * d); x += 6 * d }
-            drawRect(e.secondary, Offset(w - 8 * d, cy - 4 * d), Size(5 * d, 8 * d))
+            listOf(0f to w * 0.45f, w * 0.55f to w).forEach { (a, b) ->
+                drawLine(e.secondary.copy(alpha = 0.25f), Offset(a, cy), Offset(b, cy), 5 * d, StrokeCap.Round)
+                drawLine(e.secondary, Offset(a, cy), Offset(b, cy), 1.4f * d, StrokeCap.Round)
+            }
+            drawPath(Path().apply { moveTo(w / 2, cy - 4 * d); lineTo(w / 2 + 4 * d, cy); lineTo(w / 2, cy + 4 * d); lineTo(w / 2 - 4 * d, cy); close() }, e.primary)
         }
         // Una greca sobre su línea de base.
         TemaId.HELENO -> {
@@ -831,14 +834,11 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
                 cx += paso
             }
         }
+        // El tubo: apagado de punta a punta y encendido, con su halo, hasta donde llega el valor.
         TemaId.NEON -> {
-            val cw = maxOf(g * 1.3f, 2 * d); val paso = cw + maxOf(g * 0.5f, d)
-            var cx = 0f
-            while (cx < w) {
-                val ancho = minOf(cw, w - cx)
-                drawRect(if (cx + ancho / 2 <= x) activo else inactivo.copy(alpha = inactivo.alpha * 0.4f), Offset(cx, cy - g / 2), Size(ancho, g))
-                cx += paso
-            }
+            linea(inactivo.copy(alpha = inactivo.alpha * 0.5f), 0f, w, g, cap = StrokeCap.Round)
+            linea(activo.copy(alpha = activo.alpha * 0.3f), 0f, x, g * 3f, cap = StrokeCap.Round)
+            linea(activo, 0f, x, g, cap = StrokeCap.Round)
         }
         // Greca en onda cuadrada sobre una línea fina.
         TemaId.HELENO -> {
@@ -1018,9 +1018,11 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             drawRect(color, Offset(c.x - r * 0.45f, c.y - r * 0.8f), Size(r * 0.9f, r * 1.4f))
             drawRect(e.secondary, Offset(c.x - r * 0.55f, c.y + r * 0.75f), Size(r * 1.1f, r * 0.18f))
         }
+        // Un foco de neón: el halo y la bombilla encendida.
         TemaId.NEON -> {
-            drawRect(color, Offset(c.x - r * 0.45f, c.y - r * 0.8f), Size(r * 0.9f, r * 1.4f))
-            drawRect(e.secondary, Offset(c.x - r * 0.55f, c.y + r * 0.75f), Size(r * 1.1f, r * 0.18f))
+            drawCircle(color.copy(alpha = 0.3f), r * 1.15f, c)
+            drawCircle(color, r * 0.8f, c)
+            drawCircle(Color.White.copy(alpha = 0.6f), r * 0.3f, c + Offset(-r * 0.2f, -r * 0.2f))
         }
         // Sol de Vergina: dieciséis rayos de dos largos.
         TemaId.HELENO -> {

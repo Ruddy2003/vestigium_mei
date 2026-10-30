@@ -407,21 +407,14 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
                 drawLine(col, o, Offset(o.x, o.y + s.y * l), 1.5f * u)
             }
         }
+        // Un reloj de tubo de neón: el aro apagado, el tramo encendido con su halo y un foquito que corre por delante.
         TemaId.NEON -> {
-            val n = 48; val lado = 6.5f * u; val sigue = (p * n).toInt()
-            for (k in 0 until n) {
-                val f = (k + 0.5f) / n; val q = en(f, r); val o = Offset(q.x - lado / 2, q.y - lado / 2)
-                rotate(f * 360f, q) {
-                    if (pasado(k, n)) drawRect(color, o, Size(lado, lado))
-                    else if (k == sigue) drawRect(e.secondary, o, Size(lado, lado))
-                    else drawRect(pista, o, Size(lado, lado), style = Stroke(u))
-                }
-            }
-            val l = 18 * u; val m = 2 * u; val col = color.copy(alpha = 0.7f); val w = size.width; val h = size.height
-            listOf(Offset(m, m) to Offset(1f, 1f), Offset(w - m, m) to Offset(-1f, 1f), Offset(m, h - m) to Offset(1f, -1f), Offset(w - m, h - m) to Offset(-1f, -1f)).forEach { (o, s) ->
-                drawLine(col, o, Offset(o.x + s.x * l, o.y), 1.5f * u)
-                drawLine(col, o, Offset(o.x, o.y + s.y * l), 1.5f * u)
-            }
+            drawCircle(pista, r, c, style = Stroke(3 * u))
+            val barrido = 360f * p
+            drawArc(color.copy(alpha = 0.3f), -90f, barrido, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(12 * u, cap = StrokeCap.Round))
+            drawArc(color, -90f, barrido, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(3.5f * u, cap = StrokeCap.Round))
+            val q = en(p, r)
+            drawCircle(e.tertiary.copy(alpha = 0.35f), 8 * u, q); drawCircle(e.tertiary, 3.5f * u, q)
         }
         // Sol de Vergina: dieciséis rayos que se encienden uno a uno alrededor de un doble aro.
         TemaId.HELENO -> {
@@ -767,10 +760,8 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             val n = (w / (h * 0.9f)).toInt().coerceAtLeast(1); val ancho = w / n
             for (i in 0 until n) addRect(Rect(x + i * ancho, y, x + (i + 1) * ancho - minOf(1.5f * u, ancho * 0.3f), y + h))
         }
-        TemaId.NEON -> {
-            val n = (w / (h * 0.9f)).toInt().coerceAtLeast(1); val ancho = w / n
-            for (i in 0 until n) addRect(Rect(x + i * ancho, y, x + (i + 1) * ancho - minOf(1.5f * u, ancho * 0.3f), y + h))
-        }
+        // Un tubo de neón: la tira redondeada en las puntas.
+        TemaId.NEON -> addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(x, y, x + w, y + h), androidx.compose.ui.geometry.CornerRadius(h / 2)))
         TemaId.HELENO -> {
             val d = minOf(h * 0.5f, w / 2)
             moveTo(x, y + h / 2); lineTo(x + d, y); lineTo(x + w - d, y); lineTo(x + w, y + h / 2); lineTo(x + w - d, y + h); lineTo(x + d, y + h); close()

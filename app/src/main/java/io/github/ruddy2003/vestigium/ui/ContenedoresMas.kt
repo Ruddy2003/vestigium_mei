@@ -43,6 +43,8 @@ object ContenedoresMas {
             Contenedor.EXPEDIENTE -> Color(0xFFF2EFE6)
             // La pantalla: al oscurecerse queda casi negra (Terminal solo existe en oscuro).
             Contenedor.CONSOLA -> Color(0xFF22303A)
+            // El papel térmico de los tickets, con el tinte magenta del letrero de enfrente.
+            Contenedor.TICKETS -> Color(0xFFEFE3EA)
             Contenedor.CARPETA -> Color(0xFFF6EFD9)
             Contenedor.TECNICO -> Color(0xFFEDEDE8)
             Contenedor.CUADERNO -> Color(0xFFFBFCFD)
@@ -242,6 +244,43 @@ object ContenedoresMas {
                 drawRect(negro, Offset(W * 0.7f, H * 0.18f), Size(W * 0.08f, 3 * d))
                 drawCircle(cian, 2 * d, Offset(W * 0.64f, H * 0.56f))
                 drawPath(Path().apply { moveTo(W * 0.26f, H * 0.62f); lineTo(W * 0.48f, H * 0.62f); lineTo(W * 0.54f, H * 0.7f); lineTo(W * 0.2f, H * 0.7f); close() }, Color(0xFF111925))
+            }
+            Contenedor.TICKETS -> {
+                // El pincho de tickets del puesto: la base de metal, la púa y los tickets ensartados, cada uno un poco
+                // girado; la pila crece con lo escrito. Arriba, el reflejo magenta del letrero.
+                val W = size.width; val H = size.height
+                val papelT = Color(0xFFEFE3EA); val metal = Color(0xFF8E8A96)
+                val cx = W * 0.5f; val pisoY = H * 0.94f
+                sombra(Offset(cx - W * 0.22f + 3 * d, pisoY - 6 * d), Size(W * 0.44f, 10 * d), 5 * d)
+                drawRoundRect(Brush.verticalGradient(listOf(lerp(metal, Color.White, 0.3f), metal, lerp(metal, Color.Black, 0.4f)), pisoY - 8 * d, pisoY + 4 * d),
+                    Offset(cx - W * 0.22f, pisoY - 8 * d), Size(W * 0.44f, 12 * d), CornerRadius(6 * d))
+                val n = (3 + hojas / 6).coerceAtMost(24)
+                val az = java.util.Random(5)
+                for (k in 0 until n) {
+                    val y = pisoY - 10 * d - k * 3.2f * d
+                    val giro = (az.nextFloat() - 0.5f) * 16f
+                    rotate(giro, Offset(cx, y)) {
+                        val tw = W * 0.6f; val th = 3.2f * d
+                        drawRect(if (k % 2 == 0) papelT else lerp(papelT, Color.Black, 0.12f), Offset(cx - tw / 2, y - th), Size(tw, th))
+                    }
+                }
+                // El ticket de arriba, de frente, con su borde dentado y sus renglones.
+                val top = pisoY - 10 * d - n * 3.2f * d
+                val tx0 = cx - W * 0.3f; val tx1 = cx + W * 0.3f; val ty0 = (top - H * 0.42f).coerceAtLeast(H * 0.06f)
+                drawPath(Path().apply {
+                    moveTo(tx0, ty0); lineTo(tx1, ty0); lineTo(tx1, top)
+                    var x = tx1; var abajo = true; while (x > tx0) { x -= 6 * d; lineTo(maxOf(x, tx0), if (abajo) top - 4 * d else top); abajo = !abajo }
+                    close()
+                }, papelT)
+                with(TrofeosMas) {
+                    mono("屋台 · TICKET", cx, ty0 + 14 * d, 10 * d, Color(0xFF3A0D27), android.graphics.Paint.Align.CENTER, negrita = true)
+                    var yy = ty0 + 28 * d; var k = 0
+                    while (yy < top - 12 * d) { drawLine(Color(0xFF3A0D27).copy(alpha = 0.45f), Offset(tx0 + 10 * d, yy), Offset(tx1 - (if (k % 3 == 2) 40 else 14) * d, yy), 1 * d); yy += 9 * d; k++ }
+                }
+                // La púa que lo atraviesa.
+                drawLine(metal, Offset(cx, pisoY - 8 * d), Offset(cx, ty0 - 10 * d), 2.4f * d)
+                drawCircle(lerp(metal, Color.White, 0.4f), 2 * d, Offset(cx, ty0 - 10 * d))
+                drawRect(Brush.verticalGradient(listOf(Color(0xFFFF3D9A).copy(alpha = 0.25f), Color.Transparent), 0f, H * 0.3f), Offset.Zero, Size(W, H * 0.3f))
             }
             Contenedor.CARPETA -> {
                 // La carpeta del supervisor: cartón verde azulado con su pestaña naranja, las hojas que asoman, el broche
@@ -456,6 +495,20 @@ object ContenedoresMas {
                     while (yy < size.height - 8 * d) { mono("%03d".format(k), 21 * d, yy, 8 * d, cian.copy(alpha = 0.35f), android.graphics.Paint.Align.RIGHT); yy += renglon; k++ }
                 }
             }
+            Contenedor.TICKETS -> {
+                // El ticket térmico: la cabecera del puesto, el número de orden, renglones de puntos y el borde dentado abajo.
+                val tinta2 = if (oscuro) Color(0xFFFF8AC2) else Color(0xFF3A0D27)
+                with(TrofeosMas) {
+                    mono("屋台 · PUESTO DE FIDEOS · NIVEL −3", size.width / 2, 22 * d, 9 * d, tinta2.copy(alpha = 0.7f), android.graphics.Paint.Align.CENTER, negrita = true)
+                    mono("ORDEN Nº ${(size.height / 7).toInt() % 900 + 100}", size.width / 2, 38 * d, 8 * d, tinta2.copy(alpha = 0.5f), android.graphics.Paint.Align.CENTER)
+                }
+                drawLine(tinta2.copy(alpha = 0.4f), Offset(12 * d, 50 * d), Offset(size.width - 12 * d, 50 * d), 1 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 3 * d)))
+                var y = 96 * d
+                while (y < size.height - 16 * d) { drawLine(tinta.copy(alpha = 0.08f), Offset(margen, y), Offset(size.width - 12 * d, y), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1 * d, 3 * d))); y += renglon }
+                var x = 0f; var arriba = true
+                val diente = Path().apply { moveTo(0f, size.height); while (x < size.width) { x += 6 * d; lineTo(x, if (arriba) size.height - 5 * d else size.height); arriba = !arriba }; lineTo(size.width, size.height); close() }
+                drawPath(diente, Color.Black.copy(alpha = 0.35f))
+            }
             Contenedor.CARPETA -> {
                 // El formato del refugio: cabecera con casillas de turno y nivel, renglones verde azulado y la franja naranja.
                 val linea = if (oscuro) Color(0xFF3DFF7F) else Color(0xFF1C6E6A)
@@ -570,6 +623,13 @@ object ContenedoresMas {
                 drawRect(Color(0xFFD9DEE3).copy(alpha = if (oscuro) 0.16f else 0.6f), Offset(2 * d, 0f), Size(16 * d, size.height))
                 var y = 8 * d; while (y < size.height) { drawCircle(Color.Black.copy(alpha = 0.6f), 2.4f * d, Offset(10 * d, y)); y += 13 * d }
                 drawLine(Color(0xFF00E5FF).copy(alpha = 0.3f), Offset(18 * d, 0f), Offset(18 * d, size.height), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 2 * d)))
+            }
+            Contenedor.TICKETS -> {
+                // El agujero por donde la púa atravesó los tickets, con el desgarre alrededor, y la línea de corte.
+                val y = size.height * 0.12f
+                drawCircle(Color.Black.copy(alpha = if (oscuro) 0.6f else 0.35f), 3.2f * d, Offset(20 * d, y))
+                for (k in 0 until 6) { val a = k * PI / 3; drawLine(Color.Black.copy(alpha = 0.3f), Offset(20 * d, y), Offset(20 * d + (6 * d * cos(a)).toFloat(), y + (6 * d * sin(a)).toFloat()), 0.7f * d) }
+                drawLine(Color(0xFFFF3D9A).copy(alpha = 0.35f), Offset(30 * d, 0f), Offset(30 * d, size.height), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * d, 3 * d)))
             }
             Contenedor.CARPETA -> {
                 // El broche de dos patas que pasa por los agujeros de las hojas, con su placa de metal.

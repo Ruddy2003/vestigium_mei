@@ -166,7 +166,7 @@ object TrofeosTema {
             TemaId.ANTIGUAS -> with(TrofeosMas) { antiguas(categoria, p) }
             TemaId.DISTOPIA -> with(TrofeosMas) { distopia(categoria, p) }
             TemaId.CIBER -> with(TrofeosMas) { terminal(categoria, p) }
-            TemaId.NEON -> with(TrofeosMas) { terminal(categoria, p) }
+            TemaId.NEON -> with(TrofeosMas) { neon(categoria, p) }
             TemaId.REFUGIO -> with(TrofeosMas) { refugio(categoria, p) }
             TemaId.ORDEN -> with(TrofeosMas) { orden(categoria, p) }
             TemaId.LABORATORIO -> with(TrofeosMas) { laboratorio(categoria, p) }

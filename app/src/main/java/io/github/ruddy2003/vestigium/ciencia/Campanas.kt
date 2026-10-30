@@ -143,8 +143,8 @@ object Campanas {
 
     fun titulos(t: TemaId): List<String> = when (t) {
         TemaId.ROMANO -> listOf("Campaña de las Galias", "Marcha a Britania", "La vía Apia", "Expedición a Dacia")
-        TemaId.CIBER -> listOf("OP: NEON RUN", "RUTINA_7DIAS.EXE", "HACK DEL HÁBITO", "PROTOCOLO NOCTURNO")
-        TemaId.NEON -> listOf("OP: NEON RUN", "RUTINA_7DIAS.EXE", "HACK DEL HÁBITO", "PROTOCOLO NOCTURNO")
+        TemaId.CIBER -> listOf("RUTINA_7DIAS.EXE", "HACK DEL HÁBITO", "PROTOCOLO NOCTURNO", "BUCLE DE LA SEMANA")
+        TemaId.NEON -> listOf("OP: NEON RUN", "BAJADA AL NIVEL −7", "LA RUTA DE LOS PUESTOS", "SIETE NOCHES EN LA CALLE")
         TemaId.HELENO -> listOf("La marcha de los diez mil", "Hacia el Indo", "La travesía del Egeo", "Los juegos de Olimpia")
         TemaId.MEDIEVAL -> listOf("Peregrinación a Compostela", "La copia del códice", "El camino de los monasterios", "La feria de Champaña")
         TemaId.DISTOPIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
@@ -170,7 +170,7 @@ object Campanas {
     fun etapas(t: TemaId): List<String> = when (t) {
         TemaId.ROMANO -> listOf("Roma", "Ostia", "Massilia", "Lugdunum", "Durocortorum", "Lutetia", "Alesia")
         TemaId.CIBER -> listOf("localhost", "pasarela-01", "proxy-02", "muro-03", "dns-04", "espejo-05", "raíz")
-        TemaId.NEON -> listOf("localhost", "pasarela-01", "proxy-02", "muro-03", "dns-04", "espejo-05", "raíz")
+        TemaId.NEON -> listOf("Azotea", "Nivel −1", "Nivel −2 · mercado", "Nivel −3 · callejón", "Nivel −4 · baños", "Nivel −5 · andén", "El fondo")
         TemaId.HELENO -> listOf("Pella", "Anfípolis", "Troya", "Sardes", "Gordio", "Tarso", "Babilonia")
         TemaId.MEDIEVAL -> listOf("Roncesvalles", "Pamplona", "Logroño", "Burgos", "León", "Astorga", "Santiago")
         TemaId.DISTOPIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")

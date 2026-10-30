@@ -22,6 +22,7 @@ Italianno — Copyright 2009 The Italianno Project Authors (https://github.com/g
 Cormorant Garamond (instancias estáticas) — Copyright 2015 The Cormorant Project Authors (github.com/CatharsisFonts/Cormorant)
 Fraunces (instancias estáticas) — Copyright 2020 The Fraunces Project Authors (github.com/undercasetype/Fraunces)
 Courier Prime (recortada) — Copyright 2015 The Courier Prime Project Authors (https://github.com/quoteunquoteapps/CourierPrime).
+Chakra Petch (recortada) — Copyright 2018 The Chakra Petch Project Authors (https://github.com/m4rc1e/Chakra-Petch.git)
 Cardo (recortada) — Copyright (c) 2002-2011, David J. Perry (hospes02@scholarsfonts.net)
 Barlow (recortada) — Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)
 Saira (instancias estáticas, recortadas) — Copyright 2020 The Saira Project Authors (https://github.com/Omnibus-Type/Saira)

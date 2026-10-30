@@ -86,7 +86,7 @@ private class MarcoRecuadro(val forma: Shape, val vertical: Dp)
 private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.ROMANO -> MarcoRecuadro(RoundedCornerShape(2.dp), 12.dp)
     TemaId.CIBER -> MarcoRecuadro(RectangleShape, 9.dp)
-    TemaId.NEON -> MarcoRecuadro(RectangleShape, 9.dp)
+    TemaId.NEON -> MarcoRecuadro(RoundedCornerShape(16.dp), 12.dp)
     TemaId.HELENO -> MarcoRecuadro(RoundedCornerShape(4.dp), 13.dp)
     TemaId.MEDIEVAL -> MarcoRecuadro(RoundedCornerShape(3.dp), 11.dp)
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
@@ -146,14 +146,11 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
             }
             drawRect(k, Offset(w - 14 * u, h - 7 * u), Size(5 * u, 1.6f * u))
         }
+        // Tubo de neón alrededor de la tarjeta, con su halo, y el foquito ámbar arriba a la derecha.
         TemaId.NEON -> {
-            val k = c.copy(alpha = 0.8f)
-            listOf(4 * u to 1f, w - 4 * u to -1f).forEach { (x, d) ->
-                drawLine(k, Offset(x, 4 * u), Offset(x, h - 4 * u), 1.5f * u)
-                drawLine(k, Offset(x, 4 * u), Offset(x + d * 4 * u, 4 * u), 1.5f * u)
-                drawLine(k, Offset(x, h - 4 * u), Offset(x + d * 4 * u, h - 4 * u), 1.5f * u)
-            }
-            drawRect(k, Offset(w - 14 * u, h - 7 * u), Size(5 * u, 1.6f * u))
+            drawRoundRect(c.copy(alpha = 0.18f), Offset(3 * u, 3 * u), Size(w - 6 * u, h - 6 * u), androidx.compose.ui.geometry.CornerRadius(14 * u), style = Stroke(4 * u))
+            drawRoundRect(c.copy(alpha = 0.8f), Offset(3 * u, 3 * u), Size(w - 6 * u, h - 6 * u), androidx.compose.ui.geometry.CornerRadius(14 * u), style = Stroke(1.2f * u))
+            drawCircle(e.secondary, 2 * u, Offset(w - 12 * u, 12 * u))
         }
         // Meandros arriba y abajo.
         TemaId.HELENO -> { grecaRel(3 * u, c.copy(alpha = 0.5f), u); grecaRel(h - 9 * u, c.copy(alpha = 0.5f), u) }
@@ -354,17 +351,13 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 if (i < llenas) drawRect(col, o, s) else drawRect(col.copy(alpha = col.alpha * 0.5f), o, s, style = Stroke(0.8f * u, pathEffect = punteado))
             }
         }
+        // Un tubo de neón: apagado de lado a lado y encendido, con su halo, hasta donde llega la fuerza del lazo.
         TemaId.NEON -> {
-            val n = 8; val llenas = (fuerza * n).roundToInt().coerceIn(0, n)
-            val m = 7 * u; val cw = (w - 2 * m) / n; val ch = grosor + 4 * u
-            listOf(m - 3 * u to 1f, w - m + 3 * u to -1f).forEach { (x, d) ->
-                drawLine(col, Offset(x, y - ch / 2 - u), Offset(x, y + ch / 2 + u), u)
-                drawLine(col, Offset(x, y - ch / 2 - u), Offset(x + d * 2 * u, y - ch / 2 - u), u)
-                drawLine(col, Offset(x, y + ch / 2 + u), Offset(x + d * 2 * u, y + ch / 2 + u), u)
-            }
-            for (i in 0 until n) {
-                val o = Offset(m + i * cw + 0.8f * u, y - ch / 2); val s = Size(cw - 1.6f * u, ch)
-                if (i < llenas) drawRect(col, o, s) else drawRect(col.copy(alpha = col.alpha * 0.5f), o, s, style = Stroke(0.8f * u, pathEffect = punteado))
+            val m = 6 * u; val hasta = m + (w - 2 * m) * fuerza
+            drawLine(col.copy(alpha = col.alpha * 0.25f), Offset(m, y), Offset(w - m, y), grosor * 0.6f, cap = StrokeCap.Round)
+            if (fuerza > 0f) {
+                drawLine(col.copy(alpha = col.alpha * 0.3f), Offset(m, y), Offset(hasta, y), grosor * 2.4f, cap = StrokeCap.Round)
+                drawLine(col, Offset(m, y), Offset(hasta, y), grosor * 0.8f, cap = StrokeCap.Round)
             }
         }
         // Rama de olivo: un tallo con hojas alternas.

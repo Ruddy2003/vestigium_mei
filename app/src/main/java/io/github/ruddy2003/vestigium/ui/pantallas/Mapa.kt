@@ -88,7 +88,8 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
             else { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.95f, 6f, 6f, 4f)) }
         // Terminal: plano nocturno en azul eléctrico (solo existe en oscuro, así que es igual con o sin «oscuro»).
         TemaId.CIBER -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.30f, 0.62f, 0.80f, 0f, 4f, 10f)) }
-        TemaId.NEON -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.30f, 0.62f, 0.80f, 0f, 4f, 10f)) }
+        // Ciudad neón: el plano de noche teñido de magenta y violeta, como bajo los letreros.
+        TemaId.NEON -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.78f, 0.34f, 0.62f, 14f, 2f, 16f)) }
         // Helénico: pergamino de día, noche púrpura de noche.
         TemaId.HELENO -> if (oscuro) { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.78f, 0.70f, 0.92f, 6f, 4f, 14f)) }
             else { m.setSaturation(0.25f); m.postConcat(tinte(1.0f, 0.95f, 0.84f, 4f, 2f, 0f)) }
@@ -202,7 +203,7 @@ internal object Formas {
                 0.8f, 0.7f, -0.8f, 0.7f, -0.8f, 0.12f, -1.3f, 0.5f, -1.3f, -0.5f, -0.8f, -0.12f)
             // El cursor de bloque de la consola.
             TemaId.CIBER -> { p.reset(); p.addRect(x - r * 0.55f, y - r * 0.9f, x + r * 0.55f, y + r * 0.9f, horario) }
-            TemaId.NEON -> { p.reset(); p.addRect(x - r * 0.55f, y - r * 0.9f, x + r * 0.55f, y + r * 0.9f, horario) }
+            TemaId.NEON -> { p.reset(); p.addRoundRect(x - r * 1.15f, y - r * 0.62f, x + r * 1.15f, y + r * 0.62f, r * 0.62f, r * 0.62f, horario) }   // la placa del letrero
             // El sol de Vergina: dieciséis rayos.
             TemaId.HELENO -> poligono(x, y, r * 1.15f, 16, -90.0, 0.5f)
             TemaId.MEDIEVAL -> {   // sello de cera de borde ondulado
@@ -258,7 +259,7 @@ internal object Formas {
         when (tema) {
             TemaId.ROMANO -> c.drawRect(x - r * 0.6f, y - r * 0.48f, x + r * 0.6f, y + r * 0.48f, d)   // el campo de la inscripción
             TemaId.CIBER -> { raya(c, x, y, r, -1.55f, -0.45f, -0.95f, 0f, d); raya(c, x, y, r, -0.95f, 0f, -1.55f, 0.45f, d) }   // el «>» del indicador
-            TemaId.NEON -> { raya(c, x, y, r, -1.55f, -0.45f, -0.95f, 0f, d); raya(c, x, y, r, -0.95f, 0f, -1.55f, 0.45f, d) }   // el «>» del indicador
+            TemaId.NEON -> { raya(c, x, y, r, -0.6f, -0.15f, 0.6f, -0.15f, d); raya(c, x, y, r, -0.35f, 0.2f, 0.35f, 0.2f, d) }   // los renglones del letrero
             TemaId.HELENO -> c.drawCircle(x, y, r * 0.32f, d)
             TemaId.MEDIEVAL -> { c.drawCircle(x, y, r * 0.62f, d); raya(c, x, y, r, -0.3f, 0f, 0.3f, 0f, d); raya(c, x, y, r, 0f, -0.3f, 0f, 0.3f, d) }   // la cruz del sello
             TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
@@ -694,12 +695,15 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
             esquinas(8 * u) { o, dx, dy -> drawLine(acento, o, o + Offset(dx * k, 0f), 2 * u); drawLine(acento, o, o + Offset(0f, dy * k), 2 * u) }
             drawRect(acento, Offset(14 * u, h - 24 * u), Size(7 * u, 11 * u))
         }
+        // Un marco de tubo de neón con su halo, roto en las esquinas, y un letrerito vertical colgado a la derecha.
         TemaId.NEON -> {
-            var y = 0f
-            while (y < h) { drawLine(acento.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), 0.6f * u); y += 3 * u }
-            val k = 22 * u
-            esquinas(8 * u) { o, dx, dy -> drawLine(acento, o, o + Offset(dx * k, 0f), 2 * u); drawLine(acento, o, o + Offset(0f, dy * k), 2 * u) }
-            drawRect(acento, Offset(14 * u, h - 24 * u), Size(7 * u, 11 * u))
+            val k = 10 * u
+            drawRoundRect(acento.copy(alpha = 0.2f), Offset(6 * u, 6 * u), Size(w - 12 * u, h - 12 * u), androidx.compose.ui.geometry.CornerRadius(10 * u), style = Stroke(5 * u))
+            drawRoundRect(acento, Offset(6 * u, 6 * u), Size(w - 12 * u, h - 12 * u), androidx.compose.ui.geometry.CornerRadius(10 * u), style = Stroke(1.4f * u,
+                pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf((w - 12 * u - 2 * k) / 2, k))))
+            drawRect(fondo.copy(alpha = 0.85f), Offset(w - 22 * u, 22 * u), Size(10 * u, 34 * u))
+            drawRect(tinta, Offset(w - 22 * u, 22 * u), Size(10 * u, 34 * u), style = Stroke(1.2f * u))
+            for (j in 0 until 3) drawLine(tinta, Offset(w - 20 * u, (28 + j * 10) * u), Offset(w - 14 * u, (28 + j * 10) * u), 1.2f * u)
         }
         // Una greca arriba y otra abajo.
         TemaId.HELENO -> {
@@ -932,12 +936,12 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             drawPath(Path().apply { moveTo(c.x - r * 0.3f, c.y - r * 0.6f); lineTo(c.x, c.y - r * 0.92f); lineTo(c.x + r * 0.3f, c.y - r * 0.6f) }, acento, style = Stroke(2f * u))
             drawRect(acento, Offset(c.x - r * 0.1f, c.y - r * 0.1f), Size(r * 0.2f, r * 0.2f))
         }
+        // Rosa de tubo: un aro de neón con su halo, la flecha del norte en magenta y los otros rumbos en ámbar.
         TemaId.NEON -> {
-            drawRect(acento, Offset(c.x - r * 0.62f, c.y - r * 0.62f), Size(r * 1.24f, r * 1.24f), style = Stroke(1.2f * u))
-            drawLine(acento.copy(alpha = 0.6f), c + Offset(-r * 0.9f, 0f), c + Offset(r * 0.9f, 0f), 1f * u)
-            drawLine(acento, c + Offset(0f, r * 0.9f), c + Offset(0f, -r * 0.92f), 1.6f * u)
-            drawPath(Path().apply { moveTo(c.x - r * 0.3f, c.y - r * 0.6f); lineTo(c.x, c.y - r * 0.92f); lineTo(c.x + r * 0.3f, c.y - r * 0.6f) }, acento, style = Stroke(2f * u))
-            drawRect(acento, Offset(c.x - r * 0.1f, c.y - r * 0.1f), Size(r * 0.2f, r * 0.2f))
+            anillo(r * 0.78f, acento.copy(alpha = 0.25f), 5f * u); anillo(r * 0.78f, acento, 1.4f * u)
+            drawLine(acento, c + Offset(0f, r * 0.2f), c + Offset(0f, -r * 0.95f), 2f * u)
+            drawPath(Path().apply { moveTo(c.x - r * 0.22f, c.y - r * 0.7f); lineTo(c.x, c.y - r * 0.95f); lineTo(c.x + r * 0.22f, c.y - r * 0.7f) }, acento, style = Stroke(2f * u))
+            listOf(0.0, 90.0, 180.0).forEach { g -> drawLine(secundario, c + rumbo(g) * (r * 0.3f), c + rumbo(g) * (r * 0.62f), 1.4f * u) }
         }
         // El sol de Vergina: dieciséis rayos.
         TemaId.HELENO -> {

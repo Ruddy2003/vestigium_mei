@@ -177,13 +177,13 @@ object Avisos {
             "> mensaje en cola de tu yo del pasado", "Se cumplió la fecha programada. Toca para descifrarlo.",
             "> logro desbloqueado", "logros desbloqueados",
             "> informe_%d listo", "Un año entero en historias: lo más frecuente, lo único, lo raro. Toca para ejecutar.")
-        TemaId.NEON -> Voz("> ping ánimo", "Dos toques: qué tan agradable y cuánta energía. _",
-            "> dump de sueños", "Guárdalo antes de levantarte: la memoria se libera en minutos.",
-            "> cierre del día", "Llena el día. Si fue un mal día, basta con un número.",
-            "modo mínimo: 1 número", "> pendiente:",
-            "> mensaje en cola de tu yo del pasado", "Se cumplió la fecha programada. Toca para descifrarlo.",
-            "> logro desbloqueado", "logros desbloqueados",
-            "> informe_%d listo", "Un año entero en historias: lo más frecuente, lo único, lo raro. Toca para ejecutar.")
+        TemaId.NEON -> Voz("¿Cómo va la noche?", "Dos toques: qué tan bien estás y cuánta pila te queda.",
+            "Lo que soñaste entre el ruido", "Apúntalo antes de salir a la calle: se borra rápido.",
+            "Se apagan los letreros", "Cierra el ticket del día. Si fue malo, basta con un número.",
+            "modo de guardia: 1 número", "Te falta:",
+            "Llegó un recado de tu yo de antes", "Ya es la fecha: el repartidor trae tu carta. Toca para abrirla.",
+            "¡Ficha nueva!", "fichas ganadas",
+            "Tu año %d, en letreros", "Un año entero en historias: lo de siempre, lo único, lo raro. Toca para entrar.")
         TemaId.HELENO -> Voz("Πῶς ἔχεις; · ¿cómo te sientes ahora?", "Dos toques: cuánto agrado y cuánta energía.",
             "ὌΝΕΙΡΟΣ · ¿qué te mostró el sueño?", "Anótalo antes de levantarte; Hipnos se lo lleva en minutos.",
             "ἩΜΕΡΑ · ¿cómo fue tu día?", "Llena el día. Si fue difícil, basta con un número.",
@@ -325,7 +325,7 @@ object Avisos {
     internal fun vozEnfoque(t: TemaId = temaActual()): VozEnfoque = when (t) {
         TemaId.ROMANO -> VozEnfoque("Otium", "Levántate y bebe agua, como en las termas.", "Se acabó el otium", "Surge: hora de despertar", "Opus perfectum: terminaste")
         TemaId.CIBER -> VozEnfoque("> pausa", "Despega la vista de la pantalla. Agua.", "> pausa terminada", "> wake: hora de despertar", "> proceso completado")
-        TemaId.NEON -> VozEnfoque("> pausa", "Despega la vista de la pantalla. Agua.", "> pausa terminada", "> wake: hora de despertar", "> proceso completado")
+        TemaId.NEON -> VozEnfoque("Respira, sal a la banqueta", "Despega la vista del letrero. Un vaso de agua.", "De vuelta al puesto", "Sube la persiana: hora de despertar", "Pedido terminado")
         TemaId.HELENO -> VozEnfoque("Σχολή · pausa", "Levántate, bebe agua de la fuente.", "Terminó la pausa", "Llega Eos: hora de despertar", "Τέλος · terminaste")
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA")

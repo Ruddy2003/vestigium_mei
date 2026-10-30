@@ -211,11 +211,11 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
             linea(8 * u, h - 14 * u, 12 * u, h - 11 * u, a.copy(alpha = 0.7f)); linea(12 * u, h - 11 * u, 8 * u, h - 8 * u, a.copy(alpha = 0.7f))
             drawRect(a.copy(alpha = 0.7f), Offset(15 * u, h - 14 * u), Size(4 * u, 6 * u))
         }
+        // El reflejo de un letrero en el vidrio mojado del local: una franja magenta y gotas que resbalan.
         TemaId.NEON -> {
-            var y = 0f
-            while (y < h) { linea(0f, y, w, y, a.copy(alpha = 0.08f), 0.6f * u); y += 3 * u }
-            linea(8 * u, h - 14 * u, 12 * u, h - 11 * u, a.copy(alpha = 0.7f)); linea(12 * u, h - 11 * u, 8 * u, h - 8 * u, a.copy(alpha = 0.7f))
-            drawRect(a.copy(alpha = 0.7f), Offset(15 * u, h - 14 * u), Size(4 * u, 6 * u))
+            drawRect(Brush.verticalGradient(listOf(a.copy(alpha = 0.1f), Color.Transparent), 0f, h * 0.4f), Offset.Zero, Size(w, h * 0.4f))
+            val az = java.util.Random(3)
+            repeat(10) { val x = az.nextFloat() * w; val y = az.nextFloat() * h; linea(x, y, x, y + 7 * u, a.copy(alpha = 0.18f), 0.8f * u) }
         }
         // Una greca arriba y otra abajo.
         TemaId.HELENO -> listOf(16 * u, h - 20 * u).forEach { y0 ->

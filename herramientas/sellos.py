@@ -292,6 +292,29 @@ def espacio(tam):
         d2.ellipse([xs[i] - s, ys[i] - s, xs[i] + s, ys[i] + s], fill=(255, 255, 255, 255))
     guardar(fondo, capa, 'espacio')
 
+# ------------------------------------------------------------------ Ciudad neón
+def neon(tam):
+    m = mascara_sello(tam)
+    # Fondo: asfalto mojado violeta, con los reflejos borrosos de tres letreros y la llovizna en diagonal.
+    base = np.zeros((tam, tam, 3)) + col('#0E0812')
+    base = mezcla(base, col('#2A1630'), np.clip((ruido(tam, tam / 10, 61) - 0.4) * 1.6, 0, 1) * 0.7)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    for (cx, cy, rr, c, k) in ((0.18, 0.2, 0.22, '#FF3D9A', 0.55), (0.85, 0.78, 0.2, '#FFB238', 0.45), (0.78, 0.15, 0.12, '#8CFF5A', 0.3)):
+        dist = np.sqrt((xx - cx * tam) ** 2 + ((yy - cy * tam) * 0.6) ** 2) / (rr * tam)
+        base = mezcla(base, col(c), np.clip(1 - dist, 0, 1) ** 2 * k)
+    fondo = a_img(base).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    r = np.random.default_rng(62)
+    for _ in range(int(tam * 0.45)):
+        x, y = r.random() * tam, r.random() * tam; l = tam * (0.02 + r.random() * 0.04)
+        d.line([(x, y), (x - l * 0.25, y + l)], fill=(190, 200, 230, int(10 + 22 * r.random())), width=1)
+    fondo = fondo.convert('RGB')
+    # Huella de tubo de neón: núcleo casi blanco, cuerpo magenta y el halo que se abre alrededor.
+    tono = mezcla(col('#FF3D9A'), col('#FFE3F1'), np.clip((m - 0.75) * 4, 0, 1) * 0.6)
+    glow = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(tam / 28))).astype(np.float32) / 255
+    alfa = np.clip(m * 0.95 + glow * 0.6, 0, 1)
+    guardar(fondo, a_rgba(tono, alfa), 'neon')
+
 # ------------------------------------------------------------------ Al-Ándalus
 def andalus(tam):
     m = mascara_sello(tam)
@@ -641,6 +664,7 @@ def marcas(capa, m, tipo, semilla):
 
 # Los sellos que se dibujan con código (los demás se componen desde `fuentes/`). Los temas nuevos van aquí.
 SIETE = [
+    'neon',
     'botanico',
     'gotico',
     'espacio',
@@ -652,6 +676,7 @@ SIETE = [
 ORDEN = [
     'romano',
     'ciber',
+    'neon',
     'heleno',
     'medieval',
     'distopia',

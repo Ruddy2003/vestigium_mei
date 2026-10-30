@@ -114,7 +114,8 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     TemaId.MEDIEVAL -> listOf(0.0, PI / 2, PI, 3 * PI / 2).map { circulo(c + dir(it) * (r * 0.45f), r * 0.48f) }.reduce { a, b -> mas(a, b) }
     TemaId.GOTICO -> (0 until 6).map { circulo(c + dir(PI / 3 * it - PI / 2) * (r * 0.55f), r * 0.4f) }.fold(circulo(c, r * 0.42f)) { a, b -> mas(a, b) }
     TemaId.CIBER -> menos(poligono(c, r, 6, 0.0), poligono(c, r * 0.45f, 6, 0.0))
-    TemaId.NEON -> menos(poligono(c, r, 6, 0.0), poligono(c, r * 0.45f, 6, 0.0))
+    // El tazón del letrero visto de frente: el borde y la sopa, con un palillo cruzado.
+    TemaId.NEON -> mas(menos(circulo(c, r), circulo(c + Offset(0f, -r * 0.35f), r * 0.85f)), Path().apply { moveTo(c.x + r * 0.1f, c.y - r * 0.1f); lineTo(c.x + r * 0.95f, c.y - r * 0.95f); lineTo(c.x + r * 1.05f, c.y - r * 0.85f); lineTo(c.x + r * 0.2f, c.y); close() })
     TemaId.DISTOPIA -> {
         val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))

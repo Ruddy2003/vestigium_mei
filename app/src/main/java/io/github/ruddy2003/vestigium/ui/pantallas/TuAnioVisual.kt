@@ -144,12 +144,13 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawLine(c.copy(alpha = 0.6f), Offset(x0 + w * 0.28f, cy), Offset(x0 + w * 0.62f, cy), 0.9f * d)
             drawRect(c, Offset(x0 + w * 0.68f, y0 + h * 0.28f), Size(w * 0.1f, h * 0.44f))
         }
+        // Una caja de comida para llevar, de cartón, con la tapa doblada y la calcomanía del puesto.
         TemaId.NEON -> {
-            drawRoundRect(lerp(c, Color.Black, 0.7f), o, s, CornerRadius(1.5f * d))
-            drawRoundRect(c, o, s, CornerRadius(1.5f * d), style = Stroke(0.8f * d))
-            drawPath(Path().apply { moveTo(x0 + w * 0.1f, y0 + h * 0.3f); lineTo(x0 + w * 0.2f, cy); lineTo(x0 + w * 0.1f, y0 + h * 0.7f) }, c, style = Stroke(0.8f * d))
-            drawLine(c.copy(alpha = 0.6f), Offset(x0 + w * 0.28f, cy), Offset(x0 + w * 0.62f, cy), 0.9f * d)
-            drawRect(c, Offset(x0 + w * 0.68f, y0 + h * 0.28f), Size(w * 0.1f, h * 0.44f))
+            val carton = lerp(Color(0xFFE8D9C4), c, 0.25f)
+            drawRect(carton, o, s)
+            drawLine(lerp(carton, Color.Black, 0.3f), Offset(x0, y0 + h * 0.25f), Offset(x0 + w, y0 + h * 0.25f), 0.8f * d)
+            drawCircle(c, h * 0.26f, Offset(x0 + w * 0.75f, cy + h * 0.1f))
+            drawLine(lerp(carton, Color.Black, 0.4f), Offset(x0 + w * 0.08f, cy + h * 0.15f), Offset(x0 + w * 0.5f, cy + h * 0.15f), 0.7f * d)
         }
         // Papiro griego: sin varilla, con la espiral del rollo a la vista, el cordón que lo ata y las fibras.
         TemaId.HELENO -> {
@@ -571,11 +572,11 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             drawPath(Path().apply { moveTo(x - r * 0.7f, y - r * 0.85f); lineTo(x - r, y - r * 0.85f); lineTo(x - r, y + r * 0.85f); lineTo(x - r * 0.7f, y + r * 0.85f) }, col, style = k)
             drawPath(Path().apply { moveTo(x + r * 0.7f, y - r * 0.85f); lineTo(x + r, y - r * 0.85f); lineTo(x + r, y + r * 0.85f); lineTo(x + r * 0.7f, y + r * 0.85f) }, col, style = k)
         }
+        // Una placa de letrero redondeada con su tubo de halo.
         TemaId.NEON -> {
-            drawRect(relleno, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r))
-            val k = Stroke(1.3f * d)
-            drawPath(Path().apply { moveTo(x - r * 0.7f, y - r * 0.85f); lineTo(x - r, y - r * 0.85f); lineTo(x - r, y + r * 0.85f); lineTo(x - r * 0.7f, y + r * 0.85f) }, col, style = k)
-            drawPath(Path().apply { moveTo(x + r * 0.7f, y - r * 0.85f); lineTo(x + r, y - r * 0.85f); lineTo(x + r, y + r * 0.85f); lineTo(x + r * 0.7f, y + r * 0.85f) }, col, style = k)
+            drawRoundRect(relleno, Offset(x - r, y - r * 0.7f), Size(2 * r, 1.4f * r), CornerRadius(r * 0.7f))
+            drawRoundRect(col.copy(alpha = col.alpha * 0.3f), Offset(x - r, y - r * 0.7f), Size(2 * r, 1.4f * r), CornerRadius(r * 0.7f), style = Stroke(3.5f * d))
+            drawRoundRect(col, Offset(x - r, y - r * 0.7f), Size(2 * r, 1.4f * r), CornerRadius(r * 0.7f), style = Stroke(1.1f * d))
         }
         // Hoplon: escudo redondo de borde grueso.
         TemaId.HELENO -> {
@@ -740,20 +741,20 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
             else -> return false
         }
         TemaId.NEON -> when (forma) {
-            // Asterisco de consola.
-            "estrella" -> { for (k in 0 until 3) drawLine(col, polarCosa(c, r, PI / 2 + k * PI / 3), polarCosa(c, r, PI / 2 + k * PI / 3 + PI), 1.6f * d) }
-            // Retícula de coordenadas.
+            // Un destello de letrero: cuatro rayas de tubo con su halo.
+            "estrella" -> for (k in 0 until 4) { val a = k * PI / 2; drawLine(col.copy(alpha = col.alpha * 0.3f), polarCosa(c, r * 0.25f, a), polarCosa(c, r, a), 3f * d, StrokeCap.Round); drawLine(col, polarCosa(c, r * 0.25f, a), polarCosa(c, r, a), 1.2f * d, StrokeCap.Round) }
+            // El farolito de papel colgado.
             "alfiler" -> {
-                drawCircle(col, r * 0.6f, c, style = trazo); drawCircle(col, r * 0.14f, c)
-                for (k in 0 until 4) drawLine(col, polarCosa(c, r * 0.35f, k * PI / 2), polarCosa(c, r, k * PI / 2), 1.2f * d)
+                drawLine(col, Offset(x, y - r), Offset(x, y - r * 0.6f), 1f * d)
+                drawOval(col, Offset(x - r * 0.55f, y - r * 0.6f), Size(r * 1.1f, r * 1.3f), style = trazo)
+                drawLine(col, Offset(x - r * 0.55f, y + r * 0.05f), Offset(x + r * 0.55f, y + r * 0.05f), 1f * d)
             }
-            // Taza en píxeles, con su vapor.
+            // El vaso de té con tapa y popote del puesto.
             "taza" -> {
-                drawRect(col, Offset(x - r * 0.7f, y - r * 0.35f), Size(r * 1.05f, r * 1.1f))
-                drawRect(col, Offset(x + r * 0.35f, y - r * 0.2f), Size(r * 0.45f, r * 0.2f))
-                drawRect(col, Offset(x + r * 0.6f, y - r * 0.2f), Size(r * 0.2f, r * 0.6f))
-                drawRect(col, Offset(x + r * 0.35f, y + r * 0.2f), Size(r * 0.45f, r * 0.2f))
-                drawRect(col, Offset(x - r * 0.45f, y - r * 0.85f), Size(r * 0.2f, r * 0.3f)); drawRect(col, Offset(x, y - r), Size(r * 0.2f, r * 0.3f))
+                drawPath(Path().apply { moveTo(x - r * 0.55f, y - r * 0.5f); lineTo(x + r * 0.55f, y - r * 0.5f); lineTo(x + r * 0.4f, y + r * 0.9f); lineTo(x - r * 0.4f, y + r * 0.9f); close() }, col, style = trazo)
+                drawLine(col, Offset(x - r * 0.65f, y - r * 0.5f), Offset(x + r * 0.65f, y - r * 0.5f), 1.6f * d)
+                drawLine(col, Offset(x + r * 0.1f, y - r * 0.5f), Offset(x + r * 0.35f, y - r * 1.05f), 1.2f * d)
+                listOf(0.1f, 0.4f).forEach { f -> drawCircle(col, r * 0.1f, Offset(x - r * 0.1f + f * r * 0.4f, y + r * 0.6f)) }
             }
             else -> return false
         }

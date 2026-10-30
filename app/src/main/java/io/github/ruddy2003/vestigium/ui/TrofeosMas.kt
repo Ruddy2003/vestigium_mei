@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -48,8 +49,8 @@ object TrofeosMas {
             "Cultura" to "Documento censurado", "Gente" to "Credencial", "Constancia" to "Sello de goma", "Curiosos" to "Cámara de vigilancia", "Tuyos" to "Altavoz"),
         TemaId.CIBER to mapOf("Diario" to "Registro del sistema", "Mundo" to "Mapa de la red", "Cuerpo" to "Monitor de pulso", "Mente" to "Árbol de directorios",
             "Cultura" to "Disquete", "Gente" to "Canal de charla", "Constancia" to "Tiempo en línea", "Curiosos" to "Laberinto ASCII", "Tuyos" to "Llave de raíz"),
-        TemaId.NEON to mapOf("Diario" to "Registro del sistema", "Mundo" to "Mapa de la red", "Cuerpo" to "Monitor de pulso", "Mente" to "Árbol de directorios",
-            "Cultura" to "Disquete", "Gente" to "Canal de charla", "Constancia" to "Tiempo en línea", "Curiosos" to "Laberinto ASCII", "Tuyos" to "Llave de raíz"),
+        TemaId.NEON to mapOf("Diario" to "Letrero del puesto", "Mundo" to "Globo de neón", "Cuerpo" to "Corazón de neón", "Mente" to "Ojo que parpadea",
+            "Cultura" to "Disco de la rocola", "Gente" to "Dos vasos brindando", "Constancia" to "Reloj de 24 horas", "Curiosos" to "Gato de la suerte", "Tuyos" to "Ficha de oro"),
         TemaId.REFUGIO to mapOf("Diario" to "Placa del cronista", "Mundo" to "Medalla de la superficie", "Cuerpo" to "Insignia de salud", "Mente" to "Medalla del átomo",
             "Cultura" to "Disco de vinilo", "Gente" to "Placa de la puerta", "Constancia" to "Engrane de la compuerta", "Curiosos" to "Contador Geiger", "Tuyos" to "Lata de conservas"),
         TemaId.ORDEN to mapOf("Diario" to "Placa del juramento", "Mundo" to "Estandarte de campaña", "Cuerpo" to "Guantelete", "Mente" to "Calibre de acero",
@@ -139,13 +140,13 @@ object TrofeosMas {
                 }
             }
             TemaId.NEON -> {
-                // Una unidad de rack: chapa negra con rejilla de ventilación y sus luces de estado.
-                val c = if (p.hecho) Color(0xFF111925) else ped
-                drawRect(piedra(c), Offset(w * 0.14f, h * 0.79f), Size(w * 0.72f, h * 0.16f))
+                // Una caja de cerveza de plástico puesta de cabeza, como los bancos de los puestos, con sus asas caladas.
+                val c = if (p.hecho) Color(0xFF2F6B3A) else ped
+                drawRoundRect(piedra(c), Offset(w * 0.15f, h * 0.79f), Size(w * 0.7f, h * 0.16f), CornerRadius(w * 0.015f))
                 if (p.hecho) {
-                    drawRect(Color(0xFF15404A), Offset(w * 0.14f, h * 0.79f), Size(w * 0.72f, h * 0.16f), style = Stroke(w * 0.008f))
-                    for (k in 0 until 8) drawLine(Color(0xFF05070B), Offset(w * (0.2f + k * 0.035f), h * 0.82f), Offset(w * (0.2f + k * 0.035f), h * 0.92f), w * 0.014f)
-                    for (k in 0 until 4) drawCircle(if (k == 2) Color(0xFF86A0B3) else Color(0xFF00E5FF), w * 0.016f, Offset(w * (0.6f + k * 0.06f), h * 0.87f))
+                    for (k in 0 until 6) drawRect(Color(0xFF173A1E), Offset(w * (0.2f + k * 0.105f), h * 0.84f), Size(w * 0.07f, h * 0.06f))
+                    drawRoundRect(Color(0xFF173A1E), Offset(w * 0.42f, h * 0.805f), Size(w * 0.16f, h * 0.022f), CornerRadius(w * 0.01f))
+                    drawLine(Color(0xFFFF3D9A).copy(alpha = 0.5f), Offset(w * 0.15f, h * 0.79f), Offset(w * 0.85f, h * 0.79f), w * 0.006f)
                 }
             }
             TemaId.REFUGIO -> {
@@ -1152,6 +1153,80 @@ object TrofeosMas {
         // El cuello y la base del monitor.
         caja(p, 0.42f, 0.7f, 0.58f, 0.74f)
         caja(p, 0.3f, 0.74f, 0.7f, 0.77f)
+    }
+
+    // ---------------------------------------------------------------- Ciudad neón: letreros de tubo sobre su tablero
+
+    internal fun DrawScope.neon(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val magenta = Color(0xFFFF3D9A); val ambar = Color(0xFFFFB238); val verde = Color(0xFF8CFF5A)
+        /** Un tubo de neón: el halo ancho y el núcleo fino; sin el logro, solo el tubo apagado. */
+        fun tubo(ruta: Path, col: Color, g: Float = 1f) {
+            if (p.hecho) {
+                drawPath(ruta, col.copy(alpha = 0.22f), style = Stroke(lw * 4.2f * g, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawPath(ruta, col, style = Stroke(lw * 1.3f * g, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawPath(ruta, Color.White.copy(alpha = 0.55f), style = Stroke(lw * 0.4f * g, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            } else drawPath(ruta, p.sombra, style = Stroke(lw * 1.3f * g, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        }
+        fun ruta(f: Path.() -> Unit) = Path().apply(f)
+        fun Path.m(x: Float, y: Float) = moveTo(p.x(x), p.y(y))
+        fun Path.l(x: Float, y: Float) = lineTo(p.x(x), p.y(y))
+        fun Path.q(cx: Float, cy: Float, x: Float, y: Float) = quadraticTo(p.x(cx), p.y(cy), p.x(x), p.y(y))
+        fun Path.circulo(cx: Float, cy: Float, r: Float) = addOval(Rect(p.x(cx) - p.x(r), p.y(cy) - p.x(r), p.x(cx) + p.x(r), p.y(cy) + p.x(r)))
+        // El tablero negro del letrero, colgado con dos grapas de la ménsula de arriba.
+        caja(p, 0.2f, 0.04f, 0.8f, 0.07f)
+        caja(p, 0.3f, 0.07f, 0.32f, 0.12f); caja(p, 0.68f, 0.07f, 0.7f, 0.12f)
+        drawRoundRect(if (p.hecho) Color(0xFF120B17) else p.sombra.copy(alpha = p.sombra.alpha * 0.5f), Offset(p.x(0.12f), p.y(0.12f)), Size(p.x(0.76f), p.y(0.6f)), CornerRadius(p.w * 0.04f))
+        when (cat) {
+            // Un ticket con su renglón y la pluma que lo escribe.
+            "Diario" -> {
+                tubo(ruta { m(0.3f, 0.2f); l(0.62f, 0.2f); l(0.62f, 0.6f); l(0.56f, 0.64f); l(0.5f, 0.6f); l(0.44f, 0.64f); l(0.38f, 0.6f); l(0.3f, 0.64f); close() }, ambar)
+                tubo(ruta { m(0.36f, 0.32f); l(0.56f, 0.32f); m(0.36f, 0.42f); l(0.52f, 0.42f) }, ambar, 0.7f)
+                tubo(ruta { m(0.74f, 0.2f); l(0.52f, 0.52f) }, magenta)
+            }
+            // El globo con sus meridianos y su ecuador.
+            "Mundo" -> {
+                tubo(ruta { circulo(0.5f, 0.42f, 0.24f) }, verde)
+                tubo(ruta { m(0.26f, 0.42f); l(0.74f, 0.42f) }, verde, 0.7f)
+                tubo(ruta { addOval(Rect(p.x(0.4f), p.y(0.42f) - p.x(0.24f), p.x(0.6f), p.y(0.42f) + p.x(0.24f))) }, magenta, 0.7f)
+            }
+            // El corazón, dibujado de un solo trazo.
+            "Cuerpo" -> tubo(ruta { m(0.5f, 0.62f); q(0.18f, 0.42f, 0.28f, 0.26f); q(0.4f, 0.14f, 0.5f, 0.3f); q(0.6f, 0.14f, 0.72f, 0.26f); q(0.82f, 0.42f, 0.5f, 0.62f) }, magenta, 1.2f)
+            // El ojo que parpadea: el párpado de arriba, el de abajo y la pupila.
+            "Mente" -> {
+                tubo(ruta { m(0.22f, 0.42f); q(0.5f, 0.12f, 0.78f, 0.42f); q(0.5f, 0.72f, 0.22f, 0.42f) }, ambar)
+                tubo(ruta { circulo(0.5f, 0.42f, 0.08f) }, magenta)
+            }
+            // El disco de la rocola y su nota musical.
+            "Cultura" -> {
+                tubo(ruta { circulo(0.42f, 0.44f, 0.2f) }, magenta)
+                tubo(ruta { circulo(0.42f, 0.44f, 0.05f) }, magenta, 0.7f)
+                tubo(ruta { m(0.68f, 0.56f); l(0.68f, 0.22f); l(0.8f, 0.26f); m(0.68f, 0.56f); q(0.6f, 0.62f, 0.62f, 0.54f) }, verde)
+            }
+            // Dos vasos que brindan, con su chispa.
+            "Gente" -> {
+                tubo(ruta { m(0.26f, 0.28f); l(0.42f, 0.24f); l(0.44f, 0.6f); l(0.32f, 0.62f); close() }, ambar)
+                tubo(ruta { m(0.58f, 0.24f); l(0.74f, 0.28f); l(0.68f, 0.62f); l(0.56f, 0.6f); close() }, ambar)
+                tubo(ruta { m(0.5f, 0.14f); l(0.5f, 0.2f); m(0.44f, 0.16f); l(0.46f, 0.21f); m(0.56f, 0.16f); l(0.54f, 0.21f) }, magenta, 0.7f)
+            }
+            // El reloj de los locales que nunca cierran: la esfera, sus manecillas y «24».
+            "Constancia" -> {
+                tubo(ruta { circulo(0.5f, 0.38f, 0.19f) }, verde)
+                tubo(ruta { m(0.5f, 0.38f); l(0.5f, 0.26f); m(0.5f, 0.38f); l(0.59f, 0.42f) }, verde, 0.8f)
+                if (p.hecho) mono("24H", p.x(0.5f), p.y(0.68f), p.w * 0.1f, magenta, android.graphics.Paint.Align.CENTER, negrita = true)
+            }
+            // El gato de la suerte, con la pata levantada.
+            "Curiosos" -> {
+                tubo(ruta { m(0.34f, 0.62f); l(0.34f, 0.36f); l(0.38f, 0.22f); l(0.44f, 0.3f); l(0.56f, 0.3f); l(0.62f, 0.22f); l(0.66f, 0.36f); l(0.66f, 0.62f); close() }, ambar)
+                tubo(ruta { m(0.66f, 0.42f); l(0.74f, 0.32f); l(0.76f, 0.22f) }, ambar, 0.8f)
+                tubo(ruta { circulo(0.44f, 0.4f, 0.015f); circulo(0.56f, 0.4f, 0.015f); m(0.46f, 0.5f); q(0.5f, 0.54f, 0.54f, 0.5f) }, magenta, 0.6f)
+            }
+            // La ficha de oro de la máquina, con su agujero cuadrado.
+            else -> {
+                tubo(ruta { circulo(0.5f, 0.42f, 0.22f) }, ambar, 1.2f)
+                tubo(ruta { m(0.45f, 0.37f); l(0.55f, 0.37f); l(0.55f, 0.47f); l(0.45f, 0.47f); close() }, verde)
+            }
+        }
     }
 
     // ---------------------------------------------------------------- Refugio: placas y medallas de chapa esmaltada

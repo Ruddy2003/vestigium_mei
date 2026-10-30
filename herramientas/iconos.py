@@ -46,6 +46,11 @@ def pantalla(sem):       # Ciber: líneas de barrido y una retícula muy tenue
     reticula = ((X % 27 < 1) | (Y % 27 < 1)) * 0.6
     return lineas + reticula + ruido(sem, 0.25)
 
+def callejon(sem):       # Ciudad neón: llovizna en diagonal sobre el asfalto mojado, con manchas de luz de letrero
+    lluvia = (np.sin((X * 0.35 + Y * 1.2) * 0.9 + ruido(sem, 8, 0)) > 0.985) * 0.9
+    charcos = ruido(sem + 1, 1.0, 26) * 0.7
+    return lluvia + charcos + ruido(sem + 2, 0.2)
+
 def pario(sem):          # Helénico: mármol de Paros, blanco y fino, con vetas cortas y suaves
     t = ruido(sem, 4.0, 18)
     vetas = np.abs(np.sin((X * 0.8 - Y * 1.2) / TAM * 14 + t * 2.2)) ** 30 * -0.7
@@ -151,6 +156,15 @@ def _rayas(d, c, n=32, largo=0.6):    # segmentos sobre el anillo (como una barr
     for i in range(n):
         a0 = 2 * math.pi * i / n; a1 = a0 + 2 * math.pi / n * largo
         d.arc([(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K], math.degrees(a0), math.degrees(a1), fill=c, width=int(GROSOR * K * 1.6))
+
+def _tubos(d, c, n=3, hueco=0.2):    # el anillo como un tubo de neón partido en tramos, con sus grapas
+    caja = [(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K]
+    for i in range(n):
+        a0 = 2 * math.pi * i / n + hueco; a1 = 2 * math.pi * (i + 1) / n - hueco
+        d.arc(caja, math.degrees(a0), math.degrees(a1), fill=c, width=int(GROSOR * K * 1.5))
+        for a in (a0 + 0.25, a1 - 0.25):
+            x0, y0 = _pos(a, RADIO - 5); x1, y1 = _pos(a, RADIO + 5)
+            d.line([(x0, y0), (x1, y1)], fill=c, width=int(GROSOR * K * 0.7))
 
 def _perlas(d, c, n=28, r=2.4):
     for i in range(n):
@@ -264,6 +278,7 @@ def _runas(d, c, n=14, s=5):
 TEMAS = {
     'romano':       (travertino,    '#E5E1D9', '#6E5424',  10, 6, 'dorado',      _hojitas),
     'ciber':        (pantalla,      '#0D1117', '#7FE3F0',   5, 4, 'fosforo',     _rayas),
+    'neon':         (callejon,      '#150C19', '#FF5FAE',   6, 4, 'fosforo',     _tubos),
     'heleno':       (pario,         '#EEEDE9', '#3D2459',   9, 5, 'tinta',       _perlas),
     'medieval':     (vitela,        '#E8E2D6', '#33261A',   9, 6, 'ferrogalica', _cuadrifolios),
     'distopia':     (papel,         '#EFE9DA', '#1A1A1A',  10, 6, 'tinta',       _marcas),
