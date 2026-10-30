@@ -68,7 +68,7 @@ import kotlin.math.sqrt
 /** La forma con que el tema nuevo se abre sobre el anterior. */
 private enum class BarridoTema {
     ARCO, PIXELES, SOL, ROMBO, OJO, ESCOTILLA, ENGRANE, MEMBRANA, COLUMNAS, CORTINA, HOJA,
-    COPO, ABANICO, OJIVA, CIRCULO, OCHO, HORIZONTE, VITRUVIO, ESTRELLA, BANDAS, HEXAGONO,
+    COPO, ABANICO, OJIVA, CIRCULO, MAREA, OCHO, HORIZONTE, VITRUVIO, ESTRELLA, BANDAS, HEXAGONO,
     PERSIANA,
 }
 
@@ -120,6 +120,8 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.GOTICO -> MatizMovimiento(BarridoTema.OJIVA, 960, CubicBezierEasing(0.6f, 0f, 0.4f, 1f), 0f, 24f, 1f, 600, 75, LinearOutSlowInEasing, 0.9f, 0.85f, 450f)
     // El círculo de un telescopio; las secciones se acercan como al enfocar.
     TemaId.ESPACIO -> MatizMovimiento(BarridoTema.CIRCULO, 720, FastOutSlowInEasing, 0f, 0f, 0.94f, 440, 55, FastOutSlowInEasing, 1f, 0.5f, 900f)
+    // El mar que sube y cubre la pantalla; las secciones bajan despacio, como lastradas, y los botones se hunden blandos.
+    TemaId.ABISMO -> MatizMovimiento(BarridoTema.MAREA, 980, CubicBezierEasing(0.3f, 0f, 0.2f, 1f), 0f, -14f, 1f, 620, 75, LinearOutSlowInEasing, 1.15f, 0.45f, 380f)
     // Estrella de ocho puntas de lazo.
     TemaId.ANDALUS -> MatizMovimiento(BarridoTema.OCHO, 840, CubicBezierEasing(0.45f, 0f, 0.25f, 1f), 0f, 12f, 0.99f, 500, 60, FastOutSlowInEasing, 0.95f, 0.7f, 750f)
     // El horizonte de la estepa que se ensancha; las secciones llegan al galope.
@@ -192,7 +194,7 @@ fun contando(valor: String): String {
 internal enum class VivoTema(val periodo: Int) {
     LUCERNA(16000), VOLCADO(6000), OLIVO(30000), RAYO_ORO(26000), CENIZA(28000), VAPOR(18000), FRAGUA(7000),
     BURBUJAS(16000), GACETA(40000), CHARRETERAS(9000), HORMIGAS(70000), LUCIERNAGAS(9000), NIEVE(24000),
-    ARENA(14000), VITRAL(80000), ESTRELLAS(9000), AGUA(14000), NUBES(180000), SAMARAS(24000), ESTRELLAS_ROJAS(36000),
+    ARENA(14000), VITRAL(80000), ESTRELLAS(9000), MAR(15000), AGUA(14000), NUBES(180000), SAMARAS(24000), ESTRELLAS_ROJAS(36000),
     CONFETI(22000), RUNAS(14000), LLOVIZNA(6000)
 }
 
@@ -214,6 +216,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.SEDA -> VivoTema.ARENA                // arena que el viento arrastra de lado
     TemaId.GOTICO -> VivoTema.VITRAL             // manchas de luz de vitral
     TemaId.ESPACIO -> VivoTema.ESTRELLAS         // estrellas que titilan
+    TemaId.ABISMO -> VivoTema.MAR                // nieve marina; de día, haces de sol y un cardumen; de noche, medusas que laten
     TemaId.ANDALUS -> VivoTema.AGUA              // reflejos de alberca
     TemaId.MONGOL -> VivoTema.NUBES              // nubes del Cielo Azul
     TemaId.RENACIMIENTO -> VivoTema.SAMARAS      // semillas aladas que caen girando, como el tornillo aéreo
@@ -508,6 +511,62 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             drawLine(col, p - Offset(s, 0f), p + Offset(s, 0f), 0.9f * u); drawLine(col, p - Offset(0f, s), p + Offset(0f, s), 0.9f * u)
             drawCircle(col, 0.9f * u, p)
         }
+        VivoTema.MAR -> {
+            // Nieve marina: restos diminutos que bajan sin prisa, de día y de noche.
+            motas.forEach { m ->
+                val k = vueltas(m)
+                val y = fraccionVivo(m.y + t * k) * (h + 10f * u) - 5f * u
+                val x = (m.x + 0.012f * senoVuelta(t * 2 * k + m.fase)) * w
+                drawCircle(al(if (oscuro) Color(0xFFC4ECE6) else e.onBackground, if (oscuro) 0.18f else 0.07f), 0.8f * u * m.tam, Offset(x, y))
+            }
+            if (!oscuro) {
+                // Zona iluminada: haces de sol que bajan desde la superficie y se mecen con el oleaje.
+                for (j in 0 until 4) {
+                    val x0 = w * (0.08f + 0.26f * j) + 16f * u * senoVuelta(t * 2 + j * 0.27f)
+                    val ancho = w * (0.04f + 0.03f * (j % 2))
+                    val haz = Path().apply { moveTo(x0, 0f); lineTo(x0 + ancho, 0f); lineTo(x0 + ancho * 2.4f + w * 0.12f, h); lineTo(x0 + w * 0.12f, h); close() }
+                    val luz = 0.7f + 0.3f * senoVuelta(t * 3 + j * 0.4f)
+                    drawPath(haz, Brush.verticalGradient(listOf(al(Color.White, 0.22f * luz), Color.Transparent), startY = 0f, endY = h * 0.8f))
+                }
+                // Un cardumen pequeño que cruza de un lado a otro, meciéndose.
+                motas.take(7).forEachIndexed { i, m ->
+                    val avance = fraccionVivo(m.x + t * (1 + i % 2))
+                    val x = (avance * 1.3f - 0.15f) * w
+                    val y = (0.3f + 0.25f * m.y) * h + 8f * u * senoVuelta(t * 3 + m.fase)
+                    val l = 6f * u * m.tam
+                    val pez = Path().apply {
+                        moveTo(x + l, y); quadraticTo(x, y - l * 0.45f, x - l * 0.7f, y); quadraticTo(x, y + l * 0.45f, x + l, y); close()
+                        moveTo(x - l * 0.6f, y); lineTo(x - l * 1.1f, y - l * 0.35f); lineTo(x - l * 1.1f, y + l * 0.35f); close()
+                    }
+                    drawPath(pez, al(e.primary, 0.13f))
+                }
+            } else {
+                // Zona abisal: medusas con luz propia que laten (la campana se cierra y se abre) y suben despacio.
+                motas.take(7).forEach { m ->
+                    val k = vueltas(m)
+                    val sube = fraccionVivo(m.y + t)
+                    val y = h * (1.1f - sube * 1.2f)
+                    val x = (m.x + 0.03f * senoVuelta(t * k + m.fase)) * w
+                    val late = 0.5f + 0.5f * senoVuelta(t * 6 * k + m.fase)
+                    val r = 11f * u * m.tam
+                    val ancho = r * (1.1f - 0.25f * late); val alto = r * (0.7f + 0.2f * late)
+                    val luz = when (m.tono) { 0 -> e.primary; 1 -> e.secondary; else -> e.tertiary }
+                    drawCircle(Brush.radialGradient(listOf(al(luz, 0.14f), Color.Transparent), center = Offset(x, y), radius = r * 2.6f), r * 2.6f, Offset(x, y))
+                    val campana = Path().apply {
+                        moveTo(x - ancho, y); cubicTo(x - ancho, y - alto * 1.3f, x + ancho, y - alto * 1.3f, x + ancho, y)
+                        quadraticTo(x, y - alto * 0.25f, x - ancho, y); close()
+                    }
+                    drawPath(campana, al(luz, 0.2f))
+                    drawPath(campana, al(luz, 0.42f), style = Stroke(0.8f * u))
+                    for (j in 0 until 4) {
+                        val tx = x - ancho * 0.7f + ancho * 0.47f * j
+                        val onda = 3f * u * senoVuelta(t * 6 * k + m.fase + j * 0.2f)
+                        val tentaculo = Path().apply { moveTo(tx, y - alto * 0.1f); quadraticTo(tx + onda, y + r * 0.9f, tx - onda * 0.6f, y + r * (1.5f + 0.3f * late)) }
+                        drawPath(tentaculo, al(luz, 0.24f), style = Stroke(0.6f * u))
+                    }
+                }
+            }
+        }
         VivoTema.AGUA -> {
             // Reflejos de una alberca: líneas onduladas que se mecen.
             for (k in 0 until 6) {
@@ -656,6 +715,14 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
     val r = r0 * p
     when (b) {
         BarridoTema.CIRCULO -> ruta.addOval(Rect(c, r))
+        BarridoTema.MAREA -> {
+            // El agua sube desde abajo con su ola hasta cubrir la pantalla.
+            val nivel = h * 1.04f - h * 1.14f * p
+            ruta.moveTo(0f, h); ruta.lineTo(0f, nivel)
+            var x = 0f
+            while (x <= w) { ruta.lineTo(x, nivel + 9f * u * sin(x / (38f * u) + 7f * p)); x += 8f * u }
+            ruta.lineTo(w, nivel); ruta.lineTo(w, h); ruta.close()
+        }
         BarridoTema.ARCO -> {
             val s = r * 1.3f
             ruta.moveTo(c.x - s, c.y + s); ruta.lineTo(c.x - s, c.y - s * 0.2f)

@@ -100,6 +100,8 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.SEDA -> MarcoRecuadro(CutCornerShape(3.dp), 11.dp)
     TemaId.GOTICO -> MarcoRecuadro(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp, bottomStart = 3.dp, bottomEnd = 3.dp), 14.dp)
     TemaId.ESPACIO -> MarcoRecuadro(RoundedCornerShape(18.dp), 10.dp)
+    // El casco: arriba casi recto, abajo muy redondeado, como la esfera de la tripulación.
+    TemaId.ABISMO -> MarcoRecuadro(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp, bottomStart = 26.dp, bottomEnd = 26.dp), 12.dp)
     TemaId.ANDALUS -> MarcoRecuadro(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp, bottomStart = 4.dp, bottomEnd = 4.dp), 14.dp)
     TemaId.MONGOL -> MarcoRecuadro(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 6.dp, bottomEnd = 6.dp), 12.dp)
     TemaId.RENACIMIENTO -> MarcoRecuadro(RectangleShape, 10.dp)
@@ -233,6 +235,13 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
             listOf(Offset(m, m) to Offset(1f, 1f), Offset(w - m, m) to Offset(-1f, 1f), Offset(m, h - m) to Offset(1f, -1f), Offset(w - m, h - m) to Offset(-1f, -1f))
                 .forEach { (o, d) -> drawLine(k, o, o + Offset(d.x * 6 * u, 0f), 1.4f * u); drawLine(k, o, o + Offset(0f, d.y * 6 * u), 1.4f * u) }
             drawCircle(k, 0.9f * u, Offset(w * 0.72f, 5 * u)); drawCircle(k, 0.7f * u, Offset(w * 0.24f, h - 5 * u))
+        }
+        // La fila de remaches de la plancha arriba y un ojo de buey en la esquina.
+        TemaId.ABISMO -> {
+            val k = e.secondary.copy(alpha = 0.8f)
+            var x = 14 * u; while (x < w - 30 * u) { drawCircle(k, 1.1f * u, Offset(x, 5 * u)); x += 9 * u }
+            val o = Offset(w - 13 * u, 12 * u)
+            drawCircle(k, 6 * u, o, style = Stroke(1.6f * u)); drawCircle(c.copy(alpha = 0.35f), 3.6f * u, o)
         }
         // Estrella de ocho puntas de los alicatados, bajo el arco.
         TemaId.ANDALUS -> drawPath(estrellaRel(Offset(w / 2, 9 * u), 8, 4.5f * u, 3.45f * u), c.copy(alpha = 0.55f), style = Stroke(0.9f * u))
@@ -473,6 +482,15 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
             val o = Offset(w / 2, y + 6 * u)
             drawCircle(col, 2.5f * u + grosor * 0.3f, o)
             drawOval(col, Offset(o.x - 6 * u, o.y - 1.6f * u), Size(12 * u, 3.2f * u), style = Stroke(0.9f * u))
+        }
+        // Un cabo torcido de dos cordones y, en medio, la boya que los une.
+        TemaId.ABISMO -> {
+            drawPath(onda(2.2f * u, 6f), col, style = Stroke(grosor * 0.5f + 0.4f * u, cap = StrokeCap.Round, pathEffect = punteado))
+            drawPath(onda(2.2f * u, 6f, PI.toFloat()), col, style = Stroke(grosor * 0.5f + 0.4f * u, cap = StrokeCap.Round, pathEffect = punteado))
+            val o = Offset(w / 2, y)
+            drawCircle(fondo, 4.5f * u + grosor * 0.3f, o)
+            drawCircle(col, 4f * u + grosor * 0.3f, o, style = Stroke(1.2f * u))
+            drawLine(col, Offset(o.x - 3.6f * u, o.y), Offset(o.x + 3.6f * u, o.y), 1.6f * u)
         }
         // Dos cintas que se cruzan, como en la lacería.
         TemaId.ANDALUS -> {

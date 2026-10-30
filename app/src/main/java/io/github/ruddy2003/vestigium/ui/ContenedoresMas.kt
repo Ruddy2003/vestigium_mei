@@ -49,6 +49,8 @@ object ContenedoresMas {
             Contenedor.TECNICO -> Color(0xFFEDEDE8)
             Contenedor.CUADERNO -> Color(0xFFFBFCFD)
             Contenedor.VUELO -> Color(0xFFF4F6FA)
+            // Papel sintético impermeable, gris verdoso, de las bitácoras que se mojan.
+            Contenedor.INMERSION -> Color(0xFFEDF2EE)
             Contenedor.TETRAD -> Color(0xFFF7F3E6)
             // Las libretas de [Contenedores] tienen su papel allá.
             Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> return Contenedores.papel(c, cs, oscuro)
@@ -381,6 +383,40 @@ object ContenedoresMas {
                 // La lengüeta naranja para tirar.
                 drawRect(naranja, Offset(w - 4 * d, h * 0.74f), Size(8 * d + grosor, 14 * d))
             }
+            Contenedor.INMERSION -> {
+                // La bitácora del batiscafo: tapas de lona engomada azul petróleo con cantoneras de latón, el batiscafo
+                // estampado (el flotador largo y, debajo, la esfera de la tripulación con su ojo de buey), la regla de
+                // profundidad en el lomo y la correa de goma que la mantiene cerrada bajo el agua.
+                val lona = Color(0xFF1F4A59); val laton = Color(0xFFB8913E); val crema = Color(0xFFE6DFC6)
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 4 * d); canto(w, h, grosor, d, Color(0xFFEDF2EE))
+                drawRoundRect(Brush.linearGradient(listOf(lerp(lona, Color.White, 0.1f), lona, lerp(lona, Color.Black, 0.35f)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h), CornerRadius(4 * d))
+                // El grano de la lona.
+                var y = 0f; while (y < h) { drawLine(Color.Black.copy(alpha = 0.06f), Offset(0f, y), Offset(w, y), 1f); y += 3 * d }
+                // La regla de profundidad en el lomo: una raya cada 100 m y una más larga cada 500.
+                drawRect(lerp(lona, Color.Black, 0.3f), Offset.Zero, Size(w * 0.12f, h))
+                var k = 0; y = h * 0.06f
+                while (y < h * 0.94f) { drawLine(crema.copy(alpha = 0.6f), Offset(0f, y), Offset(w * (if (k % 5 == 0) 0.09f else 0.05f), y), 0.9f * d); y += h * 0.03f; k++ }
+                // Las cuatro cantoneras de latón.
+                listOf(Offset(0f, 0f) to 0, Offset(w, 0f) to 1, Offset(w, h) to 2, Offset(0f, h) to 3).forEach { (p, i) ->
+                    val sx = if (i == 1 || i == 2) -1f else 1f; val sy = if (i >= 2) -1f else 1f; val l = w * 0.13f
+                    drawPath(Path().apply { moveTo(p.x, p.y); lineTo(p.x + sx * l, p.y); lineTo(p.x, p.y + sy * l); close() }, Brush.linearGradient(listOf(lerp(laton, Color.White, 0.35f), laton, lerp(laton, Color.Black, 0.3f)), p, Offset(p.x + sx * l, p.y + sy * l)))
+                    drawCircle(lerp(laton, Color.Black, 0.4f), 1.4f * d, Offset(p.x + sx * l * 0.3f, p.y + sy * l * 0.3f))
+                }
+                // El batiscafo estampado en crema: el flotador, la torreta, la esfera colgada y su ojo de buey.
+                val cx = w * 0.56f; val cy = h * 0.42f; val L = w * 0.3f
+                val tinta = crema.copy(alpha = 0.8f)
+                drawRoundRect(tinta, Offset(cx - L, cy - L * 0.18f), Size(L * 2, L * 0.36f), CornerRadius(L * 0.18f), style = Stroke(1.4f * d))
+                drawRect(tinta, Offset(cx - L * 0.12f, cy - L * 0.36f), Size(L * 0.24f, L * 0.18f), style = Stroke(1.2f * d))
+                drawLine(tinta, Offset(cx, cy + L * 0.18f), Offset(cx, cy + L * 0.3f), 1.2f * d)
+                drawCircle(tinta, L * 0.26f, Offset(cx, cy + L * 0.56f), style = Stroke(1.4f * d))
+                drawCircle(tinta, L * 0.09f, Offset(cx - L * 0.06f, cy + L * 0.6f))
+                listOf(-0.7f, 0.7f).forEach { f -> drawLine(tinta, Offset(cx + f * L, cy + L * 0.18f), Offset(cx + f * L * 1.1f, cy + L * 0.34f), 1 * d) }
+                // La placa con el número de la inmersión, en latón.
+                drawRoundRect(laton, Offset(w * 0.32f, h * 0.72f), Size(w * 0.48f, h * 0.1f), CornerRadius(2 * d))
+                with(TrofeosMas) { mono("INMERSIÓN", w * 0.56f, h * 0.79f, h * 0.05f, lerp(lona, Color.Black, 0.4f), android.graphics.Paint.Align.CENTER, negrita = true) }
+                // La correa de goma negra que la cierra.
+                drawRect(Color(0xFF111A1E), Offset(w * 0.84f, -2 * d), Size(w * 0.05f, h + grosor + 4 * d))
+            }
             Contenedor.TETRAD -> {
                 // El cuaderno escolar (тетрадь): tapa delgada de papel verde con la etiqueta enmarcada y su palabra en
                 // ruso, la estrella roja, el lomo con las grapas y, como engorda poco, pocas hojas en el canto.
@@ -552,6 +588,23 @@ object ContenedoresMas {
                     y += renglon
                 }
             }
+            Contenedor.INMERSION -> {
+                // La hoja de inmersión: el encabezado con cota y presión por llenar, la regla de profundidad en el margen
+                // (cada renglón, diez metros más abajo) y, de fondo, el perfil del fondo marino que trazó el sonar.
+                val tinta = if (oscuro) Color(0xFF5CF2C6) else Color(0xFF0A5C8C)
+                with(TrofeosMas) { mono("COTA ____ m   PRESIÓN ____ bar", margen, 30 * d, 8 * d, tinta.copy(alpha = 0.5f)) }
+                drawLine(tinta.copy(alpha = 0.3f), Offset(margen, 38 * d), Offset(size.width - 12 * d, 38 * d), 0.8f * d)
+                val perfil = Path(); var x = margen; perfil.moveTo(margen, size.height * 0.7f)
+                while (x <= size.width) { perfil.lineTo(x, size.height * 0.7f + 18 * d * sin(x / (47 * d)) + 9 * d * sin(x / (17 * d))); x += 4 * d }
+                drawPath(perfil, tinta.copy(alpha = if (oscuro) 0.12f else 0.08f), style = Stroke(1.4f * d))
+                var y = 96 * d; var k = 1
+                while (y < size.height - 12 * d) {
+                    drawLine(tinta.copy(alpha = 0.1f), Offset(margen - 6 * d, y), Offset(size.width - 12 * d, y), 0.7f * d)
+                    drawLine(tinta.copy(alpha = 0.3f), Offset(margen - 18 * d, y), Offset(margen - 8 * d, y), 0.8f * d)
+                    if (k % 2 == 0) with(TrofeosMas) { mono("${k * 10}", margen - 20 * d, y - 2 * d, 6 * d, tinta.copy(alpha = 0.35f), android.graphics.Paint.Align.RIGHT) }
+                    y += renglon; k++
+                }
+            }
             Contenedor.TETRAD -> {
                 // La hoja «en cuadritos» del cuaderno escolar ruso, con el margen rojo del lado de afuera (a la derecha).
                 val cuadro = if (oscuro) Color(0xFF7A9AC8) else Color(0xFF5A7AB0)
@@ -655,6 +708,19 @@ object ContenedoresMas {
                 drawRect(Color(0xFF26324F).copy(alpha = if (oscuro) 0.9f else 0.7f), Offset(6 * d, 0f), Size(16 * d, size.height))
                 var y = 0f; while (y < size.height) { drawLine(Color.Black.copy(alpha = 0.3f), Offset(6 * d, y), Offset(22 * d, y), 1f); y += 2 * d }
                 drawLine(Color(0xFFE8601C).copy(alpha = 0.7f), Offset(22 * d, 0f), Offset(22 * d, size.height), 1.2f * d)
+            }
+            Contenedor.INMERSION -> {
+                // Los ollaos de latón del borde, con el cabo encerado que pasa de uno a otro en zigzag.
+                val laton = if (oscuro) Color(0xFF8C6E2E) else Color(0xFFB8913E)
+                val cabo = Color(0xFFCDB88C).copy(alpha = if (oscuro) 0.6f else 0.9f)
+                val paso = 34 * d; var y = 18 * d; var k = 0
+                val zig = Path().apply { moveTo(16 * d, 18 * d) }
+                while (y < size.height - 10 * d) {
+                    drawCircle(laton, 4.4f * d, Offset(16 * d, y)); drawCircle(Color.Black.copy(alpha = 0.5f), 2 * d, Offset(16 * d, y))
+                    if (k > 0) zig.lineTo(if (k % 2 == 0) 16 * d else 4 * d, y)
+                    y += paso; k++
+                }
+                drawPath(zig, cabo, style = Stroke(1.6f * d, cap = StrokeCap.Round))
             }
             Contenedor.TETRAD -> {
                 // El pliegue del cuadernillo con sus dos grapas.

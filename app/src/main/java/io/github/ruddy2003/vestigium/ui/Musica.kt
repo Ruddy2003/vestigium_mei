@@ -89,6 +89,7 @@ object Musica {
         TemaId.URSS -> R.raw.s_urss_presentacion
         TemaId.GOTICO -> R.raw.s_gotico_presentacion
         TemaId.ESPACIO -> R.raw.s_espacio_presentacion
+        TemaId.ABISMO -> R.raw.s_abismo_presentacion
         TemaId.ANDALUS -> R.raw.s_andalus_presentacion
         TemaId.MONGOL -> R.raw.s_mongol_presentacion
         TemaId.RENACIMIENTO -> R.raw.s_renacimiento_presentacion
@@ -114,6 +115,7 @@ object Musica {
         TemaId.URSS -> R.raw.s_urss_anual
         TemaId.GOTICO -> R.raw.s_gotico_anual
         TemaId.ESPACIO -> R.raw.s_espacio_anual
+        TemaId.ABISMO -> R.raw.s_abismo_anual
         TemaId.ANDALUS -> R.raw.s_andalus_anual
         TemaId.MONGOL -> R.raw.s_mongol_anual
         TemaId.RENACIMIENTO -> R.raw.s_renacimiento_anual
@@ -138,6 +140,7 @@ object Musica {
         TemaId.URSS -> R.raw.t_urss_llamada
         TemaId.GOTICO -> R.raw.t_gotico_llamada
         TemaId.ESPACIO -> R.raw.t_espacio_llamada
+        TemaId.ABISMO -> R.raw.t_abismo_llamada
         TemaId.ANDALUS -> R.raw.t_andalus_llamada
         TemaId.MONGOL -> R.raw.t_mongol_llamada
         TemaId.RENACIMIENTO -> R.raw.t_renacimiento_llamada
@@ -162,6 +165,7 @@ object Musica {
         TemaId.URSS -> R.raw.t_urss_notificacion
         TemaId.GOTICO -> R.raw.t_gotico_notificacion
         TemaId.ESPACIO -> R.raw.t_espacio_notificacion
+        TemaId.ABISMO -> R.raw.t_abismo_notificacion
         TemaId.ANDALUS -> R.raw.t_andalus_notificacion
         TemaId.MONGOL -> R.raw.t_mongol_notificacion
         TemaId.RENACIMIENTO -> R.raw.t_renacimiento_notificacion
@@ -535,6 +539,28 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             val centro = Offset(w / 2, u * (arriba + tam / 2))
             drawOval(c.copy(alpha = 0.35f), Offset(centro.x - u * 116, centro.y - u * 30), Size(u * 232, u * 60), style = Stroke(u))
             drawCircle(e.secondary, u * 3.5f, Offset(centro.x + u * 100, centro.y - u * 15))
+        }
+    }
+    // La bajada: la medusa arriba, la superficie ondulada, las capas del mar en franjas cada vez más oscuras y la regla de cotas.
+    TemaId.ABISMO -> {
+        val arriba = 46f; val tam = 128f
+        DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, "▾ " + t.nombre.uppercase() + " ▾", "≈ toca para soltar el lastre y bajar",
+            emblema = tam.dp, arriba = arriba.dp) { e ->
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            val sup = u * 24
+            val ola = Path(); var x = 0f
+            ola.moveTo(0f, sup)
+            while (x <= w) { ola.lineTo(x, sup + u * 4 * kotlin.math.sin(x / (u * 26))); x += u * 3 }
+            drawPath(ola, e.primary.copy(alpha = 0.6f), style = Stroke(u * 1.4f))
+            for (k in 1..4) drawRect(e.primary.copy(alpha = 0.035f * k), Offset(0f, h * (0.2f + 0.2f * k)), Size(w, h * 0.2f))
+            var y = sup + u * 30; var i = 0
+            while (y < h - u * 20) {
+                drawLine(e.primary.copy(alpha = 0.45f), Offset(u * 12, y), Offset(u * (if (i % 5 == 0) 26 else 18), y), u)
+                y += u * 14; i++
+            }
+            listOf(0.82f to 0.55f, 0.88f to 0.64f, 0.79f to 0.72f, 0.86f to 0.8f).forEachIndexed { j, (fx, fy) ->
+                drawCircle(e.secondary.copy(alpha = 0.6f), u * (2.5f + j % 2 * 1.5f), Offset(w * fx, h * fy), style = Stroke(u))
+            }
         }
     }
     // Arco de herradura con su alfiz y estrellas de ocho puntas en las enjutas.

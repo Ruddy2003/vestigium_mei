@@ -192,6 +192,15 @@ internal object Claves {
         "dies" to "soles_de_misión", "orbis" to "planeta", "vis" to "energía",
     )
 
+    /** Jerga del batiscafo y de los buzos. Lo que no está aquí queda en el español común. */
+    val ABISMO: Map<String, String> = mapOf(
+        "somnus" to "litera", "passus" to "brazadas", "cor" to "pulso", "animus" to "sondeo", "svmptvs" to "lastre", "loca" to "fondeaderos",
+        "personae" to "dotación", "palmae" to "perlas", "iter" to "deriva", "lux" to "luz_de_superficie", "caelum" to "estado_del_mar",
+        "aer" to "aire_del_casco", "telephonum" to "ojo_de_buey", "telephon" to "ojo_de_buey", "epistulae" to "boyas", "consuetudo" to "maniobras",
+        "momenta" to "avistamientos", "dies" to "inmersiones", "orbis" to "océano", "vis" to "reserva_de_aire", "luna" to "marea",
+        "musica" to "cantos", "series" to "cota", "strepitus" to "sonar", "imagines" to "fotos_del_fondo",
+    )
+
     /** Habla del camino. Lo que no está aquí queda en el español común. */
     val ANTIGUAS: Map<String, String> = mapOf(
         "somnus" to "lecho", "animus" to "temple", "svmptvs" to "monedas", "passus" to "andanza", "iter" to "camino", "loca" to "tierras",

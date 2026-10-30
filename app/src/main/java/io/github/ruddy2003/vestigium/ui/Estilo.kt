@@ -37,6 +37,7 @@ object Estilo {
         TemaId.URSS -> "★ "
         TemaId.GOTICO -> "✠ "
         TemaId.ESPACIO -> "⋆ "
+        TemaId.ABISMO -> "≈ "
         TemaId.ANDALUS -> "❋ "
         TemaId.MONGOL -> "◆ "
         TemaId.RENACIMIENTO -> "❧ "
@@ -66,6 +67,7 @@ object Estilo {
         TemaId.URSS -> true            // cartel constructivista
         TemaId.GOTICO -> false         // textura
         TemaId.ESPACIO -> true         // tablero de misión
+        TemaId.ABISMO -> true          // rótulos estrechos de instrumento
         TemaId.ANDALUS -> true         // cúfica de friso
         TemaId.MONGOL -> true          // cirílico de rótulo
         TemaId.RENACIMIENTO -> false   // cancilleresca
@@ -98,6 +100,8 @@ object Estilo {
             TemaId.URSS -> if (igual) null else "★ $t"
             TemaId.GOTICO -> if (igual) null else "✠ $t"
             TemaId.ESPACIO -> if (igual) null else "⋆ $t ⋆"
+            // Cada pantalla tiene su cota fija, como si estuviera a esa profundidad: «cota 3,412 m · hoy».
+            TemaId.ABISMO -> if (pantalla) String.format(java.util.Locale.US, "cota %,d m · %s", folio(titulo, 10, 10900), t) else if (igual) null else "≈ $t"
             TemaId.ANDALUS -> if (igual) null else "❋ $t ❋"
             TemaId.MONGOL -> if (igual) null else "◆ $t"
             TemaId.RENACIMIENTO -> if (igual) null else "❧ $t"
@@ -127,6 +131,7 @@ object Estilo {
             TemaId.URSS -> propio(titulo, true)
             TemaId.GOTICO -> propio(titulo, true)
             TemaId.ESPACIO -> propio(titulo, true)
+            TemaId.ABISMO -> propio(titulo, true)
             TemaId.ANDALUS -> propio(titulo, true)
             TemaId.MONGOL -> propio(titulo, true)
             TemaId.RENACIMIENTO -> propio(titulo, true)
@@ -160,6 +165,7 @@ object Estilo {
         TemaId.URSS -> false
         TemaId.GOTICO -> false
         TemaId.ESPACIO -> false
+        TemaId.ABISMO -> true
         TemaId.ANDALUS -> false
         TemaId.MONGOL -> false
         TemaId.RENACIMIENTO -> false
@@ -200,6 +206,7 @@ object Estilo {
             TemaId.URSS -> propio(titulo, false)
             TemaId.GOTICO -> propio(titulo, false)
             TemaId.ESPACIO -> propio(titulo, false)
+            TemaId.ABISMO -> propio(titulo, false)
             TemaId.ANDALUS -> propio(titulo, false)
             TemaId.MONGOL -> propio(titulo, false)
             TemaId.RENACIMIENTO -> propio(titulo, false)
@@ -235,6 +242,8 @@ object Estilo {
         TemaId.URSS -> "№ $n"
         TemaId.GOTICO -> if (n in 1..3999) Romano.de(n).lowercase() else "$n"
         TemaId.ESPACIO -> "%03d".format(n)
+        // La flecha que baja: cada número es un tramo más hondo, «▾17».
+        TemaId.ABISMO -> if (n in 1..9999) "▾$n" else "$n"
         TemaId.ANDALUS -> Temas.arabe(n)
         TemaId.REVOLUCION -> if (n < 100) "N° $n" else "$n"
         // La cuenta de jornadas y lunas del camino: «17ª».
@@ -271,6 +280,12 @@ object Estilo {
             Temas.fechaLatina(d) + if (iso == Fechas.diaLogico()) " · ad ${Temas.horaCanonica(java.time.LocalTime.now().hour)}" else ""
         }.getOrDefault(iso)
         TemaId.ESPACIO -> runCatching { val d = Fechas.parse(iso); String.format(java.util.Locale.US, "JD %,d · %04d-%02d-%02d", Temas.diaJuliano(d), d.year, d.monthValue, d.dayOfMonth).replace(',', ' ') }.getOrDefault(iso)
+        // «INMERSIÓN 290 · 17 OCT 2026»: cada día desde el primer registro es una inmersión más.
+        TemaId.ABISMO -> runCatching {
+            val d = Fechas.parse(iso)
+            val base = "%d %s %d".format(d.dayOfMonth, MESES_ES[d.monthValue - 1], d.year)
+            diasDesdeInicio(iso)?.takeIf { it > 0 }?.let { "INMERSIÓN $it · $base" } ?: base
+        }.getOrDefault(iso)
         TemaId.ANDALUS -> runCatching { val d = Fechas.parse(iso); Temas.fechaHegira(d) + " · ${d.dayOfMonth} ${MESES_ANDALUSIES[d.monthValue - 1].lowercase()}" }.getOrDefault(iso)
         TemaId.MONGOL -> runCatching { val d = Fechas.parse(iso); Temas.anioMongol(d) + " · " + Temas.fechaMongol(d) }.getOrDefault(iso)
         TemaId.RENACIMIENTO -> runCatching { Temas.fechaItaliana(Fechas.parse(iso)) }.getOrDefault(iso)
@@ -306,6 +321,8 @@ object Estilo {
             // En genitivo, como en las rúbricas del calendario litúrgico: «Octobris».
             TemaId.GOTICO -> Temas.MESES_LATINOS_GEN[i].replaceFirstChar { it.uppercase() } + (anio?.let { " " + Romano.de(it).lowercase() } ?: "")
             TemaId.ESPACIO -> MESES_ES[i] + (anio?.let { " · $it" } ?: "")
+            // El mes con la flecha de bajada: «▾ OCTUBRE · 2026».
+            TemaId.ABISMO -> "▾ " + MESES_LARGOS[i].uppercase() + (anio?.let { " · $it" } ?: "")
             // Los andalusíes nombraban los meses del sol con palabras salidas del latín: yannayr, fibrayr, mars…
             TemaId.ANDALUS -> MESES_ANDALUSIES[i] + (anio?.let { " $it" } ?: "")
             // Los meses de la estepa se nombran por la estación: primero, medio y último mes del otoño…
@@ -342,6 +359,8 @@ object Estilo {
         // Las ferias de la liturgia, en romanos: feria II es el lunes.
         TemaId.GOTICO -> listOf("F.II", "F.III", "F.IV", "F.V", "F.VI", "Sab.", "Dom.")
         TemaId.ESPACIO -> listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM")
+        // Abreviados con punto, como en las casillas de la bitácora de inmersiones.
+        TemaId.ABISMO -> listOf("LUN.", "MAR.", "MIÉ.", "JUE.", "VIE.", "SÁB.", "DOM.")
         TemaId.ANDALUS -> listOf("اثن", "ثلا", "أرب", "خمي", "جمع", "سبت", "أحد")
         TemaId.MONGOL -> listOf("ДА", "МЯ", "ЛХ", "ПҮ", "БА", "БЯ", "НЯ")
         TemaId.RENACIMIENTO -> listOf("Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom")
@@ -369,6 +388,7 @@ object Estilo {
         TemaId.URSS -> semana
         TemaId.GOTICO -> listOf("II", "III", "IV", "V", "VI", "SB", "DM")
         TemaId.ESPACIO -> semana
+        TemaId.ABISMO -> listOf("L.", "M.", "X.", "J.", "V.", "S.", "D.")
         TemaId.ANDALUS -> semana.map { it.take(2) }
         TemaId.MONGOL -> semana
         TemaId.RENACIMIENTO -> semana.map { it.take(2) }
@@ -397,6 +417,8 @@ object Estilo {
         TemaId.SEDA -> "$n jornadas de caravana"
         TemaId.GOTICO -> "$n días de oficio sin falta"
         TemaId.ESPACIO -> "T+$n DÍAS EN ÓRBITA"
+        // Cada día seguido baja diez metros: la presión sube un bar por cada diez metros, más el de la superficie.
+        TemaId.ABISMO -> String.format(java.util.Locale.US, "COTA −%,d m · %d bar", n * 10, n + 1)
         TemaId.ANDALUS -> "$n días seguidos · متتالية"
         TemaId.MONGOL -> "$n ӨДӨР ДАРААЛАН"
         TemaId.RENACIMIENTO -> "$n giorni di fila"
@@ -423,6 +445,7 @@ object Estilo {
         TemaId.URSS -> "◄ НАЗАД"
         TemaId.GOTICO -> "← redire"
         TemaId.ESPACIO -> "◄ RETORNO"
+        TemaId.ABISMO -> "▲ EMERGER"
         TemaId.ANDALUS -> "← رجوع"
         TemaId.MONGOL -> "◄ БУЦАХ"
         TemaId.RENACIMIENTO -> "← indietro"
@@ -447,6 +470,7 @@ object Estilo {
         TemaId.URSS -> "▶ "
         TemaId.GOTICO -> "✠ "
         TemaId.ESPACIO -> "◦ "
+        TemaId.ABISMO -> "↓ "
         TemaId.ANDALUS -> "◈ "
         TemaId.MONGOL -> "▹ "
         TemaId.RENACIMIENTO -> "✎ "
@@ -475,6 +499,7 @@ object Estilo {
         TemaId.SEDA -> ""
         TemaId.GOTICO -> ""
         TemaId.ESPACIO -> ""
+        TemaId.ABISMO -> " ▾"                 // la flecha de bajada
         TemaId.ANDALUS -> ""
         TemaId.MONGOL -> ""
         TemaId.RENACIMIENTO -> ""
@@ -504,6 +529,7 @@ object Estilo {
         TemaId.SEDA -> EstiloFecha(1.08f, 0.6f, abre = "▿")
         TemaId.GOTICO -> EstiloFecha(1.16f, 0.6f)
         TemaId.ESPACIO -> EstiloFecha(0.92f, 2.8f, peso = 500, abre = "▼")
+        TemaId.ABISMO -> EstiloFecha(1.12f, 1.2f, peso = 600, abre = "⤓")
         TemaId.ANDALUS -> EstiloFecha(1.06f, 1.0f, peso = 500)
         TemaId.MONGOL -> EstiloFecha(1.1f, 1.8f, peso = 700, abre = "▼")
         TemaId.RENACIMIENTO -> EstiloFecha(1.14f, 0f)
@@ -545,6 +571,7 @@ object Estilo {
             TemaId.URSS -> Claves.RUSO[k]
             TemaId.GOTICO -> Claves.GOTICO[k] ?: k
             TemaId.ESPACIO -> es(Claves.ESPACIO)?.uppercase()
+            TemaId.ABISMO -> es(Claves.ABISMO)?.uppercase()
             TemaId.ANDALUS -> Claves.ARABE[k]
             TemaId.MONGOL -> Claves.MONGOL[k]
             TemaId.RENACIMIENTO -> CLAVES_IT[k]

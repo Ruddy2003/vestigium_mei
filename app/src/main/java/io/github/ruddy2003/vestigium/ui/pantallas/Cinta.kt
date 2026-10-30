@@ -111,6 +111,8 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.GOTICO -> PielCinta(0f, false, RellenoCinta.SEGMENTOS, null, StrokeCap.Butt)
     // Barra luminosa de la consola.
     TemaId.ESPACIO -> PielCinta(3f, false, RellenoCinta.DEGRADADO, floatArrayOf(1f, 5f), StrokeCap.Round)
+    // Ristras de burbujas: bloques muy redondos llenos de puntos.
+    TemaId.ABISMO -> PielCinta(7f, false, RellenoCinta.PUNTOS, floatArrayOf(0.1f, 3.5f), StrokeCap.Round)
     // Azulejo en chaflán con su punteado.
     TemaId.ANDALUS -> PielCinta(2.5f, true, RellenoCinta.PUNTOS, floatArrayOf(3f, 2f), StrokeCap.Square)
     // Fieltro cosido.

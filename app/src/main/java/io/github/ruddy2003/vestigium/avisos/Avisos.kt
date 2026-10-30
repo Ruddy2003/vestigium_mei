@@ -52,6 +52,7 @@ object Avisos {
         TemaId.URSS -> R.raw.n_urss_aviso to R.raw.n_urss_solemne
         TemaId.GOTICO -> R.raw.n_gotico_aviso to R.raw.n_gotico_solemne
         TemaId.ESPACIO -> R.raw.n_espacio_aviso to R.raw.n_espacio_solemne
+        TemaId.ABISMO -> R.raw.n_abismo_aviso to R.raw.n_abismo_solemne
         TemaId.ANDALUS -> R.raw.n_andalus_aviso to R.raw.n_andalus_solemne
         TemaId.MONGOL -> R.raw.n_mongol_aviso to R.raw.n_mongol_solemne
         TemaId.RENACIMIENTO -> R.raw.n_renacimiento_aviso to R.raw.n_renacimiento_solemne
@@ -282,6 +283,13 @@ object Avisos {
             "TRANSMISIÓN DIFERIDA de tu yo del pasado", "La señal llegó en la fecha calculada.",
             "Hito de misión", "hitos de misión",
             "Misión %d · informe listo", "Una vuelta completa al Sol en historias: lo más hecho, lo único, lo curioso.")
+        TemaId.ABISMO -> Voz("SONDEO · ¿cómo está el buzo?", "Dos toques en el panel de la góndola: agrado y energía.",
+            "BITÁCORA DE SUPERFICIE · ¿qué soñaste?", "Anótalo antes de dejar la litera; los sueños suben y se pierden como burbujas.",
+            "FIN DE LA INMERSIÓN · el día", "Llena el día. Si hubo mar de fondo, basta con un número.",
+            "Mar de fondo: un número", "SONDEO PROGRAMADO:",
+            "Boya lastrada de tu yo del pasado", "Soltó su lastre y subió en la fecha fijada.",
+            "Nueva cota", "cotas nuevas",
+            "Bitácora de inmersiones de %d", "Un año entero bajo el agua en historias: lo más hecho, lo único, lo curioso.")
         TemaId.ANDALUS -> Voz("الآن · ¿cómo te sientes?", "Dos toques: cuánta dulzura y cuánta fuerza.",
             "المنام · ¿qué soñaste?", "Escríbelo antes de levantarte; el sueño se va como el agua de la acequia.",
             "النهار · ¿cómo fue el día?", "Llena el día. Si fue duro, basta con un número.",
@@ -340,6 +348,7 @@ object Avisos {
         TemaId.URSS -> VozEnfoque("DESCANSO REGLAMENTARIO", "Levántate, toma agua, camarada.", "DE VUELTA AL TRABAJO", "¡ARRIBA, CAMARADA!", "¡NORMA CUMPLIDA!")
         TemaId.GOTICO -> VozEnfoque("Recreatio", "Levántate, bebe agua.", "Termina la recreatio", "Laudes: hora de despertar", "Deo gratias: terminaste")
         TemaId.ESPACIO -> VozEnfoque("PAUSA ORBITAL", "Despega del asiento. Hidrátate.", "FIN DE LA PAUSA ORBITAL", "DESPERTAR DE LA TRIPULACIÓN", "MISIÓN COMPLETADA")
+        TemaId.ABISMO -> VozEnfoque("PARADA DE DESCOMPRESIÓN", "Sube despacio: levántate y toma agua.", "FIN DE LA PARADA", "EMERSIÓN: HORA DE DESPERTAR", "INMERSIÓN COMPLETADA")
         TemaId.ANDALUS -> VozEnfoque("Pausa en el patio", "Levántate, bebe agua de la fuente.", "Terminó la pausa en el patio", "Al alba: hora de despertar", "¡Obra acabada!")
         TemaId.MONGOL -> VozEnfoque("Alto en la estepa", "Levántate, bebe agua.", "A caballo otra vez", "El sol sale sobre la estepa: despierta", "¡Jornada ganada!")
         TemaId.RENACIMIENTO -> VozEnfoque("Pausa", "Lascia il pennello: levántate, toma agua.", "Fine della pausa", "Sveglia: hora de despertar", "Opera compiuta")

@@ -51,6 +51,7 @@ object SalonesTema {
             TemaId.ORDEN -> with(SalonesMas) { salaCapitular(cs, oscuro, n) }
             TemaId.LABORATORIO -> with(SalonesMas) { laboratorioLimpio(cs, oscuro, n) }
             TemaId.ESPACIO -> with(SalonesMas) { observatorio(cs, oscuro, n) }
+            TemaId.ABISMO -> with(SalonesMas) { salaAbisal(cs, oscuro, n) }
             TemaId.URSS -> with(SalonesMas) { estacionMetro(cs, oscuro, n) }
         }
     }
@@ -84,6 +85,7 @@ object SalonesTema {
             TemaId.ORDEN -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.LABORATORIO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.ESPACIO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.ABISMO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.URSS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
         }
     }

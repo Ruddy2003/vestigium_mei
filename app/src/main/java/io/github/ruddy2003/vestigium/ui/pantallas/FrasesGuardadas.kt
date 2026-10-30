@@ -243,6 +243,11 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             moveTo(12f * u, 1f * u); quadraticTo(13f * u, 11f * u, 23f * u, 12f * u); quadraticTo(13f * u, 13f * u, 12f * u, 23f * u)
             quadraticTo(11f * u, 13f * u, 1f * u, 12f * u); quadraticTo(11f * u, 11f * u, 12f * u, 1f * u); close()
         }, 1.4f)
+        // Una medusa: la campana y tres tentáculos en forma de gota.
+        TemaId.ABISMO -> pinta(Path().apply {
+            moveTo(2.5f * u, 12f * u); cubicTo(2.5f * u, 1.5f * u, 21.5f * u, 1.5f * u, 21.5f * u, 12f * u); quadraticTo(12f * u, 10f * u, 2.5f * u, 12f * u); close()
+            listOf(7f, 12f, 17f).forEach { x -> moveTo((x - 1.4f) * u, 13f * u); quadraticTo((x - 2.2f) * u, 18f * u, x * u, 22.5f * u); quadraticTo((x + 1.6f) * u, 18f * u, (x + 1.4f) * u, 13f * u); close() }
+        }, 1.3f)
         // Estrella de ocho puntas de los alicatados, con el centro abierto.
         TemaId.ANDALUS -> pinta(estrella(12f, 12f, 8, 11f, 8.4f).also { it.fillType = PathFillType.EvenOdd; circulo(it, 12f, 12f, 3.2f) }, 1.3f)
         // La yurta: cúpula, muro y puerta.

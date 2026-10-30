@@ -87,6 +87,7 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.SEDA -> 4800
     TemaId.GOTICO -> 7600
     TemaId.ESPACIO -> 10000
+    TemaId.ABISMO -> 4200                      // un latido de la medusa
     TemaId.ANDALUS -> 36000
     TemaId.MONGOL -> 30000
     TemaId.RENACIMIENTO -> 6600
@@ -130,6 +131,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.BOTANICO -> escarabajoLamina(c, r, e.primary, e.secondary, e.tertiary, e.onBackground, t)
         TemaId.GOTICO -> vitral(c, r, if (oscuro) e.primary else e.tertiary, e.secondary, if (oscuro) e.tertiary else e.primary, e.onBackground, t)
         TemaId.ESPACIO -> planeta(c, r, e.primary, e.secondary, e.tertiary, e.onBackground, t)
+        TemaId.ABISMO -> medusa(c, r, e.primary, if (oscuro) e.primary else e.tertiary, e.secondary, t, oscuro)
         TemaId.ANDALUS -> rotate(t * 360f, c) { estrellaLazo(c, r, if (oscuro) e.primary else e.tertiary, e.secondary, e.primary, e.background) }
         TemaId.MONGOL -> toono(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.RENACIMIENTO -> compas(c, r, e.primary, e.onBackground, e.secondary, t)
@@ -406,6 +408,55 @@ private fun DrawScope.planeta(c: Offset, r: Float, azul: Color, naranja: Color, 
         drawArc(naranja, 0f, 180f, false, Offset(c.x - r * 0.88f, c.y - r * 0.22f), Size(r * 1.76f, r * 0.44f), style = Stroke(r * 0.07f))
     }
     if (!detras) drawCircle(tinta, r * 0.09f, luna)
+}
+
+/**
+ * La medusa luminosa del Abismo: la campana late (se cierra y se abre una vez por vuelta), con las cuatro gónadas en
+ * herradura de la medusa luna (Aurelia), la orla de tentáculos finos y cuatro brazos orales largos que ondulan. De
+ * noche la rodea su propia luz y le brillan puntos en el borde.
+ */
+private fun DrawScope.medusa(c: Offset, r: Float, cuerpo: Color, luz: Color, brazos: Color, t: Float, oscuro: Boolean) {
+    val abre = 0.5f + 0.5f * sin(2 * PI * t).toFloat()
+    val ancho = r * (0.56f + 0.1f * abre); val alto = r * (0.5f - 0.08f * abre)
+    val yb = c.y - r * 0.08f
+    if (oscuro) drawCircle(Brush.radialGradient(listOf(luz.copy(alpha = 0.32f), Color.Transparent), center = Offset(c.x, yb - alto * 0.3f), radius = r * 0.98f), r * 0.98f, Offset(c.x, yb - alto * 0.3f))
+    // Los brazos orales, por detrás de la campana.
+    for (k in 0 until 4) {
+        val x0 = c.x + (k - 1.5f) * r * 0.1f
+        val brazo = Path().apply {
+            moveTo(x0, yb - alto * 0.2f)
+            for (s in 1..12) lineTo(x0 + r * 0.08f * sin(2 * PI * (t + s * 0.08f + k * 0.25f)).toFloat() * s / 12f, yb + s * r * 0.05f)
+        }
+        drawPath(brazo, brazos.copy(alpha = 0.75f), style = Stroke(r * 0.045f, cap = StrokeCap.Round))
+    }
+    // La orla: tentáculos finos que cuelgan del borde.
+    for (k in 0..10) {
+        val x0 = c.x - ancho * 0.94f + 1.88f * ancho * k / 10f
+        val onda = r * 0.06f * sin(2 * PI * (t + k * 0.11)).toFloat()
+        drawPath(Path().apply { moveTo(x0, yb); quadraticTo(x0 + onda, yb + r * 0.22f, x0 - onda * 0.5f, yb + r * (0.36f + 0.06f * abre)) }, cuerpo.copy(alpha = 0.55f), style = Stroke(r * 0.014f))
+    }
+    // La campana, translúcida, con el borde ondulado por debajo.
+    val campana = Path().apply {
+        moveTo(c.x - ancho, yb)
+        cubicTo(c.x - ancho, yb - alto * 1.36f, c.x + ancho, yb - alto * 1.36f, c.x + ancho, yb)
+        for (k in 1..6) {
+            val x = c.x + ancho - 2 * ancho * k / 6f
+            quadraticTo(x + ancho / 6f, yb + r * 0.05f, x, yb)
+        }
+        close()
+    }
+    drawPath(campana, Brush.verticalGradient(listOf(cuerpo.copy(alpha = 0.5f), cuerpo.copy(alpha = 0.85f)), startY = yb - alto, endY = yb))
+    drawPath(campana, cuerpo, style = Stroke(r * 0.03f))
+    // Las cuatro gónadas en herradura, vistas a través de la campana.
+    for (k in 0 until 4) {
+        val x = c.x + (k - 1.5f) * ancho * 0.4f
+        drawArc(luz.copy(alpha = if (oscuro) 0.9f else 0.7f), 160f, 220f, false, Offset(x - r * 0.07f, yb - alto * 0.72f), Size(r * 0.14f, r * 0.14f), style = Stroke(r * 0.03f))
+    }
+    drawArc(Color.White.copy(alpha = 0.35f), 200f, 50f, false, Offset(c.x - ancho * 0.8f, yb - alto * 0.95f), Size(ancho * 1.6f, alto * 1.5f), style = Stroke(r * 0.03f))
+    if (oscuro) for (k in 0 until 8) {
+        val brilla = 0.5f + 0.5f * sin(2 * PI * (t * 2 + k * 0.125)).toFloat()
+        drawCircle(luz.copy(alpha = brilla), r * 0.022f, Offset(c.x - ancho + 2 * ancho * k / 7f, yb))
+    }
 }
 
 /**
@@ -1048,6 +1099,30 @@ internal fun Orbita(modifier: Modifier) {
     }
 }
 
+/** La traza del sonar: el agua apenas ondulada, un pulso de eco cada tanto y burbujas sueltas encima. */
+@Composable
+internal fun TrazaSonar(modifier: Modifier) {
+    val e = MaterialTheme.colorScheme
+    Canvas(modifier.fillMaxWidth().height(14.dp).clipToBounds()) {
+        val y = size.height / 2; val u = 1.dp.toPx(); val periodo = 64 * u
+        val ola = Path(); var x = 0f
+        ola.moveTo(0f, y)
+        while (x <= size.width) {
+            val fase = (x % periodo) / periodo
+            val cerca = 1f - abs(fase - 0.5f) / 0.08f
+            val pulso = if (cerca > 0f) sin((fase - 0.42f) / 0.16f * PI.toFloat() * 3f) * size.height * 0.4f * cerca else 0f
+            ola.lineTo(x, y + 1.1f * u * sin(x / (5 * u)) + pulso)
+            x += 1.5f * u
+        }
+        drawPath(ola, e.primary.copy(alpha = 0.65f), style = Stroke(1.1f * u))
+        x = 18 * u; var k = 0
+        while (x < size.width) {
+            drawCircle(e.tertiary.copy(alpha = 0.6f), (1.1f + (k % 3) * 0.5f) * u, Offset(x, y - size.height * (0.18f + 0.08f * (k % 3))), style = Stroke(0.7f * u))
+            x += periodo; k++
+        }
+    }
+}
+
 /** Lazo de alicatado: una cinta en zigzag que se cruza con otra, y estrellitas de ocho puntas en los huecos. */
 @Composable
 internal fun Lazo(modifier: Modifier) {
@@ -1384,6 +1459,28 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             }
             if (!oscuro) { color = esquema.primary.copy(alpha = 0.035f); var y = 0f; while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += 48.dp.toPx() } }
         }
+        TemaId.ABISMO -> {
+            if (!oscuro) {
+                // Zona iluminada: la red de luz que el oleaje dibuja en el agua (cáusticas), más tenue cuanto más abajo.
+                color = esquema.primary.copy(alpha = 0.05f)
+                val p = 36.dp.toPx(); var y = 0f; var fila = 0
+                while (y < h * 0.7f) {
+                    var x = 0f
+                    trazo.moveTo(0f, y)
+                    while (x <= w) { trazo.lineTo(x, y + p * 0.18f * sin(x / p * 2.1f + fila * 1.7f) + p * 0.1f * sin(x / p * 5.3f + fila)); x += 4.dp.toPx() }
+                    y += p * (0.6f + fila * 0.08f); fila++
+                }
+            } else {
+                // Zona abisal: puntos de plancton con luz propia, casi todos diminutos; algunos más grandes, de medusa.
+                color2 = esquema.primary.copy(alpha = 0.2f)
+                val azar = java.util.Random(53)
+                repeat(((w * h) / 3200f).toInt().coerceAtMost(500)) {
+                    val x = azar.nextFloat() * w; val y = azar.nextFloat() * h
+                    val g = azar.nextFloat(); val rr = if (g > 0.98f) 2.4f else if (g > 0.9f) 1.3f else 0.7f
+                    puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
+                }
+            }
+        }
         TemaId.ANDALUS -> {
             // Lacería: retícula a 0°, 45° y 90° que forma estrellas de ocho puntas, como el alicatado.
             color = (if (oscuro) esquema.primary else esquema.primary).copy(alpha = if (oscuro) 0.05f else 0.045f)
@@ -1546,6 +1643,14 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         quadraticTo(0.86f * s.width, 0.1f * s.height, 0.86f * s.width, 0.45f * s.height); lineTo(0.86f * s.width, s.height); close()
     }
     TemaId.ESPACIO -> CircleShape
+    // Una gota de agua.
+    TemaId.ABISMO -> GenericShape { s, _ ->
+        moveTo(0.5f * s.width, 0.02f * s.height)
+        cubicTo(0.62f * s.width, 0.22f * s.height, 0.94f * s.width, 0.42f * s.height, 0.94f * s.width, 0.64f * s.height)
+        cubicTo(0.94f * s.width, 0.88f * s.height, 0.72f * s.width, 0.98f * s.height, 0.5f * s.width, 0.98f * s.height)
+        cubicTo(0.28f * s.width, 0.98f * s.height, 0.06f * s.width, 0.88f * s.height, 0.06f * s.width, 0.64f * s.height)
+        cubicTo(0.06f * s.width, 0.42f * s.height, 0.38f * s.width, 0.22f * s.height, 0.5f * s.width, 0.02f * s.height); close()
+    }
     TemaId.ANDALUS -> estrellaBoton(16, 0.5f, 0.383f, -90.0)
     TemaId.MONGOL -> poligonoBoton(0.04f to 0.96f, 0.04f to 0.46f, 0.36f to 0.06f, 0.64f to 0.06f, 0.96f to 0.46f, 0.96f to 0.96f)
     TemaId.RENACIMIENTO -> poligonoBoton(0.5f to 0f, 1f to 0.5f, 0.5f to 1f, 0f to 0.5f)
@@ -1572,6 +1677,7 @@ private fun textoMas(t: TemaId): String = when (t) {
     TemaId.SEDA -> "更多"
     TemaId.GOTICO -> "Atrio"
     TemaId.ESPACIO -> "Panel"
+    TemaId.ABISMO -> "Escotilla"
     TemaId.ANDALUS -> "مزيد"
     TemaId.MONGOL -> "Илүү"
     TemaId.RENACIMIENTO -> "Altro"
@@ -1655,6 +1761,12 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             TemaId.ESPACIO -> { drawCircle(color, r * 0.34f, c)
                 rotate(-25f, c) { drawOval(color, Offset(c.x - r * 0.95f, c.y - r * 0.32f), Size(r * 1.9f, r * 0.64f), style = Stroke(r * 0.08f)) }
                 drawCircle(color, r * 0.13f, c.mas(r * 0.95f, rad(-25.0))) }
+            // El sol visto desde abajo del agua: el disco, sus haces que bajan y la superficie ondulada encima.
+            TemaId.ABISMO -> { val s = c + Offset(0f, -r * 0.3f); drawCircle(color, r * 0.32f, s)
+                for (i in 0 until 5) { val a = rad(55.0 + 17.5 * i); drawLine(color, s.mas(r * 0.46f, a), s.mas(r * (if (i % 2 == 0) 0.98f else 0.8f), a), r * 0.08f, StrokeCap.Round) }
+                val ola = Path(); var x = c.x - r; ola.moveTo(x, c.y - r * 0.72f)
+                while (x <= c.x + r) { ola.lineTo(x, c.y - r * 0.72f + r * 0.07f * sin((x - c.x) / r * 9f)); x += r * 0.05f }
+                drawPath(ola, color, style = Stroke(r * 0.08f, cap = StrokeCap.Round)) }
             // Estrella de ocho puntas de lazo.
             TemaId.ANDALUS -> { estrella(c, r * 0.95f, 8, 0.77f); drawCircle(fondo, r * 0.2f, c) }
             // Sol con tres lenguas de fuego encima, de la estepa.
@@ -1723,6 +1835,10 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             // Luna con cráteres.
             TemaId.ESPACIO -> { drawCircle(color, r * 0.78f, c); drawCircle(fondo, r * 0.66f, c + Offset(r * 0.4f, -r * 0.28f))
                 listOf(Offset(-0.45f, 0.1f) to 0.12f, Offset(-0.2f, 0.5f) to 0.09f, Offset(-0.5f, -0.3f) to 0.07f).forEach { (o, k) -> drawCircle(fondo.copy(alpha = 0.55f), r * k, c + o * r) } }
+            // La linterna del rape: el anzuelo de luz al final de su varilla curva, en lo oscuro.
+            TemaId.ABISMO -> { drawPath(Path().apply { moveTo(c.x - r * 0.8f, c.y + r * 0.85f); quadraticTo(c.x - r * 0.75f, c.y - r * 0.75f, c.x + r * 0.25f, c.y - r * 0.35f) }, color, style = Stroke(r * 0.1f, cap = StrokeCap.Round))
+                drawCircle(color.copy(alpha = color.alpha * 0.3f), r * 0.5f, c + Offset(r * 0.3f, -r * 0.1f))
+                drawCircle(color, r * 0.28f, c + Offset(r * 0.3f, -r * 0.1f)); drawCircle(fondo, r * 0.1f, c + Offset(r * 0.22f, -r * 0.18f)) }
             // Hilal fino con una estrella de ocho puntas.
             TemaId.ANDALUS -> { luna(0.76f, 0.26f, -0.2f); estrella(c + Offset(r * 0.4f, -r * 0.3f), r * 0.2f, 8, 0.5f) }
             // Luna sobre una yurta.
@@ -1794,6 +1910,8 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
             mango(0.92f, 0.14f, 0.72f) }
         // Ocular de telescopio: un anillo dentro de otro.
         TemaId.ESPACIO -> { lente(); drawCircle(color, lr * 0.45f, c, style = Stroke(r * 0.04f)); mango() }
+        // Ojo de buey: el cristal con su brida de pernos.
+        TemaId.ABISMO -> { lente(); mango(0.9f, 0.13f, 0.66f); for (i in 0 until 6) drawCircle(color, r * 0.035f, c.mas(lr * 0.68f, rad(30.0 + 60.0 * i))) }
         // Estrella de lazo dentro del cristal.
         TemaId.ANDALUS -> { lente(); mango()
             val est = Path(); for (i in 0 until 16) { val rr = if (i % 2 == 0) lr * 0.5f else lr * 0.25f; val q = c.mas(rr, rad(-90.0 + 22.5 * i)); if (i == 0) est.moveTo(q.x, q.y) else est.lineTo(q.x, q.y) }
@@ -1886,6 +2004,7 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.SEDA -> false
     TemaId.GOTICO -> false
     TemaId.ESPACIO -> true
+    TemaId.ABISMO -> true                       // burbujas: suben
     TemaId.ANDALUS -> false
     TemaId.MONGOL -> false
     TemaId.RENACIMIENTO -> false
@@ -1988,6 +2107,7 @@ fun CapaFiesta(fijo: Float? = null) {
                     TemaId.GOTICO -> drawPath(Path().apply { moveTo(pos.x, pos.y - s); lineTo(pos.x + s * 0.7f, pos.y + s * 0.6f); lineTo(pos.x - s * 0.5f, pos.y + s * 0.8f); close() },
                         listOf(e.secondary, e.primary, Color(0xFF2E8B57), Color(0xFFE2B34A))[p.tono % 4].copy(alpha = a))
                     TemaId.ESPACIO -> drawPath(Path().apply { moveTo(pos.x, pos.y - s); quadraticTo(pos.x, pos.y, pos.x + s, pos.y); quadraticTo(pos.x, pos.y, pos.x, pos.y + s); quadraticTo(pos.x, pos.y, pos.x - s, pos.y); quadraticTo(pos.x, pos.y, pos.x, pos.y - s); close() }, col)
+                    TemaId.ABISMO -> { drawCircle(col, s * 0.8f, pos, style = Stroke(s * 0.14f)); drawCircle(col.copy(alpha = col.alpha * 0.8f), s * 0.22f, pos - Offset(s * 0.3f, s * 0.3f)) }
                     TemaId.ANDALUS -> drawPath(Path().apply { for (i in 0 until 16) { val rr = if (i % 2 == 0) s else s * 0.5f; val q = pos.mas(rr, rad(-90.0 + 22.5 * i)); if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }; close() }, col)
                     TemaId.MONGOL -> { drawLine(col, pos - Offset(s, 0f), pos + Offset(s, 0f), s * 0.16f, StrokeCap.Round)
                         drawPath(Path().apply { moveTo(pos.x + s * 1.3f, pos.y); lineTo(pos.x + s * 0.7f, pos.y - s * 0.35f); lineTo(pos.x + s * 0.7f, pos.y + s * 0.35f); close() }, col) }

@@ -265,6 +265,21 @@ object Textos {
         "widget_discreto_momento" to "TRANSMITIR",
     )
 
+    private val ABISMO: Map<String, String> = mapOf(
+        "pestana_dia" to "COTA",
+        "pestana_diario" to "CUADERNO",
+        "pestana_registrar" to "SONDEO",
+        "pestana_vida" to "TRAVESÍA",
+        "pestana_entender" to "SONAR",
+        "escala_vacia" to "SIN ECO · TOCA O DESLIZA",
+        "lista_anadir" to "+ ESTIBAR",
+        "palabras" to "%d PALABRAS BAJO EL AGUA",
+        "widget_animo" to "¿CÓMO ESTÁ EL BUZO AHORA?",
+        "widget_momento" to "DESDE EL FONDO…",
+        "widget_discreto_animo" to "SONDEO",
+        "widget_discreto_momento" to "ANOTAR",
+    )
+
     private val ANDALUS: Map<String, String> = mapOf(
         "pestana_dia" to "اليوم",
         "pestana_diario" to "اليوميات",
@@ -358,6 +373,7 @@ object Textos {
         TemaId.URSS -> URSS
         TemaId.GOTICO -> GOTICO
         TemaId.ESPACIO -> ESPACIO
+        TemaId.ABISMO -> ABISMO
         TemaId.ANDALUS -> ANDALUS
         TemaId.MONGOL -> MONGOL
         TemaId.RENACIMIENTO -> RENACIMIENTO

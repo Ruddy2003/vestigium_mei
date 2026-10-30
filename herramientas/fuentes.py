@@ -60,6 +60,11 @@ FUENTES = [
     ("firasans/FiraSans-SemiBold.ttf", None, "fira_semibold", None, CIRILICO),
     # GOT: Goudy de libro antiguo
     ("sortsmillgoudy/SortsMillGoudy-Regular.ttf", None, "goudy_regular", None, LATINO),
+    # ABI: rótulos estrechos de instrumento (título) y una letra hecha para leerse con poca luz (texto)
+    ("barlowcondensed/BarlowCondensed-Medium.ttf", None, "batiscafo_medium", None, LATINO),
+    ("barlowcondensed/BarlowCondensed-SemiBold.ttf", None, "batiscafo_semibold", None, LATINO),
+    ("atkinsonhyperlegiblenext/AtkinsonHyperlegibleNext[wght].ttf", {"wght": 400}, "atkinson_regular", None, LATINO),
+    ("atkinsonhyperlegiblenext/AtkinsonHyperlegibleNext[wght].ttf", {"wght": 600}, "atkinson_semibold", None, LATINO),
     # REV: Baskerville (1757), la letra del siglo de la Revolución
     ("librebaskerville/LibreBaskerville[wght].ttf", {"wght": 400}, "ciudadana_regular", "Ciudadana Vestigium", LATINO),
     ("librebaskerville/LibreBaskerville[wght].ttf", {"wght": 600}, "ciudadana_semibold", "Ciudadana Vestigium", LATINO),

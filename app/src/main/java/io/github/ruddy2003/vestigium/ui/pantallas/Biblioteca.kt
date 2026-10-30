@@ -298,6 +298,17 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
             drawOval(tenue, Offset(w * 0.2f, h - 20 * u), Size(w * 0.6f, 9 * u), style = Stroke(0.8f * u))
             drawCircle(tenue, 3.5f * u, Offset(w / 2, h - 15.5f * u))
         }
+        // La superficie ondulada arriba, burbujas que suben por un lado y una medusa pequeña abajo.
+        TemaId.ABISMO -> {
+            val ola = Path(); var x = 0f
+            ola.moveTo(0f, 8 * u)
+            while (x <= w) { ola.lineTo(x, 8 * u + 1.6f * u * kotlin.math.sin(x / (5 * u))); x += 2 * u }
+            drawPath(ola, tenue, style = Stroke(1f * u))
+            listOf(0.3f to 1.4f, 0.42f to 2f, 0.55f to 1.2f, 0.66f to 1.7f).forEach { (y, r) -> drawCircle(a.copy(alpha = 0.6f), r * u, Offset(w * 0.86f, h * y), style = Stroke(0.6f * u)) }
+            val c = Offset(w / 2, h - 18 * u)
+            drawArc(tenue, 180f, 180f, true, Offset(c.x - 7 * u, c.y - 5 * u), Size(14 * u, 10 * u))
+            for (k in 0 until 3) linea(c.x - 4 * u + k * 4 * u, c.y, c.x - 4.5f * u + k * 4 * u, c.y + 9 * u, tenue, 0.7f * u)
+        }
         // Estrellas de lazo de ocho puntas en las esquinas.
         TemaId.ANDALUS -> listOf(Offset(11 * u, 11 * u), Offset(w - 11 * u, 11 * u), Offset(11 * u, h - 11 * u), Offset(w - 11 * u, h - 11 * u)).forEach { o ->
             listOf(-90.0, -45.0).forEach { g0 ->

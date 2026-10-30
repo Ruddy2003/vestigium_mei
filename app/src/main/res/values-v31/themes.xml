@@ -182,6 +182,16 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_espacio_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_espacio</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Abismo" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_abismo</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_abismo</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_abismo</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Abismo.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_abismo_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_abismo_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_abismo</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Andalus" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_andalus</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_andalus</item>

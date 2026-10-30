@@ -385,6 +385,12 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             drawLine(col, Offset(o.x - s * 1.3f, o.y), Offset(o.x + s * 1.3f, o.y), s * 0.06f); drawLine(col, Offset(o.x, o.y - s * 1.3f), Offset(o.x, o.y + s * 1.3f), s * 0.06f)
             drawCircle(col.copy(alpha = 0.5f), s * 0.6f, o, style = Stroke(s * 0.06f)); drawCircle(col, s * 0.22f, o)
         }
+        // Una burbuja que sube, con su brillo; una de cada tres, de luz viva verde agua.
+        TemaId.ABISMO -> {
+            val col = if (i % 3 == 0) Color(0xFF5CF2C6) else Color(0xFFE6F6FA)
+            drawCircle(col.copy(alpha = 0.85f), s * 0.7f, o, style = Stroke(s * 0.08f))
+            drawCircle(col, s * 0.16f, Offset(o.x - s * 0.28f, o.y - s * 0.28f))
+        }
         TemaId.ANDALUS -> drawPath(estrellada(o, s, s * 0.74f, 8), Color(0xFFF5D27A))
         TemaId.MONGOL -> {
             val col = Color(0xFF8FD3FF)
@@ -428,6 +434,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.SEDA -> Color(0xFFD9A35A)
     TemaId.GOTICO -> Color(0xFF2C3A6B)
     TemaId.ESPACIO -> Color(0xFF1B2140)
+    TemaId.ABISMO -> Color(0xFF0B2A3A)          // el agua honda tras el cristal
     TemaId.ANDALUS -> Color(0xFFE2C98F)
     TemaId.MONGOL -> Color(0xFF4F86C6)
     TemaId.RENACIMIENTO -> Color(0xFFD9B98F)
@@ -556,6 +563,19 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
                 Offset(((k * 61 + 7) % 113) / 113f * w, ((k * 47 + 3) % 127) / 127f * h))
             drawOval(a, Offset(-w * 0.2f, h * 0.1f), Size(w * 1.4f, h * 0.3f), style = Stroke(d))
             drawOval(a, Offset(-w * 0.1f, h * 0.55f), Size(w * 1.2f, h * 0.25f), style = Stroke(d))
+        }
+        // La red de luz del oleaje arriba (cáusticas) y columnas de burbujas que suben.
+        TemaId.ABISMO -> {
+            for (f in 0 until 5) {
+                val y0 = h * (0.06f + f * 0.07f); val p = Path(); var x = 0f
+                p.moveTo(0f, y0)
+                while (x <= w) { p.lineTo(x, y0 + 5 * d * kotlin.math.sin(x / (21 * d) + f * 1.3f) + 2 * d * kotlin.math.sin(x / (7 * d) + f)); x += 4 * d }
+                drawPath(p, a, style = Stroke(d))
+            }
+            listOf(0.12f, 0.37f, 0.63f, 0.88f).forEachIndexed { j, fx ->
+                var y = h * 0.95f; var k = 0
+                while (y > h * 0.4f) { drawCircle(v.copy(alpha = 0.14f), (1.2f + (k + j) % 3) * d, Offset(w * fx + 3 * d * kotlin.math.sin(k * 1.7f), y), style = Stroke(0.8f * d)); y -= 14 * d; k++ }
+            }
         }
         TemaId.ANDALUS -> { val t = 28 * d; var y = t / 2; while (y < h) { var x = t / 2; while (x < w) { drawPath(estrellada(Offset(x, y), t * 0.42f, t * 0.32f, 8), v, style = Stroke(d)); x += t }; y += t } }
         TemaId.MONGOL -> {
@@ -721,6 +741,12 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             val luces = listOf(Color(0xFF66BB6A), Color(0xFFFFCA28), Color(0xFF4FC3F7), Color(0xFFEF5350)); var x = 16 * d; var k = 0
             while (x < w) { drawCircle(luces[k % 4], 1.6f * d, Offset(x, h * 0.6f)); x += 18 * d; k++ }
         }
+        // Una viga del casco, de acero pintado, con su fila de remaches de latón.
+        TemaId.ABISMO -> {
+            tabla(m(Color(0xFF3E4A52)))
+            drawLine(m(Color(0xFF1C252B)), Offset(0f, h * 0.18f), Offset(w, h * 0.18f), 1.2f * d)
+            var x = 10 * d; while (x < w) { drawCircle(m(Color(0xFFB8913E)), 1.5f * d, Offset(x, h * 0.58f)); drawCircle(Color.White.copy(alpha = 0.3f), 0.6f * d, Offset(x - 0.5f * d, h * 0.58f - 0.5f * d)); x += 14 * d }
+        }
         TemaId.ANDALUS -> {
             val c = m(Color(0xFF7A4A2A)); tabla(c, 0f, h * 0.6f)
             val t = 6 * d; var x = 0f; var k = 0
@@ -866,6 +892,16 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             listOf(Offset(0f, 0f), Offset(w - l, 0f), Offset(0f, h - 1.5f * d), Offset(w - l, h - 1.5f * d)).forEach { drawRect(ac, it, Size(l, 1.5f * d)) }
             drawLine(borde, Offset(0f, h / 2), Offset(3 * d, h / 2), d); drawLine(borde, Offset(w - 3 * d, h / 2), Offset(w, h / 2), d)
             drawLine(borde, Offset(l + 2 * d, h - d), Offset(w - l - 2 * d, h - d), d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 3 * d)))
+        }
+        // Una placa de latón atornillada: un perno en cada esquina y la ola grabada abajo.
+        TemaId.ABISMO -> {
+            drawRoundRect(fondo, Offset.Zero, Size(w, h), CornerRadius(4 * d))
+            drawRoundRect(borde, Offset(d / 2, d / 2), Size(w - d, h - d), CornerRadius(4 * d), style = fino)
+            listOf(Offset(4 * d, 4 * d), Offset(w - 4 * d, 4 * d), Offset(4 * d, h - 4 * d), Offset(w - 4 * d, h - 4 * d)).forEach { drawCircle(ac, 1.6f * d, it) }
+            val p = Path(); var x = 10 * d
+            p.moveTo(x, h - 3 * d)
+            while (x <= w - 10 * d) { p.lineTo(x, h - 3 * d + 1.2f * d * kotlin.math.sin(x / (3 * d))); x += 1.5f * d }
+            drawPath(p, ac, style = fino)
         }
         TemaId.ANDALUS -> {
             val t = 6 * d

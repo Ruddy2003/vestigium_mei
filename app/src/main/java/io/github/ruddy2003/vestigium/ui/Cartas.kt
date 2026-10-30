@@ -139,6 +139,8 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.GOTICO -> Papeleria(Color(0xFF1F2F7A), Color(0xFF0E1640), Color(0xFF3B4FA8), Color(0xFFB3122E), Color(0xFFB3122E), Color(0xFFE2B34A), Color(0xFFF3EBD6))
     // Estuche de metal claro con interior negro, la cápsula con su luz naranja y la cinta azul.
     TemaId.ESPACIO -> Papeleria(Color(0xFFDDE3EC), Color(0xFF8E99AB), Color(0xFFF6F8FB), Color(0xFF0A1022), Color(0xFFFFB86B), Color(0xFF8AB4FF), Color(0xFF0A1022))
+    // Bolsa de hule encerado azul petróleo, forrada de lona, sellada con latón de escafandra y atada con cabo de manila.
+    TemaId.ABISMO -> Papeleria(Color(0xFF2C5A6B), Color(0xFF15333F), Color(0xFF4D8597), Color(0xFFE6DFC6), Color(0xFFB8913E), Color(0xFFCDB88C), Color(0xFFE4EEEA))
     // Papel de Xàtiva, forro de cuero, la estrella verde y el cordón de oro.
     TemaId.ANDALUS -> Papeleria(Color(0xFFF3E7CC), Color(0xFFBFA77A), Color(0xFFFBF3DE), Color(0xFF7A3B1E), Color(0xFF1E6B5C), Color(0xFFD9B25B), Color(0xFF2A1A12))
     // Fieltro crema, forro de cielo azul, la paiza de oro y la bufanda azul.
@@ -183,6 +185,7 @@ internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
     TemaId.SEDA -> FormaSobre(SolapaSobre.RECTA, 0.02f, CierreSobre.BANDA)
     TemaId.GOTICO -> FormaSobre(SolapaSobre.OJIVA, 0.015f, CierreSobre.VERTICAL)
     TemaId.ESPACIO -> FormaSobre(SolapaSobre.REDONDA, 0.08f, CierreSobre.PRECINTO)
+    TemaId.ABISMO -> FormaSobre(SolapaSobre.ONDAS, 0.06f, CierreSobre.BANDA)
     TemaId.ANDALUS -> FormaSobre(SolapaSobre.ESCALON, 0.03f, CierreSobre.DOBLE)
     TemaId.MONGOL -> FormaSobre(SolapaSobre.PARABOLA, 0.06f, CierreSobre.CRUZ)
     TemaId.RENACIMIENTO -> FormaSobre(SolapaSobre.BISEL, 0.02f, CierreSobre.DOBLE)
@@ -478,6 +481,28 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawCircle(k(Color.White.copy(alpha = 0.7f)), r * 0.08f, c - Offset(r * 0.1f, r * 0.1f))
             drawCircle(col, r * 0.1f, Offset(c.x + r * 0.9f, c.y))
         }
+        TemaId.ABISMO -> {
+            // Un ojo de buey de latón: la brida con ocho pernos, el cristal grueso y, al fondo, una medusa que brilla.
+            drawCircle(sombra, r * 1.02f, c + Offset(r * 0.05f, r * 0.09f))
+            drawCircle(Brush.radialGradient(listOf(claro, col, hondo), center = c - Offset(r * 0.3f, r * 0.35f), radius = r * 1.3f), r, c)
+            drawCircle(hondo, r * 0.98f, c, style = Stroke(r * 0.05f))
+            for (i in 0 until 8) {
+                val ang = PI / 4 * i + PI / 8
+                val p = c + Offset((r * 0.8f * cos(ang)).toFloat(), (r * 0.8f * sin(ang)).toFloat())
+                drawCircle(hondo, r * 0.09f, p); drawCircle(claro, r * 0.035f, p - Offset(r * 0.025f, r * 0.025f))
+            }
+            drawCircle(k(Color(0xFF07202B)), r * 0.6f, c)
+            drawCircle(hondo, r * 0.6f, c, style = Stroke(r * 0.07f))
+            val luz = k(Color(0xFF5CF2C6))
+            drawCircle(Brush.radialGradient(listOf(luz.copy(alpha = 0.35f * a), Color.Transparent), center = c, radius = r * 0.5f), r * 0.5f, c)
+            drawArc(luz, 180f, 180f, false, Offset(c.x - r * 0.24f, c.y - r * 0.26f), Size(r * 0.48f, r * 0.4f), style = Stroke(r * 0.05f))
+            drawLine(luz, Offset(c.x - r * 0.24f, c.y - r * 0.06f), Offset(c.x + r * 0.24f, c.y - r * 0.06f), r * 0.04f)
+            for (j in 0 until 3) {
+                val x = c.x - r * 0.14f + r * 0.14f * j
+                drawPath(Path().apply { moveTo(x, c.y - r * 0.04f); quadraticTo(x + r * 0.06f, c.y + r * 0.14f, x, c.y + r * 0.3f) }, luz, style = Stroke(r * 0.03f))
+            }
+            drawArc(k(Color.White.copy(alpha = 0.55f)), 200f, 60f, false, Offset(c.x - r * 0.5f, c.y - r * 0.5f), Size(r, r), style = Stroke(r * 0.05f))
+        }
         TemaId.ANDALUS -> {
             // El jatam: estrella de ocho puntas de dos cuadrados cruzados, con su filo de oro y la roseta.
             val oro = k(Color(0xFFD9B25B))
@@ -680,6 +705,20 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
                 var y = top + H * 0.16f; while (y < bot) { drawCircle(junta, H * 0.01f, Offset(x + W * 0.02f, y)); y += H * 0.12f }
             }
             listOf(Color(0xFF3DDC84), Color(0xFFFFB86B), Color(0xFFFF5470)).forEachIndexed { i, col -> drawCircle(col, H * 0.022f, Offset(r - W * 0.06f, top + H * (0.3f + i * 0.08f))) }
+        }
+        TemaId.ABISMO -> {
+            // La costura del hule, pespunteada a todo el borde, gotas que resbalan y la chapa de latón con la cota.
+            val hilo = Color(0xFFCDB88C).copy(alpha = 0.55f)
+            val m = W * 0.035f
+            val costura = Stroke(1.2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 5f)))
+            drawRoundRect(hilo, Offset(l + m, top + m), Size(W - 2 * m, H - 2 * m), CornerRadius(H * 0.05f), style = costura)
+            listOf(0.18f to 0.55f, 0.27f to 0.72f, 0.74f to 0.62f, 0.86f to 0.4f).forEach { (fx, fy) ->
+                val g = Offset(l + W * fx, top + H * fy); val s = H * 0.025f
+                drawPath(Path().apply { moveTo(g.x, g.y - s * 1.6f); quadraticTo(g.x + s, g.y, g.x, g.y + s); quadraticTo(g.x - s, g.y, g.x, g.y - s * 1.6f); close() }, Color.White.copy(alpha = 0.22f))
+            }
+            val chapa = Offset(l + W * 0.07f, bot - H * 0.2f)
+            drawRoundRect(Color(0xFFB8913E).copy(alpha = 0.85f), chapa, Size(W * 0.16f, H * 0.1f), CornerRadius(H * 0.02f))
+            for (j in 0 until 3) drawLine(Color(0xFF15333F).copy(alpha = 0.6f), Offset(chapa.x + W * 0.02f, chapa.y + H * (0.03f + 0.025f * j)), Offset(chapa.x + W * (0.14f - 0.03f * j), chapa.y + H * (0.03f + 0.025f * j)), 1f)
         }
         TemaId.ANDALUS -> {
             // Una columna de estrellas de ocho puntas, de oro con el centro verde.
@@ -924,6 +963,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Al que velará en la capilla…", "Escribe a la luz del vitral…", "Epístola para %s sellada", "No se abrirá antes de su hora.", "Toca para escribir en el folio…")
     TemaId.ESPACIO -> VozCarta("CÁPSULA RECUPERADA: ABRIR", "Puesta en órbita", "DESTINO: TRIPULANTE DEL %s", "TRIPULANTE · %s", "DESTINO: TRIPULANTE FUTURO",
         "Transmisión para mi yo futuro…", "Redacta la transmisión…", "Transmisión para %s en órbita", "La cápsula no reentra antes.", "TOCA PARA TRANSMITIR")
+    TemaId.ABISMO -> VozCarta("La boya salió a flote: ábrela", "Lastrada", "Para el buzo del %s", "Buzo · %s", "Para el buzo que subirá",
+        "Querido yo de la superficie…", "Escribe antes de soltar el lastre…", "Boya para %s lastrada en el fondo", "No sube antes de su fecha.", "Toca para escribir en la bitácora…")
     TemaId.ANDALUS -> VozCarta("Ya puedes abrirla, con la venia", "Sellada con la estrella", "Para mi yo del %s", "A mi yo · %s", "Para mi yo de otra luna",
         "Querido yo de otra luna…", "Escribe tu carta en el patio…", "Carta para %s sellada con la estrella", "No se abre antes de su luna.", "Toca para tomar el cálamo de caña…")
     TemaId.MONGOL -> VozCarta("Llegó el jinete: ábrela", "Sellada con la paiza", "Para el jinete del %s", "Jinete de %s", "Para el jinete que seré",
@@ -956,6 +997,7 @@ private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.SEDA -> LetraExtra.almendra
     TemaId.GOTICO -> LetraExtra.textura
     TemaId.ESPACIO -> LetraExtra.orbita
+    TemaId.ABISMO -> LetraExtra.batiscafo
     TemaId.ANDALUS -> LetraExtra.amiri
     TemaId.MONGOL -> LetraExtra.filosofo
     TemaId.RENACIMIENTO -> LetraExtra.cormorant

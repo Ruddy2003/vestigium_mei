@@ -28,6 +28,10 @@ object LetraExtra {
     val textura = FontFamily(Font(R.font.gotica_textura, FontWeight.Normal))
     val orbita = FontFamily(Font(R.font.orbitron_medium, FontWeight.Normal), Font(R.font.orbitron_medium, FontWeight.Medium), Font(R.font.orbitron_bold, FontWeight.Bold), Font(R.font.orbitron_bold, FontWeight.SemiBold))
     val grotesk = FontFamily(Font(R.font.grotesk_regular, FontWeight.Normal), Font(R.font.grotesk_medium, FontWeight.Medium), Font(R.font.grotesk_medium, FontWeight.SemiBold))
+    /** Barlow Condensed: los rótulos estrechos de los instrumentos del batiscafo (títulos del Abismo). */
+    val batiscafo = FontFamily(Font(R.font.batiscafo_medium, FontWeight.Normal), Font(R.font.batiscafo_medium, FontWeight.Medium), Font(R.font.batiscafo_semibold, FontWeight.SemiBold), Font(R.font.batiscafo_semibold, FontWeight.Bold))
+    /** Atkinson Hyperlegible Next: hecha para leerse con poca luz y poca vista (texto del Abismo). */
+    val atkinson = FontFamily(Font(R.font.atkinson_regular, FontWeight.Normal), Font(R.font.atkinson_regular, FontWeight.Medium), Font(R.font.atkinson_semibold, FontWeight.SemiBold), Font(R.font.atkinson_semibold, FontWeight.Bold))
     val kufi = FontFamily(Font(R.font.kufi_medium, FontWeight.Normal), Font(R.font.kufi_medium, FontWeight.Medium), Font(R.font.kufi_bold, FontWeight.Bold), Font(R.font.kufi_bold, FontWeight.SemiBold))
     val amiri = FontFamily(Font(R.font.amiri_regular, FontWeight.Normal))
     val filosofo = FontFamily(Font(R.font.philosopher_regular, FontWeight.Normal), Font(R.font.philosopher_bold, FontWeight.Bold), Font(R.font.philosopher_bold, FontWeight.SemiBold))
@@ -255,6 +259,17 @@ internal val tipoEspacio = tipografia(LetraExtra.orbita, FontWeight.Bold, 0.96f,
 internal val tipoEspacioOscuro = tipografia(LetraExtra.orbita, FontWeight.Bold, 0.96f, 2.0f, LetraExtra.grotesk, 1.02f, LetraExtra.grotesk, 1.02f, brillo = Color(0xFF8AB4FF))
 
 // ---------------------------------------------------------------------
+//  Abismo: de día, la zona iluminada (azul de agua con sol, espuma, el latón del casco de buzo); de noche, la zona
+//  abisal, casi negra, donde la única luz es la de los animales (verde agua, azul de luciferina y el violeta de las medusas).
+// ---------------------------------------------------------------------
+internal val abismoClaro = esquema(false, 0xFFE6F2F6, 0xFFF4FAFC, 0xFFD3E7EF, 0xFFA6C8D5, 0xFF05263A, 0xFF41657A,
+    0xFF0A5C8C, 0xFFFFFFFF, 0xFFCBE6F3, 0xFF05263A, 0xFF8C6A1F, 0xFFF0E4C2, 0xFF0F8A86, 0xFFA8322A)
+internal val abismoOscuro = esquema(true, 0xFF01060B, 0xFF050F18, 0xFF0A1A26, 0xFF163347, 0xFFD6F0F2, 0xFF7DA2AF,
+    0xFF5CF2C6, 0xFF00201A, 0xFF0A3A32, 0xFFD6F0F2, 0xFFE29BFF, 0xFF2D1640, 0xFF3FA9FF, 0xFFFF8A80)
+internal val tipoAbismo = tipografia(LetraExtra.batiscafo, FontWeight.SemiBold, 1.1f, 1.1f, LetraExtra.atkinson, 1.0f, LetraExtra.batiscafo, 1.1f, cifrasAlineadas = true)
+internal val tipoAbismoOscuro = tipografia(LetraExtra.batiscafo, FontWeight.SemiBold, 1.1f, 1.1f, LetraExtra.atkinson, 1.0f, LetraExtra.batiscafo, 1.1f, cifrasAlineadas = true, brillo = Color(0xFF5CF2C6))
+
+// ---------------------------------------------------------------------
 //  Al-Ándalus: yeso tallado, azulejo verde y almagre; de noche, el jardín del Generalife con oro y turquesa.
 // ---------------------------------------------------------------------
 internal val andalusClaro = esquema(false, 0xFFF3EBDA, 0xFFFBF6EA, 0xFFE9DEC6, 0xFFD2C29E, 0xFF2A1A12, 0xFF6A5640,
@@ -317,6 +332,7 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.URSS -> if (oscuro) listOf(0xFFE5252F, 0xFF262020, 0xFFE8D9B5, 0xFFE5252F) else listOf(0xFFC1121F, 0xFFE3D6B8, 0xFF1D1D1B, 0xFFC1121F)
     TemaId.GOTICO -> if (oscuro) listOf(0xFFE0405E, 0xFF1A2356, 0xFF5C8DFF, 0xFFE2B34A) else listOf(0xFFB3122E, 0xFFE2D9C6, 0xFF1F3A9E, 0xFFB8892B)
     TemaId.ESPACIO -> if (oscuro) listOf(0xFFFF8A65, 0xFF121A31, 0xFF8AB4FF, 0xFFC59BFF) else listOf(0xFFE8601C, 0xFFE1E6EF, 0xFF1B3A8C, 0xFF6B4FD6)
+    TemaId.ABISMO -> if (oscuro) listOf(0xFFE29BFF, 0xFF0A1A26, 0xFF5CF2C6, 0xFF3FA9FF) else listOf(0xFFC0563F, 0xFFD3E7EF, 0xFF0A5C8C, 0xFF0F8A86)
     TemaId.ANDALUS -> if (oscuro) listOf(0xFFE07A5F, 0xFF18302D, 0xFF4FC1A6, 0xFFE0B65A) else listOf(0xFFB5432A, 0xFFE9DEC6, 0xFF1E6B5C, 0xFF2A4F9E)
     TemaId.MONGOL -> if (oscuro) listOf(0xFFFF7A59, 0xFF18263F, 0xFF6FB1FF, 0xFFF2C14E) else listOf(0xFFC2412D, 0xFFE6DFCF, 0xFF1F5FA8, 0xFFC48A1E)
     TemaId.RENACIMIENTO -> if (oscuro) listOf(0xFFE08A5E, 0xFF302318, 0xFF9EC0E0, 0xFFD9B566) else listOf(0xFF8C3B1E, 0xFFE6D6B0, 0xFF2F4F6F, 0xFF9C7A2E)
@@ -343,6 +359,7 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.URSS -> if (oscuro) listOf(0xFFE8D9B5, 0xFFE8B923, 0xFFE5252F) else listOf(0xFF1D1D1B, 0xFFD4A017, 0xFFC1121F)
     TemaId.GOTICO -> if (oscuro) listOf(0xFF5C8DFF, 0xFFE2B34A, 0xFFE0405E) else listOf(0xFF1F3A9E, 0xFFB8892B, 0xFFB3122E)
     TemaId.ESPACIO -> if (oscuro) listOf(0xFF8AB4FF, 0xFFC59BFF, 0xFFFFB86B) else listOf(0xFF1B3A8C, 0xFF6B4FD6, 0xFFE8601C)
+    TemaId.ABISMO -> if (oscuro) listOf(0xFF3FA9FF, 0xFF5CF2C6, 0xFFE29BFF) else listOf(0xFF0F8A86, 0xFF0A5C8C, 0xFFC0563F)
     TemaId.ANDALUS -> if (oscuro) listOf(0xFF4FC1A6, 0xFFE0B65A, 0xFFE07A5F) else listOf(0xFF1E6B5C, 0xFF2A4F9E, 0xFFB5432A)
     TemaId.MONGOL -> if (oscuro) listOf(0xFF6FB1FF, 0xFFF2C14E, 0xFFFF7A59) else listOf(0xFF1F5FA8, 0xFFC48A1E, 0xFFC2412D)
     TemaId.RENACIMIENTO -> if (oscuro) listOf(0xFF9EC0E0, 0xFFD9B566, 0xFFE08A5E) else listOf(0xFF2F4F6F, 0xFF9C7A2E, 0xFF8C3B1E)

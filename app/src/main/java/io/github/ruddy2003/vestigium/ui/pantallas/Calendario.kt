@@ -242,6 +242,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.SEDA -> RectangleShape
     TemaId.GOTICO -> RectangleShape
     TemaId.ESPACIO -> RoundedCornerShape(3.dp)
+    TemaId.ABISMO -> RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomStart = 9.dp, bottomEnd = 9.dp)
     TemaId.ANDALUS -> RectangleShape
     TemaId.MONGOL -> RoundedCornerShape(8.dp)
     TemaId.RENACIMIENTO -> RectangleShape
@@ -414,6 +415,17 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 moveTo(w, h - l); lineTo(w, h); lineTo(w - l, h); moveTo(l, h); lineTo(0f, h); lineTo(0f, h - l)
             }, col, style = Stroke((if (hoy) 1.4f else 0.8f) * s * 2))
             if (hoy) contorno(acento.copy(alpha = 0.35f), 0.5f)
+            if (sellado) sello(acento)
+        }
+        // Casillas de casco redondeado abajo; hoy lleva la superficie ondulada arriba y el contorno encendido.
+        TemaId.ABISMO -> {
+            contorno(if (hoy) acento else linea, if (hoy) 1.2f else 0.6f)
+            if (hoy) {
+                val ola = Path(); var x = 0f
+                ola.moveTo(0f, 3f * s)
+                while (x <= w) { ola.lineTo(x, 3f * s + 1.2f * s * kotlin.math.sin(x / (3f * s))); x += 1.5f * s }
+                drawPath(ola, acento, style = Stroke(1f * s))
+            }
             if (sellado) sello(acento)
         }
         // Alicatado: doble filete y los rombos del lazo arriba y abajo.

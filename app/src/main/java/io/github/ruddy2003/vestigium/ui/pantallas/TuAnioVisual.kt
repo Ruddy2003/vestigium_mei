@@ -254,6 +254,18 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             listOf(0.36f, 0.64f).forEach { f -> drawCircle(oscuro, h * 0.17f, Offset(x0 + w * f, cy)); drawCircle(claro, h * 0.06f, Offset(x0 + w * f, cy)) }
             drawLine(c, Offset(x0 + w * 0.36f, cy + h * 0.17f), Offset(x0 + w * 0.64f, cy + h * 0.17f), 0.6f * d)
         }
+        // La bitácora del batiscafo: lona engomada, cantoneras de latón, un ojo de buey al centro y la correa de goma.
+        TemaId.ABISMO -> {
+            val laton = Color(0xFFB8913E)
+            drawRoundRect(lerp(c, Color(0xFF1F4A59), 0.5f), o, s, CornerRadius(3f * d))
+            val l = minOf(w, h) * 0.22f
+            listOf(Offset(x0, y0) to Offset(1f, 1f), Offset(x0 + w, y0) to Offset(-1f, 1f), Offset(x0, y0 + h) to Offset(1f, -1f), Offset(x0 + w, y0 + h) to Offset(-1f, -1f)).forEach { (p, k) ->
+                drawPath(Path().apply { moveTo(p.x, p.y); lineTo(p.x + k.x * l, p.y); lineTo(p.x, p.y + k.y * l); close() }, laton)
+            }
+            val r = minOf(w, h) * 0.22f
+            drawCircle(laton, r, Offset(x0 + w * 0.45f, cy)); drawCircle(oscuro, r * 0.66f, Offset(x0 + w * 0.45f, cy)); drawCircle(claro, r * 0.2f, Offset(x0 + w * 0.4f, cy - r * 0.2f))
+            drawRect(Color(0xFF111A1E), Offset(x0 + w * 0.82f, y0), Size(w * 0.07f, h))
+        }
         // Encuadernación andalusí: la solapa que envuelve el canto, el filete y la mandorla dorada.
         TemaId.ANDALUS -> {
             drawRect(lerp(c, Color(0xFF7A3B1E), 0.3f), o, Size(w * 0.86f, h))
@@ -655,6 +667,14 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
                 drawCircle(col, r * 0.1f, Offset(x + r * 1.05f, y))
             }
         }
+        // Una medusa: la campana llena y cuatro tentáculos que cuelgan ondulando.
+        TemaId.ABISMO -> {
+            lleno(Path().apply { moveTo(x - r, y + r * 0.1f); cubicTo(x - r, y - r * 1.15f, x + r, y - r * 1.15f, x + r, y + r * 0.1f); quadraticTo(x, y - r * 0.15f, x - r, y + r * 0.1f); close() })
+            for (k in 0 until 4) {
+                val tx = x - r * 0.6f + k * r * 0.4f
+                drawPath(Path().apply { moveTo(tx, y + r * 0.05f); quadraticTo(tx + (if (k % 2 == 0) r * 0.2f else -r * 0.2f), y + r * 0.5f, tx, y + r * 0.95f) }, col, style = fino)
+            }
+        }
         // Estrella de ocho puntas del lazo.
         TemaId.ANDALUS -> lleno(estrellaCosa(c, r, 8, 0.77f))
         // Rombo doble, como en los bordados del fieltro.
@@ -1040,6 +1060,29 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
                 rotate(-30f, c) { drawArc(col, 0f, 180f, true, Offset(x - r * 0.75f, y - r * 0.75f), Size(r * 1.5f, r * 1.1f)) }
                 drawPath(Path().apply { moveTo(x, y + r * 0.1f); lineTo(x + r * 0.45f, y + r * 0.95f); lineTo(x - r * 0.45f, y + r * 0.95f); close() }, col)
                 drawArc(col, -70f, 50f, false, Offset(x - r * 0.2f, y - r * 1.1f), Size(r * 1.1f, r * 1.1f), style = Stroke(0.8f * d))
+            }
+            else -> return false
+        }
+        TemaId.ABISMO -> when (forma) {
+            // El batiscafo: el flotador, la torreta y la esfera de la tripulación con su ojo de buey.
+            "alfiler" -> {
+                drawRoundRect(col, Offset(x - r, y - r * 0.6f), Size(r * 2f, r * 0.62f), CornerRadius(r * 0.31f))
+                drawRect(col, Offset(x - r * 0.16f, y - r * 0.85f), Size(r * 0.32f, r * 0.26f))
+                drawLine(col, Offset(x, y), Offset(x, y + r * 0.2f), 1.2f * d)
+                drawCircle(col, r * 0.42f, Offset(x, y + r * 0.55f)); drawCircle(fondo, r * 0.15f, Offset(x - r * 0.05f, y + r * 0.52f))
+            }
+            // Una medusa.
+            "estrella" -> {
+                drawArc(col, 180f, 180f, true, Offset(x - r * 0.8f, y - r * 0.7f), Size(r * 1.6f, r * 1.2f))
+                for (k in 0 until 3) drawLine(col, Offset(x - r * 0.45f + k * r * 0.45f, y - r * 0.1f), Offset(x - r * 0.5f + k * r * 0.5f, y + r * 0.9f), 1.1f * d, StrokeCap.Round)
+            }
+            // Un mensaje en una botella.
+            "sobre" -> {
+                rotate(-20f, c) {
+                    drawRoundRect(col, Offset(x - r * 0.9f, y - r * 0.38f), Size(r * 1.3f, r * 0.76f), CornerRadius(r * 0.3f))
+                    drawRect(col, Offset(x + r * 0.35f, y - r * 0.16f), Size(r * 0.45f, r * 0.32f))
+                    drawRect(fondo, Offset(x - r * 0.65f, y - r * 0.14f), Size(r * 0.8f, r * 0.28f))
+                }
             }
             else -> return false
         }

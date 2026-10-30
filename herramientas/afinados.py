@@ -668,6 +668,45 @@ def espacio():
                tecla=mezclar((0, clic(0.005, (4000, 10000)), 0.6), (0, pip(hz(T + 36), 0.008), 0.06)),
                rascar=rascado((2800, 9500), tono(T + 31, 0.3), aspereza=170))
 
+def abismo():
+    # Si, escala de tonos enteros (sin centro, como el agua): el ping del sonar, burbujas que suben, el agua que pasa,
+    # el casco del batiscafo que cruje con la presión y un vibráfono apagado, como oído a través del agua.
+    T = -10  # Si3
+    ping = lambda n, d=0.7: seno(hz(n), d) * env(int(d * SR), 0.002, d * 0.55, 3) + 0.25 * seno(hz(n) * 2.01, d) * env(int(d * SR), 0.002, d * 0.2, 4)
+    burbuja = lambda n, d=0.05: barrido(hz(n), hz(n) * 1.9, d) * env(int(d * SR), 0.002, d * 0.6, 3)
+    agua = lambda d: filtro(ruido(d), 'bajo', 650) * np.sin(np.pi * t_(d) / d) ** 1.5
+    casco = lambda d: filtro(ruido(d), 'banda', (70, 280)) * env(int(d * SR), 0.02, d * 0.7, 2)
+    vib = lambda f, d: filtro(vibrafono(f, d), 'bajo', 2200)
+    tonos = [0, 2, 4, 6, 8, 10]
+    # Con su propio azar también los sonidos de siempre: un tema nuevo no mueve el ruido de los que van después.
+    with azar_propio('abismo_base'):
+        S['abismo'] = dict(
+            toque=mezclar((0, vib(hz(T + 24), 0.16), 0.6), (0, burbuja(T + 24, 0.04), 0.35)),
+            elegir=mezclar((0, burbuja(T + 26), 0.6), (0.05, burbuja(T + 30, 0.045), 0.5)),
+            pasar=mezclar((0, agua(0.24), 0.9), (0.08, burbuja(T + 28, 0.035), 0.2), (0.14, burbuja(T + 32, 0.03), 0.15)),
+            abrir=mezclar((0, casco(0.22), 0.7), (0.05, filtro(ruido(0.25), 'alto', 2500) * env(int(0.25 * SR), 0.02, 0.2, 3), 0.25), (0.2, ping(T + 18, 0.5), 0.45)),
+            guardar=reverb(mezclar((0, ping(T + 12, 0.6), 0.6), (0.04, vib(hz(T + 24), 0.5), 0.35)), 1.0, 0.3),
+            logro=reverb(mezclar(melodia(lambda f, d: vib(f, d), [T + 12 + n for n in tonos] + [T + 24], 0.08, 0.5, g=0.45),
+                                 (0, ping(T, 1.2), 0.4), *[(0.1 * i, burbuja(T + 26 + 2 * i, 0.04), 0.15) for i in range(5)]), 1.6, 0.35),
+            tema=reverb(mezclar((0, ping(T + 18, 0.8), 0.55), (0.45, ping(T + 18, 0.6), 0.25), (0.15, agua(0.5), 0.5),
+                                *[(0.2 + 0.07 * i, burbuja(T + 24 + 2 * i, 0.04), 0.2) for i in range(4)]), 1.4, 0.35),
+            aviso=reverb(mezclar(*[(0.5 * i, ping(T + n, 0.7), 0.5) for i, n in enumerate([22, 18, 14])],
+                                 (1.5, vib(hz(T + 16), 0.8), 0.4), (0, agua(1.8), 0.35)), 1.8, 0.35),
+            solemne=reverb(mezclar(*[(1.1 * i, acorde(lambda f, d: organo(f, d, 0.4), [T - 12 + a for a in ch], 1.3), 0.4)
+                                     for i, ch in enumerate([[0, 4, 8], [2, 6, 10], [-2, 4, 8], [0, 6, 12], [0, 4, 8, 12]])],
+                                   *[(0.55 + 1.1 * i, ping(T + [16, 18, 12, 20, 24][i], 0.9), 0.25) for i in range(5)],
+                                   (0.3, barrido(hz(T - 5), hz(T - 9), 2.2) * np.sin(np.pi * t_(2.2) / 2.2) ** 2, 0.12),
+                                   (0, agua(5.8), 0.3)), 2.4, 0.4))
+
+    # Error: el ping que se hunde y el golpe sordo del casco. Cambio: la válvula de lastre que se abre y suelta burbujas.
+    # Tecla: el lápiz sobre la pizarra de buceo. Rascar: cobre con verdín de un pecio, blando.
+    with azar_propio('abismo'):
+        nuevos('abismo',
+               error=mezclar((0, barrido(hz(T + 6), hz(T - 2), 0.35) * env(int(0.35 * SR), 0.003, 0.3, 3), 0.5), (0.05, casco(0.3), 0.7)),
+               cambio=mezclar((0, clic(0.01, (900, 3500)), 0.5), (0.02, burbuja(T + 22, 0.05), 0.5), (0.07, burbuja(T + 28, 0.04), 0.4), (0.1, burbuja(T + 26, 0.035), 0.3)),
+               tecla=mezclar((0, trazo((900, 3600), 0.04, 6), 1), (0, filtro(ruido(0.012), 'bajo', 900) * env(int(0.012 * SR), 0.001, 0.006), 0.25)),
+               rascar=rascado((600, 3800), ping(T + 24, 0.4), aspereza=55))
+
 def andalus():
     # Re hiyaz: laúd (oud), darbuka y qanún.
     T = -7
@@ -839,6 +878,7 @@ if __name__ == '__main__':
         urss,
         gotico,
         espacio,
+        abismo,
         andalus,
         mongol,
         renacimiento,

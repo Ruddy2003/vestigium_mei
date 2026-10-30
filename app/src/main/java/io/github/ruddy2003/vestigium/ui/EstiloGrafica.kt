@@ -179,19 +179,19 @@ enum class AdornoTrazo {
 /** Las líneas guía del fondo de la gráfica. */
 enum class Rejilla {
     NINGUNA, LINEAS, PUNTEADA, DISCONTINUA, MILIMETRADO, CRUCES, MATRIZ, DOBLE, PICADO, BANDAS, FILETES, RETICULA,
-    GUIRNALDA, ONDAS, CELOSIA, ESTRELLAS, ROMBOS, MUESCAS, PUNTO_Y_RAYA, ALTERNA, PAUTA, TALLADA,
+    GUIRNALDA, ONDAS, CELOSIA, ESTRELLAS, ISOBATAS, ROMBOS, MUESCAS, PUNTO_Y_RAYA, ALTERNA, PAUTA, TALLADA,
 }
 
 /** El eje. */
 enum class Eje {
     NINGUNO, LINEA, MARCAS, REMATES, CORCHETES, DOBLE, FLORON, GRUESA, REMACHES, REGLA, GALONES, BROTES, CUENTAS,
-    ATRAVESADAS, PINACULOS, SOLO_MARCAS, ALMENAS, FLECHA, COMPAS, AGUZADA, PICA, RUNAS,
+    ATRAVESADAS, PINACULOS, SOLO_MARCAS, SONDA, ALMENAS, FLECHA, COMPAS, AGUZADA, PICA, RUNAS,
 }
 
 /** La forma de las barras. */
 enum class FormaBarra {
     RECTA, REDONDA, ARCO, PILDORA, BISEL, OJIVA, HERRADURA, TAPA, TORRE, BLOQUES, ROLLO, BANDERIN, SESGADA, TERCIOS,
-    ESTRIADA, TABLAS, MARCO, PUNTEADO, LAZO, RAYADA, HUECA,
+    ESTRIADA, TABLAS, MARCO, PUNTEADO, LAZO, RAYADA, HUECA, BURBUJAS,
 }
 
 /** Píxeles por dp en los reportes (la hoja mide 1080 px de ancho, como un teléfono de unos 540 dp). */
@@ -251,6 +251,9 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Espacio: anillo de planeta, cielo de estrellas, solo las marcas del instrumento y barras en cápsula.
     TemaId.ESPACIO -> EstiloGrafica(FormaPunto.ANILLO, 1.6f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(0.1f, 4f),
         Rejilla.ESTRELLAS, 0.6f, Eje.SOLO_MARCAS, FormaBarra.PILDORA, R.font.orbitron_medium, FontWeight.Medium, null, 0.08f, 0.92f)
+    // Abismo: gotas de agua, las isóbatas de una carta del fondo, el cabo del escandallo y columnas de agua con burbujas.
+    TemaId.ABISMO -> EstiloGrafica(FormaPunto.GOTA, 1.7f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(4f, 1.5f, 1f, 1.5f),
+        Rejilla.ISOBATAS, 0.55f, Eje.SONDA, FormaBarra.BURBUJAS, R.font.batiscafo_medium, FontWeight.Medium, "tnum", 0.02f, 1.1f)
     // Al-Ándalus: estrella de ocho, cadena de rombos de azulejo, almenas y arcos de herradura.
     TemaId.ANDALUS -> EstiloGrafica(FormaPunto.OCTOGRAMA, 1.8f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(3f, 1.5f, 1f, 1.5f),
         Rejilla.ROMBOS, 0.5f, Eje.ALMENAS, FormaBarra.HERRADURA, R.font.kufi_medium, FontWeight.Medium, null, 0.02f, 1f)
@@ -570,6 +573,17 @@ fun DrawScope.barraGrafica(e: EstiloGrafica, arriba: Offset, tam: Size, color: C
             if (tam.width > sw && tam.height > sw) drawRect(color, Offset(x0 + sw / 2, y0 + sw / 2), Size(tam.width - sw, tam.height - sw), style = Stroke(sw))
             else drawPath(silueta, color)
         }
+        FormaBarra.BURBUJAS -> {
+            // Una columna de agua: el cuerpo lleno y, por dentro, burbujas que suben hacia la punta.
+            drawPath(silueta, color)
+            if (grosor >= 5f * d && largo >= 6f * d) {
+                val rb = grosor * 0.15f; var u = grosor * 0.6f; var k = 0
+                while (u < largo - grosor * 0.55f) {
+                    drawCircle(tinte, rb * (0.7f + 0.3f * (k % 3)), t.p(u, grosor * (if (k % 2 == 0) 0.36f else 0.62f)), style = Stroke(max(1f, 0.6f * d)))
+                    u += grosor * 0.9f; k++
+                }
+            }
+        }
         FormaBarra.HUECA -> {
             drawPath(silueta, color, alpha = 0.22f)
             val sw = max(1f, 1.2f * d)
@@ -632,6 +646,8 @@ private fun egSilueta(forma: FormaBarra, t: EgBarra, d: Float): Path {
             t.a(l, r); t.q(l, 0f, l - r, 0f); t.a(r, 0f); t.q(0f, 0f, 0f, r); t.cerrar()
         }
         FormaBarra.ARCO -> { val ru = min(g / 2, l); t.ir(0f, 0f); t.a(l - ru, 0f); t.vueltaPunta(ru); t.a(0f, g); t.cerrar() }
+        // La columna de agua: base recta y la punta redonda, como la cabeza de una burbuja.
+        FormaBarra.BURBUJAS -> { val ru = min(g / 2, l); t.ir(0f, 0f); t.a(l - ru, 0f); t.vueltaPunta(ru); t.a(0f, g); t.cerrar() }
         FormaBarra.PILDORA -> { val ru = min(g / 2, l / 2); t.ir(ru, 0f); t.a(l - ru, 0f); t.vueltaPunta(ru); t.a(ru, g); t.vueltaBase(ru); t.cerrar() }
         FormaBarra.BISEL -> {
             val b = min(g * 0.32f, l / 2)
@@ -790,6 +806,19 @@ fun DrawScope.rejillaGrafica(e: EstiloGrafica, ys: List<Float>, color: Color, xs
             }
             ys.forEach { h(it) }; xs.forEach { v(it) }
         }
+        Rejilla.ISOBATAS -> {
+            // Las isóbatas de una carta del fondo: curvas de igual profundidad, suaves e irregulares, cada una distinta.
+            ys.forEachIndexed { i, y ->
+                val p = Path(); var x = a.left
+                p.moveTo(x, y)
+                while (x < a.right) {
+                    x = min(x + 3f * d, a.right)
+                    p.lineTo(x, y + 1.6f * d * sin(x / (23f * d) + i * 1.3f) + 0.7f * d * sin(x / (7f * d) + i))
+                }
+                drawPath(p, c, style = Stroke(g))
+            }
+            xs.forEach { punteadaV(it, 4f) }
+        }
         Rejilla.ESTRELLAS -> {
             val pts = ArrayList<Offset>(); val chispas = ArrayList<Offset>()
             ys.forEachIndexed { i, y ->
@@ -874,6 +903,18 @@ fun DrawScope.ejeGrafica(e: EstiloGrafica, desde: Offset, hasta: Offset, color: 
         Eje.FLORON -> { linea(); extremos.forEach { drawPath(egPoligono(it, 2.8f * d, 4, -90f), color) }; ms.forEach { drawCircle(color, 1.1f * d, it + fuera * (2.2f * d)) } }
         Eje.GRUESA -> { linea(g * 2.6f); ms.forEach { raya(it, 5f * d, g * 1.5f) } }
         Eje.REMACHES -> { linea(g * 1.7f); (ms + extremos).forEach { drawCircle(color, 1.7f * d, it) } }
+        Eje.SONDA -> {
+            // El cabo del escandallo: marcas largas y cortas alternadas y, en la punta, la plomada.
+            linea()
+            ms.forEachIndexed { i, m -> raya(m, if (i % 2 == 0) 4.5f * d else 2.4f * d) }
+            val b = hasta + dir * (2.6f * d)
+            drawLine(color, hasta, b, g)
+            drawPath(Path().apply {
+                val n = normal * (1.8f * d)
+                moveTo(b.x + n.x, b.y + n.y); lineTo(b.x - n.x, b.y - n.y)
+                val pu = b + dir * (4.6f * d); lineTo(pu.x, pu.y); close()
+            }, color)
+        }
         Eje.REGLA -> {
             linea()
             val o = ms.sortedBy { if (horiz) it.x else it.y }

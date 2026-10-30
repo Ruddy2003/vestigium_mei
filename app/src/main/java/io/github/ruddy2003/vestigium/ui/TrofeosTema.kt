@@ -141,6 +141,7 @@ object TrofeosTema {
             TemaId.ORDEN -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.LABORATORIO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.ESPACIO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.ABISMO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.URSS -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
         }
     }
@@ -171,6 +172,7 @@ object TrofeosTema {
             TemaId.ORDEN -> with(TrofeosMas) { orden(categoria, p) }
             TemaId.LABORATORIO -> with(TrofeosMas) { laboratorio(categoria, p) }
             TemaId.ESPACIO -> with(TrofeosMas) { espacio(categoria, p) }
+            TemaId.ABISMO -> with(TrofeosMas) { abismo(categoria, p) }
             TemaId.URSS -> with(TrofeosMas) { urss(categoria, p) }
         }
     }

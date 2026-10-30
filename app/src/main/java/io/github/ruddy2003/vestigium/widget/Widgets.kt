@@ -94,6 +94,11 @@ object Widgets {
             0xFFFFB86B.toInt(), 0xFFE8ECF8.toInt(), 0xFF8E9AB8.toInt(), 0xFF26324F.toInt(),
             intArrayOf(0xFFFF8A6B.toInt(), 0xFFF5A98A.toInt(), 0xFFE0C6B8.toInt(), 0xFFE8ECF8.toInt(), 0xFFB9CCF5.toInt(), 0xFFA0C0FF.toInt(), 0xFF8AB4FF.toInt()),
             0xFF0A0F1E.toInt(), 0xFF020818.toInt())
+        // La zona abisal: fondo casi negro y la luz viva de los animales; el ánimo va del violeta de las medusas al verde agua.
+        TemaId.ABISMO -> Colores(R.drawable.widget_fondo_abismo, R.drawable.widget_boton_abismo, R.drawable.widget_boton_activo_abismo, R.drawable.widget_boton_ambar_abismo,
+            0xFF5CF2C6.toInt(), 0xFFD6F0F2.toInt(), 0xFF7DA2AF.toInt(), 0xFF163347.toInt(),
+            intArrayOf(0xFFE29BFF.toInt(), 0xFFC8A6F0.toInt(), 0xFFA9B9E2.toInt(), 0xFFD6F0F2.toInt(), 0xFF9FE0E0.toInt(), 0xFF7CE9D3.toInt(), 0xFF5CF2C6.toInt()),
+            0xFF0A1A26.toInt(), 0xFF00201A.toInt())
         TemaId.ANDALUS -> Colores(R.drawable.widget_fondo_andalus, R.drawable.widget_boton_andalus, R.drawable.widget_boton_activo_andalus, R.drawable.widget_boton_ambar_andalus,
             0xFFE0B65A.toInt(), 0xFFF3EAD6.toInt(), 0xFFB4AE9B.toInt(), 0xFF2B4A45.toInt(),
             intArrayOf(0xFFE07A5F.toInt(), 0xFFE39A82.toInt(), 0xFFE5C2AE.toInt(), 0xFFF3EAD6.toInt(), 0xFFA9DCCD.toInt(), 0xFF7CCFB8.toInt(), 0xFF4FC1A6.toInt()),
@@ -150,6 +155,7 @@ object Widgets {
         TemaId.SEDA -> "Alto" to "Rollo"
         TemaId.GOTICO -> "Ad horam" to "Scribe"
         TemaId.ESPACIO -> "T−0" to "LOG"
+        TemaId.ABISMO -> "COTA" to "PIZARRA"
         TemaId.ANDALUS -> "الآن" to "اكتب"
         TemaId.MONGOL -> "ОДОО" to "БИЧИХ"
         TemaId.RENACIMIENTO -> "Ora" to "Scrivere"
@@ -180,6 +186,7 @@ object Widgets {
             TemaId.SEDA -> R.font.almendra_regular to 1.08f
             TemaId.GOTICO -> R.font.gotica_textura to 1.12f
             TemaId.ESPACIO -> R.font.orbitron_medium to 0.88f
+            TemaId.ABISMO -> R.font.batiscafo_semibold to 1.0f
             TemaId.ANDALUS -> R.font.kufi_medium to 0.95f
             TemaId.MONGOL -> R.font.philosopher_regular to 1.05f
             TemaId.RENACIMIENTO -> R.font.cormorant_medium to 1.12f

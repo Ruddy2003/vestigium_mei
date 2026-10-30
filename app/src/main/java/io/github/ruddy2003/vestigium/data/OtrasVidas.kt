@@ -508,6 +508,23 @@ object OtrasVidas {
                 "vida" to r(65), "vida_adulto" to r(72), "hijos" to r(5.0), "alfabetizacion" to r(83), "lectura" to e(20, "Entre cinta y cinta.")),
             fuentes = listOf("Operador de computadoras (Wikipedia)" to "${W}Computer_operator", "IBM System/370 (Wikipedia)" to "${W}IBM_System/370",
                 "Cintas magnéticas de datos (Wikipedia)" to "${W}Magnetic-tape_data_storage", "La población de México (Wikipedia)" to "${W}Demographics_of_Mexico")),
+        Vida("buzo_esponjas", "Nikos", "Buzo esponjero de escafandra", "Un barco esponjero frente a la costa de Florida", "1910", 1910, "tema", "abismo", edad = 26,
+            historia = listOf(
+                "Nikos llegó de una isla del Dodecaneso con los buzos griegos que, desde 1905, sacan esponjas del golfo de México con escafandra: un casco de cobre atornillado a un traje de lona, botas de plomo y una manguera por la que dos hombres, a mano, le bombean aire desde cubierta. Baja una y otra vez durante la mañana; arriba, su ayudante sostiene la cuerda y entiende sus tirones.",
+                "Cada buzo sabe de alguien a quien el fondo dejó paralítico o mató al subir: es la enfermedad de los buzos, que entonces nadie sabía evitar bien. Por la tarde, las esponjas se limpian en cubierta, se pisan para quitarles la piel negra, se enjuagan y se ensartan en cuerdas para secarlas al sol.",
+                "Pasa meses en el mar con la misma decena de hombres. Come pan duro que se ablanda en agua, aceitunas, legumbres y el pescado que caiga; duerme en cubierta, bajo las estrellas, y antes de dormir se cantan las canciones de la isla.",
+            ),
+            dia = listOf(t(20.0, 4.5, Hacer.DORMIR, "en cubierta"), t(4.5, 5.0, Hacer.COMER), t(5.0, 11.0, Hacer.TRABAJO, "inmersiones con casco de cobre"), t(11.0, 12.5, Hacer.COMER),
+                t(12.5, 17.0, Hacer.TRABAJO, "limpiar y ensartar esponjas"), t(17.0, 18.0, Hacer.COMER), t(18.0, 20.0, Hacer.GENTE, "canciones de la isla")),
+            datos = mapOf("pasos" to r(3000, "Entre la cubierta y el fondo, con botas de plomo."), "km_anio" to r(4000, "Ir y volver de los bancos de esponjas del golfo."), "kcal" to r(3500, "Trabajo pesado en agua fría."),
+                "proteina" to r(100), "azucar" to r(15), "fibra" to r(30, "Pan duro, legumbres y aceitunas."), "alcohol" to r(20, "Algo de vino o de licor de anís por la noche."),
+                "sueno" to r(8.5), "dormir" to r(20.0), "trabajo" to r(70, "Seis días a la semana en la temporada."), "aire_libre" to r(13, "Casi todo el día en cubierta o bajo el agua."), "pantalla" to e(0),
+                "notificaciones" to r(20, "Los tirones de la cuerda de señales."), "musica" to r(2, "Canciones de la isla."), "personas_dia" to r(10, "La tripulación del barco."), "conocidas" to r(400),
+                "poblacion" to e(2212, "Tarpon Springs, el puerto de los esponjeros griegos, en el censo de 1910."), "lejos" to r(9600, "Desde su isla del Egeo hasta Florida."), "estatura" to r(167),
+                "vida" to r(40), "vida_adulto" to r(60, "Menos para los buzos: la enfermedad de la descompresión mataba o paralizaba a muchos."), "hijos" to r(5),
+                "alfabetizacion" to r(40), "lectura" to r(0)),
+            fuentes = listOf("La historia de los buzos de esponjas (Divers Alert Network)" to "https://dan.org/alert-diver/article/the-story-of-sponge-divers/",
+                "Tarpon Springs" to "${W}Tarpon_Springs,_Florida", "Escafandra" to "${W}Standard_diving_dress")),
 
         // ------------------------------------------------ mundos de ficción: estimaciones inventadas, con sentido
         Vida("repartidora", "Kei", "Repartidora en bicicleta eléctrica", "Una megaciudad de neón", "2077", 2077, "tema", "neon", edad = 26, ficticia = true,

@@ -270,6 +270,18 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             rotate(-18f, c) { drawArc(sombra, 200f, 140f, false, Offset(c.x - r * 0.9f, c.y - r * 0.32f), Size(r * 1.8f, r * 0.64f), style = Stroke(r * 0.05f)) }
             drawCircle(sombra, r * 0.07f, polarFig(c, r * 0.62f, -40f))
         }
+        // Un ojo de buey: la brida con ocho pernos, el cristal hundido y el agua ondulada detrás.
+        TemaId.ABISMO -> {
+            forma(disco(c, r * 0.97f))
+            drawCircle(sombra, r * 0.6f, c)
+            drawCircle(canto, r * 0.6f, c, style = Stroke(g * 0.8f))
+            for (k in 0 until 8) drawCircle(sombra, r * 0.07f, polarFig(c, r * 0.8f, 22.5f + k * 45f))
+            val ola = Path(); var x = c.x - r * 0.5f
+            ola.moveTo(x, c.y + r * 0.08f)
+            while (x <= c.x + r * 0.5f) { ola.lineTo(x, c.y + r * 0.08f + r * 0.06f * kotlin.math.sin((x - c.x) / (r * 0.12f))); x += r * 0.04f }
+            drawPath(ola, luz, style = Stroke(r * 0.05f))
+            drawArc(luz, 200f, 60f, false, Offset(c.x - r * 0.45f, c.y - r * 0.45f), Size(r * 0.9f, r * 0.9f), style = Stroke(r * 0.06f))
+        }
         // Estrella de lazo de ocho puntas: dos cuadrados.
         TemaId.ANDALUS -> {
             val a1 = figPoligono(c, r * 0.97f, 4, -90f); val a2 = figPoligono(c, r * 0.97f, 4, -45f)

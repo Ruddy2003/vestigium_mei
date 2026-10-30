@@ -957,6 +957,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.SEDA -> 14.dp
     TemaId.GOTICO -> 18.dp
     TemaId.ESPACIO -> 12.dp
+    TemaId.ABISMO -> 9.dp
     TemaId.ANDALUS -> 18.dp
     TemaId.MONGOL -> 14.dp
     TemaId.RENACIMIENTO -> 6.dp
@@ -1061,6 +1062,16 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         val p = 12 * u; val a = w * 0.3f; val r = 14 * u
         moveTo(0f, p + r); quadraticTo(0f, p, r, p); lineTo(a, p); lineTo(a + p, 0f); lineTo(w - a - p, 0f); lineTo(w - a, p)
         lineTo(w - r, p); quadraticTo(w, p, w, p + r); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // La superficie del mar: el borde de arriba es una ola de cuatro crestas.
+    TemaId.ABISMO -> formaDp { w, h, u ->
+        val p = 8 * u; val n = 4
+        moveTo(0f, p)
+        for (i in 0 until n) {
+            val x0 = w * i / n; val x1 = w * (i + 1) / n
+            quadraticTo((x0 + x1) / 2, if (i % 2 == 0) -p * 0.4f else p * 2.2f, x1, p)
+        }
+        lineTo(w, h); lineTo(0f, h); close()
     }
     // Arco polilobulado al centro: cinco lóbulos que suben hacia la clave.
     TemaId.ANDALUS -> formaDp { w, h, u ->
@@ -1214,6 +1225,13 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             listOf(e.primary, e.tertiary, e.secondary).forEachIndexed { k, col -> drawCircle(col, 2.4f * u, Offset(w / 2 + (k - 1) * 14 * u, 6 * u)) }
             drawLine(e.primary.copy(alpha = 0.45f), Offset(16 * u, 18 * u), Offset(w - 16 * u, 18 * u), 0.8f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * u, 4 * u)))
         }
+        // Tres burbujas que suben en el centro y, debajo, la línea de flotación.
+        TemaId.ABISMO -> {
+            listOf(Offset(-6f, 16f) to 2.2f, Offset(3f, 12f) to 3f, Offset(-1f, 6f) to 1.6f).forEach { (o, r) ->
+                drawCircle(e.tertiary, r * u, Offset(w / 2 + o.x * u, o.y * u), style = Stroke(0.9f * u))
+            }
+            drawLine(e.primary.copy(alpha = 0.45f), Offset(16 * u, 22 * u), Offset(w - 16 * u, 22 * u), 0.8f * u)
+        }
         // Estrella de ocho puntas en el lóbulo de la clave y un filete de oro.
         TemaId.ANDALUS -> {
             estrellaHoja(Offset(w / 2, 11 * u), 5 * u, e.tertiary, puntas = 8, dentro = 0.6f)
@@ -1335,6 +1353,12 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     }
     // Tecla de consola, más angosta arriba.
     TemaId.ESPACIO -> formaDp { w, h, u -> val d = 6 * u; moveTo(d, 0f); lineTo(w - d, 0f); lineTo(w, h); lineTo(0f, h); close() }
+    // El flotador del batiscafo: proa redonda a la izquierda, popa de esquinas suaves a la derecha.
+    TemaId.ABISMO -> formaDp { w, h, u ->
+        val r = h / 2; val r2 = 4 * u
+        moveTo(r, 0f); lineTo(w - r2, 0f); quadraticTo(w, 0f, w, r2); lineTo(w, h - r2); quadraticTo(w, h, w - r2, h); lineTo(r, h)
+        quadraticTo(0f, h, 0f, h / 2); quadraticTo(0f, 0f, r, 0f); close()
+    }
     // Arco de medio punto, de radio fijo.
     TemaId.ANDALUS -> RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 0.dp, bottomStart = 0.dp)
     // Esquinas escalonadas, como la orilla del fieltro.

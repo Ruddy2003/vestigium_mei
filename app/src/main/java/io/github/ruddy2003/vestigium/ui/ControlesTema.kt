@@ -285,6 +285,12 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     }, 22.dp, 0.dp, true, 1.5.dp)
     // Visor: las dos esquinas de arriba cortadas.
     TemaId.ESPACIO -> PielDialogo(CutCornerShape(topStart = 20.dp, topEnd = 20.dp), 0.dp, 0.dp, false, 1.dp)
+    // La superficie del mar: el borde de arriba es una ola larga y mansa; abajo, el casco redondeado.
+    TemaId.ABISMO -> PielDialogo(FormaDp { w, h, d ->
+        val o = 6 * d; val r = 14 * d
+        moveTo(0f, o); quadraticTo(w * 0.25f, -o * 0.6f, w * 0.5f, o); quadraticTo(w * 0.75f, o * 2.6f, w, o)
+        lineTo(w, h - r); quadraticTo(w, h, w - r, h); lineTo(r, h); quadraticTo(0f, h, 0f, h - r); close()
+    }, 16.dp, 2.dp, false, 1.2.dp)
     // Arco de medio punto, muy redondo arriba.
     TemaId.ANDALUS -> PielDialogo(RoundedCornerShape(topStart = 48.dp, topEnd = 48.dp, bottomEnd = 4.dp, bottomStart = 4.dp), 12.dp, 4.dp, true, 1.dp)
     // Cúpula de ger: el borde de arriba se abomba.
@@ -478,6 +484,23 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             while (x < w - 32 * d) { drawCircle(e.primary.copy(alpha = 0.6f), 0.9f * d, Offset(x, 8 * d)); x += 6 * d }
             drawCircle(e.primary, 2.4f * d, Offset(w * 0.7f, 8 * d))
         }
+        TemaId.ABISMO -> {
+            // La plancha remachada del casco: una fila de pernos de latón a cada lado y, abajo a la derecha, el
+            // profundímetro con su aguja.
+            listOf(9 * d, w - 9 * d).forEach { x ->
+                var y = 30 * d
+                while (y < h - 14 * d) { drawCircle(e.secondary.copy(alpha = 0.75f), 2 * d, Offset(x, y)); drawCircle(e.surface.copy(alpha = 0.6f), 0.7f * d, Offset(x - 0.6f * d, y - 0.6f * d)); y += 26 * d }
+            }
+            val c = Offset(w - 30 * d, h - 22 * d); val r = 11 * d
+            drawCircle(e.primary.copy(alpha = 0.5f), r, c, style = Stroke(1.2f * d))
+            for (k in 0..6) {
+                val a = Math.toRadians(150.0 + k * 40.0)
+                drawLine(e.primary.copy(alpha = 0.6f), c + Offset((r * 0.72f * cos(a)).toFloat(), (r * 0.72f * sin(a)).toFloat()), c + Offset((r * cos(a)).toFloat(), (r * sin(a)).toFloat()), 0.8f * d)
+            }
+            val ag = Math.toRadians(300.0)
+            drawLine(e.tertiary, c, c + Offset((r * 0.8f * cos(ag)).toFloat(), (r * 0.8f * sin(ag)).toFloat()), 1.2f * d)
+            drawCircle(e.tertiary, 1.4f * d, c)
+        }
         TemaId.ANDALUS -> {
             // El arco por dentro, una estrella en la clave y una cenefa de estrellas de ocho puntas abajo.
             drawPath(Path().apply {
@@ -657,6 +680,17 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             val c = Offset(w * 0.7f, cy)
             drawCircle(e.surface, 4 * d, c); drawCircle(e.primary, 3 * d, c)
             drawOval(e.primary, Offset(c.x - 6 * d, c.y - 2 * d), Size(12 * d, 4 * d), style = Stroke(0.8f * d))
+        }
+        // Una ola larga, y en medio tres burbujas que suben.
+        TemaId.ABISMO -> {
+            val p = Path(); var x = 0f
+            p.moveTo(0f, cy)
+            while (x <= w) { p.lineTo(x, cy + 2 * d * sin(x / (9 * d))); x += 2 * d }
+            drawPath(p, e.primary.copy(alpha = 0.55f), style = Stroke(d))
+            listOf(Offset(-5f, -2f) to 1.6f, Offset(2f, -6f) to 2.2f, Offset(-1f, -11f) to 1.3f).forEach { (o, r) ->
+                drawCircle(e.surface, (r + 0.8f) * d, Offset(w / 2 + o.x * d, cy + o.y * d))
+                drawCircle(e.tertiary, r * d, Offset(w / 2 + o.x * d, cy + o.y * d), style = Stroke(0.8f * d))
+            }
         }
         // Estrella de ocho puntas entre dos líneas de oro.
         TemaId.ANDALUS -> {
@@ -948,6 +982,19 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             linea(activo, 0f, x, g * 0.35f, cap = StrokeCap.Round)
             if (x > 0f) estrellaCtl(Offset(x, cy), g * 0.7f, activo, puntas = 4, dentro = 0.35f)
         }
+        // El cabo de sondeo: lo que falta, una raya fina con sus marcas; lo hecho, agua que ondula hasta la plomada.
+        TemaId.ABISMO -> {
+            linea(inactivo, x, w, g * 0.25f)
+            var px = 0f; var k = 0
+            while (px < w) { if (px > x) drawLine(inactivo, Offset(px, cy - g * (if (k % 5 == 0) 0.6f else 0.3f)), Offset(px, cy + g * (if (k % 5 == 0) 0.6f else 0.3f)), maxOf(g * 0.12f, 0.6f * d)); px += maxOf(g * 1.4f, 4 * d); k++ }
+            if (x > 0f) {
+                val p = Path(); var q = 0f
+                p.moveTo(0f, cy)
+                while (q <= x) { p.lineTo(q, cy + g * 0.3f * sin(q / (g * 0.9f))); q += maxOf(g * 0.25f, 0.8f * d) }
+                drawPath(p, activo, style = Stroke(g * 0.4f, cap = StrokeCap.Round))
+                drawCircle(activo, g * 0.55f, Offset(x, cy))
+            }
+        }
         // Azulejos alternos.
         TemaId.ANDALUS -> {
             linea(inactivo, x, w, g * 0.3f)
@@ -1112,6 +1159,17 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
         TemaId.ESPACIO -> {
             drawCircle(color, r * 0.55f, c)
             rotate(-20f, c) { drawOval(color, Offset(c.x - r, c.y - r * 0.3f), Size(2 * r, r * 0.6f), style = Stroke(r * 0.12f)) }
+        }
+        // Un ojo de buey: la brida con cuatro pernos y el cristal hundido.
+        TemaId.ABISMO -> {
+            drawCircle(color, r * 0.92f, c)
+            drawCircle(hueco, r * 0.52f, c)
+            drawCircle(color.copy(alpha = color.alpha * 0.35f), r * 0.52f, c)
+            for (k in 0 until 4) {
+                val a = PI / 4 + k * PI / 2
+                drawCircle(hueco, r * 0.1f, c + Offset((r * 0.72f * cos(a)).toFloat(), (r * 0.72f * sin(a)).toFloat()))
+            }
+            drawArc(Color.White.copy(alpha = 0.5f), 200f, 70f, false, Offset(c.x - r * 0.38f, c.y - r * 0.38f), Size(r * 0.76f, r * 0.76f), style = Stroke(r * 0.1f))
         }
         // Estrella de ocho puntas: dos cuadrados cruzados.
         TemaId.ANDALUS -> {

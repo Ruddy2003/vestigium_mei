@@ -59,6 +59,8 @@ object TrofeosMas {
             "Cultura" to "Modelo molecular", "Gente" to "Gradilla de tubos", "Constancia" to "Balanza analítica", "Curiosos" to "Matraz Erlenmeyer", "Tuyos" to "Placa de Petri"),
         TemaId.ESPACIO to mapOf("Diario" to "Parche de la misión", "Mundo" to "Sonda planetaria", "Cuerpo" to "Casco presurizado", "Mente" to "Telescopio espacial",
             "Cultura" to "Radiotelescopio", "Gente" to "Estación orbital", "Constancia" to "Cohete de tres etapas", "Curiosos" to "Meteorito", "Tuyos" to "Módulo de aterrizaje"),
+        TemaId.ABISMO to mapOf("Diario" to "Pizarra del buzo", "Mundo" to "Globo batimétrico", "Cuerpo" to "Escafandra de latón", "Mente" to "Batisfera",
+            "Cultura" to "Ánfora del pecio", "Gente" to "Cardumen de plata", "Constancia" to "Batiscafo de las fosas", "Curiosos" to "Rape abisal", "Tuyos" to "Medusa luminosa"),
         TemaId.URSS to mapOf("Diario" to "Periódico mural", "Mundo" to "Insignia del Transiberiano", "Cuerpo" to "Insignia del deportista", "Mente" to "Satélite de antenas",
             "Cultura" to "Cartel constructivista", "Gente" to "Estrella de la brigada", "Constancia" to "Medalla del trabajo", "Curiosos" to "Samovar", "Tuyos" to "Estrella roja"),
     )
@@ -189,6 +191,20 @@ object TrofeosMas {
                 if (p.hecho) {
                     listOf(0.18f, 0.3f, 0.7f, 0.82f).forEach { x -> drawCircle(Color(0xFFE8601C), w * 0.014f, Offset(w * x, h * 0.9f)) }
                     drawRect(Color(0xFF1B3A8C), Offset(w * 0.12f, h * 0.935f), Size(w * 0.76f, h * 0.015f))
+                }
+            }
+            TemaId.ABISMO -> {
+                // Una roca del fondo: el lomo irregular de basalto, con coral rojo, una anémona y arena alrededor.
+                val c = if (p.hecho) Color(0xFF3E4A52) else ped
+                val roca = Path().apply {
+                    moveTo(w * 0.1f, h * 0.95f); lineTo(w * 0.14f, h * 0.84f); quadraticTo(w * 0.3f, h * 0.76f, w * 0.5f, h * 0.79f)
+                    quadraticTo(w * 0.72f, h * 0.76f, w * 0.86f, h * 0.84f); lineTo(w * 0.9f, h * 0.95f); close()
+                }
+                drawPath(roca, piedra(c))
+                if (p.hecho) {
+                    drawRect(Color(0xFFD9C79A).copy(alpha = 0.8f), Offset(w * 0.06f, h * 0.93f), Size(w * 0.88f, h * 0.025f))
+                    listOf(0.2f, 0.24f, 0.28f).forEachIndexed { k, x -> drawLine(Color(0xFFC0563F), Offset(w * x, h * 0.84f), Offset(w * (x + 0.02f * (k - 1)), h * (0.76f - k * 0.015f)), w * 0.012f, StrokeCap.Round) }
+                    for (k in 0 until 6) { val a = Math.toRadians(-160.0 + k * 28.0); drawLine(Color(0xFFE29BFF), Offset(w * 0.76f, h * 0.81f), Offset(w * 0.76f + (w * 0.045f * cos(a)).toFloat(), h * 0.81f + (w * 0.045f * sin(a)).toFloat()), w * 0.008f, StrokeCap.Round) }
                 }
             }
             TemaId.URSS -> {
@@ -1684,6 +1700,156 @@ object TrofeosMas {
                 drawLine(p.linea, p.o(0.86f, 0.77f), p.o(0.86f, 0.4f), lw * 0.7f)
                 drawRect(SolidColor(naranja), Offset(p.x(0.86f), p.y(0.4f)), Size(p.x(0.1f), p.y(0.07f)))
                 drawRect(SolidColor(gris.copy(alpha = 0.4f)), Offset(p.x(0.1f), p.y(0.76f)), Size(p.x(0.8f), p.y(0.01f)))
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- Abismo: escafandra, batisfera, pecios y criaturas del fondo
+
+    internal fun DrawScope.abismo(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val mar = p.c(Color(0xFF0A5C8C)); val hondo = p.c(Color(0xFF05263A)); val luz = p.c(Color(0xFF5CF2C6))
+        val coral = p.c(Color(0xFFC0563F)); val espuma = p.c(Color(0xFFE6F2F6)); val violeta = p.c(Color(0xFFE29BFF))
+        /** Burbujas que suben (solo si ya se logró). */
+        fun burbujas(n: Int, semilla: Long, x0: Float, y0: Float, x1: Float, y1: Float) {
+            if (p.hecho) { val az = java.util.Random(semilla); repeat(n) { drawCircle(Color.White.copy(alpha = 0.75f), p.w * (0.008f + az.nextFloat() * 0.014f), p.o(x0 + az.nextFloat() * (x1 - x0), y0 + az.nextFloat() * (y1 - y0)), style = Stroke(lw * 0.4f)) } }
+        }
+        /** Un ojo de buey: la brida de metal, el cristal y su reflejo. */
+        fun ojo(c: Offset, r: Float) {
+            drawCircle(p.metal(0.2f, 0.8f), r, c)
+            drawCircle(SolidColor(hondo), r * 0.7f, c)
+            if (p.hecho) drawArc(Color.White.copy(alpha = 0.55f), 200f, 60f, false, Offset(c.x - r * 0.5f, c.y - r * 0.5f), Size(r, r), style = Stroke(lw * 0.6f))
+        }
+        when (cat) {
+            "Diario" -> {
+                // La pizarra del buzo: la tablilla blanca con su marco de latón, los renglones escritos bajo el agua y el lápiz atado.
+                drawRoundRect(p.metal(0.22f, 0.7f), p.o(0.22f, 0.12f), Size(p.x(0.48f), p.y(0.6f)), CornerRadius(p.w * 0.04f))
+                drawRoundRect(SolidColor(espuma), p.o(0.26f, 0.17f), Size(p.x(0.4f), p.y(0.5f)), CornerRadius(p.w * 0.02f))
+                if (p.hecho) for (k in 0 until 6) drawLine(hondo.copy(alpha = 0.55f), p.o(0.3f, 0.24f + k * 0.07f), p.o(if (k % 3 == 2) 0.5f else 0.62f, 0.24f + k * 0.07f), lw * 0.5f)
+                drawCircle(p.linea, p.w * 0.02f, p.o(0.46f, 0.15f))
+                drawPath(Path().apply { moveTo(p.x(0.46f), p.y(0.15f)); quadraticTo(p.x(0.78f), p.y(0.1f), p.x(0.8f), p.y(0.3f)) }, p.linea, style = Stroke(lw * 0.5f))
+                drawLine(SolidColor(coral), p.o(0.8f, 0.3f), p.o(0.84f, 0.7f), lw * 1.6f)
+                drawLine(p.linea, p.o(0.835f, 0.66f), p.o(0.842f, 0.74f), lw * 0.8f)
+                caja(p, 0.3f, 0.72f, 0.7f, 0.77f)
+            }
+            "Mundo" -> {
+                // El globo batimétrico: los océanos en azul, las fosas más hondas en oscuro y las isóbatas alrededor de los continentes.
+                val c = p.o(0.5f, 0.38f); val R = p.w * 0.3f
+                drawCircle(SolidColor(mar), R, c)
+                clipPath(Path().apply { addOval(Rect(c, R)) }) {
+                    drawPath(Path().apply { moveTo(c.x - R * 0.6f, c.y - R * 0.7f); quadraticTo(c.x - R * 0.1f, c.y - R * 0.5f, c.x - R * 0.2f, c.y); quadraticTo(c.x - R * 0.4f, c.y + R * 0.4f, c.x - R * 0.7f, c.y + R * 0.2f); close() }, p.metal(0.2f, 0.5f))
+                    drawPath(Path().apply { moveTo(c.x + R * 0.3f, c.y - R * 0.4f); quadraticTo(c.x + R * 0.8f, c.y - R * 0.2f, c.x + R * 0.5f, c.y + R * 0.5f); quadraticTo(c.x + R * 0.2f, c.y + R * 0.2f, c.x + R * 0.3f, c.y - R * 0.4f); close() }, p.metal(0.6f, 0.85f))
+                    if (p.hecho) {
+                        drawOval(hondo, Offset(c.x + R * 0.05f, c.y + R * 0.45f), Size(R * 0.18f, R * 0.4f))
+                        listOf(0.82f, 0.92f).forEach { k -> drawCircle(espuma.copy(alpha = 0.35f), R * k, c, style = Stroke(lw * 0.4f)) }
+                    }
+                }
+                drawCircle(p.linea, R, c, style = Stroke(lw * 0.6f))
+                drawArc(p.metal(0.15f, 0.85f), 120f, 300f, false, Offset(c.x - R * 1.12f, c.y - R * 1.12f), Size(R * 2.24f, R * 2.24f), style = Stroke(lw * 1.4f))
+                caja(p, 0.47f, 0.7f, 0.53f, 0.73f)
+                caja(p, 0.32f, 0.73f, 0.68f, 0.77f)
+            }
+            "Cuerpo" -> {
+                // La escafandra de latón: el casco redondo con su ojo de buey grande al frente y dos a los lados, el peto
+                // atornillado y la válvula del aire.
+                val c = p.o(0.5f, 0.38f); val R = p.w * 0.27f
+                drawRoundRect(p.metal(0.18f, 0.82f), p.o(0.2f, 0.58f), Size(p.x(0.6f), p.y(0.16f)), CornerRadius(p.w * 0.05f))
+                if (p.hecho) listOf(0.26f, 0.4f, 0.6f, 0.74f).forEach { x -> drawCircle(p.linea, p.w * 0.014f, p.o(x, 0.66f)) }
+                drawCircle(p.metal(0.22f, 0.78f), R, c)
+                ojo(c, R * 0.48f)
+                listOf(-1f, 1f).forEach { s -> ojo(Offset(c.x + s * R * 0.78f, c.y - R * 0.05f), R * 0.17f) }
+                drawLine(p.linea, Offset(c.x + R * 0.5f, c.y - R * 0.8f), Offset(c.x + R * 0.7f, c.y - R * 1.05f), lw * 1.4f)
+                drawCircle(SolidColor(coral), p.w * 0.022f, Offset(c.x + R * 0.72f, c.y - R * 1.07f))
+                burbujas(5, 4, 0.66f, 0.02f, 0.86f, 0.14f)
+                caja(p, 0.34f, 0.74f, 0.66f, 0.77f)
+            }
+            "Mente" -> {
+                // La batisfera: la esfera de acero colgada de su cable, con sus ojos de buey y el foco que alumbra lo hondo.
+                drawLine(p.linea, p.o(0.5f, 0f), p.o(0.5f, 0.14f), lw * 0.8f)
+                val c = p.o(0.5f, 0.38f); val R = p.w * 0.24f
+                if (p.hecho) drawPath(Path().apply { moveTo(c.x + R * 0.3f, c.y + R * 0.3f); lineTo(p.x(0.95f), p.y(0.66f)); lineTo(p.x(0.7f), p.y(0.72f)); close() }, Brush.linearGradient(listOf(luz.copy(alpha = 0.55f), Color.Transparent), c, p.o(0.9f, 0.7f)))
+                drawCircle(p.metal(0.26f, 0.74f), R, c)
+                drawRect(p.metal(0.42f, 0.58f), Offset(p.x(0.44f), c.y - R * 1.05f), Size(p.x(0.12f), R * 0.25f))
+                ojo(Offset(c.x - R * 0.3f, c.y + R * 0.05f), R * 0.28f); ojo(Offset(c.x + R * 0.32f, c.y - R * 0.2f), R * 0.2f)
+                if (p.hecho) for (k in 0 until 10) { val a = Math.toRadians(k * 36.0); drawCircle(p.linea, p.w * 0.008f, Offset(c.x + (R * 0.92f * cos(a)).toFloat(), c.y + (R * 0.92f * sin(a)).toFloat())) }
+                caja(p, 0.34f, 0.72f, 0.66f, 0.77f, SolidColor(hondo))
+            }
+            "Cultura" -> {
+                // El ánfora del pecio: la vasija de dos asas, tumbada en la arena y cubierta de coral y de una estrella de mar.
+                rotate(-28f, p.o(0.5f, 0.45f)) {
+                    val anfora = Path().apply {
+                        moveTo(p.x(0.45f), p.y(0.12f)); lineTo(p.x(0.55f), p.y(0.12f)); lineTo(p.x(0.55f), p.y(0.2f))
+                        cubicTo(p.x(0.72f), p.y(0.26f), p.x(0.7f), p.y(0.56f), p.x(0.5f), p.y(0.72f))
+                        cubicTo(p.x(0.3f), p.y(0.56f), p.x(0.28f), p.y(0.26f), p.x(0.45f), p.y(0.2f)); close()
+                    }
+                    drawPath(anfora, p.metal(0.3f, 0.7f))
+                    listOf(-1f, 1f).forEach { s -> drawArc(p.linea, if (s < 0) 90f else -90f, 180f, false, Offset(p.x(0.5f + s * 0.1f) - p.w * 0.05f, p.y(0.16f)), Size(p.w * 0.1f, p.y(0.12f)), style = Stroke(lw)) }
+                    if (p.hecho) listOf(Offset(0.42f, 0.4f), Offset(0.56f, 0.5f), Offset(0.48f, 0.6f)).forEach { o -> drawCircle(coral.copy(alpha = 0.75f), p.w * 0.03f, p.o(o.x, o.y)) }
+                }
+                if (p.hecho) {
+                    val e = p.o(0.72f, 0.6f)
+                    for (k in 0 until 5) { val a = Math.toRadians(-90.0 + k * 72.0); drawLine(coral, e, Offset(e.x + (p.w * 0.06f * cos(a)).toFloat(), e.y + (p.w * 0.06f * sin(a)).toFloat()), lw * 1.2f, StrokeCap.Round) }
+                }
+                drawRect(SolidColor(p.c(Color(0xFFD9C79A))), Offset(p.x(0.12f), p.y(0.72f)), Size(p.x(0.76f), p.y(0.05f)))
+            }
+            "Gente" -> {
+                // El cardumen de plata: muchos peces que nadan juntos en la misma dirección, alrededor de uno de oro.
+                val az = java.util.Random(11)
+                fun pez(o: Offset, l: Float, b: Brush) {
+                    drawPath(Path().apply { moveTo(o.x + l, o.y); quadraticTo(o.x, o.y - l * 0.45f, o.x - l * 0.7f, o.y); quadraticTo(o.x, o.y + l * 0.45f, o.x + l, o.y); close()
+                        moveTo(o.x - l * 0.6f, o.y); lineTo(o.x - l * 1.1f, o.y - l * 0.35f); lineTo(o.x - l * 1.1f, o.y + l * 0.35f); close() }, b)
+                }
+                repeat(14) { pez(p.o(0.16f + az.nextFloat() * 0.68f, 0.12f + az.nextFloat() * 0.52f), p.w * (0.045f + az.nextFloat() * 0.02f), p.metal(0.2f, 0.8f)) }
+                pez(p.o(0.5f, 0.38f), p.w * 0.09f, SolidColor(p.c(Color(0xFFD4AF37))))
+                burbujas(4, 13, 0.1f, 0.05f, 0.9f, 0.2f)
+                caja(p, 0.3f, 0.72f, 0.7f, 0.77f)
+            }
+            "Constancia" -> {
+                // El batiscafo: el flotador largo lleno de gasolina, la torreta, la esfera de la tripulación colgada debajo,
+                // el lastre de perdigones y la hélice.
+                drawRoundRect(p.metal(0.1f, 0.9f), p.o(0.1f, 0.2f), Size(p.x(0.8f), p.y(0.18f)), CornerRadius(p.w * 0.09f))
+                caja(p, 0.44f, 0.12f, 0.56f, 0.2f)
+                drawLine(p.linea, p.o(0.12f, 0.29f), p.o(0.88f, 0.29f), lw * 0.4f)
+                listOf(0.3f, 0.7f).forEach { x -> caja(p, x - 0.03f, 0.38f, x + 0.03f, 0.46f, SolidColor(hondo)) }
+                drawLine(p.linea, p.o(0.5f, 0.38f), p.o(0.5f, 0.44f), lw)
+                val c = p.o(0.5f, 0.54f); val R = p.w * 0.11f
+                drawCircle(p.metal(0.38f, 0.62f), R, c)
+                ojo(Offset(c.x - R * 0.1f, c.y + R * 0.1f), R * 0.38f)
+                drawLine(p.linea, p.o(0.9f, 0.29f), p.o(0.96f, 0.22f), lw); drawLine(p.linea, p.o(0.9f, 0.29f), p.o(0.96f, 0.36f), lw)
+                burbujas(6, 17, 0.2f, 0.02f, 0.8f, 0.12f)
+                caja(p, 0.36f, 0.72f, 0.64f, 0.77f)
+            }
+            "Curiosos" -> {
+                // El rape abisal: el cuerpo oscuro, la boca llena de dientes y la linterna de luz que cuelga delante.
+                val cuerpo = Path().apply {
+                    moveTo(p.x(0.24f), p.y(0.42f)); cubicTo(p.x(0.26f), p.y(0.2f), p.x(0.6f), p.y(0.18f), p.x(0.72f), p.y(0.38f))
+                    lineTo(p.x(0.78f), p.y(0.46f)); cubicTo(p.x(0.62f), p.y(0.66f), p.x(0.3f), p.y(0.66f), p.x(0.24f), p.y(0.42f)); close()
+                    moveTo(p.x(0.26f), p.y(0.44f)); lineTo(p.x(0.1f), p.y(0.32f)); lineTo(p.x(0.12f), p.y(0.56f)); close()
+                }
+                drawPath(cuerpo, p.metal(0.2f, 0.8f))
+                if (p.hecho) for (k in 0 until 5) drawLine(espuma, p.o(0.62f + k * 0.03f, 0.42f), p.o(0.63f + k * 0.03f, 0.47f), lw * 0.5f)
+                drawCircle(SolidColor(espuma), p.w * 0.03f, p.o(0.56f, 0.32f)); drawCircle(SolidColor(hondo), p.w * 0.014f, p.o(0.56f, 0.32f))
+                drawPath(Path().apply { moveTo(p.x(0.5f), p.y(0.2f)); quadraticTo(p.x(0.66f), p.y(0.02f), p.x(0.86f), p.y(0.18f)) }, p.linea, style = Stroke(lw * 0.8f))
+                if (p.hecho) drawCircle(Brush.radialGradient(listOf(luz.copy(alpha = 0.6f), Color.Transparent), p.o(0.86f, 0.2f), p.w * 0.1f), p.w * 0.1f, p.o(0.86f, 0.2f))
+                drawCircle(SolidColor(luz), p.w * 0.03f, p.o(0.86f, 0.2f))
+                caja(p, 0.34f, 0.72f, 0.66f, 0.77f, SolidColor(hondo))
+            }
+            else -> {
+                // La medusa luminosa: la campana translúcida con sus cuatro gónadas, la orla de tentáculos y los brazos largos.
+                val c = p.o(0.5f, 0.3f); val R = p.w * 0.26f
+                if (p.hecho) drawCircle(Brush.radialGradient(listOf(luz.copy(alpha = 0.4f), Color.Transparent), c, R * 1.5f), R * 1.5f, c)
+                for (k in 0 until 4) {
+                    val x0 = c.x + (k - 1.5f) * R * 0.2f
+                    drawPath(Path().apply { moveTo(x0, c.y); quadraticTo(x0 + R * 0.2f, c.y + R * 0.8f, x0 - R * 0.05f, c.y + R * 1.5f) }, SolidColor(violeta), style = Stroke(lw * 1.2f, cap = StrokeCap.Round))
+                }
+                for (k in 0..8) {
+                    val x0 = c.x - R * 0.9f + R * 1.8f * k / 8f
+                    drawLine(p.linea, Offset(x0, c.y), Offset(x0 + (if (k % 2 == 0) 1 else -1) * R * 0.06f, c.y + R * 0.8f), lw * 0.4f)
+                }
+                val campana = Path().apply { moveTo(c.x - R, c.y); cubicTo(c.x - R, c.y - R * 1.2f, c.x + R, c.y - R * 1.2f, c.x + R, c.y); quadraticTo(c.x, c.y - R * 0.25f, c.x - R, c.y); close() }
+                drawPath(campana, p.metal(0.24f, 0.76f), alpha = if (p.hecho) 0.85f else 1f)
+                if (p.hecho) for (k in 0 until 4) drawArc(luz, 160f, 220f, false, Offset(c.x + (k - 1.5f) * R * 0.38f - R * 0.12f, c.y - R * 0.6f), Size(R * 0.24f, R * 0.24f), style = Stroke(lw * 0.7f))
+                caja(p, 0.34f, 0.72f, 0.66f, 0.77f)
             }
         }
     }

@@ -593,6 +593,17 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawCircle(Color.White.copy(alpha = 0.85f), h * 0.2f, Offset((fw - h * 0.2f).coerceAtLeast(h * 0.2f), h / 2))
             }
         }
+        // El cabo de sondeo: la raya con sus marcas y, lo hecho, una columna de agua con burbujas que acaba en la plomada.
+        TemaId.ABISMO -> {
+            drawLine(pista, Offset(0f, h / 2), Offset(w, h / 2), d)
+            var x = 0f; var k = 0; while (x <= w) { drawLine(pista, Offset(x, h / 2 - (if (k % 5 == 0) 3 else 1.5f) * d), Offset(x, h / 2 + (if (k % 5 == 0) 3 else 1.5f) * d), d); x += 6 * d; k++ }
+            if (fw > 0f) {
+                drawRoundRect(color.copy(alpha = 0.35f), Offset(0f, h * 0.15f), Size(fw, h * 0.7f), CornerRadius(h * 0.2f))
+                var b = h * 0.5f; var j = 0
+                while (b < fw - h * 0.6f) { drawCircle(claro, h * (if (j % 2 == 0) 0.12f else 0.18f), Offset(b, h * (if (j % 2 == 0) 0.4f else 0.6f)), style = Stroke(0.8f * d)); b += h * 0.9f; j++ }
+                drawPath(Path().apply { moveTo(fw - h * 0.25f, h * 0.15f); lineTo(fw + h * 0.25f, h * 0.15f); lineTo(fw, h * 0.95f); close() }, color)
+            }
+        }
         // Alicatado: estrellas de ocho puntas en fila.
         TemaId.ANDALUS -> {
             drawRect(color.copy(alpha = 0.35f), Offset.Zero, size, style = Stroke(0.8f * d))
@@ -846,6 +857,20 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawLine(cs.secondary.copy(alpha = 0.25f), Offset(c.x, c.y - rc), Offset(c.x, c.y + rc), 0.6f * d)
             drawArc(cs.secondary.copy(alpha = 0.12f), -90f, 50f, true, Offset(c.x - rc, c.y - rc), Size(rc * 2, rc * 2))
             marcas(24, 2f * d, 0.8f * d, cs.secondary.copy(alpha = 0.5f))
+        }
+        // El profundímetro: isóbatas onduladas dentro de la esfera, una más quieta que otra, y la escala de 24 marcas.
+        TemaId.ABISMO -> {
+            listOf(0.92f to 6, 0.62f to 8, 0.32f to 5).forEach { (k, n) ->
+                val p = Path()
+                for (i in 0..72) {
+                    val a = 2 * PI * i / 72; val rr = rc * k * (1f + 0.04f * sin(a * n).toFloat())
+                    val q = Offset(c.x + (rr * cos(a)).toFloat(), c.y + (rr * sin(a)).toFloat())
+                    if (i == 0) p.moveTo(q.x, q.y) else p.lineTo(q.x, q.y)
+                }
+                drawPath(p, cs.tertiary.copy(alpha = 0.3f), style = Stroke(0.8f * d))
+            }
+            marcas(24, 2f * d, 0.8f * d, cs.tertiary.copy(alpha = 0.55f))
+            marcas(4, 5f * d, 1.2f * d, cs.tertiary.copy(alpha = 0.7f))
         }
         // Astrolabio: la red con la estrella de ocho y el limbo graduado.
         TemaId.ANDALUS -> {

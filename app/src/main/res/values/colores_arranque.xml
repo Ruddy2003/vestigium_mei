@@ -35,6 +35,8 @@
     <color name="arranque_gotico_oscuro">#0A0F2A</color>
     <color name="arranque_espacio">#EEF1F6</color>
     <color name="arranque_espacio_oscuro">#03050C</color>
+    <color name="arranque_abismo">#E6F2F6</color>
+    <color name="arranque_abismo_oscuro">#01060B</color>
     <color name="arranque_andalus">#F3EBDA</color>
     <color name="arranque_andalus_oscuro">#0B1716</color>
     <color name="arranque_mongol">#F1EDE3</color>

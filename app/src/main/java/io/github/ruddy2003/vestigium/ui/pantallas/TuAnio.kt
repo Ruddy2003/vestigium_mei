@@ -152,6 +152,8 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.GOTICO -> "Annales · anno ${Romano.de(anio).lowercase()}"
     // Como en los observatorios: el año empieza en un día juliano.
     TemaId.ESPACIO -> "CICLO $anio · DESDE JD " + String.format(java.util.Locale.US, "%,d", Temas.diaJuliano(java.time.LocalDate.of(anio, 1, 1))).replace(',', ' ')
+    // El año como una bajada: una inmersión por día, diez metros cada una.
+    TemaId.ABISMO -> java.time.Year.of(anio).length().let { n -> String.format(java.util.Locale.US, "LA BAJADA DE %d · %d INMERSIONES · %,d m", anio, n, n * 10) }
     // El año del sol cae sobre dos años de la hégira: el del 1 de enero y el del 31 de diciembre.
     TemaId.ANDALUS -> {
         val h1 = Temas.hegira(java.time.LocalDate.of(anio, 1, 1))?.third

@@ -552,6 +552,37 @@ object Frases {
         f("Veniet tempus quo ista quae nunc latent in lucem dies extrahat et longioris aevi diligentia.", "Llegará un tiempo en que lo que ahora está oculto lo saquen a la luz los días y la diligencia de una época más larga.", "Séneca, Cuestiones naturales VII, 25, 4, sobre los cometas"),
     )
 
+    val ABISMO = listOf(
+        f("La mer est tout ! Elle couvre les sept dixièmes du globe terrestre.", "¡El mar lo es todo! Cubre las siete décimas partes del globo terrestre.", "Julio Verne, Veinte mil leguas de viaje submarino I, 10, 1870 (habla el capitán Nemo)"),
+        f("Là seulement est l'indépendance ! Là je ne reconnais pas de maîtres ! Là je suis libre !", "¡Solo allí está la independencia! ¡Allí no reconozco amos! ¡Allí soy libre!", "Julio Verne, Veinte mil leguas de viaje submarino I, 10, 1870 (Nemo, sobre el fondo del mar)"),
+        f("Mobilis in mobili.", "Móvil en el elemento móvil.", "Lema del Nautilus en Veinte mil leguas de viaje submarino, de Julio Verne, 1870"),
+        f("Yes, as every one knows, meditation and water are wedded for ever.", "Sí, como todo el mundo sabe, la meditación y el agua están casadas para siempre.", "Herman Melville, Moby Dick, cap. 1, 1851"),
+        f("There is, one knows not what sweet mystery about this sea, whose gently awful stirrings seem to speak of some hidden soul beneath.",
+            "Hay en este mar no se sabe qué dulce misterio, cuyos movimientos, suaves y terribles, parecen hablar de un alma escondida debajo.", "Herman Melville, Moby Dick, cap. 111, «El Pacífico», 1851"),
+        f("For all at last return to the sea — to Oceanus, the ocean river, like the ever-flowing stream of time, the beginning and the end.",
+            "Porque al final todo vuelve al mar: a Océano, el río océano, como la corriente del tiempo que siempre fluye, el principio y el fin.", "Rachel Carson, El mar que nos rodea, 1951 (la última frase del libro)"),
+        f("It was stranger than any imagination could have conceived.", "Era más extraño de lo que cualquier imaginación habría podido concebir.", "William Beebe, Half Mile Down, 1934, sobre la luz a 800 metros desde la batisfera"),
+        f("Only dead men have sunk below this.", "Solo los muertos se han hundido más abajo.", "William Beebe, Half Mile Down, 1934"),
+        f("Homme libre, toujours tu chériras la mer ! La mer est ton miroir ; tu contemples ton âme dans le déroulement infini de sa lame.",
+            "¡Hombre libre, siempre amarás el mar! El mar es tu espejo: contemplas tu alma en el desenvolverse infinito de su ola.", "Charles Baudelaire, «El hombre y el mar», Las flores del mal, 1857"),
+        f(null, "Necesito del mar porque me enseña: no sé si aprendo música o conciencia.", "Pablo Neruda, «El mar», Memorial de Isla Negra, 1964"),
+        f(null, "Nuestras vidas son los ríos que van a dar en la mar, que es el morir.", "Jorge Manrique, Coplas por la muerte de su padre, 1476"),
+        f("Full fathom five thy father lies; of his bones are coral made; those are pearls that were his eyes.",
+            "A cinco brazas yace tu padre; de sus huesos se hizo coral; son perlas las que eran sus ojos.", "William Shakespeare, La tempestad, acto I, escena 2 (canción de Ariel)"),
+        f("Und wenn du lange in einen Abgrund blickst, blickt der Abgrund auch in dich hinein.", "Y si miras largo tiempo un abismo, el abismo también mira dentro de ti.", "Friedrich Nietzsche, Más allá del bien y del mal, § 146, 1886"),
+        f("Omnia flumina intrant mare, et mare non redundat.", "Todos los ríos van al mar, y el mar no se desborda.", "Eclesiastés 1, 7, en la Vulgata"),
+        f("Abyssus abyssum invocat in voce cataractarum tuarum.", "Un abismo llama a otro abismo con la voz de tus cascadas.", "Salmo 41, 8, en la Vulgata (42, 7 en la numeración hebrea)"),
+        f("Et tenebrae super faciem abyssi, et spiritus Dei ferebatur super aquas.", "Y había tinieblas sobre la faz del abismo, y el espíritu de Dios se movía sobre las aguas.", "Génesis 1, 2, en la Vulgata"),
+        f("θάλασσα ὕδωρ καθαρώτατον καὶ μιαρώτατον, ἰχθύσι μὲν πότιμον καὶ σωτήριον, ἀνθρώποις δὲ ἄποτον καὶ ὀλέθριον.",
+            "El mar es el agua más pura y la más impura: para los peces, potable y salvadora; para los hombres, imbebible y mortal.", "Heráclito, fragmento 61 (Diels-Kranz), citado por Hipólito"),
+        f("We have salt in our blood, in our sweat, in our tears. We are tied to the ocean.", "Tenemos sal en la sangre, en el sudor, en las lágrimas. Estamos atados al océano.",
+            "John F. Kennedy, cena de la Copa América, Newport, 14 de septiembre de 1962"),
+        f("I know of a cure for everything: salt water.", "Conozco una cura para todo: el agua salada.", "Isak Dinesen, «El diluvio de Norderney», en Siete cuentos góticos, 1934 (sigue: el sudor, las lágrimas o el mar)"),
+        f("No water, no life. No blue, no green.", "Sin agua no hay vida. Sin azul no hay verde.", "Sylvia Earle, oceanógrafa, frase que repite en sus charlas por la protección del mar"),
+        f("How inappropriate to call this planet Earth when it is quite clearly Ocean.", "Qué poco apropiado llamar Tierra a este planeta, cuando está claro que es Océano.",
+            "Atribuida a Arthur C. Clarke; así la citó James Lovelock en la revista Nature, 1990"),
+    )
+
     val ANDALUS = listOf(
         f("ولا غالب إلا الله", "No hay vencedor sino Dios.", "Lema de los nazaríes, repetido en los muros de la Alhambra"),
         f(null, "Soy un ojo lleno de alegría en este jardín, y la pupila de ese ojo es, en verdad, nuestro señor.", "Ibn Zamrak, poema del mirador de Lindaraja, Alhambra"),
@@ -687,6 +718,7 @@ object Frases {
         TemaId.URSS -> URSS
         TemaId.GOTICO -> GOTICO
         TemaId.ESPACIO -> ESPACIO
+        TemaId.ABISMO -> ABISMO
         TemaId.ANDALUS -> ANDALUS
         TemaId.MONGOL -> MONGOL
         TemaId.RENACIMIENTO -> RENACIMIENTO
@@ -719,6 +751,7 @@ object Frases {
         TemaId.URSS -> "LEMA DEL DÍA"
         TemaId.GOTICO -> "Lectio del día"
         TemaId.ESPACIO -> "TRANSMISIÓN DEL DÍA"
+        TemaId.ABISMO -> "LO QUE SUBIÓ LA SONDA HOY"
         TemaId.ANDALUS -> "حكمة اليوم · sentencia del día"
         TemaId.MONGOL -> "ӨНӨӨДРИЙН БИЛИГ · máxima del día"
         TemaId.RENACIMIENTO -> "Dal taccuino"

@@ -86,6 +86,10 @@ object Marcas {
         PIEDRA,
         /** Línea con muescas inclinadas, como una inscripción de palotes. */
         MUESCAS,
+        /** Escotilla: cápsula alrededor de la palabra con un perno en cada punta. */
+        ESCOTILLA,
+        /** Subrayado de burbujas de varios tamaños. */
+        BURBUJAS,
     }
 
     /** Cómo se ve una marca: color de la letra, el trazo detrás y si va en negrita o cursiva. */
@@ -116,6 +120,7 @@ object Marcas {
             TemaId.SEDA -> if (persona) Aspecto(cs.onPrimary, p, Forma.SELLO, negrita = true) else Aspecto(s, s, Forma.RECUADRO)
             TemaId.GOTICO -> if (persona) Aspecto(p, t, Forma.OJIVA, negrita = true) else Aspecto(s, s, Forma.SUBRAYADO, cursiva = true)
             TemaId.ESPACIO -> if (persona) Aspecto(t, t, Forma.ESQUINAS, negrita = true) else Aspecto(p, p, Forma.GUIONES)
+            TemaId.ABISMO -> if (persona) Aspecto(p, s, Forma.ESCOTILLA, negrita = true) else Aspecto(t, t, Forma.BURBUJAS)
             TemaId.ANDALUS -> if (persona) Aspecto(p, t, Forma.HERRADURA, negrita = true) else Aspecto(s, s, Forma.TRENZA)
             TemaId.MONGOL -> if (persona) Aspecto(p, t, Forma.MEDALLON, negrita = true) else Aspecto(s, s, Forma.MARCADOR)
             TemaId.RENACIMIENTO -> if (persona) Aspecto(p, p, Forma.ONDULADO, cursiva = true) else Aspecto(s, s, Forma.SUBRAYADO, cursiva = true)
@@ -129,17 +134,17 @@ object Marcas {
     private fun fondoCampo(f: Forma, c: Color): Color = when (f) {
         Forma.SELLO, Forma.TERMINAL, Forma.BARRA, Forma.PARALELO -> c
         Forma.MARCADOR, Forma.CINTA, Forma.PLACA, Forma.ETIQUETA -> c.copy(alpha = 0.22f)
-        Forma.RECUADRO, Forma.CORCHETES, Forma.CARTELA, Forma.GOMA, Forma.RECORTE, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PIEDRA -> c.copy(alpha = 0.12f)
+        Forma.RECUADRO, Forma.CORCHETES, Forma.CARTELA, Forma.GOMA, Forma.RECORTE, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PIEDRA, Forma.ESCOTILLA -> c.copy(alpha = 0.12f)
         Forma.NINGUNA, Forma.SUBRAYADO, Forma.ONDULADO, Forma.GRECA, Forma.PUNTEADO, Forma.DOBLE, Forma.ESCALA, Forma.ZIGZAG, Forma.GUIONES,
-        Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS -> Color.Unspecified
+        Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS, Forma.BURBUJAS -> Color.Unspecified
     }
 
     /** En un campo de texto, las formas que van debajo de la palabra se quedan en un subrayado. */
     private fun subrayaCampo(f: Forma): Boolean = when (f) {
         Forma.SUBRAYADO, Forma.ONDULADO, Forma.GRECA, Forma.PUNTEADO, Forma.DOBLE, Forma.ESCALA, Forma.ZIGZAG, Forma.GUIONES,
-        Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS -> true
+        Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS, Forma.BURBUJAS -> true
         Forma.NINGUNA, Forma.MARCADOR, Forma.RECUADRO, Forma.SELLO, Forma.CORCHETES, Forma.CARTELA, Forma.TERMINAL, Forma.BARRA, Forma.GOMA,
-        Forma.PLACA, Forma.RECORTE, Forma.ETIQUETA, Forma.CINTA, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PARALELO, Forma.PIEDRA -> false
+        Forma.PLACA, Forma.RECORTE, Forma.ETIQUETA, Forma.CINTA, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PARALELO, Forma.PIEDRA, Forma.ESCOTILLA -> false
     }
 
     /** El estilo de letra de la marca. Con [conFondo], lo que no se puede dibujar (en un campo de texto) va como fondo de la letra. */
@@ -335,6 +340,22 @@ object Marcas {
                     lineTo(iz + ch * 0.5f, b); lineTo(iz, b - ch); lineTo(iz, t + ch * 0.7f); close()
                 }
                 drawPath(p, c.copy(alpha = 0.09f)); drawPath(p, c.copy(alpha = 0.8f), style = Stroke(1.1f * u, join = StrokeJoin.Bevel))
+            }
+            Forma.ESCOTILLA -> {
+                // La cápsula de la escotilla: llena muy tenue, con su borde y un perno de latón en cada punta.
+                val iz = rr.left - 5 * u; val de = rr.right + 5 * u; val t = rr.top + h * 0.06f; val b = rr.bottom - h * 0.04f; val r = (b - t) / 2
+                drawRoundRect(c.copy(alpha = 0.1f), Offset(iz, t), Size(de - iz, b - t), CornerRadius(r, r))
+                drawRoundRect(c.copy(alpha = 0.85f), Offset(iz, t), Size(de - iz, b - t), CornerRadius(r, r), style = Stroke(1.1f * u))
+                listOf(iz + r * 0.55f, de - r * 0.55f).forEach { x -> drawCircle(c.copy(alpha = 0.85f), 0.9f * u, Offset(x, medio)) }
+            }
+            Forma.BURBUJAS -> {
+                // Una fila de burbujas bajo la palabra, unas más grandes que otras y a distinta altura.
+                var x = rr.left + 1.5f * u; var k = 0
+                while (x <= rr.right) {
+                    val r = (if (k % 3 == 1) 1.5f else 1f) * u
+                    drawCircle(c.copy(alpha = 0.85f), r, Offset(x, baja - (k % 2) * 1.2f * u), style = Stroke(0.7f * u))
+                    x += 4.5f * u; k++
+                }
             }
             Forma.MUESCAS -> {
                 val y = baja

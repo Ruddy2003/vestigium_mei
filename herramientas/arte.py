@@ -58,6 +58,21 @@ def papel_antiguas():
     a = a * (0.96 + 0.06 * ruido_rect(W, H, 0.8, 93)[..., None])
     a_img(a).save(os.path.join(OUT, 'papel_antiguas.jpg'), quality=86)
 
+def papel_abismo():
+    """El papel sintético impermeable de la bitácora del batiscafo: gris verdoso y liso, con un grano plástico muy fino,
+    la red de luz del agua apenas marcada como marca de agua, manchas de humedad que se secaron y los bordes un poco
+    más azules, como mojados."""
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    a = mezcla(col('#EEF4F2'), col('#DDE9E7'), ruido_rect(W, H, 40, 131) * 0.7)
+    causticas = np.abs(np.sin(xx / 29 + np.sin(yy / 41) * 2.3) * np.sin(yy / 23 + np.sin(xx / 35) * 1.9))
+    a = mezcla(a, col('#BFD9DC'), (causticas < 0.05) * 0.2)
+    a = mezcla(a, col('#C9DCD8'), np.clip((ruido_rect(W, H, 22, 132) - 0.72) * 3.2, 0, 1) * 0.45)
+    d = np.sqrt(((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2) / math.sqrt(2)
+    a = mezcla(a, col('#9DC3CC'), np.clip((d - 0.6) / 0.4, 0, 1) * 0.45)
+    a = a * (0.975 + 0.035 * ruido_rect(W, H, 0.6, 133)[..., None])
+    a_img(a).save(os.path.join(OUT, 'papel_abismo.jpg'), quality=86)
+
 # ------------------------------------------------------------------ papeles
 def papeles():
     W, H = 720, 1280
@@ -222,5 +237,6 @@ if __name__ == '__main__':
     papel_antiguas()
     papeles_lote7()
     papel_neon()
+    papel_abismo()
     papeles_fuente()
     print('papeles listos')

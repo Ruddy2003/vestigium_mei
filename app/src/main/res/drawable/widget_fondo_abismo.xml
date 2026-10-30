@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Abismo: el agua de la zona abisal, casi negra, con un borde de burbujas y una medusa que brilla en la esquina. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F7041019"/>
+            <stroke android:width="1.5dp" android:color="#1E4A5E"/>
+            <corners android:radius="15dp"/>
+        </shape>
+    </item>
+    <item android:top="5dp" android:left="5dp" android:right="5dp" android:bottom="5dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="1dp" android:color="#555CF2C6" android:dashWidth="1.5dp" android:dashGap="6dp"/>
+            <corners android:radius="10dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|right" android:width="14dp" android:height="14dp" android:top="4dp" android:right="8dp">
+        <vector android:width="14dp" android:height="14dp" android:viewportWidth="14" android:viewportHeight="14">
+            <path android:pathData="M2,7 C2,1.4 12,1.4 12,7 Q7,6 2,7 Z" android:fillColor="#CC5CF2C6"/>
+            <path android:pathData="M4.5,7.2 Q3.6,9.8 4.6,13 M7,7.2 Q8,10 7,13.2 M9.5,7.2 Q10.4,9.8 9.4,13" android:fillColor="#00000000" android:strokeColor="#AA5CF2C6" android:strokeWidth="0.7"/>
+        </vector>
+    </item>
+</layer-list>

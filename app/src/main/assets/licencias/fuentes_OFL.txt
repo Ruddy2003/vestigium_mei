@@ -15,6 +15,8 @@ Cinzel Decorative (sin modificar) — Copyright © 2012 Natanael Gama (info@ndis
 Vitral Vestigium — versión reducida y renombrada de UnifrakturMaguntia: Copyright (c) 2010 j. 'mach' wust, Copyright (c) 2009 Peter Wiegel, with Reserved Font Name UnifrakturMaguntia
 Orbita Vestigium — instancias estáticas, reducidas y renombradas de Orbitron: Copyright 2018 The Orbitron Project Authors (https://github.com/theleagueof/orbitron), with Reserved Font Name "Orbitron"
 Space Grotesk (instancias estáticas) — Copyright 2020 The Space Grotesk Project Authors (https://github.com/floriankarsten/space-grotesk)
+Barlow Condensed (recortada) — Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)
+Atkinson Hyperlegible Next (instancias estáticas, recortadas) — Copyright 2020-2024 The Atkinson Hyperlegible Next Project Authors (https://github.com/googlefonts/atkinson-hyperlegible-next)
 Reem Kufi (instancias estáticas) — Copyright 2015-2022 The Reem Kufi Project Authors (https://github.com/aliftype/reem-kufi)
 Amiri — Copyright 2010-2022 The Amiri Project Authors (https://github.com/aliftype/amiri)
 Philosopher — Copyright 2011 The Philosopher Project Authors (https://github.com/alexeiva/philosopher)
