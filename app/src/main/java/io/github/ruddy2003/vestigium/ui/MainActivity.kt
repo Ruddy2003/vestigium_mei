@@ -640,7 +640,7 @@ private fun DrawScope.bloqueoRastrillo(cs: ColorScheme) {
     val muro = Path().apply {
         moveTo(0f, h); lineTo(0f, 0f)
         var x = 0f; var k = 0
-        while (x + m < w) { val y = if (k % 2 == 0) 0f else a; lineTo(x, y); lineTo(x + m, y); x += m; k++ }
+        while (x + m < w) { val y = if (k % 2 == 0) 0f else a; lineTo(x, y); lineTo(x + m, y); x += maxOf(m, 1f); k++ }
         lineTo(x, if (k % 2 == 0) 0f else a); lineTo(w, if (k % 2 == 0) 0f else a); lineTo(w, h); close()
     }
     drawPath(muro, cs.secondary, style = Stroke(2f * u))
@@ -825,7 +825,7 @@ private fun DrawScope.bloqueoBoveda(cs: ColorScheme) {
     }
     drawPath(p, cs.primary, style = Stroke(2f * u))
     var x = m + 5 * g
-    while (x + 2 * g < w - m - 4 * g) { drawRoundRect(cs.primary.copy(alpha = 0.5f), Offset(x, m - 4 * u), Size(1.6f * g, 1.6f * g), CornerRadius(3 * u), style = Stroke(u)); x += 2 * g }
+    while (x + 2 * g < w - m - 4 * g) { drawRoundRect(cs.primary.copy(alpha = 0.5f), Offset(x, m - 4 * u), Size(1.6f * g, 1.6f * g), CornerRadius(3 * u), style = Stroke(u)); x += maxOf(2 * g, 1f) }
 }
 
 /** Puerta de piedra: esquinas cortadas, doble línea, gemas en las esquinas y runas en los dinteles. */

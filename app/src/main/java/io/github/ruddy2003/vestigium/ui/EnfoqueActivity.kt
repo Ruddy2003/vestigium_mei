@@ -985,7 +985,7 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             val m = maxOf(h * 0.4f, 3 * u); val a = h * 0.22f
             moveTo(x, y + h); lineTo(x, y)
             var xx = x; var k = 0
-            while (xx + m < x + w) { val yy = if (k % 2 == 0) y else y + a; lineTo(xx, yy); lineTo(xx + m, yy); xx += m; k++ }
+            while (xx + m < x + w) { val yy = if (k % 2 == 0) y else y + a; lineTo(xx, yy); lineTo(xx + m, yy); xx += maxOf(m, 1f); k++ }
             lineTo(xx, if (k % 2 == 0) y else y + a); lineTo(x + w, if (k % 2 == 0) y else y + a); lineTo(x + w, y + h); close()
         }
         TemaId.DISTOPIA -> {

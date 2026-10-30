@@ -132,9 +132,9 @@ object ContenedoresMas {
                     var fx = if (fila % 2 == 0) 0f else paso / 2
                     while (fx < w * 0.86f) {
                         for (k in 0 until 6) { val a = k * PI / 3; drawLine(claro, Offset(fx, fy), Offset(fx + (paso * 0.5f * cos(a)).toFloat(), fy + (paso * 0.5f * sin(a)).toFloat()), 0.8f * d) }
-                        fx += paso
+                        fx += maxOf(paso, 1f)
                     }
-                    fy += paso * 0.866f; fila++
+                    fy += maxOf(paso * 0.866f, 1f); fila++
                 }
                 // La etiqueta del título (daisen), con su marco y unas columnas de trazos.
                 val et = Offset(w * 0.1f, h * 0.06f); val es = Size(w * 0.17f, h * 0.48f)
@@ -531,7 +531,7 @@ object ContenedoresMas {
                 // La regla de profundidad en el lomo: una raya cada 100 m y una más larga cada 500.
                 drawRect(lerp(lona, Color.Black, 0.3f), Offset.Zero, Size(w * 0.12f, h))
                 var k = 0; y = h * 0.06f
-                while (y < h * 0.94f) { drawLine(crema.copy(alpha = 0.6f), Offset(0f, y), Offset(w * (if (k % 5 == 0) 0.09f else 0.05f), y), 0.9f * d); y += h * 0.03f; k++ }
+                while (y < h * 0.94f) { drawLine(crema.copy(alpha = 0.6f), Offset(0f, y), Offset(w * (if (k % 5 == 0) 0.09f else 0.05f), y), 0.9f * d); y += maxOf(h * 0.03f, 1f); k++ }
                 // Las cuatro cantoneras de latón.
                 listOf(Offset(0f, 0f) to 0, Offset(w, 0f) to 1, Offset(w, h) to 2, Offset(0f, h) to 3).forEach { (p, i) ->
                     val sx = if (i == 1 || i == 2) -1f else 1f; val sy = if (i >= 2) -1f else 1f; val l = w * 0.13f
@@ -691,7 +691,7 @@ object ContenedoresMas {
                 val marco = Rect(margen - 10 * d, 72 * d, size.width - 12 * d, size.height - 14 * d)
                 drawRect(tinta.copy(alpha = 0.16f), marco.topLeft, marco.size, style = Stroke(1.4f * d))
                 drawRect(tinta.copy(alpha = 0.1f), marco.topLeft + Offset(3 * d, 3 * d), Size(marco.width - 6 * d, marco.height - 6 * d), style = Stroke(0.5f * d))
-                var x = marco.left + renglon * 1.5f; while (x < marco.right - 4 * d) { drawLine(tinta.copy(alpha = 0.05f), Offset(x, marco.top + 3 * d), Offset(x, marco.bottom - 3 * d), 0.5f * d); x += renglon * 1.5f }
+                var x = marco.left + renglon * 1.5f; while (x < marco.right - 4 * d) { drawLine(tinta.copy(alpha = 0.05f), Offset(x, marco.top + 3 * d), Offset(x, marco.bottom - 3 * d), 0.5f * d); x += maxOf(renglon * 1.5f, 1f) }
             }
             Contenedor.ORDENES -> {
                 // Columnas verticales tenues (como la escritura vertical) y el margen de fieltro azul.
@@ -719,7 +719,7 @@ object ContenedoresMas {
             Contenedor.SUPERVIVIENTE -> {
                 // Renglones a lápiz, el aro de agua que dejó una lata, una hoja de hiedra prensada y, en el margen, la cuenta
                 // de los días de cinco en cinco.
-                var y = 96 * d; while (y < size.height) { drawLine(tinta.copy(alpha = 0.07f), Offset(margen, y), Offset(size.width - 12 * d, y), 0.6f * d); y += renglon }
+                var y = 96 * d; while (y < size.height) { drawLine(tinta.copy(alpha = 0.07f), Offset(margen, y), Offset(size.width - 12 * d, y), 0.6f * d); y += maxOf(renglon, 1f) }
                 drawCircle(Color(0xFF8A6A44).copy(alpha = if (oscuro) 0.08f else 0.1f), 34 * d, Offset(size.width - 70 * d, 150 * d), style = Stroke(3 * d))
                 val c = Offset(size.width - 60 * d, size.height - 90 * d); val s = 60 * d
                 drawPath(Path().apply { moveTo(c.x, c.y + s * 0.5f); lineTo(c.x - s * 0.55f, c.y + s * 0.35f); lineTo(c.x - s * 0.8f, c.y - s * 0.05f); lineTo(c.x - s * 0.32f, c.y - s * 0.05f); lineTo(c.x, c.y - s * 0.5f); lineTo(c.x + s * 0.32f, c.y - s * 0.05f); lineTo(c.x + s * 0.8f, c.y - s * 0.05f); lineTo(c.x + s * 0.55f, c.y + s * 0.35f); close() }, Color(0xFF4F7A33).copy(alpha = if (oscuro) 0.12f else 0.14f))
@@ -758,7 +758,7 @@ object ContenedoresMas {
                 // pared) y un bisonte de carbón, apenas, abajo a la derecha.
                 val az = java.util.Random(13)
                 repeat(160) { drawCircle(tinta.copy(alpha = 0.035f), (0.6f + az.nextFloat()) * d, Offset(az.nextFloat() * size.width, az.nextFloat() * size.height)) }
-                var y = 96 * d; while (y < size.height) { drawCircle(Color(0xFFA2401F).copy(alpha = if (oscuro) 0.3f else 0.22f), 2 * d, Offset(margen - 12 * d, y - renglon * 0.35f)); y += renglon }
+                var y = 96 * d; while (y < size.height) { drawCircle(Color(0xFFA2401F).copy(alpha = if (oscuro) 0.3f else 0.22f), 2 * d, Offset(margen - 12 * d, y - renglon * 0.35f)); y += maxOf(renglon, 1f) }
                 drawPath(bisonte(Offset(size.width - 70 * d, size.height - 60 * d), 50 * d), tinta.copy(alpha = if (oscuro) 0.08f else 0.07f))
             }
             Contenedor.EXPEDIENTE -> {
@@ -793,7 +793,7 @@ object ContenedoresMas {
                 }
                 drawLine(tinta2.copy(alpha = 0.4f), Offset(12 * d, 50 * d), Offset(size.width - 12 * d, 50 * d), 1 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 3 * d)))
                 var y = 96 * d
-                while (y < size.height - 16 * d) { drawLine(tinta.copy(alpha = 0.08f), Offset(margen, y), Offset(size.width - 12 * d, y), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1 * d, 3 * d))); y += renglon }
+                while (y < size.height - 16 * d) { drawLine(tinta.copy(alpha = 0.08f), Offset(margen, y), Offset(size.width - 12 * d, y), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1 * d, 3 * d))); y += maxOf(renglon, 1f) }
                 var x = 0f; var arriba = true
                 val diente = Path().apply { moveTo(0f, size.height); while (x < size.width) { x += 6 * d; lineTo(x, if (arriba) size.height - 5 * d else size.height); arriba = !arriba }; lineTo(size.width, size.height); close() }
                 drawPath(diente, Color.Black.copy(alpha = 0.35f))
@@ -822,7 +822,7 @@ object ContenedoresMas {
                 // La memoria descriptiva de una patente: renglones de tinta sepia, el margen doble de ladrillo, el sello
                 // redondo de la oficina arriba a la izquierda y, a la derecha, un pequeño plano azul de cianotipia con su engrane.
                 val sepia = if (oscuro) Color(0xFFD9C7A8) else Color(0xFF6E5A3A)
-                var y = 96 * d; while (y < size.height) { drawLine(sepia.copy(alpha = 0.16f), Offset(0f, y), Offset(size.width, y), 0.7f * d); y += renglon }
+                var y = 96 * d; while (y < size.height) { drawLine(sepia.copy(alpha = 0.16f), Offset(0f, y), Offset(size.width, y), 0.7f * d); y += maxOf(renglon, 1f) }
                 listOf(margen - 10 * d, margen - 7 * d).forEach { x -> drawLine(Color(0xFF9C3D24).copy(alpha = 0.45f), Offset(x, 0f), Offset(x, size.height), 0.8f * d) }
                 val s = Offset(margen + 22 * d, 40 * d)
                 drawCircle(Color(0xFF9C3D24).copy(alpha = 0.35f), 18 * d, s, style = Stroke(1.4f * d))
@@ -876,7 +876,7 @@ object ContenedoresMas {
                     drawLine(tinta.copy(alpha = 0.1f), Offset(margen - 6 * d, y), Offset(size.width - 12 * d, y), 0.7f * d)
                     drawLine(tinta.copy(alpha = 0.3f), Offset(margen - 18 * d, y), Offset(margen - 8 * d, y), 0.8f * d)
                     if (k % 2 == 0) with(TrofeosMas) { mono("${k * 10}", margen - 20 * d, y - 2 * d, 6 * d, tinta.copy(alpha = 0.35f), android.graphics.Paint.Align.RIGHT) }
-                    y += renglon; k++
+                    y += maxOf(renglon, 1f); k++
                 }
             }
             Contenedor.TETRAD -> {
@@ -891,7 +891,7 @@ object ContenedoresMas {
                 // La hoja de la regla: reglado rojo, el margen ancho donde va el número de cada artículo en romanos entre
                 // puntos, la cruz patada en la cabecera y, abajo a la derecha, la huella del sello de la casa.
                 val rojo = Color(0xFFB0191F)
-                var y = 96 * d; while (y < size.height) { drawLine(rojo.copy(alpha = if (oscuro) 0.18f else 0.12f), Offset(margen - 10 * d, y), Offset(size.width - 14 * d, y), 0.7f * d); y += renglon }
+                var y = 96 * d; while (y < size.height) { drawLine(rojo.copy(alpha = if (oscuro) 0.18f else 0.12f), Offset(margen - 10 * d, y), Offset(size.width - 14 * d, y), 0.7f * d); y += maxOf(renglon, 1f) }
                 listOf(margen - 12 * d, margen - 15 * d).forEach { x -> drawLine(rojo.copy(alpha = 0.3f), Offset(x, 60 * d), Offset(x, size.height), 0.8f * d) }
                 drawPath(cruzPatada(Offset(size.width / 2, 48 * d), 9 * d), rojo.copy(alpha = 0.55f))
                 drawLine(tinta.copy(alpha = 0.2f), Offset(size.width * 0.2f, 66 * d), Offset(size.width * 0.8f, 66 * d), 0.8f * d)
@@ -910,14 +910,14 @@ object ContenedoresMas {
                     val ancho = (size.width - margen) * f
                     drawLine(oro.copy(alpha = 0.5f - k * 0.1f), Offset(cx - ancho / 2, (60 + k * 4) * d), Offset(cx + ancho / 2, (60 + k * 4) * d), 0.8f * d)
                 }
-                var y = 96 * d; while (y < size.height) { drawLine(oro.copy(alpha = if (oscuro) 0.16f else 0.13f), Offset(margen - 8 * d, y), Offset(size.width - 12 * d, y), 0.6f * d); y += renglon }
+                var y = 96 * d; while (y < size.height) { drawLine(oro.copy(alpha = if (oscuro) 0.16f else 0.13f), Offset(margen - 8 * d, y), Offset(size.width - 12 * d, y), 0.6f * d); y += maxOf(renglon, 1f) }
                 listOf(margen - 12 * d, margen - 15 * d).forEach { x -> drawLine(oro.copy(alpha = 0.3f), Offset(x, 70 * d), Offset(x, size.height), 0.7f * d) }
                 drawRect(tinta.copy(alpha = 0.06f), Offset(size.width - 54 * d, size.height - 38 * d), Size(40 * d, 22 * d), style = Stroke(0.8f * d))
             }
             Contenedor.BOLETOS -> {
                 // Los renglones del cuaderno escolar, con el margen a lápiz; arriba a la derecha, un boleto pegado con cinta.
                 val raya = if (oscuro) Color(0xFF9DB0C8) else Color(0xFF6A84A8)
-                var y = 96 * d; while (y < size.height) { drawLine(raya.copy(alpha = 0.18f), Offset(0f, y), Offset(size.width, y), 0.7f * d); y += renglon }
+                var y = 96 * d; while (y < size.height) { drawLine(raya.copy(alpha = 0.18f), Offset(0f, y), Offset(size.width, y), 0.7f * d); y += maxOf(renglon, 1f) }
                 drawLine(tinta.copy(alpha = 0.18f), Offset(margen - 8 * d, 0f), Offset(margen - 8 * d, size.height), 0.8f * d)
                 val o = Offset(size.width - 92 * d, 18 * d)
                 rotate(6f, o + Offset(36 * d, 16 * d)) {
@@ -1071,7 +1071,7 @@ object ContenedoresMas {
                 while (y < size.height - 10 * d) {
                     drawCircle(laton, 4.4f * d, Offset(16 * d, y)); drawCircle(Color.Black.copy(alpha = 0.5f), 2 * d, Offset(16 * d, y))
                     if (k > 0) zig.lineTo(if (k % 2 == 0) 16 * d else 4 * d, y)
-                    y += paso; k++
+                    y += maxOf(paso, 1f); k++
                 }
                 drawPath(zig, cabo, style = Stroke(1.6f * d, cap = StrokeCap.Round))
             }

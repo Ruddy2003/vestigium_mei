@@ -498,7 +498,7 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
             while (x + l <= w) {
                 if (i % 2 == 0) drawOval(col, Offset(x, y - a), Size(l, 2 * a), style = Stroke(1f * u + grosor * 0.35f, pathEffect = punteado))
                 else drawLine(col, Offset(x - 1f * u, y), Offset(x + l + 1f * u, y), 1f * u + grosor * 0.45f)
-                x += l * 0.78f; i++
+                x += maxOf(l * 0.78f, 1f); i++
             }
         }
         // Alambre de púas.
@@ -650,7 +650,7 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
         TemaId.MESO -> {
             drawLine(col.copy(alpha = col.alpha * 0.6f), Offset(0f, y), Offset(w, y), 0.9f * u, pathEffect = punteado)
             var x = 5 * u; val r = grosor * 0.62f + u
-            while (x < w - 3 * u) { drawCircle(col, r, Offset(x, y)); drawCircle(fondo.copy(alpha = 0.45f), r * 0.3f, Offset(x - r * 0.3f, y - r * 0.3f)); x += r * 2.6f + 2 * u }
+            while (x < w - 3 * u) { drawCircle(col, r, Offset(x, y)); drawCircle(fondo.copy(alpha = 0.45f), r * 0.3f, Offset(x - r * 0.3f, y - r * 0.3f)); x += maxOf(r * 2.6f + 2 * u, 1f) }
         }
         // Cuerda trenzada de crin.
         TemaId.MONGOL -> {
@@ -717,7 +717,7 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
             // Una hilera de puntos de ocre, como una línea de huellas; más gruesos cuanto más fuerte es el lazo.
             val paso = (7 * u + grosor).coerceAtLeast(6 * u)
             var x = paso / 2; var k = 0
-            while (x < w) { drawCircle(if (azar && k % 2 == 1) col.copy(alpha = col.alpha * 0.4f) else col, grosor * 0.55f + 0.6f * u, Offset(x, y + (if (k % 2 == 0) -1f else 1f) * 1.2f * u)); x += paso; k++ }
+            while (x < w) { drawCircle(if (azar && k % 2 == 1) col.copy(alpha = col.alpha * 0.4f) else col, grosor * 0.55f + 0.6f * u, Offset(x, y + (if (k % 2 == 0) -1f else 1f) * 1.2f * u)); x += maxOf(paso, 1f); k++ }
         }
     }
 }

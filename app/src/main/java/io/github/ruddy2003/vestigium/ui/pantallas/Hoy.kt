@@ -1387,7 +1387,7 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             var y = top + curva + 2 * u
                             while (y + bw * 0.5f < h - 2 * u) {
                                 drawRoundRect(marca, Offset(bx + bw * 0.2f, y), Size(bw * 0.6f, bw * 0.5f), androidx.compose.ui.geometry.CornerRadius(bw * 0.14f), style = Stroke(0.8f * u))
-                                y += bw * 0.66f
+                                y += maxOf(bw * 0.66f, 1f)
                             }
                         }
                         // Estandartes de la estepa: lanza arriba y crines que cuelgan.
@@ -1414,7 +1414,7 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             val r = caja(x0, top, bw, barH)
                             if (color != null) {
                                 drawPath(r, color.copy(alpha = 0.32f))
-                                clipPath(r) { var k = 0; var y = top + barH * 0.25f; while (y < top + barH) { drawLine(color.copy(alpha = 0.7f), Offset(x0, y), Offset(x0 + bw, y + (if (k % 2 == 0) 1f else -1f) * u), 0.7f * u); y += barH * 0.25f; k++ } }
+                                clipPath(r) { var k = 0; var y = top + barH * 0.25f; while (y < top + barH) { drawLine(color.copy(alpha = 0.7f), Offset(x0, y), Offset(x0 + bw, y + (if (k % 2 == 0) 1f else -1f) * u), 0.7f * u); y += maxOf(barH * 0.25f, 1f); k++ } }
                                 drawPath(r, color, style = borde)
                                 listOf(x0 + 3 * u, x0 + bw - 3 * u).forEach { x -> drawCircle(color, 1.2f * u, Offset(x, top + barH / 2)) }
                             } else drawPath(r, linea, style = borde)

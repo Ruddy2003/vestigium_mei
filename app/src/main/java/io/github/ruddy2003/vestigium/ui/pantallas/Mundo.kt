@@ -370,7 +370,7 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             // El ankh grabado sobre el signo del agua (una línea en zigzag), que corre de una tesela a la otra.
             c.drawPath(Path().apply {
                 moveTo(0f, l * 0.85f); var x = 0f; var arriba = true
-                while (x < l - 0.01f) { x += l * 0.1f; lineTo(x, if (arriba) l * 0.79f else l * 0.91f); arriba = !arriba }
+                while (x < l - 0.01f) { x += maxOf(l * 0.1f, 1f); lineTo(x, if (arriba) l * 0.79f else l * 0.91f); arriba = !arriba }
                 addOval(l * 0.38f, l * 0.1f, l * 0.62f, l * 0.38f, Path.Direction.CW)
                 moveTo(l * 0.26f, l * 0.42f); lineTo(l * 0.74f, l * 0.42f)
                 moveTo(l * 0.5f, l * 0.38f); lineTo(l * 0.5f, l * 0.7f)

@@ -473,7 +473,7 @@ object SalonesTema {
                 while (x < x1 - 8 * d) {
                     val g = (4 + az.nextInt(6)) * d; val a = (18 + az.nextInt(16)) * d
                     if (az.nextInt(5) == 0) { drawRect(lomo, Offset(x, y - 20 * d), Size(18 * d, 20 * d)); x += 20 * d }
-                    else { drawRect(lomo.copy(alpha = lomo.alpha * (0.6f + az.nextFloat() * 0.6f)), Offset(x, y - a), Size(g, a)); x += g + 1 * d }
+                    else { drawRect(lomo.copy(alpha = lomo.alpha * (0.6f + az.nextFloat() * 0.6f)), Offset(x, y - a), Size(g, a)); x += maxOf(g + 1 * d, 1f) }
                 }
                 y += 64 * d
             }
@@ -539,7 +539,7 @@ object SalonesTema {
             drawPath(ventana, Brush.verticalGradient(listOf(Color(0xFF8FB7D6).copy(alpha = if (oscuro) 0.16f else 0.28f), Color(0xFF2F5D62).copy(alpha = if (oscuro) 0.3f else 0.35f)), marco.top, marco.bottom))
             drawLine(Color.White.copy(alpha = if (oscuro) 0.12f else 0.35f), Offset(x0, alto - 10 * d), Offset(x1, alto - 10 * d), 1f)
             var vx = x0 + (x1 - x0) / 4
-            while (vx < x1 - 1f) { drawLine(laton, Offset(vx, 8 * d), Offset(vx, alto), 1f); vx += (x1 - x0) / 4 }
+            while (vx < x1 - 1f) { drawLine(laton, Offset(vx, 8 * d), Offset(vx, alto), 1f); vx += maxOf((x1 - x0) / 4, 1f) }
             var vy = 14 * d
             while (vy < alto) { drawLine(laton, Offset(x0, vy), Offset(x1, vy), 1f); vy += 9 * d }
             drawPath(ventana, laton, style = Stroke(1.6f * d))
@@ -565,7 +565,7 @@ object SalonesTema {
         drawRect(roble.copy(alpha = roble.alpha * 1.4f), Offset(0f, piso), Size(w, h - piso))
         for (k in -8..8) drawLine(junta, Offset(w / 2 + k * w / 8, h), Offset(w / 2 + k * w / 8 * 0.55f, piso), 1f)
         var yy = piso; var pasoY = 4 * d
-        while (yy < h) { drawLine(junta, Offset(0f, yy), Offset(w, yy), 1f); yy += pasoY; pasoY *= 1.4f }
+        while (yy < h) { drawLine(junta, Offset(0f, yy), Offset(w, yy), 1f); yy += maxOf(pasoY, 1f); pasoY *= 1.4f }
     }
 
     /** La galería imperial: pilastras de mármol verde entre las piezas, guirnaldas de laurel en oro y el cortinaje carmesí arriba. */
@@ -624,7 +624,7 @@ object SalonesTema {
         while (x < w) {
             val y0 = if (k % 2 == 0) suelo else suelo + 4 * d
             drawLine(oro.copy(alpha = oro.alpha * 0.6f), Offset(x, y0), Offset(x + pa, if (k % 2 == 0) suelo + 4 * d else suelo), 1f * d)
-            x += pa; k++
+            x += maxOf(pa, 1f); k++
         }
         drawLine(oro, Offset(0f, suelo - 2 * d), Offset(w, suelo - 2 * d), 1f * d)
     }

@@ -302,7 +302,7 @@ object Reportes {
                             q.moveTo(xb, base - 8f); q.quadTo(xb - 6f, base - 14f, xb, base - 22f); q.quadTo(xb + 6f, base - 14f, xb, base - 8f); q.close()
                             c.drawPath(q, capullo)
                         }
-                        x += paso
+                        x += maxOf(paso, 1f)
                     }
                     val colores = intArrayOf(L.primario, L.terciario, L.secundario, L.terciario)
                     var xr = M; var k = 0
@@ -333,7 +333,7 @@ object Reportes {
                     var x = M
                     while (x + merlon <= W - M) {
                         if (x + merlon < cx - 30f || x > cx + 30f) c.drawRect(x, base - 4f - alto, x + merlon, base - 4f, hierro)
-                        x += merlon * 2
+                        x += maxOf(merlon * 2, 1f)
                     }
                     val escudo = Path().apply {
                         moveTo(cx - 20f, yy); lineTo(cx + 20f, yy); quadTo(cx + 21f, yy + 28f, cx, yy + 42f); quadTo(cx - 21f, yy + 28f, cx - 20f, yy); close()
@@ -561,7 +561,7 @@ object Reportes {
                             val caja = RectF(x - r, yb - r, x + r, yb + r)
                             c.drawArc(caja, 180f, 180f, true, fondo)
                             for (k in 0..2) { val q = r * (1f - k * 0.3f); c.drawArc(RectF(x - q, yb - q, x + q, yb + q), 180f, 180f, false, ola) }
-                            x += 2 * r
+                            x += maxOf(2 * r, 1f)
                         }
                     }
                     c.drawRect(cx - 14f, base - 34f, cx + 14f, base - 6f, L.relleno(L.secundario))
@@ -626,7 +626,7 @@ object Reportes {
                         val ruta = Path(); var x = cx + lado * 46f; var primero = true
                         while (if (lado < 0) x >= M else x <= W - M) {
                             if (primero) { ruta.moveTo(x, fondo(x)); primero = false } else ruta.lineTo(x, fondo(x))
-                            x += lado * 6f
+                            x += maxOf(lado * 6f, 1f)
                         }
                         c.drawPath(ruta, perfil)
                         var s = cx + lado * 70f
@@ -677,7 +677,7 @@ object Reportes {
                         p.lineTo(x + 20f, a + 2.4f * g); p.lineTo(x + 20f, a + 1.2f * g); p.lineTo(x + 25f, a + 1.2f * g)
                         c.drawPath(p, greca)
                         c.drawCircle(x + 32f, b - 5f, 2.6f, jade)
-                        x += paso
+                        x += maxOf(paso, 1f)
                     }
                     y += 50f
                 }

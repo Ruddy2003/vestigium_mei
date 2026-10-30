@@ -348,7 +348,7 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             for (k in 0 until 8) drawCircle(sombra, r * 0.07f, polarFig(c, r * 0.8f, 22.5f + k * 45f))
             val ola = Path(); var x = c.x - r * 0.5f
             ola.moveTo(x, c.y + r * 0.08f)
-            while (x <= c.x + r * 0.5f) { ola.lineTo(x, c.y + r * 0.08f + r * 0.06f * kotlin.math.sin((x - c.x) / (r * 0.12f))); x += r * 0.04f }
+            while (x <= c.x + r * 0.5f) { ola.lineTo(x, c.y + r * 0.08f + r * 0.06f * kotlin.math.sin((x - c.x) / (r * 0.12f))); x += maxOf(r * 0.04f, 1f) }
             drawPath(ola, luz, style = Stroke(r * 0.05f))
             drawArc(luz, 200f, 60f, false, Offset(c.x - r * 0.45f, c.y - r * 0.45f), Size(r * 0.9f, r * 0.9f), style = Stroke(r * 0.06f))
         }

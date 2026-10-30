@@ -584,7 +584,7 @@ object Contenedores {
                 val colores = listOf(LAPIS, ORO, CORNALINA, ORO)
                 var xc = 0f; var j = 0
                 while (xc < size.width) { drawRect(colores[j % 4].copy(alpha = if (oscuro) 0.5f else 0.6f), Offset(xc, 70 * d), Size(minOf(7 * d, size.width - xc), 4 * d)); xc += 9 * d; j++ }
-                var yy = 96 * d; while (yy < size.height) { drawCircle(CORNALINA.copy(alpha = if (oscuro) 0.6f else 0.5f), 1.6f * d, Offset(margen - 12 * d, yy - 4 * d)); yy += renglon }
+                var yy = 96 * d; while (yy < size.height) { drawCircle(CORNALINA.copy(alpha = if (oscuro) 0.6f else 0.5f), 1.6f * d, Offset(margen - 12 * d, yy - 4 * d)); yy += maxOf(renglon, 1f) }
             }
             Contenedor.BIOMBO -> {
                 // La página del códice: el estuco con alguna grieta, el marco rojo y los renglones rojos que la parten en
@@ -599,7 +599,7 @@ object Contenedores {
                 while (y < size.height - m) {
                     if (k % 4 == 0) drawLine(rojo, Offset(m, y + 3 * d), Offset(size.width - m, y + 3 * d), 1.1f * d)
                     numeralMaya(k, Offset(margen - 12 * d, y - 6 * d), 9 * d, if (k % 2 == 0) rojo else tinta.copy(alpha = if (oscuro) 0.4f else 0.35f))
-                    y += renglon; k++
+                    y += maxOf(renglon, 1f); k++
                 }
             }
             Contenedor.CODICE -> {
@@ -631,7 +631,7 @@ object Contenedores {
                 // Renglones azul gris de libreta barata, el margen rojo desvaído y, pegado en la esquina, un recorte de
                 // periódico torcido con sus dos tiras de cinta; abajo, el cerco de una taza.
                 val regla = Color(0xFF5A6E7A).copy(alpha = if (oscuro) 0.22f else 0.16f)
-                var y = 96 * d; while (y < size.height) { drawLine(regla, Offset(0f, y), Offset(size.width, y), 0.7f * d); y += renglon }
+                var y = 96 * d; while (y < size.height) { drawLine(regla, Offset(0f, y), Offset(size.width, y), 0.7f * d); y += maxOf(renglon, 1f) }
                 drawLine(Color(0xFF9A3A2E).copy(alpha = 0.35f), Offset(margen - 8 * d, 0f), Offset(margen - 8 * d, size.height), 1 * d)
                 val esq = Offset(size.width - 92 * d, 18 * d)
                 rotate(4f, esq + Offset(40 * d, 26 * d)) {
@@ -659,7 +659,7 @@ object Contenedores {
                 val rojo = Color(0xFF9A2A1C).copy(alpha = if (oscuro) 0.4f else 0.35f)
                 drawLine(tintaB, Offset(0f, 84 * d), Offset(size.width, 84 * d), 1.2f * d)
                 listOf(0.58f, 0.68f, 0.8f, 0.9f).forEach { f -> drawLine(tintaB, Offset(size.width * f, 70 * d), Offset(size.width * f, 84 * d), 0.8f * d) }
-                var y = 96 * d; while (y < size.height) { drawLine(tintaB, Offset(margen - 6 * d, y), Offset(size.width - 8 * d, y), 0.6f * d); y += renglon }
+                var y = 96 * d; while (y < size.height) { drawLine(tintaB, Offset(margen - 6 * d, y), Offset(size.width - 8 * d, y), 0.6f * d); y += maxOf(renglon, 1f) }
                 listOf(margen - 10 * d, margen - 13 * d).forEach { x -> drawLine(rojo, Offset(x, 0f), Offset(x, size.height), 0.8f * d) }
                 val m = Offset(size.width * 0.82f, size.height * 0.88f); val rm = size.width * 0.2f
                 drawCircle(Brush.radialGradient(listOf(Color.Transparent, Color(0xFF7A6A40).copy(alpha = if (oscuro) 0.12f else 0.09f), Color.Transparent), m, rm), rm, m)

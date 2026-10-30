@@ -989,7 +989,7 @@ private fun DrawScope.letreroNeon(c: Offset, r: Float, magenta: Color, ambar: Co
         val marco = Rect(c.x - r * 0.82f, c.y - r * 0.55f, c.x + r * 0.82f, c.y + r * 0.78f)
         // Las cadenas.
         listOf(marco.left + r * 0.25f, marco.right - r * 0.25f).forEach { x ->
-            var y = c.y - r; while (y < marco.top) { drawOval(ambar.copy(alpha = 0.5f), Offset(x - r * 0.03f, y), Size(r * 0.06f, r * 0.1f), style = Stroke(r * 0.02f)); y += r * 0.09f }
+            var y = c.y - r; while (y < marco.top) { drawOval(ambar.copy(alpha = 0.5f), Offset(x - r * 0.03f, y), Size(r * 0.06f, r * 0.1f), style = Stroke(r * 0.02f)); y += maxOf(r * 0.09f, 1f) }
         }
         drawRoundRect(Color.Black.copy(alpha = 0.35f), marco.topLeft, marco.size, CornerRadius(r * 0.12f))
         // El marco: se apaga un instante.
@@ -1344,7 +1344,7 @@ internal fun Adarve(modifier: Modifier) {
                 drawPath(escudo, lino); drawPath(escudo, piedra, style = Stroke(1.1f))
                 drawPath(cruzPatada(Offset(cx, h * 0.36f), h * 0.26f), rojo)
             } else if (k % 2 == 0) drawRect(piedra, Offset(x, base - h * 0.42f), Size(m, h * 0.42f))
-            x += m; k++
+            x += maxOf(m, 1f); k++
         }
     }
 }
@@ -1468,7 +1468,7 @@ internal fun Abanicos(modifier: Modifier) {
             if (xr + 2f * f < size.width) {
                 drawPath(Path().apply { moveTo(xr, base - 5f * f); lineTo(xr + 1.6f * f, base - 3f * f); lineTo(xr, base - 1f * f); lineTo(xr - 1.6f * f, base - 3f * f); close() }, jade)
             }
-            x += paso; k++
+            x += maxOf(paso, 1f); k++
         }
     }
 }
@@ -1635,7 +1635,7 @@ internal fun TrazaSonar(modifier: Modifier) {
         x = 18 * u; var k = 0
         while (x < size.width) {
             drawCircle(e.tertiary.copy(alpha = 0.6f), (1.1f + (k % 3) * 0.5f) * u, Offset(x, y - size.height * (0.18f + 0.08f * (k % 3))), style = Stroke(0.7f * u))
-            x += periodo; k++
+            x += maxOf(periodo, 1f); k++
         }
     }
 }
@@ -1672,7 +1672,7 @@ internal fun BandaGreca(modifier: Modifier) {
         drawLine(e.secondary.copy(alpha = 0.6f), Offset(0f, h - 0.6f * u), Offset(size.width, h - 0.6f * u), 1f * u)
         grecaEscalonada(2f * u, size.width, 3.2f * u, h - 3.2f * u, e.primary, 1.6f * u)
         val paso = (h - 6.4f * u) * 1.4f; var x = 2f * u + paso * 0.94f
-        while (x < size.width) { drawCircle(e.tertiary, 1.4f * u, Offset(x, h - 4.6f * u)); x += paso }
+        while (x < size.width) { drawCircle(e.tertiary, 1.4f * u, Offset(x, h - 4.6f * u)); x += maxOf(paso, 1f) }
     }
 }
 
@@ -1712,7 +1712,7 @@ internal fun Cabo(modifier: Modifier) {
                 drawLine(sombra, Offset(x + f * 0.6f, y + grueso * 0.6f), Offset(x + paso + f * 0.6f, y - grueso * 0.4f), grueso * 0.42f, StrokeCap.Round)
                 drawLine(claro, Offset(x, y + grueso * 0.5f), Offset(x + paso, y - grueso * 0.5f), grueso * 0.36f, StrokeCap.Round)
             }
-            x += paso
+            x += maxOf(paso, 1f)
         }
         // El nudo llano: dos lazos que se abrazan.
         drawOval(claro, Offset(nudo - hueco, y - grueso * 0.9f), Size(hueco, grueso * 1.8f), style = Stroke(grueso * 0.34f))
@@ -1796,7 +1796,7 @@ internal fun BandaCueva(modifier: Modifier) {
                 val g = (1.3f + az.nextFloat() * 1.1f).dp.toPx()
                 drawCircle(e.primary.copy(alpha = 0.55f + az.nextFloat() * 0.35f), g, Offset(x, y + (if (k % 2 == 0) -1f else 1f) * h * 0.08f))
             }
-            x += (7f + az.nextFloat() * 3f).dp.toPx(); k++
+            x += maxOf((7f + az.nextFloat() * 3f).dp.toPx(), 1f); k++
         }
         drawPath(bisonte(Offset(cx, y), r), e.onBackground.copy(alpha = 0.75f))
     }
@@ -1851,7 +1851,7 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             var x = 0f
             while (x < w) {
                 val ancho = (22 + az.nextInt(30)).dp.toPx(); val alto = h * (0.06f + az.nextFloat() * 0.12f)
-                puntos.addRect(Rect(x, h - alto, x + ancho - 3.dp.toPx(), h)); x += ancho
+                puntos.addRect(Rect(x, h - alto, x + ancho - 3.dp.toPx(), h)); x += maxOf(ancho, 1f)
             }
         }
         TemaId.MEDIEVAL -> {
@@ -1869,9 +1869,9 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 while (x < w) {
                     trazo.moveTo(x, y - alto); trazo.lineTo(x, y)
                     if ((fila * 7 + (x / largo).toInt() * 3) % 11 == 0) puntos.addPath(cruzPatada(Offset(x + largo / 2, y - alto / 2), alto * 0.28f))
-                    x += largo
+                    x += maxOf(largo, 1f)
                 }
-                y += alto; fila++
+                y += maxOf(alto, 1f); fila++
             }
         }
         TemaId.DISTOPIA -> {
@@ -1964,8 +1964,8 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                     val medio = rx * 0.7f * kotlin.math.sqrt((1f - ((y - cy) / (ry * 0.7f)).let { it * it }).coerceAtLeast(0f))
                     trazo.moveTo(cx - medio, y); trazo.lineTo(cx + medio, y)
                     var x = cx - medio + (if (fila % 2 == 0) 0f else largo / 2)
-                    while (x < cx + medio) { trazo.moveTo(x, y); trazo.lineTo(x, y + ladrillo); x += largo }
-                    y += ladrillo; fila++
+                    while (x < cx + medio) { trazo.moveTo(x, y); trazo.lineTo(x, y + ladrillo); x += maxOf(largo, 1f) }
+                    y += maxOf(ladrillo, 1f); fila++
                 }
             }
             repeat(((w * h) / 9000f).toInt().coerceAtMost(260)) {
@@ -2033,9 +2033,9 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.04f)
             color2 = esquema.primary.copy(alpha = if (oscuro) 0.07f else 0.06f)
             val p = 24.dp.toPx(); var x = 0f
-            while (x < w) { trazo.moveTo(x, 0f); trazo.lineTo(x, h); x += p }
+            while (x < w) { trazo.moveTo(x, 0f); trazo.lineTo(x, h); x += maxOf(p, 1f) }
             var y = 0f
-            while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += p }
+            while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += maxOf(p, 1f) }
             val ce = Offset(w * 0.92f, h * 0.9f); val rr = w * 0.42f
             trazo.addPath(Vapor.engrane(ce, rr, 18, 0.9f))
             trazo.addOval(Rect(ce, rr * 0.62f)); trazo.addOval(Rect(ce, rr * 0.2f))
@@ -2073,9 +2073,9 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 while (x < w + rr) {
                     listOf(1f, 0.66f, 0.33f).forEach { k -> trazo.arcTo(Rect(x - rr * k, y - rr * k, x + rr * k, y + rr * k), 180f, 180f, true) }
                     puntos.addOval(Rect(x - 1.5f, y - 1.5f, x + 1.5f, y + 1.5f))
-                    x += 2 * rr
+                    x += maxOf(2 * rr, 1f)
                 }
-                y += rr * 0.75f; fila++
+                y += maxOf(rr * 0.75f, 1f); fila++
             }
         }
         TemaId.BOTANICO -> {
@@ -2119,8 +2119,8 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             while (gy < h) {
                 trazo.moveTo(0f, gy); trazo.lineTo(w, gy + (azar.nextFloat() - 0.5f) * 6.dp.toPx())
                 var gx = if (fila % 2 == 0) 0f else losa / 2
-                while (gx < w) { trazo.moveTo(gx, gy); trazo.lineTo(gx + (azar.nextFloat() - 0.5f) * 4.dp.toPx(), gy + losa); gx += losa }
-                gy += losa; fila++
+                while (gx < w) { trazo.moveTo(gx, gy); trazo.lineTo(gx + (azar.nextFloat() - 0.5f) * 4.dp.toPx(), gy + losa); gx += maxOf(losa, 1f) }
+                gy += maxOf(losa, 1f); fila++
             }
             // Grietas: caminos quebrados que a la mitad se bifurcan una vez.
             fun grieta(x0: Float, y0: Float, a0: Float, pasos: Int, rama: Boolean) {
@@ -2190,7 +2190,7 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 while (y < h) {
                     val paso = 26 * u; var x = -paso * (k % 2) / 2
                     trazo.moveTo(x, y)
-                    while (x < w) { trazo.quadraticTo(x + paso / 4, y - 3 * u, x + paso / 2, y); trazo.quadraticTo(x + paso * 3 / 4, y + 3 * u, x + paso, y); x += paso }
+                    while (x < w) { trazo.quadraticTo(x + paso / 4, y - 3 * u, x + paso / 2, y); trazo.quadraticTo(x + paso * 3 / 4, y + 3 * u, x + paso, y); x += maxOf(paso, 1f) }
                     y += 22 * u; k++
                 }
             }
@@ -2215,7 +2215,7 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                     var x = 0f
                     trazo.moveTo(0f, y)
                     while (x <= w) { trazo.lineTo(x, y + p * 0.18f * sin(x / p * 2.1f + fila * 1.7f) + p * 0.1f * sin(x / p * 5.3f + fila)); x += 4.dp.toPx() }
-                    y += p * (0.6f + fila * 0.08f); fila++
+                    y += maxOf(p * (0.6f + fila * 0.08f), 1f); fila++
                 }
             } else {
                 // Zona abisal: puntos de plancton con luz propia, casi todos diminutos; algunos más grandes, de medusa.
@@ -2286,7 +2286,7 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 }
                 trazo.addOval(Rect(o.x - 14.dp.toPx(), o.y - 14.dp.toPx(), o.x + 14.dp.toPx(), o.y + 14.dp.toPx()))
             }
-            val g = 96.dp.toPx(); var y = g; while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += g }
+            val g = 96.dp.toPx(); var y = g; while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += maxOf(g, 1f) }
             val azar = java.util.Random(1718)
             repeat(5) {
                 val x = azar.nextFloat() * w; val yy = azar.nextFloat() * h; val rr = (6f + azar.nextFloat() * 14f) * 1.dp.toPx()
@@ -2318,9 +2318,9 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 var x = if (fila % 2 == 0) 0f else r
                 while (x < w + r) {
                     for (k in 0..2) { val q = r * (1f - k * 0.3f); trazo.moveTo(x - q, y); trazo.arcTo(Rect(x - q, y - q, x + q, y + q), 180f, 180f, false) }
-                    x += 2 * r
+                    x += maxOf(2 * r, 1f)
                 }
-                y += r; fila++
+                y += maxOf(r, 1f); fila++
             }
         }
         TemaId.REVOLUCION -> {
@@ -2354,7 +2354,7 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             while (y < h) {
                 val a = (3 + az.nextInt(8)).dp.toPx(); trazo.moveTo(0f, y); var x = 0f
                 while (x < w) { val nx = x + w / 3; trazo.quadraticTo(x + w / 6, y + (if (az.nextBoolean()) a else -a), nx, y + (az.nextFloat() - 0.5f) * a); x = nx }
-                y += paso * (0.7f + az.nextFloat() * 0.6f)
+                y += maxOf(paso * (0.7f + az.nextFloat() * 0.6f), 1f)
             }
             repeat(((w * h) / 140000f).toInt().coerceIn(2, 9)) {
                 val x0 = az.nextFloat() * w; val y0 = az.nextFloat() * h; val n = 3 + az.nextInt(4); val rr = 2.4f.dp.toPx()
@@ -2687,7 +2687,7 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             TemaId.ABISMO -> { val s = c + Offset(0f, -r * 0.3f); drawCircle(color, r * 0.32f, s)
                 for (i in 0 until 5) { val a = rad(55.0 + 17.5 * i); drawLine(color, s.mas(r * 0.46f, a), s.mas(r * (if (i % 2 == 0) 0.98f else 0.8f), a), r * 0.08f, StrokeCap.Round) }
                 val ola = Path(); var x = c.x - r; ola.moveTo(x, c.y - r * 0.72f)
-                while (x <= c.x + r) { ola.lineTo(x, c.y - r * 0.72f + r * 0.07f * sin((x - c.x) / r * 9f)); x += r * 0.05f }
+                while (x <= c.x + r) { ola.lineTo(x, c.y - r * 0.72f + r * 0.07f * sin((x - c.x) / r * 9f)); x += maxOf(r * 0.05f, 1f) }
                 drawPath(ola, color, style = Stroke(r * 0.08f, cap = StrokeCap.Round)) }
             // Estrella de ocho puntas de lazo.
             TemaId.ANDALUS -> { estrella(c, r * 0.95f, 8, 0.77f); drawCircle(fondo, r * 0.2f, c) }

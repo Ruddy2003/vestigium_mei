@@ -1618,9 +1618,9 @@ private fun DrawScope.cuadernoEdo(m: Materia) {
         var fx = ini.x + paso * (if (fila % 2 == 0) 0.5f else 1f)
         while (fx < ini.x + tam.width - paso * 0.5f) {
             for (k in 0 until 6) { val a = k * PI / 3; drawLine(m.brillo.copy(alpha = 0.35f), Offset(fx, fy), Offset(fx + (paso * 0.5f * cos(a)).toFloat(), fy + (paso * 0.5f * sin(a)).toFloat()), 0.8f) }
-            fx += paso
+            fx += maxOf(paso, 1f)
         }
-        fy += paso * 0.866f; fila++
+        fy += maxOf(paso * 0.866f, 1f); fila++
     }
     // Las esquinas del lomo forradas de seda (kadogire).
     val k = h * 0.1f; val xl = ini.x + tam.width
@@ -2167,7 +2167,7 @@ private fun DrawScope.bitacoraBatiscafo(m: Materia) {
     drawRoundRect(m.detalle.copy(alpha = 0.5f), eo, es, CornerRadius(6f), style = Stroke(1.2f))
     // La regla de profundidad en el canto derecho: una raya cada tramo y una más larga cada cinco.
     var k = 0; y = h * 0.1f
-    while (y < h * 0.86f) { drawLine(m.hoja.copy(alpha = 0.6f), Offset(w * 0.82f, y), Offset(w * (if (k % 5 == 0) 0.88f else 0.85f), y), 1f); y += h * 0.035f; k++ }
+    while (y < h * 0.86f) { drawLine(m.hoja.copy(alpha = 0.6f), Offset(w * 0.82f, y), Offset(w * (if (k % 5 == 0) 0.88f else 0.85f), y), 1f); y += maxOf(h * 0.035f, 1f); k++ }
     // El ojo de buey de latón arriba a la derecha, con una medusa que brilla detrás del cristal.
     val c = Offset(w * 0.86f, h * 0.17f); val r = h * 0.1f
     drawCircle(m.acento, r, c); drawCircle(lerp(m.cuerpo, Color.Black, 0.5f), r * 0.68f, c)
@@ -2334,7 +2334,7 @@ fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, noche: Boolea
         TemaId.PIRATA -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_REGALA) { o, _ ->
             val w = size.width; val hh = size.height
             drawRect(m.detalle.copy(alpha = 0.85f), Offset(0f, o.y - hh * 0.02f), Size(w, hh * 0.04f))
-            var x = 0f; while (x < w) { drawLine(m.sombra.copy(alpha = 0.5f), Offset(x, o.y - hh * 0.02f), Offset(x + hh * 0.03f, o.y + hh * 0.02f), 0.7f); x += hh * 0.04f }
+            var x = 0f; while (x < w) { drawLine(m.sombra.copy(alpha = 0.5f), Offset(x, o.y - hh * 0.02f), Offset(x + hh * 0.03f, o.y + hh * 0.02f), 0.7f); x += maxOf(hh * 0.04f, 1f) }
             drawCircle(m.acento, w * 0.08f, Offset(w / 2, hh * 0.12f))
         }
         TemaId.URSS -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_METAL) { o, _ ->
@@ -2382,7 +2382,7 @@ private class TablaEstante(val claro: Color, val oscuro: Color, val canto: DrawS
 /** La rejilla de metal del puesto, con sus agujeros y el reflejo de un letrero en el canto. */
 private val ESTANTE_REJILLA = TablaEstante(Color(0xFF3A2E42), Color(0xFF150E1B)) {
     val w = size.width; val h = size.height
-    var x = h * 0.4f; while (x < w) { drawCircle(Color(0xFF0C0811), h * 0.14f, Offset(x, h * 0.5f)); x += h * 0.55f }
+    var x = h * 0.4f; while (x < w) { drawCircle(Color(0xFF0C0811), h * 0.14f, Offset(x, h * 0.5f)); x += maxOf(h * 0.55f, 1f) }
     drawLine(Color(0xFFFF3D9A).copy(alpha = 0.55f), Offset(0f, 1f), Offset(w, 1f), 1.5f)
 }
 
@@ -2418,10 +2418,10 @@ private val ESTANTE_ADOBE = TablaEstante(Color(0xFF9A7650), Color(0xFF4E3A26)) {
     val junta = Color(0xFF3E2C1A).copy(alpha = 0.4f)
     drawLine(junta, Offset(0f, h * 0.5f), Offset(w, h * 0.5f), 0.8f)
     var x = 0f; var fila = 0
-    while (x < w) { drawLine(junta, Offset(x, if (fila % 2 == 0) 0f else h * 0.5f), Offset(x, if (fila % 2 == 0) h * 0.5f else h), 0.8f); x += h * 1.6f; fila++ }
+    while (x < w) { drawLine(junta, Offset(x, if (fila % 2 == 0) 0f else h * 0.5f), Offset(x, if (fila % 2 == 0) h * 0.5f else h), 0.8f); x += maxOf(h * 1.6f, 1f); fila++ }
     val colores = listOf(Color(0xFF1D2F7A), Color(0xFFC9971C), Color(0xFFB8471E), Color(0xFFC9971C))
     var xc = 0f; var k = 0
-    while (xc < w) { drawRect(colores[k % 4].copy(alpha = 0.7f), Offset(xc, 0f), Size(minOf(h * 0.5f, w - xc), h * 0.16f)); xc += h * 0.62f; k++ }
+    while (xc < w) { drawRect(colores[k % 4].copy(alpha = 0.7f), Offset(xc, 0f), Size(minOf(h * 0.5f, w - xc), h * 0.16f)); xc += maxOf(h * 0.62f, 1f); k++ }
 }
 
 /** Seda roja lacada, con un filete de oro y monedas con agujero cuadrado. */
@@ -2478,7 +2478,7 @@ private val ESTANTE_LADRILLO = TablaEstante(Color(0xFF9C4A32), Color(0xFF4E2216)
     val junta = Color(0xFFD9C7A8).copy(alpha = 0.35f)
     drawLine(junta, Offset(0f, h * 0.5f), Offset(w, h * 0.5f), 0.9f)
     var x = 0f; var fila = 0
-    while (x < w) { drawLine(junta, Offset(x, 0f), Offset(x, h * 0.5f), 0.9f); drawLine(junta, Offset(x + h * 1.1f, h * 0.5f), Offset(x + h * 1.1f, h), 0.9f); x += h * 2.2f; fila++ }
+    while (x < w) { drawLine(junta, Offset(x, 0f), Offset(x, h * 0.5f), 0.9f); drawLine(junta, Offset(x + h * 1.1f, h * 0.5f), Offset(x + h * 1.1f, h), 0.9f); x += maxOf(h * 2.2f, 1f); fila++ }
     drawLine(Color(0xFFC9A04A), Offset(0f, 1.2f), Offset(w, 1.2f), 2f)
 }
 
@@ -2513,7 +2513,7 @@ private val ESTANTE_HORMIGON = TablaEstante(Color(0xFF9C9C92), Color(0xFF5A5B52)
     val w = size.width; val h = size.height
     val az = java.util.Random(9)
     repeat(5) { val x = az.nextFloat() * w; drawPath(Path().apply { moveTo(x, 0f); lineTo(x + h * 0.3f, h * 0.4f); lineTo(x - h * 0.1f, h * 0.7f); lineTo(x + h * 0.2f, h) }, Color(0xFF3E3F38).copy(alpha = 0.5f), style = Stroke(0.8f)) }
-    var x = 6f; while (x < w) { drawCircle(Color(0xFF4F7A33).copy(alpha = 0.7f), 1.4f + az.nextFloat() * 1.6f, Offset(x, 1.5f)); x += 5f + az.nextFloat() * 22f }
+    var x = 6f; while (x < w) { drawCircle(Color(0xFF4F7A33).copy(alpha = 0.7f), 1.4f + az.nextFloat() * 1.6f, Offset(x, 1.5f)); x += maxOf(5f + az.nextFloat() * 22f, 1f) }
 }
 
 /** Piedra clara de la capilla con una arquería menuda. */
@@ -2928,7 +2928,7 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                     while (x < w - 14 * u) {
                         val col = (if (i % 2 == 0) p.detalle else p.acento).copy(alpha = 0.5f)
                         drawRect(col, Offset(x - 1.3f * u, 14 * u), Size(2.6f * u, 9 * u)); drawCircle(col, 2.1f * u, Offset(x, 12 * u))
-                        x += paso; i++
+                        x += maxOf(paso, 1f); i++
                     }
                     val colores = listOf(p.detalle, p.acento, p.tenue)
                     var xc = 14 * u; var k = 0
@@ -2940,7 +2940,7 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                     // La banda roja de la sobreveste en el margen y, arriba, una fila de almenas tenue.
                     drawRect(p.acento.copy(alpha = 0.18f), Offset(18.dp.toPx(), 0f), Size(4.dp.toPx(), h))
                     drawLine(p.detalle.copy(alpha = 0.25f), Offset(25.dp.toPx(), 0f), Offset(25.dp.toPx(), h), 1f)
-                    val m = 12.dp.toPx(); var x = 0f; while (x < w) { drawRect(p.detalle.copy(alpha = 0.12f), Offset(x, 0f), Size(m, 8.dp.toPx())); x += m * 2 }
+                    val m = 12.dp.toPx(); var x = 0f; while (x < w) { drawRect(p.detalle.copy(alpha = 0.12f), Offset(x, 0f), Size(m, 8.dp.toPx())); x += maxOf(m * 2, 1f) }
                 }
                 TemaId.COLONOS -> {
                     // Libro de registro: doble margen rojo, la cabecera azul y la columna de las cuentas.
@@ -2991,7 +2991,7 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                     drawRect(Brush.radialGradient(listOf(p.acento.copy(alpha = 0.12f), Color.Transparent), center = Offset(w * 0.8f, 0f), radius = w * 0.7f))
                     drawRect(Brush.radialGradient(listOf(Color(0xFF8CFF5A).copy(alpha = 0.06f), Color.Transparent), center = Offset(0f, h), radius = w * 0.6f))
                     val d = 7.dp.toPx(); var x = 0f
-                    while (x < w) { drawPath(Path().apply { moveTo(x, h); lineTo(x + d / 2, h - d * 0.6f); lineTo(x + d, h); close() }, p.detalle.copy(alpha = 0.5f)); x += d }
+                    while (x < w) { drawPath(Path().apply { moveTo(x, h); lineTo(x + d / 2, h - d * 0.6f); lineTo(x + d, h); close() }, p.detalle.copy(alpha = 0.5f)); x += maxOf(d, 1f) }
                 }
                 TemaId.BOTANICO -> {
                     // Marco de lámina y el número de la tabla.
@@ -3053,7 +3053,7 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                     drawLine(p.acento.copy(alpha = 0.35f), Offset(x0, y), Offset(x0, h - 20.dp.toPx()), 1f)
                     while (y < h - 20.dp.toPx()) {
                         drawLine(p.acento.copy(alpha = 0.4f), Offset(x0, y), Offset(x0 + (if (k % 5 == 0) 9 else 4).dp.toPx(), y), 1f)
-                        y += paso; paso = maxOf(paso * 0.96f, 9.dp.toPx()); k++
+                        y += maxOf(paso, 1f); paso = maxOf(paso * 0.96f, 9.dp.toPx()); k++
                     }
                     if (noche || p.oscura) {
                         val az = java.util.Random(53)

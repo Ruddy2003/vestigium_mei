@@ -631,7 +631,7 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
             drawRect(pista, Offset.Zero, size)
             if (fw > 0f) {
                 drawRect(color, Offset.Zero, Size(fw, h))
-                clipRect(right = fw) { var x = h / 2; while (x < fw + h) { for (k in 0..1) { val q = h * (0.42f - k * 0.18f); drawArc(claro, 180f, 180f, false, Offset(x - q, h - q), Size(2 * q, 2 * q), style = Stroke(0.8f * d)) }; x += h } }
+                clipRect(right = fw) { var x = h / 2; while (x < fw + h) { for (k in 0..1) { val q = h * (0.42f - k * 0.18f); drawArc(claro, 180f, 180f, false, Offset(x - q, h - q), Size(2 * q, 2 * q), style = Stroke(0.8f * d)) }; x += maxOf(h, 1f) } }
             }
         }
         // Vidriera: vidrios entre plomos.
@@ -670,7 +670,7 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
             if (fw > 0f) {
                 drawRoundRect(color.copy(alpha = 0.35f), Offset(0f, h * 0.15f), Size(fw, h * 0.7f), CornerRadius(h * 0.2f))
                 var b = h * 0.5f; var j = 0
-                while (b < fw - h * 0.6f) { drawCircle(claro, h * (if (j % 2 == 0) 0.12f else 0.18f), Offset(b, h * (if (j % 2 == 0) 0.4f else 0.6f)), style = Stroke(0.8f * d)); b += h * 0.9f; j++ }
+                while (b < fw - h * 0.6f) { drawCircle(claro, h * (if (j % 2 == 0) 0.12f else 0.18f), Offset(b, h * (if (j % 2 == 0) 0.4f else 0.6f)), style = Stroke(0.8f * d)); b += maxOf(h * 0.9f, 1f); j++ }
                 drawPath(Path().apply { moveTo(fw - h * 0.25f, h * 0.15f); lineTo(fw + h * 0.25f, h * 0.15f); lineTo(fw, h * 0.95f); close() }, color)
             }
         }
@@ -693,8 +693,8 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 clipRect(right = fw) {
                     var x = h * 0.5f; var k = 0
                     while (x < fw + h) {
-                        if (k % 5 == 4) { drawRect(claro, Offset(x - h * 0.1f, h * 0.36f), Size(h * 1.1f, h * 0.28f)); x += h * 1.5f }
-                        else { drawCircle(claro, h * 0.16f, Offset(x, h / 2)); x += h * 0.55f }
+                        if (k % 5 == 4) { drawRect(claro, Offset(x - h * 0.1f, h * 0.36f), Size(h * 1.1f, h * 0.28f)); x += maxOf(h * 1.5f, 1f) }
+                        else { drawCircle(claro, h * 0.16f, Offset(x, h / 2)); x += maxOf(h * 0.55f, 1f) }
                         k++
                     }
                 }
@@ -732,7 +732,7 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
             if (fw > 0f) {
                 drawLine(color, Offset(h / 2, h / 2), Offset(fw - h / 2, h / 2), h * 0.75f, StrokeCap.Round)
                 var x = h * 0.4f
-                while (x < fw - h * 0.4f) { drawLine(oscuro, Offset(x, h * 0.85f), Offset(x + h * 0.45f, h * 0.15f), 0.9f * d); x += h * 0.5f }
+                while (x < fw - h * 0.4f) { drawLine(oscuro, Offset(x, h * 0.85f), Offset(x + h * 0.45f, h * 0.15f), 0.9f * d); x += maxOf(h * 0.5f, 1f) }
                 drawCircle(color, h * 0.5f, Offset(fw - h / 2, h / 2)); drawCircle(claro, h * 0.2f, Offset(fw - h / 2, h / 2))
             }
         }
@@ -764,7 +764,7 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
             if (fw > 0f) {
                 drawRoundRect(color, Offset.Zero, Size(fw, h), CornerRadius(h / 2))
                 var x = 3f * d; var k = 0
-                while (x < fw - 1f * d) { drawLine(oscuro, Offset(x, h * 0.2f), Offset(x, h * 0.8f), 0.7f * d); x += if (k % 5 == 4) 5f * d else 2.5f * d; k++ }
+                while (x < fw - 1f * d) { drawLine(oscuro, Offset(x, h * 0.2f), Offset(x, h * 0.8f), 0.7f * d); x += maxOf(if (k % 5 == 4) 5f * d else 2.5f * d, 1f); k++ }
             }
         }
     }

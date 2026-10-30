@@ -331,9 +331,9 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             // Los dientes: medios círculos mordidos en las cuatro orillas, del color del papel de abajo.
             val diente = r * 0.07f; val hueco = k(e.surface)
             var x = o.x + diente * 1.5f
-            while (x < o.x + ancho - diente) { drawCircle(hueco, diente, Offset(x, o.y)); drawCircle(hueco, diente, Offset(x, o.y + alto)); x += diente * 3f }
+            while (x < o.x + ancho - diente) { drawCircle(hueco, diente, Offset(x, o.y)); drawCircle(hueco, diente, Offset(x, o.y + alto)); x += maxOf(diente * 3f, 1f) }
             var y = o.y + diente * 1.5f
-            while (y < o.y + alto - diente) { drawCircle(hueco, diente, Offset(o.x, y)); drawCircle(hueco, diente, Offset(o.x + ancho, y)); y += diente * 3f }
+            while (y < o.y + alto - diente) { drawCircle(hueco, diente, Offset(o.x, y)); drawCircle(hueco, diente, Offset(o.x + ancho, y)); y += maxOf(diente * 3f, 1f) }
             val dentro = Rect(o.x + r * 0.16f, o.y + r * 0.16f, o.x + ancho - r * 0.16f, o.y + alto - r * 0.16f)
             drawRect(col, dentro.topLeft, dentro.size)
             drawRect(claro, Offset(dentro.left + r * 0.06f, dentro.top + r * 0.06f), Size(dentro.width - r * 0.12f, dentro.height - r * 0.12f), style = Stroke(r * 0.03f))
@@ -345,7 +345,7 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
                 val onda = Path().apply {
                     moveTo(o.x - r * 0.3f, yy)
                     var xx = o.x - r * 0.3f
-                    while (xx < o.x + ancho + r * 0.3f) { quadraticTo(xx + r * 0.12f, yy - r * 0.08f, xx + r * 0.24f, yy); quadraticTo(xx + r * 0.36f, yy + r * 0.08f, xx + r * 0.48f, yy); xx += r * 0.48f }
+                    while (xx < o.x + ancho + r * 0.3f) { quadraticTo(xx + r * 0.12f, yy - r * 0.08f, xx + r * 0.24f, yy); quadraticTo(xx + r * 0.36f, yy + r * 0.08f, xx + r * 0.48f, yy); xx += maxOf(r * 0.48f, 1f) }
                 }
                 drawPath(onda, k(Color(0xFF2B2420).copy(alpha = 0.45f)), style = Stroke(r * 0.035f))
             }
@@ -825,7 +825,7 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
                 while (x < r) {
                     val col = if (i % 2 == 0) Color(0xFFA8432A) else Color(0xFF3D5E45)
                     drawPath(Path().apply { moveTo(x, y0 + franja); lineTo(x + paso * 0.5f, y0); lineTo(x + paso, y0); lineTo(x + paso * 0.5f, y0 + franja); close() }, col.copy(alpha = 0.6f))
-                    x += paso; i++
+                    x += maxOf(paso, 1f); i++
                 }
             }
         }
@@ -860,8 +860,8 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
         TemaId.EGIPTO -> {
             // Un cartucho vertical junto al borde derecho, con tres signos en lapislázuli, y las fibras del papiro en cruz.
             val lapis = Color(0xFF1D2F7A)
-            var y = top + H * 0.05f; while (y < bot) { drawLine(Color(0xFF8A6E3A).copy(alpha = 0.08f), Offset(l, y), Offset(r, y), 1f); y += H * 0.035f }
-            var x = l + W * 0.02f; while (x < r) { drawLine(Color(0xFF8A6E3A).copy(alpha = 0.05f), Offset(x, top), Offset(x, bot), 1f); x += W * 0.03f }
+            var y = top + H * 0.05f; while (y < bot) { drawLine(Color(0xFF8A6E3A).copy(alpha = 0.08f), Offset(l, y), Offset(r, y), 1f); y += maxOf(H * 0.035f, 1f) }
+            var x = l + W * 0.02f; while (x < r) { drawLine(Color(0xFF8A6E3A).copy(alpha = 0.05f), Offset(x, top), Offset(x, bot), 1f); x += maxOf(W * 0.03f, 1f) }
             val ancho = W * 0.075f; val x0 = r - W * 0.12f; val y0 = top + H * 0.1f; val alto = H * 0.56f
             drawRoundRect(lapis.copy(alpha = 0.7f), Offset(x0, y0), Size(ancho, alto), CornerRadius(ancho / 2), style = Stroke(1.6f))
             drawLine(lapis.copy(alpha = 0.7f), Offset(x0 - ancho * 0.15f, y0 + alto + 3f), Offset(x0 + ancho * 1.15f, y0 + alto + 3f), 2.2f)
@@ -912,7 +912,7 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
             for (k in 0..2) drawCircle(grabado, s * 0.32f, Offset(x0 + s * (0.5f + k * 0.95f), y0 + s * 1.15f))
             drawLine(grabado, Offset(x0 - s * 0.3f, y0 + s * 1.5f), Offset(x0 + s * 3.6f, y0 + s * 1.5f), s * 0.08f)
             var x = l + W * 0.04f
-            while (x < r - W * 0.04f) { drawCircle(pa.sombra.copy(alpha = 0.7f), H * 0.009f, Offset(x, bot - H * 0.08f)); x += W * 0.025f }
+            while (x < r - W * 0.04f) { drawCircle(pa.sombra.copy(alpha = 0.7f), H * 0.009f, Offset(x, bot - H * 0.08f)); x += maxOf(W * 0.025f, 1f) }
         }
         TemaId.LABORATORIO -> {
             // El código de barras de la muestra, de canto junto al borde derecho.
@@ -1053,7 +1053,7 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
                 val c = Offset(l + W * 0.07f, y); val rr = H * 0.045f
                 drawRoundRect(cinabrio, Offset(c.x - rr, c.y - rr), Size(rr * 2, rr * 2), CornerRadius(rr * 0.4f), style = Stroke(1.4f))
                 numeralMaya(3 + k * 4, c, rr * 1.2f, tinta)
-                y += H * 0.12f; k++
+                y += maxOf(H * 0.12f, 1f); k++
             }
             grecaEscalonada(l + W * 0.04f, r - W * 0.04f, bot - H * 0.12f, bot - H * 0.05f, cinabrio, 1.6f)
         }

@@ -507,7 +507,7 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                 val grieta = Path().apply {
                     var r = m * 0.42f; val p0 = pt(r, a); moveTo(p0.x, p0.y)
                     var k = 0
-                    while (r < m * 0.62f) { r += m * 0.035f; val q = pt(r, a + (if (k % 2 == 0) 0.05 else -0.05)); lineTo(q.x, q.y); k++ }
+                    while (r < m * 0.62f) { r += maxOf(m * 0.035f, 1f); val q = pt(r, a + (if (k % 2 == 0) 0.05 else -0.05)); lineTo(q.x, q.y); k++ }
                 }
                 drawPath(grieta, (if (oscuro) cs.secondary else cs.onBackground).copy(alpha = 0.10f), style = Stroke(1f * u))
             }

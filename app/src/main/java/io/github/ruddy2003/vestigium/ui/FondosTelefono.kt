@@ -350,7 +350,7 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 // de cada lado, un escudo con la cruz patada.
                 caja(0f, e.secondary.copy(alpha = 0.45f), 1.4f * u); caja(5 * u, tenue, 0.7f * u)
                 val mer = 12 * u; var x = izq
-                while (x + mer <= der) { drawRect(e.secondary.copy(alpha = 0.3f), Offset(x, arr - 10 * u), Size(mer, 10 * u)); x += mer * 2 }
+                while (x + mer <= der) { drawRect(e.secondary.copy(alpha = 0.3f), Offset(x, arr - 10 * u), Size(mer, 10 * u)); x += maxOf(mer * 2, 1f) }
                 esquinas.forEach { c -> drawCircle(e.tertiary.copy(alpha = 0.6f), 3 * u, haciaDentro(c, 9 * u)) }
                 listOf(izq, der).forEach { xx ->
                     val c = Offset(xx, cy); val r = 12 * u
@@ -583,7 +583,7 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 var y = arr + 30 * u; var i = 0; var paso = 22 * u
                 while (y < aba - 30 * u) {
                     drawLine(tenue, Offset(izq, y), Offset(izq + (if (i % 5 == 0) 12 * u else 5 * u), y), 1f * u)
-                    y += paso; paso = maxOf(paso * 0.97f, 8 * u); i++
+                    y += maxOf(paso, 1f); paso = maxOf(paso * 0.97f, 8 * u); i++
                 }
                 drawLine(tenue, Offset(izq, arr + 30 * u), Offset(izq, aba - 30 * u), 0.8f * u)
                 listOf(Offset(izq, aba), Offset(der, aba)).forEach { c ->
@@ -647,9 +647,9 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
             TemaId.PIRATA -> {
                 // El marco de una carta de marear: la escala de grados en franjas, un cabo por dentro y un nudo en cada esquina.
                 val paso = 12 * u; var x = izq; var k = 0
-                while (x < der) { if (k % 2 == 0) { drawLine(col, Offset(x, arr), Offset(minOf(x + paso, der), arr), 3 * u); drawLine(col, Offset(x, aba), Offset(minOf(x + paso, der), aba), 3 * u) }; x += paso; k++ }
+                while (x < der) { if (k % 2 == 0) { drawLine(col, Offset(x, arr), Offset(minOf(x + paso, der), arr), 3 * u); drawLine(col, Offset(x, aba), Offset(minOf(x + paso, der), aba), 3 * u) }; x += maxOf(paso, 1f); k++ }
                 var y = arr; k = 0
-                while (y < aba) { if (k % 2 == 0) { drawLine(col, Offset(izq, y), Offset(izq, minOf(y + paso, aba)), 3 * u); drawLine(col, Offset(der, y), Offset(der, minOf(y + paso, aba)), 3 * u) }; y += paso; k++ }
+                while (y < aba) { if (k % 2 == 0) { drawLine(col, Offset(izq, y), Offset(izq, minOf(y + paso, aba)), 3 * u); drawLine(col, Offset(der, y), Offset(der, minOf(y + paso, aba)), 3 * u) }; y += maxOf(paso, 1f); k++ }
                 val cabo = PathEffect.dashPathEffect(floatArrayOf(2.6f * u, 1.4f * u))
                 drawRect(tenue, Offset(izq + 8 * u, arr + 8 * u), Size(der - izq - 16 * u, aba - arr - 16 * u), style = Stroke(1.2f * u, pathEffect = cabo))
                 esquinas.forEach { c -> drawCircle(e.secondary.copy(alpha = 0.5f), 4 * u, c); drawCircle(tenue, 4 * u, c, style = Stroke(0.7f * u)) }

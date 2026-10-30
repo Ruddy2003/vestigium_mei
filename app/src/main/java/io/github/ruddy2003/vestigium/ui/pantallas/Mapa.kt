@@ -842,7 +842,7 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
         TemaId.TEMPLARIO -> {
             filete(5 * u, tinta.copy(alpha = 0.45f), 1.2f * u)
             val m = 9 * u
-            listOf(5 * u, h - 5 * u - 4 * u).forEach { y0 -> var x = 14 * u; while (x + m < w - 14 * u) { drawRect(tinta.copy(alpha = 0.35f), Offset(x, y0), Size(m, 4 * u)); x += 2 * m } }
+            listOf(5 * u, h - 5 * u - 4 * u).forEach { y0 -> var x = 14 * u; while (x + m < w - 14 * u) { drawRect(tinta.copy(alpha = 0.35f), Offset(x, y0), Size(m, 4 * u)); x += maxOf(2 * m, 1f) } }
             esquinas(5 * u) { o, _, _ -> drawCircle(fondo, 5 * u, o); drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(o, 4.6f * u), acento) }
         }
         // La cámara que graba: el punto rojo, la tira del expediente y la regla de tiempo abajo.

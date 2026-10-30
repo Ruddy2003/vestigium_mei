@@ -1023,7 +1023,7 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         val m = 16 * u; val a = 9 * u
         moveTo(0f, h); lineTo(0f, 0f)
         var x = 0f; var k = 0
-        while (x + m < w) { val y = if (k % 2 == 0) 0f else a; lineTo(x, y); lineTo(x + m, y); x += m; k++ }
+        while (x + m < w) { val y = if (k % 2 == 0) 0f else a; lineTo(x, y); lineTo(x + m, y); x += maxOf(m, 1f); k++ }
         lineTo(x, if (k % 2 == 0) 0f else a); lineTo(w, if (k % 2 == 0) 0f else a); lineTo(w, h); close()
     }
     // Carpeta de expediente con su pestaña a la izquierda.

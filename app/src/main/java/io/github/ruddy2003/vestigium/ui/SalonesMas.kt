@@ -239,7 +239,7 @@ object SalonesMas {
             val cx = i * paso; val ancho = 7 * d; val alto = h * 0.42f; val y0 = h - piso - alto
             drawRoundRect(piedra, Offset(cx - ancho, y0), Size(2 * ancho, alto), CornerRadius(ancho * 0.6f))
             var y = y0 + 5 * d
-            while (y < h - piso - 10 * d) { drawRoundRect(jade, Offset(cx - ancho * 0.6f, y), Size(ancho * 1.2f, ancho * 1.2f), CornerRadius(ancho * 0.3f), style = Stroke(0.8f * d)); y += ancho * 1.5f }
+            while (y < h - piso - 10 * d) { drawRoundRect(jade, Offset(cx - ancho * 0.6f, y), Size(ancho * 1.2f, ancho * 1.2f), CornerRadius(ancho * 0.3f), style = Stroke(0.8f * d)); y += maxOf(ancho * 1.5f, 1f) }
         }
     }
 
@@ -300,7 +300,7 @@ object SalonesMas {
         val tatami = (if (oscuro) Color(0xFF4A4A30) else Color(0xFFCFC79A)).copy(alpha = 0.55f)
         drawRect(tatami, Offset(0f, suelo), Size(w, h - suelo))
         var x = 0f; var k = 0
-        while (x < w) { drawLine(Color(0xFF2A2A1C).copy(alpha = 0.45f), Offset(x, suelo), Offset(x, h), 2.4f * d); x += if (k % 2 == 0) w * 0.36f else w * 0.18f; k++ }
+        while (x < w) { drawLine(Color(0xFF2A2A1C).copy(alpha = 0.45f), Offset(x, suelo), Offset(x, h), 2.4f * d); x += maxOf(if (k % 2 == 0) w * 0.36f else w * 0.18f, 1f); k++ }
         drawLine(Color(0xFF2A2A1C).copy(alpha = 0.45f), Offset(0f, suelo + 2 * d), Offset(w, suelo + 2 * d), 3 * d)
         // Los andon encendidos entre las columnas.
         for (i in 0..n) {
@@ -430,7 +430,7 @@ object SalonesMas {
                 while (bx < x0 + 25 * d) {
                     val bw = (2.5f + az.nextFloat() * 2.5f) * d; val bh = (10 + az.nextFloat() * 8) * d
                     if (az.nextFloat() > 0.2f) drawRect(lomos[az.nextInt(lomos.size)].copy(alpha = if (oscuro) 0.3f else 0.4f), Offset(bx, y - bh), Size(bw, bh))
-                    bx += bw + 0.6f * d
+                    bx += maxOf(bw + 0.6f * d, 1f)
                 }
                 y += 30 * d
             }
@@ -680,8 +680,8 @@ object SalonesMas {
         while (y < h - 40 * d) {
             drawRect(ladrillo, Offset(0f, y), Size(w, alto - 1.5f * d))
             var x = if (fila % 2 == 0) 0f else -largo / 2
-            while (x < w) { drawLine(junta, Offset(x, y), Offset(x, y + alto), 1.5f * d); x += largo }
-            y += alto; fila++
+            while (x < w) { drawLine(junta, Offset(x, y), Offset(x, y + alto), 1.5f * d); x += maxOf(largo, 1f) }
+            y += maxOf(alto, 1f); fila++
         }
         // Los cables que cruzan arriba, con farolitos colgando.
         listOf(18f, 46f).forEachIndexed { k, y0 ->
@@ -693,7 +693,7 @@ object SalonesMas {
                 val t = xx / w; val yy = (1 - t) * (1 - t) * y0 * d + 2 * (1 - t) * t * (y0 + 18) * d + t * t * y0 * d
                 drawCircle(Brush.radialGradient(listOf(Color(0xFFFF6B5E).copy(alpha = 0.35f), Color.Transparent), Offset(xx, yy + 7 * d), 16 * d), 16 * d, Offset(xx, yy + 7 * d))
                 drawOval(Color(0xFFFF6B5E).copy(alpha = 0.85f), Offset(xx - 4 * d, yy + 2 * d), Size(8 * d, 11 * d))
-                xx += paso
+                xx += maxOf(paso, 1f)
             }
         }
         // Los letreros verticales entre las columnas.

@@ -40,7 +40,7 @@ internal fun DrawScope.numeralMaya(n: Int, c: Offset, alto: Float, color: Color)
         y -= gruesa + hueco
     }
     if (puntos > 0) {
-        if (barras == 0) y += hueco
+        if (barras == 0) y += maxOf(hueco, 1f)
         val cy = y - rp
         val paso = ancho / 4.2f
         val x0 = c.x - paso * (puntos - 1) / 2f
@@ -101,7 +101,7 @@ internal fun DrawScope.grecaEscalonada(x0: Float, x1: Float, arriba: Float, abaj
         p.moveTo(x, abajo); p.lineTo(x + s, abajo); p.lineTo(x + s, abajo - g); p.lineTo(x + 2 * s, abajo - g); p.lineTo(x + 2 * s, abajo - 2 * g)
         p.lineTo(x + 3 * s, abajo - 2 * g); p.lineTo(x + 3 * s, arriba); p.lineTo(x + 7 * s, arriba); p.lineTo(x + 7 * s, arriba + 2.6f * g)
         p.lineTo(x + 5 * s, arriba + 2.6f * g); p.lineTo(x + 5 * s, arriba + 1.3f * g); p.lineTo(x + 6 * s, arriba + 1.3f * g)
-        x += paso
+        x += maxOf(paso, 1f)
     }
     drawPath(p, color, style = Stroke(grosor, cap = StrokeCap.Square, join = StrokeJoin.Miter))
 }

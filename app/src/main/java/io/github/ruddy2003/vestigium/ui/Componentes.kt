@@ -197,7 +197,7 @@ private fun BandaSampietrini(modifier: Modifier, color: Color) {
                 val azar = ((i * 7919 + fila * 104729) % 97) / 97f
                 val enc = lado * (0.86f + 0.14f * azar)
                 drawRoundRect(color.copy(alpha = 0.45f + 0.4f * azar), Offset(x + (lado - enc) / 2, y + (lado - enc) / 2), Size(enc, enc), CornerRadius(enc * 0.28f))
-                x += paso; i++
+                x += maxOf(paso, 1f); i++
             }
         }
     }
@@ -325,7 +325,7 @@ private fun BandaSeigaiha(modifier: Modifier) {
                     drawArc(e.background, 180f, 180f, true, Offset(x - r, yb - r), Size(2 * r, 2 * r))
                     for (k in 0..2) { val q = r * (1f - k * 0.32f); drawArc(ola, 180f, 180f, false, Offset(x - q, yb - q), Size(2 * q, 2 * q), style = Stroke(0.9f * f)) }
                 }
-                x += 2 * r
+                x += maxOf(2 * r, 1f)
             }
         }
         val s = 11 * f; val o = Offset(cx - s / 2, base - s - 1 * f)
@@ -1280,7 +1280,7 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             val y = size.height - 4.dp.toPx(); val paso = 7.dp.toPx()
             drawLine(e.primary.copy(alpha = 0.7f), Offset(0f, y), Offset(size.width, y), 1.dp.toPx())
             var x = 0f; var k = 0
-            while (x < size.width) { drawLine(e.tertiary.copy(alpha = 0.8f), Offset(x, y), Offset(x, y + (if (k % 5 == 0) 4f else 2f).dp.toPx()), 1.dp.toPx()); x += paso; k++ }
+            while (x < size.width) { drawLine(e.tertiary.copy(alpha = 0.8f), Offset(x, y), Offset(x, y + (if (k % 5 == 0) 4f else 2f).dp.toPx()), 1.dp.toPx()); x += maxOf(paso, 1f); k++ }
         }.padding(bottom = 8.dp))
         // Remate con el signo de la rub el-hizb, en oro.
         TemaId.ANDALUS -> Text(buildAnnotatedString { append(nombre); withStyle(SpanStyle(color = e.tertiary)) { append("  ۞") } }, style = estilo, modifier = peso)
@@ -1302,7 +1302,7 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
         TemaId.PIRATA -> Text(nombre, style = estilo, modifier = peso.drawBehind {
             val y = size.height - 3.dp.toPx(); val a = 1.6.dp.toPx(); val l = 9.dp.toPx(); val fin = size.width * 0.82f
             val ola = Path(); var x = 0f; ola.moveTo(0f, y)
-            while (x < fin) { ola.quadraticTo(x + l / 4, y - a, x + l / 2, y); ola.quadraticTo(x + l * 3 / 4, y + a, x + l, y); x += l }
+            while (x < fin) { ola.quadraticTo(x + l / 4, y - a, x + l / 2, y); ola.quadraticTo(x + l * 3 / 4, y + a, x + l, y); x += maxOf(l, 1f) }
             drawPath(ola, e.primary.copy(alpha = 0.6f), style = Stroke(0.9.dp.toPx()))
             val s = 2.6.dp.toPx(); val c = Offset(fin + 7.dp.toPx(), y)
             drawLine(e.tertiary, c - Offset(s, s), c + Offset(s, s), 1.4.dp.toPx(), StrokeCap.Round)
@@ -1734,7 +1734,7 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
                 drawCircle(e.onSurface.copy(alpha = 0.35f), fino * 1.1f, Offset(u * 0.8f, u * 0.8f) * 0.6f + Offset(i * 0.25f, i * 0.25f))
             }
             var x = u * 3f
-            while (x < w - u * 3f) { drawLine(e.primary.copy(alpha = 0.22f), Offset(x, i * 0.3f), Offset(x + u * 0.5f, i * 0.3f + u * 0.5f), fino * 0.9f); x += u * 0.6f }
+            while (x < w - u * 3f) { drawLine(e.primary.copy(alpha = 0.22f), Offset(x, i * 0.3f), Offset(x + u * 0.5f, i * 0.3f + u * 0.5f), fino * 0.9f); x += maxOf(u * 0.6f, 1f) }
         }
         TemaId.URSS -> {
             // Cuña roja de cartel arriba y una barra negra abajo.
@@ -1794,7 +1794,7 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawRect(l.copy(alpha = 0.4f), Offset(f(0.1f), f(0.1f)), Size(f(0.8f), f(0.18f)), style = tr)
             drawLine(a.copy(alpha = 0.35f), Offset(f(0.2f), f(0.19f)), Offset(f(0.8f), f(0.19f)), tr.width)
             drawRect(l, Offset(f(0.14f), f(0.34f)), Size(f(0.72f), f(0.56f)), style = tr)
-            var y = f(0.42f); while (y < f(0.88f)) { drawLine(l.copy(alpha = 0.6f), Offset(f(0.14f), y), Offset(f(0.86f), y), tr.width * 0.7f); y += f(0.08f) }
+            var y = f(0.42f); while (y < f(0.88f)) { drawLine(l.copy(alpha = 0.6f), Offset(f(0.14f), y), Offset(f(0.86f), y), tr.width * 0.7f); y += maxOf(f(0.08f), 1f) }
             drawCircle(e.secondary, f(0.03f), Offset(f(0.5f), f(0.86f)))
         }
         TemaId.HELENO -> {
@@ -2169,7 +2169,7 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         // Cuatro puntos de oro junto a las esquinas cóncavas.
         TemaId.MEDIEVAL -> listOf(Offset(m * 2f, m * 2f), Offset(w - m * 2f, m * 2f), Offset(m * 2f, h - m * 2f), Offset(w - m * 2f, h - m * 2f)).forEach { drawCircle(e.tertiary, fino * 1.6f, it) }
         // La cruz junto al asta del gallardete y una costura de malla a lo largo.
-        TemaId.TEMPLARIO -> { drawPath(cruzPatada(Offset(m * 3f, h / 2), m * 1.2f), c); var x = m * 6f; while (x < w - h * 0.4f) { drawCircle(c, fino * 1.1f, Offset(x, h - m), style = Stroke(fino * 0.6f)); x += m * 1.4f } }
+        TemaId.TEMPLARIO -> { drawPath(cruzPatada(Offset(m * 3f, h / 2), m * 1.2f), c); var x = m * 6f; while (x < w - h * 0.4f) { drawCircle(c, fino * 1.1f, Offset(x, h - m), style = Stroke(fino * 0.6f)); x += maxOf(m * 1.4f, 1f) } }
         // Doble recuadro de sello de goma.
         TemaId.DISTOPIA -> {
             drawRect(c, Offset(m * 0.7f, m * 0.7f), Size(w - m * 1.4f, h - m * 1.4f), style = Stroke(fino))
@@ -2252,7 +2252,7 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         TemaId.ABISMO -> {
             listOf(0.72f to 1.2f, 0.5f to 1.7f, 0.28f to 2.2f).forEach { (fy, r) -> drawCircle(c, fino * r, Offset(w - m * (2.2f + (fy * 2f)), h * fy), style = Stroke(fino * 0.8f)) }
             val ola = Path(); var x = m * 2f; ola.moveTo(x, h - m)
-            while (x < w * 0.6f) { ola.lineTo(x, h - m + fino * 1.2f * sin(x / (m * 0.8f))); x += fino }
+            while (x < w * 0.6f) { ola.lineTo(x, h - m + fino * 1.2f * sin(x / (m * 0.8f))); x += maxOf(fino, 1f) }
             drawPath(ola, c, style = Stroke(fino))
         }
         // El trasdós del arco, por dentro.
@@ -2272,7 +2272,7 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
             val sube = h * 0.32f
             val p = Path().apply { moveTo(m, h - m); lineTo(m, m + sube); lineTo(m + sube, m); lineTo(w - m - sube, m); lineTo(w - m, m + sube); lineTo(w - m, h - m) }
             drawPath(p, c, style = Stroke(fino))
-            var x = m * 3; while (x < w - m * 3) { drawCircle(c, fino * 0.9f, Offset(x, h - m * 1.6f)); x += m * 2 }
+            var x = m * 3; while (x < w - m * 3) { drawCircle(c, fino * 0.9f, Offset(x, h - m * 1.6f)); x += maxOf(m * 2, 1f) }
         }
         // Costura de fieltro.
         TemaId.MONGOL -> drawRoundRect(c, Offset(m, m), Size(w - 2 * m, h - 2 * m), CornerRadius(m * 1.2f), style = Stroke(fino, pathEffect = PathEffect.dashPathEffect(floatArrayOf(m * 1.5f, m))))
@@ -2685,7 +2685,7 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
             // Una corriente: la línea ondula de arriba abajo.
             val p = Path(); var y = 0f
             p.moveTo(2.5f * d, 0f)
-            while (y < h) { y += d; p.lineTo(2.5f * d + 1.6f * d * sin(y / (3 * d)), y) }
+            while (y < h) { y += maxOf(d, 1f); p.lineTo(2.5f * d + 1.6f * d * sin(y / (3 * d)), y) }
             drawPath(p, c, style = Stroke(1.6f * d))
         }
         TemaId.ANDALUS -> {

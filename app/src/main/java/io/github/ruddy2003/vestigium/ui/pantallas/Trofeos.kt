@@ -573,8 +573,8 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
             while (y < h) {
                 drawLine(v, Offset(0f, y), Offset(w, y), d)
                 var x = if (fila % 2 == 0) largo / 2 else 0f
-                while (x < w) { drawLine(v, Offset(x, y - alto), Offset(x, y), d); x += largo }
-                y += alto; fila++
+                while (x < w) { drawLine(v, Offset(x, y - alto), Offset(x, y), d); x += maxOf(largo, 1f) }
+                y += maxOf(alto, 1f); fila++
             }
             drawRect(Color(0xFFB0191F).copy(alpha = 0.1f), Offset(0f, h * 0.36f), Size(w, 6 * d))
         }
@@ -612,8 +612,8 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
             while (y < h) {
                 drawLine(v, Offset(0f, y), Offset(w, y), 1f * d)
                 var x = if (f % 2 == 0) 0f else largo / 2
-                while (x < w) { drawLine(v, Offset(x, y), Offset(x, y + alto), 1f * d); x += largo }
-                y += alto; f++
+                while (x < w) { drawLine(v, Offset(x, y), Offset(x, y + alto), 1f * d); x += maxOf(largo, 1f) }
+                y += maxOf(alto, 1f); f++
             }
             drawRect(a, Offset(0f, h * 0.68f), Size(w, 3 * d))
         }
@@ -637,9 +637,9 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
                 var x = if (fila % 2 == 0) 0f else rr
                 while (x < w + rr) {
                     listOf(1f, 0.6f).forEach { k -> drawArc(v, 180f, 180f, false, Offset(x - rr * k, y - rr * k), Size(2 * rr * k, 2 * rr * k), style = Stroke(d)) }
-                    x += 2 * rr
+                    x += maxOf(2 * rr, 1f)
                 }
-                y += rr * 0.8f; fila++
+                y += maxOf(rr * 0.8f, 1f); fila++
             }
             var px = 60 * d
             while (px < w) { listOf(-3f, 0f, 3f).forEach { dx -> drawLine(a, Offset(px + dx * d, 0f), Offset(px + dx * d, h), d) }; px += 160 * d }
@@ -662,7 +662,7 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
         TemaId.RUINAS -> {
             // Un muro de bloques de hormigón, con algunas grietas y hiedra que trepa desde abajo por los dos lados.
             val bw = 44 * d; val bh = 22 * d; var y = 0f; var f = 0
-            while (y < h) { var x = if (f % 2 == 0) 0f else -bw / 2; while (x < w) { drawRect(v, Offset(x, y), Size(bw, bh), style = Stroke(d)); x += bw }; y += bh; f++ }
+            while (y < h) { var x = if (f % 2 == 0) 0f else -bw / 2; while (x < w) { drawRect(v, Offset(x, y), Size(bw, bh), style = Stroke(d)); x += maxOf(bw, 1f) }; y += maxOf(bh, 1f); f++ }
             val az = java.util.Random(7)
             repeat(6) {
                 var x = az.nextFloat() * w; var yy = az.nextFloat() * h
@@ -736,7 +736,7 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
         // Muro de sillares con el friso de grecas escalonadas arriba.
         TemaId.MESO -> {
             val alto = 16 * d; var y = 30 * d; var fila = 0
-            while (y < h) { drawLine(v, Offset(0f, y), Offset(w, y), d); var x = if (fila % 2 == 0) 0f else 14 * d; while (x < w) { drawLine(v, Offset(x, y), Offset(x, y + alto), d); x += 28 * d }; y += alto; fila++ }
+            while (y < h) { drawLine(v, Offset(0f, y), Offset(w, y), d); var x = if (fila % 2 == 0) 0f else 14 * d; while (x < w) { drawLine(v, Offset(x, y), Offset(x, y + alto), d); x += 28 * d }; y += maxOf(alto, 1f); fila++ }
             grecaEscalonada(0f, w, 6 * d, 22 * d, a, 1.6f * d)
         }
         TemaId.MONGOL -> {
@@ -942,7 +942,7 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             listOf(0.1f, 0.84f).forEach { fx -> drawRect(m(Color(0xFF9C9C92)), Offset(w * fx, h * 0.45f), Size(w * 0.06f, h * 0.55f)) }
             tabla(m(Color(0xFF8A7458)), 0f, h * 0.45f)
             var x = 8 * d; var k = 0
-            while (x < w) { drawCircle(m(Color(0xFF4F7A33)).copy(alpha = 0.7f), (1.2f + (k % 3) * 0.6f) * d, Offset(x, h * 0.04f)); x += (7 + (k * 13) % 19) * d; k++ }
+            while (x < w) { drawCircle(m(Color(0xFF4F7A33)).copy(alpha = 0.7f), (1.2f + (k % 3) * 0.6f) * d, Offset(x, h * 0.04f)); x += maxOf((7 + (k * 13) % 19) * d, 1f); k++ }
         }
         TemaId.NAVIDAD -> {
             tabla(m(Color(0xFFEDE6DA)), 0f, h * 0.55f)
@@ -1058,7 +1058,7 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             val c = m(Color(0xFFB59A78))
             drawPath(Path().apply {
                 moveTo(0f, h * 0.2f); var x = 0f; var k = 0
-                while (x < w) { x += (18 + (k * 11) % 13) * d; quadraticTo(x - 9 * d, h * (if (k % 2 == 0) 0.02f else 0.16f), x, h * (0.1f + (k % 3) * 0.05f)); k++ }
+                while (x < w) { x += maxOf((18 + (k * 11) % 13) * d, 1f); quadraticTo(x - 9 * d, h * (if (k % 2 == 0) 0.02f else 0.16f), x, h * (0.1f + (k % 3) * 0.05f)); k++ }
                 lineTo(w, h); lineTo(0f, h); close()
             }, Brush.verticalGradient(listOf(lerp(c, Color.White, 0.15f), c, lerp(c, Color.Black, 0.4f)), 0f, h))
             var x = 26 * d; while (x < w) { for (j in 0 until 3) drawCircle(m(Color(0xFFA2401F)), 1.8f * d, Offset(x + j * 6 * d, h * 0.55f)); x += 84 * d }

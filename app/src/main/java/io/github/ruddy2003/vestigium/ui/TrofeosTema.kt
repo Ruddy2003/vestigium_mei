@@ -102,7 +102,7 @@ object TrofeosTema {
                 for (fila in 0 until 2) {
                     val y0 = h * (0.775f + fila * 0.062f); val lado = h * 0.055f
                     var x = w * 0.13f + (if (fila == 1) lado * 0.55f else 0f)
-                    while (x + lado < w * 0.87f) { drawRoundRect(piedra(lerp(basalto, Color.White, if ((x * 7).toInt() % 3 == 0) 0.08f else 0f)), Offset(x, y0), Size(lado, lado), CornerRadius(lado * 0.25f)); x += lado * 1.12f }
+                    while (x + lado < w * 0.87f) { drawRoundRect(piedra(lerp(basalto, Color.White, if ((x * 7).toInt() % 3 == 0) 0.08f else 0f)), Offset(x, y0), Size(lado, lado), CornerRadius(lado * 0.25f)); x += maxOf(lado * 1.12f, 1f) }
                 }
             }
             TemaId.RENACIMIENTO -> {
@@ -148,7 +148,7 @@ object TrofeosTema {
                 if (p.hecho) {
                     val colores = listOf(Color(0xFF1D2F7A), Color(0xFFC9971C), Color(0xFFB8471E), Color(0xFFC9971C))
                     var x = w * 0.22f; var k = 0
-                    while (x < w * 0.78f) { drawRect(colores[k % 4], Offset(x, h * 0.9f), Size(w * 0.03f, h * 0.025f)); x += w * 0.04f; k++ }
+                    while (x < w * 0.78f) { drawRect(colores[k % 4], Offset(x, h * 0.9f), Size(w * 0.03f, h * 0.025f)); x += maxOf(w * 0.04f, 1f); k++ }
                 }
             }
             TemaId.MEDIEVAL -> {
@@ -823,8 +823,8 @@ object TrofeosTema {
                     var yy = p.y(0.12f); var fila = 0
                     while (yy < p.y(0.76f)) {
                         var xx = p.x(0.14f) + (if (fila % 2 == 0) 0f else p.w * 0.02f)
-                        while (xx < p.x(0.86f)) { drawCircle(p.linea, p.w * 0.016f, Offset(xx, yy), style = Stroke(lw * 0.5f)); xx += p.w * 0.04f }
-                        yy += p.w * 0.03f; fila++
+                        while (xx < p.x(0.86f)) { drawCircle(p.linea, p.w * 0.016f, Offset(xx, yy), style = Stroke(lw * 0.5f)); xx += maxOf(p.w * 0.04f, 1f) }
+                        yy += maxOf(p.w * 0.03f, 1f); fila++
                     }
                 }
                 drawRect(lino, Offset(p.x(0.38f), p.y(0.3f)), Size(p.x(0.24f), p.y(0.42f)))

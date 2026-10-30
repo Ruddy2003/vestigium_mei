@@ -734,7 +734,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             val base = h * 0.9f; val merlon = 18f * u
             drawRect(muro, Offset(0f, base), Size(w, h - base))
             var mx = 0f
-            while (mx < w) { drawRect(muro, Offset(mx, base - 14f * u), Size(merlon, 14f * u)); mx += merlon * 2 }
+            while (mx < w) { drawRect(muro, Offset(mx, base - 14f * u), Size(merlon, 14f * u)); mx += maxOf(merlon * 2, 1f) }
             val fuego = if (oscuro) Color(0xFFF0A040) else e.tertiary
             val sitios = listOf(0.12f, 0.38f, 0.64f, 0.9f)
             sitios.forEachIndexed { i, fx ->
@@ -923,7 +923,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                         val cx = c + largo * 0.25f
                         drawLine(al(tinta, if (oscuro) 0.09f else 0.11f), Offset(cx - 5f * u, y0 - alto + 1.5f * u), Offset(cx + 1f * u, y0 - alto - 1f * u), 0.9f * u, cap = StrokeCap.Round)
                     }
-                    c += largo
+                    c += maxOf(largo, 1f)
                 }
             }
             // Gaviotas que cruzan planeando y a ratos aletean (una «m» abierta, como en los grabados de las cartas).

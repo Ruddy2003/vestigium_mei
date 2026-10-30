@@ -705,7 +705,7 @@ fun DrawScope.barraGrafica(e: EstiloGrafica, arriba: Offset, tam: Size, color: C
             drawPath(silueta, color)
             if (grosor >= 6f * d && largo >= 8f * d) {
                 var u = grosor * 0.5f
-                while (u < largo - grosor * 0.7f) { raya(u, grosor * 0.38f, u, grosor * 0.62f, tinte, max(1f, 0.7f * d)); u += max(2.4f * d, grosor * 0.3f) }
+                while (u < largo - grosor * 0.7f) { raya(u, grosor * 0.38f, u, grosor * 0.62f, tinte, max(1f, 0.7f * d)); u += maxOf(max(2.4f * d, grosor * 0.3f), 1f) }
             }
         }
         FormaBarra.BURBUJAS -> {
@@ -715,7 +715,7 @@ fun DrawScope.barraGrafica(e: EstiloGrafica, arriba: Offset, tam: Size, color: C
                 val rb = grosor * 0.15f; var u = grosor * 0.6f; var k = 0
                 while (u < largo - grosor * 0.55f) {
                     drawCircle(tinte, rb * (0.7f + 0.3f * (k % 3)), t.p(u, grosor * (if (k % 2 == 0) 0.36f else 0.62f)), style = Stroke(max(1f, 0.6f * d)))
-                    u += grosor * 0.9f; k++
+                    u += maxOf(grosor * 0.9f, 1f); k++
                 }
             }
         }
@@ -1152,7 +1152,7 @@ fun DrawScope.ejeGrafica(e: EstiloGrafica, desde: Offset, hasta: Offset, color: 
             linea(g * 1.8f)
             val largo = (hasta - desde).getDistance(); val paso = 2.6f * d
             var t = 0f
-            while (t < largo) { val p = desde + dir * t; drawLine(color.copy(alpha = color.alpha * 0.45f), p - normal * (g * 0.9f), p + dir * (g * 1.2f) + normal * (g * 0.9f), g * 0.5f); t += paso }
+            while (t < largo) { val p = desde + dir * t; drawLine(color.copy(alpha = color.alpha * 0.45f), p - normal * (g * 0.9f), p + dir * (g * 1.2f) + normal * (g * 0.9f), g * 0.5f); t += maxOf(paso, 1f) }
             ms.forEach { drawCircle(color, 1.8f * d, it) }
         }
         Eje.AGUZADA -> {

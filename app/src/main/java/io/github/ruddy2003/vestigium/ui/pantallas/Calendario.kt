@@ -298,7 +298,7 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             drawRect(linea, Offset(0f, 0f), Size(w, 1.4f * s))
             if (hoy) listOf(0f, w - 2.6f * s).forEach { x ->
                 drawRect(acento, Offset(x, 2 * s), Size(2.6f * s, h - 5 * s))
-                var y = 4 * s; while (y < h - 4 * s) { drawLine(sobre.copy(alpha = 0.4f), Offset(x, y), Offset(x + 2.6f * s, y), 0.5f * s); y += 2.4f * s }
+                var y = 4 * s; while (y < h - 4 * s) { drawLine(sobre.copy(alpha = 0.4f), Offset(x, y), Offset(x + 2.6f * s, y), 0.5f * s); y += maxOf(2.4f * s, 1f) }
             }
             if (sellado) sello(acento)
         }
@@ -331,7 +331,7 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 val col = if (!hoy) linea else if (i % 2 == 0) acento else oro
                 drawRect(col, Offset(x, h - lado * 0.8f), Size(lado, lado * 0.8f))
                 if (hoy) drawRect(col, Offset(x, 0f), Size(lado, lado * 0.8f))
-                x += paso; i++
+                x += maxOf(paso, 1f); i++
             }
             if (hoy) drawCircle(oro, 2.6f * s, Offset(w - 5f * s, 6f * s))
             if (sellado) sello(oro)
@@ -511,7 +511,7 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             if (hoy) {
                 val ola = Path(); var x = 0f
                 ola.moveTo(0f, 3f * s)
-                while (x <= w) { ola.lineTo(x, 3f * s + 1.2f * s * kotlin.math.sin(x / (3f * s))); x += 1.5f * s }
+                while (x <= w) { ola.lineTo(x, 3f * s + 1.2f * s * kotlin.math.sin(x / (3f * s))); x += maxOf(1.5f * s, 1f) }
                 drawPath(ola, acento, style = Stroke(1f * s))
             }
             if (sellado) sello(acento)

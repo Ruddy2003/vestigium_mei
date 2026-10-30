@@ -416,7 +416,7 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawPath(Path().apply { moveTo(xe, pie); lineTo(xe + s * u * 14, top); lineTo(xi, top); lineTo(xi, pie); close() }, c, style = Stroke(l))
             drawLine(c, Offset(xe + s * u * 13, top + u * 6), Offset(xi, top + u * 6), u * 0.8f)
             var k = 0f
-            while (k < torre - u * 22) { drawLine(c.copy(alpha = 0.4f), Offset(xe + s * (u * 16 + k), top), Offset(xe + s * (u * 16 + k), top + u * 6), u * 0.7f); k += u * 4 }
+            while (k < torre - u * 22) { drawLine(c.copy(alpha = 0.4f), Offset(xe + s * (u * 16 + k), top), Offset(xe + s * (u * 16 + k), top + u * 6), u * 0.7f); k += maxOf(u * 4, 1f) }
             listOf(0.35f, 0.7f).forEach { f ->
                 val xm = xe + s * (u * 14 + (torre - u * 20) * f)
                 drawLine(c.copy(alpha = 0.6f), Offset(xm, pie - u * 10), Offset(xm, top - u * 22), u)
@@ -452,7 +452,7 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         val u = 1.dp.toPx(); val w = size.width; val h = size.height
         val piedra = e.secondary.copy(alpha = 0.35f)
         var x = 0f; var k = 0
-        while (x < w) { drawRect(piedra, Offset(x, 0f), Size(u * 18, if (k % 2 == 0) u * 26 else u * 16)); x += u * 18; k++ }
+        while (x < w) { drawRect(piedra, Offset(x, 0f), Size(u * 18, if (k % 2 == 0) u * 26 else u * 16)); x += maxOf(u * 18, 1f); k++ }
         drawRect(piedra, Offset(0f, h - u * 10), Size(w, u * 10))
         listOf(u * 26, w - u * 26).forEach { cx ->
             drawLine(e.onBackground.copy(alpha = 0.4f), Offset(cx, u * 40), Offset(cx, u * 150), u * 1.4f)
@@ -644,7 +644,7 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             while (y < y1) {
                 val q = Offset(x0 + u * 4 * (y / y1), y); val r = u * 6
                 drawPath(Path().apply { moveTo(q.x, q.y); lineTo(q.x + lado * r, q.y - r * 0.2f); lineTo(q.x + lado * r * 0.7f, q.y + r * 0.6f); close() }, verde)
-                y += u * 14; lado = -lado
+                y += maxOf(u * 14, 1f); lado = -lado
             }
         }
         // Edificios rotos al pie, con ventanas vacías.
@@ -772,13 +772,13 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             val sup = u * 24
             val ola = Path(); var x = 0f
             ola.moveTo(0f, sup)
-            while (x <= w) { ola.lineTo(x, sup + u * 4 * kotlin.math.sin(x / (u * 26))); x += u * 3 }
+            while (x <= w) { ola.lineTo(x, sup + u * 4 * kotlin.math.sin(x / (u * 26))); x += maxOf(u * 3, 1f) }
             drawPath(ola, e.primary.copy(alpha = 0.6f), style = Stroke(u * 1.4f))
             for (k in 1..4) drawRect(e.primary.copy(alpha = 0.035f * k), Offset(0f, h * (0.2f + 0.2f * k)), Size(w, h * 0.2f))
             var y = sup + u * 30; var i = 0
             while (y < h - u * 20) {
                 drawLine(e.primary.copy(alpha = 0.45f), Offset(u * 12, y), Offset(u * (if (i % 5 == 0) 26 else 18), y), u)
-                y += u * 14; i++
+                y += maxOf(u * 14, 1f); i++
             }
             listOf(0.82f to 0.55f, 0.88f to 0.64f, 0.79f to 0.72f, 0.86f to 0.8f).forEachIndexed { j, (fx, fy) ->
                 drawCircle(e.secondary.copy(alpha = 0.6f), u * (2.5f + j % 2 * 1.5f), Offset(w * fx, h * fy), style = Stroke(u))
@@ -880,7 +880,7 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawCircle(e.primary.copy(alpha = 0.35f), u * (tam / 2 + 12), centro, style = Stroke(u))
             for (k in 0 until 3) {
                 val y0 = h - u * (18 + k * 16); val p = Path(); var x = -u * 10; p.moveTo(x, y0)
-                while (x < w + u * 10) { p.quadraticTo(x + u * 12, y0 - u * 5, x + u * 24, y0); p.quadraticTo(x + u * 36, y0 + u * 5, x + u * 48, y0); x += u * 48 }
+                while (x < w + u * 10) { p.quadraticTo(x + u * 12, y0 - u * 5, x + u * 24, y0); p.quadraticTo(x + u * 36, y0 + u * 5, x + u * 48, y0); x += maxOf(u * 48, 1f) }
                 drawPath(p, e.secondary.copy(alpha = 0.3f - k * 0.07f), style = Stroke(u))
             }
             val x = Offset(w - u * 46, h - u * 92); val s = u * 8

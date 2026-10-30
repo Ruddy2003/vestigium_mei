@@ -257,7 +257,7 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
         val m = 18 * d; val a = 7 * d
         moveTo(0f, h); lineTo(0f, 0f)
         var x = 0f; var k = 0
-        while (x + m < w) { val y = if (k % 2 == 0) 0f else a; lineTo(x, y); lineTo(x + m, y); x += m; k++ }
+        while (x + m < w) { val y = if (k % 2 == 0) 0f else a; lineTo(x, y); lineTo(x + m, y); x += maxOf(m, 1f); k++ }
         lineTo(x, if (k % 2 == 0) 0f else a); lineTo(w, if (k % 2 == 0) 0f else a); lineTo(w, h); close()
     }, 7.dp, 0.dp, true, 1.4.dp)
     // Hoja de expediente: recta y con borde grueso.
@@ -981,7 +981,7 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
         // Una ola de tinta que termina en la «X» roja.
         TemaId.PIRATA -> {
             val p = Path(); var x = 0f; val l = 10 * d; p.moveTo(0f, cy)
-            while (x < w * 0.86f) { p.quadraticTo(x + l / 4, cy - 2 * d, x + l / 2, cy); p.quadraticTo(x + l * 3 / 4, cy + 2 * d, x + l, cy); x += l }
+            while (x < w * 0.86f) { p.quadraticTo(x + l / 4, cy - 2 * d, x + l / 2, cy); p.quadraticTo(x + l * 3 / 4, cy + 2 * d, x + l, cy); x += maxOf(l, 1f) }
             drawPath(p, e.primary.copy(alpha = 0.55f), style = Stroke(0.9f * d))
             val c = Offset(w * 0.94f, cy); val s = 3 * d
             drawLine(e.tertiary.copy(alpha = 0.8f), c - Offset(s, s), c + Offset(s, s), 1.4f * d, StrokeCap.Round)
@@ -1127,6 +1127,8 @@ fun Conmutador(
  * la barra de progreso y la cuenta atrás de Deshacer; se ajusta a la altura (de 3 dp a 14 dp). Con [pasos] dibuja las marcas.
  */
 internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int, activo: Color, inactivo: Color) {
+    // Sin tamaño no hay riel; además, varios temas avanzan sus marcas según la altura, y con altura cero no avanzarían.
+    if (size.width <= 0f || size.height <= 0f) return
     val w = size.width; val cy = size.height / 2; val d = 1.dp.toPx()
     val g = minOf(size.height, 5 * d)
     val x = w * f.coerceIn(0f, 1f)
@@ -1144,7 +1146,7 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             linea(inactivo, x, w, g * 0.16f, cy - g * 0.32f); linea(inactivo, x, w, g * 0.16f, cy + g * 0.32f)
             if (x > 0f) {
                 drawRect(activo, Offset(0f, cy - g * 0.42f), Size(x, g * 0.84f))
-                var k = g * 0.7f; while (k < x) { drawLine(e.surface.copy(alpha = 0.45f), Offset(k, cy - g * 0.42f), Offset(k, cy + g * 0.42f), maxOf(g * 0.14f, 0.6f * d)); k += g * 1.6f }
+                var k = g * 0.7f; while (k < x) { drawLine(e.surface.copy(alpha = 0.45f), Offset(k, cy - g * 0.42f), Offset(k, cy + g * 0.42f), maxOf(g * 0.14f, 0.6f * d)); k += maxOf(g * 1.6f, 1f) }
             }
         }
         // Celdas de píxel: encendidas hasta donde va.
@@ -1203,7 +1205,7 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
         // Lo que falta, una fila de anillas de malla; lo recorrido, la banda roja de la sobreveste.
         TemaId.TEMPLARIO -> {
             var px = x + g * 0.4f
-            while (px < w) { drawCircle(inactivo, g * 0.32f, Offset(px, cy), style = Stroke(maxOf(g * 0.1f, 0.5f * d))); px += g * 0.5f }
+            while (px < w) { drawCircle(inactivo, g * 0.32f, Offset(px, cy), style = Stroke(maxOf(g * 0.1f, 0.5f * d))); px += maxOf(g * 0.5f, 1f) }
             if (x > 0f) drawRect(activo, Offset(0f, cy - g * 0.35f), Size(x, g * 0.7f))
         }
         // Casilla de formulario: contorno duro, relleno y rayas cada décimo.
@@ -1229,7 +1231,7 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
         // La vía: lo que falta son dos carriles sobre sus traviesas; lo recorrido, la barra de latón de la biela.
         TemaId.VAPOR -> {
             var px = x + g * 0.4f
-            while (px < w) { drawLine(inactivo, Offset(px, cy - g * 0.6f), Offset(px, cy + g * 0.6f), maxOf(g * 0.18f, 0.6f * d)); px += g * 1.2f }
+            while (px < w) { drawLine(inactivo, Offset(px, cy - g * 0.6f), Offset(px, cy + g * 0.6f), maxOf(g * 0.18f, 0.6f * d)); px += maxOf(g * 1.2f, 1f) }
             linea(inactivo, x, w, maxOf(g * 0.12f, 0.5f * d), cy - g * 0.32f); linea(inactivo, x, w, maxOf(g * 0.12f, 0.5f * d), cy + g * 0.32f)
             if (x > 0f) { drawRect(activo, Offset(0f, cy - g * 0.35f), Size(x, g * 0.7f)); drawCircle(e.tertiary, g * 0.3f, Offset(x, cy)) }
         }
@@ -1280,9 +1282,9 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             linea(inactivo, x, w, g * 0.3f)
             linea(activo.copy(alpha = activo.alpha * 0.35f), 0f, x, g * 0.45f)
             var px = g * 0.4f
-            while (px < x - g * 0.2f) { drawLine(activo, Offset(px, cy), Offset(minOf(px + g * 1.2f, x), cy), g * 0.22f); px += g * 2f }
+            while (px < x - g * 0.2f) { drawLine(activo, Offset(px, cy), Offset(minOf(px + g * 1.2f, x), cy), g * 0.22f); px += maxOf(g * 2f, 1f) }
             var qx = x + g * 3f
-            while (qx < w - g) { drawLine(inactivo, Offset(qx, cy - g * 0.5f), Offset(qx + g * 0.3f, cy + g * 0.5f), g * 0.08f); qx += g * 6f }
+            while (qx < w - g) { drawLine(inactivo, Offset(qx, cy - g * 0.5f), Offset(qx + g * 0.3f, cy + g * 0.5f), g * 0.08f); qx += maxOf(g * 6f, 1f) }
         }
         // Bastón de caramelo: franjas al sesgo.
         TemaId.NAVIDAD -> {
@@ -1357,8 +1359,8 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             linea(inactivo, x, w, g * 0.3f)
             var px = 0f; var k = 0
             while (px < x) {
-                if (k % 5 == 4) { drawRect(activo, Offset(px, cy - g * 0.32f), Size(minOf(g * 2.4f, x - px), g * 0.64f)); px += g * 2.9f }
-                else { drawCircle(e.tertiary, g * 0.32f, Offset(minOf(px + g * 0.35f, x), cy)); px += g * 1.05f }
+                if (k % 5 == 4) { drawRect(activo, Offset(px, cy - g * 0.32f), Size(minOf(g * 2.4f, x - px), g * 0.64f)); px += maxOf(g * 2.9f, 1f) }
+                else { drawCircle(e.tertiary, g * 0.32f, Offset(minOf(px + g * 0.35f, x), cy)); px += maxOf(g * 1.05f, 1f) }
                 k++
             }
         }
@@ -1387,7 +1389,7 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             if (x > 0f) {
                 linea(activo, 0f, x, g * 0.6f, cap = StrokeCap.Round)
                 var k = g * 0.3f
-                while (k < x - g * 0.3f) { drawLine(inactivo.copy(alpha = 0.6f), Offset(k, cy + g * 0.28f), Offset(k + g * 0.36f, cy - g * 0.28f), g * 0.12f); k += g * 0.55f }
+                while (k < x - g * 0.3f) { drawLine(inactivo.copy(alpha = 0.6f), Offset(k, cy + g * 0.28f), Offset(k + g * 0.36f, cy - g * 0.28f), g * 0.12f); k += maxOf(g * 0.55f, 1f) }
             }
         }
         // Barra negra; lo recorrido, rojo con el corte en diagonal.

@@ -231,9 +231,9 @@ object MapasMas {
                         drawRect(gris, Offset(x, y), Size(manzana, manzana * 0.8f))
                         val copas = (1 + (avance * 6).toInt() + az.nextInt(2)).coerceAtMost(7)
                         repeat(copas) { drawCircle(copa, (4 + az.nextFloat() * 7) * d, Offset(x + az.nextFloat() * manzana, y + az.nextFloat() * manzana * 0.8f)) }
-                        x += manzana + calle
+                        x += maxOf(manzana + calle, 1f)
                     }
-                    y += manzana * 0.8f + calle; fila++
+                    y += maxOf(manzana * 0.8f + calle, 1f); fila++
                 }
                 val via = (if (oscuro) Color(0xFFB8BCB0) else Color(0xFF55594F)).copy(alpha = 0.18f)
                 drawLine(via, Offset(0f, h * 0.95f), Offset(w * 0.42f, h * 0.55f), 9 * d)
@@ -645,8 +645,8 @@ object MapasMas {
                 // La carta náutica: el mar en verde de carta, la cuadrícula de grados, las líneas de rumbo de una rosa en la
                 // esquina, una isla bajo cada parada con su orilla de arena y, sobre la derrota, el balandro que avanza.
                 drawRect(Color(0xFF2F5D62).copy(alpha = if (oscuro) 0.22f else 0.12f), Offset.Zero, Size(w, h))
-                var gx = w / 8; while (gx < w) { drawLine(tinta.copy(alpha = 0.12f), Offset(gx, 0f), Offset(gx, h), 0.6f * d); gx += w / 8 }
-                var gy = h / 5; while (gy < h) { drawLine(tinta.copy(alpha = 0.12f), Offset(0f, gy), Offset(w, gy), 0.6f * d); gy += h / 5 }
+                var gx = w / 8; while (gx < w) { drawLine(tinta.copy(alpha = 0.12f), Offset(gx, 0f), Offset(gx, h), 0.6f * d); gx += maxOf(w / 8, 1f) }
+                var gy = h / 5; while (gy < h) { drawLine(tinta.copy(alpha = 0.12f), Offset(0f, gy), Offset(w, gy), 0.6f * d); gy += maxOf(h / 5, 1f) }
                 val rosa = Offset(w * 0.9f, h * 0.15f)
                 for (k in 0 until 16) { val a = k * PI / 8; drawLine(tinta.copy(alpha = if (k % 4 == 0) 0.3f else 0.14f), rosa, Offset(rosa.x + (w * cos(a)).toFloat(), rosa.y + (w * sin(a)).toFloat()), 0.6f * d) }
                 for (k in 0 until 8) {
@@ -694,7 +694,7 @@ object MapasMas {
                 while (y < h) {
                     var x = if (((y / (h * 0.12f)).toInt()) % 2 == 0) 0f else 14 * d
                     while (x < w) { drawArc(agua, 180f, 180f, false, Offset(x, y), Size(28 * d, 14 * d), style = Stroke(1f * d)); x += 28 * d }
-                    y += h * 0.12f
+                    y += maxOf(h * 0.12f, 1f)
                 }
                 val costa = tinta.copy(alpha = 0.6f)
                 drawPath(Path().apply { moveTo(w * 0.78f, h * 0.05f); cubicTo(w * 0.86f, h * 0.02f, w * 0.9f, h * 0.18f, w * 0.88f, h * 0.36f); cubicTo(w * 0.84f, h * 0.4f, w * 0.79f, h * 0.36f, w * 0.8f, h * 0.24f); close() }, costa)

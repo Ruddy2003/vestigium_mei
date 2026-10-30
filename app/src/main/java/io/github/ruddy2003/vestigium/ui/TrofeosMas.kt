@@ -222,7 +222,7 @@ object TrofeosMas {
                     val junta = Color(0xFFD9C7A8).copy(alpha = 0.45f)
                     listOf(0.85f, 0.9f).forEach { f -> drawLine(junta, Offset(w * 0.16f, h * f), Offset(w * 0.84f, h * f), w * 0.004f) }
                     var x = w * 0.2f; var fila = 0
-                    while (x < w * 0.84f) { drawLine(junta, Offset(x, h * (if (fila % 2 == 0) 0.8f else 0.85f)), Offset(x, h * (if (fila % 2 == 0) 0.85f else 0.9f)), w * 0.004f); x += w * 0.07f; fila++ }
+                    while (x < w * 0.84f) { drawLine(junta, Offset(x, h * (if (fila % 2 == 0) 0.8f else 0.85f)), Offset(x, h * (if (fila % 2 == 0) 0.85f else 0.9f)), w * 0.004f); x += maxOf(w * 0.07f, 1f); fila++ }
                 }
                 drawRect(piedra(if (p.hecho) Color(0xFF2E2B28) else ped), Offset(w * 0.12f, h * 0.775f), Size(w * 0.76f, h * 0.03f))
                 if (p.hecho) {
@@ -546,8 +546,8 @@ object TrofeosMas {
                 }
                 drawPath(cara, if (p.hecho) Brush.radialGradient(listOf(lerp(jade, Color.White, 0.25f), jade, lerp(jade, Color.Black, 0.3f)), c, p.w * 0.35f) else SolidColor(p.sombra))
                 if (p.hecho) clipPath(cara) {
-                    var y = p.y(0.12f); while (y < p.y(0.76f)) { drawLine(p.linea.copy(alpha = 0.3f), Offset(p.x(0.26f), y), Offset(p.x(0.74f), y), lw * 0.3f); y += p.w * 0.05f }
-                    var x = p.x(0.28f); while (x < p.x(0.74f)) { drawLine(p.linea.copy(alpha = 0.2f), Offset(x, p.y(0.1f)), Offset(x + p.w * 0.02f, p.y(0.76f)), lw * 0.3f); x += p.w * 0.06f }
+                    var y = p.y(0.12f); while (y < p.y(0.76f)) { drawLine(p.linea.copy(alpha = 0.3f), Offset(p.x(0.26f), y), Offset(p.x(0.74f), y), lw * 0.3f); y += maxOf(p.w * 0.05f, 1f) }
+                    var x = p.x(0.28f); while (x < p.x(0.74f)) { drawLine(p.linea.copy(alpha = 0.2f), Offset(x, p.y(0.1f)), Offset(x + p.w * 0.02f, p.y(0.76f)), lw * 0.3f); x += maxOf(p.w * 0.06f, 1f) }
                 }
                 listOf(0.4f, 0.6f).forEach { x -> drawOval(estuco, Offset(p.x(x - 0.06f), p.y(0.33f)), Size(p.x(0.12f), p.y(0.06f))); drawCircle(tinta, p.w * 0.022f, p.o(x, 0.36f)) }
                 drawPath(Path().apply { moveTo(p.x(0.47f), p.y(0.38f)); lineTo(p.x(0.45f), p.y(0.5f)); lineTo(p.x(0.55f), p.y(0.5f)); lineTo(p.x(0.53f), p.y(0.38f)) }, p.linea, style = Stroke(lw * 0.6f))
@@ -777,7 +777,7 @@ object TrofeosMas {
                 listOf(0.32f, 0.68f).forEachIndexed { i, cx ->
                     val s = Rect(p.x(cx - 0.13f), p.y(0.14f + i * 0.06f), p.x(cx + 0.13f), p.y(0.68f + i * 0.04f))
                     drawRoundRect(Brush.verticalGradient(listOf(lerp(paja, Color.White, 0.2f), paja), s.top, s.bottom), s.topLeft, s.size, CornerRadius(s.width * 0.45f))
-                    if (p.hecho) { var y = s.top + s.height * 0.1f; while (y < s.bottom - s.height * 0.05f) { drawLine(Color(0xFF7A6436).copy(alpha = 0.55f), Offset(s.left + s.width * 0.1f, y), Offset(s.right - s.width * 0.1f, y), lw * 0.4f); y += s.height * 0.07f } }
+                    if (p.hecho) { var y = s.top + s.height * 0.1f; while (y < s.bottom - s.height * 0.05f) { drawLine(Color(0xFF7A6436).copy(alpha = 0.55f), Offset(s.left + s.width * 0.1f, y), Offset(s.right - s.width * 0.1f, y), lw * 0.4f); y += maxOf(s.height * 0.07f, 1f) } }
                     drawLine(bermellon, Offset(s.center.x, s.top + s.height * 0.08f), Offset(s.left, s.top + s.height * 0.5f), lw * 0.7f)
                     drawLine(bermellon, Offset(s.center.x, s.top + s.height * 0.08f), Offset(s.right, s.top + s.height * 0.5f), lw * 0.7f)
                 }
