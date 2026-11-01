@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  actions: write   # para borrar las copias viejas de la APK en Actions
 
 concurrency:
   group: apk-${{ github.ref }}
@@ -54,10 +55,25 @@ jobs:
       - name: Preparar archivo
         run: cp app/build/outputs/apk/release/app-release.apk "vestigium-mei-${{ github.run_number }}.apk"
 
+      # Cada APK pesa ~50 MB y el plan gratuito da 500 MB de almacenamiento de
+      # Actions en repos privados. Se dejan solo las 4 copias más recientes (más
+      # la de esta compilación); las de main quedan además en Releases, que no cuenta.
+      - name: Borrar APKs viejas de Actions
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --paginate "repos/${{ github.repository }}/actions/artifacts?per_page=100" \
+            -q '.artifacts[] | select(.name == "vestigium-mei-apk" and .expired == false) | "\(.created_at) \(.id)"' \
+            | sort -r | tail -n +5 | cut -d' ' -f2 \
+            | while read -r id; do gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/$id"; done
+
       - uses: actions/upload-artifact@v4
+        continue-on-error: true   # si falla por espacio, el Release se publica igual
         with:
           name: vestigium-mei-apk
           path: vestigium-mei-*.apk
+          retention-days: 7
 
       - name: Publicar en Releases
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.publicar)
