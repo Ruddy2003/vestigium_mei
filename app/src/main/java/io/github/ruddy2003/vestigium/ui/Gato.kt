@@ -61,14 +61,14 @@ object Gato {
     private const val DT = DT_MS / 1000f
 
     /**
-     * Si el tema tiene gato: los 21 temas originales tienen su arte en assets/gato; los del lote 8, todavía no (lote 9).
-     * En esos, la banda no aparece.
+     * Si el tema tiene gato, es decir, su arte en assets/gato (lo exporta herramientas/gato/exportar.py). En los que todavía
+     * no lo tienen, la banda no aparece.
      */
     fun tieneGato(t: TemaId): Boolean = when (t) {
         TemaId.ROMANO -> true
-        TemaId.URBE -> false
+        TemaId.URBE -> true
         TemaId.CIBER -> true
-        TemaId.NEON -> false
+        TemaId.NEON -> true
         TemaId.HELENO -> true
         TemaId.EGIPTO -> false
         TemaId.MEDIEVAL -> true
@@ -94,7 +94,7 @@ object Gato {
         TemaId.MESO -> false
         TemaId.MONGOL -> true
         TemaId.RENACIMIENTO -> true
-        TemaId.PIRATA -> false
+        TemaId.PIRATA -> true
         TemaId.URSS -> true
         TemaId.REVOLUCION -> true
         TemaId.ANTIGUAS -> true

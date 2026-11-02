@@ -59,9 +59,9 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 | Tema | P | S | C | G | ✗ |
 |---|---|---|---|---|---|
 | ROM | 125 | 0 | 0 | 0 | 0 |
-| URB | 124 | 0 | 0 | 0 | 1 |
+| URB | 125 | 0 | 0 | 0 | 0 |
 | CIB | 123 | 0 | 0 | 0 | 0 |
-| NEO | 122 | 0 | 0 | 0 | 1 |
+| NEO | 123 | 0 | 0 | 0 | 0 |
 | HEL | 125 | 0 | 0 | 0 | 0 |
 | EGI | 124 | 0 | 0 | 0 | 1 |
 | MED | 125 | 0 | 0 | 0 | 0 |
@@ -87,7 +87,7 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 | MES | 124 | 0 | 0 | 0 | 1 |
 | MON | 125 | 0 | 0 | 0 | 0 |
 | REN | 125 | 0 | 0 | 0 | 0 |
-| PIR | 124 | 0 | 0 | 0 | 1 |
+| PIR | 125 | 0 | 0 | 0 | 0 |
 | URS | 125 | 0 | 0 | 0 | 0 |
 | REV | 125 | 0 | 0 | 0 | 0 |
 | ANT | 125 | 0 | 0 | 0 | 0 |
@@ -264,7 +264,7 @@ Lo que la prueba `CoberturaTemas` exige por tema. Los recursos que ya existen sa
 | Papel `papel_<id>` | `res/drawable-nodpi`, `herramientas/arte.py` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 7: un papel por tema, con su nombre de tema. Los de ROM, MED, SED y REV vienen de rasters viejos guardados en `herramientas/fuentes/`. |
 | Drawables de widget | `res/drawable/widget_*`, `drawable-v31` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | ROM usa los nombres sin sufijo. |
 | Los 13 sonidos del tema | `res/raw` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |  |
-| Gato de la banda de Día | `assets/gato/gato.json` | P | ✗ | P | ✗ | P | ✗ | P | ✗ | P | P | P | ✗ | P | P | P | ✗ | P | ✗ | P | P | ✗ | P | ✗ | P | ✗ | P | ✗ | P | P | ✗ | P | P | P | ✗ | Se juntó la rama del gato (lote 9, primera parte): los 21 temas originales tienen su gato. Los del lote 8 todavía no; en ellos la banda no aparece (`Gato.tieneGato`). |
+| Gato de la banda de Día | `assets/gato/gato.json` | P | P | P | P | P | ✗ | P | ✗ | P | P | P | ✗ | P | P | P | ✗ | P | ✗ | P | P | ✗ | P | ✗ | P | ✗ | P | ✗ | P | P | P | P | P | P | ✗ | Se juntó la rama del gato (lote 9, primera parte): los 21 temas originales tienen su gato. Los del lote 8 todavía no; en ellos la banda no aparece (`Gato.tieneGato`). |
 | Otra vida del tema | `data/OtrasVidas.kt` (`DE_TEMAS`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 7: ANT tiene a Brenna, guía de caminos (inventada). Lote 8: Kei pasa de CIB a NEO; CIB tiene a Carmen, operadora, y cada tema nuevo trae su vida. |
 
 ## Fuera de la matriz

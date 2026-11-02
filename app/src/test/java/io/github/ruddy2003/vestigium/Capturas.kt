@@ -881,9 +881,10 @@ class Capturas {
     @Test fun piezasGotico() = piezas(TemaId.GOTICO, true)
 
     /** La banda del gato en cada tema que lo tiene (los 21 originales), quieta en una de sus dos animaciones propias (de día la primera, de noche la segunda). */
-    private fun gatos(oscuro: Boolean) = captura(TemaId.ROMANO, oscuro, alto = 6200) {
+    private val temasConGato = TemaId.entries.filter { io.github.ruddy2003.vestigium.ui.Gato.tieneGato(it) }
+    private fun gatos(oscuro: Boolean) = captura(TemaId.ROMANO, oscuro, alto = 100 + 295 * temasConGato.size) {
         Column(Modifier.padding(8.dp)) {
-            TemaId.entries.filter { io.github.ruddy2003.vestigium.ui.Gato.tieneGato(it) }.forEachIndexed { k, t ->
+            temasConGato.forEachIndexed { k, t ->
                 val o = oscuro || t.soloOscuro
                 androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, o), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, o)) {
                     Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(horizontal = 8.dp, vertical = 3.dp)) {
