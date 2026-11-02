@@ -28,7 +28,8 @@ Son las pruebas que se fueron revisando una tras otra. Cada archivo importa los 
 | `gato19.py` | Lote 9a: los gatos que ya había, completos (fondos que se mueven, noches propias, objetos propios, Terminal en cian). |
 | `gato20*.py` | Lote 9b: los gatos de los temas nuevos, uno o varios archivos (cada uno registra sus temas en la cadena). |
 | `gato20a.py` | Pirata (grabado sepia de carta náutica, pañuelo y parche, la cubierta), Ciudad neón (gato negro con contorno de luz que se suma como pantalla, impermeable con capucha, el callejón del puesto de fideos) y Roma de hoy (fresco sobre estuco, pañuelo al cuello, el vicolo con la cúpula y las ruinas). |
-| `exportar.py` | Lo convierte en recursos para la app. | Carga `gato19` y los `gato20*` que existan.
+| `gato20b.py` | Templario (esmalte heráldico, sobreveste con cruz y malla; la muralla de frontera y el campamento), Egipto (pintura de tumba, mau con usekh y arete; el Nilo y la tumba) y Mesoamérica (códice sobre amate, jaguarundi con jade y pluma; la pirámide en la selva y Venus con la fogata). |
+| `exportar.py` | Lo convierte en recursos para la app. Carga `gato19` y los `gato20*` que existan. |
 
 Cada script también se puede correr solo para ver su parte (hojas de sprites, bandas en GIF); lo que hace queda en
 `salida/`, que no se sube.

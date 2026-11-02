@@ -70,9 +70,9 @@ object Gato {
         TemaId.CIBER -> true
         TemaId.NEON -> true
         TemaId.HELENO -> true
-        TemaId.EGIPTO -> false
+        TemaId.EGIPTO -> true
         TemaId.MEDIEVAL -> true
-        TemaId.TEMPLARIO -> false
+        TemaId.TEMPLARIO -> true
         TemaId.DISTOPIA -> true
         TemaId.REFUGIO -> true
         TemaId.ORDEN -> true
@@ -91,7 +91,7 @@ object Gato {
         TemaId.ESPACIO -> true
         TemaId.ABISMO -> false
         TemaId.ANDALUS -> true
-        TemaId.MESO -> false
+        TemaId.MESO -> true
         TemaId.MONGOL -> true
         TemaId.RENACIMIENTO -> true
         TemaId.PIRATA -> true
