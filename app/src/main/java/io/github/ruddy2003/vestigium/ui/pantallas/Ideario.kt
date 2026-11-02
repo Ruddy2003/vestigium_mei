@@ -137,7 +137,7 @@ fun PantallaIdea(nav: Nav) {
             Etiqueta("Quién lo dice")
             ListaEtiquetas(x.quien, "autor, invitado, quien te lo contó…", normalizar = { it.trim() }) { cambiar(x.copy(quien = it.distinct())) }
             val voces = remember(Repo.ideas, Repo.obras) { Ideario.voces(Repo.ideas, Repo.obras) }
-            val faltan = voces.filter { v -> x.quien.none { it.equals(v, ignoreCase = true) } }.take(8)
+            val faltan = voces.filter { v -> x.quien.none { it.equals(v, ignoreCase = true) } }.take(5)
             if (faltan.isNotEmpty()) FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 faltan.forEach { v -> Ficha("+ $v", false) { cambiar(x.copy(quien = x.quien + v)) } }
             }
