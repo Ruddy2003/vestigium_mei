@@ -50,7 +50,7 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 | 6 | Sonido y vibración | hecho 30 oct 2026 |
 | 7 | Limpieza y cierre: sin `else`, sin ramas agrupadas, pruebas sin pendientes, todo en P | hecho 30 oct 2026 (queda el gato, del lote 9) |
 | 8 | Terminal y 13 temas nuevos (de 21 a 34) | hecho: 11 temas el 30 oct 2026; Vapor y Art déco, el 2 nov 2026 |
-| 9 | El gato de cada tema | en curso: los 21 originales (30 oct 2026) y los 13 nuevos, 9b (2 nov 2026); falta 9a |
+| 9 | El gato de cada tema | hecho 2 nov 2026: los 21 originales completos (9a) y los 13 nuevos (9b) |
 
 ## Resumen por tema
 

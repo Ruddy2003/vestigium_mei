@@ -217,7 +217,7 @@ def exportar(destino, temas=None):
                                 "base": g17.ACCIONES[g17.ESP[n][q][0]][2]} for q in range(2)]
             # --- Sombra bajo el gato.
             if pantalla:
-                col = g8.mezcla(t["reflejo"], (0, 0, 0), 0.8) if nuevo else g8.mezcla(g8.hx("00E5FF"), (0, 0, 0), 0.82)
+                col = g8.mezcla(t["reflejo"], (0, 0, 0), 0.8)      # el reflejo del piso, del color de la pantalla del tema
                 m["sombra"] = {"color": "%02X%02X%02X" % col, "alfa": 255, "suma": True}
             elif nuevo:
                 a_ = t.get("sombra_a", 55)

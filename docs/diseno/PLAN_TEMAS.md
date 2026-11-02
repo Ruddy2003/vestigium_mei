@@ -695,7 +695,7 @@ Notas:
 
 ### Qué existe
 
-**Estado (2 nov 2026):** los 34 temas tienen gato. Los 21 originales vienen de la rama `claude/quirky-thompson-3km48y` (juntada el 30 oct 2026); los 13 del lote 8 (9b), de `herramientas/gato/gato20a.py` a `gato20d.py`. `Gato.tieneGato` sigue diciendo tema por tema cuáles lo tienen (hoy todos), y `CoberturaTemas` ya no tiene pendientes. 9a se hace en `gato19.py`.
+**Estado (2 nov 2026):** los 34 temas tienen gato. Los 21 originales vienen de la rama `claude/quirky-thompson-3km48y` (juntada el 30 oct 2026); los 13 del lote 8 (9b), de `herramientas/gato/gato20a.py` a `gato20d.py`. `Gato.tieneGato` sigue diciendo tema por tema cuáles lo tienen (hoy todos), y `CoberturaTemas` ya no tiene pendientes. 9a está hecho en `gato19.py`: fondos que se mueven, noches propias, atlas de noche separados, objetos propios y Terminal en cian.
 
 El gato estaba en la rama `claude/quirky-thompson-3km48y` (3 commits encima de `main`).
 

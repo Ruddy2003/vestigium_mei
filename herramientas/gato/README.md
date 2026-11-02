@@ -25,7 +25,7 @@ Son las pruebas que se fueron revisando una tras otra. Cada archivo importa los 
 | `gato16.py` | El casco romano más grande y de acero más oscuro. |
 | `gato17.py` | Las dos animaciones propias de cada tema (13 comunes + 2 = 15) y sus objetos. |
 | `gato18.py` | Arreglos antes de pasarlo a la app: la espada, el ornitóptero, objetos más grandes y el fondo de noche de los temas que no lo tenían. |
-| `gato19.py` | Lote 9a: los gatos que ya había, completos (fondos que se mueven, noches propias, objetos propios, Terminal en cian). |
+| `gato19.py` | Lote 9a: los gatos que ya había, completos: fondos que se mueven en los que estaban quietos, noches dibujadas como noche (no recoloreadas), días con más detalle, el gato de noche con sus colores en Al-Ándalus, Botánico, Orden, Renacimiento y Seda, objetos propios (tetera, azahar, campana, gorro frigio) y Terminal en cian con su consola y el cursor. Sus temas pasan por el camino de fondos de gato9 (`NUEVOS`, `ANIM`). |
 | `gato20*.py` | Lote 9b: los gatos de los temas nuevos, uno o varios archivos (cada uno registra sus temas en la cadena). |
 | `gato20a.py` | Pirata (grabado sepia de carta náutica, pañuelo y parche, la cubierta), Ciudad neón (gato negro con contorno de luz que se suma como pantalla, impermeable con capucha, el callejón del puesto de fideos) y Roma de hoy (fresco sobre estuco, pañuelo al cuello, el vicolo con la cúpula y las ruinas). |
 | `gato20b.py` | Templario (esmalte heráldico, sobreveste con cruz y malla; la muralla de frontera y el campamento), Egipto (pintura de tumba, mau con usekh y arete; el Nilo y la tumba) y Mesoamérica (códice sobre amate, jaguarundi con jade y pluma; la pirámide en la selva y Venus con la fogata). |
