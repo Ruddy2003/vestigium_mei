@@ -484,6 +484,19 @@ fun FraseDelDia(fecha: String) {
             Box(Modifier.padding(vertical = 8.dp)) { CuerpoFrase(f, fecha, rotulo, "« ", " »", centrado = true) }
             Canvas(Modifier.fillMaxWidth(0.6f).height(6.dp)) { fileteDidot(cs.tertiary) }
         }
+        // El programa de la función: el abanico de oro arriba, la frase entre comillas sencillas y tres filetes escalonados.
+        TemaId.DECO -> Column(arriba, horizontalAlignment = Alignment.CenterHorizontally) {
+            Canvas(Modifier.fillMaxWidth(0.7f).height(16.dp)) {
+                val u = 1.dp.toPx(); val b = Offset(size.width / 2, size.height - u); val r = 13 * u
+                for (i in 0 until 9) if (i % 2 == 0) drawArc(cs.primary, 180f + i * 20f, 20f, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+                drawLine(cs.primary, Offset(0f, b.y), Offset(b.x - r - 4 * u, b.y), u); drawLine(cs.primary, Offset(b.x + r + 4 * u, b.y), Offset(size.width, b.y), u)
+            }
+            Box(Modifier.padding(vertical = 8.dp)) { CuerpoFrase(f, fecha, rotulo, "‹ ", " ›", centrado = true) }
+            Canvas(Modifier.fillMaxWidth(0.6f).height(9.dp)) {
+                val u = 1.dp.toPx()
+                listOf(1f, 0.66f, 0.33f).forEachIndexed { k, fr -> drawLine(cs.primary.copy(alpha = 0.8f - k * 0.2f), Offset(size.width * (1 - fr) / 2, (1 + k * 3) * u), Offset(size.width * (1 + fr) / 2, (1 + k * 3) * u), 0.8f * u) }
+            }
+        }
         // Etiqueta de herbario clavada con un alfiler.
         TemaId.BOTANICO -> Surface(shape = RoundedCornerShape(4.dp), color = cs.surface, border = BorderStroke(1.dp, cs.outline), modifier = arriba) {
             Box(Modifier.drawBehind {
@@ -926,6 +939,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.LABORATORIO -> c(LetraExtra.jost, FontWeight.Normal, 23f, 1f, "tnum")
         TemaId.COLONOS -> c(LetraExtra.fell, FontWeight.Normal, 24f, 0.2f, "lnum")
         TemaId.NAPOLEON -> c(LetraExtra.bodoniTitulo, FontWeight.SemiBold, 23f, 0.8f, "lnum")
+        TemaId.DECO -> c(LetraExtra.poiret, FontWeight.Normal, 26f, 2f, "lnum, tnum")   // las cifras finas y altas de las marquesinas
         TemaId.BOTANICO -> c(LetraExtra.fraunces, FontWeight.Medium, 22f, 0f)
         TemaId.RUINAS -> c(LetraExtra.letrero, FontWeight.Normal, 24f, 0.5f, "tnum")
         TemaId.NAVIDAD -> c(LetraExtra.amiri, FontWeight.Normal, 25f, 0f)
@@ -1258,6 +1272,17 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             drawRect(oro, Offset(bx, top + bw * 0.5f), Size(bw, 2.5f * u))
                             drawRect(oro, Offset(bx, h - bw * 0.5f - 2.5f * u), Size(bw, 2.5f * u))
                             if (color != null) { var y = top + bw * 0.5f + 8 * u; while (y < h - bw * 0.5f - 6 * u) { drawCircle(oro, 1.1f * u, Offset(w / 2, y)); y += 7 * u } }
+                            sello = oro
+                        }
+                        // Rascacielos: cada día es una torre con su corona escalonada, la aguja y una columna de ventanas encendidas.
+                        TemaId.DECO -> {
+                            val m = minOf(w * 0.18f, barH * 0.12f)
+                            pinta(Path().apply {
+                                moveTo(0f, h); lineTo(0f, top + 2 * m); lineTo(w * 0.16f, top + 2 * m); lineTo(w * 0.16f, top + m); lineTo(w * 0.32f, top + m); lineTo(w * 0.32f, top)
+                                lineTo(w * 0.68f, top); lineTo(w * 0.68f, top + m); lineTo(w * 0.84f, top + m); lineTo(w * 0.84f, top + 2 * m); lineTo(w, top + 2 * m); lineTo(w, h); close()
+                            })
+                            drawLine(color ?: linea, Offset(w / 2, top), Offset(w / 2, top - m), 1.2f * u)
+                            if (color != null) { var y = top + 2 * m + 5 * u; while (y < h - 4 * u) { drawRect(oro, Offset(w * 0.44f, y), Size(w * 0.12f, 2 * u)); y += 6 * u } }
                             sello = oro
                         }
                         // Plantas: tallo con hojas alternas y un capullo arriba.

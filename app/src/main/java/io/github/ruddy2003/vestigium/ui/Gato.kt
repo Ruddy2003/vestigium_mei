@@ -80,6 +80,7 @@ object Gato {
         TemaId.LABORATORIO -> true
         TemaId.COLONOS -> true
         TemaId.NAPOLEON -> true
+        TemaId.DECO -> false
         TemaId.BOTANICO -> true
         TemaId.RUINAS -> false
         TemaId.NAVIDAD -> true

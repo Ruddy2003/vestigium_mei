@@ -109,6 +109,8 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.COLONOS -> PielCinta(2f, false, RellenoCinta.PUNTADA, floatArrayOf(5f, 5f), StrokeCap.Round)
     // Galón con brillo.
     TemaId.NAPOLEON -> PielCinta(1.5f, false, RellenoCinta.FILETE, floatArrayOf(4f, 2f, 1f, 2f), StrokeCap.Square)
+    // Barras de laca con doble filete de oro, esquinas cortadas, como las placas de los ascensores.
+    TemaId.DECO -> PielCinta(3f, true, RellenoCinta.SEGMENTOS, floatArrayOf(8f, 2f, 2f, 2f), StrokeCap.Butt)
     // Tallos redondeados.
     TemaId.BOTANICO -> PielCinta(10f, false, RellenoCinta.LISO, floatArrayOf(1f, 4f), StrokeCap.Round)
     // Tramos de la línea pintada de una calle.

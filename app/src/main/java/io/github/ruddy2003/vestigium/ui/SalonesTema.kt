@@ -41,6 +41,7 @@ object SalonesTema {
             TemaId.RENACIMIENTO -> galeria(cs, oscuro, n)
             TemaId.PIRATA -> camaraPopa(cs, oscuro, n)
             TemaId.NAPOLEON -> imperial(cs, oscuro, n)
+            TemaId.DECO -> salonBaile(cs, oscuro, n)
             TemaId.REVOLUCION -> panteon(cs, oscuro, n)
             TemaId.ANDALUS -> with(SalonesMas) { patio(cs, oscuro, n) }
             TemaId.MESO -> with(SalonesMas) { plazaMaya(cs, oscuro, n) }
@@ -114,6 +115,17 @@ object SalonesTema {
                 drawLine(metal, Offset(w * 0.3f, h * 0.5f), Offset(w * 0.7f, h * 0.5f), 1.2f)
             }
             TemaId.NAPOLEON -> { drawRect(piedra(Color(0xFF2F5D4A)), Offset(w * 0.16f, 0f), Size(w * 0.68f, h)); drawRect(Color(0xFFD4AF37), Offset(w * 0.16f, 0f), Size(w * 0.68f, h * 0.12f)); drawRect(Color(0xFFD4AF37), Offset(w * 0.16f, h * 0.88f), Size(w * 0.68f, h * 0.12f)) }
+            // Una columna de laca negra que se estrecha en dos escalones, con su abanico de oro arriba y la base de jade.
+            TemaId.DECO -> {
+                val oro = Color(0xFFD4AF37)
+                drawRect(piedra(Color(0xFF1C1A17)), Offset(w * 0.2f, h * 0.18f), Size(w * 0.6f, h * 0.72f))
+                drawRect(piedra(Color(0xFF1C1A17)), Offset(w * 0.28f, h * 0.08f), Size(w * 0.44f, h * 0.1f))
+                drawRect(piedra(Color(0xFF1F6B57)), Offset(w * 0.14f, h * 0.88f), Size(w * 0.72f, h * 0.12f))
+                for (k in 1..3) drawLine(oro.copy(alpha = 0.6f), Offset(w * (0.2f + 0.15f * k), h * 0.22f), Offset(w * (0.2f + 0.15f * k), h * 0.86f), 1.2f)
+                val r = w * 0.2f; val b = Offset(w * 0.5f, h * 0.08f)
+                for (i in 0 until 7) if (i % 2 == 0) drawArc(oro, 180f + i * 180f / 7, 180f / 7, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+                drawRect(oro, Offset(w * 0.2f, h * 0.18f), Size(w * 0.6f, h * 0.02f))
+            }
             TemaId.REVOLUCION -> {
                 drawRect(piedra(Color(0xFFD8D1C2)), Offset(w * 0.18f, 0f), Size(w * 0.64f, h))
                 listOf(Color(0xFF1F3A6E), Color.White, Color(0xFFB22234)).forEachIndexed { i, c -> drawRect(c, Offset(w * (0.18f + i * 0.2133f), 0f), Size(w * 0.2133f, h * 0.22f)) }
@@ -578,6 +590,44 @@ object SalonesTema {
         drawLine(oro, Offset(0f, 10 * d), Offset(w, 10 * d), 1 * d)
     }
 
+
+    /**
+     * El salón de baile de un trasatlántico de los años veinte: el gran sol de rayos del techo, pilastras de laca con
+     * estrías de oro que suben en escalones entre las piezas, apliques de abanico y, al pie, el parqué en espiga.
+     */
+    private fun DrawScope.salonBaile(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val oro = Color(0xFFD4AF37).copy(alpha = if (oscuro) 0.4f else 0.5f)
+        val laca = (if (oscuro) Color(0xFF2A2620) else Color(0xFF16130E)).copy(alpha = if (oscuro) 0.6f else 0.22f)
+        // El techo: un sol de rayos que nace arriba al centro, con su arco escalonado.
+        val sol = Offset(w / 2, 0f)
+        for (k in 0 until 19) {
+            val a = PI * (k + 0.5) / 19
+            drawLine(oro.copy(alpha = oro.alpha * (if (k % 2 == 0) 0.5f else 0.25f)), sol, Offset(sol.x + (w * 0.8f * cos(a)).toFloat(), sol.y + (w * 0.8f * sin(a)).toFloat() * 0.35f), (if (k % 2 == 0) 2f else 1f) * d)
+        }
+        listOf(0.18f, 0.12f, 0.06f).forEachIndexed { i, f -> drawArc(oro, 0f, 180f, false, Offset(w / 2 - w * f, -w * f * 0.35f), Size(2 * w * f, 2 * w * f * 0.35f), style = Stroke((1.6f - i * 0.4f) * d)) }
+        // Las pilastras escalonadas, una entre cada columna de piezas.
+        val paso = w / n; val arriba = 34 * d
+        for (i in 0..n) {
+            val x = i * paso
+            drawRect(laca, Offset(x - 7 * d, arriba), Size(14 * d, h - arriba))
+            drawRect(laca, Offset(x - 5 * d, arriba - 6 * d), Size(10 * d, 6 * d)); drawRect(laca, Offset(x - 3 * d, arriba - 11 * d), Size(6 * d, 5 * d))
+            listOf(-3f, 0f, 3f).forEach { dx -> drawLine(oro, Offset(x + dx * d, arriba + 4 * d), Offset(x + dx * d, h - 10 * d), 0.8f * d) }
+            // El aplique de abanico, a media altura.
+            val b = Offset(x, arriba + (h - arriba) * 0.32f); val r = 9 * d
+            for (k in 0 until 5) if (k % 2 == 0) drawArc(oro, 180f + k * 36f, 36f, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+            drawCircle(Brush.radialGradient(listOf(Color(0xFFF2D27A).copy(alpha = if (oscuro) 0.22f else 0.12f), Color.Transparent), b, 30 * d), 30 * d, b)
+        }
+        // El parqué en espiga, al pie.
+        val suelo = h - 8 * d; val pa = 10 * d
+        var x = 0f; var k = 0
+        while (x < w) {
+            val y0 = if (k % 2 == 0) suelo else suelo + 4 * d
+            drawLine(oro.copy(alpha = oro.alpha * 0.6f), Offset(x, y0), Offset(x + pa, if (k % 2 == 0) suelo + 4 * d else suelo), 1f * d)
+            x += maxOf(pa, 1f); k++
+        }
+        drawLine(oro, Offset(0f, suelo - 2 * d), Offset(w, suelo - 2 * d), 1f * d)
+    }
     /** El panteón: la cúpula artesonada arriba, columnas lisas entre las piezas y estandartes tricolores en los muros. */
     private fun DrawScope.panteon(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density

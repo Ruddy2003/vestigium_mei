@@ -90,6 +90,11 @@ object Widgets {
             0xFFD9B25B.toInt(), 0xFFF1E9D2.toInt(), 0xFFB3AE9C.toInt(), 0xFF2C3970.toInt(),
             intArrayOf(0xFFE05A6A.toInt(), 0xFFD98590.toInt(), 0xFFD9B8B0.toInt(), 0xFFF1E9D2.toInt(), 0xFFB9C6EE.toInt(), 0xFF9DB4FF.toInt(), 0xFF7F9BFF.toInt()),
             0xFF121A3D.toInt(), 0xFF1A1405.toInt())
+        // Laca negra con oro de marquesina; en el ánimo, del coral de los cocteles al jade de los ascensores.
+        TemaId.DECO -> Colores(R.drawable.widget_fondo_deco, R.drawable.widget_boton_deco, R.drawable.widget_boton_activo_deco, R.drawable.widget_boton_ambar_deco,
+            0xFFD9B44A.toInt(), 0xFFF0E6CC.toInt(), 0xFFB4A888.toInt(), 0xFF4A3E24.toInt(),
+            intArrayOf(0xFFE48A6E.toInt(), 0xFFDDA488.toInt(), 0xFFD9C3A0.toInt(), 0xFFF0E6CC.toInt(), 0xFFB9D9C6.toInt(), 0xFF86C7AE.toInt(), 0xFF5FB59A.toInt()),
+            0xFF201C15.toInt(), 0xFF161004.toInt())
         TemaId.BOTANICO -> Colores(R.drawable.widget_fondo_botanico, R.drawable.widget_boton_botanico, R.drawable.widget_boton_activo_botanico, R.drawable.widget_boton_ambar_botanico,
             0xFFB8E06A.toInt(), 0xFFEAF0E2.toInt(), 0xFFA9B8A4.toInt(), 0xFF2D442F.toInt(),
             intArrayOf(0xFFF29BB8.toInt(), 0xFFE7A9BE.toInt(), 0xFFD9C3C0.toInt(), 0xFFEAF0E2.toInt(), 0xFFC8E3A8.toInt(), 0xFFA9DC80.toInt(), 0xFF8FD06A.toInt()),
@@ -204,6 +209,7 @@ object Widgets {
         TemaId.LABORATORIO -> "t = 0" to "CUADERNO"
         TemaId.COLONOS -> "Al paso" to "Apunte"
         TemaId.NAPOLEON -> "À PRÉSENT" to "DÉPÊCHE"
+        TemaId.DECO -> "EN CUBIERTA" to "PROGRAMA"
         TemaId.BOTANICO -> "En el campo" to "Libreta"
         TemaId.RUINAS -> "En la ronda" to "Cuaderno"
         TemaId.NAVIDAD -> "Junto al fuego" to "Postal"
@@ -245,6 +251,7 @@ object Widgets {
             TemaId.LABORATORIO -> R.font.jost_medium to 1.0f
             TemaId.COLONOS -> R.font.fell to 1.08f
             TemaId.NAPOLEON -> R.font.bodoni_titulo to 1.05f
+            TemaId.DECO -> R.font.poiret_titulo to 1.08f
             TemaId.BOTANICO -> R.font.fraunces_titulo to 1.0f
             TemaId.RUINAS -> R.font.letrero_titulo to 1.06f
             TemaId.NAVIDAD -> R.font.cinzel_deco_regular to 0.95f

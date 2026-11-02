@@ -165,6 +165,20 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         val abdomen = menos(ovalo(c + Offset(0f, r * 0.42f), r * 0.32f, r * 0.55f), franjas)
         listOf(alaIzq, alaDer, circulo(c + Offset(0f, -r * 0.18f), r * 0.24f), circulo(c + Offset(0f, -r * 0.52f), r * 0.16f), abdomen).reduce { a, b -> mas(a, b) }
     }
+    // El abanico solar: medio disco con cuatro rayos vaciados y su base escalonada.
+    TemaId.DECO -> {
+        val disco = Path().apply { moveTo(c.x - r, c.y + r * 0.35f); arcTo(Rect(c.x - r, c.y - r * 0.65f, c.x + r, c.y + r * 1.35f), 180f, 180f, false); close() }
+        val rayos = Path().apply {
+            for (i in 1..4) {
+                val a = PI + i * PI / 5
+                val q = Offset(c.x + (r * cos(a)).toFloat(), c.y + r * 0.35f + (r * sin(a)).toFloat())
+                val n = Offset(-(sin(a)).toFloat(), (cos(a)).toFloat()) * (r * 0.05f)
+                moveTo(c.x - n.x, c.y + r * 0.35f - n.y); lineTo(q.x - n.x, q.y - n.y); lineTo(q.x + n.x, q.y + n.y); lineTo(c.x + n.x, c.y + r * 0.35f + n.y); close()
+            }
+        }
+        val base = Path().apply { addRect(Rect(c.x - r, c.y + r * 0.42f, c.x + r, c.y + r * 0.58f)); addRect(Rect(c.x - r * 0.6f, c.y + r * 0.62f, c.x + r * 0.6f, c.y + r * 0.76f)) }
+        mas(menos(disco, rayos), base)
+    }
     // Un escarabajo: élitros, pronoto y cabeza.
     TemaId.BOTANICO -> listOf(ovalo(c + Offset(0f, r * 0.2f), r * 0.62f, r * 0.78f), ovalo(c + Offset(0f, -r * 0.58f), r * 0.44f, r * 0.24f),
         circulo(c + Offset(0f, -r * 0.86f), r * 0.17f)).reduce { a, b -> mas(a, b) }

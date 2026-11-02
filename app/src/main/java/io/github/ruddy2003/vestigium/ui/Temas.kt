@@ -260,6 +260,10 @@ object Temas {
         "09-29" to "S. Miguel", "10-15" to "Cosecha", "12-24" to "Nochebuena")
     private val MARCAS_NAPOLEON = mapOf("12-02" to "Austerlitz", "08-15" to "Natalicio", "06-18" to "Waterloo", "03-21" to "Código", "05-18" to "Imperio",
         "10-14" to "Jena", "06-14" to "Friedland", "03-20" to "Cien Días", "07-06" to "Wagram")
+    /** Los años veinte y su arte: la Exposición de París de 1925 (que le dio nombre), los rascacielos, el cine sonoro, Lindbergh, la Ley Seca y el martes negro. */
+    private val MARCAS_DECO = mapOf("04-28" to "Exposición de 1925", "05-27" to "Chrysler", "05-01" to "Empire State", "10-06" to "Cine sonoro",
+        "05-21" to "Lindbergh", "11-04" to "Tutankamón", "01-17" to "Ley Seca", "12-05" to "Fin de la Ley Seca", "10-29" to "Martes negro",
+        "05-29" to "Normandie", "12-31" to "Gran gala")
     private val MARCAS_ANTIGUAS = mapOf("12-21" to "Noche larga", "06-21" to "Día largo", "03-20" to "Deshielo", "09-22" to "Cosecha", "10-31" to "Víspera", "01-01" to "Año nuevo")
     /** El año del valle (solsticios y equinoccios, por lo que hacen las manadas) y los días en que se hallaron dos grandes cuevas pintadas:
      *  Lascaux (12 de septiembre de 1940) y Chauvet (18 de diciembre de 1994). */
@@ -319,6 +323,7 @@ object Temas {
             TemaId.LABORATORIO -> MARCAS_LABORATORIO[md]
             TemaId.COLONOS -> MARCAS_COLONOS[md]
             TemaId.NAPOLEON -> MARCAS_NAPOLEON[md]
+            TemaId.DECO -> MARCAS_DECO[md]
             TemaId.BOTANICO -> MARCAS_BOTANICO[md]
             TemaId.RUINAS -> MARCAS_RUINAS[md]
             TemaId.NAVIDAD -> MARCAS_NAVIDAD[md]
@@ -500,6 +505,8 @@ object Temas {
         TemaId.LABORATORIO -> LABORATORIO[titulo]
         TemaId.COLONOS -> COLONOS[titulo]
         TemaId.NAPOLEON -> NAPOLEON[titulo]
+        // El Art déco tiene todo su diccionario en `NombresDeco` (ver [NombresCompletos]).
+        TemaId.DECO -> null
         TemaId.BOTANICO -> BOTANICO[titulo]
         TemaId.RUINAS -> RUINAS[titulo]
         TemaId.GOTICO -> GOTICO[titulo]
@@ -537,6 +544,7 @@ object Temas {
             TemaId.LABORATORIO -> mapOf("animo" to "ESTADO", "momento" to "OBSERVACIÓN", "gasto" to "RECURSOS", "sueno" to "SUEÑO", "habitos" to "VARIABLES", "hoy" to "SESIÓN", "cifra" to "MEDIDA", "foto" to "MUESTRA", "enfoque" to "ENSAYO")
             TemaId.COLONOS -> mapOf("animo" to "Ánimo", "momento" to "Sucesos", "gasto" to "Cuentas", "sueno" to "Descanso", "habitos" to "Faenas", "hoy" to "Jornada", "cifra" to "Número", "foto" to "Estampa", "enfoque" to "Faena")
             TemaId.NAPOLEON -> mapOf("animo" to "MORAL", "momento" to "DESPACHO", "gasto" to "TESORERÍA", "sueno" to "VIVAC", "habitos" to "CÓDIGO", "hoy" to "BOLETÍN", "cifra" to "CIFRA", "foto" to "RETRATO", "enfoque" to "ÉTUDE")
+            TemaId.DECO -> mapOf("animo" to "TALANTE", "momento" to "ESCENA", "gasto" to "LA CUENTA", "sueno" to "CAMAROTE", "habitos" to "ETIQUETA", "hoy" to "PASAJE", "cifra" to "MARCADOR", "foto" to "FOTOGRAMA", "enfoque" to "ENSAYO")
             TemaId.BOTANICO -> mapOf("animo" to "Ánimo", "momento" to "Observación", "gasto" to "Semillas", "sueno" to "Latencia", "habitos" to "Cuidados", "hoy" to "Herbario", "cifra" to "Medida", "foto" to "Lámina", "enfoque" to "Estudio")
             TemaId.RUINAS -> mapOf("animo" to "Aguante", "momento" to "Hallazgo", "gasto" to "Trueque", "sueno" to "Descanso", "habitos" to "Faenas", "hoy" to "Tras el silencio", "cifra" to "Marca", "foto" to "Recuerdo", "enfoque" to "Vigía")
             TemaId.GOTICO -> mapOf("animo" to "Ánima", "momento" to "Horas", "gasto" to "Tesoro", "sueno" to "Maitines", "habitos" to "Regla", "hoy" to "Laudes", "cifra" to "Cuenta", "foto" to "Vidriera", "enfoque" to "Lectio")

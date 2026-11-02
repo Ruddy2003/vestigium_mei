@@ -149,6 +149,7 @@ object LibroDiario {
         TemaId.LABORATORIO -> Fuentes(R.font.jost_medium, R.font.jost_regular)
         TemaId.COLONOS -> Fuentes(R.font.fell, R.font.oldstandard_regular)
         TemaId.NAPOLEON -> Fuentes(R.font.bodoni_titulo, R.font.bodoni_texto)
+        TemaId.DECO -> Fuentes(R.font.poiret_titulo, R.font.pasaje_regular)
         TemaId.BOTANICO -> Fuentes(R.font.fraunces_titulo, R.font.crimson_regular)
         TemaId.RUINAS -> Fuentes(R.font.letrero_titulo, R.font.overpass_regular)
         TemaId.NAVIDAD -> Fuentes(R.font.cinzel_deco_regular, R.font.calida_regular)
@@ -239,6 +240,9 @@ object LibroDiario {
                 "background-size:100% 24px,24px 100%}.meta::before{content:'Obs. — '}"
             TemaId.COLONOS -> "article{border-top:3px solid $p}article::before{content:'';display:block;border-top:1px solid $p;margin:2px 0 14px}" + capitular("3em", tinta)
             TemaId.NAPOLEON -> "h1{text-align:center;letter-spacing:.15em}article{border-top:1px solid $p;border-bottom:1px solid $p;outline:1px solid $s;outline-offset:4px;padding:18px;margin-bottom:18px}" + capitular("3em", p)
+            // Doble filete arriba y, encima de cada entrada, un medio sol de oro: el abanico de los programas de los años veinte.
+            TemaId.DECO -> "h1{text-align:center;letter-spacing:.32em;font-weight:400}article{border-top:3px double $p;padding-top:16px;margin-bottom:22px}" +
+                "article::before{content:'';display:block;width:44px;height:22px;margin:-30px auto 10px;background:radial-gradient(circle at 50% 100%,$p 58%,transparent 60%)}" + capitular("3.2em", p)
             TemaId.BOTANICO -> "article{border-top:0}article::before{content:'';display:block;height:8px;margin-bottom:12px;background:radial-gradient(ellipse 5px 3px at 6px 4px,$p 98%,transparent) 0 0/18px 8px repeat-x}" + capitular("2.8em", p)
             // La línea discontinua de una calle sobre cada entrada y la fecha como una placa de calle.
             TemaId.RUINAS -> "article{border-top:0}article::before{content:'';display:block;height:4px;margin-bottom:14px;background:repeating-linear-gradient(90deg,$s 0 22px,transparent 22px 34px)}" +
@@ -403,6 +407,7 @@ object LibroDiario {
             TemaId.LABORATORIO -> Medidas(11f, aire)
             TemaId.COLONOS -> Medidas(12.5f, aire)
             TemaId.NAPOLEON -> Medidas(12.5f, aire)
+            TemaId.DECO -> Medidas(13f, aire)
             TemaId.BOTANICO -> Medidas(12.5f, aire)
             TemaId.RUINAS -> Medidas(12f, aire)
             TemaId.NAVIDAD -> Medidas(12.5f, aire)
@@ -461,6 +466,8 @@ object LibroDiario {
         // La letra de grabado de la gaceta, en negro de imprenta.
         TemaId.COLONOS -> Inicial(R.font.fell, 2.6f, tinta = true)
         TemaId.NAPOLEON -> Inicial(R.font.bodoni_titulo, 2.5f)
+        // La capital fina y alta de las marquesinas, en oro.
+        TemaId.DECO -> Inicial(R.font.poiret_titulo, 2.9f, mayusculas = true)
         TemaId.BOTANICO -> Inicial(R.font.fraunces_negrita, 2.3f)
         TemaId.RUINAS -> Inicial(R.font.letrero_titulo, 2.4f)
         TemaId.NAVIDAD -> Inicial(R.font.cinzel_deco_bold, 2.3f)
@@ -637,6 +644,16 @@ object LibroDiario {
                 lados(13f)
                 cv.drawCircle(cx, y, 7f, Paint(trazo).apply { strokeWidth = 0.9f })
                 cv.drawText("N", cx, y + 3.2f, TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTitulo; textSize = 9f; color = acento; textAlign = Paint.Align.CENTER })
+            }
+            TemaId.DECO -> {
+                // Tres filetes que se acortan hacia el centro, a cada lado de un abanico solar.
+                for (k in 0..2) {
+                    val yy = y + (k - 1) * 2.4f; val corte = 12f + k * 7f
+                    cv.drawLine(x0 + k * 10f, yy, cx - corte, yy, Paint(linea).apply { strokeWidth = 0.7f })
+                    cv.drawLine(cx + corte, yy, x1 - k * 10f, yy, Paint(linea).apply { strokeWidth = 0.7f })
+                }
+                for (j in 0 until 7) if (j % 2 == 0) cv.drawArc(cx - 8f, y - 6f, cx + 8f, y + 10f, 180f + j * 180f / 7, 180f / 7, true, relleno)
+                cv.drawRect(cx - 9f, y + 2f, cx + 9f, y + 3.2f, relleno)
             }
             TemaId.BOTANICO -> {
                 // Un tallo que ondula con sus hojas.
@@ -861,6 +878,17 @@ object LibroDiario {
                 // Doble filete y un botón en cada esquina.
                 rect(24f, trazo); rect(28f, fino)
                 esquinas.forEach { (x, y) -> val (sx, sy) = haciaDentro(x, y); cv.drawCircle(x + sx * 2f, y + sy * 2f, 4.5f, relleno); cv.drawCircle(x + sx * 2f, y + sy * 2f, 7.5f, fino) }
+            }
+            TemaId.DECO -> {
+                // Doble filete y, en cada esquina, tres escalones de oro que se meten hacia dentro.
+                rect(24f, trazo); rect(28f, fino)
+                esquinas.forEach { (x, y) ->
+                    val (sx, sy) = haciaDentro(x, y)
+                    for (k in 1..3) {
+                        val xa = x + sx * k * 6f; val ya = y + sy * (4 - k) * 6f
+                        cv.drawRect(minOf(x, xa), minOf(y, ya), maxOf(x, xa), maxOf(y, ya), fino)
+                    }
+                }
             }
             TemaId.BOTANICO -> {
                 // Un filete redondeado con dos hojas en cada esquina.

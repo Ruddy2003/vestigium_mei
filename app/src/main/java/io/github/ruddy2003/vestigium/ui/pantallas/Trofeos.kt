@@ -376,6 +376,13 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             drawOval(Color(0xFFE8C252), Offset(o.x - s * 0.28f, o.y - s * 0.45f), Size(s * 0.56f, s * 1.3f))
             listOf(0.1f, 0.4f).forEach { f -> drawLine(Color(0xFF6B4E10), Offset(o.x - s * 0.25f, o.y + s * f), Offset(o.x + s * 0.25f, o.y + s * f), s * 0.09f) }
         }
+        // Una burbuja de champán o, una de cada tres, el destello fino de cuatro puntas de una bombilla de marquesina.
+        TemaId.DECO -> if (i % 3 == 0) {
+            drawPath(estrellada(o, s, s * 0.12f, 4), Color(0xFFF6E7BE).copy(alpha = 0.95f))
+        } else {
+            drawCircle(Color(0xFFF6E7BE).copy(alpha = 0.85f), s * 0.42f, o, style = Stroke(s * 0.1f))
+            drawCircle(Color.White.copy(alpha = 0.7f), s * 0.1f, Offset(o.x - s * 0.15f, o.y - s * 0.15f))
+        }
         TemaId.BOTANICO -> {
             for (k in 0 until 5) { val a = -PI / 2 + k * 2 * PI / 5; drawCircle(Color(0xFFFFF0A8), s * 0.34f, Offset(o.x + (s * 0.5f * cos(a)).toFloat(), o.y + (s * 0.5f * sin(a)).toFloat())) }
             drawCircle(Color(0xFFB0702A), s * 0.24f, o)
@@ -484,6 +491,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.LABORATORIO -> Color(0xFFDDF3F6)
     TemaId.COLONOS -> Color(0xFFCDB89A)
     TemaId.NAPOLEON -> Color(0xFF2E4A8C)
+    TemaId.DECO -> Color(0xFF1C1A17)   // laca negra
     TemaId.BOTANICO -> Color(0xFFB9C49A)
     TemaId.RUINAS -> Color(0xFFA9AA9C)   // hormigón
     TemaId.NAVIDAD -> Color(0xFF8E2A2A)
@@ -621,6 +629,20 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
                 }
                 x += t; k++
             }
+        }
+        // Paneles de laca con escamas de abanico, en filas alternas, y una pilastra de tres estrías de oro cada tanto.
+        TemaId.DECO -> {
+            val rr = 18 * d; var y = rr; var fila = 0
+            while (y < h + rr) {
+                var x = if (fila % 2 == 0) 0f else rr
+                while (x < w + rr) {
+                    listOf(1f, 0.6f).forEach { k -> drawArc(v, 180f, 180f, false, Offset(x - rr * k, y - rr * k), Size(2 * rr * k, 2 * rr * k), style = Stroke(d)) }
+                    x += maxOf(2 * rr, 1f)
+                }
+                y += maxOf(rr * 0.8f, 1f); fila++
+            }
+            var px = 60 * d
+            while (px < w) { listOf(-3f, 0f, 3f).forEach { dx -> drawLine(a, Offset(px + dx * d, 0f), Offset(px + dx * d, h), d) }; px += 160 * d }
         }
         TemaId.BOTANICO -> {
             val hw = 70 * d; val hh = 90 * d; var y = 8 * d; var f = 0
@@ -900,6 +922,16 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             drawRect(oro, Offset.Zero, Size(w, h * 0.16f)); drawRect(oro, Offset(0f, h * 0.84f), Size(w, h * 0.16f))
             var x = 40 * d; while (x < w) { drawCircle(oro, 2.5f * d, Offset(x, h * 0.5f)); drawCircle(c, 1.1f * d, Offset(x, h * 0.5f)); x += 80 * d }
         }
+        // Repisa de laca negra con canto de oro y, cada tanto, una ménsula escalonada de jade.
+        TemaId.DECO -> {
+            val c = m(Color(0xFF1C1A17)); tabla(c); val oro = m(Color(0xFFD4AF37)); val jade = m(Color(0xFF1F6B57))
+            drawRect(oro, Offset.Zero, Size(w, h * 0.12f))
+            var x = 40 * d
+            while (x < w) {
+                drawRect(jade, Offset(x - 6 * d, h * 0.3f), Size(12 * d, h * 0.2f)); drawRect(jade, Offset(x - 4 * d, h * 0.5f), Size(8 * d, h * 0.2f)); drawRect(jade, Offset(x - 2 * d, h * 0.7f), Size(4 * d, h * 0.2f))
+                x += 90 * d
+            }
+        }
         TemaId.BOTANICO -> {
             tabla(m(Color(0xFF8A6A3E)))
             var x = 22 * d
@@ -1138,6 +1170,18 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             drawRoundRect(fondo, Offset.Zero, size, r); drawRoundRect(ac, Offset.Zero, size, r, style = Stroke(1.5f * d))
             drawRoundRect(borde, Offset(3 * d, 3 * d), Size(w - 6 * d, h - 6 * d), CornerRadius(r.x - 3 * d), style = fino)
             drawOval(ac, Offset(w / 2 - 5 * d, -2.5f * d), Size(10 * d, 6 * d))
+        }
+        // Placa de latón con las esquinas metidas en escalón y un abanico chico arriba al centro.
+        TemaId.DECO -> {
+            val k = 5 * d
+            val placa = Path().apply {
+                moveTo(k, 0f); lineTo(w - k, 0f); lineTo(w - k, k); lineTo(w, k); lineTo(w, h - k); lineTo(w - k, h - k); lineTo(w - k, h)
+                lineTo(k, h); lineTo(k, h - k); lineTo(0f, h - k); lineTo(0f, k); lineTo(k, k); close()
+            }
+            drawPath(placa, fondo); drawPath(placa, ac, style = Stroke(1.4f * d))
+            drawRect(borde, Offset(3 * d, 3 * d), Size(w - 6 * d, h - 6 * d), style = fino)
+            val r = 6 * d
+            for (j in 0 until 5) if (j % 2 == 0) drawArc(ac, j * 36f, 36f, true, Offset(w / 2 - r, -r * 0.4f), Size(2 * r, 2 * r))
         }
         TemaId.BOTANICO -> {
             drawRect(fondo, Offset.Zero, size); drawRect(borde, Offset.Zero, size, style = fino)

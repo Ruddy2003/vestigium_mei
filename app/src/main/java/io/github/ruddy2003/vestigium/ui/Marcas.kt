@@ -58,6 +58,8 @@ object Marcas {
         CARTUCHO,
         /** La placa de mármol de una calle: fondo claro, doble filete y dos tornillos. */
         TARGA,
+        /** Marquesina de cabaret: la palabra en su cartel, con una fila de bombillas arriba y otra abajo. */
+        MARQUESINA,
         /** Vídeo inverso con el cursor de bloque detrás. */
         TERMINAL,
         /** Subrayado en greca (onda cuadrada). */
@@ -144,6 +146,8 @@ object Marcas {
             TemaId.LABORATORIO -> if (persona) Aspecto(p, p, Forma.MARCADOR, negrita = true) else Aspecto(s, s, Forma.ESCALA)
             TemaId.COLONOS -> if (persona) Aspecto(p, p, Forma.RECORTE, negrita = true) else Aspecto(s, s, Forma.ONDULADO)
             TemaId.NAPOLEON -> if (persona) Aspecto(p, t, Forma.SUBRAYADO, negrita = true, cursiva = true) else Aspecto(s, s, Forma.NINGUNA, cursiva = true)
+            // La @persona, en la marquesina del cabaret, con sus bombillas; el #tema, con tres líneas de velocidad debajo.
+            TemaId.DECO -> if (persona) Aspecto(cs.onBackground, p, Forma.MARQUESINA, negrita = true) else Aspecto(s, s, Forma.TRIPLE)
             TemaId.BOTANICO -> if (persona) Aspecto(p, s, Forma.ETIQUETA, negrita = true) else Aspecto(t, t, Forma.MARCADOR)
             TemaId.RUINAS -> if (persona) Aspecto(p, s, Forma.TIZA, negrita = true) else Aspecto(t, t, Forma.GUIONES, cursiva = true)
             TemaId.NAVIDAD -> if (persona) Aspecto(p, p, Forma.CINTA, negrita = true) else Aspecto(s, s, Forma.ZIGZAG)
@@ -174,6 +178,7 @@ object Marcas {
         Forma.MARCADOR, Forma.CINTA, Forma.PLACA, Forma.ETIQUETA -> c.copy(alpha = 0.22f)
         Forma.RECUADRO, Forma.CORCHETES, Forma.CARTELA, Forma.TARGA, Forma.CARTUCHO, Forma.GOMA, Forma.RECORTE, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PIEDRA, Forma.ESCOTILLA -> c.copy(alpha = 0.12f)
         Forma.TIZA -> c.copy(alpha = 0.12f)
+        Forma.MARQUESINA -> c.copy(alpha = 0.16f)
         Forma.NINGUNA, Forma.SUBRAYADO, Forma.ONDULADO, Forma.GRECA, Forma.PUNTEADO, Forma.DOBLE, Forma.ESCALA, Forma.ZIGZAG, Forma.GUIONES,
         Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS, Forma.BURBUJAS -> Color.Unspecified
         Forma.CABO -> Color.Unspecified
@@ -193,6 +198,7 @@ object Marcas {
         Forma.NINGUNA, Forma.MARCADOR, Forma.RECUADRO, Forma.SELLO, Forma.HANKO, Forma.CORCHETES, Forma.CARTELA, Forma.TARGA, Forma.CARTUCHO, Forma.TERMINAL, Forma.BARRA, Forma.GOMA,
         Forma.PLACA, Forma.RECORTE, Forma.ETIQUETA, Forma.CINTA, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PARALELO, Forma.PIEDRA, Forma.ESCOTILLA -> false
         Forma.TIZA -> false
+        Forma.MARQUESINA -> false
         Forma.ESCUDETE -> true
         Forma.GLIFO -> false
         Forma.NUMERAL -> true
@@ -317,6 +323,14 @@ object Marcas {
                 drawRect(c.copy(alpha = 0.85f), Offset(iz, t), Size(de - iz, b - t), style = Stroke(1.2f * u))
                 drawRect(c.copy(alpha = 0.45f), Offset(iz + 1.8f * u, t + 1.8f * u), Size(de - iz - 3.6f * u, b - t - 3.6f * u), style = Stroke(0.6f * u))
                 listOf(iz + 2.6f * u, de - 2.6f * u).forEach { x -> drawCircle(c.copy(alpha = 0.8f), 0.9f * u, Offset(x, medio)) }
+            }
+            Forma.MARQUESINA -> {
+                // El cartel de la marquesina: fondo de oro muy tenue, doble filete y las bombillas encendidas arriba y abajo.
+                val t = rr.top + h * 0.02f; val b = rr.bottom; val iz = rr.left - 5 * u; val de = rr.right + 5 * u
+                drawRect(c.copy(alpha = 0.14f), Offset(iz, t), Size(de - iz, b - t))
+                drawRect(c.copy(alpha = 0.85f), Offset(iz, t), Size(de - iz, b - t), style = Stroke(1.1f * u))
+                var x = iz + 3 * u
+                while (x < de - 1.5f * u) { drawCircle(c.copy(alpha = 0.9f), 0.8f * u, Offset(x, t + 1.6f * u)); drawCircle(c.copy(alpha = 0.9f), 0.8f * u, Offset(x, b - 1.6f * u)); x += 4.2f * u }
             }
             Forma.TERMINAL -> {
                 // Vídeo inverso: la palabra sobre su bloque y el cursor esperando detrás.

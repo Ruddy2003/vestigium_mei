@@ -164,6 +164,7 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.LABORATORIO -> listOf("hipótesis", "resultado", "replicado", "ley natural")
     TemaId.COLONOS -> listOf("nota breve", "crónica", "primera plana", "edición extra")
     TemaId.NAPOLEON -> listOf("citation", "croix d'argent", "Légion d'honneur", "maréchal d'Empire")
+    TemaId.DECO -> listOf("aplauso", "telón arriba", "ovación de pie", "estreno en Broadway")
     TemaId.BOTANICO -> listOf("ejemplar común", "ejemplar raro", "especie nueva", "género nuevo")
     TemaId.RUINAS -> listOf("hallazgo", "rescate", "tesoro entre escombros", "el árbol que rompió el asfalto")
     TemaId.NAVIDAD -> listOf("cascabel", "campana de plata", "estrella de oro", "milagro de Navidad")
@@ -462,6 +463,22 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                 drawCircle(oro.copy(alpha = 0.22f), 3.5f * u, Offset(c.x + largo, c.y + w2))
             }
             drawCircle(oro.copy(alpha = 0.14f), ri * 1.3f, c, style = Stroke(1.5f * u))
+        }
+        TemaId.DECO -> rotate(giro * 0.08f, c) {
+            // Un gran sol de rayos alternos, largos y cortos, en cuñas de oro, con tres anillos que se escalonan hacia el
+            // centro: el resplandor de los vestíbulos de los años veinte.
+            val oro = if (oscuro) cs.primary else cs.primary.copy(alpha = 0.9f)
+            val largo = lejos * 0.75f
+            for (i in 0 until 32) {
+                val a0 = 2 * PI * i / 32; val a1 = 2 * PI * (i + 0.5) / 32
+                val r = if (i % 2 == 0) largo else largo * 0.62f
+                val cuna = Path().apply { moveTo(c.x, c.y); val p0 = pt(r, a0); val p1 = pt(r, a1); lineTo(p0.x, p0.y); lineTo(p1.x, p1.y); close() }
+                drawPath(cuna, oro.copy(alpha = if (i % 2 == 0) 0.07f else 0.045f))
+            }
+            listOf(0.1f, 0.16f, 0.22f).forEachIndexed { k, f ->
+                drawCircle(oro.copy(alpha = 0.22f - k * 0.05f), m * f, c, style = Stroke((2.2f - k * 0.5f) * u))
+            }
+            drawCircle(cs.secondary.copy(alpha = 0.16f), m * 0.06f, c)
         }
         TemaId.BOTANICO -> rotate(giro * 0.125f, c) {
             // Una corola de dos vueltas de pétalos, con sus nervios, como una lámina de herbario.

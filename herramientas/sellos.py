@@ -407,6 +407,56 @@ def espacio(tam):
         d2.ellipse([xs[i] - s, ys[i] - s, xs[i] + s, ys[i] + s], fill=(255, 255, 255, 255))
     guardar(fondo, capa, 'espacio')
 
+# ------------------------------------------------------------------ Art déco
+def deco(tam):
+    """Un panel de laca negra de los años veinte: un sol de rayos que nace del pie, abanicos de oro en escamas y
+    filetes escalonados en las esquinas; encima, la huella incrustada en pan de oro, con su brillo de metal."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    laca = mezcla(col('#0E0C0A'), col('#1E1A14'), ruido(tam, tam / 18, 71) * 0.8)
+    # El brillo de la laca: una franja diagonal muy suave.
+    diag = np.exp(-(((xx - yy * 0.7) - tam * 0.35) / (tam * 0.22)) ** 2)
+    laca = laca + diag[..., None] * 10
+    fondo = a_img(laca)
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    oro = (212, 175, 55)
+    # Escamas de abanico en filas alternas, muy tenues.
+    r = tam / 9
+    fila = 0; y = r * 0.6
+    while y < tam + r:
+        x = (r if fila % 2 else 0)
+        while x < tam + r:
+            for k, a in ((1.0, 34), (0.62, 26), (0.3, 20)):
+                d.arc([x - r * k, y - r * k, x + r * k, y + r * k], 180, 360, fill=oro + (a,), width=max(1, int(tam / 360)))
+            x += 2 * r
+        y += r * 0.78; fila += 1
+    # El sol de rayos que nace del pie, alternando rayos anchos y finos.
+    c = (tam / 2, tam * 1.02)
+    for i in range(25):
+        ang = math.pi + (i + 0.5) * math.pi / 25
+        a0, a1 = ang - (0.022 if i % 2 == 0 else 0.008), ang + (0.022 if i % 2 == 0 else 0.008)
+        largo = tam * 1.2
+        d.polygon([c, (c[0] + largo * math.cos(a0), c[1] + largo * math.sin(a0)), (c[0] + largo * math.cos(a1), c[1] + largo * math.sin(a1))],
+                  fill=oro + (46 if i % 2 == 0 else 30,))
+    # Tres escalones de filete en cada esquina.
+    g = max(2, int(tam / 180)); paso = tam / 22; m0 = tam / 28
+    for (ox, oy, sx, sy) in ((m0, m0, 1, 1), (tam - m0, m0, -1, 1), (m0, tam - m0, 1, -1), (tam - m0, tam - m0, -1, -1)):
+        pts = [(ox, oy + sy * 4 * paso)]
+        for k in range(1, 4):
+            pts += [(ox + sx * k * paso, oy + sy * (5 - k) * paso), (ox + sx * k * paso, oy + sy * (4 - k) * paso)]
+        pts += [(ox + sx * 4 * paso, oy + sy * paso), (ox + sx * 4 * paso, oy)]
+        d.line(pts, fill=oro + (150,), width=g)
+    # La huella en pan de oro: gradiente de metal (oscuro, claro, oscuro) cruzado, con relieve y algún hueco de la hoja.
+    t = (np.sin((xx + yy) / tam * math.pi * 3.2) + 1) / 2
+    metal = mezcla(col('#8A6A1E'), col('#F3D98A'), t ** 1.6)
+    metal = mezcla(metal, col('#C9A23C'), ruido(tam, tam / 60, 72) * 0.4)
+    luz = relieve(m, (-1, -1), 1.2)
+    metal = np.clip(metal + luz[..., None] * 60, 0, 255)
+    hojas = ruido(tam, tam / 90, 73)
+    alfa = m * np.clip(0.96 - np.clip(hojas - 0.82, 0, 1) * 3, 0, 1)
+    capa = a_rgba(metal, alfa)
+    guardar(fondo, capa, 'deco')
+
 # ------------------------------------------------------------------ Ciudad neón
 def neon(tam):
     m = mascara_sello(tam)
@@ -1249,6 +1299,7 @@ SIETE = [
     'ruinas',
     'gotico',
     'arcano',
+    'deco',
     'espacio',
     'abismo',
     'urbe',
@@ -1280,6 +1331,7 @@ ORDEN = [
     'laboratorio',
     'colonos',
     'napoleon',
+    'deco',
     'botanico',
     'ruinas',
     'navidad',

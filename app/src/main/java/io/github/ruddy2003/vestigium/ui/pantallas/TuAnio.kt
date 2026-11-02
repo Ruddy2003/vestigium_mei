@@ -153,6 +153,7 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.LABORATORIO -> "Protocolo $anio · resultados del año"
     TemaId.COLONOS -> "Almanaque del año $anio"
     TemaId.NAPOLEON -> "BOLETÍN DE LA GRANDE ARMÉE · $anio"
+    TemaId.DECO -> "LA TEMPORADA DE $anio, EN NOTICIERO"
     TemaId.NAVIDAD -> "Lo que trajo $anio"
     TemaId.SEDA -> "Bitácora de la caravana · ${Temas.anioChino(anio)}"
     TemaId.EDO -> "Estampas del camino · ${Temas.nengo(java.time.LocalDate.of(anio, 7, 1))}"
