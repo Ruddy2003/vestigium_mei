@@ -27,6 +27,7 @@ Son las pruebas que se fueron revisando una tras otra. Cada archivo importa los 
 | `gato18.py` | Arreglos antes de pasarlo a la app: la espada, el ornitóptero, objetos más grandes y el fondo de noche de los temas que no lo tenían. |
 | `gato19.py` | Lote 9a: los gatos que ya había, completos (fondos que se mueven, noches propias, objetos propios, Terminal en cian). |
 | `gato20*.py` | Lote 9b: los gatos de los temas nuevos, uno o varios archivos (cada uno registra sus temas en la cadena). |
+| `gato20c.py` | Ciudad verde (tricolor a la acuarela con musgo, collar de cuerda con hoja; calle con hiedra, luciérnagas), Horror cósmico (gato negro en aguatinta verde-negra, amuleto; faro en la niebla, tentáculo) y Abismo (casco de buzo de latón; de noche bioluminiscente, se suma como luz; arrecife y zona abisal con medusas). |
 | `exportar.py` | Lo convierte en recursos para la app. | Carga `gato19` y los `gato20*` que existan.
 
 Cada script también se puede correr solo para ver su parte (hojas de sprites, bandas en GIF); lo que hace queda en
