@@ -55,6 +55,13 @@ object GuiaUso {
             "Notas: ideas, pensamientos especiales, propósitos y recordatorios, con @ y #. Fija arriba las importantes.",
             "Metas: elige el horizonte y, si puedes, lígala a un hábito o una variable para que el progreso se calcule solo. En diciembre aparece la plantilla de propósitos.",
         ), listOf("Idea: hablar con @mario de la beca. #maestria")),
+        Seccion("ideario", "Ideario", listOf(
+            "Para lo que entendiste de un libro, un video o una plática, y para lo que se te ocurrió: con tus palabras. Las palabras exactas de otro van en las citas de la obra.",
+            "Solo el texto es obligatorio. Con #tema la idea entra a su estantería (en el Ideario solo salen los temas escritos en ideas). «Quién lo dice» es para autores e invitados; @persona, para alguien de tu gente.",
+            "No tiene que ser verdad para guardarla: «cómo la tengo» dice si te convence, te hace pensar, la dudas o no estás de acuerdo.",
+            "Desde YouTube, el navegador o Kindle, «Compartir» → Vestigium abre una idea con el enlace y el título ya puestos. En una cita de una obra, «anotar lo que entendí» la liga a esa cita.",
+            "De vez en cuando, el Día te muestra «Una idea de antes» (de hace un mes, seis meses o un año) para ver si sigues pensando igual.",
+        ), listOf("El dinero también sirve para coordinar a desconocidos, no solo para intercambiar. #economia")),
         Seccion("laptop", "Laptop (Cold Turkey)", listOf(
             "Cada semana exporta las estadísticas de Cold Turkey (apps y sitios) e impórtalas en Laptop. Cambia la categoría de cada app o sitio con un toque.",
             "Cold Turkey solo da minutos por día, así que no hay horas exactas (por ejemplo, cuánto usaste la laptop de noche).",
@@ -92,7 +99,7 @@ object GuiaUso {
     val PANTALLAS: Map<String, String> = mapOf(
         "Día" to "principios", "Hoy" to "principios", "Privado" to "privado", "Llenar el día" to "noche", "Cómo usar la app" to "principios", "Diario" to "diario", "Momentos" to "animo", "Todos tus registros" to "animo", "Tu gente" to "sustancias_gente",
         "¿Estuviste o pensaste?" to "diario", "Tus temas" to "diario", "Sustancias" to "sustancias_gente", "Impulsos y recaídas" to "privado",
-        "Lugares" to "lugares", "Lugares especiales" to "lugares", "Suplementos" to "suplementos", "Notas" to "notas_metas", "Metas" to "notas_metas",
+        "Lugares" to "lugares", "Lugares especiales" to "lugares", "Suplementos" to "suplementos", "Notas" to "notas_metas", "Metas" to "notas_metas", "Ideario" to "ideario", "Nueva idea" to "ideario", "Una idea" to "ideario",
         "Laptop" to "laptop", "Red" to "sustancias_gente", "Experimentos personales" to "leerte", "Análisis" to "leerte", "Cobertura de variables" to "leerte",
         "Constelación" to "sustancias_gente", "Datos" to "errores", "Estado de los datos" to "errores", "Hábitos" to "noche",
     )

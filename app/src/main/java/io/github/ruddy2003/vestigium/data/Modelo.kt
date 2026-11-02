@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 15
+const val SCHEMA_V = 16
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -371,6 +371,40 @@ data class Nota(
     val recordar_el: String? = null,
     val hecha: Boolean = false,
 )
+
+/**
+ * Una entrada del Ideario (esquema 16): lo que entendiste de algo, dicho con tus palabras. Puede venir de un libro, un video,
+ * una conversación o de ti. Solo [texto] es obligatorio; los #temas y @personas van dentro del texto. [quien] son los autores
+ * o invitados que lo dicen (no son personas de Tu gente). [obra_id] y [cita_id] la ligan a una obra y a una de sus citas;
+ * si no hay obra, [fuente] y [enlace] dicen de dónde salió y [donde], el minuto o la página.
+ */
+@Serializable
+data class Idea(
+    val id: String,
+    val creada: String,
+    val fecha: String,
+    val texto: String,
+    /** La idea en una línea. */
+    val titulo: String = "",
+    /** leido, visto, contado o propia (ver [Catalogo.ORIGENES_IDEA]). */
+    val origen: String = "",
+    val quien: List<String> = emptyList(),
+    val obra_id: String? = null,
+    val cita_id: String? = null,
+    val fuente: String = "",
+    val enlace: String = "",
+    val donde: String = "",
+    /** Cómo la tienes: convence, piensa, duda o desacuerdo (ver [Catalogo.POSTURAS_IDEA]). */
+    val postura: String = "",
+    /** Cada vez que la volviste a ver en «Una idea de antes» y qué respondiste. */
+    val revisiones: List<RevisionIdea> = emptyList(),
+    val fijada: Boolean = false,
+    val editada: String? = null,
+)
+
+/** Una respuesta a «Una idea de antes» (esquema 16): [respuesta] es sigue, cambio o ignorar. */
+@Serializable
+data class RevisionIdea(val fecha: String, val respuesta: String)
 
 /**
  * Una meta con su horizonte (corto: hasta 3 meses; mediano: hasta un año; largo: más), su fecha objetivo y su estado.
@@ -838,6 +872,8 @@ data class Config(
     val presencias_reabiertas: Boolean = false,
     /** Cada cambio de zona horaria del teléfono (esquema 15, H-1-7): cada instante se lee con la zona que tenía entonces. */
     val zonas: List<CambioZona> = emptyList(),
+    /** Mostrar «Una idea de antes» del Ideario en la pantalla del día (esquema 16). */
+    val ideas_resurgir: Boolean = true,
 )
 
 /** Desde [desde] (ISO) el teléfono estuvo en la zona [zona] («America/Mexico_City», o un desfase fijo como «-05:00»). */

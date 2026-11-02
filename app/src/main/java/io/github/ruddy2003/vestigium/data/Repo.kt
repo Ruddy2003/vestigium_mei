@@ -54,6 +54,8 @@ object Repo {
     /** Notas sueltas (ideas, pensamientos, propósitos, recordatorios) y metas. */
     var notas by mutableStateOf<List<Nota>>(emptyList()); private set
     var metas by mutableStateOf<List<Meta>>(emptyList()); private set
+    /** El Ideario: lo que aprendiste o pensaste, con su fuente (esquema 16). */
+    var ideas by mutableStateOf<List<Idea>>(emptyList()); private set
     /** Tomas de suplementos y minutos de la laptop (Cold Turkey). */
     var tomas by mutableStateOf<List<TomaSuplemento>>(emptyList()); private set
     var laptop by mutableStateOf<Map<String, LaptopDia>>(emptyMap()); private set
@@ -114,6 +116,7 @@ object Repo {
         consumos = cargar("consumos", Consumo.serializer()).sortedBy { it.inicio }
         notas = cargar("notas", Nota.serializer()).sortedByDescending { it.creada }
         metas = cargar("metas", Meta.serializer()).sortedBy { it.creada }
+        ideas = cargar("ideas", Idea.serializer()).sortedByDescending { it.creada }
         tomas = cargar("tomas", TomaSuplemento.serializer()).sortedBy { it.ts }
         laptop = cargar("laptop", LaptopDia.serializer()).associateBy { it.fecha }
         avisos = cargar("avisos", AvisosDia.serializer()).associateBy { it.fecha }
@@ -256,6 +259,22 @@ object Repo {
         db.transaccion { nuevas.forEach { db.poner("notas", it.id, it.fecha, JSON.encodeToString(Nota.serializer(), it)) } }
         enMain { notas = (notas + nuevas).sortedByDescending { it.creada } }
     }
+    // ---------- Ideario ----------
+    fun guardarIdea(i: Idea) {
+        db.poner("ideas", i.id, i.fecha, JSON.encodeToString(Idea.serializer(), i))
+        enMain { ideas = (ideas.filter { it.id != i.id } + i).sortedByDescending { it.creada } }
+    }
+    fun borrarIdea(id: String) { aPapelera("ideas", id); db.borrar("ideas", id); enMain { ideas = ideas.filter { it.id != id } } }
+    fun importarIdeas(lista: List<Idea>) {
+        val ids = ideas.map { it.id }.toSet()
+        val nuevas = lista.filter { it.id !in ids }
+        if (nuevas.isEmpty()) return
+        db.transaccion { nuevas.forEach { db.poner("ideas", it.id, it.fecha, JSON.encodeToString(Idea.serializer(), it)) } }
+        enMain { ideas = (ideas + nuevas).sortedByDescending { it.creada } }
+    }
+    /** Solo para las capturas de diseño: ideas de ejemplo en memoria. */
+    fun ideasEnMemoria(l: List<Idea>) { ideas = l }
+
     fun guardarMeta(m: Meta) {
         db.poner("metas", m.id, m.creada.take(10), JSON.encodeToString(Meta.serializer(), m))
         enMain { metas = (metas.filter { it.id != m.id } + m).sortedBy { it.creada } }
@@ -593,7 +612,7 @@ object Repo {
 
     // ---------- Papelera (v14) ----------
     /** Lo que se guarda 7 días al borrarlo: los registros que haces tú (no lo que llega solo ni lo que se reimporta). */
-    private val EN_PAPELERA = setOf("momentos", "tramos", "consumos", "notas", "metas", "tomas", "gastos", "ingresos", "lugares", "cartas", "ascensos", "obras")
+    private val EN_PAPELERA = setOf("momentos", "tramos", "consumos", "notas", "metas", "tomas", "gastos", "ingresos", "lugares", "cartas", "ascensos", "obras", "ideas")
 
     private fun aPapelera(col: String, id: String) {
         if (col !in EN_PAPELERA) return
@@ -622,6 +641,7 @@ object Repo {
                 "cartas" -> guardarCarta(JSON.decodeFromString(Carta.serializer(), b.json))
                 "ascensos" -> guardarAscenso(JSON.decodeFromString(Ascenso.serializer(), b.json))
                 "obras" -> guardarObra(JSON.decodeFromString(Obra.serializer(), b.json))
+                "ideas" -> guardarIdea(JSON.decodeFromString(Idea.serializer(), b.json))
                 else -> error("colección sin papelera")
             }
         }.isSuccess

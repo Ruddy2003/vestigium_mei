@@ -98,10 +98,10 @@ import io.github.ruddy2003.vestigium.ui.elegirFecha
 private fun sinAcentos(s: String) = java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
 
 private val BIBLIOTECAS = listOf(Triple("diario", "Diario", "biblioteca_diario"), Triple("suenos", "Sueños", "biblioteca_suenos"),
-    Triple("momentos", "Momentos", "biblioteca_momentos"), Triple("cartas", "Cartas", "cartas"))
+    Triple("momentos", "Momentos", "biblioteca_momentos"), Triple("cartas", "Cartas", "cartas"), Triple("ideas", "Ideario", "biblioteca_ideas"))
 
 /**
- * Las cuatro bibliotecas en una: el diario, los sueños, la libreta de momentos y las cartas. Se cambia entre ellas con las pestañas de arriba
+ * Las cinco bibliotecas en una: el diario, los sueños, la libreta de momentos, las cartas y el Ideario. Se cambia entre ellas con las pestañas de arriba
  * o deslizando a los lados.
  */
 @Composable
@@ -125,11 +125,12 @@ fun PantallaBibliotecas(nav: Nav, inicial: String) {
             else if (total > umbral && i > 0) ir(BIBLIOTECAS[i - 1].first)
         }) { _, dx -> total += dx }
     }
-    val titulo = when (cual) { "suenos" -> "Biblioteca de sueños"; "cartas" -> "Cartas"; "momentos" -> "Libreta de momentos"; else -> "Biblioteca del diario" }
+    val titulo = when (cual) { "suenos" -> "Biblioteca de sueños"; "cartas" -> "Cartas"; "momentos" -> "Libreta de momentos"; "ideas" -> "Ideario"; else -> "Biblioteca del diario" }
     val sub = when (cual) {
         "suenos" -> "Lo que soñaste, noche por noche, en el mismo estante del tema pero de noche."
         "momentos" -> "Una hoja por día con todo lo que registraste al momento: cómo te sentías, en qué pensabas, con quién y lo que tomaste."
         "cartas" -> "Las que te escribes al futuro, selladas hasta su fecha, y las que escribes a otras personas."
+        "ideas" -> "Lo que aprendiste de un libro, un video o una plática, y lo que se te ocurrió, con tus palabras, su fuente y quién lo dice."
         else -> LibroDiario.entradas().let { l -> "${l.size} entradas · %,d palabras. Toca una para abrirla.".format(l.sumOf { Texto.palabras(it.nota) }) }
     }
     Hoja(titulo, nav.atras, sub, modifier = deslizar) {
@@ -138,17 +139,18 @@ fun PantallaBibliotecas(nav: Nav, inicial: String) {
             "suenos" -> BibliotecaSuenos(nav)
             "cartas" -> BibliotecaCartas(nav)
             "momentos" -> BibliotecaMomentosLibreta(nav)
+            "ideas" -> BibliotecaIdeas(nav, ::rotuloMes)
             else -> BibliotecaDiario(nav)
         }
     }
 }
 
-/** Las tres pestañas, con su dibujo y cuántas cosas hay en cada una. */
+/** Las pestañas, con su dibujo y cuántas cosas hay en cada una. */
 @Composable
 private fun SelectorBibliotecas(actual: String, elegir: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
     val n = mapOf("diario" to Repo.dias.values.count { it.nota.isNotBlank() }, "suenos" to Repo.dias.values.count { it.sueno_texto.isNotBlank() },
-        "momentos" to diasConMomentos().size, "cartas" to Repo.cartas.size)
+        "momentos" to diasConMomentos().size, "cartas" to Repo.cartas.size, "ideas" to Repo.ideas.size)
     val tema = Estilo.tema
     Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         BIBLIOTECAS.forEach { (id, nombre, _) ->
@@ -158,8 +160,9 @@ private fun SelectorBibliotecas(actual: String, elegir: (String) -> Unit) {
                 Column(Modifier.padding(vertical = 9.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     val tinta = if (sel) cs.onPrimary else cs.primary
                     Canvas(Modifier.size(width = 30.dp, height = 20.dp)) { icono(id, tinta, tema, if (sel) cs.primary else cs.surface) }
-                    // En mayúsculas y con letra ancha (griego, Revolución) «MOMENTOS» no cabe: se achica un poco en lugar de partirse.
-                    val estilo = MaterialTheme.typography.labelLarge.let { if (Estilo.mayusculas && nombre.length > 7) it.copy(fontSize = it.fontSize * 0.82f, letterSpacing = 0.sp) else it }
+                    // Con cinco pestañas «Momentos» casi no cabe (y en mayúsculas con letra ancha, griego o Revolución, menos): se achica
+                    // un poco en lugar de partirse.
+                    val estilo = MaterialTheme.typography.labelLarge.let { if (nombre.length > 7) it.copy(fontSize = it.fontSize * (if (Estilo.mayusculas) 0.76f else 0.9f), letterSpacing = 0.sp) else it }
                     Text(if (Estilo.mayusculas) nombre.uppercase() else nombre, style = estilo, color = if (sel) cs.onPrimary else cs.onSurface,
                         maxLines = 1, softWrap = false, modifier = Modifier.padding(top = 4.dp))
                     Text("${n[id] ?: 0}", style = MaterialTheme.typography.labelSmall, color = (if (sel) cs.onPrimary else cs.onSurfaceVariant).copy(alpha = 0.85f))
@@ -170,7 +173,7 @@ private fun SelectorBibliotecas(actual: String, elegir: (String) -> Unit) {
 }
 
 /**
- * Un libro abierto, una luna con estrellas, una libreta o un sobre, y en cada uno el símbolo del tema (el mismo con que se
+ * Un libro abierto, una luna con estrellas, una libreta, un sobre o una ficha de fichero, y en cada uno el símbolo del tema (el mismo con que se
  * califica: hoja de laurel, cruz de malta, abeja, engrane, rosetón…): en la página derecha del libro, como la estrella mayor
  * junto a la luna, en la tapa de la libreta y como el sello del sobre.
  */
@@ -192,6 +195,12 @@ private fun DrawScope.icono(id: String, c: Color, t: TemaId, fondo: Color) {
             drawRect(c, Offset(w * 0.22f, h * 0.08f), Size(w * 0.6f, h * 0.84f), style = trazo)
             for (k in 0 until 4) drawCircle(c, 1.4.dp.toPx(), Offset(w * 0.22f, h * (0.22f + k * 0.19f)))
             sello(Offset(w * 0.54f, h * 0.5f), h * 0.27f)
+        }
+        "ideas" -> {
+            // Una ficha de fichero con su pestaña y el símbolo del tema.
+            drawRect(c, Offset(w * 0.14f, h * 0.24f), Size(w * 0.72f, h * 0.68f), style = trazo)
+            drawPath(Path().apply { moveTo(w * 0.14f, h * 0.24f); lineTo(w * 0.2f, h * 0.06f); lineTo(w * 0.46f, h * 0.06f); lineTo(w * 0.52f, h * 0.24f) }, c, style = trazo)
+            sello(Offset(w * 0.5f, h * 0.58f), h * 0.2f)
         }
         "cartas" -> {
             drawRect(c, Offset(w * 0.12f, h * 0.15f), Size(w * 0.76f, h * 0.7f), style = trazo)

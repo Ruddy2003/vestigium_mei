@@ -494,6 +494,10 @@ private fun CeldaObra(o: Obra, columnas: Int, modifier: Modifier, abrir: () -> U
                 .clip(RoundedCornerShape(2.dp)).background(Color.Black.copy(alpha = 0.45f))) {
                 Box(Modifier.fillMaxWidth((o.progreso.toFloat() / o.total).coerceIn(0f, 1f)).fillMaxHeight().background(MaterialTheme.colorScheme.primary))
             }
+            // Cuántas ideas del Ideario salieron de esta obra.
+            val ideas = Repo.ideas.count { it.obra_id == o.id }
+            if (ideas > 0) Text("✎ $ideas", style = MaterialTheme.typography.labelSmall, color = Color.White,
+                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).clip(RoundedCornerShape(3.dp)).background(Color.Black.copy(alpha = 0.55f)).padding(horizontal = 5.dp, vertical = 1.dp))
         }
         Text(o.titulo, style = if (grande) MaterialTheme.typography.titleSmall else MaterialTheme.typography.labelSmall, maxLines = if (grande) 2 else 1,
             overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp))

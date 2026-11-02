@@ -92,7 +92,7 @@ vm_archivos <- c(
   biblioteca = "vm_biblioteca.csv", comunicacion = "vm_comunicacion.csv", conexiones = "vm_conexiones.csv",
   subrayados = "vm_subrayados.csv", google_dia = "vm_google_dia.csv", google = "vm_google.csv", whatsapp = "vm_whatsapp.csv",
   nutricion = "vm_nutricion.csv", comidas = "vm_comidas.csv", entrenos = "vm_entrenos.csv", series = "vm_series.csv",
-  tramos = "vm_tramos.csv", sustancias = "vm_sustancias.csv", horas = "vm_horas.csv", notas = "vm_notas.csv", metas = "vm_metas.csv",
+  tramos = "vm_tramos.csv", sustancias = "vm_sustancias.csv", horas = "vm_horas.csv", notas = "vm_notas.csv", ideas = "vm_ideas.csv", ideas_revisiones = "vm_ideas_revisiones.csv", metas = "vm_metas.csv",
   suplementos = "vm_suplementos.csv", laptop = "vm_laptop.csv", red_nodos = "vm_red_nodos.csv", red_vinculos = "vm_red_vinculos.csv",
   experimentos = "vm_experimentos.csv", personas = "vm_personas.csv", fechas_propias = "vm_fechas_propias.csv")
 

@@ -108,6 +108,7 @@ fun PantallaTotales(nav: Nav, buscar: Boolean = false) {
             busqueda.isNotBlank() -> {
                 EnDiario(busqueda, desde, hoy) { f -> Seleccion.abrir(nav, f) }
                 EnCartas(busqueda, desde, hoy) { id -> Seleccion.carta = id; nav.ir("carta") }
+                EnIdeas(busqueda, desde, hoy) { i -> EdicionIdea.abrir(nav, i) }
                 Resultados(r, busqueda) { i, e -> abierta = i to e }
             }
             r.grupos.isEmpty() && r.indices.isEmpty() -> Vacio("Nada registrado en este periodo.")
@@ -270,6 +271,29 @@ private fun EnDiario(q: String, desde: String, hasta: String, abrir: (String) ->
             }
         }
         if (hallados.size > 20) Ayuda("y ${hallados.size - 20} días más.")
+    }
+}
+
+/** Las ideas del Ideario que mencionan el texto (en la idea, su título, quién lo dice, la fuente o su obra). */
+@Composable
+private fun EnIdeas(q: String, desde: String, hasta: String, abrir: (io.github.ruddy2003.vestigium.data.Idea) -> Unit) {
+    val nq = Totales.normal(q.trim())
+    if (nq.length < 2) return
+    val hallados = remember(nq, desde, hasta, Repo.ideas, Repo.obras) {
+        Repo.ideas.filter { it.fecha in desde..hasta && Totales.normal(io.github.ruddy2003.vestigium.data.Ideario.textoBuscable(it, Repo.obras)).contains(nq) }
+            .sortedByDescending { it.creada }
+    }
+    if (hallados.isEmpty()) return
+    Etiqueta("en tu ideario · ${hallados.size}")
+    Tarjeta {
+        hallados.take(12).forEachIndexed { k, i ->
+            if (k > 0) HorizontalDivider()
+            Column(Modifier.fillMaxWidth().clickable { abrir(i) }.padding(vertical = 8.dp)) {
+                Text(Totales.fecha(i.fecha) + (i.quien.joinToString(", ").ifBlank { null }?.let { " · $it" } ?: ""), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                io.github.ruddy2003.vestigium.ui.TextoMarcado(i.titulo.ifBlank { i.texto }.replace("\n", " ").take(160), style = MaterialTheme.typography.bodySmall, maxLines = 3)
+            }
+        }
+        if (hallados.size > 12) Ayuda("y ${hallados.size - 12} ideas más.")
     }
 }
 

@@ -98,6 +98,7 @@ object Pantallas {
         P("fuerza", "Gimnasio", "Entrenamientos de MacroFactor", "pesas gym"),
         P("habitos", "Hábitos", "Lo que marcas cada noche", "costumbres"),
         P("cartas", "Cartas", "Al futuro y a otras personas", "carta"),
+        P("biblioteca_ideas", "Ideario", "Lo que aprendiste o pensaste, con su fuente", "ideas conocimiento aprendí aprendizaje autor libro video podcast fuente reflexión"),
         P("notas", "Notas", "Ideas, pensamientos, propósitos y recordatorios", "idea pensamiento recordatorio apunte"),
         P("metas", "Metas", "Corto, mediano y largo plazo", "objetivos propósitos año nuevo"),
         P("suplementos", "Suplementos", "Creatina y lo que tomes, con su nivel estimado", "creatina vitamina magnesio probióticos omega melatonina"),
