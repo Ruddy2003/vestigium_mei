@@ -305,17 +305,13 @@ class Capturas {
     private val TEXTO = "Hoy fue un día largo pero bueno. En la mañana salí a caminar con @ana por el parque y hablamos de los planes para el viaje. " +
         "Después trabajé casi toda la tarde en el proyecto; avancé más de lo que esperaba. En la noche leí un rato antes de dormir. #lectura #trabajo"
 
-    private fun objetos(temas: List<TemaId>, nombre: String) = captura(temas.first(), false, alto = 2800, nombre = nombre) {
+    private fun objetos(temas: List<TemaId>, nombre: String) = captura(temas.first(), false, alto = 1200, nombre = nombre) {
         Column(Modifier.padding(16.dp)) {
             temas.forEachIndexed { i, t -> io.github.ruddy2003.vestigium.ui.ObjetoDiario("2026-10-16", if (i == 1) "" else TEXTO, Modifier.padding(bottom = 14.dp), t) {} }
         }
     }
-    /** El diario cerrado en todos los temas, siete por captura. */
-    @Test fun objetos() = TemaId.entries.forEach { t ->
-        // DIAGNÓSTICO TEMPORAL: un tema por captura (con texto y vacío), anotado antes de dibujarlo.
-        System.err.println("OBJETO ${t.id}"); System.err.flush()
-        objetos(listOf(t, t), "tema_${t.id}")
-    }
+    /** El diario cerrado de cada tema, con texto y vacío (una captura por tema). */
+    @Test fun objetos() = TemaId.entries.forEach { t -> objetos(listOf(t, t), "tema_${t.id}") }
 
     private fun biblioteca(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario") }
     @Test fun bibliotecaMedieval() = biblioteca(TemaId.MEDIEVAL, false)

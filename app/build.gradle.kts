@@ -90,5 +90,5 @@ dependencies {
 // En CI, cada prueba deja en el registro cuándo empieza: si la máquina se apaga a mitad (sin informe de JUnit),
 // la última línea «STARTED» dice qué prueba fue.
 tasks.withType<Test>().configureEach {
-    testLogging { events("started", "failed"); showStandardStreams = true }
+    testLogging { events("started", "failed") }
 }
