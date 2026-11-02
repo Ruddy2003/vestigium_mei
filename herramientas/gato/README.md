@@ -31,7 +31,6 @@ Son las pruebas que se fueron revisando una tras otra. Cada archivo importa los 
 | `gato20b.py` | Templario (esmalte heráldico, sobreveste con cruz y malla; la muralla de frontera y el campamento), Egipto (pintura de tumba, mau con usekh y arete; el Nilo y la tumba) y Mesoamérica (códice sobre amate, jaguarundi con jade y pluma; la pirámide en la selva y Venus con la fogata). |
 | `gato20c.py` | Ciudad verde (tricolor a la acuarela con musgo, collar de cuerda con hoja; calle con hiedra, luciérnagas), Horror cósmico (gato negro en aguatinta verde-negra, amuleto; faro en la niebla, tentáculo) y Abismo (casco de buzo de latón; de noche bioluminiscente, se suma como luz; arrecife y zona abisal con medusas). |
 | `exportar.py` | Lo convierte en recursos para la app. Carga `gato19` y los `gato20*` que existan. |
-| `exportar.py` | Lo convierte en recursos para la app. | Carga `gato19` y los `gato20*` que existan.
 
 Cada script también se puede correr solo para ver su parte (hojas de sprites, bandas en GIF); lo que hace queda en
 `salida/`, que no se sube.
