@@ -518,7 +518,7 @@ Va después del lote 7. Para entonces el compilador y las pruebas de cobertura y
 
 **Cómo se hizo (30 oct 2026):** en una sola rama, con un commit «se junta el tema X» por tema en lugar de un PR por tema. Ciudad neón se hizo primero, a mano, y sirvió de modelo; los otros 12 partieron de la copia de un tema cercano (`herramientas/lote8/`) y se rehicieron rama por rama. Al juntarlos, la prueba de unicidad obligó a cambiar las esquinas de Pirata, Ciudad verde y Horror cósmico, dos títulos de pantalla (Egipto y Horror cósmico) y el comentario de Prehistoria. Lo que quedó del peso de la APK está en 8e.
 
-**Vapor victoriano y Art déco quedan para la próxima semana.** Están hechos, cada uno en su rama (`worktree-agent-a45fbcb2bdebf5093` y `worktree-agent-a9d920256ab695569`), y compilan, pero con los dos juntos la máquina de CI se apagaba al minuto de empezar las pruebas, incluso después de poner un tope de 1 px al paso de los bucles de dibujo nuevos. Se juntaron y se revirtieron (`git revert -m 1` de 9cf45bf y ed0194c). Para retomarlos: revertir esas reversiones, o volver a juntar sus ramas, de uno en uno, para saber cuál apaga la máquina.
+**Vapor victoriano y Art déco (2 nov 2026).** Se habían pospuesto porque, con los dos, la máquina de CI se apagaba al minuto de empezar las pruebas. Volvieron de uno en uno (se revirtieron sus reversiones) y llevan los nombres del Ideario. Con el registro de memoria de `capturas.yml` se vio la causa: la prueba `objetos` juntaba siete diarios cerrados en una sola captura y subía la memoria de 2 a casi 8 GB. Con un tema por captura, ningún tema la dispara. No era un error de Art déco: era el tamaño de esa captura con 34 temas.
 
 ### 8a. El Cyberpunk pasa a «Terminal»
 
@@ -694,7 +694,7 @@ Notas:
 
 ### Qué existe
 
-**Estado (30 oct 2026):** la rama `claude/quirky-thompson-3km48y` ya está juntada. El gato sale en los 21 temas originales, los que tienen arte en `assets/gato/`. En los temas del lote 8 la banda no aparece: `Gato.tieneGato` dice, tema por tema, cuáles lo tienen, y `CoberturaTemas` deja de pendientes solo a los temas nuevos. Quedan para después 9a, los gatos de los temas nuevos y el resto de este lote.
+**Estado (2 nov 2026):** los 34 temas tienen gato. Los 21 originales vienen de la rama `claude/quirky-thompson-3km48y` (juntada el 30 oct 2026); los 13 del lote 8 (9b), de `herramientas/gato/gato20a.py` a `gato20d.py`. `Gato.tieneGato` sigue diciendo tema por tema cuáles lo tienen (hoy todos), y `CoberturaTemas` ya no tiene pendientes. 9a se hace en `gato19.py`.
 
 El gato estaba en la rama `claude/quirky-thompson-3km48y` (3 commits encima de `main`).
 
