@@ -25,14 +25,16 @@ Son las pruebas que se fueron revisando una tras otra. Cada archivo importa los 
 | `gato16.py` | El casco romano más grande y de acero más oscuro. |
 | `gato17.py` | Las dos animaciones propias de cada tema (13 comunes + 2 = 15) y sus objetos. |
 | `gato18.py` | Arreglos antes de pasarlo a la app: la espada, el ornitóptero, objetos más grandes y el fondo de noche de los temas que no lo tenían. |
-| `exportar.py` | Lo convierte en recursos para la app. |
+| `gato19.py` | Lote 9a: los gatos que ya había, completos (fondos que se mueven, noches propias, objetos propios, Terminal en cian). |
+| `gato20*.py` | Lote 9b: los gatos de los temas nuevos, uno o varios archivos (cada uno registra sus temas en la cadena). |
+| `exportar.py` | Lo convierte en recursos para la app. | Carga `gato19` y los `gato20*` que existan.
 
 Cada script también se puede correr solo para ver su parte (hojas de sprites, bandas en GIF); lo que hace queda en
 `salida/`, que no se sube.
 
 ## Qué exporta
 
-Por cada tema y modo (`<tema>_c` claro, `<tema>_o` oscuro; ciber solo oscuro):
+Por cada tema y modo (`<tema>_c` claro, `<tema>_o` oscuro; los de `SOLO_OSCURO` en `exportar.py`, solo oscuro):
 
 - `_gato.webp`: atlas con todos los cuadros del gato ya pintados con el material del tema, recortados.
 - `_fondo.webp`: el fondo de la banda, a 3 px por dp (1236×240).
