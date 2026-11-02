@@ -311,7 +311,11 @@ class Capturas {
         }
     }
     /** El diario cerrado en todos los temas, siete por captura. */
-    @Test fun objetos() = TemaId.entries.chunked(7).forEachIndexed { i, temas -> objetos(temas, "parte${i + 1}") }
+    @Test fun objetos() = TemaId.entries.forEach { t ->
+        // DIAGNÓSTICO TEMPORAL: un tema por captura (con texto y vacío), anotado antes de dibujarlo.
+        System.err.println("OBJETO ${t.id}"); System.err.flush()
+        objetos(listOf(t, t), "tema_${t.id}")
+    }
 
     private fun biblioteca(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario") }
     @Test fun bibliotecaMedieval() = biblioteca(TemaId.MEDIEVAL, false)
