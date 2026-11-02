@@ -27,6 +27,7 @@ Son las pruebas que se fueron revisando una tras otra. Cada archivo importa los 
 | `gato18.py` | Arreglos antes de pasarlo a la app: la espada, el ornitóptero, objetos más grandes y el fondo de noche de los temas que no lo tenían. |
 | `gato19.py` | Lote 9a: los gatos que ya había, completos (fondos que se mueven, noches propias, objetos propios, Terminal en cian). |
 | `gato20*.py` | Lote 9b: los gatos de los temas nuevos, uno o varios archivos (cada uno registra sus temas en la cadena). |
+| `gato20d.py` | Japón Edo (ukiyo-e con bokashi, bobtail mi-ke con cascabel), Prehistoria (pintura rupestre, collar de conchas), Vapor victoriano (plano técnico y latón, gafas y chaleco) y Art déco (laca negra con oro, pajarita y perlas): pelaje, material, accesorio, fondos de día y de noche y sus 2 acciones. `python3 gato20d.py hoja|fondos|bandas [tema…]` deja las hojas en `salida/`. |
 | `exportar.py` | Lo convierte en recursos para la app. | Carga `gato19` y los `gato20*` que existan.
 
 Cada script también se puede correr solo para ver su parte (hojas de sprites, bandas en GIF); lo que hace queda en
