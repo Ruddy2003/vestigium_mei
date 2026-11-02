@@ -1,5 +1,5 @@
 """
-Íconos de la app (logo_fondo_<id>.jpg + logo_<id>.png, 432 × 432, y logo_mono.png). La composición es la misma en todos
+Íconos de la app (logo_fondo_<id>.jpg + logo_<id>.webp, WebP sin pérdida, 432 × 432, y logo_mono.webp). La composición es la misma en todos
 los temas: la huella maestra (maestra.py) del mismo tamaño y en la misma posición, dentro del círculo seguro del ícono
 adaptativo (66 %). Cada tema añade solo tres cosas (lote 1 del plan de diseño):
 1. una textura de fondo propia y tenue;
@@ -583,14 +583,14 @@ def hacer(tema, salida):
         halo.alpha_composite(capa); capa = halo
     final = anillo(tema, base)
     final.alpha_composite(capa)
-    final.save(os.path.join(salida, f'logo_{tema}.png'), optimize=True)
+    final.save(os.path.join(salida, f'logo_{tema}.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
 
 
 def mono(salida):
     """El ícono monocromo (Android lo tiñe): solo la huella maestra, sin anillo."""
     m = mascara()
     img = np.dstack([np.full((TAM, TAM, 3), 255, np.uint8), (m * 255).astype(np.uint8)])
-    Image.fromarray(img, 'RGBA').save(os.path.join(salida, 'logo_mono.png'), optimize=True)
+    Image.fromarray(img, 'RGBA').save(os.path.join(salida, 'logo_mono.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
 
 
 COLUMNAS = 7
@@ -613,7 +613,7 @@ def muestra(salida, archivo, cel=160):
     imagenes = []
     for t in TEMAS:
         f = Image.open(os.path.join(salida, f'logo_fondo_{t}.jpg')).convert('RGBA')
-        f.alpha_composite(Image.open(os.path.join(salida, f'logo_{t}.png')))
+        f.alpha_composite(Image.open(os.path.join(salida, f'logo_{t}.webp')))
         imagenes.append(f.crop(caja))
     hoja_de_contacto(imagenes, archivo, cel=cel, mascaras=[c.crop(caja)] * len(imagenes))
 

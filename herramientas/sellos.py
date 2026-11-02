@@ -1,5 +1,5 @@
 """
-Los sellos del día (huella_<id>.png + huella_fondo_<id>.jpg, 720 × 720): el fondo de cada tema y, encima, la huella
+Los sellos del día (huella_<id>.webp, WebP sin pérdida, + huella_fondo_<id>.jpg, 720 × 720): el fondo de cada tema y, encima, la huella
 maestra (maestra.py) en el material del tema. Lote 1 del plan de diseño: una sola huella en toda la app.
 
 - Siete temas se dibujan enteros aquí: botánico, gótico, espacio, Al-Ándalus, mongol, Renacimiento y Tierras Antiguas
@@ -42,7 +42,7 @@ def guardar(img_fondo, img_huella, tema):
     """[img_fondo] puede ser una imagen o la ruta de un JPG que se copia tal cual (sin volver a comprimirlo)."""
     if isinstance(img_fondo, str): shutil.copyfile(img_fondo, os.path.join(OUT, f'huella_fondo_{tema}.jpg'))
     else: img_fondo.convert('RGB').save(os.path.join(OUT, f'huella_fondo_{tema}.jpg'), quality=88)
-    img_huella.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE).save(os.path.join(OUT, f'huella_{tema}.png'), optimize=True)
+    img_huella.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE).save(os.path.join(OUT, f'huella_{tema}.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
 
 
 def desenfocar(a, s):
@@ -1128,11 +1128,11 @@ CATORCE = ['romano', 'ciber', 'heleno', 'medieval', 'distopia', 'refugio', 'orde
 
 def extraer(res, temas=CATORCE):
     """Una sola vez, con los PNG viejos: separa fondo, material y ornamento de cada sello y los guarda en fuentes/."""
-    vieja = np.asarray(Image.open(os.path.join(res, 'huella_romano.png')).convert('RGBA'), np.float32)[..., 3] / 255   # el sello romano era solo la huella
+    vieja = np.asarray(Image.open(os.path.join(res, 'huella_romano.webp')).convert('RGBA'), np.float32)[..., 3] / 255   # el sello romano era solo la huella
     cerca = desenfocar(vieja, 4) > 0.04
     dentro = desenfocar(vieja, 25) > 0.02     # todo el óvalo de la huella vieja, con sus valles
     for t in temas:
-        fg = np.asarray(Image.open(os.path.join(res, f'huella_{t}.png')).convert('RGBA'), np.float32)
+        fg = np.asarray(Image.open(os.path.join(res, f'huella_{t}.webp')).convert('RGBA'), np.float32)
         rgb, a = fg[..., :3], fg[..., 3] / 255
         crestas = (vieja > 0.6) & (a > 0.6)
         if t == 'laboratorio': crestas &= rgb[..., 0] < rgb[..., 1]    # sin las líneas rosas de las minucias
@@ -1360,7 +1360,7 @@ def hoja_contacto(archivo, temas=ORDEN):
     imgs = []
     for t in temas:
         f = Image.open(os.path.join(OUT, f'huella_fondo_{t}.jpg')).convert('RGBA')
-        f.alpha_composite(Image.open(os.path.join(OUT, f'huella_{t}.png')).convert('RGBA'))
+        f.alpha_composite(Image.open(os.path.join(OUT, f'huella_{t}.webp')).convert('RGBA'))
         imgs.append(f)
     hoja_de_contacto(imgs, archivo, mascaras=[circulo] * len(imgs))
 

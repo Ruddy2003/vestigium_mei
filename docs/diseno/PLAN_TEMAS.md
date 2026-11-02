@@ -619,8 +619,8 @@ Los ids `egipto` y `edo` coinciden con ids de vidas de `BASE` (`OtrasVidas.kt:11
 
 **`res/`**
 - **Ícono y sello** (`drawable-nodpi/`):
-  - `logo_<id>.png` y `logo_fondo_<id>.jpg`, generados por `iconos.py`;
-  - `huella_<id>.png` y `huella_fondo_<id>.jpg`, generados por `sellos.py`;
+  - `logo_<id>.webp` y `logo_fondo_<id>.jpg`, generados por `iconos.py`;
+  - `huella_<id>.webp` y `huella_fondo_<id>.jpg`, generados por `sellos.py`;
   - `papel_<id>.jpg` (720×1280), generado por el script de papeles.
 - **Widgets** (`drawable/`): `widget_fondo_<id>`, `widget_boton_<id>`, `widget_boton_activo_<id>` y `widget_boton_ambar_<id>`, más `drawable-v31/widget_fondo_<id>`.
 - **Lanzador:** `mipmap-anydpi-v26/ic_launcher_<id>.xml`, con `logo_fondo_<id>`, `logo_<id>` y `logo_mono`.
@@ -687,6 +687,7 @@ Notas:
 - **Peso de la APK.** Cada tema suma entre 1 y 1.5 MB (sonidos, imágenes, papel, fuente y gato), así que se suman entre 13 y 20 MB. Para compensar: bajar la tasa de bits de los OGG largos, recortar las fuentes, y valorar `shrinkResources`. No hay minificación hoy.
   - **Lo que se midió al cerrar el lote:** la v98 (21 temas) pesa 55 MB. Con 34 temas, `res/raw` pesa 16.4 MB, de los que 8 MB son las músicas anuales (`s_<id>_anual`, unos 80 s cada una); `res/font`, 11 MB; `res/drawable-nodpi`, 7.5 MB.
   - **Lo que ya estaba hecho:** los OGG van en mono a 22 kHz (la música anual, con calidad 1 de Vorbis, unos 30 kbit/s), y las fuentes ya van recortadas a latino y sin *hinting* (`fuentes.py`).
+  - **Hecho el 2 nov 2026:** los `logo_<id>` y `huella_<id>` de `drawable-nodpi` pasan de PNG a WebP sin pérdida (los mismos pixeles, también los transparentes): de 2.76 a 1.68 MB. `iconos.py` y `sellos.py` ya los escriben así.
   - **Lo que queda por decidir:** bajar la música anual a calidad 0 o −1 ahorraría entre 1.5 y 3.5 MB, pero hay que regenerarla con `musica.py`, y hoy no sale idéntica a la guardada (el azar de los temas viejos ya no se reproduce), así que cambiaría la música de todos los temas. `shrinkResources` exige activar la minificación (R8), que con osmdroid, Health Connect y la serialización de los datos puede pedir reglas propias; habría que probarla aparte, en un teléfono, antes de publicarla.
 - **Datos:** no cambia el esquema. Se actualiza la lista de ejemplos del KDoc de `Modelo.kt:683-684`.
 
