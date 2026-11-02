@@ -688,6 +688,7 @@ Notas:
   - **Lo que se midió al cerrar el lote:** la v98 (21 temas) pesa 55 MB. Con 34 temas, `res/raw` pesa 16.4 MB, de los que 8 MB son las músicas anuales (`s_<id>_anual`, unos 80 s cada una); `res/font`, 11 MB; `res/drawable-nodpi`, 7.5 MB.
   - **Lo que ya estaba hecho:** los OGG van en mono a 22 kHz (la música anual, con calidad 1 de Vorbis, unos 30 kbit/s), y las fuentes ya van recortadas a latino y sin *hinting* (`fuentes.py`).
   - **Hecho el 2 nov 2026:** los `logo_<id>` y `huella_<id>` de `drawable-nodpi` pasan de PNG a WebP sin pérdida (los mismos pixeles, también los transparentes): de 2.76 a 1.68 MB. `iconos.py` y `sellos.py` ya los escriben así.
+  - **Los gatos (lote 9):** `assets/gato` pasa de 7.8 a 15 MB con los 34 temas. El romano pesa casi 1 MB por clave (su atlas, de antes, 550 KB); lo demás va de 30 a 450 KB por clave.
   - **Lo que queda por decidir:** bajar la música anual a calidad 0 o −1 ahorraría entre 1.5 y 3.5 MB, pero hay que regenerarla con `musica.py`, y hoy no sale idéntica a la guardada (el azar de los temas viejos ya no se reproduce), así que cambiaría la música de todos los temas. `shrinkResources` exige activar la minificación (R8), que con osmdroid, Health Connect y la serialización de los datos puede pedir reglas propias; habría que probarla aparte, en un teléfono, antes de publicarla.
 - **Datos:** no cambia el esquema. Se actualiza la lista de ejemplos del KDoc de `Modelo.kt:683-684`.
 
