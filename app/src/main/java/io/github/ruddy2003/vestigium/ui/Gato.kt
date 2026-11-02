@@ -82,14 +82,14 @@ object Gato {
         TemaId.NAPOLEON -> true
         TemaId.DECO -> false
         TemaId.BOTANICO -> true
-        TemaId.RUINAS -> false
+        TemaId.RUINAS -> true
         TemaId.NAVIDAD -> true
         TemaId.SEDA -> true
         TemaId.EDO -> false
         TemaId.GOTICO -> true
-        TemaId.ARCANO -> false
+        TemaId.ARCANO -> true
         TemaId.ESPACIO -> true
-        TemaId.ABISMO -> false
+        TemaId.ABISMO -> true
         TemaId.ANDALUS -> true
         TemaId.MESO -> true
         TemaId.MONGOL -> true
