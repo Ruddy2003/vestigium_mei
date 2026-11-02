@@ -49,8 +49,8 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 | 5 | Textos y tipografía | hecho 29 oct 2026 |
 | 6 | Sonido y vibración | hecho 30 oct 2026 |
 | 7 | Limpieza y cierre: sin `else`, sin ramas agrupadas, pruebas sin pendientes, todo en P | hecho 30 oct 2026 (queda el gato, del lote 9) |
-| 8 | Terminal y 13 temas nuevos (de 21 a 34) | hecho 30 oct 2026 con 11 de los 13: Vapor y Art déco quedan para la próxima semana |
-| 9 | El gato de cada tema | en curso: el gato de los 21 originales ya está (30 oct 2026); faltan los gatos de los temas nuevos y 9a |
+| 8 | Terminal y 13 temas nuevos (de 21 a 34) | hecho: 11 temas el 30 oct 2026; Vapor y Art déco, el 2 nov 2026 |
+| 9 | El gato de cada tema | en curso: los 21 originales (30 oct 2026) y los 13 nuevos, 9b (2 nov 2026); falta 9a |
 
 ## Resumen por tema
 
@@ -69,16 +69,16 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 | DIS | 123 | 0 | 0 | 0 | 0 |
 | REF | 123 | 0 | 0 | 0 | 0 |
 | ORD | 125 | 0 | 0 | 0 | 0 |
-| VAP | 124 | 0 | 0 | 0 | 1 |
+| VAP | 125 | 0 | 0 | 0 | 0 |
 | LAB | 125 | 0 | 0 | 0 | 0 |
 | COL | 125 | 0 | 0 | 0 | 0 |
 | NAP | 123 | 0 | 0 | 0 | 0 |
-| DEC | 122 | 0 | 0 | 0 | 1 |
+| DEC | 123 | 0 | 0 | 0 | 0 |
 | BOT | 125 | 0 | 0 | 0 | 0 |
 | RUI | 125 | 0 | 0 | 0 | 0 |
 | NAV | 123 | 0 | 0 | 0 | 0 |
 | SED | 125 | 0 | 0 | 0 | 0 |
-| EDO | 124 | 0 | 0 | 0 | 1 |
+| EDO | 125 | 0 | 0 | 0 | 0 |
 | GOT | 125 | 0 | 0 | 0 | 0 |
 | ARC | 125 | 0 | 0 | 0 | 0 |
 | ESP | 123 | 0 | 0 | 0 | 0 |
@@ -91,7 +91,7 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 | URS | 125 | 0 | 0 | 0 | 0 |
 | REV | 125 | 0 | 0 | 0 | 0 |
 | ANT | 125 | 0 | 0 | 0 | 0 |
-| CUE | 124 | 0 | 0 | 0 | 1 |
+| CUE | 125 | 0 | 0 | 0 | 0 |
 
 Desde el lote 2 ningún tema cae en los respaldos de trofeos, salón, campaña ni libreta.
 
@@ -264,7 +264,7 @@ Lo que la prueba `CoberturaTemas` exige por tema. Los recursos que ya existen sa
 | Papel `papel_<id>` | `res/drawable-nodpi`, `herramientas/arte.py` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 7: un papel por tema, con su nombre de tema. Los de ROM, MED, SED y REV vienen de rasters viejos guardados en `herramientas/fuentes/`. |
 | Drawables de widget | `res/drawable/widget_*`, `drawable-v31` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | ROM usa los nombres sin sufijo. |
 | Los 13 sonidos del tema | `res/raw` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |  |
-| Gato de la banda de Día | `assets/gato/gato.json` | P | P | P | P | P | P | P | P | P | P | P | ✗ | P | P | P | ✗ | P | P | P | P | ✗ | P | P | P | P | P | P | P | P | P | P | P | P | ✗ | Se juntó la rama del gato (lote 9, primera parte): los 21 temas originales tienen su gato. Los del lote 8 todavía no; en ellos la banda no aparece (`Gato.tieneGato`). |
+| Gato de la banda de Día | `assets/gato/gato.json` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 9: los 21 originales con la rama del gato; los 13 del lote 8 con `herramientas/gato/gato20a.py` a `gato20d.py` (9b). |
 | Otra vida del tema | `data/OtrasVidas.kt` (`DE_TEMAS`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 7: ANT tiene a Brenna, guía de caminos (inventada). Lote 8: Kei pasa de CIB a NEO; CIB tiene a Carmen, operadora, y cada tema nuevo trae su vida. |
 
 ## Fuera de la matriz

@@ -76,16 +76,16 @@ object Gato {
         TemaId.DISTOPIA -> true
         TemaId.REFUGIO -> true
         TemaId.ORDEN -> true
-        TemaId.VAPOR -> false
+        TemaId.VAPOR -> true
         TemaId.LABORATORIO -> true
         TemaId.COLONOS -> true
         TemaId.NAPOLEON -> true
-        TemaId.DECO -> false
+        TemaId.DECO -> true
         TemaId.BOTANICO -> true
         TemaId.RUINAS -> true
         TemaId.NAVIDAD -> true
         TemaId.SEDA -> true
-        TemaId.EDO -> false
+        TemaId.EDO -> true
         TemaId.GOTICO -> true
         TemaId.ARCANO -> true
         TemaId.ESPACIO -> true
@@ -98,7 +98,7 @@ object Gato {
         TemaId.URSS -> true
         TemaId.REVOLUCION -> true
         TemaId.ANTIGUAS -> true
-        TemaId.CUEVA -> false
+        TemaId.CUEVA -> true
     }
 
     // ---- Índice de recursos (assets/gato/gato.json).
