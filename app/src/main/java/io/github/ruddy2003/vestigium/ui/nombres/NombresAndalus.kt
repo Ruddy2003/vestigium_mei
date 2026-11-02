@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresAndalus {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "دفتر الأفكار",
+        "Una idea" to "فكرة",
+        "Nueva idea" to "فكرة جديدة",
+        "Una idea de antes" to "فكرة من قبل",
+        "¿Aprendiste algo hoy?" to "هل تعلمت شيئا اليوم؟",
+        "Ideas" to "أفكار",
+        "Fuente" to "المصدر",
+        "Cómo la tengo" to "كيف أراها",
+        "La idea en una línea" to "الفكرة في سطر",
         "A quién ves más" to "أكثر من تلقاهم",
         "A qué hora" to "في أي ساعة",
         "A qué hora aparecen tus emociones" to "ساعات المشاعر",

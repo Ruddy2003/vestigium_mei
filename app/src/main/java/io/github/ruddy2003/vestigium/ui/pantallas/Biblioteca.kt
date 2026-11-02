@@ -765,7 +765,7 @@ fun PantallaObra(nav: Nav) {
         Seccion("Citas", "Las frases que te quedaron. Con ♥ aparecen en tus frases guardadas, junto a las del día.", numero = 3, latin = "SENTENTIAE") {
             Citas(o, sentir) { c -> EdicionIdea.abrir(nav, EdicionIdea.nueva(obra = o, cita = c), contexto = "«${c.texto}»") }
         }
-        Seccion("Ideas", "Lo que entendiste o te hizo pensar, con tus palabras. Se guarda en tu Ideario.", numero = 4, latin = "IDEAE") {
+        Seccion("Ideas", "Lo que entendiste o te hizo pensar, con tus palabras. Se guarda en tu Ideario.", numero = 4) {
             Tarjeta { IdeasDeObra(o, nav) }
         }
         Seccion("Qué te dejó", numero = 5, latin = "IVDICIVM") {

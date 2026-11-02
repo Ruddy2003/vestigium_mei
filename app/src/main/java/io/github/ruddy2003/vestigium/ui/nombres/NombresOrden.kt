@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresOrden {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "CUADERNO DE PRINCIPIOS",
+        "Una idea" to "PRINCIPIO",
+        "Nueva idea" to "PRINCIPIO NUEVO",
+        "Una idea de antes" to "PRINCIPIO ANTERIOR",
+        "¿Aprendiste algo hoy?" to "¿QUÉ APRENDISTE HOY?",
+        "Ideas" to "PRINCIPIOS",
+        "Fuente" to "PROCEDENCIA",
+        "Cómo la tengo" to "GRADO DE ACUERDO",
+        "La idea en una línea" to "EL PRINCIPIO EN UNA LÍNEA",
         "A quién ves más" to "HERMANOS MÁS CERCANOS",
         "A qué hora" to "HORA DE GUARDIA",
         "A qué hora aparecen tus emociones" to "GUARDIA DE CADA EMOCIÓN",

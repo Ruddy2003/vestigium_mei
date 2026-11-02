@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresCiber {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "ideas/",
+        "Una idea" to "idea.md",
+        "Nueva idea" to "nueva_idea.md",
+        "Una idea de antes" to "idea --antigua",
+        "¿Aprendiste algo hoy?" to "aprendido_hoy.log",
+        "Ideas" to "ideas.txt",
+        "Fuente" to "fuente.url",
+        "Cómo la tengo" to "postura.cfg",
+        "La idea en una línea" to "resumen.txt",
         "A otras personas" to "enviar --a otros",
         "A quién ves más" to "top personas",
         "A qué hora" to "por_hora.log",

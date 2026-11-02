@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresSeda {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "Cuaderno de enseñanzas",
+        "Una idea" to "Una enseñanza",
+        "Nueva idea" to "Enseñanza nueva",
+        "Una idea de antes" to "Una enseñanza de otra caravana",
+        "¿Aprendiste algo hoy?" to "¿Qué aprendiste en esta etapa?",
+        "Ideas" to "Enseñanzas",
+        "Fuente" to "De qué caravana vino",
+        "Cómo la tengo" to "Cómo la llevo",
+        "La idea en una línea" to "La enseñanza en una línea",
         "A quién ves más" to "Compañeros más frecuentes",
         "A qué hora" to "Hora de la jornada",
         "A qué hora aparecen tus emociones" to "Horas del ánimo en ruta",

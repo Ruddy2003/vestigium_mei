@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresRevolucion {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "CUADERNO DE LAS LUCES",
+        "Una idea" to "UNA LUZ",
+        "Nueva idea" to "LUZ NUEVA",
+        "Una idea de antes" to "UNA LUZ DE AYER",
+        "¿Aprendiste algo hoy?" to "¿QUÉ APRENDISTE HOY, CIUDADANO?",
+        "Ideas" to "LAS LUCES",
+        "Fuente" to "PROCEDENCIA",
+        "Cómo la tengo" to "CÓMO LA DEFIENDO",
+        "La idea en una línea" to "LA LUZ EN UNA CONSIGNA",
         "A quién ves más" to "CIUDADANOS MÁS FRECUENTES",
         "A qué hora" to "EL RELOJ DEL PUEBLO",
         "A qué hora aparecen tus emociones" to "LAS HORAS DE LAS PASIONES",

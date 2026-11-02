@@ -7,6 +7,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresCueva {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "Las marcas del saber",
+        "Una idea" to "Una marca",
+        "Nueva idea" to "Marca nueva",
+        "Una idea de antes" to "Una marca de otras lunas",
+        "¿Aprendiste algo hoy?" to "¿Qué aprendiste junto al fuego?",
+        "Ideas" to "Marcas",
+        "Fuente" to "Quién lo contó",
+        "Cómo la tengo" to "Cómo la llevo",
+        "La idea en una línea" to "La marca en un trazo",
         "A quién ves más" to "Con quién compartes el fuego",
         "A qué hora" to "A qué altura del sol",
         "A qué hora aparecen tus emociones" to "A qué altura del sol se aviva tu aliento",

@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresArcano {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "Grimorio de ideas",
+        "Una idea" to "Una revelación",
+        "Nueva idea" to "Revelación nueva",
+        "Una idea de antes" to "Una revelación de antaño",
+        "¿Aprendiste algo hoy?" to "¿Qué te fue revelado hoy?",
+        "Ideas" to "Revelaciones",
+        "Fuente" to "El oráculo de origen",
+        "Cómo la tengo" to "Cómo la interpreto",
+        "La idea en una línea" to "La revelación en una línea",
         "A quién ves más" to "Los testigos de siempre",
         "A qué hora" to "Hora del suceso",
         "A qué hora aparecen tus emociones" to "La hora de cada sobresalto",

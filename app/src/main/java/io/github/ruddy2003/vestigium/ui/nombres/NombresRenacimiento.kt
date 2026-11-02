@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresRenacimiento {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "Zibaldone",
+        "Una idea" to "Un pensiero",
+        "Nueva idea" to "Pensiero nuovo",
+        "Una idea de antes" to "Un pensiero di allora",
+        "¿Aprendiste algo hoy?" to "Hai imparato qualcosa oggi?",
+        "Ideas" to "Pensieri",
+        "Fuente" to "Fonte",
+        "Cómo la tengo" to "Come la vedo",
+        "La idea en una línea" to "Il pensiero in una riga",
         "A quién ves más" to "Chi vedi di più",
         "A qué hora" to "A che ora",
         "A qué hora aparecen tus emociones" to "Le ore degli affetti",

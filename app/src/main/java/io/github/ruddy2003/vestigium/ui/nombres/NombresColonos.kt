@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresColonos {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "Libreta de ocurrencias",
+        "Una idea" to "Una ocurrencia",
+        "Nueva idea" to "Ocurrencia nueva",
+        "Una idea de antes" to "Una ocurrencia de otros tiempos",
+        "¿Aprendiste algo hoy?" to "¿Qué aprendiste hoy en la colonia?",
+        "Ideas" to "Ocurrencias",
+        "Fuente" to "De dónde salió",
+        "Cómo la tengo" to "Qué me parece",
+        "La idea en una línea" to "La ocurrencia en una línea",
         "A quién ves más" to "Los vecinos de siempre",
         "A qué hora" to "La hora en el campanario",
         "A qué hora aparecen tus emociones" to "Las horas del ánimo",

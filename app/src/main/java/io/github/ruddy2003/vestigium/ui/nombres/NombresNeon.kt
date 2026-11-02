@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresNeon {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "LA PIZARRA DE IDEAS",
+        "Una idea" to "UNA IDEA AL PASO",
+        "Nueva idea" to "IDEA RECIÉN SALIDA",
+        "Una idea de antes" to "UNA IDEA DE OTRA NOCHE",
+        "¿Aprendiste algo hoy?" to "¿QUÉ APRENDISTE ESTA NOCHE?",
+        "Ideas" to "IDEAS AL PASO",
+        "Fuente" to "QUIÉN LA SOLTÓ",
+        "Cómo la tengo" to "CÓMO LA VEO",
+        "La idea en una línea" to "LA IDEA EN UN LETRERO",
         "A otras personas" to "PARA LOS DE LA CUADRA",
         "A quién ves más" to "LOS DE SIEMPRE EN LA BARRA",
         "A qué hora" to "A QUÉ HORA SE PRENDE",

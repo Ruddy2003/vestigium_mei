@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresAbismo {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "CUADERNO DE HALLAZGOS",
+        "Una idea" to "UN HALLAZGO",
+        "Nueva idea" to "HALLAZGO NUEVO",
+        "Una idea de antes" to "UN HALLAZGO DE OTRA INMERSIÓN",
+        "¿Aprendiste algo hoy?" to "¿QUÉ SACASTE DEL FONDO HOY?",
+        "Ideas" to "HALLAZGOS",
+        "Fuente" to "DE QUÉ PROFUNDIDAD VINO",
+        "Cómo la tengo" to "CÓMO LO VEO DESDE AQUÍ",
+        "La idea en una línea" to "EL HALLAZGO EN UNA LÍNEA",
         "A quién ves más" to "BUZOS QUE MÁS VES",
         "A qué hora" to "HORA DE LA INMERSIÓN",
         "A qué hora aparecen tus emociones" to "EMOCIONES POR HORA DE BUCEO",

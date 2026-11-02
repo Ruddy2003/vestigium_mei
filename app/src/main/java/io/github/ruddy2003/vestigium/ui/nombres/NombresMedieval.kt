@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresMedieval {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "Libro de saberes",
+        "Una idea" to "Un saber",
+        "Nueva idea" to "Saber nuevo",
+        "Una idea de antes" to "Un saber de otrora",
+        "¿Aprendiste algo hoy?" to "¿Qué aprendiste en esta jornada?",
+        "Ideas" to "Saberes",
+        "Fuente" to "De dó viene",
+        "Cómo la tengo" to "Cómo lo tengo por cierto",
+        "La idea en una línea" to "El saber en un renglón",
         "A quién ves más" to "Con quién más tratas",
         "A qué hora" to "En qué hora",
         "A qué hora aparecen tus emociones" to "Horas de los afectos",

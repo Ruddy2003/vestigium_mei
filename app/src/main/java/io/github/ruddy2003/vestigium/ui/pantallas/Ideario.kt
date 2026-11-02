@@ -111,7 +111,7 @@ fun PantallaIdea(nav: Nav) {
         if (n.texto.isNotBlank()) Repo.guardarIdea(n.copy(editada = if (yaGuardada) Fechas.ahoraIso() else n.editada))
     }
     var confirmar by remember { mutableStateOf(false) }
-    Hoja(if (yaGuardada) "Una idea" else "Nueva idea", nav.atras, "Lo que entendiste, con tus palabras. Se guarda sola mientras escribes; solo el texto es obligatorio.", latin = "IDEA") {
+    Hoja(if (yaGuardada) "Una idea" else "Nueva idea", nav.atras, "Lo que entendiste, con tus palabras. Se guarda sola mientras escribes; solo el texto es obligatorio.") {
         contexto?.let { c ->
             Surface(shape = RoundedCornerShape(6.dp), color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
                 Text(c, style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic, modifier = Modifier.padding(12.dp))

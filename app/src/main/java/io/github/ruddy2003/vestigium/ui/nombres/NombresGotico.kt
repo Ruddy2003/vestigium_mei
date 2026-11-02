@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresGotico {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "Libro de meditaciones",
+        "Una idea" to "Una meditación",
+        "Nueva idea" to "Meditación nueva",
+        "Una idea de antes" to "Una meditación de otro tiempo",
+        "¿Aprendiste algo hoy?" to "¿Qué te fue dado entender hoy?",
+        "Ideas" to "Meditaciones",
+        "Fuente" to "De qué códice vino",
+        "Cómo la tengo" to "Cómo la guardo en el alma",
+        "La idea en una línea" to "La meditación en un versículo",
         "A quién ves más" to "Almas más cercanas",
         "A qué hora" to "Hora canónica",
         "A qué hora aparecen tus emociones" to "Las horas del alma",
