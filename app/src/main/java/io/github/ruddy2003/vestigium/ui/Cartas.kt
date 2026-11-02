@@ -129,6 +129,8 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.REFUGIO -> Papeleria(Color(0xFFF1E8CF), Color(0xFFB8AC88), Color(0xFFFFF8E6), Color(0xFF1C6E6A), Color(0xFFE8B83A), Color(0xFFD9572B), Color(0xFF1F2A2A))
     // Papel gris acero, forro carmesí, la placa de latón y la cinta carmesí.
     TemaId.ORDEN -> Papeleria(Color(0xFFC9CDD1), Color(0xFF8A9096), Color(0xFFE2E5E8), Color(0xFF9E1B22), Color(0xFFD6B25A), Color(0xFF9E1B22), Color(0xFF1C2127))
+    // El sobre de telegrama de papel de estraza, forrado de cardenillo, con lacre de ladrillo y el cordel de latón.
+    TemaId.VAPOR -> Papeleria(Color(0xFFD8C08E), Color(0xFFA88E5C), Color(0xFFEBDDB8), Color(0xFF2F6B5E), Color(0xFF9C3D24), Color(0xFFB8862B), Color(0xFF231B14))
     // Blanco clínico con forro cian pálido, la etiqueta cian y el hilo violeta.
     TemaId.LABORATORIO -> Papeleria(Color(0xFFF7FBFC), Color(0xFFB9C6CF), Color(0xFFFFFFFF), Color(0xFFD8F3F7), Color(0xFF0B8FA1), Color(0xFF5E4FD1), Color(0xFF1B2733))
     // Papel de gaceta, forro azul marino, la oblea de ladrillo y el bramante.
@@ -198,6 +200,7 @@ internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
     TemaId.DISTOPIA -> FormaSobre(SolapaSobre.RECTA, 0.01f, CierreSobre.HILO)
     TemaId.REFUGIO -> FormaSobre(SolapaSobre.REDONDA, 0.08f, CierreSobre.BANDA)
     TemaId.ORDEN -> FormaSobre(SolapaSobre.BISEL, 0.01f, CierreSobre.CRUZ)
+    TemaId.VAPOR -> FormaSobre(SolapaSobre.ESCALON, 0.02f, CierreSobre.PRECINTO)
     TemaId.LABORATORIO -> FormaSobre(SolapaSobre.PARABOLA, 0.05f, CierreSobre.HILO)
     TemaId.COLONOS -> FormaSobre(SolapaSobre.PICO, 0.02f, CierreSobre.DOBLE)
     TemaId.NAPOLEON -> FormaSobre(SolapaSobre.PICO, 0.025f, CierreSobre.BANDA)
@@ -461,6 +464,19 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             for (j in 0 until 6) { val ang = j * PI / 3 + PI / 6; drawCircle(hondo, r * 0.06f, Offset(c.x + (r * 0.72f * cos(ang)).toFloat(), c.y + (r * 0.72f * sin(ang)).toFloat())) }
             for (j in 0 until 8) { val ang = j * PI / 4; drawLine(hondo, c, Offset(c.x + (r * 0.5f * cos(ang)).toFloat(), c.y + (r * 0.5f * sin(ang)).toFloat()), r * 0.14f) }
             drawCircle(hondo, r * 0.36f, c); drawCircle(col, r * 0.13f, c)
+        }
+        TemaId.VAPOR -> {
+            // El lacre con el borde dentado de un engrane y, estampada, la rueda motriz de una locomotora: llanta, doce
+            // rayos, el cubo y el contrapeso en media luna.
+            val canto = Vapor.engrane(c, r, 16, 0.9f)
+            translate(r * 0.06f, r * 0.08f) { drawPath(canto, sombra) }
+            drawPath(canto, col)
+            drawCircle(hondo, r * 0.74f, c, style = Stroke(r * 0.05f))
+            drawCircle(hondo, r * 0.58f, c, style = Stroke(r * 0.09f))
+            for (j in 0 until 12) { val ang = j * PI / 6; drawLine(hondo, c, Offset(c.x + (r * 0.55f * cos(ang)).toFloat(), c.y + (r * 0.55f * sin(ang)).toFloat()), r * 0.045f) }
+            drawArc(hondo, 200f, 140f, true, Offset(c.x - r * 0.52f, c.y - r * 0.52f), Size(r * 1.04f, r * 1.04f))
+            drawCircle(hondo, r * 0.14f, c); drawCircle(claro, r * 0.06f, Offset(c.x - r * 0.03f, c.y - r * 0.03f))
+            drawCircle(claro, r * 0.07f, Offset(c.x + (r * 0.36f * cos(PI / 3)).toFloat(), c.y + (r * 0.36f * sin(PI / 3)).toFloat()))
         }
         TemaId.LABORATORIO -> {
             // La etiqueta de muestra: blanca, con la franja de color, el código de barras y su número.
@@ -864,6 +880,20 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
             var y = top + H * 0.14f
             while (y < bot - H * 0.05f) { drawCircle(Color(0xFF6E757D), H * 0.018f, Offset(x, y)); drawCircle(Color.White.copy(alpha = 0.5f), H * 0.007f, Offset(x - H * 0.005f, y - H * 0.005f)); y += H * 0.1f }
         }
+        // El sobre de telegrama: la franja impresa de la compañía, con su locomotora de grabado, y la línea perforada de abajo.
+        TemaId.VAPOR -> {
+            val grabado = pa.tinta.copy(alpha = 0.5f)
+            drawRect(pa.lacre.copy(alpha = 0.7f), Offset(l, top + H * 0.06f), Size(W, H * 0.03f))
+            val x0 = l + W * 0.06f; val y0 = top + H * 0.17f; val s = H * 0.08f
+            drawRect(grabado, Offset(x0, y0), Size(s * 2.2f, s * 0.9f))
+            drawRect(grabado, Offset(x0 + s * 2.2f, y0 - s * 0.5f), Size(s * 1.1f, s * 1.4f))
+            drawRect(grabado, Offset(x0 + s * 0.3f, y0 - s * 0.6f), Size(s * 0.35f, s * 0.6f))
+            drawCircle(grabado, s * 0.22f, Offset(x0 + s * 1.2f, y0 - s * 0.05f))
+            for (k in 0..2) drawCircle(grabado, s * 0.32f, Offset(x0 + s * (0.5f + k * 0.95f), y0 + s * 1.15f))
+            drawLine(grabado, Offset(x0 - s * 0.3f, y0 + s * 1.5f), Offset(x0 + s * 3.6f, y0 + s * 1.5f), s * 0.08f)
+            var x = l + W * 0.04f
+            while (x < r - W * 0.04f) { drawCircle(pa.sombra.copy(alpha = 0.7f), H * 0.009f, Offset(x, bot - H * 0.08f)); x += maxOf(W * 0.025f, 1f) }
+        }
         TemaId.LABORATORIO -> {
             // El código de barras de la muestra, de canto junto al borde derecho.
             val az = java.util.Random(4); var y = top + H * 0.16f; val x = r - W * 0.1f
@@ -1239,6 +1269,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "¡Hola, yo del mañana!…", "Escribe tu mensaje al vecino…", "Mensaje para %s en la bóveda", "La bóveda no se abre antes de tiempo.", "Toca para escribir con optimismo…")
     TemaId.ORDEN -> VozCarta("SELLO LEVANTADO: ABRIR", "Remachada", "AL CUSTODIO DEL %s", "CUSTODIO DE %s", "AL CUSTODIO QUE VENDRÁ",
         "Custodio del futuro:…", "Redacta el despacho…", "Despacho para %s remachado", "La Orden no permite abrirla antes.", "TOCA PARA REDACTAR EL PARTE")
+    TemaId.VAPOR -> VozCarta("Llegó el telegrama: ábrelo", "Precintado en la estación", "Para mi yo del %s", "Para mi yo · %s", "Para mi yo de la próxima estación",
+        "Estimado yo del futuro: STOP…", "Redacta tu telegrama…", "Telegrama para %s entregado al jefe de estación", "Ni el expreso del Norte lo lleva antes.", "Toca para dictar el telegrama…")
     TemaId.LABORATORIO -> VozCarta("Muestra lista para abrir", "Etiquetada", "Para el sujeto del %s", "Sujeto · %s", "Para el sujeto del futuro",
         "Observación para mi yo futuro:…", "Anota tu mensaje…", "Mensaje para %s etiquetado", "Protocolo: no abrir antes de la fecha.", "Toca para anotar…")
     TemaId.COLONOS -> VozCarta("Llegó el correo: ábrela", "Cerrada con oblea", "Para el vecino que seré el %s", "Para mí, %s", "Para el vecino que seré",
@@ -1297,6 +1329,7 @@ private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.DISTOPIA -> LetraExtra.oswald
     TemaId.REFUGIO -> LetraExtra.vt323
     TemaId.ORDEN -> LetraExtra.estarcido
+    TemaId.VAPOR -> LetraExtra.caldera
     TemaId.LABORATORIO -> LetraExtra.jost
     TemaId.COLONOS -> LetraExtra.fell
     TemaId.NAPOLEON -> LetraExtra.bodoniTitulo

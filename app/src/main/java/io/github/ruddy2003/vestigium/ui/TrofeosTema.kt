@@ -212,6 +212,7 @@ object TrofeosTema {
             TemaId.NEON -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.REFUGIO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.ORDEN -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.VAPOR -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.LABORATORIO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.ESPACIO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.ABISMO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
@@ -252,6 +253,7 @@ object TrofeosTema {
             TemaId.NEON -> with(TrofeosMas) { neon(categoria, p) }
             TemaId.REFUGIO -> with(TrofeosMas) { refugio(categoria, p) }
             TemaId.ORDEN -> with(TrofeosMas) { orden(categoria, p) }
+            TemaId.VAPOR -> with(TrofeosMas) { vapor(categoria, p) }
             TemaId.LABORATORIO -> with(TrofeosMas) { laboratorio(categoria, p) }
             TemaId.ESPACIO -> with(TrofeosMas) { espacio(categoria, p) }
             TemaId.ABISMO -> with(TrofeosMas) { abismo(categoria, p) }

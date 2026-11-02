@@ -78,6 +78,8 @@ private enum class BarridoTema {
     CRUZ,
     /** Mesoamérica: el rombo escalonado de los frisos, que crece grada por grada. */
     GRADAS,
+    /** Vapor victoriano: una bocanada de vapor que se hincha desde el toque. */
+    BOCANADA,
 }
 
 /**
@@ -118,6 +120,8 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.REFUGIO -> MatizMovimiento(BarridoTema.ESCOTILLA, 780, CubicBezierEasing(0.7f, 0f, 0.3f, 1f), 0f, 22f, 1f, 380, 50, FastOutSlowInEasing, 1f, 0.4f, 900f)
     // Engrane que gira; acero pesado.
     TemaId.ORDEN -> MatizMovimiento(BarridoTema.ENGRANE, 760, CubicBezierEasing(0.5f, 0f, 0.2f, 1f), 0f, 12f, 1f, 360, 50, FastOutSlowInEasing, 1.2f, 0.9f, 1400f)
+    // Una bocanada de vapor que se hincha desde el toque; las piezas llegan de lado y frenan como un tren en el andén.
+    TemaId.VAPOR -> MatizMovimiento(BarridoTema.BOCANADA, 820, CubicBezierEasing(0.3f, 0f, 0.15f, 1f), 18f, 4f, 0.98f, 400, 55, LinearOutSlowInEasing, 1.05f, 0.7f, 1100f)
     // Membrana de célula que ondula; preciso y contenido.
     TemaId.LABORATORIO -> MatizMovimiento(BarridoTema.MEMBRANA, 680, FastOutSlowInEasing, 0f, 8f, 0.96f, 400, 50, FastOutSlowInEasing, 0.85f, 0.8f, 1200f)
     // Columnas de periódico que se imprimen de arriba abajo.
@@ -233,6 +237,8 @@ internal enum class VivoTema(val periodo: Int) {
     JEROGLIFOS(20000),
     /** Mesoamérica: las dos ruedas del tzolk'in (13 números y 20 signos) que avanzan un día por segundo; 260 días = 260 s. */
     TZOLKIN(260000),
+    /** Vapor victoriano: el hollín de las chimeneas y, de noche, el gas de alumbrado. */
+    HOLLIN(20000),
 }
 
 /** El tipo de fondo vivo de cada tema (solo el Botánico cambia entre el día y la noche; el Refugio suma el barrido de noche). */
@@ -248,6 +254,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
     TemaId.REFUGIO -> VivoTema.VAPOR             // vapor que sube, de día y de noche
     TemaId.ORDEN -> VivoTema.FRAGUA              // chispas de fragua en parábola
+    TemaId.VAPOR -> VivoTema.HOLLIN              // copos de hollín que caen girando; de noche, el halo del gas de alumbrado
     TemaId.LABORATORIO -> VivoTema.BURBUJAS      // burbujas que suben en el matraz
     TemaId.COLONOS -> VivoTema.GACETA            // hojas de periódico que arrastra el viento
     TemaId.NAPOLEON -> VivoTema.CHARRETERAS      // destellos de oro de charreteras
@@ -518,6 +525,25 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             val l = 8f * u * m.tam
             val chispa = if (oscuro) Color(0xFFFFB04A) else e.primary
             drawLine(al(chispa, (1f - tau) * (if (oscuro) 0.55f else 0.28f)), Offset(x, y), Offset(x - vx / n * l, y - dy / n * l), 1.2f * u, cap = StrokeCap.Round)
+        }
+        VivoTema.HOLLIN -> {
+            // El hollín de las chimeneas: copos que bajan de lado, despacio, girando sobre sí mismos. De noche, además, el
+            // halo amarillo de dos faroles de gas que tiembla arriba.
+            if (oscuro) listOf(0.12f, 0.88f).forEachIndexed { i, fx ->
+                val c = Offset(w * fx, h * 0.07f); val r = 130f * u * (1f + 0.05f * senoVuelta(t * 11 + i * 0.37f))
+                drawCircle(Brush.radialGradient(listOf(al(Color(0xFFF2C46A), 0.09f), Color.Transparent), center = c, radius = r), r, c)
+            }
+            val copo = if (oscuro) Color(0xFFB09F82) else Color(0xFF231B14)
+            motas.take(30).forEach { m ->
+                val k = vueltas(m)
+                val baja = fraccionVivo(m.y + t * k)
+                val x = (fraccionVivo(m.x + baja * 0.22f) + 0.015f * senoVuelta(t * 2 * k + m.fase)) * w
+                val y = h * (-0.04f + baja * 1.08f)
+                val s = 2.4f * u * (0.6f + m.tam)
+                rotate(360f * (t * k + m.fase), Offset(x, y)) {
+                    drawRect(al(copo, (if (oscuro) 0.2f else 0.14f) * senoVuelta(baja * 0.5f)), Offset(x - s, y - s * 0.35f), Size(2 * s, s * 0.7f))
+                }
+            }
         }
         VivoTema.BURBUJAS -> motas.take(22).forEach { m ->
             // Burbujas de contorno fino, con su brillo, que suben temblando y crecen un poco.
@@ -1104,6 +1130,15 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
             ruta.cubicTo(c.x - s, c.y - s * 0.9f, c.x - s * 0.3f, c.y - s * 1.5f, c.x, c.y - s * 1.8f)
             ruta.cubicTo(c.x + s * 0.3f, c.y - s * 1.5f, c.x + s, c.y - s * 0.9f, c.x + s, c.y - s * 0.2f)
             ruta.lineTo(c.x + s, c.y + s); ruta.close()
+        }
+        BarridoTema.BOCANADA -> {
+            // La bocanada: un núcleo y nueve lóbulos alrededor que giran un poco mientras crece, como el vapor que sale de la válvula.
+            ruta.addOval(Rect(c, r * 1.05f))
+            for (k in 0 until 9) {
+                val a = Math.toRadians(k * 40.0 + 50.0 * p)
+                val q = Offset(c.x + (r * 0.95f * cos(a)).toFloat(), c.y + (r * 0.95f * sin(a)).toFloat())
+                ruta.addOval(Rect(q, r * (0.42f + 0.08f * ((k * 7) % 3))))
+            }
         }
         BarridoTema.CRUZ -> {
             // La cruz patada sobre su disco: el disco cubre el círculo de radio r y los cuatro brazos se ensanchan hacia fuera.

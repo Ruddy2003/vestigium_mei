@@ -76,6 +76,7 @@ object Gato {
         TemaId.DISTOPIA -> true
         TemaId.REFUGIO -> true
         TemaId.ORDEN -> true
+        TemaId.VAPOR -> false
         TemaId.LABORATORIO -> true
         TemaId.COLONOS -> true
         TemaId.NAPOLEON -> true

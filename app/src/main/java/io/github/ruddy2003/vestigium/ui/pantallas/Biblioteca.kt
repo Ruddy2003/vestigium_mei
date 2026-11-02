@@ -275,6 +275,14 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
             val y = h - (12 + 5 * k) * u
             drawPath(Path().apply { moveTo(w / 2 - 12 * u, y - 5 * u); lineTo(w / 2, y); lineTo(w / 2 + 12 * u, y - 5 * u) }, tenue, style = Stroke(2f * u))
         }
+        // El engrane estampado al pie de la portada, entre dos filetes, y dos remaches arriba.
+        TemaId.VAPOR -> {
+            val y = h - 16 * u
+            drawPath(io.github.ruddy2003.vestigium.ui.Vapor.engrane(Offset(w / 2, y), 7 * u, 10, 0.78f), tenue)
+            drawCircle(l, 2.4f * u, Offset(w / 2, y))
+            linea(w * 0.18f, y, w / 2 - 10 * u, y); linea(w / 2 + 10 * u, y, w * 0.82f, y)
+            listOf(w * 0.14f, w * 0.86f).forEach { x -> drawCircle(tenue, 1.8f * u, Offset(x, 8 * u)) }
+        }
         // Papel cuadriculado de cuaderno de laboratorio.
         TemaId.LABORATORIO -> {
             val malla = a.copy(alpha = 0.12f); var x = 0f

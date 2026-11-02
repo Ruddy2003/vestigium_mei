@@ -340,6 +340,41 @@ object Frases {
         f("Nihil enim est quod non adsidua meditatio facillimum reddat.", "No hay nada que la práctica constante no vuelva facilísimo.", "Vegecio, Compendio de técnica militar I, 19"),
     )
 
+    /** Vapor victoriano: ingenieros, inventores y escritores del siglo del vapor y del ferrocarril (traducciones propias). */
+    val VAPOR = listOf(
+        f("I sell here, Sir, what all the world desires to have — Power.", "Aquí vendo, señor, lo que todo el mundo desea tener: fuerza.",
+            "Matthew Boulton, socio de James Watt, en su fábrica del Soho, según James Boswell, Vida de Samuel Johnson (1776)"),
+        f("Night and day the conquering engines rumbled at their distant work…", "Noche y día las máquinas conquistadoras retumbaban en su trabajo lejano…",
+            "Charles Dickens, Dombey e hijo, cap. 15, 1848"),
+        f("The first shock of a great earthquake had, just at that period, rent the whole neighbourhood to its centre.",
+            "La primera sacudida de un gran terremoto había partido, justo entonces, todo el barrio hasta su centro (llegaba el ferrocarril).", "Charles Dickens, Dombey e hijo, cap. 6, 1848"),
+        f("It was a town of machinery and tall chimneys, out of which interminable serpents of smoke trailed themselves for ever and ever, and never got uncoiled.",
+            "Era una ciudad de máquinas y chimeneas altas, de las que salían interminables serpientes de humo que se arrastraban por siempre jamás sin desenroscarse nunca.", "Charles Dickens, Tiempos difíciles, libro I, cap. 5, 1854"),
+        f("Annual income twenty pounds, annual expenditure nineteen nineteen and six, result happiness. Annual income twenty pounds, annual expenditure twenty pounds ought and six, result misery.",
+            "Ingreso anual, veinte libras; gasto anual, diecinueve libras con diecinueve chelines y seis peniques: resultado, felicidad. Ingreso anual, veinte libras; gasto anual, veinte libras y seis peniques: resultado, miseria.",
+            "El señor Micawber, en David Copperfield de Charles Dickens, cap. 12, 1850"),
+        f("Life is made of ever so many partings welded together.", "La vida está hecha de muchísimas despedidas soldadas unas con otras.", "Joe Gargery, el herrero, en Grandes esperanzas de Charles Dickens, cap. 27, 1861"),
+        f("It was the best of times, it was the worst of times.", "Era el mejor de los tiempos, era el peor de los tiempos.", "Charles Dickens, Historia de dos ciudades, 1859"),
+        f("Heaven helps those who help themselves.", "El cielo ayuda a quienes se ayudan a sí mismos.", "Samuel Smiles, ¡Ayúdate! (Self-Help), cap. 1, 1859, que la llama «máxima bien probada»"),
+        f("The spirit of self-help is the root of all genuine growth in the individual.", "El espíritu de ayudarse a uno mismo es la raíz de todo crecimiento verdadero en la persona.", "Samuel Smiles, ¡Ayúdate! (Self-Help), cap. 1, 1859"),
+        f("We often discover what will do, by finding out what will not do; and probably he who never made a mistake never made a discovery.",
+            "A menudo descubrimos lo que sirve averiguando lo que no sirve; y probablemente quien nunca se equivocó nunca descubrió nada.", "Samuel Smiles, ¡Ayúdate! (Self-Help), cap. 11, 1859"),
+        f("Man is a Tool-using Animal… Without Tools he is nothing, with Tools he is all.", "El hombre es un animal que usa herramientas… Sin herramientas no es nada; con herramientas lo es todo.", "Thomas Carlyle, Sartor Resartus, libro I, cap. 5, 1833-1834"),
+        f("It is the Age of Machinery, in every outward and inward sense of that word.", "Es la Era de la Maquinaria, en todos los sentidos, exteriores e interiores, de esa palabra.", "Thomas Carlyle, «Signos de los tiempos», 1829"),
+        f("Blessed is he who has found his work; let him ask no other blessedness.", "Bienaventurado quien ha encontrado su trabajo; que no pida otra bienaventuranza.", "Thomas Carlyle, Pasado y presente, libro III, cap. 11, 1843"),
+        f("Let the great world spin for ever down the ringing grooves of change.", "Que el gran mundo gire por siempre por los surcos resonantes del cambio.",
+            "Alfred Tennyson, «Locksley Hall», 1842 (escribió «surcos» porque creía que los trenes corrían por ranuras)"),
+        f("To strive, to seek, to find, and not to yield.", "Luchar, buscar, encontrar y no rendirse.", "Alfred Tennyson, «Ulises», 1842"),
+        f("I like to see it lap the Miles — / And lick the Valleys up —", "Me gusta verlo beberse las millas y lamer los valles.", "Emily Dickinson, sobre el tren, poema 383 (edición Franklin), hacia 1862"),
+        f("Type of the modern — emblem of motion and power — pulse of the continent.", "Tipo de lo moderno, emblema del movimiento y la fuerza, pulso del continente.", "Walt Whitman, «A una locomotora en invierno», 1876"),
+        f("Faster than fairies, faster than witches, / Bridges and houses, hedges and ditches.", "Más rápido que las hadas, más rápido que las brujas: puentes y casas, setos y zanjas.",
+            "Robert Louis Stevenson, «Desde un vagón de tren», Jardín de versos para niños, 1885"),
+        f("There is no wealth but life.", "No hay más riqueza que la vida.", "John Ruskin, Hasta este último, ensayo IV, 1860"),
+        f("Have nothing in your houses that you do not know to be useful, or believe to be beautiful.", "No tengas en tu casa nada que no sepas útil o creas hermoso.", "William Morris, «La belleza de la vida», conferencia de 1880"),
+        f("The growing good of the world is partly dependent on unhistoric acts.", "El bien creciente del mundo depende en parte de actos que no entran en la historia.", "George Eliot, Middlemarch, final, 1871-1872"),
+        f("Begin at the beginning, and go on till you come to the end: then stop.", "Empieza por el principio y sigue hasta llegar al final; entonces, para.", "El Rey, en Alicia en el país de las maravillas de Lewis Carroll, cap. 12, 1865"),
+    )
+
     val LABORATORIO = listOf(
         f("When you can measure what you are speaking about, and express it in numbers, you know something about it.",
             "Cuando puedes medir aquello de lo que hablas y expresarlo en números, sabes algo de ello.", "Lord Kelvin, 1883"),
@@ -994,6 +1029,7 @@ object Frases {
         TemaId.DISTOPIA -> DISTOPIA
         TemaId.REFUGIO -> REFUGIO
         TemaId.ORDEN -> ORDEN
+        TemaId.VAPOR -> VAPOR
         TemaId.LABORATORIO -> LABORATORIO
         TemaId.COLONOS -> COLONOS
         TemaId.NAPOLEON -> NAPOLEON
@@ -1036,6 +1072,7 @@ object Frases {
         TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"
         TemaId.REFUGIO -> "MENSAJE DEL DÍA"
         TemaId.ORDEN -> "ORDEN DEL DÍA"
+        TemaId.VAPOR -> "Sentencia del horario"
         TemaId.LABORATORIO -> "NOTA DEL DÍA"
         TemaId.COLONOS -> "Del almanaque"
         TemaId.NAPOLEON -> "BOLETÍN DEL EJÉRCITO"

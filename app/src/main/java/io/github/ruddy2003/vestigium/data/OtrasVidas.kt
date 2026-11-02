@@ -740,6 +740,26 @@ object OtrasVidas {
                 "lectura" to i(15, "Manuales técnicos.")),
             fuentes = emptyList()),
 
+        Vida("fogonero", "Albert", "Fogonero de locomotora", "Una línea del norte de Inglaterra", "1880", 1880, "tema", "vapor", edad = 24,
+            historia = listOf(
+                "Albert empezó de muchacho limpiando máquinas en el depósito, y hace unos años lo subieron a la plataforma. Su oficio es el fuego: echar carbón al hogar en paladas cortas y bien repartidas, vigilar el agua de la caldera y tener la presión que le pide el maquinista antes de cada cuesta.",
+                "La plataforma casi no tiene techo: de frente le pega el calor del hogar abierto y de espaldas el viento y la lluvia del norte. En un turno recorre cientos de kilómetros sin dar casi un paso, de pie, girando con la pala entre el ténder y la puerta del fuego. Los turnos de doce horas o más son normales; hasta 1893 ninguna ley se mete con las horas de los ferroviarios, aunque las tripulaciones cansadas causan accidentes.",
+                "Para aguantar come como pocos: pan, queso, tocino que fríe sobre la pala limpia, papas y té muy dulce en una lata. Al salir, una o dos pintas en la taberna con los del depósito, que son casi toda su gente. Sabe leer y firmar, y su meta es cambiar de lado en la plataforma: dejar la pala y tomar el regulador, ser maquinista.",
+            ),
+            dia = listOf(t(22.0, 4.5, Hacer.DORMIR), t(4.5, 5.0, Hacer.COMER), t(5.0, 5.5, Hacer.CAMINO), t(5.5, 17.5, Hacer.TRABAJO, "palear carbón, turno de 12 h"), t(17.5, 18.0, Hacer.CAMINO),
+                t(18.0, 19.0, Hacer.COMER), t(19.0, 22.0, Hacer.GENTE, "la taberna")),
+            datos = mapOf("pasos" to e(6000, "Casi todo el día de pie en la plataforma: pocos pasos y mucha pala."), "km_anio" to e(60000, "Unos 200 km por turno, seis días a la semana, siempre sobre la máquina."),
+                "kcal" to e(4500, "Lo más alto que se calcula para los obreros de su época; palear carbón doce horas es de los trabajos más pesados."), "proteina" to e(110),
+                "azucar" to e(70, "Hacia 1880 Gran Bretaña consumía unos 26 kg de azúcar por persona al año, buena parte en el té."), "fibra" to e(25), "alcohol" to e(30, "Una o dos pintas de cerveza floja al día."),
+                "sueno" to e(6.5), "dormir" to e(22.0), "trabajo" to e(72, "Doce horas, seis días a la semana."), "aire_libre" to e(12, "La plataforma va casi al descubierto."), "pantalla" to e(0),
+                "notificaciones" to e(60, "Silbatos, señales de la vía y las órdenes del maquinista."), "musica" to e(0.5, "Canciones en la taberna."), "personas_dia" to e(40), "conocidas" to e(1500),
+                "poblacion" to e(30000, "Un pueblo ferroviario del norte, con su depósito de máquinas."), "lejos" to e(250, "El otro extremo de la línea."), "estatura" to e(166),
+                "vida" to e(43, "En Inglaterra y Gales eran unos 40 años al nacer en 1841, y algo más hacia 1880."), "vida_adulto" to e(62), "hijos" to e(4.8),
+                "alfabetizacion" to e(86, "Hombres que firmaron su acta de matrimonio hacia 1880."), "lectura" to e(1)),
+            fuentes = listOf("Fogonero de máquina de vapor" to "${W}Fireman_(steam_engine)",
+                "Clayton y Rowbotham (2008): la dieta de los obreros victorianos" to "https://doi.org/10.1258/jrsm.2008.080112",
+                "Las horas de los ferroviarios y la ley de 1893 (Railway Work, Life & Death)" to "https://www.railwayaccidents.port.ac.uk/working-9-5-not-in-1915-long-hours-1")),
+
         Vida("cientifica", "La doctora", "Científica del instituto subterráneo", "Un laboratorio bajo una ciudad en ruinas", "2287", 2287, "tema", "laboratorio", edad = 41, ficticia = true,
             inspiracion = "Inspirado en el instituto científico escondido bajo tierra de la ficción posapocalíptica.",
             historia = listOf(

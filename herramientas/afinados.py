@@ -519,6 +519,45 @@ def orden():
                tecla=mezclar((0, clic(0.012, (500, 2200)), 1), (0, tambor(hz(T - 24), 0.03, 0.2), 0.25)),
                rascar=rascado((2200, 8000), campana(hz(T + 24), 0.5, 2.76, 2.0, 7), aspereza=140))
 
+def vapor():
+    # La menor con la sexta: el silbato de tres campanas de las locomotoras (La, Do y Fa), el «chu» del escape de la
+    # chimenea, la picadora del revisor, el tintineo del latón y, en lo solemne, el armonio de una estación con eco.
+    T = 0    # La4
+    def silbato(notas, d, aire=0.35):
+        t = t_(d)
+        x = sum(np.sin(2 * np.pi * hz(n) * t) + 0.3 * np.sin(2 * np.pi * hz(n) * 2 * t) for n in notas) / len(notas)
+        soplo = filtro(ruido(d), 'banda', (hz(notas[0]) * 0.9, hz(notas[-1]) * 3.2)) * aire
+        return (x + soplo) * np.minimum(1, t / 0.04) * np.minimum(1, (d - t) / 0.08)
+    def chu(d=0.16, brillo=1800):
+        return filtro(ruido(d), 'banda', (180, brillo)) * env(int(d * SR), 0.004, d * 0.5, 3)
+    tink = lambda n, d=0.2: mezclar((0, clic(0.008, (1800, 6000)), 0.45), (0, campana(hz(n), d, 3.0, 1.0, 14), 0.6))
+    armonio = lambda f, d: organo(f, d, 0.12)
+    with azar_propio('vapor_base'):
+        S['vapor'] = dict(
+            toque=tink(T + 12, 0.14),
+            elegir=silbato([T + 19], 0.12, 0.25),
+            pasar=mezclar((0, chu(0.12), 0.8), (0.1, chu(0.08, 1400), 0.4)),
+            abrir=mezclar((0, filtro(ruido(0.38), 'alto', 2200) * env(int(0.38 * SR), 0.12, 0.25, 2), 0.45), (0.3, tambor(hz(T - 24), 0.3, 0.5), 0.8),
+                          (0.3, tink(T + 7, 0.4), 0.4)),
+            guardar=mezclar((0, clic(0.012, (900, 3500)), 0.9), (0.01, tambor(hz(T - 24), 0.2, 0.4), 0.6), (0.09, tink(T + 12, 0.5), 0.6)),
+            logro=reverb(mezclar(*[(s, chu(0.16), 0.75) for s in (0.0, 0.36, 0.64, 0.86, 1.02)],
+                                 (1.12, silbato([T, T + 3, T + 8], 0.9), 0.6)), 1.3, 0.22),
+            tema=reverb(mezclar((0, chu(0.14), 0.6), (0.18, silbato([T, T + 3, T + 8], 0.55), 0.6)), 1.2, 0.24),
+            aviso=reverb(mezclar((0, silbato([T, T + 3, T + 8], 0.18), 0.55), (0.28, silbato([T, T + 3, T + 8], 0.6), 0.55),
+                                 (0.95, campana(hz(T + 12), 1.2, 2.76, 1.4, 2.5), 0.35)), 1.4, 0.26),
+            solemne=reverb(mezclar(*[(0.85 * i, acorde(armonio, [T - 12 + a for a in ch], 0.8), 0.45) for i, ch in enumerate([[0, 3, 7], [-4, 0, 3], [-7, -3, 0], [0, 3, 8, 12]])],
+                                   (2.55, silbato([T, T + 3, T + 8], 1.0, 0.25), 0.45),
+                                   *[(0.85 * i, chu(0.2, 1200), 0.35) for i in range(3)]), 2.6, 0.34))
+
+    # Error: el silbato que se ahoga medio tono abajo y el vapor que escapa. Cambio: la palanca del regulador y la
+    # válvula que tintinea a la quinta. Tecla: el manipulador del telégrafo (golpe y rebote). Rascar: latón de caldera.
+    with azar_propio('vapor'):
+        nuevos('vapor',
+               error=mezclar((0, silbato([T + 7], 0.12), 0.45), (0.13, silbato([T + 6], 0.3), 0.45), (0.13, filtro(ruido(0.35), 'alto', 2500) * env(int(0.35 * SR), 0.02, 0.2), 0.25)),
+               cambio=mezclar((0, tambor(hz(T - 19), 0.08, 0.5), 0.6), (0.07, tink(T + 19, 0.25), 0.6)),
+               tecla=mezclar((0, clic(0.01, (900, 3200)), 1), (0.035, clic(0.008, (1500, 4500)), 0.55), (0, tambor(hz(T - 12), 0.03, 0.2), 0.2)),
+               rascar=rascado((1500, 6800), campana(hz(T + 26), 0.6, 3.0, 1.2, 5), aspereza=120))
+
 def laboratorio():
     # Re menor: el instituto bajo tierra. Senos fríos, colchones de sintetizador, aire filtrado y un pulso grave lejano.
     T = -7   # Re4
@@ -1208,6 +1247,7 @@ if __name__ == '__main__':
         distopia,
         refugio,
         orden,
+        vapor,
         laboratorio,
         colonos,
         napoleon,

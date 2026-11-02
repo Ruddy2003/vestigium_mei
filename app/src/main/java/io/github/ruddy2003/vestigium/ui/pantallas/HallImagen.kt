@@ -118,6 +118,7 @@ object HallImagen {
         TemaId.DISTOPIA -> "EXPEDIENTE 07-118 · VESTIGIUM MEI" to "DOCUMENTO REVISADO · ARCHÍVESE"
         TemaId.REFUGIO -> "REFUGIO · REGISTRO DEL RESIDENTE" to "Todo en orden bajo tierra"
         TemaId.ORDEN -> "CODEX ORDINIS · VESTIGIUM MEI" to "AD SCIENTIAM CUSTODIENDAM"
+        TemaId.VAPOR -> "Gran Exposición de Vestigium Mei · catálogo oficial" to "Fin del catálogo · a todo vapor"
         TemaId.LABORATORIO -> "VESTIGIUM MEI · LAB. 3 · LOTE 001" to "Fin del informe · n = 1"
         TemaId.COLONOS -> "La Gaceta del Pueblo · Vestigium Mei" to "Impreso en el taller del pueblo"
         TemaId.NAPOLEON -> "Bulletin de la Grande Armée · Vestigium Mei" to "Fait au quartier général"

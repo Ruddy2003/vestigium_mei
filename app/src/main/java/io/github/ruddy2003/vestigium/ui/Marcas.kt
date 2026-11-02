@@ -108,6 +108,10 @@ object Marcas {
         ESCUDETE,
         /** Prehistoria: la nube de ocre soplado detrás de la palabra, con motas en el borde, como alrededor de una mano en la pared. */
         SOPLO,
+        /** Billete de tren de cartón: las muescas de los lados y el agujero del picado. */
+        BILLETE,
+        /** Subrayado de vía: dos carriles sobre sus traviesas. */
+        VIA,
     }
 
     /** Cómo se ve una marca: color de la letra, el trazo detrás y si va en negrita o cursiva. */
@@ -135,6 +139,8 @@ object Marcas {
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
             TemaId.REFUGIO -> Aspecto(if (persona) p else s, if (persona) p else s, Forma.RECUADRO, negrita = persona)
             TemaId.ORDEN -> if (persona) Aspecto(p, p, Forma.PLACA, negrita = true) else Aspecto(t, t, Forma.DOBLE)
+            // Las personas, en un billete de tren de cartón (picado); los temas, sobre la vía.
+            TemaId.VAPOR -> if (persona) Aspecto(cs.onBackground, p, Forma.BILLETE, negrita = true) else Aspecto(s, s, Forma.VIA)
             TemaId.LABORATORIO -> if (persona) Aspecto(p, p, Forma.MARCADOR, negrita = true) else Aspecto(s, s, Forma.ESCALA)
             TemaId.COLONOS -> if (persona) Aspecto(p, p, Forma.RECORTE, negrita = true) else Aspecto(s, s, Forma.ONDULADO)
             TemaId.NAPOLEON -> if (persona) Aspecto(p, t, Forma.SUBRAYADO, negrita = true, cursiva = true) else Aspecto(s, s, Forma.NINGUNA, cursiva = true)
@@ -175,6 +181,8 @@ object Marcas {
         Forma.GLIFO -> c.copy(alpha = 0.12f)
         Forma.NUMERAL -> Color.Unspecified
         Forma.SOPLO -> c.copy(alpha = 0.18f)
+        Forma.BILLETE -> c.copy(alpha = 0.16f)
+        Forma.VIA -> Color.Unspecified
     }
 
     /** En un campo de texto, las formas que van debajo de la palabra se quedan en un subrayado. */
@@ -189,6 +197,8 @@ object Marcas {
         Forma.GLIFO -> false
         Forma.NUMERAL -> true
         Forma.SOPLO -> false
+        Forma.BILLETE -> false
+        Forma.VIA -> true
     }
 
     /** El estilo de letra de la marca. Con [conFondo], lo que no se puede dibujar (en un campo de texto) va como fondo de la letra. */
@@ -475,6 +485,22 @@ object Marcas {
                     val a = az.nextFloat() * 2 * kotlin.math.PI.toFloat(); val k = 0.85f + az.nextFloat() * 0.3f
                     drawCircle(c.copy(alpha = 0.35f), (0.6f + az.nextFloat() * 0.8f) * u, Offset(ce.x + rx * k * kotlin.math.cos(a), ce.y + ry * k * kotlin.math.sin(a)))
                 }
+            }
+            Forma.BILLETE -> {
+                // El billete de cartón: fondo color crema, el contorno con una muesca redonda a cada lado y el agujero del picado.
+                val t = rr.top + h * 0.06f; val b = rr.bottom - h * 0.04f; val iz = rr.left - 6 * u; val de = rr.right + 6 * u; val m = (t + b) / 2; val k = 1.8f * u
+                val billete = Path().apply {
+                    moveTo(iz, t); lineTo(de, t); lineTo(de, m - k); quadraticTo(de - k, m, de, m + k); lineTo(de, b); lineTo(iz, b); lineTo(iz, m + k); quadraticTo(iz + k, m, iz, m - k); close()
+                }
+                drawPath(billete, Color(0xFFE9D9A8).copy(alpha = 0.6f))
+                drawPath(billete, c.copy(alpha = 0.85f), style = Stroke(0.9f * u))
+                drawCircle(c.copy(alpha = 0.7f), 0.9f * u, Offset(de - 3.4f * u, t + 2.4f * u))
+            }
+            Forma.VIA -> {
+                val y = baja
+                var x = rr.left; while (x <= rr.right) { drawLine(c.copy(alpha = 0.5f), Offset(x, y - 2.2f * u), Offset(x, y + 1.4f * u), 1.1f * u); x += 3.2f * u }
+                drawLine(c.copy(alpha = 0.9f), Offset(rr.left - u, y - 1.2f * u), Offset(rr.right + u, y - 1.2f * u), 0.8f * u)
+                drawLine(c.copy(alpha = 0.9f), Offset(rr.left - u, y + 0.6f * u), Offset(rr.right + u, y + 0.6f * u), 0.8f * u)
             }
         }
     }

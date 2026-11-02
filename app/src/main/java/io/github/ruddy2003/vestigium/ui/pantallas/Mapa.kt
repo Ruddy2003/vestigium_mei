@@ -115,6 +115,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Orden: acero.
         TemaId.ORDEN -> if (oscuro) { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.76f, 0.8f, 0.86f, 6f, 8f, 10f)) }
             else { m.setSaturation(0.1f); m.postConcat(tinte(0.9f, 0.92f, 0.95f, 0f, 0f, 2f)) }
+        // Vapor victoriano: el plano de la red en sepia sobre papel crema; de noche, a la luz amarilla del gas.
+        TemaId.VAPOR -> if (oscuro) { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.9f, 0.78f, 0.55f, 8f, 4f, -4f)) }
+            else { m.setSaturation(0.15f); m.postConcat(tinte(1.02f, 0.95f, 0.82f, 4f, 2f, -6f)) }
         // Laboratorio: blanco clínico con un toque cian; de noche, azul de monitor.
         TemaId.LABORATORIO -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.58f, 0.8f, 0.95f, 2f, 6f, 12f)) }
             else { m.setSaturation(0.2f); m.postConcat(tinte(0.94f, 0.98f, 1.0f, 2f, 4f, 6f)) }
@@ -261,6 +264,8 @@ internal object Formas {
             // El escudo de la orden.
             TemaId.ORDEN -> { p.reset(); p.moveTo(x - r, y - r); p.lineTo(x + r, y - r); p.lineTo(x + r, y - r * 0.1f); p.quadTo(x + r, y + r * 0.7f, x, y + r * 1.2f)
                 p.quadTo(x - r, y + r * 0.7f, x - r, y - r * 0.1f); p.close() }
+            // Un engrane de diez dientes.
+            TemaId.VAPOR -> poligono(x, y, r * 1.15f, 10, -90.0, r * 0.88f)
             // El anillo de benceno: un hexágono (con borde lleva su círculo dentro).
             TemaId.LABORATORIO -> poligono(x, y, r, 6, -90.0)
             // Una casita del pueblo.
@@ -331,6 +336,7 @@ internal object Formas {
             TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
             TemaId.REFUGIO -> { poligono(x, y, r * 0.55f, 3, 90.0); c.drawPath(p, d) }
             TemaId.ORDEN -> { raya(c, x, y, r, 0f, -0.8f, 0f, 0.95f, d); raya(c, x, y, r, -0.72f, -0.25f, 0.72f, -0.25f, d) }   // la cruz del escudo
+            TemaId.VAPOR -> { c.drawCircle(x, y, r * 0.5f, d); raya(c, x, y, r, 0f, 0f, 0.32f, -0.3f, d) }   // la esfera del manómetro y su aguja
             TemaId.LABORATORIO -> c.drawCircle(x, y, r * 0.55f, d)
             TemaId.COLONOS -> c.drawRect(x - r * 0.25f, y + r * 0.25f, x + r * 0.25f, y + r, d)   // la puerta
             TemaId.NAPOLEON -> c.drawCircle(x + r * 0.5f, y - r * 0.38f, r * 0.22f, d)   // la escarapela del sombrero
@@ -857,6 +863,16 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
                 for (k in 0..2) { val a = (10 + 6 * k) * u; drawLine(acento, o + Offset(dx * a, dy * 3 * u), o + Offset(dx * 3 * u, dy * a), 2 * u) }
             }
         }
+        // El marco del plano parlamentario: filete doble con una banda de «vía» (traviesas) entre los dos, y una cantonera
+        // curva de latón remachada en cada esquina.
+        TemaId.VAPOR -> {
+            filete(4 * u, tinta.copy(alpha = 0.55f), 1.4f * u); filete(10 * u, tinta.copy(alpha = 0.35f), 0.8f * u)
+            var x = 16 * u; while (x < w - 16 * u) { drawLine(tinta.copy(alpha = 0.3f), Offset(x, 5 * u), Offset(x, 9 * u), 1.2f * u); drawLine(tinta.copy(alpha = 0.3f), Offset(x, h - 9 * u), Offset(x, h - 5 * u), 1.2f * u); x += 5 * u }
+            esquinas(4 * u) { o, dx, dy ->
+                drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x + dx * 16 * u, o.y); quadraticTo(o.x + dx * 7 * u, o.y + dy * 7 * u, o.x, o.y + dy * 16 * u); close() }, acento)
+                drawCircle(fondo, 1.4f * u, o + Offset(dx * 4.5f * u, dy * 4.5f * u))
+            }
+        }
         // Reglas graduadas arriba y a la izquierda, como en una hoja milimétrica.
         TemaId.LABORATORIO -> {
             filete(3 * u, tinta.copy(alpha = 0.4f), 1 * u)
@@ -1164,6 +1180,15 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             for (i in 0 until 10) { val g = n + 36.0 * i; drawLine(tenue, c + rumbo(g) * (r * 0.62f), c + rumbo(g) * (r * 0.88f), r * 0.17f) }
             anillo(r * 0.62f, tenue, r * 0.16f)
             punta(n, r * 0.5f, r * 0.13f, acento); punta(90.0, r * 0.4f, r * 0.13f, tinta.copy(alpha = 0.6f))
+        }
+        // Una brújula de bolsillo de latón: el bisel con su argolla, los cuatro rumbos en rombo y la aguja azulada.
+        TemaId.VAPOR -> {
+            anillo(r * 0.92f, acento, r * 0.1f)
+            drawCircle(acento, r * 0.14f, c + rumbo(n) * (r * 1.12f), style = Stroke(r * 0.06f))
+            for (i in 0 until 32) { val g = n + 11.25 * i; drawLine(tenue, c + rumbo(g) * (r * 0.84f), c + rumbo(g) * (r * (if (i % 8 == 0) 0.68f else 0.78f)), 0.8f * u) }
+            for (i in 0 until 4) punta(n + 90.0 * i, r * 0.6f, r * 0.08f, tenue.copy(alpha = 0.5f))
+            punta(n, r * 0.74f, r * 0.12f, secundario); punta(90.0, r * 0.74f, r * 0.12f, tinta.copy(alpha = 0.55f))
+            drawCircle(acento, r * 0.08f, c)
         }
         // Una brújula de laboratorio: 36 marcas y la aguja imantada.
         TemaId.LABORATORIO -> {

@@ -83,6 +83,7 @@ object Musica {
         TemaId.DISTOPIA -> R.raw.s_distopia_presentacion
         TemaId.REFUGIO -> R.raw.s_refugio_presentacion
         TemaId.ORDEN -> R.raw.s_orden_presentacion
+        TemaId.VAPOR -> R.raw.s_vapor_presentacion
         TemaId.LABORATORIO -> R.raw.s_laboratorio_presentacion
         TemaId.COLONOS -> R.raw.s_colonos_presentacion
         TemaId.NAPOLEON -> R.raw.s_napoleon_presentacion
@@ -118,6 +119,7 @@ object Musica {
         TemaId.DISTOPIA -> R.raw.s_distopia_anual
         TemaId.REFUGIO -> R.raw.s_refugio_anual
         TemaId.ORDEN -> R.raw.s_orden_anual
+        TemaId.VAPOR -> R.raw.s_vapor_anual
         TemaId.LABORATORIO -> R.raw.s_laboratorio_anual
         TemaId.COLONOS -> R.raw.s_colonos_anual
         TemaId.NAPOLEON -> R.raw.s_napoleon_anual
@@ -152,6 +154,7 @@ object Musica {
         TemaId.DISTOPIA -> R.raw.t_distopia_llamada
         TemaId.REFUGIO -> R.raw.t_refugio_llamada
         TemaId.ORDEN -> R.raw.t_orden_llamada
+        TemaId.VAPOR -> R.raw.t_vapor_llamada
         TemaId.LABORATORIO -> R.raw.t_laboratorio_llamada
         TemaId.COLONOS -> R.raw.t_colonos_llamada
         TemaId.NAPOLEON -> R.raw.t_napoleon_llamada
@@ -186,6 +189,7 @@ object Musica {
         TemaId.DISTOPIA -> R.raw.t_distopia_notificacion
         TemaId.REFUGIO -> R.raw.t_refugio_notificacion
         TemaId.ORDEN -> R.raw.t_orden_notificacion
+        TemaId.VAPOR -> R.raw.t_vapor_notificacion
         TemaId.LABORATORIO -> R.raw.t_laboratorio_notificacion
         TemaId.COLONOS -> R.raw.t_colonos_notificacion
         TemaId.NAPOLEON -> R.raw.t_napoleon_notificacion
@@ -502,6 +506,24 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             val y = u * (6 + i * 6f)
             drawPath(Path().apply { moveTo(w / 2 - u * 14, y); lineTo(w / 2, y + u * 6); lineTo(w / 2 + u * 14, y) }, e.primary, style = Stroke(u * 2))
         }
+    }
+    // El cartel de una exposición del XIX: filete grueso y fino arriba y abajo, cuatro remaches en las esquinas y, al pie,
+    // la locomotora que pasa por la vía; el emblema queda abajo, como el sello de la compañía.
+    TemaId.VAPOR -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ABAJO, false, t.nombre, "☛ toque usted para poner la máquina en marcha",
+        comillas = "“" to "”", emblema = 104.dp, arriba = 40.dp, abajo = 70.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val tinta = e.onBackground.copy(alpha = 0.7f); val perfil = e.primary.copy(alpha = 0.24f)
+        listOf(u * 4 to u * 3f, u * 10 to u * 1f).forEach { (y, g) -> drawLine(tinta, Offset(u * 14, y), Offset(w - u * 14, y), g) }
+        listOf(h - u * 4 to u * 3f, h - u * 10 to u * 1f).forEach { (y, g) -> drawLine(tinta, Offset(u * 14, y), Offset(w - u * 14, y), g) }
+        listOf(Offset(u * 8, u * 7), Offset(w - u * 8, u * 7), Offset(u * 8, h - u * 7), Offset(w - u * 8, h - u * 7)).forEach { remacheVapor(it, u * 3.4f, e.primary) }
+        val base = h - u * 16
+        drawLine(perfil, Offset(0f, base), Offset(w, base), u * 2)
+        val x0 = w * 0.08f
+        drawRect(perfil, Offset(x0, base - u * 22), Size(u * 46, u * 14))
+        drawRect(perfil, Offset(x0 + u * 46, base - u * 32), Size(u * 20, u * 24))
+        drawRect(perfil, Offset(x0 + u * 8, base - u * 34), Size(u * 8, u * 12))
+        listOf(10f, 26f, 54f).forEach { x -> drawCircle(perfil, u * 6, Offset(x0 + x * u, base - u * 5)) }
+        listOf(0f to 7f, 12f to 9f, 28f to 11f).forEach { (dx, r) -> drawCircle(perfil.copy(alpha = 0.14f), r * u, Offset(x0 + u * (12 + dx), base - u * (42 + dx * 0.4f))) }
     }
     // Hoja de laboratorio: papel milimetrado, etiqueta de muestra y una graduación por el borde.
     TemaId.LABORATORIO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "○ " + t.nombre, "toca para cerrar la observación",

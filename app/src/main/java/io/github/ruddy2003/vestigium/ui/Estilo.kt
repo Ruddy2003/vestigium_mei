@@ -31,6 +31,7 @@ object Estilo {
         TemaId.DISTOPIA -> "▪ "
         TemaId.REFUGIO -> "> "
         TemaId.ORDEN -> "‡ "
+        TemaId.VAPOR -> "☛ "
         TemaId.LABORATORIO -> "· "
         TemaId.COLONOS -> "~ "
         TemaId.NAPOLEON -> "— "
@@ -70,6 +71,7 @@ object Estilo {
         TemaId.DISTOPIA -> true        // cartel
         TemaId.REFUGIO -> true         // pantalla de fósforo
         TemaId.ORDEN -> true           // estarcido
+        TemaId.VAPOR -> false          // «fat face» de cartel: en minúsculas ya pesa bastante
         TemaId.LABORATORIO -> true     // rótulo de protocolo
         TemaId.COLONOS -> false        // imprenta de pueblo
         TemaId.NAPOLEON -> true        // capitales de Bodoni
@@ -112,6 +114,8 @@ object Estilo {
             TemaId.LABORATORIO -> if (pantalla) "protocolo VM-%03d · %s".format(folio(titulo, 100, 900), t) else if (igual) null else "· $t"
             TemaId.REFUGIO -> if (igual) null else "[ $t ]"
             TemaId.ORDEN -> if (igual) null else "— $t —"
+            // Cada pantalla tiene su patente, con su número fijo como en los registros de la oficina: «patente n.º 4.217 · hoy».
+            TemaId.VAPOR -> if (pantalla) String.format(java.util.Locale.GERMANY, "patente n.º %,d · %s", folio(titulo, 1000, 9000), t) else if (igual) null else "☛ $t"
             TemaId.COLONOS -> if (igual) null else "~ $t ~"
             TemaId.MEDIEVAL -> if (igual) null else "¶ $t"
             // Cada pantalla es un artículo de la regla (la de la orden llegó a 686 artículos): «☩ art. ·CCXII· de la regla».
@@ -156,6 +160,7 @@ object Estilo {
             TemaId.DISTOPIA -> propio(titulo, true)
             TemaId.REFUGIO -> propio(titulo, true)
             TemaId.ORDEN -> propio(titulo, true)
+            TemaId.VAPOR -> propio(titulo, true)
             TemaId.LABORATORIO -> propio(titulo, true)
             TemaId.COLONOS -> propio(titulo, true)
             TemaId.NAPOLEON -> propio(titulo, true)
@@ -200,6 +205,7 @@ object Estilo {
         TemaId.TEMPLARIO -> true
         TemaId.REFUGIO -> false
         TemaId.ORDEN -> false
+        TemaId.VAPOR -> true
         TemaId.COLONOS -> false
         TemaId.NAPOLEON -> false
         TemaId.BOTANICO -> false
@@ -249,6 +255,7 @@ object Estilo {
             TemaId.DISTOPIA -> propio(titulo, false)
             TemaId.REFUGIO -> propio(titulo, false)
             TemaId.ORDEN -> propio(titulo, false)
+            TemaId.VAPOR -> propio(titulo, false)
             TemaId.LABORATORIO -> propio(titulo, false)
             TemaId.COLONOS -> propio(titulo, false)
             TemaId.NAPOLEON -> propio(titulo, false)
@@ -289,6 +296,8 @@ object Estilo {
         TemaId.REFUGIO -> if (n < 100) "#%02d".format(n) else "#$n"
         // Ordinal de regimiento y de batallón: «17º».
         TemaId.ORDEN -> if (n in 1..999) "${n}º" else "$n"
+        // La lectura del manómetro de la caldera: «17 lb».
+        TemaId.VAPOR -> Vapor.numeral(n)
         // Muestra numerada del cuaderno: «M-17».
         TemaId.LABORATORIO -> if (n in 1..999) "M-%02d".format(n) else "$n"
         TemaId.COLONOS -> if (n < 100) "§ $n" else "$n"
@@ -353,6 +362,12 @@ object Estilo {
             "%02d.%s.%d".format(d.dayOfMonth, MESES_ES[d.monthValue - 1], d.year) + (diasDesdeInicio(iso)?.takeIf { it > 0 }?.let { " · DÍA $it" } ?: "")
         }.getOrDefault(iso)
         TemaId.ORDEN -> runCatching { val d = Fechas.parse(iso); "%02d %s %02d // %s".format(d.dayOfMonth, MESES_ES[d.monthValue - 1], d.year % 100, SEMANA_LARGA[d.dayOfWeek.value - 1].uppercase()) }.getOrDefault(iso)
+        // «Sábado 17 de octubre de 2026 · tren n.º 290», contado desde el primer registro (o, sin registros, desde el 1 de
+        // enero); hoy, además, la hora del ferrocarril: «· 2.32 t. hora del ferrocarril».
+        TemaId.VAPOR -> runCatching {
+            val d = Fechas.parse(iso)
+            Vapor.fecha(d, diasDesdeInicio(iso)?.takeIf { it > 0 } ?: d.dayOfYear.toLong(), iso == Fechas.diaLogico())
+        }.getOrDefault(iso)
         TemaId.LABORATORIO -> iso + (diasDesdeInicio(iso)?.takeIf { it > 0 }?.let { " · T+$it" } ?: "")
         TemaId.COLONOS -> runCatching { val d = Fechas.parse(iso); "${SEMANA_LARGA[d.dayOfWeek.value - 1]}, ${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]} de ${d.year}" }.getOrDefault(iso)
         TemaId.NAPOLEON -> Temas.fechaImperial(iso)
@@ -426,6 +441,8 @@ object Estilo {
             TemaId.REFUGIO -> MESES_LARGOS[i].uppercase() + (anio?.let { " $it" } ?: "")
             // Mes y número, como en los partes: «OCT-10».
             TemaId.ORDEN -> MESES_ES[i] + "-%02d".format(n) + (anio?.let { " · $it" } ?: "")
+            // La guía mensual de ferrocarriles: «Guía de octubre de 2026».
+            TemaId.VAPOR -> Vapor.mes(n, anio)
             // Número y abreviatura del cuaderno de laboratorio: «10 · oct», «2026-10 · oct».
             TemaId.LABORATORIO -> (anio?.let { "$it-" } ?: "") + "%02d".format(n) + " · " + MESES_ES[i].lowercase()
             TemaId.COLONOS -> MESES_LARGOS[i].replaceFirstChar { it.uppercase() } + (anio?.let { " de $it" } ?: "")
@@ -479,6 +496,8 @@ object Estilo {
         TemaId.REFUGIO -> listOf("LU", "MA", "MI", "JU", "VI", "SA", "DO")
         // Abreviatura de parte militar, solo consonantes.
         TemaId.ORDEN -> listOf("LNS", "MRT", "MCL", "JVS", "VRN", "SBD", "DMG")
+        // Como en las columnas de los horarios: «LU.», «MA.», «MI.»…
+        TemaId.VAPOR -> Vapor.SEMANA
         TemaId.LABORATORIO -> listOf("Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do")
         // Con punto, como en la gaceta del pueblo.
         TemaId.COLONOS -> listOf("Lu.", "Ma.", "Mi.", "Ju.", "Vi.", "Sá.", "Do.")
@@ -524,6 +543,7 @@ object Estilo {
         TemaId.DISTOPIA -> semana
         TemaId.REFUGIO -> semana
         TemaId.ORDEN -> semana.map { it.take(2) }
+        TemaId.VAPOR -> listOf("L", "M", "Mi", "J", "V", "S", "D")
         TemaId.LABORATORIO -> semana
         TemaId.COLONOS -> semana
         TemaId.NAPOLEON -> semana.map { it.take(2) }
@@ -563,6 +583,7 @@ object Estilo {
         TemaId.DISTOPIA -> "CONTINUIDAD ACREDITADA: $n DÍAS"
         TemaId.REFUGIO -> "DÍAS SIN INCIDENTES: $n"
         TemaId.ORDEN -> "$n VIGILIAS SIN FALTA"
+        TemaId.VAPOR -> "$n días con la caldera encendida"
         TemaId.LABORATORIO -> "serie de $n sesiones"
         TemaId.COLONOS -> "$n jornadas seguidas"
         TemaId.NAPOLEON -> "$n JOURS DE CAMPAGNE"
@@ -599,6 +620,7 @@ object Estilo {
         TemaId.DISTOPIA -> "◄ RETROCEDER"
         TemaId.REFUGIO -> "< SALIR"
         TemaId.ORDEN -> "« REPLEGARSE"
+        TemaId.VAPOR -> "← marcha atrás"
         TemaId.LABORATORIO -> "← anterior"
         TemaId.COLONOS -> "← pa' atrás"
         TemaId.NAPOLEON -> "← retirada"
@@ -633,6 +655,7 @@ object Estilo {
         TemaId.DISTOPIA -> "▪ "
         TemaId.REFUGIO -> "> "
         TemaId.ORDEN -> "▸ "
+        TemaId.VAPOR -> "⊙ "
         TemaId.LABORATORIO -> "○ "
         TemaId.COLONOS -> "☞ "
         TemaId.NAPOLEON -> "» "
@@ -672,6 +695,7 @@ object Estilo {
         TemaId.DISTOPIA -> ""
         TemaId.REFUGIO -> ""
         TemaId.ORDEN -> ""
+        TemaId.VAPOR -> ""
         TemaId.LABORATORIO -> ""
         TemaId.COLONOS -> ""
         TemaId.NAPOLEON -> ""
@@ -711,6 +735,7 @@ object Estilo {
         TemaId.DISTOPIA -> EstiloFecha(1.12f, 1.6f, peso = 700, abre = "▼")
         TemaId.REFUGIO -> EstiloFecha(1.15f, 0.8f, abre = "▼")
         TemaId.ORDEN -> EstiloFecha(1.08f, 2.4f)
+        TemaId.VAPOR -> EstiloFecha(1.16f, 0.4f, abre = "⇓")
         TemaId.LABORATORIO -> EstiloFecha(0.96f, 2.6f, peso = 400, abre = "▿")
         TemaId.COLONOS -> EstiloFecha(1.06f, 0.5f, cursiva = true)
         TemaId.NAPOLEON -> EstiloFecha(1.04f, 2.2f, peso = 600)
@@ -761,6 +786,7 @@ object Estilo {
             TemaId.DISTOPIA -> es(Claves.DISTOPIA)?.uppercase()
             TemaId.REFUGIO -> es(Claves.REFUGIO)
             TemaId.ORDEN -> es(Claves.ORDEN)?.uppercase()
+            TemaId.VAPOR -> es(Claves.VAPOR)
             TemaId.LABORATORIO -> es(Claves.LABORATORIO)
             TemaId.COLONOS -> es(Claves.COLONOS)
             TemaId.NAPOLEON -> Claves.NAPOLEON[k] ?: Claves.FRANCES[k]

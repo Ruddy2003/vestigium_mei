@@ -101,6 +101,8 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.REFUGIO -> PielCinta(6f, false, RellenoCinta.SEGMENTOS, floatArrayOf(3f, 3f), StrokeCap.Round)
     // Placa de acero en chaflán.
     TemaId.ORDEN -> PielCinta(3f, true, RellenoCinta.CONTORNO, floatArrayOf(10f, 3f), StrokeCap.Butt)
+    // Un tramo de vía en el horario: segmentos como traviesas, con las puntas redondas.
+    TemaId.VAPOR -> PielCinta(6f, false, RellenoCinta.SEGMENTOS, floatArrayOf(7f, 2f), StrokeCap.Round)
     // Muestra punteada sobre papel milimétrico.
     TemaId.LABORATORIO -> PielCinta(3f, false, RellenoCinta.PUNTOS, floatArrayOf(1f, 3f), StrokeCap.Round)
     // Retazo de tela pespunteado.

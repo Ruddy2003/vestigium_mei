@@ -98,7 +98,7 @@ class CoberturaTemas {
 
         /** Lo que falta hoy, por superficie. Solo queda el gato de los temas del lote 8, que llega con el lote 9; los 21 originales ya lo tienen. */
         val PENDIENTES: Map<String, Set<String>> = mapOf(
-            "gato" to setOf("urbe", "neon", "egipto", "templario", "ruinas", "edo", "arcano", "abismo", "meso", "pirata", "cueva"),
+            "gato" to setOf("urbe", "neon", "egipto", "templario", "ruinas", "edo", "arcano", "abismo", "meso", "pirata", "cueva", "vapor"),
         )
 
         /** Despachos que el compilador no vigila, por archivo y tipo. Cada lote baja los suyos. */

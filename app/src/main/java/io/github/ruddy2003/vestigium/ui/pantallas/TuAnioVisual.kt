@@ -218,6 +218,16 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawRect(Color(0xFF9E1B22), Offset(x0, y0 + h * 0.38f), Size(w, h * 0.24f))
             listOf(x0 + w * 0.08f, x0 + w * 0.92f).forEach { x -> listOf(y0 + h * 0.18f, y0 + h * 0.82f).forEach { y -> drawCircle(Color(0xFFB08D3A), h * 0.08f, Offset(x, y)) } }
         }
+        // Un libro mayor de tela verde con las cantoneras de latón y la etiqueta del lomo.
+        TemaId.VAPOR -> {
+            drawRect(lerp(c, Color(0xFF34473C), 0.5f), o, s)
+            val laton = Color(0xFFC9A04A); val k = minOf(w, h) * 0.22f
+            listOf(Offset(x0, y0) to Offset(1f, 1f), Offset(x0 + w, y0) to Offset(-1f, 1f), Offset(x0, y0 + h) to Offset(1f, -1f), Offset(x0 + w, y0 + h) to Offset(-1f, -1f)).forEach { (p, sg) ->
+                drawPath(Path().apply { moveTo(p.x, p.y); lineTo(p.x + sg.x * k, p.y); quadraticTo(p.x + sg.x * k * 0.5f, p.y + sg.y * k * 0.5f, p.x, p.y + sg.y * k); close() }, laton)
+            }
+            drawRect(Color(0xFFEFE4CB), Offset(x0 + w * 0.3f, cy - h * 0.12f), Size(w * 0.4f, h * 0.24f))
+            drawLine(oscuro, Offset(x0 + w * 0.36f, cy), Offset(x0 + w * 0.64f, cy), d)
+        }
         // Cuaderno de laboratorio: tapa cuadriculada, lomo de color y la etiqueta.
         TemaId.LABORATORIO -> {
             drawRect(lerp(c, Color.White, 0.8f), o, s)
@@ -707,6 +717,12 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             for (k in 0 until 8) rotate(k * 45f, c) { drawRect(borde, Offset(x - r * 0.14f, y - r), Size(r * 0.28f, r * 0.3f)) }
             drawCircle(relleno, r * 0.8f, c); drawCircle(borde, r * 0.8f, c, style = fino)
         }
+        // La esfera de un manómetro: el disco con su escala y la aguja.
+        TemaId.VAPOR -> {
+            drawCircle(relleno, r, c); drawCircle(borde, r, c, style = fino)
+            for (k in 0..6) { val a = Math.toRadians(135.0 + 45.0 * k); drawLine(borde, io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * 0.8f, a), io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * 0.62f, a), 0.8f * d) }
+            drawLine(col, c, io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * 0.6f, Math.toRadians(310.0)), 1.2f * d)
+        }
         // Hexágono.
         TemaId.LABORATORIO -> lleno(Path().apply {
             for (k in 0 until 6) { val q = polarCosa(c, r, k * PI / 3); if (k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }
@@ -1078,6 +1094,26 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
             "sobre" -> {
                 drawPath(Path().apply { moveTo(x - r, y - r * 0.6f); lineTo(x + r * 0.6f, y - r * 0.6f); lineTo(x + r, y - r * 0.2f); lineTo(x + r, y + r * 0.6f); lineTo(x - r, y + r * 0.6f); close() }, col)
                 listOf(-0.25f, 0.05f, 0.35f).forEach { f -> drawLine(fondo, Offset(x - r * 0.7f, y + f * r), Offset(x + r * 0.5f, y + f * r), 0.7f * d) }
+            }
+            else -> return false
+        }
+        TemaId.VAPOR -> when (forma) {
+            // El clavo de vía: la cabeza ladeada, el vástago cuadrado y la punta en cincel.
+            "alfiler" -> {
+                drawPath(Path().apply { moveTo(x - r * 0.55f, y - r * 0.75f); lineTo(x + r * 0.35f, y - r * 0.75f); lineTo(x + r * 0.45f, y - r * 0.55f); lineTo(x - r * 0.55f, y - r * 0.55f); close() }, col)
+                drawRect(col, Offset(x - r * 0.14f, y - r * 0.55f), Size(r * 0.28f, r * 1.25f))
+                drawPath(Path().apply { moveTo(x - r * 0.14f, y + r * 0.7f); lineTo(x + r * 0.14f, y + r * 0.7f); lineTo(x, y + r); close() }, col)
+            }
+            // Un engranito de ocho dientes con su eje.
+            "estrella" -> {
+                drawPath(io.github.ruddy2003.vestigium.ui.Vapor.engrane(c, r * 0.9f, 8, 0.72f), col)
+                drawCircle(fondo, r * 0.24f, c)
+            }
+            // El telegrama: la hoja con la franja impresa y las tiras del texto.
+            "sobre" -> {
+                drawRect(col, Offset(x - r, y - r * 0.65f), Size(2 * r, r * 1.3f), style = trazo)
+                drawRect(col, Offset(x - r, y - r * 0.65f), Size(2 * r, r * 0.32f))
+                listOf(0f, 0.3f).forEach { f -> drawLine(col, Offset(x - r * 0.7f, y + f * r), Offset(x + r * (0.6f - f), y + f * r), 1.1f * d) }
             }
             else -> return false
         }
