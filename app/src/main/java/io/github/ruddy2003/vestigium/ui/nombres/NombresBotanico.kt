@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresBotanico {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "Semillero de ideas",
+        "Una idea" to "Una semilla",
+        "Nueva idea" to "Semilla nueva",
+        "Una idea de antes" to "Una semilla de otra estación",
+        "¿Aprendiste algo hoy?" to "¿Qué brotó hoy?",
+        "Ideas" to "Semillas",
+        "Fuente" to "De qué planta salió",
+        "Cómo la tengo" to "Cómo la cultivo",
+        "La idea en una línea" to "La semilla en una línea",
         "A quién ves más" to "Compañeros más avistados",
         "A qué hora" to "Hora de la observación",
         "A qué hora aparecen tus emociones" to "Horas de floración del ánimo",

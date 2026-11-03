@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresNavidad {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "Libreta de luces",
+        "Una idea" to "Una lucecita",
+        "Nueva idea" to "Lucecita nueva",
+        "Una idea de antes" to "Una lucecita de otras fiestas",
+        "¿Aprendiste algo hoy?" to "¿Qué aprendiste hoy junto al árbol?",
+        "Ideas" to "Lucecitas",
+        "Fuente" to "De qué cuento vino",
+        "Cómo la tengo" to "Cómo la siento",
+        "La idea en una línea" to "La lucecita en una línea",
         "A quién ves más" to "Quién viene más a casa",
         "A qué hora" to "La hora en el reloj",
         "A qué hora aparecen tus emociones" to "Las horas de cada emoción",

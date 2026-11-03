@@ -62,6 +62,7 @@ object Importar {
             if (r.tramos.isNotEmpty()) Repo.importarTramos(r.tramos)
             if (r.consumos.isNotEmpty()) Repo.importarConsumos(r.consumos)
             if (r.notas.isNotEmpty()) Repo.importarNotas(r.notas)
+            if (r.ideas.isNotEmpty()) Repo.importarIdeas(r.ideas)
             if (r.metas.isNotEmpty()) Repo.importarMetas(r.metas)
             if (r.tomas.isNotEmpty()) Repo.importarTomas(r.tomas)
             Repo.importarAvisos(r.avisos)

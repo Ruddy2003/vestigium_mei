@@ -8,6 +8,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresEgipto {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "El papiro de la sabiduría",
+        "Una idea" to "Una enseñanza",
+        "Nueva idea" to "Enseñanza nueva",
+        "Una idea de antes" to "Una enseñanza de otra crecida",
+        "¿Aprendiste algo hoy?" to "¿Qué aprendiste hoy, escriba?",
+        "Ideas" to "Enseñanzas",
+        "Fuente" to "De qué rollo vino",
+        "Cómo la tengo" to "Cómo la pesa mi corazón",
+        "La idea en una línea" to "La enseñanza en un renglón",
         "A otras personas" to "Para otras casas",
         "A quién ves más" to "Los rostros de cada día",
         "A qué hora" to "En qué hora del sol",

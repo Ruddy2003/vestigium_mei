@@ -763,9 +763,12 @@ fun PantallaObra(nav: Nav) {
             }
         }
         Seccion("Citas", "Las frases que te quedaron. Con ♥ aparecen en tus frases guardadas, junto a las del día.", numero = 3, latin = "SENTENTIAE") {
-            Citas(o, sentir)
+            Citas(o, sentir) { c -> EdicionIdea.abrir(nav, EdicionIdea.nueva(obra = o, cita = c), contexto = "«${c.texto}»") }
         }
-        Seccion("Qué te dejó", numero = 4, latin = "IVDICIVM") {
+        Seccion("Ideas", "Lo que entendiste o te hizo pensar, con tus palabras. Se guarda en tu Ideario.", numero = 4) {
+            Tarjeta { IdeasDeObra(o, nav) }
+        }
+        Seccion("Qué te dejó", numero = 5, latin = "IVDICIVM") {
             Tarjeta {
                 Etiqueta("Calificación")
                 Calificacion(o.calificacion, Modifier.padding(bottom = 10.dp), tam = 24.dp)
@@ -777,16 +780,16 @@ fun PantallaObra(nav: Nav) {
             }
         }
         val marcas = Repo.subrayados.filter { o.titulo.isNotBlank() && (it.libro.equals(o.titulo, true) || it.libro.contains(o.titulo, true) || o.titulo.contains(it.libro, true)) }
-        if (marcas.isNotEmpty()) Seccion("Subrayados de Kindle", numero = 5, latin = "EXCERPTA") { Tarjeta { Subrayados(marcas) } }
+        if (marcas.isNotEmpty()) Seccion("Subrayados de Kindle", numero = 6, latin = "EXCERPTA") { Tarjeta { Subrayados(marcas) } }
         TextButton(onClick = { if (confirmar) { Repo.borrarObra(o.id); nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Obra borrada", alExpirar = { Portadas.borrar(ctx, o.portada) }) { Repo.guardarObra(o) } } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
             Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
         }
     }
 }
 
-/** Las citas de una obra: escribir una nueva, darle o quitarle ♥, borrarla. */
+/** Las citas de una obra: escribir una nueva, darle o quitarle ♥, borrarla, o anotar lo que entendiste de ella en el Ideario. */
 @Composable
-private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit) {
+private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit, anotar: (Cita) -> Unit) {
     var texto by remember(o.id) { mutableStateOf("") }
     var pagina by remember(o.id) { mutableStateOf("") }
     var armado by remember { mutableStateOf<String?>(null) }
@@ -798,6 +801,9 @@ private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit) {
                     Text("«${c.texto}»", style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic)
                     Text(listOfNotNull(c.pagina.ifBlank { null }?.let { if (it.all { ch -> ch.isDigit() }) "p. $it" else it }, c.fecha.ifBlank { null }?.let { Fechas.corto(it) }).joinToString(" · "),
                         style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    val n = Repo.ideas.count { it.cita_id == c.id }
+                    Text(if (n > 0) "✎ $n ${if (n == 1) "idea" else "ideas"} · anotar otra" else "✎ anotar lo que entendí", style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { anotar(c) }.padding(top = 4.dp))
                 }
                 TextButton(onClick = {
                     sentir(Sentidos.Evento.ELEGIR)

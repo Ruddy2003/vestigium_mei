@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresEspacio {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "CUADERNO DE HIPÓTESIS",
+        "Una idea" to "HIPÓTESIS",
+        "Nueva idea" to "HIPÓTESIS NUEVA",
+        "Una idea de antes" to "HIPÓTESIS DE OTRA ÓRBITA",
+        "¿Aprendiste algo hoy?" to "¿QUÉ DESCUBRISTE HOY A BORDO?",
+        "Ideas" to "HIPÓTESIS DE A BORDO",
+        "Fuente" to "TRANSMISIÓN DE ORIGEN",
+        "Cómo la tengo" to "NIVEL DE CONFIANZA",
+        "La idea en una línea" to "LA HIPÓTESIS EN UNA LÍNEA",
         "A quién ves más" to "TRIPULANTES MÁS CERCANOS",
         "A qué hora" to "HORA DE MISIÓN",
         "A qué hora aparecen tus emociones" to "EMOCIONES POR HORA DE VUELO",

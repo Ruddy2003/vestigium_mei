@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresMongol {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "САНААНЫ ДЭВТЭР",
+        "Una idea" to "САНАА",
+        "Nueva idea" to "ШИНЭ САНАА",
+        "Una idea de antes" to "ӨМНӨХ САНАА",
+        "¿Aprendiste algo hoy?" to "ӨНӨӨДӨР ЮУ СУРАВ?",
+        "Ideas" to "САНААНУУД",
+        "Fuente" to "ЭХ СУРВАЛЖ",
+        "Cómo la tengo" to "МИНИЙ БОДОЛ",
+        "La idea en una línea" to "НЭГ МӨРӨНД",
         "A quién ves más" to "ХАМГИЙН ОЛОН УУЛЗДАГ",
         "A qué hora" to "ЯМАР ЦАГТ",
         "A qué hora aparecen tus emociones" to "СЭТГЭЛИЙН ЦАГ",

@@ -25,5 +25,7 @@ class BuscadorPrueba {
 
     @Test fun loPrivadoSeEncuentraPorSuFuncion() = assertTrue(buscar("impulso").any { it.ruta == "recaidas" })
 
+    @Test fun ideario() = assertTrue(buscar("aprendí video").any { it.ruta == "biblioteca_ideas" })
+
     @Test fun unaLetraNoBusca() = assertTrue(buscar("a").isEmpty())
 }

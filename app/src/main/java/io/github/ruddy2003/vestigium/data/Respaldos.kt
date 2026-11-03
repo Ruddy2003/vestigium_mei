@@ -318,7 +318,7 @@ object Respaldos {
             "Hecho el ${r.exportado.take(10)} a las ${r.exportado.drop(11).take(5)} · esquema ${r.schema_v}",
             "${n(r.dias.size)} días" + (if (dias.isNotEmpty()) " (del ${dias.first()} al ${dias.last()})" else "") + " · ${n(r.dias.count { it.nota.isNotBlank() })} con diario · ${n(r.dias.count { it.sueno_texto.isNotBlank() })} sueños",
             "${n(r.momentos.size)} momentos · ${n(r.tramos.size)} tramos de enfoque · ${n(r.consumos.size)} consumos",
-            "${n(r.gastos.size)} gastos · ${n(r.ingresos.size)} ingresos · ${n(r.cartas.size)} cartas · ${n(r.obras.size)} obras",
+            "${n(r.gastos.size)} gastos · ${n(r.ingresos.size)} ingresos · ${n(r.cartas.size)} cartas · ${n(r.obras.size)} obras · ${n(r.ideas.size)} ideas",
             "${n(r.salud.size)} días de salud · ${n(r.pantalla.size)} de pantalla · ${n(r.escuchas.size)} canciones · ${n(r.comidas.size)} comidas",
             "${n(r.lugares.size)} lugares · ${n(r.visitas.size)} visitas · ${n(c.ubicaciones)} ubicaciones · ${n(c.fotos)} fotos con lugar · ${n(c.portadas)} portadas",
             "Ajustes: ${r.config.habitos.size} hábitos, ${r.config.personas.size} personas en Tu gente, ${r.config.equivalencias.size} etiquetas unidas, tema «${r.config.tema}»",

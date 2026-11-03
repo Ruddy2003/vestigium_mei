@@ -253,11 +253,11 @@ class QuickActivity : FragmentActivity() {
         Encabezado("Registrar", "Lo de todos los días en un toque. Lo demás, cuando quieras.")
         val botones = listOfNotNull(
             "Enfoque" to M_ENFOQUE, "Siesta" to M_SIESTA, "Sustancias" to M_CONSUMO, "Gasto o ingreso" to M_GASTO, "Sueño" to M_SUENO, "Llenar el día" to "diario",
-            "Nota" to "notas", "Impulso" to "impulso", if (Repo.config.seguimiento_privado) "Recaída" to "recaida" else null,
+            "Nota" to "notas", "Idea" to "idea_nueva", "Impulso" to "impulso", if (Repo.config.seguimiento_privado) "Recaída" to "recaida" else null,
             if (Repo.config.seguimiento_privado) "Libido" to "libido" else null,
         )
         MenuQuick(botones) { d ->
-            if (d == "diario" || d == "notas") { startActivity(android.content.Intent(this@QuickActivity, MainActivity::class.java).putExtra(MainActivity.PANTALLA, d)
+            if (d == "diario" || d == "notas" || d == "idea_nueva") { startActivity(android.content.Intent(this@QuickActivity, MainActivity::class.java).putExtra(MainActivity.PANTALLA, d)
                 .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish() }
             else ir(d)
         }

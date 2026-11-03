@@ -85,6 +85,8 @@ fun PantallaMas(nav: Nav) {
                 FilaMas("suplementos", "Suplementos", if (supl.isEmpty()) "Lo que tomas y su nivel estimado" else supl.joinToString(", ") { it.nombre } +
                     " · " + (if (supl.all { io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id) }) "hoy ya" else "hoy falta"), ir)
                 HorizontalDivider()
+                FilaMas("biblioteca_ideas", "Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste o pensaste, con su fuente y quién lo dice" else "${Repo.ideas.size} ideas · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas", ir)
+                HorizontalDivider()
                 FilaMas("notas", "Notas", if (Repo.notas.isEmpty()) "Ideas, pensamientos especiales, propósitos y recordatorios" else "${Repo.notas.size} notas · ${Repo.notas.count { it.fijada }} fijadas", ir)
                 HorizontalDivider()
                 val porRev = io.github.ruddy2003.vestigium.data.Metas.porRevisar().size

@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresDistopia {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "REGISTRO DE PENSAMIENTOS",
+        "Una idea" to "PENSAMIENTO",
+        "Nueva idea" to "PENSAMIENTO NUEVO",
+        "Una idea de antes" to "PENSAMIENTO ARCHIVADO",
+        "¿Aprendiste algo hoy?" to "¿QUÉ INFORMACIÓN ADQUIRISTE HOY?",
+        "Ideas" to "PENSAMIENTOS REGISTRADOS",
+        "Fuente" to "ORIGEN DE LA INFORMACIÓN",
+        "Cómo la tengo" to "GRADO DE ADHESIÓN",
+        "La idea en una línea" to "PENSAMIENTO EN UNA LÍNEA",
         "A quién ves más" to "CONTACTOS MÁS FRECUENTES",
         "A qué hora" to "FRANJA HORARIA",
         "A qué hora aparecen tus emociones" to "HORARIO DE LAS EMOCIONES",

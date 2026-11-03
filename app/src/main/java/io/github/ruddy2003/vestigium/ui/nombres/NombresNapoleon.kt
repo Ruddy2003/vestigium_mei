@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresNapoleon {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "CARNET D'IDÉES",
+        "Una idea" to "UNE IDÉE",
+        "Nueva idea" to "IDÉE NOUVELLE",
+        "Una idea de antes" to "UNE IDÉE D'AUTREFOIS",
+        "¿Aprendiste algo hoy?" to "QU'AS-TU APPRIS AUJOURD'HUI ?",
+        "Ideas" to "IDÉES",
+        "Fuente" to "SOURCE",
+        "Cómo la tengo" to "MON AVIS",
+        "La idea en una línea" to "L'IDÉE EN UNE LIGNE",
         "A quién ves más" to "TUS INSEPARABLES",
         "A qué hora" to "À QUELLE HEURE",
         "A qué hora aparecen tus emociones" to "HORAS DE LA MORAL",

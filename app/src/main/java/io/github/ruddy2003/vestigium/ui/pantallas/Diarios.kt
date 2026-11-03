@@ -137,6 +137,7 @@ fun PantallaDiario(nav: Nav) {
                 BotonSecundario("✦  momentos", Modifier.weight(1f)) { nav.ir("biblioteca_momentos") }
                 BotonSecundario("✉  cartas", Modifier.weight(1f)) { nav.ir("cartas") }
             }
+            BotonSecundario("❖  ideario: lo que aprendiste y pensaste", Modifier.fillMaxWidth().padding(top = 8.dp)) { nav.ir("biblioteca_ideas") }
             // La lista editable de tus registros de ánimo (N-25).
             BotonSecundario("✦  todos tus registros", Modifier.fillMaxWidth().padding(top = 8.dp)) { nav.ir("momentos") }
         }
@@ -281,6 +282,11 @@ fun PantallaEntrada(nav: Nav) {
                 }
             },
             "Abrir el día" to { Seleccion.abrir(nav, fecha) },
+            // Una copia: el diario queda igual. Se recorta en la idea a lo que valga la pena conservar.
+            "Pasar al Ideario" to {
+                if (d != null) EdicionIdea.abrir(nav, io.github.ruddy2003.vestigium.data.Ideario.deDiario(d.nota, fecha, Fechas.ahoraIso(), Repo.nuevoId()),
+                    contexto = "Del diario del ${Fechas.titulo(fecha).lowercase()}. Deja solo la parte que quieres conservar; el diario no cambia.")
+            },
         ))
     if (escribiendo) io.github.ruddy2003.vestigium.ui.EscribirDia(fecha) { escribiendo = false }
 }

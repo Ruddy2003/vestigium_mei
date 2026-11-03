@@ -7,6 +7,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresUrbe {
     private val BASE: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "Taccuino delle idee",
+        "Una idea" to "Un'idea",
+        "Nueva idea" to "Nuova idea",
+        "Una idea de antes" to "Un'idea di prima",
+        "¿Aprendiste algo hoy?" to "Imparato qualcosa oggi?",
+        "Ideas" to "Idee",
+        "Fuente" to "Fonte",
+        "Cómo la tengo" to "Come la vedo",
+        "La idea en una línea" to "L'idea in una riga",
         "A otras personas" to "Ad altri",
         "A quién ves más" to "Chi vedi più spesso",
         "A qué hora" to "A che ora",

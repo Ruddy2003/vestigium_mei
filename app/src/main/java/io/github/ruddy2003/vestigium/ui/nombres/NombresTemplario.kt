@@ -7,6 +7,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresTemplario {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "Libro de doctrinas",
+        "Una idea" to "Una doctrina",
+        "Nueva idea" to "Doctrina nueva",
+        "Una idea de antes" to "Una doctrina de otra jornada",
+        "¿Aprendiste algo hoy?" to "¿Qué aprendiste hoy, hermano?",
+        "Ideas" to "Doctrinas",
+        "Fuente" to "De qué regla viene",
+        "Cómo la tengo" to "Cómo la guardo",
+        "La idea en una línea" to "La doctrina en un renglón",
         "A quién ves más" to "Con qué hermanos más andas",
         "A qué hora" to "En qué guardia",
         "A qué hora aparecen tus emociones" to "En qué guardia te asalta el ánimo",

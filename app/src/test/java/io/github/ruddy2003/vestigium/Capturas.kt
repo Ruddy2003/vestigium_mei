@@ -396,6 +396,52 @@ class Capturas {
         obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.EdicionObra.id = "o5"
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaObra(navVacia)
     }
+    /** El Ideario con ideas inventadas: de una obra (y una de sus citas), de un video, contadas y propias. */
+    private fun ideasEjemplo() {
+        obrasEjemplo()
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        fun d(k: Long) = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -k)
+        fun i(id: String, k: Long, texto: String, origen: String, titulo: String = "", quien: List<String> = emptyList(), obra: String? = null, cita: String? = null,
+              fuente: String = "", donde: String = "", postura: String = "", fijada: Boolean = false) =
+            io.github.ruddy2003.vestigium.data.Idea(id, d(k) + "T21:15:00-06:00", d(k), texto, titulo, origen, quien, obra, cita, fuente, "", donde, postura, fijada = fijada)
+        Repo.ideasEnMemoria(listOf(
+            i("i1", 0, "Un objeto se puede describir por cómo se relaciona con otros: el mismo vaso es peso para la báscula y alivio para la sed. #fisica #filosofia",
+                "visto", "Las cosas son sus relaciones", listOf("Física inventada", "Entrevistador inventado"), fuente = "Una entrevista en video", donde = "41:20", postura = "piensa"),
+            i("i2", 2, "La libertad se defiende con actos pequeños, no solo con discursos. #filosofia", "leido", quien = listOf("Miguel de Cervantes"), obra = "o1", cita = "c1",
+                donde = "II, 58", postura = "convence", fijada = true),
+            i("i3", 9, "Dormir poco no solo cansa: también vuelve más intensas las emociones negativas al día siguiente. #sueno", "leido", obra = "o5", postura = "duda"),
+            i("i4", 33, "Explicar algo en voz alta muestra qué parte todavía no entiendo. #aprender", "propia", postura = "convence"),
+            i("i5", 40, "Los mercados también coordinan a desconocidos, no solo intercambian cosas.", "contado", quien = listOf("Un profesor"), postura = "desacuerdo"),
+        ))
+    }
+    private fun ideario(tema: TemaId, oscuro: Boolean, vista: String = "mes") = pantalla(tema, oscuro, 3600) {
+        ideasEjemplo()
+        if (vista == "mes") io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "ideas")
+        else io.github.ruddy2003.vestigium.ui.Hoja("Ideario", {}) { io.github.ruddy2003.vestigium.ui.pantallas.BibliotecaIdeas(navVacia, { it }, vistaInicial = vista) }
+    }
+    @Test fun idearioMedieval() = ideario(TemaId.MEDIEVAL, false)
+    @Test fun idearioCiber() = ideario(TemaId.CIBER, true)
+    @Test fun idearioTemasBotanico() = ideario(TemaId.BOTANICO, false, "temas")
+    @Test fun idearioGriego() = ideario(TemaId.HELENO, false)
+    @Test fun ideaRenacimiento() = pantalla(TemaId.RENACIMIENTO, false, 3000) {
+        ideasEjemplo()
+        io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.idea = Repo.ideas.first { it.id == "i2" }
+        io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.contexto = "«La libertad, Sancho, es uno de los más preciosos dones que a los hombres dieron los cielos.»"
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaIdea(navVacia)
+    }
+    @Test fun ideaNuevaRomano() = pantalla(TemaId.ROMANO, true, 2200) {
+        ideasEjemplo()
+        io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.idea = null; io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.contexto = null
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaIdea(navVacia)
+    }
+    @Test fun ideaDeAntesNavidad() = pantalla(TemaId.NAVIDAD, false, 1400) {
+        ideasEjemplo()
+        Column(Modifier.padding(horizontal = 16.dp)) { io.github.ruddy2003.vestigium.ui.pantallas.UnaIdeaDeAntes(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), navVacia) }
+    }
+    @Test fun obraConIdeasMongol() = pantalla(TemaId.MONGOL, false, 6200) {
+        ideasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.EdicionObra.id = "o1"
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaObra(navVacia)
+    }
     @Test fun buscarObraAndalus() = pantalla(TemaId.ANDALUS, false, 2000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBuscarObra(navVacia) }
     @Test fun leidoHoyMongol() = pantalla(TemaId.MONGOL, false, 1400) {
         obrasEjemplo()

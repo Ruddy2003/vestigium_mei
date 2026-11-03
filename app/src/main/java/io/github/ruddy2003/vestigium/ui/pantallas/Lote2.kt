@@ -321,6 +321,13 @@ fun DialogoNota(n: Nota, cerrar: () -> Unit) {
                     if (rec != null) Text("quitar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.clickable { rec = null }.padding(6.dp))
                 }
+                // Una idea o un pensamiento que vale la pena conservar se puede mover al Ideario (con su fecha y hora de creación).
+                if (tp == "idea" || tp == "pensamiento") Text("pasar al Ideario →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 8.dp).clickable {
+                        val i = io.github.ruddy2003.vestigium.data.Ideario.deNota(n.copy(texto = t.trim().ifBlank { n.texto }, fecha = f), Repo.nuevoId())
+                        Repo.guardarIdea(i); Repo.borrarNota(n.id); cerrar()
+                        io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Nota pasada al Ideario") { Repo.borrarIdea(i.id); Repo.guardarNota(n) }
+                    }.padding(vertical = 6.dp))
             }
         },
         confirmButton = { TextButton(onClick = {

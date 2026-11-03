@@ -57,6 +57,7 @@ data class Respaldo(
     val tomas: List<TomaSuplemento> = emptyList(),
     val laptop: List<LaptopDia> = emptyList(),
     val avisos: List<AvisosDia> = emptyList(),
+    val ideas: List<Idea> = emptyList(),
 )
 
 /** CSV listos para R: fechas AAAA-MM-DD, booleanos como 0/1, listas separadas por «|», vacío = dato faltante. */
@@ -344,6 +345,23 @@ object Exportar {
         linkedMapOf<String, Any?>("id" to it.id, "creada" to it.creada, "fecha" to it.fecha, "tipo" to it.tipo, "texto" to it.texto,
             "personas" to Texto.personas(it.texto), "temas" to Texto.temas(it.texto), "fijada" to it.fijada, "recordar_el" to it.recordar_el,
             "hecha" to it.hecha, "editada" to it.editada)
+    }
+
+    /** El Ideario: una fila por idea. «obra_titulo» sale de la obra ligada, si todavía existe. */
+    fun filasIdeas(): List<Map<String, Any?>> {
+        val obras = Repo.obras.associateBy { it.id }
+        return Repo.ideas.sortedBy { it.creada }.map {
+            linkedMapOf<String, Any?>("id" to it.id, "creada" to it.creada, "fecha" to it.fecha, "editada" to it.editada, "titulo" to it.titulo.ifBlank { null },
+                "texto" to it.texto, "origen" to it.origen.ifBlank { null }, "quien" to it.quien, "obra_id" to it.obra_id,
+                "obra_titulo" to it.obra_id?.let { o -> obras[o]?.titulo }, "cita_id" to it.cita_id, "fuente" to it.fuente.ifBlank { null },
+                "enlace" to it.enlace.ifBlank { null }, "donde" to it.donde.ifBlank { null }, "postura" to it.postura.ifBlank { null },
+                "fijada" to it.fijada, "n_revisiones" to it.revisiones.size, "personas" to Texto.personas(it.texto), "temas" to Texto.temas(it.texto))
+        }
+    }
+
+    /** Cada vez que volviste a ver una idea en «Una idea de antes» y qué respondiste. */
+    fun filasIdeasRevisiones() = Repo.ideas.sortedBy { it.creada }.flatMap { i ->
+        i.revisiones.map { r -> linkedMapOf<String, Any?>("idea_id" to i.id, "fecha" to r.fecha, "respuesta" to r.respuesta) }
     }
 
     fun filasMetas(): List<Map<String, Any?>> {
@@ -877,7 +895,8 @@ object Exportar {
         chats = Repo.chats, nutricion = Repo.nutricion.values.sortedBy { it.fecha }, comidas = Repo.comidas("0000-01-01", "9999-12-31"),
         series = Repo.series("0000-01-01", "9999-12-31"), entrenos = Repo.entrenos.values.sortedBy { it.fecha }, ingresos = Repo.ingresos,
         youtube = Repo.youtube, tramos = Repo.tramos, consumos = Repo.consumos, notas = Repo.notas, metas = Repo.metas,
-        tomas = Repo.tomas, laptop = Repo.laptop.values.sortedBy { it.fecha }, avisos = Repo.avisos.values.sortedBy { it.fecha }))
+        tomas = Repo.tomas, laptop = Repo.laptop.values.sortedBy { it.fecha }, avisos = Repo.avisos.values.sortedBy { it.fecha },
+        ideas = Repo.ideas))
 
     class Tabla(val archivo: String, val descripcion: String, val filas: List<Map<String, Any?>>)
 
@@ -893,6 +912,8 @@ object Exportar {
         Tabla("vm_horas.csv", "Una fila por hora: dormido, lugar, pantalla, notificaciones, luz, música, ánimo, cafeína y alcohol en el cuerpo, sustancias, enfoque, gastos y comidas", filasHoras()),
         Tabla("vm_gastos.csv", "Gastos, uno por fila", filasGastos()),
         Tabla("vm_notas.csv", "Notas sueltas: ideas, pensamientos, propósitos y recordatorios", filasNotas()),
+        Tabla("vm_ideas.csv", "Ideario: lo que aprendiste o pensaste, con quién lo dice, su fuente y cómo la tienes", filasIdeas()),
+        Tabla("vm_ideas_revisiones.csv", "Ideario: cada vez que volviste a ver una idea y qué respondiste", filasIdeasRevisiones()),
         Tabla("vm_suplementos.csv", "Cada toma de suplemento (y las porciones de probióticos estimadas de tu bitácora de comidas)", filasSuplementos()),
         Tabla("vm_laptop.csv", "Minutos por app y por sitio en la laptop, por día (Cold Turkey)", filasLaptop()),
         filasRed().let { (n, v) -> Tabla("vm_red_nodos.csv", "Personas de tu red: relación, cercanía, días mencionada y grado", n) },

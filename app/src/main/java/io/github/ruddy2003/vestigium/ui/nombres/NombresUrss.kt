@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresUrss {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "CUADERNO DE TESIS",
+        "Una idea" to "UNA TESIS",
+        "Nueva idea" to "TESIS NUEVA",
+        "Una idea de antes" to "UNA TESIS DEL PLAN ANTERIOR",
+        "¿Aprendiste algo hoy?" to "¿QUÉ APRENDISTE EN LA JORNADA?",
+        "Ideas" to "TESIS",
+        "Fuente" to "PROCEDENCIA",
+        "Cómo la tengo" to "POSICIÓN",
+        "La idea en una línea" to "LA TESIS EN UNA LÍNEA",
         "A quién ves más" to "CAMARADAS MÁS VISTOS",
         "A qué hora" to "HORARIO",
         "A qué hora aparecen tus emociones" to "HORARIO DE LA MORAL",

@@ -7,6 +7,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresPirata {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "El cofre de las ideas",
+        "Una idea" to "Una idea a bordo",
+        "Nueva idea" to "Idea recién pescada",
+        "Una idea de antes" to "Una idea de otra travesía",
+        "¿Aprendiste algo hoy?" to "¿Qué aprendiste en esta guardia?",
+        "Ideas" to "Ideas a bordo",
+        "Fuente" to "De qué puerto vino",
+        "Cómo la tengo" to "Cómo la veo desde el puente",
+        "La idea en una línea" to "La idea en una línea de bitácora",
         "A otras personas" to "A otras costas",
         "A quién ves más" to "Con quién compartes guardia",
         "A qué hora" to "A qué campanada",

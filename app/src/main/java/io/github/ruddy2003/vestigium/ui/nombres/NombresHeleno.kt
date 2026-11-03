@@ -6,6 +6,16 @@ package io.github.ruddy2003.vestigium.ui.nombres
  */
 internal object NombresHeleno {
     val M: Map<String, String> = mapOf(
+        // Ideario (esquema 16).
+        "Ideario" to "ΒΙΒΛΟΣ ΙΔΕΩΝ",
+        "Una idea" to "ΙΔΕΑ",
+        "Nueva idea" to "ΝΕΑ ΙΔΕΑ",
+        "Una idea de antes" to "ΠΑΛΑΙΑ ΙΔΕΑ",
+        "¿Aprendiste algo hoy?" to "ΤΙ ΕΜΑΘΕΣ ΣΗΜΕΡΟΝ;",
+        "Ideas" to "ΙΔΕΑΙ",
+        "Fuente" to "ΠΗΓΗ",
+        "Cómo la tengo" to "ΠΩΣ ΔΟΚΕΙ ΜΟΙ",
+        "La idea en una línea" to "Η ΙΔΕΑ ΕΝ ΣΤΙΧΩΙ",
         "A qué hora" to "ΚΑΤΑ ΩΡΑΝ",
         "Activos" to "ΕΝΕΡΓΑ",
         "Agregar" to "ΠΡΟΣΘΕΣ",

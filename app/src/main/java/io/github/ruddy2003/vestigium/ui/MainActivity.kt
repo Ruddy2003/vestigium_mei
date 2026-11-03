@@ -143,7 +143,7 @@ class MainActivity : FragmentActivity() {
         Estilo.tema.let { t -> ArranqueTema.aplicar(this, t, ArranqueTema.oscuro(this, t)) }
         Programador.asegurar(this)
         Sentidos.preparar(this)
-        pedida = intent?.getStringExtra(PANTALLA)
+        pedida = compartido(intent) ?: intent?.getStringExtra(PANTALLA)
         desbloqueado = !Repo.config.bloqueo
         setContent {
             TemaVestigium {
@@ -160,7 +160,17 @@ class MainActivity : FragmentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        pedida = intent.getStringExtra(PANTALLA)
+        pedida = compartido(intent) ?: intent.getStringExtra(PANTALLA)
+    }
+
+    /** Lo que otra app compartió (un video, una página, un subrayado) abre una idea nueva en el Ideario con su enlace y su título. */
+    private fun compartido(i: Intent?): String? {
+        if (i?.action != Intent.ACTION_SEND || i.type?.startsWith("text/") != true) return null
+        val idea = io.github.ruddy2003.vestigium.data.Ideario.deCompartido(i.getStringExtra(Intent.EXTRA_TEXT), i.getStringExtra(Intent.EXTRA_SUBJECT),
+            io.github.ruddy2003.vestigium.data.Fechas.ahoraIso(), io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), Repo.nuevoId())
+        io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.idea = idea
+        io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.contexto = null
+        return "idea"
     }
 
     override fun onStop() {
@@ -1656,6 +1666,10 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         else if (p.startsWith("dia:")) { S.pedida = p.drop(4); pestana = "dia"; pila = emptyList() }
         else if (p == "momentos") { pestana = "diario"; pila = emptyList() }
         else if (p == "diarios") { pestana = "diario"; pila = listOf("biblioteca_diario") }
+        // Compartido desde otra app: la idea ya armada, sobre el Ideario.
+        else if (p == "idea") { pestana = "diario"; pila = listOf("biblioteca_ideas", "idea") }
+        // Del menú ⊕: una idea en blanco para hoy.
+        else if (p == "idea_nueva") { io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.idea = null; io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.contexto = null; pestana = "diario"; pila = listOf("biblioteca_ideas", "idea") }
         else if (p == "explorar" || p == "entender") { pestana = "entender"; pila = emptyList() }
         else if (PESTANAS.any { it.id == p }) { pestana = p; pila = emptyList() } else { pestana = "dia"; pila = listOf(p) }
         consumir()
@@ -1794,6 +1808,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "entrada" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(nav)
                     "biblioteca_diario" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "diario")
                     "biblioteca_momentos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "momentos")
+                    "biblioteca_ideas", "ideario" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "ideas")
+                    "idea" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaIdea(nav)
                     "cinta" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(nav)
                     "constelacion" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(nav)
                     "hall" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(nav)

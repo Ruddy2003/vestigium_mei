@@ -349,6 +349,7 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
             Aviso((if (esHoy) "Hoy: " else "Este día: ") + l.joinToString(" · ") { io.github.ruddy2003.vestigium.data.Especiales.frase(it) } + ".")
         }
         HaceUnAnio(fecha, nav)
+        if (esHoy) UnaIdeaDeAntes(hoy, nav)
 
         // Lo automático, al fondo.
         Seccion("Lo que registró el teléfono", "Se llena solo con los sensores que activaste. Nada de esto tienes que escribirlo.", numero = n(), autoPlegar = true,
@@ -586,6 +587,10 @@ fun PantallaNoche(nav: Nav) {
         }
         Seccion("Lo que leí o vi hoy", "Toca la portada de lo que le dedicaste tiempo hoy: libro, serie, película, juego o artículo.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             ObrasDeHoy(fecha, nav)
+        }
+        Seccion("¿Aprendiste algo hoy?", "De un libro, un video, una plática, o algo que se te ocurrió. Se guarda en tu Ideario.", numero = n(), plegable = true,
+            plegadaPorDefecto = Repo.ideas.none { it.fecha == fecha }) {
+            IdeasDelDia(fecha, nav) { if (sucio) { Repo.guardarDia(d); sucio = false } }
         }
         if (ver("foto")) Seccion("Foto del día", "Toca «elegir» (o mantén presionada la foto) para que sea la foto del día: sale en el calendario, en la biblioteca del diario y en el widget. Tócala para verla.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             Imagenes(fecha, d.foto, nav) { uri -> cambiar(d.copy(foto = if (d.foto == uri) null else uri)) }
@@ -850,7 +855,7 @@ private fun Tok(t: String, nueva: Boolean) {
 
 /**
  * «Tu día» (N-17, N-26): la línea de 24 horas y, debajo, todo lo que tiene hora ese día (momentos, consumos, tramos,
- * gastos, ingresos, tomas y notas), del más temprano al más tarde. Cada fila se corrige al tocarla; «＋ agregar a este día»
+ * gastos, ingresos, tomas, notas e ideas), del más temprano al más tarde. Cada fila se corrige al tocarla; «＋ agregar a este día»
  * abre el registro con la fecha ya puesta. Lo privado no se lista: se llega por Privado.
  */
 @Composable
@@ -893,6 +898,13 @@ private fun TuDia(fecha: String, nav: Nav, numero: Int, guardarAntes: () -> Unit
             add(Fila(if (mismoDia) ms else Long.MAX_VALUE, if (mismoDia) Fechas.horaDe(n.creada) else "nota",
                 (Catalogo.TIPOS_NOTA.firstOrNull { it.id == n.tipo }?.nombre ?: "Nota") + " · " + n.texto.lines().first().take(90)) { abrir(n) })
         }
+        // Las ideas del Ideario, igual que las notas.
+        Repo.ideas.filter { it.fecha == fecha }.forEach { i ->
+            val ms = Fechas.millis(i.creada)
+            val mismoDia = ms > 0 && Fechas.diaLogicoDeMillis(ms) == fecha
+            add(Fila(if (mismoDia) ms else Long.MAX_VALUE, if (mismoDia) Fechas.horaDe(i.creada) else "idea",
+                "Idea · " + i.titulo.ifBlank { i.texto.lines().first() }.take(90)) { guardarAntes(); EdicionIdea.abrir(nav, i) })
+        }
     }.sortedBy { it.ms }
     var agregar by remember(fecha) { mutableStateOf(false) }
     Seccion("Tu día", "La línea de 24 horas y todo lo que anotaste o registró el teléfono en tus lugares, por hora. Toca una fila para corregirla.", numero = numero, plegable = true,
@@ -933,6 +945,7 @@ private fun TuDia(fecha: String, nav: Nav, numero: Int, guardarAntes: () -> Unit
                     abrir(io.github.ruddy2003.vestigium.data.Gasto(Repo.nuevoId(), f, hora, 0.0, c.categorias.firstOrNull() ?: "Otros"))
                 }
                 Ficha("nota", false) { guardarAntes(); Seleccion.notaPara = fecha; nav.ir("notas") }
+                Ficha("idea", false) { guardarAntes(); EdicionIdea.abrir(nav, EdicionIdea.nueva(fecha)) }
             }
             if (io.github.ruddy2003.vestigium.data.Suplementos.activos(c).isNotEmpty()) {
                 Etiqueta("Suplementos de ese día")

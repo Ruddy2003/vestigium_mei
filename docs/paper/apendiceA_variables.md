@@ -400,7 +400,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 
 ## A.3 Tablas exportadas
 
-La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`: 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv` (columnas `archivo`, `columna`, `tipo`, `descripcion` y `tabla`; desde 10f, también `desde_version` y `cambio`, A.9), `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por cada CSV con datos, sin el «vm_», más `ubicaciones` y `diccionario`; no lleva el catálogo de fotos), un `LEEME.txt`, el propio `vestigium.R` y la carpeta `portadas/` (`Exportar.archivos` y `Exportar.zip`). La exportación resumida (`Exportar.zipResumido`) trae solo `vm_panel.csv`, su diccionario, el `LEEME.txt` y `vestigium.R`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
+La exportación genera 53 tablas CSV con datos (contadas en `Exportar.tablas()`: 51 antes del esquema 16, que agregó `vm_ideas.csv` y `vm_ideas_revisiones.csv`, A.10; 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv` (columnas `archivo`, `columna`, `tipo`, `descripcion` y `tabla`; desde 10f, también `desde_version` y `cambio`, A.9), `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por cada CSV con datos, sin el «vm_», más `ubicaciones` y `diccionario`; no lleva el catálogo de fotos), un `LEEME.txt`, el propio `vestigium.R` y la carpeta `portadas/` (`Exportar.archivos` y `Exportar.zip`). La exportación resumida (`Exportar.zipResumido`) trae solo `vm_panel.csv`, su diccionario, el `LEEME.txt` y `vestigium.R`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
 
 | Archivo | Contenido |
 |---|---|
@@ -415,6 +415,8 @@ La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_horas.csv` | Una fila por hora: dormido, lugar, pantalla, notificaciones, luz, música, ánimo, cafeína y alcohol en el cuerpo, sustancias, enfoque, gastos y comidas |
 | `vm_gastos.csv` | Gastos, uno por fila |
 | `vm_notas.csv` | Notas sueltas: ideas, pensamientos, propósitos y recordatorios |
+| `vm_ideas.csv` | Ideario: lo que aprendiste o pensaste, con quién lo dice, su fuente y cómo la tienes (esquema 16) |
+| `vm_ideas_revisiones.csv` | Ideario: cada vez que volviste a ver una idea y qué respondiste (esquema 16) |
 | `vm_suplementos.csv` | Cada toma de suplemento (y las porciones de probióticos estimadas de tu bitácora de comidas) |
 | `vm_laptop.csv` | Minutos por app y por sitio en la laptop, por día (Cold Turkey) |
 | `vm_red_nodos.csv` | Personas de tu red: relación, grupo de relación (columna `grupo`, desde 10c), cercanía, días mencionada y grado |
@@ -609,3 +611,26 @@ Cambia lo que se guarda: `SCHEMA_V` = 15. Una variable nueva en el panel de la a
 | `vm_diccionario.csv` | `desde_version`, `cambio` | Desde qué versión de la app rige la definición actual de la columna y qué cambió entonces, con su fila del Apéndice D; vacío = sin cambios desde la v84 (`Diccionario.desde`; D.115, H-1-8). La tabla que las llena (`Diccionario.DESDE`, 165 entradas, con comodines como `per_*`) se armó con las filas del Apéndice D (capítulo 2, sección 2.8) |
 
 **Lo que cambia sin columna nueva.** `sin_wifi_min` (arriba) y todas las horas que la app saca de un instante: `primer_uso_h`, `ultimo_uso_h`, `cafeina_ultima_h`, las horas de `vm_horas.csv` y las demás `*_h` se calculan con la zona que tenía el teléfono entonces, o con el desfase de la propia nota (`Fechas.local`, `Fechas.localDe`). Mientras no viajes, nada cambia. Lo que el teléfono ya guardó sumado por día (sueño, pasos, pantalla, ubicaciones) no se recalcula. La plantilla «Creatina» mide desde 10f `fuerza_ref_kg` en lugar de `volumen_kg`; un experimento creado con la plantilla de antes sigue midiendo `volumen_kg`.
+
+## A.10 Tablas nuevas del esquema 16 (Ideario)
+
+Cambia lo que se guarda: `SCHEMA_V` = 16, con una colección nueva (`ideas`) y un ajuste (`Config.ideas_resurgir`, si sale «Una idea de antes» en el Día). No hay variables nuevas en el panel ni cambia ninguna columna de las tablas anteriores. Detalle en el capítulo 2 (sección 2.5) y en el Apéndice D (D.123 a D.126).
+
+`vm_ideas.csv` tiene una fila por idea (`Exportar.filasIdeas`):
+
+| Columna | Qué es |
+|---|---|
+| `id`, `creada`, `fecha`, `editada` | Identificador; cuándo se escribió (fecha y hora con su desfase); el día al que pertenece (por omisión, el día lógico en que se anotó; se puede cambiar); la última edición |
+| `titulo` | La idea en una línea (opcional) |
+| `texto` | Lo que entendiste, con tus palabras, con sus @personas y #temas |
+| `origen` | `leido`, `visto` (o escuchado), `contado` o `propia`; vacío = sin decir |
+| `quien` | Lista de autores o invitados que lo dicen. No son personas de Tu gente: no cuentan en la red social |
+| `obra_id`, `obra_titulo`, `cita_id` | La obra y la cita de las que salió; `obra_titulo` queda vacío si la obra se borró |
+| `fuente`, `enlace`, `donde` | De dónde salió cuando no hay obra (escrita a mano o al compartir), su enlace y el minuto o la página |
+| `postura` | Cómo la tienes: `convence`, `piensa` (te hace pensar), `duda` o `desacuerdo`; vacío = sin decir |
+| `fijada`, `n_revisiones` | 0/1 si está fijada arriba; cuántas veces la respondiste en «Una idea de antes» |
+| `personas`, `temas` | Las @personas y los #temas escritos en el texto (listas) |
+
+`vm_ideas_revisiones.csv` tiene una fila por respuesta (`Exportar.filasIdeasRevisiones`): `idea_id`, `fecha` (día lógico en que respondiste) y `respuesta` (`sigue`, «sigo pensando igual»; `cambio`, «ya no»; `ignorar`, «ahora no»). En R se leen como `vm$ideas` y `vm$ideas_revisiones`.
+
+**Al leer los datos.** Las ideas no son una muestra de lo que aprendiste: solo está lo que decidiste anotar. `postura` y `revisiones` son autorreporte y empiezan vacías en casi todas las ideas. Una idea pasada desde una nota conserva la `creada` y la `fecha` de la nota; una pasada desde el diario es una copia con la fecha de ese día. `Diccionario.DESDE` no tiene entrada para estas columnas porque son nuevas: no hay una definición anterior con la cual compararlas.
