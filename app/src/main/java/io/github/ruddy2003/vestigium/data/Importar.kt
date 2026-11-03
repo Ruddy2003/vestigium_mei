@@ -108,7 +108,7 @@ object Importar {
             mes.jsonObject["items"]?.jsonArray?.mapNotNull { it as? JsonObject }?.map { g ->
                 Gasto(id = g["id"].str() ?: Repo.nuevoId(), fecha = g["fecha"].str() ?: "", hora = g["hora"].str() ?: "",
                     monto = (g["monto"] as? JsonPrimitive)?.doubleOrNull ?: 0.0, categoria = g["categoria"].str() ?: "Otro",
-                    imprevisto = g["imprevisto"].bool(), nota = g["nota"].str() ?: "")
+                    imprevisto = g["imprevisto"].bool(), nota = g["nota"].str() ?: "", se_repite = g["se_repite"].bool())
             } ?: emptyList()
         }?.filter { it.fecha.isNotEmpty() } ?: emptyList()
         Repo.importarGastos(gastos)

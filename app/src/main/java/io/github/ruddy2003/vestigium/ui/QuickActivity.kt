@@ -557,12 +557,7 @@ class QuickActivity : FragmentActivity() {
             Ayuda("En curso desde las ${Fechas.horaDe(abierto.inicio)}" + (sus.maximo(abierto)?.let { " · máximo hasta ahora $it" } ?: ""), Modifier.padding(top = 10.dp))
             Etiqueta("¿Cómo vas ahora? (0 a 10)")
             Escala(nivel, 0, 10, Catalogo.anclasNivel(id)) { v -> nivel = v; if (v != null) sus.lectura(Repo.consumo(abierto.id) ?: abierto, v) }
-            if (id == "alcohol") {
-                Etiqueta("Bebidas hasta ahora: ${"%.1f".format(cantidad).removeSuffix(".0")}")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Catalogo.BEBIDAS.forEach { (n, eq) -> Ficha("+ $n", false) { cantidad += eq; val q = cantidad; Repo.consumo(abierto.id)?.let { Repo.guardarConsumo(it.copy(cantidad = q)) } } }
-                }
-            }
+            if (id == "alcohol") CantidadConsumo("alcohol", "bebidas", cantidad) { q -> cantidad = q; Repo.consumo(abierto.id)?.let { Repo.guardarConsumo(it.copy(cantidad = q.takeIf { v -> v > 0 })) } }
             Etiqueta("¿Ya se te pasó? ¿A qué hora?")
             SelectorHora(fin, atajos = listOf(15, 30, 60)) { fin = it }
             Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -588,34 +583,12 @@ class QuickActivity : FragmentActivity() {
             Etiqueta("¿Cómo vas ahora? (0 a 10)")
             Escala(nivel, 0, 10, Catalogo.anclasNivel(id)) { nivel = it }
         }
-        when (id) {
-            "alcohol" -> {
-                Etiqueta("Bebidas: ${"%.1f".format(cantidad).removeSuffix(".0")} (opcional)")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Catalogo.BEBIDAS.forEach { (n, eq) -> Ficha("+ $n", false) { cantidad += eq } }
-                    if (cantidad > 0) Ficha("borrar", false) { cantidad = 0.0 }
-                }
-            }
-            "cafeina" -> {
-                Etiqueta("¿Qué tomaste? ${cantidad.toInt()} mg")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Catalogo.CAFES.forEach { (n, mg) -> Ficha("+ $n", false) { cantidad += mg } }
-                    if (cantidad > 0) Ficha("borrar", false) { cantidad = 0.0 }
-                }
-                Ayuda("Si registras la cafeína en MacroFactor, esos días se usa la de MacroFactor (con la hora de cada alimento) y no se cuenta dos veces.", Modifier.padding(top = 4.dp))
-            }
-            else -> {
-                if (info.vias.isNotEmpty()) {
-                    Etiqueta("¿Cómo?")
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) { info.vias.forEach { o -> Ficha(o.nombre, via == o.id) { via = if (via == o.id) null else o.id } } }
-                }
-                Etiqueta("¿Cuántos ${info.unidad}? ${cantidad.toInt().takeIf { it > 0 } ?: ""}")
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Ficha("−", false) { cantidad = (cantidad - 1).coerceAtLeast(0.0) }
-                    Ficha("+", false) { cantidad += 1 }
-                }
-            }
+        if (id != "alcohol" && id != "cafeina" && info.vias.isNotEmpty()) {
+            Etiqueta("¿Cómo?")
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) { info.vias.forEach { o -> Ficha(o.nombre, via == o.id) { via = if (via == o.id) null else o.id } } }
         }
+        CantidadConsumo(id, info.unidad, cantidad) { cantidad = it }
+        if (id == "cafeina") Ayuda("Si registras la cafeína en MacroFactor, esos días se usa la de MacroFactor (con la hora de cada alimento) y no se cuenta dos veces.", Modifier.padding(top = 4.dp))
         Etiqueta("¿Con quién? (opcional)")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Catalogo.CON_QUIEN.forEach { o -> Ficha(o.nombre, o.id in con) { con = Catalogo.alternarConQuien(con, o.id) } }
@@ -634,7 +607,37 @@ class QuickActivity : FragmentActivity() {
         }
     }
 
-    /** La mañana siguiente: hasta qué hora duró, el máximo, cuánto, la cruda y cómo te sentiste. */
+    /**
+     * Cuánto: en alcohol y cafeína, fichas que suman (y «quitar el último» para deshacer la última que sumaste); en lo demás,
+     * − y +. Siempre se puede escribir el total (con decimales) y «poner en 0».
+     */
+    @Composable
+    private fun CantidadConsumo(sustancia: String, unidad: String, cantidad: Double, onCambio: (Double) -> Unit) {
+        val D = io.github.ruddy2003.vestigium.data.Dinero
+        var pila by remember(sustancia) { mutableStateOf(listOf<Double>()) }
+        var texto by remember(sustancia) { mutableStateOf(if (cantidad > 0) D.texto(cantidad) else "") }
+        fun poner(v: Double) { val n = (Math.round(v.coerceAtLeast(0.0) * 100) / 100.0); texto = if (n > 0) D.texto(n) else ""; onCambio(n) }
+        val fichas = when (sustancia) { "alcohol" -> Catalogo.BEBIDAS; "cafeina" -> Catalogo.CAFES; else -> emptyList() }
+        Etiqueta(when (sustancia) {
+            "alcohol" -> "Bebidas: ${"%.1f".format(cantidad).removeSuffix(".0").removeSuffix(",0")} (opcional)"
+            "cafeina" -> "¿Qué tomaste? ${cantidad.toInt()} mg"
+            else -> "¿Cuántos $unidad?"
+        })
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            fichas.forEach { (n, eq) -> Ficha("+ $n", false) { pila = pila + eq; poner(cantidad + eq) } }
+            if (fichas.isEmpty()) {
+                Ficha("−", false) { poner(cantidad - 1) }
+                Ficha("+", false) { poner(cantidad + 1) }
+            } else if (pila.isNotEmpty()) Ficha("quitar el último", false) { val u = pila.last(); pila = pila.dropLast(1); poner(cantidad - u) }
+            else if (cantidad > 0 && sustancia == "alcohol") Ficha("− 1", false) { poner(cantidad - 1) }
+            if (cantidad > 0) Ficha("poner en 0", false) { pila = emptyList(); poner(0.0) }
+        }
+        OutlinedTextField(value = texto, onValueChange = { t -> texto = D.limpiarMonto(t); onCambio(texto.toDoubleOrNull() ?: 0.0) },
+            modifier = Modifier.padding(top = 6.dp).width(200.dp), singleLine = true, label = { Text("o escribe el total") },
+            suffix = { Text(if (sustancia == "cafeina") "mg" else unidad) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+    }
+
+    /** La mañana siguiente (o al corregir): hasta qué hora duró, el máximo, cuánto, cómo, con quién, la cruda y cómo te sentiste. */
     @Composable
     private fun CompletarConsumo(c0: io.github.ruddy2003.vestigium.data.Consumo) {
         val ctx = this
@@ -646,7 +649,11 @@ class QuickActivity : FragmentActivity() {
         var cruda by remember { mutableStateOf(c0.cruda) }
         var sintomas by remember { mutableStateOf(c0.sintomas) }
         var nota by remember { mutableStateOf(c0.nota) }
+        var via by remember { mutableStateOf(c0.via) }
+        var con by remember { mutableStateOf(c0.con_quien) }
+        var otra by remember { mutableStateOf(c0.otra_nombre) }
         Encabezado((if (c0.fecha < Fechas.diaLogico()) "Lo de anoche: " else "Editar: ") + Catalogo.nombreSustancia(c0).lowercase(), "Unos toques. Lo que no recuerdes, déjalo vacío.")
+        if (c0.sustancia == "otra") OutlinedTextField(value = otra, onValueChange = { otra = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("¿Cuál?") })
         Etiqueta("¿Desde cuándo?")
         SelectorHora(inicio, etiquetaAhora = "no sé") { inicio = it }
         Etiqueta("¿Hasta cuándo te duró el efecto?")
@@ -655,19 +662,20 @@ class QuickActivity : FragmentActivity() {
             Etiqueta("¿Hasta qué nivel llegaste? (0 a 10)")
             Escala(max, 0, 10, Catalogo.anclasNivel(c0.sustancia)) { max = it }
         }
-        if (c0.sustancia == "alcohol") {
-            Etiqueta("Bebidas en total: ${"%.1f".format(cantidad).removeSuffix(".0")}")
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Catalogo.BEBIDAS.forEach { (n, eq) -> Ficha("+ $n", false) { cantidad += eq } }
-                if (cantidad > 0) Ficha("borrar", false) { cantidad = 0.0 }
-            }
+        if (info != null && c0.sustancia != "alcohol" && c0.sustancia != "cafeina" && info.vias.isNotEmpty()) {
+            Etiqueta("¿Cómo?")
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) { info.vias.forEach { o -> Ficha(o.nombre, via == o.id) { via = if (via == o.id) null else o.id } } }
         }
-        Etiqueta("Cruda o bajón hoy (0 a 5)")
+        CantidadConsumo(c0.sustancia, info?.unidad ?: "", cantidad) { cantidad = it }
+        Etiqueta("¿Con quién? (opcional)")
+        SelectorConQuien(con) { con = it }
+        Etiqueta("Cruda o bajón al día siguiente (0 a 5)")
         Escala(cruda, 0, 5, Catalogo.CRUDA) { cruda = it }
         Etiqueta("Síntomas (opcional)")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Catalogo.SINTOMAS.forEach { o -> val a = o.id in sintomas; Ficha(o.nombre, a) { sintomas = if (a) sintomas - o.id else sintomas + o.id } }
         }
+        if ("otro" in sintomas) Ayuda("Escribe cuál en la nota.", Modifier.padding(top = 4.dp))
         OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Nota (opcional): @persona, #lugar…") },
             visualTransformation = rememberMarcas())
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -680,8 +688,10 @@ class QuickActivity : FragmentActivity() {
             BotonPrincipal("Guardar") {
                 val actual = Repo.consumo(c0.id) ?: c0
                 val ini = inicio?.aMillis() ?: Fechas.millis(actual.inicio)
-                Repo.guardarConsumo(actual.copy(inicio = Fechas.isoDeMillis(ini), fecha = Fechas.diaLogicoDeMillis(ini), fin = fin?.aMillis()?.coerceAtLeast(ini)?.let { Fechas.isoDeMillis(it) } ?: actual.fin,
-                    nivel_max = max, cantidad = cantidad.takeIf { it > 0 } ?: actual.cantidad, cruda = cruda, sintomas = sintomas, nota = nota.trim(), completo = true))
+                // «no sé» en el fin lo deja vacío (antes conservaba el que hubiera); la cantidad en 0 la quita.
+                Repo.guardarConsumo(actual.copy(inicio = Fechas.isoDeMillis(ini), fecha = Fechas.diaLogicoDeMillis(ini), fin = fin?.aMillis()?.coerceAtLeast(ini)?.let { Fechas.isoDeMillis(it) },
+                    nivel_max = max, cantidad = cantidad.takeIf { it > 0 }, via = via, con_quien = con, otra_nombre = if (actual.sustancia == "otra") otra.trim() else actual.otra_nombre,
+                    cruda = cruda, sintomas = sintomas, nota = nota.trim(), completo = true))
                 Toast.makeText(ctx, "Guardado", Toast.LENGTH_SHORT).show(); terminar()
             }
         }
@@ -713,7 +723,9 @@ class QuickActivity : FragmentActivity() {
         var cat by remember { mutableStateOf(catInicial.takeIf { inicial == null }) }
         var sub by remember { mutableStateOf("") }
         var imprevisto by remember { mutableStateOf(false) }
+        var repite by remember { mutableStateOf(false) }
         var fijo by remember { mutableStateOf(false) }
+        androidx.compose.runtime.LaunchedEffect(Unit) { D.asegurarCategoriasNuevas() }
         var nota by remember { mutableStateOf("") }
         var error by remember { mutableStateOf<String?>(null) }
         var registrado by remember { mutableStateOf(inicial) }
@@ -752,7 +764,7 @@ class QuickActivity : FragmentActivity() {
             }
         }
         Etiqueta(if (entra) "Monto" else "Otro gasto")
-        OutlinedTextField(value = monto, onValueChange = { monto = it.filter { ch -> ch.isDigit() || ch == '.' }; error = null }, modifier = Modifier.fillMaxWidth(),
+        OutlinedTextField(value = monto, onValueChange = { monto = D.limpiarMonto(it); error = null }, modifier = Modifier.fillMaxWidth(),
             prefix = { Text("$ ") }, placeholder = { Text("0") }, singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), textStyle = MaterialTheme.typography.headlineSmall)
         Etiqueta("Categoría")
@@ -775,8 +787,11 @@ class QuickActivity : FragmentActivity() {
         Etiqueta("Cuándo")
         SelectorHora(cuando) { cuando = it }
         if (entra) Interruptor("¿Se repite? (sueldo, beca, renta)", fijo) { fijo = it }
-        else Interruptor("¿Fue imprevisto?", imprevisto) { imprevisto = it }
-        OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, singleLine = true)
+        else {
+            Interruptor("¿Fue imprevisto?", imprevisto) { imprevisto = it }
+            Interruptor("¿Se repite? (renta, suscripción, servicios)", repite) { repite = it }
+        }
+        OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
             if (registrado != null) TextButton(onClick = { terminar() }) { Text("Listo") }
@@ -798,7 +813,7 @@ class QuickActivity : FragmentActivity() {
                         terminar()
                     }
                     else -> {
-                        val g = Gasto(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim(), subcategoria = sub, ts_creado = Fechas.ahoraIso())
+                        val g = Gasto(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim(), subcategoria = sub, se_repite = repite, ts_creado = Fechas.ahoraIso())
                         Repo.guardarGasto(g)
                         // La ubicación de ahora solo sirve si el gasto es de ahora.
                         if (k == null) ubicarGasto(g)

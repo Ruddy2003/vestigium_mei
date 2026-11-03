@@ -306,6 +306,8 @@ data class Gasto(
     val lon: Double? = null,
     /** Subcategoría dentro de [categoria] (esquema 14), por ejemplo Comida → Café. Vacía = sin subcategoría. */
     val subcategoria: String = "",
+    /** Gasto que se repite (renta, suscripción, servicios), esquema 17: solo informativo, no se duplica solo. */
+    val se_repite: Boolean = false,
     /** Cuándo se anotó y cuándo se corrigió por última vez (esquema 14). */
     val ts_creado: String? = null,
     val ts_editado: String? = null,
@@ -704,6 +706,8 @@ data class Experimento(
 data class Config(
     val habitos: List<Habito> = emptyList(),
     val categorias: List<String> = Catalogo.CATEGORIAS,
+    /** Ya se agregaron una vez Vivienda y Servicios a tus categorías (esquema 17): si las quitas, no vuelven. */
+    val categorias_v17: Boolean = false,
     /** Subcategorías de gasto por categoría (esquema 14), cada una con su monto habitual si lo fijaste. */
     val subcategorias: Map<String, List<Subcategoria>> = emptyMap(),
     val equivalencias: Map<String, String> = emptyMap(),

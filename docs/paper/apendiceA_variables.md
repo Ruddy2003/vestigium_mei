@@ -664,3 +664,5 @@ Cambia lo que se guarda: `SCHEMA_V` = 17. El detalle está en el capítulo 3 y e
 | `vm_dias.csv:habitos_tri`, `hab_*` | Con `habitos_tri` = 1, un hábito sin respuesta queda vacío en `hab_*` en vez de 0 |
 
 **Ideario** (`vm_ideas.csv`): `temas` reúne los temas del campo «Temas» (desde el esquema 17) y los `#temas` escritos en el texto, sin repetir. Antes eran solo los del texto.
+
+**Dinero** (`vm_gastos.csv`): `se_repite` (0/1), si el gasto se repite (renta, suscripción, servicios); solo se exporta. Las categorías Vivienda y Servicios aparecen como cualquier otra en `gcat_*`.

@@ -197,7 +197,7 @@ object Catalogo {
 
     val CRUDA = mapOf(0 to "Nada", 1 to "Leve: lo noto", 2 to "Molesta", 3 to "Moderada: me cuesta arrancar", 4 to "Fuerte: el día se pierde en parte", 5 to "No puedo funcionar")
     val SINTOMAS = listOf(Opcion("cabeza", "Dolor de cabeza"), Opcion("nausea", "Náusea"), Opcion("cansancio", "Cansancio"), Opcion("ansiedad", "Ansiedad"),
-        Opcion("sed", "Sed o boca seca"), Opcion("lagunas", "Lagunas de memoria"), Opcion("mal_sueno", "Dormí mal"), Opcion("animo_bajo", "Ánimo bajo"))
+        Opcion("sed", "Sed o boca seca"), Opcion("lagunas", "Lagunas de memoria"), Opcion("mal_sueno", "Dormí mal"), Opcion("animo_bajo", "Ánimo bajo"), Opcion("otro", "Otro"))
     /** Bebidas para contar rápido: equivalencia en bebidas estándar (14 g de alcohol). */
     val BEBIDAS = listOf("Cerveza 355 ml" to 1.0, "Caguama 940 ml" to 2.6, "Copa de vino" to 1.0, "Caballito" to 1.0, "Cuba o trago" to 1.0, "Mezcal o tequila doble" to 2.0)
     /** Cafeína para anotar a mano (mg). */
@@ -287,7 +287,7 @@ object Catalogo {
     val SIESTA = Opcion("siesta", "Siesta")
     fun nombreTramo(id: String): String = (ENFOQUE + SIESTA).firstOrNull { it.id == id }?.nombre ?: id
 
-    val CATEGORIAS = listOf("Comida", "Transporte", "Salud", "Ocio", "Social", "Suscripciones", "Escuela", "Ropa", "Regalos", "Otro")
+    val CATEGORIAS = listOf("Comida", "Transporte", "Vivienda", "Servicios", "Salud", "Ocio", "Social", "Suscripciones", "Escuela", "Ropa", "Regalos", "Otro")
     val CATEGORIAS_INGRESO = listOf("Sueldo", "Beca", "Trabajo extra", "Mesada", "Regalo", "Venta", "Reembolso", "Intereses", "Otro")
     /** Lo que detonó un impulso o una recaída (los ids de siempre; «otro» lleva su texto en `detonante_otro`). */
     val DETONANTES = listOf(Opcion("aburrimiento", "Aburrimiento"), Opcion("soledad", "Soledad"), Opcion("estres", "Estrés"), Opcion("tristeza", "Tristeza"),

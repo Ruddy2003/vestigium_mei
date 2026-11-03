@@ -381,7 +381,7 @@ object Exportar {
 
     fun filasGastos() = Repo.gastos.map {
         linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "hora" to it.hora, "dia_logico" to it.dia, "monto" to it.monto, "categoria" to it.categoria,
-            "subcategoria" to it.subcategoria.ifBlank { null }, "imprevisto" to it.imprevisto, "nota" to it.nota, "lat" to it.lat, "lon" to it.lon,
+            "subcategoria" to it.subcategoria.ifBlank { null }, "imprevisto" to it.imprevisto, "se_repite" to it.se_repite, "nota" to it.nota, "lat" to it.lat, "lon" to it.lon,
             "ts_creado" to it.ts_creado, "ts_editado" to it.ts_editado)
     }
 
