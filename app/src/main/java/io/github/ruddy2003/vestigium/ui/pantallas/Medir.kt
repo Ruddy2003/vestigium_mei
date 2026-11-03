@@ -324,7 +324,7 @@ fun PantallaLugares(nav: Nav) {
                         Dialogo(onDismissRequest = { renombrar = null }, title = { Text("Renombrar lugar") },
                             text = { OutlinedTextField(value = t, onValueChange = { renombrar = it }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
                             confirmButton = { TextButton(enabled = t.isNotBlank(), onClick = { Repo.guardarLugar(l.copy(nombre = t.trim())); renombrar = null }) { Text("Guardar") } },
-                            dismissButton = { TextButton(onClick = { renombrar = null }) { Text("Cancelar") } })
+                            dismissButton = { TextButton(onClick = { renombrar = null }) { Text("cancelar") } })
                     }
                     if (borrar) {
                         val suyas = Repo.visitas.filter { it.lugar == l.id }
@@ -356,7 +356,7 @@ fun PantallaLugares(nav: Nav) {
                                 }
                             },
                             confirmButton = { TextButton(onClick = { quitar(null, false) }) { Text(if (suyas.isEmpty()) "Quitar" else "Quitar con sus visitas", color = MaterialTheme.colorScheme.error) } },
-                            dismissButton = { TextButton(onClick = { borrar = false }) { Text("Cancelar") } })
+                            dismissButton = { TextButton(onClick = { borrar = false }) { Text("cancelar") } })
                     }
                 }
             }

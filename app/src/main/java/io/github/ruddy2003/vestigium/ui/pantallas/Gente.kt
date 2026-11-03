@@ -304,7 +304,7 @@ private fun DiasEspeciales() {
                     val n = fp0.copy(nombre = nombre.trim(), fecha = ok!!, tipo = tipo)
                     Repo.cambiarConfig { cc -> cc.copy(fechas_propias = cc.fechas_propias.filter { it.id != n.id } + n) }
                     editando = null
-                }) { Text("guardar") }
+                }) { Text("Guardar") }
             },
             dismissButton = {
                 Row {

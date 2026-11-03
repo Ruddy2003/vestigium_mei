@@ -540,5 +540,5 @@ fun PantallaCarta(nav: Nav) {
     if (borrar) Dialogo(onDismissRequest = { borrar = false },
         title = { Text("¿Borrar esta carta?") }, text = { Text("Tendrás unos segundos para deshacerlo.") },
         confirmButton = { TextButton(onClick = { Repo.borrarCarta(c.id); borrar = false; nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Carta borrada") { Repo.guardarCarta(c) } }) { Text("Borrar", color = MaterialTheme.colorScheme.error) } },
-        dismissButton = { TextButton(onClick = { borrar = false }) { Text("Cancelar") } })
+        dismissButton = { TextButton(onClick = { borrar = false }) { Text("cancelar") } })
 }

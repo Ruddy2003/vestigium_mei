@@ -175,6 +175,15 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
                 io.github.ruddy2003.vestigium.ui.SelectorDuracion(dur) { dur = it }
             }
             Ayuda("Si cambias la hora, el día se ajusta (empieza a las 5:00) y el lugar se toma de tus ubicaciones de esa hora.", Modifier.padding(top = 4.dp))
+            TextButton(onClick = {
+                if (confirmar) {
+                    Repo.borrarMomento(m.id); io.github.ruddy2003.vestigium.data.Recaidas.alBorrar(m); cerrar()
+                    io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Momento borrado") {
+                        Repo.guardarMomento(m)
+                        if (m.tipo == "recaida") io.github.ruddy2003.vestigium.data.Recaidas.registrar(m)
+                    }
+                } else confirmar = true
+            }, modifier = Modifier.padding(top = 6.dp)) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
         }
         },
         confirmButton = { TextButton(onClick = {
@@ -205,18 +214,6 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
             }
             cerrar()
         }) { Text("Guardar") } },
-        dismissButton = {
-        TextButton(onClick = {
-            if (confirmar) {
-                Repo.borrarMomento(m.id); io.github.ruddy2003.vestigium.data.Recaidas.alBorrar(m); cerrar()
-                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Momento borrado") {
-                    Repo.guardarMomento(m)
-                    if (m.tipo == "recaida") io.github.ruddy2003.vestigium.data.Recaidas.registrar(m)
-                }
-            } else confirmar = true
-        }) {
-            Text(if (confirmar) "¿Borrar de verdad?" else "Borrar", color = MaterialTheme.colorScheme.error)
-        }
-        },
+        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
     )
 }

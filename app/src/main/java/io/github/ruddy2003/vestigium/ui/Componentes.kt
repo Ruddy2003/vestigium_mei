@@ -704,8 +704,10 @@ fun Interruptor(texto: String, valor: Boolean, detalle: String? = null, onCambio
 fun ListaEtiquetas(lista: List<String>, pista: String, prefijo: String = "", normalizar: (String) -> String, onCambio: (List<String>) -> Unit) {
     var texto by remember { mutableStateOf("") }
     fun agregar() {
-        val nuevos = texto.split(",").map(normalizar).filter { it.isNotEmpty() }
-        if (nuevos.isNotEmpty()) { onCambio(lista + nuevos); texto = "" }
+        // Sin repetir: lo que ya está en la lista (o se escribió dos veces) no se agrega otra vez.
+        val nuevos = texto.split(",").map(normalizar).filter { it.isNotEmpty() && it !in lista }.distinct()
+        if (nuevos.isNotEmpty()) onCambio(lista + nuevos)
+        texto = ""
     }
     val tema = Estilo.tema
     val piel = pielDe(tema)

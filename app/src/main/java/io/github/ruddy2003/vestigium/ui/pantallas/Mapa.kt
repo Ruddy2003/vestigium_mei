@@ -721,7 +721,7 @@ fun PantallaMapa(nav: Nav) {
                         runCatching { io.github.ruddy2003.vestigium.sensores.Geocercas.registrar(ctx) }
                     }
                     nuevoLugar = null
-                }) { Text("guardar", style = MaterialTheme.typography.labelLarge) }
+                }) { Text("Guardar", style = MaterialTheme.typography.labelLarge) }
             },
             dismissButton = { TextButton(onClick = { nuevoLugar = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
         )

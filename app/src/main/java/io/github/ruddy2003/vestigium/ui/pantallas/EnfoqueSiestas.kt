@@ -153,6 +153,9 @@ fun DialogoTramo(t: io.github.ruddy2003.vestigium.data.Tramo, cerrar: () -> Unit
                 io.github.ruddy2003.vestigium.ui.SelectorDuracion(min, listOf(5, 10, 15, 30, 45, 60, 90, 120, 180, 240)) { min = it }
                 androidx.compose.material3.OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Qué hiciste (opcional; @persona y #tema)") },
                     visualTransformation = io.github.ruddy2003.vestigium.ui.rememberMarcas())
+                TextButton(onClick = {
+                    if (confirmar) { Repo.borrarTramo(t.id); cerrar(); Deshacer.ofrecer("Tramo borrado") { Repo.guardarTramo(t) } } else confirmar = true
+                }, modifier = Modifier.padding(top = 6.dp)) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
             }
         },
         confirmButton = {
@@ -165,10 +168,6 @@ fun DialogoTramo(t: io.github.ruddy2003.vestigium.data.Tramo, cerrar: () -> Unit
                 cerrar()
             }) { Text("Guardar") }
         },
-        dismissButton = {
-            TextButton(onClick = {
-                if (confirmar) { Repo.borrarTramo(t.id); cerrar(); Deshacer.ofrecer("Tramo borrado") { Repo.guardarTramo(t) } } else confirmar = true
-            }) { Text(if (confirmar) "¿Borrar de verdad?" else "Borrar", color = MaterialTheme.colorScheme.error) }
-        },
+        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
     )
 }

@@ -647,10 +647,14 @@ fun DialogoToma(t: io.github.ruddy2003.vestigium.data.TomaSuplemento, cerrar: ()
         title = { Text("${s?.nombre ?: t.suplemento} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.ts)}") },
         text = {
             Column {
-                OutlinedTextField(cantidad, { cantidad = it }, Modifier.fillMaxWidth(), singleLine = true, suffix = { Text(s?.unidad ?: "") },
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal))
+                OutlinedTextField(cantidad, { cantidad = it }, Modifier.fillMaxWidth(), singleLine = true, suffix = { Text(s?.unidad ?: "") }, label = { Text("Cantidad") },
+                    isError = v == null || v <= 0, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal))
                 Etiqueta("Cuándo")
                 io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, ayer = true) { cuando = it }
+                TextButton(onClick = {
+                    if (!confirmar) { confirmar = true; return@TextButton }
+                    Repo.borrarToma(t.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Toma borrada") { Repo.guardarToma(t) }
+                }, modifier = Modifier.padding(top = 6.dp)) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
             }
         },
         confirmButton = {
@@ -661,11 +665,6 @@ fun DialogoToma(t: io.github.ruddy2003.vestigium.data.TomaSuplemento, cerrar: ()
                 cerrar()
             }) { Text("Guardar") }
         },
-        dismissButton = {
-            TextButton(onClick = {
-                if (!confirmar) { confirmar = true; return@TextButton }
-                Repo.borrarToma(t.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Toma quitada") { Repo.guardarToma(t) }
-            }) { Text(if (confirmar) "¿quitar de verdad?" else "Quitar", color = MaterialTheme.colorScheme.error) }
-        },
+        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
     )
 }

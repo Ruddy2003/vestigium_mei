@@ -567,10 +567,10 @@ fun PantallaNoche(nav: Nav) {
         }
         Seccion("Lo mejor y lo peor", "Unas palabras de cada uno.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             OutlinedTextField(value = d.mejor_momento, onValueChange = { cambiar(d.copy(mejor_momento = it)) }, modifier = Modifier.fillMaxWidth(),
-                label = { Text("optimum", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+                label = { Text("lo mejor", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
             Spacer(Modifier.padding(top = 8.dp))
             OutlinedTextField(value = d.peor_momento, onValueChange = { cambiar(d.copy(peor_momento = it)) }, modifier = Modifier.fillMaxWidth(),
-                label = { Text("pessimum", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+                label = { Text("lo peor", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
         }
         Seccion("Hitos", "Lo que no pasa todos los días: un vuelo, un beso, una decisión importante. Una etiqueta corta por cosa.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             ListaEtiquetas(d.hitos.map { it.replace('_', ' ') }, "primer vuelo, mudanza, una decisión importante", normalizar = { it.trim().replace(Regex("\\s+"), " ") }) { cambiar(d.copy(hitos = it)) }

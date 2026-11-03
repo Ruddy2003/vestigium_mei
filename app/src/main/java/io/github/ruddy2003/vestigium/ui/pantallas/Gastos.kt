@@ -335,7 +335,7 @@ fun EditorCategorias() {
                 if (sb == null) D.renombrarCategoria(cat, t, tambien) else D.renombrarSub(cat, sb, t, tambien)
                 renombrar = null
             }, enabled = t.isNotBlank()) { Text("Guardar") } },
-            dismissButton = { TextButton(onClick = { renombrar = null }) { Text("Cancelar") } })
+            dismissButton = { TextButton(onClick = { renombrar = null }) { Text("cancelar") } })
     }
 }
 
@@ -446,6 +446,10 @@ private fun DialogoDinero(
                 Interruptor(marca, m) { m = it }
                 if (marca2 != null) Interruptor(marca2, m2) { m2 = it }
                 OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
+                // Borrar va adentro, en rojo y con confirmación; abajo quedan «cancelar» y «Guardar», como en los demás diálogos.
+                if (borrar != null) TextButton(onClick = { if (confirmar) { borrar(); cerrar() } else confirmar = true }, modifier = Modifier.padding(top = 6.dp)) {
+                    Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error)
+                }
             }
         },
         confirmButton = {
@@ -455,11 +459,7 @@ private fun DialogoDinero(
                 cerrar()
             }) { Text("Guardar") }
         },
-        dismissButton = {
-            if (borrar != null) TextButton(onClick = { if (confirmar) { borrar(); cerrar() } else confirmar = true }) {
-                Text(if (confirmar) "¿Borrar de verdad?" else "Borrar", color = MaterialTheme.colorScheme.error)
-            } else TextButton(onClick = cerrar) { Text("Cancelar") }
-        },
+        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
     )
 }
 

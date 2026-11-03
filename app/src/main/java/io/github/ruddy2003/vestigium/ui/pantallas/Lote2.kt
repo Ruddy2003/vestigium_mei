@@ -298,6 +298,7 @@ fun DialogoNota(n: Nota, cerrar: () -> Unit) {
     var tp by remember(n.id) { mutableStateOf(n.tipo) }
     var f by remember(n.id) { mutableStateOf(n.fecha) }
     var rec by remember(n.id) { mutableStateOf(n.recordar_el) }
+    var confirmar by remember(n.id) { mutableStateOf(false) }
     Dialogo(onDismissRequest = { cerrar() }, title = { Text("Editar nota") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
@@ -315,6 +316,9 @@ fun DialogoNota(n: Nota, cerrar: () -> Unit) {
                     if (rec != null) Text("quitar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.clickable { rec = null }.padding(6.dp))
                 }
+                // Un recordatorio sin día no avisa nunca: se dice antes de guardar.
+                if (tp == "recordatorio" && rec == null) Text("Sin día, este recordatorio no te avisará.", style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 4.dp))
                 // Una idea o un pensamiento que vale la pena conservar se puede mover al Ideario (con su fecha y hora de creación).
                 if (tp == "idea" || tp == "pensamiento") Text("pasar al Ideario →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(top = 8.dp).clickable {
@@ -322,19 +326,17 @@ fun DialogoNota(n: Nota, cerrar: () -> Unit) {
                         Repo.guardarIdea(i); Repo.borrarNota(n.id); cerrar()
                         io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Nota pasada al Ideario") { Repo.borrarIdea(i.id); Repo.guardarNota(n) }
                     }.padding(vertical = 6.dp))
+                TextButton(onClick = {
+                    if (!confirmar) { confirmar = true; return@TextButton }
+                    Repo.borrarNota(n.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Nota borrada") { Repo.guardarNota(n) }
+                }, modifier = Modifier.padding(top = 6.dp)) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
             }
         },
         confirmButton = { TextButton(onClick = {
             Repo.guardarNota(n.copy(texto = t.trim(), tipo = tp, fecha = f, recordar_el = rec.takeIf { tp == "recordatorio" }, editada = Fechas.ahoraIso()))
             cerrar()
-        }, enabled = t.isNotBlank()) { Text("guardar") } },
-        dismissButton = {
-            var confirmar by remember(n.id) { mutableStateOf(false) }
-            TextButton(onClick = {
-                if (!confirmar) { confirmar = true; return@TextButton }
-                Repo.borrarNota(n.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Nota borrada") { Repo.guardarNota(n) }
-            }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
-        })
+        }, enabled = t.isNotBlank()) { Text("Guardar") } },
+        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } })
 }
 
 @Composable
