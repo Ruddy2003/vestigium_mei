@@ -49,12 +49,13 @@ object LibroDiario {
     /** Noches con un sueño escrito, de la más reciente a la más antigua. */
     fun suenos(): List<Dia> = Repo.dias.values.filter { it.sueno_texto.isNotBlank() }.sortedByDescending { it.fecha }
 
-    /** Una línea con lo que se anotó del sueño: qué tan agradable, lucidez, vividez, tipo, temas y cómo dormiste. */
+    /** Una línea con lo que se anotó del sueño: qué tan agradable, lucidez, claridad, si fue pesadilla, qué tan raro, temas y cómo dormiste. */
     fun metaSueno(d: Dia): String = listOfNotNull(
         d.sueno_valencia?.let { "agradable $it/7" },
         d.sueno_lucidez?.let { id -> Catalogo.SUENO_LUCIDEZ.firstOrNull { it.id == id }?.let { "lucidez " + it.nombre.lowercase() } },
         d.sueno_vividez?.let { id -> Catalogo.SUENO_VIVIDEZ.firstOrNull { it.id == id }?.nombre?.lowercase() },
-        d.sueno_tipo?.let { id -> Catalogo.SUENO_TIPO.firstOrNull { it.id == id }?.nombre?.lowercase() },
+        if (Catalogo.pesadillaDe(d) == true) "pesadilla" else null,
+        Catalogo.rarezaDe(d)?.let { id -> Catalogo.SUENO_RAREZA.firstOrNull { it.id == id }?.nombre?.lowercase() },
         d.sueno_temas.takeIf { it.isNotEmpty() }?.joinToString(", "),
         d.sueno_calidad?.let { "dormiste $it/5" },
         Repo.salud[d.fecha]?.sueno_min?.let { "${it / 60} h ${"%02d".format(it % 60)} según el reloj" },

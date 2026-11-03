@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 16
+const val SCHEMA_V = 17
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -45,6 +45,10 @@ data class Dia(
     val sueno_lucidez: String? = null,
     val sueno_vividez: String? = null,
     val sueno_tipo: String? = null,
+    /** Qué tan raro fue el sueño (esquema 17): realista, raro o imposible (Catalogo.SUENO_RAREZA). Sustituye al «tipo». */
+    val sueno_rareza: String? = null,
+    /** Si fue pesadilla: angustia fuerte o te despertó (esquema 17). Null = no se dijo. */
+    val sueno_pesadilla: Boolean? = null,
     val sueno_temas: List<String> = emptyList(),
     /** Categorías del sueño por ejes (personajes, escenario, interacción, temas, estructura, emoción): ids de Catalogo.SUENO_EJES. */
     val sueno_categorias: List<String> = emptyList(),

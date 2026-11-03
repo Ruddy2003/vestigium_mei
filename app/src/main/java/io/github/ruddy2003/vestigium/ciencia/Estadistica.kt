@@ -420,7 +420,7 @@ object Estadistica {
 
     private fun emocionesUsadas(): List<String> = Repo.momentos.flatMap { Catalogo.emocionesDe(it) }.filter { it != Catalogo.OTRO }.distinct().sorted()
     private fun pensamientosUsados(): List<String> = Repo.momentos.mapNotNull { Catalogo.pensamientoDe(it) }.distinct().sorted()
-    private fun categoriasSuenoUsadas(): List<String> = Repo.dias.values.flatMap { it.sueno_categorias }.distinct().sorted()
+    private fun categoriasSuenoUsadas(): List<String> = Repo.dias.values.flatMap { Catalogo.categoriasSuenoDe(it) }.distinct().sorted()
 
     /**
      * Un «Cómo estás ahora» guardado otro día que el que cierra (H-2-8, P-26): no es el ánimo de esa noche, así que no cuenta
@@ -761,8 +761,8 @@ object Estadistica {
         }
         // De qué fueron tus sueños: solo en los días en que marcaste alguna categoría.
         val catSueno = categoriasSuenoUsadas()
-        if (catSueno.isNotEmpty()) for ((f, d) in Repo.dias) if (d.sueno_categorias.isNotEmpty()) {
-            val r = fila(f); catSueno.forEach { k -> r["sueno_$k"] = b(k in d.sueno_categorias) }
+        if (catSueno.isNotEmpty()) for ((f, d) in Repo.dias) { val cats = Catalogo.categoriasSuenoDe(d); if (cats.isNotEmpty()) {
+            val r = fila(f); catSueno.forEach { k -> r["sueno_$k"] = b(k in cats) } }
         }
         runCatching { sustancias(filas.keys.firstOrNull(), b) { f -> fila(f) } }
         // Cartas a otras personas.

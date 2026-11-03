@@ -261,25 +261,7 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
         val bloqueSueno: @Composable () -> Unit = {
         Seccion("Sueño", "Llénalo apenas despiertes. El resto, en la noche.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqSueno), plegable = true) {
                 Tarjeta {
-                    Etiqueta("Calidad del sueño, como la sentiste")
-                    Escala(d.sueno_calidad, 1, 5, Catalogo.ANCLAS["sueno_calidad"]) { cambiar(d.copy(sueno_calidad = it)) }
-                    Interruptor("¿Recordaste un sueño?", d.sueno_recordado) { cambiar(d.copy(sueno_recordado = it)) }
-                    AnimatedVisibility(d.sueno_recordado) {
-                        Column {
-                            Etiqueta("Qué tan agradable fue")
-                            Escala(d.sueno_valencia, 1, 7, Catalogo.ANCLAS["sueno_valencia"]) { cambiar(d.copy(sueno_valencia = it)) }
-                            Etiqueta("Lucidez: ¿sabías que soñabas?"); FilaFichas(Catalogo.SUENO_LUCIDEZ, d.sueno_lucidez) { cambiar(d.copy(sueno_lucidez = it)) }
-                            Etiqueta("Vividez del recuerdo"); FilaFichas(Catalogo.SUENO_VIVIDEZ, d.sueno_vividez) { cambiar(d.copy(sueno_vividez = it)) }
-                            Etiqueta("Tipo"); FilaFichas(Catalogo.SUENO_TIPO, d.sueno_tipo) { cambiar(d.copy(sueno_tipo = it)) }
-                            Etiqueta("De qué fue")
-                            io.github.ruddy2003.vestigium.ui.CategoriasSueno(d.sueno_categorias) { cambiar(d.copy(sueno_categorias = it)) }
-                            Etiqueta("Personas y temas del sueño")
-                            ListaEtiquetas(d.sueno_temas, "@persona o #tema", normalizar = { Texto.etiquetaConSimbolo(it) }) { cambiar(d.copy(sueno_temas = it)) }
-                            Etiqueta("Narración")
-                            Editor(d.sueno_texto, "somnium.txt", "Lo que recuerdes, aunque sean fragmentos.", minimo = 110, pie = "${Texto.palabras(d.sueno_texto)} verba") { cambiar(d.copy(sueno_texto = it)) }
-                            Row(Modifier.padding(top = 6.dp)) { BotonDictado { t -> cambiar(d.copy(sueno_texto = (d.sueno_texto + " " + t).trim())) } }
-                        }
-                    }
+                    io.github.ruddy2003.vestigium.ui.FormularioSueno(fecha, d) { cambiar(it) }
                     val sr = Repo.salud[fecha]
                     sr?.sueno_min?.let { m -> ClaveDia("horologium", "${m / 60} h ${m % 60} min dormido " + if (sr.sueno_manual) "(corregido a mano)" else "según tu reloj") }
                     TextButton(onClick = { editarSueno = true }) {

@@ -62,9 +62,23 @@ object Catalogo {
     )
 
     val SUENO_LUCIDEZ = listOf(Opcion("no", "No"), Opcion("parcial", "Parcial"), Opcion("total", "Total"))
-    val SUENO_VIVIDEZ = listOf(Opcion("vago", "Vago"), Opcion("moderado", "Moderado"), Opcion("muy_vivido", "Muy vívido"))
+    /** Qué tan claro lo recuerdas (los ids de antes: vago, moderado, muy_vivido). */
+    val SUENO_VIVIDEZ = listOf(Opcion("vago", "Solo fragmentos"), Opcion("moderado", "Partes claras"), Opcion("muy_vivido", "Casi completo y nítido"))
+    /**
+     * El «tipo» de antes (hasta el esquema 16). Ya no se pregunta: se partió en [SUENO_RAREZA] y en «¿fue pesadilla?», y
+     * «recurrente» quedó en la estructura. Se conserva para leer los días viejos (ver [rarezaDe], [pesadillaDe], [categoriasSuenoDe]).
+     */
     val SUENO_TIPO = listOf(Opcion("mundano", "Mundano"), Opcion("ansioso_pesadilla", "Ansioso o pesadilla"),
         Opcion("bizarro_surreal", "Bizarro o surreal"), Opcion("recurrente", "Recurrente"))
+    /** Qué tan raro fue el sueño (esquema 17): de lo que podría pasar despierto a lo imposible. */
+    val SUENO_RAREZA = listOf(Opcion("realista", "Realista"), Opcion("raro", "Raro pero posible"), Opcion("imposible", "Imposible o surreal"))
+    /** La rareza del sueño, o la que se deduce del tipo de antes (mundano = realista, bizarro = imposible). */
+    fun rarezaDe(d: Dia): String? = d.sueno_rareza ?: when (d.sueno_tipo) { "mundano" -> "realista"; "bizarro_surreal" -> "imposible"; else -> null }
+    /** Si fue pesadilla: lo que marcaste o, en los días de antes, el tipo «ansioso o pesadilla». */
+    fun pesadillaDe(d: Dia): Boolean? = d.sueno_pesadilla ?: if (d.sueno_tipo == "ansioso_pesadilla") true else null
+    /** Las categorías del sueño, con el «recurrente» del tipo de antes pasado a «se repite». */
+    fun categoriasSuenoDe(d: Dia): List<String> =
+        if (d.sueno_tipo == "recurrente" && "est_recurrente" !in d.sueno_categorias) d.sueno_categorias + "est_recurrente" else d.sueno_categorias
 
     val MOMENTOS = listOf(
         TipoMomento("pensando_en", "Pensando en", "A", "¿En qué o en quién?"),
@@ -181,24 +195,55 @@ object Catalogo {
      */
     val SUENO_EJES = listOf(
         Eje("per", "Quiénes aparecen", "Personajes", listOf(Opcion("per_familia", "Familia"), Opcion("per_pareja", "Pareja"), Opcion("per_expareja", "Expareja"),
-            Opcion("per_amistades", "Amistades"), Opcion("per_pasado", "Gente de antes"), Opcion("per_desconocidos", "Desconocidos"), Opcion("per_famosos", "Figuras públicas"),
-            Opcion("per_animales", "Animales"), Opcion("per_fallecidos", "Alguien que ya murió"))),
-        Eje("esc", "Dónde pasa", "Escenario", listOf(Opcion("esc_casa", "Mi casa de ahora"), Opcion("esc_infancia", "Lugares de mi infancia"), Opcion("esc_escuela", "Escuela o trabajo"),
-            Opcion("esc_desconocido", "Lugar desconocido"), Opcion("esc_extranjero", "Otro país o ciudad"), Opcion("esc_imposible", "Lugar imposible"), Opcion("esc_naturaleza", "Naturaleza"))),
+            Opcion("per_amistades", "Amistades"), Opcion("per_pasado", "Gente de antes"), Opcion("per_trabajo", "Gente del trabajo o la escuela"),
+            Opcion("per_desconocidos", "Desconocidos"), Opcion("per_famosos", "Figuras públicas"), Opcion("per_ninos", "Niños"),
+            Opcion("per_animales", "Animales"), Opcion("per_criaturas", "Criaturas o seres extraños"), Opcion("per_fallecidos", "Alguien que ya murió"),
+            Opcion("per_yo_otro", "Yo, con otra edad o cuerpo"))),
+        Eje("esc", "Dónde pasa", "Escenario", listOf(Opcion("esc_casa", "Mi casa de ahora"), Opcion("esc_infancia", "Un lugar de mi pasado (casa vieja, escuela)"),
+            Opcion("esc_escuela", "Escuela o trabajo"), Opcion("esc_conocido_cambiado", "Un lugar conocido pero cambiado"), Opcion("esc_desconocido", "Lugar desconocido"),
+            Opcion("esc_extranjero", "Otro país o ciudad"), Opcion("esc_transporte", "Transporte (coche, avión, tren)"), Opcion("esc_imposible", "Lugar imposible"),
+            Opcion("esc_naturaleza", "Naturaleza"))),
         Eje("int", "Qué pasa entre personas", "Interacción", listOf(Opcion("int_romantica", "Romántico: ligar, noviazgo"), Opcion("int_sexual", "Sexual"),
-            Opcion("int_amistosa", "Amistosa"), Opcion("int_conflicto", "Conflicto o pelea"), Opcion("int_ayuda", "Ayudar o que me ayuden"), Opcion("int_rechazo", "Rechazo o abandono"))),
+            Opcion("int_amistosa", "Amistosa"), Opcion("int_conflicto", "Conflicto o pelea"), Opcion("int_ayuda", "Ayudar o que me ayuden"),
+            Opcion("int_cuidado", "Me cuidaban o yo cuidaba"), Opcion("int_rechazo", "Rechazo o abandono"), Opcion("int_traicion", "Traición o engaño"),
+            Opcion("int_reconciliacion", "Reconciliación"), Opcion("int_despedida", "Despedida"))),
         Eje("tema", "Temas típicos", "Temas", listOf(Opcion("tema_persecucion", "Persecución"), Opcion("tema_caida", "Caer"), Opcion("tema_volar", "Volar"),
-            Opcion("tema_examen", "Examen o llegar tarde"), Opcion("tema_perder", "Perder algo"), Opcion("tema_muerte", "Muerte o enfermedad"),
-            Opcion("tema_desnudez", "Desnudez o vergüenza"), Opcion("tema_dientes", "Dientes"), Opcion("tema_viaje", "Viaje"), Opcion("tema_desastre", "Desastre"),
-            Opcion("tema_regreso", "Regreso a la niñez o al pasado"), Opcion("tema_poderes", "Poderes o magia"))),
-        Eje("est", "Cómo es el sueño", "Estructura", listOf(Opcion("est_conexion", "Conexión: una persona casi todo el sueño"), Opcion("est_restos", "Restos del día de ayer"),
-            Opcion("est_recurrente", "Se repite"), Opcion("est_continua", "Sigue un sueño anterior"), Opcion("est_fragmentos", "Solo fragmentos"))),
-        Eje("emo", "Emoción principal", "Emoción", listOf(Opcion("emo_alegria", "Alegría"), Opcion("emo_miedo", "Miedo"), Opcion("emo_tristeza", "Tristeza"),
-            Opcion("emo_enojo", "Enojo"), Opcion("emo_verguenza", "Vergüenza"), Opcion("emo_ternura", "Ternura"), Opcion("emo_confusion", "Confusión"), Opcion("emo_nostalgia", "Nostalgia"))),
+            Opcion("tema_examen", "Examen o llegar tarde"), Opcion("tema_perder", "Perder algo"), Opcion("tema_buscar", "Buscar algo o a alguien"),
+            Opcion("tema_atrapado", "Atrapado o encerrado"), Opcion("tema_paralisis", "No poder moverme, gritar o correr"), Opcion("tema_muerte", "Muerte o enfermedad"),
+            Opcion("tema_desnudez", "Desnudez en público"), Opcion("tema_dientes", "Dientes"), Opcion("tema_viaje", "Viaje"), Opcion("tema_agua", "Agua (inundación, ahogarse)"),
+            Opcion("tema_desastre", "Desastre"), Opcion("tema_aparato", "Un aparato que no funciona"), Opcion("tema_embarazo", "Embarazo o bebés"),
+            Opcion("tema_fiesta", "Fiesta o celebración"), Opcion("tema_regreso", "Volver a otra época o edad"), Opcion("tema_poderes", "Poderes o magia"))),
+        Eje("res", "Cómo me fue en el sueño", "Cómo me fue", listOf(Opcion("res_logro", "Logré algo"), Opcion("res_fallo", "Fallé o no pude"),
+            Opcion("res_suerte", "Tuve suerte"), Opcion("res_desgracia", "Me pasó algo malo"), Opcion("res_peligro", "Estaba en peligro"))),
+        Eje("sen", "Lo que sentía el cuerpo", "Sensaciones", listOf(Opcion("sen_colores", "Colores vivos"), Opcion("sen_sonidos", "Sonidos o voces"),
+            Opcion("sen_tacto", "Tacto o dolor"), Opcion("sen_olores", "Olores o sabores"), Opcion("sen_movimiento", "Caer, flotar o volar en el cuerpo"))),
+        Eje("est", "Cómo es el sueño", "Estructura", listOf(Opcion("est_conexion", "Una persona en el centro de todo el sueño"), Opcion("est_restos", "Restos del día de ayer"),
+            Opcion("est_recurrente", "Se repite"), Opcion("est_continua", "Sigue un sueño anterior"), Opcion("est_fuera", "Me veía desde fuera"),
+            Opcion("est_otra_persona", "Era otra persona"), Opcion("est_saltos", "Cambios bruscos de escena"), Opcion("est_interrumpido", "Desperté a la mitad"))),
+        Eje("emo", "Emociones del sueño (varias)", "Emociones", listOf(Opcion("emo_alegria", "Alegría"), Opcion("emo_paz", "Paz"), Opcion("emo_euforia", "Euforia"),
+            Opcion("emo_ternura", "Ternura"), Opcion("emo_alivio", "Alivio"), Opcion("emo_asombro", "Asombro"), Opcion("emo_deseo", "Deseo"),
+            Opcion("emo_miedo", "Miedo"), Opcion("emo_ansiedad", "Ansiedad"), Opcion("emo_tristeza", "Tristeza"), Opcion("emo_soledad", "Soledad"),
+            Opcion("emo_enojo", "Enojo"), Opcion("emo_impotencia", "Impotencia"), Opcion("emo_culpa", "Culpa"), Opcion("emo_verguenza", "Vergüenza"),
+            Opcion("emo_celos", "Celos"), Opcion("emo_asco", "Asco"), Opcion("emo_confusion", "Confusión"), Opcion("emo_nostalgia", "Nostalgia"))),
+        Eje("desp", "Cómo desperté", "Al despertar", listOf(Opcion("desp_alivio", "Aliviado de que no fuera real"), Opcion("desp_volver", "Con ganas de volver al sueño"),
+            Opcion("desp_emocion", "Con la emoción todavía encima"), Opcion("desp_persona", "Pensando en alguien del sueño"))),
     )
-    /** Las que más usas, a la vista sin abrir los ejes. */
-    val SUENO_RAPIDAS = listOf("int_romantica", "tema_regreso", "est_conexion", "per_familia", "per_expareja", "tema_persecucion", "est_restos")
-    fun opcionSueno(id: String) = SUENO_EJES.flatMap { it.opciones }.firstOrNull { it.id == id }
+    /** Categorías que ya no se ofrecen pero pueden estar en días viejos: «Solo fragmentos» pasó a la claridad del recuerdo. */
+    private val SUENO_RETIRADAS = listOf(Opcion("est_fragmentos", "Solo fragmentos"))
+    /** Las de siempre, para cuando todavía no hay suficientes sueños marcados. */
+    private val SUENO_RAPIDAS_BASE = listOf("int_romantica", "tema_regreso", "est_conexion", "per_familia", "per_expareja", "tema_persecucion", "est_restos", "est_recurrente")
+    /**
+     * Las que más usas, a la vista sin abrir los ejes: las 8 categorías más marcadas en tus sueños de los últimos 180 días;
+     * si no llegan a 8, se completan con las de siempre.
+     */
+    fun suenoRapidas(dias: Collection<Dia>, hoy: String = Fechas.diaLogico()): List<String> {
+        val desde = Fechas.sumar(hoy, -180)
+        val vigentes = SUENO_EJES.flatMap { e -> e.opciones.map { it.id } }.toSet()
+        val usadas = dias.filter { it.fecha >= desde }.flatMap { categoriasSuenoDe(it) }.filter { it in vigentes }
+            .groupingBy { it }.eachCount().entries.sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key }).map { it.key }
+        return (usadas + SUENO_RAPIDAS_BASE).distinct().take(8)
+    }
+    fun opcionSueno(id: String) = (SUENO_EJES.flatMap { it.opciones } + SUENO_RETIRADAS).firstOrNull { it.id == id }
 
     /** «¿Con quién estás?» en los avisos de ánimo. */
     val CON_QUIEN = listOf(Opcion("solo", "Solo"), Opcion("pareja", "Pareja"), Opcion("amigos", "Amigos"), Opcion("familia", "Familia"),

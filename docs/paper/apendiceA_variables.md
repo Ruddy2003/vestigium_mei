@@ -75,7 +75,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `sueno_fin_h` | Hora de despertar (reloj) | numérica | — | Si hay datos de la fuente |
 | `sueno_palabras` | Palabras del sueño escrito | numérica | — | Si hay datos de la fuente |
 | `sueno_lucidez` | Lucidez del sueño (0 no, 1 parcial, 2 total) | numérica | — | Si hay datos de la fuente |
-| `sueno_vividez` | Vividez del sueño (0 vago, 1 moderado, 2 muy vívido) | numérica | — | Si hay datos de la fuente |
+| `sueno_vividez` | Qué tan claro recuerdas el sueño (0 solo fragmentos, 1 partes claras, 2 casi completo y nítido) | numérica | — | Si hay datos de la fuente |
 | `siesta` | Tomé siesta (0/1) | binaria (0/1) | — | Si hay siestas en el cronómetro |
 | `siesta_min` | Minutos de siesta | numérica | — | Si hay siestas en el cronómetro |
 | `cama_min` | Pantalla en la última hora antes de dormir (min) | numérica | min | Si hay datos de pantalla nocturna |
@@ -387,7 +387,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 | `gen_` | Cultura | 10 | 5 | Leí, vi o jugué algo de ‹elemento› (0/1) |
 | `med_` | Privado | 15 | 3 | Tomé ‹elemento› (0/1) |
 | `det_` | Privado | 10 | 3 | Detonante: ‹elemento› (0/1) |
-| `suenot_` | Sueño | 6 | 3 | Sueño de tipo ‹elemento› (0/1) |
+| `suenot_` | Sueño | 6 | 3 | Sueño realista / raro pero posible / imposible o surreal, o pesadilla (0/1); desde el esquema 17 (antes, el tipo) |
 | `ciu_` | Mundo | 8 | 3 | Horas en ‹elemento› |
 | `pais_` | Mundo | 6 | 3 | Horas en ‹elemento› |
 | `musc_` | Cuerpo | 12 | 3 | Series de ‹elemento› |
@@ -634,3 +634,17 @@ Cambia lo que se guarda: `SCHEMA_V` = 16, con una colección nueva (`ideas`) y u
 `vm_ideas_revisiones.csv` tiene una fila por respuesta (`Exportar.filasIdeasRevisiones`): `idea_id`, `fecha` (día lógico en que respondiste) y `respuesta` (`sigue`, «sigo pensando igual»; `cambio`, «ya no»; `ignorar`, «ahora no»). En R se leen como `vm$ideas` y `vm$ideas_revisiones`.
 
 **Al leer los datos.** Las ideas no son una muestra de lo que aprendiste: solo está lo que decidiste anotar. `postura` y `revisiones` son autorreporte y empiezan vacías en casi todas las ideas. Una idea pasada desde una nota conserva la `creada` y la `fecha` de la nota; una pasada desde el diario es una copia con la fecha de ese día. `Diccionario.DESDE` no tiene entrada para estas columnas porque son nuevas: no hay una definición anterior con la cual compararlas.
+
+## A.11 Cambios del esquema 17 (pantallas de captura)
+
+Cambia lo que se guarda: `SCHEMA_V` = 17. El detalle está en el capítulo 3 y en el Apéndice D (desde D.127).
+
+**Sueños** (`vm_dias.csv`, `vm_panel.csv`):
+
+| Columna | Qué es |
+|---|---|
+| `sueno_rareza` | `realista`, `raro` (pero posible) o `imposible` (o surreal). En días de antes del esquema 17 se deduce del tipo: mundano = realista, bizarro = imposible |
+| `sueno_pesadilla` | 1 si fue pesadilla (angustia fuerte o te despertó), 0 si dijiste que no y vacío si no se dijo. En días de antes, 1 si el tipo era «ansioso o pesadilla» |
+| `sueno_tipo` | Ya no se pregunta; solo trae valor en los días de antes del esquema 17 que no se han corregido |
+| `sueno_categorias`, `sueno_<categoría>` | Nueve ejes (prefijos `per_`, `esc_`, `int_`, `tema_`, `res_`, `sen_`, `est_`, `emo_`, `desp_`). El tipo «recurrente» de antes cuenta como `est_recurrente` |
+| `suenot_realista`, `suenot_raro`, `suenot_imposible`, `suenot_pesadilla` (panel extendido) | Reemplazan a `suenot_<tipo>` |

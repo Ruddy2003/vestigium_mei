@@ -308,7 +308,7 @@ object Terapia {
             suenoH = p.suenoH, suenoAnterior = p.suenoAnterior, errorSueno = p.errorAnterior["sueno"],
             dormir = mediaYDesviacion(dormir), despertar = mediaYDesviacion(despertar),
             calidad = media(dias.mapNotNull { it.sueno_calidad?.toDouble() }),
-            pesadillas = dias.count { it.sueno_recordado && it.sueno_tipo == "ansioso_pesadilla" },
+            pesadillas = dias.count { it.sueno_recordado && Catalogo.pesadillaDe(it) == true },
             camaMin = media(fechas.mapNotNull { Repo.pantalla[it]?.cama_min?.toDouble() }),
             pasos = p.pasos, pasosAnterior = p.pasosAnterior, errorPasos = p.errorAnterior["pasos"], ejercicioMin = p.ejercicioMin,
             aireLibreMin = media(delPanel("aire_libre_min")), enCasaMin = media(delPanel("en_casa_min")),

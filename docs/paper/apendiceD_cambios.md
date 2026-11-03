@@ -352,3 +352,19 @@ Pedido del autor (2 nov 2026): una libreta para lo que aprende de libros, videos
 
 **Lo que no se pudo comprobar en la sesión:**
 - El código se compila y se prueba en GitHub Actions; no se probó en un teléfono qué texto y qué asunto mandan de verdad YouTube, Kindle y el navegador al compartir.
+
+## Pantallas de captura (esquema 17)
+
+Pedido del autor (3 nov 2026): revisar todas las pantallas donde se anota a mano. Decisiones del autor:
+- Los sueños se escriben en el libro de noche del tema, como el diario, y sus opciones dejan de pisarse.
+- Más emociones en los momentos.
+- El Ideario tiene un campo de temas y su propio fichero.
+- Se arreglan las demás pantallas revisadas.
+
+Las tres escalas 1–7 de la hoja de la noche no cambian. `SCHEMA_V` = 17. La versión indicada en el diccionario (`Diccionario.DESDE`) es la primera que puede traer el cambio.
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.127 | **El «tipo» de sueño se parte en dos preguntas.** «¿Qué tan raro fue?» (`sueno_rareza`: realista, raro pero posible, imposible o surreal) y «¿Fue pesadilla?» (`sueno_pesadilla`). «Recurrente» queda solo en la estructura (`est_recurrente`). Los días viejos se traducen al leerlos (`Catalogo.rarezaDe`, `pesadillaDe`, `categoriasSuenoDe`) y al corregirlos. Las pesadillas del reporte y de la Biblioteca de sueños, la familia `suenot_`, `sueno_<categoría>`, la exportación y la importación usan la traducción. **Cambia valores:** `suenot_mundano`, `suenot_ansioso_pesadilla`, `suenot_bizarro_surreal` y `suenot_recurrente` desaparecen, y aparecen `suenot_realista`, `suenot_raro`, `suenot_imposible` y `suenot_pesadilla` | `data/Catalogo.kt`, `data/Modelo.kt`, `ciencia/Dinamicas.kt`, `ciencia/Estadistica.kt`, `ciencia/Terapia.kt`, `data/Exportar.kt`, `data/Importar.kt`, `data/Diccionario.kt`, `ui/LibroDiario.kt`, `ui/pantallas/Bibliotecas.kt` | Las cuatro opciones mezclaban rareza, angustia y repetición, eran excluyentes y «recurrente» repetía una categoría (capítulo 3, sección 3.12) |
+| D.128 | **Ejes del sueño.** Se agregan tres ejes: cómo me fue, sensaciones y al despertar. Hay opciones nuevas en personajes, escenario, interacción, temas, estructura y emociones, que pasan a llamarse «Emociones del sueño». Algunas etiquetas cambian para no confundirse. «Solo fragmentos» sale de la estructura porque repetía la claridad del recuerdo. La vividez se rotula «Qué tan claro lo recuerdas», con los mismos ids. Las categorías a la vista son las 8 más usadas en 180 días (`Catalogo.suenoRapidas`) | `data/Catalogo.kt`, `ui/CategoriasSueno.kt` | Pedido del autor: faltaban opciones y había solapamientos |
+| D.129 | **Un solo formulario del sueño.** Antes estaba copiado en el Día y en la pantalla rápida. La narración se escribe en el libro de noche del tema, a pantalla completa (`DialogoEscritor` en modo sueño); en la pantalla rápida va primero | `ui/CategoriasSueno.kt` (`FormularioSueno`), `ui/pantallas/Dia.kt`, `ui/QuickActivity.kt` | Pedido del autor: el cuadro de texto se quedaba corto |

@@ -95,7 +95,8 @@ object Exportar {
             r["flow"] = d.flow; r["sdt_necesidad"] = d.sdt_necesidad; r["apreciacion"] = d.apreciacion
             r["sueno_recordado"] = d.sueno_recordado; r["sueno_valencia"] = d.sueno_valencia; r["sueno_lucidez"] = d.sueno_lucidez
             r["sueno_vividez"] = d.sueno_vividez; r["sueno_tipo"] = d.sueno_tipo; r["sueno_temas"] = d.sueno_temas
-            r["sueno_calidad"] = d.sueno_calidad; r["sueno_categorias"] = d.sueno_categorias; r["sueno_texto"] = d.sueno_texto
+            r["sueno_rareza"] = Catalogo.rarezaDe(d); r["sueno_pesadilla"] = Catalogo.pesadillaDe(d)
+            r["sueno_calidad"] = d.sueno_calidad; r["sueno_categorias"] = Catalogo.categoriasSuenoDe(d); r["sueno_texto"] = d.sueno_texto
             r["mejor_momento"] = d.mejor_momento; r["peor_momento"] = d.peor_momento
             r["impulso"] = d.impulso; r["recaida"] = d.recaida; r["detonantes"] = d.detonantes
             r["medicamentos"] = d.medicamentos; r["prediccion_manana"] = d.prediccion_manana

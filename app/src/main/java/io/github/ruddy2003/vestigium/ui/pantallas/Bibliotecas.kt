@@ -258,7 +258,7 @@ private fun BibliotecaSuenos(nav: Nav) {
     }
     if (todas.isNotEmpty()) {
         val lucidos = todas.count { it.sueno_lucidez == "parcial" || it.sueno_lucidez == "total" }
-        val pesadillas = todas.count { it.sueno_tipo == "ansioso_pesadilla" }
+        val pesadillas = todas.count { io.github.ruddy2003.vestigium.data.Catalogo.pesadillaDe(it) == true }
         val agradable = todas.mapNotNull { it.sueno_valencia }.takeIf { it.isNotEmpty() }?.average()
         Row(Modifier.fillMaxWidth().padding(top = 16.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Cifra("${todas.size}", "sueños escritos", Modifier.width(100.dp))

@@ -51,7 +51,7 @@ object Diccionario {
         "emocion_otra" to "El sentimiento que escribiste cuando elegiste «otro»", "pensamiento" to "En qué pensabas (pensando_en, preocupacion, idea, recuerdo, plan, vueltas, autocritica, deseo)",
         "alcohol_nivel" to "Qué tan pedo estabas en ese momento (0 sobrio a 10 vómito y mucho mareo; interpolado de tus lecturas)",
         "cannabis_nivel" to "Nivel con cannabis en ese momento (0 a 10; interpolado)", "otra_nivel" to "Nivel con otra sustancia en ese momento (0 a 10; interpolado)",
-        "sueno_categorias" to "De qué fue el sueño (lista de ejes: per_ personajes, esc_ escenario, int_ interacción, tema_ temas típicos, est_ estructura, emo_ emoción)",
+        "sueno_categorias" to "De qué fue el sueño (lista de ejes: per_ personajes, esc_ escenario, int_ interacción, tema_ temas típicos, res_ cómo me fue, sen_ sensaciones, est_ estructura, emo_ emociones, desp_ al despertar; en los días de antes del esquema 17, el tipo «recurrente» aparece como est_recurrente)",
         "vm_sustancias.csv:sustancia" to "alcohol, cannabis, tabaco, cafeina u otra", "otra_nombre" to "Cuál, si fue «otra»",
         "hora_inicio" to "Hora en que empezó", "hora_fin" to "Hora en que se te pasó el efecto", "duracion_h" to "Horas con efecto (de inicio a fin)",
         "nivel_max" to "Nivel máximo (0 a 10): el que dijiste en la mañana o el mayor que leíste", "lecturas" to "Lecturas de nivel con su hora (lista HH:MM=nivel)",
@@ -100,7 +100,9 @@ object Diccionario {
         "version_noche" to "Con qué orden de preguntas se llenó la hoja de la noche (desde el esquema 14): 1 = el orden anterior; 2 = el orden nuevo, con el ánimo del momento primero. Vacío = no pasó por la hoja o es de antes",
         "hitos" to "Hitos del día (lista)", "flow" to "Experiencia de flujo (Csikszentmihalyi)", "sdt_necesidad" to "Necesidad psicológica más presente (Deci y Ryan)",
         "apreciacion" to "Evaluación del estrés (Lazarus)", "sueno_recordado" to "Recordó un sueño (0/1)", "sueno_valencia" to "Qué tan agradable fue el sueño (1 a 7)",
-        "sueno_lucidez" to "Lucidez del sueño", "sueno_vividez" to "Vividez del recuerdo", "sueno_tipo" to "Tipo de sueño", "sueno_temas" to "Personas y temas del sueño (lista)",
+        "sueno_lucidez" to "Lucidez del sueño", "sueno_vividez" to "Qué tan claro lo recuerdas: vago (solo fragmentos), moderado (partes claras) o muy_vivido (casi completo y nítido)", "sueno_tipo" to "Tipo de sueño (solo hasta el esquema 17: mundano, ansioso_pesadilla, bizarro_surreal, recurrente; después, ver sueno_rareza y sueno_pesadilla)",
+        "sueno_rareza" to "Qué tan raro fue el sueño: realista, raro (pero posible) o imposible (o surreal); en días de antes del esquema 17, deducido del tipo (mundano = realista, bizarro = imposible)",
+        "sueno_pesadilla" to "Si fue pesadilla: angustia fuerte o te despertó (TRUE/FALSE; vacío = no se dijo); en días de antes del esquema 17, TRUE si el tipo era ansioso o pesadilla", "sueno_temas" to "Personas y temas del sueño (lista)",
         "sueno_texto" to "Narración del sueño", "mejor_momento" to "Lo mejor del día", "peor_momento" to "Lo peor del día",
         "impulso" to "Intensidad del impulso (0 a 5), seguimiento privado", "recaida" to "Hubo recaída (0/1), seguimiento privado", "detonantes" to "Detonantes (lista)",
         "medicamentos" to "Medicamentos tomados (lista)", "prediccion_manana" to "Predicción del ánimo de mañana (1 a 7)",
@@ -575,6 +577,13 @@ object Diccionario {
         "vm_series.csv:referencia" to (92 to "nueva: la serie es del ejercicio de referencia (D.114)"),
         "wifi_sin_dato_min" to (92 to "nueva: minutos en que no se supo si había wifi (D.112)"),
         "wifi_total_min" to (92 to "cuenta también el wifi con el nombre oculto (D.112)"),
+        // Esquema 17: pantallas de captura (sueños).
+        "vm_dias.csv:sueno_rareza" to (110 to "nueva: qué tan raro fue el sueño; los días de antes, desde su tipo (D.127)"),
+        "vm_dias.csv:sueno_pesadilla" to (110 to "nueva: si fue pesadilla; los días de antes, desde su tipo (D.127)"),
+        "vm_dias.csv:sueno_tipo" to (110 to "ya no se pregunta: queda solo en los días de antes (D.127)"),
+        "vm_dias.csv:sueno_categorias" to (110 to "nueve ejes; el tipo «recurrente» de antes aparece como est_recurrente (D.127, D.128)"),
+        "suenot_*" to (110 to "rareza del sueño y pesadilla en lugar del tipo (D.127)"),
+        "sueno_est_recurrente" to (110 to "incluye los días de antes con tipo «recurrente» (D.127)"),
     )
 
     // Las claves con «*», como patrones; la más larga primero, para que «app_min_*» gane a «app_*».

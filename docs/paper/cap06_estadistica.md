@@ -105,7 +105,7 @@ La regla 2 es la más defendible: antes de empezar a usar una función no se sab
 | `gcat_`, `icat_` | gasto e ingreso por categoría | $ | 15 / 5; 8 / 3 (por peso) |
 | `obr_`, `gen_` | cada obra y cada género | 0/1 | 10 / 5 |
 | `med_`, `det_` | cada medicamento; cada detonante (privadas: solo en la exportación para R, nunca en las listas de la app) | 0/1 | 15 / 3; 10 / 3 |
-| `suenot_` | tipo de sueño | 0/1 | 6 / 3 |
+| `suenot_` | rareza del sueño y pesadilla (antes del esquema 17, el tipo) | 0/1 | 6 / 3 |
 | `ciu_`, `pais_` | horas en cada ciudad y país | horas | 8 / 3; 6 / 3 |
 | `musc_`, `act_` | series por músculo; minutos por tipo de movimiento | n, min | 12 / 3; 6 / 3 |
 | `nut_`, `ali_` | cada nutriente de MacroFactor; cada alimento | cantidad; 0/1 | 60 / 14; 12 / 5 |
