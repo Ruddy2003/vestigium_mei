@@ -190,7 +190,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** subestima frecuencias (recuerdo de sueños, contextos, hábitos) en proporción a los días sin respuesta y sesga análisis por necesidad. Mismo problema de fondo que H-1-1.
 - **Gravedad:** Media.
 - **Propuesta:** vacío (`null`) cuando la sección no se respondió (`sueno_recordado` solo si se abrió la pantalla de sueño o hay calidad; `hab_*` desde `Habito.desde`); con «las tres», poner 1 en las tres columnas.
-- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-15): `sueno_recordado` queda vacío salvo que ese día haya calidad, texto o la propia marca del sueño; `hab_*` queda vacío antes de `Habito.desde` (en el panel y en `vm_dias`); con «las tres», las tres necesidades valen 1. Los hábitos sin `desde` (los importados) siguen con 0.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-15): `sueno_recordado` queda vacío salvo que ese día haya calidad, texto o la propia marca del sueño; `hab_*` queda vacío antes de `Habito.desde` (en el panel y en `vm_dias`); con «las tres», las tres necesidades valen 1. Los hábitos sin `desde` (los importados) siguen con 0. Ampliado en el esquema 17 (D.133): en los días contestados con «sí / no / sin contestar», un hábito sin respuesta queda vacío en vez de 0.
 
 ### H-2-5 · El perfil actual se proyecta hacia atrás en las etapas de vida
 - **Dónde:** `ciencia/Dinamicas.kt`, «Etapas de vida», `valorEn()`: si un campo nunca cambió, se usa `actual[campo]` para cualquier fecha.

@@ -170,8 +170,7 @@ object Terapia {
     private fun legible(id: String) = id.replace('_', ' ').replaceFirstChar { it.uppercase() }
 
     /** Los detonantes de [Catalogo.DETONANTES] con acentos; los escritos a mano salen como se anotaron. */
-    private val DETONANTES = mapOf("estres" to "Estrés", "noche_insomnio" to "Noche sin dormir", "redes_sociales" to "Redes sociales")
-    private fun detonante(id: String) = DETONANTES[id] ?: legible(id)
+    private fun detonante(id: String) = Catalogo.DETONANTES.firstOrNull { it.id == id }?.nombre ?: legible(id)
 
     // ------------------------------------------------------------------ el reporte
 
@@ -194,10 +193,10 @@ object Terapia {
         // ---- ánimo
         val registros = mu.filter { Catalogo.esRegistro(it) && !Estadistica.cierreFuera(it) }
         val (emo, neg) = emociones(registros)
-        val pens = conteo(registros.mapNotNull { Catalogo.pensamientoDe(it) }) { id -> Catalogo.PENSAMIENTOS.firstOrNull { it.id == id }?.nombre ?: id }
+        val pens = conteo(registros.flatMap { Catalogo.pensamientosDe(it) }) { id -> Catalogo.PENSAMIENTOS.firstOrNull { it.id == id }?.nombre ?: id }
         val con = mu.filter { it.tipo == "muestreo" && it.con_quien.isNotEmpty() }
         val solos = con.filter { "solo" in it.con_quien }; val acomp = con.filter { "solo" !in it.con_quien }
-        val apre = conteo(dias.mapNotNull { it.apreciacion }) { id -> Catalogo.CIENTIFICAS.first { it.clave == "apreciacion" }.opciones.firstOrNull { it.id == id }?.nombre ?: id }
+        val apre = conteo(dias.mapNotNull { it.apreciacion?.takeIf { a -> a != "no_aplica" } }) { id -> Catalogo.CIENTIFICAS.first { it.clave == "apreciacion" }.opciones.firstOrNull { it.id == id }?.nombre ?: id }
         val errores = fechas.mapNotNull { f -> Repo.dias[Fechas.sumar(f, -1)]?.prediccion_manana?.let { pr -> Repo.dias[f]?.valencia?.let { (it - pr).toDouble() } } }
 
         // ---- cuestionarios: los semanales y el de soledad; la personalidad no cambia en una semana.

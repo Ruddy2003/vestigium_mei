@@ -36,6 +36,8 @@ data class Dia(
     val activacion: Int? = null,
     val dolor: Int? = null,
     val ctx: Map<String, Boolean> = emptyMap(),
+    /** Otro contexto del día, escrito a mano (esquema 17); solo se exporta. */
+    val ctx_otro: String = "",
     val hitos: List<String> = emptyList(),
     val flow: String? = null,
     val sdt_necesidad: String? = null,
@@ -59,9 +61,16 @@ data class Dia(
     val impulso: Int? = null,
     val recaida: Boolean? = null,
     val detonantes: List<String> = emptyList(),
+    /** El detonante del día escrito cuando se eligió «otro» (esquema 17, seguimiento privado). */
+    val detonante_otro: String? = null,
     val medicamentos: List<String> = emptyList(),
     val prediccion_manana: Int? = null,
     val habitos: Map<String, Boolean> = emptyMap(),
+    /**
+     * Los hábitos se contestaron con «sí / no / sin contestar» (esquema 17): un hábito sin entrada es «sin contestar» (vacío en
+     * el panel), y «no» se guarda como false. Sin esta marca (los días de antes), un hábito sin entrada cuenta como 0.
+     */
+    val habitos_tri: Boolean = false,
     val nota: String = "",
     /**
      * Cómo estuviste con cada @persona que nombras ese día (clave sin @, en minúsculas): «pense» si solo pensaste en ella,
@@ -120,8 +129,14 @@ data class Momento(
     /** Lo que sentías (ids de Catalogo.SENTIMIENTOS; «no_se» = no lo sabías; «otro» va con [emocion_otra]). */
     val emociones: List<String> = emptyList(),
     val emocion_otra: String? = null,
-    /** En qué pensabas: Catalogo.PENSAMIENTOS (preocupación, idea, recuerdo…). */
+    /** En qué pensabas: Catalogo.PENSAMIENTOS (preocupación, idea, recuerdo…). Hasta el esquema 16, uno solo; ver [pensamientos]. */
     val pensamiento: String? = null,
+    /** En qué pensabas, varios a la vez (esquema 17). Vacío en los registros de antes: ver Catalogo.pensamientosDe. */
+    val pensamientos: List<String> = emptyList(),
+    /** Cuánto de cada emoción (esquema 17): id de [emociones] → 1 un poco, 2 bastante, 3 mucho. Sin entrada = no se dijo. */
+    val intensidades: Map<String, Int> = emptyMap(),
+    /** El detonante escrito cuando se eligió «otro» (esquema 17, seguimiento privado). */
+    val detonante_otro: String? = null,
     /** Libido (seguimiento privado): en qué está el foco (Catalogo.FOCOS: pensando, viendo, conversando, nada, otro). */
     val foco: String? = null,
     /** Cuándo se anotó (esquema 14). [ts] es cuándo pasó; si se anotó después, las dos difieren. Null en los registros de antes. */

@@ -425,10 +425,12 @@ fun PantallaNoche(nav: Nav) {
     }
     // Lo esencial, en orden: lo que falta se puede saltar con «siguiente».
     val habitosActivos = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles(c).filter { it.activo }
-    val pasos = listOfNotNull(
-        Triple("ánimo", d.valencia != null, reqAnimo), Triple("predicción", d.prediccion_manana != null, reqPred),
-        if (habitosActivos.isNotEmpty()) Triple("hábitos", habitosActivos.all { d.habitos[it.id] == true }, reqHabitos) else null,
-        Triple("diario", d.nota.isNotBlank(), reqDiario),
+    // Lo que pide «Sellar el día» (ánimo y diario) es lo que cuenta la barra; predicción y hábitos van aparte, como extras.
+    // Los hábitos están hechos cuando todos tienen respuesta, «sí» o «no».
+    val pasos = listOf(Triple("ánimo", d.valencia != null, reqAnimo), Triple("diario", d.nota.isNotBlank(), reqDiario))
+    val extras = listOfNotNull(
+        Triple("predicción", d.prediccion_manana != null, reqPred),
+        if (habitosActivos.isNotEmpty()) Triple("hábitos", habitosActivos.all { d.habitos.containsKey(it.id) }, reqHabitos) else null,
     )
     androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
     Hoja("Llenar el día", nav.atras,
@@ -492,13 +494,15 @@ fun PantallaNoche(nav: Nav) {
             Escala(d.prediccion_manana, 1, 7, Catalogo.ANCLAS["prediccion_manana"]) { cambiar(d.copy(prediccion_manana = it)) }
         }
         // 4 y 5. Hechos: contexto, hábitos y suplementos.
-        if (ver("contexto")) Seccion("Contexto", "Activa todo lo que aplique. Pueden ser varios o ninguno.", numero = n()) {
+        if (ver("contexto")) Seccion("Cómo fue el día", "El día completo: activa todo lo que aplique. Pueden ser varios o ninguno.", numero = n()) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Catalogo.CONTEXTOS.forEach { o ->
                     val activo = d.ctx[o.id] == true
                     Ficha(o.nombre, activo) { cambiar(d.copy(ctx = if (activo) d.ctx - o.id else d.ctx + (o.id to true))) }
                 }
             }
+            OutlinedTextField(value = d.ctx_otro, onValueChange = { cambiar(d.copy(ctx_otro = it.take(80))) }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                singleLine = true, placeholder = { Text("otro (opcional)", style = MaterialTheme.typography.bodyMedium) })
         }
         Seccion("Hábitos", "Siempre aquí, para marcarlos al cerrar el día.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqHabitos)) {
             val activos = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles(c).filter { it.activo }
@@ -508,15 +512,19 @@ fun PantallaNoche(nav: Nav) {
                     TextButton(onClick = { nav.ir("habitos") }) { Text("+ agregar hábitos", style = MaterialTheme.typography.labelLarge) }
                 }
             } else Tarjeta {
+                // «sí», «no» o sin contestar (tocar otra vez la misma respuesta la quita): «no» ya no es lo mismo que no haber contestado.
                 activos.forEach { h ->
-                    val hecho = d.habitos[h.id] == true
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                        Checkbox(checked = hecho, onCheckedChange = { cambiar(d.copy(habitos = if (it) d.habitos + (h.id to true) else d.habitos - h.id)) },
-                            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary))
+                    val r = d.habitos[h.id]
+                    fun poner(v: Boolean) = cambiar(d.copy(habitos = if (r == v) d.habitos - h.id else d.habitos + (h.id to v), habitos_tri = true))
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                         Text(h.nombre, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                        Text(if (hecho) "= 1" else "= 0", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Ficha("sí", r == true) { poner(true) }
+                            Ficha("no", r == false) { poner(false) }
+                        }
                     }
                 }
+                if (activos.any { !d.habitos.containsKey(it.id) }) Ayuda("Sin respuesta queda en blanco, no como «no».", Modifier.padding(top = 4.dp))
             }
         }
         // Lo que tomaste ese día: sirve también para lo que olvidaste anotar (N-09, E-11). Tocar de nuevo lo quita.
@@ -557,7 +565,7 @@ fun PantallaNoche(nav: Nav) {
                 }
             }
         }
-        Seccion("Lo mejor y lo peor", "Una línea cada uno.", numero = n(), plegable = true, plegadaPorDefecto = true) {
+        Seccion("Lo mejor y lo peor", "Unas palabras de cada uno.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             OutlinedTextField(value = d.mejor_momento, onValueChange = { cambiar(d.copy(mejor_momento = it)) }, modifier = Modifier.fillMaxWidth(),
                 label = { Text("optimum", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
             Spacer(Modifier.padding(top = 8.dp))
@@ -565,7 +573,7 @@ fun PantallaNoche(nav: Nav) {
                 label = { Text("pessimum", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
         }
         Seccion("Hitos", "Lo que no pasa todos los días: un vuelo, un beso, una decisión importante. Una etiqueta corta por cosa.", numero = n(), plegable = true, plegadaPorDefecto = true) {
-            ListaEtiquetas(d.hitos, "vuelo, beso, decision_importante", normalizar = { Texto.slug(it) }) { cambiar(d.copy(hitos = it)) }
+            ListaEtiquetas(d.hitos.map { it.replace('_', ' ') }, "primer vuelo, mudanza, una decisión importante", normalizar = { it.trim().replace(Regex("\\s+"), " ") }) { cambiar(d.copy(hitos = it)) }
         }
         Seccion("Lo que leí o vi hoy", "Toca la portada de lo que le dedicaste tiempo hoy: libro, serie, película, juego o artículo.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             ObrasDeHoy(fecha, nav)
@@ -589,15 +597,15 @@ fun PantallaNoche(nav: Nav) {
         Spacer(Modifier.height(72.dp))
     }
     // Barra fija abajo: cuánto llevas y un salto a lo siguiente que falta.
-    BarraNoche(pasos.map { it.first to it.second }, completo, Modifier.align(Alignment.BottomCenter)) {
-        val sig = pasos.firstOrNull { !it.second }
+    BarraNoche(pasos.map { it.first to it.second }, extras.map { it.first to it.second }, completo, Modifier.align(Alignment.BottomCenter)) {
+        val sig = pasos.firstOrNull { !it.second } ?: extras.firstOrNull { !it.second }
         scope.launch { (sig?.third ?: reqSellar).bringIntoView() }
     }
     }
 }
 
 @Composable
-private fun BarraNoche(pasos: List<Pair<String, Boolean>>, completo: Boolean, modifier: Modifier, siguiente: () -> Unit) {
+private fun BarraNoche(pasos: List<Pair<String, Boolean>>, extras: List<Pair<String, Boolean>>, completo: Boolean, modifier: Modifier, siguiente: () -> Unit) {
     val hechos = pasos.count { it.second }
     val cs = MaterialTheme.colorScheme
     Surface(modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), shape = MaterialTheme.shapes.medium, color = cs.surface,
@@ -607,11 +615,13 @@ private fun BarraNoche(pasos: List<Pair<String, Boolean>>, completo: Boolean, mo
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     pasos.forEach { (_, ok) -> Box(Modifier.weight(1f).height(5.dp).clip(RoundedCornerShape(3.dp)).background(if (ok) cs.primary else cs.outline)) }
                 }
-                Text("$hechos de ${pasos.size} · " + (pasos.firstOrNull { !it.second }?.let { "falta ${it.first}" } ?: "todo listo"),
+                val faltaExtra = extras.filter { !it.second }.map { it.first }
+                Text("$hechos de ${pasos.size} · " + (pasos.firstOrNull { !it.second }?.let { "falta ${it.first}" } ?: "listo para sellar") +
+                    (if (faltaExtra.isNotEmpty()) " · extra: " + faltaExtra.joinToString(", ") else ""),
                     style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
             }
             TextButton(onClick = siguiente) {
-                Text(if (hechos < pasos.size) "siguiente →" else if (completo) "sellar ↓" else "guardar ↓", style = MaterialTheme.typography.labelLarge, color = cs.primary)
+                Text(if (hechos < pasos.size || extras.any { !it.second }) "siguiente →" else if (completo) "sellar ↓" else "guardar ↓", style = MaterialTheme.typography.labelLarge, color = cs.primary)
             }
         }
     }

@@ -98,10 +98,11 @@ object Exportar {
             r["sueno_rareza"] = Catalogo.rarezaDe(d); r["sueno_pesadilla"] = Catalogo.pesadillaDe(d)
             r["sueno_calidad"] = d.sueno_calidad; r["sueno_categorias"] = Catalogo.categoriasSuenoDe(d); r["sueno_texto"] = d.sueno_texto
             r["mejor_momento"] = d.mejor_momento; r["peor_momento"] = d.peor_momento
-            r["impulso"] = d.impulso; r["recaida"] = d.recaida; r["detonantes"] = d.detonantes
+            r["impulso"] = d.impulso; r["recaida"] = d.recaida; r["detonantes"] = d.detonantes; r["detonante_otro"] = d.detonante_otro
             r["medicamentos"] = d.medicamentos; r["prediccion_manana"] = d.prediccion_manana
             // Antes de que existiera el hábito no se sabe (P-15).
-            Repo.config.habitos.forEach { h -> r["hab_${h.id}"] = if (d.habitos[h.id] == true) true else if (h.desde.isNotBlank() && d.fecha < h.desde) null else false }
+            Repo.config.habitos.forEach { h -> r["hab_${h.id}"] = when { d.habitos[h.id] == true -> true; h.desde.isNotBlank() && d.fecha < h.desde -> null; d.habitos_tri && h.id !in d.habitos -> null; else -> false } }
+            r["habitos_tri"] = d.habitos_tri; r["ctx_otro"] = d.ctx_otro
             r["personas"] = Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct()
             // Cómo estuviste con cada persona: «ana:estuve|luis:pense|mama:mensajes».
             r["presencias"] = Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct().map { "$it:" + Presencias.enDiario(d, it, eq) }
@@ -126,14 +127,15 @@ object Exportar {
         return Repo.momentos.map {
         val ms = Fechas.millis(it.ts)
         linkedMapOf<String, Any?>("id" to it.id, "ts" to it.ts, "fecha" to it.fecha, "hora" to Fechas.horaDe(it.ts), "tipo" to it.tipo,
-            "es_animo" to Catalogo.esRegistro(it), "emociones" to Catalogo.emocionesDe(it), "emocion_otra" to it.emocion_otra, "pensamiento" to Catalogo.pensamientoDe(it),
+            "es_animo" to Catalogo.esRegistro(it), "emociones" to Catalogo.emocionesDe(it), "emocion_otra" to it.emocion_otra, "intensidades" to Catalogo.emocionesDe(it).mapNotNull { e -> it.intensidades[e]?.let { n -> "$e:$n" } },
+            "pensamiento" to Catalogo.pensamientoDe(it), "pensamientos" to Catalogo.pensamientosDe(it),
             "intensidad" to it.intensidad, "valencia" to it.valencia, "activacion" to it.activacion, "texto" to it.texto,
             "personas" to Texto.personas(it.texto), "temas" to Texto.temas(it.texto),
             "lat" to it.lat, "lon" to it.lon, "precision_m" to it.precision_m, "lugar" to Repo.lugares.firstOrNull { l -> l.id == it.lugar }?.nombre,
             "origen" to it.origen, "aviso_ts" to it.aviso_ts,
             "latencia_min" to it.aviso_ts?.let { a -> (Fechas.millis(it.ts) - Fechas.millis(a)) / 60000.0 },
             "ruido_db" to it.ruido_db, "luz_lux" to it.luz_lux,
-            "con_quien" to it.con_quien, "detonantes" to it.detonantes, "dispositivo" to it.dispositivo, "antes" to it.antes, "duracion_min" to it.duracion_min, "foco" to it.foco, "cierre" to it.esCierre,
+            "con_quien" to it.con_quien, "detonantes" to it.detonantes, "detonante_otro" to it.detonante_otro, "dispositivo" to it.dispositivo, "antes" to it.antes, "duracion_min" to it.duracion_min, "foco" to it.foco, "cierre" to it.esCierre,
             "tipo_lugar" to Repo.lugares.firstOrNull { l -> l.id == it.lugar }?.tipo,
             "alcohol_nivel" to nivelSustancia("alcohol", ms, cons), "cannabis_nivel" to nivelSustancia("cannabis", ms, cons), "otra_nivel" to nivelSustancia("otra", ms, cons),
             "ts_creado" to it.ts_creado, "ts_editado" to it.ts_editado)
@@ -677,7 +679,7 @@ object Exportar {
             (if (Repo.config.campanas.isNotEmpty()) listOf("campanas_n") else emptyList()) +
             Repo.lugares.map { "horas_tipo_${it.tipo}" }.distinct().sorted()
         // Lo que sentías y pensabas (una columna por sentimiento o pensamiento que hayas registrado alguna vez).
-        val emociones = (Repo.momentos.flatMap { Catalogo.emocionesDe(it) }.filter { it != Catalogo.OTRO } + Repo.momentos.mapNotNull { Catalogo.pensamientoDe(it) }).distinct().sorted()
+        val emociones = (Repo.momentos.flatMap { Catalogo.emocionesDe(it) }.filter { it != Catalogo.OTRO } + Repo.momentos.flatMap { Catalogo.pensamientosDe(it) }).distinct().sorted()
         val est = runCatching { io.github.ruddy2003.vestigium.ciencia.Estadistica.panel() }.getOrDefault(emptyMap())
         val hayEspeciales = Especiales.hay()
         // Festivos solo si vives en México (I-1); el día libre es la misma regla del ritmo de sueño (P-19), y R la lee de aquí.

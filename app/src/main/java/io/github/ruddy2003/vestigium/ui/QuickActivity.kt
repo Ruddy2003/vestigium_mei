@@ -120,7 +120,7 @@ class QuickActivity : FragmentActivity() {
                 val m0 = crear("animo", origen, null, null)
                 val n = when {
                     Catalogo.sentimiento(tipo) != null -> m0.copy(emociones = listOf(tipo))
-                    Catalogo.PENSAMIENTOS.any { it.id == tipo } -> m0.copy(pensamiento = tipo)
+                    Catalogo.PENSAMIENTOS.any { it.id == tipo } -> m0.copy(pensamiento = tipo, pensamientos = listOf(tipo))
                     else -> m0
                 }
                 Repo.guardarMomento(n); inicial = n
@@ -309,7 +309,8 @@ class QuickActivity : FragmentActivity() {
         var activacion by remember { mutableStateOf(inicial?.activacion) }
         var emociones by remember { mutableStateOf(inicial?.emociones.orEmpty()) }
         var otra by remember { mutableStateOf(inicial?.emocion_otra.orEmpty()) }
-        var pensamiento by remember { mutableStateOf(inicial?.pensamiento) }
+        var intensidades by remember { mutableStateOf(inicial?.intensidades.orEmpty()) }
+        var pensamientos by remember { mutableStateOf(inicial?.let { Catalogo.pensamientosDe(it) }.orEmpty()) }
         var nota by remember { mutableStateOf(inicial?.texto.orEmpty()) }
         var con by remember { mutableStateOf(inicial?.con_quien.orEmpty()) }
         val discreto = Repo.config.discreto
@@ -318,10 +319,16 @@ class QuickActivity : FragmentActivity() {
         val fechaPedida = intent.getStringExtra(FECHA)?.takeIf { it != Fechas.diaLogico() }
         var cuando by remember { mutableStateOf<java.time.LocalDateTime?>(fechaPedida?.let { Fechas.parse(it).atTime(12, 0) }) }
         var elegirCuando by remember { mutableStateOf(fechaPedida != null) }
-        /** El registro se crea con lo primero que toques. */
+        /**
+         * El registro se crea con lo primero que diga algo del ánimo: la cuadrícula, una emoción, un pensamiento o el texto.
+         * «Con quién» solo no crea nada: espera y se guarda junto con lo demás.
+         */
         fun asegurar(f: (Momento) -> Momento) {
+            val nuevo = m == null
             val actual = m ?: crear(if (avisoMs != null) "muestreo" else "animo", origen, null, avisoMs, cuando?.aMillis())
-            val n = f(Repo.momento(actual.id) ?: actual)
+            var base = Repo.momento(actual.id) ?: actual
+            if (nuevo && con.isNotEmpty()) base = base.copy(con_quien = con)
+            val n = f(base)
             Repo.guardarMomento(n); m = n
         }
         Encabezado("¿Cómo estás ahora?", if (m != null) "Guardado a las ${Fechas.horaDe(m!!.ts)} del ${Fechas.titulo(m!!.fecha).lowercase()}. Lo demás es opcional; puedes cerrar." else "Un toque en el cuadro basta.")
@@ -343,43 +350,23 @@ class QuickActivity : FragmentActivity() {
         BannerConsumo(ir)
         CuadriculaAfecto(valencia, activacion) { v, a -> valencia = v; activacion = a; asegurar { it.copy(valencia = v, activacion = a) } }
         Etiqueta("¿Qué sientes? (opcional, varios)")
-        fun alternar(id: String) {
-            emociones = when {
-                id in emociones -> emociones - id
-                id == Catalogo.NO_SE -> listOf(Catalogo.NO_SE)
-                else -> emociones - Catalogo.NO_SE + id
-            }
-            val e = emociones
-            asegurar { it.copy(emociones = e, emocion_otra = if (Catalogo.OTRO in e) otra.ifBlank { null } else null) }
+        io.github.ruddy2003.vestigium.ui.SelectorEmociones(io.github.ruddy2003.vestigium.ui.EleccionEmociones(emociones, otra, intensidades), discreto) { e ->
+            emociones = e.emociones; otra = e.otra; intensidades = e.intensidades
+            asegurar { it.copy(emociones = e.emociones, emocion_otra = if (Catalogo.OTRO in e.emociones) e.otra.trim().ifBlank { null } else null, intensidades = e.intensidades) }
         }
-        listOf(1, -1, 0).forEach { tono ->
-            FlowRow(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Catalogo.SENTIMIENTOS.filter { it.tono == tono }.forEach { e -> Ficha(if (discreto) e.discreto else e.nombre, e.id in emociones) { alternar(e.id) } }
-                if (tono == 0) {
-                    Ficha("otro…", Catalogo.OTRO in emociones) { alternar(Catalogo.OTRO) }
-                    Ficha("no sé", Catalogo.NO_SE in emociones) { alternar(Catalogo.NO_SE) }
-                }
-            }
-        }
-        if (Catalogo.OTRO in emociones) OutlinedTextField(value = otra, onValueChange = { t -> otra = t; asegurar { it.copy(emocion_otra = t.trim().ifBlank { null }) } },
-            modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
-        Etiqueta("¿En qué piensas? (opcional)")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Catalogo.PENSAMIENTOS.forEach { o -> Ficha(o.nombre, pensamiento == o.id) { pensamiento = if (pensamiento == o.id) null else o.id; val p = pensamiento; asegurar { it.copy(pensamiento = p) } } }
+        Etiqueta("¿En qué piensas? (opcional, varios)")
+        io.github.ruddy2003.vestigium.ui.SelectorPensamientos(pensamientos, discreto) { l ->
+            pensamientos = l
+            asegurar { it.copy(pensamientos = l, pensamiento = l.firstOrNull()) }
         }
         OutlinedTextField(value = nota, onValueChange = { t -> nota = t; asegurar { it.copy(texto = t) } },
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp), minLines = 2, placeholder = { Text("¿Qué está pasando? Usa @persona y #tema") }, visualTransformation = rememberMarcas())
         Row(Modifier.padding(top = 6.dp)) { BotonDictado { d -> nota = (nota + " " + d).trim(); val t = nota; asegurar { it.copy(texto = t) } } }
-        Etiqueta("¿Con quién estás?")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Catalogo.CON_QUIEN.forEach { o ->
-                val activo = o.id in con
-                Ficha(o.nombre, activo) {
-                    // «Solo» excluye a los demás, y elegir a alguien quita «solo».
-                    con = when { activo -> con - o.id; o.id == "solo" -> listOf("solo"); else -> con - "solo" + o.id }
-                    val c = con; asegurar { it.copy(con_quien = c) }
-                }
-            }
+        Etiqueta("¿Con quién estás? (opcional)")
+        io.github.ruddy2003.vestigium.ui.SelectorConQuien(con) { c ->
+            con = c
+            // Solo se guarda si ya hay registro; si no, espera a lo primero del ánimo.
+            if (m != null) asegurar { it.copy(con_quien = c) }
         }
         // Lo que no es ánimo, a un toque: sustancias, impulso y recaída.
         FlowRow(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -510,9 +497,14 @@ class QuickActivity : FragmentActivity() {
         Etiqueta("Qué la detonó")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Catalogo.DETONANTES.forEach { d ->
-                val activo = d in det
-                Ficha(d.replace("_", " "), activo) { det = if (activo) det - d else det + d; actualizar(mm.id) { it.copy(detonantes = det) } }
+                val activo = d.id in det
+                Ficha(d.nombre, activo) { det = if (activo) det - d.id else det + d.id; actualizar(mm.id) { it.copy(detonantes = det, detonante_otro = if ("otro" in det) it.detonante_otro else null) } }
             }
+        }
+        if ("otro" in det) {
+            var otro by remember(mm.id) { mutableStateOf(mm.detonante_otro.orEmpty()) }
+            OutlinedTextField(value = otro, onValueChange = { t -> otro = t; actualizar(mm.id) { it.copy(detonante_otro = t.trim().ifBlank { null }) } },
+                modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
         }
         Etiqueta("Qué hacías justo antes")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -626,7 +618,7 @@ class QuickActivity : FragmentActivity() {
         }
         Etiqueta("¿Con quién? (opcional)")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Catalogo.CON_QUIEN.forEach { o -> val a = o.id in con; Ficha(o.nombre, a) { con = when { a -> con - o.id; o.id == "solo" -> listOf("solo"); else -> con - "solo" + o.id } } }
+            Catalogo.CON_QUIEN.forEach { o -> Ficha(o.nombre, o.id in con) { con = Catalogo.alternarConQuien(con, o.id) } }
         }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End) {
             BotonPrincipal("Guardar", habilitado = (id != "otra" || otra.isNotBlank()) && !guardado) {

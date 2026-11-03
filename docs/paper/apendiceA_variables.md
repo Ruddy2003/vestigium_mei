@@ -648,3 +648,17 @@ Cambia lo que se guarda: `SCHEMA_V` = 17. El detalle está en el capítulo 3 y e
 | `sueno_tipo` | Ya no se pregunta; solo trae valor en los días de antes del esquema 17 que no se han corregido |
 | `sueno_categorias`, `sueno_<categoría>` | Nueve ejes (prefijos `per_`, `esc_`, `int_`, `tema_`, `res_`, `sen_`, `est_`, `emo_`, `desp_`). El tipo «recurrente» de antes cuenta como `est_recurrente` |
 | `suenot_realista`, `suenot_raro`, `suenot_imposible`, `suenot_pesadilla` (panel extendido) | Reemplazan a `suenot_<tipo>` |
+
+**Momentos y hoja de la noche** (`vm_momentos.csv`, `vm_dias.csv`, `vm_panel.csv`):
+
+| Columna | Qué es |
+|---|---|
+| `vm_momentos.csv:intensidades` | Lista `emoción:n` (1 un poco, 2 bastante, 3 mucho); solo las emociones a las que les pusiste intensidad |
+| `vm_momentos.csv:pensamientos` | Lista de pensamientos. `pensamiento` queda con el primero, por compatibilidad |
+| `vm_momentos.csv:detonante_otro`, `vm_dias.csv:detonante_otro` | El detonante escrito con «otro» (seguimiento privado) |
+| `n_<emoción>` nuevas | `n_amor`, `n_decepcion`, `n_anhelo`…; solo desde que se usan. Antes del esquema 17 no se podían marcar |
+| `n_<pensamiento>` nuevos | `n_trabajo`, `n_cuerpo`, `n_imaginando`, `n_nada`. Un registro con varios pensamientos cuenta en cada uno |
+| `con_hijos`, `con_mascota`, `con_mensaje` | Igual que los demás `con_*`. «Mensaje» puede ir con «solo» y no cuenta como acompañado |
+| `ctx_casa`, `ctx_fiesta`, `ctx_tramites` | Contextos nuevos; 0 en los días de antes (no existían) |
+| `vm_dias.csv:ctx_otro` | Otro contexto escrito a mano |
+| `vm_dias.csv:habitos_tri`, `hab_*` | Con `habitos_tri` = 1, un hábito sin respuesta queda vacío en `hab_*` en vez de 0 |

@@ -37,7 +37,7 @@ object Presencias {
 
     /** En un momento: si era «pensando en…» o un recuerdo y no estabas con nadie, la gente que nombras es en quien pensabas. */
     fun deMomento(m: Momento): String =
-        if (Catalogo.pensamientoDe(m) in PENSAR && (m.con_quien.isEmpty() || m.con_quien == listOf("solo"))) PENSE else ESTUVE
+        if (Catalogo.pensamientosDe(m).any { it in PENSAR } && m.con_quien.all { it == "solo" || it == "mensaje" }) PENSE else ESTUVE
 
     /**
      * Todas las personas de un día (nombre canónico) con su estado: lo que marcaste en el diario manda; si alguien solo

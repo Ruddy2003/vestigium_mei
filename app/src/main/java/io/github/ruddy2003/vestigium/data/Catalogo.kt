@@ -9,7 +9,8 @@ object Catalogo {
         Opcion("trabajo", "Trabajo"), Opcion("gym", "Gym"), Opcion("viaje", "Viaje"), Opcion("enfermo", "Enfermo"),
         Opcion("academico", "Académico"), Opcion("ocio_inmersivo", "Ocio inmersivo"),
         Opcion("naturaleza", "Naturaleza"), Opcion("amigos", "Amigos"),
-        Opcion("romantico", "Romántico"), Opcion("familia", "Familia"),
+        Opcion("romantico", "Cita o tiempo en pareja"), Opcion("familia", "Familia"),
+        Opcion("casa", "Casa o descanso"), Opcion("fiesta", "Fiesta"), Opcion("tramites", "Trámites o pendientes"),
     )
 
     val ANCLAS: Map<String, Map<Int, String>> = mapOf(
@@ -42,8 +43,8 @@ object Catalogo {
         Pregunta("flow", "¿El reto igualó tu habilidad?", "Csikszentmihalyi",
             "Piensa en la actividad más exigente del día y compara el tamaño del reto con qué tan preparado te sentías.",
             listOf(Opcion("flujo", "Flujo", "Concentración total, perdiste la noción del tiempo"),
-                Opcion("ansiedad", "Ansiedad", "El reto te rebasó"),
-                Opcion("aburrimiento", "Aburrimiento", "Muy por debajo de tu capacidad"),
+                Opcion("ansiedad", "Me rebasó (ansiedad)", "El reto fue más de lo que podías: así llama este modelo a ese estado, no es la emoción"),
+                Opcion("aburrimiento", "Me quedó chico (aburrimiento)", "Muy por debajo de tu capacidad"),
                 Opcion("apatia", "Apatía", "Ni reto ni interés"),
                 Opcion("no_aplica", "No aplica", "No hubo actividad que evaluar así"))),
         Pregunta("sdt_necesidad", "¿Qué necesidad se satisfizo más?", "Deci y Ryan",
@@ -58,7 +59,8 @@ object Catalogo {
             listOf(Opcion("reto", "Reto", "Exigente, pero te motivó"),
                 Opcion("amenaza", "Amenaza", "Exigente, y temiste fallar"),
                 Opcion("perdida", "Pérdida", "Algo ya salió mal"),
-                Opcion("rutina", "Rutina", "Baja exigencia"))),
+                Opcion("rutina", "Rutina", "Baja exigencia"),
+                Opcion("no_aplica", "No aplica", "No hubo nada que evaluar así"))),
     )
 
     val SUENO_LUCIDEZ = listOf(Opcion("no", "No"), Opcion("parcial", "Parcial"), Opcion("total", "Total"))
@@ -116,7 +118,18 @@ object Catalogo {
         Sentimiento("verguenza", "Vergüenza", -1, "S"), Sentimiento("celos", "Celos", -1, "T"), Sentimiento("abrumado", "Abrumado", -1, "U"),
         Sentimiento("cansancio", "Cansancio", -1, "V"), Sentimiento("nostalgia", "Nostalgia", 0, "W"), Sentimiento("confusion", "Confusión", 0, "X"),
         Sentimiento("sorpresa", "Sorpresa", 0, "Y"),
+        // Esquema 17: más emociones (los ids de arriba no cambian). En modo discreto, la Z y letras griegas.
+        Sentimiento("amor", "Amor", 1, "Z"), Sentimiento("satisfaccion", "Satisfacción", 1, "α"), Sentimiento("curiosidad", "Curiosidad", 1, "β"),
+        Sentimiento("inspiracion", "Inspiración", 1, "γ"), Sentimiento("seguridad", "Seguridad en mí", 1, "δ"), Sentimiento("admiracion", "Admiración", 1, "ε"),
+        Sentimiento("motivacion", "Motivación", 1, "ζ"), Sentimiento("conectado", "Conectado", 1, "η"), Sentimiento("asombro", "Asombro", 1, "θ"),
+        Sentimiento("decepcion", "Decepción", -1, "ι"), Sentimiento("impotencia", "Impotencia", -1, "κ"), Sentimiento("dolido", "Dolido o rechazado", -1, "λ"),
+        Sentimiento("inseguridad", "Inseguridad", -1, "μ"), Sentimiento("envidia", "Envidia", -1, "ν"), Sentimiento("irritacion", "Irritación", -1, "ξ"),
+        Sentimiento("vacio", "Vacío o apatía", -1, "ο"), Sentimiento("desesperanza", "Desesperanza", -1, "π"), Sentimiento("arrepentimiento", "Arrepentimiento", -1, "ρ"),
+        Sentimiento("inquietud", "Inquietud", -1, "σ"),
+        Sentimiento("anhelo", "Anhelo", 0, "τ"), Sentimiento("encontrados", "Sentimientos encontrados", 0, "υ"), Sentimiento("vulnerable", "Vulnerable", 0, "φ"),
     )
+    /** Cuánto de cada emoción (esquema 17): 1 un poco, 2 bastante, 3 mucho. */
+    val INTENSIDADES = listOf(1 to "un poco", 2 to "bastante", 3 to "mucho")
     /** «No sé» también es un dato: no lo sabías nombrar. «Otro» lleva su nombre escrito. */
     val NO_SE = "no_se"
     val OTRO = "otro"
@@ -126,17 +139,22 @@ object Catalogo {
         else -> sentimiento(id)?.let { if (discreto) it.discreto else it.nombre } ?: id
     }
 
-    /** En qué pensabas (opcional). */
+    /** En qué pensabas (opcional, varios desde el esquema 17). El detalle distingue las tres que se parecen. */
     val PENSAMIENTOS = listOf(
-        Opcion("pensando_en", "En alguien o algo"), Opcion("preocupacion", "Preocupación"), Opcion("idea", "Idea"), Opcion("recuerdo", "Recuerdo"),
-        Opcion("plan", "Plan o pendiente"), Opcion("vueltas", "Dándole vueltas"), Opcion("autocritica", "Autocrítica"), Opcion("deseo", "Deseo o antojo"),
+        Opcion("pensando_en", "En una persona"), Opcion("preocupacion", "Preocupación", "miedo a lo que viene"), Opcion("idea", "Idea"),
+        Opcion("recuerdo", "Recuerdo"), Opcion("plan", "Plan o pendiente"), Opcion("vueltas", "Dándole vueltas", "repetir lo que ya pasó"),
+        Opcion("autocritica", "Autocrítica", "juzgarte a ti"), Opcion("deseo", "Antojo o ganas de algo"), Opcion("trabajo", "En el trabajo o la escuela"),
+        Opcion("cuerpo", "En mi cuerpo o salud"), Opcion("imaginando", "Imaginando o fantaseando"), Opcion("nada", "En nada en particular"),
     )
 
     /** Los tipos de momento de antes, traducidos al registro de ánimo nuevo: qué sentimiento o qué pensamiento eran. */
     private val VIEJO_SENTIMIENTO = setOf("tristeza", "ansiedad", "enojo", "alegria", "gratitud")
     private val VIEJO_PENSAMIENTO = setOf("pensando_en", "preocupacion", "idea", "recuerdo")
     fun emocionesDe(m: Momento): List<String> = m.emociones.ifEmpty { if (m.tipo in VIEJO_SENTIMIENTO) listOf(m.tipo) else emptyList() }
-    fun pensamientoDe(m: Momento): String? = m.pensamiento ?: m.tipo.takeIf { it in VIEJO_PENSAMIENTO }
+    fun pensamientoDe(m: Momento): String? = pensamientosDe(m).firstOrNull()
+    /** En qué pensabas: la lista (esquema 17) o, en los registros de antes, el único pensamiento o el tipo de momento viejo. */
+    fun pensamientosDe(m: Momento): List<String> = m.pensamientos.ifEmpty { listOfNotNull(m.pensamiento ?: m.tipo.takeIf { it in VIEJO_PENSAMIENTO }) }
+    fun nombrePensamiento(id: String): String = PENSAMIENTOS.firstOrNull { it.id == id }?.nombre ?: id
     /** Un registro de ánimo o un momento de antes (no impulsos, recaídas ni sustancias). */
     fun esRegistro(m: Momento) = m.esAnimo || m.tipo in VIEJO_SENTIMIENTO || m.tipo in VIEJO_PENSAMIENTO
 
@@ -145,7 +163,7 @@ object Catalogo {
         if (m.tipo == "impulso" || m.tipo == "recaida" || m.tipo == "libido") return nombreTipo(m.tipo).let { n -> if (discreto) tipo(m.tipo)?.discreto ?: n else n }
         val e = emocionesDe(m).map { if (it == OTRO && !m.emocion_otra.isNullOrBlank() && !discreto) m.emocion_otra else nombreSentimiento(it, discreto) }
         if (e.isNotEmpty()) return e.joinToString(" · ")
-        pensamientoDe(m)?.let { p -> return if (discreto) "·" else PENSAMIENTOS.firstOrNull { it.id == p }?.nombre ?: p }
+        pensamientosDe(m).takeIf { it.isNotEmpty() }?.let { l -> return if (discreto) "·" else l.joinToString(" · ") { nombrePensamiento(it) } }
         return if (discreto) "Ā" else "Ánimo"
     }
 
@@ -247,7 +265,18 @@ object Catalogo {
 
     /** «¿Con quién estás?» en los avisos de ánimo. */
     val CON_QUIEN = listOf(Opcion("solo", "Solo"), Opcion("pareja", "Pareja"), Opcion("amigos", "Amigos"), Opcion("familia", "Familia"),
-        Opcion("companeros", "Compañeros"), Opcion("desconocidos", "Desconocidos"))
+        Opcion("hijos", "Hijos"), Opcion("companeros", "Compañeros de trabajo o escuela"), Opcion("desconocidos", "Desconocidos"), Opcion("mascota", "Mascota"),
+        Opcion("mensaje", "Por mensaje o llamada"))
+    /**
+     * Marcar o desmarcar a alguien en «¿con quién?». «Solo» excluye a quien está contigo en persona; «por mensaje o llamada»
+     * puede ir con «solo» (estás solo, pero hablando con alguien).
+     */
+    fun alternarConQuien(con: List<String>, id: String): List<String> = when {
+        id in con -> con - id
+        id == "solo" -> con.filter { it == "mensaje" } + "solo"
+        id == "mensaje" -> con + id
+        else -> con - "solo" + id
+    }
     /** Recaída: en qué aparato y qué hacías justo antes. */
     val DISPOSITIVOS = listOf(Opcion("telefono", "Teléfono"), Opcion("computadora", "Computadora"), Opcion("tableta", "Tableta"), Opcion("tele", "Tele"), Opcion("otro", "Otro"))
     val ANTES = listOf(Opcion("redes", "En redes"), Opcion("cama", "En la cama sin dormir"), Opcion("estudiando", "Estudiando o trabajando"),
@@ -260,7 +289,11 @@ object Catalogo {
 
     val CATEGORIAS = listOf("Comida", "Transporte", "Salud", "Ocio", "Social", "Suscripciones", "Escuela", "Ropa", "Regalos", "Otro")
     val CATEGORIAS_INGRESO = listOf("Sueldo", "Beca", "Trabajo extra", "Mesada", "Regalo", "Venta", "Reembolso", "Intereses", "Otro")
-    val DETONANTES = listOf("aburrimiento", "soledad", "estres", "tristeza", "ansiedad", "noche_insomnio", "redes_sociales", "cansancio", "otro")
+    /** Lo que detonó un impulso o una recaída (los ids de siempre; «otro» lleva su texto en `detonante_otro`). */
+    val DETONANTES = listOf(Opcion("aburrimiento", "Aburrimiento"), Opcion("soledad", "Soledad"), Opcion("estres", "Estrés"), Opcion("tristeza", "Tristeza"),
+        Opcion("ansiedad", "Ansiedad"), Opcion("noche_insomnio", "Noche sin dormir"), Opcion("redes_sociales", "Redes sociales"), Opcion("cansancio", "Cansancio"),
+        Opcion("otro", "Otro"))
+    fun nombreDetonante(id: String): String = DETONANTES.firstOrNull { it.id == id }?.nombre ?: id.replace('_', ' ')
     val HABITOS_SUGERIDOS = listOf("Meditar", "Leer", "Estudiar chino", "Escribir a mano", "Dormir antes de 00:00", "Sin pantalla al despertar")
     val TIPOS_LUGAR = listOf(Opcion("casa", "Casa"), Opcion("familia", "Familia"), Opcion("trabajo", "Trabajo"),
         Opcion("escuela", "Escuela"), Opcion("ejercicio", "Ejercicio"), Opcion("social", "Social"), Opcion("bar", "Bar"), Opcion("ocio", "Ocio"),

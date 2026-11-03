@@ -206,10 +206,16 @@ Ese mismo sesgo afecta al **mapa emocional de lugares** (pantalla Lugares): colo
 
 En cualquier registro de ánimo, después del toque en la cuadrícula, puedes marcar (todo opcional):
 
-- **Qué sientes** (varias a la vez), de una lista de 25 emociones (`Catalogo.SENTIMIENTOS`) agrupadas por tono: **9 agradables** (alegría, calma, gratitud, entusiasmo, orgullo, cariño, alivio, diversión, esperanza), **13 desagradables** (estrés, ansiedad, frustración, tristeza, enojo, miedo, soledad, aburrimiento, culpa, vergüenza, celos, abrumado, cansancio) y **3 mixtas** (nostalgia, confusión, sorpresa). Más dos opciones especiales: **«otro…»** (escribes cuál) y **«no sé»**. Elegir «no sé» quita las demás; elegir otra quita «no sé».
-- **En qué piensas** (una): en alguien o algo, preocupación, idea, recuerdo, plan o pendiente, dándole vueltas, autocrítica, deseo o antojo.
+- **Qué sientes** (varias a la vez), de una lista de 47 emociones (`Catalogo.SENTIMIENTOS`; 25 hasta el esquema 16) agrupadas por tono y con encabezado en la pantalla:
+  - **18 agradables:** alegría, calma, gratitud, entusiasmo, orgullo, cariño, alivio, diversión, esperanza, amor, satisfacción, curiosidad, inspiración, seguridad en mí, admiración, motivación, conectado, asombro.
+  - **23 desagradables:** estrés, ansiedad, frustración, tristeza, enojo, miedo, soledad, aburrimiento, culpa, vergüenza, celos, abrumado, cansancio, decepción, impotencia, dolido o rechazado, inseguridad, envidia, irritación, vacío o apatía, desesperanza, arrepentimiento, inquietud.
+  - **6 mixtas:** nostalgia, confusión, sorpresa, anhelo, sentimientos encontrados, vulnerable.
+
+  Dentro de cada tono salen primero las que más usas. Hay dos opciones especiales: **«otro…»** (escribes cuál, con un toque para las que ya escribiste antes) y **«no sé»**. Elegir «no sé» quita las demás; elegir otra quita «no sé». Desde el esquema 17 el selector es el mismo en el registro rápido y al corregir un momento (`SelectorEmociones`); antes, al corregir no estaba «otro» y «no sé» no quitaba las demás.
+- **Cuánto de cada emoción** (opcional, esquema 17): un poco (1), bastante (2) o mucho (3), en `Momento.intensidades`. Sin respuesta, no hay intensidad (no se asume ninguna).
+- **En qué piensas** (varias desde el esquema 17; antes, una): en una persona, preocupación, idea, recuerdo, plan o pendiente, dándole vueltas, autocrítica, antojo o ganas de algo, en el trabajo o la escuela, en mi cuerpo o salud, imaginando o fantaseando, en nada en particular. Las tres que se parecen llevan una línea que las distingue: preocupación es miedo a lo que viene; dándole vueltas, repetir lo que ya pasó; autocrítica, juzgarte a ti. Los registros de antes se leen con `Catalogo.pensamientosDe` (el único pensamiento, o el tipo de momento viejo).
 - **Una nota** con @personas y #temas.
-- **Con quién estás** (varias): solo, pareja, amigos, familia, compañeros, desconocidos. «Solo» excluye a los demás.
+- **Con quién estás** (varias): solo, pareja, amigos, familia, hijos, compañeros de trabajo o escuela, desconocidos, mascota, por mensaje o llamada. «Solo» excluye a quien está contigo en persona, pero puede ir con «por mensaje o llamada». Desde el esquema 17, marcar solo «con quién» ya no crea un registro de ánimo: se guarda junto con lo primero que digas del ánimo (la cuadrícula, una emoción, un pensamiento o el texto).
 
 ### 3.6.2 Por qué emociones con nombre además de los dos ejes
 
@@ -217,12 +223,13 @@ Los dos ejes resumen bien, pero pierden información: «enojo» y «miedo» caen
 
 **Por qué «no sé» es un dato.** No poder nombrar lo que sientes también es información (puede indicar baja diferenciación en ese momento, o un estado mezclado). Por eso, se guarda como emoción propia (`no_se`) y produce su propia variable `n_no_se`. **[Diseño propio]**, razonable.
 
-**Asimetría de la lista.** Hay más emociones desagradables (13) que agradables (9). Es habitual (el vocabulario emocional suele tener más palabras negativas), pero significa que **los conteos no son comparables entre sí**: que marques más emociones negativas que positivas puede deberse en parte a que hay más para elegir. **[Diseño propio]**.
+**Asimetría de la lista.** Hay más emociones desagradables (23) que agradables (18); hasta el esquema 16 eran 13 y 9. Es habitual (el vocabulario emocional suele tener más palabras negativas), pero significa que **los conteos no son comparables entre sí**: que marques más emociones negativas que positivas puede deberse en parte a que hay más para elegir. **[Diseño propio]**.
 
 ### 3.6.3 Cómo entran al panel
 
 - `n_<emoción>`: cuántos registros de ese día incluyen esa emoción (`n_alegria`, `n_estres`, `n_no_se`…). Solo se crean columnas para emociones que hayas usado al menos una vez (la de «otro» no genera columna).
-- `n_<pensamiento>`: igual con los pensamientos.
+- `n_<pensamiento>`: igual con los pensamientos; desde el esquema 17, un registro con varios pensamientos cuenta en cada uno.
+- **Las emociones y pensamientos nuevos del esquema 17** solo tienen columna desde que se usan por primera vez. Antes de existir no se podían marcar, así que su 0 en días viejos no significa «no lo sentí». **[Diseño propio]**. La intensidad (1–3) no entra al panel: solo se exporta (`vm_momentos.csv:intensidades`).
 - `registros_animo`: cuántos registros de ánimo hiciste ese día.
 - **Relleno con cero:** desde la fecha de tu **primer** registro de ánimo, los días que tienen documento de diario y no tienen registros cuentan como **0** en estas variables (no como «sin dato»). **[Diseño propio]**: es razonable si se asume que siempre registras cuando sientes algo, cosa que no es cierta en un día sin registros por olvido (ver H-1-1 sobre el criterio de rellenar con cero).
 - Con quién (solo con los registros **de aviso** que tienen compañía marcada): `acompanado_pct` (fracción de avisos en compañía), `con_pareja`, `con_amigos`… (fracción de avisos con cada tipo) y `valencia_acompanado` / `valencia_solo` (promedio de valencia en cada caso).
@@ -244,8 +251,10 @@ La «hoja de la noche» (`PantallaNoche`, en `ui/pantallas/Dia.kt`; en la app se
 1. **«Cómo estás ahora»** (el cierre, sección 3.7.5), solo en la hoja del día de hoy.
 2. **Ánimo y cuerpo** del día: valencia, activación y dolor.
 3. **Predicción** de mañana.
-4. **Contexto** del día (trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia; varios o ninguno).
-5. **Hábitos** (casillas; sin el hábito ligado a las recaídas) y **suplementos de este día**.
+4. **Cómo fue el día** (el contexto del día completo: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, cita o tiempo en pareja, familia y, desde el esquema 17, casa o descanso, fiesta, trámites o pendientes; varios o ninguno), más un «otro» escrito (`ctx_otro`, solo se exporta).
+5. **Hábitos** (desde el esquema 17, «sí» o «no» por hábito, y tocar otra vez la misma respuesta la quita; antes, casillas; sin el hábito ligado a las recaídas) y **suplementos de este día**.
+
+La barra fija de abajo cuenta lo mismo que pide «Sellar el día»: el ánimo y el diario. La predicción y los hábitos aparecen como «extra». Los hábitos cuentan como hechos cuando todos tienen respuesta, sea «sí» o «no». Antes contaba cuatro pasos y los hábitos solo estaban hechos si todos eran «sí».
 6. **Diario** (texto libre con @personas y #temas) y con quién estuviste.
 7. Plegado, como opcional: la «lectura del día», lo mejor y lo peor, hitos, lo que leíste o viste, la foto del día y «privado de este día →».
 8. Sellar.
@@ -269,11 +278,11 @@ Se guarda sola mientras escribes (cada 0.7 s sin cambios). Si tiene **valencia y
 
 Son tres preguntas de opción única (`Catalogo.CIENTIFICAS`), cada una inspirada en una teoría:
 
-**Flujo (Csikszentmihalyi).** «¿El reto igualó tu habilidad?» Opciones: **flujo** (concentración total), **ansiedad** (el reto te rebasó), **aburrimiento** (muy por debajo de tu capacidad), **apatía** (ni reto ni interés) y «no aplica». Corresponde al **modelo de cuadrantes**: cruzar «reto alto/bajo» con «habilidad alta/baja» da cuatro estados, y el flujo aparece cuando ambos son altos (Csikszentmihalyi y LeFevre, 1989). **[Aproximación]**: en los estudios se mide reto y habilidad por separado y se calcula el cuadrante; aquí se pide elegir directamente el estado, y referido al día completo (a «la actividad más exigente del día»), no a un momento.
+**Flujo (Csikszentmihalyi).** «¿El reto igualó tu habilidad?» Opciones: **flujo** (concentración total), **ansiedad** (el reto te rebasó), **aburrimiento** (muy por debajo de tu capacidad), **apatía** (ni reto ni interés) y «no aplica». Desde el esquema 17 la pantalla dice «Me rebasó (ansiedad)» y «Me quedó chico (aburrimiento)», porque en este modelo son estados de reto contra habilidad, no las emociones que llevan el mismo nombre en los registros de ánimo. Los ids (`ansiedad`, `aburrimiento`) y las columnas no cambian. Corresponde al **modelo de cuadrantes**: cruzar «reto alto/bajo» con «habilidad alta/baja» da cuatro estados, y el flujo aparece cuando ambos son altos (Csikszentmihalyi y LeFevre, 1989). **[Aproximación]**: en los estudios se mide reto y habilidad por separado y se calcula el cuadrante; aquí se pide elegir directamente el estado, y referido al día completo (a «la actividad más exigente del día»), no a un momento.
 
 **Necesidades psicológicas (Deci y Ryan).** «¿Qué necesidad se satisfizo más?»: **autonomía** (las decisiones fueron tuyas), **competencia** (algo se te dio bien), **relación** (te sentiste conectado), **ninguna** o **las tres**. Se basa en la teoría de la autodeterminación, que propone esas tres necesidades básicas (Deci y Ryan, 2000). **[Aproximación]**: las escalas validadas miden cada necesidad por separado con varios reactivos; aquí es una sola elección.
 
-**Evaluación del estrés (Lazarus).** «¿Cómo evaluaste la exigencia del día?»: **reto** (exigente pero motivante), **amenaza** (exigente y temiste fallar), **pérdida** (algo ya salió mal) o **rutina** (baja exigencia). Corresponde a la «evaluación primaria» de Lazarus y Folkman (1984), que distingue daño/pérdida, amenaza y reto. **[Aproximación]**: mismo comentario, es una sola elección del día.
+**Evaluación del estrés (Lazarus).** «¿Cómo evaluaste la exigencia del día?»: **reto** (exigente pero motivante), **amenaza** (exigente y temiste fallar), **pérdida** (algo ya salió mal) o **rutina** (baja exigencia); desde el esquema 17 también «no aplica», que deja las columnas en 0 igual que en flujo y no cuenta en el reporte. Corresponde a la «evaluación primaria» de Lazarus y Folkman (1984), que distingue daño/pérdida, amenaza y reto. **[Aproximación]**: mismo comentario, es una sola elección del día.
 
 **Cómo entran al panel.** Cada opción se convierte en una columna de 0/1 (`flow_flujo`, `flow_ansiedad`, `sdt_necesidad_autonomia`…), con valor **vacío** si no respondiste. Dos consecuencias del código:
 
@@ -287,7 +296,8 @@ Estas preguntas están **plegadas por omisión**, así que se responden menos y 
 - **Lo mejor y lo peor** del día: una línea cada uno, texto libre. No entran al panel como números.
 - **Hitos**: etiquetas cortas de cosas que no pasan todos los días; `hitos_n` cuenta cuántas.
 - **Medicamentos**: desde el módulo 10a son privados y se anotan en la pantalla Privado, no en el diario de la noche (al final hay un enlace «privado de este día»). Son etiquetas; `medicamentos_n` cuenta cuántas desde el primer día en que anotaste alguno y solo viaja a R.
-- **Contextos** (`ctx_*`) y **hábitos** (`hab_*`): 1 si lo marcaste. **Ojo (H-2-4):** los contextos valen **0 en todos los días con diario**, también si no abriste esa sección: es la convención declarada en la pantalla («marca lo que aplique»), y se mantiene. Los hábitos valían 0 incluso **antes de crear el hábito**; desde la entrega 10c, antes de `Habito.desde` (el día en que lo creaste) quedan vacíos, salvo que los hayas marcado (D.63). Los hábitos creados antes de que existiera esa fecha siguen valiendo 0 desde el principio. «No lo marqué» y «no pasó» siguen siendo lo mismo en ambos; es el problema de fondo de H-1-1.
+- **Contextos** (`ctx_*`) y **hábitos** (`hab_*`): 1 si lo marcaste. **Ojo (H-2-4):** los contextos valen **0 en todos los días con diario**, también si no abriste esa sección: es la convención declarada en la pantalla («marca lo que aplique»), y se mantiene. Los hábitos valían 0 incluso **antes de crear el hábito**; desde la entrega 10c, antes de `Habito.desde` (el día en que lo creaste) quedan vacíos, salvo que los hayas marcado (D.63). Los hábitos creados antes de que existiera esa fecha siguen valiendo 0 desde el principio.
+- **Hábitos con «sí / no / sin contestar» (esquema 17).** Al contestar un hábito en la hoja de la noche, el día queda marcado (`habitos_tri`). En esos días, «no» vale 0 y un hábito **sin respuesta queda vacío**, no 0. En los días de antes (sin la marca), sin marca sigue valiendo 0. *Ejemplo con datos inventados:* un día con «Leer: sí» y «Meditar» sin tocar da `hab_leer` = 1 y `hab_meditar` vacío; el mismo día sin la marca daba `hab_meditar` = 0. Una recaída deja el hábito ligado en «no» (0), como antes. Con esto se resuelve en parte H-2-4 para los hábitos; en los contextos, «no lo marqué» y «no pasó» siguen siendo lo mismo (H-1-1).
 
 ### 3.7.4 «Retroactivo»: cuándo se llenó el día
 

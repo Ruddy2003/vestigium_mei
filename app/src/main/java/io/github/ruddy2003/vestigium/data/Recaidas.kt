@@ -22,7 +22,7 @@ object Recaidas {
         val d = Repo.dia(m.fecha)
         val h = habito()
         val previo = Previo(m.fecha, d.recaida, h?.id, h != null && d.habitos[h.id] == true)
-        Repo.guardarDia(d.copy(recaida = true, habitos = if (h != null) d.habitos - h.id else d.habitos))
+        Repo.guardarDia(d.copy(recaida = true, habitos = if (h != null) d.habitos + (h.id to false) else d.habitos))
         return previo
     }
 

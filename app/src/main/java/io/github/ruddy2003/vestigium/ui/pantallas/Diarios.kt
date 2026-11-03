@@ -113,7 +113,7 @@ fun PantallaDiario(nav: Nav) {
         (when (tipo) { "entradas" -> tieneEntrada; "momentos" -> ms.isNotEmpty(); "suenos" -> tieneSueno; else -> true }) &&
             (anio == null || f.startsWith(anio!!)) && (!conFoto || d?.foto != null) && (!largas || Texto.palabras(d?.nota) >= 200) &&
             (q.isBlank() || normal(listOfNotNull(d?.nota, d?.mejor_momento, d?.peor_momento, d?.sueno_texto).joinToString(" ") + " " +
-                ms.joinToString(" ") { it.texto + " " + io.github.ruddy2003.vestigium.data.Catalogo.titulo(it, false) + " " + it.pensamiento.orEmpty() }).contains(q))
+                ms.joinToString(" ") { it.texto + " " + io.github.ruddy2003.vestigium.data.Catalogo.titulo(it, false) + " " + io.github.ruddy2003.vestigium.data.Catalogo.pensamientosDe(it).joinToString(" ") }).contains(q))
     }
     val entradas = visibles.mapNotNull { Repo.dias[it]?.takeIf { d -> d.nota.isNotBlank() } }
     val palabras = remember(Repo.dias) { Repo.dias.values.sumOf { Texto.palabras(it.nota) } }

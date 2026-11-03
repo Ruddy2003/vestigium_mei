@@ -300,8 +300,8 @@ fun PantallaCinta(nav: Nav) {
             val color = if (m.tipo == "recaida") cs.error else Tonos.valencia(m.valencia?.toDouble(), oscuro) ?: cs.secondary
             val dur = m.duracion_min?.takeIf { it > 0 }
             cosas += Cosa(p, t, dur?.let { t + it * 60_000L }, color, Catalogo.titulo(m, Repo.config.discreto).take(1),
-                "${hm(t)} · ${Catalogo.titulo(m, Repo.config.discreto)}" + (Catalogo.pensamientoDe(m)?.takeIf { Catalogo.emocionesDe(m).isNotEmpty() && !Repo.config.discreto }
-                    ?.let { p0 -> " · pensando: " + (Catalogo.PENSAMIENTOS.firstOrNull { it.id == p0 }?.nombre?.lowercase() ?: p0) } ?: "") + (dur?.let { " · $it min" } ?: "") + (m.valencia?.let { " · $it/7" } ?: "") + (if (m.texto.isNotBlank()) " — ${m.texto}" else "") +
+                "${hm(t)} · ${Catalogo.titulo(m, Repo.config.discreto)}" + (Catalogo.pensamientosDe(m).takeIf { it.isNotEmpty() && Catalogo.emocionesDe(m).isNotEmpty() && !Repo.config.discreto }
+                    ?.let { l -> " · pensando: " + l.joinToString(", ") { p0 -> Catalogo.nombrePensamiento(p0).lowercase() } } ?: "") + (dur?.let { " · $it min" } ?: "") + (m.valencia?.let { " · $it/7" } ?: "") + (if (m.texto.isNotBlank()) " — ${m.texto}" else "") +
                     (Repo.lugares.firstOrNull { it.id == m.lugar }?.nombre?.let { " · en $it" } ?: ""))
         }
     }

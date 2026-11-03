@@ -312,7 +312,7 @@ object Estadistica {
         if (hayEx) v += Variable("vi_expareja", "Estuve con una expareja (0/1)", "Social")
         if (Repo.config.personas.any { Personas.grupo(it.relacion) == "trabajo" }) v += Variable("vi_trabajo", "Estuve con un colega, compañero o mentor (0/1)", "Social")
         // Ver a alguien no es lo mismo que pensar en esa persona o escribirse.
-        if (Repo.dias.values.any { it.presencias.isNotEmpty() } || Repo.momentos.any { Catalogo.pensamientoDe(it) == "pensando_en" && Texto.personas(it.texto).isNotEmpty() }) {
+        if (Repo.dias.values.any { it.presencias.isNotEmpty() } || Repo.momentos.any { "pensando_en" in Catalogo.pensamientosDe(it) && Texto.personas(it.texto).isNotEmpty() }) {
             v += Variable("personas_vistas", "Personas con las que estuve", "Social"); v += Variable("personas_pensadas", "Personas en las que pensé sin verlas", "Social")
             v += Variable("personas_mensajes", "Personas con las que hablé por mensaje o llamada", "Social")
             if (Repo.config.personas.any { it.relacion == "pareja" } || Repo.config.perfil.pareja.isNotBlank()) v += Variable("penso_en_pareja", "Pensé en mi pareja sin verla (0/1)", "Social")
@@ -419,7 +419,7 @@ object Estadistica {
     }
 
     private fun emocionesUsadas(): List<String> = Repo.momentos.flatMap { Catalogo.emocionesDe(it) }.filter { it != Catalogo.OTRO }.distinct().sorted()
-    private fun pensamientosUsados(): List<String> = Repo.momentos.mapNotNull { Catalogo.pensamientoDe(it) }.distinct().sorted()
+    private fun pensamientosUsados(): List<String> = Repo.momentos.flatMap { Catalogo.pensamientosDe(it) }.distinct().sorted()
     private fun categoriasSuenoUsadas(): List<String> = Repo.dias.values.flatMap { Catalogo.categoriasSuenoDe(it) }.distinct().sorted()
 
     /**
@@ -467,7 +467,8 @@ object Estadistica {
                 p.opciones.filter { it.id != "no_aplica" }.forEach { o -> r["${p.clave}_${o.id}"] = valor?.let { b(it == o.id || p.clave == "sdt_necesidad" && it == "las_tres" && o.id in setOf("autonomia", "competencia", "relacion")) } }
             }
             // Un hábito vale 0 desde que existe; antes, sin dato (salvo que lo hayas marcado).
-            Repo.config.habitos.forEach { h -> r["hab_${h.id}"] = if (d.habitos[h.id] == true) 1.0 else if (h.desde.isNotBlank() && f < h.desde) null else 0.0 }
+            // Con «sí / no / sin contestar» (esquema 17), sin respuesta queda vacío; en los días de antes, sin marca es 0.
+            Repo.config.habitos.forEach { h -> r["hab_${h.id}"] = when { d.habitos[h.id] == true -> 1.0; h.desde.isNotBlank() && f < h.desde -> null; d.habitos_tri && h.id !in d.habitos -> null; else -> 0.0 } }
             if (d.presencias_ok || Texto.personas(d.nota).isNotEmpty()) r["presencias_revisado"] = b(d.presencias_ok)
         }
         // Personas distintas nombradas con @ en el diario y en los momentos no privados (H-14-2): los mismos días en que vale 0.
@@ -492,7 +493,7 @@ object Estadistica {
             val regs = lista.filter { Catalogo.esRegistro(it) }
             r["registros_animo"] = regs.size.toDouble()
             emoUsadas.forEach { e -> r["n_$e"] = regs.count { e in Catalogo.emocionesDe(it) }.toDouble() }
-            penUsados.forEach { t -> r["n_$t"] = regs.count { Catalogo.pensamientoDe(it) == t }.toDouble() }
+            penUsados.forEach { t -> r["n_$t"] = regs.count { t in Catalogo.pensamientosDe(it) }.toDouble() }
             if (primerImpulso != null && f >= primerImpulso) r["n_impulso"] = lista.count { it.tipo == "impulso" }.toDouble()
             // Con quién: la proporción de avisos de ánimo con cada compañía, y el ánimo solo o acompañado.
             val con = mu.filter { it.con_quien.isNotEmpty() }
