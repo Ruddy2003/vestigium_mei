@@ -238,6 +238,8 @@ data class Tramo(
     val min: Int = 0,
     val nota: String = "",
     val origen: String = "app",
+    /** Con el tipo «otro» (esquema 17): en qué fue, escrito a mano. */
+    val tipo_otro: String = "",
     /** Cuándo se anotó (esquema 14). */
     val ts_creado: String? = null,
 )
@@ -447,9 +449,11 @@ data class Meta(
     /** habito o variable; null = sin medida (progreso a mano). */
     val medida_tipo: String? = null,
     val medida_clave: String? = null,
-    /** dias (días que cumplen ≥ [umbral]), suma o media. */
+    /** dias (días que cumplen ≥ [umbral], o ≤ con [umbral_max]), suma o media. */
     val medida_modo: String = "dias",
     val umbral: Double = 0.0,
+    /** Esquema 17: un día cuenta si queda «como mucho» en [umbral] (pantalla ≤ 120 min…); false = «al menos». */
+    val umbral_max: Boolean = false,
     val objetivo: Double? = null,
     /** Progreso a mano, de 0 a 100. */
     val progreso_manual: Int? = null,
@@ -966,6 +970,8 @@ data class LogroPropio(
     val ventana: Int = 0,
     /** Desde cuánto cuenta un día (por ejemplo, 8000 pasos). */
     val umbral: Double = 0.0,
+    /** Esquema 17: un día cuenta si queda en [umbral] o menos (por ejemplo, menos de 120 min de pantalla). */
+    val umbral_max: Boolean = false,
     val creado: String = "",
     val icono: String = "★",
 )

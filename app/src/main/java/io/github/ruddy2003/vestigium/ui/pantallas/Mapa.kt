@@ -701,20 +701,21 @@ fun PantallaMapa(nav: Nav) {
     nuevoLugar?.let { p ->
         var nombre by remember(p) { mutableStateOf("") }
         var tipoNuevo by remember(p) { mutableStateOf("otro") }
+        var radioNuevo by remember(p) { mutableStateOf(120f) }
         Dialogo(
             onDismissRequest = { nuevoLugar = null },
             title = { Text("Marcar este lugar", style = MaterialTheme.typography.titleLarge) },
             text = {
                 Column {
-                    Ayuda("%.5f, %.5f · la app registrará cuándo llegas y te vas.".format(p.latitude, p.longitude))
-                    OutlinedTextField(nombre, { nombre = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("casa, gimnasio, oficina…") })
-                    io.github.ruddy2003.vestigium.ui.FilaFichas(io.github.ruddy2003.vestigium.data.Catalogo.TIPOS_LUGAR, tipoNuevo) { t -> if (t != null) tipoNuevo = t }
+                    Ayuda("%.5f, %.5f · la app registrará cuándo llegas y te vas.".format(p.latitude, p.longitude), Modifier.padding(bottom = 8.dp))
+                    CamposLugar(nombre, tipoNuevo, radioNuevo, { nombre = it }, { t -> if (t != null) tipoNuevo = t }, { radioNuevo = it })
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
+                // Sin nombre no se guarda ni se cierra (antes se cerraba y se perdía lo elegido).
+                TextButton(enabled = nombre.isNotBlank(), onClick = {
                     if (nombre.isNotBlank()) {
-                        val l = Lugar(Repo.nuevoId(), nombre.trim(), p.latitude, p.longitude, tipo = tipoNuevo)
+                        val l = Lugar(Repo.nuevoId(), nombre.trim(), p.latitude, p.longitude, radioNuevo.toInt(), tipo = tipoNuevo)
                         Repo.guardarLugar(l)
                         runCatching { io.github.ruddy2003.vestigium.data.Lugares.reconstruir(l) }
                         runCatching { io.github.ruddy2003.vestigium.sensores.Geocercas.registrar(ctx) }

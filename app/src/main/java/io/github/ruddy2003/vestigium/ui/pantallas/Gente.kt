@@ -84,35 +84,33 @@ fun CirculosCercania(valor: Int?, onCambio: (Int?) -> Unit) {
 
 /** Relación, cercanía y una nota corta. [alGuardar] recibe lo elegido. */
 @Composable
-private fun FormularioPersona(nombre: String, alGuardar: () -> Unit, extra: @Composable () -> Unit = {}) {
-    val previo = Personas.de(nombre)
-    var rel by remember(nombre) { mutableStateOf(previo?.relacion) }
-    var cerca by remember(nombre) { mutableStateOf(previo?.cercania) }
-    var detalle by remember(nombre) { mutableStateOf(previo?.detalle.orEmpty()) }
-    var nac by remember(nombre) { mutableStateOf(Especiales.paraEditar(previo?.nacimiento.orEmpty())) }
-    var fall by remember(nombre) { mutableStateOf(Especiales.paraEditar(previo?.fallecimiento.orEmpty())) }
+private fun FormularioPersona(nombre: String, alGuardar: () -> Unit, clave: String = nombre, extra: @Composable () -> Unit = {}) {
+    val previo = if (nombre.isEmpty()) null else Personas.de(nombre)
+    var rel by remember(clave) { mutableStateOf(previo?.relacion) }
+    var cerca by remember(clave) { mutableStateOf(previo?.cercania) }
+    var detalle by remember(clave) { mutableStateOf(previo?.detalle.orEmpty()) }
+    var nac by remember(clave) { mutableStateOf(Especiales.paraEditar(previo?.nacimiento.orEmpty())) }
+    var fall by remember(clave) { mutableStateOf(Especiales.paraEditar(previo?.fallecimiento.orEmpty())) }
     val nacOk = Especiales.leer(nac); val fallOk = Especiales.leer(fall)
     // Cuándo cambió de verdad la relación (H-6-3): por omisión hoy; no antes del cambio anterior ni después de hoy.
     val hoy = Fechas.diaLogico()
     val minimo = previo?.historial?.maxOfOrNull { it.hasta }
-    var desde by remember(nombre) { mutableStateOf(hoy) }
+    var desde by remember(clave) { mutableStateOf(hoy) }
     val ctx = androidx.compose.ui.platform.LocalContext.current
     Etiqueta("¿Qué es para ti?")
     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Personas.RELACIONES.forEach { o -> Ficha(o.nombre, rel == o.id) { rel = if (rel == o.id) null else o.id } }
+        // Con la «amistad cercana» de antes, «Amistad» sale marcada y se conserva tal cual (no cuenta como cambio de relación).
+        Personas.RELACIONES.forEach { o -> val sel = Personas.relacionVisible(rel) == o.id; Ficha(o.nombre, sel) { rel = if (sel) null else if (o.id == Personas.relacionVisible(previo?.relacion)) previo?.relacion else o.id } }
     }
     Etiqueta("¿Qué tan cerca?")
     CirculosCercania(cerca) { cerca = it }
     OutlinedTextField(detalle, { detalle = it.take(80) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
         placeholder = { Text("detalle opcional: «mi prima», «de la prepa»…") })
     // Fechas (opcionales): con el año de nacimiento se ve su edad; los dos días cuentan como días especiales.
-    Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedTextField(nac, { nac = it.take(10) }, Modifier.weight(1f), singleLine = true, isError = nacOk == null,
-            label = { Text("nacimiento") }, placeholder = { Text("15/03/1962 o 15/03") })
-        OutlinedTextField(fall, { fall = it.take(10) }, Modifier.weight(1f), singleLine = true, isError = fallOk == null,
-            label = { Text("fallecimiento") }, placeholder = { Text("si aplica") })
-    }
-    if (nacOk == null || fallOk == null) Ayuda("Escribe día/mes o día/mes/año, por ejemplo 15/03 o 15/03/1962.", Modifier.padding(top = 4.dp))
+    // Se eligen en el calendario; «sin año» deja solo día y mes (para un cumpleaños sin saber la edad).
+    CampoFechaPersona("Nacimiento (opcional)", nacOk) { nac = it }
+    CampoFechaPersona("Fallecimiento (si aplica)", fallOk) { fall = it }
+    if (nacOk == null || fallOk == null) Ayuda("Esa fecha no se entiende; elígela de nuevo.", Modifier.padding(top = 4.dp))
     else nacOk.takeIf { it.isNotBlank() }?.let { n ->
         val e = Especiales.edadDe(Persona(nombre, "", nacimiento = n, fallecimiento = fallOk))
         Ayuda("Cumple el ${Especiales.texto(n, conAnio = false)}" + (e?.let { if (fallOk.isBlank()) " · tiene $it años" else " · tenía $it años" } ?: ""), Modifier.padding(top = 4.dp))
@@ -126,9 +124,23 @@ private fun FormularioPersona(nombre: String, alGuardar: () -> Unit, extra: @Com
     }
     FlowRow(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         extra()
-        BotonPrincipal("Guardar", habilitado = rel != null && nacOk != null && fallOk != null) {
+        BotonPrincipal("Guardar", habilitado = nombre.isNotEmpty() && rel != null && nacOk != null && fallOk != null) {
             rel?.let { Personas.guardar(nombre, it, cerca, detalle.trim(), hoy = if (previo != null) desde else hoy, nacimiento = nacOk, fallecimiento = fallOk); alGuardar() }
         }
+    }
+}
+
+/** Una fecha de Tu gente elegida en el calendario: muestra la elegida, «sin año» la deja en día y mes, y «quitar» la borra. */
+@Composable
+private fun CampoFechaPersona(rotulo: String, ok: String?, poner: (String) -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    Etiqueta(rotulo)
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        BotonSecundario(ok?.takeIf { it.isNotBlank() }?.let { Especiales.texto(it, conAnio = true) } ?: "elegir…") {
+            io.github.ruddy2003.vestigium.ui.elegirFecha(ctx, ok?.takeIf { it.length == 10 }) { f -> poner(Especiales.paraEditar(f)) }
+        }
+        if (ok != null && ok.length == 10) Ficha("sin año", false) { poner(Especiales.paraEditar(ok).take(5)) }
+        if (!ok.isNullOrBlank()) TextButton(onClick = { poner("") }) { Text("quitar", style = MaterialTheme.typography.labelLarge) }
     }
 }
 
@@ -173,23 +185,23 @@ fun PantallaPersonas(nav: Nav) {
         // Alguien que aún no mencionas (N-25): nombre, y después relación y nacimiento en su ficha.
         var nueva by remember { mutableStateOf<String?>(null) }
         TextButton(onClick = { nueva = "" }, modifier = Modifier.padding(top = 8.dp)) { Text("+ persona", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+        // Todo en un paso: el nombre y, en el mismo diálogo, su relación, cercanía y fechas.
         nueva?.let { t ->
-            Dialogo(onDismissRequest = { nueva = null }, title = { Text("Nueva persona") },
+            Dialogo(onDismissRequest = { nueva = null }, title = { Text("Nueva persona") }, confirmButton = {},
+                dismissButton = { TextButton(onClick = { nueva = null }) { Text("cancelar") } },
                 text = {
-                    Column {
+                    Column(Modifier.verticalScroll(rememberScrollState())) {
                         androidx.compose.material3.OutlinedTextField(value = t, onValueChange = { nueva = it }, singleLine = true, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nombre, como la escribirías con @") })
-                        Ayuda("Después eliges su relación, su cercanía y su nacimiento. No tendrá días hasta que la menciones.", Modifier.padding(top = 6.dp))
+                        val etiqueta = io.github.ruddy2003.vestigium.data.Texto.etiqueta(t)
+                        if (etiqueta.isNotEmpty()) Ayuda("Se guarda como @$etiqueta. No tendrá días hasta que la menciones.", Modifier.padding(top = 6.dp))
+                        FormularioPersona(etiqueta, alGuardar = { nueva = null }, clave = "nueva")
                     }
-                },
-                confirmButton = { TextButton(enabled = io.github.ruddy2003.vestigium.data.Texto.etiqueta(t).isNotEmpty(), onClick = {
-                    editando = io.github.ruddy2003.vestigium.data.Texto.etiqueta(t); nueva = null
-                }) { Text("Seguir") } },
-                dismissButton = { TextButton(onClick = { nueva = null }) { Text("Cancelar") } })
+                })
         }
         Seccion("Clasificadas", "${clasif.size} personas. Toca una para cambiarla.") {
             if (clasif.isEmpty()) Vacio("Todavía nadie. Responde arriba o toca a alguien de la lista de abajo.")
             Personas.RELACIONES.forEach { r ->
-                val l = clasif.filter { it.relacion == r.id }
+                val l = clasif.filter { Personas.relacionVisible(it.relacion) == r.id }
                 if (l.isNotEmpty()) {
                     Text(r.nombre, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 10.dp))
                     l.forEach { p ->
@@ -233,7 +245,7 @@ fun PantallaPersonas(nav: Nav) {
         }
     }
     editando?.let { n ->
-        Dialogo(onDismissRequest = { editando = null }, confirmButton = {}, dismissButton = { TextButton(onClick = { editando = null }) { Text("cerrar") } },
+        Dialogo(onDismissRequest = { editando = null }, confirmButton = {}, dismissButton = { TextButton(onClick = { editando = null }) { Text("cancelar") } },
             title = { Text("@$n") },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {

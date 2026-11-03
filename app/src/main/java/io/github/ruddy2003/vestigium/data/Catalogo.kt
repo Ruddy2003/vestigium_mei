@@ -283,9 +283,11 @@ object Catalogo {
         Opcion("solo_casa", "Solo en casa"), Opcion("sin_plan", "Aburrido, sin plan"), Opcion("tras_discusion", "Después de algo difícil"), Opcion("otro", "Otra cosa"))
     /** El cronómetro: bloques de enfoque y siestas. */
     val ENFOQUE = listOf(Opcion("estudio", "Estudio"), Opcion("lectura", "Lectura"), Opcion("idiomas", "Idiomas"), Opcion("tesis", "Tesis"),
-        Opcion("trabajo", "Trabajo"), Opcion("creativo", "Creativo"))
+        Opcion("trabajo", "Trabajo"), Opcion("creativo", "Creativo"), Opcion("otro", "Otro"))
     val SIESTA = Opcion("siesta", "Siesta")
     fun nombreTramo(id: String): String = (ENFOQUE + SIESTA).firstOrNull { it.id == id }?.nombre ?: id
+    /** El nombre de un tramo: el de su tipo o, con «otro», el que escribiste (esquema 17). */
+    fun nombreTramo(t: Tramo): String = if (t.tipo == "otro" && t.tipo_otro.isNotBlank()) t.tipo_otro.trim() else nombreTramo(t.tipo)
 
     val CATEGORIAS = listOf("Comida", "Transporte", "Vivienda", "Servicios", "Salud", "Ocio", "Social", "Suscripciones", "Escuela", "Ropa", "Regalos", "Otro")
     val CATEGORIAS_INGRESO = listOf("Sueldo", "Beca", "Trabajo extra", "Mesada", "Regalo", "Venta", "Reembolso", "Intereses", "Otro")
@@ -297,7 +299,8 @@ object Catalogo {
     val HABITOS_SUGERIDOS = listOf("Meditar", "Leer", "Estudiar chino", "Escribir a mano", "Dormir antes de 00:00", "Sin pantalla al despertar")
     val TIPOS_LUGAR = listOf(Opcion("casa", "Casa"), Opcion("familia", "Familia"), Opcion("trabajo", "Trabajo"),
         Opcion("escuela", "Escuela"), Opcion("ejercicio", "Ejercicio"), Opcion("social", "Social"), Opcion("bar", "Bar"), Opcion("ocio", "Ocio"),
-        Opcion("salud", "Salud"), Opcion("naturaleza", "Naturaleza"), Opcion("viaje", "Viaje"), Opcion("otro", "Otro"))
+        Opcion("salud", "Salud"), Opcion("naturaleza", "Naturaleza"), Opcion("viaje", "Viaje"), Opcion("restaurante", "Restaurante o café"),
+        Opcion("tienda", "Tienda"), Opcion("otro", "Otro"))
     fun nombreTipoLugar(id: String) = TIPOS_LUGAR.firstOrNull { it.id == id }?.nombre ?: id
 
     /** Notas sueltas y metas. */

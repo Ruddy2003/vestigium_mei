@@ -134,4 +134,9 @@ object Grados {
     )
     val ANGULOS = listOf(Opcion("placa", "Placa"), Opcion("vertical", "Vertical"), Opcion("desplome", "Desplome"), Opcion("techo", "Techo"))
     val RASGOS = listOf("regletas", "romos", "pinzas", "agujeros", "volumenes", "dinamico", "coordinacion", "compresion", "talon", "punta", "fuerza", "equilibrio", "resistencia")
+    /** Cómo se lee cada rasgo (los ids no cambian): con acento y mayúscula. */
+    private val NOMBRES_RASGO = mapOf("regletas" to "Regletas", "romos" to "Romos", "pinzas" to "Pinzas", "agujeros" to "Agujeros", "volumenes" to "Volúmenes",
+        "dinamico" to "Dinámico", "coordinacion" to "Coordinación", "compresion" to "Compresión", "talon" to "Talón", "punta" to "Punta", "fuerza" to "Fuerza",
+        "equilibrio" to "Equilibrio", "resistencia" to "Resistencia")
+    fun nombreRasgo(id: String): String = NOMBRES_RASGO[id] ?: id.replace('_', ' ')
 }

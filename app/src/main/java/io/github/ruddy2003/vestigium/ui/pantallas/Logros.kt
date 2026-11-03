@@ -466,6 +466,7 @@ fun PantallaLogros(nav: Nav) {
     var filtro by remember { mutableStateOf("todos") }
     var nuevos by remember { mutableStateOf<List<Logros.Logro>>(emptyList()) }
     var crear by remember { mutableStateOf(false) }
+    var editandoLogro by remember { mutableStateOf<LogroPropio?>(null) }
     var abierto by remember { mutableStateOf<Logros.Logro?>(null) }
     // Al abrir: se festejan los nuevos (la primera vez solo se cuentan, para no festejar todo tu historial de golpe).
     LaunchedEffect(todos != null) {
@@ -518,14 +519,17 @@ fun PantallaLogros(nav: Nav) {
             BotonPrincipal("+ Inventar un logro", Modifier.fillMaxWidth().padding(top = 10.dp)) { crear = true }
             Ayuda("Por ejemplo: «Leer 20 de 30 días», «10 veces con @abuela», «100,000 pasos en una semana» o «Gimnasio 3 veces por semana».", Modifier.padding(top = 6.dp))
         }
-        if (crear) EditorLogro(cerrar = { crear = false })
+        if (crear || editandoLogro != null) EditorLogro(editandoLogro, cerrar = { crear = false; editandoLogro = null })
         if (lista.isEmpty()) Vacio(if (filtro == "Tuyos") "Todavía no inventas ninguno." else "Nada por aquí todavía.")
         // La sala de trofeos: en «Todos», una vitrina por categoría; en los filtros, una sola.
         if (filtro == "todos") Logros.CATEGORIAS.forEach { c ->
             val deC = l.filter { it.categoria == c }.sortedWith(compareByDescending<Logros.Logro> { it.hecho }.thenByDescending { if (it.hecho) it.nivel.toFloat() else it.fraccion })
             SalaTrofeos(deC, titulo = c + " · " + deC.count { it.hecho } + " de " + deC.size) { abierto = it }
         } else SalaTrofeos(lista) { abierto = it }
-        abierto?.let { a -> DetalleTrofeo(a, l) { abierto = null } }
+        abierto?.let { a ->
+            val propio = Repo.config.logros_propios.firstOrNull { "p_" + it.id == a.id }
+            DetalleTrofeo(a, l, editar = propio?.let { p -> { editandoLogro = p; filtro = "Tuyos"; abierto = null } }) { abierto = null }
+        }
         if (filtro != "Tuyos") TextButton(onClick = { filtro = "Tuyos"; crear = true }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
             Text("+ inventar un logro propio", style = MaterialTheme.typography.labelLarge)
         }
@@ -570,25 +574,28 @@ private fun cuanto(x: Double): String = when {
 
 private val ICONOS = listOf("★", "✎", "❖", "☾", "▣", "❦", "♥", "⚑", "✓", "☀", "⚡", "♫", "✈", "☕", "✿", "◆")
 
-/** Inventar un logro: de qué (una variable de tu día, un hábito o una @persona/#tema), cómo se cuenta y la meta. */
+/** Inventar un logro (o corregir uno tuyo, [previo]): de qué (una variable de tu día, un hábito o una @persona/#tema), cómo se cuenta y la meta. */
 @Composable
-private fun EditorLogro(cerrar: () -> Unit) {
-    var nombre by remember { mutableStateOf("") }
-    var fuente by remember { mutableStateOf("habito") }
-    var clave by remember { mutableStateOf("") }
-    var modo by remember { mutableStateOf("dias") }
-    var meta by remember { mutableStateOf("20") }
-    var ventana by remember { mutableStateOf("30") }
-    var umbral by remember { mutableStateOf("") }
-    var icono by remember { mutableStateOf("★") }
+private fun EditorLogro(previo: LogroPropio? = null, cerrar: () -> Unit) {
+    val k = previo?.id
+    fun num(x: Double) = io.github.ruddy2003.vestigium.data.Dinero.texto(x)
+    var nombre by remember(k) { mutableStateOf(previo?.nombre ?: "") }
+    var fuente by remember(k) { mutableStateOf(previo?.fuente ?: "habito") }
+    var clave by remember(k) { mutableStateOf(previo?.clave ?: "") }
+    var modo by remember(k) { mutableStateOf(previo?.modo ?: "dias") }
+    var meta by remember(k) { mutableStateOf(previo?.meta?.let { num(it) } ?: "20") }
+    var ventana by remember(k) { mutableStateOf(previo?.ventana?.toString() ?: "30") }
+    var umbral by remember(k) { mutableStateOf(previo?.umbral?.takeIf { it > 0 }?.let { num(it) } ?: "") }
+    var umbralMax by remember(k) { mutableStateOf(previo?.umbral_max ?: false) }
+    var icono by remember(k) { mutableStateOf(previo?.icono ?: "★") }
     var buscar by remember { mutableStateOf("") }
     val variables = remember { runCatching { Estadistica.variables(dinamicas = false) }.getOrDefault(emptyList()) }
     var version by remember { mutableIntStateOf(0) }
     Tarjeta(Modifier.padding(top = 10.dp)) {
-        Text("Nuevo logro", style = MaterialTheme.typography.titleMedium)
+        Text(if (previo == null) "Nuevo logro" else "Corregir el logro", style = MaterialTheme.typography.titleMedium)
         OutlinedTextField(nombre, { nombre = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("Nombre") })
         Etiqueta("Qué cuenta")
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf("habito" to "Un hábito", "variable" to "Algo de tu día", "etiqueta" to "@persona o #tema").forEach { (id, n) -> Ficha(n, fuente == id) { fuente = id; clave = "" } }
         }
         when (fuente) {
@@ -597,7 +604,16 @@ private fun EditorLogro(cerrar: () -> Unit) {
                 if (hs.isEmpty()) Ayuda("Primero crea un hábito en Más → Hábitos.")
                 hs.forEach { h -> Ficha(h.nombre, clave == h.id) { clave = h.id; if (nombre.isBlank()) nombre = h.nombre } }
             }
-            "etiqueta" -> OutlinedTextField(clave, { clave = it.trim() }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("@abuela o #guitarra") })
+            "etiqueta" -> {
+                OutlinedTextField(clave, { clave = it.trim() }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("@abuela o #guitarra") },
+                    isError = clave.isNotEmpty() && !clave.startsWith("@") && !clave.startsWith("#"))
+                if (clave.isNotEmpty() && !clave.startsWith("@") && !clave.startsWith("#")) Ayuda("Empieza con @ para una persona o con # para un tema.", Modifier.padding(top = 4.dp))
+                // Tus @ y # más usados, a un toque.
+                val sugeridas = remember { io.github.ruddy2003.vestigium.ui.Etiquetas.frecuentes().let { (p, t) -> p.take(5).map { "@$it" } + t.take(5).map { "#$it" } } }
+                if (sugeridas.isNotEmpty()) FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    sugeridas.forEach { e -> Ficha(e, clave == e) { clave = e; if (nombre.isBlank()) nombre = e } }
+                }
+            }
             else -> {
                 OutlinedTextField(buscar, { buscar = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("buscar: pasos, sueño, palabras…") })
                 val q = buscar.trim().lowercase()
@@ -606,33 +622,41 @@ private fun EditorLogro(cerrar: () -> Unit) {
                         Ficha(v.nombre, clave == v.id) { clave = v.id; if (nombre.isBlank()) nombre = v.nombre }
                     }
                 }
-                OutlinedTextField(umbral, { umbral = it.filter { ch -> ch.isDigit() || ch == '.' } }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
-                    label = { Text("Un día cuenta si pasa de… (opcional)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Ficha("pasa de", !umbralMax) { umbralMax = false }
+                    Ficha("queda en o menos de", umbralMax) { umbralMax = true }
+                }
+                OutlinedTextField(umbral, { umbral = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(it) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
+                    label = { Text(if (umbralMax) "Un día cuenta si queda en… o menos" else "Un día cuenta si pasa de… (opcional)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
             }
         }
         Etiqueta("Cómo se cuenta")
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf("dias" to "Días", "racha" to "Seguidos", "total" to "Suma total").forEach { (id, n) -> Ficha(n, modo == id) { modo = id } }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            // «Suma total» de un hábito sería lo mismo que «Días»: solo para algo de tu día o una etiqueta.
+            listOf("dias" to "Días", "racha" to "Seguidos", "total" to "Suma total").filter { (id, _) -> id != "total" || fuente == "variable" }
+                .forEach { (id, n) -> Ficha(n, modo == id) { modo = id } }
         }
         Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(meta, { meta = it.filter { ch -> ch.isDigit() || ch == '.' } }, Modifier.weight(1f), singleLine = true,
                 label = { Text(if (modo == "total") "Meta (suma)" else "Días") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
             if (modo == "dias") OutlinedTextField(ventana, { ventana = it.filter { ch -> ch.isDigit() } }, Modifier.weight(1f), singleLine = true,
-                label = { Text("de cada (0 = desde siempre)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                label = { Text("en una ventana de … días (vacío o 0: desde siempre)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
         }
         Ayuda(when (modo) {
             "dias" -> if ((ventana.toIntOrNull() ?: 0) > 0) "Se logra cuando en cualquier tramo de ${ventana.ifBlank { "?" }} días lo hiciste ${meta.ifBlank { "?" }} veces: no necesitas racha." else "Se logra al juntar ${meta.ifBlank { "?" }} días con eso."
             "racha" -> "Se logra con ${meta.ifBlank { "?" }} días seguidos."
             else -> "Se logra cuando lo acumulado llega a ${meta.ifBlank { "?" }}."
         }, Modifier.padding(top = 4.dp))
-        Etiqueta("Signo")
+        Etiqueta("Ícono")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) { ICONOS.forEach { i -> Ficha(i, icono == i) { icono = i } } }
         val listo = nombre.isNotBlank() && clave.isNotBlank() && (meta.toDoubleOrNull() ?: 0.0) > 0
         Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BotonPrincipal("Guardar", habilitado = listo) {
-                val p = LogroPropio(Repo.nuevoId(), nombre.trim(), fuente, clave.trim(), modo, meta.toDoubleOrNull() ?: 1.0,
-                    if (modo == "dias") ventana.toIntOrNull() ?: 0 else 0, umbral.toDoubleOrNull() ?: 0.0, Fechas.diaLogico(), icono)
-                Repo.cambiarConfig { c -> c.copy(logros_propios = c.logros_propios + p) }
+                val modoFinal = if (modo == "total" && fuente != "variable") "dias" else modo
+                val p = LogroPropio(id = previo?.id ?: Repo.nuevoId(), nombre = nombre.trim(), fuente = fuente, clave = clave.trim(), modo = modoFinal, meta = meta.toDoubleOrNull() ?: 1.0,
+                    ventana = if (modoFinal == "dias") ventana.toIntOrNull() ?: 0 else 0, umbral = umbral.toDoubleOrNull() ?: 0.0, umbral_max = umbralMax && fuente == "variable",
+                    creado = previo?.creado ?: Fechas.diaLogico(), icono = icono)
+                Repo.cambiarConfig { c -> c.copy(logros_propios = if (previo != null) c.logros_propios.map { if (it.id == previo.id) p else it } else c.logros_propios + p) }
                 version++; cerrar()
             }
             TextButton(onClick = cerrar) { Text("cancelar", style = MaterialTheme.typography.labelLarge) }

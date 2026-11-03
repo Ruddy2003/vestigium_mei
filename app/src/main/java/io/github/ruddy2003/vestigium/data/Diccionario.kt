@@ -116,7 +116,7 @@ object Diccionario {
         "aviso_ts" to "Cuándo llegó el aviso que se respondió", "latencia_min" to "Minutos entre el aviso y la respuesta",
         "ruido_db" to "Ruido ambiente aproximado al registrar (dB relativos, sin calibrar)", "luz_lux" to "Luz ambiente al registrar (lux)",
         // Gastos
-        "monto" to "Importe (tu moneda)", "vm_gastos.csv:categoria" to "Categoría de gasto", "vm_ingresos.csv:categoria" to "Categoría de ingreso", "subcategoria" to "Subcategoría dentro de la categoría (desde el esquema 14; vacío = sin subcategoría)", "imprevisto" to "Gasto no planeado (0/1)", "se_repite" to "Gasto que se repite, como renta, suscripción o servicios (0/1; desde el esquema 17)",
+        "monto" to "Importe (tu moneda)", "vm_gastos.csv:categoria" to "Categoría de gasto", "vm_ingresos.csv:categoria" to "Categoría de ingreso", "subcategoria" to "Subcategoría dentro de la categoría (desde el esquema 14; vacío = sin subcategoría)", "imprevisto" to "Gasto no planeado (0/1)", "tipo_otro" to "Bloque de enfoque de tipo «otro»: en qué fue, escrito a mano (desde el esquema 17)", "se_repite" to "Gasto que se repite, como renta, suscripción o servicios (0/1; desde el esquema 17)",
         // Escalas y reacción
         "instrumento" to "Cuestionario (who5, pss4, ucla3, tipi)", "media_ms" to "Tiempo de reacción medio (ms)", "mediana_ms" to "Tiempo de reacción mediano (ms)",
         "lapsos" to "Respuestas de más de 500 ms", "anticipaciones" to "Toques antes del estímulo", "ensayos_ms" to "Tiempos de cada ensayo (lista, ms)",

@@ -997,7 +997,7 @@ fun LineaDelTiempo(fecha: String) {
     if (ses.isNotEmpty()) pistas += Pista("ejercicio", ses.map { Triple(Fechas.millis(it.inicio), Fechas.millis(it.fin), ter) })
     val tramos = Repo.tramos.filter { it.fecha == fecha }
     if (tramos.isNotEmpty()) pistas += Pista("enfoque", tramos.map { t -> val a = Fechas.millis(t.inicio); Triple(a, a + t.min * 60_000L, if (t.tipo == "siesta") sec else prim) },
-        etiquetas = tramos.map { t -> Fechas.millis(t.inicio) to io.github.ruddy2003.vestigium.data.Catalogo.nombreTramo(t.tipo).lowercase() })
+        etiquetas = tramos.map { t -> Fechas.millis(t.inicio) to io.github.ruddy2003.vestigium.data.Catalogo.nombreTramo(t).lowercase() })
     val mom = Repo.momentos.filter { it.fecha == fecha && !it.privado }
     if (mom.isNotEmpty()) pistas += Pista("momentos", marcas = mom.map { m -> Fechas.millis(m.ts) to (Tonos.valencia(m.valencia?.toDouble(), oscuro) ?: sec) })
     Repo.notifs[fecha]?.por_hora?.takeIf { it.sum() > 0 }?.let { h -> pistas += Pista("teléfono", calor = h.map { it.toDouble() }) }

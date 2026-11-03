@@ -136,10 +136,11 @@ fun PantallaSuplementos(nav: Nav) {
                 }
             }
         }
-        Seccion("Agregar", "Del catálogo; después puedes cambiar dosis, unidad y parámetros.") {
+        Seccion("Agregar", "Del catálogo o uno tuyo; después puedes cambiar dosis, unidad y parámetros. Tocar uno activo lo deja de usar.") {
             Tarjeta {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Suplementos.CATALOGO.forEach { s ->
+                    // Los tuyos (esquema 17) junto a los del catálogo, para volver a activarlos.
+                    (Suplementos.CATALOGO + c.suplementos.filter { s -> Suplementos.CATALOGO.none { it.id == s.id } }).forEach { s ->
                         val ya = c.suplementos.firstOrNull { it.id == s.id }
                         Ficha(s.nombre, ya?.activo == true) {
                             Repo.cambiarConfig { cc ->
@@ -148,6 +149,8 @@ fun PantallaSuplementos(nav: Nav) {
                             }
                         }
                     }
+                    // Uno que no está en el catálogo (hierro, B12, zinc, proteína…): se crea con «solo porciones» y se ajusta enseguida.
+                    BotonSecundario("＋ otro suplemento") { editando = Suplemento("s_" + Repo.nuevoId().take(8), "", "mg", 1.0, "exposicion", activo = false) }
                 }
                 if (c.suplementos.any { it.id == "probioticos" && it.activo }) {
                     Ayuda("Probióticos: también se cuentan como porciones estimadas los alimentos de tu bitácora de MacroFactor que contienen: " + c.probioticos_palabras.joinToString(", ") + ".",
@@ -225,26 +228,35 @@ private fun EditorSuplemento(s0: Suplemento, cerrar: () -> Unit) {
     var vida by remember { mutableStateOf(cifra(s0.vida_media_h)) }
     var carga by remember { mutableStateOf(s0.carga_dias.toString()) }
     var lavado by remember { mutableStateOf(s0.lavado_dias.toString()) }
-    Dialogo(onDismissRequest = cerrar, title = { Text(s0.nombre) },
+    // Uno nuevo (todavía no está en tus suplementos): se agrega activo al guardar.
+    val nuevo = Repo.config.suplementos.none { it.id == s0.id }
+    // Los números se revisan antes de guardar: si uno no se entiende, se avisa en lugar de volver en silencio al anterior.
+    val dosisOk = dosis.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 }
+    val vidaOk = if (modelo == "vida_media") vida.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 } else s0.vida_media_h
+    val cargaOk = if (modelo == "carga") carga.toIntOrNull()?.takeIf { it > 0 } else s0.carga_dias
+    val lavadoOk = if (modelo == "carga") lavado.toIntOrNull()?.takeIf { it > 0 } else s0.lavado_dias
+    val valido = nombre.isNotBlank() && dosisOk != null && vidaOk != null && cargaOk != null && lavadoOk != null
+    Dialogo(onDismissRequest = cerrar, title = { Text(if (nuevo) "Nuevo suplemento" else s0.nombre) },
         confirmButton = {
-            TextButton(onClick = {
-                val n = s0.copy(nombre = nombre.trim().ifBlank { s0.nombre }, unidad = unidad.trim().ifBlank { s0.unidad }, dosis = dosis.replace(',', '.').toDoubleOrNull() ?: s0.dosis,
-                    modelo = modelo, vida_media_h = vida.replace(',', '.').toDoubleOrNull() ?: s0.vida_media_h, carga_dias = carga.toIntOrNull() ?: s0.carga_dias, lavado_dias = lavado.toIntOrNull() ?: s0.lavado_dias)
-                Repo.cambiarConfig { c -> c.copy(suplementos = c.suplementos.map { if (it.id == s0.id) n else it }) }
+            TextButton(enabled = valido, onClick = {
+                val n = s0.copy(nombre = nombre.trim(), unidad = unidad.trim().ifBlank { s0.unidad }, dosis = dosisOk ?: s0.dosis,
+                    modelo = modelo, vida_media_h = vidaOk ?: s0.vida_media_h, carga_dias = cargaOk ?: s0.carga_dias, lavado_dias = lavadoOk ?: s0.lavado_dias,
+                    activo = if (nuevo) true else s0.activo)
+                Repo.cambiarConfig { c -> c.copy(suplementos = if (nuevo) c.suplementos + n else c.suplementos.map { if (it.id == s0.id) n else it }) }
                 cerrar()
             }) { Text("Guardar") }
         },
         dismissButton = {
             Row {
-                TextButton(onClick = { Repo.cambiarConfig { c -> c.copy(suplementos = c.suplementos.map { if (it.id == s0.id) it.copy(activo = false) else it }) }; cerrar() }) { Text("dejar de usar") }
+                if (!nuevo) TextButton(onClick = { Repo.cambiarConfig { c -> c.copy(suplementos = c.suplementos.map { if (it.id == s0.id) it.copy(activo = false) else it }) }; cerrar() }) { Text("dejar de usar") }
                 TextButton(onClick = cerrar) { Text("cancelar") }
             }
         },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                OutlinedTextField(nombre, { nombre = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("Nombre") })
+                OutlinedTextField(nombre, { nombre = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("Nombre") }, isError = nombre.isBlank())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
-                    OutlinedTextField(dosis, { dosis = it }, Modifier.weight(1f), singleLine = true, label = { Text("Dosis habitual") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                    OutlinedTextField(dosis, { dosis = it }, Modifier.weight(1f), singleLine = true, label = { Text("Dosis habitual") }, isError = dosisOk == null, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                     OutlinedTextField(unidad, { unidad = it }, Modifier.weight(1f), singleLine = true, label = { Text("Unidad") })
                 }
                 Etiqueta("Modelo")

@@ -297,7 +297,7 @@ object Exportar {
     }
 
     fun filasTramos() = Repo.tramos.map {
-        linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "tipo" to it.tipo, "es_siesta" to (it.tipo == "siesta"), "inicio" to it.inicio, "fin" to it.fin,
+        linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "tipo" to it.tipo, "tipo_otro" to it.tipo_otro.ifBlank { null }, "es_siesta" to (it.tipo == "siesta"), "inicio" to it.inicio, "fin" to it.fin,
             "hora" to Fechas.horaDe(it.inicio), "min" to it.min, "nota" to it.nota, "personas" to Texto.personas(it.nota), "temas" to Texto.temas(it.nota), "origen" to it.origen,
             "ts_creado" to it.ts_creado)
     }

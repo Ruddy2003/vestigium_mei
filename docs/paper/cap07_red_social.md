@@ -87,7 +87,7 @@ En «Tu gente» dices qué es cada @persona para ti. Una persona nace cuando la 
 
 ### 7.4.2 Las opciones
 
-`Personas.RELACIONES` ofrece 12: familia, pareja, expareja, amistad cercana, amistad, colega o compañero de trabajo, compañero de escuela, profesor/jefe/mentor, conocido, «no la conozco en persona», mascota y otra.
+`Personas.RELACIONES` ofrece 14 desde el esquema 17: familia, pareja, expareja, amistad, colega o compañero de trabajo, compañero de escuela, profesor/jefe/mentor, roomie, vecino, profesional de salud, conocido, «solo en línea o de lejos» (antes «no la conozco en persona», mismo id), mascota y otra. Hasta el esquema 16 eran 12 e incluían «amistad cercana». Esa opción ya no se ofrece porque la cercanía la dan los círculos 1 a 7; quien la tenía conserva su id y se ve como «amistad» (`Personas.relacionVisible`). Los análisis ya la juntaban con amistad (`Personas.grupo`), así que no cambian. Las relaciones nuevas forman su propio grupo: roomie no cuenta como familia aunque vivan juntos.
 
 Para los análisis se **agrupan** (`Personas.grupo`):
 

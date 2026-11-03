@@ -71,7 +71,7 @@ object EdicionIdea {
     fun nueva(fecha: String = Fechas.diaLogico(), obra: Obra? = null, cita: Cita? = null): Idea = Idea(
         id = Repo.nuevoId(), creada = Fechas.ahoraIso(), fecha = fecha, texto = "", obra_id = obra?.id, cita_id = cita?.id,
         donde = cita?.pagina.orEmpty(), quien = listOfNotNull(obra?.autor?.trim()?.ifBlank { null }),
-        origen = when (obra?.tipo) { "libro", "articulo" -> "leido"; "pelicula", "serie", "juego" -> "visto"; else -> "" })
+        origen = when (obra?.tipo) { "libro", "articulo", "comic" -> "leido"; "pelicula", "serie", "juego", "documental", "podcast", "audiolibro", "album" -> "visto"; else -> "" })
 }
 
 private fun nombreOrigen(id: String) = Catalogo.ORIGENES_IDEA.firstOrNull { it.id == id }?.nombre

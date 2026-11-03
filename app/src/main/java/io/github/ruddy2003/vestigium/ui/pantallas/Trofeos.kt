@@ -202,7 +202,7 @@ fun SalaTrofeos(lista: List<Logros.Logro>, titulo: String? = null, porFila: Int 
 
 /** El trofeo de cerca: grande, con lo que lograste y cuándo, o el reto y cuánto llevas, y el siguiente de la serie. */
 @Composable
-fun DetalleTrofeo(l: Logros.Logro, todos: List<Logros.Logro>, cerrar: () -> Unit) {
+fun DetalleTrofeo(l: Logros.Logro, todos: List<Logros.Logro>, editar: (() -> Unit)? = null, cerrar: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val secreto = l.secreto && !l.hecho
     val serie = l.id.substringBeforeLast('_')
@@ -214,7 +214,9 @@ fun DetalleTrofeo(l: Logros.Logro, todos: List<Logros.Logro>, cerrar: () -> Unit
                 TextButton(onClick = {
                     Repo.cambiarConfig { c -> c.copy(hall_logros = if (enHall) c.hall_logros - l.id else (c.hall_logros + l.id).takeLast(12)) }
                 }) { Text(if (enHall) "quitar del hall" else "ponerlo en el hall") }
-            } else if (l.propio) {
+            } else if (l.propio) androidx.compose.foundation.layout.Row {
+                // Un logro propio se puede corregir (nombre, qué cuenta, umbral, meta) o borrar.
+                if (editar != null) TextButton(onClick = editar) { Text("editar") }
                 var confirmar by remember(l.id) { mutableStateOf(false) }
                 TextButton(onClick = {
                     if (!confirmar) { confirmar = true; return@TextButton }

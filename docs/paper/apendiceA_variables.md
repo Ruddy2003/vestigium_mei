@@ -351,7 +351,7 @@ Estas se crean una por cada elemento que el usuario ha usado (o, en las de catá
 | `n_<pensamiento>` | Registros pensando: ‹pensamiento› (los usados) | Momentos |
 | `sueno_<categoria>` | Sueño: ‹categoría› (0/1); las categorías usadas, con valor solo en días con categorías | Sueños |
 | `enfoque_<tipo>_min` | Enfoque: ‹tipo› (min); los tipos usados de estudio, lectura, idiomas, tesis, trabajo y creativo | Enfoque |
-| `horas_tipo_<tipo>` | Horas en lugares de tipo ‹tipo›; los tipos de tus lugares, de 12 posibles | Lugares |
+| `horas_tipo_<tipo>` | Horas en lugares de tipo ‹tipo›; los tipos de tus lugares, de 14 posibles (12 hasta el esquema 17, que agregó restaurante o café y tienda) | Lugares |
 | `laptop_<categoria>_min` | Minutos en la laptop: ‹categoría› (productivo, ocio, social, otro); con Cold Turkey | Laptop |
 | `con_<id>` | Avisos con ‹pareja, amigos, familia, compañeros o desconocidos› (0 a 1); si hay avisos con «con quién» | Social |
 | `ctx_<id>` | Contexto: ‹nombre› (0/1); siempre, los 10 contextos: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia | Contexto |
