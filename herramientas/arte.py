@@ -404,6 +404,37 @@ def papel_templario():
     a = a * (0.97 + 0.05 * ruido_rect(W, H, 0.8, 144)[..., None])
     a_img(a).save(os.path.join(OUT, 'papel_templario.jpg'), quality=86)
 
+def papel_deco():
+    """Art déco: el papel de cartas del salón de escribir de un trasatlántico, marfil y satinado, con el membrete del
+    abanico solar en oro arriba, tres filetes que se acortan en escalones y un doble filete alrededor con las esquinas
+    escalonadas."""
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    a = mezcla(col('#FBF6EA'), col('#F0E6CF'), ruido_rect(W, H, 60, 151) * 0.55)
+    a = a * (0.985 + 0.02 * ruido_rect(W, H, 0.7, 152)[..., None])
+    img = a_img(a); d = ImageDraw.Draw(img, 'RGBA')
+    oro = (184, 149, 46)
+    # El membrete: el abanico de rayos alternos sobre su base, y los filetes escalonados debajo.
+    cx, cy, r = W / 2, 118, 52
+    for i in range(13):
+        if i % 2 == 0: d.pieslice([cx - r, cy - r, cx + r, cy + r], 180 + i * 180 / 13, 180 + (i + 1) * 180 / 13, fill=oro + (120,))
+    d.pieslice([cx - r * 0.34, cy - r * 0.34, cx + r * 0.34, cy + r * 0.34], 180, 360, fill=(31, 107, 87, 110))
+    d.rectangle([cx - r - 6, cy, cx + r + 6, cy + 3], fill=oro + (130,))
+    for k, f in enumerate((0.62, 0.44, 0.26)):
+        y = cy + 16 + k * 8
+        d.line([(W * (1 - f) / 2, y), (W * (1 + f) / 2, y)], fill=oro + (110 - k * 20,), width=2)
+    # El marco: doble filete y tres escalones en cada esquina.
+    m, paso = 26, 12
+    d.rectangle([m, m, W - m, H - m], outline=oro + (95,), width=2)
+    d.rectangle([m + 7, m + 7, W - m - 7, H - m - 7], outline=oro + (60,), width=1)
+    for (ox, oy, sx, sy) in ((m + 7, m + 7, 1, 1), (W - m - 7, m + 7, -1, 1), (m + 7, H - m - 7, 1, -1), (W - m - 7, H - m - 7, -1, -1)):
+        pts = [(ox, oy + sy * 4 * paso)]
+        for k in range(1, 4):
+            pts += [(ox + sx * k * paso, oy + sy * (5 - k) * paso), (ox + sx * k * paso, oy + sy * (4 - k) * paso)]
+        pts += [(ox + sx * 4 * paso, oy + sy * paso), (ox + sx * 4 * paso, oy)]
+        d.line(pts, fill=oro + (110,), width=2)
+    img.save(os.path.join(OUT, 'papel_deco.jpg'), quality=86)
+
 def papel_urbe():
     """Roma: la hoja de un cuaderno comprado en la papelería del barrio, crema y algo reciclada, con el cerco claro
     que dejó una tazzina de café y el pliegue suave de haberlo llevado en la bolsa."""
@@ -445,6 +476,37 @@ def papel_edo():
                 for t in np.linspace(0, 1, 9)], fill=c, width=1)
     img.save(os.path.join(OUT, 'papel_edo.jpg'), quality=86)
 
+def papel_vapor():
+    """Vapor victoriano: el papel de oficio crema de una memoria de patente, con las manchas pardas de la humedad
+    (foxing), la huella de hollín de unos dedos en la esquina de abajo y, arriba a la derecha, el sello en seco de la
+    oficina de patentes: un anillo con un engrane, en relieve sin tinta."""
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    a = mezcla(col('#F3EAD4'), col('#E6D8B8'), ruido_rect(W, H, 60, 151) * 0.75)
+    # Las manchas de humedad: puntos pardos de borde difuso, más en los márgenes.
+    rng = np.random.default_rng(152)
+    for _ in range(26):
+        cx, cy = rng.random() * W, rng.random() * H
+        r = 3 + rng.random() * 10
+        d = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
+        borde = min(cx, W - cx, cy, H - cy) / (W / 2)
+        a = mezcla(a, col('#B08A55'), np.clip(1 - d / r, 0, 1) ** 1.5 * (0.35 - 0.2 * min(borde, 1)))
+    # El hollín de los dedos del fogonero, abajo a la izquierda: dos o tres manchas alargadas y grises.
+    for k, (cx, cy) in enumerate(((W * 0.1, H * 0.93), (W * 0.16, H * 0.955), (W * 0.06, H * 0.9))):
+        d = np.sqrt(((xx - cx) / 1.6) ** 2 + (yy - cy) ** 2)
+        a = mezcla(a, col('#4A443C'), np.clip(1 - d / (24 - k * 4), 0, 1) * (0.5 + 0.5 * ruido_rect(W, H, 5, 153 + k)) * 0.4)
+    # El sello en seco: un anillo con dientes de engrane, en relieve (luz arriba a la izquierda, sombra abajo a la derecha).
+    sx, sy, sr = W * 0.8, H * 0.1, W * 0.085
+    d = np.sqrt((xx - sx) ** 2 + (yy - sy) ** 2)
+    ang = np.arctan2(yy - sy, xx - sx)
+    dientes = sr * 0.62 + sr * 0.08 * (np.cos(ang * 12) > 0)
+    figura = (np.abs(d - sr) < 3).astype(np.float32) + ((d < dientes) & (d > sr * 0.3)).astype(np.float32)
+    figura = np.clip(figura, 0, 1)
+    gy, gx = np.gradient(np.asarray(Image.fromarray((figura * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.5)), np.float32) / 255)
+    a = a * (1 + np.clip(-(gx + gy) * 3.5, -0.08, 0.08))[..., None]
+    a = a * (0.97 + 0.05 * ruido_rect(W, H, 0.8, 156)[..., None])
+    a_img(a).save(os.path.join(OUT, 'papel_vapor.jpg'), quality=86)
+
 if __name__ == '__main__':
     OUT = sys.argv[1]
     papeles()
@@ -460,6 +522,8 @@ if __name__ == '__main__':
     papel_meso()
     papeles_fuente()
     papel_templario()
+    papel_deco()
     papel_urbe()
     papel_edo()
+    papel_vapor()
     print('papeles listos')

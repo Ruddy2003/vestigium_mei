@@ -518,7 +518,7 @@ Va después del lote 7. Para entonces el compilador y las pruebas de cobertura y
 
 **Cómo se hizo (30 oct 2026):** en una sola rama, con un commit «se junta el tema X» por tema en lugar de un PR por tema. Ciudad neón se hizo primero, a mano, y sirvió de modelo; los otros 12 partieron de la copia de un tema cercano (`herramientas/lote8/`) y se rehicieron rama por rama. Al juntarlos, la prueba de unicidad obligó a cambiar las esquinas de Pirata, Ciudad verde y Horror cósmico, dos títulos de pantalla (Egipto y Horror cósmico) y el comentario de Prehistoria. Lo que quedó del peso de la APK está en 8e.
 
-**Vapor victoriano y Art déco quedan para la próxima semana.** Están hechos, cada uno en su rama (`worktree-agent-a45fbcb2bdebf5093` y `worktree-agent-a9d920256ab695569`), y compilan, pero con los dos juntos la máquina de CI se apagaba al minuto de empezar las pruebas, incluso después de poner un tope de 1 px al paso de los bucles de dibujo nuevos. Se juntaron y se revirtieron (`git revert -m 1` de 9cf45bf y ed0194c). Para retomarlos: revertir esas reversiones, o volver a juntar sus ramas, de uno en uno, para saber cuál apaga la máquina.
+**Vapor victoriano y Art déco (2 nov 2026).** Se habían pospuesto porque, con los dos, la máquina de CI se apagaba al minuto de empezar las pruebas. Volvieron de uno en uno (se revirtieron sus reversiones) y llevan los nombres del Ideario. Con el registro de memoria de `capturas.yml` se vio la causa: la prueba `objetos` juntaba siete diarios cerrados en una sola captura y subía la memoria de 2 a casi 8 GB. Con un tema por captura, ningún tema la dispara. No era un error de Art déco: era el tamaño de esa captura con 34 temas.
 
 ### 8a. El Cyberpunk pasa a «Terminal»
 
@@ -619,8 +619,8 @@ Los ids `egipto` y `edo` coinciden con ids de vidas de `BASE` (`OtrasVidas.kt:11
 
 **`res/`**
 - **Ícono y sello** (`drawable-nodpi/`):
-  - `logo_<id>.png` y `logo_fondo_<id>.jpg`, generados por `iconos.py`;
-  - `huella_<id>.png` y `huella_fondo_<id>.jpg`, generados por `sellos.py`;
+  - `logo_<id>.webp` y `logo_fondo_<id>.jpg`, generados por `iconos.py`;
+  - `huella_<id>.webp` y `huella_fondo_<id>.jpg`, generados por `sellos.py`;
   - `papel_<id>.jpg` (720×1280), generado por el script de papeles.
 - **Widgets** (`drawable/`): `widget_fondo_<id>`, `widget_boton_<id>`, `widget_boton_activo_<id>` y `widget_boton_ambar_<id>`, más `drawable-v31/widget_fondo_<id>`.
 - **Lanzador:** `mipmap-anydpi-v26/ic_launcher_<id>.xml`, con `logo_fondo_<id>`, `logo_<id>` y `logo_mono`.
@@ -687,6 +687,8 @@ Notas:
 - **Peso de la APK.** Cada tema suma entre 1 y 1.5 MB (sonidos, imágenes, papel, fuente y gato), así que se suman entre 13 y 20 MB. Para compensar: bajar la tasa de bits de los OGG largos, recortar las fuentes, y valorar `shrinkResources`. No hay minificación hoy.
   - **Lo que se midió al cerrar el lote:** la v98 (21 temas) pesa 55 MB. Con 34 temas, `res/raw` pesa 16.4 MB, de los que 8 MB son las músicas anuales (`s_<id>_anual`, unos 80 s cada una); `res/font`, 11 MB; `res/drawable-nodpi`, 7.5 MB.
   - **Lo que ya estaba hecho:** los OGG van en mono a 22 kHz (la música anual, con calidad 1 de Vorbis, unos 30 kbit/s), y las fuentes ya van recortadas a latino y sin *hinting* (`fuentes.py`).
+  - **Hecho el 2 nov 2026:** los `logo_<id>` y `huella_<id>` de `drawable-nodpi` pasan de PNG a WebP sin pérdida (los mismos pixeles, también los transparentes): de 2.76 a 1.68 MB. `iconos.py` y `sellos.py` ya los escriben así.
+  - **Los gatos (lote 9):** `assets/gato` pasa de 7.8 a 15 MB con los 34 temas. El romano pesa casi 1 MB por clave (su atlas, de antes, 550 KB); lo demás va de 30 a 450 KB por clave.
   - **Lo que queda por decidir:** bajar la música anual a calidad 0 o −1 ahorraría entre 1.5 y 3.5 MB, pero hay que regenerarla con `musica.py`, y hoy no sale idéntica a la guardada (el azar de los temas viejos ya no se reproduce), así que cambiaría la música de todos los temas. `shrinkResources` exige activar la minificación (R8), que con osmdroid, Health Connect y la serialización de los datos puede pedir reglas propias; habría que probarla aparte, en un teléfono, antes de publicarla.
 - **Datos:** no cambia el esquema. Se actualiza la lista de ejemplos del KDoc de `Modelo.kt:683-684`.
 
@@ -694,7 +696,7 @@ Notas:
 
 ### Qué existe
 
-**Estado (30 oct 2026):** la rama `claude/quirky-thompson-3km48y` ya está juntada. El gato sale en los 21 temas originales, los que tienen arte en `assets/gato/`. En los temas del lote 8 la banda no aparece: `Gato.tieneGato` dice, tema por tema, cuáles lo tienen, y `CoberturaTemas` deja de pendientes solo a los temas nuevos. Quedan para después 9a, los gatos de los temas nuevos y el resto de este lote.
+**Estado (2 nov 2026):** los 34 temas tienen gato. Los 21 originales vienen de la rama `claude/quirky-thompson-3km48y` (juntada el 30 oct 2026); los 13 del lote 8 (9b), de `herramientas/gato/gato20a.py` a `gato20d.py`. `Gato.tieneGato` sigue diciendo tema por tema cuáles lo tienen (hoy todos), y `CoberturaTemas` ya no tiene pendientes. 9a está hecho en `gato19.py`: fondos que se mueven, noches propias, atlas de noche separados, objetos propios y Terminal en cian.
 
 El gato estaba en la rama `claude/quirky-thompson-3km48y` (3 commits encima de `main`).
 

@@ -46,9 +46,11 @@ object Avisos {
         TemaId.DISTOPIA -> R.raw.n_distopia_aviso to R.raw.n_distopia_solemne
         TemaId.REFUGIO -> R.raw.n_refugio_aviso to R.raw.n_refugio_solemne
         TemaId.ORDEN -> R.raw.n_orden_aviso to R.raw.n_orden_solemne
+        TemaId.VAPOR -> R.raw.n_vapor_aviso to R.raw.n_vapor_solemne
         TemaId.LABORATORIO -> R.raw.n_laboratorio_aviso to R.raw.n_laboratorio_solemne
         TemaId.COLONOS -> R.raw.n_colonos_aviso to R.raw.n_colonos_solemne
         TemaId.NAPOLEON -> R.raw.n_napoleon_aviso to R.raw.n_napoleon_solemne
+        TemaId.DECO -> R.raw.n_deco_aviso to R.raw.n_deco_solemne
         TemaId.BOTANICO -> R.raw.n_botanico_aviso to R.raw.n_botanico_solemne
         TemaId.RUINAS -> R.raw.n_ruinas_aviso to R.raw.n_ruinas_solemne
         TemaId.NAVIDAD -> R.raw.n_navidad_aviso to R.raw.n_navidad_solemne
@@ -250,6 +252,13 @@ object Avisos {
             "ÓRDENES SELLADAS DE TU YO DEL PASADO", "Llegó la fecha de abrirlas.",
             "Mérito ganado", "méritos nuevos",
             "PARTE DE CAMPAÑA %d LISTO", "Un año de campaña en historias: lo más hecho, lo único, lo curioso.")
+        TemaId.VAPOR -> Voz("☛ Lectura del manómetro · ¿qué presión marca tu ánimo?", "Dos toques en la esfera: qué tan agradable y cuánto vapor tienes.",
+            "☛ Al encender la caldera · ¿qué soñaste?", "Anótalo antes de que silbe el primer tren: el sueño se va con el humo.",
+            "☛ Fin del turno · ¿cómo fue la jornada?", "Asienta el día en el cuaderno. Si fue de carbón y sudor, basta con un número.",
+            "Jornada de mucho carbón: un número", "Lecturas de este turno:",
+            "☛ Telegrama de tu yo del pasado", "El cartero de la estación lo trae en la fecha que pusiste.",
+            "Patente concedida", "patentes nuevas",
+            "La memoria de la compañía, ejercicio %d", "Un año entero en estampas de viaje: lo que más hiciste, lo único, lo curioso. Toca para leerla.")
         TemaId.LABORATORIO -> Voz("Medición de ánimo · t = ahora", "Dos toques: qué tan agradable (valencia) y cuánta energía (activación).",
             "Muestra onírica", "Regístrala antes de levantarte: se degrada en minutos.",
             "Cierre de sesión", "Llena el día. Si fue difícil, basta con un dato.",
@@ -271,6 +280,13 @@ object Avisos {
             "Despacho de tu yo del pasado", "El correo imperial lo entrega en la fecha fijada.",
             "Légion d’honneur", "honores nuevos",
             "Boletín de la campaña de %d", "La campaña entera en historias: lo más hecho, lo único, lo curioso.")
+        TemaId.DECO -> Voz("Timbre del camarote · ¿qué tal la velada?", "Dos toques, como dos compases: agrado y energía.",
+            "Lo que soñaste en el camarote", "Anótalo antes del desayuno en cubierta; los sueños se van con la bruma.",
+            "El carnet de esta noche", "Llena el día antes de que baje el telón. Si fue una mala función, basta con un número.",
+            "Mala función: un número", "El sobrecargo te entrega el programa:",
+            "Telegrama de tu yo del pasado", "La radio de a bordo lo recibe el día fijado.",
+            "¡Ovación!", "ovaciones nuevas",
+            "La temporada de %d en noticiero", "Toda la temporada en historias: lo más hecho, lo único, lo curioso.")
         TemaId.BOTANICO -> Voz("Observación · ¿cómo te sientes?", "Dos toques, como una muestra de campo: agrado y energía.",
             "Latencia · ¿qué soñaste?", "Anótalo antes de levantarte; se marchita en minutos.",
             "Entrada del herbario", "Llena el día. Si fue difícil, basta con un número.",
@@ -414,9 +430,11 @@ object Avisos {
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA")
         TemaId.REFUGIO -> VozEnfoque("DESCANSO DE TURNO", "Levántate, bebe agua filtrada.", "FIN DEL DESCANSO", "HORA DE DESPERTAR, RESIDENTE", "TURNO COMPLETADO")
         TemaId.ORDEN -> VozEnfoque("ALTO", "Rompan filas: agua y estiramiento.", "FIN DEL ALTO", "DIANA", "MISIÓN CUMPLIDA")
+        TemaId.VAPOR -> VozEnfoque("Parada en la estación", "Baja al andén: estira las piernas y bebe agua del aguador.", "¡Viajeros al tren!", "Silba la locomotora: hora de despertar", "Llegada a destino: terminaste")
         TemaId.LABORATORIO -> VozEnfoque("Intervalo", "Levántate, hidrátate.", "Fin del intervalo", "Fin del registro de sueño: despierta", "Ensayo completado")
         TemaId.COLONOS -> VozEnfoque("Descanso", "Levántate, toma agua del pozo.", "Se acabó el descanso", "Hora de despertar", "¡Faena terminada!")
         TemaId.NAPOLEON -> VozEnfoque("Halte", "Levántate y bebe, soldado.", "Fin de la halte", "Diana: ¡arriba!", "Victoire!")
+        TemaId.DECO -> VozEnfoque("Entreacto", "Levántate, da una vuelta por cubierta y bebe agua.", "Se acabó el entreacto", "Suena la campana del desayuno: hora de despertar", "¡Telón! Función terminada")
         TemaId.BOTANICO -> VozEnfoque("Pausa de campo", "Levántate y riégate: toma agua.", "Termina la pausa de campo", "Hora de despertar, como las flores", "Muestra completa")
         TemaId.RUINAS -> VozEnfoque("Sombra bajo el puente", "Levántate y bebe del agua de lluvia que guardaste.", "Se acabó la sombra", "Ya salió el sol sobre las azoteas", "Faena cumplida, sigues en pie")
         TemaId.NAVIDAD -> VozEnfoque("Descanso junto al fuego", "Levántate, toma algo caliente o agua.", "Se acabó el descanso junto al fuego", "Hora de despertar", "¡Terminaste!")

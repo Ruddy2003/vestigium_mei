@@ -305,13 +305,13 @@ class Capturas {
     private val TEXTO = "Hoy fue un día largo pero bueno. En la mañana salí a caminar con @ana por el parque y hablamos de los planes para el viaje. " +
         "Después trabajé casi toda la tarde en el proyecto; avancé más de lo que esperaba. En la noche leí un rato antes de dormir. #lectura #trabajo"
 
-    private fun objetos(temas: List<TemaId>, nombre: String) = captura(temas.first(), false, alto = 2800, nombre = nombre) {
+    private fun objetos(temas: List<TemaId>, nombre: String) = captura(temas.first(), false, alto = 1200, nombre = nombre) {
         Column(Modifier.padding(16.dp)) {
             temas.forEachIndexed { i, t -> io.github.ruddy2003.vestigium.ui.ObjetoDiario("2026-10-16", if (i == 1) "" else TEXTO, Modifier.padding(bottom = 14.dp), t) {} }
         }
     }
-    /** El diario cerrado en todos los temas, siete por captura. */
-    @Test fun objetos() = TemaId.entries.chunked(7).forEachIndexed { i, temas -> objetos(temas, "parte${i + 1}") }
+    /** El diario cerrado de cada tema, con texto y vacío (una captura por tema). */
+    @Test fun objetos() = TemaId.entries.forEach { t -> objetos(listOf(t, t), "tema_${t.id}") }
 
     private fun biblioteca(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario") }
     @Test fun bibliotecaMedieval() = biblioteca(TemaId.MEDIEVAL, false)
@@ -881,9 +881,10 @@ class Capturas {
     @Test fun piezasGotico() = piezas(TemaId.GOTICO, true)
 
     /** La banda del gato en cada tema que lo tiene (los 21 originales), quieta en una de sus dos animaciones propias (de día la primera, de noche la segunda). */
-    private fun gatos(oscuro: Boolean) = captura(TemaId.ROMANO, oscuro, alto = 6200) {
+    private val temasConGato = TemaId.entries.filter { io.github.ruddy2003.vestigium.ui.Gato.tieneGato(it) }
+    private fun gatos(oscuro: Boolean) = captura(TemaId.ROMANO, oscuro, alto = 100 + 295 * temasConGato.size) {
         Column(Modifier.padding(8.dp)) {
-            TemaId.entries.filter { io.github.ruddy2003.vestigium.ui.Gato.tieneGato(it) }.forEachIndexed { k, t ->
+            temasConGato.forEachIndexed { k, t ->
                 val o = oscuro || t.soloOscuro
                 androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, o), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, o)) {
                     Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(horizontal = 8.dp, vertical = 3.dp)) {

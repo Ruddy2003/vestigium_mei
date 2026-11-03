@@ -133,6 +133,15 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(SUBE, 0.4f), g(CLICK, 0.8f, 40)); Evento.ERROR -> listOf(g(BAJA, 0.7f), g(THUD, 1f, 40))
             Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 1f), g(THUD, 1f, 180), g(THUD, 1f, 180))
         }
+        // La máquina de vapor: el pistón (un golpe grave y la válvula detrás), el «chu-chu» al pasar, la picadora del
+        // revisor al guardar, la palanca del regulador al cambiar y, en el logro, la locomotora que arranca y acelera.
+        TemaId.VAPOR -> when (e) {
+            Evento.TOQUE -> listOf(g(THUD, 0.55f), g(TICK_GRAVE, 0.3f, 22)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.5f), g(TICK_GRAVE, 0.35f, 70))
+            Evento.GUARDAR -> listOf(g(THUD, 0.75f), g(CLICK, 0.5f, 42), g(THUD, 0.5f, 110))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.62f), g(TICK, 0.28f, 26)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.5f), g(TICK_GRAVE, 0.6f, 95))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.75f), g(THUD, 0.45f, 52)); Evento.ERROR -> listOf(g(BAJA, 0.7f), g(THUD, 0.8f, 35), g(BAJA, 0.45f, 60))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.5f), g(THUD, 0.55f, 140), g(THUD, 0.6f, 110), g(THUD, 0.7f, 85), g(SUBE, 0.8f, 60))
+        }
         // Limpio y suave.
         TemaId.LABORATORIO -> when (e) {
             Evento.TOQUE -> listOf(g(TICK, 0.4f)); Evento.PASAR -> listOf(g(TICK, 0.3f))
@@ -156,6 +165,14 @@ object Sentidos {
             Evento.ELEGIR -> listOf(g(CLICK, 0.6f), g(CLICK, 0.4f, 40)); Evento.ABRIR -> listOf(g(SUBE, 0.6f), g(THUD, 0.7f, 40))
             Evento.CAMBIO -> listOf(g(CLICK, 0.5f), g(CLICK, 0.7f, 60), g(THUD, 0.5f, 60)); Evento.ERROR -> listOf(g(THUD, 0.8f), g(BAJA, 0.6f, 60))
             Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.5f), g(CLICK, 0.5f, 50), g(CLICK, 0.5f, 50), g(CLICK, 0.5f, 50), g(THUD, 1f, 160), g(THUD, 0.6f, 240))
+        }
+        // La escobilla sobre el platillo de una orquesta de jazz: golpes en ritmo de swing (largo, corto) y el remate del bombo.
+        TemaId.DECO -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 0.55f), g(TICK, 0.32f, 30)); Evento.PASAR -> listOf(g(SUBE, 0.35f), g(TICK, 0.5f, 70))
+            Evento.GUARDAR -> listOf(g(TICK, 0.5f), g(TICK, 0.5f, 90), g(CLICK, 0.8f, 45))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.6f), g(TICK, 0.45f, 55)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.5f), g(CLICK, 0.6f, 110))
+            Evento.CAMBIO -> listOf(g(SPIN, 0.4f), g(TICK, 0.6f, 80), g(TICK, 0.4f, 40)); Evento.ERROR -> listOf(g(BAJA, 0.7f), g(TICK_GRAVE, 0.7f, 90), g(TICK_GRAVE, 0.5f, 45))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(TICK, 0.5f), g(TICK, 0.5f, 90), g(TICK, 0.5f, 45), g(TICK, 0.6f, 90), g(TICK, 0.6f, 45), g(CLICK, 0.9f, 90), g(SUBE, 0.7f, 120))
         }
         // Hojas que se rozan y un pájaro que canta.
         TemaId.BOTANICO -> when (e) {
@@ -372,9 +389,11 @@ object Sentidos {
         TemaId.DISTOPIA -> intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro, R.raw.s_distopia_pasar, R.raw.s_distopia_elegir, R.raw.s_distopia_abrir, R.raw.s_distopia_tema, R.raw.s_distopia_error, R.raw.s_distopia_cambio, R.raw.s_tecla_distopia, R.raw.s_rascar_distopia)
         TemaId.REFUGIO -> intArrayOf(R.raw.s_refugio_toque, R.raw.s_refugio_guardar, R.raw.s_refugio_logro, R.raw.s_refugio_pasar, R.raw.s_refugio_elegir, R.raw.s_refugio_abrir, R.raw.s_refugio_tema, R.raw.s_refugio_error, R.raw.s_refugio_cambio, R.raw.s_tecla_refugio, R.raw.s_rascar_refugio)
         TemaId.ORDEN -> intArrayOf(R.raw.s_orden_toque, R.raw.s_orden_guardar, R.raw.s_orden_logro, R.raw.s_orden_pasar, R.raw.s_orden_elegir, R.raw.s_orden_abrir, R.raw.s_orden_tema, R.raw.s_orden_error, R.raw.s_orden_cambio, R.raw.s_tecla_orden, R.raw.s_rascar_orden)
+        TemaId.VAPOR -> intArrayOf(R.raw.s_vapor_toque, R.raw.s_vapor_guardar, R.raw.s_vapor_logro, R.raw.s_vapor_pasar, R.raw.s_vapor_elegir, R.raw.s_vapor_abrir, R.raw.s_vapor_tema, R.raw.s_vapor_error, R.raw.s_vapor_cambio, R.raw.s_tecla_vapor, R.raw.s_rascar_vapor)
         TemaId.LABORATORIO -> intArrayOf(R.raw.s_laboratorio_toque, R.raw.s_laboratorio_guardar, R.raw.s_laboratorio_logro, R.raw.s_laboratorio_pasar, R.raw.s_laboratorio_elegir, R.raw.s_laboratorio_abrir, R.raw.s_laboratorio_tema, R.raw.s_laboratorio_error, R.raw.s_laboratorio_cambio, R.raw.s_tecla_laboratorio, R.raw.s_rascar_laboratorio)
         TemaId.COLONOS -> intArrayOf(R.raw.s_colonos_toque, R.raw.s_colonos_guardar, R.raw.s_colonos_logro, R.raw.s_colonos_pasar, R.raw.s_colonos_elegir, R.raw.s_colonos_abrir, R.raw.s_colonos_tema, R.raw.s_colonos_error, R.raw.s_colonos_cambio, R.raw.s_tecla_colonos, R.raw.s_rascar_colonos)
         TemaId.NAPOLEON -> intArrayOf(R.raw.s_napoleon_toque, R.raw.s_napoleon_guardar, R.raw.s_napoleon_logro, R.raw.s_napoleon_pasar, R.raw.s_napoleon_elegir, R.raw.s_napoleon_abrir, R.raw.s_napoleon_tema, R.raw.s_napoleon_error, R.raw.s_napoleon_cambio, R.raw.s_tecla_napoleon, R.raw.s_rascar_napoleon)
+        TemaId.DECO -> intArrayOf(R.raw.s_deco_toque, R.raw.s_deco_guardar, R.raw.s_deco_logro, R.raw.s_deco_pasar, R.raw.s_deco_elegir, R.raw.s_deco_abrir, R.raw.s_deco_tema, R.raw.s_deco_error, R.raw.s_deco_cambio, R.raw.s_tecla_deco, R.raw.s_rascar_deco)
         TemaId.BOTANICO -> intArrayOf(R.raw.s_botanico_toque, R.raw.s_botanico_guardar, R.raw.s_botanico_logro, R.raw.s_botanico_pasar, R.raw.s_botanico_elegir, R.raw.s_botanico_abrir, R.raw.s_botanico_tema, R.raw.s_botanico_error, R.raw.s_botanico_cambio, R.raw.s_tecla_botanico, R.raw.s_rascar_botanico)
         TemaId.RUINAS -> intArrayOf(R.raw.s_ruinas_toque, R.raw.s_ruinas_guardar, R.raw.s_ruinas_logro, R.raw.s_ruinas_pasar, R.raw.s_ruinas_elegir, R.raw.s_ruinas_abrir, R.raw.s_ruinas_tema, R.raw.s_ruinas_error, R.raw.s_ruinas_cambio, R.raw.s_tecla_ruinas, R.raw.s_rascar_ruinas)
         TemaId.GOTICO -> intArrayOf(R.raw.s_gotico_toque, R.raw.s_gotico_guardar, R.raw.s_gotico_logro, R.raw.s_gotico_pasar, R.raw.s_gotico_elegir, R.raw.s_gotico_abrir, R.raw.s_gotico_tema, R.raw.s_gotico_error, R.raw.s_gotico_cambio, R.raw.s_tecla_gotico, R.raw.s_rascar_gotico)
@@ -458,12 +477,16 @@ object Sentidos {
         TemaId.REFUGIO -> Afinacion(st(0, 2, 4), null, pasarRuido = true, elegirRuido = true)
         // Sol menor; el servo baja a la cuarta.
         TemaId.ORDEN -> Afinacion(st(-5, -2, 0), st(-5, 0, 3, 5), pasarRuido = false, elegirRuido = false)
+        // La menor con sexta: el acorde del silbato de tres campanas; el «chu-chu» de pasar es ruido.
+        TemaId.VAPOR -> Afinacion(st(0, 3, 8, 12, 7), st(-4, 0, 3, 8), pasarRuido = true, elegirRuido = false)
         // Re menor con la novena: misterio.
         TemaId.LABORATORIO -> Afinacion(st(-5, 0, 2, 3, 7), st(-5, 0, 1, 6), pasarRuido = false, elegirRuido = false)
         // Sol pentatónico con la quinta grave de la marimba.
         TemaId.COLONOS -> Afinacion(st(-5, 0, 2, 4, 7), st(-7, 0, 5, 7), pasarRuido = false, elegirRuido = false)
         // Si bemol: el tambor afinado en las notas de la corneta.
         TemaId.NAPOLEON -> Afinacion(st(-5, 0, 4, 7), null, pasarRuido = true, elegirRuido = true)
+        // Do mayor con sexta y novena, el acorde con que cierran las orquestas de jazz de los años veinte.
+        TemaId.DECO -> Afinacion(st(0, 4, 7, 9, 14), st(-5, 0, 2, 9), pasarRuido = false, elegirRuido = false)
         // Sol dórico.
         TemaId.BOTANICO -> Afinacion(st(-5, 0, 3, 7, 9), st(-5, 0, 2, 5), pasarRuido = true, elegirRuido = false)
         // Re mixolidio con quintas al aire, como una flauta en una plaza vacía; el viento entre los edificios al pasar y al elegir.
@@ -588,9 +611,11 @@ object Sentidos {
         TemaId.DISTOPIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
         TemaId.REFUGIO -> pasadas(TICK, 0.8f, 35, 4)   // chapa galvanizada
         TemaId.ORDEN -> pasadas(CLICK, 0.8f, 45, 3)   // acero pavonado
+        TemaId.VAPOR -> pasadas(CLICK, 0.66f, 38, 4)   // latón remachado
         TemaId.LABORATORIO -> pasadas(TICK, 0.4f, 30, 5)   // aluminio
         TemaId.COLONOS -> pasadas(TICK_GRAVE, 0.7f, 55, 3)   // cobre
         TemaId.NAPOLEON -> pasadas(CLICK, 0.6f, 50, 3)   // bronce dorado
+        TemaId.DECO -> pasadas(TICK, 0.48f, 38, 6)   // laca con pan de oro, lisa y dura
         TemaId.BOTANICO -> pasadas(TICK_GRAVE, 0.45f, 65, 3)   // bronce con verdín
         TemaId.RUINAS -> pasadas(THUD, 0.38f, 58, 4)   // hormigón áspero
         TemaId.GOTICO -> pasadas(TICK_GRAVE, 0.6f, 80, 3)   // peltre

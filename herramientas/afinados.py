@@ -519,6 +519,45 @@ def orden():
                tecla=mezclar((0, clic(0.012, (500, 2200)), 1), (0, tambor(hz(T - 24), 0.03, 0.2), 0.25)),
                rascar=rascado((2200, 8000), campana(hz(T + 24), 0.5, 2.76, 2.0, 7), aspereza=140))
 
+def vapor():
+    # La menor con la sexta: el silbato de tres campanas de las locomotoras (La, Do y Fa), el «chu» del escape de la
+    # chimenea, la picadora del revisor, el tintineo del latón y, en lo solemne, el armonio de una estación con eco.
+    T = 0    # La4
+    def silbato(notas, d, aire=0.35):
+        t = t_(d)
+        x = sum(np.sin(2 * np.pi * hz(n) * t) + 0.3 * np.sin(2 * np.pi * hz(n) * 2 * t) for n in notas) / len(notas)
+        soplo = filtro(ruido(d), 'banda', (hz(notas[0]) * 0.9, hz(notas[-1]) * 3.2)) * aire
+        return (x + soplo) * np.minimum(1, t / 0.04) * np.minimum(1, (d - t) / 0.08)
+    def chu(d=0.16, brillo=1800):
+        return filtro(ruido(d), 'banda', (180, brillo)) * env(int(d * SR), 0.004, d * 0.5, 3)
+    tink = lambda n, d=0.2: mezclar((0, clic(0.008, (1800, 6000)), 0.45), (0, campana(hz(n), d, 3.0, 1.0, 14), 0.6))
+    armonio = lambda f, d: organo(f, d, 0.12)
+    with azar_propio('vapor_base'):
+        S['vapor'] = dict(
+            toque=tink(T + 12, 0.14),
+            elegir=silbato([T + 19], 0.12, 0.25),
+            pasar=mezclar((0, chu(0.12), 0.8), (0.1, chu(0.08, 1400), 0.4)),
+            abrir=mezclar((0, filtro(ruido(0.38), 'alto', 2200) * env(int(0.38 * SR), 0.12, 0.25, 2), 0.45), (0.3, tambor(hz(T - 24), 0.3, 0.5), 0.8),
+                          (0.3, tink(T + 7, 0.4), 0.4)),
+            guardar=mezclar((0, clic(0.012, (900, 3500)), 0.9), (0.01, tambor(hz(T - 24), 0.2, 0.4), 0.6), (0.09, tink(T + 12, 0.5), 0.6)),
+            logro=reverb(mezclar(*[(s, chu(0.16), 0.75) for s in (0.0, 0.36, 0.64, 0.86, 1.02)],
+                                 (1.12, silbato([T, T + 3, T + 8], 0.9), 0.6)), 1.3, 0.22),
+            tema=reverb(mezclar((0, chu(0.14), 0.6), (0.18, silbato([T, T + 3, T + 8], 0.55), 0.6)), 1.2, 0.24),
+            aviso=reverb(mezclar((0, silbato([T, T + 3, T + 8], 0.18), 0.55), (0.28, silbato([T, T + 3, T + 8], 0.6), 0.55),
+                                 (0.95, campana(hz(T + 12), 1.2, 2.76, 1.4, 2.5), 0.35)), 1.4, 0.26),
+            solemne=reverb(mezclar(*[(0.85 * i, acorde(armonio, [T - 12 + a for a in ch], 0.8), 0.45) for i, ch in enumerate([[0, 3, 7], [-4, 0, 3], [-7, -3, 0], [0, 3, 8, 12]])],
+                                   (2.55, silbato([T, T + 3, T + 8], 1.0, 0.25), 0.45),
+                                   *[(0.85 * i, chu(0.2, 1200), 0.35) for i in range(3)]), 2.6, 0.34))
+
+    # Error: el silbato que se ahoga medio tono abajo y el vapor que escapa. Cambio: la palanca del regulador y la
+    # válvula que tintinea a la quinta. Tecla: el manipulador del telégrafo (golpe y rebote). Rascar: latón de caldera.
+    with azar_propio('vapor'):
+        nuevos('vapor',
+               error=mezclar((0, silbato([T + 7], 0.12), 0.45), (0.13, silbato([T + 6], 0.3), 0.45), (0.13, filtro(ruido(0.35), 'alto', 2500) * env(int(0.35 * SR), 0.02, 0.2), 0.25)),
+               cambio=mezclar((0, tambor(hz(T - 19), 0.08, 0.5), 0.6), (0.07, tink(T + 19, 0.25), 0.6)),
+               tecla=mezclar((0, clic(0.01, (900, 3200)), 1), (0.035, clic(0.008, (1500, 4500)), 0.55), (0, tambor(hz(T - 12), 0.03, 0.2), 0.2)),
+               rascar=rascado((1500, 6800), campana(hz(T + 26), 0.6, 3.0, 1.2, 5), aspereza=120))
+
 def laboratorio():
     # Re menor: el instituto bajo tierra. Senos fríos, colchones de sintetizador, aire filtrado y un pulso grave lejano.
     T = -7   # Re4
@@ -601,6 +640,40 @@ def napoleon():
                cambio=mezclar((0, golpe(), 0.6), (0.06, corneta(T, 0.1), 0.4), (0.16, corneta(T + 7, 0.16), 0.45)),
                tecla=trazo((3000, 9000), 0.035, 12, 0.02),
                rascar=rascado((1500, 6500), corneta(T + 24, 0.25), aspereza=100))
+
+def deco():
+    # Do mayor con sexta y novena: una orquesta de jazz de los años veinte. El piano «stride», el vibráfono, la trompeta
+    # con sordina, la escobilla sobre el platillo y el contrabajo pulsado; en lo solemne, el órgano de un cine de estreno.
+    T = 3    # Do5
+    piano = lambda n, d=0.4: mezclar((0, pluck(hz(n), d, 0.7, 0.995), 0.8), (0, pluck(hz(n + 12), d * 0.6, 0.5, 0.993), 0.25))
+    vibra = lambda n, d=0.6: vibrafono(hz(n), d)
+    trompeta = lambda n, d: filtro(metal(hz(n), d, 2200, 0.02), 'bajo', 2600)
+    escobilla = lambda d=0.12: filtro(ruido(d), 'banda', (2500, 8000)) * env(int(d * SR), 0.01, d * 0.8, 2)
+    platillo = lambda d=0.6: filtro(ruido(d), 'alto', 6000) * env(int(d * SR), 0.002, d, 4)
+    contrabajo = lambda n, d=0.4: pluck(hz(n), d, 0.3, 0.996)
+    # Con su propio azar: un tema nuevo no mueve el ruido de los que van después.
+    with azar_propio('deco_base'):
+        S['deco'] = dict(
+            toque=mezclar((0, piano(T + 12, 0.12), 0.8), (0, escobilla(0.05), 0.2)), elegir=vibra(T + 16, 0.35),
+            pasar=mezclar((0, escobilla(0.16), 0.8), (0.04, piano(T + 19, 0.07), 0.2)),
+            abrir=mezclar(*[(0.06 * i, piano(T + n, 0.3), 0.45) for i, n in enumerate([0, 4, 7, 9])]),
+            guardar=mezclar((0, piano(T + 7, 0.15), 0.5), (0.12, piano(T + 12, 0.45), 0.55), (0.12, piano(T + 16, 0.45), 0.4)),
+            logro=reverb(mezclar(*[(0.12 * i, trompeta(T + n, 0.12 if i < 4 else 0.7), 0.5) for i, n in enumerate([0, 4, 7, 9, 14])],
+                                 (0.48, platillo(0.9), 0.35), (0.48, contrabajo(T - 24, 0.8), 0.5)), 1.2, 0.22),
+            tema=reverb(mezclar(*[(0.07 * i, piano(T + n, 0.5), 0.4) for i, n in enumerate([-12, -5, 0, 4, 9, 14])], (0.42, vibra(T + 21, 0.8), 0.35)), 1.0, 0.22),
+            aviso=reverb(mezclar((0, vibra(T + 16, 0.4), 0.5), (0.15, vibra(T + 19, 0.4), 0.5), (0.3, vibra(T + 21, 0.7), 0.5), (0.3, escobilla(0.2), 0.3)), 1.1, 0.25),
+            solemne=reverb(mezclar(*[(0.9 * i, acorde(lambda f, d: organo(f, d, 0.08), [T - 12 + a for a in ch], 0.9), 0.4) for i, ch in enumerate([[0, 4, 9, 14], [2, 5, 9, 12], [-5, -1, 2, 5], [0, 4, 7, 9, 14]])],
+                                   *[(0.9 * i, contrabajo(T - 24 + b, 0.8), 0.45) for i, b in enumerate([0, 2, -5, 0])],
+                                   (2.7, platillo(1.4), 0.3), (2.7, trompeta(T + 16, 1.2), 0.35)), 2.0, 0.3))
+
+    # Error: la trompeta con sordina que baja medio tono, el «uá-uá» de los cómicos. Cambio: dos notas de piano, sexta y
+    # novena. Tecla: la estilográfica sobre el papel satinado. Rascar: la laca con pan de oro, lisa y dura.
+    with azar_propio('deco'):
+        nuevos('deco',
+               error=mezclar((0, trompeta(T + 4, 0.12), 0.45), (0.12, trompeta(T + 3, 0.35), 0.45)),
+               cambio=mezclar((0, piano(T + 9, 0.2), 0.5), (0.08, piano(T + 14, 0.3), 0.5)),
+               tecla=mezclar((0, trazo((2500, 7500), 0.03, 16, 0.015), 1), (0, clic(0.006, (3000, 8000)), 0.2)),
+               rascar=rascado((1800, 7000), campana(hz(T + 31), 0.4, 2.76, 1.2, 6), aspereza=120))
 
 def botanico():
     # Sol dórico: el cuaderno del naturalista. Guitarra de cuerdas de tripa, madera, la pluma que raspa, grillos afinados y un violonchelo.
@@ -1208,9 +1281,11 @@ if __name__ == '__main__':
         distopia,
         refugio,
         orden,
+        vapor,
         laboratorio,
         colonos,
         napoleon,
+        deco,
         botanico,
         ruinas,
         navidad,

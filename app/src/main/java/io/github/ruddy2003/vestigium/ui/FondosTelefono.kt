@@ -168,9 +168,11 @@ object FondosTelefono {
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"
         TemaId.REFUGIO -> "VESTIGIUM-MEI OS"
         TemaId.ORDEN -> "ORDO · VESTIGII"
+        TemaId.VAPOR -> "Compañía de Vapor y Patentes Vestigium"
         TemaId.LABORATORIO -> "CUADERNO DE LABORATORIO VM-01"
         TemaId.COLONOS -> "LA GACETA DEL VESTIGIO"
         TemaId.NAPOLEON -> "Bulletin du Vestige"
+        TemaId.DECO -> "Línea Transatlántica del Vestigio"
         TemaId.BOTANICO -> "Herbarium vestigii"
         TemaId.RUINAS -> "Cuaderno del silencio"
         TemaId.NAVIDAD -> "Cartas de invierno"
@@ -387,6 +389,21 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 chaflan(0f, col, 2.4f * u); chaflan(7 * u, tenue, 1f * u)
                 listOf(Offset(cx, arr), Offset(cx, aba), Offset(izq, cy), Offset(der, cy)).forEach { c -> drawCircle(e.secondary.copy(alpha = 0.5f), 4 * u, c) }
             }
+            TemaId.VAPOR -> {
+                // La lámina de patente: marco doble de dibujante con remate en arco arriba, remaches por los lados, los dos
+                // engranes que engranan abajo a la izquierda y la cartela con sus casillas abajo a la derecha.
+                val a = 34 * u
+                drawPath(Path().apply { moveTo(izq, aba); lineTo(izq, arr + a); quadraticTo(cx, arr - a * 0.7f, der, arr + a); lineTo(der, aba); close() }, col, style = Stroke(2.4f * u))
+                drawPath(Path().apply { moveTo(izq + 7 * u, aba - 7 * u); lineTo(izq + 7 * u, arr + a + 5 * u); quadraticTo(cx, arr - a * 0.7f + 12 * u, der - 7 * u, arr + a + 5 * u); lineTo(der - 7 * u, aba - 7 * u); close() }, tenue, style = Stroke(1f * u))
+                var y = arr + a + 24 * u
+                while (y < aba - 20 * u) { listOf(izq, der).forEach { x -> remacheVapor(Offset(x, y), 2.4f * u, e.primary.copy(alpha = 0.45f), Color.Transparent) }; y += 46 * u }
+                val g1 = Offset(izq + 46 * u, aba - 46 * u); val g2 = Offset(g1.x + 41 * u, g1.y - 16 * u)
+                drawPath(Vapor.engrane(g1, 26 * u, 14, 0.86f), tenue, style = Stroke(1.2f * u)); drawCircle(tenue, 6 * u, g1, style = Stroke(1f * u))
+                drawPath(Vapor.engrane(g2, 17 * u, 10, 0.82f, giro = 0.3), tenue, style = Stroke(1.2f * u)); drawCircle(tenue, 4 * u, g2, style = Stroke(1f * u))
+                val cw = 96 * u; val ch = 34 * u; val o = Offset(der - 10 * u - cw, aba - 10 * u - ch)
+                drawRect(tenue, o, Size(cw, ch), style = Stroke(1f * u))
+                drawLine(tenue, o + Offset(0f, ch / 2), o + Offset(cw, ch / 2), 0.8f * u); drawLine(tenue, o + Offset(cw * 0.4f, 0f), o + Offset(cw * 0.4f, ch), 0.8f * u)
+            }
             TemaId.LABORATORIO -> {
                 // Esquinas redondeadas y una escala graduada a la izquierda, como una probeta.
                 drawRoundRect(col, Offset(izq, arr), Size(der - izq, aba - arr), CornerRadius(18 * u), style = Stroke(1.2f * u))
@@ -415,6 +432,26 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 }, c, style = Stroke(g))
                 concavo(0f, col, 1.4f * u); concavo(6 * u, e.tertiary.copy(alpha = 0.35f), 0.8f * u)
                 listOf(Offset(cx, arr), Offset(cx, aba)).forEach { c -> estrellaMarco(c, 6 * u, 5, e.tertiary.copy(alpha = 0.6f)) }
+            }
+            TemaId.DECO -> {
+                // Doble filete con las cuatro esquinas escalonadas, como el marco de un cartel de naviera, y un abanico
+                // solar arriba y abajo al centro.
+                val k = 7 * u
+                fun escalonado(d: Float, c: Color, g: Float) = drawPath(Path().apply {
+                    moveTo(izq + d + 3 * k, arr + d); lineTo(der - d - 3 * k, arr + d); lineTo(der - d - 3 * k, arr + d + k); lineTo(der - d - 2 * k, arr + d + k)
+                    lineTo(der - d - 2 * k, arr + d + 2 * k); lineTo(der - d - k, arr + d + 2 * k); lineTo(der - d - k, arr + d + 3 * k); lineTo(der - d, arr + d + 3 * k)
+                    lineTo(der - d, aba - d - 3 * k); lineTo(der - d - k, aba - d - 3 * k); lineTo(der - d - k, aba - d - 2 * k); lineTo(der - d - 2 * k, aba - d - 2 * k)
+                    lineTo(der - d - 2 * k, aba - d - k); lineTo(der - d - 3 * k, aba - d - k); lineTo(der - d - 3 * k, aba - d); lineTo(izq + d + 3 * k, aba - d)
+                    lineTo(izq + d + 3 * k, aba - d - k); lineTo(izq + d + 2 * k, aba - d - k); lineTo(izq + d + 2 * k, aba - d - 2 * k); lineTo(izq + d + k, aba - d - 2 * k)
+                    lineTo(izq + d + k, aba - d - 3 * k); lineTo(izq + d, aba - d - 3 * k); lineTo(izq + d, arr + d + 3 * k); lineTo(izq + d + k, arr + d + 3 * k)
+                    lineTo(izq + d + k, arr + d + 2 * k); lineTo(izq + d + 2 * k, arr + d + 2 * k); lineTo(izq + d + 2 * k, arr + d + k); lineTo(izq + d + 3 * k, arr + d + k); close()
+                }, c, style = Stroke(g))
+                escalonado(0f, col, 1.4f * u); escalonado(5 * u, e.primary.copy(alpha = 0.4f), 0.8f * u)
+                listOf(arr to 1f, aba to -1f).forEach { (y, s) ->
+                    val rr = 11 * u; val b = Offset(cx, y + s * 2 * u)
+                    for (i in 0 until 7) if (i % 2 == 0) drawArc(e.primary.copy(alpha = 0.7f), (if (s > 0) 0f else 180f) + i * 180f / 7, 180f / 7, true, Offset(b.x - rr, b.y - rr), Size(2 * rr, 2 * rr))
+                    drawCircle(e.secondary.copy(alpha = 0.7f), 3 * u, b)
+                }
             }
             TemaId.BOTANICO -> {
                 // Pliego de herbario: filete fino, alfileres arriba y la etiqueta del ejemplar abajo a la derecha.
@@ -886,9 +923,11 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.DISTOPIA -> R.drawable.logo_distopia
     TemaId.REFUGIO -> R.drawable.logo_refugio
     TemaId.ORDEN -> R.drawable.logo_orden
+    TemaId.VAPOR -> R.drawable.logo_vapor
     TemaId.LABORATORIO -> R.drawable.logo_laboratorio
     TemaId.COLONOS -> R.drawable.logo_colonos
     TemaId.NAPOLEON -> R.drawable.logo_napoleon
+    TemaId.DECO -> R.drawable.logo_deco
     TemaId.BOTANICO -> R.drawable.logo_botanico
     TemaId.RUINAS -> R.drawable.logo_ruinas
     TemaId.NAVIDAD -> R.drawable.logo_navidad

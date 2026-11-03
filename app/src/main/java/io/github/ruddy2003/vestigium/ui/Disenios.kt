@@ -25,6 +25,10 @@ object LetraExtra {
     val fell = FontFamily(Font(R.font.fell, FontWeight.Normal))
     val bodoniTitulo = FontFamily(Font(R.font.bodoni_titulo, FontWeight.Normal), Font(R.font.bodoni_titulo, FontWeight.SemiBold))
     val bodoni = FontFamily(Font(R.font.bodoni_texto, FontWeight.Normal), Font(R.font.bodoni_titulo, FontWeight.SemiBold))
+    /** Poiret One: la línea fina y geométrica de los carteles y las marquesinas de los años veinte (títulos del Art déco). Tiene un solo peso. */
+    val poiret = FontFamily(Font(R.font.poiret_titulo, FontWeight.Normal), Font(R.font.poiret_titulo, FontWeight.Medium), Font(R.font.poiret_titulo, FontWeight.SemiBold), Font(R.font.poiret_titulo, FontWeight.Bold))
+    /** «Pasaje Vestigium» (Josefin Sans renombrada): geométrica de aire años veinte, para leer el texto del Art déco. */
+    val pasaje = FontFamily(Font(R.font.pasaje_regular, FontWeight.Normal), Font(R.font.pasaje_regular, FontWeight.Medium), Font(R.font.pasaje_semibold, FontWeight.SemiBold), Font(R.font.pasaje_semibold, FontWeight.Bold))
     val textura = FontFamily(Font(R.font.gotica_textura, FontWeight.Normal))
     val orbita = FontFamily(Font(R.font.orbitron_medium, FontWeight.Normal), Font(R.font.orbitron_medium, FontWeight.Medium), Font(R.font.orbitron_bold, FontWeight.Bold), Font(R.font.orbitron_bold, FontWeight.SemiBold))
     val grotesk = FontFamily(Font(R.font.grotesk_regular, FontWeight.Normal), Font(R.font.grotesk_medium, FontWeight.Medium), Font(R.font.grotesk_medium, FontWeight.SemiBold))
@@ -63,6 +67,10 @@ object LetraExtra {
     val barlow = FontFamily(Font(R.font.barlow_regular, FontWeight.Normal), Font(R.font.barlow_semibold, FontWeight.SemiBold))
     /** Saira: la hermana de texto del estarcido de la orden. */
     val saira = FontFamily(Font(R.font.saira_regular, FontWeight.Normal), Font(R.font.saira_semibold, FontWeight.SemiBold))
+    /** «Caldera Vestigium» (Abril Fatface renombrada): la «fat face» de los carteles de ferrocarril y de las exposiciones del XIX. */
+    val caldera = FontFamily(Font(R.font.caldera_titulo, FontWeight.Normal), Font(R.font.caldera_titulo, FontWeight.Medium), Font(R.font.caldera_titulo, FontWeight.SemiBold), Font(R.font.caldera_titulo, FontWeight.Bold))
+    /** Bitter: egipcia de remates cuadrados, la familia de las letras de los horarios y los billetes de tren, para leer en párrafos. */
+    val bitter = FontFamily(Font(R.font.bitter_regular, FontWeight.Normal), Font(R.font.bitter_regular, FontWeight.Medium), Font(R.font.bitter_semibold, FontWeight.SemiBold), Font(R.font.bitter_semibold, FontWeight.Bold))
     /** Old Standard: la letra de los periódicos del siglo XIX. */
     val gaceta = FontFamily(Font(R.font.oldstandard_regular, FontWeight.Normal), Font(R.font.oldstandard_bold, FontWeight.Bold), Font(R.font.oldstandard_bold, FontWeight.SemiBold))
     /** Crimson Pro: el libro del naturalista. */
@@ -210,6 +218,18 @@ internal val ordenOscuro = esquema(true, 0xFF101215, 0xFF171A1E, 0xFF22262B, 0xF
 internal val tipoOrden = tipografia(LetraExtra.estarcido, FontWeight.Normal, 1.05f, 1.6f, LetraExtra.saira, 0.98f, LetraExtra.saira, 1f)
 
 // ---------------------------------------------------------------------
+//  Vapor victoriano: de día, el papel crema de los planos de patente, con la tinta de hollín, el latón bruñido, el
+//  cardenillo (la pátina verde del cobre y del latón) y el ladrillo de las fábricas; de noche, la sala de máquinas a la
+//  luz del gas: hollín, el latón que brilla, el cardenillo aclarado y el ladrillo al rojo.
+// ---------------------------------------------------------------------
+internal val vaporClaro = esquema(false, 0xFFE9DFC8, 0xFFF4ECD9, 0xFFDCCEAF, 0xFFB9A47C, 0xFF231B14, 0xFF5F5040,
+    0xFF8A5A14, 0xFFFFF6E4, 0xFFF0DDB6, 0xFF2A1D0A, 0xFF2F6B5E, 0xFFD2E4DC, 0xFF9C3D24, 0xFF8E1F14)
+internal val vaporOscuro = esquema(true, 0xFF14110E, 0xFF1D1914, 0xFF29231B, 0xFF453A2B, 0xFFEADCC0, 0xFFB09F82,
+    0xFFDBA641, 0xFF1E1404, 0xFF3D2D10, 0xFFF5E6C6, 0xFF74B8A4, 0xFF1D3630, 0xFFE27A55, 0xFFFF8A76)
+/** Caldera (Abril Fatface) en los títulos, apenas espaciada como en los carteles; Bitter, egipcia de horario, en el texto y los datos. */
+internal val tipoVapor = tipografia(LetraExtra.caldera, FontWeight.Normal, 1.06f, 0.3f, LetraExtra.bitter, 0.98f, LetraExtra.bitter, 1.0f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
 //  Laboratorio: blanco clínico, cian y violeta; geometría limpia.
 // ---------------------------------------------------------------------
 internal val laboratorioClaro = esquema(false, 0xFFF4F7F9, 0xFFFFFFFF, 0xFFE6EDF2, 0xFFCBD6DF, 0xFF12202B, 0xFF4D5D6B,
@@ -235,6 +255,16 @@ internal val napoleonClaro = esquema(false, 0xFFF4EEDF, 0xFFFBF7EC, 0xFFEAE1CB, 
 internal val napoleonOscuro = esquema(true, 0xFF0B1230, 0xFF121A3D, 0xFF1B2550, 0xFF2C3970, 0xFFF1E9D2, 0xFFB3AE9C,
     0xFFD9B25B, 0xFF1A1405, 0xFF263266, 0xFFF1E9D2, 0xFFE05A6A, 0xFF3A1420, 0xFF9DB4FF, 0xFFFF8A80)
 internal val tipoNapoleon = tipografia(LetraExtra.bodoniTitulo, FontWeight.Normal, 1.06f, 1.7f, LetraExtra.bodoni, 1.06f, LetraExtra.bodoni, 1.08f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
+//  Art déco: los años veinte. De día, marfil de pasaje de primera clase con laca negra, oro viejo y jade; de noche, la
+//  laca negra de un salón de baile con el oro de las marquesinas, el jade de los ascensores y el coral de los cocteles.
+// ---------------------------------------------------------------------
+internal val decoClaro = esquema(false, 0xFFF3ECDC, 0xFFFBF7EE, 0xFFE8DEC6, 0xFFC7B48A, 0xFF16130E, 0xFF5A5246,
+    0xFF84610F, 0xFFFFFBF0, 0xFFF0E1B8, 0xFF1A1408, 0xFF1F6B57, 0xFFD3E6DD, 0xFFB5523B, 0xFF9A2A1F)
+internal val decoOscuro = esquema(true, 0xFF0D0C0A, 0xFF15130F, 0xFF201C15, 0xFF4A3E24, 0xFFF0E6CC, 0xFFB4A888,
+    0xFFD9B44A, 0xFF161004, 0xFF3A2E12, 0xFFF6E7BE, 0xFF5FB59A, 0xFF16332B, 0xFFE48A6E, 0xFFFF8A7A)
+internal val tipoDeco = tipografia(LetraExtra.poiret, FontWeight.Normal, 1.1f, 2.0f, LetraExtra.pasaje, 1.04f, LetraExtra.pasaje, 1.06f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Botánico: el cuaderno de un naturalista viajero. Papel envejecido, tinta sepia, verde musgo, óxido de hormiga
@@ -422,9 +452,12 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFFE0262F, 0xFF2A2C2E, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFFB3121B, 0xFFCFCBC0, 0xFF2E3B44, 0xFFB3121B)
     TemaId.REFUGIO -> if (oscuro) listOf(0xFFFFB23F, 0xFF112016, 0xFF3DFF7F, 0xFF3DFF7F) else listOf(0xFFD9572B, 0xFFE6DAB8, 0xFF1C6E6A, 0xFF1C6E6A)
     TemaId.ORDEN -> if (oscuro) listOf(0xFFD0333B, 0xFF262A30, 0xFF8FB3C8, 0xFFD6B25A) else listOf(0xFF9E1B22, 0xFFD3D7DC, 0xFF2F4858, 0xFF7E6219)
+    // Del ladrillo (bajo) al cardenillo (alto), pasando por el papel de plano o el hollín; fuerte, el latón.
+    TemaId.VAPOR -> if (oscuro) listOf(0xFFE27A55, 0xFF29231B, 0xFF74B8A4, 0xFFDBA641) else listOf(0xFF9C3D24, 0xFFDCCEAF, 0xFF2F6B5E, 0xFF8A5A14)
     TemaId.LABORATORIO -> if (oscuro) listOf(0xFFFF7A9A, 0xFF18222F, 0xFF3CD2E5, 0xFF3CD2E5) else listOf(0xFFC0466A, 0xFFE6EDF2, 0xFF0B8FA1, 0xFF0B8FA1)
     TemaId.COLONOS -> if (oscuro) listOf(0xFFE07A62, 0xFF1E2838, 0xFF8FB3E0, 0xFFE3C27A) else listOf(0xFFA23B2A, 0xFFE7DDC8, 0xFF1F3A5F, 0xFF7A5A2E)
     TemaId.NAPOLEON -> if (oscuro) listOf(0xFFE05A6A, 0xFF1B2550, 0xFF9DB4FF, 0xFFD9B25B) else listOf(0xFFA3172E, 0xFFEAE1CB, 0xFF1E3A8A, 0xFFB8892B)
+    TemaId.DECO -> if (oscuro) listOf(0xFFE48A6E, 0xFF201C15, 0xFF5FB59A, 0xFFD9B44A) else listOf(0xFFB5523B, 0xFFE8DEC6, 0xFF1F6B57, 0xFF84610F)
     TemaId.BOTANICO -> if (oscuro) listOf(0xFFE09A5E, 0xFF2A251B, 0xFFA9C27A, 0xFF6FC2B0) else listOf(0xFF8C4A22, 0xFFE3D9C0, 0xFF3F5A2C, 0xFF2E5E5A)
     TemaId.RUINAS -> if (oscuro) listOf(0xFFE08A55, 0xFF212923, 0xFF8FCB6A, 0xFFE9C25A) else listOf(0xFFA34A1E, 0xFFD6D6CC, 0xFF3E6B2A, 0xFFB57A0E)
     TemaId.NAVIDAD -> if (oscuro) listOf(0xFFE5484D, 0xFF1C3125, 0xFF66BB6A, 0xFFF2C94C) else listOf(0xFFB71C1C, 0xFFECE4D6, 0xFF1B5E20, 0xFFC9A227)
@@ -458,9 +491,12 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFF6D7377, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFF6D7377, 0xFF2E3B44, 0xFFB3121B)
     TemaId.REFUGIO -> if (oscuro) listOf(0xFF1E8A45, 0xFF3DFF7F, 0xFFFFB23F) else listOf(0xFF1C6E6A, 0xFFB98A15, 0xFFD9572B)
     TemaId.ORDEN -> if (oscuro) listOf(0xFF8FB3C8, 0xFFD6B25A, 0xFFD0333B) else listOf(0xFF2F4858, 0xFF7E6219, 0xFF9E1B22)
+    // Como una caldera que se calienta: cardenillo frío, latón tibio, ladrillo al rojo.
+    TemaId.VAPOR -> if (oscuro) listOf(0xFF5E9C8A, 0xFFDBA641, 0xFFE8603A) else listOf(0xFF2F6B5E, 0xFFB8862B, 0xFF9C3D24)
     TemaId.LABORATORIO -> if (oscuro) listOf(0xFF3CD2E5, 0xFF9D93FF, 0xFFFF7A9A) else listOf(0xFF0B8FA1, 0xFF5E4FD1, 0xFFC0466A)
     TemaId.COLONOS -> if (oscuro) listOf(0xFF8FB3E0, 0xFFE3C27A, 0xFFE07A62) else listOf(0xFF1F3A5F, 0xFF7A5A2E, 0xFFA23B2A)
     TemaId.NAPOLEON -> if (oscuro) listOf(0xFF9DB4FF, 0xFFD9B25B, 0xFFE05A6A) else listOf(0xFF1E3A8A, 0xFFB8892B, 0xFFA3172E)
+    TemaId.DECO -> if (oscuro) listOf(0xFF5FB59A, 0xFFD9B44A, 0xFFE48A6E) else listOf(0xFF1F6B57, 0xFFA8801E, 0xFFB5523B)   // jade, oro, coral
     TemaId.BOTANICO -> if (oscuro) listOf(0xFF6FC2B0, 0xFFA9C27A, 0xFFE09A5E) else listOf(0xFF2E5E5A, 0xFF3F5A2C, 0xFF8C4A22)
     TemaId.RUINAS -> if (oscuro) listOf(0xFF8FCB6A, 0xFFE9C25A, 0xFFE0604A) else listOf(0xFF3E6B2A, 0xFFB57A0E, 0xFFB3261E)   // el semáforo: verde, ámbar, rojo
     TemaId.NAVIDAD -> if (oscuro) listOf(0xFF66BB6A, 0xFFF2C94C, 0xFFE5484D) else listOf(0xFF1B5E20, 0xFFC9A227, 0xFFB71C1C)

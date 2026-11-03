@@ -1,5 +1,5 @@
 """
-Los sellos del día (huella_<id>.png + huella_fondo_<id>.jpg, 720 × 720): el fondo de cada tema y, encima, la huella
+Los sellos del día (huella_<id>.webp, WebP sin pérdida, + huella_fondo_<id>.jpg, 720 × 720): el fondo de cada tema y, encima, la huella
 maestra (maestra.py) en el material del tema. Lote 1 del plan de diseño: una sola huella en toda la app.
 
 - Siete temas se dibujan enteros aquí: botánico, gótico, espacio, Al-Ándalus, mongol, Renacimiento y Tierras Antiguas
@@ -42,7 +42,7 @@ def guardar(img_fondo, img_huella, tema):
     """[img_fondo] puede ser una imagen o la ruta de un JPG que se copia tal cual (sin volver a comprimirlo)."""
     if isinstance(img_fondo, str): shutil.copyfile(img_fondo, os.path.join(OUT, f'huella_fondo_{tema}.jpg'))
     else: img_fondo.convert('RGB').save(os.path.join(OUT, f'huella_fondo_{tema}.jpg'), quality=88)
-    img_huella.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE).save(os.path.join(OUT, f'huella_{tema}.png'), optimize=True)
+    img_huella.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE).save(os.path.join(OUT, f'huella_{tema}.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
 
 
 def desenfocar(a, s):
@@ -406,6 +406,56 @@ def espacio(tam):
         i = r.integers(len(xs)); s = 0.8 + r.random() * 1.6
         d2.ellipse([xs[i] - s, ys[i] - s, xs[i] + s, ys[i] + s], fill=(255, 255, 255, 255))
     guardar(fondo, capa, 'espacio')
+
+# ------------------------------------------------------------------ Art déco
+def deco(tam):
+    """Un panel de laca negra de los años veinte: un sol de rayos que nace del pie, abanicos de oro en escamas y
+    filetes escalonados en las esquinas; encima, la huella incrustada en pan de oro, con su brillo de metal."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    laca = mezcla(col('#0E0C0A'), col('#1E1A14'), ruido(tam, tam / 18, 71) * 0.8)
+    # El brillo de la laca: una franja diagonal muy suave.
+    diag = np.exp(-(((xx - yy * 0.7) - tam * 0.35) / (tam * 0.22)) ** 2)
+    laca = laca + diag[..., None] * 10
+    fondo = a_img(laca)
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    oro = (212, 175, 55)
+    # Escamas de abanico en filas alternas, muy tenues.
+    r = tam / 9
+    fila = 0; y = r * 0.6
+    while y < tam + r:
+        x = (r if fila % 2 else 0)
+        while x < tam + r:
+            for k, a in ((1.0, 34), (0.62, 26), (0.3, 20)):
+                d.arc([x - r * k, y - r * k, x + r * k, y + r * k], 180, 360, fill=oro + (a,), width=max(1, int(tam / 360)))
+            x += 2 * r
+        y += r * 0.78; fila += 1
+    # El sol de rayos que nace del pie, alternando rayos anchos y finos.
+    c = (tam / 2, tam * 1.02)
+    for i in range(25):
+        ang = math.pi + (i + 0.5) * math.pi / 25
+        a0, a1 = ang - (0.022 if i % 2 == 0 else 0.008), ang + (0.022 if i % 2 == 0 else 0.008)
+        largo = tam * 1.2
+        d.polygon([c, (c[0] + largo * math.cos(a0), c[1] + largo * math.sin(a0)), (c[0] + largo * math.cos(a1), c[1] + largo * math.sin(a1))],
+                  fill=oro + (46 if i % 2 == 0 else 30,))
+    # Tres escalones de filete en cada esquina.
+    g = max(2, int(tam / 180)); paso = tam / 22; m0 = tam / 28
+    for (ox, oy, sx, sy) in ((m0, m0, 1, 1), (tam - m0, m0, -1, 1), (m0, tam - m0, 1, -1), (tam - m0, tam - m0, -1, -1)):
+        pts = [(ox, oy + sy * 4 * paso)]
+        for k in range(1, 4):
+            pts += [(ox + sx * k * paso, oy + sy * (5 - k) * paso), (ox + sx * k * paso, oy + sy * (4 - k) * paso)]
+        pts += [(ox + sx * 4 * paso, oy + sy * paso), (ox + sx * 4 * paso, oy)]
+        d.line(pts, fill=oro + (150,), width=g)
+    # La huella en pan de oro: gradiente de metal (oscuro, claro, oscuro) cruzado, con relieve y algún hueco de la hoja.
+    t = (np.sin((xx + yy) / tam * math.pi * 3.2) + 1) / 2
+    metal = mezcla(col('#8A6A1E'), col('#F3D98A'), t ** 1.6)
+    metal = mezcla(metal, col('#C9A23C'), ruido(tam, tam / 60, 72) * 0.4)
+    luz = relieve(m, (-1, -1), 1.2)
+    metal = np.clip(metal + luz[..., None] * 60, 0, 255)
+    hojas = ruido(tam, tam / 90, 73)
+    alfa = m * np.clip(0.96 - np.clip(hojas - 0.82, 0, 1) * 3, 0, 1)
+    capa = a_rgba(metal, alfa)
+    guardar(fondo, capa, 'deco')
 
 # ------------------------------------------------------------------ Ciudad neón
 def neon(tam):
@@ -805,6 +855,50 @@ def urbe(tam):
     capa = a_rgba(rgb, alfa)
     guardar(fondo, capa, 'urbe')
 
+
+def vapor(tam):
+    """La puerta de una caldera: chapa de hierro ennegrecida por el hollín, con sus costuras y filas de remaches de latón,
+    el bisel de latón de un manómetro con su escala por el borde y, encima, la huella en latón bruñido, con relieve y algo
+    de cardenillo en los surcos."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    cx = cy = tam / 2
+    dist = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2) / (tam / 2)
+    hierro = mezcla(col('#3A342D'), col('#24201C'), ruido(tam, tam / 18, 141))
+    hierro = hierro * (0.92 + 0.12 * ruido(tam, 1.0, 142)[..., None])
+    hollin = np.clip((ruido(tam, tam / 10, 143) - 0.45) * 2, 0, 1) * 0.5
+    hierro = mezcla(hierro, col('#120F0C'), hollin)
+    for yc in (tam * 0.2, tam * 0.8):
+        hierro = mezcla(hierro, col('#14110E'), (np.abs(yy - yc) < tam / 300).astype(np.float32) * 0.8)
+    fondo = a_img(hierro).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    r0 = tam * 0.475
+    d.ellipse([cx - r0, cy - r0, cx + r0, cy + r0], outline=(201, 160, 74, 255), width=int(tam * 0.024))
+    r1 = r0 - tam * 0.03
+    for k in range(60):
+        a = math.radians(k * 6); l = tam * (0.042 if k % 5 == 0 else 0.022)
+        d.line([(cx + r1 * math.cos(a), cy + r1 * math.sin(a)), (cx + (r1 - l) * math.cos(a), cy + (r1 - l) * math.sin(a))],
+               fill=(201, 160, 74, 210), width=max(1, int(tam * (0.006 if k % 5 == 0 else 0.003))))
+    for yc in (tam * 0.2 - tam * 0.028, tam * 0.2 + tam * 0.028, tam * 0.8 - tam * 0.028, tam * 0.8 + tam * 0.028):
+        for x in np.arange(tam * 0.08, tam * 0.94, tam * 0.06):
+            if math.hypot(x - cx, yc - cy) < r1 - tam * 0.08:
+                rr = tam * 0.011
+                d.ellipse([x - rr, yc - rr, x + rr, yc + rr], fill=(176, 134, 43, 255))
+                d.ellipse([x - rr * 0.85, yc - rr * 0.85, x + rr * 0.15, yc + rr * 0.15], fill=(240, 212, 144, 170))
+    arr = np.array(fondo.convert('RGB')).astype(np.float32)
+    arr = mezcla(arr, col('#0E0C0A'), np.clip((dist - 0.975) * 10, 0, 1))
+    fondo = a_img(arr)
+    sh = relieve(m, fuerza=1.3)[..., None]
+    luz = np.clip(1 - np.abs((xx + yy) / tam - 0.9) * 1.4, 0, 1) ** 2
+    laton = mezcla(col('#8A5A14'), col('#E8C470'), np.clip(luz * 0.8 + ruido(tam, tam / 40, 144) * 0.3, 0, 1))
+    laton = mezcla(laton, col('#4E8F7E'), np.clip((ruido(tam, tam / 60, 145) - 0.72) * 3, 0, 1) * 0.4)
+    rgb = laton * (1 + sh * 0.5)
+    capa = a_rgba(rgb, m)
+    sombra = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(tam / 120))).astype(np.float32) / 255
+    base = a_rgba(np.zeros((tam, tam, 3)) + col('#0A0806'), np.roll(np.roll(sombra, 4, 0), 4, 1) * 0.6)
+    base.alpha_composite(capa)
+    guardar(fondo, base, 'vapor')
+
 # ------------------------------------------------------------------ Tierras Antiguas
 def runas_pil(d, x, y, ancho, alto, n, color, grosor, semilla):
     """Signos inventados (trazos rectos y ángulos), como en TrofeosMas.runas."""
@@ -1034,11 +1128,11 @@ CATORCE = ['romano', 'ciber', 'heleno', 'medieval', 'distopia', 'refugio', 'orde
 
 def extraer(res, temas=CATORCE):
     """Una sola vez, con los PNG viejos: separa fondo, material y ornamento de cada sello y los guarda en fuentes/."""
-    vieja = np.asarray(Image.open(os.path.join(res, 'huella_romano.png')).convert('RGBA'), np.float32)[..., 3] / 255   # el sello romano era solo la huella
+    vieja = np.asarray(Image.open(os.path.join(res, 'huella_romano.webp')).convert('RGBA'), np.float32)[..., 3] / 255   # el sello romano era solo la huella
     cerca = desenfocar(vieja, 4) > 0.04
     dentro = desenfocar(vieja, 25) > 0.02     # todo el óvalo de la huella vieja, con sus valles
     for t in temas:
-        fg = np.asarray(Image.open(os.path.join(res, f'huella_{t}.png')).convert('RGBA'), np.float32)
+        fg = np.asarray(Image.open(os.path.join(res, f'huella_{t}.webp')).convert('RGBA'), np.float32)
         rgb, a = fg[..., :3], fg[..., 3] / 255
         crestas = (vieja > 0.6) & (a > 0.6)
         if t == 'laboratorio': crestas &= rgb[..., 0] < rgb[..., 1]    # sin las líneas rosas de las minucias
@@ -1205,6 +1299,7 @@ SIETE = [
     'ruinas',
     'gotico',
     'arcano',
+    'deco',
     'espacio',
     'abismo',
     'urbe',
@@ -1218,6 +1313,7 @@ SIETE = [
     'antiguas',
     'cueva',
     'templario',
+    'vapor',
 ]
 ORDEN = [
     'romano',
@@ -1231,9 +1327,11 @@ ORDEN = [
     'distopia',
     'refugio',
     'orden',
+    'vapor',
     'laboratorio',
     'colonos',
     'napoleon',
+    'deco',
     'botanico',
     'ruinas',
     'navidad',
@@ -1262,7 +1360,7 @@ def hoja_contacto(archivo, temas=ORDEN):
     imgs = []
     for t in temas:
         f = Image.open(os.path.join(OUT, f'huella_fondo_{t}.jpg')).convert('RGBA')
-        f.alpha_composite(Image.open(os.path.join(OUT, f'huella_{t}.png')).convert('RGBA'))
+        f.alpha_composite(Image.open(os.path.join(OUT, f'huella_{t}.webp')).convert('RGBA'))
         imgs.append(f)
     hoja_de_contacto(imgs, archivo, mascaras=[circulo] * len(imgs))
 

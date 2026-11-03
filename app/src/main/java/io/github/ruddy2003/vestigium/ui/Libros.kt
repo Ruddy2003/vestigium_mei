@@ -123,6 +123,7 @@ fun soporte(t: TemaId): Soporte = when (t) {
     TemaId.TEMPLARIO -> Soporte.LIBRO
     TemaId.COLONOS -> Soporte.LIBRO
     TemaId.ORDEN -> Soporte.LIBRO
+    TemaId.VAPOR -> Soporte.LIBRO
     TemaId.BOTANICO -> Soporte.LIBRO
     TemaId.RUINAS -> Soporte.LIBRO
     TemaId.URSS -> Soporte.LIBRO
@@ -137,6 +138,7 @@ fun soporte(t: TemaId): Soporte = when (t) {
     TemaId.ANTIGUAS -> Soporte.LIBRO
     TemaId.CUEVA -> Soporte.LIBRO      // una laja que se da vuelta, como una tapa
     TemaId.NAPOLEON -> Soporte.SOBRE
+    TemaId.DECO -> Soporte.SOBRE
     TemaId.NAVIDAD -> Soporte.SOBRE
     TemaId.DISTOPIA -> Soporte.CARPETA
     TemaId.CIBER -> Soporte.PANTALLA
@@ -167,6 +169,8 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.TEMPLARIO -> Materia(c(0xFFE6DDC6), c(0xFFA39880), c(0xFFFBF7EC), c(0xFFB0191F), c(0xFF4A4E54), c(0xFFF4EFE2), c(0xFF201E1B), extra = c(0xFF5A3A22))
     TemaId.COLONOS -> Materia(c(0xFF4A3423), c(0xFF2B1D12), c(0xFF6A4D35), c(0xFFB8893A), c(0xFF2E2016), c(0xFFF1E6CC), c(0xFF1E1A16), extra = c(0xFF9E2B25))
     TemaId.ORDEN -> Materia(c(0xFF4A525C), c(0xFF2A2F35), c(0xFF6E7883), c(0xFFC9A54A), c(0xFFA3172E), c(0xFFD6D9DC), c(0xFF1C2127))
+    // El registro de patentes: tela verde de libro mayor, cantoneras de latón, lomo de ladrillo y el papel crema de los planos.
+    TemaId.VAPOR -> Materia(c(0xFF34473C), c(0xFF1D2A22), c(0xFF52685A), c(0xFFC9A04A), c(0xFF9C3D24), c(0xFFEFE4CB), c(0xFF231B14), extra = c(0xFFE2BE6A))
     TemaId.BOTANICO -> Materia(c(0xFF6B4A2E), c(0xFF432C19), c(0xFF8C6844), c(0xFFC9A54A), c(0xFF2E5E5A), c(0xFFF2EAD3), c(0xFF2A2318), extra = c(0xFF8C4A22))
     // Lona verde gastada, cinta plateada, óxido, papel reciclado y una hoja de hiedra.
     TemaId.RUINAS -> Materia(c(0xFF5B6B45), c(0xFF333D27), c(0xFF7A8A60), c(0xFFB8BCB8), c(0xFFA34A1E), c(0xFFE6E3D6), c(0xFF1F2420), extra = c(0xFF7FA35A))
@@ -186,6 +190,8 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.URSS -> Materia(c(0xFFB71C1C), c(0xFF6E0F0F), c(0xFFD84343), c(0xFFE8B923), c(0xFF161414), c(0xFFEFE6D2), c(0xFF161414))
     TemaId.LABORATORIO -> Materia(c(0xFF20323F), c(0xFF101B23), c(0xFF3A5363), c(0xFF3CD2E5), c(0xFFFFFFFF), c(0xFFF7FBFC), c(0xFF1B2733))
     TemaId.NAPOLEON -> Materia(c(0xFFF1E6CC), c(0xFFC9B48A), c(0xFFFBF5E6), c(0xFFA3172E), c(0xFF1E3A8A), c(0xFFF6F0E0), c(0xFF14213D), extra = c(0xFFD9B25B))
+    // El pasaje de primera clase: cartulina marfil, talón de laca, oro de imprenta, jade y el lacre coral.
+    TemaId.DECO -> Materia(c(0xFFF3EAD4), c(0xFFC9B48A), c(0xFFFBF6EA), c(0xFFB8952E), c(0xFF1F6B57), c(0xFFF6F0E1), c(0xFF16130E), extra = c(0xFFB5523B))
     TemaId.NAVIDAD -> Materia(c(0xFFB71C1C), c(0xFF7A1010), c(0xFFD84343), c(0xFFC9A227), c(0xFF1B5E20), c(0xFFFBF6EC), c(0xFF1E2A22), extra = c(0xFFFF5252), textoCuerpo = c(0xFFFBF6EC))
     TemaId.DISTOPIA -> Materia(c(0xFFD8C08A), c(0xFFA88F58), c(0xFFE8D4A4), c(0xFFC8102E), c(0xFF141414), c(0xFFF2EFE6), c(0xFF141414))
     TemaId.CIBER -> Materia(c(0xFF0A1416), c(0xFF030708), c(0xFF132529), c(0xFF00E5FF), c(0xFF2C8C99), c(0xFF030708), c(0xFFBDEFF5), extra = c(0xFFC8FBFF))
@@ -241,12 +247,16 @@ private fun nocheDe(t: TemaId): NocheTema = when (t) {
     TemaId.REFUGIO -> NocheTema(c(0xFF1A1003), c(0xFFFFB23F), 0.7f, 0.85f, c(0xFFFFC870))
     // Brasas de la forja.
     TemaId.ORDEN -> NocheTema(c(0xFF14181D), c(0xFFE8743A), 0.66f, 0.82f, c(0xFFF3C9A8))
+    // La sala de máquinas de noche: hollín azulado y la luz amarilla del gas de alumbrado.
+    TemaId.VAPOR -> NocheTema(c(0xFF16161B), c(0xFFF2C46A), 0.62f, 0.8f, c(0xFFF4E2B8))
     // La lámpara ultravioleta del laboratorio.
     TemaId.LABORATORIO -> NocheTema(c(0xFF0F0B22), c(0xFFB59CFF), 0.72f, 0.87f, c(0xFFE3DAFF))
     // El farol del pueblo.
     TemaId.COLONOS -> NocheTema(c(0xFF0F1626), c(0xFFF0A860), 0.64f, 0.8f, c(0xFFF3DDBF))
     // El fuego del vivac.
     TemaId.NAPOLEON -> NocheTema(c(0xFF0C1433), c(0xFFE8C35A), 0.66f, 0.83f, c(0xFFF1E3B8))
+    // La noche en alta mar desde la cubierta de paseo, con el oro de las luces del salón.
+    TemaId.DECO -> NocheTema(c(0xFF0A0C14), c(0xFFF2D27A), 0.62f, 0.82f, c(0xFFF0E6CC))
     // Luciérnagas en el bosque.
     TemaId.BOTANICO -> NocheTema(c(0xFF0B1A14), c(0xFFC6F06A), 0.7f, 0.85f, c(0xFFE6F2C8))
     // La luna fría sobre las azoteas, sin una sola luz eléctrica.
@@ -312,9 +322,11 @@ fun materiaNoche(t: TemaId): Materia {
         TemaId.TEMPLARIO -> materiaTenida(m, n)
         TemaId.DISTOPIA -> materiaTenida(m, n)
         TemaId.ORDEN -> materiaTenida(m, n)
+        TemaId.VAPOR -> materiaTenida(m, n)
         TemaId.LABORATORIO -> materiaTenida(m, n)
         TemaId.COLONOS -> materiaTenida(m, n)
         TemaId.NAPOLEON -> materiaTenida(m, n)
+        TemaId.DECO -> materiaTenida(m, n)
         TemaId.BOTANICO -> materiaTenida(m, n)
         TemaId.RUINAS -> materiaTenida(m, n)
         TemaId.NAVIDAD -> materiaTenida(m, n)
@@ -356,9 +368,11 @@ fun paginaNoche(t: TemaId): Pagina {
         TemaId.TEMPLARIO -> paginaTenida(p, n)
         TemaId.DISTOPIA -> paginaTenida(p, n)
         TemaId.ORDEN -> paginaTenida(p, n)
+        TemaId.VAPOR -> paginaTenida(p, n)
         TemaId.LABORATORIO -> paginaTenida(p, n)
         TemaId.COLONOS -> paginaTenida(p, n)
         TemaId.NAPOLEON -> paginaTenida(p, n)
+        TemaId.DECO -> paginaTenida(p, n)
         TemaId.BOTANICO -> paginaTenida(p, n)
         TemaId.RUINAS -> paginaTenida(p, n)
         TemaId.NAVIDAD -> paginaTenida(p, n)
@@ -391,9 +405,11 @@ fun rotuloSueno(t: TemaId): String = when (t) {
     TemaId.DISTOPIA -> "INFORME DE ACTIVIDAD ONÍRICA"
     TemaId.REFUGIO -> "REGISTRO ONÍRICO · TERMINAL 03"
     TemaId.ORDEN -> "PARTE NOCTURNO"
+    TemaId.VAPOR -> "Sueños del turno de noche"
     TemaId.LABORATORIO -> "REGISTRO DE SUEÑO"
     TemaId.COLONOS -> "Lo soñado"
     TemaId.NAPOLEON -> "SONGE · sueño"
+    TemaId.DECO -> "SUEÑOS DE CAMAROTE"
     TemaId.BOTANICO -> "Flora nocturna"
     TemaId.RUINAS -> "Sueños en la azotea"
     TemaId.NAVIDAD -> "Sueños junto al fuego"
@@ -427,9 +443,11 @@ fun colofonSueno(t: TemaId): String = when (t) {
     TemaId.DISTOPIA -> "FIN DEL INFORME NOCTURNO"
     TemaId.REFUGIO -> "FIN DEL REGISTRO"
     TemaId.ORDEN -> "TOQUE DE DIANA"
+    TemaId.VAPOR -> "— silba el tren del alba —"
     TemaId.LABORATORIO -> "fin del registro onírico"
     TemaId.COLONOS -> "Y amaneció."
     TemaId.NAPOLEON -> "Réveil."
+    TemaId.DECO -> "Y sonó la campana del desayuno."
     TemaId.BOTANICO -> "Se cerraron las flores de la noche."
     TemaId.RUINAS -> "Amaneció sobre las azoteas."
     TemaId.NAVIDAD -> "Y llegó la mañana."
@@ -534,9 +552,13 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
             TemaId.DISTOPIA -> drawCircle(col.copy(alpha = col.alpha * 0.45f), r * 0.8f, o)
             TemaId.REFUGIO -> { val p = r * 0.8f; drawRect(col, Offset(o.x - p / 2, o.y - p * 1.5f), Size(p, p * 3)); drawRect(col, Offset(o.x - p * 1.5f, o.y - p / 2), Size(p * 3, p)) }
             TemaId.ORDEN -> { drawLine(col, o - Offset(r * 2.4f, 0f), o + Offset(r * 2.4f, 0f), 1f); drawLine(col, o - Offset(0f, r * 2.4f), o + Offset(0f, r * 2.4f), 1f); drawCircle(col, r * 0.7f, o) }
+            // Con tanto hollín apenas se ven estrellas: son chispas de la chimenea que suben, con su halo.
+            TemaId.VAPOR -> { drawCircle(col.copy(alpha = col.alpha * 0.25f), r * 2f, o); drawCircle(col, r * 0.6f, o); if (i % 5 == 0) drawLine(col.copy(alpha = col.alpha * 0.5f), o, o + Offset(-r * 1.5f, r * 3f), 0.8f) }
             TemaId.LABORATORIO -> { drawLine(col, o - Offset(r * 1.5f, 0f), o + Offset(r * 1.5f, 0f), 0.7f); drawLine(col, o - Offset(0f, r * 1.5f), o + Offset(0f, r * 1.5f), 0.7f) }
             TemaId.COLONOS -> { drawCircle(col, r * 0.8f, o); drawCircle(col.copy(alpha = col.alpha * 0.3f), r * 2f, o, style = Stroke(0.6f)) }
             TemaId.NAPOLEON -> estrellaPuntas(o, r * 1.8f, col, 5, 0.42f)
+            // Destellos finos de cuatro puntas, como las bombillas de una marquesina vistas de lejos.
+            TemaId.DECO -> estrellaPuntas(o, r * 1.7f, col, 4, 0.2f)
             TemaId.BOTANICO -> { drawCircle(col.copy(alpha = col.alpha * 0.25f), r * 3f, o); drawCircle(col, r * 0.8f, o) }
             // Sin luz eléctrica, el cielo de la ciudad vuelve a llenarse de estrellas: crucecitas nítidas.
             TemaId.RUINAS -> { drawLine(col, o - Offset(r * 1.4f, 0f), o + Offset(r * 1.4f, 0f), r * 0.4f); drawLine(col, o - Offset(0f, r * 1.4f), o + Offset(0f, r * 1.4f), r * 0.4f); drawCircle(col, r * 0.5f, o) }
@@ -645,6 +667,15 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
         }
         // Media luna de acero: un semicírculo recto, con su anillo.
         TemaId.ORDEN -> { drawArc(luna, 90f, 180f, true, Offset(ce.x - r, ce.y - r), Size(2 * r, 2 * r)); drawCircle(luna.copy(alpha = 0.4f), r * 1.25f, ce, style = Stroke(1.2f)) }
+        // En lugar de luna, el reloj de la estación, con la hora del ferrocarril: esfera, doce marcas y las dos agujas.
+        TemaId.VAPOR -> {
+            drawCircle(luna.copy(alpha = 0.16f), r * 1.5f, ce); drawCircle(luna, r * 0.95f, ce)
+            drawCircle(n.cielo.copy(alpha = 0.55f), r * 0.95f, ce, style = Stroke(r * 0.08f))
+            for (k in 0 until 12) { val a = k * PI / 6; drawLine(n.cielo.copy(alpha = 0.6f), ce + Offset((r * 0.78f * cos(a)).toFloat(), (r * 0.78f * sin(a)).toFloat()), ce + Offset((r * 0.66f * cos(a)).toFloat(), (r * 0.66f * sin(a)).toFloat()), r * 0.06f) }
+            drawLine(n.cielo.copy(alpha = 0.75f), ce, ce + Offset(-r * 0.3f, -r * 0.38f), r * 0.08f)
+            drawLine(n.cielo.copy(alpha = 0.75f), ce, ce + Offset(r * 0.55f, -r * 0.1f), r * 0.05f)
+            if (!sola) drawRect(n.cielo, Offset(ce.x - r * 0.08f, ce.y - r * 1.5f), Size(r * 0.16f, r * 0.55f))
+        }
         // Diagrama de fase: la mitad iluminada y las marcas de los grados.
         TemaId.LABORATORIO -> {
             drawCircle(luna, r, ce, style = Stroke(1.2f))
@@ -664,6 +695,17 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
         }
         // La estrella del Emperador junto a la luna.
         TemaId.NAPOLEON -> { mediaLuna(ce, r * 0.85f, luna); if (!sola) estrellaPuntas(ce + Offset(-r * 2f, r * 0.4f), r * 0.7f, n.luz, 5, 0.42f) }
+        // La luna creciente junto a la aguja de un rascacielos escalonado.
+        TemaId.DECO -> {
+            mediaLuna(ce, r * 0.85f, luna)
+            if (!sola) {
+                val x = ce.x - r * 2.2f; val b = ce.y + r * 2.4f; val torre = n.luz.copy(alpha = 0.3f)
+                drawRect(torre, Offset(x - r * 0.6f, b - r * 1.6f), Size(r * 1.2f, r * 1.6f))
+                drawRect(torre, Offset(x - r * 0.4f, b - r * 2.2f), Size(r * 0.8f, r * 0.6f))
+                drawRect(torre, Offset(x - r * 0.2f, b - r * 2.7f), Size(r * 0.4f, r * 0.5f))
+                drawLine(torre, Offset(x, b - r * 2.7f), Offset(x, b - r * 3.4f), r * 0.08f)
+            }
+        }
         // Una polilla nocturna cruza la luna llena.
         TemaId.BOTANICO -> {
             drawCircle(luna, r, ce)
@@ -821,9 +863,11 @@ fun textoGuardar(t: TemaId): String = when (t) {
     TemaId.DISTOPIA -> "ARCHIVAR"
     TemaId.REFUGIO -> "GUARDAR"
     TemaId.ORDEN -> "REGISTRAR"
+    TemaId.VAPOR -> "Asentar en el registro"
     TemaId.LABORATORIO -> "guardar registro"
     TemaId.COLONOS -> "asentar"
     TemaId.NAPOLEON -> "SELLAR"
+    TemaId.DECO -> "guardar en el carnet"
     TemaId.BOTANICO -> "prensar la hoja"
     TemaId.RUINAS -> "apuntarlo en el cuaderno"
     TemaId.NAVIDAD -> "guardar carta"
@@ -857,9 +901,11 @@ fun colofon(t: TemaId): String = when (t) {
     TemaId.DISTOPIA -> "FIN DE LA DECLARACIÓN"
     TemaId.REFUGIO -> "FIN DE LA ENTRADA"
     TemaId.ORDEN -> "FIN DEL PARTE"
+    TemaId.VAPOR -> "— fin de la memoria descriptiva —"
     TemaId.LABORATORIO -> "fin del registro"
     TemaId.COLONOS -> "Asentado."
     TemaId.NAPOLEON -> "Dado en el cuartel general."
+    TemaId.DECO -> "Fin de la función."
     TemaId.BOTANICO -> "Ex herbario."
     TemaId.RUINAS -> "Escrito tras el silencio."
     TemaId.NAVIDAD -> "Con cariño, junto al fuego."
@@ -893,9 +939,11 @@ private fun pistaDia(t: TemaId): String = when (t) {
     TemaId.DISTOPIA -> "TOCA PARA ABRIR EL EXPEDIENTE"
     TemaId.REFUGIO -> "> TOCA PARA ABRIR LA BITÁCORA_"
     TemaId.ORDEN -> "toca para abrir el libro de partes"
+    TemaId.VAPOR -> "toca para abrir el registro de patentes"
     TemaId.LABORATORIO -> "toca para abrir el cuaderno de laboratorio"
     TemaId.COLONOS -> "toca para abrir el libro de registro"
     TemaId.NAPOLEON -> "toca para desplegar el boletín"
+    TemaId.DECO -> "toca para abrir el pasaje del día"
     TemaId.BOTANICO -> "toca para abrir la libreta de campo"
     TemaId.RUINAS -> "toca para abrir el cuaderno del superviviente"
     TemaId.NAVIDAD -> "toca para abrir la carta"
@@ -929,9 +977,11 @@ private fun pistaNoche(t: TemaId): String = when (t) {
     TemaId.DISTOPIA -> "TOCA PARA DECLARAR LO SOÑADO"
     TemaId.REFUGIO -> "> TOCA PARA REGISTRAR EL SUEÑO_"
     TemaId.ORDEN -> "toca para dar el parte nocturno"
+    TemaId.VAPOR -> "toca para anotar los sueños del turno de noche"
     TemaId.LABORATORIO -> "toca para registrar la observación nocturna"
     TemaId.COLONOS -> "toca para anotar lo soñado"
     TemaId.NAPOLEON -> "toca para dictar el sueño"
+    TemaId.DECO -> "toca para contar lo que soñaste en el camarote"
     TemaId.BOTANICO -> "toca para anotar la flora de la noche"
     TemaId.RUINAS -> "toca para apuntar lo que soñaste en la azotea"
     TemaId.NAVIDAD -> "toca para contar lo que soñaste junto al fuego"
@@ -965,9 +1015,11 @@ private fun textoVacio(t: TemaId): String = when (t) {
     TemaId.DISTOPIA -> "SIN DECLARACIÓN REGISTRADA PARA ESTA JORNADA."
     TemaId.REFUGIO -> "SIN ENTRADAS EN LA BITÁCORA PARA ESTE DÍA."
     TemaId.ORDEN -> "Sin parte para esta jornada."
+    TemaId.VAPOR -> "Ninguna patente registrada en esta jornada."
     TemaId.LABORATORIO -> "Sin datos registrados en esta fecha."
     TemaId.COLONOS -> "Nada asentado en el registro este día."
     TemaId.NAPOLEON -> "Aucun bulletin: no hubo despacho este día."
+    TemaId.DECO -> "Butaca vacía: no hubo función este día."
     TemaId.BOTANICO -> "Lámina vacía: no se anotó nada este día."
     TemaId.RUINAS -> "Hoja en blanco: nadie apuntó nada este día."
     TemaId.NAVIDAD -> "Nadie escribió junto al fuego este día."
@@ -1001,9 +1053,11 @@ private fun textoSinSueno(t: TemaId): String = when (t) {
     TemaId.DISTOPIA -> "SIN ACTIVIDAD ONÍRICA DECLARADA."
     TemaId.REFUGIO -> "SIN REGISTRO ONÍRICO ESA NOCHE."
     TemaId.ORDEN -> "Sin parte nocturno."
+    TemaId.VAPOR -> "Esa noche la caldera durmió sin sueños."
     TemaId.LABORATORIO -> "Sin registro de sueño esa noche."
     TemaId.COLONOS -> "No quedó nada soñado esa noche."
     TemaId.NAPOLEON -> "Pas de songe: no anotaste ningún sueño."
+    TemaId.DECO -> "Esa noche el camarote no guardó ningún sueño."
     TemaId.BOTANICO -> "La flora de esa noche quedó sin describir."
     TemaId.RUINAS -> "Esa noche no quedó ningún sueño apuntado."
     TemaId.NAVIDAD -> "No anotaste ningún sueño junto al fuego."
@@ -1037,9 +1091,11 @@ private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
     TemaId.DISTOPIA -> "MÉRITO — " to "FALTA — "
     TemaId.REFUGIO -> "LO MEJOR > " to "LO PEOR > "
     TemaId.ORDEN -> "Acierto — " to "Baja — "
+    TemaId.VAPOR -> "A todo vapor — " to "Avería — "
     TemaId.LABORATORIO -> "Resultado positivo — " to "Resultado negativo — "
     TemaId.COLONOS -> "Lo que salió bien — " to "Lo que salió mal — "
     TemaId.NAPOLEON -> "Victoire — " to "Revers — "
+    TemaId.DECO -> "Ovación — " to "Abucheo — "
     TemaId.BOTANICO -> "Hallazgo — " to "Plaga — "
     TemaId.RUINAS -> "Lo que encontré — " to "Lo que perdí — "
     TemaId.NAVIDAD -> "Lo más bonito — " to "Lo más frío — "
@@ -1073,9 +1129,11 @@ private fun pistaEscribir(t: TemaId): String = when (t) {
     TemaId.DISTOPIA -> "DECLARE LAS ACTIVIDADES DE LA JORNADA."
     TemaId.REFUGIO -> "> REGISTRE LA ENTRADA DEL DÍA_"
     TemaId.ORDEN -> "Redacte el parte de la jornada."
+    TemaId.VAPOR -> "Memoria descriptiva de la jornada:"
     TemaId.LABORATORIO -> "Observaciones del día:"
     TemaId.COLONOS -> "¿Qué pasó hoy en el pueblo?"
     TemaId.NAPOLEON -> "Dictez: ¿qué noticias trae el día?"
+    TemaId.DECO -> "¿Qué pasó hoy a bordo?"
     TemaId.BOTANICO -> "Observaciones de campo: ¿qué viste hoy?"
     TemaId.RUINAS -> "¿Qué encontraste hoy entre las ruinas?"
     TemaId.NAVIDAD -> "Querido diario: hoy junto al fuego…"
@@ -1109,9 +1167,11 @@ private fun pistaSonar(t: TemaId): String = when (t) {
     TemaId.DISTOPIA -> "DECLARE LA ACTIVIDAD ONÍRICA."
     TemaId.REFUGIO -> "> REGISTRE EL SUEÑO_"
     TemaId.ORDEN -> "Parte nocturno: ¿qué soñó?"
+    TemaId.VAPOR -> "Lo que soñaste junto a la caldera…"
     TemaId.LABORATORIO -> "Registro onírico: fragmentos, imágenes, emociones."
     TemaId.COLONOS -> "¿Qué soñaste anoche?"
     TemaId.NAPOLEON -> "Racontez le songe: ¿qué soñaste?"
+    TemaId.DECO -> "¿Qué soñaste en el camarote?"
     TemaId.BOTANICO -> "¿Qué flora creció en el sueño?"
     TemaId.RUINAS -> "¿Qué soñaste mientras crecía la hiedra?"
     TemaId.NAVIDAD -> "¿Qué soñaste junto al fuego?"
@@ -1212,6 +1272,8 @@ private fun formaObjeto(t: TemaId, m: Materia, e: ColorScheme, noche: Boolean, f
         TemaId.MEDIEVAL -> libro({ libroCerrado(m) { g -> tapaMedieval(m, g) } }, LetraExtra.gotica, 14f)
         TemaId.TEMPLARIO -> libro({ libroCerrado(m) { g -> tapaTemplario(m, g) } }, LetraExtra.cruzada, 13.5f)
         TemaId.ORDEN -> libro({ libroCerrado(m) { g -> tapaOrden(m, g) } }, LetraExtra.estarcido, 12.5f)
+        TemaId.VAPOR -> libro({ libroCerrado(m) { g -> tapaVapor(m, g) } }, LetraExtra.caldera, 13f,
+            rotulos = listOf(RotuloObjeto("REGISTRO DE PATENTES", LetraExtra.bitter, 8.5f, m.extra, 0.3f, 0.9f)))
         TemaId.BOTANICO -> libro({ libroCerrado(m) { g -> tapaBotanico(m, g) } }, LetraExtra.fraunces, 13f)
         TemaId.RUINAS -> libro({ libroCerrado(m) { g -> tapaRuinas(m, g) } }, LetraExtra.letrero, 13.5f)
         TemaId.LABORATORIO -> libro({
@@ -1237,6 +1299,10 @@ private fun formaObjeto(t: TemaId, m: Materia, e: ColorScheme, noche: Boolean, f
         TemaId.NAPOLEON -> FormaObjeto(dibujo = { boletin(t, m, e, noche) }, caja = listOf(0.07f, 0.36f, 0.24f, 0.07f), pista = pista, letra = LetraExtra.bodoni,
             tinta = m.tinta, fecha = m.detalle, tam = 13f, alto = 176, gira = true, letraFecha = LetraExtra.bodoniTitulo,
             rotulos = listOf(RotuloObjeto("BULLETIN DE LA GRANDE ARMÉE", LetraExtra.bodoniTitulo, 12f, m.tinta, 0f, 0.15f, Alignment.TopCenter)))
+        TemaId.DECO -> FormaObjeto(dibujo = { pasajeDeco(t, m, e, noche) }, caja = listOf(0.33f, 0.38f, 0.08f, 0.12f), pista = pista, letra = LetraExtra.pasaje,
+            tinta = m.tinta, fecha = m.detalle, tam = 13f, alto = 176, gira = true, letraFecha = LetraExtra.poiret,
+            rotulos = listOf(RotuloObjeto("LÍNEA TRANSATLÁNTICA · 1ª CLASE", LetraExtra.poiret, 11f, m.tinta, 0.31f, 0.14f),
+                RotuloObjeto("PASAJE", LetraExtra.poiret, 10f, m.acento, 0.05f, 0.14f)))
         TemaId.NAVIDAD -> FormaObjeto(dibujo = { cartaNavidad(t, m, e, noche) }, caja = listOf(0.07f, 0.62f, 0.07f, 0.07f), pista = pista, letra = LetraExtra.italianno,
             tinta = m.textoCuerpo, fecha = m.acento, tam = 18f, interlinea = 18f, alto = 176, gira = true, lineas = 2)
         TemaId.DISTOPIA -> FormaObjeto(dibujo = { carpeta(m) }, caja = listOf(0.06f, 0.34f, 0.06f, 0.06f), pista = pista, letra = Letra.terminal, tinta = m.textoCuerpo,
@@ -1616,6 +1682,29 @@ private fun DrawScope.tapaOrden(m: Materia, g: Tapa) {
     drawRect(m.detalle, Offset(g.ini.x + g.tam.width * 0.72f, g.ini.y + g.tam.height - 4f), Size(w * 0.03f, h * 0.1f))
 }
 
+/**
+ * El registro de patentes: cuatro cantoneras de latón remachadas, una fila de remaches arriba y abajo, el engrane
+ * estampado en la esquina y la cinta de ladrillo que asoma por abajo.
+ */
+private fun DrawScope.tapaVapor(m: Materia, g: Tapa) {
+    val w = size.width; val h = size.height
+    val k = minOf(g.tam.width, g.tam.height) * 0.16f
+    listOf(Triple(g.ini.x + g.lomo, g.ini.y, 1f to 1f), Triple(g.ini.x + g.tam.width, g.ini.y, -1f to 1f), Triple(g.ini.x + g.lomo, g.ini.y + g.tam.height, 1f to -1f), Triple(g.ini.x + g.tam.width, g.ini.y + g.tam.height, -1f to -1f))
+        .forEach { (x, y, s) ->
+            drawPath(Path().apply { moveTo(x, y); lineTo(x + s.first * k, y); quadraticTo(x + s.first * k * 0.55f, y + s.second * k * 0.55f, x, y + s.second * k); close() }, m.acento)
+            drawCircle(m.sombra, 2.2f, Offset(x + s.first * k * 0.28f, y + s.second * k * 0.28f))
+        }
+    var x = g.ini.x + g.lomo + k * 1.3f
+    while (x < g.ini.x + g.tam.width - k * 1.2f) {
+        listOf(g.ini.y + 5f, g.ini.y + g.tam.height - 5f).forEach { y -> drawCircle(m.acento.copy(alpha = 0.85f), 2f, Offset(x, y)) }
+        x += 16f
+    }
+    val ce = Offset(g.ini.x + g.tam.width - k * 0.9f, g.ini.y + g.tam.height * 0.5f)
+    drawPath(Vapor.engrane(ce, k * 0.5f, 10, 0.78f), m.acento.copy(alpha = 0.7f))
+    drawCircle(m.cuerpo, k * 0.18f, ce)
+    drawRect(m.detalle, Offset(g.ini.x + g.tam.width * 0.3f, g.ini.y + g.tam.height - 4f), Size(w * 0.035f, h * 0.1f))
+}
+
 private fun DrawScope.tapaBotanico(m: Materia, g: Tapa) {
     val w = size.width
     // Libreta de campo de cuero, con su broche de latón y una fila de hormigas estampada en el borde.
@@ -1909,6 +1998,31 @@ private fun DrawScope.boletin(t: TemaId, m: Materia, e: ColorScheme, luna: Boole
     lacre(t, ce, r, m.acento, m.brillo, e, luna)
 }
 
+/**
+ * El pasaje de un trasatlántico de los años veinte: la cartulina marfil con su talón de laca negra separado por el
+ * perforado, el abanico de oro de la naviera en el talón, el doble filete con tres líneas de velocidad y el lacre.
+ */
+private fun DrawScope.pasajeDeco(t: TemaId, m: Materia, e: ColorScheme, luna: Boolean) {
+    val w = size.width; val h = size.height
+    val ini = Offset(w * 0.02f, h * 0.06f); val tam = Size(w * 0.96f, h * 0.86f)
+    drawRect(Color.Black.copy(alpha = 0.12f), ini + Offset(4f, 5f), tam)
+    drawRect(m.cuerpo, ini, tam)
+    val talon = tam.width * 0.26f
+    drawRect(c(0xFF16130E), ini, Size(talon, tam.height))
+    var y = ini.y + 4f
+    while (y < ini.y + tam.height - 4f) { drawCircle(m.cuerpo, 1.6f, Offset(ini.x + talon, y)); y += 7f }
+    val b = Offset(ini.x + talon / 2, ini.y + tam.height * 0.66f); val r = talon * 0.36f
+    for (i in 0 until 9) if (i % 2 == 0) drawArc(m.acento, 180f + i * 20f, 20f, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+    drawArc(m.detalle, 180f, 180f, true, Offset(b.x - r * 0.35f, b.y - r * 0.35f), Size(r * 0.7f, r * 0.7f))
+    drawRect(m.acento, Offset(b.x - r, b.y), Size(2 * r, r * 0.12f))
+    val x0 = ini.x + talon + w * 0.03f; val x1 = ini.x + tam.width - w * 0.03f; val y0 = ini.y + h * 0.05f; val y1 = ini.y + tam.height - h * 0.05f
+    drawRect(m.acento, Offset(x0, y0), Size(x1 - x0, y1 - y0), style = Stroke(1.4f))
+    drawRect(m.acento.copy(alpha = 0.5f), Offset(x0 + 4f, y0 + 4f), Size(x1 - x0 - 8f, y1 - y0 - 8f), style = Stroke(0.7f))
+    listOf(0.27f, 0.3f, 0.33f).forEachIndexed { k, f -> drawLine(m.tinta.copy(alpha = 0.6f), Offset(x0 + 10f, h * f), Offset(x1 - 10f - k * 24f, h * f), 1.1f) }
+    val ce = Offset(x1 - w * 0.07f, y1 - h * 0.16f)
+    lacre(t, ce, h * 0.11f, m.extra, m.brillo, e, luna)
+}
+
 /** La carta de Navidad: sobre con solapa, timbre, ramita de acebo y el lacre con el emblema. */
 private fun DrawScope.cartaNavidad(t: TemaId, m: Materia, e: ColorScheme, luna: Boolean) {
     val w = size.width; val h = size.height
@@ -2150,6 +2264,15 @@ fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, noche: Boolea
             drawLine(m.acento, Offset(o.x, o.y - s * 0.7f), Offset(o.x, o.y + s * 0.8f), 1.2f)
             listOf(-1f, 1f).forEach { k -> drawCircle(m.brillo, w * 0.06f, Offset(o.x, o.y + k * s * 2.4f)) }
         }
+        // Libros mayores de pie en un nicho de ladrillo de fábrica: cada lomo con dos bandas de latón y la esfera de un
+        // manómetro estampada.
+        TemaId.VAPOR -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_LADRILLO) { o, cuerpo ->
+            val w = size.width; val hh = size.height; val s = w * 0.26f
+            listOf(0.1f, 0.86f).forEach { f -> drawRect(m.acento, Offset(0f, hh * f), Size(w, hh * 0.035f)) }
+            drawCircle(m.acento, s, o); drawCircle(m.hoja, s * 0.78f, o)
+            drawLine(m.detalle, o, o + Offset(s * 0.5f, -s * 0.45f), 1.4f)
+            drawCircle(lerp(cuerpo, Color.Black, 0.4f), s * 0.18f, o)
+        }
         TemaId.LABORATORIO -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_LABORATORIO) { o, _ ->
             // Etiqueta de inventario con código de barras y el punto de color de la serie.
             val w = size.width; val hh = size.height
@@ -2235,6 +2358,8 @@ fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, noche: Boolea
         }
         // Boletines y cartas, de dos en dos.
         TemaId.NAPOLEON -> Cartas(entradas, tema, m, noche, texto, conSonido) { e -> boletin(tema, m, e, noche) }
+        // Pasajes de barco, de dos en dos.
+        TemaId.DECO -> Cartas(entradas, tema, m, noche, texto, conSonido) { e -> pasajeDeco(tema, m, e, noche) }
         TemaId.NAVIDAD -> Cartas(entradas, tema, m, noche, texto, conSonido) { e -> cartaNavidad(tema, m, e, noche) }
         TemaId.DISTOPIA -> Expedientes(entradas, m, noche, texto, conSonido)
         TemaId.CIBER -> Logs(entradas, m, noche, texto, conSonido, refugio = false)
@@ -2345,6 +2470,16 @@ private val ESTANTE_ACERO = TablaEstante(Color(0xFF6E7883), Color(0xFF2A2F35)) {
     val w = size.width; val h = size.height
     drawLine(Color(0xFFA3172E), Offset(0f, h * 0.85f), Offset(w, h * 0.85f), 1.5f)
     var x = 10f; while (x < w) { drawCircle(Color(0xFFB8C0C8), h * 0.14f, Offset(x, h * 0.4f)); x += 48f }
+}
+
+/** Un nicho de ladrillo de fábrica, con sus juntas de mortero, y el riel de latón por delante. */
+private val ESTANTE_LADRILLO = TablaEstante(Color(0xFF9C4A32), Color(0xFF4E2216)) {
+    val w = size.width; val h = size.height
+    val junta = Color(0xFFD9C7A8).copy(alpha = 0.35f)
+    drawLine(junta, Offset(0f, h * 0.5f), Offset(w, h * 0.5f), 0.9f)
+    var x = 0f; var fila = 0
+    while (x < w) { drawLine(junta, Offset(x, 0f), Offset(x, h * 0.5f), 0.9f); drawLine(junta, Offset(x + h * 1.1f, h * 0.5f), Offset(x + h * 1.1f, h), 0.9f); x += maxOf(h * 2.2f, 1f); fila++ }
+    drawLine(Color(0xFFC9A04A), Offset(0f, 1.2f), Offset(w, 1.2f), 2f)
 }
 
 /** Repisa blanca de laboratorio con marcas de regla. */
@@ -2719,6 +2854,7 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.TEMPLARIO -> Pagina(R.drawable.papel_templario, c(0xFFF1EADA), c(0xFF201E1B), c(0xFF5B574E), c(0xFFB0191F), c(0xFF4A5560), LetraExtra.regla, 17.5f, 27f, false, capitular = LetraExtra.cruzada)
     TemaId.COLONOS -> Pagina(R.drawable.papel_colonos, c(0xFFF3EBD7), c(0xFF1E1A16), c(0xFF6B6255), c(0xFF9E2B25), c(0xFF3E4B60), LetraExtra.gaceta, 17.5f, 28f, false, Rayas.RENGLONES, LetraExtra.fell)
     TemaId.ORDEN -> Pagina(R.drawable.papel_orden, c(0xFF1C2127), c(0xFFDDE2E7), c(0xFF9DA6B0), c(0xFFD6B25A), c(0xFFD0333B), LetraExtra.estarcido, 16f, 25f, true, Rayas.NADA)
+    TemaId.VAPOR -> Pagina(R.drawable.papel_vapor, c(0xFFEDE3CB), c(0xFF231B14), c(0xFF6E5E46), c(0xFF8A5A14), c(0xFF9C3D24), LetraExtra.bitter, 16.5f, 25.5f, false, Rayas.CUADRICULA, LetraExtra.caldera)
     TemaId.BOTANICO -> Pagina(R.drawable.papel_botanico, c(0xFFF1E9D2), c(0xFF2A2318), c(0xFF6B5E45), c(0xFF3F5A2C), c(0xFF8C4A22), LetraExtra.fraunces, 17.5f, 27f, false, Rayas.NADA, LetraExtra.fraunces)
     TemaId.RUINAS -> Pagina(R.drawable.papel_ruinas, c(0xFFE6E3D6), c(0xFF1F2420), c(0xFF5A5F55), c(0xFF3E6B2A), c(0xFFA34A1E), LetraExtra.overpass, 16.5f, 26f, false, Rayas.RENGLONES, LetraExtra.letrero)
     TemaId.GOTICO -> Pagina(R.drawable.papel_gotico, c(0xFFF1E8D2), c(0xFF1A1630), c(0xFF5E5870), c(0xFFB3122E), c(0xFF1F3A9E), LetraExtra.textura, 19.5f, 28f, false, capitular = LetraExtra.textura)
@@ -2735,6 +2871,8 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.URSS -> Pagina(R.drawable.papel_urss, c(0xFFEFE6D2), c(0xFF161414), c(0xFF6A625A), c(0xFFC1121F), c(0xFF161414), LetraExtra.russo, 15.5f, 26f, false, Rayas.RENGLONES)
     TemaId.LABORATORIO -> Pagina(R.drawable.papel_laboratorio, c(0xFFF7FBFC), c(0xFF1B2733), c(0xFF5D6F80), c(0xFF0B8FA3), c(0xFFE0557A), LetraExtra.jost, 16.5f, 26f, false, Rayas.CUADRICULA)
     TemaId.NAPOLEON -> Pagina(R.drawable.papel_napoleon, c(0xFFF6F0E0), c(0xFF14213D), c(0xFF5A6278), c(0xFF1E3A8A), c(0xFFA3172E), LetraExtra.bodoni, 18f, 27f, false, Rayas.NADA, LetraExtra.bodoniTitulo)
+    // El papel de cartas del salón de escribir del barco: marfil, tinta de laca, oro y jade; capitulares de marquesina.
+    TemaId.DECO -> Pagina(R.drawable.papel_deco, c(0xFFF6F0E1), c(0xFF16130E), c(0xFF6A6052), c(0xFF8A6A12), c(0xFF1F6B57), LetraExtra.pasaje, 17f, 27f, false, Rayas.NADA, LetraExtra.poiret)
     // La carta de Navidad va en cursiva de pluma, grande para que se lea bien.
     TemaId.NAVIDAD -> Pagina(R.drawable.papel_navidad, c(0xFFFBF6EC), c(0xFF1E2A22), c(0xFF5E6B62), c(0xFFB71C1C), c(0xFF1B5E20), LetraExtra.italianno, 27f, 32f, false, Rayas.NADA, LetraExtra.cinzelDeco)
     // La declaración, tecleada.
@@ -2817,6 +2955,12 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                     drawPath(Path().apply { moveTo(0f, h - 46.dp.toPx()); lineTo(46.dp.toPx(), h); lineTo(58.dp.toPx(), h); lineTo(0f, h - 58.dp.toPx()); close() }, p.tinta.copy(alpha = 0.7f))
                 }
                 TemaId.NAPOLEON -> { var x = 0f; while (x < w) { drawLine(p.tenue.copy(alpha = 0.07f), Offset(x, 0f), Offset(x, h), 1f); x += 22.dp.toPx() } }
+                // Un sol de rayos muy tenue que baja desde lo alto y, al pie, tres filetes escalonados.
+                TemaId.DECO -> {
+                    val o = Offset(w / 2, -h * 0.04f)
+                    for (i in 0..18) { val a = PI * (0.12 + 0.76 * i / 18.0); drawLine(p.acento.copy(alpha = 0.05f), o, o + polarLibro(h * 0.6f, a), 1.2f) }
+                    listOf(0.7f, 0.5f, 0.3f).forEachIndexed { k, f -> drawLine(p.acento.copy(alpha = 0.22f), Offset(w * (1 - f) / 2, h - (14 + k * 5).dp.toPx()), Offset(w * (1 + f) / 2, h - (14 + k * 5).dp.toPx()), 1f) }
+                }
                 TemaId.NAVIDAD -> {
                     drawRect(p.acento, Offset(8.dp.toPx(), 8.dp.toPx()), Size(w - 16.dp.toPx(), h - 16.dp.toPx()), style = Stroke(3f))
                     drawRect(p.detalle, Offset(13.dp.toPx(), 13.dp.toPx()), Size(w - 26.dp.toPx(), h - 26.dp.toPx()), style = Stroke(1.5f))
@@ -2824,6 +2968,18 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                 TemaId.ORDEN -> {
                     drawRect(p.acento.copy(alpha = 0.7f), Offset(6.dp.toPx(), 6.dp.toPx()), Size(w - 12.dp.toPx(), h - 12.dp.toPx()), style = Stroke(2f))
                     listOf(Offset(16f, 16f), Offset(w - 16f, 16f), Offset(16f, h - 16f), Offset(w - 16f, h - 16f)).forEach { drawCircle(p.acento, 9f, it) }
+                }
+                TemaId.VAPOR -> {
+                    // La lámina de patente: doble marco de dibujante y, abajo a la derecha, la cartela con sus casillas
+                    // (número, fecha y firma), como en los planos que se entregaban en la oficina.
+                    val m0 = 8.dp.toPx()
+                    drawRect(p.tinta.copy(alpha = 0.5f), Offset(m0, m0), Size(w - 2 * m0, h - 2 * m0), style = Stroke(1.6f))
+                    drawRect(p.tinta.copy(alpha = 0.25f), Offset(m0 + 4.dp.toPx(), m0 + 4.dp.toPx()), Size(w - 2 * m0 - 8.dp.toPx(), h - 2 * m0 - 8.dp.toPx()), style = Stroke(0.8f))
+                    val cw = 120.dp.toPx(); val ch = 42.dp.toPx(); val o = Offset(w - m0 - 4.dp.toPx() - cw, h - m0 - 4.dp.toPx() - ch)
+                    drawRect(p.tinta.copy(alpha = 0.3f), o, Size(cw, ch), style = Stroke(0.9f))
+                    drawLine(p.tinta.copy(alpha = 0.25f), o + Offset(0f, ch / 2), o + Offset(cw, ch / 2), 0.8f)
+                    drawLine(p.tinta.copy(alpha = 0.25f), o + Offset(cw * 0.55f, 0f), o + Offset(cw * 0.55f, ch), 0.8f)
+                    drawPath(Vapor.engrane(o + Offset(cw * 0.27f, ch * 0.25f), ch * 0.18f, 8, 0.76f), p.acento.copy(alpha = 0.45f))
                 }
                 TemaId.REFUGIO -> {
                     drawRect(Brush.radialGradient(listOf(p.acento.copy(alpha = 0.1f), Color.Transparent), center = Offset(w / 2, h / 2), radius = h * 0.7f))
@@ -3059,6 +3215,13 @@ private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String, modo: Escrito 
                 Emblema(t, 28.dp, MaterialTheme.colorScheme, animado = false)
                 Text("PARTE DE LA ORDEN · Nº %03d".format(nDia), fontFamily = LetraExtra.estarcido, fontSize = 13.sp, color = p.tinta, modifier = Modifier.padding(start = 8.dp))
             }
+            // La cabecera de la memoria de patente: el emblema y el número de la patente, entre dos filetes de latón.
+            TemaId.VAPOR -> {
+                emblema()
+                Box(Modifier.fillMaxWidth().height(1.5.dp).background(p.acento))
+                Text("Patente n.º %d · memoria descriptiva".format(1000 + nDia), fontFamily = LetraExtra.caldera, fontSize = 14.sp, color = p.tinta, modifier = Modifier.padding(vertical = 3.dp))
+                Box(Modifier.fillMaxWidth().height(1.5.dp).background(p.acento))
+            }
             TemaId.LABORATORIO -> Text("PROTOCOLO VM-%03d · CUADERNO DE LABORATORIO".format((fecha.hashCode() and 0x7fffffff) % 900 + 100), fontFamily = LetraExtra.jost, fontSize = 11.sp, color = p.acento)
             // La cabecera de la gaceta del pueblo, entre filetes.
             TemaId.COLONOS -> Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -3068,6 +3231,7 @@ private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String, modo: Escrito 
                 Text("Año ${dia?.year ?: ""} · Número $nDia", fontFamily = LetraExtra.fell, fontSize = 11.sp, color = p.tenue, modifier = Modifier.padding(top = 2.dp))
             }
             TemaId.NAPOLEON -> { emblema(); Rubrica("BULLETIN DE LA GRANDE ARMÉE · Nº $nDia", LetraExtra.bodoniTitulo, 12f, p.acento, 1.5f) }
+            TemaId.DECO -> { emblema(); Rubrica("PASAJE Nº $nDia · LÍNEA TRANSATLÁNTICA", LetraExtra.poiret, 12f, p.acento, 2.4f) }
             TemaId.BOTANICO -> Row(verticalAlignment = Alignment.CenterVertically) {
                 Emblema(t, 36.dp, MaterialTheme.colorScheme, animado = false)
                 Column(Modifier.padding(start = 10.dp)) {
@@ -3144,9 +3308,11 @@ private fun letraSueno(t: TemaId): Pair<FontFamily, Float> = when (t) {
     TemaId.DISTOPIA -> LetraExtra.oswald to 12f
     TemaId.REFUGIO -> LetraExtra.vt323 to 18f
     TemaId.ORDEN -> LetraExtra.estarcido to 12f
+    TemaId.VAPOR -> LetraExtra.caldera to 12.5f
     TemaId.LABORATORIO -> LetraExtra.jost to 12f
     TemaId.COLONOS -> LetraExtra.fell to 14f
     TemaId.NAPOLEON -> LetraExtra.bodoniTitulo to 12f
+    TemaId.DECO -> LetraExtra.poiret to 13f
     TemaId.BOTANICO -> LetraExtra.fraunces to 13f
     TemaId.RUINAS -> LetraExtra.letrero to 14f
     TemaId.NAVIDAD -> LetraExtra.cinzelDeco to 13f

@@ -222,6 +222,14 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(sombra, r * 0.62f, c, style = Stroke(g))
             drawCircle(luz, r * 0.52f, c, style = Stroke(r * 0.04f))
         }
+        // La esfera de un manómetro: el disco con su bisel, la escala de 270°, la zona roja y seis remaches.
+        TemaId.VAPOR -> {
+            forma(disco(c, r * 0.97f))
+            drawCircle(sombra, r * 0.78f, c, style = Stroke(g * 0.8f))
+            for (k in 0..10) { val a = Math.toRadians(135.0 + 27.0 * k); drawLine(sombra, io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * 0.7f, a), io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * (if (k % 5 == 0) 0.52f else 0.6f), a), r * 0.035f) }
+            drawLine(luz, c, io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * 0.55f, Math.toRadians(330.0)), r * 0.06f)
+            for (k in 0 until 6) drawCircle(sombra, r * 0.04f, io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * 0.88f, k * Math.PI / 3 + Math.PI / 6))
+        }
         // Placa hexagonal con el anillo de benceno.
         TemaId.LABORATORIO -> {
             forma(figPoligono(c, r * 0.97f, 6, 0f))
@@ -247,6 +255,16 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             forma(figLegion(c, r * 0.98f))
             drawCircle(if (hecho) Color(0xFFF4EFE3) else apagado, r * 0.44f, c)
             drawCircle(if (hecho) Color(0xFF1F3A93) else borde.copy(alpha = 0.5f), r * 0.44f, c, style = Stroke(r * 0.08f))
+        }
+        // Medalla octogonal escalonada con el abanico de rayos sobre esmalte negro y un rombo de jade.
+        TemaId.DECO -> {
+            val oct = Path().apply { for (k in 0 until 8) { val a = Math.toRadians(22.5 + k * 45.0); val q = Offset(c.x + r * 0.96f * kotlin.math.cos(a).toFloat(), c.y + r * 0.96f * kotlin.math.sin(a).toFloat()); if (k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }; close() }
+            forma(oct)
+            drawCircle(if (hecho) Color(0xFF16130E) else apagado, r * 0.66f, c)
+            val b = Offset(c.x, c.y + r * 0.28f); val rr = r * 0.56f
+            for (i in 0 until 9) if (i % 2 == 0) drawArc(if (hecho) metal else borde.copy(alpha = 0.5f), 180f + i * 20f, 20f, true, Offset(b.x - rr, b.y - rr), Size(2 * rr, 2 * rr))
+            drawPath(Path().apply { moveTo(c.x, c.y + r * 0.34f); lineTo(c.x + r * 0.1f, c.y + r * 0.46f); lineTo(c.x, c.y + r * 0.58f); lineTo(c.x - r * 0.1f, c.y + r * 0.46f); close() }, if (hecho) Color(0xFF1F6B57) else borde.copy(alpha = 0.5f))
+            drawCircle(luz, r * 0.8f, c, style = Stroke(r * 0.03f))
         }
         // Camafeo de herbario: óvalo con una ramita al pie.
         TemaId.BOTANICO -> {

@@ -23,6 +23,16 @@ import gato18 as g18      # noqa: E402,F401  (carga toda la cadena de pruebas co
 import gato8 as g8        # noqa: E402
 import gato9 as g9        # noqa: E402
 import gato17 as g17      # noqa: E402
+import importlib          # noqa: E402
+
+# Lo que sigue a gato18, si existe: gato19 (9a, los gatos que ya había) y gato20* (9b, los gatos de los temas nuevos,
+# uno o varios archivos). Cada uno cambia o agrega lo suyo a la cadena al importarse.
+for _m in ["gato19"] + sorted(p.stem for p in Path(__file__).parent.glob("gato20*.py")):
+    if (Path(__file__).parent / f"{_m}.py").exists():
+        importlib.import_module(_m)
+
+# Los temas que solo existen en oscuro (como en TemaId.soloOscuro): se exporta solo su `_o`.
+SOLO_OSCURO = {"ciber", "neon"}
 
 ESC = g8.ESC
 LADO = g8.N * ESC
@@ -176,7 +186,7 @@ def exportar(destino, temas=None):
     for n, _, _ in g8.BANDAS:
         if temas and n not in temas:
             continue
-        for o in ((True,) if n == "ciber" else (False, True)):
+        for o in ((True,) if n in SOLO_OSCURO else (False, True)):
             clave = f"{n}_{'o' if o else 'c'}"
             print(clave, flush=True)
             for viejo_ in destino.glob(f"{clave}_*"):
@@ -207,7 +217,7 @@ def exportar(destino, temas=None):
                                 "base": g17.ACCIONES[g17.ESP[n][q][0]][2]} for q in range(2)]
             # --- Sombra bajo el gato.
             if pantalla:
-                col = g8.mezcla(t["reflejo"], (0, 0, 0), 0.8) if nuevo else g8.mezcla(g8.hx("00E5FF"), (0, 0, 0), 0.82)
+                col = g8.mezcla(t["reflejo"], (0, 0, 0), 0.8)      # el reflejo del piso, del color de la pantalla del tema
                 m["sombra"] = {"color": "%02X%02X%02X" % col, "alfa": 255, "suma": True}
             elif nuevo:
                 a_ = t.get("sombra_a", 55)

@@ -237,9 +237,11 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.DISTOPIA -> RectangleShape
     TemaId.REFUGIO -> RoundedCornerShape(7.dp)
     TemaId.ORDEN -> CutCornerShape(topEnd = 8.dp)
+    TemaId.VAPOR -> RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
     TemaId.LABORATORIO -> RoundedCornerShape(5.dp)
     TemaId.COLONOS -> RoundedCornerShape(2.dp)
     TemaId.NAPOLEON -> CutCornerShape(2.dp)
+    TemaId.DECO -> CutCornerShape(5.dp)   // la placa de ascensor de esquinas cortadas
     TemaId.BOTANICO -> RoundedCornerShape(topStart = 9.dp, topEnd = 1.dp, bottomEnd = 9.dp, bottomStart = 1.dp)
     TemaId.RUINAS -> CutCornerShape(topStart = 0.dp, topEnd = 6.dp, bottomEnd = 0.dp, bottomStart = 2.dp)   // baldosa desportillada
     TemaId.NAVIDAD -> RoundedCornerShape(4.dp)
@@ -374,6 +376,13 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             for (k in 0 until 3) drawRect(linea.copy(alpha = 0.7f), Offset(w - 3.4f * s, h * 0.22f + k * 3.2f * s), Size(1.4f * s, 2.2f * s))
             if (sellado) sello(acento)
         }
+        // Una casilla de horario: dos remaches abajo; hoy, la esferita de un manómetro arriba a la derecha.
+        TemaId.VAPOR -> {
+            contorno(if (hoy) oro else linea, if (hoy) 1.3f else 0.8f)
+            listOf(3.5f * s, w - 3.5f * s).forEach { x -> drawCircle(linea.copy(alpha = 0.8f), 1f * s, Offset(x, h - 3.5f * s)) }
+            if (hoy) { val o = Offset(w - 6 * s, 6 * s); drawCircle(oro, 3.4f * s, o, style = Stroke(0.9f * s)); drawLine(oro, o, o + Offset(2 * s, -1.6f * s), 0.9f * s) }
+            if (sellado) sello(acento)
+        }
         // Papel milimétrico; hoy, las marcas de la mira en los cuatro lados.
         TemaId.LABORATORIO -> {
             val rejilla = linea.copy(alpha = 0.16f)
@@ -399,6 +408,13 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             val m = 1.6f * s
             drawRect(oro.copy(alpha = if (hoy) 1f else 0.6f), Offset(m, m), Size(w - 2 * m, h - 2 * m), style = Stroke(0.5f * s))
             listOf(Offset(m, m), Offset(w - m, m), Offset(m, h - m), Offset(w - m, h - m)).forEach { drawCircle(oro, 0.9f * s, it) }
+            if (sellado) sello(acento)
+        }
+        // Placa de esquinas cortadas con tres líneas de velocidad abajo; hoy, además, el abanico de oro arriba.
+        TemaId.DECO -> {
+            contorno(if (hoy) acento else linea, if (hoy) 1.4f else 0.6f)
+            for (k in 0..2) drawLine(oro.copy(alpha = if (hoy) 0.9f else 0.45f), Offset(w * (0.2f + k * 0.08f), h - (2.4f + k * 1.4f) * s), Offset(w * (0.8f - k * 0.08f), h - (2.4f + k * 1.4f) * s), 0.6f * s)
+            if (hoy) { val r = 3.5f * s; drawArc(oro, 180f, 180f, true, Offset(w / 2 - r, 1.2f * s), Size(2 * r, 2 * r)) }
             if (sellado) sello(acento)
         }
         // Hoja de herbario: forma de hoja con su nervadura; hoy, clavada con alfiler.

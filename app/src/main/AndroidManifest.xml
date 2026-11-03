@@ -229,6 +229,19 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
         <activity-alias
+            android:name=".IconoVapor"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_vapor"
+            android:roundIcon="@mipmap/ic_launcher_vapor"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
             android:name=".IconoLaboratorio"
             android:enabled="false"
             android:exported="true"
@@ -260,6 +273,19 @@
             android:exported="true"
             android:icon="@mipmap/ic_launcher_napoleon"
             android:roundIcon="@mipmap/ic_launcher_napoleon"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoDeco"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_deco"
+            android:roundIcon="@mipmap/ic_launcher_deco"
             android:targetActivity=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

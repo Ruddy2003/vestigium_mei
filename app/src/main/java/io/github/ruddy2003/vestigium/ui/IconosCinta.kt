@@ -97,6 +97,12 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
         }
         // Engrane.
         TemaId.ORDEN -> drawPath(figEngrane(o, w * 0.49f, 10, 0.86f), c, style = Stroke(g * 0.8f))
+        // La esfera de un manómetro: el bisel y la zona roja del final de la escala.
+        TemaId.VAPOR -> {
+            drawCircle(c, w * 0.46f, o, style = Stroke(g * 1.2f))
+            drawArc(c, 351f, 54f, false, Offset(o.x - w * 0.34f, o.y - h * 0.34f), Size(w * 0.68f, h * 0.68f), style = Stroke(g * 1.4f))
+            for (k in 0..4) { val a = 135f + k * 54f; drawLine(c, polarFig(o, w * 0.4f, a), polarFig(o, w * 0.33f, a), g * 0.6f) }
+        }
         // Anillo de benceno.
         TemaId.LABORATORIO -> drawPath(figPoligono(o, w * 0.48f, 6, 0f), c, style = Stroke(g))
         // Letrero de madera clavado.
@@ -109,6 +115,18 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
             drawArc(c, 100f, 140f, false, Offset(w * 0.05f, h * 0.05f), Size(w * 0.9f, h * 0.9f), style = Stroke(g * 0.6f))
             drawArc(c, 80f, -140f, false, Offset(w * 0.05f, h * 0.05f), Size(w * 0.9f, h * 0.9f), style = Stroke(g * 0.6f))
             for (k in 0..4) { drawCircle(c, w * 0.05f, polarFig(o, w * 0.45f, 110f + k * 30f)); drawCircle(c, w * 0.05f, polarFig(o, w * 0.45f, 70f - k * 30f)) }
+        }
+        // El octógono escalonado de un ascensor: marco cuadrado con las cuatro esquinas metidas en un escalón y un filete dentro.
+        TemaId.DECO -> {
+            val a = w * 0.04f; val k = w * 0.14f; val b = w - a; val ab = h - a
+            val marco = Path().apply {
+                moveTo(a + k, a); lineTo(b - k, a); lineTo(b - k, a + k * 0.5f); lineTo(b - k * 0.5f, a + k * 0.5f); lineTo(b - k * 0.5f, a + k); lineTo(b, a + k)
+                lineTo(b, ab - k); lineTo(b - k * 0.5f, ab - k); lineTo(b - k * 0.5f, ab - k * 0.5f); lineTo(b - k, ab - k * 0.5f); lineTo(b - k, ab)
+                lineTo(a + k, ab); lineTo(a + k, ab - k * 0.5f); lineTo(a + k * 0.5f, ab - k * 0.5f); lineTo(a + k * 0.5f, ab - k); lineTo(a, ab - k)
+                lineTo(a, a + k); lineTo(a + k * 0.5f, a + k); lineTo(a + k * 0.5f, a + k * 0.5f); lineTo(a + k, a + k * 0.5f); close()
+            }
+            drawPath(marco, c, style = Stroke(g * 0.7f))
+            drawRect(c.copy(alpha = 0.5f), Offset(w * 0.2f, h * 0.2f), Size(w * 0.6f, h * 0.6f), style = Stroke(g * 0.3f))
         }
         // Etiqueta de colección clavada con alfiler.
         TemaId.BOTANICO -> {
@@ -350,6 +368,11 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
         }
         // Un engrane.
         TemaId.ORDEN -> { drawPath(figEngrane(c, r, 8, 0.72f), color); drawCircle(hueco, r * 0.3f, c) }
+        // El manómetro: esfera llena, la escala vaciada y la aguja.
+        TemaId.VAPOR -> {
+            drawCircle(color, r, c); drawCircle(hueco.copy(alpha = 0.7f), r * 0.72f, c, style = Stroke(r * 0.12f))
+            drawLine(hueco, c, Offset(c.x + r * 0.5f, c.y - r * 0.45f), r * 0.16f, StrokeCap.Round); drawCircle(hueco, r * 0.16f, c)
+        }
         // El anillo de benceno.
         TemaId.LABORATORIO -> { drawPath(figPoligono(c, r, 6, 0f), color); drawCircle(hueco.copy(alpha = 0.55f), r * 0.5f, c, style = Stroke(r * 0.12f)) }
         // Un botón de costura con sus cuatro agujeros.
@@ -359,6 +382,14 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
         }
         // La estrella de la Legión de Honor.
         TemaId.NAPOLEON -> { drawPath(figLegion(c, r), color); drawCircle(hueco.copy(alpha = 0.6f), r * 0.26f, c) }
+        // El abanico solar: rayos alternos sobre su base y el medio sol vaciado.
+        TemaId.DECO -> {
+            val b = Offset(c.x, c.y + r * 0.45f)
+            for (i in 0 until 9) if (i % 2 == 0) drawArc(color, 180f + i * 20f, 20f, true, Offset(b.x - r * 1.15f, b.y - r * 1.15f), Size(r * 2.3f, r * 2.3f))
+            drawArc(color, 180f, 180f, false, Offset(b.x - r * 1.15f, b.y - r * 1.15f), Size(r * 2.3f, r * 2.3f), style = Stroke(r * 0.1f))
+            drawArc(hueco.copy(alpha = 0.6f), 180f, 180f, true, Offset(b.x - r * 0.38f, b.y - r * 0.38f), Size(r * 0.76f, r * 0.76f))
+            drawRect(color, Offset(b.x - r * 1.15f, b.y), Size(r * 2.3f, r * 0.2f))
+        }
         // Un escarabajo clavado con alfiler.
         TemaId.BOTANICO -> {
             for (lado in listOf(-1f, 1f)) for (k in 0..2)

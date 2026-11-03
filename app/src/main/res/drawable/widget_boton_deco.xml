@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Botón del widget del Art déco: chaflán de rascacielos y, abajo, la franja escalonada de una corona de torre. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FF201C15"/>
+            <stroke android:width="1dp" android:color="#4A3E24"/>
+            <corners android:radius="3dp"/>
+        </shape>
+    </item>
+    <item android:gravity="bottom|fill_horizontal" android:height="2.5dp" android:left="6dp" android:right="6dp" android:bottom="1.5dp">
+        <vector android:width="40dp" android:height="2.5dp" android:viewportWidth="39" android:viewportHeight="2.5">
+            <path android:pathData="M0,2.5 L0,1.6 L4,1.6 L4,0.8 L8,0.8 L8,0 L31,0 L31,0.8 L35,0.8 L35,1.6 L39,1.6 L39,2.5 Z" android:fillColor="#AAD9B44A"/>
+        </vector>
+    </item>
+</layer-list>

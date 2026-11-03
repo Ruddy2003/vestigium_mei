@@ -145,9 +145,11 @@ object LibroDiario {
         TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
         TemaId.REFUGIO -> Fuentes(R.font.vt323, R.font.courier_regular)
         TemaId.ORDEN -> Fuentes(R.font.saira_stencil, R.font.saira_regular)
+        TemaId.VAPOR -> Fuentes(R.font.caldera_titulo, R.font.bitter_regular)
         TemaId.LABORATORIO -> Fuentes(R.font.jost_medium, R.font.jost_regular)
         TemaId.COLONOS -> Fuentes(R.font.fell, R.font.oldstandard_regular)
         TemaId.NAPOLEON -> Fuentes(R.font.bodoni_titulo, R.font.bodoni_texto)
+        TemaId.DECO -> Fuentes(R.font.poiret_titulo, R.font.pasaje_regular)
         TemaId.BOTANICO -> Fuentes(R.font.fraunces_titulo, R.font.crimson_regular)
         TemaId.RUINAS -> Fuentes(R.font.letrero_titulo, R.font.overpass_regular)
         TemaId.NAVIDAD -> Fuentes(R.font.cinzel_deco_regular, R.font.calida_regular)
@@ -230,10 +232,17 @@ object LibroDiario {
             TemaId.DISTOPIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
             TemaId.REFUGIO -> "article{border:1px solid $p;border-radius:14px;padding:18px;margin-bottom:18px}.nota::first-letter{background:$p;color:$b;font-size:1.6em;padding:0 3px;margin-right:2px}"
             TemaId.ORDEN -> "article{border-top:3px solid $p;outline:1px solid $v;outline-offset:6px;margin:18px 0;padding:18px}.fecha{text-transform:uppercase;letter-spacing:.1em}" + capitular("2.6em", p)
+            // La lámina del plano: cuadrícula tenue, filete doble arriba y la fecha con el «⊙» del manómetro.
+            TemaId.VAPOR -> "article{border-top:4px double $p;border-left:1px solid $v;padding:14px 18px;background-image:linear-gradient(${v}18 1px,transparent 1px)," +
+                "linear-gradient(90deg,${v}18 1px,transparent 1px);background-size:100% 20px,20px 100%}.fecha{font-variant:small-caps;letter-spacing:.04em}" +
+                ".fecha::before{content:'\\2299  ';color:$s}" + capitular("3em", p)
             TemaId.LABORATORIO -> "article{border-top:1px solid $p;padding:18px;background-image:linear-gradient(${v}22 1px,transparent 1px),linear-gradient(90deg,${v}22 1px,transparent 1px);" +
                 "background-size:100% 24px,24px 100%}.meta::before{content:'Obs. — '}"
             TemaId.COLONOS -> "article{border-top:3px solid $p}article::before{content:'';display:block;border-top:1px solid $p;margin:2px 0 14px}" + capitular("3em", tinta)
             TemaId.NAPOLEON -> "h1{text-align:center;letter-spacing:.15em}article{border-top:1px solid $p;border-bottom:1px solid $p;outline:1px solid $s;outline-offset:4px;padding:18px;margin-bottom:18px}" + capitular("3em", p)
+            // Doble filete arriba y, encima de cada entrada, un medio sol de oro: el abanico de los programas de los años veinte.
+            TemaId.DECO -> "h1{text-align:center;letter-spacing:.32em;font-weight:400}article{border-top:3px double $p;padding-top:16px;margin-bottom:22px}" +
+                "article::before{content:'';display:block;width:44px;height:22px;margin:-30px auto 10px;background:radial-gradient(circle at 50% 100%,$p 58%,transparent 60%)}" + capitular("3.2em", p)
             TemaId.BOTANICO -> "article{border-top:0}article::before{content:'';display:block;height:8px;margin-bottom:12px;background:radial-gradient(ellipse 5px 3px at 6px 4px,$p 98%,transparent) 0 0/18px 8px repeat-x}" + capitular("2.8em", p)
             // La línea discontinua de una calle sobre cada entrada y la fecha como una placa de calle.
             TemaId.RUINAS -> "article{border-top:0}article::before{content:'';display:block;height:4px;margin-bottom:14px;background:repeating-linear-gradient(90deg,$s 0 22px,transparent 22px 34px)}" +
@@ -394,9 +403,11 @@ object LibroDiario {
             TemaId.DISTOPIA -> Medidas(11f, aire)
             TemaId.REFUGIO -> Medidas(11f, 1.35f)
             TemaId.ORDEN -> Medidas(11f, aire)
+            TemaId.VAPOR -> Medidas(11.5f, aire)
             TemaId.LABORATORIO -> Medidas(11f, aire)
             TemaId.COLONOS -> Medidas(12.5f, aire)
             TemaId.NAPOLEON -> Medidas(12.5f, aire)
+            TemaId.DECO -> Medidas(13f, aire)
             TemaId.BOTANICO -> Medidas(12.5f, aire)
             TemaId.RUINAS -> Medidas(12f, aire)
             TemaId.NAVIDAD -> Medidas(12.5f, aire)
@@ -448,11 +459,15 @@ object LibroDiario {
         TemaId.REFUGIO -> Inicial(R.font.vt323, 1.9f, invertida = true)
         // La letra de estarcido.
         TemaId.ORDEN -> Inicial(R.font.saira_stencil, 2.2f, mayusculas = true)
+        // La capitular en «fat face», grande como en los carteles de las exposiciones.
+        TemaId.VAPOR -> Inicial(R.font.caldera_titulo, 2.8f)
         // «Obs. —» y la primera palabra en negrita, como en un cuaderno de laboratorio.
         TemaId.LABORATORIO -> Inicial(R.font.jost_semibold, 1f, palabra = true, prefijo = "Obs. — ")
         // La letra de grabado de la gaceta, en negro de imprenta.
         TemaId.COLONOS -> Inicial(R.font.fell, 2.6f, tinta = true)
         TemaId.NAPOLEON -> Inicial(R.font.bodoni_titulo, 2.5f)
+        // La capital fina y alta de las marquesinas, en oro.
+        TemaId.DECO -> Inicial(R.font.poiret_titulo, 2.9f, mayusculas = true)
         TemaId.BOTANICO -> Inicial(R.font.fraunces_negrita, 2.3f)
         TemaId.RUINAS -> Inicial(R.font.letrero_titulo, 2.4f)
         TemaId.NAVIDAD -> Inicial(R.font.cinzel_deco_bold, 2.3f)
@@ -603,6 +618,16 @@ object LibroDiario {
                 for (j in 0 until 8) { val a = j * Math.PI / 4; cv.drawLine(cx + 4.2f * cos(a).toFloat(), y + 4.2f * sin(a).toFloat(), cx + 6.4f * cos(a).toFloat(), y + 6.4f * sin(a).toFloat(), diente) }
                 cv.drawCircle(cx, y, 1.2f, relleno)
             }
+            TemaId.VAPOR -> {
+                // Un manómetro chico: la esfera, cinco marcas y la aguja.
+                lados(10f)
+                cv.drawCircle(cx, y, 5f, Paint(trazo).apply { strokeWidth = 1.1f })
+                val marca = Paint(linea).apply { strokeWidth = 0.8f }
+                for (j in 0..4) { val a = Math.toRadians(135.0 + 67.5 * j); cv.drawLine(cx + 3.2f * cos(a).toFloat(), y + 3.2f * sin(a).toFloat(), cx + 4.6f * cos(a).toFloat(), y + 4.6f * sin(a).toFloat(), marca) }
+                val ag = Math.toRadians(300.0)
+                cv.drawLine(cx, y, cx + 3.6f * cos(ag).toFloat(), y + 3.6f * sin(ag).toFloat(), Paint(linea).apply { strokeWidth = 1.2f })
+                cv.drawCircle(cx, y, 0.9f, relleno)
+            }
             TemaId.LABORATORIO -> {
                 // Una regla con sus marcas.
                 cv.drawLine(x0, y + 2f, x1, y + 2f, linea)
@@ -619,6 +644,16 @@ object LibroDiario {
                 lados(13f)
                 cv.drawCircle(cx, y, 7f, Paint(trazo).apply { strokeWidth = 0.9f })
                 cv.drawText("N", cx, y + 3.2f, TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTitulo; textSize = 9f; color = acento; textAlign = Paint.Align.CENTER })
+            }
+            TemaId.DECO -> {
+                // Tres filetes que se acortan hacia el centro, a cada lado de un abanico solar.
+                for (k in 0..2) {
+                    val yy = y + (k - 1) * 2.4f; val corte = 12f + k * 7f
+                    cv.drawLine(x0 + k * 10f, yy, cx - corte, yy, Paint(linea).apply { strokeWidth = 0.7f })
+                    cv.drawLine(cx + corte, yy, x1 - k * 10f, yy, Paint(linea).apply { strokeWidth = 0.7f })
+                }
+                for (j in 0 until 7) if (j % 2 == 0) cv.drawArc(cx - 8f, y - 6f, cx + 8f, y + 10f, 180f + j * 180f / 7, 180f / 7, true, relleno)
+                cv.drawRect(cx - 9f, y + 2f, cx + 9f, y + 3.2f, relleno)
             }
             TemaId.BOTANICO -> {
                 // Un tallo que ondula con sus hojas.
@@ -820,6 +855,15 @@ object LibroDiario {
                 var x = 22f; while (x <= A - 22f) { cv.drawCircle(x, 22f, 1.8f, relleno); cv.drawCircle(x, B - 22f, 1.8f, relleno); x += 24f }
                 var y = 46f; while (y <= B - 46f) { cv.drawCircle(22f, y, 1.8f, relleno); cv.drawCircle(A - 22f, y, 1.8f, relleno); y += 24f }
             }
+            TemaId.VAPOR -> {
+                // El marco doble de una lámina de patente y la cartela de abajo a la derecha, con sus casillas.
+                rect(22f, Paint(trazo).apply { strokeWidth = 1.6f })
+                rect(27f, Paint(trazo).apply { strokeWidth = 0.6f })
+                val x0 = A - 27f - 130f; val y0 = B - 27f - 44f
+                cv.drawRect(x0, y0, A - 27f, B - 27f, Paint(trazo).apply { strokeWidth = 0.8f })
+                cv.drawLine(x0, y0 + 22f, A - 27f, y0 + 22f, Paint(trazo).apply { strokeWidth = 0.6f })
+                cv.drawLine(x0 + 70f, y0, x0 + 70f, B - 27f, Paint(trazo).apply { strokeWidth = 0.6f })
+            }
             TemaId.LABORATORIO -> {
                 // Un filete fino con las marcas de una regla en los bordes de arriba y de la izquierda.
                 rect(22f, Paint(trazo).apply { strokeWidth = 0.8f })
@@ -834,6 +878,17 @@ object LibroDiario {
                 // Doble filete y un botón en cada esquina.
                 rect(24f, trazo); rect(28f, fino)
                 esquinas.forEach { (x, y) -> val (sx, sy) = haciaDentro(x, y); cv.drawCircle(x + sx * 2f, y + sy * 2f, 4.5f, relleno); cv.drawCircle(x + sx * 2f, y + sy * 2f, 7.5f, fino) }
+            }
+            TemaId.DECO -> {
+                // Doble filete y, en cada esquina, tres escalones de oro que se meten hacia dentro.
+                rect(24f, trazo); rect(28f, fino)
+                esquinas.forEach { (x, y) ->
+                    val (sx, sy) = haciaDentro(x, y)
+                    for (k in 1..3) {
+                        val xa = x + sx * k * 6f; val ya = y + sy * (4 - k) * 6f
+                        cv.drawRect(minOf(x, xa), minOf(y, ya), maxOf(x, xa), maxOf(y, ya), fino)
+                    }
+                }
             }
             TemaId.BOTANICO -> {
                 // Un filete redondeado con dos hojas en cada esquina.

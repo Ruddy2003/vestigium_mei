@@ -1,5 +1,5 @@
 """
-Íconos de la app (logo_fondo_<id>.jpg + logo_<id>.png, 432 × 432, y logo_mono.png). La composición es la misma en todos
+Íconos de la app (logo_fondo_<id>.jpg + logo_<id>.webp, WebP sin pérdida, 432 × 432, y logo_mono.webp). La composición es la misma en todos
 los temas: la huella maestra (maestra.py) del mismo tamaño y en la misma posición, dentro del círculo seguro del ícono
 adaptativo (66 %). Cada tema añade solo tres cosas (lote 1 del plan de diseño):
 1. una textura de fondo propia y tenue;
@@ -92,6 +92,12 @@ def acero(sem):          # Orden: acero cepillado en horizontal
     rayas = np.asarray(Image.fromarray(((ruido(sem, 1, 0) * 30) + 128).clip(0, 255).astype(np.uint8)).resize((TAM // 24, TAM)).resize((TAM, TAM), Image.BILINEAR), np.float32)
     return (rayas - 128) / 30 * 0.7 + ruido(sem + 1, 0.3, 30)
 
+def hollin_plano(sem):   # Vapor victoriano: papel de patente con nubes de hollín, motas de carbón y la doble regla del margen
+    nubes = np.clip(ruido(sem, 1.0, 22), -2, 0) * 0.9
+    motas = np.asarray(Image.fromarray(((ruido(sem + 5, 1, 0) > 2.6) * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(3)), np.float32) / 255 * -0.9
+    regla = ((np.abs(X - 40) < 1) | (np.abs(X - 46) < 0.8) | (np.abs(Y - 40) < 1) | (np.abs(Y - 46) < 0.8)) * -0.6
+    return nubes + motas + regla + ruido(sem + 2, 0.25, 2)
+
 def cuadricula(sem):     # Laboratorio: papel de laboratorio cuadriculado
     fino = ((X % 18 < 1) | (Y % 18 < 1)) * -0.6
     grueso = ((X % 90 < 1.5) | (Y % 90 < 1.5)) * -0.6
@@ -108,6 +114,15 @@ def marmol(sem):         # Napoleónico: mármol con vetas suaves
     vetas = np.abs(np.sin((x * 1.3 + y * 0.7) * 4 + t * 3.2)) ** 24 * -1.1
     finas = np.abs(np.sin((x * 0.6 - y * 1.1) * 9 + t * 4.5)) ** 40 * -0.5
     return vetas + finas + ruido(sem + 1, 0.3, 3) + ruido(sem + 2, 0.5, 20)
+
+def laca(sem):           # Art déco: laca negra con escamas de abanico apenas grabadas y el brillo en diagonal
+    r = 27
+    fila = (Y // (r * 0.78)).astype(int)
+    cx = (X + (fila % 2) * r) % (2 * r) - r; cy = Y % (r * 0.78) - r * 0.78
+    d = np.sqrt(cx ** 2 + cy ** 2)
+    escamas = ((np.abs(d - r) < 0.9) | (np.abs(d - r * 0.6) < 0.7)) & (cy < 0)
+    brillo = np.exp(-(((X - Y * 0.7) - TAM * 0.3) / (TAM * 0.2)) ** 2) * 0.6
+    return escamas * 0.8 + brillo + ruido(sem, 0.2, 2)
 
 def herbario(sem):       # Botánico: papel de herbario con fibras y nervaduras muy tenues
     nerv = (np.abs(np.sin((X - Y * 0.6) * 0.035 + ruido(sem, 1.5, 16))) < 0.04) * -0.8
@@ -232,6 +247,16 @@ def _cupolas(d, c, n=8, r=8.5):       # cúpulas: medio disco hacia afuera con s
         lx, ly = _pos(a, RADIO + r + 1.6)
         d.ellipse([lx - 1.4 * K, ly - 1.4 * K, lx + 1.4 * K, ly + 1.4 * K], fill=c)
 
+def _abanicos(d, c, n=10, r=10.5):     # Art déco: abanicos solares hacia afuera, de tres rayos llenos, y un punto entre uno y otro
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        x, y = _pos(a); g = math.degrees(a)
+        caja = [x - r * K, y - r * K, x + r * K, y + r * K]
+        for k in range(5):
+            if k % 2 == 0: d.pieslice(caja, g - 90 + k * 36, g - 90 + (k + 1) * 36, fill=c)
+        px, py = _pos(a + math.pi / n)
+        d.ellipse([px - 1.5 * K, py - 1.5 * K, px + 1.5 * K, py + 1.5 * K], fill=c)
+
 def _rayas(d, c, n=32, largo=0.6):    # segmentos sobre el anillo (como una barra de carga)
     for i in range(n):
         a0 = 2 * math.pi * i / n; a1 = a0 + 2 * math.pi / n * largo
@@ -290,6 +315,22 @@ def _remaches(d, c, n=8):
         x, y = _pos(2 * math.pi * i / n + math.pi / 8); r = 4.2 * K
         d.ellipse([x - r, y - r, x + r, y + r], fill=c)
         d.ellipse([x - r * 0.45 - r * 0.3, y - r * 0.45 - r * 0.3, x + r * 0.45 - r * 0.3, y + r * 0.45 - r * 0.3], fill=(255, 255, 255, 110))
+
+def _engrane_manometro(d, c, n=16):   # Vapor victoriano: dientes de engrane por fuera y cuatro manómetros sobre el anillo
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        p = [_pos(a + s * 0.07, RADIO + h) for s, h in ((-1, 0), (-0.6, 9), (0.6, 9), (1, 0))]
+        d.polygon(p, fill=c)
+    for i in range(4):
+        a = math.pi / 4 + i * math.pi / 2
+        x, y = _pos(a); r = 11 * K
+        d.ellipse([x - r, y - r, x + r, y + r], fill=c)
+        d.ellipse([x - r * 0.72, y - r * 0.72, x + r * 0.72, y + r * 0.72], fill=(239, 228, 203, 255))
+        for k in range(5):
+            b = math.radians(135 + 67.5 * k)
+            d.line([(x + r * 0.6 * math.cos(b), y + r * 0.6 * math.sin(b)), (x + r * 0.42 * math.cos(b), y + r * 0.42 * math.sin(b))], fill=c, width=int(K * 1.4))
+        g = math.radians(300)
+        d.line([(x, y), (x + r * 0.55 * math.cos(g), y + r * 0.55 * math.sin(g))], fill=(156, 61, 36, 255), width=int(K * 2))
 
 def _cuerda(d, c, n=56):              # cuerda trenzada
     for i in range(n):
@@ -459,9 +500,11 @@ TEMAS = {
     'distopia':     (papel,         '#EFE9DA', '#1A1A1A',  10, 6, 'tinta',       _marcas),
     'refugio':      (hormigon,      '#1B1C1A', '#9BE8AE',   8, 5, 'fosforo',     _dientes),
     'orden':        (acero,         '#16171A', '#C2A15E',   9, 5, 'dorado',      _remaches),
+    'vapor':        (hollin_plano,  '#E6D9BD', '#7A4E12',  10, 5, 'dorado',      _engrane_manometro),
     'laboratorio':  (cuadricula,    '#F1F2F1', '#1E5A66',   7, 4, 'tinta',       _marcas),
     'colonos':      (gaceta,        '#E7E3DA', '#22324D',   9, 6, 'tinta',       _cuerda),
     'napoleon':     (marmol,        '#EDEBE6', '#1F2B5C',  12, 5, 'esmalte',     _estrellas),
+    'deco':         (laca,          '#15120E', '#D9B44A',   9, 5, 'dorado',      _abanicos),
     'botanico':     (herbario,      '#EAE9E1', '#3B2E1D',   9, 6, 'ferrogalica', _hojas_alternas),
     'ruinas':       (hormigon_agrietado, '#E2E2DA', '#3E5A2A', 9, 5, 'tinta',    _hiedra),
     'navidad':      (fieltro_nieve, '#1C1E1D', '#E4C987',   8, 5, 'dorado',      _copos),
@@ -540,14 +583,14 @@ def hacer(tema, salida):
         halo.alpha_composite(capa); capa = halo
     final = anillo(tema, base)
     final.alpha_composite(capa)
-    final.save(os.path.join(salida, f'logo_{tema}.png'), optimize=True)
+    final.save(os.path.join(salida, f'logo_{tema}.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
 
 
 def mono(salida):
     """El ícono monocromo (Android lo tiñe): solo la huella maestra, sin anillo."""
     m = mascara()
     img = np.dstack([np.full((TAM, TAM, 3), 255, np.uint8), (m * 255).astype(np.uint8)])
-    Image.fromarray(img, 'RGBA').save(os.path.join(salida, 'logo_mono.png'), optimize=True)
+    Image.fromarray(img, 'RGBA').save(os.path.join(salida, 'logo_mono.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
 
 
 COLUMNAS = 7
@@ -570,7 +613,7 @@ def muestra(salida, archivo, cel=160):
     imagenes = []
     for t in TEMAS:
         f = Image.open(os.path.join(salida, f'logo_fondo_{t}.jpg')).convert('RGBA')
-        f.alpha_composite(Image.open(os.path.join(salida, f'logo_{t}.png')))
+        f.alpha_composite(Image.open(os.path.join(salida, f'logo_{t}.webp')))
         imagenes.append(f.crop(caja))
     hoja_de_contacto(imagenes, archivo, cel=cel, mascaras=[c.crop(caja)] * len(imagenes))
 

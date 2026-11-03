@@ -67,7 +67,10 @@ import kotlin.math.sqrt
 
 /** La forma con que el tema nuevo se abre sobre el anterior. */
 private enum class BarridoTema {
-    ARCO, CUPOLA, PIXELES, SOL, PIRAMIDE, ROMBO, OJO, ESCOTILLA, ENGRANE, MEMBRANA, COLUMNAS, CORTINA, HOJA,
+    ARCO, CUPOLA, PIXELES, SOL, PIRAMIDE, ROMBO, OJO, ESCOTILLA, ENGRANE, MEMBRANA, COLUMNAS, CORTINA,
+    /** Art déco: la corona escalonada de un rascacielos que crece desde el toque. */
+    ESCALONES,
+    HOJA,
     TINTA,
     GRIETA,
     COPO, ABANICO, SELLO, OJIVA, CIRCULO, MAREA, OCHO, HORIZONTE, VITRUVIO, ROSA, ESTRELLA, BANDAS, HEXAGONO,
@@ -78,6 +81,8 @@ private enum class BarridoTema {
     CRUZ,
     /** Mesoamérica: el rombo escalonado de los frisos, que crece grada por grada. */
     GRADAS,
+    /** Vapor victoriano: una bocanada de vapor que se hincha desde el toque. */
+    BOCANADA,
 }
 
 /**
@@ -118,12 +123,17 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.REFUGIO -> MatizMovimiento(BarridoTema.ESCOTILLA, 780, CubicBezierEasing(0.7f, 0f, 0.3f, 1f), 0f, 22f, 1f, 380, 50, FastOutSlowInEasing, 1f, 0.4f, 900f)
     // Engrane que gira; acero pesado.
     TemaId.ORDEN -> MatizMovimiento(BarridoTema.ENGRANE, 760, CubicBezierEasing(0.5f, 0f, 0.2f, 1f), 0f, 12f, 1f, 360, 50, FastOutSlowInEasing, 1.2f, 0.9f, 1400f)
+    // Una bocanada de vapor que se hincha desde el toque; las piezas llegan de lado y frenan como un tren en el andén.
+    TemaId.VAPOR -> MatizMovimiento(BarridoTema.BOCANADA, 820, CubicBezierEasing(0.3f, 0f, 0.15f, 1f), 18f, 4f, 0.98f, 400, 55, LinearOutSlowInEasing, 1.05f, 0.7f, 1100f)
     // Membrana de célula que ondula; preciso y contenido.
     TemaId.LABORATORIO -> MatizMovimiento(BarridoTema.MEMBRANA, 680, FastOutSlowInEasing, 0f, 8f, 0.96f, 400, 50, FastOutSlowInEasing, 0.85f, 0.8f, 1200f)
     // Columnas de periódico que se imprimen de arriba abajo.
     TemaId.COLONOS -> MatizMovimiento(BarridoTema.COLUMNAS, 820, LinearOutSlowInEasing, 0f, 20f, 1f, 450, 65, LinearOutSlowInEasing, 1f, 0.65f, 650f)
     // Cortina que se abre al centro; las secciones entran marchando desde la derecha.
     TemaId.NAPOLEON -> MatizMovimiento(BarridoTema.CORTINA, 740, FastOutSlowInEasing, 18f, 0f, 1f, 420, 55, FastOutSlowInEasing, 1.05f, 0.55f, 1000f)
+    // La corona escalonada de un rascacielos que crece desde el toque; las secciones suben como el ascensor exprés y se
+    // detienen en su piso, sin rebote.
+    TemaId.DECO -> MatizMovimiento(BarridoTema.ESCALONES, 720, CubicBezierEasing(0.7f, 0f, 0.2f, 1f), 0f, 26f, 0.98f, 460, 70, FastOutSlowInEasing, 1.0f, 0.5f, 850f)
     // Una hoja que se despliega; resorte de tallo.
     TemaId.BOTANICO -> MatizMovimiento(BarridoTema.HOJA, 860, CubicBezierEasing(0.3f, 0f, 0.2f, 1f), 0f, 16f, 0.97f, 520, 65, FastOutSlowInEasing, 0.95f, 0.45f, 600f)
     // Un boquete de borde quebrado que se abre en el hormigón; las secciones se asientan como polvo y el botón pesa como una losa.
@@ -221,7 +231,10 @@ fun contando(valor: String): String {
  */
 internal enum class VivoTema(val periodo: Int) {
     LUCERNA(16000), STORNI(30000), VOLCADO(6000), OLIVO(30000), RAYO_ORO(26000), CENIZA(28000), VAPOR(18000), FRAGUA(7000),
-    BURBUJAS(16000), GACETA(40000), CHARRETERAS(9000), HORMIGAS(70000), LUCIERNAGAS(9000), NIEVE(24000),
+    BURBUJAS(16000), GACETA(40000), CHARRETERAS(9000),
+    /** Art déco: los reflectores de una noche de estreno sobre los rascacielos. */
+    REFLECTORES(20000),
+    HORMIGAS(70000), LUCIERNAGAS(9000), NIEVE(24000),
     NIEBLA(60000),
     VILANOS(30000), GOTERAS(12000),
     ARENA(14000), PETALOS(20000), VITRAL(80000), ESTRELLAS(9000), MAR(15000), AGUA(14000), NUBES(180000), SAMARAS(24000), OLEAJE(30000), ESTRELLAS_ROJAS(36000),
@@ -233,6 +246,8 @@ internal enum class VivoTema(val periodo: Int) {
     JEROGLIFOS(20000),
     /** Mesoamérica: las dos ruedas del tzolk'in (13 números y 20 signos) que avanzan un día por segundo; 260 días = 260 s. */
     TZOLKIN(260000),
+    /** Vapor victoriano: el hollín de las chimeneas y, de noche, el gas de alumbrado. */
+    HOLLIN(20000),
 }
 
 /** El tipo de fondo vivo de cada tema (solo el Botánico cambia entre el día y la noche; el Refugio suma el barrido de noche). */
@@ -248,9 +263,11 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
     TemaId.REFUGIO -> VivoTema.VAPOR             // vapor que sube, de día y de noche
     TemaId.ORDEN -> VivoTema.FRAGUA              // chispas de fragua en parábola
+    TemaId.VAPOR -> VivoTema.HOLLIN              // copos de hollín que caen girando; de noche, el halo del gas de alumbrado
     TemaId.LABORATORIO -> VivoTema.BURBUJAS      // burbujas que suben en el matraz
     TemaId.COLONOS -> VivoTema.GACETA            // hojas de periódico que arrastra el viento
     TemaId.NAPOLEON -> VivoTema.CHARRETERAS      // destellos de oro de charreteras
+    TemaId.DECO -> VivoTema.REFLECTORES          // reflectores de estreno que barren el cielo sobre las torres escalonadas
     TemaId.BOTANICO -> if (oscuro) VivoTema.LUCIERNAGAS else VivoTema.HORMIGAS
     TemaId.RUINAS -> if (oscuro) VivoTema.GOTERAS else VivoTema.VILANOS   // de día, vilanos y hiedra colgante; de noche, goteras del techo roto
     TemaId.NAVIDAD -> VivoTema.NIEVE             // nieve con algún copo
@@ -519,6 +536,25 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             val chispa = if (oscuro) Color(0xFFFFB04A) else e.primary
             drawLine(al(chispa, (1f - tau) * (if (oscuro) 0.55f else 0.28f)), Offset(x, y), Offset(x - vx / n * l, y - dy / n * l), 1.2f * u, cap = StrokeCap.Round)
         }
+        VivoTema.HOLLIN -> {
+            // El hollín de las chimeneas: copos que bajan de lado, despacio, girando sobre sí mismos. De noche, además, el
+            // halo amarillo de dos faroles de gas que tiembla arriba.
+            if (oscuro) listOf(0.12f, 0.88f).forEachIndexed { i, fx ->
+                val c = Offset(w * fx, h * 0.07f); val r = 130f * u * (1f + 0.05f * senoVuelta(t * 11 + i * 0.37f))
+                drawCircle(Brush.radialGradient(listOf(al(Color(0xFFF2C46A), 0.09f), Color.Transparent), center = c, radius = r), r, c)
+            }
+            val copo = if (oscuro) Color(0xFFB09F82) else Color(0xFF231B14)
+            motas.take(30).forEach { m ->
+                val k = vueltas(m)
+                val baja = fraccionVivo(m.y + t * k)
+                val x = (fraccionVivo(m.x + baja * 0.22f) + 0.015f * senoVuelta(t * 2 * k + m.fase)) * w
+                val y = h * (-0.04f + baja * 1.08f)
+                val s = 2.4f * u * (0.6f + m.tam)
+                rotate(360f * (t * k + m.fase), Offset(x, y)) {
+                    drawRect(al(copo, (if (oscuro) 0.2f else 0.14f) * senoVuelta(baja * 0.5f)), Offset(x - s, y - s * 0.35f), Size(2 * s, s * 0.7f))
+                }
+            }
+        }
         VivoTema.BURBUJAS -> motas.take(22).forEach { m ->
             // Burbujas de contorno fino, con su brillo, que suben temblando y crecen un poco.
             val k = vueltas(m)
@@ -563,6 +599,41 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 }
                 rotate(if (m.tono == 1) 45f else 0f, p) { drawPath(destello, al(oro, (if (oscuro) 0.6f else 0.4f) * s)) }
                 drawCircle(al(oro, 0.25f * s), r * 0.15f, p)
+            }
+        }
+        VivoTema.REFLECTORES -> {
+            // Los reflectores de una noche de estreno barren el cielo desde el pie de los rascacielos; abajo, el perfil
+            // escalonado de las torres con su aguja y, delante, burbujas de champán que suben despacio.
+            val oro = if (oscuro) Color(0xFFF2D27A) else e.primary
+            listOf(Triple(0.18f, 0f, 1), Triple(0.56f, 0.33f, 2), Triple(0.86f, 0.71f, 1)).forEach { (fx, fase, k) ->
+                val pie = Offset(w * fx, h * 1.02f)
+                val ang = (-PI / 2 + 0.5 * senoVuelta(t * k + fase)).toFloat()
+                val largo = h * 1.15f
+                val punta = Offset(pie.x + largo * cos(ang), pie.y + largo * sin(ang))
+                val nx = -sin(ang); val ny = cos(ang); val ab = w * 0.07f
+                val haz = Path().apply {
+                    moveTo(pie.x - nx * 2f * u, pie.y - ny * 2f * u); lineTo(punta.x - nx * ab, punta.y - ny * ab)
+                    lineTo(punta.x + nx * ab, punta.y + ny * ab); lineTo(pie.x + nx * 2f * u, pie.y + ny * 2f * u); close()
+                }
+                drawPath(haz, Brush.linearGradient(listOf(al(oro, if (oscuro) 0.16f else 0.1f), Color.Transparent), start = pie, end = punta))
+            }
+            val tinta = if (oscuro) Color(0xFFF0E6CC) else e.onBackground
+            val sil = al(tinta, if (oscuro) 0.06f else 0.05f)
+            val linea = h * 0.96f
+            drawRect(sil, Offset(0f, linea), Size(w, h - linea))
+            listOf(0.08f to 0.1f, 0.3f to 0.17f, 0.5f to 0.24f, 0.7f to 0.14f, 0.9f to 0.19f).forEach { (fx, fa) ->
+                val a = h * fa; val an = w * 0.09f; val x = w * fx
+                drawRect(sil, Offset(x - an / 2, linea - a * 0.6f), Size(an, a * 0.6f))
+                drawRect(sil, Offset(x - an * 0.34f, linea - a * 0.82f), Size(an * 0.68f, a * 0.22f))
+                drawRect(sil, Offset(x - an * 0.18f, linea - a * 0.95f), Size(an * 0.36f, a * 0.13f))
+                drawLine(sil, Offset(x, linea - a * 0.95f), Offset(x, linea - a * 1.08f), 1.2f * u)
+            }
+            motas.take(14).forEach { m ->
+                val k = vueltas(m)
+                val vida = fraccionVivo(m.y + t * k)
+                val x = (m.x + 0.012f * senoVuelta(t * 4 * k + m.fase)) * w
+                val y = h * (1f - vida * 0.75f)
+                drawCircle(al(oro, (if (oscuro) 0.35f else 0.25f) * (1f - vida)), 2.2f * u * (0.5f + m.tam), Offset(x, y), style = Stroke(0.8f * u))
             }
         }
         VivoTema.HORMIGAS -> motas.take(7).forEachIndexed { i, m ->
@@ -1105,6 +1176,15 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
             ruta.cubicTo(c.x + s * 0.3f, c.y - s * 1.5f, c.x + s, c.y - s * 0.9f, c.x + s, c.y - s * 0.2f)
             ruta.lineTo(c.x + s, c.y + s); ruta.close()
         }
+        BarridoTema.BOCANADA -> {
+            // La bocanada: un núcleo y nueve lóbulos alrededor que giran un poco mientras crece, como el vapor que sale de la válvula.
+            ruta.addOval(Rect(c, r * 1.05f))
+            for (k in 0 until 9) {
+                val a = Math.toRadians(k * 40.0 + 50.0 * p)
+                val q = Offset(c.x + (r * 0.95f * cos(a)).toFloat(), c.y + (r * 0.95f * sin(a)).toFloat())
+                ruta.addOval(Rect(q, r * (0.42f + 0.08f * ((k * 7) % 3))))
+            }
+        }
         BarridoTema.CRUZ -> {
             // La cruz patada sobre su disco: el disco cubre el círculo de radio r y los cuatro brazos se ensanchan hacia fuera.
             val r1 = r * 1.02f; val l = r * 2.3f
@@ -1267,6 +1347,15 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
         BarridoTema.CORTINA -> {
             val s = maxOf(c.x, w - c.x) * p * 1.02f
             ruta.addRect(Rect(c.x - s, 0f, c.x + s, h))
+        }
+        BarridoTema.ESCALONES -> {
+            // El cuerpo de la torre, tres retranqueos cada vez más estrechos y la aguja.
+            val s = r * 1.5f
+            ruta.addRect(Rect(c.x - s, c.y - s * 0.7f, c.x + s, c.y + s))
+            ruta.addRect(Rect(c.x - s * 0.78f, c.y - s * 0.95f, c.x + s * 0.78f, c.y - s * 0.7f))
+            ruta.addRect(Rect(c.x - s * 0.56f, c.y - s * 1.18f, c.x + s * 0.56f, c.y - s * 0.95f))
+            ruta.addRect(Rect(c.x - s * 0.34f, c.y - s * 1.4f, c.x + s * 0.34f, c.y - s * 1.18f))
+            ruta.addRect(Rect(c.x - s * 0.05f, c.y - s * 1.7f, c.x + s * 0.05f, c.y - s * 1.4f))
         }
         BarridoTema.HORIZONTE -> {
             val s = maxOf(c.y, h - c.y) * p * 1.02f

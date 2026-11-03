@@ -25,14 +25,20 @@ Son las pruebas que se fueron revisando una tras otra. Cada archivo importa los 
 | `gato16.py` | El casco romano más grande y de acero más oscuro. |
 | `gato17.py` | Las dos animaciones propias de cada tema (13 comunes + 2 = 15) y sus objetos. |
 | `gato18.py` | Arreglos antes de pasarlo a la app: la espada, el ornitóptero, objetos más grandes y el fondo de noche de los temas que no lo tenían. |
-| `exportar.py` | Lo convierte en recursos para la app. |
+| `gato19.py` | Lote 9a: los gatos que ya había, completos: fondos que se mueven en los que estaban quietos, noches dibujadas como noche (no recoloreadas), días con más detalle, el gato de noche con sus colores en Al-Ándalus, Botánico, Orden, Renacimiento y Seda, objetos propios (tetera, azahar, campana, gorro frigio) y Terminal en cian con su consola y el cursor. Sus temas pasan por el camino de fondos de gato9 (`NUEVOS`, `ANIM`). |
+| `gato20*.py` | Lote 9b: los gatos de los temas nuevos, uno o varios archivos (cada uno registra sus temas en la cadena). |
+| `gato20a.py` | Pirata (grabado sepia de carta náutica, pañuelo y parche, la cubierta), Ciudad neón (gato negro con contorno de luz que se suma como pantalla, impermeable con capucha, el callejón del puesto de fideos) y Roma de hoy (fresco sobre estuco, pañuelo al cuello, el vicolo con la cúpula y las ruinas). |
+| `gato20b.py` | Templario (esmalte heráldico, sobreveste con cruz y malla; la muralla de frontera y el campamento), Egipto (pintura de tumba, mau con usekh y arete; el Nilo y la tumba) y Mesoamérica (códice sobre amate, jaguarundi con jade y pluma; la pirámide en la selva y Venus con la fogata). |
+| `gato20c.py` | Ciudad verde (tricolor a la acuarela con musgo, collar de cuerda con hoja; calle con hiedra, luciérnagas), Horror cósmico (gato negro en aguatinta verde-negra, amuleto; faro en la niebla, tentáculo) y Abismo (casco de buzo de latón; de noche bioluminiscente, se suma como luz; arrecife y zona abisal con medusas). |
+| `gato20d.py` | Japón Edo (ukiyo-e con bokashi, bobtail mi-ke con cascabel), Prehistoria (pintura rupestre, collar de conchas), Vapor victoriano (plano técnico y latón, gafas y chaleco) y Art déco (laca negra con oro, pajarita y perlas): pelaje, material, accesorio, fondos de día y de noche y sus 2 acciones. `python3 gato20d.py hoja|fondos|bandas [tema…]` deja las hojas en `salida/`. |
+| `exportar.py` | Lo convierte en recursos para la app. Carga `gato19` y los `gato20*` que existan. |
 
 Cada script también se puede correr solo para ver su parte (hojas de sprites, bandas en GIF); lo que hace queda en
 `salida/`, que no se sube.
 
 ## Qué exporta
 
-Por cada tema y modo (`<tema>_c` claro, `<tema>_o` oscuro; ciber solo oscuro):
+Por cada tema y modo (`<tema>_c` claro, `<tema>_o` oscuro; los de `SOLO_OSCURO` en `exportar.py`, solo oscuro):
 
 - `_gato.webp`: atlas con todos los cuadros del gato ya pintados con el material del tema, recortados.
 - `_fondo.webp`: el fondo de la banda, a 3 px por dp (1236×240).

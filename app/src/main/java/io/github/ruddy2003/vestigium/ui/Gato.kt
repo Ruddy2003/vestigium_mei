@@ -61,42 +61,44 @@ object Gato {
     private const val DT = DT_MS / 1000f
 
     /**
-     * Si el tema tiene gato: los 21 temas originales tienen su arte en assets/gato; los del lote 8, todavía no (lote 9).
-     * En esos, la banda no aparece.
+     * Si el tema tiene gato, es decir, su arte en assets/gato (lo exporta herramientas/gato/exportar.py). En los que todavía
+     * no lo tienen, la banda no aparece.
      */
     fun tieneGato(t: TemaId): Boolean = when (t) {
         TemaId.ROMANO -> true
-        TemaId.URBE -> false
+        TemaId.URBE -> true
         TemaId.CIBER -> true
-        TemaId.NEON -> false
+        TemaId.NEON -> true
         TemaId.HELENO -> true
-        TemaId.EGIPTO -> false
+        TemaId.EGIPTO -> true
         TemaId.MEDIEVAL -> true
-        TemaId.TEMPLARIO -> false
+        TemaId.TEMPLARIO -> true
         TemaId.DISTOPIA -> true
         TemaId.REFUGIO -> true
         TemaId.ORDEN -> true
+        TemaId.VAPOR -> true
         TemaId.LABORATORIO -> true
         TemaId.COLONOS -> true
         TemaId.NAPOLEON -> true
+        TemaId.DECO -> true
         TemaId.BOTANICO -> true
-        TemaId.RUINAS -> false
+        TemaId.RUINAS -> true
         TemaId.NAVIDAD -> true
         TemaId.SEDA -> true
-        TemaId.EDO -> false
+        TemaId.EDO -> true
         TemaId.GOTICO -> true
-        TemaId.ARCANO -> false
+        TemaId.ARCANO -> true
         TemaId.ESPACIO -> true
-        TemaId.ABISMO -> false
+        TemaId.ABISMO -> true
         TemaId.ANDALUS -> true
-        TemaId.MESO -> false
+        TemaId.MESO -> true
         TemaId.MONGOL -> true
         TemaId.RENACIMIENTO -> true
-        TemaId.PIRATA -> false
+        TemaId.PIRATA -> true
         TemaId.URSS -> true
         TemaId.REVOLUCION -> true
         TemaId.ANTIGUAS -> true
-        TemaId.CUEVA -> false
+        TemaId.CUEVA -> true
     }
 
     // ---- Índice de recursos (assets/gato/gato.json).

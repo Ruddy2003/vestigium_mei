@@ -452,6 +452,15 @@ fun FraseDelDia(fecha: String) {
                 listOf(Offset(16 * u, 5 * u), Offset(w - 16 * u, 5 * u), Offset(16 * u, h - 5 * u), Offset(w - 16 * u, h - 5 * u)).forEach { drawCircle(cs.secondary, 2.2f * u, it) }
             }.padding(horizontal = 18.dp, vertical = 14.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»") }
         }
+        // La placa de nombre de una locomotora: remate redondo arriba, el filete de latón por dentro y un remache a cada lado.
+        TemaId.VAPOR -> Surface(shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp, bottomEnd = 4.dp, bottomStart = 4.dp), color = cs.surface,
+            border = BorderStroke(2.dp, cs.primary.copy(alpha = 0.8f)), modifier = arriba) {
+            Box(Modifier.drawBehind {
+                val u = 1.dp.toPx(); val w = size.width; val h = size.height
+                drawRoundRect(cs.primary.copy(alpha = 0.35f), Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u), androidx.compose.ui.geometry.CornerRadius(17 * u, 17 * u), style = Stroke(0.8f * u))
+                listOf(Offset(10 * u, h / 2), Offset(w - 10 * u, h / 2)).forEach { drawCircle(cs.tertiary, 2.4f * u, it); drawCircle(Color.White.copy(alpha = 0.4f), 0.9f * u, it - Offset(0.7f * u, 0.7f * u)) }
+            }.padding(horizontal = 22.dp, vertical = 16.dp)) { CuerpoFrase(f, fecha, rotulo, "“", "”") }
+        }
         // Etiqueta de laboratorio con una regla graduada arriba.
         TemaId.LABORATORIO -> Surface(shape = RoundedCornerShape(14.dp), color = cs.surface, border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.4f)), modifier = arriba) {
             Column {
@@ -474,6 +483,19 @@ fun FraseDelDia(fecha: String) {
             Canvas(Modifier.fillMaxWidth(0.6f).height(6.dp)) { fileteDidot(cs.tertiary) }
             Box(Modifier.padding(vertical = 8.dp)) { CuerpoFrase(f, fecha, rotulo, "« ", " »", centrado = true) }
             Canvas(Modifier.fillMaxWidth(0.6f).height(6.dp)) { fileteDidot(cs.tertiary) }
+        }
+        // El programa de la función: el abanico de oro arriba, la frase entre comillas sencillas y tres filetes escalonados.
+        TemaId.DECO -> Column(arriba, horizontalAlignment = Alignment.CenterHorizontally) {
+            Canvas(Modifier.fillMaxWidth(0.7f).height(16.dp)) {
+                val u = 1.dp.toPx(); val b = Offset(size.width / 2, size.height - u); val r = 13 * u
+                for (i in 0 until 9) if (i % 2 == 0) drawArc(cs.primary, 180f + i * 20f, 20f, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+                drawLine(cs.primary, Offset(0f, b.y), Offset(b.x - r - 4 * u, b.y), u); drawLine(cs.primary, Offset(b.x + r + 4 * u, b.y), Offset(size.width, b.y), u)
+            }
+            Box(Modifier.padding(vertical = 8.dp)) { CuerpoFrase(f, fecha, rotulo, "‹ ", " ›", centrado = true) }
+            Canvas(Modifier.fillMaxWidth(0.6f).height(9.dp)) {
+                val u = 1.dp.toPx()
+                listOf(1f, 0.66f, 0.33f).forEachIndexed { k, fr -> drawLine(cs.primary.copy(alpha = 0.8f - k * 0.2f), Offset(size.width * (1 - fr) / 2, (1 + k * 3) * u), Offset(size.width * (1 + fr) / 2, (1 + k * 3) * u), 0.8f * u) }
+            }
         }
         // Etiqueta de herbario clavada con un alfiler.
         TemaId.BOTANICO -> Surface(shape = RoundedCornerShape(4.dp), color = cs.surface, border = BorderStroke(1.dp, cs.outline), modifier = arriba) {
@@ -913,9 +935,11 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
         TemaId.REFUGIO -> c(LetraExtra.vt323, FontWeight.Normal, 30f, 0.4f)
         TemaId.ORDEN -> c(LetraExtra.estarcido, FontWeight.Normal, 23f, 1.2f)
+        TemaId.VAPOR -> c(LetraExtra.caldera, FontWeight.Normal, 24f, 0.4f, "lnum")
         TemaId.LABORATORIO -> c(LetraExtra.jost, FontWeight.Normal, 23f, 1f, "tnum")
         TemaId.COLONOS -> c(LetraExtra.fell, FontWeight.Normal, 24f, 0.2f, "lnum")
         TemaId.NAPOLEON -> c(LetraExtra.bodoniTitulo, FontWeight.SemiBold, 23f, 0.8f, "lnum")
+        TemaId.DECO -> c(LetraExtra.poiret, FontWeight.Normal, 26f, 2f, "lnum, tnum")   // las cifras finas y altas de las marquesinas
         TemaId.BOTANICO -> c(LetraExtra.fraunces, FontWeight.Medium, 22f, 0f)
         TemaId.RUINAS -> c(LetraExtra.letrero, FontWeight.Normal, 24f, 0.5f, "tnum")
         TemaId.NAVIDAD -> c(LetraExtra.amiri, FontWeight.Normal, 25f, 0f)
@@ -1206,6 +1230,16 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             drawRect(color ?: linea, Offset(w * 0.4f, h - 4 * u), Size(w * 0.2f, 4 * u))
                             sello = cs.secondary
                         }
+                        // Chimeneas de fábrica: el fuste de ladrillo que se angosta, el remate más ancho arriba y las hiladas.
+                        TemaId.VAPOR -> {
+                            val bx = w * 0.2f; val bw = w * 0.6f; val cap = minOf(4 * u, barH * 0.2f); val ala = w * 0.08f
+                            pinta(Path().apply {
+                                moveTo(bx, h); lineTo(bx + bw * 0.1f, top + cap); lineTo(bx - ala, top + cap); lineTo(bx - ala, top)
+                                lineTo(bx + bw + ala, top); lineTo(bx + bw + ala, top + cap); lineTo(bx + bw * 0.9f, top + cap); lineTo(bx + bw, h); close()
+                            })
+                            if (color != null) { var y = top + cap + 5 * u; while (y < h - 2 * u) { drawLine(Color.Black.copy(alpha = 0.18f), Offset(bx + bw * 0.1f, y), Offset(bx + bw * 0.9f, y), 0.6f * u); y += 5 * u } }
+                            sello = cs.tertiary
+                        }
                         // Probetas de fondo redondo, con su borde y un brillo de vidrio.
                         TemaId.LABORATORIO -> {
                             val tx = w * 0.15f; val tw = w * 0.7f; val rr = tw / 2
@@ -1238,6 +1272,17 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             drawRect(oro, Offset(bx, top + bw * 0.5f), Size(bw, 2.5f * u))
                             drawRect(oro, Offset(bx, h - bw * 0.5f - 2.5f * u), Size(bw, 2.5f * u))
                             if (color != null) { var y = top + bw * 0.5f + 8 * u; while (y < h - bw * 0.5f - 6 * u) { drawCircle(oro, 1.1f * u, Offset(w / 2, y)); y += 7 * u } }
+                            sello = oro
+                        }
+                        // Rascacielos: cada día es una torre con su corona escalonada, la aguja y una columna de ventanas encendidas.
+                        TemaId.DECO -> {
+                            val m = minOf(w * 0.18f, barH * 0.12f)
+                            pinta(Path().apply {
+                                moveTo(0f, h); lineTo(0f, top + 2 * m); lineTo(w * 0.16f, top + 2 * m); lineTo(w * 0.16f, top + m); lineTo(w * 0.32f, top + m); lineTo(w * 0.32f, top)
+                                lineTo(w * 0.68f, top); lineTo(w * 0.68f, top + m); lineTo(w * 0.84f, top + m); lineTo(w * 0.84f, top + 2 * m); lineTo(w, top + 2 * m); lineTo(w, h); close()
+                            })
+                            drawLine(color ?: linea, Offset(w / 2, top), Offset(w / 2, top - m), 1.2f * u)
+                            if (color != null) { var y = top + 2 * m + 5 * u; while (y < h - 4 * u) { drawRect(oro, Offset(w * 0.44f, y), Size(w * 0.12f, 2 * u)); y += 6 * u } }
                             sello = oro
                         }
                         // Plantas: tallo con hojas alternas y un capullo arriba.

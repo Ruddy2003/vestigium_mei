@@ -340,6 +340,41 @@ object Frases {
         f("Nihil enim est quod non adsidua meditatio facillimum reddat.", "No hay nada que la práctica constante no vuelva facilísimo.", "Vegecio, Compendio de técnica militar I, 19"),
     )
 
+    /** Vapor victoriano: ingenieros, inventores y escritores del siglo del vapor y del ferrocarril (traducciones propias). */
+    val VAPOR = listOf(
+        f("I sell here, Sir, what all the world desires to have — Power.", "Aquí vendo, señor, lo que todo el mundo desea tener: fuerza.",
+            "Matthew Boulton, socio de James Watt, en su fábrica del Soho, según James Boswell, Vida de Samuel Johnson (1776)"),
+        f("Night and day the conquering engines rumbled at their distant work…", "Noche y día las máquinas conquistadoras retumbaban en su trabajo lejano…",
+            "Charles Dickens, Dombey e hijo, cap. 15, 1848"),
+        f("The first shock of a great earthquake had, just at that period, rent the whole neighbourhood to its centre.",
+            "La primera sacudida de un gran terremoto había partido, justo entonces, todo el barrio hasta su centro (llegaba el ferrocarril).", "Charles Dickens, Dombey e hijo, cap. 6, 1848"),
+        f("It was a town of machinery and tall chimneys, out of which interminable serpents of smoke trailed themselves for ever and ever, and never got uncoiled.",
+            "Era una ciudad de máquinas y chimeneas altas, de las que salían interminables serpientes de humo que se arrastraban por siempre jamás sin desenroscarse nunca.", "Charles Dickens, Tiempos difíciles, libro I, cap. 5, 1854"),
+        f("Annual income twenty pounds, annual expenditure nineteen nineteen and six, result happiness. Annual income twenty pounds, annual expenditure twenty pounds ought and six, result misery.",
+            "Ingreso anual, veinte libras; gasto anual, diecinueve libras con diecinueve chelines y seis peniques: resultado, felicidad. Ingreso anual, veinte libras; gasto anual, veinte libras y seis peniques: resultado, miseria.",
+            "El señor Micawber, en David Copperfield de Charles Dickens, cap. 12, 1850"),
+        f("Life is made of ever so many partings welded together.", "La vida está hecha de muchísimas despedidas soldadas unas con otras.", "Joe Gargery, el herrero, en Grandes esperanzas de Charles Dickens, cap. 27, 1861"),
+        f("It was the best of times, it was the worst of times.", "Era el mejor de los tiempos, era el peor de los tiempos.", "Charles Dickens, Historia de dos ciudades, 1859"),
+        f("Heaven helps those who help themselves.", "El cielo ayuda a quienes se ayudan a sí mismos.", "Samuel Smiles, ¡Ayúdate! (Self-Help), cap. 1, 1859, que la llama «máxima bien probada»"),
+        f("The spirit of self-help is the root of all genuine growth in the individual.", "El espíritu de ayudarse a uno mismo es la raíz de todo crecimiento verdadero en la persona.", "Samuel Smiles, ¡Ayúdate! (Self-Help), cap. 1, 1859"),
+        f("We often discover what will do, by finding out what will not do; and probably he who never made a mistake never made a discovery.",
+            "A menudo descubrimos lo que sirve averiguando lo que no sirve; y probablemente quien nunca se equivocó nunca descubrió nada.", "Samuel Smiles, ¡Ayúdate! (Self-Help), cap. 11, 1859"),
+        f("Man is a Tool-using Animal… Without Tools he is nothing, with Tools he is all.", "El hombre es un animal que usa herramientas… Sin herramientas no es nada; con herramientas lo es todo.", "Thomas Carlyle, Sartor Resartus, libro I, cap. 5, 1833-1834"),
+        f("It is the Age of Machinery, in every outward and inward sense of that word.", "Es la Era de la Maquinaria, en todos los sentidos, exteriores e interiores, de esa palabra.", "Thomas Carlyle, «Signos de los tiempos», 1829"),
+        f("Blessed is he who has found his work; let him ask no other blessedness.", "Bienaventurado quien ha encontrado su trabajo; que no pida otra bienaventuranza.", "Thomas Carlyle, Pasado y presente, libro III, cap. 11, 1843"),
+        f("Let the great world spin for ever down the ringing grooves of change.", "Que el gran mundo gire por siempre por los surcos resonantes del cambio.",
+            "Alfred Tennyson, «Locksley Hall», 1842 (escribió «surcos» porque creía que los trenes corrían por ranuras)"),
+        f("To strive, to seek, to find, and not to yield.", "Luchar, buscar, encontrar y no rendirse.", "Alfred Tennyson, «Ulises», 1842"),
+        f("I like to see it lap the Miles — / And lick the Valleys up —", "Me gusta verlo beberse las millas y lamer los valles.", "Emily Dickinson, sobre el tren, poema 383 (edición Franklin), hacia 1862"),
+        f("Type of the modern — emblem of motion and power — pulse of the continent.", "Tipo de lo moderno, emblema del movimiento y la fuerza, pulso del continente.", "Walt Whitman, «A una locomotora en invierno», 1876"),
+        f("Faster than fairies, faster than witches, / Bridges and houses, hedges and ditches.", "Más rápido que las hadas, más rápido que las brujas: puentes y casas, setos y zanjas.",
+            "Robert Louis Stevenson, «Desde un vagón de tren», Jardín de versos para niños, 1885"),
+        f("There is no wealth but life.", "No hay más riqueza que la vida.", "John Ruskin, Hasta este último, ensayo IV, 1860"),
+        f("Have nothing in your houses that you do not know to be useful, or believe to be beautiful.", "No tengas en tu casa nada que no sepas útil o creas hermoso.", "William Morris, «La belleza de la vida», conferencia de 1880"),
+        f("The growing good of the world is partly dependent on unhistoric acts.", "El bien creciente del mundo depende en parte de actos que no entran en la historia.", "George Eliot, Middlemarch, final, 1871-1872"),
+        f("Begin at the beginning, and go on till you come to the end: then stop.", "Empieza por el principio y sigue hasta llegar al final; entonces, para.", "El Rey, en Alicia en el país de las maravillas de Lewis Carroll, cap. 12, 1865"),
+    )
+
     val LABORATORIO = listOf(
         f("When you can measure what you are speaking about, and express it in numbers, you know something about it.",
             "Cuando puedes medir aquello de lo que hablas y expresarlo en números, sabes algo de ello.", "Lord Kelvin, 1883"),
@@ -420,6 +455,36 @@ object Frases {
         f("Les vraies conquêtes, les seules qui ne donnent aucun regret, sont celles que l'on fait sur l'ignorance.", "Las verdaderas conquistas, las únicas que no dejan ningún pesar, son las que se hacen sobre la ignorancia.", "Bonaparte, carta a Camus al ser elegido miembro del Instituto de Francia, diciembre de 1797"),
         f("J'écris principalement pour rendre compte de moi à moi-même.", "Escribo, sobre todo, para rendirme cuentas de mí a mí mismo.", "Chateaubriand, manuscrito de 1826 de las Memorias de ultratumba"),
         f("Je désire que mes cendres reposent sur les bords de la Seine, au milieu de ce peuple français que j'ai tant aimé.", "Deseo que mis cenizas reposen a orillas del Sena, en medio de ese pueblo francés al que tanto he amado.", "Napoleón, testamento, art. 2, Santa Elena, 15 de abril de 1821"),
+    )
+
+    /** Art déco: los años veinte y su orilla, de París a Nueva York (novela, poesía, cabaret, jazz y arquitectura). */
+    val DECO = listOf(
+        f("So we beat on, boats against the current, borne back ceaselessly into the past.", "Y así seguimos, botes contra la corriente, arrastrados sin cesar hacia el pasado.", "F. Scott Fitzgerald, El gran Gatsby, 1925 (la última línea)"),
+        f("Life starts all over again when it gets crisp in the fall.", "La vida vuelve a empezar cuando refresca en otoño.", "F. Scott Fitzgerald, El gran Gatsby, cap. VII, 1925"),
+        f("In his blue gardens men and girls came and went like moths among the whisperings and the champagne and the stars.",
+            "En sus jardines azules, hombres y muchachas iban y venían como polillas entre los susurros, el champán y las estrellas.", "F. Scott Fitzgerald, El gran Gatsby, cap. III, 1925"),
+        f("It was an age of miracles, it was an age of art, it was an age of excess, and it was an age of satire.",
+            "Fue una época de milagros, una época de arte, una época de excesos y una época de sátira.", "F. Scott Fitzgerald, «Ecos de la era del jazz», 1931"),
+        f("Mrs. Dalloway said she would buy the flowers herself.", "La señora Dalloway dijo que ella misma compraría las flores.", "Virginia Woolf, La señora Dalloway, 1925 (la primera línea)"),
+        f("She had a perpetual sense, as she watched the taxi cabs, of being out, out, far out to sea and alone.",
+            "Tenía siempre la sensación, mientras miraba pasar los taxis, de estar lejos, lejos, mar adentro y sola.", "Virginia Woolf, La señora Dalloway, 1925"),
+        f("One cannot think well, love well, sleep well, if one has not dined well.", "No se puede pensar bien, amar bien ni dormir bien si no se ha cenado bien.", "Virginia Woolf, Una habitación propia, 1929"),
+        f("You can't get away from yourself by moving from one place to another.", "Uno no se escapa de sí mismo yéndose de un lugar a otro.", "Ernest Hemingway, Fiesta, cap. II, 1926"),
+        f("If you are lucky enough to have lived in Paris as a young man, then wherever you go for the rest of your life, it stays with you, for Paris is a moveable feast.",
+            "Si tienes la suerte de haber vivido en París de joven, vayas adonde vayas el resto de tu vida, París te acompaña, porque París es una fiesta que se lleva dentro.", "Ernest Hemingway, epígrafe de París era una fiesta (de una carta de 1950)"),
+        f("Une maison est une machine à habiter.", "Una casa es una máquina para habitar.", "Le Corbusier, Hacia una arquitectura, 1923"),
+        f(null, "La aurora de Nueva York tiene cuatro columnas de cieno y un huracán de negras palomas que chapotean las aguas podridas.", "Federico García Lorca, «La aurora», Poeta en Nueva York (escrito en 1929-1930)"),
+        f("It don't mean a thing if it ain't got that swing.", "No vale nada si no tiene swing.", "Duke Ellington e Irving Mills, canción de 1931"),
+        f("J'ai deux amours, mon pays et Paris.", "Tengo dos amores: mi país y París.", "«J'ai deux amours», la canción que estrenó Josephine Baker en el Casino de París, 1930"),
+        f("La mode se démode, le style jamais.", "La moda pasa de moda; el estilo, jamás.", "Atribuida a Coco Chanel"),
+        f("Life is a tragedy when seen in close-up, but a comedy in long-shot.", "La vida es una tragedia vista en primer plano, pero una comedia en plano general.", "Atribuida a Charles Chaplin"),
+        f("Rose is a rose is a rose is a rose.", "Una rosa es una rosa es una rosa es una rosa.", "Gertrude Stein, «Sacred Emily», 1913 (publicado en Geografía y obras, 1922)"),
+        f("Le vent se lève !… Il faut tenter de vivre !", "¡Se levanta el viento!… ¡Hay que intentar vivir!", "Paul Valéry, El cementerio marino, 1920"),
+        f("Les vrais paradis sont les paradis qu'on a perdus.", "Los verdaderos paraísos son los paraísos que se han perdido.", "Marcel Proust, El tiempo recobrado, 1927"),
+        f(null, "Yo soy yo y mi circunstancia, y si no la salvo a ella no me salvo yo.", "José Ortega y Gasset, Meditaciones del Quijote, 1914"),
+        f("Well, less is more, Lucrezia.", "Pues bien, menos es más, Lucrezia.", "Robert Browning, «Andrea del Sarto», 1855; el lema lo hizo suyo el arquitecto Ludwig Mies van der Rohe"),
+        f("If you have to ask what jazz is, you'll never know.", "Si tienes que preguntar qué es el jazz, nunca lo sabrás.", "Atribuida a Louis Armstrong"),
+        f("The most effective way to do it, is to do it.", "La manera más eficaz de hacerlo es hacerlo.", "Atribuida a Amelia Earhart"),
     )
 
     /** Tierras Antiguas: dichos propios del tema, escritos para la app (no citan ninguna obra). */
@@ -994,9 +1059,11 @@ object Frases {
         TemaId.DISTOPIA -> DISTOPIA
         TemaId.REFUGIO -> REFUGIO
         TemaId.ORDEN -> ORDEN
+        TemaId.VAPOR -> VAPOR
         TemaId.LABORATORIO -> LABORATORIO
         TemaId.COLONOS -> COLONOS
         TemaId.NAPOLEON -> NAPOLEON
+        TemaId.DECO -> DECO
         TemaId.BOTANICO -> BOTANICO
         TemaId.RUINAS -> RUINAS
         TemaId.NAVIDAD -> NAVIDAD
@@ -1036,9 +1103,11 @@ object Frases {
         TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"
         TemaId.REFUGIO -> "MENSAJE DEL DÍA"
         TemaId.ORDEN -> "ORDEN DEL DÍA"
+        TemaId.VAPOR -> "Sentencia del horario"
         TemaId.LABORATORIO -> "NOTA DEL DÍA"
         TemaId.COLONOS -> "Del almanaque"
         TemaId.NAPOLEON -> "BOLETÍN DEL EJÉRCITO"
+        TemaId.DECO -> "Del programa de esta noche"
         TemaId.BOTANICO -> "Nota del naturalista"
         TemaId.RUINAS -> "Escrito en la pared"
         TemaId.NAVIDAD -> "Junto a la chimenea"

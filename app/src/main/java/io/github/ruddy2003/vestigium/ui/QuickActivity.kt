@@ -953,9 +953,11 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.DISTOPIA -> 12.dp
     TemaId.REFUGIO -> 6.dp
     TemaId.ORDEN -> 6.dp
+    TemaId.VAPOR -> 7.dp
     TemaId.LABORATORIO -> 8.dp
     TemaId.COLONOS -> 4.dp
     TemaId.NAPOLEON -> 14.dp
+    TemaId.DECO -> 16.dp
     TemaId.BOTANICO -> 8.dp
     TemaId.RUINAS -> 10.dp
     TemaId.NAVIDAD -> 7.dp
@@ -1039,6 +1041,11 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         val c = 14 * u
         moveTo(c, 0f); lineTo(w - c, 0f); lineTo(w, c); lineTo(w, h); lineTo(0f, h); lineTo(0f, c); close()
     }
+    // El billete de tren: las dos esquinas de arriba recortadas hacia dentro.
+    TemaId.VAPOR -> formaDp { w, h, u ->
+        val c = 13 * u
+        moveTo(c, 0f); lineTo(w - c, 0f); quadraticTo(w - c, c, w, c); lineTo(w, h); lineTo(0f, h); lineTo(0f, c); quadraticTo(c, c, c, 0f); close()
+    }
     // Vaso de precipitados: el pico para verter, a la izquierda.
     TemaId.LABORATORIO -> formaDp { w, h, u ->
         val p = 8 * u; val r = 3 * u
@@ -1059,6 +1066,13 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         moveTo(0f, p); lineTo(w / 2 - p, p)
         arcTo(Rect(Offset(w / 2, p), p), 180f, 180f, false)
         lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // La hoja sube al centro en tres escalones, como la corona de una torre.
+    TemaId.DECO -> formaDp { w, h, u ->
+        val p = 16 * u; val a = p / 3; val s = 14 * u
+        moveTo(0f, p); lineTo(w / 2 - 3 * s, p); lineTo(w / 2 - 3 * s, 2 * a); lineTo(w / 2 - 2 * s, 2 * a); lineTo(w / 2 - 2 * s, a)
+        lineTo(w / 2 - s, a); lineTo(w / 2 - s, 0f); lineTo(w / 2 + s, 0f); lineTo(w / 2 + s, a); lineTo(w / 2 + 2 * s, a)
+        lineTo(w / 2 + 2 * s, 2 * a); lineTo(w / 2 + 3 * s, 2 * a); lineTo(w / 2 + 3 * s, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
     }
     // Hoja: una esquina muy redonda y la otra en punta.
     TemaId.BOTANICO -> formaDp { w, h, u ->
@@ -1260,6 +1274,12 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
                 x += 34 * u
             }
         }
+        // La línea perforada del talonario de billetes y, debajo, el filete de latón.
+        TemaId.VAPOR -> {
+            var x = 20 * u
+            while (x < w - 18 * u) { drawCircle(e.onSurface.copy(alpha = 0.25f), 1.2f * u, Offset(x, 6 * u)); x += 6 * u }
+            drawLine(e.primary.copy(alpha = 0.7f), Offset(18 * u, 10 * u), Offset(w - 18 * u, 10 * u), 1.4f * u)
+        }
         // Graduación a lo largo del borde.
         TemaId.LABORATORIO -> {
             var x = 30 * u; var n = 0
@@ -1275,6 +1295,17 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             estrellaHoja(Offset(w / 2, 10 * u), 7 * u, e.tertiary)
             drawLine(e.tertiary.copy(alpha = 0.6f), Offset(12 * u, 19 * u), Offset(w / 2 - 18 * u, 19 * u), u)
             drawLine(e.tertiary.copy(alpha = 0.6f), Offset(w / 2 + 18 * u, 19 * u), Offset(w - 12 * u, 19 * u), u)
+        }
+        // El abanico de oro en la corona de la hoja y tres líneas de velocidad a cada lado.
+        TemaId.DECO -> {
+            val b = Offset(w / 2, 15 * u); val r = 10 * u
+            for (i in 0 until 9) if (i % 2 == 0) drawArc(e.primary, 180f + i * 20f, 20f, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+            drawArc(e.secondary, 180f, 180f, true, Offset(b.x - r * 0.35f, b.y - r * 0.35f), Size(r * 0.7f, r * 0.7f))
+            for (k in 0..2) {
+                val y = (20 + k * 3) * u
+                drawLine(e.primary.copy(alpha = 0.6f - k * 0.15f), Offset((12 + k * 10) * u, y), Offset(w / 2 - 46 * u, y), 0.8f * u)
+                drawLine(e.primary.copy(alpha = 0.6f - k * 0.15f), Offset(w / 2 + 46 * u, y), Offset(w - (12 + k * 10) * u, y), 0.8f * u)
+            }
         }
         // Un tallo con hojitas a lo largo del borde.
         TemaId.BOTANICO -> {
@@ -1462,6 +1493,7 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     TemaId.DISTOPIA -> RectangleShape
     TemaId.REFUGIO -> RoundedCornerShape(18.dp)
     TemaId.ORDEN -> CutCornerShape(8.dp)
+    TemaId.VAPOR -> RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
     TemaId.LABORATORIO -> RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomEnd = 4.dp, bottomStart = 4.dp)
     // Boleto: una muesca a cada lado, a media altura.
     TemaId.COLONOS -> formaDp { w, h, u ->
@@ -1476,6 +1508,12 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     TemaId.NAPOLEON -> formaDp { w, h, u ->
         val c = minOf(h / 2, 12 * u)
         moveTo(c, 0f); lineTo(w - c, 0f); lineTo(w, h / 2); lineTo(w - c, h); lineTo(c, h); lineTo(0f, h / 2); close()
+    }
+    // Placa de ascensor: cada esquina metida en un escalón.
+    TemaId.DECO -> formaDp { w, h, u ->
+        val a = minOf(h * 0.22f, 6 * u)
+        moveTo(a, 0f); lineTo(w - a, 0f); lineTo(w - a, a); lineTo(w, a); lineTo(w, h - a); lineTo(w - a, h - a); lineTo(w - a, h)
+        lineTo(a, h); lineTo(a, h - a); lineTo(0f, h - a); lineTo(0f, a); lineTo(a, a); close()
     }
     // Hoja: dos esquinas redondas y dos en punta.
     TemaId.BOTANICO -> RoundedCornerShape(topStart = 16.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 2.dp)

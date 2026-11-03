@@ -121,9 +121,11 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.DISTOPIA -> BandaExpediente(modifier)
         TemaId.REFUGIO -> Destellos(modifier)
         TemaId.ORDEN -> Galones(modifier)
+        TemaId.VAPOR -> BandaVia(modifier)
         TemaId.LABORATORIO -> BandaProbeta(modifier)
         TemaId.COLONOS -> BandaGaceta(modifier)
         TemaId.NAPOLEON -> Laureles(modifier)
+        TemaId.DECO -> Abanicos(modifier)
         TemaId.BOTANICO -> Enredadera(modifier)
         TemaId.RUINAS -> BandaCalle(modifier)
         TemaId.GOTICO -> Arqueria(modifier)
@@ -1049,6 +1051,12 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "⚙", igual = "» ", nulo = "N/D", elegido = "◆", riel = RolColor.SECUNDARIO, quitar = "⊠", listaVacia = "[ SIN REGISTRO ]", flecha = "⟫",
         sufijo = " ::", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 2f, colorPrefijo = RolColor.SECUNDARIO, renglones = false, margen = MargenEditor.DOBLE,
         guiones = floatArrayOf(4.5f, 1f), tamBoton = 14, letraBoton = null, borde = RolColor.SECUNDARIO, grosor = 1.5f)
+    // La memoria descriptiva de una patente: «Fig. 3 ·», el manicule de los carteles, la aguja del manómetro en cero y el
+    // margen doble de la lámina; el botón principal, en la egipcia de los horarios.
+    TemaId.VAPOR -> PielComponentes(sep = " · Fig. ", cerrada = "⊕", abierta = "⊖", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
+        aviso = "☛", igual = " ⟶ ", nulo = "aguja en cero", elegido = "⊙", riel = RolColor.PRIMARIO, quitar = "⊗", listaVacia = "( ninguna pieza acoplada )", flecha = "⇢",
+        sufijo = ".—", caja = CajaEtiqueta.CAPITAL, espaciado = 0.6f, colorPrefijo = RolColor.TERCIARIO, renglones = true, margen = MargenEditor.DOBLE,
+        guiones = floatArrayOf(8f, 2f, 2f, 2f), tamBoton = 15, letraBoton = LetraExtra.bitter, borde = RolColor.TERCIARIO, grosor = 1.8f)
     TemaId.LABORATORIO -> PielComponentes(sep = "  /  ", cerrada = "＋", abierta = "－", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
         aviso = "⚗", igual = "≈ ", nulo = "n.d.", elegido = "●", riel = RolColor.PRIMARIO, quitar = "−", listaVacia = "( muestra vacía )", flecha = "↦",
         sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0.4f, colorPrefijo = RolColor.SECUNDARIO, renglones = true, margen = MargenEditor.PUNTOS,
@@ -1061,6 +1069,11 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "✪", igual = "→ ", nulo = "néant", elegido = "✦", riel = RolColor.TERCIARIO, quitar = "✘", listaVacia = "( sans ordre )", flecha = "➔",
         sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.2f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.BARRA,
         guiones = floatArrayOf(5.5f, 1.5f), tamBoton = 14, letraBoton = null, borde = RolColor.TERCIARIO, grosor = 1.5f)
+    // Rótulos de marquesina muy espaciados, el abanico de oro como aviso, doble filete en el editor y jade en el borde.
+    TemaId.DECO -> PielComponentes(sep = "  ‖  ", cerrada = "▷", abierta = "▽", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
+        aviso = "☼", igual = " ≡ ", nulo = "telón cerrado", elegido = "◆", riel = RolColor.PRIMARIO, quitar = "✕", listaVacia = "( butacas vacías )", flecha = "⇢",
+        sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 2.2f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.DOBLE,
+        guiones = floatArrayOf(8f, 2f, 2f, 2f), tamBoton = 15, letraBoton = null, borde = RolColor.SECUNDARIO, grosor = 1.2f)
     TemaId.BOTANICO -> PielComponentes(sep = "  ⁂  ", cerrada = "⚘", abierta = "❀", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
         aviso = "✾", igual = "~ ", nulo = "sin espécimen", elegido = "✿", riel = RolColor.SECUNDARIO, quitar = "⊘", listaVacia = "( frasco vacío )", flecha = "⤳",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.1f, colorPrefijo = RolColor.SECUNDARIO, renglones = true, margen = MargenEditor.PUNTOS,
@@ -1192,6 +1205,13 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             drawRect(e.secondary, Offset(0f, size.height - g), Size(minOf(size.width, 56.dp.toPx()), g))
             drawRect(e.primary, Offset(0f, size.height - g), Size(minOf(size.width, 14.dp.toPx()), g))
         }.padding(bottom = 5.dp))
+        // La placa de nombre: un filete de latón con el remate en arco por encima y un remache a cada lado.
+        TemaId.VAPOR -> Text(nombre, style = estilo.copy(letterSpacing = 0.6.sp), modifier = peso.drawBehind {
+            val g = 1.dp.toPx(); val w = size.width; val h = size.height
+            drawPath(Path().apply { moveTo(0f, h); lineTo(0f, h * 0.35f); quadraticTo(w / 2, -h * 0.25f, w, h * 0.35f); lineTo(w, h) }, e.primary.copy(alpha = 0.7f), style = Stroke(1.4f * g))
+            drawLine(e.primary, Offset(0f, h), Offset(w, h), 2f * g)
+            listOf(5f * g, w - 5f * g).forEach { x -> remacheVapor(Offset(x, h * 0.62f), 1.8f * g, e.tertiary) }
+        }.padding(horizontal = 16.dp, vertical = 4.dp))
         // Pestaña de protocolo: una barra violeta al lado.
         TemaId.LABORATORIO -> Text(nombre, style = estilo, modifier = peso.drawBehind { drawRect(e.secondary, Offset.Zero, Size(3.dp.toPx(), size.height)) }.padding(start = 10.dp))
         // Raya inglesa de gaceta: gruesa y fina.
@@ -1201,6 +1221,11 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
         }.padding(bottom = 6.dp))
         // Azul imperial con una estrella de oro.
         TemaId.NAPOLEON -> Text(buildAnnotatedString { append(nombre); withStyle(SpanStyle(color = e.tertiary)) { append("  ✦") } }, style = estilo.copy(letterSpacing = 1.2.sp), color = e.primary, modifier = peso)
+        // Rótulo de marquesina: letras muy abiertas sobre tres filetes de oro que se acortan en escalones.
+        TemaId.DECO -> Text(nombre, style = estilo.copy(letterSpacing = 2.6.sp), modifier = peso.drawBehind {
+            val g = 1.dp.toPx(); val w = size.width; val h = size.height
+            listOf(1f, 0.62f, 0.3f).forEachIndexed { k, f -> drawRect(e.primary.copy(alpha = 0.75f - k * 0.18f), Offset(0f, h - (1.2f + k * 2.6f) * g), Size(w * f, 1.1f * g)) }
+        }.padding(bottom = 9.dp))
         // Nombre de especie: cursiva sobre una línea punteada a lápiz.
         TemaId.BOTANICO -> Text(nombre, style = estilo.copy(fontStyle = FontStyle.Italic), modifier = peso.drawBehind {
             drawLine(e.onBackground.copy(alpha = 0.5f), Offset(0f, size.height - 1.dp.toPx()), Offset(size.width, size.height - 1.dp.toPx()), 1.dp.toPx(),
@@ -1335,6 +1360,7 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.DISTOPIA -> RectangleShape
     TemaId.REFUGIO -> RoundedCornerShape(50)
     TemaId.ORDEN -> CutCornerShape(6.dp)
+    TemaId.VAPOR -> RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomEnd = 3.dp, bottomStart = 3.dp)
     TemaId.LABORATORIO -> RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomEnd = 4.dp, bottomStart = 4.dp)
     // Boleto de feria: una muesca a cada lado.
     TemaId.COLONOS -> GenericShape { s, _ ->
@@ -1344,6 +1370,14 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     }
     // Placa de puntas, como una chapa de chacó.
     TemaId.NAPOLEON -> CutCornerShape(50)
+    // Placa de ascensor de los años veinte: cada esquina se mete en dos escalones.
+    TemaId.DECO -> GenericShape { s, _ ->
+        val a = s.height * 0.16f; val w = s.width; val h = s.height
+        moveTo(2 * a, 0f); lineTo(w - 2 * a, 0f); lineTo(w - 2 * a, a); lineTo(w - a, a); lineTo(w - a, 2 * a); lineTo(w, 2 * a)
+        lineTo(w, h - 2 * a); lineTo(w - a, h - 2 * a); lineTo(w - a, h - a); lineTo(w - 2 * a, h - a); lineTo(w - 2 * a, h)
+        lineTo(2 * a, h); lineTo(2 * a, h - a); lineTo(a, h - a); lineTo(a, h - 2 * a); lineTo(0f, h - 2 * a)
+        lineTo(0f, 2 * a); lineTo(a, 2 * a); lineTo(a, a); lineTo(2 * a, a); close()
+    }
     // Hoja: dos esquinas redondas y dos en punta.
     TemaId.BOTANICO -> RoundedCornerShape(topStart = 16.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 2.dp)
     // Una losa con las esquinas desportilladas, cada una distinta.
@@ -1434,9 +1468,11 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.DISTOPIA -> "FORMULARIO 7-B · ${es.uppercase()}"
         TemaId.REFUGIO -> "BITÁCORA DEL REFUGIO > $es"
         TemaId.ORDEN -> "CRÓNICA DE LA ORDEN · ${es.uppercase()}"
+        TemaId.VAPOR -> "Plano n.º ${(base.hashCode() and 0xffff) % 900 + 100} · $es"
         TemaId.LABORATORIO -> "cuaderno de laboratorio · $es"
         TemaId.COLONOS -> "a máquina · $es"
         TemaId.NAPOLEON -> "dépêche · $es"
+        TemaId.DECO -> "telegrama de a bordo · $es"
         TemaId.BOTANICO -> "cuaderno de campo · $es"
         TemaId.RUINAS -> "a lápiz, en el cuaderno del superviviente · $es"
         TemaId.NAVIDAD -> "carta junto al fuego · $es"
@@ -1569,6 +1605,11 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             drawLine(e.secondary, Offset(i, i + u * 1.4f), Offset(i + u * 1.4f, i), fino * 1.6f)
             drawCircle(e.secondary, u * 0.22f, Offset(i + u * 1.25f, i + u * 1.25f))
         }
+        TemaId.VAPOR -> enLasCuatro {
+            // Cantonera de latón curva, como las de los libros mayores, con su remache.
+            drawPath(Path().apply { moveTo(i, i); lineTo(i + u * 1.6f, i); quadraticTo(i + u * 0.7f, i + u * 0.7f, i, i + u * 1.6f); close() }, e.primary.copy(alpha = 0.75f))
+            remacheVapor(Offset(i + u * 0.45f, i + u * 0.45f), u * 0.16f, e.tertiary)
+        }
         TemaId.LABORATORIO -> {
             // Etiqueta de muestra arriba a la derecha y una graduación por el borde izquierdo.
             val et = Offset(w - i - u * 3.2f, i)
@@ -1586,6 +1627,18 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             drawRect(e.primary.copy(alpha = 0.35f), Offset(j, j), Size(w - 2 * j, h - 2 * j), style = Stroke(fino * 0.6f))
         }
         TemaId.NAPOLEON -> enLasCuatro { estrellaComp(Offset(i + u * 0.6f, i + u * 0.6f), u * 0.6f, e.tertiary) }
+        TemaId.DECO -> {
+            // Doble filete de oro y, en cada esquina, tres escalones que se meten hacia dentro.
+            drawRect(e.primary.copy(alpha = 0.35f), Offset(i, i), Size(w - 2 * i, h - 2 * i), style = Stroke(fino * 0.8f))
+            enLasCuatro {
+                val esc = Path().apply {
+                    moveTo(i, i + u * 1.8f); lineTo(i + u * 0.6f, i + u * 1.8f); lineTo(i + u * 0.6f, i + u * 1.2f); lineTo(i + u * 1.2f, i + u * 1.2f)
+                    lineTo(i + u * 1.2f, i + u * 0.6f); lineTo(i + u * 1.8f, i + u * 0.6f); lineTo(i + u * 1.8f, i)
+                }
+                drawPath(esc, e.primary.copy(alpha = 0.75f), style = Stroke(fino * 1.2f))
+                drawRect(e.secondary.copy(alpha = 0.6f), Offset(i + u * 0.15f, i + u * 0.15f), Size(u * 0.32f, u * 0.32f))
+            }
+        }
         TemaId.BOTANICO -> {
             // El alfiler del entomólogo, clavado arriba al centro, con su sombra.
             val c = Offset(w / 2, i + u * 0.2f)
@@ -1799,6 +1852,14 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             }, l, style = tr)
             drawLine(a, Offset(f(0.24f), f(0.94f)), Offset(f(0.76f), f(0.94f)), tr.width)
         }
+        TemaId.VAPOR -> {
+            // Un manómetro con la aguja en cero: la caldera está fría.
+            drawCircle(l, f(0.4f), Offset(f(0.5f), f(0.5f)), style = tr)
+            for (k in 0..8) { val ang = Math.toRadians(135.0 + 33.75 * k); val c0 = Offset(f(0.5f), f(0.5f)); drawLine(l, Vapor.en(c0, f(0.32f), ang), Vapor.en(c0, f(if (k % 4 == 0) 0.24f else 0.28f), ang), tr.width * 0.8f) }
+            drawLine(a, Offset(f(0.5f), f(0.5f)), Vapor.en(Offset(f(0.5f), f(0.5f)), f(0.26f), Math.toRadians(135.0)), tr.width * 1.4f)
+            drawCircle(a, f(0.04f), Offset(f(0.5f), f(0.5f)))
+            drawLine(l, Offset(f(0.5f), f(0.9f)), Offset(f(0.5f), f(0.98f)), tr.width * 2f)
+        }
         TemaId.LABORATORIO -> rotate(18f) {
             // Tubo de ensayo vacío, con su graduación.
             drawLine(l, Offset(f(0.38f), f(0.08f)), Offset(f(0.38f), f(0.72f)), tr.width)
@@ -1819,6 +1880,13 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawPath(Path().apply { moveTo(f(0.04f), f(0.66f)); quadraticTo(f(0.5f), 0f, f(0.96f), f(0.66f)); quadraticTo(f(0.5f), f(0.5f), f(0.04f), f(0.66f)); close() }, l, style = tr)
             drawCircle(a, f(0.08f), Offset(f(0.66f), f(0.4f)))
             drawLine(l, Offset(f(0.2f), f(0.78f)), Offset(f(0.8f), f(0.78f)), tr.width)
+        }
+        TemaId.DECO -> {
+            // La copa de champán vacía (la «coupe»), con su tallo y su pie, y una sola burbuja que quedó.
+            drawPath(Path().apply { moveTo(f(0.16f), f(0.26f)); quadraticTo(f(0.18f), f(0.52f), f(0.5f), f(0.54f)); quadraticTo(f(0.82f), f(0.52f), f(0.84f), f(0.26f)); close() }, l, style = tr)
+            drawLine(l, Offset(f(0.5f), f(0.54f)), Offset(f(0.5f), f(0.86f)), tr.width)
+            drawOval(l, Offset(f(0.32f), f(0.84f)), Size(f(0.36f), f(0.08f)), style = tr)
+            drawCircle(a, f(0.035f), Offset(f(0.56f), f(0.16f)), style = Stroke(tr.width * 0.8f))
         }
         TemaId.BOTANICO -> {
             // Frasco de especímenes vacío, con su corcho y la etiqueta.
@@ -1988,6 +2056,8 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
         TemaId.DISTOPIA -> drawRect(c, Offset.Zero, Size(w, d))
         TemaId.REFUGIO -> drawCircle(c, d * 0.9f, Offset(w / 2, h - d * 1.6f), style = Stroke(d * 0.5f))
         TemaId.ORDEN -> drawPath(Path().apply { moveTo(w / 2 - d * 1.5f, h - d * 0.6f); lineTo(w / 2, h - d * 1.8f); lineTo(w / 2 + d * 1.5f, h - d * 0.6f) }, c, style = Stroke(d * 0.55f))
+        // La aguja de un manómetro que sube desde la esquina de abajo.
+        TemaId.VAPOR -> { drawLine(c, Offset(d, h - d), Offset(d * 3.2f, h - d * 3.2f), d * 0.5f); drawCircle(c, d * 0.6f, Offset(d, h - d)) }
         TemaId.LABORATORIO -> {
             for (n in -1..1) {
                 val x = w / 2 + n * d * 1.4f
@@ -1999,6 +2069,12 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
             drawRect(c, Offset(d, h - d * 0.5f), Size(w - 2 * d, d * 0.35f))
         }
         TemaId.NAPOLEON -> romboComp(Offset(w / 2, d * 1.3f), d * 0.8f, d, c)
+        // Un abanico chico arriba al centro, con su raya de oro debajo.
+        TemaId.DECO -> {
+            drawArc(c, 180f, 180f, true, Offset(w / 2 - d * 1.3f, d * 0.2f), Size(d * 2.6f, d * 2.6f))
+            drawLine(fondo, Offset(w / 2, d * 1.5f), Offset(w / 2, d * 0.3f), d * 0.22f)
+            drawRect(c, Offset(d, h - d * 0.45f), Size(w - 2 * d, d * 0.45f))
+        }
         TemaId.BOTANICO -> rotate(-35f, Offset(w - d * 2.2f, h - d * 1.5f)) { drawOval(c, Offset(w - d * 3.4f, h - d * 2f), Size(d * 2.4f, d)) }
         TemaId.RUINAS -> {
             // Un semáforo diminuto arriba al centro: la caja y sus tres luces, la de abajo encendida.
@@ -2103,6 +2179,11 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         TemaId.REFUGIO -> estrellaComp(Offset(m * 3.2f, h / 2), m * 1.1f, c, puntas = 4, dentro = 0.3f)
         // Remaches a los lados.
         TemaId.ORDEN -> listOf(m * 2f, w - m * 2f).forEach { x -> drawCircle(c, fino * 2f, Offset(x, h / 2)) }
+        // Dos filetes arriba y abajo, como en los billetes de tren de cartón, y una muesca de picado a la derecha.
+        TemaId.VAPOR -> {
+            listOf(m, h - m).forEach { y -> drawLine(c, Offset(m * 2f, y), Offset(w - m * 2f, y), fino * 0.7f) }
+            drawCircle(c, fino * 2.2f, Offset(w - m * 1.6f, h / 2), style = Stroke(fino * 0.8f))
+        }
         // Graduación por abajo.
         TemaId.LABORATORIO -> {
             var x = m * 2; var n = 0
@@ -2115,6 +2196,14 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         }
         // Estrellas de oro en las puntas.
         TemaId.NAPOLEON -> listOf(m * 3.2f, w - m * 3.2f).forEach { x -> estrellaComp(Offset(x, h / 2), m * 0.9f, e.tertiary) }
+        // Tres barras de velocidad en cada punta, cada una más corta, como en los rótulos de los trenes de lujo.
+        TemaId.DECO -> listOf(1f, -1f).forEach { sg ->
+            for (k in 0..2) {
+                val x = if (sg > 0) m * (1.6f + k * 0.9f) else w - m * (1.6f + k * 0.9f)
+                val alto = h * (0.5f - k * 0.12f)
+                drawLine(c, Offset(x, h / 2 - alto / 2), Offset(x, h / 2 + alto / 2), fino * 1.3f)
+            }
+        }
         // Nervaduras en las dos puntas de la hoja.
         TemaId.BOTANICO -> {
             drawLine(c, Offset(m * 1.5f, h - m * 1.5f), Offset(m * 4.5f, h - m * 3.2f), fino)
@@ -2288,6 +2377,14 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawRect(l, Offset(f(0.06f), f(0.16f)), Size(f(0.88f), f(0.68f)), style = tr)
             listOf(Offset(0.18f, 0.28f), Offset(0.82f, 0.28f), Offset(0.18f, 0.72f), Offset(0.82f, 0.72f)).forEach { drawCircle(e.secondary, f(0.07f), Offset(f(it.x), f(it.y))) }
         }
+        TemaId.VAPOR -> {
+            // La lámina del plano con su escuadra y el compás abierto.
+            drawRect(l, Offset(f(0.08f), f(0.1f)), Size(f(0.7f), f(0.82f)), style = tr)
+            drawPath(Path().apply { moveTo(f(0.16f), f(0.82f)); lineTo(f(0.16f), f(0.46f)); lineTo(f(0.52f), f(0.82f)); close() }, l, style = tr)
+            drawLine(a, Offset(f(0.8f), f(0.12f)), Offset(f(0.64f), f(0.62f)), tr.width)
+            drawLine(a, Offset(f(0.8f), f(0.12f)), Offset(f(0.94f), f(0.6f)), tr.width)
+            drawCircle(a, f(0.05f), Offset(f(0.8f), f(0.12f)))
+        }
         TemaId.LABORATORIO -> {
             // Cuaderno de laboratorio cuadriculado.
             drawRect(l, Offset(f(0.1f), f(0.06f)), Size(f(0.8f), f(0.88f)), style = tr)
@@ -2307,6 +2404,13 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawRect(l, Offset(f(0.04f), f(0.2f)), Size(f(0.92f), f(0.6f)), style = tr)
             drawPath(Path().apply { moveTo(f(0.04f), f(0.2f)); lineTo(f(0.5f), f(0.56f)); lineTo(f(0.96f), f(0.2f)) }, l, style = tr)
             drawCircle(a, f(0.13f), Offset(f(0.5f), f(0.58f)))
+        }
+        TemaId.DECO -> {
+            // El formulario del telegrama, con las dos tiras de cinta pegadas y el abanico de la compañía arriba.
+            drawRect(l, Offset(f(0.06f), f(0.12f)), Size(f(0.88f), f(0.76f)), style = tr)
+            drawArc(a, 180f, 180f, true, Offset(f(0.12f), f(0.18f)), Size(f(0.2f), f(0.2f)))
+            drawLine(l, Offset(f(0.4f), f(0.26f)), Offset(f(0.86f), f(0.26f)), tr.width)
+            listOf(0.46f, 0.64f).forEach { y -> drawRect(a.copy(alpha = 0.55f), Offset(f(0.14f), f(y)), Size(f(0.72f), f(0.1f))) }
         }
         TemaId.BOTANICO -> {
             // Cuaderno de campo con una hoja prensada.
@@ -2500,6 +2604,11 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
             while (y < h) { p.lineTo(w * 0.8f, y + 3 * d); p.lineTo(0f, y + 6 * d); y += 6 * d }
             drawPath(p, c, style = Stroke(1.4f * d))
         }
+        // El tubo de vapor vertical con sus bridas.
+        TemaId.VAPOR -> {
+            drawRect(e.primary.copy(alpha = 0.8f), Offset(0f, 0f), Size(3 * d, h))
+            var y = 4 * d; while (y < h) { drawRect(e.primary, Offset(-1 * d, y), Size(5 * d, 1.6f * d)); y += 14 * d }
+        }
         TemaId.LABORATORIO -> {
             drawRect(c, Offset.Zero, Size(d, h))
             var y = 0f; var n = 0
@@ -2513,6 +2622,16 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
             drawRect(e.tertiary, Offset(2.5f * d, 0f), Size(d, h))
             var y = 6 * d
             while (y < h) { romboComp(Offset(3 * d, y), 2.4f * d, 3.2f * d, e.tertiary); y += 14 * d }
+        }
+        // Doble filete de oro y, de trecho en trecho, la corona escalonada de una torre.
+        TemaId.DECO -> {
+            drawRect(e.primary, Offset(0.5f * d, 0f), Size(d, h)); drawRect(e.primary.copy(alpha = 0.5f), Offset(3f * d, 0f), Size(0.7f * d, h))
+            var y = 8 * d
+            while (y < h) {
+                drawRect(c, Offset(0f, y), Size(5 * d, 1.6f * d)); drawRect(c, Offset(0.8f * d, y - 1.6f * d), Size(3.4f * d, 1.6f * d))
+                drawRect(c, Offset(1.6f * d, y - 3.2f * d), Size(1.8f * d, 1.6f * d))
+                y += 18 * d
+            }
         }
         TemaId.BOTANICO -> {
             // Un tallo que ondula.

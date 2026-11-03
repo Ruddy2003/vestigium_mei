@@ -226,12 +226,16 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.REFUGIO -> LaminaRascar(0xFF4A5560.toInt(), 0xFF98A7B3.toInt(), 0xFFE3EBF0.toInt())
     // Acero pavonado.
     TemaId.ORDEN -> LaminaRascar(0xFF2C3138.toInt(), 0xFF6A747F.toInt(), 0xFFBFC8D2.toInt())
+    // Latón de caldera, ennegrecido por el hollín y bruñido donde se toca.
+    TemaId.VAPOR -> LaminaRascar(0xFF4A3410.toInt(), 0xFFB8862B.toInt(), 0xFFF0D490.toInt())
     // Aluminio de instrumento, casi blanco.
     TemaId.LABORATORIO -> LaminaRascar(0xFF5F6670.toInt(), 0xFFB5BCC4.toInt(), 0xFFF4F6F8.toInt())
     // Cobre.
     TemaId.COLONOS -> LaminaRascar(0xFF6E3A1C.toInt(), 0xFFB87A4A.toInt(), 0xFFF0CDA6.toInt())
     // Bronce dorado del Imperio, amarillo limón.
     TemaId.NAPOLEON -> LaminaRascar(0xFF6E5A10.toInt(), 0xFFD9B82E.toInt(), 0xFFFFF4B0.toInt())
+    // Laca negra con pan de oro: al rascar sale el brillo de champán.
+    TemaId.DECO -> LaminaRascar(0xFF16130E.toInt(), 0xFFB8952E.toInt(), 0xFFF6E7BE.toInt())
     // Bronce con verdín.
     TemaId.BOTANICO -> LaminaRascar(0xFF3E4A30.toInt(), 0xFF7E8F5E.toInt(), 0xFFD8E2B8.toInt())
     // Hormigón gris con su polvo.
@@ -419,6 +423,15 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             for (i in 0 until 8) girado(cx, cy, i * 45f) { c.drawRect(-l * 0.035f, -r - l * 0.07f, l * 0.035f, -r, relleno) }
             for (x in listOf(0f, l)) for (y in listOf(0f, l)) c.drawCircle(x, y, l * 0.045f, relleno)
         }
+        TemaId.VAPOR -> {
+            // La esfera de un manómetro grabada en el centro, con su escala y la aguja, y dos tramos de vía en diagonal.
+            val cx = l / 2; val cy = l / 2; val r = l * 0.2f
+            c.drawCircle(cx, cy, r, linea)
+            for (i in 0..8) girado(cx, cy, 135f + i * 33.75f) { c.drawLine(r * 0.62f, 0f, r * (if (i % 4 == 0) 0.88f else 0.8f), 0f, linea) }
+            girado(cx, cy, 300f) { c.drawLine(0f, 0f, r * 0.7f, 0f, linea) }
+            c.drawCircle(cx, cy, l * 0.02f, relleno)
+            for (k in 0 until 4) { val t = l * (0.06f + 0.06f * k); c.drawLine(t, 0f, 0f, t, linea); c.drawLine(l - t, l, l, l - t, linea) }
+        }
         TemaId.LABORATORIO -> tresbolillo { x, y ->
             // Anillos de benceno: el hexágono y su círculo.
             val r = l * 0.19f
@@ -445,6 +458,13 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawCircle(x, y - s * 0.85f, s * 0.32f, relleno)
             c.drawOval(RectF(x - s * 1.25f, y - s * 0.75f, x - s * 0.15f, y + s * 0.05f), linea)
             c.drawOval(RectF(x + s * 0.15f, y - s * 0.75f, x + s * 1.25f, y + s * 0.05f), linea)
+        }
+        // Abanicos de rayos en tresbolillo, como el papel pintado de un vestíbulo.
+        TemaId.DECO -> tresbolillo { x, y ->
+            val s = l * 0.16f
+            for (i in 0 until 7) if (i % 2 == 0) c.drawArc(RectF(x - s, y - s, x + s, y + s), 180f + i * 180f / 7, 180f / 7, true, relleno)
+            c.drawArc(RectF(x - s * 1.25f, y - s * 1.25f, x + s * 1.25f, y + s * 1.25f), 180f, 180f, false, linea)
+            c.drawLine(x - s * 1.25f, y, x + s * 1.25f, y, linea)
         }
         TemaId.BOTANICO -> {
             // Una fronda de helecho: el raquis y sus pinnas, más cortas hacia la punta.

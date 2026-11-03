@@ -83,9 +83,11 @@ object Musica {
         TemaId.DISTOPIA -> R.raw.s_distopia_presentacion
         TemaId.REFUGIO -> R.raw.s_refugio_presentacion
         TemaId.ORDEN -> R.raw.s_orden_presentacion
+        TemaId.VAPOR -> R.raw.s_vapor_presentacion
         TemaId.LABORATORIO -> R.raw.s_laboratorio_presentacion
         TemaId.COLONOS -> R.raw.s_colonos_presentacion
         TemaId.NAPOLEON -> R.raw.s_napoleon_presentacion
+        TemaId.DECO -> R.raw.s_deco_presentacion
         TemaId.BOTANICO -> R.raw.s_botanico_presentacion
         TemaId.RUINAS -> R.raw.s_ruinas_presentacion
         TemaId.NAVIDAD -> R.raw.s_navidad_presentacion
@@ -118,9 +120,11 @@ object Musica {
         TemaId.DISTOPIA -> R.raw.s_distopia_anual
         TemaId.REFUGIO -> R.raw.s_refugio_anual
         TemaId.ORDEN -> R.raw.s_orden_anual
+        TemaId.VAPOR -> R.raw.s_vapor_anual
         TemaId.LABORATORIO -> R.raw.s_laboratorio_anual
         TemaId.COLONOS -> R.raw.s_colonos_anual
         TemaId.NAPOLEON -> R.raw.s_napoleon_anual
+        TemaId.DECO -> R.raw.s_deco_anual
         TemaId.BOTANICO -> R.raw.s_botanico_anual
         TemaId.RUINAS -> R.raw.s_ruinas_anual
         TemaId.NAVIDAD -> R.raw.s_navidad_anual
@@ -152,9 +156,11 @@ object Musica {
         TemaId.DISTOPIA -> R.raw.t_distopia_llamada
         TemaId.REFUGIO -> R.raw.t_refugio_llamada
         TemaId.ORDEN -> R.raw.t_orden_llamada
+        TemaId.VAPOR -> R.raw.t_vapor_llamada
         TemaId.LABORATORIO -> R.raw.t_laboratorio_llamada
         TemaId.COLONOS -> R.raw.t_colonos_llamada
         TemaId.NAPOLEON -> R.raw.t_napoleon_llamada
+        TemaId.DECO -> R.raw.t_deco_llamada
         TemaId.BOTANICO -> R.raw.t_botanico_llamada
         TemaId.RUINAS -> R.raw.t_ruinas_llamada
         TemaId.NAVIDAD -> R.raw.t_navidad_llamada
@@ -186,9 +192,11 @@ object Musica {
         TemaId.DISTOPIA -> R.raw.t_distopia_notificacion
         TemaId.REFUGIO -> R.raw.t_refugio_notificacion
         TemaId.ORDEN -> R.raw.t_orden_notificacion
+        TemaId.VAPOR -> R.raw.t_vapor_notificacion
         TemaId.LABORATORIO -> R.raw.t_laboratorio_notificacion
         TemaId.COLONOS -> R.raw.t_colonos_notificacion
         TemaId.NAPOLEON -> R.raw.t_napoleon_notificacion
+        TemaId.DECO -> R.raw.t_deco_notificacion
         TemaId.BOTANICO -> R.raw.t_botanico_notificacion
         TemaId.RUINAS -> R.raw.t_ruinas_notificacion
         TemaId.NAVIDAD -> R.raw.t_navidad_notificacion
@@ -503,6 +511,24 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawPath(Path().apply { moveTo(w / 2 - u * 14, y); lineTo(w / 2, y + u * 6); lineTo(w / 2 + u * 14, y) }, e.primary, style = Stroke(u * 2))
         }
     }
+    // El cartel de una exposición del XIX: filete grueso y fino arriba y abajo, cuatro remaches en las esquinas y, al pie,
+    // la locomotora que pasa por la vía; el emblema queda abajo, como el sello de la compañía.
+    TemaId.VAPOR -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ABAJO, false, t.nombre, "☛ toque usted para poner la máquina en marcha",
+        comillas = "“" to "”", emblema = 104.dp, arriba = 40.dp, abajo = 70.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val tinta = e.onBackground.copy(alpha = 0.7f); val perfil = e.primary.copy(alpha = 0.24f)
+        listOf(u * 4 to u * 3f, u * 10 to u * 1f).forEach { (y, g) -> drawLine(tinta, Offset(u * 14, y), Offset(w - u * 14, y), g) }
+        listOf(h - u * 4 to u * 3f, h - u * 10 to u * 1f).forEach { (y, g) -> drawLine(tinta, Offset(u * 14, y), Offset(w - u * 14, y), g) }
+        listOf(Offset(u * 8, u * 7), Offset(w - u * 8, u * 7), Offset(u * 8, h - u * 7), Offset(w - u * 8, h - u * 7)).forEach { remacheVapor(it, u * 3.4f, e.primary) }
+        val base = h - u * 16
+        drawLine(perfil, Offset(0f, base), Offset(w, base), u * 2)
+        val x0 = w * 0.08f
+        drawRect(perfil, Offset(x0, base - u * 22), Size(u * 46, u * 14))
+        drawRect(perfil, Offset(x0 + u * 46, base - u * 32), Size(u * 20, u * 24))
+        drawRect(perfil, Offset(x0 + u * 8, base - u * 34), Size(u * 8, u * 12))
+        listOf(10f, 26f, 54f).forEach { x -> drawCircle(perfil, u * 6, Offset(x0 + x * u, base - u * 5)) }
+        listOf(0f to 7f, 12f to 9f, 28f to 11f).forEach { (dx, r) -> drawCircle(perfil.copy(alpha = 0.14f), r * u, Offset(x0 + u * (12 + dx), base - u * (42 + dx * 0.4f))) }
+    }
     // Hoja de laboratorio: papel milimetrado, etiqueta de muestra y una graduación por el borde.
     TemaId.LABORATORIO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "○ " + t.nombre, "toca para cerrar la observación",
         comillas = "“" to "”", emblema = 92.dp, arriba = 46.dp) { e ->
@@ -553,6 +579,34 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             }
             drawRect(oro.copy(alpha = 0.4f), Offset(0f, 0f), size, style = Stroke(u))
             for (i in 0 until 5) estrellaPresentacion(Offset(w / 2 + (i - 2) * u * 22, h - u * 18), u * 6, oro, 5, 0.45f)
+        }
+    }
+    // El telón de un cabaret: un gran sol de rayos detrás del emblema, el marco con las esquinas escalonadas y, al pie,
+    // las bombillas de la marquesina.
+    TemaId.DECO -> {
+        val arriba = 40f; val tam = 128f
+        DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre.uppercase(), "Señoras y señores: la orquesta  ·  toca para seguir", "‹ " to " ›",
+            emblema = tam.dp, arriba = arriba.dp, abajo = 50.dp) { e ->
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            val oro = e.primary
+            val centro = Offset(w / 2, u * (arriba + tam / 2))
+            for (k in 0 until 36) {
+                val a = Math.toRadians(k * 10.0)
+                val largo = if (k % 2 == 0) maxOf(w, h) else u * (tam / 2 + 46)
+                drawLine(oro.copy(alpha = if (k % 2 == 0) 0.1f else 0.18f), Offset(centro.x + u * (tam / 2 + 8) * cos(a).toFloat(), centro.y + u * (tam / 2 + 8) * sin(a).toFloat()),
+                    Offset(centro.x + largo * cos(a).toFloat(), centro.y + largo * sin(a).toFloat()), (if (k % 2 == 0) 2f else 1f) * u)
+            }
+            drawCircle(oro.copy(alpha = 0.5f), u * (tam / 2 + 6), centro, style = Stroke(u))
+            val m = 8 * u; val k = 10 * u
+            val marco = Path().apply {
+                moveTo(m + 2 * k, m); lineTo(w - m - 2 * k, m); lineTo(w - m - 2 * k, m + k); lineTo(w - m - k, m + k); lineTo(w - m - k, m + 2 * k); lineTo(w - m, m + 2 * k)
+                lineTo(w - m, h - m - 2 * k); lineTo(w - m - k, h - m - 2 * k); lineTo(w - m - k, h - m - k); lineTo(w - m - 2 * k, h - m - k); lineTo(w - m - 2 * k, h - m)
+                lineTo(m + 2 * k, h - m); lineTo(m + 2 * k, h - m - k); lineTo(m + k, h - m - k); lineTo(m + k, h - m - 2 * k); lineTo(m, h - m - 2 * k)
+                lineTo(m, m + 2 * k); lineTo(m + k, m + 2 * k); lineTo(m + k, m + k); lineTo(m + 2 * k, m + k); close()
+            }
+            drawPath(marco, oro.copy(alpha = 0.6f), style = Stroke(1.2f * u))
+            var x = w * 0.2f
+            while (x < w * 0.8f) { drawCircle(oro.copy(alpha = 0.85f), 2.2f * u, Offset(x, h - u * 22)); drawCircle(oro.copy(alpha = 0.2f), 5f * u, Offset(x, h - u * 22)); x += 14 * u }
         }
     }
     // Lámina de herbario: esquineros, un helecho por el margen y la etiqueta del ejemplar al pie.

@@ -544,6 +544,13 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 if (fw > h * 3) { drawCircle(oscuro, h * 0.17f, Offset(h * 0.5f, h / 2)); drawCircle(oscuro, h * 0.17f, Offset(fw - h * 0.5f, h / 2)) }
             }
         }
+        // El tubo de nivel de una caldera: la pista de vidrio con sus marcas y el agua (el color) hasta donde llega.
+        TemaId.VAPOR -> {
+            drawRoundRect(pista, Offset.Zero, size, CornerRadius(h / 2))
+            if (fw > 0f) { drawRoundRect(color, Offset.Zero, Size(fw, h), CornerRadius(h / 2)); drawLine(claro, Offset(h * 0.4f, h * 0.3f), Offset(maxOf(h * 0.4f, fw - h * 0.4f), h * 0.3f), 1.2f * d) }
+            for (k in 1 until 10) drawLine(oscuro.copy(alpha = 0.18f), Offset(w * k / 10f, h * (if (k == 5) 0.1f else 0.55f)), Offset(w * k / 10f, h * 0.9f), 0.8f * d)
+            listOf(0f, w).forEach { x -> drawRect(oscuro, Offset(x - 1.5f * d, -1 * d), Size(3 * d, h + 2 * d)) }
+        }
         // Regla graduada: la lectura arriba y la marca donde termina.
         TemaId.LABORATORIO -> {
             var x = 0f; var i = 0
@@ -564,6 +571,16 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
             if (fw > 0f) {
                 val oro = Color(0xFFD4AF37)
                 drawRect(color, Offset.Zero, Size(fw, h)); drawRect(oro, Offset.Zero, Size(fw, 1.6f * d)); drawRect(oro, Offset(0f, h - 1.6f * d), Size(fw, 1.6f * d))
+            }
+        }
+        // La barra de un rascacielos tumbado: el cuerpo lleno y la punta que se estrecha en tres escalones, con su aguja.
+        TemaId.DECO -> {
+            drawRect(pista, Offset.Zero, size)
+            if (fw > 0f) {
+                val m = minOf(h * 0.4f, fw * 0.2f)
+                drawRect(color, Offset.Zero, Size((fw - 3 * m).coerceAtLeast(0f), h))
+                listOf(0.14f, 0.28f, 0.42f).forEachIndexed { k, f -> drawRect(color, Offset((fw - (3 - k) * m).coerceAtLeast(0f), h * f), Size(m, h * (1 - 2 * f))) }
+                drawLine(Color(0xFFD4AF37), Offset(0f, h / 2), Offset((fw - 3 * m).coerceAtLeast(0f), h / 2), 0.8f * d)
             }
         }
         // Un tallo con hojas alternas y un botón en la punta.
@@ -918,6 +935,14 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawCircle(linea.copy(alpha = 0.5f), rc * 0.32f, c, style = Stroke(2f * d))
             for (k in 0 until 6) drawCircle(linea.copy(alpha = 0.5f), 1.5f * d, polarFig(c, rc * 0.2f, k * 60f))
         }
+        // El reloj de la estación: las doce horas en números de horario por fuera, los minutos marcados y el bisel de latón.
+        TemaId.VAPOR -> {
+            drawCircle(cs.primary.copy(alpha = 0.55f), ro + 4 * d, c, style = Stroke(2.4f * d))
+            marcas(60, 2.5f * d, 0.7f * d, linea.copy(alpha = 0.5f))
+            marcas(12, 5 * d, 1.6f * d, tinta.copy(alpha = 0.7f))
+            drawCircle(linea.copy(alpha = 0.4f), rc * 0.3f, c, style = Stroke(1.2f * d))
+            drawCircle(cs.primary.copy(alpha = 0.6f), 2.4f * d, c)
+        }
         // Papel polar: círculos y radios.
         TemaId.LABORATORIO -> {
             listOf(1f, 0.66f, 0.33f).forEach { k -> drawCircle(linea.copy(alpha = 0.25f), rc * k, c, style = Stroke(0.6f * d)) }
@@ -937,6 +962,12 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
                 rotate(a, p) { drawOval(cs.tertiary.copy(alpha = 0.7f), Offset(p.x - 1.3f * d, p.y - 3f * d), Size(2.6f * d, 6f * d)) }
             }
             figuraTema(tema, cs.tertiary.copy(alpha = 0.35f), c, rc * 0.45f, cs.surface)
+        }
+        // El reloj de un vestíbulo: un sol de rayos largos y cortos alrededor de la esfera y el abanico al centro.
+        TemaId.DECO -> {
+            for (k in 0 until 48) { val a = k * 7.5f - 90f; drawLine(cs.primary.copy(alpha = if (k % 4 == 0) 0.7f else 0.3f), polarFig(c, ro + 2f * d, a), polarFig(c, ro + (if (k % 4 == 0) 10f else 5f) * d, a), (if (k % 4 == 0) 1.6f else 0.8f) * d) }
+            drawCircle(cs.primary.copy(alpha = 0.4f), ro + 12f * d, c, style = Stroke(0.8f * d))
+            figuraTema(tema, cs.primary.copy(alpha = 0.35f), c, rc * 0.45f, cs.surface)
         }
         // El reloj de flores: doce pétalos.
         TemaId.BOTANICO -> {

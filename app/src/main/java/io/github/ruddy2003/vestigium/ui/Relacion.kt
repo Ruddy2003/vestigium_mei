@@ -96,9 +96,11 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
     TemaId.REFUGIO -> MarcoRecuadro(RoundedCornerShape(12.dp), 10.dp)
     TemaId.ORDEN -> MarcoRecuadro(CutCornerShape(7.dp), 10.dp)
+    TemaId.VAPOR -> MarcoRecuadro(RoundedCornerShape(topStart = 13.dp, topEnd = 13.dp, bottomEnd = 3.dp, bottomStart = 3.dp), 10.dp)
     TemaId.LABORATORIO -> MarcoRecuadro(RoundedCornerShape(14.dp), 9.dp)
     TemaId.COLONOS -> MarcoRecuadro(RoundedCornerShape(1.dp), 12.dp)
     TemaId.NAPOLEON -> MarcoRecuadro(RoundedCornerShape(5.dp), 11.dp)
+    TemaId.DECO -> MarcoRecuadro(CutCornerShape(7.dp), 13.dp)   // el chaflán de un rascacielos
     TemaId.BOTANICO -> MarcoRecuadro(RoundedCornerShape(8.dp), 12.dp)
     TemaId.RUINAS -> MarcoRecuadro(CutCornerShape(topStart = 2.dp, topEnd = 10.dp, bottomEnd = 2.dp, bottomStart = 5.dp), 12.dp)   // losa desportillada
     TemaId.NAVIDAD -> MarcoRecuadro(RoundedCornerShape(10.dp), 12.dp)
@@ -209,6 +211,12 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
         TemaId.ORDEN -> listOf(Offset(6 * u, 6 * u), Offset(w - 6 * u, 6 * u), Offset(6 * u, h - 6 * u), Offset(w - 6 * u, h - 6 * u)).forEach {
             drawCircle(e.secondary, 2 * u, it); drawCircle(c.copy(alpha = 0.5f), 2 * u, it, style = Stroke(0.6f * u))
         }
+        // La placa de latón: el filete de arriba, un remache en cada esquina y una muesca de picado a la derecha.
+        TemaId.VAPOR -> {
+            drawLine(c.copy(alpha = 0.6f), Offset(14 * u, 3.5f * u), Offset(w - 14 * u, 3.5f * u), 1.6f * u)
+            listOf(Offset(7 * u, 8 * u), Offset(w - 7 * u, 8 * u), Offset(7 * u, h - 7 * u), Offset(w - 7 * u, h - 7 * u)).forEach { remacheVapor(it, 1.8f * u, c.copy(alpha = 0.8f)) }
+            drawCircle(e.onSurface.copy(alpha = 0.3f), 2.2f * u, Offset(w - 4 * u, h / 2), style = Stroke(0.8f * u))
+        }
         // Probeta: marcas de graduación en el borde izquierdo.
         TemaId.LABORATORIO -> {
             var y = 7 * u; var i = 0
@@ -231,6 +239,16 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
                 while (x + 2 * u <= w - 5 * u) { x += 2 * u; lineTo(x, if (arriba) y0 else y0 + 4 * u); arriba = !arriba }
             }
             drawPath(z, k, style = Stroke(0.8f * u))
+        }
+        // Un abanico de oro arriba al centro y, abajo, tres filetes que se acortan en escalones.
+        TemaId.DECO -> {
+            val b = Offset(w / 2, 9 * u); val r = 8 * u
+            for (i in 0 until 7) if (i % 2 == 0) drawArc(c.copy(alpha = 0.75f), i * 180f / 7, 180f / 7, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+            drawLine(c.copy(alpha = 0.6f), Offset(b.x - r - 4 * u, b.y), Offset(b.x + r + 4 * u, b.y), 0.8f * u)
+            listOf(0.8f, 0.55f, 0.3f).forEachIndexed { k, f ->
+                val y = h - (5 + k * 3) * u
+                drawLine(c.copy(alpha = 0.6f - k * 0.15f), Offset(w * (1 - f) / 2, y), Offset(w * (1 + f) / 2, y), 0.7f * u)
+            }
         }
         // Etiqueta de herbario: el alfiler arriba y la línea punteada para la fecha abajo.
         TemaId.BOTANICO -> {
@@ -510,6 +528,12 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 x += l * 0.72f; i++
             }
         }
+        // La biela que une dos ruedas: una barra de acero con sus pasadores; cuanto más fuerte el lazo, más gruesa.
+        TemaId.VAPOR -> {
+            drawLine(col, Offset(4 * u, y), Offset(w - 4 * u, y), grosor, pathEffect = punteado)
+            var x = 4 * u
+            while (x <= w - 4 * u) { drawCircle(col, grosor * 0.5f + 2.2f * u, Offset(x, y)); drawCircle(fondo, 1.2f * u, Offset(x, y)); x += maxOf(26 * u, (w - 8 * u) / 6f) }
+        }
         // Tubo de vidrio con el líquido adentro y tres burbujas.
         TemaId.LABORATORIO -> {
             val r = grosor / 2 + 2.5f * u
@@ -535,6 +559,15 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 for (k in -2..2) drawLine(col, Offset(x, y), Offset(x + k * 1.2f * u, y + 9 * u), 0.8f * u)
             }
             drawCircle(col, grosor * 0.3f + 1.4f * u, Offset(w / 2, y))
+        }
+        // Tres hilos paralelos, como las líneas de velocidad de un tren de lujo, con un abanico en cada punta.
+        TemaId.DECO -> {
+            val sep = grosor * 0.5f + 1.6f * u
+            listOf(-sep, 0f, sep).forEach { dy -> drawLine(col, Offset(10 * u, y + dy), Offset(w - 10 * u, y + dy), grosor * 0.38f + 0.4f * u, pathEffect = punteado) }
+            listOf(8 * u to 90f, w - 8 * u to 270f).forEach { (x, giro) ->
+                val r = sep + 4 * u
+                for (i in 0 until 5) if (i % 2 == 0) drawArc(col, giro + i * 36f, 36f, true, Offset(x - r, y - r), Size(2 * r, 2 * r))
+            }
         }
         // Una ramita por la que caminan dos hormigas.
         TemaId.BOTANICO -> {

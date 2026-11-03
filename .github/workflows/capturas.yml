@@ -34,7 +34,13 @@ jobs:
           CAPTURAS: ${{ inputs.superficies }}
         run: |
           chmod +x gradlew
-          ./gradlew :app:recordPaparazziDebug --no-daemon 2>&1 | tee capturas.log || true
+          # La memoria libre cada 20 s en el registro: si la máquina se apaga, se ve si fue por falta de memoria.
+          (while true; do echo "MEMORIA $(free -m | awk '/Mem:/ {print $3 " MB usados, " $7 " MB disponibles"}')"; sleep 20; done) &
+          # Primero se compila y se cierra el daemon de Kotlin; las capturas corren después, en un Gradle nuevo, con
+          # toda la memoria para ellas (con 34 temas, juntas no caben en la máquina de CI).
+          ./gradlew :app:compileDebugUnitTestKotlin --no-daemon 2>&1 | tee capturas.log || true
+          pkill -f KotlinCompileDaemon || true
+          ./gradlew :app:recordPaparazziDebug --no-daemon 2>&1 | tee -a capturas.log || true
       - name: Publicar en la rama capturas
         if: always()
         run: |

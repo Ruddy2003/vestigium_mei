@@ -73,6 +73,11 @@ object Widgets {
             0xFFD6B25A.toInt(), 0xFFDDE2E7.toInt(), 0xFF9DA6B0.toInt(), 0xFF4A3F22.toInt(),
             intArrayOf(0xFFD0333B.toInt(), 0xFFD06A6E.toInt(), 0xFFC9A5A7.toInt(), 0xFFDDE2E7.toInt(), 0xFFB4CBD8.toInt(), 0xFF9FBFD0.toInt(), 0xFF8FB3C8.toInt()),
             0xFF22262B.toInt(), 0xFF1C1405.toInt())
+        // La placa de hollín de la sala de máquinas a la luz del gas: latón, papel de plano y, en el ánimo, del ladrillo al rojo al cardenillo.
+        TemaId.VAPOR -> Colores(R.drawable.widget_fondo_vapor, R.drawable.widget_boton_vapor, R.drawable.widget_boton_activo_vapor, R.drawable.widget_boton_ambar_vapor,
+            0xFFDBA641.toInt(), 0xFFEADCC0.toInt(), 0xFFB09F82.toInt(), 0xFF5A4726.toInt(),
+            intArrayOf(0xFFE27A55.toInt(), 0xFFD99A70.toInt(), 0xFFD4B98E.toInt(), 0xFFEADCC0.toInt(), 0xFFB3CDB9.toInt(), 0xFF93C4B1.toInt(), 0xFF74B8A4.toInt()),
+            0xFF29231B.toInt(), 0xFF1E1404.toInt())
         TemaId.LABORATORIO -> Colores(R.drawable.widget_fondo_laboratorio, R.drawable.widget_boton_laboratorio, R.drawable.widget_boton_activo_laboratorio, R.drawable.widget_boton_ambar_laboratorio,
             0xFF3CD2E5.toInt(), 0xFFE3ECF3.toInt(), 0xFF97A8B9.toInt(), 0xFF263447.toInt(),
             intArrayOf(0xFFFF7A9A.toInt(), 0xFFF29DB3.toInt(), 0xFFE9C6D2.toInt(), 0xFFE3ECF3.toInt(), 0xFFAEE6EE.toInt(), 0xFF78DCEA.toInt(), 0xFF3CD2E5.toInt()),
@@ -85,6 +90,11 @@ object Widgets {
             0xFFD9B25B.toInt(), 0xFFF1E9D2.toInt(), 0xFFB3AE9C.toInt(), 0xFF2C3970.toInt(),
             intArrayOf(0xFFE05A6A.toInt(), 0xFFD98590.toInt(), 0xFFD9B8B0.toInt(), 0xFFF1E9D2.toInt(), 0xFFB9C6EE.toInt(), 0xFF9DB4FF.toInt(), 0xFF7F9BFF.toInt()),
             0xFF121A3D.toInt(), 0xFF1A1405.toInt())
+        // Laca negra con oro de marquesina; en el ánimo, del coral de los cocteles al jade de los ascensores.
+        TemaId.DECO -> Colores(R.drawable.widget_fondo_deco, R.drawable.widget_boton_deco, R.drawable.widget_boton_activo_deco, R.drawable.widget_boton_ambar_deco,
+            0xFFD9B44A.toInt(), 0xFFF0E6CC.toInt(), 0xFFB4A888.toInt(), 0xFF4A3E24.toInt(),
+            intArrayOf(0xFFE48A6E.toInt(), 0xFFDDA488.toInt(), 0xFFD9C3A0.toInt(), 0xFFF0E6CC.toInt(), 0xFFB9D9C6.toInt(), 0xFF86C7AE.toInt(), 0xFF5FB59A.toInt()),
+            0xFF201C15.toInt(), 0xFF161004.toInt())
         TemaId.BOTANICO -> Colores(R.drawable.widget_fondo_botanico, R.drawable.widget_boton_botanico, R.drawable.widget_boton_activo_botanico, R.drawable.widget_boton_ambar_botanico,
             0xFFB8E06A.toInt(), 0xFFEAF0E2.toInt(), 0xFFA9B8A4.toInt(), 0xFF2D442F.toInt(),
             intArrayOf(0xFFF29BB8.toInt(), 0xFFE7A9BE.toInt(), 0xFFD9C3C0.toInt(), 0xFFEAF0E2.toInt(), 0xFFC8E3A8.toInt(), 0xFFA9DC80.toInt(), 0xFF8FD06A.toInt()),
@@ -195,9 +205,11 @@ object Widgets {
         TemaId.DISTOPIA -> "CONTROL" to "FORMULARIO"
         TemaId.REFUGIO -> "CHEQUEO" to "ENTRADA"
         TemaId.ORDEN -> "RELEVO" to "ACTA"
+        TemaId.VAPOR -> "A todo vapor" to "Al cuaderno"
         TemaId.LABORATORIO -> "t = 0" to "CUADERNO"
         TemaId.COLONOS -> "Al paso" to "Apunte"
         TemaId.NAPOLEON -> "À PRÉSENT" to "DÉPÊCHE"
+        TemaId.DECO -> "EN CUBIERTA" to "PROGRAMA"
         TemaId.BOTANICO -> "En el campo" to "Libreta"
         TemaId.RUINAS -> "En la ronda" to "Cuaderno"
         TemaId.NAVIDAD -> "Junto al fuego" to "Postal"
@@ -235,9 +247,11 @@ object Widgets {
             TemaId.DISTOPIA -> R.font.oswald_medium to 1.05f
             TemaId.REFUGIO -> R.font.vt323 to 1.35f
             TemaId.ORDEN -> R.font.saira_stencil to 1.0f
+            TemaId.VAPOR -> R.font.caldera_titulo to 0.96f
             TemaId.LABORATORIO -> R.font.jost_medium to 1.0f
             TemaId.COLONOS -> R.font.fell to 1.08f
             TemaId.NAPOLEON -> R.font.bodoni_titulo to 1.05f
+            TemaId.DECO -> R.font.poiret_titulo to 1.08f
             TemaId.BOTANICO -> R.font.fraunces_titulo to 1.0f
             TemaId.RUINAS -> R.font.letrero_titulo to 1.06f
             TemaId.NAVIDAD -> R.font.cinzel_deco_regular to 0.95f

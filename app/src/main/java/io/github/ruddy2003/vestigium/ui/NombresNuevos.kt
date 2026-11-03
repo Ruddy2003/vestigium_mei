@@ -37,6 +37,8 @@ object NombresNuevos {
         TemaId.ORDEN to mapOf("La cinta" to "CRÓNICA HORARIA", "Constelación" to "LA HERMANDAD", "Hall de logros" to "SALA DE ARMAS", "Campañas" to "MISIONES",
             "Impulsos y recaídas" to "CÓDICE PRIVADO", "Estado de los datos" to "INFORME DE SENSORES", "Enfoque y siestas" to "VIGILIA Y REPOSO", "Ver tu vida" to "CRÓNICAS VISUALES",
             "Tus atajos" to "ATAJOS", "Logro conseguido" to "CONDECORACIÓN", "Este día hace un año" to "HACE UN AÑO", "Elegir campaña" to "ELEGIR MISIÓN", "Campañas anteriores" to "MISIONES PASADAS"),
+        // El Vapor victoriano nombra estas pantallas en `NombresVapor`, junto con todas las demás («La cinta del telégrafo», «Rutas ferroviarias»…).
+        TemaId.VAPOR to emptyMap(),
         TemaId.LABORATORIO to mapOf("La cinta" to "SERIE TEMPORAL", "Constelación" to "RED SOCIAL DEL SUJETO", "Hall de logros" to "VITRINA DE RESULTADOS", "Campañas" to "ENSAYOS SEMANALES",
             "Impulsos y recaídas" to "VARIABLES PRIVADAS", "Estado de los datos" to "CALIDAD DE LOS DATOS", "Enfoque y siestas" to "SESIONES Y REPOSO", "Ver tu vida" to "VISUALIZACIONES",
             "Tus atajos" to "ACCESOS", "Logro conseguido" to "HITO ALCANZADO", "Este día hace un año" to "CONTROL: HACE UN AÑO", "Elegir campaña" to "NUEVO ENSAYO", "Campañas anteriores" to "ENSAYOS PREVIOS"),
@@ -46,6 +48,9 @@ object NombresNuevos {
         TemaId.NAPOLEON to mapOf("La cinta" to "JOURNAL DE LA JOURNÉE", "Constelación" to "L'ÉTAT-MAJOR", "Hall de logros" to "GALERÍA DE LAS VICTORIAS", "Campañas" to "CAMPAGNES",
             "Impulsos y recaídas" to "CABINET NOIR", "Estado de los datos" to "PARTE DE LOS CORREOS", "Enfoque y siestas" to "ÉTUDE ET BIVOUAC", "Ver tu vida" to "TABLEAUX",
             "Tus atajos" to "RACCOURCIS", "Logro conseguido" to "VICTOIRE", "Este día hace un año" to "IL Y A UN AN", "Elegir campaña" to "NOUVELLE CAMPAGNE", "Campañas anteriores" to "CAMPAGNES PASSÉES"),
+        TemaId.DECO to mapOf("La cinta" to "EL NOTICIERO", "Constelación" to "LA MESA DEL CAPITÁN", "Hall de logros" to "SALÓN DE LAS OVACIONES", "Campañas" to "CRUCEROS",
+            "Impulsos y recaídas" to "EL RESERVADO", "Estado de los datos" to "ESTADO DE LA BODEGA", "Enfoque y siestas" to "ENSAYO Y SIESTA EN LA HAMACA", "Ver tu vida" to "TU TRAVESÍA EN LÁMINAS",
+            "Tus atajos" to "ESCALERAS DE SERVICIO", "Logro conseguido" to "OVACIÓN", "Este día hace un año" to "LA FUNCIÓN DE HACE UN AÑO", "Elegir campaña" to "ELEGIR CRUCERO", "Campañas anteriores" to "CRUCEROS PASADOS"),
         TemaId.REVOLUCION to mapOf("La cinta" to "LA JORNADA", "Constelación" to "LA FRATERNIDAD", "Hall de logros" to "PANTEÓN DE LOS HONORES", "Campañas" to "JORNADAS",
             "Impulsos y recaídas" to "CUADERNO SECRETO", "Estado de los datos" to "ESTADO DE LOS REGISTROS", "Enfoque y siestas" to "ESTUDIO Y REPOSO", "Ver tu vida" to "ESTAMPAS",
             "Tus atajos" to "ATAJOS", "Logro conseguido" to "HONOR CÍVICO", "Este día hace un año" to "HACE UN AÑO", "Elegir campaña" to "NUEVA JORNADA", "Campañas anteriores" to "JORNADAS PASADAS"),

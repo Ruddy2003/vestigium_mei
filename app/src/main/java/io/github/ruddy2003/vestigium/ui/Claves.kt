@@ -147,6 +147,16 @@ internal object Claves {
         "orbis" to "empire",
     )
 
+    /** La jerga de a bordo y del salón de baile de los años veinte (Art déco). Lo que no está aquí queda en el español común. */
+    val DECO: Map<String, String> = mapOf(
+        "somnus" to "camarote", "passus" to "pasos_de_baile", "cor" to "compás", "animus" to "talante", "svmptvs" to "la_cuenta",
+        "loca" to "puertos", "personae" to "invitados", "palmae" to "ovaciones", "iter" to "travesía", "caelum" to "parte_del_puente",
+        "lux" to "claraboya", "musica" to "orquesta", "imagines" to "fotogramas", "epistulae" to "telegramas", "momenta" to "ecos_de_sociedad",
+        "orbis" to "ultramar", "reditus" to "dividendos", "consuetudo" to "etiqueta", "cibus" to "menú", "telephonum" to "cinematógrafo",
+        "telephon" to "cinematógrafo", "strepitus" to "bullicio", "dies" to "jornadas_a_bordo", "lumen" to "marquesina", "vis" to "calderas",
+        "robur" to "gimnasio_de_a_bordo", "aer" to "aire_de_cubierta", "lectio" to "sala_de_lectura", "series" to "galas_seguidas",
+    )
+
     /** Palabras de la Convención que reemplazan al francés común. */
     val REVOLUCION: Map<String, String> = mapOf(
         "somnus" to "repos", "animus" to "esprit", "personae" to "citoyens", "palmae" to "honneurs", "consuetudo" to "vertus",
@@ -195,6 +205,16 @@ internal object Claves {
         "robur" to "entreno", "loca" to "posiciones", "personae" to "hermanos", "palmae" to "medallas", "consuetudo" to "disciplina",
         "epistulae" to "despachos", "reditus" to "soldada", "momenta" to "bitácora", "orbis" to "frentes", "telephonum" to "terminal",
         "telephon" to "terminal", "themata" to "materias", "opera" to "archivo",
+    )
+
+    /** Habla de la sala de máquinas y del andén (Vapor victoriano). Lo que no está aquí queda en el español común. */
+    val VAPOR: Map<String, String> = mapOf(
+        "somnus" to "fuegos_bajos", "passus" to "leguas", "cor" to "pistón", "animus" to "presión", "svmptvs" to "libro_mayor",
+        "loca" to "estaciones", "personae" to "pasajeros", "palmae" to "patentes", "iter" to "trayecto", "caelum" to "barómetro",
+        "lux" to "luz_de_gas", "aer" to "hollín", "telephonum" to "aparato", "telephon" to "aparato", "epistulae" to "telegramas",
+        "momenta" to "asientos", "consuetudo" to "mantenimiento", "cibus" to "carbonera", "dies" to "jornadas",
+        "orbis" to "la_red", "vis" to "carbón", "strepitus" to "estrépito", "musica" to "gramófono", "imagines" to "daguerrotipos",
+        "reditus" to "dividendos", "series" to "caldera", "robur" to "fundición", "horologium" to "leontina",
     )
 
     /** Jerga del laboratorio. Lo que no está aquí queda en el español común. */

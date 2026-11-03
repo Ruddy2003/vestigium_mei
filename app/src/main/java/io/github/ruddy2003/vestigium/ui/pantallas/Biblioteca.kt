@@ -275,6 +275,14 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
             val y = h - (12 + 5 * k) * u
             drawPath(Path().apply { moveTo(w / 2 - 12 * u, y - 5 * u); lineTo(w / 2, y); lineTo(w / 2 + 12 * u, y - 5 * u) }, tenue, style = Stroke(2f * u))
         }
+        // El engrane estampado al pie de la portada, entre dos filetes, y dos remaches arriba.
+        TemaId.VAPOR -> {
+            val y = h - 16 * u
+            drawPath(io.github.ruddy2003.vestigium.ui.Vapor.engrane(Offset(w / 2, y), 7 * u, 10, 0.78f), tenue)
+            drawCircle(l, 2.4f * u, Offset(w / 2, y))
+            linea(w * 0.18f, y, w / 2 - 10 * u, y); linea(w / 2 + 10 * u, y, w * 0.82f, y)
+            listOf(w * 0.14f, w * 0.86f).forEach { x -> drawCircle(tenue, 1.8f * u, Offset(x, 8 * u)) }
+        }
         // Papel cuadriculado de cuaderno de laboratorio.
         TemaId.LABORATORIO -> {
             val malla = a.copy(alpha = 0.12f); var x = 0f
@@ -290,6 +298,12 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
         // Abejas sembradas, como en el manto imperial.
         TemaId.NAPOLEON -> for (fila in 0 until 3) for (col in 0 until 3) {
             if ((fila + col) % 2 == 0) drawPath(simboloCalificacion(t, Offset(w * (0.2f + 0.3f * col), h * (0.62f + 0.13f * fila)), 3.2f * u), a.copy(alpha = 0.35f))
+        }
+        // Un abanico de rayos que sube desde el pie de la portada y tres filetes escalonados encima.
+        TemaId.DECO -> {
+            val b = Offset(w / 2, h * 0.92f); val r = w * 0.36f
+            for (i in 0 until 11) if (i % 2 == 0) drawArc(tenue, 180f + i * 180f / 11, 180f / 11, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+            listOf(0.7f, 0.5f, 0.3f).forEachIndexed { k, f -> linea(w * (1 - f) / 2, h * (0.46f - k * 0.04f), w * (1 + f) / 2, h * (0.46f - k * 0.04f)) }
         }
         // Un helecho que sube por el borde izquierdo.
         TemaId.BOTANICO -> {

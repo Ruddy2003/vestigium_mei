@@ -272,6 +272,42 @@ def hacer():
     P['renacimiento'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, laud, [4, 7, 12], 0.09, 1.0))
     ARGS['renacimiento'] = (T, pz, ac, mel, kw)
 
+def hacer_vapor():
+    # --- Vapor victoriano: La menor, un galop de feria a buen paso (melodía propia). La corneta de la banda canta, el
+    # armonio de la estación sostiene, la tuba hace el «um» y el armonio el «pa»; debajo, el escape de la chimenea marca
+    # las corcheas (el «chu-chu»), y al final suena el silbato de tres campanas. Con su propio azar.
+    with A.azar_propio('musica_vapor'):
+        T = 0; pz = 0.3
+        ac = compases([0, 3, 7], [5, 8, 12], [7, 11, 14, 17], [0, 3, 7], [8, 12, 15], [3, 7, 10], [7, 11, 14, 17], [0, 3, 7, 12])
+        mel = frase(0, "12:1 11:0.5 12:0.5 7:1 3:1 | 5:0.5 8:0.5 12:1 10:1 8:1 | 7:1 11:1 14:1 11:1 | 12:2 r:1 7:1 | "
+                       "8:1 12:1 15:1 12:1 | 15:1 14:0.5 12:0.5 10:1 7:1 | 14:1 11:1 7:1 5:1 | 3:1 11:1 12:2")
+        corneta = lambda f, d: metal(f, d, 3200, 0.025)
+        tuba = lambda f, d: metal(f, d, 700, 0.03)
+        armonio = lambda f, d: organo(f, d, 0.04)
+        def silbato(notas, d):
+            t = t_(d)
+            x = sum(np.sin(2 * np.pi * hz(n) * t) + 0.3 * np.sin(4 * np.pi * hz(n) * t) for n in notas) / len(notas)
+            x = x + filtro(ruido(d), 'banda', (hz(notas[0]) * 0.9, hz(notas[-1]) * 3)) * 0.3
+            return x * np.minimum(1, t / 0.05) * np.minimum(1, (d - t) / 0.2)
+        chu = lambda g: filtro(ruido(0.14), 'banda', (200, 1700)) * env(int(0.14 * SR), 0.004, 0.07, 3) * g
+        def ritmo(acordes):
+            """El «um-pa» de la tuba y el armonio, el escape en corcheas (fuerte en el pulso) y el silbato al cerrar."""
+            out = []
+            for (b, notas, d) in acordes:
+                for k in range(int(d)):
+                    if k % 2 == 0: out.append((b + k, tuba(hz(T - 24 + notas[0 if k == 0 else 2 % len(notas)]), pz * 0.8), 0.32))
+                    else: out.append((b + k, acorde(armonio, [T - 12 + n for n in notas], pz * 0.45), 0.16))
+                    out.append((b + k, chu(1.0), 0.22)); out.append((b + k + 0.5, chu(0.55), 0.22))
+            fin = acordes[-1][0]
+            out.append((fin + 2, silbato([T, T + 3, T + 8], 6 * pz), 0.26))
+            return out
+        kw = dict(inst_mel=corneta, inst_ac=armonio, perc=ritmo(ac), g_mel=0.42, g_ac=0.1, oct_mel=0, oct_ac=-12, legato=0.88, cola=1.5, rev=0.24)
+        # La llamada solo toma los dos primeros compases y el cierre: su ritmo se arma con esos mismos acordes.
+        kw_llamada = dict(kw, perc=ritmo([c for c in ac if c[0] < 8] + [(8, ac[-1][1], 4)]))
+        P['vapor'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw_llamada),
+                      notificacion(T, lambda f, d: campana(f, d, 3.5, 1.2, 3.0), [7, 12, 15], 0.11, 0.9))
+        ARGS['vapor'] = (T, pz, ac, mel, kw)
+
 def hacer_templario():
     # --- Templario: Sol mixolidio, canción de marcha de la hueste (melodía propia). El olifante lleva la melodía sobre el
     # bordón del coro de los freires, la fídula marca el bajo y el tambor de guerra lleva el paso. Con su propio azar.
@@ -346,6 +382,26 @@ def hacer_edo():
                   g_mel=0.42, g_ac=0.26, g_bajo=0.22, oct_ac=-12, oct_mel=0, legato=0.95, rev=0.3)
         P['edo'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, koto, [7, 12, 15], 0.11, 0.9))
         ARGS['edo'] = (T, pz, ac, mel, kw)
+
+def hacer_deco():
+    # --- Art déco: Do mayor, un charlestón de orquesta de baile de los años veinte (melodía propia), con su síncopa de
+    # «uno y el de antes del tres». La trompeta con sordina canta, el piano marca los acordes con sexta, el contrabajo
+    # pulsa, la escobilla da el dos y el cuatro y el platillo, el contratiempo; al final, el vibráfono. Con su propio azar.
+    with A.azar_propio('musica_deco'):
+        T = 3; pz = 0.36
+        ac = compases([0, 4, 7, 9], [-3, 1, 4, 7], [2, 5, 9, 12], [7, 11, 14, 17], [0, 4, 9, 14])
+        mel = frase(0, "7:1.5 9:0.5 r:0.5 7:1.5 | 4:1 1:1 4:1 7:1 | 9:1.5 12:0.5 r:0.5 9:1.5 | 11:1 9:0.5 7:0.5 5:1 2:1 | 4:1 9:1 0:2")
+        trompeta = lambda f, d: filtro(metal(f, d, 2200, 0.02), 'bajo', 2600)
+        piano = lambda f, d: mezclar((0, pluck(f, min(d, 1.1), 0.62, 0.995), 0.8), (0, pluck(f * 2, min(d, 0.6), 0.45, 0.993), 0.2))
+        bajo = lambda f, d: pluck(f, min(d, 0.6), 0.3, 0.996)
+        escobilla = lambda: filtro(ruido(0.1), 'banda', (2500, 8000)) * env(int(0.1 * SR), 0.01, 0.08, 2)
+        platillo = lambda: filtro(ruido(0.25), 'alto', 6000) * env(int(0.25 * SR), 0.002, 0.25, 4)
+        perc = cada(20, escobilla, 0.16, desde=1, paso=2) + cada(20, platillo, 0.07, desde=0.66, paso=1)
+        final = vibrafono(hz(T + 21), 1.6)
+        kw = dict(inst_mel=trompeta, inst_ac=piano, bajo=bajo, perc=perc, extra=[(17.5 * pz, final, 0.22)],
+                  g_mel=0.5, g_ac=0.26, g_bajo=0.32, oct_mel=0, oct_ac=-12, legato=0.92, rev=0.24)
+        P['deco'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, vibrafono, [16, 19, 21, 26], 0.11, 0.9))
+        ARGS['deco'] = (T, pz, ac, mel, kw)
 
 def hacer_revolucion():
     # --- Revolución: Sol mayor, marcha de pífano y tambor (melodía propia) sobre cuerdas
@@ -595,10 +651,12 @@ def anual(T, pz, ac, mel, kw, ciclos=10):
 
 if __name__ == '__main__':
     hacer()
+    hacer_vapor()
     hacer_templario()
     hacer_pirata()
     hacer_urbe()
     hacer_edo()
+    hacer_deco()
     hacer_revolucion()
     hacer_antiguas()
     hacer_cueva()

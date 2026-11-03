@@ -129,12 +129,16 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.REFUGIO -> Papeleria(Color(0xFFF1E8CF), Color(0xFFB8AC88), Color(0xFFFFF8E6), Color(0xFF1C6E6A), Color(0xFFE8B83A), Color(0xFFD9572B), Color(0xFF1F2A2A))
     // Papel gris acero, forro carmesí, la placa de latón y la cinta carmesí.
     TemaId.ORDEN -> Papeleria(Color(0xFFC9CDD1), Color(0xFF8A9096), Color(0xFFE2E5E8), Color(0xFF9E1B22), Color(0xFFD6B25A), Color(0xFF9E1B22), Color(0xFF1C2127))
+    // El sobre de telegrama de papel de estraza, forrado de cardenillo, con lacre de ladrillo y el cordel de latón.
+    TemaId.VAPOR -> Papeleria(Color(0xFFD8C08E), Color(0xFFA88E5C), Color(0xFFEBDDB8), Color(0xFF2F6B5E), Color(0xFF9C3D24), Color(0xFFB8862B), Color(0xFF231B14))
     // Blanco clínico con forro cian pálido, la etiqueta cian y el hilo violeta.
     TemaId.LABORATORIO -> Papeleria(Color(0xFFF7FBFC), Color(0xFFB9C6CF), Color(0xFFFFFFFF), Color(0xFFD8F3F7), Color(0xFF0B8FA1), Color(0xFF5E4FD1), Color(0xFF1B2733))
     // Papel de gaceta, forro azul marino, la oblea de ladrillo y el bramante.
     TemaId.COLONOS -> Papeleria(Color(0xFFEDE4CC), Color(0xFFB5A684), Color(0xFFF7F0DC), Color(0xFF3E4B60), Color(0xFF9E2B25), Color(0xFF8A6A44), Color(0xFF1E1A16))
     // Papel de despacho, forro azul imperial, el lacre carmesí del águila y la banda de oro.
     TemaId.NAPOLEON -> Papeleria(Color(0xFFF3EAD2), Color(0xFFC9B48A), Color(0xFFFBF5E6), Color(0xFF1E3A8A), Color(0xFFA3172E), Color(0xFFD9B25B), Color(0xFF14213D))
+    // Sobre de laca negra forrado de oro, el lacre de jade y la cinta dorada de los grandes almacenes; la tinta, marfil.
+    TemaId.DECO -> Papeleria(Color(0xFF1C1A16), Color(0xFF0E0D0B), Color(0xFF38332B), Color(0xFFD9B44A), Color(0xFF1F6B57), Color(0xFFC9A54A), Color(0xFFF0E6CC))
     // Papel de trapo, forro de musgo, la cera verde en flor y la rafia.
     TemaId.BOTANICO -> Papeleria(Color(0xFFE9E2C6), Color(0xFFAFA27C), Color(0xFFF5F0DC), Color(0xFF6E7A4E), Color(0xFF3F5A2C), Color(0xFFC9B27A), Color(0xFF2A2318))
     // Cartón gris recortado de una caja, forro de hiedra, una chapa oxidada por sello y cordel de nailon viejo.
@@ -178,7 +182,7 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
 // =====================================================================
 
 /** El perfil del borde de la solapa, de una esquina a la otra: en pico, redondo, recto, en ondas, en ojiva… */
-internal enum class SolapaSobre { PICO, REDONDA, RECTA, ONDAS, LENGUA, BISEL, OJIVA, DIENTES, PARABOLA, ESCALON, RASGADA, ALMENA }
+internal enum class SolapaSobre { PICO, REDONDA, RECTA, ONDAS, LENGUA, BISEL, OJIVA, DIENTES, PARABOLA, ESCALON, CORONA, RASGADA, ALMENA }
 
 /** Con qué se ata el sobre sellado: cordón en cruz, dos vueltas, cinta vertical, faja, hilo y botones o precinto. */
 internal enum class CierreSobre { CRUZ, DOBLE, VERTICAL, BANDA, HILO, PRECINTO }
@@ -198,9 +202,11 @@ internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
     TemaId.DISTOPIA -> FormaSobre(SolapaSobre.RECTA, 0.01f, CierreSobre.HILO)
     TemaId.REFUGIO -> FormaSobre(SolapaSobre.REDONDA, 0.08f, CierreSobre.BANDA)
     TemaId.ORDEN -> FormaSobre(SolapaSobre.BISEL, 0.01f, CierreSobre.CRUZ)
+    TemaId.VAPOR -> FormaSobre(SolapaSobre.ESCALON, 0.02f, CierreSobre.PRECINTO)
     TemaId.LABORATORIO -> FormaSobre(SolapaSobre.PARABOLA, 0.05f, CierreSobre.HILO)
     TemaId.COLONOS -> FormaSobre(SolapaSobre.PICO, 0.02f, CierreSobre.DOBLE)
     TemaId.NAPOLEON -> FormaSobre(SolapaSobre.PICO, 0.025f, CierreSobre.BANDA)
+    TemaId.DECO -> FormaSobre(SolapaSobre.CORONA, 0.008f, CierreSobre.VERTICAL)
     TemaId.BOTANICO -> FormaSobre(SolapaSobre.ONDAS, 0.04f, CierreSobre.CRUZ)
     TemaId.RUINAS -> FormaSobre(SolapaSobre.RASGADA, 0.005f, CierreSobre.HILO)
     TemaId.NAVIDAD -> FormaSobre(SolapaSobre.DIENTES, 0.04f, CierreSobre.CRUZ)
@@ -236,6 +242,8 @@ private fun perfilSolapa(s: SolapaSobre, u: Float): Float {
         SolapaSobre.DIENTES -> { val x = (u - 0.5f) * 8f; borde * (0.82f + 0.18f * (1f - 2f * abs(x - round(x)))) }
         SolapaSobre.PARABOLA -> 1f - (2f * u - 1f) * (2f * u - 1f)
         SolapaSobre.ESCALON -> ceil(p * 4f) / 4f
+        // La corona de un rascacielos: tres retranqueos simétricos y, al centro, la aguja que baja hasta la punta.
+        SolapaSobre.CORONA -> if (p > 0.92f) 1f else ceil(p * 3f) / 3f * 0.78f
         SolapaSobre.RASGADA -> ((p * 1.6f).coerceAtMost(1f) + 0.05f * sin(u * 37f) * sin(u * PI.toFloat())).coerceIn(0f, 1f)
         // El borde de la solapa en almenas: merlones y troneras alternados.
         SolapaSobre.ALMENA -> borde * (if ((u * 9f).toInt() % 2 == 0) 1f else 0.8f)
@@ -462,6 +470,19 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             for (j in 0 until 8) { val ang = j * PI / 4; drawLine(hondo, c, Offset(c.x + (r * 0.5f * cos(ang)).toFloat(), c.y + (r * 0.5f * sin(ang)).toFloat()), r * 0.14f) }
             drawCircle(hondo, r * 0.36f, c); drawCircle(col, r * 0.13f, c)
         }
+        TemaId.VAPOR -> {
+            // El lacre con el borde dentado de un engrane y, estampada, la rueda motriz de una locomotora: llanta, doce
+            // rayos, el cubo y el contrapeso en media luna.
+            val canto = Vapor.engrane(c, r, 16, 0.9f)
+            translate(r * 0.06f, r * 0.08f) { drawPath(canto, sombra) }
+            drawPath(canto, col)
+            drawCircle(hondo, r * 0.74f, c, style = Stroke(r * 0.05f))
+            drawCircle(hondo, r * 0.58f, c, style = Stroke(r * 0.09f))
+            for (j in 0 until 12) { val ang = j * PI / 6; drawLine(hondo, c, Offset(c.x + (r * 0.55f * cos(ang)).toFloat(), c.y + (r * 0.55f * sin(ang)).toFloat()), r * 0.045f) }
+            drawArc(hondo, 200f, 140f, true, Offset(c.x - r * 0.52f, c.y - r * 0.52f), Size(r * 1.04f, r * 1.04f))
+            drawCircle(hondo, r * 0.14f, c); drawCircle(claro, r * 0.06f, Offset(c.x - r * 0.03f, c.y - r * 0.03f))
+            drawCircle(claro, r * 0.07f, Offset(c.x + (r * 0.36f * cos(PI / 3)).toFloat(), c.y + (r * 0.36f * sin(PI / 3)).toFloat()))
+        }
         TemaId.LABORATORIO -> {
             // La etiqueta de muestra: blanca, con la franja de color, el código de barras y su número.
             val o = Offset(c.x - r * 1.2f, c.y - r * 0.66f); val s = Size(r * 2.4f, r * 1.32f)
@@ -504,6 +525,21 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             val cola = Path().apply { val a1 = p(-0.22f, 0.55f); val a2 = p(0.22f, 0.55f); val a3 = p(0f, 0.9f); moveTo(a1.x, a1.y); lineTo(a2.x, a2.y); lineTo(a3.x, a3.y); close() }
             drawPath(cola, oro)
             listOf(-0.12f, 0f, 0.12f).forEach { x -> drawCircle(oro, 0.05f * u, p(x + 0.04f, -0.66f)) }
+        }
+        TemaId.DECO -> {
+            // Lacre de jade con el abanico solar en relieve: siete rayos que salen de un medio sol, sobre tres escalones.
+            gotaCera(c, r, col, 7)
+            drawCircle(hondo, r * 0.8f, c, style = Stroke(r * 0.05f))
+            val oro = k(Color(0xFFE6C664)); val u = r * 0.6f
+            fun p(x: Float, y: Float) = Offset(c.x + x * u, c.y + y * u)
+            val pie = p(0f, 0.3f)
+            for (i in 0..6) {
+                val ang = PI + (i + 0.5) * PI / 7
+                drawLine(oro, pie, Offset(pie.x + 0.95f * u * cos(ang).toFloat(), pie.y + 0.95f * u * sin(ang).toFloat()), r * 0.06f, cap = StrokeCap.Round)
+            }
+            drawArc(oro, 180f, 180f, true, p(-0.32f, -0.02f), Size(0.64f * u, 0.64f * u))
+            drawArc(claro, 180f, 180f, false, p(-1.05f, -0.75f), Size(2.1f * u, 2.1f * u), style = Stroke(r * 0.035f))
+            listOf(0.42f to 0.9f, 0.56f to 0.62f, 0.7f to 0.34f).forEach { (y, an) -> drawRect(oro, p(-an / 2, y), Size(an * u, 0.08f * u)) }
         }
         TemaId.BOTANICO -> {
             // Cera verde en forma de flor de cinco lóbulos, con una hoja prensada en relieve.
@@ -864,6 +900,20 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
             var y = top + H * 0.14f
             while (y < bot - H * 0.05f) { drawCircle(Color(0xFF6E757D), H * 0.018f, Offset(x, y)); drawCircle(Color.White.copy(alpha = 0.5f), H * 0.007f, Offset(x - H * 0.005f, y - H * 0.005f)); y += H * 0.1f }
         }
+        // El sobre de telegrama: la franja impresa de la compañía, con su locomotora de grabado, y la línea perforada de abajo.
+        TemaId.VAPOR -> {
+            val grabado = pa.tinta.copy(alpha = 0.5f)
+            drawRect(pa.lacre.copy(alpha = 0.7f), Offset(l, top + H * 0.06f), Size(W, H * 0.03f))
+            val x0 = l + W * 0.06f; val y0 = top + H * 0.17f; val s = H * 0.08f
+            drawRect(grabado, Offset(x0, y0), Size(s * 2.2f, s * 0.9f))
+            drawRect(grabado, Offset(x0 + s * 2.2f, y0 - s * 0.5f), Size(s * 1.1f, s * 1.4f))
+            drawRect(grabado, Offset(x0 + s * 0.3f, y0 - s * 0.6f), Size(s * 0.35f, s * 0.6f))
+            drawCircle(grabado, s * 0.22f, Offset(x0 + s * 1.2f, y0 - s * 0.05f))
+            for (k in 0..2) drawCircle(grabado, s * 0.32f, Offset(x0 + s * (0.5f + k * 0.95f), y0 + s * 1.15f))
+            drawLine(grabado, Offset(x0 - s * 0.3f, y0 + s * 1.5f), Offset(x0 + s * 3.6f, y0 + s * 1.5f), s * 0.08f)
+            var x = l + W * 0.04f
+            while (x < r - W * 0.04f) { drawCircle(pa.sombra.copy(alpha = 0.7f), H * 0.009f, Offset(x, bot - H * 0.08f)); x += maxOf(W * 0.025f, 1f) }
+        }
         TemaId.LABORATORIO -> {
             // El código de barras de la muestra, de canto junto al borde derecho.
             val az = java.util.Random(4); var y = top + H * 0.16f; val x = r - W * 0.1f
@@ -883,6 +933,22 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
             val oro = Color(0xFFD9B25B)
             drawRect(oro.copy(alpha = 0.8f), Offset(l + W * 0.03f, top + W * 0.03f), Size(W * 0.94f, H - W * 0.06f), style = Stroke(1.6f))
             drawRect(oro.copy(alpha = 0.5f), Offset(l + W * 0.045f, top + W * 0.045f), Size(W * 0.91f, H - W * 0.09f), style = Stroke(0.8f))
+        }
+        TemaId.DECO -> {
+            // Doble filete de oro y, en cada esquina, tres escalones que se meten hacia dentro, como un marco de ascensor.
+            val oro = Color(0xFFD9B44A)
+            val m = W * 0.035f
+            drawRect(oro.copy(alpha = 0.85f), Offset(l + m, top + m), Size(W - 2 * m, H - 2 * m), style = Stroke(1.6f))
+            drawRect(oro.copy(alpha = 0.45f), Offset(l + m * 1.5f, top + m * 1.5f), Size(W - 3 * m, H - 3 * m), style = Stroke(0.8f))
+            val paso = W * 0.022f
+            listOf(Offset(l + m, top + m) to Offset(1f, 1f), Offset(r - m, top + m) to Offset(-1f, 1f), Offset(l + m, bot - m) to Offset(1f, -1f), Offset(r - m, bot - m) to Offset(-1f, -1f)).forEach { (o, d) ->
+                val esc = Path().apply {
+                    moveTo(o.x, o.y + d.y * 4 * paso)
+                    for (i in 1..3) { lineTo(o.x + d.x * i * paso, o.y + d.y * (4 - i + 1) * paso); lineTo(o.x + d.x * i * paso, o.y + d.y * (4 - i) * paso) }
+                    lineTo(o.x + d.x * 4 * paso, o.y + d.y * paso); lineTo(o.x + d.x * 4 * paso, o.y)
+                }
+                drawPath(esc, oro.copy(alpha = 0.8f), style = Stroke(1.2f))
+            }
         }
         TemaId.BOTANICO -> {
             // Un helecho a tinta junto al borde izquierdo.
@@ -1239,12 +1305,16 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "¡Hola, yo del mañana!…", "Escribe tu mensaje al vecino…", "Mensaje para %s en la bóveda", "La bóveda no se abre antes de tiempo.", "Toca para escribir con optimismo…")
     TemaId.ORDEN -> VozCarta("SELLO LEVANTADO: ABRIR", "Remachada", "AL CUSTODIO DEL %s", "CUSTODIO DE %s", "AL CUSTODIO QUE VENDRÁ",
         "Custodio del futuro:…", "Redacta el despacho…", "Despacho para %s remachado", "La Orden no permite abrirla antes.", "TOCA PARA REDACTAR EL PARTE")
+    TemaId.VAPOR -> VozCarta("Llegó el telegrama: ábrelo", "Precintado en la estación", "Para mi yo del %s", "Para mi yo · %s", "Para mi yo de la próxima estación",
+        "Estimado yo del futuro: STOP…", "Redacta tu telegrama…", "Telegrama para %s entregado al jefe de estación", "Ni el expreso del Norte lo lleva antes.", "Toca para dictar el telegrama…")
     TemaId.LABORATORIO -> VozCarta("Muestra lista para abrir", "Etiquetada", "Para el sujeto del %s", "Sujeto · %s", "Para el sujeto del futuro",
         "Observación para mi yo futuro:…", "Anota tu mensaje…", "Mensaje para %s etiquetado", "Protocolo: no abrir antes de la fecha.", "Toca para anotar…")
     TemaId.COLONOS -> VozCarta("Llegó el correo: ábrela", "Cerrada con oblea", "Para el vecino que seré el %s", "Para mí, %s", "Para el vecino que seré",
         "Querido yo de más adelante…", "Escribe tu carta…", "Carta para %s al correo", "El cartero no la entrega antes.", "Toca para mojar la pluma…")
     TemaId.NAPOLEON -> VozCarta("Boletín recibido: ábrelo", "Lacrada con el águila", "A mí mismo, el %s", "A mí mismo · %s", "A mí mismo, en el porvenir",
         "Mon cher moi de l’avenir…", "Redacta tu despacho…", "Despacho para %s lacrado", "Ni el Emperador la abriría antes.", "Toca para dictar el despacho…")
+    TemaId.DECO -> VozCarta("Llegó el telegrama: ábrelo", "Lacrado con el abanico", "Al pasajero que seré el %s", "Al pasajero de %s", "Al pasajero que seré",
+        "Querido yo de la próxima temporada…", "Dicta tu telegrama…", "Telegrama para %s en la valija", "La radio de a bordo no lo entrega antes.", "Toca para dictar al radiotelegrafista…")
     TemaId.BOTANICO -> VozCarta("Ya floreció: ábrela", "Prensada entre hojas", "Para el naturalista del %s", "Naturalista de %s", "Para el naturalista que seré",
         "Querido yo de otra estación…", "Escribe tu nota de campo…", "Carta para %s prensada", "Hay que esperar a que florezca.", "Toca para escribir a tinta sepia…")
     TemaId.RUINAS -> VozCarta("Ya puedes destapiarla", "Tapiada con una chapa", "Para quien siga en pie el %s", "Superviviente de %s", "Para quien siga en pie",
@@ -1297,9 +1367,11 @@ private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.DISTOPIA -> LetraExtra.oswald
     TemaId.REFUGIO -> LetraExtra.vt323
     TemaId.ORDEN -> LetraExtra.estarcido
+    TemaId.VAPOR -> LetraExtra.caldera
     TemaId.LABORATORIO -> LetraExtra.jost
     TemaId.COLONOS -> LetraExtra.fell
     TemaId.NAPOLEON -> LetraExtra.bodoniTitulo
+    TemaId.DECO -> LetraExtra.poiret
     TemaId.BOTANICO -> LetraExtra.fraunces
     TemaId.RUINAS -> LetraExtra.letrero
     TemaId.NAVIDAD -> LetraExtra.cinzelDeco

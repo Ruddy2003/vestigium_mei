@@ -245,12 +245,25 @@ object Temas {
         "10-23" to "SIMULACRO", "12-02" to "REACTOR")
     private val MARCAS_ORDEN = mapOf("01-15" to "JURAMENTO", "03-01" to "LEVA", "04-23" to "S. JORGE", "06-15" to "TORNEO",
         "09-01" to "CAMPAÑA", "11-11" to "ARMISTICIO", "12-21" to "VIGILIA")
+    // Fechas del vapor y del ferrocarril: la patente de Watt del condensador separado (5 ene 1769), la locomotora de
+    // Trevithick en Penydarren (21 feb 1804), la apertura de la Exposición del Crystal Palace (1 may 1851), el clavo de
+    // oro del primer transcontinental (10 may 1869), la línea Stockton–Darlington (27 sep 1825), el concurso de Rainhill
+    // (del 6 oct 1829), la Liverpool–Manchester (15 sep 1830), el primer tren de España, Barcelona–Mataró (28 oct 1848),
+    // la hora de Greenwich en los ferrocarriles británicos (1 dic 1847), el Metropolitano de Londres (10 ene 1863) y el
+    // Ferrocarril Mexicano de México a Veracruz (1 ene 1873).
+    private val MARCAS_VAPOR = mapOf("01-05" to "Watt", "02-21" to "Trevithick", "05-01" to "Crystal Pal.", "05-10" to "Clavo de oro",
+        "09-27" to "Stockton", "10-06" to "Rainhill", "09-15" to "Liverpool", "10-28" to "Mataró", "12-01" to "Greenwich",
+        "01-10" to "Metro", "01-01" to "F. Mexicano")
     private val MARCAS_LABORATORIO = mapOf("02-11" to "Científicas", "03-14" to "Einstein", "04-25" to "ADN", "05-20" to "Metrología",
         "10-21" to "Nobel", "10-23" to "Mol", "11-07" to "Curie")
     private val MARCAS_COLONOS = mapOf("03-19" to "Siembra", "05-15" to "S. Isidro", "05-20" to "Tierras", "06-24" to "S. Juan",
         "09-29" to "S. Miguel", "10-15" to "Cosecha", "12-24" to "Nochebuena")
     private val MARCAS_NAPOLEON = mapOf("12-02" to "Austerlitz", "08-15" to "Natalicio", "06-18" to "Waterloo", "03-21" to "Código", "05-18" to "Imperio",
         "10-14" to "Jena", "06-14" to "Friedland", "03-20" to "Cien Días", "07-06" to "Wagram")
+    /** Los años veinte y su arte: la Exposición de París de 1925 (que le dio nombre), los rascacielos, el cine sonoro, Lindbergh, la Ley Seca y el martes negro. */
+    private val MARCAS_DECO = mapOf("04-28" to "Exposición de 1925", "05-27" to "Chrysler", "05-01" to "Empire State", "10-06" to "Cine sonoro",
+        "05-21" to "Lindbergh", "11-04" to "Tutankamón", "01-17" to "Ley Seca", "12-05" to "Fin de la Ley Seca", "10-29" to "Martes negro",
+        "05-29" to "Normandie", "12-31" to "Gran gala")
     private val MARCAS_ANTIGUAS = mapOf("12-21" to "Noche larga", "06-21" to "Día largo", "03-20" to "Deshielo", "09-22" to "Cosecha", "10-31" to "Víspera", "01-01" to "Año nuevo")
     /** El año del valle (solsticios y equinoccios, por lo que hacen las manadas) y los días en que se hallaron dos grandes cuevas pintadas:
      *  Lascaux (12 de septiembre de 1940) y Chauvet (18 de diciembre de 1994). */
@@ -306,9 +319,11 @@ object Temas {
             TemaId.DISTOPIA -> MARCAS_DISTOPIA[md]
             TemaId.REFUGIO -> MARCAS_REFUGIO[md]
             TemaId.ORDEN -> MARCAS_ORDEN[md]
+            TemaId.VAPOR -> MARCAS_VAPOR[md]
             TemaId.LABORATORIO -> MARCAS_LABORATORIO[md]
             TemaId.COLONOS -> MARCAS_COLONOS[md]
             TemaId.NAPOLEON -> MARCAS_NAPOLEON[md]
+            TemaId.DECO -> MARCAS_DECO[md]
             TemaId.BOTANICO -> MARCAS_BOTANICO[md]
             TemaId.RUINAS -> MARCAS_RUINAS[md]
             TemaId.NAVIDAD -> MARCAS_NAVIDAD[md]
@@ -485,9 +500,13 @@ object Temas {
         TemaId.DISTOPIA -> DISTOPIA[titulo]
         TemaId.REFUGIO -> REFUGIO[titulo]
         TemaId.ORDEN -> ORDEN[titulo]
+        // El Vapor victoriano tiene todo su diccionario en `NombresVapor` (ver [NombresCompletos]).
+        TemaId.VAPOR -> null
         TemaId.LABORATORIO -> LABORATORIO[titulo]
         TemaId.COLONOS -> COLONOS[titulo]
         TemaId.NAPOLEON -> NAPOLEON[titulo]
+        // El Art déco tiene todo su diccionario en `NombresDeco` (ver [NombresCompletos]).
+        TemaId.DECO -> null
         TemaId.BOTANICO -> BOTANICO[titulo]
         TemaId.RUINAS -> RUINAS[titulo]
         TemaId.GOTICO -> GOTICO[titulo]
@@ -521,9 +540,11 @@ object Temas {
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
             TemaId.REFUGIO -> mapOf("animo" to "ESTADO", "momento" to "SUCESO", "gasto" to "SUMINISTROS", "sueno" to "DESCANSO", "habitos" to "PROTOCOLOS", "hoy" to "BITÁCORA", "cifra" to "LECTURA", "foto" to "FOTO", "enfoque" to "TURNO")
             TemaId.ORDEN -> mapOf("animo" to "MORAL", "momento" to "BITÁCORA", "gasto" to "INTENDENCIA", "sueno" to "DESCANSO", "habitos" to "DISCIPLINA", "hoy" to "PARTE", "cifra" to "CIFRA", "foto" to "IMAGEN", "enfoque" to "VIGILIA")
+            TemaId.VAPOR -> mapOf("animo" to "Presión", "momento" to "Asiento", "gasto" to "Libro mayor", "sueno" to "Caldera en reposo", "habitos" to "Mantenimiento", "hoy" to "Salida", "cifra" to "Lectura", "foto" to "Daguerrotipo", "enfoque" to "Plena marcha")
             TemaId.LABORATORIO -> mapOf("animo" to "ESTADO", "momento" to "OBSERVACIÓN", "gasto" to "RECURSOS", "sueno" to "SUEÑO", "habitos" to "VARIABLES", "hoy" to "SESIÓN", "cifra" to "MEDIDA", "foto" to "MUESTRA", "enfoque" to "ENSAYO")
             TemaId.COLONOS -> mapOf("animo" to "Ánimo", "momento" to "Sucesos", "gasto" to "Cuentas", "sueno" to "Descanso", "habitos" to "Faenas", "hoy" to "Jornada", "cifra" to "Número", "foto" to "Estampa", "enfoque" to "Faena")
             TemaId.NAPOLEON -> mapOf("animo" to "MORAL", "momento" to "DESPACHO", "gasto" to "TESORERÍA", "sueno" to "VIVAC", "habitos" to "CÓDIGO", "hoy" to "BOLETÍN", "cifra" to "CIFRA", "foto" to "RETRATO", "enfoque" to "ÉTUDE")
+            TemaId.DECO -> mapOf("animo" to "TALANTE", "momento" to "ESCENA", "gasto" to "LA CUENTA", "sueno" to "CAMAROTE", "habitos" to "ETIQUETA", "hoy" to "PASAJE", "cifra" to "MARCADOR", "foto" to "FOTOGRAMA", "enfoque" to "ENSAYO")
             TemaId.BOTANICO -> mapOf("animo" to "Ánimo", "momento" to "Observación", "gasto" to "Semillas", "sueno" to "Latencia", "habitos" to "Cuidados", "hoy" to "Herbario", "cifra" to "Medida", "foto" to "Lámina", "enfoque" to "Estudio")
             TemaId.RUINAS -> mapOf("animo" to "Aguante", "momento" to "Hallazgo", "gasto" to "Trueque", "sueno" to "Descanso", "habitos" to "Faenas", "hoy" to "Tras el silencio", "cifra" to "Marca", "foto" to "Recuerdo", "enfoque" to "Vigía")
             TemaId.GOTICO -> mapOf("animo" to "Ánima", "momento" to "Horas", "gasto" to "Tesoro", "sueno" to "Maitines", "habitos" to "Regla", "hoy" to "Laudes", "cifra" to "Cuenta", "foto" to "Vidriera", "enfoque" to "Lectio")

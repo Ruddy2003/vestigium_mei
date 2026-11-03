@@ -82,9 +82,11 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.DISTOPIA -> 7000
     TemaId.REFUGIO -> 3200
     TemaId.ORDEN -> 2600
+    TemaId.VAPOR -> 3200          // el engrane da una doceava de vuelta por ciclo; la aguja tiembla tres veces
     TemaId.LABORATORIO -> 2400
     TemaId.COLONOS -> 1900
     TemaId.NAPOLEON -> 5200
+    TemaId.DECO -> 7300
     TemaId.BOTANICO -> 14000
     TemaId.RUINAS -> 9000
     TemaId.NAVIDAD -> 24000
@@ -137,9 +139,11 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.DISTOPIA -> ojo(c, r, e.onBackground, e.primary, e.background, t)
         TemaId.REFUGIO -> atomo(c, r, e.primary, e.secondary, t)
         TemaId.ORDEN -> escudo(c, r, e.primary, e.secondary, t)
+        TemaId.VAPOR -> engraneManometro(c, r, e.primary, lerp(e.primary, e.onBackground, 0.35f), if (oscuro) Color(0xFFEADCC0) else e.surface, Color(0xFF231B14), e.tertiary, t)
         TemaId.LABORATORIO -> molecula(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.COLONOS -> farol(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.NAPOLEON -> nImperial(c, r, if (oscuro) e.primaryContainer else e.primary, if (oscuro) e.primary else e.tertiary, e.secondary, t)
+        TemaId.DECO -> abanicoSolar(c, r, e.primary, e.secondary, if (oscuro) e.surfaceVariant else e.onBackground, t)
         TemaId.BOTANICO -> escarabajoLamina(c, r, e.primary, e.secondary, e.tertiary, e.onBackground, t)
         TemaId.RUINAS -> semaforoHiedra(c, r, e.primary, e.secondary, e.tertiary, if (oscuro) Color(0xFF3A443B) else e.onBackground, t)
         TemaId.GOTICO -> vitral(c, r, if (oscuro) e.primary else e.tertiary, e.secondary, if (oscuro) e.tertiary else e.primary, e.onBackground, t)
@@ -323,6 +327,26 @@ private fun DrawScope.nImperial(c: Offset, r: Float, azul: Color, oro: Color, ro
     coronaImperial(Offset(c.x, c.y - r * 0.52f), r * 0.28f, oro, rojo)
     abejaImperial(Offset(c.x - r * 0.8f, c.y + r * 0.6f), r * 0.2f, oro, t)
     abejaImperial(Offset(c.x + r * 0.8f, c.y + r * 0.6f), r * 0.2f, oro, t + 0.5f)
+}
+
+/**
+ * Abanico solar del Art déco: trece rayos de oro alternos que salen de un medio sol de laca con su arco de jade, sobre
+ * una base de tres escalones. Un brillo recorre los rayos de uno en uno, como la luz de una marquesina.
+ */
+private fun DrawScope.abanicoSolar(c: Offset, r: Float, oro: Color, jade: Color, laca: Color, t: Float) {
+    val base = Offset(c.x, c.y + r * 0.4f); val rr = r * 0.9f
+    val n = 13; val paso = 180f / n
+    val caja = Offset(base.x - rr, base.y - rr); val tam = Size(2 * rr, 2 * rr)
+    for (i in 0 until n) drawArc(if (i % 2 == 0) oro else oro.copy(alpha = 0.42f), 180f + i * paso, paso, true, caja, tam)
+    val brillo = ((t * n).toInt()).coerceIn(0, n - 1); val f = t * n - (t * n).toInt()
+    drawArc(Color.White.copy(alpha = 0.32f * sin(PI * f).toFloat()), 180f + brillo * paso, paso, true, caja, tam)
+    drawArc(oro, 180f, 180f, false, Offset(base.x - r, base.y - r), Size(2 * r, 2 * r), style = Stroke(r * 0.05f))
+    drawArc(laca, 180f, 180f, true, Offset(base.x - r * 0.42f, base.y - r * 0.42f), Size(r * 0.84f, r * 0.84f))
+    drawArc(oro, 180f, 180f, false, Offset(base.x - r * 0.33f, base.y - r * 0.33f), Size(r * 0.66f, r * 0.66f), style = Stroke(r * 0.04f))
+    drawArc(jade, 180f, 180f, true, Offset(base.x - r * 0.22f, base.y - r * 0.22f), Size(r * 0.44f, r * 0.44f))
+    drawRect(oro, Offset(base.x - r * 0.98f, base.y), Size(r * 1.96f, r * 0.09f))
+    drawRect(oro.copy(alpha = 0.8f), Offset(base.x - r * 0.72f, base.y + r * 0.13f), Size(r * 1.44f, r * 0.08f))
+    drawRect(oro.copy(alpha = 0.6f), Offset(base.x - r * 0.46f, base.y + r * 0.25f), Size(r * 0.92f, r * 0.07f))
 }
 
 /** Corona imperial vista de frente: banda, bonete rojo bajo los arcos de oro, y el orbe con su cruz. [b]: centro de la base. */
@@ -1363,6 +1387,29 @@ internal fun Galones(modifier: Modifier) {
     }
 }
 
+/** La vía del tren bajo el título: una locomotora chica con su penacho de vapor y, detrás, los carriles sobre sus traviesas. */
+@Composable
+internal fun BandaVia(modifier: Modifier) {
+    val laton = MaterialTheme.colorScheme.primary; val hierro = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+    val traviesa = MaterialTheme.colorScheme.outline; val ladrillo = MaterialTheme.colorScheme.tertiary
+    Canvas(modifier.fillMaxWidth().height(14.dp)) {
+        val u = 1.dp.toPx(); val h = size.height; val base = h - 3 * u
+        // La locomotora: caldera, chimenea, cabina, el faro de ladrillo y tres ruedas.
+        drawRect(laton, Offset(4 * u, base - 7 * u), Size(16 * u, 5 * u))
+        drawRect(laton, Offset(7 * u, base - 11 * u), Size(3 * u, 4 * u))
+        drawRect(laton, Offset(20 * u, base - 10 * u), Size(7 * u, 8 * u))
+        drawCircle(ladrillo, 1.4f * u, Offset(3.2f * u, base - 5 * u))
+        listOf(8f, 14f, 22f).forEach { x -> drawCircle(hierro, 2.2f * u, Offset(x * u, base - 1 * u)) }
+        listOf(Offset(9 * u, base - 13 * u) to 1.8f, Offset(13 * u, base - 13.5f * u) to 1.4f, Offset(16.5f * u, base - 12.5f * u) to 1f).forEach { (o, rr) ->
+            drawCircle(hierro.copy(alpha = 0.3f), rr * u, o)
+        }
+        var x = 32 * u
+        while (x < size.width) { drawRect(traviesa, Offset(x, base - 2.5f * u), Size(2 * u, 5 * u)); x += 7 * u }
+        drawLine(hierro, Offset(30 * u, base - 1.5f * u), Offset(size.width, base - 1.5f * u), 1f * u)
+        drawLine(hierro, Offset(30 * u, base + 1.5f * u), Offset(size.width, base + 1.5f * u), 1f * u)
+    }
+}
+
 /** Rama de laurel dorada con una estrella de la Legión de Honor cada tanto. */
 @Composable
 internal fun Laureles(modifier: Modifier) {
@@ -1385,6 +1432,43 @@ internal fun Laureles(modifier: Modifier) {
                 }
             }
             x += paso; k++
+        }
+    }
+}
+
+/**
+ * Banda del Art déco: una fila de abanicos solares de oro sobre un filete, con sus rayos vaciados; entre abanico y
+ * abanico, un rombo de jade. Cada tanto, una corona escalonada de rascacielos.
+ */
+@Composable
+internal fun Abanicos(modifier: Modifier) {
+    val oro = MaterialTheme.colorScheme.primary; val jade = MaterialTheme.colorScheme.secondary; val fondo = MaterialTheme.colorScheme.background
+    Canvas(modifier.fillMaxWidth().height(14.dp)) {
+        val f = 1.dp.toPx(); val base = size.height - 2f * f
+        drawRect(oro, Offset(0f, base), Size(size.width, 1.2f * f))
+        drawRect(oro.copy(alpha = 0.5f), Offset(0f, base + 2f * f), Size(size.width, 0.7f * f))
+        val r = 5.5f * f; val paso = 2 * r + 7f * f
+        var x = r + 2f * f; var k = 0
+        while (x + r < size.width) {
+            if (k % 9 == 4) {
+                // La corona de una torre: tres cuerpos escalonados y la aguja.
+                drawRect(oro, Offset(x - r, base - 3f * f), Size(2 * r, 3f * f))
+                drawRect(oro, Offset(x - r * 0.65f, base - 6f * f), Size(1.3f * r, 3f * f))
+                drawRect(oro, Offset(x - r * 0.3f, base - 9f * f), Size(0.6f * r, 3f * f))
+                drawLine(oro, Offset(x, base - 9f * f), Offset(x, base - 12f * f), 0.8f * f)
+            } else {
+                drawArc(oro, 180f, 180f, true, Offset(x - r, base - r), Size(2 * r, 2 * r))
+                for (i in 1..4) {
+                    val a = PI + i * PI / 5
+                    drawLine(fondo, Offset(x, base), Offset(x + r * cos(a).toFloat(), base + r * sin(a).toFloat()), 0.8f * f)
+                }
+                drawArc(fondo, 180f, 180f, true, Offset(x - r * 0.3f, base - r * 0.3f), Size(r * 0.6f, r * 0.6f))
+            }
+            val xr = x + r + 3.5f * f
+            if (xr + 2f * f < size.width) {
+                drawPath(Path().apply { moveTo(xr, base - 5f * f); lineTo(xr + 1.6f * f, base - 3f * f); lineTo(xr, base - 1f * f); lineTo(xr - 1.6f * f, base - 3f * f); close() }, jade)
+            }
+            x += maxOf(paso, 1f); k++
         }
     }
 }
@@ -1943,6 +2027,26 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             val p = 9.dp.toPx(); var x = -h
             while (x < w) { trazo.moveTo(x, h); trazo.lineTo(x + h, 0f); x += p }
         }
+        TemaId.VAPOR -> {
+            // El papel de plano: la cuadrícula del dibujante, un gran engrane trazado a compás en la esquina de abajo, con
+            // sus círculos de construcción y su eje, y una cota con flechas arriba.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.04f)
+            color2 = esquema.primary.copy(alpha = if (oscuro) 0.07f else 0.06f)
+            val p = 24.dp.toPx(); var x = 0f
+            while (x < w) { trazo.moveTo(x, 0f); trazo.lineTo(x, h); x += maxOf(p, 1f) }
+            var y = 0f
+            while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += maxOf(p, 1f) }
+            val ce = Offset(w * 0.92f, h * 0.9f); val rr = w * 0.42f
+            trazo.addPath(Vapor.engrane(ce, rr, 18, 0.9f))
+            trazo.addOval(Rect(ce, rr * 0.62f)); trazo.addOval(Rect(ce, rr * 0.2f))
+            trazo.moveTo(ce.x - rr * 1.1f, ce.y); trazo.lineTo(ce.x + rr * 0.2f, ce.y)
+            trazo.moveTo(ce.x, ce.y - rr * 1.1f); trazo.lineTo(ce.x, ce.y + rr * 0.2f)
+            val yc = h * 0.06f
+            trazo.moveTo(w * 0.1f, yc); trazo.lineTo(w * 0.6f, yc)
+            trazo.moveTo(w * 0.1f, yc - 6.dp.toPx()); trazo.lineTo(w * 0.1f, yc + 6.dp.toPx()); trazo.moveTo(w * 0.6f, yc - 6.dp.toPx()); trazo.lineTo(w * 0.6f, yc + 6.dp.toPx())
+            puntos.addOval(Rect(ce, rr * 0.06f))
+            for (k in 0 until 6) { val q = Vapor.en(ce, rr * 0.41f, k * Math.PI / 3); puntos.addOval(Rect(q, rr * 0.045f)) }
+        }
         TemaId.COLONOS -> {
             color2 = esquema.onBackground.copy(alpha = 0.05f)
             val azar = java.util.Random(17)
@@ -1958,6 +2062,21 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             while (x < w + h) { trazo.moveTo(x, 0f); trazo.lineTo(x + h, h); trazo.moveTo(x, h); trazo.lineTo(x + h, 0f); x += p }
             var y = 0f; var fila = 0
             while (y < h) { var xx = if (fila % 2 == 0) 0f else p / 2; while (xx < w) { puntos.addOval(Rect(xx - 1.4f, y - 1.4f, xx + 1.4f, y + 1.4f)); xx += p }; y += p / 2; fila++ }
+        }
+        TemaId.DECO -> {
+            // Papel pintado de abanicos: escamas de medio círculo en filas alternas, cada una con dos arcos dentro y un
+            // punto de oro en su centro, como en los vestíbulos de los años veinte.
+            color = esquema.primary.copy(alpha = if (oscuro) 0.06f else 0.05f); color2 = esquema.primary.copy(alpha = if (oscuro) 0.1f else 0.08f)
+            val rr = 22.dp.toPx(); var y = rr; var fila = 0
+            while (y < h + rr) {
+                var x = if (fila % 2 == 0) 0f else rr
+                while (x < w + rr) {
+                    listOf(1f, 0.66f, 0.33f).forEach { k -> trazo.arcTo(Rect(x - rr * k, y - rr * k, x + rr * k, y + rr * k), 180f, 180f, true) }
+                    puntos.addOval(Rect(x - 1.5f, y - 1.5f, x + 1.5f, y + 1.5f))
+                    x += maxOf(2 * rr, 1f)
+                }
+                y += maxOf(rr * 0.75f, 1f); fila++
+            }
         }
         TemaId.BOTANICO -> {
             // Libreta de campo: cuadrícula muy tenue, y aquí y allá hileras de hormigas, semillas y frondas de helecho a lápiz.
@@ -2322,6 +2441,12 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         quadraticTo(0.9f * s.width, 0.85f * s.height, 0.5f * s.width, 0.98f * s.height)
         quadraticTo(0.1f * s.width, 0.85f * s.height, 0.1f * s.width, 0.5f * s.height); close()
     }
+    // La placa de nombre de una locomotora: arco arriba, recta abajo, con las orejas de los pernos.
+    TemaId.VAPOR -> GenericShape { s, _ ->
+        moveTo(0.02f * s.width, 0.94f * s.height); lineTo(0.02f * s.width, 0.4f * s.height); lineTo(0.1f * s.width, 0.4f * s.height)
+        quadraticTo(0.5f * s.width, -0.12f * s.height, 0.9f * s.width, 0.4f * s.height)
+        lineTo(0.98f * s.width, 0.4f * s.height); lineTo(0.98f * s.width, 0.94f * s.height); close()
+    }
     TemaId.LABORATORIO -> estrellaBoton(6, 0.48f, 0.48f, -90.0)
     TemaId.COLONOS -> GenericShape { s, _ ->
         // Boleto de feria: esquinas mordidas hacia dentro.
@@ -2333,6 +2458,13 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         arcTo(Rect(x0 - k, y0 - k, x0 + k, y0 + k), 90f, -90f, false); close()
     }
     TemaId.NAPOLEON -> GenericShape { s, _ -> addOval(Rect(0.12f * s.width, 0.02f * s.height, 0.88f * s.width, 0.98f * s.height)) }
+    // La puerta de un ascensor de los años veinte: el marco escalonado por arriba.
+    TemaId.DECO -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(0.1f * w, h); lineTo(0.1f * w, 0.3f * h); lineTo(0.22f * w, 0.3f * h); lineTo(0.22f * w, 0.17f * h); lineTo(0.36f * w, 0.17f * h)
+        lineTo(0.36f * w, 0.04f * h); lineTo(0.64f * w, 0.04f * h); lineTo(0.64f * w, 0.17f * h); lineTo(0.78f * w, 0.17f * h)
+        lineTo(0.78f * w, 0.3f * h); lineTo(0.9f * w, 0.3f * h); lineTo(0.9f * w, h); close()
+    }
     TemaId.BOTANICO -> GenericShape { s, _ ->
         moveTo(0.06f * s.width, 0.94f * s.height)
         quadraticTo(-0.1f * s.width, -0.1f * s.height, 0.94f * s.width, 0.06f * s.height)
@@ -2414,9 +2546,11 @@ private fun textoMas(t: TemaId): String = when (t) {
     TemaId.DISTOPIA -> "Anexo"
     TemaId.REFUGIO -> "Menú"
     TemaId.ORDEN -> "Taller"
+    TemaId.VAPOR -> "Depósito"
     TemaId.LABORATORIO -> "Índice"
     TemaId.COLONOS -> "Tablón"
     TemaId.NAPOLEON -> "Plus"
+    TemaId.DECO -> "Guardarropa"
     TemaId.BOTANICO -> "Notas"
     TemaId.RUINAS -> "Mochila"
     TemaId.NAVIDAD -> "Baúl"
@@ -2508,6 +2642,8 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             // Engrane.
             TemaId.ORDEN -> { drawCircle(color, r * 0.62f, c); for (i in 0 until 10) { val a = rad(36.0 * i); drawLine(color, c.mas(r * 0.55f, a), c.mas(r * 0.92f, a), r * 0.22f) }
                 drawCircle(fondo, r * 0.24f, c) }
+            // Un sol engranado: el disco con doce dientes, su eje y el hueco del cubo.
+            TemaId.VAPOR -> { drawPath(Vapor.engrane(c, r * 0.92f, 12, 0.76f), color); drawCircle(fondo, r * 0.4f, c); drawCircle(color, r * 0.2f, c) }
             // Disco dentro de una escala graduada.
             TemaId.LABORATORIO -> { drawCircle(color, r * 0.4f, c)
                 for (i in 0 until 24) { val a = rad(15.0 * i); drawLine(color, c.mas(r * (if (i % 6 == 0) 0.56f else 0.74f), a), c.mas(r * 0.94f, a), r * (if (i % 6 == 0) 0.12f else 0.06f)) } }
@@ -2518,6 +2654,9 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             // Sol de Austerlitz: doce rayos, uno de cada tres más largo.
             TemaId.NAPOLEON -> { drawCircle(color, r * 0.36f, c)
                 for (i in 0 until 12) { val a = rad(30.0 * i); drawLine(color, c.mas(r * 0.5f, a), c.mas(r * (if (i % 3 == 0) 0.96f else 0.72f), a), r * (if (i % 3 == 0) 0.13f else 0.08f), StrokeCap.Round) } }
+            // El sol de las marquesinas: un disco con un anillo y dieciséis rayos rectos, largos y cortos alternados.
+            TemaId.DECO -> { drawCircle(color, r * 0.3f, c); drawCircle(color, r * 0.4f, c, style = Stroke(r * 0.05f))
+                for (i in 0 until 16) { val a = rad(22.5 * i); drawLine(color, c.mas(r * 0.5f, a), c.mas(r * (if (i % 2 == 0) 0.98f else 0.7f), a), r * 0.07f, StrokeCap.Butt) } }
             // Girasol.
             TemaId.BOTANICO -> { for (i in 0 until 8) rotate(45f * i, c) { drawOval(color, Offset(c.x - r * 0.15f, c.y - r * 0.98f), Size(r * 0.3f, r * 0.5f)) }
                 drawCircle(color, r * 0.36f, c); drawCircle(fondo, r * 0.18f, c) }
@@ -2620,6 +2759,10 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             TemaId.REFUGIO -> { luna(0.62f, 0.3f, -0.24f); rotate(-30f, c) { drawOval(color, Offset(c.x - r * 0.95f, c.y - r * 0.32f), Size(r * 1.9f, r * 0.64f), style = Stroke(r * 0.06f)) } }
             // Luna remachada.
             TemaId.ORDEN -> { luna(); listOf(-40.0, 0.0, 40.0).forEach { d -> drawCircle(fondo, r * 0.08f, c.mas(r * 0.6f, rad(180.0 + d))) } }
+            // La luna creciente sobre la chimenea de una fábrica, con su humo.
+            TemaId.VAPOR -> { luna(0.52f, 0.28f, -0.22f, c + Offset(r * 0.26f, -r * 0.34f))
+                drawPath(Path().apply { moveTo(c.x - r * 0.78f, c.y + r * 0.9f); lineTo(c.x - r * 0.64f, c.y - r * 0.1f); lineTo(c.x - r * 0.4f, c.y - r * 0.1f); lineTo(c.x - r * 0.26f, c.y + r * 0.9f); close() }, color)
+                drawCircle(color, r * 0.13f, c + Offset(-r * 0.46f, -r * 0.34f)); drawCircle(color, r * 0.1f, c + Offset(-r * 0.24f, -r * 0.52f)); drawCircle(color, r * 0.07f, c + Offset(-r * 0.04f, -r * 0.66f)) }
             // Media luna de diagrama de fases.
             TemaId.LABORATORIO -> { drawCircle(color, r * 0.8f, c, style = Stroke(r * 0.09f)); drawArc(color, 90f, 180f, true, Offset(c.x - r * 0.8f, c.y - r * 0.8f), Size(r * 1.6f, r * 1.6f)) }
             // Luna sobre el agua del puerto.
@@ -2628,6 +2771,11 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
                 drawLine(color, Offset(c.x - r * 0.6f, c.y + r * 0.98f), Offset(c.x + r * 0.4f, c.y + r * 0.98f), r * 0.07f) }
             // Luna en su cartela oval.
             TemaId.NAPOLEON -> { luna(0.6f, 0.3f, -0.24f); drawOval(color, Offset(c.x - r * 0.72f, c.y - r * 0.98f), Size(r * 1.44f, r * 1.96f), style = Stroke(r * 0.09f)) }
+            // Luna creciente sobre la corona escalonada de una torre.
+            TemaId.DECO -> { luna(0.58f, 0.3f, -0.26f, c + Offset(0f, -r * 0.22f))
+                drawRect(color, Offset(c.x - r * 0.8f, c.y + r * 0.62f), Size(r * 1.6f, r * 0.2f))
+                drawRect(color, Offset(c.x - r * 0.5f, c.y + r * 0.44f), Size(r * 1.0f, r * 0.18f))
+                drawRect(color, Offset(c.x - r * 0.22f, c.y + r * 0.28f), Size(r * 0.44f, r * 0.16f)) }
             // Luna con una hoja.
             TemaId.BOTANICO -> { luna(0.7f, 0.34f, -0.26f, c + Offset(r * 0.1f, -r * 0.1f))
                 rotate(-40f, Offset(c.x - r * 0.55f, c.y + r * 0.6f)) { drawOval(color, Offset(c.x - r * 0.85f, c.y + r * 0.48f), Size(r * 0.6f, r * 0.24f)) } }
@@ -2736,6 +2884,9 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
             drawCircle(color, r * 0.05f, c + Offset(-lr * 0.35f, -lr * 0.35f)) }
         // Cristal hexagonal, como una tuerca, y mango grueso.
         TemaId.ORDEN -> { drawPath(poli(6, lr * 1.08f, 0.0), color, style = Stroke(g)); mango(0.92f, 0.18f, 0.7f) }
+        // La lupa del relojero con el aro de latón remachado y el mango torneado.
+        TemaId.VAPOR -> { lente(); for (i in 0 until 8) drawCircle(color, g * 0.5f, c.mas(lr + g * 0.6f, rad(45.0 * i))); mango(0.9f, 0.12f)
+            drawCircle(color, r * 0.07f, Offset(r * 0.78f, r * 0.78f)) }
         // Escala dentro del cristal.
         TemaId.LABORATORIO -> { lente(); mango()
             for (k in -1..1) drawLine(color, Offset(c.x + k * lr * 0.4f, c.y + lr * 0.25f), Offset(c.x + k * lr * 0.4f, c.y + lr * (if (k == 0) -0.2f else 0.02f)), r * 0.04f) }
@@ -2745,6 +2896,10 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
         // Cristal oval y mango con guarda.
         TemaId.NAPOLEON -> { drawOval(color, Offset(c.x - lr * 0.8f, c.y - lr * 1.05f), Size(lr * 1.6f, lr * 2.1f), style = Stroke(g)); mango()
             drawLine(color, Offset(r * 0.62f, r * 0.8f), Offset(r * 0.8f, r * 0.62f), r * 0.07f) }
+        // Un monóculo: el cristal con su aro doble y el cordón que cuelga.
+        TemaId.DECO -> { lente(); drawCircle(color, lr * 0.72f, c, style = Stroke(g * 0.35f))
+            drawLine(color, Offset(r * 0.63f, r * 0.63f), Offset(r * 0.92f, r * 0.92f), r * 0.08f, StrokeCap.Butt)
+            listOf(0.72f, 0.82f).forEach { k -> drawLine(color, Offset(r * k - r * 0.06f, r * k + r * 0.06f), Offset(r * k + r * 0.06f, r * k - r * 0.06f), r * 0.05f) } }
         // Una hoja vista con la lupa.
         TemaId.BOTANICO -> { lente(); mango(); rotate(-45f, c) { drawOval(color, Offset(c.x - lr * 0.5f, c.y - lr * 0.2f), Size(lr, lr * 0.4f)) } }
         // Un cristal estrellado: la grieta cruza la lente.
@@ -2875,9 +3030,11 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.DISTOPIA -> false
     TemaId.REFUGIO -> false
     TemaId.ORDEN -> false
+    TemaId.VAPOR -> true                        // bocanadas de vapor y engranes que suben
     TemaId.LABORATORIO -> true
     TemaId.COLONOS -> true
     TemaId.NAPOLEON -> false
+    TemaId.DECO -> true              // las burbujas del champán suben
     TemaId.BOTANICO -> false
     TemaId.RUINAS -> true            // los vilanos suben con el aire tibio
     TemaId.NAVIDAD -> false
@@ -2987,6 +3144,13 @@ fun CapaFiesta(fijo: Float? = null) {
                     // Galones de la Orden.
                     TemaId.ORDEN -> drawPath(Path().apply { moveTo(pos.x - s, pos.y - s * 0.3f); lineTo(pos.x, pos.y + s * 0.4f); lineTo(pos.x + s, pos.y - s * 0.3f) },
                         col, style = Stroke(s * 0.3f, join = StrokeJoin.Miter))
+                    // Bocanadas de vapor y engranitos de latón que suben de la caldera.
+                    TemaId.VAPOR -> if (p.tono == 0) {
+                        val nube = lerp(col, Color.White, 0.55f).copy(alpha = a * 0.8f)
+                        drawCircle(nube, s * 0.7f, pos); drawCircle(nube, s * 0.5f, pos + Offset(s * 0.6f, -s * 0.2f)); drawCircle(nube, s * 0.45f, pos + Offset(-s * 0.55f, s * 0.1f))
+                    } else {
+                        drawPath(Vapor.engrane(pos, s * 0.9f, 8, 0.72f), col); drawCircle(e.background.copy(alpha = a), s * 0.3f, pos)
+                    }
                     // Brasas que suben del farol, con su halo y un parpadeo.
                     TemaId.COLONOS -> { val viva = 0.6f + 0.4f * sin(t * 20f + p.giro)
                         val brasa = listOf(Color(0xFFFF8A3D), Color(0xFFFFC14D), e.secondary)[p.tono].copy(alpha = a * viva)
@@ -2998,6 +3162,15 @@ fun CapaFiesta(fijo: Float? = null) {
                         drawOval(ab.copy(alpha = a * 0.55f), Offset(pos.x + s * 0.1f, pos.y - s * 0.5f), Size(s * 0.9f, s * 0.45f))
                         drawOval(ab, Offset(pos.x - s * 0.25f, pos.y - s * 0.45f), Size(s * 0.5f, s * 1.2f)); drawCircle(ab, s * 0.2f, Offset(pos.x, pos.y - s * 0.6f))
                         drawLine(Color.Black.copy(alpha = a * 0.35f), Offset(pos.x - s * 0.22f, pos.y + s * 0.2f), Offset(pos.x + s * 0.22f, pos.y + s * 0.2f), s * 0.08f) }
+                    // Burbujas de champán que suben y, de vez en cuando, una serpentina de oro en zigzag.
+                    TemaId.DECO -> { val ab = oro.copy(alpha = a)
+                        if (p.tono == 0) {
+                            val zz = Path().apply { moveTo(pos.x - s, pos.y); lineTo(pos.x - s * 0.5f, pos.y - s * 0.5f); lineTo(pos.x, pos.y); lineTo(pos.x + s * 0.5f, pos.y - s * 0.5f); lineTo(pos.x + s, pos.y) }
+                            drawPath(zz, ab, style = Stroke(s * 0.18f))
+                        } else {
+                            drawCircle(ab.copy(alpha = a * 0.7f), s * 0.55f, pos, style = Stroke(s * 0.12f))
+                            drawCircle(Color.White.copy(alpha = a * 0.5f), s * 0.12f, pos + Offset(-s * 0.2f, -s * 0.2f))
+                        } }
                     TemaId.LABORATORIO -> { drawCircle(col, s * 0.7f, pos, style = Stroke(s * 0.18f)); drawCircle(Color.White.copy(alpha = a * 0.6f), s * 0.14f, pos + Offset(-s * 0.3f, -s * 0.3f)) }
                     TemaId.REFUGIO -> { drawCircle(col, s * 0.35f, pos); drawOval(col, Offset(pos.x - s, pos.y - s * 0.35f), Size(s * 2, s * 0.7f), style = Stroke(s * 0.12f)) }
                     TemaId.NAVIDAD -> for (i in 0 until 3) { val a = rad(60.0 * i); drawLine(col, pos.mas(s, a), pos.mas(-s, a), s * 0.22f, StrokeCap.Round) }

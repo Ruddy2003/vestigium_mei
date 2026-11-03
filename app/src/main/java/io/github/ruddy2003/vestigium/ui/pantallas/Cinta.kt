@@ -101,12 +101,16 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.REFUGIO -> PielCinta(6f, false, RellenoCinta.SEGMENTOS, floatArrayOf(3f, 3f), StrokeCap.Round)
     // Placa de acero en chaflán.
     TemaId.ORDEN -> PielCinta(3f, true, RellenoCinta.CONTORNO, floatArrayOf(10f, 3f), StrokeCap.Butt)
+    // Un tramo de vía en el horario: segmentos como traviesas, con las puntas redondas.
+    TemaId.VAPOR -> PielCinta(6f, false, RellenoCinta.SEGMENTOS, floatArrayOf(7f, 2f), StrokeCap.Round)
     // Muestra punteada sobre papel milimétrico.
     TemaId.LABORATORIO -> PielCinta(3f, false, RellenoCinta.PUNTOS, floatArrayOf(1f, 3f), StrokeCap.Round)
     // Retazo de tela pespunteado.
     TemaId.COLONOS -> PielCinta(2f, false, RellenoCinta.PUNTADA, floatArrayOf(5f, 5f), StrokeCap.Round)
     // Galón con brillo.
     TemaId.NAPOLEON -> PielCinta(1.5f, false, RellenoCinta.FILETE, floatArrayOf(4f, 2f, 1f, 2f), StrokeCap.Square)
+    // Barras de laca con doble filete de oro, esquinas cortadas, como las placas de los ascensores.
+    TemaId.DECO -> PielCinta(3f, true, RellenoCinta.SEGMENTOS, floatArrayOf(8f, 2f, 2f, 2f), StrokeCap.Butt)
     // Tallos redondeados.
     TemaId.BOTANICO -> PielCinta(10f, false, RellenoCinta.LISO, floatArrayOf(1f, 4f), StrokeCap.Round)
     // Tramos de la línea pintada de una calle.

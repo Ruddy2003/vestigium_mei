@@ -218,6 +218,16 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawRect(Color(0xFF9E1B22), Offset(x0, y0 + h * 0.38f), Size(w, h * 0.24f))
             listOf(x0 + w * 0.08f, x0 + w * 0.92f).forEach { x -> listOf(y0 + h * 0.18f, y0 + h * 0.82f).forEach { y -> drawCircle(Color(0xFFB08D3A), h * 0.08f, Offset(x, y)) } }
         }
+        // Un libro mayor de tela verde con las cantoneras de latón y la etiqueta del lomo.
+        TemaId.VAPOR -> {
+            drawRect(lerp(c, Color(0xFF34473C), 0.5f), o, s)
+            val laton = Color(0xFFC9A04A); val k = minOf(w, h) * 0.22f
+            listOf(Offset(x0, y0) to Offset(1f, 1f), Offset(x0 + w, y0) to Offset(-1f, 1f), Offset(x0, y0 + h) to Offset(1f, -1f), Offset(x0 + w, y0 + h) to Offset(-1f, -1f)).forEach { (p, sg) ->
+                drawPath(Path().apply { moveTo(p.x, p.y); lineTo(p.x + sg.x * k, p.y); quadraticTo(p.x + sg.x * k * 0.5f, p.y + sg.y * k * 0.5f, p.x, p.y + sg.y * k); close() }, laton)
+            }
+            drawRect(Color(0xFFEFE4CB), Offset(x0 + w * 0.3f, cy - h * 0.12f), Size(w * 0.4f, h * 0.24f))
+            drawLine(oscuro, Offset(x0 + w * 0.36f, cy), Offset(x0 + w * 0.64f, cy), d)
+        }
         // Cuaderno de laboratorio: tapa cuadriculada, lomo de color y la etiqueta.
         TemaId.LABORATORIO -> {
             drawRect(lerp(c, Color.White, 0.8f), o, s)
@@ -241,6 +251,12 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawLine(oscuro.copy(alpha = 0.4f), Offset(x0, cy), Offset(x0 + w, cy), 0.6f * d)
             drawLine(Color(0xFFA3172E), Offset(x0 + w * 0.5f, y0), Offset(x0 + w * 0.5f, y0 + h), 1.6f * d)
             drawCircle(Color(0xFFA3172E), h * 0.28f, Offset(x0 + w * 0.5f, cy))
+        }
+        // Un tomo de laca negra con la tapa en el color del mes y tres bandas de oro escalonadas.
+        TemaId.DECO -> {
+            drawRect(Color(0xFF16130E), o, s)
+            drawRect(lerp(c, Color(0xFF16130E), 0.25f), Offset(x0 + w * 0.12f, y0 + h * 0.12f), Size(w * 0.76f, h * 0.76f))
+            listOf(0.9f, 0.66f, 0.42f).forEachIndexed { k, f -> drawRect(Color(0xFFD4AF37), Offset(x0 + w * (1 - f) / 2, y0 + h * (0.2f + k * 0.1f)), Size(w * f, 0.9f * d)) }
         }
         // Herbario: cuaderno de campo verde con una hoja.
         TemaId.BOTANICO -> {
@@ -707,6 +723,12 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             for (k in 0 until 8) rotate(k * 45f, c) { drawRect(borde, Offset(x - r * 0.14f, y - r), Size(r * 0.28f, r * 0.3f)) }
             drawCircle(relleno, r * 0.8f, c); drawCircle(borde, r * 0.8f, c, style = fino)
         }
+        // La esfera de un manómetro: el disco con su escala y la aguja.
+        TemaId.VAPOR -> {
+            drawCircle(relleno, r, c); drawCircle(borde, r, c, style = fino)
+            for (k in 0..6) { val a = Math.toRadians(135.0 + 45.0 * k); drawLine(borde, io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * 0.8f, a), io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * 0.62f, a), 0.8f * d) }
+            drawLine(col, c, io.github.ruddy2003.vestigium.ui.Vapor.en(c, r * 0.6f, Math.toRadians(310.0)), 1.2f * d)
+        }
         // Hexágono.
         TemaId.LABORATORIO -> lleno(Path().apply {
             for (k in 0 until 6) { val q = polarCosa(c, r, k * PI / 3); if (k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }
@@ -729,6 +751,12 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
                 lineTo(m.x, m.y); lineTo(p2.x, p2.y); lineTo(v.x, v.y)
             }
             close()
+        })
+        // La ficha en forma de abanico: medio disco sobre su base.
+        TemaId.DECO -> lleno(Path().apply {
+            moveTo(c.x - r, c.y + r * 0.55f); lineTo(c.x - r, c.y + r * 0.35f)
+            arcTo(androidx.compose.ui.geometry.Rect(c.x - r, c.y - r * 0.65f, c.x + r, c.y + r * 1.35f), 180f, 180f, false)
+            lineTo(c.x + r, c.y + r * 0.55f); close()
         })
         // Etiqueta de herbario con su ojal.
         TemaId.BOTANICO -> {
@@ -1081,6 +1109,26 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
             }
             else -> return false
         }
+        TemaId.VAPOR -> when (forma) {
+            // El clavo de vía: la cabeza ladeada, el vástago cuadrado y la punta en cincel.
+            "alfiler" -> {
+                drawPath(Path().apply { moveTo(x - r * 0.55f, y - r * 0.75f); lineTo(x + r * 0.35f, y - r * 0.75f); lineTo(x + r * 0.45f, y - r * 0.55f); lineTo(x - r * 0.55f, y - r * 0.55f); close() }, col)
+                drawRect(col, Offset(x - r * 0.14f, y - r * 0.55f), Size(r * 0.28f, r * 1.25f))
+                drawPath(Path().apply { moveTo(x - r * 0.14f, y + r * 0.7f); lineTo(x + r * 0.14f, y + r * 0.7f); lineTo(x, y + r); close() }, col)
+            }
+            // Un engranito de ocho dientes con su eje.
+            "estrella" -> {
+                drawPath(io.github.ruddy2003.vestigium.ui.Vapor.engrane(c, r * 0.9f, 8, 0.72f), col)
+                drawCircle(fondo, r * 0.24f, c)
+            }
+            // El telegrama: la hoja con la franja impresa y las tiras del texto.
+            "sobre" -> {
+                drawRect(col, Offset(x - r, y - r * 0.65f), Size(2 * r, r * 1.3f), style = trazo)
+                drawRect(col, Offset(x - r, y - r * 0.65f), Size(2 * r, r * 0.32f))
+                listOf(0f, 0.3f).forEach { f -> drawLine(col, Offset(x - r * 0.7f, y + f * r), Offset(x + r * (0.6f - f), y + f * r), 1.1f * d) }
+            }
+            else -> return false
+        }
         TemaId.LABORATORIO -> when (forma) {
             // Vaso de precipitados con su pico, graduado y a medio llenar.
             "taza" -> {
@@ -1144,6 +1192,24 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
                 drawOval(col, Offset(x - r * 0.95f, y - r * 0.6f), Size(r * 0.7f, r * 0.5f), style = Stroke(0.9f * d))
                 drawOval(col, Offset(x + r * 0.25f, y - r * 0.6f), Size(r * 0.7f, r * 0.5f), style = Stroke(0.9f * d))
                 listOf(0.05f, 0.3f).forEach { f -> drawLine(fondo, Offset(x - r * 0.3f, y + f * r), Offset(x + r * 0.3f, y + f * r), 0.7f * d) }
+            }
+            else -> return false
+        }
+        TemaId.DECO -> when (forma) {
+            // Un trasatlántico chico: el casco y sus tres chimeneas.
+            "alfiler" -> {
+                drawPath(Path().apply { moveTo(x - r, y); lineTo(x + r, y); lineTo(x + r * 0.75f, y + r * 0.45f); lineTo(x - r * 0.75f, y + r * 0.45f); close() }, col)
+                listOf(-0.45f, 0f, 0.45f).forEach { dx -> drawRect(col, Offset(x + dx * r - r * 0.13f, y - r * 0.6f), Size(r * 0.26f, r * 0.55f)) }
+            }
+            // El telegrama, con las dos tiras de cinta pegadas.
+            "sobre" -> {
+                drawRect(col, Offset(x - r, y - r * 0.65f), Size(2 * r, r * 1.3f))
+                listOf(-0.25f, 0.2f).forEach { f -> drawRect(fondo, Offset(x - r * 0.8f, y + f * r), Size(r * 1.6f, r * 0.22f)) }
+            }
+            // La estrella de rayos rectos de los vestíbulos: ocho rayos largos y ocho cortos.
+            "estrella" -> {
+                for (k in 0 until 16) { val a = k * PI / 8; drawLine(col, c, Offset(x + (r * (if (k % 2 == 0) 1f else 0.55f) * kotlin.math.cos(a)).toFloat(), y + (r * (if (k % 2 == 0) 1f else 0.55f) * kotlin.math.sin(a)).toFloat()), (if (k % 2 == 0) 1.4f else 0.8f) * d) }
+                drawCircle(fondo, r * 0.18f, c); drawCircle(col, r * 0.18f, c, style = Stroke(0.8f * d))
             }
             else -> return false
         }

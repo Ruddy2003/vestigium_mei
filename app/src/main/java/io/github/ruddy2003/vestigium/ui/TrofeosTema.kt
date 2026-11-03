@@ -54,6 +54,8 @@ object TrofeosTema {
             "Gente" to "Doblón de a ocho", "Constancia" to "Timón", "Curiosos" to "Botella con mensaje", "Tuyos" to "Cofre del tesoro"),
         TemaId.NAPOLEON to mapOf("Diario" to "Código", "Mundo" to "Mapa de campaña", "Cuerpo" to "Tambor", "Mente" to "Columna triunfal", "Cultura" to "Arco de la Estrella",
             "Gente" to "Legión de Honor", "Constancia" to "Laurel", "Curiosos" to "Bicornio", "Tuyos" to "Monograma"),
+        TemaId.DECO to mapOf("Diario" to "Pluma estilográfica", "Mundo" to "Trasatlántico", "Cuerpo" to "Bailarina de bronce", "Mente" to "Rascacielos", "Cultura" to "Gramófono",
+            "Gente" to "Copa de champán", "Constancia" to "Reloj de vestíbulo", "Curiosos" to "Coctelera", "Tuyos" to "Abanico solar"),
         TemaId.REVOLUCION to mapOf("Diario" to "Declaración", "Mundo" to "Árbol de la libertad", "Cuerpo" to "Escarapela", "Mente" to "Balanza", "Cultura" to "Pluma",
             "Gente" to "Gorro frigio", "Constancia" to "Llave de la Bastilla", "Curiosos" to "Fasces", "Tuyos" to "Nivel"),
     )
@@ -190,6 +192,20 @@ object TrofeosTema {
                 drawRect(Brush.horizontalGradient(listOf(p.oscuro, p.base, p.brillo, p.base, p.oscuro), w * 0.36f, w * 0.64f).takeIf { p.hecho } ?: SolidColor(p.sombra),
                     Offset(w * 0.36f, h * 0.845f), Size(w * 0.28f, h * 0.05f))
             }
+            TemaId.DECO -> {
+                // Plinto escalonado de ónix negro, con filetes de oro y un rombo de jade al frente.
+                val c = if (p.hecho) Color(0xFF1C1A17) else ped
+                drawRect(piedra(c), Offset(w * 0.16f, h * 0.82f), Size(w * 0.68f, h * 0.13f))
+                drawRect(piedra(c), Offset(w * 0.22f, h * 0.795f), Size(w * 0.56f, h * 0.026f))
+                drawRect(piedra(c), Offset(w * 0.28f, h * 0.772f), Size(w * 0.44f, h * 0.024f))
+                if (p.hecho) {
+                    val oro = Color(0xFFD4AF37)
+                    drawRect(oro, Offset(w * 0.16f, h * 0.82f), Size(w * 0.68f, h * 0.008f)); drawRect(oro, Offset(w * 0.16f, h * 0.94f), Size(w * 0.68f, h * 0.008f))
+                    val cc = Offset(w * 0.5f, h * 0.885f)
+                    drawPath(Path().apply { moveTo(cc.x, cc.y - h * 0.035f); lineTo(cc.x + w * 0.05f, cc.y); lineTo(cc.x, cc.y + h * 0.035f); lineTo(cc.x - w * 0.05f, cc.y); close() }, Color(0xFF1F6B57))
+                    listOf(-1f, 1f).forEach { sg -> for (k in 0..2) drawLine(oro.copy(alpha = 0.7f), Offset(cc.x + sg * w * (0.09f + k * 0.04f), cc.y - h * 0.03f), Offset(cc.x + sg * w * (0.09f + k * 0.04f), cc.y + h * 0.03f), w * 0.006f) }
+                }
+            }
             TemaId.REVOLUCION -> {
                 // Plinto sencillo de piedra con una franja tricolor.
                 val c = if (p.hecho) Color(0xFFD8D1C2) else ped
@@ -212,6 +228,7 @@ object TrofeosTema {
             TemaId.NEON -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.REFUGIO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.ORDEN -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.VAPOR -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.LABORATORIO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.ESPACIO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.ABISMO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
@@ -235,6 +252,7 @@ object TrofeosTema {
             TemaId.RENACIMIENTO -> renacimiento(categoria, p)
             TemaId.PIRATA -> pirata(categoria, p)
             TemaId.NAPOLEON -> napoleon(categoria, p)
+            TemaId.DECO -> deco(categoria, p)
             TemaId.REVOLUCION -> revolucion(categoria, p)
             TemaId.ANDALUS -> with(TrofeosMas) { andalus(categoria, p) }
             TemaId.MESO -> with(TrofeosMas) { meso(categoria, p) }
@@ -252,6 +270,7 @@ object TrofeosTema {
             TemaId.NEON -> with(TrofeosMas) { neon(categoria, p) }
             TemaId.REFUGIO -> with(TrofeosMas) { refugio(categoria, p) }
             TemaId.ORDEN -> with(TrofeosMas) { orden(categoria, p) }
+            TemaId.VAPOR -> with(TrofeosMas) { vapor(categoria, p) }
             TemaId.LABORATORIO -> with(TrofeosMas) { laboratorio(categoria, p) }
             TemaId.ESPACIO -> with(TrofeosMas) { espacio(categoria, p) }
             TemaId.ABISMO -> with(TrofeosMas) { abismo(categoria, p) }
@@ -1407,6 +1426,113 @@ object TrofeosTema {
 
     // ================================================================== Revolución
 
+
+    /** Art déco: los objetos de un salón de los años veinte, en oro, laca negra, jade y marfil. */
+    private fun DrawScope.deco(cat: String, p: Pincel) {
+        val lw = p.w * 0.012f
+        val oro = p.metal(0.2f, 0.8f)
+        fun tinte(c: Long): Brush = if (p.hecho) SolidColor(Color(c)) else SolidColor(p.sombra)
+        val laca = tinte(0xFF16130E); val jade = tinte(0xFF1F6B57); val marfil = tinte(0xFFF0E6CC); val coral = tinte(0xFFB5523B)
+        /** Medio sol de rayos alternos sobre [b], de radio [r] (fracción del ancho). */
+        fun abanico(b: Offset, r: Float, n: Int, claro: Brush, oscuro: Brush) {
+            val rr = p.w * r
+            for (i in 0 until n) drawArc(if (i % 2 == 0) claro else oscuro, 180f + i * 180f / n, 180f / n, true, Offset(b.x - rr, b.y - rr), Size(2 * rr, 2 * rr))
+        }
+        when (cat) {
+            "Diario" -> {
+                // La estilográfica de pie en su tintero escalonado: capuchón de jade, cuerpo de laca, anillos y plumín de oro.
+                caja(p, 0.3f, 0.72f, 0.7f, 0.77f); caja(p, 0.36f, 0.68f, 0.64f, 0.72f)
+                drawPath(Path().apply { moveTo(p.x(0.45f), p.y(0.6f)); lineTo(p.x(0.55f), p.y(0.6f)); lineTo(p.x(0.5f), p.y(0.7f)); close() }, oro)
+                caja(p, 0.45f, 0.36f, 0.55f, 0.6f, laca)
+                caja(p, 0.44f, 0.08f, 0.56f, 0.34f, jade)
+                caja(p, 0.44f, 0.33f, 0.56f, 0.37f); caja(p, 0.44f, 0.12f, 0.56f, 0.14f)
+                caja(p, 0.535f, 0.1f, 0.555f, 0.3f)
+                if (p.hecho) drawLine(Color.White.copy(alpha = 0.25f), Offset(p.x(0.47f), p.y(0.1f)), Offset(p.x(0.47f), p.y(0.58f)), lw * 0.6f)
+            }
+            "Mundo" -> {
+                // El trasatlántico en su soporte: casco de laca con la línea de flotación coral, la cubierta blanca y las
+                // tres chimeneas.
+                caja(p, 0.3f, 0.66f, 0.34f, 0.74f); caja(p, 0.66f, 0.66f, 0.7f, 0.74f); caja(p, 0.22f, 0.73f, 0.78f, 0.77f)
+                drawPath(Path().apply { moveTo(p.x(0.06f), p.y(0.48f)); lineTo(p.x(0.94f), p.y(0.48f)); lineTo(p.x(0.86f), p.y(0.66f)); lineTo(p.x(0.14f), p.y(0.66f)); close() }, laca)
+                drawPath(Path().apply { moveTo(p.x(0.11f), p.y(0.6f)); lineTo(p.x(0.89f), p.y(0.6f)); lineTo(p.x(0.86f), p.y(0.66f)); lineTo(p.x(0.14f), p.y(0.66f)); close() }, coral)
+                caja(p, 0.22f, 0.4f, 0.78f, 0.48f, marfil)
+                listOf(0.3f, 0.46f, 0.62f).forEach { x -> caja(p, x, 0.2f, x + 0.09f, 0.4f, coral); caja(p, x, 0.2f, x + 0.09f, 0.25f, laca) }
+                if (p.hecho) for (k in 0 until 9) drawCircle(Color(0xFFF0E6CC), p.w * 0.011f, Offset(p.x(0.2f + k * 0.075f), p.y(0.54f)))
+                drawLine(p.linea, Offset(p.x(0.06f), p.y(0.48f)), Offset(p.x(0.94f), p.y(0.48f)), lw * 0.8f)
+            }
+            "Cuerpo" -> {
+                // La bailarina de bronce y marfil sobre su peana de ónix: los brazos en alto y la falda abierta en abanico.
+                caja(p, 0.36f, 0.72f, 0.64f, 0.77f, laca); caja(p, 0.4f, 0.69f, 0.6f, 0.72f)
+                drawCircle(marfil, p.w * 0.05f, Offset(p.x(0.5f), p.y(0.13f)))
+                drawPath(Path().apply { moveTo(p.x(0.46f), p.y(0.2f)); lineTo(p.x(0.54f), p.y(0.2f)); lineTo(p.x(0.53f), p.y(0.42f)); lineTo(p.x(0.47f), p.y(0.42f)); close() }, oro)
+                drawLine(p.linea, Offset(p.x(0.47f), p.y(0.22f)), Offset(p.x(0.28f), p.y(0.04f)), lw * 1.4f)
+                drawLine(p.linea, Offset(p.x(0.53f), p.y(0.22f)), Offset(p.x(0.74f), p.y(0.06f)), lw * 1.4f)
+                val rr = p.w * 0.22f; val cf = Offset(p.x(0.5f), p.y(0.42f))
+                for (i in 0 until 7) drawArc(if (i % 2 == 0) oro else jade, 20f + i * 20f, 20f, true, Offset(cf.x - rr, cf.y - rr), Size(2 * rr, 2 * rr))
+                drawLine(p.linea, Offset(p.x(0.49f), p.y(0.56f)), Offset(p.x(0.45f), p.y(0.69f)), lw * 1.3f)
+                drawLine(p.linea, Offset(p.x(0.51f), p.y(0.56f)), Offset(p.x(0.6f), p.y(0.64f)), lw * 1.3f)
+            }
+            "Mente" -> {
+                // El rascacielos: tres cuerpos escalonados, la corona de arcos solares y la aguja.
+                caja(p, 0.3f, 0.42f, 0.7f, 0.77f); caja(p, 0.36f, 0.3f, 0.64f, 0.42f); caja(p, 0.42f, 0.2f, 0.58f, 0.3f)
+                drawPath(Path().apply { moveTo(p.x(0.47f), p.y(0.2f)); lineTo(p.x(0.53f), p.y(0.2f)); lineTo(p.x(0.5f), p.y(0.03f)); close() }, oro)
+                if (p.hecho) {
+                    listOf(0.24f, 0.27f).forEach { y -> drawArc(Color(0xFF16130E).copy(alpha = 0.5f), 180f, 180f, false, Offset(p.x(0.44f), p.y(y)), Size(p.x(0.12f), p.x(0.12f)), style = Stroke(lw * 0.6f)) }
+                    for (k in 0 until 5) drawLine(Color(0xFF16130E).copy(alpha = 0.35f), Offset(p.x(0.36f + k * 0.07f), p.y(0.45f)), Offset(p.x(0.36f + k * 0.07f), p.y(0.75f)), lw * 0.6f)
+                }
+            }
+            "Cultura" -> {
+                // El gramófono: la caja de laca, el plato, el brazo y la bocina de oro.
+                caja(p, 0.18f, 0.56f, 0.7f, 0.77f, laca)
+                caja(p, 0.18f, 0.56f, 0.7f, 0.58f)
+                drawOval(oro, Offset(p.x(0.24f), p.y(0.52f)), Size(p.x(0.36f), p.y(0.05f)))
+                drawLine(p.linea, Offset(p.x(0.62f), p.y(0.54f)), Offset(p.x(0.5f), p.y(0.5f)), lw * 1.2f)
+                drawPath(Path().apply { moveTo(p.x(0.58f), p.y(0.55f)); lineTo(p.x(0.63f), p.y(0.5f)); lineTo(p.x(0.95f), p.y(0.2f)); quadraticTo(p.x(0.84f), p.y(0.0f), p.x(0.66f), p.y(0.08f)); close() }, oro)
+                drawLine(p.linea, Offset(p.x(0.95f), p.y(0.2f)), Offset(p.x(0.66f), p.y(0.08f)), lw)
+                if (p.hecho) listOf(0.32f, 0.44f, 0.56f).forEach { x -> drawLine(Color(0xFFD4AF37).copy(alpha = 0.7f), Offset(p.x(x), p.y(0.62f)), Offset(p.x(x), p.y(0.74f)), lw * 0.7f) }
+            }
+            "Gente" -> {
+                // La copa de champán (la «coupe»), con su tallo, su pie y las burbujas que suben.
+                drawPath(Path().apply { moveTo(p.x(0.2f), p.y(0.24f)); quadraticTo(p.x(0.22f), p.y(0.46f), p.x(0.5f), p.y(0.47f)); quadraticTo(p.x(0.78f), p.y(0.46f), p.x(0.8f), p.y(0.24f)); close() }, oro)
+                if (p.hecho) drawLine(Color(0xFFF0E6CC), Offset(p.x(0.22f), p.y(0.28f)), Offset(p.x(0.78f), p.y(0.28f)), lw * 0.8f)
+                caja(p, 0.48f, 0.47f, 0.52f, 0.7f)
+                drawOval(oro, Offset(p.x(0.32f), p.y(0.68f)), Size(p.x(0.36f), p.y(0.07f)))
+                caja(p, 0.3f, 0.74f, 0.7f, 0.77f, laca)
+                listOf(0.44f to 0.16f, 0.52f to 0.1f, 0.58f to 0.18f, 0.48f to 0.04f).forEach { (x, y) -> drawCircle(marfil, p.w * 0.018f, Offset(p.x(x), p.y(y)), style = Stroke(lw * 0.6f)) }
+            }
+            "Constancia" -> {
+                // El reloj de vestíbulo: esfera cuadrada de laca con su sol de rayos de oro y la corona escalonada.
+                caja(p, 0.34f, 0.06f, 0.66f, 0.12f); caja(p, 0.28f, 0.1f, 0.72f, 0.14f)
+                caja(p, 0.22f, 0.14f, 0.78f, 0.68f, laca)
+                drawRect(oro, Offset(p.x(0.22f), p.y(0.14f)), Size(p.x(0.56f), p.y(0.54f)), style = Stroke(lw))
+                val c = Offset(p.x(0.5f), p.y(0.41f))
+                for (k in 0 until 12) {
+                    val a = k * PI / 6
+                    drawLine(oro, Offset(c.x + (p.w * 0.06f * cos(a)).toFloat(), c.y + (p.w * 0.06f * sin(a)).toFloat()),
+                        Offset(c.x + (p.w * 0.22f * cos(a)).toFloat(), c.y + (p.w * 0.22f * sin(a)).toFloat()), lw * (if (k % 3 == 0) 1.2f else 0.6f))
+                }
+                val aguja = if (p.hecho) Color(0xFFF0E6CC) else p.sombra
+                drawLine(aguja, c, Offset(c.x, c.y - p.w * 0.16f), lw * 1.2f)
+                drawLine(aguja, c, Offset(c.x + p.w * 0.11f, c.y + p.w * 0.04f), lw * 1.2f)
+                drawCircle(jade, p.w * 0.03f, c)
+                caja(p, 0.3f, 0.68f, 0.7f, 0.77f)
+            }
+            "Curiosos" -> {
+                // La coctelera: cuerpo de plata dorada con franjas de jade, el tapón y su remate.
+                caja(p, 0.38f, 0.3f, 0.62f, 0.72f)
+                listOf(0.42f, 0.52f, 0.62f).forEach { y -> caja(p, 0.38f, y, 0.62f, y + 0.03f, jade) }
+                drawPath(Path().apply { moveTo(p.x(0.38f), p.y(0.3f)); lineTo(p.x(0.62f), p.y(0.3f)); lineTo(p.x(0.57f), p.y(0.18f)); lineTo(p.x(0.43f), p.y(0.18f)); close() }, oro)
+                caja(p, 0.46f, 0.1f, 0.54f, 0.18f); drawCircle(oro, p.w * 0.04f, Offset(p.x(0.5f), p.y(0.09f)))
+                caja(p, 0.34f, 0.72f, 0.66f, 0.77f, laca)
+            }
+            else -> {
+                // El abanico solar sobre su base escalonada: el emblema del tema.
+                abanico(Offset(p.x(0.5f), p.y(0.58f)), 0.38f, 13, oro, laca)
+                abanico(Offset(p.x(0.5f), p.y(0.58f)), 0.14f, 1, jade, jade)
+                caja(p, 0.1f, 0.58f, 0.9f, 0.63f); caja(p, 0.2f, 0.65f, 0.8f, 0.7f); caja(p, 0.3f, 0.72f, 0.7f, 0.77f)
+            }
+        }
+    }
     private fun DrawScope.revolucion(cat: String, p: Pincel) {
         val lw = p.w * 0.012f
         val azul = if (p.hecho) Color(0xFF1F3A6E) else p.sombra; val rojo = if (p.hecho) Color(0xFFB22234) else p.sombra
