@@ -118,8 +118,16 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
     var intensidad by remember(m.id) { mutableStateOf(m.intensidad) }
     var valencia by remember(m.id) { mutableStateOf(m.valencia) }
     var activacion by remember(m.id) { mutableStateOf(m.activacion) }
-    var emociones by remember(m.id) { mutableStateOf(Catalogo.emocionesDe(m)) }
-    var pensamiento by remember(m.id) { mutableStateOf(Catalogo.pensamientoDe(m)) }
+    var eleccion by remember(m.id) { mutableStateOf(io.github.ruddy2003.vestigium.ui.EleccionEmociones(Catalogo.emocionesDe(m), m.emocion_otra.orEmpty(), m.intensidades)) }
+    var pensamientos by remember(m.id) { mutableStateOf(Catalogo.pensamientosDe(m)) }
+    var con by remember(m.id) { mutableStateOf(m.con_quien) }
+    // Recaída (seguimiento privado): qué la detonó, qué hacías antes y en qué aparato. Libido: 0 a 5 y el foco.
+    var det by remember(m.id) { mutableStateOf(m.detonantes) }
+    var detOtro by remember(m.id) { mutableStateOf(m.detonante_otro.orEmpty()) }
+    var antes by remember(m.id) { mutableStateOf(m.antes) }
+    var aparato by remember(m.id) { mutableStateOf(m.dispositivo) }
+    var foco by remember(m.id) { mutableStateOf(m.foco) }
+    val esLibido = m.tipo == "libido"
     var confirmar by remember(m.id) { mutableStateOf(false) }
     val registro = Catalogo.esRegistro(m)
     // Se corrigen la fecha y la hora de cualquier registro; en una recaída, además, cuánto duró.
@@ -136,17 +144,30 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
                 Etiqueta("Qué tan agradable (1 a 7)"); Escala(valencia, 1, 7) { valencia = it }
                 Etiqueta("Energía (1 a 7)"); Escala(activacion, 1, 7) { activacion = it }
                 Etiqueta("Qué sentías")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    (Catalogo.SENTIMIENTOS.map { it.id } + Catalogo.NO_SE).forEach { id ->
-                        val a = id in emociones
-                        io.github.ruddy2003.vestigium.ui.Ficha(Catalogo.nombreSentimiento(id, discreto), a) { emociones = if (a) emociones - id else emociones + id }
-                    }
-                }
+                io.github.ruddy2003.vestigium.ui.SelectorEmociones(eleccion, discreto) { eleccion = it }
                 Etiqueta("En qué pensabas")
+                io.github.ruddy2003.vestigium.ui.SelectorPensamientos(pensamientos, discreto) { pensamientos = it }
+                Etiqueta("Con quién estabas")
+                io.github.ruddy2003.vestigium.ui.SelectorConQuien(con) { con = it }
+            } else if (esLibido) {
+                Etiqueta("Qué tan presente (0 a 5)"); Escala(intensidad, 0, 5, Catalogo.ANCLAS["libido"]) { intensidad = it }
+                Etiqueta("En qué está el foco")
+                io.github.ruddy2003.vestigium.ui.FilaFichas(Catalogo.FOCOS, foco) { foco = it }
+            } else {
+                Etiqueta(if (esRecaida) "Qué tan fuerte era el impulso" else "Intensidad")
+                Escala(intensidad, 1, 5, mapOf(1 to "Muy leve", 2 to "Leve", 3 to "Moderada", 4 to "Fuerte", 5 to "Muy fuerte")) { intensidad = it }
+            }
+            if (esRecaida) {
+                Etiqueta("Qué la detonó")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Catalogo.PENSAMIENTOS.forEach { o -> io.github.ruddy2003.vestigium.ui.Ficha(if (discreto) "·" else o.nombre, pensamiento == o.id) { pensamiento = if (pensamiento == o.id) null else o.id } }
+                    Catalogo.DETONANTES.forEach { o -> io.github.ruddy2003.vestigium.ui.Ficha(o.nombre, o.id in det) { det = if (o.id in det) det - o.id else det + o.id } }
                 }
-            } else { Etiqueta("Intensidad"); Escala(intensidad, 1, 5) { intensidad = it } }
+                if ("otro" in det) OutlinedTextField(value = detOtro, onValueChange = { detOtro = it }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
+                Etiqueta("Qué hacías justo antes")
+                io.github.ruddy2003.vestigium.ui.FilaFichas(Catalogo.ANTES, antes) { antes = it }
+                Etiqueta("En qué aparato")
+                io.github.ruddy2003.vestigium.ui.FilaFichas(Catalogo.DISPOSITIVOS, aparato) { aparato = it }
+            }
             Etiqueta(if (esRecaida) "Empezó" else "Cuándo")
             io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, atajos = listOf(15, 30, 60, 120)) { cuando = it }
             if (esRecaida) {
@@ -154,11 +175,28 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
                 io.github.ruddy2003.vestigium.ui.SelectorDuracion(dur) { dur = it }
             }
             Ayuda("Si cambias la hora, el día se ajusta (empieza a las 5:00) y el lugar se toma de tus ubicaciones de esa hora.", Modifier.padding(top = 4.dp))
+            TextButton(onClick = {
+                if (confirmar) {
+                    Repo.borrarMomento(m.id); io.github.ruddy2003.vestigium.data.Recaidas.alBorrar(m); cerrar()
+                    io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Momento borrado") {
+                        Repo.guardarMomento(m)
+                        if (m.tipo == "recaida") io.github.ruddy2003.vestigium.data.Recaidas.registrar(m)
+                    }
+                } else confirmar = true
+            }, modifier = Modifier.padding(top = 6.dp)) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
         }
         },
         confirmButton = { TextButton(onClick = {
             val base = m.copy(texto = texto, intensidad = intensidad, valencia = valencia, activacion = activacion,
-                emociones = if (registro) emociones else m.emociones, pensamiento = if (registro) pensamiento else m.pensamiento,
+                emociones = if (registro) eleccion.emociones else m.emociones,
+                emocion_otra = if (registro) eleccion.otra.trim().takeIf { Catalogo.OTRO in eleccion.emociones && it.isNotEmpty() } else m.emocion_otra,
+                intensidades = if (registro) eleccion.intensidades else m.intensidades,
+                pensamientos = if (registro) pensamientos else m.pensamientos, pensamiento = if (registro) pensamientos.firstOrNull() else m.pensamiento,
+                con_quien = if (registro) con else m.con_quien,
+                detonantes = if (esRecaida) det else m.detonantes,
+                detonante_otro = if (esRecaida) detOtro.trim().takeIf { "otro" in det && it.isNotEmpty() } else m.detonante_otro,
+                antes = if (esRecaida) antes else m.antes, dispositivo = if (esRecaida) aparato else m.dispositivo,
+                foco = if (esLibido) foco else m.foco,
                 duracion_min = if (esRecaida) dur else m.duracion_min)
             val ms = (cuando ?: io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(m.ts))).aMillis()
             // Se compara el minuto completo (fecha y hora): cambiar solo el día, con la misma hora, también lo mueve.
@@ -176,18 +214,6 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
             }
             cerrar()
         }) { Text("Guardar") } },
-        dismissButton = {
-        TextButton(onClick = {
-            if (confirmar) {
-                Repo.borrarMomento(m.id); io.github.ruddy2003.vestigium.data.Recaidas.alBorrar(m); cerrar()
-                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Momento borrado") {
-                    Repo.guardarMomento(m)
-                    if (m.tipo == "recaida") io.github.ruddy2003.vestigium.data.Recaidas.registrar(m)
-                }
-            } else confirmar = true
-        }) {
-            Text(if (confirmar) "¿Borrar de verdad?" else "Borrar", color = MaterialTheme.colorScheme.error)
-        }
-        },
+        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
     )
 }

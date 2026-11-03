@@ -28,7 +28,7 @@ object Metas {
         return when (m.medida_modo) {
             "suma" -> v.sum()
             "media" -> v.average()
-            else -> v.count { if (m.medida_tipo == "habito") it >= 1.0 else it >= m.umbral }.toDouble()
+            else -> v.count { if (m.medida_tipo == "habito") it >= 1.0 else if (m.umbral_max) it <= m.umbral else it >= m.umbral }.toDouble()
         }
     }
 

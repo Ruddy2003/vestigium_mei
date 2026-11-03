@@ -184,9 +184,12 @@ object Dinamicas {
         familia("med_", "Privado", Repo.dias.mapValues { (_, d) -> d.medicamentos.associateWith { 1.0 } }, cobertura(Repo.dias.filterValues { it.medicamentos.isNotEmpty() }.keys), 15, 3, { "Tomé $it (0/1)" })
         familia("det_", "Privado", Repo.dias.mapValues { (_, d) -> d.detonantes.associateWith { 1.0 } }, cobertura(Repo.dias.filterValues { it.detonantes.isNotEmpty() }.keys), 10, 3, { "Detonante: ${it.replace('_', ' ')} (0/1)" })
 
-        // ---- El sueño de la noche: tipo.
-        familia("suenot_", "Sueño", Repo.dias.filterValues { it.sueno_recordado }.mapValues { (_, d) -> listOfNotNull(d.sueno_tipo).associateWith { 1.0 } },
-            Repo.dias.filterValues { it.sueno_recordado }.keys, 6, 3, { "Sueño de tipo ${it.replace('_', ' ')} (0/1)" })
+        // ---- El sueño de la noche: qué tan raro fue y si fue pesadilla (esquema 17; los días de antes, desde su «tipo»).
+        val catS = io.github.ruddy2003.vestigium.data.Catalogo
+        familia("suenot_", "Sueño", Repo.dias.filterValues { it.sueno_recordado }.mapValues { (_, d) ->
+                (listOfNotNull(catS.rarezaDe(d)) + listOfNotNull("pesadilla".takeIf { catS.pesadillaDe(d) == true })).associateWith { 1.0 } },
+            Repo.dias.filterValues { it.sueno_recordado }.keys, 6, 3,
+            { if (it == "pesadilla") "Sueño: pesadilla (0/1)" else "Sueño ${catS.SUENO_RAREZA.firstOrNull { o -> o.id == it }?.nombre?.lowercase() ?: it} (0/1)" })
 
         // ---- Mundo: horas en cada ciudad y país.
         runCatching {

@@ -220,7 +220,7 @@ private fun DialogoNuevaClave(cambio: Boolean, cerrar: () -> Unit, listo: (Strin
                     Modifier.padding(top = 6.dp))
             }
         },
-        confirmButton = { TextButton(enabled = a.length >= 8 && a == b, onClick = { listo(a) }) { Text("guardar", style = MaterialTheme.typography.labelLarge) } },
+        confirmButton = { TextButton(enabled = a.length >= 8 && a == b, onClick = { listo(a) }) { Text("Guardar", style = MaterialTheme.typography.labelLarge) } },
         dismissButton = { TextButton(onClick = cerrar) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
     )
 }

@@ -169,14 +169,8 @@ fun PantallaLugarNuevo(nav: Nav) {
                 Text("¿Es un lugar especial?", style = MaterialTheme.typography.titleLarge)
                 Ayuda("Estuviste aquí de ${Fechas.horaDe(Fechas.isoDeMillis(cand.desde_ms))} a ${Fechas.horaDe(Fechas.isoDeMillis(cand.hasta_ms))} del ${Fechas.corto(Fechas.diaDeMillis(cand.desde_ms))}" +
                     (if (cand.sugerencia.isNotBlank()) ", cerca de ${cand.sugerencia}." else "."))
-                OutlinedTextField(value = nombre, onValueChange = { nombre = it }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true,
-                    label = { Text("Nombre") }, placeholder = { Text("Casa de mi abuela, la biblioteca, el muro de escalada…") })
-                Etiqueta("Tipo")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Catalogo.TIPOS_LUGAR.forEach { o -> Ficha(o.nombre, tipo == o.id) { tipo = o.id } }
-                }
-                Etiqueta("Radio: ${radio.toInt()} m")
-                Deslizador(value = radio, onValueChange = { radio = it }, valueRange = 50f..300f, steps = 9)
+                androidx.compose.foundation.layout.Spacer(Modifier.padding(top = 10.dp))
+                CamposLugar(nombre, tipo, radio, { nombre = it }, { t -> if (t != null) tipo = t }, { radio = it })
                 BotonPrincipal("Guardar", Modifier.fillMaxWidth().padding(top = 8.dp), habilitado = nombre.isNotBlank()) {
                     val n = Lugares.guardar(ctx, cand, nombre, tipo, radio.toInt())
                     msg = "Guardado «${nombre.trim()}»." + if (n > 0) " Encontré $n visita${if (n > 1) "s" else ""} de los últimos 30 días." else ""
@@ -304,6 +298,7 @@ fun DialogoNota(n: Nota, cerrar: () -> Unit) {
     var tp by remember(n.id) { mutableStateOf(n.tipo) }
     var f by remember(n.id) { mutableStateOf(n.fecha) }
     var rec by remember(n.id) { mutableStateOf(n.recordar_el) }
+    var confirmar by remember(n.id) { mutableStateOf(false) }
     Dialogo(onDismissRequest = { cerrar() }, title = { Text("Editar nota") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
@@ -321,6 +316,9 @@ fun DialogoNota(n: Nota, cerrar: () -> Unit) {
                     if (rec != null) Text("quitar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.clickable { rec = null }.padding(6.dp))
                 }
+                // Un recordatorio sin día no avisa nunca: se dice antes de guardar.
+                if (tp == "recordatorio" && rec == null) Text("Sin día, este recordatorio no te avisará.", style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 4.dp))
                 // Una idea o un pensamiento que vale la pena conservar se puede mover al Ideario (con su fecha y hora de creación).
                 if (tp == "idea" || tp == "pensamiento") Text("pasar al Ideario →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(top = 8.dp).clickable {
@@ -328,19 +326,17 @@ fun DialogoNota(n: Nota, cerrar: () -> Unit) {
                         Repo.guardarIdea(i); Repo.borrarNota(n.id); cerrar()
                         io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Nota pasada al Ideario") { Repo.borrarIdea(i.id); Repo.guardarNota(n) }
                     }.padding(vertical = 6.dp))
+                TextButton(onClick = {
+                    if (!confirmar) { confirmar = true; return@TextButton }
+                    Repo.borrarNota(n.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Nota borrada") { Repo.guardarNota(n) }
+                }, modifier = Modifier.padding(top = 6.dp)) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
             }
         },
         confirmButton = { TextButton(onClick = {
             Repo.guardarNota(n.copy(texto = t.trim(), tipo = tp, fecha = f, recordar_el = rec.takeIf { tp == "recordatorio" }, editada = Fechas.ahoraIso()))
             cerrar()
-        }, enabled = t.isNotBlank()) { Text("guardar") } },
-        dismissButton = {
-            var confirmar by remember(n.id) { mutableStateOf(false) }
-            TextButton(onClick = {
-                if (!confirmar) { confirmar = true; return@TextButton }
-                Repo.borrarNota(n.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Nota borrada") { Repo.guardarNota(n) }
-            }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
-        })
+        }, enabled = t.isNotBlank()) { Text("Guardar") } },
+        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } })
 }
 
 @Composable
@@ -455,8 +451,9 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
     var m by remember(previa?.id) { mutableStateOf(previa ?: Meta(Repo.nuevoId(), "", creada = Fechas.ahoraIso())) }
     var buscarVar by remember { mutableStateOf("") }
     val vars = remember { Estadistica.variables(dinamicas = false).filter { it.grupo != "Privado" } }
-    var objetivoTexto by remember(previa?.id) { mutableStateOf(previa?.objetivo?.let { "%.0f".format(it) } ?: "") }
-    var umbralTexto by remember(previa?.id) { mutableStateOf(previa?.umbral?.takeIf { it > 0 }?.let { "%.0f".format(it) } ?: "") }
+    // Con sus decimales (antes «%.0f» redondeaba 7.5 a 8 al volver a abrir).
+    var objetivoTexto by remember(previa?.id) { mutableStateOf(previa?.objetivo?.let { io.github.ruddy2003.vestigium.data.Dinero.texto(it) } ?: "") }
+    var umbralTexto by remember(previa?.id) { mutableStateOf(previa?.umbral?.takeIf { it > 0 }?.let { io.github.ruddy2003.vestigium.data.Dinero.texto(it) } ?: "") }
     Dialogo(onDismissRequest = cerrar, title = { Text(if (previa == null) "Nueva meta" else "Meta") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
@@ -469,7 +466,10 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
                     }
                 }
                 Etiqueta("Horizonte")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) { Catalogo.HORIZONTES.forEach { h -> Ficha(h.nombre, m.horizonte == h.id) { m = m.copy(horizonte = h.id) } } }
+                // Con fecha objetivo, el horizonte sale de ella; sin fecha, se elige.
+                if (m.fecha_objetivo != null) Text(Catalogo.HORIZONTES.firstOrNull { it.id == m.horizonte }?.let { "${it.nombre} (${it.detalle}), según la fecha" } ?: m.horizonte,
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                else FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) { Catalogo.HORIZONTES.forEach { h -> Ficha(h.nombre, m.horizonte == h.id) { m = m.copy(horizonte = h.id) } } }
                 Etiqueta("Cómo se mide")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Ficha("a mano", m.medida_tipo == null) { m = m.copy(medida_tipo = null, medida_clave = null) }
@@ -496,12 +496,18 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
                         FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             listOf("dias" to "días que cumplen", "suma" to "suma", "media" to "media").forEach { (k, n) -> Ficha(n, m.medida_modo == k) { m = m.copy(medida_modo = k) } }
                         }
-                        if (m.medida_modo == "dias") OutlinedTextField(value = umbralTexto, onValueChange = { t -> umbralTexto = t.filter { it.isDigit() || it == '.' }; m = m.copy(umbral = umbralTexto.toDoubleOrNull() ?: 0.0) },
-                            singleLine = true, label = { Text("Un día cuenta desde (p. ej. 60 minutos)") }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                        if (m.medida_modo == "dias") {
+                            FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Ficha("al menos", !m.umbral_max) { m = m.copy(umbral_max = false) }
+                                Ficha("como mucho", m.umbral_max) { m = m.copy(umbral_max = true) }
+                            }
+                            OutlinedTextField(value = umbralTexto, onValueChange = { t -> umbralTexto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(t); m = m.copy(umbral = umbralTexto.toDoubleOrNull() ?: 0.0) },
+                                singleLine = true, label = { Text(if (m.umbral_max) "Un día cuenta si queda en (p. ej. 120 minutos) o menos" else "Un día cuenta desde (p. ej. 60 minutos)") },
+                                modifier = Modifier.fillMaxWidth().padding(top = 6.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                        }
                     }
                 }
-                if (m.medida_tipo != null) OutlinedTextField(value = objetivoTexto, onValueChange = { t -> objetivoTexto = t.filter { it.isDigit() || it == '.' }; m = m.copy(objetivo = objetivoTexto.toDoubleOrNull()) },
+                if (m.medida_tipo != null) OutlinedTextField(value = objetivoTexto, onValueChange = { t -> objetivoTexto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(t); m = m.copy(objetivo = objetivoTexto.toDoubleOrNull()) },
                     singleLine = true, label = { Text(if (m.medida_modo == "dias") "Cuántos días" else "Meta numérica") }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 Etiqueta("Revisión")
@@ -526,7 +532,7 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { if (m.nombre.isNotBlank()) { Metas.cambiar(previa, m.copy(nombre = m.nombre.trim())); cerrar() } }) { Text("guardar") } },
+        confirmButton = { TextButton(enabled = m.nombre.isNotBlank(), onClick = { Metas.cambiar(previa, m.copy(nombre = m.nombre.trim())); cerrar() }) { Text("Guardar") } },
         dismissButton = {
             Row {
                 var confirmar by remember { mutableStateOf(false) }

@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 16
+const val SCHEMA_V = 17
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -36,6 +36,8 @@ data class Dia(
     val activacion: Int? = null,
     val dolor: Int? = null,
     val ctx: Map<String, Boolean> = emptyMap(),
+    /** Otro contexto del día, escrito a mano (esquema 17); solo se exporta. */
+    val ctx_otro: String = "",
     val hitos: List<String> = emptyList(),
     val flow: String? = null,
     val sdt_necesidad: String? = null,
@@ -45,6 +47,10 @@ data class Dia(
     val sueno_lucidez: String? = null,
     val sueno_vividez: String? = null,
     val sueno_tipo: String? = null,
+    /** Qué tan raro fue el sueño (esquema 17): realista, raro o imposible (Catalogo.SUENO_RAREZA). Sustituye al «tipo». */
+    val sueno_rareza: String? = null,
+    /** Si fue pesadilla: angustia fuerte o te despertó (esquema 17). Null = no se dijo. */
+    val sueno_pesadilla: Boolean? = null,
     val sueno_temas: List<String> = emptyList(),
     /** Categorías del sueño por ejes (personajes, escenario, interacción, temas, estructura, emoción): ids de Catalogo.SUENO_EJES. */
     val sueno_categorias: List<String> = emptyList(),
@@ -55,9 +61,16 @@ data class Dia(
     val impulso: Int? = null,
     val recaida: Boolean? = null,
     val detonantes: List<String> = emptyList(),
+    /** El detonante del día escrito cuando se eligió «otro» (esquema 17, seguimiento privado). */
+    val detonante_otro: String? = null,
     val medicamentos: List<String> = emptyList(),
     val prediccion_manana: Int? = null,
     val habitos: Map<String, Boolean> = emptyMap(),
+    /**
+     * Los hábitos se contestaron con «sí / no / sin contestar» (esquema 17): un hábito sin entrada es «sin contestar» (vacío en
+     * el panel), y «no» se guarda como false. Sin esta marca (los días de antes), un hábito sin entrada cuenta como 0.
+     */
+    val habitos_tri: Boolean = false,
     val nota: String = "",
     /**
      * Cómo estuviste con cada @persona que nombras ese día (clave sin @, en minúsculas): «pense» si solo pensaste en ella,
@@ -116,8 +129,14 @@ data class Momento(
     /** Lo que sentías (ids de Catalogo.SENTIMIENTOS; «no_se» = no lo sabías; «otro» va con [emocion_otra]). */
     val emociones: List<String> = emptyList(),
     val emocion_otra: String? = null,
-    /** En qué pensabas: Catalogo.PENSAMIENTOS (preocupación, idea, recuerdo…). */
+    /** En qué pensabas: Catalogo.PENSAMIENTOS (preocupación, idea, recuerdo…). Hasta el esquema 16, uno solo; ver [pensamientos]. */
     val pensamiento: String? = null,
+    /** En qué pensabas, varios a la vez (esquema 17). Vacío en los registros de antes: ver Catalogo.pensamientosDe. */
+    val pensamientos: List<String> = emptyList(),
+    /** Cuánto de cada emoción (esquema 17): id de [emociones] → 1 un poco, 2 bastante, 3 mucho. Sin entrada = no se dijo. */
+    val intensidades: Map<String, Int> = emptyMap(),
+    /** El detonante escrito cuando se eligió «otro» (esquema 17, seguimiento privado). */
+    val detonante_otro: String? = null,
     /** Libido (seguimiento privado): en qué está el foco (Catalogo.FOCOS: pensando, viendo, conversando, nada, otro). */
     val foco: String? = null,
     /** Cuándo se anotó (esquema 14). [ts] es cuándo pasó; si se anotó después, las dos difieren. Null en los registros de antes. */
@@ -219,6 +238,8 @@ data class Tramo(
     val min: Int = 0,
     val nota: String = "",
     val origen: String = "app",
+    /** Con el tipo «otro» (esquema 17): en qué fue, escrito a mano. */
+    val tipo_otro: String = "",
     /** Cuándo se anotó (esquema 14). */
     val ts_creado: String? = null,
 )
@@ -287,6 +308,8 @@ data class Gasto(
     val lon: Double? = null,
     /** Subcategoría dentro de [categoria] (esquema 14), por ejemplo Comida → Café. Vacía = sin subcategoría. */
     val subcategoria: String = "",
+    /** Gasto que se repite (renta, suscripción, servicios), esquema 17: solo informativo, no se duplica solo. */
+    val se_repite: Boolean = false,
     /** Cuándo se anotó y cuándo se corrigió por última vez (esquema 14). */
     val ts_creado: String? = null,
     val ts_editado: String? = null,
@@ -400,6 +423,8 @@ data class Idea(
     val revisiones: List<RevisionIdea> = emptyList(),
     val fijada: Boolean = false,
     val editada: String? = null,
+    /** Los temas de la idea (esquema 17), sin «#» y en minúsculas. Se suman a los #temas escritos en el texto (ver Ideario.temasDe). */
+    val temas: List<String> = emptyList(),
 )
 
 /** Una respuesta a «Una idea de antes» (esquema 16): [respuesta] es sigue, cambio o ignorar. */
@@ -424,9 +449,11 @@ data class Meta(
     /** habito o variable; null = sin medida (progreso a mano). */
     val medida_tipo: String? = null,
     val medida_clave: String? = null,
-    /** dias (días que cumplen ≥ [umbral]), suma o media. */
+    /** dias (días que cumplen ≥ [umbral], o ≤ con [umbral_max]), suma o media. */
     val medida_modo: String = "dias",
     val umbral: Double = 0.0,
+    /** Esquema 17: un día cuenta si queda «como mucho» en [umbral] (pantalla ≤ 120 min…); false = «al menos». */
+    val umbral_max: Boolean = false,
     val objetivo: Double? = null,
     /** Progreso a mano, de 0 a 100. */
     val progreso_manual: Int? = null,
@@ -683,6 +710,8 @@ data class Experimento(
 data class Config(
     val habitos: List<Habito> = emptyList(),
     val categorias: List<String> = Catalogo.CATEGORIAS,
+    /** Ya se agregaron una vez Vivienda y Servicios a tus categorías (esquema 17): si las quitas, no vuelven. */
+    val categorias_v17: Boolean = false,
     /** Subcategorías de gasto por categoría (esquema 14), cada una con su monto habitual si lo fijaste. */
     val subcategorias: Map<String, List<Subcategoria>> = emptyMap(),
     val equivalencias: Map<String, String> = emptyMap(),
@@ -941,6 +970,8 @@ data class LogroPropio(
     val ventana: Int = 0,
     /** Desde cuánto cuenta un día (por ejemplo, 8000 pasos). */
     val umbral: Double = 0.0,
+    /** Esquema 17: un día cuenta si queda en [umbral] o menos (por ejemplo, menos de 120 min de pantalla). */
+    val umbral_max: Boolean = false,
     val creado: String = "",
     val icono: String = "★",
 )

@@ -1830,7 +1830,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         },
         containerColor = MaterialTheme.colorScheme.background,
         // Al leer una entrada, la página ocupa toda la pantalla.
-        bottomBar = { if (pila.lastOrNull() !in setOf("entrada", "sueno", "carta", "hoja_momentos")) BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
+        bottomBar = { if (pila.lastOrNull() !in setOf("entrada", "sueno", "carta", "hoja_momentos", "cajon_ideas")) BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
     ) { pad ->
         val esquema = MaterialTheme.colorScheme
         Box(Modifier.padding(pad).fillMaxSize().fondoTema(tema, esquema)) {
@@ -1910,6 +1910,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "biblioteca_momentos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "momentos")
                     "biblioteca_ideas", "ideario" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "ideas")
                     "idea" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaIdea(nav)
+                    "cajon_ideas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCajonIdeas(nav)
                     "cinta" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(nav)
                     "constelacion" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(nav)
                     "hall" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(nav)

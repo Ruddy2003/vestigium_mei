@@ -112,13 +112,17 @@ object BusquedaObra {
     var portadaDe by mutableStateOf<String?>(null)
 }
 
-val TIPOS_OBRA = listOf(Opcion("libro", "Libro"), Opcion("pelicula", "Película"), Opcion("serie", "Serie"), Opcion("juego", "Juego"), Opcion("articulo", "Artículo"))
-private val ESTADOS = listOf(Opcion("quiero", "Pendiente"), Opcion("en_curso", "En curso"), Opcion("terminado", "Terminado"), Opcion("abandonado", "Abandonado"))
+val TIPOS_OBRA = listOf(Opcion("libro", "Libro"), Opcion("pelicula", "Película"), Opcion("serie", "Serie"), Opcion("juego", "Juego"), Opcion("articulo", "Artículo"),
+    Opcion("documental", "Documental"), Opcion("podcast", "Podcast"), Opcion("audiolibro", "Audiolibro"), Opcion("comic", "Cómic"), Opcion("album", "Álbum"))
+private val ESTADOS = listOf(Opcion("quiero", "Pendiente"), Opcion("en_curso", "En curso"), Opcion("pausado", "Pausado"), Opcion("terminado", "Terminado"), Opcion("abandonado", "Abandonado"))
 
-private fun autorDe(tipo: String) = when (tipo) { "libro" -> "Autor"; "pelicula" -> "Dirección"; "serie" -> "Creador o canal"; "articulo" -> "Autores"; else -> "Estudio" }
-private fun unidad(tipo: String) = when (tipo) { "libro", "articulo" -> "páginas"; "pelicula" -> "minutos"; "serie" -> "capítulos"; else -> "horas" }
+private fun autorDe(tipo: String) = when (tipo) { "libro", "audiolibro", "comic" -> "Autor"; "pelicula", "documental" -> "Dirección"; "serie" -> "Creador o canal"; "articulo" -> "Autores"
+    "podcast" -> "Conductores"; "album" -> "Artista"; else -> "Estudio" }
+private fun unidad(tipo: String) = when (tipo) { "libro", "articulo", "comic" -> "páginas"; "pelicula", "documental" -> "minutos"; "serie" -> "capítulos"; "podcast" -> "episodios"
+    "album" -> "canciones"; else -> "horas" }
 private fun verbo(tipo: String) = when (tipo) { "libro", "articulo" -> "Leyendo ahora"; "juego" -> "Jugando ahora"; else -> "Viendo ahora" }
-private fun plural(tipo: String) = when (tipo) { "libro" -> "libros"; "pelicula" -> "películas"; "serie" -> "series"; "juego" -> "juegos"; else -> "artículos" }
+private fun plural(tipo: String) = when (tipo) { "libro" -> "libros"; "pelicula" -> "películas"; "serie" -> "series"; "juego" -> "juegos"; "documental" -> "documentales"
+    "podcast" -> "podcasts"; "audiolibro" -> "audiolibros"; "comic" -> "cómics"; "album" -> "álbumes"; else -> "artículos" }
 private fun hoyHice(tipo: String) = when (tipo) { "libro", "articulo" -> "Hoy leí esto"; "juego" -> "Hoy jugué esto"; else -> "Hoy vi esto" }
 
 // =====================================================================
@@ -651,7 +655,8 @@ fun PantallaBuscarObra(nav: Nav) {
             Spacer(Modifier.width(8.dp))
             BotonSecundario("buscar") { buscar() }
         }
-        if (!Portadas.disponible(ctx, tipo)) Ayuda(if (tipo == "pelicula") "Para buscar películas pon tu clave de TMDB en Obras → Buscadores. Mientras, añádela a mano y ponle una foto."
+        if (tipo in setOf("documental", "podcast", "audiolibro", "comic", "album")) Ayuda("Este tipo no tiene buscador: añádelo a mano y ponle una foto.", Modifier.padding(top = 8.dp))
+        else if (!Portadas.disponible(ctx, tipo)) Ayuda(if (tipo == "pelicula") "Para buscar películas pon tu clave de TMDB en Obras → Buscadores. Mientras, añádela a mano y ponle una foto."
             else "Para buscar juegos pon tu clave de RAWG en Obras → Buscadores. Mientras, añádelo a mano y ponle una foto.", Modifier.padding(top = 8.dp))
         if (buscando) Text("Buscando…", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp))
         mensaje?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp)) }
@@ -769,7 +774,7 @@ fun PantallaObra(nav: Nav) {
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 }
                 Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("veces = ", style = MaterialTheme.typography.labelLarge)
+                    Text("Veces que la leíste o viste:", style = MaterialTheme.typography.labelLarge)
                     BotonSecundario("−") { g(o.copy(veces = (o.veces - 1).coerceAtLeast(1))) }
                     Text("${o.veces}", style = MaterialTheme.typography.titleLarge)
                     BotonSecundario("+") { g(o.copy(veces = o.veces + 1)) }
@@ -807,12 +812,14 @@ private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit, anotar: (Cita) -> 
     var texto by remember(o.id) { mutableStateOf("") }
     var pagina by remember(o.id) { mutableStateOf("") }
     var armado by remember { mutableStateOf<String?>(null) }
+    var editando by remember { mutableStateOf<Cita?>(null) }
     Tarjeta {
         o.citas.forEachIndexed { i, c ->
             if (i > 0) HorizontalDivider(Modifier.padding(vertical = 6.dp))
             Row(verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f)) {
-                    Text("«${c.texto}»", style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic)
+                    // Tocar la cita la corrige (texto y página o minuto).
+                    Text("«${c.texto}»", style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic, modifier = Modifier.clickable { editando = c })
                     Text(listOfNotNull(c.pagina.ifBlank { null }?.let { if (it.all { ch -> ch.isDigit() }) "p. $it" else it }, c.fecha.ifBlank { null }?.let { Fechas.corto(it) }).joinToString(" · "),
                         style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     val n = Repo.ideas.count { it.cita_id == c.id }
@@ -834,13 +841,29 @@ private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit, anotar: (Cita) -> 
         if (o.citas.isNotEmpty()) Spacer(Modifier.height(10.dp))
         OutlinedTextField(texto, { texto = it }, Modifier.fillMaxWidth(), placeholder = { Text("Copia aquí la frase") }, minLines = 2)
         Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(pagina, { pagina = it.take(20) }, Modifier.width(130.dp), singleLine = true, placeholder = { Text(if (o.tipo == "pelicula" || o.tipo == "serie") "minuto" else "página") })
+            OutlinedTextField(pagina, { pagina = it.take(20) }, Modifier.width(130.dp), singleLine = true, placeholder = { Text(if (o.tipo in setOf("pelicula", "serie", "documental", "podcast", "audiolibro", "album")) "minuto" else "página") })
             Spacer(Modifier.width(10.dp))
             BotonPrincipal("Guardar cita", habilitado = texto.isNotBlank()) {
                 val c = Cita(Repo.nuevoId(), texto.trim().removePrefix("«").removeSuffix("»").removePrefix("\"").removeSuffix("\"").trim(), pagina.trim(), Fechas.diaLogico())
                 Repo.guardarObra(o.copy(citas = o.citas + c)); texto = ""; pagina = ""
             }
         }
+    }
+    editando?.let { c ->
+        var t by remember(c.id) { mutableStateOf(c.texto) }
+        var p by remember(c.id) { mutableStateOf(c.pagina) }
+        io.github.ruddy2003.vestigium.ui.Dialogo(onDismissRequest = { editando = null }, title = { Text("Corregir la cita") },
+            text = {
+                Column {
+                    OutlinedTextField(t, { t = it }, Modifier.fillMaxWidth(), minLines = 3)
+                    OutlinedTextField(p, { p = it.take(20) }, Modifier.width(160.dp).padding(top = 8.dp), singleLine = true, label = { Text("página o minuto") })
+                }
+            },
+            confirmButton = { TextButton(enabled = t.isNotBlank(), onClick = {
+                Repo.obras.firstOrNull { it.id == o.id }?.let { x -> Repo.guardarObra(x.copy(citas = x.citas.map { if (it.id == c.id) it.copy(texto = t.trim(), pagina = p.trim()) else it })) }
+                editando = null
+            }) { Text("Guardar") } },
+            dismissButton = { TextButton(onClick = { editando = null }) { Text("cancelar") } })
     }
 }
 

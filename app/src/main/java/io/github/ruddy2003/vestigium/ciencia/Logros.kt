@@ -340,7 +340,8 @@ object Logros {
 
     fun propio(p: LogroPropio): Logro {
         val s = serie(p.fuente, p.clave)
-        val utiles = s.filter { it.second > p.umbral || (p.umbral == 0.0 && it.second > 0) }
+        // «Como mucho» (esquema 17): cuentan los días que quedan en el umbral o por debajo; si no, los que lo pasan.
+        val utiles = if (p.umbral_max && p.fuente == "variable") s.filter { it.second <= p.umbral } else s.filter { it.second > p.umbral || (p.umbral == 0.0 && it.second > 0) }
         return when (p.modo) {
             "total" -> Logro("p_${p.id}", p.nombre, "Suma %s".format(fmt(p.meta)), p.icono, "Tuyos", 2, p.meta, s.sumOf { it.second }, acumulado(s, p.meta), propio = true)
             "racha" -> { val (m, c) = racha(utiles.map { it.first }, p.meta.toInt()); Logro("p_${p.id}", p.nombre, "${p.meta.toInt()} días seguidos", p.icono, "Tuyos", 2, p.meta, m.toDouble(), c, propio = true, unidad = "días") }

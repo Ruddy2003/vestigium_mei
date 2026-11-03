@@ -1,7 +1,7 @@
 ---
 title: "Vestigium Mei"
 subtitle: "Qué hace la app, cómo y por qué: el paper metodológico (versión corta)"
-date: "Versión de la app: v92 (v91 más la entrega 10f, esquema 15) · 28 de octubre de 2026"
+date: "Versión de la app: v92 (esquema 15), más el Ideario (esquema 16) y las pantallas de captura (esquema 17) en los capítulos que las describen · 3 de noviembre de 2026"
 lang: es-MX
 toc-title: "Índice"
 ---
@@ -27,7 +27,7 @@ Vestigium Mei («mi rastro», en latín) es una app de Android, escrita en Kotli
 - **Pasiva**: lo que el teléfono y el reloj miden solos: pantalla, ubicación, pasos y sueño por Health Connect, clima, luz, ruido (capítulo 4).
 - **Importada**: Spotify, Google Takeout, WhatsApp (solo conteos), MacroFactor, Kindle, Cold Turkey (capítulo 4).
 
-**Una unidad de análisis: el día.** Todo se resume en el **panel diario**, una tabla con un renglón por día y una columna por variable (`Estadistica.panel`). El día va de **las 05:00 a las 04:59** del día siguiente (el *día lógico*, `Fechas.diaLogico`), para que la madrugada cuente con el día que se estaba viviendo; algunas variables de fuentes externas siguen yendo por día de calendario, y la exportación lo dice en cada una. Además de 187 variables fijas (57 de ellas solo existen si hay datos de su fuente; versión completa, §2.7), la app crea **variables dinámicas**: una por cada persona, tema, lugar, app, artista, nutriente o etapa de vida que aparece en tus datos (27 prefijos; capítulo 2).
+**Una unidad de análisis: el día.** Todo se resume en el **panel diario**, una tabla con un renglón por día y una columna por variable (`Estadistica.panel`). El día va de **las 05:00 a las 04:59** del día siguiente (el *día lógico*, `Fechas.diaLogico`), para que la madrugada cuente con el día que se estaba viviendo; algunas variables de fuentes externas siguen yendo por día de calendario, y la exportación lo dice en cada una. Además de 193 variables fijas desde el esquema 17 (60 de ellas solo existen si hay datos de su fuente; versión completa, §2.7), la app crea **variables dinámicas**: una por cada persona, tema, lugar, app, artista, nutriente o etapa de vida que aparece en tus datos (27 prefijos; capítulo 2).
 
 **Lo que devuelve:** análisis de relaciones entre cualquier par de variables, quitando tendencias y corrigiendo por días parecidos y por muchas comparaciones (capítulo 6); **experimentos personales** sorteados, con la hipótesis sellada antes de empezar (desde 10f, si se quiere, también el criterio de decisión; capítulo 8); reportes, «Tu año», logros y campañas (capítulo 9), y una **exportación** de 51 tablas CSV, un diccionario y un script de R (`vestigium.R`) que repite los análisis de la app.
 
@@ -242,7 +242,7 @@ Una fila se crea para cada fecha que aparece en *alguna* fuente. Una variable re
 | Variables | Pueden valer 0… |
 |---|---|
 | `gasto_total`, `gasto_imprevisto`, `n_impulso`, `escalada`, `gimnasio`; emociones `n_*`, `registros_animo`, `ingreso_total` y otras | desde el primer registro de su fuente, en días con diario (en algunas, o con datos de esa fuente) |
-| Hábitos `hab_<id>` | desde `Habito.desde` (el día en que se creó el hábito) |
+| Hábitos `hab_<id>` | desde `Habito.desde` (el día en que se creó el hábito); desde el esquema 17, vacío en los días en que no lo contestaste |
 | `sueno_recordado` | solo si ese día se dijo algo del sueño |
 | Variables sociales (`personas`, `vi_*`, `per_`, `pen_`…) | solo en días en que se pudo nombrar a alguien (`Dinamicas.diasSociales`); desde 10e, `personas` cuenta a quien nombras en el diario y en los momentos no privados (D.93) |
 | `ctx_*`, `dia_dificil`, `palabras`, `hitos_n` y otras | en todos los días con diario |
@@ -266,7 +266,7 @@ Las escalas del diario (valencia y activación, 1–7) son **ordinales**: la dis
 
 ## 2.7 Familias de variables dinámicas
 
-Hay **187** variables fijas desde 10f (cada identificador que `Estadistica.variables()` escribe con su nombre; 186 en la v91 y 184 en la v90): 130 existen siempre y 57 solo si hay datos de su fuente. Las de 10e son `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94); la de 10f, `fuerza_ref_kg`, la mejor 1RM estimada del día en press inclinado con mancuernas (D.114; capítulo 8). Siete son privadas: la app no las cruza y van a R. Además, el sistema crea **variables dinámicas** por cada elemento que la persona usa: una por persona (`per_*`, `pen_*`), tema, lugar, app, categoría de gasto, artista, ciudad, nutriente… (27 prefijos, Apéndice A), y también hábitos, emociones usadas y campañas.
+Hay **193** variables fijas desde el esquema 17 (cada identificador que `Estadistica.variables()` escribe con su nombre; 187 desde 10f, 186 en la v91 y 184 en la v90): 133 existen siempre y 60 solo si hay datos de su fuente. El esquema 17 sumó tres contextos y tres compañías (D.132, D.133). Las de 10e son `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94); la de 10f, `fuerza_ref_kg`, la mejor 1RM estimada del día en press inclinado con mancuernas (D.114; capítulo 8). Siete son privadas: la app no las cruza y van a R. Además, el sistema crea **variables dinámicas** por cada elemento que la persona usa: una por persona (`per_*`, `pen_*`), tema, lugar, app, categoría de gasto, artista, ciudad, nutriente… (27 prefijos, Apéndice A), y también hábitos, emociones usadas y campañas.
 
 - **Análisis:** entran solo las más frecuentes de cada familia, con un tope y un mínimo de días (por ejemplo, `per_`: máx. 15, mín. 5 días; `Dinamicas.familia`).
 - **Exportación extendida (`vm_panel_extendido.csv`):** todas las que aparecen en al menos 2 días, hasta 400 por familia.
@@ -403,7 +403,11 @@ Desde el esquema 13, la colección `avisos` anota por día los avisos **planeado
 
 ## 3.5 Emociones con nombre, pensamientos y compañía
 
-En cualquier registro de ánimo se puede marcar (todo opcional) **qué sientes**, de 25 emociones (`Catalogo.SENTIMIENTOS`: 9 agradables, 13 desagradables y 3 mixtas), más «otro…» y «no sé»; **en qué piensas**; una nota con @personas y #temas, y **con quién estás**.
+En cualquier registro de ánimo se puede marcar (todo opcional):
+- **qué sientes**, de 47 emociones desde el esquema 17 (`Catalogo.SENTIMIENTOS`: 18 agradables, 23 desagradables y 6 mixtas; antes eran 25), más «otro…» y «no sé». A cada una se le puede poner **cuánto**: un poco, bastante o mucho. La intensidad solo se exporta.
+- **en qué piensas**, varios a la vez desde el esquema 17;
+- una nota con @personas y #temas;
+- **con quién estás**, que incluye hijos, mascota y «por mensaje o llamada».
 
 «Enojo» y «miedo» caen en la misma zona de los dos ejes y son experiencias distintas. Nombrar con precisión lo que sientes (*granularidad emocional*) se asocia con manejar mejor las emociones desagradables (Kashdan, Barrett y McKnight, 2015). **[Validado]** el concepto; la app solo guarda los nombres, no calcula un índice. «No sé» también es información y tiene su variable, `n_no_se`. **[Diseño propio]**. Como hay más emociones desagradables que agradables, **los conteos no son comparables entre sí**.
 
@@ -489,11 +493,19 @@ $$\text{posición} = \frac{\sum (\text{respuesta} - 3) \times \text{signo} \time
 
 ## 3.11 Sueño y sueños
 
-A las **8:00** por omisión, si el día no tiene relato ni la marca «recordé un sueño», llega un aviso. La pantalla pone **primero la narración**, porque el contenido de los sueños se olvida muy rápido; que sea cuestión de minutos es la afirmación de la app **[sin verificar]**. Se registra la **calidad del sueño como la sentiste** (1–5, en el día del despertar) y, si recordaste un sueño, su valencia (1–7), lucidez, vividez, tipo y categorías en seis ejes (`Catalogo.SUENO_EJES`).
+A las **8:00** por omisión, si el día no tiene relato ni la marca «recordé un sueño», llega un aviso. La pantalla pone **primero la narración**, porque el contenido de los sueños se olvida muy rápido; que sea cuestión de minutos es la afirmación de la app **[sin verificar]**. Desde el esquema 17 la narración se escribe en el libro de noche del tema, a pantalla completa, como el diario. Se registra la **calidad del sueño como la sentiste** (1–5, en el día del despertar). Si recordaste un sueño, también:
+- su valencia (1–7);
+- si fue **pesadilla** (angustia fuerte o te despertó);
+- **qué tan raro** fue (realista, raro pero posible, imposible);
+- **qué tan claro** lo recuerdas;
+- la lucidez;
+- categorías en **nueve ejes** (`Catalogo.SUENO_EJES`), con las ocho más usadas a la vista.
+
+Hasta el esquema 16 había una sola pregunta de «tipo» (mundano, ansioso o pesadilla, bizarro, recurrente) que mezclaba esas cosas. Los días de antes se traducen al leerlos: mundano → realista; bizarro → imposible; ansioso → pesadilla; recurrente → «se repite». **[Aproximación]** la rareza, a la idea de *bizarreness*.
 
 Las categorías se basan en el sistema de **Hall y Van de Castle (1966)**. **[Aproximación]**: el original se aplica leyendo el relato con reglas detalladas; aquí quien soñó elige categorías simplificadas, útiles para patrones propios, no para compararse con las normas. La idea de que los sueños reflejan preocupaciones de la vida despierta (hipótesis de la **continuidad**) es de Domhoff (2003).
 
-En el panel, `sueno_lucidez` y `sueno_vividez` valen 0, 1 o 2 (supone saltos iguales, **[Aproximación]**). `sueno_recordado` vale 1 si recordaste un sueño, 0 solo si ese día dijiste algo del sueño sin recordarlo, y vacío en los demás (H-2-4, resuelto en 10c).
+En el panel, `sueno_lucidez` y `sueno_vividez` valen 0, 1 o 2 (supone saltos iguales, **[Aproximación]**). `sueno_recordado` vale 1 si recordaste un sueño, 0 solo si ese día dijiste algo del sueño sin recordarlo, y vacío en los demás (H-2-4, resuelto en 10c). Desde el esquema 17, la familia `suenot_` es rareza y pesadilla (`suenot_realista`, `suenot_raro`, `suenot_imposible`, `suenot_pesadilla`) en lugar del tipo.
 
 ## 3.12 Presencias: estuve, pensé, mensajes
 
@@ -893,7 +905,7 @@ Lo importante: **«Las relaciones más marcadas» y, desde la entrega 10c, «Tod
 
 ### 6.2.1 Qué es
 
-`Estadistica.panel()` devuelve un mapa `fecha → (variable → valor)`. Cada **fecha** es un día lógico (de 5:00 a 4:59 del día siguiente; capítulo 2), y desde 10f cada momento se asigna a su día y a su hora con la zona que tenía el teléfono entonces (D.109). Cada **valor** es un número o `null` (un **dato faltante**: «no sé» para ese día, que no es lo mismo que 0). Las variables 0/1 se guardan como 0.0 y 1.0. Qué variables entran en los análisis lo decide `Estadistica.variables()`: 187 con nombre fijo en 24 grupos (valencia, sueño, pasos, clima…; 130 existen siempre y 57 **solo aparecen si hay datos**; en 10e se agregaron `error_prediccion_signo` y `gasto_imprevisto_monto`, D.94, y en 10f `fuerza_ref_kg`, la mejor 1RM estimada del día en press inclinado con mancuernas, D.114) y las **dinámicas** (6.2.3). Las privadas nunca: desde el módulo 10a se excluyen siempre y solo viajan a R. **[Diseño propio]**.
+`Estadistica.panel()` devuelve un mapa `fecha → (variable → valor)`. Cada **fecha** es un día lógico (de 5:00 a 4:59 del día siguiente; capítulo 2), y desde 10f cada momento se asigna a su día y a su hora con la zona que tenía el teléfono entonces (D.109). Cada **valor** es un número o `null` (un **dato faltante**: «no sé» para ese día, que no es lo mismo que 0). Las variables 0/1 se guardan como 0.0 y 1.0. Qué variables entran en los análisis lo decide `Estadistica.variables()`: 193 con nombre fijo en 24 grupos desde el esquema 17 (valencia, sueño, pasos, clima…; 133 existen siempre y 60 **solo aparecen si hay datos**; el esquema 17 sumó tres contextos y tres compañías; en 10e se agregaron `error_prediccion_signo` y `gasto_imprevisto_monto`, D.94, y en 10f `fuerza_ref_kg`, la mejor 1RM estimada del día en press inclinado con mancuernas, D.114) y las **dinámicas** (6.2.3). Las privadas nunca: desde el módulo 10a se excluyen siempre y solo viajan a R. **[Diseño propio]**.
 
 ### 6.2.2 Cero o faltante: la decisión más delicada
 

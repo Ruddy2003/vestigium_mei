@@ -6,13 +6,20 @@ package io.github.ruddy2003.vestigium.data
  * usan la relación que había ese día.
  */
 object Personas {
+    /**
+     * Las relaciones que se ofrecen (esquema 17). «Amistad cercana» ya no se ofrece: la cercanía la dan los círculos 1 a 7;
+     * quien la tenía se muestra como «Amistad» y conserva su id (los análisis ya la juntaban con amistad).
+     */
     val RELACIONES = listOf(
-        Opcion("familia", "Familia"), Opcion("pareja", "Pareja"), Opcion("expareja", "Expareja"), Opcion("amistad_cercana", "Amistad cercana"),
+        Opcion("familia", "Familia"), Opcion("pareja", "Pareja"), Opcion("expareja", "Expareja"),
         Opcion("amistad", "Amistad"), Opcion("colega", "Colega o compañero de trabajo"), Opcion("companero", "Compañero de escuela"),
-        Opcion("mentor", "Profesor, jefe o mentor"), Opcion("conocido", "Conocido"), Opcion("lejana", "No la conozco en persona"),
+        Opcion("mentor", "Profesor, jefe o mentor"), Opcion("roomie", "Roomie (vivimos juntos)"), Opcion("vecino", "Vecino"),
+        Opcion("salud", "Profesional de salud"), Opcion("conocido", "Conocido"), Opcion("lejana", "Solo en línea o de lejos"),
         Opcion("mascota", "Mascota"), Opcion("otra", "Otra"),
     )
-    fun nombreRelacion(id: String?) = RELACIONES.firstOrNull { it.id == id }?.nombre ?: Perfiles.RELACIONES.firstOrNull { it.id == id }?.nombre ?: id.orEmpty()
+    /** La relación como se ve en la lista (la retirada «amistad_cercana» se ve como «amistad»). */
+    fun relacionVisible(id: String?): String? = if (id == "amistad_cercana") "amistad" else id
+    fun nombreRelacion(id: String?) = RELACIONES.firstOrNull { it.id == relacionVisible(id) }?.nombre ?: Perfiles.RELACIONES.firstOrNull { it.id == id }?.nombre ?: id.orEmpty()
 
     /** Para los análisis de siempre: familia, pareja, amistad (las de «Conocerte» usaban estas tres). */
     fun grupo(relacion: String?): String? = when (relacion) {

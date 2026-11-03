@@ -21,6 +21,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import io.github.ruddy2003.vestigium.ui.aMillis
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -261,10 +264,7 @@ fun PantallaLugares(nav: Nav) {
         }
         Seccion("Marcar dónde estoy ahora") {
             Tarjeta {
-                OutlinedTextField(value = nombre, onValueChange = { nombre = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Nombre (ej. SEDECO, casa de mis abuelos)") }, singleLine = true)
-                Etiqueta("Tipo"); FilaFichas(Catalogo.TIPOS_LUGAR, tipo) { tipo = it }
-                Etiqueta("Radio: ${radio.toInt()} m")
-                Deslizador(value = radio, onValueChange = { radio = it }, valueRange = 80f..400f)
+                CamposLugar(nombre, tipo, radio, { nombre = it }, { tipo = it }, { radio = it })
                 msg?.let { Ayuda(it) }
                 BotonPrincipal("Guardar este lugar", Modifier.fillMaxWidth().padding(top = 8.dp), habilitado = nombre.isNotBlank()) {
                     scope.launch {
@@ -310,7 +310,7 @@ fun PantallaLugares(nav: Nav) {
                     }
                     if (radioAbierto) {
                         androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            listOf(80, 120, 200, 300, 400).forEach { r ->
+                            (listOf(50, 80, 120, 200, 300, 400) + listOf(l.radio_m)).distinct().sorted().forEach { r ->
                                 io.github.ruddy2003.vestigium.ui.Ficha("$r m", l.radio_m == r) {
                                     val n = l.copy(radio_m = r); Repo.guardarLugar(n); Geocercas.registrar(ctx); radioAbierto = false
                                     // Con un radio mayor, se buscan las visitas de los últimos 30 días que antes quedaban fuera (no se tocan las que ya hay).
@@ -324,7 +324,7 @@ fun PantallaLugares(nav: Nav) {
                         Dialogo(onDismissRequest = { renombrar = null }, title = { Text("Renombrar lugar") },
                             text = { OutlinedTextField(value = t, onValueChange = { renombrar = it }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
                             confirmButton = { TextButton(enabled = t.isNotBlank(), onClick = { Repo.guardarLugar(l.copy(nombre = t.trim())); renombrar = null }) { Text("Guardar") } },
-                            dismissButton = { TextButton(onClick = { renombrar = null }) { Text("Cancelar") } })
+                            dismissButton = { TextButton(onClick = { renombrar = null }) { Text("cancelar") } })
                     }
                     if (borrar) {
                         val suyas = Repo.visitas.filter { it.lugar == l.id }
@@ -356,7 +356,7 @@ fun PantallaLugares(nav: Nav) {
                                 }
                             },
                             confirmButton = { TextButton(onClick = { quitar(null, false) }) { Text(if (suyas.isEmpty()) "Quitar" else "Quitar con sus visitas", color = MaterialTheme.colorScheme.error) } },
-                            dismissButton = { TextButton(onClick = { borrar = false }) { Text("Cancelar") } })
+                            dismissButton = { TextButton(onClick = { borrar = false }) { Text("cancelar") } })
                     }
                 }
             }
@@ -401,39 +401,66 @@ private fun Mapa(puntos: List<Db.Punto>, lugares: List<Lugar>, muestreos: List<i
     }
 }
 
+/**
+ * Lo mismo en las tres formas de marcar un lugar (dónde estoy, un sitio nuevo detectado y un punto del mapa): nombre, tipo y
+ * radio de 50 a 400 m en pasos de 25.
+ */
+@Composable
+fun CamposLugar(nombre: String, tipo: String?, radio: Float, onNombre: (String) -> Unit, onTipo: (String?) -> Unit, onRadio: (Float) -> Unit) {
+    OutlinedTextField(value = nombre, onValueChange = onNombre, modifier = Modifier.fillMaxWidth(), singleLine = true, isError = nombre.isBlank(),
+        label = { Text("Nombre") }, placeholder = { Text("casa de mis abuelos, la biblioteca, el muro de escalada…") })
+    Etiqueta("Tipo"); FilaFichas(Catalogo.TIPOS_LUGAR, tipo) { onTipo(it) }
+    Etiqueta("Radio: ${radio.toInt()} m")
+    Deslizador(value = radio, onValueChange = { onRadio(Math.round(it / 25f) * 25f) }, valueRange = 50f..400f, steps = 13)
+}
+
 /** Un registro de ánimo cuenta para un lugar si lo marcaste ahí o si su ubicación cae dentro del radio: el mismo criterio en la lista y en el mapa (P-26). */
 private fun enLugar(m: io.github.ruddy2003.vestigium.data.Momento, l: io.github.ruddy2003.vestigium.data.Lugar): Boolean =
     m.lugar == l.id || (m.lat != null && m.lon != null && Geo.distanciaM(m.lat, m.lon, l.lat, l.lon) <= l.radio_m)
 
-/** Una visita de un día (N-05): «fue en…» otro de tus lugares, o «no estuve aquí». Las dos con Deshacer. */
+/**
+ * Una visita de un día (N-05): corregir la llegada y la salida, «fue en…» otro de tus lugares, o «no estuve aquí» (con
+ * confirmación). Todo con Deshacer. Las horas corregidas no las pisa la detección: solo cierra visitas abiertas y agrega las que no se enciman.
+ */
 @Composable
 fun DialogoVisita(v: io.github.ruddy2003.vestigium.data.Visita, cerrar: () -> Unit) {
+    var lugar by remember(v.id) { mutableStateOf(v.lugar) }
+    var entrada by remember(v.id) { mutableStateOf<java.time.LocalDateTime?>(io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(v.entrada))) }
+    var salida by remember(v.id) { mutableStateOf<java.time.LocalDateTime?>(v.salida?.let { io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(it)) }) }
+    var confirmar by remember(v.id) { mutableStateOf(false) }
     val actual = Repo.lugares.firstOrNull { it.id == v.lugar }
+    val ini = entrada?.aMillis() ?: Fechas.millis(v.entrada)
+    val fin = salida?.aMillis()
+    val valida = fin == null || fin > ini
     Dialogo(onDismissRequest = cerrar,
         title = { Text("${actual?.nombre ?: "Lugar quitado"} · ${Fechas.horaDe(v.entrada)}" + (v.salida?.let { "–${Fechas.horaDe(it)}" } ?: "")) },
         text = {
-            Column {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                Etiqueta("Llegué")
+                io.github.ruddy2003.vestigium.ui.SelectorHora(entrada, ayer = true) { entrada = it }
+                Etiqueta("Me fui")
+                io.github.ruddy2003.vestigium.ui.SelectorHora(salida, etiquetaAhora = "sigo aquí", ayer = true) { salida = it }
+                if (!valida) Text("La salida debe ser después de la llegada.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 Etiqueta("Fue en…")
                 androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Repo.lugares.forEach { l ->
-                        io.github.ruddy2003.vestigium.ui.Ficha(l.nombre, l.id == v.lugar) {
-                            if (l.id != v.lugar) {
-                                Repo.guardarVisita(v.copy(lugar = l.id))
-                                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Visita pasada a ${l.nombre}") { Repo.guardarVisita(v) }
-                            }
-                            cerrar()
-                        }
-                    }
+                    Repo.lugares.forEach { l -> io.github.ruddy2003.vestigium.ui.Ficha(l.nombre, l.id == lugar) { lugar = l.id } }
                 }
                 Ayuda("Si no fue en ninguno de tus lugares, «no estuve aquí» la quita.", Modifier.padding(top = 6.dp))
+                TextButton(onClick = {
+                    if (!confirmar) { confirmar = true; return@TextButton }
+                    Repo.borrarVisita(v.id); cerrar()
+                    io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Visita quitada") { Repo.guardarVisita(v) }
+                }) { Text(if (confirmar) "¿quitarla de verdad?" else "no estuve aquí", color = MaterialTheme.colorScheme.error) }
             }
         },
-        confirmButton = { TextButton(onClick = cerrar) { Text("Listo") } },
-        dismissButton = {
-            TextButton(onClick = {
-                Repo.borrarVisita(v.id); cerrar()
-                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Visita quitada") { Repo.guardarVisita(v) }
-            }) { Text("no estuve aquí", color = MaterialTheme.colorScheme.error) }
-        })
+        confirmButton = { TextButton(enabled = valida, onClick = {
+            val n = v.copy(lugar = lugar, entrada = Fechas.isoDeMillis(ini), salida = fin?.let { Fechas.isoDeMillis(it) })
+            if (n != v) {
+                Repo.guardarVisita(n)
+                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Visita corregida") { Repo.guardarVisita(v) }
+            }
+            cerrar()
+        }) { Text("Guardar") } },
+        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } })
 }
 

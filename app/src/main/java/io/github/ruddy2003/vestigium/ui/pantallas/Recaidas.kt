@@ -102,14 +102,20 @@ fun PantallaRecaidas(nav: Nav) {
                 }
                 Etiqueta("Qué lo detonó")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Catalogo.DETONANTES.forEach { t ->
+                    Catalogo.DETONANTES.forEach { o ->
+                        val t = o.id
                         val activo = t in d.detonantes
-                        Ficha(t.replace("_", " "), activo) { guardar { x -> x.copy(detonantes = if (t in x.detonantes) x.detonantes - t else x.detonantes + t) } }
+                        Ficha(o.nombre, activo) { guardar { x -> x.copy(detonantes = if (t in x.detonantes) x.detonantes - t else x.detonantes + t, detonante_otro = if (t == "otro" && t in x.detonantes) null else x.detonante_otro) } }
                     }
+                }
+                if ("otro" in d.detonantes) {
+                    var otro by remember(fecha) { mutableStateOf(d.detonante_otro.orEmpty()) }
+                    androidx.compose.material3.OutlinedTextField(value = otro, onValueChange = { t -> otro = t; guardar { x -> x.copy(detonante_otro = t.trim().ifBlank { null }) } },
+                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
                 }
                 Privado.habito(c)?.takeIf { it.activo }?.let { h ->
                     Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = d.habitos[h.id] == true, onCheckedChange = { v -> guardar { x -> x.copy(habitos = if (v) x.habitos + (h.id to true) else x.habitos - h.id) } })
+                        Checkbox(checked = d.habitos[h.id] == true, onCheckedChange = { v -> guardar { x -> x.copy(habitos = x.habitos + (h.id to v)) } })
                         Text(h.nombre, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                         Ayuda("una recaída lo deja en 0")
                     }
@@ -177,7 +183,7 @@ fun PantallaRecaidas(nav: Nav) {
             }
             Seccion("Dónde, qué lo detona y qué hacías") {
                 Lista("Lugares", r.lugares)
-                Lista("Detonantes", r.detonantes.map { it.first.replace("_", " ") to it.second })
+                Lista("Detonantes", r.detonantes.map { Catalogo.nombreDetonante(it.first) to it.second })
                 Lista("Justo antes", r.antes.map { (k, v) -> (Catalogo.ANTES.firstOrNull { it.id == k }?.nombre ?: k) to v })
                 Lista("Aparato", r.aparatos.map { (k, v) -> (Catalogo.DISPOSITIVOS.firstOrNull { it.id == k }?.nombre ?: k) to v })
             }
@@ -224,7 +230,7 @@ fun PantallaRecaidas(nav: Nav) {
                         Column(Modifier.weight(1f)) {
                             Text("${Fechas.corto(m.fecha)} · ${Fechas.horaDe(m.ts)} · ${Catalogo.nombreTipo(m.tipo)}" + (m.intensidad?.let { " $it" } ?: "") +
                                 (m.duracion_min?.let { " · ${duracion(it.toDouble())}" } ?: ""), style = MaterialTheme.typography.bodyLarge)
-                            val extra = listOfNotNull(Repo.lugares.firstOrNull { it.id == m.lugar }?.nombre, m.detonantes.joinToString(", ") { it.replace("_", " ") }.ifBlank { null },
+                            val extra = listOfNotNull(Repo.lugares.firstOrNull { it.id == m.lugar }?.nombre, m.detonantes.joinToString(", ") { if (it == "otro" && !m.detonante_otro.isNullOrBlank()) m.detonante_otro else Catalogo.nombreDetonante(it) }.ifBlank { null },
                                 m.antes?.let { a -> Catalogo.ANTES.firstOrNull { it.id == a }?.nombre?.lowercase() }, m.texto.ifBlank { null }).joinToString(" · ")
                             if (extra.isNotEmpty()) Text(extra, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }

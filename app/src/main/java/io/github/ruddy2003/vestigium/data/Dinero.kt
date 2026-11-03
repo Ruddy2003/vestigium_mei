@@ -92,6 +92,44 @@ object Dinero {
         if (i <= 0) c else c.copy(categorias = c.categorias.toMutableList().apply { removeAt(i); add(i - 1, cat) })
     }
 
+    /**
+     * Lo que se escribe en el campo del monto: solo cifras y un separador decimal. La coma cuenta como punto («12,50» = 12.50);
+     * un segundo separador se ignora. Antes la coma se borraba y «12,50» quedaba en 1250.
+     */
+    fun limpiarMonto(t: String): String {
+        val sb = StringBuilder(); var punto = false
+        for (ch in t) when {
+            ch.isDigit() -> sb.append(ch)
+            (ch == '.' || ch == ',') && !punto -> { sb.append('.'); punto = true }
+        }
+        return sb.toString()
+    }
+
+    /** Agrega una sola vez las categorías nuevas del esquema 17 (Vivienda y Servicios) a tu lista, si no las tienes. */
+    fun asegurarCategoriasNuevas() {
+        if (Repo.config.categorias_v17) return
+        Repo.cambiarConfig { c ->
+            val faltan = listOf("Vivienda", "Servicios").filter { n -> c.categorias.none { it.equals(n, ignoreCase = true) } }
+            val i = c.categorias.indexOfFirst { it.equals("Otro", ignoreCase = true) }.takeIf { it >= 0 } ?: c.categorias.size
+            c.copy(categorias = c.categorias.toMutableList().apply { addAll(i, faltan) }, categorias_v17 = true)
+        }
+    }
+
+    /** Categorías de ingreso: subir, renombrar (y, si [tambien], en los ingresos que ya la tienen). */
+    fun subirIngreso(cat: String) = Repo.cambiarConfig { c ->
+        val i = c.categorias_ingreso.indexOf(cat)
+        if (i <= 0) c else c.copy(categorias_ingreso = c.categorias_ingreso.toMutableList().apply { removeAt(i); add(i - 1, cat) })
+    }
+
+    fun cuantosIngresos(cat: String): Int = Repo.ingresos.count { it.categoria == cat }
+
+    fun renombrarIngreso(viejo: String, nuevo: String, tambien: Boolean) {
+        val n = nuevo.trim()
+        if (n.isEmpty() || n == viejo || n in Repo.config.categorias_ingreso) return
+        Repo.cambiarConfig { c -> c.copy(categorias_ingreso = c.categorias_ingreso.map { if (it == viejo) n else it }) }
+        if (tambien) Repo.ingresos.filter { it.categoria == viejo }.forEach { Repo.guardarIngreso(it.copy(categoria = n, ts_editado = Fechas.ahoraIso())) }
+    }
+
     /** «1,234.50» sin ceros de más, para llenar el campo del monto. */
     fun texto(v: Double): String = if (v % 1.0 == 0.0) v.toLong().toString() else "%.2f".format(java.util.Locale.US, v).trimEnd('0').trimEnd('.')
 }

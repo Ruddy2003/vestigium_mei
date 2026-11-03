@@ -1,7 +1,7 @@
 ---
 title: "Vestigium Mei"
 subtitle: "Qué hace la app, cómo y por qué: el paper metodológico"
-date: "Versión de la app: v92 (v91 más la entrega 10f, esquema 15) · 28 de octubre de 2026"
+date: "Versión de la app: v92 (esquema 15), más el Ideario (esquema 16) y las pantallas de captura (esquema 17) en los capítulos que las describen · 3 de noviembre de 2026"
 lang: es-MX
 toc-title: "Índice"
 ---
@@ -47,7 +47,7 @@ Vestigium Mei («mi rastro», en latín) es una app de Android, escrita en Kotli
 - **Pasiva**: lo que el teléfono y el reloj miden solos. Tiempo de pantalla, ubicación y lugares, pasos y sueño del reloj por Health Connect, clima, luz, ruido, notificaciones (capítulo 4).
 - **Importada**: archivos que cargas. Spotify, Google Takeout, WhatsApp (solo conteos), MacroFactor, Kindle, Cold Turkey (capítulo 4).
 
-**Una unidad de análisis: el día.** Todo se resume en el **panel diario**, una tabla con un renglón por día y una columna por variable (`Estadistica.panel`). El día no va de medianoche a medianoche, sino de **las 05:00 a las 04:59** del día siguiente (el *día lógico*, `Fechas.diaLogico`), para que la madrugada cuente con el día que se estaba viviendo. Algunas variables de fuentes externas siguen yendo por día de calendario, y la exportación lo dice en cada una (capítulo 2, sección 2.3.2). Además de 187 variables fijas (las que `Estadistica.variables()` escribe con su nombre; 57 de ellas solo existen si hay datos de su fuente; capítulo 2, sección 2.7, y Apéndice A.1), la app crea **variables dinámicas**: una por cada persona, tema, lugar, app, artista, nutriente o etapa de vida que aparece en tus datos (27 prefijos; capítulo 2, sección 2.7).
+**Una unidad de análisis: el día.** Todo se resume en el **panel diario**, una tabla con un renglón por día y una columna por variable (`Estadistica.panel`). El día no va de medianoche a medianoche, sino de **las 05:00 a las 04:59** del día siguiente (el *día lógico*, `Fechas.diaLogico`), para que la madrugada cuente con el día que se estaba viviendo. Algunas variables de fuentes externas siguen yendo por día de calendario, y la exportación lo dice en cada una (capítulo 2, sección 2.3.2). Además de 193 variables fijas desde el esquema 17 (las que `Estadistica.variables()` escribe con su nombre; 60 de ellas solo existen si hay datos de su fuente; capítulo 2, sección 2.7, y Apéndice A.1), la app crea **variables dinámicas**: una por cada persona, tema, lugar, app, artista, nutriente o etapa de vida que aparece en tus datos (27 prefijos; capítulo 2, sección 2.7).
 
 **Lo que la app devuelve:**
 
@@ -387,9 +387,9 @@ La carga inicial usa `cargar(col, serializer)`. Hasta el esquema 12 descartaba *
 
 ### 2.4.3 `Repo`: memoria con escritura inmediata
 
-`Repo` mantiene en memoria el estado observable (Compose `mutableStateOf`) de las **35 colecciones** que precarga al iniciar (`dias`, `momentos`, `gastos`, `ingresos`, `respuestas`, `reacciones`, `lugares`, `visitas`, `youtube`, `salud`, `pantalla`, `cartas`, `experimentos`, `entorno`, `fotos`, `agenda`, `notifs`, `actividad`, `sesiones`, `ascensos`, `obras`, `comunicacion`, `conexiones`, `subrayados`, `huellas_dia`, `whatsapp`, `nutricion`, `entrenos`, `tramos`, `consumos`, `notas`, `metas`, `tomas`, `laptop` y, desde el esquema 13, `avisos`, un documento por día con los avisos de ánimo planeados, vencidos y mostrados; capítulo 3). Cada `guardarX` hace **escritura inmediata (write-through)**: primero a SQLite (`db.poner`), luego actualiza la memoria en el hilo principal. Los más usados (`guardarDia`, `guardarMomento`, `guardarConsumo` y los que anotan visitas, avisos, actividad, notificaciones y conexiones) están sincronizados (`@Synchronized`); los demás no.
+`Repo` mantiene en memoria el estado observable (Compose `mutableStateOf`) de las **36 colecciones** que precarga al iniciar (`dias`, `momentos`, `gastos`, `ingresos`, `respuestas`, `reacciones`, `lugares`, `visitas`, `youtube`, `salud`, `pantalla`, `cartas`, `experimentos`, `entorno`, `fotos`, `agenda`, `notifs`, `actividad`, `sesiones`, `ascensos`, `obras`, `comunicacion`, `conexiones`, `subrayados`, `huellas_dia`, `whatsapp`, `nutricion`, `entrenos`, `tramos`, `consumos`, `notas`, `metas`, `tomas`, `laptop` y, desde el esquema 13, `avisos`, un documento por día con los avisos de ánimo planeados, vencidos y mostrados, capítulo 3; desde el esquema 16, `ideas`, el Ideario, sección 2.5). Cada `guardarX` hace **escritura inmediata (write-through)**: primero a SQLite (`db.poner`), luego actualiza la memoria en el hilo principal. Los más usados (`guardarDia`, `guardarMomento`, `guardarConsumo` y los que anotan visitas, avisos, actividad, notificaciones y conexiones) están sincronizados (`@Synchronized`); los demás no.
 
-Otras colecciones se guardan en la misma tabla pero no están en la carga de 35: `comidas`, `escuchas`, `huellas` y `series` se leen bajo demanda, por fechas; `papelera` (desde el esquema 14) y `config_ilegible`, cuando hacen falta. La configuración (`config`, un solo documento) se lee al iniciar, aparte de las 35; desde el esquema 15 guarda también el historial de zonas horarias (`Config.zonas`, sección 2.3.1), que `Repo` le pasa a `Fechas` (`Fechas.usarHistorial`) al iniciar y cada vez que cambia la configuración.
+Otras colecciones se guardan en la misma tabla pero no están en la carga de 36: `comidas`, `escuchas`, `huellas` y `series` se leen bajo demanda, por fechas; `papelera` (desde el esquema 14) y `config_ilegible`, cuando hacen falta. La configuración (`config`, un solo documento) se lee al iniciar, aparte de las 36; desde el esquema 15 guarda también el historial de zonas horarias (`Config.zonas`, sección 2.3.1), que `Repo` le pasa a `Fechas` (`Fechas.usarHistorial`) al iniciar y cada vez que cambia la configuración.
 
 *Razonamiento.* La escritura inmediata minimiza la pérdida de datos si la app se cierra; mantener todo en memoria hace instantáneos los análisis sobre cientos o miles de días. El costo es el uso de memoria, aceptable para un solo usuario.
 
@@ -412,12 +412,16 @@ Resumen por familia temática (el detalle campo a campo está en el Apéndice A)
 | Dinero | `gastos`, `ingresos` | transacción | activa |
 | Lugar y movimiento | `lugares`, `visitas`, `actividad`, `ubicaciones` (tabla), `fotos` | visita / punto | pasiva |
 | Entorno | `entorno` (clima, aire, luz solar), fases de la luna (calculadas) | día | pasiva / calculada |
-| Cultura y mente | `obras`, `subrayados`, `agenda`, `tramos` (cronómetro de enfoque y siestas) | día / obra / bloque | activa e importada |
+| Cultura y mente | `obras`, `subrayados`, `agenda`, `tramos` (cronómetro de enfoque y siestas), `ideas` (desde el esquema 16) | día / obra / bloque / idea | activa e importada |
 | Sociales | `comunicacion`, `whatsapp`, menciones `@persona` en texto | día | pasiva e importada |
 | Cognición | `reacciones` (tiempo de reacción) | sesión | activa |
 | Ciencia personal | `experimentos` | semanas | activa (diseño en capítulo de experimentos) |
 
 : Tabla 2.5. Catálogo de colecciones
+
+**El Ideario (desde el esquema 16).** La colección `ideas` guarda, una por documento (`Idea`), lo que entendiste de un libro, un video o una plática, o algo que se te ocurrió, con tus palabras. Solo el texto es obligatorio; además puede llevar la idea en una línea (`titulo`), sus temas (`temas`, desde el esquema 17; se suman a los `#temas` escritos en el texto, `Ideario.temasDe`), de dónde viene (`origen`: leído, visto o escuchado, contado o propio), quién lo dice (`quien`, una lista de nombres que **no** son personas de Tu gente), la obra y la cita de las que salió (`obra_id`, `cita_id`), una fuente escrita y su enlace, el minuto o la página, cómo la tienes (`postura`: me convence, me hace pensar, la dudo, no estoy de acuerdo) y cada vez que la volviste a ver en «Una idea de antes» (`revisiones`). Se asigna al día que tú eliges (por omisión, el día lógico en que se anota) y guarda la hora en que se escribió (`creada`). Es una colección de **eventos** (varias ideas por día) que **no entra al panel**: ninguna variable diaria sale de ella, sus temas no se suman a «Tus temas» ni sus `@personas` a las menciones de la red social (capítulo 7). Solo se exporta tal cual (`vm_ideas.csv` y `vm_ideas_revisiones.csv`, Apéndice A.10). **[Diseño propio]**.
+
+«Una idea de antes» (`Ideario.resurgir`) elige, en el Día de hoy, una idea con al menos 30 días que no hayas respondido en los últimos 30, y prefiere las que cumplen un aniversario: 30, 180 o 365·n días (n = 1…10), con ± 3 días de holgura. Si ninguna cumple, toma cualquiera de las elegibles. La elección depende solo de la fecha y del identificador (el menor `hashCode` de «fecha:id»), así que es la misma toda la jornada; sale una por día. *Ejemplo con datos inventados:* el 2 de noviembre, con ideas del 20 de octubre (13 días: aún no), del 2 de octubre (31 días: aniversario de un mes) y del 15 de agosto (79 días), sale la del 2 de octubre. Releer a intervalos que se alargan se parece a la **repetición espaciada** (repasar algo justo cuando empieza a olvidarse ayuda a recordarlo), pero aquí los intervalos son fijos y no se adaptan a lo que recuerdas: es una aproximación a esa idea, no el método validado. **[Aproximación]**. *Cuándo falla:* con pocas ideas, casi siempre sale «cualquiera»; y la respuesta («sigo pensando igual», «ya no», «ahora no») mide si cambió tu opinión, no si la recordabas.
 
 **Unidad de observación.** No todas las colecciones son «una fila por día»: `momentos` (varios por día, con hora), `gastos` (por transacción), `visitas` (con entrada/salida) y `ubicaciones` (puntos) son **eventos**. El paso evento → día (agregar por media, suma, conteo o máximo según la variable) es el corazón de la sección 2.6 y una fuente de decisiones que afectan los resultados (por ejemplo, un día con un solo aviso de ánimo tiene una media tan ruidosa como una observación única). Desde el esquema 13, `avisos_respondidos` dice cuántos de los avisos mostrados ese día tuvieron respuesta, que es casi siempre el número de valores detrás de `muestreo_valencia` (no siempre: la media usa todos los registros de tipo «muestreo» del día, también los que no están unidos a un aviso); antes solo estaba `registros_animo`, que cuenta también los registros por iniciativa propia.
 
@@ -443,7 +447,7 @@ Una fila de la tabla se crea para cada fecha que aparece en *alguna* fuente. Una
 |---|---|---|---|
 | **Cero desde el primer registro, en días con diario** (`ceroDesde`) | `gasto_total`, `gasto_imprevisto` y, desde 10e, `gasto_imprevisto_monto` (primer gasto), `n_impulso` (primer impulso), `escalada` (primera sesión), `gimnasio` (primer entrenamiento; también cuenta los días con entrenamiento) | días con documento de diario | Cuando la persona *ya usa* esa función, un día con diario sin registro significa «no ocurrió». Antes del primer uso no se sabe. |
 | **Cero desde el primer registro** (reglas que ya existían, con la misma lógica) | emociones `n_*`, `registros_animo`, `enfoque_*_min`, `siesta_min`, `horas_tipo_*`, `obras_dia`, `carta_escrita`, `cartas_otros`, `n_recaida`, `yt_megusta`, `yt_comentarios`, `ingreso_total`, `medicamentos_n`, `campana_*` | días con diario (o con datos de esa fuente) | Igual |
-| **Hábitos** `hab_<id>` | 1 si lo marcaste; 0 desde `Habito.desde` (el día en que lo creaste); antes, vacío. Los hábitos sin esa fecha (importados o de versiones viejas) siguen en 0 todos los días | días con diario | Un hábito que aún no existía no se pudo cumplir ni dejar de cumplir |
+| **Hábitos** `hab_<id>` | 1 si lo marcaste; 0 desde `Habito.desde` (el día en que lo creaste); antes, vacío. Los hábitos sin esa fecha (importados o de versiones viejas) siguen en 0 todos los días. Desde el esquema 17, en los días contestados con «sí / no / sin contestar» (`habitos_tri`), «no» es 0 y un hábito sin respuesta queda vacío (D.133) | días con diario | Un hábito que aún no existía no se pudo cumplir ni dejar de cumplir |
 | **Sueño recordado** `sueno_recordado` | 1 si recordaste un sueño; 0 solo si ese día dijiste algo del sueño (calidad o texto); si no, vacío | días con diario | Un día en que no abriste la sección del sueño no dice «no recordé nada» |
 | **Variables sociales** `personas`, `vi_*`, `cercanos`, `cercania_media`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `penso_en_*`, y las familias `per_` y `pen_` | 0 solo en los días en que se pudo nombrar a alguien (`Dinamicas.diasSociales`): con diario escrito o con un momento no privado que nombra a alguien con @. En `tema_`, los días con diario escrito o con un momento que lleva un #tema. Desde 10e (D.93), `personas` cuenta a quien nombras con @ en el diario **y** en los momentos no privados de ese día; antes contaba solo el diario, y un día con solo momentos valía 0 aunque nombraras a alguien (H-14-2) | esos días | Antes, un toque en el widget de hábitos o una recaída creaban el documento del día y con él un día de «no vi a nadie» |
 | **Ejercicio y distancia** | `ejercicio_min` en 0 los días con datos del reloj (pasos o ritmo cardiaco) y sin sesión, desde la primera sesión; `distancia_km` en 0 los días con ubicaciones y sin movimiento (`Movilidad.kmPorDia`) | días con reloj / con ubicaciones | Antes quedaban vacíos aunque sí se sabía que fueron 0 |
@@ -493,7 +497,7 @@ Los 0/1 (`ctx_*`, `hab_*`, `vi_pareja`…) tratan una condición como «ocurrió
 
 ## 2.7 Familias de variables dinámicas
 
-**Cuántas variables fijas hay.** Contando como «fija» cada identificador que `Estadistica.variables()` escribe con su nombre, son **187** desde 10f (186 en la v91 y 184 en la v90), en 24 grupos: 130 existen siempre y 57 solo si hay datos de su fuente (por ejemplo, `alcohol` si alguna vez anotaste alcohol, o `laptop_min` si importaste Cold Turkey). De ellas, 7 son privadas (`impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `medicamentos_n`): la app no las cruza y van a R. Otras 33 salen de listas fijas del catálogo: los 10 `ctx_*`, las 13 opciones de las tres preguntas científicas, los 5 `con_*`, las 4 `laptop_<categoría>_min` y `n_impulso`. Las dos que agregó 10e (D.94), `error_prediccion_signo` (grupo «Ánimo») y `gasto_imprevisto_monto` («Dinero»), están en la lista fija y existen siempre. La que agregó 10f (D.114), `fuerza_ref_kg` («Cuerpo»), solo existe si hay datos: es la mejor 1RM estimada del día en un ejercicio fijo, el press inclinado con mancuernas (capítulo 8). El Apéndice A.1 lista 186, porque pone `dia_especial` y `campanas_n` entre las de nombre generado y suma `n_impulso`.
+**Cuántas variables fijas hay.** Contando como «fija» cada identificador que `Estadistica.variables()` escribe con su nombre, son **193** desde el esquema 17 (187 desde 10f, 186 en la v91 y 184 en la v90), en 24 grupos: 133 existen siempre y 60 solo si hay datos de su fuente (por ejemplo, `alcohol` si alguna vez anotaste alcohol, o `laptop_min` si importaste Cold Turkey). De ellas, 7 son privadas (`impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `medicamentos_n`): la app no las cruza y van a R. Otras 39 salen de listas fijas del catálogo: los 13 `ctx_*` (10 hasta el esquema 16), las 13 opciones de las tres preguntas científicas, los 8 `con_*` (5 hasta el esquema 16), las 4 `laptop_<categoría>_min` y `n_impulso`. Las dos que agregó 10e (D.94), `error_prediccion_signo` (grupo «Ánimo») y `gasto_imprevisto_monto` («Dinero»), están en la lista fija y existen siempre. La que agregó 10f (D.114), `fuerza_ref_kg` («Cuerpo»), solo existe si hay datos: es la mejor 1RM estimada del día en un ejercicio fijo, el press inclinado con mancuernas (capítulo 8). El Apéndice A.1 lista 192 (186 hasta el esquema 16), porque pone `dia_especial` y `campanas_n` entre las de nombre generado y suma `n_impulso`.
 
 Además, el sistema crea **variables dinámicas** por cada elemento que la persona usa: una por cada persona (`per_*`, `pen_*`), tema, hito, lugar, app, categoría de gasto, artista, canal, género, obra, medicamento, ciudad, país, músculo, nutriente, alimento… (27 prefijos, Apéndice A.2). Lo mismo los hábitos (`hab_*`), las emociones y pensamientos usados (`n_*`), las categorías de sueño, los tipos de lugar, los suplementos y las campañas, que `variables()` arma con lo que hay en tus datos.
 
@@ -798,10 +802,16 @@ Ese mismo sesgo afecta al **mapa emocional de lugares** (pantalla Lugares): colo
 
 En cualquier registro de ánimo, después del toque en la cuadrícula, puedes marcar (todo opcional):
 
-- **Qué sientes** (varias a la vez), de una lista de 25 emociones (`Catalogo.SENTIMIENTOS`) agrupadas por tono: **9 agradables** (alegría, calma, gratitud, entusiasmo, orgullo, cariño, alivio, diversión, esperanza), **13 desagradables** (estrés, ansiedad, frustración, tristeza, enojo, miedo, soledad, aburrimiento, culpa, vergüenza, celos, abrumado, cansancio) y **3 mixtas** (nostalgia, confusión, sorpresa). Más dos opciones especiales: **«otro…»** (escribes cuál) y **«no sé»**. Elegir «no sé» quita las demás; elegir otra quita «no sé».
-- **En qué piensas** (una): en alguien o algo, preocupación, idea, recuerdo, plan o pendiente, dándole vueltas, autocrítica, deseo o antojo.
+- **Qué sientes** (varias a la vez), de una lista de 47 emociones (`Catalogo.SENTIMIENTOS`; 25 hasta el esquema 16) agrupadas por tono y con encabezado en la pantalla:
+  - **18 agradables:** alegría, calma, gratitud, entusiasmo, orgullo, cariño, alivio, diversión, esperanza, amor, satisfacción, curiosidad, inspiración, seguridad en mí, admiración, motivación, conectado, asombro.
+  - **23 desagradables:** estrés, ansiedad, frustración, tristeza, enojo, miedo, soledad, aburrimiento, culpa, vergüenza, celos, abrumado, cansancio, decepción, impotencia, dolido o rechazado, inseguridad, envidia, irritación, vacío o apatía, desesperanza, arrepentimiento, inquietud.
+  - **6 mixtas:** nostalgia, confusión, sorpresa, anhelo, sentimientos encontrados, vulnerable.
+
+  Dentro de cada tono salen primero las que más usas. Hay dos opciones especiales: **«otro…»** (escribes cuál, con un toque para las que ya escribiste antes) y **«no sé»**. Elegir «no sé» quita las demás; elegir otra quita «no sé». Desde el esquema 17 el selector es el mismo en el registro rápido y al corregir un momento (`SelectorEmociones`); antes, al corregir no estaba «otro» y «no sé» no quitaba las demás.
+- **Cuánto de cada emoción** (opcional, esquema 17): un poco (1), bastante (2) o mucho (3), en `Momento.intensidades`. Sin respuesta, no hay intensidad (no se asume ninguna).
+- **En qué piensas** (varias desde el esquema 17; antes, una): en una persona, preocupación, idea, recuerdo, plan o pendiente, dándole vueltas, autocrítica, antojo o ganas de algo, en el trabajo o la escuela, en mi cuerpo o salud, imaginando o fantaseando, en nada en particular. Las tres que se parecen llevan una línea que las distingue: preocupación es miedo a lo que viene; dándole vueltas, repetir lo que ya pasó; autocrítica, juzgarte a ti. Los registros de antes se leen con `Catalogo.pensamientosDe` (el único pensamiento, o el tipo de momento viejo).
 - **Una nota** con @personas y #temas.
-- **Con quién estás** (varias): solo, pareja, amigos, familia, compañeros, desconocidos. «Solo» excluye a los demás.
+- **Con quién estás** (varias): solo, pareja, amigos, familia, hijos, compañeros de trabajo o escuela, desconocidos, mascota, por mensaje o llamada. «Solo» excluye a quien está contigo en persona, pero puede ir con «por mensaje o llamada». Desde el esquema 17, marcar solo «con quién» ya no crea un registro de ánimo: se guarda junto con lo primero que digas del ánimo (la cuadrícula, una emoción, un pensamiento o el texto).
 
 ### 3.6.2 Por qué emociones con nombre además de los dos ejes
 
@@ -809,12 +819,13 @@ Los dos ejes resumen bien, pero pierden información: «enojo» y «miedo» caen
 
 **Por qué «no sé» es un dato.** No poder nombrar lo que sientes también es información (puede indicar baja diferenciación en ese momento, o un estado mezclado). Por eso, se guarda como emoción propia (`no_se`) y produce su propia variable `n_no_se`. **[Diseño propio]**, razonable.
 
-**Asimetría de la lista.** Hay más emociones desagradables (13) que agradables (9). Es habitual (el vocabulario emocional suele tener más palabras negativas), pero significa que **los conteos no son comparables entre sí**: que marques más emociones negativas que positivas puede deberse en parte a que hay más para elegir. **[Diseño propio]**.
+**Asimetría de la lista.** Hay más emociones desagradables (23) que agradables (18); hasta el esquema 16 eran 13 y 9. Es habitual (el vocabulario emocional suele tener más palabras negativas), pero significa que **los conteos no son comparables entre sí**: que marques más emociones negativas que positivas puede deberse en parte a que hay más para elegir. **[Diseño propio]**.
 
 ### 3.6.3 Cómo entran al panel
 
 - `n_<emoción>`: cuántos registros de ese día incluyen esa emoción (`n_alegria`, `n_estres`, `n_no_se`…). Solo se crean columnas para emociones que hayas usado al menos una vez (la de «otro» no genera columna).
-- `n_<pensamiento>`: igual con los pensamientos.
+- `n_<pensamiento>`: igual con los pensamientos; desde el esquema 17, un registro con varios pensamientos cuenta en cada uno.
+- **Las emociones y pensamientos nuevos del esquema 17** solo tienen columna desde que se usan por primera vez. Antes de existir no se podían marcar, así que su 0 en días viejos no significa «no lo sentí». **[Diseño propio]**. La intensidad (1–3) no entra al panel: solo se exporta (`vm_momentos.csv:intensidades`).
 - `registros_animo`: cuántos registros de ánimo hiciste ese día.
 - **Relleno con cero:** desde la fecha de tu **primer** registro de ánimo, los días que tienen documento de diario y no tienen registros cuentan como **0** en estas variables (no como «sin dato»). **[Diseño propio]**: es razonable si se asume que siempre registras cuando sientes algo, cosa que no es cierta en un día sin registros por olvido (ver H-1-1 sobre el criterio de rellenar con cero).
 - Con quién (solo con los registros **de aviso** que tienen compañía marcada): `acompanado_pct` (fracción de avisos en compañía), `con_pareja`, `con_amigos`… (fracción de avisos con cada tipo) y `valencia_acompanado` / `valencia_solo` (promedio de valencia en cada caso).
@@ -834,8 +845,10 @@ La «hoja de la noche» (`PantallaNoche`, en `ui/pantallas/Dia.kt`; en la app se
 1. **«Cómo estás ahora»** (el cierre, sección 3.7.5), solo en la hoja del día de hoy.
 2. **Ánimo y cuerpo** del día: valencia, activación y dolor.
 3. **Predicción** de mañana.
-4. **Contexto** del día (trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia; varios o ninguno).
-5. **Hábitos** (casillas; sin el hábito ligado a las recaídas) y **suplementos de este día**.
+4. **Cómo fue el día** (el contexto del día completo: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, cita o tiempo en pareja, familia y, desde el esquema 17, casa o descanso, fiesta, trámites o pendientes; varios o ninguno), más un «otro» escrito (`ctx_otro`, solo se exporta).
+5. **Hábitos** (desde el esquema 17, «sí» o «no» por hábito, y tocar otra vez la misma respuesta la quita; antes, casillas; sin el hábito ligado a las recaídas) y **suplementos de este día**.
+
+La barra fija de abajo cuenta lo mismo que pide «Sellar el día»: el ánimo y el diario. La predicción y los hábitos aparecen como «extra». Los hábitos cuentan como hechos cuando todos tienen respuesta, sea «sí» o «no». Antes contaba cuatro pasos y los hábitos solo estaban hechos si todos eran «sí».
 6. **Diario** (texto libre con @personas y #temas) y con quién estuviste.
 7. Plegado, como opcional: la «lectura del día», lo mejor y lo peor, hitos, lo que leíste o viste, la foto del día y «privado de este día →».
 8. Sellar.
@@ -859,11 +872,11 @@ Se guarda sola mientras escribes (cada 0.7 s sin cambios). Si tiene **valencia y
 
 Son tres preguntas de opción única (`Catalogo.CIENTIFICAS`), cada una inspirada en una teoría:
 
-**Flujo (Csikszentmihalyi).** «¿El reto igualó tu habilidad?» Opciones: **flujo** (concentración total), **ansiedad** (el reto te rebasó), **aburrimiento** (muy por debajo de tu capacidad), **apatía** (ni reto ni interés) y «no aplica». Corresponde al **modelo de cuadrantes**: cruzar «reto alto/bajo» con «habilidad alta/baja» da cuatro estados, y el flujo aparece cuando ambos son altos (Csikszentmihalyi y LeFevre, 1989). **[Aproximación]**: en los estudios se mide reto y habilidad por separado y se calcula el cuadrante; aquí se pide elegir directamente el estado, y referido al día completo (a «la actividad más exigente del día»), no a un momento.
+**Flujo (Csikszentmihalyi).** «¿El reto igualó tu habilidad?» Opciones: **flujo** (concentración total), **ansiedad** (el reto te rebasó), **aburrimiento** (muy por debajo de tu capacidad), **apatía** (ni reto ni interés) y «no aplica». Desde el esquema 17 la pantalla dice «Me rebasó (ansiedad)» y «Me quedó chico (aburrimiento)», porque en este modelo son estados de reto contra habilidad, no las emociones que llevan el mismo nombre en los registros de ánimo. Los ids (`ansiedad`, `aburrimiento`) y las columnas no cambian. Corresponde al **modelo de cuadrantes**: cruzar «reto alto/bajo» con «habilidad alta/baja» da cuatro estados, y el flujo aparece cuando ambos son altos (Csikszentmihalyi y LeFevre, 1989). **[Aproximación]**: en los estudios se mide reto y habilidad por separado y se calcula el cuadrante; aquí se pide elegir directamente el estado, y referido al día completo (a «la actividad más exigente del día»), no a un momento.
 
 **Necesidades psicológicas (Deci y Ryan).** «¿Qué necesidad se satisfizo más?»: **autonomía** (las decisiones fueron tuyas), **competencia** (algo se te dio bien), **relación** (te sentiste conectado), **ninguna** o **las tres**. Se basa en la teoría de la autodeterminación, que propone esas tres necesidades básicas (Deci y Ryan, 2000). **[Aproximación]**: las escalas validadas miden cada necesidad por separado con varios reactivos; aquí es una sola elección.
 
-**Evaluación del estrés (Lazarus).** «¿Cómo evaluaste la exigencia del día?»: **reto** (exigente pero motivante), **amenaza** (exigente y temiste fallar), **pérdida** (algo ya salió mal) o **rutina** (baja exigencia). Corresponde a la «evaluación primaria» de Lazarus y Folkman (1984), que distingue daño/pérdida, amenaza y reto. **[Aproximación]**: mismo comentario, es una sola elección del día.
+**Evaluación del estrés (Lazarus).** «¿Cómo evaluaste la exigencia del día?»: **reto** (exigente pero motivante), **amenaza** (exigente y temiste fallar), **pérdida** (algo ya salió mal) o **rutina** (baja exigencia); desde el esquema 17 también «no aplica», que deja las columnas en 0 igual que en flujo y no cuenta en el reporte. Corresponde a la «evaluación primaria» de Lazarus y Folkman (1984), que distingue daño/pérdida, amenaza y reto. **[Aproximación]**: mismo comentario, es una sola elección del día.
 
 **Cómo entran al panel.** Cada opción se convierte en una columna de 0/1 (`flow_flujo`, `flow_ansiedad`, `sdt_necesidad_autonomia`…), con valor **vacío** si no respondiste. Dos consecuencias del código:
 
@@ -877,7 +890,8 @@ Estas preguntas están **plegadas por omisión**, así que se responden menos y 
 - **Lo mejor y lo peor** del día: una línea cada uno, texto libre. No entran al panel como números.
 - **Hitos**: etiquetas cortas de cosas que no pasan todos los días; `hitos_n` cuenta cuántas.
 - **Medicamentos**: desde el módulo 10a son privados y se anotan en la pantalla Privado, no en el diario de la noche (al final hay un enlace «privado de este día»). Son etiquetas; `medicamentos_n` cuenta cuántas desde el primer día en que anotaste alguno y solo viaja a R.
-- **Contextos** (`ctx_*`) y **hábitos** (`hab_*`): 1 si lo marcaste. **Ojo (H-2-4):** los contextos valen **0 en todos los días con diario**, también si no abriste esa sección: es la convención declarada en la pantalla («marca lo que aplique»), y se mantiene. Los hábitos valían 0 incluso **antes de crear el hábito**; desde la entrega 10c, antes de `Habito.desde` (el día en que lo creaste) quedan vacíos, salvo que los hayas marcado (D.63). Los hábitos creados antes de que existiera esa fecha siguen valiendo 0 desde el principio. «No lo marqué» y «no pasó» siguen siendo lo mismo en ambos; es el problema de fondo de H-1-1.
+- **Contextos** (`ctx_*`) y **hábitos** (`hab_*`): 1 si lo marcaste. **Ojo (H-2-4):** los contextos valen **0 en todos los días con diario**, también si no abriste esa sección: es la convención declarada en la pantalla («marca lo que aplique»), y se mantiene. Los hábitos valían 0 incluso **antes de crear el hábito**; desde la entrega 10c, antes de `Habito.desde` (el día en que lo creaste) quedan vacíos, salvo que los hayas marcado (D.63). Los hábitos creados antes de que existiera esa fecha siguen valiendo 0 desde el principio.
+- **Hábitos con «sí / no / sin contestar» (esquema 17).** Al contestar un hábito en la hoja de la noche, el día queda marcado (`habitos_tri`). En esos días, «no» vale 0 y un hábito **sin respuesta queda vacío**, no 0. En los días de antes (sin la marca), sin marca sigue valiendo 0. *Ejemplo con datos inventados:* un día con «Leer: sí» y «Meditar» sin tocar da `hab_leer` = 1 y `hab_meditar` vacío; el mismo día sin la marca daba `hab_meditar` = 0. Una recaída deja el hábito ligado en «no» (0), como antes. Con esto se resuelve en parte H-2-4 para los hábitos; en los contextos, «no lo marqué» y «no pasó» siguen siendo lo mismo (H-1-1).
 
 ### 3.7.4 «Retroactivo»: cuándo se llenó el día
 
@@ -1021,24 +1035,39 @@ Lo que no se arregla: los perfiles llenados antes de esta versión no tienen ese
 
 ### 3.12.1 Cómo se captura
 
-A la hora configurada (**8:00** por omisión, `hora_sueno`), si el día lógico aún no tiene relato del sueño ni la marca «recordé un sueño» (la calidad sola no lo evita), llega el aviso «¿Recuerdas lo que soñaste? Anótalo antes de levantarte; el recuerdo se borra en minutos», que se borra solo a las **3 horas**. El aviso solo se intenta durante las 3 horas siguientes a la hora configurada. La pantalla rápida pone **primero la narración** y después lo demás, precisamente porque el contenido de los sueños se olvida muy rápido al despertar. Que el olvido sea cuestión de minutos es la afirmación de la app; es coherente con lo que sé de la literatura sobre el recuerdo de sueños, pero no la verifiqué con una fuente en esta sesión **[sin verificar]**.
+A la hora configurada (**8:00** por omisión, `hora_sueno`), si el día lógico aún no tiene relato del sueño ni la marca «recordé un sueño» (la calidad sola no lo evita), llega el aviso «¿Recuerdas lo que soñaste? Anótalo antes de levantarte; el recuerdo se borra en minutos», que se borra solo a las **3 horas**. El aviso solo se intenta durante las 3 horas siguientes a la hora configurada. La pantalla rápida pone **primero la narración** y después lo demás, precisamente porque el contenido de los sueños se olvida muy rápido al despertar. Desde el esquema 17 la narración ya no se escribe en un cuadro de texto: se toca el «libro de noche» del tema y se escribe a pantalla completa, igual que el diario; el formulario es el mismo en la pantalla rápida y en el Día (`FormularioSueno`, en `ui/CategoriasSueno.kt`). Que el olvido sea cuestión de minutos es la afirmación de la app; es coherente con lo que sé de la literatura sobre el recuerdo de sueños, pero no la verifiqué con una fuente en esta sesión **[sin verificar]**.
 
 Se registra:
 
 - **Calidad del sueño como la sentiste**, de 1 (muy mala) a 5 (muy buena). Es una percepción, distinta de las horas que mide el reloj (capítulo 4). Se guarda en el **día del despertar** (la fecha del calendario, `Fechas.hoyCalendario()`), igual que las horas del reloj. Así, quien despierta a las 04:30 y la anota no la deja en el día anterior. Esto es así desde la entrega N2 de la revisión de navegación; antes usaba el día lógico (H-NAV-7).
-- **¿Recordaste un sueño?** (sí/no). Si sí: **valencia del sueño** (1–7), **lucidez** (no / parcial / total), **vividez** (vago / moderado / muy vívido), **tipo** (mundano, ansioso o pesadilla, bizarro o surreal, recurrente), **categorías por ejes** y personas y temas.
+- **¿Recordaste un sueño?** (sí/no). Si sí: **valencia del sueño** (1–7), **¿fue pesadilla?** (sí/no: angustia fuerte o te despertó), **qué tan raro fue** (realista / raro pero posible / imposible o surreal), **qué tan claro lo recuerdas** (solo fragmentos / partes claras / casi completo y nítido), **lucidez** (no / parcial / total), **categorías por ejes** y nombres y temas propios (@ y #).
+
+**El «tipo» de antes (hasta el esquema 16).** Antes había una sola pregunta de tipo con cuatro opciones excluyentes: mundano, ansioso o pesadilla, bizarro o surreal, recurrente. Mezclaba tres cosas distintas (qué tan raro, qué tan angustiante y si se repite), obligaba a elegir una aunque el sueño fuera raro *y* angustiante, y «recurrente» repetía la categoría «se repite» de la estructura. Desde el esquema 17 se pregunta por separado: **rareza** (`sueno_rareza`) y **pesadilla** (`sueno_pesadilla`), y «recurrente» queda solo en la estructura. Los días viejos se leen con funciones de compatibilidad (`Catalogo.rarezaDe`, `pesadillaDe`, `categoriasSuenoDe`): mundano → realista; bizarro o surreal → imposible; ansioso o pesadilla → pesadilla = sí (sin rareza); recurrente → categoría `est_recurrente`. *Ejemplo con datos inventados:* un día de 2025 con tipo «recurrente» aparece en el panel con `sueno_est_recurrente` = 1 y sin rareza. Al corregir un día viejo, se pasa a los campos nuevos y el tipo se borra. **[Aproximación]**: la rareza corresponde a la idea de *bizarreness* de la investigación sobre sueños (lo que no podría pasar despierto), aquí en tres niveles juzgados por quien soñó, sin las escalas de codificación de esa literatura. La definición de pesadilla (un sueño muy desagradable que despierta o casi) es la habitual en clínica; no verifiqué en esta sesión una fuente con la redacción exacta **[sin verificar]**. *Cuándo falla:* un día viejo marcado «ansioso o pesadilla» puede haber sido solo ansioso; desde el esquema 17 cuenta como pesadilla.
 
 ### 3.12.2 Las categorías por ejes
 
-Seis ejes independientes (`Catalogo.SUENO_EJES`), con varias opciones cada uno: **quiénes aparecen** (familia, pareja, expareja, amistades, gente de antes, desconocidos, figuras públicas, animales, alguien que ya murió), **dónde pasa**, **qué pasa entre personas** (romántico, sexual, amistoso, conflicto, ayuda, rechazo), **temas típicos** (persecución, caer, volar, examen, perder algo, muerte, desnudez, dientes, viaje, desastre, regreso al pasado, poderes), **estructura** (una persona casi todo el sueño, restos del día anterior, se repite, continúa uno anterior, fragmentos) y **emoción principal**.
+Nueve ejes independientes (`Catalogo.SUENO_EJES`, desde el esquema 17; antes eran seis), con varias opciones cada uno:
+- **quiénes aparecen** (familia, pareja, expareja, amistades, gente de antes, gente del trabajo o la escuela, desconocidos, figuras públicas, niños, animales, criaturas, alguien que ya murió, yo con otra edad o cuerpo);
+- **dónde pasa** (mi casa, un lugar de mi pasado, escuela o trabajo, un lugar conocido pero cambiado, lugar desconocido, otro país, transporte, lugar imposible, naturaleza);
+- **qué pasa entre personas** (romántico, sexual, amistoso, conflicto, ayuda, cuidado, rechazo, traición, reconciliación, despedida);
+- **temas típicos** (persecución, caer, volar, examen o llegar tarde, perder algo, buscar, atrapado, no poder moverme o gritar, muerte, desnudez en público, dientes, viaje, agua, desastre, aparato que no funciona, embarazo, fiesta, volver a otra época, poderes);
+- **cómo me fue** (logré algo, fallé, tuve suerte, me pasó algo malo, estaba en peligro);
+- **sensaciones** (colores vivos, sonidos o voces, tacto o dolor, olores o sabores, caer o flotar en el cuerpo);
+- **estructura** (una persona en el centro, restos del día anterior, se repite, continúa uno anterior, me veía desde fuera, era otra persona, cambios bruscos de escena, desperté a la mitad);
+- **emociones del sueño** (19, varias a la vez);
+- **al despertar** (aliviado de que no fuera real, con ganas de volver, con la emoción encima, pensando en alguien del sueño).
 
-Se basan en el sistema de **Hall y Van de Castle (1966)**, que codifica los sueños en categorías como personajes, interacciones sociales, escenarios, emociones, éxitos y fracasos, entre otras. **[Aproximación]**: el sistema original se aplica **leyendo el relato** con reglas detalladas de codificación; aquí la persona que soñó elige categorías simplificadas. Sirve para ver patrones propios, no para compararse con las normas publicadas. La idea de que los sueños reflejan preocupaciones de la vida despierta (hipótesis de la **continuidad**) es la de Domhoff (2003).
+Arriba de los ejes aparecen las **8 categorías más marcadas en los últimos 180 días** (`Catalogo.suenoRapidas`); si no llegan a 8, se completan con una lista fija. Antes la lista era siempre la misma. La categoría «solo fragmentos» de la estructura se retiró en el esquema 17 porque repetía la claridad del recuerdo («vago»); en los días viejos se conserva.
+
+Se basan en el sistema de **Hall y Van de Castle (1966)**, que codifica los sueños en categorías como personajes, interacciones sociales, escenarios, emociones, éxitos y fracasos, entre otras («cómo me fue» toma de ahí éxito, fracaso, buena y mala fortuna). Las sensaciones, la perspectiva y «al despertar» son **[Diseño propio]**. **[Aproximación]**: el sistema original se aplica **leyendo el relato** con reglas detalladas de codificación; aquí la persona que soñó elige categorías simplificadas. Sirve para ver patrones propios, no para compararse con las normas publicadas. La idea de que los sueños reflejan preocupaciones de la vida despierta (hipótesis de la **continuidad**) es la de Domhoff (2003).
 
 ### 3.12.3 Cómo entra al panel
 
 - `sueno_calidad` (1–5), `sueno_valencia` (solo si recordaste), `sueno_palabras` (palabras del relato).
 - `sueno_lucidez` y `sueno_vividez` se convierten en **0, 1, 2** (por ejemplo, vago = 0, moderado = 1, muy vívido = 2), solo en días con sueño recordado. Tratarlas como números supone que los saltos entre niveles son iguales. **[Aproximación]**.
-- `sueno_<categoría>` = 1/0, solo en días en que marcaste **alguna** categoría (si no marcaste ninguna, quedan vacías: bien resuelto).
+- `sueno_<categoría>` = 1/0, solo en días en que marcaste **alguna** categoría (si no marcaste ninguna, quedan vacías: bien resuelto). En los días de antes del esquema 17, el tipo «recurrente» cuenta como `sueno_est_recurrente`.
+- En el panel extendido, la familia `suenot_` ya no es el tipo: son `suenot_realista`, `suenot_raro`, `suenot_imposible` y `suenot_pesadilla` (1 si ese día el sueño fue así), en los días con sueño recordado. Las columnas viejas (`suenot_mundano`, `suenot_ansioso_pesadilla`…) dejan de existir.
+- La exportación (`vm_dias.csv`) agrega `sueno_rareza` y `sueno_pesadilla` (con los días viejos ya traducidos) y conserva `sueno_tipo` tal como se guardó.
 
 **`sueno_recordado` valía 0 cuando no respondiste (H-2-4).** Era 1 si marcaste que recordaste un sueño y **0 en cualquier otro caso**, incluidos los días en que no abriste la pantalla de sueño, así que la frecuencia de recuerdo se subestimaba. Desde la entrega 10c (D.63) vale 1 si recordaste un sueño, **0 solo si ese día dijiste algo del sueño** (la calidad o un texto) sin marcar que lo recordaste, y queda vacía en los demás días. Ejemplo: un día con calidad 4 y sin sueño recordado → 0; un día en que no tocaste la sección del sueño → vacío.
 
@@ -2170,7 +2199,7 @@ Lo importante de la tabla: **«Las relaciones más marcadas» y, desde la entreg
 
 `Estadistica.panel()` devuelve un mapa `fecha → (variable → valor)`. Cada **fecha** es un día lógico (de 5:00 a 4:59 del día siguiente; capítulo 2); desde 10f (D.109), cada momento se asigna a su día y a su hora con la zona horaria que tenía el teléfono entonces, así que las horas del panel (`primer_uso_h`, `ultimo_uso_h`, `cafeina_ultima_h`…) son la hora local del lugar donde estabas, también si viajaste. Cada **valor** es un número o `null`. Las variables 0/1 se guardan como 0.0 y 1.0.
 
-Qué variables entran en los análisis lo decide otra función, `Estadistica.variables()`: una lista de 187 variables con nombre fijo en 24 grupos (valencia, sueño, pasos, clima…; capítulo 2 y Apéndice A.1): 130 existen siempre y 57 **solo aparecen si hay datos** (por ejemplo, las de alcohol solo si alguna vez registraste alcohol; las privadas nunca: desde el módulo 10a se excluyen siempre y solo viajan a R) y, con `dinamicas = true`, las **variables dinámicas** de `Dinamicas.calcular()`: una por persona, tema, lugar, app, artista, nutriente, cuestionario, etapa de vida… (sección 6.3.3). En 10e (D.94) se sumaron dos a las de la v90: `error_prediccion_signo` (grupo «Ánimo»: valencia del día menos la predicción de la noche anterior, de −6 a +6; positivo si el día salió mejor de lo predicho) y `gasto_imprevisto_monto` (grupo «Dinero»: la suma de los gastos imprevistos del día), las dos de las que existen siempre y obvias con sus parientes: `error_prediccion_signo` con `prediccion`, `error_prediccion` y `valencia`, de la que se calcula; `gasto_imprevisto_monto` con `gasto_total`, `gasto_imprevisto`, `balance_dinero` y los `gcat_` (sección 6.9.2). Desde 10f (D.114) hay una más, `fuerza_ref_kg` (grupo «Cuerpo»: la mejor 1RM estimada del día en press inclinado con mancuernas, el ejercicio fijo de la plantilla «Creatina»; capítulo 8, sección 8.9), de las que solo aparecen si hay datos: vacía los días sin ese ejercicio, y obvia con las demás del gimnasio (sección 6.9.2). El panel puede tener columnas que no están en esa lista; esas no se analizan. **[Diseño propio]**.
+Qué variables entran en los análisis lo decide otra función, `Estadistica.variables()`: una lista de 193 variables con nombre fijo en 24 grupos (valencia, sueño, pasos, clima…; capítulo 2 y Apéndice A.1; 187 hasta el esquema 16, que sumó tres contextos y tres compañías): 133 existen siempre y 60 **solo aparecen si hay datos** (por ejemplo, las de alcohol solo si alguna vez registraste alcohol; las privadas nunca: desde el módulo 10a se excluyen siempre y solo viajan a R) y, con `dinamicas = true`, las **variables dinámicas** de `Dinamicas.calcular()`: una por persona, tema, lugar, app, artista, nutriente, cuestionario, etapa de vida… (sección 6.3.3). En 10e (D.94) se sumaron dos a las de la v90: `error_prediccion_signo` (grupo «Ánimo»: valencia del día menos la predicción de la noche anterior, de −6 a +6; positivo si el día salió mejor de lo predicho) y `gasto_imprevisto_monto` (grupo «Dinero»: la suma de los gastos imprevistos del día), las dos de las que existen siempre y obvias con sus parientes: `error_prediccion_signo` con `prediccion`, `error_prediccion` y `valencia`, de la que se calcula; `gasto_imprevisto_monto` con `gasto_total`, `gasto_imprevisto`, `balance_dinero` y los `gcat_` (sección 6.9.2). Desde 10f (D.114) hay una más, `fuerza_ref_kg` (grupo «Cuerpo»: la mejor 1RM estimada del día en press inclinado con mancuernas, el ejercicio fijo de la plantilla «Creatina»; capítulo 8, sección 8.9), de las que solo aparecen si hay datos: vacía los días sin ese ejercicio, y obvia con las demás del gimnasio (sección 6.9.2). El panel puede tener columnas que no están en esa lista; esas no se analizan. **[Diseño propio]**.
 
 ### 6.3.2 Cero o faltante: la decisión más delicada del panel
 
@@ -2213,7 +2242,7 @@ La regla 2 es la más defendible: antes de empezar a usar una función no se sab
 | `gcat_`, `icat_` | gasto e ingreso por categoría | $ | 15 / 5; 8 / 3 (por peso) |
 | `obr_`, `gen_` | cada obra y cada género | 0/1 | 10 / 5 |
 | `med_`, `det_` | cada medicamento; cada detonante (privadas: solo en la exportación para R, nunca en las listas de la app) | 0/1 | 15 / 3; 10 / 3 |
-| `suenot_` | tipo de sueño | 0/1 | 6 / 3 |
+| `suenot_` | rareza del sueño y pesadilla (antes del esquema 17, el tipo) | 0/1 | 6 / 3 |
 | `ciu_`, `pais_` | horas en cada ciudad y país | horas | 8 / 3; 6 / 3 |
 | `musc_`, `act_` | series por músculo; minutos por tipo de movimiento | n, min | 12 / 3; 6 / 3 |
 | `nut_`, `ali_` | cada nutriente de MacroFactor; cada alimento | cantidad; 0/1 | 60 / 14; 12 / 5 |
@@ -2959,7 +2988,7 @@ En «Tu gente» dices qué es cada @persona para ti. Una persona nace cuando la 
 
 ### 7.4.2 Las opciones
 
-`Personas.RELACIONES` ofrece 12: familia, pareja, expareja, amistad cercana, amistad, colega o compañero de trabajo, compañero de escuela, profesor/jefe/mentor, conocido, «no la conozco en persona», mascota y otra.
+`Personas.RELACIONES` ofrece 14 desde el esquema 17: familia, pareja, expareja, amistad, colega o compañero de trabajo, compañero de escuela, profesor/jefe/mentor, roomie, vecino, profesional de salud, conocido, «solo en línea o de lejos» (antes «no la conozco en persona», mismo id), mascota y otra. Hasta el esquema 16 eran 12 e incluían «amistad cercana». Esa opción ya no se ofrece porque la cercanía la dan los círculos 1 a 7; quien la tenía conserva su id y se ve como «amistad» (`Personas.relacionVisible`). Los análisis ya la juntaban con amistad (`Personas.grupo`), así que no cambian. Las relaciones nuevas forman su propio grupo: roomie no cuenta como familia aunque vivan juntos.
 
 Para los análisis se **agrupan** (`Personas.grupo`):
 
@@ -3954,6 +3983,56 @@ Dos observaciones:
 - **«La relación del año» es la más fuerte de muchas.** Elegir el máximo |*r*| entre cientos de pares sobrestima su tamaño: es la que tuvo más suerte además de ser real (un sesgo de selección; el método y su criterio para «Tu año» están en el capítulo 6, secciones 6.8 y 6.10). Que pase la corrección por comparaciones múltiples (*q* < 0.05) ayuda, pero el valor de *r* mostrado será, en promedio, más alto que el verdadero. **[Aproximación]**.
 - **Predecir tu ánimo medio en enero** crea una expectativa sobre la variable que luego mides. No hay forma de saber cuánto influye, pero es una forma de reactividad (sección 9.7).
 
+### 9.3.6 El reporte para terapia (desde D.119)
+
+**Qué es.** Un PDF tamaño carta, de varias páginas, que resume los **últimos 7 o 14 días** para llevarlo a una sesión de psicoterapia. A diferencia de los otros reportes, no se genera solo ni se guarda en la galería: se arma en Reportes › «Para terapia» y se abre directo el menú de compartir de Android (el archivo queda en la carpeta interna `cache/export/terapia/`, y cada reporte nuevo borra el anterior). Va en blanco y negro con un solo color de acento, sin los colores ni las letras del tema, para que se pueda imprimir. El cálculo está en `Terapia.calcular` (`ciencia/Terapia.kt`) y el dibujo en `ReporteTerapia.pdf` (`reportes/ReporteTerapia.kt`).
+
+**El periodo.** Por omisión termina **ayer** (el día lógico de hoy menos uno, porque hoy aún no se cierra) y cubre 7 o 14 días hacia atrás (`Opciones.ini = fin − (días − 1)`). Se puede elegir otro último día. Pensado para quien va a terapia en un día fijo: el de 7 días cubre justo de una sesión a otra; el de 14, una sesión quincenal. La comparación con el «periodo anterior» usa los 7 o 14 días inmediatamente antes (la misma regla de la sección 9.3.4, con `Periodo.errorDif`).
+
+**Qué lleva, en este orden** (todo sale de funciones que ya existían; donde hay una regla nueva, se dice). Desde D.122, cada parte es una de **8 secciones** que se encienden o apagan al generar el reporte, más un interruptor «Todo» que las enciende o apaga juntas (`Opciones.conTodo`). La primera fila, «qué tan completo está», sale siempre; la tabla día por día lleva solo las columnas de las secciones encendidas y, si no hay ninguna, no sale. Entre paréntesis, la sección (`Opciones`) y cómo empieza:
+
+| Sección | Qué muestra | De dónde sale |
+|---|---|---|
+| Qué tan completo está (siempre) | Días con diario de *N*; avisos de ánimo respondidos de los mostrados y su tasa; días con ánimo solo en los avisos | `Periodo.diasDiario`, `AvisosAnimo.cifras`, `diasSoloAvisos` |
+| Día por día (columnas según las secciones) | Una tabla: ánimo y energía (1–7), horas de sueño, calidad (1–5), kcal menos el objetivo, minutos de gimnasio; un asterisco en los días marcados como difíciles | `Repo.dias`, `Periodo.activacion` y `suenoPorDia`, `NutricionDia` |
+| Ánimo (1, `animo`, encendida) | Gráfica de ánimo y energía por día; ánimo medio del diario y su cambio; días difíciles; las 5 emociones más nombradas en los registros y qué parte de las nombradas son desagradables; en qué pensabas; qué parte de los avisos estabas con alguien y el ánimo solo frente a acompañado; cómo viviste la exigencia del día (reto, amenaza, pérdida, rutina); el error medio de la predicción del día siguiente | `Periodo`, `Terapia.emociones`, `Catalogo.pensamientoDe`, `Momento.con_quien`, `Dia.apreciacion`, `prediccion_manana` |
+| Cuestionarios (2, `cuestionarios`, encendida) | WHO-5 (0–100), PSS-4 (0–16) y UCLA-3 (3–9) respondidos en el periodo, con el texto de lectura de `Escalas` y hasta 3 respuestas anteriores. El TIPI no entra: la personalidad no cambia en una semana | `Repo.respuestas`, `Instrumento.lectura` |
+| Sueño (3, `sueno`, encendida) | Barras de horas por noche; media y cambio; hora media de dormir y de despertar con su desviación estándar; calidad media; noches con pesadilla (solo el número; desde el esquema 17 con «¿fue pesadilla?», y en los días de antes, el tipo «ansioso o pesadilla», D.127); minutos de pantalla en la hora antes de dormir | `Periodo`, `Exportar.horaDecimal`, `Catalogo.pesadillaDe`, `PantallaDia.cama_min` |
+| Actividad y rutina (4, `rutina`, encendida) | Pasos; minutos de ejercicio del reloj; minutos al aire libre y horas en casa al día; hábitos cumplidos; dolor medio y máximo; días con los contextos «enfermo», «trabajo» y «académico»; pantalla y desbloqueos | `Periodo`, el panel (`aire_libre_min`, `en_casa_min`) |
+| Contacto con otros (4, `rutina`) | Días en que estuviste en persona con familia, pareja, amistades o expareja, y días en que solo pensaste en ellas; llamadas. **Sin nombres** | El panel (`vi_*`, `penso_en_*`), `Periodo.llamadas` |
+| Gimnasio y ejercicio (5, `cuerpo`, encendida) | Días de gimnasio (con series en MacroFactor o con el contexto «gym») y la duración de cada uno; las otras sesiones del reloj por tipo | `EntrenoDia.minutos`; si falta, la sesión de fuerza o pesas del reloj de ese día; `Sesion` |
+| Alimentación (5, `cuerpo`) | Calorías y proteína contra el objetivo de cada día; carbohidratos y grasa contra el suyo; promedio diario de cafeína, alcohol, azúcares añadidos, fibra, omega-3 y agua; hora de la última cafeína; comidas al día y hora de la primera y la última | `NutricionDia` (MacroFactor), `Terapia.contraObjetivo` |
+| Sustancias (6, `sustancias`, encendida) | Por cada sustancia que no ocultaste: días, cantidad total, nivel máximo (0–10), malestar medio del día siguiente (0–5) y los síntomas más frecuentes | `Repo.consumos`, `Sustancias.maximo` |
+| Momentos del periodo (7, `momentosPeriodo`, encendida) | «Lo mejor» de tu mejor día y «lo peor» de tu peor día, tal como los escribiste | `Periodo.mejorDia` y `peorDia` |
+| Lo mejor y lo peor de cada día (dentro de la 7, `momentosDia`, apagada) | Los mismos dos textos de cada día | `Dia.mejor_momento`, `peor_momento` |
+| Seguimiento privado (8, `privado`, apagada) | Impulso medio del día (0–5) y por día en la tabla; impulsos registrados y cuántos no tuvieron una recaída en las 3 h siguientes; días con recaída de los días con respuesta; detonantes más frecuentes; medicamentos anotados | `Dia.impulso`, `recaida`, `detonantes`, `medicamentos`; momentos `impulso` y `recaida`; `Terapia.superados` (la misma regla de `Recaidas.resumen`) |
+
+: Tabla 9.3. El reporte para terapia (desde D.119)
+
+**Lo que nunca lleva**, aunque exista: el diario completo, los sueños escritos, las cartas, las notas, los títulos de la agenda, el contenido o los nombres de los chats, los lugares y el GPS, los nombres de personas (en los textos de «lo mejor» y «lo peor», cada `@ana_luisa` sale como «A.L.», `Terapia.sinNombres`), el dinero, la música, YouTube, los libros, el volumen y los récords del gimnasio, los alimentos, el peso, la frecuencia cardiaca, la HRV, la SpO₂, el tiempo de reacción y la libido. Tampoco lleva correlaciones, valores *p* ni experimentos: son análisis de una sola persona que, fuera de contexto, se leen como hallazgos firmes. El reporte describe; no interpreta ni etiqueta. **[Diseño propio]**: la selección se hizo pensando en lo que se suele revisar en una sesión (ánimo, sueño, actividad, contacto, consumo, alimentación), no siguiendo un formato clínico validado.
+
+**La regla nueva: calorías contra el objetivo** (`Terapia.contraObjetivo`). Para cada día con registro y con objetivo, la diferencia es *lo que comiste − tu objetivo* y su porcentaje es esa diferencia entre el objetivo. Un día cuenta como «dentro» si el porcentaje está entre −10 % y +10 % (los extremos incluidos), «por encima» si pasa de +10 % y «por debajo» si baja de −10 %. Un día con menos de 300 kcal (`MINIMO_KCAL`, la misma regla de `Periodo`) se toma como **sin registro** (se te olvidó anotar), no como un día de ayuno: no cuenta en los promedios y la nota lo dice. La proteína usa la misma cuenta sobre los días con registro. **[Diseño propio]**: el margen de 10 % es una convención para no marcar como «fallo» variaciones pequeñas; no viene de una guía.
+
+*Ejemplo (inventado).* Tres días con objetivo de 2,000 kcal: comiste 2,300, 1,700 y 2,050. Las diferencias son +300, −300 y +50; la media, **+17 kcal** (+0.8 %). Por porcentaje: +15 % (por encima), −15 % (por debajo) y +2.5 % (dentro). Un cuarto día con 120 kcal anotadas no cuenta. El reporte diría: «2,017 kcal al día contra un objetivo de 2,000: +17 kcal (+0.8 %) · dentro de ±10 %: 1 día · por encima: 1 día · por debajo: 1 día», y la barra de cada día muestra su diferencia.
+
+Esta media esconde los extremos: un día de +300 y otro de −300 se anulan. Por eso el reporte da también el conteo de días fuera del margen y la barra por día.
+
+**Las otras cuentas nuevas:**
+- **Emociones desagradables** (`Terapia.emociones`): de todas las emociones nombradas en los registros de ánimo del periodo, la parte con tono −1 en `Catalogo.SENTIMIENTOS`. Las mixtas (nostalgia, confusión, sorpresa) cuentan en el total; «no sé» y «otro» no, porque no tienen tono. *Ejemplo (inventado)*: ansiedad, ansiedad, calma y nostalgia → 2 de 4 = **50 %**. Es una proporción de **menciones**, no de registros: un registro con tres emociones pesa tres veces. **[Diseño propio]**.
+- **Regularidad del horario**: la desviación estándar muestral (con *n* − 1) de las horas de dormir y de despertar de las noches del reloj con más de 2 h. *Ejemplo (inventado)*: 23:30, 00:30 y 01:30 → media 00:30, desviación **60 min**. No es el índice de regularidad del sueño (*Sleep Regularity Index*), que compara minuto a minuto; es una aproximación más simple. **[Aproximación]**.
+- **Error de predicción**: el promedio, con signo, de *ánimo del día − predicción de la noche anterior*, el mismo `error_prediccion_signo` del panel (capítulo 3). Positivo: los días salieron mejor de lo que predijiste.
+- **Gimnasio**: un día cuenta si MacroFactor tiene series ese día o si marcaste el contexto «gym». La duración es la de MacroFactor (`EntrenoDia.minutos`); si no la hay, la suma de las sesiones del reloj de tipo «fuerza» o «pesas» de ese día. Esas sesiones no se cuentan otra vez entre las «otras sesiones». **[Diseño propio]**.
+
+**Las secciones elegidas no se guardan.** Cada vez que se abre la pantalla empiezan igual: encendido todo lo que el reporte llevaba desde D.119; lo mejor y lo peor de cada día y el seguimiento privado, apagados. «Todo» enciende también esos dos. Así, lo privado solo sale si lo eliges en ese momento, y un reporte compartido con prisa no lo lleva por error (capítulo 10, sección 10.3.4).
+
+**Cuándo falla o engaña:**
+- **Pocos datos.** Con pocos días de diario o pocos avisos respondidos, las medias son inestables. Por eso la primera sección dice cuántos hay; la comparación con el periodo anterior exige al menos 3 días en cada lado (sección 9.3.4).
+- **Avisos que faltan sin azar.** Si dejas de responder los avisos justo en los peores momentos, las emociones y el ánimo «solo o acompañado» se ven mejor de lo que fueron. El reporte no puede saberlo; la tasa de respuesta es la única pista.
+- **Contacto.** Solo cuenta lo que nombraste con `@` y la relación que le diste a cada persona; un día sin nombres no es un día sin contacto (por eso se dice de cuántos días hay datos).
+- **Alimentación.** Depende de que MacroFactor esté importado hasta el último día del periodo; un día a medio anotar (más de 300 kcal pero incompleto) cuenta como «por debajo».
+- **Cuestionarios.** El WHO-5 y el PSS-4 se aplican aquí con un periodo de 7 días en lugar de 2 semanas y un mes (capítulo 3); sus puntos de corte se validaron con el periodo original.
+- **Texto libre.** «Lo mejor» y «lo peor» van tal como se escribieron: aunque los `@nombres` salen como iniciales, un nombre escrito sin `@` sí sale.
+
 ## 9.4 Logros
 
 ### 9.4.1 Qué son (`ciencia/Logros.kt`)
@@ -3966,9 +4045,9 @@ Medallas de cuatro niveles (bronce, plata, oro, legendario) en 9 categorías: Di
 | **Récord** | 20 000 pasos en un día; 42.195 km en un día; reacción con mediana < 250 ms | — |
 | **Constancia** | «Escribe 20, 25 o 28 de 30 días»; 8000 pasos 15, 20 o 25 de 30 días; 7 h de sueño 15, 20 o 25 de 30 noches; entrenar 16, 20 o 24 de 56 días; cada hábito activo 15, 20 o 25 de 30 días (salvo el ligado a las recaídas, desde el módulo 10a) | `constancia` |
 
-: Tabla 9.3. Qué son (ciencia/Logros.kt)
+: Tabla 9.4. Qué son (ciencia/Logros.kt)
 
-Además hay **rachas** de diario (7, 30 y 100 días seguidos), **secretos** (aparecen al lograrlos: «Día perfecto», «Remontada», «Noctámbulo», «Desahogo»…) y **logros propios**: eliges una fuente (un hábito, una @persona o #tema, o **cualquier variable del panel** que no sea privada), un umbral y un modo (total, racha, días o constancia en una ventana). Desde el módulo 10a no se ofrecen ni se muestran los logros propios sobre algo privado: el hábito ligado a las recaídas o una variable privada.
+Además hay **rachas** de diario (7, 30 y 100 días seguidos), **secretos** (aparecen al lograrlos: «Día perfecto», «Remontada», «Noctámbulo», «Desahogo»…) y **logros propios**: eliges una fuente (un hábito, una @persona o #tema, o **cualquier variable del panel** que no sea privada), un umbral y un modo (total, racha, días o constancia en una ventana). Desde el esquema 17, con una variable el umbral tiene dirección: «pasa de» (un día cuenta si el valor es mayor que el umbral, como antes) o «queda en o menos de» (`LogroPropio.umbral_max`: cuenta si es menor o igual, por ejemplo «pantalla de 120 min o menos»), y los logros propios se pueden corregir además de borrar. «Suma total» ya no se ofrece con un hábito, porque daba lo mismo que «días». Las metas medidas por días tienen la misma opción, «al menos» o «como mucho» (`Meta.umbral_max`, en `Metas.valor`). **[Diseño propio]**. Desde el módulo 10a no se ofrecen ni se muestran los logros propios sobre algo privado: el hábito ligado a las recaídas o una variable privada.
 
 Al abrir un logro, `comoSeConsiguio` dice en qué día de registro llegó, el ánimo de ese día y una cita de hasta **22 palabras** del diario de esa noche (no en los secretos).
 
@@ -3987,7 +4066,7 @@ Conviene separar los logros por **qué** premian:
 | **Un valor de la medida subjetiva** | «Día perfecto» (calificar un día con 7 de 7), «Remontada» (un ≥ 6 tras un ≤ 2 en alguno de los 3 días con valencia anteriores, que pueden no ser seguidos) | Premian **un número que tú escribes**. Riesgo directo de sesgar la valencia (H-8-6). Se quedan por decisión del autor (D.117). |
 | **Un rendimiento** | «Rayo» (reacción < 250 ms) | Incentiva practicar la prueba; los tiempos pueden mejorar por práctica y no por estar más despierto. |
 
-: Tabla 9.4. Lo que premian, y por qué importa para los datos
+: Tabla 9.5. Lo que premian, y por qué importa para los datos
 
 Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que reduce mucho el incentivo: no sabes que existen hasta que ocurren. Aun así, una vez descubiertos, son medallas por escribir cierto valor en la escala que más se analiza. **[Diseño propio]**, de bajo riesgo en la práctica, pero contrario al principio de no premiar el valor de una medida.
 
@@ -4011,7 +4090,7 @@ Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que
 | Contestar los avisos de ánimo | al menos 2 avisos contestados | 5 |
 | Cada hábito activo | el hábito marcado | 5 |
 
-: Tabla 9.5. Campañas
+: Tabla 9.6. Campañas
 
 `Campanas.estado`: cada día cumplido avanza una etapa en un «mapa» narrativo que cambia con el tema (de Roma a Alesia, de Chang'an a Antioquía…); se **gana** al llegar a la meta y se **pierde** cuando ya no da tiempo (días cumplidos + días que quedan < meta). Ganar campañas da logros (1, 5, 20 y 52 victorias).
 
@@ -4072,8 +4151,11 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 | Logros que premian valores de la valencia; se quedan por decisión del autor (10f, D.117) | Diseño propio (contrario a la ley de Campbell) | Campbell (1979) |
 | Campañas semanales como retos | Diseño propio | Hamari et al. (2014) sobre gamificación |
 | «Relación del año» = máximo |*r*| con *q* < 0.05 | Aproximación (sobrestima) | — |
+| Reporte para terapia: qué entra y qué no; 8 secciones elegibles que no se guardan, con lo privado apagado | Diseño propio | — |
+| Calorías y proteína contra el objetivo con un margen de ±10 %; menos de 300 kcal = sin registro | Diseño propio | — |
+| Regularidad del horario de sueño como desviación estándar de las horas | Aproximación | — |
 
-: Tabla 9.6. Resumen de decisiones
+: Tabla 9.7. Resumen de decisiones
 
 ## 9.9 Resumen del capítulo
 
@@ -4083,6 +4165,7 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 4. Los logros premian sobre todo **registrar** y **conductas medidas por sensores**, y prefieren la **constancia** a las rachas: una buena decisión para no abandonar. Dos logros secretos premian valores de la valencia (H-8-6). Desde 10f se quedan como están por decisión del autor (D.117); el riesgo, un incentivo pequeño a sesgar la valencia que desaparece al ganarlos, queda descrito en la sección 9.4.3.
 5. Las campañas son **intervenciones**. Hasta el esquema 12 no quedaban registradas como variable y podían confundir el análisis observacional (H-8-7). Desde el 13 son variables del panel (`campana_<reto>`, `campanas_n`), obvias con lo que cada reto mueve.
 6. La gamificación puede ayudar a no abandonar, pero con efectos dependientes del contexto; las recompensas pueden cambiar la motivación y lo que se mide.
+7. Desde D.119 hay un reporte para terapia de 7 o 14 días, en PDF para compartir (sección 9.3.6). Describe ánimo, cuestionarios, sueño, rutina, contacto, gimnasio, alimentación contra el objetivo y, si se elige al generarlo, sustancias, textos de «lo mejor» y «lo peor» y el seguimiento privado. No lleva nombres, lugares, el diario ni análisis estadísticos.
 
 
 # Capítulo 10. Privacidad, seguridad e integridad de los datos
@@ -4193,7 +4276,7 @@ La sección 7 del documento de contexto llama a estas reglas «no negociables».
 | `allowBackup=false` | **Sí** | Manifiesto |
 | Fotos nunca se copian | **Sí** | El catálogo guarda hora, coordenadas y aparato, no la imagen |
 | Cartas selladas: sin contenido en búsqueda, CSV ni «Tu año» | **En parte** | El CSV, «Tu año» y la búsqueda cumplen (la búsqueda en cartas solo mira las legibles, `Carta.legible`, en `ui/pantallas/Totales.kt`); `vm_respaldo.json`, que se exporta junto al CSV, lleva el texto (H-8-5) |
-| Seguimiento privado (impulsos, recaídas, libido, detonantes, medicamentos) nunca en reportes, «Tu año», logros, mapas ni widgets; sí en la exportación a R | **Sí desde el módulo 10a**, con una regla más estricta: fuera de la pantalla Privado no aparece en ninguna salida. Hasta v84 fallaba en los impulsos y los medicamentos (H-8-1, H-8-2) | `data/Privado.kt`, `Momento.privado`, `Estadistica.variables` |
+| Seguimiento privado (impulsos, recaídas, libido, detonantes, medicamentos) nunca en reportes, «Tu año», logros, mapas ni widgets; sí en la exportación a R | **Sí desde el módulo 10a**, con una regla más estricta: fuera de la pantalla Privado no aparece en ninguna salida. Hasta v84 fallaba en los impulsos y los medicamentos (H-8-1, H-8-2). **Una excepción elegida, desde D.119**: el reporte para terapia lleva impulsos, recaídas, detonantes y medicamentos (nunca la libido) solo si se marca su casilla al generarlo; la casilla no se guarda y empieza apagada cada vez (capítulo 9, sección 9.3.6) | `data/Privado.kt`, `Momento.privado`, `Estadistica.variables`, `ciencia/Terapia.kt` (`Opciones.privado`) |
 | Sustancias no son privadas | **Sí** | Se tratan como dato normal |
 | La imagen del hall no lleva texto del diario | **Sí** | `HallImagen.kt` («Sin textos del diario ni nada privado»); la cita del diario solo aparece en el detalle del trofeo dentro de la app |
 | «Nada pasa por servidores ajenos salvo Drive, Open-Meteo y Spotify» (sección 1) | **No del todo** | También hay consultas a TMDB, RAWG, TVmaze, Google Books, Open Library, Crossref y a los mosaicos de OpenStreetMap (sección 10.8; H-8-17). Desde 10e, el texto de privacidad de la app los nombra todos (D.103), y desde 10f también Ajustes › Privacidad, con la misma lista (`Red.SERVICIOS`, D.116); el documento de contexto, que no está en el repositorio, sigue con la lista corta |
@@ -4264,6 +4347,8 @@ Una vez al día (la primera vez que corre la tarea diaria después de las 6:00, 
 
 Los reportes semanales y mensuales se generan **solos** (capítulo 9, sección 9.3.1) y se guardan con `MediaStore` en `Pictures/VestigiumMei` y `Download/VestigiumMei`, fuera del almacenamiento privado de la app. Ahí los ve la galería, cualquier app con permiso para leer imágenes o descargas y, si está activada, la copia automática de fotos del teléfono, que puede subirlos a la nube sin que lo decidas. El reporte excluye el seguimiento privado (desde el módulo 10a también los impulsos), las calles y los nombres de lugares, pero incluye ciudades, peso, dinero y ánimo. Hasta v84 incluía también los **nombres de personas** (salvo en modo discreto, apagado por omisión) y la **frase del mejor momento** del diario. Desde el módulo 10a, los reportes **que se guardan solos** (lunes y día 1) van siempre en modo discreto, con iniciales, y sin esa frase (`Reportes.reporte(automatico = true)`); los que pides a mano siguen como antes. **[Diseño propio]**: la idea de reportes «para compartir» es coherente, pero guardarlos solos en una carpeta pública convierte cada lunes en una salida de datos que no elegiste.
 
+El **reporte para terapia** (desde D.119) va por otro camino: no se genera solo ni pasa por `MediaStore`. Se escribe en la carpeta interna de la app (`cache/export/terapia/`, la única que comparte el `FileProvider` de `res/xml/archivos.xml`), se borra al generar el siguiente y sale del teléfono solo por el menú de compartir, a donde elijas. Lleva más datos sensibles que los otros reportes (consumo, alimentación, textos de «lo mejor» y «lo peor» y, si lo marcas, lo privado), pero cada salida es una decisión tuya en ese momento. Lo que se haga con el archivo después (un correo, un chat) ya no lo controla la app.
+
 ## 10.6 Verificar sin restaurar
 
 `Respaldos.verificar` (desde un archivo) y `Drive.verificar` (la copia más reciente de Drive):
@@ -4330,6 +4415,15 @@ El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive 
 
 - **Documentos que no se pueden leer.** Hasta el esquema 12 se descartaban en silencio (H-1-3). Desde el 13 (P-07) se cuentan por colección y se muestran en «Estado de los datos» y en Hoy, y una configuración ilegible se copia aparte antes de quedar en blanco (H-9-2; capítulo 2). Los **valores inválidos se convierten en valores por omisión** (H-1-4).
 - **Versión del esquema**: cada día guarda `schema_v` y cada respaldo el suyo (capítulo 2); desde 10f el vigente es el **15** (`SCHEMA_V` en `data/Modelo.kt`). Como un respaldo de un esquema más nuevo no se restaura (sección 10.6), una app de la v91 o anterior (esquema 14) no restaura un respaldo de la v92. Al revés, un respaldo de antes del 15 se restaura con los campos nuevos en su valor por omisión: sin fuente del clima (al exportar se deduce de la fecha en que se pidió, `Entorno.fuente`, D.111), con 0 minutos de wifi sin dato (el campo no existía), con los experimentos sin huella (`intacto` vacío) y sin fuerza de referencia. Esta última se calcula de las series del respaldo al restaurarlo (`Repo.completarFuerzaReferencia`, D.114), y además una sola vez para lo que ya estaba en el teléfono (la marca `fuerza_ref` en `avisos/Trabajo.kt`). No lo probé en un teléfono.
+
+**Esquemas 16 y 17.** Después de 10f, el esquema 16 agregó el Ideario y el 17, los campos de las pantallas de captura (Apéndice D, D.127 a D.144). Con la misma regla, una app con esquema 16 o anterior no restaura un respaldo del 17. Al revés, un respaldo de antes del 17 se restaura con los campos nuevos en su valor por omisión:
+- Los sueños quedan sin rareza ni pesadilla. Se traducen de su «tipo» al leerlos (`Catalogo.rarezaDe`, `pesadillaDe`).
+- Los días quedan sin la marca de hábitos de tres estados, así que siguen con la regla de antes: sin marca, 0.
+- Las ideas quedan sin el campo de temas y cuentan solo sus #temas del texto.
+- Los momentos quedan sin intensidades ni lista de pensamientos.
+- `Config.categorias_v17` queda apagado, así que Vivienda y Servicios se agregan una vez a las categorías.
+
+No lo probé en un teléfono.
 - **Desde qué versión vale cada columna** (desde 10f, D.115; H-1-8, resuelto). Hasta la v91, el diccionario no versionaba variable por variable: si una definición cambiaba, una exportación nueva y una vieja traían columnas con el mismo nombre y distinto significado, sin aviso. Ahora `vm_diccionario.csv` trae dos columnas más: `desde_version` (la versión de la app desde la que rige la definición actual de esa columna) y `cambio` (qué cambió entonces, con su fila del Apéndice D). Salen de una tabla fija en el código, `Diccionario.DESDE`, que acepta claves «archivo:columna», «columna» o familias con «*» (por ejemplo `per_*`); si coinciden varias, gana la más larga (`Diccionario.desde`). Vacío quiere decir «sin cambios desde la v84»: antes de la v85 no hay registro. *Ejemplo:* `sin_wifi_min` dice 92, «ya no incluye los minutos sin dato (D.112)»; si comparas una exportación de la v91 con una de la v92, esa columna no es la misma medida. El LEEME pide mirar las dos columnas al comparar exportaciones de fechas distintas. **[Diseño propio]**: la tabla es tan completa como quien la mantiene; una prueba JVM (`ZonasPrueba`) comprueba algunas entradas, no que estén todas.
 - **El sello de los experimentos** (desde 10f, D.113; H-7-10, resuelto; el método está en el capítulo 8). Al crear un experimento, `Experimentos.sellar` le pone una **huella** (`huella`): el SHA-256 de lo sellado, unido en un orden fijo (`textoSellado`): pregunta, acción, medida, hipótesis, umbral, sentido, diseño, inicio, semanas, plan, lavado y hora del sello. El nombre, el «¿Lo hiciste hoy?» y la fecha de fin no entran, porque cambian durante el experimento. Cada vez que se muestra, la app vuelve a calcularla (`Experimentos.intacto`): si coincide, la tarjeta enseña sus primeros 8 caracteres («coincide: nada de lo sellado cambió»); si no, avisa que la pregunta, la hipótesis, el criterio o el plan ya no son los del principio. `vm_experimentos.csv` trae `huella` e `intacto` (1, 0, o vacío en los experimentos de antes del esquema 15, que no tienen huella). *Ejemplo:* si después de empezar cambias la hipótesis «dormiré mejor» por «dormiré mejor o igual», la huella cambia por completo y la tarjeta lo dice. **[Validado]** que SHA-256 detecta cambios: es una función hash criptográfica estándar, y encontrar otro texto con la misma huella no es factible en la práctica. **[Diseño propio]** cómo se usa, con un límite que conviene decir: la huella se guarda junto a los datos y **sin ninguna llave**, así que nota los cambios hechos sin querer o sin recalcularla (una edición, un respaldo que reescribe el experimento), pero no los hechos a propósito: quien edite el JSON de un respaldo puede calcular la huella nueva con la misma receta, que está en el código. Protege contra acomodar el criterio sin darse cuenta, no contra hacer trampa.
 - **Estado de los datos** (`EstadoDatos.kt`, capítulo 4): muestra por fuente si llegó hoy o ayer (verde), si está atrasada (ámbar), si falta un permiso (rojo) o si está apagada (gris). Es el monitor de integridad de los datos pasivos.
@@ -4724,7 +4818,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `sueno_fin_h` | Hora de despertar (reloj) | numérica | — | Si hay datos de la fuente |
 | `sueno_palabras` | Palabras del sueño escrito | numérica | — | Si hay datos de la fuente |
 | `sueno_lucidez` | Lucidez del sueño (0 no, 1 parcial, 2 total) | numérica | — | Si hay datos de la fuente |
-| `sueno_vividez` | Vividez del sueño (0 vago, 1 moderado, 2 muy vívido) | numérica | — | Si hay datos de la fuente |
+| `sueno_vividez` | Qué tan claro recuerdas el sueño (0 solo fragmentos, 1 partes claras, 2 casi completo y nítido) | numérica | — | Si hay datos de la fuente |
 | `siesta` | Tomé siesta (0/1) | binaria (0/1) | — | Si hay siestas en el cronómetro |
 | `siesta_min` | Minutos de siesta | numérica | — | Si hay siestas en el cronómetro |
 | `cama_min` | Pantalla en la última hora antes de dormir (min) | numérica | min | Si hay datos de pantalla nocturna |
@@ -5026,7 +5120,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 
 : Tabla A.21. Laptop
 
-_Cuántas son. Regla de conteo: una variable fija es un `Variable("id", …)` con el identificador escrito tal cual en `Estadistica.variables()`. Desde 10f son **187, con 24 nombres de grupo** (186 en la v91 y 184 en la v90). Las tablas de arriba traen **186 en 21 grupos**, porque: `dia_especial` («Calendario») y `campanas_n` («Campañas») van en la tabla siguiente, junto a las de su grupo; `n_impulso` se agrega aquí aunque el código la arma con una plantilla (`n_${it.id}` sobre `Catalogo.MOMENTOS`, que solo da esa), y `medicamentos_n`, la única del grupo «Salud», se lista en Privado. En la v81 eran 177 en 22 grupos; el esquema 13 (10b) agregó `avisos_planeados`, `avisos_mostrados`, `avisos_respondidos`, `tasa_respuesta`, `campanas_n` y `dia_especial`, 10c, `presencias_revisado`, 10e, `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94), y 10f, `fuerza_ref_kg` (D.114). No todas existen en cada instalación: 130 se agregan siempre (entre ellas, las dos de 10e y 4 privadas) y las otras 57 (entre ellas, la de 10f), según la columna «Existe»._
+_Cuántas son. Regla de conteo: una variable fija es un `Variable("id", …)` con el identificador escrito tal cual en `Estadistica.variables()`. Desde el esquema 17 son **193, con 24 nombres de grupo** (187 desde 10f, 186 en la v91 y 184 en la v90). Las tablas de arriba traen **192 en 21 grupos** (186 hasta el esquema 16), porque: `dia_especial` («Calendario») y `campanas_n` («Campañas») van en la tabla siguiente, junto a las de su grupo; `n_impulso` se agrega aquí aunque el código la arma con una plantilla (`n_${it.id}` sobre `Catalogo.MOMENTOS`, que solo da esa), y `medicamentos_n`, la única del grupo «Salud», se lista en Privado. En la v81 eran 177 en 22 grupos; el esquema 13 (10b) agregó `avisos_planeados`, `avisos_mostrados`, `avisos_respondidos`, `tasa_respuesta`, `campanas_n` y `dia_especial`, 10c, `presencias_revisado`, 10e, `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94), y 10f, `fuerza_ref_kg` (D.114); el esquema 17 agregó tres contextos (`ctx_casa`, `ctx_fiesta`, `ctx_tramites`) y tres compañías (`con_hijos`, `con_mascota`, `con_mensaje`), D.132 y D.133. No todas existen en cada instalación: 133 se agregan siempre (entre ellas, las dos de 10e, los tres contextos nuevos y 4 privadas) y las otras 60 (entre ellas, la de 10f y las tres compañías nuevas), según la columna «Existe»._
 
 ### Variables con nombre generado
 
@@ -5037,13 +5131,13 @@ Estas se crean una por cada elemento que el usuario ha usado (o, en las de catá
 | `n_<sentimiento>` | Registros con ‹sentimiento› (los usados, sin «otro») | Sentimientos |
 | `n_<pensamiento>` | Registros pensando: ‹pensamiento› (los usados) | Momentos |
 | `sueno_<categoria>` | Sueño: ‹categoría› (0/1); las categorías usadas, con valor solo en días con categorías | Sueños |
-| `enfoque_<tipo>_min` | Enfoque: ‹tipo› (min); los tipos usados de estudio, lectura, idiomas, tesis, trabajo y creativo | Enfoque |
-| `horas_tipo_<tipo>` | Horas en lugares de tipo ‹tipo›; los tipos de tus lugares, de 12 posibles | Lugares |
+| `enfoque_<tipo>_min` | Enfoque: ‹tipo› (min); los tipos usados de estudio, lectura, idiomas, tesis, trabajo, creativo y, desde el esquema 17, otro (`enfoque_otro_min`, que junta todos los «otro» aunque tengan nombres distintos) | Enfoque |
+| `horas_tipo_<tipo>` | Horas en lugares de tipo ‹tipo›; los tipos de tus lugares, de 14 posibles (12 hasta el esquema 17, que agregó restaurante o café y tienda) | Lugares |
 | `laptop_<categoria>_min` | Minutos en la laptop: ‹categoría› (productivo, ocio, social, otro); con Cold Turkey | Laptop |
-| `con_<id>` | Avisos con ‹pareja, amigos, familia, compañeros o desconocidos› (0 a 1); si hay avisos con «con quién» | Social |
-| `ctx_<id>` | Contexto: ‹nombre› (0/1); siempre, los 10 contextos: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia | Contexto |
+| `con_<id>` | Avisos con ‹pareja, amigos, familia, hijos, compañeros, desconocidos, mascota o mensaje› (0 a 1; las tres últimas compañías desde el esquema 17); si hay avisos con «con quién». «Mensaje» puede ir con «solo» y no cuenta como acompañado | Social |
+| `ctx_<id>` | Contexto: ‹nombre› (0/1); siempre, los 13 contextos: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, cita o tiempo en pareja (`ctx_romantico`), familia y, desde el esquema 17, casa o descanso, fiesta, trámites o pendientes | Contexto |
 | `flow_<id>`, `sdt_necesidad_<id>`, `apreciacion_<id>` | Opción elegida en las tres preguntas científicas del día (0/1); siempre, 13 opciones (4, 5 y 4; «No aplica» no cuenta) | Lectura del día |
-| `hab_<id>` | Hábito: ‹nombre› (0/1) | Hábitos |
+| `hab_<id>` | Hábito: ‹nombre› (0/1; vacío si ese día no lo contestaste, desde el esquema 17) | Hábitos |
 | `supl_<id>_dosis/_tomado/_nivel/_porciones` | Dosis, toma, reserva o cantidad estimada y porciones del suplemento. Desde 10e, `_nivel` no existe en los suplementos de vida media menor de 6 horas (`Suplementos.VIDA_MEDIA_MIN_NIVEL`, A.8) | Suplementos |
 | `campana_<reto>`, `campana_hab_<id>` | En campaña ese día (0/1; la tenías aceptada). 0 desde tu primera campaña, vacío antes. Desde el esquema 13 | Campañas |
 | `campanas_n` | Campañas que tenías ese día. Desde el esquema 13 | Campañas |
@@ -5076,7 +5170,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 | `gen_` | Cultura | 10 | 5 | Leí, vi o jugué algo de ‹elemento› (0/1) |
 | `med_` | Privado | 15 | 3 | Tomé ‹elemento› (0/1) |
 | `det_` | Privado | 10 | 3 | Detonante: ‹elemento› (0/1) |
-| `suenot_` | Sueño | 6 | 3 | Sueño de tipo ‹elemento› (0/1) |
+| `suenot_` | Sueño | 6 | 3 | Sueño realista / raro pero posible / imposible o surreal, o pesadilla (0/1); desde el esquema 17 (antes, el tipo) |
 | `ciu_` | Mundo | 8 | 3 | Horas en ‹elemento› |
 | `pais_` | Mundo | 6 | 3 | Horas en ‹elemento› |
 | `musc_` | Cuerpo | 12 | 3 | Series de ‹elemento› |
@@ -5091,7 +5185,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 
 ## A.3 Tablas exportadas
 
-La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`: 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv` (columnas `archivo`, `columna`, `tipo`, `descripcion` y `tabla`; desde 10f, también `desde_version` y `cambio`, A.9), `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por cada CSV con datos, sin el «vm_», más `ubicaciones` y `diccionario`; no lleva el catálogo de fotos), un `LEEME.txt`, el propio `vestigium.R` y la carpeta `portadas/` (`Exportar.archivos` y `Exportar.zip`). La exportación resumida (`Exportar.zipResumido`) trae solo `vm_panel.csv`, su diccionario, el `LEEME.txt` y `vestigium.R`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
+La exportación genera 53 tablas CSV con datos (contadas en `Exportar.tablas()`: 51 antes del esquema 16, que agregó `vm_ideas.csv` y `vm_ideas_revisiones.csv`, A.10; 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv` (columnas `archivo`, `columna`, `tipo`, `descripcion` y `tabla`; desde 10f, también `desde_version` y `cambio`, A.9), `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por cada CSV con datos, sin el «vm_», más `ubicaciones` y `diccionario`; no lleva el catálogo de fotos), un `LEEME.txt`, el propio `vestigium.R` y la carpeta `portadas/` (`Exportar.archivos` y `Exportar.zip`). La exportación resumida (`Exportar.zipResumido`) trae solo `vm_panel.csv`, su diccionario, el `LEEME.txt` y `vestigium.R`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
 
 | Archivo | Contenido |
 |---|---|
@@ -5106,6 +5200,8 @@ La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_horas.csv` | Una fila por hora: dormido, lugar, pantalla, notificaciones, luz, música, ánimo, cafeína y alcohol en el cuerpo, sustancias, enfoque, gastos y comidas |
 | `vm_gastos.csv` | Gastos, uno por fila |
 | `vm_notas.csv` | Notas sueltas: ideas, pensamientos, propósitos y recordatorios |
+| `vm_ideas.csv` | Ideario: lo que aprendiste o pensaste, con quién lo dice, su fuente y cómo la tienes (esquema 16) |
+| `vm_ideas_revisiones.csv` | Ideario: cada vez que volviste a ver una idea y qué respondiste (esquema 16) |
 | `vm_suplementos.csv` | Cada toma de suplemento (y las porciones de probióticos estimadas de tu bitácora de comidas) |
 | `vm_laptop.csv` | Minutos por app y por sitio en la laptop, por día (Cold Turkey) |
 | `vm_red_nodos.csv` | Personas de tu red: relación, grupo de relación (columna `grupo`, desde 10c), cercanía, días mencionada y grado |
@@ -5192,7 +5288,7 @@ No cambia lo que se guarda (`SCHEMA_V` = 14); cambia cómo se calcula el panel c
 | `n_impulso` (privada) | 0 en los días con diario desde el **primer impulso** | 0 en todos los días con diario |
 | `escalada` | 0 en los días con diario desde la **primera sesión de escalada** | 0 en todos los días con diario |
 | `gimnasio` | 0 en los días con diario desde el **primer entrenamiento**, más los días con entrenamiento | 0 en cualquier fecha del panel desde el primer entrenamiento |
-| `hab_<id>` | 1 si lo marcaste; 0 desde `Habito.desde`; vacío antes (los hábitos sin esa fecha, 0 siempre) | 0 en todos los días con diario, también antes de existir (igual en `vm_dias.csv`) |
+| `hab_<id>` | 1 si lo marcaste; 0 desde `Habito.desde`; vacío antes (los hábitos sin esa fecha, 0 siempre). Desde el esquema 17, en los días con `habitos_tri`, vacío si no lo contestaste (D.133) | 0 en todos los días con diario, también antes de existir (igual en `vm_dias.csv`) |
 | `sueno_recordado` | 1 si recordaste; 0 solo si ese día dijiste algo del sueño (calidad o texto); si no, vacío | 0 en cualquier día con diario sin sueño recordado |
 | `sdt_necesidad_autonomia`, `_competencia`, `_relacion` | También 1 si elegiste «las tres» | 0 con «las tres» |
 | `personas`, `vi_*`, `cercanos`, `cercania_media`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `penso_en_*` | Solo en los días con diario escrito o con un momento no privado que nombra a alguien con @ (`Dinamicas.diasSociales`); vacías en los demás | En cualquier día con documento de diario o algún momento |
@@ -5320,6 +5416,67 @@ Cambia lo que se guarda: `SCHEMA_V` = 15. Una variable nueva en el panel de la a
 : Tabla A.33. Columnas nuevas del esquema 15 (entrega 10f)
 
 **Lo que cambia sin columna nueva.** `sin_wifi_min` (arriba) y todas las horas que la app saca de un instante: `primer_uso_h`, `ultimo_uso_h`, `cafeina_ultima_h`, las horas de `vm_horas.csv` y las demás `*_h` se calculan con la zona que tenía el teléfono entonces, o con el desfase de la propia nota (`Fechas.local`, `Fechas.localDe`). Mientras no viajes, nada cambia. Lo que el teléfono ya guardó sumado por día (sueño, pasos, pantalla, ubicaciones) no se recalcula. La plantilla «Creatina» mide desde 10f `fuerza_ref_kg` en lugar de `volumen_kg`; un experimento creado con la plantilla de antes sigue midiendo `volumen_kg`.
+
+## A.10 Tablas nuevas del esquema 16 (Ideario)
+
+Cambia lo que se guarda: `SCHEMA_V` = 16, con una colección nueva (`ideas`) y un ajuste (`Config.ideas_resurgir`, si sale «Una idea de antes» en el Día). No hay variables nuevas en el panel ni cambia ninguna columna de las tablas anteriores. Detalle en el capítulo 2 (sección 2.5) y en el Apéndice D (D.123 a D.126).
+
+`vm_ideas.csv` tiene una fila por idea (`Exportar.filasIdeas`):
+
+| Columna | Qué es |
+|---|---|
+| `id`, `creada`, `fecha`, `editada` | Identificador; cuándo se escribió (fecha y hora con su desfase); el día al que pertenece (por omisión, el día lógico en que se anotó; se puede cambiar); la última edición |
+| `titulo` | La idea en una línea (opcional) |
+| `texto` | Lo que entendiste, con tus palabras, con sus @personas y #temas |
+| `origen` | `leido`, `visto` (o escuchado), `contado` o `propia`; vacío = sin decir |
+| `quien` | Lista de autores o invitados que lo dicen. No son personas de Tu gente: no cuentan en la red social |
+| `obra_id`, `obra_titulo`, `cita_id` | La obra y la cita de las que salió; `obra_titulo` queda vacío si la obra se borró |
+| `fuente`, `enlace`, `donde` | De dónde salió cuando no hay obra (escrita a mano o al compartir), su enlace y el minuto o la página |
+| `postura` | Cómo la tienes: `convence`, `piensa` (te hace pensar), `duda` o `desacuerdo`; vacío = sin decir |
+| `fijada`, `n_revisiones` | 0/1 si está fijada arriba; cuántas veces la respondiste en «Una idea de antes» |
+| `personas`, `temas` | Las @personas escritas en el texto; los temas del campo «Temas» (desde el esquema 17) y los #temas del texto, sin repetir (listas) |
+
+: Tabla A.34. Tablas nuevas del esquema 16 (Ideario)
+
+`vm_ideas_revisiones.csv` tiene una fila por respuesta (`Exportar.filasIdeasRevisiones`): `idea_id`, `fecha` (día lógico en que respondiste) y `respuesta` (`sigue`, «sigo pensando igual»; `cambio`, «ya no»; `ignorar`, «ahora no»). En R se leen como `vm$ideas` y `vm$ideas_revisiones`.
+
+**Al leer los datos.** Las ideas no son una muestra de lo que aprendiste: solo está lo que decidiste anotar. `postura` y `revisiones` son autorreporte y empiezan vacías en casi todas las ideas. Una idea pasada desde una nota conserva la `creada` y la `fecha` de la nota; una pasada desde el diario es una copia con la fecha de ese día. `Diccionario.DESDE` no tiene entrada para estas columnas porque son nuevas: no hay una definición anterior con la cual compararlas.
+
+## A.11 Cambios del esquema 17 (pantallas de captura)
+
+Cambia lo que se guarda: `SCHEMA_V` = 17. El detalle está en el capítulo 3 y en el Apéndice D (desde D.127).
+
+**Sueños** (`vm_dias.csv`, `vm_panel.csv`):
+
+| Columna | Qué es |
+|---|---|
+| `sueno_rareza` | `realista`, `raro` (pero posible) o `imposible` (o surreal). En días de antes del esquema 17 se deduce del tipo: mundano = realista, bizarro = imposible |
+| `sueno_pesadilla` | 1 si fue pesadilla (angustia fuerte o te despertó), 0 si dijiste que no y vacío si no se dijo. En días de antes, 1 si el tipo era «ansioso o pesadilla» |
+| `sueno_tipo` | Ya no se pregunta; solo trae valor en los días de antes del esquema 17 que no se han corregido |
+| `sueno_categorias`, `sueno_<categoría>` | Nueve ejes (prefijos `per_`, `esc_`, `int_`, `tema_`, `res_`, `sen_`, `est_`, `emo_`, `desp_`). El tipo «recurrente» de antes cuenta como `est_recurrente` |
+| `suenot_realista`, `suenot_raro`, `suenot_imposible`, `suenot_pesadilla` (panel extendido) | Reemplazan a `suenot_<tipo>` |
+
+: Tabla A.35. Cambios del esquema 17 (pantallas de captura)
+
+**Momentos y hoja de la noche** (`vm_momentos.csv`, `vm_dias.csv`, `vm_panel.csv`):
+
+| Columna | Qué es |
+|---|---|
+| `vm_momentos.csv:intensidades` | Lista `emoción:n` (1 un poco, 2 bastante, 3 mucho); solo las emociones a las que les pusiste intensidad |
+| `vm_momentos.csv:pensamientos` | Lista de pensamientos. `pensamiento` queda con el primero, por compatibilidad |
+| `vm_momentos.csv:detonante_otro`, `vm_dias.csv:detonante_otro` | El detonante escrito con «otro» (seguimiento privado) |
+| `n_<emoción>` nuevas | `n_amor`, `n_decepcion`, `n_anhelo`…; solo desde que se usan. Antes del esquema 17 no se podían marcar |
+| `n_<pensamiento>` nuevos | `n_trabajo`, `n_cuerpo`, `n_imaginando`, `n_nada`. Un registro con varios pensamientos cuenta en cada uno |
+| `con_hijos`, `con_mascota`, `con_mensaje` | Igual que los demás `con_*`. «Mensaje» puede ir con «solo» y no cuenta como acompañado |
+| `ctx_casa`, `ctx_fiesta`, `ctx_tramites` | Contextos nuevos; 0 en los días de antes (no existían) |
+| `vm_dias.csv:ctx_otro` | Otro contexto escrito a mano |
+| `vm_dias.csv:habitos_tri`, `hab_*` | Con `habitos_tri` = 1, un hábito sin respuesta queda vacío en `hab_*` en vez de 0 |
+
+: Tabla A.36. Cambios del esquema 17 (pantallas de captura)
+
+**Ideario** (`vm_ideas.csv`): `temas` reúne los temas del campo «Temas» (desde el esquema 17) y los `#temas` escritos en el texto, sin repetir. Antes eran solo los del texto.
+
+**Dinero** (`vm_gastos.csv`): `se_repite` (0/1), si el gasto se repite (renta, suscripción, servicios); solo se exporta. Las categorías Vivienda y Servicios aparecen como cualquier otra en `gcat_*`.
 
 
 # Apéndice B. Fórmulas
@@ -5547,7 +5704,7 @@ _El script `app/src/main/assets/vestigium.R` viaja con cada exportación. Se pon
 | `vm_fecha_hora(x)` | Convierte texto ISO con desfase a fecha-hora en `vm_zona`; agrega «:00» cuando Java omitió los segundos. Es el mismo instante, pero con la hora de reloj de `vm_zona`: si estuviste en otra zona, no es la hora que viviste. La hora local de entonces está en las columnas `*_h` y en las fechas, que la app calcula con la zona que tenía el teléfono (esquema 15), y en `vm_hora_local`. |
 | `vm_hora_local(x)` | Desde 10f (D.110). La hora de una marca ISO tal como se tomó, con su propio desfase y sin pasarla a `vm_zona`, en decimal: horas + minutos/60 (`2026-10-16T08:42:10-06:00` → 8.70; `…T23:30:00+02:00` → 23.5). Lee las dos cifras después de la «T» (`str_match`): ignora los segundos y da `NA` si el texto no trae hora. Recibe el **texto** de la exportación, no la columna ya convertida por `vm_leer` (por ejemplo, `read_csv("vm_momentos.csv", col_types = cols(ts = "c"))`). **Diferencia con la app:** una marca en UTC («Z», de importaciones) da la hora UTC, mientras que la app la pasa a la zona que tenía el teléfono entonces (`Fechas.localDe`); tampoco suma 24 a la madrugada, como hacen las horas de dormir. |
 | `vm_lista(x)`, `vm_pares(datos, columna)` | Separan columnas «a\|b\|c» y «clave:n\|clave:n». |
-| `vm` y objetos sueltos | `vm` es la lista de las tablas de `vm_archivos`; cada una queda también como objeto (`panel`, `dias`, `momentos`…). Son 45 de las 51 tablas de `Exportar.tablas()`, más `vm_ubicaciones.csv`; no carga `vm_citas`, `vm_mundo`, `vm_cartas`, `vm_perfil`, `vm_politica`, `vm_youtube` ni `vm_fotos_catalogo` (se leen con `vm_leer("vm_citas.csv")`, con sus tipos). Desde el esquema 13 incluye `personas` (`vm_personas.csv`) y `fechas_propias` (`vm_fechas_propias.csv`); desde 10d, `panel_extendido` (`vm_panel_extendido.csv`), `variables` (`vm_variables.csv`) y `familias` (`vm_familias.csv`). |
+| `vm` y objetos sueltos | `vm` es la lista de las tablas de `vm_archivos`; cada una queda también como objeto (`panel`, `dias`, `momentos`…). Son 47 de las 53 tablas de `Exportar.tablas()`, más `vm_ubicaciones.csv`; no carga `vm_citas`, `vm_mundo`, `vm_cartas`, `vm_perfil`, `vm_politica`, `vm_youtube` ni `vm_fotos_catalogo` (se leen con `vm_leer("vm_citas.csv")`, con sus tipos). Desde el esquema 13 incluye `personas` (`vm_personas.csv`) y `fechas_propias` (`vm_fechas_propias.csv`); desde 10d, `panel_extendido` (`vm_panel_extendido.csv`), `variables` (`vm_variables.csv`) y `familias` (`vm_familias.csv`); desde el esquema 16, `ideas` (`vm_ideas.csv`) e `ideas_revisiones` (`vm_ideas_revisiones.csv`). |
 | `panel` (enriquecido) | Desde 10d, **`vm_panel_extendido.csv`** (si la exportación lo trae; si no, `vm_panel.csv`), pasado por `.vm_enriquecer()`: quita filas sin fecha, ordena, **completa todos los días del calendario** (`complete()`) y agrega `dia_semana` (1 = lunes), `fin_de_semana`, `semana`, `mes`, `valencia_ayer` y `valencia_manana` (si hay `valencia`) y `sueno_h = sueno_min/60` (si hay `sueno_min`). Todas las funciones de análisis lo usan por omisión. `vm$panel` (de `vm_panel.csv`, enriquecido igual) queda por compatibilidad y lo siguen usando `vm_ritmo` y `vm_por_hora` (columna `dia_libre`), `vm_lugares` y `vm_presion`. |
 | `.vm_variables(privadas = FALSE)` | Las variables de `vm_variables.csv`: las que la app cruza (`Estadistica.variables(dinamicas = true)`, con las familias dinámicas recortadas como en la app). Con `privadas = TRUE` suma el seguimiento privado, marcado en la columna `privada`, que la app nunca cruza. Devuelve NULL si la exportación no trae ese archivo. |
 | `.vm_no_cruzar` | Columnas que describen el calendario o cuánto se registró, no una conducta, y que `vm_relaciones` y `vm_factores` no cruzan nunca (P-32): `fecha`, `semana`, `mes`, `dia_semana`, `fin_de_semana`, `dia_libre`, `festivo`, `valencia_ayer`, `valencia_manana`, `con_diario` y `n_muestreos`. **[Diseño propio]**. |
@@ -6038,6 +6195,72 @@ Decisión del autor (28 oct 2026), hallazgo por hallazgo: respetar siempre la ho
 **Lo que no se pudo comprobar en la sesión:**
 - Lo de Kotlin se compiló y se probó en GitHub Actions (pruebas JVM); no se probó en un teléfono: ni el aviso `TIMEZONE_CHANGED`, ni la respuesta de `ConnectivityManager` cuando Android esconde el nombre de la red, ni el nombre exacto con que MacroFactor exporta el press inclinado con mancuernas (se reconocen las formas en inglés y en español).
 - Que el archivo de Open-Meteo ya tenga los días de más de 80 días es lo que la app suponía desde antes; no se consultó en la sesión.
+
+## Reporte para terapia (sin cambio de esquema)
+
+Pedido del autor (30 oct 2026): un reporte semanal y quincenal para llevar a terapia. Decisiones del autor: los últimos 7 o 14 días, terminando ayer o en el día que se elija; sustancias y «lo mejor y lo peor del periodo» encendidos por omisión; «lo mejor y lo peor de cada día» y el seguimiento privado apagados; días y duración del gimnasio; alimentación contra el objetivo y los nutrientes de interés. No cambia lo que se guarda (las casillas no se guardan), así que `SCHEMA_V` sigue igual; tampoco cambian la exportación ni `vestigium.R`.
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.119 | **Reporte para terapia.** Un PDF tamaño carta, de varias páginas y para imprimir, con la cobertura de datos, una tabla día por día, ánimo, cuestionarios, sueño, actividad, contacto sin nombres, gimnasio, alimentación y las secciones opcionales. Se genera en Reportes › «Para terapia» y se comparte con el menú de Android. Lo que lleva, lo que no y sus reglas están en el capítulo 9, sección 9.3.6 | `ciencia/Terapia.kt`, `reportes/ReporteTerapia.kt`, `ui/pantallas/Sistema.kt` | Pedido del autor |
+| D.120 | **Lo privado en el reporte para terapia.** Única excepción a la regla de `Privado`: impulsos, recaídas, detonantes y medicamentos (nunca la libido) entran solo con una casilla que se marca al generarlo, no se guarda y empieza apagada | `ciencia/Terapia.kt` (`Opciones.privado`), `data/Privado.kt` (comentario) | Que salga solo cuando se elige |
+| D.121 | Pruebas JVM: los nombres como iniciales, las calorías contra el objetivo (con días sin registro), la proporción de emociones desagradables, los impulsos superados y que lo privado y los textos de cada día solo salgan con su casilla; captura de la pantalla y de las páginas del reporte con los datos inventados de las capturas | `app/src/test/.../TerapiaPrueba.kt`, `Capturas.kt` (`reportesBotanico`, `reporteTerapia`) | Que cada regla falle en una prueba si se rompe |
+
+: Tabla D.15. Reporte para terapia (sin cambio de esquema)
+
+| D.122 | **Secciones elegibles.** Pedido del autor: elegir exactamente qué sale. El reporte se divide en 8 secciones (ánimo y emociones; cuestionarios; sueño; actividad, rutina y contacto; gimnasio y alimentación; sustancias; lo mejor y lo peor, con «también el de cada día» dentro; seguimiento privado) y un interruptor «Todo». Empiezan encendidas las que ya salían y apagadas las que estaban apagadas; la cobertura sale siempre y la tabla día por día lleva solo las columnas de lo elegido | `ciencia/Terapia.kt` (`Opciones`), `reportes/ReporteTerapia.kt`, `ui/pantallas/Sistema.kt`, `TerapiaPrueba.kt` (`secciones`) | Pedido del autor |
+
+**Lo que no se pudo comprobar en la sesión:**
+- El código se compila y se prueba en GitHub Actions; no se probó en un teléfono que el menú de compartir reciba el PDF ni cómo se ve impreso.
+
+## Ideario (esquema 16)
+
+Pedido del autor (2 nov 2026): una libreta para lo que aprende de libros, videos y conversaciones y para sus propias ideas, centralizada, con temas, fuente y quién lo dice, sin que llenarla canse. Decisiones del autor: se llama «Ideario» (no «Conocimiento»: caben ideas que se dudan o rechazan); Notas queda igual, con un botón para pasar una nota; los autores van en un campo aparte, no como @personas; la vista por temas muestra solo los #temas escritos en ideas.
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.123 | **La colección `ideas`.** Cada idea guarda texto (lo único obligatorio), la idea en una línea, origen, quién lo dice, obra y cita, fuente, enlace, minuto o página, postura, fijada y sus revisiones, con la hora en que se escribió. Entra al respaldo, a la papelera de 7 días y a la búsqueda general. No agrega variables al panel, y sus #temas y @personas no cuentan en «Tus temas» ni en la red social | `data/Modelo.kt` (`Idea`, `RevisionIdea`, `SCHEMA_V` = 16), `data/Repo.kt`, `data/Papelera.kt`, `data/Exportar.kt` (`Respaldo`), `data/Importar.kt`, `ui/pantallas/Totales.kt` (`EnIdeas`) | Pedido del autor |
+| D.124 | **Dónde se escribe.** Quinta libreta de las bibliotecas (por mes o por estanterías de #temas); compartir texto desde otra app abre una idea con el enlace y el título ya puestos (`Ideario.deCompartido`: enlaces de YouTube o podcasts dejan el origen en «visto»; Kindle, Goodreads o Amazon, en «leído»); en una obra, «Ideas» y «anotar lo que entendí» en cada cita; en el Día, las ideas del día en «Tu día»; en la hoja de la noche, «¿Aprendiste algo hoy?» (plegada, no guarda nada si no se usa); en Notas, «pasar al Ideario» (conserva la hora de creación); en una entrada del diario, «Pasar al Ideario» (una copia); y en el menú ⊕ | `ui/pantallas/Ideario.kt`, `Bibliotecas.kt`, `Biblioteca.kt`, `Galerias.kt`, `Dia.kt`, `Lote2.kt`, `Diarios.kt`, `ui/QuickActivity.kt`, `ui/MainActivity.kt`, `AndroidManifest.xml` | Pedido del autor: que sea fácil de llenar |
+| D.125 | **«Una idea de antes».** En el Día de hoy, una idea de hace un mes, seis meses o un año (± 3 días), o cualquiera de más de 30 días; las respondidas descansan 30 días; una por día. Se responde «sigo pensando igual», «ya no» (y se ofrece cambiar la postura) o «ahora no». Se apaga en la libreta o en la propia tarjeta (`Config.ideas_resurgir`). No hay notificación: los horarios de avisos no cambian | `data/Ideario.kt` (`resurgir`, `respondidaHoy`, `haceCuanto`), `ui/pantallas/Ideario.kt` (`UnaIdeaDeAntes`) | Pedido del autor: volver a leer lo anotado. Aproximación a la repetición espaciada (capítulo 2, sección 2.5) |
+| D.126 | **Exportación.** `vm_ideas.csv` y `vm_ideas_revisiones.csv`, con su diccionario y su lugar en `vm_archivos` de R. Pruebas JVM: estanterías solo con temas de ideas, voces sin repetir, elección de «Una idea de antes» y su descanso, lo compartido, la nota pasada al Ideario y el respaldo con y sin ideas; capturas de la libreta, la idea y la tarjeta | `data/Exportar.kt`, `data/Diccionario.kt`, `assets/vestigium.R`, `app/src/test/.../IdearioPrueba.kt`, `Capturas.kt` | Que cada regla falle en una prueba si se rompe |
+
+: Tabla D.16. Ideario (esquema 16)
+
+**Lo que no se pudo comprobar en la sesión:**
+- El código se compila y se prueba en GitHub Actions; no se probó en un teléfono qué texto y qué asunto mandan de verdad YouTube, Kindle y el navegador al compartir.
+
+## Pantallas de captura (esquema 17)
+
+Pedido del autor (3 nov 2026): revisar todas las pantallas donde se anota a mano. Decisiones del autor:
+- Los sueños se escriben en el libro de noche del tema, como el diario, y sus opciones dejan de pisarse.
+- Más emociones en los momentos.
+- El Ideario tiene un campo de temas y su propio fichero.
+- Se arreglan las demás pantallas revisadas.
+
+Las tres escalas 1–7 de la hoja de la noche no cambian. `SCHEMA_V` = 17. La versión indicada en el diccionario (`Diccionario.DESDE`) es la primera que puede traer el cambio.
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.127 | **El «tipo» de sueño se parte en dos preguntas.** «¿Qué tan raro fue?» (`sueno_rareza`: realista, raro pero posible, imposible o surreal) y «¿Fue pesadilla?» (`sueno_pesadilla`). «Recurrente» queda solo en la estructura (`est_recurrente`). Los días viejos se traducen al leerlos (`Catalogo.rarezaDe`, `pesadillaDe`, `categoriasSuenoDe`) y al corregirlos. Las pesadillas del reporte y de la Biblioteca de sueños, la familia `suenot_`, `sueno_<categoría>`, la exportación y la importación usan la traducción. **Cambia valores:** `suenot_mundano`, `suenot_ansioso_pesadilla`, `suenot_bizarro_surreal` y `suenot_recurrente` desaparecen, y aparecen `suenot_realista`, `suenot_raro`, `suenot_imposible` y `suenot_pesadilla` | `data/Catalogo.kt`, `data/Modelo.kt`, `ciencia/Dinamicas.kt`, `ciencia/Estadistica.kt`, `ciencia/Terapia.kt`, `data/Exportar.kt`, `data/Importar.kt`, `data/Diccionario.kt`, `ui/LibroDiario.kt`, `ui/pantallas/Bibliotecas.kt` | Las cuatro opciones mezclaban rareza, angustia y repetición, eran excluyentes y «recurrente» repetía una categoría (capítulo 3, sección 3.12) |
+| D.128 | **Ejes del sueño.** Se agregan tres ejes: cómo me fue, sensaciones y al despertar. Hay opciones nuevas en personajes, escenario, interacción, temas, estructura y emociones, que pasan a llamarse «Emociones del sueño». Algunas etiquetas cambian para no confundirse. «Solo fragmentos» sale de la estructura porque repetía la claridad del recuerdo. La vividez se rotula «Qué tan claro lo recuerdas», con los mismos ids. Las categorías a la vista son las 8 más usadas en 180 días (`Catalogo.suenoRapidas`) | `data/Catalogo.kt`, `ui/CategoriasSueno.kt` | Pedido del autor: faltaban opciones y había solapamientos |
+| D.129 | **Un solo formulario del sueño.** Antes estaba copiado en el Día y en la pantalla rápida. La narración se escribe en el libro de noche del tema, a pantalla completa (`DialogoEscritor` en modo sueño); en la pantalla rápida va primero | `ui/CategoriasSueno.kt` (`FormularioSueno`), `ui/pantallas/Dia.kt`, `ui/QuickActivity.kt` | Pedido del autor: el cuadro de texto se quedaba corto |
+| D.130 | **Más emociones y su intensidad.** `Catalogo.SENTIMIENTOS` pasa de 25 a 47 emociones (9 agradables, 10 desagradables y 3 mixtas nuevas, con los mismos ids de antes). Hay un solo selector (`SelectorEmociones`) en el registro rápido y al corregir: encabezados por tono, primero las más usadas, «otro…» con las que ya escribiste y «no sé» excluyente. Al corregir faltaban «otro» y la exclusión de «no sé». Intensidad opcional por emoción, de 1 a 3 (`Momento.intensidades`, solo exportada) | `data/Catalogo.kt`, `data/Modelo.kt`, `ui/SelectorEmociones.kt`, `ui/QuickActivity.kt`, `ui/pantallas/Momentos.kt`, `data/Exportar.kt` | Pedido del autor: faltaban emociones |
+| D.131 | **Pensamientos múltiples.** «¿En qué piensas?» deja marcar varios (`Momento.pensamientos`), con cuatro opciones nuevas y una línea que distingue preocupación, darle vueltas y autocrítica. En modo discreto llevan letra; antes todos eran «·» e indistinguibles. `n_<pensamiento>` cuenta un registro en cada pensamiento que tenga. La regla de presencias («pensé en») usa la lista | `data/Catalogo.kt` (`pensamientosDe`), `ciencia/Estadistica.kt`, `ciencia/Terapia.kt`, `data/Presencias.kt`, pantallas que los muestran | Revisión de pantallas: eran de una sola opción y se pisaban |
+| D.132 | **Con quién y cuándo se crea el registro.** Se agregan hijos, mascota y «por mensaje o llamada», que puede ir con «solo». «Compañeros» pasa a «compañeros de trabajo o escuela». Marcar solo «con quién» ya no crea un registro de ánimo. Al corregir un momento se pueden cambiar con quién, los detalles de la recaída (detonantes, qué hacías antes, aparato) y la libido (0–5 con su foco; antes salía 1–5 sin anclas) | `data/Catalogo.kt` (`alternarConQuien`), `ui/QuickActivity.kt`, `ui/pantallas/Momentos.kt` | Revisión de pantallas |
+| D.133 | **Hoja de la noche.** Los hábitos se contestan con «sí», «no» o sin contestar (`Dia.habitos_tri`). En esos días, un hábito sin respuesta queda vacío en `hab_*` (resuelve en parte H-2-4). La barra cuenta lo que pide «Sellar» (ánimo y diario), y la predicción y los hábitos van como extras. El contexto se llama «Cómo fue el día», tiene tres opciones nuevas (`ctx_casa`, `ctx_fiesta`, `ctx_tramites`), «Romántico» pasa a «Cita o tiempo en pareja» y hay un «otro» escrito (`ctx_otro`). Los hitos se guardan como se escriben (sin `_`). En la lectura del día, «Me rebasó (ansiedad)» y «Me quedó chico (aburrimiento)» con los mismos ids, y «no aplica» en la evaluación de Lazarus. Los detonantes tienen nombre con acentos y un «otro» escrito (`detonante_otro`) | `ui/pantallas/Dia.kt`, `data/Catalogo.kt`, `data/Modelo.kt`, `ciencia/Estadistica.kt`, `data/Exportar.kt`, `data/Recaidas.kt`, `ui/pantallas/Recaidas.kt` | Revisión de pantallas; decisión del autor de aclarar la lectura del día |
+| D.134 | **Temas del Ideario y su fichero.** Las ideas tienen un campo «Temas» (`Idea.temas`) con fichas de los temas que ya usas. Antes el tema solo se podía poner escribiendo `#tema` en el texto, y las fichas solo salían si ya existía alguno. Los temas de una idea son los del campo más los `#temas` del texto (`Ideario.temasDe`). Eso usan los cajones, la búsqueda y `vm_ideas.csv:temas`. El Ideario se ve como un fichero con un cajón por tema (`FicheroIdeas`); un cajón abierto muestra sus fichas, que se pasan deslizando (`PantallaCajonIdeas`) | `data/Modelo.kt`, `data/Ideario.kt`, `data/Exportar.kt`, `ui/pantallas/Ideario.kt`, `ui/pantallas/Fichero.kt` (nuevo), `ui/MainActivity.kt` | Pedido del autor: no había forma visible de ponerle tema a una idea, y quería un diseño propio por tema |
+| D.135 | **La pestaña Diario muestra las cinco bibliotecas,** cada una con su objeto, en este orden: el estante del diario, la libreta de momentos, el estante de sueños, el fichero del Ideario y las cartas. Las pestañas de las bibliotecas siguen el mismo orden. Antes solo estaba el estante del diario y botones hacia las demás | `ui/pantallas/Diarios.kt`, `ui/pantallas/Bibliotecas.kt`, `ui/pantallas/LibretaMomentos.kt` | Pedido del autor |
+| D.136 | **Gastos.** El monto acepta coma decimal (`Dinero.limpiarMonto`); antes «12,50» se guardaba como 1250. Las categorías de ingreso se pueden agregar, renombrar (con sus ingresos, si quieres), ordenar y quitar. Vivienda y Servicios entran a las categorías una sola vez (`Config.categorias_v17`). Los gastos tienen «¿se repite?» (`Gasto.se_repite`, solo se exporta). La nota es de varias líneas y el título del diálogo sigue la fecha elegida | `data/Dinero.kt`, `data/Modelo.kt`, `data/Catalogo.kt`, `ui/pantallas/Gastos.kt`, `ui/QuickActivity.kt`, `data/Exportar.kt` | Revisión de pantallas; la coma perdía datos |
+| D.137 | **Consumos.** En alcohol y cafeína, «quitar el último» y «poner en 0» (antes la ficha se llamaba «borrar» y solo se podía sumar); en las demás, − y +. En todas se puede escribir el total con decimales. Al completar o corregir se pueden cambiar con quién, cómo, la cantidad de cualquier sustancia y el nombre de «otra». «Cruda o bajón» dice «al día siguiente». «No sé» en la hora de fin la deja vacía. Síntomas: + «Otro» | `ui/QuickActivity.kt` (`CantidadConsumo`, `CompletarConsumo`), `data/Catalogo.kt` | Revisión de pantallas |
+| D.138 | **Escalada no borra sesiones con datos.** Al abrir la pantalla se borraban las sesiones sin bloques, nota, enlace al reloj ni energía, aunque tuvieran lugar, duración, piel, esfuerzo, satisfacción o dolor. Ahora solo se borran las que tienen todos los campos vacíos. El título dice «Sesión del ‹fecha›» al editar. Se ve la descripción del estilo elegido. Los rasgos tienen nombre con acentos. «Dolor o lesión» es de varias líneas | `ui/pantallas/Escalada.kt`, `data/Calculos.kt` (`Grados.nombreRasgo`) | Error que perdía datos |
+| D.139 | **Gente.** Relaciones: sale «amistad cercana» (se ve como amistad y conserva su id) y entran roomie, vecino y profesional de salud. Las fechas de nacimiento y fallecimiento se eligen en el calendario, con «sin año». Una persona nueva se crea en un solo diálogo | `data/Personas.kt`, `ui/pantallas/Gente.kt` | Revisión de pantallas |
+| D.140 | **Metas y logros propios.** El umbral puede ser «al menos» o «como mucho» (`Meta.umbral_max`, `LogroPropio.umbral_max`). Los logros propios se pueden editar. El objetivo conserva sus decimales. El horizonte sale de la fecha objetivo cuando hay una | `data/Metas.kt`, `ciencia/Logros.kt`, `ui/pantallas/Lote2.kt`, `ui/pantallas/Logros.kt`, `ui/pantallas/Trofeos.kt` | Revisión de pantallas (capítulo 9) |
+| D.141 | **Suplementos propios.** «＋ otro suplemento» crea uno fuera del catálogo («solo porciones», ajustable). Al editar, los números que no se entienden se marcan y no se guardan; antes volvían en silencio al valor anterior | `ui/pantallas/Lote3.kt` | Revisión de pantallas |
+| D.142 | **Lugares.** Un solo juego de campos (nombre, tipo, radio de 50 a 400 m en pasos de 25) en las tres formas de marcar un lugar (`CamposLugar`). En el mapa ya no se cierra sin nombre y se puede elegir el radio. Tipos nuevos: restaurante o café, y tienda. En una visita se corrigen la llegada y la salida, y «no estuve aquí» pide confirmación. La detección automática no pisa la corrección: solo cierra visitas abiertas y agrega las que no se enciman | `ui/pantallas/Medir.kt`, `ui/pantallas/Lote2.kt`, `ui/pantallas/Mapa.kt`, `data/Catalogo.kt` | Revisión de pantallas |
+| D.143 | **Obras, enfoque y mundo.** Obras: tipos documental, podcast, audiolibro, cómic y álbum (sin buscador; se añaden a mano), estado «pausado» y citas editables. Enfoque: tipo «otro» con nombre (`Tramo.tipo_otro`; en el panel, `enfoque_otro_min`) y duraciones de hasta 4 h. Mundo: «hasta» no puede quedar antes de «desde», las fechas se pueden quitar y las ciudades anotadas a mano se pueden editar | `ui/pantallas/Biblioteca.kt`, `ui/pantallas/EnfoqueSiestas.kt`, `data/Catalogo.kt`, `ui/pantallas/Mundo.kt` | Revisión de pantallas |
+| D.144 | **Consistencia de los formularios.** Los diálogos de corrección (gasto, ingreso, tramo, toma, nota, momento y visita) tienen «cancelar» abajo; «borrar» va adentro, en rojo y con confirmación. Antes, en varios, el único botón de salida era «Borrar». Las palabras son las mismas en todos («Guardar», «cancelar», «borrar»). «Lo mejor» y «lo peor» ya no tienen etiquetas en latín fijas. Las listas de etiquetas (medicamentos, hitos, nombres de un sueño, temas de una idea) no aceptan repetidos. Un recordatorio sin día avisa que no sonará | `ui/pantallas/Gastos.kt`, `EnfoqueSiestas.kt`, `Lote2.kt`, `Lote3.kt`, `Momentos.kt`, `Medir.kt`, `Dia.kt`, `ui/Componentes.kt` | Revisión de pantallas. No cambia ningún cálculo |
+
+: Tabla D.17. Pantallas de captura (esquema 17)
 
 
 # Apéndice E. Glosario

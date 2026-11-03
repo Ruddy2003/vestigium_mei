@@ -878,6 +878,7 @@ fun PantallaMundo(nav: Nav) {
             val manuales = Repo.config.ciudades_visitadas
             val lista = t.ciudades.sortedByDescending { it.ultimo ?: -1 }
             var borrar by remember { mutableStateOf<CiudadVisitada?>(null) }
+            var editar by remember { mutableStateOf<CiudadVisitada?>(null) }
             if (lista.isEmpty()) Vacio("Todavía ninguna.")
             else Tarjeta {
                 var abiertas by remember { mutableStateOf(false) }
@@ -890,11 +891,15 @@ fun PantallaMundo(nav: Nav) {
                                 e.ultimo?.let { "última vez ${mesAnio(it)}" }, if (e.manual) "a mano" else null).joinToString(" · "))
                         }
                         val propia = manuales.firstOrNull { m -> Mundo.ciudadEn(ctx, m.lat, m.lon, m.pais).let { ci -> "c$ci" == e.clave } || "m${m.id}" == e.clave }
-                        if (propia != null) TextButton(onClick = { borrar = propia }) { Text("quitar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        if (propia != null) {
+                            TextButton(onClick = { editar = propia }) { Text("editar", color = MaterialTheme.colorScheme.primary) }
+                            TextButton(onClick = { borrar = propia }) { Text("quitar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        }
                     }
                 }
                 if (lista.size > 12) TextButton(onClick = { abiertas = !abiertas }) { Text(if (abiertas) "ver menos" else "ver las ${lista.size}") }
             }
+            editar?.let { e -> DialogoCiudad(e) { editar = null } }
             borrar?.let { b ->
                 Dialogo(onDismissRequest = { borrar = null }, title = { Text("¿Quitar ${b.nombre}?") },
                     text = { Text("Se borra lo que anotaste a mano. Si tus ubicaciones pasan por ahí, la ciudad seguirá apareciendo.") },
@@ -1289,8 +1294,10 @@ fun PantallaCiudadNueva(nav: Nav) {
             Seccion("¿Cuándo?", "Opcional. Con fechas cuenta los días exactos; si no las recuerdas, pon solo cuántos días fueron.") {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     BotonSecundario(desde?.let { "desde ${Fechas.corto(it)}" } ?: "desde…") { fecha(desde) { desde = it; if (hasta == null || hasta!! < it) hasta = it } }
-                    BotonSecundario(hasta?.let { "hasta ${Fechas.corto(it)}" } ?: "hasta…") { fecha(hasta ?: desde) { hasta = it } }
+                    // «Hasta» no puede quedar antes de «desde»: si eliges una fecha anterior, pasa a ser el inicio.
+                    BotonSecundario(hasta?.let { "hasta ${Fechas.corto(it)}" } ?: "hasta…") { fecha(hasta ?: desde) { h -> if (desde != null && h < desde!!) { hasta = desde; desde = h } else hasta = h } }
                 }
+                if (desde != null) TextButton(onClick = { desde = null; hasta = null }) { Text("quitar las fechas", style = MaterialTheme.typography.labelLarge) }
                 if (desde == null) OutlinedTextField(dias, { dias = it.filter { ch -> ch.isDigit() }.take(4) }, Modifier.padding(top = 8.dp).width(180.dp), singleLine = true,
                     label = { Text("días (aprox.)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("nota (opcional)") })
@@ -1305,6 +1312,35 @@ fun PantallaCiudadNueva(nav: Nav) {
         }
         Spacer(Modifier.height(40.dp))
     }
+}
+
+/** Corregir una ciudad anotada a mano: cuándo fuiste (o cuántos días) y la nota. */
+@Composable
+private fun DialogoCiudad(c0: CiudadVisitada, cerrar: () -> Unit) {
+    val ctx = LocalContext.current
+    var desde by remember { mutableStateOf(c0.desde) }
+    var hasta by remember { mutableStateOf(c0.hasta) }
+    var dias by remember { mutableStateOf(c0.dias?.toString() ?: "") }
+    var nota by remember { mutableStateOf(c0.nota) }
+    Dialogo(onDismissRequest = cerrar, title = { Text("${Mundo.bandera(c0.pais)}  ${c0.nombre}") },
+        text = {
+            Column {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    BotonSecundario(desde?.let { "desde ${Fechas.corto(it)}" } ?: "desde…") { elegirFecha(ctx, desde) { d -> desde = d; if (hasta == null || hasta!! < d) hasta = d } }
+                    BotonSecundario(hasta?.let { "hasta ${Fechas.corto(it)}" } ?: "hasta…") { elegirFecha(ctx, hasta ?: desde) { h -> if (desde != null && h < desde!!) { hasta = desde; desde = h } else hasta = h } }
+                }
+                if (desde != null) TextButton(onClick = { desde = null; hasta = null }) { Text("quitar las fechas", style = MaterialTheme.typography.labelLarge) }
+                else OutlinedTextField(dias, { dias = it.filter { ch -> ch.isDigit() }.take(4) }, Modifier.padding(top = 8.dp).width(180.dp), singleLine = true,
+                    label = { Text("días (aprox.)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("nota (opcional)") })
+            }
+        },
+        confirmButton = { TextButton(onClick = {
+            val n = c0.copy(desde = desde, hasta = hasta, dias = if (desde == null) dias.toIntOrNull() else null, nota = nota.trim())
+            Repo.cambiarConfig { cf -> cf.copy(ciudades_visitadas = cf.ciudades_visitadas.map { if (it.id == c0.id) n else it }) }
+            cerrar()
+        }) { Text("Guardar") } },
+        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } })
 }
 
 private fun poblacion(p: Int): String? = when {

@@ -77,7 +77,10 @@ private fun maxGrado(a: Ascenso): Pair<Double, String>? =
 @Composable
 fun PantallaEscalada(nav: Nav) {
     androidx.compose.runtime.LaunchedEffect(Unit) {
-        Repo.ascensos.filter { it.bloques.isEmpty() && it.nota.isBlank() && it.sesion_reloj == null && it.energia == null }.forEach { Repo.borrarAscenso(it.id) }
+        // Solo se limpian las sesiones que quedaron del todo vacías (abiertas y sin nada): antes se borraban aunque tuvieran
+        // lugar, duración, piel, esfuerzo, satisfacción o dolor.
+        Repo.ascensos.filter { it.bloques.isEmpty() && it.nota.isBlank() && it.sesion_reloj == null && it.energia == null && it.lugar.isBlank() &&
+            it.min == null && it.piel == null && it.esfuerzo == null && it.satisfaccion == null && it.dolor.isBlank() }.forEach { Repo.borrarAscenso(it.id) }
     }
     val sesiones = Repo.ascensos.sortedByDescending { it.fecha + (it.inicio ?: "") }
     val enlazadas = Repo.ascensos.mapNotNull { it.sesion_reloj }.toSet()
@@ -207,7 +210,9 @@ fun PantallaAscenso(nav: Nav) {
     val grados = if (esCuerda) Grados.YDS else if (escala == "Font") Grados.FONT else Grados.V
     val gimnasios = (Repo.config.gimnasios + Repo.ascensos.map { it.lugar }).filter { it.isNotBlank() }.distinct().take(8)
 
-    Hoja("Nueva sesión", nav.atras, latin = "EXERCITATIO", subtitulo = "Se guarda sola mientras escribes.") {
+    // «Nueva sesión» solo mientras está vacía; después, la sesión de su fecha.
+    val vacia = a.bloques.isEmpty() && a.nota.isBlank() && a.lugar.isBlank() && a.min == null && a.energia == null && a.esfuerzo == null
+    Hoja(if (vacia) "Nueva sesión" else "Sesión del ${Fechas.corto(a.fecha)}", nav.atras, latin = "EXERCITATIO", subtitulo = "Se guarda sola mientras escribes.") {
         Seccion("Cuándo y dónde", numero = 1, latin = "QVANDO ET VBI") {
             Tarjeta {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -247,12 +252,13 @@ fun PantallaAscenso(nav: Nav) {
                         Text(b.grado, style = MaterialTheme.typography.titleLarge, color = if (Grados.encadenado(b.estilo)) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.width(72.dp))
                         Text((Grados.ESTILOS.firstOrNull { it.id == b.estilo }?.nombre ?: b.estilo).lowercase() + " · ${b.intentos} int." +
-                            (if (b.angulo.isNotBlank()) " · ${b.angulo}" else "") + (if (b.rasgos.isNotEmpty()) " · " + b.rasgos.joinToString(", ") else ""),
+                            (if (b.angulo.isNotBlank()) " · ${b.angulo}" else "") + (if (b.rasgos.isNotEmpty()) " · " + b.rasgos.joinToString(", ") { Grados.nombreRasgo(it).lowercase() } else ""),
                             style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
                         Text(if (abierto == i) "−" else "+", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     }
                     if (abierto == i) Column(Modifier.padding(bottom = 10.dp)) {
                         FilaFichas(Grados.ESTILOS, b.estilo) { cambiarB(b.copy(estilo = it ?: "encadenado", intentos = if (it == "flash" || it == "a_vista") 1 else b.intentos)) }
+                        Grados.ESTILOS.firstOrNull { it.id == b.estilo }?.detalle?.takeIf { it.isNotBlank() }?.let { Ayuda(it, Modifier.padding(top = 4.dp)) }
                         Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text("intentos = ", style = MaterialTheme.typography.labelLarge)
                             BotonSecundario("−") { cambiarB(b.copy(intentos = (b.intentos - 1).coerceAtLeast(1))) }
@@ -262,7 +268,7 @@ fun PantallaAscenso(nav: Nav) {
                         Etiqueta("Ángulo"); FilaFichas(Grados.ANGULOS, b.angulo.ifBlank { null }) { cambiarB(b.copy(angulo = it ?: "")) }
                         Etiqueta("Qué tenía")
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                            Grados.RASGOS.forEach { r -> val on = r in b.rasgos; Ficha(r, on) { cambiarB(b.copy(rasgos = if (on) b.rasgos - r else b.rasgos + r)) } }
+                            Grados.RASGOS.forEach { r -> val on = r in b.rasgos; Ficha(Grados.nombreRasgo(r), on) { cambiarB(b.copy(rasgos = if (on) b.rasgos - r else b.rasgos + r)) } }
                         }
                         OutlinedTextField(b.nota, { cambiarB(b.copy(nota = it)) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
                             placeholder = { Text("nota: color, nombre, beta…", style = MaterialTheme.typography.labelLarge) })
@@ -285,7 +291,7 @@ fun PantallaAscenso(nav: Nav) {
                 Etiqueta("Esfuerzo de la sesión (1 a 10)"); Escala(a.esfuerzo, 1, 10, mapOf(1 to "paseo", 5 to "moderado", 8 to "duro", 10 to "al límite")) { g(a.copy(esfuerzo = it)) }
                 Etiqueta("Satisfacción"); Escala(a.satisfaccion, 1, 5, mapOf(1 to "frustrado", 3 to "bien", 5 to "increíble")) { g(a.copy(satisfaccion = it)) }
                 Etiqueta("Dolor o lesión")
-                OutlinedTextField(a.dolor, { g(a.copy(dolor = it)) }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("dedo anular izquierdo, hombro…", style = MaterialTheme.typography.labelLarge) })
+                OutlinedTextField(a.dolor, { g(a.copy(dolor = it)) }, Modifier.fillMaxWidth(), minLines = 2, placeholder = { Text("dedo anular izquierdo, hombro…", style = MaterialTheme.typography.labelLarge) })
                 Etiqueta("Notas")
                 Editor(a.nota, "ascensus_${a.fecha}.txt", "Qué funcionó, qué no, con quién fuiste…", minimo = 90) { g(a.copy(nota = it)) }
             }

@@ -97,11 +97,11 @@ import io.github.ruddy2003.vestigium.ui.elegirFecha
 /** Minúsculas y sin acentos, para buscar sin importar cómo se escribió. */
 private fun sinAcentos(s: String) = java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
 
-private val BIBLIOTECAS = listOf(Triple("diario", "Diario", "biblioteca_diario"), Triple("suenos", "Sueños", "biblioteca_suenos"),
-    Triple("momentos", "Momentos", "biblioteca_momentos"), Triple("cartas", "Cartas", "cartas"), Triple("ideas", "Ideario", "biblioteca_ideas"))
+private val BIBLIOTECAS = listOf(Triple("diario", "Diario", "biblioteca_diario"), Triple("momentos", "Momentos", "biblioteca_momentos"),
+    Triple("suenos", "Sueños", "biblioteca_suenos"), Triple("ideas", "Ideario", "biblioteca_ideas"), Triple("cartas", "Cartas", "cartas"))
 
 /**
- * Las cinco bibliotecas en una: el diario, los sueños, la libreta de momentos, las cartas y el Ideario. Se cambia entre ellas con las pestañas de arriba
+ * Las cinco bibliotecas en una: el diario, la libreta de momentos, los sueños, el Ideario y las cartas (el mismo orden que en la pestaña Diario). Se cambia entre ellas con las pestañas de arriba
  * o deslizando a los lados.
  */
 @Composable
@@ -258,7 +258,7 @@ private fun BibliotecaSuenos(nav: Nav) {
     }
     if (todas.isNotEmpty()) {
         val lucidos = todas.count { it.sueno_lucidez == "parcial" || it.sueno_lucidez == "total" }
-        val pesadillas = todas.count { it.sueno_tipo == "ansioso_pesadilla" }
+        val pesadillas = todas.count { io.github.ruddy2003.vestigium.data.Catalogo.pesadillaDe(it) == true }
         val agradable = todas.mapNotNull { it.sueno_valencia }.takeIf { it.isNotEmpty() }?.average()
         Row(Modifier.fillMaxWidth().padding(top = 16.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Cifra("${todas.size}", "sueños escritos", Modifier.width(100.dp))
@@ -337,7 +337,7 @@ private fun lineaMomento(m: io.github.ruddy2003.vestigium.data.Momento, discreto
     val cifras = listOfNotNull(m.valencia?.let { "agrado $it/7" }, m.activacion?.let { "energía $it/7" }, m.intensidad?.let { "intensidad $it/5" })
     if (cifras.isNotEmpty()) append(" (" + cifras.joinToString(", ") + ")")
     if (!discreto) {
-        if (cat.emocionesDe(m).isNotEmpty()) cat.pensamientoDe(m)?.let { p -> append("\nen qué pensabas: " + (cat.PENSAMIENTOS.firstOrNull { it.id == p }?.nombre ?: p).lowercase()) }
+        if (cat.emocionesDe(m).isNotEmpty()) cat.pensamientosDe(m).takeIf { it.isNotEmpty() }?.let { l -> append("\nen qué pensabas: " + l.joinToString(", ") { cat.nombrePensamiento(it).lowercase() }) }
         if (m.con_quien.isNotEmpty()) append("\ncon: " + m.con_quien.joinToString(", ") { q -> cat.CON_QUIEN.firstOrNull { it.id == q }?.nombre?.lowercase() ?: q })
         m.lugar?.takeIf { it.isNotBlank() }?.let { append("\nen: $it") }
     }
@@ -540,5 +540,5 @@ fun PantallaCarta(nav: Nav) {
     if (borrar) Dialogo(onDismissRequest = { borrar = false },
         title = { Text("¿Borrar esta carta?") }, text = { Text("Tendrás unos segundos para deshacerlo.") },
         confirmButton = { TextButton(onClick = { Repo.borrarCarta(c.id); borrar = false; nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Carta borrada") { Repo.guardarCarta(c) } }) { Text("Borrar", color = MaterialTheme.colorScheme.error) } },
-        dismissButton = { TextButton(onClick = { borrar = false }) { Text("Cancelar") } })
+        dismissButton = { TextButton(onClick = { borrar = false }) { Text("cancelar") } })
 }

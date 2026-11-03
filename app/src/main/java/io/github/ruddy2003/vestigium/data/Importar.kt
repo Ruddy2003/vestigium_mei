@@ -108,7 +108,7 @@ object Importar {
             mes.jsonObject["items"]?.jsonArray?.mapNotNull { it as? JsonObject }?.map { g ->
                 Gasto(id = g["id"].str() ?: Repo.nuevoId(), fecha = g["fecha"].str() ?: "", hora = g["hora"].str() ?: "",
                     monto = (g["monto"] as? JsonPrimitive)?.doubleOrNull ?: 0.0, categoria = g["categoria"].str() ?: "Otro",
-                    imprevisto = g["imprevisto"].bool(), nota = g["nota"].str() ?: "")
+                    imprevisto = g["imprevisto"].bool(), nota = g["nota"].str() ?: "", se_repite = g["se_repite"].bool())
             } ?: emptyList()
         }?.filter { it.fecha.isNotEmpty() } ?: emptyList()
         Repo.importarGastos(gastos)
@@ -175,6 +175,7 @@ object Importar {
             hitos = o["hitos"].lista(), flow = o["flow"].str(), sdt_necesidad = o["sdt_necesidad"].str(), apreciacion = o["apreciacion"].str(),
             sueno_recordado = o["sueno_recordado"].bool(), sueno_valencia = o["sueno_valencia"].int(),
             sueno_lucidez = o["sueno_lucidez"].str(), sueno_vividez = o["sueno_vividez"].str(), sueno_tipo = o["sueno_tipo"].str(),
+            sueno_rareza = o["sueno_rareza"].str(), sueno_pesadilla = o["sueno_pesadilla"].str()?.let { it == "true" || it == "1" },
             sueno_temas = o["sueno_temas"].lista(), sueno_texto = o["sueno_texto"].str() ?: "",
             habitos = habitos, nota = o["nota"].str() ?: "", ts_creado = o["ts_creado"].str(), ts_editado = o["ts_editado"].str(),
         )
@@ -248,7 +249,7 @@ object Importar {
             ctx = Catalogo.CONTEXTOS.associate { it.id to b("ctx_${it.id}") }.filterValues { it },
             hitos = l("hitos"), flow = s("flow"), sdt_necesidad = s("sdt_necesidad"), apreciacion = s("apreciacion"),
             sueno_recordado = b("sueno_recordado"), sueno_valencia = n("sueno_valencia"), sueno_lucidez = s("sueno_lucidez"),
-            sueno_vividez = s("sueno_vividez"), sueno_tipo = s("sueno_tipo"), sueno_temas = l("sueno_temas"), sueno_texto = s("sueno_texto") ?: "",
+            sueno_vividez = s("sueno_vividez"), sueno_tipo = s("sueno_tipo"), sueno_rareza = s("sueno_rareza"), sueno_pesadilla = s("sueno_pesadilla")?.let { it == "true" || it == "1" }, sueno_temas = l("sueno_temas"), sueno_texto = s("sueno_texto") ?: "",
             // Los sellos del encabezado si los trae; si no, vacíos: no la hora de importar (P-33).
             nota = nota, ts_creado = s("ts_creado"), ts_editado = s("ts_editado"),
         )

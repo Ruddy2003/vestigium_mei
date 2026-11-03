@@ -33,7 +33,12 @@ object Diccionario {
         "ts" to "Momento exacto, ISO 8601 con desfase de tu zona horaria", "hora" to "Hora local HH:MM",
         "id" to "Identificador único del registro", "nota" to "Texto libre", "texto" to "Texto libre",
         "lat" to "Latitud (grados)", "lon" to "Longitud (grados)", "precision_m" to "Precisión de la ubicación (metros)",
-        "con_quien" to "Con quién estabas en el aviso de ánimo (lista: solo, pareja, amigos, familia, companeros, desconocidos)",
+        "con_quien" to "Con quién estabas en el registro de ánimo (lista: solo, pareja, amigos, familia, hijos, companeros, desconocidos, mascota, mensaje = por mensaje o llamada; «mensaje» puede ir con «solo»)",
+        "intensidades" to "Cuánto de cada emoción (lista emocion:n; 1 un poco, 2 bastante, 3 mucho); solo las que lo dijiste (esquema 17)",
+        "pensamientos" to "En qué pensabas, varios (lista; esquema 17). En registros de antes, el único pensamiento",
+        "detonante_otro" to "El detonante escrito cuando elegiste «otro» (seguimiento privado, esquema 17)",
+        "habitos_tri" to "Los hábitos de ese día se contestaron con sí / no / sin contestar (0/1): con 1, un hábito sin respuesta queda vacío en hab_*",
+        "ctx_otro" to "Otro contexto del día, escrito a mano (esquema 17)",
         "detonantes" to "Detonantes (lista)", "dispositivo" to "Recaída: en qué aparato (seguimiento privado)", "vm_momentos.csv:antes" to "Recaída: qué hacías justo antes (seguimiento privado)",
         "duracion_min" to "Recaída: cuánto duró (minutos)", "recaida_min" to "Minutos de recaída en el día (seguimiento privado)",
         "es_siesta" to "El tramo es una siesta (0/1)", "vm_tramos.csv:inicio" to "Inicio, ISO 8601", "vm_tramos.csv:fin" to "Fin, ISO 8601", "vm_tramos.csv:min" to "Minutos del tramo",
@@ -48,10 +53,10 @@ object Diccionario {
         // Ánimo unificado, sustancias y la tabla por hora
         "es_animo" to "Es un registro de ánimo (aviso o hecho por ti), no un impulso ni una recaída (0/1)",
         "emociones" to "Lo que sentías (lista de Catalogo: alegria, calma, estres, frustracion…; no_se = no lo sabías nombrar; otro = ver emocion_otra)",
-        "emocion_otra" to "El sentimiento que escribiste cuando elegiste «otro»", "pensamiento" to "En qué pensabas (pensando_en, preocupacion, idea, recuerdo, plan, vueltas, autocritica, deseo)",
+        "emocion_otra" to "El sentimiento que escribiste cuando elegiste «otro»", "pensamiento" to "En qué pensabas: el primero (pensando_en, preocupacion, idea, recuerdo, plan, vueltas, autocritica, deseo, trabajo, cuerpo, imaginando, nada); todos, en pensamientos",
         "alcohol_nivel" to "Qué tan pedo estabas en ese momento (0 sobrio a 10 vómito y mucho mareo; interpolado de tus lecturas)",
         "cannabis_nivel" to "Nivel con cannabis en ese momento (0 a 10; interpolado)", "otra_nivel" to "Nivel con otra sustancia en ese momento (0 a 10; interpolado)",
-        "sueno_categorias" to "De qué fue el sueño (lista de ejes: per_ personajes, esc_ escenario, int_ interacción, tema_ temas típicos, est_ estructura, emo_ emoción)",
+        "sueno_categorias" to "De qué fue el sueño (lista de ejes: per_ personajes, esc_ escenario, int_ interacción, tema_ temas típicos, res_ cómo me fue, sen_ sensaciones, est_ estructura, emo_ emociones, desp_ al despertar; en los días de antes del esquema 17, el tipo «recurrente» aparece como est_recurrente)",
         "vm_sustancias.csv:sustancia" to "alcohol, cannabis, tabaco, cafeina u otra", "otra_nombre" to "Cuál, si fue «otra»",
         "hora_inicio" to "Hora en que empezó", "hora_fin" to "Hora en que se te pasó el efecto", "duracion_h" to "Horas con efecto (de inicio a fin)",
         "nivel_max" to "Nivel máximo (0 a 10): el que dijiste en la mañana o el mayor que leíste", "lecturas" to "Lecturas de nivel con su hora (lista HH:MM=nivel)",
@@ -100,7 +105,9 @@ object Diccionario {
         "version_noche" to "Con qué orden de preguntas se llenó la hoja de la noche (desde el esquema 14): 1 = el orden anterior; 2 = el orden nuevo, con el ánimo del momento primero. Vacío = no pasó por la hoja o es de antes",
         "hitos" to "Hitos del día (lista)", "flow" to "Experiencia de flujo (Csikszentmihalyi)", "sdt_necesidad" to "Necesidad psicológica más presente (Deci y Ryan)",
         "apreciacion" to "Evaluación del estrés (Lazarus)", "sueno_recordado" to "Recordó un sueño (0/1)", "sueno_valencia" to "Qué tan agradable fue el sueño (1 a 7)",
-        "sueno_lucidez" to "Lucidez del sueño", "sueno_vividez" to "Vividez del recuerdo", "sueno_tipo" to "Tipo de sueño", "sueno_temas" to "Personas y temas del sueño (lista)",
+        "sueno_lucidez" to "Lucidez del sueño", "sueno_vividez" to "Qué tan claro lo recuerdas: vago (solo fragmentos), moderado (partes claras) o muy_vivido (casi completo y nítido)", "sueno_tipo" to "Tipo de sueño (solo hasta el esquema 17: mundano, ansioso_pesadilla, bizarro_surreal, recurrente; después, ver sueno_rareza y sueno_pesadilla)",
+        "sueno_rareza" to "Qué tan raro fue el sueño: realista, raro (pero posible) o imposible (o surreal); en días de antes del esquema 17, deducido del tipo (mundano = realista, bizarro = imposible)",
+        "sueno_pesadilla" to "Si fue pesadilla: angustia fuerte o te despertó (TRUE/FALSE; vacío = no se dijo); en días de antes del esquema 17, TRUE si el tipo era ansioso o pesadilla", "sueno_temas" to "Personas y temas del sueño (lista)",
         "sueno_texto" to "Narración del sueño", "mejor_momento" to "Lo mejor del día", "peor_momento" to "Lo peor del día",
         "impulso" to "Intensidad del impulso (0 a 5), seguimiento privado", "recaida" to "Hubo recaída (0/1), seguimiento privado", "detonantes" to "Detonantes (lista)",
         "medicamentos" to "Medicamentos tomados (lista)", "prediccion_manana" to "Predicción del ánimo de mañana (1 a 7)",
@@ -109,7 +116,7 @@ object Diccionario {
         "aviso_ts" to "Cuándo llegó el aviso que se respondió", "latencia_min" to "Minutos entre el aviso y la respuesta",
         "ruido_db" to "Ruido ambiente aproximado al registrar (dB relativos, sin calibrar)", "luz_lux" to "Luz ambiente al registrar (lux)",
         // Gastos
-        "monto" to "Importe (tu moneda)", "vm_gastos.csv:categoria" to "Categoría de gasto", "vm_ingresos.csv:categoria" to "Categoría de ingreso", "subcategoria" to "Subcategoría dentro de la categoría (desde el esquema 14; vacío = sin subcategoría)", "imprevisto" to "Gasto no planeado (0/1)",
+        "monto" to "Importe (tu moneda)", "vm_gastos.csv:categoria" to "Categoría de gasto", "vm_ingresos.csv:categoria" to "Categoría de ingreso", "subcategoria" to "Subcategoría dentro de la categoría (desde el esquema 14; vacío = sin subcategoría)", "imprevisto" to "Gasto no planeado (0/1)", "tipo_otro" to "Bloque de enfoque de tipo «otro»: en qué fue, escrito a mano (desde el esquema 17)", "se_repite" to "Gasto que se repite, como renta, suscripción o servicios (0/1; desde el esquema 17)",
         // Escalas y reacción
         "instrumento" to "Cuestionario (who5, pss4, ucla3, tipi)", "media_ms" to "Tiempo de reacción medio (ms)", "mediana_ms" to "Tiempo de reacción mediano (ms)",
         "lapsos" to "Respuestas de más de 500 ms", "anticipaciones" to "Toques antes del estímulo", "ensayos_ms" to "Tiempos de cada ensayo (lista, ms)",
@@ -248,7 +255,7 @@ object Diccionario {
         "vm_ideas.csv:fuente" to "De dónde salió, escrito a mano o al compartir (video, conversación, sitio…)", "vm_ideas.csv:enlace" to "Enlace de la fuente",
         "vm_ideas.csv:donde" to "Minuto o página", "vm_ideas.csv:postura" to "Cómo la tienes: convence, piensa (te hace pensar), duda o desacuerdo; vacío = sin decir",
         "vm_ideas.csv:n_revisiones" to "Veces que la respondiste en «Una idea de antes»", "vm_ideas.csv:personas" to "@personas escritas en el texto",
-        "vm_ideas.csv:temas" to "#temas escritos en el texto", "vm_ideas_revisiones.csv:idea_id" to "Idea que volviste a ver",
+        "vm_ideas.csv:temas" to "Temas de la idea: los del campo «Temas» (desde el esquema 17) y los #temas escritos en el texto", "vm_ideas_revisiones.csv:idea_id" to "Idea que volviste a ver",
         "vm_ideas_revisiones.csv:fecha" to "Día lógico en que respondiste", "vm_ideas_revisiones.csv:respuesta" to "sigue (sigo pensando igual), cambio (ya no) o ignorar (ahora no)",
         "vm_notas.csv:tipo" to "idea, pensamiento, proposito o recordatorio", "fijada" to "Fijada arriba (0/1)", "recordar_el" to "Día del recordatorio", "hecha" to "Ya hecha (0/1)",
         "creada" to "Cuándo se creó", "editada" to "Última edición", "horizonte" to "corto (hasta 3 meses), mediano (hasta un año) o largo",
@@ -344,7 +351,7 @@ object Diccionario {
             col.startsWith("horas_tipo_") -> "Horas en lugares de tipo ${Catalogo.nombreTipoLugar(col.removePrefix("horas_tipo_")).lowercase()}"
             col.startsWith("ctx_") -> "Contexto del día: ${col.removePrefix("ctx_").replace('_', ' ')} (0/1)"
             col.startsWith("campana_") -> "En campaña ese día: ${io.github.ruddy2003.vestigium.ciencia.Campanas.reto(col.removePrefix("campana_").let { if (it.startsWith("hab_")) "habito:" + it.removePrefix("hab_") else it })?.nombre ?: col.removePrefix("campana_")} (0/1; la tenías aceptada, la cumplieras o no)"
-            col.startsWith("hab_") -> "Hábito cumplido: ${Repo.config.habitos.firstOrNull { it.id == col.removePrefix("hab_") }?.nombre ?: col.removePrefix("hab_")} (0/1)"
+            col.startsWith("hab_") -> "Hábito cumplido: ${Repo.config.habitos.firstOrNull { it.id == col.removePrefix("hab_") }?.nombre ?: col.removePrefix("hab_")} (0/1; vacío si ese día no lo contestaste, desde el esquema 17)"
             col.startsWith("m_") -> "Momentos de tipo ${col.removePrefix("m_")} (registros de antes de unir ánimo y momentos)"
             col.startsWith("n_") && Catalogo.sentimiento(col.removePrefix("n_")) != null -> "Registros con ${Catalogo.nombreSentimiento(col.removePrefix("n_")).lowercase()} en el día"
             col.startsWith("n_") && Catalogo.PENSAMIENTOS.any { it.id == col.removePrefix("n_") } -> "Registros pensando: ${Catalogo.PENSAMIENTOS.first { it.id == col.removePrefix("n_") }.nombre.lowercase()}"
@@ -472,7 +479,7 @@ object Diccionario {
         "esc_*" to (88 to "cada cuestionario cubre solo los días que pregunta (7 o 30) (D.62)"),
         "festivo" to (88 to "nueva: festivo de la Ley Federal del Trabajo, solo si vives en México (D.69)"),
         "gasto_imprevisto" to (88 to "0 desde el primer gasto, en días con diario; antes, vacío (D.63)"),
-        "hab_*" to (88 to "vacío antes de que existiera el hábito, salvo marcado (D.63)"),
+        "hab_*" to (110 to "vacío antes de que existiera el hábito, salvo marcado (D.63); desde el esquema 17, también vacío si ese día no lo contestaste (D.133)"),
         "lugares_distintos" to (88 to "por día lógico: una visita antes de las 05:00 cuenta para el anterior (D.64)"),
         "n_impulso" to (88 to "0 desde el primer impulso, en días con diario; antes, vacío (D.63)"),
         "pen_*" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
@@ -575,6 +582,18 @@ object Diccionario {
         "vm_series.csv:referencia" to (92 to "nueva: la serie es del ejercicio de referencia (D.114)"),
         "wifi_sin_dato_min" to (92 to "nueva: minutos en que no se supo si había wifi (D.112)"),
         "wifi_total_min" to (92 to "cuenta también el wifi con el nombre oculto (D.112)"),
+        // Esquema 17: pantallas de captura.
+        "vm_momentos.csv:pensamientos" to (110 to "nueva: varios pensamientos por registro (D.131)"),
+        "vm_momentos.csv:intensidades" to (110 to "nueva: cuánto de cada emoción (D.130)"),
+        "vm_momentos.csv:con_quien" to (110 to "más opciones: hijos, mascota, por mensaje o llamada (D.132)"),
+        "con_*" to (110 to "más opciones: hijos, mascota, mensaje (D.132)"),
+        "vm_ideas.csv:temas" to (110 to "suma los temas del campo «Temas» a los #temas del texto (D.134)"),
+        "vm_dias.csv:sueno_rareza" to (110 to "nueva: qué tan raro fue el sueño; los días de antes, desde su tipo (D.127)"),
+        "vm_dias.csv:sueno_pesadilla" to (110 to "nueva: si fue pesadilla; los días de antes, desde su tipo (D.127)"),
+        "vm_dias.csv:sueno_tipo" to (110 to "ya no se pregunta: queda solo en los días de antes (D.127)"),
+        "vm_dias.csv:sueno_categorias" to (110 to "nueve ejes; el tipo «recurrente» de antes aparece como est_recurrente (D.127, D.128)"),
+        "suenot_*" to (110 to "rareza del sueño y pesadilla en lugar del tipo (D.127)"),
+        "sueno_est_recurrente" to (110 to "incluye los días de antes con tipo «recurrente» (D.127)"),
     )
 
     // Las claves con «*», como patrones; la más larga primero, para que «app_min_*» gane a «app_*».

@@ -109,7 +109,7 @@ fun PantallaEnfoque(nav: Nav) {
                     // Tocar un tramo lo abre para corregir el tipo, la hora, la duración o la nota, o para borrarlo.
                     Row(Modifier.fillMaxWidth().clickable { abierto = t }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("${Catalogo.nombreTramo(t.tipo)} · ${horasMin(t.min)}", style = MaterialTheme.typography.bodyLarge)
+                            Text("${Catalogo.nombreTramo(t)} · ${horasMin(t.min)}", style = MaterialTheme.typography.bodyLarge)
                             Text("${Fechas.corto(t.fecha)} · ${Fechas.horaDe(t.inicio)}" + if (t.origen == "manual") " · anotado después" else "", style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             if (t.nota.isNotBlank()) TextoMarcado(t.nota, style = MaterialTheme.typography.bodySmall)
@@ -134,36 +134,40 @@ fun DialogoTramo(t: io.github.ruddy2003.vestigium.data.Tramo, cerrar: () -> Unit
     var cuando by remember(t.id) { mutableStateOf<java.time.LocalDateTime?>(io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(t.inicio))) }
     var min by remember(t.id) { mutableStateOf<Int?>(t.min) }
     var nota by remember(t.id) { mutableStateOf(t.nota) }
+    var otro by remember(t.id) { mutableStateOf(t.tipo_otro) }
     var confirmar by remember(t.id) { mutableStateOf(false) }
     Dialogo(
         onDismissRequest = cerrar,
-        title = { Text("${Catalogo.nombreTramo(t.tipo)} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.inicio)}") },
+        title = { Text("${Catalogo.nombreTramo(t)} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.inicio)}") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 io.github.ruddy2003.vestigium.ui.Etiqueta("Qué fue")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     (Catalogo.ENFOQUE + Catalogo.SIESTA).forEach { o -> io.github.ruddy2003.vestigium.ui.Ficha(o.nombre, tipo == o.id) { tipo = o.id } }
                 }
+                if (tipo == "otro") androidx.compose.material3.OutlinedTextField(otro, { otro = it.take(40) }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true,
+                    label = { Text("¿En qué?") })
                 io.github.ruddy2003.vestigium.ui.Etiqueta("Empezó")
                 io.github.ruddy2003.vestigium.ui.SelectorHora(cuando) { cuando = it }
                 io.github.ruddy2003.vestigium.ui.Etiqueta("Duró")
-                io.github.ruddy2003.vestigium.ui.SelectorDuracion(min) { min = it }
-                androidx.compose.material3.OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Qué hiciste (opcional)") })
+                io.github.ruddy2003.vestigium.ui.SelectorDuracion(min, listOf(5, 10, 15, 30, 45, 60, 90, 120, 180, 240)) { min = it }
+                androidx.compose.material3.OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Qué hiciste (opcional; @persona y #tema)") },
+                    visualTransformation = io.github.ruddy2003.vestigium.ui.rememberMarcas())
+                TextButton(onClick = {
+                    if (confirmar) { Repo.borrarTramo(t.id); cerrar(); Deshacer.ofrecer("Tramo borrado") { Repo.guardarTramo(t) } } else confirmar = true
+                }, modifier = Modifier.padding(top = 6.dp)) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
             }
         },
         confirmButton = {
             TextButton(enabled = (min ?: 0) > 0, onClick = {
                 val ini = (cuando ?: io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(t.inicio))).aMillis()
                 val m = min ?: t.min
-                val n = t.copy(tipo = tipo, inicio = Fechas.isoDeMillis(ini), fin = Fechas.isoDeMillis(ini + m * 60_000L), min = m, fecha = Fechas.diaLogicoDeMillis(ini), nota = nota.trim())
+                val n = t.copy(tipo = tipo, inicio = Fechas.isoDeMillis(ini), fin = Fechas.isoDeMillis(ini + m * 60_000L), min = m, fecha = Fechas.diaLogicoDeMillis(ini), nota = nota.trim(),
+                    tipo_otro = if (tipo == "otro") otro.trim() else "")
                 if (n != t) Repo.guardarTramo(n)
                 cerrar()
             }) { Text("Guardar") }
         },
-        dismissButton = {
-            TextButton(onClick = {
-                if (confirmar) { Repo.borrarTramo(t.id); cerrar(); Deshacer.ofrecer("Tramo borrado") { Repo.guardarTramo(t) } } else confirmar = true
-            }) { Text(if (confirmar) "¿Borrar de verdad?" else "Borrar", color = MaterialTheme.colorScheme.error) }
-        },
+        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
     )
 }
