@@ -83,7 +83,11 @@ Desde el esquema 13, la colección `avisos` anota por día los avisos **planeado
 
 ## 3.5 Emociones con nombre, pensamientos y compañía
 
-En cualquier registro de ánimo se puede marcar (todo opcional) **qué sientes**, de 25 emociones (`Catalogo.SENTIMIENTOS`: 9 agradables, 13 desagradables y 3 mixtas), más «otro…» y «no sé»; **en qué piensas**; una nota con @personas y #temas, y **con quién estás**.
+En cualquier registro de ánimo se puede marcar (todo opcional):
+- **qué sientes**, de 47 emociones desde el esquema 17 (`Catalogo.SENTIMIENTOS`: 18 agradables, 23 desagradables y 6 mixtas; antes eran 25), más «otro…» y «no sé». A cada una se le puede poner **cuánto**: un poco, bastante o mucho. La intensidad solo se exporta.
+- **en qué piensas**, varios a la vez desde el esquema 17;
+- una nota con @personas y #temas;
+- **con quién estás**, que incluye hijos, mascota y «por mensaje o llamada».
 
 «Enojo» y «miedo» caen en la misma zona de los dos ejes y son experiencias distintas. Nombrar con precisión lo que sientes (*granularidad emocional*) se asocia con manejar mejor las emociones desagradables (Kashdan, Barrett y McKnight, 2015). **[Validado]** el concepto; la app solo guarda los nombres, no calcula un índice. «No sé» también es información y tiene su variable, `n_no_se`. **[Diseño propio]**. Como hay más emociones desagradables que agradables, **los conteos no son comparables entre sí**.
 
@@ -183,11 +187,19 @@ $$ \text{posición} = \frac{\sum (\text{respuesta} - 3) \times \text{signo} \tim
 
 ## 3.11 Sueño y sueños
 
-A las **8:00** por omisión, si el día no tiene relato ni la marca «recordé un sueño», llega un aviso. La pantalla pone **primero la narración**, porque el contenido de los sueños se olvida muy rápido; que sea cuestión de minutos es la afirmación de la app **[sin verificar]**. Se registra la **calidad del sueño como la sentiste** (1–5, en el día del despertar) y, si recordaste un sueño, su valencia (1–7), lucidez, vividez, tipo y categorías en seis ejes (`Catalogo.SUENO_EJES`).
+A las **8:00** por omisión, si el día no tiene relato ni la marca «recordé un sueño», llega un aviso. La pantalla pone **primero la narración**, porque el contenido de los sueños se olvida muy rápido; que sea cuestión de minutos es la afirmación de la app **[sin verificar]**. Desde el esquema 17 la narración se escribe en el libro de noche del tema, a pantalla completa, como el diario. Se registra la **calidad del sueño como la sentiste** (1–5, en el día del despertar). Si recordaste un sueño, también:
+- su valencia (1–7);
+- si fue **pesadilla** (angustia fuerte o te despertó);
+- **qué tan raro** fue (realista, raro pero posible, imposible);
+- **qué tan claro** lo recuerdas;
+- la lucidez;
+- categorías en **nueve ejes** (`Catalogo.SUENO_EJES`), con las ocho más usadas a la vista.
+
+Hasta el esquema 16 había una sola pregunta de «tipo» (mundano, ansioso o pesadilla, bizarro, recurrente) que mezclaba esas cosas. Los días de antes se traducen al leerlos: mundano → realista; bizarro → imposible; ansioso → pesadilla; recurrente → «se repite». **[Aproximación]** la rareza, a la idea de *bizarreness*.
 
 Las categorías se basan en el sistema de **Hall y Van de Castle (1966)**. **[Aproximación]**: el original se aplica leyendo el relato con reglas detalladas; aquí quien soñó elige categorías simplificadas, útiles para patrones propios, no para compararse con las normas. La idea de que los sueños reflejan preocupaciones de la vida despierta (hipótesis de la **continuidad**) es de Domhoff (2003).
 
-En el panel, `sueno_lucidez` y `sueno_vividez` valen 0, 1 o 2 (supone saltos iguales, **[Aproximación]**). `sueno_recordado` vale 1 si recordaste un sueño, 0 solo si ese día dijiste algo del sueño sin recordarlo, y vacío en los demás (H-2-4, resuelto en 10c).
+En el panel, `sueno_lucidez` y `sueno_vividez` valen 0, 1 o 2 (supone saltos iguales, **[Aproximación]**). `sueno_recordado` vale 1 si recordaste un sueño, 0 solo si ese día dijiste algo del sueño sin recordarlo, y vacío en los demás (H-2-4, resuelto en 10c). Desde el esquema 17, la familia `suenot_` es rareza y pesadilla (`suenot_realista`, `suenot_raro`, `suenot_imposible`, `suenot_pesadilla`) en lugar del tipo.
 
 ---
 

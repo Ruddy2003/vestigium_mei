@@ -339,7 +339,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `laptop_min` | Minutos en la laptop | numérica | — | Si se importó Cold Turkey |
 | `laptop_web_min` | Minutos en sitios web (laptop) | numérica | — | Si se importó Cold Turkey con sitios web |
 
-_Cuántas son. Regla de conteo: una variable fija es un `Variable("id", …)` con el identificador escrito tal cual en `Estadistica.variables()`. Desde 10f son **187, con 24 nombres de grupo** (186 en la v91 y 184 en la v90). Las tablas de arriba traen **186 en 21 grupos**, porque: `dia_especial` («Calendario») y `campanas_n` («Campañas») van en la tabla siguiente, junto a las de su grupo; `n_impulso` se agrega aquí aunque el código la arma con una plantilla (`n_${it.id}` sobre `Catalogo.MOMENTOS`, que solo da esa), y `medicamentos_n`, la única del grupo «Salud», se lista en Privado. En la v81 eran 177 en 22 grupos; el esquema 13 (10b) agregó `avisos_planeados`, `avisos_mostrados`, `avisos_respondidos`, `tasa_respuesta`, `campanas_n` y `dia_especial`, 10c, `presencias_revisado`, 10e, `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94), y 10f, `fuerza_ref_kg` (D.114). No todas existen en cada instalación: 130 se agregan siempre (entre ellas, las dos de 10e y 4 privadas) y las otras 57 (entre ellas, la de 10f), según la columna «Existe»._
+_Cuántas son. Regla de conteo: una variable fija es un `Variable("id", …)` con el identificador escrito tal cual en `Estadistica.variables()`. Desde el esquema 17 son **193, con 24 nombres de grupo** (187 desde 10f, 186 en la v91 y 184 en la v90). Las tablas de arriba traen **192 en 21 grupos** (186 hasta el esquema 16), porque: `dia_especial` («Calendario») y `campanas_n` («Campañas») van en la tabla siguiente, junto a las de su grupo; `n_impulso` se agrega aquí aunque el código la arma con una plantilla (`n_${it.id}` sobre `Catalogo.MOMENTOS`, que solo da esa), y `medicamentos_n`, la única del grupo «Salud», se lista en Privado. En la v81 eran 177 en 22 grupos; el esquema 13 (10b) agregó `avisos_planeados`, `avisos_mostrados`, `avisos_respondidos`, `tasa_respuesta`, `campanas_n` y `dia_especial`, 10c, `presencias_revisado`, 10e, `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94), y 10f, `fuerza_ref_kg` (D.114); el esquema 17 agregó tres contextos (`ctx_casa`, `ctx_fiesta`, `ctx_tramites`) y tres compañías (`con_hijos`, `con_mascota`, `con_mensaje`), D.132 y D.133. No todas existen en cada instalación: 133 se agregan siempre (entre ellas, las dos de 10e, los tres contextos nuevos y 4 privadas) y las otras 60 (entre ellas, la de 10f y las tres compañías nuevas), según la columna «Existe»._
 
 ### Variables con nombre generado
 
@@ -350,13 +350,13 @@ Estas se crean una por cada elemento que el usuario ha usado (o, en las de catá
 | `n_<sentimiento>` | Registros con ‹sentimiento› (los usados, sin «otro») | Sentimientos |
 | `n_<pensamiento>` | Registros pensando: ‹pensamiento› (los usados) | Momentos |
 | `sueno_<categoria>` | Sueño: ‹categoría› (0/1); las categorías usadas, con valor solo en días con categorías | Sueños |
-| `enfoque_<tipo>_min` | Enfoque: ‹tipo› (min); los tipos usados de estudio, lectura, idiomas, tesis, trabajo y creativo | Enfoque |
+| `enfoque_<tipo>_min` | Enfoque: ‹tipo› (min); los tipos usados de estudio, lectura, idiomas, tesis, trabajo, creativo y, desde el esquema 17, otro (`enfoque_otro_min`, que junta todos los «otro» aunque tengan nombres distintos) | Enfoque |
 | `horas_tipo_<tipo>` | Horas en lugares de tipo ‹tipo›; los tipos de tus lugares, de 14 posibles (12 hasta el esquema 17, que agregó restaurante o café y tienda) | Lugares |
 | `laptop_<categoria>_min` | Minutos en la laptop: ‹categoría› (productivo, ocio, social, otro); con Cold Turkey | Laptop |
-| `con_<id>` | Avisos con ‹pareja, amigos, familia, compañeros o desconocidos› (0 a 1); si hay avisos con «con quién» | Social |
-| `ctx_<id>` | Contexto: ‹nombre› (0/1); siempre, los 10 contextos: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia | Contexto |
+| `con_<id>` | Avisos con ‹pareja, amigos, familia, hijos, compañeros, desconocidos, mascota o mensaje› (0 a 1; las tres últimas compañías desde el esquema 17); si hay avisos con «con quién». «Mensaje» puede ir con «solo» y no cuenta como acompañado | Social |
+| `ctx_<id>` | Contexto: ‹nombre› (0/1); siempre, los 13 contextos: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, cita o tiempo en pareja (`ctx_romantico`), familia y, desde el esquema 17, casa o descanso, fiesta, trámites o pendientes | Contexto |
 | `flow_<id>`, `sdt_necesidad_<id>`, `apreciacion_<id>` | Opción elegida en las tres preguntas científicas del día (0/1); siempre, 13 opciones (4, 5 y 4; «No aplica» no cuenta) | Lectura del día |
-| `hab_<id>` | Hábito: ‹nombre› (0/1) | Hábitos |
+| `hab_<id>` | Hábito: ‹nombre› (0/1; vacío si ese día no lo contestaste, desde el esquema 17) | Hábitos |
 | `supl_<id>_dosis/_tomado/_nivel/_porciones` | Dosis, toma, reserva o cantidad estimada y porciones del suplemento. Desde 10e, `_nivel` no existe en los suplementos de vida media menor de 6 horas (`Suplementos.VIDA_MEDIA_MIN_NIVEL`, A.8) | Suplementos |
 | `campana_<reto>`, `campana_hab_<id>` | En campaña ese día (0/1; la tenías aceptada). 0 desde tu primera campaña, vacío antes. Desde el esquema 13 | Campañas |
 | `campanas_n` | Campañas que tenías ese día. Desde el esquema 13 | Campañas |
@@ -497,7 +497,7 @@ No cambia lo que se guarda (`SCHEMA_V` = 14); cambia cómo se calcula el panel c
 | `n_impulso` (privada) | 0 en los días con diario desde el **primer impulso** | 0 en todos los días con diario |
 | `escalada` | 0 en los días con diario desde la **primera sesión de escalada** | 0 en todos los días con diario |
 | `gimnasio` | 0 en los días con diario desde el **primer entrenamiento**, más los días con entrenamiento | 0 en cualquier fecha del panel desde el primer entrenamiento |
-| `hab_<id>` | 1 si lo marcaste; 0 desde `Habito.desde`; vacío antes (los hábitos sin esa fecha, 0 siempre) | 0 en todos los días con diario, también antes de existir (igual en `vm_dias.csv`) |
+| `hab_<id>` | 1 si lo marcaste; 0 desde `Habito.desde`; vacío antes (los hábitos sin esa fecha, 0 siempre). Desde el esquema 17, en los días con `habitos_tri`, vacío si no lo contestaste (D.133) | 0 en todos los días con diario, también antes de existir (igual en `vm_dias.csv`) |
 | `sueno_recordado` | 1 si recordaste; 0 solo si ese día dijiste algo del sueño (calidad o texto); si no, vacío | 0 en cualquier día con diario sin sueño recordado |
 | `sdt_necesidad_autonomia`, `_competencia`, `_relacion` | También 1 si elegiste «las tres» | 0 con «las tres» |
 | `personas`, `vi_*`, `cercanos`, `cercania_media`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `penso_en_*` | Solo en los días con diario escrito o con un momento no privado que nombra a alguien con @ (`Dinamicas.diasSociales`); vacías en los demás | En cualquier día con documento de diario o algún momento |
@@ -629,7 +629,7 @@ Cambia lo que se guarda: `SCHEMA_V` = 16, con una colección nueva (`ideas`) y u
 | `fuente`, `enlace`, `donde` | De dónde salió cuando no hay obra (escrita a mano o al compartir), su enlace y el minuto o la página |
 | `postura` | Cómo la tienes: `convence`, `piensa` (te hace pensar), `duda` o `desacuerdo`; vacío = sin decir |
 | `fijada`, `n_revisiones` | 0/1 si está fijada arriba; cuántas veces la respondiste en «Una idea de antes» |
-| `personas`, `temas` | Las @personas y los #temas escritos en el texto (listas) |
+| `personas`, `temas` | Las @personas escritas en el texto; los temas del campo «Temas» (desde el esquema 17) y los #temas del texto, sin repetir (listas) |
 
 `vm_ideas_revisiones.csv` tiene una fila por respuesta (`Exportar.filasIdeasRevisiones`): `idea_id`, `fecha` (día lógico en que respondiste) y `respuesta` (`sigue`, «sigo pensando igual»; `cambio`, «ya no»; `ignorar`, «ahora no»). En R se leen como `vm$ideas` y `vm$ideas_revisiones`.
 

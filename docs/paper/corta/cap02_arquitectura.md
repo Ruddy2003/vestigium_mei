@@ -103,7 +103,7 @@ Una fila se crea para cada fecha que aparece en *alguna* fuente. Una variable re
 | Variables | Pueden valer 0… |
 |---|---|
 | `gasto_total`, `gasto_imprevisto`, `n_impulso`, `escalada`, `gimnasio`; emociones `n_*`, `registros_animo`, `ingreso_total` y otras | desde el primer registro de su fuente, en días con diario (en algunas, o con datos de esa fuente) |
-| Hábitos `hab_<id>` | desde `Habito.desde` (el día en que se creó el hábito) |
+| Hábitos `hab_<id>` | desde `Habito.desde` (el día en que se creó el hábito); desde el esquema 17, vacío en los días en que no lo contestaste |
 | `sueno_recordado` | solo si ese día se dijo algo del sueño |
 | Variables sociales (`personas`, `vi_*`, `per_`, `pen_`…) | solo en días en que se pudo nombrar a alguien (`Dinamicas.diasSociales`); desde 10e, `personas` cuenta a quien nombras en el diario y en los momentos no privados (D.93) |
 | `ctx_*`, `dia_dificil`, `palabras`, `hitos_n` y otras | en todos los días con diario |
@@ -127,7 +127,7 @@ Las escalas del diario (valencia y activación, 1–7) son **ordinales**: la dis
 
 ## 2.7 Familias de variables dinámicas
 
-Hay **187** variables fijas desde 10f (cada identificador que `Estadistica.variables()` escribe con su nombre; 186 en la v91 y 184 en la v90): 130 existen siempre y 57 solo si hay datos de su fuente. Las de 10e son `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94); la de 10f, `fuerza_ref_kg`, la mejor 1RM estimada del día en press inclinado con mancuernas (D.114; capítulo 8). Siete son privadas: la app no las cruza y van a R. Además, el sistema crea **variables dinámicas** por cada elemento que la persona usa: una por persona (`per_*`, `pen_*`), tema, lugar, app, categoría de gasto, artista, ciudad, nutriente… (27 prefijos, Apéndice A), y también hábitos, emociones usadas y campañas.
+Hay **193** variables fijas desde el esquema 17 (cada identificador que `Estadistica.variables()` escribe con su nombre; 187 desde 10f, 186 en la v91 y 184 en la v90): 133 existen siempre y 60 solo si hay datos de su fuente. El esquema 17 sumó tres contextos y tres compañías (D.132, D.133). Las de 10e son `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94); la de 10f, `fuerza_ref_kg`, la mejor 1RM estimada del día en press inclinado con mancuernas (D.114; capítulo 8). Siete son privadas: la app no las cruza y van a R. Además, el sistema crea **variables dinámicas** por cada elemento que la persona usa: una por persona (`per_*`, `pen_*`), tema, lugar, app, categoría de gasto, artista, ciudad, nutriente… (27 prefijos, Apéndice A), y también hábitos, emociones usadas y campañas.
 
 - **Análisis:** entran solo las más frecuentes de cada familia, con un tope y un mínimo de días (por ejemplo, `per_`: máx. 15, mín. 5 días; `Dinamicas.familia`).
 - **Exportación extendida (`vm_panel_extendido.csv`):** todas las que aparecen en al menos 2 días, hasta 400 por familia.
