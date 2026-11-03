@@ -126,20 +126,50 @@ fun PantallaDiario(nav: Nav) {
         Seccion("Hoy", "Toca para escribir. Se guarda mientras escribes.") {
             io.github.ruddy2003.vestigium.ui.ObjetoDiario(hoy, Repo.dias[hoy]?.nota.orEmpty()) { escribiendo = hoy }
         }
-        // La biblioteca: las últimas entradas en su estante, y la puerta para entrar.
+        // Las cinco bibliotecas, cada una con su objeto: el estante del diario, la libreta de momentos, el estante de sueños de
+        // noche, el fichero del Ideario y las cartas. Cada una tiene su puerta para entrar.
         val ultimas = remember(Repo.dias) { LibroDiario.entradas().take(9) }
         Seccion("Biblioteca del diario", "${Repo.dias.values.count { it.nota.isNotBlank() }} entradas · %,d palabras".format(palabras)) {
             if (ultimas.isEmpty()) Vacio("Aquí se irán guardando tus entradas.")
             else io.github.ruddy2003.vestigium.ui.EstanteDiario(ultimas) { f -> Seleccion.entrada = f; nav.ir("entrada") }
-            io.github.ruddy2003.vestigium.ui.BotonPrincipal("entrar a la biblioteca →", Modifier.fillMaxWidth().padding(top = 12.dp)) { nav.ir("biblioteca_diario") }
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BotonSecundario("☾  sueños", Modifier.weight(1f)) { nav.ir("biblioteca_suenos") }
-                BotonSecundario("✦  momentos", Modifier.weight(1f)) { nav.ir("biblioteca_momentos") }
-                BotonSecundario("✉  cartas", Modifier.weight(1f)) { nav.ir("cartas") }
+            BotonSecundario("entrar a la biblioteca del diario →", Modifier.fillMaxWidth().padding(top = 10.dp)) { nav.ir("biblioteca_diario") }
+        }
+        val hojas = remember(Repo.momentos, Repo.consumos) { diasConMomentos() }
+        Seccion("Libreta de momentos", if (hojas.isEmpty()) null else "${hojas.size} ${if (hojas.size == 1) "hoja" else "hojas"}, una por día") {
+            if (hojas.isEmpty()) Vacio("Toca «¿Cómo estás ahora?» y aquí se irá llenando, una hoja por día.")
+            else androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().padding(top = 4.dp), contentAlignment = Alignment.Center) {
+                LibretaCerrada(hojas.size, hojas.lastOrNull(), Modifier.fillMaxWidth(0.46f)) { Seleccion.momentos = hojas.first(); nav.ir("hoja_momentos") }
             }
-            BotonSecundario("❖  ideario: lo que aprendiste y pensaste", Modifier.fillMaxWidth().padding(top = 8.dp)) { nav.ir("biblioteca_ideas") }
-            // La lista editable de tus registros de ánimo (N-25).
-            BotonSecundario("✦  todos tus registros", Modifier.fillMaxWidth().padding(top = 8.dp)) { nav.ir("momentos") }
+            Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BotonSecundario("entrar a la libreta →", Modifier.weight(1f)) { nav.ir("biblioteca_momentos") }
+                // La lista editable de tus registros de ánimo (N-25).
+                BotonSecundario("todos tus registros", Modifier.weight(1f)) { nav.ir("momentos") }
+            }
+        }
+        val suenos = remember(Repo.dias) { LibroDiario.suenos().take(9) }
+        Seccion("Biblioteca de sueños", if (suenos.isEmpty()) null else "${Repo.dias.values.count { it.sueno_texto.isNotBlank() }} sueños escritos") {
+            if (suenos.isEmpty()) Vacio("Cuando escribas un sueño, aparece aquí, en el estante de noche.")
+            else io.github.ruddy2003.vestigium.ui.CieloNoche { io.github.ruddy2003.vestigium.ui.EstanteDiario(suenos, noche = true) { f -> Seleccion.sueno = f; nav.ir("sueno") } }
+            BotonSecundario("entrar a la biblioteca de sueños →", Modifier.fillMaxWidth().padding(top = 10.dp)) { nav.ir("biblioteca_suenos") }
+        }
+        Seccion("Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste y pensaste, un cajón por tema." else "${Repo.ideas.size} ideas · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas") {
+            if (Repo.ideas.isEmpty()) Vacio("Anota una idea y ponle un tema: cada tema es un cajón del fichero.")
+            else FicheroIdeas(nav, Repo.ideas, max = 6)
+            Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BotonSecundario("entrar al Ideario →", Modifier.weight(1f)) { nav.ir("biblioteca_ideas") }
+                BotonSecundario("＋ idea", Modifier.weight(1f)) { EdicionIdea.abrir(nav, EdicionIdea.nueva()) }
+            }
+        }
+        val cartas = remember(Repo.cartas) { Repo.cartas.sortedByDescending { it.escrita }.take(2) }
+        Seccion("Cartas", if (Repo.cartas.isEmpty()) "A tu yo del futuro y a otras personas." else "${Repo.cartas.size} ${if (Repo.cartas.size == 1) "carta" else "cartas"}") {
+            if (cartas.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                cartas.forEach { c -> io.github.ruddy2003.vestigium.ui.SobreCarta(c, Modifier.weight(1f).height(112.dp)) { nav.ir("cartas") } }
+                if (cartas.size == 1) androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+            }
+            Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BotonSecundario("entrar a las cartas →", Modifier.weight(1f)) { nav.ir("cartas") }
+                BotonSecundario("✉ escribir una", Modifier.weight(1f)) { nav.ir("carta_nueva") }
+            }
         }
         // La línea de tiempo y la exportación empiezan plegadas, y se vuelven a plegar al cerrar la app o al cambiar de día.
         Seccion("Línea de tiempo", "Entradas, momentos y sueños, día por día, con buscador y filtros.", autoPlegar = true) { Column {

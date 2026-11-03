@@ -662,3 +662,5 @@ Cambia lo que se guarda: `SCHEMA_V` = 17. El detalle está en el capítulo 3 y e
 | `ctx_casa`, `ctx_fiesta`, `ctx_tramites` | Contextos nuevos; 0 en los días de antes (no existían) |
 | `vm_dias.csv:ctx_otro` | Otro contexto escrito a mano |
 | `vm_dias.csv:habitos_tri`, `hab_*` | Con `habitos_tri` = 1, un hábito sin respuesta queda vacío en `hab_*` en vez de 0 |
+
+**Ideario** (`vm_ideas.csv`): `temas` reúne los temas del campo «Temas» (desde el esquema 17) y los `#temas` escritos en el texto, sin repetir. Antes eran solo los del texto.

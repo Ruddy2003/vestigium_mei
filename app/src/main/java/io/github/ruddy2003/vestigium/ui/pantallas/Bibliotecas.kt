@@ -97,11 +97,11 @@ import io.github.ruddy2003.vestigium.ui.elegirFecha
 /** Minúsculas y sin acentos, para buscar sin importar cómo se escribió. */
 private fun sinAcentos(s: String) = java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
 
-private val BIBLIOTECAS = listOf(Triple("diario", "Diario", "biblioteca_diario"), Triple("suenos", "Sueños", "biblioteca_suenos"),
-    Triple("momentos", "Momentos", "biblioteca_momentos"), Triple("cartas", "Cartas", "cartas"), Triple("ideas", "Ideario", "biblioteca_ideas"))
+private val BIBLIOTECAS = listOf(Triple("diario", "Diario", "biblioteca_diario"), Triple("momentos", "Momentos", "biblioteca_momentos"),
+    Triple("suenos", "Sueños", "biblioteca_suenos"), Triple("ideas", "Ideario", "biblioteca_ideas"), Triple("cartas", "Cartas", "cartas"))
 
 /**
- * Las cinco bibliotecas en una: el diario, los sueños, la libreta de momentos, las cartas y el Ideario. Se cambia entre ellas con las pestañas de arriba
+ * Las cinco bibliotecas en una: el diario, la libreta de momentos, los sueños, el Ideario y las cartas (el mismo orden que en la pestaña Diario). Se cambia entre ellas con las pestañas de arriba
  * o deslizando a los lados.
  */
 @Composable

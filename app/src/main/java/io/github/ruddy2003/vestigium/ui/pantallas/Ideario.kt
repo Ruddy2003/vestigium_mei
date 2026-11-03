@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -118,19 +117,21 @@ fun PantallaIdea(nav: Nav) {
             }
         }
         Etiqueta("La idea")
-        Editor(x.texto, "idea.txt", "¿Qué entendiste? Con #tema para ordenarla y @persona si te lo contó alguien de tu gente.", minimo = 160,
+        Editor(x.texto, "idea.txt", "¿Qué entendiste? Con tus palabras; @persona si te lo contó alguien de tu gente.", minimo = 160,
             pie = "${Texto.palabras(x.texto)} verba") { cambiar(x.copy(texto = it)) }
-        // Las estanterías que ya tienes: un toque agrega el #tema al final del texto.
-        val temas = remember(Repo.ideas) { Ideario.temas(Repo.ideas).take(14) }
-        if (temas.isNotEmpty()) {
-            val puestos = Texto.temas(x.texto).toSet()
-            FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                temas.forEach { (t, _) ->
-                    Ficha("#$t", t in puestos) { if (t !in puestos) cambiar(x.copy(texto = (x.texto.trimEnd() + " #" + t).trimStart())) }
-                }
+        if (x.texto.isBlank() && tocada) Ayuda("Sin texto todavía no se guarda.", Modifier.padding(top = 6.dp))
+        // Los temas: cada uno es un cajón del fichero. Los #temas escritos en el texto también cuentan (se ven marcados).
+        Etiqueta("Temas")
+        val enTexto = Texto.temas(x.texto).toSet()
+        ListaEtiquetas(x.temas, "un tema: estoicismo, dinero, salud…", normalizar = { Texto.etiqueta(it) }) { l -> cambiar(x.copy(temas = l.distinct())) }
+        val temas = remember(Repo.ideas) { Ideario.temas(Repo.ideas).take(18) }
+        if (temas.isNotEmpty()) FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            temas.forEach { (t, _) ->
+                val puesto = t in x.temas || t in enTexto
+                Ficha(t.replace('_', ' '), puesto) { if (t in x.temas) cambiar(x.copy(temas = x.temas - t)) else if (t !in enTexto) cambiar(x.copy(temas = x.temas + t)) }
             }
         }
-        if (x.texto.isBlank() && tocada) Ayuda("Sin texto todavía no se guarda.", Modifier.padding(top = 6.dp))
+        if (enTexto.any { it !in x.temas }) Ayuda("También cuentan los #temas del texto: " + enTexto.filter { it !in x.temas }.joinToString(", ") { "#$it" } + ".", Modifier.padding(top = 4.dp))
         Etiqueta("De dónde viene")
         FilaFichas(Catalogo.ORIGENES_IDEA, x.origen.ifBlank { null }) { cambiar(x.copy(origen = it.orEmpty())) }
         if (x.origen != "propia") {
@@ -227,6 +228,7 @@ fun TarjetaIdea(i: Idea, modifier: Modifier = Modifier, lineas: Int = 4, onClick
             }
             if (i.titulo.isNotBlank()) Text(i.titulo, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 4.dp))
             TextoMarcado(i.texto, Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodyMedium, maxLines = lineas, overflow = TextOverflow.Ellipsis)
+            Ideario.temasDe(i).takeIf { it.isNotEmpty() }?.let { t -> Text(t.joinToString("  ") { "#" + it.replace('_', ' ') }, style = MaterialTheme.typography.labelSmall, color = cs.primary, modifier = Modifier.padding(top = 4.dp), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             lineaFuente(i).ifBlank { null }?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
     }
@@ -236,28 +238,29 @@ fun TarjetaIdea(i: Idea, modifier: Modifier = Modifier, lineas: Int = 4, onClick
 //  La libreta
 // =====================================================================
 
-/** El Ideario dentro de las bibliotecas: por mes o por temas (solo los #temas que escribiste en las ideas). */
+/**
+ * El Ideario dentro de las bibliotecas: arriba el fichero (un cajón por tema, [FicheroIdeas]) y debajo todas las ideas por mes,
+ * con buscador y filtros. [vistaInicial] se conserva por compatibilidad: con «temas», la lista de abajo se oculta y queda solo el fichero.
+ */
 @Composable
 fun BibliotecaIdeas(nav: Nav, rotulo: (String) -> String, vistaInicial: String = "mes") {
-    var vista by remember { mutableStateOf(vistaInicial) }
     var busca by remember { mutableStateOf("") }
     var anio by remember { mutableStateOf<String?>(null) }
     var origen by remember { mutableStateOf<String?>(null) }
-    var estante by remember { mutableStateOf<String?>(null) }
-    var sinTema by remember { mutableStateOf(false) }
     var meses by remember { mutableIntStateOf(6) }
     val todas = Repo.ideas
     BotonPrincipal("＋ Anotar una idea", Modifier.fillMaxWidth().padding(top = 12.dp)) { EdicionIdea.abrir(nav, EdicionIdea.nueva()) }
-    Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Ficha("por mes", vista == "mes") { vista = "mes" }
-        Ficha("por temas", vista == "temas") { vista = "temas"; estante = null; sinTema = false }
-    }
     if (todas.isEmpty()) {
-        Vacio("Todavía no hay ideas. Anota lo que aprendiste de un libro, un video o una plática, o algo que se te ocurrió. También puedes compartir un video o una página a Vestigium.")
+        Vacio("Todavía no hay ideas. Anota lo que aprendiste de un libro, un video o una plática, o algo que se te ocurrió, y ponle un tema: cada tema es un cajón del fichero. También puedes compartir un video o una página a Vestigium.")
         return
     }
-    OutlinedTextField(busca, { busca = it }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true,
-        placeholder = { Text("buscar: idea, autor, fuente…", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+    Text("El fichero", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 16.dp, bottom = 6.dp))
+    Ayuda("Un cajón por tema. Toca uno para sacar sus fichas.", Modifier.padding(bottom = 8.dp))
+    FicheroIdeas(nav, todas)
+    if (vistaInicial == "temas") return
+    Text("Todas, por mes", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp))
+    OutlinedTextField(busca, { busca = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
+        placeholder = { Text("buscar: idea, tema, autor, fuente…", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
     FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Catalogo.ORIGENES_IDEA.filter { o -> todas.any { it.origen == o.id } }.forEach { o -> Ficha(o.nombre.lowercase(), origen == o.id) { origen = if (origen == o.id) null else o.id } }
         todas.map { it.fecha.take(4) }.distinct().sortedDescending().takeIf { it.size > 1 }?.forEach { a -> Ficha(a, anio == a) { anio = if (anio == a) null else a } }
@@ -267,49 +270,20 @@ fun BibliotecaIdeas(nav: Nav, rotulo: (String) -> String, vistaInicial: String =
         (q.isBlank() || Totales.normal(Ideario.textoBuscable(i, Repo.obras)).contains(q)) }
     fun abrir(i: Idea) = EdicionIdea.abrir(nav, i)
     if (visibles.isEmpty()) { Vacio("Nada coincide."); return }
-    if (vista == "temas") {
-        val elegida = estante
-        if (elegida == null && !sinTema) {
-            val temas = Ideario.temas(visibles)
-            Ayuda("Cada #tema que escribiste en una idea es una estantería. Los temas del diario y de los momentos no salen aquí.", Modifier.padding(top = 10.dp))
-            Tarjeta(Modifier.padding(top = 8.dp)) {
-                temas.forEachIndexed { k, (t, n) ->
-                    if (k > 0) HorizontalDivider()
-                    FilaEstante("#$t", n) { estante = t }
-                }
-                val sin = Ideario.deTema(visibles, null).size
-                if (sin > 0) { if (temas.isNotEmpty()) HorizontalDivider(); FilaEstante("sin tema", sin) { sinTema = true } }
-            }
-        } else {
-            TextButton(onClick = { estante = null; sinTema = false }) { Text("← todas las estanterías", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
-            val l = Ideario.deTema(visibles, elegida)
-            Text((elegida?.let { "#$it" } ?: "Sin tema") + " · ${l.size}", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-            l.forEach { i -> TarjetaIdea(i) { abrir(i) } }
-        }
-    } else {
-        val fijadas = visibles.filter { it.fijada }
-        if (fijadas.isNotEmpty()) {
-            Text("Fijadas", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 16.dp))
-            fijadas.forEach { i -> TarjetaIdea(i) { abrir(i) } }
-        }
-        val porMes = visibles.filter { !it.fijada }.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
-        porMes.entries.take(meses).forEach { (mes, l) ->
-            Text(rotulo(mes), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp, bottom = 2.dp))
-            l.sortedByDescending { it.creada }.forEach { i -> TarjetaIdea(i) { abrir(i) } }
-        }
-        if (porMes.size > meses) BotonSecundario("ver más meses", Modifier.padding(top = 14.dp)) { meses += 6 }
+    val fijadas = visibles.filter { it.fijada }
+    if (fijadas.isNotEmpty()) {
+        Text("Fijadas", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 16.dp))
+        fijadas.forEach { i -> TarjetaIdea(i) { abrir(i) } }
     }
+    val porMes = visibles.filter { !it.fijada }.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
+    porMes.entries.take(meses).forEach { (mes, l) ->
+        Text(rotulo(mes), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp, bottom = 2.dp))
+        l.sortedByDescending { it.creada }.forEach { i -> TarjetaIdea(i) { abrir(i) } }
+    }
+    if (porMes.size > meses) BotonSecundario("ver más meses", Modifier.padding(top = 14.dp)) { meses += 6 }
     Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
         Ayuda("«Una idea de antes» en la pantalla del día", Modifier.weight(1f))
         Ficha(if (Repo.config.ideas_resurgir) "encendido" else "apagado", Repo.config.ideas_resurgir) { Repo.cambiarConfig { it.copy(ideas_resurgir = !it.ideas_resurgir) } }
-    }
-}
-
-@Composable
-private fun FilaEstante(nombre: String, n: Int, abrir: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable { abrir() }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(nombre, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-        Text("$n ${if (n == 1) "idea" else "ideas"} ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

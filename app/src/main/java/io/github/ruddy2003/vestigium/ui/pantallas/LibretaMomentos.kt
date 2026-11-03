@@ -98,7 +98,7 @@ private fun renglones(fecha: String, discreto: Boolean): List<Renglon> {
  * La libreta cerrada: el contenedor del tema ([contenedorDe]), que engorda con cada hoja escrita. Al tocarla se abre en la última hoja.
  */
 @Composable
-private fun LibretaCerrada(hojas: Int, desde: String?, modifier: Modifier = Modifier, abrir: () -> Unit) {
+internal fun LibretaCerrada(hojas: Int, desde: String?, modifier: Modifier = Modifier, abrir: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val oscuro = esOscuro()
     val tapa = cs.primary

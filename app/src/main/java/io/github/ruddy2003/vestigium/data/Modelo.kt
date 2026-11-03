@@ -405,6 +405,8 @@ data class Idea(
     val texto: String,
     /** La idea en una línea. */
     val titulo: String = "",
+    /** Los temas de la idea (esquema 17), sin «#» y en minúsculas. Se suman a los #temas escritos en el texto (ver Ideario.temasDe). */
+    val temas: List<String> = emptyList(),
     /** leido, visto, contado o propia (ver [Catalogo.ORIGENES_IDEA]). */
     val origen: String = "",
     val quien: List<String> = emptyList(),

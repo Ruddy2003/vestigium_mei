@@ -358,7 +358,7 @@ object Exportar {
                 "texto" to it.texto, "origen" to it.origen.ifBlank { null }, "quien" to it.quien, "obra_id" to it.obra_id,
                 "obra_titulo" to it.obra_id?.let { o -> obras[o]?.titulo }, "cita_id" to it.cita_id, "fuente" to it.fuente.ifBlank { null },
                 "enlace" to it.enlace.ifBlank { null }, "donde" to it.donde.ifBlank { null }, "postura" to it.postura.ifBlank { null },
-                "fijada" to it.fijada, "n_revisiones" to it.revisiones.size, "personas" to Texto.personas(it.texto), "temas" to Texto.temas(it.texto))
+                "fijada" to it.fijada, "n_revisiones" to it.revisiones.size, "personas" to Texto.personas(it.texto), "temas" to Ideario.temasDe(it))
         }
     }
 

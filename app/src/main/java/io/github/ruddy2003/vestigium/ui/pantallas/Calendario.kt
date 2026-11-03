@@ -101,6 +101,10 @@ object Seleccion {
     var cinta by mutableStateOf<String?>(null)
     /** Día abierto en la libreta de momentos. */
     var momentos by mutableStateOf<String?>(null)
+    /** Cajón abierto del fichero del Ideario: un tema, o "" para las ideas sin tema. */
+    var cajon by mutableStateOf<String?>(null)
+    /** La idea que se estaba leyendo en el cajón (para volver a ella después de editarla). */
+    var fichaIdea by mutableStateOf<String?>(null)
     /**
      * Abre el Día de [fecha] encima de la pantalla actual, para que «atrás» regrese a ella (N-12). La pestaña Hoy no cambia
      * de fecha por esto.

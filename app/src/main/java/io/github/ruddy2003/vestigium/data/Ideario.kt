@@ -12,18 +12,21 @@ object Ideario {
     const val HOLGURA = 3L
 
     /**
-     * Las estanterías: cada #tema escrito en el texto de alguna idea, con cuántas ideas lo tienen, de más a menos (empate:
-     * alfabético). Solo cuentan las ideas: los temas del diario o de los momentos no aparecen aquí.
+     * Las estanterías (los cajones del fichero): cada tema de alguna idea (del campo «Temas» o escrito con # en el texto), con
+     * cuántas ideas lo tienen, de más a menos (empate: alfabético). Solo cuentan las ideas: los temas del diario o de los momentos no aparecen aquí.
      */
     fun temas(ideas: List<Idea>): List<Pair<String, Int>> {
         val n = HashMap<String, Int>()
-        ideas.forEach { i -> Texto.temas(i.texto).distinct().forEach { n.merge(it, 1, Int::plus) } }
+        ideas.forEach { i -> temasDe(i).forEach { n.merge(it, 1, Int::plus) } }
         return n.entries.sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key }).map { it.key to it.value }
     }
 
+    /** Los temas de una idea: los del campo «Temas» (esquema 17) más los #temas escritos en el texto, sin repetir. */
+    fun temasDe(i: Idea): List<String> = (i.temas.map { Texto.etiqueta(it) }.filter { it.isNotEmpty() } + Texto.temas(i.texto)).distinct()
+
     /** Las ideas de una estantería (o, con null, las que no tienen ningún tema), de la más reciente a la más antigua. */
     fun deTema(ideas: List<Idea>, tema: String?): List<Idea> = ideas.filter { i ->
-        val t = Texto.temas(i.texto)
+        val t = temasDe(i)
         if (tema == null) t.isEmpty() else tema in t
     }.sortedByDescending { it.creada }
 
@@ -102,7 +105,7 @@ object Ideario {
     fun deNota(n: Nota, id: String): Idea =
         Idea(id = id, creada = n.creada, fecha = n.fecha, texto = n.texto, origen = "propia", fijada = n.fijada, editada = n.editada)
 
-    /** Lo que se busca de una idea: título, texto, quién lo dice, la fuente y el título de su obra. */
+    /** Lo que se busca de una idea: título, texto, temas, quién lo dice, la fuente y el título de su obra. */
     fun textoBuscable(i: Idea, obras: List<Obra>): String =
-        listOf(i.titulo, i.texto, i.quien.joinToString(" "), i.fuente, i.obra_id?.let { o -> obras.firstOrNull { it.id == o }?.titulo }.orEmpty()).joinToString(" ")
+        listOf(i.titulo, i.texto, i.temas.joinToString(" "), i.quien.joinToString(" "), i.fuente, i.obra_id?.let { o -> obras.firstOrNull { it.id == o }?.titulo }.orEmpty()).joinToString(" ")
 }
