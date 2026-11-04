@@ -151,10 +151,14 @@ object Terapia {
         )
     }
 
-    /** Las [k] emociones más nombradas en los registros de ánimo, y qué parte de las nombradas (con tono conocido) son desagradables. */
+    /**
+     * Las [k] emociones más nombradas en los registros de ánimo, y qué parte de las nombradas (con tono conocido) son desagradables.
+     * «Otro» se nombra con lo que escribiste (esquema 17), y si alguna vez dijiste «mucho», se anota al lado: «Ansiedad (2 «mucho»)».
+     */
     fun emociones(registros: List<Momento>, k: Int = 5): Pair<List<Pair<String, Int>>, Double?> {
         val todas = registros.flatMap { Catalogo.emocionesDe(it) }
-        val top = todas.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.take(k).map { Catalogo.nombreSentimiento(it.key) to it.value }
+        val periodo = Periodo.animoDe(registros, k, conNoSe = true)
+        val top = periodo.first.map { e -> (if (e.mucho > 0) "${e.nombre} (${e.mucho} «mucho»)" else e.nombre) to e.n }
         val conTono = todas.mapNotNull { Catalogo.sentimiento(it) }
         val neg = if (conTono.isEmpty()) null else conTono.count { it.tono < 0 }.toDouble() / conTono.size
         return top to neg
@@ -168,6 +172,10 @@ object Terapia {
         l.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.map { nombre(it.key) to it.value }
 
     private fun legible(id: String) = id.replace('_', ' ').replaceFirstChar { it.uppercase() }
+
+    /** Los detonantes de un día o de una recaída, con «otro» cambiado por lo que escribiste (esquema 17). */
+    private fun detonantesCon(l: List<String>, otro: String?): List<String> =
+        l.map { if (it == "otro" && !otro.isNullOrBlank()) otro.trim().lowercase() else it }
 
     /** Los detonantes de [Catalogo.DETONANTES] con acentos; los escritos a mano salen como se anotaron. */
     private fun detonante(id: String) = Catalogo.DETONANTES.firstOrNull { it.id == id }?.nombre ?: legible(id)
@@ -274,7 +282,8 @@ object Terapia {
                 diasConRecaida = diasRec.size, diasRespondidos = fechas.count { f -> Repo.dias[f]?.recaida != null || f in diasRec },
                 impulsos = imp.size, superados = superados(imp.map { Fechas.millis(it.ts) }, rec.map { Fechas.millis(it.ts) }),
                 impulsoMedio = media(dias.mapNotNull { it.impulso?.toDouble() }),
-                detonantes = conteo(dias.flatMap { it.detonantes } + rec.filter { it.fecha in en }.flatMap { it.detonantes }, ::detonante).take(5),
+                detonantes = conteo(dias.flatMap { detonantesCon(it.detonantes, it.detonante_otro) } +
+                    rec.filter { it.fecha in en }.flatMap { detonantesCon(it.detonantes, it.detonante_otro) }, ::detonante).take(5),
                 medicamentos = conteo(dias.flatMap { d -> d.medicamentos.map { it.trim() }.filter { it.isNotBlank() }.distinct() }) { it },
             )
         }

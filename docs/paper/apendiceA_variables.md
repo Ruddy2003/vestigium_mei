@@ -400,7 +400,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 
 ## A.3 Tablas exportadas
 
-La exportación genera 53 tablas CSV con datos (contadas en `Exportar.tablas()`: 51 antes del esquema 16, que agregó `vm_ideas.csv` y `vm_ideas_revisiones.csv`, A.10; 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv` (columnas `archivo`, `columna`, `tipo`, `descripcion` y `tabla`; desde 10f, también `desde_version` y `cambio`, A.9), `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por cada CSV con datos, sin el «vm_», más `ubicaciones` y `diccionario`; no lleva el catálogo de fotos), un `LEEME.txt`, el propio `vestigium.R` y la carpeta `portadas/` (`Exportar.archivos` y `Exportar.zip`). La exportación resumida (`Exportar.zipResumido`) trae solo `vm_panel.csv`, su diccionario, el `LEEME.txt` y `vestigium.R`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
+La exportación genera 54 tablas CSV con datos (contadas en `Exportar.tablas()`: 53 antes del esquema 18, que agregó `vm_listas.csv`, A.12; 51 antes del esquema 16, que agregó `vm_ideas.csv` y `vm_ideas_revisiones.csv`, A.10; 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv` (columnas `archivo`, `columna`, `tipo`, `descripcion` y `tabla`; desde 10f, también `desde_version` y `cambio`, A.9), `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por cada CSV con datos, sin el «vm_», más `ubicaciones` y `diccionario`; no lleva el catálogo de fotos), un `LEEME.txt`, el propio `vestigium.R` y la carpeta `portadas/` (`Exportar.archivos` y `Exportar.zip`). La exportación resumida (`Exportar.zipResumido`) trae solo `vm_panel.csv`, su diccionario, el `LEEME.txt` y `vestigium.R`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
 
 | Archivo | Contenido |
 |---|---|
@@ -442,6 +442,7 @@ La exportación genera 53 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_escalada_bloques.csv` | Bloques o vías de cada sesión |
 | `vm_biblioteca.csv` | Libros, películas, series, juegos y artículos |
 | `vm_citas.csv` | Citas de tus obras y frases guardadas con ♥ |
+| `vm_listas.csv` | Listas libres: cada elemento, cuándo se agregó y cuándo se hizo (esquema 18) |
 | `vm_mundo.csv` | Ciudades añadidas a mano, países rascados y sitios del Patrimonio Mundial marcados |
 | `vm_cartas.csv` | Cartas: a tu yo del futuro y a otras personas (las selladas, sin su texto) |
 | `vm_perfil.csv` | Conocerte: cómo está ahora y cada cambio con su fecha |
@@ -666,3 +667,30 @@ Cambia lo que se guarda: `SCHEMA_V` = 17. El detalle está en el capítulo 3 y e
 **Ideario** (`vm_ideas.csv`): `temas` reúne los temas del campo «Temas» (desde el esquema 17) y los `#temas` escritos en el texto, sin repetir. Antes eran solo los del texto.
 
 **Dinero** (`vm_gastos.csv`): `se_repite` (0/1), si el gasto se repite (renta, suscripción, servicios); solo se exporta. Las categorías Vivienda y Servicios aparecen como cualquier otra en `gcat_*`.
+
+## A.12 Cambios del esquema 18 (deseados y listas)
+
+Cambia lo que se guarda: `SCHEMA_V` = 18. El detalle está en el capítulo 2 (sección 2.5) y en el Apéndice D (D.145 y D.146). **No hay variables nuevas en el panel**: lo de esta sección solo se exporta como dato crudo. **[Diseño propio]**: agregar algo a una lista no describe cómo fue un día, y sumar columnas casi siempre en cero solo agregaría comparaciones a `vm_relaciones`.
+
+**Deseados** (`vm_biblioteca.csv`, tres columnas nuevas; vacías en las obras de antes):
+
+| Columna | Qué es |
+|---|---|
+| `prioridad` | Si está pendiente, qué tan pronto la quieres: `pronto`, `cuando_pueda` o `algun_dia`; vacío = sin decir |
+| `recomendo` | Quién te la recomendó: personas de tu gente, sin @ (lista) |
+| `donde` | Dónde verla o conseguirla, escrito a mano |
+
+La descripción de `estado` ahora incluye `pausado`, que ya existía desde D.143 pero el diccionario no nombraba.
+
+**Listas libres** (`vm_listas.csv`, `Exportar.filasListas`, una fila por elemento):
+
+| Columna | Qué es |
+|---|---|
+| `lista_id`, `lista` | Identificador y nombre de la lista (lugares por visitar, cosas por comprar…) |
+| `id`, `texto`, `nota`, `enlace` | El elemento, una nota y un enlace |
+| `prioridad` | `pronto`, `cuando_pueda` o `algun_dia`; vacío = sin decir |
+| `agregado` | Día lógico en que lo agregaste |
+| `hecho` | Día lógico en que lo tachaste; vacío = pendiente |
+| `dias_hasta_hecho` | Días entre `agregado` y `hecho` (vacío si sigue pendiente). *Ejemplo inventado:* agregado el 1 de octubre y hecho el 11 → 10 |
+
+En R se lee como `vm$listas`.

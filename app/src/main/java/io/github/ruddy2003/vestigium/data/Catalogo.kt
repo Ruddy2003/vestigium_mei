@@ -167,6 +167,36 @@ object Catalogo {
         return if (discreto) "Ā" else "Ánimo"
     }
 
+    /** Una emoción del registro con su intensidad, si la diste: «Tristeza (mucho)». En modo discreto, la letra y un punto por nivel. */
+    fun emocionConIntensidad(m: Momento, id: String, discreto: Boolean): String {
+        val n = if (id == OTRO && !m.emocion_otra.isNullOrBlank() && !discreto) m.emocion_otra else nombreSentimiento(id, discreto)
+        val k = m.intensidades[id] ?: return n
+        val palabra = INTENSIDADES.firstOrNull { it.first == k }?.second ?: return n
+        return if (discreto) n + "·".repeat(k) else "$n ($palabra)"
+    }
+
+    /** Como [titulo], pero cada emoción con su intensidad (esquema 17). Sin emociones, igual que [titulo]. */
+    fun tituloDetallado(m: Momento, discreto: Boolean): String {
+        val e = emocionesDe(m)
+        if (e.isEmpty() || m.tipo == "impulso" || m.tipo == "recaida" || m.tipo == "libido") return titulo(m, discreto)
+        return e.joinToString(" · ") { emocionConIntensidad(m, it, discreto) }
+    }
+
+    /** Con quién estabas, en palabras («pareja, amigos», «solo, por mensaje o llamada»); vacío si no se dijo. */
+    fun conQuienTexto(m: Momento): String = m.con_quien.joinToString(", ") { q -> CON_QUIEN.firstOrNull { it.id == q }?.nombre?.lowercase() ?: q }
+
+    /**
+     * Lo que dice un registro además de su título, en una línea: en qué pensabas (cuando el título son las emociones) y con quién.
+     * En modo discreto, nada: así no se lee de un vistazo.
+     */
+    fun detalleMomento(m: Momento, discreto: Boolean): String {
+        if (discreto) return ""
+        return listOfNotNull(
+            pensamientosDe(m).takeIf { it.isNotEmpty() && emocionesDe(m).isNotEmpty() }?.let { l -> "pensando: " + l.joinToString(", ") { nombrePensamiento(it).lowercase() } },
+            conQuienTexto(m).ifBlank { null }?.let { "con $it" },
+        ).joinToString(" · ")
+    }
+
     /** Las ocho del widget de momentos: un toque y se guarda ese sentimiento. */
     val SENTIMIENTOS_WIDGET = listOf("alegria", "calma", "gratitud", "estres", "ansiedad", "frustracion", "tristeza", "enojo")
 
@@ -288,6 +318,10 @@ object Catalogo {
     fun nombreTramo(id: String): String = (ENFOQUE + SIESTA).firstOrNull { it.id == id }?.nombre ?: id
     /** El nombre de un tramo: el de su tipo o, con «otro», el que escribiste (esquema 17). */
     fun nombreTramo(t: Tramo): String = if (t.tipo == "otro" && t.tipo_otro.isNotBlank()) t.tipo_otro.trim() else nombreTramo(t.tipo)
+
+    /** Qué tan pronto quieres algo pendiente: una obra deseada o un elemento de una lista (esquema 18). */
+    val PRIORIDADES_DESEO = listOf(Opcion("pronto", "Pronto"), Opcion("cuando_pueda", "Cuando pueda"), Opcion("algun_dia", "Algún día"))
+    fun nombrePrioridad(id: String): String? = PRIORIDADES_DESEO.firstOrNull { it.id == id }?.nombre
 
     val CATEGORIAS = listOf("Comida", "Transporte", "Vivienda", "Servicios", "Salud", "Ocio", "Social", "Suscripciones", "Escuela", "Ropa", "Regalos", "Otro")
     val CATEGORIAS_INGRESO = listOf("Sueldo", "Beca", "Trabajo extra", "Mesada", "Regalo", "Venta", "Reembolso", "Intereses", "Otro")

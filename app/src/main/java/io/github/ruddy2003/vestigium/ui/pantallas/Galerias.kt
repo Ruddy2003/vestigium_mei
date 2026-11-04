@@ -464,6 +464,7 @@ fun PantallaObras(nav: Nav) {
                 BusquedaObra.tipo = tipo ?: "libro"; BusquedaObra.texto = ""; BusquedaObra.portadaDe = null; nav.ir("buscar_obra")
             }
             BotonSecundario("lista y pendientes", Modifier.weight(1f)) { nav.ir("biblioteca") }
+            BotonSecundario("deseados", Modifier.weight(1f)) { nav.ir("deseados") }
         }
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("todo", tipo == null) { tipo = null }

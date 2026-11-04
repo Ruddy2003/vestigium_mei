@@ -58,6 +58,7 @@ data class Respaldo(
     val laptop: List<LaptopDia> = emptyList(),
     val avisos: List<AvisosDia> = emptyList(),
     val ideas: List<Idea> = emptyList(),
+    val listas: List<Lista> = emptyList(),
 )
 
 /** CSV listos para R: fechas AAAA-MM-DD, booleanos como 0/1, listas separadas por «|», vacío = dato faltante. */
@@ -642,12 +643,21 @@ object Exportar {
         }
     }
 
+    /** Las listas libres: un elemento por fila, con cuántos días pasaron entre agregarlo y hacerlo. */
+    fun filasListas() = Repo.listas.flatMap { l ->
+        l.elementos.sortedBy { it.agregado }.map { e ->
+            linkedMapOf<String, Any?>("lista_id" to l.id, "lista" to l.nombre, "id" to e.id, "texto" to e.texto, "nota" to e.nota.ifBlank { null },
+                "enlace" to e.enlace.ifBlank { null }, "prioridad" to e.prioridad.ifBlank { null }, "agregado" to e.agregado, "hecho" to e.hecho,
+                "dias_hasta_hecho" to e.hecho?.let { h -> runCatching { java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(e.agregado.take(10)), Fechas.parse(h.take(10))) }.getOrNull() })
+        }
+    }
+
     fun filasBiblioteca() = Repo.obras.sortedBy { it.agregado }.map {
         linkedMapOf<String, Any?>("id" to it.id, "tipo" to it.tipo, "titulo" to it.titulo, "autor" to it.autor, "anio" to it.anio, "estado" to it.estado,
             "inicio" to it.inicio, "fin" to it.fin, "calificacion" to it.calificacion, "progreso" to it.progreso, "total" to it.total,
             "veces" to it.veces, "etiquetas" to it.etiquetas, "nota" to it.nota, "agregado" to it.agregado,
             "revista" to it.revista.ifBlank { null }, "doi" to it.doi.ifBlank { null }, "fuente" to it.fuente, "dias_marcados" to it.dias.size, "fechas_marcadas" to it.dias,
-            "citas" to it.citas.size,
+            "citas" to it.citas.size, "prioridad" to it.prioridad.ifBlank { null }, "recomendo" to it.recomendo, "donde" to it.donde.ifBlank { null },
             "dias" to if (it.inicio != null && it.fin != null) java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(it.inicio), Fechas.parse(it.fin)) + 1 else null)
     }
 
@@ -899,7 +909,7 @@ object Exportar {
         series = Repo.series("0000-01-01", "9999-12-31"), entrenos = Repo.entrenos.values.sortedBy { it.fecha }, ingresos = Repo.ingresos,
         youtube = Repo.youtube, tramos = Repo.tramos, consumos = Repo.consumos, notas = Repo.notas, metas = Repo.metas,
         tomas = Repo.tomas, laptop = Repo.laptop.values.sortedBy { it.fecha }, avisos = Repo.avisos.values.sortedBy { it.fecha },
-        ideas = Repo.ideas))
+        ideas = Repo.ideas, listas = Repo.listas))
 
     class Tabla(val archivo: String, val descripcion: String, val filas: List<Map<String, Any?>>)
 
@@ -942,6 +952,7 @@ object Exportar {
         Tabla("vm_escalada_bloques.csv", "Bloques o vías de cada sesión", filasEscaladaBloques()),
         Tabla("vm_biblioteca.csv", "Libros, películas, series, juegos y artículos", filasBiblioteca()),
         Tabla("vm_citas.csv", "Citas de tus obras y frases guardadas con ♥", filasCitas()),
+        Tabla("vm_listas.csv", "Listas libres: cada elemento, cuándo se agregó y cuándo se hizo", filasListas()),
         Tabla("vm_mundo.csv", "Ciudades añadidas a mano, países rascados y sitios del Patrimonio Mundial marcados", filasMundo()),
         Tabla("vm_cartas.csv", "Cartas: a tu yo del futuro y a otras personas (las selladas, sin su texto)", filasCartas()),
         Tabla("vm_perfil.csv", "Conocerte: cómo está ahora y cada cambio con su fecha", filasPerfil()),

@@ -73,6 +73,8 @@ object Pantallas {
         P("rascar", "Mapa para rascar", "Rasca los países que visitaste", "rascar mapa países"),
         P("unesco", "Patrimonio", "Sitios de la UNESCO que conoces", "unesco patrimonio"),
         P("ciudad_nueva", "Nueva ciudad", "Agregar una ciudad que visitaste", "ciudad agregar viaje"),
+        P("deseados", "Quiero leer y ver", "Tu lista de deseados: libros, películas, series y juegos pendientes", "deseados quiero leer ver pendientes recomendación wishlist"),
+        P("listas", "Listas", "Listas libres: lugares por visitar, cosas por comprar, restaurantes", "listas lista lugares comprar restaurantes pendientes tareas"),
         P("biblioteca", "Lista y pendientes", "Todas tus obras y lo pendiente de leer o ver", "pendientes leer ver lista libros películas añadir"),
         P("carta_nueva", "Nueva carta", "Escribir una carta al futuro o a alguien", "carta escribir futuro"),
         P("noche", "Llenar el día", "La hoja de la noche", "diario nota ánimo hábitos predicción"),

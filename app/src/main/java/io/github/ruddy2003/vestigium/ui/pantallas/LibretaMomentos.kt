@@ -84,7 +84,7 @@ private fun renglones(fecha: String, discreto: Boolean): List<Renglon> {
             Catalogo.pensamientosDe(m).takeIf { it.isNotEmpty() && !discreto && Catalogo.emocionesDe(m).isNotEmpty() }?.let { l -> "pensando: " + l.joinToString(", ") { Catalogo.nombrePensamiento(it).lowercase() } },
             m.con_quien.takeIf { it.isNotEmpty() && !discreto }?.let { l -> "con " + l.joinToString(", ") { q -> Catalogo.CON_QUIEN.firstOrNull { it.id == q }?.nombre?.lowercase() ?: q } },
             Repo.lugares.firstOrNull { it.id == m.lugar }?.nombre?.takeIf { !discreto }?.let { "en $it" })
-        Renglon(Fechas.millis(m.ts), Fechas.horaDe(m.ts), Catalogo.titulo(m, discreto), det.joinToString(" · "), m.texto.trim(), m.valencia, "momentos")
+        Renglon(Fechas.millis(m.ts), Fechas.horaDe(m.ts), Catalogo.tituloDetallado(m, discreto), det.joinToString(" · "), m.texto.trim(), m.valencia, "momentos")
     }
     val cs = Repo.consumos.filter { it.fecha == fecha && Sustancias.visible(it) }.map { c ->
         val det = listOfNotNull(Sustancias.maximo(c)?.let { "nivel $it/10" }, c.cantidad?.let { "${cifra(it)} ${Catalogo.sustancia(c.sustancia)?.unidad ?: ""}".trim() },

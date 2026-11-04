@@ -84,7 +84,7 @@ Desde el esquema 13, la colección `avisos` anota por día los avisos **planeado
 ## 3.5 Emociones con nombre, pensamientos y compañía
 
 En cualquier registro de ánimo se puede marcar (todo opcional):
-- **qué sientes**, de 47 emociones desde el esquema 17 (`Catalogo.SENTIMIENTOS`: 18 agradables, 23 desagradables y 6 mixtas; antes eran 25), más «otro…» y «no sé». A cada una se le puede poner **cuánto**: un poco, bastante o mucho. La intensidad solo se exporta.
+- **qué sientes**, de 47 emociones desde el esquema 17 (`Catalogo.SENTIMIENTOS`: 18 agradables, 23 desagradables y 6 mixtas; antes eran 25), más «otro…» y «no sé». A cada una se le puede poner **cuánto**: un poco, bastante o mucho. La intensidad no entra al panel: se exporta y, desde el esquema 18, se muestra al lado de cada emoción en las pantallas y los reportes («Tristeza (mucho)»).
 - **en qué piensas**, varios a la vez desde el esquema 17;
 - una nota con @personas y #temas;
 - **con quién estás**, que incluye hijos, mascota y «por mensaje o llamada».

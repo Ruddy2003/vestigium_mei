@@ -56,8 +56,37 @@ object Periodo {
         val diasSoloAvisos: Int = 0,
         /** Error típico de cada diferencia con el periodo anterior ([errorDif]): «valencia», «sueno», «pasos», «pantalla». */
         val errorAnterior: Map<String, Double> = emptyMap(),
+        // ---- lo que dicen los registros de ánimo (esquema 17): emociones con su intensidad, pensamientos y con quién
+        /** Las emociones nombradas, de más a menos, con cuántas veces dijiste «mucho». «No sé» no cuenta; «otro» va con lo que escribiste. */
+        val emociones: List<EmocionPeriodo> = emptyList(),
+        /** En qué pensabas, de más a menos (un registro con varios cuenta en cada uno). */
+        val pensamientos: List<Pair<String, Int>> = emptyList(),
+        /** Con quién estabas: cuántos registros con cada compañía, y de cuántos registros con «con quién» respondido. */
+        val conQuien: List<Pair<String, Int>> = emptyList(), val conQuienRegistros: Int = 0,
+        /** Registros de ánimo del periodo (de un aviso o abiertos por ti). */
+        val registrosAnimo: Int = 0,
     ) {
         val n: Int get() = fechas.size
+    }
+
+    /** Una emoción del periodo: su nombre, cuántos registros la nombran y en cuántos fue «mucho». */
+    class EmocionPeriodo(val nombre: String, val n: Int, val mucho: Int)
+
+    /**
+     * Lo que dicen los registros de ánimo de un periodo, con la misma lógica de las pantallas: cada emoción cuenta una vez por
+     * registro, «no sé» se deja fuera (salvo con [conNoSe], como en el reporte para terapia, que siempre lo contó), «otro» se
+     * nombra con lo que escribiste y «mucho» es la intensidad 3. Solo informativo: no entra a ningún promedio ni al panel.
+     */
+    fun animoDe(registros: List<io.github.ruddy2003.vestigium.data.Momento>, k: Int = 6, conNoSe: Boolean = false): Triple<List<EmocionPeriodo>, List<Pair<String, Int>>, Pair<List<Pair<String, Int>>, Int>> {
+        val reg = registros.filter { Catalogo.esRegistro(it) }
+        val pares = reg.flatMap { m -> Catalogo.emocionesDe(m).distinct().filter { conNoSe || it != Catalogo.NO_SE }.map { id -> m to id } }
+        val emociones = pares.groupBy { (m, id) -> if (id == Catalogo.OTRO) m.emocion_otra?.trim()?.lowercase()?.ifBlank { null } ?: "otro" else Catalogo.nombreSentimiento(id) }
+            .map { (nombre, l) -> EmocionPeriodo(nombre.replaceFirstChar { it.uppercase() }, l.size, l.count { (m, id) -> m.intensidades[id] == 3 }) }
+            .sortedWith(compareByDescending<EmocionPeriodo> { it.n }.thenBy { it.nombre }).take(k)
+        val pens = top(reg.flatMap { Catalogo.pensamientosDe(it).distinct() }, k).map { Catalogo.nombrePensamiento(it.first) to it.second }
+        val conL = reg.filter { it.con_quien.isNotEmpty() }
+        val con = top(conL.flatMap { it.con_quien.distinct() }, 9).map { (q, n) -> (Catalogo.CON_QUIEN.firstOrNull { it.id == q }?.nombre?.lowercase() ?: q) to n }
+        return Triple(emociones, pens, con to conL.size)
     }
 
     private fun <T> top(l: List<T>, k: Int = 6): List<Pair<T, Int>> = l.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.take(k).map { it.key to it.value }
@@ -177,6 +206,7 @@ object Periodo {
         val pp = pf.mapNotNull { Repo.salud[it]?.pasos?.toDouble()?.takeIf { x -> x > 0 } }
         val ppa = pf.mapNotNull { Repo.pantalla[it]?.total_min?.toDouble()?.takeIf { x -> x > 0 } }
 
+        val animo = animoDe(mu)
         return Datos(
             ini, fin, fechas,
             diasDiario = dias.count { it.nota.isNotBlank() || it.valencia != null }, palabras = dias.sumOf { Texto.palabras(it.nota) },
@@ -185,6 +215,8 @@ object Periodo {
             mejorMomento = mejor?.let { Repo.dias[it]?.mejor_momento?.takeIf { m -> m.isNotBlank() } },
             valPorMes = porMes, valPorSemana = porSem,
             suenosRecordados = vividos.size, suenoVivido = vivido, hitos = dias.flatMap { it.hitos }.distinct(),
+            emociones = animo.first, pensamientos = animo.second, conQuien = animo.third.first, conQuienRegistros = animo.third.second,
+            registrosAnimo = mu.count { Catalogo.esRegistro(it) },
             momentos = mu.filter { it.tipo != "muestreo" }.groupingBy { it.tipo }.eachCount().entries.sortedByDescending { it.value }.map { Catalogo.nombreTipo(it.key) to it.value },
             personas = top(personasL), temas = top(temasL), personaNueva = nueva,
             habitosPct = habPct, habitos = habitos, rachaDiario = racha,

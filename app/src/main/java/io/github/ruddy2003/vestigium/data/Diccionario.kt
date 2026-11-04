@@ -112,7 +112,7 @@ object Diccionario {
         "impulso" to "Intensidad del impulso (0 a 5), seguimiento privado", "recaida" to "Hubo recaída (0/1), seguimiento privado", "detonantes" to "Detonantes (lista)",
         "medicamentos" to "Medicamentos tomados (lista)", "prediccion_manana" to "Predicción del ánimo de mañana (1 a 7)",
         // Momentos
-        "tipo" to "Tipo de registro", "intensidad" to "Intensidad (1 a 5)", "lugar" to "Nombre del lugar marcado más cercano",
+        "tipo" to "Tipo de registro", "intensidad" to "Intensidad: 1 a 5 en impulsos y recaídas, 0 a 5 en libido", "lugar" to "Nombre del lugar marcado más cercano",
         "aviso_ts" to "Cuándo llegó el aviso que se respondió", "latencia_min" to "Minutos entre el aviso y la respuesta",
         "ruido_db" to "Ruido ambiente aproximado al registrar (dB relativos, sin calibrar)", "luz_lux" to "Luz ambiente al registrar (lux)",
         // Gastos
@@ -172,9 +172,17 @@ object Diccionario {
         "vm_escalada_bloques.csv:grado" to "Grado como lo anotaste", "grado_num" to "Grado como número (V0 = 0; Font convertido a V; YDS 5.10a = 10)", "escala" to "Escala del grado (V, Font, YDS)",
         "estilo" to "a_vista, flash, encadenado, repetido o proyecto", "encadenado" to "Se encadenó (0/1)", "angulo" to "placa, vertical, desplome o techo", "rasgos" to "Rasgos del bloque (lista)",
         // Biblioteca
-        "autor" to "Autor, dirección o estudio", "anio" to "Año de publicación o estreno", "estado" to "quiero, en_curso, terminado o abandonado",
+        "autor" to "Autor, dirección o estudio", "anio" to "Año de publicación o estreno", "estado" to "quiero (pendiente), en_curso, pausado, terminado o abandonado",
         "calificacion" to "Calificación (1 a 10)", "progreso" to "Avance (páginas, minutos, capítulos u horas)", "veces" to "Veces leído o visto",
         "etiquetas" to "Etiquetas (lista)", "agregado" to "Cuándo lo agregaste", "dias" to "Días entre inicio y fin",
+        "vm_biblioteca.csv:prioridad" to "Si está pendiente, qué tan pronto la quieres: pronto, cuando_pueda o algun_dia; vacío = sin decir (desde el esquema 18)",
+        "vm_biblioteca.csv:recomendo" to "Quién te la recomendó: personas de tu gente (lista; desde el esquema 18)",
+        "vm_biblioteca.csv:donde" to "Dónde verla o conseguirla: plataforma, biblioteca, quien te la presta… (desde el esquema 18)",
+        // Listas libres (esquema 18)
+        "vm_listas.csv:lista_id" to "Identificador de la lista", "vm_listas.csv:lista" to "Nombre de la lista (lugares por visitar, cosas por comprar…)",
+        "vm_listas.csv:texto" to "El elemento de la lista", "vm_listas.csv:enlace" to "Enlace del elemento",
+        "vm_listas.csv:prioridad" to "Qué tan pronto: pronto, cuando_pueda o algun_dia; vacío = sin decir", "vm_listas.csv:agregado" to "Cuándo lo agregaste",
+        "vm_listas.csv:hecho" to "Cuándo lo hiciste (lo tachaste); vacío = pendiente", "vm_listas.csv:dias_hasta_hecho" to "Días entre agregarlo y hacerlo",
         // Comunicación
         "entrantes" to "Llamadas entrantes contestadas", "salientes" to "Llamadas salientes", "perdidas" to "Llamadas perdidas", "rechazadas" to "Llamadas rechazadas o bloqueadas",
         "min_hablado" to "Minutos hablando por teléfono", "llamada_max_min" to "Llamada más larga (min)", "sms_recibidos" to "SMS recibidos", "sms_enviados" to "SMS enviados",
@@ -416,6 +424,9 @@ object Diccionario {
      * Clave «archivo:columna» o solo «columna» (vale en todas las tablas que la tengan). Sin entrada = sin cambios desde la v84.
      * Una clave con «*» vale para toda una familia de columnas (por ejemplo «per_*» o «supl_*_nivel»); si dos coinciden, la más larga.
      */
+    /** La versión de la app con la que llega el esquema 18 (deseados y listas). */
+    private const val VERSION_ESQUEMA_18 = 116
+
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
         "n_madrugada" to (85 to "sin momentos privados: ya no cuenta impulsos (D.4)"),
@@ -594,6 +605,10 @@ object Diccionario {
         "vm_dias.csv:sueno_categorias" to (110 to "nueve ejes; el tipo «recurrente» de antes aparece como est_recurrente (D.127, D.128)"),
         "suenot_*" to (110 to "rareza del sueño y pesadilla en lugar del tipo (D.127)"),
         "sueno_est_recurrente" to (110 to "incluye los días de antes con tipo «recurrente» (D.127)"),
+        // Esquema 18: deseados y listas libres.
+        "vm_biblioteca.csv:prioridad" to (VERSION_ESQUEMA_18 to "nueva: qué tan pronto quieres lo pendiente (D.145)"),
+        "vm_biblioteca.csv:recomendo" to (VERSION_ESQUEMA_18 to "nueva: quién te lo recomendó (D.145)"),
+        "vm_biblioteca.csv:donde" to (VERSION_ESQUEMA_18 to "nueva: dónde verlo o conseguirlo (D.145)"),
     )
 
     // Las claves con «*», como patrones; la más larga primero, para que «app_min_*» gane a «app_*».

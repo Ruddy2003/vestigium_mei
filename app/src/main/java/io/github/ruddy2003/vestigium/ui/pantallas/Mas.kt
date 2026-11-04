@@ -87,6 +87,10 @@ fun PantallaMas(nav: Nav) {
                 HorizontalDivider()
                 FilaMas("biblioteca_ideas", "Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste o pensaste, con su fuente y quién lo dice" else "${Repo.ideas.size} ideas · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas", ir)
                 HorizontalDivider()
+                FilaMas("deseados", "Quiero leer y ver", Repo.obras.count { it.estado == "quiero" }.let { n -> if (n == 0) "Libros, películas, series y juegos que quieres" else "$n pendientes · ${Repo.obras.count { it.estado == "quiero" && it.prioridad == "pronto" }} para pronto" }, ir)
+                HorizontalDivider()
+                FilaMas("listas", "Listas", if (Repo.listas.isEmpty()) "Lugares por visitar, cosas por comprar, restaurantes…" else Repo.listas.joinToString(", ") { it.nombre }.take(80), ir)
+                HorizontalDivider()
                 FilaMas("notas", "Notas", if (Repo.notas.isEmpty()) "Ideas, pensamientos especiales, propósitos y recordatorios" else "${Repo.notas.size} notas · ${Repo.notas.count { it.fijada }} fijadas", ir)
                 HorizontalDivider()
                 val porRev = io.github.ruddy2003.vestigium.data.Metas.porRevisar().size

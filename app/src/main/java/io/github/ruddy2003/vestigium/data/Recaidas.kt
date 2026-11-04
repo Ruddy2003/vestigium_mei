@@ -118,7 +118,9 @@ object Recaidas {
         val sem = IntArray(7); dias.forEach { f -> sem[Fechas.parse(f).dayOfWeek.value - 1]++ }
         val lugares = rec.groupingBy { m -> Repo.lugares.firstOrNull { it.id == m.lugar }?.nombre ?: if (m.lat != null) "otro lugar" else "sin ubicación" }.eachCount()
             .entries.sortedByDescending { it.value }.map { it.key to it.value }
-        val det = (Repo.dias.values.flatMap { it.detonantes } + rec.flatMap { it.detonantes }).groupingBy { it }.eachCount()
+        // «Otro» se cuenta con lo que escribiste (esquema 17), como en el reporte para terapia.
+        fun conOtro(l: List<String>, otro: String?) = l.map { if (it == "otro" && !otro.isNullOrBlank()) otro.trim().lowercase() else it }
+        val det = (Repo.dias.values.flatMap { conOtro(it.detonantes, it.detonante_otro) } + rec.flatMap { conOtro(it.detonantes, it.detonante_otro) }).groupingBy { it }.eachCount()
             .entries.sortedByDescending { it.value }.map { it.key to it.value }
         val antes = rec.mapNotNull { it.antes }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.map { it.key to it.value }
         val aparatos = rec.mapNotNull { it.dispositivo }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.map { it.key to it.value }

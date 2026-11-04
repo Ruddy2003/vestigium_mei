@@ -479,10 +479,17 @@ fun PantallaBiblioteca(nav: Nav) {
 
         val enCurso = todas.filter { it.estado == "en_curso" }.sortedByDescending { it.dias.maxOrNull() ?: it.inicio ?: it.agregado }
         if (enCurso.isNotEmpty()) Seccion(filtro?.let { verbo(it) } ?: "En curso", latin = "IN MANIBVS") { Estante(enCurso, nav) }
+        // Lo pendiente va antes que lo terminado: lo de «pronto» primero, y la lista entera en «Quiero leer y ver».
+        val pendientes = ordenDeseados(todas.filter { it.estado == "quiero" })
+        Seccion("Pendientes", if (pendientes.isEmpty()) "Lo que quieres leer, ver o jugar." else "${pendientes.size} en tu lista de deseados") {
+            if (pendientes.isEmpty()) Vacio("Nada pendiente. Añade lo que quieres leer o ver, aunque sea solo el título.")
+            else Lista(pendientes.take(5), nav)
+            BotonSecundario("toda la lista de deseados →", Modifier.fillMaxWidth().padding(top = 8.dp)) { nav.ir("deseados") }
+        }
+        val pausadas = todas.filter { it.estado == "pausado" }.sortedByDescending { it.dias.maxOrNull() ?: it.inicio ?: it.agregado }
+        if (pausadas.isNotEmpty()) Seccion("Pausados") { Lista(pausadas, nav) }
         val terminadas = todas.filter { it.estado == "terminado" }.sortedByDescending { it.fin ?: it.agregado }
         Seccion("Terminados") { if (terminadas.isEmpty()) Vacio("Nada terminado todavía.") else Lista(terminadas, nav, porAnio = true) }
-        val pendientes = todas.filter { it.estado == "quiero" }.sortedByDescending { it.agregado }
-        if (pendientes.isNotEmpty()) Seccion("Pendientes") { Lista(pendientes, nav) }
         val abandonadas = todas.filter { it.estado == "abandonado" }
         if (abandonadas.isNotEmpty()) Seccion("Archivados", latin = "RELICTA") { Lista(abandonadas, nav) }
         if ((filtro == null || filtro == "libro") && Repo.subrayados.isNotEmpty()) Seccion("Subrayados de Kindle", "Toca un libro para ver lo que marcaste; con ♥ la frase pasa a tus frases guardadas.", latin = "EXCERPTA") {
@@ -757,6 +764,15 @@ fun PantallaObra(nav: Nav) {
                         inicio = if ((est == "en_curso" || est == "terminado") && o.inicio == null) hoy else o.inicio,
                         fin = if (est == "terminado" && o.fin == null) hoy else if (est != "terminado" && est != "abandonado") null else o.fin))
                 }
+                if (o.estado == "quiero") {
+                    Etiqueta("Qué tan pronto la quieres")
+                    FilaFichas(io.github.ruddy2003.vestigium.data.Catalogo.PRIORIDADES_DESEO, o.prioridad.ifBlank { null }) { g(o.copy(prioridad = it.orEmpty())) }
+                    Etiqueta("Dónde verla o conseguirla")
+                    OutlinedTextField(o.donde, { g(o.copy(donde = it.take(80))) }, Modifier.fillMaxWidth(), singleLine = true,
+                        placeholder = { Text("plataforma, biblioteca, quien te la presta…") })
+                }
+                Etiqueta("Te la recomendó")
+                ListaEtiquetas(o.recomendo, "@persona de tu gente", prefijo = "@", normalizar = { Texto.etiqueta(it.trim().removePrefix("@")) }) { g(o.copy(recomendo = it)) }
                 Spacer(Modifier.height(8.dp))
                 Clave("initium", o.inicio?.let { Fechas.titulo(it).lowercase() } ?: "—", ancho = 8)
                 Clave("finis", o.fin?.let { Fechas.titulo(it).lowercase() } ?: "—", ancho = 8)
@@ -920,5 +936,88 @@ fun ObrasDeHoy(fecha: String, nav: Nav) {
             BotonSecundario("buscar otra…") { BusquedaObra.tipo = "libro"; BusquedaObra.texto = ""; BusquedaObra.portadaDe = null; nav.ir("buscar_obra") }
             BotonSecundario("ver obras") { nav.ir("biblioteca") }
         }
+    }
+}
+
+// =====================================================================
+//  Quiero leer y ver: la lista de deseados (esquema 18)
+// =====================================================================
+
+private fun rangoPrioridad(p: String) = when (p) { "pronto" -> 0; "cuando_pueda" -> 1; "algun_dia" -> 2; else -> 3 }
+
+/** El orden de lo pendiente: primero lo de «pronto», luego «cuando pueda», «algún día» y sin decir; dentro de cada uno, lo más reciente. */
+internal fun ordenDeseados(l: List<Obra>): List<Obra> = l.sortedWith(compareBy<Obra> { rangoPrioridad(it.prioridad) }.thenByDescending { it.agregado })
+
+/**
+ * La lista de deseados: lo que quieres leer, ver, escuchar o jugar (las obras «pendientes»). Se añade con solo el título (o
+ * buscando la portada), se agrupa por qué tan pronto lo quieres y un toque en «empezar» lo pasa a «en curso».
+ */
+@Composable
+fun PantallaDeseados(nav: Nav) {
+    var filtro by remember { mutableStateOf<String?>(null) }
+    var tipoNuevo by remember { mutableStateOf("libro") }
+    var titulo by remember { mutableStateOf("") }
+    var prioridad by remember { mutableStateOf("") }
+    val sentir = rememberSentir()
+    val hoy = Fechas.diaLogico()
+    val pendientes = Repo.obras.filter { it.estado == "quiero" && it.titulo.isNotBlank() }
+    val todas = pendientes.filter { filtro == null || it.tipo == filtro }
+    fun anadir() {
+        val t = titulo.trim(); if (t.isEmpty()) return
+        Repo.guardarObra(Obra(id = Repo.nuevoId(), tipo = tipoNuevo, titulo = t, agregado = hoy, prioridad = prioridad))
+        sentir(Sentidos.Evento.GUARDAR); titulo = ""
+    }
+    Hoja("Quiero leer y ver", nav.atras, "Lo que quieres leer, ver, escuchar o jugar. Basta el título; lo demás, cuando quieras.") {
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Ficha("todo · ${pendientes.size}", filtro == null) { filtro = null }
+            TIPOS_OBRA.forEach { t -> val n = pendientes.count { it.tipo == t.id }; if (n > 0) Ficha("${plural(t.id)} · $n", filtro == t.id) { filtro = if (filtro == t.id) null else t.id } }
+        }
+        Seccion("Añadir", "Elige qué es, escribe el título y listo.") {
+            Tarjeta {
+                FilaFichas(TIPOS_OBRA, tipoNuevo) { tipoNuevo = it ?: tipoNuevo }
+                OutlinedTextField(titulo, { titulo = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("título") },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { anadir() }))
+                Etiqueta("Qué tan pronto")
+                FilaFichas(io.github.ruddy2003.vestigium.data.Catalogo.PRIORIDADES_DESEO, prioridad.ifBlank { null }) { prioridad = it.orEmpty() }
+                Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    BotonPrincipal("Añadir", Modifier.weight(1f), habilitado = titulo.isNotBlank()) { anadir() }
+                    BotonSecundario("buscar con portada", Modifier.weight(1f)) {
+                        BusquedaObra.tipo = tipoNuevo; BusquedaObra.texto = titulo.trim(); BusquedaObra.portadaDe = null; nav.ir("buscar_obra")
+                    }
+                }
+            }
+        }
+        if (todas.isEmpty()) Vacio(if (pendientes.isEmpty()) "Tu lista está vacía. Lo que te recomienden o se te antoje, aquí, para no olvidarlo." else "Nada de este tipo.")
+        val grupos = ordenDeseados(todas).groupBy { it.prioridad.takeIf { p -> io.github.ruddy2003.vestigium.data.Catalogo.nombrePrioridad(p) != null }.orEmpty() }
+        listOf("pronto", "cuando_pueda", "algun_dia", "").forEach { p ->
+            val l = grupos[p].orEmpty()
+            if (l.isNotEmpty()) Seccion(io.github.ruddy2003.vestigium.data.Catalogo.nombrePrioridad(p) ?: "Sin decir cuándo", "${l.size}") {
+                Tarjeta {
+                    l.forEachIndexed { i, o ->
+                        if (i > 0) HorizontalDivider()
+                        FilaDeseo(o, hoy, nav)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Una obra deseada: su portada, qué es, quién te la recomendó, dónde verla, hace cuánto la agregaste y «empezar». */
+@Composable
+private fun FilaDeseo(o: Obra, hoy: String, nav: Nav) {
+    Row(Modifier.fillMaxWidth().clickable { EdicionObra.id = o.id; nav.ir("obra") }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        PortadaObra(o, Modifier.width(40.dp).aspectRatio(2f / 3f), lado = 160)
+        Column(Modifier.weight(1f).padding(start = 12.dp)) {
+            Text(o.titulo, style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            val detalle = listOfNotNull(
+                TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre?.lowercase(), o.autor.ifBlank { null },
+                o.recomendo.takeIf { it.isNotEmpty() }?.let { r -> "te la recomendó " + r.joinToString(", ") { "@$it" } },
+                o.donde.ifBlank { null },
+                o.agregado.takeIf { it.length >= 10 && it.take(10) != hoy }?.let { Fechas.relativo(it.take(10)) },
+            ).joinToString(" · ")
+            if (detalle.isNotBlank()) Text(detalle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+        TextButton(onClick = { Repo.guardarObra(o.copy(estado = "en_curso", inicio = o.inicio ?: hoy)) }) { Text("empezar", style = MaterialTheme.typography.labelLarge) }
     }
 }

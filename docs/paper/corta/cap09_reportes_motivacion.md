@@ -17,6 +17,7 @@ Los reportes y «Tu año» no calculan nada por su cuenta: usan un mismo resumen
 | **Mejor marca** | `Macrofactor.e1rm`, la misma de la exportación: peso × (1 + repeticiones/30) (**fórmula de Epley**), solo en series de **1 a 12** repeticiones y sin calentamientos, redondeada a 0.1 kg. |
 | **Gasto e ingresos** | Por el **día del diario** (`Gasto.dia`, `Ingreso.dia`: antes de las 5:00 cuenta para el día anterior), igual que el panel. |
 | **Comparación con el periodo anterior** | Solo si el periodo anterior tiene **al menos 3 días** con dato. |
+| **Emociones, pensamientos y con quién** (desde el esquema 18) | `Periodo.animoDe`, con los registros de ánimo no privados: cada emoción cuenta una vez por registro, «no sé» no cuenta, «otro» va con lo que escribiste y se dice cuántas veces fue «mucho». Conteos para leer: no entran a ningún promedio ni al panel. **[Diseño propio]** |
 
 El **periodo anterior** es el de la misma duración inmediatamente antes. Las demás cifras están en la versión completa, §9.2.
 

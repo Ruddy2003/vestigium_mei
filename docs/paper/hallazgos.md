@@ -1375,3 +1375,21 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Gravedad:** Baja.
 - **Propuesta:** usar en R la misma lista de 8, o exportar en `vm_laptop.csv` una columna `navegador` (0/1) tomada de `NAVEGADORES`.
 - **Estado:** Resuelto en 10e (D.106).
+
+## Revisión de los momentos en los reportes (esquema 18, sin módulo)
+
+Encontrados al llevar la información nueva de los momentos a pantallas y reportes (D.146). No se cambiaron: el autor pidió seguir la lógica que ya tenía cada cálculo.
+
+### H-18-1 · «Con quién» en el panel y en terapia solo cuenta los registros de aviso
+- **Dónde:** `ciencia/Estadistica.kt`, `panel` (bloque «Con quién», `mu = tipo == "muestreo"`); `ciencia/Terapia.kt`, `calcular` (`con = mu.filter { it.tipo == "muestreo" … }`). En cambio, `ui/pantallas/Explorar.kt` (`ConQuien`) y `Periodo.animoDe` usan todos los registros de ánimo (`esAnimo`).
+- **Qué pasa:** un registro de «¿Cómo estás ahora?» que abres tú (`tipo = "animo"`) con compañía marcada no entra en `acompanado_pct`, `con_*`, `valencia_solo` ni `valencia_acompanado`, ni en el «estabas con alguien» del reporte para terapia; sí entra en Explorar y en los reportes periódicos.
+- **Por qué importa:** la misma pregunta da cifras distintas según la pantalla. Que los avisos sean al azar y los registros propios no (capítulo 3) es una buena razón para separarlos, pero no está dicha en la pantalla.
+- **Gravedad:** Baja.
+- **Propuesta:** decidir una regla y usarla en todos lados, o rotular en Explorar y en los reportes que esas cifras incluyen los registros propios.
+
+### H-18-2 · «Solo por mensaje» cuenta como acompañado en el panel
+- **Dónde:** `ciencia/Estadistica.kt`, `panel` (`acomp = con.filter { "solo" !in it.con_quien }`); `ciencia/Terapia.kt` (misma regla). El Apéndice A.11 dice lo contrario («“Mensaje” puede ir con “solo” y no cuenta como acompañado»), y `data/Presencias.kt` (`deMomento`) trata «mensaje» como no estar en persona.
+- **Qué pasa:** un registro con solo `["mensaje"]` cuenta como acompañado; con `["solo", "mensaje"]`, como solo.
+- **Por qué importa:** `acompanado_pct` y `valencia_acompanado` mezclan estar con alguien en persona con hablar por mensaje, según cómo se marcó.
+- **Gravedad:** Baja.
+- **Propuesta:** contar como acompañado solo si hay alguna compañía en persona (todo menos `solo` y `mensaje`), o corregir el Apéndice A.11 para que diga la regla actual.

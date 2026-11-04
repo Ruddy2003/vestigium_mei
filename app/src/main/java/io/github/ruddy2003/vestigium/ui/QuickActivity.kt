@@ -368,12 +368,28 @@ class QuickActivity : FragmentActivity() {
             // Solo se guarda si ya hay registro; si no, espera a lo primero del ánimo.
             if (m != null) asegurar { it.copy(con_quien = c) }
         }
-        // Lo que no es ánimo, a un toque: sustancias, impulso y recaída.
+        // Lo que no es ánimo, a un toque: dinero, sustancias, impulso y recaída.
+        var dinero by remember { mutableStateOf(false) }
+        var anotado by remember { mutableStateOf<List<String>>(emptyList()) }
         FlowRow(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            BotonSecundario(if (dinero) "− gasto o ingreso" else "＋ gasto o ingreso") { dinero = !dinero }
             BotonSecundario("＋ sustancia") { ir(M_CONSUMO) }
             BotonSecundario("＋ impulso") { ir("impulso") }
             if (Repo.config.seguimiento_privado) BotonSecundario("＋ recaída") { ir("recaida") }
             if (Repo.config.seguimiento_privado) BotonSecundario("＋ libido") { ir("libido") }
+        }
+        // Para no olvidar el dinero: cuánto llevas anotado hoy, lo que acabas de anotar aquí y, al abrirlo, el mismo formulario
+        // del ⊕ (con la hora del momento si lo estás anotando tarde). Registrar no cierra la hoja.
+        val hoyDia = m?.fecha ?: Fechas.diaLogico()
+        val deHoy = Repo.gastos.filter { it.dia == hoyDia }
+        Text(if (deHoy.isEmpty()) "Hoy no has anotado gastos." else "Hoy: ${deHoy.size} ${if (deHoy.size == 1) "gasto" else "gastos"} · ${io.github.ruddy2003.vestigium.ui.pantallas.dinero(deHoy.sumOf { it.monto })}",
+            style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
+        anotado.forEach { Text("✓ $it", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 4.dp)) }
+        if (dinero) Surface(shape = formaPiezaQuick(Estilo.tema), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline), modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                GastoRapido(null, null, null, embebido = true, cuandoInicial = cuando) { t -> anotado = anotado + t; dinero = false }
+            }
         }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             if (m != null) TextButton(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
@@ -711,7 +727,8 @@ class QuickActivity : FragmentActivity() {
      * queda para lo muy específico.
      */
     @Composable
-    private fun GastoRapido(catInicial: String?, subInicial: String?, inicial: Gasto?) {
+    private fun GastoRapido(catInicial: String?, subInicial: String?, inicial: Gasto?, embebido: Boolean = false,
+                            cuandoInicial: java.time.LocalDateTime? = null, alGuardar: ((String) -> Unit)? = null) {
         val D = io.github.ruddy2003.vestigium.data.Dinero
         fun dinero(v: Double) = io.github.ruddy2003.vestigium.ui.pantallas.dinero(v)
         var entra by remember { mutableStateOf(false) }
@@ -730,9 +747,14 @@ class QuickActivity : FragmentActivity() {
         var error by remember { mutableStateOf<String?>(null) }
         var registrado by remember { mutableStateOf(inicial) }
         var corrigiendo by remember { mutableStateOf(false) }
-        var cuando by remember { mutableStateOf<java.time.LocalDateTime?>(null) }
+        var cuando by remember { mutableStateOf(cuandoInicial) }
         val c = Repo.config
-        Encabezado("Gasto o ingreso", if (entra) "Lo que entra: sueldo, beca, venta, regalo." else "En el momento de pagar. Un frecuente registra con un toque.")
+        // Dentro del momento no se cierra la hoja: se avisa a quien lo abrió y el formulario queda limpio para otro.
+        fun listo(texto: String) {
+            if (alGuardar == null) { Toast.makeText(this@QuickActivity, texto, Toast.LENGTH_SHORT).show(); terminar(); return }
+            alGuardar(texto); monto = ""; auto = null; cat = null; sub = ""; nota = ""; imprevisto = false; repite = false; fijo = false; guardando = false
+        }
+        if (!embebido) Encabezado("Gasto o ingreso", if (entra) "Lo que entra: sueldo, beca, venta, regalo." else "En el momento de pagar. Un frecuente registra con un toque.")
         Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Ficha("− Gasto", !entra) { if (entra) { entra = false; cat = null; sub = ""; error = null } }
             Ficha("+ Ingreso", entra) { if (!entra) { entra = true; cat = null; sub = ""; error = null } }
@@ -758,6 +780,7 @@ class QuickActivity : FragmentActivity() {
                             val (g, nuevo) = D.registrarFrecuente(f.categoria, f.sub, f.monto)
                             if (nuevo) ubicarGasto(g)
                             registrado = g
+                            if (embebido) alGuardar?.invoke("${f.sub} ${dinero(f.monto)} registrado")
                         }
                     }
                 }
@@ -794,7 +817,7 @@ class QuickActivity : FragmentActivity() {
         OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-            if (registrado != null) TextButton(onClick = { terminar() }) { Text("Listo") }
+            if (registrado != null && !embebido) TextButton(onClick = { terminar() }) { Text("Listo") }
             BotonPrincipal(if (entra) "Registrar ingreso" else "Registrar gasto") {
                 // Un toque doble no registra dos veces.
                 if (guardando) return@BotonPrincipal
@@ -809,8 +832,7 @@ class QuickActivity : FragmentActivity() {
                         val i = io.github.ruddy2003.vestigium.data.Ingreso(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, nota.trim(), fijo, ts_creado = Fechas.ahoraIso())
                         Repo.guardarIngreso(i)
                         guardando = true
-                        Toast.makeText(this@QuickActivity, "Ingreso registrado: ${dinero(i.monto)} · ${i.categoria}", Toast.LENGTH_SHORT).show()
-                        terminar()
+                        listo("Ingreso registrado: ${dinero(i.monto)} · ${i.categoria}")
                     }
                     else -> {
                         val g = Gasto(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim(), subcategoria = sub, se_repite = repite, ts_creado = Fechas.ahoraIso())
@@ -818,8 +840,7 @@ class QuickActivity : FragmentActivity() {
                         // La ubicación de ahora solo sirve si el gasto es de ahora.
                         if (k == null) ubicarGasto(g)
                         guardando = true
-                        Toast.makeText(this@QuickActivity, "Gasto registrado: ${dinero(g.monto)} · ${g.categoria}" + (if (sub.isNotBlank()) " → $sub" else ""), Toast.LENGTH_SHORT).show()
-                        terminar()
+                        listo("Gasto registrado: ${dinero(g.monto)} · ${g.categoria}" + (if (sub.isNotBlank()) " → $sub" else ""))
                     }
                 }
             }

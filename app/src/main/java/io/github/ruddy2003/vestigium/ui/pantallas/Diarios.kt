@@ -258,7 +258,8 @@ private fun TarjetaDiaDiario(f: String, d: Dia?, ms: List<io.github.ruddy2003.ve
                     ms.sortedBy { it.ts }.take(8).forEach { m ->
                         Row(Modifier.fillMaxWidth().clickable { editar(m) }.padding(top = 5.dp), verticalAlignment = Alignment.Top) {
                             Text(Fechas.horaDe(m.ts), style = MaterialTheme.typography.labelMedium, color = cs.primary, modifier = Modifier.width(46.dp))
-                            io.github.ruddy2003.vestigium.ui.TextoMarcado(io.github.ruddy2003.vestigium.data.Catalogo.titulo(m, discreto) + (m.valencia?.let { " · $it/7" } ?: "") + (m.intensidad?.let { " · $it/5" } ?: "") +
+                            io.github.ruddy2003.vestigium.ui.TextoMarcado(io.github.ruddy2003.vestigium.data.Catalogo.tituloDetallado(m, discreto) + (m.valencia?.let { " · $it/7" } ?: "") + (m.intensidad?.let { " · $it/5" } ?: "") +
+                                io.github.ruddy2003.vestigium.data.Catalogo.detalleMomento(m, discreto).let { if (it.isNotBlank()) " · $it" else "" } +
                                 (if (m.texto.isNotBlank()) " — ${m.texto}" else ""), style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                     }
