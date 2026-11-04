@@ -40,6 +40,7 @@ import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.RevisionIdea
 import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.ui.Ayuda
+import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import io.github.ruddy2003.vestigium.ui.BotonSecundario
 import io.github.ruddy2003.vestigium.ui.Deshacer
 import io.github.ruddy2003.vestigium.ui.Etiqueta
