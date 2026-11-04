@@ -106,13 +106,14 @@ fun paginaFicha(t: TemaId): Pagina {
         if (p.rayas == Rayas.NADA) Rayas.RENGLONES else p.rayas, capitular = null)
 }
 
-/** El papel de una ficha: el color y la textura del tema, sin sus adornos; en modo oscuro, el papel claro se atenúa como en el diario. */
+/** El papel de una ficha: el color y la textura del tema, sin sus adornos; en modo oscuro, el papel claro se atenúa un poco. */
 @Composable
 fun PapelFicha(p: Pagina, modifier: Modifier = Modifier) {
     val oscuroApp = esOscuro()
     Box(modifier.fillMaxSize().background(p.color)) {
         p.fondo?.let { Image(painterResource(it), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
-        if (oscuroApp && !p.oscura) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.22f)))
+        // Un velo más ligero que el del diario (22 %): en una ficha chica, más oscuro ya se lee como gris.
+        if (oscuroApp && !p.oscura) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.12f)))
     }
 }
 

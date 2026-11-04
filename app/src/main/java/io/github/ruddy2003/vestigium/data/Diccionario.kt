@@ -425,7 +425,7 @@ object Diccionario {
      * Una clave con «*» vale para toda una familia de columnas (por ejemplo «per_*» o «supl_*_nivel»); si dos coinciden, la más larga.
      */
     /** La versión de la app con la que llega el esquema 18 (deseados y listas). */
-    private const val VERSION_ESQUEMA_18 = 116
+    private const val VERSION_ESQUEMA_18 = 118
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),

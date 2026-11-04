@@ -75,6 +75,7 @@ import io.github.ruddy2003.vestigium.ui.altoBarraVentana
 import io.github.ruddy2003.vestigium.ui.archivoIdeas
 import io.github.ruddy2003.vestigium.ui.colorEtiqueta
 import io.github.ruddy2003.vestigium.ui.dibujarContenedor
+import io.github.ruddy2003.vestigium.ui.esquemaPagina
 import io.github.ruddy2003.vestigium.ui.formaDeFicha
 import io.github.ruddy2003.vestigium.ui.margenLado
 import io.github.ruddy2003.vestigium.ui.margenSuperior
@@ -185,6 +186,8 @@ fun FichaMini(i: Idea, modifier: Modifier = Modifier, rotulo: String? = null, li
     val sup = margenSuperior(a.formaFicha); val lado = margenLado(a.formaFicha)
     val encabezado = if (a.formaFicha == FormaFicha.VENTANA) altoBarraVentana() else 16.dp
     val texto = rotulo ?: Ideario.temasDe(i).firstOrNull()?.let { rotuloCajon(it) } ?: "idea"
+    // Los colores de la página (también las marcas de @ y #): sobre el papel claro, los del modo oscuro de la app no se leen.
+    MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
     Surface(shape = forma, color = Color.Transparent, shadowElevation = 3.dp, modifier = modifier.clickable(onClick = onClick)) {
         Box {
             PapelFicha(p)
@@ -202,6 +205,7 @@ fun FichaMini(i: Idea, modifier: Modifier = Modifier, rotulo: String? = null, li
             }
         }
     }
+    }
 }
 
 /** La ficha entera: el papel del tema con su forma, el texto completo, de dónde salió, los otros temas y en qué lugar del cajón va. */
@@ -214,6 +218,7 @@ private fun FichaGrande(i: Idea, numero: Int, total: Int, tema: String, a: Archi
     val sup = margenSuperior(a.formaFicha, true); val lado = margenLado(a.formaFicha, true)
     val encabezado = if (a.formaFicha == FormaFicha.VENTANA) altoBarraVentana(true) else 22.dp
     Box(Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 8.dp)) {
+        MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         Surface(shape = forma, color = Color.Transparent, shadowElevation = 6.dp, modifier = Modifier.fillMaxSize()) {
             Box {
                 PapelFicha(p)
@@ -237,6 +242,7 @@ private fun FichaGrande(i: Idea, numero: Int, total: Int, tema: String, a: Archi
                     }
                 }
             }
+        }
         }
     }
 }
