@@ -387,7 +387,7 @@ La carga inicial usa `cargar(col, serializer)`. Hasta el esquema 12 descartaba *
 
 ### 2.4.3 `Repo`: memoria con escritura inmediata
 
-`Repo` mantiene en memoria el estado observable (Compose `mutableStateOf`) de las **36 colecciones** que precarga al iniciar (`dias`, `momentos`, `gastos`, `ingresos`, `respuestas`, `reacciones`, `lugares`, `visitas`, `youtube`, `salud`, `pantalla`, `cartas`, `experimentos`, `entorno`, `fotos`, `agenda`, `notifs`, `actividad`, `sesiones`, `ascensos`, `obras`, `comunicacion`, `conexiones`, `subrayados`, `huellas_dia`, `whatsapp`, `nutricion`, `entrenos`, `tramos`, `consumos`, `notas`, `metas`, `tomas`, `laptop` y, desde el esquema 13, `avisos`, un documento por día con los avisos de ánimo planeados, vencidos y mostrados, capítulo 3; desde el esquema 16, `ideas`, el Ideario, sección 2.5). Cada `guardarX` hace **escritura inmediata (write-through)**: primero a SQLite (`db.poner`), luego actualiza la memoria en el hilo principal. Los más usados (`guardarDia`, `guardarMomento`, `guardarConsumo` y los que anotan visitas, avisos, actividad, notificaciones y conexiones) están sincronizados (`@Synchronized`); los demás no.
+`Repo` mantiene en memoria el estado observable (Compose `mutableStateOf`) de las **36 colecciones** que precarga al iniciar (`dias`, `momentos`, `gastos`, `ingresos`, `respuestas`, `reacciones`, `lugares`, `visitas`, `youtube`, `salud`, `pantalla`, `cartas`, `experimentos`, `entorno`, `fotos`, `agenda`, `notifs`, `actividad`, `sesiones`, `ascensos`, `obras`, `comunicacion`, `conexiones`, `subrayados`, `huellas_dia`, `whatsapp`, `nutricion`, `entrenos`, `tramos`, `consumos`, `notas`, `metas`, `tomas`, `laptop` y, desde el esquema 13, `avisos`, un documento por día con los avisos de ánimo planeados, vencidos y mostrados, capítulo 3; desde el esquema 16, `ideas`, el Ideario, sección 2.5; desde el esquema 18, `listas`, las listas libres). Cada `guardarX` hace **escritura inmediata (write-through)**: primero a SQLite (`db.poner`), luego actualiza la memoria en el hilo principal. Los más usados (`guardarDia`, `guardarMomento`, `guardarConsumo` y los que anotan visitas, avisos, actividad, notificaciones y conexiones) están sincronizados (`@Synchronized`); los demás no.
 
 Otras colecciones se guardan en la misma tabla pero no están en la carga de 36: `comidas`, `escuchas`, `huellas` y `series` se leen bajo demanda, por fechas; `papelera` (desde el esquema 14) y `config_ilegible`, cuando hacen falta. La configuración (`config`, un solo documento) se lee al iniciar, aparte de las 36; desde el esquema 15 guarda también el historial de zonas horarias (`Config.zonas`, sección 2.3.1), que `Repo` le pasa a `Fechas` (`Fechas.usarHistorial`) al iniciar y cada vez que cambia la configuración.
 
@@ -412,7 +412,7 @@ Resumen por familia temática (el detalle campo a campo está en el Apéndice A)
 | Dinero | `gastos`, `ingresos` | transacción | activa |
 | Lugar y movimiento | `lugares`, `visitas`, `actividad`, `ubicaciones` (tabla), `fotos` | visita / punto | pasiva |
 | Entorno | `entorno` (clima, aire, luz solar), fases de la luna (calculadas) | día | pasiva / calculada |
-| Cultura y mente | `obras`, `subrayados`, `agenda`, `tramos` (cronómetro de enfoque y siestas), `ideas` (desde el esquema 16) | día / obra / bloque / idea | activa e importada |
+| Cultura y mente | `obras`, `subrayados`, `agenda`, `tramos` (cronómetro de enfoque y siestas), `ideas` (desde el esquema 16), `listas` (desde el esquema 18) | día / obra / bloque / idea / lista | activa e importada |
 | Sociales | `comunicacion`, `whatsapp`, menciones `@persona` en texto | día | pasiva e importada |
 | Cognición | `reacciones` (tiempo de reacción) | sesión | activa |
 | Ciencia personal | `experimentos` | semanas | activa (diseño en capítulo de experimentos) |
@@ -420,6 +420,8 @@ Resumen por familia temática (el detalle campo a campo está en el Apéndice A)
 : Tabla 2.5. Catálogo de colecciones
 
 **El Ideario (desde el esquema 16).** La colección `ideas` guarda, una por documento (`Idea`), lo que entendiste de un libro, un video o una plática, o algo que se te ocurrió, con tus palabras. Solo el texto es obligatorio; además puede llevar la idea en una línea (`titulo`), sus temas (`temas`, desde el esquema 17; se suman a los `#temas` escritos en el texto, `Ideario.temasDe`), de dónde viene (`origen`: leído, visto o escuchado, contado o propio), quién lo dice (`quien`, una lista de nombres que **no** son personas de Tu gente), la obra y la cita de las que salió (`obra_id`, `cita_id`), una fuente escrita y su enlace, el minuto o la página, cómo la tienes (`postura`: me convence, me hace pensar, la dudo, no estoy de acuerdo) y cada vez que la volviste a ver en «Una idea de antes» (`revisiones`). Se asigna al día que tú eliges (por omisión, el día lógico en que se anota) y guarda la hora en que se escribió (`creada`). Es una colección de **eventos** (varias ideas por día) que **no entra al panel**: ninguna variable diaria sale de ella, sus temas no se suman a «Tus temas» ni sus `@personas` a las menciones de la red social (capítulo 7). Solo se exporta tal cual (`vm_ideas.csv` y `vm_ideas_revisiones.csv`, Apéndice A.10). **[Diseño propio]**.
+
+**Deseados y listas libres (desde el esquema 18, D.145).** Lo que quieres leer, ver o jugar es una `Obra` con `estado = "quiero"` (la pantalla «Quiero leer y ver»); desde el esquema 18 lleva además qué tan pronto la quieres (`prioridad`: pronto, cuando pueda, algún día), quién te la recomendó (`recomendo`, personas de tu gente sin @) y dónde verla o conseguirla (`donde`). Lo que no es una obra (lugares por visitar, cosas por comprar…) va en la colección `listas`: un documento por lista (`Lista`) con sus elementos (`ElementoLista`: texto, nota, enlace, prioridad, cuándo se agregó y cuándo se hizo). **Ninguna de las dos entra al panel.** Agregar algo a una lista o tacharlo no dice cómo fue un día; serían columnas casi siempre en cero que solo sumarían comparaciones a `vm_relaciones` (capítulo 6). Lo que sí describe el día ya se mide (`obras_dia`, `obra_terminada`), y el tiempo entre desear una obra y empezarla se calcula en R con `agregado` e `inicio` de `vm_biblioteca.csv`. Se exportan tal cual: tres columnas nuevas en `vm_biblioteca.csv` y `vm_listas.csv` (Apéndice A.12). **[Diseño propio]**.
 
 «Una idea de antes» (`Ideario.resurgir`) elige, en el Día de hoy, una idea con al menos 30 días que no hayas respondido en los últimos 30, y prefiere las que cumplen un aniversario: 30, 180 o 365·n días (n = 1…10), con ± 3 días de holgura. Si ninguna cumple, toma cualquiera de las elegibles. La elección depende solo de la fecha y del identificador (el menor `hashCode` de «fecha:id»), así que es la misma toda la jornada; sale una por día. *Ejemplo con datos inventados:* el 2 de noviembre, con ideas del 20 de octubre (13 días: aún no), del 2 de octubre (31 días: aniversario de un mes) y del 15 de agosto (79 días), sale la del 2 de octubre. Releer a intervalos que se alargan se parece a la **repetición espaciada** (repasar algo justo cuando empieza a olvidarse ayuda a recordarlo), pero aquí los intervalos son fijos y no se adaptan a lo que recuerdas: es una aproximación a esa idea, no el método validado. **[Aproximación]**. *Cuándo falla:* con pocas ideas, casi siempre sale «cualquiera»; y la respuesta («sigo pensando igual», «ya no», «ahora no») mide si cambió tu opinión, no si la recordabas.
 
@@ -825,7 +827,7 @@ Los dos ejes resumen bien, pero pierden información: «enojo» y «miedo» caen
 
 - `n_<emoción>`: cuántos registros de ese día incluyen esa emoción (`n_alegria`, `n_estres`, `n_no_se`…). Solo se crean columnas para emociones que hayas usado al menos una vez (la de «otro» no genera columna).
 - `n_<pensamiento>`: igual con los pensamientos; desde el esquema 17, un registro con varios pensamientos cuenta en cada uno.
-- **Las emociones y pensamientos nuevos del esquema 17** solo tienen columna desde que se usan por primera vez. Antes de existir no se podían marcar, así que su 0 en días viejos no significa «no lo sentí». **[Diseño propio]**. La intensidad (1–3) no entra al panel: solo se exporta (`vm_momentos.csv:intensidades`).
+- **Las emociones y pensamientos nuevos del esquema 17** solo tienen columna desde que se usan por primera vez. Antes de existir no se podían marcar, así que su 0 en días viejos no significa «no lo sentí». **[Diseño propio]**. La intensidad (1–3) no entra al panel: se exporta (`vm_momentos.csv:intensidades`) y, desde el esquema 18 (D.146), se muestra junto a cada emoción en las pantallas («Tristeza (mucho)», `Catalogo.tituloDetallado`) y en los reportes («2 veces «mucho»», `Periodo.animoDe`); en R se resume con `vm_emociones()` (Apéndice C). Ninguno de esos usos la convierte en número del día ni la promedia con la valencia.
 - `registros_animo`: cuántos registros de ánimo hiciste ese día.
 - **Relleno con cero:** desde la fecha de tu **primer** registro de ánimo, los días que tienen documento de diario y no tienen registros cuentan como **0** en estas variables (no como «sin dato»). **[Diseño propio]**: es razonable si se asume que siempre registras cuando sientes algo, cosa que no es cierta en un día sin registros por olvido (ver H-1-1 sobre el criterio de rellenar con cero).
 - Con quién (solo con los registros **de aviso** que tienen compañía marcada): `acompanado_pct` (fracción de avisos en compañía), `con_pareja`, `con_amigos`… (fracción de avisos con cada tipo) y `valencia_acompanado` / `valencia_solo` (promedio de valencia en cada caso).
@@ -3910,6 +3912,7 @@ Los reportes y «Tu año» no calculan nada por su cuenta: usan un mismo resumen
 | **Gasto e ingresos** | Por el **día del diario** (`Gasto.dia`, `Ingreso.dia`: antes de las 5:00 cuenta para el día anterior), igual que el panel; los ingresos se contaban por su fecha de calendario hasta 10c, así que un ingreso de madrugada caía en otro día que su gasto. Totales usa la misma regla desde 10c (D.77). |
 | **Tazas de café** | Cafeína total ÷ 95 mg. |
 | **Personas, temas** | Las @ y # del diario (una vez por día) y de los momentos no privados. |
+| **Emociones, pensamientos y con quién** (desde el esquema 18, D.146) | Salen de los registros de ánimo no privados del periodo (`Catalogo.esRegistro`, los de un aviso y los que abres tú), con `Periodo.animoDe`. Cada emoción cuenta **una vez por registro** (dos registros con «ansiedad» = 2); «no sé» no cuenta; «otro» se nombra con lo que escribiste; y se dice en cuántos de esos registros fue «mucho» (intensidad 3 de 3). Igual con los pensamientos (un registro con dos cuenta en los dos) y con quién (de cuántos registros que lo dicen). Son **conteos para leer**: no entran a ningún promedio ni al panel, y no se pesan por intensidad. **[Diseño propio]** |
 | **Comparación con el periodo anterior** | Solo si el periodo anterior tiene **al menos 3 días** con dato. |
 
 : Tabla 9.2. De dónde salen las cifras: Periodo.calcular
@@ -3934,10 +3937,12 @@ Arriba, hasta **9 cifras** (días con diario, ánimo medio, sueño, pasos, panta
 
 - **La semana de un vistazo** (solo el semanal; Figura 9.1).
 - **El mes de un vistazo** (solo el mensual): calendario del ánimo, curva del sueño, comparación con el mes anterior, nubes de personas y temas, y un **mapa abstracto**: cada lugar guardado es un punto sobre una cuadrícula, **sin calles ni nombres**.
-- **Ánimo**: gráfica de valencia (con la activación detrás) o, en el anual, un cuadro por día del color del ánimo; mejor y peor día, cambio frente al periodo anterior, el mejor día de la semana (si el periodo pasa de 13 días), hábitos y racha.
+- **Ánimo**: gráfica de valencia (con la activación detrás) o, en el anual, un cuadro por día del color del ánimo; mejor y peor día, cambio frente al periodo anterior, el mejor día de la semana (si el periodo pasa de 13 días), hábitos y racha. Desde el esquema 18 (D.146), también tres líneas de los registros de ánimo: *affectus* («lo que más sentiste»: las 5 emociones más nombradas, con cuántas veces fueron «mucho»), *cogitatio* (los 3 pensamientos más frecuentes) y *comites* (con quién, con de cuántos registros sale). La sección aparece aunque no haya valencia del diario si hay registros con estos datos. Ejemplo (inventado): «lo que más sentiste: ansiedad 6 (2 «mucho») · calma 4 · cansancio 3».
 - **Cuerpo, Mente, Gente, Mundo, Cultura, Dinero, Teléfono, Lo memorable** (hitos y logros del periodo).
 
-**El modo discreto** (`Config.discreto`, apagado por omisión), en los reportes, cambia los nombres de las personas por iniciales (`@ana_luisa` → «A.L.», `Reportes.persona`). No toca nada más del reporte (en otras pantallas también oculta, por ejemplo, los nombres de las emociones).
+**El modo discreto** (`Config.discreto`, apagado por omisión), en los reportes, cambia los nombres de las personas por iniciales (`@ana_luisa` → «A.L.», `Reportes.persona`) y, desde el esquema 18, quita las tres líneas de emociones, pensamientos y compañía. No toca nada más del reporte (en otras pantallas también oculta, por ejemplo, los nombres de las emociones). Como los reportes que se generan solos van siempre en modo discreto (9.3.1), esas líneas solo salen en los que pides a mano.
+
+Las pantallas **Semana** y **Año** usan la misma `Periodo.animoDe`: Semana suma las tres líneas debajo de «Momentos de la semana», y Año las dos primeras en «Lo más frecuente» (siempre que el modo discreto esté apagado).
 
 ### 9.3.3 Decisiones de visualización
 
@@ -3976,7 +3981,7 @@ $$EE = \sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}\qquad\qquad (9.1)$$
 
 ### 9.3.5 «Tu año»
 
-`TuAnio.calcular` usa el mismo `Periodo` del año y le suma: equivalencias («escribiste el equivalente a *N* páginas», a 300 palabras por página), un día típico armado con lo más frecuente, lo que pasó una sola vez, **el día más raro** (`Analisis.atipicos` con umbral 2.8, sobre 15 variables fijas; desde 10e, D.100, «Tu año» le pasa `desde = null` y usa todos los días del año elegido; antes, `atipicos` solo devolvía días de los últimos 365 contados desde hoy, así que al ver un año pasado podía faltar o quedarse en parte del año, H-14-3), récords, **la relación más fuerte del año** (la correlación no obvia con mayor |*r*|, con *q* < 0.05 y *n* ≥ 30, si el año tiene al menos 40 días), la palabra del año, un «arquetipo», tus medallas y cómo te fue con las **predicciones de enero** (8 preguntas: obras, países, ciudades, pasos, sueño, **ánimo medio**, persona más mencionada y palabras).
+`TuAnio.calcular` usa el mismo `Periodo` del año y le suma: equivalencias («escribiste el equivalente a *N* páginas», a 300 palabras por página), un día típico armado con lo más frecuente, lo que pasó una sola vez, **el día más raro** (`Analisis.atipicos` con umbral 2.8, sobre 15 variables fijas; desde 10e, D.100, «Tu año» le pasa `desde = null` y usa todos los días del año elegido; antes, `atipicos` solo devolvía días de los últimos 365 contados desde hoy, así que al ver un año pasado podía faltar o quedarse en parte del año, H-14-3), récords, **la relación más fuerte del año** (la correlación no obvia con mayor |*r*|, con *q* < 0.05 y *n* ≥ 30, si el año tiene al menos 40 días), la palabra del año, un «arquetipo», tus medallas y cómo te fue con las **predicciones de enero** (8 preguntas: obras, países, ciudades, pasos, sueño, **ánimo medio**, persona más mencionada y palabras). Desde el esquema 18, el día típico suma «sentías» (la emoción más nombrada del año) y «pensabas» (el pensamiento más frecuente), con la regla de la sección 9.2 y solo sin modo discreto.
 
 Dos observaciones:
 
@@ -3995,7 +4000,7 @@ Dos observaciones:
 |---|---|---|
 | Qué tan completo está (siempre) | Días con diario de *N*; avisos de ánimo respondidos de los mostrados y su tasa; días con ánimo solo en los avisos | `Periodo.diasDiario`, `AvisosAnimo.cifras`, `diasSoloAvisos` |
 | Día por día (columnas según las secciones) | Una tabla: ánimo y energía (1–7), horas de sueño, calidad (1–5), kcal menos el objetivo, minutos de gimnasio; un asterisco en los días marcados como difíciles | `Repo.dias`, `Periodo.activacion` y `suenoPorDia`, `NutricionDia` |
-| Ánimo (1, `animo`, encendida) | Gráfica de ánimo y energía por día; ánimo medio del diario y su cambio; días difíciles; las 5 emociones más nombradas en los registros y qué parte de las nombradas son desagradables; en qué pensabas; qué parte de los avisos estabas con alguien y el ánimo solo frente a acompañado; cómo viviste la exigencia del día (reto, amenaza, pérdida, rutina); el error medio de la predicción del día siguiente | `Periodo`, `Terapia.emociones`, `Catalogo.pensamientoDe`, `Momento.con_quien`, `Dia.apreciacion`, `prediccion_manana` |
+| Ánimo (1, `animo`, encendida) | Gráfica de ánimo y energía por día; ánimo medio del diario y su cambio; días difíciles; las 5 emociones más nombradas en los registros (desde el esquema 18, D.146, cada una cuenta una vez por registro, «otro» sale con lo que escribiste y al lado va cuántas veces fue «mucho», por ejemplo «Ansiedad (2 «mucho»)»; «no sé» sigue contando) y qué parte de las nombradas son desagradables; en qué pensabas; qué parte de los avisos estabas con alguien y el ánimo solo frente a acompañado; cómo viviste la exigencia del día (reto, amenaza, pérdida, rutina); el error medio de la predicción del día siguiente | `Periodo`, `Terapia.emociones`, `Catalogo.pensamientoDe`, `Momento.con_quien`, `Dia.apreciacion`, `prediccion_manana` |
 | Cuestionarios (2, `cuestionarios`, encendida) | WHO-5 (0–100), PSS-4 (0–16) y UCLA-3 (3–9) respondidos en el periodo, con el texto de lectura de `Escalas` y hasta 3 respuestas anteriores. El TIPI no entra: la personalidad no cambia en una semana | `Repo.respuestas`, `Instrumento.lectura` |
 | Sueño (3, `sueno`, encendida) | Barras de horas por noche; media y cambio; hora media de dormir y de despertar con su desviación estándar; calidad media; noches con pesadilla (solo el número; desde el esquema 17 con «¿fue pesadilla?», y en los días de antes, el tipo «ansioso o pesadilla», D.127); minutos de pantalla en la hora antes de dormir | `Periodo`, `Exportar.horaDecimal`, `Catalogo.pesadillaDe`, `PantallaDia.cama_min` |
 | Actividad y rutina (4, `rutina`, encendida) | Pasos; minutos de ejercicio del reloj; minutos al aire libre y horas en casa al día; hábitos cumplidos; dolor medio y máximo; días con los contextos «enfermo», «trabajo» y «académico»; pantalla y desbloqueos | `Periodo`, el panel (`aire_libre_min`, `en_casa_min`) |
@@ -4005,7 +4010,7 @@ Dos observaciones:
 | Sustancias (6, `sustancias`, encendida) | Por cada sustancia que no ocultaste: días, cantidad total, nivel máximo (0–10), malestar medio del día siguiente (0–5) y los síntomas más frecuentes | `Repo.consumos`, `Sustancias.maximo` |
 | Momentos del periodo (7, `momentosPeriodo`, encendida) | «Lo mejor» de tu mejor día y «lo peor» de tu peor día, tal como los escribiste | `Periodo.mejorDia` y `peorDia` |
 | Lo mejor y lo peor de cada día (dentro de la 7, `momentosDia`, apagada) | Los mismos dos textos de cada día | `Dia.mejor_momento`, `peor_momento` |
-| Seguimiento privado (8, `privado`, apagada) | Impulso medio del día (0–5) y por día en la tabla; impulsos registrados y cuántos no tuvieron una recaída en las 3 h siguientes; días con recaída de los días con respuesta; detonantes más frecuentes; medicamentos anotados | `Dia.impulso`, `recaida`, `detonantes`, `medicamentos`; momentos `impulso` y `recaida`; `Terapia.superados` (la misma regla de `Recaidas.resumen`) |
+| Seguimiento privado (8, `privado`, apagada) | Impulso medio del día (0–5) y por día en la tabla; impulsos registrados y cuántos no tuvieron una recaída en las 3 h siguientes; días con recaída de los días con respuesta; detonantes más frecuentes (desde el esquema 18, el detonante «otro» se cuenta con lo que escribiste en `detonante_otro`, igual que en la pantalla Privado, `Recaidas.resumen`); medicamentos anotados | `Dia.impulso`, `recaida`, `detonantes`, `medicamentos`; momentos `impulso` y `recaida`; `Terapia.superados` (la misma regla de `Recaidas.resumen`) |
 
 : Tabla 9.3. El reporte para terapia (desde D.119)
 
@@ -5185,7 +5190,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 
 ## A.3 Tablas exportadas
 
-La exportación genera 53 tablas CSV con datos (contadas en `Exportar.tablas()`: 51 antes del esquema 16, que agregó `vm_ideas.csv` y `vm_ideas_revisiones.csv`, A.10; 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv` (columnas `archivo`, `columna`, `tipo`, `descripcion` y `tabla`; desde 10f, también `desde_version` y `cambio`, A.9), `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por cada CSV con datos, sin el «vm_», más `ubicaciones` y `diccionario`; no lleva el catálogo de fotos), un `LEEME.txt`, el propio `vestigium.R` y la carpeta `portadas/` (`Exportar.archivos` y `Exportar.zip`). La exportación resumida (`Exportar.zipResumido`) trae solo `vm_panel.csv`, su diccionario, el `LEEME.txt` y `vestigium.R`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
+La exportación genera 54 tablas CSV con datos (contadas en `Exportar.tablas()`: 53 antes del esquema 18, que agregó `vm_listas.csv`, A.12; 51 antes del esquema 16, que agregó `vm_ideas.csv` y `vm_ideas_revisiones.csv`, A.10; 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv` (columnas `archivo`, `columna`, `tipo`, `descripcion` y `tabla`; desde 10f, también `desde_version` y `cambio`, A.9), `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por cada CSV con datos, sin el «vm_», más `ubicaciones` y `diccionario`; no lleva el catálogo de fotos), un `LEEME.txt`, el propio `vestigium.R` y la carpeta `portadas/` (`Exportar.archivos` y `Exportar.zip`). La exportación resumida (`Exportar.zipResumido`) trae solo `vm_panel.csv`, su diccionario, el `LEEME.txt` y `vestigium.R`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
 
 | Archivo | Contenido |
 |---|---|
@@ -5227,6 +5232,7 @@ La exportación genera 53 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_escalada_bloques.csv` | Bloques o vías de cada sesión |
 | `vm_biblioteca.csv` | Libros, películas, series, juegos y artículos |
 | `vm_citas.csv` | Citas de tus obras y frases guardadas con ♥ |
+| `vm_listas.csv` | Listas libres: cada elemento, cuándo se agregó y cuándo se hizo (esquema 18) |
 | `vm_mundo.csv` | Ciudades añadidas a mano, países rascados y sitios del Patrimonio Mundial marcados |
 | `vm_cartas.csv` | Cartas: a tu yo del futuro y a otras personas (las selladas, sin su texto) |
 | `vm_perfil.csv` | Conocerte: cómo está ahora y cada cambio con su fecha |
@@ -5477,6 +5483,37 @@ Cambia lo que se guarda: `SCHEMA_V` = 17. El detalle está en el capítulo 3 y e
 **Ideario** (`vm_ideas.csv`): `temas` reúne los temas del campo «Temas» (desde el esquema 17) y los `#temas` escritos en el texto, sin repetir. Antes eran solo los del texto.
 
 **Dinero** (`vm_gastos.csv`): `se_repite` (0/1), si el gasto se repite (renta, suscripción, servicios); solo se exporta. Las categorías Vivienda y Servicios aparecen como cualquier otra en `gcat_*`.
+
+## A.12 Cambios del esquema 18 (deseados y listas)
+
+Cambia lo que se guarda: `SCHEMA_V` = 18. El detalle está en el capítulo 2 (sección 2.5) y en el Apéndice D (D.145 y D.146). **No hay variables nuevas en el panel**: lo de esta sección solo se exporta como dato crudo. **[Diseño propio]**: agregar algo a una lista no describe cómo fue un día, y sumar columnas casi siempre en cero solo agregaría comparaciones a `vm_relaciones`.
+
+**Deseados** (`vm_biblioteca.csv`, tres columnas nuevas; vacías en las obras de antes):
+
+| Columna | Qué es |
+|---|---|
+| `prioridad` | Si está pendiente, qué tan pronto la quieres: `pronto`, `cuando_pueda` o `algun_dia`; vacío = sin decir |
+| `recomendo` | Quién te la recomendó: personas de tu gente, sin @ (lista) |
+| `donde` | Dónde verla o conseguirla, escrito a mano |
+
+: Tabla A.37. Cambios del esquema 18 (deseados y listas)
+
+La descripción de `estado` ahora incluye `pausado`, que ya existía desde D.143 pero el diccionario no nombraba.
+
+**Listas libres** (`vm_listas.csv`, `Exportar.filasListas`, una fila por elemento):
+
+| Columna | Qué es |
+|---|---|
+| `lista_id`, `lista` | Identificador y nombre de la lista (lugares por visitar, cosas por comprar…) |
+| `id`, `texto`, `nota`, `enlace` | El elemento, una nota y un enlace |
+| `prioridad` | `pronto`, `cuando_pueda` o `algun_dia`; vacío = sin decir |
+| `agregado` | Día lógico en que lo agregaste |
+| `hecho` | Día lógico en que lo tachaste; vacío = pendiente |
+| `dias_hasta_hecho` | Días entre `agregado` y `hecho` (vacío si sigue pendiente). *Ejemplo inventado:* agregado el 1 de octubre y hecho el 11 → 10 |
+
+: Tabla A.38. Cambios del esquema 18 (deseados y listas)
+
+En R se lee como `vm$listas`.
 
 
 # Apéndice B. Fórmulas
@@ -5831,6 +5868,7 @@ Desde 10e (D.97; H-7-11, resuelto). Es **`Experimentos.resultado` de la app** (c
 | `vm_cruce_horas(x, y, desfase)` | Desde 10e (H-5-7), r de Pearson y ρ de Spearman, cada uno con su p de `cor.test`, entre dos columnas de `vm_horas.csv` en la misma hora o `desfase` horas después; exige 10 horas. Antes, solo Spearman. | La app no cruza horas, así que no hay n efectivo que copiar: ignora que horas consecutivas se parecen mucho más que días consecutivos, y su p es muy optimista (la salida lo dice). |
 | `vm_sustancias()` | Registros, días, nivel máximo medio, horas y cruda por sustancia; cruda contra bebidas. | Descriptiva. |
 | `vm_lugares()` | Horas por tipo de lugar por semana; valencia media de los registros de ánimo por tipo de lugar. | Descriptiva. |
+| `vm_emociones(desde = NULL, hasta = NULL)` (desde el esquema 18, D.146) | De `vm_momentos.csv`, solo registros de ánimo (`es_animo`): por emoción, cuántos registros la nombran, en cuántos le pusiste intensidad, la intensidad media (1 a 3), cuántas veces fue «mucho» y la valencia media de esos registros; lo mismo por pensamiento y por compañía (`con_quien`); y una gráfica de barras de las 12 emociones más nombradas, coloreada por intensidad media. «No sé» no cuenta como emoción; un registro con varias emociones cuenta en cada una (como `n_*` en el panel). Lee las listas con `vm_lista` y las intensidades con `vm_pares`. | Descriptiva: la valencia media por emoción no es un efecto de la emoción (los registros con varias emociones se repiten en cada una). |
 | `vm_presion()` | Desde 10e (H-5-7), el mismo resumen que `vm_cruce` (`.vm_cruce_resumen`) entre `cambio_presion_3h` y la valencia, sobre `vm$panel`: r de Pearson con intervalo y p por el n efectivo, r sin tendencia y ρ de Spearman; exige 5 días. Antes, solo Spearman con n bruto. La gráfica sigue con una curva `loess`. | Como «Cruzar dos variables» con esas dos variables. |
 | `vm_retraso(tabla, umbral_min = 60)` | Desde el esquema 14: minutos entre cuándo pasó y cuándo se anotó cada registro (`retraso_min`), si se anotó en otro día lógico (`otro_dia`) y si fue `tarde` (más del umbral u otro día). Sirve para momentos, sustancias, tramos, suplementos, gastos e ingresos. | Descriptiva. El umbral de 60 min es **[Diseño propio]**; los registros de antes del esquema 14 quedan con NA. |
 | `vm_red(declaradas = FALSE, min_juntos = 2, min_dias = 3)` | Red personal con igraph: densidad, grupos, aisladas, restricción de Burt, grado, composición. Desde 10c, la composición y el color usan la columna `grupo` de `vm_red_nodos.csv` (familia, pareja, amistad, trabajo…), como la Red de la app; si la exportación no la trae, la relación tal cual. Desde 10d (P-32; H-6-7 a y b, H-9-23): un par declarado «no se conocen» **nunca** es línea, aunque aparezcan juntas `min_juntos` días; `componentes` cuenta solo los grupos con al menos una línea (`sum(csize > 1)`) y las personas sin ninguna van aparte en `aisladas`; sin ningún par (o sin `vm_red_vinculos.csv`) ya no falla: da una red sin líneas. Desde 10e (D.106; H-6-8): solo entran las personas mencionadas al menos `min_dias` días distintos (`dias_mencion`: con @ en el diario o en los momentos no privados), y sus líneas se van con ellas; quien tiene alguna línea dicha en Tu gente (que no sea «no se conocen») entra siempre. Así alguien nombrado una vez no baja la densidad ni la restricción. Dice cuántas quedan; `min_dias = 0` usa a todas, como antes. El 3 es **[Diseño propio]**. | Capítulo 7. Igual que `RedPersonas.componentes`. Lo que sigue distinto (H-6-7 c y d, documentado en el diccionario): la exportación trae hasta 400 personas y el `grado` del CSV cuenta pares con 1 día o más juntas; la Red de la app dibuja 45 y pide 2 días; la app no tiene el mínimo de `min_dias` (en la app, H-6-8 queda solo documentado, capítulo 7). |
@@ -6261,6 +6299,15 @@ Las tres escalas 1–7 de la hoja de la noche no cambian. `SCHEMA_V` = 17. La ve
 | D.144 | **Consistencia de los formularios.** Los diálogos de corrección (gasto, ingreso, tramo, toma, nota, momento y visita) tienen «cancelar» abajo; «borrar» va adentro, en rojo y con confirmación. Antes, en varios, el único botón de salida era «Borrar». Las palabras son las mismas en todos («Guardar», «cancelar», «borrar»). «Lo mejor» y «lo peor» ya no tienen etiquetas en latín fijas. Las listas de etiquetas (medicamentos, hitos, nombres de un sueño, temas de una idea) no aceptan repetidos. Un recordatorio sin día avisa que no sonará | `ui/pantallas/Gastos.kt`, `EnfoqueSiestas.kt`, `Lote2.kt`, `Lote3.kt`, `Momentos.kt`, `Medir.kt`, `Dia.kt`, `ui/Componentes.kt` | Revisión de pantallas. No cambia ningún cálculo |
 
 : Tabla D.17. Pantallas de captura (esquema 17)
+
+## Deseados, listas y momentos en los reportes (esquema 18)
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.145 | **Deseados y listas libres.** Las obras pendientes («Quiero leer y ver», `PantallaDeseados`) llevan qué tan pronto las quieres (`Obra.prioridad`: pronto, cuando pueda, algún día), quién te las recomendó (`Obra.recomendo`) y dónde verlas (`Obra.donde`); se añaden con solo el título y se ordenan por prioridad y luego por fecha. Nueva colección `listas` (`Lista`, `ElementoLista`) para lo que no es una obra, con fecha de agregado y de hecho. Nada de esto entra al panel; se exporta en `vm_biblioteca.csv` (tres columnas) y `vm_listas.csv` (A.12) | `data/Modelo.kt`, `data/Repo.kt`, `data/Exportar.kt`, `data/Diccionario.kt`, `ui/pantallas/Biblioteca.kt`, `ui/pantallas/Listas.kt`, `assets/vestigium.R` (`vm$listas`) | Pedido del autor: una forma más establecida de llevar la lista de deseados, y listas aparte para lo demás. **[Diseño propio]**: sin variables de panel, porque no describen el día y solo sumarían comparaciones |
+| D.146 | **Lo nuevo de los momentos en pantallas y reportes.** Las intensidades, la lista de pensamientos y «con quién» (esquema 17) se muestran donde aparecen los registros (Tu día, la línea de tiempo del Diario, la lista de registros, la cinta, la libreta de momentos: «Tristeza (mucho)», «pensando: …», «con …»). Los reportes semanal, mensual y anual, Semana, Año y «Tu año» suman las emociones más nombradas (con sus «mucho»), los pensamientos y con quién (`Periodo.animoDe`, 9.2). El reporte para terapia nombra «otro» con lo escrito, anota los «mucho» y cuenta el detonante «otro» con su texto, igual que la pantalla Privado. En R, `vm_emociones()` (Apéndice C). **No cambia el panel**: `n_*`, `con_*`, `acompanado_pct` y la regla de terapia de contar «con quién» solo en los avisos siguen igual. La libreta de momentos mostraba el identificador del lugar en vez de su nombre; ya muestra el nombre | `data/Catalogo.kt` (`tituloDetallado`, `detalleMomento`, `conQuienTexto`), `ciencia/Periodo.kt`, `ciencia/Terapia.kt`, `ciencia/TuAnio.kt`, `data/Recaidas.kt`, `reportes/Reportes.kt`, `ui/pantallas/` (Dia, Diarios, Momentos, Cinta, LibretaMomentos, Bibliotecas, Semana, Anno), `assets/vestigium.R` | Pedido del autor: los momentos guardan más que antes y no se veía en los reportes. Conteos para leer, sin pesar por intensidad. **[Diseño propio]** |
+
+: Tabla D.18. Deseados, listas y momentos en los reportes (esquema 18)
 
 
 # Apéndice E. Glosario

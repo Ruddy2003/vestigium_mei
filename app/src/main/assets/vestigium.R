@@ -94,7 +94,7 @@ vm_archivos <- c(
   nutricion = "vm_nutricion.csv", comidas = "vm_comidas.csv", entrenos = "vm_entrenos.csv", series = "vm_series.csv",
   tramos = "vm_tramos.csv", sustancias = "vm_sustancias.csv", horas = "vm_horas.csv", notas = "vm_notas.csv", ideas = "vm_ideas.csv", ideas_revisiones = "vm_ideas_revisiones.csv", metas = "vm_metas.csv",
   suplementos = "vm_suplementos.csv", laptop = "vm_laptop.csv", red_nodos = "vm_red_nodos.csv", red_vinculos = "vm_red_vinculos.csv",
-  experimentos = "vm_experimentos.csv", personas = "vm_personas.csv", fechas_propias = "vm_fechas_propias.csv")
+  experimentos = "vm_experimentos.csv", personas = "vm_personas.csv", fechas_propias = "vm_fechas_propias.csv", listas = "vm_listas.csv")
 
 vm <- compact(lapply(vm_archivos, vm_leer))
 
@@ -684,6 +684,37 @@ vm_lugares <- function() {
   ggplot(h, aes(semana, horas, fill = tipo)) + geom_col() + labs(x = NULL, y = "horas por semana", fill = "tipo de lugar") + theme_minimal()
 }
 
+#' Ánimo con detalle (esquema 17): qué emociones nombraste y con qué intensidad (1 un poco, 2 bastante, 3 mucho), en qué pensabas
+#' y con quién estabas, con la valencia media de los registros en cada caso. Solo los registros de ánimo de vm_momentos.csv; «no sé»
+#' no cuenta como emoción. Un registro con varias emociones (o pensamientos, o compañías) cuenta en cada una. Es para mirar: no entra
+#' a vm_relaciones() ni al panel (las variables n_* y con_* del panel siguen su propia regla).
+vm_emociones <- function(desde = NULL, hasta = NULL) {
+  m <- vm$momentos
+  if (is.null(m) || nrow(m) == 0) stop("No hay registros en vm_momentos.csv.")
+  m <- m |> filter(es_animo)
+  if (!is.null(desde)) m <- m |> filter(fecha >= as.Date(desde))
+  if (!is.null(hasta)) m <- m |> filter(fecha <= as.Date(hasta))
+  if (nrow(m) == 0) stop("No hay registros de ánimo en ese periodo.")
+  e <- m |> select(id, valencia, emociones) |> mutate(emocion = vm_lista(emociones)) |> select(-emociones) |> unnest(emocion) |> filter(emocion != "no_se")
+  i <- if ("intensidades" %in% names(m)) vm_pares(m, "intensidades", id = "id") |> rename(emocion = clave, intensidad = n) else
+    tibble(id = character(), emocion = character(), intensidad = numeric())
+  emo <- e |> left_join(i, by = c("id", "emocion")) |> group_by(emocion) |>
+    summarise(registros = n(), con_intensidad = sum(!is.na(intensidad)), intensidad_media = mean(intensidad, na.rm = TRUE),
+              mucho = sum(intensidad == 3, na.rm = TRUE), valencia_media = mean(valencia, na.rm = TRUE), .groups = "drop") |> arrange(desc(registros))
+  col_p <- if ("pensamientos" %in% names(m)) "pensamientos" else "pensamiento"
+  pen <- m |> select(id, valencia, all_of(col_p)) |> mutate(.q = vm_lista(.data[[col_p]])) |> select(id, valencia, .q) |> unnest(.q) |>
+    group_by(pensamiento = .q) |> summarise(registros = n(), valencia_media = mean(valencia, na.rm = TRUE), .groups = "drop") |> arrange(desc(registros))
+  con <- m |> select(id, valencia, con_quien) |> mutate(.q = vm_lista(con_quien)) |> select(id, valencia, .q) |> unnest(.q) |>
+    group_by(con_quien = .q) |> summarise(registros = n(), valencia_media = mean(valencia, na.rm = TRUE), .groups = "drop") |> arrange(desc(registros))
+  print(emo); print(pen); print(con)
+  if (nrow(emo) == 0) return(invisible(list(emociones = emo, pensamientos = pen, con_quien = con)))
+  g <- ggplot(head(emo, 12), aes(reorder(emocion, registros), registros, fill = intensidad_media)) + geom_col() + coord_flip() +
+    scale_fill_gradient(low = "#E8D9B0", high = "#7C2433", na.value = "grey70", limits = c(1, 3)) +
+    labs(x = NULL, y = "registros que la nombran", fill = "intensidad media\n(1 a 3)") + theme_minimal()
+  print(g)
+  invisible(list(emociones = emo, pensamientos = pen, con_quien = con, grafica = g))
+}
+
 #' Cuánto después de que pasó se anotó cada registro (desde la v14): minutos de retraso y si fue «tarde», es decir,
 #' más de `umbral_min` minutos después o en otro día lógico. Sirve para momentos, sustancias, tramos, suplementos,
 #' gastos e ingresos. Los registros de antes de la v14 no tienen la hora de anotación y quedan con NA.
@@ -932,6 +963,6 @@ vm_resumen()
 message("\nListo. Tablas: ", paste(names(vm), collapse = ", "),
         "\nFunciones: vm_tendencia(), vm_semana(), vm_cruce(x, y, desfase = 1), vm_relaciones(), vm_factores(), vm_totales(), vm_buscar('texto'), vm_modelo(), vm_modelo_ar1(), vm_fuerza(),",
         "\n           vm_dinamica(), vm_ritmo(), vm_palabras(), vm_atipicos(), vm_mapa_animo(), vm_guardar_graficas(),",
-        "\n           vm_por_hora('valencia'), vm_cruce_horas('cafeina_mg', 'activacion'), vm_sustancias(), vm_lugares(), vm_presion(), vm_retraso('momentos'),",
+        "\n           vm_por_hora('valencia'), vm_cruce_horas('cafeina_mg', 'activacion'), vm_sustancias(), vm_lugares(), vm_emociones(), vm_presion(), vm_retraso('momentos'),",
         "\n           vm_red(min_dias = 3), vm_laptop(), vm_experimento('id'),",
         "\n           vm_describir('vm_panel.csv'), vm_lista(), vm_pares(tabla, 'columna'), vm_hora_local(ts), vm_leer_sqlite()")

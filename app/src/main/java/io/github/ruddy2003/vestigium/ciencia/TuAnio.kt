@@ -109,6 +109,11 @@ object TuAnio {
             p.comidaTop.firstOrNull()?.let { add("comías" to it.first.lowercase()) }
             p.artistas.firstOrNull()?.let { add("escuchabas" to it.first) }
             p.momentos.firstOrNull()?.let { add("anotabas" to it.first.lowercase()) }
+            // Lo que dicen los registros de ánimo: la emoción que más nombraste y en lo que más pensaste (no en modo discreto).
+            if (!Repo.config.discreto) {
+                p.emociones.firstOrNull()?.let { add("sentías" to it.nombre.lowercase()) }
+                p.pensamientos.firstOrNull()?.let { add("pensabas" to it.first.lowercase()) }
+            }
             p.personas.firstOrNull()?.let { add("veías a" to "@${it.first}") }
             val diasDiario = p.fechas.filter { Repo.dias[it]?.nota?.isNotBlank() == true }
             if (diasDiario.size >= 10) add("escribías" to "unas ${n0(diasDiario.map { Texto.palabras(Repo.dias[it]!!.nota).toDouble() }.sorted()[diasDiario.size / 2])} palabras")

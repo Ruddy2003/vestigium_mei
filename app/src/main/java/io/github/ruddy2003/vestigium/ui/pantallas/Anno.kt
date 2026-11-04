@@ -182,6 +182,12 @@ fun PantallaAnno(nav: Nav) {
                 if (personas.isNotEmpty()) Clave("personae", personas.joinToString("  ") { "@${it.key} ${it.value}" })
                 if (temas.isNotEmpty()) Clave("themata", temas.joinToString("  ") { "#${it.key} ${it.value}" })
                 if (tipos.isNotEmpty()) Clave("momenta", tipos.joinToString(" · ") { "${Catalogo.nombreTipo(it.key).lowercase()} ${it.value}" })
+                // Lo que dicen los registros de ánimo del año: las emociones más nombradas y en qué pensabas.
+                if (!Repo.config.discreto) {
+                    val (emo, pens, _) = remember(anio, Repo.momentos.size) { io.github.ruddy2003.vestigium.ciencia.Periodo.animoDe(Repo.momentos.filter { it.fecha.startsWith(pre) && !it.privado }) }
+                    if (emo.isNotEmpty()) Clave("affectus", emo.take(5).joinToString(" · ") { e -> e.nombre.lowercase() + " ${e.n}" + (if (e.mucho > 0) " (${e.mucho} «mucho»)" else "") })
+                    if (pens.isNotEmpty()) Clave("cogitatio", pens.take(3).joinToString(" · ") { (t, k) -> "${t.lowercase()} $k" })
+                }
                 if (musica.isNotEmpty()) Clave("musica", musica.joinToString(" · ") { "${it.first} ${it.second}" })
                 val lugares = Repo.visitas.filter { it.entrada.startsWith(pre) }.groupingBy { it.lugar }.eachCount().entries.sortedByDescending { it.value }.take(4)
                 if (lugares.isNotEmpty()) Clave("loca", lugares.joinToString(" · ") { e -> (Repo.lugares.firstOrNull { it.id == e.key }?.nombre ?: "?") + " ${e.value}" })

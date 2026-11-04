@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -209,8 +210,8 @@ fun materia(t: TemaId): Materia = when (t) {
 //  De noche: los sueños con el mismo objeto del tema, bajo el cielo y la luz de su noche
 // =====================================================================
 
-/** Qué se escribe en la página: el diario del día, un sueño o una carta. */
-enum class Escrito { DIARIO, SUENO, CARTA }
+/** Qué se escribe en la página: el diario del día, un sueño, una carta o una idea (que va en una ficha del tema, no en un libro). */
+enum class Escrito { DIARIO, SUENO, CARTA, IDEA }
 
 internal val NOCHE = Color(0xFF111833)
 internal val NOCHE_ALTA = Color(0xFF261C4C)
@@ -3472,8 +3473,11 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
 /** Escribir el diario a pantalla completa, sobre el papel del tema. Se guarda solo; el botón guarda y vuelve. */
 @Composable
 fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guardar: () -> Unit, tema: TemaId = Estilo.tema, dictado: Boolean = true,
-                 modo: Escrito = Escrito.DIARIO, encabezado: (@Composable (Pagina) -> Unit)? = null, pista: String? = null, textoBoton: String? = null) {
-    val p = if (modo == Escrito.SUENO) paginaNoche(tema) else pagina(tema)
+                 modo: Escrito = Escrito.DIARIO, encabezado: (@Composable (Pagina) -> Unit)? = null, pista: String? = null, textoBoton: String? = null,
+                 pie: (@Composable (Pagina) -> Unit)? = null) {
+    val p = when (modo) { Escrito.SUENO -> paginaNoche(tema); Escrito.IDEA -> paginaFicha(tema); else -> pagina(tema) }
+    val ficha = modo == Escrito.IDEA
+    val archivo = archivoIdeas(tema)
     val sentir = rememberSentir()
     var campo by remember { mutableStateOf(TextFieldValue(valor, TextRange(valor.length))) }
     if (campo.text != valor) campo = TextFieldValue(valor, TextRange(valor.length))
@@ -3487,9 +3491,11 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
     }
     MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         Box(Modifier.fillMaxSize()) {
-            FondoPagina(tema, p, noche = modo == Escrito.SUENO)
-            // Arriba y a los lados, la barra del sistema; abajo, el teclado del teléfono o la barra de navegación (sin contarlas dos veces).
-            Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)).imePadding()) {
+            if (ficha) InteriorArchivo(archivo, materia(tema)) else FondoPagina(tema, p, noche = modo == Escrito.SUENO)
+            // Lo de adentro de la página: la barra, el texto y la fila de abajo. En una idea va dentro de una ficha grande del tema.
+            val interior: @Composable ColumnScope.() -> Unit = {
+                if (ficha && archivo.formaFicha == FormaFicha.VENTANA) Spacer(Modifier.height(altoBarraVentana(true)))
+                else if (ficha) Spacer(Modifier.height(margenSuperior(archivo.formaFicha, true) / 2))
                 BarraPagina(p, guardar, Estilo.texto("palabras").format(Texto.palabras(campo.text))) {
                     Text(textoBoton ?: textoGuardar(tema), style = MaterialTheme.typography.labelLarge, color = if (p.oscura) p.color else Color.White,
                         modifier = Modifier.padding(end = 6.dp).background(p.acento, MaterialTheme.shapes.small).clickable { sentir(Sentidos.Evento.GUARDAR); guardar() }
@@ -3498,6 +3504,8 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start = if (p.rayas == Rayas.NUMEROS) 52.dp else 30.dp, end = 26.dp, bottom = 24.dp)) {
                     if (encabezado != null) encabezado(p) else EncabezadoPagina(tema, p, fecha, modo)
                     if (modo == Escrito.DIARIO) Epigrafe(fecha, p)
+                    // La línea de color de la ficha, bajo el encabezado.
+                    if (ficha) Box(Modifier.fillMaxWidth().padding(bottom = 6.dp).height(1.6.dp).background(p.acento.copy(alpha = 0.7f)))
                     val estilo = TextStyle(fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, color = p.tinta)
                     BasicTextField(
                         value = campo, onValueChange = { campo = it; if (it.text != valor) onCambio(it.text) },
@@ -3511,6 +3519,7 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                             }
                         },
                     )
+                    if (pie != null) pie(p)
                 }
                 // Abajo, junto al teclado, también está «guardar»: con el texto largo, el de arriba queda lejos del pulgar (N-27).
                 FlowRow(Modifier.fillMaxWidth().background(p.color.copy(alpha = 0.92f)).padding(horizontal = 12.dp, vertical = 6.dp),
@@ -3525,6 +3534,22 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                             val nuevo = campo.text.substring(0, ini) + s + " " + campo.text.substring(antes.length)
                             campo = TextFieldValue(nuevo, TextRange(ini + s.length + 1)); onCambio(nuevo)
                         }
+                    }
+                }
+            }
+            // Arriba y a los lados, la barra del sistema; abajo, el teclado del teléfono o la barra de navegación (sin contarlas dos veces).
+            if (!ficha) Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)).imePadding()) {
+                interior()
+                androidx.compose.foundation.layout.Spacer(Modifier.navigationBarsPadding())
+            } else Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)).imePadding()) {
+                // La ficha grande, con la forma de las del tema, sobre el interior del contenedor.
+                val forma = remember(archivo.formaFicha) { formaDeFicha(archivo.formaFicha, fecha.hashCode()) }
+                androidx.compose.material3.Surface(shape = forma, color = Color.Transparent, shadowElevation = 6.dp,
+                    modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp)) {
+                    Box {
+                        PapelFicha(p)
+                        Canvas(Modifier.matchParentSize()) { adornoFicha(archivo.formaFicha, p, materia(tema), grande = true) }
+                        Column(Modifier.fillMaxSize()) { interior() }
                     }
                 }
                 androidx.compose.foundation.layout.Spacer(Modifier.navigationBarsPadding())

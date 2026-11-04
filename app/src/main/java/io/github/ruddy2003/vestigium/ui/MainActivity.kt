@@ -1830,7 +1830,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         },
         containerColor = MaterialTheme.colorScheme.background,
         // Al leer una entrada, la página ocupa toda la pantalla.
-        bottomBar = { if (pila.lastOrNull() !in setOf("entrada", "sueno", "carta", "hoja_momentos", "cajon_ideas")) BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
+        bottomBar = { if (pila.lastOrNull() !in setOf("entrada", "sueno", "carta", "hoja_momentos", "cajon_ideas", "ficha_idea", "idea")) BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
     ) { pad ->
         val esquema = MaterialTheme.colorScheme
         Box(Modifier.padding(pad).fillMaxSize().fondoTema(tema, esquema)) {
@@ -1889,6 +1889,9 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "escalada" -> PantallaEscalada(nav)
                     "ascenso" -> PantallaAscenso(nav)
                     "biblioteca" -> PantallaBiblioteca(nav)
+                    "deseados" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaDeseados(nav)
+                    "listas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaListas(nav)
+                    "lista" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLista(nav)
                     "obra" -> PantallaObra(nav)
                     "buscar_obra" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBuscarObra(nav)
                     "anno" -> PantallaAnno(nav)
@@ -1911,6 +1914,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "biblioteca_ideas", "ideario" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "ideas")
                     "idea" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaIdea(nav)
                     "cajon_ideas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCajonIdeas(nav)
+                    "ficha_idea" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaFichaIdea(nav)
                     "cinta" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(nav)
                     "constelacion" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(nav)
                     "hall" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(nav)

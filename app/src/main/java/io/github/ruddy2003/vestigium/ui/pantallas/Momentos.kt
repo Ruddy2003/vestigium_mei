@@ -94,7 +94,8 @@ fun PantallaMomentos(nav: Nav) {
                         Text(Fechas.horaDe(m.ts), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp, modifier = Modifier.padding(end = 10.dp))
                         Column(Modifier.weight(1f)) {
                             val extra = listOfNotNull(m.valencia?.let { "valencia $it" }, m.activacion?.let { "energía $it" }, m.intensidad?.let { "intensidad $it" }).joinToString(" · ")
-                            Text(Catalogo.titulo(m, discreto) + if (extra.isNotEmpty()) " · $extra" else "", style = MaterialTheme.typography.titleMedium)
+                            Text(Catalogo.tituloDetallado(m, discreto) + if (extra.isNotEmpty()) " · $extra" else "", style = MaterialTheme.typography.titleMedium)
+                            Catalogo.detalleMomento(m, discreto).takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                             if (m.texto.isNotBlank()) io.github.ruddy2003.vestigium.ui.TextoMarcado(m.texto, style = MaterialTheme.typography.bodyMedium)
                             val lugar = Repo.lugares.firstOrNull { it.id == m.lugar }?.nombre
                             Ayuda(listOfNotNull(lugar, if (m.lat != null && lugar == null) "con ubicación" else null, m.origen).joinToString(" · "))

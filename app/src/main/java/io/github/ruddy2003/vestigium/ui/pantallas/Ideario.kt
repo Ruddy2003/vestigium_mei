@@ -2,7 +2,6 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,10 +11,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -46,7 +43,6 @@ import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import io.github.ruddy2003.vestigium.ui.BotonSecundario
 import io.github.ruddy2003.vestigium.ui.Deshacer
-import io.github.ruddy2003.vestigium.ui.Editor
 import io.github.ruddy2003.vestigium.ui.Etiqueta
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.FilaFichas
@@ -55,9 +51,28 @@ import io.github.ruddy2003.vestigium.ui.ListaEtiquetas
 import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
-import io.github.ruddy2003.vestigium.ui.TextoMarcado
 import io.github.ruddy2003.vestigium.ui.Vacio
 import io.github.ruddy2003.vestigium.ui.elegirFecha
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import io.github.ruddy2003.vestigium.ui.ArchivoIdeas
+import io.github.ruddy2003.vestigium.ui.EscritorTema
+import io.github.ruddy2003.vestigium.ui.Escrito
+import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.FormaFicha
+import io.github.ruddy2003.vestigium.ui.Pagina
+import io.github.ruddy2003.vestigium.ui.archivoIdeas
+import io.github.ruddy2003.vestigium.ui.margenSuperior
+import io.github.ruddy2003.vestigium.ui.paginaFicha
 
 /** La idea que se abre en la pantalla «idea»: nueva (todavía sin guardar) o una ya guardada. */
 object EdicionIdea {
@@ -74,32 +89,24 @@ object EdicionIdea {
         origen = when (obra?.tipo) { "libro", "articulo", "comic" -> "leido"; "pelicula", "serie", "juego", "documental", "podcast", "audiolibro", "album" -> "visto"; else -> "" })
 }
 
-private fun nombreOrigen(id: String) = Catalogo.ORIGENES_IDEA.firstOrNull { it.id == id }?.nombre
-private fun nombrePostura(id: String) = Catalogo.POSTURAS_IDEA.firstOrNull { it.id == id }?.nombre
-
-@Composable
-private fun colorPostura(id: String): Color? {
-    val cs = MaterialTheme.colorScheme
-    return when (id) { "convence" -> cs.primary; "piensa" -> cs.tertiary; "duda" -> cs.secondary; "desacuerdo" -> cs.error; else -> null }
-}
-
-/** De dónde salió, en una línea: quién lo dice, la obra o la fuente, y el minuto o la página. */
-private fun lineaFuente(i: Idea): String {
-    val obra = i.obra_id?.let { o -> Repo.obras.firstOrNull { it.id == o }?.titulo }
-    return listOfNotNull(i.quien.joinToString(", ").ifBlank { null }, obra ?: i.fuente.ifBlank { null }, i.donde.ifBlank { null }).joinToString(" · ")
-}
-
 // =====================================================================
 //  Escribir o corregir una idea
 // =====================================================================
 
 /**
- * Una idea a pantalla completa. Solo el texto es obligatorio; se guarda sola mientras escribes (en cuanto tiene texto).
- * Si «se me ocurrió», no se piden quién ni fuente.
+ * Una idea a pantalla completa, como el diario: una ficha grande del tema ([Escrito.IDEA]) sobre el interior de su contenedor.
+ * Arriba, la pestaña del tema y la fecha y «la idea en una línea»; luego el texto, que es lo único obligatorio y se guarda solo
+ * mientras escribes (en cuanto tiene texto). Abajo, en «el reverso de la ficha», los temas, de dónde viene, quién lo dice, la
+ * fuente y cómo la tienes. Si «se me ocurrió», no se piden quién ni fuente.
  */
 @Composable
 fun PantallaIdea(nav: Nav) {
-    val ctx = LocalContext.current
+    Dialog(onDismissRequest = nav.atras, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) { EscritorIdea(nav) }
+}
+
+/** Lo de adentro de [PantallaIdea]: la ficha grande para escribir (aparte, para poder verla en las capturas de diseño). */
+@Composable
+fun EscritorIdea(nav: Nav) {
     val inicial = remember { EdicionIdea.idea ?: EdicionIdea.nueva() }
     val contexto = remember { EdicionIdea.contexto }
     val yaGuardada = remember { Repo.ideas.any { it.id == inicial.id } }
@@ -109,67 +116,82 @@ fun PantallaIdea(nav: Nav) {
         x = n; tocada = true
         if (n.texto.isNotBlank()) Repo.guardarIdea(n.copy(editada = if (yaGuardada) Fechas.ahoraIso() else n.editada))
     }
+    val a = archivoIdeas(Estilo.tema)
+    EscritorTema(x.fecha, x.texto, { cambiar(x.copy(texto = it)) }, nav.atras, modo = Escrito.IDEA, textoBoton = "listo",
+        pista = "¿Qué entendiste? Con tus palabras; @persona si te lo contó alguien de tu gente.",
+        encabezado = { p -> EncabezadoIdea(x, contexto, a, p, yaGuardada) { cambiar(it) } },
+        pie = { _ -> ReversoIdea(x, tocada, nav) { cambiar(it) } })
+}
+
+/** Arriba de la ficha: el tema (o qué es: una tablilla nueva, un tanzaku…), la fecha que se cambia al tocarla, la idea en una línea y de dónde nace. */
+@Composable
+private fun EncabezadoIdea(x: Idea, contexto: String?, a: ArchivoIdeas, p: Pagina, yaGuardada: Boolean, cambiar: (Idea) -> Unit) {
+    val ctx = LocalContext.current
+    Column(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            val tema = Ideario.temasDe(x).firstOrNull()
+            Text((if (x.fijada) "◆ " else "") + (tema?.let { "#" + it.replace('_', ' ') } ?: if (yaGuardada) a.ficha else "${a.ficha} nueva"),
+                style = MaterialTheme.typography.labelLarge, color = p.acento, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(Fechas.corto(x.fecha) + " · " + Fechas.horaDe(x.creada), style = MaterialTheme.typography.labelMedium, color = p.tenue,
+                modifier = Modifier.clickable { elegirFecha(ctx, x.fecha) { cambiar(x.copy(fecha = it)) } }.padding(vertical = 4.dp))
+        }
+        val estilo = TextStyle(fontFamily = p.texto, fontSize = (p.tam + 1).sp, lineHeight = p.interlinea.sp, color = p.tinta, fontWeight = FontWeight.SemiBold)
+        BasicTextField(x.titulo, { cambiar(x.copy(titulo = it.replace('\n', ' ').take(140))) }, singleLine = true, textStyle = estilo, cursorBrush = SolidColor(p.acento),
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp),
+            decorationBox = { campo -> Box { if (x.titulo.isEmpty()) Text("La idea en una línea (opcional)", style = estilo.copy(color = p.tenue.copy(alpha = 0.6f), fontWeight = FontWeight.Normal)); campo() } })
+        contexto?.let { c -> Text(c, style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic, color = p.tenue, modifier = Modifier.padding(bottom = 6.dp)) }
+    }
+}
+
+/** El reverso de la ficha: temas, de dónde viene, quién lo dice, la fuente, cómo la tienes, fijarla y borrarla. */
+@Composable
+private fun ReversoIdea(x: Idea, tocada: Boolean, nav: Nav, cambiar: (Idea) -> Unit) {
     var confirmar by remember { mutableStateOf(false) }
-    Hoja(if (yaGuardada) "Una idea" else "Nueva idea", nav.atras, "Lo que entendiste, con tus palabras. Se guarda sola mientras escribes; solo el texto es obligatorio.") {
-        contexto?.let { c ->
-            Surface(shape = RoundedCornerShape(6.dp), color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
-                Text(c, style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic, modifier = Modifier.padding(12.dp))
-            }
+    if (x.texto.isBlank() && tocada) Ayuda("Sin texto todavía no se guarda.", Modifier.padding(top = 6.dp))
+    Text("El reverso de la ficha", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 22.dp))
+    // Los temas: cada uno es un contenedor del archivo. Los #temas escritos en el texto también cuentan (se ven marcados).
+    Etiqueta("Temas")
+    val enTexto = Texto.temas(x.texto).toSet()
+    ListaEtiquetas(x.temas, "un tema: estoicismo, dinero, salud…", normalizar = { Texto.etiqueta(it) }) { l -> cambiar(x.copy(temas = l.distinct())) }
+    val temas = remember(Repo.ideas) { Ideario.temas(Repo.ideas).take(18) }
+    if (temas.isNotEmpty()) FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        temas.forEach { (t, _) ->
+            val puesto = t in x.temas || t in enTexto
+            Ficha(t.replace('_', ' '), puesto) { if (t in x.temas) cambiar(x.copy(temas = x.temas - t)) else if (t !in enTexto) cambiar(x.copy(temas = x.temas + t)) }
         }
-        Etiqueta("La idea")
-        Editor(x.texto, "idea.txt", "¿Qué entendiste? Con tus palabras; @persona si te lo contó alguien de tu gente.", minimo = 160,
-            pie = "${Texto.palabras(x.texto)} verba") { cambiar(x.copy(texto = it)) }
-        if (x.texto.isBlank() && tocada) Ayuda("Sin texto todavía no se guarda.", Modifier.padding(top = 6.dp))
-        // Los temas: cada uno es un cajón del fichero. Los #temas escritos en el texto también cuentan (se ven marcados).
-        Etiqueta("Temas")
-        val enTexto = Texto.temas(x.texto).toSet()
-        ListaEtiquetas(x.temas, "un tema: estoicismo, dinero, salud…", normalizar = { Texto.etiqueta(it) }) { l -> cambiar(x.copy(temas = l.distinct())) }
-        val temas = remember(Repo.ideas) { Ideario.temas(Repo.ideas).take(18) }
-        if (temas.isNotEmpty()) FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            temas.forEach { (t, _) ->
-                val puesto = t in x.temas || t in enTexto
-                Ficha(t.replace('_', ' '), puesto) { if (t in x.temas) cambiar(x.copy(temas = x.temas - t)) else if (t !in enTexto) cambiar(x.copy(temas = x.temas + t)) }
-            }
+    }
+    if (enTexto.any { it !in x.temas }) Ayuda("También cuentan los #temas del texto: " + enTexto.filter { it !in x.temas }.joinToString(", ") { "#$it" } + ".", Modifier.padding(top = 4.dp))
+    Etiqueta("De dónde viene")
+    FilaFichas(Catalogo.ORIGENES_IDEA, x.origen.ifBlank { null }) { cambiar(x.copy(origen = it.orEmpty())) }
+    if (x.origen != "propia") {
+        Etiqueta("Quién lo dice")
+        ListaEtiquetas(x.quien, "autor, invitado, quien te lo contó…", normalizar = { it.trim() }) { cambiar(x.copy(quien = it.distinct())) }
+        val voces = remember(Repo.ideas, Repo.obras) { Ideario.voces(Repo.ideas, Repo.obras) }
+        val faltan = voces.filter { v -> x.quien.none { it.equals(v, ignoreCase = true) } }.take(5)
+        if (faltan.isNotEmpty()) FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            faltan.forEach { v -> Ficha("+ $v", false) { cambiar(x.copy(quien = x.quien + v)) } }
         }
-        if (enTexto.any { it !in x.temas }) Ayuda("También cuentan los #temas del texto: " + enTexto.filter { it !in x.temas }.joinToString(", ") { "#$it" } + ".", Modifier.padding(top = 4.dp))
-        Etiqueta("De dónde viene")
-        FilaFichas(Catalogo.ORIGENES_IDEA, x.origen.ifBlank { null }) { cambiar(x.copy(origen = it.orEmpty())) }
-        if (x.origen != "propia") {
-            Etiqueta("Quién lo dice")
-            ListaEtiquetas(x.quien, "autor, invitado, quien te lo contó…", normalizar = { it.trim() }) { cambiar(x.copy(quien = it.distinct())) }
-            val voces = remember(Repo.ideas, Repo.obras) { Ideario.voces(Repo.ideas, Repo.obras) }
-            val faltan = voces.filter { v -> x.quien.none { it.equals(v, ignoreCase = true) } }.take(5)
-            if (faltan.isNotEmpty()) FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                faltan.forEach { v -> Ficha("+ $v", false) { cambiar(x.copy(quien = x.quien + v)) } }
-            }
-            Seccion("Fuente", "Una de tus obras, o lo que sea: un video, una plática, un sitio.", plegable = true,
-                plegadaPorDefecto = x.obra_id == null && x.fuente.isBlank() && x.enlace.isBlank()) {
-                FuenteIdea(x) { cambiar(it) }
-            }
+        Seccion("Fuente", "Una de tus obras, o lo que sea: un video, una plática, un sitio.", plegable = true,
+            plegadaPorDefecto = x.obra_id == null && x.fuente.isBlank() && x.enlace.isBlank()) {
+            FuenteIdea(x) { cambiar(it) }
         }
-        Seccion("Cómo la tengo", "No tiene que ser verdad para guardarla: también caben las que dudas o rechazas.", plegable = true, plegadaPorDefecto = x.postura.isBlank()) {
-            FilaFichas(Catalogo.POSTURAS_IDEA, x.postura.ifBlank { null }) { cambiar(x.copy(postura = it.orEmpty())) }
-        }
-        Seccion("La idea en una línea", "Opcional: para leer la lista sin abrir cada una.", plegable = true, plegadaPorDefecto = x.titulo.isBlank()) {
-            OutlinedTextField(x.titulo, { cambiar(x.copy(titulo = it.take(140))) }, Modifier.fillMaxWidth(), singleLine = true)
-        }
-        Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Ayuda("Del ${Fechas.titulo(x.fecha).lowercase()} · anotada a las ${Fechas.horaDe(x.creada)}", Modifier.weight(1f))
-            Text("cambiar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable { elegirFecha(ctx, x.fecha) { cambiar(x.copy(fecha = it)) } }.padding(6.dp))
-            Ficha(if (x.fijada) "◆ fijada" else "fijar", x.fijada) { cambiar(x.copy(fijada = !x.fijada)) }
-        }
-        if (x.revisiones.isNotEmpty()) Ayuda("La volviste a ver ${x.revisiones.size} ${if (x.revisiones.size == 1) "vez" else "veces"}: " +
-            x.revisiones.takeLast(3).joinToString(" · ") { r -> Fechas.corto(r.fecha) + " " + (Catalogo.RESPUESTAS_IDEA.firstOrNull { it.id == r.respuesta }?.nombre?.lowercase() ?: r.respuesta) },
-            Modifier.padding(top = 6.dp))
-        BotonPrincipal("Listo", Modifier.fillMaxWidth().padding(top = 14.dp)) { nav.atras() }
-        if (Repo.ideas.any { it.id == x.id }) TextButton(onClick = {
-            if (!confirmar) { confirmar = true; return@TextButton }
-            val antes = Repo.ideas.firstOrNull { it.id == x.id } ?: x
-            Repo.borrarIdea(x.id); nav.atras(); Deshacer.ofrecer("Idea borrada") { Repo.guardarIdea(antes) }
-        }, modifier = Modifier.padding(top = 8.dp)) {
-            Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
-        }
+    }
+    Seccion("Cómo la tengo", "No tiene que ser verdad para guardarla: también caben las que dudas o rechazas.", plegable = true, plegadaPorDefecto = x.postura.isBlank()) {
+        FilaFichas(Catalogo.POSTURAS_IDEA, x.postura.ifBlank { null }) { cambiar(x.copy(postura = it.orEmpty())) }
+    }
+    Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Ayuda("Del ${Fechas.titulo(x.fecha).lowercase()} · anotada a las ${Fechas.horaDe(x.creada)}", Modifier.weight(1f))
+        Ficha(if (x.fijada) "◆ fijada" else "fijar", x.fijada) { cambiar(x.copy(fijada = !x.fijada)) }
+    }
+    if (x.revisiones.isNotEmpty()) Ayuda("La volviste a ver ${x.revisiones.size} ${if (x.revisiones.size == 1) "vez" else "veces"}: " +
+        x.revisiones.takeLast(3).joinToString(" · ") { r -> Fechas.corto(r.fecha) + " " + (Catalogo.RESPUESTAS_IDEA.firstOrNull { it.id == r.respuesta }?.nombre?.lowercase() ?: r.respuesta) },
+        Modifier.padding(top = 6.dp))
+    if (Repo.ideas.any { it.id == x.id }) TextButton(onClick = {
+        if (!confirmar) { confirmar = true; return@TextButton }
+        val antes = Repo.ideas.firstOrNull { it.id == x.id } ?: x
+        Repo.borrarIdea(x.id); nav.atras(); Deshacer.ofrecer("Idea borrada") { Repo.guardarIdea(antes) }
+    }, modifier = Modifier.padding(top = 8.dp)) {
+        Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
     }
 }
 
@@ -214,22 +236,30 @@ private fun FuenteIdea(x: Idea, cambiar: (Idea) -> Unit) {
 //  Cómo se ve una idea
 // =====================================================================
 
-/** Una idea en la lista: origen y fecha, la idea en una línea, el texto recortado y de dónde salió. */
+/**
+ * Una idea sola, a lo ancho: la misma ficha del tema que en el archivo ([FichaMini]), con alto para [lineas] renglones.
+ * Se usa donde sale una idea suelta (en una obra, en la hoja de la noche, en «Una idea de antes»).
+ */
 @Composable
 fun TarjetaIdea(i: Idea, modifier: Modifier = Modifier, lineas: Int = 4, onClick: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
-    Surface(shape = RoundedCornerShape(6.dp), color = if (i.fijada) cs.primaryContainer else cs.surface, border = BorderStroke(1.dp, cs.outline),
-        modifier = modifier.fillMaxWidth().padding(top = 8.dp).clickable { onClick() }) {
-        Column(Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text((if (i.fijada) "◆ " else "") + listOfNotNull(nombreOrigen(i.origen), Fechas.corto(i.fecha)).joinToString(" · "),
-                    style = MaterialTheme.typography.labelSmall, color = cs.primary, modifier = Modifier.weight(1f))
-                colorPostura(i.postura)?.let { c -> Text("● " + (nombrePostura(i.postura)?.lowercase() ?: ""), style = MaterialTheme.typography.labelSmall, color = c) }
+    val t = Estilo.tema
+    val a = archivoIdeas(t); val p = paginaFicha(t)
+    val renglon = with(LocalDensity.current) { (p.interlinea * 0.66f).sp.toDp() }
+    val alto = margenSuperior(a.formaFicha) + 22.dp + renglon * (lineas + if (i.titulo.isNotBlank()) 1 else 0) + 12.dp
+    FichaMini(i, modifier.fillMaxWidth().padding(top = 8.dp).height(alto), lineas = lineas + if (i.titulo.isNotBlank()) 1 else 0, onClick = onClick)
+}
+
+/** Varias ideas en fichas chicas, de dos en dos (de tres en tres si las fichas del tema son tiras). Para usar dentro de una hoja que ya se desplaza. */
+@Composable
+fun FichasEnFilas(ideas: List<Idea>, abrir: (Idea) -> Unit) {
+    val tira = archivoIdeas(Estilo.tema).formaFicha == FormaFicha.TIRA
+    val cols = if (tira) 3 else 2
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ideas.chunked(cols).forEach { fila ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                fila.forEach { i -> FichaMini(i, Modifier.weight(1f).aspectRatio(if (tira) 0.5f else 1.2f), lineas = if (tira) 9 else 4) { abrir(i) } }
+                repeat(cols - fila.size) { Spacer(Modifier.weight(1f)) }
             }
-            if (i.titulo.isNotBlank()) Text(i.titulo, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 4.dp))
-            TextoMarcado(i.texto, Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodyMedium, maxLines = lineas, overflow = TextOverflow.Ellipsis)
-            Ideario.temasDe(i).takeIf { it.isNotEmpty() }?.let { t -> Text(t.joinToString("  ") { "#" + it.replace('_', ' ') }, style = MaterialTheme.typography.labelSmall, color = cs.primary, modifier = Modifier.padding(top = 4.dp), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-            lineaFuente(i).ifBlank { null }?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
     }
 }
@@ -255,7 +285,7 @@ fun BibliotecaIdeas(nav: Nav, rotulo: (String) -> String, vistaInicial: String =
         return
     }
     Text("El fichero", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 16.dp, bottom = 6.dp))
-    Ayuda("Un cajón por tema. Toca uno para sacar sus fichas.", Modifier.padding(bottom = 8.dp))
+    archivoIdeas(Estilo.tema).let { a -> Ayuda("Un${if (a.fem) "a" else ""} ${a.contenedor} por tema. Toca uno para sacar sus ${a.fichas}.", Modifier.padding(bottom = 8.dp)) }
     FicheroIdeas(nav, todas)
     if (vistaInicial == "temas") return
     Text("Todas, por mes", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp))
@@ -273,12 +303,12 @@ fun BibliotecaIdeas(nav: Nav, rotulo: (String) -> String, vistaInicial: String =
     val fijadas = visibles.filter { it.fijada }
     if (fijadas.isNotEmpty()) {
         Text("Fijadas", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 16.dp))
-        fijadas.forEach { i -> TarjetaIdea(i) { abrir(i) } }
+        FichasEnFilas(fijadas) { abrir(it) }
     }
     val porMes = visibles.filter { !it.fijada }.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
     porMes.entries.take(meses).forEach { (mes, l) ->
         Text(rotulo(mes), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp, bottom = 2.dp))
-        l.sortedByDescending { it.creada }.forEach { i -> TarjetaIdea(i) { abrir(i) } }
+        FichasEnFilas(l.sortedByDescending { it.creada }) { abrir(it) }
     }
     if (porMes.size > meses) BotonSecundario("ver más meses", Modifier.padding(top = 14.dp)) { meses += 6 }
     Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically) {

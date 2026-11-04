@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 17
+const val SCHEMA_V = 18
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -1292,6 +1292,37 @@ data class Obra(
     val dias: List<String> = emptyList(),
     /** Citas que copiaste de la obra. */
     val citas: List<Cita> = emptyList(),
+    /** Deseados (esquema 18): qué tan pronto la quieres («pronto», «cuando_pueda», «algun_dia»; vacío = sin decir). */
+    val prioridad: String = "",
+    /** Quién te la recomendó: personas de tu gente (sin @), en minúsculas como las etiquetas. */
+    val recomendo: List<String> = emptyList(),
+    /** Dónde verla o conseguirla: una plataforma, la biblioteca, un amigo que la presta… */
+    val donde: String = "",
+)
+
+/**
+ * Una lista libre (esquema 18): lugares por visitar, cosas por comprar, restaurantes por probar… Cada elemento se tacha con la
+ * fecha en que se hizo. No entra al panel: se exporta tal cual (vm_listas.csv).
+ */
+@Serializable
+data class Lista(
+    val id: String,
+    val nombre: String,
+    val creada: String,
+    val orden: Int = 0,
+    val elementos: List<ElementoLista> = emptyList(),
+)
+
+/** Un elemento de una [Lista]: qué es, una nota, un enlace, qué tan pronto, cuándo se agregó y cuándo se hizo (null = pendiente). */
+@Serializable
+data class ElementoLista(
+    val id: String,
+    val texto: String,
+    val nota: String = "",
+    val enlace: String = "",
+    val prioridad: String = "",
+    val agregado: String,
+    val hecho: String? = null,
 )
 
 /** Una cita copiada de un libro, una película o un artículo. Las que tienen ♥ salen en «Frases guardadas». */

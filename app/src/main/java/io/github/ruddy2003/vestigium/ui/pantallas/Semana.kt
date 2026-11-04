@@ -37,6 +37,7 @@ import io.github.ruddy2003.vestigium.ui.BotonSecundario
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
+import io.github.ruddy2003.vestigium.ui.Clave
 import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
@@ -58,6 +59,8 @@ private class ResumenSemana(val dias: List<String>) {
     val kcal = prom(dias.mapNotNull { Repo.nutricion[it]?.valores?.get("kcal") })
     val entrenos = dias.count { (Repo.entrenos[it]?.series ?: 0) > 0 } + dias.count { f -> Repo.ascensos.any { it.fecha == f } }
     val momentos = Repo.momentos.filter { it.fecha in dias && it.tipo != "muestreo" && !it.privado }
+    /** Lo que dicen los registros de ánimo de la semana: emociones (con su «mucho»), pensamientos y con quién ([Periodo.animoDe]). */
+    val animoRegistros = io.github.ruddy2003.vestigium.ciencia.Periodo.animoDe(Repo.momentos.filter { it.fecha in dias && !it.privado })
 }
 
 @Composable
@@ -135,13 +138,21 @@ fun PantallaSemana(nav: Nav) {
             }
         }
 
-        if (r.momentos.isNotEmpty()) Seccion("Momentos de la semana") {
+        val (emo, pens, con) = r.animoRegistros
+        val conDetalle = !Repo.config.discreto && (emo.isNotEmpty() || pens.isNotEmpty() || con.first.isNotEmpty())
+        if (r.momentos.isNotEmpty() || conDetalle) Seccion("Momentos de la semana") {
             Tarjeta {
                 r.momentos.groupingBy { it.tipo }.eachCount().entries.sortedByDescending { it.value }.forEach { (t, n) ->
                     Row(Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
                         Text(Catalogo.nombreTipo(t), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                         Text("$n", style = MaterialTheme.typography.labelLarge)
                     }
+                }
+                // Lo que dicen los registros: qué sentiste, en qué pensabas y con quién estabas.
+                if (conDetalle) {
+                    if (emo.isNotEmpty()) Clave("affectus", emo.take(5).joinToString(" · ") { e -> e.nombre.lowercase() + " ${e.n}" + (if (e.mucho > 0) " (${e.mucho} «mucho»)" else "") })
+                    if (pens.isNotEmpty()) Clave("cogitatio", pens.take(3).joinToString(" · ") { (t, k) -> "${t.lowercase()} $k" })
+                    if (con.first.isNotEmpty()) Clave("comites", con.first.take(4).joinToString(" · ") { (t, k) -> "$t $k" } + " · de ${con.second}")
                 }
             }
         }

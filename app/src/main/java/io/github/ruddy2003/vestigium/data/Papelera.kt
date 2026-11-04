@@ -31,6 +31,7 @@ object Papelera {
             "cartas" -> JSON.decodeFromString(Carta.serializer(), b.json).let { "Carta escrita el ${Fechas.corto(it.escrita)}" }
             "ascensos" -> JSON.decodeFromString(Ascenso.serializer(), b.json).let { "Sesión de escalada · ${Fechas.corto(it.fecha)}" }
             "obras" -> JSON.decodeFromString(Obra.serializer(), b.json).let { "Obra · ${it.titulo}" }
+            "listas" -> JSON.decodeFromString(Lista.serializer(), b.json).let { "Lista · ${it.nombre} (${it.elementos.size})" }
             "ideas" -> JSON.decodeFromString(Idea.serializer(), b.json).let { "Idea · " + it.titulo.ifBlank { it.texto.lines().first() }.take(60) }
             else -> "Un registro"
         }

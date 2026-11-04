@@ -860,7 +860,8 @@ private fun TuDia(fecha: String, nav: Nav, numero: Int, guardarAntes: () -> Unit
     fun nota(t: String) = if (t.isNotBlank()) " · $t" else ""
     val filas = buildList {
         Repo.momentos.filter { it.fecha == fecha && !it.privado }.forEach { m ->
-            add(Fila(Fechas.millis(m.ts), Fechas.horaDe(m.ts), Catalogo.titulo(m, c.discreto) + (m.valencia?.let { " · $it/7" } ?: "") + nota(m.texto)) { abrir(m) })
+            add(Fila(Fechas.millis(m.ts), Fechas.horaDe(m.ts), Catalogo.tituloDetallado(m, c.discreto) + (m.valencia?.let { " · $it/7" } ?: "") +
+                Catalogo.detalleMomento(m, c.discreto).let { if (it.isNotBlank()) " · $it" else "" } + nota(m.texto)) { abrir(m) })
         }
         Repo.consumos.filter { it.fecha == fecha && io.github.ruddy2003.vestigium.data.Sustancias.visible(it) }.forEach { x ->
             add(Fila(Fechas.millis(x.inicio), Fechas.horaDe(x.inicio), Catalogo.nombreSustancia(x) + nota(resumenConsumo(x))) { abrirConsumo(ctx, id = x.id) })

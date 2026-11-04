@@ -1288,9 +1288,10 @@ object Reportes {
         }
 
         // ---- Ánimo
-        if (d.valencia.any { it != null }) {
+        val hayRegistros = d.registrosAnimo > 0 && !h.discreto && (d.emociones.isNotEmpty() || d.pensamientos.isNotEmpty() || d.conQuien.isNotEmpty())
+        if (d.valencia.any { it != null } || hayRegistros) {
             h.titulo("Ánimo", "ANIMVS")
-            if (anual) pixeles(h, d) else h.graficaAnimo(d)
+            if (d.valencia.any { it != null }) { if (anual) pixeles(h, d) else h.graficaAnimo(d) }
             listOfNotNull(
                 d.mejorDia?.let { "optimus" to Fechas.titulo(it).lowercase() + (d.mejorMomento?.takeIf { !h.sinFrases }?.let { m -> " · «${m.take(90)}»" } ?: "") },
                 d.peorDia?.takeIf { it != d.mejorDia }?.let { "pessimus" to Fechas.titulo(it).lowercase() },
@@ -1298,6 +1299,12 @@ object Reportes {
                 d.valPorSemana.maxByOrNull { it.value }?.takeIf { d.n > 13 }?.let { "dies felix" to "los " + DIAS_LARGOS[it.key - 1] + " (%.1f)".format(it.value) },
                 d.habitosPct?.let { "consuetudo" to "${(it * 100).roundToInt()}% de tus hábitos cumplidos" + (d.habitos.firstOrNull()?.let { (n, k) -> " · más: $n ($k días)" } ?: "") },
                 d.rachaDiario.takeIf { it >= 3 }?.let { "series" to "$it días seguidos escribiendo" },
+                // Lo que dicen los registros de ánimo: las emociones (con cuántas fueron «mucho»), en qué pensabas y con quién.
+                d.emociones.takeIf { it.isNotEmpty() && !h.discreto }?.let { l -> "affectus" to "lo que más sentiste: " +
+                    l.take(5).joinToString(" · ") { e -> e.nombre.lowercase() + " ${e.n}" + (if (e.mucho > 0) " (${e.mucho} «mucho»)" else "") } },
+                d.pensamientos.takeIf { it.isNotEmpty() && !h.discreto }?.let { l -> "cogitatio" to "en qué pensabas: " + l.take(3).joinToString(" · ") { (t, k) -> "${t.lowercase()} $k" } },
+                d.conQuien.takeIf { it.isNotEmpty() && !h.discreto }?.let { l -> "comites" to "con quién: " + l.take(4).joinToString(" · ") { (t, k) -> "$t $k" } +
+                    " (de ${d.conQuienRegistros} ${if (d.conQuienRegistros == 1) "registro" else "registros"} que lo dicen)" },
             ).forEach { (k, v) -> h.clave(k, v) }
         }
 

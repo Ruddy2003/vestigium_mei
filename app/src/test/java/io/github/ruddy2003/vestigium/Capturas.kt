@@ -427,12 +427,71 @@ class Capturas {
         ideasEjemplo()
         io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.idea = Repo.ideas.first { it.id == "i2" }
         io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.contexto = "«La libertad, Sancho, es uno de los más preciosos dones que a los hombres dieron los cielos.»"
-        io.github.ruddy2003.vestigium.ui.pantallas.PantallaIdea(navVacia)
+        io.github.ruddy2003.vestigium.ui.pantallas.EscritorIdea(navVacia)
     }
     @Test fun ideaNuevaRomano() = pantalla(TemaId.ROMANO, true, 2200) {
         ideasEjemplo()
         io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.idea = null; io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.contexto = null
-        io.github.ruddy2003.vestigium.ui.pantallas.PantallaIdea(navVacia)
+        io.github.ruddy2003.vestigium.ui.pantallas.EscritorIdea(navVacia)
+    }
+    /** Más ideas en un mismo tema, para ver la cuadrícula del contenedor llena. */
+    private fun ideasArchivo() {
+        ideasEjemplo()
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        val extra = listOf(
+            "Lo que no depende de mí no es asunto mío: me toca cómo respondo.", "Escribir la preocupación la vuelve más pequeña.",
+            "Un hábito se sostiene mejor si es fácil de empezar que si es heroico.", "La atención es el gasto más caro del día.",
+            "Pedir ayuda también es una forma de fuerza.", "Lo urgente casi nunca es lo importante.",
+        ).mapIndexed { k, t ->
+            val f = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -(k * 3L + 1))
+            io.github.ruddy2003.vestigium.data.Idea("e$k", f + "T20:00:00-06:00", f, t + " #filosofia", if (k % 2 == 0) "Idea ${k + 1}" else "", if (k % 3 == 0) "propia" else "leido",
+                postura = listOf("convence", "piensa", "duda", "")[k % 4], fijada = k == 1)
+        }
+        Repo.ideasEnMemoria(Repo.ideas + extra)
+        io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.cajon = "filosofia"
+        io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.fichaIdea = "i2"
+    }
+
+    /** El archivo del Ideario: el fichero (sus contenedores), un contenedor abierto en cuadrícula y una ficha abierta. */
+    private fun archivo(t: TemaId, oscuro: Boolean, nombre: String?) = pantalla(t, oscuro, 3900, nombre) {
+        ideasArchivo()
+        Column {
+            Box(Modifier.padding(16.dp)) { io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, Repo.ideas, max = 4) }
+            Box(Modifier.fillMaxWidth().height(600.dp)) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCajonIdeas(navVacia) }
+            Box(Modifier.fillMaxWidth().height(560.dp)) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaFichaIdea(navVacia) }
+        }
+    }
+    /** Una muestra de siempre por forma de contenedor; los 34 temas, claro y oscuro, con CAPTURAS=archivo ([temaArchivo]). */
+    @Test fun archivoIdeas() = listOf(TemaId.ROMANO, TemaId.EDO, TemaId.TEMPLARIO, TemaId.NAVIDAD, TemaId.DECO, TemaId.CIBER, TemaId.NEON, TemaId.CUEVA).forEach { t ->
+        archivo(t, t.soloOscuro, "tema_${t.id}")
+    }
+    /** En modo oscuro, el papel de las fichas (antes salía de un gris raro). */
+    @Test fun archivoIdeasOscuro() = listOf(TemaId.MEDIEVAL, TemaId.BOTANICO, TemaId.URBE, TemaId.EDO).forEach { t -> archivo(t, true, "tema_${t.id}") }
+    /** Escribir una idea: una muestra por forma de ficha (tarjeta, tablilla, tira, ticket, expediente, ventana, laja y recorte). */
+    @Test fun escritorIdea() = listOf(TemaId.MEDIEVAL, TemaId.ROMANO, TemaId.EDO, TemaId.NEON, TemaId.DISTOPIA, TemaId.CIBER, TemaId.CUEVA, TemaId.PIRATA).forEach { t ->
+        pantalla(t, t.soloOscuro, 2400, "tema_${t.id}") {
+            ideasEjemplo()
+            io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.idea = Repo.ideas.first { it.id == "i1" }; io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.contexto = null
+            io.github.ruddy2003.vestigium.ui.pantallas.EscritorIdea(navVacia)
+        }
+    }
+    @Test fun deseadosColonos() = pantalla(TemaId.COLONOS, false, 3200) {
+        obrasEjemplo()
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        Repo.obrasEnMemoria(Repo.obras + listOf(
+            io.github.ruddy2003.vestigium.data.Obra("d1", "libro", "Un libro pendiente", "Autora inventada", estado = "quiero", agregado = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -20), prioridad = "pronto", recomendo = listOf("ana"), donde = "biblioteca"),
+            io.github.ruddy2003.vestigium.data.Obra("d2", "serie", "Una serie inventada", estado = "quiero", agregado = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -3), prioridad = "algun_dia", donde = "plataforma"),
+            io.github.ruddy2003.vestigium.data.Obra("d3", "pelicula", "Una película inventada", estado = "quiero", agregado = hoy),
+        ))
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaDeseados(navVacia)
+    }
+    @Test fun listaArcano() = pantalla(TemaId.ARCANO, false, 2400) {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        fun e(id: String, t: String, p: String = "", hecho: String? = null) = io.github.ruddy2003.vestigium.data.ElementoLista(id, t, prioridad = p, agregado = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -10), hecho = hecho)
+        Repo.listasEnMemoria(listOf(io.github.ruddy2003.vestigium.data.Lista("l1", "Lugares por visitar", hoy + "T10:00:00-06:00",
+            elementos = listOf(e("a", "Un museo inventado", "pronto"), e("b", "Un mirador en la sierra", "algun_dia"), e("c", "La biblioteca vieja"), e("d", "Un mercado de fin de semana", hecho = hoy)))))
+        io.github.ruddy2003.vestigium.ui.pantallas.EdicionLista.id = "l1"
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaLista(navVacia)
     }
     @Test fun ideaDeAntesNavidad() = pantalla(TemaId.NAVIDAD, false, 1400) {
         ideasEjemplo()
@@ -1204,6 +1263,7 @@ class Capturas {
     @Test fun temaHallImagen() = porTema("hallImagen") { t, o, n -> hallImagen(t, o, true, n) }
     @Test fun temaCampana() = porTema("campana") { t, o, n -> campanas(t, o, n) }
     @Test fun temaLibreta() = porTema("libreta") { t, o, n -> libreta(t, o, n) }
+    @Test fun temaArchivo() = porTema("archivo") { t, o, n -> archivo(t, o, n) }
 
     // Animación y celebración: un instante quieto de cada una.
     @Test fun temaFondoVivo() = porTema("fondoVivo") { t, o, n -> captura(t, o, 2400, n) { io.github.ruddy2003.vestigium.ui.FondoVivo(t, fijo = 0.4f) } }

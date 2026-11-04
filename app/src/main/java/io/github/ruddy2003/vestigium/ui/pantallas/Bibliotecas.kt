@@ -333,13 +333,13 @@ fun diasConMomentos(): List<String> =
 
 private fun lineaMomento(m: io.github.ruddy2003.vestigium.data.Momento, discreto: Boolean): String = buildString {
     val cat = io.github.ruddy2003.vestigium.data.Catalogo
-    append(Fechas.horaDe(m.ts)); append(" — "); append(cat.titulo(m, discreto))
+    append(Fechas.horaDe(m.ts)); append(" — "); append(cat.tituloDetallado(m, discreto))
     val cifras = listOfNotNull(m.valencia?.let { "agrado $it/7" }, m.activacion?.let { "energía $it/7" }, m.intensidad?.let { "intensidad $it/5" })
     if (cifras.isNotEmpty()) append(" (" + cifras.joinToString(", ") + ")")
     if (!discreto) {
         if (cat.emocionesDe(m).isNotEmpty()) cat.pensamientosDe(m).takeIf { it.isNotEmpty() }?.let { l -> append("\nen qué pensabas: " + l.joinToString(", ") { cat.nombrePensamiento(it).lowercase() }) }
         if (m.con_quien.isNotEmpty()) append("\ncon: " + m.con_quien.joinToString(", ") { q -> cat.CON_QUIEN.firstOrNull { it.id == q }?.nombre?.lowercase() ?: q })
-        m.lugar?.takeIf { it.isNotBlank() }?.let { append("\nen: $it") }
+        m.lugar?.takeIf { it.isNotBlank() }?.let { id -> (Repo.lugares.firstOrNull { it.id == id }?.nombre)?.let { append("\nen: $it") } }
     }
     if (m.texto.isNotBlank()) append("\n" + m.texto.trim())
 }

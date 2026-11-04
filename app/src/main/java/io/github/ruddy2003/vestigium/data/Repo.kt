@@ -56,6 +56,8 @@ object Repo {
     var metas by mutableStateOf<List<Meta>>(emptyList()); private set
     /** El Ideario: lo que aprendiste o pensaste, con su fuente (esquema 16). */
     var ideas by mutableStateOf<List<Idea>>(emptyList()); private set
+    /** Listas libres (esquema 18): lugares por visitar, cosas por comprar… */
+    var listas by mutableStateOf<List<Lista>>(emptyList()); private set
     /** Tomas de suplementos y minutos de la laptop (Cold Turkey). */
     var tomas by mutableStateOf<List<TomaSuplemento>>(emptyList()); private set
     var laptop by mutableStateOf<Map<String, LaptopDia>>(emptyMap()); private set
@@ -117,6 +119,7 @@ object Repo {
         notas = cargar("notas", Nota.serializer()).sortedByDescending { it.creada }
         metas = cargar("metas", Meta.serializer()).sortedBy { it.creada }
         ideas = cargar("ideas", Idea.serializer()).sortedByDescending { it.creada }
+        listas = cargar("listas", Lista.serializer()).sortedWith(compareBy<Lista>({ it.orden }, { it.creada }))
         tomas = cargar("tomas", TomaSuplemento.serializer()).sortedBy { it.ts }
         laptop = cargar("laptop", LaptopDia.serializer()).associateBy { it.fecha }
         avisos = cargar("avisos", AvisosDia.serializer()).associateBy { it.fecha }
@@ -274,6 +277,19 @@ object Repo {
     }
     /** Solo para las capturas de diseño: ideas de ejemplo en memoria. */
     fun ideasEnMemoria(l: List<Idea>) { ideas = l }
+
+    // ---------- Listas libres ----------
+    fun guardarLista(l: Lista) {
+        db.poner("listas", l.id, l.creada.take(10), JSON.encodeToString(Lista.serializer(), l))
+        enMain { listas = (listas.filter { it.id != l.id } + l).sortedWith(compareBy<Lista>({ it.orden }, { it.creada })) }
+    }
+    fun borrarLista(id: String) { aPapelera("listas", id); db.borrar("listas", id); enMain { listas = listas.filter { it.id != id } } }
+    fun importarListas(lista: List<Lista>) {
+        val ids = listas.map { it.id }.toSet()
+        lista.filter { it.id !in ids }.forEach { guardarLista(it) }
+    }
+    /** Solo para las capturas de diseño: listas de ejemplo en memoria. */
+    fun listasEnMemoria(l: List<Lista>) { listas = l }
 
     fun guardarMeta(m: Meta) {
         db.poner("metas", m.id, m.creada.take(10), JSON.encodeToString(Meta.serializer(), m))
@@ -612,7 +628,7 @@ object Repo {
 
     // ---------- Papelera (v14) ----------
     /** Lo que se guarda 7 días al borrarlo: los registros que haces tú (no lo que llega solo ni lo que se reimporta). */
-    private val EN_PAPELERA = setOf("momentos", "tramos", "consumos", "notas", "metas", "tomas", "gastos", "ingresos", "lugares", "cartas", "ascensos", "obras", "ideas")
+    private val EN_PAPELERA = setOf("momentos", "tramos", "consumos", "notas", "metas", "tomas", "gastos", "ingresos", "lugares", "cartas", "ascensos", "obras", "ideas", "listas")
 
     private fun aPapelera(col: String, id: String) {
         if (col !in EN_PAPELERA) return
@@ -642,6 +658,7 @@ object Repo {
                 "ascensos" -> guardarAscenso(JSON.decodeFromString(Ascenso.serializer(), b.json))
                 "obras" -> guardarObra(JSON.decodeFromString(Obra.serializer(), b.json))
                 "ideas" -> guardarIdea(JSON.decodeFromString(Idea.serializer(), b.json))
+                "listas" -> guardarLista(JSON.decodeFromString(Lista.serializer(), b.json))
                 else -> error("colección sin papelera")
             }
         }.isSuccess

@@ -404,7 +404,7 @@ Desde el esquema 13, la colección `avisos` anota por día los avisos **planeado
 ## 3.5 Emociones con nombre, pensamientos y compañía
 
 En cualquier registro de ánimo se puede marcar (todo opcional):
-- **qué sientes**, de 47 emociones desde el esquema 17 (`Catalogo.SENTIMIENTOS`: 18 agradables, 23 desagradables y 6 mixtas; antes eran 25), más «otro…» y «no sé». A cada una se le puede poner **cuánto**: un poco, bastante o mucho. La intensidad solo se exporta.
+- **qué sientes**, de 47 emociones desde el esquema 17 (`Catalogo.SENTIMIENTOS`: 18 agradables, 23 desagradables y 6 mixtas; antes eran 25), más «otro…» y «no sé». A cada una se le puede poner **cuánto**: un poco, bastante o mucho. La intensidad no entra al panel: se exporta y, desde el esquema 18, se muestra al lado de cada emoción en las pantallas y los reportes («Tristeza (mucho)»).
 - **en qué piensas**, varios a la vez desde el esquema 17;
 - una nota con @personas y #temas;
 - **con quién estás**, que incluye hijos, mascota y «por mensaje o llamada».
@@ -1536,6 +1536,7 @@ Los reportes y «Tu año» no calculan nada por su cuenta: usan un mismo resumen
 | **Mejor marca** | `Macrofactor.e1rm`, la misma de la exportación: peso × (1 + repeticiones/30) (**fórmula de Epley**), solo en series de **1 a 12** repeticiones y sin calentamientos, redondeada a 0.1 kg. |
 | **Gasto e ingresos** | Por el **día del diario** (`Gasto.dia`, `Ingreso.dia`: antes de las 5:00 cuenta para el día anterior), igual que el panel. |
 | **Comparación con el periodo anterior** | Solo si el periodo anterior tiene **al menos 3 días** con dato. |
+| **Emociones, pensamientos y con quién** (desde el esquema 18) | `Periodo.animoDe`, con los registros de ánimo no privados: cada emoción cuenta una vez por registro, «no sé» no cuenta, «otro» va con lo que escribiste y se dice cuántas veces fue «mucho». Conteos para leer: no entran a ningún promedio ni al panel. **[Diseño propio]** |
 
 : Tabla 9.1. De dónde salen las cifras: Periodo.calcular
 

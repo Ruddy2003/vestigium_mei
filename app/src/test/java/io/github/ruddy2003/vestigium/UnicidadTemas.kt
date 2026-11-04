@@ -7,6 +7,7 @@ import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.Textos
 import io.github.ruddy2003.vestigium.ui.TrofeosTema
+import io.github.ruddy2003.vestigium.ui.archivoIdeas
 import io.github.ruddy2003.vestigium.ui.contenedorDe
 import io.github.ruddy2003.vestigium.ui.radioDe
 import io.github.ruddy2003.vestigium.ui.tipoDe
@@ -64,6 +65,9 @@ class UnicidadTemas {
         r["campana_etapas"] = comparten { Campanas.ETAPAS[it.id].orEmpty() }
         r["campana_titulos"] = comparten { Campanas.TITULOS[it.id].orEmpty() }
         r["libreta"] = iguales { contenedorDe(it) }
+        // El archivo del Ideario: cada tema guarda sus ideas en su propio objeto, con su propia ficha.
+        r["archivo_ideas"] = iguales { archivoIdeas(it).let { a -> a.contenedor to a.ficha } }
+        r["archivo_forma"] = iguales { archivoIdeas(it).let { a -> Triple(a.forma, a.formaFicha, a.adorno) } }
         return r
     }
 
