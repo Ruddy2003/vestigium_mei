@@ -147,16 +147,16 @@ fun formaDeFicha(f: FormaFicha, semilla: Int = 0): Shape = when (f) {
         moveTo(0f, tab); lineTo(s.width * 0.06f, 0f); lineTo(s.width * 0.38f, 0f); lineTo(s.width * 0.44f, tab)
         lineTo(s.width, tab); lineTo(s.width, s.height); lineTo(0f, s.height); close()
     }
-    // Una piedra o un tiesto: polígono con los bordes un poco irregulares.
+    // Una piedra o un tiesto: el rectángulo con las esquinas desportilladas, cada una distinta, y los lados apenas irregulares.
     FormaFicha.LAJA -> GenericShape { s, _ ->
-        val n = 14
-        for (k in 0 until n) {
-            val a = 2 * Math.PI * k / n
-            val rx = s.width / 2 * (0.93f + 0.07f * ruido(semilla, k)); val ry = s.height / 2 * (0.9f + 0.1f * ruido(semilla, k + 50))
-            val px = s.width / 2 + (rx * Math.cos(a)).toFloat().let { if (Math.abs(Math.cos(a)) > 0.5) it * 1.06f else it }
-            val py = s.height / 2 + (ry * Math.sin(a)).toFloat()
-            if (k == 0) moveTo(px.coerceIn(0f, s.width), py.coerceIn(0f, s.height)) else lineTo(px.coerceIn(0f, s.width), py.coerceIn(0f, s.height))
-        }
+        val base = minOf(s.width, s.height) * 0.09f
+        fun c(k: Int) = base * (0.6f + 0.8f * ruido(semilla, k))
+        fun b(k: Int) = minOf(s.width, s.height) * 0.012f * ruido(semilla, k + 30)
+        moveTo(c(0), 0f)
+        lineTo(s.width / 2, b(1)); lineTo(s.width - c(2), 0f)
+        lineTo(s.width, c(3)); lineTo(s.width - b(4), s.height / 2); lineTo(s.width, s.height - c(5))
+        lineTo(s.width - c(6), s.height); lineTo(s.width / 2, s.height - b(7)); lineTo(c(8), s.height)
+        lineTo(0f, s.height - c(9)); lineTo(b(10), s.height / 2); lineTo(0f, c(11))
         close()
     }
     // Recortado con tijera: los lados con pequeños saltos.
@@ -194,7 +194,8 @@ fun DrawScope.adornoFicha(f: FormaFicha, p: Pagina, m: Materia, grande: Boolean 
             var x = 10.dp.toPx(); val y = 18.dp.toPx() * g
             while (x < w - 6.dp.toPx()) { drawCircle(p.tenue.copy(alpha = 0.35f), 1.2.dp.toPx(), Offset(x, y)); x += 7.dp.toPx() }
         }
-        FormaFicha.EXPEDIENTE -> {
+        // El sello del expediente: solo en la ficha grande (en las chicas taparía el texto).
+        FormaFicha.EXPEDIENTE -> if (grande) {
             val r = (minOf(w, h) * 0.11f).coerceAtMost(46.dp.toPx())
             val c = Offset(w - r * 1.5f, h - r * 1.5f)
             drawCircle(p.acento.copy(alpha = 0.35f), r, c, style = Stroke(2f * g))
@@ -240,7 +241,7 @@ fun tintaInterior(a: ArchivoIdeas, m: Materia): Color {
 /** Margen a los lados según la forma (el marco de la tablilla, los bordes de la laja). */
 fun margenLado(f: FormaFicha, grande: Boolean = false): Dp = when (f) {
     FormaFicha.TABLILLA -> if (grande) 22.dp else 11.dp
-    FormaFicha.LAJA -> if (grande) 30.dp else 14.dp
+    FormaFicha.LAJA -> if (grande) 26.dp else 12.dp
     FormaFicha.TIRA -> if (grande) 20.dp else 7.dp
     else -> if (grande) 22.dp else 9.dp
 }

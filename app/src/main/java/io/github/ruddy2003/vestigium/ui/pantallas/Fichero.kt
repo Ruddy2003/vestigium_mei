@@ -112,7 +112,9 @@ fun FicheroIdeas(nav: Nav, ideas: List<Idea> = Repo.ideas, max: Int? = null, mod
     val a = archivoIdeas(tema)
     if (lista.isEmpty()) return
     val (_, tintaEtiqueta) = colorEtiqueta(a, m)
-    Surface(shape = MaterialTheme.shapes.small, shadowElevation = 3.dp, color = Color.Transparent, modifier = modifier.fillMaxWidth()) {
+    // En una columna propia: así el «y N más» va debajo también donde el fichero no está dentro de otra columna.
+    Column(modifier.fillMaxWidth()) {
+    Surface(shape = MaterialTheme.shapes.small, shadowElevation = 3.dp, color = Color.Transparent, modifier = Modifier.fillMaxWidth()) {
         Box {
             InteriorArchivo(a, m, Modifier.matchParentSize())
             Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -142,6 +144,7 @@ fun FicheroIdeas(nav: Nav, ideas: List<Idea> = Repo.ideas, max: Int? = null, mod
     if (max != null && todos.size > max)
         Text("y ${todos.size - max} ${a.contenedores} más", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
+    }
 }
 
 /** Lo que dice la ficha de dónde salió: quién, la obra o la fuente, y el minuto o la página. */
