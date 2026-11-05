@@ -193,11 +193,11 @@ fun FichaMini(i: Idea, modifier: Modifier = Modifier, rotulo: String? = null, li
         Box {
             PapelFicha(p)
             Canvas(Modifier.matchParentSize()) { adornoFicha(a.formaFicha, p, m) }
-            // La línea de color va justo debajo del encabezado tal como quedó medido: con letras altas (Art déco) el
-            // encabezado pasa de los 16 dp y la línea caía encima del título.
+            // La línea de color va justo debajo del encabezado tal como quedó medido, a medio camino del título: con la
+            // altura supuesta (16 dp) caía sobre las astas del título cuando la letra del tema es más baja (Art déco).
             val densidad = LocalDensity.current
             var altoEncabezado by remember { mutableStateOf(encabezado) }
-            Column(Modifier.fillMaxSize().rayadoFicha(p, sup + maxOf(encabezado, altoEncabezado) + 2.dp, paso).padding(start = lado, end = lado, top = sup, bottom = 6.dp)) {
+            Column(Modifier.fillMaxSize().rayadoFicha(p, sup + altoEncabezado + 2.dp, paso).padding(start = lado, end = lado, top = sup, bottom = 6.dp)) {
                 EncabezadoFicha(i, texto, a, p, grande = false, modifier = Modifier.onSizeChanged { altoEncabezado = with(densidad) { it.height.toDp() } })
                 Spacer(Modifier.height(4.dp))
                 val estilo = TextStyle(fontFamily = p.texto, fontSize = tam, lineHeight = inter, color = p.tinta)
@@ -231,7 +231,7 @@ private fun FichaGrande(i: Idea, numero: Int, total: Int, tema: String, a: Archi
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                     val densidad = LocalDensity.current
                     var altoEncabezado by remember { mutableStateOf(encabezado) }
-                    Column(Modifier.fillMaxWidth().rayadoFicha(p, sup + maxOf(encabezado, altoEncabezado) + 4.dp, paso).padding(start = lado, end = lado, top = sup, bottom = 22.dp)) {
+                    Column(Modifier.fillMaxWidth().rayadoFicha(p, sup + altoEncabezado + 4.dp, paso).padding(start = lado, end = lado, top = sup, bottom = 22.dp)) {
                         EncabezadoFicha(i, rotuloCajon(tema), a, p, grande = true, modifier = Modifier.onSizeChanged { altoEncabezado = with(densidad) { it.height.toDp() } })
                         Spacer(Modifier.height(6.dp))
                         val estilo = TextStyle(fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, color = p.tinta)
