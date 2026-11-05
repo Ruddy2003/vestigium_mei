@@ -22,6 +22,11 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.security.SecureRandom
@@ -176,5 +181,73 @@ class RespaldoPrueba {
         assertEquals(setOf("meditar", "leer"), c.habitos.map { it.id }.toSet())
         assertEquals("ana", c.equivalencias["ana_m"]); assertEquals("tesis", c.equivalencias["tésis"])
         assertEquals(setOf("a|b", "examen|examenes"), c.temas_distintos.toSet())
+    }
+
+    /** Cifrar y descifrar de archivo a archivo (por trozos) da lo mismo que en memoria, y los dos se abren entre sí. */
+    @Test fun cifradoPorArchivos() {
+        val dir = java.nio.file.Files.createTempDirectory("vm_prueba").toFile()
+        try {
+            val r = ejemplo()
+            val zip = zip(JSON.encodeToString(Respaldo.serializer(), r), 200)
+            val origen = java.io.File(dir, "r.zip").apply { writeBytes(zip) }
+            val cifrado = java.io.File(dir, "r.vmc")
+            val clave = "una contraseña larga".toCharArray()
+            Respaldos.cifrarArchivo(origen, cifrado, clave)
+            assertTrue(Respaldos.estaCifrado(cifrado))
+            assertFalse(Respaldos.estaCifrado(origen))
+            // El de archivos se abre en memoria…
+            assertArrayEquals(zip, Respaldos.descifrar(cifrado.readBytes(), clave))
+            // …y por archivos.
+            val claro = java.io.File(dir, "claro.zip")
+            assertTrue(Respaldos.descifrarArchivo(cifrado, claro, clave))
+            assertArrayEquals(zip, claro.readBytes())
+            assertEquals(r, Respaldos.contenido(claro)!!.r)
+            assertEquals(200, Respaldos.contenido(claro)!!.ubicaciones)
+            // Con otra contraseña no abre y no deja nada escrito.
+            val otro = java.io.File(dir, "otro.zip")
+            assertFalse(Respaldos.descifrarArchivo(cifrado, otro, "otra".toCharArray()))
+            assertFalse(otro.exists())
+            // El cifrado en memoria se abre por archivos.
+            val enMemoria = java.io.File(dir, "m.vmc").apply { writeBytes(Respaldos.cifrar(zip, clave)) }
+            val claro2 = java.io.File(dir, "claro2.zip")
+            assertTrue(Respaldos.descifrarArchivo(enMemoria, claro2, clave))
+            assertArrayEquals(zip, claro2.readBytes())
+            // Truncado no abre.
+            val corto = java.io.File(dir, "corto.vmc").apply { writeBytes(cifrado.readBytes().copyOf(60)) }
+            assertFalse(Respaldos.descifrarArchivo(corto, java.io.File(dir, "x"), clave))
+        } finally { dir.deleteRecursively() }
+    }
+
+    /** Un momento que esta versión no entiende ya no tumba la restauración: se salta ese y se quedan los demás. */
+    @Test fun unElementoIlegibleNoTumbaElRespaldo() {
+        val r = ejemplo()
+        val raiz = JSON.parseToJsonElement(JSON.encodeToString(Respaldo.serializer(), r)).jsonObject
+        val momentos = raiz["momentos"]!!.jsonArray
+        val malo = JsonObject(momentos[0].jsonObject + ("ts" to JsonObject(mapOf("x" to JsonPrimitive(1)))))
+        val alterado = JsonObject(raiz + ("momentos" to JsonArray(momentos + malo)))
+        val (leido, saltados) = Importar.tolerante(alterado)
+        assertEquals(r.momentos, leido.momentos)
+        assertEquals(r.dias, leido.dias)
+        assertEquals(r.config, leido.config)
+        assertEquals(1, saltados["momentos"])
+        // Sin nada raro, se lee igual y no se salta nada.
+        val (igual, nada) = Importar.tolerante(raiz)
+        assertEquals(r, igual)
+        assertTrue(nada.isEmpty())
+    }
+
+    /** Leer el respaldo directo del archivo da lo mismo que leer su texto. */
+    @Test fun leerDelArchivo() {
+        val dir = java.nio.file.Files.createTempDirectory("vm_prueba").toFile()
+        try {
+            val r = ejemplo()
+            val f = java.io.File(dir, "vm_respaldo.json").apply { writeText(JSON.encodeToString(Respaldo.serializer(), r)) }
+            val l = Importar.leer(f)
+            assertTrue(l is Importar.Leido.Propio)
+            assertEquals(r, (l as Importar.Leido.Propio).r)
+            // De una versión más nueva: no se lee.
+            val futuro = java.io.File(dir, "futuro.json").apply { writeText(JSON.encodeToString(Respaldo.serializer(), r.copy(schema_v = SCHEMA_V + 1))) }
+            assertTrue(Importar.leer(futuro) is Importar.Leido.Malo)
+        } finally { dir.deleteRecursively() }
     }
 }

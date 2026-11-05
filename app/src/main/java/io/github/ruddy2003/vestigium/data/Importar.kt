@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+
 package io.github.ruddy2003.vestigium.data
 
 import android.content.Context
@@ -15,6 +17,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.decodeFromStream
 import java.io.InputStreamReader
 import java.time.OffsetDateTime
 
@@ -45,18 +48,79 @@ object Importar {
     fun esquemaFuturo(v: Int?): String? =
         if (v != null && v > SCHEMA_V) "Este respaldo es de una versión más nueva de la app (esquema $v; esta tiene el $SCHEMA_V). Actualiza la app antes de restaurarlo: así no se pierde nada." else null
 
+    /** Lo que se leyó de un vm_respaldo.json. */
+    sealed class Leido {
+        /** Un respaldo de esta app y, por colección, cuántos elementos ilegibles se saltaron. */
+        class Propio(val r: Respaldo, val saltados: Map<String, Int>) : Leido()
+        /** El JSON de la versión web. */
+        class Web(val raiz: JsonObject) : Leido()
+        /** No se puede restaurar (de una versión más nueva, o no es JSON). */
+        class Malo(val aviso: String) : Leido()
+    }
+
+    /**
+     * Lee vm_respaldo.json directo del archivo, sin pasarlo a texto ni armar su árbol (con años de datos, eso no cabía en
+     * memoria). Solo si así no se puede (un elemento que esta versión no entiende, o la versión web) se lee como texto.
+     */
+    fun leer(f: java.io.File): Leido {
+        val r = runCatching { f.inputStream().buffered(64 * 1024).use { JSON.decodeFromStream(Respaldo.serializer(), it) } }.getOrNull()
+        if (r != null && r.exportado.isNotEmpty()) return esquemaFuturo(r.schema_v)?.let { Leido.Malo(it) } ?: Leido.Propio(r, emptyMap())
+        return try { leer(f.readText(Charsets.UTF_8)) } catch (e: OutOfMemoryError) { Leido.Malo("El respaldo no cupo en la memoria del teléfono.") }
+    }
+
+    fun leer(texto: String): Leido {
+        val raiz = runCatching { JSON.parseToJsonElement(texto).jsonObject }.getOrNull() ?: return Leido.Malo("El archivo no es un JSON válido.")
+        if (!raiz.containsKey("momentos") && !raiz.containsKey("respuestas")) return Leido.Web(raiz)
+        esquemaFuturo(raiz["schema_v"].int())?.let { return Leido.Malo(it) }
+        val (r, saltados) = tolerante(raiz)
+        return Leido.Propio(r, saltados)
+    }
+
+    /**
+     * El respaldo, aunque traiga elementos que no se pueden leer: antes, uno solo (un momento con un dato que esta versión no
+     * entiende) tumbaba la restauración entera. Ahora cada colección que falla se revisa elemento por elemento y se quedan
+     * los que sí se leen; los demás se cuentan para avisar.
+     */
+    fun tolerante(raiz: JsonObject): Pair<Respaldo, Map<String, Int>> {
+        runCatching { return JSON.decodeFromJsonElement(Respaldo.serializer(), raiz) to emptyMap() }
+        val base = mapOf(
+            "exportado" to ((raiz["exportado"] as? JsonPrimitive)?.takeIf { it !is JsonNull } ?: JsonPrimitive("?")),
+            "schema_v" to (raiz["schema_v"].int()?.let { JsonPrimitive(it) } ?: JsonPrimitive(0)))
+        fun sirve(k: String, v: JsonElement) = runCatching { JSON.decodeFromJsonElement(Respaldo.serializer(), JsonObject(base + (k to v))) }.isSuccess
+        val saltados = LinkedHashMap<String, Int>()
+        val limpio = LinkedHashMap<String, JsonElement>(base)
+        for ((k, v) in raiz) {
+            if (k in base) continue
+            when {
+                sirve(k, v) -> limpio[k] = v
+                v is JsonArray -> {
+                    val buenos = v.filter { sirve(k, JsonArray(listOf(it))) }
+                    saltados[k] = v.size - buenos.size
+                    limpio[k] = JsonArray(buenos)
+                }
+                else -> saltados[k] = 1
+            }
+        }
+        return JSON.decodeFromJsonElement(Respaldo.serializer(), JsonObject(limpio)) to saltados
+    }
+
+    fun aplicar(l: Leido): ResultadoImport = when (l) {
+        is Leido.Malo -> ResultadoImport(l.aviso)
+        is Leido.Web -> web(l.raiz)
+        is Leido.Propio -> propio(l.r, l.saltados)
+    }
+
     /** El texto de vm_respaldo.json (o el de la versión web). */
-    fun respaldoTexto(texto: String): ResultadoImport {
-        val raiz = runCatching { JSON.parseToJsonElement(texto).jsonObject }.getOrNull() ?: return ResultadoImport("El archivo no es un JSON válido.")
-        // Respaldo propio
-        if (raiz.containsKey("momentos") || raiz.containsKey("respuestas")) {
-            esquemaFuturo(raiz["schema_v"].int())?.let { return ResultadoImport(it) }
-            val r = JSON.decodeFromString(Respaldo.serializer(), texto)
+    fun respaldoTexto(texto: String): ResultadoImport = aplicar(leer(texto))
+
+    private fun propio(r: Respaldo, saltados: Map<String, Int>): ResultadoImport {
             // En un teléfono recién instalado, el respaldo trae también todos tus ajustes; si ya hay datos, se combinan sin pisar lo tuyo.
-            val nuevo = Repo.dias.isEmpty() && Repo.momentos.isEmpty() && Repo.gastos.isEmpty()
+            // (Si los ajustes del respaldo no se pudieron leer, no se toman como si fueran los de un teléfono nuevo.)
+            val nuevo = Repo.dias.isEmpty() && Repo.momentos.isEmpty() && Repo.gastos.isEmpty() && "config" !in saltados
             val n = Repo.importarDias(r.dias, sobrescribir = false)
             if (r.visitas.isNotEmpty()) Repo.importarVisitas(r.visitas)
-            r.momentos.filter { m -> Repo.momentos.none { it.id == m.id } }.forEach { Repo.guardarMomento(it) }
+            // En lote: antes cada momento se buscaba en toda la lista, se guardaba suelto y la lista se reordenaba entera.
+            Repo.importarMomentos(r.momentos)
             Repo.importarGastos(r.gastos)
             if (r.ingresos.isNotEmpty()) Repo.importarIngresos(r.ingresos)
             if (r.tramos.isNotEmpty()) Repo.importarTramos(r.tramos)
@@ -68,12 +132,13 @@ object Importar {
             if (r.tomas.isNotEmpty()) Repo.importarTomas(r.tomas)
             Repo.importarAvisos(r.avisos)
             if (r.laptop.isNotEmpty()) Repo.guardarLaptop(r.laptop.filter { it.fecha !in Repo.laptop })
-            r.respuestas.forEach { Repo.guardarRespuesta(it) }
-            r.reacciones.forEach { rr -> if (Repo.reacciones.none { it.id == rr.id }) Repo.guardarReaccion(rr) }
+            Repo.importarRespuestas(r.respuestas)
+            Repo.importarReacciones(r.reacciones)
             // Sin pisar lo de aquí: un lugar o un día de sensores que ya está se queda como está (antes, un lugar que
             // renombraste volvía al nombre viejo, y la pantalla o el clima de aquí se cambiaban por los del respaldo).
-            r.lugares.filter { l -> Repo.lugares.none { it.id == l.id } }.forEach { Repo.guardarLugar(it) }
-            r.salud.forEach { Repo.guardarSalud(Fusion.salud(Repo.salud[it.fecha], it)) }
+            val lugaresAqui = Repo.lugares.map { it.id }.toSet()
+            r.lugares.filter { it.id !in lugaresAqui }.forEach { Repo.guardarLugar(it) }
+            Repo.importarSalud(r.salud.map { Fusion.salud(Repo.salud[it.fecha], it) })
             r.pantalla.filter { it.fecha !in Repo.pantalla }.forEach { Repo.guardarPantalla(it) }
             // Una carta que ya abriste aquí sigue abierta; una que solo está en el respaldo se agrega; si allá ya estaba
             // abierta y aquí no, queda abierta (antes el respaldo volvía a sellar las que abriste después).
@@ -88,18 +153,21 @@ object Importar {
             r.entorno.filter { it.fecha !in Repo.entorno }.forEach { Repo.guardarEntorno(it) }
             r.fotos.filter { it.fecha !in Repo.fotos }.forEach { Repo.guardarFotos(it) }
             r.agenda.filter { it.fecha !in Repo.agenda }.forEach { Repo.guardarAgenda(it) }
-            r.sesiones.filter { s -> Repo.sesiones.none { it.id == s.id } }.forEach { Repo.guardarSesion(it) }
-            r.ascensos.forEach { a -> if (Repo.ascensos.none { it.id == a.id }) Repo.guardarAscenso(a) }
-            r.obras.forEach { o -> if (Repo.obras.none { it.id == o.id }) Repo.guardarObra(o) }
-            r.escuchas.forEach { Repo.guardarEscucha(it) }
+            val sesionesAqui = Repo.sesiones.map { it.id }.toSet()
+            r.sesiones.filter { it.id !in sesionesAqui }.forEach { Repo.guardarSesion(it) }
+            val ascensosAqui = Repo.ascensos.map { it.id }.toSet()
+            r.ascensos.filter { it.id !in ascensosAqui }.forEach { Repo.guardarAscenso(it) }
+            val obrasAqui = Repo.obras.map { it.id }.toSet()
+            r.obras.filter { it.id !in obrasAqui }.forEach { Repo.guardarObra(it) }
+            Repo.importarEscuchas(r.escuchas)
             Repo.importarSensores(r.notifs, r.actividad)
             r.comunicacion.forEach { if (it.fecha !in Repo.comunicacion) Repo.guardarComunicacion(it) }
             r.conexiones.forEach { c -> if (c.fecha !in Repo.conexiones) Repo.cambiarConexion(c.fecha) { c } }
             if (r.subrayados.isNotEmpty()) Repo.importarSubrayados(r.subrayados)
             if (r.huellas.isNotEmpty()) Repo.importarHuellas(r.huellas)
             if (r.huellas_dia.isNotEmpty()) Repo.guardarHuellasDia(r.huellas_dia.filter { it.fecha !in Repo.huellas })
-            if (r.chats.isNotEmpty()) Repo.importarChats(r.chats.filter { c -> Repo.chats.none { it.id == c.id } })
-            if (r.youtube.isNotEmpty()) Repo.importarYoutube(r.youtube.filter { y -> Repo.youtube.none { it.id == y.id } }, reemplazarSuscripciones = false)
+            if (r.chats.isNotEmpty()) { val aqui = Repo.chats.map { it.id }.toSet(); Repo.importarChats(r.chats.filter { it.id !in aqui }) }
+            if (r.youtube.isNotEmpty()) { val aqui = Repo.youtube.map { it.id }.toSet(); Repo.importarYoutube(r.youtube.filter { it.id !in aqui }, reemplazarSuscripciones = false) }
             if (r.nutricion.isNotEmpty() || r.series.isNotEmpty()) {
                 val fs = r.nutricion.map { it.fecha } + r.comidas.map { it.fecha } + r.series.map { it.fecha } + r.entrenos.map { it.fecha }
                 if (fs.isNotEmpty() && Repo.nutricion.isEmpty() && Repo.entrenos.isEmpty()) {
@@ -110,10 +178,15 @@ object Importar {
                 }
             }
             Repo.cambiarConfig { c -> combinarConfig(c, r.config, nuevo) }
+            val avisoSaltados = saltados.filterValues { it > 0 }.takeIf { it.isNotEmpty() }?.let { m ->
+                " No se pudieron leer y se saltaron: " + m.entries.joinToString(", ") { (k, v) -> if (k == "config") "los ajustes" else "%,d de «%s»".format(v, k) } + "."
+            }.orEmpty()
             return ResultadoImport("Respaldo importado: $n días nuevos, ${r.momentos.size} momentos, ${r.gastos.size} gastos y ${r.visitas.size} visitas revisados" +
-                (if (nuevo) "; también tus ajustes, Conocerte, la brújula y el mapa." else "; tus ajustes se combinaron con los de aquí."))
-        }
-        // Versión web
+                (if (nuevo) "; también tus ajustes, Conocerte, la brújula y el mapa." else if ("config" in saltados) "." else "; tus ajustes se combinaron con los de aquí.") + avisoSaltados)
+    }
+
+    /** El JSON de la versión web de Vestigium Mei. */
+    private fun web(raiz: JsonObject): ResultadoImport {
         val dias = raiz["dias"]?.jsonArray?.mapNotNull { e -> runCatching { diaDesdeWeb(e.jsonObject) }.getOrNull() } ?: emptyList()
         val n = Repo.importarDias(dias, sobrescribir = false)
         val gastos = raiz["gastos_mes"]?.jsonArray?.flatMap { mes ->

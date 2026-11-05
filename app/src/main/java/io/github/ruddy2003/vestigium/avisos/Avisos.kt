@@ -707,6 +707,18 @@ object Avisos {
         mostrar(ctx, 2031, b)
     }
 
+    /** El respaldo automático a la carpeta lleva días sin poder escribirse. */
+    fun respaldoFallido(ctx: Context) {
+        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("Tu respaldo automático no está saliendo")
+            .setContentText("Lleva más de 3 días sin poder guardarse en tu carpeta. Toca para revisarlo.")
+            .setStyle(NotificationCompat.BigTextStyle().bigText("Lleva más de 3 días sin poder guardarse en tu carpeta: puede faltar espacio o que la carpeta ya no deje escribir. Toca para revisarlo o hacer uno a mano."))
+            .setContentIntent(abrirApp(ctx, 2035, "datos"))
+            .setAutoCancel(true)
+        mostrar(ctx, 2035, b)
+    }
+
     /** El respaldo automático de Drive vino mucho más pobre que el último y se guardó aparte. */
     fun driveEmpobrecido(ctx: Context) {
         val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)

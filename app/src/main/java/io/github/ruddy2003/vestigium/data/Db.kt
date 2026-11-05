@@ -158,6 +158,13 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 2) {
         return out
     }
 
+    /** Todas las ubicaciones en orden, una por una, sin juntarlas en una lista (para el respaldo y la exportación). */
+    fun recorrerPuntos(f: (Punto) -> Unit) {
+        readableDatabase.rawQuery("SELECT ms, lat, lon, precision, fuente FROM ubicaciones ORDER BY ms", null).use { c ->
+            while (c.moveToNext()) f(Punto(c.getLong(0), c.getDouble(1), c.getDouble(2), if (c.isNull(3)) null else c.getDouble(3), c.getString(4)))
+        }
+    }
+
     /**
      * Recorre las ubicaciones en orden sin crear un objeto por punto (para años de historial). Un punto sin precisión (importado
      * de Maps) cuenta como de [PRECISION_SIN_DATO] metros, no de 0 (P-33).

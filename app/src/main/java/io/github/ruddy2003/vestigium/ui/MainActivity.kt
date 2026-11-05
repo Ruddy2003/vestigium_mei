@@ -1838,7 +1838,11 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         bottomBar = { if (pila.lastOrNull() !in setOf("entrada", "sueno", "carta", "hoja_momentos", "cajon_ideas", "ficha_idea", "idea")) BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
     ) { pad ->
         val esquema = MaterialTheme.colorScheme
-        Box(Modifier.padding(pad).fillMaxSize().fondoTema(tema, esquema)) {
+        // En Art déco y Edo el papel tapiz va en su propia capa, guardada como imagen: así no se vuelve a trazar (cientos de
+        // arcos) cada vez que se mueve el fondo vivo o cambia la pantalla.
+        val tapizEnCapa = io.github.ruddy2003.vestigium.ui.animacionLigera(tema)
+        Box(Modifier.padding(pad).fillMaxSize().then(if (tapizEnCapa) Modifier else Modifier.fondoTema(tema, esquema))) {
+            if (tapizEnCapa) Box(Modifier.fillMaxSize().graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }.fondoTema(tema, esquema))
             FondoVivo(tema)
             // Cada tema cambia de pantalla a su manera; hacia adentro y hacia atrás se mueven en sentidos opuestos.
             // Ocupa siempre toda la ventana: si se encogiera junto con la pantalla que entra (las que se abren desde una

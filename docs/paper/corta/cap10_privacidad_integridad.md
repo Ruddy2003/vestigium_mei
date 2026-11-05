@@ -138,6 +138,8 @@ La Figura 10.1 resume qué tipo de dato llega a cada salida. Comparadas con el c
 
 **Por qué importa.** Si restauras sobre un teléfono que tiene una versión **incompleta** de un día (solo el sueño de esa mañana), el diario completo del respaldo para ese día **no se recupera**. En cambio, para la salud, un respaldo viejo puede **pisar** datos más nuevos del teléfono. Ninguna de las dos cosas se avisa. **[Diseño propio]** (inconsistente).
 
+**Por partes y sin tumbarse** (desde el 5 nov 2026, D.157). El respaldo se escribe, se cifra, se descifra y se lee por partes, de archivo a archivo, sin tenerlo entero varias veces en memoria; antes, con años de ubicaciones, la app se podía quedar sin memoria. Un elemento que no se puede leer se salta y el mensaje lo cuenta (`Importar.tolerante`), en vez de hacer fallar toda la restauración. Si el respaldo a la carpeta lleva más de 3 días sin salir, llega una notificación por semana. **[Diseño propio]**.
+
 **La papelera** (desde el esquema 14). Antes de borrar un registro que hiciste tú, `Repo` copia el documento a la colección `papelera`; lo que lleva más de 7 días se vacía en la tarea diaria. La papelera **no viaja** en los respaldos. Lo privado no aparece en la pantalla «Papelera»: se recupera en la de la pantalla Privado (`Papelera.esPrivado`). **[Diseño propio]**.
 
 ---

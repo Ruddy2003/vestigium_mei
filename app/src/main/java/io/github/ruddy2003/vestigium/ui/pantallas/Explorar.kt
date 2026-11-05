@@ -72,6 +72,9 @@ import java.time.temporal.TemporalAdjusters
 import kotlin.math.abs
 import kotlin.math.sin
 
+/** «Cruzar dos variables», ya calculado: los pares y sus correlaciones. */
+private class Cruce(val ps: List<io.github.ruddy2003.vestigium.ciencia.Par>, val r: Double?, val rho: Double?, val ic: Pair<Double, Double>?, val nEf: Double?, val rSin: Double?)
+
 @Composable
 fun PantallaExplorar(nav: Nav) {
     val version = Repo.dias.size + Repo.momentos.size + Repo.salud.size + Repo.pantalla.size + Repo.gastos.size
@@ -201,10 +204,10 @@ fun PantallaExplorar(nav: Nav) {
                 OutlinedButton(onClick = { eligiendo = 'x' }, modifier = Modifier.fillMaxWidth()) { Text("Eje X: $nx") }
                 OutlinedButton(onClick = { eligiendo = 'y' }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) { Text("Eje Y: $ny") }
                 Interruptor(if (porSemana) "Medir Y la semana siguiente" else "Medir Y al día siguiente", desfase, "Ejemplo: ¿lo que dormí hoy predice mi ánimo de mañana?") { desfase = it }
-                val ps = if (porSemana) Estadistica.pares(panelSemanal, x, y, desfase, 7) else Estadistica.pares(panel, x, y, desfase)
-                if (x == y && !desfase) Ayuda("Elige dos variables distintas.")
-                else if (ps.size < 3) Vacio("Hay ${ps.size} ${if (porSemana) "semanas" else "días"} con ambos datos. Hacen falta al menos 3 para dibujar algo, y unos 30 para empezar a creerle.")
-                else {
+                // Se calcula solo cuando cambian los datos o las variables elegidas (antes, en cada redibujo de la pantalla).
+                val cruce = remember(panel, panelSemanal, x, y, desfase, porSemana) {
+                    val ps = if (porSemana) Estadistica.pares(panelSemanal, x, y, desfase, 7) else Estadistica.pares(panel, x, y, desfase)
+                    if (ps.size < 3) return@remember Cruce(ps, null, null, null, null, null)
                     val r = Estadistica.pearson(ps.map { it.x }, ps.map { it.y })
                     val rho = Estadistica.spearman(ps.map { it.x }, ps.map { it.y })
                     // El intervalo cuenta los días seguidos que se parecen (n efectivo), como la lista (P-17).
@@ -212,13 +215,17 @@ fun PantallaExplorar(nav: Nav) {
                     val paso = if (porSemana) 7L else 1L
                     val sx = io.github.ruddy2003.vestigium.ciencia.Analisis.serie(base, x); val sy = io.github.ruddy2003.vestigium.ciencia.Analisis.serie(base, y)
                     val ef = Estadistica.correlacionEf(ps.map { it.x }, ps.map { it.y }, Estadistica.ar1(sx, paso) ?: Estadistica.AR1_SIN_DATO, Estadistica.ar1(sy, paso) ?: Estadistica.AR1_SIN_DATO)
-                    val ic = ef?.second
-                    val nEf = ef?.third?.first
                     // La misma relación sin tendencia: cada valor menos el promedio de sus semanas cercanas.
                     val ventanaT = if (porSemana) 35 else Estadistica.VENTANA
                     val tx = Estadistica.sinTendencia(sx, ventanaT); val ty = Estadistica.sinTendencia(sy, ventanaT).toMap()
                     val pt = tx.mapNotNull { (f, a) -> ty[if (desfase) Fechas.sumar(f, paso) else f]?.let { a to it } }
-                    val rSin = if (pt.size >= 5) Estadistica.pearson(pt.map { it.first }, pt.map { it.second }) else null
+                    Cruce(ps, r, rho, ef?.second, ef?.third?.first, if (pt.size >= 5) Estadistica.pearson(pt.map { it.first }, pt.map { it.second }) else null)
+                }
+                val ps = cruce.ps
+                if (x == y && !desfase) Ayuda("Elige dos variables distintas.")
+                else if (ps.size < 3) Vacio("Hay ${ps.size} ${if (porSemana) "semanas" else "días"} con ambos datos. Hacen falta al menos 3 para dibujar algo, y unos 30 para empezar a creerle.")
+                else {
+                    val r = cruce.r; val rho = cruce.rho; val ic = cruce.ic; val nEf = cruce.nEf; val rSin = cruce.rSin
                     Dispersion(ps, nx, ny)
                     Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Cifra(r?.let { "%.2f".format(it) } ?: "—", "Pearson r", Modifier.weight(1f))

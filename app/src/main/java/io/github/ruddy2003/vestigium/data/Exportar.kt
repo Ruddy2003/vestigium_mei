@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+
 package io.github.ruddy2003.vestigium.data
 
 import android.content.Context
@@ -10,6 +12,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.OutputStream
+import kotlinx.serialization.json.encodeToStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -74,14 +78,27 @@ object Exportar {
         return if (s.any { it == ',' || it == '"' || it == '\n' || it == '\r' }) "\"" + s.replace("\"", "\"\"") + "\"" else s
     }
 
-    fun csv(filas: List<Map<String, Any?>>): String {
+    fun csv(filas: List<Map<String, Any?>>): String = StringBuilder().also { csv(filas, it) }.toString()
+
+    /** El CSV escrito directo en [w], fila por fila (para el zip: así no se arma todo el texto en memoria). */
+    fun csv(filas: List<Map<String, Any?>>, w: Appendable) {
         val cols = LinkedHashSet<String>()
         filas.forEach { cols.addAll(it.keys) }
-        val sb = StringBuilder("﻿")
-        sb.append(cols.joinToString(",")).append('\n')
-        filas.forEach { f -> sb.append(cols.joinToString(",") { celda(f[it]) }).append('\n') }
-        return sb.toString()
+        w.append('\ufeff')
+        w.append(cols.joinToString(",")).append('\n')
+        filas.forEach { f -> cols.forEachIndexed { i, c -> if (i > 0) w.append(','); w.append(celda(f[c])) }; w.append('\n') }
     }
+
+    /** Un flujo que no se cierra al cerrar lo que escribe encima (para escribir varias entradas del mismo zip). */
+    private class SinCerrar(private val o: OutputStream) : OutputStream() {
+        override fun write(b: Int) = o.write(b)
+        override fun write(b: ByteArray, off: Int, len: Int) = o.write(b, off, len)
+        override fun flush() = o.flush()
+        override fun close() = o.flush()
+    }
+
+    /** Escribe texto en [o] (UTF-8, con búfer) sin cerrarlo. */
+    fun texto(o: OutputStream, f: (Appendable) -> Unit) { java.io.BufferedWriter(java.io.OutputStreamWriter(SinCerrar(o), Charsets.UTF_8), 64 * 1024).use { f(it) } }
 
     fun filasDias(): List<Map<String, Any?>> {
         val eq = Repo.equivalencias()
@@ -892,24 +909,32 @@ object Exportar {
     /** Una hora de la noche («la última…»): antes de las 05:00 suma 24, como `cafeina_ultima_h` y `ultimo_uso_h` (00:40 → 24.67). */
     fun horaNoche(hhmm: String): Double? = horaTexto(hhmm)?.let { if (it < 5) Math.round((it + 24) * 100) / 100.0 else it }
 
-    fun csvUbicaciones(): String {
-        val sb = StringBuilder("﻿ts,lat,lon,precision_m,fuente,ms\n")
-        Repo.db().ubicaciones().forEach { sb.append(Fechas.isoDeMillis(it.ms)).append(',').append(it.lat).append(',').append(it.lon).append(',')
-            .append(it.precision ?: "").append(',').append(it.fuente ?: "").append(',').append(it.ms).append('\n') }
-        return sb.toString()
+    fun csvUbicaciones(): String = StringBuilder().also { escribirUbicaciones(it) }.toString()
+
+    /** vm_ubicaciones.csv, punto por punto desde la base: con años de historial no cabría en memoria como texto. */
+    fun escribirUbicaciones(w: Appendable) {
+        w.append("﻿ts,lat,lon,precision_m,fuente,ms\n")
+        Repo.db().recorrerPuntos { w.append(Fechas.isoDeMillis(it.ms)).append(',').append(it.lat.toString()).append(',').append(it.lon.toString()).append(',')
+            .append(it.precision?.toString() ?: "").append(',').append(it.fuente ?: "").append(',').append(it.ms.toString()).append('\n') }
     }
 
     /** El catálogo de fotos con lugar (solo hora, coordenadas y de qué aparato; nunca la foto). Sirve para restaurar en otro teléfono. */
-    fun csvCatalogoFotos(): String {
-        val sb = StringBuilder("﻿clave,ms,ts,lat,lon,aparato,origen,ms_archivo,fuente\n")
+    fun csvCatalogoFotos(): String = StringBuilder().also { escribirCatalogoFotos(it) }.toString()
+
+    fun escribirCatalogoFotos(w: Appendable) {
+        w.append("﻿clave,ms,ts,lat,lon,aparato,origen,ms_archivo,fuente\n")
         Repo.db().recorrerFotos { f ->
-            sb.append(celda(f.clave)).append(',').append(f.ms).append(',').append(Fechas.isoDeMillis(f.ms)).append(',').append(f.lat).append(',').append(f.lon).append(',')
-                .append(celda(f.aparato)).append(',').append(celda(f.origen)).append(',').append(f.msArchivo).append(',').append(celda(f.fuente)).append('\n')
+            w.append(celda(f.clave)).append(',').append(f.ms.toString()).append(',').append(Fechas.isoDeMillis(f.ms)).append(',').append(f.lat.toString()).append(',').append(f.lon.toString()).append(',')
+                .append(celda(f.aparato)).append(',').append(celda(f.origen)).append(',').append(f.msArchivo.toString()).append(',').append(celda(f.fuente)).append('\n')
         }
-        return sb.toString()
     }
 
-    fun respaldoJson(): String = JSON.encodeToString(Respaldo.serializer(), Respaldo(
+    fun respaldoJson(): String = JSON.encodeToString(Respaldo.serializer(), respaldo())
+
+    /** vm_respaldo.json escrito directo en [o], sin pasar por un texto en memoria (que con años de datos ocupaba el doble). */
+    fun escribirRespaldo(o: OutputStream) { val s = SinCerrar(o); JSON.encodeToStream(Respaldo.serializer(), respaldo(), s); s.flush() }
+
+    fun respaldo(): Respaldo = Respaldo(
         exportado = Fechas.ahoraIso(), schema_v = SCHEMA_V, dias = Repo.dias.values.sortedBy { it.fecha }, momentos = Repo.momentos,
         gastos = Repo.gastos, respuestas = Repo.respuestas, reacciones = Repo.reacciones, lugares = Repo.lugares, visitas = Repo.visitas,
         salud = Repo.salud.values.toList(), pantalla = Repo.pantalla.values.toList(), cartas = Repo.cartas, experimentos = Repo.experimentos,
@@ -923,7 +948,7 @@ object Exportar {
         series = Repo.series("0000-01-01", "9999-12-31"), entrenos = Repo.entrenos.values.sortedBy { it.fecha }, ingresos = Repo.ingresos,
         youtube = Repo.youtube, tramos = Repo.tramos, consumos = Repo.consumos, notas = Repo.notas, metas = Repo.metas,
         tomas = Repo.tomas, laptop = Repo.laptop.values.sortedBy { it.fecha }, avisos = Repo.avisos.values.sortedBy { it.fecha },
-        ideas = Repo.ideas, listas = Repo.listas))
+        ideas = Repo.ideas, listas = Repo.listas)
 
     class Tabla(val archivo: String, val descripcion: String, val filas: List<Map<String, Any?>>)
 
@@ -984,15 +1009,25 @@ object Exportar {
         Tabla("vm_series.csv", "MacroFactor Workouts: cada serie", filasSeries()),
     )
 
-    fun archivos(ctx: Context? = null, ts: List<Tabla> = tablas()): List<Pair<String, String>> {
-        val out = ArrayList<Pair<String, String>>()
-        ts.forEach { out.add(it.archivo to csv(it.filas)) }
-        out.add("vm_ubicaciones.csv" to csvUbicaciones())
-        out.add("vm_fotos_catalogo.csv" to csvCatalogoFotos())
-        out.add("vm_diccionario.csv" to Diccionario.csv(ts))
-        out.add("vm_respaldo.json" to respaldoJson())
-        out.add("LEEME.txt" to leeme())
-        ctx?.let { c -> runCatching { c.assets.open("vestigium.R").use { it.readBytes().toString(Charsets.UTF_8) } }.getOrNull()?.let { out.add("vestigium.R" to it) } }
+    /** Un archivo de la exportación: su nombre y cómo escribirlo. Se escribe uno a la vez, directo a su destino. */
+    class Archivo(val nombre: String, val escribir: (OutputStream) -> Unit) {
+        fun bytes(): ByteArray = java.io.ByteArrayOutputStream().also { escribir(it) }.toByteArray()
+    }
+
+    /**
+     * Todos los archivos de la exportación. Antes se armaban todos como texto antes de escribir el primero (con años de
+     * ubicaciones, la app se quedaba sin memoria y el respaldo automático dejaba de salir); ahora cada uno se escribe al
+     * pedirlo, y las ubicaciones, el catálogo de fotos y el respaldo van directo de la base al archivo.
+     */
+    fun archivos(ctx: Context? = null, ts: List<Tabla> = tablas()): List<Archivo> {
+        val out = ArrayList<Archivo>()
+        ts.forEach { t -> out.add(Archivo(t.archivo) { o -> texto(o) { csv(t.filas, it) } }) }
+        out.add(Archivo("vm_ubicaciones.csv") { o -> texto(o) { escribirUbicaciones(it) } })
+        out.add(Archivo("vm_fotos_catalogo.csv") { o -> texto(o) { escribirCatalogoFotos(it) } })
+        out.add(Archivo("vm_diccionario.csv") { o -> texto(o) { csv(Diccionario.filas(ts), it) } })
+        out.add(Archivo("vm_respaldo.json") { o -> escribirRespaldo(o) })
+        out.add(Archivo("LEEME.txt") { o -> texto(o) { it.append(leeme()) } })
+        ctx?.let { c -> runCatching { c.assets.open("vestigium.R").close() }.onSuccess { out.add(Archivo("vestigium.R") { o -> c.assets.open("vestigium.R").use { it.copyTo(o) } }) } }
         return out
     }
 
@@ -1062,7 +1097,7 @@ object Exportar {
         val f = File(dir, "vestigium_${Fechas.hoyCalendario()}.zip")
         val ts = tablas()
         ZipOutputStream(f.outputStream()).use { z ->
-            archivos(ctx, ts).forEach { (nombre, cont) -> z.putNextEntry(ZipEntry(nombre)); z.write(cont.toByteArray()); z.closeEntry() }
+            archivos(ctx, ts).forEach { a -> z.putNextEntry(ZipEntry(a.nombre)); a.escribir(z); z.closeEntry() }
             // Todo también en una sola base SQLite (formato abierto que se lee igual dentro de veinte años): vm_datos.sqlite.
             runCatching { sqlite(ctx, ts) }.getOrNull()?.let { db ->
                 z.putNextEntry(ZipEntry("vm_datos.sqlite")); db.inputStream().use { it.copyTo(z) }; z.closeEntry(); db.delete()
@@ -1124,7 +1159,18 @@ object Exportar {
         try {
             db.beginTransaction()
             ts.forEach { t -> tabla(t.archivo.removeSuffix(".csv").removePrefix("vm_"), t.filas) }
-            tabla("ubicaciones", Repo.db().ubicaciones().map { linkedMapOf<String, Any?>("ts" to Fechas.isoDeMillis(it.ms), "lat" to it.lat, "lon" to it.lon, "precision_m" to it.precision, "fuente" to it.fuente, "ms" to it.ms) })
+            // Las ubicaciones, punto por punto desde la base (pueden ser millones).
+            db.execSQL("CREATE TABLE ubicaciones (ts TEXT, lat REAL, lon REAL, precision_m REAL, fuente TEXT, ms INTEGER)")
+            db.compileStatement("INSERT INTO ubicaciones VALUES (?, ?, ?, ?, ?, ?)").use { st ->
+                Repo.db().recorrerPuntos { p ->
+                    st.clearBindings()
+                    st.bindString(1, Fechas.isoDeMillis(p.ms)); st.bindDouble(2, p.lat); st.bindDouble(3, p.lon)
+                    p.precision?.let { st.bindDouble(4, it) } ?: st.bindNull(4)
+                    p.fuente?.let { st.bindString(5, it) } ?: st.bindNull(5)
+                    st.bindLong(6, p.ms)
+                    st.executeInsert()
+                }
+            }
             tabla("diccionario", Diccionario.filas(ts))
             db.setTransactionSuccessful()
         } finally { db.endTransaction(); db.close() }

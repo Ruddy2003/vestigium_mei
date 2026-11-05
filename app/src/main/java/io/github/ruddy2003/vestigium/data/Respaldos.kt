@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+
 package io.github.ruddy2003.vestigium.data
 
 import android.content.Context
@@ -20,9 +22,7 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
-import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.decodeFromStream
 
 /**
  * Respaldo completo en un solo archivo y su restauración de un toque.
@@ -98,6 +98,67 @@ object Respaldos {
         c.doFinal(b, o + 28, b.size - o - 28)
     }.getOrNull()
 
+    private const val TROZO = 64 * 1024
+
+    /** Lee el principio de [f] (lo justo para la marca). */
+    private fun inicio(f: File): ByteArray = f.inputStream().use { i ->
+        val b = ByteArray(MAGIA_2.size); var n = 0
+        while (n < b.size) { val r = i.read(b, n, b.size - n); if (r < 0) break; n += r }
+        b.copyOf(n)
+    }
+
+    fun estaCifrado(f: File): Boolean = formato(inicio(f)).let { it != 0 && f.length() > cabecera(it) + 28 }
+
+    /**
+     * Como [cifrar], pero de archivo a archivo y por trozos: el respaldo nunca está entero en memoria tres veces (antes:
+     * el zip leído, el cifrado y la copia con el encabezado). El resultado es el mismo formato 2.
+     */
+    fun cifrarArchivo(origen: File, destino: File, contrasena: CharArray) {
+        val r = SecureRandom()
+        val sal = ByteArray(16).also { r.nextBytes(it) }
+        val iv = ByteArray(12).also { r.nextBytes(it) }
+        val cab = MAGIA_2 + ByteBuffer.allocate(4).putInt(ITERACIONES).array()
+        val c = Cipher.getInstance("AES/GCM/NoPadding")
+        c.init(Cipher.ENCRYPT_MODE, llave(contrasena, sal, ITERACIONES), GCMParameterSpec(128, iv))
+        c.updateAAD(cab)
+        destino.outputStream().buffered(TROZO).use { o ->
+            o.write(cab); o.write(sal); o.write(iv)
+            val buf = ByteArray(TROZO)
+            origen.inputStream().use { i -> while (true) { val n = i.read(buf); if (n < 0) break; c.update(buf, 0, n)?.let { o.write(it) } } }
+            o.write(c.doFinal())
+        }
+    }
+
+    /**
+     * Como [descifrar], de archivo a archivo. false si la contraseña no lo abre o el archivo está dañado; entonces [destino]
+     * no queda. (GCM solo entrega el contenido después de comprobar la etiqueta: nunca se escribe algo sin verificar.)
+     */
+    fun descifrarArchivo(origen: File, destino: File, contrasena: CharArray): Boolean {
+        val ok = runCatching {
+            java.io.DataInputStream(origen.inputStream().buffered(TROZO)).use { d ->
+                val marca = ByteArray(MAGIA_2.size).also { d.readFully(it) }
+                val v = formato(marca)
+                if (v == 0) return@runCatching false
+                val extra = ByteArray(cabecera(v) - marca.size).also { d.readFully(it) }
+                val iteraciones = if (v == 2) ByteBuffer.wrap(extra).int else ITERACIONES_1
+                if (iteraciones !in ITER_MIN..ITER_MAX) return@runCatching false
+                val sal = ByteArray(16).also { d.readFully(it) }
+                val iv = ByteArray(12).also { d.readFully(it) }
+                val c = Cipher.getInstance("AES/GCM/NoPadding")
+                c.init(Cipher.DECRYPT_MODE, llave(contrasena, sal, iteraciones), GCMParameterSpec(128, iv))
+                c.updateAAD(marca + extra)
+                destino.outputStream().buffered(TROZO).use { o ->
+                    val buf = ByteArray(TROZO)
+                    while (true) { val n = d.read(buf); if (n < 0) break; c.update(buf, 0, n)?.let { o.write(it) } }
+                    o.write(c.doFinal())
+                }
+                true
+            }
+        }.getOrDefault(false)
+        if (!ok) destino.delete()
+        return ok
+    }
+
     // ------------------------------------------------------------ la contraseña en este teléfono
 
     private const val ALIAS = "vestigium_respaldo"
@@ -133,13 +194,14 @@ object Respaldos {
 
     /** Lo indispensable para rehacer la app en otro teléfono: el respaldo, ubicaciones, catálogo de fotos y portadas. */
     private fun escribirZip(ctx: Context, destino: File, conTablas: Boolean) {
-        ZipOutputStream(destino.outputStream().buffered()).use { z ->
-            fun poner(nombre: String, texto: String) { z.putNextEntry(ZipEntry(nombre)); z.write(texto.toByteArray()); z.closeEntry() }
-            poner("vm_respaldo.json", Exportar.respaldoJson())
-            poner("vm_ubicaciones.csv", Exportar.csvUbicaciones())
-            poner("vm_fotos_catalogo.csv", Exportar.csvCatalogoFotos())
-            if (conTablas) Exportar.archivos(ctx).filter { it.first !in setOf("vm_respaldo.json", "vm_ubicaciones.csv", "vm_fotos_catalogo.csv") }.forEach { (n, t) -> poner(n, t) }
-            else poner("LEEME.txt", "Respaldo completo de Vestigium Mei (${Fechas.ahoraIso()}).\nPara restaurarlo: Más → Datos → Respaldo completo → Restaurar desde un archivo.\n")
+        // Cada entrada se escribe directo al zip (antes se armaba todo como texto primero: con años de ubicaciones no cabía).
+        ZipOutputStream(destino.outputStream().buffered(TROZO)).use { z ->
+            fun poner(nombre: String, escribir: (java.io.OutputStream) -> Unit) { z.putNextEntry(ZipEntry(nombre)); escribir(z); z.closeEntry() }
+            poner("vm_respaldo.json") { Exportar.escribirRespaldo(it) }
+            poner("vm_ubicaciones.csv") { o -> Exportar.texto(o) { Exportar.escribirUbicaciones(it) } }
+            poner("vm_fotos_catalogo.csv") { o -> Exportar.texto(o) { Exportar.escribirCatalogoFotos(it) } }
+            if (conTablas) Exportar.archivos(ctx).filter { it.nombre !in setOf("vm_respaldo.json", "vm_ubicaciones.csv", "vm_fotos_catalogo.csv") }.forEach { a -> poner(a.nombre, a.escribir) }
+            else poner("LEEME.txt") { it.write("Respaldo completo de Vestigium Mei (${Fechas.ahoraIso()}).\nPara restaurarlo: Más → Datos → Respaldo completo → Restaurar desde un archivo.\n".toByteArray()) }
             Portadas.carpeta(ctx).listFiles()?.forEach { p -> z.putNextEntry(ZipEntry("portadas/" + p.name)); p.inputStream().use { it.copyTo(z) }; z.closeEntry() }
         }
     }
@@ -155,9 +217,7 @@ object Respaldos {
         escribirZip(ctx, zip, conTablas)
         val clave = contrasena(ctx) ?: return zip
         val vmc = File(dir, "$nombre.vmc")
-        vmc.writeBytes(cifrar(zip.readBytes(), clave))
-        clave.fill(' ')
-        zip.delete()
+        try { cifrarArchivo(zip, vmc, clave) } finally { clave.fill(' '); zip.delete() }
         return vmc
     }
 
@@ -203,11 +263,12 @@ object Respaldos {
         val dir = DocumentFile.fromTreeUri(ctx, Uri.parse(uriTxt)) ?: return false
         if (!dir.canWrite()) return false
         val cifra = cifradoActivo(ctx)
-        if (!cifra) Exportar.archivos(ctx).forEach { (nombre, cont) ->
+        if (!cifra) Exportar.archivos(ctx).forEach { a ->
+            val nombre = a.nombre
             // Para .R se usa un tipo genérico: así el sistema no le agrega «.txt» al nombre.
             val m = when { nombre.endsWith(".csv") -> "text/csv"; nombre.endsWith(".json") -> "application/json"; nombre.endsWith(".R") -> "application/octet-stream"; else -> "text/plain" }
             val f = dir.findFile(nombre) ?: dir.createFile(m, nombre) ?: return@forEach
-            ctx.contentResolver.openOutputStream(f.uri, "wt")?.use { it.write(cont.toByteArray()) }
+            ctx.contentResolver.openOutputStream(f.uri, "wt")?.buffered(TROZO)?.use { a.escribir(it) }
         }
         val a = archivo(ctx)
         val escrito = try { escribirSinRomper(ctx, dir, a) } finally { a.delete() }
@@ -263,50 +324,80 @@ object Respaldos {
         object PideContrasena : Lectura()
     }
 
+    /** Copia lo que hay en [uri] a un archivo temporal, por trozos (un respaldo grande no se lee entero a memoria). */
+    private fun copiarUri(ctx: Context, uri: Uri, f: File): Boolean {
+        val ok = runCatching { ctx.contentResolver.openInputStream(uri)?.use { i -> f.outputStream().buffered(TROZO).use { i.copyTo(it, TROZO) }; true } }.getOrNull() == true
+        if (!ok) f.delete()
+        return ok
+    }
+
+    private fun esZip(f: File) = inicio(f).let { it.size > 2 && it[0] == 'P'.code.toByte() && it[1] == 'K'.code.toByte() }
+
+    /**
+     * [f] listo para leer: el mismo archivo si no está cifrado, o su versión descifrada en [claro]. Si no se puede abrir,
+     * null y el porqué (pedir la contraseña o que no es la correcta).
+     */
+    private fun abrir(ctx: Context, f: File, claro: File, contrasena: CharArray?): Pair<File?, Lectura?> {
+        if (!estaCifrado(f)) return f to null
+        val clave = contrasena ?: contrasena(ctx) ?: return null to Lectura.PideContrasena
+        if (!descifrarArchivo(f, claro, clave)) return null to (if (contrasena == null) Lectura.PideContrasena else Lectura.Error("La contraseña no abre este respaldo."))
+        return claro to null
+    }
+
     fun restaurarUri(ctx: Context, uri: Uri, contrasena: CharArray?): Lectura {
-        val b = runCatching { ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() } }.getOrNull() ?: return Lectura.Error("No pude leer el archivo.")
-        return restaurar(ctx, b, contrasena)
+        val f = File(ctx.cacheDir, "restaurar_entrada")
+        if (!copiarUri(ctx, uri, f)) return Lectura.Error("No pude leer el archivo.")
+        return try { restaurarArchivo(ctx, f, contrasena) } finally { f.delete() }
     }
 
     /** Restaura un respaldo: .vmc cifrado, .zip (completo o la exportación extendida) o el JSON suelto. Lo que ya existe no se duplica. */
     fun restaurar(ctx: Context, datos: ByteArray, contrasena: CharArray?): Lectura {
-        var b = datos
-        if (estaCifrado(b)) {
-            val clave = contrasena ?: contrasena(ctx) ?: return Lectura.PideContrasena
-            b = descifrar(b, clave) ?: return if (contrasena == null) Lectura.PideContrasena else Lectura.Error("La contraseña no abre este respaldo.")
-        }
-        val esZip = b.size > 4 && b[0] == 'P'.code.toByte() && b[1] == 'K'.code.toByte()
-        if (!esZip) {
-            val t = b.toString(Charsets.UTF_8)
-            val v = runCatching { JSON.parseToJsonElement(t).jsonObject["schema_v"]?.jsonPrimitive?.intOrNull }.getOrNull()
-            Importar.esquemaFuturo(v)?.let { return Lectura.Error(it) }
-            return Lectura.Listo(Importar.respaldoTexto(t).mensaje)
-        }
-        val tmp = File(ctx.cacheDir, "restaurar.zip")
-        tmp.writeBytes(b)
+        val f = File(ctx.cacheDir, "restaurar_entrada")
+        f.writeBytes(datos)
+        return try { restaurarArchivo(ctx, f, contrasena) } finally { f.delete() }
+    }
+
+    /**
+     * Restaura desde un archivo, sin cargarlo entero en memoria: se descifra a otro archivo, el zip se lee entrada por
+     * entrada, el respaldo se decodifica directo del archivo y las ubicaciones, línea por línea. Antes, entre los bytes del
+     * archivo, los descifrados, el texto del JSON y su árbol, un respaldo de varios años no cabía en un teléfono nuevo.
+     */
+    private fun restaurarArchivo(ctx: Context, entrada: File, contrasena: CharArray?): Lectura {
+        val claro = File(ctx.cacheDir, "restaurar_claro")
+        val json = File(ctx.cacheDir, "restaurar_respaldo.json")
         try {
-            ZipFile(tmp).use { z ->
+            val (f, problema) = abrir(ctx, entrada, claro, contrasena)
+            if (f == null) return problema ?: Lectura.Error("No pude abrir el respaldo.")
+            if (!esZip(f)) {
+                val l = Importar.leer(f)
+                if (l is Importar.Leido.Malo) return Lectura.Error(l.aviso)
+                return Lectura.Listo(Importar.aplicar(l).mensaje)
+            }
+            ZipFile(f).use { z ->
                 // Primero el respaldo (trae los ajustes que deciden qué fotos cuentan), luego ubicaciones, catálogo y portadas.
-                val json = z.entradaQueTermina("vm_respaldo.json") ?: return Lectura.Error("Ese .zip no trae vm_respaldo.json: no es un respaldo de Vestigium Mei.")
-                val texto = z.getInputStream(json).use { it.readBytes().toString(Charsets.UTF_8) }
-                // De una versión más nueva: no se restaura nada (ni ubicaciones ni portadas), para no dejarlo a medias.
-                val v = runCatching { JSON.parseToJsonElement(texto).jsonObject["schema_v"]?.jsonPrimitive?.intOrNull }.getOrNull()
-                Importar.esquemaFuturo(v)?.let { return Lectura.Error(it) }
-                val msg = Importar.respaldoTexto(texto).mensaje
-                val nUb = z.entradaQueTermina("vm_ubicaciones.csv")?.let { e -> z.getInputStream(e).bufferedReader().use { ubicaciones(it.readLines()) } } ?: 0
-                val nFo = z.entradaQueTermina("vm_fotos_catalogo.csv")?.let { e -> z.getInputStream(e).bufferedReader().use { catalogo(it.readLines()) } } ?: 0
+                val e = z.entradaQueTermina("vm_respaldo.json") ?: return Lectura.Error("Ese .zip no trae vm_respaldo.json: no es un respaldo de Vestigium Mei.")
+                z.getInputStream(e).use { i -> json.outputStream().buffered(TROZO).use { i.copyTo(it, TROZO) } }
+                val l = Importar.leer(json)
+                json.delete()
+                // De una versión más nueva (o ilegible): no se restaura nada (ni ubicaciones ni portadas), para no dejarlo a medias.
+                if (l is Importar.Leido.Malo) return Lectura.Error(l.aviso)
+                val msg = Importar.aplicar(l).mensaje
+                val nUb = z.entradaQueTermina("vm_ubicaciones.csv")?.let { x -> z.getInputStream(x).bufferedReader().use { ubicaciones(it.lineSequence()) } } ?: 0
+                val nFo = z.entradaQueTermina("vm_fotos_catalogo.csv")?.let { x -> z.getInputStream(x).bufferedReader().use { catalogo(it.lineSequence()) } } ?: 0
                 if (nFo > 0) runCatching { io.github.ruddy2003.vestigium.sensores.FotosLugar.aplicar(ctx) }
                 var nPo = 0
                 val portadas = Portadas.carpeta(ctx)
-                z.entries().asSequence().filter { !it.isDirectory && it.name.contains("portadas/") }.forEach { e ->
-                    val f = File(portadas, e.name.substringAfterLast('/'))
-                    if (!f.exists()) { z.getInputStream(e).use { i -> f.outputStream().use { i.copyTo(it) } }; nPo++ }
+                z.entries().asSequence().filter { !it.isDirectory && it.name.contains("portadas/") }.forEach { x ->
+                    val p = File(portadas, x.name.substringAfterLast('/'))
+                    if (!p.exists()) { z.getInputStream(x).use { i -> p.outputStream().use { i.copyTo(it) } }; nPo++ }
                 }
                 return Lectura.Listo(msg + " Ubicaciones nuevas: %,d. Fotos con lugar: %,d. Portadas: %d.".format(nUb, nFo, nPo))
             }
         } catch (e: Exception) {
             return Lectura.Error("No pude abrir el respaldo: ${e.message}")
-        } finally { tmp.delete() }
+        } catch (e: OutOfMemoryError) {
+            return Lectura.Error("El respaldo no cupo en la memoria del teléfono. Cierra otras apps y vuelve a intentarlo.")
+        } finally { claro.delete(); json.delete() }
     }
 
     // ------------------------------------------------------------ verificar sin restaurar
@@ -320,19 +411,27 @@ object Respaldos {
      */
     fun contenido(b: ByteArray): Contenido? {
         val esZip = b.size > 4 && b[0] == 'P'.code.toByte() && b[1] == 'K'.code.toByte()
-        if (!esZip) {
-            val t = b.toString(Charsets.UTF_8)
-            if (!t.contains("\"momentos\"") && !t.contains("\"respuestas\"")) return null
-            return Contenido(JSON.decodeFromString(Respaldo.serializer(), t), 0, 0, 0)
-        }
+        return if (esZip) contenidoZip(b.inputStream()) else contenidoJson(b.inputStream())
+    }
+
+    /** Lo mismo, leyendo el archivo por partes. */
+    fun contenido(f: File): Contenido? = if (esZip(f)) f.inputStream().buffered(TROZO).use { contenidoZip(it) } else f.inputStream().buffered(TROZO).use { contenidoJson(it) }
+
+    private fun contenidoJson(i: java.io.InputStream): Contenido? {
+        // La versión web (u otro JSON) no es un respaldo de esta app: no trae ni la hora ni el esquema.
+        val r = try { JSON.decodeFromStream(Respaldo.serializer(), i) } catch (e: kotlinx.serialization.MissingFieldException) { return null }
+        return if (r.exportado.isEmpty()) null else Contenido(r, 0, 0, 0)
+    }
+
+    private fun contenidoZip(i: java.io.InputStream): Contenido? {
         var r: Respaldo? = null; var ub = 0; var fo = 0; var po = 0
-        java.util.zip.ZipInputStream(b.inputStream()).use { z ->
+        java.util.zip.ZipInputStream(i).use { z ->
             while (true) {
                 val e = z.nextEntry ?: break
                 if (e.isDirectory) continue
                 val n = e.name.substringAfterLast('/')
                 when {
-                    n == "vm_respaldo.json" -> r = JSON.decodeFromString(Respaldo.serializer(), z.readBytes().toString(Charsets.UTF_8))
+                    n == "vm_respaldo.json" -> r = JSON.decodeFromStream(Respaldo.serializer(), SoloEntrada(z))
                     n == "vm_ubicaciones.csv" -> ub = (z.bufferedReader().lineSequence().count() - 1).coerceAtLeast(0)
                     n == "vm_fotos_catalogo.csv" -> fo = (z.bufferedReader().lineSequence().count() - 1).coerceAtLeast(0)
                     e.name.contains("portadas/") -> po++
@@ -340,6 +439,13 @@ object Respaldos {
             }
         }
         return r?.let { Contenido(it, ub, fo, po) }
+    }
+
+    /** La entrada actual de un zip, sin que leerla hasta el final ni cerrarla cierre el zip entero. */
+    private class SoloEntrada(private val z: java.util.zip.ZipInputStream) : java.io.InputStream() {
+        override fun read(): Int = z.read()
+        override fun read(b: ByteArray, off: Int, len: Int): Int = z.read(b, off, len)
+        override fun close() {}
     }
 
     /** Las cifras de un respaldo, en una línea cada una: qué trae y desde cuándo. */
@@ -360,24 +466,32 @@ object Respaldos {
 
     /** Abre el respaldo (descifrándolo si hace falta) y dice qué trae, comparado con lo que hay en este teléfono. No cambia nada. */
     fun verificar(ctx: Context, datos: ByteArray, contrasena: CharArray?): Lectura {
-        var b = datos
-        val cifrado = estaCifrado(b)
-        if (cifrado) {
-            val clave = contrasena ?: contrasena(ctx) ?: return Lectura.PideContrasena
-            b = descifrar(b, clave) ?: return if (contrasena == null) Lectura.PideContrasena else Lectura.Error("La contraseña no abre este respaldo.")
-        }
-        val c = try { contenido(b) } catch (e: Exception) { return Lectura.Error("El archivo está dañado o incompleto: ${e.message}") }
-            ?: return Lectura.Error("Ese archivo no es un respaldo de Vestigium Mei.")
-        val aqui = "Respaldo / este teléfono: %,d / %,d días · %,d / %,d momentos · %,d / %,d gastos · %,d / %,d experimentos.".format(
-            c.r.dias.size, Repo.dias.size, c.r.momentos.size, Repo.momentos.size, c.r.gastos.size, Repo.gastos.size, c.r.experimentos.size, Repo.experimentos.size)
-        // «Se lee completo» es lo único que se comprobó: que no le falte nada depende de qué había cuando se hizo.
-        return Lectura.Listo((if (cifrado) "Cifrado y abierto con la contraseña. " else "") + "El respaldo se lee completo.\n" +
-            (Importar.esquemaFuturo(c.r.schema_v)?.let { "$it\n" } ?: "") + informe(c).joinToString("\n") { "· $it" } + "\n" + aqui)
+        val f = File(ctx.cacheDir, "verificar_entrada")
+        f.writeBytes(datos)
+        return try { verificarArchivo(ctx, f, contrasena) } finally { f.delete() }
     }
 
     fun verificarUri(ctx: Context, uri: Uri, contrasena: CharArray?): Lectura {
-        val b = runCatching { ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() } }.getOrNull() ?: return Lectura.Error("No pude leer el archivo.")
-        return verificar(ctx, b, contrasena)
+        val f = File(ctx.cacheDir, "verificar_entrada")
+        if (!copiarUri(ctx, uri, f)) return Lectura.Error("No pude leer el archivo.")
+        return try { verificarArchivo(ctx, f, contrasena) } finally { f.delete() }
+    }
+
+    private fun verificarArchivo(ctx: Context, entrada: File, contrasena: CharArray?): Lectura {
+        val claro = File(ctx.cacheDir, "verificar_claro")
+        try {
+            val cifrado = estaCifrado(entrada)
+            val (f, problema) = abrir(ctx, entrada, claro, contrasena)
+            if (f == null) return problema ?: Lectura.Error("No pude abrir el respaldo.")
+            val c = try { contenido(f) } catch (e: Exception) { return Lectura.Error("El archivo está dañado o incompleto: ${e.message}") }
+                catch (e: OutOfMemoryError) { return Lectura.Error("El respaldo no cupo en la memoria del teléfono para revisarlo.") }
+                ?: return Lectura.Error("Ese archivo no es un respaldo de Vestigium Mei.")
+            val aqui = "Respaldo / este teléfono: %,d / %,d días · %,d / %,d momentos · %,d / %,d gastos · %,d / %,d experimentos.".format(
+                c.r.dias.size, Repo.dias.size, c.r.momentos.size, Repo.momentos.size, c.r.gastos.size, Repo.gastos.size, c.r.experimentos.size, Repo.experimentos.size)
+            // «Se lee completo» es lo único que se comprobó: que no le falte nada depende de qué había cuando se hizo.
+            return Lectura.Listo((if (cifrado) "Cifrado y abierto con la contraseña. " else "") + "El respaldo se lee completo.\n" +
+                (Importar.esquemaFuturo(c.r.schema_v)?.let { "$it\n" } ?: "") + informe(c).joinToString("\n") { "· $it" } + "\n" + aqui)
+        } finally { claro.delete() }
     }
 
     private fun ZipFile.entradaQueTermina(n: String): ZipEntry? = entries().asSequence().firstOrNull { !it.isDirectory && (it.name == n || it.name.endsWith("/$n")) }
@@ -402,16 +516,17 @@ object Respaldos {
     }
 
     /** Las ubicaciones del respaldo; las de fotos se rehacen desde el catálogo. Con la tabla vacía se meten todas sin revisar una por una. */
-    private fun ubicaciones(lineas: List<String>): Int {
-        if (lineas.size < 2) return 0
-        val k = columnas(lineas[0])
+    private fun ubicaciones(lineas: Sequence<String>): Int {
+        val filas = lineas.iterator()
+        if (!filas.hasNext()) return 0
+        val k = columnas(filas.next())
         val iTs = k["ts"] ?: return 0; val iLat = k["lat"] ?: return 0; val iLon = k["lon"] ?: return 0
         val iPre = k["precision_m"]; val iFu = k["fuente"]; val iMs = k["ms"]
         val db = Repo.db()
         val vacia = db.contarUbicaciones() == 0L
         var n = 0
         db.transaccion {
-            for (l in lineas.drop(1)) {
+            for (l in filas) {
                 if (l.isBlank()) continue
                 val c = l.split(',')
                 val fuente = iFu?.let { c.getOrNull(it) }.orEmpty()
@@ -426,13 +541,14 @@ object Respaldos {
         return n
     }
 
-    private fun catalogo(lineas: List<String>): Int {
-        if (lineas.size < 2) return 0
-        val k = columnas(lineas[0])
+    private fun catalogo(lineas: Sequence<String>): Int {
+        val filas = lineas.iterator()
+        if (!filas.hasNext()) return 0
+        val k = columnas(filas.next())
         val db = Repo.db()
         var n = 0
         db.transaccion {
-            for (l in lineas.drop(1)) {
+            for (l in filas) {
                 if (l.isBlank()) continue
                 val c = partir(l)
                 fun t(col: String) = k[col]?.let { c.getOrNull(it) }.orEmpty()

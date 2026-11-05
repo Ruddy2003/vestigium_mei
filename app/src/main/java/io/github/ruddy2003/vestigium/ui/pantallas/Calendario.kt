@@ -603,13 +603,27 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
     }
 }
 
+/**
+ * Cuántos momentos (sin avisos ni privados) hay cada día, contado una sola vez por versión de la lista: antes cada celda
+ * del mes recorría todos los momentos, en cada redibujo.
+ */
+private object MomentosPorDia {
+    private var de: List<io.github.ruddy2003.vestigium.data.Momento>? = null
+    private var conteo: Map<String, Int> = emptyMap()
+    fun en(fecha: String): Int {
+        val l = Repo.momentos
+        if (l !== de) { conteo = l.filter { it.tipo != "muestreo" && !it.privado }.groupingBy { it.fecha }.eachCount(); de = l }
+        return conteo[fecha] ?: 0
+    }
+}
+
 @Composable
 private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean, futuro: Boolean, verFotos: Boolean, onClick: () -> Unit) {
     val d = Repo.dias[fecha]
     // Con «fotos», los días con foto del día la muestran de fondo (las letras van en blanco sobre una sombra).
     val conFoto = verFotos && d?.foto != null
     val tinta = if (conFoto) Color.White else Tonos.sobre(fondo)
-    val nMom = Repo.momentos.count { it.fecha == fecha && it.tipo != "muestreo" && !it.privado }
+    val nMom = MomentosPorDia.en(fecha)
     val marca = io.github.ruddy2003.vestigium.ui.Estilo.marca(fecha)
     // Sellado: con ánimo y diario, lo mismo que pide la hoja de la noche para «día sellado».
     val sellado = d != null && d.valencia != null && d.nota.isNotBlank()

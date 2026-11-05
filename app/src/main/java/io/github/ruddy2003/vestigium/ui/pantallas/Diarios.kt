@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -107,16 +108,20 @@ fun PantallaDiario(nav: Nav) {
         (Repo.dias.values.filter { it.nota.isNotBlank() || it.sueno_texto.isNotBlank() }.map { it.fecha } + visiblesM.map { it.fecha }).distinct().sortedDescending()
     }
     val q = normal(busca.trim())
-    val visibles = fechas.filter { f ->
+    // Se recalcula solo si cambian los datos o los filtros (antes, en cada redibujo de la pantalla).
+    val visibles = remember(fechas, porDia, Repo.dias, q, tipo, anio, conFoto, largas) { fechas.filter { f ->
         val d = Repo.dias[f]; val ms = porDia[f].orEmpty()
         val tieneEntrada = d?.nota?.isNotBlank() == true; val tieneSueno = d?.sueno_texto?.isNotBlank() == true
         (when (tipo) { "entradas" -> tieneEntrada; "momentos" -> ms.isNotEmpty(); "suenos" -> tieneSueno; else -> true }) &&
             (anio == null || f.startsWith(anio!!)) && (!conFoto || d?.foto != null) && (!largas || Texto.palabras(d?.nota) >= 200) &&
             (q.isBlank() || normal(listOfNotNull(d?.nota, d?.mejor_momento, d?.peor_momento, d?.sueno_texto).joinToString(" ") + " " +
                 ms.joinToString(" ") { it.texto + " " + io.github.ruddy2003.vestigium.data.Catalogo.titulo(it, false) + " " + io.github.ruddy2003.vestigium.data.Catalogo.pensamientosDe(it).joinToString(" ") }).contains(q))
-    }
+    } }
     val entradas = visibles.mapNotNull { Repo.dias[it]?.takeIf { d -> d.nota.isNotBlank() } }
-    val palabras = remember(Repo.dias) { Repo.dias.values.sumOf { Texto.palabras(it.nota) } }
+    // Contar las palabras de todo el diario va en otro hilo: con cada autoguardado cambia Repo.dias y se volvía a contar
+    // todo en el hilo principal, mientras escribías.
+    val diasAhora = Repo.dias
+    val palabras by produceState(0, diasAhora) { value = withContext(Dispatchers.Default) { diasAhora.values.sumOf { Texto.palabras(it.nota) } } }
 
     Hoja("Diario", buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
         // Un solo botón: el ánimo de ahora (sentimientos, pensamiento, con quién) y, desde ahí, una sustancia o un impulso.

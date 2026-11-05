@@ -237,7 +237,15 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             paso(s, "agenda") { Agenda.sincronizar(ctx) }
             paso(s, "comunicacion") { io.github.ruddy2003.vestigium.sensores.Comunicacion.sincronizar(ctx, 3) }
             paso(s, "entorno") { Entorno.sincronizar(ctx) }
-            paso(s, "respaldo") { Exportar.respaldoAutomatico(ctx) }
+            paso(s, "respaldo") {
+                val ok = try { Exportar.respaldoAutomatico(ctx) } catch (e: CancellationException) { throw e } catch (e: Throwable) { false }
+                // Si falla (sin espacio, la carpeta ya no deja escribir, sin memoria…) y van 3 días sin respaldo, se avisa una vez
+                // por semana: antes el error se tragaba y solo se notaba al ir a buscar el respaldo.
+                val c = Repo.config
+                if (!ok && c.carpeta_respaldo != null && !io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx) &&
+                    (c.respaldo_ultimo == null || System.currentTimeMillis() - Fechas.millis(c.respaldo_ultimo) > 3 * 86_400_000L) &&
+                    !yaFue("respaldo_falla:${Fechas.lunesDe(hoy)}")) { marcar("respaldo_falla:${Fechas.lunesDe(hoy)}"); Avisos.respaldoFallido(ctx) }
+            }
             if (isStopped) return
             // Lo que lleva más de 7 días en la papelera se va (v14).
             intentar { Repo.limpiarPapelera() }

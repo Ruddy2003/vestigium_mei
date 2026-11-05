@@ -766,22 +766,24 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             drawLine(al(e.tertiary, 0.10f), Offset(x - estela, y + estela * 0.1f), Offset(x, y), 1f * u * m.tam)
             drawCircle(al(e.tertiary, 0.22f), 1.1f * u * m.tam, Offset(x, y))
         }
-        VivoTema.PETALOS -> motas.take(22).forEach { m ->
+        VivoTema.PETALOS -> { val petalo = Path(); motas.take(22).forEach { m ->
             // Pétalos de cerezo (con su muesca en la punta) que caen meciéndose y girando, como en las estampas de primavera.
+            // Un solo trazo que se rehace para cada pétalo (antes, 22 trazos nuevos en cada cuadro).
             val k = vueltas(m)
             val y = fraccionVivo(m.y + t * k) * (h + 30f * u) - 15f * u
             val x = (m.x + 0.06f * senoVuelta(t * 2 * k + m.fase)) * w
             val l = 5.5f * u * m.tam
             val col = al(if (oscuro) Color(0xFFF2C6CF) else Color(0xFFE08CA4), if (oscuro) 0.2f else 0.28f)
             rotate(200f * (t * 3 * k + m.fase), Offset(x, y)) {
-                val petalo = Path().apply {
+                petalo.reset()
+                petalo.apply {
                     moveTo(x, y + l); cubicTo(x - l * 0.9f, y + l * 0.3f, x - l * 0.6f, y - l * 0.9f, x - l * 0.16f, y - l)
                     lineTo(x, y - l * 0.72f); lineTo(x + l * 0.16f, y - l)
                     cubicTo(x + l * 0.6f, y - l * 0.9f, x + l * 0.9f, y + l * 0.3f, x, y + l); close()
                 }
                 drawPath(petalo, col)
             }
-        }
+        } }
         VivoTema.VITRAL -> motas.take(14).forEach { m ->
             // Manchas de luz de colores que cruzan despacio, como el sol a través de las vidrieras.
             val x = (fraccionVivo(m.x + t) * 1.2f - 0.1f) * w; val y = (m.y + 0.03f * senoVuelta(t + m.fase)) * h
@@ -1094,11 +1096,62 @@ fun FondoVivo(tema: TemaId = Estilo.tema, fijo: Float? = null) {
     val oscuro = e.background.luminance() < 0.5f
     val tipo = vivoTema(tema, oscuro)
     val motas = remember(tema) { motasVivo(tema) }
+    if (fijo == null && animacionLigera(tema)) {
+        // Art déco y Edo: el fondo va en su propia capa y el tiempo se lee al dibujar, unas 30 veces por segundo. Antes cada
+        // cuadro (60 por segundo) recomponía el fondo y obligaba a redibujar lo que tiene detrás: el papel tapiz de abanicos
+        // o de olas (cientos de arcos) y la pantalla entera.
+        val anim = rememberInfiniteTransition(label = "fondo").animateFloat(0f, 1f, infiniteRepeatable(tween(tipo.periodo, easing = LinearEasing)), label = "t")
+        val pasos = (tipo.periodo / 33).coerceAtLeast(1)
+        val t by remember(anim, pasos) { androidx.compose.runtime.derivedStateOf { floor(anim.value * pasos) / pasos } }
+        Canvas(Modifier.fillMaxSize().graphicsLayer()) { pintarVivoTema(tipo, t, oscuro, e, motas) }
+        return
+    }
     val t = if (fijo != null) fijo else {
         val v by rememberInfiniteTransition(label = "fondo").animateFloat(0f, 1f, infiniteRepeatable(tween(tipo.periodo, easing = LinearEasing)), label = "t")
         v
     }
     Canvas(Modifier.fillMaxSize()) { pintarVivoTema(tipo, t, oscuro, e, motas) }
+}
+
+/**
+ * Temas con animaciones aligeradas (decisión del autor del 5 nov 2026: solo Art déco y Edo): su fondo vivo, su papel tapiz
+ * y su emblema van en capas propias, para que lo que se mueve no obligue a redibujar lo demás.
+ */
+fun animacionLigera(t: TemaId): Boolean = when (t) {
+    TemaId.ROMANO -> false
+    TemaId.URBE -> false
+    TemaId.CIBER -> false
+    TemaId.NEON -> false
+    TemaId.HELENO -> false
+    TemaId.EGIPTO -> false
+    TemaId.MEDIEVAL -> false
+    TemaId.TEMPLARIO -> false
+    TemaId.DISTOPIA -> false
+    TemaId.REFUGIO -> false
+    TemaId.ORDEN -> false
+    TemaId.VAPOR -> false
+    TemaId.LABORATORIO -> false
+    TemaId.COLONOS -> false
+    TemaId.NAPOLEON -> false
+    TemaId.DECO -> true
+    TemaId.BOTANICO -> false
+    TemaId.RUINAS -> false
+    TemaId.NAVIDAD -> false
+    TemaId.SEDA -> false
+    TemaId.EDO -> true
+    TemaId.GOTICO -> false
+    TemaId.ARCANO -> false
+    TemaId.ESPACIO -> false
+    TemaId.ABISMO -> false
+    TemaId.ANDALUS -> false
+    TemaId.MESO -> false
+    TemaId.MONGOL -> false
+    TemaId.RENACIMIENTO -> false
+    TemaId.PIRATA -> false
+    TemaId.URSS -> false
+    TemaId.REVOLUCION -> false
+    TemaId.ANTIGUAS -> false
+    TemaId.CUEVA -> false
 }
 
 // =====================================================================
