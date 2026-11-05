@@ -675,12 +675,6 @@ object Repo {
         leer("escuchas", db.porFecha("escuchas", desde, hasta), Escucha.serializer())
             .filter { todas || it.esMusica }.sortedBy { it.ts }
 
-    /** Las escuchas de un respaldo, en una sola transacción (antes, una escritura suelta por canción). */
-    fun importarEscuchas(lista: List<Escucha>) {
-        if (lista.isEmpty()) return
-        db.transaccion { lista.forEach { db.poner("escuchas", it.id, it.fecha, JSON.encodeToString(Escucha.serializer(), it)) } }
-    }
-
     fun guardarComunicacion(c: ComunicacionDia) {
         db.poner("comunicacion", c.fecha, c.fecha, JSON.encodeToString(ComunicacionDia.serializer(), c))
         enMain { comunicacion = comunicacion + (c.fecha to c) }
