@@ -56,7 +56,7 @@ Los reportes y «Tu año» no calculan nada por su cuenta: usan un mismo resumen
 
 La tarea periódica (`avisos/Trabajo.kt`) genera, sin que lo pidas:
 
-- **El semanal**, cada **lunes desde las 8:00**, de la semana anterior: una imagen PNG.
+- **El semanal**, cada **lunes desde las 8:00**, de la semana anterior: una imagen PNG. Si pides el de la semana o el mes en curso, llega solo hasta hoy (desde el 5 nov 2026, D.155). Antes contaba los días que aún no pasaban: un miércoles decía «3/7 días con diario» y los promedios por día salían a menos de la mitad.
 - **El mensual**, cada **día 1 desde las 9:00**, del mes anterior: PNG y PDF.
 - **El anual**: a petición (y «Tu año» avisa el 31 de diciembre desde las 9:00).
 
@@ -199,8 +199,8 @@ Conviene separar los logros por **qué** premian:
 |---|---|---|
 | **Registrar** | días de diario, avisos contestados, momentos, cuestionarios, pruebas de reacción | Menos datos faltantes (bueno: capítulo 3, sección 3.15). Riesgo: entradas de relleno para cumplir. |
 | **Una conducta** | pasos, sueño ≥ 7 h, entrenar, hábitos, enfoque | Cambian la conducta medida: es su objetivo (es una intervención). Riesgo: confundir el análisis observacional (sección 9.7). |
-| **Un valor de la medida subjetiva** | «Día perfecto» (calificar un día con 7 de 7), «Remontada» (un ≥ 6 tras un ≤ 2 en alguno de los 3 días con valencia anteriores, que pueden no ser seguidos) | Premian **un número que tú escribes**. Riesgo directo de sesgar la valencia (H-8-6). Se quedan por decisión del autor (D.117). |
-| **Un rendimiento** | «Rayo» (reacción < 250 ms) | Incentiva practicar la prueba; los tiempos pueden mejorar por práctica y no por estar más despierto. |
+| **Un valor de la medida subjetiva** | «Día perfecto» (calificar un día con 7 de 7), «Remontada» (un ≥ 6 tras un ≤ 2 en los 3 días de calendario anteriores; hasta el 5 nov 2026, en los 3 días con valencia anteriores, que podían estar a semanas de distancia) | Premian **un número que tú escribes**. Riesgo directo de sesgar la valencia (H-8-6). Se quedan por decisión del autor (D.117). |
+| **Un rendimiento** | «Rayo» (reacción < 250 ms; desde el 5 nov 2026 el avance es 250 / tu mejor mediana, sin unidad, y ya no «208 / 250 ms») | Incentiva practicar la prueba; los tiempos pueden mejorar por práctica y no por estar más despierto. |
 
 Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que reduce mucho el incentivo: no sabes que existen hasta que ocurren. Aun así, una vez descubiertos, son medallas por escribir cierto valor en la escala que más se analiza. **[Diseño propio]**, de bajo riesgo en la práctica, pero contrario al principio de no premiar el valor de una medida.
 

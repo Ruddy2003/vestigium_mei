@@ -125,6 +125,8 @@ object Exportar {
 
     fun filasMomentos(): List<Map<String, Any?>> {
         val cons = Repo.consumos.filter { Catalogo.sustancia(it.sustancia)?.conNivel == true }
+        // La hora real en que salió cada aviso (esquema 20), por su hora planeada.
+        val reales = Repo.avisos.values.flatMap { it.reales.entries }.associate { it.key to it.value }
         return Repo.momentos.map {
         val ms = Fechas.millis(it.ts)
         linkedMapOf<String, Any?>("id" to it.id, "ts" to it.ts, "fecha" to it.fecha, "hora" to Fechas.horaDe(it.ts), "tipo" to it.tipo,
@@ -134,7 +136,11 @@ object Exportar {
             "personas" to Texto.personas(it.texto), "temas" to Texto.temas(it.texto),
             "lat" to it.lat, "lon" to it.lon, "precision_m" to it.precision_m, "lugar" to Repo.lugares.firstOrNull { l -> l.id == it.lugar }?.nombre,
             "origen" to it.origen, "aviso_ts" to it.aviso_ts,
-            "latencia_min" to it.aviso_ts?.let { a -> (Fechas.millis(it.ts) - Fechas.millis(a)) / 60000.0 },
+            // Desde el esquema 20 (decisión del autor): latencia_min desde que el aviso salió de verdad (vacía si no se sabe,
+            // como en los avisos de antes); latencia_plan_min, la medida de siempre, desde la hora planeada.
+            "mostrado_ts" to it.aviso_ts?.let { a -> reales[a] },
+            "latencia_min" to it.aviso_ts?.let { a -> reales[a] }?.let { r -> (Fechas.millis(it.ts) - Fechas.millis(r)) / 60000.0 },
+            "latencia_plan_min" to it.aviso_ts?.let { a -> (Fechas.millis(it.ts) - Fechas.millis(a)) / 60000.0 },
             "ruido_db" to it.ruido_db, "luz_lux" to it.luz_lux,
             "con_quien" to it.con_quien, "detonantes" to it.detonantes, "detonante_otro" to it.detonante_otro, "dispositivo" to it.dispositivo, "antes" to it.antes, "duracion_min" to it.duracion_min, "foco" to it.foco, "cierre" to it.esCierre,
             "tipo_lugar" to Repo.lugares.firstOrNull { l -> l.id == it.lugar }?.tipo,
@@ -668,6 +674,11 @@ object Exportar {
         // Respondido = hay un registro del aviso, tenga o no valencia (la misma regla en el diccionario, Explorar y los widgets).
         val mu = Repo.momentos.filter { it.tipo == "muestreo" }.groupBy { it.fecha }
         val mo = Repo.momentos.filter { it.tipo != "muestreo" }.groupBy { it.fecha }
+        // La regla de ceros de la app (P-15, Estadistica.ceroDesde): un día sin registros vale 0 solo desde el primer registro
+        // de esa fuente y si ese día tiene diario; antes, sin dato. Antes la exportación ponía 0 en todas las fechas, también
+        // en las anteriores a que empezaras a registrar.
+        val ceroMomentos = io.github.ruddy2003.vestigium.ciencia.Estadistica.ceroDesde(mo.keys, Repo.dias.keys).toHashSet()
+        val ceroMuestreos = io.github.ruddy2003.vestigium.ciencia.Estadistica.ceroDesde(mu.keys, Repo.dias.keys).toHashSet()
         val ga = Repo.gastos.groupBy { it.dia }
         val ing = Repo.ingresos.groupBy { it.dia }
         val ej = Repo.sesiones.groupBy { it.fecha }
@@ -701,9 +712,9 @@ object Exportar {
                 "festivo" to (if (mexico) Fechas.esFestivoMx(f) else null), "dia_libre" to Fechas.esDiaLibre(f, mexico), "con_diario" to (d != null),
                 "desfase_utc_h" to Fechas.desfaseH(Fechas.millisDe(Fechas.parse(f).atTime(12, 0))), "cambio_horario" to (Fechas.cambioDeHora(f) != null),
                 "valencia" to d?.valencia, "activacion" to d?.activacion, "dolor" to d?.dolor, "sueno_calidad" to d?.sueno_calidad, "version_noche" to d?.version_noche,
-                "valencia_muestreo" to mu[f]?.mapNotNull { it.valencia }?.average(), "n_muestreos" to (mu[f]?.size ?: 0),
-                "n_momentos" to (mo[f]?.size ?: 0))
-            Catalogo.MOMENTOS.forEach { t -> r["m_${t.id}"] = mo[f]?.count { it.tipo == t.id } ?: 0 }
+                "valencia_muestreo" to mu[f]?.mapNotNull { it.valencia }?.average(), "n_muestreos" to (mu[f]?.size ?: if (f in ceroMuestreos) 0 else null),
+                "n_momentos" to (mo[f]?.size ?: if (f in ceroMomentos) 0 else null))
+            Catalogo.MOMENTOS.forEach { t -> r["m_${t.id}"] = mo[f]?.count { it.tipo == t.id } ?: if (f in ceroMomentos) 0 else null }
             r["gasto_total"] = ga[f]?.sumOf { it.monto } ?: 0.0
             r["ingreso_total"] = ing[f]?.sumOf { it.monto } ?: 0.0
             r["palabras"] = d?.let { Texto.palabras(it.nota) }
@@ -736,9 +747,9 @@ object Exportar {
             val nu = Repo.nutricion[f]; val en = Repo.entrenos[f]
             listOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "cafeina_mg", "gasto_kcal", "peso_tendencia_kg").forEach { k -> r[k] = nu?.valores?.get(k) }
             r["comidas"] = nu?.comidas?.takeIf { it > 0 }
-            r["primera_comida_h"] = nu?.primera?.let { horaTexto(it) }; r["ultima_comida_h"] = nu?.ultima?.let { horaTexto(it) }
+            r["primera_comida_h"] = nu?.primera?.let { horaTexto(it) }; r["ultima_comida_h"] = nu?.ultima?.let { horaNoche(it) }
             // Como en el panel de la app (H-4-12): de todas las dosis del día lógico; si no se pudo calcular, la de MacroFactor.
-            r["cafeina_ultima_h"] = if (est[f]?.containsKey("cafeina_ultima_h") == true) est[f]!!["cafeina_ultima_h"] else nu?.cafeina_ultima?.let { horaTexto(it) }
+            r["cafeina_ultima_h"] = if (est[f]?.containsKey("cafeina_ultima_h") == true) est[f]!!["cafeina_ultima_h"] else nu?.cafeina_ultima?.let { horaNoche(it) }
             r["gimnasio"] = en != null && en.series > 0; r["gimnasio_min"] = en?.minutos; r["series_gimnasio"] = en?.series_efectivas; r["volumen_kg"] = en?.volumen_kg; r["fuerza_ref_kg"] = en?.fuerza_ref_kg
             val x = est[f]
             nuevas.forEach { k -> r[k] = x?.get(k) }
@@ -877,6 +888,9 @@ object Exportar {
     }.getOrNull()
 
     fun horaTexto(hhmm: String): Double? = runCatching { val (h, m) = hhmm.split(":").map { it.toInt() }; Math.round((h + m / 60.0) * 100) / 100.0 }.getOrNull()
+
+    /** Una hora de la noche («la última…»): antes de las 05:00 suma 24, como `cafeina_ultima_h` y `ultimo_uso_h` (00:40 → 24.67). */
+    fun horaNoche(hhmm: String): Double? = horaTexto(hhmm)?.let { if (it < 5) Math.round((it + 24) * 100) / 100.0 else it }
 
     fun csvUbicaciones(): String {
         val sb = StringBuilder("﻿ts,lat,lon,precision_m,fuente,ms\n")

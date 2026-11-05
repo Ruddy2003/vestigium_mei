@@ -58,8 +58,17 @@ object TuAnio {
         p.pantallaMin?.let { m["pantalla"] = it / 60 }
         val dn = p.fechas.count { Repo.notifs[it] != null }
         if (dn > 0) m["notificaciones"] = p.notifs.toDouble() / dn
-        if (p.musicaH > 0) m["musica"] = p.musicaH / p.n
-        if (p.km > 0) m["km_anio"] = p.km * 365.0 / p.n
+        // Por día con dato de la fuente (la regla P-15), no por día de calendario: con Spotify importado desde julio, las
+        // horas de música de medio año se dividían entre el año entero y salía la mitad.
+        if (p.musicaH > 0 && p.fechas.isNotEmpty()) {
+            val desde = runCatching { Repo.escuchas(p.fechas.first(), p.fechas.last()).minOfOrNull { it.fecha } }.getOrNull()
+            val dias = p.fechas.count { desde != null && it >= desde }.coerceAtLeast(1)
+            m["musica"] = p.musicaH / dias
+        }
+        if (p.km > 0) {
+            val dias = p.fechas.count { Repo.salud[it]?.let { s -> s.distancia_km != null || s.pasos != null } == true }.coerceAtLeast(1)
+            m["km_anio"] = p.km * 365.0 / dias
+        }
         val nut = p.fechas.mapNotNull { Repo.nutricion[it] }.filter { (it.valores["kcal"] ?: 0.0) > 300 }
         fun prom(k: String) = nut.mapNotNull { it.valores[k] }.takeIf { it.isNotEmpty() }?.average()
         prom("fibra_g")?.let { m["fibra"] = it }; prom("alcohol_g")?.let { m["alcohol"] = it }; prom("azucares_g")?.let { m["azucar"] = it }
@@ -83,7 +92,8 @@ object TuAnio {
         val p = Periodo.calcular(ctx, ini, fin)
         val pIni = "${anio - 1}-01-01"
         val previo = if (Repo.dias.keys.any { it in pIni..Fechas.sumar(ini, -1) } || Repo.salud.keys.any { it in pIni..Fechas.sumar(ini, -1) })
-            runCatching { Periodo.calcular(ctx, pIni, "${anio - 1}" + fin.drop(4)) }.getOrNull() else null
+            // Un año antes con el calendario (el 29 de febrero pasa al 28): armar «AAAA-02-29» de un año no bisiesto fallaba.
+            runCatching { Periodo.calcular(ctx, pIni, Fechas.iso(Fechas.parse(fin).minusYears(1))) }.getOrNull() else null
         val en = p.fechas.toHashSet()
         val perfil = Repo.config.perfil
         val f = Perfiles.sexo() == "mujer"

@@ -455,6 +455,18 @@ object Avisos {
         TemaId.CUEVA -> VozEnfoque("Descanso junto al fuego", "Levántate, estira las piernas, bebe del arroyo.", "De vuelta al acecho", "Sale el sol sobre el valle: hora de despertar", "¡Presa cobrada!")
     }
 
+    /**
+     * ¿Se puede ver un aviso de ánimo? El permiso (Android 13 o más), las notificaciones de la app encendidas y el canal de
+     * ánimo sin silenciar del todo. Antes solo se miraba el permiso, y un aviso con el canal apagado contaba como mostrado
+     * (y bajaba la tasa de respuesta).
+     */
+    fun animoVisible(ctx: Context): Boolean {
+        if (!permitido(ctx) || !NotificationManagerCompat.from(ctx).areNotificationsEnabled()) return false
+        val nm = ctx.getSystemService(NotificationManager::class.java) ?: return true
+        val ch = runCatching { nm.getNotificationChannel(canal(ctx, CANAL_ANIMO)) }.getOrNull() ?: return true
+        return ch.importance != NotificationManager.IMPORTANCE_NONE
+    }
+
     fun permitido(ctx: Context): Boolean =
         android.os.Build.VERSION.SDK_INT < 33 ||
             ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED

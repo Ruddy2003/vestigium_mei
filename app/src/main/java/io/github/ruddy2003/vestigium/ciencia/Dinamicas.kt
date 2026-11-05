@@ -140,12 +140,23 @@ object Dinamicas {
         familia("hito_", "Hitos", Repo.dias.mapValues { (_, d) -> d.hitos.associateWith { 1.0 } }, Repo.dias.keys, 10, 3, { "Hito: ${it.replace('_', ' ')} (0/1)" })
 
         // ---- Lugares marcados: horas en cada uno.
+        // Cada visita se reparte entre los días lógicos que cruza, como horas_tipo_* (Lugares.minutosPorTipo). Antes iba entera
+        // (con tope de 24 h) al día en que llegaste: dos noches en casa contaban 24 h el primer día y 0 los siguientes.
         val lugares = HashMap<String, HashMap<String, Double>>()
+        val ahoraMs = System.currentTimeMillis()
         Repo.visitas.forEach { v ->
             val l = Repo.lugares.firstOrNull { it.id == v.lugar } ?: return@forEach
-            val h = ((Fechas.millis(v.salida ?: return@forEach) - Fechas.millis(v.entrada)) / 3_600_000.0).coerceIn(0.0, 24.0)
-            lugares.getOrPut(Fechas.diaLogicoDeMillis(Fechas.millis(v.entrada))) { HashMap() }.merge(l.nombre, h, Double::plus)
+            var a = Fechas.millis(v.entrada); val z = v.salida?.let { Fechas.millis(it) } ?: ahoraMs
+            if (a <= 0 || z <= a || z - a > 40L * 86_400_000L) return@forEach
+            while (a < z) {
+                val f = Fechas.diaLogicoDeMillis(a)
+                val y = minOf(z, Fechas.finDiaLogico(f))
+                if (y <= a) break
+                lugares.getOrPut(f) { HashMap() }.merge(l.nombre, (y - a) / 3_600_000.0, Double::plus)
+                a = y
+            }
         }
+        lugares.values.forEach { m -> m.replaceAll { _, h -> minOf(h, 24.0) } }
         familia("lug_", "Lugares", lugares, cobertura(lugares.keys), 15, 3, { "Horas en «$it»" }, porPeso = true)
 
         // ---- Teléfono: minutos por app, notificaciones por app, YouTube por canal.

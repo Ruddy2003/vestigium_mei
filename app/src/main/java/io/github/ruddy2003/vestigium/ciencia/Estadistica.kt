@@ -652,7 +652,7 @@ object Estadistica {
             val k = n.valores["kcal"]; val g = n.valores["gasto_kcal"]
             r["balance_kcal"] = if (k != null && g != null) k - g else null
             r["primera_comida_h"] = n.primera?.let { io.github.ruddy2003.vestigium.data.Exportar.horaTexto(it) }
-            r["ultima_comida_h"] = n.ultima?.let { io.github.ruddy2003.vestigium.data.Exportar.horaTexto(it) }
+            r["ultima_comida_h"] = n.ultima?.let { io.github.ruddy2003.vestigium.data.Exportar.horaNoche(it) }
             r["cafeina_ultima_h"] = n.cafeina_ultima?.let { io.github.ruddy2003.vestigium.data.Exportar.horaTexto(it) }
         }
         Repo.entrenos.forEach { (f, e) -> val r = fila(f); r["volumen_kg"] = e.volumen_kg; r["series_gimnasio"] = e.series_efectivas.toDouble(); e.fuerza_ref_kg?.let { r["fuerza_ref_kg"] = it } }

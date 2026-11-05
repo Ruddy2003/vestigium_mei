@@ -1519,7 +1519,9 @@ object Reportes {
 
     /** La imagen del reporte semanal (sin guardarla). */
     fun imagenSemana(ctx: Context, lunes: String, automatico: Boolean = false): Bitmap {
-        val fin = Fechas.sumar(lunes, 6)
+        // Hasta hoy si la semana no ha terminado: los días que aún no pasan no cuentan como «sin diario» ni bajan el promedio
+        // (antes, un miércoles decía «3/7 días con diario» y el gasto diario salía a menos de la mitad).
+        val fin = minOf(Fechas.sumar(lunes, 6), Fechas.diaLogico())
         val ini = Fechas.parse(lunes); val f = Fechas.parse(fin)
         val semana = f.get(java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR)
         val rango = "Semana ${Estilo.numeral(semana)} · del ${ini.dayOfMonth} de ${mesNombre(ini.monthValue)} al ${f.dayOfMonth} de ${mesNombre(f.monthValue)} de ${f.year}"
@@ -1551,7 +1553,8 @@ object Reportes {
     fun mensual(ctx: Context, ym: String, avisar: Boolean): Uri? {
         val ini = "$ym-01"
         val d = Fechas.parse(ini)
-        val fin = Fechas.iso(d.plusMonths(1).minusDays(1))
+        // Igual que imagenMes: hasta hoy si el mes no ha terminado.
+        val fin = minOf(Fechas.iso(d.plusMonths(1).minusDays(1)), Fechas.diaLogico())
         val (pic, alto, fondo) = reporte(ctx, "Tu mes", "MENSIS", Estilo.mes(d.monthValue, d.year), ini, fin, false, mensual = true, automatico = avisar)
         guardarPng(ctx, "mes_$ym.png", bitmap(pic, alto, fondo))
         val uri = guardarPdf(ctx, "mes_$ym.pdf", pic, alto, fondo)

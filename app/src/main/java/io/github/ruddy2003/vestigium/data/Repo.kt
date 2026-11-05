@@ -555,7 +555,8 @@ object Repo {
         if (lista.isEmpty()) return
         val nuevos = lista.mapNotNull { r ->
             val a = avisosMem[r.fecha] ?: avisos[r.fecha] ?: return@mapNotNull r
-            val n = a.copy(planeados = maxOf(a.planeados, r.planeados), vencidos = (a.vencidos + r.vencidos).distinct().sorted(), mostrados = (a.mostrados + r.mostrados).distinct().sorted())
+            val n = a.copy(planeados = maxOf(a.planeados, r.planeados), vencidos = (a.vencidos + r.vencidos).distinct().sorted(), mostrados = (a.mostrados + r.mostrados).distinct().sorted(),
+                reales = r.reales + a.reales)
             n.takeIf { it != a }
         }
         if (nuevos.isEmpty()) return
@@ -663,6 +664,25 @@ object Repo {
         }
         nuevos.forEach { db.poner("entrenos", it.fecha, it.fecha, JSON.encodeToString(EntrenoDia.serializer(), it)) }
         if (nuevos.isNotEmpty()) enMain { entrenos = entrenos + nuevos.associateBy { it.fecha } }
+        return nuevos.size
+    }
+
+    /**
+     * Una sola vez: rehace la primera y la última comida (y la última cafeína) de lo ya importado de MacroFactor con
+     * [Macrofactor.horario] (lo de antes de las 05:00 va al final). Devuelve cuántos días cambió.
+     */
+    fun rehacerHorarioComidas(): Int {
+        val desde = nutricion.keys.minOrNull() ?: return 0; val hasta = nutricion.keys.max()
+        val porDia = comidas(desde, hasta).groupBy { it.fecha }
+        val nuevos = nutricion.values.mapNotNull { n ->
+            val l = porDia[n.fecha] ?: return@mapNotNull null
+            val (p, u) = Macrofactor.horario(l.map { it.hora })
+            val caf = Macrofactor.horario(l.filter { (it.valores["cafeina_mg"] ?: 0.0) > 0 }.map { it.hora }).second
+            n.copy(primera = p, ultima = u, cafeina_ultima = caf).takeIf { it != n }
+        }
+        if (nuevos.isEmpty()) return 0
+        db.transaccion { nuevos.forEach { db.poner("nutricion", it.fecha, it.fecha, JSON.encodeToString(NutricionDia.serializer(), it)) } }
+        enMain { nutricion = nutricion + nuevos.associateBy { it.fecha } }
         return nuevos.size
     }
 

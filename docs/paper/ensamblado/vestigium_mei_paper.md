@@ -761,18 +761,35 @@ Dos avisos seguidos quedan separados al menos **2 × mín(45 min, tramo/4)**: el
 
 ### 3.5.3 Cómo llega el aviso (y cuándo se pierde)
 
-La app no programa una alarma exacta para cada aviso: lo revisa en el **pulso** de cada ~15 minutos (capítulo 4). En cada pulso, para cada hora del plan que ya pasó y no se ha procesado:
+**Desde el esquema 20 (decisión del autor del 5 nov 2026), cada aviso tiene su alarma exacta** (`avisos/Muestreo.kt`). La alarma es `setExactAndAllowWhileIdle`, la misma del temporizador de enfoque; si el sistema no deja programarla exacta, se usa una aproximada. Suena a la hora planeada aunque el teléfono esté en reposo. El **pulso** de cada ~15 minutos (capítulo 4) queda como respaldo, por si una alarma se perdió (por ejemplo, al reiniciar el teléfono), y vuelve a programar las que faltan.
 
-- la marca como «ya procesada»;
-- **solo si han pasado menos de 50 minutos** desde la hora planeada, muestra la notificación «¿Cómo te sientes ahora?»;
+**Hasta el esquema 19 no había alarmas.** Cada aviso salía cuando le tocaba correr al pulso: entre 0 y ~15 minutos tarde, y más con el teléfono en reposo, porque Android aplaza esas tareas. Los que más se atrasaban, o se perdían por pasar de 50 minutos, eran justo los de los ratos en que no usabas el teléfono, y eso sesga la muestra hacia los momentos de uso.
+
+Lo dispare la alarma o el pulso, cada aviso se procesa una sola vez (`Muestreo.disparar`):
+
+- lo marca como «ya procesado»;
+- **solo si han pasado menos de 50 minutos** desde la hora planeada, muestra la notificación «¿Cómo te sientes ahora?»; con alarma, el retraso es de segundos;
 - la notificación **se borra sola a los 60 minutos** de mostrarse (`setTimeoutAfter`).
 
-Si respondes tocando la notificación, el registro se guarda como tipo **`muestreo`**, con la hora planeada en `aviso_ts`. La exportación calcula `latencia_min` = minutos entre la hora planeada y tu respuesta. Si en vez de eso abres la app por tu cuenta, el registro se guarda como **`animo`** (iniciativa propia), aunque fuera para contestar el aviso.
+Si respondes tocando la notificación, el registro se guarda como tipo **`muestreo`**, con la hora planeada en `aviso_ts`. Si en vez de eso abres la app por tu cuenta, el registro se guarda como **`animo`** (iniciativa propia), aunque fuera para contestar el aviso.
+
+**Dos latencias desde el esquema 20** (D.153). Cada aviso mostrado guarda la hora en que salió de verdad (`AvisosDia.reales`; en la exportación, `mostrado_ts`):
+- **`latencia_min`**: minutos entre que el aviso salió de verdad y tu respuesta. Queda vacía en los avisos de antes del esquema 20, cuya hora real no se guardó.
+- **`latencia_plan_min`**: la medida de siempre, desde la hora planeada, en todas las filas. Incluye el retraso del propio aviso.
+
+Hasta el esquema 19, `latencia_min` era esta segunda medida.
+
+*Ejemplo (inventado).* El aviso estaba planeado para las 11:23, el pulso lo mostró a las 11:31 y contestaste a las 11:40. Antes, `latencia_min` = 17; ahora `latencia_min` = 9 y `latencia_plan_min` = 17. Con alarma, el aviso sale a las 11:23 y las dos dan 17.
+
+**Razonamiento.** En el muestreo de experiencias, el aviso a una hora al azar sirve para captar el estado del momento y no un recuerdo; por eso estos estudios programan el aviso a su hora, registran cuándo sonó y cuándo se contestó, y con esa diferencia separan las respuestas «del momento» de las tardías (Csikszentmihalyi y Larson, 1987; Shiffman, Stone y Hufford, 2008). **[Validado]** como práctica del método. El tope de 50 minutos para mostrar un aviso y la forma de usar la latencia en el análisis son **[Diseño propio]**. Para el autor los avisos son también un recordatorio de anotar el ánimo durante el día. Eso sigue valiendo: la latencia permite decidir en R qué respuestas cuentan como «del momento».
 
 **Lo que queda registrado desde el esquema 13 (P-10).** Cada pulso anota en la colección `avisos`, un documento por día del plan (`AvisosDia`):
 - **`planeados`**: cuántos avisos podían sonar ese día. Si cambias los ajustes a mitad del día, el plan se rehace. Entonces se suman los que ya vencieron y los del plan nuevo que todavía pueden sonar; los de un turno ya usado no vuelven a sonar (H-9-11).
 - **`vencidos`**: los avisos cuya hora ya pasó y que el pulso ya procesó.
-- **`mostrados`**: los que además salieron en pantalla, es decir, con menos de 50 minutos de retraso y con permiso de notificaciones.
+- **`mostrados`**: los que además salieron en pantalla, es decir, con menos de 50 minutos de retraso y con permiso de notificaciones. Desde el esquema 20 también hace falta que las notificaciones de la app estén encendidas y el canal de ánimo no esté silenciado del todo (`Avisos.animoVisible`). Antes, un aviso con el canal apagado contaba como mostrado y bajaba la tasa de respuesta.
+- **`reales`** (desde el esquema 20): de cada aviso mostrado, la hora en que salió de verdad.
+
+Al cambiar de zona horaria (un viaje), el plan del día se rehace con la zona nueva, porque guarda instantes fijos que de otro modo caerían de madrugada; los turnos ya usados no vuelven a sonar (desde el esquema 20).
 
 Las horas se guardan en el mismo formato que `aviso_ts`, para unir cada aviso con su respuesta. Con los avisos apagados no se anota nada, y el día queda **sin dato**, no en 0.
 
@@ -1703,7 +1720,7 @@ Lee el `.xlsx` que exporta MacroFactor (la app incluye su propio lector mínimo 
 - **Horario de comidas:** se saca la hora de la **primera** y la **última** comida y la de la **última cafeína** (importa para el sueño), por fecha de MacroFactor. Según el Apéndice D (D.91), es la hora en que **anotaste** el alimento, no necesariamente la de la toma (no lo comprobé en la documentación de MacroFactor). Desde 10e (D.92), la variable `cafeina_ultima_h` del panel ya no es esa hora tal cual: sale de las mismas tomas que `cafeina_total_mg` (MacroFactor y lo anotado en la app, juntadas toma por toma desde 10e, D.91), por día lógico y sumando 24 antes de las 5:00. El detalle está en el capítulo 5.
 - **Entrenamiento:** de las series se calculan series efectivas (**sin calentamientos**), repeticiones, volumen = Σ (peso × repeticiones) y la duración del entrenamiento.
 - En el panel, `balance_kcal` = kcal comidas − gasto estimado (si ambos existen).
-- **1RM estimado** (`e1rm`, solo series efectivas de **≤ 12 repeticiones**): `peso × (1 + repeticiones / 30)` (**fórmula de Epley**, una estimación de la fuerza máxima en una repetición, útil para *comparar* tus propias series entre días). Es una estimación, no una prueba de fuerza; el tope de 12 repeticiones es una decisión del código (no revisé literatura específica sobre su exactitud). **[Aproximación]**.
+- **1RM estimado** (`e1rm`, solo series efectivas de **≤ 12 repeticiones**): `peso × (1 + repeticiones / 30)` (con **1** repetición, el peso mismo desde el 5 nov 2026, D.156; antes daba 3.3 % de más) (**fórmula de Epley**, una estimación de la fuerza máxima en una repetición, útil para *comparar* tus propias series entre días). Es una estimación, no una prueba de fuerza; el tope de 12 repeticiones es una decisión del código (no revisé literatura específica sobre su exactitud). **[Aproximación]**.
 
 **Limitación que conviene saber.** Lo que MacroFactor registra **depende de lo que tú anotas** y de la base de datos de alimentos: los **micronutrientes** (vitaminas y minerales) suelen estar **incompletos** en las entradas de alimentos. No lo pude comprobar con una fuente citable en esta sesión, así que **trátalo como supuesto**, no como hecho. El gasto energético («expenditure») es un **algoritmo propio de MacroFactor**, no una medición.
 
@@ -2107,7 +2124,7 @@ Ambas están descritas con detalle en el capítulo 4. En resumen:
 
 - **Fase lunar** (`Luna`, `data/Calculos.kt`): edad de la luna a partir de una luna nueva de referencia (6 ene 2000, 18:14 UTC) y del **mes sinódico medio** de 29.530588853 días, evaluada al mediodía local; iluminación = (1 − cos 2π*f*)/2 (variable `luna_ilum`). **[Validado]** como aproximación astronómica: el mes real varía alrededor de ese promedio, así que la fase puede desviarse algunas horas; no lo cuantifiqué **[sin verificar]**.
 - **Enfoque y siestas** (`Enfoque`, `data/Enfoque.kt`): el cronómetro guarda cada bloque como un tramo **sin contar las pausas**, redondeado a minutos; los bloques de **menos de 1 minuto** no se guardan. Con meta y descansos, la meta se reparte en bloques iguales (2 h con 3 descansos = 4 bloques de 30 min). Los tramos anotados después con hora antes de las 5:00 se asignan a la madrugada del día lógico. Variables: `enfoque_min`, `enfoque_<tipo>_min`, `siesta`, `siesta_min`. Son **mediciones** (de tu cronómetro), no modelos.
-- **Repetición máxima estimada** (1RM): peso × (1 + repeticiones/30), la **fórmula de Epley**, una de las habituales para estimar el máximo; no verifiqué su fuente original **[sin verificar]**. Desde la entrega 10c (D.72) hay **un solo criterio** en toda la app, `Macrofactor.e1rm`: series de 1 a **12** repeticiones, sin calentamientos, redondeada a una décima. Lo usan la exportación, `vm_fuerza()` de R, Fuerza, Totales, los reportes (`Periodo`) y Tus apps. Antes, los reportes aceptaban hasta 15 repeticiones con calentamientos y Tus apps no tenía límite (H-4-13). *Ejemplo:* series de 100 kg × 15, 120 kg × 5 y un calentamiento de 130 kg × 8: antes el reporte daba 130 × (1 + 8/30) = **164.7 kg** (el calentamiento); ahora, 120 × (1 + 5/30) = **140 kg**, como en R.
+- **Repetición máxima estimada** (1RM): peso × (1 + repeticiones/30), la **fórmula de Epley** (con 1 repetición, el peso mismo desde el 5 nov 2026, D.156), una de las habituales para estimar el máximo; no verifiqué su fuente original **[sin verificar]**. Desde la entrega 10c (D.72) hay **un solo criterio** en toda la app, `Macrofactor.e1rm`: series de 1 a **12** repeticiones, sin calentamientos, redondeada a una décima. Lo usan la exportación, `vm_fuerza()` de R, Fuerza, Totales, los reportes (`Periodo`) y Tus apps. Antes, los reportes aceptaban hasta 15 repeticiones con calentamientos y Tus apps no tenía límite (H-4-13). *Ejemplo:* series de 100 kg × 15, 120 kg × 5 y un calentamiento de 130 kg × 8: antes el reporte daba 130 × (1 + 8/30) = **164.7 kg** (el calentamiento); ahora, 120 × (1 + 5/30) = **140 kg**, como en R.
 - **Fuerza de referencia** (`fuerza_ref_kg`, desde 10f; D.114, H-7-14): la mayor 1RM estimada del día (`Macrofactor.e1rm`, con sus mismas reglas) entre las series de **un solo ejercicio fijo**, el press inclinado con mancuernas (`Macrofactor.fuerzaReferencia`). Vacía los días sin ese ejercicio. `Macrofactor.esReferencia` lo reconoce por el nombre, en inglés o en español: el nombre simplificado (`Texto.slug`: minúsculas, sin acentos) debe contener «inclin»; «mancuern», «dumbbell» o la palabra «db», y «press», «banc» o «bench». Así entran «Incline Dumbbell Press», «Incline Dumbbell Bench Press» y «Press inclinado con mancuernas», y no «Incline Barbell Bench Press» ni «Dumbbell Bench Press». Se calcula al importar MacroFactor y, una sola vez, para lo ya importado (`Repo.completarFuerzaReferencia`). Va en el panel (grupo «Cuerpo»), en `vm_entrenos.csv` y en `vm_panel.csv`, y `vm_series.csv` marca las series del ejercicio (`referencia`). *Ejemplo* (inventado): 30 kg × 8, 32 kg × 5 y un calentamiento de 40 kg × 3 dan 30 × (1 + 8/30) = 38.0 y 32 × (1 + 5/30) = 37.3; el calentamiento no cuenta, y `fuerza_ref_kg` = **38.0 kg**. **[Aproximación]** la 1RM de Epley; **[Diseño propio]** reconocer el ejercicio por su nombre. *Cuándo falla.* (a) Con un nombre sin esas palabras, el día queda vacío; el nombre exacto con que MacroFactor exporta este ejercicio no se comprobó. (b) Al revés, un ejercicio que no es press pero se llama con «banco inclinado» y «mancuernas» (por ejemplo, «Aperturas en banco inclinado con mancuernas») también cuenta, porque «banc» basta. (c) Solo hay dato los días en que hiciste el ejercicio: si lo haces una vez por semana, un experimento de creatina tiene pocos días medidos en cada condición (capítulo 8).
 - **Grados de escalada** (`Grados`): los grados de Fontainebleau se convierten a la escala V con una tabla fija (6A = V3, 7A = V6…) y los de YDS a número (5.10a = 10, 5.10b = 10.25…). **[Aproximación]**: las tablas de equivalencia publicadas no coinciden entre sí.
 
@@ -2260,7 +2277,7 @@ La regla 2 es la más defendible: antes de empezar a usar una función no se sab
 | `per_` | aparece @persona (diario, momentos, sueños, cartas) | 0/1 | 15 / 5 |
 | `pen_` | pensé en @persona sin verla | 0/1 | 10 / 3 |
 | `tema_`, `hito_` | aparece #tema; hito del día | 0/1 | 12 / 5; 10 / 3 |
-| `lug_` | horas en cada lugar marcado | horas | 15 / 3 (por peso) |
+| `lug_` | horas en cada lugar marcado, repartidas entre los días lógicos que cruza la visita (desde el 5 nov 2026, D.155; antes, toda la visita al día de llegada, con tope de 24 h) | horas | 15 / 3 (por peso) |
 | `app_`, `ntf_` | minutos y notificaciones por app | min, n | 12 / 5; 8 / 5 (por peso) |
 | `lap_`, `web_` | minutos por app y sitio en la laptop | min | 10 / 4 (por peso) |
 | `ytc_`, `art_` | videos por canal; canciones por artista | n | 8 / 5; 10 / 5 |
@@ -2290,7 +2307,7 @@ Hasta la entrega 10d, el script de R leía `vm_panel.csv`, que **no** es `Estadi
 - **Once nombres distintos, documentados.** `sueno_min`/`sueno_horas` (en minutos frente a horas), `sueno_profundo_min`/`sueno_profundo`, `sueno_rem_min`/`sueno_rem`, `km`/`distancia_km`, `hrv_rmssd`/`hrv`, `valencia_muestreo`/`muestreo_valencia`, `luz_dia_min`/`luz_horas` (minutos frente a horas), `sol_min`/`sol_horas` (minutos frente a horas), `carga_noche_inicio_h`/`carga_noche_h`, `temp_piel_delta`/`temp_piel` y `ruido_db_medio`/`ruido_db` (`Exportar.EQUIVALENTES`). No se renombraron, para no romper scripts viejos; el diccionario dice en cada una cuál es la otra, y `vm_familias.csv` las trata como la misma medida.
 - **Mismas variables.** `vm_variables.csv` lista las que la app cruza (`Estadistica.variables()`, con las dinámicas recortadas igual que en la app); `vm_relaciones` y `vm_factores` se limitan a ellas por omisión. El seguimiento privado va marcado y solo se cruza con `privadas = TRUE`.
 
-Lo que sigue distinto: `n_momentos` y `m_<tipo>` (solo en `vm_panel.csv`) cuentan también momentos privados (H-2-13), y R completa el calendario con renglones vacíos (`complete()`), que no cambia ningún cálculo porque los vacíos no entran. **Cómo se comprobó:** `ExportacionPrueba.kt` fija que, con el mismo panel inventado, `vm_relaciones` y `vm_factores` dan los mismos números que la app; con una exportación real de la v89, el script cargó y analizó sin errores (y así se encontró lo que corrigió D.87); y después el autor comprobó con una exportación real que las primeras parejas de `vm_relaciones()` coinciden con las de «Las relaciones más marcadas» (28 oct 2026). Ver la comparación completa en la sección 6.22.
+Lo que sigue distinto: `n_momentos` y `m_<tipo>` (solo en `vm_panel.csv`) cuentan también momentos privados (H-2-13); desde el 5 nov 2026 valen 0 con la misma regla P-15 que el panel (desde el primer registro y en días con diario; antes, sin dato), y antes de eso valían 0 en todas las fechas (D.154), y R completa el calendario con renglones vacíos (`complete()`), que no cambia ningún cálculo porque los vacíos no entran. **Cómo se comprobó:** `ExportacionPrueba.kt` fija que, con el mismo panel inventado, `vm_relaciones` y `vm_factores` dan los mismos números que la app; con una exportación real de la v89, el script cargó y analizó sin errores (y así se encontró lo que corrigió D.87); y después el autor comprobó con una exportación real que las primeras parejas de `vm_relaciones()` coinciden con las de «Las relaciones más marcadas» (28 oct 2026). Ver la comparación completa en la sección 6.22.
 
 ## 6.4 La correlación: Pearson y Spearman
 
@@ -3790,7 +3807,7 @@ Con el modelo de la 10c, en la misma situación el aviso sale el **5 %** de las 
 **Desde 10f (D.114): la fuerza de referencia, `fuerza_ref_kg`.** Es la mejor 1RM estimada del día en **un solo ejercicio fijo**, el press inclinado con mancuernas (`Macrofactor.fuerzaReferencia`):
 
 - **Qué ejercicio cuenta** (`Macrofactor.esReferencia`). El nombre del ejercicio se pasa a minúsculas sin acentos ni signos (`Texto.slug`: «Press inclinado con mancuernas» → `press_inclinado_con_mancuernas`), y cuenta si contiene «press» y «inclin», además de «mancuern», «dumbbell» o la palabra suelta «db». Así se reconocen «Incline Dumbbell Press», «Incline DB Bench Press», «Press inclinado con mancuernas» y «Press de banca inclinado con mancuernas», y quedan fuera las aperturas y los curls en banco inclinado (que no dicen «press»). **[Diseño propio]**: no se comprobó en la sesión con qué nombre exacto exporta MacroFactor este ejercicio (Apéndice D). Cuándo falla: un nombre sin esas palabras (una abreviatura propia, o «banco inclinado con mancuernas» sin «press») no cuenta, y otro press inclinado con mancuernas que no sea el de banca (uno de pie, por ejemplo) sí contaría.
-- **Cómo se calcula.** Para cada serie de ese ejercicio, la 1RM de Epley de `Macrofactor.e1rm`: peso × (1 + repeticiones/30), solo con 1 a 12 repeticiones, peso mayor que 0 y sin las series de calentamiento; redondeada a 0.1 kg (capítulo 4, sección 4.6.6, y capítulo 5, sección 5.9). `fuerza_ref_kg` es la mayor del día; vacía (`null`) los días sin ese ejercicio. **[Aproximación]**: Epley estima el máximo a partir de una serie submáxima, con error que crece con las repeticiones.
+- **Cómo se calcula.** Para cada serie de ese ejercicio, la 1RM de Epley de `Macrofactor.e1rm`: peso × (1 + repeticiones/30) (con 1 repetición, el peso mismo desde el 5 nov 2026, D.156), solo con 1 a 12 repeticiones, peso mayor que 0 y sin las series de calentamiento; redondeada a 0.1 kg (capítulo 4, sección 4.6.6, y capítulo 5, sección 5.9). `fuerza_ref_kg` es la mayor del día; vacía (`null`) los días sin ese ejercicio. **[Aproximación]**: Epley estima el máximo a partir de una serie submáxima, con error que crece con las repeticiones.
 - **Dónde está.** Se calcula al importar MacroFactor, al restaurar un respaldo que trae entrenos y, una vez, para lo ya importado (`Repo.completarFuerzaReferencia`). Es una variable del panel (grupo «Cuerpo»; capítulo 6, sección 6.3.1), una medida posible en cualquier experimento (sección 8.3.1), y sale en `vm_entrenos.csv` y `vm_panel.csv`; `vm_series.csv` marca con `referencia` las series de ese ejercicio.
 
 *Ejemplo (inventado).* Un día hiciste press inclinado con mancuernas: una serie de calentamiento de 12 kg × 15, y luego 24 kg × 8 y 26 kg × 5. El calentamiento no cuenta (y además pasa de 12 repeticiones). 24 × (1 + 8/30) = 30.4 kg; 26 × (1 + 5/30) = 30.3 kg. `fuerza_ref_kg` = **30.4**. Ese día también hiciste sentadilla, que sube `volumen_kg` pero no cambia `fuerza_ref_kg`.
@@ -3948,7 +3965,7 @@ Los reportes y «Tu año» no calculan nada por su cuenta: usan un mismo resumen
 
 La tarea periódica (`avisos/Trabajo.kt`) genera, sin que lo pidas:
 
-- **El semanal**, cada **lunes desde las 8:00**, de la semana anterior: una imagen PNG.
+- **El semanal**, cada **lunes desde las 8:00**, de la semana anterior: una imagen PNG. Si pides el de la semana o el mes en curso, llega solo hasta hoy (desde el 5 nov 2026, D.155). Antes contaba los días que aún no pasaban: un miércoles decía «3/7 días con diario» y los promedios por día salían a menos de la mitad.
 - **El mensual**, cada **día 1 desde las 9:00**, del mes anterior: PNG y PDF.
 - **El anual**: a petición (y «Tu año» avisa el 31 de diciembre desde las 9:00).
 
@@ -4091,8 +4108,8 @@ Conviene separar los logros por **qué** premian:
 |---|---|---|
 | **Registrar** | días de diario, avisos contestados, momentos, cuestionarios, pruebas de reacción | Menos datos faltantes (bueno: capítulo 3, sección 3.15). Riesgo: entradas de relleno para cumplir. |
 | **Una conducta** | pasos, sueño ≥ 7 h, entrenar, hábitos, enfoque | Cambian la conducta medida: es su objetivo (es una intervención). Riesgo: confundir el análisis observacional (sección 9.7). |
-| **Un valor de la medida subjetiva** | «Día perfecto» (calificar un día con 7 de 7), «Remontada» (un ≥ 6 tras un ≤ 2 en alguno de los 3 días con valencia anteriores, que pueden no ser seguidos) | Premian **un número que tú escribes**. Riesgo directo de sesgar la valencia (H-8-6). Se quedan por decisión del autor (D.117). |
-| **Un rendimiento** | «Rayo» (reacción < 250 ms) | Incentiva practicar la prueba; los tiempos pueden mejorar por práctica y no por estar más despierto. |
+| **Un valor de la medida subjetiva** | «Día perfecto» (calificar un día con 7 de 7), «Remontada» (un ≥ 6 tras un ≤ 2 en los 3 días de calendario anteriores; hasta el 5 nov 2026, en los 3 días con valencia anteriores, que podían estar a semanas de distancia) | Premian **un número que tú escribes**. Riesgo directo de sesgar la valencia (H-8-6). Se quedan por decisión del autor (D.117). |
+| **Un rendimiento** | «Rayo» (reacción < 250 ms; desde el 5 nov 2026 el avance es 250 / tu mejor mediana, sin unidad, y ya no «208 / 250 ms») | Incentiva practicar la prueba; los tiempos pueden mejorar por práctica y no por estar más despierto. |
 
 : Tabla 9.5. Lo que premian, y por qué importa para los datos
 
@@ -5028,8 +5045,8 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `cafeina_mg` | Cafeína (mg) | numérica | mg | Si hay datos de la fuente |
 | `azucares_g` | Azúcares (g) | numérica | g | Si hay datos de la fuente |
 | `balance_kcal` | Calorías menos gasto estimado | numérica | — | Si hay datos de la fuente |
-| `primera_comida_h` | Hora del primer alimento | numérica | — | Si hay datos de la fuente |
-| `ultima_comida_h` | Hora del último alimento | numérica | — | Si hay datos de la fuente |
+| `primera_comida_h` | Hora del primer alimento (desde el 5 nov 2026, lo anotado antes de las 05:00 ya no cuenta como primero; D.156) | numérica | — | Si hay datos de la fuente |
+| `ultima_comida_h` | Hora del último alimento; antes de las 05:00 suma 24, como `cafeina_ultima_h` (desde el 5 nov 2026; D.156) | numérica | — | Si hay datos de la fuente |
 | `cafeina_ultima_h` | Hora de la última cafeína. Desde 10e (D.92), del día lógico, con las tomas de MacroFactor y de la app (antes de las 5:00 suma 24); antes, la de MacroFactor por día de calendario (A.8) | numérica | — | Si hay datos de la fuente |
 
 : Tabla A.13. Nutrición
@@ -5190,7 +5207,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 | `pen_` | Personas | 10 | 3 | Pensé en @‹elemento› sin verla (0/1) |
 | `tema_` | Temas | 12 | 5 | Aparece #‹elemento› (0/1); 0 solo en días con diario escrito o momento con #tema (10c) |
 | `hito_` | Hitos | 10 | 3 | Hito: ‹elemento› (0/1) |
-| `lug_` | Lugares | 15 | 3 | Horas en «‹elemento›» |
+| `lug_` | Lugares | 15 | 3 | Horas en «‹elemento›» (repartidas por día lógico desde el 5 nov 2026; D.155) |
 | `app_` | Apps | 12 | 5 | Minutos en ‹elemento› |
 | `ntf_` | Notificaciones | 8 | 5 | Notificaciones de ‹elemento› |
 | `lap_` | Laptop | 10 | 4 | Minutos en ‹elemento› (laptop) |
@@ -6363,6 +6380,19 @@ No cambia lo que se guarda: `SCHEMA_V` sigue en 19.
 | D.152 | **La tarea de fondo.** Cada paso de las tandas diaria, nocturna y mensual se anota al terminar; si la tarea se corta, el siguiente pulso sigue donde se quedó (dos intentos por paso). Antes, la tanda se daba por hecha al empezar. Los errores ya no atrapan la orden de detenerse: antes, lo que seguía, el respaldo incluido, corría sin la protección del sistema. `Repo.cambiarConfig` es sincronizado: la tarea de fondo y la interfaz ya no se borran cambios una a otra, por ejemplo una persona que agregaste o la marca de un aviso, que entonces sonaba dos veces (4.1) | `avisos/Trabajo.kt` (`paso`, `intentar`), `data/Repo.kt` | Revisión del 5 nov 2026 |
 
 : Tabla D.20. Que no se pierda nada (5 nov 2026)
+
+## Cómo se mide (esquema 20, 5 nov 2026)
+
+Decisión del autor (5 nov 2026): los avisos de ánimo, como sea mejor metodológicamente, es decir, a su hora exacta, guardando cuándo salieron y con las dos latencias por separado.
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.153 | **Avisos de ánimo a su hora.** Cada aviso tiene una alarma exacta (`Muestreo.programar`, `MuestreoReceiver`) y el pulso queda de respaldo. Cada aviso mostrado guarda su hora real (`AvisosDia.reales`, `SCHEMA_V` 20). En `vm_momentos.csv`: `mostrado_ts` (nueva); `latencia_min` desde la hora real (vacía antes del esquema 20); `latencia_plan_min` (nueva), la medida de antes. Un aviso solo cuenta como mostrado si las notificaciones de la app y el canal de ánimo están activos (`Avisos.animoVisible`). Al cambiar de zona horaria, el plan del día se rehace (3.5.3) | `avisos/Muestreo.kt` (nuevo), `avisos/Trabajo.kt`, `avisos/Avisos.kt`, `data/Modelo.kt`, `data/Exportar.kt`, `data/Diccionario.kt`, `data/Repo.kt`, `AndroidManifest.xml` | Los avisos salían con el pulso, entre 0 y ~15 min tarde y más con el teléfono en reposo: se sesgaba la muestra hacia los ratos de uso, y la latencia incluía el retraso del propio aviso. **Cambia valores** de `latencia_min` |
+| D.154 | **Ceros de los momentos en `vm_panel.csv`.** `n_momentos`, `m_*` y `n_muestreos` valen 0 solo desde el primer registro de su tipo y en días con diario (la regla P-15 del panel, `Estadistica.ceroDesde`); antes, sin dato (6.3.4) | `data/Exportar.kt` (`filasPanel`) | Se exportaban en 0 en todas las fechas, también antes de empezar a registrar: los días anteriores contaban como «sin momentos» y bajaban medias y correlaciones. **Cambia valores** |
+| D.155 | **Periodos y repartos.** Los reportes de la semana y el mes en curso llegan hasta hoy (`Reportes.imagenSemana`, `mensual`; como ya hacía `imagenMes`). `lug_*` reparte cada visita entre los días lógicos que cruza, como `horas_tipo_*`. La energía de reportes, «Tu año» y Terapia es solo la del diario, como la valencia (H-8-10) | `reportes/Reportes.kt`, `ciencia/Dinamicas.kt`, `ciencia/Periodo.kt` | Dividían entre días que no habían pasado; las horas por lugar no cuadraban con su total; «Energía media» mezclaba dos instrumentos. **Cambia valores** de `lug_*` |
+| D.156 | **Detalles de cálculo.** La primera y la última comida de MacroFactor ponen lo de antes de las 05:00 al final, y `ultima_comida_h` suma 24, como `cafeina_ultima_h` (se rehizo lo importado). 1RM con 1 repetición = el peso (Epley daba 3.3 % de más; se recalculó `fuerza_ref_kg`). «Tu año»: música y kilómetros por día con dato de la fuente (P-15), y la comparación con el año anterior funciona el 29 de febrero. Totales muestra la cafeína en mg. Logros: el avance de «Rayo» sin unidad engañosa, y «Remontada» con 3 días de calendario | `data/Macrofactor.kt`, `data/Exportar.kt`, `data/Repo.kt` (`rehacerHorarioComidas`), `ciencia/Estadistica.kt`, `ciencia/Terapia.kt`, `ciencia/TuAnio.kt`, `ciencia/Totales.kt`, `ciencia/Logros.kt`, `ui/pantallas/TusApps.kt`, `avisos/Trabajo.kt` | Revisión del 5 nov 2026. **Cambia valores** de `primera_comida_h`, `ultima_comida_h` y `fuerza_ref_kg` en los días afectados |
+
+: Tabla D.21. Cómo se mide (esquema 20, 5 nov 2026)
 
 
 # Apéndice E. Glosario

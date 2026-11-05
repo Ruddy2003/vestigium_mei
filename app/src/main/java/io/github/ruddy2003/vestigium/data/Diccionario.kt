@@ -113,7 +113,8 @@ object Diccionario {
         "medicamentos" to "Medicamentos tomados (lista)", "prediccion_manana" to "Predicción del ánimo de mañana (1 a 7)",
         // Momentos
         "tipo" to "Tipo de registro", "intensidad" to "Intensidad: 1 a 5 en impulsos y recaídas, 0 a 5 en libido", "lugar" to "Nombre del lugar marcado más cercano",
-        "aviso_ts" to "Cuándo llegó el aviso que se respondió", "latencia_min" to "Minutos entre el aviso y la respuesta",
+        "aviso_ts" to "Hora planeada del aviso que se respondió", "mostrado_ts" to "Hora en que el aviso salió de verdad (desde el esquema 20; vacío antes o si no se sabe)",
+        "latencia_min" to "Minutos entre que el aviso salió de verdad y la respuesta (desde el esquema 20; vacío antes)", "latencia_plan_min" to "Minutos entre la hora planeada del aviso y la respuesta (incluye el retraso del propio aviso)",
         "ruido_db" to "Ruido ambiente aproximado al registrar (dB relativos, sin calibrar)", "luz_lux" to "Luz ambiente al registrar (lux)",
         // Gastos
         "monto" to "Importe (tu moneda)", "vm_gastos.csv:categoria" to "Categoría de gasto", "vm_ingresos.csv:categoria" to "Categoría de ingreso", "subcategoria" to "Subcategoría dentro de la categoría (desde el esquema 14; vacío = sin subcategoría)", "imprevisto" to "Gasto no planeado (0/1)", "tipo_otro" to "Bloque de enfoque de tipo «otro»: en qué fue, escrito a mano (desde el esquema 17)", "se_repite" to "Gasto que se repite, como renta, suscripción o servicios (0/1; desde el esquema 17)",
@@ -432,6 +433,8 @@ object Diccionario {
      * de ejecución de la compilación que publica esa versión.
      */
     private const val VERSION_ESQUEMA_19 = 123
+    /** La versión de la app con la que llega el esquema 20 (avisos de ánimo a su hora). Se fija al mezclar a `main`. */
+    private const val VERSION_ESQUEMA_20 = 123
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
@@ -613,6 +616,9 @@ object Diccionario {
         "sueno_est_recurrente" to (110 to "incluye los días de antes con tipo «recurrente» (D.127)"),
         // Esquema 18: deseados y listas libres.
         "vm_visitas.csv:cierre" to (VERSION_ESQUEMA_19 to "nueva: cómo se supo la salida (D.147)"),
+        "mostrado_ts" to (VERSION_ESQUEMA_20 to "nueva: hora real en que salió el aviso (D.153)"),
+        "latencia_min" to (VERSION_ESQUEMA_20 to "desde que el aviso salió de verdad; antes, desde la hora planeada (ahora latencia_plan_min) (D.153)"),
+        "latencia_plan_min" to (VERSION_ESQUEMA_20 to "nueva: la latencia de antes, desde la hora planeada (D.153)"),
         "en_casa_min" to (VERSION_ESQUEMA_19 to "con las visitas corregidas: sin las que quedaban abiertas estando en otro lado (D.147)"),
         "horas_tipo_*" to (VERSION_ESQUEMA_19 to "con las visitas corregidas: sin las que quedaban abiertas estando en otro lado (D.147)"),
         "lug_*" to (VERSION_ESQUEMA_19 to "con las visitas corregidas: sin las que quedaban abiertas estando en otro lado (D.147)"),

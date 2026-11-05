@@ -244,7 +244,7 @@ private fun comida(periodo: String): List<Bloque> {
     val peso = Repo.nutricion.values.filter { it.fecha >= d0 }.mapNotNull { n -> n.valores["peso_tendencia_kg"]?.let { n.fecha to it } }.sortedBy { it.first }
     val gasto = prom("gasto_kcal")
     val primera = dias.mapNotNull { it.primera?.let { h -> io.github.ruddy2003.vestigium.data.Exportar.horaTexto(h) } }.takeIf { it.isNotEmpty() }?.average()
-    val ultima = dias.mapNotNull { it.ultima?.let { h -> io.github.ruddy2003.vestigium.data.Exportar.horaTexto(h) } }.takeIf { it.isNotEmpty() }?.average()
+    val ultima = dias.mapNotNull { it.ultima?.let { h -> io.github.ruddy2003.vestigium.data.Exportar.horaNoche(h) } }.takeIf { it.isNotEmpty() }?.average()
     fun hhmm(h: Double) = "%d:%02d".format(h.toInt(), ((h - h.toInt()) * 60).roundToInt())
     return listOfNotNull(
         Bloque.Cifras(listOfNotNull(n(dias.size) to "días registrados", n(kcal) to "kcal al día", gasto?.let { n(it) to "kcal de gasto estimado" }, n(p) to "g de proteína",

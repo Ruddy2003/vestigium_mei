@@ -246,10 +246,10 @@ object Terapia {
                 nutrientes = listOf("cafeina_mg" to ("Cafeína" to "mg"), "alcohol_g" to ("Alcohol" to "g"), "azucares_anadidos_g" to ("Azúcares añadidos" to "g"),
                     "fibra_g" to ("Fibra" to "g"), "omega_3_g" to ("Omega-3" to "g"), "agua_g" to ("Agua" to "ml"))
                     .mapNotNull { (k, nu) -> prom(k)?.let { Triple(nu.first, it, nu.second) } },
-                cafeinaUltima = mediaYDesviacion(nutReg.mapNotNull { it.cafeina_ultima?.let(Exportar::horaTexto) }),
+                cafeinaUltima = mediaYDesviacion(nutReg.mapNotNull { it.cafeina_ultima?.let(Exportar::horaNoche) }),
                 comidasPorDia = media(nutReg.filter { it.comidas > 0 }.map { it.comidas.toDouble() }),
                 primera = mediaYDesviacion(nutReg.mapNotNull { it.primera?.let(Exportar::horaTexto) }),
-                ultima = mediaYDesviacion(nutReg.mapNotNull { it.ultima?.let(Exportar::horaTexto) }),
+                ultima = mediaYDesviacion(nutReg.mapNotNull { it.ultima?.let(Exportar::horaNoche) }),
             )
         }
 

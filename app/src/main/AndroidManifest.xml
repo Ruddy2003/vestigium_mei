@@ -645,6 +645,8 @@
         <receiver android:name=".widget.HabitoReceiver" android:exported="false" />
         <receiver android:name=".data.EnfoqueReceiver" android:exported="false" />
         <receiver android:name=".avisos.RecordatorioReceiver" android:exported="false" />
+        <!-- La alarma exacta de cada aviso de ánimo (esquema 20). -->
+        <receiver android:name=".avisos.MuestreoReceiver" android:exported="false" />
         <receiver android:name=".widget.WidgetEnfoque" android:exported="false" android:label="Enfoque">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

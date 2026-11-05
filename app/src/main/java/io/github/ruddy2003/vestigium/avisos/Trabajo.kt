@@ -91,6 +91,9 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         var visitasCorregidas = false
         intentar {
             val mig = ctx.getSharedPreferences("migraciones", Context.MODE_PRIVATE)
+            if (!mig.getBoolean("comidas_medianoche", false)) { Repo.rehacerHorarioComidas(); mig.edit().putBoolean("comidas_medianoche", true).apply() }
+            // Con una repetición, el 1RM es el peso (ya no Epley): se recalcula la fuerza de referencia guardada.
+            if (!mig.getBoolean("epley_una", false)) { Repo.completarFuerzaReferencia(); mig.edit().putBoolean("epley_una", true).apply() }
             if (!mig.getBoolean("esquema19_ubicaciones", false)) { Repo.db().quitarMuestrasRepetidas(); mig.edit().putBoolean("esquema19_ubicaciones", true).apply() }
             if (!mig.getBoolean("esquema19_visitas", false)) {
                 io.github.ruddy2003.vestigium.data.Lugares.limpiarVisitasPasadas(); visitasCorregidas = true
@@ -165,16 +168,9 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             if (p.isNotEmpty() || Repo.avisos[hoy] != null)
                 Repo.anotarAvisos(hoy) { a -> a.copy(planeados = a.vencidos.size + p.indices.count { !yaFue("muestreo:$hoy:$it") }) }
         }
-        plan.forEachIndexed { i, t ->
-            val clave = "muestreo:$hoy:$i"
-            if (!yaFue(clave) && ms >= t) {
-                marcar(clave)
-                val iso = Fechas.isoDeMillis(t)
-                val muestra = ms - t < 50 * 60_000L && Avisos.permitido(ctx)
-                Repo.anotarAvisos(hoy) { a -> a.copy(vencidos = (a.vencidos + iso).distinct(), mostrados = if (muestra) (a.mostrados + iso).distinct() else a.mostrados) }
-                if (muestra) Avisos.muestreo(ctx, i, t)
-            }
-        }
+        // Cada aviso tiene su alarma exacta (Muestreo); este pulso es el respaldo si alguna se perdió.
+        plan.forEachIndexed { i, t -> if (!yaFue("muestreo:$hoy:$i") && ms >= t) Muestreo.disparar(ctx, hoy, i, t, ms) }
+        intentar { Muestreo.programar(ctx, hoy, plan, ms) }
 
         // Sueños por la mañana
         if (ahora.hour >= c.hora_sueno && ahora.hour < c.hora_sueno + 3 && !yaFue("sueno:$hoy")) {
@@ -311,7 +307,16 @@ class ArranqueReceiver : BroadcastReceiver() {
         Repo.init(context)
         // Al cambiar de zona horaria (un viaje o el horario de verano del sistema) se anota desde cuándo rige la nueva.
         runCatching { Repo.registrarZona() }
-        if (intent.action == Intent.ACTION_TIMEZONE_CHANGED) return
+        if (intent.action == Intent.ACTION_TIMEZONE_CHANGED) {
+            // El plan de hoy son instantes fijos calculados con la zona de antes: tras un viaje caerían de madrugada. Se
+            // quita y el siguiente pulso lo rehace con la zona nueva (los turnos ya usados no vuelven a sonar).
+            runCatching {
+                Muestreo.cancelar(context)
+                val hoy = Fechas.hoyCalendario()
+                Repo.cambiarConfig { it.copy(plan_muestreo = it.plan_muestreo - hoy) }
+            }
+            return
+        }
         runCatching { Geocercas.registrar(context) }
         runCatching { Actividad.registrar(context) }
         Programador.asegurar(context)

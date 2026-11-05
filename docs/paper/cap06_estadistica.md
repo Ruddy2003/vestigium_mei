@@ -98,7 +98,7 @@ La regla 2 es la más defendible: antes de empezar a usar una función no se sab
 | `per_` | aparece @persona (diario, momentos, sueños, cartas) | 0/1 | 15 / 5 |
 | `pen_` | pensé en @persona sin verla | 0/1 | 10 / 3 |
 | `tema_`, `hito_` | aparece #tema; hito del día | 0/1 | 12 / 5; 10 / 3 |
-| `lug_` | horas en cada lugar marcado | horas | 15 / 3 (por peso) |
+| `lug_` | horas en cada lugar marcado, repartidas entre los días lógicos que cruza la visita (desde el 5 nov 2026, D.155; antes, toda la visita al día de llegada, con tope de 24 h) | horas | 15 / 3 (por peso) |
 | `app_`, `ntf_` | minutos y notificaciones por app | min, n | 12 / 5; 8 / 5 (por peso) |
 | `lap_`, `web_` | minutos por app y sitio en la laptop | min | 10 / 4 (por peso) |
 | `ytc_`, `art_` | videos por canal; canciones por artista | n | 8 / 5; 10 / 5 |
@@ -126,7 +126,7 @@ Hasta la entrega 10d, el script de R leía `vm_panel.csv`, que **no** es `Estadi
 - **Once nombres distintos, documentados.** `sueno_min`/`sueno_horas` (en minutos frente a horas), `sueno_profundo_min`/`sueno_profundo`, `sueno_rem_min`/`sueno_rem`, `km`/`distancia_km`, `hrv_rmssd`/`hrv`, `valencia_muestreo`/`muestreo_valencia`, `luz_dia_min`/`luz_horas` (minutos frente a horas), `sol_min`/`sol_horas` (minutos frente a horas), `carga_noche_inicio_h`/`carga_noche_h`, `temp_piel_delta`/`temp_piel` y `ruido_db_medio`/`ruido_db` (`Exportar.EQUIVALENTES`). No se renombraron, para no romper scripts viejos; el diccionario dice en cada una cuál es la otra, y `vm_familias.csv` las trata como la misma medida.
 - **Mismas variables.** `vm_variables.csv` lista las que la app cruza (`Estadistica.variables()`, con las dinámicas recortadas igual que en la app); `vm_relaciones` y `vm_factores` se limitan a ellas por omisión. El seguimiento privado va marcado y solo se cruza con `privadas = TRUE`.
 
-Lo que sigue distinto: `n_momentos` y `m_<tipo>` (solo en `vm_panel.csv`) cuentan también momentos privados (H-2-13), y R completa el calendario con renglones vacíos (`complete()`), que no cambia ningún cálculo porque los vacíos no entran. **Cómo se comprobó:** `ExportacionPrueba.kt` fija que, con el mismo panel inventado, `vm_relaciones` y `vm_factores` dan los mismos números que la app; con una exportación real de la v89, el script cargó y analizó sin errores (y así se encontró lo que corrigió D.87); y después el autor comprobó con una exportación real que las primeras parejas de `vm_relaciones()` coinciden con las de «Las relaciones más marcadas» (28 oct 2026). Ver la comparación completa en la sección 6.22.
+Lo que sigue distinto: `n_momentos` y `m_<tipo>` (solo en `vm_panel.csv`) cuentan también momentos privados (H-2-13); desde el 5 nov 2026 valen 0 con la misma regla P-15 que el panel (desde el primer registro y en días con diario; antes, sin dato), y antes de eso valían 0 en todas las fechas (D.154), y R completa el calendario con renglones vacíos (`complete()`), que no cambia ningún cálculo porque los vacíos no entran. **Cómo se comprobó:** `ExportacionPrueba.kt` fija que, con el mismo panel inventado, `vm_relaciones` y `vm_factores` dan los mismos números que la app; con una exportación real de la v89, el script cargó y analizó sin errores (y así se encontró lo que corrigió D.87); y después el autor comprobó con una exportación real que las primeras parejas de `vm_relaciones()` coinciden con las de «Las relaciones más marcadas» (28 oct 2026). Ver la comparación completa en la sección 6.22.
 
 ---
 

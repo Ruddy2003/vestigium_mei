@@ -179,7 +179,8 @@ object Logros {
         out += Logro("reaccion_1", "Reflejos", "Haz tu primera prueba de reacción", "⚡", "Mente", 1, 1.0, reac.size.toDouble().coerceAtMost(1.0), reac.firstOrNull()?.fecha)
         escalones("reacciones", "Mente", "⚡", "pruebas", listOf(30.0 to "Un mes de reflejos", 100.0 to "Cien pruebas"), reac.size.toDouble(), { alLlegar(reac.map { it.fecha }, it.toInt()) }, { "Haz ${it.toInt()} pruebas de reacción" })
         val rapida = reac.filter { (it.mediana_ms ?: 9999.0) < 250 }
-        out += Logro("reaccion_rapida", "Rayo", "Termina una prueba con mediana menor a 250 ms", "⚡", "Mente", 3, 250.0, reac.mapNotNull { it.mediana_ms }.minOrNull()?.let { 250.0 * 250.0 / it.coerceAtLeast(1.0) } ?: 0.0, rapida.firstOrNull()?.fecha, unidad = "ms")
+        // El avance es qué tan cerca estás (250 / tu mejor mediana), sin unidad: antes se mostraba «208 / 250 ms» con una mediana de 300 ms.
+        out += Logro("reaccion_rapida", "Rayo", "Termina una prueba con mediana menor a 250 ms", "⚡", "Mente", 3, 1.0, reac.mapNotNull { it.mediana_ms }.minOrNull()?.let { (250.0 / it.coerceAtLeast(1.0)).coerceAtMost(1.0) } ?: 0.0, rapida.firstOrNull()?.fecha)
         val cues = Repo.respuestas.map { it.fecha }.sorted()
         escalones("cuestionarios", "Mente", "?", "cuestionarios", listOf(1.0 to "Autoconocimiento", 12.0 to "Seguimiento serio", 50.0 to "Científico de ti"), cues.size.toDouble(),
             { alLlegar(cues, it.toInt()) }, { "Responde ${it.toInt()} cuestionarios" })
@@ -231,7 +232,8 @@ object Logros {
         // ------------------------------------------------ Curiosos (algunos, secretos hasta lograrlos)
         Repo.dias.values.filter { it.valencia == 7 }.minByOrNull { it.fecha }.let { d -> out += Logro("dia_perfecto", "Día perfecto", "Califica un día con 7 de 7", "✺", "Curiosos", 2, 1.0, if (d != null) 1.0 else 0.0, d?.fecha, secreto = true) }
         val vals = Repo.dias.values.filter { it.valencia != null }.sortedBy { it.fecha }
-        val remonta = vals.withIndex().firstOrNull { (i, d) -> d.valencia!! >= 6 && vals.subList(maxOf(0, i - 3), i).any { (it.valencia ?: 9) <= 2 } }?.value?.fecha
+        // «En menos de 3 días» de calendario: antes miraba los 3 registros anteriores, aunque fueran de hace un mes.
+        val remonta = vals.firstOrNull { d -> d.valencia!! >= 6 && vals.any { it.fecha >= Fechas.sumar(d.fecha, -3) && it.fecha < d.fecha && (it.valencia ?: 9) <= 2 } }?.fecha
         out += Logro("remontada", "Remontada", "De un día muy malo a uno muy bueno en menos de 3 días", "↗", "Curiosos", 3, 1.0, if (remonta != null) 1.0 else 0.0, remonta, secreto = true)
         val noctambulo = Repo.dias.values.filter { d -> d.ts_editado?.let { t -> t.length > 13 && t.substring(11, 13).toIntOrNull()?.let { it in 2..4 } == true } == true }.minByOrNull { it.fecha }
         out += Logro("noctambulo", "Noctámbulo", "Escribe el diario entre las 2 y las 5 de la mañana", "✦", "Curiosos", 1, 1.0, if (noctambulo != null) 1.0 else 0.0, noctambulo?.fecha, secreto = true)

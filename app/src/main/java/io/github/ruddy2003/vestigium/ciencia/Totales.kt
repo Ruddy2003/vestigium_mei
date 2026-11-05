@@ -177,7 +177,8 @@ object Totales {
             listOf("proteina_g" to "Proteína", "carbohidratos_g" to "Carbohidratos", "grasa_g" to "Grasa", "fibra_g" to "Fibra", "azucares_g" to "Azúcares", "alcohol_g" to "Alcohol").forEach { (k, t) ->
                 c.poner(t, suma(nutricion, { it.fecha }, { it.valores[k] }), ::masa)
             }
-            c.poner("Cafeína", suma(nutricion, { it.fecha }, { it.valores["cafeina_mg"] }), { masa(it / 1000) })
+            // En mg hasta 10 g: en gramos sin decimales, 400 mg salían como «0 g».
+            c.poner("Cafeína", suma(nutricion, { it.fecha }, { it.valores["cafeina_mg"] }), { mg -> if (mg < 10_000) "${n(mg)} mg" else masa(mg / 1000) })
             if (comidas.isNotEmpty()) c.add(Cifra("Alimentos registrados", n(comidas.size.toDouble()), comidas.minOf { it.fecha },
                 "${comidas.map { normal(it.alimento) }.distinct().size} distintos"))
             if (c.isNotEmpty()) grupos.add(Grupo("Comida", "CIBVS", c))
