@@ -75,7 +75,10 @@
             android:name=".ui.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density|fontScale"
             android:windowSoftInputMode="adjustResize">
+            <!-- Girar el teléfono, cambiar el tamaño de letra o el modo oscuro, o abrir la app en multiventana no la reinicia:
+                 la interfaz se acomoda sola y no se pierde la pantalla en la que estabas ni lo que escribías. -->
             <!-- Compartir un video, una página o un subrayado a Vestigium abre una idea nueva en el Ideario. -->
             <intent-filter android:label="Ideario">
                 <action android:name="android.intent.action.SEND" />

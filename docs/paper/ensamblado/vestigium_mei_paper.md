@@ -1240,7 +1240,7 @@ La app programa una tarea periódica (`Pulso`, con `PeriodicWorkRequestBuilder` 
 
 ### 4.2.2 La sincronización diaria
 
-Una vez al día, después de las 06:00 (`Trabajo.kt`, función `diario`), la app trae del teléfono, en este orden: reloj (últimos **3** días), pantalla (últimos **2** días), registra de nuevo las geocercas y el reconocimiento de actividad, fotos (3 días), agenda, llamadas/SMS (3 días), clima y un respaldo automático. A partir de las 21:00 hay una **segunda** pasada más corta (1 día de pantalla, reloj, fotos y llamadas, más la agenda). Además, una vez al mes (después de las 13:00) rellena la historia que guardan la galería (hasta 400 días con registro y sin conteo de fotos), el calendario y el registro de llamadas (hasta un año atrás), y pide clima atrasado (hasta 20 peticiones).
+Una vez al día, después de las 06:00 (`Trabajo.kt`, función `diario`), la app trae del teléfono (desde el 5 nov 2026, cada paso se anota como hecho al terminar y no antes: si Android corta la tarea a los 10 minutos, el siguiente pulso sigue donde se quedó, con un máximo de dos intentos por paso; D.152), en este orden: reloj (últimos **3** días), pantalla (últimos **2** días), registra de nuevo las geocercas y el reconocimiento de actividad, fotos (3 días), agenda, llamadas/SMS (3 días), clima y un respaldo automático. A partir de las 21:00 hay una **segunda** pasada más corta (1 día de pantalla, reloj, fotos y llamadas, más la agenda). Además, una vez al mes (después de las 13:00) rellena la historia que guardan la galería (hasta 400 días con registro y sin conteo de fotos), el calendario y el registro de llamadas (hasta un año atrás), y pide clima atrasado (hasta 20 peticiones).
 
 Hay un botón «Sincronizar todo ahora» (`Sincronizar.todo`): en Permisos y sensores lee 7 días; el de Estado de los datos, y los de Hoy y el Día, 3 días. Hay otros para rangos mayores.
 
@@ -4354,6 +4354,7 @@ Una vez al día (la primera vez que corre la tarea diaria después de las 6:00, 
 - **Con contraseña**: se escribe solo `vestigium_respaldo.vmc` y se **borran** los archivos en claro que hubiera de antes (`vm_*.csv`, `vm_*.json`, `LEEME.txt`, `vestigium.R`, `vestigium_*.zip`). Desde el esquema 13 (P-09) se borran **después** de que el .vmc quedó escrito: si la escritura falla, la copia en claro sigue ahí (H-9-37).
 - **Sin contraseña**: se escriben **todos** los CSV de la exportación, el diccionario, `vm_respaldo.json`, `vestigium.R` y `vestigium_respaldo.zip`, en claro.
 - **Sin contraseña y con datos privados** (desde el módulo 10a): **no se escribe nada** (`Respaldos.bloqueado`). Hoy muestra «Tus respaldos están en pausa…» y llega una notificación por semana hasta que pongas contraseña.
+- **Sin dejarlo a medias** (desde el 5 nov 2026, D.151). El respaldo (`.zip` o `.vmc`) se escribe primero a un archivo aparte (`….nuevo`) y solo cuando está completo toma el nombre del respaldo; el anterior se borra al final (`Respaldos.escribirSinRomper`). Antes se escribía encima del único respaldo, y si la tarea se cortaba o el teléfono se apagaba a la mitad, quedaba truncado. Si la carpeta no deja renombrar archivos, se escribe encima como antes. Los CSV sueltos se siguen escribiendo encima: son una copia de lo que ya lleva el respaldo.
 
 ### 10.5.2 A Google Drive (`data/Drive.kt`)
 
@@ -4400,7 +4401,9 @@ El **reporte para terapia** (desde D.119) va por otro camino: no se genera solo 
 |---|---|
 | Días | **gana el teléfono**: el día del respaldo se ignora (`importarDias(sobrescribir = false)`) |
 | Momentos, reacciones, obras, ascensos, chats, YouTube | se agregan los que no existan (por identificador) |
-| Salud, pantalla, lugares, cartas, entorno, fotos, agenda, sesiones, canciones | **gana el respaldo**: se guardan encima. Desde el esquema 14, con una excepción: el sueño que corregiste a mano en el teléfono (`sueno_manual`) no lo pisa un respaldo que no lo tenía corregido (`Fusion.salud`; H-NAV-5) |
+| Salud, canciones | **gana el respaldo**: se guardan encima. Desde el esquema 14, con una excepción: el sueño que corregiste a mano en el teléfono (`sueno_manual`) no lo pisa un respaldo que no lo tenía corregido (`Fusion.salud`; H-NAV-5) |
+| Pantalla, lugares, entorno, fotos, agenda, sesiones (desde el 5 nov 2026, D.150) | **gana el teléfono**: del respaldo solo entran las fechas o los identificadores que no estén. Hasta entonces ganaba el respaldo: un lugar que renombraste o al que le cambiaste el radio volvía a su versión vieja |
+| Cartas (desde el 5 nov 2026, D.150) | gana el teléfono, pero una carta que en el respaldo ya estaba abierta queda abierta. Hasta entonces ganaba el respaldo: una carta que abriste después del respaldo volvía a quedar sellada |
 | Experimentos (desde el esquema 13) | gana el teléfono, pero se conserva lo que solo trae el respaldo: la fecha de fin (un respaldo viejo no reactiva uno terminado) y las respuestas de «¿Lo hiciste hoy?» (`Fusion.experimento`). Hasta el 12, ganaba el respaldo |
 | Gastos e ingresos | se agregan los que no existan (por identificador). Hasta el esquema 12, los repetidos se sobrescribían en la base pero no en memoria, y al reiniciar aparecía en silencio la versión del respaldo (H-9-28) |
 | Avisos de ánimo (desde el esquema 13) | se juntan los dos: el mayor número de planeados y la unión de vencidos y mostrados |
@@ -4412,7 +4415,9 @@ El **reporte para terapia** (desde D.119) va por otro camino: no se genera solo 
 
 : Tabla 10.3. Restaurar: cómo se combinan los datos
 
-**Por qué importa.** Si restauras un respaldo sobre un teléfono que tiene una versión **incompleta** de un día (por ejemplo, solo el sueño de esa mañana), el diario completo del respaldo para ese día **no se recupera**. En cambio, para la salud, un respaldo viejo puede **pisar** datos más nuevos del teléfono. Ninguna de las dos cosas se avisa.
+**Por qué importa.** Si restauras un respaldo sobre un teléfono que tiene una versión **incompleta** de un día (por ejemplo, solo el sueño de esa mañana), el diario completo del respaldo para ese día **no se recupera**. En cambio, para la salud y las canciones, un respaldo viejo puede **pisar** datos más nuevos del teléfono. Ninguna de las dos cosas se avisa. Un lugar que quitaste en el teléfono vuelve si el respaldo lo trae: «combinar» no distingue lo que borraste de lo que nunca tuviste.
+
+**Durante la restauración** (desde el 5 nov 2026, D.150). La restauración corre en otro hilo. Los días se mezclan ya en el hilo principal, sobre lo que haya en ese momento: antes, un día que guardaras mientras se restauraba desaparecía de la memoria, y la siguiente edición partía de la versión vieja. Los avisos de ánimo del respaldo también pasan a la copia de trabajo de la tarea de fondo, que si no los borraba con el siguiente aviso del día.
 
 ### 10.7.1 La papelera (desde el esquema 14)
 
@@ -4442,7 +4447,7 @@ El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive 
 ## 10.9 Integridad: lo que ya se vio en otros capítulos
 
 - **Documentos que no se pueden leer.** Hasta el esquema 12 se descartaban en silencio (H-1-3). Desde el 13 (P-07) se cuentan por colección y se muestran en «Estado de los datos» y en Hoy, y una configuración ilegible se copia aparte antes de quedar en blanco (H-9-2; capítulo 2). Los **valores inválidos se convierten en valores por omisión** (H-1-4).
-- **Versión del esquema**: cada día guarda `schema_v` y cada respaldo el suyo (capítulo 2); desde 10f el vigente es el **15** (`SCHEMA_V` en `data/Modelo.kt`). Como un respaldo de un esquema más nuevo no se restaura (sección 10.6), una app de la v91 o anterior (esquema 14) no restaura un respaldo de la v92. Al revés, un respaldo de antes del 15 se restaura con los campos nuevos en su valor por omisión: sin fuente del clima (al exportar se deduce de la fecha en que se pidió, `Entorno.fuente`, D.111), con 0 minutos de wifi sin dato (el campo no existía), con los experimentos sin huella (`intacto` vacío) y sin fuerza de referencia. Esta última se calcula de las series del respaldo al restaurarlo (`Repo.completarFuerzaReferencia`, D.114), y además una sola vez para lo que ya estaba en el teléfono (la marca `fuerza_ref` en `avisos/Trabajo.kt`). No lo probé en un teléfono.
+- **Versión del esquema**: cada día guarda `schema_v` y cada respaldo el suyo (capítulo 2); desde 10f el vigente es el **15** (`SCHEMA_V` en `data/Modelo.kt`). Como un respaldo de un esquema más nuevo no se restaura (sección 10.6), una app de la v91 o anterior (esquema 14) no restaura un respaldo de la v92. Al revés, un respaldo de antes del 15 se restaura con los campos nuevos en su valor por omisión: sin fuente del clima (al exportar se deduce de la fecha en que se pidió, `Entorno.fuente`, D.111), con 0 minutos de wifi sin dato (el campo no existía), con los experimentos sin huella (`intacto` vacío) y sin fuerza de referencia. Esta última se calcula de las series del respaldo al restaurarlo (`Repo.completarFuerzaReferencia`, D.114), y además una sola vez para lo que ya estaba en el teléfono (la marca `fuerza_ref` en `avisos/Trabajo.kt`). No lo probé en un teléfono. Hasta el 5 nov 2026 el cálculo al restaurar no hacía nada: recorría la lista de entrenos en memoria, que todavía estaba vacía, y como la marca `fuerza_ref` ya estaba puesta, nunca se repetía. Ahora recibe los entrenos del respaldo (D.150).
 
 **Esquemas 16 y 17.** Después de 10f, el esquema 16 agregó el Ideario y el 17, los campos de las pantallas de captura (Apéndice D, D.127 a D.144). Con la misma regla, una app con esquema 16 o anterior no restaura un respaldo del 17. Al revés, un respaldo de antes del 17 se restaura con los campos nuevos en su valor por omisión:
 - Los sueños quedan sin rareza ni pesadilla. Se traducen de su «tipo» al leerlos (`Catalogo.rarezaDe`, `pesadillaDe`).
@@ -6346,6 +6351,18 @@ Decisiones del autor (5 nov 2026):
 | D.149 | **Cortes del día con cambio de horario.** Donde se sumaba «medianoche + 5 h» en milisegundos, se usa el inicio o el fin del día lógico con su zona (`Fechas.inicioDiaLogico`, `finDiaLogico`). La noche en que se atrasa el reloj, ese corte caía a las 04:00, todavía del mismo día lógico. En `en_casa_min` y en la actividad detectada (`Actividad.acumular`), el ciclo no terminaba nunca y la app se quedaba trabada. En el resto (galería, llamadas, mapa, reportes, suplementos), el corte se corría una hora | `ciencia/Estadistica.kt`, `data/Lugares.kt`, `sensores/Actividad.kt`, `Galeria.kt`, `Comunicacion.kt`, `data/Lote3.kt`, `reportes/Reportes.kt`, `ui/pantallas/` (Mapa, Recuerdos, LibretaMomentos, Lote3) | Revisión del 5 nov 2026. No afecta a quien vive en una zona sin horario de verano |
 
 : Tabla D.19. Ubicaciones y visitas limpias (esquema 19)
+
+## Que no se pierda nada (5 nov 2026)
+
+No cambia lo que se guarda: `SCHEMA_V` sigue en 19.
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.150 | **Restaurar sin pisar lo del teléfono.** Lugares, pantalla, entorno, fotos, agenda y sesiones: del respaldo solo entra lo que no está. Cartas: una ya abierta en el teléfono no se vuelve a sellar; una abierta en el respaldo queda abierta. Los días del respaldo se mezclan en el hilo principal, sobre lo que haya en ese momento. Los avisos de ánimo restaurados pasan a la copia de trabajo de la tarea de fondo. La fuerza de referencia se calcula con los entrenos del respaldo (10.7, 10.9) | `data/Importar.kt`, `data/Repo.kt` (`importarDias`, `importarAvisos`, `completarFuerzaReferencia`) | La pantalla promete «lo que ya tengas aquí no se duplica ni se borra», y el código decía «sin pisar lo tuyo», pero estas colecciones las pisaba el respaldo |
+| D.151 | **Respaldo a la carpeta sin dejarlo a medias**: se escribe aparte y luego se renombra (10.5.1) | `data/Respaldos.kt` (`escribirSinRomper`) | Antes se escribía encima del único respaldo; un corte a la mitad lo dejaba truncado |
+| D.152 | **La tarea de fondo.** Cada paso de las tandas diaria, nocturna y mensual se anota al terminar; si la tarea se corta, el siguiente pulso sigue donde se quedó (dos intentos por paso). Antes, la tanda se daba por hecha al empezar. Los errores ya no atrapan la orden de detenerse: antes, lo que seguía, el respaldo incluido, corría sin la protección del sistema. `Repo.cambiarConfig` es sincronizado: la tarea de fondo y la interfaz ya no se borran cambios una a otra, por ejemplo una persona que agregaste o la marca de un aviso, que entonces sonaba dos veces (4.1) | `avisos/Trabajo.kt` (`paso`, `intentar`), `data/Repo.kt` | Revisión del 5 nov 2026 |
+
+: Tabla D.20. Que no se pierda nada (5 nov 2026)
 
 
 # Apéndice E. Glosario

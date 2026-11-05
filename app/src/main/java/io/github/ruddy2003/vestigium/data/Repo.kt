@@ -200,9 +200,14 @@ object Repo {
                 db.poner("dias", d.fecha, d.fecha, JSON.encodeToString(Dia.serializer(), d)); n++
             }
         }
-        val nuevos = dias.toMutableMap()
-        lista.forEach { if (sobrescribir || !dias.containsKey(it.fecha)) nuevos[it.fecha] = it }
-        enMain { dias = nuevos }
+        // La mezcla se hace ya en el hilo principal, sobre lo que haya en ese momento: si se arma antes (la restauración
+        // corre en otro hilo), un día que guardaste mientras tanto desaparecía de la memoria y la siguiente edición
+        // partía de la versión vieja.
+        enMain {
+            val nuevos = dias.toMutableMap()
+            lista.forEach { if (sobrescribir || !nuevos.containsKey(it.fecha)) nuevos[it.fecha] = it }
+            dias = nuevos
+        }
         return n
     }
 
@@ -545,15 +550,19 @@ object Repo {
         enMain { avisos = avisos + (fecha to n) }
     }
     /** Avisos de un respaldo: se juntan con lo de aquí sin perder ningún aviso de ninguno de los dos. */
+    @Synchronized
     fun importarAvisos(lista: List<AvisosDia>) {
         if (lista.isEmpty()) return
         val nuevos = lista.mapNotNull { r ->
-            val a = avisos[r.fecha] ?: return@mapNotNull r
+            val a = avisosMem[r.fecha] ?: avisos[r.fecha] ?: return@mapNotNull r
             val n = a.copy(planeados = maxOf(a.planeados, r.planeados), vencidos = (a.vencidos + r.vencidos).distinct().sorted(), mostrados = (a.mostrados + r.mostrados).distinct().sorted())
             n.takeIf { it != a }
         }
         if (nuevos.isEmpty()) return
         db.transaccion { nuevos.forEach { db.poner("avisos", it.fecha, it.fecha, JSON.encodeToString(AvisosDia.serializer(), it)) } }
+        // La copia de trabajo de la tarea de fondo también: si no, el siguiente aviso del día escribiría la de antes y
+        // borraría lo que trajo el respaldo.
+        nuevos.forEach { avisosMem[it.fecha] = it }
         enMain { avisos = avisos + nuevos.associateBy { it.fecha } }
     }
     /** Solo para las capturas de diseño. */
@@ -646,9 +655,9 @@ object Repo {
         leer("series", db.porFecha("series", desde, hasta), Serie.serializer()).sortedWith(compareBy({ it.fecha }, { it.orden }))
 
     /** Calcula la fuerza de referencia de los entrenos importados antes del esquema 15 (H-7-14). Devuelve cuántos cambió. */
-    fun completarFuerzaReferencia(): Int {
+    fun completarFuerzaReferencia(base: Collection<EntrenoDia> = entrenos.values): Int {
         val porDia = series("0000-01-01", "9999-12-31").groupBy { it.fecha }
-        val nuevos = entrenos.values.mapNotNull { e ->
+        val nuevos = base.mapNotNull { e ->
             val r = Macrofactor.fuerzaReferencia(porDia[e.fecha].orEmpty())
             if (r != e.fuerza_ref_kg) e.copy(fuerza_ref_kg = r) else null
         }
@@ -737,12 +746,22 @@ object Repo {
         this.notifs = notifs; this.entorno = entorno; this.nutricion = nutricion; this.lugares = lugares; this.visitas = visitas; this.sesiones = sesiones
     }
 
+    /** La última configuración escrita: la publicación en el hilo principal no debe volver a una anterior. */
+    @Volatile private var configUltima: Config? = null
+
+    /**
+     * Lee, cambia y guarda la configuración de una sola vez. Sincronizado: la tarea de cada 15 min (marcas de avisos,
+     * sincronizaciones) y la interfaz (tu gente, hábitos, ajustes) la cambian a la vez, y sin candado el que escribía al
+     * final borraba el cambio del otro.
+     */
+    @Synchronized
     fun cambiarConfig(f: (Config) -> Config) {
         val n = f(config)
         db.poner("config", "config", null, JSON.encodeToString(Config.serializer(), n))
         config = n
+        configUltima = n
         Fechas.usarHistorial(n.zonas)
-        enMain { config = n }
+        enMain { if (configUltima === n) config = n }
     }
 
     fun equivalencias(): Map<String, String> = config.equivalencias

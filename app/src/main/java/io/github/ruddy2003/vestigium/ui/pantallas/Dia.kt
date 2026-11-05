@@ -103,10 +103,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun PantallaDia(nav: Nav, apilado: Boolean = false) {
-    var fecha by remember { mutableStateOf(Seleccion.pedida ?: (if (apilado) null else Seleccion.diaAbierto) ?: Fechas.diaLogico()) }
-    // La pestaña recuerda la fecha abierta mientras vas a la hoja de la noche y vuelves; un día apilado no la cambia.
-    LaunchedEffect(fecha) { if (!apilado) Seleccion.diaAbierto = fecha }
+fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
+    // La pestaña recuerda la fecha abierta mientras vas a la hoja de la noche y vuelves. Un día apilado (abierto desde el
+    // calendario, el diario…) recuerda la suya según su nivel en la pila: antes, al volver de una pantalla abierta encima,
+    // mostraba el día de hoy y se podía escribir en el día equivocado.
+    var fecha by remember { mutableStateOf(Seleccion.pedida ?: (if (apilado) Seleccion.diaApilado(nivel) else Seleccion.diaAbierto) ?: Fechas.diaLogico()) }
+    LaunchedEffect(fecha) { if (!apilado) Seleccion.diaAbierto = fecha else Seleccion.recordarDiaApilado(nivel, fecha) }
     val guardado = Repo.dias[fecha]
     var d by remember(fecha) { mutableStateOf(guardado ?: Dia(fecha = fecha)) }
     var sucio by remember(fecha) { mutableStateOf(false) }

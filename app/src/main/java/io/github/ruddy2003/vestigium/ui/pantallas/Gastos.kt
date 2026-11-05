@@ -416,7 +416,8 @@ private fun DialogoDinero(
     var monto by remember { mutableStateOf(if (monto0 <= 0.0) "" else if (monto0 % 1.0 == 0.0) monto0.toLong().toString() else monto0.toString()) }
     var cat by remember { mutableStateOf(cat0) }
     var sub by remember { mutableStateOf(sub0) }
-    var cuando by remember { mutableStateOf<LocalDateTime?>(runCatching { LocalDateTime.of(Fechas.parse(fecha0), java.time.LocalTime.parse(hora0.take(5))) }.getOrNull()) }
+    // «9:05» también se lee (antes solo «09:05»).
+    var cuando by remember { mutableStateOf<LocalDateTime?>(runCatching { LocalDateTime.of(Fechas.parse(fecha0), java.time.LocalTime.parse(hora0.trim().take(5).padStart(5, '0'))) }.getOrNull()) }
     var nota by remember { mutableStateOf(nota0) }
     var m by remember { mutableStateOf(marca0) }
     var m2 by remember { mutableStateOf(marca20) }
@@ -454,8 +455,11 @@ private fun DialogoDinero(
         },
         confirmButton = {
             TextButton(enabled = v != null && v > 0, onClick = {
-                val c = cuando ?: LocalDateTime.now()
-                guardar(Math.round((v ?: monto0) * 100) / 100.0, cat, sub, Fechas.iso(c.toLocalDate()), "%02d:%02d".format(c.hour, c.minute), nota.trim(), m, m2)
+                // Si la hora guardada no se pudo leer y no la cambiaste, se conservan su fecha y su hora: antes el gasto se
+                // movía a hoy en silencio. Solo uno nuevo, sin fecha, toma la de ahora.
+                val (f, h) = cuando?.let { c -> Fechas.iso(c.toLocalDate()) to "%02d:%02d".format(c.hour, c.minute) }
+                    ?: if (fecha0.isNotBlank()) fecha0 to hora0 else LocalDateTime.now().let { c -> Fechas.iso(c.toLocalDate()) to "%02d:%02d".format(c.hour, c.minute) }
+                guardar(Math.round((v ?: monto0) * 100) / 100.0, cat, sub, f, h, nota.trim(), m, m2)
                 cerrar()
             }) { Text("Guardar") }
         },

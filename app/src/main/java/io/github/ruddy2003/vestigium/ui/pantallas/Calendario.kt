@@ -74,6 +74,12 @@ import io.github.ruddy2003.vestigium.ui.elegirFecha
 /** Fecha que otra pantalla le pide abrir al Día. */
 object Seleccion {
     var pedida by mutableStateOf<String?>(null)
+    /** La fecha de cada día abierto encima de otra pantalla, por su nivel en la pila. */
+    private val apilados = HashMap<Int, String>()
+    fun diaApilado(nivel: Int): String? = apilados[nivel]
+    fun recordarDiaApilado(nivel: Int, fecha: String) { apilados[nivel] = fecha }
+    /** Al cerrar niveles de la pila, sus fechas ya no sirven. */
+    fun olvidarDiasSobre(nivel: Int) { apilados.keys.removeAll { it > nivel } }
     /** Día que abre la pantalla Privado (desde «privado de este día» en Día). */
     var privado by mutableStateOf<String?>(null)
     var ultimoMes by mutableStateOf<String?>(null)

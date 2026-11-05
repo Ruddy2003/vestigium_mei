@@ -40,10 +40,12 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.graphics.graphicsLayer
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
@@ -3571,19 +3573,27 @@ fun DialogoEscritor(fecha: String, valor: String, onCambio: (String) -> Unit, mo
 /** Escribir el sueño de una noche sobre la página nocturna del tema. Se guarda mientras escribes y al cerrar. */
 @Composable
 fun EscribirSueno(fecha: String, cerrar: () -> Unit) {
-    var d by remember(fecha) { mutableStateOf(Repo.dia(fecha)) }
+    var texto by remember(fecha) { mutableStateOf(Repo.dia(fecha).sueno_texto) }
     var sucio by remember(fecha) { mutableStateOf(false) }
-    LaunchedEffect(d, sucio) { if (sucio) { delay(800); Repo.guardarDia(d); sucio = false } }
-    DialogoEscritor(fecha, d.sueno_texto, { d = d.copy(sueno_texto = it, sueno_recordado = d.sueno_recordado || it.isNotBlank()); sucio = true }, Escrito.SUENO) {
-        if (sucio) { Repo.guardarDia(d); sucio = false }; cerrar()
-    }
+    // Solo se escribe este campo sobre el día tal como está ahora: si algo más del día cambió mientras escribías (la
+    // hoja de la noche, un widget), no se pierde. Antes se guardaba el día entero que se cargó al abrir.
+    fun guardar() { val hoyDia = Repo.dia(fecha); Repo.guardarDia(hoyDia.copy(sueno_texto = texto, sueno_recordado = hoyDia.sueno_recordado || texto.isNotBlank())); sucio = false }
+    val guardarAlCerrar by rememberUpdatedState { if (sucio) guardar() }
+    LaunchedEffect(texto, sucio) { if (sucio) { delay(800); guardar() } }
+    // También si la pantalla se cierra sin pasar por «cerrar» (atrás del sistema, otra pantalla encima).
+    DisposableEffect(fecha) { onDispose { guardarAlCerrar() } }
+    DialogoEscritor(fecha, texto, { texto = it; sucio = true }, Escrito.SUENO) { if (sucio) guardar(); cerrar() }
 }
 
 /** Escribir el diario de un día desde fuera de la hoja de la noche: carga el día, guarda mientras escribes y al cerrar. */
 @Composable
 fun EscribirDia(fecha: String, cerrar: () -> Unit) {
-    var d by remember(fecha) { mutableStateOf(Repo.dia(fecha)) }
+    var texto by remember(fecha) { mutableStateOf(Repo.dia(fecha).nota) }
     var sucio by remember(fecha) { mutableStateOf(false) }
-    LaunchedEffect(d, sucio) { if (sucio) { delay(800); Repo.guardarDia(d); sucio = false } }
-    DialogoEscritor(fecha, d.nota, { d = d.copy(nota = it); sucio = true }) { if (sucio) { Repo.guardarDia(d); sucio = false }; cerrar() }
+    // Solo la nota, sobre el día tal como está ahora (ver EscribirSueno).
+    fun guardar() { Repo.guardarDia(Repo.dia(fecha).copy(nota = texto)); sucio = false }
+    val guardarAlCerrar by rememberUpdatedState { if (sucio) guardar() }
+    LaunchedEffect(texto, sucio) { if (sucio) { delay(800); guardar() } }
+    DisposableEffect(fecha) { onDispose { guardarAlCerrar() } }
+    DialogoEscritor(fecha, texto, { texto = it; sucio = true }) { if (sucio) guardar(); cerrar() }
 }

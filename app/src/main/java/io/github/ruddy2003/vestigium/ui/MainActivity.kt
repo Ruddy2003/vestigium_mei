@@ -143,7 +143,9 @@ class MainActivity : FragmentActivity() {
         Estilo.tema.let { t -> ArranqueTema.aplicar(this, t, ArranqueTema.oscuro(this, t)) }
         Programador.asegurar(this)
         Sentidos.preparar(this)
-        pedida = compartido(intent) ?: intent?.getStringExtra(PANTALLA)
+        // Solo la primera vez: si Android rehace la actividad (por ejemplo, tras cerrar la app para liberar memoria), el
+        // intent es el mismo de antes y una idea compartida se volvería a crear.
+        if (savedInstanceState == null) pedida = compartido(intent) ?: intent?.getStringExtra(PANTALLA)
         desbloqueado = !Repo.config.bloqueo
         setContent {
             TemaVestigium {
@@ -1749,9 +1751,10 @@ class Nav(val ir: (String) -> Unit, val atras: () -> Unit, val pestana: (String)
 
 @Composable
 private fun Raiz(pedida: String?, consumir: () -> Unit) {
-    var pestana by remember { mutableStateOf("dia") }
+    // Se guardan con el estado de la actividad: si Android la rehace, vuelves a la misma pantalla.
+    var pestana by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("dia") }
     // Al instalar: primero «Conocerte» (se puede omitir) y luego los permisos. Si ya se llenó o se omitió, no vuelve a salir.
-    var pila by remember {
+    var pila by androidx.compose.runtime.saveable.rememberSaveable(stateSaver = androidx.compose.runtime.saveable.listSaver<List<String>, String>({ it }, { it })) {
         val conocer = !Repo.config.conocer_visto && io.github.ruddy2003.vestigium.data.Perfiles.vacio(Repo.config.perfil)
         mutableStateOf((if (Repo.config.bienvenida_vista) emptyList() else listOf("mas", "permisos")) + (if (conocer) listOf("conocer") else emptyList()))
     }
@@ -1778,6 +1781,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
     val nav = Nav(ir = { pila = pila + it }, atras = { pila = pila.dropLast(1) }, pestana = { pestana = it; pila = emptyList() },
         reemplazar = { pila = if (pila.isEmpty()) listOf(it) else pila.dropLast(1) + it })
     BackHandler(enabled = pila.isNotEmpty()) { pila = pila.dropLast(1) }
+    // Las fechas de los días abiertos encima de otra pantalla se olvidan al cerrar esos niveles.
+    LaunchedEffect(pila.size) { io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.olvidarDiasSobre(pila.size) }
 
     // Modo nocturno cálido: de 22:00 a 5:00 la pantalla se entibia y baja un poco el brillo.
     val hora by produceState(java.time.LocalTime.now().hour) { while (true) { kotlinx.coroutines.delay(60_000); value = java.time.LocalTime.now().hour } }
@@ -1846,14 +1851,15 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                 modifier = Modifier.fillMaxSize(),
                 transitionSpec = { transicion(tema, initialState, targetState, Repo.config.animaciones) },
                 contentAlignment = origenTransicion(tema, atras),
-                contentKey = { it.ruta }, label = "pantallas",
+                // Cada nivel es su propia pantalla: dos días abiertos uno encima del otro no comparten su estado.
+                contentKey = { it.ruta + "@" + it.nivel }, label = "pantallas",
             ) { destino ->
                 val sc = if (destino.nivel == 0) scrolls.getOrPut(destino.ruta) { androidx.compose.foundation.ScrollState(0) } else null
                 androidx.compose.runtime.CompositionLocalProvider(LocalScrollPestana provides sc, LocalGuia provides { s: String -> nav.ir("guia_uso:$s") }) {
                 when (val actual = destino.ruta) {
                     "dia" -> PantallaDia(nav)
                     // Un día abierto desde otra pantalla (calendario, diario, cinta…): se apila y «atrás» regresa.
-                    "dia_fecha" -> PantallaDia(nav, apilado = true)
+                    "dia_fecha" -> PantallaDia(nav, apilado = true, nivel = destino.nivel)
                     "diario", "diarios" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(nav)
                     "momentos" -> PantallaMomentos(nav)
                     "gastos" -> PantallaGastos(nav)

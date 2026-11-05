@@ -210,15 +210,48 @@ object Respaldos {
             ctx.contentResolver.openOutputStream(f.uri, "wt")?.use { it.write(cont.toByteArray()) }
         }
         val a = archivo(ctx)
-        val f = dir.findFile(a.name) ?: dir.createFile(mime(a.name), a.name) ?: run { a.delete(); return false }
-        val escrito = ctx.contentResolver.openOutputStream(f.uri, "wt")?.use { o -> a.inputStream().use { it.copyTo(o) }; true } ?: false
-        a.delete()
+        val escrito = try { escribirSinRomper(ctx, dir, a) } finally { a.delete() }
         if (!escrito) return false
         // Los archivos en claro de antes se borran solo cuando ya quedó la copia cifrada.
         if (cifra) dir.listFiles().filter { x -> x.name?.let { esArchivoPlano(it) } == true }.forEach { runCatching { it.delete() } }
         // Si cambió el modo, el archivo del otro tipo ya no sirve.
         dir.findFile(BASE + if (cifra) ".zip" else ".vmc")?.let { runCatching { it.delete() } }
         Repo.cambiarConfig { it.copy(respaldo_ultimo = Fechas.ahoraIso()) }
+        return true
+    }
+
+    /**
+     * Escribe [a] en [dir] sin dejar nunca el respaldo a medias: primero a un archivo aparte («….nuevo») y, solo cuando
+     * está completo, toma el nombre del respaldo; el anterior se borra al final. Antes se escribía encima del único
+     * respaldo, y si la tarea se cortaba (o el teléfono se apagaba) quedaba truncado. Si la carpeta no deja renombrar,
+     * se escribe encima como antes.
+     */
+    private fun escribirSinRomper(ctx: Context, dir: DocumentFile, a: java.io.File): Boolean {
+        fun copiar(f: DocumentFile): Boolean =
+            ctx.contentResolver.openOutputStream(f.uri, "wt")?.use { o -> a.inputStream().use { it.copyTo(o) }; true } ?: false
+        val nuevoNombre = a.name + ".nuevo"; val viejoNombre = a.name + ".anterior"
+        dir.findFile(nuevoNombre)?.delete()
+        val nuevo = dir.createFile("application/octet-stream", nuevoNombre)
+        if (nuevo == null || nuevo.name != nuevoNombre) {
+            nuevo?.delete()
+            val f = dir.findFile(a.name) ?: dir.createFile(mime(a.name), a.name) ?: return false
+            return copiar(f)
+        }
+        if (!runCatching { copiar(nuevo) }.getOrDefault(false)) { nuevo.delete(); return false }
+        val viejo = dir.findFile(a.name)
+        dir.findFile(viejoNombre)?.delete()
+        if (viejo != null && !viejo.renameTo(viejoNombre)) {
+            // No deja renombrar: se escribe encima, como antes (el «.nuevo» ya no sirve).
+            nuevo.delete()
+            return copiar(viejo)
+        }
+        if (!nuevo.renameTo(a.name)) {
+            // El nuevo no tomó el nombre: el anterior vuelve a su lugar.
+            dir.findFile(viejoNombre)?.renameTo(a.name)
+            nuevo.delete()
+            return false
+        }
+        dir.findFile(viejoNombre)?.delete()
         return true
     }
 

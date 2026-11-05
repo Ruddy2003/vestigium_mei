@@ -459,8 +459,15 @@ fun PantallaBiblioteca(nav: Nav) {
     var filtro by remember { mutableStateOf<String?>(null) }
     val todas = Repo.obras.filter { filtro == null || it.tipo == filtro }
     val anio = Fechas.diaLogico().take(4)
-    // Lo que se abrió para añadir y se dejó sin título no se queda.
-    LaunchedEffect(Unit) { Repo.obras.filter { it.titulo.isBlank() }.forEach { Repo.borrarObra(it.id) } }
+    // Lo que se abrió para añadir y se dejó del todo vacío no se queda. Una obra sin título pero con algo más (autor,
+    // calificación, nota, citas, fechas, portada…) se conserva: antes se borraba sin poder deshacerlo.
+    LaunchedEffect(Unit) {
+        Repo.obras.filter { o ->
+            o.titulo.isBlank() && o.autor.isBlank() && o.anio == null && o.inicio == null && o.fin == null && o.calificacion == null &&
+                o.progreso == null && o.etiquetas.isEmpty() && o.nota.isBlank() && o.portada == null && o.portada_url == null && o.revista.isBlank() &&
+                o.doi.isBlank() && o.dias.isEmpty() && o.citas.isEmpty() && o.recomendo.isEmpty() && o.donde.isBlank()
+        }.forEach { Repo.borrarObra(it.id) }
+    }
 
     // «Lista y pendientes», para no confundirla con la galería «Obras» (N-23).
     Hoja("Lista y pendientes", nav.atras, "Libros, películas, series, juegos y artículos: qué tienes pendiente, qué empezaste, qué terminaste, qué te dejó y qué frases te quedaron.", latin = "INDEX OPERVM") {

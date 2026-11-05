@@ -30,6 +30,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CancellationException
 import kotlin.random.Random
 
 object Programador {
@@ -63,51 +64,86 @@ object Programador {
     }
 }
 
+/** Lo que vale [Pulso.paso] cuando el paso terminó. */
+private const val PASO_HECHO = -1
+
+/**
+ * Como runCatching, pero deja pasar la cancelación: si WorkManager detiene la tarea (pasó su límite de 10 min), se detiene
+ * de verdad. runCatching la atrapaba y lo que seguía (respaldo incluido) corría sin la protección de WorkManager.
+ */
+internal inline fun intentar(f: () -> Unit) {
+    try { f() } catch (e: CancellationException) { throw e } catch (e: Throwable) { }
+}
+
 /** Tarea cada 15 minutos: ubicación, avisos que tocan, sincronización diaria y reportes. */
 class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
     override suspend fun doWork(): Result {
         val ctx = applicationContext
         Repo.init(ctx)
-        runCatching { Repo.registrarZona() }
+        intentar { Repo.registrarZona() }
         // Una sola vez: la fuerza de referencia de los entrenos que ya estaban (H-7-14).
-        runCatching {
+        intentar {
             val mig = ctx.getSharedPreferences("migraciones", Context.MODE_PRIVATE)
             if (!mig.getBoolean("fuerza_ref", false)) { Repo.completarFuerzaReferencia(); mig.edit().putBoolean("fuerza_ref", true).apply() }
         }
         // Una sola vez (esquema 19): quita los puntos repetidos de la muestra de fondo y corrige las visitas que quedaron
         // abiertas o encimadas (decisión del autor, 5 nov 2026: corregir también lo pasado).
         var visitasCorregidas = false
-        runCatching {
+        intentar {
             val mig = ctx.getSharedPreferences("migraciones", Context.MODE_PRIVATE)
             if (!mig.getBoolean("esquema19_ubicaciones", false)) { Repo.db().quitarMuestrasRepetidas(); mig.edit().putBoolean("esquema19_ubicaciones", true).apply() }
             if (!mig.getBoolean("esquema19_visitas", false)) {
                 io.github.ruddy2003.vestigium.data.Lugares.limpiarVisitasPasadas(); visitasCorregidas = true
                 mig.edit().putBoolean("esquema19_visitas", true).apply()
-                runCatching { Geocercas.registrar(ctx) }
+                intentar { Geocercas.registrar(ctx) }
             }
         }
-        runCatching { Ubicacion.muestrear(ctx) }
+        intentar { Ubicacion.muestrear(ctx) }
         // Las visitas abiertas de las que tus ubicaciones ya dicen que saliste (si Android no avisó la salida). No en el
         // pulso de la corrección: la lista en memoria se actualiza un instante después y partiría de la de antes.
-        if (!visitasCorregidas) runCatching { if (io.github.ruddy2003.vestigium.data.Lugares.cerrarAbiertas()) Geocercas.registrar(ctx) }
-        runCatching { io.github.ruddy2003.vestigium.sensores.Percepcion.muestrear(ctx) }
+        if (!visitasCorregidas) intentar { if (io.github.ruddy2003.vestigium.data.Lugares.cerrarAbiertas()) Geocercas.registrar(ctx) }
+        intentar { io.github.ruddy2003.vestigium.sensores.Percepcion.muestrear(ctx) }
         // ¿Llevas un rato en un sitio nuevo? Pregunta si es un lugar especial (máximo dos veces al día, nunca de noche).
-        runCatching {
+        intentar {
             if (Repo.config.avisos) io.github.ruddy2003.vestigium.data.Lugares.revisar(ctx)?.let { c ->
                 Avisos.lugar(ctx, c.sugerencia, ((c.hasta_ms - c.desde_ms) / 60_000L).toInt())
             }
         }
-        runCatching { io.github.ruddy2003.vestigium.data.Spotify.quizaSincronizar(ctx) }
-        runCatching { avisos(ctx) }
-        runCatching { diario(ctx) }
+        intentar { io.github.ruddy2003.vestigium.data.Spotify.quizaSincronizar(ctx) }
+        intentar { avisos(ctx) }
+        intentar { diario(ctx) }
         // Por si la alarma del enfoque se perdió (reinicio del teléfono): avanza y la vuelve a programar.
-        runCatching { io.github.ruddy2003.vestigium.data.Enfoque.avanzar(ctx) }
+        intentar { io.github.ruddy2003.vestigium.data.Enfoque.avanzar(ctx) }
         // El tema del día (si pediste que cambie solo): también el widget y el ícono.
-        runCatching { if (io.github.ruddy2003.vestigium.ui.RotacionTema.revisar()) { io.github.ruddy2003.vestigium.widget.Widgets.actualizar(ctx); io.github.ruddy2003.vestigium.ui.IconoApp.aplicar(ctx); io.github.ruddy2003.vestigium.ui.AccesosDirectos.publicar(ctx) } }
+        intentar { if (io.github.ruddy2003.vestigium.ui.RotacionTema.revisar()) { io.github.ruddy2003.vestigium.widget.Widgets.actualizar(ctx); io.github.ruddy2003.vestigium.ui.IconoApp.aplicar(ctx); io.github.ruddy2003.vestigium.ui.AccesosDirectos.publicar(ctx) } }
         return Result.success()
     }
 
     private fun yaFue(clave: String) = Repo.config.disparos.containsKey(clave)
+
+    /** Lo que se sabe de cada paso de las tandas en curso: [PASO_HECHO], o cuántas veces se empezó. */
+    private val pasos get() = applicationContext.getSharedPreferences("pulso_pasos", Context.MODE_PRIVATE)
+
+    /**
+     * Un paso de una tanda (la sincronización del día, la de la noche, la historia del mes). Se salta si ya se hizo o si
+     * ya se empezó dos veces (si siempre se corta, no se insiste todo el día). Se anota como hecho al terminar, también si
+     * falló con un error (como antes: no se reintenta en cada pulso); si la tarea se detuvo a la mitad, no.
+     */
+    private suspend fun paso(tanda: String, nombre: String, f: suspend () -> Unit) {
+        if (isStopped) return
+        val clave = "$tanda|$nombre"
+        val antes = pasos.getInt(clave, 0)
+        if (antes == PASO_HECHO || antes >= 2) return
+        pasos.edit().putInt(clave, antes + 1).commit()
+        try { f() } catch (e: CancellationException) { throw e } catch (e: Throwable) { }
+        if (!isStopped) pasos.edit().putInt(clave, PASO_HECHO).apply()
+    }
+
+    /** Quita lo anotado de tandas que ya no son las de hoy ni la del mes. */
+    private fun olvidarPasos(vigentes: Set<String>) {
+        val viejas = pasos.all.keys.filter { it.substringBefore('|') !in vigentes }
+        if (viejas.isNotEmpty()) pasos.edit().apply { viejas.forEach { remove(it) } }.apply()
+    }
     private fun marcar(clave: String) {
         val limite = System.currentTimeMillis() - 40L * 86_400_000
         Repo.cambiarConfig { c -> c.copy(disparos = c.disparos.filterValues { it > limite } + (clave to System.currentTimeMillis())) }
@@ -180,7 +216,7 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         }
 
         // Importaciones (una vez por semana), metas que toca revisar y notas de recordatorio.
-        runCatching { Recordatorios.revisar(ctx, ahora, ::yaFue, ::marcar) }
+        intentar { Recordatorios.revisar(ctx, ahora, ::yaFue, ::marcar) }
 
         // Cartas al futuro
         val vencidas = Repo.cartas.filter { !it.abierta && it.abrir_en <= hoy }
@@ -191,46 +227,59 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         val hoy = Fechas.hoyCalendario()
         val ahora = LocalDateTime.now()
         if (ahora.hour < 6) return
+        val mes = Fechas.mesDe(hoy)
+        olvidarPasos(setOf("sync:$hoy", "sync2:$hoy", "historia:$mes"))
+        // Cada paso se anota al terminar, no antes: si WorkManager corta la tarea (su límite son 10 min), el siguiente pulso
+        // sigue donde se quedó. Antes la tanda entera se daba por hecha al empezar y lo que faltaba no se hacía ese día.
         if (!yaFue("sync:$hoy")) {
-            marcar("sync:$hoy")
-            runCatching { Salud.sincronizar(ctx, 3) }
-            runCatching { Pantalla.sincronizar(ctx, 2) }
-            runCatching { Geocercas.registrar(ctx) }
-            runCatching { Actividad.registrar(ctx) }
-            runCatching { Galeria.sincronizar(ctx, 3) }
-            runCatching { Agenda.sincronizar(ctx) }
-            runCatching { io.github.ruddy2003.vestigium.sensores.Comunicacion.sincronizar(ctx, 3) }
-            runCatching { Entorno.sincronizar(ctx) }
-            runCatching { Exportar.respaldoAutomatico(ctx) }
+            val s = "sync:$hoy"
+            paso(s, "salud") { Salud.sincronizar(ctx, 3) }
+            paso(s, "pantalla") { Pantalla.sincronizar(ctx, 2) }
+            paso(s, "geocercas") { Geocercas.registrar(ctx) }
+            paso(s, "actividad") { Actividad.registrar(ctx) }
+            paso(s, "galeria") { Galeria.sincronizar(ctx, 3) }
+            paso(s, "agenda") { Agenda.sincronizar(ctx) }
+            paso(s, "comunicacion") { io.github.ruddy2003.vestigium.sensores.Comunicacion.sincronizar(ctx, 3) }
+            paso(s, "entorno") { Entorno.sincronizar(ctx) }
+            paso(s, "respaldo") { Exportar.respaldoAutomatico(ctx) }
+            if (isStopped) return
             // Lo que lleva más de 7 días en la papelera se va (v14).
-            Repo.limpiarPapelera()
-            if ((Repo.config.carpeta_respaldo != null || Repo.config.drive) && io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx) &&
-                !yaFue("respaldo_pausa:${Fechas.lunesDe(hoy)}")) { marcar("respaldo_pausa:${Fechas.lunesDe(hoy)}"); Avisos.respaldoPausado(ctx) }
-            if (Repo.config.drive && !Drive.automatico(ctx) && !yaFue("drive_aviso:${Fechas.lunesDe(hoy)}")) {
-                marcar("drive_aviso:${Fechas.lunesDe(hoy)}"); Avisos.drive(ctx)
+            intentar { Repo.limpiarPapelera() }
+            intentar {
+                if ((Repo.config.carpeta_respaldo != null || Repo.config.drive) && io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx) &&
+                    !yaFue("respaldo_pausa:${Fechas.lunesDe(hoy)}")) { marcar("respaldo_pausa:${Fechas.lunesDe(hoy)}"); Avisos.respaldoPausado(ctx) }
             }
+            intentar {
+                if (Repo.config.drive && !Drive.automatico(ctx) && !yaFue("drive_aviso:${Fechas.lunesDe(hoy)}")) {
+                    marcar("drive_aviso:${Fechas.lunesDe(hoy)}"); Avisos.drive(ctx)
+                }
+            }
+            marcar(s)
             Repo.cambiarConfig { it.copy(ultimo_sync = Fechas.ahoraIso()) }
         } else if (ahora.hour >= 21 && !yaFue("sync2:$hoy")) {
-            marcar("sync2:$hoy")
-            runCatching { Pantalla.sincronizar(ctx, 1) }
-            runCatching { Salud.sincronizar(ctx, 1) }
-            runCatching { Galeria.sincronizar(ctx, 1) }
-            runCatching { Agenda.sincronizar(ctx) }
-            runCatching { io.github.ruddy2003.vestigium.sensores.Comunicacion.sincronizar(ctx, 1) }
+            val s = "sync2:$hoy"
+            paso(s, "pantalla") { Pantalla.sincronizar(ctx, 1) }
+            paso(s, "salud") { Salud.sincronizar(ctx, 1) }
+            paso(s, "galeria") { Galeria.sincronizar(ctx, 1) }
+            paso(s, "agenda") { Agenda.sincronizar(ctx) }
+            paso(s, "comunicacion") { io.github.ruddy2003.vestigium.sensores.Comunicacion.sincronizar(ctx, 1) }
+            if (isStopped) return
+            marcar(s)
         }
         // Una vez al mes se rellena la historia que guardan la galería y el calendario.
-        val mes = Fechas.mesDe(hoy)
         if (ahora.hour >= 13 && !yaFue("historia:$mes")) {
-            marcar("historia:$mes")
-            runCatching { Galeria.historia(ctx) }
-            runCatching { Agenda.historia(ctx) }
-            runCatching { io.github.ruddy2003.vestigium.sensores.Comunicacion.historia(ctx) }
-            runCatching { Entorno.sincronizar(ctx, maxPeticiones = 20) }
+            val s = "historia:$mes"
+            paso(s, "galeria") { Galeria.historia(ctx) }
+            paso(s, "agenda") { Agenda.historia(ctx) }
+            paso(s, "comunicacion") { io.github.ruddy2003.vestigium.sensores.Comunicacion.historia(ctx) }
+            paso(s, "entorno") { Entorno.sincronizar(ctx, maxPeticiones = 20) }
+            if (isStopped) return
+            marcar(s)
         }
         // Logros nuevos: un aviso por la tarde con los que se consiguieron (se festejan al abrir Logros).
         if (ahora.hour >= 18 && !yaFue("logros:$hoy")) {
             marcar("logros:$hoy")
-            runCatching {
+            intentar {
                 val vistos = Repo.config.logros_vistos
                 val avisados = Repo.config.disparos.keys.filter { it.startsWith("logro_aviso:") }.map { it.removePrefix("logro_aviso:") }.toSet()
                 val nuevos = io.github.ruddy2003.vestigium.ciencia.Logros.todos(ctx).filter { it.hecho && it.id !in vistos && it.id !in avisados && it.conseguido?.let { f -> f >= Fechas.sumar(hoy, -3) } == true }
@@ -240,19 +289,19 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         // «Tu año»: el 31 de diciembre por la mañana.
         if (ahora.monthValue == 12 && ahora.dayOfMonth == 31 && ahora.hour >= 9 && !yaFue("tu_anio:${ahora.year}")) {
             marcar("tu_anio:${ahora.year}")
-            runCatching { Avisos.tuAnio(ctx, ahora.year) }
+            intentar { Avisos.tuAnio(ctx, ahora.year) }
         }
         // Reporte semanal: lunes, de la semana anterior
         if (ahora.dayOfWeek == DayOfWeek.MONDAY && ahora.hour >= 8 && !yaFue("reporte_sem:$hoy")) {
             marcar("reporte_sem:$hoy")
-            runCatching { Reportes.semanal(ctx, Fechas.sumar(Fechas.lunesDe(hoy), -7), avisar = true) }
+            intentar { Reportes.semanal(ctx, Fechas.sumar(Fechas.lunesDe(hoy), -7), avisar = true) }
         }
         // Reporte mensual: día 1, del mes anterior
         if (ahora.dayOfMonth == 1 && ahora.hour >= 9 && !yaFue("reporte_mes:$hoy")) {
             marcar("reporte_mes:$hoy")
-            runCatching { Reportes.mensual(ctx, Fechas.mesDe(Fechas.sumar(hoy, -1)), avisar = true) }
+            intentar { Reportes.mensual(ctx, Fechas.mesDe(Fechas.sumar(hoy, -1)), avisar = true) }
         }
-        runCatching { Widgets.actualizar(ctx) }
+        intentar { Widgets.actualizar(ctx) }
     }
 }
 

@@ -552,7 +552,7 @@ fun PantallaDatos(nav: Nav) {
     var msg by remember { mutableStateOf<String?>(null) }
     var ocupado by remember { mutableStateOf(false) }
 
-    fun tarea(b: suspend () -> String) { scope.launch { ocupado = true; msg = try { withContext(Dispatchers.IO) { b() } } catch (e: Exception) { "Algo falló: ${e.message}" }; ocupado = false } }
+    fun tarea(b: suspend () -> String) { if (ocupado) return; ocupado = true; scope.launch { msg = try { withContext(Dispatchers.IO) { b() } } catch (e: Exception) { "Algo falló: ${e.message}" }; ocupado = false } }
 
     val carpeta = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
@@ -612,16 +612,29 @@ fun PantallaDatos(nav: Nav) {
             Tarjeta {
                 Text("Resumido", style = MaterialTheme.typography.titleMedium)
                 Ayuda("Un solo CSV, una fila por día, con lo principal de cada fuente (ánimo, sueño, cuerpo, teléfono, dinero, clima, comida, lugares, cultura). Para empezar rápido.")
-                BotonPrincipal("Exportar resumido", Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                    scope.launch { ocupado = true; val f = withContext(Dispatchers.IO) { runCatching { Exportar.zipResumido(ctx) }.getOrNull() }; f?.let { Exportar.compartir(ctx, it) }; ocupado = false }
+                // Deshabilitado mientras trabaja (dos toques lanzaban dos exportaciones a la vez) y, si falla, lo dice.
+                BotonPrincipal("Exportar resumido", Modifier.fillMaxWidth().padding(top = 8.dp), habilitado = !ocupado) {
+                    if (ocupado) return@BotonPrincipal
+                    scope.launch {
+                        ocupado = true
+                        val f = withContext(Dispatchers.IO) { runCatching { Exportar.zipResumido(ctx) } }
+                        f.getOrNull()?.let { Exportar.compartir(ctx, it) } ?: run { msg = "No pude armar la exportación: ${f.exceptionOrNull()?.message ?: "error desconocido"}" }
+                        ocupado = false
+                    }
                 }
                 androidx.compose.material3.HorizontalDivider(Modifier.padding(vertical = 14.dp))
                 Text("Extendido", style = MaterialTheme.typography.titleMedium)
                 Ayuda("Todo: el panel extendido con una columna por cada persona, tema, lugar, app, categoría de gasto, artista, canal, obra, ciudad, alimento y nutriente " +
                     "(vitaminas y minerales incluidos), los cuestionarios, las etapas de vida y la brújula; además, un CSV por cada tabla (cada gasto, cada canción, cada serie del gimnasio…), " +
                     "las ubicaciones, un respaldo completo en JSON y las portadas.")
-                BotonPrincipal("Exportar extendido", Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                    scope.launch { ocupado = true; val f = withContext(Dispatchers.IO) { runCatching { Exportar.zip(ctx) }.getOrNull() }; f?.let { Exportar.compartir(ctx, it) }; ocupado = false }
+                BotonPrincipal("Exportar extendido", Modifier.fillMaxWidth().padding(top = 8.dp), habilitado = !ocupado) {
+                    if (ocupado) return@BotonPrincipal
+                    scope.launch {
+                        ocupado = true
+                        val f = withContext(Dispatchers.IO) { runCatching { Exportar.zip(ctx) } }
+                        f.getOrNull()?.let { Exportar.compartir(ctx, it) } ?: run { msg = "No pude armar la exportación: ${f.exceptionOrNull()?.message ?: "error desconocido"}" }
+                        ocupado = false
+                    }
                 }
                 if (io.github.ruddy2003.vestigium.data.Privado.hayDatos())
                     Ayuda("Las dos exportaciones llevan tus datos privados sin cifrar (R necesita leerlos). Guárdalas solo en un lugar tuyo y bórralas cuando ya no las uses.", Modifier.padding(top = 8.dp))
@@ -635,7 +648,7 @@ fun PantallaDatos(nav: Nav) {
                 Ayuda(Repo.config.carpeta_respaldo?.let { "Carpeta configurada." } ?: "Sin carpeta.")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
                     OutlinedButton(onClick = { carpeta.launch(null) }) { Text("Elegir carpeta") }
-                    if (Repo.config.carpeta_respaldo != null) OutlinedButton(onClick = { tarea { if (Exportar.respaldoAutomatico(ctx)) "Respaldo escrito." else "No pude escribir en la carpeta." } }) { Text("Respaldar ahora") }
+                    if (Repo.config.carpeta_respaldo != null) OutlinedButton(enabled = !ocupado, onClick = { if (!ocupado) tarea { if (Exportar.respaldoAutomatico(ctx)) "Respaldo escrito." else "No pude escribir en la carpeta." } }) { Text("Respaldar ahora") }
                 }
             }
         }

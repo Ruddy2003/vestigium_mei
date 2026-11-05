@@ -70,15 +70,25 @@ object Importar {
             if (r.laptop.isNotEmpty()) Repo.guardarLaptop(r.laptop.filter { it.fecha !in Repo.laptop })
             r.respuestas.forEach { Repo.guardarRespuesta(it) }
             r.reacciones.forEach { rr -> if (Repo.reacciones.none { it.id == rr.id }) Repo.guardarReaccion(rr) }
-            r.lugares.forEach { Repo.guardarLugar(it) }
+            // Sin pisar lo de aquí: un lugar o un día de sensores que ya está se queda como está (antes, un lugar que
+            // renombraste volvía al nombre viejo, y la pantalla o el clima de aquí se cambiaban por los del respaldo).
+            r.lugares.filter { l -> Repo.lugares.none { it.id == l.id } }.forEach { Repo.guardarLugar(it) }
             r.salud.forEach { Repo.guardarSalud(Fusion.salud(Repo.salud[it.fecha], it)) }
-            r.pantalla.forEach { Repo.guardarPantalla(it) }
-            r.cartas.forEach { Repo.guardarCarta(it) }
+            r.pantalla.filter { it.fecha !in Repo.pantalla }.forEach { Repo.guardarPantalla(it) }
+            // Una carta que ya abriste aquí sigue abierta; una que solo está en el respaldo se agrega; si allá ya estaba
+            // abierta y aquí no, queda abierta (antes el respaldo volvía a sellar las que abriste después).
+            r.cartas.forEach { c ->
+                val aqui = Repo.cartas.firstOrNull { it.id == c.id }
+                when {
+                    aqui == null -> Repo.guardarCarta(c)
+                    c.abierta && !aqui.abierta -> Repo.guardarCarta(aqui.copy(abierta = true, abierta_el = aqui.abierta_el ?: c.abierta_el))
+                }
+            }
             r.experimentos.forEach { e -> Fusion.experimento(Repo.experimentos.firstOrNull { it.id == e.id }, e)?.let { Repo.guardarExperimento(it) } }
-            r.entorno.forEach { Repo.guardarEntorno(it) }
-            r.fotos.forEach { Repo.guardarFotos(it) }
-            r.agenda.forEach { Repo.guardarAgenda(it) }
-            r.sesiones.forEach { Repo.guardarSesion(it) }
+            r.entorno.filter { it.fecha !in Repo.entorno }.forEach { Repo.guardarEntorno(it) }
+            r.fotos.filter { it.fecha !in Repo.fotos }.forEach { Repo.guardarFotos(it) }
+            r.agenda.filter { it.fecha !in Repo.agenda }.forEach { Repo.guardarAgenda(it) }
+            r.sesiones.filter { s -> Repo.sesiones.none { it.id == s.id } }.forEach { Repo.guardarSesion(it) }
             r.ascensos.forEach { a -> if (Repo.ascensos.none { it.id == a.id }) Repo.guardarAscenso(a) }
             r.obras.forEach { o -> if (Repo.obras.none { it.id == o.id }) Repo.guardarObra(o) }
             r.escuchas.forEach { Repo.guardarEscucha(it) }
@@ -95,7 +105,8 @@ object Importar {
                 if (fs.isNotEmpty() && Repo.nutricion.isEmpty() && Repo.entrenos.isEmpty()) {
                     Repo.importarMacrofactor(fs.min(), fs.max(), r.nutricion, r.comidas, r.series, r.entrenos)
                     // Un respaldo de antes del esquema 15 no trae la fuerza de referencia: se calcula con sus series (H-7-14).
-                    runCatching { Repo.completarFuerzaReferencia() }
+                    // Con los entrenos del respaldo: la lista en memoria se actualiza un instante después y todavía estaría vacía.
+                    runCatching { Repo.completarFuerzaReferencia(r.entrenos) }
                 }
             }
             Repo.cambiarConfig { c -> combinarConfig(c, r.config, nuevo) }

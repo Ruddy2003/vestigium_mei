@@ -1767,7 +1767,8 @@ La Figura 10.1 resume qué tipo de dato llega a cada salida. Comparadas con el c
 |---|---|
 | Días | **gana el teléfono** (`importarDias(sobrescribir = false)`) |
 | Momentos, gastos e ingresos | se agregan los que no existan (por identificador) |
-| Salud, pantalla, lugares, cartas, entorno, canciones… | **gana el respaldo**; desde el esquema 14, el sueño que corregiste a mano no lo pisa un respaldo que no lo tenía corregido (`Fusion.salud`; H-NAV-5) |
+| Salud, canciones | **gana el respaldo**; desde el esquema 14, el sueño que corregiste a mano no lo pisa un respaldo que no lo tenía corregido (`Fusion.salud`; H-NAV-5) |
+| Pantalla, lugares, cartas, entorno, fotos, agenda, sesiones (desde el 5 nov 2026, D.150) | **gana el teléfono**; del respaldo solo entra lo que falta, y una carta abierta no se vuelve a sellar |
 | Experimentos (desde el esquema 13) | gana el teléfono, pero se conserva la fecha de fin y las respuestas que solo trae el respaldo (`Fusion.experimento`) |
 | MacroFactor | solo si en el teléfono **no hay nada** de MacroFactor |
 
