@@ -1300,8 +1300,10 @@ private fun formaObjeto(t: TemaId, m: Materia, e: ColorScheme, noche: Boolean, f
         TemaId.NAPOLEON -> FormaObjeto(dibujo = { boletin(t, m, e, noche) }, caja = listOf(0.07f, 0.36f, 0.24f, 0.07f), pista = pista, letra = LetraExtra.bodoni,
             tinta = m.tinta, fecha = m.detalle, tam = 13f, alto = 176, gira = true, letraFecha = LetraExtra.bodoniTitulo,
             rotulos = listOf(RotuloObjeto("BULLETIN DE LA GRANDE ARMÉE", LetraExtra.bodoniTitulo, 12f, m.tinta, 0f, 0.15f, Alignment.TopCenter)))
-        TemaId.DECO -> FormaObjeto(dibujo = { pasajeDeco(t, m, e, noche) }, caja = listOf(0.33f, 0.38f, 0.08f, 0.12f), pista = pista, letra = LetraExtra.pasaje,
-            tinta = m.tinta, fecha = m.detalle, tam = 13f, alto = 176, gira = true, letraFecha = LetraExtra.poiret,
+        // El texto queda dentro del doble filete (que acaba al 87 % del alto) y a la izquierda del lacre (que empieza
+        // hacia el 82 % del ancho); con tres renglones, la fecha y las palabras no cabían y se salían del marco.
+        TemaId.DECO -> FormaObjeto(dibujo = { pasajeDeco(t, m, e, noche) }, caja = listOf(0.33f, 0.36f, 0.19f, 0.15f), pista = pista, letra = LetraExtra.pasaje,
+            tinta = m.tinta, fecha = m.detalle, tam = 13f, alto = 176, gira = true, letraFecha = LetraExtra.poiret, lineas = 2,
             rotulos = listOf(RotuloObjeto("LÍNEA TRANSATLÁNTICA · 1ª CLASE", LetraExtra.poiret, 11f, m.tinta, 0.31f, 0.14f),
                 RotuloObjeto("PASAJE", LetraExtra.poiret, 10f, m.acento, 0.05f, 0.14f)))
         TemaId.NAVIDAD -> FormaObjeto(dibujo = { cartaNavidad(t, m, e, noche) }, caja = listOf(0.07f, 0.62f, 0.07f, 0.07f), pista = pista, letra = LetraExtra.italianno,

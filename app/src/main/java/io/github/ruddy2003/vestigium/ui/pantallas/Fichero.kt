@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -159,11 +160,11 @@ private fun colorPosturaFicha(id: String, p: Pagina): Color? = when (id) {
 
 /** El encabezado de una ficha: el tema y la fecha; en la ficha-ventana van dentro de la barra de título, como el nombre del archivo. */
 @Composable
-private fun EncabezadoFicha(i: Idea, rotulo: String, a: ArchivoIdeas, p: Pagina, grande: Boolean) {
+private fun EncabezadoFicha(i: Idea, rotulo: String, a: ArchivoIdeas, p: Pagina, grande: Boolean, modifier: Modifier = Modifier) {
     val ventana = a.formaFicha == FormaFicha.VENTANA
     val color = if (ventana) p.color else p.acento
     val estilo = if (grande) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelSmall
-    Row(Modifier.fillMaxWidth().let { if (ventana) it.height(altoBarraVentana(grande)) else it }, verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier.fillMaxWidth().let { if (ventana) it.height(altoBarraVentana(grande)) else it }, verticalAlignment = Alignment.CenterVertically) {
         val nombre = if (ventana) rotulo.removePrefix("#").replace(' ', '_') + "/" + (i.titulo.ifBlank { i.texto }.take(14).trim().replace(' ', '_').lowercase().ifBlank { "idea" }) + ".md" else rotulo
         Text((if (i.fijada) "◆ " else "") + nombre, style = estilo, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         Text(Fechas.corto(i.fecha), style = estilo, color = color.copy(alpha = 0.75f), maxLines = 1,
@@ -192,8 +193,12 @@ fun FichaMini(i: Idea, modifier: Modifier = Modifier, rotulo: String? = null, li
         Box {
             PapelFicha(p)
             Canvas(Modifier.matchParentSize()) { adornoFicha(a.formaFicha, p, m) }
-            Column(Modifier.fillMaxSize().rayadoFicha(p, sup + encabezado + 2.dp, paso).padding(start = lado, end = lado, top = sup, bottom = 6.dp)) {
-                EncabezadoFicha(i, texto, a, p, grande = false)
+            // La línea de color va justo debajo del encabezado tal como quedó medido: con letras altas (Art déco) el
+            // encabezado pasa de los 16 dp y la línea caía encima del título.
+            val densidad = LocalDensity.current
+            var altoEncabezado by remember { mutableStateOf(encabezado) }
+            Column(Modifier.fillMaxSize().rayadoFicha(p, sup + maxOf(encabezado, altoEncabezado) + 2.dp, paso).padding(start = lado, end = lado, top = sup, bottom = 6.dp)) {
+                EncabezadoFicha(i, texto, a, p, grande = false, modifier = Modifier.onSizeChanged { altoEncabezado = with(densidad) { it.height.toDp() } })
                 Spacer(Modifier.height(4.dp))
                 val estilo = TextStyle(fontFamily = p.texto, fontSize = tam, lineHeight = inter, color = p.tinta)
                 if (i.titulo.isNotBlank()) Text(i.titulo, style = estilo.copy(fontWeight = FontWeight.SemiBold), maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -224,8 +229,10 @@ private fun FichaGrande(i: Idea, numero: Int, total: Int, tema: String, a: Archi
                 PapelFicha(p)
                 Canvas(Modifier.matchParentSize()) { adornoFicha(a.formaFicha, p, m, grande = true) }
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                    Column(Modifier.fillMaxWidth().rayadoFicha(p, sup + encabezado + 4.dp, paso).padding(start = lado, end = lado, top = sup, bottom = 22.dp)) {
-                        EncabezadoFicha(i, rotuloCajon(tema), a, p, grande = true)
+                    val densidad = LocalDensity.current
+                    var altoEncabezado by remember { mutableStateOf(encabezado) }
+                    Column(Modifier.fillMaxWidth().rayadoFicha(p, sup + maxOf(encabezado, altoEncabezado) + 4.dp, paso).padding(start = lado, end = lado, top = sup, bottom = 22.dp)) {
+                        EncabezadoFicha(i, rotuloCajon(tema), a, p, grande = true, modifier = Modifier.onSizeChanged { altoEncabezado = with(densidad) { it.height.toDp() } })
                         Spacer(Modifier.height(6.dp))
                         val estilo = TextStyle(fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, color = p.tinta)
                         if (i.titulo.isNotBlank()) Text(i.titulo, style = estilo.copy(fontWeight = FontWeight.SemiBold))

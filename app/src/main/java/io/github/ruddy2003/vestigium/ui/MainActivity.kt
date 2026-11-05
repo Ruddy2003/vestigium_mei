@@ -1979,9 +1979,40 @@ private class SentidoPantalla(private var ultimo: Destino) {
  * centro aparecían como una franja a la izquierda que se deslizaba.
  */
 private fun origenTransicion(tema: TemaId, atras: Boolean): Alignment = when (tema) {
-    TemaId.DECO, TemaId.ANDALUS, TemaId.LABORATORIO -> Alignment.TopCenter
-    TemaId.SEDA, TemaId.COLONOS -> if (atras) Alignment.TopEnd else Alignment.TopStart
-    else -> Alignment.TopStart
+    TemaId.ROMANO -> Alignment.TopStart
+    TemaId.URBE -> Alignment.TopStart
+    TemaId.CIBER -> Alignment.TopStart
+    TemaId.NEON -> Alignment.TopStart
+    TemaId.HELENO -> Alignment.TopStart
+    TemaId.EGIPTO -> Alignment.TopStart
+    TemaId.MEDIEVAL -> Alignment.TopStart
+    TemaId.TEMPLARIO -> Alignment.TopStart
+    TemaId.DISTOPIA -> Alignment.TopStart
+    TemaId.REFUGIO -> Alignment.TopStart
+    TemaId.ORDEN -> Alignment.TopStart
+    TemaId.VAPOR -> Alignment.TopStart
+    TemaId.LABORATORIO -> Alignment.TopCenter                                   // la gota crece desde el centro
+    TemaId.COLONOS -> if (atras) Alignment.TopEnd else Alignment.TopStart      // la gaceta se despliega desde su esquina
+    TemaId.NAPOLEON -> Alignment.TopStart
+    TemaId.DECO -> Alignment.TopCenter                                         // las puertas del ascensor, desde el centro
+    TemaId.BOTANICO -> Alignment.TopStart
+    TemaId.RUINAS -> Alignment.TopStart
+    TemaId.NAVIDAD -> Alignment.TopStart
+    TemaId.SEDA -> if (atras) Alignment.TopEnd else Alignment.TopStart         // el rollo se desenrolla de lado
+    TemaId.EDO -> Alignment.TopStart                                           // el kakejiku baja desde arriba
+    TemaId.GOTICO -> Alignment.TopStart
+    TemaId.ARCANO -> Alignment.TopStart
+    TemaId.ESPACIO -> Alignment.TopStart
+    TemaId.ABISMO -> Alignment.TopStart
+    TemaId.ANDALUS -> Alignment.TopCenter                                      // la puerta de arco, desde el centro
+    TemaId.MESO -> Alignment.TopStart
+    TemaId.MONGOL -> Alignment.TopStart
+    TemaId.RENACIMIENTO -> Alignment.TopStart
+    TemaId.PIRATA -> Alignment.TopStart
+    TemaId.URSS -> Alignment.TopStart
+    TemaId.REVOLUCION -> Alignment.TopStart
+    TemaId.ANTIGUAS -> Alignment.TopStart
+    TemaId.CUEVA -> Alignment.TopStart
 }
 
 /**
