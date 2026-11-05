@@ -454,7 +454,10 @@ fun DialogoVisita(v: io.github.ruddy2003.vestigium.data.Visita, cerrar: () -> Un
             }
         },
         confirmButton = { TextButton(enabled = valida, onClick = {
-            val n = v.copy(lugar = lugar, entrada = Fechas.isoDeMillis(ini), salida = fin?.let { Fechas.isoDeMillis(it) })
+            val nuevaSalida = fin?.let { Fechas.isoDeMillis(it) }
+            // Si cambiaste la salida, la visita dice que la pusiste tú (esquema 19); «sigo aquí» la deja abierta.
+            val cierre = when { nuevaSalida == null -> null; fin != v.salida?.let { Fechas.millis(it) } -> io.github.ruddy2003.vestigium.data.Lugares.CIERRE_MANUAL; else -> v.cierre }
+            val n = v.copy(lugar = lugar, entrada = Fechas.isoDeMillis(ini), salida = nuevaSalida, cierre = cierre)
             if (n != v) {
                 Repo.guardarVisita(n)
                 io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Visita corregida") { Repo.guardarVisita(v) }

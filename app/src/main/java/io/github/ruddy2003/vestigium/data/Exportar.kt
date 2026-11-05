@@ -466,7 +466,7 @@ object Exportar {
     fun filasVisitas() = Repo.visitas.map { v ->
         val l = Repo.lugares.firstOrNull { it.id == v.lugar }
         linkedMapOf<String, Any?>("lugar" to l?.nombre, "tipo" to l?.tipo, "entrada" to v.entrada, "salida" to v.salida,
-            "minutos" to v.salida?.let { (Fechas.millis(it) - Fechas.millis(v.entrada)) / 60000 })
+            "minutos" to v.salida?.let { (Fechas.millis(it) - Fechas.millis(v.entrada)) / 60000 }, "cierre" to v.cierre)
     }
 
     fun filasEntorno() = Repo.entorno.values.sortedBy { it.fecha }.map {

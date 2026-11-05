@@ -117,6 +117,34 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 2) {
         writableDatabase.insert("ubicaciones", null, v)
     }
 
+    /** Las fuentes que toma el propio teléfono (muestra de fondo, geocerca, momento): las que no deben repetir un punto. */
+    private val FUENTES_PROPIAS = "('app', 'geocerca', 'momento')"
+
+    /**
+     * Una lectura del propio teléfono: se guarda solo si ese mismo punto (misma hora, latitud y longitud) no está ya. Cuando
+     * la lectura tarda, Android devuelve la última conocida, la misma una y otra vez: antes quedaba repetida en cada pulso
+     * (H-3-8), y una geocerca repetía el punto de la muestra. Devuelve si lo guardó.
+     */
+    fun ponerMuestra(ms: Long, lat: Double, lon: Double, precision: Float?, fuente: String): Boolean {
+        val ya = readableDatabase.rawQuery(
+            "SELECT 1 FROM ubicaciones WHERE ms = ? AND ABS(lat - ?) < 1e-7 AND ABS(lon - ?) < 1e-7 LIMIT 1",
+            arrayOf(ms.toString(), lat.toString(), lon.toString())
+        ).use { it.moveToFirst() }
+        if (ya) return false
+        ponerUbicacion(ms, lat, lon, precision, fuente)
+        return true
+    }
+
+    /**
+     * Una sola vez (esquema 19): quita los puntos repetidos del propio teléfono que dejó la muestra de fondo (mismo punto,
+     * misma hora); se queda el primero de cada uno. No toca los importados ni los de fotos. Devuelve cuántos quitó.
+     */
+    fun quitarMuestrasRepetidas(): Int = writableDatabase.delete(
+        "ubicaciones",
+        "fuente IN $FUENTES_PROPIAS AND rowid NOT IN (SELECT MIN(rowid) FROM ubicaciones WHERE fuente IN $FUENTES_PROPIAS GROUP BY ms, lat, lon)",
+        null
+    )
+
     data class Punto(val ms: Long, val lat: Double, val lon: Double, val precision: Double?, val fuente: String?)
 
     fun ubicaciones(desde: Long = 0, hasta: Long = Long.MAX_VALUE): List<Punto> {

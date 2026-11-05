@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 18
+const val SCHEMA_V = 19
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -369,12 +369,19 @@ data class CandidatoLugar(
     val sugerencia: String = "",
 )
 
+/**
+ * Una estancia en un lugar guardado. [cierre] (esquema 19) dice cómo se supo la salida: «geocerca» (Android avisó que
+ * saliste), «otro_lugar» (llegaste a un lugar lejano sin que avisara la salida), «ubicaciones» (tus puntos ya te ponían
+ * fuera), «reconstruida» (la visita entera salió de tus ubicaciones al guardar el lugar), «manual» (la corregiste tú). Null: abierta, o guardada antes
+ * del esquema 19 y sin corregir.
+ */
 @Serializable
 data class Visita(
     val id: String,
     val lugar: String,
     val entrada: String,
     val salida: String? = null,
+    val cierre: String? = null,
 )
 
 /**

@@ -396,19 +396,62 @@ object Repo {
     /** «No estuve aquí»: quita una visita. */
     fun borrarVisita(id: String) { db.borrar("visitas", id); enMain { visitas = visitas.filter { it.id != id } } }
 
+    /** Guarda y quita varias visitas de una vez (en una transacción) y las publica juntas. */
     @Synchronized
-    fun entrada(lugarId: String, ts: String) {
-        if (visitas.any { it.lugar == lugarId && it.salida == null }) return
-        val v = Visita(nuevoId(), lugarId, ts)
-        db.poner("visitas", v.id, ts.take(10), JSON.encodeToString(Visita.serializer(), v))
-        enMain { visitas = visitas + v }
+    fun cambiarVisitas(guardar: List<Visita>, quitar: Set<String> = emptySet()) {
+        if (guardar.isEmpty() && quitar.isEmpty()) return
+        db.transaccion {
+            quitar.forEach { db.borrar("visitas", it) }
+            guardar.forEach { db.poner("visitas", it.id, it.entrada.take(10), JSON.encodeToString(Visita.serializer(), it)) }
+        }
+        val ids = guardar.map { it.id }.toSet() + quitar
+        enMain { visitas = (visitas.filter { it.id !in ids } + guardar).sortedBy { it.entrada } }
     }
+
+    /**
+     * Android avisa que entraste a un lugar. Si seguía abierta la visita de otro lugar lejano (Android no avisó que saliste),
+     * se cierra: a la hora en que tus ubicaciones ya te ponían fuera o, si no hay, a la de esta entrada (esquema 19).
+     * Devuelve si cerró alguna: entonces hay que volver a registrar las geocercas (Android cree que sigues allá y no
+     * avisaría cuando vuelvas).
+     */
+    @Synchronized
+    fun entrada(lugarId: String, ts: String): Boolean {
+        if (visitas.any { it.lugar == lugarId && it.salida == null }) return false
+        val aqui = lugares.firstOrNull { it.id == lugarId }
+        val t = Fechas.millis(ts)
+        val cerrar = ArrayList<Visita>(); val quitar = HashSet<String>()
+        if (aqui != null && t > 0) visitas.filter { it.salida == null && it.lugar != lugarId }.forEach { v ->
+            val alla = lugares.firstOrNull { it.id == v.lugar } ?: return@forEach
+            if (!Lugares.lejos(aqui, alla)) return@forEach
+            val a = Fechas.millis(v.entrada)
+            val (fin, como) = Lugares.salidaPorUbicaciones(alla, a, t)?.let { it to Lugares.CIERRE_UBICACIONES } ?: (t to Lugares.CIERRE_OTRO_LUGAR)
+            if (fin - a < Lugares.VISITA_MINIMA_MS) quitar += v.id
+            else cerrar += v.copy(salida = if (fin == t) ts else Fechas.isoDeMillis(fin), cierre = como)
+        }
+        cambiarVisitas(cerrar + Visita(nuevoId(), lugarId, ts), quitar)
+        return cerrar.isNotEmpty() || quitar.isNotEmpty()
+    }
+
+    /**
+     * Android avisa que saliste. Si tus ubicaciones dicen que saliste bastante antes (un aviso tardío), vale esa hora. Una
+     * visita de menos de 8 minutos se quita (pasar cerca o un brinco del GPS) y, si al empezar cerró la visita del lugar
+     * donde en realidad seguías, esa se vuelve a abrir.
+     */
     @Synchronized
     fun salida(lugarId: String, ts: String) {
         val abierta = visitas.lastOrNull { it.lugar == lugarId && it.salida == null } ?: return
-        val v = abierta.copy(salida = ts)
-        db.poner("visitas", v.id, v.entrada.take(10), JSON.encodeToString(Visita.serializer(), v))
-        enMain { visitas = visitas.map { if (it.id == v.id) v else it } }
+        val a = Fechas.millis(abierta.entrada); val t = Fechas.millis(ts)
+        if (a <= 0 || t < a) return
+        val (fin, como) = Lugares.salidaAvisada(abierta, t)
+        if (fin - a < Lugares.VISITA_MINIMA_MS) {
+            val reabrir = visitas.filter { w ->
+                w.cierre == Lugares.CIERRE_OTRO_LUGAR && w.salida?.let { Fechas.millis(it) } == a &&
+                    visitas.none { it.lugar == w.lugar && it.salida == null }
+            }.map { it.copy(salida = null, cierre = null) }
+            cambiarVisitas(reabrir, setOf(abierta.id))
+            return
+        }
+        cambiarVisitas(listOf(abierta.copy(salida = if (fin == t) ts else Fechas.isoDeMillis(fin), cierre = como)))
     }
 
     /** Eventos de YouTube (Takeout). Si llega una lista de suscripciones, reemplaza la anterior (te pudiste desuscribir). */

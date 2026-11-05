@@ -74,7 +74,22 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             val mig = ctx.getSharedPreferences("migraciones", Context.MODE_PRIVATE)
             if (!mig.getBoolean("fuerza_ref", false)) { Repo.completarFuerzaReferencia(); mig.edit().putBoolean("fuerza_ref", true).apply() }
         }
+        // Una sola vez (esquema 19): quita los puntos repetidos de la muestra de fondo y corrige las visitas que quedaron
+        // abiertas o encimadas (decisión del autor, 5 nov 2026: corregir también lo pasado).
+        var visitasCorregidas = false
+        runCatching {
+            val mig = ctx.getSharedPreferences("migraciones", Context.MODE_PRIVATE)
+            if (!mig.getBoolean("esquema19_ubicaciones", false)) { Repo.db().quitarMuestrasRepetidas(); mig.edit().putBoolean("esquema19_ubicaciones", true).apply() }
+            if (!mig.getBoolean("esquema19_visitas", false)) {
+                io.github.ruddy2003.vestigium.data.Lugares.limpiarVisitasPasadas(); visitasCorregidas = true
+                mig.edit().putBoolean("esquema19_visitas", true).apply()
+                runCatching { Geocercas.registrar(ctx) }
+            }
+        }
         runCatching { Ubicacion.muestrear(ctx) }
+        // Las visitas abiertas de las que tus ubicaciones ya dicen que saliste (si Android no avisó la salida). No en el
+        // pulso de la corrección: la lista en memoria se actualiza un instante después y partiría de la de antes.
+        if (!visitasCorregidas) runCatching { if (io.github.ruddy2003.vestigium.data.Lugares.cerrarAbiertas()) Geocercas.registrar(ctx) }
         runCatching { io.github.ruddy2003.vestigium.sensores.Percepcion.muestrear(ctx) }
         // ¿Llevas un rato en un sitio nuevo? Pregunta si es un lugar especial (máximo dos veces al día, nunca de noche).
         runCatching {

@@ -188,7 +188,7 @@ private fun NivelSuplemento(s: Suplemento, hoy: String) {
     val valores: List<Double?> = remember(Repo.tomas, s) {
         when (s.modelo) {
             "carga" -> { val m = Suplementos.carga(s, hoy); dias.map { m[it] } }
-            "vida_media" -> dias.map { f -> if (Repo.tomas.any { it.suplemento == s.id && it.fecha <= f }) Suplementos.cantidadEn(s, Fechas.finDia(f) + 5 * 3_600_000L - 1) else null }
+            "vida_media" -> dias.map { f -> if (Repo.tomas.any { it.suplemento == s.id && it.fecha <= f }) Suplementos.cantidadEn(s, Fechas.finDiaLogico(f) - 1) else null }
             else -> { val d = Suplementos.dosisPorDia(s.id); val e = if (s.id == "probioticos") Suplementos.probioticosEstimados() else emptyMap(); dias.map { f -> ((d[f] ?: 0.0) + (e[f] ?: 0.0)).takeIf { it > 0 } } }
         }
     }

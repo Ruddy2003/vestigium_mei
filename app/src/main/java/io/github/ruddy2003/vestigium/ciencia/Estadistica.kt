@@ -585,8 +585,11 @@ object Estadistica {
                 if (a <= 0 || z <= a || z - a > 40L * 86_400_000L) return@forEach
                 while (a < z) {
                     val f = Fechas.diaLogicoDeMillis(a)
-                    val finDia = Fechas.finDia(f) + 5 * 3_600_000L
+                    // El fin del día lógico con su zona (antes, medianoche + 5 h de reloj: la noche en que se atrasa el
+                    // reloj caía a las 04:00, del mismo día lógico, y el ciclo no terminaba nunca).
+                    val finDia = Fechas.finDiaLogico(f)
                     val y = minOf(z, finDia)
+                    if (y <= a) break
                     enCasa[f] = (enCasa[f] ?: 0.0) + (y - a) / 60_000.0
                     a = y
                 }
@@ -1176,7 +1179,7 @@ object Estadistica {
 object Movilidad {
     /** Suma de distancias entre muestras consecutivas del mismo día, ignorando saltos imposibles. */
     fun kmDe(fecha: String): Double? {
-        val a = Fechas.inicioDia(fecha) + 5 * 3_600_000L
+        val a = Fechas.inicioDiaLogico(fecha)
         return kmPorDia(Repo.db().ubicaciones(a, a + 86_400_000L))[fecha]
     }
 
@@ -1185,7 +1188,7 @@ object Movilidad {
         val out = HashMap<String, Double>()
         var pMs = -1L; var pLat = 0.0; var pLon = 0.0
         val ini = if (desde <= "1971-01-01") 0L else Fechas.inicioDia(desde)
-        val fin = if (hasta >= "9999-01-01") Long.MAX_VALUE else Fechas.finDia(hasta) + 5 * 3_600_000L
+        val fin = if (hasta >= "9999-01-01") Long.MAX_VALUE else Fechas.finDiaLogico(hasta)
         Repo.db().recorrerUbicaciones(ini, fin) { ms, lat, lon, _ ->
             if (pMs >= 0) {
                 val dt = (ms - pMs) / 1000.0

@@ -1416,7 +1416,7 @@ object Reportes {
     /** Cada lugar guardado con visitas en el periodo: lat, lon, tipo y horas (solo para el mapa abstracto del mes). */
     private fun lugaresDelMes(ini: String, fin: String): List<Triple<Double, Double, Pair<String, Double>>> {
         val ahora = System.currentTimeMillis()
-        val a0 = Fechas.inicioDia(ini) + 5 * 3_600_000L; val z0 = Fechas.finDia(fin) + 5 * 3_600_000L
+        val a0 = Fechas.inicioDiaLogico(ini); val z0 = Fechas.finDiaLogico(fin)
         val horas = HashMap<String, Double>()
         Repo.visitas.forEach { v ->
             val a = maxOf(Fechas.millis(v.entrada), a0); val z = minOf(v.salida?.let { Fechas.millis(it) } ?: ahora, z0)

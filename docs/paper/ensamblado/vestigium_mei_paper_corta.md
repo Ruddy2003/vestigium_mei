@@ -601,7 +601,7 @@ Como los puntos llegan cada ~15 minutos, con 2 puntos no se llega a 20 min: en l
 
 ![Figura 4.1. Detección de un lugar nuevo con datos sintéticos: un punto cada 15 minutos y un radio de 75 m; la app pregunta en el minuto 60, 30 minutos después de llegar. Script: `figuras/fig05_deteccion_lugar.py`.](figuras/fig05_deteccion_lugar.png){width=100%}
 
-Al guardar un lugar, `reconstruir` rehace las visitas de los **30 días** previos (huecos de hasta **2 horas** no rompen una visita; **solo cuentan visitas de ≥ 10 minutos**). Detectar *estancias* (*stay points*) con un radio y un tiempo mínimo es la técnica estándar de la minería de trayectorias GPS (Zheng, 2015); la app usa una versión simple, sin agrupamiento por densidad. **[Aproximación]**. Falla en interiores (el GPS «salta»), con estancias de menos de 30 minutos y con dos lugares a menos de ~75 m (se funden).
+Al guardar un lugar, `reconstruir` rehace las visitas de los **30 días** previos (huecos de hasta **2 horas** no rompen una visita; **solo cuentan visitas de ≥ 8 minutos**). Si Android no avisa una salida, desde el esquema 19 la app la deduce: al llegar a un lugar lejano, o con dos puntos seguidos fuera del lugar. Las visitas de menos de 8 minutos se quitan, y la columna `cierre` dice cómo se supo cada salida (4.4.3 de la versión completa). Detectar *estancias* (*stay points*) con un radio y un tiempo mínimo es la técnica estándar de la minería de trayectorias GPS (Zheng, 2015); la app usa una versión simple, sin agrupamiento por densidad. **[Aproximación]**. Falla en interiores (el GPS «salta»), con estancias de menos de 30 minutos y con dos lugares a menos de ~75 m (se funden).
 
 ## 4.5 Movimiento y «percepción»
 

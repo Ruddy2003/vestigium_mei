@@ -19,8 +19,8 @@ object Comunicacion {
     fun sms(ctx: Context) = ctx.checkSelfPermission(Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED
     fun tienePermiso(ctx: Context) = llamadas(ctx) || sms(ctx)
 
-    private fun ini(f: String) = Fechas.inicioDia(f) + 5 * 3_600_000L
-    private fun fin(f: String) = Fechas.finDia(f) + 5 * 3_600_000L
+    private fun ini(f: String) = Fechas.inicioDiaLogico(f)
+    private fun fin(f: String) = Fechas.finDiaLogico(f)
     private fun clave(numero: String?): String? = numero?.filter { it.isDigit() }?.takeLast(8)?.takeIf { it.length >= 6 }
 
     fun calcular(ctx: Context, fecha: String): ComunicacionDia? {

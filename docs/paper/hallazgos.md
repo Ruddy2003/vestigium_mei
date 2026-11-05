@@ -140,7 +140,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** (a) solo tamaño; (b) puede crear estancias falsas o inexactas.
 - **Gravedad:** Baja.
 - **Propuesta:** alinear comentario y código; asignar una precisión por defecto conservadora a puntos sin precisión.
-- **Estado:** Resuelto en parte. Inciso b resuelto en el módulo 10d (commit `035982c`) (P-33): un punto sin precisión cuenta como de 100 m (`Db.PRECISION_SIN_DATO`). El inciso a (una muestra por pulso) no se cambió: no estaba en P-33.
+- **Estado:** Resuelto. Inciso b resuelto en el módulo 10d (commit `035982c`) (P-33): un punto sin precisión cuenta como de 100 m (`Db.PRECISION_SIN_DATO`). Inciso a resuelto en el esquema 19 (D.148): la muestra ya no repite un punto que ya está, y se quitaron los repetidos guardados. Al revisarlo se vio que el efecto no era solo de tamaño: el mismo punto viejo repetido durante horas pesaba de más en lo que cuenta puntos.
 
 ### H-3-9 · Inicio de canción de Spotify subestimado si se interrumpe
 - **Dónde:** `Spotify.kt`.

@@ -22,8 +22,9 @@ import org.junit.Test
 class EsquemaCatorcePrueba {
     // El esquema 15 (10f) agregó el historial de zonas, la fuente del clima, el wifi sin dato, el criterio sellado y la fuerza de referencia;
     // el 16, el Ideario (ver IdearioPrueba); el 17, la rareza y la pesadilla del sueño, los temas de las ideas y más campos de captura;
-    // el 18, los deseados (prioridad, quién lo recomendó y dónde) y las listas libres (ver DeseadosPrueba).
-    @Test fun esquema() = assertEquals(18, SCHEMA_V)
+    // el 18, los deseados (prioridad, quién lo recomendó y dónde) y las listas libres (ver DeseadosPrueba); el 19, cómo se
+    // supo la salida de cada visita (ver VisitasPrueba).
+    @Test fun esquema() = assertEquals(19, SCHEMA_V)
 
     @Test fun registrosViejosSinMarca() {
         // Un momento, un gasto, una toma y un día guardados antes del esquema 14 no traen los campos nuevos.

@@ -138,6 +138,7 @@ object Diccionario {
         "sueno_inicio_h" to "Hora de dormir en decimal; la madrugada suma 24", "sueno_fin_h" to "Hora de despertar en decimal",
         // Visitas
         "entrada" to "Llegada al lugar", "salida" to "Salida del lugar", "vm_visitas.csv:minutos" to "Minutos en el lugar",
+        "vm_visitas.csv:cierre" to "Cómo se supo la salida: geocerca (Android avisó), otro_lugar (llegaste a un lugar lejano sin aviso de salida), ubicaciones (tus puntos ya te ponían fuera), reconstruida (la visita salió de tus ubicaciones al guardar el lugar), manual (la corregiste tú); vacío = abierta o anterior al esquema 19 sin corregir",
         // Entorno
         "t_max" to "Temperatura máxima (°C)", "t_min" to "Temperatura mínima (°C)", "t_media" to "Temperatura media (°C)", "sensacion_max" to "Sensación térmica máxima (°C)",
         "precip_mm" to "Lluvia (mm)", "horas_lluvia" to "Horas con lluvia", "nubes_pct" to "Nubosidad media (%)", "humedad_pct" to "Humedad media (%)",
@@ -426,6 +427,11 @@ object Diccionario {
      */
     /** La versión de la app con la que llega el esquema 18 (deseados y listas). */
     private const val VERSION_ESQUEMA_18 = 118
+    /**
+     * La versión de la app con la que llega el esquema 19 (cierre de las visitas). Se fija al mezclar a `main`: es el número
+     * de ejecución de la compilación que publica esa versión.
+     */
+    private const val VERSION_ESQUEMA_19 = 123
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
@@ -606,6 +612,12 @@ object Diccionario {
         "suenot_*" to (110 to "rareza del sueño y pesadilla en lugar del tipo (D.127)"),
         "sueno_est_recurrente" to (110 to "incluye los días de antes con tipo «recurrente» (D.127)"),
         // Esquema 18: deseados y listas libres.
+        "vm_visitas.csv:cierre" to (VERSION_ESQUEMA_19 to "nueva: cómo se supo la salida (D.147)"),
+        "en_casa_min" to (VERSION_ESQUEMA_19 to "con las visitas corregidas: sin las que quedaban abiertas estando en otro lado (D.147)"),
+        "horas_tipo_*" to (VERSION_ESQUEMA_19 to "con las visitas corregidas: sin las que quedaban abiertas estando en otro lado (D.147)"),
+        "lug_*" to (VERSION_ESQUEMA_19 to "con las visitas corregidas: sin las que quedaban abiertas estando en otro lado (D.147)"),
+        "vm_visitas.csv:salida" to (VERSION_ESQUEMA_19 to "si Android no avisó, se deduce de la llegada a otro lugar o de tus ubicaciones; también hacia atrás (D.147)"),
+        "vm_visitas.csv:minutos" to (VERSION_ESQUEMA_19 to "visitas de menos de 8 min ya no se guardan; antes 10 en las reconstruidas y ninguno en las de geocerca (D.147)"),
         "vm_biblioteca.csv:prioridad" to (VERSION_ESQUEMA_18 to "nueva: qué tan pronto quieres lo pendiente (D.145)"),
         "vm_biblioteca.csv:recomendo" to (VERSION_ESQUEMA_18 to "nueva: quién te lo recomendó (D.145)"),
         "vm_biblioteca.csv:donde" to (VERSION_ESQUEMA_18 to "nueva: dónde verlo o conseguirlo (D.145)"),

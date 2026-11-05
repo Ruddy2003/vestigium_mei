@@ -61,7 +61,7 @@ object Recuerdos {
 
     fun de(fecha: String, anios: Int): Recuerdo {
         val d = Repo.dias[fecha]
-        val ini = Fechas.inicioDia(fecha) + 5 * 3_600_000L; val fin = ini + 86_400_000L
+        val ini = Fechas.inicioDiaLogico(fecha); val fin = Fechas.finDiaLogico(fecha)
         val lugares = Repo.visitas.filter { val a = Fechas.millis(it.entrada); a in ini until fin }.mapNotNull { v -> Repo.lugares.firstOrNull { it.id == v.lugar }?.nombre }.distinct()
         val cancion = runCatching { Repo.escuchas(fecha, fecha).groupingBy { it.titulo + if (it.artista.isNotBlank()) " · ${it.artista}" else "" }.eachCount().maxByOrNull { it.value }?.key }.getOrNull()
         val e = Repo.entorno[fecha]

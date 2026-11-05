@@ -33,12 +33,16 @@ object Ubicacion {
     suspend fun actual(ctx: Context, esperaMs: Long = 7000): Location? {
         if (!tienePermiso(ctx)) return null
         val cliente = LocationServices.getFusedLocationProviderClient(ctx)
+        // Si se acaba la espera, la petición se cancela: antes seguía buscando señal (y gastando batería) aunque ya no se usara.
+        val cancelar = CancellationTokenSource()
         return try {
             withTimeoutOrNull(esperaMs) {
-                cliente.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, CancellationTokenSource().token).await()
+                cliente.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, cancelar.token).await()
             } ?: cliente.lastLocation.await()
         } catch (e: Exception) {
             null
+        } finally {
+            cancelar.cancel()
         }
     }
 
@@ -48,11 +52,14 @@ object Ubicacion {
         return try { LocationServices.getFusedLocationProviderClient(ctx).lastLocation.await() } catch (e: Exception) { null }
     }
 
-    /** Muestra de fondo: se guarda solo si cambió algo respecto a la anterior o pasó tiempo suficiente. */
+    /**
+     * Muestra de fondo. Si la lectura tarda, Android da la última ubicación conocida, que puede ser la misma de los pulsos
+     * anteriores: un punto que ya está no se vuelve a guardar ([Db.ponerMuestra]).
+     */
     suspend fun muestrear(ctx: Context) {
         if (!Repo.config.muestreo_ubicacion || !tieneSegundoPlano(ctx)) return
         val loc = actual(ctx, 10000) ?: return
-        Repo.db().ponerUbicacion(loc.time.takeIf { it > 0 } ?: System.currentTimeMillis(), loc.latitude, loc.longitude, loc.accuracy, "app")
+        Repo.db().ponerMuestra(loc.time.takeIf { it > 0 } ?: System.currentTimeMillis(), loc.latitude, loc.longitude, loc.accuracy, "app")
     }
 }
 
@@ -63,13 +70,22 @@ object Geocercas {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         )
 
+    /**
+     * Registra una geocerca por lugar. [soloSiCambio]: al arrancar el proceso (lo arranca también cada pulso, cada widget
+     * y cada geocerca) no se vuelven a registrar si los lugares son los mismos y no ha pasado un día; antes se quitaban y
+     * se ponían de nuevo cada vez, y una salida justo en ese momento se perdía.
+     */
     @SuppressLint("MissingPermission")
-    fun registrar(ctx: Context) {
+    fun registrar(ctx: Context, soloSiCambio: Boolean = false) {
         if (!Ubicacion.tieneSegundoPlano(ctx)) return
         val cliente = LocationServices.getGeofencingClient(ctx)
         val pi = intent(ctx)
         val lugares = Repo.lugares.take(95)
-        if (lugares.isEmpty()) { cliente.removeGeofences(pi); return }
+        val firma = lugares.joinToString("|") { "${it.id},${it.lat},${it.lon},${it.radio_m}" }.hashCode()
+        val prefs = ctx.getSharedPreferences("geocercas", Context.MODE_PRIVATE)
+        val ahora = System.currentTimeMillis()
+        if (soloSiCambio && prefs.getInt("firma", 0) == firma && ahora - prefs.getLong("ms", 0L) < 86_400_000L) return
+        if (lugares.isEmpty()) { cliente.removeGeofences(pi); prefs.edit().putInt("firma", firma).putLong("ms", ahora).apply(); return }
         val cercas = lugares.map {
             Geofence.Builder()
                 .setRequestId(it.id)
@@ -79,13 +95,17 @@ object Geocercas {
                 .setLoiteringDelay(120000)
                 .build()
         }
+        // Al registrar avisa también de los lugares donde ya no estás (INITIAL_TRIGGER_EXIT): cierra una visita que quedó
+        // abierta porque Android no avisó la salida. A los lugares sin visita abierta no les pasa nada (Repo.salida).
         val req = GeofencingRequest.Builder()
-            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER or GeofencingRequest.INITIAL_TRIGGER_EXIT)
             .addGeofences(cercas)
             .build()
         // Primero se quitan las anteriores y, al terminar, se agregan las nuevas.
         cliente.removeGeofences(pi).addOnCompleteListener {
-            try { cliente.addGeofences(req, pi) } catch (e: SecurityException) { }
+            try {
+                cliente.addGeofences(req, pi).addOnSuccessListener { prefs.edit().putInt("firma", firma).putLong("ms", ahora).apply() }
+            } catch (e: SecurityException) { }
         }
     }
 }
@@ -97,10 +117,15 @@ class GeocercaReceiver : BroadcastReceiver() {
         if (ev.hasError()) return
         val ts = ev.triggeringLocation?.time?.takeIf { it > 0 }?.let { Fechas.isoDeMillis(it) } ?: Fechas.ahoraIso()
         val ids = ev.triggeringGeofences?.map { it.requestId } ?: return
+        // El punto primero: la entrada y la salida miran las ubicaciones para saber si saliste antes de este aviso.
+        ev.triggeringLocation?.let { Repo.db().ponerMuestra(it.time, it.latitude, it.longitude, it.accuracy, "geocerca") }
         when (ev.geofenceTransition) {
-            Geofence.GEOFENCE_TRANSITION_ENTER -> ids.forEach { Repo.entrada(it, ts) }
+            Geofence.GEOFENCE_TRANSITION_ENTER -> {
+                // Si cerró la visita de un lugar del que Android no avisó la salida, se registran de nuevo para que avise al volver.
+                val cerro = ids.map { Repo.entrada(it, ts) }.any { it }
+                if (cerro) runCatching { Geocercas.registrar(context) }
+            }
             Geofence.GEOFENCE_TRANSITION_EXIT -> ids.forEach { Repo.salida(it, ts) }
         }
-        ev.triggeringLocation?.let { Repo.db().ponerUbicacion(it.time, it.latitude, it.longitude, it.accuracy, "geocerca") }
     }
 }

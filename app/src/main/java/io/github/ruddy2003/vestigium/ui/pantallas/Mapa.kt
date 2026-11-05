@@ -572,7 +572,7 @@ fun PantallaMapa(nav: Nav) {
     val puntos by produceState(emptyList<Db.Punto>(), capa, periodo, dia) {
         value = withContext(Dispatchers.IO) {
             when (capa) {
-                "ruta" -> Repo.db().ubicaciones(Fechas.inicioDia(dia) + 5 * 3_600_000L, Fechas.finDia(dia) + 5 * 3_600_000L)
+                "ruta" -> Repo.db().ubicaciones(Fechas.inicioDiaLogico(dia), Fechas.finDiaLogico(dia))
                 else -> emptyList()
             }
         }
