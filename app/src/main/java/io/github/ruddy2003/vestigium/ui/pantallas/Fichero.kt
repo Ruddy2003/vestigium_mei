@@ -197,9 +197,10 @@ fun FichaMini(i: Idea, modifier: Modifier = Modifier, rotulo: String? = null, li
             // altura supuesta (16 dp) caía sobre las astas del título cuando la letra del tema es más baja (Art déco).
             val densidad = LocalDensity.current
             var altoEncabezado by remember { mutableStateOf(encabezado) }
-            Column(Modifier.fillMaxSize().rayadoFicha(p, sup + altoEncabezado + 2.dp, paso).padding(start = lado, end = lado, top = sup, bottom = 6.dp)) {
+            Column(Modifier.fillMaxSize().rayadoFicha(p, sup + altoEncabezado + 1.dp, paso).padding(start = lado, end = lado, top = sup, bottom = 6.dp)) {
                 EncabezadoFicha(i, texto, a, p, grande = false, modifier = Modifier.onSizeChanged { altoEncabezado = with(densidad) { it.height.toDp() } })
-                Spacer(Modifier.height(4.dp))
+                // Aire bajo la línea: con un interlineado apretado, las astas del título suben por encima de su renglón.
+                Spacer(Modifier.height(7.dp))
                 val estilo = TextStyle(fontFamily = p.texto, fontSize = tam, lineHeight = inter, color = p.tinta)
                 if (i.titulo.isNotBlank()) Text(i.titulo, style = estilo.copy(fontWeight = FontWeight.SemiBold), maxLines = 2, overflow = TextOverflow.Ellipsis)
                 val resto = (lineas - if (i.titulo.isNotBlank()) 1 else 0).coerceAtLeast(1)
@@ -231,9 +232,9 @@ private fun FichaGrande(i: Idea, numero: Int, total: Int, tema: String, a: Archi
                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                     val densidad = LocalDensity.current
                     var altoEncabezado by remember { mutableStateOf(encabezado) }
-                    Column(Modifier.fillMaxWidth().rayadoFicha(p, sup + altoEncabezado + 4.dp, paso).padding(start = lado, end = lado, top = sup, bottom = 22.dp)) {
+                    Column(Modifier.fillMaxWidth().rayadoFicha(p, sup + altoEncabezado + 2.dp, paso).padding(start = lado, end = lado, top = sup, bottom = 22.dp)) {
                         EncabezadoFicha(i, rotuloCajon(tema), a, p, grande = true, modifier = Modifier.onSizeChanged { altoEncabezado = with(densidad) { it.height.toDp() } })
-                        Spacer(Modifier.height(6.dp))
+                        Spacer(Modifier.height(10.dp))
                         val estilo = TextStyle(fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, color = p.tinta)
                         if (i.titulo.isNotBlank()) Text(i.titulo, style = estilo.copy(fontWeight = FontWeight.SemiBold))
                         TextoMarcado(i.texto.trim(), style = estilo)
