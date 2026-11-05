@@ -1836,9 +1836,16 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         Box(Modifier.padding(pad).fillMaxSize().fondoTema(tema, esquema)) {
             FondoVivo(tema)
             // Cada tema cambia de pantalla a su manera; hacia adentro y hacia atrás se mueven en sentidos opuestos.
+            // Ocupa siempre toda la ventana: si se encogiera junto con la pantalla que entra (las que se abren desde una
+            // franja: Art déco, Edo, Seda…), la nueva aparecería pegada a la izquierda y se iría deslizando.
+            val destinoActual = Destino(pila.lastOrNull() ?: pestana, pila.size)
+            val sentido = remember { SentidoPantalla(destinoActual) }
+            val atras = sentido.atrasHacia(destinoActual)
             androidx.compose.animation.AnimatedContent(
-                targetState = Destino(pila.lastOrNull() ?: pestana, pila.size),
+                targetState = destinoActual,
+                modifier = Modifier.fillMaxSize(),
                 transitionSpec = { transicion(tema, initialState, targetState, Repo.config.animaciones) },
+                contentAlignment = origenTransicion(tema, atras),
                 contentKey = { it.ruta }, label = "pantallas",
             ) { destino ->
                 val sc = if (destino.nivel == 0) scrolls.getOrPut(destino.ruta) { androidx.compose.foundation.ScrollState(0) } else null
@@ -1954,6 +1961,30 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
 private data class Destino(val ruta: String, val nivel: Int)
 
 /**
+ * Recuerda si el último cambio de pantalla fue hacia atrás. Mientras no cambie el destino devuelve lo mismo, así que no
+ * cambia a media transición aunque la raíz se vuelva a dibujar.
+ */
+private class SentidoPantalla(private var ultimo: Destino) {
+    private var atras = false
+    fun atrasHacia(d: Destino): Boolean {
+        if (d != ultimo) { atras = d.nivel < ultimo.nivel; ultimo = d }
+        return atras
+    }
+}
+
+/**
+ * Dónde se ancla la pantalla que entra mientras crece: del mismo lado desde el que se abre en [transicion] (al centro
+ * las que se abren desde el medio, a un lado las que se desenrollan de lado). Siempre arriba, para que una pantalla
+ * más corta que la ventana nunca quede a media altura; con anclarla arriba a la izquierda, las que se abren desde el
+ * centro aparecían como una franja a la izquierda que se deslizaba.
+ */
+private fun origenTransicion(tema: TemaId, atras: Boolean): Alignment = when (tema) {
+    TemaId.DECO, TemaId.ANDALUS, TemaId.LABORATORIO -> Alignment.TopCenter
+    TemaId.SEDA, TemaId.COLONOS -> if (atras) Alignment.TopEnd else Alignment.TopStart
+    else -> Alignment.TopStart
+}
+
+/**
  * Transición entre pantallas según el tema. Cada una tiene su movimiento, su origen, su duración y su curva, y todas son
  * cortas (entre 140 y 460 ms) y sin giros, para no marear. Hacia adentro y hacia atrás se mueven en sentidos opuestos.
  */
@@ -2009,8 +2040,9 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         // Estandarte que se despliega desde su asta, a un lado.
         TemaId.NAPOLEON -> (scaleIn(t(280), initialScale = 0.85f, transformOrigin = TransformOrigin(if (atras) 1f else 0f, 0.5f)) + fadeIn(t(220))) togetherWith
             (fadeOut(t(160)) + scaleOut(t(160), targetScale = 0.97f))
-        // Las puertas del ascensor que se abren desde el centro.
-        TemaId.DECO -> (androidx.compose.animation.expandHorizontally(t(320), expandFrom = Alignment.CenterHorizontally) + fadeIn(t(240))) togetherWith fadeOut(t(160))
+        // Las puertas del ascensor que se abren desde el centro, sobre la pantalla anterior (que se apaga mientras tanto,
+        // no antes: si se fuera primero, quedaría un hueco vacío a los lados).
+        TemaId.DECO -> (androidx.compose.animation.expandHorizontally(t(320), expandFrom = Alignment.CenterHorizontally) + fadeIn(t(240))) togetherWith fadeOut(t(320))
         // Una hoja que crece desde abajo, como un brote.
         TemaId.BOTANICO -> (scaleIn(t(380), initialScale = 0.96f, transformOrigin = TransformOrigin(0.5f, 1f)) + fadeIn(t(320))) togetherWith fadeOut(t(180))
         // El polvo que se asienta: la pantalla baja apenas y se aclara; la anterior se desmorona hacia abajo.
@@ -2038,8 +2070,9 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.NAVIDAD -> (scaleIn(t(360, androidx.compose.animation.core.CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)), initialScale = 0.82f) + fadeIn(t(220))) togetherWith fadeOut(t(140))
         // Rollo de seda que se desenrolla de lado, como un rollo de mano.
         TemaId.SEDA -> (androidx.compose.animation.expandHorizontally(t(380), expandFrom = if (atras) Alignment.End else Alignment.Start) + fadeIn(t(300))) togetherWith fadeOut(t(160))
-        // Un rollo colgante (kakejiku) que se desenrolla de arriba abajo.
-        TemaId.EDO -> (expandVertically(t(440, frena), expandFrom = if (atras) Alignment.Bottom else Alignment.Top) + fadeIn(t(260))) togetherWith fadeOut(t(180))
+        // Un rollo colgante (kakejiku) que se desenrolla de arriba abajo, sobre la pantalla anterior, que se apaga mientras
+        // tanto. Hacia atrás también baja: si subiera desde abajo, la parte de abajo de la pantalla aparecería arriba.
+        TemaId.EDO -> (expandVertically(t(440, frena), expandFrom = Alignment.Top) + fadeIn(t(260))) togetherWith fadeOut(t(440))
         // Cartel que entra en diagonal.
         TemaId.URSS -> (slideIn(t(220)) { androidx.compose.ui.unit.IntOffset(dir * it.width / 6, it.height / 12) } + fadeIn(t(160))) togetherWith fadeOut(t(100))
         // Un cartel que se pega en la pared: cae apenas desde arriba, algo más grande, y se asienta.

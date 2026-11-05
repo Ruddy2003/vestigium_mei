@@ -143,7 +143,7 @@ fun FicheroIdeas(nav: Nav, ideas: List<Idea> = Repo.ideas, max: Int? = null, mod
         }
     }
     if (max != null && todos.size > max)
-        Text("y ${todos.size - max} ${a.contenedores} más", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Text("y ${todos.size - max} ${if (todos.size - max == 1) a.contenedor else a.contenedores} más", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
     }
 }
