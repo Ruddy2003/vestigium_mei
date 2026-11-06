@@ -48,6 +48,8 @@ enum class Adorno { NADA, HERRAJES, REMACHES, TARACEA, CRUZ, TEJIDO, LACA, NIEVE
 class ArchivoIdeas(
     val contenedor: String, val contenedores: String, val ficha: String, val fichas: String, val fem: Boolean,
     val forma: FormaArchivo, val formaFicha: FormaFicha, val adorno: Adorno = Adorno.NADA,
+    /** El mueble entero donde están los contenedores («el tansu», «la pared de la cueva»); mientras no tiene uno propio, «el fichero». */
+    val mueble: String = "el fichero",
 ) {
     /** «3 tablillas», «1 tanzaku». */
     fun cuenta(n: Int) = "$n ${if (n == 1) ficha else fichas}"
@@ -61,7 +63,7 @@ fun archivoIdeas(t: TemaId): ArchivoIdeas = when (t) {
     TemaId.HELENO -> ArchivoIdeas("ánfora", "ánforas", "óstrakon", "óstraka", true, FormaArchivo.CAPSA, FormaFicha.LAJA, Adorno.MEANDRO)
     TemaId.EGIPTO -> ArchivoIdeas("cofre de cedro", "cofres de cedro", "tablilla", "tablillas", false, FormaArchivo.ARCON, FormaFicha.TABLILLA, Adorno.GLIFOS)
     TemaId.SEDA -> ArchivoIdeas("caja lacada", "cajas lacadas", "tira de bambú", "tiras de bambú", true, FormaArchivo.CAJA, FormaFicha.TIRA, Adorno.LACA)
-    TemaId.EDO -> ArchivoIdeas("cajón del tansu", "cajones del tansu", "tanzaku", "tanzaku", false, FormaArchivo.CAJONERA, FormaFicha.TIRA, Adorno.HERRAJES)
+    TemaId.EDO -> ArchivoIdeas("cajón del tansu", "cajones del tansu", "tanzaku", "tanzaku", false, FormaArchivo.CAJONERA, FormaFicha.TIRA, Adorno.HERRAJES, "el tansu")
     TemaId.MONGOL -> ArchivoIdeas("arcón de la ger", "arcones de la ger", "tablilla de abedul", "tablillas de abedul", false, FormaArchivo.ARCON, FormaFicha.TABLILLA, Adorno.TEJIDO)
     TemaId.MEDIEVAL -> ArchivoIdeas("arcón", "arcones", "folio", "folios", false, FormaArchivo.ARCON, FormaFicha.TARJETA, Adorno.HERRAJES)
     TemaId.TEMPLARIO -> ArchivoIdeas("arca", "arcas", "carta sellada", "cartas selladas", true, FormaArchivo.ARCON, FormaFicha.EXPEDIENTE, Adorno.CRUZ)
@@ -89,7 +91,7 @@ fun archivoIdeas(t: TemaId): ArchivoIdeas = when (t) {
     TemaId.URSS -> ArchivoIdeas("kartoteka", "kartotekas", "ficha", "fichas", true, FormaArchivo.CAJONERA, FormaFicha.EXPEDIENTE, Adorno.NADA)
     TemaId.REVOLUCION -> ArchivoIdeas("caja de los cahiers", "cajas de los cahiers", "pasquín", "pasquines", true, FormaArchivo.CAJA, FormaFicha.RECORTE, Adorno.CINTA)
     TemaId.ANTIGUAS -> ArchivoIdeas("arcón de la compañía", "arcones de la compañía", "página", "páginas", false, FormaArchivo.ARCON, FormaFicha.TARJETA, Adorno.CORREAS)
-    TemaId.CUEVA -> ArchivoIdeas("nicho", "nichos", "laja", "lajas", false, FormaArchivo.NICHO, FormaFicha.LAJA, Adorno.NADA)
+    TemaId.CUEVA -> ArchivoIdeas("nicho", "nichos", "laja", "lajas", false, FormaArchivo.NICHO, FormaFicha.LAJA, Adorno.NADA, "la pared de la cueva")
 }
 
 // =====================================================================
@@ -502,30 +504,33 @@ fun DrawScope.dibujarContenedor(a: ArchivoIdeas, m: Materia, t: TemaId, n: Int) 
  */
 @Composable
 fun InteriorArchivo(a: ArchivoIdeas, m: Materia, modifier: Modifier = Modifier) {
+    Canvas(modifier.fillMaxSize()) { dibujarInteriorArchivo(a, m) }
+}
+
+/** Lo mismo que [InteriorArchivo], para dibujarlo dentro de otro lienzo. */
+fun DrawScope.dibujarInteriorArchivo(a: ArchivoIdeas, m: Materia) {
     val fondo = when (a.forma) {
         FormaArchivo.DIRECTORIO -> listOf(lerp(m.hoja, Color.Black, 0.2f), m.hoja)
         FormaArchivo.NICHO -> listOf(lerp(m.sombra, Color.Black, 0.25f), lerp(m.cuerpo, Color.Black, 0.35f))
         FormaArchivo.RIEL -> listOf(lerp(m.cuerpo, Color.Black, 0.3f), m.cuerpo)
         else -> listOf(lerp(m.sombra, Color.Black, 0.25f), lerp(m.cuerpo, Color.Black, 0.4f))
     }
-    Canvas(modifier.fillMaxSize()) {
-        drawRect(Brush.verticalGradient(fondo))
-        val w = size.width; val h = size.height
-        when (a.forma) {
-            FormaArchivo.CAJONERA, FormaArchivo.ARCON, FormaArchivo.CASILLERO -> {
-                // Vetas de la madera (o el cepillado del metal).
-                for (i in 0 until 26) {
-                    val y = h * i / 26f + 8f * ruido(3, i)
-                    drawLine(m.brillo.copy(alpha = 0.06f), Offset(0f, y), Offset(w, y + 14f * (ruido(5, i) - 0.5f)), 1.5f)
-                }
+    drawRect(Brush.verticalGradient(fondo))
+    val w = size.width; val h = size.height
+    when (a.forma) {
+        FormaArchivo.CAJONERA, FormaArchivo.ARCON, FormaArchivo.CASILLERO -> {
+            // Vetas de la madera (o el cepillado del metal).
+            for (i in 0 until 26) {
+                val y = h * i / 26f + 8f * ruido(3, i)
+                drawLine(m.brillo.copy(alpha = 0.06f), Offset(0f, y), Offset(w, y + 14f * (ruido(5, i) - 0.5f)), 1.5f)
             }
-            FormaArchivo.CAJA -> { var x = 0f; while (x < w) { drawLine(Color.Black.copy(alpha = 0.08f), Offset(x, 0f), Offset(x, h), 2f); x += 9.dp.toPx() } }
-            FormaArchivo.CAPSA -> { var x = 0f; while (x < w) { drawLine(m.sombra.copy(alpha = 0.3f), Offset(x, 0f), Offset(x, h), 1.5f); x += 46.dp.toPx() } }
-            FormaArchivo.DIRECTORIO -> {
-                var y = 0f; while (y < h) { drawLine(m.acento.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), 1f); y += 3.dp.toPx() }
-            }
-            FormaArchivo.RIEL -> drawRect(m.acento.copy(alpha = 0.12f), Offset(0f, h - 3.dp.toPx()), Size(w, 3.dp.toPx()))
-            FormaArchivo.NICHO -> for (i in 0 until 60) drawCircle(m.brillo.copy(alpha = 0.08f), 1.5f + 2 * ruido(13, i), Offset(w * ruido(17, i), h * ruido(19, i)))
         }
+        FormaArchivo.CAJA -> { var x = 0f; while (x < w) { drawLine(Color.Black.copy(alpha = 0.08f), Offset(x, 0f), Offset(x, h), 2f); x += 9.dp.toPx() } }
+        FormaArchivo.CAPSA -> { var x = 0f; while (x < w) { drawLine(m.sombra.copy(alpha = 0.3f), Offset(x, 0f), Offset(x, h), 1.5f); x += 46.dp.toPx() } }
+        FormaArchivo.DIRECTORIO -> {
+            var y = 0f; while (y < h) { drawLine(m.acento.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), 1f); y += 3.dp.toPx() }
+        }
+        FormaArchivo.RIEL -> drawRect(m.acento.copy(alpha = 0.12f), Offset(0f, h - 3.dp.toPx()), Size(w, 3.dp.toPx()))
+        FormaArchivo.NICHO -> for (i in 0 until 60) drawCircle(m.brillo.copy(alpha = 0.08f), 1.5f + 2 * ruido(13, i), Offset(w * ruido(17, i), h * ruido(19, i)))
     }
 }

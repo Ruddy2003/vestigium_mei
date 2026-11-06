@@ -467,6 +467,46 @@ class Capturas {
     }
     /** En modo oscuro, el papel de las fichas (antes salía de un gris raro). */
     @Test fun archivoIdeasOscuro() = listOf(TemaId.MEDIEVAL, TemaId.BOTANICO, TemaId.URBE, TemaId.EDO).forEach { t -> archivo(t, true, "tema_${t.id}") }
+    /**
+     * Ideas inventadas repartidas en [n] temas, cada uno con más o menos fichas; uno de nombre largo y, con más de uno, el
+     * último es el cajón de las ideas sin tema.
+     */
+    private fun ideasConTemas(n: Int): List<io.github.ruddy2003.vestigium.data.Idea> {
+        val temas = listOf("filosofia", "dinero", "historia_de_la_ciencia_y_de_la_tecnica", "salud", "aprender", "fisica", "amistad", "escritura", "cocina")
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        return (0 until n).flatMap { k ->
+            (0..(k * 3 % 7)).map { j ->
+                val f = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -(k * 2L + j))
+                val sinTema = n > 1 && k == n - 1
+                io.github.ruddy2003.vestigium.data.Idea("m${k}_$j", f + "T19:00:00-06:00", f, "Una idea inventada número ${j + 1}.",
+                    temas = if (sinTema) emptyList() else listOf(temas[k % temas.size]))
+            }
+        }
+    }
+    /** El mueble del Ideario: vacío, con 1, 5 y 9 temas, y la vista corta (6 y «y N más»). */
+    private fun mueble(t: TemaId, oscuro: Boolean) = pantalla(t, oscuro, 4200, "tema_${t.id}_${if (oscuro) "oscuro" else "claro"}") {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+            listOf(0, 1, 5, 9).forEach { n -> io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, ideasConTemas(n)) }
+            io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, ideasConTemas(9), max = 6)
+        }
+    }
+    /** Los muebles con diseño propio, en claro y en oscuro (los demás, con CAPTURAS=mueble, [temaMueble]). */
+    @Test fun muebleIdeas() = listOf(TemaId.EDO, TemaId.CUEVA).forEach { t -> mueble(t, false); mueble(t, true) }
+    /** El archivo de los temas con diseño propio, en oscuro (el claro ya sale en [archivoIdeas]). */
+    @Test fun archivoIdeasPropio() = listOf(TemaId.EDO, TemaId.CUEVA).forEach { t -> archivo(t, true, "propio_${t.id}") }
+    /** Escribir una idea en los temas con diseño propio, con el reverso a la vista. */
+    @Test fun escritorIdeaPropio() = listOf(TemaId.EDO, TemaId.CUEVA).forEach { t ->
+        pantalla(t, false, 3400, "propio_${t.id}") {
+            ideasEjemplo()
+            io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.idea = Repo.ideas.first { it.id == "i2" }; io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.contexto = null
+            io.github.ruddy2003.vestigium.ui.pantallas.EscritorIdea(navVacia)
+        }
+    }
+    /** La biblioteca del Ideario entera en los temas con diseño propio: el mueble, las fijadas y la lista por mes. */
+    @Test fun idearioPropio() = listOf(TemaId.EDO, TemaId.CUEVA).forEach { t -> pantalla(t, false, 4000, "propio_${t.id}") {
+        ideasArchivo()
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "ideas")
+    } }
     /** Escribir una idea: una muestra por forma de ficha (tarjeta, tablilla, tira, ticket, expediente, ventana, laja y recorte). */
     @Test fun escritorIdea() = listOf(TemaId.MEDIEVAL, TemaId.ROMANO, TemaId.EDO, TemaId.NEON, TemaId.DISTOPIA, TemaId.CIBER, TemaId.CUEVA, TemaId.PIRATA).forEach { t ->
         pantalla(t, t.soloOscuro, 2400, "tema_${t.id}") {
@@ -1264,6 +1304,7 @@ class Capturas {
     @Test fun temaCampana() = porTema("campana") { t, o, n -> campanas(t, o, n) }
     @Test fun temaLibreta() = porTema("libreta") { t, o, n -> libreta(t, o, n) }
     @Test fun temaArchivo() = porTema("archivo") { t, o, n -> archivo(t, o, n) }
+    @Test fun temaMueble() = porTema("mueble") { t, o, _ -> mueble(t, o) }
 
     // Animación y celebración: un instante quieto de cada una.
     @Test fun temaFondoVivo() = porTema("fondoVivo") { t, o, n -> captura(t, o, 2400, n) { io.github.ruddy2003.vestigium.ui.FondoVivo(t, fijo = 0.4f) } }
