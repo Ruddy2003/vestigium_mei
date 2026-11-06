@@ -111,12 +111,12 @@ interface DisenoIdeas {
 
 /** El diseño del Ideario de cada tema. */
 fun disenoIdeas(t: TemaId): DisenoIdeas = when (t) {
-    TemaId.ROMANO -> DisenoAnterior(TemaId.ROMANO)
+    TemaId.ROMANO -> IdeasRomano
     TemaId.URBE -> DisenoAnterior(TemaId.URBE)
     TemaId.CIBER -> DisenoAnterior(TemaId.CIBER)
     TemaId.NEON -> DisenoAnterior(TemaId.NEON)
-    TemaId.HELENO -> DisenoAnterior(TemaId.HELENO)
-    TemaId.EGIPTO -> DisenoAnterior(TemaId.EGIPTO)
+    TemaId.HELENO -> IdeasHeleno
+    TemaId.EGIPTO -> IdeasEgipto
     TemaId.MEDIEVAL -> DisenoAnterior(TemaId.MEDIEVAL)
     TemaId.TEMPLARIO -> DisenoAnterior(TemaId.TEMPLARIO)
     TemaId.DISTOPIA -> DisenoAnterior(TemaId.DISTOPIA)
@@ -133,17 +133,17 @@ fun disenoIdeas(t: TemaId): DisenoIdeas = when (t) {
     TemaId.SEDA -> DisenoAnterior(TemaId.SEDA)
     TemaId.EDO -> IdeasEdo
     TemaId.GOTICO -> DisenoAnterior(TemaId.GOTICO)
-    TemaId.ARCANO -> DisenoAnterior(TemaId.ARCANO)
+    TemaId.ARCANO -> IdeasArcano
     TemaId.ESPACIO -> DisenoAnterior(TemaId.ESPACIO)
     TemaId.ABISMO -> DisenoAnterior(TemaId.ABISMO)
     TemaId.ANDALUS -> DisenoAnterior(TemaId.ANDALUS)
-    TemaId.MESO -> DisenoAnterior(TemaId.MESO)
+    TemaId.MESO -> IdeasMeso
     TemaId.MONGOL -> DisenoAnterior(TemaId.MONGOL)
     TemaId.RENACIMIENTO -> DisenoAnterior(TemaId.RENACIMIENTO)
     TemaId.PIRATA -> DisenoAnterior(TemaId.PIRATA)
     TemaId.URSS -> DisenoAnterior(TemaId.URSS)
     TemaId.REVOLUCION -> DisenoAnterior(TemaId.REVOLUCION)
-    TemaId.ANTIGUAS -> DisenoAnterior(TemaId.ANTIGUAS)
+    TemaId.ANTIGUAS -> IdeasAntiguas
     TemaId.CUEVA -> IdeasCueva
 }
 
@@ -213,3 +213,32 @@ internal fun mezcla(a: Color, b: Color, f: Float) = lerp(a, b, f.coerceIn(0f, 1f
 
 /** El margen chico estándar: el de las fichas sin adornos arriba. */
 internal val MARGEN_SIMPLE = MargenesFicha(6.dp, 9.dp, 6.dp, 12.dp, 22.dp, 22.dp)
+
+/**
+ * Un contorno irregular dentro de [r]: el perímetro en [puntos] pasos, cada uno empujado hacia adentro hasta [hondo] (fracción
+ * del lado menor), con un salto más hondo cada cuatro. Sirve para tiestos, papel de corteza o vitela de borde barbado.
+ */
+internal fun contornoIrregular(r: Rect, semilla: Int, puntos: Int, hondo: Float): Path = Path().apply {
+    for (k in 0 until puntos) {
+        val t = k / puntos.toFloat()
+        val (x, y) = when {
+            t < 0.25f -> r.left + r.width * (t / 0.25f) to r.top
+            t < 0.5f -> r.right to r.top + r.height * ((t - 0.25f) / 0.25f)
+            t < 0.75f -> r.right - r.width * ((t - 0.5f) / 0.25f) to r.bottom
+            else -> r.left to r.bottom - r.height * ((t - 0.75f) / 0.25f)
+        }
+        val adentro = minOf(r.width, r.height) * hondo * (0.25f + 0.75f * azar(semilla, k)) * (if (k % 4 == 0) 1.8f else 1f)
+        val px = x + (if (x <= r.left + 0.5f) adentro else if (x >= r.right - 0.5f) -adentro else 0f)
+        val py = y + (if (y <= r.top + 0.5f) adentro else if (y >= r.bottom - 0.5f) -adentro else 0f)
+        if (k == 0) moveTo(px, py) else lineTo(px, py)
+    }
+    close()
+}
+
+/** Los cuatro lados de [r] más hondos que su centro: sombra de esquina para paredes de un interior. */
+internal fun DrawScope.sombraInterior(r: Rect, ancho: Float, fuerza: Float = 0.25f) {
+    drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = fuerza), Color.Transparent), r.top, r.top + ancho), r.topLeft, Size(r.width, ancho))
+    drawRect(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = fuerza * 0.6f)), r.bottom - ancho, r.bottom), Offset(r.left, r.bottom - ancho), Size(r.width, ancho))
+    drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = fuerza * 0.8f), Color.Transparent), r.left, r.left + ancho), r.topLeft, Size(ancho, r.height))
+    drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = fuerza * 0.8f)), r.right - ancho, r.right), Offset(r.right - ancho, r.top), Size(ancho, r.height))
+}

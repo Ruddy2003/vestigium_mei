@@ -58,10 +58,10 @@ class ArchivoIdeas(
 }
 
 fun archivoIdeas(t: TemaId): ArchivoIdeas = when (t) {
-    TemaId.ROMANO -> ArchivoIdeas("capsa", "capsas", "tablilla", "tablillas", true, FormaArchivo.CAPSA, FormaFicha.TABLILLA, Adorno.ORO)
+    TemaId.ROMANO -> ArchivoIdeas("capsa", "capsas", "rollo", "rollos", true, FormaArchivo.CAPSA, FormaFicha.TABLILLA, Adorno.ORO, "el armarium")
     TemaId.URBE -> ArchivoIdeas("caja de boletos", "cajas de boletos", "boleto", "boletos", true, FormaArchivo.CAJA, FormaFicha.TICKET, Adorno.CINTA)
-    TemaId.HELENO -> ArchivoIdeas("ánfora", "ánforas", "óstrakon", "óstraka", true, FormaArchivo.CAPSA, FormaFicha.LAJA, Adorno.MEANDRO)
-    TemaId.EGIPTO -> ArchivoIdeas("cofre de cedro", "cofres de cedro", "tablilla", "tablillas", false, FormaArchivo.ARCON, FormaFicha.TABLILLA, Adorno.GLIFOS)
+    TemaId.HELENO -> ArchivoIdeas("ánfora", "ánforas", "óstrakon", "óstraka", true, FormaArchivo.CAPSA, FormaFicha.LAJA, Adorno.MEANDRO, "la stoa")
+    TemaId.EGIPTO -> ArchivoIdeas("cofre de cedro", "cofres de cedro", "tablilla de escriba", "tablillas de escriba", false, FormaArchivo.ARCON, FormaFicha.TABLILLA, Adorno.GLIFOS, "la Casa de la Vida")
     TemaId.SEDA -> ArchivoIdeas("caja lacada", "cajas lacadas", "tira de bambú", "tiras de bambú", true, FormaArchivo.CAJA, FormaFicha.TIRA, Adorno.LACA)
     TemaId.EDO -> ArchivoIdeas("cajón del tansu", "cajones del tansu", "tanzaku", "tanzaku", false, FormaArchivo.CAJONERA, FormaFicha.TIRA, Adorno.HERRAJES, "el tansu")
     TemaId.MONGOL -> ArchivoIdeas("arcón de la ger", "arcones de la ger", "tablilla de abedul", "tablillas de abedul", false, FormaArchivo.ARCON, FormaFicha.TABLILLA, Adorno.TEJIDO)
@@ -81,16 +81,16 @@ fun archivoIdeas(t: TemaId): ArchivoIdeas = when (t) {
     TemaId.CIBER -> ArchivoIdeas("directorio", "directorios", "archivo", "archivos", false, FormaArchivo.DIRECTORIO, FormaFicha.VENTANA, Adorno.CODIGO)
     TemaId.NEON -> ArchivoIdeas("riel", "rieles", "ticket", "tickets", false, FormaArchivo.RIEL, FormaFicha.TICKET, Adorno.NADA)
     TemaId.GOTICO -> ArchivoIdeas("cajón de la sacristía", "cajones de la sacristía", "hoja", "hojas", false, FormaArchivo.CAJONERA, FormaFicha.TARJETA, Adorno.ORO)
-    TemaId.ARCANO -> ArchivoIdeas("caja de archivo", "cajas de archivo", "ficha de evidencia", "fichas de evidencia", true, FormaArchivo.CAJA, FormaFicha.EXPEDIENTE, Adorno.BRAMANTE)
+    TemaId.ARCANO -> ArchivoIdeas("caja de archivo", "cajas de archivo", "ficha de evidencia", "fichas de evidencia", true, FormaArchivo.CAJA, FormaFicha.EXPEDIENTE, Adorno.BRAMANTE, "el archivo del pueblo")
     TemaId.ESPACIO -> ArchivoIdeas("módulo", "módulos", "registro", "registros", false, FormaArchivo.DIRECTORIO, FormaFicha.VENTANA, Adorno.NADA)
     TemaId.ABISMO -> ArchivoIdeas("caja estanca", "cajas estancas", "pizarra", "pizarras", true, FormaArchivo.CAJA, FormaFicha.TABLILLA, Adorno.REMACHES)
     TemaId.ANDALUS -> ArchivoIdeas("cajita de taracea", "cajitas de taracea", "hoja", "hojas", true, FormaArchivo.CAJONERA, FormaFicha.TARJETA, Adorno.TARACEA)
-    TemaId.MESO -> ArchivoIdeas("petaca", "petacas", "hoja de amate", "hojas de amate", true, FormaArchivo.CAJA, FormaFicha.TIRA, Adorno.TEJIDO)
+    TemaId.MESO -> ArchivoIdeas("petaca", "petacas", "hoja de amate", "hojas de amate", true, FormaArchivo.CAJA, FormaFicha.TIRA, Adorno.TEJIDO, "el muro pintado")
     TemaId.RENACIMIENTO -> ArchivoIdeas("cajoncito del studiolo", "cajoncitos del studiolo", "hoja de boceto", "hojas de boceto", false, FormaArchivo.CAJONERA, FormaFicha.TARJETA, Adorno.HERRAJES)
     TemaId.PIRATA -> ArchivoIdeas("cofre", "cofres", "carta de marear", "cartas de marear", false, FormaArchivo.ARCON, FormaFicha.RECORTE, Adorno.HERRAJES)
     TemaId.URSS -> ArchivoIdeas("kartoteka", "kartotekas", "ficha", "fichas", true, FormaArchivo.CAJONERA, FormaFicha.EXPEDIENTE, Adorno.NADA)
     TemaId.REVOLUCION -> ArchivoIdeas("caja de los cahiers", "cajas de los cahiers", "pasquín", "pasquines", true, FormaArchivo.CAJA, FormaFicha.RECORTE, Adorno.CINTA)
-    TemaId.ANTIGUAS -> ArchivoIdeas("arcón de la compañía", "arcones de la compañía", "página", "páginas", false, FormaArchivo.ARCON, FormaFicha.TARJETA, Adorno.CORREAS)
+    TemaId.ANTIGUAS -> ArchivoIdeas("arcón de la compañía", "arcones de la compañía", "página del cronista", "páginas del cronista", false, FormaArchivo.ARCON, FormaFicha.TARJETA, Adorno.CORREAS, "la sala de piedra")
     TemaId.CUEVA -> ArchivoIdeas("nicho", "nichos", "laja", "lajas", false, FormaArchivo.NICHO, FormaFicha.LAJA, Adorno.NADA, "la pared de la cueva")
 }
 

@@ -78,7 +78,8 @@ fun MuebleIdeas(cajones: List<CajonIdeas>, rotulo: (String) -> String, sub: (Caj
             fun x(i: Int): Dp = lado + (anchoH + sep) * (i % d.cols)
             fun y(i: Int): Dp = altoCorona + sep + (altoH + sep) * (i / d.cols)
             Box(Modifier.fillMaxWidth().height(alto)) {
-                Canvas(Modifier.fillMaxSize()) {
+                // En su propia capa: el mueble tiene muchos trazos y no hace falta volver a dibujarlo al desplazar la pantalla.
+                Canvas(Modifier.fillMaxSize().graphicsLayer()) {
                     val disp = Disposicion(
                         corona = Rect(0f, 0f, size.width, altoCorona.toPx()),
                         filas = (0 until filas).map { f -> Rect(0f, y(f * d.cols).toPx(), size.width, (y(f * d.cols) + altoH).toPx()) },
@@ -136,7 +137,7 @@ fun MuebleIdeas(cajones: List<CajonIdeas>, rotulo: (String) -> String, sub: (Caj
 fun CompartimentoIdeas(d: DisenoIdeas, n: Int, sinTema: Boolean, semilla: Int, titulo: String, sub: String, oscuro: Boolean,
                        modifier: Modifier = Modifier, abierto: () -> Float = { 0f }) {
     BoxWithConstraints(modifier) {
-        Canvas(Modifier.fillMaxSize()) { with(d) { compartimento(EstadoCajon(n, sinTema, abierto(), semilla), oscuro) } }
+        Canvas(Modifier.fillMaxSize().graphicsLayer()) { with(d) { compartimento(EstadoCajon(n, sinTema, abierto(), semilla), oscuro) } }
         val r = d.rotulo
         val altoR = maxHeight * r.height
         val tam = (altoR.value * 0.36f).coerceIn(9f, 17f)
@@ -158,7 +159,7 @@ fun CompartimentoIdeas(d: DisenoIdeas, n: Int, sinTema: Boolean, semilla: Int, t
 @Composable
 fun InteriorIdeas(oscuro: Boolean, modifier: Modifier = Modifier) {
     val d = disenoIdeas(Estilo.tema)
-    Canvas(modifier.fillMaxSize()) { with(d) { interior(oscuro) } }
+    Canvas(modifier.fillMaxSize().graphicsLayer()) { with(d) { interior(oscuro) } }
 }
 
 /** La marca de cómo la tienes, chica, para poner junto al texto de una ficha. No dibuja nada si la idea no tiene postura. */
