@@ -114,27 +114,27 @@ fun disenoIdeas(t: TemaId): DisenoIdeas = when (t) {
     TemaId.ROMANO -> IdeasRomano
     TemaId.URBE -> IdeasUrbe
     TemaId.CIBER -> IdeasCiber
-    TemaId.NEON -> DisenoAnterior(TemaId.NEON)
+    TemaId.NEON -> IdeasNeon
     TemaId.HELENO -> IdeasHeleno
     TemaId.EGIPTO -> IdeasEgipto
     TemaId.MEDIEVAL -> IdeasMedieval
     TemaId.TEMPLARIO -> IdeasTemplario
-    TemaId.DISTOPIA -> DisenoAnterior(TemaId.DISTOPIA)
-    TemaId.REFUGIO -> DisenoAnterior(TemaId.REFUGIO)
-    TemaId.ORDEN -> DisenoAnterior(TemaId.ORDEN)
+    TemaId.DISTOPIA -> IdeasDistopia
+    TemaId.REFUGIO -> IdeasRefugio
+    TemaId.ORDEN -> IdeasOrden
     TemaId.VAPOR -> IdeasVapor
-    TemaId.LABORATORIO -> DisenoAnterior(TemaId.LABORATORIO)
-    TemaId.COLONOS -> DisenoAnterior(TemaId.COLONOS)
+    TemaId.LABORATORIO -> IdeasLaboratorio
+    TemaId.COLONOS -> IdeasColonos
     TemaId.NAPOLEON -> IdeasNapoleon
     TemaId.DECO -> IdeasDeco
     TemaId.BOTANICO -> IdeasBotanico
-    TemaId.RUINAS -> DisenoAnterior(TemaId.RUINAS)
+    TemaId.RUINAS -> IdeasRuinas
     TemaId.NAVIDAD -> IdeasNavidad
     TemaId.SEDA -> IdeasSeda
     TemaId.EDO -> IdeasEdo
     TemaId.GOTICO -> IdeasGotico
     TemaId.ARCANO -> IdeasArcano
-    TemaId.ESPACIO -> DisenoAnterior(TemaId.ESPACIO)
+    TemaId.ESPACIO -> IdeasEspacio
     TemaId.ABISMO -> IdeasAbismo
     TemaId.ANDALUS -> IdeasAndalus
     TemaId.MESO -> IdeasMeso

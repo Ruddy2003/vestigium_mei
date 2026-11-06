@@ -560,6 +560,21 @@ class Capturas {
         ideasArchivo()
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "ideas")
     } }
+    /** Los temas del lote 4 del Ideario: Futuro. */
+    private val LOTE4 = listOf(TemaId.NEON, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.ORDEN, TemaId.LABORATORIO, TemaId.COLONOS, TemaId.RUINAS, TemaId.ESPACIO)
+    @Test fun muebleIdeasLote4() = LOTE4.forEach { t -> mueble(t, t.soloOscuro); if (!t.soloOscuro) mueble(t, true) }
+    @Test fun archivoIdeasLote4() = LOTE4.forEach { t -> archivo(t, t.soloOscuro, "lote4_${t.id}_claro"); if (!t.soloOscuro) archivo(t, true, "lote4_${t.id}_oscuro") }
+    @Test fun escritorIdeaLote4() = LOTE4.forEach { t ->
+        pantalla(t, t.soloOscuro, 3400, "lote4_${t.id}") {
+            ideasEjemplo()
+            io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.idea = Repo.ideas.first { it.id == "i2" }; io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.contexto = null
+            io.github.ruddy2003.vestigium.ui.pantallas.EscritorIdea(navVacia)
+        }
+    }
+    @Test fun idearioLote4() = LOTE4.forEach { t -> pantalla(t, t.soloOscuro, 4000, "lote4_${t.id}") {
+        ideasArchivo()
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "ideas")
+    } }
     /** Escribir una idea: una muestra por forma de ficha (tarjeta, tablilla, tira, ticket, expediente, ventana, laja y recorte). */
     @Test fun escritorIdea() = listOf(TemaId.MEDIEVAL, TemaId.ROMANO, TemaId.EDO, TemaId.NEON, TemaId.DISTOPIA, TemaId.CIBER, TemaId.CUEVA, TemaId.PIRATA).forEach { t ->
         pantalla(t, t.soloOscuro, 2400, "tema_${t.id}") {
