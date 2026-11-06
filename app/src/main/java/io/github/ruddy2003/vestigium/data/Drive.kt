@@ -123,7 +123,7 @@ object Drive {
             return EMPOBRECIDO
         }
         var n = 0
-        if (!cifra) for ((nombre, cont) in Exportar.archivos(ctx)) { subirArchivo(token, dir, existentes, nombre, mime(nombre), cont.toByteArray()); n++ }
+        if (!cifra) for (a in Exportar.archivos(ctx)) { subirArchivo(token, dir, existentes, a.nombre, mime(a.nombre), a.bytes()); n++ }
         val diario = Respaldos.archivo(ctx)
         val bytes = diario.readBytes(); diario.delete()
         subirArchivo(token, dir, existentes, Respaldos.BASE + ext, Respaldos.mime(ext), bytes); n++

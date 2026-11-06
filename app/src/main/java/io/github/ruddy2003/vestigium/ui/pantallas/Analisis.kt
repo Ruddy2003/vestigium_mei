@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -178,7 +180,7 @@ private fun Tendencia(panel: Map<String, Map<String, Double?>>, vars: List<Varia
     var v by remember { mutableStateOf("valencia") }
     Selector("variable", v, vars, elegir) { v = it }
     val s = Analisis.serie(panel, v)
-    if (s.size < 5) { Vacio("Hay ${s.size} días con este dato. Con 5 o más aparece la gráfica."); return }
+    if (s.size < 5) { Vacio("Hay ${porNumero(s.size, "1 día", "${s.size} días")} con este dato. Con 5 o más aparece la gráfica."); return }
     val m7 = Analisis.movil(s, 7); val m30 = Analisis.movil(s, 30)
     val c1 = MaterialTheme.colorScheme.outline; val c2 = MaterialTheme.colorScheme.secondary; val c3 = MaterialTheme.colorScheme.primary
     val eg = estiloGrafica()
@@ -217,7 +219,7 @@ private fun Tendencia(panel: Map<String, Map<String, Double?>>, vars: List<Varia
             Cifra((if (c.dif >= 0) "+" else "") + fmt(c.dif), "cambio", Modifier.weight(1f))
         }
         Ayuda(if (c.lo > 0 || c.hi < 0) "El cambio es claro: el intervalo de 95% (${fmt(c.lo)} a ${fmt(c.hi)}) no incluye el cero."
-        else "El intervalo de 95% (${fmt(c.lo)} a ${fmt(c.hi)}) incluye el cero: podría ser variación normal. (${c.nA} y ${c.nB} días)", Modifier.padding(top = 6.dp))
+        else "El intervalo de 95% (${fmt(c.lo)} a ${fmt(c.hi)}) incluye el cero: podría ser variación normal. (${c.nA} y ${porNumero(c.nB, "1 día", "${c.nB} días")})", Modifier.padding(top = 6.dp))
     }
 }
 
@@ -347,8 +349,8 @@ private fun Dinamica() {
     Tarjeta(Modifier.padding(top = 10.dp)) {
         // «Muy difíciles» (1 o 2) no es lo mismo que la racha dura (3 o menos): por eso se nombran distinto (H-5-12).
         Clave("muy difíciles", "%.0f%% de tus días con valencia 1 o 2".format(d.dificiles))
-        Clave("racha buena", "${d.rachaBuena} días seguidos con 5 o más")
-        Clave("racha dura", "${d.rachaDificil} días seguidos con 3 o menos")
+        Clave("racha buena", "${porNumero(d.rachaBuena, "1 día seguido", "${d.rachaBuena} días seguidos")} con 5 o más")
+        Clave("racha dura", "${porNumero(d.rachaDificil, "1 día seguido", "${d.rachaDificil} días seguidos")} con 3 o menos")
         d.dentroDelDia?.let { Clave("intradía", "DE de %.2f entre avisos de un mismo día".format(it)) }
     }
     Ayuda("La DE mide qué tanto cambia tu ánimo en general; el MSSD, qué tan bruscos son los saltos de un día al siguiente; la inercia (de −1 a 1), qué tanto el ánimo de hoy arrastra al de mañana. " +

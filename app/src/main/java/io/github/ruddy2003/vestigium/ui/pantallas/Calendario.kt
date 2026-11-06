@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
 import androidx.compose.foundation.background
@@ -74,6 +76,12 @@ import io.github.ruddy2003.vestigium.ui.elegirFecha
 /** Fecha que otra pantalla le pide abrir al Día. */
 object Seleccion {
     var pedida by mutableStateOf<String?>(null)
+    /** La fecha de cada día abierto encima de otra pantalla, por su nivel en la pila. */
+    private val apilados = HashMap<Int, String>()
+    fun diaApilado(nivel: Int): String? = apilados[nivel]
+    fun recordarDiaApilado(nivel: Int, fecha: String) { apilados[nivel] = fecha }
+    /** Al cerrar niveles de la pila, sus fechas ya no sirven. */
+    fun olvidarDiasSobre(nivel: Int) { apilados.keys.removeAll { it > nivel } }
     /** Día que abre la pantalla Privado (desde «privado de este día» en Día). */
     var privado by mutableStateOf<String?>(null)
     var ultimoMes by mutableStateOf<String?>(null)
@@ -209,7 +217,7 @@ fun PantallaCalendario(nav: Nav) {
                 val transcurridos = dias.count { it <= hoy }
                 val vals = dias.mapNotNull { Repo.dias[it]?.valencia }
                 Clave("dias", "$conDiario de $transcurridos con registro")
-                if (vals.isNotEmpty()) Clave("animus", "%.2f de media · ${vals.size} días".format(vals.average()))
+                if (vals.isNotEmpty()) Clave("animus", "%.2f de media · ${porNumero(vals.size, "1 día", "${vals.size} días")}".format(vals.average()))
                 val mejor = dias.filter { Repo.dias[it]?.valencia != null }.maxByOrNull { Repo.dias[it]!!.valencia!! }
                 mejor?.let { Clave("optimus", Fechas.corto(it) + " · " + Repo.dias[it]?.valencia) }
                 val mom = Repo.momentos.count { it.fecha.startsWith(mes) && it.tipo != "muestreo" && !it.privado }
@@ -219,7 +227,7 @@ fun PantallaCalendario(nav: Nav) {
                 val hitos = dias.flatMap { Repo.dias[it]?.hitos ?: emptyList() }
                 if (hitos.isNotEmpty()) Clave("memorabilia", hitos.distinct().take(8).joinToString(", "))
                 val esc = Repo.ascensos.count { it.fecha.startsWith(mes) }
-                if (esc > 0) Clave("ascensvs", "$esc sesiones")
+                if (esc > 0) Clave("ascensvs", "${porNumero(esc, "1 sesión", "$esc sesiones")}")
             }
         }
     }
@@ -597,13 +605,27 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
     }
 }
 
+/**
+ * Cuántos momentos (sin avisos ni privados) hay cada día, contado una sola vez por versión de la lista: antes cada celda
+ * del mes recorría todos los momentos, en cada redibujo.
+ */
+private object MomentosPorDia {
+    private var de: List<io.github.ruddy2003.vestigium.data.Momento>? = null
+    private var conteo: Map<String, Int> = emptyMap()
+    fun en(fecha: String): Int {
+        val l = Repo.momentos
+        if (l !== de) { conteo = l.filter { it.tipo != "muestreo" && !it.privado }.groupingBy { it.fecha }.eachCount(); de = l }
+        return conteo[fecha] ?: 0
+    }
+}
+
 @Composable
 private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean, futuro: Boolean, verFotos: Boolean, onClick: () -> Unit) {
     val d = Repo.dias[fecha]
     // Con «fotos», los días con foto del día la muestran de fondo (las letras van en blanco sobre una sombra).
     val conFoto = verFotos && d?.foto != null
     val tinta = if (conFoto) Color.White else Tonos.sobre(fondo)
-    val nMom = Repo.momentos.count { it.fecha == fecha && it.tipo != "muestreo" && !it.privado }
+    val nMom = MomentosPorDia.en(fecha)
     val marca = io.github.ruddy2003.vestigium.ui.Estilo.marca(fecha)
     // Sellado: con ánimo y diario, lo mismo que pide la hoja de la noche para «día sellado».
     val sellado = d != null && d.valencia != null && d.nota.isNotBlank()

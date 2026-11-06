@@ -140,7 +140,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** (a) solo tamaño; (b) puede crear estancias falsas o inexactas.
 - **Gravedad:** Baja.
 - **Propuesta:** alinear comentario y código; asignar una precisión por defecto conservadora a puntos sin precisión.
-- **Estado:** Resuelto en parte. Inciso b resuelto en el módulo 10d (commit `035982c`) (P-33): un punto sin precisión cuenta como de 100 m (`Db.PRECISION_SIN_DATO`). El inciso a (una muestra por pulso) no se cambió: no estaba en P-33.
+- **Estado:** Resuelto. Inciso b resuelto en el módulo 10d (commit `035982c`) (P-33): un punto sin precisión cuenta como de 100 m (`Db.PRECISION_SIN_DATO`). Inciso a resuelto en el esquema 19 (D.148): la muestra ya no repite un punto que ya está, y se quitaron los repetidos guardados. Al revisarlo se vio que el efecto no era solo de tamaño: el mismo punto viejo repetido durante horas pesaba de más en lo que cuenta puntos.
 
 ### H-3-9 · Inicio de canción de Spotify subestimado si se interrumpe
 - **Dónde:** `Spotify.kt`.
@@ -182,7 +182,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** no se puede calcular la tasa de respuesta ni ver si la falta de respuesta se concentra en ciertos días u horas (dato que puede ser no aleatorio).
 - **Gravedad:** Media.
 - **Propuesta:** registrar por día los avisos planeados, mostrados y respondidos (p. ej., en una colección pequeña o en el documento del día) y exportarlos.
-- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-10): la colección `avisos` guarda planeados, vencidos y mostrados por día; el panel tiene `avisos_*` y `tasa_respuesta`. Los días anteriores quedan vacíos.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-10): la colección `avisos` guarda planeados, vencidos y mostrados por día; el panel tiene `avisos_*` y `tasa_respuesta`. Los días anteriores quedan vacíos. Desde el esquema 20 (D.153) se guarda además la hora real en que salió cada aviso, y los avisos suenan a su hora con una alarma exacta.
 
 ### H-2-4 · «No respondí» codificado como 0 en varias variables subjetivas
 - **Dónde:** `ciencia/Estadistica.kt`, `panel()`: `sueno_recordado = b(d.sueno_recordado)`, `ctx_* = b(...)`, `hab_* = b(...)` en todos los días con documento; codificación de `sdt_necesidad` (`las_tres` deja `autonomia`, `competencia`, `relacion` en 0) y de flujo (`no_aplica` deja todas en 0).
@@ -836,7 +836,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Gravedad:** Baja.
 - **Relación:** ya señalado en H-5-15 (módulo 5); se repite aquí porque afecta a «Tu año» y a la comparación entre periodos.
 - **Propuesta:** usar solo la valencia del diario (y mostrar aparte la de los avisos) o indicar cuántos días vienen de cada fuente.
-- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-29): el ánimo de los reportes y «Tu año» es solo la valencia del diario, y el reporte dice cuántos días solo tenían avisos.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-29): el ánimo de los reportes y «Tu año» es solo la valencia del diario, y el reporte dice cuántos días solo tenían avisos. La energía (activación) seguía cayendo al promedio de los avisos cuando faltaba la del diario; resuelto el 5 nov 2026 (D.155).
 
 ### H-8-11 · Comparaciones con el periodo anterior sin incertidumbre
 - **Dónde:** `reportes/Reportes.kt`, `cambio()` (umbral fijo 0.05 / 0.5); `Periodo` (mínimo 3 días en el periodo anterior).

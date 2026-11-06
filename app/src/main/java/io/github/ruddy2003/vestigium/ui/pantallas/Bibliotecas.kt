@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.privado
 import android.content.Context
 import android.content.Intent
@@ -131,7 +133,7 @@ fun PantallaBibliotecas(nav: Nav, inicial: String) {
         "momentos" -> "Una hoja por día con todo lo que registraste al momento: cómo te sentías, en qué pensabas, con quién y lo que tomaste."
         "cartas" -> "Las que te escribes al futuro, selladas hasta su fecha, y las que escribes a otras personas."
         "ideas" -> "Lo que aprendiste de un libro, un video o una plática, y lo que se te ocurrió, con tus palabras, su fuente y quién lo dice."
-        else -> LibroDiario.entradas().let { l -> "${l.size} entradas · %,d palabras. Toca una para abrirla.".format(l.sumOf { Texto.palabras(it.nota) }) }
+        else -> LibroDiario.entradas().let { l -> "${porNumero(l.size, "1 entrada", "${l.size} entradas")} · %,d palabras. Toca una para abrirla.".format(l.sumOf { Texto.palabras(it.nota) }) }
     }
     Hoja(titulo, nav.atras, sub, modifier = deslizar) {
         SelectorBibliotecas(cual) { ir(it) }

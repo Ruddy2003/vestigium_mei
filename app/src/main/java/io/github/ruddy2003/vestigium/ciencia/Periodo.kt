@@ -120,7 +120,9 @@ object Periodo {
 
         // ---- ánimo
         val vals = fechas.map { valDe(it) }
-        val acts = fechas.map { f -> Repo.dias[f]?.activacion?.toDouble() ?: mu.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.activacion?.toDouble() }.takeIf { it.isNotEmpty() }?.average() }
+        // La energía, como la valencia (valDe, H-8-10): solo la del diario. Antes, un día sin ella tomaba el promedio de los
+        // avisos, y «Energía media» mezclaba dos instrumentos mientras «Ánimo medio» no.
+        val acts = fechas.map { f -> Repo.dias[f]?.activacion?.toDouble() }
         val conVal = fechas.zip(vals).filter { it.second != null }
         val mejor = conVal.maxByOrNull { it.second!! }?.first
         val peor = conVal.minByOrNull { it.second!! }?.first

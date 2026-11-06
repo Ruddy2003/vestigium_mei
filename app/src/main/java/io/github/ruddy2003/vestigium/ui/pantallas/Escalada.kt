@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -136,7 +138,7 @@ fun PantallaEscalada(nav: Nav) {
                     Row(Modifier.fillMaxWidth().clickable { EdicionEscalada.id = a.id; nav.ir("ascenso") }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(Fechas.corto(a.fecha) + (if (a.lugar.isNotBlank()) " · ${a.lugar}" else ""), style = MaterialTheme.typography.bodyLarge)
-                            Text("${a.bloques.size} bloques · ${a.bloques.count { Grados.encadenado(it.estilo) }} encadenados" + (a.min?.let { " · $it min" } ?: ""),
+                            Text("${porNumero(a.bloques.size, "1 bloque", "${a.bloques.size} bloques")} · ${a.bloques.count { Grados.encadenado(it.estilo) }} encadenados" + (a.min?.let { " · $it min" } ?: ""),
                                 style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Text(maxGrado(a)?.second ?: "—", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)

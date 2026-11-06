@@ -29,8 +29,8 @@ object Galeria {
     data class Foto(val id: Long, val uri: Uri, val ms: Long, val tipo: String, val favorita: Boolean)
 
     // El día de la app empieza a las 5:00: una foto a la 1:00 pertenece a la noche anterior.
-    private fun ini(f: String) = Fechas.inicioDia(f) + 5 * 3_600_000L
-    private fun fin(f: String) = Fechas.finDia(f) + 5 * 3_600_000L
+    private fun ini(f: String) = Fechas.inicioDiaLogico(f)
+    private fun fin(f: String) = Fechas.finDiaLogico(f)
 
     fun delDia(ctx: Context, fecha: String): List<Foto> {
         if (!tienePermiso(ctx) && !parcial(ctx)) return emptyList()

@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
 import android.content.Intent
@@ -103,10 +105,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun PantallaDia(nav: Nav, apilado: Boolean = false) {
-    var fecha by remember { mutableStateOf(Seleccion.pedida ?: (if (apilado) null else Seleccion.diaAbierto) ?: Fechas.diaLogico()) }
-    // La pestaña recuerda la fecha abierta mientras vas a la hoja de la noche y vuelves; un día apilado no la cambia.
-    LaunchedEffect(fecha) { if (!apilado) Seleccion.diaAbierto = fecha }
+fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
+    // La pestaña recuerda la fecha abierta mientras vas a la hoja de la noche y vuelves. Un día apilado (abierto desde el
+    // calendario, el diario…) recuerda la suya según su nivel en la pila: antes, al volver de una pantalla abierta encima,
+    // mostraba el día de hoy y se podía escribir en el día equivocado.
+    var fecha by remember { mutableStateOf(Seleccion.pedida ?: (if (apilado) Seleccion.diaApilado(nivel) else Seleccion.diaAbierto) ?: Fechas.diaLogico()) }
+    LaunchedEffect(fecha) { if (!apilado) Seleccion.diaAbierto = fecha else Seleccion.recordarDiaApilado(nivel, fecha) }
     val guardado = Repo.dias[fecha]
     var d by remember(fecha) { mutableStateOf(guardado ?: Dia(fecha = fecha)) }
     var sucio by remember(fecha) { mutableStateOf(false) }
@@ -682,12 +686,12 @@ private fun Vestigios(fecha: String, nav: Nav) {
             if (extra.isNotEmpty()) { algo = true; ClaveDia("cibus", extra.joinToString(" · ")) }
         }
         Repo.comunicacion[fecha]?.let { co ->
-            if (co.sms_enviados + co.sms_recibidos > 0 || co.contactos > 0) { algo = true; ClaveDia("voces", (if (co.sms_enviados + co.sms_recibidos > 0) "${co.sms_enviados + co.sms_recibidos} sms · " else "") + "${co.contactos} personas") }
+            if (co.sms_enviados + co.sms_recibidos > 0 || co.contactos > 0) { algo = true; ClaveDia("voces", (if (co.sms_enviados + co.sms_recibidos > 0) "${co.sms_enviados + co.sms_recibidos} sms · " else "") + "${porNumero(co.contactos, "1 persona", "${co.contactos} personas")}") }
         }
         val wa = Repo.chats.filter { it.fecha == fecha }
         if (wa.isNotEmpty()) {
             algo = true
-            ClaveDia("whatsapp", "${wa.sumOf { it.mios }} enviados · ${wa.sumOf { it.otros }} recibidos · ${wa.size} chats")
+            ClaveDia("whatsapp", "${wa.sumOf { it.mios }} enviados · ${wa.sumOf { it.otros }} recibidos · ${porNumero(wa.size, "1 chat", "${wa.size} chats")}")
         }
         Repo.conexiones[fecha]?.let { cx ->
             algo = true
@@ -701,7 +705,7 @@ private fun Vestigios(fecha: String, nav: Nav) {
         }
         Repo.huellas[fecha]?.let { h -> algo = true; ClaveDia("google", "${h.yt_vistos} videos · ${h.busquedas + h.yt_busquedas} búsquedas" + (h.canales.keys.firstOrNull()?.let { " · más: $it" } ?: "")) }
         val sub = Repo.subrayados.filter { it.fecha == fecha }
-        if (sub.isNotEmpty()) { algo = true; ClaveDia("lectio", "${sub.size} subrayados · " + sub.map { it.libro }.distinct().take(2).joinToString(", ")) }
+        if (sub.isNotEmpty()) { algo = true; ClaveDia("lectio", "${porNumero(sub.size, "1 subrayado", "${sub.size} subrayados")} · " + sub.map { it.libro }.distinct().take(2).joinToString(", ")) }
         val ruidos = Repo.momentos.filter { it.fecha == fecha && !it.privado }.mapNotNull { it.ruido_db }
         if (ruidos.isNotEmpty()) ClaveDia("strepitus", "%.0f dB de media al registrar".format(ruidos.average()))
         // Lo que leíste, viste o jugaste; si lo terminaste ese día, tu calificación y lo que opinaste.

@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -385,7 +387,7 @@ private fun cartas(d: TuAnio.Datos): List<CartaAnio> {
     }
     if (p.tazasCafe >= 1 || p.entrenos > 0 || p.comidaTop.isNotEmpty()) l += CartaAnio("cuerpo", "Comida y fuerza", "CORPVS") { v ->
         if (p.tazasCafe >= 1) Grande(p.tazasCafe, "tazas de café (en cafeína)", v)
-        p.comidaTop.firstOrNull()?.let { Renglon("lo que más comiste", "${it.first.lowercase()} · ${it.second} veces") }
+        p.comidaTop.firstOrNull()?.let { Renglon("lo que más comiste", "${it.first.lowercase()} · ${porNumero(it.second, "1 vez", "${it.second} veces")}") }
         if (p.entrenos > 0) {
             Grande(d.elefantes, "elefantes africanos levantados", v) { n1(it) }
             Ayuda("${n1(p.volumenKg / 1000)} toneladas en ${p.entrenos} entrenos · un elefante pesa unas 6 t")
@@ -470,7 +472,7 @@ private fun cartas(d: TuAnio.Datos): List<CartaAnio> {
         Rascar(v) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(d.palabra, style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.primary, textAlign = TextAlign.Center)
-                Ayuda("${d.palabraVeces} veces")
+                Ayuda("${porNumero(d.palabraVeces, "1 vez", "${d.palabraVeces} veces")}")
             }
         }
         if (d.palabrasCasi.isNotEmpty() && (v.revelado || v.exportar)) Ayuda("También: " + d.palabrasCasi.joinToString(", "), Modifier.padding(top = 12.dp))
@@ -521,12 +523,12 @@ private fun Gente(d: TuAnio.Datos, v: Vista) {
         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("${i + 1}", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.width(34.dp))
             Text(v.nombre(n), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("$k días", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("${porNumero(k, "1 día", "$k días")}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
     p.personaNueva?.let { Renglon("alguien nuevo", v.nombre(it)) }
     if (p.cartas > 0) Renglon("cartas", "${p.cartas} escritas" + if (d.dirigidas > 0) " · ${d.dirigidas} a otras personas" else "")
-    if (p.waMios > 0) Renglon("WhatsApp", "${n0(p.waMios.toDouble())} mensajes tuyos")
+    if (p.waMios > 0) Renglon("WhatsApp", "${porNumero(p.waMios.toDouble(), "1 mensaje tuyo", "${n0(p.waMios.toDouble())} mensajes tuyos")}")
 }
 
 @Composable
@@ -535,7 +537,7 @@ private fun MusicaAnio(d: TuAnio.Datos, v: Vista) {
     if (p.musicaH > 0.5) {
         Grande(p.musicaH, "horas de música", v)
         p.artistas.firstOrNull()?.let { Renglon("tu artista", "${it.first} · ${n0(it.second / 60)} h") }
-        p.cancionTop?.let { Renglon("tu canción", "${it.first} (${it.second} veces)") }
+        p.cancionTop?.let { Renglon("tu canción", "${it.first} (${porNumero(it.second, "1 vez", "${it.second} veces")})") }
         p.artistaNuevo?.let { Renglon("descubriste", it) }
     }
     if (p.ytVideos > 0) {
@@ -558,7 +560,7 @@ private fun CuerpoTarjeta(d: TuAnio.Datos, actual: CartaAnio, vista: Vista) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) { androidx.compose.runtime.key(actual.id) { actual.dibujo(vista) } }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("Vestigium Mei · ${d.anio}", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
-            if (!d.completo) Text("año incompleto · faltan ${d.faltan} días", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+            if (!d.completo) Text("año incompleto · ${porNumero(d.faltan, "falta 1 día", "faltan ${d.faltan} días")}", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
         }
     }
 }
@@ -691,7 +693,7 @@ private fun HistoriasAnio(d: TuAnio.Datos, nav: Nav, cerrar: () -> Unit) {
                     androidx.compose.material3.TextButton(onClick = { pausaFija = !pausaFija }) { Text(if (pausaFija) "▶ seguir" else "❚❚ pausa") }
                     androidx.compose.material3.TextButton(onClick = { if (idx < n - 1) ir(idx + 1) else cerrar() }, enabled = !esperando) { Text("siguiente ›") }
                 }
-                if (!d.completo) Text("Año incompleto: faltan ${d.faltan} días", style = MaterialTheme.typography.labelMedium, color = cs.onSecondaryContainer,
+                if (!d.completo) Text("Año incompleto: ${porNumero(d.faltan, "falta 1 día", "faltan ${d.faltan} días")}", style = MaterialTheme.typography.labelMedium, color = cs.onSecondaryContainer,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp).background(cs.secondaryContainer, MaterialTheme.shapes.small).padding(horizontal = 10.dp, vertical = 4.dp))
                 // La historia, en 9:16 (lo mismo que se guarda en la imagen).
                 BoxWithConstraints(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
@@ -756,8 +758,8 @@ fun PantallaTuAnio(nav: Nav) {
                     Text(voz(Estilo.tema, anio), style = MaterialTheme.typography.titleLarge)
                     Ayuda(when {
                         d == null -> "Contando tu año…"
-                        d.completo -> "${d.p.diasDiario} días escritos · ${n0(d.p.palabras.toDouble())} palabras"
-                        else -> "Año incompleto: faltan ${d.faltan} días. Puedes verlo ya; las imágenes llevarán la marca."
+                        d.completo -> "${porNumero(d.p.diasDiario, "1 día escrito", "${d.p.diasDiario} días escritos")} · ${porNumero(d.p.palabras.toDouble(), "1 palabra", "${n0(d.p.palabras.toDouble())} palabras")}"
+                        else -> "Año incompleto: ${porNumero(d.faltan, "falta 1 día", "faltan ${d.faltan} días")}. Puedes verlo ya; las imágenes llevarán la marca."
                     })
                 }
             }
@@ -812,7 +814,7 @@ fun RecuadroTuAnio(nav: Nav) {
     val anio = hoy.take(4).toInt()
     val faltan = Fechas.diasEntre(hoy, "$anio-12-31").toInt()
     val cs = MaterialTheme.colorScheme
-    Recuadro("Tu año en historias", if (faltan <= 0) "Tu $anio está listo: ábrelo" else "Tu $anio en historias · faltan $faltan días (puedes verlo ya)", alto = 110.dp, onClick = { nav.ir("tu_anio") }) {
+    Recuadro("Tu año en historias", if (faltan <= 0) "Tu $anio está listo: ábrelo" else "Tu $anio en historias · ${porNumero(faltan, "falta 1 día", "faltan $faltan días")} (puedes verlo ya)", alto = 110.dp, onClick = { nav.ir("tu_anio") }) {
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(cs.primary.copy(alpha = 0.22f), cs.surface, cs.tertiary.copy(alpha = 0.18f))))) {
             Row(Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
                 Emblema(tam = 64.dp)

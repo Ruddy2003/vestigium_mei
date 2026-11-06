@@ -245,7 +245,8 @@ fun TarjetaIdea(i: Idea, modifier: Modifier = Modifier, lineas: Int = 4, onClick
     val t = Estilo.tema
     val a = archivoIdeas(t); val p = paginaFicha(t)
     val renglon = with(LocalDensity.current) { (p.interlinea * 0.66f).sp.toDp() }
-    val alto = margenSuperior(a.formaFicha) + 22.dp + renglon * (lineas + if (i.titulo.isNotBlank()) 1 else 0) + 12.dp
+    // 25 dp: el encabezado (16), el aire bajo la línea de color (7) y un respiro.
+    val alto = margenSuperior(a.formaFicha) + 25.dp + renglon * (lineas + if (i.titulo.isNotBlank()) 1 else 0) + 12.dp
     FichaMini(i, modifier.fillMaxWidth().padding(top = 8.dp).height(alto), lineas = lineas + if (i.titulo.isNotBlank()) 1 else 0, onClick = onClick)
 }
 

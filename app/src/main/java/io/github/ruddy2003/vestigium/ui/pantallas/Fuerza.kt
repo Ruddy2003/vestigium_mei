@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -100,7 +102,7 @@ fun PantallaFuerza(nav: Nav) {
                             Text(ej, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                             Text("%.1f kg".format(ultimo), style = MaterialTheme.typography.labelLarge, color = if (ultimo >= mejor) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                         }
-                        Text("${porSesion.size} sesiones · mejor %.1f kg · desde ${Fechas.corto(porSesion.firstKey())}".format(mejor), style = MaterialTheme.typography.labelSmall,
+                        Text("${porNumero(porSesion.size, "1 sesión", "${porSesion.size} sesiones")} · mejor %.1f kg · desde ${Fechas.corto(porSesion.firstKey())}".format(mejor), style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (abierto == ej && porSesion.size >= 2) {
                             val c = MaterialTheme.colorScheme.primary; val rej = MaterialTheme.colorScheme.outline
@@ -126,7 +128,7 @@ fun PantallaFuerza(nav: Nav) {
                     Row(Modifier.fillMaxWidth().clickable { Seleccion.abrir(nav, x.fecha) }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(x.entrenos.joinToString(", ").ifBlank { "Entrenamiento" }, style = MaterialTheme.typography.bodyMedium)
-                            Text(Fechas.corto(x.fecha) + (x.minutos?.let { " · %.0f min".format(it) } ?: "") + " · ${x.series_efectivas} series", style = MaterialTheme.typography.labelSmall,
+                            Text(Fechas.corto(x.fecha) + (x.minutos?.let { " · %.0f min".format(it) } ?: "") + " · ${porNumero(x.series_efectivas, "1 serie", "${x.series_efectivas} series")}", style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Text("%,.0f kg".format(x.volumen_kg), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)

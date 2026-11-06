@@ -285,25 +285,25 @@ object Salud {
         var s = base
         fun tiene(k: kotlin.reflect.KClass<out androidx.health.connect.client.records.Record>) = HealthPermission.getReadPermission(k) in ok
         if (tiene(WeightRecord::class)) runCatching {
-            cliente.readRecords(ReadRecordsRequest(WeightRecord::class, rango)).records.lastOrNull()?.let { s = s.copy(peso_kg = r(it.weight.inKilograms, 2)) }
+            leer(cliente, WeightRecord::class, rango).lastOrNull()?.let { s = s.copy(peso_kg = r(it.weight.inKilograms, 2)) }
         }
         if (tiene(BodyFatRecord::class)) runCatching {
-            cliente.readRecords(ReadRecordsRequest(BodyFatRecord::class, rango)).records.lastOrNull()?.let { s = s.copy(grasa_pct = r(it.percentage.value)) }
+            leer(cliente, BodyFatRecord::class, rango).lastOrNull()?.let { s = s.copy(grasa_pct = r(it.percentage.value)) }
         }
         if (tiene(RespiratoryRateRecord::class)) runCatching {
-            val l = cliente.readRecords(ReadRecordsRequest(RespiratoryRateRecord::class, rango)).records
+            val l = leer(cliente, RespiratoryRateRecord::class, rango)
             if (l.isNotEmpty()) s = s.copy(resp_rpm = r(l.map { it.rate }.average()))
         }
         if (tiene(BodyTemperatureRecord::class)) runCatching {
-            val l = cliente.readRecords(ReadRecordsRequest(BodyTemperatureRecord::class, rango)).records
+            val l = leer(cliente, BodyTemperatureRecord::class, rango)
             if (l.isNotEmpty()) s = s.copy(temp_c = r(l.map { it.temperature.inCelsius }.average(), 2))
         }
         if (tiene(SkinTemperatureRecord::class)) runCatching {
-            val d = cliente.readRecords(ReadRecordsRequest(SkinTemperatureRecord::class, rango)).records.flatMap { it.deltas }.map { it.delta.inCelsius }
+            val d = leer(cliente, SkinTemperatureRecord::class, rango).flatMap { it.deltas }.map { it.delta.inCelsius }
             if (d.isNotEmpty()) s = s.copy(temp_piel_delta = r(d.average(), 2))
         }
         if (tiene(BloodPressureRecord::class)) runCatching {
-            val l = cliente.readRecords(ReadRecordsRequest(BloodPressureRecord::class, rango)).records
+            val l = leer(cliente, BloodPressureRecord::class, rango)
             if (l.isNotEmpty()) s = s.copy(pa_sistolica = r(l.map { it.systolic.inMillimetersOfMercury }.average(), 0), pa_diastolica = r(l.map { it.diastolic.inMillimetersOfMercury }.average(), 0))
         }
         if (tiene(DistanceRecord::class)) runCatching {
@@ -319,7 +319,7 @@ object Salud {
             cliente.aggregate(AggregateRequest(setOf(FloorsClimbedRecord.FLOORS_CLIMBED_TOTAL), rango))[FloorsClimbedRecord.FLOORS_CLIMBED_TOTAL]?.let { s = s.copy(pisos = r(it, 0)) }
         }
         if (tiene(Vo2MaxRecord::class)) runCatching {
-            cliente.readRecords(ReadRecordsRequest(Vo2MaxRecord::class, rango)).records.lastOrNull()?.let { s = s.copy(vo2max = r(it.vo2MillilitersPerMinuteKilogram)) }
+            leer(cliente, Vo2MaxRecord::class, rango).lastOrNull()?.let { s = s.copy(vo2max = r(it.vo2MillilitersPerMinuteKilogram)) }
         }
         if (tiene(HydrationRecord::class)) runCatching {
             cliente.aggregate(AggregateRequest(setOf(HydrationRecord.VOLUME_TOTAL), rango))[HydrationRecord.VOLUME_TOTAL]?.let { s = s.copy(agua_ml = r(it.inMilliliters, 0)) }
@@ -348,8 +348,8 @@ object Salud {
     /** Sesiones de ejercicio del reloj, con la frecuencia cardiaca de cada una. */
     private suspend fun ejercicio(cliente: HealthConnectClient, dias: Int) {
         val ini = Instant.ofEpochMilli(Fechas.inicioDia(Fechas.sumar(Fechas.hoyCalendario(), -dias.toLong())))
-        val r = cliente.readRecords(ReadRecordsRequest(recordType = ExerciseSessionRecord::class, timeRangeFilter = TimeRangeFilter.after(ini)))
-        for (e in r.records) {
+        // Todas las páginas (antes solo la primera, de hasta 1000 sesiones).
+        for (e in leer(cliente, ExerciseSessionRecord::class, TimeRangeFilter.after(ini))) {
             val rango = TimeRangeFilter.between(e.startTime, e.endTime)
             val fc = runCatching { cliente.aggregate(AggregateRequest(setOf(HeartRateRecord.BPM_AVG, HeartRateRecord.BPM_MAX), rango)) }.getOrNull()
             val ms = e.startTime.toEpochMilli()

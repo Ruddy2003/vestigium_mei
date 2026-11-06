@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
 import java.text.Normalizer
@@ -600,28 +602,28 @@ object Estilo {
         TemaId.CIBER -> "> streak --días $n"
         TemaId.NEON -> "$n NOCHES SEGUIDAS EN LA CALLE"
         TemaId.HELENO -> "ΣΥΝΕΧΕΙΣ ΗΜΕΡΑΙ · $n"
-        TemaId.EGIPTO -> "$n días seguidos ante el cálamo"
-        TemaId.MEDIEVAL -> "$n días seguidos en el libro"
+        TemaId.EGIPTO -> "${porNumero(n, "1 día seguido", "$n días seguidos")} ante el cálamo"
+        TemaId.MEDIEVAL -> "${porNumero(n, "1 día seguido", "$n días seguidos")} en el libro"
         TemaId.TEMPLARIO -> "$n jornadas de guardia en la muralla"
         TemaId.DISTOPIA -> "CONTINUIDAD ACREDITADA: $n DÍAS"
         TemaId.REFUGIO -> "DÍAS SIN INCIDENTES: $n"
         TemaId.ORDEN -> "$n VIGILIAS SIN FALTA"
-        TemaId.VAPOR -> "$n días con la caldera encendida"
-        TemaId.LABORATORIO -> "serie de $n sesiones"
+        TemaId.VAPOR -> "${porNumero(n, "1 día", "$n días")} con la caldera encendida"
+        TemaId.LABORATORIO -> "serie de ${porNumero(n, "1 sesión", "$n sesiones")}"
         TemaId.COLONOS -> "$n jornadas seguidas"
         TemaId.NAPOLEON -> "$n JOURS DE CAMPAGNE"
         TemaId.DECO -> "$n NOCHES DE GALA SEGUIDAS"
-        TemaId.BOTANICO -> "$n días de herbario"
+        TemaId.BOTANICO -> "${porNumero(n, "1 día", "$n días")} de herbario"
         TemaId.RUINAS -> "$n amaneceres seguidos entre la hiedra"
-        TemaId.NAVIDAD -> "$n noches junto al fuego"
+        TemaId.NAVIDAD -> "${porNumero(n, "1 noche", "$n noches")} junto al fuego"
         TemaId.SEDA -> "$n jornadas de caravana"
         TemaId.EDO -> "$n postas seguidas por el camino real"
-        TemaId.GOTICO -> "$n días de oficio sin falta"
-        TemaId.ARCANO -> "$n noches sin perder el hilo"
+        TemaId.GOTICO -> "${porNumero(n, "1 día", "$n días")} de oficio sin falta"
+        TemaId.ARCANO -> "${porNumero(n, "1 noche", "$n noches")} sin perder el hilo"
         TemaId.ESPACIO -> "T+$n DÍAS EN ÓRBITA"
         // Cada día seguido baja diez metros: la presión sube un bar por cada diez metros, más el de la superficie.
         TemaId.ABISMO -> String.format(java.util.Locale.US, "COTA −%,d m · %d bar", n * 10, n + 1)
-        TemaId.ANDALUS -> "$n días seguidos · متتالية"
+        TemaId.ANDALUS -> "${porNumero(n, "1 día seguido", "$n días seguidos")} · متتالية"
         TemaId.MESO -> "$n soles seguidos pintados en el códice"
         TemaId.MONGOL -> "$n ӨДӨР ДАРААЛАН"
         TemaId.RENACIMIENTO -> "$n giorni di fila"

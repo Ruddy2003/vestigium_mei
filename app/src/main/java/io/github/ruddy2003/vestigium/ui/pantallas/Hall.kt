@@ -78,6 +78,7 @@ import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.Vacio
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.PI
 import kotlin.math.cos
@@ -2270,6 +2271,8 @@ fun CuerpoHall(l: List<Logros.Logro>) {
     var editar by remember { mutableStateOf(false) }
     var abierto by remember { mutableStateOf<Logros.Logro?>(null) }
     var conTextos by remember { mutableStateOf(true) }
+    val alcance = androidx.compose.runtime.rememberCoroutineScope()
+    var creando by remember { mutableStateOf(false) }
     val tema = Estilo.tema
     val cs = MaterialTheme.colorScheme
     val ctx = LocalContext.current
@@ -2305,9 +2308,15 @@ fun CuerpoHall(l: List<Logros.Logro>) {
             Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = conTextos, onCheckedChange = { conTextos = it })
                 Text("con nombres y fechas", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f).clickable { conTextos = !conTextos })
-                TextButton(onClick = {
-                    runCatching { HallImagen.crear(ctx, enHall, tema, cs, conTextos) }.onSuccess { LibroDiario.compartir(ctx, it, "image/png") }
-                }) { Text("guardar imagen", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
+                // La imagen (1080 × 1350) se dibuja en otro hilo: antes se hacía dentro del toque y la pantalla se trababa.
+                TextButton(enabled = !creando, onClick = {
+                    creando = true
+                    alcance.launch {
+                        val f = withContext(Dispatchers.Default) { runCatching { HallImagen.crear(ctx, enHall, tema, cs, conTextos) }.getOrNull() }
+                        creando = false
+                        if (f != null) LibroDiario.compartir(ctx, f, "image/png")
+                    }
+                }) { Text(if (creando) "creando…" else "guardar imagen", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
             }
         }
         if (editar) {

@@ -186,7 +186,7 @@ private fun HojaLibreta(fecha: String, numero: Int, total: Int, discreto: Boolea
                     style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(start = 46.dp))
                 // El día de 5:00 a 5:00, con un punto por registro del color de su ánimo.
                 Canvas(Modifier.fillMaxWidth().padding(start = 46.dp, top = 8.dp).height(16.dp)) {
-                    val ini = Fechas.inicioDia(fecha) + 5 * 3_600_000L
+                    val ini = Fechas.inicioDiaLogico(fecha)
                     drawLine(cs.outline.copy(alpha = 0.6f), Offset(0f, size.height / 2), Offset(size.width, size.height / 2), 1f * density)
                     for (h in 0..24 step 6) { val x = h / 24f * size.width; drawLine(cs.outline, Offset(x, size.height / 2 - 3 * density), Offset(x, size.height / 2 + 3 * density), 1f * density) }
                     l.forEach { r ->

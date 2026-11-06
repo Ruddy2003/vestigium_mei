@@ -232,8 +232,8 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `cafeina_mg` | Cafeína (mg) | numérica | mg | Si hay datos de la fuente |
 | `azucares_g` | Azúcares (g) | numérica | g | Si hay datos de la fuente |
 | `balance_kcal` | Calorías menos gasto estimado | numérica | — | Si hay datos de la fuente |
-| `primera_comida_h` | Hora del primer alimento | numérica | — | Si hay datos de la fuente |
-| `ultima_comida_h` | Hora del último alimento | numérica | — | Si hay datos de la fuente |
+| `primera_comida_h` | Hora del primer alimento (desde el 5 nov 2026, lo anotado antes de las 05:00 ya no cuenta como primero; D.156) | numérica | — | Si hay datos de la fuente |
+| `ultima_comida_h` | Hora del último alimento; antes de las 05:00 suma 24, como `cafeina_ultima_h` (desde el 5 nov 2026; D.156) | numérica | — | Si hay datos de la fuente |
 | `cafeina_ultima_h` | Hora de la última cafeína. Desde 10e (D.92), del día lógico, con las tomas de MacroFactor y de la app (antes de las 5:00 suma 24); antes, la de MacroFactor por día de calendario (A.8) | numérica | — | Si hay datos de la fuente |
 
 ### Cultura
@@ -374,7 +374,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 | `pen_` | Personas | 10 | 3 | Pensé en @‹elemento› sin verla (0/1) |
 | `tema_` | Temas | 12 | 5 | Aparece #‹elemento› (0/1); 0 solo en días con diario escrito o momento con #tema (10c) |
 | `hito_` | Hitos | 10 | 3 | Hito: ‹elemento› (0/1) |
-| `lug_` | Lugares | 15 | 3 | Horas en «‹elemento›» |
+| `lug_` | Lugares | 15 | 3 | Horas en «‹elemento›» (repartidas por día lógico desde el 5 nov 2026; D.155) |
 | `app_` | Apps | 12 | 5 | Minutos en ‹elemento› |
 | `ntf_` | Notificaciones | 8 | 5 | Notificaciones de ‹elemento› |
 | `lap_` | Laptop | 10 | 4 | Minutos en ‹elemento› (laptop) |

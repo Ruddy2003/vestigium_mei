@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.privado
 import android.content.Intent
 import androidx.compose.foundation.background
@@ -29,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -107,16 +110,20 @@ fun PantallaDiario(nav: Nav) {
         (Repo.dias.values.filter { it.nota.isNotBlank() || it.sueno_texto.isNotBlank() }.map { it.fecha } + visiblesM.map { it.fecha }).distinct().sortedDescending()
     }
     val q = normal(busca.trim())
-    val visibles = fechas.filter { f ->
+    // Se recalcula solo si cambian los datos o los filtros (antes, en cada redibujo de la pantalla).
+    val visibles = remember(fechas, porDia, Repo.dias, q, tipo, anio, conFoto, largas) { fechas.filter { f ->
         val d = Repo.dias[f]; val ms = porDia[f].orEmpty()
         val tieneEntrada = d?.nota?.isNotBlank() == true; val tieneSueno = d?.sueno_texto?.isNotBlank() == true
         (when (tipo) { "entradas" -> tieneEntrada; "momentos" -> ms.isNotEmpty(); "suenos" -> tieneSueno; else -> true }) &&
             (anio == null || f.startsWith(anio!!)) && (!conFoto || d?.foto != null) && (!largas || Texto.palabras(d?.nota) >= 200) &&
             (q.isBlank() || normal(listOfNotNull(d?.nota, d?.mejor_momento, d?.peor_momento, d?.sueno_texto).joinToString(" ") + " " +
                 ms.joinToString(" ") { it.texto + " " + io.github.ruddy2003.vestigium.data.Catalogo.titulo(it, false) + " " + io.github.ruddy2003.vestigium.data.Catalogo.pensamientosDe(it).joinToString(" ") }).contains(q))
-    }
+    } }
     val entradas = visibles.mapNotNull { Repo.dias[it]?.takeIf { d -> d.nota.isNotBlank() } }
-    val palabras = remember(Repo.dias) { Repo.dias.values.sumOf { Texto.palabras(it.nota) } }
+    // Contar las palabras de todo el diario va en otro hilo: con cada autoguardado cambia Repo.dias y se volvía a contar
+    // todo en el hilo principal, mientras escribías.
+    val diasAhora = Repo.dias
+    val palabras by produceState(0, diasAhora) { value = withContext(Dispatchers.Default) { diasAhora.values.sumOf { Texto.palabras(it.nota) } } }
 
     Hoja("Diario", buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
         // Un solo botón: el ánimo de ahora (sentimientos, pensamiento, con quién) y, desde ahí, una sustancia o un impulso.
@@ -129,7 +136,7 @@ fun PantallaDiario(nav: Nav) {
         // Las cinco bibliotecas, cada una con su objeto: el estante del diario, la libreta de momentos, el estante de sueños de
         // noche, el fichero del Ideario y las cartas. Cada una tiene su puerta para entrar.
         val ultimas = remember(Repo.dias) { LibroDiario.entradas().take(9) }
-        Seccion("Biblioteca del diario", "${Repo.dias.values.count { it.nota.isNotBlank() }} entradas · %,d palabras".format(palabras)) {
+        Seccion("Biblioteca del diario", Repo.dias.values.count { it.nota.isNotBlank() }.let { n -> porNumero(n, "1 entrada", "$n entradas") } + " · %,d palabras".format(palabras)) {
             if (ultimas.isEmpty()) Vacio("Aquí se irán guardando tus entradas.")
             else io.github.ruddy2003.vestigium.ui.EstanteDiario(ultimas) { f -> Seleccion.entrada = f; nav.ir("entrada") }
             BotonSecundario("entrar a la biblioteca del diario →", Modifier.fillMaxWidth().padding(top = 10.dp)) { nav.ir("biblioteca_diario") }
@@ -152,7 +159,7 @@ fun PantallaDiario(nav: Nav) {
             else io.github.ruddy2003.vestigium.ui.CieloNoche { io.github.ruddy2003.vestigium.ui.EstanteDiario(suenos, noche = true) { f -> Seleccion.sueno = f; nav.ir("sueno") } }
             BotonSecundario("entrar a la biblioteca de sueños →", Modifier.fillMaxWidth().padding(top = 10.dp)) { nav.ir("biblioteca_suenos") }
         }
-        Seccion("Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste y pensaste, un cajón por tema." else "${Repo.ideas.size} ideas · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas") {
+        Seccion("Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste y pensaste, un cajón por tema." else "${porNumero(Repo.ideas.size, "1 idea", "${Repo.ideas.size} ideas")} · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas") {
             if (Repo.ideas.isEmpty()) Vacio("Anota una idea y ponle un tema: cada tema es un cajón del fichero.")
             else FicheroIdeas(nav, Repo.ideas, max = 6)
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -173,7 +180,7 @@ fun PantallaDiario(nav: Nav) {
         }
         // La línea de tiempo y la exportación empiezan plegadas, y se vuelven a plegar al cerrar la app o al cambiar de día.
         Seccion("Línea de tiempo", "Entradas, momentos y sueños, día por día, con buscador y filtros.", autoPlegar = true) { Column {
-        Text("${visiblesM.size} registros de ánimo y momentos", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+        Text("${porNumero(visiblesM.size, "1 registro", "${visiblesM.size} registros")} de ánimo y momentos", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         OutlinedTextField(busca, { busca = it; mostrar = 30 }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
             placeholder = { Text("buscar en tu diario, @personas, #temas", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
         FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -198,10 +205,10 @@ fun PantallaDiario(nav: Nav) {
             TarjetaDiaDiario(f, Repo.dias[f], porDia[f].orEmpty(), tipo, discreto,
                 abrirDia = { Seleccion.abrir(nav, f) }, abrirEntrada = { Seleccion.entrada = f; nav.ir("entrada") }, editar = { editando = it })
         }
-        if (visibles.size > mostrar) BotonSecundario("ver ${minOf(30, visibles.size - mostrar)} días más", Modifier.padding(top = 8.dp)) { mostrar += 30 }
+        if (visibles.size > mostrar) BotonSecundario("ver ${porNumero(minOf(30, visibles.size - mostrar), "1 día", "${minOf(30, visibles.size - mostrar)} días")} más", Modifier.padding(top = 8.dp)) { mostrar += 30 }
         } }
 
-        Seccion("Exportar", "Las ${entradas.size} entradas de lo que estás viendo. El PDF y el HTML llevan el diseño del tema; el de Obsidian es una nota por día con sus datos.",
+        Seccion("Exportar", porNumero(entradas.size, "La entrada", "Las ${entradas.size} entradas") + " de lo que estás viendo. El PDF y el HTML llevan el diseño del tema; el de Obsidian es una nota por día con sus datos.",
             autoPlegar = true) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 BotonSecundario("PDF", habilitado = entradas.isNotEmpty()) { exportar("pdf", { LibroDiario.pdf(ctx, entradas) }, "application/pdf") }
@@ -245,7 +252,7 @@ private fun TarjetaDiaDiario(f: String, d: Dia?, ms: List<io.github.ruddy2003.ve
             Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
                 Row(Modifier.fillMaxWidth().clickable(onClick = abrirDia), verticalAlignment = Alignment.CenterVertically) {
                     Text(Fechas.titulo(f), style = MaterialTheme.typography.labelLarge, color = cs.primary, modifier = Modifier.weight(1f))
-                    Text(listOfNotNull(d?.nota?.takeIf { it.isNotBlank() }?.let { "${Texto.palabras(it)} palabras" }, d?.valencia?.let { "$it/7" }).joinToString(" · "),
+                    Text(listOfNotNull(d?.nota?.takeIf { it.isNotBlank() }?.let { "${porNumero(Texto.palabras(it), "1 palabra", "${Texto.palabras(it)} palabras")}" }, d?.valencia?.let { "$it/7" }).joinToString(" · "),
                         style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
                 }
                 if (tipo != "momentos" && tipo != "suenos" && d != null && d.nota.isNotBlank())
@@ -263,7 +270,7 @@ private fun TarjetaDiaDiario(f: String, d: Dia?, ms: List<io.github.ruddy2003.ve
                                 (if (m.texto.isNotBlank()) " — ${m.texto}" else ""), style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                     }
-                    if (ms.size > 8) Text("+${ms.size - 8} momentos más", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+                    if (ms.size > 8) Text("+${porNumero(ms.size - 8, "1 momento", "${ms.size - 8} momentos")} más", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
                 }
             }
         }
@@ -281,7 +288,7 @@ private fun FichaEntrada(d: Dia, abrir: () -> Unit) {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(Fechas.titulo(d.fecha), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
-                    Text("${Texto.palabras(d.nota)} palabras" + (d.valencia?.let { " · $it/7" } ?: ""), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${porNumero(Texto.palabras(d.nota), "1 palabra", "${Texto.palabras(d.nota)} palabras")}" + (d.valencia?.let { " · $it/7" } ?: ""), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 io.github.ruddy2003.vestigium.ui.TextoMarcado(d.nota.trim(), style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp))
             }

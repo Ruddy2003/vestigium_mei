@@ -50,6 +50,9 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.fadeIn
@@ -143,7 +146,9 @@ class MainActivity : FragmentActivity() {
         Estilo.tema.let { t -> ArranqueTema.aplicar(this, t, ArranqueTema.oscuro(this, t)) }
         Programador.asegurar(this)
         Sentidos.preparar(this)
-        pedida = compartido(intent) ?: intent?.getStringExtra(PANTALLA)
+        // Solo la primera vez: si Android rehace la actividad (por ejemplo, tras cerrar la app para liberar memoria), el
+        // intent es el mismo de antes y una idea compartida se volvería a crear.
+        if (savedInstanceState == null) pedida = compartido(intent) ?: intent?.getStringExtra(PANTALLA)
         desbloqueado = !Repo.config.bloqueo
         setContent {
             TemaVestigium {
@@ -940,9 +945,12 @@ private fun nombresPestanas(tema: TemaId): List<Pestana> = PESTANAS.map { p -> P
 internal fun BarraPestanas(activa: String?, tema: TemaId, tocar: (String) -> Unit, largo: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
     val pestanas = nombresPestanas(tema)
+    // Con la letra grande del sistema, la barra crece (hasta 20 dp más con el doble de tamaño): antes medía siempre 66 dp
+    // y las etiquetas se cortaban.
+    val extra = ((androidx.compose.ui.platform.LocalDensity.current.fontScale - 1f).coerceIn(0f, 1f) * 20f).dp
     Column(Modifier.background(cs.surface)) {
         Canvas(Modifier.fillMaxWidth().height(5.dp)) { divisorBarra(tema, cs) }
-        Row(Modifier.fillMaxWidth().navigationBarsPadding().height(66.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().navigationBarsPadding().height(66.dp + extra), verticalAlignment = Alignment.CenterVertically) {
             pestanas.forEach { p ->
                 // El botón del centro registra: una figura grande con el ícono, sin pestaña propia.
                 if (p.id == "registrar") {
@@ -960,7 +968,9 @@ internal fun BarraPestanas(activa: String?, tema: TemaId, tocar: (String) -> Uni
                 val salto by androidx.compose.animation.core.animateFloatAsState(if (sel && Repo.config.animaciones) 1.12f else 1f,
                     androidx.compose.animation.core.spring(dampingRatio = 0.4f, stiffness = 500f), label = "salto")
                 Column(
-                    Modifier.weight(1f).fillMaxHeight().combinedClickable(onClick = { tocar(p.id) }, onLongClick = { largo(p.id) }, onLongClickLabel = "atajo de ${p.nombre}"),
+                    // TalkBack dice cuál pestaña está elegida.
+                    Modifier.weight(1f).fillMaxHeight().combinedClickable(onClick = { tocar(p.id) }, onLongClick = { largo(p.id) }, onLongClickLabel = "atajo de ${p.nombre}")
+                        .semantics { selected = sel; role = androidx.compose.ui.semantics.Role.Tab },
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
                 ) {
                     Box(Modifier.size(width = 58.dp, height = 30.dp).drawBehind { if (marca > 0.01f) indicadorBarra(tema, cs, marca) }
@@ -1749,9 +1759,10 @@ class Nav(val ir: (String) -> Unit, val atras: () -> Unit, val pestana: (String)
 
 @Composable
 private fun Raiz(pedida: String?, consumir: () -> Unit) {
-    var pestana by remember { mutableStateOf("dia") }
+    // Se guardan con el estado de la actividad: si Android la rehace, vuelves a la misma pantalla.
+    var pestana by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("dia") }
     // Al instalar: primero «Conocerte» (se puede omitir) y luego los permisos. Si ya se llenó o se omitió, no vuelve a salir.
-    var pila by remember {
+    var pila by androidx.compose.runtime.saveable.rememberSaveable(stateSaver = androidx.compose.runtime.saveable.listSaver<List<String>, String>({ it }, { it })) {
         val conocer = !Repo.config.conocer_visto && io.github.ruddy2003.vestigium.data.Perfiles.vacio(Repo.config.perfil)
         mutableStateOf((if (Repo.config.bienvenida_vista) emptyList() else listOf("mas", "permisos")) + (if (conocer) listOf("conocer") else emptyList()))
     }
@@ -1778,6 +1789,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
     val nav = Nav(ir = { pila = pila + it }, atras = { pila = pila.dropLast(1) }, pestana = { pestana = it; pila = emptyList() },
         reemplazar = { pila = if (pila.isEmpty()) listOf(it) else pila.dropLast(1) + it })
     BackHandler(enabled = pila.isNotEmpty()) { pila = pila.dropLast(1) }
+    // Las fechas de los días abiertos encima de otra pantalla se olvidan al cerrar esos niveles.
+    LaunchedEffect(pila.size) { io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.olvidarDiasSobre(pila.size) }
 
     // Modo nocturno cálido: de 22:00 a 5:00 la pantalla se entibia y baja un poco el brillo.
     val hora by produceState(java.time.LocalTime.now().hour) { while (true) { kotlinx.coroutines.delay(60_000); value = java.time.LocalTime.now().hour } }
@@ -1833,20 +1846,32 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         bottomBar = { if (pila.lastOrNull() !in setOf("entrada", "sueno", "carta", "hoja_momentos", "cajon_ideas", "ficha_idea", "idea")) BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
     ) { pad ->
         val esquema = MaterialTheme.colorScheme
-        Box(Modifier.padding(pad).fillMaxSize().fondoTema(tema, esquema)) {
+        // En Art déco y Edo el papel tapiz va en su propia capa, guardada como imagen: así no se vuelve a trazar (cientos de
+        // arcos) cada vez que se mueve el fondo vivo o cambia la pantalla.
+        val tapizEnCapa = io.github.ruddy2003.vestigium.ui.animacionLigera(tema)
+        Box(Modifier.padding(pad).fillMaxSize().then(if (tapizEnCapa) Modifier else Modifier.fondoTema(tema, esquema))) {
+            if (tapizEnCapa) Box(Modifier.fillMaxSize().graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }.fondoTema(tema, esquema))
             FondoVivo(tema)
             // Cada tema cambia de pantalla a su manera; hacia adentro y hacia atrás se mueven en sentidos opuestos.
+            // Ocupa siempre toda la ventana: si se encogiera junto con la pantalla que entra (las que se abren desde una
+            // franja: Art déco, Edo, Seda…), la nueva aparecería pegada a la izquierda y se iría deslizando.
+            val destinoActual = Destino(pila.lastOrNull() ?: pestana, pila.size)
+            val sentido = remember { SentidoPantalla(destinoActual) }
+            val atras = sentido.atrasHacia(destinoActual)
             androidx.compose.animation.AnimatedContent(
-                targetState = Destino(pila.lastOrNull() ?: pestana, pila.size),
+                targetState = destinoActual,
+                modifier = Modifier.fillMaxSize(),
                 transitionSpec = { transicion(tema, initialState, targetState, Repo.config.animaciones) },
-                contentKey = { it.ruta }, label = "pantallas",
+                contentAlignment = origenTransicion(tema, atras),
+                // Cada nivel es su propia pantalla: dos días abiertos uno encima del otro no comparten su estado.
+                contentKey = { it.ruta + "@" + it.nivel }, label = "pantallas",
             ) { destino ->
                 val sc = if (destino.nivel == 0) scrolls.getOrPut(destino.ruta) { androidx.compose.foundation.ScrollState(0) } else null
                 androidx.compose.runtime.CompositionLocalProvider(LocalScrollPestana provides sc, LocalGuia provides { s: String -> nav.ir("guia_uso:$s") }) {
                 when (val actual = destino.ruta) {
                     "dia" -> PantallaDia(nav)
                     // Un día abierto desde otra pantalla (calendario, diario, cinta…): se apila y «atrás» regresa.
-                    "dia_fecha" -> PantallaDia(nav, apilado = true)
+                    "dia_fecha" -> PantallaDia(nav, apilado = true, nivel = destino.nivel)
                     "diario", "diarios" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(nav)
                     "momentos" -> PantallaMomentos(nav)
                     "gastos" -> PantallaGastos(nav)
@@ -1954,6 +1979,61 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
 private data class Destino(val ruta: String, val nivel: Int)
 
 /**
+ * Recuerda si el último cambio de pantalla fue hacia atrás. Mientras no cambie el destino devuelve lo mismo, así que no
+ * cambia a media transición aunque la raíz se vuelva a dibujar.
+ */
+private class SentidoPantalla(private var ultimo: Destino) {
+    private var atras = false
+    fun atrasHacia(d: Destino): Boolean {
+        if (d != ultimo) { atras = d.nivel < ultimo.nivel; ultimo = d }
+        return atras
+    }
+}
+
+/**
+ * Dónde se ancla la pantalla que entra mientras crece: del mismo lado desde el que se abre en [transicion] (al centro
+ * las que se abren desde el medio, a un lado las que se desenrollan de lado). Siempre arriba, para que una pantalla
+ * más corta que la ventana nunca quede a media altura; con anclarla arriba a la izquierda, las que se abren desde el
+ * centro aparecían como una franja a la izquierda que se deslizaba.
+ */
+private fun origenTransicion(tema: TemaId, atras: Boolean): Alignment = when (tema) {
+    TemaId.ROMANO -> Alignment.TopStart
+    TemaId.URBE -> Alignment.TopStart
+    TemaId.CIBER -> Alignment.TopStart
+    TemaId.NEON -> Alignment.TopStart
+    TemaId.HELENO -> Alignment.TopStart
+    TemaId.EGIPTO -> Alignment.TopStart
+    TemaId.MEDIEVAL -> Alignment.TopStart
+    TemaId.TEMPLARIO -> Alignment.TopStart
+    TemaId.DISTOPIA -> Alignment.TopStart
+    TemaId.REFUGIO -> Alignment.TopStart
+    TemaId.ORDEN -> Alignment.TopStart
+    TemaId.VAPOR -> Alignment.TopStart
+    TemaId.LABORATORIO -> Alignment.TopCenter                                   // la gota crece desde el centro
+    TemaId.COLONOS -> if (atras) Alignment.TopEnd else Alignment.TopStart      // la gaceta se despliega desde su esquina
+    TemaId.NAPOLEON -> Alignment.TopStart
+    TemaId.DECO -> Alignment.TopCenter                                         // las puertas del ascensor, desde el centro
+    TemaId.BOTANICO -> Alignment.TopStart
+    TemaId.RUINAS -> Alignment.TopStart
+    TemaId.NAVIDAD -> Alignment.TopStart
+    TemaId.SEDA -> if (atras) Alignment.TopEnd else Alignment.TopStart         // el rollo se desenrolla de lado
+    TemaId.EDO -> Alignment.TopStart                                           // el kakejiku baja desde arriba
+    TemaId.GOTICO -> Alignment.TopStart
+    TemaId.ARCANO -> Alignment.TopStart
+    TemaId.ESPACIO -> Alignment.TopStart
+    TemaId.ABISMO -> Alignment.TopStart
+    TemaId.ANDALUS -> Alignment.TopCenter                                      // la puerta de arco, desde el centro
+    TemaId.MESO -> Alignment.TopStart
+    TemaId.MONGOL -> Alignment.TopStart
+    TemaId.RENACIMIENTO -> Alignment.TopStart
+    TemaId.PIRATA -> Alignment.TopStart
+    TemaId.URSS -> Alignment.TopStart
+    TemaId.REVOLUCION -> Alignment.TopStart
+    TemaId.ANTIGUAS -> Alignment.TopStart
+    TemaId.CUEVA -> Alignment.TopStart
+}
+
+/**
  * Transición entre pantallas según el tema. Cada una tiene su movimiento, su origen, su duración y su curva, y todas son
  * cortas (entre 140 y 460 ms) y sin giros, para no marear. Hacia adentro y hacia atrás se mueven en sentidos opuestos.
  */
@@ -2009,8 +2089,9 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         // Estandarte que se despliega desde su asta, a un lado.
         TemaId.NAPOLEON -> (scaleIn(t(280), initialScale = 0.85f, transformOrigin = TransformOrigin(if (atras) 1f else 0f, 0.5f)) + fadeIn(t(220))) togetherWith
             (fadeOut(t(160)) + scaleOut(t(160), targetScale = 0.97f))
-        // Las puertas del ascensor que se abren desde el centro.
-        TemaId.DECO -> (androidx.compose.animation.expandHorizontally(t(320), expandFrom = Alignment.CenterHorizontally) + fadeIn(t(240))) togetherWith fadeOut(t(160))
+        // Las puertas del ascensor que se abren desde el centro, sobre la pantalla anterior (que se apaga mientras tanto,
+        // no antes: si se fuera primero, quedaría un hueco vacío a los lados).
+        TemaId.DECO -> (androidx.compose.animation.expandHorizontally(t(320), expandFrom = Alignment.CenterHorizontally) + fadeIn(t(240))) togetherWith fadeOut(t(320))
         // Una hoja que crece desde abajo, como un brote.
         TemaId.BOTANICO -> (scaleIn(t(380), initialScale = 0.96f, transformOrigin = TransformOrigin(0.5f, 1f)) + fadeIn(t(320))) togetherWith fadeOut(t(180))
         // El polvo que se asienta: la pantalla baja apenas y se aclara; la anterior se desmorona hacia abajo.
@@ -2038,8 +2119,9 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.NAVIDAD -> (scaleIn(t(360, androidx.compose.animation.core.CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)), initialScale = 0.82f) + fadeIn(t(220))) togetherWith fadeOut(t(140))
         // Rollo de seda que se desenrolla de lado, como un rollo de mano.
         TemaId.SEDA -> (androidx.compose.animation.expandHorizontally(t(380), expandFrom = if (atras) Alignment.End else Alignment.Start) + fadeIn(t(300))) togetherWith fadeOut(t(160))
-        // Un rollo colgante (kakejiku) que se desenrolla de arriba abajo.
-        TemaId.EDO -> (expandVertically(t(440, frena), expandFrom = if (atras) Alignment.Bottom else Alignment.Top) + fadeIn(t(260))) togetherWith fadeOut(t(180))
+        // Un rollo colgante (kakejiku) que se desenrolla de arriba abajo, sobre la pantalla anterior, que se apaga mientras
+        // tanto. Hacia atrás también baja: si subiera desde abajo, la parte de abajo de la pantalla aparecería arriba.
+        TemaId.EDO -> (expandVertically(t(440, frena), expandFrom = Alignment.Top) + fadeIn(t(260))) togetherWith fadeOut(t(440))
         // Cartel que entra en diagonal.
         TemaId.URSS -> (slideIn(t(220)) { androidx.compose.ui.unit.IntOffset(dir * it.width / 6, it.height / 12) } + fadeIn(t(160))) togetherWith fadeOut(t(100))
         // Un cartel que se pega en la pared: cae apenas desde arriba, algo más grande, y se asienta.

@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.avisos
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -455,6 +457,18 @@ object Avisos {
         TemaId.CUEVA -> VozEnfoque("Descanso junto al fuego", "Levántate, estira las piernas, bebe del arroyo.", "De vuelta al acecho", "Sale el sol sobre el valle: hora de despertar", "¡Presa cobrada!")
     }
 
+    /**
+     * ¿Se puede ver un aviso de ánimo? El permiso (Android 13 o más), las notificaciones de la app encendidas y el canal de
+     * ánimo sin silenciar del todo. Antes solo se miraba el permiso, y un aviso con el canal apagado contaba como mostrado
+     * (y bajaba la tasa de respuesta).
+     */
+    fun animoVisible(ctx: Context): Boolean {
+        if (!permitido(ctx) || !NotificationManagerCompat.from(ctx).areNotificationsEnabled()) return false
+        val nm = ctx.getSystemService(NotificationManager::class.java) ?: return true
+        val ch = runCatching { nm.getNotificationChannel(canal(ctx, CANAL_ANIMO)) }.getOrNull() ?: return true
+        return ch.importance != NotificationManager.IMPORTANCE_NONE
+    }
+
     fun permitido(ctx: Context): Boolean =
         android.os.Build.VERSION.SDK_INT < 33 ||
             ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
@@ -533,7 +547,7 @@ object Avisos {
         val titulo = when {
             peor <= 0 -> "${voz().escalas} $nombres"
             peor <= 3 -> "Pendiente desde hace $peor día${if (peor > 1) "s" else ""}: $nombres"
-            else -> "Llevas $peor días de atraso: $nombres"
+            else -> "Llevas ${porNumero(peor, "1 día", "$peor días")} de atraso: $nombres"
         }
         val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_ESCALAS))
             .setSmallIcon(R.drawable.ic_stat)
@@ -624,7 +638,7 @@ object Avisos {
     fun metas(ctx: Context, metas: List<String>, notas: List<String>) {
         crearCanales(ctx)
         val titulo = when {
-            metas.isNotEmpty() && notas.isEmpty() -> if (metas.size == 1) "Revisa tu meta: ${metas[0]}" else "Toca revisar ${metas.size} metas"
+            metas.isNotEmpty() && notas.isEmpty() -> if (metas.size == 1) "Revisa tu meta: ${metas[0]}" else "Toca revisar ${porNumero(metas.size, "1 meta", "${metas.size} metas")}"
             metas.isEmpty() -> if (notas.size == 1) "Recordatorio: ${notas[0]}" else "${notas.size} recordatorios para hoy"
             else -> "Metas y recordatorios para hoy"
         }
@@ -693,6 +707,18 @@ object Avisos {
             .setContentIntent(abrirApp(ctx, 2031, "datos"))
             .setAutoCancel(true)
         mostrar(ctx, 2031, b)
+    }
+
+    /** El respaldo automático a la carpeta lleva días sin poder escribirse. */
+    fun respaldoFallido(ctx: Context) {
+        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("Tu respaldo automático no está saliendo")
+            .setContentText("Lleva más de 3 días sin poder guardarse en tu carpeta. Toca para revisarlo.")
+            .setStyle(NotificationCompat.BigTextStyle().bigText("Lleva más de 3 días sin poder guardarse en tu carpeta: puede faltar espacio o que la carpeta ya no deje escribir. Toca para revisarlo o hacer uno a mano."))
+            .setContentIntent(abrirApp(ctx, 2035, "datos"))
+            .setAutoCancel(true)
+        mostrar(ctx, 2035, b)
     }
 
     /** El respaldo automático de Drive vino mucho más pobre que el último y se guardó aparte. */

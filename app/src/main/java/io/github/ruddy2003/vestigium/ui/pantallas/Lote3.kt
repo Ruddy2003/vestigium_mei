@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
@@ -188,14 +190,14 @@ private fun NivelSuplemento(s: Suplemento, hoy: String) {
     val valores: List<Double?> = remember(Repo.tomas, s) {
         when (s.modelo) {
             "carga" -> { val m = Suplementos.carga(s, hoy); dias.map { m[it] } }
-            "vida_media" -> dias.map { f -> if (Repo.tomas.any { it.suplemento == s.id && it.fecha <= f }) Suplementos.cantidadEn(s, Fechas.finDia(f) + 5 * 3_600_000L - 1) else null }
+            "vida_media" -> dias.map { f -> if (Repo.tomas.any { it.suplemento == s.id && it.fecha <= f }) Suplementos.cantidadEn(s, Fechas.finDiaLogico(f) - 1) else null }
             else -> { val d = Suplementos.dosisPorDia(s.id); val e = if (s.id == "probioticos") Suplementos.probioticosEstimados() else emptyMap(); dias.map { f -> ((d[f] ?: 0.0) + (e[f] ?: 0.0)).takeIf { it > 0 } } }
         }
     }
     if (valores.all { it == null }) { Ayuda("Cuando registres tomas, aquí verás tu nivel estimado.", Modifier.padding(top = 8.dp)); return }
     val ultimo = valores.lastOrNull { it != null }
     Ayuda(when (s.modelo) {
-        "carga" -> "Reserva estimada hoy: ${ultimo?.roundToInt() ?: 0} %. Se llena en unos ${s.carga_dias} días de dosis normal y baja en unos ${s.lavado_dias} sin tomar."
+        "carga" -> "Reserva estimada hoy: ${ultimo?.roundToInt() ?: 0} %. Se llena en unos ${porNumero(s.carga_dias, "1 día", "${s.carga_dias} días")} de dosis normal y baja en unos ${s.lavado_dias} sin tomar."
         "vida_media" -> "En el cuerpo al final del día: ${cifra(ultimo ?: 0.0)} ${s.unidad} (vida media de ${cifra(s.vida_media_h)} h)."
         else -> "Porciones por día en los últimos 60 días."
     }, Modifier.padding(top = 8.dp))
@@ -441,9 +443,9 @@ fun PantallaRed(nav: Nav) {
             val nd = nodos.first { it.nombre == e }
             Tarjeta(Modifier.padding(top = 8.dp)) {
                 Text("@$e", style = MaterialTheme.typography.titleMedium)
-                Ayuda(listOfNotNull(nd.relacion?.let { Personas.nombreRelacion(it) }, "${nd.dias} días mencionada", "unida a ${nd.grado}").joinToString(" · "))
+                Ayuda(listOfNotNull(nd.relacion?.let { Personas.nombreRelacion(it) }, "${porNumero(nd.dias, "1 día", "${nd.dias} días")} mencionada", "unida a ${nd.grado}").joinToString(" · "))
                 val suyos = lazos.filter { it.a == e || it.b == e }.sortedByDescending { it.juntos }
-                if (suyos.isNotEmpty()) Ayuda(suyos.take(8).joinToString(" · ") { a -> "@" + (if (a.a == e) a.b else a.a) + (a.tipo?.let { " (${RedPersonas.nombreTipo(it).lowercase()})" } ?: " (${a.juntos} días juntas)") },
+                if (suyos.isNotEmpty()) Ayuda(suyos.take(8).joinToString(" · ") { a -> "@" + (if (a.a == e) a.b else a.a) + (a.tipo?.let { " (${RedPersonas.nombreTipo(it).lowercase()})" } ?: " (${porNumero(a.juntos, "1 día", "${a.juntos} días")} juntas)") },
                     Modifier.padding(top = 4.dp))
             }
         }
@@ -530,7 +532,7 @@ fun PantallaExperimentos(nav: Nav) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(0, 1, 2, 7, 28).forEach { d -> Ficha(if (d == 0) "ninguno" else "$d", lavado == d) { lavado = d } } }
                 // Con este lavado, ¿quedan días suficientes en cada condición, sea cual sea el sorteo? (P-18)
                 val minimo = remember(diseno, semanas, lavado) { Experimentos.minimoPosible(diseno, semanas, lavado) }
-                if (minimo < Experimentos.MIN_DIAS) Aviso("Con $lavado días de lavado tras cada cambio, en $semanas semanas podrían quedar solo $minimo días que cuentan en una condición. " +
+                if (minimo < Experimentos.MIN_DIAS) Aviso("Con ${porNumero(lavado, "1 día", "$lavado días")} de lavado tras cada cambio, en ${porNumero(semanas, "1 semana", "$semanas semanas")} podrían quedar solo ${porNumero(minimo, "1 día", "$minimo días")} que cuentan en una condición. " +
                     "Hacen falta al menos ${Experimentos.MIN_DIAS}: alarga el experimento o reduce el lavado.")
                 BotonPrincipal("Sellar y empezar el lunes", Modifier.fillMaxWidth().padding(top = 12.dp),
                     habilitado = nombre.isNotBlank() && accion.isNotBlank() && hipotesis.isNotBlank() && minimo >= Experimentos.MIN_DIAS) {
@@ -570,11 +572,11 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
                 else -> "Semana ${sem + 1} de ${e.semanas}: " + (if (e.plan[sem]) "SÍ toca." else "NO toca.") + if (Experimentos.enLavado(e, hoy)) " Hoy es día de lavado (no cuenta)." else ""
             }, Modifier.padding(top = 4.dp))
             Ayuda((if (e.diseno == "antes_despues") "Antes y después · " else "Semanas sorteadas · ") + "plan: " + e.plan.joinToString(" ") { if (it) "SÍ" else "no" } +
-                if (e.lavado_dias > 0) " · ${e.lavado_dias} días de lavado tras cada cambio" else "")
+                if (e.lavado_dias > 0) " · ${porNumero(e.lavado_dias, "1 día", "${e.lavado_dias} días")} de lavado tras cada cambio" else "")
             val r = remember(e, panel) { Experimentos.resultado(e, panel) }
             if (r.dif == null) Ayuda(when {
                 // Tres casos distintos (P-18): el plan nunca alcanzará, ya terminó, o falta esperar.
-                r.posibleSi < 3 || r.posibleNo < 3 -> "Este plan nunca dará resultado: con el lavado solo cuentan ${r.posibleSi} días con la acción y ${r.posibleNo} sin ella (hacen falta 3 de cada una)."
+                r.posibleSi < 3 || r.posibleNo < 3 -> "Este plan nunca dará resultado: con el lavado solo cuentan ${porNumero(r.posibleSi, "1 día", "${r.posibleSi} días")} con la acción y ${r.posibleNo} sin ella (hacen falta 3 de cada una)."
                 !r.provisional -> "El experimento terminó sin suficientes días medidos: ${r.con.size} con la acción y ${r.sin.size} sin ella (hacían falta 3 de cada una)."
                 else -> "Aún no hay suficientes días medidos en ambas condiciones (${r.con.size} con, ${r.sin.size} sin; hacen falta 3 de cada una)."
             }, Modifier.padding(top = 6.dp))
@@ -601,7 +603,7 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
                 Text("Lo hiciste: ${pct(c.pSi)} de los días que tocaba (${c.respSi} de ${c.diasSi} respondidos) y ${pct(c.pNo)} de los que no tocaba (${c.respNo} de ${c.diasNo}).",
                     style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
                 if (e.plantilla == "creatina") Ayuda("Los días sin respuesta se completan con tu registro de suplementos (si anotaste creatina ese día).")
-                if (c.sinRespuesta > 0) Ayuda("${c.sinRespuesta} días sin respuesta: no cuentan como «no».")
+                if (c.sinRespuesta > 0) Ayuda("${porNumero(c.sinRespuesta, "1 día", "${c.sinRespuesta} días")} sin respuesta: no cuentan como «no».")
                 r.cociente?.let { Ayuda("Si el efecto viene de hacerlo, hacerlo de verdad cambiaría tu medida en unos ${"%+.2f".format(it)} (la diferencia según el plan entre la diferencia de cumplimiento). " +
                     "Es una aproximación: supone que saber qué semana tocaba no cambia nada por sí solo.") }
             }

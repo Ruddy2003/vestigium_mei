@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -239,7 +241,7 @@ fun PantallaRecaidas(nav: Nav) {
                 }
             }
         }
-        Ayuda((if (c.seguimiento_privado) "${r.totalDias} días con recaída de ${r.diasConRespuesta} días con seguimiento. " else "") +
+        Ayuda((if (c.seguimiento_privado) "${porNumero(r.totalDias, "1 día", "${r.totalDias} días")} con recaída de ${porNumero(r.diasConRespuesta, "1 día", "${r.diasConRespuesta} días")} con seguimiento. " else "") +
             "Para cruzar esto con sueño, pantalla o ánimo, usa tu exportación en R (vm_panel_extendido.csv: impulso, recaida, n_recaida, n_impulso, libido_max, medicamentos_n, med_…, det_…).",
             Modifier.padding(top = 12.dp))
         // Lo privado borrado se recupera aquí, nunca en la papelera general (N-14).

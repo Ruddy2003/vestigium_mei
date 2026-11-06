@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
 import android.content.Intent
@@ -194,13 +196,13 @@ fun PantallaAnno(nav: Nav) {
                 val asc = Repo.ascensos.filter { it.fecha.startsWith(pre) }
                 if (asc.isNotEmpty()) {
                     val max = asc.flatMap { it.bloques }.filter { Grados.encadenado(it.estilo) }.mapNotNull { b -> Grados.valor(b.grado)?.let { it to b.grado } }.maxByOrNull { it.first }?.second
-                    Clave("ascensvs", "${asc.size} sesiones · ${asc.sumOf { it.bloques.size }} bloques" + (max?.let { " · máximo $it" } ?: ""))
+                    Clave("ascensvs", "${porNumero(asc.size, "1 sesión", "${asc.size} sesiones")} · ${asc.sumOf { it.bloques.size }} bloques" + (max?.let { " · máximo $it" } ?: ""))
                 }
                 val obras = Repo.obras.filter { it.estado == "terminado" && it.fin?.startsWith(pre) == true }
                 if (obras.isNotEmpty()) Clave("bibliotheca", TIPOS_OBRA.mapNotNull { t -> obras.count { it.tipo == t.id }.takeIf { it > 0 }?.let { "$it ${t.nombre.lowercase()}" } }.joinToString(" · "))
                 obras.filter { it.calificacion != null }.maxByOrNull { it.calificacion!! }?.let { Clave("praeclarum", "${it.titulo} · ${it.calificacion}/10") }
                 val fotos = Repo.fotos.values.filter { it.fecha.startsWith(pre) }.sumOf { it.fotos }
-                if (fotos > 0) Clave("imagines", "%,d fotos".format(fotos))
+                if (fotos > 0) Clave("imagines", porNumero(fotos, "1 foto", "%,d fotos".format(fotos)))
                 val notif = Repo.notifs.values.filter { it.fecha.startsWith(pre) }.sumOf { it.total }
                 if (notif > 0) Clave("monita", "%,d notificaciones".format(notif))
                 val hitos = dias.flatMap { it.hitos }.distinct()

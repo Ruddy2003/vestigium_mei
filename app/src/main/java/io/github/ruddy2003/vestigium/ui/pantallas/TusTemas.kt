@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -94,7 +96,7 @@ fun PantallaTusTemas(nav: Nav) {
             }
         }
 
-        if (lista.isNotEmpty()) Seccion("Todos", "${lista.size} temas, del más usado al menos. Toca uno para renombrarlo o unirlo con otro.") {
+        if (lista.isNotEmpty()) Seccion("Todos", "${porNumero(lista.size, "1 tema", "${lista.size} temas")}, del más usado al menos. Toca uno para renombrarlo o unirlo con otro.") {
             Tarjeta {
                 lista.take(verTodos).forEach { t ->
                     val unidos = c.equivalencias.filterValues { it == t.nombre }.keys
@@ -115,7 +117,7 @@ fun PantallaTusTemas(nav: Nav) {
             title = { TextoMarcado("#${t.nombre}", style = MaterialTheme.typography.titleLarge) },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
-                    Ayuda("${t.dias} días · de ${Fechas.corto(t.primera)} a ${Fechas.corto(t.ultima)}")
+                    Ayuda("${porNumero(t.dias, "1 día", "${t.dias} días")} · de ${Fechas.corto(t.primera)} a ${Fechas.corto(t.ultima)}")
                     OutlinedTextField(nuevo, { nuevo = it }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true, label = { Text("nuevo nombre") }, prefix = { Text("#") })
                     previa?.let { (n, ej) ->
                         Ayuda("Cambiaría $n ${if (n == 1) "texto" else "textos"}." + if (existe) " #$destino ya existe: quedan juntos." else "", Modifier.padding(top = 8.dp))
@@ -159,7 +161,7 @@ fun PantallaPresencias(nav: Nav) {
         }
         if (pendientes.isEmpty()) Vacio(if (todos) "No hay días con personas en el diario." else "No hay días por revisar.")
         else {
-            Ayuda("${pendientes.size} días por revisar. No hace falta hacerlo todo: sirve más revisar los días en que pensaste en alguien sin verlo.", Modifier.padding(top = 8.dp))
+            Ayuda("${porNumero(pendientes.size, "1 día", "${pendientes.size} días")} por revisar. No hace falta hacerlo todo: sirve más revisar los días en que pensaste en alguien sin verlo.", Modifier.padding(top = 8.dp))
             BotonSecundario("dejar todos como están", Modifier.padding(top = 8.dp)) {
                 Repo.importarDias(pendientes.map { (Repo.dias[it.fecha] ?: it).copy(presencias_ok = true) }, sobrescribir = true)
                 listos = listos + pendientes.map { it.fecha }

@@ -172,7 +172,7 @@ object Spotify {
         pr.edit().remove("verificador").remove("estado").remove("error").apply()
         version.value++
         val n = runCatching { sincronizar(ctx) }.getOrElse { return "Conectado, pero la primera lectura falló: ${it.message?.take(160)}" }
-        return "Conectado con Spotify. Guardé $n canciones recientes; de aquí en adelante se leen solas cada media hora."
+        return "Conectado con Spotify. Guardé ${porNumero(n, "1 canción reciente", "$n canciones recientes")}; de aquí en adelante se leen solas cada media hora."
     }
 
     private fun guardarTokens(ctx: Context, r: JsonObject) {

@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -72,7 +74,7 @@ fun PantallaMas(nav: Nav) {
                 HorizontalDivider()
                 FilaMas("campanas", "Campañas", "Retos de la semana", ir)
                 HorizontalDivider()
-                FilaMas("escalada", "Escalada", if (ult == null) "Bitácora de sesiones y bloques" else "${Repo.ascensos.size} sesiones · última ${Fechas.relativo(ult.fecha)}", ir)
+                FilaMas("escalada", "Escalada", if (ult == null) "Bitácora de sesiones y bloques" else "${porNumero(Repo.ascensos.size, "1 sesión", "${Repo.ascensos.size} sesiones")} · última ${Fechas.relativo(ult.fecha)}", ir)
                 HorizontalDivider()
                 FilaMas("fuerza", "Gimnasio", if (Repo.entrenos.isEmpty()) "Entrenamientos de MacroFactor Workouts" else "${Repo.entrenos.values.count { it.series > 0 }} entrenamientos importados", ir)
                 HorizontalDivider()
@@ -85,13 +87,13 @@ fun PantallaMas(nav: Nav) {
                 FilaMas("suplementos", "Suplementos", if (supl.isEmpty()) "Lo que tomas y su nivel estimado" else supl.joinToString(", ") { it.nombre } +
                     " · " + (if (supl.all { io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id) }) "hoy ya" else "hoy falta"), ir)
                 HorizontalDivider()
-                FilaMas("biblioteca_ideas", "Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste o pensaste, con su fuente y quién lo dice" else "${Repo.ideas.size} ideas · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas", ir)
+                FilaMas("biblioteca_ideas", "Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste o pensaste, con su fuente y quién lo dice" else "${porNumero(Repo.ideas.size, "1 idea", "${Repo.ideas.size} ideas")} · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas", ir)
                 HorizontalDivider()
                 FilaMas("deseados", "Quiero leer y ver", Repo.obras.count { it.estado == "quiero" }.let { n -> if (n == 0) "Libros, películas, series y juegos que quieres" else "$n pendientes · ${Repo.obras.count { it.estado == "quiero" && it.prioridad == "pronto" }} para pronto" }, ir)
                 HorizontalDivider()
                 FilaMas("listas", "Listas", if (Repo.listas.isEmpty()) "Lugares por visitar, cosas por comprar, restaurantes…" else Repo.listas.joinToString(", ") { it.nombre }.take(80), ir)
                 HorizontalDivider()
-                FilaMas("notas", "Notas", if (Repo.notas.isEmpty()) "Ideas, pensamientos especiales, propósitos y recordatorios" else "${Repo.notas.size} notas · ${Repo.notas.count { it.fijada }} fijadas", ir)
+                FilaMas("notas", "Notas", if (Repo.notas.isEmpty()) "Ideas, pensamientos especiales, propósitos y recordatorios" else "${porNumero(Repo.notas.size, "1 nota", "${Repo.notas.size} notas")} · ${Repo.notas.count { it.fijada }} fijadas", ir)
                 HorizontalDivider()
                 val porRev = io.github.ruddy2003.vestigium.data.Metas.porRevisar().size
                 FilaMas("metas", "Metas", if (Repo.metas.isEmpty()) "Corto, mediano y largo plazo, con su progreso" else "${io.github.ruddy2003.vestigium.data.Metas.activas().size} activas" + if (porRev > 0) " · $porRev por revisar" else "", ir)
@@ -130,7 +132,7 @@ fun PantallaMas(nav: Nav) {
                 HorizontalDivider()
                 FilaMas("tus_apps", "Tus apps", "YouTube, música, comida, gimnasio, Kindle, WhatsApp y Google, en números", ir)
                 HorizontalDivider()
-                FilaMas("laptop", "Laptop", if (Repo.laptop.isEmpty()) "Minutos por app y sitio desde Cold Turkey" else "${Repo.laptop.size} días importados de Cold Turkey", ir)
+                FilaMas("laptop", "Laptop", if (Repo.laptop.isEmpty()) "Minutos por app y sitio desde Cold Turkey" else "${porNumero(Repo.laptop.size, "1 día importado", "${Repo.laptop.size} días importados")} de Cold Turkey", ir)
                 HorizontalDivider()
                 FilaMas("escalas", "Cuestionarios", if (pendientes > 0) "$pendientes pendiente(s): bienestar, estrés, soledad, personalidad" else "Al día", ir)
                 HorizontalDivider()
@@ -198,7 +200,7 @@ fun PantallaHabitos(nav: Nav) {
                         val hechos = Repo.dias.values.count { it.habitos[h.id] == true }
                         Column(Modifier.weight(1f)) {
                             Text(h.nombre, style = MaterialTheme.typography.bodyLarge)
-                            Ayuda(if (h.id == ligado) "Privado: se marca y se ve en Más → Privado" else "$hechos días cumplido")
+                            Ayuda(if (h.id == ligado) "Privado: se marca y se ve en Más → Privado" else "${porNumero(hechos, "1 día cumplido", "$hechos días cumplidos")}")
                         }
                         TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(habitos = cc.habitos.map { if (it.id == h.id) it.copy(activo = false) else it }) } }) { Text("Archivar") }
                     }
@@ -241,7 +243,7 @@ fun PantallaGuia(nav: Nav) {
             Escalas.TODAS.forEach { i ->
                 Tarjeta(Modifier.padding(bottom = 8.dp)) {
                     Text(i.nombre, style = MaterialTheme.typography.titleMedium)
-                    Ayuda(i.mide + " · cada ${i.frecuenciaDias} días")
+                    Ayuda(i.mide + " · cada ${porNumero(i.frecuenciaDias, "1 día", "${i.frecuenciaDias} días")}")
                     Text(i.referencia, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
                     Ayuda(i.adaptacion, Modifier.padding(top = 4.dp))
                 }

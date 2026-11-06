@@ -115,7 +115,7 @@ object Suplementos {
                 when (s.modelo) {
                     "carga" -> niveles[f]?.let { put(f, "supl_${s.id}_nivel", it); if (s.id == "creatina") put(f, "creatina_saturacion_pct", it) }
                     // Con vida media corta (melatonina, 1 h), lo que queda a las 5:00 es casi siempre 0: no se exporta (H-4-7).
-                    "vida_media" -> if (s.vida_media_h >= VIDA_MEDIA_MIN_NIVEL) put(f, "supl_${s.id}_nivel", Math.round(cantidadEn(s, Fechas.finDia(f) + 5 * 3_600_000L - 1) * 100) / 100.0)
+                    "vida_media" -> if (s.vida_media_h >= VIDA_MEDIA_MIN_NIVEL) put(f, "supl_${s.id}_nivel", Math.round(cantidadEn(s, Fechas.finDiaLogico(f) - 1) * 100) / 100.0)
                     else -> {
                         val e = estimados[f] ?: 0.0
                         put(f, "supl_${s.id}_porciones", d + e)
@@ -202,7 +202,7 @@ object ColdTurkey {
         Repo.guardarLaptop(porDia.values.toList())
         io.github.ruddy2003.vestigium.avisos.Recordatorios.importado("coldturkey")
         val apps = leidos.count { !it.sitios }; val sitios = leidos.count { it.sitios }
-        return "Cold Turkey: ${porDia.size} días (" + listOfNotNull(apps.takeIf { it > 0 }?.let { "apps" }, sitios.takeIf { it > 0 }?.let { "sitios" }).joinToString(" y ") + ")."
+        return "Cold Turkey: ${porNumero(porDia.size, "1 día", "${porDia.size} días")} (" + listOfNotNull(apps.takeIf { it > 0 }?.let { "apps" }, sitios.takeIf { it > 0 }?.let { "sitios" }).joinToString(" y ") + ")."
     }
 
     /** Minutos totales, en sitios y por categoría de un día. */

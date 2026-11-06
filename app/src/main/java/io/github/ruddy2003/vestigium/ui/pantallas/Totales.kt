@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.privado
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
@@ -204,7 +206,7 @@ private fun Detalle(i: Totales.Indice, e: Totales.Entrada, cerrar: () -> Unit) {
                 if (e.veces > 1) Clave("por vez", Totales.formato(e.total / e.veces, e.unidad), ancho = 9)
                 if (e.dias.size >= 2) {
                     val lapso = java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(e.primera), Fechas.parse(e.ultima)) + 1
-                    Clave("ritmo", "${e.dias.size} de $lapso días (${Totales.n(100.0 * e.dias.size / lapso)}%)", ancho = 9)
+                    Clave("ritmo", "${e.dias.size} de ${porNumero(lapso, "1 día", "$lapso días")} (${Totales.n(100.0 * e.dias.size / lapso)}%)", ancho = 9)
                 }
                 if (e.porMes.size >= 2) Meses(e.porMes, e.unidad)
             }
@@ -270,7 +272,7 @@ private fun EnDiario(q: String, desde: String, hasta: String, abrir: (String) ->
                 io.github.ruddy2003.vestigium.ui.TextoMarcado((if (a > 0) "…" else "") + t.substring(a, b).replace("\n", " ") + (if (b < t.length) "…" else ""), style = MaterialTheme.typography.bodySmall)
             }
         }
-        if (hallados.size > 20) Ayuda("y ${hallados.size - 20} días más.")
+        if (hallados.size > 20) Ayuda("y ${porNumero(hallados.size - 20, "1 día", "${hallados.size - 20} días")} más.")
     }
 }
 
@@ -293,7 +295,7 @@ private fun EnIdeas(q: String, desde: String, hasta: String, abrir: (io.github.r
                 io.github.ruddy2003.vestigium.ui.TextoMarcado(i.titulo.ifBlank { i.texto }.replace("\n", " ").take(160), style = MaterialTheme.typography.bodySmall, maxLines = 3)
             }
         }
-        if (hallados.size > 12) Ayuda("y ${hallados.size - 12} ideas más.")
+        if (hallados.size > 12) Ayuda("y ${porNumero(hallados.size - 12, "1 idea", "${hallados.size - 12} ideas")} más.")
     }
 }
 

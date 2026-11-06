@@ -48,7 +48,7 @@ Un martes (día lógico 12): el diario nocturno marca `valencia = 5` (escala 1�
 
 ### 2.3.1 Marcas de tiempo
 
-`Fechas.ahoraIso()` genera `2026-10-16T08:42:10-06:00`: fecha y hora **locales con el desfase respecto a UTC**. Las fechas «de día» (sin hora) son `YYYY-MM-DD`.
+`Fechas.ahoraIso()` genera `2026-10-16T08:42:10-06:00`: fecha y hora **locales con el desfase respecto a UTC**. Las fechas «de día» (sin hora) son `YYYY-MM-DD`. Desde el 6 nov 2026 (D.159) la hora lleva **siempre** segundos: antes, cuando eran :00, salía `2026-10-16T18:32-06:00` (así lo escribe `OffsetDateTime.toString()`), que también es ISO 8601 pero que Excel y algunos lectores de Python no leían. Lo guardado antes se queda como estaba; la app y `vestigium.R` leen los dos.
 
 - *Qué hace:* guarda el instante exacto y a la vez la hora local con que la persona lo vivió.
 - *Razonamiento:* el ISO-8601 con desfase es no ambiguo (identifica un instante físico) y conserva la hora «de reloj de pared», necesaria para ritmos circadianos (a qué hora se duerme, cuándo se usa el teléfono). Usar solo UTC borraría esa información; usar solo hora local sin desfase se volvería ambiguo en viajes y cambios de horario. **[Validado]** (práctica estándar de ISO 8601).

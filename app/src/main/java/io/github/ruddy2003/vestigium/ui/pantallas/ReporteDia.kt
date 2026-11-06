@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -181,7 +183,7 @@ internal fun fichasDelDia(fecha: String, km: Double?, canciones: Int, artista: S
             DibujoFicha.Semana(semana(fecha) { f -> Repo.sesiones.filter { it.fecha == f }.sumOf { it.min }.toDouble().takeIf { it > 0 } }, null))
     }
     Repo.entrenos[fecha]?.takeIf { it.series > 0 }?.let { e ->
-        l += FichaDia("gimnasio", "robur", "gimnasio", "${e.series_efectivas} series", "%,.0f kg en total".format(e.volumen_kg),
+        l += FichaDia("gimnasio", "robur", "gimnasio", "${porNumero(e.series_efectivas, "1 serie", "${e.series_efectivas} series")}", "%,.0f kg en total".format(e.volumen_kg),
             DibujoFicha.Partes(e.series_musculo.entries.sortedByDescending { it.value }.take(4).map { it.key.replace('_', ' ') to it.value.toDouble() }) { "%.0f".format(it) })
     }
     // Llamadas y mensajes.
@@ -194,7 +196,7 @@ internal fun fichasDelDia(fecha: String, km: Double?, canciones: Int, artista: S
     // Música, fotos y avisos: cifras con su reparto.
     if (canciones > 0) l += FichaDia("musica", "musica", "música", "$canciones ${if (canciones == 1) "canción" else "canciones"}", artista?.let { "más: $it" }, DibujoFicha.Nada)
     Repo.fotos[fecha]?.takeIf { it.fotos + it.capturas + it.videos > 0 }?.let { f ->
-        l += FichaDia("fotos", "imagines", "fotos", "${f.fotos} fotos", "${f.capturas} capturas · ${f.videos} videos",
+        l += FichaDia("fotos", "imagines", "fotos", "${porNumero(f.fotos, "1 foto", "${f.fotos} fotos")}", "${f.capturas} capturas · ${f.videos} videos",
             DibujoFicha.Partes(listOf("fotos" to f.fotos.toDouble(), "capturas" to f.capturas.toDouble(), "videos" to f.videos.toDouble()).filter { it.second > 0 }) { "%.0f".format(it) })
     }
     Repo.notifs[fecha]?.takeIf { it.total > 0 }?.let { nt ->

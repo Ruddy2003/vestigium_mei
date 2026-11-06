@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.widget
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
 import android.app.PendingIntent
@@ -421,7 +423,7 @@ object Widgets {
         val dias = (0 until ini.lengthOfMonth()).map { ini.plusDays(it.toLong()) }
         val vals = dias.map { d -> val f = Fechas.iso(d); Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average() }
         val conDato = vals.filterNotNull()
-        v.setTextViewText(R.id.sub_mes, if (conDato.isEmpty()) Estilo.numeral(hoy.year) else "μ %.1f · ${conDato.size} días".format(conDato.average()))
+        v.setTextViewText(R.id.sub_mes, if (conDato.isEmpty()) Estilo.numeral(hoy.year) else "μ %.1f · ${porNumero(conDato.size, "1 día", "${conDato.size} días")}".format(conDato.average()))
         val celda = 64; val sep = 6; val cab = 34
         val filas = (ini.dayOfWeek.value - 1 + dias.size + 6) / 7
         val w = 7 * celda + 6 * sep; val h = cab + filas * celda + (filas - 1) * sep
@@ -471,7 +473,7 @@ object Widgets {
         val mu = Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia }
         when {
             d?.valencia != null -> l += linea("animus", "${d.valencia} / 7")
-            mu.isNotEmpty() -> l += linea("animus", "%.1f (%d avisos)".format(mu.average(), mu.size))
+            mu.isNotEmpty() -> l += linea("animus", "%.1f (%s)".format(mu.average(), porNumero(mu.size, "1 aviso", "${mu.size} avisos")))
             else -> l += linea("animus", "—")
         }
         Repo.salud[f]?.sueno_min?.let { l += linea("somnus", "${it / 60} h ${"%02d".format(it % 60)}") }
@@ -617,19 +619,21 @@ object Widgets {
 
     fun actualizar(ctx: Context) {
         val m = AppWidgetManager.getInstance(ctx)
-        m.getAppWidgetIds(ComponentName(ctx, WidgetEnfoque::class.java)).forEach { m.updateAppWidget(it, vistaEnfoque(ctx)) }
-        m.getAppWidgetIds(ComponentName(ctx, WidgetAnimo::class.java)).forEach { m.updateAppWidget(it, vistaAnimo(ctx)) }
-        m.getAppWidgetIds(ComponentName(ctx, WidgetMomento::class.java)).forEach { m.updateAppWidget(it, vistaMomento(ctx)) }
-        m.getAppWidgetIds(ComponentName(ctx, WidgetHoy::class.java)).forEach { m.updateAppWidget(it, vistaHoy(ctx)) }
-        m.getAppWidgetIds(ComponentName(ctx, WidgetGasto::class.java)).forEach { m.updateAppWidget(it, vistaGasto(ctx)) }
-        m.getAppWidgetIds(ComponentName(ctx, WidgetSueno::class.java)).forEach { m.updateAppWidget(it, vistaSueno(ctx)) }
-        m.getAppWidgetIds(ComponentName(ctx, WidgetHabitos::class.java)).forEach { m.updateAppWidget(it, vistaHabitos(ctx)) }
-        m.getAppWidgetIds(ComponentName(ctx, WidgetMes::class.java)).forEach { m.updateAppWidget(it, vistaMes(ctx)) }
-        m.getAppWidgetIds(ComponentName(ctx, WidgetAnillos::class.java)).forEach { m.updateAppWidget(it, vistaAnillos(ctx)) }
-        m.getAppWidgetIds(ComponentName(ctx, WidgetFoto::class.java)).forEach { m.updateAppWidget(it, vistaFoto(ctx)) }
-        m.getAppWidgetIds(ComponentName(ctx, WidgetCifra::class.java)).forEach { m.updateAppWidget(it, vistaCifra(ctx)) }
+        // Cada widget por su cuenta: antes, si uno fallaba, los siguientes y los accesos directos ya no se actualizaban.
+        fun uno(f: () -> Unit) { runCatching(f) }
+        uno { m.getAppWidgetIds(ComponentName(ctx, WidgetEnfoque::class.java)).forEach { m.updateAppWidget(it, vistaEnfoque(ctx)) } }
+        uno { m.getAppWidgetIds(ComponentName(ctx, WidgetAnimo::class.java)).forEach { m.updateAppWidget(it, vistaAnimo(ctx)) } }
+        uno { m.getAppWidgetIds(ComponentName(ctx, WidgetMomento::class.java)).forEach { m.updateAppWidget(it, vistaMomento(ctx)) } }
+        uno { m.getAppWidgetIds(ComponentName(ctx, WidgetHoy::class.java)).forEach { m.updateAppWidget(it, vistaHoy(ctx)) } }
+        uno { m.getAppWidgetIds(ComponentName(ctx, WidgetGasto::class.java)).forEach { m.updateAppWidget(it, vistaGasto(ctx)) } }
+        uno { m.getAppWidgetIds(ComponentName(ctx, WidgetSueno::class.java)).forEach { m.updateAppWidget(it, vistaSueno(ctx)) } }
+        uno { m.getAppWidgetIds(ComponentName(ctx, WidgetHabitos::class.java)).forEach { m.updateAppWidget(it, vistaHabitos(ctx)) } }
+        uno { m.getAppWidgetIds(ComponentName(ctx, WidgetMes::class.java)).forEach { m.updateAppWidget(it, vistaMes(ctx)) } }
+        uno { m.getAppWidgetIds(ComponentName(ctx, WidgetAnillos::class.java)).forEach { m.updateAppWidget(it, vistaAnillos(ctx)) } }
+        uno { m.getAppWidgetIds(ComponentName(ctx, WidgetFoto::class.java)).forEach { m.updateAppWidget(it, vistaFoto(ctx)) } }
+        uno { m.getAppWidgetIds(ComponentName(ctx, WidgetCifra::class.java)).forEach { m.updateAppWidget(it, vistaCifra(ctx)) } }
         // Los accesos directos del ícono también llevan el color del tema; solo se vuelven a publicar si algo cambió.
-        io.github.ruddy2003.vestigium.ui.AccesosDirectos.publicar(ctx)
+        uno { io.github.ruddy2003.vestigium.ui.AccesosDirectos.publicar(ctx) }
     }
 }
 

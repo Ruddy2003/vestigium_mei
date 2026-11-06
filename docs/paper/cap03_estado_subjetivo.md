@@ -159,18 +159,35 @@ Dos avisos seguidos quedan separados al menos **2 × mín(45 min, tramo/4)**: el
 
 ### 3.5.3 Cómo llega el aviso (y cuándo se pierde)
 
-La app no programa una alarma exacta para cada aviso: lo revisa en el **pulso** de cada ~15 minutos (capítulo 4). En cada pulso, para cada hora del plan que ya pasó y no se ha procesado:
+**Desde el esquema 20 (decisión del autor del 5 nov 2026), cada aviso tiene su alarma exacta** (`avisos/Muestreo.kt`). La alarma es `setExactAndAllowWhileIdle`, la misma del temporizador de enfoque; si el sistema no deja programarla exacta, se usa una aproximada. Suena a la hora planeada aunque el teléfono esté en reposo. El **pulso** de cada ~15 minutos (capítulo 4) queda como respaldo, por si una alarma se perdió (por ejemplo, al reiniciar el teléfono), y vuelve a programar las que faltan.
 
-- la marca como «ya procesada»;
-- **solo si han pasado menos de 50 minutos** desde la hora planeada, muestra la notificación «¿Cómo te sientes ahora?»;
+**Hasta el esquema 19 no había alarmas.** Cada aviso salía cuando le tocaba correr al pulso: entre 0 y ~15 minutos tarde, y más con el teléfono en reposo, porque Android aplaza esas tareas. Los que más se atrasaban, o se perdían por pasar de 50 minutos, eran justo los de los ratos en que no usabas el teléfono, y eso sesga la muestra hacia los momentos de uso.
+
+Lo dispare la alarma o el pulso, cada aviso se procesa una sola vez (`Muestreo.disparar`):
+
+- lo marca como «ya procesado»;
+- **solo si han pasado menos de 50 minutos** desde la hora planeada, muestra la notificación «¿Cómo te sientes ahora?»; con alarma, el retraso es de segundos;
 - la notificación **se borra sola a los 60 minutos** de mostrarse (`setTimeoutAfter`).
 
-Si respondes tocando la notificación, el registro se guarda como tipo **`muestreo`**, con la hora planeada en `aviso_ts`. La exportación calcula `latencia_min` = minutos entre la hora planeada y tu respuesta. Si en vez de eso abres la app por tu cuenta, el registro se guarda como **`animo`** (iniciativa propia), aunque fuera para contestar el aviso.
+Si respondes tocando la notificación, el registro se guarda como tipo **`muestreo`**, con la hora planeada en `aviso_ts`. Si en vez de eso abres la app por tu cuenta, el registro se guarda como **`animo`** (iniciativa propia), aunque fuera para contestar el aviso.
+
+**Dos latencias desde el esquema 20** (D.153). Cada aviso mostrado guarda la hora en que salió de verdad (`AvisosDia.reales`; en la exportación, `mostrado_ts`):
+- **`latencia_min`**: minutos entre que el aviso salió de verdad y tu respuesta. Queda vacía en los avisos de antes del esquema 20, cuya hora real no se guardó.
+- **`latencia_plan_min`**: la medida de siempre, desde la hora planeada, en todas las filas. Incluye el retraso del propio aviso.
+
+Hasta el esquema 19, `latencia_min` era esta segunda medida.
+
+*Ejemplo (inventado).* El aviso estaba planeado para las 11:23, el pulso lo mostró a las 11:31 y contestaste a las 11:40. Antes, `latencia_min` = 17; ahora `latencia_min` = 9 y `latencia_plan_min` = 17. Con alarma, el aviso sale a las 11:23 y las dos dan 17.
+
+**Razonamiento.** En el muestreo de experiencias, el aviso a una hora al azar sirve para captar el estado del momento y no un recuerdo; por eso estos estudios programan el aviso a su hora, registran cuándo sonó y cuándo se contestó, y con esa diferencia separan las respuestas «del momento» de las tardías (Csikszentmihalyi y Larson, 1987; Shiffman, Stone y Hufford, 2008). **[Validado]** como práctica del método. El tope de 50 minutos para mostrar un aviso y la forma de usar la latencia en el análisis son **[Diseño propio]**. Para el autor los avisos son también un recordatorio de anotar el ánimo durante el día. Eso sigue valiendo: la latencia permite decidir en R qué respuestas cuentan como «del momento».
 
 **Lo que queda registrado desde el esquema 13 (P-10).** Cada pulso anota en la colección `avisos`, un documento por día del plan (`AvisosDia`):
 - **`planeados`**: cuántos avisos podían sonar ese día. Si cambias los ajustes a mitad del día, el plan se rehace. Entonces se suman los que ya vencieron y los del plan nuevo que todavía pueden sonar; los de un turno ya usado no vuelven a sonar (H-9-11).
 - **`vencidos`**: los avisos cuya hora ya pasó y que el pulso ya procesó.
-- **`mostrados`**: los que además salieron en pantalla, es decir, con menos de 50 minutos de retraso y con permiso de notificaciones.
+- **`mostrados`**: los que además salieron en pantalla, es decir, con menos de 50 minutos de retraso y con permiso de notificaciones. Desde el esquema 20 también hace falta que las notificaciones de la app estén encendidas y el canal de ánimo no esté silenciado del todo (`Avisos.animoVisible`). Antes, un aviso con el canal apagado contaba como mostrado y bajaba la tasa de respuesta.
+- **`reales`** (desde el esquema 20): de cada aviso mostrado, la hora en que salió de verdad.
+
+Al cambiar de zona horaria (un viaje), el plan del día se rehace con la zona nueva, porque guarda instantes fijos que de otro modo caerían de madrugada; los turnos ya usados no vuelven a sonar (desde el esquema 20).
 
 Las horas se guardan en el mismo formato que `aviso_ts`, para unir cada aviso con su respuesta. Con los avisos apagados no se anota nada, y el día queda **sin dato**, no en 0.
 

@@ -90,5 +90,7 @@ dependencies {
 // En CI, cada prueba deja en el registro cuándo empieza: si la máquina se apaga a mitad (sin informe de JUnit),
 // la última línea «STARTED» dice qué prueba fue.
 tasks.withType<Test>().configureEach {
+    // Las capturas muy altas (6000-8000 px) no caben en los 512 MB que Gradle da por omisión a las pruebas.
+    maxHeapSize = "2g"
     testLogging { events("started", "failed") }
 }

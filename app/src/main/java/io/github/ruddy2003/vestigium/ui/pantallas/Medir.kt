@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.esAnimo
 import android.os.SystemClock
 import androidx.compose.foundation.Canvas
@@ -94,7 +96,7 @@ fun PantallaEscalas(nav: Nav) {
                 Escalas.TODAS.forEach { i ->
                     val u = Repo.ultimaRespuesta(i.id)
                     val atraso = Escalas.atraso(i)
-                    val cada = when (i.frecuenciaDias) { 7 -> "cada semana"; 30 -> "cada mes"; 365 -> "cada año"; else -> "cada ${i.frecuenciaDias} días" }
+                    val cada = when (i.frecuenciaDias) { 7 -> "cada semana"; 30 -> "cada mes"; 365 -> "cada año"; else -> "cada ${porNumero(i.frecuenciaDias, "1 día", "${i.frecuenciaDias} días")}" }
                     val estado = when {
                         u == null -> "nunca respondido · toca hoy"
                         atraso > 0 -> "atrasado $atraso día${if (atraso > 1) "s" else ""}"
@@ -107,9 +109,10 @@ fun PantallaEscalas(nav: Nav) {
         }
         Escalas.TODAS.forEach { i ->
             val hist = Repo.respuestas.filter { it.instrumento == i.id }
-            if (hist.size >= 2) Seccion("Historial · ${i.nombre}") {
+            // Una respuesta sin puntajes (de un respaldo raro) ya no cierra la pantalla: antes, `first()` sobre una lista vacía.
+            val clave = hist.lastOrNull()?.puntajes?.keys?.let { k -> k.firstOrNull { it == "porcentaje" || it == "total" } ?: k.firstOrNull() }
+            if (hist.size >= 2 && clave != null) Seccion("Historial · ${i.nombre}") {
                 Tarjeta {
-                    val clave = hist.last().puntajes.keys.firstOrNull { it == "porcentaje" || it == "total" } ?: hist.last().puntajes.keys.first()
                     Linea(hist.mapNotNull { it.puntajes[clave] })
                     Ayuda(hist.takeLast(6).joinToString(" · ") { "${it.fecha.substring(5)}: ${"%.0f".format(it.puntajes[clave] ?: 0.0)}" })
                 }
@@ -295,7 +298,7 @@ fun PantallaLugares(nav: Nav) {
                             Text(Catalogo.nombreTipoLugar(l.tipo).lowercase() + " · cambiar tipo", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.clickable { cambiarTipo = !cambiarTipo })
                             if (cambiarTipo) FilaFichas(Catalogo.TIPOS_LUGAR, l.tipo) { t -> if (t != null) Repo.guardarLugar(l.copy(tipo = t)); cambiarTipo = false }
-                            Ayuda("${vis.size} visitas en 30 días · ${"%.1f".format(horas)} h")
+                            Ayuda("${porNumero(vis.size, "1 visita", "${vis.size} visitas")} en 30 días · ${"%.1f".format(horas)} h")
                             Ayuda(if (aqui.size < 5) "Pocos datos de ánimo aquí (${aqui.size}); se necesitan 5." else
                                 "Valencia aquí ${"%.1f".format(media)}" + (general?.let { g -> " (tu promedio ${"%.1f".format(g)})" } ?: "") + (act?.let { " · energía ${"%.1f".format(it)}" } ?: ""))
                         }
@@ -342,7 +345,7 @@ fun PantallaLugares(nav: Nav) {
                                 Column {
                                     if (suyas.isEmpty()) Ayuda("No tiene visitas guardadas.")
                                     else {
-                                        Text("¿Qué hago con sus ${suyas.size} visitas?", style = MaterialTheme.typography.bodyMedium)
+                                        Text("¿Qué hago con " + porNumero(suyas.size, "su visita", "sus ${suyas.size} visitas") + "?", style = MaterialTheme.typography.bodyMedium)
                                         if (otros.isNotEmpty()) {
                                             Etiqueta("Pasarlas a…")
                                             androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -454,7 +457,10 @@ fun DialogoVisita(v: io.github.ruddy2003.vestigium.data.Visita, cerrar: () -> Un
             }
         },
         confirmButton = { TextButton(enabled = valida, onClick = {
-            val n = v.copy(lugar = lugar, entrada = Fechas.isoDeMillis(ini), salida = fin?.let { Fechas.isoDeMillis(it) })
+            val nuevaSalida = fin?.let { Fechas.isoDeMillis(it) }
+            // Si cambiaste la salida, la visita dice que la pusiste tú (esquema 19); «sigo aquí» la deja abierta.
+            val cierre = when { nuevaSalida == null -> null; fin != v.salida?.let { Fechas.millis(it) } -> io.github.ruddy2003.vestigium.data.Lugares.CIERRE_MANUAL; else -> v.cierre }
+            val n = v.copy(lugar = lugar, entrada = Fechas.isoDeMillis(ini), salida = nuevaSalida, cierre = cierre)
             if (n != v) {
                 Repo.guardarVisita(n)
                 io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Visita corregida") { Repo.guardarVisita(v) }

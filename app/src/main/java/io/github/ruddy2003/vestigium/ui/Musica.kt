@@ -590,12 +590,13 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             val u = 1.dp.toPx(); val w = size.width; val h = size.height
             val oro = e.primary
             val centro = Offset(w / 2, u * (arriba + tam / 2))
-            for (k in 0 until 36) {
+            // Los rayos largos se recortan al marco: antes se salían y cruzaban toda la pantalla.
+            clipRect(0f, 0f, w, h) { for (k in 0 until 36) {
                 val a = Math.toRadians(k * 10.0)
                 val largo = if (k % 2 == 0) maxOf(w, h) else u * (tam / 2 + 46)
                 drawLine(oro.copy(alpha = if (k % 2 == 0) 0.1f else 0.18f), Offset(centro.x + u * (tam / 2 + 8) * cos(a).toFloat(), centro.y + u * (tam / 2 + 8) * sin(a).toFloat()),
                     Offset(centro.x + largo * cos(a).toFloat(), centro.y + largo * sin(a).toFloat()), (if (k % 2 == 0) 2f else 1f) * u)
-            }
+            } }
             drawCircle(oro.copy(alpha = 0.5f), u * (tam / 2 + 6), centro, style = Stroke(u))
             val m = 8 * u; val k = 10 * u
             val marco = Path().apply {

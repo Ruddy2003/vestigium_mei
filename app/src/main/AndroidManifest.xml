@@ -75,7 +75,10 @@
             android:name=".ui.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density|fontScale"
             android:windowSoftInputMode="adjustResize">
+            <!-- Girar el teléfono, cambiar el tamaño de letra o el modo oscuro, o abrir la app en multiventana no la reinicia:
+                 la interfaz se acomoda sola y no se pierde la pantalla en la que estabas ni lo que escribías. -->
             <!-- Compartir un video, una página o un subrayado a Vestigium abre una idea nueva en el Ideario. -->
             <intent-filter android:label="Ideario">
                 <action android:name="android.intent.action.SEND" />
@@ -542,9 +545,11 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
 
+        <!-- Solo la abre la propia app (widgets, accesos directos, mosaicos, avisos): antes otra app podía abrirla y
+             saltarse el candado. Los accesos directos se lanzan con la identidad de la app, así que no necesita estar exportada. -->
         <activity
             android:name=".ui.QuickActivity"
-            android:exported="true"
+            android:exported="false"
             android:excludeFromRecents="true"
             android:taskAffinity=""
             android:theme="@style/Theme.Vestigium.Quick"
@@ -642,6 +647,8 @@
         <receiver android:name=".widget.HabitoReceiver" android:exported="false" />
         <receiver android:name=".data.EnfoqueReceiver" android:exported="false" />
         <receiver android:name=".avisos.RecordatorioReceiver" android:exported="false" />
+        <!-- La alarma exacta de cada aviso de ánimo (esquema 20). -->
+        <receiver android:name=".avisos.MuestreoReceiver" android:exported="false" />
         <receiver android:name=".widget.WidgetEnfoque" android:exported="false" android:label="Enfoque">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

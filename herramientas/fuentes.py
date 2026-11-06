@@ -27,10 +27,11 @@ KANJI_EDO = ("※、。々〆「」『』〔〕あいえおかがきぎくけこ
              "動勝医十千卯印又反取口古吉同名和品問土場声夏夢大如始定客宿封尺岩師平年庫廻引弥後御心応悔悪成我所手持数文新旅日明昭是時暮曜曲書最月有朝期木朱東枯栖様模正歩残段水求池"
              "河治流海滋火無瓶生用画番病登百皐盗目眠睦知硯神秋稼稽空窓第筋紙終絵絶続網習者脈腕腹良花茶草菜葉蛙蝉行西言計記評読費走起足跡転連過道野金釣錬鍛長開閑間階雪電霜露面音"
              "題顔風飛食養騒齢＋－：〇二三四六九")
-# La negrita del texto solo lleva las cifras, los meses, los días de la semana y las eras.
-KANA_EDO_NEGRITA = "一二三四五六七八九十〇百千万第年月日曜火水木金土、。・「」『』※令和平成昭大正明治元睦如弥生卯皐無文葉長神霜師走"
 JAPONES_EDO = LATINO + "," + ",".join(f"U+{ord(c):04X}" for c in KANJI_EDO)
-JAPONES_EDO_NEGRITA = LATINO + "," + ",".join(f"U+{ord(c):04X}" for c in KANA_EDO_NEGRITA)
+# La negrita del texto lleva las mismas letras que la regular: cualquier texto en negrita del tema (títulos de ficha,
+# la capitular del diario, rótulos) puede llevar kana o kanji, y la letra que falta sale con la fuente del sistema,
+# de palo seco, en medio de la palabra.
+JAPONES_EDO_NEGRITA = JAPONES_EDO
 
 # archivo de origen, ejes (None si es estática), nombre en res/font, nombre nuevo (si la licencia reserva el suyo), letras
 FUENTES = [
@@ -177,6 +178,137 @@ def anadir_mayas(f, cache):
     f["maxp"].numGlyphs = len(orden)
 
 
+# Las salidas que llevan, además, los adornos del tema Art déco (≡ ◊ ‖ ▷ ▽ y las flechas), que Poiret One y Josefin Sans
+# no traen: sin ellos Android los toma de la fuente del sistema, con otro grosor y otra altura. Se dibujan aquí con el
+# grosor del palo de cada fuente (ver anadir_adornos).
+CON_ADORNOS = {"poiret_titulo", "pasaje_regular", "pasaje_semibold"}
+
+
+def anadir_adornos(f):
+    """Dibuja en [f] los adornos de Art déco con sus propias medidas: el grosor de «|», la altura de «-» y «=», la de las mayúsculas."""
+    import math
+    from fontTools.pens.ttGlyphPen import TTGlyphPen
+    cm = f.getBestCmap()
+    glyf, hmtx = f["glyf"], f["hmtx"]
+
+    def caja(c):
+        g = glyf[cm[ord(c)]]
+        g.recalcBounds(glyf)
+        return g.xMin, g.yMin, g.xMax, g.yMax, hmtx[cm[ord(c)]][0]
+
+    bx0, by0, bx1, by1, badv = caja("|")
+    hx0, hy0, hx1, hy1, _ = caja("-")
+    ex0, ey0, ex1, ey1, eadv = caja("=")
+    _, _, _, mayus, _ = caja("H")
+    g = bx1 - bx0                       # grosor del palo
+    h = hy1 - hy0                       # grosor de la raya
+    c = (hy0 + hy1) / 2                 # el eje de los signos (la altura de la raya)
+    em = f["head"].unitsPerEm
+
+    def area(p):
+        return sum(p[i][0] * p[(i + 1) % len(p)][1] - p[(i + 1) % len(p)][0] * p[i][1] for i in range(len(p))) / 2
+
+    def horario(p, si=True):
+        """TrueType rellena los contornos en sentido horario; los huecos van al revés."""
+        return p if (area(p) < 0) == si else p[::-1]
+
+    def barra(a, b, grueso):
+        (x0, y0), (x1, y1) = a, b
+        l = math.hypot(x1 - x0, y1 - y0)
+        nx, ny = -(y1 - y0) / l * grueso / 2, (x1 - x0) / l * grueso / 2
+        return horario([(x0 + nx, y0 + ny), (x1 + nx, y1 + ny), (x1 - nx, y1 - ny), (x0 - nx, y0 - ny)])
+
+    def hueco(p, grueso):
+        """El contorno de adentro de un polígono convexo de trazo [grueso]: cada lado se recorre [grueso] hacia el centro."""
+        cx, cy = sum(x for x, _ in p) / len(p), sum(y for _, y in p) / len(p)
+        lineas = []
+        for i in range(len(p)):
+            (x0, y0), (x1, y1) = p[i], p[(i + 1) % len(p)]
+            l = math.hypot(x1 - x0, y1 - y0)
+            nx, ny = -(y1 - y0) / l, (x1 - x0) / l
+            if (cx - x0) * nx + (cy - y0) * ny < 0:
+                nx, ny = -nx, -ny
+            lineas.append(((x0 + nx * grueso, y0 + ny * grueso), (x1 - x0, y1 - y0)))
+        out = []
+        for i in range(len(lineas)):
+            (p0, d0), (p1, d1) = lineas[i - 1], lineas[i]
+            det = d0[0] * d1[1] - d0[1] * d1[0]
+            t = ((p1[0] - p0[0]) * d1[1] - (p1[1] - p0[1]) * d1[0]) / det
+            out.append((p0[0] + d0[0] * t, p0[1] + d0[1] * t))
+        return out
+
+    def contorno(p, grueso):
+        return [horario(p), horario(hueco(p, grueso), si=False)]
+
+    def glifo(nombre, contornos, ancho):
+        pen = TTGlyphPen(None)
+        for p in contornos:
+            pen.moveTo(tuple(round(v) for v in p[0]))
+            for q in p[1:]:
+                pen.lineTo(tuple(round(v) for v in q))
+            pen.closePath()
+        gl = pen.glyph()
+        gl.recalcBounds(None)
+        return nombre, gl, (round(ancho), gl.xMin)
+
+    lado = em * 0.08                                        # aire a cada lado de los signos
+    alto = mayus * 0.8                                      # alto de los triángulos y del rombo
+    cm_ = mayus / 2                                         # ≡ ‖ ▷ ▽ ◊ van junto a rótulos en mayúsculas: a media altura de ellas
+    largo = max(hx1 - hx0, em * 0.3) * 1.7                  # largo de las flechas
+    punta = largo * 0.4
+    t = min(max(g, h), em * 0.07)                           # grosor de las flechas
+    trazo = min(g, alto * 0.12)                             # grosor del contorno de ▷ ▽ ◊
+    nuevos = {}
+    # ≡: tres rayas del grosor de las de «=», con aire suficiente para que no se junten en la negrita.
+    hr = min(h, em * 0.06)
+    d = max((ey1 - ey0 - h) / 2, hr * 2.4, em * 0.09)
+    an = max(ex1 - ex0, em * 0.5)
+    nuevos[0x2261] = glifo("uni2261", [barra((lado + hr / 2, cm_ + k * d), (lado + an - hr / 2, cm_ + k * d), hr) for k in (-1, 0, 1)], an + 2 * lado)
+    # ‖: dos palos de «|».
+    sep = max(2 * g, em * 0.06)
+    nuevos[0x2016] = glifo("uni2016", [barra((bx0 + g / 2 + k * (g + sep), by0), (bx0 + g / 2 + k * (g + sep), by1), g) for k in (0, 1)], badv + g + sep)
+    # ▷ ▽ ◊: el contorno con el grosor del palo.
+    w = alto * 0.866
+    nuevos[0x25B7] = glifo("uni25B7", contorno([(lado, cm_ - alto / 2), (lado, cm_ + alto / 2), (lado + w, cm_)], trazo), w + 2 * lado)
+    wv = alto / 0.866
+    nuevos[0x25BD] = glifo("uni25BD", contorno([(lado, cm_ + alto / 2), (lado + wv, cm_ + alto / 2), (lado + wv / 2, cm_ - alto / 2)], trazo), wv + 2 * lado)
+    wr = alto * 0.62
+    nuevos[0x25CA] = glifo("uni25CA", contorno([(lado + wr / 2, cm_ - alto / 2), (lado, cm_), (lado + wr / 2, cm_ + alto / 2), (lado + wr, cm_)], trazo), wr + 2 * lado)
+
+    # Flechas: el asta y los dos brazos de la punta, del grosor de la raya.
+    def flecha(punta_en, desde):
+        (px, py), (qx, qy) = punta_en, desde
+        l = math.hypot(px - qx, py - qy)
+        ux, uy = (px - qx) / l, (py - qy) / l
+        brazos = [((px - ux * punta - uy * punta * s), (py - uy * punta + ux * punta * s)) for s in (1, -1)]
+        return [barra((qx, qy), (px - ux * t * 0.35, py - uy * t * 0.35), t)] + [barra((px, py), b, t) for b in brazos]
+
+    ancho = largo + 2 * lado
+    nuevos[0x2192] = glifo("arrowright", flecha((lado + largo, c), (lado, c)), ancho)
+    nuevos[0x2190] = glifo("arrowleft", flecha((lado, c), (lado + largo, c)), ancho)
+    av = max(eadv, punta * 2 + 2 * lado)
+    nuevos[0x2191] = glifo("arrowup", flecha((av / 2, mayus), (av / 2, 0)), av)
+    nuevos[0x2193] = glifo("arrowdown", flecha((av / 2, 0), (av / 2, mayus)), av)
+
+    orden = list(f.getGlyphOrder())
+    para_cmap = {}
+    for cp, (nombre, gl, metrica) in nuevos.items():
+        if cp in cm:
+            continue
+        while nombre in glyf.glyphs:
+            nombre += ".vm"
+        orden.append(nombre)
+        glyf[nombre] = gl
+        hmtx[nombre] = metrica
+        para_cmap[cp] = nombre
+    f.setGlyphOrder(orden)
+    glyf.glyphOrder = orden
+    for tabla in f["cmap"].tables:
+        if tabla.isUnicode():
+            tabla.cmap.update(para_cmap)
+    f["maxp"].numGlyphs = len(orden)
+
+
 def bajar(ruta, cache):
     local = os.path.join(cache, ruta.replace("/", "_"))
     if not os.path.exists(local):
@@ -220,6 +352,8 @@ def hacer(origen, ejes, salida, nombre, letras, cache):
     s.subset(f)
     if salida in CON_MAYAS:
         anadir_mayas(f, cache)
+    if salida in CON_ADORNOS:
+        anadir_adornos(f)
     if nombre:
         peso = salida.split("_")[-1]
         renombrar(f, nombre, {"regular": "Regular", "titulo": "Regular", "medium": "Medium", "semibold": "SemiBold", "bold": "Bold", "negrita": "Bold"}[peso])

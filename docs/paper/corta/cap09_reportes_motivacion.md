@@ -14,7 +14,7 @@ Los reportes y «Tu año» no calculan nada por su cuenta: usan un mismo resumen
 | **Ánimo medio** | Promedio de los «ánimos del día» que existen. Si hubo días con valencia solo en los avisos (`diasSoloAvisos`), el reporte añade «*N* días solo con avisos no cuentan». |
 | **Sueño medio** | Promedio de las noches del reloj con **más de 120 minutos** (las más cortas se descartan como siestas o errores). |
 | **Hora de dormir media** | `Exportar.horaDecimal`, como el panel y R: las anteriores a las **12:00** suman 24 (la 01:00 cuenta como 25:00). |
-| **Mejor marca** | `Macrofactor.e1rm`, la misma de la exportación: peso × (1 + repeticiones/30) (**fórmula de Epley**), solo en series de **1 a 12** repeticiones y sin calentamientos, redondeada a 0.1 kg. |
+| **Mejor marca** | `Macrofactor.e1rm`, la misma de la exportación: peso × (1 + repeticiones/30) (**fórmula de Epley**; con 1 repetición, el peso mismo), solo en series de **1 a 12** repeticiones y sin calentamientos, redondeada a 0.1 kg. |
 | **Gasto e ingresos** | Por el **día del diario** (`Gasto.dia`, `Ingreso.dia`: antes de las 5:00 cuenta para el día anterior), igual que el panel. |
 | **Comparación con el periodo anterior** | Solo si el periodo anterior tiene **al menos 3 días** con dato. |
 | **Emociones, pensamientos y con quién** (desde el esquema 18) | `Periodo.animoDe`, con los registros de ánimo no privados: cada emoción cuenta una vez por registro, «no sé» no cuenta, «otro» va con lo que escribiste y se dice cuántas veces fue «mucho». Conteos para leer: no entran a ningún promedio ni al panel. **[Diseño propio]** |
@@ -88,7 +88,7 @@ Una **racha** son días **seguidos** cumpliendo algo: un solo día sin cumplir l
 |---|---|---|
 | **Registrar** | días de diario, avisos contestados, momentos | Menos datos faltantes (bueno). Riesgo: entradas de relleno. |
 | **Una conducta** | pasos, sueño ≥ 7 h, entrenar, hábitos | Cambian la conducta medida: es una intervención. |
-| **Un valor de la medida subjetiva** | «Día perfecto» (7 de 7), «Remontada» (un ≥ 6 tras un ≤ 2 en alguno de los 3 días con valencia anteriores) | Premian **un número que tú escribes** (H-8-6). Se quedan por decisión del autor (D.117). |
+| **Un valor de la medida subjetiva** | «Día perfecto» (7 de 7), «Remontada» (un ≥ 6 tras un ≤ 2 en los 3 días de calendario anteriores) | Premian **un número que tú escribes** (H-8-6). Se quedan por decisión del autor (D.117). |
 | **Un rendimiento** | «Rayo» (reacción < 250 ms) | Los tiempos pueden mejorar por práctica y no por estar más despierto. |
 
 Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que reduce mucho el incentivo. **[Diseño propio]**, de bajo riesgo en la práctica, pero contrario al principio de no premiar el valor de una medida. **Desde 10f se quedan como están, por decisión del autor** (D.117). El riesgo que queda es **un incentivo pequeño a sesgar la valencia del diario** (poner un 7 en vez de un 6), que desaparece en cuanto se gana cada uno; que sean «secretos» casi no protege, porque el único usuario, el autor, sabe que existen. Si se sospecha el efecto, se puede comparar la proporción de 7 antes y después del día en que se ganó (más en la versión completa, §9.4.3).

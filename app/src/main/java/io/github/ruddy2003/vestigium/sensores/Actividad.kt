@@ -46,8 +46,11 @@ object Actividad {
         var a = desde
         while (a < hasta) {
             val dia = Fechas.diaLogicoDeMillis(a)
-            val corte = Fechas.inicioDia(Fechas.sumar(dia, 1)) + 5 * 3_600_000L
+            // El fin del día lógico con su zona: con «medianoche + 5 h» de reloj, la noche en que se atrasa el reloj el
+            // corte caía a las 04:00, del mismo día lógico, y el ciclo no terminaba.
+            val corte = Fechas.finDiaLogico(dia)
             val b = minOf(hasta, corte)
+            if (b <= a) break
             Repo.sumarActividad(dia, tipo, ((b - a) / 60_000).toInt())
             a = b
         }

@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.foundation.Canvas
@@ -208,7 +210,8 @@ fun PantallaGastos(nav: Nav? = null) {
         else {
             Box(Modifier.padding(top = 12.dp)) { Tarjeta { GastoPorDia(mes, items) } }
             val porCat = items.groupBy { it.categoria }.mapValues { e -> e.value.sumOf { it.monto } }.entries.sortedByDescending { it.value }
-            val max = porCat.first().value
+            // Un mes que suma 0 (gastos en cero o devoluciones) daba barras de ancho NaN y cerraba la pantalla.
+            val max = porCat.first().value.takeIf { it > 0 } ?: 1.0
             val eg = estiloGrafica()
             val barraCat = MaterialTheme.colorScheme.primary
             val cifrasCat = estiloCifras(MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp))
@@ -220,7 +223,7 @@ fun PantallaGastos(nav: Nav? = null) {
                         Row(Modifier.fillMaxWidth().clickable(enabled = porSub.isNotEmpty()) { abiertaCat = if (abiertaCat == c) null else c }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(c + if (porSub.isNotEmpty()) (if (abiertaCat == c) " ▾" else " ▸") else "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(100.dp))
                             Box(Modifier.weight(1f)) {
-                                Canvas(Modifier.fillMaxWidth((v / max).toFloat().coerceAtLeast(0.03f)).height(9.dp)) { barraGrafica(eg, Offset.Zero, size, barraCat, horizontal = true) }
+                                Canvas(Modifier.fillMaxWidth((v / max).toFloat().takeIf { !it.isNaN() }?.coerceIn(0.03f, 1f) ?: 0.03f).height(9.dp)) { barraGrafica(eg, Offset.Zero, size, barraCat, horizontal = true) }
                             }
                             Text(dinero(v), style = cifrasCat, modifier = Modifier.width(80.dp), textAlign = TextAlign.End)
                         }
@@ -416,7 +419,8 @@ private fun DialogoDinero(
     var monto by remember { mutableStateOf(if (monto0 <= 0.0) "" else if (monto0 % 1.0 == 0.0) monto0.toLong().toString() else monto0.toString()) }
     var cat by remember { mutableStateOf(cat0) }
     var sub by remember { mutableStateOf(sub0) }
-    var cuando by remember { mutableStateOf<LocalDateTime?>(runCatching { LocalDateTime.of(Fechas.parse(fecha0), java.time.LocalTime.parse(hora0.take(5))) }.getOrNull()) }
+    // «9:05» también se lee (antes solo «09:05»).
+    var cuando by remember { mutableStateOf<LocalDateTime?>(runCatching { LocalDateTime.of(Fechas.parse(fecha0), java.time.LocalTime.parse(hora0.trim().take(5).padStart(5, '0'))) }.getOrNull()) }
     var nota by remember { mutableStateOf(nota0) }
     var m by remember { mutableStateOf(marca0) }
     var m2 by remember { mutableStateOf(marca20) }
@@ -454,8 +458,11 @@ private fun DialogoDinero(
         },
         confirmButton = {
             TextButton(enabled = v != null && v > 0, onClick = {
-                val c = cuando ?: LocalDateTime.now()
-                guardar(Math.round((v ?: monto0) * 100) / 100.0, cat, sub, Fechas.iso(c.toLocalDate()), "%02d:%02d".format(c.hour, c.minute), nota.trim(), m, m2)
+                // Si la hora guardada no se pudo leer y no la cambiaste, se conservan su fecha y su hora: antes el gasto se
+                // movía a hoy en silencio. Solo uno nuevo, sin fecha, toma la de ahora.
+                val (f, h) = cuando?.let { c -> Fechas.iso(c.toLocalDate()) to "%02d:%02d".format(c.hour, c.minute) }
+                    ?: if (fecha0.isNotBlank()) fecha0 to hora0 else LocalDateTime.now().let { c -> Fechas.iso(c.toLocalDate()) to "%02d:%02d".format(c.hour, c.minute) }
+                guardar(Math.round((v ?: monto0) * 100) / 100.0, cat, sub, f, h, nota.trim(), m, m2)
                 cerrar()
             }) { Text("Guardar") }
         },
@@ -515,5 +522,5 @@ private fun GastoPorDia(mes: String, items: List<Gasto>) {
         }
     }
     val top = porDia.indices.maxBy { porDia[it] }
-    Ayuda("Día más alto: el ${top + 1} con ${dinero(porDia[top])} · gastaste en $diasConGasto de $dias días · en rojo, imprevistos.")
+    Ayuda("Día más alto: el ${top + 1} con ${dinero(porDia[top])} · gastaste en $diasConGasto de ${porNumero(dias, "1 día", "$dias días")} · en rojo, imprevistos.")
 }

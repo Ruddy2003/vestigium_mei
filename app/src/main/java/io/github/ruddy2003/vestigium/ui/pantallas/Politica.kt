@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -316,7 +318,7 @@ private fun contextoDe(ctx: Context, desde: String, hasta: String): List<Pair<St
     dias.mapNotNull { it.valencia }.takeIf { it.size >= 5 }?.let { out += "ánimo" to "%.1f de 7 en promedio (%d días)".format(it.average(), it.size) }
     Repo.salud.filterKeys { it in desde..hasta }.values.mapNotNull { it.sueno_min }.takeIf { it.size >= 5 }?.let { out += "sueño" to "%.1f h por noche".format(it.average() / 60) }
     val ejercicio = Repo.sesiones.filter { it.fecha in desde..hasta }.map { it.fecha }.toSet().size + Repo.ascensos.filter { it.fecha in desde..hasta }.map { it.fecha }.toSet().size
-    if (ejercicio > 0) out += "ejercicio" to "$ejercicio días"
+    if (ejercicio > 0) out += "ejercicio" to "${porNumero(ejercicio, "1 día", "$ejercicio días")}"
     val eq = Repo.equivalencias()
     dias.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.take(5)
         .takeIf { it.isNotEmpty() }?.let { l -> out += "personas" to l.joinToString(", ") { "@${it.key}" } }

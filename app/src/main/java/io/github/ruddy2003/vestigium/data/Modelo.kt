@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 18
+const val SCHEMA_V = 20
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -150,9 +150,12 @@ data class Momento(
  * (menos de 50 minutos tarde y con permiso de notificaciones). Las horas van en ISO, igual que [Momento.aviso_ts],
  * para unir cada aviso con su respuesta. [fecha] es el día del plan (de calendario; con la ventana de avisos después
  * de las 05:00 coincide con el día lógico). Con los avisos apagados no se anota nada: el día queda sin dato, no en 0.
+ * [reales] (esquema 20): de cada aviso mostrado, la hora en que salió de verdad (hora planeada → hora real). Antes no se
+ * guardaba, y la latencia se medía desde la hora planeada, con el retraso del propio aviso dentro.
  */
 @Serializable
-data class AvisosDia(val fecha: String, val planeados: Int = 0, val vencidos: List<String> = emptyList(), val mostrados: List<String> = emptyList())
+data class AvisosDia(val fecha: String, val planeados: Int = 0, val vencidos: List<String> = emptyList(), val mostrados: List<String> = emptyList(),
+    val reales: Map<String, String> = emptyMap())
 
 /** Un registro de ánimo: de un aviso («muestreo») o hecho por ti («animo»). */
 val Momento.esAnimo: Boolean get() = tipo == "muestreo" || tipo == "animo"
@@ -369,12 +372,19 @@ data class CandidatoLugar(
     val sugerencia: String = "",
 )
 
+/**
+ * Una estancia en un lugar guardado. [cierre] (esquema 19) dice cómo se supo la salida: «geocerca» (Android avisó que
+ * saliste), «otro_lugar» (llegaste a un lugar lejano sin que avisara la salida), «ubicaciones» (tus puntos ya te ponían
+ * fuera), «reconstruida» (la visita entera salió de tus ubicaciones al guardar el lugar), «manual» (la corregiste tú). Null: abierta, o guardada antes
+ * del esquema 19 y sin corregir.
+ */
 @Serializable
 data class Visita(
     val id: String,
     val lugar: String,
     val entrada: String,
     val salida: String? = null,
+    val cierre: String? = null,
 )
 
 /**

@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.reportes
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import android.content.ContentValues
 import android.content.Context
 import android.content.res.Configuration
@@ -955,7 +957,7 @@ object Reportes {
             if (dias.any { it.palabras > 0 }) {
                 val maxPal = dias.maxOf { it.palabras }
                 val porHoja = maxOf(10, (maxPal + 9) / 10)
-                rotulo("páginas escritas · una hoja = $porHoja palabras")
+                rotulo("páginas escritas · una hoja = ${porNumero(porHoja, "1 palabra", "$porHoja palabras")}")
                 val maxHojas = ((maxPal + porHoja - 1) / porHoja).coerceIn(1, 10)
                 val alto = maxHojas * 9.5f + 14f; val base = y + alto
                 dias.forEachIndexed { i, d ->
@@ -1253,7 +1255,7 @@ object Reportes {
         val valTipo = runCatching { Lugares.valenciaPorTipo(d.ini, d.fin) }.getOrDefault(emptyMap()).filterValues { it.second >= 2 }
         h.cifras(listOfNotNull(
             "${d.diasDiario}/${d.n}" to "días con diario",
-            d.valMedia?.let { n1(it) to ("ánimo medio del diario (de 7)" + if (d.diasSoloAvisos > 0) "; ${d.diasSoloAvisos} días solo con avisos no cuentan" else "") },
+            d.valMedia?.let { n1(it) to ("ánimo medio del diario (de 7)" + if (d.diasSoloAvisos > 0) "; ${porNumero(d.diasSoloAvisos, "1 día", "${d.diasSoloAvisos} días")} solo con avisos no cuentan" else "") },
             d.suenoH?.let { n1(it) + " h" to "sueño por noche" },
             d.pasos?.let { n0(it) to "pasos al día" },
             d.pantallaMin?.let { hm(it) to "pantalla al día" },
@@ -1297,8 +1299,8 @@ object Reportes {
                 d.peorDia?.takeIf { it != d.mejorDia }?.let { "pessimus" to Fechas.titulo(it).lowercase() },
                 cambio(d.valMedia, d.valAnterior, "de ánimo", se = d.errorAnterior["valencia"])?.let { "animus" to it },
                 d.valPorSemana.maxByOrNull { it.value }?.takeIf { d.n > 13 }?.let { "dies felix" to "los " + DIAS_LARGOS[it.key - 1] + " (%.1f)".format(it.value) },
-                d.habitosPct?.let { "consuetudo" to "${(it * 100).roundToInt()}% de tus hábitos cumplidos" + (d.habitos.firstOrNull()?.let { (n, k) -> " · más: $n ($k días)" } ?: "") },
-                d.rachaDiario.takeIf { it >= 3 }?.let { "series" to "$it días seguidos escribiendo" },
+                d.habitosPct?.let { "consuetudo" to "${(it * 100).roundToInt()}% de tus hábitos cumplidos" + (d.habitos.firstOrNull()?.let { (n, k) -> " · más: $n (${porNumero(k, "1 día", "$k días")})" } ?: "") },
+                d.rachaDiario.takeIf { it >= 3 }?.let { "series" to "${porNumero(it, "1 día seguido", "$it días seguidos")} escribiendo" },
                 // Lo que dicen los registros de ánimo: las emociones (con cuántas fueron «mucho»), en qué pensabas y con quién.
                 d.emociones.takeIf { it.isNotEmpty() && !h.discreto }?.let { l -> "affectus" to "lo que más sentiste: " +
                     l.take(5).joinToString(" · ") { e -> e.nombre.lowercase() + " ${e.n}" + (if (e.mucho > 0) " (${e.mucho} «mucho»)" else "") } },
@@ -1320,7 +1322,7 @@ object Reportes {
                 d.pasos?.let { "passus" to "${n0(it)} al día · ${n0(d.pasosTotal.toDouble())} en total · unos ${n0(d.km)} km" },
                 cambio(d.pasos, d.pasosAnterior, "pasos al día", false, d.errorAnterior["pasos"])?.let { "passus" to it },
                 d.ejercicioMin.takeIf { it > 0 }?.let { "exercitatio" to hm(it.toDouble()) + " de ejercicio" },
-                d.entrenos.takeIf { it > 0 }?.let { "robur" to "$it entrenos · ${d.series} series · ${n1(d.volumenKg / 1000)} t levantadas" + (d.pr?.let { p -> " · mejor marca: ${p.first} (${n0(p.second)} kg 1RM)" } ?: "") },
+                d.entrenos.takeIf { it > 0 }?.let { "robur" to "${porNumero(it, "1 entreno", "$it entrenos")} · ${porNumero(d.series, "1 serie", "${d.series} series")} · ${n1(d.volumenKg / 1000)} t levantadas" + (d.pr?.let { p -> " · mejor marca: ${p.first} (${n0(p.second)} kg 1RM)" } ?: "") },
                 d.kcal?.let { "nutritio" to "${n0(it)} kcal al día" + (d.proteina?.let { p -> " · ${n0(p)} g de proteína" } ?: "") },
                 d.comidaTop.firstOrNull()?.let { "cibus" to "lo que más comiste: " + d.comidaTop.take(3).joinToString(", ") { it.first.lowercase() } },
                 if (d.pesoIni != null && d.pesoFin != null && abs(d.pesoFin - d.pesoIni) >= 0.2) "corpus" to "peso: ${n1(d.pesoIni)} → ${n1(d.pesoFin)} kg" else null,
@@ -1333,7 +1335,7 @@ object Reportes {
             h.titulo("Mente", "MENS")
             listOfNotNull(
                 d.reaccionMs?.let { "celeritas" to "${n0(it)} ms de reacción (${d.reacciones} pruebas)" },
-                d.suenosRecordados.takeIf { it > 0 }?.let { "somnium" to "$it sueños recordados" },
+                d.suenosRecordados.takeIf { it > 0 }?.let { "somnium" to "${porNumero(it, "1 sueño recordado", "$it sueños recordados")}" },
             ).forEach { (k, v) -> h.clave(k, v) }
             d.cuestionarios.take(if (anual) 4 else 6).forEach { h.clave("quaestiones", it) }
         }
@@ -1341,14 +1343,14 @@ object Reportes {
         // ---- Gente
         if (d.personas.isNotEmpty() || d.momentos.isNotEmpty() || d.waMios + d.waOtros > 0 || d.llamadas > 0) {
             h.titulo("Gente", "HOMINES")
-            if (d.personas.isNotEmpty()) h.barras(d.personas.take(6).map { Triple(persona(it.first, h.discreto), it.second.toDouble(), "${it.second} días") }, L.primario)
+            if (d.personas.isNotEmpty()) h.barras(d.personas.take(6).map { Triple(persona(it.first, h.discreto), it.second.toDouble(), "${porNumero(it.second, "1 día", "${it.second} días")}") }, L.primario)
             listOfNotNull(
                 d.personaNueva?.takeIf { anual }?.let { "personae" to "alguien nuevo: ${persona(it, h.discreto)}" },
                 d.temas.takeIf { it.isNotEmpty() }?.let { "themata" to it.take(5).joinToString("  ") { "#${it.first}" } },
                 d.momentos.takeIf { it.isNotEmpty() }?.let { "momenta" to it.take(4).joinToString(" · ") { (t, k) -> "${t.lowercase()} $k" } },
-                (d.waMios + d.waOtros).takeIf { it > 0 }?.let { "voces" to "${n0(d.waMios.toDouble())} mensajes tuyos y ${n0(d.waOtros.toDouble())} recibidos en WhatsApp" },
-                d.llamadas.takeIf { it > 0 }?.let { "voces" to "$it llamadas" },
-                d.cartas.takeIf { it > 0 }?.let { "epistulae" to "$it cartas escritas" },
+                (d.waMios + d.waOtros).takeIf { it > 0 }?.let { "voces" to "${porNumero(d.waMios.toDouble(), "1 mensaje tuyo", "${n0(d.waMios.toDouble())} mensajes tuyos")} y ${n0(d.waOtros.toDouble())} recibidos en WhatsApp" },
+                d.llamadas.takeIf { it > 0 }?.let { "voces" to "${porNumero(it, "1 llamada", "$it llamadas")}" },
+                d.cartas.takeIf { it > 0 }?.let { "epistulae" to "${porNumero(it, "1 carta escrita", "$it cartas escritas")}" },
             ).forEach { (k, v) -> h.clave(k, v) }
         }
 
@@ -1361,10 +1363,10 @@ object Reportes {
             }
             listOfNotNull(
                 d.ciudades.takeIf { it.isNotEmpty() }?.let { "loca" to it.take(if (anual) 8 else 5).joinToString(" · ") { (c, p) -> "${Mundo.bandera(p)} $c" } + if (it.size > 8) " y ${it.size - 8} más" else "" },
-                d.ciudadesNuevas.takeIf { it.isNotEmpty() }?.let { "nova" to "${it.size} ciudades nuevas" + if (d.paisesNuevos.isNotEmpty()) " · países nuevos: " + d.paisesNuevos.joinToString(" ") { p -> Mundo.bandera(p) } else "" },
+                d.ciudadesNuevas.takeIf { it.isNotEmpty() }?.let { "nova" to "${porNumero(it.size, "1 ciudad nueva", "${it.size} ciudades nuevas")}" + if (d.paisesNuevos.isNotEmpty()) " · países nuevos: " + d.paisesNuevos.joinToString(" ") { p -> Mundo.bandera(p) } else "" },
                 d.sitios.takeIf { it.isNotEmpty() }?.let { "mirabilia" to it.take(3).joinToString(" · ") },
-                d.fotos.takeIf { it > 0 }?.let { "imagines" to "${n0(it.toDouble())} fotos" },
-                d.tempMax?.let { "caelum" to "máximas de ${n0(it)}° de media · ${d.diasLluvia} días de lluvia" + (d.luzH?.let { l -> " · ${n1(l)} h de luz" } ?: "") },
+                d.fotos.takeIf { it > 0 }?.let { "imagines" to "${porNumero(it.toDouble(), "1 foto", "${n0(it.toDouble())} fotos")}" },
+                d.tempMax?.let { "caelum" to "máximas de ${n0(it)}° de media · ${porNumero(d.diasLluvia, "1 día", "${d.diasLluvia} días")} de lluvia" + (d.luzH?.let { l -> " · ${n1(l)} h de luz" } ?: "") },
             ).forEach { (k, v) -> h.clave(k, v) }
         }
 
@@ -1375,10 +1377,10 @@ object Reportes {
             listOfNotNull(
                 d.obras.takeIf { it.isNotEmpty() }?.let { "opera" to it.take(5).joinToString(" · ") { o -> o.titulo + (o.calificacion?.let { c -> " ($c/10)" } ?: "") } },
                 d.mejorObra?.takeIf { d.obras.size > 1 }?.let { "praeclarum" to "${it.titulo} · ${it.calificacion}/10" },
-                d.cancionTop?.let { "musica" to "${it.first} (${it.second} veces)" },
+                d.cancionTop?.let { "musica" to "${it.first} (${porNumero(it.second, "1 vez", "${it.second} veces")})" },
                 d.artistaNuevo?.let { "nova" to "descubriste a $it" },
                 d.ytVideos.takeIf { it > 0 }?.let { "youtube" to "${n0(it.toDouble())} videos" + (d.ytCanales.firstOrNull()?.let { c -> " · más: ${c.first}" } ?: "") + if (d.ytMadrugada > 0) " · ${d.ytMadrugada} de madrugada" else "" },
-                d.subrayados.takeIf { it > 0 }?.let { "lectio" to "$it subrayados" },
+                d.subrayados.takeIf { it > 0 }?.let { "lectio" to "${porNumero(it, "1 subrayado", "$it subrayados")}" },
                 d.frase?.let { "sententia" to "«${it.texto.take(110)}» — ${it.autor}" },
             ).forEach { (k, v) -> h.clave(k, v) }
         }
@@ -1416,7 +1418,7 @@ object Reportes {
     /** Cada lugar guardado con visitas en el periodo: lat, lon, tipo y horas (solo para el mapa abstracto del mes). */
     private fun lugaresDelMes(ini: String, fin: String): List<Triple<Double, Double, Pair<String, Double>>> {
         val ahora = System.currentTimeMillis()
-        val a0 = Fechas.inicioDia(ini) + 5 * 3_600_000L; val z0 = Fechas.finDia(fin) + 5 * 3_600_000L
+        val a0 = Fechas.inicioDiaLogico(ini); val z0 = Fechas.finDiaLogico(fin)
         val horas = HashMap<String, Double>()
         Repo.visitas.forEach { v ->
             val a = maxOf(Fechas.millis(v.entrada), a0); val z = minOf(v.salida?.let { Fechas.millis(it) } ?: ahora, z0)
@@ -1519,7 +1521,9 @@ object Reportes {
 
     /** La imagen del reporte semanal (sin guardarla). */
     fun imagenSemana(ctx: Context, lunes: String, automatico: Boolean = false): Bitmap {
-        val fin = Fechas.sumar(lunes, 6)
+        // Hasta hoy si la semana no ha terminado: los días que aún no pasan no cuentan como «sin diario» ni bajan el promedio
+        // (antes, un miércoles decía «3/7 días con diario» y el gasto diario salía a menos de la mitad).
+        val fin = minOf(Fechas.sumar(lunes, 6), Fechas.diaLogico())
         val ini = Fechas.parse(lunes); val f = Fechas.parse(fin)
         val semana = f.get(java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR)
         val rango = "Semana ${Estilo.numeral(semana)} · del ${ini.dayOfMonth} de ${mesNombre(ini.monthValue)} al ${f.dayOfMonth} de ${mesNombre(f.monthValue)} de ${f.year}"
@@ -1551,7 +1555,8 @@ object Reportes {
     fun mensual(ctx: Context, ym: String, avisar: Boolean): Uri? {
         val ini = "$ym-01"
         val d = Fechas.parse(ini)
-        val fin = Fechas.iso(d.plusMonths(1).minusDays(1))
+        // Igual que imagenMes: hasta hoy si el mes no ha terminado.
+        val fin = minOf(Fechas.iso(d.plusMonths(1).minusDays(1)), Fechas.diaLogico())
         val (pic, alto, fondo) = reporte(ctx, "Tu mes", "MENSIS", Estilo.mes(d.monthValue, d.year), ini, fin, false, mensual = true, automatico = avisar)
         guardarPng(ctx, "mes_$ym.png", bitmap(pic, alto, fondo))
         val uri = guardarPdf(ctx, "mes_$ym.pdf", pic, alto, fondo)

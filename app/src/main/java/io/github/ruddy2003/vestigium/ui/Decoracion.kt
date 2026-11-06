@@ -37,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
@@ -119,7 +120,9 @@ fun Emblema(tema: TemaId = Estilo.tema, tam: Dp = 30.dp, esquema: ColorScheme = 
         inf.animateFloat(0f, 1f, infiniteRepeatable(tween(periodo(tema), easing = LinearEasing)), label = "t")
     } else remember { mutableFloatStateOf(0.3f) }
     val oscuro = esquema.background.luminance() < 0.5f
-    Canvas(modifier.size(tam).semantics { contentDescription = "emblema ${tema.nombre}" }) {
+    // Art déco y Edo: el emblema animado en su propia capa, para que su movimiento no redibuje el encabezado entero.
+    val capa = if (animado && animacionLigera(tema)) Modifier.graphicsLayer() else Modifier
+    Canvas(modifier.size(tam).then(capa).semantics { contentDescription = "emblema ${tema.nombre}" }) {
         dibujarEmblema(tema, t.value, esquema, oscuro)
     }
 }

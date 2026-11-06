@@ -46,6 +46,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -606,8 +607,11 @@ fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null
                     change.consume()
                 }
             },
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            // Con 10 u 11 casillas (0 a 10) van más juntas y con el número más chico, para que el «10» quepa.
+            horizontalArrangement = Arrangement.spacedBy(if (n > 9) 3.dp else 5.dp),
         ) {
+            // Si aun así no cabe (letra grande del sistema), todos los números se achican igual en vez de partirse.
+            var tam by remember(n) { mutableFloatStateOf(if (n > 9) 15f else 17f) }
             for (i in desde..hasta) {
                 val sel = valor == i
                 val c = tono(i)
@@ -620,8 +624,9 @@ fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null
                         .clickable { onCambio(if (sel) null else i); sentir(Sentidos.Evento.ELEGIR) },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("$i", style = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp, fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal),
-                        color = if (sel) Tonos.sobre(c) else MaterialTheme.colorScheme.onSurface)
+                    Text("$i", style = MaterialTheme.typography.labelLarge.copy(fontSize = tam.sp, fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal),
+                        color = if (sel) Tonos.sobre(c) else MaterialTheme.colorScheme.onSurface, maxLines = 1, softWrap = false,
+                        onTextLayout = { r -> if (r.hasVisualOverflow && tam > 9f) tam = maxOf(9f, tam * 0.9f) })
                 }
             }
         }
@@ -871,7 +876,11 @@ fun Cifra(valor: String, etiqueta: String, modifier: Modifier = Modifier) {
     val e = MaterialTheme.colorScheme
     Surface(modifier = modifier.drawWithContent { drawContent(); esquinasComp(tema, e, 0.7f) }, shape = R4, color = e.surfaceVariant) {
         Column(Modifier.padding(10.dp)) {
-            Text(contando(valor), style = MaterialTheme.typography.labelLarge.copy(fontSize = 19.sp, letterSpacing = 0.sp), maxLines = 1)
+            // Si la cifra no cabe (cifras largas o letra grande del sistema), se achica en vez de cortarse: antes «-0.12»
+            // podía verse como «-0.1», que es otro número.
+            var tam by remember(valor) { mutableFloatStateOf(19f) }
+            Text(contando(valor), style = MaterialTheme.typography.labelLarge.copy(fontSize = tam.sp, letterSpacing = 0.sp), maxLines = 1, softWrap = false,
+                onTextLayout = { r -> if (r.hasVisualOverflow && tam > 10f) tam = maxOf(10f, tam * 0.9f) })
             Text(etiqueta.uppercase(), style = MaterialTheme.typography.labelSmall, color = e.onSurfaceVariant, maxLines = 2)
         }
     }

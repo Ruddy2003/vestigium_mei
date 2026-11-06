@@ -113,7 +113,8 @@ object Diccionario {
         "medicamentos" to "Medicamentos tomados (lista)", "prediccion_manana" to "Predicción del ánimo de mañana (1 a 7)",
         // Momentos
         "tipo" to "Tipo de registro", "intensidad" to "Intensidad: 1 a 5 en impulsos y recaídas, 0 a 5 en libido", "lugar" to "Nombre del lugar marcado más cercano",
-        "aviso_ts" to "Cuándo llegó el aviso que se respondió", "latencia_min" to "Minutos entre el aviso y la respuesta",
+        "aviso_ts" to "Hora planeada del aviso que se respondió", "mostrado_ts" to "Hora en que el aviso salió de verdad (desde el esquema 20; vacío antes o si no se sabe)",
+        "latencia_min" to "Minutos entre que el aviso salió de verdad y la respuesta (desde el esquema 20; vacío antes)", "latencia_plan_min" to "Minutos entre la hora planeada del aviso y la respuesta (incluye el retraso del propio aviso)",
         "ruido_db" to "Ruido ambiente aproximado al registrar (dB relativos, sin calibrar)", "luz_lux" to "Luz ambiente al registrar (lux)",
         // Gastos
         "monto" to "Importe (tu moneda)", "vm_gastos.csv:categoria" to "Categoría de gasto", "vm_ingresos.csv:categoria" to "Categoría de ingreso", "subcategoria" to "Subcategoría dentro de la categoría (desde el esquema 14; vacío = sin subcategoría)", "imprevisto" to "Gasto no planeado (0/1)", "tipo_otro" to "Bloque de enfoque de tipo «otro»: en qué fue, escrito a mano (desde el esquema 17)", "se_repite" to "Gasto que se repite, como renta, suscripción o servicios (0/1; desde el esquema 17)",
@@ -138,6 +139,7 @@ object Diccionario {
         "sueno_inicio_h" to "Hora de dormir en decimal; la madrugada suma 24", "sueno_fin_h" to "Hora de despertar en decimal",
         // Visitas
         "entrada" to "Llegada al lugar", "salida" to "Salida del lugar", "vm_visitas.csv:minutos" to "Minutos en el lugar",
+        "vm_visitas.csv:cierre" to "Cómo se supo la salida: geocerca (Android avisó), otro_lugar (llegaste a un lugar lejano sin aviso de salida), ubicaciones (tus puntos ya te ponían fuera), reconstruida (la visita salió de tus ubicaciones al guardar el lugar), manual (la corregiste tú); vacío = abierta o anterior al esquema 19 sin corregir",
         // Entorno
         "t_max" to "Temperatura máxima (°C)", "t_min" to "Temperatura mínima (°C)", "t_media" to "Temperatura media (°C)", "sensacion_max" to "Sensación térmica máxima (°C)",
         "precip_mm" to "Lluvia (mm)", "horas_lluvia" to "Horas con lluvia", "nubes_pct" to "Nubosidad media (%)", "humedad_pct" to "Humedad media (%)",
@@ -408,7 +410,7 @@ object Diccionario {
         fun n(x: Double) = if (x % 1.0 == 0.0) x.toLong().toString() else x.toString()
         val c = Repo.config
         fun deSuplemento(s: Suplemento) = if (s.modelo == "carga")
-            "llega al 95 % en ${s.carga_dias} días con ${n(Suplementos.dosisReferencia(s))} ${s.unidad} al día y se vacía en ${s.lavado_dias} días"
+            "llega al 95 % en ${porNumero(s.carga_dias, "1 día", "${s.carga_dias} días")} con ${n(Suplementos.dosisReferencia(s))} ${s.unidad} al día y se vacía en ${porNumero(s.lavado_dias, "1 día", "${s.lavado_dias} días")}"
             else "vida media de ${n(s.vida_media_h)} h"
         val p = when {
             col == "cafeina_al_dormir_mg" -> "vida media de la cafeína de ${n(c.cafeina_vida_media_h)} h"
@@ -426,6 +428,10 @@ object Diccionario {
      */
     /** La versión de la app con la que llega el esquema 18 (deseados y listas). */
     private const val VERSION_ESQUEMA_18 = 118
+    /** La versión de la app con la que llegan el esquema 19 (cierre de las visitas) y el 20: la v129. */
+    private const val VERSION_ESQUEMA_19 = 129
+    /** La versión de la app con la que llega el esquema 20 (avisos de ánimo a su hora): la misma v129. */
+    private const val VERSION_ESQUEMA_20 = 129
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
@@ -606,6 +612,15 @@ object Diccionario {
         "suenot_*" to (110 to "rareza del sueño y pesadilla en lugar del tipo (D.127)"),
         "sueno_est_recurrente" to (110 to "incluye los días de antes con tipo «recurrente» (D.127)"),
         // Esquema 18: deseados y listas libres.
+        "vm_visitas.csv:cierre" to (VERSION_ESQUEMA_19 to "nueva: cómo se supo la salida (D.147)"),
+        "mostrado_ts" to (VERSION_ESQUEMA_20 to "nueva: hora real en que salió el aviso (D.153)"),
+        "latencia_min" to (VERSION_ESQUEMA_20 to "desde que el aviso salió de verdad; antes, desde la hora planeada (ahora latencia_plan_min) (D.153)"),
+        "latencia_plan_min" to (VERSION_ESQUEMA_20 to "nueva: la latencia de antes, desde la hora planeada (D.153)"),
+        "en_casa_min" to (VERSION_ESQUEMA_19 to "con las visitas corregidas: sin las que quedaban abiertas estando en otro lado (D.147)"),
+        "horas_tipo_*" to (VERSION_ESQUEMA_19 to "con las visitas corregidas: sin las que quedaban abiertas estando en otro lado (D.147)"),
+        "lug_*" to (VERSION_ESQUEMA_19 to "con las visitas corregidas: sin las que quedaban abiertas estando en otro lado (D.147)"),
+        "vm_visitas.csv:salida" to (VERSION_ESQUEMA_19 to "si Android no avisó, se deduce de la llegada a otro lugar o de tus ubicaciones; también hacia atrás (D.147)"),
+        "vm_visitas.csv:minutos" to (VERSION_ESQUEMA_19 to "visitas de menos de 8 min ya no se guardan; antes 10 en las reconstruidas y ninguno en las de geocerca (D.147)"),
         "vm_biblioteca.csv:prioridad" to (VERSION_ESQUEMA_18 to "nueva: qué tan pronto quieres lo pendiente (D.145)"),
         "vm_biblioteca.csv:recomendo" to (VERSION_ESQUEMA_18 to "nueva: quién te lo recomendó (D.145)"),
         "vm_biblioteca.csv:donde" to (VERSION_ESQUEMA_18 to "nueva: dónde verlo o conseguirlo (D.145)"),

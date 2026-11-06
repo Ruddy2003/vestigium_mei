@@ -72,19 +72,60 @@ object Repo {
     fun init(ctx: Context) {
         if (listo) return
         db = Db(ctx.applicationContext)
-        dias = cargar("dias", Dia.serializer()).associateBy { it.fecha }
-        momentos = cargar("momentos", Momento.serializer()).sortedBy { it.ts }
-        gastos = cargar("gastos", Gasto.serializer()).sortedBy { it.fecha + it.hora }
-        ingresos = cargar("ingresos", Ingreso.serializer()).sortedBy { it.fecha + it.hora }
-        respuestas = cargar("respuestas", Respuesta.serializer()).sortedBy { it.ts }
-        reacciones = cargar("reacciones", Reaccion.serializer()).sortedBy { it.ts }
-        lugares = cargar("lugares", Lugar.serializer())
-        visitas = cargar("visitas", Visita.serializer()).sortedBy { it.entrada }
-        youtube = cargar("youtube", YtEvento.serializer()).sortedBy { it.ts }
-        salud = cargar("salud", SaludDia.serializer()).associateBy { it.fecha }
-        pantalla = cargar("pantalla", PantallaDia.serializer()).associateBy { it.fecha }
-        cartas = cargar("cartas", Carta.serializer())
-        experimentos = cargar("experimentos", Experimento.serializer())
+        // Las colecciones se leen y decodifican a la vez, en varios hilos: antes iban una tras otra en el hilo principal y
+        // el arranque se alargaba con cada año de datos (con riesgo de que Android diera la app por congelada).
+        val hilos = java.util.concurrent.Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors().coerceIn(2, 4)) { r -> Thread(r, "vm-carga").apply { isDaemon = true } }
+        fun <T, R> pedir(col: String, s: KSerializer<T>, f: (List<T>) -> R): java.util.concurrent.Future<R> = hilos.submit(java.util.concurrent.Callable { f(cargar(col, s)) })
+        val f_dias = pedir("dias", Dia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_momentos = pedir("momentos", Momento.serializer()) { l -> l.sortedBy { it.ts } }
+        val f_gastos = pedir("gastos", Gasto.serializer()) { l -> l.sortedBy { it.fecha + it.hora } }
+        val f_ingresos = pedir("ingresos", Ingreso.serializer()) { l -> l.sortedBy { it.fecha + it.hora } }
+        val f_respuestas = pedir("respuestas", Respuesta.serializer()) { l -> l.sortedBy { it.ts } }
+        val f_reacciones = pedir("reacciones", Reaccion.serializer()) { l -> l.sortedBy { it.ts } }
+        val f_lugares = pedir("lugares", Lugar.serializer()) { l -> l }
+        val f_visitas = pedir("visitas", Visita.serializer()) { l -> l.sortedBy { it.entrada } }
+        val f_youtube = pedir("youtube", YtEvento.serializer()) { l -> l.sortedBy { it.ts } }
+        val f_salud = pedir("salud", SaludDia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_pantalla = pedir("pantalla", PantallaDia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_cartas = pedir("cartas", Carta.serializer()) { l -> l }
+        val f_experimentos = pedir("experimentos", Experimento.serializer()) { l -> l }
+        val f_entorno = pedir("entorno", EntornoDia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_fotos = pedir("fotos", FotosDia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_agenda = pedir("agenda", AgendaDia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_notifs = pedir("notifs", NotifDia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_actividad = pedir("actividad", ActividadDia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_sesiones = pedir("sesiones", Sesion.serializer()) { l -> l.sortedBy { it.inicio } }
+        val f_ascensos = pedir("ascensos", Ascenso.serializer()) { l -> l.sortedBy { it.fecha + (it.inicio ?: "") } }
+        val f_obras = pedir("obras", Obra.serializer()) { l -> l }
+        val f_comunicacion = pedir("comunicacion", ComunicacionDia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_conexiones = pedir("conexiones", ConexionDia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_subrayados = pedir("subrayados", Subrayado.serializer()) { l -> l.sortedBy { it.ts ?: "" } }
+        val f_huellas = pedir("huellas_dia", HuellasDia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_chats = pedir("whatsapp", ChatDia.serializer()) { l -> l.sortedBy { it.fecha } }
+        val f_nutricion = pedir("nutricion", NutricionDia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_entrenos = pedir("entrenos", EntrenoDia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_tramos = pedir("tramos", Tramo.serializer()) { l -> l.sortedBy { it.inicio } }
+        val f_consumos = pedir("consumos", Consumo.serializer()) { l -> l.sortedBy { it.inicio } }
+        val f_notas = pedir("notas", Nota.serializer()) { l -> l.sortedByDescending { it.creada } }
+        val f_metas = pedir("metas", Meta.serializer()) { l -> l.sortedBy { it.creada } }
+        val f_ideas = pedir("ideas", Idea.serializer()) { l -> l.sortedByDescending { it.creada } }
+        val f_listas = pedir("listas", Lista.serializer()) { l -> l.sortedWith(compareBy<Lista>({ it.orden }, { it.creada })) }
+        val f_tomas = pedir("tomas", TomaSuplemento.serializer()) { l -> l.sortedBy { it.ts } }
+        val f_laptop = pedir("laptop", LaptopDia.serializer()) { l -> l.associateBy { it.fecha } }
+        val f_avisos = pedir("avisos", AvisosDia.serializer()) { l -> l.associateBy { it.fecha } }
+        dias = f_dias.dato()
+        momentos = f_momentos.dato()
+        gastos = f_gastos.dato()
+        ingresos = f_ingresos.dato()
+        respuestas = f_respuestas.dato()
+        reacciones = f_reacciones.dato()
+        lugares = f_lugares.dato()
+        visitas = f_visitas.dato()
+        youtube = f_youtube.dato()
+        salud = f_salud.dato()
+        pantalla = f_pantalla.dato()
+        cartas = f_cartas.dato()
+        experimentos = f_experimentos.dato()
         // Si la configuración no se puede leer, se guarda el texto original aparte antes de seguir con una vacía:
         // así el siguiente cambio de ajustes no lo sobrescribe (se perderían personas, hábitos, perfil, campañas…).
         val crudo = db.uno("config", "config")
@@ -99,30 +140,32 @@ object Repo {
         } ?: Config()
         // El tema «Día de Muertos» se convirtió en «Botánico»: quien lo tenía elegido pasa al nuevo.
         if (config.tema == "muertos") { config = config.copy(tema = "botanico"); db.poner("config", "config", null, JSON.encodeToString(Config.serializer(), config)) }
-        entorno = cargar("entorno", EntornoDia.serializer()).associateBy { it.fecha }
-        fotos = cargar("fotos", FotosDia.serializer()).associateBy { it.fecha }
-        agenda = cargar("agenda", AgendaDia.serializer()).associateBy { it.fecha }
-        notifs = cargar("notifs", NotifDia.serializer()).associateBy { it.fecha }
-        actividad = cargar("actividad", ActividadDia.serializer()).associateBy { it.fecha }
-        sesiones = cargar("sesiones", Sesion.serializer()).sortedBy { it.inicio }
-        ascensos = cargar("ascensos", Ascenso.serializer()).sortedBy { it.fecha + (it.inicio ?: "") }
-        obras = cargar("obras", Obra.serializer())
-        comunicacion = cargar("comunicacion", ComunicacionDia.serializer()).associateBy { it.fecha }
-        conexiones = cargar("conexiones", ConexionDia.serializer()).associateBy { it.fecha }
-        subrayados = cargar("subrayados", Subrayado.serializer()).sortedBy { it.ts ?: "" }
-        huellas = cargar("huellas_dia", HuellasDia.serializer()).associateBy { it.fecha }
-        chats = cargar("whatsapp", ChatDia.serializer()).sortedBy { it.fecha }
-        nutricion = cargar("nutricion", NutricionDia.serializer()).associateBy { it.fecha }
-        entrenos = cargar("entrenos", EntrenoDia.serializer()).associateBy { it.fecha }
-        tramos = cargar("tramos", Tramo.serializer()).sortedBy { it.inicio }
-        consumos = cargar("consumos", Consumo.serializer()).sortedBy { it.inicio }
-        notas = cargar("notas", Nota.serializer()).sortedByDescending { it.creada }
-        metas = cargar("metas", Meta.serializer()).sortedBy { it.creada }
-        ideas = cargar("ideas", Idea.serializer()).sortedByDescending { it.creada }
-        listas = cargar("listas", Lista.serializer()).sortedWith(compareBy<Lista>({ it.orden }, { it.creada }))
-        tomas = cargar("tomas", TomaSuplemento.serializer()).sortedBy { it.ts }
-        laptop = cargar("laptop", LaptopDia.serializer()).associateBy { it.fecha }
-        avisos = cargar("avisos", AvisosDia.serializer()).associateBy { it.fecha }
+        entorno = f_entorno.dato()
+        fotos = f_fotos.dato()
+        agenda = f_agenda.dato()
+        notifs = f_notifs.dato()
+        actividad = f_actividad.dato()
+        sesiones = f_sesiones.dato()
+        ascensos = f_ascensos.dato()
+        obras = f_obras.dato()
+        comunicacion = f_comunicacion.dato()
+        conexiones = f_conexiones.dato()
+        subrayados = f_subrayados.dato()
+        huellas = f_huellas.dato()
+        chats = f_chats.dato()
+        nutricion = f_nutricion.dato()
+        entrenos = f_entrenos.dato()
+        tramos = f_tramos.dato()
+        consumos = f_consumos.dato()
+        notas = f_notas.dato()
+        metas = f_metas.dato()
+        ideas = f_ideas.dato()
+        listas = f_listas.dato()
+        tomas = f_tomas.dato()
+        laptop = f_laptop.dato()
+        avisos = f_avisos.dato()
+        hilos.shutdown()
+        ilegibles = ilegiblesAlAbrir.toMap()
         Fechas.usarHistorial(config.zonas)
         listo = true
         runCatching { registrarZona() }
@@ -168,11 +211,18 @@ object Repo {
     private fun <T> leer(col: String, textos: List<String>, s: KSerializer<T>): List<T> {
         val (l, fallidos) = Decodificar.todos(textos, s)
         if (fallidos > 0) {
-            val n = maxOf(fallidos, ilegibles[col] ?: 0)
-            if (listo) enMain { ilegibles = ilegibles + (col to n) } else ilegibles = ilegibles + (col to n)
+            // Al abrir, varios hilos leen a la vez: se juntan aparte y se publican al final de init.
+            if (listo) { val n = maxOf(fallidos, ilegibles[col] ?: 0); enMain { ilegibles = ilegibles + (col to n) } }
+            else ilegiblesAlAbrir.merge(col, fallidos) { a, b -> maxOf(a, b) }
         }
         return l
     }
+
+    private val ilegiblesAlAbrir = java.util.concurrent.ConcurrentHashMap<String, Int>()
+
+    /** El resultado de una lectura en paralelo; si falló, el error original (no el envoltorio del hilo). */
+    private fun <R> java.util.concurrent.Future<R>.dato(): R =
+        try { get() } catch (e: java.util.concurrent.ExecutionException) { throw e.cause ?: e }
 
     private fun enMain(b: () -> Unit) { if (Looper.myLooper() == Looper.getMainLooper()) b() else main.post(b) }
 
@@ -200,9 +250,14 @@ object Repo {
                 db.poner("dias", d.fecha, d.fecha, JSON.encodeToString(Dia.serializer(), d)); n++
             }
         }
-        val nuevos = dias.toMutableMap()
-        lista.forEach { if (sobrescribir || !dias.containsKey(it.fecha)) nuevos[it.fecha] = it }
-        enMain { dias = nuevos }
+        // La mezcla se hace ya en el hilo principal, sobre lo que haya en ese momento: si se arma antes (la restauración
+        // corre en otro hilo), un día que guardaste mientras tanto desaparecía de la memoria y la siguiente edición
+        // partía de la versión vieja.
+        enMain {
+            val nuevos = dias.toMutableMap()
+            lista.forEach { if (sobrescribir || !nuevos.containsKey(it.fecha)) nuevos[it.fecha] = it }
+            dias = nuevos
+        }
         return n
     }
 
@@ -211,6 +266,14 @@ object Repo {
     fun guardarMomento(m: Momento) {
         db.poner("momentos", m.id, m.fecha, JSON.encodeToString(Momento.serializer(), m))
         enMain { momentos = (momentos.filter { it.id != m.id } + m).sortedBy { it.ts } }
+    }
+    /** Los momentos de un respaldo que no están aquí, de una vez: una transacción y un solo reordenamiento. */
+    fun importarMomentos(lista: List<Momento>) {
+        val ids = momentos.map { it.id }.toHashSet()
+        val nuevos = lista.filter { it.id !in ids }.distinctBy { it.id }
+        if (nuevos.isEmpty()) return
+        db.transaccion { nuevos.forEach { db.poner("momentos", it.id, it.fecha, JSON.encodeToString(Momento.serializer(), it)) } }
+        enMain { val ya = momentos.map { it.id }.toHashSet(); momentos = (momentos + nuevos.filter { it.id !in ya }).sortedBy { it.ts } }
     }
     fun momento(id: String): Momento? = momentos.firstOrNull { it.id == id } ?: db.uno("momentos", id)?.let { JSON.decodeFromString(Momento.serializer(), it) }
     fun borrarMomento(id: String) { aPapelera("momentos", id); db.borrar("momentos", id); enMain { momentos = momentos.filter { it.id != id } } }
@@ -365,6 +428,20 @@ object Repo {
         db.poner("reacciones", r.id, r.fecha, JSON.encodeToString(Reaccion.serializer(), r))
         enMain { reacciones = (reacciones + r).sortedBy { it.ts } }
     }
+    fun importarRespuestas(lista: List<Respuesta>) {
+        val ids = respuestas.map { it.id }.toHashSet()
+        val nuevas = lista.filter { it.id !in ids }.distinctBy { it.id }
+        if (nuevas.isEmpty()) return
+        db.transaccion { nuevas.forEach { db.poner("respuestas", it.id, it.fecha, JSON.encodeToString(Respuesta.serializer(), it)) } }
+        enMain { val ya = respuestas.map { it.id }.toHashSet(); respuestas = (respuestas + nuevas.filter { it.id !in ya }).sortedBy { it.ts } }
+    }
+    fun importarReacciones(lista: List<Reaccion>) {
+        val ids = reacciones.map { it.id }.toHashSet()
+        val nuevas = lista.filter { it.id !in ids }.distinctBy { it.id }
+        if (nuevas.isEmpty()) return
+        db.transaccion { nuevas.forEach { db.poner("reacciones", it.id, it.fecha, JSON.encodeToString(Reaccion.serializer(), it)) } }
+        enMain { val ya = reacciones.map { it.id }.toHashSet(); reacciones = (reacciones + nuevas.filter { it.id !in ya }).sortedBy { it.ts } }
+    }
     fun ultimaRespuesta(instr: String): Respuesta? = respuestas.lastOrNull { it.instrumento == instr }
 
     // ---------- Lugares y visitas ----------
@@ -396,19 +473,62 @@ object Repo {
     /** «No estuve aquí»: quita una visita. */
     fun borrarVisita(id: String) { db.borrar("visitas", id); enMain { visitas = visitas.filter { it.id != id } } }
 
+    /** Guarda y quita varias visitas de una vez (en una transacción) y las publica juntas. */
     @Synchronized
-    fun entrada(lugarId: String, ts: String) {
-        if (visitas.any { it.lugar == lugarId && it.salida == null }) return
-        val v = Visita(nuevoId(), lugarId, ts)
-        db.poner("visitas", v.id, ts.take(10), JSON.encodeToString(Visita.serializer(), v))
-        enMain { visitas = visitas + v }
+    fun cambiarVisitas(guardar: List<Visita>, quitar: Set<String> = emptySet()) {
+        if (guardar.isEmpty() && quitar.isEmpty()) return
+        db.transaccion {
+            quitar.forEach { db.borrar("visitas", it) }
+            guardar.forEach { db.poner("visitas", it.id, it.entrada.take(10), JSON.encodeToString(Visita.serializer(), it)) }
+        }
+        val ids = guardar.map { it.id }.toSet() + quitar
+        enMain { visitas = (visitas.filter { it.id !in ids } + guardar).sortedBy { it.entrada } }
     }
+
+    /**
+     * Android avisa que entraste a un lugar. Si seguía abierta la visita de otro lugar lejano (Android no avisó que saliste),
+     * se cierra: a la hora en que tus ubicaciones ya te ponían fuera o, si no hay, a la de esta entrada (esquema 19).
+     * Devuelve si cerró alguna: entonces hay que volver a registrar las geocercas (Android cree que sigues allá y no
+     * avisaría cuando vuelvas).
+     */
+    @Synchronized
+    fun entrada(lugarId: String, ts: String): Boolean {
+        if (visitas.any { it.lugar == lugarId && it.salida == null }) return false
+        val aqui = lugares.firstOrNull { it.id == lugarId }
+        val t = Fechas.millis(ts)
+        val cerrar = ArrayList<Visita>(); val quitar = HashSet<String>()
+        if (aqui != null && t > 0) visitas.filter { it.salida == null && it.lugar != lugarId }.forEach { v ->
+            val alla = lugares.firstOrNull { it.id == v.lugar } ?: return@forEach
+            if (!Lugares.lejos(aqui, alla)) return@forEach
+            val a = Fechas.millis(v.entrada)
+            val (fin, como) = Lugares.salidaPorUbicaciones(alla, a, t)?.let { it to Lugares.CIERRE_UBICACIONES } ?: (t to Lugares.CIERRE_OTRO_LUGAR)
+            if (fin - a < Lugares.VISITA_MINIMA_MS) quitar += v.id
+            else cerrar += v.copy(salida = if (fin == t) ts else Fechas.isoDeMillis(fin), cierre = como)
+        }
+        cambiarVisitas(cerrar + Visita(nuevoId(), lugarId, ts), quitar)
+        return cerrar.isNotEmpty() || quitar.isNotEmpty()
+    }
+
+    /**
+     * Android avisa que saliste. Si tus ubicaciones dicen que saliste bastante antes (un aviso tardío), vale esa hora. Una
+     * visita de menos de 8 minutos se quita (pasar cerca o un brinco del GPS) y, si al empezar cerró la visita del lugar
+     * donde en realidad seguías, esa se vuelve a abrir.
+     */
     @Synchronized
     fun salida(lugarId: String, ts: String) {
         val abierta = visitas.lastOrNull { it.lugar == lugarId && it.salida == null } ?: return
-        val v = abierta.copy(salida = ts)
-        db.poner("visitas", v.id, v.entrada.take(10), JSON.encodeToString(Visita.serializer(), v))
-        enMain { visitas = visitas.map { if (it.id == v.id) v else it } }
+        val a = Fechas.millis(abierta.entrada); val t = Fechas.millis(ts)
+        if (a <= 0 || t < a) return
+        val (fin, como) = Lugares.salidaAvisada(abierta, t)
+        if (fin - a < Lugares.VISITA_MINIMA_MS) {
+            val reabrir = visitas.filter { w ->
+                w.cierre == Lugares.CIERRE_OTRO_LUGAR && w.salida?.let { Fechas.millis(it) } == a &&
+                    visitas.none { it.lugar == w.lugar && it.salida == null }
+            }.map { it.copy(salida = null, cierre = null) }
+            cambiarVisitas(reabrir, setOf(abierta.id))
+            return
+        }
+        cambiarVisitas(listOf(abierta.copy(salida = if (fin == t) ts else Fechas.isoDeMillis(fin), cierre = como)))
     }
 
     /** Eventos de YouTube (Takeout). Si llega una lista de suscripciones, reemplaza la anterior (te pudiste desuscribir). */
@@ -442,6 +562,12 @@ object Repo {
     fun guardarSalud(s: SaludDia) {
         db.poner("salud", s.fecha, s.fecha, JSON.encodeToString(SaludDia.serializer(), s))
         enMain { salud = salud + (s.fecha to s) }
+    }
+    /** Varios días de salud de una vez (al restaurar): una transacción y un solo cambio en memoria. */
+    fun importarSalud(lista: List<SaludDia>) {
+        if (lista.isEmpty()) return
+        db.transaccion { lista.forEach { db.poner("salud", it.fecha, it.fecha, JSON.encodeToString(SaludDia.serializer(), it)) } }
+        enMain { salud = salud + lista.associateBy { it.fecha } }
     }
     fun guardarPantalla(p: PantallaDia) {
         db.poner("pantalla", p.fecha, p.fecha, JSON.encodeToString(PantallaDia.serializer(), p))
@@ -502,15 +628,20 @@ object Repo {
         enMain { avisos = avisos + (fecha to n) }
     }
     /** Avisos de un respaldo: se juntan con lo de aquí sin perder ningún aviso de ninguno de los dos. */
+    @Synchronized
     fun importarAvisos(lista: List<AvisosDia>) {
         if (lista.isEmpty()) return
         val nuevos = lista.mapNotNull { r ->
-            val a = avisos[r.fecha] ?: return@mapNotNull r
-            val n = a.copy(planeados = maxOf(a.planeados, r.planeados), vencidos = (a.vencidos + r.vencidos).distinct().sorted(), mostrados = (a.mostrados + r.mostrados).distinct().sorted())
+            val a = avisosMem[r.fecha] ?: avisos[r.fecha] ?: return@mapNotNull r
+            val n = a.copy(planeados = maxOf(a.planeados, r.planeados), vencidos = (a.vencidos + r.vencidos).distinct().sorted(), mostrados = (a.mostrados + r.mostrados).distinct().sorted(),
+                reales = r.reales + a.reales)
             n.takeIf { it != a }
         }
         if (nuevos.isEmpty()) return
         db.transaccion { nuevos.forEach { db.poner("avisos", it.fecha, it.fecha, JSON.encodeToString(AvisosDia.serializer(), it)) } }
+        // La copia de trabajo de la tarea de fondo también: si no, el siguiente aviso del día escribiría la de antes y
+        // borraría lo que trajo el respaldo.
+        nuevos.forEach { avisosMem[it.fecha] = it }
         enMain { avisos = avisos + nuevos.associateBy { it.fecha } }
     }
     /** Solo para las capturas de diseño. */
@@ -603,14 +734,33 @@ object Repo {
         leer("series", db.porFecha("series", desde, hasta), Serie.serializer()).sortedWith(compareBy({ it.fecha }, { it.orden }))
 
     /** Calcula la fuerza de referencia de los entrenos importados antes del esquema 15 (H-7-14). Devuelve cuántos cambió. */
-    fun completarFuerzaReferencia(): Int {
+    fun completarFuerzaReferencia(base: Collection<EntrenoDia> = entrenos.values): Int {
         val porDia = series("0000-01-01", "9999-12-31").groupBy { it.fecha }
-        val nuevos = entrenos.values.mapNotNull { e ->
+        val nuevos = base.mapNotNull { e ->
             val r = Macrofactor.fuerzaReferencia(porDia[e.fecha].orEmpty())
             if (r != e.fuerza_ref_kg) e.copy(fuerza_ref_kg = r) else null
         }
         nuevos.forEach { db.poner("entrenos", it.fecha, it.fecha, JSON.encodeToString(EntrenoDia.serializer(), it)) }
         if (nuevos.isNotEmpty()) enMain { entrenos = entrenos + nuevos.associateBy { it.fecha } }
+        return nuevos.size
+    }
+
+    /**
+     * Una sola vez: rehace la primera y la última comida (y la última cafeína) de lo ya importado de MacroFactor con
+     * [Macrofactor.horario] (lo de antes de las 05:00 va al final). Devuelve cuántos días cambió.
+     */
+    fun rehacerHorarioComidas(): Int {
+        val desde = nutricion.keys.minOrNull() ?: return 0; val hasta = nutricion.keys.max()
+        val porDia = comidas(desde, hasta).groupBy { it.fecha }
+        val nuevos = nutricion.values.mapNotNull { n ->
+            val l = porDia[n.fecha] ?: return@mapNotNull null
+            val (p, u) = Macrofactor.horario(l.map { it.hora })
+            val caf = Macrofactor.horario(l.filter { (it.valores["cafeina_mg"] ?: 0.0) > 0 }.map { it.hora }).second
+            n.copy(primera = p, ultima = u, cafeina_ultima = caf).takeIf { it != n }
+        }
+        if (nuevos.isEmpty()) return 0
+        db.transaccion { nuevos.forEach { db.poner("nutricion", it.fecha, it.fecha, JSON.encodeToString(NutricionDia.serializer(), it)) } }
+        enMain { nutricion = nutricion + nuevos.associateBy { it.fecha } }
         return nuevos.size
     }
 
@@ -694,12 +844,22 @@ object Repo {
         this.notifs = notifs; this.entorno = entorno; this.nutricion = nutricion; this.lugares = lugares; this.visitas = visitas; this.sesiones = sesiones
     }
 
+    /** La última configuración escrita: la publicación en el hilo principal no debe volver a una anterior. */
+    @Volatile private var configUltima: Config? = null
+
+    /**
+     * Lee, cambia y guarda la configuración de una sola vez. Sincronizado: la tarea de cada 15 min (marcas de avisos,
+     * sincronizaciones) y la interfaz (tu gente, hábitos, ajustes) la cambian a la vez, y sin candado el que escribía al
+     * final borraba el cambio del otro.
+     */
+    @Synchronized
     fun cambiarConfig(f: (Config) -> Config) {
         val n = f(config)
         db.poner("config", "config", null, JSON.encodeToString(Config.serializer(), n))
         config = n
+        configUltima = n
         Fechas.usarHistorial(n.zonas)
-        enMain { config = n }
+        enMain { if (configUltima === n) config = n }
     }
 
     fun equivalencias(): Map<String, String> = config.equivalencias

@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.rememberScrollState
@@ -113,7 +115,7 @@ private fun FormularioPersona(nombre: String, alGuardar: () -> Unit, clave: Stri
     if (nacOk == null || fallOk == null) Ayuda("Esa fecha no se entiende; elígela de nuevo.", Modifier.padding(top = 4.dp))
     else nacOk.takeIf { it.isNotBlank() }?.let { n ->
         val e = Especiales.edadDe(Persona(nombre, "", nacimiento = n, fallecimiento = fallOk))
-        Ayuda("Cumple el ${Especiales.texto(n, conAnio = false)}" + (e?.let { if (fallOk.isBlank()) " · tiene $it años" else " · tenía $it años" } ?: ""), Modifier.padding(top = 4.dp))
+        Ayuda("Cumple el ${Especiales.texto(n, conAnio = false)}" + (e?.let { if (fallOk.isBlank()) " · tiene ${porNumero(it, "1 año", "$it años")}" else " · tenía ${porNumero(it, "1 año", "$it años")}" } ?: ""), Modifier.padding(top = 4.dp))
     }
     if (previo != null && rel != null && (rel != previo.relacion || cerca != previo.cercania)) {
         val cuando = if (desde == hoy) "hoy" else "el ${Fechas.corto(desde)} ${desde.take(4)}"
@@ -153,7 +155,7 @@ fun TarjetaQuienEs(modifier: Modifier = Modifier, compacta: Boolean = false, abr
     var abierta by remember(nombre) { mutableStateOf(!compacta) }
     Tarjeta(modifier) {
         Text("¿Quién es @$nombre?", style = MaterialTheme.typography.titleMedium)
-        Ayuda("La mencionaste en $n días." + if (pend.size > 1) " Faltan ${pend.size - 1} más." else "")
+        Ayuda("La mencionaste en ${porNumero(n, "1 día", "$n días")}." + if (pend.size > 1) " Faltan ${pend.size - 1} más." else "")
         if (!abierta) Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.End) {
             TextButton(onClick = { Personas.posponer() }) { Text("después") }
             BotonSecundario("responder") { abierta = true }
@@ -179,7 +181,7 @@ fun PantallaPersonas(nav: Nav) {
         TarjetaQuienEs(Modifier.padding(top = 14.dp))
         val porRevisar = remember(Repo.dias) { io.github.ruddy2003.vestigium.data.Presencias.porRevisar().size + io.github.ruddy2003.vestigium.data.Presencias.paraReabrir().size }
         if (porRevisar > 0) Tarjeta(Modifier.padding(top = 10.dp)) {
-            FilaMenu("¿Estuviste o solo pensaste?", "$porRevisar días con personas por revisar: ver a alguien no es lo mismo que pensar en esa persona") { nav.ir("presencias") }
+            FilaMenu("¿Estuviste o solo pensaste?", "${porNumero(porRevisar, "1 día", "$porRevisar días")} con personas por revisar: ver a alguien no es lo mismo que pensar en esa persona") { nav.ir("presencias") }
         }
         val clasif = c.personas.sortedByDescending { menc[it.nombre]?.first ?: 0 }
         // Alguien que aún no mencionas (N-25): nombre, y después relación y nacimiento en su ficha.
@@ -198,7 +200,7 @@ fun PantallaPersonas(nav: Nav) {
                     }
                 })
         }
-        Seccion("Clasificadas", "${clasif.size} personas. Toca una para cambiarla.") {
+        Seccion("Clasificadas", "${porNumero(clasif.size, "1 persona", "${clasif.size} personas")}. Toca una para cambiarla.") {
             if (clasif.isEmpty()) Vacio("Todavía nadie. Responde arriba o toca a alguien de la lista de abajo.")
             Personas.RELACIONES.forEach { r ->
                 val l = clasif.filter { Personas.relacionVisible(it.relacion) == r.id }
@@ -207,8 +209,8 @@ fun PantallaPersonas(nav: Nav) {
                     l.forEach { p ->
                         val m = menc[p.nombre]
                         FilaMenu("@${p.nombre}" + if (p.detalle.isNotBlank()) " · ${p.detalle}" else "",
-                            listOfNotNull(Especiales.edadDe(p)?.let { if (p.fallecimiento.isBlank()) "$it años" else "†, a los $it" } ?: "†".takeIf { p.fallecimiento.isNotBlank() },
-                                p.cercania?.let { "cercanía $it/7" }, m?.let { "${it.first} días" }, m?.second?.takeIf { it.isNotBlank() }?.let { "última vez ${Fechas.corto(it)}" },
+                            listOfNotNull(Especiales.edadDe(p)?.let { if (p.fallecimiento.isBlank()) "${porNumero(it, "1 año", "$it años")}" else "†, a los $it" } ?: "†".takeIf { p.fallecimiento.isNotBlank() },
+                                p.cercania?.let { "cercanía $it/7" }, m?.let { "${porNumero(it.first, "1 día", "${it.first} días")}" }, m?.second?.takeIf { it.isNotBlank() }?.let { "última vez ${Fechas.corto(it)}" },
                                 p.historial.lastOrNull()?.let { "antes ${Personas.nombreRelacion(it.relacion).lowercase()}" }).joinToString(" · ")) { editando = p.nombre }
                     }
                 }
@@ -239,7 +241,7 @@ fun PantallaPersonas(nav: Nav) {
         val resto = menc.entries.filter { it.key !in ya }.sortedByDescending { it.value.first }
         if (resto.isNotEmpty()) Seccion("Sin clasificar", "Todas las que has mencionado, de la más a la menos frecuente.") {
             (if (verTodas) resto else resto.take(15)).forEach { (n, v) ->
-                FilaMenu("@$n", "${v.first} días · última vez ${Fechas.corto(v.second)}" + if (n in c.personas_omitidas) " · no preguntar" else "") { editando = n }
+                FilaMenu("@$n", "${porNumero(v.first, "1 día", "${v.first} días")} · última vez ${Fechas.corto(v.second)}" + if (n in c.personas_omitidas) " · no preguntar" else "") { editando = n }
             }
             if (!verTodas && resto.size > 15) BotonSecundario("ver las ${resto.size}", Modifier.padding(top = 8.dp)) { verTodas = true }
         }

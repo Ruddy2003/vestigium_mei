@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.avisos
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -70,7 +72,7 @@ object Recordatorios {
             val tocaHoy = ahora.dayOfWeek.value == c.importar_dia || FUENTES.any { c.importar_pospuesto[it.id] == hoy }
             if (tocaHoy) {
                 marcar("importar:$hoy")
-                if (pend.isNotEmpty()) Avisos.importar(ctx, pend.map { it.nombre + (hace(it.id, hoy)?.let { d -> " (hace $d días)" } ?: " (nunca)") })
+                if (pend.isNotEmpty()) Avisos.importar(ctx, pend.map { it.nombre + (hace(it.id, hoy)?.let { d -> " (hace ${porNumero(d, "1 día", "$d días")})" } ?: " (nunca)") })
             }
         }
         // Suplementos: a la hora elegida (o una hora después de «en una hora»), solo si falta alguno.

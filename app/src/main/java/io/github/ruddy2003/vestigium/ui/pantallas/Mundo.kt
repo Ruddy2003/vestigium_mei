@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import android.content.Context
 import android.content.Intent
 import android.graphics.Paint
@@ -1178,7 +1180,7 @@ fun PantallaRascar(nav: Nav) {
             TextButton(onClick = nav.atras) { Text(Estilo.atras, color = MaterialTheme.colorScheme.primary) }
             Column(Modifier.weight(1f)) {
                 Text(Estilo.pantalla("Mapa para rascar", io.github.ruddy2003.vestigium.ui.Romano.latin("Mapa para rascar")).first, style = MaterialTheme.typography.titleLarge)
-                Ayuda("${visitados.size} países · toca un país para verlo; pellizca o usa − y +")
+                Ayuda("${porNumero(visitados.size, "1 país", "${visitados.size} países")} · toca un país para verlo; pellizca o usa − y +")
             }
             // Alternativa visible a pellizcar y al doble toque (N-24).
             TextButton(onClick = { zoom = (zoom / 1.6f).coerceAtLeast(1f); if (zoom == 1f) pan = Offset.Zero }) { Text("−", style = MaterialTheme.typography.titleLarge) }

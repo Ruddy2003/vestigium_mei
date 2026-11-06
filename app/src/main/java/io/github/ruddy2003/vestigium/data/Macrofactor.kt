@@ -95,6 +95,16 @@ object Xlsx {
  * Reimportar un periodo reemplaza lo de esas fechas, así que se puede exportar de nuevo cuando quieras.
  */
 object Macrofactor {
+    /**
+     * La primera y la última hora («HH:MM») de un día de MacroFactor. Lo anotado antes de las 05:00 va al final, como en el
+     * día lógico: una cena a las 00:40 es la última comida, no la primera. Antes se ordenaba como texto y «00:40» salía
+     * primero.
+     */
+    fun horario(horas: List<String>): Pair<String?, String?> {
+        val validas = horas.filter { it.matches(Regex("\\d{2}:\\d{2}")) }.sortedBy { h -> (if (h < "05:00") "1" else "0") + h }
+        return validas.firstOrNull() to validas.lastOrNull()
+    }
+
     private val NOMBRES = mapOf(
         "expenditure" to "gasto_kcal", "trend_weight_kg" to "peso_tendencia_kg", "weight_kg" to "peso_mf_kg", "calories_kcal" to "kcal",
         "protein_g" to "proteina_g", "fat_g" to "grasa_g", "carbs_g" to "carbohidratos_g", "target_calories_kcal" to "objetivo_kcal",
@@ -212,10 +222,10 @@ object Macrofactor {
 
         // Horario de comidas y de la última cafeína (esto último importa mucho para el sueño).
         comidas.groupBy { it.fecha }.forEach { (f, l) ->
-            val horas = l.map { it.hora }.filter { it.matches(Regex("\\d{2}:\\d{2}")) }.sorted()
-            val caf = l.filter { (it.valores["cafeina_mg"] ?: 0.0) > 0 }.map { it.hora }.filter { it.matches(Regex("\\d{2}:\\d{2}")) }.maxOrNull()
+            val (primera, ultima) = horario(l.map { it.hora })
+            val caf = horario(l.filter { (it.valores["cafeina_mg"] ?: 0.0) > 0 }.map { it.hora }).second
             val previo = dias[f] ?: NutricionDia(f, emptyMap())
-            dias[f] = previo.copy(comidas = l.size, primera = horas.firstOrNull(), ultima = horas.lastOrNull(), cafeina_ultima = caf)
+            dias[f] = previo.copy(comidas = l.size, primera = primera, ultima = ultima, cafeina_ultima = caf)
         }
         val fechasEntreno = (series.map { it.fecha } + musSeries.keys + musVol.keys).toSortedSet()
         val entrenos = fechasEntreno.map { f ->
@@ -230,7 +240,7 @@ object Macrofactor {
         val todas = (dias.keys + comidas.map { it.fecha } + fechasEntreno)
         val desde = todas.min(); val hasta = todas.max()
         Repo.importarMacrofactor(desde, hasta, dias.values.toList(), comidas, series, entrenos)
-        return "Importé del $desde al $hasta: ${dias.size} días de nutrición, ${comidas.size} alimentos, ${entrenos.count { it.series > 0 }} entrenamientos y ${series.size} series."
+        return "Importé del $desde al $hasta: ${porNumero(dias.size, "1 día", "${dias.size} días")} de nutrición, ${porNumero(comidas.size, "1 alimento", "${comidas.size} alimentos")}, ${entrenos.count { it.series > 0 }} entrenamientos y ${porNumero(series.size, "1 serie", "${series.size} series")}."
     }
 
     /**
@@ -251,6 +261,8 @@ object Macrofactor {
     fun e1rm(s: Serie): Double? {
         val p = s.peso_kg ?: return null; val r = s.reps ?: return null
         if (r <= 0 || r > 12 || s.tipo.contains("Warm", true) || p <= 0) return null
+        // Con una repetición, el máximo es el peso levantado: Epley daría 3.3 % de más (100 kg × 1 → 103.3 kg).
+        if (r == 1) return Math.round(p * 10) / 10.0
         return Math.round(p * (1 + r / 30.0) * 10) / 10.0
     }
 }
