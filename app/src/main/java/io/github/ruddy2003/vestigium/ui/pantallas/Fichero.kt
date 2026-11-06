@@ -214,9 +214,10 @@ private fun FichaGrande(i: Idea, numero: Int, total: Int, tema: String, a: Archi
     val encabezado = if (d.barra) d.altoBarra(true) else 22.dp
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val ancho = (maxWidth - 28.dp) * d.anchoGrande
+        val minimo = minOf(ancho / d.proporcionGrande, maxHeight - 16.dp)
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
-            Surface(shape = forma, color = Color.Transparent, shadowElevation = 6.dp, modifier = Modifier.width(ancho).heightIn(min = minOf(ancho / d.proporcionGrande, maxHeight - 16.dp))) {
+            Surface(shape = forma, color = Color.Transparent, shadowElevation = 6.dp, modifier = Modifier.width(ancho).heightIn(min = minimo)) {
                 Box {
                     PapelFicha(p, Modifier.matchParentSize())
                     Canvas(Modifier.matchParentSize()) { with(d) { adornoFicha(p, true, semilla) } }
