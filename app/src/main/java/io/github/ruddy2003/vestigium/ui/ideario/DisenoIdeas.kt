@@ -112,8 +112,8 @@ interface DisenoIdeas {
 /** El diseño del Ideario de cada tema. */
 fun disenoIdeas(t: TemaId): DisenoIdeas = when (t) {
     TemaId.ROMANO -> IdeasRomano
-    TemaId.URBE -> DisenoAnterior(TemaId.URBE)
-    TemaId.CIBER -> DisenoAnterior(TemaId.CIBER)
+    TemaId.URBE -> IdeasUrbe
+    TemaId.CIBER -> IdeasCiber
     TemaId.NEON -> DisenoAnterior(TemaId.NEON)
     TemaId.HELENO -> IdeasHeleno
     TemaId.EGIPTO -> IdeasEgipto
@@ -122,26 +122,26 @@ fun disenoIdeas(t: TemaId): DisenoIdeas = when (t) {
     TemaId.DISTOPIA -> DisenoAnterior(TemaId.DISTOPIA)
     TemaId.REFUGIO -> DisenoAnterior(TemaId.REFUGIO)
     TemaId.ORDEN -> DisenoAnterior(TemaId.ORDEN)
-    TemaId.VAPOR -> DisenoAnterior(TemaId.VAPOR)
+    TemaId.VAPOR -> IdeasVapor
     TemaId.LABORATORIO -> DisenoAnterior(TemaId.LABORATORIO)
     TemaId.COLONOS -> DisenoAnterior(TemaId.COLONOS)
-    TemaId.NAPOLEON -> DisenoAnterior(TemaId.NAPOLEON)
-    TemaId.DECO -> DisenoAnterior(TemaId.DECO)
-    TemaId.BOTANICO -> DisenoAnterior(TemaId.BOTANICO)
+    TemaId.NAPOLEON -> IdeasNapoleon
+    TemaId.DECO -> IdeasDeco
+    TemaId.BOTANICO -> IdeasBotanico
     TemaId.RUINAS -> DisenoAnterior(TemaId.RUINAS)
-    TemaId.NAVIDAD -> DisenoAnterior(TemaId.NAVIDAD)
+    TemaId.NAVIDAD -> IdeasNavidad
     TemaId.SEDA -> IdeasSeda
     TemaId.EDO -> IdeasEdo
     TemaId.GOTICO -> IdeasGotico
     TemaId.ARCANO -> IdeasArcano
     TemaId.ESPACIO -> DisenoAnterior(TemaId.ESPACIO)
-    TemaId.ABISMO -> DisenoAnterior(TemaId.ABISMO)
+    TemaId.ABISMO -> IdeasAbismo
     TemaId.ANDALUS -> IdeasAndalus
     TemaId.MESO -> IdeasMeso
     TemaId.MONGOL -> IdeasMongol
     TemaId.RENACIMIENTO -> IdeasRenacimiento
     TemaId.PIRATA -> IdeasPirata
-    TemaId.URSS -> DisenoAnterior(TemaId.URSS)
+    TemaId.URSS -> IdeasUrss
     TemaId.REVOLUCION -> IdeasRevolucion
     TemaId.ANTIGUAS -> IdeasAntiguas
     TemaId.CUEVA -> IdeasCueva
