@@ -461,7 +461,7 @@ class Capturas {
             Box(Modifier.fillMaxWidth().height(560.dp)) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaFichaIdea(navVacia) }
         }
     }
-    /** Una muestra de siempre por forma de contenedor; los 34 temas, claro y oscuro, con CAPTURAS=archivo ([temaArchivo]). */
+    /** Una muestra de siempre, de épocas distintas; los 34 temas, claro y oscuro, con CAPTURAS=archivo ([temaArchivo]). */
     @Test fun archivoIdeas() = listOf(TemaId.ROMANO, TemaId.EDO, TemaId.TEMPLARIO, TemaId.NAVIDAD, TemaId.DECO, TemaId.CIBER, TemaId.NEON, TemaId.CUEVA).forEach { t ->
         archivo(t, t.soloOscuro, "tema_${t.id}")
     }
@@ -498,11 +498,11 @@ class Capturas {
             }
         }
     }
-    /** Los muebles con diseño propio, en claro y en oscuro (los demás, con CAPTURAS=mueble, [temaMueble]). */
+    /** Los muebles del lote 0, en claro y en oscuro (los 34, con CAPTURAS=mueble, [temaMueble]). */
     @Test fun muebleIdeas() = listOf(TemaId.EDO, TemaId.CUEVA).forEach { t -> mueble(t, false); mueble(t, true) }
-    /** El archivo de los temas con diseño propio, en oscuro (el claro ya sale en [archivoIdeas]). */
+    /** El archivo de los temas del lote 0, en oscuro (el claro ya sale en [archivoIdeas]). */
     @Test fun archivoIdeasPropio() = listOf(TemaId.EDO, TemaId.CUEVA).forEach { t -> archivo(t, true, "propio_${t.id}") }
-    /** Escribir una idea en los temas con diseño propio, con el reverso a la vista. */
+    /** Escribir una idea en los temas del lote 0, con el reverso a la vista. */
     @Test fun escritorIdeaPropio() = listOf(TemaId.EDO, TemaId.CUEVA).forEach { t ->
         pantalla(t, false, 3400, "propio_${t.id}") {
             ideasEjemplo()
@@ -510,7 +510,7 @@ class Capturas {
             io.github.ruddy2003.vestigium.ui.pantallas.EscritorIdea(navVacia)
         }
     }
-    /** La biblioteca del Ideario entera en los temas con diseño propio: el mueble, las fijadas y la lista por mes. */
+    /** La biblioteca del Ideario entera en los temas del lote 0: el mueble, las fijadas y la lista por mes. */
     @Test fun idearioPropio() = listOf(TemaId.EDO, TemaId.CUEVA).forEach { t -> pantalla(t, false, 4000, "propio_${t.id}") {
         ideasArchivo()
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "ideas")
