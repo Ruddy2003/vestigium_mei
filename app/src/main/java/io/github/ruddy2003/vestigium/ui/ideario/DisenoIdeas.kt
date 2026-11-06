@@ -117,8 +117,8 @@ fun disenoIdeas(t: TemaId): DisenoIdeas = when (t) {
     TemaId.NEON -> DisenoAnterior(TemaId.NEON)
     TemaId.HELENO -> IdeasHeleno
     TemaId.EGIPTO -> IdeasEgipto
-    TemaId.MEDIEVAL -> DisenoAnterior(TemaId.MEDIEVAL)
-    TemaId.TEMPLARIO -> DisenoAnterior(TemaId.TEMPLARIO)
+    TemaId.MEDIEVAL -> IdeasMedieval
+    TemaId.TEMPLARIO -> IdeasTemplario
     TemaId.DISTOPIA -> DisenoAnterior(TemaId.DISTOPIA)
     TemaId.REFUGIO -> DisenoAnterior(TemaId.REFUGIO)
     TemaId.ORDEN -> DisenoAnterior(TemaId.ORDEN)
@@ -130,19 +130,19 @@ fun disenoIdeas(t: TemaId): DisenoIdeas = when (t) {
     TemaId.BOTANICO -> DisenoAnterior(TemaId.BOTANICO)
     TemaId.RUINAS -> DisenoAnterior(TemaId.RUINAS)
     TemaId.NAVIDAD -> DisenoAnterior(TemaId.NAVIDAD)
-    TemaId.SEDA -> DisenoAnterior(TemaId.SEDA)
+    TemaId.SEDA -> IdeasSeda
     TemaId.EDO -> IdeasEdo
-    TemaId.GOTICO -> DisenoAnterior(TemaId.GOTICO)
+    TemaId.GOTICO -> IdeasGotico
     TemaId.ARCANO -> IdeasArcano
     TemaId.ESPACIO -> DisenoAnterior(TemaId.ESPACIO)
     TemaId.ABISMO -> DisenoAnterior(TemaId.ABISMO)
-    TemaId.ANDALUS -> DisenoAnterior(TemaId.ANDALUS)
+    TemaId.ANDALUS -> IdeasAndalus
     TemaId.MESO -> IdeasMeso
-    TemaId.MONGOL -> DisenoAnterior(TemaId.MONGOL)
-    TemaId.RENACIMIENTO -> DisenoAnterior(TemaId.RENACIMIENTO)
-    TemaId.PIRATA -> DisenoAnterior(TemaId.PIRATA)
+    TemaId.MONGOL -> IdeasMongol
+    TemaId.RENACIMIENTO -> IdeasRenacimiento
+    TemaId.PIRATA -> IdeasPirata
     TemaId.URSS -> DisenoAnterior(TemaId.URSS)
-    TemaId.REVOLUCION -> DisenoAnterior(TemaId.REVOLUCION)
+    TemaId.REVOLUCION -> IdeasRevolucion
     TemaId.ANTIGUAS -> IdeasAntiguas
     TemaId.CUEVA -> IdeasCueva
 }
@@ -241,4 +241,45 @@ internal fun DrawScope.sombraInterior(r: Rect, ancho: Float, fuerza: Float = 0.2
     drawRect(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = fuerza * 0.6f)), r.bottom - ancho, r.bottom), Offset(r.left, r.bottom - ancho), Size(r.width, ancho))
     drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = fuerza * 0.8f), Color.Transparent), r.left, r.left + ancho), r.topLeft, Size(ancho, r.height))
     drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = fuerza * 0.8f)), r.right - ancho, r.right), Offset(r.right - ancho, r.top), Size(ancho, r.height))
+}
+
+/** Un rectángulo dado en fracciones de la base del mueble (la placa de «y N más»), en píxeles del lienzo. */
+internal fun Disposicion.enBase(pl: Rect) =
+    Rect(base.left + base.width * pl.left, base.top + base.height * pl.top, base.left + base.width * pl.right, base.top + base.height * pl.bottom)
+
+/** Un arco de medio punto: [r] con la parte de arriba redonda (el radio es la mitad del ancho). */
+internal fun arcoMedioPunto(r: Rect): Path = Path().apply {
+    val rad = r.width / 2
+    moveTo(r.left, r.bottom); lineTo(r.left, r.top + rad)
+    arcTo(Rect(r.left, r.top, r.right, r.top + 2 * rad), 180f, 180f, false)
+    lineTo(r.right, r.bottom); close()
+}
+
+/** Un arco apuntado (ojival): [r] con la punta arriba al centro; [flecha] es el alto de la parte curva. */
+internal fun arcoApuntado(r: Rect, flecha: Float): Path = Path().apply {
+    val cx = r.center.x
+    moveTo(r.left, r.bottom); lineTo(r.left, r.top + flecha)
+    cubicTo(r.left, r.top + flecha * 0.45f, cx - r.width * 0.22f, r.top + flecha * 0.1f, cx, r.top)
+    cubicTo(cx + r.width * 0.22f, r.top + flecha * 0.1f, r.right, r.top + flecha * 0.45f, r.right, r.top + flecha)
+    lineTo(r.right, r.bottom); close()
+}
+
+/** Un arco de herradura: el círculo es más ancho que el vano y se cierra un poco al bajar (25° por debajo del centro). */
+internal fun arcoHerradura(r: Rect): Path = Path().apply {
+    val rad = r.width / 2 / 0.906f
+    val cx = r.center.x; val cy = r.top + rad
+    moveTo(r.left, r.bottom); lineTo(r.left, cy + rad * 0.423f)
+    arcTo(Rect(cx - rad, cy - rad, cx + rad, cy + rad), 155f, 230f, false)
+    lineTo(r.right, r.bottom); close()
+}
+
+/** Una estrella de [puntas] puntas con centro [c] y radio [r]; [hondo] es el radio de los entrantes, en fracción de [r]. */
+internal fun estrella(c: Offset, r: Float, puntas: Int, hondo: Float, giro: Float = -90f): Path = Path().apply {
+    for (k in 0 until puntas * 2) {
+        val a = Math.toRadians((giro + k * 180.0 / puntas)).toFloat()
+        val rr = if (k % 2 == 0) r else r * hondo
+        val p = Offset(c.x + rr * kotlin.math.cos(a), c.y + rr * kotlin.math.sin(a))
+        if (k == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+    }
+    close()
 }
