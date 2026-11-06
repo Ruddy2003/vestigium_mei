@@ -455,12 +455,12 @@ object Respaldos {
         val dias = r.dias.map { it.fecha }.sorted()
         return listOfNotNull(
             "Hecho el ${r.exportado.take(10)} a las ${r.exportado.drop(11).take(5)} · esquema ${r.schema_v}",
-            "${n(r.dias.size)} días" + (if (dias.isNotEmpty()) " (del ${dias.first()} al ${dias.last()})" else "") + " · ${n(r.dias.count { it.nota.isNotBlank() })} con diario · ${n(r.dias.count { it.sueno_texto.isNotBlank() })} sueños",
-            "${n(r.momentos.size)} momentos · ${n(r.tramos.size)} tramos de enfoque · ${n(r.consumos.size)} consumos",
-            "${n(r.gastos.size)} gastos · ${n(r.ingresos.size)} ingresos · ${n(r.cartas.size)} cartas · ${n(r.obras.size)} obras · ${n(r.ideas.size)} ideas · ${n(r.listas.size)} listas",
-            "${n(r.salud.size)} días de salud · ${n(r.pantalla.size)} de pantalla · ${n(r.escuchas.size)} canciones · ${n(r.comidas.size)} comidas",
-            "${n(r.lugares.size)} lugares · ${n(r.visitas.size)} visitas · ${n(c.ubicaciones)} ubicaciones · ${n(c.fotos)} fotos con lugar · ${n(c.portadas)} portadas",
-            "Ajustes: ${r.config.habitos.size} hábitos, ${r.config.personas.size} personas en Tu gente, ${r.config.equivalencias.size} etiquetas unidas, tema «${r.config.tema}»",
+            "${porNumero(r.dias.size, "1 día", "${n(r.dias.size)} días")}" + (if (dias.isNotEmpty()) " (del ${dias.first()} al ${dias.last()})" else "") + " · ${n(r.dias.count { it.nota.isNotBlank() })} con diario · ${n(r.dias.count { it.sueno_texto.isNotBlank() })} sueños",
+            "${porNumero(r.momentos.size, "1 momento", "${n(r.momentos.size)} momentos")} · ${n(r.tramos.size)} tramos de enfoque · ${n(r.consumos.size)} consumos",
+            "${porNumero(r.gastos.size, "1 gasto", "${n(r.gastos.size)} gastos")} · ${n(r.ingresos.size)} ingresos · ${porNumero(r.cartas.size, "1 carta", "${n(r.cartas.size)} cartas")} · ${porNumero(r.obras.size, "1 obra", "${n(r.obras.size)} obras")} · ${porNumero(r.ideas.size, "1 idea", "${n(r.ideas.size)} ideas")} · ${porNumero(r.listas.size, "1 lista", "${n(r.listas.size)} listas")}",
+            "${porNumero(r.salud.size, "1 día", "${n(r.salud.size)} días")} de salud · ${n(r.pantalla.size)} de pantalla · ${porNumero(r.escuchas.size, "1 canción", "${n(r.escuchas.size)} canciones")} · ${porNumero(r.comidas.size, "1 comida", "${n(r.comidas.size)} comidas")}",
+            "${porNumero(r.lugares.size, "1 lugar", "${n(r.lugares.size)} lugares")} · ${porNumero(r.visitas.size, "1 visita", "${n(r.visitas.size)} visitas")} · ${n(c.ubicaciones)} ubicaciones · ${porNumero(c.fotos, "1 foto", "${n(c.fotos)} fotos")} con lugar · ${n(c.portadas)} portadas",
+            "Ajustes: ${porNumero(r.config.habitos.size, "1 hábito", "${r.config.habitos.size} hábitos")}, ${porNumero(r.config.personas.size, "1 persona", "${r.config.personas.size} personas")} en Tu gente, ${porNumero(r.config.equivalencias.size, "1 etiqueta", "${r.config.equivalencias.size} etiquetas")} unidas, tema «${r.config.tema}»",
         )
     }
 

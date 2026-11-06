@@ -50,6 +50,9 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.fadeIn
@@ -942,9 +945,12 @@ private fun nombresPestanas(tema: TemaId): List<Pestana> = PESTANAS.map { p -> P
 internal fun BarraPestanas(activa: String?, tema: TemaId, tocar: (String) -> Unit, largo: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
     val pestanas = nombresPestanas(tema)
+    // Con la letra grande del sistema, la barra crece (hasta 20 dp más con el doble de tamaño): antes medía siempre 66 dp
+    // y las etiquetas se cortaban.
+    val extra = ((androidx.compose.ui.platform.LocalDensity.current.fontScale - 1f).coerceIn(0f, 1f) * 20f).dp
     Column(Modifier.background(cs.surface)) {
         Canvas(Modifier.fillMaxWidth().height(5.dp)) { divisorBarra(tema, cs) }
-        Row(Modifier.fillMaxWidth().navigationBarsPadding().height(66.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().navigationBarsPadding().height(66.dp + extra), verticalAlignment = Alignment.CenterVertically) {
             pestanas.forEach { p ->
                 // El botón del centro registra: una figura grande con el ícono, sin pestaña propia.
                 if (p.id == "registrar") {
@@ -962,7 +968,9 @@ internal fun BarraPestanas(activa: String?, tema: TemaId, tocar: (String) -> Uni
                 val salto by androidx.compose.animation.core.animateFloatAsState(if (sel && Repo.config.animaciones) 1.12f else 1f,
                     androidx.compose.animation.core.spring(dampingRatio = 0.4f, stiffness = 500f), label = "salto")
                 Column(
-                    Modifier.weight(1f).fillMaxHeight().combinedClickable(onClick = { tocar(p.id) }, onLongClick = { largo(p.id) }, onLongClickLabel = "atajo de ${p.nombre}"),
+                    // TalkBack dice cuál pestaña está elegida.
+                    Modifier.weight(1f).fillMaxHeight().combinedClickable(onClick = { tocar(p.id) }, onLongClick = { largo(p.id) }, onLongClickLabel = "atajo de ${p.nombre}")
+                        .semantics { selected = sel; role = androidx.compose.ui.semantics.Role.Tab },
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
                 ) {
                     Box(Modifier.size(width = 58.dp, height = 30.dp).drawBehind { if (marca > 0.01f) indicadorBarra(tema, cs, marca) }

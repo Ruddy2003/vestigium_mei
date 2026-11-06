@@ -240,7 +240,7 @@ object Macrofactor {
         val todas = (dias.keys + comidas.map { it.fecha } + fechasEntreno)
         val desde = todas.min(); val hasta = todas.max()
         Repo.importarMacrofactor(desde, hasta, dias.values.toList(), comidas, series, entrenos)
-        return "Importé del $desde al $hasta: ${dias.size} días de nutrición, ${comidas.size} alimentos, ${entrenos.count { it.series > 0 }} entrenamientos y ${series.size} series."
+        return "Importé del $desde al $hasta: ${porNumero(dias.size, "1 día", "${dias.size} días")} de nutrición, ${porNumero(comidas.size, "1 alimento", "${comidas.size} alimentos")}, ${entrenos.count { it.series > 0 }} entrenamientos y ${porNumero(series.size, "1 serie", "${series.size} series")}."
     }
 
     /**

@@ -1235,7 +1235,7 @@ private class FormaObjeto(
     val brilla: Boolean = false,
     val letraFecha: FontFamily? = null,
     val letraPie: FontFamily = Letra.texto,
-    val palabras: (Int) -> String = { "$it palabras" },
+    val palabras: (Int) -> String = { "${porNumero(it, "1 palabra", "$it palabras")}" },
     val cabecera: String? = null,
     val rotulos: List<RotuloObjeto> = emptyList(),
 )
@@ -1291,7 +1291,7 @@ private fun formaObjeto(t: TemaId, m: Materia, e: ColorScheme, noche: Boolean, f
         TemaId.REVOLUCION -> libro({ libroCerrado(m) { g -> tapaRevolucion(m, g) } }, LetraExtra.convencion, 13.5f)
         TemaId.ANTIGUAS -> libro({ libroCerrado(m) { g -> tapaAntiguas(m, g) } }, LetraExtra.almendra, 13.5f)
         TemaId.CUEVA -> FormaObjeto(dibujo = { lajaPintada(m) }, caja = listOf(0.1f, 0.3f, 0.1f, 0.2f), pista = pista, letra = LetraExtra.abrigo, tinta = m.tinta,
-            fecha = m.acento, tam = 13.5f, interlinea = 18f, alto = 176, gira = true, letraFecha = LetraExtra.trazo, palabras = { "$it palabras en la laja" })
+            fecha = m.acento, tam = 13.5f, interlinea = 18f, alto = 176, gira = true, letraFecha = LetraExtra.trazo, palabras = { "${porNumero(it, "1 palabra", "$it palabras")} en la laja" })
         TemaId.COLONOS -> libro({ libroRegistro(m) }, LetraExtra.oswald, 13f, caja = listOf(0.27f, 0.24f, 0.17f, 0.24f))
         TemaId.URSS -> libro({ libretaInforme(m) }, LetraExtra.russo, 12f, caja = listOf(0.37f, 0.27f, 0.1f, 0.18f),
             rotulos = listOf(RotuloObjeto("ОТЧЁТ · INFORME", LetraExtra.russo, 9f, m.hoja, 0.37f, 0.183f)), fecha = m.cuerpo)
@@ -1317,18 +1317,18 @@ private fun formaObjeto(t: TemaId, m: Materia, e: ColorScheme, noche: Boolean, f
                 RotuloObjeto("EXPEDIENTE", LetraExtra.oswald, 11f, if (noche) LUNA else m.detalle, 0.07f, 0.035f),
             ))
         TemaId.CIBER -> FormaObjeto(dibujo = { terminalCiber(m) }, caja = listOf(0.05f, 0.22f, 0.05f, 0.06f), pista = pista, letra = Letra.codigo, tinta = m.tinta,
-            fecha = m.acento, tam = 13f, brilla = true, letraFecha = Letra.codigo, letraPie = Letra.codigo, palabras = { "[$it palabras]" },
+            fecha = m.acento, tam = 13f, brilla = true, letraFecha = Letra.codigo, letraPie = Letra.codigo, palabras = { "[${porNumero(it, "1 palabra", "$it palabras")}]" },
             cabecera = if (noche) "$ nano ~/suenos/$fecha.dream" else "$ nano ~/diario/$fecha.log")
         TemaId.NEON -> FormaObjeto(dibujo = { cajaLuzNeon(m) }, caja = listOf(0.06f, 0.24f, 0.06f, 0.2f), pista = pista, letra = Letra.letrero, tinta = m.tinta,
-            fecha = m.extra, tam = 13.5f, brilla = true, letraFecha = Letra.letrero, letraPie = Letra.letrero, palabras = { "$it palabras en el ticket" },
+            fecha = m.extra, tam = 13.5f, brilla = true, letraFecha = Letra.letrero, letraPie = Letra.letrero, palabras = { "${porNumero(it, "1 palabra", "$it palabras")} en el ticket" },
             cabecera = if (noche) "夢 · ticket de la noche · $fecha" else "屋台 · ticket del día · $fecha")
         TemaId.REFUGIO -> FormaObjeto(dibujo = { monitorRefugio(m) }, caja = listOf(0.1f, 0.13f, 0.1f, 0.2f), pista = pista, letra = LetraExtra.vt323, tinta = m.tinta,
             fecha = m.acento, tam = 17f, interlinea = 18f, brilla = true, letraFecha = LetraExtra.vt323, letraPie = LetraExtra.vt323, palabras = { "[$it PALABRAS]" })
         TemaId.ESPACIO -> FormaObjeto(dibujo = { tabletaControl(m) }, caja = listOf(0.06f, 0.32f, 0.2f, 0.14f), pista = pista, letra = LetraExtra.grotesk, tinta = m.tinta,
-            fecha = m.acento, tam = 13f, brilla = true, letraFecha = Letra.codigo, letraPie = Letra.codigo, palabras = { "$it palabras transmitidas" },
+            fecha = m.acento, tam = 13f, brilla = true, letraFecha = Letra.codigo, letraPie = Letra.codigo, palabras = { "${porNumero(it, "1 palabra transmitida", "$it palabras transmitidas")}" },
             rotulos = listOf(RotuloObjeto("BITÁCORA DE VUELO", LetraExtra.orbita, 9f, m.acento, 0.14f, 0.195f)))
         TemaId.ABISMO -> FormaObjeto(dibujo = { bitacoraBatiscafo(m) }, caja = listOf(0.1f, 0.34f, 0.26f, 0.14f), pista = pista, letra = LetraExtra.atkinson, tinta = m.tinta,
-            fecha = m.extra, tam = 13f, gira = true, letraFecha = LetraExtra.batiscafo, letraPie = LetraExtra.batiscafo, palabras = { "$it palabras bajo el agua" },
+            fecha = m.extra, tam = 13f, gira = true, letraFecha = LetraExtra.batiscafo, letraPie = LetraExtra.batiscafo, palabras = { "${porNumero(it, "1 palabra", "$it palabras")} bajo el agua" },
             rotulos = listOf(RotuloObjeto("BITÁCORA DE INMERSIÓN", LetraExtra.batiscafo, 11f, m.acento, 0.1f, 0.19f)))
     }
 }
@@ -2725,7 +2725,7 @@ private fun Cartas(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean
                         }
                         Column(Modifier.align(Alignment.BottomStart).padding(start = 10.dp, bottom = 8.dp, end = 10.dp)) {
                             Text(Fechas.corto(d.fecha), fontSize = 12.sp, color = m.textoCuerpo, fontFamily = letra, maxLines = 1)
-                            Text("${Texto.palabras(texto(d))} palabras", fontSize = 9.5.sp, color = m.textoCuerpo.copy(alpha = 0.7f), maxLines = 1)
+                            Text("${porNumero(Texto.palabras(texto(d)), "1 palabra", "${Texto.palabras(texto(d))} palabras")}", fontSize = 9.5.sp, color = m.textoCuerpo.copy(alpha = 0.7f), maxLines = 1)
                         }
                     }
                 }
@@ -3424,7 +3424,7 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
         Box(Modifier.fillMaxSize().then(deslizar)) {
             FondoPagina(tema, p, noche = sueno)
             Column(Modifier.fillMaxSize()) {
-                BarraPagina(p, volver, if (d != null) "${Texto.palabras(cuerpo)} palabras" else "") {
+                BarraPagina(p, volver, if (d != null) "${porNumero(Texto.palabras(cuerpo), "1 palabra", "${Texto.palabras(cuerpo)} palabras")}" else "") {
                     Text("‹", fontSize = 24.sp, color = if (anterior != null) p.acento else p.tenue.copy(alpha = 0.3f),
                         modifier = Modifier.clickable(enabled = anterior != null) { sentirPagina(Sentidos.Evento.PASAR); anterior?.invoke() }.padding(horizontal = 10.dp))
                     Text("›", fontSize = 24.sp, color = if (siguiente != null) p.acento else p.tenue.copy(alpha = 0.3f),
@@ -3500,7 +3500,7 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
             val interior: @Composable ColumnScope.() -> Unit = {
                 if (ficha && archivo.formaFicha == FormaFicha.VENTANA) Spacer(Modifier.height(altoBarraVentana(true)))
                 else if (ficha) Spacer(Modifier.height(margenSuperior(archivo.formaFicha, true) / 2))
-                BarraPagina(p, guardar, Estilo.texto("palabras").format(Texto.palabras(campo.text))) {
+                BarraPagina(p, guardar, Texto.palabras(campo.text).let { n -> Estilo.texto("palabras").format(n).let { if (n == 1) it.replace(" palabras", " palabra") else it } }) {
                     Text(textoBoton ?: textoGuardar(tema), style = MaterialTheme.typography.labelLarge, color = if (p.oscura) p.color else Color.White,
                         modifier = Modifier.padding(end = 6.dp).background(p.acento, MaterialTheme.shapes.small).clickable { sentir(Sentidos.Evento.GUARDAR); guardar() }
                             .padding(horizontal = 14.dp, vertical = 8.dp))

@@ -202,7 +202,7 @@ object ColdTurkey {
         Repo.guardarLaptop(porDia.values.toList())
         io.github.ruddy2003.vestigium.avisos.Recordatorios.importado("coldturkey")
         val apps = leidos.count { !it.sitios }; val sitios = leidos.count { it.sitios }
-        return "Cold Turkey: ${porDia.size} días (" + listOfNotNull(apps.takeIf { it > 0 }?.let { "apps" }, sitios.takeIf { it > 0 }?.let { "sitios" }).joinToString(" y ") + ")."
+        return "Cold Turkey: ${porNumero(porDia.size, "1 día", "${porDia.size} días")} (" + listOfNotNull(apps.takeIf { it > 0 }?.let { "apps" }, sitios.takeIf { it > 0 }?.let { "sitios" }).joinToString(" y ") + ")."
     }
 
     /** Minutos totales, en sitios y por categoría de un día. */

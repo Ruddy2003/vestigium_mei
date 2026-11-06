@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ciencia
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Fechas
@@ -50,7 +52,7 @@ object Totales {
     fun tiempo(min: Double) = when {
         min < 90 -> "${n(min)} min"
         min < 60 * 24 * 3 -> "${n(min / 60, if (min < 600) 1 else 0)} h"
-        else -> "${n(min / 60)} h (${n(min / 60 / 24, 1)} días)"
+        else -> "${n(min / 60)} h (${porNumero(min / 60 / 24, "1 día", "${n(min / 60 / 24, 1)} días")})"
     }
     fun dinero(v: Double) = "$" + n(v)
     fun formato(v: Double, unidad: String): String = when (unidad) {
@@ -155,7 +157,7 @@ object Totales {
         // ----- Cuerpo -----
         run {
             val c = ArrayList<Cifra>()
-            c.poner("Horas dormidas", suma(salud, { it.fecha }, { it.sueno_min }), ::tiempo) { s -> "${n(s.v / s.n / 60, 1)} h por noche en ${s.n} noches" }
+            c.poner("Horas dormidas", suma(salud, { it.fecha }, { it.sueno_min }), ::tiempo) { s -> "${n(s.v / s.n / 60, 1)} h por noche en ${porNumero(s.n, "1 noche", "${s.n} noches")}" }
             val ses = Repo.sesiones.filter { en(it.fecha) }
             if (ses.isNotEmpty()) c.add(Cifra("Sesiones de ejercicio (reloj)", "${ses.size} · ${tiempo(ses.sumOf { it.min }.toDouble())}", ses.minOf { it.fecha }))
             if (entrenos.isNotEmpty()) {
@@ -173,7 +175,7 @@ object Totales {
         // ----- Comida -----
         run {
             val c = ArrayList<Cifra>()
-            c.poner("Calorías consumidas", suma(nutricion, { it.fecha }, { it.valores["kcal"] }), { "${n(it)} kcal" }) { s -> "${n(s.v / s.n)} al día en ${s.n} días" }
+            c.poner("Calorías consumidas", suma(nutricion, { it.fecha }, { it.valores["kcal"] }), { "${n(it)} kcal" }) { s -> "${n(s.v / s.n)} al día en ${porNumero(s.n, "1 día", "${s.n} días")}" }
             listOf("proteina_g" to "Proteína", "carbohidratos_g" to "Carbohidratos", "grasa_g" to "Grasa", "fibra_g" to "Fibra", "azucares_g" to "Azúcares", "alcohol_g" to "Alcohol").forEach { (k, t) ->
                 c.poner(t, suma(nutricion, { it.fecha }, { it.valores[k] }), ::masa)
             }
@@ -208,9 +210,9 @@ object Totales {
                 val g0 = gastos.minOf { it.fecha }
                 val porDia = gastos.groupBy { it.fecha }.mapValues { e -> e.value.sumOf { it.monto } }
                 val top = porDia.maxByOrNull { it.value }!!
-                c.add(Cifra("Gasto total", dinero(gastos.sumOf { it.monto }), g0, "${gastos.size} gastos · día más caro: ${dinero(top.value)} el ${fecha(top.key)}"))
+                c.add(Cifra("Gasto total", dinero(gastos.sumOf { it.monto }), g0, "${porNumero(gastos.size, "1 gasto", "${gastos.size} gastos")} · día más caro: ${dinero(top.value)} el ${fecha(top.key)}"))
                 val imp = gastos.filter { it.imprevisto }
-                if (imp.isNotEmpty()) c.add(Cifra("Imprevistos", dinero(imp.sumOf { it.monto }), imp.minOf { it.fecha }, "${imp.size} gastos"))
+                if (imp.isNotEmpty()) c.add(Cifra("Imprevistos", dinero(imp.sumOf { it.monto }), imp.minOf { it.fecha }, "${porNumero(imp.size, "1 gasto", "${imp.size} gastos")}"))
             }
             if (ingresos.isNotEmpty()) {
                 val total = ingresos.sumOf { it.monto }
@@ -315,7 +317,7 @@ object Totales {
         run {
             val m = LinkedHashMap<String, Entrada>()
             dias.forEach { d -> d.hitos.forEach { h -> m.getOrPut(normal(h)) { Entrada(h, "días") }.sumar(d.fecha, 1.0) } }
-            if (m.isNotEmpty()) indices.add(Indice("hitos", "Hitos", m.values.sortedByDescending { it.total }) { e -> "${n(e.total)} días" })
+            if (m.isNotEmpty()) indices.add(Indice("hitos", "Hitos", m.values.sortedByDescending { it.total }) { e -> "${porNumero(e.total, "1 día", "${n(e.total)} días")}" })
         }
 
         if (escuchas.isNotEmpty()) {
@@ -330,7 +332,7 @@ object Totales {
                     .apply { sumar(es.fecha, 1.0); extra += min }
             }
             indices.add(Indice("artistas", "Artistas", art.values.sortedByDescending { it.total }) { e -> "${n(e.total)} reproducciones · ${tiempo(e.extra)}" })
-            indices.add(Indice("canciones", "Canciones", can.values.sortedByDescending { it.total }) { e -> "${n(e.total)} veces · ${tiempo(e.extra)}" })
+            indices.add(Indice("canciones", "Canciones", can.values.sortedByDescending { it.total }) { e -> "${porNumero(e.total, "1 vez", "${n(e.total)} veces")} · ${tiempo(e.extra)}" })
         }
 
         if (visitas.isNotEmpty()) {
@@ -340,7 +342,7 @@ object Totales {
                 val min = v.salida?.let { (Fechas.millis(it) - Fechas.millis(v.entrada)) / 60000.0 }?.takeIf { it in 0.0..(60.0 * 24 * 3) } ?: 0.0
                 m.getOrPut(v.lugar) { Entrada(nombre, "min") }.sumar(v.entrada.take(10), min)
             }
-            if (m.isNotEmpty()) indices.add(Indice("lugares", "Lugares", m.values.sortedByDescending { it.total }) { e -> "${tiempo(e.total)} · ${e.veces} visitas" })
+            if (m.isNotEmpty()) indices.add(Indice("lugares", "Lugares", m.values.sortedByDescending { it.total }) { e -> "${tiempo(e.total)} · ${porNumero(e.veces, "1 visita", "${e.veces} visitas")}" })
         }
 
         if (series.isNotEmpty()) {
@@ -352,26 +354,26 @@ object Totales {
                 Macrofactor.e1rm(s)?.let { if (it > e.mejor) e.mejor = it }
             }
             indices.add(Indice("ejercicios", "Ejercicios de gimnasio", m.values.sortedByDescending { it.total }) { e ->
-                "${n(e.total)} series · ${e.dias.size} días · ${n(e.extra)} kg" + if (e.mejor > 0) " · 1RM ≈ ${n(e.mejor, 1)} kg" else ""
+                "${porNumero(e.total, "1 serie", "${n(e.total)} series")} · ${porNumero(e.dias.size, "1 día", "${e.dias.size} días")} · ${n(e.extra)} kg" + if (e.mejor > 0) " · 1RM ≈ ${n(e.mejor, 1)} kg" else ""
             })
         }
 
         Repo.sesiones.filter { en(it.fecha) }.takeIf { it.isNotEmpty() }?.let { l ->
             val m = LinkedHashMap<String, Entrada>()
             l.forEach { s -> m.getOrPut(normal(s.tipo_nombre)) { Entrada(s.tipo_nombre, "min") }.sumar(s.fecha, s.min.toDouble()) }
-            indices.add(Indice("deportes", "Ejercicio del reloj", m.values.sortedByDescending { it.total }) { e -> "${tiempo(e.total)} · ${e.veces} sesiones" })
+            indices.add(Indice("deportes", "Ejercicio del reloj", m.values.sortedByDescending { it.total }) { e -> "${tiempo(e.total)} · ${porNumero(e.veces, "1 sesión", "${e.veces} sesiones")}" })
         }
 
         Repo.ascensos.filter { en(it.fecha) }.takeIf { it.isNotEmpty() }?.let { l ->
             val m = LinkedHashMap<String, Entrada>()
             l.forEach { a -> a.bloques.filter { Grados.encadenado(it.estilo) }.forEach { b -> m.getOrPut(b.grado) { Entrada(b.grado, "bloques") }.sumar(a.fecha, 1.0) } }
-            if (m.isNotEmpty()) indices.add(Indice("grados", "Grados encadenados", m.values.sortedByDescending { Grados.valor(it.nombre) ?: 0.0 }) { e -> "${n(e.total)} bloques · ${e.dias.size} sesiones" })
+            if (m.isNotEmpty()) indices.add(Indice("grados", "Grados encadenados", m.values.sortedByDescending { Grados.valor(it.nombre) ?: 0.0 }) { e -> "${porNumero(e.total, "1 bloque", "${n(e.total)} bloques")} · ${porNumero(e.dias.size, "1 sesión", "${e.dias.size} sesiones")}" })
         }
 
         if (pantalla.isNotEmpty()) {
             val m = LinkedHashMap<String, Entrada>()
             pantalla.forEach { p -> p.por_app_min.forEach { (app, min) -> m.getOrPut(app) { Entrada(app, "min") }.sumar(p.fecha, min.toDouble()) } }
-            if (m.isNotEmpty()) indices.add(Indice("apps", "Apps", m.values.sortedByDescending { it.total }) { e -> "${tiempo(e.total)} · ${e.dias.size} días" })
+            if (m.isNotEmpty()) indices.add(Indice("apps", "Apps", m.values.sortedByDescending { it.total }) { e -> "${tiempo(e.total)} · ${porNumero(e.dias.size, "1 día", "${e.dias.size} días")}" })
         }
 
         if (huellas.isNotEmpty()) {
@@ -380,30 +382,30 @@ object Totales {
                 if (h.producto == "youtube" && h.accion == "visto" && h.canal.isNotBlank()) canales.getOrPut(normal(h.canal)) { Entrada(h.canal, "videos") }.sumar(h.fecha, 1.0)
                 if (h.accion == "buscado" && h.titulo.isNotBlank()) busq.getOrPut(normal(h.titulo)) { Entrada(h.titulo, "veces") }.sumar(h.fecha, 1.0)
             }
-            if (canales.isNotEmpty()) indices.add(Indice("canales", "Canales de YouTube", canales.values.sortedByDescending { it.total }) { e -> "${n(e.total)} videos · ${e.dias.size} días" })
+            if (canales.isNotEmpty()) indices.add(Indice("canales", "Canales de YouTube", canales.values.sortedByDescending { it.total }) { e -> "${n(e.total)} videos · ${porNumero(e.dias.size, "1 día", "${e.dias.size} días")}" })
             if (busq.isNotEmpty()) indices.add(Indice("busquedas", "Búsquedas", busq.values.sortedByDescending { it.total }) { e -> "${n(e.total)} ${if (e.total == 1.0) "vez" else "veces"}" })
         }
 
         if (gastos.isNotEmpty()) {
             val m = LinkedHashMap<String, Entrada>()
             gastos.forEach { g -> m.getOrPut(normal(g.categoria)) { Entrada(g.categoria, "$") }.sumar(g.fecha, g.monto) }
-            indices.add(Indice("gastos", "Gastos por categoría", m.values.sortedByDescending { it.total }) { e -> "${dinero(e.total)} · ${e.veces} gastos" })
+            indices.add(Indice("gastos", "Gastos por categoría", m.values.sortedByDescending { it.total }) { e -> "${dinero(e.total)} · ${porNumero(e.veces, "1 gasto", "${e.veces} gastos")}" })
         }
 
         run {
             val m = LinkedHashMap<String, Entrada>()
             io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().forEach { h -> dias.filter { it.habitos[h.id] == true }.forEach { d -> m.getOrPut(h.id) { Entrada(h.nombre, "días") }.sumar(d.fecha, 1.0) } }
-            if (m.isNotEmpty()) indices.add(Indice("habitos", "Hábitos cumplidos", m.values.sortedByDescending { it.total }) { e -> "${n(e.total)} días" })
+            if (m.isNotEmpty()) indices.add(Indice("habitos", "Hábitos cumplidos", m.values.sortedByDescending { it.total }) { e -> "${porNumero(e.total, "1 día", "${n(e.total)} días")}" })
         }
         run {
             val m = LinkedHashMap<String, Entrada>()
             momentos.filter { it.tipo != "muestreo" }.forEach { mo -> m.getOrPut(mo.tipo) { Entrada(Catalogo.nombreTipo(mo.tipo), "veces") }.sumar(mo.fecha, 1.0) }
-            if (m.isNotEmpty()) indices.add(Indice("momentos", "Momentos", m.values.sortedByDescending { it.total }) { e -> "${n(e.total)} veces · ${e.dias.size} días" })
+            if (m.isNotEmpty()) indices.add(Indice("momentos", "Momentos", m.values.sortedByDescending { it.total }) { e -> "${porNumero(e.total, "1 vez", "${n(e.total)} veces")} · ${porNumero(e.dias.size, "1 día", "${e.dias.size} días")}" })
         }
         run {
             val m = LinkedHashMap<String, Entrada>()
             Catalogo.CONTEXTOS.forEach { cx -> dias.filter { it.ctx[cx.id] == true }.forEach { d -> m.getOrPut(cx.id) { Entrada(cx.nombre, "días") }.sumar(d.fecha, 1.0) } }
-            if (m.isNotEmpty()) indices.add(Indice("contextos", "Contextos", m.values.sortedByDescending { it.total }) { e -> "${n(e.total)} días" })
+            if (m.isNotEmpty()) indices.add(Indice("contextos", "Contextos", m.values.sortedByDescending { it.total }) { e -> "${porNumero(e.total, "1 día", "${n(e.total)} días")}" })
         }
         run {
             val m = LinkedHashMap<String, Entrada>()
@@ -413,12 +415,12 @@ object Totales {
         run {
             val m = LinkedHashMap<String, Entrada>()
             Repo.chats.filter { en(it.fecha) }.forEach { ch -> m.getOrPut(ch.chat) { Entrada(ch.chat, "mensajes") }.apply { sumar(ch.fecha, (ch.mios + ch.otros).toDouble()); extra += ch.mios } }
-            if (m.isNotEmpty()) indices.add(Indice("chats", "Chats de WhatsApp", m.values.sortedByDescending { it.total }) { e -> "${n(e.total)} mensajes (${n(e.extra)} tuyos) · ${e.dias.size} días" })
+            if (m.isNotEmpty()) indices.add(Indice("chats", "Chats de WhatsApp", m.values.sortedByDescending { it.total }) { e -> "${porNumero(e.total, "1 mensaje", "${n(e.total)} mensajes")} (${n(e.extra)} tuyos) · ${porNumero(e.dias.size, "1 día", "${e.dias.size} días")}" })
         }
         run {
             val m = LinkedHashMap<String, Entrada>()
             Repo.subrayados.filter { en(it.fecha) }.forEach { s -> m.getOrPut(normal(s.libro)) { Entrada(s.libro, "subrayados") }.sumar(s.fecha!!, 1.0) }
-            if (m.isNotEmpty()) indices.add(Indice("libros", "Libros subrayados", m.values.sortedByDescending { it.total }) { e -> "${n(e.total)} subrayados" })
+            if (m.isNotEmpty()) indices.add(Indice("libros", "Libros subrayados", m.values.sortedByDescending { it.total }) { e -> "${porNumero(e.total, "1 subrayado", "${n(e.total)} subrayados")}" })
         }
         return Resultado(desde, hasta, grupos, indices)
     }

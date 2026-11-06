@@ -322,7 +322,7 @@ private fun DetalleVida(v: OtrasVidas.Vida, t: Map<String, TusNumeros.Valor>?) {
             MedallaVida(v, 92.dp, elegida = true)
             Column(Modifier.padding(start = 14.dp).weight(1f)) {
                 Text(v.nombre, style = MaterialTheme.typography.headlineSmall)
-                Text("${v.rol}, ${v.edad} años", style = MaterialTheme.typography.bodyMedium)
+                Text("${v.rol}, ${porNumero(v.edad, "1 año", "${v.edad} años")}", style = MaterialTheme.typography.bodyMedium)
                 Text("${v.lugar} · ${v.cuando}", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
                 if (v.ficticia) Text("vida de ficción · números inventados", style = MaterialTheme.typography.labelSmall, color = cs.secondary, modifier = Modifier.padding(top = 4.dp))
             }
@@ -421,7 +421,7 @@ private fun FilaComparacion(v: OtrasVidas.Vida, m: OtrasVidas.Medida, d: OtrasVi
                 texto?.let { Ayuda(it, Modifier.padding(top = 2.dp)) }
             }
         }
-        if (edad != null) Ayuda("Tú tienes ${edad.roundToInt()} años.")
+        if (edad != null) Ayuda("Tú tienes ${porNumero(edad.roundToInt(), "1 año", "${edad.roundToInt()} años")}.")
         if (abierta) {
             if (d.nota.isNotBlank()) Ayuda(d.nota, Modifier.padding(top = 4.dp))
             if (m.explica.isNotBlank()) Ayuda(m.explica, Modifier.padding(top = 2.dp))

@@ -106,7 +106,7 @@ fun PantallaSemana(nav: Nav) {
                 FilaSemana("Gasto", r.gasto.takeIf { it > 0 }, antes.gasto) { "$%,.0f".format(it) }
                 FilaSemana("Calorías al día", r.kcal, antes.kcal) { "%,.0f".format(it) }
                 FilaSemana("Entrenamientos", r.entrenos.toDouble().takeIf { it > 0 }, antes.entrenos.toDouble()) { "%.0f".format(it) }
-                Ayuda(if (transcurridos < 7) "Las flechas comparan con los mismos $transcurridos días de la semana anterior." else "Las flechas comparan con la semana anterior.", Modifier.padding(top = 4.dp))
+                Ayuda(if (transcurridos < 7) "Las flechas comparan con " + porNumero(transcurridos, "el mismo día", "los mismos $transcurridos días") + " de la semana anterior." else "Las flechas comparan con la semana anterior.", Modifier.padding(top = 4.dp))
             }
         }
 

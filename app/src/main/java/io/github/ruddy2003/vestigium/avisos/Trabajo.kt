@@ -325,6 +325,11 @@ class ArranqueReceiver : BroadcastReceiver() {
             }
             return
         }
+        // Tras encender el teléfono, el tramo de actividad que quedó abierto (por ejemplo, «en vehículo») no sigue: no se
+        // sabe cuándo se apagó, y antes se sumaba todo el rato apagado al llegar el siguiente cambio (hasta horas de más).
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == "android.intent.action.LOCKED_BOOT_COMPLETED" ||
+            intent.action == "android.intent.action.QUICKBOOT_POWERON")
+            runCatching { context.getSharedPreferences("actividad", Context.MODE_PRIVATE).edit().remove("tipo").remove("desde").apply() }
         runCatching { Geocercas.registrar(context) }
         runCatching { Actividad.registrar(context) }
         Programador.asegurar(context)

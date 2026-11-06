@@ -66,7 +66,7 @@ object Ideario {
             kotlin.math.abs(d - 30) <= HOLGURA -> "hace un mes"
             kotlin.math.abs(d - 180) <= HOLGURA -> "hace seis meses"
             d >= 365 - HOLGURA && kotlin.math.abs(d - 365 * ((d + HOLGURA) / 365)) <= HOLGURA -> ((d + HOLGURA) / 365).let { if (it == 1L) "hace un año" else "hace $it años" }
-            else -> "hace $d días"
+            else -> "hace ${porNumero(d, "1 día", "$d días")}"
         }
     }
 

@@ -279,7 +279,7 @@ internal fun Recuadro(titulo: String, detalle: String, modifier: Modifier = Modi
 @Composable
 fun RecuadroMapas(nav: Nav) {
     val r = rememberResumen("todo")
-    val detalle = r?.let { "${it.paises.size} países · ${it.ciudades.size} ciudades · ${it.sitios.size} sitios del Patrimonio Mundial" } ?: "Mundo, mapa para rascar, Patrimonio Mundial y tus lugares"
+    val detalle = r?.let { "${porNumero(it.paises.size, "1 país", "${it.paises.size} países")} · ${porNumero(it.ciudades.size, "1 ciudad", "${it.ciudades.size} ciudades")} · ${porNumero(it.sitios.size, "1 sitio", "${it.sitios.size} sitios")} del Patrimonio Mundial" } ?: "Mundo, mapa para rascar, Patrimonio Mundial y tus lugares"
     Recuadro("Mapas", detalle, alto = 168.dp, onClick = { nav.ir("mapas") }) {
         MapaRascar(r?.codigosPaises ?: emptySet(), Modifier.fillMaxSize().padding(6.dp))
     }
@@ -413,7 +413,7 @@ fun PantallaMapas(nav: Nav) {
                     TarjetaMapa("calles", "Tus calles", "Ánimo, tiempo y la ruta de un día, sobre el mapa", Modifier.weight(1f)) { nav.ir("mapa") }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    TarjetaMapa("lugares", "Lugares", "${Repo.lugares.size} lugares marcados y tu ánimo en cada uno", Modifier.weight(1f)) { nav.ir("lugares") }
+                    TarjetaMapa("lugares", "Lugares", "${porNumero(Repo.lugares.size, "1 lugar marcado", "${Repo.lugares.size} lugares marcados")} y tu ánimo en cada uno", Modifier.weight(1f)) { nav.ir("lugares") }
                     TarjetaMapa("mundo", "Ciudades visitadas", "Añade a mano las de antes de la app", Modifier.weight(1f)) { nav.ir("ciudad_nueva") }
                 }
             }
@@ -425,7 +425,7 @@ fun PantallaMapas(nav: Nav) {
                         Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(Estilo.numeral(i + 1), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.width(36.dp))
                             Text("${Mundo.bandera(e.pais)}  ${e.nombre}", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                            Text("${e.totalDias} días", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("${porNumero(e.totalDias, "1 día", "${e.totalDias} días")}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }

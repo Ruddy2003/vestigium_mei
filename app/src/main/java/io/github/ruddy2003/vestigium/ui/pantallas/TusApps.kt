@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -190,7 +192,7 @@ private fun youtube(periodo: String): List<Bloque> {
         Bloque.Meses("Videos por mes", porMes(vistos.groupingBy { mes(it.fecha) }.eachCount().mapValues { it.value.toDouble() }), "videos"),
         Bloque.Semana("Cuándo ves YouTube", semana),
         Bloque.Lista("Tus canales", canales.take(15).map { Triple(it.key, it.value.toDouble(), "${n(it.value)} videos" + if (subs.any { s -> s.canal.equals(it.key, true) }) " · suscrito" else "") }),
-        Bloque.Lista("Lo que más repetiste", repetidos.take(10).map { Triple(it.key, it.value.toDouble(), "${it.value} veces") }, "Videos que viste 3 veces o más."),
+        Bloque.Lista("Lo que más repetiste", repetidos.take(10).map { Triple(it.key, it.value.toDouble(), "${porNumero(it.value, "1 vez", "${it.value} veces")}") }, "Videos que viste 3 veces o más."),
         Bloque.Lista("Lo que más buscas", palabras.take(15).map { Triple(it.key, it.value.toDouble(), "${it.value}") }),
     ) + deCsv + listOfNotNull(
         if (subs.isNotEmpty() && sinSuscribir.isNotEmpty()) Bloque.Lista("Los ves mucho y no estás suscrito", sinSuscribir.map { Triple(it.key, it.value.toDouble(), "${n(it.value)} videos") }) else null,
@@ -223,7 +225,7 @@ private fun musica(periodo: String): List<Bloque> {
         Bloque.Meses("Horas por mes", porMes(e.groupBy { mes(it.fecha) }.mapValues { (_, l) -> l.sumOf { min(it) } / 60 }), "h"),
         Bloque.Semana("Cuándo escuchas", semana),
         Bloque.Lista("Tus artistas", artistas.take(15).map { Triple(it.key, it.value, "${n(it.value / 60)} h") }),
-        Bloque.Lista("Tus canciones", canciones.take(15).map { Triple(it.key, it.value, "${n(it.value)} veces") }),
+        Bloque.Lista("Tus canciones", canciones.take(15).map { Triple(it.key, it.value, "${porNumero(it.value, "1 vez", "${n(it.value)} veces")}") }),
         Bloque.Lista("Tus álbumes", albums.take(10).map { Triple(it.key, it.value, "${n(it.value / 60)} h") }),
         if (nuevos.isNotEmpty()) Bloque.Meses("Artistas que descubriste cada mes", porMes(nuevos), "artistas") else null,
         if (contextos.isNotEmpty()) Bloque.Partes("Desde dónde suena", contextos.map { it.key to it.value.toDouble() }) else null,
@@ -252,7 +254,7 @@ private fun comida(periodo: String): List<Bloque> {
         Bloque.Partes("De dónde vienen tus calorías", listOf("proteína" to p * 4, "carbohidratos" to c * 4, "grasa" to g * 9) + listOfNotNull(prom("alcohol_g")?.takeIf { it > 0.5 }?.let { "alcohol" to it * 7 })),
         Bloque.Linea("Calorías por semana", semanas, "kcal"),
         if (peso.size > 3) Bloque.Linea("Tu peso de tendencia", peso, "kg") else null,
-        Bloque.Lista("Lo que más comes", veces.take(15).map { Triple(it.key, it.value.toDouble(), "${it.value} veces") }),
+        Bloque.Lista("Lo que más comes", veces.take(15).map { Triple(it.key, it.value.toDouble(), "${porNumero(it.value, "1 vez", "${it.value} veces")}") }),
         Bloque.Lista("Lo que más calorías te da", porKcal.take(10).map { Triple(it.key, it.value, "${n(it.value)} kcal") }),
     ).filter { it !is Bloque.Lista || it.l.isNotEmpty() }
 }
@@ -274,7 +276,7 @@ private fun gimnasio(periodo: String): List<Bloque> {
             n(e.mapNotNull { it.minutos }.sum() / 60) to "horas entrenando", n(racha(e.map { it.fecha })) to "días seguidos (récord)")),
         Bloque.Meses("Entrenamientos por mes", porMes(e.groupingBy { mes(it.fecha) }.eachCount().mapValues { it.value.toDouble() }), "entrenos"),
         Bloque.Partes("Series por músculo", musculos.entries.sortedByDescending { it.value }.take(8).map { it.key to it.value }),
-        Bloque.Lista("Tus ejercicios", ejercicios.take(12).map { Triple(it.key, it.value, "${n(it.value)} series") }),
+        Bloque.Lista("Tus ejercicios", ejercicios.take(12).map { Triple(it.key, it.value, "${porNumero(it.value, "1 serie", "${n(it.value)} series")}") }),
         Bloque.Lista("Tus mejores marcas (1RM estimado)", mejores.take(10).map { Triple(it.key, it.value, "${d1(it.value)} kg") }, "Estimado con la fórmula de Epley a partir de tu mejor serie."),
     ).filter { it !is Bloque.Lista || it.l.isNotEmpty() }
 }

@@ -545,9 +545,11 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
 
+        <!-- Solo la abre la propia app (widgets, accesos directos, mosaicos, avisos): antes otra app podía abrirla y
+             saltarse el candado. Los accesos directos se lanzan con la identidad de la app, así que no necesita estar exportada. -->
         <activity
             android:name=".ui.QuickActivity"
-            android:exported="true"
+            android:exported="false"
             android:excludeFromRecents="true"
             android:taskAffinity=""
             android:theme="@style/Theme.Vestigium.Quick"

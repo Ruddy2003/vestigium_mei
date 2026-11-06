@@ -684,12 +684,12 @@ private fun Vestigios(fecha: String, nav: Nav) {
             if (extra.isNotEmpty()) { algo = true; ClaveDia("cibus", extra.joinToString(" · ")) }
         }
         Repo.comunicacion[fecha]?.let { co ->
-            if (co.sms_enviados + co.sms_recibidos > 0 || co.contactos > 0) { algo = true; ClaveDia("voces", (if (co.sms_enviados + co.sms_recibidos > 0) "${co.sms_enviados + co.sms_recibidos} sms · " else "") + "${co.contactos} personas") }
+            if (co.sms_enviados + co.sms_recibidos > 0 || co.contactos > 0) { algo = true; ClaveDia("voces", (if (co.sms_enviados + co.sms_recibidos > 0) "${co.sms_enviados + co.sms_recibidos} sms · " else "") + "${porNumero(co.contactos, "1 persona", "${co.contactos} personas")}") }
         }
         val wa = Repo.chats.filter { it.fecha == fecha }
         if (wa.isNotEmpty()) {
             algo = true
-            ClaveDia("whatsapp", "${wa.sumOf { it.mios }} enviados · ${wa.sumOf { it.otros }} recibidos · ${wa.size} chats")
+            ClaveDia("whatsapp", "${wa.sumOf { it.mios }} enviados · ${wa.sumOf { it.otros }} recibidos · ${porNumero(wa.size, "1 chat", "${wa.size} chats")}")
         }
         Repo.conexiones[fecha]?.let { cx ->
             algo = true
@@ -703,7 +703,7 @@ private fun Vestigios(fecha: String, nav: Nav) {
         }
         Repo.huellas[fecha]?.let { h -> algo = true; ClaveDia("google", "${h.yt_vistos} videos · ${h.busquedas + h.yt_busquedas} búsquedas" + (h.canales.keys.firstOrNull()?.let { " · más: $it" } ?: "")) }
         val sub = Repo.subrayados.filter { it.fecha == fecha }
-        if (sub.isNotEmpty()) { algo = true; ClaveDia("lectio", "${sub.size} subrayados · " + sub.map { it.libro }.distinct().take(2).joinToString(", ")) }
+        if (sub.isNotEmpty()) { algo = true; ClaveDia("lectio", "${porNumero(sub.size, "1 subrayado", "${sub.size} subrayados")} · " + sub.map { it.libro }.distinct().take(2).joinToString(", ")) }
         val ruidos = Repo.momentos.filter { it.fecha == fecha && !it.privado }.mapNotNull { it.ruido_db }
         if (ruidos.isNotEmpty()) ClaveDia("strepitus", "%.0f dB de media al registrar".format(ruidos.average()))
         // Lo que leíste, viste o jugaste; si lo terminaste ese día, tu calificación y lo que opinaste.

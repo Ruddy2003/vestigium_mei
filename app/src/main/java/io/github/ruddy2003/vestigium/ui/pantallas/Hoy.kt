@@ -134,7 +134,7 @@ object Pendientes {
         val faltan = io.github.ruddy2003.vestigium.data.AvisosAnimo.sinContestar().size
         if (faltan > 0) l += Pendiente("p:aviso", if (faltan == 1) "1 aviso de ánimo sin contestar" else "$faltan avisos de ánimo sin contestar", "aviso")
         if (!ignorado("p:escalas")) Escalas.pendientes().firstOrNull()?.let { (ins, atraso) ->
-            l += Pendiente("p:escalas", if (atraso > 0) "${ins.nombre}: ${atraso} días de atraso" else "${ins.nombre} toca hoy", "escalas")
+            l += Pendiente("p:escalas", if (atraso > 0) "${ins.nombre}: ${porNumero(atraso, "1 día", "${atraso} días")} de atraso" else "${ins.nombre} toca hoy", "escalas")
         }
         // La prueba de reacción, una vez al día (desde las 8, para no medir el cerebro recién despierto).
         if (ahora.hour >= 8 && Repo.reacciones.none { it.fecha == hoy } && !ignorado("p:reaccion")) l += Pendiente("p:reaccion", "Prueba de reacción", "reaccion")
@@ -267,7 +267,7 @@ object Faltas {
         if (Spotify.conectado(ctx) && System.currentTimeMillis() - Spotify.ultimo(ctx) > 2 * 3_600_000L) {
             val u = Spotify.ultimo(ctx)
             l += Falta("spotify", "Spotify sin leer desde " + (if (u > 0) Fechas.horaDe(Fechas.isoDeMillis(u)) else "que lo conectaste") + (Spotify.error(ctx)?.let { ". $it" } ?: "."), "leer ahora") { x ->
-                "Spotify: ${Spotify.sincronizar(x)} canciones nuevas."
+                Spotify.sincronizar(x).let { k -> "Spotify: ${porNumero(k, "1 canción nueva", "$k canciones nuevas")}." }
             }
         }
         // Lo que no se pudo leer al abrir la app.
@@ -275,7 +275,7 @@ object Faltas {
             l += Falta("config_ilegible", "Tus ajustes no se pudieron leer al abrir la app y quedaron como nuevos. Guardé el original aparte (${Fechas.corto(ts.take(10))}); para recuperar hábitos, personas y perfil, restaura un respaldo.", "datos") { null }
         }
         Repo.ilegibles.values.sum().takeIf { it > 0 }?.let { n ->
-            l += Falta("ilegibles", "$n registros guardados no se pudieron leer. Mira de qué tipo en Estado de los datos.", "estado") { null }
+            l += Falta("ilegibles", "${porNumero(n, "1 registro guardado", "$n registros guardados")} no se pudieron leer. Mira de qué tipo en Estado de los datos.", "estado") { null }
         }
         val respaldo = listOfNotNull(c.respaldo_ultimo?.takeIf { c.carpeta_respaldo != null }, c.drive_ultimo?.takeIf { c.drive }).maxOrNull()
         if ((c.carpeta_respaldo != null || c.drive) && io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx))
@@ -289,7 +289,7 @@ object Faltas {
             }
         Repo.nutricion.keys.maxOrNull()?.let { u ->
             val dias = java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(u), Fechas.parse(hoy))
-            if (dias > 10) l += Falta("macrofactor", "Hace $dias días que no importas MacroFactor.", "datos") { null }
+            if (dias > 10) l += Falta("macrofactor", "Hace ${porNumero(dias, "1 día", "$dias días")} que no importas MacroFactor.", "datos") { null }
         }
         l.filter { f -> val i = c.avisos_ignorados[f.clave]; i != "siempre" && i != hoy }
     }

@@ -208,7 +208,8 @@ fun PantallaGastos(nav: Nav? = null) {
         else {
             Box(Modifier.padding(top = 12.dp)) { Tarjeta { GastoPorDia(mes, items) } }
             val porCat = items.groupBy { it.categoria }.mapValues { e -> e.value.sumOf { it.monto } }.entries.sortedByDescending { it.value }
-            val max = porCat.first().value
+            // Un mes que suma 0 (gastos en cero o devoluciones) daba barras de ancho NaN y cerraba la pantalla.
+            val max = porCat.first().value.takeIf { it > 0 } ?: 1.0
             val eg = estiloGrafica()
             val barraCat = MaterialTheme.colorScheme.primary
             val cifrasCat = estiloCifras(MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp))
@@ -220,7 +221,7 @@ fun PantallaGastos(nav: Nav? = null) {
                         Row(Modifier.fillMaxWidth().clickable(enabled = porSub.isNotEmpty()) { abiertaCat = if (abiertaCat == c) null else c }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(c + if (porSub.isNotEmpty()) (if (abiertaCat == c) " ▾" else " ▸") else "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(100.dp))
                             Box(Modifier.weight(1f)) {
-                                Canvas(Modifier.fillMaxWidth((v / max).toFloat().coerceAtLeast(0.03f)).height(9.dp)) { barraGrafica(eg, Offset.Zero, size, barraCat, horizontal = true) }
+                                Canvas(Modifier.fillMaxWidth((v / max).toFloat().takeIf { !it.isNaN() }?.coerceIn(0.03f, 1f) ?: 0.03f).height(9.dp)) { barraGrafica(eg, Offset.Zero, size, barraCat, horizontal = true) }
                             }
                             Text(dinero(v), style = cifrasCat, modifier = Modifier.width(80.dp), textAlign = TextAlign.End)
                         }
@@ -519,5 +520,5 @@ private fun GastoPorDia(mes: String, items: List<Gasto>) {
         }
     }
     val top = porDia.indices.maxBy { porDia[it] }
-    Ayuda("Día más alto: el ${top + 1} con ${dinero(porDia[top])} · gastaste en $diasConGasto de $dias días · en rojo, imprevistos.")
+    Ayuda("Día más alto: el ${top + 1} con ${dinero(porDia[top])} · gastaste en $diasConGasto de ${porNumero(dias, "1 día", "$dias días")} · en rojo, imprevistos.")
 }

@@ -181,7 +181,7 @@ object Importar {
             val avisoSaltados = saltados.filterValues { it > 0 }.takeIf { it.isNotEmpty() }?.let { m ->
                 " No se pudieron leer y se saltaron: " + m.entries.joinToString(", ") { (k, v) -> if (k == "config") "los ajustes" else "%,d de «%s»".format(v, k) } + "."
             }.orEmpty()
-            return ResultadoImport("Respaldo importado: $n días nuevos, ${r.momentos.size} momentos, ${r.gastos.size} gastos y ${r.visitas.size} visitas revisados" +
+            return ResultadoImport("Respaldo importado: ${porNumero(n, "1 día nuevo", "$n días nuevos")}, ${porNumero(r.momentos.size, "1 momento", "${r.momentos.size} momentos")}, ${porNumero(r.gastos.size, "1 gasto", "${r.gastos.size} gastos")} y ${porNumero(r.visitas.size, "1 visita", "${r.visitas.size} visitas")} revisados" +
                 (if (nuevo) "; también tus ajustes, Conocerte, la brújula y el mapa." else if ("config" in saltados) "." else "; tus ajustes se combinaron con los de aquí.") + avisoSaltados)
     }
 
@@ -202,7 +202,7 @@ object Importar {
         } ?: emptyList()
         val eq = (raiz["equivalencias"] as? JsonObject)?.mapNotNull { (k, v) -> v.str()?.let { k to it } }?.toMap() ?: emptyMap()
         Repo.cambiarConfig { c -> c.copy(habitos = (c.habitos + habitos).distinctBy { it.id }, equivalencias = eq + c.equivalencias) }
-        return ResultadoImport("Importé $n días nuevos y ${gastos.size} gastos de la versión web. Los días que ya existían no se tocaron.")
+        return ResultadoImport("Importé ${porNumero(n, "1 día nuevo", "$n días nuevos")} y ${porNumero(gastos.size, "1 gasto", "${gastos.size} gastos")} de la versión web. Los días que ya existían no se tocaron.")
     }
 
     /**
@@ -276,7 +276,7 @@ object Importar {
             if (d != null) dias.add(d) else fallas.add(nombre.substringAfterLast('/'))
         }
         val n = Repo.importarDias(dias, sobrescribir = false)
-        return ResultadoImport("Leí ${dias.size} nota(s); importé $n días nuevos." + if (fallas.isNotEmpty()) " No pude leer: ${fallas.joinToString(", ")}." else "")
+        return ResultadoImport("Leí ${dias.size} nota(s); importé ${porNumero(n, "1 día nuevo", "$n días nuevos")}." + if (fallas.isNotEmpty()) " No pude leer: ${fallas.joinToString(", ")}." else "")
     }
 
     /** YAML mínimo del encabezado de Obsidian: clave: valor, listas con guiones, bloques | y comillas. */
@@ -413,6 +413,6 @@ object Importar {
             }
         }
         Mundo.invalidar()
-        return ResultadoImport("Importé $puntos puntos de ubicación de tu Cronología ($visitas visitas a lugares).")
+        return ResultadoImport("Importé $puntos puntos de ubicación de tu Cronología (${porNumero(visitas, "1 visita", "$visitas visitas")} a lugares).")
     }
 }

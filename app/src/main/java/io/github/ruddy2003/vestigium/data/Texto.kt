@@ -60,3 +60,9 @@ object Texto {
     fun reemplazar(texto: String, simbolo: Char, de: String, a: String): String =
         Regex(Regex.escape("$simbolo$de") + "(?![\\p{L}\\p{N}_])", RegexOption.IGNORE_CASE).replace(texto, "$simbolo$a")
 }
+
+/**
+ * La frase con la cifra en singular o en plural: `porNumero(n, "1 día seguido", "$n días seguidos")`. Antes muchas
+ * pantallas decían «1 días» o «1 sesiones». Cuenta como uno solo el 1 exacto (1, 1L o 1.0).
+ */
+fun porNumero(n: Number, uno: String, varios: String): String = if (n.toDouble() == 1.0) uno else varios

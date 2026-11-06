@@ -146,7 +146,7 @@ fun PantallaPermisos(nav: Nav) {
                 }
                 if (hc.isNotEmpty() && !hc.containsAll(Salud.PERMISOS.filter { it.startsWith("android.permission.health.READ_") && !it.endsWith("BACKGROUND") && !it.endsWith("HISTORY") && !it.endsWith("SKIN_TEMPERATURE") }))
                     TextButton(onClick = { salud.launch(Salud.PERMISOS) }) { Text("+ conceder los permisos nuevos", style = MaterialTheme.typography.labelLarge) }
-                if (hc.isNotEmpty()) TextButton(onClick = { scope.launch { val n = Salud.sincronizar(ctx, 30); android.widget.Toast.makeText(ctx, "Sincronicé $n días", android.widget.Toast.LENGTH_SHORT).show() } }) { Text("↻ sincronizar los últimos 30 días", style = MaterialTheme.typography.labelLarge) }
+                if (hc.isNotEmpty()) TextButton(onClick = { scope.launch { val n = Salud.sincronizar(ctx, 30); android.widget.Toast.makeText(ctx, "Sincronicé ${porNumero(n, "1 día", "$n días")}", android.widget.Toast.LENGTH_SHORT).show() } }) { Text("↻ sincronizar los últimos 30 días", style = MaterialTheme.typography.labelLarge) }
                 HorizontalDivider()
                 Estado("Movimiento", Actividad.tienePermiso(ctx), "Minutos a pie, en bici, en vehículo o quieto, detectados por el teléfono. Casi no gasta batería.") {
                     movimiento.launch(Manifest.permission.ACTIVITY_RECOGNITION)
@@ -209,7 +209,7 @@ fun PantallaPermisos(nav: Nav) {
                 Interruptor("Clima, luz y aire", Repo.config.clima, "Temperatura, lluvia, nubes, horas de luz, presión y calidad del aire de donde estuviste, de Open-Meteo (gratis, sin cuenta). Solo se envía tu zona aproximada (~1 km).") { v ->
                     Repo.cambiarConfig { it.copy(clima = v) }
                 }
-                if (Repo.config.clima) TextButton(onClick = { scope.launch { val n = withContext(Dispatchers.IO) { runCatching { Entorno.sincronizar(ctx, 20) }.getOrDefault(0) }; msgSync = if (n > 0) "Clima de $n días." else "No pude traer el clima (¿hay internet y alguna ubicación guardada?)." } }) {
+                if (Repo.config.clima) TextButton(onClick = { scope.launch { val n = withContext(Dispatchers.IO) { runCatching { Entorno.sincronizar(ctx, 20) }.getOrDefault(0) }; msgSync = if (n > 0) "Clima de ${porNumero(n, "1 día", "$n días")}." else "No pude traer el clima (¿hay internet y alguna ubicación guardada?)." } }) {
                     Text("↻ traer clima de los días con registro", style = MaterialTheme.typography.labelLarge)
                 }
             }
@@ -671,11 +671,11 @@ fun PantallaDatos(nav: Nav) {
             Tarjeta {
                 OutlinedButton(onClick = { macrofactor.launch(arrayOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("MacroFactor · nutrición y Workouts (.xlsx)") }
                 Ayuda("En MacroFactor: Más → Data Management → Data Export. Elige el periodo e incluye nutrición y Workouts. Al reimportar, las fechas del archivo se reemplazan.")
-                if (Repo.nutricion.isNotEmpty() || Repo.entrenos.isNotEmpty()) Clave("macrofactor", "${Repo.nutricion.size} días de nutrición · ${Repo.entrenos.values.count { it.series > 0 }} entrenos" +
+                if (Repo.nutricion.isNotEmpty() || Repo.entrenos.isNotEmpty()) Clave("macrofactor", "${porNumero(Repo.nutricion.size, "1 día", "${Repo.nutricion.size} días")} de nutrición · ${Repo.entrenos.values.count { it.series > 0 }} entrenos" +
                     (Repo.nutricion.keys.maxOrNull()?.let { " · hasta $it" } ?: ""))
                 OutlinedButton(onClick = { coldturkey.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Cold Turkey · laptop (los dos .csv)") }
                 Ayuda("En Cold Turkey: Statistics → Export. Elige el CSV de apps y el de sitios (los dos a la vez). Reimportar un día lo reemplaza." +
-                    if (Repo.laptop.isNotEmpty()) " Tienes ${Repo.laptop.size} días, hasta ${Repo.laptop.keys.max()}." else "")
+                    if (Repo.laptop.isNotEmpty()) " Tienes ${porNumero(Repo.laptop.size, "1 día", "${Repo.laptop.size} días")}, hasta ${Repo.laptop.keys.max()}." else "")
                 OutlinedButton(onClick = { spotify.launch(arrayOf("application/json", "application/zip", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Spotify · historial de reproducción") }
                 Ayuda("spotify.com → Cuenta → Privacidad → Descargar tus datos → «Historial de reproducción ampliado». Tarda unos días; llega un .zip: elígelo completo o los Streaming_History…json.")
                 OutlinedButton(onClick = { kindle.launch(arrayOf("text/plain", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Kindle · subrayados (My Clippings.txt)") }
@@ -691,11 +691,11 @@ fun PantallaDatos(nav: Nav) {
                 if (nMusica > 0 || Repo.subrayados.isNotEmpty() || Repo.huellas.isNotEmpty() || Repo.chats.isNotEmpty() || Repo.youtube.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
                     if (nMusica > 0) Clave("musica", "$nMusica reproducciones")
-                    if (Repo.subrayados.isNotEmpty()) Clave("kindle", "${Repo.subrayados.size} subrayados de ${Repo.subrayados.map { it.libro }.distinct().size} libros")
-                    if (Repo.huellas.isNotEmpty()) Clave("google", "${Repo.huellas.size} días · ${Repo.huellas.values.sumOf { it.yt_vistos }} videos")
+                    if (Repo.subrayados.isNotEmpty()) Clave("kindle", "${porNumero(Repo.subrayados.size, "1 subrayado", "${Repo.subrayados.size} subrayados")} de ${Repo.subrayados.map { it.libro }.distinct().size} libros")
+                    if (Repo.huellas.isNotEmpty()) Clave("google", "${porNumero(Repo.huellas.size, "1 día", "${Repo.huellas.size} días")} · ${Repo.huellas.values.sumOf { it.yt_vistos }} videos")
                     if (Repo.youtube.isNotEmpty()) Clave("youtube", Repo.youtube.groupingBy { it.tipo }.eachCount().let { c ->
                         listOfNotNull(c["suscripcion"]?.let { "$it suscripciones" }, c["megusta"]?.let { "$it me gusta" }, c["comentario"]?.let { "$it comentarios" }).joinToString(" · ") })
-                    if (Repo.chats.isNotEmpty()) Clave("whatsapp", "${Repo.chats.map { it.chat }.distinct().size} chats · ${Repo.chats.size} días")
+                    if (Repo.chats.isNotEmpty()) Clave("whatsapp", "${Repo.chats.map { it.chat }.distinct().size} chats · ${porNumero(Repo.chats.size, "1 día", "${Repo.chats.size} días")}")
                 }
             }
         }
@@ -706,10 +706,10 @@ fun PantallaDatos(nav: Nav) {
         Seccion("Resumen") {
             Tarjeta {
                 Clave("dies", "${Repo.dias.size}"); Clave("momenta", "${Repo.momentos.size}"); Clave("svmptvs", "${Repo.gastos.size}")
-                Clave("quaestiones", "${Repo.respuestas.size}"); Clave("celeritas", "${Repo.reacciones.size}"); Clave("corpus", "${Repo.salud.size} días")
-                Clave("telephonum", "${Repo.pantalla.size} días"); Clave("caelum", "${Repo.entorno.size} días"); Clave("imagines", "${Repo.fotos.size} días")
-                Clave("fasti", "${Repo.agenda.size} días"); Clave("monita", "${Repo.notifs.size} días"); Clave("ascensvs", "${Repo.ascensos.size} sesiones")
-                Clave("bibliotheca", "${Repo.obras.size} obras"); Clave("loca", "${Repo.lugares.size} · ${Repo.visitas.size} visitas")
+                Clave("quaestiones", "${Repo.respuestas.size}"); Clave("celeritas", "${Repo.reacciones.size}"); Clave("corpus", "${porNumero(Repo.salud.size, "1 día", "${Repo.salud.size} días")}")
+                Clave("telephonum", "${porNumero(Repo.pantalla.size, "1 día", "${Repo.pantalla.size} días")}"); Clave("caelum", "${porNumero(Repo.entorno.size, "1 día", "${Repo.entorno.size} días")}"); Clave("imagines", "${porNumero(Repo.fotos.size, "1 día", "${Repo.fotos.size} días")}")
+                Clave("fasti", "${porNumero(Repo.agenda.size, "1 día", "${Repo.agenda.size} días")}"); Clave("monita", "${porNumero(Repo.notifs.size, "1 día", "${Repo.notifs.size} días")}"); Clave("ascensvs", "${porNumero(Repo.ascensos.size, "1 sesión", "${Repo.ascensos.size} sesiones")}")
+                Clave("bibliotheca", "${porNumero(Repo.obras.size, "1 obra", "${Repo.obras.size} obras")}"); Clave("loca", "${Repo.lugares.size} · ${porNumero(Repo.visitas.size, "1 visita", "${Repo.visitas.size} visitas")}")
                 Repo.config.ultimo_sync?.let { Clave("synchronia", "${Fechas.horaDe(it)} del ${it.take(10)}") }
             }
         }
@@ -750,7 +750,7 @@ private fun RecordatoriosImportacion(importar: (String) -> Unit) {
                     Text(when {
                         !f.activa -> f.que
                         apagada -> "sin recordatorio"
-                        else -> (hace?.let { if (it == 0L) "importado hoy" else "hace $it días" } ?: "nunca importado") + " · cada ${if (f.cada >= 28) "mes" else "${f.cada} días"}" +
+                        else -> (hace?.let { if (it == 0L) "importado hoy" else "hace ${porNumero(it, "1 día", "$it días")}" } ?: "nunca importado") + " · cada ${if (f.cada >= 28) "mes" else "${porNumero(f.cada, "1 día", "${f.cada} días")}"}" +
                             (R.pospuesta(f.id, hoy)?.let { " · pospuesto al ${Fechas.corto(it)}" } ?: "")
                     }, style = MaterialTheme.typography.bodySmall, color = if (f.activa && !apagada && R.toca(f, hoy)) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -844,13 +844,13 @@ private fun SpotifyTarjeta(tarea: (suspend () -> String) -> Unit) {
     }
     Tarjeta {
         if (conectado) {
-            Clave("estado", "conectado · $n canciones por esta vía", ancho = 8)
+            Clave("estado", "conectado · ${porNumero(n, "1 canción", "$n canciones")} por esta vía", ancho = 8)
             val u = remember(version) { Spotify.ultimo(ctx) }
             Clave("lectura", if (u > 0) Fechas.isoDeMillis(u).let { "${Fechas.horaDe(it)} del ${it.take(10)}" } else "aún no", ancho = 8)
             remember(version) { Spotify.error(ctx) }?.let { Aviso(it) }
             Ayuda("Se lee sola cada media hora. Spotify solo guarda tus últimas 50 canciones: si el teléfono pasa apagado una tarde entera de música, esas se pierden (el historial importado las recupera).", Modifier.padding(top = 6.dp))
             Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BotonSecundario("leer ahora") { tarea { "Spotify: ${Spotify.sincronizar(ctx)} canciones nuevas." } }
+                BotonSecundario("leer ahora") { tarea { Spotify.sincronizar(ctx).let { k -> "Spotify: ${porNumero(k, "1 canción nueva", "$k canciones nuevas")}." } } }
                 BotonSecundario("desconectar") { Spotify.desconectar(ctx) }
             }
         } else {

@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.reportes
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -75,10 +77,10 @@ object ReporteTerapia {
 
     private fun dibujar(p: Pdf, d: Terapia.Datos) {
         val op = d.op
-        val anteriores = "${d.n} días"
+        val anteriores = "${porNumero(d.n, "1 día", "${d.n} días")}"
         p.encabezado(
             "Reporte para terapia",
-            "Últimos ${d.n} días: del ${Fechas.larga(op.ini)} al ${Fechas.larga(op.fin)}",
+            "Últimos ${porNumero(d.n, "1 día", "${d.n} días")}: del ${Fechas.larga(op.ini)} al ${Fechas.larga(op.fin)}",
             "Autorregistro hecho con Vestigium Mei. Describe lo que anoté y lo que midió el teléfono; no es un instrumento diagnóstico. " +
                 "El ánimo y la energía van de 1 a 7 (4 = neutral). Un guion (—) es un dato que no hay.",
         )

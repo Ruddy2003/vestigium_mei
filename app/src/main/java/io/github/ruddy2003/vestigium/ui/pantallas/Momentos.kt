@@ -70,6 +70,8 @@ fun PantallaMomentos(nav: Nav) {
 
     // «Todos tus registros» (N-25): la lista editable de 30 días, con filtro por día. Lo privado no sale aquí.
     var dia by remember { mutableStateOf<String?>(null) }
+    // Se muestran de 200 en 200; antes, los que pasaban de 200 no se veían y no había cómo llegar a ellos.
+    var mostrar by remember { mutableStateOf(200) }
     Hoja("Todos tus registros", nav.atras, subtitulo = "Tus registros de ánimo de los últimos 30 días. Toca uno para cambiar lo que sentías, su hora o su día, o para borrarlo.") {
         if (!conUbicacion) Aviso("Sin permiso de ubicación, los registros se guardan sin lugar. Actívalo en Más → Permisos y sensores.")
         BotonAnimo(Modifier.padding(top = 14.dp)) { abrir(QuickActivity.M_ANIMO) }
@@ -81,10 +83,10 @@ fun PantallaMomentos(nav: Nav) {
             dias.forEach { f -> io.github.ruddy2003.vestigium.ui.Ficha(Fechas.corto(f), dia == f) { dia = if (dia == f) null else f } }
         }
         val recientes = todos.filter { dia == null || it.fecha == dia }
-        Seccion("Últimos 30 días", "${recientes.size} registros. Toca uno para editarlo.") {
+        Seccion("Últimos 30 días", "${porNumero(recientes.size, "1 registro", "${recientes.size} registros")}. Toca uno para editarlo.") {
             if (recientes.isEmpty()) Vacio("Todavía no hay registros. Toca «¿Cómo estás ahora?» cuando algo te pase por la cabeza.")
             var ultimoDia = ""
-            recientes.take(200).forEach { m ->
+            recientes.take(mostrar).forEach { m ->
                 if (m.fecha != ultimoDia) {
                     ultimoDia = m.fecha
                     Text(Fechas.corto(m.fecha).uppercase(), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp, bottom = 4.dp))
@@ -103,6 +105,7 @@ fun PantallaMomentos(nav: Nav) {
                     }
                 }
             }
+            if (recientes.size > mostrar) io.github.ruddy2003.vestigium.ui.BotonSecundario("ver ${porNumero(minOf(200, recientes.size - mostrar), "1 registro", "${minOf(200, recientes.size - mostrar)} registros")} más", Modifier.padding(top = 8.dp)) { mostrar += 200 }
         }
     }
 

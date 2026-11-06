@@ -134,7 +134,7 @@ fun PantallaDiario(nav: Nav) {
         // Las cinco bibliotecas, cada una con su objeto: el estante del diario, la libreta de momentos, el estante de sueños de
         // noche, el fichero del Ideario y las cartas. Cada una tiene su puerta para entrar.
         val ultimas = remember(Repo.dias) { LibroDiario.entradas().take(9) }
-        Seccion("Biblioteca del diario", "${Repo.dias.values.count { it.nota.isNotBlank() }} entradas · %,d palabras".format(palabras)) {
+        Seccion("Biblioteca del diario", Repo.dias.values.count { it.nota.isNotBlank() }.let { n -> porNumero(n, "1 entrada", "$n entradas") } + " · %,d palabras".format(palabras)) {
             if (ultimas.isEmpty()) Vacio("Aquí se irán guardando tus entradas.")
             else io.github.ruddy2003.vestigium.ui.EstanteDiario(ultimas) { f -> Seleccion.entrada = f; nav.ir("entrada") }
             BotonSecundario("entrar a la biblioteca del diario →", Modifier.fillMaxWidth().padding(top = 10.dp)) { nav.ir("biblioteca_diario") }
@@ -157,7 +157,7 @@ fun PantallaDiario(nav: Nav) {
             else io.github.ruddy2003.vestigium.ui.CieloNoche { io.github.ruddy2003.vestigium.ui.EstanteDiario(suenos, noche = true) { f -> Seleccion.sueno = f; nav.ir("sueno") } }
             BotonSecundario("entrar a la biblioteca de sueños →", Modifier.fillMaxWidth().padding(top = 10.dp)) { nav.ir("biblioteca_suenos") }
         }
-        Seccion("Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste y pensaste, un cajón por tema." else "${Repo.ideas.size} ideas · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas") {
+        Seccion("Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste y pensaste, un cajón por tema." else "${porNumero(Repo.ideas.size, "1 idea", "${Repo.ideas.size} ideas")} · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas") {
             if (Repo.ideas.isEmpty()) Vacio("Anota una idea y ponle un tema: cada tema es un cajón del fichero.")
             else FicheroIdeas(nav, Repo.ideas, max = 6)
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -178,7 +178,7 @@ fun PantallaDiario(nav: Nav) {
         }
         // La línea de tiempo y la exportación empiezan plegadas, y se vuelven a plegar al cerrar la app o al cambiar de día.
         Seccion("Línea de tiempo", "Entradas, momentos y sueños, día por día, con buscador y filtros.", autoPlegar = true) { Column {
-        Text("${visiblesM.size} registros de ánimo y momentos", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+        Text("${porNumero(visiblesM.size, "1 registro", "${visiblesM.size} registros")} de ánimo y momentos", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         OutlinedTextField(busca, { busca = it; mostrar = 30 }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
             placeholder = { Text("buscar en tu diario, @personas, #temas", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
         FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -203,10 +203,10 @@ fun PantallaDiario(nav: Nav) {
             TarjetaDiaDiario(f, Repo.dias[f], porDia[f].orEmpty(), tipo, discreto,
                 abrirDia = { Seleccion.abrir(nav, f) }, abrirEntrada = { Seleccion.entrada = f; nav.ir("entrada") }, editar = { editando = it })
         }
-        if (visibles.size > mostrar) BotonSecundario("ver ${minOf(30, visibles.size - mostrar)} días más", Modifier.padding(top = 8.dp)) { mostrar += 30 }
+        if (visibles.size > mostrar) BotonSecundario("ver ${porNumero(minOf(30, visibles.size - mostrar), "1 día", "${minOf(30, visibles.size - mostrar)} días")} más", Modifier.padding(top = 8.dp)) { mostrar += 30 }
         } }
 
-        Seccion("Exportar", "Las ${entradas.size} entradas de lo que estás viendo. El PDF y el HTML llevan el diseño del tema; el de Obsidian es una nota por día con sus datos.",
+        Seccion("Exportar", porNumero(entradas.size, "La entrada", "Las ${entradas.size} entradas") + " de lo que estás viendo. El PDF y el HTML llevan el diseño del tema; el de Obsidian es una nota por día con sus datos.",
             autoPlegar = true) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 BotonSecundario("PDF", habilitado = entradas.isNotEmpty()) { exportar("pdf", { LibroDiario.pdf(ctx, entradas) }, "application/pdf") }
@@ -250,7 +250,7 @@ private fun TarjetaDiaDiario(f: String, d: Dia?, ms: List<io.github.ruddy2003.ve
             Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
                 Row(Modifier.fillMaxWidth().clickable(onClick = abrirDia), verticalAlignment = Alignment.CenterVertically) {
                     Text(Fechas.titulo(f), style = MaterialTheme.typography.labelLarge, color = cs.primary, modifier = Modifier.weight(1f))
-                    Text(listOfNotNull(d?.nota?.takeIf { it.isNotBlank() }?.let { "${Texto.palabras(it)} palabras" }, d?.valencia?.let { "$it/7" }).joinToString(" · "),
+                    Text(listOfNotNull(d?.nota?.takeIf { it.isNotBlank() }?.let { "${porNumero(Texto.palabras(it), "1 palabra", "${Texto.palabras(it)} palabras")}" }, d?.valencia?.let { "$it/7" }).joinToString(" · "),
                         style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
                 }
                 if (tipo != "momentos" && tipo != "suenos" && d != null && d.nota.isNotBlank())
@@ -268,7 +268,7 @@ private fun TarjetaDiaDiario(f: String, d: Dia?, ms: List<io.github.ruddy2003.ve
                                 (if (m.texto.isNotBlank()) " — ${m.texto}" else ""), style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                     }
-                    if (ms.size > 8) Text("+${ms.size - 8} momentos más", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+                    if (ms.size > 8) Text("+${porNumero(ms.size - 8, "1 momento", "${ms.size - 8} momentos")} más", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
                 }
             }
         }
@@ -286,7 +286,7 @@ private fun FichaEntrada(d: Dia, abrir: () -> Unit) {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(Fechas.titulo(d.fecha), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
-                    Text("${Texto.palabras(d.nota)} palabras" + (d.valencia?.let { " · $it/7" } ?: ""), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${porNumero(Texto.palabras(d.nota), "1 palabra", "${Texto.palabras(d.nota)} palabras")}" + (d.valencia?.let { " · $it/7" } ?: ""), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 io.github.ruddy2003.vestigium.ui.TextoMarcado(d.nota.trim(), style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp))
             }

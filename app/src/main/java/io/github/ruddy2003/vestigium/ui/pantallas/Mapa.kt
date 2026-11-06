@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.privado
 import android.graphics.Canvas
 import android.graphics.ColorMatrix
@@ -1415,12 +1417,12 @@ private fun Leyenda(capa: String, oscuro: Boolean, n: Int, ubic: Int, calor: Pai
             else -> {}
         }
         Text(when (capa) {
-            "animo" -> "$n momentos con lugar, coloreados por cómo te sentías"
+            "animo" -> "${porNumero(n, "1 momento", "$n momentos")} con lugar, coloreados por cómo te sentías"
             "calor" -> tocada?.let { "Aquí: ≈ ${duracion(it.horas)} en el periodo. Toca otro punto para comparar." }
                 ?: calor?.let { (c, np) -> "≈ ${duracion(c.sumOf { it.horas })} estimadas a partir de $np ubicaciones · escala logarítmica: el color sube igual de 1 a 10 h que de 10 a 100 h · toca un punto para ver sus horas" }
                 ?: "Calculando…"
             "ruta" -> "$ubic puntos del día"
-            else -> "${Repo.lugares.size} lugares marcados"
+            else -> "${porNumero(Repo.lugares.size, "1 lugar marcado", "${Repo.lugares.size} lugares marcados")}"
         }, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
     }
 }

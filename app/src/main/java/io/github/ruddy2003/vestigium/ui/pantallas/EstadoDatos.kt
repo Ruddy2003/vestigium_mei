@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -60,7 +62,7 @@ object EstadoDatos {
         fecha == null -> "nunca"
         fecha >= hoy -> "hoy"
         fecha == Fechas.sumar(hoy, -1) -> "ayer"
-        else -> "hace ${Fechas.diasEntre(fecha, hoy)} días"
+        else -> "hace ${porNumero(Fechas.diasEntre(fecha, hoy), "1 día", "${Fechas.diasEntre(fecha, hoy)} días")}"
     }
 
     private fun por(fecha: String?, hoy: String, tolerancia: Int = 1): Salud3 =
@@ -103,7 +105,7 @@ object EstadoDatos {
                 val u = runCatching { Repo.db().ultimaUbicacion() }.getOrNull()
                 val horas = u?.let { (System.currentTimeMillis() - it) / 3_600_000.0 }
                 Fuente("Ubicación", if (horas != null && horas < 3) Salud3.BIEN else Salud3.ATRASADA,
-                    if (u == null) "sin muestras todavía" else "última muestra a las ${Fechas.horaDe(Fechas.isoDeMillis(u))}" + if (horas != null && horas >= 24) " (hace ${(horas / 24).toInt()} días)" else "",
+                    if (u == null) "sin muestras todavía" else "última muestra a las ${Fechas.horaDe(Fechas.isoDeMillis(u))}" + if (horas != null && horas >= 24) " (hace ${porNumero((horas / 24).toInt(), "1 día", "${(horas / 24).toInt()} días")})" else "",
                     if (!Ubicacion.tieneSegundoPlano(ctx)) "permisos" else null)
             }
         }
@@ -129,7 +131,7 @@ object EstadoDatos {
         R.FUENTES.filter { it.activa }.forEach { f ->
             val hace = R.hace(f.id, hoy)
             val estado = when { R.apagada(f.id) -> Salud3.APAGADA; hace == null -> Salud3.ATRASADA; hace <= f.cada -> Salud3.BIEN; else -> Salud3.ATRASADA }
-            l += Fuente(f.nombre, estado, (hace?.let { if (it == 0L) "importado hoy" else "importado hace $it días" } ?: "nunca importado") + " · toca cada ${if (f.cada >= 28) "mes" else "${f.cada} días"}", "datos")
+            l += Fuente(f.nombre, estado, (hace?.let { if (it == 0L) "importado hoy" else "importado hace ${porNumero(it, "1 día", "$it días")}" } ?: "nunca importado") + " · toca cada ${if (f.cada >= 28) "mes" else "${porNumero(f.cada, "1 día", "${f.cada} días")}"}", "datos")
         }
         // Respaldos.
         val respaldo = listOfNotNull(c.respaldo_ultimo?.takeIf { c.carpeta_respaldo != null }, c.drive_ultimo?.takeIf { c.drive }).maxOrNull()

@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import androidx.compose.foundation.Canvas
 import kotlin.math.roundToInt
 import androidx.compose.ui.text.style.TextOverflow
@@ -98,7 +100,7 @@ internal fun LibrosDelAnio(anio: Int, tema: TemaId = Estilo.tema) {
         for (m in 1..12) Text(usar[m - 1], style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant,
             modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 1, softWrap = false)
     }
-    Ayuda("Cada libro = ${miles(unidad)} palabras. El mes más escrito: ${Estilo.mes(porMes.indexOfFirst { it == maximo } + 1)} (${miles(maximo.toLong())}).", Modifier.padding(top = 6.dp))
+    Ayuda("Cada libro = ${porNumero(unidad, "1 palabra", "${miles(unidad)} palabras")}. El mes más escrito: ${Estilo.mes(porMes.indexOfFirst { it == maximo } + 1)} (${miles(maximo.toLong())}).", Modifier.padding(top = 6.dp))
 }
 
 /** Etiqueta corta de cada mes en el tema: la inicial de su nombre; si se repiten, su numeral (si es corto) o el número. */
@@ -606,7 +608,7 @@ private fun FichaSuenos(d: TuAnio.Datos, noches: List<Boolean>, tema: TemaId, mo
     val cs = MaterialTheme.colorScheme
     val n = d.p.suenosRecordados
     val cada = d.p.n.toDouble() / n
-    FichaCosa(tema, "estrella", "$n", if (n == 1) "sueño recordado" else "sueños recordados", "1 de cada ${f0(cada)} noches", modifier) {
+    FichaCosa(tema, "estrella", "$n", if (n == 1) "sueño recordado" else "sueños recordados", "1 de cada ${porNumero(cada, "1 noche", "${f0(cada)} noches")}", modifier) {
         Canvas(Modifier.fillMaxWidth().height(54.dp)) {
             val dd = density
             drawRoundRect(lerp(Color(0xFF141A33), cs.primary, 0.15f), Offset.Zero, size, CornerRadius(6 * dd))

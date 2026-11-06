@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.avisos
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -545,7 +547,7 @@ object Avisos {
         val titulo = when {
             peor <= 0 -> "${voz().escalas} $nombres"
             peor <= 3 -> "Pendiente desde hace $peor día${if (peor > 1) "s" else ""}: $nombres"
-            else -> "Llevas $peor días de atraso: $nombres"
+            else -> "Llevas ${porNumero(peor, "1 día", "$peor días")} de atraso: $nombres"
         }
         val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_ESCALAS))
             .setSmallIcon(R.drawable.ic_stat)
@@ -636,7 +638,7 @@ object Avisos {
     fun metas(ctx: Context, metas: List<String>, notas: List<String>) {
         crearCanales(ctx)
         val titulo = when {
-            metas.isNotEmpty() && notas.isEmpty() -> if (metas.size == 1) "Revisa tu meta: ${metas[0]}" else "Toca revisar ${metas.size} metas"
+            metas.isNotEmpty() && notas.isEmpty() -> if (metas.size == 1) "Revisa tu meta: ${metas[0]}" else "Toca revisar ${porNumero(metas.size, "1 meta", "${metas.size} metas")}"
             metas.isEmpty() -> if (notas.size == 1) "Recordatorio: ${notas[0]}" else "${notas.size} recordatorios para hoy"
             else -> "Metas y recordatorios para hoy"
         }

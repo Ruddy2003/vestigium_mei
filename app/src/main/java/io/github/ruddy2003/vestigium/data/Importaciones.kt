@@ -163,7 +163,7 @@ object Importaciones {
         if (lista.isEmpty()) return "No encontré subrayados. El archivo se llama «My Clippings.txt» y está en la carpeta documents del Kindle."
         Repo.importarSubrayados(lista)
         val libros = lista.map { it.libro }.distinct()
-        return "Importé ${lista.size} subrayados y notas de ${libros.size} libros" + (lista.count { it.fecha == null }.takeIf { it > 0 }?.let { " ($it sin fecha legible)" } ?: "") + "."
+        return "Importé ${porNumero(lista.size, "1 subrayado", "${lista.size} subrayados")} y notas de ${porNumero(libros.size, "1 libro", "${libros.size} libros")}" + (lista.count { it.fecha == null }.takeIf { it > 0 }?.let { " ($it sin fecha legible)" } ?: "") + "."
     }
 
     // ---------------- Google Takeout ----------------
@@ -259,7 +259,7 @@ object Importaciones {
             Repo.importarYoutube(yt.distinctBy { it.id }, conSubs)
             val c = yt.groupingBy { it.tipo }.eachCount()
             listOfNotNull(c["suscripcion"]?.let { "$it suscripciones" }, c["megusta"]?.let { "$it «me gusta»" }, c["lista"]?.let { "$it videos en listas" },
-                c["comentario"]?.let { "$it comentarios (solo fecha)" }, c["chat"]?.let { "$it mensajes en chats en vivo (solo fecha)" }).joinToString(", ")
+                c["comentario"]?.let { "$it comentarios (solo fecha)" }, c["chat"]?.let { "${porNumero(it, "1 mensaje", "$it mensajes")} en chats en vivo (solo fecha)" }).joinToString(", ")
         } else null
         val detalle = if (fallas.isNotEmpty()) " No pude usar: " + fallas.take(5).joinToString("; ") + "." else ""
         if (lista.isEmpty()) return (msgYt?.let { "YouTube: $it." } ?: ("No encontré actividad" + if (fuentes.isEmpty()) " (no llegó ningún archivo)." else
@@ -279,7 +279,7 @@ object Importaciones {
                 canales = l.filter { it.canal.isNotBlank() }.groupingBy { it.canal }.eachCount().entries.sortedByDescending { it.value }.take(10).associate { it.key to it.value })
         }
         Repo.guardarHuellasDia(dias)
-        return "Importé ${lista.size} registros (${lista.count { it.producto == "youtube" && it.accion == "visto" }} videos vistos, " +
+        return "Importé ${porNumero(lista.size, "1 registro", "${lista.size} registros")} (${lista.count { it.producto == "youtube" && it.accion == "visto" }} videos vistos, " +
             "${lista.count { it.accion == "buscado" }} búsquedas) del $desde al $hasta." + (msgYt?.let { " YouTube: $it." } ?: "") + detalle
     }
 
@@ -460,6 +460,6 @@ object Importaciones {
         }
         Repo.importarChats(out)
         Repo.cambiarConfig { it.copy(whatsapp_yo = yo) }
-        return "Guardé la actividad de ${chats.size} chat(s): ${out.size} días con mensajes. Solo conteos y tiempos; ningún texto."
+        return "Guardé la actividad de ${chats.size} chat(s): ${porNumero(out.size, "1 día", "${out.size} días")} con mensajes. Solo conteos y tiempos; ningún texto."
     }
 }

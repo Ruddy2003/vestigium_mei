@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -1264,7 +1266,7 @@ private fun faltan(c: Carta, hoy: String): Long = java.time.temporal.ChronoUnit.
 
 private fun cuanto(dias: Long): String = when {
     dias <= 1 -> "mañana"
-    dias < 60 -> "faltan $dias días"
+    dias < 60 -> "${porNumero(dias, "falta 1 día", "faltan $dias días")}"
     dias < 730 -> "faltan ${dias / 30} meses"
     else -> "faltan ${dias / 365} años"
 }
@@ -1568,7 +1570,7 @@ fun LecturaCarta(c: Carta, volver: () -> Unit, acciones: List<Pair<String, () ->
         Box(Modifier.fillMaxSize()) {
             FondoPagina(tema, p)
             Column(Modifier.fillMaxSize()) {
-                BarraPagina(p, volver, "${Texto.palabras(c.texto)} palabras") {
+                BarraPagina(p, volver, "${porNumero(Texto.palabras(c.texto), "1 palabra", "${Texto.palabras(c.texto)} palabras")}") {
                     Box {
                         Text("⋯", fontSize = 22.sp, color = p.acento, modifier = Modifier.clickable { menu = true }.padding(horizontal = 10.dp))
                         Menu(expanded = menu, onDismissRequest = { menu = false }, containerColor = p.color) {
@@ -1635,6 +1637,6 @@ fun HojaCarta(texto: String, para: String, abrirEn: String?, modifier: Modifier 
             Text(texto.ifBlank { v.toca }, fontFamily = p.texto, fontSize = (p.tam - 3).sp, lineHeight = (p.interlinea - 4).sp,
                 color = if (texto.isBlank()) p.tenue else p.tinta, maxLines = 7, overflow = TextOverflow.Ellipsis)
         }
-        Text("${Texto.palabras(texto)} palabras", style = MaterialTheme.typography.labelSmall, color = p.tenue, modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp))
+        Text("${porNumero(Texto.palabras(texto), "1 palabra", "${Texto.palabras(texto)} palabras")}", style = MaterialTheme.typography.labelSmall, color = p.tenue, modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp))
     }
 }

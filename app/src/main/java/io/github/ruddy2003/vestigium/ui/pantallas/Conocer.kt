@@ -98,7 +98,7 @@ fun PantallaConocer(nav: Nav) {
                         val d = runCatching { Fechas.parse(p.nacimiento) }.getOrDefault(LocalDate.now().minusYears(25))
                         elegirFecha(ctx, Fechas.iso(d), maximo = LocalDate.now()) { cambiar(p.copy(nacimiento = it)) }
                     }
-                    Perfiles.edad(p = p)?.let { Text("  $it años", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+                    Perfiles.edad(p = p)?.let { Text("  ${porNumero(it, "1 año", "$it años")}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
                 }
                 Etiqueta("Dónde vives")
                 CiudadDeCasa(p) { cambiar(it) }

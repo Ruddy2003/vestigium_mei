@@ -298,7 +298,7 @@ Un martes (día lógico 12): el diario nocturno marca `valencia = 5` (escala 1�
 
 ### 2.3.1 Marcas de tiempo
 
-`Fechas.ahoraIso()` genera `2026-10-16T08:42:10-06:00`: fecha y hora **locales con el desfase respecto a UTC**. Las fechas «de día» (sin hora) son `YYYY-MM-DD`.
+`Fechas.ahoraIso()` genera `2026-10-16T08:42:10-06:00`: fecha y hora **locales con el desfase respecto a UTC**. Las fechas «de día» (sin hora) son `YYYY-MM-DD`. Desde el 6 nov 2026 (D.159) la hora lleva **siempre** segundos: antes, cuando eran :00, salía `2026-10-16T18:32-06:00` (así lo escribe `OffsetDateTime.toString()`), que también es ISO 8601 pero que Excel y algunos lectores de Python no leían. Lo guardado antes se queda como estaba; la app y `vestigium.R` leen los dos.
 
 - *Qué hace:* guarda el instante exacto y a la vez la hora local con que la persona lo vivió.
 - *Razonamiento:* el ISO-8601 con desfase es no ambiguo (identifica un instante físico) y conserva la hora «de reloj de pared», necesaria para ritmos circadianos (a qué hora se duerme, cuándo se usa el teléfono). Usar solo UTC borraría esa información; usar solo hora local sin desfase se volvería ambiguo en viajes y cambios de horario. **[Validado]** (práctica estándar de ISO 8601).
@@ -1451,6 +1451,7 @@ Cuando la app deduce una salida, vuelve a registrar las geocercas para que Andro
 - Un tramo se parte en el corte de las **05:00** (día lógico).
 - **Se ignora cualquier tramo de más de 20 horas** (probable aviso perdido).
 - Los avisos se ordenan por su marca de tiempo del sistema.
+- **Al encender el teléfono, el tramo abierto se descarta** (desde el 6 nov 2026, D.159; `ArranqueReceiver`). Antes seguía abierto mientras el teléfono estuvo apagado, y al llegar el siguiente aviso se sumaba todo ese rato (por ejemplo, 8 horas «en vehículo» que no pasaron), siempre que fueran menos de 20 horas. Como no se sabe a qué hora se apagó, ese último tramo se pierde. **[Diseño propio]**.
 
 **Razonamiento y confiabilidad.** Es un clasificador del propio Android (no controlado por la app) que combina acelerómetro y otros sensores. Funciona bien para distinguir «quieto / a pie / vehículo» y peor para matices. No hay una validación publicada en esta app. **[Aproximación]**. «Quieto» es especialmente ambiguo (teléfono sobre la mesa mientras tú caminas por otro lado). Las variables `a_pie_min` y `vehiculo_min` entran al panel.
 
@@ -6411,6 +6412,17 @@ No cambia lo que se guarda ni cómo se calcula: `SCHEMA_V` sigue en 20.
 | D.158 | **Arranque y pantallas.** Al abrir, las colecciones se leen en paralelo (`Repo.init`). «Cruzar dos variables», el conteo de palabras del diario, la lista del diario y el calendario ya no recalculan todo en cada redibujo; la imagen del Hall se dibuja en otro hilo. En Art déco y Edo (decisión del autor), el fondo vivo, el papel tapiz y el emblema van en capas propias y el fondo vivo se dibuja a unos 30 cuadros por segundo | `data/Repo.kt`, `ui/pantallas/Explorar.kt`, `ui/pantallas/Diarios.kt`, `ui/pantallas/Calendario.kt`, `ui/pantallas/Hall.kt`, `ui/Animaciones.kt` (`animacionLigera`), `ui/Decoracion.kt`, `ui/MainActivity.kt` | El arranque se alargaba con cada año de datos; algunas pantallas se trababan al escribir o al tocar |
 
 : Tabla D.22. Memoria y velocidad (5 nov 2026)
+
+## Detalles (6 nov 2026)
+
+No cambia lo que se guarda: `SCHEMA_V` sigue en 20.
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.159 | **Datos.** Las fechas-hora llevan siempre segundos (`Fechas.ahoraIso`, `isoDeMillis`; capítulo 2). El tramo de actividad que quedó abierto se descarta al encender el teléfono (4.4.4). Health Connect: el peso, la grasa, la respiración, las temperaturas, la presión, el VO₂ máx. y las sesiones de ejercicio se leen en todas sus páginas, no solo en la primera (`Salud.leer`) | `data/Fechas.kt`, `avisos/Trabajo.kt` (`ArranqueReceiver`), `sensores/Salud.kt` | Excel y Python no leían las horas sin segundos; tras apagar el teléfono se sumaban horas de actividad que no pasaron; con más de 1000 registros se perdían los siguientes |
+| D.160 | **Pantalla.** Singular y plural según la cifra en unas 250 frases (`porNumero`: «1 día», no «1 días»). Las cifras de los recuadros y los números de la escala de 0 a 10 se achican si no caben, en vez de cortarse; la barra de pestañas crece con la letra grande del sistema y TalkBack dice cuál está elegida. Momentos muestra de 200 en 200 con «ver más». Dos cierres posibles corregidos (Medir, Gastos). Los widgets se actualizan uno por uno aunque falle otro. La presentación de Art déco recorta sus rayos al marco. Otra app ya no puede abrir la captura rápida saltándose el candado | `data/Texto.kt` (`porNumero`), `ui/Componentes.kt`, `ui/MainActivity.kt`, `ui/pantallas/Momentos.kt`, `ui/pantallas/Medir.kt`, `ui/pantallas/Gastos.kt`, `widget/Widgets.kt`, `ui/Musica.kt`, `AndroidManifest.xml` y unas 50 pantallas | Detalles de la revisión del 5 nov 2026 |
+
+: Tabla D.23. Detalles (6 nov 2026)
 
 
 # Apéndice E. Glosario

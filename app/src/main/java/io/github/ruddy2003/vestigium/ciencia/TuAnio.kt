@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ciencia
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.privado
 import android.content.Context
 import io.github.ruddy2003.vestigium.data.Fechas
@@ -103,7 +105,7 @@ object TuAnio {
         val dist = buildList {
             if (p.km >= 42.195) add("${n1(p.km / 42.195)} maratones")
             if (p.km >= 100) add("el ${n1(p.km / 40_075 * 100)}% de la vuelta a la Tierra por el ecuador")
-            if (p.km >= 8.849) add("${n0(p.km / 8.849)} veces la altura del Everest, pero acostado")
+            if (p.km >= 8.849) add("${porNumero(p.km / 8.849, "1 vez", "${n0(p.km / 8.849)} veces")} la altura del Everest, pero acostado")
         }
 
         // ---- lo más común: un día típico armado con lo que más se repitió
@@ -154,7 +156,7 @@ object TuAnio {
             p.fechas.mapNotNull { fe -> Repo.salud[fe]?.pasos?.let { fe to it } }.maxByOrNull { it.second }?.let { add("más pasos" to "${n0(it.second.toDouble())} el ${Fechas.titulo(it.first).lowercase()}") }
             p.fechas.mapNotNull { fe -> Repo.dias[fe]?.let { fe to Texto.palabras(it.nota) } }.maxByOrNull { it.second }?.takeIf { it.second > 0 }?.let { add("más palabras" to "${n0(it.second.toDouble())} el ${Fechas.titulo(it.first).lowercase()}") }
             Repo.gastos.filter { it.dia in en }.groupBy { it.dia }.mapValues { (_, l) -> l.sumOf { g -> g.monto } }.maxByOrNull { it.value }?.let { add("más gasto" to "$${n0(it.value)} el ${Fechas.titulo(it.key).lowercase()}") }
-            if (p.rachaDiario >= 3) add("racha de diario" to "${p.rachaDiario} días seguidos")
+            if (p.rachaDiario >= 3) add("racha de diario" to "${porNumero(p.rachaDiario, "1 día seguido", "${p.rachaDiario} días seguidos")}")
             p.fechas.mapNotNull { fe -> Repo.pantalla[fe]?.let { fe to it.total_min } }.filter { it.second > 0 }.minByOrNull { it.second }?.let { add("menos pantalla" to "${it.second / 60} h ${it.second % 60} min el ${Fechas.titulo(it.first).lowercase()}") }
         }
         // La relación más fuerte que se encontró (no obvia y con poca probabilidad de azar).

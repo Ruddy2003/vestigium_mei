@@ -96,8 +96,14 @@ object Fechas {
     fun diasEntre(a: String, b: String): Long = java.time.temporal.ChronoUnit.DAYS.between(parse(a), parse(b))
 
     /** Marca de tiempo con desfase local, por ejemplo 2026-10-16T08:42:10-06:00. */
-    fun ahoraIso(): String = OffsetDateTime.now().withNano(0).toString()
-    fun isoDeMillis(ms: Long): String = OffsetDateTime.ofInstant(Instant.ofEpochMilli(ms), zonaEn(ms)).withNano(0).toString()
+    /**
+     * Fecha y hora con segundos siempre (2026-10-16T18:32:00-06:00). `OffsetDateTime.toString()` los quitaba cuando eran
+     * :00 (2026-10-16T18:32-06:00), y Excel o algunos lectores de Python no leían esas filas. Lo ya guardado se queda como
+     * está: los dos formatos son ISO 8601 y la app y vestigium.R leen ambos.
+     */
+    private val ISO_SEGUNDOS: DateTimeFormatter = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssXXX", Locale.ROOT)
+    fun ahoraIso(): String = OffsetDateTime.now().withNano(0).format(ISO_SEGUNDOS)
+    fun isoDeMillis(ms: Long): String = OffsetDateTime.ofInstant(Instant.ofEpochMilli(ms), zonaEn(ms)).withNano(0).format(ISO_SEGUNDOS)
     fun millis(iso: String): Long = try { OffsetDateTime.parse(iso).toInstant().toEpochMilli() } catch (e: Exception) { 0L }
     fun horaDe(iso: String): String = try { localDe(iso).format(HORA) } catch (e: Exception) { "" }
     fun horaAhora(): String = LocalDateTime.now().format(HORA)
@@ -139,8 +145,8 @@ object Fechas {
             dif == 0L -> "hoy"
             dif == -1L -> "ayer"
             dif == 1L -> "mañana"
-            dif < 0 -> "hace ${-dif} días"
-            else -> "en $dif días"
+            dif < 0 -> "hace ${porNumero(-dif, "1 día", "${-dif} días")}"
+            else -> "en ${porNumero(dif, "1 día", "$dif días")}"
         }
     }
     /**

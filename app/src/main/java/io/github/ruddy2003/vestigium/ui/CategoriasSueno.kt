@@ -84,7 +84,7 @@ fun FormularioSueno(fecha: String, d: Dia, narracionPrimero: Boolean = false, gu
         Etiqueta("Qué soñaste")
         ObjetoDiario(fecha, d.sueno_texto, noche = true) { escribiendo = true }
         Ayuda(if (d.sueno_texto.isBlank()) "Toca el libro para escribirlo a pantalla completa: dónde estabas, quién aparecía, qué pasaba, qué sentías, cómo terminó. Aunque sean fragmentos."
-            else "${Texto.palabras(d.sueno_texto)} palabras. Toca el libro para seguir escribiendo.", Modifier.padding(top = 6.dp))
+            else "${porNumero(Texto.palabras(d.sueno_texto), "1 palabra", "${Texto.palabras(d.sueno_texto)} palabras")}. Toca el libro para seguir escribiendo.", Modifier.padding(top = 6.dp))
         Row(Modifier.padding(top = 6.dp)) { BotonDictado { t -> ponerTexto((actual.sueno_texto + " " + t).trim()) } }
     }
 

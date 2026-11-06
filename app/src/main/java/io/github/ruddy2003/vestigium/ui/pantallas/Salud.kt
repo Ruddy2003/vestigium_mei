@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.Canvas
@@ -151,7 +153,7 @@ private fun TarjetaGuia(it: Guias.Item) {
             }
             Text(it.texto, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
             if (it.valor != null && it.zonas.isNotEmpty()) Regla(it, Modifier.fillMaxWidth().padding(top = 10.dp).height(34.dp))
-            Ayuda("Meta: ${it.meta}." + if (it.dias > 0) " Con ${it.dias} días de datos" + (if (it.hasta.isNotEmpty() && Fechas.diasEntre(it.hasta, Fechas.diaLogico()) > 10) ", hasta el ${Fechas.larga(it.hasta)}." else ".") else "",
+            Ayuda("Meta: ${it.meta}." + if (it.dias > 0) " Con ${porNumero(it.dias, "1 día", "${it.dias} días")} de datos" + (if (it.hasta.isNotEmpty() && Fechas.diasEntre(it.hasta, Fechas.diaLogico()) > 10) ", hasta el ${Fechas.larga(it.hasta)}." else ".") else "",
                 Modifier.padding(top = 6.dp))
             if (abierta) {
                 if (it.detalle.isNotBlank()) Text(it.detalle, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))

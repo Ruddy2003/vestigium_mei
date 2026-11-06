@@ -72,7 +72,7 @@ object Guias {
             "Tu reloj debe guardar sesiones de ejercicio en Health Connect.")
         item("fuerza", "Moverte", "Días de fuerza a la semana", "2 o más días", "fuerza_sem", "días", 0.0, 5.0,
             listOf(Zona(0.0, 1.0, L), Zona(1.0, 2.0, C), Zona(2.0, 1e9, B)), OMS_ACTIVIDAD,
-            { x -> if (x >= 2) "Entrenas fuerza ${n(x, 1)} días por semana: cumples." else "Entrenas fuerza ${n(x, 1)} días por semana; la OMS recomienda al menos 2." },
+            { x -> if (x >= 2) "Entrenas fuerza ${porNumero(x, "1 día", "${n(x, 1)} días")} por semana: cumples." else "Entrenas fuerza ${porNumero(x, "1 día", "${n(x, 1)} días")} por semana; la OMS recomienda al menos 2." },
             "Ejercicios de fuerza de los grupos musculares grandes. Sale de tus entrenamientos de MacroFactor Workouts.", "Importa MacroFactor Workouts en Datos.")
 
         // ------------------------------------------------ dormir

@@ -231,6 +231,7 @@ Cuando la app deduce una salida, vuelve a registrar las geocercas para que Andro
 - Un tramo se parte en el corte de las **05:00** (día lógico).
 - **Se ignora cualquier tramo de más de 20 horas** (probable aviso perdido).
 - Los avisos se ordenan por su marca de tiempo del sistema.
+- **Al encender el teléfono, el tramo abierto se descarta** (desde el 6 nov 2026, D.159; `ArranqueReceiver`). Antes seguía abierto mientras el teléfono estuvo apagado, y al llegar el siguiente aviso se sumaba todo ese rato (por ejemplo, 8 horas «en vehículo» que no pasaron), siempre que fueran menos de 20 horas. Como no se sabe a qué hora se apagó, ese último tramo se pierde. **[Diseño propio]**.
 
 **Razonamiento y confiabilidad.** Es un clasificador del propio Android (no controlado por la app) que combina acelerómetro y otros sensores. Funciona bien para distinguir «quieto / a pie / vehículo» y peor para matices. No hay una validación publicada en esta app. **[Aproximación]**. «Quieto» es especialmente ambiguo (teléfono sobre la mesa mientras tú caminas por otro lado). Las variables `a_pie_min` y `vehiculo_min` entran al panel.
 

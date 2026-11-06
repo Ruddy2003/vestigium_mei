@@ -410,7 +410,7 @@ object Diccionario {
         fun n(x: Double) = if (x % 1.0 == 0.0) x.toLong().toString() else x.toString()
         val c = Repo.config
         fun deSuplemento(s: Suplemento) = if (s.modelo == "carga")
-            "llega al 95 % en ${s.carga_dias} días con ${n(Suplementos.dosisReferencia(s))} ${s.unidad} al día y se vacía en ${s.lavado_dias} días"
+            "llega al 95 % en ${porNumero(s.carga_dias, "1 día", "${s.carga_dias} días")} con ${n(Suplementos.dosisReferencia(s))} ${s.unidad} al día y se vacía en ${porNumero(s.lavado_dias, "1 día", "${s.lavado_dias} días")}"
             else "vida media de ${n(s.vida_media_h)} h"
         val p = when {
             col == "cafeina_al_dormir_mg" -> "vida media de la cafeína de ${n(c.cafeina_vida_media_h)} h"

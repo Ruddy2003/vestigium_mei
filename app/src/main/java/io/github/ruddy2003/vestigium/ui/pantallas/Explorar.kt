@@ -117,9 +117,9 @@ fun PantallaExplorar(nav: Nav) {
             Tarjetita("Experimentos personales", "${Repo.experimentos.count { io.github.ruddy2003.vestigium.data.Experimentos.enCurso(it) }}", "en curso · prueba algo y mide si sirve", "experimentos"),
         )) { nav.ir(it) }
         val nDias = Repo.dias.size
-        Ayuda("$nDias días con diario · ${Repo.momentos.count { it.tipo != "muestreo" && !it.privado }} registros propios · ${Repo.momentos.count { it.tipo == "muestreo" }} avisos respondidos. " +
+        Ayuda("${porNumero(nDias, "1 día", "$nDias días")} con diario · ${Repo.momentos.count { it.tipo != "muestreo" && !it.privado }} registros propios · ${Repo.momentos.count { it.tipo == "muestreo" }} avisos respondidos. " +
             // 90 días bastan para una relación moderada en una pareja que ya sospechabas; al revisar todas a la vez, solo para las fuertes (P-28).
-            if (nDias >= 90) "Con 90 días o más ya se puede detectar una relación moderada en una pareja concreta; en esta lista, que revisa todas a la vez, solo las fuertes." else "Faltan ${90 - nDias} días para tener potencia suficiente; antes de eso, todo es pista, no evidencia.",
+            if (nDias >= 90) "Con 90 días o más ya se puede detectar una relación moderada en una pareja concreta; en esta lista, que revisa todas a la vez, solo las fuertes." else "${porNumero(90 - nDias, "Falta 1 día", "Faltan ${90 - nDias} días")} para tener potencia suficiente; antes de eso, todo es pista, no evidencia.",
             Modifier.padding(top = 10.dp))
         Row(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("por día", !porSemana) { porSemana = false }
@@ -254,7 +254,7 @@ fun PantallaExplorar(nav: Nav) {
 
         Seccion("¿Qué tan bien te conoces?", "Tu predicción de cada noche contra lo que pasó al día siguiente.", plegable = true) {
             val pares = Repo.dias.values.mapNotNull { d -> val p = d.prediccion_manana ?: return@mapNotNull null; val real = Repo.dias[Fechas.sumar(d.fecha, 1)]?.valencia ?: return@mapNotNull null; p to real }
-            if (pares.size < 5) Vacio("Llevas ${pares.size} predicciones con resultado. Con 5 o más aparece tu calibración.")
+            if (pares.size < 5) Vacio("Llevas ${porNumero(pares.size, "1 predicción", "${pares.size} predicciones")} con resultado. Con 5 o más aparece tu calibración.")
             else Tarjeta {
                 val error = pares.map { abs(it.first - it.second) }.average()
                 val r = Estadistica.pearson(pares.map { it.first.toDouble() }, pares.map { it.second.toDouble() })
@@ -413,7 +413,7 @@ private fun Cobertura() {
             barraGrafica(eg, Offset(izq + w * celda, dd * celda), Size(lado, lado), col, pista = true)
         }
     }
-    Ayuda("$registrados días registrados en este periodo.", Modifier.padding(top = 6.dp))
+    Ayuda("${porNumero(registrados, "1 día registrado", "$registrados días registrados")} en este periodo.", Modifier.padding(top = 6.dp))
 }
 
 @Composable
@@ -513,7 +513,7 @@ private fun ConQuien() {
     if (mu.isEmpty()) return
     Seccion("Ánimo según con quién estás", "Promedio de la valencia en los avisos de ánimo, según con quién dijiste que estabas.", plegable = true) {
         Tarjeta {
-            if (mu.size < 10) Ayuda("Llevas ${mu.size} avisos con compañía. Con 10 o más empieza a verse algo; con 30, ya es una pista.")
+            if (mu.size < 10) Ayuda("Llevas ${porNumero(mu.size, "1 aviso", "${mu.size} avisos")} con compañía. Con 10 o más empieza a verse algo; con 30, ya es una pista.")
             val general = mu.mapNotNull { it.valencia }.average()
             val cs = MaterialTheme.colorScheme
             val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()

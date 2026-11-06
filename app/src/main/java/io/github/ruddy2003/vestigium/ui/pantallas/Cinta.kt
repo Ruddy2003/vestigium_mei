@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.privado
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -268,7 +270,7 @@ fun PantallaCinta(nav: Nav) {
         esc.forEach { x ->
             val h = runCatching { LocalTime.parse(x.inicio!!.take(5)) }.getOrNull() ?: return@forEach
             val a = Fechas.millisDe(java.time.LocalDateTime.of(Fechas.parse(x.fecha), h))
-            cosas += Cosa(p, a, a + (x.min ?: 90) * 60_000L, cs.primary, "escalada", "Escalada en ${x.lugar.ifBlank { "el muro" }}: ${x.bloques.size} bloques")
+            cosas += Cosa(p, a, a + (x.min ?: 90) * 60_000L, cs.primary, "escalada", "Escalada en ${x.lugar.ifBlank { "el muro" }}: ${porNumero(x.bloques.size, "1 bloque", "${x.bloques.size} bloques")}")
         }
     }
     Repo.pantalla[fecha]?.takeIf { it.por_hora_min.sum() > 0 }?.let { pd ->

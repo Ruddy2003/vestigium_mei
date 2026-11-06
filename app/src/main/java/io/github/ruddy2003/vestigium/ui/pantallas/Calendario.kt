@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
 import androidx.compose.foundation.background
@@ -215,7 +217,7 @@ fun PantallaCalendario(nav: Nav) {
                 val transcurridos = dias.count { it <= hoy }
                 val vals = dias.mapNotNull { Repo.dias[it]?.valencia }
                 Clave("dias", "$conDiario de $transcurridos con registro")
-                if (vals.isNotEmpty()) Clave("animus", "%.2f de media · ${vals.size} días".format(vals.average()))
+                if (vals.isNotEmpty()) Clave("animus", "%.2f de media · ${porNumero(vals.size, "1 día", "${vals.size} días")}".format(vals.average()))
                 val mejor = dias.filter { Repo.dias[it]?.valencia != null }.maxByOrNull { Repo.dias[it]!!.valencia!! }
                 mejor?.let { Clave("optimus", Fechas.corto(it) + " · " + Repo.dias[it]?.valencia) }
                 val mom = Repo.momentos.count { it.fecha.startsWith(mes) && it.tipo != "muestreo" && !it.privado }
@@ -225,7 +227,7 @@ fun PantallaCalendario(nav: Nav) {
                 val hitos = dias.flatMap { Repo.dias[it]?.hitos ?: emptyList() }
                 if (hitos.isNotEmpty()) Clave("memorabilia", hitos.distinct().take(8).joinToString(", "))
                 val esc = Repo.ascensos.count { it.fecha.startsWith(mes) }
-                if (esc > 0) Clave("ascensvs", "$esc sesiones")
+                if (esc > 0) Clave("ascensvs", "${porNumero(esc, "1 sesión", "$esc sesiones")}")
             }
         }
     }
