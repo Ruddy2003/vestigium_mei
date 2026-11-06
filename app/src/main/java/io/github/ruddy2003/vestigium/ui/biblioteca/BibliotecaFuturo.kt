@@ -243,7 +243,7 @@ object EstanteDistopia : DisenoBiblioteca {
         drawLine(c(ROJO).copy(alpha = 0.6f), Offset(tarjeta.left + 2 * u, tarjeta.top + tarjeta.height * 0.2f), Offset(tarjeta.right - 2 * u, tarjeta.top + tarjeta.height * 0.2f), 0.6f * u)
         textoEn(medidor, if (v.noche) "☾" else "Nº", Rect(tarjeta.left, tarjeta.top, tarjeta.right, tarjeta.top + tarjeta.height * 0.2f), letra, c(NEGRO).copy(alpha = 0.7f), 6.5f)
         textoEn(medidor, v.dia, Rect(tarjeta.left, tarjeta.top + tarjeta.height * 0.22f, tarjeta.right, tarjeta.top + tarjeta.height * 0.66f), ESTARCIDO, c(NEGRO), 15f, peso = FontWeight.Bold)
-        textoEn(medidor, v.mes.uppercase(), Rect(tarjeta.left + 1 * u, tarjeta.top + tarjeta.height * 0.66f, tarjeta.right - 1 * u, tarjeta.bottom - 1 * u), letra, c(NEGRO).copy(alpha = 0.8f), 7f)
+        textoEn(medidor, v.mes.uppercase(), Rect(tarjeta.left + 0.5f * u, tarjeta.top + tarjeta.height * 0.66f, tarjeta.right - 0.5f * u, tarjeta.bottom - 1 * u), ESTARCIDO, c(NEGRO).copy(alpha = 0.8f), 7f, minimo = 4.5f)
         // El agujero para el dedo, con su ojal de metal.
         val o = Offset(w * 0.5f, h * 0.58f)
         val ra = minOf(w * 0.2f, 6.5f * u)

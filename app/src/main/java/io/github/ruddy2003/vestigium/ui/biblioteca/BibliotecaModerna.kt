@@ -59,7 +59,7 @@ object EstanteEdo : DisenoBiblioteca {
     /** El color con la luz del momento: en modo oscuro, más hundido; de noche, bajo la luna. */
     private fun t(c: Color, oscuro: Boolean, noche: Boolean): Color {
         var r = c
-        if (oscuro) r = mezcla(r, Color(0xFF0D0B0A), 0.4f)
+        if (oscuro) r = mezcla(r, Color(0xFF120E0B), 0.32f)
         if (noche) r = mezcla(r, NOCHE, 0.45f)
         return r
     }

@@ -124,11 +124,11 @@ fun disenoBiblioteca(t: TemaId): DisenoBiblioteca? = when (t) {
 // =====================================================================
 
 /**
- * Un texto dibujado dentro de [r], centrado: si no cabe, se achica (hasta 6 sp) y, si aun así no cabe, se corta. Con
+ * Un texto dibujado dentro de [r], centrado: si no cabe, se achica (hasta [minimo] sp) y, si aun así no cabe, se corta. Con
  * [vertical] corre de abajo arriba, a lo largo de un lomo.
  */
 internal fun DrawScope.textoEn(medidor: TextMeasurer, texto: String, r: Rect, letra: FontFamily, color: Color, tam: Float,
-                               vertical: Boolean = false, peso: FontWeight = FontWeight.Normal, espaciado: Float = 0f) {
+                               vertical: Boolean = false, peso: FontWeight = FontWeight.Normal, espaciado: Float = 0f, minimo: Float = 6f) {
     if (texto.isBlank() || r.width <= 1f || r.height <= 1f) return
     val largo = if (vertical) r.height else r.width
     val grueso = if (vertical) r.width else r.height
@@ -137,7 +137,7 @@ internal fun DrawScope.textoEn(medidor: TextMeasurer, texto: String, r: Rect, le
     var capa = medidor.measure(texto, estilo, maxLines = 1, softWrap = false)
     val k = minOf(1f, largo / capa.size.width.coerceAtLeast(1), grueso / capa.size.height.coerceAtLeast(1))
     if (k < 1f) {
-        val nuevo = maxOf(6f, tam * k)
+        val nuevo = maxOf(minimo, tam * k)
         estilo = estilo.copy(fontSize = nuevo.sp, lineHeight = (nuevo * 1.05f).sp)
         capa = medidor.measure(texto, estilo, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
             constraints = Constraints(maxWidth = largo.toInt().coerceAtLeast(1)))
