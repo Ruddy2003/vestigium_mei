@@ -484,7 +484,7 @@ class Capturas {
         }
     }
     /** El mueble del Ideario: vacío, con 1, 5 y 9 temas, y la vista corta (6 y «y N más»). */
-    private fun mueble(t: TemaId, oscuro: Boolean) = pantalla(t, oscuro, 4200, "tema_${t.id}_${if (oscuro) "oscuro" else "claro"}") {
+    private fun mueble(t: TemaId, oscuro: Boolean) = pantalla(t, oscuro, 5400, "tema_${t.id}_${if (oscuro) "oscuro" else "claro"}") {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
             listOf(0, 1, 5, 9).forEach { n -> io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, ideasConTemas(n)) }
             io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, ideasConTemas(9), max = 6)

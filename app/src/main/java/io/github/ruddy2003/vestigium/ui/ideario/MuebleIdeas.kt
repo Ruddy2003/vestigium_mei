@@ -109,9 +109,12 @@ fun MuebleIdeas(cajones: List<CajonIdeas>, rotulo: (String) -> String, sub: (Caj
                 if (mas > 0 && placa != null) {
                     val alto0 = alto - altoBase
                     val altoP = altoBase * placa.height
-                    Box(Modifier.offset(ancho * placa.left, alto0 + altoBase * placa.top).size(ancho * placa.width, altoP), contentAlignment = Alignment.Center) {
+                    // La caja del texto, centrada en la placa y nunca tan baja que corte las letras.
+                    val caja = maxOf(altoP, 26.dp)
+                    val tam = (altoP.value * 0.42f).coerceIn(10f, 14f)
+                    Box(Modifier.offset(ancho * placa.left, alto0 + altoBase * placa.top + (altoP - caja) / 2).size(ancho * placa.width, caja), contentAlignment = Alignment.Center) {
                         Text(textoMas, color = d.tintaPlaca(oscuro), fontFamily = d.letraRotulo ?: MaterialTheme.typography.labelMedium.fontFamily,
-                            fontSize = (altoP.value * 0.42f).coerceIn(9f, 14f).sp, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                            fontSize = tam.sp, lineHeight = (tam * 1.15f).sp, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
                     }
                 }
             }

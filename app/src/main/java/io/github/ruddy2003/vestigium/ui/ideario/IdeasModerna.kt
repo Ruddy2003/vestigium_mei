@@ -54,7 +54,7 @@ object IdeasEdo : DisenoIdeas {
     override val cols = 3
     override val proporcion = 1.55f
     override val corona = 0.17f
-    override val base = 0.12f
+    override val base = 0.1f
     override val lado = 0.055f
     override val hueco = 0.022f
 
@@ -73,7 +73,7 @@ object IdeasEdo : DisenoIdeas {
         val cuerpo = Rect(w * 0.025f, d.corona.bottom - 2 * u, w * 0.975f, d.base.top + d.base.height * 0.42f)
         sombraSuave(Rect(cuerpo.left, cuerpo.bottom - 6 * u, cuerpo.right, cuerpo.bottom + 4 * u), 4 * u, 10 * u, 0.35f)
         drawRect(Brush.horizontalGradient(listOf(mezcla(kk, Color.Black, 0.18f), kk, mezcla(kk, KEYAKI_LUZ, 0.25f), kk, mezcla(kk, Color.Black, 0.22f)), cuerpo.left, cuerpo.right), cuerpo.topLeft, cuerpo.size)
-        vetas(cuerpo, KEYAKI_OSC.copy(alpha = 0.35f), 11, 0.7f)
+        vetas(cuerpo, KEYAKI_OSC.copy(alpha = 0.3f), 11, 1.2f, grosor = 0.7f, ondulacion = 0.4f)
         // Los huecos de los cajones: la sombra del rebaje alrededor de cada uno.
         d.huecos.forEach { r ->
             drawRect(Color.Black.copy(alpha = 0.55f), Offset(r.left - 1.4f * u, r.top - 1.4f * u), Size(r.width + 2.8f * u, r.height + 2.8f * u))
@@ -114,7 +114,7 @@ object IdeasEdo : DisenoIdeas {
         val tapa = Rect(0f, d.corona.bottom - d.corona.height * 0.3f, w, d.corona.bottom + 1 * u)
         drawRect(Color.Black.copy(alpha = 0.3f), Offset(tapa.left + 2 * u, tapa.bottom), Size(tapa.width - 4 * u, 3 * u))
         drawRect(Brush.verticalGradient(listOf(mezcla(kk, KEYAKI_LUZ, 0.45f), kk, mezcla(kk, Color.Black, 0.3f)), tapa.top, tapa.bottom), tapa.topLeft, tapa.size)
-        vetas(tapa, KEYAKI_OSC.copy(alpha = 0.4f), 23, 0.8f)
+        vetas(tapa, KEYAKI_OSC.copy(alpha = 0.35f), 23, 1.3f, grosor = 0.7f, ondulacion = 0.35f)
         listOf(tapa.left, tapa.right - 12 * u).forEach { x ->
             drawRect(HIERRO, Offset(x, tapa.top), Size(12 * u, tapa.height))
             drawCircle(HIERRO_LUZ, 1.1f * u, Offset(x + 6 * u, tapa.center.y))
@@ -129,8 +129,8 @@ object IdeasEdo : DisenoIdeas {
         drawRect(HIERRO, Offset(if (sx > 0) o.x else o.x - l, if (sy > 0) o.y else o.y - g), Size(l, g))
         drawRect(HIERRO, Offset(if (sx > 0) o.x else o.x - g, if (sy > 0) o.y else o.y - l), Size(g, l))
         // La punta en forma de hoja (warabi) al final de cada brazo.
-        drawCircle(HIERRO, g * 0.9f, Offset(o.x + sx * l, o.y + sy * g / 2))
-        drawCircle(HIERRO, g * 0.9f, Offset(o.x + sx * g / 2, o.y + sy * l))
+        drawCircle(HIERRO, g * 0.6f, Offset(o.x + sx * l, o.y + sy * g / 2))
+        drawCircle(HIERRO, g * 0.6f, Offset(o.x + sx * g / 2, o.y + sy * l))
         listOf(Offset(o.x + sx * l * 0.55f, o.y + sy * g / 2), Offset(o.x + sx * g / 2, o.y + sy * l * 0.55f), Offset(o.x + sx * g / 2, o.y + sy * g / 2)).forEach {
             drawCircle(HIERRO_LUZ, 0.75f * density, it)
         }
@@ -197,7 +197,7 @@ object IdeasEdo : DisenoIdeas {
         val f = Rect(-e, arriba, w + e, h + baja + h * 0.04f * ab)
         if (ab > 0f) sombraSuave(Rect(f.left, f.bottom - 4 * u, f.right, f.bottom + 2 * u), 2 * u, 8 * u * ab, 0.3f * ab)
         drawRect(Brush.verticalGradient(listOf(mezcla(kk, KEYAKI_LUZ, 0.3f), kk, mezcla(kk, Color.Black, 0.15f)), f.top, f.bottom), f.topLeft, f.size)
-        vetas(f, KEYAKI_OSC.copy(alpha = 0.45f), c.semilla, 0.9f)
+        vetas(f, KEYAKI_OSC.copy(alpha = 0.38f), c.semilla, 1.4f, grosor = 0.7f, ondulacion = 0.45f)
         bisel(f, Color.White.copy(alpha = 0.18f), Color.Black.copy(alpha = 0.35f), 1.3f * u)
         // Escuadras en las cuatro esquinas del frente.
         val l = minOf(w, f.height) * 0.2f
@@ -288,11 +288,14 @@ object IdeasEdo : DisenoIdeas {
         val g = if (grande) 2f else 1f
         // El teñido en nube: añil arriba y violeta abajo, en manchas suaves que se funden con el papel.
         val nubeA = 12 * u * g; val nubeV = 9 * u * g
-        for (k in 0 until 7) {
-            val x = w * (k + azar(semilla, k)) / 6f
-            mancha(Offset(x, nubeA * (0.1f + 0.5f * azar(semilla, k + 10))), nubeA * (1.1f + 0.6f * azar(semilla, k + 20)), ANIL.copy(alpha = 0.5f))
-            mancha(Offset(x, h - nubeV * (0.1f + 0.5f * azar(semilla, k + 30))), nubeV * (1.1f + 0.6f * azar(semilla, k + 40)), VIOLETA.copy(alpha = 0.42f))
+        for (k in 0 until 11) {
+            val x = w * (k + azar(semilla, k)) / 10f
+            mancha(Offset(x, nubeA * (0.05f + 0.35f * azar(semilla, k + 10))), nubeA * (0.8f + 0.5f * azar(semilla, k + 20)), ANIL.copy(alpha = 0.26f))
+            mancha(Offset(x, h - nubeV * (0.05f + 0.35f * azar(semilla, k + 30))), nubeV * (0.8f + 0.5f * azar(semilla, k + 40)), VIOLETA.copy(alpha = 0.22f))
         }
+        // Una franja fina de añil pegada al borde, donde el tinte cargó más.
+        drawRect(Brush.verticalGradient(listOf(ANIL.copy(alpha = 0.35f), Color.Transparent), 0f, nubeA * 0.7f), Offset.Zero, Size(w, nubeA * 0.7f))
+        drawRect(Brush.verticalGradient(listOf(Color.Transparent, VIOLETA.copy(alpha = 0.3f)), h - nubeV * 0.7f, h), Offset(0f, h - nubeV * 0.7f), Size(w, nubeV * 0.7f))
         // Hojuelas de oro (kirihaku), cuadraditos esparcidos.
         val n = if (grande) 46 else 16
         for (k in 0 until n) {

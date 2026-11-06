@@ -172,14 +172,14 @@ internal fun DrawScope.sombraSuave(r: Rect, radio: Float, alcance: Float, fuerza
  * Vetas de madera en un rectángulo: líneas onduladas a lo largo, más o menos marcadas, con algún nudo. [vertical] si la
  * tabla corre de arriba abajo.
  */
-internal fun DrawScope.vetas(r: Rect, color: Color, semilla: Int, densidad: Float = 1f, vertical: Boolean = false, grosor: Float = 1f) {
+internal fun DrawScope.vetas(r: Rect, color: Color, semilla: Int, densidad: Float = 1f, vertical: Boolean = false, grosor: Float = 1f, ondulacion: Float = 1f) {
     val d = density
     val largo = if (vertical) r.height else r.width
     val ancho = if (vertical) r.width else r.height
     val n = (ancho / (3.2f * d) * densidad).toInt().coerceIn(3, 80)
     for (k in 0 until n) {
         val base = ancho * (k + azar(semilla, k)) / n
-        val amp = (0.6f + 1.8f * azar(semilla, k + 100)) * d
+        val amp = (0.6f + 1.8f * azar(semilla, k + 100)) * d * ondulacion
         val fase = azar(semilla, k + 200) * 6.28f
         val ondas = 1.5f + 2.5f * azar(semilla, k + 300)
         val alfa = 0.25f + 0.75f * azar(semilla, k + 400)

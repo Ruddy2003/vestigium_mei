@@ -47,7 +47,7 @@ object IdeasCueva : DisenoIdeas {
 
     override val cols = 2
     override val proporcion = 1.05f
-    override val corona = 0.15f
+    override val corona = 0.24f
     override val base = 0.2f
     override val lado = 0.07f
     override val hueco = 0.06f
@@ -57,9 +57,9 @@ object IdeasCueva : DisenoIdeas {
         val w = size.width; val h = size.height
         // La roca: un contorno irregular, más oscura arriba (el techo) y abajo (el suelo).
         val contorno = Path().apply {
-            moveTo(0f, d.corona.height * 0.35f)
+            moveTo(0f, d.corona.height * 0.2f)
             val pasos = 14
-            for (k in 1..pasos) lineTo(w * k / pasos, d.corona.height * (0.15f + 0.35f * azar(5, k)))
+            for (k in 1..pasos) lineTo(w * k / pasos, d.corona.height * (0.08f + 0.2f * azar(5, k)))
             lineTo(w, h); lineTo(0f, h); close()
         }
         drawPath(contorno, Brush.verticalGradient(listOf(roca(ROCA_OSC, oscuro), roca(ROCA, oscuro), roca(ROCA_LUZ, oscuro), roca(ROCA, oscuro), roca(ROCA_OSC, oscuro)), 0f, h))
@@ -78,9 +78,12 @@ object IdeasCueva : DisenoIdeas {
         }
         // Las pinturas, solo donde no hay nichos: manos sopladas con ocre, un bisonte a carbón y filas de puntos.
         fun libre(c: Offset, r: Float) = d.huecos.none { it.inflate(r + 4 * u).contains(c) }
-        val manos = listOf(Offset(w * 0.06f, d.corona.bottom + 18 * u), Offset(w * 0.93f, d.corona.bottom + 30 * u), Offset(w * 0.5f, d.base.top - 6 * u),
-            Offset(w * 0.04f, h * 0.55f), Offset(w * 0.96f, h * 0.7f))
-        manos.forEachIndexed { k, c -> if (libre(c, 14 * u)) manoNegativa(c, (11f + 3f * azar(31, k)) * u, -25f + 50f * azar(32, k), oscuro) }
+        // La franja de pinturas, bajo las estalactitas: manos, el bisonte y una fila de puntos.
+        val banda = d.corona.top + d.corona.height * 0.72f
+        listOf(0.09f, 0.21f, 0.9f).forEachIndexed { k, fx -> manoNegativa(Offset(w * fx, banda + (k % 2) * 4 * u), (10f + 3f * azar(31, k)) * u, -25f + 50f * azar(32, k), oscuro) }
+        for (i in 0 until 7) drawCircle(OCRE.copy(alpha = 0.65f), 1.7f * u, Offset(w * (0.7f + 0.025f * i), banda + 12 * u + (if (i % 2 == 0) 0f else 2 * u)))
+        val abajo = Offset(w * 0.5f, d.base.top - 4 * u)
+        if (libre(abajo, 14 * u)) manoNegativa(abajo, 11 * u, 15f, oscuro)
         d.filas.zipWithNext().forEachIndexed { k, (a, b) ->
             val y = (a.bottom + b.top) / 2
             for (i in 0 until 9) drawCircle(OCRE.copy(alpha = 0.6f), 1.6f * u, Offset(w * (0.36f + 0.035f * i) + (k % 2) * w * 0.06f, y + (if (i % 2 == 0) 0f else 2 * u)))
@@ -88,16 +91,15 @@ object IdeasCueva : DisenoIdeas {
         // El techo: estalactitas que cuelgan, con su filo de luz.
         for (k in 0 until 11) {
             val x = w * (0.03f + 0.095f * k + 0.04f * azar(41, k))
-            val largo = d.corona.height * (0.35f + 0.6f * azar(42, k))
+            val largo = d.corona.height * (0.18f + 0.3f * azar(42, k))
             val ancho = (6f + 8f * azar(43, k)) * u
-            val y0 = d.corona.height * 0.2f
+            val y0 = d.corona.height * 0.12f
             val e = Path().apply { moveTo(x - ancho / 2, y0); quadraticTo(x - ancho * 0.15f, y0 + largo * 0.6f, x, y0 + largo); quadraticTo(x + ancho * 0.15f, y0 + largo * 0.6f, x + ancho / 2, y0); close() }
             drawPath(e, Brush.horizontalGradient(listOf(roca(ROCA_OSC, oscuro), roca(ROCA_LUZ, oscuro), roca(ROCA_OSC, oscuro)), x - ancho / 2, x + ancho / 2))
             drawCircle(roca(ROCA_LUZ, oscuro).copy(alpha = 0.7f), 1.1f * u, Offset(x, y0 + largo + 2.5f * u))
         }
         // El bisonte, en la roca de arriba a la izquierda si queda lugar.
-        val bc = Offset(w * 0.24f, d.corona.bottom + 4 * u)
-        if (libre(bc, 26 * u)) bisonte(bc, 26 * u, oscuro)
+        bisonte(Offset(w * 0.5f, banda), minOf(26 * u, d.corona.height * 0.3f), oscuro)
         // El suelo: tierra con piedras, y el fogón al centro con sus brasas.
         val piso = d.base.top + d.base.height * 0.25f
         drawRect(Brush.verticalGradient(listOf(roca(Color(0xFF6E5A45), oscuro), roca(Color(0xFF4A3B2D), oscuro)), piso, h), Offset(0f, piso), Size(w, h - piso))
@@ -193,7 +195,7 @@ object IdeasCueva : DisenoIdeas {
         val hueco = Rect(w * 0.08f, h * 0.04f, w * 0.92f, h * 0.66f)
         if (c.vacio) {
             // Un lugar todavía sin nicho: apenas un hundimiento en la roca y unas muescas de ocre.
-            drawOval(roca(ROCA_OSC, oscuro).copy(alpha = 0.25f), Offset(hueco.left + hueco.width * 0.15f, hueco.top + hueco.height * 0.3f), Size(hueco.width * 0.7f, hueco.height * 0.5f))
+            drawOval(roca(ROCA_OSC, oscuro).copy(alpha = 0.12f), Offset(hueco.left + hueco.width * 0.15f, hueco.top + hueco.height * 0.3f), Size(hueco.width * 0.7f, hueco.height * 0.5f))
             for (k in 0 until 4) drawLine(OCRE.copy(alpha = 0.45f), Offset(w * (0.4f + 0.06f * k), h * 0.78f), Offset(w * (0.41f + 0.06f * k), h * 0.88f), 2 * u, StrokeCap.Round)
             return
         }
@@ -226,7 +228,7 @@ object IdeasCueva : DisenoIdeas {
             val x = hueco.left + hueco.width * (0.16f + 0.62f * (i + 0.5f) / k) - ancho / 2
             val r = Rect(x, hueco.bottom - alto - 2 * u, x + ancho, hueco.bottom - 2 * u)
             rotate(-10f + 20f * azar(c.semilla, i + 70), Offset(r.center.x, r.bottom)) {
-                drawPath(lajaPath(r, c.semilla + i), roca(mezcla(CALIZA, ROCA, 0.2f * (k - 1 - i)), oscuro))
+                drawPath(lajaPath(r, c.semilla + i), mezcla(mezcla(CALIZA, ROCA, 0.2f * (k - 1 - i)), Color(0xFF1E150E), if (oscuro) 0.28f else 0f))
                 drawPath(lajaPath(r, c.semilla + i), roca(ROCA_OSC, oscuro).copy(alpha = 0.6f), style = Stroke(0.8f * u))
                 drawLine(OCRE.copy(alpha = 0.7f), Offset(r.left + r.width * 0.3f, r.top + r.height * 0.3f), Offset(r.left + r.width * 0.7f, r.top + r.height * 0.32f), 1.2f * u, StrokeCap.Round)
                 drawLine(CARBON.copy(alpha = 0.5f), Offset(r.left + r.width * 0.3f, r.top + r.height * 0.48f), Offset(r.left + r.width * 0.55f, r.top + r.height * 0.5f), 1f * u, StrokeCap.Round)
