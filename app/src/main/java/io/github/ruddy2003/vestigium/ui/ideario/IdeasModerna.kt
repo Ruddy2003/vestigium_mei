@@ -852,7 +852,7 @@ object IdeasPirata : DisenoIdeas {
         // Las paredes del cofre, con sus cantoneras.
         val pl = 14 * u
         listOf(Rect(0f, 0f, w, pl), Rect(0f, h - pl, w, h), Rect(0f, 0f, pl, h), Rect(w - pl, 0f, w, h)).forEach { r -> drawRect(t(VERDE_OSC, oscuro), r.topLeft, r.size) }
-        listOf(Offset(0f, 0f), Offset(w - 30 * u, 0f), Offset(0f, h - 30 * u), Offset(w - 30 * u, h - 30 * u)).forEach { o -> drawRect(t(LATON, oscuro), o, Size(30 * u, 30 * u), style = Stroke(4 * u)) }
+        escuadrasPared(w, h, pl, 40 * u, t(LATON, oscuro))
         sombraInterior(Rect(pl, pl, w - pl, h - pl), 18 * u, 0.35f)
     }
 

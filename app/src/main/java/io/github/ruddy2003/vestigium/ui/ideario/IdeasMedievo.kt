@@ -46,6 +46,15 @@ internal fun DrawScope.circuloDuda(color: Color) {
     drawCircle(color, s * 0.32f, center, style = Stroke(s * 0.11f))
 }
 
+/** Escuadras de metal en las cuatro esquinas de un interior, sin salirse de sus paredes de grosor [pl]. */
+internal fun DrawScope.escuadrasPared(w: Float, h: Float, pl: Float, largo: Float, color: Color) {
+    listOf(0f to 0f, w to 0f, 0f to h, w to h).forEach { (x, y) ->
+        val sx = if (x == 0f) 0f else x - largo; val sy = if (y == 0f) 0f else y - pl
+        drawRect(color, Offset(sx, sy), Size(largo, pl))
+        drawRect(color, Offset(if (x == 0f) 0f else x - pl, if (y == 0f) 0f else y - largo), Size(pl, largo))
+    }
+}
+
 /** Dos trazos cruzados de [color]: la marca del desacuerdo. */
 internal fun DrawScope.aspa(color: Color, grosor: Float = 0.12f) {
     val s = size.minDimension; val c = center
@@ -554,9 +563,7 @@ object IdeasTemplario : DisenoIdeas {
             drawRect(t(ROBLE, oscuro), r.topLeft, r.size)
             vetas(r, ROBLE_OSC.copy(alpha = 0.5f), (r.left + r.top).toInt(), 1f, vertical = r.height > r.width, grosor = 0.6f, ondulacion = 0.4f)
         }
-        listOf(Offset(0f, 0f), Offset(w - 40 * u, 0f), Offset(0f, h - 40 * u), Offset(w - 40 * u, h - 40 * u)).forEach { o ->
-            drawRect(t(HIERRO, oscuro), o, Size(40 * u, 40 * u), style = Stroke(5 * u))
-        }
+        escuadrasPared(w, h, pl, 46 * u, t(HIERRO, oscuro))
         sombraInterior(Rect(pl, pl, w - pl, h - pl), 18 * u, 0.3f)
     }
 
@@ -648,7 +655,8 @@ object IdeasSeda : DisenoIdeas {
     private val PAPEL = Color(0xFFF6EFDC)
     private val TINTA = Color(0xFF1F1B3A)
     private val CELADON = Color(0xFFA8C8B0)
-    private val CUERDA = Color(0xFF7A5A34)
+    private val CUERDA = Color(0xFFC9A86A)
+    private val BAMBU_VIEJO = Color(0xFF4E3A22)
     private val KILIM_ROJO = Color(0xFF9E2A22)
     private val KILIM_AZUL = Color(0xFF23305E)
     private val KILIM_OCRE = Color(0xFFD39A3A)
@@ -848,15 +856,17 @@ object IdeasSeda : DisenoIdeas {
         val u = density
         val w = size.width; val h = size.height
         val g = if (grande) 1.7f else 1f
-        drawRect(BAMBU.copy(alpha = 0.5f))
+        // Bambú viejo, tostado: la página de la Seda es de tinta clara sobre fondo oscuro.
+        drawRect(BAMBU_VIEJO.copy(alpha = 0.78f))
         // Las tablillas, una junto a otra, cada una con su nudo.
         val tira = 13 * u * g
         var x = 0f; var k = 0
         while (x < w) {
-            if (k % 2 == 1) drawRect(BAMBU_OSC.copy(alpha = 0.08f), Offset(x, 0f), Size(tira, h))
-            drawLine(BAMBU_OSC.copy(alpha = 0.55f), Offset(x, 0f), Offset(x, h), 1f * u)
+            if (k % 2 == 1) drawRect(Color.Black.copy(alpha = 0.08f), Offset(x, 0f), Size(tira, h))
+            drawLine(Color.Black.copy(alpha = 0.45f), Offset(x, 0f), Offset(x, h), 1f * u)
+            drawLine(BAMBU.copy(alpha = 0.14f), Offset(x + 1.2f * u, 0f), Offset(x + 1.2f * u, h), 0.8f * u)
             val ny = h * (0.2f + 0.6f * azar(semilla, k))
-            drawLine(BAMBU_OSC.copy(alpha = 0.35f), Offset(x + 1 * u, ny), Offset(x + tira - 1 * u, ny), 1.4f * u)
+            drawLine(BAMBU.copy(alpha = 0.22f), Offset(x + 1 * u, ny), Offset(x + tira - 1 * u, ny), 1.4f * u)
             x += tira; k++
         }
         // Los dos cordeles que las atan, arriba y abajo, con su vuelta en cada tablilla.
@@ -1029,7 +1039,7 @@ object IdeasGotico : DisenoIdeas {
     private fun DrawScope.linenfold(r: Rect, oscuro: Boolean) {
         val u = density
         drawRect(t(mezcla(ROBLE, ROBLE_OSC, 0.3f), oscuro), r.topLeft, r.size)
-        val n = 4
+        val n = 3
         val pw = r.width / n
         for (k in 0 until n) {
             val x = r.left + pw * k
@@ -1068,10 +1078,10 @@ object IdeasGotico : DisenoIdeas {
         bisel(f, Color.White.copy(alpha = 0.15f), Color.Black.copy(alpha = 0.35f), 1.3f * u)
         // Los paneles de pergamino plegado a los lados (en el lugar libre, también al centro).
         val fh = f.bottom - f.top
-        val izq = Rect(w * 0.04f, f.top + fh * 0.14f, w * 0.27f, f.bottom - fh * 0.14f)
-        val der = Rect(w * 0.73f, izq.top, w * 0.96f, izq.bottom)
+        val izq = Rect(w * 0.04f, f.top + fh * 0.14f, w * 0.2f, f.bottom - fh * 0.14f)
+        val der = Rect(w * 0.8f, izq.top, w * 0.96f, izq.bottom)
         linenfold(izq, oscuro); linenfold(der, oscuro)
-        if (c.vacio) { linenfold(Rect(w * 0.31f, izq.top, w * 0.69f, izq.bottom), oscuro); return }
+        if (c.vacio) { linenfold(Rect(w * 0.24f, izq.top, w * 0.76f, izq.bottom), oscuro); return }
         // La cartela de vitela con su marco de latón y un trebolillo encima.
         val r = Rect(w * rotulo.left, h * rotulo.top + baja, w * rotulo.right, h * rotulo.bottom + baja)
         drawRect(t(VITELA, oscuro), r.topLeft, r.size)
@@ -1085,7 +1095,7 @@ object IdeasGotico : DisenoIdeas {
         drawCircle(t(HIERRO_LUZ, oscuro), 1f * u, Offset(ar.x, ar.y - rr * 0.6f))
     }
 
-    override val rotulo = Rect(0.31f, 0.17f, 0.69f, 0.66f)
+    override val rotulo = Rect(0.24f, 0.17f, 0.76f, 0.66f)
     override fun tintaRotulo(oscuro: Boolean) = TINTA
     override val letraRotulo: FontFamily = LetraExtra.goudy
     override val salida = SALIDA
@@ -1251,6 +1261,7 @@ object IdeasAndalus : DisenoIdeas {
                 drawArc(t(TERRACOTA, oscuro), a0, 230f / 24, true, Offset(centro.x - rad * 1.2f, centro.y - rad * 1.2f), Size(rad * 2.4f, rad * 2.4f))
             }
         }
+        drawPath(ext, t(YESO_OSC, oscuro), style = Stroke(1.6f * u))
         drawPath(int, t(CEDRO_OSC, oscuro))
         clipPath(int) {
             var bx = vano.left
