@@ -483,11 +483,19 @@ class Capturas {
             }
         }
     }
-    /** El mueble del Ideario: vacío, con 1, 5 y 9 temas, y la vista corta (6 y «y N más»). */
-    private fun mueble(t: TemaId, oscuro: Boolean) = pantalla(t, oscuro, 5400, "tema_${t.id}_${if (oscuro) "oscuro" else "claro"}") {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-            listOf(0, 1, 5, 9).forEach { n -> io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, ideasConTemas(n)) }
-            io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, ideasConTemas(9), max = 6)
+    /**
+     * El mueble del Ideario: vacío y con 1 tema; con 5 y 9; y la vista corta (6 y «y N más»). En tres capturas: con muchos
+     * degradados en una sola imagen, el simulador de Paparazzi pinta de negro los últimos (en el teléfono no pasa).
+     */
+    private fun mueble(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        listOf("a" to listOf(0, 1), "b" to listOf(5, 9), "c" to emptyList()).forEach { (parte, ns) ->
+            pantalla(t, oscuro, 2600, "tema_${t.id}_${modo}_$parte") {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                    ns.forEach { n -> io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, ideasConTemas(n)) }
+                    if (ns.isEmpty()) io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, ideasConTemas(9), max = 6)
+                }
+            }
         }
     }
     /** Los muebles con diseño propio, en claro y en oscuro (los demás, con CAPTURAS=mueble, [temaMueble]). */
