@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontStyle
@@ -85,7 +86,8 @@ fun MuebleIdeas(cajones: List<CajonIdeas>, rotulo: (String) -> String, sub: (Caj
                         base = Rect(0f, size.height - altoBase.toPx(), size.width, size.height),
                         separacion = sep.toPx(), mas = mas,
                     )
-                    with(d) { mueble(disp, oscuro) }
+                    // El mueble no se sale de su lugar (la luz del fuego, por ejemplo, se queda en la cueva).
+                    clipRect { with(d) { mueble(disp, oscuro) } }
                 }
                 for (i in 0 until huecos) {
                     val c = cajones.getOrNull(i)
