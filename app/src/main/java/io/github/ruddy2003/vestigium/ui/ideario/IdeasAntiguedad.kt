@@ -127,7 +127,8 @@ object IdeasCueva : DisenoIdeas {
         // La laja con «y N más», tirada en el suelo a la izquierda del fuego.
         if (d.mas > 0) placa.let { pl ->
             val r = Rect(d.base.left + d.base.width * pl.left, d.base.top + d.base.height * pl.top, d.base.left + d.base.width * pl.right, d.base.top + d.base.height * pl.bottom)
-            drawPath(lajaPath(r, 9), Color.Black.copy(alpha = 0.3f), style = Stroke(3 * u))
+            // La sombra de la piedra, corrida hacia abajo, y la piedra encima.
+            drawPath(lajaPath(r.translate(1.5f * u, 2.5f * u), 9), Color.Black.copy(alpha = 0.3f))
             drawPath(lajaPath(r, 9), roca(CALIZA, oscuro))
         }
     }
