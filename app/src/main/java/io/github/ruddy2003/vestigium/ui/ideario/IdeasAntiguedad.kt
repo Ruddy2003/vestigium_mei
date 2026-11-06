@@ -898,7 +898,7 @@ object IdeasHeleno : DisenoIdeas {
     override val columnas = 2
     override val lineas = 4
 
-    override fun forma(semilla: Int): Shape = GenericShape { s, _ -> addPath(contornoIrregular(Rect(0f, 0f, s.width, s.height), semilla, 9, 0.07f)) }
+    override fun forma(semilla: Int): Shape = GenericShape { s, _ -> addPath(contornoIrregular(Rect(0f, 0f, s.width, s.height), semilla, 9, 0.035f)) }
 
     override fun DrawScope.adornoFicha(p: Pagina, grande: Boolean, semilla: Int) {
         val u = density
@@ -909,7 +909,7 @@ object IdeasHeleno : DisenoIdeas {
         drawRect(Brush.linearGradient(listOf(Color.White.copy(alpha = 0.12f), Color.Transparent, TERRA_OSC.copy(alpha = 0.2f)), Offset.Zero, Offset(w, h)))
         // El barniz negro de la cara de afuera, en el borde de abajo, y el canto roto más claro.
         drawRect(BARNIZ.copy(alpha = 0.75f), Offset(0f, h - 6 * u * g), Size(w, 6 * u * g))
-        drawPath(contornoIrregular(Rect(0f, 0f, w, h), semilla, 9, 0.07f), TERRA_LUZ.copy(alpha = 0.6f), style = Stroke(2.2f * u))
+        drawPath(contornoIrregular(Rect(0f, 0f, w, h), semilla, 9, 0.035f), TERRA_LUZ.copy(alpha = 0.6f), style = Stroke(2.2f * u))
         // Rayones incisos y poros del barro.
         for (k in 0 until 2) {
             val y = h * (0.25f + 0.5f * azar(semilla, k + 70))
@@ -918,7 +918,7 @@ object IdeasHeleno : DisenoIdeas {
         for (k in 0 until (if (grande) 70 else 24)) drawCircle(TERRA_OSC.copy(alpha = 0.2f), (0.5f + azar(semilla, k + 200)) * u, Offset(w * azar(semilla, k + 300), h * azar(semilla, k + 400)))
     }
 
-    override val margenes = MargenesFicha(11.dp, 14.dp, 16.dp, 22.dp, 28.dp, 36.dp)
+    override val margenes = MargenesFicha(12.dp, 18.dp, 16.dp, 24.dp, 34.dp, 36.dp)
     override val proporcionFicha = 1.15f
     override val anchoGrande = 1f
     override val proporcionGrande = 0.95f

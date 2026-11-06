@@ -35,9 +35,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -114,9 +116,15 @@ fun MuebleIdeas(cajones: List<CajonIdeas>, rotulo: (String) -> String, sub: (Caj
                     val altoP = altoBase * placa.height
                     // La caja del texto, centrada en la placa y nunca tan baja que corte las letras.
                     val caja = maxOf(altoP, 26.dp)
-                    val tam = (altoP.value * 0.42f).coerceIn(10f, 14f)
+                    val tam0 = (altoP.value * 0.42f).coerceIn(10f, 14f)
+                    val letraPlaca = d.letraRotulo ?: MaterialTheme.typography.labelMedium.fontFamily
+                    // Si la frase no cabe en la placa, la letra se achica (hasta 8 sp) antes de cortarse.
+                    val medidor = rememberTextMeasurer()
+                    val anchoTexto = medidor.measure(textoMas, TextStyle(fontFamily = letraPlaca, fontSize = tam0.sp), maxLines = 1, softWrap = false).size.width
+                    val anchoLibre = with(LocalDensity.current) { (ancho * placa.width - 10.dp).toPx() }
+                    val tam = if (anchoTexto > anchoLibre) maxOf(8f, tam0 * anchoLibre / anchoTexto) else tam0
                     Box(Modifier.offset(ancho * placa.left, alto0 + altoBase * placa.top + (altoP - caja) / 2).size(ancho * placa.width, caja), contentAlignment = Alignment.Center) {
-                        Text(textoMas, color = d.tintaPlaca(oscuro), fontFamily = d.letraRotulo ?: MaterialTheme.typography.labelMedium.fontFamily,
+                        Text(textoMas, color = d.tintaPlaca(oscuro), fontFamily = letraPlaca,
                             fontSize = tam.sp, lineHeight = (tam * 1.15f).sp, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
                     }
                 }

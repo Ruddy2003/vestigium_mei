@@ -463,7 +463,7 @@ object IdeasAntiguas : DisenoIdeas {
     override fun tintaRotulo(oscuro: Boolean) = TINTA
     override val letraRotulo: FontFamily = LetraExtra.camino
     override val salida = 0f
-    override val placa = Rect(0.3f, 0.14f, 0.7f, 0.86f)
+    override val placa = Rect(0.2f, 0.14f, 0.8f, 0.86f)
     override fun tintaPlaca(oscuro: Boolean) = TINTA
 
     override fun DrawScope.interior(oscuro: Boolean) {

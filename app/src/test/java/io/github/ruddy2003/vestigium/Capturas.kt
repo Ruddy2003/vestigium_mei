@@ -484,12 +484,12 @@ class Capturas {
         }
     }
     /**
-     * El mueble del Ideario: vacío y con 1 tema; con 5 y 9; y la vista corta (6 y «y N más»). En tres capturas: con muchos
+     * El mueble del Ideario: vacío, con 1 y con 5 temas; con 9; y la vista corta (6 y «y N más»). En tres capturas: con muchos
      * degradados en una sola imagen, el simulador de Paparazzi pinta de negro los últimos (en el teléfono no pasa).
      */
     private fun mueble(t: TemaId, oscuro: Boolean) {
         val modo = if (oscuro) "oscuro" else "claro"
-        listOf("a" to listOf(0, 1), "b" to listOf(5, 9), "c" to emptyList()).forEach { (parte, ns) ->
+        listOf("a" to listOf(0, 1, 5), "b" to listOf(9), "c" to emptyList()).forEach { (parte, ns) ->
             pantalla(t, oscuro, 2600, "tema_${t.id}_${modo}_$parte") {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                     ns.forEach { n -> io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, ideasConTemas(n)) }
