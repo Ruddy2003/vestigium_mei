@@ -235,7 +235,7 @@ object EstanteDistopia : DisenoBiblioteca {
         // Las hojas que asoman por arriba: más cuanto más escribiste.
         val hojas = 1 + (v.lleno * 4).toInt()
         for (j in 0 until hojas) drawLine(c(PAPEL).copy(alpha = 0.8f), Offset(w * 0.12f, 1.2f * u + j * 1.4f * u), Offset(w * 0.86f, 1.2f * u + j * 1.4f * u), 0.7f * u)
-        // La ventanilla de plástico con la tarjeta: el día y el mes.
+        // La ventanilla de plástico con la tarjeta: el día y el mes (abreviado, «M-10», para que quepa en los más delgados).
         val tarjeta = Rect(w * 0.14f, h * 0.08f, w * 0.86f, h * 0.42f)
         drawRect(c(PAPEL), tarjeta.topLeft, tarjeta.size)
         drawRect(Color.White.copy(alpha = 0.25f), tarjeta.topLeft, Size(tarjeta.width, tarjeta.height * 0.18f))
@@ -243,7 +243,7 @@ object EstanteDistopia : DisenoBiblioteca {
         drawLine(c(ROJO).copy(alpha = 0.6f), Offset(tarjeta.left + 2 * u, tarjeta.top + tarjeta.height * 0.2f), Offset(tarjeta.right - 2 * u, tarjeta.top + tarjeta.height * 0.2f), 0.6f * u)
         textoEn(medidor, if (v.noche) "☾" else "Nº", Rect(tarjeta.left, tarjeta.top, tarjeta.right, tarjeta.top + tarjeta.height * 0.2f), letra, c(NEGRO).copy(alpha = 0.7f), 6.5f)
         textoEn(medidor, v.dia, Rect(tarjeta.left, tarjeta.top + tarjeta.height * 0.22f, tarjeta.right, tarjeta.top + tarjeta.height * 0.66f), ESTARCIDO, c(NEGRO), 15f, peso = FontWeight.Bold)
-        textoEn(medidor, v.mes.uppercase(), Rect(tarjeta.left + 0.5f * u, tarjeta.top + tarjeta.height * 0.66f, tarjeta.right - 0.5f * u, tarjeta.bottom - 1 * u), ESTARCIDO, c(NEGRO).copy(alpha = 0.8f), 7f, minimo = 4.5f)
+        textoEn(medidor, v.mes.uppercase().let { m -> if (m.startsWith("MES ")) "M-" + m.removePrefix("MES ") else m }, Rect(tarjeta.left + 0.5f * u, tarjeta.top + tarjeta.height * 0.66f, tarjeta.right - 0.5f * u, tarjeta.bottom - 1 * u), ESTARCIDO, c(NEGRO).copy(alpha = 0.8f), 7f, minimo = 4.5f)
         // El agujero para el dedo, con su ojal de metal.
         val o = Offset(w * 0.5f, h * 0.58f)
         val ra = minOf(w * 0.2f, 6.5f * u)
