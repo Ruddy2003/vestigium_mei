@@ -2196,6 +2196,11 @@ private fun DrawScope.bitacoraBatiscafo(m: Materia) {
 @Composable
 fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, noche: Boolean = false, abrir: (String) -> Unit) {
     if (entradas.isEmpty()) return
+    // Los temas con su biblioteca nueva dibujan el mueble entero (ui/biblioteca); los demás, el estante de antes.
+    io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(tema)?.let { d ->
+        io.github.ruddy2003.vestigium.ui.biblioteca.EstanteTema(d, listOf(io.github.ruddy2003.vestigium.ui.biblioteca.GrupoEstante(null, entradas)), noche, abrir)
+        return
+    }
     val m = if (noche) materiaNoche(tema) else materia(tema)
     val sentir = rememberSentir()
     val conSonido: (String) -> Unit = { f -> sentir(Sentidos.Evento.ABRIR); abrir(f) }

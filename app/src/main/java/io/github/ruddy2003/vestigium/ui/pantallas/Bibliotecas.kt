@@ -237,11 +237,30 @@ private fun BibliotecaDiario(nav: Nav) {
     }
     if (todas.isEmpty()) Vacio("Todavía no hay entradas. Escribe la de hoy desde la pestaña Diario o al llenar el día.")
     else if (visibles.isEmpty()) Vacio("Nada coincide con la búsqueda.")
-    porMes.entries.take(meses).forEach { (mes, lista) ->
-        Text(rotuloMes(mes), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp, bottom = 2.dp))
-        EstanteDiario(lista) { f -> Seleccion.entrada = f; nav.ir("entrada") }
-    }
+    EstantePorMeses(porMes.entries.take(meses).map { (mes, lista) -> rotuloMes(mes) to lista }, noche = false) { f -> Seleccion.entrada = f; nav.ir("entrada") }
     if (porMes.size > meses) BotonSecundario("ver más meses", Modifier.padding(top = 14.dp)) { meses += 6 }
+}
+
+/**
+ * Las entradas de varios meses. Con la biblioteca nueva del tema es un solo mueble y cada mes empieza en su repisa, con su
+ * rótulo en el canto de la tabla; con el estante de antes, un título y un estante por mes. De noche, bajo el cielo del tema.
+ */
+@Composable
+private fun EstantePorMeses(meses: List<Pair<String, List<io.github.ruddy2003.vestigium.data.Dia>>>, noche: Boolean, abrir: (String) -> Unit) {
+    if (meses.isEmpty()) return
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(Estilo.tema)
+    if (d != null) {
+        val grupos = meses.map { (titulo, lista) -> io.github.ruddy2003.vestigium.ui.biblioteca.GrupoEstante(titulo, lista) }
+        androidx.compose.foundation.layout.Box(Modifier.padding(top = 18.dp)) {
+            if (noche) CieloNoche { io.github.ruddy2003.vestigium.ui.biblioteca.EstanteTema(d, grupos, true, abrir) }
+            else io.github.ruddy2003.vestigium.ui.biblioteca.EstanteTema(d, grupos, false, abrir)
+        }
+        return
+    }
+    meses.forEach { (titulo, lista) ->
+        Text(titulo, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp, bottom = if (noche) 6.dp else 2.dp))
+        if (noche) CieloNoche { EstanteDiario(lista, noche = true, abrir = abrir) } else EstanteDiario(lista, abrir = abrir)
+    }
 }
 
 // ---------------------------------------------------------------- Sueños
@@ -293,10 +312,7 @@ private fun BibliotecaSuenos(nav: Nav) {
     if (todas.isEmpty()) Vacio("Todavía no hay sueños escritos. Cuéntalo arriba, o en la mañana desde Día → Sueño.")
     else if (visibles.isEmpty()) Vacio("Ningún sueño coincide.")
     val porMes = visibles.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
-    porMes.entries.take(meses).forEach { (mes, lista) ->
-        Text(rotuloMes(mes), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp, bottom = 6.dp))
-        CieloNoche { EstanteDiario(lista, noche = true) { f -> Seleccion.sueno = f; nav.ir("sueno") } }
-    }
+    EstantePorMeses(porMes.entries.take(meses).map { (mes, lista) -> rotuloMes(mes) to lista }, noche = true) { f -> Seleccion.sueno = f; nav.ir("sueno") }
     if (porMes.size > meses) BotonSecundario("ver más meses", Modifier.padding(top = 14.dp)) { meses += 6 }
     escribiendo?.let { f -> EscribirSueno(f) { escribiendo = null } }
 }

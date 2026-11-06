@@ -575,6 +575,50 @@ class Capturas {
         ideasArchivo()
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "ideas")
     } }
+
+    // ---------------------------------------------------------------- Bibliotecas: el estante del diario (fase A)
+
+    /** [n] días inventados de octubre y noviembre, con más o menos palabras, ánimo y sueño. */
+    private fun diasEstante(n: Int, desde: Int = 0) = (0 until n).map { i ->
+        val k = desde + i
+        val fecha = if (k < 31) "2026-10-%02d".format(31 - k) else "2026-09-%02d".format(30 - (k - 31) % 30)
+        io.github.ruddy2003.vestigium.data.Dia(fecha = fecha, valencia = (k * 3) % 7 - 3, nota = TEXTO.repeat(1 + k % 5).take(40 + (k * 211) % 1600),
+            sueno_texto = "Volaba sobre un río. ".repeat(1 + k % 6), sueno_valencia = 3 - (k * 2) % 7)
+    }
+    /** Los temas con la biblioteca nueva. */
+    private val ESTANTE_A0 = listOf(TemaId.EDO, TemaId.DISTOPIA)
+    /**
+     * El estante de un tema: (a) con 1 y con 12 entradas; (b) 40 entradas en tres meses, con sus rótulos; (c) de noche, bajo
+     * su cielo. En partes: con muchos degradados en una imagen, Paparazzi pinta de negro los últimos.
+     */
+    private fun estante(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(t)!!
+        captura(t, oscuro, 2200, "tema_${t.id}_${modo}_a") {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                io.github.ruddy2003.vestigium.ui.EstanteDiario(diasEstante(1), t) {}
+                io.github.ruddy2003.vestigium.ui.EstanteDiario(diasEstante(12), t) {}
+            }
+        }
+        captura(t, oscuro, 2600, "tema_${t.id}_${modo}_b") {
+            val todos = diasEstante(40)
+            val grupos = todos.groupBy { it.fecha.take(7) }.map { (mes, l) -> io.github.ruddy2003.vestigium.ui.biblioteca.GrupoEstante(if (mes.endsWith("10")) "octubre · 2026" else "septiembre · 2026", l) } +
+                io.github.ruddy2003.vestigium.ui.biblioteca.GrupoEstante("un mes con un nombre muy largo · 2026", diasEstante(3, 50))
+            Box(Modifier.padding(16.dp)) { io.github.ruddy2003.vestigium.ui.biblioteca.EstanteTema(d, grupos, false, {}) }
+        }
+        captura(t, oscuro, 2000, "tema_${t.id}_${modo}_c") {
+            Box(Modifier.padding(16.dp)) {
+                io.github.ruddy2003.vestigium.ui.CieloNoche(tema = t) {
+                    io.github.ruddy2003.vestigium.ui.biblioteca.EstanteTema(d, listOf(io.github.ruddy2003.vestigium.ui.biblioteca.GrupoEstante("octubre · 2026", diasEstante(12))), true, {})
+                }
+            }
+        }
+    }
+    @Test fun estanteA0() = ESTANTE_A0.forEach { t -> estante(t, t.soloOscuro); if (!t.soloOscuro) estante(t, true) }
+    /** La biblioteca del diario entera, con el estante por meses. */
+    @Test fun bibliotecaDiarioA0() = ESTANTE_A0.forEach { t -> pantalla(t, false, 3600, "a0_${t.id}") {
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")
+    } }
     /** Escribir una idea: una muestra por forma de ficha (tarjeta, tablilla, tira, ticket, expediente, ventana, laja y recorte). */
     @Test fun escritorIdea() = listOf(TemaId.MEDIEVAL, TemaId.ROMANO, TemaId.EDO, TemaId.NEON, TemaId.DISTOPIA, TemaId.CIBER, TemaId.CUEVA, TemaId.PIRATA).forEach { t ->
         pantalla(t, t.soloOscuro, 2400, "tema_${t.id}") {
