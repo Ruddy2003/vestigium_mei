@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedContent

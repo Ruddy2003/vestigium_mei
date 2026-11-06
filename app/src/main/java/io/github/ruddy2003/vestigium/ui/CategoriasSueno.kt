@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

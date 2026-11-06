@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.porNumero
+
 import io.github.ruddy2003.vestigium.data.privado
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
