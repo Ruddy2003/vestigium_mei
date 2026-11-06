@@ -801,7 +801,7 @@ object IdeasOrden : DisenoIdeas {
     override fun tintaRotulo(oscuro: Boolean) = NEGRO
     override val letraRotulo: FontFamily = LetraExtra.estarcido
     override val salida = SALIDA
-    override val placa = Rect(0.3f, 0.6f, 0.7f, 0.96f)
+    override val placa = Rect(0.2f, 0.5f, 0.8f, 0.98f)
     override fun tintaPlaca(oscuro: Boolean) = NEGRO
 
     override fun DrawScope.interior(oscuro: Boolean) {
@@ -1008,15 +1008,17 @@ object IdeasLaboratorio : DisenoIdeas {
         val r = Rect(w * rotulo.left, h * rotulo.top, w * rotulo.right, h * rotulo.bottom)
         drawRect(t(BLANCO, oscuro), r.topLeft, r.size)
         drawRect(t(CIAN, oscuro), r.topLeft, Size(r.width, 3 * u))
-        var bx = r.right - 3 * u; var q = 0
-        while (bx > r.right - 16 * u) { val bw = (0.6f + 1.2f * azar(c.semilla, q)) * u; drawRect(TINTA.copy(alpha = 0.6f), Offset(bx - bw, r.bottom - 7 * u), Size(bw, 5 * u)); bx -= bw + 1 * u; q++ }
+        // El código de barras va en la caja, debajo de la etiqueta, para no pisar el texto.
+        val by = (r.bottom + caja.bottom) / 2
+        var bx = caja.right - 6 * u; var q = 0
+        while (bx > caja.right - 26 * u) { val bw = (0.6f + 1.2f * azar(c.semilla, q)) * u; drawRect(TINTA.copy(alpha = 0.55f), Offset(bx - bw, by - 2.5f * u), Size(bw, 5 * u)); bx -= bw + 1 * u; q++ }
     }
 
-    override val rotulo = Rect(0.16f, 0.5f, 0.84f, 0.86f)
+    override val rotulo = Rect(0.16f, 0.5f, 0.84f, 0.84f)
     override fun tintaRotulo(oscuro: Boolean) = TINTA
     override val letraRotulo: FontFamily = LetraExtra.jost
     override val salida = 0f
-    override val placa = Rect(0.3f, 0.6f, 0.7f, 0.95f)
+    override val placa = Rect(0.2f, 0.5f, 0.8f, 0.98f)
     override fun tintaPlaca(oscuro: Boolean) = TINTA
 
     override fun DrawScope.interior(oscuro: Boolean) {
