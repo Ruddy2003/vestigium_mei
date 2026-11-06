@@ -1544,13 +1544,14 @@ object IdeasNavidad : DisenoIdeas {
         drawOval(t(ORO, oscuro), Offset(tapa.left, tapa.top - elip * 0.8f), Size(tapa.width, elip * 1.6f), style = Stroke(1.4f * u))
         drawLine(t(ORO, oscuro), Offset(tapa.left, tapa.center.y), Offset(tapa.right, tapa.center.y), 1.2f * u)
         // La etiqueta ovalada con el tema.
-        val r = Rect(w * rotulo.left, h * rotulo.top, w * rotulo.right, h * rotulo.bottom)
+        // El óvalo es más ancho y más alto que la zona del texto: así el texto no toca su borde curvo.
+        val r = Rect(w * rotulo.left - w * 0.07f, h * rotulo.top - h * 0.04f, w * rotulo.right + w * 0.07f, h * rotulo.bottom + h * 0.03f)
         drawOval(Color.Black.copy(alpha = 0.25f), Offset(r.left + 1.5f * u, r.top + 2 * u), r.size)
         drawOval(t(BLANCO, oscuro), r.topLeft, r.size)
         drawOval(t(ORO, oscuro), Offset(r.left + 2 * u, r.top + 2 * u), Size(r.width - 4 * u, r.height - 4 * u), style = Stroke(1.2f * u))
     }
 
-    override val rotulo = Rect(0.16f, 0.5f, 0.84f, 0.86f)
+    override val rotulo = Rect(0.2f, 0.54f, 0.8f, 0.84f)
     override fun tintaRotulo(oscuro: Boolean) = TINTA
     override val letraRotulo: FontFamily = LetraExtra.calida
     override val salida = 0f
@@ -1999,7 +2000,7 @@ object IdeasUrss : DisenoIdeas {
     override fun tintaRotulo(oscuro: Boolean) = TINTA
     override val letraRotulo: FontFamily = LetraExtra.russo
     override val salida = SALIDA
-    override val placa = Rect(0.33f, 0.12f, 0.67f, 0.32f)
+    override val placa = Rect(0.24f, 0.04f, 0.76f, 0.38f)
     override fun tintaPlaca(oscuro: Boolean) = TINTA
 
     override fun DrawScope.interior(oscuro: Boolean) {
@@ -2027,7 +2028,7 @@ object IdeasUrss : DisenoIdeas {
     override fun forma(semilla: Int): Shape = GenericShape { s, _ ->
         fillType = PathFillType.EvenOdd
         addRect(Rect(0f, 0f, s.width, s.height))
-        val r = minOf(s.width, s.height) * 0.045f
+        val r = minOf(s.width, s.height).coerceAtMost(s.width * 0.3f) * 0.03f
         addOval(Rect(s.width / 2 - r, s.height - r * 3.6f, s.width / 2 + r, s.height - r * 1.6f))
     }
 
@@ -2039,7 +2040,7 @@ object IdeasUrss : DisenoIdeas {
         // El filete rojo de arriba, la línea vertical del margen y el refuerzo del agujero.
         drawLine(ROJO.copy(alpha = 0.7f), Offset(0f, 3 * u * g), Offset(w, 3 * u * g), 1f * u * g)
         drawLine(ROJO.copy(alpha = 0.35f), Offset(10 * u * g, 0f), Offset(10 * u * g, h), 0.8f * u)
-        val r = minOf(w, h) * 0.045f
+        val r = minOf(w, h).coerceAtMost(w * 0.3f) * 0.03f
         drawCircle(TINTA.copy(alpha = 0.25f), r * 1.5f, Offset(w / 2, h - r * 2.6f), style = Stroke(0.8f * u))
     }
 
