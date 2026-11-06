@@ -3483,7 +3483,9 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                  pie: (@Composable (Pagina) -> Unit)? = null) {
     val p = when (modo) { Escrito.SUENO -> paginaNoche(tema); Escrito.IDEA -> paginaFicha(tema); else -> pagina(tema) }
     val ficha = modo == Escrito.IDEA
-    val archivo = archivoIdeas(tema)
+    val diseno = io.github.ruddy2003.vestigium.ui.ideario.disenoIdeas(tema)
+    // Antes de cambiar al esquema del papel: si la app está de noche.
+    val oscuroApp = esOscuro()
     val sentir = rememberSentir()
     var campo by remember { mutableStateOf(TextFieldValue(valor, TextRange(valor.length))) }
     if (campo.text != valor) campo = TextFieldValue(valor, TextRange(valor.length))
@@ -3497,11 +3499,11 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
     }
     MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         Box(Modifier.fillMaxSize()) {
-            if (ficha) InteriorArchivo(archivo, materia(tema)) else FondoPagina(tema, p, noche = modo == Escrito.SUENO)
+            if (ficha) io.github.ruddy2003.vestigium.ui.ideario.InteriorIdeas(oscuroApp) else FondoPagina(tema, p, noche = modo == Escrito.SUENO)
             // Lo de adentro de la página: la barra, el texto y la fila de abajo. En una idea va dentro de una ficha grande del tema.
             val interior: @Composable ColumnScope.() -> Unit = {
-                if (ficha && archivo.formaFicha == FormaFicha.VENTANA) Spacer(Modifier.height(altoBarraVentana(true)))
-                else if (ficha) Spacer(Modifier.height(margenSuperior(archivo.formaFicha, true) / 2))
+                if (ficha && diseno.barra) Spacer(Modifier.height(diseno.altoBarra(true)))
+                else if (ficha) Spacer(Modifier.height(diseno.margenes.arribaGrande / 2))
                 BarraPagina(p, guardar, Texto.palabras(campo.text).let { n -> Estilo.texto("palabras").format(n).let { if (n == 1) it.replace(" palabras", " palabra") else it } }) {
                     Text(textoBoton ?: textoGuardar(tema), style = MaterialTheme.typography.labelLarge, color = if (p.oscura) p.color else Color.White,
                         modifier = Modifier.padding(end = 6.dp).background(p.acento, MaterialTheme.shapes.small).clickable { sentir(Sentidos.Evento.GUARDAR); guardar() }
@@ -3549,12 +3551,12 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                 androidx.compose.foundation.layout.Spacer(Modifier.navigationBarsPadding())
             } else Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)).imePadding()) {
                 // La ficha grande, con la forma de las del tema, sobre el interior del contenedor.
-                val forma = remember(archivo.formaFicha) { formaDeFicha(archivo.formaFicha, fecha.hashCode()) }
+                val forma = remember(tema) { diseno.forma(fecha.hashCode()) }
                 androidx.compose.material3.Surface(shape = forma, color = Color.Transparent, shadowElevation = 6.dp,
                     modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp)) {
                     Box {
                         PapelFicha(p)
-                        Canvas(Modifier.matchParentSize()) { adornoFicha(archivo.formaFicha, p, materia(tema), grande = true) }
+                        Canvas(Modifier.matchParentSize()) { with(diseno) { adornoFicha(p, true, fecha.hashCode()) } }
                         Column(Modifier.fillMaxSize()) { interior() }
                     }
                 }
