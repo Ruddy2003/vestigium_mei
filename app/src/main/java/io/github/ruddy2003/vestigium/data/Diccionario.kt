@@ -428,13 +428,10 @@ object Diccionario {
      */
     /** La versión de la app con la que llega el esquema 18 (deseados y listas). */
     private const val VERSION_ESQUEMA_18 = 118
-    /**
-     * La versión de la app con la que llega el esquema 19 (cierre de las visitas). Se fija al mezclar a `main`: es el número
-     * de ejecución de la compilación que publica esa versión.
-     */
-    private const val VERSION_ESQUEMA_19 = 123
-    /** La versión de la app con la que llega el esquema 20 (avisos de ánimo a su hora). Se fija al mezclar a `main`. */
-    private const val VERSION_ESQUEMA_20 = 123
+    /** La versión de la app con la que llegan el esquema 19 (cierre de las visitas) y el 20: la v129. */
+    private const val VERSION_ESQUEMA_19 = 129
+    /** La versión de la app con la que llega el esquema 20 (avisos de ánimo a su hora): la misma v129. */
+    private const val VERSION_ESQUEMA_20 = 129
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
