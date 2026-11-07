@@ -671,7 +671,7 @@ class Capturas {
         captura(t, oscuro, 2000, "tema_${t.id}_${modo}_sola") {
             val medidor = androidx.compose.ui.text.rememberTextMeasurer()
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                listOf(Triple(1, 0f, "1 ${c.hoja} · desde el 6 nov"), Triple(40, 0f, "40 ${c.hoja}s · desde el 3 sep"), Triple(40, 0.55f, "40 ${c.hoja}s · desde el 3 sep")).forEach { (h, a, cuenta) ->
+                listOf(Triple(1, 0f, "1 ${c.hoja} · desde el 6 nov"), Triple(40, 0f, "40 ${io.github.ruddy2003.vestigium.ui.pantallas.pluralHoja(c.hoja)} · desde el 3 sep"), Triple(40, 0.55f, "40 ${io.github.ruddy2003.vestigium.ui.pantallas.pluralHoja(c.hoja)} · desde el 3 sep")).forEach { (h, a, cuenta) ->
                     androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(d.altoLibreta)) {
                         with(d) { libreta(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoLibreta(c.nombre, cuenta, h, a, 7), medidor, oscuro) }
                     }

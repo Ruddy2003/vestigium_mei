@@ -102,6 +102,21 @@ private fun renglones(fecha: String, discreto: Boolean): List<Renglon> {
 }
 
 /**
+ * El plural del nombre de una hoja del contenedor: «columna» → «columnas», «piel» → «pieles», «inmersión» → «inmersiones»,
+ * «página pintada» → «páginas pintadas», «página del carnet» → «páginas del carnet».
+ */
+internal fun pluralHoja(h: String): String {
+    fun plural(p: String) = when {
+        p.endsWith("ón") -> p.dropLast(2) + "ones"
+        p.last() in "aeiouáéíóú" -> p + "s"
+        else -> p + "es"
+    }
+    val palabras = h.split(" ")
+    val corte = palabras.indexOfFirst { it == "de" || it == "del" }.let { if (it < 0) palabras.size else it }
+    return palabras.mapIndexed { i, w -> if (i < corte) plural(w) else w }.joinToString(" ")
+}
+
+/**
  * La libreta cerrada sobre su soporte, como la dibuja el tema ([io.github.ruddy2003.vestigium.ui.biblioteca.DisenoBiblioteca.libreta]):
  * el objeto de su contenedor ([contenedorDe]), que engorda con cada hoja, con el nombre y la cuenta dentro. Al tocarla se
  * abre y después pasa a la última hoja.
@@ -116,7 +131,7 @@ internal fun LibretaCerrada(hojas: Int, desde: String?, modifier: Modifier = Mod
     val alcance = rememberCoroutineScope()
     val abre = remember { Animatable(0f) }
     val animar = Repo.config.animaciones
-    val cuenta = "$hojas ${contenedor.hoja}${if (hojas == 1) "" else "s"}" + (desde?.let { " · desde el ${Fechas.corto(it)}" } ?: "")
+    val cuenta = "$hojas ${if (hojas == 1) contenedor.hoja else pluralHoja(contenedor.hoja)}" + (desde?.let { " · desde el ${Fechas.corto(it)}" } ?: "")
     Canvas(modifier.fillMaxWidth().height(d.altoLibreta).semantics { contentDescription = contenedor.nombre + ", " + cuenta }.clickable {
         sentir(Sentidos.Evento.ABRIR)
         if (animar) alcance.launch { abre.animateTo(1f, tween(300)); abrir(); abre.snapTo(0f) } else abrir()
