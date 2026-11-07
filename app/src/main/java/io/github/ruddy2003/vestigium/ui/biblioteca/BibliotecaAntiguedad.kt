@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.ui.Letra
 import io.github.ruddy2003.vestigium.ui.LetraExtra
+import io.github.ruddy2003.vestigium.ui.Pagina
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.bisel
 import io.github.ruddy2003.vestigium.ui.ideario.contornoIrregular
@@ -546,6 +547,183 @@ object EstanteCueva : DisenoBiblioteca {
             }
         }
     }
+
+    // ---------------------------------------------------------------- la página y el escritor
+
+    override val altoEncabezado: Dp = 118.dp
+
+    /**
+     * El encabezado: una laja de caliza alisada a todo el ancho, de contorno desportillado, con sus capas y sus poros. A la
+     * izquierda, la mano en positivo (de noche, la luna creciente y unas estrellas, en ocre amarillo); a la derecha, el ciervo
+     * de carbón; en medio, el rótulo pintado con ocre, la fecha con carbón (la protagonista), el trazo ondulado y el detalle;
+     * abajo, la hilera de puntos de ocre.
+     */
+    override fun DrawScope.encabezado(e: EstadoEncabezado, p: Pagina, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val laja = Rect(2 * u, 4 * u, w - 3 * u, h - 5 * u)
+        val contorno = contornoIrregular(laja, e.numero * 7 + 3, 52, 0.03f)
+        val piedra = if (p.oscura) mezcla(p.color, p.tinta, 0.1f) else tonoAnt(CALIZAS[1], p, oscuro)
+        translate(2 * u, 3 * u) { drawPath(contorno, Color.Black.copy(alpha = if (p.oscura) 0.35f else 0.18f)) }
+        drawPath(contorno, piedra)
+        clipPath(contorno) {
+            // Las capas de la caliza, los poros y, de noche, la luz de las brasas que sube desde abajo (el único degradado).
+            for (j in 0 until 4) {
+                val y = laja.top + laja.height * (0.18f + 0.22f * j)
+                val capa = Path()
+                capa.moveTo(laja.left, y)
+                var x = laja.left
+                var k = 0
+                while (x < laja.right) {
+                    capa.quadraticTo(x + 16 * u, y + (azar(e.numero + j, k) - 0.5f) * 6 * u, x + 32 * u, y)
+                    x += 32 * u; k++
+                }
+                drawPath(capa, p.tinta.copy(alpha = 0.07f), style = Stroke(0.8f * u))
+            }
+            for (j in 0 until 60) {
+                drawCircle(p.tinta.copy(alpha = 0.08f + 0.08f * azar(e.numero, 300 + j)), (0.5f + azar(e.numero, 400 + j)) * u,
+                    Offset(laja.left + laja.width * azar(e.numero, 500 + j), laja.top + laja.height * azar(e.numero, 600 + j)))
+            }
+            if (e.noche) mancha(Offset(laja.left + w * 0.12f, laja.bottom + 10 * u), h * 1.3f, BRASA.copy(alpha = 0.2f))
+        }
+        drawPath(contorno, p.tinta.copy(alpha = 0.3f), style = Stroke(1f * u))
+        val pintura = mezcla(OCRE_AMARILLO, FUEGO, 0.35f)
+        // La mano (o, de noche, la luna y sus estrellas).
+        val cm = Offset(laja.left + 27 * u, h * 0.45f)
+        val m = 27 * u
+        if (e.noche) {
+            val luna = Offset(cm.x, h * 0.5f)
+            drawCircle(pintura, m * 0.62f, luna)
+            drawCircle(piedra, m * 0.52f, Offset(luna.x + m * 0.3f, luna.y - m * 0.18f))
+            for (j in 0 until 5) {
+                val s = Offset(laja.left + (8 + 9 * j) * u, h * (if (j % 2 == 0) 0.18f else 0.82f))
+                if (j % 2 == 0) drawPath(estrella(s, 3.4f * u, 4, 0.35f), pintura) else drawCircle(pintura, 1.3f * u, s)
+            }
+        } else {
+            mano(cm, m, p.acento.copy(alpha = 0.85f), e.numero)
+        }
+        // El ciervo de carbón, a la derecha.
+        ciervo(Offset(w - 40 * u, h * 0.56f), 38 * u, p.tinta.copy(alpha = 0.72f))
+        // El rótulo, la fecha, el trazo ondulado y el detalle.
+        val izq = laja.left + 58 * u
+        val der = w - 72 * u
+        textoEn(medidor, e.rotulo, Rect(izq - 4 * u, 9 * u, w - 14 * u, 29 * u), LetraExtra.trazo, p.acento, 15f, espaciado = 0.3f, minimo = 8f)
+        fechaEncAnt(medidor, e.fecha, Rect(izq, 30 * u, der, 74 * u), LetraExtra.abrigo, p.tinta, 22f, 22, FontWeight.Bold)
+        val trazo = Path()
+        val ty = 78 * u
+        trazo.moveTo(izq + 10 * u, ty)
+        var tx = izq + 10 * u
+        var k = 0
+        while (tx < der - 10 * u) {
+            trazo.quadraticTo(tx + 5 * u, ty + (if (k % 2 == 0) -2f else 2f) * u, tx + 10 * u, ty)
+            tx += 10 * u; k++
+        }
+        drawPath(trazo, p.acento.copy(alpha = 0.6f), style = Stroke(1.5f * u, cap = StrokeCap.Round))
+        textoEn(medidor, e.detalle, Rect(laja.left + 10 * u, 85 * u, laja.right - 10 * u, 99 * u), LetraExtra.abrigo, p.tenue, 11f, minimo = 7f)
+        for (j in 0 until 7) drawCircle(p.acento.copy(alpha = 0.75f), 2.1f * u, Offset((izq + der) / 2 + (j - 3) * 9 * u, 105 * u + (j % 2) * 1.6f * u))
+    }
+
+    /**
+     * La pared donde se escribe: el hollín de la lámpara arriba (en franjas, sin degradado), las capas de la roca, la hilera de
+     * puntos de ocre, las rayas de cuenta que bajan por el margen izquierdo en grupos de cinco, el ciervo de carbón apenas
+     * trazado abajo a la izquierda y, abajo a la derecha, una mano en negativo con el ocre soplado alrededor (de noche, una luna
+     * creciente arriba). En modo oscuro, la pared en la penumbra y la luz del fuego que sube desde abajo a la izquierda.
+     */
+    override fun DrawScope.pagina(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        for (k in 0 until 6) drawRect(p.tinta.copy(alpha = 0.022f), Offset.Zero, Size(w, (60 + k * 22) * u))
+        for (j in 0 until 8) {
+            val y = h * (0.1f + 0.115f * j)
+            val capa = Path()
+            capa.moveTo(0f, y)
+            var x = 0f
+            var k = 0
+            while (x < w) {
+                capa.quadraticTo(x + 22 * u, y + (azar(31 + j, k) - 0.5f) * 14 * u, x + 44 * u, y + (azar(37 + j, k) - 0.5f) * 4 * u)
+                x += 44 * u; k++
+            }
+            drawPath(capa, p.tinta.copy(alpha = 0.045f), style = Stroke(1f * u))
+        }
+        for (j in 0 until 7) drawCircle(p.acento.copy(alpha = 0.28f), 2.3f * u, Offset(w / 2 + (j - 3) * 10 * u, 62 * u + (j % 2) * 2 * u))
+        // Las rayas de cuenta en el margen: cuatro de pie y una que las cruza, cada 64 dp.
+        var y0 = 90 * u
+        var g = 0
+        while (y0 < h - 120 * u) {
+            val x0 = 8 * u
+            for (i in 0 until 4) drawLine(p.tinta.copy(alpha = 0.16f), Offset(x0 + i * 3.4f * u, y0), Offset(x0 + i * 3.4f * u + 0.6f * u, y0 + 13 * u), 1.3f * u, StrokeCap.Round)
+            if (g % 3 != 2) drawLine(p.tinta.copy(alpha = 0.16f), Offset(x0 - 2 * u, y0 + 11 * u), Offset(x0 + 13 * u, y0 + 2 * u), 1.3f * u, StrokeCap.Round)
+            y0 += 64 * u; g++
+        }
+        ciervo(Offset(52 * u, h - 52 * u), 46 * u, p.tinta.copy(alpha = 0.12f))
+        // La mano en negativo: el ocre soplado en puntos (más denso cerca de la mano) y la mano del color de la piedra.
+        val cm = Offset(w - 48 * u, h - 74 * u)
+        for (j in 0 until 220) {
+            val a = azar(71, j) * 6.283f
+            val r = 44 * u * kotlin.math.sqrt(azar(73, j))
+            val o = Offset(cm.x + r * cos(a), cm.y + 8 * u + r * sin(a))
+            drawCircle(p.acento.copy(alpha = 0.2f * (1f - r / (46 * u))), (0.8f + 1.6f * azar(79, j)) * u, o)
+        }
+        mano(cm, 22 * u, p.color, 5)
+        if (noche) {
+            val luna = Offset(w - 40 * u, h - 160 * u)
+            drawCircle(p.acento.copy(alpha = 0.4f), 13 * u, luna)
+            drawCircle(p.color, 11 * u, Offset(luna.x + 6 * u, luna.y - 4 * u))
+        }
+        if (oscuro && !p.oscura) penumbraAnt(Offset(w * 0.06f, h * 1.02f), FUEGO, 0.24f)
+    }
+
+    /**
+     * La visera de la roca sobre la página: una franja de caliza (un degradado, más honda arriba) con el borde de abajo
+     * desportillado, sus capas y una hilera de puntos de ocre pintados en el canto.
+     */
+    override fun DrawScope.barra(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val base = if (p.oscura) mezcla(p.color, p.tinta, 0.07f) else tonoAnt(CALIZAS[3], p, oscuro)
+        val honda = if (p.oscura) mezcla(p.color, Color.Black, 0.35f) else mezcla(base, ROCA_OSC, 0.45f)
+        val borde = Path().apply {
+            moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, h - 4 * u)
+            var x = w
+            var k = 0
+            while (x > 0f) {
+                x -= (10 + 14 * azar(17, k)) * u
+                lineTo(maxOf(x, 0f), h - (1 + 5 * azar(19, k)) * u)
+                k++
+            }
+            close()
+        }
+        drawPath(borde, Brush.verticalGradient(0f to honda, 0.45f to base, 1f to base, startY = 0f, endY = h))
+        for (j in 0 until 2) {
+            val y = h * (0.22f + 0.2f * j)
+            drawLine(p.tinta.copy(alpha = 0.06f), Offset(0f, y), Offset(w, y + (azar(23, j) - 0.5f) * 4 * u), 0.8f * u)
+        }
+        drawPath(borde, p.tinta.copy(alpha = 0.35f), style = Stroke(1.2f * u))
+        var x = 30 * u
+        var k = 0
+        while (x < w - 30 * u) {
+            drawCircle(p.acento.copy(alpha = 0.45f), 1.6f * u, Offset(x, h - 9 * u + (k % 2) * 1.5f * u))
+            x += 13 * u; k++
+        }
+    }
+
+    /**
+     * El botón de guardar: un canto rodado pintado con ocre, de contorno irregular, con su sombra plana, la luz arriba (un
+     * degradado), el borde de carbón y dos puntos de ocre amarillo en las puntas.
+     */
+    override fun DrawScope.botonGuardar(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val r = Rect(2 * u, 2 * u, w - 3 * u, h - 4 * u)
+        val canto = contornoIrregular(r, 11, 30, 0.07f)
+        translate(1.5f * u, 2.5f * u) { drawPath(canto, Color.Black.copy(alpha = 0.32f)) }
+        val ocre = if (oscuro) mezcla(OCRE, Color.Black, 0.12f) else OCRE
+        drawPath(canto, Brush.verticalGradient(listOf(mezcla(ocre, OCRE_AMARILLO, 0.4f), ocre, mezcla(ocre, Color.Black, 0.28f)), r.top, r.bottom))
+        drawPath(canto, CARBON.copy(alpha = 0.55f), style = Stroke(1f * u))
+        listOf(r.left + 7 * u, r.right - 7 * u).forEach { x -> drawCircle(mezcla(OCRE_AMARILLO, FUEGO, 0.4f), 2.2f * u, Offset(x, r.center.y)) }
+    }
+
+    override fun tintaBoton(p: Pagina, oscuro: Boolean, noche: Boolean): Color = CALIZAS[0]
 }
 
 
@@ -1032,6 +1210,180 @@ object EstanteRomano : DisenoBiblioteca {
             }
         }
     }
+
+    // ---------------------------------------------------------------- la página y el escritor
+
+    override val altoEncabezado: Dp = 114.dp
+
+    /** Una corona de laurel abierta abajo, con su cinta: dos ramas de hojas en arco alrededor de [c]. */
+    private fun DrawScope.coronaLaurel(c: Offset, r: Float, hoja: Color, cinta: Color) {
+        val u = density
+        listOf(-1f, 1f).forEach { s ->
+            drawArc(hoja, if (s < 0) 110f else -70f, 140f, false, Offset(c.x - r * 0.82f, c.y - r * 0.82f), Size(r * 1.64f, r * 1.64f), style = Stroke(0.9f * u))
+            for (k in 0 until 7) {
+                val a = Math.toRadians((if (s < 0) 112.0 + k * 21.0 else 68.0 - k * 21.0))
+                val o = Offset(c.x + r * 0.82f * cos(a).toFloat(), c.y + r * 0.82f * sin(a).toFloat())
+                val giro = Math.toDegrees(a).toFloat() + 90f + s * 32f
+                rotate(giro, o) {
+                    drawOval(hoja, Offset(o.x - r * 0.1f, o.y - r * 0.24f), Size(r * 0.2f, r * 0.48f))
+                }
+            }
+        }
+        drawLine(cinta, Offset(c.x - r * 0.18f, c.y + r * 0.86f), Offset(c.x - r * 0.38f, c.y + r * 1.1f), 1.4f * u, StrokeCap.Round)
+        drawLine(cinta, Offset(c.x + r * 0.18f, c.y + r * 0.86f), Offset(c.x + r * 0.38f, c.y + r * 1.1f), 1.4f * u, StrokeCap.Round)
+        drawCircle(cinta, 1.8f * u, Offset(c.x, c.y + r * 0.84f))
+    }
+
+    /** Una hedera (la hoja de hiedra que separa los textos en las inscripciones), centrada en [o], de alto [m]. */
+    private fun DrawScope.hedera(o: Offset, m: Float, color: Color) {
+        val hoja = Path().apply {
+            moveTo(o.x, o.y + m * 0.5f)
+            cubicTo(o.x - m * 0.7f, o.y + m * 0.05f, o.x - m * 0.45f, o.y - m * 0.55f, o.x, o.y - m * 0.2f)
+            cubicTo(o.x + m * 0.45f, o.y - m * 0.55f, o.x + m * 0.7f, o.y + m * 0.05f, o.x, o.y + m * 0.5f)
+            close()
+        }
+        drawPath(hoja, color)
+        drawLine(color, Offset(o.x, o.y - m * 0.2f), Offset(o.x - m * 0.25f, o.y - m * 0.62f), m * 0.1f, StrokeCap.Round)
+    }
+
+    /**
+     * El encabezado: la tabula ansata, la placa de mármol con sus dos asas de cola de milano, el doble marco en minio y las
+     * vetas; dentro, a la izquierda, la corona de laurel (de noche, la luna creciente con dos estrellas) y, en medio, el
+     * rótulo en capitales espaciadas entre dos hederae, la fecha grande y el detalle.
+     */
+    override fun DrawScope.encabezado(e: EstadoEncabezado, p: Pagina, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val marmol = if (p.oscura) mezcla(p.color, p.tinta, 0.1f) else tonoAnt(MARMOL, p, oscuro)
+        val asa = 22 * u
+        val placa = Rect(asa, 6 * u, w - asa, h - 8 * u)
+        val forma = Path().apply {
+            moveTo(placa.left, placa.top); lineTo(placa.right, placa.top)
+            lineTo(placa.right, placa.center.y - placa.height * 0.2f); lineTo(w - 2 * u, placa.top + placa.height * 0.1f)
+            lineTo(w - 2 * u, placa.bottom - placa.height * 0.1f); lineTo(placa.right, placa.center.y + placa.height * 0.2f)
+            lineTo(placa.right, placa.bottom); lineTo(placa.left, placa.bottom)
+            lineTo(placa.left, placa.center.y + placa.height * 0.2f); lineTo(2 * u, placa.bottom - placa.height * 0.1f)
+            lineTo(2 * u, placa.top + placa.height * 0.1f); lineTo(placa.left, placa.center.y - placa.height * 0.2f)
+            close()
+        }
+        translate(2 * u, 3 * u) { drawPath(forma, Color.Black.copy(alpha = if (p.oscura) 0.35f else 0.16f)) }
+        drawPath(forma, marmol)
+        clipPath(forma) {
+            for (j in 0 until 5) {
+                val veta = Path()
+                val y = placa.top + placa.height * (0.1f + 0.2f * j)
+                veta.moveTo(0f, y)
+                veta.cubicTo(w * 0.3f, y + (azar(e.numero, j) - 0.5f) * 30 * u, w * 0.6f, y + (azar(e.numero, j + 9) - 0.5f) * 30 * u, w, y + 6 * u)
+                drawPath(veta, (if (p.oscura) p.tinta else MARMOL_VETA).copy(alpha = 0.18f), style = Stroke(0.7f * u))
+            }
+            // De noche, la luz de la lucerna desde la izquierda (el único degradado).
+            if (e.noche) mancha(Offset(placa.left, placa.center.y), w * 0.5f, LLAMA.copy(alpha = 0.16f))
+        }
+        drawPath(forma, p.tinta.copy(alpha = 0.35f), style = Stroke(1f * u))
+        drawRect(p.acento.copy(alpha = 0.8f), Offset(placa.left + 5 * u, placa.top + 5 * u), Size(placa.width - 10 * u, placa.height - 10 * u), style = Stroke(1.4f * u))
+        drawRect(p.tinta.copy(alpha = 0.3f), Offset(placa.left + 8 * u, placa.top + 8 * u), Size(placa.width - 16 * u, placa.height - 16 * u), style = Stroke(0.7f * u))
+        // El clavo de bronce en cada asa.
+        listOf(10 * u, w - 10 * u).forEach { x ->
+            drawCircle(tonoAnt(BRONCE, p, oscuro), 3 * u, Offset(x, placa.center.y))
+            drawCircle(Color.Black.copy(alpha = 0.35f), 3 * u, Offset(x, placa.center.y), style = Stroke(0.7f * u))
+        }
+        // La corona de laurel o, de noche, la luna.
+        val ce = Offset(placa.left + 30 * u, placa.center.y - 2 * u)
+        if (e.noche) {
+            drawCircle(LUNA, 13 * u, ce)
+            drawCircle(marmol, 11 * u, Offset(ce.x + 6 * u, ce.y - 4 * u))
+            drawPath(estrella(Offset(ce.x + 13 * u, ce.y + 12 * u), 3.2f * u, 4, 0.35f), LUNA)
+            drawCircle(LUNA, 1.3f * u, Offset(ce.x - 12 * u, ce.y - 14 * u))
+        } else {
+            coronaLaurel(ce, 17 * u, (if (p.oscura) p.detalle else tonoAnt(LAUREL, p, oscuro)), p.acento)
+        }
+        val izq = placa.left + 54 * u
+        val der = placa.right - 12 * u
+        textoEn(medidor, e.rotulo, Rect(izq + 14 * u, 15 * u, der - 14 * u, 33 * u), Letra.inscripcion, p.acento, 13f, espaciado = 2.4f, minimo = 8f)
+        hedera(Offset(izq + 5 * u, 24 * u), 8 * u, p.acento.copy(alpha = 0.8f))
+        hedera(Offset(der - 5 * u, 24 * u), 8 * u, p.acento.copy(alpha = 0.8f))
+        drawLine(p.acento.copy(alpha = 0.45f), Offset(izq + 10 * u, 35 * u), Offset(der - 10 * u, 35 * u), 0.8f * u)
+        fechaEncAnt(medidor, e.fecha, Rect(izq, 37 * u, der, 74 * u), Letra.inscripcion, p.tinta, 24f, 24, FontWeight.Bold)
+        textoEn(medidor, e.detalle, Rect(placa.left + 12 * u, 77 * u, placa.right - 12 * u, 92 * u), Letra.inscripcion, p.tenue, 10.5f, minimo = 7f)
+    }
+
+    /**
+     * El papiro del volumen: las juntas de las hojas pegadas (kolleseis) cada 37 % del ancho, las fibras horizontales, la
+     * doble regla roja del margen, las marcas de cuenta de líneas en el margen derecho y, al pie, tres hederae; de noche, la
+     * luna creciente abajo a la derecha. En modo oscuro, el papiro en la penumbra y la luz de la lucerna desde arriba a la
+     * izquierda.
+     */
+    override fun DrawScope.pagina(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        var x = w * 0.29f
+        while (x < w) {
+            drawRect(p.detalle.copy(alpha = 0.06f), Offset(x, 0f), Size(7 * u, h))
+            drawLine(p.detalle.copy(alpha = 0.1f), Offset(x + 7 * u, 0f), Offset(x + 7 * u, h), 0.8f * u)
+            x += w * 0.37f
+        }
+        var y = 0f
+        var k = 0
+        while (y < h) {
+            drawLine(p.detalle.copy(alpha = 0.02f + 0.03f * azar(41, k)), Offset(0f, y), Offset(w, y + (azar(43, k) - 0.5f) * 2 * u), (0.6f + azar(47, k)) * u)
+            y += (4 + 5 * azar(53, k)) * u; k++
+        }
+        listOf(16 * u, 20 * u).forEach { x0 -> drawLine(p.acento.copy(alpha = 0.3f), Offset(x0, 0f), Offset(x0, h), 1f * u) }
+        var ym = 120 * u
+        var n = 1
+        while (ym < h - 80 * u) {
+            drawLine(p.acento.copy(alpha = 0.28f), Offset(w - 16 * u, ym), Offset(w - 9 * u, ym), 1f * u)
+            if (n % 5 == 0) drawCircle(p.acento.copy(alpha = 0.3f), 1.6f * u, Offset(w - 12.5f * u, ym + 6 * u))
+            ym += 96 * u; n++
+        }
+        for (j in -1..1) hedera(Offset(w / 2 + j * 22 * u, h - 22 * u), 9 * u, p.acento.copy(alpha = 0.35f))
+        listOf(h - 34 * u, h - 11 * u).forEach { yy -> drawLine(p.acento.copy(alpha = 0.2f), Offset(w * 0.3f, yy), Offset(w * 0.7f, yy), 0.8f * u) }
+        if (noche) {
+            val luna = Offset(w - 46 * u, h - 128 * u)
+            drawCircle(p.acento.copy(alpha = 0.35f), 12 * u, luna)
+            drawCircle(p.color, 10 * u, Offset(luna.x + 6 * u, luna.y - 4 * u))
+        }
+        if (oscuro && !p.oscura) penumbraAnt(Offset(-w * 0.04f, h * 0.06f), LLAMA, 0.22f)
+    }
+
+    /**
+     * La barra: el volumen enrollado arriba, un cilindro de papiro (un degradado: luz arriba, sombra abajo) con las vueltas
+     * del rollo marcadas y las perillas de hueso del umbilicus asomando en los dos extremos.
+     */
+    override fun DrawScope.barra(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val papiro = if (p.oscura) mezcla(p.color, p.tinta, 0.08f) else tonoAnt(PAPIROS[2], p, oscuro)
+        val luz = if (p.oscura) mezcla(p.color, p.tinta, 0.14f) else mezcla(papiro, MARMOL_LUZ, 0.35f)
+        val sombra = if (p.oscura) mezcla(p.color, Color.Black, 0.3f) else mezcla(papiro, PAPIRO_OSC, 0.7f)
+        drawRect(Brush.verticalGradient(0f to luz, 0.3f to papiro, 0.8f to papiro, 1f to sombra, startY = 0f, endY = h - 3 * u), Offset(10 * u, 0f), Size(w - 20 * u, h - 3 * u))
+        listOf(0.12f, 0.88f).forEach { f -> drawLine(p.detalle.copy(alpha = 0.18f), Offset(10 * u, h * f), Offset(w - 10 * u, h * f), 0.8f * u) }
+        drawLine(p.acento.copy(alpha = 0.4f), Offset(10 * u, h - 3 * u), Offset(w - 10 * u, h - 3 * u), 1f * u)
+        listOf(0f, w - 10 * u).forEach { x0 ->
+            val perilla = if (p.oscura) mezcla(HUESO, p.color, 0.45f) else tonoAnt(HUESO, p, oscuro)
+            drawRoundRect(perilla, Offset(x0 + 1 * u, h * 0.26f), Size(8 * u, h * 0.42f), CornerRadius(4 * u))
+            drawRoundRect(Color.Black.copy(alpha = 0.3f), Offset(x0 + 1 * u, h * 0.26f), Size(8 * u, h * 0.42f), CornerRadius(4 * u), style = Stroke(0.8f * u))
+            drawRect(tonoAnt(EBANO, p, oscuro), Offset(x0 + 3.5f * u, h * 0.42f), Size(3 * u, h * 0.1f))
+        }
+    }
+
+    /**
+     * El botón de guardar: el sillybos, la etiqueta de pergamino teñida de minio que cuelga del rollo con el título, con su
+     * hilo a la izquierda, su borde de hueso, la sombra plana y un degradado de arriba abajo.
+     */
+    override fun DrawScope.botonGuardar(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val r = Rect(8 * u, 3 * u, w - 3 * u, h - 5 * u)
+        val minio = if (oscuro) mezcla(MINIO, Color.Black, 0.12f) else MINIO
+        drawRoundRect(Color.Black.copy(alpha = 0.3f), Offset(r.left + 1.5f * u, r.top + 2.5f * u), r.size, CornerRadius(3 * u))
+        drawRoundRect(Brush.verticalGradient(listOf(mezcla(minio, OCRE, 0.25f), minio, mezcla(minio, Color.Black, 0.25f)), r.top, r.bottom), r.topLeft, r.size, CornerRadius(3 * u))
+        drawRoundRect(HUESO.copy(alpha = 0.55f), Offset(r.left + 3 * u, r.top + 3 * u), Size(r.width - 6 * u, r.height - 6 * u), CornerRadius(2 * u), style = Stroke(0.8f * u))
+        drawLine(tonoAnt(PAPIRO_OSC, p, oscuro), Offset(0f, h * 0.3f), Offset(r.left + 4 * u, r.center.y), 1.2f * u, StrokeCap.Round)
+        drawCircle(HUESO, 1.6f * u, Offset(r.left + 4 * u, r.center.y))
+    }
+
+    override fun tintaBoton(p: Pagina, oscuro: Boolean, noche: Boolean): Color = HUESO
 }
 
 
@@ -1508,6 +1860,187 @@ object EstanteHeleno : DisenoBiblioteca {
         // De noche llega la lechuza y se posa en la esquina de abajo de la tablilla.
         if (e.noche) lechuza(Offset(tabla.left + tabla.width * 0.085f, tabla.bottom - 1 * u), h * 0.22f)
     }
+
+    // ---------------------------------------------------------------- la página y el escritor
+
+    override val altoEncabezado: Dp = 118.dp
+
+    /** La ola corrida de los vasos: espirales que ruedan una tras otra sobre su línea de base, a partir de [o]. */
+    private fun DrawScope.olaCorrida(o: Offset, largo: Float, alto: Float, color: Color) {
+        val u = density
+        val r = alto / 2
+        val paso = alto * 1.4f
+        val p = Path()
+        var x = 0f
+        while (x + paso <= largo) {
+            val x0 = o.x + x
+            p.moveTo(x0, o.y + r)
+            p.cubicTo(x0 + paso * 0.45f, o.y + r, x0 + paso * 0.25f, o.y - r, x0 + paso * 0.65f, o.y - r)
+            p.cubicTo(x0 + paso * 0.98f, o.y - r, x0 + paso * 0.98f, o.y + r * 0.15f, x0 + paso * 0.7f, o.y + r * 0.15f)
+            p.cubicTo(x0 + paso * 0.5f, o.y + r * 0.15f, x0 + paso * 0.52f, o.y - r * 0.45f, x0 + paso * 0.7f, o.y - r * 0.4f)
+            x += paso
+        }
+        drawPath(p, color, style = Stroke(1.1f * u))
+        drawLine(color, Offset(o.x, o.y + r), Offset(o.x + x, o.y + r), 0.9f * u)
+    }
+
+    /** Una palmeta (anthemion): el abanico de hojas sobre su volutas, centrada en [o], de alto [m]. */
+    private fun DrawScope.palmeta(o: Offset, m: Float, color: Color) {
+        val u = density
+        for (k in -3..3) {
+            val a = Math.toRadians(-90.0 + k * 22.0)
+            val largo = m * (0.75f - kotlin.math.abs(k) * 0.07f)
+            val fin = Offset(o.x + largo * cos(a).toFloat(), o.y + largo * sin(a).toFloat())
+            drawLine(color, o, fin, 1.6f * u, StrokeCap.Round)
+            drawCircle(color, 1.6f * u, fin)
+        }
+        listOf(-1f, 1f).forEach { s ->
+            val rv = m * 0.14f
+            drawArc(color, -90f, s * -270f, false, Offset(o.x + s * rv - rv, o.y), Size(rv * 2, rv * 2), style = Stroke(1f * u))
+        }
+    }
+
+    /**
+     * La lechuza de Atenea acuñada en un tetradracma: el disco de plata con su borde, la lechuza de perfil de frente con sus
+     * ojos grandes y la ramita de olivo; de noche, la moneda se vuelve la luna y la lechuza abre los ojos dorados.
+     */
+    private fun DrawScope.monedaLechuza(c: Offset, r: Float, p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val plata = if (noche) LUNA else if (p.oscura) mezcla(p.color, p.tinta, 0.3f) else tonoAnt(Color(0xFFCFCBC0), p, oscuro)
+        val figura = if (noche) mezcla(NOCHE, BARNIZ, 0.5f) else BARNIZ
+        drawCircle(Color.Black.copy(alpha = 0.22f), r, Offset(c.x + 1.2f * u, c.y + 1.8f * u))
+        drawCircle(plata, r, c)
+        drawCircle(figura.copy(alpha = 0.4f), r * 0.9f, c, style = Stroke(0.8f * u))
+        val pie = Offset(c.x - r * 0.08f, c.y + r * 0.6f)
+        val a = r * 1.15f
+        drawOval(figura, Offset(pie.x - a * 0.26f, pie.y - a * 0.68f), Size(a * 0.52f, a * 0.68f))
+        val cabeza = Rect(pie.x - a * 0.25f, pie.y - a * 1.0f, pie.x + a * 0.25f, pie.y - a * 0.58f)
+        drawOval(figura, cabeza.topLeft, cabeza.size)
+        listOf(-1f, 1f).forEach { s ->
+            val o = Offset(pie.x + s * a * 0.11f, cabeza.center.y)
+            drawCircle(plata, a * 0.095f, o)
+            drawCircle(if (noche) OJO else figura, a * 0.05f, o)
+        }
+        drawLine(figura, Offset(pie.x - a * 0.1f, pie.y), Offset(pie.x + a * 0.15f, pie.y), 1f * u)
+        // La ramita de olivo a la derecha y la luna creciente arriba a la izquierda, como en la moneda.
+        val rama = Offset(c.x + r * 0.5f, c.y - r * 0.15f)
+        drawLine(figura, Offset(rama.x - r * 0.1f, rama.y + r * 0.35f), Offset(rama.x + r * 0.1f, rama.y - r * 0.3f), 0.8f * u)
+        for (k in 0 until 3) drawOval(figura, Offset(rama.x - r * (0.02f + 0.06f * k) + (if (k % 2 == 0) r * 0.04f else -r * 0.14f), rama.y - r * 0.25f + k * r * 0.2f), Size(r * 0.12f, r * 0.07f))
+        val luna = Offset(c.x - r * 0.52f, c.y - r * 0.42f)
+        drawCircle(figura, r * 0.11f, luna)
+        drawCircle(plata, r * 0.09f, Offset(luna.x + r * 0.05f, luna.y - r * 0.02f))
+    }
+
+    /** Un ánfora de figuras negras: el cuerpo, el cuello, las asas, el pie y la franja de terracota con su meandro. */
+    private fun DrawScope.anfora(c: Offset, alto: Float, barniz: Color, barro: Color) {
+        val u = density
+        val cuerpo = Path().apply {
+            moveTo(c.x - alto * 0.1f, c.y - alto * 0.36f)
+            cubicTo(c.x - alto * 0.38f, c.y - alto * 0.2f, c.x - alto * 0.3f, c.y + alto * 0.3f, c.x - alto * 0.06f, c.y + alto * 0.4f)
+            lineTo(c.x + alto * 0.06f, c.y + alto * 0.4f)
+            cubicTo(c.x + alto * 0.3f, c.y + alto * 0.3f, c.x + alto * 0.38f, c.y - alto * 0.2f, c.x + alto * 0.1f, c.y - alto * 0.36f)
+            close()
+        }
+        drawPath(cuerpo, barniz)
+        drawRect(barniz, Offset(c.x - alto * 0.08f, c.y - alto * 0.5f), Size(alto * 0.16f, alto * 0.15f))
+        drawRect(barniz, Offset(c.x - alto * 0.12f, c.y - alto * 0.52f), Size(alto * 0.24f, alto * 0.04f))
+        drawRect(barniz, Offset(c.x - alto * 0.1f, c.y + alto * 0.4f), Size(alto * 0.2f, alto * 0.08f))
+        listOf(-1f, 1f).forEach { s ->
+            drawArc(barniz, if (s < 0) 90f else -90f, 180f, false, Offset(c.x + s * alto * 0.14f - alto * 0.07f, c.y - alto * 0.47f), Size(alto * 0.14f, alto * 0.22f), style = Stroke(1.4f * u))
+        }
+        drawRect(barro, Offset(c.x - alto * 0.3f, c.y - alto * 0.04f), Size(alto * 0.6f, alto * 0.13f))
+        clipPath(cuerpo) {
+            val y = c.y + alto * 0.025f
+            var x = c.x - alto * 0.3f
+            while (x < c.x + alto * 0.3f) {
+                drawLine(barniz, Offset(x, y + alto * 0.04f), Offset(x, y - alto * 0.04f), 0.8f * u)
+                drawLine(barniz, Offset(x, y - alto * 0.04f), Offset(x + alto * 0.04f, y - alto * 0.04f), 0.8f * u)
+                x += alto * 0.07f
+            }
+        }
+    }
+
+    /**
+     * El encabezado: el friso de un vaso. Arriba, el meandro entre sus dos filetes; abajo, la ola corrida; a la izquierda,
+     * la lechuza en su tetradracma (de noche, en la luna y con los ojos dorados) y, a la derecha, un ánfora de figuras negras;
+     * en medio, el rótulo en mayúsculas griegas espaciadas, la fecha grande y el detalle.
+     */
+    override fun DrawScope.encabezado(e: EstadoEncabezado, p: Pagina, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val friso = Rect(0f, 2 * u, w, h - 2 * u)
+        // La franja del friso, apenas más honda que el papel (de noche, un poco más clara), con su luz de lámpara de noche.
+        drawRect(if (p.oscura) p.tinta.copy(alpha = 0.05f) else p.acento.copy(alpha = 0.06f), friso.topLeft, friso.size)
+        if (e.noche) mancha(Offset(w * 0.12f, h * 0.5f), h * 1.1f, LLAMA.copy(alpha = 0.12f))
+        val linea = p.tinta.copy(alpha = 0.75f)
+        meandro(Rect(6 * u, 6 * u, w - 6 * u, 17 * u), linea)
+        olaCorrida(Offset(8 * u, h - 13 * u), w - 16 * u, 9 * u, p.acento.copy(alpha = 0.85f))
+        drawLine(linea, Offset(6 * u, h - 4 * u), Offset(w - 6 * u, h - 4 * u), 1.2f * u)
+        monedaLechuza(Offset(30 * u, h * 0.5f), 22 * u, p, oscuro, e.noche)
+        anfora(Offset(w - 28 * u, h * 0.5f + 1 * u), 46 * u, if (p.oscura) p.tinta.copy(alpha = 0.85f) else BARNIZ, if (p.oscura) p.acento else tonoAnt(TERRACOTA, p, oscuro))
+        val izq = 60 * u
+        val der = w - 54 * u
+        textoEn(medidor, e.rotulo, Rect(44 * u, 20 * u, w - 44 * u, 38 * u), Letra.garamond, p.acento, 13.5f, espaciado = 1.2f, minimo = 8f)
+        fechaEncAnt(medidor, e.fecha, Rect(izq, 39 * u, der, 78 * u), Letra.garamond, p.tinta, 24f, 22, FontWeight.Bold)
+        textoEn(medidor, e.detalle, Rect(izq - 6 * u, 79 * u, der + 6 * u, 94 * u), Letra.garamond, p.tenue, 11f, minimo = 7f)
+    }
+
+    /**
+     * El pergamino de Pérgamo: la doble regla de cada margen con su hilera de puntos, la palmeta en las esquinas de abajo y,
+     * al pie, el meandro sobre la ola corrida; de noche, la luna creciente abajo a la derecha. En modo oscuro, el
+     * pergamino en la penumbra y la luz de una lámpara de aceite desde abajo a la derecha.
+     */
+    override fun DrawScope.pagina(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val tinta = p.detalle.copy(alpha = 0.3f)
+        listOf(11 * u, 15 * u, w - 15 * u, w - 11 * u).forEach { x -> drawLine(tinta, Offset(x, 0f), Offset(x, h - 52 * u), 0.8f * u) }
+        var y = 80 * u
+        while (y < h - 70 * u) {
+            listOf(13 * u, w - 13 * u).forEach { x -> drawCircle(p.acento.copy(alpha = 0.3f), 1.3f * u, Offset(x, y)) }
+            y += 22 * u
+        }
+        meandro(Rect(16 * u, h - 46 * u, w - 16 * u, h - 36 * u), p.detalle.copy(alpha = 0.35f))
+        olaCorrida(Offset(18 * u, h - 22 * u), w - 36 * u, 9 * u, p.acento.copy(alpha = 0.4f))
+        palmeta(Offset(13 * u, h - 30 * u), 20 * u, p.acento.copy(alpha = 0.35f))
+        palmeta(Offset(w - 13 * u, h - 30 * u), 20 * u, p.acento.copy(alpha = 0.35f))
+        if (noche) {
+            val luna = Offset(w - 44 * u, h - 128 * u)
+            drawCircle(p.acento.copy(alpha = 0.3f), 12 * u, luna)
+            drawCircle(p.color, 10 * u, Offset(luna.x + 6 * u, luna.y - 4 * u))
+        }
+        if (oscuro && !p.oscura) penumbraAnt(Offset(w * 1.03f, h * 0.98f), LLAMA, 0.22f)
+    }
+
+    /**
+     * La barra: la cornisa de mármol de la stoa (un degradado, con luz arriba) y, al pie, el meandro de figuras negras entre
+     * sus dos filetes.
+     */
+    override fun DrawScope.barra(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val marmol = if (p.oscura) mezcla(p.color, p.tinta, 0.07f) else tonoAnt(MARMOL, p, oscuro)
+        val luz = if (p.oscura) mezcla(p.color, p.tinta, 0.12f) else tonoAnt(MARMOL_LUZ, p, oscuro)
+        drawRect(Brush.verticalGradient(0f to luz, 0.6f to marmol, 1f to mezcla(marmol, MARMOL_SOMBRA, 0.5f), startY = 0f, endY = h))
+        drawLine(p.tinta.copy(alpha = 0.15f), Offset(0f, 3 * u), Offset(w, 3 * u), 0.8f * u)
+        meandro(Rect(0f, h - 9 * u, w, h - 1.5f * u), (if (p.oscura) p.tinta else BARNIZ).copy(alpha = 0.45f))
+    }
+
+    /**
+     * El botón de guardar: una franja de vaso de figuras negras, el barniz negro (un degradado, con su brillo arriba) con un
+     * filete de terracota arriba y abajo, la hilera de puntos y la sombra plana.
+     */
+    override fun DrawScope.botonGuardar(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val r = Rect(2 * u, 2 * u, w - 3 * u, h - 4 * u)
+        drawRoundRect(Color.Black.copy(alpha = 0.3f), Offset(r.left + 1.5f * u, r.top + 2.5f * u), r.size, CornerRadius(h * 0.22f))
+        drawRoundRect(Brush.verticalGradient(listOf(Color(0xFF3A302A), BARNIZ, Color(0xFF0E0A08)), r.top, r.bottom), r.topLeft, r.size, CornerRadius(h * 0.22f))
+        listOf(r.top + 4 * u, r.bottom - 4 * u).forEach { y -> drawLine(TERRACOTA, Offset(r.left + 8 * u, y), Offset(r.right - 8 * u, y), 1.2f * u) }
+        listOf(r.left + 7 * u, r.right - 7 * u).forEach { x -> drawCircle(TERRACOTA, 1.8f * u, Offset(x, r.center.y)) }
+    }
+
+    override fun tintaBoton(p: Pagina, oscuro: Boolean, noche: Boolean): Color = Color(0xFFEBB58A)
 }
 
 
@@ -2025,6 +2558,129 @@ object EstanteEgipto : DisenoBiblioteca {
             }
         }
     }
+
+    // ---------------------------------------------------------------- la página y el escritor
+
+    override val altoEncabezado: Dp = 122.dp
+
+    /** El friso jeker: los manojos de juncos atados que coronan las paredes pintadas, alternando [a] y [b], a lo largo de [r]. */
+    private fun DrawScope.jeker(r: Rect, a: Color, b: Color) {
+        val u = density
+        val paso = 8 * u
+        var x = r.left + paso / 2
+        var i = 0
+        while (x < r.right - paso / 2) {
+            val c = if (i % 2 == 0) a else b
+            drawRect(c, Offset(x - 1.3f * u, r.top + r.height * 0.3f), Size(2.6f * u, r.height * 0.7f))
+            drawCircle(c, 2.1f * u, Offset(x, r.top + r.height * 0.2f))
+            drawLine(c, Offset(x - 2.2f * u, r.top + r.height * 0.55f), Offset(x + 2.2f * u, r.top + r.height * 0.55f), 0.8f * u)
+            x += paso; i++
+        }
+    }
+
+    /** La cenefa de rectángulos de colores separados por una línea clara, en [r], con transparencia [alfa]. */
+    private fun DrawScope.cenefa(r: Rect, alfa: Float) {
+        val u = density
+        val colores = listOf(LAPIS, ROJO, VERDE, ROJO)
+        val paso = 7 * u
+        var x = r.left
+        var k = 0
+        while (x < r.right) {
+            drawRect(colores[k % colores.size].copy(alpha = alfa), Offset(x, r.top), Size(minOf(paso - 1.4f * u, r.right - x), r.height))
+            x += paso; k++
+        }
+        drawLine(NEGRO.copy(alpha = alfa), Offset(r.left, r.top), Offset(r.right, r.top), 0.6f * u)
+        drawLine(NEGRO.copy(alpha = alfa), Offset(r.left, r.bottom), Offset(r.right, r.bottom), 0.6f * u)
+    }
+
+    /**
+     * El encabezado: arriba, el friso jeker de juncos en lapislázuli y cornalina; debajo, el rótulo; en medio, el cartucho (el
+     * anillo de cuerda alargado que encierra los nombres de los reyes, con su nudo a la derecha) que aquí encierra la fecha;
+     * debajo, el detalle y la cenefa de colores. A la izquierda, el ojo udjat; a la derecha, el ankh; de noche, la luna
+     * creciente y la estrella del cielo de Nut.
+     */
+    override fun DrawScope.encabezado(e: EstadoEncabezado, p: Pagina, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        jeker(Rect(4 * u, 2 * u, w - 4 * u, 13 * u), (if (p.oscura) p.detalle else tonoAnt(LAPIS, p, oscuro)).copy(alpha = 0.8f),
+            (if (p.oscura) p.acento else tonoAnt(ROJO, p, oscuro)).copy(alpha = 0.8f))
+        drawLine(p.tinta.copy(alpha = 0.5f), Offset(4 * u, 14.5f * u), Offset(w - 4 * u, 14.5f * u), 0.8f * u)
+        textoEn(medidor, e.rotulo, Rect(48 * u, 17 * u, w - 48 * u, 34 * u), Letra.messiri, p.acento, 14f, espaciado = 0.6f, minimo = 8f)
+        // El cartucho: el óvalo de cuerda, doble, con el nudo y la barra a la derecha.
+        val cart = Rect(46 * u, 36 * u, w - 52 * u, 82 * u)
+        val fondo = if (p.oscura) mezcla(p.color, p.tinta, 0.08f) else tonoAnt(PAPIROS[0], p, oscuro)
+        drawRoundRect(Color.Black.copy(alpha = if (p.oscura) 0.3f else 0.12f), Offset(cart.left + 1.5f * u, cart.top + 2 * u), cart.size, CornerRadius(cart.height / 2))
+        drawRoundRect(fondo, cart.topLeft, cart.size, CornerRadius(cart.height / 2))
+        if (e.noche) clipRect(cart.left, cart.top, cart.right, cart.bottom) { mancha(cart.center, cart.width * 0.5f, AMARILLO.copy(alpha = 0.1f)) }
+        drawRoundRect(p.tinta.copy(alpha = 0.8f), cart.topLeft, cart.size, CornerRadius(cart.height / 2), style = Stroke(1.6f * u))
+        drawRoundRect(p.tinta.copy(alpha = 0.35f), Offset(cart.left + 3.5f * u, cart.top + 3.5f * u), Size(cart.width - 7 * u, cart.height - 7 * u),
+            CornerRadius(cart.height / 2 - 3.5f * u), style = Stroke(0.8f * u))
+        drawLine(p.tinta.copy(alpha = 0.8f), Offset(cart.right + 4 * u, cart.top + 3 * u), Offset(cart.right + 4 * u, cart.bottom - 3 * u), 2.2f * u)
+        drawLine(p.tinta.copy(alpha = 0.8f), Offset(cart.right - 1 * u, cart.center.y), Offset(cart.right + 4 * u, cart.center.y), 1.4f * u)
+        fechaEncAnt(medidor, e.fecha, Rect(cart.left + 14 * u, cart.top + 4 * u, cart.right - 12 * u, cart.bottom - 4 * u), Letra.escriba, p.tinta, 21f, 22, FontWeight.Bold)
+        textoEn(medidor, e.detalle, Rect(40 * u, 85 * u, w - 40 * u, 100 * u), Letra.escriba, p.tenue, 11f, minimo = 7f)
+        cenefa(Rect(14 * u, h - 14 * u, w - 14 * u, h - 9 * u), if (p.oscura) 0.55f else 0.75f)
+        // Los signos a los lados.
+        val lapis = if (p.oscura) p.detalle else tonoAnt(LAPIS, p, oscuro)
+        val roja = if (p.oscura) p.acento else tonoAnt(ROJO, p, oscuro)
+        if (e.noche) {
+            val luna = Offset(22 * u, 58 * u)
+            drawCircle(ORO, 12 * u, luna)
+            drawCircle(p.color, 10 * u, Offset(luna.x + 5 * u, luna.y - 4 * u))
+            drawPath(estrella(Offset(w - 20 * u, 56 * u), 11 * u, 5, 0.42f), ORO)
+            drawCircle(ORO, 1.3f * u, Offset(w - 34 * u, 40 * u)); drawCircle(ORO, 1.1f * u, Offset(34 * u, 82 * u))
+        } else {
+            signo(2, Offset(22 * u, 58 * u), 32 * u, lapis)
+            signo(0, Offset(w - 20 * u, 58 * u), 38 * u, roja)
+        }
+    }
+
+    /**
+     * El papiro de la página: las guías de las columnas en los márgenes, el punto rojo de verso que marca cada estrofa, al pie
+     * la cenefa de colores y, sobre ella, tres signos tenues (udjat, pluma de Maat, escarabajo); de noche, una estrella de
+     * cinco puntas abajo a la derecha. En modo oscuro, el papiro en la penumbra y la luz de una lámpara de aceite desde
+     * arriba a la derecha.
+     */
+    override fun DrawScope.pagina(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        listOf(13 * u, 17 * u, w - 17 * u, w - 13 * u).forEach { x -> drawLine(p.detalle.copy(alpha = 0.18f), Offset(x, 0f), Offset(x, h - 34 * u), 0.8f * u) }
+        var y = 108 * u
+        while (y < h - 80 * u) { drawCircle(p.acento.copy(alpha = 0.45f), 2.2f * u, Offset(24 * u, y)); y += 132 * u }
+        cenefa(Rect(14 * u, h - 22 * u, w - 14 * u, h - 17 * u), 0.4f)
+        listOf(0 to -26f, 1 to 0f, 3 to 26f).forEach { (k, dx) -> signo(k, Offset(w / 2 + dx * u, h - 40 * u), 16 * u, p.detalle.copy(alpha = 0.25f)) }
+        if (noche) drawPath(estrella(Offset(w - 46 * u, h - 96 * u), 10 * u, 5, 0.42f), p.acento.copy(alpha = 0.35f))
+        if (oscuro && !p.oscura) penumbraAnt(Offset(w * 1.03f, h * 0.05f), AMARILLO, 0.2f)
+    }
+
+    /** La barra: una franja de papiro (un degradado, más claro arriba) con el friso jeker a lo largo del borde de abajo. */
+    override fun DrawScope.barra(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val papiro = if (p.oscura) mezcla(p.color, p.tinta, 0.07f) else tonoAnt(PAPIROS[1], p, oscuro)
+        drawRect(Brush.verticalGradient(listOf(mezcla(papiro, Color.White, 0.25f), papiro), 0f, h))
+        jeker(Rect(0f, h - 11 * u, w, h - 2 * u), (if (p.oscura) p.detalle else tonoAnt(LAPIS, p, oscuro)).copy(alpha = 0.55f),
+            (if (p.oscura) p.acento else tonoAnt(ROJO, p, oscuro)).copy(alpha = 0.55f))
+        drawLine(p.tinta.copy(alpha = 0.45f), Offset(0f, h - 1 * u), Offset(w, h - 1 * u), 1f * u)
+    }
+
+    /**
+     * El botón de guardar: una placa de fayenza de lapislázuli (un degradado, con su brillo arriba), con el borde de oro, una
+     * línea de oro adentro y un punto de oro en cada punta; sombra plana.
+     */
+    override fun DrawScope.botonGuardar(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val r = Rect(2 * u, 2 * u, w - 3 * u, h - 4 * u)
+        val lapis = if (oscuro) mezcla(LAPIS, Color.Black, 0.12f) else LAPIS
+        drawRoundRect(Color.Black.copy(alpha = 0.3f), Offset(r.left + 1.5f * u, r.top + 2.5f * u), r.size, CornerRadius(5 * u))
+        drawRoundRect(Brush.verticalGradient(listOf(mezcla(lapis, Color(0xFF6A8AD8), 0.35f), lapis, NUT), r.top, r.bottom), r.topLeft, r.size, CornerRadius(5 * u))
+        drawRoundRect(ORO, r.topLeft, r.size, CornerRadius(5 * u), style = Stroke(1.6f * u))
+        drawRoundRect(ORO.copy(alpha = 0.5f), Offset(r.left + 3.5f * u, r.top + 3.5f * u), Size(r.width - 7 * u, r.height - 7 * u), CornerRadius(3 * u), style = Stroke(0.7f * u))
+        listOf(r.left + 8 * u, r.right - 8 * u).forEach { x -> drawCircle(ORO, 2 * u, Offset(x, r.center.y)) }
+    }
+
+    override fun tintaBoton(p: Pagina, oscuro: Boolean, noche: Boolean): Color = Color(0xFFF4E3A6)
 }
 
 
@@ -2596,6 +3252,151 @@ object EstanteMeso : DisenoBiblioteca {
             drawRect(Color.Black.copy(alpha = 0.45f * a), tapa.topLeft, tapa.size)
         }
     }
+
+    // ---------------------------------------------------------------- la página y el escritor
+
+    override val altoEncabezado: Dp = 120.dp
+
+    /**
+     * La greca escalonada (xicalcoliuhqui) a lo largo de [r]: cada motivo sube en escalones y remata en un gancho que se
+     * enrolla en cuadro, y el siguiente baja; en [color] y de grosor [g] (dp).
+     */
+    private fun DrawScope.grecaEscalonada(r: Rect, color: Color, g: Float) {
+        val u = density
+        val alto = r.height
+        val paso = alto * 2.2f
+        val e = alto / 3f
+        val p = Path()
+        var x = r.left
+        p.moveTo(x, r.bottom)
+        while (x + paso <= r.right + 0.5f) {
+            // Tres escalones que suben.
+            p.lineTo(x, r.bottom); p.lineTo(x + e * 0.6f, r.bottom); p.lineTo(x + e * 0.6f, r.bottom - e)
+            p.lineTo(x + e * 1.2f, r.bottom - e); p.lineTo(x + e * 1.2f, r.bottom - 2 * e)
+            p.lineTo(x + e * 1.8f, r.bottom - 2 * e); p.lineTo(x + e * 1.8f, r.top)
+            // El gancho que se enrolla.
+            p.lineTo(x + e * 3.6f, r.top); p.lineTo(x + e * 3.6f, r.top + e * 1.8f); p.lineTo(x + e * 2.6f, r.top + e * 1.8f)
+            p.lineTo(x + e * 2.6f, r.top + e * 0.9f)
+            p.moveTo(x + e * 3.6f, r.bottom); p.lineTo(x + paso, r.bottom)
+            x += paso
+        }
+        drawPath(p, color, style = Stroke(g * u))
+        drawLine(color, Offset(r.left, r.bottom), Offset(r.right, r.bottom), g * u)
+    }
+
+    /** La luna del códice de noche: el disco con el conejo que los mayas veían en ella, centrado en [c] y de radio [rr]. */
+    private fun DrawScope.lunaConejo(c: Offset, rr: Float, luna: Color, conejo: Color) {
+        drawCircle(luna, rr, c)
+        drawOval(conejo, Offset(c.x - rr * 0.4f, c.y - rr * 0.05f), Size(rr * 0.7f, rr * 0.5f))
+        drawCircle(conejo, rr * 0.2f, Offset(c.x + rr * 0.32f, c.y - rr * 0.1f))
+        drawOval(conejo, Offset(c.x + rr * 0.25f, c.y - rr * 0.68f), Size(rr * 0.14f, rr * 0.5f))
+        drawOval(conejo, Offset(c.x + rr * 0.42f, c.y - rr * 0.6f), Size(rr * 0.13f, rr * 0.45f))
+    }
+
+    /**
+     * El encabezado: un registro de la página del códice, con el marco rojo y la guía roja que lo divide. A la izquierda, el
+     * signo del día en su cartucho redondeado (de noche, la luna con su conejo) y, debajo, el número del día del año escrito
+     * con barras y puntos en dos niveles de veinte; a la derecha, el rótulo en versalitas, la guía, la fecha (la cuenta del
+     * tzolk'in, el haab y la cuenta larga) y el detalle; abajo, la greca escalonada.
+     */
+    override fun DrawScope.encabezado(e: EstadoEncabezado, p: Pagina, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val marco = Rect(2 * u, 3 * u, w - 2 * u, h - 3 * u)
+        val estuco = if (p.oscura) mezcla(p.color, p.tinta, 0.07f) else tonoAnt(ESTUCO, p, oscuro)
+        drawRect(Color.Black.copy(alpha = if (p.oscura) 0.3f else 0.1f), Offset(marco.left + 1.5f * u, marco.top + 2 * u), marco.size)
+        drawRect(estuco, marco.topLeft, marco.size)
+        if (e.noche) clipRect(marco.left, marco.top, marco.right, marco.bottom) { mancha(Offset(marco.left, marco.bottom), w * 0.6f, BRASA.copy(alpha = 0.14f)) }
+        val rojo = p.acento
+        drawRect(rojo, marco.topLeft, marco.size, style = Stroke(1.6f * u))
+        val corte = marco.left + 66 * u
+        drawLine(rojo, Offset(corte, marco.top), Offset(corte, marco.bottom - 16 * u), 1.2f * u)
+        drawLine(rojo, Offset(marco.left, marco.bottom - 16 * u), Offset(marco.right, marco.bottom - 16 * u), 1.2f * u)
+        grecaEscalonada(Rect(marco.left + 6 * u, marco.bottom - 13 * u, marco.right - 6 * u, marco.bottom - 4 * u), rojo.copy(alpha = 0.75f), 1.1f)
+        // El signo del día (o la luna) y el número maya del día del año.
+        val celda = Rect(marco.left + 13 * u, marco.top + 8 * u, corte - 13 * u, marco.top + 48 * u)
+        val jade = if (p.oscura) p.detalle else tonoAnt(JADE, p, oscuro)
+        val negro = if (p.oscura) p.tinta else NEGRO
+        if (e.noche) {
+            drawRoundRect(tonoAnt(CIELO_NOCHE, p, oscuro), celda.topLeft, celda.size, CornerRadius(celda.width * 0.2f))
+            lunaConejo(celda.center, celda.width * 0.32f, LUNA, mezcla(CIELO_NOCHE, LUNA, 0.35f))
+            drawRoundRect(rojo, celda.topLeft, celda.size, CornerRadius(celda.width * 0.2f), style = Stroke(1.2f * u))
+        } else {
+            drawRoundRect(rojo, celda.topLeft, celda.size, CornerRadius(celda.width * 0.2f), style = Stroke(1.2f * u))
+            val o = celda.center
+            val m = celda.width * 0.3f
+            drawCircle(jade, m, o)
+            drawCircle(estuco, m * 0.6f, o)
+            drawCircle(negro, m * 0.3f, o)
+            for (k in 0 until 4) {
+                val a = Math.toRadians(45.0 + 90.0 * k)
+                drawCircle(rojo, 2 * u, Offset(o.x + m * 1.45f * cos(a).toFloat(), o.y + m * 1.45f * sin(a).toFloat()))
+            }
+        }
+        numeroMaya(e.numero, Rect(celda.left + 2 * u, celda.bottom + 4 * u, celda.right - 2 * u, marco.bottom - 19 * u), negro, rojo)
+        val izq = corte + 8 * u
+        val der = marco.right - 8 * u
+        textoEn(medidor, e.rotulo, Rect(izq, marco.top + 5 * u, der, marco.top + 25 * u), LetraExtra.codice, rojo, 14.5f, espaciado = 1f, minimo = 8f)
+        drawLine(rojo.copy(alpha = 0.6f), Offset(izq, marco.top + 27 * u), Offset(der, marco.top + 27 * u), 0.8f * u)
+        fechaEncAnt(medidor, e.fecha, Rect(izq, marco.top + 29 * u, der, marco.top + 70 * u), LetraExtra.amate, p.tinta, 22f, 20, FontWeight.Bold)
+        textoEn(medidor, e.detalle, Rect(izq, marco.top + 71 * u, der, marco.bottom - 18 * u), LetraExtra.amate, p.tenue, 10.5f, minimo = 7f)
+    }
+
+    /**
+     * La página de estuco del códice plegado: el pliegue de biombo en los dos bordes, el doble marco rojo, una cuenta de
+     * jade en cada esquina, la greca escalonada al pie y un signo de día muy tenue abajo a la derecha; de noche, la luna con
+     * su conejo abajo a la derecha. En modo oscuro, el estuco en la penumbra y la luz del brasero de copal desde abajo a la
+     * izquierda.
+     */
+    override fun DrawScope.pagina(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        drawRect(p.tinta.copy(alpha = 0.06f), Offset.Zero, Size(5 * u, h))
+        drawRect(p.tinta.copy(alpha = 0.06f), Offset(w - 5 * u, 0f), Size(5 * u, h))
+        drawRect(p.acento.copy(alpha = 0.45f), Offset(10 * u, 10 * u), Size(w - 20 * u, h - 20 * u), style = Stroke(1.6f * u))
+        drawRect(p.acento.copy(alpha = 0.22f), Offset(14 * u, 14 * u), Size(w - 28 * u, h - 28 * u), style = Stroke(0.8f * u))
+        listOf(Offset(10 * u, 10 * u), Offset(w - 10 * u, 10 * u), Offset(10 * u, h - 10 * u), Offset(w - 10 * u, h - 10 * u)).forEach {
+            drawCircle(p.detalle.copy(alpha = 0.55f), 4 * u, it)
+            drawCircle(p.color, 1.4f * u, it)
+        }
+        grecaEscalonada(Rect(20 * u, h - 32 * u, w - 20 * u, h - 21 * u), p.acento.copy(alpha = 0.38f), 1.2f)
+        val s = Offset(w - 46 * u, h - 66 * u)
+        drawRoundRect(p.acento.copy(alpha = 0.16f), Offset(s.x - 16 * u, s.y - 16 * u), Size(32 * u, 32 * u), CornerRadius(6 * u), style = Stroke(1.2f * u))
+        drawCircle(p.detalle.copy(alpha = 0.14f), 8 * u, s)
+        drawCircle(p.tinta.copy(alpha = 0.12f), 3 * u, s)
+        if (noche) lunaConejo(Offset(w - 46 * u, h - 120 * u), 13 * u, p.acento.copy(alpha = 0.3f), p.color.copy(alpha = 0.6f))
+        if (oscuro && !p.oscura) penumbraAnt(Offset(-w * 0.03f, h * 1.01f), Color(0xFFF0B062), 0.24f)
+    }
+
+    /** La barra: una franja de estuco (un degradado, más claro arriba) con la greca escalonada roja y su guía de jade al pie. */
+    override fun DrawScope.barra(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val estuco = if (p.oscura) mezcla(p.color, p.tinta, 0.07f) else tonoAnt(ESTUCO, p, oscuro)
+        drawRect(Brush.verticalGradient(listOf(mezcla(estuco, Color.White, 0.3f), estuco, mezcla(estuco, CALIZA_OSC, 0.25f)), 0f, h))
+        grecaEscalonada(Rect(4 * u, h - 11 * u, w - 4 * u, h - 4 * u), p.acento.copy(alpha = 0.5f), 1f)
+        drawLine((if (p.oscura) p.detalle else tonoAnt(JADE, p, oscuro)).copy(alpha = 0.6f), Offset(0f, h - 1.5f * u), Offset(w, h - 1.5f * u), 1.6f * u)
+    }
+
+    /**
+     * El botón de guardar: una placa de jade pulido (un degradado, con su brillo arriba), con el borde más claro, una cuenta
+     * de cinabrio en cada punta y su sombra plana.
+     */
+    override fun DrawScope.botonGuardar(p: Pagina, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val r = Rect(2 * u, 2 * u, w - 3 * u, h - 4 * u)
+        val jade = mezcla(JADE, Color.Black, if (oscuro) 0.3f else 0.18f)
+        drawRoundRect(Color.Black.copy(alpha = 0.3f), Offset(r.left + 1.5f * u, r.top + 2.5f * u), r.size, CornerRadius(8 * u))
+        drawRoundRect(Brush.verticalGradient(listOf(mezcla(jade, Color(0xFF8FD0A8), 0.3f), jade, mezcla(jade, Color.Black, 0.3f)), r.top, r.bottom), r.topLeft, r.size, CornerRadius(8 * u))
+        drawRoundRect(Color(0xFF9FDCB8).copy(alpha = 0.5f), Offset(r.left + 2 * u, r.top + 2 * u), Size(r.width - 4 * u, r.height - 4 * u), CornerRadius(6 * u), style = Stroke(0.9f * u))
+        listOf(r.left + 8 * u, r.right - 8 * u).forEach { x ->
+            drawCircle(CINABRIO, 2.6f * u, Offset(x, r.center.y))
+            drawCircle(ESTUCO.copy(alpha = 0.6f), 0.9f * u, Offset(x - 0.8f * u, r.center.y - 0.8f * u))
+        }
+    }
+
+    override fun tintaBoton(p: Pagina, oscuro: Boolean, noche: Boolean): Color = ESTUCO
 }
 
 
@@ -2622,3 +3423,58 @@ private fun renglonesFechaAnt(f: String, largo: Int): List<String> {
 
 /** «1 palabra», «N palabras». */
 private fun palabrasAnt(n: Int): String = if (n == 1) "1 palabra" else "$n palabras"
+
+// =====================================================================
+//  Ayudantes de la página abierta de la Antigüedad
+// =====================================================================
+
+/**
+ * Un color del tema puesto sobre el papel [p]: tal cual de día; en modo oscuro (papel claro), hundido como el papel en su
+ * penumbra; sobre un papel oscuro (el de un sueño), casi fundido con él para que la tinta clara siga leyéndose.
+ */
+private fun tonoAnt(c: Color, p: Pagina, oscuro: Boolean): Color = when {
+    p.oscura -> mezcla(c, p.color, 0.6f)
+    oscuro -> mezcla(c, Color(0xFF0E0A07), 0.24f)
+    else -> c
+}
+
+/**
+ * La fecha del encabezado en [r]: en un renglón si cabe en [largo] letras; si no, partida por el « · » más cercano a la mitad,
+ * el primer renglón grande y el segundo menor (o, si no tiene « · », en dos renglones parejos partidos por un espacio).
+ */
+private fun DrawScope.fechaEncAnt(medidor: TextMeasurer, f: String, r: Rect, letra: FontFamily, color: Color, tam: Float, largo: Int,
+                                  peso: FontWeight = FontWeight.Normal) {
+    val renglones = renglonesFechaAnt(f, largo)
+    val espacio = f.indices.filter { f[it] == ' ' }.minByOrNull { kotlin.math.abs(it - f.length / 2) }
+    if (renglones.size == 1 && f.length > largo + 4 && espacio != null) {
+        // Larga y sin « · »: dos renglones parejos, partidos por el espacio más cercano a la mitad.
+        val corte = r.top + r.height * 0.5f
+        textoEn(medidor, f.substring(0, espacio), Rect(r.left, r.top, r.right, corte), letra, color, tam * 0.78f, peso = peso, minimo = 9f)
+        textoEn(medidor, f.substring(espacio + 1), Rect(r.left, corte, r.right, r.bottom), letra, color, tam * 0.78f, peso = peso, minimo = 9f)
+    } else if (renglones.size == 1) {
+        textoEn(medidor, renglones[0], r, letra, color, tam, peso = peso, minimo = 9f)
+    } else {
+        val corte = r.top + r.height * 0.6f
+        textoEn(medidor, renglones[0], Rect(r.left, r.top, r.right, corte), letra, color, tam * 0.84f, peso = peso, minimo = 9f)
+        textoEn(medidor, renglones[1], Rect(r.left, corte, r.right, r.bottom), letra, color.copy(alpha = color.alpha * 0.85f), tam * 0.6f, minimo = 8f)
+    }
+}
+
+/**
+ * La penumbra del modo oscuro sobre un papel claro: un velo parejo del 12 %, las orillas que se hunden (una elipse que deja
+ * claro el centro, donde va el texto, y llega a cerca del 60 % en las esquinas) y la luz cálida que llega desde [foco] (la
+ * lucerna, la vela, el fuego) con fuerza [fuerza]. Dos degradados.
+ */
+private fun DrawScope.penumbraAnt(foco: Offset, luz: Color, fuerza: Float) {
+    val w = size.width; val h = size.height
+    drawRect(Color.Black.copy(alpha = 0.12f))
+    val centro = Offset(w * 0.5f + (foco.x - w * 0.5f) * 0.12f, h * 0.45f + (foco.y - h * 0.45f) * 0.12f)
+    clipRect {
+        withTransform({ scale(1f, h / w, centro) }) {
+            drawRect(Brush.radialGradient(0f to Color.Transparent, 0.42f to Color.Black.copy(alpha = 0.06f), 0.72f to Color.Black.copy(alpha = 0.3f),
+                1f to Color.Black.copy(alpha = 0.55f), center = centro, radius = w * 0.72f), Offset(-w, centro.y - h), Size(3 * w, 2 * h))
+        }
+    }
+    drawRect(Brush.radialGradient(0f to luz.copy(alpha = fuerza), 0.4f to luz.copy(alpha = fuerza * 0.4f), 1f to Color.Transparent,
+        center = foco, radius = maxOf(w, h) * 0.62f))
+}
