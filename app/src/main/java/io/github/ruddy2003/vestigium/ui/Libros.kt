@@ -73,6 +73,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -1234,6 +1235,34 @@ fun ObjetoDiario(fecha: String, texto: String, modifier: Modifier = Modifier, te
     }, tema, noche) { abre.value }
 }
 
+/** La tapa sola, sin el toque: [abierto] se lee al dibujar (de 0, cerrada, a 1, abierta). Las capturas la usan a medio abrir. */
+@Composable
+internal fun TapaDiario(fecha: String, texto: String, modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, noche: Boolean = false, abierto: () -> Float = { 0f }) {
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(tema)
+    val oscuro = esOscuro()
+    val medidor = androidx.compose.ui.text.rememberTextMeasurer()
+    val palabras = Texto.palabras(texto)
+    val vista = texto.trim().replace(Regex("\\s+"), " ").take(160)
+    val fechaTema = Estilo.fecha(fecha)
+    val etiqueta = (if (noche) "El sueño de " else "El diario de ") + Fechas.corto(fecha) + if (palabras > 0) ", " + porNumero(palabras, "1 palabra", "$palabras palabras") else ", en blanco"
+    BoxWithConstraints(modifier.fillMaxWidth().height(d.altoTapa).semantics { contentDescription = etiqueta }) {
+        Canvas(Modifier.fillMaxSize().graphicsLayer()) {
+            // El brillo de una lámpara o de la luna no se sale del objeto.
+            clipRect {
+                with(d) { tapa(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoTapa(fechaTema, palabras, vista.isBlank(), noche, abierto(), fecha.hashCode()), medidor, oscuro) }
+            }
+        }
+        val k = d.cajaTapa
+        val w = maxWidth; val h = maxHeight
+        Text(if (vista.isBlank()) (if (noche) pistaNoche(tema) else pistaDia(tema)) else vista,
+            color = d.tintaTapa(oscuro, noche).copy(alpha = if (vista.isBlank()) 0.62f else 0.92f),
+            fontFamily = d.letraTapa, fontSize = d.tamTapa.sp, lineHeight = (d.tamTapa * 1.28f).sp, maxLines = d.lineasTapa,
+            overflow = TextOverflow.Ellipsis, textAlign = if (d.centradoTapa) TextAlign.Center else TextAlign.Start,
+            modifier = Modifier.offset(w * k.left, h * k.top).size(w * (k.right - k.left), h * (k.bottom - k.top))
+                .wrapContentHeight(Alignment.CenterVertically).graphicsLayer { alpha = 1f - abierto() })
+    }
+}
+
 
 // =====================================================================
 //  La biblioteca: lomos en estantes, rollos, boletines, cartas, expedientes, logs
@@ -1442,7 +1471,7 @@ private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String, modo: Escrito 
     val estado = io.github.ruddy2003.vestigium.ui.biblioteca.EstadoEncabezado(rotulo, fechaTema, detalle, dia?.dayOfYear ?: 1, noche)
     Column(Modifier.fillMaxWidth().padding(top = 6.dp)) {
         Canvas(Modifier.fillMaxWidth().height(d.altoEncabezado).semantics { contentDescription = "$rotulo. $fechaTema. $detalle" }) {
-            androidx.compose.ui.graphics.drawscope.clipRect { with(d) { encabezado(estado, p, medidor, oscuro) } }
+            clipRect { with(d) { encabezado(estado, p, medidor, oscuro) } }
         }
         if (noche) Meandro(Modifier.padding(top = 10.dp, bottom = 12.dp), color = p.acento.copy(alpha = 0.5f))
         else Meandro(Modifier.padding(top = 10.dp, bottom = 12.dp))
