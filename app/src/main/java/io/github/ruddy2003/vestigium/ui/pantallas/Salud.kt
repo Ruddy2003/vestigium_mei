@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import android.content.Intent
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -128,7 +128,7 @@ fun PantallaSalud(nav: Nav) {
         if (sin.isNotEmpty()) Seccion("Sin datos todavía", numero = grupos.size + 2) {
             Tarjeta {
                 sin.forEachIndexed { i, it ->
-                    if (i > 0) HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                    if (i > 0) Separador(Modifier.padding(vertical = 8.dp))
                     Text(it.titulo, style = MaterialTheme.typography.bodyLarge)
                     Ayuda("Meta: ${it.meta}." + if (it.como.isNotBlank()) " ${it.como}" else "")
                 }

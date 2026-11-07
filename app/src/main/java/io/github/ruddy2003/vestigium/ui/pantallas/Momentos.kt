@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
@@ -24,7 +25,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -181,7 +181,7 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
                 io.github.ruddy2003.vestigium.ui.SelectorDuracion(dur) { dur = it }
             }
             Ayuda("Si cambias la hora, el día se ajusta (empieza a las 5:00) y el lugar se toma de tus ubicaciones de esa hora.", Modifier.padding(top = 4.dp))
-            TextButton(onClick = {
+            BotonTexto(onClick = {
                 if (confirmar) {
                     Repo.borrarMomento(m.id); io.github.ruddy2003.vestigium.data.Recaidas.alBorrar(m); cerrar()
                     io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Momento borrado") {
@@ -192,7 +192,7 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
             }, modifier = Modifier.padding(top = 6.dp)) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
         }
         },
-        confirmButton = { TextButton(onClick = {
+        confirmButton = { BotonTexto(onClick = {
             val base = m.copy(texto = texto, intensidad = intensidad, valencia = valencia, activacion = activacion,
                 emociones = if (registro) eleccion.emociones else m.emociones,
                 emocion_otra = if (registro) eleccion.otra.trim().takeIf { Catalogo.OTRO in eleccion.emociones && it.isNotEmpty() } else m.emocion_otra,
@@ -220,6 +220,6 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
             }
             cerrar()
         }) { Text("Guardar") } },
-        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
+        dismissButton = { BotonTexto(onClick = cerrar) { Text("cancelar") } },
     )
 }

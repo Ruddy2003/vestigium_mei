@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,10 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -2283,7 +2283,7 @@ fun CuerpoHall(l: List<Logros.Logro>) {
         val enHall = ids.mapNotNull { id -> hechos.firstOrNull { it.id == id } }
         Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("${enHall.size} de 12 lugares", style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
-            TextButton(onClick = { editar = !editar }) { Text(if (editar) "listo" else "elegir piezas", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
+            BotonTexto(onClick = { editar = !editar }) { Text(if (editar) "listo" else "elegir piezas", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
         }
         if (enHall.isEmpty() && !editar) {
             Vacio(if (hechos.isEmpty()) "Cuando consigas logros, aquí podrás exhibir los que más te gusten." else "Tu hall está vacío. Elige qué exhibir o llénalo con los mejores.")
@@ -2309,7 +2309,7 @@ fun CuerpoHall(l: List<Logros.Logro>) {
                 Checkbox(checked = conTextos, onCheckedChange = { conTextos = it })
                 Text("con nombres y fechas", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f).clickable { conTextos = !conTextos })
                 // La imagen (1080 × 1350) se dibuja en otro hilo: antes se hacía dentro del toque y la pantalla se trababa.
-                TextButton(enabled = !creando, onClick = {
+                BotonTexto(enabled = !creando, onClick = {
                     creando = true
                     alcance.launch {
                         val f = withContext(Dispatchers.Default) { runCatching { HallImagen.crear(ctx, enHall, tema, cs, conTextos) }.getOrNull() }
@@ -2324,12 +2324,12 @@ fun CuerpoHall(l: List<Logros.Logro>) {
             if (enHall.isNotEmpty()) Tarjeta(Modifier.padding(top = 8.dp)) {
                 Text("En el hall", style = MaterialTheme.typography.titleMedium)
                 enHall.forEachIndexed { i, g ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         TrofeoLogro(g, 44.dp, tema = tema)
                         Text(g.nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f).padding(start = 10.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        TextButton(onClick = { mover(ids, i, -1) }, enabled = i > 0) { Text("↑") }
-                        TextButton(onClick = { mover(ids, i, 1) }, enabled = i < ids.lastIndex) { Text("↓") }
+                        BotonTexto(onClick = { mover(ids, i, -1) }, enabled = i > 0) { Text("↑") }
+                        BotonTexto(onClick = { mover(ids, i, 1) }, enabled = i < ids.lastIndex) { Text("↓") }
                     }
                 }
             }
@@ -2342,7 +2342,7 @@ fun CuerpoHall(l: List<Logros.Logro>) {
             }
             Tarjeta(Modifier.padding(top = 8.dp)) {
                 hechos.filter { cat == null || it.categoria == cat }.sortedByDescending { it.conseguido }.forEachIndexed { i, g ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     val dentro = g.id in ids
                     Row(Modifier.fillMaxWidth().clickable {
                         Repo.cambiarConfig { c -> c.copy(hall_logros = if (dentro) c.hall_logros - g.id else if (c.hall_logros.size >= 12) c.hall_logros else c.hall_logros + g.id) }

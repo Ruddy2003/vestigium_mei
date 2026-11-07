@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
@@ -16,7 +17,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -130,11 +130,11 @@ fun PantallaTusTemas(nav: Nav) {
                 }
             },
             confirmButton = {
-                TextButton(enabled = previa != null, onClick = {
+                BotonTexto(enabled = previa != null, onClick = {
                     val (n, antes) = TusTemas.renombrar(t.nombre, destino); editando = null; hecho("Renombré #${t.nombre} → #$destino en $n textos.", antes)
                 }) { Text("renombrar en todo") }
             },
-            dismissButton = { TextButton(onClick = { editando = null }) { Text("cancelar") } })
+            dismissButton = { BotonTexto(onClick = { editando = null }) { Text("cancelar") } })
     }
 }
 
@@ -174,7 +174,7 @@ fun PantallaPresencias(nav: Nav) {
                 Text(Fechas.titulo(d.fecha) + if (todos && d.presencias_ok) " · revisado" else "", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                 TextoMarcado(d.nota.trim().take(220) + if (d.nota.length > 220) "…" else "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
                 ChipsPresencia(d, revisado = false) { n -> Repo.importarDias(listOf(n), sobrescribir = true) }
-                TextButton(onClick = { Repo.importarDias(listOf(Repo.dia(d.fecha).copy(presencias_ok = true)), sobrescribir = true); listos = listos + d.fecha }) {
+                BotonTexto(onClick = { Repo.importarDias(listOf(Repo.dia(d.fecha).copy(presencias_ok = true)), sobrescribir = true); listos = listos + d.fecha }) {
                     Text("así está bien", style = MaterialTheme.typography.labelLarge)
                 }
             }

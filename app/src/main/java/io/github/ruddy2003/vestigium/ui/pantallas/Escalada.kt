@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
@@ -19,10 +21,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -102,7 +102,7 @@ fun PantallaEscalada(nav: Nav) {
         delReloj.take(3).forEach { s ->
             Tarjeta(Modifier.padding(top = 8.dp)) {
                 Text("Tu reloj registró escalada el ${Fechas.corto(s.fecha)} · ${s.min} min" + (s.fc_media?.let { " · %.0f lpm".format(it) } ?: ""), style = MaterialTheme.typography.bodyMedium)
-                TextButton(onClick = { nueva(s) }) { Text("+ anotar los bloques de esa sesión", style = MaterialTheme.typography.labelLarge) }
+                BotonTexto(onClick = { nueva(s) }) { Text("+ anotar los bloques de esa sesión", style = MaterialTheme.typography.labelLarge) }
             }
         }
         if (sesiones.isEmpty()) { Spacer(Modifier.height(12.dp)); Vacio("Aún no hay sesiones. Al terminar de escalar, anota cada bloque que intentaste."); return@Hoja }
@@ -134,7 +134,7 @@ fun PantallaEscalada(nav: Nav) {
         Seccion("Sesiones") {
             Tarjeta {
                 sesiones.forEachIndexed { i, a ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     Row(Modifier.fillMaxWidth().clickable { EdicionEscalada.id = a.id; nav.ir("ascenso") }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(Fechas.corto(a.fecha) + (if (a.lugar.isNotBlank()) " · ${a.lugar}" else ""), style = MaterialTheme.typography.bodyLarge)
@@ -247,7 +247,7 @@ fun PantallaAscenso(nav: Nav) {
             }
             if (a.bloques.isNotEmpty()) Tarjeta(Modifier.padding(top = 10.dp)) {
                 a.bloques.forEachIndexed { i, b ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     fun cambiarB(n: Bloque) = g(a.copy(bloques = a.bloques.mapIndexed { j, x -> if (j == i) n else x }))
                     Row(Modifier.fillMaxWidth().clickable { abierto = if (abierto == i) null else i }.padding(vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("${i + 1}".padStart(2, '0') + "  ", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -274,7 +274,7 @@ fun PantallaAscenso(nav: Nav) {
                         }
                         CampoTexto(b.nota, { cambiarB(b.copy(nota = it)) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
                             placeholder = { Text("nota: color, nombre, beta…", style = MaterialTheme.typography.labelLarge) })
-                        TextButton(onClick = {
+                        BotonTexto(onClick = {
                             val antes = a
                             g(a.copy(bloques = a.bloques.filterIndexed { j, _ -> j != i })); abierto = null
                             io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Bloque quitado") { g(antes) }
@@ -298,7 +298,7 @@ fun PantallaAscenso(nav: Nav) {
                 Editor(a.nota, "ascensus_${a.fecha}.txt", "Qué funcionó, qué no, con quién fuiste…", minimo = 90) { g(a.copy(nota = it)) }
             }
         }
-        TextButton(onClick = { if (confirmar) { Repo.borrarAscenso(a.id); nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Sesión borrada") { Repo.guardarAscenso(a) } } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
+        BotonTexto(onClick = { if (confirmar) { Repo.borrarAscenso(a.id); nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Sesión borrada") { Repo.guardarAscenso(a) } } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
             Text(if (confirmar) "¿borrar la sesión de verdad?" else "borrar sesión", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
         }
     }

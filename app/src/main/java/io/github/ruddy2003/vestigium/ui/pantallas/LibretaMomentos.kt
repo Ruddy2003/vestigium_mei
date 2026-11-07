@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import android.content.Intent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
@@ -41,7 +42,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -180,7 +180,7 @@ fun BibliotecaMomentosLibreta(nav: Nav) {
             }
         }
     }
-    if (q.isBlank() && porMes.size > meses) TextButton(onClick = { meses += 6 }) { Text("ver más meses", style = MaterialTheme.typography.labelLarge) }
+    if (q.isBlank() && porMes.size > meses) BotonTexto(onClick = { meses += 6 }) { Text("ver más meses", style = MaterialTheme.typography.labelLarge) }
 }
 
 private fun normalLibreta(s: String) = java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")

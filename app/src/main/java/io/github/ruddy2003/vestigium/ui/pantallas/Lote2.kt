@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import android.content.Intent
 import androidx.compose.foundation.background
@@ -22,11 +24,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -128,7 +128,7 @@ fun PantallaCoberturaVariables(nav: Nav) {
         }
         Tarjeta(Modifier.padding(top = 10.dp)) {
             visibles.forEachIndexed { i, f ->
-                if (i > 0) HorizontalDivider(Modifier.padding(vertical = 6.dp))
+                if (i > 0) Separador(Modifier.padding(vertical = 6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(f.v.nombre, style = MaterialTheme.typography.bodyMedium)
@@ -176,8 +176,8 @@ fun PantallaLugarNuevo(nav: Nav) {
                     msg = "Guardado «${nombre.trim()}»." + if (n > 0) " Encontré $n visita${if (n > 1) "s" else ""} de los últimos 30 días." else ""
                 }
                 Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TextButton(onClick = { Lugares.ignorar(cand); msg = "No volveré a preguntar en 150 m a la redonda." }) { Text("no guardar nunca aquí") }
-                    TextButton(onClick = { Lugares.despues(cand); msg = "Te pregunto en tres días." ; nav.atras() }) { Text("ahora no") }
+                    BotonTexto(onClick = { Lugares.ignorar(cand); msg = "No volveré a preguntar en 150 m a la redonda." }) { Text("no guardar nunca aquí") }
+                    BotonTexto(onClick = { Lugares.despues(cand); msg = "Te pregunto en tres días." ; nav.atras() }) { Text("ahora no") }
                 }
             }
             if (pend.size > 1) Ayuda("Hay ${pend.size - 1} sitio(s) más esperando.", Modifier.padding(top = 6.dp))
@@ -195,10 +195,10 @@ fun PantallaLugarNuevo(nav: Nav) {
         if (c.lugares_ignorados.isNotEmpty()) Seccion("Sitios ignorados", plegable = true, plegadaPorDefecto = true) {
             Tarjeta {
                 c.lugares_ignorados.forEachIndexed { i, x ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("%.4f, %.4f · desde %s".format(x.lat, x.lon, x.desde.ifBlank { "?" }), style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                        TextButton(onClick = {
+                        BotonTexto(onClick = {
                             Repo.cambiarConfig { cc -> cc.copy(lugares_ignorados = cc.lugares_ignorados - x) }
                             io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Sitio quitado de los ignorados") { Repo.cambiarConfig { cc -> if (x in cc.lugares_ignorados) cc else cc.copy(lugares_ignorados = cc.lugares_ignorados + x) } }
                         }) { Text("quitar") }
@@ -206,7 +206,7 @@ fun PantallaLugarNuevo(nav: Nav) {
                 }
             }
         }
-        TextButton(onClick = { nav.ir("lugares") }, modifier = Modifier.padding(top = 8.dp)) { Text("ver el mapa emocional de tus lugares ›") }
+        BotonTexto(onClick = { nav.ir("lugares") }, modifier = Modifier.padding(top = 8.dp)) { Text("ver el mapa emocional de tus lugares ›") }
     }
 }
 
@@ -326,17 +326,17 @@ fun DialogoNota(n: Nota, cerrar: () -> Unit) {
                         Repo.guardarIdea(i); Repo.borrarNota(n.id); cerrar()
                         io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Nota pasada al Ideario") { Repo.borrarIdea(i.id); Repo.guardarNota(n) }
                     }.padding(vertical = 6.dp))
-                TextButton(onClick = {
-                    if (!confirmar) { confirmar = true; return@TextButton }
+                BotonTexto(onClick = {
+                    if (!confirmar) { confirmar = true; return@BotonTexto }
                     Repo.borrarNota(n.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Nota borrada") { Repo.guardarNota(n) }
                 }, modifier = Modifier.padding(top = 6.dp)) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
             }
         },
-        confirmButton = { TextButton(onClick = {
+        confirmButton = { BotonTexto(onClick = {
             Repo.guardarNota(n.copy(texto = t.trim(), tipo = tp, fecha = f, recordar_el = rec.takeIf { tp == "recordatorio" }, editada = Fechas.ahoraIso()))
             cerrar()
         }, enabled = t.isNotBlank()) { Text("Guardar") } },
-        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } })
+        dismissButton = { BotonTexto(onClick = cerrar) { Text("cancelar") } })
 }
 
 @Composable
@@ -436,7 +436,7 @@ private fun PlantillaPropositos(anio: Int) {
         }
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
             CampoTexto(value = propio, onValueChange = { propio = it }, singleLine = true, modifier = Modifier.weight(1f), placeholder = { Text("Otro propósito") })
-            TextButton(onClick = { if (propio.isNotBlank()) { elegidos = elegidos + propio.trim(); propio = "" } }) { Text("+") }
+            BotonTexto(onClick = { if (propio.isNotBlank()) { elegidos = elegidos + propio.trim(); propio = "" } }) { Text("+") }
         }
         BotonPrincipal("Guardar ${elegidos.size} propósito${if (elegidos.size == 1) "" else "s"}", Modifier.fillMaxWidth().padding(top = 8.dp), habilitado = elegidos.isNotEmpty()) {
             elegidos.forEach { Repo.guardarMeta(Metas.proposito(it, anio)) }; elegidos = emptySet()
@@ -532,15 +532,15 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(enabled = m.nombre.isNotBlank(), onClick = { Metas.cambiar(previa, m.copy(nombre = m.nombre.trim())); cerrar() }) { Text("Guardar") } },
+        confirmButton = { BotonTexto(enabled = m.nombre.isNotBlank(), onClick = { Metas.cambiar(previa, m.copy(nombre = m.nombre.trim())); cerrar() }) { Text("Guardar") } },
         dismissButton = {
             Row {
                 var confirmar by remember { mutableStateOf(false) }
-                if (previa != null) TextButton(onClick = {
-                    if (!confirmar) { confirmar = true; return@TextButton }
+                if (previa != null) BotonTexto(onClick = {
+                    if (!confirmar) { confirmar = true; return@BotonTexto }
                     Repo.borrarMeta(previa.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Meta borrada") { Repo.guardarMeta(previa) }
                 }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
-                TextButton(onClick = cerrar) { Text("cancelar") }
+                BotonTexto(onClick = cerrar) { Text("cancelar") }
             }
         })
 }
@@ -605,7 +605,7 @@ fun SemanaCorta(d: Dia, abrirNoche: () -> Unit) {
             }
         }
         Text("Semana corta: solo lo mínimo. Todo lo demás sigue guardándose solo.", style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 12.dp))
-        TextButton(onClick = { Repo.cambiarConfig { it.copy(semana_corta = false) } }) { Text("volver a Hoy completo", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
+        BotonTexto(onClick = { Repo.cambiarConfig { it.copy(semana_corta = false) } }) { Text("volver a Hoy completo", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
     }
 }
 
@@ -622,7 +622,7 @@ fun SugerirSemanaCorta(hoy: String) {
             Ayuda("¿Probamos la semana corta? Hoy muestra solo cuatro cifras y tres botones; lo automático se sigue guardando.")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
                 BotonPrincipal("Activar") { Repo.cambiarConfig { it.copy(semana_corta = true, semana_corta_sugerida = hoy) } }
-                TextButton(onClick = { Repo.cambiarConfig { it.copy(semana_corta_sugerida = hoy) } }) { Text("no, gracias") }
+                BotonTexto(onClick = { Repo.cambiarConfig { it.copy(semana_corta_sugerida = hoy) } }) { Text("no, gracias") }
             }
         }
     }

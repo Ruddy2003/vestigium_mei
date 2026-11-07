@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
@@ -23,10 +25,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -117,7 +117,7 @@ fun PantallaSuplementos(nav: Nav) {
                         Text(s.nombre, style = MaterialTheme.typography.titleMedium)
                         Ayuda(if (tomas.isEmpty()) "$ese: todavía no" else "$ese: " + tomas.joinToString(" + ") { "${cifra(it.cantidad)} ${s.unidad} a las ${Fechas.horaDe(it.ts)}" })
                     }
-                    TextButton(onClick = { editando = s }) { Text("ajustar") }
+                    BotonTexto(onClick = { editando = s }) { Text("ajustar") }
                 }
                 Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     BotonPrincipal("Tomé ${cifra(s.dosis)} ${s.unidad}" + if (cuando != null) " · ${Fechas.corto(dia)}" else "", Modifier.weight(1f)) { tomar(s, s.dosis) }
@@ -159,7 +159,7 @@ fun PantallaSuplementos(nav: Nav) {
                         Modifier.padding(top = 10.dp))
                     var palabras by remember { mutableStateOf(c.probioticos_palabras.joinToString(", ")) }
                     CampoTexto(palabras, { palabras = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Palabras (separadas por coma)") })
-                    TextButton(onClick = { Repo.cambiarConfig { it.copy(probioticos_palabras = palabras.split(',').map { p -> p.trim() }.filter { p -> p.isNotEmpty() }) } }) { Text("guardar palabras") }
+                    BotonTexto(onClick = { Repo.cambiarConfig { it.copy(probioticos_palabras = palabras.split(',').map { p -> p.trim() }.filter { p -> p.isNotEmpty() }) } }) { Text("guardar palabras") }
                 }
             }
         }
@@ -167,7 +167,7 @@ fun PantallaSuplementos(nav: Nav) {
         if (pasadas.isNotEmpty()) Seccion("Últimas tomas", "Toca una para corregir la cantidad o la hora, o para quitarla.") {
             Tarjeta {
                 pasadas.forEachIndexed { i, t ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     val s = Suplementos.de(t.suplemento)
                     Row(Modifier.fillMaxWidth().clickable { toma = t }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("${s?.nombre ?: t.suplemento} · ${cifra(t.cantidad)} ${s?.unidad ?: ""} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.ts)}", style = MaterialTheme.typography.bodySmall,
@@ -240,7 +240,7 @@ private fun EditorSuplemento(s0: Suplemento, cerrar: () -> Unit) {
     val valido = nombre.isNotBlank() && dosisOk != null && vidaOk != null && cargaOk != null && lavadoOk != null
     Dialogo(onDismissRequest = cerrar, title = { Text(if (nuevo) "Nuevo suplemento" else s0.nombre) },
         confirmButton = {
-            TextButton(enabled = valido, onClick = {
+            BotonTexto(enabled = valido, onClick = {
                 val n = s0.copy(nombre = nombre.trim(), unidad = unidad.trim().ifBlank { s0.unidad }, dosis = dosisOk ?: s0.dosis,
                     modelo = modelo, vida_media_h = vidaOk ?: s0.vida_media_h, carga_dias = cargaOk ?: s0.carga_dias, lavado_dias = lavadoOk ?: s0.lavado_dias,
                     activo = if (nuevo) true else s0.activo)
@@ -250,8 +250,8 @@ private fun EditorSuplemento(s0: Suplemento, cerrar: () -> Unit) {
         },
         dismissButton = {
             Row {
-                if (!nuevo) TextButton(onClick = { Repo.cambiarConfig { c -> c.copy(suplementos = c.suplementos.map { if (it.id == s0.id) it.copy(activo = false) else it }) }; cerrar() }) { Text("dejar de usar") }
-                TextButton(onClick = cerrar) { Text("cancelar") }
+                if (!nuevo) BotonTexto(onClick = { Repo.cambiarConfig { c -> c.copy(suplementos = c.suplementos.map { if (it.id == s0.id) it.copy(activo = false) else it }) }; cerrar() }) { Text("dejar de usar") }
+                BotonTexto(onClick = cerrar) { Text("cancelar") }
             }
         },
         text = {
@@ -345,7 +345,7 @@ fun PantallaLaptop(nav: Nav) {
         Seccion("Apps y sitios", "Toca la categoría para cambiarla. El navegador no cuenta en las categorías: sus minutos ya están en los sitios.") {
             Tarjeta {
                 ColdTurkey.nombres().take(25).forEachIndexed { i, (n, m) ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     val cat = ColdTurkey.categoria(n)
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
@@ -607,7 +607,7 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
                 r.cociente?.let { Ayuda("Si el efecto viene de hacerlo, hacerlo de verdad cambiaría tu medida en unos ${"%+.2f".format(it)} (la diferencia según el plan entre la diferencia de cumplimiento). " +
                     "Es una aproximación: supone que saber qué semana tocaba no cambia nada por sí solo.") }
             }
-            if (Experimentos.enCurso(e, hoy)) TextButton(onClick = { Repo.guardarExperimento(e.copy(activo = false, fin = hoy)) }) { Text("Terminar experimento") }
+            if (Experimentos.enCurso(e, hoy)) BotonTexto(onClick = { Repo.guardarExperimento(e.copy(activo = false, fin = hoy)) }) { Text("Terminar experimento") }
         }
     }
 }
@@ -653,20 +653,20 @@ fun DialogoToma(t: io.github.ruddy2003.vestigium.data.TomaSuplemento, cerrar: ()
                     isError = v == null || v <= 0, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal))
                 Etiqueta("Cuándo")
                 io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, ayer = true) { cuando = it }
-                TextButton(onClick = {
-                    if (!confirmar) { confirmar = true; return@TextButton }
+                BotonTexto(onClick = {
+                    if (!confirmar) { confirmar = true; return@BotonTexto }
                     Repo.borrarToma(t.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Toma borrada") { Repo.guardarToma(t) }
                 }, modifier = Modifier.padding(top = 6.dp)) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
             }
         },
         confirmButton = {
-            TextButton(enabled = v != null && v > 0, onClick = {
+            BotonTexto(enabled = v != null && v > 0, onClick = {
                 val ms = (cuando ?: java.time.LocalDateTime.now()).aMillis()
                 val n = t.copy(cantidad = v ?: t.cantidad, ts = Fechas.isoDeMillis(ms), fecha = Fechas.diaLogicoDeMillis(ms))
                 if (n != t) Repo.guardarToma(n)
                 cerrar()
             }) { Text("Guardar") }
         },
-        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
+        dismissButton = { BotonTexto(onClick = cerrar) { Text("cancelar") } },
     )
 }

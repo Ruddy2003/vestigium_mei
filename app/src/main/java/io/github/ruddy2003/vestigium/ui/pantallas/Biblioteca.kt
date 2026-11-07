@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -30,10 +32,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -217,7 +217,7 @@ fun PantallaBiblioteca(nav: Nav) {
             var abierto by remember { mutableStateOf<String?>(null) }
             Tarjeta {
                 Repo.subrayados.groupBy { it.libro }.entries.sortedByDescending { e -> e.value.maxOfOrNull { it.ts ?: "" } }.forEachIndexed { i, (libro, l) ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     Row(Modifier.fillMaxWidth().clickable { abierto = if (abierto == libro) null else libro }.padding(vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(libro, style = MaterialTheme.typography.bodyLarge)
@@ -299,7 +299,7 @@ private fun Lista(obras: List<Obra>, nav: Nav, porAnio: Boolean = false) {
                 anioPrevio = anio
                 Text(Estilo.numeral(anio.toIntOrNull() ?: 0).let { if (it == anio) anio else "$it · $anio" }, style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = if (i == 0) 0.dp else 12.dp, bottom = 4.dp))
-            } else if (i > 0) HorizontalDivider()
+            } else if (i > 0) Separador()
             Row(Modifier.fillMaxWidth().clickable { EdicionObra.id = o.id; nav.ir("obra") }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 PortadaObra(o, Modifier.width(40.dp).aspectRatio(2f / 3f), lado = 160)
                 Column(Modifier.weight(1f).padding(start = 12.dp)) {
@@ -391,7 +391,7 @@ fun PantallaBuscarObra(nav: Nav) {
         if (resultados.isNotEmpty()) Box(Modifier.padding(top = 12.dp)) {
             Tarjeta {
                 resultados.forEachIndexed { i, r ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     Row(Modifier.fillMaxWidth().clickable(enabled = eligiendo == null) { elegir(r) }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         if (tipo == "articulo") PortadaObra(Obra("", "articulo", r.titulo, r.autor, r.anio, revista = r.revista), Modifier.width(48.dp).aspectRatio(2f / 3f))
                         else ImagenRed(r.portada, Modifier.width(48.dp).aspectRatio(2f / 3f))
@@ -405,7 +405,7 @@ fun PantallaBuscarObra(nav: Nav) {
                 }
             }
         }
-        if (soloPortada == null) TextButton(onClick = {
+        if (soloPortada == null) BotonTexto(onClick = {
             val o = Obra(id = Repo.nuevoId(), tipo = tipo, titulo = BusquedaObra.texto.trim(), agregado = Fechas.diaLogico())
             Repo.guardarObra(o); EdicionObra.id = o.id; nav.atras(); nav.ir("obra")
         }, modifier = Modifier.padding(top = 10.dp)) { Text("No está: añadir a mano", style = MaterialTheme.typography.labelLarge) }
@@ -451,10 +451,10 @@ fun PantallaObra(nav: Nav) {
                 if (o.dias.isNotEmpty()) Text("${o.dias.size} día${if (o.dias.size == 1) "" else "s"} marcados · último ${Fechas.relativo(o.dias.max())}",
                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
                 FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    if (o.tipo != "articulo") TextButton(onClick = { BusquedaObra.tipo = o.tipo; BusquedaObra.texto = o.titulo; BusquedaObra.portadaDe = o.id; nav.ir("buscar_obra") }) {
+                    if (o.tipo != "articulo") BotonTexto(onClick = { BusquedaObra.tipo = o.tipo; BusquedaObra.texto = o.titulo; BusquedaObra.portadaDe = o.id; nav.ir("buscar_obra") }) {
                         Text("buscar portada", style = MaterialTheme.typography.labelMedium) }
-                    TextButton(onClick = { foto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) { Text("foto", style = MaterialTheme.typography.labelMedium) }
-                    if (o.portada != null) TextButton(onClick = { Portadas.borrar(ctx, o.portada); g(o.copy(portada = null, portada_url = null)) }) {
+                    BotonTexto(onClick = { foto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) { Text("foto", style = MaterialTheme.typography.labelMedium) }
+                    if (o.portada != null) BotonTexto(onClick = { Portadas.borrar(ctx, o.portada); g(o.copy(portada = null, portada_url = null)) }) {
                         Text("quitar portada", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
             }
@@ -537,7 +537,7 @@ fun PantallaObra(nav: Nav) {
         }
         val marcas = Repo.subrayados.filter { o.titulo.isNotBlank() && (it.libro.equals(o.titulo, true) || it.libro.contains(o.titulo, true) || o.titulo.contains(it.libro, true)) }
         if (marcas.isNotEmpty()) Seccion("Subrayados de Kindle", numero = 6, latin = "EXCERPTA") { Tarjeta { Subrayados(marcas) } }
-        TextButton(onClick = { if (confirmar) { Repo.borrarObra(o.id); nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Obra borrada", alExpirar = { Portadas.borrar(ctx, o.portada) }) { Repo.guardarObra(o) } } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
+        BotonTexto(onClick = { if (confirmar) { Repo.borrarObra(o.id); nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Obra borrada", alExpirar = { Portadas.borrar(ctx, o.portada) }) { Repo.guardarObra(o) } } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
             Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
         }
     }
@@ -552,7 +552,7 @@ private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit, anotar: (Cita) -> 
     var editando by remember { mutableStateOf<Cita?>(null) }
     Tarjeta {
         o.citas.forEachIndexed { i, c ->
-            if (i > 0) HorizontalDivider(Modifier.padding(vertical = 6.dp))
+            if (i > 0) Separador(Modifier.padding(vertical = 6.dp))
             Row(verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f)) {
                     // Tocar la cita la corrige (texto y página o minuto).
@@ -563,11 +563,11 @@ private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit, anotar: (Cita) -> 
                     Text(if (n > 0) "✎ $n ${if (n == 1) "idea" else "ideas"} · anotar otra" else "✎ anotar lo que entendí", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { anotar(c) }.padding(top = 4.dp))
                 }
-                TextButton(onClick = {
+                BotonTexto(onClick = {
                     sentir(Sentidos.Evento.ELEGIR)
                     Repo.guardarObra(o.copy(citas = o.citas.map { if (it.id == c.id) it.copy(favorita = !it.favorita) else it }))
                 }) { Text(if (c.favorita) "♥" else "♡", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge) }
-                TextButton(onClick = { if (armado == c.id) {
+                BotonTexto(onClick = { if (armado == c.id) {
                     Repo.guardarObra(o.copy(citas = o.citas.filterNot { it.id == c.id })); armado = null
                     io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Cita borrada") { Repo.obras.firstOrNull { it.id == o.id }?.let { x -> if (x.citas.none { it.id == c.id }) Repo.guardarObra(x.copy(citas = x.citas + c)) } }
                 } else armado = c.id }) {
@@ -596,11 +596,11 @@ private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit, anotar: (Cita) -> 
                     CampoTexto(p, { p = it.take(20) }, Modifier.width(160.dp).padding(top = 8.dp), singleLine = true, label = { Text("página o minuto") })
                 }
             },
-            confirmButton = { TextButton(enabled = t.isNotBlank(), onClick = {
+            confirmButton = { BotonTexto(enabled = t.isNotBlank(), onClick = {
                 Repo.obras.firstOrNull { it.id == o.id }?.let { x -> Repo.guardarObra(x.copy(citas = x.citas.map { if (it.id == c.id) it.copy(texto = t.trim(), pagina = p.trim()) else it })) }
                 editando = null
             }) { Text("Guardar") } },
-            dismissButton = { TextButton(onClick = { editando = null }) { Text("cancelar") } })
+            dismissButton = { BotonTexto(onClick = { editando = null }) { Text("cancelar") } })
     }
 }
 
@@ -618,7 +618,7 @@ private fun Subrayados(l: List<io.github.ruddy2003.vestigium.data.Subrayado>) {
                     Text(listOfNotNull(s.tipo, s.pagina?.let { "p. $it" }, s.ubicacion.ifBlank { null }?.let { "pos. $it" }, s.fecha?.let { Fechas.corto(it) }).joinToString(" · "),
                         style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                if (s.tipo != "nota" && s.texto.isNotBlank()) TextButton(onClick = {
+                if (s.tipo != "nota" && s.texto.isNotBlank()) BotonTexto(onClick = {
                     sentir(Sentidos.Evento.ELEGIR)
                     Repo.cambiarConfig { c ->
                         c.copy(frases_guardadas = if (guardada) c.frases_guardadas.filterNot { it.texto == s.texto && it.autor == autor }
@@ -715,7 +715,7 @@ fun PantallaDeseados(nav: Nav) {
             if (l.isNotEmpty()) Seccion(io.github.ruddy2003.vestigium.data.Catalogo.nombrePrioridad(p) ?: "Sin decir cuándo", "${l.size}") {
                 Tarjeta {
                     l.forEachIndexed { i, o ->
-                        if (i > 0) HorizontalDivider()
+                        if (i > 0) Separador()
                         FilaDeseo(o, hoy, nav)
                     }
                 }
@@ -739,6 +739,6 @@ private fun FilaDeseo(o: Obra, hoy: String, nav: Nav) {
             ).joinToString(" · ")
             if (detalle.isNotBlank()) Text(detalle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        TextButton(onClick = { Repo.guardarObra(o.copy(estado = "en_curso", inicio = o.inicio ?: hoy)) }) { Text("empezar", style = MaterialTheme.typography.labelLarge) }
+        BotonTexto(onClick = { Repo.guardarObra(o.copy(estado = "en_curso", inicio = o.inicio ?: hoy)) }) { Text("empezar", style = MaterialTheme.typography.labelLarge) }
     }
 }

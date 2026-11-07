@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
@@ -30,7 +31,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -284,13 +284,13 @@ fun EditorCategorias() {
     var renombrar by remember { mutableStateOf<Pair<String, String?>?>(null) }
     Tarjeta {
         c.categorias.forEachIndexed { i, cat ->
-            if (i > 0) androidx.compose.material3.HorizontalDivider()
+            if (i > 0) io.github.ruddy2003.vestigium.ui.comun.Separador()
             val subs = D.subcategorias(cat)
             Row(Modifier.fillMaxWidth().clickable { abierta = if (abierta == cat) null else cat; nuevaSub = "" }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text((if (abierta == cat) "▾ " else "▸ ") + cat + if (subs.isNotEmpty()) " · ${subs.size}" else "", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                if (i > 0) TextButton(onClick = { D.subir(cat) }) { Text("↑") }
-                TextButton(onClick = { renombrar = cat to null }) { Text("✎") }
-                TextButton(onClick = {
+                if (i > 0) BotonTexto(onClick = { D.subir(cat) }) { Text("↑") }
+                BotonTexto(onClick = { renombrar = cat to null }) { Text("✎") }
+                BotonTexto(onClick = {
                     Repo.cambiarConfig { it.copy(categorias = it.categorias - cat) }
                     io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Categoría quitada") { Repo.cambiarConfig { cc -> if (cat in cc.categorias) cc else cc.copy(categorias = cc.categorias.toMutableList().apply { add(i.coerceIn(0, size), cat) }) } }
                 }) { Text("×", color = MaterialTheme.colorScheme.error) }
@@ -304,8 +304,8 @@ fun EditorCategorias() {
                             modifier = Modifier.width(112.dp), singleLine = true, prefix = { Text("$") },
                             placeholder = { Text(D.montoHabitual(cat, sc.nombre)?.let { D.texto(it) } ?: "auto", style = MaterialTheme.typography.bodySmall) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), textStyle = MaterialTheme.typography.bodySmall)
-                        TextButton(onClick = { renombrar = cat to sc.nombre }) { Text("✎") }
-                        TextButton(onClick = {
+                        BotonTexto(onClick = { renombrar = cat to sc.nombre }) { Text("✎") }
+                        BotonTexto(onClick = {
                             D.quitarSub(cat, sc.nombre)
                             io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Subcategoría quitada") { Repo.cambiarConfig { cc -> cc.copy(subcategorias = cc.subcategorias + (cat to (cc.subcategorias[cat].orEmpty() + sc))) } }
                         }) { Text("×", color = MaterialTheme.colorScheme.error) }
@@ -313,13 +313,13 @@ fun EditorCategorias() {
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CampoTexto(value = nuevaSub, onValueChange = { nuevaSub = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva subcategoría de $cat") })
-                    TextButton(onClick = { D.agregarSub(cat, nuevaSub); nuevaSub = "" }, enabled = nuevaSub.isNotBlank()) { Text("Añadir") }
+                    BotonTexto(onClick = { D.agregarSub(cat, nuevaSub); nuevaSub = "" }, enabled = nuevaSub.isNotBlank()) { Text("Añadir") }
                 }
             }
         }
         Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             CampoTexto(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría") })
-            TextButton(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias) { Repo.cambiarConfig { it.copy(categorias = it.categorias + n) }; nueva = "" } }) { Text("Añadir") }
+            BotonTexto(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias) { Repo.cambiarConfig { it.copy(categorias = it.categorias + n) }; nueva = "" } }) { Text("Añadir") }
         }
         Ayuda("El monto vacío es automático: el que más se repite en tus últimos 10 gastos de esa subcategoría. Quitar una categoría no cambia los gastos ya registrados.", Modifier.padding(top = 6.dp))
     }
@@ -334,11 +334,11 @@ fun EditorCategorias() {
                     if (n > 0) Interruptor("Cambiar también ${if (n == 1) "el gasto anterior" else "los $n gastos anteriores"}", tambien) { tambien = it }
                 }
             },
-            confirmButton = { TextButton(onClick = {
+            confirmButton = { BotonTexto(onClick = {
                 if (sb == null) D.renombrarCategoria(cat, t, tambien) else D.renombrarSub(cat, sb, t, tambien)
                 renombrar = null
             }, enabled = t.isNotBlank()) { Text("Guardar") } },
-            dismissButton = { TextButton(onClick = { renombrar = null }) { Text("cancelar") } })
+            dismissButton = { BotonTexto(onClick = { renombrar = null }) { Text("cancelar") } })
     }
 }
 
@@ -354,12 +354,12 @@ fun EditorCategoriasIngreso() {
     var renombrar by remember { mutableStateOf<String?>(null) }
     Tarjeta {
         c.categorias_ingreso.forEachIndexed { i, cat ->
-            if (i > 0) androidx.compose.material3.HorizontalDivider()
+            if (i > 0) io.github.ruddy2003.vestigium.ui.comun.Separador()
             Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(cat, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                if (i > 0) TextButton(onClick = { D.subirIngreso(cat) }) { Text("↑") }
-                TextButton(onClick = { renombrar = cat }) { Text("✎") }
-                TextButton(onClick = {
+                if (i > 0) BotonTexto(onClick = { D.subirIngreso(cat) }) { Text("↑") }
+                BotonTexto(onClick = { renombrar = cat }) { Text("✎") }
+                BotonTexto(onClick = {
                     Repo.cambiarConfig { it.copy(categorias_ingreso = it.categorias_ingreso - cat) }
                     io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Categoría quitada") { Repo.cambiarConfig { cc -> if (cat in cc.categorias_ingreso) cc else cc.copy(categorias_ingreso = cc.categorias_ingreso.toMutableList().apply { add(i.coerceIn(0, size), cat) }) } }
                 }) { Text("×", color = MaterialTheme.colorScheme.error) }
@@ -367,7 +367,7 @@ fun EditorCategoriasIngreso() {
         }
         Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             CampoTexto(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría de ingreso") })
-            TextButton(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias_ingreso) { Repo.cambiarConfig { it.copy(categorias_ingreso = it.categorias_ingreso + n) }; nueva = "" } }) { Text("Añadir") }
+            BotonTexto(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias_ingreso) { Repo.cambiarConfig { it.copy(categorias_ingreso = it.categorias_ingreso + n) }; nueva = "" } }) { Text("Añadir") }
         }
     }
     renombrar?.let { cat ->
@@ -381,8 +381,8 @@ fun EditorCategoriasIngreso() {
                     if (n > 0) Interruptor("Cambiar también ${if (n == 1) "el ingreso anterior" else "los $n ingresos anteriores"}", tambien) { tambien = it }
                 }
             },
-            confirmButton = { TextButton(onClick = { D.renombrarIngreso(cat, t, tambien); renombrar = null }, enabled = t.isNotBlank()) { Text("Guardar") } },
-            dismissButton = { TextButton(onClick = { renombrar = null }) { Text("cancelar") } })
+            confirmButton = { BotonTexto(onClick = { D.renombrarIngreso(cat, t, tambien); renombrar = null }, enabled = t.isNotBlank()) { Text("Guardar") } },
+            dismissButton = { BotonTexto(onClick = { renombrar = null }) { Text("cancelar") } })
     }
 }
 
@@ -451,13 +451,13 @@ private fun DialogoDinero(
                 if (marca2 != null) Interruptor(marca2, m2) { m2 = it }
                 CampoTexto(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
                 // Borrar va adentro, en rojo y con confirmación; abajo quedan «cancelar» y «Guardar», como en los demás diálogos.
-                if (borrar != null) TextButton(onClick = { if (confirmar) { borrar(); cerrar() } else confirmar = true }, modifier = Modifier.padding(top = 6.dp)) {
+                if (borrar != null) BotonTexto(onClick = { if (confirmar) { borrar(); cerrar() } else confirmar = true }, modifier = Modifier.padding(top = 6.dp)) {
                     Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error)
                 }
             }
         },
         confirmButton = {
-            TextButton(enabled = v != null && v > 0, onClick = {
+            BotonTexto(enabled = v != null && v > 0, onClick = {
                 // Si la hora guardada no se pudo leer y no la cambiaste, se conservan su fecha y su hora: antes el gasto se
                 // movía a hoy en silencio. Solo uno nuevo, sin fecha, toma la de ahora.
                 val (f, h) = cuando?.let { c -> Fechas.iso(c.toLocalDate()) to "%02d:%02d".format(c.hour, c.minute) }
@@ -466,7 +466,7 @@ private fun DialogoDinero(
                 cerrar()
             }) { Text("Guardar") }
         },
-        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
+        dismissButton = { BotonTexto(onClick = cerrar) { Text("cancelar") } },
     )
 }
 

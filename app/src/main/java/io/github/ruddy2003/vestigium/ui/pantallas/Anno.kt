@@ -126,7 +126,7 @@ fun PantallaAnno(nav: Nav) {
                 Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(Fechas.titulo(f) + " · " + (valencia(f)?.let { "ánimo ${"%.1f".format(it)}/7" } ?: "sin ánimo anotado"),
                         style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-                    androidx.compose.material3.TextButton(onClick = { Seleccion.abrir(nav, f) }) { Text("abrir →") }
+                    io.github.ruddy2003.vestigium.ui.comun.BotonTexto(onClick = { Seleccion.abrir(nav, f) }) { Text("abrir →") }
                 }
             }
         }

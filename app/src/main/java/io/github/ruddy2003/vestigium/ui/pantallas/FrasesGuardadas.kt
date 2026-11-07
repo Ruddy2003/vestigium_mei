@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -396,7 +396,7 @@ fun PantallaFrasesGuardadas(nav: Nav) {
                         modifier = Modifier.padding(top = 4.dp).then(if (g.obra != null) Modifier.clickable { EdicionObra.id = g.obra; nav.ir("obra") } else Modifier))
                     Row(Modifier.fillMaxWidth().padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("${g.origen} · ${Fechas.relativo(g.fecha)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-                        TextButton(onClick = {
+                        BotonTexto(onClick = {
                             if (armado == g.clave) { sentir(Sentidos.Evento.TOQUE); g.quitar(); armado = null; io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Frase quitada") { g.restaurar() } } else armado = g.clave
                         }) {
                             Text(if (armado == g.clave) "¿Quitar?" else "Quitar", color = if (armado == g.clave) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)

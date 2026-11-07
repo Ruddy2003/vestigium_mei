@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -13,7 +14,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +42,7 @@ fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null,
     Column(modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             // El texto cambia con el tema («← tornar», «cd ..»); para TalkBack siempre dice «Volver» (N-27).
-            if (atras != null) TextButton(onClick = atras, modifier = Modifier.semantics { contentDescription = "Volver" }) {
+            if (atras != null) BotonTexto(onClick = atras, modifier = Modifier.semantics { contentDescription = "Volver" }) {
                 Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.clearAndSetSemantics { })
             }
         }
@@ -63,7 +63,7 @@ fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null,
                 )
                 val guia = LocalGuia.current
                 val seccionGuia = io.github.ruddy2003.vestigium.data.GuiaUso.PANTALLAS[titulo]
-                if (guia != null && seccionGuia != null) TextButton(onClick = { guia(seccionGuia) }, modifier = Modifier.semantics { contentDescription = "Ayuda de esta pantalla" }) {
+                if (guia != null && seccionGuia != null) BotonTexto(onClick = { guia(seccionGuia) }, modifier = Modifier.semantics { contentDescription = "Ayuda de esta pantalla" }) {
                     Text("?", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.clearAndSetSemantics { })
                 }
                 if (buscar != null) BotonBuscar(onClick = buscar)

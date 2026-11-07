@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -19,10 +21,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -140,7 +140,7 @@ fun PantallaCampanas(nav: Nav) {
                     else -> "${e.hechos} de ${c.meta}. " + (e.reto?.descripcion ?: "")
                 }, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
                 // Abandonar la cierra hoy, no la borra: queda en la historia (y en el panel, los días que la tuviste).
-                TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(campanas = cc.campanas.map { if (it.id == c.id) it.copy(abandonada = hoy) else it }) } }) {
+                BotonTexto(onClick = { Repo.cambiarConfig { cc -> cc.copy(campanas = cc.campanas.map { if (it.id == c.id) it.copy(abandonada = hoy) else it }) } }) {
                     Text("abandonar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -152,7 +152,7 @@ fun PantallaCampanas(nav: Nav) {
                 var elegido by remember { mutableStateOf<String?>(null) }
                 Tarjeta {
                     Campanas.retos().filter { r -> actuales.none { it.reto == r.id } }.forEachIndexed { i, r ->
-                        if (i > 0) HorizontalDivider()
+                        if (i > 0) Separador()
                         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Text(r.nombre, style = MaterialTheme.typography.bodyLarge)
@@ -171,7 +171,7 @@ fun PantallaCampanas(nav: Nav) {
                             Repo.cambiarConfig { cc -> cc.copy(campanas = cc.campanas + c) }
                             eligiendo = false; elegido = null
                         }
-                        TextButton(onClick = { eligiendo = false; elegido = null }) { Text("cancelar") }
+                        BotonTexto(onClick = { eligiendo = false; elegido = null }) { Text("cancelar") }
                     }
                 }
             }
@@ -180,7 +180,7 @@ fun PantallaCampanas(nav: Nav) {
         if (pasadas.isNotEmpty()) Seccion("Campañas anteriores", "${Campanas.victorias(hoy).size} ganadas de ${pasadas.size}.") {
             Tarjeta {
                 pasadas.take(20).forEachIndexed { i, c ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     val e = Campanas.estado(c, hoy)
                     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {

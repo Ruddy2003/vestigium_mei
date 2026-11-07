@@ -1,12 +1,12 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,14 +49,14 @@ fun ListaPapelera(privado: Boolean) {
         if (lista.isEmpty()) Vacio("Nada borrado en los últimos 7 días.")
         else Tarjeta {
             lista.forEachIndexed { i, b ->
-                if (i > 0) HorizontalDivider()
+                if (i > 0) Separador()
                 var msg by remember(b.col, b.id) { mutableStateOf<String?>(null) }
                 Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     androidx.compose.foundation.layout.Column(Modifier.weight(1f)) {
                         Text(Papelera.describir(b, discreto), style = MaterialTheme.typography.bodyMedium)
                         Ayuda(msg ?: Papelera.diasQuedan(b).let { if (it <= 1) "se vacía mañana" else "quedan $it días" })
                     }
-                    TextButton(onClick = { if (Repo.restaurar(b)) version++ else msg = "No se pudo recuperar." }) { Text("recuperar") }
+                    BotonTexto(onClick = { if (Repo.restaurar(b)) version++ else msg = "No se pudo recuperar." }) { Text("recuperar") }
                 }
             }
         }

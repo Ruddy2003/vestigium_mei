@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
@@ -43,7 +44,6 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -183,7 +183,7 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
         val est = io.github.ruddy2003.vestigium.ui.Estilo
         fun abrirCalendario() { Seleccion.ultimoMes = Fechas.mesDe(fecha); if (sucio) Repo.guardarDia(d); nav.ir("calendario") }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (apilado) TextButton(onClick = nav.atras, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
+            if (apilado) BotonTexto(onClick = nav.atras, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
                 modifier = Modifier.semantics { contentDescription = "Volver" }) {
                 Text("←", style = MaterialTheme.typography.titleLarge)
             }
@@ -195,7 +195,7 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
                 append(est.sufijoTitulo)
                 if (espanolT != null) withStyle(androidx.compose.ui.text.SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append(" · $espanolT") }
             }, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
-            io.github.ruddy2003.vestigium.ui.LocalGuia.current?.let { guia -> TextButton(onClick = { guia("principios") }) { Text("?", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary) } }
+            io.github.ruddy2003.vestigium.ui.LocalGuia.current?.let { guia -> BotonTexto(onClick = { guia("principios") }) { Text("?", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary) } }
             io.github.ruddy2003.vestigium.ui.BotonBuscar { nav.ir("buscar") }
             io.github.ruddy2003.vestigium.ui.BotonAjustes(Modifier.padding(start = 4.dp)) { nav.ir("mas") }
             io.github.ruddy2003.vestigium.ui.BotonModo()
@@ -233,7 +233,7 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
 
         // Estado del día, con flechas pequeñas (también se cambia de día deslizando a los lados).
         Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { irA(Fechas.sumar(fecha, -1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
+            BotonTexto(onClick = { irA(Fechas.sumar(fecha, -1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
                 modifier = Modifier.semantics { contentDescription = "Día anterior" }) { Text("‹", style = MaterialTheme.typography.titleLarge) }
             Text("estado = ", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(when { sucio -> "guardando…"; guardado != null -> "guardado"; else -> "vacío" } + (if (guardado?.retroactivo == true) " · retroactivo" else ""),
@@ -248,8 +248,8 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
             }
             if (r >= 2) Text("  ·  racha $r", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.weight(1f))
-            if (!esHoy) TextButton(onClick = { irA(hoy) }) { Text("hoy", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
-            TextButton(onClick = { irA(Fechas.sumar(fecha, 1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
+            if (!esHoy) BotonTexto(onClick = { irA(hoy) }) { Text("hoy", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+            BotonTexto(onClick = { irA(Fechas.sumar(fecha, 1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
                 modifier = Modifier.semantics { contentDescription = "Día siguiente" }) { Text("›", style = MaterialTheme.typography.titleLarge) }
         }
         // Semana corta: solo cuatro cifras y tres botones.
@@ -268,7 +268,7 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
                     io.github.ruddy2003.vestigium.ui.FormularioSueno(fecha, d) { cambiar(it) }
                     val sr = Repo.salud[fecha]
                     sr?.sueno_min?.let { m -> ClaveDia("horologium", "${m / 60} h ${m % 60} min dormido " + if (sr.sueno_manual) "(corregido a mano)" else "según tu reloj") }
-                    TextButton(onClick = { editarSueno = true }) {
+                    BotonTexto(onClick = { editarSueno = true }) {
                         Text(if (sr?.sueno_min != null) "corregir las horas de sueño" else "anotar a qué hora dormí y desperté", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     }
                 }
@@ -472,7 +472,7 @@ fun PantallaNoche(nav: Nav) {
         if (d.dia_dificil) Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Marcaste este día como «día difícil».", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f))
-            TextButton(onClick = { cambiar(d.copy(dia_dificil = false)) }) { Text("quitar", style = MaterialTheme.typography.labelLarge) }
+            BotonTexto(onClick = { cambiar(d.copy(dia_dificil = false)) }) { Text("quitar", style = MaterialTheme.typography.labelLarge) }
         }
         // 1. El ánimo de este momento, antes de repasar el día: recordar y escribir lo cambian (N-18). Solo en la hoja de hoy:
         //    en un día pasado se guardaría «ahora» con la fecha de otro día (H-2-8).
@@ -513,7 +513,7 @@ fun PantallaNoche(nav: Nav) {
             if (activos.isEmpty()) {
                 Tarjeta {
                     Ayuda("Aún no tienes hábitos.")
-                    TextButton(onClick = { nav.ir("habitos") }) { Text("+ agregar hábitos", style = MaterialTheme.typography.labelLarge) }
+                    BotonTexto(onClick = { nav.ir("habitos") }) { Text("+ agregar hábitos", style = MaterialTheme.typography.labelLarge) }
                 }
             } else Tarjeta {
                 // «sí», «no» o sin contestar (tocar otra vez la misma respuesta la quita): «no» ya no es lo mismo que no haber contestado.
@@ -547,7 +547,7 @@ fun PantallaNoche(nav: Nav) {
                 ChipsPresencia(d) { n -> cambiar(n) }
                 Ayuda("Toca un nombre si solo pensaste en esa persona o hablaron por mensaje.", Modifier.padding(top = 4.dp))
             }
-            TextButton(onClick = { nav.ir("biblioteca_diario") }) { Text("abrir la biblioteca del diario →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+            BotonTexto(onClick = { nav.ir("biblioteca_diario") }) { Text("abrir la biblioteca del diario →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }
 
         // 7. Lo opcional, plegado y en orden fijo: lectura, lo mejor y lo peor, hitos, obras, foto y lo privado.
@@ -558,7 +558,7 @@ fun PantallaNoche(nav: Nav) {
                     var abierta by remember { mutableStateOf(false) }
                     if (i > 0) Spacer(Modifier.padding(top = 14.dp))
                     Text(p.pregunta, style = MaterialTheme.typography.titleMedium)
-                    TextButton(onClick = { abierta = !abierta }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
+                    BotonTexto(onClick = { abierta = !abierta }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
                         Text(if (abierta) "− ocultar guía" else "+ cómo elegir · ${p.autor}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                     }
                     if (abierta) Ayuda(p.guia, Modifier.padding(bottom = 8.dp))
@@ -590,7 +590,7 @@ fun PantallaNoche(nav: Nav) {
             Imagenes(fecha, d.foto, nav) { uri -> cambiar(d.copy(foto = if (d.foto == uri) null else uri)) }
         }
         // Medicamentos, impulsos, recaídas y libido se anotan y se ven solo en la pantalla Privado.
-        TextButton(onClick = { if (sucio) { Repo.guardarDia(d); sucio = false }; Seleccion.privado = fecha; nav.ir("recaidas") }) {
+        BotonTexto(onClick = { if (sucio) { Repo.guardarDia(d); sucio = false }; Seleccion.privado = fecha; nav.ir("recaidas") }) {
             Text("privado de este día →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         // Cerrar el día: guarda y, si está completo, lo sella con la huella.
@@ -624,7 +624,7 @@ private fun BarraNoche(pasos: List<Pair<String, Boolean>>, extras: List<Pair<Str
                     (if (faltaExtra.isNotEmpty()) " · extra: " + faltaExtra.joinToString(", ") else ""),
                     style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
             }
-            TextButton(onClick = siguiente) {
+            BotonTexto(onClick = siguiente) {
                 Text(if (hechos < pasos.size || extras.any { !it.second }) "siguiente →" else if (completo) "sellar ↓" else "guardar ↓", style = MaterialTheme.typography.labelLarge, color = cs.primary)
             }
         }
@@ -790,7 +790,7 @@ private fun Imagenes(fecha: String, elegida: String?, nav: Nav, onElegir: (Strin
                     modifier = Modifier.align(Alignment.TopStart).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.55f)).padding(horizontal = 3.dp))
                 if (sel) Text("★", color = MaterialTheme.colorScheme.primary, modifier = Modifier.align(Alignment.TopEnd).padding(3.dp))
             }
-            TextButton(onClick = { onElegir(f.uri.toString()) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)) {
+            BotonTexto(onClick = { onElegir(f.uri.toString()) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)) {
                 Text(if (sel) "quitar" else "elegir", style = MaterialTheme.typography.labelMedium)
             }
             }
@@ -832,7 +832,7 @@ fun Detectados(texto: String, fecha: String, onCorregir: (String) -> Unit) {
         Surface(shape = RoundedCornerShape(4.dp), color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
             Row(Modifier.padding(start = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("$s$a es nueva. ¿Quisiste decir $s$b?", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                TextButton(onClick = { onCorregir(Texto.reemplazar(texto, s, a, b)) }) { Text("corregir", style = MaterialTheme.typography.labelLarge) }
+                BotonTexto(onClick = { onCorregir(Texto.reemplazar(texto, s, a, b)) }) { Text("corregir", style = MaterialTheme.typography.labelLarge) }
             }
         }
     }
@@ -908,8 +908,8 @@ private fun TuDia(fecha: String, nav: Nav, numero: Int, guardarAntes: () -> Unit
         resumen = if (filas.isEmpty()) "Nada anotado con hora" else "${filas.size} ${if (filas.size == 1) "registro" else "registros"} con hora") {
         LineaDelTiempo(fecha)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            TextButton(onClick = { Seleccion.cinta = fecha; nav.ir("cinta") }) { Text("la cinta completa →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
-            if (Repo.momentos.any { it.fecha == fecha && !it.privado }) TextButton(onClick = { Seleccion.momentos = fecha; nav.ir("hoja_momentos") }) {
+            BotonTexto(onClick = { Seleccion.cinta = fecha; nav.ir("cinta") }) { Text("la cinta completa →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+            if (Repo.momentos.any { it.fecha == fecha && !it.privado }) BotonTexto(onClick = { Seleccion.momentos = fecha; nav.ir("hoja_momentos") }) {
                 Text("la hoja de la libreta →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
         }
@@ -922,7 +922,7 @@ private fun TuDia(fecha: String, nav: Nav, numero: Int, guardarAntes: () -> Unit
                 }
             }
         }
-        TextButton(onClick = { agregar = !agregar }) {
+        BotonTexto(onClick = { agregar = !agregar }) {
             Text(if (agregar) "＋ agregar a este día ▾" else "＋ agregar a este día…", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         }
         if (agregar) Tarjeta {

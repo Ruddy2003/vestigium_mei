@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
@@ -44,10 +45,8 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -689,9 +688,9 @@ private fun HistoriasAnio(d: TuAnio.Datos, nav: Nav, cerrar: () -> Unit) {
                 }
                 // Flechas y pausa visibles, además de tocar los lados y mantener presionado (N-24).
                 Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.TextButton(onClick = { ir(idx - 1) }, enabled = idx > 0) { Text("‹ anterior") }
-                    androidx.compose.material3.TextButton(onClick = { pausaFija = !pausaFija }) { Text(if (pausaFija) "▶ seguir" else "❚❚ pausa") }
-                    androidx.compose.material3.TextButton(onClick = { if (idx < n - 1) ir(idx + 1) else cerrar() }, enabled = !esperando) { Text("siguiente ›") }
+                    io.github.ruddy2003.vestigium.ui.comun.BotonTexto(onClick = { ir(idx - 1) }, enabled = idx > 0) { Text("‹ anterior") }
+                    io.github.ruddy2003.vestigium.ui.comun.BotonTexto(onClick = { pausaFija = !pausaFija }) { Text(if (pausaFija) "▶ seguir" else "❚❚ pausa") }
+                    io.github.ruddy2003.vestigium.ui.comun.BotonTexto(onClick = { if (idx < n - 1) ir(idx + 1) else cerrar() }, enabled = !esperando) { Text("siguiente ›") }
                 }
                 if (!d.completo) Text("Año incompleto: ${porNumero(d.faltan, "falta 1 día", "faltan ${d.faltan} días")}", style = MaterialTheme.typography.labelMedium, color = cs.onSecondaryContainer,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp).background(cs.secondaryContainer, MaterialTheme.shapes.small).padding(horizontal = 10.dp, vertical = 4.dp))
@@ -770,7 +769,7 @@ fun PantallaTuAnio(nav: Nav) {
                 Interruptor("Nombres completos en las imágenes", c.anio_nombres_completos, "Si lo apagas, las personas salen con iniciales (A. M.) al exportar.") { v ->
                     Repo.cambiarConfig { it.copy(anio_nombres_completos = v) }
                 }
-                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                Separador(Modifier.padding(vertical = 8.dp))
                 Ayuda("Tarjetas que se exportan:")
                 FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     TARJETAS_ANIO.forEach { (id, nombre) ->

@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
@@ -12,10 +14,8 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -125,7 +125,7 @@ fun PantallaConocer(nav: Nav) {
                 p.mascotas.forEachIndexed { i, m ->
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(m.nombre + (Perfiles.ESPECIES.firstOrNull { it.id == m.especie }?.let { " · ${it.nombre.lowercase()}" } ?: ""), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                        TextButton(onClick = { val antes = p; cambiar(p.copy(mascotas = p.mascotas.filterIndexed { j, _ -> j != i })); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Mascota quitada") { cambiar(antes) } }) { Text("quitar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        BotonTexto(onClick = { val antes = p; cambiar(p.copy(mascotas = p.mascotas.filterIndexed { j, _ -> j != i })); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Mascota quitada") { cambiar(antes) } }) { Text("quitar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     }
                 }
                 var mascota by remember { mutableStateOf("") }
@@ -146,7 +146,7 @@ fun PantallaConocer(nav: Nav) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("@${c.nombre}" + (Perfiles.RELACIONES.firstOrNull { it.id == c.relacion }?.let { " · ${it.nombre.lowercase()}" } ?: ""),
                             style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                        TextButton(onClick = { val antes = p; cambiar(p.copy(cercanas = p.cercanas.filterIndexed { j, _ -> j != i })); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Persona quitada") { cambiar(antes) } }) { Text("quitar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        BotonTexto(onClick = { val antes = p; cambiar(p.copy(cercanas = p.cercanas.filterIndexed { j, _ -> j != i })); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Persona quitada") { cambiar(antes) } }) { Text("quitar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     }
                 }
                 var quien by remember { mutableStateOf("") }
@@ -230,7 +230,7 @@ fun PantallaConocer(nav: Nav) {
         }
 
         BotonPrincipal(if (primera) "Listo" else "Guardar cambios", Modifier.fillMaxWidth().padding(top = 22.dp), habilitado = primera || p != Repo.config.perfil) { guardar() }
-        if (primera) TextButton(onClick = { Repo.cambiarConfig { it.copy(conocer_visto = true) }; nav.atras() }, modifier = Modifier.fillMaxWidth()) {
+        if (primera) BotonTexto(onClick = { Repo.cambiarConfig { it.copy(conocer_visto = true) }; nav.atras() }, modifier = Modifier.fillMaxWidth()) {
             Text("Omitir por ahora (está en Más → Conocerte)", color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
@@ -238,7 +238,7 @@ fun PantallaConocer(nav: Nav) {
         if (!primera && historial.isNotEmpty()) Seccion("Cómo ha cambiado", "Cada vez que cambiaste algo, con su fecha.", plegable = true) {
             Tarjeta {
                 historial.sortedByDescending { it.fecha }.take(40).forEachIndexed { i, c ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     Column(Modifier.padding(vertical = 7.dp)) {
                         Text("${Fechas.corto(c.fecha)} ${c.fecha.take(4)} · ${c.campo}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                         Text("${c.antes.ifBlank { "(vacío)" }}  →  ${c.despues.ifBlank { "(vacío)" }}", style = MaterialTheme.typography.bodySmall)
@@ -264,7 +264,7 @@ private fun CiudadDeCasa(p: Perfil, cambiar: (Perfil) -> Unit) {
     }
     if (p.ciudad.isNotBlank()) Row(verticalAlignment = Alignment.CenterVertically) {
         Text("${Mundo.bandera(p.pais)}  ${p.ciudad}" + (Mundo.pais(ctx, p.pais)?.nombre?.let { ", $it" } ?: ""), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-        TextButton(onClick = { cambiar(p.copy(ciudad = "", pais = "", ciudad_lat = null, ciudad_lon = null)) }) { Text("cambiar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        BotonTexto(onClick = { cambiar(p.copy(ciudad = "", pais = "", ciudad_lat = null, ciudad_lon = null)) }) { Text("cambiar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
     } else {
         CampoTexto(q, { q = it }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("escribe tu ciudad") })
         if (resultados.isNotEmpty()) FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

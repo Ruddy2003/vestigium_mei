@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.foundation.Canvas
@@ -15,10 +17,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -83,15 +83,15 @@ fun PantallaRecaidas(nav: Nav) {
         val d = Repo.dias[fecha] ?: Dia(fecha = fecha)
         fun guardar(f: (Dia) -> Dia) = Repo.guardarDia(f(Repo.dia(fecha)))
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { fecha = Fechas.sumar(fecha, -1) }) { Text("‹", style = MaterialTheme.typography.titleLarge) }
+            BotonTexto(onClick = { fecha = Fechas.sumar(fecha, -1) }) { Text("‹", style = MaterialTheme.typography.titleLarge) }
             Text(if (fecha == hoy) "Hoy" else Fechas.corto(fecha), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
-            TextButton(onClick = { fecha = Fechas.sumar(fecha, 1) }, enabled = fecha < hoy) { Text("›", style = MaterialTheme.typography.titleLarge) }
+            BotonTexto(onClick = { fecha = Fechas.sumar(fecha, 1) }, enabled = fecha < hoy) { Text("›", style = MaterialTheme.typography.titleLarge) }
         }
         Tarjeta {
             Etiqueta("Medicamentos")
             ListaEtiquetas(d.medicamentos, "nombre del medicamento", normalizar = { Texto.slug(it) }) { l -> guardar { it.copy(medicamentos = l) } }
             val siempre = remember(Repo.dias, fecha) { Repo.dias.values.filter { it.fecha < fecha && it.medicamentos.isNotEmpty() }.maxByOrNull { it.fecha }?.medicamentos }
-            if (d.medicamentos.isEmpty() && siempre != null) TextButton(onClick = { guardar { it.copy(medicamentos = siempre) } }) {
+            if (d.medicamentos.isEmpty() && siempre != null) BotonTexto(onClick = { guardar { it.copy(medicamentos = siempre) } }) {
                 Text("lo de siempre: " + siempre.joinToString(", ") { it.replace('_', ' ') }, style = MaterialTheme.typography.labelLarge)
             }
             if (c.seguimiento_privado) {
@@ -227,7 +227,7 @@ fun PantallaRecaidas(nav: Nav) {
         if (lista.isNotEmpty()) Seccion("Registro", "Los últimos 30. Toca uno para corregir la hora, la duración o la nota.") {
             Tarjeta {
                 lista.take(30).forEachIndexed { i, m ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     Row(Modifier.fillMaxWidth().clickable { editando = m }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text("${Fechas.corto(m.fecha)} · ${Fechas.horaDe(m.ts)} · ${Catalogo.nombreTipo(m.tipo)}" + (m.intensidad?.let { " $it" } ?: "") +

@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -20,10 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -530,7 +529,7 @@ fun PantallaLogros(nav: Nav) {
             val propio = Repo.config.logros_propios.firstOrNull { "p_" + it.id == a.id }
             DetalleTrofeo(a, l, editar = propio?.let { p -> { editandoLogro = p; filtro = "Tuyos"; abierto = null } }) { abierto = null }
         }
-        if (filtro != "Tuyos") TextButton(onClick = { filtro = "Tuyos"; crear = true }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
+        if (filtro != "Tuyos") BotonTexto(onClick = { filtro = "Tuyos"; crear = true }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
             Text("+ inventar un logro propio", style = MaterialTheme.typography.labelLarge)
         }
     }
@@ -555,8 +554,8 @@ private fun FilaLogro(g: Logros.Logro) {
                 }
             }
             var confirmar by remember(g.id) { mutableStateOf(false) }
-            if (abierto && g.propio) TextButton(onClick = {
-                if (!confirmar) { confirmar = true; return@TextButton }
+            if (abierto && g.propio) BotonTexto(onClick = {
+                if (!confirmar) { confirmar = true; return@BotonTexto }
                 val previos = Repo.config.logros_propios.filter { "p_" + it.id == g.id }
                 Repo.cambiarConfig { c -> c.copy(logros_propios = c.logros_propios.filterNot { "p_" + it.id == g.id }) }
                 io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Logro borrado") { Repo.cambiarConfig { c -> c.copy(logros_propios = c.logros_propios + previos.filter { p -> c.logros_propios.none { it.id == p.id } }) } }
@@ -659,7 +658,7 @@ private fun EditorLogro(previo: LogroPropio? = null, cerrar: () -> Unit) {
                 Repo.cambiarConfig { c -> c.copy(logros_propios = if (previo != null) c.logros_propios.map { if (it.id == previo.id) p else it } else c.logros_propios + p) }
                 version++; cerrar()
             }
-            TextButton(onClick = cerrar) { Text("cancelar", style = MaterialTheme.typography.labelLarge) }
+            BotonTexto(onClick = cerrar) { Text("cancelar", style = MaterialTheme.typography.labelLarge) }
         }
     }
 }

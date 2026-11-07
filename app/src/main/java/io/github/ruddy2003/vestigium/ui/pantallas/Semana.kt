@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -17,7 +18,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -117,7 +117,7 @@ fun PantallaSemana(nav: Nav) {
             val mejor = conValencia.maxBy { it.second!! }; val peor = conValencia.minBy { it.second!! }
             Tarjeta {
                 listOf("Mejor día" to mejor, "Día más difícil" to peor).forEachIndexed { k, (t, p) ->
-                    if (k > 0) HorizontalDivider(Modifier.padding(vertical = 6.dp))
+                    if (k > 0) Separador(Modifier.padding(vertical = 6.dp))
                     Column(Modifier.fillMaxWidth().clickable { Seleccion.abrir(nav, p.first) }) {
                         Text("$t · ${Fechas.titulo(p.first).lowercase()} · ${"%.0f".format(p.second)}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                         Repo.dias[p.first]?.nota?.takeIf { it.isNotBlank() }?.let { Text(it.take(220) + if (it.length > 220) "…" else "", style = MaterialTheme.typography.bodySmall) }

@@ -823,6 +823,43 @@ class Capturas {
     @Test fun camposB1b() = (ESTANTE_A1B + TemaId.EDO).forEach { camposB1Tema(it) }
     @Test fun camposB1c() = ESTANTE_A1C.forEach { camposB1Tema(it) }
     @Test fun camposB1d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { camposB1Tema(it) }
+    /**
+     * Separadores y botones de texto (lote B2): el separador a todo el ancho, tenue y angosto; una lista corta separada;
+     * botones de texto de varios anchos, apagado y presionado (este dibujado directo); y la pantalla Más, que tiene muchos
+     * separadores. En claro y en oscuro.
+     */
+    private fun separadoresB2(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(t)
+        captura(t, oscuro, 2600, "tema_${t.id}_${modo}_separadores") {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                io.github.ruddy2003.vestigium.ui.comun.Separador()
+                io.github.ruddy2003.vestigium.ui.comun.Separador(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                androidx.compose.foundation.layout.Box(Modifier.width(140.dp)) { io.github.ruddy2003.vestigium.ui.comun.Separador() }
+                Column {
+                    listOf("Pasos", "Sueño", "Ánimo").forEachIndexed { k, x ->
+                        if (k > 0) io.github.ruddy2003.vestigium.ui.comun.Separador()
+                        Text(x, Modifier.padding(vertical = 10.dp), style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    io.github.ruddy2003.vestigium.ui.comun.BotonTexto({}) { Text("×") }
+                    io.github.ruddy2003.vestigium.ui.comun.BotonTexto({}) { Text("cancelar") }
+                    io.github.ruddy2003.vestigium.ui.comun.BotonTexto({}, enabled = false) { Text("deshacer") }
+                }
+                io.github.ruddy2003.vestigium.ui.comun.BotonTexto({}, Modifier.fillMaxWidth()) { Text("ver más meses") }
+                androidx.compose.foundation.Canvas(Modifier.width(140.dp).height(48.dp)) {
+                    with(d) { botonTexto(io.github.ruddy2003.vestigium.ui.comun.EstadoBotonTexto(true, true, 3), oscuro) }
+                }
+            }
+        }
+        pantalla(t, oscuro, 4200, "tema_${t.id}_${modo}_mas") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
+    }
+    private fun separadoresB2Tema(t: TemaId) { separadoresB2(t, t.soloOscuro); if (!t.soloOscuro) separadoresB2(t, true) }
+    @Test fun separadoresB2a() = ESTANTE_A1A.forEach { separadoresB2Tema(it) }
+    @Test fun separadoresB2b() = (ESTANTE_A1B + TemaId.EDO).forEach { separadoresB2Tema(it) }
+    @Test fun separadoresB2c() = ESTANTE_A1C.forEach { separadoresB2Tema(it) }
+    @Test fun separadoresB2d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { separadoresB2Tema(it) }
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

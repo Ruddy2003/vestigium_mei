@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Context
@@ -28,7 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -734,7 +734,7 @@ fun PantallaFondoTelefono(nav: Nav) {
         DosFondos(tema, oscuro, ver, capaInicio, capaBloqueo)
         Row(Modifier.fillMaxWidth().statusBarsPadding().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)) {
-                TextButton(onClick = nav.atras) { Text(Estilo.atras, color = MaterialTheme.colorScheme.primary) }
+                BotonTexto(onClick = nav.atras) { Text(Estilo.atras, color = MaterialTheme.colorScheme.primary) }
             }
         }
         Surface(Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().padding(12.dp), shape = RoundedCornerShape(14.dp),

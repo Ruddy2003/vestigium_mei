@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -28,7 +29,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -137,7 +137,7 @@ fun CapaLogro() {
                     style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
                     val enHall = g.id in Repo.config.hall_logros
-                    TextButton(onClick = {
+                    BotonTexto(onClick = {
                         if (!enHall && Repo.config.hall_logros.size < 12) Repo.cambiarConfig { c -> c.copy(hall_logros = c.hall_logros + g.id) }
                     }, enabled = !enHall) { Text(if (enHall) "ya está en tu hall" else "ponerlo en el hall", style = MaterialTheme.typography.labelLarge) }
                     BotonPrincipal(if (Celebracion.cola.size > 1) "siguiente (${Celebracion.cola.size - 1})" else "seguir") { Celebracion.siguiente() }

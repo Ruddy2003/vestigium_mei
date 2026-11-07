@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
@@ -21,11 +23,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -123,7 +123,7 @@ fun PantallaPermisos(nav: Nav) {
         Seccion("Avisos") {
             Tarjeta {
                 Estado("Notificaciones", Avisos.permitido(ctx), "Ánimo durante el día, sueños por la mañana y diario por la noche.") { notif.launch(Manifest.permission.POST_NOTIFICATIONS) }
-                HorizontalDivider()
+                Separador()
                 val pm = ctx.getSystemService(PowerManager::class.java)
                 Estado("Sin restricción de batería", pm.isIgnoringBatteryOptimizations(ctx.packageName), "Hace que los avisos y la ubicación de fondo lleguen a tiempo.") {
                     runCatching { ctx.startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + ctx.packageName))) }
@@ -135,7 +135,7 @@ fun PantallaPermisos(nav: Nav) {
                 Estado("Mientras usas la app", Ubicacion.tienePermiso(ctx), "Para guardar dónde estabas en cada momento y gasto.") {
                     ubic.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
                 }
-                HorizontalDivider()
+                Separador()
                 Estado("Todo el tiempo", Ubicacion.tieneSegundoPlano(ctx), "Para el mapa de calor y para registrar llegadas a tus lugares. Android te llevará a ajustes: elige «Permitir todo el tiempo». Gasta entre 1 y 3% de batería al día.",
                     habilitado = Ubicacion.tienePermiso(ctx)) { fondo.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION) }
             }
@@ -147,9 +147,9 @@ fun PantallaPermisos(nav: Nav) {
                     salud.launch(Salud.PERMISOS)
                 }
                 if (hc.isNotEmpty() && !hc.containsAll(Salud.PERMISOS.filter { it.startsWith("android.permission.health.READ_") && !it.endsWith("BACKGROUND") && !it.endsWith("HISTORY") && !it.endsWith("SKIN_TEMPERATURE") }))
-                    TextButton(onClick = { salud.launch(Salud.PERMISOS) }) { Text("+ conceder los permisos nuevos", style = MaterialTheme.typography.labelLarge) }
-                if (hc.isNotEmpty()) TextButton(onClick = { scope.launch { val n = Salud.sincronizar(ctx, 30); android.widget.Toast.makeText(ctx, "Sincronicé ${porNumero(n, "1 día", "$n días")}", android.widget.Toast.LENGTH_SHORT).show() } }) { Text("↻ sincronizar los últimos 30 días", style = MaterialTheme.typography.labelLarge) }
-                HorizontalDivider()
+                    BotonTexto(onClick = { salud.launch(Salud.PERMISOS) }) { Text("+ conceder los permisos nuevos", style = MaterialTheme.typography.labelLarge) }
+                if (hc.isNotEmpty()) BotonTexto(onClick = { scope.launch { val n = Salud.sincronizar(ctx, 30); android.widget.Toast.makeText(ctx, "Sincronicé ${porNumero(n, "1 día", "$n días")}", android.widget.Toast.LENGTH_SHORT).show() } }) { Text("↻ sincronizar los últimos 30 días", style = MaterialTheme.typography.labelLarge) }
+                Separador()
                 Estado("Movimiento", Actividad.tienePermiso(ctx), "Minutos a pie, en bici, en vehículo o quieto, detectados por el teléfono. Casi no gasta batería.") {
                     movimiento.launch(Manifest.permission.ACTIVITY_RECOGNITION)
                 }
@@ -161,7 +161,7 @@ fun PantallaPermisos(nav: Nav) {
                     if (Galeria.parcial(ctx)) " Diste acceso solo a algunas: elige «Permitir todo» para que los conteos sean reales." else "") {
                     fotos.launch(Galeria.permisos())
                 }
-                HorizontalDivider()
+                Separador()
                 Estado("Calendario", Agenda.tienePermiso(ctx), "Cuántos eventos tuviste y cuánto tiempo ocupado: sirve para cruzar tu ánimo con la carga del día.") {
                     agenda.launch(Manifest.permission.READ_CALENDAR)
                 }
@@ -174,7 +174,7 @@ fun PantallaPermisos(nav: Nav) {
                 }
                 if (!Oyente.activo(ctx)) {
                     Aviso("Si Android dice «ajuste restringido»: abre la información de la app, toca ⋮ arriba a la derecha → «Permitir ajustes restringidos», y vuelve a intentarlo. Pasa con las apps instaladas fuera de la tienda.")
-                    TextButton(onClick = { runCatching { ctx.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + ctx.packageName))) } }) {
+                    BotonTexto(onClick = { runCatching { ctx.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + ctx.packageName))) } }) {
                         Text("abrir información de la app →", style = MaterialTheme.typography.labelLarge)
                     }
                 }
@@ -193,7 +193,7 @@ fun PantallaPermisos(nav: Nav) {
                     if (android.os.Build.VERSION.SDK_INT >= 31) bt.launch(Manifest.permission.BLUETOOTH_CONNECT)
                 }
                 Ayuda("El nombre de tu wifi solo se puede leer con la ubicación activada; si no, se anota como «wifi (sin nombre)».", Modifier.padding(top = 4.dp))
-                HorizontalDivider(Modifier.padding(vertical = 6.dp))
+                Separador(Modifier.padding(vertical = 6.dp))
                 Interruptor("Luz del ambiente", Repo.config.medir_luz, "Lee el sensor de luz cada 15 minutos y al registrar un momento: cuánta luz de exterior recibes al día.") { v -> Repo.cambiarConfig { it.copy(medir_luz = v) } }
                 // El barómetro solo aparece si el teléfono lo tiene.
                 if (remember { Percepcion.tieneBarometro(ctx) }) {
@@ -211,7 +211,7 @@ fun PantallaPermisos(nav: Nav) {
                 Interruptor("Clima, luz y aire", Repo.config.clima, "Temperatura, lluvia, nubes, horas de luz, presión y calidad del aire de donde estuviste, de Open-Meteo (gratis, sin cuenta). Solo se envía tu zona aproximada (~1 km).") { v ->
                     Repo.cambiarConfig { it.copy(clima = v) }
                 }
-                if (Repo.config.clima) TextButton(onClick = { scope.launch { val n = withContext(Dispatchers.IO) { runCatching { Entorno.sincronizar(ctx, 20) }.getOrDefault(0) }; msgSync = if (n > 0) "Clima de ${porNumero(n, "1 día", "$n días")}." else "No pude traer el clima (¿hay internet y alguna ubicación guardada?)." } }) {
+                if (Repo.config.clima) BotonTexto(onClick = { scope.launch { val n = withContext(Dispatchers.IO) { runCatching { Entorno.sincronizar(ctx, 20) }.getOrDefault(0) }; msgSync = if (n > 0) "Clima de ${porNumero(n, "1 día", "$n días")}." else "No pude traer el clima (¿hay internet y alguna ubicación guardada?)." } }) {
                     Text("↻ traer clima de los días con registro", style = MaterialTheme.typography.labelLarge)
                 }
             }
@@ -225,7 +225,7 @@ fun PantallaPermisos(nav: Nav) {
                 Estado("Tiempo en pantalla", Pantalla.tienePermiso(ctx), "Minutos por app y desbloqueos por día. Android te llevará a «Acceso a datos de uso»: busca Vestigium Mei y actívalo.") {
                     ctx.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
                 }
-                if (Pantalla.tienePermiso(ctx)) TextButton(onClick = { scope.launch(Dispatchers.IO) { Pantalla.sincronizar(ctx, 7) } }) { Text("Calcular los últimos 7 días ahora") }
+                if (Pantalla.tienePermiso(ctx)) BotonTexto(onClick = { scope.launch(Dispatchers.IO) { Pantalla.sincronizar(ctx, 7) } }) { Text("Calcular los últimos 7 días ahora") }
             }
         }
         if (primera) {
@@ -304,8 +304,8 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
-                    TextButton(onClick = { cambiar { it.copy(temas_rotacion = emptyList()) } }) { Text("todos", style = MaterialTheme.typography.labelLarge) }
-                    TextButton(onClick = { cambiar { it.copy(temas_rotacion = io.github.ruddy2003.vestigium.ui.TemaId.entries.map { t -> t.id } - it.tema) } }) {
+                    BotonTexto(onClick = { cambiar { it.copy(temas_rotacion = emptyList()) } }) { Text("todos", style = MaterialTheme.typography.labelLarge) }
+                    BotonTexto(onClick = { cambiar { it.copy(temas_rotacion = io.github.ruddy2003.vestigium.ui.TemaId.entries.map { t -> t.id } - it.tema) } }) {
                         Text("todos menos este", style = MaterialTheme.typography.labelLarge)
                     }
                 }
@@ -431,7 +431,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                         }
                     }
                     Ayuda(if (c.habito_recaida == null && auto != null) "Elegido solo por su nombre: «${auto.nombre}»." else "Al registrar una recaída, ese hábito queda sin cumplir ese día.", Modifier.padding(top = 4.dp))
-                    TextButton(onClick = { nav.ir("recaidas") }) { Text("abrir Privado →", style = MaterialTheme.typography.labelLarge) }
+                    BotonTexto(onClick = { nav.ir("recaidas") }) { Text("abrir Privado →", style = MaterialTheme.typography.labelLarge) }
                 }
                 Interruptor("Ubicación de fondo", c.muestreo_ubicacion, "Una muestra cada 15 minutos para el mapa de calor.") { v -> cambiar { it.copy(muestreo_ubicacion = v) } }
             }
@@ -511,12 +511,12 @@ private fun ReporteTerapiaTarjeta() {
                 listOf(7, 14).forEach { n -> Ficha("$n días", op.dias == n) { op = op.copy(dias = n) } }
             }
             Text("Del ${Fechas.larga(op.ini)} al ${Fechas.larga(op.fin)}", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
-            TextButton(onClick = {
+            BotonTexto(onClick = {
                 io.github.ruddy2003.vestigium.ui.elegirFecha(ctx, op.fin, maximo = Fechas.parse(Fechas.diaLogico())) { op = op.copy(fin = it) }
             }) { Text("Cambiar el último día") }
             Text("Qué sale", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
             Interruptor("Todo", op.todo, "Enciende o apaga todas las secciones a la vez. Cuántos días y avisos tienen datos sale siempre.") { op = op.conTodo(it) }
-            HorizontalDivider(Modifier.padding(vertical = 4.dp))
+            Separador(Modifier.padding(vertical = 4.dp))
             Interruptor("Ánimo y emociones", op.animo, "Ánimo y energía por día, días difíciles, emociones, en qué pensabas, solo o acompañado y tu predicción del día siguiente.") { op = op.copy(animo = it) }
             Interruptor("Cuestionarios", op.cuestionarios, "Bienestar (WHO-5), estrés (PSS-4) y soledad (UCLA-3), con tus respuestas anteriores.") { op = op.copy(cuestionarios = it) }
             Interruptor("Sueño", op.sueno, "Horas por noche, horarios y qué tan regulares fueron, calidad, pesadillas (solo cuántas) y pantalla antes de dormir.") { op = op.copy(sueno = it) }
@@ -624,7 +624,7 @@ fun PantallaDatos(nav: Nav) {
                         ocupado = false
                     }
                 }
-                androidx.compose.material3.HorizontalDivider(Modifier.padding(vertical = 14.dp))
+                io.github.ruddy2003.vestigium.ui.comun.Separador(Modifier.padding(vertical = 14.dp))
                 Text("Extendido", style = MaterialTheme.typography.titleMedium)
                 Ayuda("Todo: el panel extendido con una columna por cada persona, tema, lugar, app, categoría de gasto, artista, canal, obra, ciudad, alimento y nutriente " +
                     "(vitaminas y minerales incluidos), los cuestionarios, las etapas de vida y la brújula; además, un CSV por cada tabla (cada gasto, cada canción, cada serie del gimnasio…), " +
@@ -729,7 +729,7 @@ fun PantallaDatos(nav: Nav) {
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { chatsLeidos = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
+            confirmButton = { BotonTexto(onClick = { chatsLeidos = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
         )
     }
 }
@@ -743,7 +743,7 @@ private fun RecordatoriosImportacion(importar: (String) -> Unit) {
     val R = io.github.ruddy2003.vestigium.avisos.Recordatorios
     Tarjeta {
         R.FUENTES.forEachIndexed { i, f ->
-            if (i > 0) HorizontalDivider(Modifier.padding(vertical = 8.dp))
+            if (i > 0) Separador(Modifier.padding(vertical = 8.dp))
             val hace = R.hace(f.id, hoy)
             val apagada = c.importar_pospuesto[f.id] == "apagado"
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -764,7 +764,7 @@ private fun RecordatoriosImportacion(importar: (String) -> Unit) {
                 Ficha("elegir fecha…", false) { io.github.ruddy2003.vestigium.ui.elegirFecha(ctx, R.pospuesta(f.id, hoy), desdeManana = true) { d -> R.posponer(f.id, d) } }
             }
         }
-        HorizontalDivider(Modifier.padding(vertical = 10.dp))
+        Separador(Modifier.padding(vertical = 10.dp))
         Etiqueta("Día del aviso")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf("lun", "mar", "mié", "jue", "vie", "sáb", "dom").forEachIndexed { k, n -> Ficha(n, c.importar_dia == k + 1) { Repo.cambiarConfig { it.copy(importar_dia = k + 1) } } }
@@ -805,7 +805,7 @@ private fun Equivalencias() {
         eq.forEach { (k, v) ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("$k → $v", fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp, modifier = Modifier.weight(1f))
-                TextButton(onClick = {
+                BotonTexto(onClick = {
                     Repo.cambiarConfig { it.copy(equivalencias = it.equivalencias - k) }
                     io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Regla quitada") { Repo.cambiarConfig { c -> c.copy(equivalencias = c.equivalencias + (k to v)) } }
                 }) { Text("Quitar") }
@@ -814,7 +814,7 @@ private fun Equivalencias() {
         Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             CampoTexto(value = a, onValueChange = { a = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("variante") })
             CampoTexto(value = b, onValueChange = { b = it }, modifier = Modifier.weight(1f).padding(start = 6.dp), singleLine = true, placeholder = { Text("canónica") })
-            TextButton(onClick = {
+            BotonTexto(onClick = {
                 val x = Texto.etiqueta(a); val y = Texto.etiqueta(b)
                 if (x.isNotEmpty() && y.isNotEmpty() && x != y) { Repo.cambiarConfig { it.copy(equivalencias = it.equivalencias + (x to y)) }; a = ""; b = "" }
             }) { Text("Añadir") }
@@ -861,7 +861,7 @@ private fun SpotifyTarjeta(tarea: (suspend () -> String) -> Unit) {
                 "2. Nombre y descripción: los que quieras (p. ej. Vestigium Mei). Website: déjalo vacío.\n" +
                 "3. En «Redirect URIs» escribe exactamente esta dirección y toca «Add»:")
             Clave("redirect", Spotify.REDIRECCION, ancho = 8)
-            TextButton(onClick = { copiar(Spotify.REDIRECCION) }) { Text("copiar dirección", style = MaterialTheme.typography.labelLarge) }
+            BotonTexto(onClick = { copiar(Spotify.REDIRECCION) }) { Text("copiar dirección", style = MaterialTheme.typography.labelLarge) }
             Ayuda("4. En «Which API/SDKs…» marca «Web API», acepta los términos y guarda.\n" +
                 "5. En la app recién creada abre «Settings», copia el Client ID y pégalo aquí:")
             CampoTexto(clientId, { clientId = it.trim() }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Client ID") })
@@ -918,7 +918,7 @@ private fun DriveTarjeta(tarea: (suspend () -> String) -> Unit) {
                 "4. Credenciales → Crear credenciales → ID de cliente de OAuth → tipo Android, con estos datos:")
             Clave("paquete", ctx.packageName, ancho = 8)
             Clave("sha-1", sha, ancho = 8)
-            TextButton(onClick = {
+            BotonTexto(onClick = {
                 val cb = ctx.getSystemService(android.content.ClipboardManager::class.java)
                 cb?.setPrimaryClip(android.content.ClipData.newPlainText("SHA-1", sha))
                 msg = "SHA-1 copiada."

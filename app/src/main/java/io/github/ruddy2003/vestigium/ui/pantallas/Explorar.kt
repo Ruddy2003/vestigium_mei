@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -23,7 +24,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -186,7 +186,7 @@ fun PantallaExplorar(nav: Nav) {
                     }
                     if (porSemana) Ayuda(if (abrirCruce > 0) "La pareja quedó abajo, en «Cruzar dos variables», por semanas." else "Toca una relación para verla abajo, en «Cruzar dos variables», por semanas.",
                         Modifier.padding(top = 6.dp))
-                    if (!todas && grupos.size > 5) TextButton(onClick = { todas = true }) {
+                    if (!todas && grupos.size > 5) BotonTexto(onClick = { todas = true }) {
                         Text("ver las ${grupos.size - 5} siguientes ▾", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     }
                 }
@@ -251,7 +251,7 @@ fun PantallaExplorar(nav: Nav) {
 
         Seccion("Cobertura", "Últimas 16 semanas. Más intenso = mejor valencia. Hueco = sin registro.", plegable = true) {
             Tarjeta { Cobertura() }
-            TextButton(onClick = { nav.ir("cobertura") }) { Text("cobertura de cada variable: ¿ya hay 30 días? ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+            BotonTexto(onClick = { nav.ir("cobertura") }) { Text("cobertura de cada variable: ¿ya hay 30 días? ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }
 
         Seccion("¿Qué tan bien te conoces?", "Tu predicción de cada noche contra lo que pasó al día siguiente.", plegable = true) {
@@ -295,7 +295,7 @@ fun PantallaExplorar(nav: Nav) {
             fun id(pre: String, k: String): String? = (pre + Texto.slug(k).take(40)).takeIf { it in ids }
             Ayuda("Toca una para ver todo lo que se mueve con ella.", Modifier.padding(bottom = 6.dp))
             Lista("Personas", p, "@", { id("per_", it) }, ::abrirFicha); Lista("Temas", t, "#", { id("tema_", it) }, ::abrirFicha); Lista("Hitos", h, "", { id("hito_", it) }, ::abrirFicha)
-            TextButton(onClick = { nav.ir("totales") }) { Text("Ver menciones con fechas y por mes en Totales ›") }
+            BotonTexto(onClick = { nav.ir("totales") }) { Text("Ver menciones con fechas y por mes en Totales ›") }
         }
 
         Seccion("Lugares y ánimo", plegable = true) {
@@ -308,7 +308,7 @@ fun PantallaExplorar(nav: Nav) {
                     }
                 }
             }
-            TextButton(onClick = { nav.ir("lugares") }) { Text("Ver el mapa emocional de tus lugares ›") }
+            BotonTexto(onClick = { nav.ir("lugares") }) { Text("Ver el mapa emocional de tus lugares ›") }
         }
 
         EtapasDeVida(panel)

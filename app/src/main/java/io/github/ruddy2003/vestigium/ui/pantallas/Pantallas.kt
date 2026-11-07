@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,11 +14,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -163,7 +163,7 @@ fun EnPantallas(q: String, ir: (String) -> Unit) {
     Seccion("Pantallas y acciones") {
         Tarjeta {
             (if (todos) l else l.take(12)).forEachIndexed { i, p ->
-                if (i > 0) HorizontalDivider()
+                if (i > 0) Separador()
                 Row(Modifier.fillMaxWidth().clickable { Seleccion.limpiarFechas(); p.antes?.invoke(); ir(p.ruta) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text((if (p.accion) "✎ " + p.titulo else Estilo.pantalla(p.titulo, Romano.latin(p.titulo)).first), style = MaterialTheme.typography.bodyLarge)
@@ -172,7 +172,7 @@ fun EnPantallas(q: String, ir: (String) -> Unit) {
                     Text("→", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 }
             }
-            if (!todos && l.size > 12) TextButton(onClick = { todos = true }) { Text("ver los ${l.size - 12} siguientes ▾") }
+            if (!todos && l.size > 12) BotonTexto(onClick = { todos = true }) { Text("ver los ${l.size - 12} siguientes ▾") }
         }
     }
 }
@@ -187,7 +187,7 @@ fun FilaMas(ruta: String, titulo: String, detalle: String?, ir: (String) -> Unit
             Text(titulo, style = MaterialTheme.typography.bodyLarge)
             if (detalle != null) Text(detalle, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
         }
-        TextButton(onClick = {
+        BotonTexto(onClick = {
             Repo.cambiarConfig { c -> c.copy(favoritos_mas = if (fija) c.favoritos_mas - ruta else c.favoritos_mas + ruta) }
         }) { Text(if (fija) "★" else "☆", style = MaterialTheme.typography.titleMedium, color = if (fija) cs.primary else cs.onSurfaceVariant) }
     }

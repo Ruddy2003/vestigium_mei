@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.foundation.Canvas
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -94,7 +94,7 @@ fun PantallaFuerza(nav: Nav) {
             val porEj = l.filter { Macrofactor.e1rm(it) != null }.groupBy { it.ejercicio }.entries.sortedByDescending { en -> en.value.map { it.fecha }.distinct().size }
             Tarjeta {
                 porEj.take(30).forEachIndexed { i, (ej, ss) ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     val porSesion = ss.groupBy { it.fecha }.mapValues { en -> en.value.mapNotNull { Macrofactor.e1rm(it) }.max() }.toSortedMap()
                     val ultimo = porSesion.values.last(); val mejor = porSesion.values.max()
                     Column(Modifier.fillMaxWidth().clickable { abierto = if (abierto == ej) null else ej }.padding(vertical = 8.dp)) {
@@ -124,7 +124,7 @@ fun PantallaFuerza(nav: Nav) {
         Seccion("Entrenamientos recientes", latin = "ANNALES") {
             Tarjeta {
                 e.sortedByDescending { it.fecha }.take(15).forEachIndexed { i, x ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     Row(Modifier.fillMaxWidth().clickable { Seleccion.abrir(nav, x.fecha) }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(x.entrenos.joinToString(", ").ifBlank { "Entrenamiento" }, style = MaterialTheme.typography.bodyMedium)

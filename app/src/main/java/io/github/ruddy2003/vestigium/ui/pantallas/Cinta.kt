@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -369,12 +369,12 @@ fun PantallaCinta(nav: Nav) {
 
     Hoja("La cinta", nav.atras, "Tu día hora por hora. Desliza a los lados y toca algo para ver qué fue.") {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { fecha = Fechas.sumar(fecha, -1) }) { Text("‹", style = MaterialTheme.typography.titleLarge) }
+            BotonTexto(onClick = { fecha = Fechas.sumar(fecha, -1) }) { Text("‹", style = MaterialTheme.typography.titleLarge) }
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(Estilo.fecha(fecha), style = MaterialTheme.typography.titleMedium, color = cs.primary)
                 Text(Fechas.titulo(fecha).lowercase(), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
             }
-            TextButton(onClick = { fecha = Fechas.sumar(fecha, 1) }, enabled = fecha < Fechas.diaLogico()) { Text("›", style = MaterialTheme.typography.titleLarge) }
+            BotonTexto(onClick = { fecha = Fechas.sumar(fecha, 1) }, enabled = fecha < Fechas.diaLogico()) { Text("›", style = MaterialTheme.typography.titleLarge) }
         }
         val e = Repo.entorno[fecha]
         if (e != null) Ayuda(listOfNotNull(e.t_max?.let { "máx ${it.toInt()}°" }, e.t_min?.let { "mín ${it.toInt()}°" }, e.precip_mm?.takeIf { it > 0.2 }?.let { "lluvia ${"%.1f".format(it)} mm" },
@@ -474,6 +474,6 @@ fun PantallaCinta(nav: Nav) {
             if (c == null) Ayuda("Toca un bloque o una marca de la cinta.")
             else TextoMarcado(c.detalle, style = MaterialTheme.typography.bodyMedium)
         }
-        TextButton(onClick = { Seleccion.abrir(nav, fecha) }, modifier = Modifier.padding(top = 4.dp)) { Text("abrir este día ›", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
+        BotonTexto(onClick = { Seleccion.abrir(nav, fecha) }, modifier = Modifier.padding(top = 4.dp)) { Text("abrir este día ›", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
     }
 }

@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -29,11 +31,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -233,7 +233,7 @@ fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (
                 l.forEach { p -> Ficha("${p.texto} →", false) { accion(p.accion) } }
             }
             // El diario de ayer se puede dejar pasar.
-            if (l.any { it.clave == "p:ayer" }) TextButton(onClick = {
+            if (l.any { it.clave == "p:ayer" }) BotonTexto(onClick = {
                 Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + ("p:ayer" to hoy)) }
             }) { Text("hoy no: " + (l.first { it.clave == "p:ayer" }.texto.removePrefix("Te faltan ").lowercase()), style = MaterialTheme.typography.labelMedium) }
             invitaciones(MaterialTheme.colorScheme.onPrimaryContainer)
@@ -309,7 +309,7 @@ fun DatosQueFaltan(nav: io.github.ruddy2003.vestigium.ui.Nav, compacto: Boolean 
     // En Hoy, solo un contador que se despliega (N-16).
     var abierto by remember { mutableStateOf(!compacto) }
     if (!abierto) {
-        TextButton(onClick = { abierto = true }) {
+        BotonTexto(onClick = { abierto = true }) {
             Text(if (faltas.size == 1) "1 dato que falta →" else "${faltas.size} datos que faltan →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.error)
         }
         return
@@ -317,10 +317,10 @@ fun DatosQueFaltan(nav: io.github.ruddy2003.vestigium.ui.Nav, compacto: Boolean 
     Tarjeta(Modifier.padding(top = 10.dp)) {
         Text(Estilo.seccion("Datos que faltan", null).first, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.error)
         faltas.forEachIndexed { i, f ->
-            if (i > 0) HorizontalDivider(Modifier.padding(vertical = 6.dp))
+            if (i > 0) Separador(Modifier.padding(vertical = 6.dp))
             Text(f.texto, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                TextButton(onClick = {
+                BotonTexto(onClick = {
                     when (f.arreglo) {
                         "permisos" -> nav.ir("permisos")
                         "datos" -> nav.ir("datos")
@@ -328,16 +328,16 @@ fun DatosQueFaltan(nav: io.github.ruddy2003.vestigium.ui.Nav, compacto: Boolean 
                         else -> scope.launch { msg = runCatching { withContext(Dispatchers.IO) { f.hacer(ctx) } }.getOrElse { "No se pudo: ${it.message}" }; version++ }
                     }
                 }) { Text(f.arreglo, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
-                TextButton(onClick = { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + (f.clave to hoy)) } }) {
+                BotonTexto(onClick = { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + (f.clave to hoy)) } }) {
                     Text("ignorar hoy", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                TextButton(onClick = { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + (f.clave to "siempre")) } }) {
+                BotonTexto(onClick = { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + (f.clave to "siempre")) } }) {
                     Text("no volver a avisar", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
         msg?.let { Ayuda(it, Modifier.padding(top = 4.dp)) }
-        if (Repo.config.avisos_ignorados.values.any { it == "siempre" }) TextButton(onClick = {
+        if (Repo.config.avisos_ignorados.values.any { it == "siempre" }) BotonTexto(onClick = {
             Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados.filterValues { it != "siempre" }) }
         }) { Text("volver a avisar de todo", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
@@ -475,10 +475,10 @@ fun FraseDelDia(fecha: String) {
         }
         // Recorte de gaceta: filete grueso y fino arriba, fino abajo.
         TemaId.COLONOS -> Column(arriba) {
-            HorizontalDivider(thickness = 2.dp, color = cs.onSurface)
-            HorizontalDivider(Modifier.padding(top = 2.dp), thickness = 0.5.dp, color = cs.onSurface)
+            Separador(thickness = 2.dp, color = cs.onSurface)
+            Separador(Modifier.padding(top = 2.dp), thickness = 0.5.dp, color = cs.onSurface)
             Box(Modifier.padding(vertical = 6.dp)) { CuerpoFrase(f, fecha, rotulo.uppercase(), "“", "”") }
-            HorizontalDivider(thickness = 0.5.dp, color = cs.onSurface)
+            Separador(thickness = 0.5.dp, color = cs.onSurface)
         }
         // Boletín: un filete de Didot (grueso al centro, fino en las puntas) arriba y abajo; el texto centrado.
         TemaId.NAPOLEON -> Column(arriba, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -832,10 +832,10 @@ fun Tablero(fecha: String, max: Int? = null, tocar: (String) -> Unit = {}) {
         }
     }
     if (!todo && completa.size > lista.size) {
-        TextButton(onClick = { todo = true }) { Text("ver todo (${completa.size}) ▾", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary) }
+        BotonTexto(onClick = { todo = true }) { Text("ver todo (${completa.size}) ▾", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary) }
         return
     }
-    TextButton(onClick = { editando = !editando }) {
+    BotonTexto(onClick = { editando = !editando }) {
         Text(if (editando) "listo" else "editar tablero", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     if (editando) Tarjeta {
@@ -848,8 +848,8 @@ fun Tablero(fecha: String, max: Int? = null, tocar: (String) -> Unit = {}) {
                 Checkbox(activa, onCheckedChange = { v -> Repo.cambiarConfig { c -> c.copy(tablero = if (v) elegidas + id else elegidas - id) } })
                 Text(m.nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                 if (activa) {
-                    TextButton(onClick = { mover(elegidas, id, -1) }) { Text("↑") }
-                    TextButton(onClick = { mover(elegidas, id, 1) }) { Text("↓") }
+                    BotonTexto(onClick = { mover(elegidas, id, -1) }) { Text("↑") }
+                    BotonTexto(onClick = { mover(elegidas, id, 1) }) { Text("↓") }
                 }
             }
         }
@@ -1488,7 +1488,7 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
         Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(if (partes.isEmpty()) "Esta semana todavía no hay datos." else "esta semana: " + partes.joinToString(" · "),
                 style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
-            if (faltan > 0) TextButton(onClick = ponerse) {
+            if (faltan > 0) BotonTexto(onClick = ponerse) {
                 Text(if (faltan == 1) "1 día sin llenar →" else "$faltan días sin llenar →", style = MaterialTheme.typography.labelMedium, color = cs.primary)
             }
         }

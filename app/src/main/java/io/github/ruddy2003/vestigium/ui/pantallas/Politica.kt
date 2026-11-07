@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import android.content.Context
@@ -18,11 +20,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -98,7 +98,7 @@ fun PantallaPolitica(nav: Nav) {
         Seccion("Los cinco ejes", "Cada marca es un año; la grande es el más reciente (${Fechas.corto(ultimo.fecha)} ${ultimo.fecha.take(4)}).") {
             Tarjeta {
                 Politica.EJES.forEachIndexed { i, e ->
-                    if (i > 0) HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                    if (i > 0) Separador(Modifier.padding(vertical = 8.dp))
                     EjeAnual(e, tests)
                 }
             }
@@ -159,8 +159,8 @@ private fun TestEnCurso(cerrar: () -> Unit) {
                 }
             }
             Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { if (i > 0) i-- }, enabled = i > 0) { Text("← anterior") }
-                TextButton(onClick = { resp = resp - a.id; i++ }) { Text("prefiero no responder →") }
+                BotonTexto(onClick = { if (i > 0) i-- }, enabled = i > 0) { Text("← anterior") }
+                BotonTexto(onClick = { resp = resp - a.id; i++ }) { Text("prefiero no responder →") }
             }
         } else {
             val ejes = Politica.ejes(resp)
@@ -174,7 +174,7 @@ private fun TestEnCurso(cerrar: () -> Unit) {
                 sentir(Sentidos.Evento.LOGRO)
                 cerrar()
             }
-            TextButton(onClick = { i = orden.size - 1 }) { Text("← revisar la última") }
+            BotonTexto(onClick = { i = orden.size - 1 }) { Text("← revisar la última") }
         }
     }
 }

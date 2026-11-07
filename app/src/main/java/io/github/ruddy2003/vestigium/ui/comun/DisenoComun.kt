@@ -37,7 +37,35 @@ interface DisenoComun {
      * se nota que se está escribiendo ahí; con [EstadoMarco.error], que el valor no sirve; sin [EstadoMarco.habilitado], apagado.
      */
     fun DrawScope.marcoCampo(e: EstadoMarco, oscuro: Boolean)
+
+    // ---------------------------------------------------------------- separadores y botones de texto
+
+    /** Alto del lienzo del separador (la raya va centrada en él). */
+    val altoSeparador: Dp
+
+    /**
+     * La raya que separa dos cosas, a todo el ancho del lienzo (de 120 a 400 dp): la greca, el filete con su rombo, la línea
+     * de guiones de la consola, el cordón… Discreta, porque se repite entre las filas de una lista. Con [EstadoSeparador.tenue]
+     * va más suave.
+     */
+    fun DrawScope.separador(e: EstadoSeparador, oscuro: Boolean)
+
+    /** El color del texto de los botones de texto. */
+    fun tintaBotonTexto(oscuro: Boolean): Color
+
+    /**
+     * El adorno de un botón de texto, del tamaño del botón (de 48×48 a 300×48 dp), detrás de su texto: el subrayado con
+     * floritura, los corchetes de la consola, la cinta… Discreto: el texto manda. Con [EstadoBotonTexto.presionado] se nota
+     * el toque; sin [EstadoBotonTexto.habilitado], apagado.
+     */
+    fun DrawScope.botonTexto(e: EstadoBotonTexto, oscuro: Boolean)
 }
+
+/** Un separador: si va tenue (la pantalla le pidió un color propio) y una semilla. */
+class EstadoSeparador(val tenue: Boolean, val semilla: Int)
+
+/** Un botón de texto: si se está presionando, si está habilitado y una semilla. */
+class EstadoBotonTexto(val presionado: Boolean, val habilitado: Boolean, val semilla: Int)
 
 /** Cómo está un campo: con el foco, con un error, habilitado, de varios renglones, vacío, y una semilla. */
 class EstadoMarco(val enfocado: Boolean, val error: Boolean, val habilitado: Boolean, val multilinea: Boolean, val vacio: Boolean, val semilla: Int)

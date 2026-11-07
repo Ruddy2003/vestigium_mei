@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.semantics.contentDescription
@@ -34,7 +35,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -451,7 +451,7 @@ fun PantallaCartaNueva(nav: Nav) {
                 hora = hora, tema = Estilo.tema.id, lugar = lugar, abierta_el = if (b.alFuturo) null else hoy)
             Repo.guardarCarta(c); sellando = c
         }
-        if (b.texto.isNotBlank()) TextButton(onClick = { b.limpiar() }, modifier = Modifier.padding(top = 4.dp)) { Text("descartar el borrador", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        if (b.texto.isNotBlank()) BotonTexto(onClick = { b.limpiar() }, modifier = Modifier.padding(top = 4.dp)) { Text("descartar el borrador", color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
     if (escribiendo) DialogoCarta(lugar, hora) { escribiendo = false }
     sellando?.let { c -> SelladoCarta(c) { b.limpiar(); sellando = null; nav.atras() } }
@@ -507,6 +507,6 @@ fun PantallaCarta(nav: Nav) {
     }
     if (borrar) Dialogo(onDismissRequest = { borrar = false },
         title = { Text("¿Borrar esta carta?") }, text = { Text("Tendrás unos segundos para deshacerlo.") },
-        confirmButton = { TextButton(onClick = { Repo.borrarCarta(c.id); borrar = false; nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Carta borrada") { Repo.guardarCarta(c) } }) { Text("Borrar", color = MaterialTheme.colorScheme.error) } },
-        dismissButton = { TextButton(onClick = { borrar = false }) { Text("cancelar") } })
+        confirmButton = { BotonTexto(onClick = { Repo.borrarCarta(c.id); borrar = false; nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Carta borrada") { Repo.guardarCarta(c) } }) { Text("Borrar", color = MaterialTheme.colorScheme.error) } },
+        dismissButton = { BotonTexto(onClick = { borrar = false }) { Text("cancelar") } })
 }

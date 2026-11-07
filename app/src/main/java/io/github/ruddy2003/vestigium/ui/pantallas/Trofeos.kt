@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -20,7 +21,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -207,19 +207,19 @@ fun DetalleTrofeo(l: Logros.Logro, todos: List<Logros.Logro>, editar: (() -> Uni
     val secreto = l.secreto && !l.hecho
     val serie = l.id.substringBeforeLast('_')
     val siguiente = todos.filter { it.id != l.id && it.id.substringBeforeLast('_') == serie && it.categoria == l.categoria && !it.hecho }.minByOrNull { it.meta }
-    Dialogo(onDismissRequest = cerrar, confirmButton = { TextButton(onClick = cerrar) { Text("cerrar") } },
+    Dialogo(onDismissRequest = cerrar, confirmButton = { BotonTexto(onClick = cerrar) { Text("cerrar") } },
         dismissButton = {
             if (l.hecho) {
                 val enHall = l.id in Repo.config.hall_logros
-                TextButton(onClick = {
+                BotonTexto(onClick = {
                     Repo.cambiarConfig { c -> c.copy(hall_logros = if (enHall) c.hall_logros - l.id else (c.hall_logros + l.id).takeLast(12)) }
                 }) { Text(if (enHall) "quitar del hall" else "ponerlo en el hall") }
             } else if (l.propio) androidx.compose.foundation.layout.Row {
                 // Un logro propio se puede corregir (nombre, qué cuenta, umbral, meta) o borrar.
-                if (editar != null) TextButton(onClick = editar) { Text("editar") }
+                if (editar != null) BotonTexto(onClick = editar) { Text("editar") }
                 var confirmar by remember(l.id) { mutableStateOf(false) }
-                TextButton(onClick = {
-                    if (!confirmar) { confirmar = true; return@TextButton }
+                BotonTexto(onClick = {
+                    if (!confirmar) { confirmar = true; return@BotonTexto }
                     val previos = Repo.config.logros_propios.filter { "p_" + it.id == l.id }
                     Repo.cambiarConfig { c -> c.copy(logros_propios = c.logros_propios.filterNot { "p_" + it.id == l.id }) }; cerrar()
                     io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Logro borrado") { Repo.cambiarConfig { c -> c.copy(logros_propios = c.logros_propios + previos.filter { p -> c.logros_propios.none { it.id == p.id } }) } }

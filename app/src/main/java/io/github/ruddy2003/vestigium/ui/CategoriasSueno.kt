@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.animation.AnimatedVisibility
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,7 +45,7 @@ fun CategoriasSueno(sel: List<String>, onCambio: (List<String>) -> Unit) {
         FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             Catalogo.SUENO_EJES.forEach { e ->
                 val n = e.opciones.count { it.id in sel }
-                TextButton(onClick = { abierto = if (abierto == e.id) null else e.id }, contentPadding = PaddingValues(horizontal = 8.dp)) {
+                BotonTexto(onClick = { abierto = if (abierto == e.id) null else e.id }, contentPadding = PaddingValues(horizontal = 8.dp)) {
                     Text((if (abierto == e.id) "− " else "+ ") + e.ayuda.lowercase() + if (n > 0) " ($n)" else "", style = MaterialTheme.typography.labelLarge,
                         color = if (abierto == e.id || n > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
                 }

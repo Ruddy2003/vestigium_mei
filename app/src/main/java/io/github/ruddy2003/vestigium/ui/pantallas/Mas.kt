@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
@@ -12,10 +14,8 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,37 +71,37 @@ fun PantallaMas(nav: Nav) {
             Tarjeta {
                 val ult = Repo.ascensos.maxByOrNull { it.fecha }
                 FilaMas("gastos", "Gastos", "Gastos e ingresos del mes, por categoría y subcategoría", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("campanas", "Campañas", "Retos de la semana", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("escalada", "Escalada", if (ult == null) "Bitácora de sesiones y bloques" else "${porNumero(Repo.ascensos.size, "1 sesión", "${Repo.ascensos.size} sesiones")} · última ${Fechas.relativo(ult.fecha)}", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("fuerza", "Gimnasio", if (Repo.entrenos.isEmpty()) "Entrenamientos de MacroFactor Workouts" else "${Repo.entrenos.values.count { it.series > 0 }} entrenamientos importados", ir)
-                HorizontalDivider()
+                Separador()
                 val corriendo = io.github.ruddy2003.vestigium.data.Enfoque.enCurso()
                 FilaMas("enfoque", "Enfoque y siestas", if (corriendo != null) "Corriendo: ${Catalogo.nombreTramo(corriendo.first).lowercase()}" else "${Repo.tramos.size} tramos medidos · estudio, lectura, idiomas, siestas", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("habitos", "Hábitos", "${Repo.config.habitos.count { it.activo }} activos · se marcan en la hoja de la noche", ir)
-                HorizontalDivider()
+                Separador()
                 val supl = io.github.ruddy2003.vestigium.data.Suplementos.activos()
                 FilaMas("suplementos", "Suplementos", if (supl.isEmpty()) "Lo que tomas y su nivel estimado" else supl.joinToString(", ") { it.nombre } +
                     " · " + (if (supl.all { io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id) }) "hoy ya" else "hoy falta"), ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("biblioteca_ideas", "Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste o pensaste, con su fuente y quién lo dice" else "${porNumero(Repo.ideas.size, "1 idea", "${Repo.ideas.size} ideas")} · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("deseados", "Quiero leer y ver", Repo.obras.count { it.estado == "quiero" }.let { n -> if (n == 0) "Libros, películas, series y juegos que quieres" else "$n pendientes · ${Repo.obras.count { it.estado == "quiero" && it.prioridad == "pronto" }} para pronto" }, ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("listas", "Listas", if (Repo.listas.isEmpty()) "Lugares por visitar, cosas por comprar, restaurantes…" else Repo.listas.joinToString(", ") { it.nombre }.take(80), ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("notas", "Notas", if (Repo.notas.isEmpty()) "Ideas, pensamientos especiales, propósitos y recordatorios" else "${porNumero(Repo.notas.size, "1 nota", "${Repo.notas.size} notas")} · ${Repo.notas.count { it.fijada }} fijadas", ir)
-                HorizontalDivider()
+                Separador()
                 val porRev = io.github.ruddy2003.vestigium.data.Metas.porRevisar().size
                 FilaMas("metas", "Metas", if (Repo.metas.isEmpty()) "Corto, mediano y largo plazo, con su progreso" else "${io.github.ruddy2003.vestigium.data.Metas.activas().size} activas" + if (porRev > 0) " · $porRev por revisar" else "", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("cartas", "Cartas", "${Repo.cartas.count { !it.abierta }} selladas para tu yo del futuro · ${Repo.cartas.count { it.para.isNotBlank() }} a otras personas", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("biblioteca_suenos", "Biblioteca de sueños", "${Repo.dias.values.count { it.sueno_texto.isNotBlank() }} sueños escritos", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("frases", "Frases guardadas", (Repo.config.frases_guardadas.size + Repo.obras.sumOf { o -> o.citas.count { it.favorita } }).let { if (it == 0) "Las frases del día a las que les des ♥" else "$it frase${if (it == 1) "" else "s"} con ♥" }, ir)
             }
         }
@@ -109,39 +109,39 @@ fun PantallaMas(nav: Nav) {
             Tarjeta {
                 val pend = io.github.ruddy2003.vestigium.data.Personas.pendientes().size
                 FilaMas("personas", "Tu gente", if (pend > 0) "$pend por clasificar · quién es cada @persona para ti" else "Quién es cada @persona para ti, y qué tan cerca", ir)
-                HorizontalDivider()
+                Separador()
                 val temasN = Repo.dias.values.flatMap { io.github.ruddy2003.vestigium.data.Texto.temas(it.nota) }.toSet().size
                 FilaMas("personas", "Días especiales y cumpleaños", "Cumpleaños, aniversarios y tus fechas, con su aviso (en Tu gente)", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("red", "Red", "Quién conoce a quién, como un grafo", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("temas", "Tus temas", if (temasN == 0) "Tus #temas, ordenados y sin duplicados" else "$temasN #temas · juntar los que se parecen, renombrar, pasar a hitos", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("sustancias", "Sustancias", "Alcohol, cannabis, tabaco, cafeína: episodios, niveles y cruda", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("recaidas", "Privado", "Medicamentos" + (if (Repo.config.seguimiento_privado) ", impulsos, recaídas y libido" else " e impulsos") + ": solo se ven aquí", ir)
             }
         }
         Seccion("Medir", "Instrumentos para compararte contigo mismo.", numero = 3, plegable = true, abrir = abrir[2], modifier = Modifier.bringIntoViewRequester(req[2])) {
             Tarjeta {
                 FilaMas("experimentos", "Experimentos personales", "${Repo.experimentos.count { io.github.ruddy2003.vestigium.data.Experimentos.enCurso(it) }} en curso · prueba algo y mide si sirve", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("lugares", "Lugares", "El mapa emocional de tus lugares", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("salud", "Salud", "Tus datos frente a las recomendaciones de la OMS: pasos, sueño, azúcar, sal, fibra, alcohol, vitaminas…", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("tus_apps", "Tus apps", "YouTube, música, comida, gimnasio, Kindle, WhatsApp y Google, en números", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("laptop", "Laptop", if (Repo.laptop.isEmpty()) "Minutos por app y sitio desde Cold Turkey" else "${porNumero(Repo.laptop.size, "1 día importado", "${Repo.laptop.size} días importados")} de Cold Turkey", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("escalas", "Cuestionarios", if (pendientes > 0) "$pendientes pendiente(s): bienestar, estrés, soledad, personalidad" else "Al día", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("reaccion", "Prueba de reacción", "30 segundos para medir tu estado mental", ir)
-                HorizontalDivider()
+                Separador()
                 val u = io.github.ruddy2003.vestigium.data.Politica.ultimo()
                 FilaMas("politica", "Brújula política", if (u == null) "Un test al año para ver cómo cambian tus posiciones" else "Último: ${Fechas.corto(u.fecha)} ${u.fecha.take(4)}" +
                     if (io.github.ruddy2003.vestigium.data.Politica.toca()) " · toca el de este año" else "", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("conocer", "Conocerte", if (io.github.ruddy2003.vestigium.data.Perfiles.vacio(Repo.config.perfil)) "Con quién vives, a quién ves, a qué te dedicas" else
                     "Lo grande de tu vida · ${Repo.config.perfil_historial.size} cambios guardados", ir)
             }
@@ -149,31 +149,31 @@ fun PantallaMas(nav: Nav) {
         Seccion("Sistema", numero = 4, plegable = true, abrir = abrir[3], modifier = Modifier.bringIntoViewRequester(req[3])) {
             Tarjeta {
                 FilaMas("guia_uso", "Cómo usar la app", "Qué poner, cuándo y cómo leerte", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("apariencia", "Apariencia", "Tema, claro u oscuro, ícono, letra, animaciones, tus últimos días, semana corta, vibraciones y sonidos", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("avisos", "Avisos y recordatorios", "Avisos de ánimo, horas del diario y del sueño, cuestionarios", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("privacidad", "Privacidad", "Huella, modo discreto, seguimiento privado, ubicación", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("datos", "Datos", "Exportar a R, Google Drive, respaldos, importar", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("papelera", "Papelera", "Lo que borraste en los últimos 7 días, para recuperarlo", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("estado_datos", "Estado de los datos", "Qué fuentes registraron hoy, qué permiso falta y el último respaldo", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("cobertura", "Cobertura de variables", "Cuántos días tiene cada variable y cuánto falta para 30", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("lugar_nuevo", "Lugares especiales", io.github.ruddy2003.vestigium.data.Lugares.pendientes().size.let { if (it > 0) "$it sitio(s) esperando respuesta" else "Cuándo pregunta «¿es un lugar especial?» y los sitios ignorados" }, ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("reportes", "Reportes", "Semanal en imagen, mensual en PDF y uno para terapia", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("permisos", "Permisos y sensores", "Ubicación, reloj, pantalla, fotos, agenda, notificaciones, clima", ir)
-                HorizontalDivider()
+                Separador()
                 FilaMas("guia", "Cómo leer tus datos", "Qué mide cada cosa, de dónde viene y por qué", ir)
             }
         }
-        TextButton(onClick = { nav.ir("guia_uso:atajos") }, modifier = Modifier.padding(top = 12.dp)) { Text("Atajos, corregir y deshacer →") }
+        BotonTexto(onClick = { nav.ir("guia_uso:atajos") }, modifier = Modifier.padding(top = 12.dp)) { Text("Atajos, corregir y deshacer →") }
         Ayuda("vestigium mei · schema_v = ${io.github.ruddy2003.vestigium.data.SCHEMA_V} · ${io.github.ruddy2003.vestigium.ui.Estilo.fecha(Fechas.diaLogico())}", Modifier.padding(top = 16.dp))
     }
 }
@@ -202,12 +202,12 @@ fun PantallaHabitos(nav: Nav) {
                             Text(h.nombre, style = MaterialTheme.typography.bodyLarge)
                             Ayuda(if (h.id == ligado) "Privado: se marca y se ve en Más → Privado" else "${porNumero(hechos, "1 día cumplido", "$hechos días cumplidos")}")
                         }
-                        TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(habitos = cc.habitos.map { if (it.id == h.id) it.copy(activo = false) else it }) } }) { Text("Archivar") }
+                        BotonTexto(onClick = { Repo.cambiarConfig { cc -> cc.copy(habitos = cc.habitos.map { if (it.id == h.id) it.copy(activo = false) else it }) } }) { Text("Archivar") }
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     CampoTexto(value = nuevo, onValueChange = { nuevo = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nombre del hábito") })
-                    TextButton(onClick = { agregar(nuevo.trim()) }) { Text("Añadir") }
+                    BotonTexto(onClick = { agregar(nuevo.trim()) }) { Text("Añadir") }
                 }
                 FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Catalogo.HABITOS_SUGERIDOS.filter { s -> c.habitos.none { it.nombre == s } }.forEach { s -> Ficha("+ $s", false) { agregar(s) } }
@@ -220,7 +220,7 @@ fun PantallaHabitos(nav: Nav) {
                 archivados.forEach { h ->
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(h.nombre, Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(habitos = cc.habitos.map { if (it.id == h.id) it.copy(activo = true) else it }) } }) { Text("Reactivar") }
+                        BotonTexto(onClick = { Repo.cambiarConfig { cc -> cc.copy(habitos = cc.habitos.map { if (it.id == h.id) it.copy(activo = true) else it }) } }) { Text("Reactivar") }
                     }
                 }
             }

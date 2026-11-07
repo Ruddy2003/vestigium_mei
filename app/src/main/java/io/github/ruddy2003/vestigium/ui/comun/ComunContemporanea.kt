@@ -6,6 +6,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -48,6 +49,17 @@ private fun DrawScope.renglones(izq: Float, der: Float, arriba: Float, abajo: Fl
         } else drawLine(color, Offset(izq, y), Offset(der, y), grosor)
         y += paso; n++
     }
+}
+
+/** Cuánto se nota un separador: la mitad cuando va tenue (la pantalla le pidió un color propio). */
+private fun fuerza(e: EstadoSeparador): Float = if (e.tenue) 0.5f else 1f
+
+/** El color del adorno de un botón de texto apagado: casi sin color y a media luz. */
+private fun apagarBoton(c: Color, habilitado: Boolean): Color = if (habilitado) c else apagar(c, false).copy(alpha = c.alpha * 0.5f)
+
+/** Un paralelogramo inclinado hacia la derecha, de [izq] a [der] y de [arriba] a [abajo], con [sesgo] de corrimiento. */
+private fun paralelogramo(izq: Float, arriba: Float, der: Float, abajo: Float, sesgo: Float): Path = Path().apply {
+    moveTo(izq + sesgo, arriba); lineTo(der, arriba); lineTo(der - sesgo, abajo); lineTo(izq, abajo); close()
 }
 
 /**
@@ -132,6 +144,55 @@ object ComunUrbe : DisenoComun {
         drawCircle(luz, 1.3f * u, piloto)
         if (e.habilitado && (e.enfocado || e.error)) drawCircle(luz.copy(alpha = 0.3f), 3 * u, piloto)
     }
+
+    // ---------------------------------------------------------------- separadores y botones de texto
+
+    override val altoSeparador: Dp = 10.dp
+
+    /**
+     * La línea del autobús en el plano de la parada: la raya naranja de lado a lado, la parada de en medio (un círculo hueco
+     * que la corta) y dos paradas menores de través.
+     */
+    override fun DrawScope.separador(e: EstadoSeparador, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val cx = w / 2; val cy = size.height / 2
+        val f = fuerza(e)
+        val linea = (if (oscuro) mezcla(NARANJA, Color(0xFF100E0C), 0.15f) else NARANJA_OSC).copy(alpha = (if (oscuro) 0.5f else 0.6f) * f)
+        val r = 2.8f * u
+        drawLine(linea, Offset(4 * u, cy), Offset(cx - r - 0.6f * u, cy), 1.2f * u, StrokeCap.Round)
+        drawLine(linea, Offset(cx + r + 0.6f * u, cy), Offset(w - 4 * u, cy), 1.2f * u, StrokeCap.Round)
+        listOf(-1f, 1f).forEach { s ->
+            val x = cx + s * minOf(22 * u, w * 0.2f)
+            drawLine(linea, Offset(x, cy - 2.2f * u), Offset(x, cy + 2.2f * u), 1 * u)
+        }
+        drawCircle(NARANJA.copy(alpha = (if (oscuro) 0.8f else 0.95f) * f), r, Offset(cx, cy), style = Stroke(1.2f * u))
+    }
+
+    override fun tintaBotonTexto(oscuro: Boolean): Color = if (oscuro) Color(0xFFE8955A) else Color(0xFF9C3D22)
+
+    /**
+     * La ranura de la obliteradora: una raya de hierro bajo el texto, con un tornillo de aluminio a cada lado. Al tocarlo,
+     * la chapa naranja asoma detrás y la ranura se enciende del verde del piloto, como cuando el boleto queda marcado.
+     */
+    override fun DrawScope.botonTexto(e: EstadoBotonTexto, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height; val cy = h / 2
+        fun c(x: Color, a: Float = 1f) = apagarBoton(t(x, oscuro).copy(alpha = a), e.habilitado)
+        val toque = e.presionado && e.habilitado
+        if (toque) drawRoundRect(t(NARANJA, oscuro).copy(alpha = if (oscuro) 0.2f else 0.16f), Offset(2 * u, cy - 16 * u), Size(w - 4 * u, 32 * u), CornerRadius(8 * u))
+        listOf(4.5f * u, w - 4.5f * u).forEach { x ->
+            drawCircle(Color.Black.copy(alpha = if (e.habilitado) 0.25f else 0.1f), 1.7f * u, Offset(x, cy + 0.4f * u))
+            drawCircle(c(ALUMINIO), 1.5f * u, Offset(x, cy))
+            drawLine(c(HIERRO), Offset(x - 0.9f * u, cy - 0.5f * u), Offset(x + 0.9f * u, cy + 0.5f * u), 0.5f * u)
+        }
+        val y = minOf(cy + 12 * u, h - 3 * u)
+        val x0 = 11 * u; val x1 = w - 11 * u
+        if (x1 > x0) {
+            val ranura = if (toque) (if (oscuro) VERDE_PILOTO else PERSIANA) else c(if (oscuro) ALUMINIO else HIERRO, 0.45f)
+            if (toque && oscuro) drawLine(VERDE_PILOTO.copy(alpha = 0.25f), Offset(x0, y), Offset(x1, y), 3.6f * u, StrokeCap.Round)
+            drawLine(ranura, Offset(x0, y), Offset(x1, y), 1.4f * u, StrokeCap.Round)
+        }
+    }
 }
 
 /**
@@ -204,6 +265,52 @@ object ComunCiber : DisenoComun {
         drawRoundRect(Color.White.copy(alpha = 0.035f), Offset(vidrio.left + 4 * u, vidrio.top + 1.5f * u), Size(vidrio.width - 8 * u, minOf(vidrio.height * 0.3f, 8 * u)), CornerRadius(3 * u))
         val piloto = Rect(caja.right - 14 * u, vidrio.bottom + 1.6f * u, caja.right - 9 * u, vidrio.bottom + 2.8f * u)
         drawRect(if (!e.habilitado) Color(0xFF3A3C3A) else if (e.error) AVISO else PILOTO, piloto.topLeft, piloto.size)
+    }
+
+    // ---------------------------------------------------------------- separadores y botones de texto
+
+    override val altoSeparador: Dp = 8.dp
+
+    /** La línea de guiones de la consola, `+------+`: guiones de fósforo tenue de lado a lado y una cruz en cada punta. */
+    override fun DrawScope.separador(e: EstadoSeparador, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val cy = size.height / 2
+        val f = fuerza(e)
+        drawLine(FOSFORO_TENUE.copy(alpha = 0.85f * f), Offset(9 * u, cy), Offset(w - 9 * u, cy), 1 * u,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(5 * u, 3 * u)))
+        val cruz = FOSFORO.copy(alpha = 0.55f * f)
+        listOf(4 * u, w - 4 * u).forEach { x ->
+            drawLine(cruz, Offset(x - 2.4f * u, cy), Offset(x + 2.4f * u, cy), 1 * u)
+            drawLine(cruz, Offset(x, cy - 2.4f * u), Offset(x, cy + 2.4f * u), 1 * u)
+        }
+    }
+
+    override fun tintaBotonTexto(oscuro: Boolean): Color = FOSFORO
+
+    /**
+     * Los corchetes de la consola, `[ cancelar ]`, en fósforo tenue a los lados del texto. Al tocarlo, el video se invierte
+     * a medias (el fósforo rellena tenue el hueco), los corchetes se avivan y asoma el cursor `_` en la esquina.
+     */
+    override fun DrawScope.botonTexto(e: EstadoBotonTexto, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height; val cy = h / 2
+        val toque = e.presionado && e.habilitado
+        val alto = minOf(13 * u, h / 2 - 4 * u)
+        val izq = 4 * u; val der = w - 4 * u
+        val color = when {
+            !e.habilitado -> Color(0xFF34403E)
+            toque -> FOSFORO
+            else -> FOSFORO_TENUE
+        }
+        if (toque) {
+            drawRect(FOSFORO.copy(alpha = 0.14f), Offset(izq + 2 * u, cy - alto), Size(der - izq - 4 * u, 2 * alto))
+            drawRect(FOSFORO, Offset(der - 11 * u, cy + alto - 3.6f * u), Size(4.5f * u, 1.6f * u))
+        }
+        val brazo = 3.5f * u
+        listOf(izq to 1f, der to -1f).forEach { (x, s) ->
+            drawPath(Path().apply { moveTo(x + s * brazo, cy - alto); lineTo(x, cy - alto); lineTo(x, cy + alto); lineTo(x + s * brazo, cy + alto) },
+                color, style = Stroke(1.4f * u, cap = StrokeCap.Square))
+        }
     }
 }
 
@@ -289,6 +396,65 @@ object ComunVapor : DisenoComun {
             mx += maxOf(8 * u, 1f); n++
         }
     }
+
+    // ---------------------------------------------------------------- separadores y botones de texto
+
+    override val altoSeparador: Dp = 10.dp
+
+    /**
+     * El tubo de latón de la sala de máquinas: la raya pulida con su sombra debajo, una brida en cada punta y, al centro,
+     * un engrane chico de ocho dientes que corta el tubo.
+     */
+    override fun DrawScope.separador(e: EstadoSeparador, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val cx = w / 2; val cy = size.height / 2
+        val f = fuerza(e)
+        val laton = (if (oscuro) mezcla(LATON, Color(0xFF0D0B09), 0.15f) else LATON_OSC).copy(alpha = (if (oscuro) 0.6f else 0.8f) * f)
+        val sombra = (if (oscuro) Color.Black else LATON_OSC).copy(alpha = 0.45f * f)
+        val r = 4.2f * u
+        listOf(6 * u to cx - r - 2 * u, cx + r + 2 * u to w - 6 * u).forEach { (a, b) ->
+            drawLine(laton, Offset(a, cy - 0.3f * u), Offset(b, cy - 0.3f * u), 1.2f * u)
+            drawLine(sombra, Offset(a, cy + 0.9f * u), Offset(b, cy + 0.9f * u), 0.6f * u)
+        }
+        listOf(5 * u, w - 5 * u).forEach { x -> drawLine(laton, Offset(x, cy - 2.4f * u), Offset(x, cy + 2.6f * u), 1.6f * u) }
+        // El engrane: cuatro puntos por diente (dos afuera, dos adentro) y su eje.
+        val engrane = Path()
+        val puntos = 8 * 4
+        for (i in 0 until puntos) {
+            val ang = (i - 0.5f) / puntos * 2 * PI.toFloat()
+            val rr = if (i % 4 < 2) r else r * 0.7f
+            val p = Offset(cx + cos(ang) * rr, cy + sin(ang) * rr)
+            if (i == 0) engrane.moveTo(p.x, p.y) else engrane.lineTo(p.x, p.y)
+        }
+        engrane.close()
+        drawPath(engrane, laton)
+        drawCircle(sombra.copy(alpha = 0.9f * f), 1.2f * u, Offset(cx, cy))
+    }
+
+    override fun tintaBotonTexto(oscuro: Boolean): Color = if (oscuro) Color(0xFFDBA641) else Color(0xFF7A4E10)
+
+    /**
+     * Las escuadras de latón de una placa de la sala de máquinas: cuatro esquinas remachadas que enmarcan el texto sin
+     * cerrarlo. Al tocarlo, la placa toma la luz tibia de la lámpara de gas y el latón se pule.
+     */
+    override fun DrawScope.botonTexto(e: EstadoBotonTexto, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height; val cy = h / 2
+        val toque = e.presionado && e.habilitado
+        val alto = minOf(14 * u, h / 2 - 3 * u)
+        val r = Rect(3 * u, cy - alto, w - 3 * u, cy + alto)
+        if (toque) drawRoundRect(GAS.copy(alpha = if (oscuro) 0.14f else 0.24f), r.topLeft, r.size, CornerRadius(2 * u))
+        val laton = apagarBoton(t(if (toque) (if (oscuro) LATON_LUZ else LATON) else (if (oscuro) LATON else LATON_OSC), oscuro), e.habilitado)
+        val brazo = minOf(6 * u, r.width / 4)
+        listOf(
+            Offset(r.left, r.top) to Offset(1f, 1f), Offset(r.right, r.top) to Offset(-1f, 1f),
+            Offset(r.left, r.bottom) to Offset(1f, -1f), Offset(r.right, r.bottom) to Offset(-1f, -1f),
+        ).forEach { (p, s) ->
+            drawPath(Path().apply { moveTo(p.x + s.x * brazo, p.y); lineTo(p.x, p.y); lineTo(p.x, p.y + s.y * brazo * 0.8f) }, laton,
+                style = Stroke(if (toque) 1.6f * u else 1.3f * u))
+            drawCircle(laton, 0.85f * u, Offset(p.x + s.x * 2.2f * u, p.y + s.y * 2.2f * u))
+        }
+    }
 }
 
 /**
@@ -367,6 +533,59 @@ object ComunNapoleon : DisenoComun {
             }, c(LATON_LUZ), style = Stroke(0.8f * u))
         }
     }
+
+    // ---------------------------------------------------------------- separadores y botones de texto
+
+    override val altoSeparador: Dp = 10.dp
+
+    /**
+     * El filete dorado del boletín, grueso y fino, roto al centro por la estrella del Imperio entre dos ramitas de laurel
+     * de tres hojas.
+     */
+    override fun DrawScope.separador(e: EstadoSeparador, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val cx = w / 2; val cy = size.height / 2
+        val f = fuerza(e)
+        val oro = (if (oscuro) ORO.copy(alpha = 0.65f) else Color(0xFFB08A2E).copy(alpha = 0.8f)).let { it.copy(alpha = it.alpha * f) }
+        val hueco = 14 * u
+        listOf(4 * u to cx - hueco, cx + hueco to w - 4 * u).forEach { (a, b) ->
+            drawLine(oro, Offset(a, cy - 0.6f * u), Offset(b, cy - 0.6f * u), 1 * u)
+            if (b - a > 8 * u) drawLine(oro.copy(alpha = oro.alpha * 0.6f), Offset(a + 3 * u, cy + 1.4f * u), Offset(b - 3 * u, cy + 1.4f * u), 0.5f * u)
+        }
+        // Las ramitas de laurel: un tallo y tres hojas alternas, hacia cada lado.
+        listOf(-1f, 1f).forEach { s ->
+            drawLine(oro, Offset(cx + s * 4.5f * u, cy), Offset(cx + s * 12.5f * u, cy - 0.6f * u), 0.6f * u)
+            for (k in 0 until 3) {
+                val arriba = k % 2 == 0
+                val p = Offset(cx + s * (6.2f + 2.6f * k) * u, cy + (if (arriba) -1.3f else 1.1f) * u)
+                rotate(s * (if (arriba) -28f else 28f), p) { drawOval(oro, Offset(p.x - 1.7f * u, p.y - 0.75f * u), Size(3.4f * u, 1.5f * u)) }
+            }
+        }
+        drawPath(estrella(Offset(cx, cy), 3.4f * u, 5, 0.42f), oro.copy(alpha = (if (oscuro) 0.9f else 1f) * f))
+    }
+
+    override fun tintaBotonTexto(oscuro: Boolean): Color = if (oscuro) Color(0xFFD9B25B) else AZUL_IMPERIAL
+
+    /**
+     * El doble filete dorado de las órdenes bajo el texto, grueso y fino, con un punto de oro en cada punta. Al tocarlo,
+     * asoma detrás un dorado tenue (de noche, el azul imperial del uniforme) y el filete se aviva.
+     */
+    override fun DrawScope.botonTexto(e: EstadoBotonTexto, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height; val cy = h / 2
+        val toque = e.presionado && e.habilitado
+        if (toque) drawRoundRect(if (oscuro) Color(0xFF26337A).copy(alpha = 0.55f) else ORO.copy(alpha = 0.18f), Offset(3 * u, cy - 16 * u), Size(w - 6 * u, 32 * u), CornerRadius(2 * u))
+        val oro = apagarBoton(
+            if (oscuro) t(if (toque) LATON_LUZ else ORO, true) else (if (toque) Color(0xFF9C741A) else Color(0xFFB8892B)), e.habilitado)
+        val y = minOf(cy + 11.5f * u, h - 4 * u)
+        val x0 = 12 * u; val x1 = w - 12 * u
+        if (x1 > x0) {
+            drawLine(oro, Offset(x0, y), Offset(x1, y), if (toque) 1.4f * u else 1 * u)
+            if (x1 - x0 > 8 * u) drawLine(oro.copy(alpha = oro.alpha * 0.7f), Offset(x0 + 3 * u, y + 2 * u), Offset(x1 - 3 * u, y + 2 * u), 0.5f * u)
+            drawCircle(oro, 0.9f * u, Offset(x0 - 2.6f * u, y + 0.6f * u))
+            drawCircle(oro, 0.9f * u, Offset(x1 + 2.6f * u, y + 0.6f * u))
+        }
+    }
 }
 
 /**
@@ -439,6 +658,62 @@ object ComunDeco : DisenoComun {
             drawPath(rombo, fuera, style = Stroke(0.9f * u))
             drawCircle(fuera, 0.9f * u, Offset(cx, y))
             listOf(-1f, 1f).forEach { s -> drawLine(c(CROMO).copy(alpha = 0.7f), Offset(cx + s * (r + 3 * u), y), Offset(cx + s * (r + 7 * u), y), 0.6f * u) }
+        }
+    }
+
+    // ---------------------------------------------------------------- separadores y botones de texto
+
+    override val altoSeparador: Dp = 10.dp
+
+    /**
+     * El abanico de rayos del salón: medio sol de oro al centro, de siete rayos, y a los lados el doble filete, el de dentro
+     * más corto, que remata en un cuadrito de oro.
+     */
+    override fun DrawScope.separador(e: EstadoSeparador, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val cx = w / 2; val cy = size.height / 2
+        val f = fuerza(e)
+        val oro = (if (oscuro) ORO.copy(alpha = 0.6f) else mezcla(ORO, Color.Black, 0.22f).copy(alpha = 0.8f)).let { it.copy(alpha = it.alpha * f) }
+        // El medio sol: siete rayos que salen de un medio disco.
+        val base = Offset(cx, cy + 2.2f * u)
+        for (k in 0..6) {
+            val a = PI.toFloat() * (1f + k / 6f)
+            val largo = (if (k % 2 == 0) 6f else 4.6f) * u
+            drawLine(oro, Offset(base.x + cos(a) * 2.2f * u, base.y + sin(a) * 2.2f * u), Offset(base.x + cos(a) * largo, base.y + sin(a) * largo), 0.8f * u)
+        }
+        drawArc(oro, 180f, 180f, true, Offset(base.x - 1.6f * u, base.y - 1.6f * u), Size(3.2f * u, 3.2f * u))
+        // El doble filete con su remate.
+        listOf(-1f, 1f).forEach { s ->
+            val a = cx + s * 8 * u; val b = if (s < 0) 6 * u else w - 6 * u
+            drawLine(oro, Offset(a, cy - 0.4f * u), Offset(b, cy - 0.4f * u), 0.9f * u)
+            drawLine(oro.copy(alpha = oro.alpha * 0.6f), Offset(a, cy + 1.8f * u), Offset(b - s * 5 * u, cy + 1.8f * u), 0.5f * u)
+            drawRect(oro, Offset(b - 1.1f * u, cy - 1.5f * u), Size(2.2f * u, 2.2f * u))
+        }
+    }
+
+    override fun tintaBotonTexto(oscuro: Boolean): Color = if (oscuro) Color(0xFFD9B44A) else Color(0xFF7A590C)
+
+    /**
+     * La marquesina: el texto entre dos filetes finos de oro, arriba y abajo, rematados en un cuadrito en cada punta, como
+     * las letras de un cartel de teatro. Al tocarlo se enciende: el oro aclara, corre por dentro un filete de jade y el
+     * hueco toma un brillo de oro tenue.
+     */
+    override fun DrawScope.botonTexto(e: EstadoBotonTexto, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height; val cy = h / 2
+        val toque = e.presionado && e.habilitado
+        val alto = minOf(13 * u, h / 2 - 4 * u)
+        val x0 = minOf(9 * u, w / 4); val x1 = w - x0
+        if (toque) drawRect(ORO.copy(alpha = if (oscuro) 0.16f else 0.15f), Offset(x0, cy - alto), Size(x1 - x0, 2 * alto))
+        val oro = apagarBoton(
+            if (toque) (if (oscuro) ORO_CLARO else mezcla(ORO, Color.Black, 0.12f)) else (if (oscuro) t(ORO, true) else mezcla(ORO, Color.Black, 0.22f)),
+            e.habilitado)
+        val jade = if (oscuro) JADE_LUZ else mezcla(JADE_LUZ, Color.Black, 0.25f)
+        listOf(cy - alto to 1f, cy + alto to -1f).forEach { (y, s) ->
+            drawLine(oro, Offset(x0 + 2 * u, y), Offset(x1 - 2 * u, y), if (toque) 1 * u else 0.7f * u)
+            drawRect(oro, Offset(x0 - 0.9f * u, y - 0.9f * u), Size(1.8f * u, 1.8f * u))
+            drawRect(oro, Offset(x1 - 0.9f * u, y - 0.9f * u), Size(1.8f * u, 1.8f * u))
+            if (toque && x1 - x0 > 8 * u) drawLine(jade, Offset(x0 + 4 * u, y + s * 2 * u), Offset(x1 - 4 * u, y + s * 2 * u), 0.6f * u)
         }
     }
 }
@@ -523,6 +798,71 @@ object ComunBotanico : DisenoComun {
                     quadraticTo(base.x + lado * 2.2f * u, base.y + 0.4f * u, base.x, base.y); close()
                 }, c(HOJA_CLARA))
             }
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- separadores y botones de texto
+
+    override val altoSeparador: Dp = 14.dp
+
+    /**
+     * La rama del herbario dibujada a tinta: el tallo fino de lado a lado, con una semilla en cada punta y, al centro, una
+     * ramita de tres hojas y dos hojas chicas a sus lados.
+     */
+    override fun DrawScope.separador(e: EstadoSeparador, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val cx = w / 2; val cy = size.height / 2 + 1.5f * u
+        val f = fuerza(e)
+        val tinta = (if (oscuro) Color(0xFF9BC06C) else TINTA_VERDE).copy(alpha = (if (oscuro) 0.5f else 0.45f) * f)
+        val hoja = (if (oscuro) t(HOJA_CLARA, true) else HELECHO).copy(alpha = 0.8f * f)
+        drawLine(tinta, Offset(7 * u, cy), Offset(w - 7 * u, cy), 0.9f * u, StrokeCap.Round)
+        drawCircle(tinta, 1.3f * u, Offset(5.5f * u, cy)); drawCircle(tinta, 1.3f * u, Offset(w - 5.5f * u, cy))
+        // Una hoja: dos curvas desde la base hasta la punta, girada hacia [ang] (en grados, de la derecha y hacia abajo).
+        fun hojita(base: Offset, ang: Float, largo: Float) = rotate(ang, base) {
+            drawPath(Path().apply {
+                moveTo(base.x, base.y)
+                quadraticTo(base.x + largo * 0.5f, base.y - largo * 0.36f, base.x + largo, base.y)
+                quadraticTo(base.x + largo * 0.5f, base.y + largo * 0.36f, base.x, base.y); close()
+            }, hoja)
+        }
+        hojita(Offset(cx - 0.6f * u, cy), -148f, 6.6f * u)
+        hojita(Offset(cx + 0.6f * u, cy), -32f, 6.6f * u)
+        hojita(Offset(cx, cy), -90f, 5.2f * u)
+        hojita(Offset(cx - 11 * u, cy), -155f, 4.4f * u)
+        hojita(Offset(cx + 11 * u, cy), -25f, 4.4f * u)
+    }
+
+    override fun tintaBotonTexto(oscuro: Boolean): Color = if (oscuro) Color(0xFFA9C27A) else Color(0xFF3F5A2C)
+
+    /**
+     * El subrayado a tinta del naturalista: una raya fina bajo el texto que, a la derecha, se enrosca en un zarcillo. Al
+     * tocarlo, el papel se tiñe de un verde de hoja muy tenue y a la raya le brota una hojita.
+     */
+    override fun DrawScope.botonTexto(e: EstadoBotonTexto, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height; val cy = h / 2
+        val toque = e.presionado && e.habilitado
+        if (toque) drawRoundRect(HOJA_CLARA.copy(alpha = if (oscuro) 0.16f else 0.22f), Offset(3 * u, cy - 15 * u), Size(w - 6 * u, 30 * u), CornerRadius(10 * u))
+        val tinta = apagarBoton((if (oscuro) Color(0xFF9BC06C) else TINTA_VERDE).copy(alpha = if (toque) 1f else 0.7f), e.habilitado)
+        val y = minOf(cy + 11.5f * u, h - 6 * u)
+        val x0 = 9 * u; val fin = w - 14 * u
+        if (fin > x0) {
+            val trazo = Path().apply {
+                moveTo(x0, y)
+                quadraticTo((x0 + fin) / 2, y + 0.8f * u, fin, y)
+                cubicTo(fin + 4 * u, y - 0.2f * u, fin + 5.2f * u, y - 4 * u, fin + 2.6f * u, y - 5 * u)
+                cubicTo(fin + 0.6f * u, y - 5.6f * u, fin - 0.2f * u, y - 3 * u, fin + 1.8f * u, y - 2.6f * u)
+            }
+            drawPath(trazo, tinta, style = Stroke(1 * u, cap = StrokeCap.Round))
+            if (toque) {
+                val b = Offset(x0 + minOf(10 * u, (fin - x0) * 0.3f), y + 0.3f * u)
+                rotate(-130f, b) {
+                    drawPath(Path().apply {
+                        moveTo(b.x, b.y); quadraticTo(b.x + 3 * u, b.y - 2.4f * u, b.x + 6 * u, b.y)
+                        quadraticTo(b.x + 3 * u, b.y + 2.4f * u, b.x, b.y); close()
+                    }, if (oscuro) t(HOJA_CLARA, true) else HELECHO)
+                }
             }
         }
     }
@@ -626,6 +966,70 @@ object ComunNavidad : DisenoComun {
             drawCircle(Color.White.copy(alpha = 0.5f), 0.4f * u, Offset(b.x - 0.4f * u, b.y - 0.4f * u))
         }
     }
+
+    // ---------------------------------------------------------------- separadores y botones de texto
+
+    override val altoSeparador: Dp = 12.dp
+
+    /** Un hilo verde de pino con un copo de nieve al centro y una baya de acebo a cada lado. */
+    override fun DrawScope.separador(e: EstadoSeparador, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val cx = w / 2; val cy = size.height / 2
+        val f = fuerza(e)
+        val hilo = (if (oscuro) Color(0xFF86C99A) else ABETO).copy(alpha = (if (oscuro) 0.4f else 0.45f) * f)
+        val copo = (if (oscuro) NIEVE.copy(alpha = 0.75f) else Color(0xFF5E7E9A)).let { it.copy(alpha = it.alpha * f) }
+        val hueco = 15 * u
+        drawLine(hilo, Offset(6 * u, cy), Offset(cx - hueco, cy), 1 * u, StrokeCap.Round)
+        drawLine(hilo, Offset(cx + hueco, cy), Offset(w - 6 * u, cy), 1 * u, StrokeCap.Round)
+        listOf(-1f, 1f).forEach { s ->
+            val b = Offset(cx + s * 11 * u, cy)
+            drawCircle((if (oscuro) Color(0xFFE5484D) else ROJO).copy(alpha = 0.85f * f), 1.6f * u, b)
+            drawCircle(Color.White.copy(alpha = 0.45f * f), 0.45f * u, Offset(b.x - 0.45f * u, b.y - 0.45f * u))
+        }
+        // El copo: tres brazos que se cruzan y una V en cada medio brazo.
+        val r = 4.4f * u
+        val c = Offset(cx, cy)
+        for (k in 0 until 3) {
+            val a = PI.toFloat() / 3 * k + PI.toFloat() / 2
+            drawLine(copo, Offset(c.x - cos(a) * r, c.y - sin(a) * r), Offset(c.x + cos(a) * r, c.y + sin(a) * r), 0.8f * u)
+        }
+        for (k in 0 until 6) {
+            val a = PI.toFloat() / 3 * k + PI.toFloat() / 2
+            val p = Offset(c.x + cos(a) * r * 0.55f, c.y + sin(a) * r * 0.55f)
+            listOf(-0.75f, 0.75f).forEach { d -> drawLine(copo, p, Offset(p.x + cos(a + d) * 1.7f * u, p.y + sin(a + d) * 1.7f * u), 0.6f * u) }
+        }
+    }
+
+    override fun tintaBotonTexto(oscuro: Boolean): Color = if (oscuro) Color(0xFFFF6F6B) else Color(0xFFB71C1C)
+
+    /**
+     * La cinta roja de un regalo bajo el texto, con su moño chico en la punta de la derecha. Al tocarlo, se enciende detrás
+     * la luz tibia de una vela y la cinta se aviva.
+     */
+    override fun DrawScope.botonTexto(e: EstadoBotonTexto, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height; val cy = h / 2
+        val toque = e.presionado && e.habilitado
+        if (toque) drawRoundRect(LLAMA.copy(alpha = if (oscuro) 0.12f else 0.28f), Offset(3 * u, cy - 15 * u), Size(w - 6 * u, 30 * u), CornerRadius(8 * u))
+        val cinta = apagarBoton((if (oscuro) Color(0xFFE5484D) else ROJO).copy(alpha = if (toque) 1f else 0.75f), e.habilitado)
+        val y = minOf(cy + 11.5f * u, h - 6 * u)
+        val x0 = 10 * u; val nudo = w - 12 * u
+        if (nudo > x0 + 4 * u) {
+            drawLine(cinta, Offset(x0, y), Offset(nudo, y), 1.5f * u, StrokeCap.Round)
+            // El moño: dos lazos, dos puntas y el nudo.
+            listOf(-1f, 1f).forEach { s ->
+                val lazo = Path().apply {
+                    moveTo(nudo, y)
+                    cubicTo(nudo + s * 0.6f * u, y - 5.2f * u, nudo + s * 6.4f * u, y - 5 * u, nudo + s * 5.2f * u, y - 1.2f * u)
+                    cubicTo(nudo + s * 4.6f * u, y + 0.4f * u, nudo + s * 2 * u, y + 0.2f * u, nudo, y); close()
+                }
+                drawPath(lazo, cinta.copy(alpha = cinta.alpha * 0.3f))
+                drawPath(lazo, cinta, style = Stroke(1 * u))
+                drawLine(cinta, Offset(nudo, y), Offset(nudo + s * 1.8f * u, y + 4.2f * u), 1.1f * u, StrokeCap.Round)
+            }
+            drawCircle(cinta, 1.2f * u, Offset(nudo, y))
+        }
+    }
 }
 
 /**
@@ -707,6 +1111,48 @@ object ComunAbismo : DisenoComun {
             }
         }
     }
+
+    // ---------------------------------------------------------------- separadores y botones de texto
+
+    override val altoSeparador: Dp = 12.dp
+
+    /** El cable del batiscafo con un eco de sonar al centro: el punto y sus dos ondas, que se abren hacia los dos lados. */
+    override fun DrawScope.separador(e: EstadoSeparador, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val cx = w / 2; val cy = size.height / 2
+        val f = fuerza(e)
+        val color = if (oscuro) BIOLUZ else Color(0xFF17646C)
+        val cable = color.copy(alpha = (if (oscuro) 0.35f else 0.4f) * f)
+        drawLine(cable, Offset(6 * u, cy), Offset(cx - 11 * u, cy), 0.9f * u, StrokeCap.Round)
+        drawLine(cable, Offset(cx + 11 * u, cy), Offset(w - 6 * u, cy), 0.9f * u, StrokeCap.Round)
+        drawCircle(color.copy(alpha = 0.8f * f), 1.5f * u, Offset(cx, cy))
+        listOf(4 * u to 0.6f, 7.5f * u to 0.35f).forEach { (r, a) ->
+            listOf(145f, -35f).forEach { desde ->
+                drawArc(color.copy(alpha = a * f), desde, 70f, false, Offset(cx - r, cy - r), Size(2 * r, 2 * r), style = Stroke(0.9f * u, cap = StrokeCap.Round))
+            }
+        }
+    }
+
+    override fun tintaBotonTexto(oscuro: Boolean): Color = if (oscuro) Color(0xFF5CF2C6) else Color(0xFF0A5C8C)
+
+    /**
+     * Las ondas del sonar que buscan el texto: dos arcos finos a cada lado, ((  así  )). Al tocarlo llega el eco: los arcos
+     * se avivan, aparece un tercero y el agua de alrededor se ilumina tenue (de bioluminiscencia, de noche).
+     */
+    override fun DrawScope.botonTexto(e: EstadoBotonTexto, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height; val cy = h / 2
+        val toque = e.presionado && e.habilitado
+        val color = apagarBoton(if (oscuro) BIOLUZ else Color(0xFF17646C), e.habilitado)
+        if (toque) drawRoundRect(color.copy(alpha = if (oscuro) 0.14f else 0.1f), Offset(3 * u, cy - 15 * u), Size(w - 6 * u, 30 * u), CornerRadius(15 * u))
+        val radios = if (toque) listOf(9 * u to 0.95f, 12 * u to 0.65f, 15 * u to 0.35f) else listOf(10 * u to 0.7f, 13 * u to 0.4f)
+        val izq = 18 * u; val der = w - 18 * u
+        radios.forEach { (r, a) ->
+            listOf(izq to 148f, der to -32f).forEach { (x, desde) ->
+                drawArc(color.copy(alpha = color.alpha * a), desde, 64f, false, Offset(x - r, cy - r), Size(2 * r, 2 * r), style = Stroke(1.1f * u, cap = StrokeCap.Round))
+            }
+        }
+    }
 }
 
 /**
@@ -776,6 +1222,48 @@ object ComunUrss : DisenoComun {
                 drawCircle(violeta.copy(alpha = 0.5f), 5.4f * u, s, style = Stroke(0.5f * u))
                 drawPath(estrella(s, 3.4f * u, 5, 0.42f), violeta.copy(alpha = 0.55f))
             }
+        }
+    }
+
+    // ---------------------------------------------------------------- separadores y botones de texto
+
+    override val altoSeparador: Dp = 10.dp
+
+    /**
+     * La regla de imprenta del cartel: el filete negro de lado a lado, roto al centro por una estrella roja entre dos barras
+     * rojas inclinadas, como en una portada constructivista.
+     */
+    override fun DrawScope.separador(e: EstadoSeparador, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val cx = w / 2; val cy = size.height / 2
+        val f = fuerza(e)
+        val tinta = (if (oscuro) Color(0xFFEFE4C9) else TINTA).copy(alpha = (if (oscuro) 0.3f else 0.45f) * f)
+        val rojo = (if (oscuro) Color(0xFFE0453F) else ROJO).copy(alpha = 0.9f * f)
+        drawLine(tinta, Offset(4 * u, cy), Offset(cx - 17 * u, cy), 1 * u)
+        drawLine(tinta, Offset(cx + 17 * u, cy), Offset(w - 4 * u, cy), 1 * u)
+        drawPath(paralelogramo(cx - 15 * u, cy - 1 * u, cx - 7 * u, cy + 1 * u, 1.4f * u), rojo)
+        drawPath(paralelogramo(cx + 7 * u, cy - 1 * u, cx + 15 * u, cy + 1 * u, 1.4f * u), rojo)
+        drawPath(estrella(Offset(cx, cy), 3.8f * u, 5, 0.4f), rojo)
+    }
+
+    override fun tintaBotonTexto(oscuro: Boolean): Color = if (oscuro) Color(0xFFFF5C5C) else Color(0xFFB0121C)
+
+    /**
+     * El subrayado del cartel constructivista: una barra roja inclinada bajo el texto y la cuña roja que la empuja desde la
+     * izquierda. Al tocarlo, una franja roja tenue, también inclinada, se imprime detrás del texto y la barra engruesa.
+     */
+    override fun DrawScope.botonTexto(e: EstadoBotonTexto, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height; val cy = h / 2
+        val toque = e.presionado && e.habilitado
+        val rojo = apagarBoton(if (oscuro) Color(0xFFE0453F) else ROJO, e.habilitado)
+        if (toque) drawPath(paralelogramo(4 * u, cy - 14 * u, w - 4 * u, cy + 14 * u, 6 * u), rojo.copy(alpha = if (oscuro) 0.16f else 0.12f))
+        val y = minOf(cy + 11 * u, h - 5 * u)
+        val g = if (toque) 2.6f * u else 1.8f * u
+        val x0 = 15 * u; val x1 = w - 9 * u
+        if (x1 > x0) {
+            drawPath(paralelogramo(x0, y - g / 2, x1, y + g / 2, g * 0.8f), rojo.copy(alpha = rojo.alpha * 0.85f))
+            drawPath(Path().apply { moveTo(x0 - 10 * u, y - 2.4f * u); lineTo(x0 - 1 * u, y); lineTo(x0 - 10 * u, y + 2.4f * u); close() }, rojo)
         }
     }
 }

@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.privado
 import android.content.ActivityNotFoundException
@@ -43,7 +44,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -724,7 +724,7 @@ fun ListaEtiquetas(lista: List<String>, pista: String, prefijo: String = "", nor
                 Surface(shape = forma, color = MaterialTheme.colorScheme.surfaceVariant) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 12.dp)) {
                         Text(prefijo + t, style = MaterialTheme.typography.labelLarge)
-                        TextButton(onClick = { onCambio(lista.filterIndexed { j, _ -> j != i }) }, contentPadding = PaddingValues(0.dp), modifier = Modifier.size(36.dp)) { Text(piel.quitar, fontSize = 16.sp) }
+                        BotonTexto(onClick = { onCambio(lista.filterIndexed { j, _ -> j != i }) }, contentPadding = PaddingValues(0.dp), modifier = Modifier.size(36.dp)) { Text(piel.quitar, fontSize = 16.sp) }
                     }
                 }
             }

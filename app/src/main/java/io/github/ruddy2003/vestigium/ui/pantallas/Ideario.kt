@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -210,8 +210,8 @@ private fun ContenidoReverso(x: Idea, nav: Nav, p: Pagina, cambiar: (Idea) -> Un
     if (x.revisiones.isNotEmpty()) Ayuda("La volviste a ver ${x.revisiones.size} ${if (x.revisiones.size == 1) "vez" else "veces"}: " +
         x.revisiones.takeLast(3).joinToString(" · ") { r -> Fechas.corto(r.fecha) + " " + (Catalogo.RESPUESTAS_IDEA.firstOrNull { it.id == r.respuesta }?.nombre?.lowercase() ?: r.respuesta) },
         Modifier.padding(top = 6.dp))
-    if (Repo.ideas.any { it.id == x.id }) TextButton(onClick = {
-        if (!confirmar) { confirmar = true; return@TextButton }
+    if (Repo.ideas.any { it.id == x.id }) BotonTexto(onClick = {
+        if (!confirmar) { confirmar = true; return@BotonTexto }
         val antes = Repo.ideas.firstOrNull { it.id == x.id } ?: x
         Repo.borrarIdea(x.id); nav.atras(); Deshacer.ofrecer("Idea borrada") { Repo.guardarIdea(antes) }
     }, modifier = Modifier.padding(top = 8.dp)) {
@@ -241,7 +241,7 @@ private fun FuenteIdea(x: Idea, p: Pagina, cambiar: (Idea) -> Unit) {
     Column(Modifier.fillMaxWidth().padding(top = 4.dp)) {
         if (obra != null) Row(verticalAlignment = Alignment.CenterVertically) {
             Text("${TIPOS_OBRA.firstOrNull { it.id == obra.tipo }?.nombre ?: "Obra"} · ${obra.titulo}", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-            TextButton(onClick = { cambiar(x.copy(obra_id = null, cita_id = null)) }) { Text("quitar", style = MaterialTheme.typography.labelMedium) }
+            BotonTexto(onClick = { cambiar(x.copy(obra_id = null, cita_id = null)) }) { Text("quitar", style = MaterialTheme.typography.labelMedium) }
         } else {
             Ficha(if (buscando) "elegir de tus obras ▾" else "elegir de tus obras…", buscando) { buscando = !buscando }
             if (buscando) {

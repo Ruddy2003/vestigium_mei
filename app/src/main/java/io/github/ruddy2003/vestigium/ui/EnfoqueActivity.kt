@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import android.os.Build
 import android.os.Bundle
@@ -30,7 +31,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -177,7 +177,7 @@ private fun Corriendo(p: PlanEnfoque, ahora: Long, cerrar: () -> Unit) {
     val n = Enfoque.bloques(p)
     Column(Modifier.fillMaxSize().padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = cerrar) { Text("✕", style = MaterialTheme.typography.titleLarge, color = cs.onSurfaceVariant) }
+            BotonTexto(onClick = cerrar) { Text("✕", style = MaterialTheme.typography.titleLarge, color = cs.onSurfaceVariant) }
             Text(Estilo.pantalla(nombre, Romano.latin(nombre)).first, style = MaterialTheme.typography.titleLarge, color = cs.primary, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
             Spacer(Modifier.widthIn(min = 48.dp))
         }
@@ -221,7 +221,7 @@ private fun Corriendo(p: PlanEnfoque, ahora: Long, cerrar: () -> Unit) {
             }
             if (descanso && !pausa) BotonSecundario("Pausar", Modifier.weight(1f).height(56.dp)) { Enfoque.pausar(ctx) }
         }
-        TextButton(onClick = { terminando = true }, modifier = Modifier.padding(top = 6.dp, bottom = 12.dp)) {
+        BotonTexto(onClick = { terminando = true }, modifier = Modifier.padding(top = 6.dp, bottom = 12.dp)) {
             Text("terminar ahora", style = MaterialTheme.typography.labelLarge, color = cs.error)
         }
     }
@@ -237,8 +237,8 @@ private fun Corriendo(p: PlanEnfoque, ahora: Long, cerrar: () -> Unit) {
                         placeholder = { Text("Qué hiciste (opcional): #tesis, capítulo 2…") }, visualTransformation = rememberMarcas())
                 }
             },
-            confirmButton = { TextButton(onClick = { Enfoque.terminar(ctx, nota); terminando = false; cerrar() }) { Text("Terminar y guardar") } },
-            dismissButton = { TextButton(onClick = { terminando = false }) { Text("seguir") } })
+            confirmButton = { BotonTexto(onClick = { Enfoque.terminar(ctx, nota); terminando = false; cerrar() }) { Text("Terminar y guardar") } },
+            dismissButton = { BotonTexto(onClick = { terminando = false }) { Text("seguir") } })
     }
 }
 
@@ -272,7 +272,7 @@ private fun Planear(siestaInicial: Boolean, cerrar: () -> Unit) {
     val siesta = tipo == "siesta"
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = cerrar) { Text("✕", style = MaterialTheme.typography.titleLarge, color = cs.onSurfaceVariant) }
+            BotonTexto(onClick = cerrar) { Text("✕", style = MaterialTheme.typography.titleLarge, color = cs.onSurfaceVariant) }
             Text(Estilo.pantalla(if (siesta) "Siesta" else "Enfoque", null).first, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
         }
         Etiqueta("¿En qué?")
@@ -323,7 +323,7 @@ private fun Planear(siestaInicial: Boolean, cerrar: () -> Unit) {
             else Enfoque.iniciarPlan(ctx, tipo, if (libre) null else meta, if (libre) 0 else descansos, largo)
         }
         // Lo que ya pasó, para anotarlo sin cronómetro.
-        TextButton(onClick = { pasado = !pasado }, modifier = Modifier.padding(top = 14.dp)) {
+        BotonTexto(onClick = { pasado = !pasado }, modifier = Modifier.padding(top = 14.dp)) {
             Text((if (pasado) "− " else "+ ") + "¿ya pasó? anótalo", style = MaterialTheme.typography.labelLarge, color = cs.primary)
         }
         if (pasado) {

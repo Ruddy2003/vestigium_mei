@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import android.os.Bundle
 import android.widget.Toast
@@ -34,7 +35,6 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -281,8 +281,8 @@ class QuickActivity : FragmentActivity() {
             supl.firstOrNull { it.id == duda }?.let { sp ->
                 Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(sp.nombre + " ya está hoy:", style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
-                    TextButton(onClick = { io.github.ruddy2003.vestigium.data.Suplementos.registrar(sp); duda = null; Toast.makeText(this@QuickActivity, "Otra toma anotada", Toast.LENGTH_SHORT).show() }) { Text("otra toma") }
-                    TextButton(onClick = {
+                    BotonTexto(onClick = { io.github.ruddy2003.vestigium.data.Suplementos.registrar(sp); duda = null; Toast.makeText(this@QuickActivity, "Otra toma anotada", Toast.LENGTH_SHORT).show() }) { Text("otra toma") }
+                    BotonTexto(onClick = {
                         // Se cuentan antes de borrar: la lista en memoria se actualiza después, en el hilo principal.
                         val deHoy = Repo.tomas.filter { it.suplemento == sp.id && it.fecha == Fechas.diaLogico() }
                         deHoy.maxByOrNull { it.ts }?.let { Repo.borrarToma(it.id) }
@@ -335,10 +335,10 @@ class QuickActivity : FragmentActivity() {
         // Lo guardó el toque en el widget o en el aviso: se dice qué quedó y se puede borrar si fue sin querer (N-15).
         if (inicial != null && m != null) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("Guardado con el toque" + (m!!.valencia?.let { ": $it/7" } ?: "") + ".", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-            TextButton(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("borrar") }
+            BotonTexto(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("borrar") }
         }
         if (avisoMs == null && inicial == null) {
-            if (!elegirCuando) TextButton(onClick = { elegirCuando = true }) {
+            if (!elegirCuando) BotonTexto(onClick = { elegirCuando = true }) {
                 Text(if (cuando == null) "¿fue antes? anotarlo en otra hora o día" else "cuándo: ${Fechas.corto(Fechas.diaLogicoDeMillis(cuando!!.aMillis()))} ${"%02d:%02d".format(cuando!!.hour, cuando!!.minute)}",
                     style = MaterialTheme.typography.labelLarge)
             } else io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, ayer = true, atajos = listOf(60, 180)) { nuevo ->
@@ -392,7 +392,7 @@ class QuickActivity : FragmentActivity() {
             }
         }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            if (m != null) TextButton(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
+            if (m != null) BotonTexto(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
             else Spacer(Modifier.width(1.dp))
             BotonPrincipal("Listo") { terminar() }
         }
@@ -412,8 +412,8 @@ class QuickActivity : FragmentActivity() {
                     Text("$nombre desde las ${Fechas.horaDe(c.inicio)} · ¿cómo vas?", style = MaterialTheme.typography.titleSmall, color = cs.onSecondaryContainer)
                     Escala(nivel, 0, 10, Catalogo.anclasNivel(c.sustancia)) { v -> nivel = v; if (v != null) io.github.ruddy2003.vestigium.data.Sustancias.lectura(Repo.consumo(c.id) ?: c, v) }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
-                        TextButton(onClick = { io.github.ruddy2003.vestigium.data.Sustancias.cerrar(Repo.consumo(c.id) ?: c); Toast.makeText(this@QuickActivity, "Anotado: ya se te pasó", Toast.LENGTH_SHORT).show() }) { Text("ya se me pasó") }
-                        TextButton(onClick = { ir(M_CONSUMO) }) { Text("más detalles") }
+                        BotonTexto(onClick = { io.github.ruddy2003.vestigium.data.Sustancias.cerrar(Repo.consumo(c.id) ?: c); Toast.makeText(this@QuickActivity, "Anotado: ya se te pasó", Toast.LENGTH_SHORT).show() }) { Text("ya se me pasó") }
+                        BotonTexto(onClick = { ir(M_CONSUMO) }) { Text("más detalles") }
                     }
                 }
             }
@@ -441,7 +441,7 @@ class QuickActivity : FragmentActivity() {
             intensidad = v; actualizar(mm.id) { it.copy(intensidad = v) }
         }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            TextButton(onClick = {
+            BotonTexto(onClick = {
                 Repo.borrarMomento(mm.id)
                 previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }; previoRecaida = null
                 Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar()
@@ -467,15 +467,15 @@ class QuickActivity : FragmentActivity() {
         }
         Ayuda("Solo para ti: no sale en reportes, logros, «Tu año», mapas ni widgets. Sí en tu exportación a R.", Modifier.padding(top = 10.dp))
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            if (impulso == null) TextButton(onClick = {
+            if (impulso == null) BotonTexto(onClick = {
                 val i = Momento(Repo.nuevoId(), mm.ts, mm.fecha, "impulso", intensidad = nivel?.coerceIn(1, 5), lat = mm.lat, lon = mm.lon, lugar = mm.lugar, origen = mm.origen, ts_creado = Fechas.ahoraIso())
                 Repo.guardarMomento(i); impulso = i
                 Toast.makeText(this@QuickActivity, "Impulso registrado a la misma hora", Toast.LENGTH_SHORT).show()
             }) { Text("también es un impulso") }
-            else TextButton(onClick = { impulso?.let { Repo.borrarMomento(it.id) }; impulso = null }) { Text("quitar el impulso") }
+            else BotonTexto(onClick = { impulso?.let { Repo.borrarMomento(it.id) }; impulso = null }) { Text("quitar el impulso") }
             BotonPrincipal("Listo") { terminar() }
         }
-        TextButton(onClick = { Repo.borrarMomento(mm.id); impulso?.let { Repo.borrarMomento(it.id) }; Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
+        BotonTexto(onClick = { Repo.borrarMomento(mm.id); impulso?.let { Repo.borrarMomento(it.id) }; Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
     }
 
     /** Lo que ayuda a entender una recaída: qué la detonó, en qué aparato y qué hacías antes. Todo opcional. */
@@ -577,7 +577,7 @@ class QuickActivity : FragmentActivity() {
             Etiqueta("¿Ya se te pasó? ¿A qué hora?")
             SelectorHora(fin, atajos = listOf(15, 30, 60)) { fin = it }
             Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { terminar() }) { Text("sigue") }
+                BotonTexto(onClick = { terminar() }) { Text("sigue") }
                 BotonPrincipal("Ya se me pasó") {
                     sus.cerrar(Repo.consumo(abierto.id) ?: abierto, (fin ?: java.time.LocalDateTime.now()).aMillis())
                     Toast.makeText(ctx, "Anotado. Mañana te pregunto cómo terminó.", Toast.LENGTH_SHORT).show(); terminar()
@@ -696,8 +696,8 @@ class QuickActivity : FragmentActivity() {
             visualTransformation = rememberMarcas())
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             var confirmar by remember { mutableStateOf(false) }
-            TextButton(onClick = {
-                if (!confirmar) { confirmar = true; return@TextButton }
+            BotonTexto(onClick = {
+                if (!confirmar) { confirmar = true; return@BotonTexto }
                 Repo.borrarConsumo(c0.id); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Registro borrado") { Repo.guardarConsumo(c0) }
                 Toast.makeText(ctx, "Borrado. Queda 7 días en la papelera.", Toast.LENGTH_LONG).show(); terminar()
             }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = if (confirmar) MaterialTheme.colorScheme.error else androidx.compose.ui.graphics.Color.Unspecified) }
@@ -765,8 +765,8 @@ class QuickActivity : FragmentActivity() {
             Surface(shape = formaPiezaQuick(Estilo.tema), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f), modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
                 Row(Modifier.padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("${g.subcategoria.ifBlank { g.categoria }} ${dinero(g.monto)} registrado", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-                    TextButton(onClick = { corrigiendo = true }) { Text("cambiar monto") }
-                    TextButton(onClick = { Repo.borrarGasto(g.id); registrado = null; Toast.makeText(this@QuickActivity, "Gasto quitado", Toast.LENGTH_SHORT).show() }) { Text("deshacer") }
+                    BotonTexto(onClick = { corrigiendo = true }) { Text("cambiar monto") }
+                    BotonTexto(onClick = { Repo.borrarGasto(g.id); registrado = null; Toast.makeText(this@QuickActivity, "Gasto quitado", Toast.LENGTH_SHORT).show() }) { Text("deshacer") }
                 }
             }
         }
@@ -817,7 +817,7 @@ class QuickActivity : FragmentActivity() {
         CampoTexto(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-            if (registrado != null && !embebido) TextButton(onClick = { terminar() }) { Text("Listo") }
+            if (registrado != null && !embebido) BotonTexto(onClick = { terminar() }) { Text("Listo") }
             BotonPrincipal(if (entra) "Registrar ingreso" else "Registrar gasto") {
                 // Un toque doble no registra dos veces.
                 if (guardando) return@BotonPrincipal
@@ -861,7 +861,7 @@ class QuickActivity : FragmentActivity() {
         val delWidget = remember { intent.getIntExtra(CALIDAD, 0).takeIf { it in 1..5 } }
         if (delWidget != null && d.sueno_calidad == delWidget) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("Guardado con el toque: calidad $delWidget.", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-            TextButton(onClick = { guardar(d.copy(sueno_calidad = null)) }) { Text("quitar") }
+            BotonTexto(onClick = { guardar(d.copy(sueno_calidad = null)) }) { Text("quitar") }
         }
         // La narración arriba, en el libro de noche del tema (es lo que se olvida primero); lo demás, debajo.
         io.github.ruddy2003.vestigium.ui.FormularioSueno(fecha, d, narracionPrimero = true) { guardar(it) }

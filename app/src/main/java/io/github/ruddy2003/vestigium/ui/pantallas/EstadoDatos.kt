@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import android.content.Context
@@ -13,10 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -178,7 +178,7 @@ fun PantallaEstadoDatos(nav: Nav) {
             if (grupo.isNotEmpty()) Seccion(titulo) {
                 Tarjeta {
                     grupo.forEachIndexed { i, f ->
-                        if (i > 0) HorizontalDivider()
+                        if (i > 0) Separador()
                         Row(Modifier.fillMaxWidth().then(if (f.arreglo != null && f.arreglo != "sincronizar") Modifier.clickable { nav.ir(f.arreglo) } else Modifier).padding(vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically) {
                             val color = when (f.estado) { Salud3.BIEN -> cs.primary; Salud3.ATRASADA -> cs.tertiary; Salud3.SIN_PERMISO -> cs.error; Salud3.APAGADA -> cs.outline }
@@ -198,7 +198,7 @@ fun PantallaEstadoDatos(nav: Nav) {
         if (diag.isNotEmpty()) Seccion("Detalle de Health Connect", "Última lectura: " + (Repo.config.hc_diagnostico_ts?.let { Fechas.corto(it.take(10)) + " " + Fechas.horaDe(it) } ?: "?"), plegable = true, plegadaPorDefecto = true) {
             Tarjeta { diag.forEach { (k, v) -> Clave(k, v, 18) } }
         }
-        TextButton(onClick = { nav.ir("cobertura") }, modifier = Modifier.padding(top = 8.dp)) { Text("cobertura de cada variable ›", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
-        TextButton(onClick = { nav.ir("permisos") }) { Text("abrir Permisos y sensores ›", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
+        BotonTexto(onClick = { nav.ir("cobertura") }, modifier = Modifier.padding(top = 8.dp)) { Text("cobertura de cada variable ›", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
+        BotonTexto(onClick = { nav.ir("permisos") }) { Text("abrir Permisos y sensores ›", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
     }
 }

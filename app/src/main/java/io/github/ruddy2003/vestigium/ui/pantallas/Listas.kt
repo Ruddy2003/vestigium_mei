@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,10 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,7 +74,7 @@ fun PantallaListas(nav: Nav) {
             }
         } else Tarjeta {
             Repo.listas.forEachIndexed { i, l ->
-                if (i > 0) HorizontalDivider()
+                if (i > 0) Separador()
                 val pendientes = l.elementos.count { it.hecho == null }
                 Row(Modifier.fillMaxWidth().clickable { EdicionLista.id = l.id; nav.ir("lista") }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
@@ -120,12 +120,12 @@ fun PantallaLista(nav: Nav) {
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             CampoTexto(texto, { texto = it.take(200) }, Modifier.weight(1f), singleLine = true, placeholder = { Text("añadir a la lista") },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { anadir() }))
-            TextButton(onClick = { anadir() }, enabled = texto.isNotBlank()) { Text("añadir", style = MaterialTheme.typography.labelLarge) }
+            BotonTexto(onClick = { anadir() }, enabled = texto.isNotBlank()) { Text("añadir", style = MaterialTheme.typography.labelLarge) }
         }
         if (pendientes.isEmpty()) Vacio(if (hechos.isEmpty()) "La lista está vacía." else "Todo hecho.")
         else Tarjeta {
             pendientes.forEachIndexed { i, e ->
-                if (i > 0) HorizontalDivider()
+                if (i > 0) Separador()
                 FilaElemento(e, abierto == e.id, { abierto = if (abierto == e.id) null else e.id }, { cambiar(it) },
                     borrar = { g(l.copy(elementos = l.elementos.filter { it.id != e.id })); Deshacer.ofrecer("Quitado de la lista") { Repo.listas.firstOrNull { it.id == l.id }?.let { x -> Repo.guardarLista(x.copy(elementos = x.elementos + e)) } } })
             }
@@ -133,7 +133,7 @@ fun PantallaLista(nav: Nav) {
         if (hechos.isNotEmpty()) Seccion("Hechos", "${hechos.size}", plegable = true, plegadaPorDefecto = true) {
             Tarjeta {
                 hechos.forEachIndexed { i, e ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     FilaElemento(e, abierto == e.id, { abierto = if (abierto == e.id) null else e.id }, { cambiar(it) },
                         borrar = { g(l.copy(elementos = l.elementos.filter { it.id != e.id })) })
                 }
@@ -143,8 +143,8 @@ fun PantallaLista(nav: Nav) {
             var nombre by remember(l.id) { mutableStateOf(l.nombre) }
             Etiqueta("Nombre")
             CampoTexto(nombre, { nombre = it.take(60); if (it.isNotBlank()) g(l.copy(nombre = it.trim())) }, Modifier.fillMaxWidth(), singleLine = true)
-            TextButton(onClick = {
-                if (!confirmar) { confirmar = true; return@TextButton }
+            BotonTexto(onClick = {
+                if (!confirmar) { confirmar = true; return@BotonTexto }
                 Repo.borrarLista(l.id); nav.atras(); Deshacer.ofrecer("Lista borrada") { Repo.guardarLista(l) }
             }, modifier = Modifier.padding(top = 8.dp)) {
                 Text(if (confirmar) "¿borrar la lista y todo lo que tiene?" else "borrar la lista", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
@@ -182,7 +182,7 @@ private fun FilaElemento(e: ElementoLista, abierto: Boolean, alternar: () -> Uni
             Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (e.enlace.startsWith("http")) BotonSecundario("abrir enlace") { runCatching { uri.openUri(e.enlace) } }
                 Ayuda("Agregado el ${Fechas.corto(e.agregado)}", Modifier.weight(1f))
-                TextButton(onClick = borrar) { Text("quitar", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge) }
+                BotonTexto(onClick = borrar) { Text("quitar", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge) }
             }
         }
     }

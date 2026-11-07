@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -22,7 +23,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -619,13 +619,13 @@ fun PantallaMapa(nav: Nav) {
       // Controles arriba, siempre por encima del mapa y con fondo propio para que se puedan tocar.
       Column(Modifier.fillMaxWidth().zIndex(2f).background(MaterialTheme.colorScheme.background)) {
         Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = nav.atras) { Text(io.github.ruddy2003.vestigium.ui.Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+            BotonTexto(onClick = nav.atras) { Text(io.github.ruddy2003.vestigium.ui.Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
             Column(Modifier.weight(1f)) {
                 Text(io.github.ruddy2003.vestigium.ui.Estilo.pantalla("Mapa", "MAPPA").first, style = MaterialTheme.typography.headlineSmall)
                 Text("${io.github.ruddy2003.vestigium.ui.Estilo.comentario}mapa · «＋ lugar aquí» marca el centro (o mantén presionado un punto)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             // La alternativa visible al toque largo (N-24): marca el centro del mapa.
-            TextButton(onClick = { mapa.value?.mapCenter?.let { c -> nuevoLugar = GeoPoint(c.latitude, c.longitude) } }) {
+            BotonTexto(onClick = { mapa.value?.mapCenter?.let { c -> nuevoLugar = GeoPoint(c.latitude, c.longitude) } }) {
                 Text("＋ lugar aquí", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
         }
@@ -714,7 +714,7 @@ fun PantallaMapa(nav: Nav) {
             },
             confirmButton = {
                 // Sin nombre no se guarda ni se cierra (antes se cerraba y se perdía lo elegido).
-                TextButton(enabled = nombre.isNotBlank(), onClick = {
+                BotonTexto(enabled = nombre.isNotBlank(), onClick = {
                     if (nombre.isNotBlank()) {
                         val l = Lugar(Repo.nuevoId(), nombre.trim(), p.latitude, p.longitude, radioNuevo.toInt(), tipo = tipoNuevo)
                         Repo.guardarLugar(l)
@@ -724,7 +724,7 @@ fun PantallaMapa(nav: Nav) {
                     nuevoLugar = null
                 }) { Text("Guardar", style = MaterialTheme.typography.labelLarge) }
             },
-            dismissButton = { TextButton(onClick = { nuevoLugar = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
+            dismissButton = { BotonTexto(onClick = { nuevoLugar = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
         )
     }
 }
