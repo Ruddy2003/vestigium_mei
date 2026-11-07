@@ -145,7 +145,7 @@ fun PantallaDiario(nav: Nav) {
         Seccion("Libreta de momentos", if (hojas.isEmpty()) null else "${hojas.size} ${if (hojas.size == 1) "hoja" else "hojas"}, una por día") {
             if (hojas.isEmpty()) Vacio("Toca «¿Cómo estás ahora?» y aquí se irá llenando, una hoja por día.")
             else androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().padding(top = 4.dp), contentAlignment = Alignment.Center) {
-                LibretaCerrada(hojas.size, hojas.lastOrNull(), Modifier.fillMaxWidth(0.46f)) { Seleccion.momentos = hojas.first(); nav.ir("hoja_momentos") }
+                LibretaCerrada(hojas.size, hojas.lastOrNull(), Modifier.fillMaxWidth()) { Seleccion.momentos = hojas.first(); nav.ir("hoja_momentos") }
             }
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BotonSecundario("entrar a la libreta →", Modifier.weight(1f)) { nav.ir("biblioteca_momentos") }

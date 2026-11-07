@@ -135,7 +135,34 @@ interface DisenoBiblioteca {
 
     /** El color de la letra del botón de guardar, que contraste con [botonGuardar]. */
     fun tintaBoton(p: Pagina, oscuro: Boolean, noche: Boolean): Color
+
+    // ---------------------------------------------------------------- la libreta de momentos
+
+    /** Alto de la escena de la libreta (ocupa todo el ancho). */
+    val altoLibreta: Dp
+
+    /**
+     * La libreta de momentos cerrada sobre su soporte (el atril, la mesa de campaña, la consola…): el objeto del tema
+     * (el de su `Contenedor`: rollo, tablillas, códice en biombo, pincho de tickets…), que engorda con [EstadoLibreta.hojas],
+     * con su nombre y su cuenta dibujados dentro con [textoEn]. Con [EstadoLibreta.abierto] de 0 a 1 se abre.
+     */
+    fun DrawScope.libreta(e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean)
+
+    /** La pestaña de un día en el índice de la libreta (44×56 dp): el día, la letra de la semana y el color del ánimo. */
+    fun DrawScope.pestana(e: EstadoPestana, medidor: TextMeasurer, oscuro: Boolean)
+
+    /** El rótulo de un mes en el índice de la libreta, en una franja de 34 dp a todo el ancho. */
+    fun DrawScope.rotuloMes(texto: String, medidor: TextMeasurer, oscuro: Boolean)
 }
+
+/**
+ * Lo que se ve de la libreta cerrada: su nombre («Rollo de momentos»), la cuenta («12 columnas · desde el 3 oct»), cuántas
+ * hojas tiene (engorda con ellas), cuánto se ha abierto (0 a 1) y una semilla.
+ */
+class EstadoLibreta(val nombre: String, val cuenta: String, val hojas: Int, val abierto: Float, val semilla: Int)
+
+/** Una pestaña del índice: el número del día, la letra de su semana, el color de su ánimo medio (null si no hay) y una semilla. */
+class EstadoPestana(val dia: String, val semana: String, val tono: Color?, val semilla: Int)
 
 /**
  * Lo que dice el encabezado de una página: la cabecera del tema («ACTA · DIVRNA», «CRONACA DI ROMA · Trastevere»…), la

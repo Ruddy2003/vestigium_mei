@@ -5,6 +5,13 @@ package io.github.ruddy2003.vestigium.ui.pantallas
 import android.content.Intent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleOut
@@ -95,25 +102,26 @@ private fun renglones(fecha: String, discreto: Boolean): List<Renglon> {
 }
 
 /**
- * La libreta cerrada: el contenedor del tema ([contenedorDe]), que engorda con cada hoja escrita. Al tocarla se abre en la última hoja.
+ * La libreta cerrada sobre su soporte, como la dibuja el tema ([io.github.ruddy2003.vestigium.ui.biblioteca.DisenoBiblioteca.libreta]):
+ * el objeto de su contenedor ([contenedorDe]), que engorda con cada hoja, con el nombre y la cuenta dentro. Al tocarla se
+ * abre y después pasa a la última hoja.
  */
 @Composable
 internal fun LibretaCerrada(hojas: Int, desde: String?, modifier: Modifier = Modifier, abrir: () -> Unit) {
-    val cs = MaterialTheme.colorScheme
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(Estilo.tema)
     val oscuro = esOscuro()
-    val tapa = cs.primary
     val contenedor = io.github.ruddy2003.vestigium.ui.contenedorDe(Estilo.tema)
-    // El contenedor del tema (rollo, tablillas, códice…): la misma lógica, otra forma.
-    Box(modifier.aspectRatio(0.74f).clickable(onClick = abrir), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.fillMaxSize()) { with(io.github.ruddy2003.vestigium.ui.Contenedores) { cerrado(contenedor, hojas, tapa, cs.secondary, oscuro) } }
-        Column(Modifier.fillMaxSize().padding(bottom = 6.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
-            Surface(color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f), shape = MaterialTheme.shapes.small) {
-                Column(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(contenedor.nombre, style = MaterialTheme.typography.titleSmall, color = cs.primary, textAlign = TextAlign.Center)
-                    Text("$hojas ${contenedor.hoja}${if (hojas == 1) "" else "s"}" + (desde?.let { " · desde el ${Fechas.corto(it)}" } ?: ""), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
-                }
-            }
-        }
+    val medidor = rememberTextMeasurer()
+    val sentir = rememberSentir()
+    val alcance = rememberCoroutineScope()
+    val abre = remember { Animatable(0f) }
+    val animar = Repo.config.animaciones
+    val cuenta = "$hojas ${contenedor.hoja}${if (hojas == 1) "" else "s"}" + (desde?.let { " · desde el ${Fechas.corto(it)}" } ?: "")
+    Canvas(modifier.fillMaxWidth().height(d.altoLibreta).semantics { contentDescription = contenedor.nombre + ", " + cuenta }.clickable {
+        sentir(Sentidos.Evento.ABRIR)
+        if (animar) alcance.launch { abre.animateTo(1f, tween(300)); abrir(); abre.snapTo(0f) } else abrir()
+    }) {
+        clipRect { with(d) { libreta(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoLibreta(contenedor.nombre, cuenta, hojas, abre.value, hojas * 31 + 7), medidor, oscuro) } }
     }
 }
 
@@ -128,7 +136,7 @@ fun BibliotecaMomentosLibreta(nav: Nav) {
     fun abrir(f: String) { sentir(Sentidos.Evento.ABRIR); Seleccion.momentos = f; nav.ir("hoja_momentos") }
     if (todas.isEmpty()) { Vacio("La libreta está en blanco. Toca «¿Cómo estás ahora?» en la pestaña Diario y aquí se irá llenando, una hoja por día."); return }
     Box(Modifier.fillMaxWidth().padding(top = 16.dp), contentAlignment = Alignment.Center) {
-        LibretaCerrada(todas.size, todas.lastOrNull(), Modifier.fillMaxWidth(0.62f)) { abrir(todas.first()) }
+        LibretaCerrada(todas.size, todas.lastOrNull(), Modifier.fillMaxWidth()) { Seleccion.momentos = todas.first(); nav.ir("hoja_momentos") }
     }
     Text("Toca la libreta para abrirla en la última hoja; adentro se pasa de día deslizando.", style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
@@ -137,24 +145,24 @@ fun BibliotecaMomentosLibreta(nav: Nav) {
     val q = normalLibreta(busca.trim())
     val visibles = if (q.isBlank()) todas else todas.filter { f -> normalLibreta(hojaMomentos(f, discreto)?.nota.orEmpty()).contains(q) }
     if (q.isNotBlank() && visibles.isEmpty()) Vacio("Ninguna hoja tiene eso.")
-    // El índice: los días de cada mes como pestañas de colores (el color es el ánimo medio del día).
+    // El índice: cada mes con su rótulo y sus días como pestañas del tema (con el color del ánimo medio del día).
     val oscuro = esOscuro()
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(Estilo.tema)
+    val medidor = rememberTextMeasurer()
     val porMes = visibles.groupBy { it.take(7) }.toSortedMap(compareByDescending { it })
     porMes.entries.take(if (q.isBlank()) meses else 24).forEach { (mes, dias) ->
-        Text(Estilo.mes(mes.drop(5).toInt(), mes.take(4).toInt()).let { if (it.contains(mes.take(4))) it else it + " · " + mes.take(4) },
-            style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 18.dp, bottom = 6.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        val rotulo = Estilo.mes(mes.drop(5).toInt(), mes.take(4).toInt()).let { if (it.contains(mes.take(4))) it else it + " · " + mes.take(4) }
+        Canvas(Modifier.fillMaxWidth().padding(top = 18.dp, bottom = 8.dp).height(34.dp).semantics { contentDescription = rotulo }) {
+            clipRect { with(d) { rotuloMes(rotulo, medidor, oscuro) } }
+        }
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             dias.sorted().forEach { f ->
                 val v = momentosVisibles().filter { it.fecha == f && Catalogo.esRegistro(it) }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average()
-                val tono = Tonos.valencia(v, oscuro) ?: MaterialTheme.colorScheme.outline
-                Surface(onClick = { abrir(f) }, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surface,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
-                    Column(Modifier.width(40.dp)) {
-                        Box(Modifier.fillMaxWidth().height(5.dp).background(tono))
-                        Text(f.takeLast(2).trimStart('0'), style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 3.dp))
-                        Text(Fechas.parse(f).dayOfWeek.getDisplayName(java.time.format.TextStyle.NARROW, java.util.Locale("es")), style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(bottom = 3.dp))
-                    }
+                val dia = f.takeLast(2).trimStart('0')
+                val semana = Fechas.parse(f).dayOfWeek.getDisplayName(java.time.format.TextStyle.NARROW, java.util.Locale("es"))
+                val e = io.github.ruddy2003.vestigium.ui.biblioteca.EstadoPestana(dia, semana, Tonos.valencia(v, oscuro), f.hashCode())
+                Canvas(Modifier.size(44.dp, 56.dp).semantics { contentDescription = Fechas.corto(f) }.clickable { abrir(f) }) {
+                    with(d) { pestana(e, medidor, oscuro) }
                 }
             }
         }
@@ -242,15 +250,23 @@ fun PantallaHojaMomentos(nav: Nav) {
     }
     val umbral = with(LocalDensity.current) { 90.dp.toPx() }
     Column(Modifier.fillMaxSize().background(lerp(cs.background, Color.Black, if (esOscuro()) 0.25f else 0.06f))) {
-        Row(Modifier.fillMaxWidth().padding(top = 6.dp, start = 4.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = nav.atras) { Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = cs.primary) }
+        // Las barras de arriba y de abajo llevan la franja del tema (la misma de la página del diario).
+        val p = io.github.ruddy2003.vestigium.ui.pagina(Estilo.tema)
+        val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(Estilo.tema)
+        val oscuro = esOscuro()
+        val franja = Modifier.drawBehind { with(d) { barra(p, oscuro, false) } }
+        @Composable fun Boton(texto: String, activo: Boolean = true, al: () -> Unit) = Text(texto, style = MaterialTheme.typography.labelLarge,
+            color = if (activo) p.acento else p.tenue.copy(alpha = 0.45f), maxLines = 1,
+            modifier = Modifier.clickable(enabled = activo, onClick = al).padding(horizontal = 10.dp, vertical = 10.dp))
+        Row(Modifier.fillMaxWidth().then(franja).padding(top = 6.dp, start = 4.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Boton(Estilo.atras) { nav.atras() }
             Text(io.github.ruddy2003.vestigium.ui.contenedorDe(Estilo.tema).nombre,
-                style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-            TextButton(onClick = {
-                val t = hojaMomentos(fecha, discreto)?.nota ?: return@TextButton
-                ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, "Momentos · ${Fechas.titulo(fecha)}\n\n$t"), "Compartir")
+                style = MaterialTheme.typography.labelLarge, color = p.tenue, modifier = Modifier.weight(1f), textAlign = TextAlign.Center, maxLines = 1)
+            Boton("compartir") {
+                val t = hojaMomentos(fecha, discreto)?.nota
+                if (t != null) ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, "Momentos · ${Fechas.titulo(fecha)}\n\n$t"), "Compartir")
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-            }) { Text("compartir", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
+            }
         }
         Box(Modifier.weight(1f).fillMaxWidth().pointerInput(todas) {
             var total = 0f
@@ -268,12 +284,12 @@ fun PantallaHojaMomentos(nav: Nav) {
                 HojaLibreta(f, todas.indexOf(f) + 1, todas.size, discreto)
             }
         }
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { ir(i - 1) }, enabled = i > 0) { Text("‹ " + (todas.getOrNull(i - 1)?.let { Fechas.corto(it) } ?: ""), style = MaterialTheme.typography.labelLarge) }
+        Row(Modifier.fillMaxWidth().then(franja).padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Boton("‹ " + (todas.getOrNull(i - 1)?.let { Fechas.corto(it) } ?: ""), i > 0) { ir(i - 1) }
             Spacer(Modifier.weight(1f))
-            TextButton(onClick = { Seleccion.abrir(nav, fecha) }) { Text("abrir el día", style = MaterialTheme.typography.labelLarge) }
+            Boton("abrir el día") { Seleccion.abrir(nav, fecha) }
             Spacer(Modifier.weight(1f))
-            TextButton(onClick = { ir(i + 1) }, enabled = i in 0 until todas.size - 1) { Text((todas.getOrNull(i + 1)?.let { Fechas.corto(it) } ?: "") + " ›", style = MaterialTheme.typography.labelLarge) }
+            Boton((todas.getOrNull(i + 1)?.let { Fechas.corto(it) } ?: "") + " ›", i in 0 until todas.size - 1) { ir(i + 1) }
         }
     }
 }

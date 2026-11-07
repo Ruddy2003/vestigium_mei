@@ -660,6 +660,31 @@ class Capturas {
     @Test fun paginaA2b() = (ESTANTE_A1B + TemaId.EDO).forEach { t -> paginaAbierta(t, t.soloOscuro); if (!t.soloOscuro) paginaAbierta(t, true) }
     @Test fun paginaA2c() = ESTANTE_A1C.forEach { t -> paginaAbierta(t, t.soloOscuro); if (!t.soloOscuro) paginaAbierta(t, true) }
     @Test fun paginaA2d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { t -> paginaAbierta(t, t.soloOscuro); if (!t.soloOscuro) paginaAbierta(t, true) }
+    /**
+     * La libreta de momentos (lote A3): sola con 1 y con 40 hojas y a medio abrir; la pestaña Momentos de la biblioteca (la
+     * libreta y su índice) y una hoja abierta con sus barras. En claro y en oscuro (los de solo oscuro, solo en oscuro).
+     */
+    private fun libretaA3(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(t)
+        val c = io.github.ruddy2003.vestigium.ui.contenedorDe(t)
+        captura(t, oscuro, 2000, "tema_${t.id}_${modo}_sola") {
+            val medidor = androidx.compose.ui.text.rememberTextMeasurer()
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                listOf(Triple(1, 0f, "1 ${c.hoja} · desde el 6 nov"), Triple(40, 0f, "40 ${c.hoja}s · desde el 3 sep"), Triple(40, 0.55f, "40 ${c.hoja}s · desde el 3 sep")).forEach { (h, a, cuenta) ->
+                    androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(d.altoLibreta)) {
+                        with(d) { libreta(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoLibreta(c.nombre, cuenta, h, a, 7), medidor, oscuro) }
+                    }
+                }
+            }
+        }
+        v73(t, oscuro, 3000, nombre = "tema_${t.id}_${modo}_biblioteca") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "momentos") }
+        v73(t, oscuro, 2000, nombre = "tema_${t.id}_${modo}_hoja") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaHojaMomentos(navVacia) }
+    }
+    @Test fun libretaA3a() = ESTANTE_A1A.forEach { t -> libretaA3(t, t.soloOscuro); if (!t.soloOscuro) libretaA3(t, true) }
+    @Test fun libretaA3b() = (ESTANTE_A1B + TemaId.EDO).forEach { t -> libretaA3(t, t.soloOscuro); if (!t.soloOscuro) libretaA3(t, true) }
+    @Test fun libretaA3c() = ESTANTE_A1C.forEach { t -> libretaA3(t, t.soloOscuro); if (!t.soloOscuro) libretaA3(t, true) }
+    @Test fun libretaA3d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { t -> libretaA3(t, t.soloOscuro); if (!t.soloOscuro) libretaA3(t, true) }
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")
