@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.engrane
+import io.github.ruddy2003.vestigium.ui.ideario.estrella
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
@@ -178,6 +179,171 @@ object ComunDistopia : DisenoComun {
         val k = 4 * u
         drawPath(Path().apply { moveTo(der - k, arriba); lineTo(der, arriba); lineTo(der, arriba + k); close() }, rojo.copy(alpha = if (e.presionado) 1f else 0.75f))
     }
+
+    // ---------------------------------------------------------------- filas, vacío, aviso y cifra
+
+    /** El papel de las piezas del registro: el formulario en claro y el papel carbón en oscuro. */
+    private fun papelFicha(oscuro: Boolean): Color = if (oscuro) Color(0xFF1C1E20) else Color(0xFFECE8DC)
+
+    /** La tinta gris de las rayas del formulario. */
+    private fun rayaFicha(oscuro: Boolean): Color = if (oscuro) Color(0xFF8E8C86) else Color(0xFF5A5750)
+
+    override val margenFila: Dp = 12.dp
+
+    /**
+     * El renglón del libro de registro: la raya fina al pie y, a la izquierda, la pestaña de índice del archivador (más larga
+     * si la fila lleva detalle). Al tocarla la entrada se marca para revisión: la pestaña se vuelve roja, el renglón se tiñe y
+     * se subraya en rojo hasta la mitad.
+     */
+    override fun DrawScope.fila(e: EstadoFila, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val raya = rayaFicha(oscuro)
+        val rojo = tintaBotonTexto(oscuro)
+        if (e.presionado) drawRect(ROJO.copy(alpha = if (oscuro) 0.14f else 0.08f))
+        drawLine(raya.copy(alpha = 0.35f), Offset(0f, h - 0.5f * u), Offset(w, h - 0.5f * u), 0.8f * u)
+        if (e.presionado) drawLine(rojo, Offset(0f, h - 1 * u), Offset(w * 0.45f, h - 1 * u), 1.6f * u)
+        // La pestaña de índice, con sus dos marcas de registro.
+        val alto = if (e.conDetalle) minOf(26 * u, h - 12 * u) else minOf(16 * u, h - 12 * u)
+        drawRect(if (e.presionado) rojo else raya.copy(alpha = 0.45f), Offset(0f, (h - alto) / 2), Size(3 * u, alto))
+        listOf(-1f, 1f).forEach { s -> drawLine(raya.copy(alpha = 0.4f), Offset(4.5f * u, h / 2 + s * alto / 2), Offset(6.5f * u, h / 2 + s * alto / 2), 0.7f * u) }
+    }
+
+    /** El «▶» de la máquina de escribir, con su raya de guía delante. */
+    override fun DrawScope.flechaFila(oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2)
+        val tinta = if (oscuro) Color(0xFFA8A69E) else Color(0xFF3E3C37)
+        drawRect(tinta.copy(alpha = 0.55f), Offset(c.x - 7 * u, c.y - 1 * u), Size(4 * u, 2 * u))
+        drawPath(Path().apply { moveTo(c.x - 1.5f * u, c.y - 4.5f * u); lineTo(c.x + 5.5f * u, c.y); lineTo(c.x - 1.5f * u, c.y + 4.5f * u); close() }, tinta)
+    }
+
+    /**
+     * El sello de «prioritario»: un cuadro con su estrella, estampado un poco torcido. Fijo, en rojo pleno con la estrella en
+     * blanco de papel; sin fijar, solo el contorno punteado gris, como la casilla que nadie selló.
+     */
+    override fun DrawScope.marcaFija(fija: Boolean, oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2)
+        val r = Rect(c.x - 8 * u, c.y - 8 * u, c.x + 8 * u, c.y + 8 * u)
+        val estrellita = estrella(c, 5.6f * u, 5, 0.42f)
+        if (fija) rotate(-8f, c) {
+            drawRect(tintaBotonTexto(oscuro), r.topLeft, r.size)
+            drawRect(papelFicha(oscuro).copy(alpha = 0.7f), r.deflate(1.6f * u).topLeft, r.deflate(1.6f * u).size, style = Stroke(0.7f * u))
+            drawPath(estrellita, papelFicha(oscuro))
+        } else {
+            val gris = rayaFicha(oscuro).copy(alpha = 0.6f)
+            drawRect(gris, r.topLeft, r.size, style = Stroke(1 * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * u, 1.5f * u))))
+            drawPath(estrellita, gris, style = Stroke(1 * u, join = StrokeJoin.Miter))
+        }
+    }
+
+    override val tamDibujoVacio: Dp = 40.dp
+    override fun tintaVacio(oscuro: Boolean): Color = if (oscuro) Color(0xFFA8A69E) else Color(0xFF3E3C37)
+
+    /**
+     * El formulario en blanco: la hoja con su folio arriba (la raya del título y las cuatro casillas del número, vacías), el
+     * recuadro punteado donde irían los datos y la esquina roja de «clasificado». Liso y quieto: nada que tocar.
+     */
+    override fun DrawScope.marcoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val raya = rayaFicha(oscuro)
+        drawRect(papelFicha(oscuro))
+        drawRect(raya.copy(alpha = 0.5f), Offset.Zero, size, style = Stroke(0.8f * u))
+        // El folio: la raya del título y las casillas del número.
+        drawLine(raya.copy(alpha = 0.5f), Offset(8 * u, 8 * u), Offset(minOf(w * 0.3f, 90 * u), 8 * u), 1.2f * u)
+        val casilla = 5 * u
+        for (i in 0 until 4) drawRect(raya.copy(alpha = 0.45f), Offset(w - 20 * u - (4 - i) * (casilla + 1.5f * u), 4.5f * u), Size(casilla, casilla), style = Stroke(0.7f * u))
+        // El recuadro de los datos, vacío.
+        val r = Rect(8 * u, 14 * u, w - 8 * u, h - 8 * u)
+        if (r.height > 10 * u) drawRect(raya.copy(alpha = 0.32f), r.topLeft, r.size, style = Stroke(0.8f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * u, 2 * u))))
+        // La esquina de «clasificado».
+        val k = 11 * u
+        drawPath(Path().apply { moveTo(w - k, 0f); lineTo(w, 0f); lineTo(w, k); close() }, tintaBotonTexto(oscuro).copy(alpha = 0.85f))
+    }
+
+    /**
+     * El cajón del archivador, sacado y vacío: el mueble de acero con el cajón de arriba cerrado (su portaetiquetas y su
+     * tirador), el de abajo afuera, con el fondo a la vista sin una sola carpeta, y la tira roja cruzada sobre su etiqueta.
+     */
+    override fun DrawScope.dibujoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val s = size.minDimension
+        fun f(v: Float) = v * s
+        val borde = (if (oscuro) Color(0xFF9BA1A6) else NEGRO).copy(alpha = 0.7f)
+        val g = 1 * u
+        // El mueble y el cajón de arriba.
+        drawRect(t(ACERO, oscuro), Offset(f(0.18f), f(0.04f)), Size(f(0.64f), f(0.66f)))
+        drawRect(borde, Offset(f(0.18f), f(0.04f)), Size(f(0.64f), f(0.66f)), style = Stroke(g))
+        drawRect(t(ACERO_LUZ, oscuro), Offset(f(0.24f), f(0.1f)), Size(f(0.52f), f(0.22f)))
+        drawRect(borde, Offset(f(0.24f), f(0.1f)), Size(f(0.52f), f(0.22f)), style = Stroke(0.7f * g))
+        drawRect(papelFicha(false), Offset(f(0.42f), f(0.13f)), Size(f(0.16f), f(0.05f)))
+        drawLine(borde, Offset(f(0.42f), f(0.25f)), Offset(f(0.58f), f(0.25f)), 1.6f * g, StrokeCap.Round)
+        // El hueco del cajón de abajo y el cajón afuera, con su fondo vacío.
+        drawRect(NEGRO.copy(alpha = 0.75f), Offset(f(0.24f), f(0.38f)), Size(f(0.52f), f(0.28f)))
+        val fondo = Path().apply { moveTo(f(0.24f), f(0.42f)); lineTo(f(0.76f), f(0.42f)); lineTo(f(0.92f), f(0.66f)); lineTo(f(0.08f), f(0.66f)); close() }
+        drawPath(fondo, t(ACERO_OSC, oscuro))
+        drawPath(fondo, borde, style = Stroke(0.7f * g))
+        drawLine(borde.copy(alpha = 0.4f), Offset(f(0.5f), f(0.43f)), Offset(f(0.5f), f(0.65f)), 0.6f * g)
+        // El frente del cajón: el portaetiquetas sin nombre, la tira roja y el tirador.
+        drawRect(t(ACERO_LUZ, oscuro), Offset(f(0.08f), f(0.66f)), Size(f(0.84f), f(0.26f)))
+        drawRect(borde, Offset(f(0.08f), f(0.66f)), Size(f(0.84f), f(0.26f)), style = Stroke(g))
+        drawRect(papelFicha(false), Offset(f(0.38f), f(0.7f)), Size(f(0.24f), f(0.08f)))
+        drawRect(borde, Offset(f(0.38f), f(0.7f)), Size(f(0.24f), f(0.08f)), style = Stroke(0.6f * g))
+        rotate(-14f, Offset(f(0.5f), f(0.74f))) { drawRect(tintaBotonTexto(oscuro), Offset(f(0.3f), f(0.725f)), Size(f(0.4f), f(0.03f))) }
+        drawLine(borde, Offset(f(0.4f), f(0.86f)), Offset(f(0.6f), f(0.86f)), 2 * g, StrokeCap.Round)
+    }
+
+    override val margenAviso: Dp = 32.dp
+    override fun tintaAviso(oscuro: Boolean): Color = if (oscuro) Color(0xFFE6E1D3) else NEGRO
+
+    /**
+     * La circular oficial: la hoja con la banda de acero a la izquierda, filo rojo, y arriba el sello cuadrado de «atención»
+     * (el signo de admiración o, según el aviso, el triángulo de advertencia), con la hilera de perforaciones debajo.
+     */
+    override fun DrawScope.aviso(e: EstadoAviso, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        drawRect(papelFicha(oscuro))
+        drawLine(rayaFicha(oscuro).copy(alpha = 0.35f), Offset(0f, h - 0.5f * u), Offset(w, h - 0.5f * u), 0.8f * u)
+        // La banda de acero con su filo rojo.
+        val banda = 22 * u
+        drawRect(t(ACERO_OSC, oscuro), Offset.Zero, Size(banda, h))
+        drawRect(tintaBotonTexto(oscuro), Offset(banda, 0f), Size(1.6f * u, h))
+        // El sello de «atención».
+        val sello = Rect(5 * u, 7 * u, 17 * u, 19 * u)
+        drawRect(tintaBotonTexto(oscuro), sello.topLeft, sello.size)
+        val blanco = papelFicha(false)
+        if (e.semilla % 2 == 0) {
+            drawRect(blanco, Offset(sello.center.x - 0.9f * u, sello.top + 2.2f * u), Size(1.8f * u, 4.6f * u))
+            drawRect(blanco, Offset(sello.center.x - 0.9f * u, sello.bottom - 3.6f * u), Size(1.8f * u, 1.8f * u))
+        } else drawPath(Path().apply { moveTo(sello.center.x, sello.top + 2.2f * u); lineTo(sello.right - 2.2f * u, sello.bottom - 2.4f * u); lineTo(sello.left + 2.2f * u, sello.bottom - 2.4f * u); close() },
+            blanco, style = Stroke(1.2f * u, join = StrokeJoin.Miter))
+        // La perforación bajo el sello.
+        if (h > 30 * u) drawLine(Color.Black.copy(alpha = 0.45f), Offset(11 * u, 25 * u), Offset(11 * u, h - 5 * u), 1.4f * u, StrokeCap.Round,
+            PathEffect.dashPathEffect(floatArrayOf(0.01f, maxOf(4 * u, 1f))))
+    }
+
+    override val margenCifra: Dp = 10.dp
+    override fun tintaCifra(oscuro: Boolean): Color = if (oscuro) Color(0xFFE6E1D3) else NEGRO
+    override fun rotuloCifra(oscuro: Boolean): Color = if (oscuro) Color(0xFFF07068) else ROJO
+
+    /**
+     * La ficha numerada: el papel del formulario en su marco de acero, con dos remaches, la sombra de la ranura arriba y la
+     * esquina roja de «clasificado».
+     */
+    override fun DrawScope.cifra(e: EstadoCifra, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val b = 2.5f * u
+        drawRect(t(ACERO, oscuro))
+        drawRect(papelFicha(oscuro), Offset(b, b), Size(w - 2 * b, h - 2 * b))
+        drawRect(Color.Black.copy(alpha = if (oscuro) 0.3f else 0.1f), Offset(b, b), Size(w - 2 * b, 1.2f * u))
+        val k = 8 * u
+        drawPath(Path().apply { moveTo(w - b - k, b); lineTo(w - b, b); lineTo(w - b, b + k); close() }, tintaBotonTexto(oscuro).copy(alpha = 0.9f))
+        listOf(Offset(b / 2, h / 2), Offset(w - b / 2, h / 2)).forEach { drawCircle(t(ACERO_LUZ, oscuro), 0.9f * u, it) }
+    }
 }
 
 /**
@@ -330,6 +496,156 @@ object ComunNeon : DisenoComun {
         val metal = t(Color(0xFF6A6478), true)
         listOf(izq - 3 * u, der + 1 * u).forEach { x -> drawRoundRect(metal, Offset(x, y - 1.1f * u), Size(2 * u, 2.2f * u), CornerRadius(0.5f * u)) }
     }
+
+    // ---------------------------------------------------------------- filas, vacío, aviso y cifra
+
+    /** El fondo de las placas del callejón: vidrio violeta casi negro. */
+    private val PLACA = Color(0xFF150F1E)
+    /** El ámbar de los tubos de precaución. */
+    private val AMBAR = Color(0xFFFFB02E)
+
+    override val margenFila: Dp = 12.dp
+
+    /**
+     * La fila del letrero: un tubo cian apagado al pie (apenas tibio) y el piloto de la izquierda. Al tocarla el tubo se
+     * enciende en magenta con su halo, la placa se tiñe de su luz y el piloto se prende.
+     */
+    override fun DrawScope.fila(e: EstadoFila, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val y = h - 1.2f * u
+        val apagado = mezcla(CIAN, Color(0xFF3A4048), 0.55f)
+        if (e.presionado) {
+            drawRect(MAGENTA.copy(alpha = 0.08f))
+            tubo(Path().apply { moveTo(6 * u, y); lineTo(w - 6 * u, y) }, MAGENTA, 0.7f * u)
+        } else {
+            drawLine(CIAN.copy(alpha = 0.06f), Offset(6 * u, y), Offset(w - 6 * u, y), 2.5f * u)
+            drawLine(apagado.copy(alpha = 0.6f), Offset(6 * u, y), Offset(w - 6 * u, y), 0.6f * u)
+        }
+        // El piloto de la izquierda; con detalle, un segundo piloto debajo.
+        val pilotos = if (e.conDetalle) listOf(h / 2 - 4 * u, h / 2 + 4 * u) else listOf(h / 2)
+        pilotos.forEach { py ->
+            val p = Offset(4 * u, py)
+            if (e.presionado) drawCircle(MAGENTA.copy(alpha = 0.3f), 3 * u, p)
+            drawCircle(if (e.presionado) mezcla(MAGENTA, Color.White, 0.4f) else apagado.copy(alpha = 0.7f), 1.1f * u, p)
+        }
+    }
+
+    /** El «›» de neón cian, con su halo. */
+    override fun DrawScope.flechaFila(oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2)
+        tubo(Path().apply { moveTo(c.x - 3 * u, c.y - 5.5f * u); lineTo(c.x + 3 * u, c.y); lineTo(c.x - 3 * u, c.y + 5.5f * u) }, CIAN, 0.9f * u)
+    }
+
+    /** La estrella del letrero: encendida en magenta, con su halo y su luz dentro; sin fijar, el tubo apagado, gris violeta. */
+    override fun DrawScope.marcaFija(fija: Boolean, oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2 + 0.5f * u)
+        val p = estrella(c, 8 * u, 5, 0.45f)
+        if (fija) {
+            drawPath(p, MAGENTA.copy(alpha = 0.2f))
+            tubo(p, MAGENTA, 0.8f * u)
+        } else drawPath(p, Color(0xFF5E5870), style = Stroke(1 * u, join = StrokeJoin.Round))
+    }
+
+    override val tamDibujoVacio: Dp = 42.dp
+    override fun tintaVacio(oscuro: Boolean): Color = Color(0xFFBBACC6)
+
+    /**
+     * El escaparate apagado: la placa de vidrio negro con el contorno de un tubo que no está encendido (cian, a tramos y
+     * sin halo) y los cuatro tornillos de la chapa.
+     */
+    override fun DrawScope.marcoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        drawRoundRect(PLACA, Offset.Zero, size, CornerRadius(8 * u))
+        drawRoundRect(t(CARCASA_LUZ, true), Offset(0.5f * u, 0.5f * u), Size(w - 1 * u, h - 1 * u), CornerRadius(8 * u), style = Stroke(1 * u))
+        drawRoundRect(mezcla(CIAN, Color(0xFF3A4048), 0.5f).copy(alpha = 0.5f), Offset(6 * u, 6 * u), Size(w - 12 * u, h - 12 * u), CornerRadius(5 * u),
+            style = Stroke(0.9f * u, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(18 * u, 6 * u))))
+        listOf(Offset(3 * u, 3 * u), Offset(w - 3 * u, 3 * u), Offset(3 * u, h - 3 * u), Offset(w - 3 * u, h - 3 * u))
+            .forEach { drawCircle(t(ALAMBRE, true).copy(alpha = 0.5f), 0.9f * u, it) }
+    }
+
+    /**
+     * El puesto cerrado: la cortina metálica bajada, con sus lamas, su barra y su candado, bajo la caja del rollo; encima, el
+     * letrero de neón apagado, con una sola chispa magenta que todavía parpadea en una punta.
+     */
+    override fun DrawScope.dibujoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val s = size.minDimension
+        fun f(v: Float) = v * s
+        val metal = t(Color(0xFF5A5468), true)
+        val sombra = Color(0xFF06050B)
+        // El letrero apagado y su chispa.
+        drawRoundRect(Color(0xFF6A6478), Offset(f(0.14f), f(0.04f)), Size(f(0.72f), f(0.18f)), CornerRadius(f(0.06f)), style = Stroke(1.2f * u))
+        drawLine(Color(0xFF6A6478), Offset(f(0.28f), f(0.13f)), Offset(f(0.72f), f(0.13f)), 1.2f * u, StrokeCap.Round)
+        drawCircle(MAGENTA.copy(alpha = 0.35f), f(0.06f), Offset(f(0.86f), f(0.1f)))
+        drawCircle(mezcla(MAGENTA, Color.White, 0.5f), f(0.022f), Offset(f(0.86f), f(0.1f)))
+        // La caja del rollo.
+        drawRect(t(CARCASA_LUZ, true), Offset(f(0.08f), f(0.28f)), Size(f(0.84f), f(0.08f)))
+        // La cortina con sus lamas.
+        drawRect(metal, Offset(f(0.12f), f(0.36f)), Size(f(0.76f), f(0.52f)))
+        val lamas = Path()
+        for (k in 1..7) { val y = f(0.36f + 0.065f * k); lamas.moveTo(f(0.12f), y); lamas.lineTo(f(0.88f), y) }
+        drawPath(lamas, sombra.copy(alpha = 0.7f), style = Stroke(0.8f * u))
+        drawRect(t(ALAMBRE, true).copy(alpha = 0.6f), Offset(f(0.12f), f(0.36f)), Size(f(0.76f), f(0.52f)), style = Stroke(0.8f * u))
+        // La barra de abajo y el candado.
+        drawRect(t(ALAMBRE, true), Offset(f(0.1f), f(0.86f)), Size(f(0.8f), f(0.05f)))
+        drawArc(t(ALAMBRE, true), 180f, 180f, false, Offset(f(0.45f), f(0.74f)), Size(f(0.1f), f(0.12f)), style = Stroke(1 * u))
+        drawRoundRect(AMBAR.copy(alpha = 0.85f), Offset(f(0.43f), f(0.8f)), Size(f(0.14f), f(0.11f)), CornerRadius(f(0.02f)))
+        // El suelo mojado, con el reflejo cian.
+        drawLine(CIAN.copy(alpha = 0.35f), Offset(f(0.04f), f(0.96f)), Offset(f(0.96f), f(0.96f)), 0.8f * u)
+    }
+
+    override val margenAviso: Dp = 30.dp
+    override fun tintaAviso(oscuro: Boolean): Color = ETIQUETA
+
+    /**
+     * El aviso de obra del callejón: la cinta de precaución en franjas ámbar a la izquierda y, al lado, el triángulo de neón
+     * ámbar encendido (con su signo de admiración o, según el aviso, el rayo), sobre la placa de vidrio.
+     */
+    override fun DrawScope.aviso(e: EstadoAviso, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        drawRoundRect(PLACA, Offset.Zero, size, CornerRadius(5 * u))
+        drawLine(AMBAR.copy(alpha = 0.18f), Offset(30 * u, h - 1 * u), Offset(w - 6 * u, h - 1 * u), 0.8f * u)
+        // La cinta de precaución.
+        val ancho = 7 * u
+        drawRect(AMBAR.copy(alpha = 0.18f), Offset.Zero, Size(ancho, h))
+        clipRect(0f, 0f, ancho, h) {
+            val paso = maxOf(8 * u, 1f)
+            var y = -ancho
+            var n = 0
+            while (y < h && n < 400) { drawPath(Path().apply { moveTo(0f, y + 3 * u); lineTo(ancho, y); lineTo(ancho, y + 4 * u); lineTo(0f, y + 7 * u); close() }, AMBAR.copy(alpha = 0.8f)); y += paso; n++ }
+        }
+        // El triángulo de neón.
+        val c = Offset(18.5f * u, 15 * u)
+        tubo(Path().apply { moveTo(c.x, c.y - 6 * u); lineTo(c.x + 6.5f * u, c.y + 5 * u); lineTo(c.x - 6.5f * u, c.y + 5 * u); close() }, AMBAR, 0.8f * u)
+        if (e.semilla % 2 == 0) {
+            drawLine(mezcla(AMBAR, Color.White, 0.5f), Offset(c.x, c.y - 2.5f * u), Offset(c.x, c.y + 1 * u), 1.2f * u, StrokeCap.Round)
+            drawCircle(mezcla(AMBAR, Color.White, 0.5f), 0.7f * u, Offset(c.x, c.y + 3 * u))
+        } else drawPath(Path().apply { moveTo(c.x + 1 * u, c.y - 3 * u); lineTo(c.x - 1.5f * u, c.y + 0.5f * u); lineTo(c.x + 1.5f * u, c.y + 0.5f * u); lineTo(c.x - 1 * u, c.y + 3.5f * u) },
+            mezcla(AMBAR, Color.White, 0.5f), style = Stroke(0.9f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+
+    override val margenCifra: Dp = 10.dp
+    override fun tintaCifra(oscuro: Boolean): Color = CIAN
+    override fun rotuloCifra(oscuro: Boolean): Color = Color(0xFFFF8CC0)
+
+    /** El letrerito del marcador: la placa de vidrio negro enmarcada por un tubo magenta tibio, con sus dos electrodos abajo. */
+    override fun DrawScope.cifra(e: EstadoCifra, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        drawRoundRect(PLACA, Offset.Zero, size, CornerRadius(6 * u))
+        val r = Rect(2.5f * u, 2.5f * u, w - 2.5f * u, h - 2.5f * u)
+        drawRoundRect(MAGENTA.copy(alpha = 0.1f), r.topLeft, r.size, CornerRadius(4 * u), style = Stroke(3 * u))
+        drawRoundRect(MAGENTA.copy(alpha = 0.55f), r.topLeft, r.size, CornerRadius(4 * u), style = Stroke(0.8f * u))
+        // El hueco de los electrodos, abajo a la derecha.
+        val x0 = w - 18 * u
+        drawRect(PLACA, Offset(x0, r.bottom - 2 * u), Size(6 * u, 4 * u))
+        listOf(x0 - 1.6f * u, x0 + 6 * u).forEach { x -> drawRoundRect(t(Color(0xFF6A6478), true), Offset(x, r.bottom - 1.2f * u), Size(1.6f * u, 2.4f * u), CornerRadius(0.5f * u)) }
+    }
 }
 
 /**
@@ -458,6 +774,195 @@ object ComunRefugio : DisenoComun {
         } else drawLine(tinta.copy(alpha = 0.5f), Offset(izq, pie), Offset(der, pie), 1 * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * u, 2.5f * u)))
         // El cursor en bloque, al final de la raya.
         drawRect(tinta.copy(alpha = if (e.presionado) 1f else 0.7f), Offset(der + 1.5f * u, pie - 1.4f * u), Size(3 * u, 2.8f * u))
+    }
+
+    // ---------------------------------------------------------------- filas, vacío, aviso y cifra
+
+    /** La chapa de las placas del refugio: crema en claro; en oscuro, la pantalla de fósforo apagada. */
+    private fun chapa(oscuro: Boolean): Color = if (oscuro) Color(0xFF0B160E) else Color(0xFFF8F1DE)
+
+    /** El color de la orden de la terminal: verde azulado en claro, fósforo en oscuro. */
+    private fun orden(oscuro: Boolean): Color = if (oscuro) Color(0xFF3DFF7F) else Color(0xFF1C6E6A)
+
+    /** La tinta tenue de rayas y contornos. */
+    private fun tenue(oscuro: Boolean): Color = if (oscuro) Color(0xFF55B872) else Color(0xFF4C5752)
+
+    override val margenFila: Dp = 12.dp
+
+    /**
+     * La línea de la terminal: la raya de guiones al pie y, a la izquierda, el cursor en bloque, apagado (dos bloques si la
+     * fila lleva detalle). Al tocarla se invierte el video: la fila se tiñe del color de la orden, el cursor se prende y la
+     * raya se vuelve continua.
+     */
+    override fun DrawScope.fila(e: EstadoFila, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val c = orden(oscuro)
+        val y = h - 1 * u
+        if (e.presionado) {
+            drawRect(c.copy(alpha = 0.1f))
+            drawLine(c.copy(alpha = 0.7f), Offset(0f, y), Offset(w, y), 1 * u)
+        } else drawLine((if (oscuro) FOSFORO else TUBO_OSC).copy(alpha = if (oscuro) 0.22f else 0.35f), Offset(0f, y), Offset(w, y), 0.8f * u,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * u, 2.5f * u)))
+        val bloques = if (e.conDetalle) 2 else 1
+        for (k in 0 until bloques) {
+            val yb = h / 2 + (k - (bloques - 1) / 2f) * 9 * u
+            drawRect(c.copy(alpha = if (e.presionado) 1f else 0.3f), Offset(0f, yb - 3.5f * u), Size(3 * u, 7 * u))
+        }
+    }
+
+    /** El indicador «>» de la terminal, con su raya de cursor debajo. */
+    override fun DrawScope.flechaFila(oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2)
+        val tinta = orden(oscuro)
+        drawPath(Path().apply { moveTo(c.x - 4 * u, c.y - 4.5f * u); lineTo(c.x + 2 * u, c.y); lineTo(c.x - 4 * u, c.y + 4.5f * u) }, tinta,
+            style = Stroke(1.6f * u, cap = StrokeCap.Square, join = StrokeJoin.Miter))
+        drawRect(tinta.copy(alpha = 0.6f), Offset(c.x + 3 * u, c.y + 3 * u), Size(3.5f * u, 1.6f * u))
+    }
+
+    /**
+     * La insignia del refugio: el disco con su estrella. Fija, el disco es amarillo pleno (con su resplandor en oscuro) y la
+     * estrella va oscura; sin fijar, contorno tenue del disco y de la estrella.
+     */
+    override fun DrawScope.marcaFija(fija: Boolean, oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2)
+        val r = 8.5f * u
+        val estrellita = estrella(c, 5.4f * u, 5, 0.42f)
+        if (fija) {
+            if (oscuro) drawCircle(AMARILLO.copy(alpha = 0.25f), r + 2 * u, c)
+            drawCircle(AMARILLO, r, c)
+            drawCircle(Color.Black.copy(alpha = 0.25f), r - 1.2f * u, c, style = Stroke(0.6f * u))
+            drawPath(estrellita, if (oscuro) PANTALLA else Color(0xFF1F2A2A))
+        } else {
+            val g = tenue(oscuro).copy(alpha = 0.6f)
+            drawCircle(g, r, c, style = Stroke(1 * u))
+            drawPath(estrellita, g, style = Stroke(0.9f * u, join = StrokeJoin.Miter))
+        }
+    }
+
+    override val tamDibujoVacio: Dp = 40.dp
+    override fun tintaVacio(oscuro: Boolean): Color = tenue(oscuro)
+
+    /**
+     * El panel sin lecturas: en claro, la chapa crema con sus cuatro pernos y las franjas de peligro en la esquina de abajo; en
+     * oscuro, la pantalla de fósforo apagada con sus líneas de barrido. Un borde fino, sin brillo: nada que tocar.
+     */
+    override fun DrawScope.marcoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        drawRoundRect(chapa(oscuro), Offset.Zero, size, CornerRadius(6 * u))
+        if (oscuro) {
+            val paso = maxOf(3 * u, 1f)
+            var y = 2 * u
+            var n = 0
+            while (y < h - 2 * u && n < 400) { drawLine(Color.Black.copy(alpha = 0.35f), Offset(4 * u, y), Offset(w - 4 * u, y), 0.6f * u); y += paso; n++ }
+            drawRoundRect(FOSFORO.copy(alpha = 0.28f), Offset.Zero, size, CornerRadius(6 * u), style = Stroke(1 * u))
+        } else {
+            drawRoundRect(TUBO_OSC.copy(alpha = 0.45f), Offset.Zero, size, CornerRadius(6 * u), style = Stroke(1 * u))
+            drawLine(Color.White.copy(alpha = 0.6f), Offset(6 * u, 1.5f * u), Offset(w - 6 * u, 1.5f * u), 1 * u)
+            // Las franjas de peligro, en la esquina de abajo a la izquierda.
+            val k = minOf(16 * u, h * 0.3f)
+            clipPath(Path().apply { addRoundRect(RoundRect(Rect(0f, 0f, w, h), CornerRadius(6 * u))) }) {
+                clipPath(Path().apply { moveTo(0f, h - k); lineTo(k, h); lineTo(0f, h); close() }) {
+                    drawRect(Color(0xFF1F2A2A).copy(alpha = 0.8f), Offset(0f, h - k), Size(k, k))
+                    for (i in 0 until 4) drawPath(Path().apply { val x = i * 5 * u; moveTo(x, h); lineTo(x + 2.5f * u, h); lineTo(x - k + 2.5f * u, h - k); lineTo(x - k, h - k); close() }, AMARILLO)
+                }
+            }
+        }
+        listOf(Offset(4 * u, 4 * u), Offset(w - 4 * u, 4 * u), Offset(w - 4 * u, h - 4 * u)).forEach {
+            drawCircle(t(TUBO_OSC, oscuro).copy(alpha = 0.7f), 1.4f * u, it)
+            drawLine(Color.Black.copy(alpha = 0.4f), Offset(it.x - 0.9f * u, it.y), Offset(it.x + 0.9f * u, it.y), 0.5f * u)
+        }
+    }
+
+    /**
+     * La lata de conservas abierta y vacía: el cuerpo con sus dos costillas y la etiqueta sin nada, el interior oscuro a la
+     * vista y la tapa levantada, todavía colgando del borde.
+     */
+    override fun DrawScope.dibujoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val s = size.minDimension
+        fun f(v: Float) = v * s
+        val l = tenue(oscuro)
+        val acento = if (oscuro) AMARILLO else Color(0xFFB98A15)
+        val tr = Stroke(1.3f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // La etiqueta, debajo de todo.
+        drawRect(acento.copy(alpha = 0.22f), Offset(f(0.22f), f(0.5f)), Size(f(0.56f), f(0.16f)))
+        // El cuerpo.
+        drawLine(l, Offset(f(0.22f), f(0.35f)), Offset(f(0.22f), f(0.84f)), tr.width)
+        drawLine(l, Offset(f(0.78f), f(0.35f)), Offset(f(0.78f), f(0.84f)), tr.width)
+        drawArc(l, 0f, 180f, false, Offset(f(0.22f), f(0.78f)), Size(f(0.56f), f(0.12f)), style = tr)
+        listOf(0.44f, 0.6f).forEach { y -> drawArc(l.copy(alpha = 0.5f), 0f, 180f, false, Offset(f(0.22f), f(y)), Size(f(0.56f), f(0.12f)), style = Stroke(0.8f * u)) }
+        // La boca, con el interior vacío.
+        drawOval(if (oscuro) Color.Black else Color(0xFF2A3032), Offset(f(0.24f), f(0.3f)), Size(f(0.52f), f(0.1f)))
+        drawOval(l, Offset(f(0.22f), f(0.29f)), Size(f(0.56f), f(0.12f)), style = tr)
+        // La tapa levantada, colgando del borde de la derecha.
+        rotate(36f, Offset(f(0.78f), f(0.35f))) {
+            drawOval(acento.copy(alpha = 0.18f), Offset(f(0.22f), f(0.29f)), Size(f(0.56f), f(0.12f)))
+            drawOval(acento, Offset(f(0.22f), f(0.29f)), Size(f(0.56f), f(0.12f)), style = tr)
+            drawOval(acento.copy(alpha = 0.45f), Offset(f(0.3f), f(0.315f)), Size(f(0.4f), f(0.07f)), style = Stroke(0.7f * u))
+        }
+        // La sombra en el suelo.
+        drawLine(l.copy(alpha = 0.4f), Offset(f(0.14f), f(0.94f)), Offset(f(0.9f), f(0.94f)), 0.8f * u, StrokeCap.Round)
+    }
+
+    override val margenAviso: Dp = 30.dp
+    override fun tintaAviso(oscuro: Boolean): Color = if (oscuro) Color(0xFF9CF5B0) else Color(0xFF1F2A2A)
+
+    /**
+     * El cartel de seguridad del refugio: la chapa con la franja de peligro amarilla y negra a la izquierda y, arriba, la señal
+     * (el triángulo con su admiración o, según el aviso, el trébol de radiación) sobre su disco amarillo.
+     */
+    override fun DrawScope.aviso(e: EstadoAviso, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        drawRoundRect(chapa(oscuro), Offset.Zero, size, CornerRadius(4 * u))
+        drawRoundRect(tenue(oscuro).copy(alpha = 0.35f), Offset.Zero, size, CornerRadius(4 * u), style = Stroke(0.8f * u))
+        // La franja de peligro.
+        val ancho = 6 * u
+        val amarillo = if (oscuro) Color(0xFFFFB23F) else AMARILLO
+        clipRect(0f, 0f, ancho, h) {
+            drawRect(Color(0xFF1F2A2A))
+            val paso = maxOf(7 * u, 1f)
+            var y = -ancho
+            var n = 0
+            while (y < h && n < 400) { drawPath(Path().apply { moveTo(0f, y + ancho); lineTo(ancho, y); lineTo(ancho, y + 3.5f * u); lineTo(0f, y + ancho + 3.5f * u); close() }, amarillo); y += paso; n++ }
+        }
+        // La señal.
+        val c = Offset(18 * u, 15 * u)
+        val oscura = Color(0xFF1F2A2A)
+        drawCircle(amarillo, 7 * u, c)
+        if (e.semilla % 2 == 0) {
+            drawPath(Path().apply { moveTo(c.x, c.y - 4.5f * u); lineTo(c.x + 4.5f * u, c.y + 3.2f * u); lineTo(c.x - 4.5f * u, c.y + 3.2f * u); close() }, oscura, style = Stroke(1 * u, join = StrokeJoin.Round))
+            drawLine(oscura, Offset(c.x, c.y - 1.6f * u), Offset(c.x, c.y + 0.6f * u), 1 * u)
+            drawCircle(oscura, 0.6f * u, Offset(c.x, c.y + 2 * u))
+        } else {
+            listOf(-90f, 30f, 150f).forEach { a -> drawArc(oscura, a - 30f, 60f, true, Offset(c.x - 5 * u, c.y - 5 * u), Size(10 * u, 10 * u)) }
+            drawCircle(amarillo, 1.8f * u, c)
+            drawCircle(oscura, 1.1f * u, c)
+        }
+    }
+
+    override val margenCifra: Dp = 10.dp
+    override fun tintaCifra(oscuro: Boolean): Color = if (oscuro) Color(0xFF9CF5B0) else Color(0xFF1F2A2A)
+    override fun rotuloCifra(oscuro: Boolean): Color = if (oscuro) Color(0xFF55B872) else Color(0xFF1C6E6A)
+
+    /**
+     * El lector del panel: la chapa (o la pantalla apagada, en oscuro) con su borde, el brillo de arriba, dos tornillos y el
+     * piloto ámbar del canto de la derecha.
+     */
+    override fun DrawScope.cifra(e: EstadoCifra, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        drawRoundRect(chapa(oscuro), Offset.Zero, size, CornerRadius(5 * u))
+        drawRoundRect((if (oscuro) FOSFORO else TUBO_OSC).copy(alpha = if (oscuro) 0.3f else 0.45f), Offset.Zero, size, CornerRadius(5 * u), style = Stroke(1 * u))
+        drawLine(Color.White.copy(alpha = if (oscuro) 0.06f else 0.6f), Offset(5 * u, 1.6f * u), Offset(w - 5 * u, 1.6f * u), 0.9f * u)
+        listOf(Offset(3.5f * u, h - 3.5f * u), Offset(w - 3.5f * u, h - 3.5f * u)).forEach { drawCircle(t(TUBO_OSC, oscuro).copy(alpha = 0.6f), 1 * u, it) }
+        val p = Offset(w - 4 * u, 5 * u)
+        if (oscuro) drawCircle(AMARILLO.copy(alpha = 0.25f), 3 * u, p)
+        drawCircle(if (oscuro) Color(0xFFFFC14A) else Color(0xFFB98A15), 1.3f * u, p)
     }
 }
 
@@ -608,6 +1113,156 @@ object ComunOrden : DisenoComun {
         // Los dos remaches, a los lados.
         listOf(r.left + 3.5f * u, r.right - 3.5f * u).forEach { drawCircle(laton.copy(alpha = if (e.habilitado) 0.7f else 0.3f), 1 * u, Offset(it, r.center.y)) }
     }
+
+    // ---------------------------------------------------------------- filas, vacío, aviso y cifra
+
+    /** La plancha de las placas de la orden: acero claro pulido, o pavonado en oscuro. */
+    private fun plancha(oscuro: Boolean): Color = if (oscuro) Color(0xFF1A1D22) else Color(0xFFF0F2F4)
+
+    /** El latón de filetes y remaches, más oscuro sobre el acero claro. */
+    private fun filete(oscuro: Boolean): Color = if (oscuro) placa(LATON, true) else Color(0xFF8C6E2A)
+
+    /** Uno o varios galones (las «V» de los grados) apuntando hacia [d] desde [c]; [d] = (1, 0) apunta a la derecha. */
+    private fun galones(c: Offset, ancho: Float, alto: Float, cuantos: Int, sep: Float, d: Offset): Path = Path().apply {
+        for (k in 0 until cuantos) {
+            val o = Offset(c.x + d.x * k * sep, c.y + d.y * k * sep)
+            if (d.x != 0f) { moveTo(o.x - ancho / 2, o.y - alto / 2); lineTo(o.x + ancho / 2, o.y); lineTo(o.x - ancho / 2, o.y + alto / 2) }
+            else { moveTo(o.x - ancho / 2, o.y + alto / 2); lineTo(o.x, o.y - alto / 2); lineTo(o.x + ancho / 2, o.y + alto / 2) }
+        }
+    }
+
+    override val margenFila: Dp = 12.dp
+
+    /**
+     * La fila del escalafón: el filete de latón al pie con un remache en la punta y otro a la izquierda, a media altura. Al
+     * tocarla la plancha se pule (un baño de latón tenue) y el remache se vuelve un galón doble, en latón vivo.
+     */
+    override fun DrawScope.fila(e: EstadoFila, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val laton = filete(oscuro)
+        if (e.presionado) drawRect(laton.copy(alpha = if (oscuro) 0.12f else 0.1f))
+        drawLine(laton.copy(alpha = if (e.presionado) 0.8f else 0.4f), Offset(4 * u, h - 1 * u), Offset(w - 6 * u, h - 1 * u), 0.7f * u)
+        drawCircle(laton.copy(alpha = 0.6f), 1.2f * u, Offset(w - 3 * u, h - 1 * u))
+        if (e.presionado) drawPath(galones(Offset(4 * u, h / 2), 4 * u, 8 * u, 2, 2.6f * u, Offset(1f, 0f)), tintaBotonTexto(oscuro), style = Stroke(1.2f * u, join = StrokeJoin.Miter))
+        else drawCircle(laton.copy(alpha = 0.55f), 1.2f * u, Offset(4 * u, h / 2))
+    }
+
+    /** El galón doble de latón, apuntando hacia adelante. */
+    override fun DrawScope.flechaFila(oscuro: Boolean) {
+        val u = density
+        drawPath(galones(Offset(size.width / 2 - 2.5f * u, size.height / 2), 5 * u, 10 * u, 2, 4 * u, Offset(1f, 0f)), tintaBotonTexto(oscuro),
+            style = Stroke(1.5f * u, join = StrokeJoin.Miter))
+    }
+
+    /**
+     * El engrane de la orden: fijo, de latón macizo con su lente encendida en rojo; sin fijar, solo el contorno del engrane y
+     * de la lente, en plomo.
+     */
+    override fun DrawScope.marcaFija(fija: Boolean, oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2)
+        val r = 8.5f * u
+        if (fija) {
+            drawPath(engrane(Offset(c.x + 0.5f * u, c.y + 0.6f * u), r, 8), Color.Black.copy(alpha = 0.3f))
+            drawPath(engrane(c, r, 8), placa(LATON, oscuro))
+            drawCircle(placa(LATON_LUZ, oscuro), r * 0.58f, c)
+            drawCircle(mezcla(Color(0xFF2A0A0A), ALERTA, 0.75f), r * 0.4f, c)
+            drawCircle(Color.White.copy(alpha = 0.5f), r * 0.12f, Offset(c.x - r * 0.14f, c.y - r * 0.14f))
+        } else {
+            val plomo = (if (oscuro) Color(0xFF8A9098) else Color(0xFF5E646C)).copy(alpha = 0.6f)
+            drawPath(engrane(c, r, 8), plomo, style = Stroke(0.9f * u, join = StrokeJoin.Miter))
+            drawCircle(plomo, r * 0.4f, c, style = Stroke(0.9f * u))
+        }
+    }
+
+    override val tamDibujoVacio: Dp = 42.dp
+    override fun tintaVacio(oscuro: Boolean): Color = if (oscuro) Color(0xFF9DA6B0) else Color(0xFF4B525A)
+
+    /**
+     * La vitrina del arsenal sin nada dentro: la plancha ochavada con su filete de latón hacia dentro y una hilera de remaches
+     * en los cantos de arriba y de abajo.
+     */
+    override fun DrawScope.marcoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val laton = filete(oscuro)
+        val todo = ochavado(Rect(0f, 0f, w, h), 7 * u)
+        drawPath(todo, plancha(oscuro))
+        drawPath(todo, t(ACERO_LUZ, oscuro).copy(alpha = 0.6f), style = Stroke(1 * u))
+        drawPath(ochavado(Rect(4 * u, 4 * u, w - 4 * u, h - 4 * u), 5 * u), laton.copy(alpha = 0.55f), style = Stroke(0.8f * u))
+        val paso = maxOf(34 * u, 1f)
+        var x = 16 * u
+        var n = 0
+        while (x < w - 14 * u && n < 300) {
+            listOf(2 * u, h - 2 * u).forEach { y -> drawCircle(laton.copy(alpha = 0.6f), 0.9f * u, Offset(x, y)) }
+            x += paso; n++
+        }
+    }
+
+    /**
+     * La caja fuerte abierta y vacía: el cuerpo de acero con su filete de latón, el hueco negro con su repisa y nada en ella, y
+     * la puerta abierta de par en par, con la rueda de la combinación (el engrane) y su manija.
+     */
+    override fun DrawScope.dibujoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val s = size.minDimension
+        fun f(v: Float) = v * s
+        val acero = t(ACERO, oscuro).let { if (oscuro) mezcla(it, Color(0xFF8A929C), 0.25f) else it }
+        val laton = placa(LATON, oscuro)
+        // El cuerpo y su hueco.
+        drawRect(acero, Offset(f(0.08f), f(0.1f)), Size(f(0.62f), f(0.78f)))
+        drawRect(laton, Offset(f(0.08f), f(0.1f)), Size(f(0.62f), f(0.78f)), style = Stroke(0.9f * u))
+        drawRect(ESMALTE, Offset(f(0.15f), f(0.17f)), Size(f(0.48f), f(0.64f)))
+        drawLine(t(ACERO_LUZ, oscuro).copy(alpha = 0.6f), Offset(f(0.15f), f(0.5f)), Offset(f(0.63f), f(0.5f)), 1 * u)
+        drawRect(Color.Black.copy(alpha = 0.5f), Offset(f(0.15f), f(0.17f)), Size(f(0.48f), f(0.05f)))
+        // Las patas.
+        listOf(0.12f, 0.58f).forEach { drawRect(acero, Offset(f(it), f(0.88f)), Size(f(0.08f), f(0.05f))) }
+        // La puerta abierta.
+        val puerta = Path().apply { moveTo(f(0.7f), f(0.1f)); lineTo(f(0.94f), f(0.2f)); lineTo(f(0.94f), f(0.8f)); lineTo(f(0.7f), f(0.88f)); close() }
+        drawPath(puerta, t(ACERO_LUZ, oscuro))
+        drawPath(puerta, laton, style = Stroke(0.9f * u, join = StrokeJoin.Miter))
+        val rueda = Offset(f(0.83f), f(0.45f))
+        drawPath(engrane(rueda, f(0.08f), 8), laton)
+        drawCircle(ESMALTE, f(0.03f), rueda)
+        drawLine(ESMALTE, Offset(f(0.83f), f(0.6f)), Offset(f(0.83f), f(0.72f)), 1.6f * u, StrokeCap.Round)
+    }
+
+    override val margenAviso: Dp = 28.dp
+    override fun tintaAviso(oscuro: Boolean): Color = if (oscuro) Color(0xFFDDE2E7) else Color(0xFF15181B)
+
+    /**
+     * La orden del día clavada en la plancha: la banda de esmalte negro a la izquierda con sus galones de latón apilados (dos o
+     * tres, según el aviso) y el filete de latón que la separa del texto.
+     */
+    override fun DrawScope.aviso(e: EstadoAviso, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        drawPath(ochavado(Rect(0f, 0f, w, h), 4 * u), plancha(oscuro))
+        drawLine(filete(oscuro).copy(alpha = 0.35f), Offset(24 * u, h - 1 * u), Offset(w - 6 * u, h - 1 * u), 0.7f * u)
+        val banda = 20 * u
+        drawPath(Path().apply { moveTo(4 * u, 0f); lineTo(banda, 0f); lineTo(banda, h); lineTo(4 * u, h); lineTo(0f, h - 4 * u); lineTo(0f, 4 * u); close() }, ESMALTE)
+        drawLine(placa(LATON, oscuro), Offset(banda, 0f), Offset(banda, h), 1.2f * u)
+        val cuantos = 2 + e.semilla % 2
+        drawPath(galones(Offset(banda / 2, 12 * u), 10 * u, 4.5f * u, cuantos, 3.4f * u, Offset(0f, 1f)), placa(LATON_LUZ, oscuro),
+            style = Stroke(1.3f * u, join = StrokeJoin.Miter))
+        if (h > 34 * u) drawCircle(placa(LATON, oscuro), 1.1f * u, Offset(banda / 2, h - 6 * u))
+    }
+
+    override val margenCifra: Dp = 10.dp
+    override fun tintaCifra(oscuro: Boolean): Color = if (oscuro) Color(0xFFEFE3C2) else Color(0xFF15181B)
+    override fun rotuloCifra(oscuro: Boolean): Color = tintaBotonTexto(oscuro)
+
+    /** La placa de grado: la plancha ochavada con su filete de latón y un remache a cada lado, a media altura. */
+    override fun DrawScope.cifra(e: EstadoCifra, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val p = ochavado(Rect(0f, 0f, w, h), 5 * u)
+        drawPath(p, plancha(oscuro))
+        drawPath(p, filete(oscuro).copy(alpha = 0.75f), style = Stroke(1 * u))
+        drawLine(Color.Black.copy(alpha = if (oscuro) 0.3f else 0.08f), Offset(5 * u, 1.6f * u), Offset(w - 5 * u, 1.6f * u), 1 * u)
+        listOf(Offset(3 * u, h / 2), Offset(w - 3 * u, h / 2)).forEach { drawCircle(filete(oscuro), 1 * u, it) }
+    }
 }
 
 /**
@@ -753,6 +1408,153 @@ object ComunLaboratorio : DisenoComun {
             }, c)
         }
     }
+
+    // ---------------------------------------------------------------- filas, vacío, aviso y cifra
+
+    /** El papel de las placas del laboratorio: blanco de cuaderno en claro, vidrio ahumado en oscuro. */
+    private fun hoja(oscuro: Boolean): Color = if (oscuro) Color(0xFF101823) else Color(0xFFFCFDFE)
+
+    /** El gris de los filos y las escalas. */
+    private fun filo(oscuro: Boolean): Color = if (oscuro) Color(0xFF8C98A0) else GRIS_OSC
+
+    override val margenFila: Dp = 14.dp
+
+    /**
+     * El renglón del cuaderno de laboratorio: la raya gris fina al pie, con tres marcas de escala donde empieza, y el punto cian
+     * de la muestra a la izquierda (vacío; con detalle, con su anillo). Al tocarla la fila se tiñe de cian, redondeada como los
+     * frascos, y el punto se llena.
+     */
+    override fun DrawScope.fila(e: EstadoFila, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val cian = tintaBotonTexto(oscuro)
+        if (e.presionado) drawRoundRect(cian.copy(alpha = if (oscuro) 0.12f else 0.08f), Offset(2 * u, 2 * u), Size(w - 4 * u, h - 4 * u), CornerRadius(12 * u))
+        val y = h - 0.6f * u
+        val gris = filo(oscuro).copy(alpha = 0.32f)
+        drawLine(gris, Offset(10 * u, y), Offset(w, y), 0.6f * u)
+        drawPath(Path().apply { for (k in 0 until 3) { moveTo(10 * u + k * 3 * u, y); lineTo(10 * u + k * 3 * u, y - (if (k == 0) 3f else 1.8f) * u) } }, gris, style = Stroke(0.6f * u))
+        val p = Offset(6 * u, h / 2)
+        if (e.presionado) drawCircle(cian, 1.8f * u, p) else drawCircle(cian.copy(alpha = 0.55f), 1.6f * u, p, style = Stroke(0.8f * u))
+        if (e.conDetalle) drawCircle(cian.copy(alpha = 0.3f), 3.4f * u, p, style = Stroke(0.6f * u))
+    }
+
+    /** La flecha del vector: el trazo cian con su punta llena. */
+    override fun DrawScope.flechaFila(oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2)
+        val cian = tintaBotonTexto(oscuro)
+        drawLine(cian, Offset(c.x - 6 * u, c.y), Offset(c.x + 2 * u, c.y), 1.3f * u, StrokeCap.Round)
+        drawPath(Path().apply { moveTo(c.x + 6.5f * u, c.y); lineTo(c.x + 1 * u, c.y - 3.4f * u); lineTo(c.x + 1 * u, c.y + 3.4f * u); close() }, cian)
+    }
+
+    /** El asterisco de «significativo», en estrella de seis puntas: lleno en cian si está fijo, en contorno gris si no. */
+    override fun DrawScope.marcaFija(fija: Boolean, oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2)
+        val p = estrella(c, 8.5f * u, 6, 0.48f)
+        if (fija) drawPath(p, tintaBotonTexto(oscuro))
+        else drawPath(p, filo(oscuro).copy(alpha = 0.6f), style = Stroke(1 * u, join = StrokeJoin.Round))
+    }
+
+    override val tamDibujoVacio: Dp = 40.dp
+    override fun tintaVacio(oscuro: Boolean): Color = if (oscuro) Color(0xFF97A8B9) else Color(0xFF4D5D6B)
+
+    /**
+     * La hoja de papel milimetrado sin datos: la cuadrícula fina cada 10 dp (más marcada cada cinco), en un recuadro de
+     * esquinas redondas con su filo gris.
+     */
+    override fun DrawScope.marcoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val radio = CornerRadius(8 * u)
+        drawRoundRect(hoja(oscuro), Offset.Zero, size, radio)
+        val paso = maxOf(10 * u, 1f)
+        val fina = Path(); val gruesa = Path()
+        var x = paso; var i = 1
+        while (x < w && i < 200) { (if (i % 5 == 0) gruesa else fina).apply { moveTo(x, 1 * u); lineTo(x, h - 1 * u) }; x += paso; i++ }
+        var y = paso; var j = 1
+        while (y < h && j < 200) { (if (j % 5 == 0) gruesa else fina).apply { moveTo(1 * u, y); lineTo(w - 1 * u, y) }; y += paso; j++ }
+        drawPath(fina, CIAN.copy(alpha = if (oscuro) 0.07f else 0.09f), style = Stroke(0.5f * u))
+        drawPath(gruesa, CIAN.copy(alpha = if (oscuro) 0.14f else 0.18f), style = Stroke(0.7f * u))
+        drawRoundRect(filo(oscuro).copy(alpha = 0.45f), Offset.Zero, size, radio, style = Stroke(0.8f * u))
+    }
+
+    /**
+     * El matraz de Erlenmeyer limpio y vacío, un poco inclinado: el cuello con su boca, el cuerpo cónico de fondo redondeado
+     * con el vidrio apenas teñido, las marcas de graduación y una sola gota que queda en el borde.
+     */
+    override fun DrawScope.dibujoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val s = size.minDimension
+        fun f(v: Float) = v * s
+        val l = tintaVacio(oscuro).copy(alpha = 0.9f)
+        val cian = tintaBotonTexto(oscuro)
+        val tr = Stroke(1.3f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        rotate(-10f, Offset(f(0.5f), f(0.55f))) {
+            val matraz = Path().apply {
+                moveTo(f(0.42f), f(0.1f)); lineTo(f(0.42f), f(0.38f)); lineTo(f(0.18f), f(0.78f))
+                quadraticTo(f(0.13f), f(0.9f), f(0.26f), f(0.9f)); lineTo(f(0.74f), f(0.9f))
+                quadraticTo(f(0.87f), f(0.9f), f(0.82f), f(0.78f)); lineTo(f(0.58f), f(0.38f)); lineTo(f(0.58f), f(0.1f))
+            }
+            drawPath(matraz, cian.copy(alpha = 0.08f))
+            drawPath(matraz, l, style = tr)
+            drawLine(l, Offset(f(0.37f), f(0.1f)), Offset(f(0.63f), f(0.1f)), tr.width, StrokeCap.Round)
+            // Las marcas de graduación y el brillo del vidrio.
+            listOf(0.56f, 0.66f, 0.76f).forEachIndexed { k, y -> drawLine(l.copy(alpha = 0.6f), Offset(f(0.62f), f(y)), Offset(f(if (k == 1) 0.72f else 0.68f), f(y)), 0.8f * u) }
+            drawLine(Color.White.copy(alpha = if (oscuro) 0.25f else 0.8f), Offset(f(0.3f), f(0.72f)), Offset(f(0.38f), f(0.58f)), 1.2f * u, StrokeCap.Round)
+            // La gota del borde.
+            drawPath(Path().apply { moveTo(f(0.62f), f(0.12f)); quadraticTo(f(0.68f), f(0.2f), f(0.65f), f(0.23f)); quadraticTo(f(0.6f), f(0.24f), f(0.61f), f(0.19f)); close() }, cian)
+        }
+        drawLine(l.copy(alpha = 0.35f), Offset(f(0.12f), f(0.97f)), Offset(f(0.88f), f(0.97f)), 0.8f * u, StrokeCap.Round)
+    }
+
+    override val margenAviso: Dp = 30.dp
+    override fun tintaAviso(oscuro: Boolean): Color = tintaCampo(oscuro)
+
+    /**
+     * La nota del protocolo: el recuadro con la raya cian a la izquierda y, arriba, su marca: la «i» de información en su
+     * círculo o, según el aviso, el rombo rojo de riesgo con su admiración.
+     */
+    override fun DrawScope.aviso(e: EstadoAviso, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        drawRoundRect(if (oscuro) Color(0xFF0F1A24) else Color(0xFFE2EFF3), Offset.Zero, size, CornerRadius(6 * u))
+        drawRoundRect(tintaBotonTexto(oscuro), Offset(3 * u, 4 * u), Size(2 * u, h - 8 * u), CornerRadius(1 * u))
+        val c = Offset(17 * u, 15 * u)
+        if (e.semilla % 2 == 0) {
+            val cian = tintaBotonTexto(oscuro)
+            drawCircle(cian, 6 * u, c, style = Stroke(1.2f * u))
+            drawCircle(cian, 0.9f * u, Offset(c.x, c.y - 2.8f * u))
+            drawLine(cian, Offset(c.x, c.y - 0.8f * u), Offset(c.x, c.y + 3.4f * u), 1.4f * u, StrokeCap.Round)
+        } else {
+            val rojo = errorCampo(oscuro)
+            val d = 6.5f * u
+            drawPath(Path().apply { moveTo(c.x, c.y - d); lineTo(c.x + d, c.y); lineTo(c.x, c.y + d); lineTo(c.x - d, c.y); close() }, rojo, style = Stroke(1.2f * u, join = StrokeJoin.Miter))
+            drawLine(rojo, Offset(c.x, c.y - 2.8f * u), Offset(c.x, c.y + 0.8f * u), 1.3f * u, StrokeCap.Round)
+            drawCircle(rojo, 0.8f * u, Offset(c.x, c.y + 2.8f * u))
+        }
+    }
+
+    override val margenCifra: Dp = 10.dp
+    override fun tintaCifra(oscuro: Boolean): Color = tintaCampo(oscuro)
+    override fun rotuloCifra(oscuro: Boolean): Color = rotuloCampo(oscuro)
+
+    /**
+     * La lectura del instrumento: el recuadro de esquinas redondas, como los frascos, con su filo y una escala micrométrica a
+     * lo largo del canto de arriba (un solo trazo, larga cada cinco marcas).
+     */
+    override fun DrawScope.cifra(e: EstadoCifra, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val radio = CornerRadius(8 * u)
+        drawRoundRect(hoja(oscuro), Offset.Zero, size, radio)
+        drawRoundRect(if (oscuro) Color(0xFF263447) else Color(0xFFCBD6DF), Offset.Zero, size, radio, style = Stroke(1 * u))
+        val paso = maxOf(3 * u, 1f)
+        val escala = Path()
+        var x = 9 * u; var k = 0
+        while (x < w - 9 * u && k < 300) { escala.moveTo(x, 0.5f * u); escala.lineTo(x, (if (k % 5 == 0) 3.6f else 2f) * u); x += paso; k++ }
+        drawPath(escala, filo(oscuro).copy(alpha = 0.5f), style = Stroke(0.6f * u))
+    }
 }
 
 /**
@@ -885,6 +1687,162 @@ object ComunColonos : DisenoComun {
         if (lleno) drawPath(vale, (if (oscuro) Color(0xFFE3C27A) else PINO_LUZ).copy(alpha = if (oscuro) 0.1f else 0.25f))
         drawPath(vale, tinta.copy(alpha = when { !e.habilitado -> 0.3f; lleno -> 0.95f; else -> 0.55f }),
             style = Stroke((if (lleno) 1.2f else 0.9f) * u, pathEffect = if (lleno) null else PathEffect.dashPathEffect(floatArrayOf(3 * u, 1.6f * u))))
+    }
+
+    // ---------------------------------------------------------------- filas, vacío, aviso y cifra
+
+    /** El papel del almacén: estraza clara en claro; en oscuro, la tabla de pizarra de noche. */
+    private fun papelAlmacen(oscuro: Boolean): Color = if (oscuro) Color(0xFF1E2636) else Color(0xFFF8F2E4)
+
+    /** El rojo de las rayas del libro de cuentas. */
+    private fun rojoCuentas(oscuro: Boolean): Color = if (oscuro) Color(0xFFE07A62) else Color(0xFFA23B2A)
+
+    /** El latón de las tachuelas. */
+    private val TACHUELA = Color(0xFFC9A04A)
+
+    override val margenFila: Dp = 12.dp
+
+    /**
+     * El renglón del libro de cuentas: la raya de lápiz al pie y, a la izquierda, la doble raya roja del margen. Al tocarla la
+     * fila se llena de papel de estraza; con detalle, la doble raya lleva un punto de tinta donde empieza el renglón.
+     */
+    override fun DrawScope.fila(e: EstadoFila, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (e.presionado) drawRect((if (oscuro) Color(0xFFE3C27A) else PINO_LUZ).copy(alpha = if (oscuro) 0.09f else 0.28f))
+        drawLine((if (oscuro) Color(0xFFA9B0BC) else Color(0xFF525866)).copy(alpha = if (oscuro) 0.22f else 0.3f), Offset(0f, h - 0.6f * u), Offset(w, h - 0.6f * u), 0.7f * u)
+        val rojo = rojoCuentas(oscuro).copy(alpha = if (e.presionado) 0.85f else 0.45f)
+        listOf(3 * u, 5.2f * u).forEach { x -> drawLine(rojo, Offset(x, 0f), Offset(x, h), 0.7f * u) }
+        if (e.conDetalle) drawCircle(rojo, 0.9f * u, Offset(8 * u, h / 2))
+    }
+
+    /** El letrero de tablón en punta, clavado: de pino, con su veta y su clavo. */
+    override fun DrawScope.flechaFila(oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2)
+        val tabla = Path().apply { moveTo(c.x - 8 * u, c.y - 3.5f * u); lineTo(c.x + 3.5f * u, c.y - 3.5f * u); lineTo(c.x + 8 * u, c.y); lineTo(c.x + 3.5f * u, c.y + 3.5f * u); lineTo(c.x - 8 * u, c.y + 3.5f * u); close() }
+        drawPath(tabla, t(PINO, oscuro))
+        drawLine(t(VETA, oscuro).copy(alpha = 0.5f), Offset(c.x - 7 * u, c.y + 0.8f * u), Offset(c.x + 4 * u, c.y + 0.4f * u), 0.6f * u)
+        drawPath(tabla, t(PINO_OSC, oscuro), style = Stroke(0.8f * u, join = StrokeJoin.Round))
+        drawCircle(CLAVO, 0.9f * u, Offset(c.x - 5.5f * u, c.y - 1 * u))
+    }
+
+    /**
+     * La tachuela que clava la nota arriba: fija, la cabeza de latón con su brillo y su sombra en el papel; sin fijar, el
+     * contorno de la cabeza con el agujerito, tenue.
+     */
+    override fun DrawScope.marcaFija(fija: Boolean, oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2)
+        val r = 6.5f * u
+        if (fija) {
+            drawCircle(Color.Black.copy(alpha = 0.25f), r, Offset(c.x + 1.2f * u, c.y + 1.4f * u))
+            drawCircle(if (oscuro) Color(0xFFE3C27A) else TACHUELA, r, c)
+            drawCircle(Color(0xFF7A5A2E).copy(alpha = 0.6f), r, c, style = Stroke(0.8f * u))
+            drawCircle(Color.White.copy(alpha = 0.55f), r * 0.32f, Offset(c.x - r * 0.35f, c.y - r * 0.35f))
+        } else {
+            val g = (if (oscuro) Color(0xFFA9B0BC) else Color(0xFF525866)).copy(alpha = 0.55f)
+            drawCircle(g, r, c, style = Stroke(1 * u))
+            drawCircle(g, 0.9f * u, c)
+        }
+    }
+
+    override val tamDibujoVacio: Dp = 40.dp
+    override fun tintaVacio(oscuro: Boolean): Color = if (oscuro) Color(0xFFD8CFBC) else Color(0xFF524634)
+
+    /**
+     * La hoja del pedido sin apuntar: el papel con su borde de lápiz, una esquina doblada arriba a la derecha y una tachuela en
+     * cada una de las otras tres.
+     */
+    override fun DrawScope.marcoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val k = 12 * u
+        val hoja = Path().apply { moveTo(0f, 0f); lineTo(w - k, 0f); lineTo(w, k); lineTo(w, h); lineTo(0f, h); close() }
+        drawPath(hoja, papelAlmacen(oscuro))
+        drawPath(hoja, t(PINO_OSC, oscuro).copy(alpha = 0.45f), style = Stroke(0.8f * u))
+        // La esquina doblada.
+        val pliegue = Path().apply { moveTo(w - k, 0f); lineTo(w - k, k); lineTo(w, k); close() }
+        drawPath(pliegue, t(PINO_LUZ, oscuro).copy(alpha = if (oscuro) 0.5f else 0.9f))
+        drawPath(pliegue, t(PINO_OSC, oscuro).copy(alpha = 0.5f), style = Stroke(0.7f * u))
+        listOf(Offset(5 * u, 5 * u), Offset(5 * u, h - 5 * u), Offset(w - 5 * u, h - 5 * u)).forEach {
+            drawCircle(Color.Black.copy(alpha = 0.2f), 2 * u, Offset(it.x + 0.5f * u, it.y + 0.6f * u))
+            drawCircle(if (oscuro) Color(0xFFB8945A) else TACHUELA, 2 * u, it)
+            drawCircle(Color.White.copy(alpha = 0.45f), 0.6f * u, Offset(it.x - 0.6f * u, it.y - 0.6f * u))
+        }
+    }
+
+    /**
+     * El cajón de madera abierto y vacío, visto de tres cuartos: el frente de tablas con sus clavos, el costado en sombra, la
+     * boca abierta con el fondo a la vista y una sola brizna de paja que quedó dentro.
+     */
+    override fun DrawScope.dibujoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val s = size.minDimension
+        fun f(v: Float) = v * s
+        val borde = t(VETA, oscuro).let { if (oscuro) mezcla(it, Color(0xFFD8CFBC), 0.3f) else it }
+        val g = Stroke(0.9f * u, join = StrokeJoin.Round)
+        // La boca, con el fondo a la vista.
+        val boca = Path().apply { moveTo(f(0.08f), f(0.44f)); lineTo(f(0.26f), f(0.3f)); lineTo(f(0.92f), f(0.3f)); lineTo(f(0.74f), f(0.44f)); close() }
+        drawPath(boca, t(Color(0xFF3A2A18), oscuro))
+        drawPath(Path().apply { moveTo(f(0.3f), f(0.4f)); quadraticTo(f(0.45f), f(0.33f), f(0.6f), f(0.38f)) }, Color(0xFFE2C46A).copy(alpha = 0.8f), style = Stroke(0.8f * u, cap = StrokeCap.Round))
+        drawPath(boca, borde, style = g)
+        // El costado, en sombra.
+        val costado = Path().apply { moveTo(f(0.74f), f(0.44f)); lineTo(f(0.92f), f(0.3f)); lineTo(f(0.92f), f(0.76f)); lineTo(f(0.74f), f(0.9f)); close() }
+        drawPath(costado, t(PINO_OSC, oscuro))
+        drawPath(costado, borde, style = g)
+        // El frente de tablas, con sus clavos.
+        drawRect(t(PINO, oscuro), Offset(f(0.08f), f(0.44f)), Size(f(0.66f), f(0.46f)))
+        listOf(0.595f, 0.745f).forEach { y -> drawLine(borde, Offset(f(0.08f), f(y)), Offset(f(0.74f), f(y)), 0.7f * u) }
+        drawRect(borde, Offset(f(0.08f), f(0.44f)), Size(f(0.66f), f(0.46f)), style = g)
+        listOf(0.52f, 0.67f, 0.82f).forEach { y -> listOf(0.13f, 0.69f).forEach { x -> drawCircle(CLAVO, 0.7f * u, Offset(f(x), f(y))) } }
+    }
+
+    override val margenAviso: Dp = 31.dp
+    override fun tintaAviso(oscuro: Boolean): Color = if (oscuro) Color(0xFFEEE7D7) else Color(0xFF1F2A3A)
+
+    /**
+     * La nota del almacén clavada en el poste: el papel y, a la izquierda, la tira de pino con sus vetas y su clavo; con
+     * algunos avisos, la marca roja del libro de cuentas (la cruz de «ojo») junto al clavo.
+     */
+    override fun DrawScope.aviso(e: EstadoAviso, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        drawRect(papelAlmacen(oscuro))
+        drawLine(t(PINO_OSC, oscuro).copy(alpha = 0.35f), Offset(0f, h - 0.6f * u), Offset(w, h - 0.6f * u), 0.7f * u)
+        val tira = Rect(0f, 0f, 14 * u, h)
+        drawRect(t(PINO, oscuro), tira.topLeft, tira.size)
+        vetas(tira, t(VETA, oscuro).copy(alpha = 0.35f), 41 + e.semilla % 5, densidad = 0.5f, vertical = true)
+        drawRect(t(PINO_OSC, oscuro), Offset(tira.right - 1.2f * u, 0f), Size(1.2f * u, h))
+        val clavo = Offset(tira.center.x, 11 * u)
+        drawCircle(Color.Black.copy(alpha = 0.25f), 1.6f * u, Offset(clavo.x + 0.4f * u, clavo.y + 0.5f * u))
+        drawCircle(CLAVO, 1.5f * u, clavo)
+        drawCircle(Color.White.copy(alpha = 0.3f), 0.5f * u, Offset(clavo.x - 0.4f * u, clavo.y - 0.4f * u))
+        if (e.semilla % 2 == 1) {
+            val c = Offset(20 * u, 11 * u); val r = 2.5f * u
+            val rojo = rojoCuentas(oscuro)
+            drawLine(rojo, Offset(c.x - r, c.y - r), Offset(c.x + r, c.y + r), 1.2f * u, StrokeCap.Round)
+            drawLine(rojo, Offset(c.x + r, c.y - r), Offset(c.x - r, c.y + r), 1.2f * u, StrokeCap.Round)
+        }
+    }
+
+    override val margenCifra: Dp = 10.dp
+    override fun tintaCifra(oscuro: Boolean): Color = if (oscuro) Color(0xFFEEE7D7) else Color(0xFF1F2A3A)
+    override fun rotuloCifra(oscuro: Boolean): Color = if (oscuro) Color(0xFFE3C27A) else Color(0xFFA23B2A)
+
+    /** La etiqueta de bulto: el vale con las esquinas comidas, su borde de lápiz y el ojal con su arandela arriba a la derecha. */
+    override fun DrawScope.cifra(e: EstadoCifra, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val k = 4 * u
+        val vale = Path().apply {
+            moveTo(k, 0f); lineTo(w - k, 0f); quadraticTo(w - k, k, w, k); lineTo(w, h - k); quadraticTo(w - k, h - k, w - k, h)
+            lineTo(k, h); quadraticTo(k, h - k, 0f, h - k); lineTo(0f, k); quadraticTo(k, k, k, 0f); close()
+        }
+        drawPath(vale, papelAlmacen(oscuro))
+        drawPath(vale, (if (oscuro) Color(0xFFC9A66A) else PINO_OSC).copy(alpha = 0.6f), style = Stroke(1 * u))
+        val ojal = Offset(w - 6 * u, 6 * u)
+        drawCircle(if (oscuro) Color(0xFFB8945A) else TACHUELA, 1.9f * u, ojal, style = Stroke(1.1f * u))
     }
 }
 
@@ -1073,6 +2031,183 @@ object ComunRuinas : DisenoComun {
             drawCircle(t(if (i % 2 == 0) MUSGO_LUZ else MUSGO, oscuro), (0.9f + 0.7f * azar(s + 19, i)) * u, Offset(m.x + dx, m.y - 0.8f * u * azar(s + 17, i)))
         }
     }
+
+    // ---------------------------------------------------------------- filas, vacío, aviso y cifra
+
+    /** El hormigón liso de las placas: claro y lavado por la lluvia, u oscuro y húmedo de noche. */
+    private fun losa(oscuro: Boolean): Color = if (oscuro) Color(0xFF1A201C) else Color(0xFFDCDCD3)
+
+    /** El gris de las grietas. */
+    private fun grieta(oscuro: Boolean): Color = if (oscuro) Color(0xFF4A554C) else HORMIGON_OSC
+
+    /** Una mata de musgo de [n] bolitas alrededor de [c], de hasta [r] de radio. */
+    private fun DrawScope.matita(c: Offset, r: Float, n: Int, semilla: Int, oscuro: Boolean) {
+        for (i in 0 until n) {
+            val a = (190f + 160f * azar(semilla, i)) * (Math.PI / 180f).toFloat()
+            val d = r * azar(semilla + 4, i)
+            drawCircle(t(if (i % 3 == 0) MUSGO_LUZ else MUSGO, oscuro), r * (0.25f + 0.25f * azar(semilla + 8, i)),
+                Offset(c.x + d * kotlin.math.cos(a), c.y + d * kotlin.math.sin(a) * 0.55f))
+        }
+    }
+
+    /** Una hoja de hiedra de punta en [o], girada [giro] grados y de [l] de largo, con su nervio. */
+    private fun DrawScope.hojita(o: Offset, giro: Float, l: Float, color: Color, nervio: Color, relleno: Boolean = true, grosor: Float = 1f) {
+        rotate(giro, o) {
+            val p = Path().apply { moveTo(o.x, o.y); quadraticTo(o.x + l * 0.45f, o.y - l * 0.46f, o.x + l, o.y); quadraticTo(o.x + l * 0.45f, o.y + l * 0.46f, o.x, o.y); close() }
+            if (relleno) drawPath(p, color) else drawPath(p, color, style = Stroke(grosor, join = StrokeJoin.Round))
+            drawLine(nervio, o, Offset(o.x + l * 0.85f, o.y), grosor * 0.6f)
+        }
+    }
+
+    override val margenFila: Dp = 12.dp
+
+    /**
+     * La fila del muro: una grieta fina que corre al pie, quebrada a su manera en cada fila, y una matita de musgo abajo a la
+     * izquierda. Al tocarla el muro se tiñe de verde y una luciérnaga se enciende junto al musgo.
+     */
+    override fun DrawScope.fila(e: EstadoFila, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (e.presionado) drawRect(MUSGO.copy(alpha = if (oscuro) 0.14f else 0.1f))
+        val s = e.semilla
+        val tramos = (w / (40 * u)).toInt().coerceIn(2, 30)
+        val raya = Path().apply {
+            moveTo(8 * u, h - 1 * u)
+            for (i in 1..tramos) lineTo(8 * u + (w - 8 * u) * i / tramos, h - (0.6f + 1.6f * azar(s, i)) * u)
+        }
+        drawPath(raya, grieta(oscuro).copy(alpha = if (oscuro) 0.9f else 0.5f), style = Stroke(0.7f * u, join = StrokeJoin.Round))
+        matita(Offset(4 * u, h - 2.5f * u), (if (e.conDetalle) 4.5f else 3.5f) * u, 5, s + 3, oscuro)
+        if (e.presionado) {
+            val l = Offset(6 * u, h / 2 - 4 * u)
+            mancha(l, 7 * u, LUCIERNAGA.copy(alpha = 0.45f))
+            drawCircle(Color(0xFFF8FFD0), 0.9f * u, l)
+        }
+    }
+
+    /** La flecha pintada con aerosol en la pared: el trazo verde musgo con su punta y una gota que escurre. */
+    override fun DrawScope.flechaFila(oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2)
+        val pintura = tintaBotonTexto(oscuro)
+        drawLine(pintura, Offset(c.x - 6.5f * u, c.y + 0.4f * u), Offset(c.x + 4 * u, c.y), 1.8f * u, StrokeCap.Round)
+        drawPath(Path().apply { moveTo(c.x + 0.5f * u, c.y - 4.5f * u); lineTo(c.x + 5.5f * u, c.y); lineTo(c.x + 0.5f * u, c.y + 4.5f * u) }, pintura,
+            style = Stroke(1.8f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        drawLine(pintura.copy(alpha = 0.7f), Offset(c.x - 3 * u, c.y + 1 * u), Offset(c.x - 3 * u, c.y + 5.5f * u), 0.9f * u, StrokeCap.Round)
+        drawCircle(pintura.copy(alpha = 0.7f), 0.9f * u, Offset(c.x - 3 * u, c.y + 6 * u))
+    }
+
+    /** La hoja de hiedra: fija, llena y verde, con su nervio claro; sin fijar, solo su contorno, gris. */
+    override fun DrawScope.marcaFija(fija: Boolean, oscuro: Boolean) {
+        val u = density
+        val o = Offset(size.width / 2 - 6 * u, size.height / 2 + 6 * u)
+        val l = 17 * u
+        drawLine(if (fija) t(HOJA, oscuro) else grieta(oscuro), o, Offset(o.x - 3 * u, o.y + 3 * u), 1 * u, StrokeCap.Round)
+        if (fija) hojita(o, -45f, l, if (oscuro) Color(0xFF6FA04A) else HOJA, t(MUSGO_LUZ, false).copy(alpha = 0.8f), grosor = 1.2f * u)
+        else hojita(o, -45f, l, grieta(oscuro).copy(alpha = if (oscuro) 1f else 0.8f), grieta(oscuro).copy(alpha = 0.6f), relleno = false, grosor = 1 * u)
+    }
+
+    override val tamDibujoVacio: Dp = 40.dp
+    override fun tintaVacio(oscuro: Boolean): Color = if (oscuro) Color(0xFFAAB3A6) else Color(0xFF3A3F38)
+
+    /**
+     * El trozo de muro donde no queda nada: la losa de hormigón con dos grietas, una mata de musgo en la esquina de abajo a la
+     * izquierda y una hoja de hiedra que se asoma por la de arriba a la derecha.
+     */
+    override fun DrawScope.marcoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val s = e.semilla
+        drawRect(losa(oscuro))
+        drawRect(grieta(oscuro).copy(alpha = 0.35f), Offset.Zero, size, style = Stroke(0.8f * u))
+        val g = grieta(oscuro).copy(alpha = if (oscuro) 0.9f else 0.6f)
+        val g1 = w * (0.12f + 0.2f * azar(s, 1))
+        drawPath(Path().apply { moveTo(g1, 0f); lineTo(g1 + 3 * u, 4 * u); lineTo(g1 + 1 * u, 8 * u); lineTo(g1 + 5 * u, 12 * u) }, g, style = Stroke(0.8f * u))
+        val g2 = w * (0.62f + 0.25f * azar(s, 2))
+        drawPath(Path().apply { moveTo(g2, h); lineTo(g2 - 2 * u, h - 4 * u); lineTo(g2 + 1.5f * u, h - 7 * u); moveTo(g2 - 2 * u, h - 4 * u); lineTo(g2 - 6 * u, h - 6 * u) }, g, style = Stroke(0.8f * u))
+        matita(Offset(10 * u, h - 3 * u), 7 * u, 12, s + 13, oscuro)
+        hojita(Offset(w - 2 * u, 1 * u), 140f, 11 * u, t(HOJA, oscuro), t(MUSGO_LUZ, oscuro).copy(alpha = 0.6f), grosor = 0.9f * u)
+        hojita(Offset(w - 2 * u, 1 * u), 105f, 8 * u, t(MUSGO, oscuro), t(MUSGO_LUZ, oscuro).copy(alpha = 0.6f), grosor = 0.8f * u)
+    }
+
+    /**
+     * La maceta de barro rota y vacía: el borde mellado, el hueco oscuro sin tierra, la grieta que baja por el cuerpo y una hoja
+     * seca caída a su lado, en el suelo.
+     */
+    override fun DrawScope.dibujoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val s = size.minDimension
+        fun f(v: Float) = v * s
+        val barro = t(Color(0xFFB0643A), oscuro)
+        val borde = if (oscuro) Color(0xFFD08A60) else Color(0xFF6E3A1E)
+        val tr = Stroke(1.1f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // El cuerpo.
+        val cuerpo = Path().apply { moveTo(f(0.24f), f(0.42f)); lineTo(f(0.32f), f(0.88f)); lineTo(f(0.68f), f(0.88f)); lineTo(f(0.76f), f(0.42f)); close() }
+        drawPath(cuerpo, barro)
+        drawPath(cuerpo, borde, style = tr)
+        // El borde, con su mella a la derecha.
+        val labio = Path().apply {
+            moveTo(f(0.18f), f(0.3f)); lineTo(f(0.6f), f(0.3f)); lineTo(f(0.66f), f(0.37f)); lineTo(f(0.72f), f(0.32f)); lineTo(f(0.82f), f(0.32f))
+            lineTo(f(0.82f), f(0.42f)); lineTo(f(0.18f), f(0.42f)); close()
+        }
+        drawPath(labio, mezcla(barro, Color.White, 0.12f))
+        drawPath(labio, borde, style = tr)
+        drawRect(Color.Black.copy(alpha = if (oscuro) 0.6f else 0.45f), Offset(f(0.22f), f(0.38f)), Size(f(0.56f), f(0.035f)))
+        // La grieta.
+        drawPath(Path().apply { moveTo(f(0.56f), f(0.42f)); lineTo(f(0.52f), f(0.56f)); lineTo(f(0.58f), f(0.66f)); lineTo(f(0.54f), f(0.8f)) }, borde, style = Stroke(0.8f * u, join = StrokeJoin.Round))
+        // El trozo caído y la hoja seca.
+        drawPath(Path().apply { moveTo(f(0.8f), f(0.9f)); lineTo(f(0.88f), f(0.84f)); lineTo(f(0.94f), f(0.9f)); close() }, barro)
+        hojita(Offset(f(0.06f), f(0.9f)), -12f, f(0.2f), t(Color(0xFF8A7A3A), oscuro), borde.copy(alpha = 0.5f), grosor = 0.8f * u)
+        drawLine(grieta(oscuro), Offset(f(0.02f), f(0.93f)), Offset(f(0.98f), f(0.93f)), 0.8f * u, StrokeCap.Round)
+    }
+
+    override val margenAviso: Dp = 28.dp
+    override fun tintaAviso(oscuro: Boolean): Color = tintaCampo(oscuro)
+
+    /**
+     * La cinta del campo pegada en el muro con su aviso: las puntas rotas a mano, su brillo de arriba y, a la izquierda, la
+     * marca pintada con aerosol en óxido: la admiración o, según el aviso, la cruz de «cuidado».
+     */
+    override fun DrawScope.aviso(e: EstadoAviso, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val s = e.semilla
+        val dientes = (h / (5 * u)).toInt().coerceIn(3, 40)
+        val cinta = Path().apply {
+            moveTo(1.5f * u, 0f); lineTo(w - 1.5f * u, 0f)
+            for (i in 1..dientes) lineTo(w + (if (i % 2 == 0) -1.5f else 0f) * u * (0.6f + 0.8f * azar(s + 5, i)), h * i / dientes)
+            lineTo(1.5f * u, h)
+            for (i in dientes - 1 downTo 0) lineTo((if (i % 2 == 0) 1.5f else 0f) * u * (0.6f + 0.8f * azar(s + 7, i)), h * i / dientes)
+            close()
+        }
+        drawPath(cinta, if (oscuro) Color(0xFF2C2E2C) else Color(0xFFCFD3CD))
+        drawLine(Color.White.copy(alpha = if (oscuro) 0.08f else 0.45f), Offset(3 * u, 1.2f * u), Offset(w - 3 * u, 1.2f * u), 0.8f * u)
+        val oxido = errorCampo(oscuro)
+        val x = 13 * u
+        if (s % 2 == 0) {
+            drawLine(oxido, Offset(x, 6 * u), Offset(x + 0.6f * u, 15 * u), 2.4f * u, StrokeCap.Round)
+            drawCircle(oxido, 1.4f * u, Offset(x + 0.6f * u, 20 * u))
+            drawLine(oxido.copy(alpha = 0.6f), Offset(x + 0.4f * u, 15 * u), Offset(x + 0.4f * u, minOf(17.5f * u, h - 2 * u)), 0.8f * u, StrokeCap.Round)
+        } else {
+            drawLine(oxido, Offset(x - 4 * u, 8 * u), Offset(x + 4 * u, 18 * u), 2.2f * u, StrokeCap.Round)
+            drawLine(oxido, Offset(x + 4 * u, 8 * u), Offset(x - 4 * u, 18 * u), 2.2f * u, StrokeCap.Round)
+            drawLine(oxido.copy(alpha = 0.6f), Offset(x + 3 * u, 17 * u), Offset(x + 3 * u, minOf(22 * u, h - 2 * u)), 0.8f * u, StrokeCap.Round)
+        }
+    }
+
+    override val margenCifra: Dp = 10.dp
+    override fun tintaCifra(oscuro: Boolean): Color = if (oscuro) Color(0xFFE3E6DC) else Color(0xFF1F2420)
+    override fun rotuloCifra(oscuro: Boolean): Color = rotuloCampo(oscuro)
+
+    /** La baldosa de hormigón: su canto, una grieta que baja de la esquina de arriba y una pizca de musgo en la de abajo. */
+    override fun DrawScope.cifra(e: EstadoCifra, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        drawRect(losa(oscuro))
+        drawRect(grieta(oscuro).copy(alpha = 0.4f), Offset.Zero, size, style = Stroke(0.8f * u))
+        drawPath(Path().apply { moveTo(w - 10 * u, 0f); lineTo(w - 7 * u, 3 * u); lineTo(w - 8 * u, 6 * u); lineTo(w - 4 * u, 8 * u) },
+            grieta(oscuro).copy(alpha = if (oscuro) 0.9f else 0.6f), style = Stroke(0.7f * u))
+        matita(Offset(w - 6 * u, h - 2.5f * u), 4 * u, 6, e.semilla, oscuro)
+    }
 }
 
 /**
@@ -1219,5 +2354,155 @@ object ComunEspacio : DisenoComun {
         }
         drawPath(esquinas, tinta.copy(alpha = when { !e.habilitado -> 0.3f; fijo -> 1f; else -> 0.55f }),
             style = Stroke((if (fijo) 1.4f else 1f) * u, cap = StrokeCap.Square, join = StrokeJoin.Miter))
+    }
+
+    // ---------------------------------------------------------------- filas, vacío, aviso y cifra
+
+    /** El fondo de las pantallas de la nave: blanco de panel en claro, el negro del espacio en oscuro. */
+    private fun pantalla(oscuro: Boolean): Color = if (oscuro) Color(0xFF0A0F1E) else Color(0xFFF8FAFD)
+
+    /** El filo de los paneles. */
+    private fun filo(oscuro: Boolean): Color = if (oscuro) Color(0xFF26324F) else Color(0xFFC3CCDA)
+
+    override val margenFila: Dp = 14.dp
+
+    /**
+     * La línea del visor: un trazo fino al pie con un tope en cada punta y, a la izquierda, el corchete del visor, tenue. Al
+     * tocarla el corchete se cierra sobre la fila y se enciende, y la fila se tiñe de azul.
+     */
+    override fun DrawScope.fila(e: EstadoFila, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val azul = tintaBotonTexto(oscuro)
+        if (e.presionado) drawRect(azul.copy(alpha = if (oscuro) 0.1f else 0.07f))
+        val y = h - 1 * u
+        val linea = azul.copy(alpha = if (e.presionado) 0.6f else 0.22f)
+        drawPath(Path().apply { moveTo(10 * u, y); lineTo(w - 4 * u, y); moveTo(w - 4 * u, y - 2.5f * u); lineTo(w - 4 * u, y) }, linea, style = Stroke(0.7f * u))
+        val alto = (if (e.conDetalle) 0.56f else 0.42f) * h
+        val x = if (e.presionado) 4 * u else 2 * u
+        drawPath(Path().apply { moveTo(x + 3 * u, h / 2 - alto / 2); lineTo(x, h / 2 - alto / 2); lineTo(x, h / 2 + alto / 2); lineTo(x + 3 * u, h / 2 + alto / 2) },
+            (if (e.presionado) (if (oscuro) CIAN else azul) else azul.copy(alpha = 0.4f)), style = Stroke((if (e.presionado) 1.3f else 0.9f) * u, join = StrokeJoin.Miter))
+    }
+
+    /** El doble galón del visor, «»», el de adelante más marcado. */
+    override fun DrawScope.flechaFila(oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2)
+        val azul = tintaBotonTexto(oscuro)
+        listOf(-3.5f to 0.45f, 1.5f to 1f).forEach { (dx, a) ->
+            drawPath(Path().apply { moveTo(c.x + dx * u - 2.5f * u, c.y - 4.5f * u); lineTo(c.x + dx * u + 2 * u, c.y); lineTo(c.x + dx * u - 2.5f * u, c.y + 4.5f * u) },
+                azul.copy(alpha = a), style = Stroke(1.4f * u, cap = StrokeCap.Square, join = StrokeJoin.Miter))
+        }
+    }
+
+    /** El destello de cuatro puntas de una estrella: fijo, lleno de ámbar (con su halo en oscuro); sin fijar, en contorno tenue. */
+    override fun DrawScope.marcaFija(fija: Boolean, oscuro: Boolean) {
+        val u = density
+        val c = Offset(size.width / 2, size.height / 2)
+        val p = estrella(c, 9 * u, 4, 0.32f)
+        if (fija) {
+            val ambar = if (oscuro) AMBAR else Color(0xFFD9550F)
+            if (oscuro) drawCircle(ambar.copy(alpha = 0.22f), 6 * u, c)
+            drawPath(p, ambar)
+        } else drawPath(p, (if (oscuro) Color(0xFF8E9AB8) else Color(0xFF4E5A70)).copy(alpha = 0.6f), style = Stroke(1 * u, join = StrokeJoin.Miter))
+    }
+
+    override val tamDibujoVacio: Dp = 42.dp
+    override fun tintaVacio(oscuro: Boolean): Color = if (oscuro) Color(0xFF8E9AB8) else Color(0xFF4E5A70)
+
+    /**
+     * La pantalla de exploración sin señal: el panel ochavado con su filo, una rejilla de puntos de referencia y las tres luces
+     * de estado del canto de arriba, apagadas.
+     */
+    override fun DrawScope.marcoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val todo = ochavado(Rect(0f, 0f, w, h), 8 * u)
+        drawPath(todo, pantalla(oscuro))
+        drawPath(todo, filo(oscuro), style = Stroke(1 * u))
+        // La rejilla de puntos: una raya de puntos por renglón.
+        val paso = maxOf(14 * u, 1f)
+        val puntos = Path()
+        var y = paso; var n = 0
+        while (y < h - 4 * u && n < 100) { puntos.moveTo(paso, y); puntos.lineTo(w - 4 * u, y); y += paso; n++ }
+        drawPath(puntos, tintaBotonTexto(oscuro).copy(alpha = if (oscuro) 0.22f else 0.16f), style = Stroke(1.1f * u, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.01f, paso))))
+        // Las luces, apagadas.
+        listOf(VERDE, AMBAR, CIAN).forEachIndexed { i, cl -> drawCircle(mezcla(cl, if (oscuro) Color(0xFF1A1E26) else Color(0xFF9AA4B4), 0.7f), 1 * u, Offset(w - 24 * u + i * 5 * u, 3.5f * u)) }
+    }
+
+    /**
+     * La órbita sin planeta: la elipse punteada de la trayectoria, el hueco del planeta marcado con su círculo a trazos y la
+     * cruz de puntería, un satélite que sigue dando vueltas y dos estrellas lejanas.
+     */
+    override fun DrawScope.dibujoVacio(e: EstadoVacio, oscuro: Boolean) {
+        val u = density
+        val s = size.minDimension
+        fun f(v: Float) = v * s
+        val l = tintaVacio(oscuro)
+        val azul = tintaBotonTexto(oscuro)
+        val c = Offset(f(0.5f), f(0.52f))
+        rotate(-14f, c) { drawOval(l, Offset(f(0.04f), f(0.32f)), Size(f(0.92f), f(0.4f)), style = Stroke(1.1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(f(0.05f), f(0.04f))))) }
+        drawCircle(azul, f(0.13f), c, style = Stroke(1.1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(f(0.04f), f(0.035f)))))
+        val cruz = Path().apply { moveTo(c.x - f(0.07f), c.y); lineTo(c.x + f(0.07f), c.y); moveTo(c.x, c.y - f(0.07f)); lineTo(c.x, c.y + f(0.07f)) }
+        drawPath(cruz, azul.copy(alpha = 0.6f), style = Stroke(0.8f * u))
+        // El satélite, en la órbita.
+        val sat = Offset(f(0.16f), f(0.64f))
+        drawRect(l, Offset(sat.x - f(0.03f), sat.y - f(0.03f)), Size(f(0.06f), f(0.06f)))
+        drawLine(azul, Offset(sat.x - f(0.1f), sat.y), Offset(sat.x + f(0.1f), sat.y), 1.6f * u)
+        // Las estrellas lejanas.
+        drawPath(estrella(Offset(f(0.84f), f(0.14f)), f(0.08f), 4, 0.32f), if (oscuro) AMBAR else Color(0xFFD9550F))
+        drawCircle(l, f(0.02f), Offset(f(0.2f), f(0.18f)))
+    }
+
+    override val margenAviso: Dp = 28.dp
+    override fun tintaAviso(oscuro: Boolean): Color = if (oscuro) Color(0xFFE8ECF8) else Color(0xFF0D1526)
+
+    /**
+     * La alerta de la consola de a bordo: el panel con la barra azul a la izquierda y, arriba, su señal (el triángulo ámbar
+     * con su admiración o, según el aviso, el anillo de información), con una fila de tres luces de estado debajo.
+     */
+    override fun DrawScope.aviso(e: EstadoAviso, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val p = ochavado(Rect(0f, 0f, w, h), 5 * u)
+        drawPath(p, if (oscuro) Color(0xFF0B1226) else Color(0xFFE9EEF6))
+        drawPath(p, filo(oscuro), style = Stroke(0.8f * u))
+        val azul = tintaBotonTexto(oscuro)
+        drawRect(azul, Offset(3 * u, 5 * u), Size(2 * u, h - 10 * u))
+        val c = Offset(16 * u, 13 * u)
+        if (e.semilla % 2 == 0) {
+            val ambar = if (oscuro) AMBAR else Color(0xFFC24A0C)
+            drawPath(Path().apply { moveTo(c.x, c.y - 6 * u); lineTo(c.x + 6 * u, c.y + 4.5f * u); lineTo(c.x - 6 * u, c.y + 4.5f * u); close() }, ambar, style = Stroke(1.2f * u, join = StrokeJoin.Miter))
+            drawLine(ambar, Offset(c.x, c.y - 2.2f * u), Offset(c.x, c.y + 1 * u), 1.3f * u)
+            drawRect(ambar, Offset(c.x - 0.65f * u, c.y + 2 * u), Size(1.3f * u, 1.3f * u))
+        } else {
+            drawCircle(azul, 5.5f * u, c, style = Stroke(1.2f * u))
+            drawRect(azul, Offset(c.x - 0.65f * u, c.y - 3 * u), Size(1.3f * u, 1.3f * u))
+            drawLine(azul, Offset(c.x, c.y - 0.8f * u), Offset(c.x, c.y + 3.2f * u), 1.3f * u)
+        }
+        if (h > 30 * u) listOf(VERDE, AMBAR, CIAN).forEachIndexed { i, cl ->
+            drawCircle(if (oscuro) cl else mezcla(cl, Color(0xFF0D1526), 0.35f), 0.9f * u, Offset(c.x - 4 * u + i * 4 * u, 24 * u))
+        }
+    }
+
+    override val margenCifra: Dp = 10.dp
+    override fun tintaCifra(oscuro: Boolean): Color = if (oscuro) Color(0xFFE8F4FF) else Color(0xFF0D1526)
+    override fun rotuloCifra(oscuro: Boolean): Color = tintaBotonTexto(oscuro)
+
+    /** La lectura de telemetría: el panel ochavado con su filo, la regla de marcas en el canto izquierdo y la luz de estado arriba. */
+    override fun DrawScope.cifra(e: EstadoCifra, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val p = ochavado(Rect(0f, 0f, w, h), 6 * u)
+        drawPath(p, pantalla(oscuro))
+        drawPath(p, filo(oscuro), style = Stroke(1 * u))
+        val paso = maxOf(4 * u, 1f)
+        val marcas = Path()
+        var y = 9 * u; var k = 0
+        while (y < h - 9 * u && k < 100) { marcas.moveTo(2 * u, y); marcas.lineTo((if (k % 4 == 0) 5.5f else 3.8f) * u, y); y += paso; k++ }
+        drawPath(marcas, tintaBotonTexto(oscuro).copy(alpha = 0.45f), style = Stroke(0.6f * u))
+        val luz = Offset(w - 5 * u, 5 * u)
+        if (oscuro) drawCircle(CIAN.copy(alpha = 0.25f), 2.4f * u, luz)
+        drawCircle(if (oscuro) CIAN else Color(0xFF1B8FB0), 1 * u, luz)
     }
 }

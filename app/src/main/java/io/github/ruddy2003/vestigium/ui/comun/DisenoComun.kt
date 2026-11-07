@@ -59,7 +59,55 @@ interface DisenoComun {
      * el toque; sin [EstadoBotonTexto.habilitado], apagado.
      */
     fun DrawScope.botonTexto(e: EstadoBotonTexto, oscuro: Boolean)
+
+    // ---------------------------------------------------------------- filas, vacío, aviso y cifra
+
+    /** Margen a los lados del texto de una fila de menú. */
+    val margenFila: Dp
+    /** Lo que va detrás de una fila de menú (de Ajustes, de «Más»), del tamaño de la fila; [EstadoFila.presionado] al tocarla. */
+    fun DrawScope.fila(e: EstadoFila, oscuro: Boolean)
+    /** La flecha (mano, cursor…) al final de una fila de menú, en un lienzo de 20×20 dp. */
+    fun DrawScope.flechaFila(oscuro: Boolean)
+    /** La marca para fijar una fila de «Más» arriba (estrella, alfiler, lacre…), en 24×24 dp: llena si [fija]. */
+    fun DrawScope.marcaFija(fija: Boolean, oscuro: Boolean)
+
+    /** Lado del dibujo de lo vacío, arriba del texto. */
+    val tamDibujoVacio: Dp
+    /** El color del texto de un vacío. */
+    fun tintaVacio(oscuro: Boolean): Color
+    /** El recuadro de «todavía no hay…», del tamaño del lienzo. */
+    fun DrawScope.marcoVacio(e: EstadoVacio, oscuro: Boolean)
+    /** Una ilustración pequeña de algo vacío del mundo del tema (el ánfora, la lata, el cofre abierto…), en [tamDibujoVacio]. */
+    fun DrawScope.dibujoVacio(e: EstadoVacio, oscuro: Boolean)
+
+    /** Margen izquierdo del texto de un aviso (ahí va su marca). */
+    val margenAviso: Dp
+    /** El color del texto de un aviso. */
+    fun tintaAviso(oscuro: Boolean): Color
+    /** Lo que va detrás de un aviso, del tamaño del lienzo, con su marca a la izquierda dentro de [margenAviso]. */
+    fun DrawScope.aviso(e: EstadoAviso, oscuro: Boolean)
+
+    /** Margen entre el borde de una cifra y su texto. */
+    val margenCifra: Dp
+    /** El color del número de una cifra. */
+    fun tintaCifra(oscuro: Boolean): Color
+    /** El color del rótulo de una cifra. */
+    fun rotuloCifra(oscuro: Boolean): Color
+    /** Lo que va detrás de una cifra (la tesela, la placa, el contador…), del tamaño del lienzo. */
+    fun DrawScope.cifra(e: EstadoCifra, oscuro: Boolean)
 }
+
+/** Una fila de menú: si se está tocando, si lleva detalle y una semilla. */
+class EstadoFila(val presionado: Boolean, val conDetalle: Boolean, val semilla: Int)
+
+/** Un vacío: una semilla (para variar el dibujo). */
+class EstadoVacio(val semilla: Int)
+
+/** Un aviso: una semilla. */
+class EstadoAviso(val semilla: Int)
+
+/** Una cifra: una semilla. */
+class EstadoCifra(val semilla: Int)
 
 /** Un separador: si va tenue (la pantalla le pidió un color propio) y una semilla. */
 class EstadoSeparador(val tenue: Boolean, val semilla: Int)

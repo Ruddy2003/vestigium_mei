@@ -860,6 +860,38 @@ class Capturas {
     @Test fun separadoresB2b() = (ESTANTE_A1B + TemaId.EDO).forEach { separadoresB2Tema(it) }
     @Test fun separadoresB2c() = ESTANTE_A1C.forEach { separadoresB2Tema(it) }
     @Test fun separadoresB2d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { separadoresB2Tema(it) }
+    /**
+     * Filas, vacío, aviso y cifra (lote B3): dos filas de menú, una presionada (dibujada directo), dos filas de Más (una
+     * fijada), un vacío, un aviso y tres cifras. En claro y en oscuro. Datos inventados.
+     */
+    private fun filasB3(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(t)
+        captura(t, oscuro, 2800, "tema_${t.id}_${modo}_filas") {
+            Repo.configEnMemoria(Repo.config.copy(favoritos_mas = Repo.config.favoritos_mas + "gastos"))
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                io.github.ruddy2003.vestigium.ui.FilaMenu("Respaldo automático", "cada noche, en la carpeta elegida") {}
+                io.github.ruddy2003.vestigium.ui.FilaMenu("Acerca de") {}
+                androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(56.dp)) {
+                    with(d) { fila(io.github.ruddy2003.vestigium.ui.comun.EstadoFila(true, false, 4), oscuro) }
+                }
+                io.github.ruddy2003.vestigium.ui.pantallas.FilaMas("gastos", "Gastos", "Gastos e ingresos del mes") {}
+                io.github.ruddy2003.vestigium.ui.pantallas.FilaMas("escalada", "Escalada", null) {}
+                io.github.ruddy2003.vestigium.ui.Vacio("Todavía no hay entradas. Escribe la de hoy desde la pestaña Diario.")
+                io.github.ruddy2003.vestigium.ui.Aviso("Los datos se guardan solo en este teléfono. Haz un respaldo de vez en cuando.")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    io.github.ruddy2003.vestigium.ui.Cifra("128", "entradas", Modifier.width(100.dp))
+                    io.github.ruddy2003.vestigium.ui.Cifra("6.4", "ánimo medio", Modifier.width(100.dp))
+                    io.github.ruddy2003.vestigium.ui.Cifra("-0.12", "tendencia", Modifier.width(100.dp))
+                }
+            }
+        }
+    }
+    private fun filasB3Tema(t: TemaId) { filasB3(t, t.soloOscuro); if (!t.soloOscuro) filasB3(t, true) }
+    @Test fun filasB3a() = ESTANTE_A1A.forEach { filasB3Tema(it) }
+    @Test fun filasB3b() = (ESTANTE_A1B + TemaId.EDO).forEach { filasB3Tema(it) }
+    @Test fun filasB3c() = ESTANTE_A1C.forEach { filasB3Tema(it) }
+    @Test fun filasB3d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { filasB3Tema(it) }
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

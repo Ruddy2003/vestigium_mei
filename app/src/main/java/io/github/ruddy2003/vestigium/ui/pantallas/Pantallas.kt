@@ -2,6 +2,12 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import io.github.ruddy2003.vestigium.ui.comun.Separador
 import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.BorderStroke
@@ -177,19 +183,29 @@ fun EnPantallas(q: String, ir: (String) -> Unit) {
     }
 }
 
-/** Una fila de «Más» con estrella para fijarla arriba. */
+/** Una fila de «Más», con el fondo y la flecha del tema, y la marca del tema para fijarla arriba. */
 @Composable
 fun FilaMas(ruta: String, titulo: String, detalle: String?, ir: (String) -> Unit) {
     val fija = ruta in Repo.config.favoritos_mas
     val cs = MaterialTheme.colorScheme
-    Row(Modifier.fillMaxWidth().clickable { Seleccion.limpiarFechas(); ir(ruta) }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(Estilo.tema)
+    val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+    val toque = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val presionado by toque.collectIsPressedAsState()
+    val e = io.github.ruddy2003.vestigium.ui.comun.EstadoFila(presionado, detalle != null, ruta.hashCode())
+    Row(Modifier.fillMaxWidth().drawBehind { with(d) { fila(e, oscuro) } }
+        .clickable(toque, androidx.compose.foundation.LocalIndication.current) { Seleccion.limpiarFechas(); ir(ruta) }
+        .padding(start = d.margenFila, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f).padding(vertical = 7.dp)) {
             Text(titulo, style = MaterialTheme.typography.bodyLarge)
             if (detalle != null) Text(detalle, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
         }
-        BotonTexto(onClick = {
-            Repo.cambiarConfig { c -> c.copy(favoritos_mas = if (fija) c.favoritos_mas - ruta else c.favoritos_mas + ruta) }
-        }) { Text(if (fija) "★" else "☆", style = MaterialTheme.typography.titleMedium, color = if (fija) cs.primary else cs.onSurfaceVariant) }
+        androidx.compose.foundation.layout.Box(Modifier.size(48.dp)
+            .semantics { contentDescription = if (fija) "Quitar de los atajos" else "Fijar en los atajos" }
+            .clickable { Repo.cambiarConfig { c -> c.copy(favoritos_mas = if (fija) c.favoritos_mas - ruta else c.favoritos_mas + ruta) } },
+            contentAlignment = Alignment.Center) {
+            androidx.compose.foundation.Canvas(Modifier.size(24.dp)) { with(d) { marcaFija(fija, oscuro) } }
+        }
     }
 }
 
