@@ -710,8 +710,9 @@ object ComunLaboratorio : DisenoComun {
         val u = density
         val w = size.width; val y = size.height / 2 + 1.5f * u
         val a = if (e.tenue) 0.5f else 1f
-        val gris = (if (oscuro) Color(0xFF8C98A0) else GRIS_OSC).copy(alpha = 0.5f * a)
-        drawLine(gris, Offset(0f, y), Offset(w, y), 0.8f * u)
+        // Más marcado que una raya de pelo: en claro, sobre el papel azulado, al 50 % casi no se veía.
+        val gris = (if (oscuro) Color(0xFF8C98A0) else GRIS_OSC).copy(alpha = (if (oscuro) 0.6f else 0.75f) * a)
+        drawLine(gris, Offset(0f, y), Offset(w, y), 1f * u)
         // La escala del centro.
         val cx = w / 2
         val paso = maxOf(3 * u, 1f)
