@@ -79,7 +79,40 @@ interface DisenoBiblioteca {
     fun alto(semilla: Int, palabras: Int): Float
     /** Un volumen entero, en su lienzo: el objeto, sus marcas y el día y el mes dibujados con [letra]. */
     fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean)
+
+    // ---------------------------------------------------------------- la tapa: el diario de hoy, cerrado
+
+    /** Alto de la tapa (el objeto ocupa todo el ancho). */
+    val altoTapa: Dp
+    /** Dónde va el extracto de lo escrito, en fracciones de la tapa (izquierda, arriba, derecha, abajo como bordes). */
+    val cajaTapa: Rect
+    /** La letra del extracto. */
+    val letraTapa: FontFamily
+    /** Tamaño del extracto, en sp. */
+    val tamTapa: Float
+    /** Cuántos renglones del extracto caben. */
+    val lineasTapa: Int
+    /** Si el extracto va centrado. */
+    val centradoTapa: Boolean
+    /** El color del extracto sobre la tapa. */
+    fun tintaTapa(oscuro: Boolean, noche: Boolean): Color
+    /** Cómo dice el tema cuántas palabras hay («120 palabras», «[120 PALABRAS]», «120 palabras bajo el agua»…). */
+    fun palabrasTapa(n: Int): String
+
+    /**
+     * El diario del día cerrado, como objeto del tema (el mismo objeto que sus volúmenes en el estante, pero grande): la
+     * fecha ([EstadoTapa.fecha]), la cuenta de palabras ([palabrasTapa]) y los rótulos del tema dibujados dentro con
+     * [textoEn]. El extracto lo pone la pantalla encima, en [cajaTapa]. Con [EstadoTapa.abierto] de 0 a 1 se abre: la
+     * tapa gira, el rollo se desenrolla, la solapa se levanta, la pantalla se enciende…
+     */
+    fun DrawScope.tapa(e: EstadoTapa, medidor: TextMeasurer, oscuro: Boolean)
 }
+
+/**
+ * Lo que se ve del diario cerrado de un día: la fecha como la escribe el tema, cuántas palabras tiene, si está en blanco,
+ * si es de noche (el sueño), cuánto se ha abierto (0 a 1, al tocarlo) y una semilla para sus irregularidades.
+ */
+class EstadoTapa(val fecha: String, val palabras: Int, val vacio: Boolean, val noche: Boolean, val abierto: Float, val semilla: Int)
 
 /** El diseño de la biblioteca de cada tema: cada uno con su mueble y su volumen propios. */
 fun disenoBiblioteca(t: TemaId): DisenoBiblioteca = when (t) {

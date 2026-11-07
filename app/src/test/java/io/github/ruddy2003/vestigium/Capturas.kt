@@ -628,6 +628,22 @@ class Capturas {
     @Test fun estanteA1b() = ESTANTE_A1B.forEach { t -> estante(t, t.soloOscuro); if (!t.soloOscuro) estante(t, true) }
     @Test fun estanteA1c() = ESTANTE_A1C.forEach { t -> estante(t, t.soloOscuro); if (!t.soloOscuro) estante(t, true) }
     @Test fun estanteA1d() = ESTANTE_A1D.forEach { t -> estante(t, t.soloOscuro); if (!t.soloOscuro) estante(t, true) }
+    /**
+     * La tapa del diario (lote A2a): con texto, en blanco, de noche y a medio abrir, en claro y en oscuro (los de solo
+     * oscuro, solo en oscuro).
+     */
+    private fun tapa(t: TemaId, oscuro: Boolean) = captura(t, oscuro, 2700, "tema_${t.id}_${if (oscuro) "oscuro" else "claro"}") {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            io.github.ruddy2003.vestigium.ui.TapaDiario("2026-10-16", TEXTO, tema = t)
+            io.github.ruddy2003.vestigium.ui.TapaDiario("2026-10-17", "", tema = t)
+            io.github.ruddy2003.vestigium.ui.TapaDiario("2026-10-16", "Volaba sobre un río y el agua subía hasta el puente.", tema = t, noche = true)
+            io.github.ruddy2003.vestigium.ui.TapaDiario("2026-10-16", TEXTO, tema = t) { 0.55f }
+        }
+    }
+    @Test fun tapaA2a() = ESTANTE_A1A.forEach { t -> tapa(t, t.soloOscuro); if (!t.soloOscuro) tapa(t, true) }
+    @Test fun tapaA2b() = (ESTANTE_A1B + TemaId.EDO).forEach { t -> tapa(t, t.soloOscuro); if (!t.soloOscuro) tapa(t, true) }
+    @Test fun tapaA2c() = ESTANTE_A1C.forEach { t -> tapa(t, t.soloOscuro); if (!t.soloOscuro) tapa(t, true) }
+    @Test fun tapaA2d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { t -> tapa(t, t.soloOscuro); if (!t.soloOscuro) tapa(t, true) }
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

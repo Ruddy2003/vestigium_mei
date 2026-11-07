@@ -31,6 +31,10 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -1335,60 +1339,45 @@ private fun formaObjeto(t: TemaId, m: Materia, e: ColorScheme, noche: Boolean, f
     }
 }
 
-/** El diario de un día como objeto del tema (rollo, libro, boletín, carta, expediente, tableta o terminal). Al tocarlo se abre a pantalla completa. */
+/**
+ * El diario de un día como objeto del tema, cerrado: la tapa de su biblioteca ([io.github.ruddy2003.vestigium.ui.biblioteca.DisenoBiblioteca.tapa]),
+ * con la fecha y la cuenta de palabras dibujadas dentro y el extracto de lo escrito en su caja. Al tocarlo se abre (la
+ * tapa gira, el rollo se desenrolla…) y después pasa a pantalla completa.
+ */
 @Composable
 fun ObjetoDiario(fecha: String, texto: String, modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, noche: Boolean = false, onClick: () -> Unit) {
-    val m = if (noche) materiaNoche(tema) else materia(tema)
-    val n = nocheDe(tema)
     val sentir = rememberSentir()
-    val esquemaEmblema = MaterialTheme.colorScheme.copy(primary = m.brillo, secondary = m.detalle, tertiary = m.brillo, background = m.acento, onBackground = m.brillo)
-    val forma = formaObjeto(tema, m, esquemaEmblema, noche, fecha)
-    val palabras = Texto.palabras(texto)
-    val vista = texto.trim().replace(Regex("\\s+"), " ").take(140)
-    // Al tocarlo, el objeto se abre un instante (la tapa gira, el rollo se acerca) antes de pasar a pantalla completa.
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val abre = remember { androidx.compose.animation.core.Animatable(0f) }
     val animar = Repo.config.animaciones
-    BoxWithConstraints(modifier.fillMaxWidth().height(forma.alto.dp).graphicsLayer {
-        val k = abre.value
-        scaleX = 1f + 0.05f * k; scaleY = 1f + 0.05f * k
-        if (forma.gira) { rotationY = -22f * k; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f); cameraDistance = 14f * density }
-        alpha = 1f - 0.25f * k
-    }.clickable {
+    TapaDiario(fecha, texto, modifier.clickable {
         sentir(Sentidos.Evento.ABRIR)
-        if (animar) scope.launch { abre.animateTo(1f, androidx.compose.animation.core.tween(230)); onClick(); abre.snapTo(0f) } else onClick()
-    }) {
-        Canvas(Modifier.fillMaxSize()) {
-            forma.dibujo.invoke(this)
-            if (noche) {
-                // Un poco del cielo del tema sobre el objeto: sus estrellas y su luna en una esquina.
-                estrellasDelTema(tema, fecha.hashCode(), 26, n.luna, Rect(0f, 0f, size.width, size.height * 0.5f), 1.3f)
-                lunaDelTema(tema, Offset(size.width * 0.93f, size.height * 0.16f), size.height * 0.07f, n)
-            }
+        if (animar) scope.launch { abre.animateTo(1f, androidx.compose.animation.core.tween(300)); onClick(); abre.snapTo(0f) } else onClick()
+    }, tema, noche) { abre.value }
+}
+
+/** La tapa sola, sin el toque: [abierto] se lee al dibujar (de 0, cerrada, a 1, abierta). Las capturas la usan a medio abrir. */
+@Composable
+internal fun TapaDiario(fecha: String, texto: String, modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, noche: Boolean = false, abierto: () -> Float = { 0f }) {
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(tema)
+    val oscuro = esOscuro()
+    val medidor = androidx.compose.ui.text.rememberTextMeasurer()
+    val palabras = Texto.palabras(texto)
+    val vista = texto.trim().replace(Regex("\\s+"), " ").take(160)
+    val fechaTema = Estilo.fecha(fecha)
+    val etiqueta = (if (noche) "El sueño de " else "El diario de ") + Fechas.corto(fecha) + if (palabras > 0) ", " + porNumero(palabras, "1 palabra", "$palabras palabras") else ", en blanco"
+    BoxWithConstraints(modifier.fillMaxWidth().height(d.altoTapa).semantics { contentDescription = etiqueta }) {
+        Canvas(Modifier.fillMaxSize().graphicsLayer()) {
+            with(d) { tapa(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoTapa(fechaTema, palabras, vista.isBlank(), noche, abierto(), fecha.hashCode()), medidor, oscuro) }
         }
+        val k = d.cajaTapa
         val w = maxWidth; val h = maxHeight
-        val k = forma.caja
-        // De noche, la fecha va en la luz de la noche del tema (salvo en las pantallas, que ya brillan).
-        val acento = if (noche && !forma.brilla) n.luna else forma.fecha
-        val ty = MaterialTheme.typography
-        val alinear = if (forma.centrado) TextAlign.Center else TextAlign.Start
-        Column(Modifier.fillMaxSize().padding(start = w * k[0], top = h * k[1], end = w * k[2], bottom = h * k[3]), verticalArrangement = Arrangement.Center,
-            horizontalAlignment = if (forma.centrado) Alignment.CenterHorizontally else Alignment.Start) {
-            forma.cabecera?.let { Text(it, fontFamily = Letra.codigo, fontSize = 11.sp, color = m.acento, maxLines = 1) }
-            Text(Estilo.fecha(fecha), style = ty.titleSmall, color = acento, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                fontFamily = forma.letraFecha ?: ty.titleSmall.fontFamily, textAlign = alinear)
-            Text(if (vista.isBlank()) forma.pista else vista, color = forma.tinta.copy(alpha = if (vista.isBlank()) 0.65f else 0.9f),
-                fontFamily = forma.letra, fontSize = forma.tam.sp, lineHeight = forma.interlinea.sp,
-                maxLines = forma.lineas, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp), textAlign = alinear)
-            if (palabras > 0) Text(forma.palabras(palabras), fontSize = 10.5.sp, color = forma.tinta.copy(alpha = 0.6f), fontFamily = forma.letraPie, modifier = Modifier.padding(top = 3.dp))
-        }
-        forma.rotulos.forEach { r ->
-            val marco = if (r.borde) Modifier.border(2.dp, r.color).padding(horizontal = 6.dp, vertical = 1.dp) else Modifier
-            Text(r.texto, color = r.color, fontFamily = r.letra, fontSize = r.tam.sp, maxLines = 1,
-                modifier = Modifier.align(r.alinear)
-                    .padding(start = if (r.alinear == Alignment.TopStart) w * r.x else 0.dp, end = if (r.alinear == Alignment.TopEnd) w * r.x else 0.dp, top = h * r.y)
-                    .rotate(r.giro).then(marco))
-        }
+        Text(if (vista.isBlank()) (if (noche) pistaNoche(tema) else pistaDia(tema)) else vista,
+            color = d.tintaTapa(oscuro, noche).copy(alpha = if (vista.isBlank()) 0.62f else 0.92f),
+            fontFamily = d.letraTapa, fontSize = d.tamTapa.sp, lineHeight = (d.tamTapa * 1.28f).sp, maxLines = d.lineasTapa,
+            overflow = TextOverflow.Ellipsis, textAlign = if (d.centradoTapa) TextAlign.Center else TextAlign.Start,
+            modifier = Modifier.offset(w * k.left, h * k.top).size(w * (k.right - k.left), h * (k.bottom - k.top))
+                .wrapContentHeight(Alignment.CenterVertically).graphicsLayer { alpha = 1f - abierto() })
     }
 }
 
