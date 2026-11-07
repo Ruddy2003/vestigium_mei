@@ -2929,7 +2929,8 @@ object EstanteTemplario : DisenoBiblioteca {
             drawLine(c(SILLAR_JUNTA).copy(alpha = 0.7f), Offset(r.left, junta), Offset(r.right, junta), 0.7f * u)
             drawLine(c(SILLAR_JUNTA).copy(alpha = 0.7f), Offset(r.left + r.width * 0.3f, r.top), Offset(r.left + r.width * 0.3f, junta), 0.7f * u)
             drawLine(c(SILLAR_JUNTA).copy(alpha = 0.7f), Offset(r.left + r.width * 0.7f, junta), Offset(r.left + r.width * 0.7f, r.bottom), 0.7f * u)
-            val tinta = if (sel) rojo else labrado
+            // En oscuro, la piedra elegida se hunde: el rojo se aclara para que el nombre se lea sobre ella.
+            val tinta = if (sel) (if (oscuro) mezcla(rojo, Color.White, 0.45f) else rojo) else labrado
             emblema(k, Offset(r.center.x, r.top + 13 * u), 6.5f * u, tinta, piedra)
             textoEn(medidor, e.nombres.getOrElse(k) { "" }, Rect(r.left + 2 * u, r.top + 23 * u, r.right - 2 * u, r.top + 38 * u), letra, tinta, 11f,
                 peso = FontWeight.Bold, minimo = 7f)
@@ -7440,7 +7441,7 @@ object EstanteAndalus : DisenoBiblioteca {
             drawRect(Color.White.copy(alpha = if (sel) 0.45f else 0.25f), Offset(r.left + 4 * u, r.top + 4 * u), Size(r.width * 0.3f, 1.2f * u))
             emblema(k, Offset(r.center.x, r.top + 15 * u), 6.5f * u, if (sel) mezcla(verde, c(ORO), 0.35f) else verde, pf)
             textoEn(medidor, e.nombres.getOrElse(k) { "" }.uppercase(), Rect(orla.left + 2 * u, r.top + 26 * u, orla.right - 2 * u, r.top + 40 * u), letra,
-                if (sel) ALMAGRA else perfil, 10f, peso = FontWeight.Bold, minimo = 6f)
+                if (sel) ALMAGRA else if (oscuro) HUESO else perfil, 10f, peso = FontWeight.Bold, minimo = 6f)
             // La cuenta, en un ojo verde abajo.
             val ojo = Rect(r.center.x - 11 * u, r.top + 41 * u, r.center.x + 11 * u, minOf(r.top + 52 * u, orla.bottom - 1 * u))
             drawRoundRect(verde, ojo.topLeft, ojo.size, CornerRadius(ojo.height / 2))

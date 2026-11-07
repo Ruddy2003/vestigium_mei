@@ -331,7 +331,16 @@ internal fun DrawScope.textoEn(medidor: TextMeasurer, texto: String, r: Rect, le
     var capa = medidor.measure(texto, estilo, maxLines = 1, softWrap = false)
     val k = minOf(1f, largo / capa.size.width.coerceAtLeast(1), grueso / capa.size.height.coerceAtLeast(1))
     if (k < 1f) {
-        val nuevo = maxOf(minimo, tam * k)
+        // El ancho no baja exactamente en proporción con la letra (los avances se redondean a píxeles): se vuelve a medir y,
+        // si todavía no cabe, se achica otra vez, hasta tres veces, antes de cortar con «…».
+        var nuevo = maxOf(minimo, tam * k)
+        for (vuelta in 0 until 3) {
+            estilo = estilo.copy(fontSize = nuevo.sp, lineHeight = (nuevo * 1.05f).sp)
+            capa = medidor.measure(texto, estilo, maxLines = 1, softWrap = false)
+            val k2 = minOf(largo / capa.size.width.coerceAtLeast(1), grueso / capa.size.height.coerceAtLeast(1))
+            if (k2 >= 1f || nuevo <= minimo) break
+            nuevo = maxOf(minimo, nuevo * k2 * 0.97f)
+        }
         estilo = estilo.copy(fontSize = nuevo.sp, lineHeight = (nuevo * 1.05f).sp)
         capa = medidor.measure(texto, estilo, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
             constraints = Constraints(maxWidth = (kotlin.math.ceil(largo).toInt() + 1).coerceAtLeast(1)))

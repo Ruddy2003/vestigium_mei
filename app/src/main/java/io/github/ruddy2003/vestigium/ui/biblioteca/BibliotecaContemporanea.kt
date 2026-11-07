@@ -1391,7 +1391,7 @@ object EstanteUrbe : DisenoBiblioteca {
             drawCircle(c(crudo), rm, centro)
             emblemaAl(k, centro, rm * 0.62f, c(lona), 1.1f * u)
             // La cenefa festoneada con el nombre.
-            val cenefa = Rect(x0, abajo, x1, abajo + 13 * u)
+            val cenefa = Rect(x0, abajo, x1, abajo + 16 * u)
             val festones = 6
             val fw = cenefa.width / festones
             drawPath(Path().apply {
@@ -1403,8 +1403,8 @@ object EstanteUrbe : DisenoBiblioteca {
                 close()
             }, c(lona))
             drawLine(c(crudo).copy(alpha = 0.7f), Offset(cenefa.left + 2 * u, cenefa.top + 1.6f * u), Offset(cenefa.right - 2 * u, cenefa.top + 1.6f * u), 0.7f * u)
-            textoEn(medidor, e.nombres[k], Rect(cenefa.left + 2 * u, cenefa.top + 2 * u, cenefa.right - 2 * u, cenefa.bottom - 1.5f * u), letra, c(crudo), 9.5f,
-                peso = if (sel) FontWeight.Bold else FontWeight.Normal, minimo = 6f)
+            textoEn(medidor, e.nombres[k], Rect(cenefa.left + 2 * u, cenefa.top + 2 * u, cenefa.right - 2 * u, cenefa.bottom - 1.5f * u), letra, c(crudo), 11.5f,
+                peso = FontWeight.Bold, minimo = 6f)
             // La sombra del toldo en la pared.
             drawRect(Color.Black.copy(alpha = if (sel) 0.16f else 0.1f), Offset(x0 + 2 * u, cenefa.bottom + 1.5f * u), Size(x1 - x0 - 4 * u, 3 * u))
             // La placa del número de la calle, con la cuenta.
@@ -5353,12 +5353,14 @@ object EstanteNapoleon : DisenoBiblioteca {
             }
             drawPath(orla, oro, style = Stroke(0.8f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f * u, 1f * u))))
             emblemaAl(k, Offset(r.center.x, r.top + 11 * u), 6 * u, oro, 1f * u)
-            textoEn(medidor, e.nombres[k].uppercase(), Rect(r.left + 4 * u, r.top + 20 * u, r.right - 4 * u, r.top + 31 * u), letra, if (sel) c(PERGAMINO) else oro, 9f,
-                espaciado = 0.4f, minimo = 5.5f)
+            // La letra en pergamino sobre todas las sedas (en oro se perdía sobre el rojo y el azul apagados).
+            val tinta = if (sel) c(PERGAMINO) else mezcla(c(PERGAMINO), seda, 0.12f)
+            textoEn(medidor, e.nombres[k].uppercase(), Rect(r.left + 3 * u, r.top + 19 * u, r.right - 3 * u, r.top + 32 * u), letra, tinta, 10.5f,
+                peso = FontWeight.Bold, espaciado = 0.3f, minimo = 5.5f)
             val cartela = Rect(r.center.x - 13 * u, r.top + 33 * u, r.center.x + 13 * u, r.top + 43 * u)
             if (r.bottom - pico > cartela.bottom) {
                 drawRoundRect(oro, cartela.topLeft, cartela.size, CornerRadius(5 * u), style = Stroke(0.7f * u))
-                textoEn(medidor, "${e.cuentas[k]}", cartela.deflate(1 * u), letra, oro, 8.5f)
+                textoEn(medidor, "${e.cuentas[k]}", cartela.deflate(1 * u), letra, tinta, 9f, peso = FontWeight.Bold)
             }
             // El cordón y la borla del elegido.
             if (sel) {
@@ -6699,7 +6701,7 @@ object EstanteDeco : DisenoBiblioteca {
         for (k in 0 until 5) {
             val q = quintoAl(k, banda.top + 2 * u, banda.bottom)
             val sel = k == e.actual
-            textoEn(medidor, e.nombres[k].uppercase(), q.deflate(4.5f * u, 1 * u), letra, if (sel) c(ORO_CLARO) else c(ORO).copy(alpha = 0.75f), 9f,
+            textoEn(medidor, e.nombres[k].uppercase(), q.deflate(4.5f * u, 1 * u), letra, if (sel) c(ORO_CLARO) else if (oscuro) ORO_CLARO.copy(alpha = 0.9f) else c(ORO), 9.5f,
                 peso = if (sel) FontWeight.Bold else FontWeight.Normal, espaciado = 0.6f, minimo = 5.5f)
             if (k > 0) drawLine(c(ORO).copy(alpha = 0.5f), Offset(q.left, q.top + 3 * u), Offset(q.left, q.bottom - 2 * u), 0.6f * u)
         }
@@ -9422,7 +9424,8 @@ object EstanteNavidad : DisenoBiblioteca {
             if (sel && oscuro) { drawCircle(LLAMA.copy(alpha = 0.08f), 40 * u, Offset(q.center.x, h * 0.5f)); drawCircle(LLAMA.copy(alpha = 0.08f), 26 * u, Offset(q.center.x, h * 0.5f)) }
             val fondo = c(telas[k])
             val pano = if (sel) fondo else mezcla(fondo, c(PINO), if (oscuro) 0.15f else 0.2f)
-            val letraColor = if (telas[k] == CREMA) c(ROJO) else c(CREMA)
+            // De noche la letra crema no se apaga con el fieltro: se queda casi como de día, para que se lea.
+            val letraColor = if (telas[k] == CREMA) c(ROJO) else if (oscuro) mezcla(CREMA, c(CREMA), 0.25f) else c(CREMA)
             val r = Rect(q.left + 5 * u, 8 * u, q.right - 5 * u, h - (if (sel) 5f else 14f) * u)
             val ondas = 3
             val forma = Path().apply {
@@ -9442,8 +9445,8 @@ object EstanteNavidad : DisenoBiblioteca {
             drawLine(hilo.copy(alpha = 0.8f), Offset(r.left + 2 * u, r.top + 4 * u), Offset(r.right - 2 * u, r.top + 4 * u), 0.7f * u)
             drawPath(forma, hilo.copy(alpha = 0.7f), style = Stroke(0.7f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.2f * u, 1.6f * u))))
             emblemaAl(k, Offset(r.center.x, r.top + 15 * u), 6.5f * u, letraColor, 1.1f * u)
-            textoEn(medidor, e.nombres[k], Rect(r.left + 3 * u, r.top + 24 * u, r.right - 3 * u, r.top + 36 * u), letra, letraColor, 10f,
-                peso = if (sel) FontWeight.Bold else FontWeight.Normal, minimo = 5.5f)
+            textoEn(medidor, e.nombres[k], Rect(r.left + 3 * u, r.top + 24 * u, r.right - 3 * u, r.top + 36 * u), letra, letraColor, 10.5f,
+                peso = FontWeight.Bold, minimo = 5.5f)
             if (r.bottom - 3 * u > r.top + 46 * u) textoEn(medidor, "${e.cuentas[k]}", Rect(r.left + 3 * u, r.top + 37 * u, r.right - 3 * u, r.top + 47 * u), letra, letraColor.copy(alpha = 0.85f), 9.5f)
             else textoEn(medidor, "${e.cuentas[k]}", Rect(r.left + 3 * u, r.top + 36 * u, r.right - 3 * u, r.bottom - 3 * u), letra, letraColor.copy(alpha = 0.85f), 8.5f)
             pinza(Offset(r.left + 6 * u, 6 * u), oscuro)
@@ -12261,7 +12264,14 @@ private fun DrawScope.renglonCon(medidor: TextMeasurer, texto: String, x: Float,
     var estilo = TextStyle(fontFamily = letra, fontSize = tam.sp, lineHeight = (tam * 1.05f).sp, color = color, fontWeight = peso)
     var capa = medidor.measure(texto, estilo, maxLines = 1, softWrap = false)
     if (capa.size.width > ancho) {
-        val nuevo = maxOf(minimo, tam * ancho / capa.size.width)
+        // Como en textoEn: el ancho no baja exacto con la letra, así que se vuelve a medir hasta tres veces antes de cortar.
+        var nuevo = maxOf(minimo, tam * ancho / capa.size.width)
+        for (vuelta in 0 until 3) {
+            estilo = estilo.copy(fontSize = nuevo.sp, lineHeight = (nuevo * 1.05f).sp)
+            capa = medidor.measure(texto, estilo, maxLines = 1, softWrap = false)
+            if (capa.size.width <= ancho || nuevo <= minimo) break
+            nuevo = maxOf(minimo, nuevo * ancho / capa.size.width * 0.97f)
+        }
         estilo = estilo.copy(fontSize = nuevo.sp, lineHeight = (nuevo * 1.05f).sp)
         capa = medidor.measure(texto, estilo, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
             constraints = Constraints(maxWidth = ceil(ancho).toInt().coerceAtLeast(1)))
