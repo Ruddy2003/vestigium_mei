@@ -725,7 +725,16 @@ class Capturas {
     @Test fun cartasA4a() = ESTANTE_A1A.forEach { t -> cartasA4(t, t.soloOscuro); if (!t.soloOscuro) cartasA4(t, true) }
     @Test fun cartasA4b() = (ESTANTE_A1B + TemaId.EDO).forEach { t -> cartasA4(t, t.soloOscuro); if (!t.soloOscuro) cartasA4(t, true) }
     @Test fun cartasA4c() = ESTANTE_A1C.forEach { t -> cartasA4(t, t.soloOscuro); if (!t.soloOscuro) cartasA4(t, true) }
-    @Test fun cartasA4d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { t -> cartasA4(t, t.soloOscuro); if (!t.soloOscuro) cartasA4(t, true) }
+    // El futuro, tema por tema (si uno falla, la prueba dice cuál).
+    private fun cartasA4Tema(t: TemaId) { cartasA4(t, t.soloOscuro); if (!t.soloOscuro) cartasA4(t, true) }
+    @Test fun cartasA4Neon() = cartasA4Tema(TemaId.NEON)
+    @Test fun cartasA4Refugio() = cartasA4Tema(TemaId.REFUGIO)
+    @Test fun cartasA4Orden() = cartasA4Tema(TemaId.ORDEN)
+    @Test fun cartasA4Laboratorio() = cartasA4Tema(TemaId.LABORATORIO)
+    @Test fun cartasA4Colonos() = cartasA4Tema(TemaId.COLONOS)
+    @Test fun cartasA4Ruinas() = cartasA4Tema(TemaId.RUINAS)
+    @Test fun cartasA4Espacio() = cartasA4Tema(TemaId.ESPACIO)
+    @Test fun cartasA4Distopia() = cartasA4Tema(TemaId.DISTOPIA)
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

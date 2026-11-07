@@ -1327,7 +1327,7 @@ object EstanteDistopia : DisenoBiblioteca {
             val alambre = c(ACERO_LUZ)
             drawRect(alambre, Offset(b.left, b.top + 28 * u), Size(b.width, 1.6f * u))
             var x = b.left
-            while (x <= b.right + 0.5f * u) { drawLine(alambre.copy(alpha = 0.85f), Offset(x, b.top + 28 * u), Offset(x, b.bottom), 1f * u); x += b.width / 12f }
+            while (x <= b.right + 0.5f * u) { drawLine(alambre.copy(alpha = 0.85f), Offset(x, b.top + 28 * u), Offset(x, b.bottom), 1f * u); x += maxOf(b.width / 12f, 1f) }
             drawLine(alambre, Offset(b.left, b.top + 60 * u), Offset(b.right, b.top + 60 * u), 1f * u)
             val labio = Rect(b.left - 1 * u, b.bottom - 9 * u, b.right + 1 * u, b.bottom)
             drawRect(c(ACERO), labio.topLeft, labio.size)
@@ -3550,7 +3550,7 @@ object EstanteRefugio : DisenoBiblioteca {
         clipRect(franja.left, franja.top, franja.right, franja.bottom) {
             drawRect(c(AMARILLO), franja.topLeft, franja.size)
             var x = franja.left - franja.height
-            while (x < franja.right) { drawPath(Path().apply { moveTo(x, franja.bottom); lineTo(x + franja.height, franja.top); lineTo(x + franja.height * 1.8f, franja.top); lineTo(x + franja.height * 0.8f, franja.bottom); close() }, c(NEGRO)); x += franja.height * 1.8f }
+            while (x < franja.right) { drawPath(Path().apply { moveTo(x, franja.bottom); lineTo(x + franja.height, franja.top); lineTo(x + franja.height * 1.8f, franja.top); lineTo(x + franja.height * 0.8f, franja.bottom); close() }, c(NEGRO)); x += maxOf(franja.height * 1.8f, 1f) }
         }
         // El portaetiquetas: el marco de chapa, los dos tornillos y la tarjeta crema mecanografiada.
         val marco = Rect(cuerpo.left + w * 0.06f, cuerpo.top + h * 0.1f, cuerpo.right - w * 0.17f, franja.top - h * 0.04f)
@@ -7152,7 +7152,7 @@ object EstanteColonos : DisenoBiblioteca {
             for (j in 0 until 3) {
                 val y = mt.y + (j - 1) * h * 0.04f
                 val p = Path(); var x = mt.x - w * 0.02f; p.moveTo(x, y); var sg = 1f
-                while (x < s.right - w * 0.02f) { p.quadraticTo(x + w * 0.012f, y - sg * h * 0.02f, x + w * 0.024f, y); x += w * 0.024f; sg = -sg }
+                while (x < s.right - w * 0.02f) { p.quadraticTo(x + w * 0.012f, y - sg * h * 0.02f, x + w * 0.024f, y); x += maxOf(w * 0.024f, 1f); sg = -sg }
                 drawPath(p, c(TINTA).copy(alpha = 0.45f), style = Stroke(0.9f * u))
             }
             if (e.romper > 0f) withTransform({ translate(-1f * u * e.romper, -2f * u * e.romper); rotate(-8f * e.romper, sc) }) {
@@ -9354,8 +9354,8 @@ object EstanteEspacio : DisenoBiblioteca {
         val pa = Rect(w * 0.62f, h * 0.05f, w * 0.95f, h * 0.36f)
         drawRoundRect(f(CASCO_OSC), pa.inflate(4 * u).topLeft, pa.inflate(4 * u).size, CornerRadius(4 * u))
         drawRect(c(VISOR), pa.topLeft, pa.size)
-        var gx = pa.left; while (gx < pa.right) { drawLine(CIAN.copy(alpha = 0.12f), Offset(gx, pa.top), Offset(gx, pa.bottom), 0.5f * u); gx += pa.width / 8 }
-        var gy = pa.top; while (gy < pa.bottom) { drawLine(CIAN.copy(alpha = 0.12f), Offset(pa.left, gy), Offset(pa.right, gy), 0.5f * u); gy += pa.height / 4 }
+        var gx = pa.left; while (gx < pa.right) { drawLine(CIAN.copy(alpha = 0.12f), Offset(gx, pa.top), Offset(gx, pa.bottom), 0.5f * u); gx += maxOf(pa.width / 8, 1f) }
+        var gy = pa.top; while (gy < pa.bottom) { drawLine(CIAN.copy(alpha = 0.12f), Offset(pa.left, gy), Offset(pa.right, gy), 0.5f * u); gy += maxOf(pa.height / 4, 1f) }
         for (k in 0 until 3) drawPath(contornoIrregular(Rect(pa.left + pa.width * (0.08f + 0.3f * k), pa.top + pa.height * (0.25f + 0.15f * (k % 2)), pa.left + pa.width * (0.26f + 0.3f * k), pa.top + pa.height * (0.65f + 0.1f * (k % 2))), 711 + k, 8, 0.25f), VERDE.copy(alpha = 0.18f))
         drawPath(Path().apply { for (s in 0..40) { val xx = pa.left + pa.width * s / 40f; val yy = pa.center.y - pa.height * 0.32f * sin(s / 40f * 2 * PI.toFloat() + 0.6f); if (s == 0) moveTo(xx, yy) else lineTo(xx, yy) } }, CIAN, style = Stroke(1.2f * u))
         val nave = Offset(pa.left + pa.width * 0.62f, pa.center.y - pa.height * 0.32f * sin(0.62f * 2 * PI.toFloat() + 0.6f))
@@ -9671,7 +9671,7 @@ object EstanteEspacio : DisenoBiblioteca {
             val fr = Rect(r.left + w * 0.56f, r.top + r.height * 0.32f, r.left + w * 0.76f, r.top + r.height * 0.62f)
             clipRect(fr.left, fr.top, fr.right, fr.bottom) {
                 drawRect(c(AMBAR), fr.topLeft, fr.size)
-                var x = fr.left - fr.height; while (x < fr.right) { drawPath(Path().apply { moveTo(x, fr.bottom); lineTo(x + fr.height, fr.top); lineTo(x + fr.height * 1.6f, fr.top); lineTo(x + fr.height * 0.6f, fr.bottom); close() }, c(VACIO)); x += fr.height * 1.6f }
+                var x = fr.left - fr.height; while (x < fr.right) { drawPath(Path().apply { moveTo(x, fr.bottom); lineTo(x + fr.height, fr.top); lineTo(x + fr.height * 1.6f, fr.top); lineTo(x + fr.height * 0.6f, fr.bottom); close() }, c(VACIO)); x += maxOf(fr.height * 1.6f, 1f) }
             }
             listOf(r.left + radio * 0.8f, r.right - radio * 0.8f).forEach { x -> drawCircle(c(PANEL_OSC), 1.8f * u * k, Offset(x, r.top + r.height * 0.45f)); drawLine(c(CASCO_OSC), Offset(x - 1.2f * u * k, r.top + r.height * 0.45f), Offset(x + 1.2f * u * k, r.top + r.height * 0.45f), 0.6f * u) }
             // El pestillo.
