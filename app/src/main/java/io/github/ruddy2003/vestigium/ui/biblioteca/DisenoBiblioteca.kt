@@ -81,45 +81,42 @@ interface DisenoBiblioteca {
     fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean)
 }
 
-/**
- * El diseño de la biblioteca de cada tema. Los temas que aún no tienen su lote dan null y siguen con el estante de antes
- * (`EstanteDiario` en Libros.kt); al terminar la fase, ninguno.
- */
-fun disenoBiblioteca(t: TemaId): DisenoBiblioteca? = when (t) {
-    TemaId.ROMANO -> null
-    TemaId.URBE -> null
-    TemaId.CIBER -> null
-    TemaId.NEON -> null
-    TemaId.HELENO -> null
-    TemaId.EGIPTO -> null
-    TemaId.MEDIEVAL -> null
-    TemaId.TEMPLARIO -> null
+/** El diseño de la biblioteca de cada tema: cada uno con su mueble y su volumen propios. */
+fun disenoBiblioteca(t: TemaId): DisenoBiblioteca = when (t) {
+    TemaId.ROMANO -> EstanteRomano
+    TemaId.URBE -> EstanteUrbe
+    TemaId.CIBER -> EstanteCiber
+    TemaId.NEON -> EstanteNeon
+    TemaId.HELENO -> EstanteHeleno
+    TemaId.EGIPTO -> EstanteEgipto
+    TemaId.MEDIEVAL -> EstanteMedieval
+    TemaId.TEMPLARIO -> EstanteTemplario
     TemaId.DISTOPIA -> EstanteDistopia
-    TemaId.REFUGIO -> null
-    TemaId.ORDEN -> null
-    TemaId.VAPOR -> null
-    TemaId.LABORATORIO -> null
-    TemaId.COLONOS -> null
-    TemaId.NAPOLEON -> null
-    TemaId.DECO -> null
-    TemaId.BOTANICO -> null
-    TemaId.RUINAS -> null
-    TemaId.NAVIDAD -> null
-    TemaId.SEDA -> null
+    TemaId.REFUGIO -> EstanteRefugio
+    TemaId.ORDEN -> EstanteOrden
+    TemaId.VAPOR -> EstanteVapor
+    TemaId.LABORATORIO -> EstanteLaboratorio
+    TemaId.COLONOS -> EstanteColonos
+    TemaId.NAPOLEON -> EstanteNapoleon
+    TemaId.DECO -> EstanteDeco
+    TemaId.BOTANICO -> EstanteBotanico
+    TemaId.RUINAS -> EstanteRuinas
+    TemaId.NAVIDAD -> EstanteNavidad
+    TemaId.SEDA -> EstanteSeda
     TemaId.EDO -> EstanteEdo
-    TemaId.GOTICO -> null
-    TemaId.ARCANO -> null
-    TemaId.ESPACIO -> null
-    TemaId.ABISMO -> null
-    TemaId.ANDALUS -> null
-    TemaId.MESO -> null
-    TemaId.MONGOL -> null
-    TemaId.RENACIMIENTO -> null
-    TemaId.PIRATA -> null
-    TemaId.URSS -> null
-    TemaId.REVOLUCION -> null
-    TemaId.ANTIGUAS -> null
-    TemaId.CUEVA -> null
+    TemaId.GOTICO -> EstanteGotico
+    TemaId.ARCANO -> EstanteArcano
+    TemaId.ESPACIO -> EstanteEspacio
+    TemaId.ABISMO -> EstanteAbismo
+    TemaId.ANDALUS -> EstanteAndalus
+    TemaId.MESO -> EstanteMeso
+    TemaId.MONGOL -> EstanteMongol
+    TemaId.RENACIMIENTO -> EstanteRenacimiento
+    TemaId.PIRATA -> EstantePirata
+    TemaId.URSS -> EstanteUrss
+    TemaId.REVOLUCION -> EstanteRevolucion
+    TemaId.ANTIGUAS -> EstanteAntiguas
+    TemaId.CUEVA -> EstanteCueva
 }
 
 // =====================================================================
