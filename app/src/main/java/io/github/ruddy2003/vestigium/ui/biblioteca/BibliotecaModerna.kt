@@ -73,7 +73,7 @@ object EstanteEdo : DisenoBiblioteca {
     override val letra: FontFamily = LetraExtra.shippori
 
     override fun ancho(palabras: Int): Dp = (22 + (palabras / 40).coerceAtMost(20)).dp
-    override fun alto(semilla: Int): Float = 0.8f + 0.15f * azar(semilla, 1)
+    override fun alto(semilla: Int, palabras: Int): Float = 0.8f + 0.15f * azar(semilla, 1)
 
     override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
         val u = density

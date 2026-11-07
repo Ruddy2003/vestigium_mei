@@ -66,7 +66,7 @@ object EstanteDistopia : DisenoBiblioteca {
     override val letra: FontFamily = LetraExtra.barlow
 
     override fun ancho(palabras: Int): Dp = (24 + (palabras / 45).coerceAtMost(18)).dp
-    override fun alto(semilla: Int): Float = 0.84f + 0.1f * azar(semilla, 2)
+    override fun alto(semilla: Int, palabras: Int): Float = 0.84f + 0.1f * azar(semilla, 2)
 
     override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
         val u = density

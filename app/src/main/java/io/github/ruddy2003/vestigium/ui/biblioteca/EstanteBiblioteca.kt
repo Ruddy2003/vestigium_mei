@@ -71,9 +71,10 @@ fun EstanteTema(d: DisenoBiblioteca, grupos: List<GrupoEstante>, noche: Boolean,
             grupo.titulo?.let { placas.add(repisa to it) }
             var x = d.separa
             grupo.dias.forEach { dia ->
-                val w = d.ancho(Texto.palabras(texto(dia)))
+                val palabras = Texto.palabras(texto(dia))
+                val w = d.ancho(palabras)
                 if (x + w > interior - d.separa && x > d.separa) { repisa++; x = d.separa }
-                val h = d.altoRepisa * d.alto(dia.fecha.hashCode())
+                val h = d.altoRepisa * d.alto(dia.fecha.hashCode(), palabras).coerceIn(0.1f, 1f)
                 val y = altoCorona + fila * repisa + (d.altoRepisa - h)
                 lugares.add(Lugar(dia, lado + x, y, w, h))
                 x += w + d.separa

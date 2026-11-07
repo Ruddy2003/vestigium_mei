@@ -72,8 +72,11 @@ interface DisenoBiblioteca {
 
     /** Qué tan grueso es un volumen según las palabras de la entrada. */
     fun ancho(palabras: Int): Dp
-    /** Alto del volumen, en fracción del hueco de la repisa (cada uno un poco distinto, según su [semilla]). */
-    fun alto(semilla: Int): Float
+    /**
+     * Alto del volumen, en fracción del hueco de la repisa: cada uno un poco distinto según su [semilla]; los que van
+     * tumbados (rollos, pothi) engordan con las [palabras].
+     */
+    fun alto(semilla: Int, palabras: Int): Float
     /** Un volumen entero, en su lienzo: el objeto, sus marcas y el día y el mes dibujados con [letra]. */
     fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean)
 }
