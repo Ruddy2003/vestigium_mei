@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.comun
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -62,4 +64,23 @@ fun BotonTexto(
     val e = EstadoBotonTexto(presionado, enabled, 0)
     TextButton(onClick, modifier.drawBehind { with(d) { botonTexto(e, oscuro) } }, enabled = enabled, contentPadding = contentPadding,
         interactionSource = toque, colors = ButtonDefaults.textButtonColors(contentColor = d.tintaBotonTexto(oscuro)), content = content)
+}
+
+
+/**
+ * Una tarjeta del tema ([DisenoComun.tarjeta]) con su contenido encima: la pieza detrás, el margen del tema y, si se puede
+ * tocar ([onClick]), el toque con su aspecto presionado. El contenido usa [DisenoComun.tintaTarjeta] como color por omisión.
+ */
+@Composable
+fun TarjetaTema(tipo: TipoTarjeta, modifier: Modifier = Modifier, destacado: Boolean = false, onClick: (() -> Unit)? = null,
+                contenido: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+    val d = disenoComun(Estilo.tema)
+    val oscuro = esOscuro()
+    val toque = remember { MutableInteractionSource() }
+    val presionado by toque.collectIsPressedAsState()
+    val e = EstadoTarjeta(tipo, destacado, presionado, tipo.ordinal)
+    val toca = if (onClick != null) Modifier.clickable(toque, androidx.compose.foundation.LocalIndication.current, onClick = onClick) else Modifier
+    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides d.tintaTarjeta(tipo, oscuro)) {
+        androidx.compose.foundation.layout.Column(modifier.drawBehind { with(d) { tarjeta(e, oscuro) } }.then(toca).padding(d.margenTarjeta), content = contenido)
+    }
 }

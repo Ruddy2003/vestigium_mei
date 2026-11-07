@@ -892,6 +892,31 @@ class Capturas {
     @Test fun filasB3b() = (ESTANTE_A1B + TemaId.EDO).forEach { filasB3Tema(it) }
     @Test fun filasB3c() = ESTANTE_A1C.forEach { filasB3Tema(it) }
     @Test fun filasB3d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { filasB3Tema(it) }
+    /**
+     * Las tarjetas (lote B4): «Te falta hoy», el tablero de Hoy y la rejilla de Vida en una hoja; aparte, Día con su tarjeta
+     * de la noche. En claro y en oscuro. Datos inventados (los de cada pantalla vacía).
+     */
+    private fun tarjetasB4(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        captura(t, oscuro, 3600, "tema_${t.id}_${modo}_tarjetas") {
+            Column(Modifier.padding(16.dp)) {
+                io.github.ruddy2003.vestigium.ui.pantallas.TeFaltaHoy(io.github.ruddy2003.vestigium.data.Dia(fecha = hoy), hoy) {}
+                io.github.ruddy2003.vestigium.ui.pantallas.Tablero(hoy, max = 4)
+                io.github.ruddy2003.vestigium.ui.pantallas.RejillaTarjetas(listOf(
+                    io.github.ruddy2003.vestigium.ui.pantallas.Tarjetita("Resumen semanal", "5.8 ↑", "ánimo de esta semana", "semana"),
+                    io.github.ruddy2003.vestigium.ui.pantallas.Tarjetita("Calendario", "12 / 20", "días con diario este mes", "calendario"),
+                    io.github.ruddy2003.vestigium.ui.pantallas.Tarjetita("Tu gente", "14", "personas que mencionas", "personas"),
+                )) {}
+            }
+        }
+        pantalla(t, oscuro, 4200, "tema_${t.id}_${modo}_dia") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) }
+    }
+    private fun tarjetasB4Tema(t: TemaId) { tarjetasB4(t, t.soloOscuro); if (!t.soloOscuro) tarjetasB4(t, true) }
+    @Test fun tarjetasB4a() = ESTANTE_A1A.forEach { tarjetasB4Tema(it) }
+    @Test fun tarjetasB4b() = (ESTANTE_A1B + TemaId.EDO).forEach { tarjetasB4Tema(it) }
+    @Test fun tarjetasB4c() = ESTANTE_A1C.forEach { tarjetasB4Tema(it) }
+    @Test fun tarjetasB4d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { tarjetasB4Tema(it) }
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

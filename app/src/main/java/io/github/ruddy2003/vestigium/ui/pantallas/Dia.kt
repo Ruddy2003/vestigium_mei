@@ -365,15 +365,16 @@ private fun TarjetaNoche(d: Dia, fecha: String, c: io.github.ruddy2003.vestigium
         "ánimo" to (d.valencia != null), "predicción" to (d.prediccion_manana != null),
     ) + (if (activos.isNotEmpty()) listOf("hábitos $hechos/${activos.size}" to (hechos == activos.size)) else emptyList()) + listOf("diario" to d.nota.isNotBlank())
     val listo = d.valencia != null && d.nota.isNotBlank()
-    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, if (listo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
-        modifier = Modifier.fillMaxWidth().padding(top = 18.dp)) {
-        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+    val dc = io.github.ruddy2003.vestigium.ui.comun.disenoComun(io.github.ruddy2003.vestigium.ui.Estilo.tema)
+    val osc = io.github.ruddy2003.vestigium.ui.esOscuro()
+    val tipo = io.github.ruddy2003.vestigium.ui.comun.TipoTarjeta.NOCHE
+    io.github.ruddy2003.vestigium.ui.comun.TarjetaTema(tipo, Modifier.fillMaxWidth().padding(top = 18.dp), destacado = listo) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(io.github.ruddy2003.vestigium.ui.Estilo.seccion("Llenar el día", Romano.latin("Llenar el día")).first.let { io.github.ruddy2003.vestigium.ui.Estilo.conEspanol(it, "Llenar el día") }, style = MaterialTheme.typography.titleLarge)
                 Text(partes.joinToString("  ") { (t, ok) -> (if (ok) "✓ " else "○ ") + t }, style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-                if (listo) Text("día sellado", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    color = dc.rotuloTarjeta(tipo, osc), modifier = Modifier.padding(top = 4.dp))
+                if (listo) Text("día sellado", style = MaterialTheme.typography.labelMedium, color = dc.acentoTarjeta(tipo, osc))
             }
             io.github.ruddy2003.vestigium.ui.BotonPrincipal(if (listo) "abrir" else "llenar") { abrir() }
         }

@@ -95,7 +95,31 @@ interface DisenoComun {
     fun rotuloCifra(oscuro: Boolean): Color
     /** Lo que va detrás de una cifra (la tesela, la placa, el contador…), del tamaño del lienzo. */
     fun DrawScope.cifra(e: EstadoCifra, oscuro: Boolean)
+
+    // ---------------------------------------------------------------- tarjetas de Hoy, Día y Vida
+
+    /** Margen entre el borde de una tarjeta y su contenido. */
+    val margenTarjeta: Dp
+    /** El color del texto principal de una tarjeta de ese tipo. */
+    fun tintaTarjeta(tipo: TipoTarjeta, oscuro: Boolean): Color
+    /** El color de los rótulos y el texto secundario de una tarjeta de ese tipo. */
+    fun rotuloTarjeta(tipo: TipoTarjeta, oscuro: Boolean): Color
+    /** El color de acento de una tarjeta de ese tipo (el título, la barra del día, lo que se destaca). */
+    fun acentoTarjeta(tipo: TipoTarjeta, oscuro: Boolean): Color
+
+    /**
+     * Lo que va detrás de una tarjeta, del tamaño del lienzo: la pieza del tema según [EstadoTarjeta.tipo] (una cifra del
+     * tablero de Hoy, lo que te falta hoy, la noche de Día, una tarjeta de Vida). [EstadoTarjeta.destacado]: la cifra que se
+     * aparta de tu normal, la noche ya sellada. [EstadoTarjeta.presionado] al tocarla.
+     */
+    fun DrawScope.tarjeta(e: EstadoTarjeta, oscuro: Boolean)
 }
+
+/** Qué tarjeta es: una cifra del tablero de Hoy, «Te falta hoy», la noche de Día o una tarjeta de Vida. */
+enum class TipoTarjeta { METRICA, PENDIENTE, NOCHE, VIDA }
+
+/** Una tarjeta: su tipo, si se destaca, si se está tocando y una semilla. */
+class EstadoTarjeta(val tipo: TipoTarjeta, val destacado: Boolean, val presionado: Boolean, val semilla: Int)
 
 /** Una fila de menú: si se está tocando, si lleva detalle y una semilla. */
 class EstadoFila(val presionado: Boolean, val conDetalle: Boolean, val semilla: Int)

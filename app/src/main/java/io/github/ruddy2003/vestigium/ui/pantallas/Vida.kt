@@ -31,17 +31,17 @@ class Tarjetita(val titulo: String, val cifra: String, val detalle: String, val 
 
 @Composable
 fun RejillaTarjetas(l: List<Tarjetita>, ir: (String) -> Unit) {
+    val dc = io.github.ruddy2003.vestigium.ui.comun.disenoComun(Estilo.tema)
+    val osc = io.github.ruddy2003.vestigium.ui.esOscuro()
+    val tipo = io.github.ruddy2003.vestigium.ui.comun.TipoTarjeta.VIDA
     l.chunked(2).forEach { fila ->
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             fila.forEach { t ->
-                Surface(onClick = { ir(t.ruta) }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.surface, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
-                    Column(Modifier.padding(12.dp)) {
-                        Text(Estilo.seccion(t.titulo, Romano.latin(t.titulo)).first, style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(t.cifra, style = estiloCifra(), maxLines = 1)
-                        Text(t.detalle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
-                    }
+                io.github.ruddy2003.vestigium.ui.comun.TarjetaTema(tipo, Modifier.weight(1f), onClick = { ir(t.ruta) }) {
+                    Text(Estilo.seccion(t.titulo, Romano.latin(t.titulo)).first, style = MaterialTheme.typography.labelLarge,
+                        color = dc.acentoTarjeta(tipo, osc), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(t.cifra, style = estiloCifra(), maxLines = 1)
+                    Text(t.detalle, style = MaterialTheme.typography.labelSmall, color = dc.rotuloTarjeta(tipo, osc), maxLines = 2)
                 }
             }
             if (fila.size == 1) Spacer(Modifier.weight(1f))
