@@ -143,7 +143,7 @@ internal fun DrawScope.textoEn(medidor: TextMeasurer, texto: String, r: Rect, le
         val nuevo = maxOf(minimo, tam * k)
         estilo = estilo.copy(fontSize = nuevo.sp, lineHeight = (nuevo * 1.05f).sp)
         capa = medidor.measure(texto, estilo, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
-            constraints = Constraints(maxWidth = largo.toInt().coerceAtLeast(1)))
+            constraints = Constraints(maxWidth = (kotlin.math.ceil(largo).toInt() + 1).coerceAtLeast(1)))
     }
     val c = r.center
     val esquina = Offset(c.x - capa.size.width / 2f, c.y - capa.size.height / 2f)
