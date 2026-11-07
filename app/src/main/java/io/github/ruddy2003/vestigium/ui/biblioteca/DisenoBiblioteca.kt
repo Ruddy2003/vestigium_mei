@@ -178,7 +178,70 @@ interface DisenoBiblioteca {
      * [EstadoBuzon.abiertas], y sus números dibujados dentro.
      */
     fun DrawScope.buzon(e: EstadoBuzon, medidor: TextMeasurer, oscuro: Boolean)
+
+    // ---------------------------------------------------------------- lo de alrededor: pestañas, buscador, obras y recuerdos
+
+    /** Alto de la fila de pestañas de las bibliotecas (ocupa todo el ancho). */
+    val altoPestanas: Dp
+
+    /**
+     * Las cinco pestañas de las bibliotecas como un solo objeto del tema (las lengüetas del archivador, los marcadores de
+     * cinta, las teclas de función…), en el orden de [EstadoPestanas.nombres]: diario, momentos, sueños, ideario y cartas.
+     * Cada una ocupa una quinta parte del ancho (ahí se toca) y lleva su emblema, su nombre y su cuenta dibujados con
+     * [textoEn]; la de [EstadoPestanas.actual] se distingue (sobresale, se enciende, queda hundida).
+     */
+    fun DrawScope.pestanas(e: EstadoPestanas, medidor: TextMeasurer, oscuro: Boolean)
+
+    /** Alto del buscador (ocupa todo el ancho). */
+    val altoCampo: Dp
+    /** Dónde va el texto que se escribe en el buscador, en fracciones del lienzo. */
+    val cajaCampo: Rect
+    /** La letra de lo que se escribe en el buscador. */
+    val letraCampo: FontFamily
+    /** El color de lo que se escribe (y del cursor), que contraste con [campo]. */
+    fun tintaCampo(oscuro: Boolean): Color
+
+    /**
+     * El marco del buscador (la tablilla de cera, la línea de comando, la lupa sobre el registro…), del tamaño del lienzo.
+     * Con [EstadoCampo.vacio] dibuja la pista dentro de [cajaCampo]; con [EstadoCampo.enfocado] cambia (se enciende, el cursor).
+     */
+    fun DrawScope.campo(e: EstadoCampo, medidor: TextMeasurer, oscuro: Boolean)
+
+    /** El fondo del recuadro de Obras en «Más»: la vitrina, el atril o la repisa donde se abren en abanico las portadas. */
+    fun DrawScope.repisaObras(medidor: TextMeasurer, oscuro: Boolean)
+
+    /**
+     * La tapa dibujada de una obra sin imagen, del tamaño del lienzo (2:3): el tipo, el título, el autor y el año dibujados con
+     * [textoEn]. Con [EstadoPortada.mini] (una miniatura de lista) solo la inicial.
+     */
+    fun DrawScope.portadaObra(e: EstadoPortada, medidor: TextMeasurer, oscuro: Boolean)
+
+    /** Margen de la tarjeta de un recuerdo, donde empieza el contenido. */
+    val margenRecuerdo: Dp
+    /** Alto de la franja de arriba de la tarjeta de un recuerdo (donde el tema dibuja «Hace un año», la fecha y el clima). */
+    val altoRotuloRecuerdo: Dp
+    /** El color del texto de la tarjeta de un recuerdo. */
+    fun tintaRecuerdo(oscuro: Boolean): Color
+
+    /**
+     * La tarjeta de «este día hace N años» (la postal clavada, el fragmento de fresco, la tira del registro…), del tamaño del
+     * lienzo, con «Hace un año» o «Hace N años», la fecha, el clima y el punto del ánimo dibujados en la franja de arriba
+     * ([altoRotuloRecuerdo]). Lo demás (lugares, canción, la línea del diario) lo pone la pantalla debajo, con [tintaRecuerdo].
+     */
+    fun DrawScope.recuerdo(e: EstadoRecuerdo, medidor: TextMeasurer, oscuro: Boolean)
 }
+
+/** Las pestañas: sus nombres y cuentas, en orden (diario, momentos, sueños, ideario, cartas), cuál está elegida y una semilla. */
+class EstadoPestanas(val nombres: List<String>, val cuentas: List<Int>, val actual: Int, val semilla: Int)
+
+/** El buscador: la pista que se ve vacío, si está vacío y si tiene el foco. */
+class EstadoCampo(val pista: String, val vacio: Boolean, val enfocado: Boolean)
+
+/** La tapa dibujada de una obra: su tipo («LIBRO», «PELÍCULA»…), título, autor o revista, año, si es miniatura y una semilla. */
+class EstadoPortada(val tipo: String, val titulo: String, val autor: String, val anio: String, val mini: Boolean, val semilla: Int)
+
+/** Un recuerdo: hace cuántos años, la fecha como se escribe, el clima («☂ lluvia 18°», o vacío) y el color del ánimo (null si no hay). */
+class EstadoRecuerdo(val anios: Int, val fecha: String, val clima: String, val animo: Color?, val semilla: Int)
 
 /** Lo que se ve de un sobre: sus dos renglones, dónde va (en píxeles) y cómo está de abierto, sellado o brillando. */
 class EstadoCarta(

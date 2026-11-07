@@ -295,13 +295,12 @@ fun RecuadroObras(nav: Nav) {
     val terminadas = Repo.obras.count { it.estado == "terminado" }
     Recuadro("Obras", if (Repo.obras.isEmpty()) "Libros, películas, series y juegos, con su portada y tu calificación" else
         "$terminadas vistas o leídas · ${Repo.obras.count { it.estado == "en_curso" }} en curso", alto = 168.dp, onClick = { nav.ir("obras") }) {
-        val m = io.github.ruddy2003.vestigium.ui.materia(Estilo.tema)
+        val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(Estilo.tema)
+        val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+        val medidor = androidx.compose.ui.text.rememberTextMeasurer(cacheSize = 4)
         Box(Modifier.fillMaxSize().clip(RoundedCornerShape(4.dp))) {
-            // El estante del tema detrás de las portadas.
-            Canvas(Modifier.fillMaxSize()) {
-                drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(m.brillo.copy(alpha = 0.25f), m.cuerpo.copy(alpha = 0.35f))))
-                drawRect(m.sombra.copy(alpha = 0.7f), Offset(0f, size.height * 0.86f), Size(size.width, size.height * 0.14f))
-            }
+            // La vitrina o repisa del tema detrás de las portadas.
+            Canvas(Modifier.fillMaxSize()) { with(d) { repisaObras(medidor, oscuro) } }
             if (vistas.isEmpty()) Text("Añade lo que estés leyendo o viendo", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.Center))
             else BoxWithConstraints(Modifier.fillMaxSize().padding(horizontal = 14.dp)) {

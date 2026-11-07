@@ -39,7 +39,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -155,8 +154,7 @@ fun BibliotecaMomentosLibreta(nav: Nav) {
     }
     Text("Toca la libreta para abrirla en la última hoja; adentro se pasa de día deslizando.", style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
-    OutlinedTextField(busca, { busca = it }, Modifier.fillMaxWidth().padding(top = 14.dp), singleLine = true,
-        placeholder = { Text("buscar en tus momentos", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+    io.github.ruddy2003.vestigium.ui.biblioteca.CampoTema(busca, { busca = it }, "buscar en tus momentos", Modifier.padding(top = 14.dp))
     val q = normalLibreta(busca.trim())
     val visibles = if (q.isBlank()) todas else todas.filter { f -> normalLibreta(hojaMomentos(f, discreto)?.nota.orEmpty()).contains(q) }
     if (q.isNotBlank() && visibles.isEmpty()) Vacio("Ninguna hoja tiene eso.")

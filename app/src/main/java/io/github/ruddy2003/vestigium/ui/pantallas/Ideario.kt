@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -337,8 +336,7 @@ fun BibliotecaIdeas(nav: Nav, rotulo: (String) -> String, vistaInicial: String =
     FicheroIdeas(nav, todas)
     if (vistaInicial == "temas") return
     Text("Todas, por mes", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp))
-    OutlinedTextField(busca, { busca = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
-        placeholder = { Text("buscar: idea, tema, autor, fuente…", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+    io.github.ruddy2003.vestigium.ui.biblioteca.CampoTema(busca, { busca = it }, "buscar: idea, tema, autor, fuente…", Modifier.padding(top = 8.dp))
     FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Catalogo.ORIGENES_IDEA.filter { o -> todas.any { it.origen == o.id } }.forEach { o -> Ficha(o.nombre.lowercase(), origen == o.id) { origen = if (origen == o.id) null else o.id } }
         todas.map { it.fecha.take(4) }.distinct().sortedDescending().takeIf { it.size > 1 }?.forEach { a -> Ficha(a, anio == a) { anio = if (anio == a) null else a } }

@@ -735,6 +735,57 @@ class Capturas {
     @Test fun cartasA4Ruinas() = cartasA4Tema(TemaId.RUINAS)
     @Test fun cartasA4Espacio() = cartasA4Tema(TemaId.ESPACIO)
     @Test fun cartasA4Distopia() = cartasA4Tema(TemaId.DISTOPIA)
+    /**
+     * Lo de alrededor (lote A5): las pestañas de las bibliotecas (con la primera, la tercera y la última elegidas), el
+     * buscador vacío y con texto, el recuadro de Obras, tapas dibujadas de 40, 78 y 118 dp, y dos tarjetas de «hace un año»
+     * (una completa y una con solo la franja); aparte, la galería de Obras. Datos inventados.
+     */
+    private fun alrededorA5(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(t)
+        captura(t, oscuro, 3800, "tema_${t.id}_${modo}_alrededor") {
+            obrasEjemplo()
+            val medidor = androidx.compose.ui.text.rememberTextMeasurer()
+            val nombres = listOf("Diario", "Momentos", "Sueños", "Ideario", "Cartas")
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                listOf(0, 2, 4).forEach { k ->
+                    androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(d.altoPestanas)) {
+                        with(d) { pestanas(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoPestanas(nombres, listOf(128, 46, 0, 12, 7), k, 3), medidor, oscuro) }
+                    }
+                }
+                io.github.ruddy2003.vestigium.ui.biblioteca.CampoTema("", {}, "buscar en tu diario, @personas, #temas")
+                io.github.ruddy2003.vestigium.ui.biblioteca.CampoTema("mar y montaña", {}, "buscar en tus sueños")
+                io.github.ruddy2003.vestigium.ui.pantallas.RecuadroObras(navVacia)
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
+                    val l = Repo.obras
+                    io.github.ruddy2003.vestigium.ui.pantallas.PortadaObra(l[0], Modifier.width(40.dp).aspectRatio(2f / 3f))
+                    io.github.ruddy2003.vestigium.ui.pantallas.PortadaObra(l[4], Modifier.width(40.dp).aspectRatio(2f / 3f))
+                    io.github.ruddy2003.vestigium.ui.pantallas.PortadaObra(l[2], Modifier.width(78.dp).aspectRatio(2f / 3f))
+                    io.github.ruddy2003.vestigium.ui.pantallas.PortadaObra(l[0], Modifier.width(118.dp).aspectRatio(2f / 3f))
+                }
+                io.github.ruddy2003.vestigium.ui.pantallas.TarjetaRecuerdo(io.github.ruddy2003.vestigium.ui.pantallas.Recuerdo(
+                    io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), -365), 1,
+                    listOf("Un café inventado", "El parque"), "Una canción · Un grupo", "Fue un día tranquilo, con lluvia por la tarde y una caminata larga.",
+                    "☂ lluvia 18°", 5, null)) {}
+                io.github.ruddy2003.vestigium.ui.pantallas.TarjetaRecuerdo(io.github.ruddy2003.vestigium.ui.pantallas.Recuerdo(
+                    io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), -1096), 3,
+                    emptyList(), null, null, "☀ despejado 24°", null, null)) {}
+            }
+        }
+        pantalla(t, oscuro, 4200, "tema_${t.id}_${modo}_obras") { obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaObras(navVacia) }
+    }
+    private fun alrededorA5Tema(t: TemaId) { alrededorA5(t, t.soloOscuro); if (!t.soloOscuro) alrededorA5(t, true) }
+    @Test fun alrededorA5a() = ESTANTE_A1A.forEach { alrededorA5Tema(it) }
+    @Test fun alrededorA5b() = (ESTANTE_A1B + TemaId.EDO).forEach { alrededorA5Tema(it) }
+    @Test fun alrededorA5c() = ESTANTE_A1C.forEach { alrededorA5Tema(it) }
+    @Test fun alrededorA5Neon() = alrededorA5Tema(TemaId.NEON)
+    @Test fun alrededorA5Refugio() = alrededorA5Tema(TemaId.REFUGIO)
+    @Test fun alrededorA5Orden() = alrededorA5Tema(TemaId.ORDEN)
+    @Test fun alrededorA5Laboratorio() = alrededorA5Tema(TemaId.LABORATORIO)
+    @Test fun alrededorA5Colonos() = alrededorA5Tema(TemaId.COLONOS)
+    @Test fun alrededorA5Ruinas() = alrededorA5Tema(TemaId.RUINAS)
+    @Test fun alrededorA5Espacio() = alrededorA5Tema(TemaId.ESPACIO)
+    @Test fun alrededorA5Distopia() = alrededorA5Tema(TemaId.DISTOPIA)
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")
