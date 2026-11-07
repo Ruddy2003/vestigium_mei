@@ -619,6 +619,19 @@ class Capturas {
     @Test fun bibliotecaDiarioA0() = ESTANTE_A0.forEach { t -> pantalla(t, false, 3600, "a0_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")
     } }
+    /** El estante de los otros 32 temas, por épocas (lote A1), en claro y en oscuro; los de solo oscuro, solo en oscuro. */
+    private val ESTANTE_A1A = listOf(TemaId.CUEVA, TemaId.ROMANO, TemaId.HELENO, TemaId.EGIPTO, TemaId.MESO, TemaId.ARCANO, TemaId.ANTIGUAS)
+    private val ESTANTE_A1B = listOf(TemaId.MEDIEVAL, TemaId.TEMPLARIO, TemaId.SEDA, TemaId.GOTICO, TemaId.ANDALUS, TemaId.MONGOL, TemaId.RENACIMIENTO, TemaId.PIRATA, TemaId.REVOLUCION)
+    private val ESTANTE_A1C = listOf(TemaId.URBE, TemaId.CIBER, TemaId.VAPOR, TemaId.NAPOLEON, TemaId.DECO, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.ABISMO, TemaId.URSS)
+    private val ESTANTE_A1D = listOf(TemaId.NEON, TemaId.REFUGIO, TemaId.ORDEN, TemaId.LABORATORIO, TemaId.COLONOS, TemaId.RUINAS, TemaId.ESPACIO)
+    @Test fun estanteA1a() = ESTANTE_A1A.forEach { t -> estante(t, t.soloOscuro); if (!t.soloOscuro) estante(t, true) }
+    @Test fun estanteA1b() = ESTANTE_A1B.forEach { t -> estante(t, t.soloOscuro); if (!t.soloOscuro) estante(t, true) }
+    @Test fun estanteA1c() = ESTANTE_A1C.forEach { t -> estante(t, t.soloOscuro); if (!t.soloOscuro) estante(t, true) }
+    @Test fun estanteA1d() = ESTANTE_A1D.forEach { t -> estante(t, t.soloOscuro); if (!t.soloOscuro) estante(t, true) }
+    /** La biblioteca del diario entera de los 32, en su modo de siempre. */
+    @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")
+    } }
     /** Escribir una idea: una muestra por forma de ficha (tarjeta, tablilla, tira, ticket, expediente, ventana, laja y recorte). */
     @Test fun escritorIdea() = listOf(TemaId.MEDIEVAL, TemaId.ROMANO, TemaId.EDO, TemaId.NEON, TemaId.DISTOPIA, TemaId.CIBER, TemaId.CUEVA, TemaId.PIRATA).forEach { t ->
         pantalla(t, t.soloOscuro, 2400, "tema_${t.id}") {
