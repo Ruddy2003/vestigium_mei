@@ -5354,7 +5354,7 @@ object EstanteNapoleon : DisenoBiblioteca {
             drawPath(orla, oro, style = Stroke(0.8f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f * u, 1f * u))))
             emblemaAl(k, Offset(r.center.x, r.top + 11 * u), 6 * u, oro, 1f * u)
             // La letra en pergamino sobre todas las sedas (en oro se perdía sobre el rojo y el azul apagados).
-            val tinta = if (sel) c(PERGAMINO) else mezcla(c(PERGAMINO), seda, 0.12f)
+            val tinta = if (oscuro) (if (sel) PERGAMINO else mezcla(PERGAMINO, seda, 0.2f)) else if (sel) c(PERGAMINO) else mezcla(c(PERGAMINO), seda, 0.12f)
             textoEn(medidor, e.nombres[k].uppercase(), Rect(r.left + 3 * u, r.top + 19 * u, r.right - 3 * u, r.top + 32 * u), letra, tinta, 10.5f,
                 peso = FontWeight.Bold, espaciado = 0.3f, minimo = 5.5f)
             val cartela = Rect(r.center.x - 13 * u, r.top + 33 * u, r.center.x + 13 * u, r.top + 43 * u)
