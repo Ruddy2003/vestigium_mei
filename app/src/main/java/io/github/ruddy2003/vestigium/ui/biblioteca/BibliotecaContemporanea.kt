@@ -3252,7 +3252,7 @@ object EstanteNapoleon : DisenoBiblioteca {
                 drawRect(Color.Black.copy(alpha = 0.25f), ca.topLeft + Offset(1.2f * u, 1.6f * u), ca.size)
                 drawRect(cp(PERGAMINO), ca.topLeft, ca.size)
                 drawRect(c(TEJUELO).copy(alpha = 0.7f), ca.deflate(3 * u).topLeft, ca.deflate(3 * u).size, style = Stroke(0.8f * u))
-                textoEn(medidor, e.nombre, Rect(ca.left + 10 * u, ca.top + 5 * u, ca.right - 10 * u, ca.top + ca.height * 0.58f), letra, c(TINTA), 14f, peso = FontWeight.Bold, minimo = 7.5f)
+                textoEn(medidor, e.nombre, Rect(ca.left + 5 * u, ca.top + 5 * u, ca.right - 5 * u, ca.top + ca.height * 0.58f), letra, c(TINTA), 14f, peso = FontWeight.Bold, minimo = 5.5f)
                 textoEn(medidor, e.cuenta, Rect(ca.left + 10 * u, ca.top + ca.height * 0.58f, ca.right - 10 * u, ca.bottom - 5 * u), LetraExtra.bodoni, c(TEJUELO), 10f, minimo = 6f)
                 if (abre > 0f) drawRect(Color.Black.copy(alpha = 0.45f * abre), r.topLeft, r.size)
             }
@@ -7273,7 +7273,7 @@ object EstanteUrss : DisenoBiblioteca {
         drawLine(c(ROJO), Offset(r.left + 5 * u, r.top), Offset(r.left + 5 * u, r.bottom), 0.9f * u)
         drawPath(Path().apply { moveTo(r.right - oreja, r.top); lineTo(r.right - oreja, r.top + oreja); lineTo(r.right, r.top + oreja); close() }, c(mezcla(PAPEL_ESCOLAR, Color.Black, 0.15f)))
         textoEn(medidor, e.semana, Rect(r.left + 6 * u, r.top + 2 * u, r.right - 6 * u, r.top + 11 * u), letra, c(TINTA).copy(alpha = 0.7f), 7.5f, minimo = 5f)
-        textoEn(medidor, e.dia, Rect(r.left + 6 * u, r.top + 11 * u, r.right - 2 * u, r.top + 33 * u), LetraExtra.trazo, c(VIOLETA), 20f, peso = FontWeight.Bold, minimo = 9f)
+        textoEn(medidor, e.dia, Rect(r.left + 6 * u, r.top + 11 * u, r.right - 2 * u, r.top + 33 * u), letra, c(VIOLETA), 17f, peso = FontWeight.Bold, minimo = 9f)
         val n = Offset(r.center.x + 2.5f * u, r.bottom - 9 * u)
         if (e.tono != null) drawCircle(e.tono, 6 * u, n)
         drawCircle(c(ROJO), 6.5f * u, n, style = Stroke(1.1f * u))
