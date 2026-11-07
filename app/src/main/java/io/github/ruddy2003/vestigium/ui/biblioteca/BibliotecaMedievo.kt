@@ -260,15 +260,20 @@ object EstanteMedieval : DisenoBiblioteca {
             drawRect(Color.Black.copy(alpha = 0.3f), Offset(mx + 5 * u, arranque), Size(2 * u, cornisa.bottom - arranque))
             mx += 22 * u
         }
-        // La vela en su palmatoria de hierro, en el vano; de noche, encendida.
+        // La vela en su palmatoria de hierro, a un lado del vano (no bajo la saetera); de noche, encendida.
         val pie = cornisa.top
-        drawRect(c(HIERRO), Offset(centro.x - 6 * u, pie - 2 * u), Size(12 * u, 2 * u))
-        drawLine(c(HIERRO), Offset(centro.x, pie - 2 * u), Offset(centro.x, pie - 8 * u), 1.6f * u)
-        drawRect(c(HIERRO), Offset(centro.x - 4.5f * u, pie - 9.6f * u), Size(9 * u, 1.6f * u))
-        val vela = Rect(centro.x - 2.6f * u, pie - 25 * u, centro.x + 2.6f * u, pie - 9.6f * u)
+        val vx = centro.x + 13 * u
+        drawOval(c(HIERRO), Offset(vx - 8 * u, pie - 3 * u), Size(16 * u, 3 * u))
+        drawCircle(c(HIERRO), 2.6f * u, Offset(vx + 9.5f * u, pie - 2 * u), style = Stroke(1.2f * u))
+        drawRect(c(HIERRO), Offset(vx - 1 * u, pie - 7 * u), Size(2 * u, 5 * u))
+        drawRect(c(HIERRO), Offset(vx - 5 * u, pie - 8.6f * u), Size(10 * u, 1.8f * u))
+        val vela = Rect(vx - 4 * u, pie - 23 * u, vx + 4 * u, pie - 8.6f * u)
         drawRect(if (noche) CERA else c(CERA), vela.topLeft, vela.size)
-        drawRect(Color.Black.copy(alpha = 0.15f), Offset(vela.right - 1.6f * u, vela.top), Size(1.6f * u, vela.height))
-        drawLine(c(TINTA), Offset(vela.center.x, vela.top), Offset(vela.center.x, vela.top - 2.4f * u), 0.8f * u)
+        drawRect(Color.Black.copy(alpha = 0.15f), Offset(vela.right - 2.2f * u, vela.top), Size(2.2f * u, vela.height))
+        // Los chorretones de cera.
+        drawRoundRect(if (noche) CERA else c(CERA), Offset(vela.left - 0.8f * u, vela.top + 1.5f * u), Size(1.8f * u, 6 * u), CornerRadius(0.9f * u))
+        drawRoundRect(if (noche) CERA else c(CERA), Offset(vela.left + 2.4f * u, vela.top + 1 * u), Size(1.6f * u, 3.5f * u), CornerRadius(0.8f * u))
+        drawLine(c(HIERRO), Offset(vela.center.x, vela.top), Offset(vela.center.x, vela.top - 2.6f * u), 1f * u)
         if (noche) {
             val ly = vela.top - 2 * u
             val llama = Path().apply {
@@ -1614,14 +1619,14 @@ object EstanteMongol : DisenoBiblioteca {
     override val corona = 0.36f
     override val base = 0.1f
     override val lado = 0.06f
-    override val altoRepisa: Dp = 50.dp
+    override val altoRepisa: Dp = 64.dp
     override val tabla: Dp = 14.dp
     override val separa: Dp = 8.dp
     override val letra: FontFamily = LetraExtra.filosofo
 
     override fun ancho(palabras: Int): Dp = ANCHO_POTHI.dp
     override fun alto(semilla: Int, palabras: Int): Float =
-        (0.4f + 0.52f * (palabras / 800f).coerceIn(0f, 1f) + 0.06f * azar(semilla, 1)).coerceAtMost(1f)
+        (0.58f + 0.36f * (palabras / 800f).coerceIn(0f, 1f) + 0.05f * azar(semilla, 1)).coerceAtMost(1f)
 
     /** El nudo infinito: una trama en rombo con un lazo en cada punta. */
     private fun DrawScope.nudo(c0: Offset, s: Float, color: Color, grosor: Float) {

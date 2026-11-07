@@ -267,6 +267,19 @@ Lo que la prueba `CoberturaTemas` exige por tema. Los recursos que ya existen sa
 | Gato de la banda de Día | `assets/gato/gato.json` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 9: los 21 originales con la rama del gato; los 13 del lote 8 con `herramientas/gato/gato20a.py` a `gato20d.py` (9b). |
 | Otra vida del tema | `data/OtrasVidas.kt` (`DE_TEMAS`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 7: ANT tiene a Brenna, guía de caminos (inventada). Lote 8: Kei pasa de CIB a NEO; CIB tiene a Carmen, operadora, y cada tema nuevo trae su vida. |
 
+## Segunda pasada: detalle (al nivel del Ideario)
+
+La matriz de arriba dice si cada superficie es **propia**; esta segunda pasada mide si además está **detallada**: un dibujo entero por tema (no una plantilla con adornos), variante oscura de verdad, texto dibujado dentro con la letra del tema y trazos en dp. El modelo es el Ideario (`ui/ideario/`, v143). El plan por fases (A: bibliotecas, B: piezas comunes, C: logros y viaje, D: pulido) se revisa en cada lote.
+
+| Superficie | Dónde | Estado |
+|---|---|---|
+| Ideario: mueble, contenedor, ficha y marcas | `ui/ideario/` | Hecho (v143): un `object` por tema. |
+| Estante del diario (de día y de noche) | `ui/biblioteca/` (`disenoBiblioteca`, `EstanteTema`) | Hecho (lotes A0 y A1): un mueble entero por tema, distinto del del Ideario, con un volumen propio por entrada (día y mes dibujados dentro, más grueso cuanto más escrito) y su versión de noche. Se borró el estante de antes (`Lomos`, `Rollos`, `Cartas`, `Expedientes`, `Logs`, `RegistroDeVuelo`, `BitacoraDeInmersiones`, `TablaEstante`). |
+| Tapa, página y escritor del diario | `ObjetoDiario`, `EncabezadoPagina`, `EscritorTema` (`ui/Libros.kt`) | Pendiente (A2). |
+| Libreta de momentos | `ui/Contenedores.kt`, `pantallas/LibretaMomentos.kt` | Pendiente (A3). |
+| Cartas | `ui/Cartas.kt` | Pendiente (A4). |
+| Pestañas, buscadores, obras y recuerdos de las bibliotecas | `pantallas/Bibliotecas.kt`, `Galerias.kt`, `Biblioteca.kt`, `Recuerdos.kt` | Pendiente (A5). |
+
 ## Fuera de la matriz
 
 - **`logo_mono`, `ic_stat` y los mosaicos de ajustes rápidos** son uno solo para todos los temas, a propósito. Desde el lote 1 son la huella maestra (`ic_stat` lo genera `herramientas/notificacion.py`).

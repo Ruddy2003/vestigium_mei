@@ -593,7 +593,7 @@ class Capturas {
      */
     private fun estante(t: TemaId, oscuro: Boolean) {
         val modo = if (oscuro) "oscuro" else "claro"
-        val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(t)!!
+        val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(t)
         captura(t, oscuro, 2200, "tema_${t.id}_${modo}_a") {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 io.github.ruddy2003.vestigium.ui.EstanteDiario(diasEstante(1), t) {}
