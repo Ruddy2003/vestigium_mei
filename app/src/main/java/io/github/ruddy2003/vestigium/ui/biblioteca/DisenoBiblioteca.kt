@@ -153,7 +153,42 @@ interface DisenoBiblioteca {
 
     /** El rótulo de un mes en el índice de la libreta, en una franja de 34 dp a todo el ancho. */
     fun DrawScope.rotuloMes(texto: String, medidor: TextMeasurer, oscuro: Boolean)
+
+    // ---------------------------------------------------------------- las cartas
+
+    /**
+     * El sobre de una carta, propio del tema (su forma, su solapa, su cierre, su sello y su adorno), dibujado en
+     * [EstadoCarta.cuerpo]. Lo animan [EstadoCarta.abrir] (la solapa), [EstadoCarta.romper] (el sello se parte),
+     * [EstadoCarta.subir] (la carta sale, con el papel [EstadoCarta.hoja] y sus [EstadoCarta.renglones]), [EstadoCarta.cordon]
+     * (el cierre de las selladas), [EstadoCarta.brillo] (el sello de la que ya se puede abrir) y [EstadoCarta.escalaSello] /
+     * [EstadoCarta.alfaSello] (el sello que cae al sellar). [EstadoCarta.linea1] y [EstadoCarta.linea2] (a quién va, las fechas)
+     * se dibujan dentro con [textoEn]; pueden venir vacías.
+     */
+    fun DrawScope.sobre(e: EstadoCarta, medidor: TextMeasurer, oscuro: Boolean)
+
+    /** Dónde pone la pantalla las primeras palabras de la carta que asoma del sobre abierto, en fracciones del lienzo. */
+    val cajaPrevia: Rect
+
+    /** Alto del buzón (el mueble de las cartas, a todo el ancho). */
+    val altoBuzon: Dp
+
+    /**
+     * El buzón del tema (el casillero de la posada, la valija, el tubo neumático, el cofre de despachos…), con tantas cartas
+     * como [EstadoBuzon.listas] (las que ya se pueden abrir, que brillan), [EstadoBuzon.selladas] (atadas) y
+     * [EstadoBuzon.abiertas], y sus números dibujados dentro.
+     */
+    fun DrawScope.buzon(e: EstadoBuzon, medidor: TextMeasurer, oscuro: Boolean)
 }
+
+/** Lo que se ve de un sobre: sus dos renglones, dónde va (en píxeles) y cómo está de abierto, sellado o brillando. */
+class EstadoCarta(
+    val linea1: String, val linea2: String, val cuerpo: Rect,
+    val abrir: Float, val romper: Float, val subir: Float, val cordon: Float, val brillo: Float,
+    val escalaSello: Float, val alfaSello: Float, val hoja: Color, val renglones: Color, val semilla: Int, val alFuturo: Boolean,
+)
+
+/** Cuántas cartas hay en el buzón: listas para abrir, selladas (al futuro) y abiertas o enviadas. */
+class EstadoBuzon(val listas: Int, val selladas: Int, val abiertas: Int)
 
 /**
  * Lo que se ve de la libreta cerrada: su nombre («Rollo de momentos»), la cuenta («12 columnas · desde el 3 oct»), cuántas

@@ -2,6 +2,9 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -397,6 +400,15 @@ private fun BibliotecaCartas(nav: Nav) {
     var persona by remember { mutableStateOf<String?>(null) }
     var abriendo by remember { mutableStateOf<Carta?>(null) }
     val todas = Repo.cartas
+    // El buzón del tema, con sus cartas: las listas para abrir brillan, las selladas van atadas.
+    val nListas = todas.count { it.lista(hoy) }; val nSelladas = todas.count { it.sellada(hoy) }; val nAbiertas = todas.count { it.legible }
+    val diseno = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(Estilo.tema)
+    val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+    val medidor = androidx.compose.ui.text.rememberTextMeasurer()
+    androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().padding(top = 14.dp).height(diseno.altoBuzon)
+        .semantics { contentDescription = "Buzón: $nListas listas para abrir, $nSelladas selladas, $nAbiertas abiertas" }) {
+        clipRect { with(diseno) { buzon(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoBuzon(nListas, nSelladas, nAbiertas), medidor, oscuro) } }
+    }
     BotonPrincipal("✉  escribir una carta", Modifier.fillMaxWidth().padding(top = 14.dp)) { nav.ir("carta_nueva") }
     val listas = todas.filter { it.lista(hoy) }.sortedBy { it.abrir_en }
     if (listas.isNotEmpty()) Seccion("Listas para abrir", "Ya llegó su fecha. Toca el sobre para romper el lacre.") { RejillaCartas(listas) { abriendo = it } }

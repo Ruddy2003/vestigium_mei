@@ -1203,6 +1203,16 @@ private fun pistaSonar(t: TemaId): String = when (t) {
 }
 
 /** Un esquema de color con los colores del objeto, para que bandas, botones y fichas combinen con la página. */
+/**
+ * Si la app está en modo oscuro, visto desde adentro de una página: allí el esquema de colores es el del papel y
+ * [esOscuro] miraría el papel. Lo proveen la lectura y el escritor; fuera de ellos vale [esOscuro].
+ */
+internal val LocalOscuroApp = androidx.compose.runtime.compositionLocalOf<Boolean?> { null }
+
+/** El modo oscuro de la app, también adentro de una página (ver [LocalOscuroApp]). */
+@Composable
+internal fun oscuroApp(): Boolean = LocalOscuroApp.current ?: esOscuro()
+
 @Composable
 internal fun esquemaPagina(p: Pagina): ColorScheme {
     val b = MaterialTheme.colorScheme
@@ -1554,7 +1564,7 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
             else if (total < -umbralPaso) sig?.let { sentirPagina(Sentidos.Evento.PASAR); it() }
         }) { _, dx -> total += dx }
     }
-    MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
+    androidx.compose.runtime.CompositionLocalProvider(LocalOscuroApp provides oscuroApp) { MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         Box(Modifier.fillMaxSize().then(deslizar)) {
             FondoPagina(tema, p, noche = sueno, oscuro = oscuroApp)
             Column(Modifier.fillMaxSize()) {
@@ -1606,6 +1616,7 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
             }
         }
     }
+    }
 }
 
 /** Escribir el diario a pantalla completa, sobre el papel del tema. Se guarda solo; el botón guarda y vuelve. */
@@ -1629,7 +1640,7 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
         val pre = token.first(); val q = token.drop(1).lowercase()
         (if (pre == '@') etiquetas.first else etiquetas.second).filter { it.startsWith(q) && it != q }.take(6).map { "$pre$it" }
     }
-    MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
+    androidx.compose.runtime.CompositionLocalProvider(LocalOscuroApp provides oscuroApp) { MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         Box(Modifier.fillMaxSize()) {
             if (ficha) io.github.ruddy2003.vestigium.ui.ideario.InteriorIdeas(oscuroApp) else FondoPagina(tema, p, noche = modo == Escrito.SUENO, oscuro = oscuroApp)
             // Lo de adentro de la página: la barra, el texto y la fila de abajo. En una idea va dentro de una ficha grande del tema.
@@ -1695,6 +1706,7 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                 androidx.compose.foundation.layout.Spacer(Modifier.navigationBarsPadding())
             }
         }
+    }
     }
 }
 

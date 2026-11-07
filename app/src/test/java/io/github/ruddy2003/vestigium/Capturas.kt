@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
@@ -685,6 +686,46 @@ class Capturas {
     @Test fun libretaA3b() = (ESTANTE_A1B + TemaId.EDO).forEach { t -> libretaA3(t, t.soloOscuro); if (!t.soloOscuro) libretaA3(t, true) }
     @Test fun libretaA3c() = ESTANTE_A1C.forEach { t -> libretaA3(t, t.soloOscuro); if (!t.soloOscuro) libretaA3(t, true) }
     @Test fun libretaA3d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { t -> libretaA3(t, t.soloOscuro); if (!t.soloOscuro) libretaA3(t, true) }
+    /**
+     * Las cartas (lote A4): el sobre del tema en cinco momentos (sellado y atado, listo con su brillo, abriéndose con el sello
+     * partido, abierto con la carta afuera y cerrándose con el sello que cae), la biblioteca de cartas con su buzón y una
+     * carta abierta con su encabezado. En claro y en oscuro (los de solo oscuro, solo en oscuro).
+     */
+    private fun cartasA4(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(t)
+        val pg = io.github.ruddy2003.vestigium.ui.pagina(t)
+        captura(t, oscuro, 2500, "tema_${t.id}_${modo}_sobres") {
+            val medidor = androidx.compose.ui.text.rememberTextMeasurer()
+            // linea1, linea2, abrir, romper, subir, cordón, brillo, escala y alfa del sello, ¿abierta?
+            class M(val l1: String, val l2: String, val a: Float, val r: Float, val s: Float, val c: Float, val b: Float, val es: Float, val al: Float, val abierta: Boolean)
+            val momentos = listOf(
+                M("A mí, dentro de un año", "se abre 7 nov 2027 · en 365 días", 0f, 0f, 0f, 1f, 0f, 1f, 1f, false),
+                M("Ya se puede abrir", "escrita el 2 oct 2025", 0f, 0f, 0f, 0f, 0.9f, 1f, 1f, false),
+                M("", "", 0.5f, 0.8f, 0f, 0f, 0.3f, 1f, 1f, false),
+                M("Para @ana", "2 nov 2026 · 21:40", 1f, 1f, 0.55f, 0f, 0f, 1f, 1f, true),
+                M("", "", 0f, 0f, 0f, 0.4f, 0f, 1.6f, 0.6f, false),
+            )
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                momentos.forEach { m ->
+                    androidx.compose.foundation.Canvas(Modifier.width(300.dp).height(if (m.abierta) 290.dp else 190.dp)) {
+                        val cuerpo = if (m.abierta) androidx.compose.ui.geometry.Rect(0f, size.height * 0.34f, size.width, size.height) else androidx.compose.ui.geometry.Rect(0f, 0f, size.width, size.height)
+                        with(d) { sobre(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoCarta(m.l1, m.l2, cuerpo, m.a, m.r, m.s, m.c, m.b, m.es, m.al, pg.color, pg.tinta.copy(alpha = 0.2f), 7, true), medidor, oscuro) }
+                    }
+                }
+            }
+        }
+        cartas(t, oscuro, "tema_${t.id}_${modo}_biblioteca")
+        pantalla(t, oscuro, 2200, "tema_${t.id}_${modo}_carta") {
+            Repo.configEnMemoria(Repo.config.copy(perfil = io.github.ruddy2003.vestigium.data.Perfil(nombre = "Ana")))
+            cartasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.carta = "k4"
+            io.github.ruddy2003.vestigium.ui.pantallas.PantallaCarta(navVacia)
+        }
+    }
+    @Test fun cartasA4a() = ESTANTE_A1A.forEach { t -> cartasA4(t, t.soloOscuro); if (!t.soloOscuro) cartasA4(t, true) }
+    @Test fun cartasA4b() = (ESTANTE_A1B + TemaId.EDO).forEach { t -> cartasA4(t, t.soloOscuro); if (!t.soloOscuro) cartasA4(t, true) }
+    @Test fun cartasA4c() = ESTANTE_A1C.forEach { t -> cartasA4(t, t.soloOscuro); if (!t.soloOscuro) cartasA4(t, true) }
+    @Test fun cartasA4d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { t -> cartasA4(t, t.soloOscuro); if (!t.soloOscuro) cartasA4(t, true) }
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

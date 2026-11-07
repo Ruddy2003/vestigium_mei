@@ -11,6 +11,11 @@ import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -1413,9 +1418,11 @@ fun SobreCarta(c: Carta, modifier: Modifier = Modifier, tema: TemaId = Estilo.te
     val ctx = LocalContext.current
     val hoy = Fechas.diaLogico()
     val estado = estadoSobre(c, hoy)
-    val pa = papeleria(tema); val pg = pagina(tema)
+    val pg = pagina(tema)
     val v = vozCarta(tema)
-    val e = esquemaLacre(pa)
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(tema)
+    val oscuro = esOscuro()
+    val medidor = rememberTextMeasurer()
     val animar = Repo.config.animaciones
     val brillo = if (estado == EstadoSobre.LISTA && animar) {
         val inf = rememberInfiniteTransition(label = "lacre")
@@ -1432,32 +1439,30 @@ fun SobreCarta(c: Carta, modifier: Modifier = Modifier, tema: TemaId = Estilo.te
         } else onClick()
     }) {
         val abierta = estado == EstadoSobre.ABIERTA
-        Canvas(Modifier.fillMaxSize()) {
-            val cuerpo = if (abierta) Rect(0f, size.height * 0.34f, size.width, size.height) else Rect(0f, 0f, size.width, size.height)
-            dibujarSobre(tema, pa, e, cuerpo, abrir = if (abierta) 1f else 0f, romper = if (abierta) 1f else 0f, subir = if (abierta) 0.5f else 0f,
-                cordon = if (estado == EstadoSobre.SELLADA) 1f else 0f, brillo = brillo, hoja = pg.color, renglones = pg.tinta.copy(alpha = 0.2f))
+        val linea1 = when (estado) {
+            EstadoSobre.SELLADA -> destinatario(c, tema)
+            EstadoSobre.LISTA -> v.lista
+            EstadoSobre.ABIERTA -> if (c.alFuturo) "De ${Fechas.corto(c.escrita)} · ${c.escrita.take(4)}" else "Para @${c.para}"
         }
-        val fuente = letraSobre(tema)
+        val linea2 = when (estado) {
+            EstadoSobre.SELLADA -> "se abre ${Fechas.corto(c.abrir_en)} ${c.abrir_en.take(4)} · ${cuanto(faltan(c, hoy))}"
+            EstadoSobre.LISTA -> "escrita el ${Fechas.corto(c.escrita)} ${c.escrita.take(4)}"
+            EstadoSobre.ABIERTA -> if (c.alFuturo) "abierta ${c.abierta_el?.let { Fechas.corto(it) } ?: ""}" else "${Fechas.corto(c.escrita)} ${c.escrita.take(4)}${if (c.hora.isNotBlank()) " · ${c.hora}" else ""}"
+        }
+        Canvas(Modifier.fillMaxSize().semantics { contentDescription = "$linea1, $linea2" }) {
+            val cuerpo = if (abierta) Rect(0f, size.height * 0.34f, size.width, size.height) else Rect(0f, 0f, size.width, size.height)
+            with(d) {
+                sobre(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoCarta(linea1, linea2, cuerpo, abrir = if (abierta) 1f else 0f, romper = if (abierta) 1f else 0f,
+                    subir = if (abierta) 0.5f else 0f, cordon = if (estado == EstadoSobre.SELLADA) 1f else 0f, brillo = brillo, escalaSello = 1f, alfaSello = 1f,
+                    hoja = pg.color, renglones = pg.tinta.copy(alpha = 0.2f), semilla = c.id.hashCode(), alFuturo = c.alFuturo), medidor, oscuro)
+            }
+        }
         if (abierta) {
-            // Las primeras palabras, escritas en la carta que asoma.
+            // Las primeras palabras, escritas en la carta que asoma, donde dice el tema.
+            val k = d.cajaPrevia
             Text(c.texto.trim().replace(Regex("\\s+"), " "), fontFamily = pg.texto, fontSize = 9.sp, lineHeight = 11.sp, color = pg.tinta.copy(alpha = 0.8f),
                 maxLines = 2, overflow = TextOverflow.Ellipsis, fontStyle = FontStyle.Italic,
-                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth().padding(start = maxWidth * 0.13f, end = maxWidth * 0.13f, top = maxHeight * 0.2f))
-        }
-        Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = 10.dp, end = 10.dp, bottom = 7.dp)) {
-            val linea1 = when (estado) {
-                EstadoSobre.SELLADA -> destinatario(c, tema)
-                EstadoSobre.LISTA -> v.lista
-                EstadoSobre.ABIERTA -> if (c.alFuturo) "De ${Fechas.corto(c.escrita)} · ${c.escrita.take(4)}" else "Para @${c.para}"
-            }
-            val linea2 = when (estado) {
-                EstadoSobre.SELLADA -> "se abre ${Fechas.corto(c.abrir_en)} ${c.abrir_en.take(4)} · ${cuanto(faltan(c, hoy))}"
-                EstadoSobre.LISTA -> "escrita el ${Fechas.corto(c.escrita)} ${c.escrita.take(4)}"
-                EstadoSobre.ABIERTA -> if (c.alFuturo) "abierta ${c.abierta_el?.let { Fechas.corto(it) } ?: ""}" else "${Fechas.corto(c.escrita)} ${c.escrita.take(4)}${if (c.hora.isNotBlank()) " · ${c.hora}" else ""}"
-            }
-            Text(linea1, fontFamily = fuente, fontSize = 12.sp, lineHeight = 13.sp, color = if (estado == EstadoSobre.LISTA) pa.lacre.let { if (abs(it.luminance() - pa.sobre.luminance()) > 0.25f) it else pa.tinta } else pa.tinta,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(linea2, fontFamily = fuente, fontSize = 9.5.sp, lineHeight = 11.sp, color = pa.tinta.copy(alpha = 0.72f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                modifier = Modifier.offset(maxWidth * k.left, maxHeight * k.top).size(maxWidth * (k.right - k.left), maxHeight * (k.bottom - k.top)))
         }
     }
 }
@@ -1469,8 +1474,10 @@ fun AperturaCarta(c: Carta, terminar: () -> Unit) {
     val tema = Estilo.tema
     val t = remember { Animatable(if (animar) 0f else 1f) }
     val sentir = rememberSentir()
-    val pa = papeleria(tema); val pg = pagina(tema)
-    val e = esquemaLacre(pa)
+    val pg = pagina(tema)
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(tema)
+    val oscuro = esOscuro()
+    val medidor = rememberTextMeasurer()
     LaunchedEffect(Unit) {
         sentir(Sentidos.Evento.ABRIR)
         if (animar) t.animateTo(1f, tween(2000, easing = LinearEasing))
@@ -1485,7 +1492,10 @@ fun AperturaCarta(c: Carta, terminar: () -> Unit) {
                     val romper = ((v - 0.14f) / 0.2f).coerceIn(0f, 1f)
                     val abrir = ((v - 0.3f) / 0.32f).coerceIn(0f, 1f)
                     val subir = ((v - 0.58f) / 0.42f).coerceIn(0f, 1f)
-                    dibujarSobre(tema, pa, e, Rect(0f, size.height * 0.42f, size.width, size.height), abrir, romper, subir, 0f, brillo, pg.color, pg.tinta.copy(alpha = 0.22f))
+                    with(d) {
+                        sobre(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoCarta("", "", Rect(0f, size.height * 0.42f, size.width, size.height), abrir, romper, subir, 0f, brillo,
+                            1f, 1f, pg.color, pg.tinta.copy(alpha = 0.22f), c.id.hashCode(), c.alFuturo), medidor, oscuro)
+                    }
                 }
                 Text("Escrita el ${Fechas.larga(c.escrita)}", style = MaterialTheme.typography.titleMedium, color = Color.White, modifier = Modifier.padding(top = 18.dp))
                 Text("${java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(c.escrita), Fechas.parse(Fechas.diaLogico()))} días después", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.7f))
@@ -1501,9 +1511,11 @@ fun SelladoCarta(c: Carta, terminar: () -> Unit) {
     val tema = Estilo.tema
     val t = remember { Animatable(if (animar) 0f else 1f) }
     val sentir = rememberSentir()
-    val pa = papeleria(tema); val pg = pagina(tema)
+    val pg = pagina(tema)
     val voz = vozCarta(tema)
-    val e = esquemaLacre(pa)
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(tema)
+    val oscuro = esOscuro()
+    val medidor = rememberTextMeasurer()
     LaunchedEffect(Unit) {
         if (animar) {
             t.animateTo(0.62f, tween(1150, easing = LinearEasing))
@@ -1521,8 +1533,10 @@ fun SelladoCarta(c: Carta, terminar: () -> Unit) {
                     val abrir = (1f - (v - 0.28f) / 0.3f).coerceIn(0f, 1f)
                     val caer = ((v - 0.56f) / 0.12f).coerceIn(0f, 1f)
                     val cordon = if (c.alFuturo) ((v - 0.72f) / 0.28f).coerceIn(0f, 1f) else 0f
-                    dibujarSobre(tema, pa, e, Rect(0f, size.height * 0.42f, size.width, size.height), abrir, 0f, subir, cordon, 0f, pg.color, pg.tinta.copy(alpha = 0.22f),
-                        escalaSello = 2.2f - 1.2f * caer, alfaSello = caer)
+                    with(d) {
+                        sobre(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoCarta("", "", Rect(0f, size.height * 0.42f, size.width, size.height), abrir, 0f, subir, cordon, 0f,
+                            2.2f - 1.2f * caer, caer, pg.color, pg.tinta.copy(alpha = 0.22f), c.id.hashCode(), c.alFuturo), medidor, oscuro)
+                    }
                 }
                 Text(if (c.alFuturo) "${voz.sellada} hasta el ${Fechas.larga(c.abrir_en)}" else voz.guardadaOtro.format("@${c.para}"), style = MaterialTheme.typography.titleMedium,
                     color = Color.White, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 18.dp, start = 24.dp, end = 24.dp))
@@ -1537,22 +1551,26 @@ fun SelladoCarta(c: Carta, terminar: () -> Unit) {
 //  La carta abierta y la carta que se escribe
 // =====================================================================
 
-/** Encabezado de una carta: emblema, lugar, fecha y hora a la derecha, y a quién va. */
+/**
+ * Encabezado de una carta: la cabecera dibujada del tema (la misma de la página del diario: [io.github.ruddy2003.vestigium.ui.biblioteca.DisenoBiblioteca.encabezado]),
+ * con el lugar, la fecha del tema y la fecha larga con la hora; debajo, a quién va.
+ */
 @Composable
 fun EncabezadoCarta(t: TemaId, p: Pagina, escrita: String, hora: String, lugar: String, para: String, abrirEn: String?) {
     val ty = MaterialTheme.typography
     val v = vozCarta(t)
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(t)
+    val oscuro = oscuroApp()
+    val medidor = rememberTextMeasurer()
+    val rotulo = lugar.ifBlank { "carta" }
+    val fechaTema = Estilo.fecha(escrita)
+    val detalle = Fechas.larga(escrita) + if (hora.isNotBlank()) " · $hora" else ""
+    val numero = runCatching { Fechas.parse(escrita).dayOfYear }.getOrDefault(1)
     Column(Modifier.fillMaxWidth().padding(top = 10.dp)) {
-        Row(verticalAlignment = Alignment.Top) {
-            Emblema(t, 38.dp, MaterialTheme.colorScheme, animado = false)
-            Spacer(Modifier.weight(1f))
-            Column(horizontalAlignment = Alignment.End) {
-                Text(listOfNotNull(lugar.ifBlank { null }, Fechas.larga(escrita)).joinToString(", "), fontFamily = p.texto, fontSize = (p.tam - 4).sp,
-                    fontStyle = FontStyle.Italic, color = p.tinta, textAlign = TextAlign.End)
-                Text(Estilo.fecha(escrita) + if (hora.isNotBlank()) " · $hora" else "", style = ty.labelMedium, color = p.tenue, textAlign = TextAlign.End)
-            }
+        Canvas(Modifier.fillMaxWidth().height(d.altoEncabezado).semantics { contentDescription = "$rotulo. $fechaTema. $detalle" }) {
+            clipRect { with(d) { encabezado(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoEncabezado(rotulo, fechaTema, detalle, numero, false), p, medidor, oscuro) } }
         }
-        Text(paraQuien(v, para, abrirEn), style = ty.titleLarge, color = p.acento, modifier = Modifier.padding(top = 22.dp))
+        Text(paraQuien(v, para, abrirEn), style = ty.titleLarge, color = p.acento, modifier = Modifier.padding(top = 16.dp))
         if (para.isBlank() && abrirEn != null) Text("${v.sellada.replaceFirstChar { it.lowercase() }} hasta ese día", style = ty.labelMedium, color = p.tenue)
         Meandro(Modifier.padding(top = 10.dp, bottom = 16.dp), color = p.acento.copy(alpha = 0.5f))
     }
@@ -1568,7 +1586,7 @@ fun LecturaCarta(c: Carta, volver: () -> Unit, acciones: List<Pair<String, () ->
     val e = esquemaLacre(pa)
     // Antes de cambiar al esquema del papel: si la app está de noche.
     val oscuroApp = esOscuro()
-    MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
+    androidx.compose.runtime.CompositionLocalProvider(LocalOscuroApp provides oscuroApp) { MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         Box(Modifier.fillMaxSize()) {
             FondoPagina(tema, p, oscuro = oscuroApp)
             Column(Modifier.fillMaxSize()) {
@@ -1599,6 +1617,7 @@ fun LecturaCarta(c: Carta, volver: () -> Unit, acciones: List<Pair<String, () ->
                 }
             }
         }
+    }
     }
 }
 
