@@ -1632,7 +1632,10 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                     if (pie != null) pie(p)
                 }
                 // Abajo, junto al teclado, también está «guardar»: con el texto largo, el de arriba queda lejos del pulgar (N-27).
-                FlowRow(Modifier.fillMaxWidth().background(p.color.copy(alpha = 0.92f)).padding(horizontal = 12.dp, vertical = 6.dp),
+                // La fila de abajo lleva la misma franja del tema que la barra de arriba (en una ficha, el papel de la ficha).
+                FlowRow(Modifier.fillMaxWidth().then(if (ficha) Modifier.background(p.color.copy(alpha = 0.92f))
+                        else Modifier.drawBehind { with(io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(tema)) { barra(p, oscuroApp, modo == Escrito.SUENO) } })
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     BotonGuardarTema(textoBoton ?: textoGuardar(tema), p, oscuroApp, modo == Escrito.SUENO) { sentir(Sentidos.Evento.GUARDAR); guardar() }
                     if (dictado) BotonDictado { t -> val nuevo = (campo.text + " " + t).trim(); campo = TextFieldValue(nuevo, TextRange(nuevo.length)); onCambio(nuevo) }
