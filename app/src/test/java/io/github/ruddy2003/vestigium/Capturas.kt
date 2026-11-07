@@ -644,6 +644,22 @@ class Capturas {
     @Test fun tapaA2b() = (ESTANTE_A1B + TemaId.EDO).forEach { t -> tapa(t, t.soloOscuro); if (!t.soloOscuro) tapa(t, true) }
     @Test fun tapaA2c() = ESTANTE_A1C.forEach { t -> tapa(t, t.soloOscuro); if (!t.soloOscuro) tapa(t, true) }
     @Test fun tapaA2d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { t -> tapa(t, t.soloOscuro); if (!t.soloOscuro) tapa(t, true) }
+    /**
+     * La página abierta (lote A2b): la entrada leída con su encabezado y su barra, el sueño leído de noche y el escritor con
+     * su botón de guardar, en claro y en oscuro (los de solo oscuro, solo en oscuro).
+     */
+    private fun paginaAbierta(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val dia = io.github.ruddy2003.vestigium.data.Dia(fecha = "2026-10-16", valencia = 2, nota = TEXTO, mejor_momento = "La caminata.", peor_momento = "El tráfico.",
+            sueno_texto = "Volaba sobre un río y el agua subía hasta el puente.", sueno_valencia = 1)
+        captura(t, oscuro, 2000, "tema_${t.id}_${modo}_lectura") { io.github.ruddy2003.vestigium.ui.LecturaTema("2026-10-16", dia, {}, {}, null, emptyList(), tema = t) }
+        captura(t, oscuro, 1600, "tema_${t.id}_${modo}_sueno") { io.github.ruddy2003.vestigium.ui.LecturaTema("2026-10-16", dia, {}, null, null, emptyList(), tema = t, modo = io.github.ruddy2003.vestigium.ui.Escrito.SUENO) }
+        captura(t, oscuro, 1600, "tema_${t.id}_${modo}_escritor") { io.github.ruddy2003.vestigium.ui.EscritorTema("2026-10-16", TEXTO.take(220), {}, {}, t) }
+    }
+    @Test fun paginaA2a() = ESTANTE_A1A.forEach { t -> paginaAbierta(t, t.soloOscuro); if (!t.soloOscuro) paginaAbierta(t, true) }
+    @Test fun paginaA2b() = (ESTANTE_A1B + TemaId.EDO).forEach { t -> paginaAbierta(t, t.soloOscuro); if (!t.soloOscuro) paginaAbierta(t, true) }
+    @Test fun paginaA2c() = ESTANTE_A1C.forEach { t -> paginaAbierta(t, t.soloOscuro); if (!t.soloOscuro) paginaAbierta(t, true) }
+    @Test fun paginaA2d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { t -> paginaAbierta(t, t.soloOscuro); if (!t.soloOscuro) paginaAbierta(t, true) }
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
+import io.github.ruddy2003.vestigium.ui.Pagina
 import io.github.ruddy2003.vestigium.ui.TemaId
 
 // =====================================================================
@@ -106,7 +107,42 @@ interface DisenoBiblioteca {
      * tapa gira, el rollo se desenrolla, la solapa se levanta, la pantalla se enciende…
      */
     fun DrawScope.tapa(e: EstadoTapa, medidor: TextMeasurer, oscuro: Boolean)
+
+    // ---------------------------------------------------------------- la página abierta y el escritor
+
+    /** Alto del encabezado de la página (el ancho es el de la columna de texto). */
+    val altoEncabezado: Dp
+
+    /**
+     * El encabezado de la página abierta, dibujado por el tema sobre el papel [p] (la cabecera de una gaceta, la cartela de
+     * un códice, el sello y la jornada, la ruta de un archivo en la terminal…): la cabecera del tema ([EstadoEncabezado.rotulo]),
+     * la fecha y el detalle (día de la semana · hace cuánto) dibujados dentro con [textoEn]. De noche, el del sueño.
+     */
+    fun DrawScope.encabezado(e: EstadoEncabezado, p: Pagina, medidor: TextMeasurer, oscuro: Boolean)
+
+    /**
+     * Lo que el tema pone sobre el papel de la página, por debajo del texto: márgenes, filetes, juntas, sellos, la cenefa…
+     * En modo oscuro ([oscuro]), además, la luz con que se lee (una lámpara, la vela, el resplandor de la pantalla): el papel
+     * se hunde en la penumbra pero el centro, donde va el texto, queda legible. De noche ([noche]), la página del sueño.
+     */
+    fun DrawScope.pagina(p: Pagina, oscuro: Boolean, noche: Boolean)
+
+    /** La franja de la barra de arriba de la página (atrás, cuántas palabras, guardar), del tamaño del lienzo. */
+    fun DrawScope.barra(p: Pagina, oscuro: Boolean, noche: Boolean)
+
+    /** El botón de guardar como pieza del tema (el lacre, la tecla, el sello, la placa de latón…), del tamaño del lienzo. */
+    fun DrawScope.botonGuardar(p: Pagina, oscuro: Boolean, noche: Boolean)
+
+    /** El color de la letra del botón de guardar, que contraste con [botonGuardar]. */
+    fun tintaBoton(p: Pagina, oscuro: Boolean, noche: Boolean): Color
 }
+
+/**
+ * Lo que dice el encabezado de una página: la cabecera del tema («ACTA · DIVRNA», «CRONACA DI ROMA · Trastevere»…), la
+ * fecha como la escribe el tema, el detalle («viernes · hace 2 días») y el número del día del año, por si el tema lo usa
+ * (folios, singladuras, cotas). [noche]: la página de un sueño.
+ */
+class EstadoEncabezado(val rotulo: String, val fecha: String, val detalle: String, val numero: Int, val noche: Boolean)
 
 /**
  * Lo que se ve del diario cerrado de un día: la fecha como la escribe el tema, cuántas palabras tiene, si está en blanco,

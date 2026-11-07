@@ -1566,11 +1566,13 @@ fun LecturaCarta(c: Carta, volver: () -> Unit, acciones: List<Pair<String, () ->
     val pa = papeleria(tema)
     val v = vozCarta(tema)
     val e = esquemaLacre(pa)
+    // Antes de cambiar al esquema del papel: si la app está de noche.
+    val oscuroApp = esOscuro()
     MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         Box(Modifier.fillMaxSize()) {
-            FondoPagina(tema, p)
+            FondoPagina(tema, p, oscuro = oscuroApp)
             Column(Modifier.fillMaxSize()) {
-                BarraPagina(p, volver, "${porNumero(Texto.palabras(c.texto), "1 palabra", "${Texto.palabras(c.texto)} palabras")}") {
+                BarraPagina(p, volver, "${porNumero(Texto.palabras(c.texto), "1 palabra", "${Texto.palabras(c.texto)} palabras")}", oscuro = oscuroApp) {
                     Box {
                         Text("⋯", fontSize = 22.sp, color = p.acento, modifier = Modifier.clickable { menu = true }.padding(horizontal = 10.dp))
                         Menu(expanded = menu, onDismissRequest = { menu = false }, containerColor = p.color) {
