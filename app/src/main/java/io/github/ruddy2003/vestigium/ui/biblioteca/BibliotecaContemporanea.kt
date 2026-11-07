@@ -9,6 +9,8 @@ import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.PathMeasure
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -983,6 +985,327 @@ object EstanteUrbe : DisenoBiblioteca {
         }
         textoEn(medidor, texto, Rect(pl.left + 12 * u, pl.top + 4 * u, pl.right - 12 * u, pl.bottom - 4 * u), letra, c(TINTA), 13f, peso = FontWeight.Bold, espaciado = 1f, minimo = 7f)
     }
+
+    // ---------------------------------------------------------------- las cartas
+
+    /** La busta de correo aéreo, su forro, el spago con que se ata y la ceralacca. */
+    private val BUSTA = Color(0xFFF1E4C8)
+    private val BUSTA_SOMBRA = Color(0xFFC4AC7E)
+    private val BUSTA_LUZ = Color(0xFFFBF3E0)
+    private val SPAGO = Color(0xFFB59A6A)
+    private val CERALACCA = Color(0xFFA8432A)
+    private val AZUL_AEREO = Color(0xFF283F66)
+
+    /** El sello de ceralacca: una gota de cera de borde irregular, el aro estampado, la R y su corona de puntos. */
+    private fun DrawScope.ceralacca(c: Offset, r: Float, oscuro: Boolean, medidor: TextMeasurer, alfa: Float) {
+        val u = density
+        fun k(x: Color) = t(x, oscuro, false).copy(alpha = alfa)
+        val gota = Path().apply {
+            for (i in 0 until 16) {
+                val a = (2 * PI * i / 16).toFloat()
+                val rr = r * (0.92f + 0.14f * azar(i, 41))
+                val p = Offset(c.x + cos(a) * rr, c.y + sin(a) * rr)
+                if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+            }
+            close()
+        }
+        translate(0.8f * u, 1.2f * u) { drawPath(gota, Color.Black.copy(alpha = 0.25f * alfa)) }
+        drawPath(gota, k(CERALACCA))
+        drawCircle(k(mezcla(CERALACCA, Color.Black, 0.3f)), r * 0.7f, c, style = Stroke(r * 0.08f))
+        for (i in 0 until 12) {
+            val a = (2 * PI * i / 12).toFloat()
+            drawCircle(k(mezcla(CERALACCA, BUSTA_LUZ, 0.35f)), r * 0.05f, Offset(c.x + cos(a) * r * 0.56f, c.y + sin(a) * r * 0.56f))
+        }
+        drawArc(k(Color.White.copy(alpha = 0.3f)), 200f, 70f, false, Offset(c.x - r * 0.8f, c.y - r * 0.8f), Size(r * 1.6f, r * 1.6f), style = Stroke(r * 0.1f, cap = StrokeCap.Round))
+        textoEn(medidor, "R", Rect(c.x - r * 0.5f, c.y - r * 0.5f, c.x + r * 0.5f, c.y + r * 0.5f), letra, k(mezcla(CERALACCA, Color.Black, 0.45f)), r * 0.7f / u, peso = FontWeight.Bold, minimo = 4f)
+    }
+
+    /** La orilla de correo aéreo: rombos en diagonal, rojo y verde de persiana con el crema en medio, a lo largo de [r]. */
+    private fun DrawScope.orillaAerea(r: Rect, oscuro: Boolean, vertical: Boolean = false) {
+        val paso = (if (vertical) r.width else r.height) * 2.6f
+        var x = if (vertical) r.top else r.left; var i = 0
+        val fin = if (vertical) r.bottom else r.right
+        while (x < fin) {
+            val col = t(if (i % 2 == 0) ROJO else PERSIANA, oscuro, false)
+            val p = if (vertical) Path().apply { moveTo(r.left, x + paso * 0.5f); lineTo(r.right, x); lineTo(r.right, x + paso * 0.5f); lineTo(r.left, x + paso); close() }
+            else Path().apply { moveTo(x, r.bottom); lineTo(x + paso * 0.5f, r.top); lineTo(x + paso, r.top); lineTo(x + paso * 0.5f, r.bottom); close() }
+            drawPath(p, col)
+            x += paso; i++
+        }
+    }
+
+    /** El francobollo dentado: la estampilla con los tres pisos de arcos del anfiteatro y el valor; encima, el matasellos ondulado. */
+    private fun DrawScope.francobollo(r: Rect, fondo: Color, oscuro: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        drawRect(Color.Black.copy(alpha = 0.15f), r.topLeft + Offset(0.6f * u, 0.8f * u), r.size)
+        drawRect(c(BUSTA_LUZ), r.topLeft, r.size)
+        val d = 0.75f * u
+        var x = r.left + d * 1.5f
+        while (x < r.right - d) { drawCircle(fondo, d, Offset(x, r.top)); drawCircle(fondo, d, Offset(x, r.bottom)); x += d * 3f }
+        var y = r.top + d * 1.5f
+        while (y < r.bottom - d) { drawCircle(fondo, d, Offset(r.left, y)); drawCircle(fondo, d, Offset(r.right, y)); y += d * 3f }
+        val f = r.deflate(2.2f * u)
+        drawRect(c(Color(0xFF3E6B8A)), f.topLeft, f.size)
+        drawRect(c(TRAVERTINO), Offset(f.left, f.top + f.height * 0.3f), Size(f.width, f.height * 0.56f))
+        for (piso in 0 until 3) {
+            val y0 = f.top + f.height * (0.36f + piso * 0.17f)
+            for (k in 0 until 4) {
+                val ax = f.left + f.width * (0.1f + k * 0.21f)
+                drawArc(c(TRAVERTINO_PORO), 180f, 180f, true, Offset(ax, y0), Size(f.width * 0.14f, f.height * 0.14f))
+                drawRect(c(TRAVERTINO_PORO), Offset(ax, y0 + f.height * 0.07f), Size(f.width * 0.14f, f.height * 0.06f))
+            }
+        }
+        drawRect(c(ROJO), Offset(f.left, f.bottom - f.height * 0.14f), Size(f.width, f.height * 0.14f))
+        for (j in 0 until 4) {
+            val yy = r.top + r.height * (0.2f + j * 0.2f)
+            val onda = Path().apply {
+                moveTo(r.left - r.width * 0.6f, yy)
+                var xx = r.left - r.width * 0.6f
+                while (xx < r.right + r.width * 0.2f) { quadraticTo(xx + 2 * u, yy - 1.4f * u, xx + 4 * u, yy); quadraticTo(xx + 6 * u, yy + 1.4f * u, xx + 8 * u, yy); xx += 8 * u }
+            }
+            drawPath(onda, c(TINTA).copy(alpha = 0.42f), style = Stroke(0.6f * u))
+        }
+        drawCircle(c(TINTA).copy(alpha = 0.4f), r.height * 0.42f, Offset(r.left - r.width * 0.15f, r.center.y), style = Stroke(0.6f * u))
+    }
+
+    /**
+     * La busta de correo aéreo, vista del lado de la solapa: papel crema con la orilla de rombos rojos y verdes, la etiqueta
+     * azul «PER VIA AEREA» y el francobollo del anfiteatro con su matasellos en la solapa recta; dentro, el forro ocre con su
+     * trama de seguridad. La cierra la ceralacca roja con su R; las de al futuro, además, dan dos vueltas de spago con su
+     * nudo de moño. Al abrirla, la ceralacca se parte (media se va con la solapa), la solapa se levanta detrás y sube la
+     * carta. En modo oscuro, el papel se hunde en la penumbra del portal; la letra sigue oscura sobre crema.
+     */
+    override fun DrawScope.sobre(e: EstadoCarta, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        val b = Rect(e.cuerpo.left + 2 * u, e.cuerpo.top + 1.5f * u, e.cuerpo.right - 2 * u, e.cuerpo.bottom - 3.5f * u)
+        val l = b.left; val r = b.right; val top = b.top; val bot = b.bottom
+        val W = b.width; val H = b.height; val cx = b.center.x
+        val rad = CornerRadius(3 * u)
+        val fondo = c(BUSTA)
+        drawRoundRect(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.2f), Offset(l + 1.5f * u, top + 2.5f * u), b.size, rad)
+        // El forro de adentro, con su trama de seguridad: se ve al levantar la solapa.
+        drawRoundRect(c(OCRE), b.topLeft, b.size, rad)
+        clipRect(l, top, r, top + H * 0.45f) {
+            var x = l - H; while (x < r) { drawLine(c(mezcla(OCRE, AZUL_AEREO, 0.45f)).copy(alpha = 0.35f), Offset(x, top), Offset(x + H * 0.5f, top + H * 0.5f), 0.7f * u); x += 3.2f * u }
+            var x2 = l; while (x2 < r + H) { drawLine(c(mezcla(OCRE, AZUL_AEREO, 0.45f)).copy(alpha = 0.25f), Offset(x2, top), Offset(x2 - H * 0.5f, top + H * 0.5f), 0.7f * u); x2 += 3.2f * u }
+        }
+        val k = 1f - 2f * e.abrir.coerceIn(0f, 1f)
+        val hondo = H * 0.4f
+        val solapa = Path().apply {
+            moveTo(l, top); lineTo(r, top); lineTo(r - W * 0.035f, top + hondo - 4 * u)
+            quadraticTo(r - W * 0.04f, top + hondo, r - W * 0.06f, top + hondo); lineTo(l + W * 0.06f, top + hondo)
+            quadraticTo(l + W * 0.04f, top + hondo, l + W * 0.035f, top + hondo - 4 * u); close()
+        }
+        val selloC = Offset(cx, top + hondo * k)
+        val selloR = H * 0.13f
+        if (k < 0f) scale(1f, k, Offset(cx, top)) {
+            // La solapa levantada, por dentro: el forro ocre.
+            drawPath(solapa, c(mezcla(OCRE, BUSTA_SOMBRA, 0.4f)))
+            drawPath(solapa, c(BUSTA_SOMBRA), style = Stroke(1 * u))
+        }
+        // La carta.
+        if (e.subir > 0f || e.abrir > 0.3f) {
+            val h = hojaCo(e, 0.84f, 0.86f, 0.06f, 3 * u)
+            papelCartaCo(h, e, 7 * u, 5.5f * u, 6 * u, oscuro)
+            drawRect(c(ROJO).copy(alpha = 0.5f), Offset(h.left + 6 * u, h.top + 3 * u), Size(h.width * 0.22f, 1 * u))
+        }
+        // El frente: el bolsillo con su escote en V y las orillas aéreas.
+        val v = top + H * 0.28f
+        val frente = Path().apply {
+            moveTo(l, top + H * 0.1f); lineTo(cx, v); lineTo(r, top + H * 0.1f); lineTo(r, bot - 3 * u)
+            quadraticTo(r, bot, r - 3 * u, bot); lineTo(l + 3 * u, bot); quadraticTo(l, bot, l, bot - 3 * u); close()
+        }
+        drawPath(frente, fondo)
+        clipPath(frente) {
+            for (j in 0 until 14) { val y = top + H * azar(e.semilla, j); drawLine(c(BUSTA_SOMBRA).copy(alpha = 0.12f), Offset(l, y), Offset(r, y + (azar(e.semilla, j + 30) - 0.5f) * 4 * u), 0.6f * u) }
+            orillaAerea(Rect(l, bot - 4 * u, r, bot), oscuro)
+            orillaAerea(Rect(l, top, l + 4 * u, bot), oscuro, vertical = true)
+            orillaAerea(Rect(r - 4 * u, top, r, bot), oscuro, vertical = true)
+            drawLine(c(BUSTA_SOMBRA).copy(alpha = 0.6f), Offset(l + 4 * u, bot - 4 * u), Offset(cx - W * 0.1f, v + H * 0.05f), 0.8f * u)
+            drawLine(c(BUSTA_SOMBRA).copy(alpha = 0.6f), Offset(r - 4 * u, bot - 4 * u), Offset(cx + W * 0.1f, v + H * 0.05f), 0.8f * u)
+        }
+        drawPath(Path().apply { moveTo(l, top + H * 0.1f); lineTo(cx, v); lineTo(r, top + H * 0.1f) }, c(BUSTA_SOMBRA), style = Stroke(1 * u))
+        // La solapa cerrada (o cerrándose), con la etiqueta aérea y el francobollo.
+        if (k >= 0f) scale(1f, k.coerceAtLeast(0.001f), Offset(cx, top)) {
+            drawPath(Path().apply { addPath(solapa); translate(Offset(0f, 1.2f * u)) }, Color.Black.copy(alpha = 0.12f))
+            drawPath(solapa, c(BUSTA_LUZ))
+            clipPath(solapa) {
+                orillaAerea(Rect(l, top + hondo - 3.5f * u, r, top + hondo), oscuro)
+                val et = Rect(l + W * 0.07f, top + H * 0.09f, l + W * 0.46f, top + H * 0.22f)
+                drawRect(c(AZUL_AEREO), et.topLeft, et.size)
+                drawRect(c(BUSTA_LUZ), et.deflate(1 * u).topLeft, et.deflate(1 * u).size, style = Stroke(0.5f * u))
+                textoEn(medidor, "PER VIA AEREA", et.deflate(1.6f * u), letra, c(BUSTA_LUZ), 7f, peso = FontWeight.Bold, minimo = 4f)
+                val fh = H * 0.26f
+                francobollo(Rect(r - W * 0.06f - fh * 0.82f, top + H * 0.06f, r - W * 0.06f, top + H * 0.06f + fh), c(BUSTA_LUZ), oscuro)
+            }
+            drawPath(solapa, c(BUSTA_SOMBRA), style = Stroke(1 * u))
+        }
+        // El spago: dos vueltas de hilo de bramante a lo largo, con su moño al lado del sello.
+        if (e.cordon > 0f) {
+            val y0 = top + hondo
+            listOf(-1.6f * u, 1.6f * u).forEachIndexed { i, dy ->
+                val p = Path().apply { moveTo(l - 2 * u, y0 + dy); lineTo(r + 2 * u, y0 + dy + 0.6f * u) }
+                trazoParcialCo(Path().apply { moveTo(l - 2 * u, y0 + dy + 1.2f * u); lineTo(r + 2 * u, y0 + dy + 1.8f * u) }, (e.cordon * 1.25f - i * 0.12f).coerceIn(0f, 1f), Color.Black.copy(alpha = 0.18f), 1.6f * u)
+                trazoParcialCo(p, (e.cordon * 1.25f - i * 0.12f).coerceIn(0f, 1f), c(SPAGO), 1.4f * u)
+            }
+            val nudo = ((e.cordon - 0.75f) / 0.25f).coerceIn(0f, 1f)
+            if (nudo > 0f) {
+                val n0 = Offset(cx + selloR * 1.5f, y0)
+                scale(nudo, nudo, n0) {
+                    drawOval(c(SPAGO), Offset(n0.x - 1 * u, n0.y - 5.5f * u), Size(6 * u, 5 * u), style = Stroke(1.3f * u))
+                    drawOval(c(SPAGO), Offset(n0.x - 1 * u, n0.y + 0.5f * u), Size(6 * u, 5 * u), style = Stroke(1.3f * u))
+                    drawLine(c(SPAGO), n0, n0 + Offset(3 * u, 8 * u), 1.3f * u, StrokeCap.Round)
+                    drawLine(c(SPAGO), n0, n0 + Offset(7 * u, 6 * u), 1.3f * u, StrokeCap.Round)
+                    drawCircle(c(mezcla(SPAGO, NOGAL, 0.4f)), 1.6f * u, n0)
+                }
+            }
+        }
+        // La ceralacca, entera o partida: media se queda en el bolsillo, media se va con la solapa.
+        if (k >= 0f && e.alfaSello > 0f) {
+            brilloSelloCo(selloC, selloR, c(FAROL), e.brillo)
+            selloPartidoCo(Offset(cx, top + hondo), selloR, e.romper, e.escalaSello, Offset(-selloR * 0.3f * e.romper, selloC.y - (top + hondo) - selloR * 0.25f * e.romper),
+                Offset(selloR * 0.2f * e.romper, selloR * 0.35f * e.romper), e.semilla) {
+                ceralacca(Offset(cx, top + hondo), selloR, oscuro, medidor, e.alfaSello)
+            }
+        } else if (e.alfaSello > 0f && e.romper > 0f) {
+            // Abierta: la mitad de abajo de la ceralacca sigue pegada al bolsillo.
+            selloPartidoCo(Offset(cx, top + hondo), selloR, e.romper, 1f, Offset.Zero, Offset(selloR * 0.2f, selloR * 0.35f), e.semilla, conArriba = false) {
+                ceralacca(Offset(cx, top + hondo), selloR, oscuro, medidor, e.alfaSello)
+            }
+        }
+        // A quién va y las fechas, a pluma sobre el crema.
+        textoEn(medidor, e.linea1, Rect(l + W * 0.08f, top + H * 0.6f, r - W * 0.08f, top + H * 0.76f), Letra.cronaca, c(TINTA), 11.5f, peso = FontWeight.SemiBold, minimo = 7f)
+        textoEn(medidor, e.linea2, Rect(l + W * 0.1f, top + H * 0.77f, r - W * 0.1f, top + H * 0.89f), letra, c(TINTA).copy(alpha = 0.78f), 9f, minimo = 6f)
+    }
+
+    override val cajaPrevia: Rect = Rect(0.15f, 0.235f, 0.85f, 0.39f)
+
+    override val altoBuzon: Dp = 200.dp
+
+    /** Una busta chica de pie en su casilla: lista (la ceralacca brilla), sellada (con su spago) o abierta (la carta asoma). */
+    private fun DrawScope.bustaChica(r: Rect, tipo: Int, oscuro: Boolean, semilla: Int) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        val inclina = (azar(semilla, 1) - 0.5f) * 6f
+        rotate(inclina, r.center) {
+            if (tipo == 2) {
+                drawRect(c(PAPEL), Offset(r.left + r.width * 0.12f, r.top - r.height * 0.32f), Size(r.width * 0.76f, r.height * 0.6f))
+                for (j in 0 until 3) drawLine(c(TINTA).copy(alpha = 0.3f), Offset(r.left + r.width * 0.2f, r.top - r.height * (0.22f - j * 0.12f)), Offset(r.right - r.width * 0.22f, r.top - r.height * (0.22f - j * 0.12f)), 0.6f * u)
+            }
+            drawRect(Color.Black.copy(alpha = 0.25f), r.topLeft + Offset(0.8f * u, 1 * u), r.size)
+            drawRect(c(BUSTA), r.topLeft, r.size)
+            orillaAerea(Rect(r.left, r.bottom - 2 * u, r.right, r.bottom), oscuro)
+            val punta = if (tipo == 2) r.top - r.height * 0.3f else r.top + r.height * 0.45f
+            drawPath(Path().apply { moveTo(r.left, r.top); lineTo(r.center.x, punta); lineTo(r.right, r.top); close() }, c(if (tipo == 2) mezcla(OCRE, BUSTA, 0.3f) else BUSTA_LUZ))
+            drawPath(Path().apply { moveTo(r.left, r.top); lineTo(r.center.x, punta); lineTo(r.right, r.top) }, c(BUSTA_SOMBRA), style = Stroke(0.7f * u))
+            if (tipo == 1) {
+                drawLine(c(SPAGO), Offset(r.left, r.top + r.height * 0.45f), Offset(r.right, r.top + r.height * 0.45f), 1.2f * u)
+                drawLine(c(SPAGO), Offset(r.center.x, r.top), Offset(r.center.x, r.bottom), 1.2f * u)
+            }
+            if (tipo != 2) drawCircle(c(CERALACCA), r.width * 0.13f, Offset(r.center.x, r.top + r.height * 0.45f))
+            else drawArc(c(CERALACCA), 0f, 180f, true, Offset(r.center.x - r.width * 0.12f, r.top + r.height * 0.33f), Size(r.width * 0.24f, r.width * 0.24f))
+        }
+    }
+
+    /**
+     * El casellario de la portinería: el mueble de nogal de diez casillas, en dos filas, cada una con su placa de latón
+     * numerada y su fondo hundido, contra el muro de revoque bajo el rótulo de travertino «PORTINERIA». En cada casilla, una
+     * busta de pie: las listas con su ceralacca que brilla (el primer degradado), las selladas atadas con spago y las abiertas
+     * con la carta asomando. Delante, el mostrador del portero con el registro abierto y el timbre de mesa, y en su frente tres
+     * portaprecios de lata con la cuenta de cada clase. En modo oscuro, el portal de noche: solo la lámpara del mostrador
+     * alumbra (el segundo degradado). Sin cartas, las casillas esperan vacías con sus números.
+     */
+    override fun DrawScope.buzon(e: EstadoBuzon, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        fun c(x: Color) = t(x, oscuro, false)
+        // El muro y la madera, de noche, más hundidos que las tarjetas (que se siguen leyendo).
+        fun m(x: Color) = if (oscuro) mezcla(t(x, true, false), Color(0xFF0A0807), 0.38f) else t(x, false, false)
+        drawRect(m(REVOQUE))
+        for (k in 0 until 9) drawOval(m(REVOQUE_SOMBRA).copy(alpha = 0.18f), Offset(w * azar(91, k) - 24 * u, h * 0.7f * azar(92, k)), Size(48 * u, 12 * u))
+        // El rótulo de travertino.
+        val rot = Rect(w * 0.3f, 6 * u, w * 0.7f, 24 * u)
+        drawRect(Color.Black.copy(alpha = 0.2f), rot.topLeft + Offset(1 * u, 1.5f * u), rot.size)
+        drawRect(c(TRAVERTINO), rot.topLeft, rot.size)
+        poros(rot, c(TRAVERTINO_PORO), 93)
+        drawRect(c(TRAVERTINO_SOMBRA), rot.deflate(2 * u).topLeft, rot.deflate(2 * u).size, style = Stroke(0.8f * u))
+        textoEn(medidor, "PORTINERIA", rot.deflate(3 * u), letra, c(TINTA), 11f, peso = FontWeight.Bold, espaciado = 2f, minimo = 6f)
+        // El casellario.
+        val mueble = Rect(w * 0.06f, 30 * u, w * 0.94f, h * 0.7f)
+        drawRect(Color.Black.copy(alpha = 0.25f), mueble.topLeft + Offset(2 * u, 3 * u), mueble.size)
+        drawRect(m(NOGAL), mueble.topLeft, mueble.size)
+        vetas(mueble, m(NOGAL_VETA).copy(alpha = 0.5f), 94, densidad = 0.7f)
+        bisel(mueble, m(NOGAL_LUZ).copy(alpha = 0.7f), m(NOGAL_VETA), 2 * u)
+        val cols = 5; val filas = 2
+        val marco = 5 * u; val placa = 9 * u
+        val cw = (mueble.width - marco * (cols + 1)) / cols
+        val ch = (mueble.height - marco * (filas + 1) - placa * filas) / filas
+        val cartas = cartasBuzonCo(e, cols * filas)
+        for (f in 0 until filas) for (k in 0 until cols) {
+            val i = f * cols + k
+            val x0 = mueble.left + marco + k * (cw + marco)
+            val y0 = mueble.top + marco + f * (ch + marco + placa)
+            val hueco = Rect(x0, y0, x0 + cw, y0 + ch)
+            drawRect(m(mezcla(NOGAL_VETA, Color.Black, 0.45f)), hueco.topLeft, hueco.size)
+            drawRect(Color.Black.copy(alpha = 0.3f), hueco.topLeft, Size(cw, 3 * u))
+            drawRect(Color.Black.copy(alpha = 0.2f), hueco.topLeft, Size(2.5f * u, ch))
+            val tipo = cartas.getOrNull(i)
+            if (tipo != null) {
+                val bw = cw * 0.72f; val bh = minOf(ch * 0.62f, bw * 0.7f)
+                val br = Rect(hueco.center.x - bw / 2, hueco.bottom - bh - 1 * u, hueco.center.x + bw / 2, hueco.bottom - 1 * u)
+                if (tipo == 0) mancha(Offset(br.center.x, br.top + bh * 0.45f), cw * 0.55f, c(FAROL).copy(alpha = 0.55f))
+                bustaChica(br, tipo, oscuro, i * 7 + 3)
+            } else {
+                // La casilla vacía: el gancho de latón con su llave.
+                val g = Offset(hueco.center.x, hueco.top + ch * 0.25f)
+                drawCircle(c(OCRE), 1.3f * u, g)
+                drawCircle(c(OCRE).copy(alpha = 0.8f), 2.4f * u, g + Offset(0f, 4 * u), style = Stroke(0.9f * u))
+                drawLine(c(OCRE).copy(alpha = 0.8f), g + Offset(0f, 6.4f * u), g + Offset(0f, 12 * u), 1 * u)
+                drawLine(c(OCRE).copy(alpha = 0.8f), g + Offset(0f, 10.5f * u), g + Offset(2 * u, 10.5f * u), 1 * u)
+            }
+            val pl = Rect(hueco.center.x - 8 * u, hueco.bottom + 1.5f * u, hueco.center.x + 8 * u, hueco.bottom + placa - 0.5f * u)
+            drawRect(c(OCRE), pl.topLeft, pl.size)
+            drawRect(c(mezcla(OCRE, Color.White, 0.4f)).copy(alpha = 0.6f), pl.topLeft, Size(pl.width, 1 * u))
+            textoEn(medidor, "${i + 1}", pl, letra, c(TINTA), 7f, peso = FontWeight.Bold, minimo = 5f)
+        }
+        // El mostrador del portero.
+        val tablero = Rect(0f, h * 0.73f, w, h * 0.78f)
+        drawRect(m(MARMOL), tablero.topLeft, tablero.size)
+        vetas(tablero, m(MARMOL_VETA).copy(alpha = 0.4f), 95, densidad = 0.5f)
+        val frente = Rect(0f, tablero.bottom, w, h)
+        drawRect(m(NOGAL), frente.topLeft, frente.size)
+        vetas(frente, m(NOGAL_VETA).copy(alpha = 0.45f), 96, densidad = 0.8f)
+        drawRect(Color.Black.copy(alpha = 0.25f), frente.topLeft, Size(w, 2 * u))
+        // El registro abierto y el timbre de mesa.
+        val reg = Rect(w * 0.06f, tablero.top - 7 * u, w * 0.26f, tablero.top + 1 * u)
+        drawRect(c(Color(0xFF283F66)), Offset(reg.left - 1.5f * u, reg.top + 1 * u), Size(reg.width + 3 * u, reg.height))
+        drawRect(c(PAPEL), reg.topLeft, reg.size)
+        drawLine(c(TINTA).copy(alpha = 0.4f), Offset(reg.center.x, reg.top), Offset(reg.center.x, reg.bottom), 0.6f * u)
+        for (j in 0 until 3) { val yy = reg.top + 2 * u + j * 2 * u; drawLine(c(TINTA).copy(alpha = 0.25f), Offset(reg.left + 2 * u, yy), Offset(reg.right - 2 * u, yy), 0.5f * u) }
+        val tim = Offset(w * 0.86f, tablero.top)
+        drawOval(Color.Black.copy(alpha = 0.25f), Offset(tim.x - 9 * u, tim.y - 2 * u), Size(18 * u, 4 * u))
+        drawArc(c(ALUMINIO), 180f, 180f, true, Offset(tim.x - 8 * u, tim.y - 9 * u), Size(16 * u, 16 * u))
+        drawArc(Color.White.copy(alpha = 0.4f), 200f, 50f, false, Offset(tim.x - 6 * u, tim.y - 7 * u), Size(12 * u, 12 * u), style = Stroke(1 * u))
+        drawCircle(c(HIERRO), 1.6f * u, Offset(tim.x, tim.y - 9.5f * u))
+        // Los tres portaprecios con la cuenta de cada clase.
+        val rotulos = listOf("DA APRIRE" to e.listas, "SIGILLATE" to e.selladas, "APERTE" to e.abiertas)
+        val pw = minOf(w * 0.26f, 110 * u); val gap = (w - pw * 3) / 4
+        rotulos.forEachIndexed { i, (txt, n) ->
+            val pr = Rect(gap + i * (pw + gap), frente.top + 7 * u, gap + i * (pw + gap) + pw, h - 7 * u)
+            drawRect(Color.Black.copy(alpha = 0.25f), pr.topLeft + Offset(0.8f * u, 1.2f * u), pr.size)
+            drawRect(c(ALUMINIO), pr.topLeft, pr.size)
+            val tj = pr.deflate(2 * u)
+            drawRect(c(PAPEL), tj.topLeft, tj.size)
+            textoEn(medidor, txt, Rect(tj.left + 2 * u, tj.top, tj.left + tj.width * 0.68f, tj.bottom), letra, c(TINTA), 8.5f, peso = FontWeight.Bold, espaciado = 0.5f, minimo = 5f)
+            textoEn(medidor, "$n", Rect(tj.left + tj.width * 0.68f, tj.top, tj.right - 2 * u, tj.bottom), Letra.cronaca, c(if (i == 0 && n > 0) ROJO else TINTA), 13f, peso = FontWeight.SemiBold, minimo = 6f)
+        }
+        if (oscuro) {
+            // La lámpara del mostrador, de noche: un círculo tibio sobre el casellario y el registro.
+            mancha(Offset(w * 0.16f, tablero.top), w * 0.55f, c(FAROL).copy(alpha = 0.3f))
+        }
+    }
 }
 
 /**
@@ -1677,6 +2000,255 @@ object EstanteCiber : DisenoBiblioteca {
         drawRect(FOSFORO, Offset(fin + 5 * u, h / 2 - 6 * u), Size(6.5f * u, 12 * u))
         var x = fin + 18 * u
         while (x < w - 12 * u) { drawLine(FOSFORO_TENUE.copy(alpha = 0.7f), Offset(x, h / 2), Offset(x + 4 * u, h / 2), 1 * u); x += 7 * u }
+    }
+
+    // ---------------------------------------------------------------- las cartas
+
+    /** La funda antiestática, el cian del holograma de seguridad, el magenta de un cable y el rojo del candado. */
+    private val FUNDA = Color(0xFF3A4048)
+    private val FUNDA_LUZ = Color(0xFF6E7883)
+    private val FUNDA_OSC = Color(0xFF1C2026)
+    private val CIAN = Color(0xFF00E5FF)
+    private val MAGENTA = Color(0xFFE040B0)
+    private val CANDADO = Color(0xFFFF4A5A)
+
+    /** El color de la escena: el tema solo tiene modo oscuro, así que todo va siempre en la penumbra del escritorio. */
+    private fun o(x: Color): Color = t(x, true, false)
+
+    /**
+     * El holograma de seguridad: un círculo plateado con el candado y los anillos que cambian de color, el «VOID» que queda
+     * si se despega; con [alfa], al caer al sellar.
+     */
+    private fun DrawScope.holograma(c: Offset, r: Float, medidor: TextMeasurer, alfa: Float) {
+        val u = density
+        fun k(x: Color) = x.copy(alpha = x.alpha * alfa)
+        drawCircle(Color.Black.copy(alpha = 0.4f * alfa), r, c + Offset(0.6f * u, 1 * u))
+        drawCircle(k(o(METAL)), r, c)
+        listOf(CIAN, MAGENTA, PILOTO, CIAN).forEachIndexed { i, col ->
+            drawArc(k(col.copy(alpha = 0.55f)), 30f + i * 90f, 70f, false, Offset(c.x - r * 0.82f, c.y - r * 0.82f), Size(r * 1.64f, r * 1.64f), style = Stroke(r * 0.12f))
+        }
+        drawCircle(k(o(FUNDA_OSC)), r * 0.62f, c)
+        // El candado.
+        val cw = r * 0.5f; val chh = r * 0.38f
+        drawArc(k(CIAN), 180f, 180f, false, Offset(c.x - cw * 0.32f, c.y - chh * 1.05f), Size(cw * 0.64f, chh * 1.1f), style = Stroke(r * 0.08f))
+        drawRoundRect(k(CIAN), Offset(c.x - cw / 2, c.y - chh * 0.45f), Size(cw, chh), CornerRadius(r * 0.06f))
+        drawCircle(k(o(FUNDA_OSC)), r * 0.06f, Offset(c.x, c.y - chh * 0.45f + chh * 0.45f))
+        textoEn(medidor, "VOID", Rect(c.x - r * 0.6f, c.y + r * 0.62f, c.x + r * 0.6f, c.y + r * 0.95f), letra, k(o(FUNDA_OSC)), r * 0.3f / u, minimo = 3f)
+    }
+
+    /**
+     * La funda antiestática plateada, sellada: por su plástico ahumado se adivina el disquete de 5¼ que lleva dentro; en la
+     * solapa doblada, el triángulo de aviso de descarga y el código de barras; abajo, la etiqueta blanca escrita a bolígrafo
+     * con a quién va y las fechas. La cierra el holograma de seguridad con su candado cian; las de al futuro, además, una
+     * cinta de precinto rayada. Al abrirla, el holograma se rasga, la solapa se dobla hacia atrás y sube la carta en papel
+     * continuo de impresora, con sus agujeros de arrastre. Siempre en oscuro (el tema no tiene claro).
+     */
+    override fun DrawScope.sobre(e: EstadoCarta, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val b = Rect(e.cuerpo.left + 2 * u, e.cuerpo.top + 1.5f * u, e.cuerpo.right - 2 * u, e.cuerpo.bottom - 3.5f * u)
+        val l = b.left; val r = b.right; val top = b.top; val bot = b.bottom
+        val W = b.width; val H = b.height; val cx = b.center.x
+        drawRect(Color.Black.copy(alpha = 0.5f), Offset(l + 1.5f * u, top + 2.5f * u), b.size)
+        // La cara de atrás, por dentro: plástico oscuro.
+        drawRect(o(FUNDA_OSC), b.topLeft, b.size)
+        val k = 1f - 2f * e.abrir.coerceIn(0f, 1f)
+        val hondo = H * 0.36f
+        val solapa = Path().apply { moveTo(l, top); lineTo(r, top); lineTo(r, top + hondo); lineTo(l, top + hondo); close() }
+        if (k < 0f) scale(1f, k, Offset(cx, top)) {
+            drawPath(solapa, o(mezcla(FUNDA_OSC, FUNDA, 0.4f)))
+            drawRect(o(FOSFORO_TENUE).copy(alpha = 0.5f), Offset(l, top + hondo - 3 * u), Size(W, 1.2f * u))
+        }
+        // La carta: papel continuo con sus agujeros de arrastre.
+        if (e.subir > 0f || e.abrir > 0.3f) {
+            val h = hojaCo(e, 0.86f, 0.86f, 0.06f, 3 * u)
+            papelCartaCo(h, e, 7 * u, 5.5f * u, 9 * u, oscuro)
+            var y = h.top + 2.5f * u
+            while (y < h.bottom) {
+                listOf(h.left + 3.5f * u, h.right - 3.5f * u).forEach { x -> drawCircle(mezcla(e.hoja, e.renglones.copy(alpha = 1f), 0.35f), 1.1f * u, Offset(x, y)) }
+                y += 4.2f * u
+            }
+            drawLine(e.renglones, Offset(h.left + 6.5f * u, h.top), Offset(h.left + 6.5f * u, h.bottom), 0.5f * u)
+            drawLine(e.renglones, Offset(h.right - 6.5f * u, h.top), Offset(h.right - 6.5f * u, h.bottom), 0.5f * u)
+            drawRect(o(CIAN).copy(alpha = 0.6f), Offset(h.left + 9 * u, h.top + 3 * u), Size(h.width * 0.2f, 1 * u))
+        }
+        // El frente de la funda: plástico ahumado con el disquete adivinado, los reflejos y la boca con su cierre a presión.
+        val frente = Rect(l, top + H * 0.12f, r, bot)
+        drawRect(o(FUNDA), frente.topLeft, frente.size)
+        clipRect(frente.left, frente.top, frente.right, frente.bottom) {
+            val dl = minOf(W * 0.62f, H * 0.95f)
+            val disco = Rect(cx - dl / 2, frente.top + H * 0.08f, cx + dl / 2, frente.top + H * 0.08f + dl)
+            drawRect(o(FUNDA_OSC).copy(alpha = 0.55f), disco.topLeft, disco.size)
+            drawCircle(o(FUNDA).copy(alpha = 0.8f), dl * 0.14f, disco.center)
+            drawCircle(o(FUNDA_LUZ).copy(alpha = 0.3f), dl * 0.14f, disco.center, style = Stroke(1 * u))
+            drawRoundRect(o(FUNDA).copy(alpha = 0.8f), Offset(cx - dl * 0.05f, disco.center.y + dl * 0.2f), Size(dl * 0.1f, dl * 0.26f), CornerRadius(dl * 0.05f))
+            for (j in 0 until 5) {
+                val x0 = l + W * (0.1f + 0.2f * j) + W * 0.1f * azar(e.semilla, j)
+                drawLine(o(FUNDA_LUZ).copy(alpha = 0.22f), Offset(x0, frente.top), Offset(x0 - W * 0.18f, bot), (1.5f + 3f * azar(e.semilla, j + 9)) * u)
+            }
+            for (j in 0 until 6) { val x0 = l + W * azar(e.semilla, j + 20); drawLine(o(FUNDA_LUZ).copy(alpha = 0.18f), Offset(x0, frente.top + H * azar(e.semilla, j + 30) * 0.5f), Offset(x0 + 6 * u, frente.top + H * (0.2f + azar(e.semilla, j + 40) * 0.6f)), 0.6f * u) }
+        }
+        drawRect(o(FUNDA_LUZ), Offset(l, frente.top), Size(W, 1.4f * u))
+        drawRect(o(FUNDA_OSC), Offset(l, frente.top + 3 * u), Size(W, 1.2f * u))
+        drawRect(o(FUNDA_OSC), frente.topLeft, frente.size, style = Stroke(1 * u))
+        // La etiqueta blanca, escrita a bolígrafo.
+        val et = Rect(l + W * 0.08f, top + H * 0.56f, r - W * 0.08f, top + H * 0.92f)
+        drawRect(Color.Black.copy(alpha = 0.35f), et.topLeft + Offset(0.8f * u, 1 * u), et.size)
+        drawRect(mezcla(ETIQUETA, Color.Black, 0.1f), et.topLeft, et.size)
+        drawRect(o(CIAN).copy(alpha = 0.9f), et.topLeft, Size(et.width, 2 * u))
+        for (j in 1..2) drawLine(Color(0xFF9FB7C9).copy(alpha = 0.6f), Offset(et.left + 3 * u, et.top + et.height * j / 2.15f + 1.5f * u), Offset(et.right - 3 * u, et.top + et.height * j / 2.15f + 1.5f * u), 0.5f * u)
+        textoEn(medidor, e.linea1, Rect(et.left + 4 * u, et.top + 2 * u, et.right - 4 * u, et.top + et.height * 0.56f), letra, BOLIGRAFO, 11.5f, minimo = 7f)
+        textoEn(medidor, e.linea2, Rect(et.left + 4 * u, et.top + et.height * 0.56f, et.right - 4 * u, et.bottom - 1 * u), letra, BOLIGRAFO.copy(alpha = 0.85f), 9f, minimo = 6f)
+        // La solapa doblada encima, con el aviso de descarga y el código de barras.
+        if (k >= 0f) scale(1f, k.coerceAtLeast(0.001f), Offset(cx, top)) {
+            drawRect(Color.Black.copy(alpha = 0.35f), Offset(l, top + 1.5f * u), Size(W, hondo))
+            drawPath(solapa, o(mezcla(FUNDA, FUNDA_LUZ, 0.25f)))
+            clipPath(solapa) {
+                for (j in 0 until 3) { val x0 = l + W * (0.2f + 0.3f * j); drawLine(o(FUNDA_LUZ).copy(alpha = 0.25f), Offset(x0, top), Offset(x0 - W * 0.1f, top + hondo), 3 * u) }
+                var x = l + 3 * u
+                while (x < r - 3 * u) { drawCircle(o(FUNDA_OSC), 0.7f * u, Offset(x, top + hondo - 4 * u)); x += 3 * u }
+                val tr = Offset(l + W * 0.12f, top + hondo * 0.48f); val tl = hondo * 0.26f
+                val tri = Path().apply { moveTo(tr.x, tr.y - tl); lineTo(tr.x + tl, tr.y + tl * 0.75f); lineTo(tr.x - tl, tr.y + tl * 0.75f); close() }
+                drawPath(tri, o(AMBAR)); drawPath(tri, o(FUNDA_OSC), style = Stroke(0.7f * u))
+                drawLine(o(FUNDA_OSC), Offset(tr.x, tr.y - tl * 0.4f), Offset(tr.x, tr.y + tl * 0.3f), 1 * u)
+                drawCircle(o(FUNDA_OSC), 0.7f * u, Offset(tr.x, tr.y + tl * 0.52f))
+                val cb = Rect(r - W * 0.3f, top + hondo * 0.25f, r - W * 0.07f, top + hondo * 0.62f)
+                drawRect(mezcla(ETIQUETA, Color.Black, 0.15f), cb.topLeft, cb.size)
+                var bx = cb.left + 2 * u; var j = 0
+                while (bx < cb.right - 2 * u) { val g = (0.5f + 1.2f * azar(e.semilla + 5, j)) * u; drawRect(o(FUNDA_OSC), Offset(bx, cb.top + 1.5f * u), Size(g, cb.height - 3 * u)); bx += g + (0.6f + azar(e.semilla + 6, j)) * u; j++ }
+            }
+            drawRect(o(FUNDA_LUZ).copy(alpha = 0.7f), Offset(l, top + hondo - 1 * u), Size(W, 1 * u))
+        }
+        // El precinto: una cinta rayada, cian y negra, que corre de lado a lado bajo el holograma.
+        val selloC = Offset(cx, top + hondo * k)
+        val selloR = H * 0.14f
+        if (e.cordon > 0f) {
+            val ya = top + hondo; val alto = 7 * u
+            val hasta = l + W * e.cordon
+            drawRect(Color.Black.copy(alpha = 0.4f), Offset(l, ya - alto / 2 + 1.2f * u), Size(hasta - l, alto))
+            drawRect(o(FUNDA_OSC), Offset(l, ya - alto / 2), Size(hasta - l, alto))
+            clipRect(l, ya - alto / 2, hasta, ya + alto / 2) {
+                var x = l; while (x < hasta) { drawLine(o(CIAN).copy(alpha = 0.85f), Offset(x, ya + alto / 2), Offset(x + alto * 0.7f, ya - alto / 2), alto * 0.32f); x += alto * 1.2f }
+            }
+        }
+        if (k >= 0f && e.alfaSello > 0f) {
+            brilloSelloCo(selloC, selloR, CIAN, e.brillo)
+            selloPartidoCo(Offset(cx, top + hondo), selloR, e.romper, e.escalaSello, Offset(-selloR * 0.25f * e.romper, selloC.y - (top + hondo) - selloR * 0.3f * e.romper),
+                Offset(selloR * 0.2f * e.romper, selloR * 0.3f * e.romper), e.semilla) { holograma(Offset(cx, top + hondo), selloR, medidor, e.alfaSello) }
+        } else if (e.alfaSello > 0f && e.romper > 0f) {
+            selloPartidoCo(Offset(cx, top + hondo), selloR, e.romper, 1f, Offset.Zero, Offset(selloR * 0.2f, selloR * 0.3f), e.semilla, conArriba = false) {
+                holograma(Offset(cx, top + hondo), selloR, medidor, e.alfaSello)
+            }
+        }
+    }
+
+    override val cajaPrevia: Rect = Rect(0.16f, 0.235f, 0.84f, 0.39f)
+
+    override val altoBuzon: Dp = 206.dp
+
+    /**
+     * El chasis de cuchillas del servidor de correo, en su rack: arriba, el visor de fósforo con las tres cuentas (RX las que
+     * llegaron y se pueden abrir, LOCK las selladas, READ las leídas); debajo, diez ranuras con una cuchilla por carta, de
+     * pie, con su número, sus pilotos y su asa: las listas con el piloto cian encendido y su halo (el primer degradado), las
+     * selladas con el candado rojo y la brida, y las leídas medio sacadas, con el papel continuo saliendo por arriba. Las
+     * ranuras vacías llevan su tapa ciega con rejilla. Abajo, el panel de conexiones con sus cables. Detrás, la sala a oscuras
+     * con el resplandor del visor (el segundo degradado). Siempre en oscuro.
+     */
+    override fun DrawScope.buzon(e: EstadoBuzon, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        drawRect(o(FONDO))
+        // Los postes del rack, con sus agujeros cuadrados.
+        val poste = 10 * u
+        listOf(0f, w - poste).forEach { x ->
+            drawRect(o(PLASTICO_OSC), Offset(x, 0f), Size(poste, h))
+            var y = 4 * u; while (y < h) { drawRect(Color.Black, Offset(x + poste * 0.35f, y), Size(poste * 0.3f, 2.4f * u)); y += 6 * u }
+            drawLine(o(PLASTICO_LUZ).copy(alpha = 0.5f), Offset(x + 0.5f * u, 0f), Offset(x + 0.5f * u, h), 1 * u)
+        }
+        val il = poste + 3 * u; val ir = w - poste - 3 * u
+        // El visor de fósforo.
+        val visor = Rect(il, 6 * u, ir, 42 * u)
+        drawRect(o(PLASTICO), visor.topLeft, visor.size)
+        bisel(visor, o(PLASTICO_LUZ).copy(alpha = 0.6f), Color.Black.copy(alpha = 0.6f), 1.5f * u)
+        val pant = Rect(visor.left + 8 * u, visor.top + 6 * u, visor.right - 30 * u, visor.bottom - 6 * u)
+        drawRect(o(PANTALLA), pant.topLeft, pant.size)
+        mancha(pant.center, pant.width * 0.6f, FOSFORO.copy(alpha = 0.16f))
+        val cuentas = listOf("RX" to e.listas, "LOCK" to e.selladas, "READ" to e.abiertas)
+        val cw = pant.width / 3
+        cuentas.forEachIndexed { i, (txt, n) ->
+            val x0 = pant.left + i * cw
+            if (i > 0) drawLine(FOSFORO_TENUE, Offset(x0, pant.top + 3 * u), Offset(x0, pant.bottom - 3 * u), 0.7f * u)
+            val col = if (i == 0 && n > 0) CIAN else FOSFORO
+            textoEn(medidor, txt, Rect(x0 + 3 * u, pant.top, x0 + cw * 0.5f, pant.bottom), letra, col.copy(alpha = 0.75f), 9f, minimo = 5f)
+            textoEn(medidor, "%02d".format(n.coerceAtMost(99)), Rect(x0 + cw * 0.45f, pant.top, x0 + cw - 3 * u, pant.bottom), letra, col, 17f, minimo = 7f)
+        }
+        listOf(PILOTO, AMBAR).forEachIndexed { i, col -> drawCircle(col, 2.2f * u, Offset(visor.right - 18 * u + i * 9 * u, visor.center.y)) }
+        // El chasis, con sus diez ranuras.
+        val chasis = Rect(il, visor.bottom + 4 * u, ir, h - 30 * u)
+        drawRect(o(PLASTICO_OSC), chasis.topLeft, chasis.size)
+        bisel(chasis, o(PLASTICO_LUZ).copy(alpha = 0.5f), Color.Black.copy(alpha = 0.6f), 1.5f * u)
+        val n = 10; val gap = 3 * u
+        val sw = (chasis.width - 8 * u - gap * (n - 1)) / n
+        val cartas = cartasBuzonCo(e, n)
+        for (i in 0 until n) {
+            val x0 = chasis.left + 4 * u + i * (sw + gap)
+            val ranura = Rect(x0, chasis.top + 20 * u, x0 + sw, chasis.bottom - 4 * u)
+            drawRect(Color.Black, ranura.topLeft, ranura.size)
+            drawRect(Color.Black.copy(alpha = 0.5f), Offset(ranura.left, chasis.top + 4 * u), Size(sw, 14 * u))
+            val tipo = cartas.getOrNull(i)
+            if (tipo == null) {
+                drawRect(o(PLASTICO), ranura.topLeft, ranura.size)
+                var y = ranura.top + 6 * u
+                while (y < ranura.bottom - 6 * u) { drawLine(Color.Black.copy(alpha = 0.7f), Offset(ranura.left + 3 * u, y), Offset(ranura.right - 3 * u, y), 1.2f * u); y += 3.4f * u }
+                continue
+            }
+            val sube = if (tipo == 2) 7 * u else 0f
+            val cu = Rect(ranura.left, ranura.top - sube, ranura.right, ranura.bottom - sube)
+            if (tipo == 2) {
+                // El papel continuo que sale por arriba de la cuchilla leída.
+                val pp = Rect(cu.left + sw * 0.15f, cu.top - 10 * u, cu.right - sw * 0.15f, cu.top + 2 * u)
+                drawRect(PAPEL_CONTINUO.copy(alpha = 0.8f), pp.topLeft, pp.size)
+                var yy = pp.top + 2 * u; while (yy < pp.bottom) { drawCircle(o(FUNDA_OSC), 0.7f * u, Offset(pp.left + 1.6f * u, yy)); drawCircle(o(FUNDA_OSC), 0.7f * u, Offset(pp.right - 1.6f * u, yy)); yy += 3 * u }
+                for (j in 0 until 2) drawLine(o(FOSFORO_TENUE), Offset(pp.left + 3.5f * u, pp.top + 3 * u + j * 3 * u), Offset(pp.right - 3.5f * u, pp.top + 3 * u + j * 3 * u), 0.6f * u)
+            }
+            if (tipo == 0) mancha(Offset(cu.center.x, cu.top + cu.height * 0.3f), sw * 1.3f, CIAN.copy(alpha = 0.4f))
+            drawRect(o(if (tipo == 2) PLASTICO else FUNDA), cu.topLeft, cu.size)
+            bisel(cu, o(FUNDA_LUZ).copy(alpha = 0.6f), Color.Black.copy(alpha = 0.5f), 1 * u)
+            // El asa, la etiqueta con el número y los pilotos.
+            drawRect(o(METAL), Offset(cu.left + sw * 0.2f, cu.bottom - 9 * u), Size(sw * 0.6f, 3 * u))
+            val et = Rect(cu.left + 2 * u, cu.top + 4 * u, cu.right - 2 * u, cu.top + 14 * u)
+            drawRect(mezcla(ETIQUETA, Color.Black, 0.12f), et.topLeft, et.size)
+            textoEn(medidor, "%02d".format(i + 1), et, letra, BOLIGRAFO, 8f, minimo = 5f)
+            val p0 = Offset(cu.center.x - sw * 0.18f, cu.top + 20 * u); val p1 = Offset(cu.center.x + sw * 0.18f, cu.top + 20 * u)
+            drawCircle(if (tipo == 0) CIAN else o(FOSFORO_TENUE), 1.8f * u, p0)
+            drawCircle(when (tipo) { 1 -> CANDADO; 0 -> PILOTO; else -> o(PLASTICO_OSC) }, 1.8f * u, p1)
+            for (j in 0 until 4) drawLine(Color.Black.copy(alpha = 0.6f), Offset(cu.left + 3 * u, cu.top + 27 * u + j * 3.2f * u), Offset(cu.right - 3 * u, cu.top + 27 * u + j * 3.2f * u), 1.1f * u)
+            val cc = Offset(cu.center.x, cu.top + cu.height * 0.68f)
+            when (tipo) {
+                0 -> { drawCircle(CIAN, sw * 0.22f, cc, style = Stroke(1.4f * u)); drawLine(CIAN, cc - Offset(0f, sw * 0.12f), cc + Offset(0f, sw * 0.04f), 1.4f * u, StrokeCap.Round) }
+                1 -> {
+                    // El candado y la brida que abraza la cuchilla.
+                    drawArc(CANDADO, 180f, 180f, false, Offset(cc.x - sw * 0.12f, cc.y - sw * 0.24f), Size(sw * 0.24f, sw * 0.26f), style = Stroke(1.3f * u))
+                    drawRect(CANDADO, Offset(cc.x - sw * 0.18f, cc.y - sw * 0.1f), Size(sw * 0.36f, sw * 0.26f))
+                    drawRect(o(FUNDA_OSC), Offset(cu.left - 1 * u, cc.y + sw * 0.3f), Size(sw + 2 * u, 2.6f * u))
+                    drawRect(o(FUNDA_OSC), Offset(cu.right - 3 * u, cc.y + sw * 0.25f), Size(4 * u, 4 * u))
+                }
+                else -> drawRect(o(FOSFORO_TENUE), Offset(cc.x - sw * 0.2f, cc.y - 1 * u), Size(sw * 0.4f, 2 * u))
+            }
+        }
+        // El panel de conexiones, con sus cables.
+        val panel = Rect(il, h - 26 * u, ir, h - 6 * u)
+        drawRect(o(PLASTICO), panel.topLeft, panel.size)
+        bisel(panel, o(PLASTICO_LUZ).copy(alpha = 0.5f), Color.Black.copy(alpha = 0.6f), 1 * u)
+        val puertos = 16
+        val pw = (panel.width - 16 * u) / puertos
+        for (j in 0 until puertos) {
+            val p = Offset(panel.left + 8 * u + pw * (j + 0.5f), panel.center.y)
+            drawRect(Color.Black, Offset(p.x - pw * 0.3f, p.y - 3 * u), Size(pw * 0.6f, 6 * u))
+            if (azar(97, j) > 0.4f) {
+                val col = listOf(CIAN, MAGENTA, o(METAL), AMBAR)[(azar(98, j) * 4).toInt().coerceAtMost(3)]
+                drawLine(col.copy(alpha = 0.85f), p, Offset(p.x + (azar(99, j) - 0.5f) * 20 * u, h + 2 * u), 2.2f * u)
+            }
+        }
     }
 }
 
@@ -2544,6 +3116,275 @@ object EstanteVapor : DisenoBiblioteca {
         }
         textoEn(medidor, texto, Rect(pl.left + 14 * u, pl.top + 3 * u, pl.right - 14 * u, pl.bottom - 3 * u), letra, c(HIERRO_OSC), 13f, peso = FontWeight.Bold, minimo = 7f)
     }
+
+    // ---------------------------------------------------------------- las cartas
+
+    /** El plomo del precinto, el alambre que lo ata y el fieltro de las cápsulas del correo neumático. */
+    private val PLOMO = Color(0xFF8C9094)
+    private val PLOMO_OSC = Color(0xFF55595D)
+    private val ALAMBRE = Color(0xFFB8862B)
+    private val FIELTRO = Color(0xFF7A2E22)
+
+    /** Un remache de latón con su brillo. */
+    private fun DrawScope.remache(p: Offset, r: Float, oscuro: Boolean) {
+        drawCircle(t(LATON_OSC, oscuro, false), r, p + Offset(r * 0.25f, r * 0.3f))
+        drawCircle(t(LATON, oscuro, false), r, p)
+        drawCircle(t(LATON_LUZ, oscuro, false), r * 0.4f, p - Offset(r * 0.3f, r * 0.3f))
+    }
+
+    /** El precinto de plomo: un disco gris aplastado con el engrane estampado y el alambre que lo atraviesa. */
+    private fun DrawScope.precintoPlomo(c: Offset, r: Float, oscuro: Boolean, alfa: Float) {
+        fun k(x: Color) = t(x, oscuro, false).copy(alpha = alfa)
+        drawCircle(Color.Black.copy(alpha = 0.3f * alfa), r, c + Offset(r * 0.1f, r * 0.15f))
+        drawCircle(k(PLOMO), r, c)
+        drawCircle(k(PLOMO_OSC), r * 0.92f, c, style = Stroke(r * 0.1f))
+        drawPath(engrane(c, r * 0.52f, 8), k(PLOMO_OSC), style = Stroke(r * 0.08f))
+        drawCircle(k(PLOMO_OSC), r * 0.16f, c)
+        drawArc(k(Color.White.copy(alpha = 0.35f)), 200f, 70f, false, Offset(c.x - r * 0.75f, c.y - r * 0.75f), Size(r * 1.5f, r * 1.5f), style = Stroke(r * 0.1f, cap = StrokeCap.Round))
+    }
+
+    /**
+     * El estuche de telegramas de la estación: una caja de hierro pavonado con flejes y cantoneras de latón remachadas y la
+     * tapa abisagrada atrás. En el frente, el portatarjetas de latón con la tarjeta crema donde va, grabado, a quién va y las
+     * fechas; sobre la tapa, la placa «TELEGRAMA» y el número de la caja. La aldaba baja de la tapa y la cierra el precinto
+     * de plomo con el engrane; en las de al futuro, el alambre da vueltas por la armella antes de llegar al plomo. Al abrirla,
+     * el plomo se parte, la tapa se levanta sobre sus bisagras y sube el telegrama con su franja de cabecera. En modo oscuro,
+     * el hierro se hunde y el latón apenas brilla; la tarjeta sigue clara.
+     */
+    override fun DrawScope.sobre(e: EstadoCarta, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        val b = Rect(e.cuerpo.left + 2 * u, e.cuerpo.top + 1.5f * u, e.cuerpo.right - 2 * u, e.cuerpo.bottom - 3.5f * u)
+        val l = b.left; val r = b.right; val top = b.top; val bot = b.bottom
+        val W = b.width; val H = b.height; val cx = b.center.x
+        val borde = top + H * 0.12f
+        val tapaH = H * 0.3f
+        val k = 1f - 2f * e.abrir.coerceIn(0f, 1f)
+        drawRoundRect(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.25f), Offset(l + 1.5f * u, borde + 2.5f * u), Size(W, bot - borde), CornerRadius(2 * u))
+        // Por dentro: la caja hueca, de hierro oscuro, con su forro de fieltro.
+        drawRect(c(HIERRO_OSC), Offset(l, borde - 2 * u), Size(W, H * 0.3f))
+        drawRect(c(FIELTRO).copy(alpha = 0.6f), Offset(l + 4 * u, borde), Size(W - 8 * u, H * 0.2f))
+        // La tapa levantada, vista por dentro.
+        if (k < 0f) {
+            val alto = tapaH * -k
+            val tapa = Rect(l, top - alto + H * 0.12f, r, top + H * 0.12f)
+            drawRect(c(HIERRO), tapa.topLeft, tapa.size)
+            drawRect(c(FIELTRO), tapa.deflate(3 * u).topLeft, tapa.deflate(3 * u).size)
+            drawRect(c(LATON_OSC), Offset(l, tapa.bottom - 2 * u), Size(W, 2 * u))
+        }
+        // El telegrama.
+        if (e.subir > 0f || e.abrir > 0.3f) {
+            val h = hojaCo(e, 0.82f, 0.86f, 0.08f, 3 * u)
+            papelCartaCo(h, e, 9 * u, 5.5f * u, 6 * u, oscuro)
+            drawRect(c(ROJO).copy(alpha = 0.6f), Offset(h.left + 4 * u, h.top + 2.5f * u), Size(h.width - 8 * u, 2.2f * u))
+            drawLine(e.renglones, Offset(h.left + 4 * u, h.top + 6.2f * u), Offset(h.right - 4 * u, h.top + 6.2f * u), 0.6f * u)
+        }
+        // El cuerpo de la caja: hierro pavonado, flejes de latón y cantoneras.
+        val caja = Rect(l, borde, r, bot)
+        drawRect(c(HIERRO), caja.topLeft, caja.size)
+        for (j in 0 until 7) { val y = caja.top + caja.height * azar(e.semilla, j + 50); drawLine(c(HIERRO_LUZ).copy(alpha = 0.18f), Offset(l, y), Offset(r, y), (0.6f + azar(e.semilla, j + 60)) * u) }
+        bisel(caja, c(HIERRO_LUZ).copy(alpha = 0.6f), c(HIERRO_OSC), 1.5f * u)
+        drawRect(c(LATON), Offset(l, caja.top), Size(W, 3 * u))
+        drawRect(c(LATON_OSC), Offset(l, caja.top + 3 * u), Size(W, 0.8f * u))
+        drawRect(c(LATON), Offset(l, bot - 4 * u), Size(W, 4 * u))
+        listOf(l, r - W * 0.09f).forEach { x ->
+            drawRect(c(LATON_OSC), Offset(x, caja.top), Size(W * 0.09f, caja.height))
+            drawRect(c(LATON), Offset(x + 0.8f * u, caja.top), Size(W * 0.09f - 1.6f * u, caja.height))
+            var y = caja.top + 8 * u
+            while (y < bot - 6 * u) { remache(Offset(x + W * 0.045f, y), 1.5f * u, oscuro); y += 9 * u }
+        }
+        // El portatarjetas con la tarjeta crema.
+        val pt = Rect(l + W * 0.11f, top + H * 0.56f, r - W * 0.11f, bot - 7 * u)
+        drawRect(c(LATON_OSC), pt.topLeft, pt.size)
+        drawRect(c(LATON), pt.deflate(0.8f * u).topLeft, pt.deflate(0.8f * u).size)
+        val tj = Rect(pt.left + 3 * u, pt.top + 3 * u, pt.right - 3 * u, pt.bottom - 2 * u)
+        drawRect(if (oscuro) mezcla(CARA, Color.Black, 0.18f) else CARA, tj.topLeft, tj.size)
+        drawRect(c(LATON_OSC), Offset(pt.left, pt.top), Size(pt.width, 3 * u))
+        listOf(pt.left + 1.6f * u, pt.right - 1.6f * u).forEach { x -> remache(Offset(x, pt.top + 1.5f * u), 1.2f * u, oscuro) }
+        textoEn(medidor, e.linea1, Rect(tj.left + 3 * u, tj.top + 1 * u, tj.right - 3 * u, tj.top + tj.height * 0.58f), letra, HIERRO_OSC, 11.5f, peso = FontWeight.Bold, minimo = 7f)
+        textoEn(medidor, e.linea2, Rect(tj.left + 3 * u, tj.top + tj.height * 0.56f, tj.right - 3 * u, tj.bottom - 1 * u), letra, mezcla(HIERRO_OSC, ROJO, 0.35f), 9f, minimo = 6f)
+        // La armella del frente, donde baja la aldaba.
+        val armella = Offset(cx, top + tapaH + 4 * u)
+        drawRoundRect(c(LATON_OSC), Offset(armella.x - 3 * u, armella.y - 3 * u), Size(6 * u, 7 * u), CornerRadius(3 * u), style = Stroke(1.6f * u))
+        // La tapa cerrada (o cerrándose), con su placa y la aldaba.
+        if (k >= 0f) {
+            val alto = tapaH * k
+            val tapa = Rect(l - 1 * u, top, r + 1 * u, top + alto)
+            drawRect(Color.Black.copy(alpha = 0.35f), Offset(tapa.left, tapa.top + 2 * u), tapa.size)
+            drawRect(c(HIERRO), tapa.topLeft, tapa.size)
+            if (k > 0.15f) scale(1f, k, Offset(cx, top)) {
+                val tc = Rect(l - 1 * u, top, r + 1 * u, top + tapaH)
+                bisel(tc, c(HIERRO_LUZ).copy(alpha = 0.7f), c(HIERRO_OSC), 1.5f * u)
+                drawRect(c(LATON), Offset(tc.left, tc.bottom - 3 * u), Size(tc.width, 3 * u))
+                var x = tc.left + 6 * u
+                while (x < tc.right - 4 * u) { remache(Offset(x, tc.bottom - 1.5f * u), 1.1f * u, oscuro); x += 10 * u }
+                val pl = Rect(l + W * 0.14f, top + tapaH * 0.18f, l + W * 0.56f, top + tapaH * 0.7f)
+                drawRoundRect(c(LATON_OSC), pl.topLeft, pl.size, CornerRadius(2 * u))
+                drawRoundRect(c(LATON), pl.deflate(1 * u).topLeft, pl.deflate(1 * u).size, CornerRadius(1.5f * u))
+                textoEn(medidor, "TELEGRAMA", pl.deflate(2.5f * u), letra, c(HIERRO_OSC), 8.5f, peso = FontWeight.Bold, espaciado = 1f, minimo = 4f)
+                val ng = Offset(r - W * 0.2f, top + tapaH * 0.44f)
+                drawPath(engrane(ng, tapaH * 0.3f, 10), c(LATON_OSC))
+                drawCircle(c(LATON), tapaH * 0.18f, ng)
+                textoEn(medidor, "${(e.semilla and 0x7fffffff) % 90 + 10}", Rect(ng.x - tapaH * 0.16f, ng.y - tapaH * 0.14f, ng.x + tapaH * 0.16f, ng.y + tapaH * 0.14f), letra, c(HIERRO_OSC), 7f, peso = FontWeight.Bold, minimo = 3f)
+                // La aldaba: una lengüeta de latón que baja hasta la armella.
+                drawRoundRect(c(LATON_OSC), Offset(cx - 4 * u, top + tapaH * 0.55f), Size(8 * u, tapaH * 0.45f + 6 * u), CornerRadius(2 * u))
+                drawRoundRect(c(LATON), Offset(cx - 3.2f * u, top + tapaH * 0.55f), Size(6.4f * u, tapaH * 0.45f + 5 * u), CornerRadius(2 * u))
+                remache(Offset(cx, top + tapaH * 0.62f), 1.2f * u, oscuro)
+            }
+        }
+        // El alambre del precinto: da vueltas por la armella y baja al plomo.
+        val selloR = H * 0.11f
+        val plomo = Offset(cx + selloR * 1.6f, armella.y + selloR * 0.9f)
+        val selloC = if (k >= 0f) plomo else plomo
+        if (e.cordon > 0f) {
+            val p = Path().apply {
+                moveTo(cx - 7 * u, armella.y - 1 * u)
+                for (j in 0 until 4) { cubicTo(cx - 3 * u, armella.y - 6 * u, cx + 3 * u, armella.y + 5 * u, cx + 5 * u, armella.y); cubicTo(cx + 3 * u, armella.y - 5 * u, cx - 3 * u, armella.y + 5 * u, cx - 5 * u, armella.y) }
+                quadraticTo(cx + selloR * 0.4f, armella.y + selloR * 1.2f, plomo.x, plomo.y)
+            }
+            trazoParcialCo(p, e.cordon, c(ALAMBRE), 1 * u)
+        } else if (e.alfaSello > 0f && e.romper < 1f) {
+            drawLine(c(ALAMBRE).copy(alpha = e.alfaSello), Offset(cx, armella.y), plomo, 0.9f * u)
+        }
+        if (e.alfaSello > 0f) {
+            brilloSelloCo(selloC, selloR, c(GAS), e.brillo)
+            selloPartidoCo(plomo, selloR, e.romper, e.escalaSello, Offset(-selloR * 0.5f * e.romper, -selloR * 0.4f * e.romper - (if (k < 0f) H * 0.5f else 0f)),
+                Offset(selloR * 0.3f * e.romper, selloR * 0.5f * e.romper), e.semilla, conArriba = k >= 0f) { precintoPlomo(plomo, selloR, oscuro, e.alfaSello) }
+        }
+    }
+
+    override val cajaPrevia: Rect = Rect(0.16f, 0.25f, 0.84f, 0.395f)
+
+    override val altoBuzon: Dp = 204.dp
+
+    /** Una cápsula del correo neumático, tumbada: latón con dos fajas de cuero y tapas de fieltro; lista, sellada o abierta. */
+    private fun DrawScope.capsula(r: Rect, tipo: Int, oscuro: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        val rr = r.height / 2
+        if (tipo == 2) {
+            // Abierta: sin la tapa de la izquierda, con el telegrama enrollado asomando.
+            drawRoundRect(c(CARA), Offset(r.left - rr * 1.3f, r.top + rr * 0.25f), Size(rr * 2.4f, rr * 1.5f), CornerRadius(rr * 0.75f))
+            drawArc(c(TABLON_VETA).copy(alpha = 0.6f), 90f, 180f, false, Offset(r.left - rr * 1.3f, r.top + rr * 0.25f), Size(rr * 1.5f, rr * 1.5f), style = Stroke(0.8f * u))
+        }
+        drawRoundRect(Color.Black.copy(alpha = 0.3f), r.topLeft + Offset(1 * u, 1.5f * u), r.size, CornerRadius(rr))
+        drawRoundRect(c(LATON), r.topLeft, r.size, CornerRadius(rr))
+        drawRoundRect(c(LATON_OSC), Offset(r.left + rr, r.bottom - rr * 0.5f), Size(r.width - 2 * rr, rr * 0.5f), CornerRadius(rr * 0.25f))
+        drawLine(c(LATON_LUZ), Offset(r.left + rr, r.top + rr * 0.45f), Offset(r.right - rr, r.top + rr * 0.45f), rr * 0.25f, StrokeCap.Round)
+        listOf(0.3f, 0.7f).forEach { f -> drawRect(c(CORREA), Offset(r.left + r.width * f - rr * 0.35f, r.top), Size(rr * 0.7f, r.height)) }
+        drawRoundRect(c(FIELTRO), Offset(r.right - rr * 0.9f, r.top), Size(rr * 0.9f, r.height), CornerRadius(rr * 0.45f))
+        if (tipo != 2) drawRoundRect(c(FIELTRO), Offset(r.left, r.top), Size(rr * 0.9f, r.height), CornerRadius(rr * 0.45f))
+        else drawOval(c(HIERRO_OSC), Offset(r.left - rr * 0.2f, r.top + rr * 0.1f), Size(rr * 0.6f, r.height - rr * 0.2f))
+        if (tipo == 1) {
+            val p = Offset(r.left + r.width * 0.7f, r.bottom + rr * 0.55f)
+            drawLine(c(ALAMBRE), Offset(r.left + r.width * 0.7f, r.center.y), p, 0.8f * u)
+            precintoPlomo(p, rr * 0.55f, oscuro, 1f)
+        }
+        if (tipo == 0) {
+            // La banderita roja de «llegada».
+            val m = Offset(r.left + r.width * 0.5f, r.top)
+            drawLine(c(HIERRO_OSC), m, m - Offset(0f, rr * 1.4f), 0.9f * u)
+            drawPath(Path().apply { moveTo(m.x, m.y - rr * 1.4f); lineTo(m.x + rr * 1.1f, m.y - rr * 1.1f); lineTo(m.x, m.y - rr * 0.8f); close() }, c(ROJO))
+        }
+    }
+
+    /** Un contador de rodillos: la caja de latón con su rótulo y los tres tambores blancos con la cifra. */
+    private fun DrawScope.contadorRodillos(r: Rect, rotulo: String, n: Int, medidor: TextMeasurer, oscuro: Boolean, vivo: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        drawRoundRect(Color.Black.copy(alpha = 0.3f), r.topLeft + Offset(1 * u, 1.5f * u), r.size, CornerRadius(3 * u))
+        drawRoundRect(c(LATON_OSC), r.topLeft, r.size, CornerRadius(3 * u))
+        drawRoundRect(c(LATON), r.deflate(1.2f * u).topLeft, r.deflate(1.2f * u).size, CornerRadius(2.5f * u))
+        textoEn(medidor, rotulo, Rect(r.left + 4 * u, r.top + 2 * u, r.right - 4 * u, r.top + r.height * 0.36f), letra, c(HIERRO_OSC), 8f, peso = FontWeight.Bold, espaciado = 0.8f, minimo = 5f)
+        val cifras = "%03d".format(n.coerceIn(0, 999))
+        val ventana = Rect(r.center.x - r.height * 0.75f, r.top + r.height * 0.4f, r.center.x + r.height * 0.75f, r.bottom - 4 * u)
+        drawRect(c(HIERRO_OSC), ventana.inflate(1.5f * u).topLeft, ventana.inflate(1.5f * u).size)
+        val dw = ventana.width / 3
+        cifras.forEachIndexed { i, ch ->
+            val d = Rect(ventana.left + i * dw + 0.6f * u, ventana.top, ventana.left + (i + 1) * dw - 0.6f * u, ventana.bottom)
+            drawRect(if (oscuro) mezcla(CARA, Color.Black, 0.15f) else CARA, d.topLeft, d.size)
+            drawRect(Color.Black.copy(alpha = 0.2f), d.topLeft, Size(d.width, d.height * 0.18f))
+            drawRect(Color.Black.copy(alpha = 0.2f), Offset(d.left, d.bottom - d.height * 0.18f), Size(d.width, d.height * 0.18f))
+            textoEn(medidor, ch.toString(), d, letra, if (vivo) ROJO else HIERRO_OSC, 13f, peso = FontWeight.Bold, minimo = 6f)
+        }
+        listOf(r.left + 4 * u, r.right - 4 * u).forEach { x -> remache(Offset(x, r.center.y + r.height * 0.15f), 1.3f * u, oscuro) }
+    }
+
+    /**
+     * La estación del correo neumático, contra el muro de ladrillo tiznado: el tubo de latón baja del techo con su manómetro
+     * y su brida hasta el recibidor de hierro con la compuerta; a la derecha, el portacápsulas de hierro colado, de dos
+     * repisas, con una cápsula por carta (hasta diez): las llegadas con su banderita roja y el resplandor de la lámpara de
+     * gas (el primer degradado), las precintadas con su plomo colgando y las abiertas sin tapa, con el telegrama asomando.
+     * Abajo, tres contadores de rodillos en su caja de latón con la cuenta de cada clase. En modo oscuro, la estación de
+     * noche bajo la lámpara de gas del muro (el segundo degradado).
+     */
+    override fun DrawScope.buzon(e: EstadoBuzon, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        fun c(x: Color) = t(x, oscuro, false)
+        fun m(x: Color) = if (oscuro) mezcla(t(x, true, false), Color(0xFF0B0907), 0.35f) else t(x, false, false)
+        // El muro de ladrillo.
+        drawRect(m(LADRILLO))
+        val lh = 9 * u; val lw = 24 * u
+        var fila = 0; var y = 0f
+        while (y < h) {
+            drawLine(m(LADRILLO_JUNTA), Offset(0f, y), Offset(w, y), 1.2f * u)
+            var x = if (fila % 2 == 0) 0f else -lw / 2
+            while (x < w) { drawLine(m(LADRILLO_JUNTA), Offset(x, y), Offset(x, y + lh), 1.2f * u); drawRect(Color.Black.copy(alpha = 0.12f * azar(fila, (x / u).toInt())), Offset(x + 1 * u, y + 1 * u), Size(lw - 2 * u, lh - 2 * u)); x += lw }
+            y += lh; fila++
+        }
+        if (oscuro) mancha(Offset(w * 0.12f, h * 0.18f), w * 0.5f, c(GAS).copy(alpha = 0.22f))
+        // El tubo de latón y el recibidor.
+        val tx = w * 0.075f; val tg = 16 * u
+        drawRect(Color.Black.copy(alpha = 0.3f), Offset(tx - tg / 2 + 3 * u, 0f), Size(tg, h * 0.42f))
+        drawRect(c(LATON_OSC), Offset(tx - tg / 2, 0f), Size(tg, h * 0.42f))
+        drawRect(c(LATON), Offset(tx - tg / 2 + 1.5f * u, 0f), Size(tg - 5 * u, h * 0.42f))
+        drawRect(c(LATON_LUZ), Offset(tx - tg / 2 + 3.5f * u, 0f), Size(2.5f * u, h * 0.42f))
+        listOf(h * 0.08f, h * 0.36f).forEach { by ->
+            drawRect(c(LATON_OSC), Offset(tx - tg / 2 - 3 * u, by), Size(tg + 6 * u, 5 * u))
+            listOf(tx - tg / 2 - 1 * u, tx + tg / 2 + 1 * u).forEach { bx -> drawCircle(c(HIERRO), 1.2f * u, Offset(bx, by + 2.5f * u)) }
+        }
+        manometro(Offset(tx + tg / 2 + 12 * u, h * 0.2f), 11 * u, c(LATON), c(CARA), c(ROJO), 0.3f + 0.6f * ((e.listas + e.selladas + e.abiertas).coerceAtMost(30) / 30f))
+        drawLine(c(LATON_OSC), Offset(tx + tg / 2, h * 0.2f), Offset(tx + tg / 2 + 2 * u, h * 0.2f), 3 * u)
+        val rec = Rect(tx - 15 * u, h * 0.42f, tx + 15 * u, h * 0.66f)
+        drawRect(Color.Black.copy(alpha = 0.3f), rec.topLeft + Offset(2 * u, 2 * u), rec.size)
+        drawRoundRect(c(HIERRO), rec.topLeft, rec.size, CornerRadius(4 * u))
+        bisel(rec, c(HIERRO_LUZ).copy(alpha = 0.5f), c(HIERRO_OSC), 1.2f * u)
+        drawCircle(c(HIERRO_OSC), 9 * u, rec.center)
+        drawCircle(c(LATON), 9 * u, rec.center, style = Stroke(2 * u))
+        drawLine(c(LATON), rec.center - Offset(6 * u, 0f), rec.center + Offset(6 * u, 0f), 2 * u, StrokeCap.Round)
+        drawRect(c(HIERRO_OSC), Offset(rec.left + 4 * u, rec.bottom), Size(rec.width - 8 * u, h * 0.06f))
+        // El portacápsulas.
+        val rack = Rect(w * 0.2f, 8 * u, w - 8 * u, h * 0.64f)
+        val cartas = cartasBuzonCo(e, 10)
+        for (f in 0 until 2) {
+            val ry = rack.top + (rack.height / 2) * (f + 1) - 4 * u
+            val cw = rack.width / 5
+            for (k in 0 until 5) {
+                val tipo = cartas.getOrNull(f * 5 + k) ?: continue
+                val cr = Rect(rack.left + k * cw + cw * 0.18f, ry - 15 * u, rack.left + (k + 1) * cw - cw * 0.08f, ry - 2 * u)
+                if (tipo == 0) mancha(cr.center, cw * 0.62f, c(GAS).copy(alpha = 0.5f))
+                capsula(cr, tipo, oscuro)
+            }
+            // La repisa: una barra de hierro colado con sus ménsulas caladas.
+            drawRect(Color.Black.copy(alpha = 0.3f), Offset(rack.left, ry + 2 * u), Size(rack.width, 4 * u))
+            drawRect(c(HIERRO), Offset(rack.left, ry), Size(rack.width, 4 * u))
+            drawRect(c(HIERRO_LUZ).copy(alpha = 0.6f), Offset(rack.left, ry), Size(rack.width, 1 * u))
+            for (k in 0..5) {
+                val mx = rack.left + k * rack.width / 5
+                drawPath(Path().apply { moveTo(mx - 1.5f * u, ry + 4 * u); lineTo(mx + 1.5f * u, ry + 4 * u); lineTo(mx + 1.5f * u, ry + 13 * u); lineTo(mx - 1.5f * u, ry + 13 * u); close() }, c(HIERRO))
+                drawCircle(c(HIERRO), 3.5f * u, Offset(mx, ry + 8 * u), style = Stroke(1.2f * u))
+            }
+        }
+        // Los tres contadores de rodillos.
+        val cuentas = listOf("LLEGADAS" to e.listas, "PRECINTADAS" to e.selladas, "ABIERTAS" to e.abiertas)
+        val base = Rect(w * 0.2f, h * 0.7f, w - 8 * u, h - 6 * u)
+        val pw = base.width / 3
+        cuentas.forEachIndexed { i, (txt, n) ->
+            contadorRodillos(Rect(base.left + i * pw + 3 * u, base.top, base.left + (i + 1) * pw - 3 * u, base.bottom), txt, n, medidor, oscuro, i == 0 && n > 0)
+        }
+        drawRect(c(HIERRO), Offset(0f, h - 4 * u), Size(w, 4 * u))
+    }
 }
 
 /**
@@ -3321,6 +4162,277 @@ object EstanteNapoleon : DisenoBiblioteca {
         ramaLaurel(Offset(b.center.x + mitad + 8 * u, b.center.y + 5 * u), 22 * u, 1f, c(ORO))
         textoEn(medidor, texto, Rect(b.left + 40 * u, b.top + 3 * u, b.right - 40 * u, b.bottom - 3 * u), letra, c(ORO), 13f, peso = FontWeight.Bold, espaciado = 1.5f, minimo = 7f)
     }
+
+    // ---------------------------------------------------------------- las cartas
+
+    /** El azul, el blanco y el rojo de la cinta del despacho. */
+    private val AZUL_CINTA = Color(0xFF1E3A8A)
+    private val BLANCO_CINTA = Color(0xFFF4EFE2)
+    private val ROJO_CINTA = Color(0xFFA3172E)
+
+    /** El águila de las armas, de alas abiertas sobre el rayo, en [c] con radio [r]. */
+    private fun DrawScope.aguila(c: Offset, r: Float, color: Color) {
+        listOf(-1f, 1f).forEach { s ->
+            val ala = Path().apply {
+                moveTo(c.x + s * r * 0.08f, c.y - r * 0.12f)
+                quadraticTo(c.x + s * r * 0.5f, c.y - r * 0.75f, c.x + s * r * 0.9f, c.y - r * 0.52f)
+                lineTo(c.x + s * r * 0.74f, c.y - r * 0.36f); lineTo(c.x + s * r * 0.84f, c.y - r * 0.24f)
+                lineTo(c.x + s * r * 0.66f, c.y - r * 0.12f); lineTo(c.x + s * r * 0.74f, c.y + r * 0.02f)
+                quadraticTo(c.x + s * r * 0.4f, c.y + r * 0.12f, c.x + s * r * 0.1f, c.y + r * 0.2f); close()
+            }
+            drawPath(ala, color)
+        }
+        drawOval(color, Offset(c.x - r * 0.15f, c.y - r * 0.3f), Size(r * 0.3f, r * 0.66f))
+        drawCircle(color, r * 0.12f, Offset(c.x - r * 0.03f, c.y - r * 0.4f))
+        drawPath(Path().apply { moveTo(c.x - r * 0.12f, c.y - r * 0.44f); lineTo(c.x - r * 0.26f, c.y - r * 0.38f); lineTo(c.x - r * 0.12f, c.y - r * 0.34f); close() }, color)
+        drawPath(Path().apply { moveTo(c.x - r * 0.14f, c.y + r * 0.3f); lineTo(c.x, c.y + r * 0.62f); lineTo(c.x + r * 0.14f, c.y + r * 0.3f); close() }, color)
+        drawPath(Path().apply { moveTo(c.x - r * 0.5f, c.y + r * 0.42f); lineTo(c.x - r * 0.15f, c.y + r * 0.34f); lineTo(c.x + r * 0.05f, c.y + r * 0.46f); lineTo(c.x + r * 0.5f, c.y + r * 0.36f) },
+            color, style = Stroke(r * 0.07f))
+    }
+
+    /** El lacre del águila: una gota roja de borde chorreado, el aro de laurel y el águila en relieve. */
+    private fun DrawScope.lacreAguila(c: Offset, r: Float, oscuro: Boolean, alfa: Float) {
+        fun k(x: Color) = t(x, oscuro, false).copy(alpha = alfa)
+        val gota = Path().apply {
+            for (i in 0 until 18) {
+                val a = (2 * PI * i / 18).toFloat()
+                val rr = r * (if (i % 5 == 2) 1.12f else 0.95f + 0.06f * azar(i, 61))
+                val p = Offset(c.x + cos(a) * rr, c.y + sin(a) * rr)
+                if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+            }
+            close()
+        }
+        translate(r * 0.06f, r * 0.1f) { drawPath(gota, Color.Black.copy(alpha = 0.3f * alfa)) }
+        drawPath(gota, k(LACRE))
+        drawCircle(k(mezcla(LACRE, Color.Black, 0.3f)), r * 0.76f, c, style = Stroke(r * 0.07f))
+        for (i in 0 until 14) {
+            val a = (PI * 0.15 + 2 * PI * i / 14).toFloat()
+            val p = Offset(c.x + cos(a) * r * 0.66f, c.y + sin(a) * r * 0.66f)
+            drawOval(k(mezcla(LACRE, ORO, 0.35f)), Offset(p.x - r * 0.07f, p.y - r * 0.035f), Size(r * 0.14f, r * 0.07f))
+        }
+        aguila(c, r * 0.5f, k(mezcla(LACRE, ORO, 0.3f)))
+        drawArc(k(Color.White.copy(alpha = 0.3f)), 200f, 60f, false, Offset(c.x - r * 0.82f, c.y - r * 0.82f), Size(r * 1.64f, r * 1.64f), style = Stroke(r * 0.08f, cap = StrokeCap.Round))
+    }
+
+    /**
+     * El pliego de despacho de campaña: la cubierta de papel verjurado, doblada en sobre a mano, con su orilla barbada, el
+     * filete dorado y la solapa en pico que baja hasta el medio, donde la cierra el lacre rojo del águila. En la solapa, la
+     * N coronada entre dos ramas de laurel; abajo, a pluma, a quién va y las fechas, y el cuño rojo de franquicia «GRANDE
+     * ARMÉE». Las de al futuro van además atadas con la cinta tricolor, que se anuda a un lado con sus colas en pico. Al
+     * abrirlo, el lacre se parte, la solapa se levanta mostrando el reverso escrito y sube el boletín. En modo oscuro, el
+     * papel queda en la penumbra de la tienda; la tinta, azul de Prusia, se sigue leyendo.
+     */
+    override fun DrawScope.sobre(e: EstadoCarta, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        val b = Rect(e.cuerpo.left + 2 * u, e.cuerpo.top + 1.5f * u, e.cuerpo.right - 2 * u, e.cuerpo.bottom - 3.5f * u)
+        val l = b.left; val r = b.right; val top = b.top; val bot = b.bottom
+        val W = b.width; val H = b.height; val cx = b.center.x
+        val tinta = Color(0xFF14213D)
+        drawRect(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.2f), Offset(l + 1.5f * u, top + 2.5f * u), b.size)
+        // El reverso de la cubierta, por dentro, con la letra de otro despacho que se transparenta.
+        drawRect(c(mezcla(DESPACHO, PERGAMINO, 0.5f)), b.topLeft, b.size)
+        for (j in 0 until 6) drawLine(c(tinta).copy(alpha = 0.14f), Offset(l + W * 0.12f, top + H * (0.07f + j * 0.06f)), Offset(r - W * (0.12f + 0.2f * azar(e.semilla, j)), top + H * (0.07f + j * 0.06f)), 0.8f * u)
+        val k = 1f - 2f * e.abrir.coerceIn(0f, 1f)
+        val punta = H * 0.42f
+        val solapa = Path().apply {
+            moveTo(l, top); lineTo(r, top); lineTo(cx + W * 0.06f, top + punta - 3 * u); quadraticTo(cx, top + punta + 1 * u, cx - W * 0.06f, top + punta - 3 * u); close()
+        }
+        if (k < 0f) scale(1f, k, Offset(cx, top)) {
+            drawPath(solapa, c(mezcla(DESPACHO, PERGAMINO, 0.6f)))
+            clipPath(solapa) { for (j in 0 until 5) drawLine(c(tinta).copy(alpha = 0.2f), Offset(l + W * 0.15f, top + H * (0.06f + j * 0.07f)), Offset(r - W * 0.15f, top + H * (0.06f + j * 0.07f)), 0.8f * u) }
+            drawPath(solapa, c(PERGAMINO), style = Stroke(0.8f * u))
+        }
+        // El boletín.
+        if (e.subir > 0f || e.abrir > 0.3f) {
+            val h = hojaCo(e, 0.82f, 0.86f, 0.06f, 3 * u)
+            papelCartaCo(h, e, 9 * u, 5.5f * u, 7 * u, oscuro)
+            drawLine(c(ORO), Offset(h.left + 3 * u, h.top + 3 * u), Offset(h.right - 3 * u, h.top + 3 * u), 0.6f * u)
+            aguila(Offset(h.center.x, h.top + 5.5f * u), 3.5f * u, c(AZUL_CINTA).copy(alpha = 0.6f))
+        }
+        // El frente: los dos dobleces laterales y el de abajo, con la orilla barbada y el filete dorado.
+        val v = top + H * 0.3f
+        val frente = Path().apply {
+            moveTo(l, top + H * 0.1f); lineTo(cx, v); lineTo(r, top + H * 0.1f); lineTo(r, bot); lineTo(l, bot); close()
+        }
+        drawPath(frente, c(DESPACHO))
+        clipPath(frente) {
+            for (j in 0 until 30) { val x = l + W * j / 30f; drawLine(c(PERGAMINO).copy(alpha = 0.6f), Offset(x, top), Offset(x, bot), 0.5f * u) }
+            drawRect(c(ORO).copy(alpha = 0.85f), Offset(l + 3 * u, top), Size(W - 6 * u, H - 3 * u), style = Stroke(0.7f * u))
+            drawLine(c(PERGAMINO), Offset(l, bot), Offset(cx - W * 0.08f, v + H * 0.06f), 1 * u)
+            drawLine(c(PERGAMINO), Offset(r, bot), Offset(cx + W * 0.08f, v + H * 0.06f), 1 * u)
+            // El cuño de franquicia.
+            val cu = Offset(r - W * 0.13f, top + H * 0.4f)
+            rotate(-12f, cu) {
+                drawCircle(c(ROJO_CINTA).copy(alpha = 0.5f), H * 0.1f, cu, style = Stroke(0.8f * u))
+                drawCircle(c(ROJO_CINTA).copy(alpha = 0.5f), H * 0.075f, cu, style = Stroke(0.5f * u))
+                textoEn(medidor, "G·A", Rect(cu.x - H * 0.08f, cu.y - H * 0.05f, cu.x + H * 0.08f, cu.y + H * 0.05f), letra, c(ROJO_CINTA).copy(alpha = 0.6f), 6f, minimo = 3f)
+            }
+        }
+        drawPath(Path().apply { moveTo(l, top + H * 0.1f); lineTo(cx, v); lineTo(r, top + H * 0.1f) }, c(PERGAMINO), style = Stroke(1.2f * u))
+        // La solapa en pico, cerrada, con la N coronada entre laureles.
+        if (k >= 0f) scale(1f, k.coerceAtLeast(0.001f), Offset(cx, top)) {
+            translate(0f, 1.5f * u) { drawPath(solapa, Color.Black.copy(alpha = 0.14f)) }
+            drawPath(solapa, c(mezcla(DESPACHO, BLANCO_CINTA, 0.4f)))
+            clipPath(solapa) {
+                for (j in 0 until 30) { val x = l + W * j / 30f; drawLine(c(PERGAMINO).copy(alpha = 0.5f), Offset(x, top), Offset(x, top + punta), 0.5f * u) }
+                val n = Offset(cx, top + punta * 0.34f)
+                ramaLaurel(n + Offset(-2 * u, punta * 0.12f), punta * 0.32f, -1f, c(ORO))
+                ramaLaurel(n + Offset(2 * u, punta * 0.12f), punta * 0.32f, 1f, c(ORO))
+                textoEn(medidor, "N", Rect(n.x - punta * 0.14f, n.y - punta * 0.12f, n.x + punta * 0.14f, n.y + punta * 0.18f), letra, c(ORO), punta * 0.26f / u, peso = FontWeight.SemiBold, minimo = 4f)
+            }
+            drawPath(solapa, c(ORO).copy(alpha = 0.8f), style = Stroke(0.8f * u))
+        }
+        // La cinta tricolor, a lo ancho, anudada a un lado.
+        val y0 = top + punta
+        val selloR = H * 0.14f
+        if (e.cordon > 0f) {
+            val ancho = 6 * u
+            val hasta = l + (W + 2 * u) * e.cordon.coerceAtMost(0.85f) / 0.85f
+            drawRect(Color.Black.copy(alpha = 0.2f), Offset(l, y0 - ancho / 2 + 1.5f * u), Size(hasta - l, ancho))
+            listOf(AZUL_CINTA, BLANCO_CINTA, ROJO_CINTA).forEachIndexed { i, col -> drawRect(c(col), Offset(l, y0 - ancho / 2 + i * ancho / 3), Size(hasta - l, ancho / 3)) }
+            val nudo = ((e.cordon - 0.8f) / 0.2f).coerceIn(0f, 1f)
+            if (nudo > 0f) {
+                val n0 = Offset(cx + selloR * 1.8f, y0)
+                scale(nudo, nudo, n0) {
+                    listOf(-1f, 1f).forEach { s ->
+                        val cola = Path().apply { moveTo(n0.x, n0.y); lineTo(n0.x + s * 5 * u, n0.y + 12 * u); lineTo(n0.x + s * 3 * u, n0.y + 10 * u); lineTo(n0.x + s * 1.5f * u, n0.y + 13 * u); close() }
+                        drawPath(cola, c(if (s < 0) AZUL_CINTA else ROJO_CINTA))
+                        drawOval(c(if (s < 0) AZUL_CINTA else ROJO_CINTA), Offset(n0.x + (if (s < 0) -8f else 0f) * u, n0.y - 3.5f * u), Size(8 * u, 6 * u))
+                    }
+                    drawCircle(c(BLANCO_CINTA), 2.4f * u, n0)
+                    drawCircle(c(ROJO_CINTA), 2.4f * u, n0, style = Stroke(0.6f * u))
+                }
+            }
+        }
+        // El lacre del águila.
+        val selloC = Offset(cx, top + punta * k)
+        if (k >= 0f && e.alfaSello > 0f) {
+            brilloSelloCo(selloC, selloR, c(FAROL), e.brillo)
+            selloPartidoCo(Offset(cx, y0), selloR, e.romper, e.escalaSello, Offset(-selloR * 0.3f * e.romper, selloC.y - y0 - selloR * 0.3f * e.romper),
+                Offset(selloR * 0.25f * e.romper, selloR * 0.3f * e.romper), e.semilla) { lacreAguila(Offset(cx, y0), selloR, oscuro, e.alfaSello) }
+        } else if (e.alfaSello > 0f && e.romper > 0f) {
+            selloPartidoCo(Offset(cx, y0), selloR, e.romper, 1f, Offset.Zero, Offset(selloR * 0.25f, selloR * 0.3f), e.semilla, conArriba = false) { lacreAguila(Offset(cx, y0), selloR, oscuro, e.alfaSello) }
+        }
+        textoEn(medidor, e.linea1, Rect(l + W * 0.1f, top + H * 0.62f, r - W * 0.06f, top + H * 0.78f), LetraExtra.bodoni, c(tinta), 11.5f, peso = FontWeight.SemiBold, minimo = 7f)
+        textoEn(medidor, e.linea2, Rect(l + W * 0.1f, top + H * 0.79f, r - W * 0.06f, top + H * 0.91f), LetraExtra.bodoni, c(tinta).copy(alpha = 0.8f), 9f, minimo = 6f)
+    }
+
+    override val cajaPrevia: Rect = Rect(0.16f, 0.24f, 0.84f, 0.39f)
+
+    override val altoBuzon: Dp = 200.dp
+
+    /** Un despacho chico, de pie en la valija: doblado con su lacre (que brilla si está listo), atado con la cinta o abierto. */
+    private fun DrawScope.despachoChico(r: Rect, tipo: Int, oscuro: Boolean, inclina: Float) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        rotate(inclina, Offset(r.center.x, r.bottom)) {
+            if (tipo == 2) {
+                drawRect(Color.Black.copy(alpha = 0.2f), Offset(r.left + 1 * u, r.top - r.height * 0.4f + 1 * u), Size(r.width, r.height * 1.4f))
+                drawRect(c(DESPACHO), Offset(r.left, r.top - r.height * 0.4f), Size(r.width, r.height * 1.4f))
+                for (j in 0 until 5) drawLine(c(TINTA).copy(alpha = 0.35f), Offset(r.left + r.width * 0.15f, r.top - r.height * 0.28f + j * r.height * 0.16f), Offset(r.right - r.width * 0.15f, r.top - r.height * 0.28f + j * r.height * 0.16f), 0.6f * u)
+                drawLine(c(PERGAMINO), Offset(r.left, r.top + r.height * 0.3f), Offset(r.right, r.top + r.height * 0.3f), 0.8f * u)
+                drawArc(c(LACRE), 0f, 180f, true, Offset(r.center.x - r.width * 0.14f, r.top + r.height * 0.3f - r.width * 0.14f), Size(r.width * 0.28f, r.width * 0.28f))
+                return@rotate
+            }
+            drawRect(Color.Black.copy(alpha = 0.25f), r.topLeft + Offset(1 * u, 1 * u), r.size)
+            drawRect(c(DESPACHO), r.topLeft, r.size)
+            drawPath(Path().apply { moveTo(r.left, r.top); lineTo(r.right, r.top); lineTo(r.center.x, r.top + r.height * 0.5f); close() }, c(mezcla(DESPACHO, BLANCO_CINTA, 0.5f)))
+            drawPath(Path().apply { moveTo(r.left, r.top); lineTo(r.center.x, r.top + r.height * 0.5f); lineTo(r.right, r.top) }, c(PERGAMINO), style = Stroke(0.7f * u))
+            if (tipo == 1) listOf(AZUL_CINTA, BLANCO_CINTA, ROJO_CINTA).forEachIndexed { i, col -> drawRect(c(col), Offset(r.left, r.top + r.height * 0.45f + i * 1.2f * u), Size(r.width, 1.2f * u)) }
+            drawCircle(c(LACRE), r.width * 0.15f, Offset(r.center.x, r.top + r.height * 0.5f))
+            drawCircle(c(mezcla(LACRE, ORO, 0.3f)), r.width * 0.07f, Offset(r.center.x, r.top + r.height * 0.5f), style = Stroke(0.6f * u))
+        }
+    }
+
+    /**
+     * El portamanteau del correo de campaña, tendido sobre su caballete de tijera delante del paño verde del puesto de
+     * postas: un cilindro de cuero con sus tres correas de hebilla de latón, las tapas redondas de los extremos con el aro
+     * de latón y la N, y la boca larga de arriba abierta, con la tapa doblada hacia atrás. De la boca asoman los despachos
+     * (hasta diez): los que ya se pueden abrir, con el lacre que brilla a la luz del farol (el primer degradado); los
+     * lacrados, atados con su cinta tricolor; los abiertos, desplegados. En el cuero, tres placas de latón remachadas con la
+     * cuenta de cada clase. Abajo, la alfombra de campaña. En modo oscuro, la tienda de noche bajo el farol (el segundo
+     * degradado).
+     */
+    override fun DrawScope.buzon(e: EstadoBuzon, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        fun c(x: Color) = t(x, oscuro, false)
+        fun m(x: Color) = if (oscuro) mezcla(t(x, true, false), Color(0xFF080706), 0.35f) else t(x, false, false)
+        // El paño verde del puesto, con su orla de clavos dorados.
+        drawRect(m(TAPETE))
+        for (j in 0 until 40) { val x = w * azar(101, j); drawLine(m(mezcla(TAPETE, Color.Black, 0.2f)).copy(alpha = 0.4f), Offset(x, 0f), Offset(x + 3 * u, h * 0.8f), 0.6f * u) }
+        var x = 6 * u; while (x < w) { drawCircle(m(LATON), 1.5f * u, Offset(x, 6 * u)); x += 10 * u }
+        if (oscuro) mancha(Offset(w * 0.88f, h * 0.1f), w * 0.55f, c(FAROL).copy(alpha = 0.22f))
+        // El farol colgado arriba a la derecha.
+        val fa = Offset(w * 0.9f, h * 0.06f)
+        drawLine(m(HIERRO_FAROL), Offset(fa.x, 0f), fa, 1 * u)
+        drawRect(c(LATON_OSC), Offset(fa.x - 6 * u, fa.y), Size(12 * u, 3 * u))
+        drawRect(if (oscuro) FAROL else c(PERGAMINO), Offset(fa.x - 5 * u, fa.y + 3 * u), Size(10 * u, 14 * u))
+        drawRect(c(LATON_OSC), Offset(fa.x - 5 * u, fa.y + 3 * u), Size(10 * u, 14 * u), style = Stroke(1 * u))
+        drawRect(c(LATON_OSC), Offset(fa.x - 6 * u, fa.y + 17 * u), Size(12 * u, 3 * u))
+        // La alfombra.
+        val piso = h * 0.88f
+        drawRect(m(ALFOMBRA), Offset(0f, piso), Size(w, h - piso))
+        drawRect(m(ALFOMBRA_ORLA), Offset(0f, piso + 3 * u), Size(w, 3 * u))
+        // El caballete de tijera.
+        val cil = Rect(w * 0.07f, h * 0.36f, w * 0.93f, h * 0.76f)
+        listOf(cil.left + cil.width * 0.16f, cil.right - cil.width * 0.16f).forEach { px ->
+            drawLine(m(CAOBA_VETA), Offset(px - 14 * u, piso + 2 * u), Offset(px + 10 * u, cil.center.y), 4 * u, StrokeCap.Round)
+            drawLine(m(CAOBA), Offset(px + 14 * u, piso + 2 * u), Offset(px - 10 * u, cil.center.y), 4 * u, StrokeCap.Round)
+            drawCircle(c(LATON), 2 * u, Offset(px, cil.center.y + (piso - cil.center.y) * 0.45f))
+        }
+        // Los despachos que asoman por la boca, detrás del labio del cuero.
+        val boca = Rect(cil.left + cil.width * 0.1f, cil.top - 4 * u, cil.right - cil.width * 0.1f, cil.top + 6 * u)
+        val tapaAtras = Path().apply { moveTo(boca.left, boca.top + 3 * u); lineTo(boca.left + 6 * u, boca.top - 16 * u); lineTo(boca.right - 6 * u, boca.top - 16 * u); lineTo(boca.right, boca.top + 3 * u); close() }
+        drawPath(tapaAtras, c(CUERO_OSC))
+        drawPath(tapaAtras, c(CUERO_LUZ).copy(alpha = 0.5f), style = Stroke(1 * u))
+        drawRoundRect(c(CUERO_OSC), boca.topLeft, boca.size, CornerRadius(5 * u))
+        val cartas = cartasBuzonCo(e, 10)
+        val paso = boca.width / 10
+        cartas.forEachIndexed { i, tipo ->
+            val dw = paso * 0.8f; val dh = 28 * u
+            val dx = boca.left + paso * (i + 0.5f)
+            val r0 = Rect(dx - dw / 2, boca.bottom - dh - 2 * u - azar(102, i) * 6 * u, dx + dw / 2, boca.bottom + 4 * u)
+            if (tipo == 0) mancha(Offset(dx, r0.top + dh * 0.45f), paso * 0.9f, c(FAROL).copy(alpha = 0.55f))
+            despachoChico(r0, tipo, oscuro, (azar(103, i) - 0.5f) * 10f)
+        }
+        // El cilindro de cuero.
+        drawRoundRect(Color.Black.copy(alpha = 0.3f), cil.topLeft + Offset(3 * u, 4 * u), cil.size, CornerRadius(cil.height / 2.4f))
+        drawRoundRect(c(CUERO), Offset(cil.left, cil.top + 4 * u), Size(cil.width, cil.height - 4 * u), CornerRadius(cil.height / 2.4f))
+        drawRect(c(CUERO_LUZ).copy(alpha = 0.5f), Offset(cil.left + cil.height * 0.4f, cil.top + cil.height * 0.22f), Size(cil.width - cil.height * 0.8f, 3 * u))
+        drawRect(c(CUERO_OSC).copy(alpha = 0.6f), Offset(cil.left + cil.height * 0.4f, cil.bottom - cil.height * 0.2f), Size(cil.width - cil.height * 0.8f, cil.height * 0.16f))
+        var sx = cil.left + 10 * u; while (sx < cil.right - 10 * u) { drawLine(c(CUERO_OSC), Offset(sx, cil.top + 7 * u), Offset(sx + 2 * u, cil.top + 7 * u), 0.7f * u); sx += 4 * u }
+        // Las tapas de los extremos.
+        listOf(cil.left + cil.height * 0.22f, cil.right - cil.height * 0.22f).forEach { ex ->
+            val tc = Rect(ex - cil.height * 0.22f, cil.top + 4 * u, ex + cil.height * 0.22f, cil.bottom)
+            drawOval(c(CUERO_OSC), tc.topLeft, tc.size)
+            drawOval(c(LATON), tc.topLeft, tc.size, style = Stroke(2.2f * u))
+            textoEn(medidor, "N", tc.deflate(tc.width * 0.22f), letra, c(ORO), 12f, peso = FontWeight.SemiBold, minimo = 6f)
+        }
+        // Las correas con su hebilla.
+        listOf(0.2f, 0.4f, 0.6f, 0.8f).forEach { f ->
+            val cx = cil.left + cil.width * f
+            drawRect(c(CUERO_OSC), Offset(cx - 4 * u, cil.top + 2 * u), Size(8 * u, cil.height - 2 * u))
+            drawRect(c(CUERO_LUZ).copy(alpha = 0.4f), Offset(cx - 4 * u, cil.top + 2 * u), Size(1.2f * u, cil.height - 2 * u))
+            drawRoundRect(c(LATON), Offset(cx - 5.5f * u, cil.bottom - 18 * u), Size(11 * u, 9 * u), CornerRadius(1.5f * u), style = Stroke(1.6f * u))
+            drawLine(c(LATON_OSC), Offset(cx, cil.bottom - 17 * u), Offset(cx, cil.bottom - 10 * u), 1 * u)
+        }
+        // Las tres placas de latón con la cuenta.
+        val cuentas = listOf("POR ABRIR" to e.listas, "LACRADAS" to e.selladas, "ABIERTAS" to e.abiertas)
+        val pw = cil.width * 0.17f
+        listOf(0.2f, 0.4f, 0.6f).zip(cuentas).forEachIndexed { i, (f, cu) ->
+            val px = cil.left + cil.width * (f + 0.1f) - pw / 2
+            val pl = Rect(px + 4 * u, cil.top + cil.height * 0.3f, px + pw - 4 * u, cil.top + cil.height * 0.78f)
+            drawRoundRect(Color.Black.copy(alpha = 0.3f), pl.topLeft + Offset(0.8f * u, 1.2f * u), pl.size, CornerRadius(2 * u))
+            drawRoundRect(c(LATON), pl.topLeft, pl.size, CornerRadius(2 * u))
+            drawRoundRect(c(LATON_OSC), pl.deflate(1.5f * u).topLeft, pl.deflate(1.5f * u).size, CornerRadius(1.5f * u), style = Stroke(0.6f * u))
+            textoEn(medidor, cu.first, Rect(pl.left + 2 * u, pl.top + 2 * u, pl.right - 2 * u, pl.top + pl.height * 0.42f), letra, c(TINTA), 7.5f, peso = FontWeight.SemiBold, espaciado = 0.4f, minimo = 4.5f)
+            textoEn(medidor, "${cu.second}", Rect(pl.left + 2 * u, pl.top + pl.height * 0.38f, pl.right - 2 * u, pl.bottom - 1.5f * u), LetraExtra.bodoni, c(if (i == 0 && cu.second > 0) TEJUELO else TINTA), 14f, peso = FontWeight.SemiBold, minimo = 6f)
+        }
+    }
+
+    private val HIERRO_FAROL = Color(0xFF2A2622)
 }
 
 /**
@@ -4105,6 +5217,258 @@ object EstanteDeco : DisenoBiblioteca {
         val mitad = minOf(medida / 2f + 18 * u, b.width / 2 - 14 * u)
         listOf(-1f, 1f).forEach { s -> abanicoDeco(Offset(b.center.x + s * mitad, b.bottom - 4 * u), 9 * u, 7, c(ORO), c(NACAR), c(JADE)) }
         textoEn(medidor, texto, Rect(b.center.x - mitad + 12 * u, b.top + 3 * u, b.center.x + mitad - 12 * u, b.bottom - 3 * u), letra, c(ORO_CLARO), 13f, peso = FontWeight.Bold, espaciado = 2f, minimo = 7f)
+    }
+
+    // ---------------------------------------------------------------- las cartas
+
+    /** El esmalte de jade del medallón, más claro en su brillo. */
+    private val JADE_LUZ = Color(0xFF4FA88C)
+
+    /** La solapa escalonada de la carta: tres gradas por lado que bajan hasta una meseta en el centro, a [hondo] del borde. */
+    private fun solapaGradas(l: Float, r: Float, top: Float, hondo: Float): Path = Path().apply {
+        val w = r - l; val cx = (l + r) / 2
+        moveTo(l, top); lineTo(r, top)
+        val gx = listOf(0f, 0.12f, 0.24f, 0.36f); val gy = listOf(0.3f, 0.55f, 0.8f, 1f)
+        for (i in 0 until 4) { lineTo(r - w * gx[i], top + hondo * gy[i]); if (i < 3) lineTo(r - w * gx[i + 1], top + hondo * gy[i]) }
+        lineTo(cx + w * 0.06f, top + hondo); lineTo(cx - w * 0.06f, top + hondo)
+        lineTo(l + w * gx[3], top + hondo)
+        for (i in 3 downTo 1) { lineTo(l + w * gx[i], top + hondo * gy[i - 1]); lineTo(l + w * gx[i - 1], top + hondo * gy[i - 1]) }
+        close()
+    }
+
+    /** El medallón de esmalte: un octógono de jade con su aro de oro y el abanico de oro y nácar. */
+    private fun DrawScope.medallon(c: Offset, r: Float, oscuro: Boolean, alfa: Float) {
+        fun k(x: Color) = t(x, oscuro, false).copy(alpha = alfa)
+        val oct = Path().apply { for (i in 0 until 8) { val a = (PI / 8 + i * PI / 4).toFloat(); val p = Offset(c.x + cos(a) * r, c.y + sin(a) * r); if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y) }; close() }
+        translate(r * 0.06f, r * 0.1f) { drawPath(oct, Color.Black.copy(alpha = 0.4f * alfa)) }
+        drawPath(oct, k(ORO))
+        scale(0.84f, 0.84f, c) { drawPath(oct, k(JADE)) }
+        scale(0.84f, 0.84f, c) { drawPath(oct, k(ORO_CLARO), style = Stroke(r * 0.05f)) }
+        abanicoDeco(Offset(c.x, c.y + r * 0.32f), r * 0.55f, 7, k(ORO), k(NACAR), k(JADE_LUZ))
+        drawLine(k(ORO), Offset(c.x - r * 0.55f, c.y + r * 0.34f), Offset(c.x + r * 0.55f, c.y + r * 0.34f), r * 0.06f)
+        drawArc(k(Color.White.copy(alpha = 0.35f)), 205f, 55f, false, Offset(c.x - r * 0.7f, c.y - r * 0.7f), Size(r * 1.4f, r * 1.4f), style = Stroke(r * 0.07f, cap = StrokeCap.Round))
+    }
+
+    /** Un botón de cierre: el disco de oro con su remache, donde se enrolla el cordón. */
+    private fun DrawScope.botonCierre(c: Offset, r: Float, oscuro: Boolean) {
+        drawCircle(Color.Black.copy(alpha = 0.4f), r, c + Offset(r * 0.15f, r * 0.2f))
+        drawCircle(t(ORO, oscuro, false), r, c)
+        drawCircle(t(ORO_CLARO, oscuro, false), r * 0.7f, c, style = Stroke(r * 0.12f))
+        drawCircle(t(LACA, oscuro, false), r * 0.2f, c)
+    }
+
+    /**
+     * El sobre de laca negra del salón de primera: papel negro satinado con el doble filete de oro y las esquinas en escalón,
+     * la solapa escalonada como un rascacielos con su sol de rayos de oro y, dentro, el forro de oro con chevrones. La
+     * cierra el medallón octogonal de esmalte de jade con el abanico de oro y nácar; las de al futuro, además, el cordón de
+     * oro que da vueltas en ocho entre dos botones, uno en la solapa y otro en el sobre. A quién va y las fechas, en crema
+     * sobre el negro. Al abrirlo, el medallón se parte, la solapa sube con sus gradas y sale la carta con su filete. En modo
+     * oscuro, la laca casi se funde con la noche y solo el oro y la letra crema relucen.
+     */
+    override fun DrawScope.sobre(e: EstadoCarta, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        val b = Rect(e.cuerpo.left + 2 * u, e.cuerpo.top + 1.5f * u, e.cuerpo.right - 2 * u, e.cuerpo.bottom - 3.5f * u)
+        val l = b.left; val r = b.right; val top = b.top; val bot = b.bottom
+        val W = b.width; val H = b.height; val cx = b.center.x
+        drawRect(Color.Black.copy(alpha = if (oscuro) 0.55f else 0.25f), Offset(l + 1.5f * u, top + 2.5f * u), b.size)
+        // El forro de oro con chevrones.
+        drawRect(c(ORO), b.topLeft, b.size)
+        clipRect(l, top, r, top + H * 0.5f) {
+            var y = top - 6 * u
+            while (y < top + H * 0.5f) {
+                drawPath(Path().apply { var x = l; moveTo(x, y); while (x < r) { lineTo(x + 4 * u, y + 3 * u); lineTo(x + 8 * u, y); x += 8 * u } }, c(ORO_CLARO).copy(alpha = 0.6f), style = Stroke(0.8f * u))
+                y += 5 * u
+            }
+        }
+        val k = 1f - 2f * e.abrir.coerceIn(0f, 1f)
+        val hondo = H * 0.4f
+        val solapa = solapaGradas(l, r, top, hondo)
+        if (k < 0f) scale(1f, k, Offset(cx, top)) {
+            drawPath(solapa, c(mezcla(ORO, LACA, 0.25f)))
+            drawPath(solapa, c(ORO_CLARO), style = Stroke(0.8f * u))
+        }
+        // La carta, con su filete de oro.
+        if (e.subir > 0f || e.abrir > 0.3f) {
+            val h = hojaCo(e, 0.82f, 0.86f, 0.06f, 3 * u)
+            papelCartaCo(h, e, 9 * u, 5.5f * u, 7 * u, oscuro)
+            drawRect(c(ORO), Offset(h.left + 3 * u, h.top + 3 * u), Size(h.width - 6 * u, h.height - 6 * u), style = Stroke(0.5f * u))
+            drawLine(c(JADE), Offset(h.center.x - 8 * u, h.top + 5.5f * u), Offset(h.center.x + 8 * u, h.top + 5.5f * u), 1 * u)
+        }
+        // El frente: laca negra con el doble filete y las esquinas en escalón.
+        val v = top + H * 0.3f
+        val frente = Path().apply {
+            moveTo(l, top + H * 0.1f); lineTo(cx - W * 0.08f, v); lineTo(cx + W * 0.08f, v); lineTo(r, top + H * 0.1f); lineTo(r, bot); lineTo(l, bot); close()
+        }
+        drawPath(frente, c(LACA))
+        clipPath(frente) {
+            for (j in 0 until 4) { val x0 = l + W * (0.15f + 0.22f * j); drawLine(Color.White.copy(alpha = 0.035f), Offset(x0, top), Offset(x0 - W * 0.2f, bot), 7 * u) }
+            val marco = Rect(l + 4 * u, top + 4 * u, r - 4 * u, bot - 4 * u)
+            drawPath(escalonado(marco, 9 * u), c(ORO), style = Stroke(0.9f * u))
+            drawPath(escalonado(marco.deflate(2.5f * u), 7 * u), c(ORO).copy(alpha = 0.6f), style = Stroke(0.5f * u))
+            listOf(-1f, 1f).forEach { s ->
+                val p0 = Offset(cx + s * W * 0.33f, bot - 10 * u)
+                for (j in 0 until 3) drawLine(c(ORO).copy(alpha = 0.7f), Offset(p0.x, p0.y - j * 2.5f * u), Offset(p0.x + s * (12 - j * 3) * u, p0.y - j * 2.5f * u), 0.7f * u)
+            }
+        }
+        drawPath(Path().apply { moveTo(l, top + H * 0.1f); lineTo(cx - W * 0.08f, v); lineTo(cx + W * 0.08f, v); lineTo(r, top + H * 0.1f) }, c(ORO).copy(alpha = 0.8f), style = Stroke(0.8f * u))
+        // La solapa escalonada, con su sol.
+        val botonA = Offset(r - W * 0.2f, top + hondo * 0.16f)
+        if (k >= 0f) scale(1f, k.coerceAtLeast(0.001f), Offset(cx, top)) {
+            translate(0f, 1.5f * u) { drawPath(solapa, Color.Black.copy(alpha = 0.5f)) }
+            drawPath(solapa, c(mezcla(LACA, ORO, 0.06f)))
+            clipPath(solapa) {
+                val sol = Offset(cx, top + hondo)
+                for (i in 0 until 15) {
+                    val a = (PI + PI * (i + 0.5f) / 15).toFloat()
+                    drawLine(c(ORO).copy(alpha = if (i % 2 == 0) 0.75f else 0.35f), sol, Offset(sol.x + cos(a) * W * 0.7f, sol.y + sin(a) * W * 0.7f), (if (i % 2 == 0) 1f else 0.6f) * u)
+                }
+            }
+            drawPath(solapa, c(ORO), style = Stroke(1 * u))
+            if (e.cordon > 0f) botonCierre(botonA, 3.2f * u, oscuro)
+        }
+        // El cordón de oro en ocho, entre el botón de la solapa y el del sobre.
+        val botonB = Offset(r - W * 0.2f, top + H * 0.52f)
+        if (e.cordon > 0f) {
+            botonCierre(botonB, 3.2f * u, oscuro)
+            val a = Offset(botonA.x, top + (botonA.y - top) * k)
+            val p = Path().apply {
+                moveTo(botonB.x - 3 * u, botonB.y + 2 * u)
+                for (j in 0 until 3) {
+                    quadraticTo(botonB.x - 8 * u, (a.y + botonB.y) / 2, a.x + 3.5f * u, a.y - 2 * u)
+                    quadraticTo(a.x - 4 * u, a.y - 4 * u, a.x - 3.5f * u, a.y + 1 * u)
+                    quadraticTo(botonB.x + 8 * u, (a.y + botonB.y) / 2, botonB.x + 3.5f * u, botonB.y + 2 * u)
+                    quadraticTo(botonB.x, botonB.y + 5 * u, botonB.x - 3.5f * u, botonB.y)
+                }
+                quadraticTo(botonB.x - 2 * u, botonB.y + 5 * u, botonB.x + 2 * u, botonB.y + 7 * u)
+            }
+            trazoParcialCo(p, e.cordon, c(ORO_CLARO), 1 * u)
+        }
+        // El medallón de esmalte.
+        val selloR = H * 0.14f
+        val y0 = top + hondo
+        val selloC = Offset(cx, top + hondo * k)
+        if (k >= 0f && e.alfaSello > 0f) {
+            brilloSelloCo(selloC, selloR, c(JADE_LUZ), e.brillo)
+            selloPartidoCo(Offset(cx, y0), selloR, e.romper, e.escalaSello, Offset(-selloR * 0.3f * e.romper, selloC.y - y0 - selloR * 0.3f * e.romper),
+                Offset(selloR * 0.25f * e.romper, selloR * 0.3f * e.romper), e.semilla) { medallon(Offset(cx, y0), selloR, oscuro, e.alfaSello) }
+        } else if (e.alfaSello > 0f && e.romper > 0f) {
+            selloPartidoCo(Offset(cx, y0), selloR, e.romper, 1f, Offset.Zero, Offset(selloR * 0.25f, selloR * 0.3f), e.semilla, conArriba = false) { medallon(Offset(cx, y0), selloR, oscuro, e.alfaSello) }
+        }
+        textoEn(medidor, e.linea1, Rect(l + W * 0.1f, top + H * 0.62f, r - W * 0.1f, top + H * 0.78f), LetraExtra.poiret, c(CREMA), 12f, peso = FontWeight.SemiBold, minimo = 7f)
+        textoEn(medidor, e.linea2, Rect(l + W * 0.12f, top + H * 0.78f, r - W * 0.12f, top + H * 0.9f), letra, c(ORO_CLARO), 9f, minimo = 6f)
+    }
+
+    override val cajaPrevia: Rect = Rect(0.16f, 0.24f, 0.84f, 0.39f)
+
+    override val altoBuzon: Dp = 210.dp
+
+    /** Un sobre de laca chico, cayendo por el tubo de cristal: listo (el medallón brilla), atado con el cordón o abierto. */
+    private fun DrawScope.sobreChico(r: Rect, tipo: Int, oscuro: Boolean, giro: Float) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        rotate(giro, r.center) {
+            if (tipo == 2) {
+                drawRect(c(NACAR), Offset(r.left + r.width * 0.1f, r.top - r.height * 0.5f), Size(r.width * 0.8f, r.height * 0.8f))
+                for (j in 0 until 2) drawLine(c(LACA).copy(alpha = 0.4f), Offset(r.left + r.width * 0.2f, r.top - r.height * (0.32f - j * 0.18f)), Offset(r.right - r.width * 0.2f, r.top - r.height * (0.32f - j * 0.18f)), 0.6f * u)
+            }
+            drawRect(Color.Black.copy(alpha = 0.35f), r.topLeft + Offset(1 * u, 1 * u), r.size)
+            drawRect(c(LACA), r.topLeft, r.size)
+            drawRect(c(ORO), r.deflate(1.2f * u).topLeft, r.deflate(1.2f * u).size, style = Stroke(0.5f * u))
+            val punta = if (tipo == 2) r.top - r.height * 0.45f else r.top + r.height * 0.5f
+            drawPath(Path().apply { moveTo(r.left, r.top); lineTo(r.center.x, punta); lineTo(r.right, r.top) }, c(ORO), style = Stroke(0.8f * u))
+            if (tipo == 1) {
+                drawLine(c(ORO_CLARO), Offset(r.center.x + r.width * 0.25f, r.top + r.height * 0.2f), Offset(r.center.x + r.width * 0.25f, r.bottom - r.height * 0.15f), 0.8f * u)
+                drawCircle(c(ORO), 1.6f * u, Offset(r.center.x + r.width * 0.25f, r.top + r.height * 0.2f))
+                drawCircle(c(ORO), 1.6f * u, Offset(r.center.x + r.width * 0.25f, r.bottom - r.height * 0.15f))
+            }
+            if (tipo != 2) {
+                drawCircle(c(ORO), r.height * 0.2f, Offset(r.center.x, r.top + r.height * 0.5f))
+                drawCircle(c(if (tipo == 0) JADE_LUZ else JADE), r.height * 0.15f, Offset(r.center.x, r.top + r.height * 0.5f))
+            }
+        }
+    }
+
+    /**
+     * El buzón del vestíbulo del rascacielos: el tubo de cristal del correo que baja por la pared de mármol verde entre sus
+     * bandas de cromo, con los sobres de laca cayendo dentro (hasta diez): los listos, con el medallón de jade que brilla
+     * (el primer degradado), los atados con su cordón de oro y los abiertos, con la carta asomando. Abajo, la caja de bronce
+     * dorado con su remate escalonado, el sol de rayos, la boca «CORREO» y tres cartelas de laca con la cuenta de cada clase
+     * en oro. A los lados, dos apliques de abanico; en modo oscuro se encienden sobre el vestíbulo a oscuras (el segundo
+     * degradado). Abajo, el piso de terrazo en damero.
+     */
+    override fun DrawScope.buzon(e: EstadoBuzon, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        fun c(x: Color) = t(x, oscuro, false)
+        fun m(x: Color) = if (oscuro) mezcla(t(x, true, false), Color(0xFF07090B), 0.45f) else t(x, false, false)
+        // La pared de mármol verde con sus vetas.
+        drawRect(m(PARED))
+        vetas(Rect(0f, 0f, w, h), m(mezcla(PARED, CREMA, 0.3f)).copy(alpha = 0.35f), 111, densidad = 0.25f, ondulacion = 3f)
+        val piso = h - 16 * u
+        // Los apliques de abanico.
+        listOf(w * 0.1f, w * 0.9f).forEach { ax ->
+            val base = Offset(ax, h * 0.32f)
+            if (oscuro) mancha(base - Offset(0f, 8 * u), w * 0.22f, LUZ_LAMPARA.copy(alpha = 0.32f))
+            drawRect(c(CROMO), Offset(ax - 6 * u, base.y), Size(12 * u, 4 * u))
+            drawRect(c(CROMO_OSC), Offset(ax - 3 * u, base.y + 4 * u), Size(6 * u, 10 * u))
+            val pant = if (oscuro) ESMERILADO else c(ESMERILADO)
+            for (i in 0 until 5) drawArc(if (i % 2 == 0) pant else mezcla(pant, ORO, 0.2f), 180f + i * 36f, 36f, true, Offset(ax - 18 * u, base.y - 18 * u), Size(36 * u, 36 * u))
+            for (i in 1 until 5) { val a = (PI + i * PI / 5).toFloat(); drawLine(c(CROMO), base, Offset(ax + cos(a) * 18 * u, base.y + sin(a) * 18 * u), 0.8f * u) }
+        }
+        // El tubo de cristal, con sus bandas de cromo.
+        val tubo = Rect(w * 0.31f, 0f, w * 0.69f, h * 0.5f)
+        drawRect(m(mezcla(PARED, CREMA, 0.22f)), tubo.topLeft, tubo.size)
+        val cartas = cartasBuzonCo(e, 10)
+        val sw = tubo.width * 0.3f; val sh = sw * 0.52f
+        clipRect(tubo.left, tubo.top, tubo.right, tubo.bottom) { cartas.forEachIndexed { i, tipo ->
+            val col = i % 3; val fila = i / 3
+            val cx = tubo.left + tubo.width * (0.18f + 0.32f * col) + (azar(112, i) - 0.5f) * 6 * u
+            val cy = tubo.bottom - sh * 0.7f - fila * (tubo.height - sh * 1.9f) / 3f
+            val r = Rect(cx - sw / 2, cy - sh / 2, cx + sw / 2, cy + sh / 2)
+            if (tipo == 0) mancha(r.center, sw * 0.6f, JADE_LUZ.copy(alpha = 0.5f))
+            sobreChico(r, tipo, oscuro, (azar(113, i) - 0.5f) * 22f)
+        } }
+        // El cristal: reflejos y las bandas de cromo.
+        drawRect(Color.White.copy(alpha = 0.08f), Offset(tubo.left + tubo.width * 0.1f, 0f), Size(tubo.width * 0.1f, tubo.height))
+        drawRect(Color.White.copy(alpha = 0.05f), Offset(tubo.left + tubo.width * 0.75f, 0f), Size(tubo.width * 0.05f, tubo.height))
+        cromo(Rect(tubo.left - 4 * u, 0f, tubo.left, tubo.bottom), oscuro, false)
+        cromo(Rect(tubo.right, 0f, tubo.right + 4 * u, tubo.bottom), oscuro, false)
+        listOf(h * 0.12f, h * 0.32f).forEach { y -> cromo(Rect(tubo.left - 4 * u, y, tubo.right + 4 * u, y + 3 * u), oscuro, false) }
+        // La caja de bronce dorado.
+        val caja = Rect(w * 0.16f, h * 0.5f, w * 0.84f, piso)
+        val remate = Path().apply {
+            moveTo(caja.left, caja.top + 12 * u); lineTo(caja.left + caja.width * 0.12f, caja.top + 12 * u); lineTo(caja.left + caja.width * 0.12f, caja.top + 6 * u)
+            lineTo(caja.left + caja.width * 0.26f, caja.top + 6 * u); lineTo(caja.left + caja.width * 0.26f, caja.top); lineTo(caja.right - caja.width * 0.26f, caja.top)
+            lineTo(caja.right - caja.width * 0.26f, caja.top + 6 * u); lineTo(caja.right - caja.width * 0.12f, caja.top + 6 * u); lineTo(caja.right - caja.width * 0.12f, caja.top + 12 * u)
+            lineTo(caja.right, caja.top + 12 * u); lineTo(caja.right, caja.bottom); lineTo(caja.left, caja.bottom); close()
+        }
+        translate(3 * u, 3 * u) { drawPath(remate, Color.Black.copy(alpha = 0.35f)) }
+        drawPath(remate, c(ORO))
+        drawPath(remate, c(mezcla(ORO, Color.Black, 0.4f)), style = Stroke(1 * u))
+        // El sol de rayos sobre la boca.
+        val sol = Offset(caja.center.x, caja.top + 26 * u)
+        for (i in 0 until 13) { val a = (PI + PI * (i + 0.5f) / 13).toFloat(); drawLine(c(ORO_CLARO), sol, Offset(sol.x + cos(a) * 20 * u, sol.y + sin(a) * 20 * u), 1.2f * u) }
+        drawArc(c(JADE), 180f, 180f, true, Offset(sol.x - 6 * u, sol.y - 6 * u), Size(12 * u, 12 * u))
+        val boca = Rect(caja.center.x - caja.width * 0.26f, sol.y + 2 * u, caja.center.x + caja.width * 0.26f, sol.y + 9 * u)
+        drawRect(Color.Black, boca.topLeft, boca.size)
+        drawRect(c(ORO_CLARO), boca.topLeft, boca.size, style = Stroke(1 * u))
+        textoEn(medidor, "CORREO", Rect(boca.left, boca.bottom + 1 * u, boca.right, boca.bottom + 10 * u), LetraExtra.poiret, c(LACA), 8.5f, peso = FontWeight.Bold, espaciado = 3f, minimo = 5f)
+        // Las tres cartelas de laca.
+        val cuentas = listOf("POR ABRIR" to e.listas, "LACRADAS" to e.selladas, "ABIERTAS" to e.abiertas)
+        val cw = (caja.width - 24 * u) / 3
+        cuentas.forEachIndexed { i, (txt, n) ->
+            val ct = Rect(caja.left + 6 * u + i * (cw + 6 * u), boca.bottom + 13 * u, caja.left + 6 * u + i * (cw + 6 * u) + cw, caja.bottom - 6 * u)
+            drawPath(escalonado(ct, 5 * u), c(LACA))
+            drawPath(escalonado(ct.deflate(1.5f * u), 4 * u), c(ORO), style = Stroke(0.6f * u))
+            textoEn(medidor, txt, Rect(ct.left + 3 * u, ct.top + 2 * u, ct.right - 3 * u, ct.top + ct.height * 0.42f), letra, c(ORO_CLARO), 7.5f, espaciado = 0.6f, minimo = 4.5f)
+            textoEn(medidor, "$n", Rect(ct.left + 3 * u, ct.top + ct.height * 0.38f, ct.right - 3 * u, ct.bottom - 2 * u), LetraExtra.poiret, if (i == 0 && n > 0) c(JADE_LUZ) else c(CREMA), 15f, peso = FontWeight.Bold, minimo = 6f)
+        }
+        // El piso de terrazo en damero.
+        val lado = 16 * u
+        var x = 0f; var i = 0
+        while (x < w) { drawRect(m(if (i % 2 == 0) LINOLEO_A else LINOLEO_B), Offset(x, piso), Size(lado, h - piso)); x += lado; i++ }
+        cromo(Rect(0f, piso - 2 * u, w, piso), oscuro, false)
     }
 }
 
@@ -4912,6 +6276,271 @@ object EstanteBotanico : DisenoBiblioteca {
         hojaSimple(Offset(b.right - 9 * u, b.center.y + 4 * u), 200f, 20 * u, c(HELECHO), c(TINTA).copy(alpha = 0.3f))
         hojaSimple(Offset(b.right - 12 * u, b.center.y + 4 * u), 160f, 16 * u, c(OTONO), c(TINTA).copy(alpha = 0.3f))
         textoEn(medidor, texto, Rect(b.left + 36 * u, b.top + 3 * u, b.right - 36 * u, b.bottom - 3 * u), letra, c(TINTA), 13f, peso = FontWeight.Bold, espaciado = 0.5f, minimo = 7f)
+    }
+
+    // ---------------------------------------------------------------- las cartas
+
+    /** El lacre verde, la rafia con que se ata y el papel verde del forro. */
+    private val LACRE_VERDE = Color(0xFF3F5A2C)
+    private val RAFIA = Color(0xFFD8C08A)
+    private val FORRO_VERDE = Color(0xFF8FA36A)
+
+    /** El lacre verde: la gota de cera con la hoja estampada en relieve. */
+    private fun DrawScope.lacreHoja(c: Offset, r: Float, oscuro: Boolean, alfa: Float) {
+        fun k(x: Color) = t(x, oscuro, false).copy(alpha = alfa)
+        val gota = Path().apply {
+            for (i in 0 until 14) {
+                val a = (2 * PI * i / 14).toFloat()
+                val rr = r * (0.9f + 0.16f * azar(i, 71))
+                val p = Offset(c.x + cos(a) * rr, c.y + sin(a) * rr)
+                if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+            }
+            close()
+        }
+        translate(r * 0.07f, r * 0.1f) { drawPath(gota, Color.Black.copy(alpha = 0.28f * alfa)) }
+        drawPath(gota, k(LACRE_VERDE))
+        drawCircle(k(mezcla(LACRE_VERDE, Color.Black, 0.3f)), r * 0.74f, c, style = Stroke(r * 0.07f))
+        hojaPrensada(Offset(c.x - r * 0.1f, c.y + r * 0.45f), r * 0.95f, r * 0.42f, 18f, k(mezcla(LACRE_VERDE, HOJA_CLARA, 0.55f)), k(mezcla(LACRE_VERDE, Color.Black, 0.25f)))
+        drawArc(k(Color.White.copy(alpha = 0.3f)), 200f, 60f, false, Offset(c.x - r * 0.8f, c.y - r * 0.8f), Size(r * 1.6f, r * 1.6f), style = Stroke(r * 0.08f, cap = StrokeCap.Round))
+    }
+
+    /** La solapa con orilla de ondas, como las bolsas de semillas cortadas a tijera de picos. */
+    private fun solapaOndas(l: Float, r: Float, top: Float, hondo: Float): Path = Path().apply {
+        val w = r - l; val cx = (l + r) / 2
+        moveTo(l, top); lineTo(r, top); lineTo(r, top + hondo * 0.35f)
+        val n = 8
+        for (i in 0 until n) {
+            val x0 = r - w * i / n; val x1 = r - w * (i + 1) / n
+            val y0 = top + hondo * (0.35f + 0.65f * (1f - kotlin.math.abs((x0 - cx) / (w / 2))))
+            val y1 = top + hondo * (0.35f + 0.65f * (1f - kotlin.math.abs((x1 - cx) / (w / 2))))
+            quadraticTo((x0 + x1) / 2, (y0 + y1) / 2 + hondo * 0.12f, x1, y1)
+        }
+        close()
+    }
+
+    /**
+     * El sobre de semillas del naturalista, de papel kraft: la solapa de ondas con la lámina de una campanilla grabada en
+     * su marco, la etiqueta de herbario pegada abajo (con su orla y a quién va y las fechas, a pluma) y por dentro el forro
+     * de papel verde con hojitas. Lo cierra el lacre verde con la hoja; las de al futuro, además, la rafia en cruz anudada
+     * con una ramita de helecho prensado. Al abrirlo, el lacre se parte, la solapa de ondas se levanta y sale la carta con
+     * una hoja prensada en la esquina. En modo oscuro, el kraft se hunde en la penumbra del invernadero; la etiqueta, clara.
+     */
+    override fun DrawScope.sobre(e: EstadoCarta, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        val b = Rect(e.cuerpo.left + 2 * u, e.cuerpo.top + 1.5f * u, e.cuerpo.right - 2 * u, e.cuerpo.bottom - 3.5f * u)
+        val l = b.left; val r = b.right; val top = b.top; val bot = b.bottom
+        val W = b.width; val H = b.height; val cx = b.center.x
+        val rad = CornerRadius(2 * u)
+        drawRoundRect(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.2f), Offset(l + 1.5f * u, top + 2.5f * u), b.size, rad)
+        // El forro verde con hojitas.
+        drawRoundRect(c(FORRO_VERDE), b.topLeft, b.size, rad)
+        for (j in 0 until 10) hojaSimple(Offset(l + W * azar(e.semilla, j + 70), top + H * 0.45f * azar(e.semilla, j + 80)), 360f * azar(e.semilla, j + 90), 5 * u, c(mezcla(FORRO_VERDE, HELECHO, 0.5f)), c(FORRO_VERDE))
+        val k = 1f - 2f * e.abrir.coerceIn(0f, 1f)
+        val hondo = H * 0.42f
+        val solapa = solapaOndas(l, r, top, hondo)
+        if (k < 0f) scale(1f, k, Offset(cx, top)) {
+            drawPath(solapa, c(mezcla(KRAFT, FORRO_VERDE, 0.5f)))
+            drawPath(solapa, c(ROBLE_VETA).copy(alpha = 0.5f), style = Stroke(0.8f * u))
+        }
+        // La carta, con su hoja prensada.
+        if (e.subir > 0f || e.abrir > 0.3f) {
+            val h = hojaCo(e, 0.82f, 0.86f, 0.06f, 3 * u)
+            papelCartaCo(h, e, 8 * u, 5.5f * u, 7 * u, oscuro)
+            hojaPrensada(Offset(h.right - 9 * u, h.top + 16 * u), 12 * u, 4 * u, 30f, c(HOJA_CLARA).copy(alpha = 0.8f), c(HELECHO))
+        }
+        // El frente de kraft.
+        val v = top + H * 0.3f
+        val frente = Path().apply {
+            moveTo(l, top + H * 0.1f); quadraticTo(cx, v + H * 0.06f, r, top + H * 0.1f); lineTo(r, bot - 2 * u)
+            quadraticTo(r, bot, r - 2 * u, bot); lineTo(l + 2 * u, bot); quadraticTo(l, bot, l, bot - 2 * u); close()
+        }
+        drawPath(frente, c(KRAFT))
+        clipPath(frente) {
+            for (j in 0 until 40) { val p = Offset(l + W * azar(e.semilla, j + 100), top + H * azar(e.semilla, j + 140)); drawLine(c(ROBLE_VETA).copy(alpha = 0.18f), p, p + Offset(3 * u, 0.6f * u), 0.6f * u) }
+            drawLine(c(ROBLE_VETA).copy(alpha = 0.4f), Offset(l, bot), Offset(cx - W * 0.1f, v + H * 0.1f), 0.8f * u)
+            drawLine(c(ROBLE_VETA).copy(alpha = 0.4f), Offset(r, bot), Offset(cx + W * 0.1f, v + H * 0.1f), 0.8f * u)
+        }
+        drawPath(Path().apply { moveTo(l, top + H * 0.1f); quadraticTo(cx, v + H * 0.06f, r, top + H * 0.1f) }, c(ROBLE_VETA).copy(alpha = 0.6f), style = Stroke(1 * u))
+        // La etiqueta de herbario.
+        val et = Rect(l + W * 0.07f, top + H * 0.58f, r - W * 0.2f, top + H * 0.93f)
+        drawRect(Color.Black.copy(alpha = 0.18f), et.topLeft + Offset(0.8f * u, 1 * u), et.size)
+        drawRect(if (oscuro) mezcla(PAPEL, Color.Black, 0.12f) else PAPEL, et.topLeft, et.size)
+        drawRect(c(HELECHO), et.deflate(1.5f * u).topLeft, et.deflate(1.5f * u).size, style = Stroke(0.8f * u))
+        drawRect(c(HELECHO), et.deflate(3 * u).topLeft, et.deflate(3 * u).size, style = Stroke(0.4f * u))
+        textoEn(medidor, e.linea1, Rect(et.left + 4 * u, et.top + 3 * u, et.right - 4 * u, et.top + et.height * 0.58f), letra, TINTA, 11.5f, peso = FontWeight.SemiBold, minimo = 7f)
+        textoEn(medidor, e.linea2, Rect(et.left + 4 * u, et.top + et.height * 0.55f, et.right - 4 * u, et.bottom - 3 * u), LetraExtra.fraunces, mezcla(TINTA, BEGONIA, 0.4f), 9f, minimo = 6f)
+        // La solapa de ondas, cerrada, con la lámina de la campanilla.
+        if (k >= 0f) scale(1f, k.coerceAtLeast(0.001f), Offset(cx, top)) {
+            translate(0f, 1.5f * u) { drawPath(solapa, Color.Black.copy(alpha = 0.14f)) }
+            drawPath(solapa, c(mezcla(KRAFT, PAPEL, 0.12f)))
+            clipPath(solapa) {
+                val lam = Rect(l + W * 0.08f, top + H * 0.06f, l + W * 0.08f + H * 0.3f, top + H * 0.34f)
+                drawRect(c(PAPEL), lam.topLeft, lam.size)
+                drawRect(c(ROBLE_VETA), lam.deflate(1.2f * u).topLeft, lam.deflate(1.2f * u).size, style = Stroke(0.5f * u))
+                val base = Offset(lam.center.x, lam.bottom - 2 * u)
+                drawPath(Path().apply { moveTo(base.x, base.y); quadraticTo(base.x - lam.width * 0.1f, lam.center.y, base.x + lam.width * 0.15f, lam.top + lam.height * 0.25f) }, c(HELECHO), style = Stroke(0.7f * u))
+                hojaSimple(Offset(base.x - 0.5f * u, base.y - lam.height * 0.25f), 200f, lam.width * 0.3f, c(HOJA_CLARA), c(HELECHO))
+                listOf(Offset(lam.width * 0.15f, lam.height * 0.25f), Offset(-lam.width * 0.12f, lam.height * 0.45f)).forEach { o ->
+                    val f = Offset(base.x, lam.top) + o
+                    drawPath(Path().apply { moveTo(f.x - lam.width * 0.1f, f.y); lineTo(f.x + lam.width * 0.1f, f.y); lineTo(f.x + lam.width * 0.13f, f.y + lam.height * 0.16f)
+                        lineTo(f.x, f.y + lam.height * 0.12f); lineTo(f.x - lam.width * 0.13f, f.y + lam.height * 0.16f); close() }, c(Color(0xFF6E6AA8)))
+                }
+                textoEn(medidor, "SEMILLAS", Rect(lam.right + 4 * u, top + H * 0.08f, r - W * 0.06f, top + H * 0.2f), letra, c(TINTA), 9f, peso = FontWeight.SemiBold, espaciado = 1.2f, minimo = 4f)
+                drawLine(c(TINTA).copy(alpha = 0.4f), Offset(lam.right + 8 * u, top + H * 0.22f), Offset(r - W * 0.1f, top + H * 0.22f), 0.5f * u)
+            }
+            drawPath(solapa, c(ROBLE_VETA).copy(alpha = 0.6f), style = Stroke(0.8f * u))
+        }
+        // La rafia en cruz, con su moño y una ramita de helecho.
+        val y0 = top + hondo
+        val xr = r - W * 0.12f
+        if (e.cordon > 0f) {
+            val h = Path().apply { moveTo(l - 2 * u, y0 + 0.5f * u); lineTo(r + 2 * u, y0 - 0.5f * u) }
+            val vt = Path().apply { moveTo(xr, top - 2 * u); lineTo(xr + 1 * u, bot + 2 * u) }
+            listOf(h, vt).forEachIndexed { i, p ->
+                val f = ((e.cordon - i * 0.4f) / 0.5f).coerceIn(0f, 1f)
+                translate(0.6f * u, 1 * u) { trazoParcialCo(p, f, Color.Black.copy(alpha = 0.18f), 3 * u, StrokeCap.Butt) }
+                trazoParcialCo(p, f, c(RAFIA), 3 * u, StrokeCap.Butt)
+                trazoParcialCo(p, f, c(mezcla(RAFIA, ROBLE_VETA, 0.3f)), 0.6f * u)
+            }
+            val nudo = ((e.cordon - 0.85f) / 0.15f).coerceIn(0f, 1f)
+            if (nudo > 0f) scale(nudo, nudo, Offset(xr, y0)) {
+                frondaPrensada(Offset(xr - 2 * u, y0 + 6 * u), 22 * u, -40f, c(HELECHO))
+                drawOval(c(RAFIA), Offset(xr - 9 * u, y0 - 4 * u), Size(9 * u, 7 * u), style = Stroke(2 * u))
+                drawOval(c(RAFIA), Offset(xr, y0 - 4 * u), Size(9 * u, 7 * u), style = Stroke(2 * u))
+                drawCircle(c(mezcla(RAFIA, ROBLE_VETA, 0.2f)), 2.4f * u, Offset(xr, y0))
+            }
+        }
+        // El lacre verde.
+        val selloR = H * 0.13f
+        val selloC = Offset(cx, top + hondo * k)
+        if (k >= 0f && e.alfaSello > 0f) {
+            brilloSelloCo(selloC, selloR, c(LUCIERNAGA), e.brillo)
+            selloPartidoCo(Offset(cx, y0), selloR, e.romper, e.escalaSello, Offset(-selloR * 0.3f * e.romper, selloC.y - y0 - selloR * 0.3f * e.romper),
+                Offset(selloR * 0.25f * e.romper, selloR * 0.3f * e.romper), e.semilla) { lacreHoja(Offset(cx, y0), selloR, oscuro, e.alfaSello) }
+        } else if (e.alfaSello > 0f && e.romper > 0f) {
+            selloPartidoCo(Offset(cx, y0), selloR, e.romper, 1f, Offset.Zero, Offset(selloR * 0.25f, selloR * 0.3f), e.semilla, conArriba = false) { lacreHoja(Offset(cx, y0), selloR, oscuro, e.alfaSello) }
+        }
+    }
+
+    override val cajaPrevia: Rect = Rect(0.16f, 0.24f, 0.8f, 0.39f)
+
+    override val altoBuzon: Dp = 208.dp
+
+    /** Un sobre de semillas de pie en su bolsillo: listo (le brota una flor), atado con rafia o abierto con la carta. */
+    private fun DrawScope.sobreSemillas(r: Rect, tipo: Int, oscuro: Boolean, semilla: Int) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        if (tipo == 0) {
+            // Le brota una flor: el tallo, dos hojas y la corola abierta.
+            val b = Offset(r.center.x, r.top + 2 * u)
+            drawLine(c(HELECHO), b, b - Offset(0f, r.height * 0.55f), 1 * u)
+            hojaSimple(b - Offset(0f, r.height * 0.2f), -150f, r.width * 0.3f, c(HOJA_CLARA), c(HELECHO))
+            hojaSimple(b - Offset(0f, r.height * 0.3f), -30f, r.width * 0.3f, c(HOJA_CLARA), c(HELECHO))
+            val f = b - Offset(0f, r.height * 0.58f)
+            for (i in 0 until 5) { val a = (2 * PI * i / 5).toFloat(); drawCircle(c(listOf(Color(0xFFD9785A), Color(0xFF8C7AC8), Color(0xFFE2B84A))[semilla % 3]), r.width * 0.11f, Offset(f.x + cos(a) * r.width * 0.1f, f.y + sin(a) * r.width * 0.1f)) }
+            drawCircle(c(Color(0xFFF2D86A)), r.width * 0.07f, f)
+        }
+        if (tipo == 2) {
+            drawRect(c(PAPEL), Offset(r.left + r.width * 0.1f, r.top - r.height * 0.35f), Size(r.width * 0.8f, r.height * 0.6f))
+            for (j in 0 until 3) drawLine(c(TINTA).copy(alpha = 0.3f), Offset(r.left + r.width * 0.2f, r.top - r.height * (0.25f - j * 0.1f)), Offset(r.right - r.width * 0.2f, r.top - r.height * (0.25f - j * 0.1f)), 0.6f * u)
+        }
+        drawRect(Color.Black.copy(alpha = 0.22f), r.topLeft + Offset(1 * u, 1 * u), r.size)
+        drawRect(c(KRAFT), r.topLeft, r.size)
+        val lam = Rect(r.left + r.width * 0.14f, r.top + r.height * 0.3f, r.right - r.width * 0.14f, r.top + r.height * 0.78f)
+        drawRect(c(PAPEL), lam.topLeft, lam.size)
+        val col = listOf(Color(0xFFB0473A), Color(0xFF6E6AA8), Color(0xFFD9A43A), Color(0xFF4F7D3E))[semilla % 4]
+        drawCircle(c(col), lam.width * 0.2f, Offset(lam.center.x, lam.top + lam.height * 0.4f))
+        drawLine(c(HELECHO), Offset(lam.center.x, lam.top + lam.height * 0.55f), Offset(lam.center.x, lam.bottom - 1.5f * u), 0.8f * u)
+        if (tipo == 2) drawPath(Path().apply { moveTo(r.left, r.top); lineTo(r.center.x, r.top - r.height * 0.18f); lineTo(r.right, r.top) }, c(mezcla(KRAFT, FORRO_VERDE, 0.4f)))
+        else drawPath(Path().apply { moveTo(r.left, r.top); lineTo(r.right, r.top); lineTo(r.right, r.top + r.height * 0.12f); lineTo(r.left, r.top + r.height * 0.12f); close() }, c(mezcla(KRAFT, ROBLE_VETA, 0.2f)))
+        if (tipo == 1) {
+            drawLine(c(RAFIA), Offset(r.left - 1 * u, r.top + r.height * 0.2f), Offset(r.right + 1 * u, r.top + r.height * 0.2f), 2 * u)
+            drawLine(c(RAFIA), Offset(r.center.x, r.top), Offset(r.center.x, r.bottom), 2 * u)
+        }
+        if (tipo != 2) drawCircle(c(LACRE_VERDE), r.width * 0.12f, Offset(r.center.x, r.top + r.height * 0.18f))
+    }
+
+    /**
+     * El expositor de semillas del vivero, contra la pared de tablas pintadas del invernadero: un mueble inclinado de roble
+     * de dos gradas con cinco bolsillos cada una, y en cada bolsillo un sobre de semillas por carta (hasta diez). A los que
+     * ya se pueden abrir les brota una flor y los alumbra un resplandor (el primer degradado); los sellados van atados con
+     * rafia y su lacre verde; los abiertos asoman la carta. Arriba, la tabla pintada «SEMILLAS» entre dos ramas; abajo, tres
+     * etiquetas de herbario clavadas en el canto con la cuenta de cada clase, y macetas de barro con plantones a los pies. En
+     * modo oscuro, el invernadero de noche: el farol de campo encendido (el segundo degradado) y unas luciérnagas.
+     */
+    override fun DrawScope.buzon(e: EstadoBuzon, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        fun c(x: Color) = t(x, oscuro, false)
+        fun m(x: Color) = if (oscuro) mezcla(t(x, true, false), Color(0xFF070A08), 0.4f) else t(x, false, false)
+        // La pared de tablas.
+        drawRect(m(PARED))
+        var x = 0f; while (x < w) { drawLine(m(mezcla(PARED, ROBLE_VETA, 0.35f)), Offset(x, 0f), Offset(x, h), 1 * u); x += 18 * u }
+        if (oscuro) mancha(Offset(w * 0.92f, h * 0.2f), w * 0.5f, FAROL_CAMPO.copy(alpha = 0.25f))
+        // El farol de campo colgado.
+        val fa = Offset(w * 0.92f, 10 * u)
+        drawLine(m(HIERRO), Offset(fa.x, 0f), fa, 1 * u)
+        drawRoundRect(c(LATA), Offset(fa.x - 6 * u, fa.y), Size(12 * u, 3 * u), CornerRadius(1 * u))
+        drawRect(if (oscuro) FAROL_CAMPO else c(VIDRIO), Offset(fa.x - 4.5f * u, fa.y + 3 * u), Size(9 * u, 12 * u))
+        drawRect(c(LATA), Offset(fa.x - 4.5f * u, fa.y + 3 * u), Size(9 * u, 12 * u), style = Stroke(1 * u))
+        drawRoundRect(c(LATA), Offset(fa.x - 6 * u, fa.y + 15 * u), Size(12 * u, 3 * u), CornerRadius(1 * u))
+        // La tabla pintada.
+        val tabla = Rect(w * 0.3f, 6 * u, w * 0.7f, 26 * u)
+        drawRect(Color.Black.copy(alpha = 0.2f), tabla.topLeft + Offset(1 * u, 1.5f * u), tabla.size)
+        drawRect(m(HIERRO), tabla.topLeft, tabla.size)
+        textoEn(medidor, "SEMILLAS", tabla.deflate(3 * u), letra, c(PAPEL), 12f, peso = FontWeight.SemiBold, espaciado = 2f, minimo = 6f)
+        fronda(Offset(tabla.left - 2 * u, tabla.bottom), 22 * u, -60f, c(HELECHO))
+        fronda(Offset(tabla.right + 2 * u, tabla.bottom), 22 * u, 60f, c(HELECHO))
+        // El expositor de dos gradas.
+        val mue = Rect(w * 0.08f, 44 * u, w * 0.92f, h - 42 * u)
+        val cartas = cartasBuzonCo(e, 10)
+        val gh = mue.height / 2
+        for (g in 0 until 2) {
+            val gr = Rect(mue.left + g * 6 * u, mue.top + g * gh, mue.right - g * 6 * u, mue.top + (g + 1) * gh)
+            drawRect(c(ROBLE_VETA), Offset(gr.left, gr.top + gh * 0.35f), Size(gr.width, gh * 0.65f))
+            val pw = gr.width / 5
+            for (k in 0 until 5) {
+                val i = g * 5 + k
+                val tipo = cartas.getOrNull(i) ?: continue
+                val sr = Rect(gr.left + k * pw + pw * 0.2f, gr.top + gh * 0.18f, gr.left + (k + 1) * pw - pw * 0.2f, gr.bottom - gh * 0.2f)
+                if (tipo == 0) mancha(Offset(sr.center.x, sr.top), pw * 0.7f, c(LUCIERNAGA).copy(alpha = 0.5f))
+                sobreSemillas(sr, tipo, oscuro, i * 5 + 1)
+            }
+            // El frente del bolsillo: una tabla de roble con su canto.
+            val fr = Rect(gr.left, gr.bottom - gh * 0.42f, gr.right, gr.bottom)
+            drawRect(Color.Black.copy(alpha = 0.25f), Offset(fr.left, fr.top - 2 * u), Size(fr.width, 2 * u))
+            drawRect(c(ROBLE), fr.topLeft, fr.size)
+            vetas(fr, c(ROBLE_VETA).copy(alpha = 0.5f), 121 + g, densidad = 0.8f)
+            drawRect(c(ROBLE_LUZ), fr.topLeft, Size(fr.width, 1.5f * u))
+            for (k in 1 until 5) drawLine(c(ROBLE_VETA), Offset(gr.left + k * pw, fr.top), Offset(gr.left + k * pw, fr.bottom), 1 * u)
+        }
+        // Las patas y las tres etiquetas de herbario con la cuenta.
+        val pie = Rect(mue.left, mue.bottom, mue.right, h - 8 * u)
+        listOf(pie.left + 6 * u, pie.right - 10 * u).forEach { px -> drawRect(c(ROBLE_VETA), Offset(px, pie.top), Size(4 * u, pie.height)) }
+        drawRect(c(ROBLE), Offset(pie.left, pie.top), Size(pie.width, 4 * u))
+        val cuentas = listOf("POR ABRIR" to e.listas, "SELLADAS" to e.selladas, "ABIERTAS" to e.abiertas)
+        val ew = minOf(pie.width * 0.29f, 104 * u)
+        val gap = (pie.width - ew * 3) / 4
+        cuentas.forEachIndexed { i, (txt, n) ->
+            val et = Rect(pie.left + gap + i * (ew + gap), pie.top + 6 * u, pie.left + gap + i * (ew + gap) + ew, pie.bottom - 2 * u)
+            drawLine(c(LATON), Offset(et.center.x, pie.top), Offset(et.center.x, et.top), 0.8f * u)
+            drawRect(Color.Black.copy(alpha = 0.2f), et.topLeft + Offset(0.8f * u, 1 * u), et.size)
+            drawRect(if (oscuro) mezcla(PAPEL, Color.Black, 0.12f) else PAPEL, et.topLeft, et.size)
+            drawRect(c(HELECHO), et.deflate(1.5f * u).topLeft, et.deflate(1.5f * u).size, style = Stroke(0.6f * u))
+            textoEn(medidor, txt, Rect(et.left + 3 * u, et.top + 2 * u, et.left + et.width * 0.64f, et.bottom - 2 * u), letra, TINTA, 7.5f, peso = FontWeight.SemiBold, minimo = 5f)
+            textoEn(medidor, "$n", Rect(et.left + et.width * 0.66f, et.top + 1 * u, et.right - 3 * u, et.bottom - 1 * u), LetraExtra.fraunces, if (i == 0 && n > 0) BEGONIA else TINTA, 14f, peso = FontWeight.Bold, minimo = 6f)
+        }
+        // Las macetas con plantones, a los pies.
+        listOf(0.03f, 0.97f).forEachIndexed { i, f ->
+            val mx = w * f
+            val ma = Path().apply { moveTo(mx - 9 * u, h - 22 * u); lineTo(mx + 9 * u, h - 22 * u); lineTo(mx + 6.5f * u, h); lineTo(mx - 6.5f * u, h); close() }
+            drawPath(ma, c(BARRO))
+            drawRect(c(mezcla(BARRO, Color.Black, 0.2f)), Offset(mx - 10 * u, h - 24 * u), Size(20 * u, 4 * u))
+            fronda(Offset(mx, h - 24 * u), 24 * u, if (i == 0) 12f else -12f, c(HELECHO))
+            hojaSimple(Offset(mx, h - 26 * u), -120f, 10 * u, c(HOJA_CLARA), c(HELECHO))
+        }
+        if (oscuro) listOf(Offset(w * 0.2f, h * 0.12f), Offset(w * 0.76f, h * 0.3f), Offset(w * 0.5f, h * 0.06f), Offset(w * 0.12f, h * 0.55f)).forEach { luciernaga(it, 1.4f * u) }
     }
 }
 
@@ -5791,6 +7420,284 @@ object EstanteNavidad : DisenoBiblioteca {
         aceboDentado(Offset(w - 18 * u, h / 2), 12 * u, c(VERDE), c(ORO))
         textoEn(medidor, texto, Rect(40 * u, b.top + 2 * u, w - 40 * u, b.bottom - 2 * u), letra, c(CREMA), 13f, peso = FontWeight.Bold, espaciado = 0.5f, minimo = 7f)
     }
+
+    // ---------------------------------------------------------------- las cartas
+
+    /** El rojo del papel de regalo, la cinta de raso verde, el papel de seda y la madera roja del trineo. */
+    private val REGALO = Color(0xFFB71C1C)
+    private val REGALO_OSC = Color(0xFF7A1010)
+    private val RASO = Color(0xFF1B5E20)
+    private val RASO_LUZ = Color(0xFF3F8A44)
+    private val SEDA = Color(0xFFF6F1E6)
+    private val ARPILLERA = Color(0xFFB08A5A)
+
+    /** El papel de regalo: rojo con estrellitas de oro y puntos de nieve. */
+    private fun DrawScope.papelRegalo(r: Rect, oscuro: Boolean, semilla: Int) {
+        val u = density
+        drawRect(t(REGALO, oscuro, false), r.topLeft, r.size)
+        clipRect(r.left, r.top, r.right, r.bottom) {
+            val paso = 13 * u
+            var y = r.top + paso * 0.4f; var fila = 0
+            while (y < r.bottom + paso) {
+                var x = r.left + (if (fila % 2 == 0) 0f else paso / 2) + paso * 0.3f
+                while (x < r.right + paso) {
+                    drawPath(estrella(Offset(x, y), 2.4f * u, 5, 0.45f), t(ORO, oscuro, false).copy(alpha = 0.85f))
+                    drawCircle(t(NIEVE, oscuro, false).copy(alpha = 0.55f), 0.8f * u, Offset(x + paso * 0.5f, y + paso * 0.25f))
+                    x += paso
+                }
+                y += paso * 0.75f; fila++
+            }
+        }
+    }
+
+    /** El sello de cera dorada, con la estrella de ocho puntas y su aro. */
+    private fun DrawScope.selloEstrella(c: Offset, r: Float, oscuro: Boolean, alfa: Float) {
+        fun k(x: Color) = t(x, oscuro, false).copy(alpha = alfa)
+        val gota = Path().apply {
+            for (i in 0 until 16) {
+                val a = (2 * PI * i / 16).toFloat()
+                val rr = r * (0.92f + 0.14f * azar(i, 81))
+                val p = Offset(c.x + cos(a) * rr, c.y + sin(a) * rr)
+                if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+            }
+            close()
+        }
+        translate(r * 0.06f, r * 0.1f) { drawPath(gota, Color.Black.copy(alpha = 0.3f * alfa)) }
+        drawPath(gota, k(ORO))
+        drawCircle(k(mezcla(ORO, Color.Black, 0.3f)), r * 0.74f, c, style = Stroke(r * 0.07f))
+        drawPath(estrella(c, r * 0.58f, 8, 0.45f), k(mezcla(ORO, Color.Black, 0.25f)))
+        drawPath(estrella(c, r * 0.4f, 8, 0.45f), k(mezcla(ORO, Color.White, 0.35f)))
+        drawArc(k(Color.White.copy(alpha = 0.4f)), 200f, 60f, false, Offset(c.x - r * 0.8f, c.y - r * 0.8f), Size(r * 1.6f, r * 1.6f), style = Stroke(r * 0.08f, cap = StrokeCap.Round))
+    }
+
+    /** El moño de raso: dos lazadas, el nudo y las dos colas en pico. */
+    private fun DrawScope.mono(c: Offset, s: Float, oscuro: Boolean) {
+        val u = density
+        fun k(x: Color) = t(x, oscuro, false)
+        listOf(-1f, 1f).forEach { l0 ->
+            drawPath(Path().apply { moveTo(c.x, c.y); lineTo(c.x + l0 * s * 0.5f, c.y + s * 0.95f); lineTo(c.x + l0 * s * 0.3f, c.y + s * 0.8f); lineTo(c.x + l0 * s * 0.18f, c.y + s * 0.98f); close() }, k(RASO))
+            val lazo = Path().apply { moveTo(c.x, c.y); cubicTo(c.x + l0 * s * 0.4f, c.y - s * 0.75f, c.x + l0 * s * 1.05f, c.y - s * 0.4f, c.x + l0 * s * 0.85f, c.y + s * 0.05f); close() }
+            drawPath(lazo, k(RASO))
+            drawPath(lazo, k(RASO_LUZ), style = Stroke(0.8f * u))
+        }
+        drawOval(k(RASO_LUZ), Offset(c.x - s * 0.17f, c.y - s * 0.14f), Size(s * 0.34f, s * 0.28f))
+    }
+
+    /**
+     * La caja de regalo: el papel rojo con estrellitas de oro, la tapa más ancha con su canto y, abajo, la etiqueta de regalo
+     * de cartulina crema atada con su hilo, donde van a quién va y las fechas. La cierra el sello de cera dorada con la
+     * estrella, montado entre la tapa y la caja; las de al futuro, además, la cinta de raso verde en cruz con su moño. Al
+     * abrirla, el sello se parte (media mitad sube con la tapa), la tapa se levanta y se recuesta detrás, y entre el papel de
+     * seda sube la carta con su ramita de acebo. En modo oscuro, la caja se hunde en la penumbra de la sala; la etiqueta,
+     * clara, se sigue leyendo.
+     */
+    override fun DrawScope.sobre(e: EstadoCarta, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        val b = Rect(e.cuerpo.left + 3 * u, e.cuerpo.top + 1.5f * u, e.cuerpo.right - 3 * u, e.cuerpo.bottom - 3.5f * u)
+        val l = b.left; val r = b.right; val top = b.top; val bot = b.bottom
+        val W = b.width; val H = b.height; val cx = b.center.x
+        val borde = top + H * 0.2f
+        val tapaH = H * 0.3f
+        val a = e.abrir.coerceIn(0f, 1f)
+        val xr = l + W * 0.11f
+        drawRect(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.22f), Offset(l + 2 * u, borde + 3 * u), Size(W, bot - borde))
+        // La tapa, recostada detrás de la caja abierta.
+        fun DrawScope.tapaCaja(conSello: Boolean) {
+            val tr = Rect(l - 3 * u, top, r + 3 * u, top + tapaH)
+            drawRect(Color.Black.copy(alpha = 0.25f), tr.topLeft + Offset(0f, 2 * u), tr.size)
+            papelRegalo(tr, oscuro, e.semilla + 1)
+            drawRect(c(REGALO_OSC), Offset(tr.left, tr.bottom - 2.5f * u), Size(tr.width, 2.5f * u))
+            drawRect(c(Color.White).copy(alpha = 0.15f), tr.topLeft, Size(tr.width, 1.5f * u))
+            if (e.cordon > 0f) {
+                val f = (e.cordon / 0.4f).coerceIn(0f, 1f)
+                drawRect(c(RASO), Offset(xr - 4 * u, tr.top), Size(8 * u, tr.height * f))
+                drawRect(c(RASO_LUZ), Offset(xr - 2.5f * u, tr.top), Size(1.2f * u, tr.height * f))
+                val f2 = ((e.cordon - 0.4f) / 0.35f).coerceIn(0f, 1f)
+                drawRect(c(RASO), Offset(tr.left, tr.center.y - 4 * u), Size(tr.width * f2, 8 * u))
+                drawRect(c(RASO_LUZ), Offset(tr.left, tr.center.y - 2.5f * u), Size(tr.width * f2, 1.2f * u))
+                val m = ((e.cordon - 0.8f) / 0.2f).coerceIn(0f, 1f)
+                if (m > 0f) scale(m, m, Offset(xr, tr.center.y)) { mono(Offset(xr, tr.center.y), tapaH * 0.6f, oscuro) }
+            }
+            if (conSello) acebo(Offset(r - W * 0.12f, tr.center.y), tapaH * 0.5f, c(ABETO), c(ROJO))
+        }
+        if (a > 0.5f) {
+            val f = (a - 0.5f) / 0.5f
+            translate(W * 0.12f * f, -H * 0.12f - H * 0.08f * f) { rotate(8f * f, Offset(cx, top + tapaH / 2)) { tapaCaja(false) } }
+        }
+        // El interior de la caja: verde, con el papel de seda arrugado.
+        drawRect(c(RASO), Offset(l, borde - 2 * u), Size(W, H * 0.3f))
+        for (j in 0 until 7) {
+            val p = Offset(l + W * (0.05f + 0.9f * j / 6f), borde + 2 * u)
+            drawPath(Path().apply { moveTo(p.x - 10 * u, p.y + 4 * u); lineTo(p.x - 3 * u, p.y - 4 * u - 3 * u * azar(e.semilla, j)); lineTo(p.x + 2 * u, p.y + 1 * u); lineTo(p.x + 8 * u, p.y - 5 * u); lineTo(p.x + 12 * u, p.y + 4 * u); close() }, c(SEDA))
+        }
+        // La carta, con su ramita de acebo.
+        if (e.subir > 0f || a > 0.3f) {
+            val h = hojaCo(e, 0.8f, 0.86f, 0.06f, 3 * u)
+            papelCartaCo(h, e, 9 * u, 5.5f * u, 7 * u, oscuro)
+            acebo(Offset(h.right - 7 * u, h.top + 6 * u), 9 * u, c(ABETO), c(ROJO))
+            drawLine(c(ORO), Offset(h.left + 4 * u, h.top + 3 * u), Offset(h.left + h.width * 0.4f, h.top + 3 * u), 0.8f * u)
+        }
+        // El cuerpo de la caja.
+        val caja = Rect(l, borde, r, bot)
+        papelRegalo(caja, oscuro, e.semilla)
+        drawRect(Color.Black.copy(alpha = 0.18f), Offset(r - 5 * u, borde), Size(5 * u, bot - borde))
+        drawRect(c(Color.White).copy(alpha = 0.12f), Offset(l, borde), Size(W, 1.5f * u))
+        // La cinta vertical del cuerpo.
+        if (e.cordon > 0f) {
+            val f = (e.cordon / 0.4f).coerceIn(0f, 1f)
+            drawRect(c(RASO), Offset(xr - 4 * u, borde), Size(8 * u, (bot - borde) * f))
+            drawRect(c(RASO_LUZ), Offset(xr - 2.5f * u, borde), Size(1.2f * u, (bot - borde) * f))
+        }
+        // La etiqueta de regalo, con su hilo rojo.
+        val et = Rect(l + W * 0.2f, top + H * 0.56f, r - W * 0.04f, bot - 5 * u)
+        drawLine(c(ROJO), Offset(et.left + 3 * u, et.center.y), Offset(xr + 2 * u, top + tapaH + 3 * u), 1 * u)
+        val pe = etiquetaRegalo(et, et.height * 0.3f)
+        translate(1 * u, 1.5f * u) { drawPath(pe, Color.Black.copy(alpha = 0.25f)) }
+        drawPath(pe, cremaTapa(oscuro, false))
+        drawPath(etiquetaRegalo(et.deflate(2 * u), et.height * 0.24f), c(ORO), style = Stroke(0.7f * u))
+        drawCircle(c(ROJO), 1.6f * u, Offset(et.left + 4 * u, et.center.y), style = Stroke(0.8f * u))
+        textoEn(medidor, e.linea1, Rect(et.left + 8 * u, et.top + 2 * u, et.right - 4 * u, et.top + et.height * 0.58f), letra, TINTA, 11.5f, peso = FontWeight.SemiBold, minimo = 7f)
+        textoEn(medidor, e.linea2, Rect(et.left + 8 * u, et.top + et.height * 0.55f, et.right - 4 * u, et.bottom - 2 * u), letra, mezcla(TINTA, ROJO, 0.4f), 9f, minimo = 6f)
+        // La tapa, cerrada o levantándose.
+        val sube = if (a <= 0.5f) H * 0.3f * (a / 0.5f) else 0f
+        if (a <= 0.5f) translate(0f, -sube) { tapaCaja(true) }
+        // El sello de cera dorada, entre la tapa y la caja.
+        val selloR = H * 0.13f
+        val y0 = top + tapaH
+        if (e.alfaSello > 0f) {
+            if (a <= 0.5f) brilloSelloCo(Offset(cx, y0 - sube), selloR, c(LLAMA), e.brillo)
+            selloPartidoCo(Offset(cx, y0), selloR, e.romper, e.escalaSello, Offset(-selloR * 0.2f * e.romper, -sube - selloR * 0.3f * e.romper),
+                Offset(selloR * 0.2f * e.romper, selloR * 0.3f * e.romper), e.semilla, conArriba = a <= 0.5f) { selloEstrella(Offset(cx, y0), selloR, oscuro, e.alfaSello) }
+        }
+    }
+
+    override val cajaPrevia: Rect = Rect(0.17f, 0.235f, 0.83f, 0.39f)
+
+    override val altoBuzon: Dp = 212.dp
+
+    /** Una carta chica asomando del saco: lista (su sello de oro brilla), atada con cinta y moño, o abierta. */
+    private fun DrawScope.cartaSaco(r: Rect, tipo: Int, oscuro: Boolean, giro: Float, semilla: Int) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        rotate(giro, Offset(r.center.x, r.bottom)) {
+            if (tipo == 2) {
+                drawRect(c(CREMA), Offset(r.left + r.width * 0.12f, r.top - r.height * 0.45f), Size(r.width * 0.76f, r.height * 0.7f))
+                for (j in 0 until 3) drawLine(c(TINTA).copy(alpha = 0.3f), Offset(r.left + r.width * 0.2f, r.top - r.height * (0.32f - j * 0.12f)), Offset(r.right - r.width * 0.2f, r.top - r.height * (0.32f - j * 0.12f)), 0.6f * u)
+            }
+            drawRect(Color.Black.copy(alpha = 0.25f), r.topLeft + Offset(1 * u, 1 * u), r.size)
+            drawRect(c(if (semilla % 2 == 0) REGALO else VERDE), r.topLeft, r.size)
+            val punta = if (tipo == 2) r.top - r.height * 0.35f else r.top + r.height * 0.5f
+            drawPath(Path().apply { moveTo(r.left, r.top); lineTo(r.center.x, punta); lineTo(r.right, r.top) }, c(ORO), style = Stroke(0.8f * u))
+            if (tipo == 1) {
+                drawRect(c(ORO), Offset(r.left, r.top + r.height * 0.55f), Size(r.width, 2 * u))
+                drawRect(c(ORO), Offset(r.center.x - 1 * u, r.top), Size(2 * u, r.height))
+                drawCircle(c(ORO), 2.4f * u, Offset(r.center.x, r.top + r.height * 0.56f))
+            }
+            if (tipo != 2) drawCircle(c(if (tipo == 0) mezcla(ORO, Color.White, 0.3f) else ORO), r.width * 0.12f, Offset(r.center.x, r.top + r.height * 0.5f))
+        }
+    }
+
+    /**
+     * El trineo del correo de Navidad, sobre la nieve: la caja de madera roja con sus volutas doradas y los patines curvos
+     * de hierro que se enroscan delante; atrás, el saco de arpillera atado, del que asoman las cartas (hasta diez): las que
+     * ya se pueden abrir, con su sello de oro que brilla (el primer degradado); las selladas, con cinta y moño; las
+     * abiertas, con la carta afuera. En el costado del trineo cuelgan tres etiquetas de regalo con la cuenta de cada clase.
+     * Cae la nieve; un abeto nevado detrás. En modo oscuro, la noche de Navidad: el cielo con estrellas y el farolillo del
+     * trineo encendido (el segundo degradado).
+     */
+    override fun DrawScope.buzon(e: EstadoBuzon, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        fun c(x: Color) = t(x, oscuro, false)
+        // El cielo y la nieve del suelo.
+        drawRect(if (oscuro) mezcla(CIELO_NOCHE, Color.Black, 0.25f) else CIELO_DIA)
+        if (oscuro) for (j in 0 until 24) drawCircle(NIEVE.copy(alpha = 0.4f + 0.5f * azar(131, j)), (0.5f + 0.7f * azar(132, j)) * u, Offset(w * azar(133, j), h * 0.5f * azar(134, j)))
+        val suelo = h * 0.8f
+        // El abeto nevado de atrás.
+        val ab = Offset(w * 0.88f, suelo)
+        for (k in 0 until 4) {
+            val y = ab.y - 18 * u - k * 22 * u; val an = (34 - k * 7) * u
+            drawPath(Path().apply { moveTo(ab.x, y - 30 * u); lineTo(ab.x + an, y + 4 * u); lineTo(ab.x - an, y + 4 * u); close() }, c(ABETO_OSC))
+            drawPath(Path().apply { moveTo(ab.x, y - 30 * u); lineTo(ab.x + an * 0.5f, y - 14 * u); lineTo(ab.x - an * 0.4f, y - 12 * u); close() }, c(NIEVE).copy(alpha = 0.8f))
+        }
+        drawPath(Path().apply { moveTo(0f, suelo); quadraticTo(w * 0.3f, suelo - 8 * u, w * 0.6f, suelo - 2 * u); quadraticTo(w * 0.85f, suelo + 4 * u, w, suelo - 4 * u); lineTo(w, h); lineTo(0f, h); close() }, c(NIEVE))
+        // El trineo.
+        val x0 = w * 0.08f; val x1 = w * 0.8f
+        val yt = h * 0.42f; val yb = h * 0.76f
+        // Los patines.
+        val patin = Path().apply {
+            moveTo(x0 - 4 * u, yb + 10 * u); lineTo(x1, yb + 10 * u)
+            cubicTo(x1 + 30 * u, yb + 10 * u, x1 + 34 * u, yt + 10 * u, x1 + 14 * u, yt + 6 * u)
+            cubicTo(x1 + 4 * u, yt + 4 * u, x1 + 4 * u, yt + 16 * u, x1 + 13 * u, yt + 16 * u)
+        }
+        drawPath(patin, c(HIERRO_TRINEO), style = Stroke(3 * u, cap = StrokeCap.Round))
+        listOf(0.15f, 0.5f, 0.85f).forEach { f -> val px = x0 + (x1 - x0) * f; drawLine(c(HIERRO_TRINEO), Offset(px, yb), Offset(px, yb + 10 * u), 2.2f * u) }
+        // El saco, atrás.
+        val saco = Rect(x0 + 6 * u, yt - 50 * u, x0 + (x1 - x0) * 0.62f, yt + 14 * u)
+        // Las cartas, que asoman del saco.
+        val cartas = cartasBuzonCo(e, 10)
+        val cw = (saco.width - 10 * u) / 10f
+        cartas.forEachIndexed { i, tipo ->
+            val bw = cw * 1.5f; val bh = bw * 1.05f
+            val bx = saco.left + 5 * u + cw * (i + 0.5f)
+            val by = saco.top + 12 * u + (kotlin.math.abs(i - 4.5f) / 4.5f) * 8 * u
+            val rr = Rect(bx - bw / 2, by - bh, bx + bw / 2, by + 6 * u)
+            if (tipo == 0) mancha(Offset(bx, by - bh * 0.4f), bw * 1.1f, c(LLAMA).copy(alpha = 0.55f))
+            cartaSaco(rr, tipo, oscuro, (i - 4.5f) * 4f + (azar(135, i) - 0.5f) * 8f, i)
+        }
+        val sacoP = Path().apply {
+            moveTo(saco.left, saco.top + 10 * u); quadraticTo(saco.center.x, saco.top + 2 * u, saco.right, saco.top + 10 * u)
+            quadraticTo(saco.right + 12 * u, saco.center.y, saco.right - 4 * u, saco.bottom); lineTo(saco.left + 4 * u, saco.bottom)
+            quadraticTo(saco.left - 12 * u, saco.center.y, saco.left, saco.top + 10 * u); close()
+        }
+        drawPath(sacoP, c(ARPILLERA))
+        clipPath(sacoP) {
+            var yy = saco.top; while (yy < saco.bottom) { drawLine(c(mezcla(ARPILLERA, Color.Black, 0.2f)).copy(alpha = 0.4f), Offset(saco.left - 10 * u, yy), Offset(saco.right + 10 * u, yy), 0.6f * u); yy += 2.5f * u }
+            var xx = saco.left - 10 * u; while (xx < saco.right + 10 * u) { drawLine(c(mezcla(ARPILLERA, Color.Black, 0.2f)).copy(alpha = 0.3f), Offset(xx, saco.top), Offset(xx, saco.bottom), 0.6f * u); xx += 2.5f * u }
+        }
+        drawPath(Path().apply { moveTo(saco.left + 2 * u, saco.top + 14 * u); quadraticTo(saco.center.x, saco.top + 20 * u, saco.right - 2 * u, saco.top + 14 * u) }, c(ROJO), style = Stroke(2 * u))
+        // La caja del trineo, con su respaldo curvo y las volutas.
+        val cuerpo = Path().apply {
+            moveTo(x0, yt - 14 * u); quadraticTo(x0 - 8 * u, yt - 26 * u, x0 + 4 * u, yt - 30 * u); quadraticTo(x0 + 12 * u, yt - 26 * u, x0 + 8 * u, yt - 4 * u)
+            lineTo(x1 - 10 * u, yt + 4 * u); quadraticTo(x1 + 10 * u, yt - 10 * u, x1 + 8 * u, yt + 8 * u)
+            lineTo(x1, yb); lineTo(x0 + 6 * u, yb); quadraticTo(x0, yb, x0, yb - 8 * u); close()
+        }
+        translate(2 * u, 3 * u) { drawPath(cuerpo, Color.Black.copy(alpha = 0.25f)) }
+        drawPath(cuerpo, c(ROJO))
+        drawPath(cuerpo, c(ORO), style = Stroke(1.6f * u))
+        drawLine(c(mezcla(ROJO, Color.Black, 0.3f)), Offset(x0 + 8 * u, yt + 6 * u), Offset(x1 - 4 * u, yt + 12 * u), 1 * u)
+        listOf(Offset(x0 + 14 * u, yb - 12 * u), Offset(x1 - 12 * u, yb - 12 * u)).forEachIndexed { i, p ->
+            val s = if (i == 0) 1f else -1f
+            drawPath(Path().apply { moveTo(p.x, p.y); cubicTo(p.x + s * 10 * u, p.y - 10 * u, p.x + s * 18 * u, p.y + 2 * u, p.x + s * 10 * u, p.y + 4 * u); quadraticTo(p.x + s * 6 * u, p.y + 2 * u, p.x + s * 9 * u, p.y - 1 * u) },
+                c(ORO), style = Stroke(1.2f * u, cap = StrokeCap.Round))
+        }
+        // Las tres etiquetas de regalo con la cuenta.
+        val cuentas = listOf("POR ABRIR" to e.listas, "SELLADAS" to e.selladas, "ABIERTAS" to e.abiertas)
+        val zona = Rect(x0 + 34 * u, yt + 12 * u, x1 - 30 * u, yb - 4 * u)
+        val ew = zona.width / 3
+        cuentas.forEachIndexed { i, (txt, n) ->
+            val et = Rect(zona.left + i * ew + 3 * u, zona.top + 4 * u, zona.left + (i + 1) * ew - 3 * u, zona.bottom)
+            drawLine(c(ORO), Offset(et.center.x, zona.top - 4 * u), Offset(et.left + 5 * u, et.center.y), 0.8f * u)
+            val pe = etiquetaRegalo(et, et.height * 0.28f)
+            translate(0.8f * u, 1.2f * u) { drawPath(pe, Color.Black.copy(alpha = 0.25f)) }
+            drawPath(pe, cremaTapa(oscuro, false))
+            drawCircle(c(ROJO), 1.5f * u, Offset(et.left + 5 * u, et.center.y), style = Stroke(0.8f * u))
+            textoEn(medidor, txt, Rect(et.left + 9 * u, et.top + 2 * u, et.right - 2 * u, et.top + et.height * 0.45f), letra, TINTA, 8f, peso = FontWeight.SemiBold, minimo = 4.5f)
+            textoEn(medidor, "$n", Rect(et.left + 9 * u, et.top + et.height * 0.4f, et.right - 2 * u, et.bottom - 1 * u), LetraExtra.cinzelDeco, if (i == 0 && n > 0) ROJO else TINTA, 14f, peso = FontWeight.Bold, minimo = 6f)
+        }
+        // El farolillo del trineo.
+        val fa = Offset(x1 + 2 * u, yt - 18 * u)
+        if (oscuro) mancha(fa, w * 0.3f, LLAMA.copy(alpha = 0.3f))
+        drawLine(c(HIERRO_TRINEO), Offset(fa.x, fa.y + 8 * u), Offset(fa.x, yt + 4 * u), 1.4f * u)
+        drawRect(c(ORO), Offset(fa.x - 5 * u, fa.y - 9 * u), Size(10 * u, 2.5f * u))
+        drawRect(if (oscuro) LLAMA else c(CERA), Offset(fa.x - 4 * u, fa.y - 6.5f * u), Size(8 * u, 12 * u))
+        drawRect(c(ORO), Offset(fa.x - 4 * u, fa.y - 6.5f * u), Size(8 * u, 12 * u), style = Stroke(1 * u))
+        // La nieve que cae.
+        for (j in 0 until 30) drawCircle(NIEVE.copy(alpha = if (oscuro) 0.75f else 0.9f), (0.8f + 1.2f * azar(136, j)) * u, Offset(w * azar(137, j), h * azar(138, j)))
+    }
+
+    private val HIERRO_TRINEO = Color(0xFF2E2A2A)
 }
 
 /**
@@ -6608,6 +8515,268 @@ object EstanteAbismo : DisenoBiblioteca {
                 peso = FontWeight.Bold, espaciado = 2f, minimo = 6.5f)
         }
     }
+
+    // ---------------------------------------------------------------- las cartas
+
+    /** El esmalte verde petróleo de la caja estanca, su sombra, el cabo de cáñamo, el plomo de lastre y el vidrio de las botellas. */
+    private val ESMALTE = Color(0xFF2C5A6B)
+    private val ESMALTE_OSC = Color(0xFF15333F)
+    private val ESMALTE_LUZ = Color(0xFF4D8597)
+    private val CABO = Color(0xFFCDB88C)
+    private val PLOMO = Color(0xFF6E7378)
+    private val VIDRIO_BOTELLA = Color(0xFF5E9C8E)
+    private val CORCHO = Color(0xFFB48A5A)
+    private val ARENA = Color(0xFFB9A57E)
+    private val BOYA = Color(0xFFE8792A)
+
+    /** Una tira de cinta de rotular con [texto] en relieve: plástico oscuro, letras blancas. */
+    private fun DrawScope.cintaRotular(r: Rect, texto: String, medidor: TextMeasurer, tam: Float, oscuro: Boolean) {
+        val u = density
+        drawRect(Color.Black.copy(alpha = 0.3f), r.topLeft + Offset(0.6f * u, 1 * u), r.size)
+        drawRect(t(CINTA, oscuro, false), r.topLeft, r.size)
+        drawRect(Color.White.copy(alpha = 0.08f), r.topLeft, Size(r.width, r.height * 0.3f))
+        textoEn(medidor, texto, Rect(r.left + 3 * u, r.top, r.right - 3 * u, r.bottom), letra, Color(0xFFF1F3F2), tam, peso = FontWeight.Bold, minimo = 6f)
+    }
+
+    /** El sello de latón estampado con la escafandra: el casco redondo, la mirilla y sus tres portillos. */
+    private fun DrawScope.selloEscafandra(c: Offset, r: Float, oscuro: Boolean, alfa: Float) {
+        fun k(x: Color) = t(x, oscuro, false).copy(alpha = alfa)
+        drawCircle(Color.Black.copy(alpha = 0.35f * alfa), r, c + Offset(r * 0.08f, r * 0.12f))
+        drawCircle(k(LATON), r, c)
+        drawCircle(k(LATON_OSC), r * 0.86f, c, style = Stroke(r * 0.08f))
+        for (i in 0 until 12) { val a = (2 * PI * i / 12).toFloat(); drawCircle(k(LATON_OSC), r * 0.05f, Offset(c.x + cos(a) * r * 0.72f, c.y + sin(a) * r * 0.72f)) }
+        drawCircle(k(LATON_LUZ), r * 0.42f, Offset(c.x, c.y - r * 0.05f))
+        drawRect(k(LATON_LUZ), Offset(c.x - r * 0.38f, c.y + r * 0.25f), Size(r * 0.76f, r * 0.18f))
+        drawCircle(k(LATON_OSC), r * 0.2f, Offset(c.x, c.y - r * 0.05f))
+        listOf(-1f, 1f).forEach { s -> drawCircle(k(LATON_OSC), r * 0.08f, Offset(c.x + s * r * 0.3f, c.y - r * 0.08f)) }
+        drawCircle(k(LATON_OSC), r * 0.08f, Offset(c.x, c.y - r * 0.36f))
+        drawArc(k(Color.White.copy(alpha = 0.4f)), 200f, 60f, false, Offset(c.x - r * 0.9f, c.y - r * 0.9f), Size(r * 1.8f, r * 1.8f), style = Stroke(r * 0.07f, cap = StrokeCap.Round))
+    }
+
+    /**
+     * La caja estanca de las cartas del batiscafo: acero esmaltado verde petróleo con su marco de latón y sus pernos, la tapa
+     * con la junta de goma, dos cierres de palanca a los lados y un ojo de buey en la tapa por donde se ve una medusa del
+     * fondo; en el frente, a quién va y las fechas en dos tiras de cinta de rotular de letras blancas en relieve. La cierra
+     * el sello de latón con la escafandra; las de al futuro van además lastradas: dos vueltas de cabo de cáñamo y el plomo
+     * de buceo colgando del nudo. Al abrirla, el sello se parte, los cierres saltan, la tapa se levanta mostrando su junta
+     * y sube la carta, la hoja de la bitácora. En modo oscuro, todo se hunde en el azul del fondo y el sello que ya se puede
+     * abrir brilla con luz de bioluminiscencia.
+     */
+    override fun DrawScope.sobre(e: EstadoCarta, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        val b = Rect(e.cuerpo.left + 3 * u, e.cuerpo.top + 1.5f * u, e.cuerpo.right - 3 * u, e.cuerpo.bottom - 3.5f * u)
+        val l = b.left; val r = b.right; val top = b.top; val bot = b.bottom
+        val W = b.width; val H = b.height; val cx = b.center.x
+        val rad = CornerRadius(5 * u)
+        val borde = top + H * 0.14f
+        val tapaH = H * 0.32f
+        val k = 1f - 2f * e.abrir.coerceIn(0f, 1f)
+        val junta = borde + tapaH * 0.56f
+        drawRoundRect(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.25f), Offset(l + 2 * u, borde + 3 * u), Size(W, bot - borde), rad)
+        // Por dentro: el hueco, con la junta de goma.
+        drawRoundRect(c(ESMALTE_OSC), Offset(l, borde - 3 * u), Size(W, H * 0.3f), rad)
+        drawRect(c(GOMA), Offset(l + 4 * u, borde - 2 * u), Size(W - 8 * u, 2.5f * u))
+        // La tapa levantada, vista por dentro.
+        if (k < 0f) {
+            val alto = tapaH * -k
+            val tr = Rect(l, borde - alto, r, borde)
+            drawRoundRect(c(ESMALTE_OSC), tr.topLeft, tr.size, CornerRadius(4 * u))
+            drawRoundRect(c(GOMA), tr.deflate(3 * u).topLeft, tr.deflate(3 * u).size, CornerRadius(3 * u), style = Stroke(2 * u))
+            drawRect(c(LATON_OSC), Offset(l, borde - 2 * u), Size(W, 2 * u))
+        }
+        // La hoja de la bitácora.
+        if (e.subir > 0f || e.abrir > 0.3f) {
+            val h = hojaCo(e, 0.8f, 0.86f, 0.06f, 3 * u)
+            papelCartaCo(h, e, 9 * u, 5.5f * u, 7 * u, oscuro)
+            drawRect(c(AGUA).copy(alpha = 0.7f), Offset(h.left + 4 * u, h.top + 3 * u), Size(h.width * 0.3f, 1.6f * u))
+            drawLine(c(ROJO).copy(alpha = 0.5f), Offset(h.left + 5 * u, h.top), Offset(h.left + 5 * u, h.bottom), 0.6f * u)
+        }
+        // El cuerpo de la caja.
+        val caja = Rect(l, borde, r, bot)
+        drawRoundRect(c(ESMALTE), caja.topLeft, caja.size, rad)
+        drawRoundRect(c(LATON), caja.topLeft, caja.size, rad, style = Stroke(2.2f * u))
+        drawRoundRect(c(ESMALTE_LUZ).copy(alpha = 0.5f), caja.deflate(3.5f * u).topLeft, caja.deflate(3.5f * u).size, CornerRadius(3 * u), style = Stroke(0.6f * u))
+        listOf(Offset(l + 6 * u, borde + 6 * u), Offset(r - 6 * u, borde + 6 * u), Offset(l + 6 * u, bot - 6 * u), Offset(r - 6 * u, bot - 6 * u)).forEach {
+            perno(it, 2 * u, c(LATON), c(LATON_OSC), c(LATON_LUZ))
+        }
+        // Las dos tiras de cinta de rotular.
+        val t1 = Rect(l + W * 0.08f, top + H * 0.6f, r - W * 0.08f, top + H * 0.76f)
+        val t2 = Rect(l + W * 0.16f, top + H * 0.79f, r - W * 0.16f, top + H * 0.9f)
+        if (e.linea1.isNotBlank()) cintaRotular(t1, e.linea1.uppercase(), medidor, 10.5f, oscuro)
+        if (e.linea2.isNotBlank()) cintaRotular(t2, e.linea2, medidor, 9f, oscuro)
+        if (e.linea1.isBlank() && e.linea2.isBlank()) {
+            // Sin renglones (al abrir o sellar): la placa de profundidad.
+            val pl = Rect(cx - W * 0.2f, top + H * 0.66f, cx + W * 0.2f, top + H * 0.84f)
+            drawRoundRect(c(LATON), pl.topLeft, pl.size, CornerRadius(2 * u))
+            textoEn(medidor, "ESTANCA · 300 m", pl.deflate(2 * u), letra, c(TINTA), 9f, peso = FontWeight.Bold, minimo = 4f)
+        }
+        // La tapa cerrada (o cerrándose), con su ojo de buey.
+        if (k >= 0f) {
+            val alto = tapaH * k
+            val tr = Rect(l - 1 * u, borde - alto * 0.44f, r + 1 * u, borde - alto * 0.44f + alto)
+            drawRoundRect(Color.Black.copy(alpha = 0.3f), tr.topLeft + Offset(0f, 2 * u), tr.size, CornerRadius(5 * u))
+            drawRoundRect(c(ESMALTE), tr.topLeft, tr.size, CornerRadius(5 * u))
+            if (k > 0.2f) scale(1f, k, Offset(cx, tr.top)) {
+                val tc = Rect(tr.left, tr.top, tr.right, tr.top + tapaH)
+                drawRoundRect(c(LATON), tc.topLeft, tc.size, CornerRadius(5 * u), style = Stroke(2.2f * u))
+                drawRect(c(GOMA), Offset(tc.left + 2 * u, tc.bottom - 3 * u), Size(tc.width - 4 * u, 2 * u))
+                val ob = Offset(r - W * 0.17f, tc.top + tapaH * 0.48f); val orr = tapaH * 0.34f
+                drawCircle(c(LATON_OSC), orr + 2.5f * u, ob)
+                drawCircle(c(LATON), orr + 1.5f * u, ob)
+                drawCircle(t(AGUA_HONDA, oscuro, false), orr, ob)
+                medusa(ob + Offset(0f, orr * 0.1f), orr * 1.1f, BIOLUZ.copy(alpha = 0.85f), true)
+                drawArc(Color.White.copy(alpha = 0.25f), 200f, 70f, false, Offset(ob.x - orr * 0.8f, ob.y - orr * 0.8f), Size(orr * 1.6f, orr * 1.6f), style = Stroke(1 * u))
+                for (i in 0 until 6) { val a = (2 * PI * i / 6).toFloat(); drawCircle(c(LATON_OSC), 0.9f * u, Offset(ob.x + cos(a) * (orr + 1.6f * u), ob.y + sin(a) * (orr + 1.6f * u))) }
+                textoEn(medidor, "Nº ${(e.semilla and 0x7fffffff) % 900 + 100}", Rect(l + W * 0.2f, tc.top + tapaH * 0.25f, l + W * 0.45f, tc.top + tapaH * 0.7f), letra, c(LATON_LUZ), 8f, peso = FontWeight.Bold, minimo = 4f)
+            }
+        }
+        // Los cierres de palanca, a los lados.
+        val salto = (e.romper * 1.2f).coerceIn(0f, 1f).coerceAtLeast(e.abrir)
+        listOf(l + W * 0.1f, r - W * 0.1f).forEach { px ->
+            val base = Offset(px, junta + 5 * u)
+            drawRoundRect(c(LATON_OSC), Offset(px - 4 * u, base.y - 2 * u), Size(8 * u, 8 * u), CornerRadius(1.5f * u))
+            rotate(-150f * salto * (if (px < cx) 1f else -1f), base) {
+                drawRoundRect(c(LATON), Offset(px - 2.2f * u, base.y - 13 * u), Size(4.4f * u, 14 * u), CornerRadius(2 * u))
+                drawRoundRect(c(LATON_LUZ), Offset(px - 1.2f * u, base.y - 12 * u), Size(1 * u, 11 * u), CornerRadius(0.5f * u))
+            }
+            drawCircle(c(LATON_LUZ), 1.4f * u, base)
+        }
+        // El cabo de lastre y el plomo.
+        val y0 = junta
+        if (e.cordon > 0f) {
+            listOf(-1.8f * u, 1.8f * u).forEachIndexed { i, dy ->
+                val p = Path().apply { moveTo(l - 2 * u, y0 + dy); lineTo(r + 2 * u, y0 + dy + 0.5f * u) }
+                val f = (e.cordon * 1.3f - i * 0.15f).coerceIn(0f, 1f)
+                trazoParcialCo(p, f, c(CABO), 2.2f * u, StrokeCap.Butt)
+                trazoParcialCo(p, f, c(mezcla(CABO, Color.Black, 0.3f)), 0.5f * u, StrokeCap.Butt)
+            }
+            val cae = ((e.cordon - 0.75f) / 0.25f).coerceIn(0f, 1f)
+            if (cae > 0f) {
+                val n0 = Offset(l + W * 0.28f, y0)
+                drawCircle(c(CABO), 3 * u, n0)
+                val pb = Offset(n0.x, n0.y + (6 + 10 * cae) * u)
+                drawLine(c(CABO), n0, pb, 1.4f * u)
+                drawRoundRect(c(PLOMO), Offset(pb.x - 5 * u, pb.y), Size(10 * u, 7 * u), CornerRadius(2 * u))
+                drawRect(Color.White.copy(alpha = 0.2f), Offset(pb.x - 4 * u, pb.y + 1 * u), Size(8 * u, 1 * u))
+            }
+        }
+        // El sello de latón con la escafandra, en la junta.
+        val selloR = H * 0.13f
+        val sc = Offset(cx, junta)
+        val subeTapa = if (k >= 0f) 0f else H * 0.5f
+        if (e.alfaSello > 0f) {
+            if (k >= 0f) brilloSelloCo(sc, selloR, BIOLUZ, e.brillo)
+            selloPartidoCo(sc, selloR, e.romper, e.escalaSello, Offset(-selloR * 0.3f * e.romper, -selloR * 0.4f * e.romper - subeTapa),
+                Offset(selloR * 0.25f * e.romper, selloR * 0.3f * e.romper), e.semilla, conArriba = k >= 0f) { selloEscafandra(sc, selloR, oscuro, e.alfaSello) }
+        }
+    }
+
+    override val cajaPrevia: Rect = Rect(0.17f, 0.235f, 0.83f, 0.39f)
+
+    override val altoBuzon: Dp = 210.dp
+
+    /** Una botella con su mensaje, tumbada en la red: lista (brilla), sellada (corcho con lacre y su hilo) o abierta (sin corcho). */
+    private fun DrawScope.botella(c0: Offset, largo: Float, giro: Float, tipo: Int, oscuro: Boolean) {
+        val u = density
+        val g = largo * 0.36f
+        rotate(giro, c0) {
+            val cuerpo = Rect(c0.x - largo / 2, c0.y - g / 2, c0.x + largo * 0.22f, c0.y + g / 2)
+            val cuello = Rect(cuerpo.right - 2 * u, c0.y - g * 0.2f, c0.x + largo * 0.45f, c0.y + g * 0.2f)
+            val vidrio = t(VIDRIO_BOTELLA, oscuro, false)
+            drawRoundRect(vidrio.copy(alpha = 0.55f), cuerpo.topLeft, cuerpo.size, CornerRadius(g * 0.35f))
+            drawPath(Path().apply { moveTo(cuerpo.right - 2 * u, cuerpo.top + g * 0.1f); quadraticTo(cuerpo.right + g * 0.3f, c0.y - g * 0.2f, cuello.right, cuello.top); lineTo(cuello.right, cuello.bottom); quadraticTo(cuerpo.right + g * 0.3f, c0.y + g * 0.2f, cuerpo.right - 2 * u, cuerpo.bottom - g * 0.1f); close() }, vidrio.copy(alpha = 0.55f))
+            // El mensaje enrollado dentro.
+            val papel = if (tipo == 0) mezcla(CREMA_LONA, BIOLUZ, 0.35f) else t(CREMA_LONA, oscuro, false)
+            val sale = if (tipo == 2) largo * 0.3f else 0f
+            drawRoundRect(papel, Offset(cuerpo.left + g * 0.25f + sale, c0.y - g * 0.22f), Size(largo * 0.55f, g * 0.44f), CornerRadius(g * 0.2f))
+            drawLine(t(TINTA, oscuro, false).copy(alpha = 0.3f), Offset(cuerpo.left + g * 0.4f + sale, c0.y), Offset(cuerpo.left + largo * 0.5f + sale, c0.y), 0.6f * u)
+            if (tipo == 1) drawLine(t(ROJO, oscuro, false), Offset(cuerpo.left + largo * 0.32f, c0.y - g * 0.22f), Offset(cuerpo.left + largo * 0.32f, c0.y + g * 0.22f), 1 * u)
+            // El brillo del vidrio.
+            drawLine(Color.White.copy(alpha = 0.45f), Offset(cuerpo.left + g * 0.3f, cuerpo.top + g * 0.18f), Offset(cuerpo.right - g * 0.2f, cuerpo.top + g * 0.18f), 1.2f * u, StrokeCap.Round)
+            drawRoundRect(vidrio, cuerpo.topLeft, cuerpo.size, CornerRadius(g * 0.35f), style = Stroke(0.8f * u))
+            if (tipo != 2) {
+                drawRect(t(CORCHO, oscuro, false), Offset(cuello.right - 1 * u, c0.y - g * 0.17f), Size(g * 0.35f, g * 0.34f))
+                if (tipo == 1) {
+                    drawRect(t(LATON, oscuro, false), Offset(cuello.right + g * 0.12f, c0.y - g * 0.21f), Size(g * 0.26f, g * 0.42f))
+                    drawLine(t(CABO, oscuro, false), Offset(cuello.right, c0.y), Offset(cuello.right - g * 0.4f, c0.y + g * 0.5f), 0.8f * u)
+                }
+            }
+        }
+    }
+
+    /**
+     * La red de pesca tendida en el fondo: un cabo con boyas de corcho cruza arriba y de él cuelga la red en rombos, con las
+     * cartas atrapadas como botellas con su mensaje (hasta diez): las que ya se pueden abrir brillan con la luz de la
+     * bioluminiscencia (el primer degradado), las selladas llevan el corcho lacrado y su hilo, las abiertas, el mensaje
+     * medio afuera. Las tres boyas grandes del cabo llevan pintada la cuenta de cada clase. Abajo, la arena con sus algas y
+     * un ancla vieja; arriba, los haces de luz que bajan de la superficie. En modo oscuro, el abismo: no llega la luz,
+     * la nieve marina cae y una medusa alumbra la red (el segundo degradado).
+     */
+    override fun DrawScope.buzon(e: EstadoBuzon, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        fun c(x: Color) = t(x, oscuro, false)
+        drawRect(if (oscuro) mezcla(AGUA_HONDA, Color.Black, 0.35f) else mezcla(AGUA, Color(0xFF2E6A8E), 0.55f))
+        if (!oscuro) for (j in 0 until 4) {
+            val x0 = w * (0.1f + 0.25f * j)
+            drawPath(Path().apply { moveTo(x0, 0f); lineTo(x0 + 26 * u, 0f); lineTo(x0 + 70 * u, h); lineTo(x0 + 30 * u, h); close() }, Color.White.copy(alpha = 0.06f))
+        } else {
+            mancha(Offset(w * 0.85f, h * 0.3f), w * 0.35f, BIOLUZ.copy(alpha = 0.18f))
+            medusa(Offset(w * 0.86f, h * 0.28f), 26 * u, BIOLUZ, true)
+            for (j in 0 until 30) drawCircle(Color.White.copy(alpha = 0.25f + 0.3f * azar(141, j)), (0.5f + 0.6f * azar(142, j)) * u, Offset(w * azar(143, j), h * azar(144, j)))
+        }
+        // La arena, las algas y el ancla.
+        val arena = h * 0.86f
+        drawPath(Path().apply { moveTo(0f, arena); quadraticTo(w * 0.4f, arena - 8 * u, w * 0.7f, arena - 2 * u); quadraticTo(w * 0.9f, arena + 2 * u, w, arena - 6 * u); lineTo(w, h); lineTo(0f, h); close() }, c(ARENA))
+        for (j in 0 until 20) drawCircle(c(mezcla(ARENA, Color.Black, 0.25f)), (0.6f + azar(145, j)) * u, Offset(w * azar(146, j), arena + (h - arena) * azar(147, j)))
+        listOf(0.04f, 0.1f, 0.94f).forEachIndexed { i, f ->
+            val bx = w * f
+            val p = Path().apply { moveTo(bx, arena); cubicTo(bx - 8 * u, arena - 20 * u, bx + 8 * u, arena - 36 * u, bx - 2 * u, arena - (52 - i * 10) * u) }
+            drawPath(p, c(Color(0xFF3E7A4E)), style = Stroke(3 * u, cap = StrokeCap.Round))
+        }
+        val an = Offset(w * 0.06f, arena - 6 * u)
+        drawLine(c(PLOMO), an, an + Offset(0f, -22 * u), 2.2f * u)
+        drawCircle(c(PLOMO), 3 * u, an + Offset(0f, -25 * u), style = Stroke(1.4f * u))
+        drawArc(c(PLOMO), 20f, 140f, false, Offset(an.x - 10 * u, an.y - 14 * u), Size(20 * u, 16 * u), style = Stroke(2.2f * u))
+        // El cabo de arriba con sus boyas de corcho.
+        val cy = 14 * u
+        drawPath(Path().apply { moveTo(0f, cy - 4 * u); quadraticTo(w / 2, cy + 8 * u, w, cy - 4 * u) }, c(CABO), style = Stroke(2 * u))
+        // La red: rombos que cuelgan del cabo.
+        val red = Rect(w * 0.14f, cy, w * 0.86f, arena - 4 * u)
+        val malla = 12 * u
+        clipPath(Path().apply { moveTo(red.left, red.top); lineTo(red.right, red.top); lineTo(red.right - 14 * u, red.bottom); quadraticTo(red.center.x, red.bottom + 10 * u, red.left + 14 * u, red.bottom); close() }) {
+            var x = red.left - red.height
+            while (x < red.right) {
+                drawLine(c(CABO).copy(alpha = 0.6f), Offset(x, red.top), Offset(x + red.height, red.bottom), 0.7f * u)
+                drawLine(c(CABO).copy(alpha = 0.6f), Offset(x + red.height, red.top), Offset(x, red.bottom), 0.7f * u)
+                x += malla
+            }
+        }
+        // Las botellas atrapadas.
+        val cartas = cartasBuzonCo(e, 10)
+        val largo = minOf(red.width / 5.2f, 64 * u)
+        cartas.forEachIndexed { i, tipo ->
+            val fila = i / 5; val col = i % 5
+            val p = Offset(red.left + red.width * (0.1f + 0.2f * col) + (azar(148, i) - 0.5f) * 8 * u, red.top + red.height * (0.42f + 0.32f * fila) + (azar(149, i) - 0.5f) * 8 * u)
+            if (tipo == 0) mancha(p, largo * 0.65f, BIOLUZ.copy(alpha = 0.5f))
+            botella(p, largo, (azar(150, i) - 0.5f) * 50f, tipo, oscuro)
+        }
+        // Las boyas grandes con la cuenta.
+        val cuentas = listOf("POR ABRIR" to e.listas, "SELLADAS" to e.selladas, "ABIERTAS" to e.abiertas)
+        cuentas.forEachIndexed { i, (txt, n) ->
+            val bx = w * (0.27f + 0.23f * i)
+            val by = cy + 4 * u + (1f - ((bx - w / 2) / (w / 2)).let { it * it }) * 6 * u
+            val br = Rect(bx - 30 * u, by + 2 * u, bx + 30 * u, by + 34 * u)
+            drawLine(c(CABO), Offset(bx, by - 2 * u), Offset(bx, br.top), 1.4f * u)
+            drawRoundRect(Color.Black.copy(alpha = 0.3f), br.topLeft + Offset(1 * u, 1.5f * u), br.size, CornerRadius(br.height / 2))
+            drawRoundRect(c(if (i == 0) BOYA else CREMA_LONA), br.topLeft, br.size, CornerRadius(br.height / 2))
+            drawRect(c(GOMA).copy(alpha = 0.85f), Offset(br.left + 4 * u, br.top + br.height * 0.18f), Size(br.width - 8 * u, br.height * 0.64f))
+            drawLine(Color.White.copy(alpha = 0.3f), Offset(br.left + 8 * u, br.top + 2.5f * u), Offset(br.right - 8 * u, br.top + 2.5f * u), 1.2f * u, StrokeCap.Round)
+            textoEn(medidor, txt, Rect(br.left + 6 * u, br.top + br.height * 0.18f, br.right - 6 * u, br.top + br.height * 0.45f), letra, Color(0xFFF1F3F2), 7f, peso = FontWeight.Bold, espaciado = 0.5f, minimo = 4.5f)
+            textoEn(medidor, "$n", Rect(br.left + 6 * u, br.top + br.height * 0.42f, br.right - 6 * u, br.top + br.height * 0.82f), letra, if (i == 0 && n > 0) BIOLUZ else Color(0xFFF1F3F2), 13f, peso = FontWeight.Bold, minimo = 6f)
+        }
+    }
 }
 
 /**
@@ -7293,6 +9462,255 @@ object EstanteUrss : DisenoBiblioteca {
         drawRect(c(TIZA), Offset(w - 30 * u, h - 6 * u), Size(10 * u, 2.5f * u))
         textoEn(medidor, texto, Rect(pz.left + 14 * u, pz.top + 2 * u, pz.right - 14 * u, pz.bottom - 2 * u), LetraExtra.trazo, c(TIZA).copy(alpha = 0.92f), 17f, peso = FontWeight.Bold, espaciado = 0.5f, minimo = 8f)
     }
+
+    // ---------------------------------------------------------------- las cartas
+
+    /** El papel de sobre gris crema, el sello de sello de lacre (el «surguch»), el bramante y la pintura de los buzones. */
+    private val SOBRE = Color(0xFFE3D9C3)
+    private val SOBRE_SOMBRA = Color(0xFFA89C82)
+    private val SOBRE_LUZ = Color(0xFFF0E8D6)
+    private val SURGUCH = Color(0xFF9C1A16)
+    private val BRAMANTE = Color(0xFFBFA77A)
+    private val AZUL_IMPRESO = Color(0xFF2E4A8A)
+    private val PINTURA = Color(0xFF5E7A68)
+    private val PINTURA_OSC = Color(0xFF3E5446)
+    private val CAL = Color(0xFFE6E1D2)
+
+    /** El sello de lacre: una torta de cera roja de borde chorreado, con la estrella de cinco puntas y su aro de puntos. */
+    private fun DrawScope.surguch(c: Offset, r: Float, oscuro: Boolean, alfa: Float) {
+        fun k(x: Color) = t(x, oscuro, false).copy(alpha = alfa)
+        val gota = Path().apply {
+            for (i in 0 until 14) {
+                val a = (2 * PI * i / 14).toFloat()
+                val rr = r * (if (i % 4 == 1) 1.12f else 0.94f + 0.06f * azar(i, 91))
+                val p = Offset(c.x + cos(a) * rr, c.y + sin(a) * rr)
+                if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+            }
+            close()
+        }
+        translate(r * 0.07f, r * 0.1f) { drawPath(gota, Color.Black.copy(alpha = 0.3f * alfa)) }
+        drawPath(gota, k(SURGUCH))
+        drawCircle(k(mezcla(SURGUCH, Color.Black, 0.3f)), r * 0.72f, c, style = Stroke(r * 0.07f))
+        for (i in 0 until 16) { val a = (2 * PI * i / 16).toFloat(); drawCircle(k(mezcla(SURGUCH, Color.Black, 0.35f)), r * 0.045f, Offset(c.x + cos(a) * r * 0.6f, c.y + sin(a) * r * 0.6f)) }
+        drawPath(estrella(c, r * 0.44f, 5, 0.42f), k(mezcla(SURGUCH, ORO, 0.35f)))
+        drawArc(k(Color.White.copy(alpha = 0.3f)), 200f, 60f, false, Offset(c.x - r * 0.8f, c.y - r * 0.8f), Size(r * 1.6f, r * 1.6f), style = Stroke(r * 0.08f, cap = StrokeCap.Round))
+    }
+
+    /** La marca postal: dentada, con el cohete y la estrella sobre el cielo y el valor. */
+    private fun DrawScope.marca(r: Rect, fondo: Color, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        drawRect(c(SOBRE_LUZ), r.topLeft, r.size)
+        val d = 0.7f * u
+        var x = r.left + d * 1.5f
+        while (x < r.right - d) { drawCircle(fondo, d, Offset(x, r.top)); drawCircle(fondo, d, Offset(x, r.bottom)); x += d * 3f }
+        var y = r.top + d * 1.5f
+        while (y < r.bottom - d) { drawCircle(fondo, d, Offset(r.left, y)); drawCircle(fondo, d, Offset(r.right, y)); y += d * 3f }
+        val f = r.deflate(2 * u)
+        drawRect(c(AZUL_IMPRESO), f.topLeft, f.size)
+        val cohete = Offset(f.center.x, f.center.y)
+        rotate(35f, cohete) {
+            drawRoundRect(c(CREMA), Offset(cohete.x - f.width * 0.08f, cohete.y - f.height * 0.3f), Size(f.width * 0.16f, f.height * 0.5f), CornerRadius(f.width * 0.08f))
+            drawPath(Path().apply { moveTo(cohete.x - f.width * 0.08f, cohete.y + f.height * 0.12f); lineTo(cohete.x - f.width * 0.18f, cohete.y + f.height * 0.25f); lineTo(cohete.x - f.width * 0.08f, cohete.y + f.height * 0.2f); close() }, c(ROJO))
+            drawPath(Path().apply { moveTo(cohete.x + f.width * 0.08f, cohete.y + f.height * 0.12f); lineTo(cohete.x + f.width * 0.18f, cohete.y + f.height * 0.25f); lineTo(cohete.x + f.width * 0.08f, cohete.y + f.height * 0.2f); close() }, c(ROJO))
+            drawLine(c(ORO), Offset(cohete.x, cohete.y + f.height * 0.22f), Offset(cohete.x, cohete.y + f.height * 0.38f), 1.2f * u)
+        }
+        drawPath(estrella(Offset(f.left + f.width * 0.25f, f.top + f.height * 0.22f), f.width * 0.1f, 5, 0.42f), c(ORO))
+        textoEn(medidor, "4 к", Rect(f.left, f.bottom - f.height * 0.26f, f.right - 1 * u, f.bottom), letra, c(CREMA), 6f, minimo = 3f)
+    }
+
+    /**
+     * El sobre de correo soviético, de papel gris crema, visto del lado de la solapa: la solapa en pico con «ПИСЬМО» impreso
+     * en azul, la marca dentada del cohete con el matasellos redondo, y abajo el formulario impreso con sus renglones,
+     * «Кому» (a quién va) y «Когда» (cuándo: las fechas), escritos en letra de molde; en la esquina, la plantilla de cifras del índice
+     * postal. Lo cierra la torta roja de lacre con la estrella; las de al futuro, además, dos vueltas de bramante cuyos
+     * cabos quedan presos bajo el lacre. Al abrirlo, el lacre se parte, la solapa se levanta y sube la carta. En modo
+     * oscuro, el papel se hunde en la penumbra de la sala de lectura; la tinta sigue negra sobre crema.
+     */
+    override fun DrawScope.sobre(e: EstadoCarta, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        val b = Rect(e.cuerpo.left + 2 * u, e.cuerpo.top + 1.5f * u, e.cuerpo.right - 2 * u, e.cuerpo.bottom - 3.5f * u)
+        val l = b.left; val r = b.right; val top = b.top; val bot = b.bottom
+        val W = b.width; val H = b.height; val cx = b.center.x
+        drawRect(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.2f), Offset(l + 1.5f * u, top + 2.5f * u), b.size)
+        // Por dentro: el papel gris del forro, con su trama.
+        drawRect(c(SOBRE_SOMBRA), b.topLeft, b.size)
+        clipRect(l, top, r, top + H * 0.45f) { var x = l; while (x < r) { drawLine(c(mezcla(SOBRE_SOMBRA, TINTA, 0.25f)).copy(alpha = 0.4f), Offset(x, top), Offset(x, top + H * 0.45f), 0.6f * u); x += 2.2f * u } }
+        val k = 1f - 2f * e.abrir.coerceIn(0f, 1f)
+        val hondo = H * 0.42f
+        val solapa = Path().apply { moveTo(l, top); lineTo(r, top); lineTo(cx, top + hondo); close() }
+        if (k < 0f) scale(1f, k, Offset(cx, top)) {
+            drawPath(solapa, c(mezcla(SOBRE, SOBRE_SOMBRA, 0.5f)))
+            drawPath(solapa, c(SOBRE_SOMBRA), style = Stroke(0.8f * u))
+        }
+        // La carta.
+        if (e.subir > 0f || e.abrir > 0.3f) {
+            val h = hojaCo(e, 0.82f, 0.86f, 0.06f, 3 * u)
+            papelCartaCo(h, e, 8 * u, 5.5f * u, 7 * u, oscuro)
+            drawLine(c(ROJO).copy(alpha = 0.6f), Offset(h.left + 4 * u, h.top), Offset(h.left + 4 * u, h.bottom), 0.6f * u)
+        }
+        // El frente con su formulario impreso.
+        val v = top + H * 0.28f
+        val frente = Path().apply { moveTo(l, top + H * 0.1f); lineTo(cx, v); lineTo(r, top + H * 0.1f); lineTo(r, bot); lineTo(l, bot); close() }
+        drawPath(frente, c(SOBRE))
+        clipPath(frente) {
+            for (j in 0 until 16) { val y = top + H * azar(e.semilla, j + 200); drawLine(c(SOBRE_SOMBRA).copy(alpha = 0.15f), Offset(l, y), Offset(r, y), 0.6f * u) }
+            drawLine(c(SOBRE_SOMBRA), Offset(l, bot), Offset(cx - W * 0.1f, v + H * 0.06f), 0.8f * u)
+            drawLine(c(SOBRE_SOMBRA), Offset(r, bot), Offset(cx + W * 0.1f, v + H * 0.06f), 0.8f * u)
+            // La plantilla del índice postal: seis cifras de trazos.
+            val ix = Rect(r - W * 0.36f, top + H * 0.36f, r - W * 0.05f, top + H * 0.52f)
+            val cw = ix.width / 6
+            val cifras = "%06d".format((e.semilla and 0x7fffffff) % 1000000)
+            cifras.forEachIndexed { i, ch ->
+                val d = Rect(ix.left + i * cw + cw * 0.15f, ix.top, ix.left + (i + 1) * cw - cw * 0.15f, ix.bottom)
+                drawRect(c(AZUL_IMPRESO).copy(alpha = 0.25f), d.topLeft, d.size, style = Stroke(0.5f * u))
+                textoEn(medidor, ch.toString(), d, letra, c(TINTA).copy(alpha = 0.75f), 8f, minimo = 4f)
+            }
+        }
+        drawPath(Path().apply { moveTo(l, top + H * 0.1f); lineTo(cx, v); lineTo(r, top + H * 0.1f) }, c(SOBRE_SOMBRA), style = Stroke(1 * u))
+        // Los renglones de «Кому» y «Когда».
+        val y1 = top + H * 0.76f; val y2 = top + H * 0.9f
+        listOf("Кому" to y1, "Когда" to y2).forEach { (et, y) ->
+            textoEn(medidor, et, Rect(l + 4 * u, y - 9 * u, l + W * 0.15f, y), letra, c(AZUL_IMPRESO), 7f, minimo = 4f)
+            drawLine(c(AZUL_IMPRESO).copy(alpha = 0.6f), Offset(l + W * 0.16f, y), Offset(r - 5 * u, y), 0.6f * u)
+        }
+        textoEn(medidor, e.linea1, Rect(l + W * 0.16f, y1 - H * 0.15f, r - 5 * u, y1 - 0.5f * u), letra, TINTA, 11.5f, minimo = 7f)
+        textoEn(medidor, e.linea2, Rect(l + W * 0.16f, y2 - H * 0.12f, r - 5 * u, y2 - 0.5f * u), letra, mezcla(TINTA, ROJO, 0.3f), 9f, minimo = 6f)
+        // La solapa en pico, con «ПИСЬМО», la marca y el matasellos.
+        if (k >= 0f) scale(1f, k.coerceAtLeast(0.001f), Offset(cx, top)) {
+            translate(0f, 1.5f * u) { drawPath(solapa, Color.Black.copy(alpha = 0.14f)) }
+            drawPath(solapa, c(SOBRE_LUZ))
+            clipPath(solapa) {
+                textoEn(medidor, "ПИСЬМО", Rect(cx - W * 0.2f, top + H * 0.05f, cx + W * 0.2f, top + H * 0.17f), letra, c(AZUL_IMPRESO), 9f, espaciado = 1.5f, minimo = 4f)
+                drawLine(c(ROJO), Offset(cx - W * 0.16f, top + H * 0.19f), Offset(cx + W * 0.16f, top + H * 0.19f), 1.2f * u)
+            }
+            drawPath(solapa, c(SOBRE_SOMBRA), style = Stroke(0.8f * u))
+        }
+        if (k > 0.6f) scale(1f, k, Offset(cx, top)) {
+            val mh = H * 0.24f
+            val mr = Rect(r - W * 0.06f - mh * 0.8f, top + H * 0.03f, r - W * 0.06f, top + H * 0.03f + mh)
+            rotate(4f, mr.center) { marca(mr, c(SOBRE_LUZ), medidor, oscuro) }
+            drawCircle(c(TINTA).copy(alpha = 0.45f), mh * 0.4f, Offset(mr.left, mr.center.y + mh * 0.1f), style = Stroke(0.7f * u))
+            drawCircle(c(TINTA).copy(alpha = 0.35f), mh * 0.3f, Offset(mr.left, mr.center.y + mh * 0.1f), style = Stroke(0.5f * u))
+            for (j in 0 until 3) drawLine(c(TINTA).copy(alpha = 0.35f), Offset(mr.left - mh * 1.4f, mr.center.y + (j - 1) * 3 * u + mh * 0.1f), Offset(mr.left - mh * 0.45f, mr.center.y + (j - 1) * 3 * u + mh * 0.1f), 0.6f * u)
+        }
+        // El bramante, cuyos cabos quedan bajo el lacre.
+        val y0 = top + hondo
+        if (e.cordon > 0f) {
+            listOf(-1f, 1f).forEach { s ->
+                listOf(-1.4f * u, 1.4f * u).forEach { dy ->
+                    val p = Path().apply { moveTo(if (s < 0) l - 2 * u else r + 2 * u, y0 + dy + s * 1.5f * u); lineTo(cx, y0 + dy * 0.4f) }
+                    trazoParcialCo(p, e.cordon, c(BRAMANTE), 1.3f * u)
+                }
+            }
+        }
+        // El lacre.
+        val selloR = H * 0.13f
+        val selloC = Offset(cx, top + hondo * k)
+        if (k >= 0f && e.alfaSello > 0f) {
+            brilloSelloCo(selloC, selloR, c(LUZ), e.brillo)
+            selloPartidoCo(Offset(cx, y0), selloR, e.romper, e.escalaSello, Offset(-selloR * 0.3f * e.romper, selloC.y - y0 - selloR * 0.3f * e.romper),
+                Offset(selloR * 0.25f * e.romper, selloR * 0.3f * e.romper), e.semilla) { surguch(Offset(cx, y0), selloR, oscuro, e.alfaSello) }
+        } else if (e.alfaSello > 0f && e.romper > 0f) {
+            selloPartidoCo(Offset(cx, y0), selloR, e.romper, 1f, Offset.Zero, Offset(selloR * 0.25f, selloR * 0.3f), e.semilla, conArriba = false) { surguch(Offset(cx, y0), selloR, oscuro, e.alfaSello) }
+        }
+    }
+
+    override val cajaPrevia: Rect = Rect(0.16f, 0.24f, 0.84f, 0.39f)
+
+    override val altoBuzon: Dp = 206.dp
+
+    /**
+     * Los buzones de la escalera del bloque de viviendas: un banco de diez cajas de chapa pintada de verde, en dos filas,
+     * cada una con su número de piso en una tarjeta, su ranura, su cerradura y las tres filas de agujeros redondos por donde
+     * se ve si hay carta: las que ya se pueden abrir se ven encendidas por dentro (el primer degradado), las selladas dejan
+     * ver el bramante y el lacre rojo, y de las abiertas asoma la carta por la ranura. Encima, la tira de esmalte rojo
+     * «ПИСЬМА»; debajo, tres plaquitas de esmalte con la cuenta de cada clase. La pared, de cal arriba y pintura verde abajo,
+     * con su filete. En modo oscuro, la escalera de noche bajo la bombilla desnuda (el segundo degradado).
+     */
+    override fun DrawScope.buzon(e: EstadoBuzon, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        fun c(x: Color) = t(x, oscuro, false)
+        fun m(x: Color) = if (oscuro) mezcla(t(x, true, false), Color(0xFF080808), 0.4f) else t(x, false, false)
+        // La pared: cal arriba, pintura abajo, con su filete.
+        val zocalo = h * 0.55f
+        drawRect(m(CAL), Offset.Zero, Size(w, zocalo))
+        drawRect(m(PINTURA_OSC), Offset(0f, zocalo), Size(w, h - zocalo))
+        drawRect(m(ROJO_OSC), Offset(0f, zocalo - 1.5f * u), Size(w, 3 * u))
+        if (oscuro) {
+            mancha(Offset(w * 0.5f, 0f), w * 0.6f, LUZ.copy(alpha = 0.22f))
+            drawLine(c(TINTA), Offset(w * 0.5f, 0f), Offset(w * 0.5f, 5 * u), 1 * u)
+            drawCircle(LUZ, 3 * u, Offset(w * 0.5f, 8 * u))
+        }
+        // La tira de esmalte «ПИСЬМА».
+        val tira = Rect(w * 0.34f, 6 * u, w * 0.66f, 22 * u)
+        drawRoundRect(Color.Black.copy(alpha = 0.25f), tira.topLeft + Offset(1 * u, 1.5f * u), tira.size, CornerRadius(3 * u))
+        drawRoundRect(c(ROJO), tira.topLeft, tira.size, CornerRadius(3 * u))
+        drawRoundRect(c(CREMA), tira.deflate(1.5f * u).topLeft, tira.deflate(1.5f * u).size, CornerRadius(2 * u), style = Stroke(0.7f * u))
+        textoEn(medidor, "ПИСЬМА", tira.deflate(2 * u), letra, c(CREMA), 11f, espaciado = 2f, minimo = 6f)
+        // El banco de buzones.
+        val banco = Rect(w * 0.06f, 28 * u, w * 0.94f, h - 40 * u)
+        drawRect(Color.Black.copy(alpha = 0.3f), banco.topLeft + Offset(2 * u, 3 * u), banco.size)
+        drawRect(c(PINTURA_OSC), banco.topLeft, banco.size)
+        val cols = 5; val gap = 2.5f * u
+        val bw = (banco.width - gap * (cols + 1)) / cols
+        val bh = (banco.height - gap * 3) / 2
+        val cartas = cartasBuzonCo(e, 10)
+        for (f in 0 until 2) for (k in 0 until cols) {
+            val i = f * cols + k
+            val tipo = cartas.getOrNull(i)
+            val caja = Rect(banco.left + gap + k * (bw + gap), banco.top + gap + f * (bh + gap), banco.left + gap + k * (bw + gap) + bw, banco.top + gap + f * (bh + gap) + bh)
+            // La carta abierta asomando por la ranura.
+            val ranura = Rect(caja.left + bw * 0.15f, caja.top + bh * 0.1f, caja.right - bw * 0.15f, caja.top + bh * 0.1f + 3 * u)
+            if (tipo == 2) {
+                drawRect(c(SOBRE), Offset(ranura.left + 3 * u, ranura.top - 11 * u), Size(ranura.width - 6 * u, 13 * u))
+                drawLine(c(AZUL_IMPRESO).copy(alpha = 0.5f), Offset(ranura.left + 6 * u, ranura.top - 7 * u), Offset(ranura.right - 8 * u, ranura.top - 7 * u), 0.6f * u)
+            }
+            drawRect(c(PINTURA), caja.topLeft, caja.size)
+            bisel(caja, c(mezcla(PINTURA, Color.White, 0.25f)).copy(alpha = 0.7f), c(PINTURA_OSC), 1 * u)
+            drawRect(c(TINTA), ranura.topLeft, ranura.size)
+            if (tipo == 2) drawRect(c(SOBRE), Offset(ranura.left + 3 * u, ranura.top), Size(ranura.width - 6 * u, ranura.height * 0.6f))
+            // La tarjeta con el número.
+            val tj = Rect(caja.left + bw * 0.18f, ranura.bottom + 3 * u, caja.left + bw * 0.62f, ranura.bottom + 12 * u)
+            drawRect(c(CREMA), tj.topLeft, tj.size)
+            drawRect(c(TINTA).copy(alpha = 0.4f), tj.topLeft, tj.size, style = Stroke(0.5f * u))
+            textoEn(medidor, "${i + 1}", tj, letra, c(TINTA), 7.5f, minimo = 4f)
+            // La cerradura.
+            val ce = Offset(caja.right - bw * 0.18f, tj.center.y)
+            drawCircle(c(ALUMINIO_URSS), 2.6f * u, ce)
+            drawLine(c(TINTA), ce - Offset(0f, 1.2f * u), ce + Offset(0f, 1.2f * u), 0.8f * u)
+            if (tipo == 0) mancha(Offset(caja.center.x, caja.bottom - bh * 0.3f), bw * 0.55f, c(LUZ).copy(alpha = 0.4f))
+            // Los agujeros: tres filas, por donde se ve lo que hay dentro.
+            val ah = Rect(caja.left + bw * 0.14f, tj.bottom + 4 * u, caja.right - bw * 0.14f, caja.bottom - 4 * u)
+            val nx = 4; val ny = 3
+            for (a in 0 until ny) for (b in 0 until nx) {
+                val p = Offset(ah.left + ah.width * (b + 0.5f) / nx, ah.top + ah.height * (a + 0.5f) / ny)
+                val rr = minOf(ah.width / nx, ah.height / ny) * 0.3f
+                val dentro = when (tipo) {
+                    null -> c(TINTA)
+                    0 -> mezcla(c(SOBRE), LUZ, 0.5f)
+                    1 -> if (a == 1 && b == 1) c(SURGUCH) else if (b == 2) c(BRAMANTE) else c(SOBRE)
+                    else -> if (a == 0) c(TINTA) else c(SOBRE)
+                }
+                drawCircle(dentro, rr, p)
+                drawArc(Color.Black.copy(alpha = 0.4f), 180f, 180f, false, Offset(p.x - rr, p.y - rr), Size(rr * 2, rr * 2), style = Stroke(0.6f * u))
+            }
+        }
+        // Las tres plaquitas de esmalte con la cuenta.
+        val cuentas = listOf("POR ABRIR" to e.listas, "SELLADAS" to e.selladas, "ABIERTAS" to e.abiertas)
+        val pw = minOf(w * 0.27f, 104 * u); val gp = (w - pw * 3) / 4
+        cuentas.forEachIndexed { i, (txt, n) ->
+            val pl = Rect(gp + i * (pw + gp), h - 33 * u, gp + i * (pw + gp) + pw, h - 9 * u)
+            drawRoundRect(Color.Black.copy(alpha = 0.3f), pl.topLeft + Offset(1 * u, 1.5f * u), pl.size, CornerRadius(3 * u))
+            drawRoundRect(c(CREMA), pl.topLeft, pl.size, CornerRadius(3 * u))
+            drawRoundRect(c(if (i == 0) ROJO else TINTA), pl.deflate(1.5f * u).topLeft, pl.deflate(1.5f * u).size, CornerRadius(2 * u), style = Stroke(0.8f * u))
+            listOf(pl.left + 4 * u, pl.right - 4 * u).forEach { x -> drawCircle(c(ALUMINIO_URSS), 1.2f * u, Offset(x, pl.center.y)) }
+            textoEn(medidor, txt, Rect(pl.left + 8 * u, pl.top + 2 * u, pl.left + pl.width * 0.66f, pl.bottom - 2 * u), letra, c(TINTA), 8f, minimo = 4.5f)
+            textoEn(medidor, "$n", Rect(pl.left + pl.width * 0.64f, pl.top + 1 * u, pl.right - 7 * u, pl.bottom - 1 * u), letra, c(if (i == 0 && n > 0) ROJO else TINTA), 14f, minimo = 6f)
+        }
+    }
 }
 
 /**
@@ -7436,4 +9854,87 @@ private fun DrawScope.cantoLibreta(r: Rect, grosor: Float, papel: Color, raya: C
     while (y < r.bottom + grosor - 0.8f * u) { drawLine(raya, Offset(r.left + 3 * u, y), Offset(r.right + lado * (y - r.bottom) / grosor, y), 0.5f * u); y += 1.5f * u }
     var x = r.right + 1.2f * u
     while (x < r.right + lado - 0.5f * u) { drawLine(raya, Offset(x, r.top + lado + 2 * u), Offset(x, r.bottom + (x - r.right) / lado * grosor), 0.5f * u); x += 1.5f * u }
+}
+
+// =====================================================================
+//  Ayudantes de las cartas de la Edad Contemporánea
+// =====================================================================
+
+/**
+ * Qué cartas se ven en un buzón, hasta [tope]: 0 las listas para abrir, 1 las selladas y 2 las abiertas, en ese orden. Si hay
+ * más que [tope], se reparten en proporción, pero cada clase que haya conserva al menos una.
+ */
+private fun cartasBuzonCo(e: EstadoBuzon, tope: Int): List<Int> {
+    val n = intArrayOf(e.listas.coerceAtLeast(0), e.selladas.coerceAtLeast(0), e.abiertas.coerceAtLeast(0))
+    val total = n.sum()
+    if (total <= tope) return (0..2).flatMap { k -> List(n[k]) { k } }
+    val v = IntArray(3) { k -> if (n[k] > 0) maxOf(1, n[k] * tope / total) else 0 }
+    while (v.sum() > tope) { val k = (0..2).filter { v[it] > 1 }.maxByOrNull { v[it] } ?: break; v[k]-- }
+    while (v.sum() < tope) { val k = (0..2).filter { v[it] < n[it] }.maxByOrNull { n[it] - v[it] } ?: break; v[k]++ }
+    return (0..2).flatMap { k -> List(v[k]) { k } }
+}
+
+/**
+ * Dónde va la hoja de la carta: centrada, de [ancho] y [alto] (fracciones del cuerpo). Guardada, su borde de arriba queda a
+ * [dentro] del cuerpo (fracción de su alto, desde arriba); con [EstadoCarta.subir] en 1 sube hasta [margen] px del borde de
+ * arriba del lienzo (en la rejilla, con subir 0.5, queda a medio camino).
+ */
+private fun hojaCo(e: EstadoCarta, ancho: Float, alto: Float, dentro: Float, margen: Float): Rect {
+    val c = e.cuerpo
+    val w = c.width * ancho
+    val arriba0 = c.top + c.height * dentro
+    val arriba = arriba0 - e.subir.coerceIn(0f, 1f) * (arriba0 - margen).coerceAtLeast(0f)
+    return Rect(c.center.x - w / 2, arriba, c.center.x + w / 2, arriba + c.height * alto)
+}
+
+/**
+ * La hoja de la carta en [r]: el papel [EstadoCarta.hoja] (en modo oscuro, un poco en penumbra) con su sombra y sus renglones
+ * [EstadoCarta.renglones], desde [desde] px bajo el borde de arriba, cada [paso] px, con [margen] px a los lados.
+ */
+private fun DrawScope.papelCartaCo(r: Rect, e: EstadoCarta, desde: Float, paso: Float, margen: Float, oscuro: Boolean, radio: Float = 0f) {
+    val u = density
+    val papel = if (oscuro) mezcla(e.hoja, Color.Black, 0.12f) else e.hoja
+    drawRoundRect(Color.Black.copy(alpha = 0.18f), r.topLeft + Offset(1.2f * u, 1.6f * u), r.size, CornerRadius(radio))
+    drawRoundRect(papel, r.topLeft, r.size, CornerRadius(radio))
+    var y = r.top + desde; var i = 0
+    while (y < r.bottom - paso * 0.5f && i < 24) {
+        drawLine(e.renglones, Offset(r.left + margen, y), Offset(r.right - margen - (if (i % 4 == 3) r.width * 0.25f else 0f), y), 0.8f * u)
+        y += paso; i++
+    }
+}
+
+/**
+ * Un sello que se parte: con [romper] en 0 se dibuja entero (a [escala]); si no, una grieta en zigzag lo corta en una mitad de
+ * arriba (corrida [arriba], que se va con la solapa o la tapa, y que no se dibuja si [conArriba] es falso) y otra de abajo
+ * (corrida [abajo], que se queda), cada una un poco girada. [pinta] dibuja el sello entero, centrado en [c], de radio [r].
+ */
+private fun DrawScope.selloPartidoCo(c: Offset, r: Float, romper: Float, escala: Float, arriba: Offset, abajo: Offset, semilla: Int,
+                                            conArriba: Boolean = true, pinta: DrawScope.() -> Unit) {
+    if (romper <= 0f) { scale(escala, escala, c) { pinta() }; return }
+    val zig = (0..7).map { k -> Offset(c.x - r * 1.8f + r * 3.6f * k / 7f, c.y + r * (if (k % 2 == 0) 0.2f else -0.16f) * (0.6f + 0.8f * azar(semilla, k))) }
+    fun mitad(y: Float) = Path().apply { zig.forEachIndexed { k, p -> if (k == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y) }; lineTo(c.x + r * 1.8f, y); lineTo(c.x - r * 1.8f, y); close() }
+    val sup = mitad(c.y - r * 2f); val inf = mitad(c.y + r * 2f)
+    if (conArriba) translate(arriba.x, arriba.y) { rotate(-9f * romper, c) { clipPath(sup) { pinta() } } }
+    translate(abajo.x, abajo.y) { rotate(7f * romper, c) { clipPath(inf) { pinta() } } }
+}
+
+/** El brillo del sello de la carta que ya se puede abrir: un halo (un degradado) y cuatro destellos finos. */
+private fun DrawScope.brilloSelloCo(c: Offset, r: Float, color: Color, brillo: Float) {
+    if (brillo <= 0f) return
+    val u = density
+    mancha(c, r * 2.6f, color.copy(alpha = 0.55f * brillo))
+    for (k in 0 until 4) {
+        val a = (PI / 4 + k * PI / 2).toFloat()
+        val d0 = r * 1.15f; val d1 = r * (1.6f + 0.5f * brillo)
+        drawLine(color.copy(alpha = 0.8f * brillo), Offset(c.x + cos(a) * d0, c.y + sin(a) * d0), Offset(c.x + cos(a) * d1, c.y + sin(a) * d1), 1.1f * u)
+    }
+}
+
+/** Un trazo dibujado hasta la fracción [f] de su largo (un cordón que se va atando). */
+private fun DrawScope.trazoParcialCo(p: Path, f: Float, color: Color, grosor: Float, cap: StrokeCap = StrokeCap.Round) {
+    if (f <= 0f) return
+    if (f >= 1f) { drawPath(p, color, style = Stroke(grosor, cap = cap)); return }
+    val m = PathMeasure(); m.setPath(p, false)
+    val parte = Path(); m.getSegment(0f, m.length * f, parte, true)
+    drawPath(parte, color, style = Stroke(grosor, cap = cap))
 }
