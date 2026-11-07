@@ -1246,7 +1246,10 @@ internal fun TapaDiario(fecha: String, texto: String, modifier: Modifier = Modif
     val etiqueta = (if (noche) "El sueño de " else "El diario de ") + Fechas.corto(fecha) + if (palabras > 0) ", " + porNumero(palabras, "1 palabra", "$palabras palabras") else ", en blanco"
     BoxWithConstraints(modifier.fillMaxWidth().height(d.altoTapa).semantics { contentDescription = etiqueta }) {
         Canvas(Modifier.fillMaxSize().graphicsLayer()) {
-            with(d) { tapa(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoTapa(fechaTema, palabras, vista.isBlank(), noche, abierto(), fecha.hashCode()), medidor, oscuro) }
+            // El brillo de una lámpara o de la luna no se sale del objeto.
+            androidx.compose.ui.graphics.drawscope.clipRect {
+                with(d) { tapa(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoTapa(fechaTema, palabras, vista.isBlank(), noche, abierto(), fecha.hashCode()), medidor, oscuro) }
+            }
         }
         val k = d.cajaTapa
         val w = maxWidth; val h = maxHeight
