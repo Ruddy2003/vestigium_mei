@@ -275,7 +275,7 @@ La matriz de arriba dice si cada superficie es **propia**; esta segunda pasada m
 |---|---|---|
 | Ideario: mueble, contenedor, ficha y marcas | `ui/ideario/` | Hecho (v143): un `object` por tema. |
 | Estante del diario (de día y de noche) | `ui/biblioteca/` (`disenoBiblioteca`, `EstanteTema`) | Hecho (lotes A0 y A1): un mueble entero por tema, distinto del del Ideario, con un volumen propio por entrada (día y mes dibujados dentro, más grueso cuanto más escrito) y su versión de noche. Se borró el estante de antes (`Lomos`, `Rollos`, `Cartas`, `Expedientes`, `Logs`, `RegistroDeVuelo`, `BitacoraDeInmersiones`, `TablaEstante`). |
-| Tapa, página y escritor del diario | `ObjetoDiario`, `EncabezadoPagina`, `EscritorTema` (`ui/Libros.kt`) | Pendiente (A2). |
+| Tapa, página y escritor del diario | `ObjetoDiario`/`TapaDiario`, `EncabezadoPagina`, `FondoPagina`, `BarraPagina`, `BotonGuardarTema` (`ui/Libros.kt`) y `DisenoBiblioteca` | Hecho (lote A2): la tapa es el objeto de su volumen, grande, con la fecha y la cuenta de palabras dentro, el extracto en su caja y la apertura dibujada; el encabezado de la página es una cabecera dibujada con la fecha dentro; el papel lleva los adornos del tema y, en modo oscuro, su propia luz (antes, adentro de la página, el velo no se aplicaba); la barra y el botón de guardar son piezas del tema. Se borraron `FormaObjeto`, `libroCerrado`, `rolloAbierto`, las tapas viejas, `Rubrica` y `EncabezadoSueno`. |
 | Libreta de momentos | `ui/Contenedores.kt`, `pantallas/LibretaMomentos.kt` | Pendiente (A3). |
 | Cartas | `ui/Cartas.kt` | Pendiente (A4). |
 | Pestañas, buscadores, obras y recuerdos de las bibliotecas | `pantallas/Bibliotecas.kt`, `Galerias.kt`, `Biblioteca.kt`, `Recuerdos.kt` | Pendiente (A5). |
