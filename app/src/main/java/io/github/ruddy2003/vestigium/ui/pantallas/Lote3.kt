@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -24,7 +25,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -158,7 +158,7 @@ fun PantallaSuplementos(nav: Nav) {
                     Ayuda("Probióticos: también se cuentan como porciones estimadas los alimentos de tu bitácora de MacroFactor que contienen: " + c.probioticos_palabras.joinToString(", ") + ".",
                         Modifier.padding(top = 10.dp))
                     var palabras by remember { mutableStateOf(c.probioticos_palabras.joinToString(", ")) }
-                    OutlinedTextField(palabras, { palabras = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Palabras (separadas por coma)") })
+                    CampoTexto(palabras, { palabras = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Palabras (separadas por coma)") })
                     TextButton(onClick = { Repo.cambiarConfig { it.copy(probioticos_palabras = palabras.split(',').map { p -> p.trim() }.filter { p -> p.isNotEmpty() }) } }) { Text("guardar palabras") }
                 }
             }
@@ -256,20 +256,20 @@ private fun EditorSuplemento(s0: Suplemento, cerrar: () -> Unit) {
         },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                OutlinedTextField(nombre, { nombre = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("Nombre") }, isError = nombre.isBlank())
+                CampoTexto(nombre, { nombre = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("Nombre") }, isError = nombre.isBlank())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
-                    OutlinedTextField(dosis, { dosis = it }, Modifier.weight(1f), singleLine = true, label = { Text("Dosis habitual") }, isError = dosisOk == null, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-                    OutlinedTextField(unidad, { unidad = it }, Modifier.weight(1f), singleLine = true, label = { Text("Unidad") })
+                    CampoTexto(dosis, { dosis = it }, Modifier.weight(1f), singleLine = true, label = { Text("Dosis habitual") }, isError = dosisOk == null, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                    CampoTexto(unidad, { unidad = it }, Modifier.weight(1f), singleLine = true, label = { Text("Unidad") })
                 }
                 Etiqueta("Modelo")
                 FilaFichas(Suplementos.MODELOS, modelo) { modelo = it ?: modelo }
                 when (modelo) {
                     "carga" -> {
-                        OutlinedTextField(carga, { carga = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Días para llenar la reserva") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                        OutlinedTextField(lavado, { lavado = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Días para vaciarla sin tomar") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                        CampoTexto(carga, { carga = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Días para llenar la reserva") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                        CampoTexto(lavado, { lavado = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Días para vaciarla sin tomar") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                         Ayuda("Creatina: con 3–5 g diarios la reserva del músculo se llena en unas 4 semanas (en una con dosis de carga) y vuelve a lo normal 4 a 6 semanas después de dejarla.", Modifier.padding(top = 6.dp))
                     }
-                    "vida_media" -> OutlinedTextField(vida, { vida = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Vida media (horas)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                    "vida_media" -> CampoTexto(vida, { vida = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Vida media (horas)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                     else -> Ayuda("Solo se cuentan porciones por día.", Modifier.padding(top = 6.dp))
                 }
                 Ayuda("Los valores iniciales son aproximados. Cámbialos si sabes algo mejor.", Modifier.padding(top = 8.dp))
@@ -498,10 +498,10 @@ fun PantallaExperimentos(nav: Nav) {
                     }
                 }
                 Experimentos.PLANTILLAS.firstOrNull { it.id == plantilla }?.let { Ayuda(it.nota, Modifier.padding(top = 4.dp)) }
-                OutlinedTextField(nombre, { nombre = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("Nombre") }, singleLine = true)
-                OutlinedTextField(pregunta, { pregunta = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Pregunta") })
-                OutlinedTextField(accion, { accion = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Qué vas a cambiar (la acción)") })
-                OutlinedTextField(hipotesis, { hipotesis = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Qué crees que pasará (hipótesis)") })
+                CampoTexto(nombre, { nombre = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("Nombre") }, singleLine = true)
+                CampoTexto(pregunta, { pregunta = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Pregunta") })
+                CampoTexto(accion, { accion = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Qué vas a cambiar (la acción)") })
+                CampoTexto(hipotesis, { hipotesis = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Qué crees que pasará (hipótesis)") })
                 Etiqueta("Qué vas a medir")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     (listOf("valencia", "activacion", "sueno_calidad", "sueno_horas", "muestreo_valencia", "pantalla_min", "rt_media", "volumen_kg", "fuerza_ref_kg", "enfoque_min") +
@@ -513,7 +513,7 @@ fun PantallaExperimentos(nav: Nav) {
                     Ficha("debería subir", sentido == 1) { sentido = if (sentido == 1) null else 1 }
                     Ficha("debería bajar", sentido == -1) { sentido = if (sentido == -1) null else -1 }
                 }
-                if (sentido != null) OutlinedTextField(umbral, { umbral = it.replace(',', '.') }, Modifier.fillMaxWidth().padding(top = 6.dp),
+                if (sentido != null) CampoTexto(umbral, { umbral = it.replace(',', '.') }, Modifier.fillMaxWidth().padding(top = 6.dp),
                     label = { Text("Diferencia mínima que te importaría (opcional, en las unidades de la medida)") }, singleLine = true,
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal))
                 Ayuda(if (sentido == null) "Opcional, pero recomendable: di antes de empezar hacia dónde esperas el cambio. Al final la app te dirá si se cumplió."
@@ -649,7 +649,7 @@ fun DialogoToma(t: io.github.ruddy2003.vestigium.data.TomaSuplemento, cerrar: ()
         title = { Text("${s?.nombre ?: t.suplemento} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.ts)}") },
         text = {
             Column {
-                OutlinedTextField(cantidad, { cantidad = it }, Modifier.fillMaxWidth(), singleLine = true, suffix = { Text(s?.unidad ?: "") }, label = { Text("Cantidad") },
+                CampoTexto(cantidad, { cantidad = it }, Modifier.fillMaxWidth(), singleLine = true, suffix = { Text(s?.unidad ?: "") }, label = { Text("Cantidad") },
                     isError = v == null || v <= 0, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal))
                 Etiqueta("Cuándo")
                 io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, ayer = true) { cuando = it }

@@ -112,7 +112,7 @@ fun PantallaRecaidas(nav: Nav) {
                 }
                 if ("otro" in d.detonantes) {
                     var otro by remember(fecha) { mutableStateOf(d.detonante_otro.orEmpty()) }
-                    androidx.compose.material3.OutlinedTextField(value = otro, onValueChange = { t -> otro = t; guardar { x -> x.copy(detonante_otro = t.trim().ifBlank { null }) } },
+                    io.github.ruddy2003.vestigium.ui.comun.CampoTexto(value = otro, onValueChange = { t -> otro = t; guardar { x -> x.copy(detonante_otro = t.trim().ifBlank { null }) } },
                         modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
                 }
                 Privado.habito(c)?.takeIf { it.activo }?.let { h ->

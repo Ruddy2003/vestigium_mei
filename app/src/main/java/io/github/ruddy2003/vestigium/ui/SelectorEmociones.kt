@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -63,7 +63,7 @@ fun SelectorEmociones(actual: EleccionEmociones, discreto: Boolean, onCambio: (E
             }
         }
         if (Catalogo.OTRO in sel) {
-            OutlinedTextField(value = actual.otra, onValueChange = { t -> onCambio(actual.copy(otra = t)) },
+            CampoTexto(value = actual.otra, onValueChange = { t -> onCambio(actual.copy(otra = t)) },
                 modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
             val sugeridas = otrasAntes.filter { !it.equals(actual.otra.trim(), ignoreCase = true) }
             if (!discreto && sugeridas.isNotEmpty()) FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

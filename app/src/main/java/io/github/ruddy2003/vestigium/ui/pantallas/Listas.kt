@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,7 +11,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -87,7 +87,7 @@ fun PantallaListas(nav: Nav) {
             }
         }
         Seccion("Una lista nueva") {
-            OutlinedTextField(nombre, { nombre = it.take(60) }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("nombre de la lista") },
+            CampoTexto(nombre, { nombre = it.take(60) }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("nombre de la lista") },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { if (nombre.isNotBlank()) { crearLista(nav, nombre); nombre = "" } }))
             BotonPrincipal("Crear", Modifier.fillMaxWidth().padding(top = 8.dp), habilitado = nombre.isNotBlank()) { crearLista(nav, nombre); nombre = "" }
             val faltan = SUGERIDAS.filter { s -> Repo.listas.none { it.nombre.equals(s, ignoreCase = true) } }
@@ -118,7 +118,7 @@ fun PantallaLista(nav: Nav) {
     val hechos = l.elementos.filter { it.hecho != null }.sortedByDescending { it.hecho }
     Hoja(l.nombre, nav.atras, "${pendientes.size} pendientes" + (if (hechos.isNotEmpty()) " · ${hechos.size} hechos" else "")) {
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(texto, { texto = it.take(200) }, Modifier.weight(1f), singleLine = true, placeholder = { Text("añadir a la lista") },
+            CampoTexto(texto, { texto = it.take(200) }, Modifier.weight(1f), singleLine = true, placeholder = { Text("añadir a la lista") },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { anadir() }))
             TextButton(onClick = { anadir() }, enabled = texto.isNotBlank()) { Text("añadir", style = MaterialTheme.typography.labelLarge) }
         }
@@ -142,7 +142,7 @@ fun PantallaLista(nav: Nav) {
         Seccion("La lista", plegable = true, plegadaPorDefecto = true) {
             var nombre by remember(l.id) { mutableStateOf(l.nombre) }
             Etiqueta("Nombre")
-            OutlinedTextField(nombre, { nombre = it.take(60); if (it.isNotBlank()) g(l.copy(nombre = it.trim())) }, Modifier.fillMaxWidth(), singleLine = true)
+            CampoTexto(nombre, { nombre = it.take(60); if (it.isNotBlank()) g(l.copy(nombre = it.trim())) }, Modifier.fillMaxWidth(), singleLine = true)
             TextButton(onClick = {
                 if (!confirmar) { confirmar = true; return@TextButton }
                 Repo.borrarLista(l.id); nav.atras(); Deshacer.ofrecer("Lista borrada") { Repo.guardarLista(l) }
@@ -172,13 +172,13 @@ private fun FilaElemento(e: ElementoLista, abierto: Boolean, alternar: () -> Uni
             }
         }
         if (abierto) Column(Modifier.padding(start = 30.dp, bottom = 8.dp)) {
-            OutlinedTextField(e.texto, { if (it.isNotBlank()) cambiar(e.copy(texto = it.take(200))) }, Modifier.fillMaxWidth(), singleLine = true)
+            CampoTexto(e.texto, { if (it.isNotBlank()) cambiar(e.copy(texto = it.take(200))) }, Modifier.fillMaxWidth(), singleLine = true)
             Etiqueta("Qué tan pronto")
             FilaFichas(Catalogo.PRIORIDADES_DESEO, e.prioridad.ifBlank { null }) { cambiar(e.copy(prioridad = it.orEmpty())) }
             Etiqueta("Nota")
-            OutlinedTextField(e.nota, { cambiar(e.copy(nota = it.take(500))) }, Modifier.fillMaxWidth(), minLines = 2)
+            CampoTexto(e.nota, { cambiar(e.copy(nota = it.take(500))) }, Modifier.fillMaxWidth(), minLines = 2)
             Etiqueta("Enlace")
-            OutlinedTextField(e.enlace, { cambiar(e.copy(enlace = it.trim())) }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("https://…") })
+            CampoTexto(e.enlace, { cambiar(e.copy(enlace = it.trim())) }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("https://…") })
             Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (e.enlace.startsWith("http")) BotonSecundario("abrir enlace") { runCatching { uri.openUri(e.enlace) } }
                 Ayuda("Agregado el ${Fechas.corto(e.agregado)}", Modifier.weight(1f))

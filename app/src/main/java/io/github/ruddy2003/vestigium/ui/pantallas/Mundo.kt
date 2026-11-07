@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import android.content.Context
@@ -36,7 +37,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -1273,7 +1273,7 @@ fun PantallaCiudadNueva(nav: Nav) {
     Hoja("Añadir ciudad", nav.atras, "Busca la ciudad por su nombre. Si sabes cuándo fuiste, ponlo: así cuenta en el tiempo de cada ciudad y país.") {
         val c = remember { Mundo.ciudades(ctx) }
         if (elegida < 0) {
-            OutlinedTextField(texto, { texto = it }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true, placeholder = { Text("nombre de la ciudad") })
+            CampoTexto(texto, { texto = it }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true, placeholder = { Text("nombre de la ciudad") })
             Spacer(Modifier.height(8.dp))
             if (texto.length >= 2 && resultados.isEmpty()) Ayuda("Nada con ese nombre. Prueba sin acentos o con el nombre local.")
             resultados.forEach { i ->
@@ -1300,9 +1300,9 @@ fun PantallaCiudadNueva(nav: Nav) {
                     BotonSecundario(hasta?.let { "hasta ${Fechas.corto(it)}" } ?: "hasta…") { fecha(hasta ?: desde) { h -> if (desde != null && h < desde!!) { hasta = desde; desde = h } else hasta = h } }
                 }
                 if (desde != null) TextButton(onClick = { desde = null; hasta = null }) { Text("quitar las fechas", style = MaterialTheme.typography.labelLarge) }
-                if (desde == null) OutlinedTextField(dias, { dias = it.filter { ch -> ch.isDigit() }.take(4) }, Modifier.padding(top = 8.dp).width(180.dp), singleLine = true,
+                if (desde == null) CampoTexto(dias, { dias = it.filter { ch -> ch.isDigit() }.take(4) }, Modifier.padding(top = 8.dp).width(180.dp), singleLine = true,
                     label = { Text("días (aprox.)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("nota (opcional)") })
+                CampoTexto(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("nota (opcional)") })
             }
             BotonPrincipal("Guardar", Modifier.fillMaxWidth().padding(top = 18.dp)) {
                 val nueva = CiudadVisitada(UUID.randomUUID().toString().take(8), c.nombre(i), c.pais(i), c.lat[i] / 1e5, c.lon[i] / 1e5,
@@ -1332,9 +1332,9 @@ private fun DialogoCiudad(c0: CiudadVisitada, cerrar: () -> Unit) {
                     BotonSecundario(hasta?.let { "hasta ${Fechas.corto(it)}" } ?: "hasta…") { elegirFecha(ctx, hasta ?: desde) { h -> if (desde != null && h < desde!!) { hasta = desde; desde = h } else hasta = h } }
                 }
                 if (desde != null) TextButton(onClick = { desde = null; hasta = null }) { Text("quitar las fechas", style = MaterialTheme.typography.labelLarge) }
-                else OutlinedTextField(dias, { dias = it.filter { ch -> ch.isDigit() }.take(4) }, Modifier.padding(top = 8.dp).width(180.dp), singleLine = true,
+                else CampoTexto(dias, { dias = it.filter { ch -> ch.isDigit() }.take(4) }, Modifier.padding(top = 8.dp).width(180.dp), singleLine = true,
                     label = { Text("días (aprox.)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("nota (opcional)") })
+                CampoTexto(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("nota (opcional)") })
             }
         },
         confirmButton = { TextButton(onClick = {
@@ -1370,7 +1370,7 @@ fun PantallaUnesco(nav: Nav) {
     val q = Mundo.normalizar(texto)
 
     Hoja("Patrimonio Mundial", nav.atras, "Los ${"%,d".format(sitios.size)} sitios de la lista de la UNESCO, por país. ✓ quiere decir que estuviste ahí.") {
-        OutlinedTextField(texto, { texto = it }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true, placeholder = { Text("buscar un sitio o un país") })
+        CampoTexto(texto, { texto = it }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true, placeholder = { Text("buscar un sitio o un país") })
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf("todos" to "todos", "visitados" to "visitados", "pendientes" to "pendientes", "c" to "culturales", "n" to "naturales", "m" to "mixtos", "peligro" to "en peligro").forEach { (id, n) -> Ficha(n, filtro == id) { filtro = id } }
         }

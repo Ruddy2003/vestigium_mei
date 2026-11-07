@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -31,7 +32,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -423,7 +423,7 @@ fun PantallaCartaNueva(nav: Nav) {
                 OpcionCarta("Alguien", "Una carta para una persona, con su @. Se guarda abierta.", !b.alFuturo, Modifier.weight(1f)) { b.alFuturo = false }
             }
             if (!b.alFuturo) {
-                OutlinedTextField(b.para, { b.para = Texto.etiqueta(it) }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true,
+                CampoTexto(b.para, { b.para = Texto.etiqueta(it) }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true,
                     prefix = { Text("@") }, placeholder = { Text("nombre, como lo escribes en tu diario") })
                 val sug = conocidas.filter { it != b.para && (b.para.isBlank() || it.startsWith(b.para)) }.take(10)
                 if (sug.isNotEmpty()) FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

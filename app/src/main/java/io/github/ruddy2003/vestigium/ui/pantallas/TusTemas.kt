@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -118,7 +118,7 @@ fun PantallaTusTemas(nav: Nav) {
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     Ayuda("${porNumero(t.dias, "1 día", "${t.dias} días")} · de ${Fechas.corto(t.primera)} a ${Fechas.corto(t.ultima)}")
-                    OutlinedTextField(nuevo, { nuevo = it }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true, label = { Text("nuevo nombre") }, prefix = { Text("#") })
+                    CampoTexto(nuevo, { nuevo = it }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true, label = { Text("nuevo nombre") }, prefix = { Text("#") })
                     previa?.let { (n, ej) ->
                         Ayuda("Cambiaría $n ${if (n == 1) "texto" else "textos"}." + if (existe) " #$destino ya existe: quedan juntos." else "", Modifier.padding(top = 8.dp))
                         ej?.let { (a, b) ->

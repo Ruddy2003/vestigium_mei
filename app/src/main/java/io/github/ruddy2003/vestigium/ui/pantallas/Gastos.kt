@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import android.app.DatePickerDialog
@@ -28,7 +29,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -116,7 +116,7 @@ fun PantallaGastos(nav: Nav? = null) {
                         }
                     }
                 }
-                OutlinedTextField(value = monto, onValueChange = { monto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(it); error = null }, modifier = Modifier.fillMaxWidth(),
+                CampoTexto(value = monto, onValueChange = { monto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(it); error = null }, modifier = Modifier.fillMaxWidth(),
                     prefix = { Text("$ ") }, placeholder = { Text("0") }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), textStyle = MaterialTheme.typography.headlineSmall)
                 Etiqueta("Categoría")
@@ -144,7 +144,7 @@ fun PantallaGastos(nav: Nav? = null) {
                     Interruptor("¿Fue imprevisto?", imprevisto) { imprevisto = it }
                     Interruptor("¿Se repite? (renta, suscripción, servicios)", repite) { repite = it }
                 }
-                OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
+                CampoTexto(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
                 BotonPrincipal(if (entra) "Registrar ingreso" else "Registrar gasto", Modifier.fillMaxWidth().padding(top = 10.dp)) {
                     val v = monto.toDoubleOrNull()
@@ -300,7 +300,7 @@ fun EditorCategorias() {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(sc.nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                         var m by remember(cat, sc.nombre) { mutableStateOf(sc.monto?.let { D.texto(it) } ?: "") }
-                        OutlinedTextField(value = m, onValueChange = { t -> m = D.limpiarMonto(t); D.fijarMonto(cat, sc.nombre, m.toDoubleOrNull()?.takeIf { it > 0 }) },
+                        CampoTexto(value = m, onValueChange = { t -> m = D.limpiarMonto(t); D.fijarMonto(cat, sc.nombre, m.toDoubleOrNull()?.takeIf { it > 0 }) },
                             modifier = Modifier.width(112.dp), singleLine = true, prefix = { Text("$") },
                             placeholder = { Text(D.montoHabitual(cat, sc.nombre)?.let { D.texto(it) } ?: "auto", style = MaterialTheme.typography.bodySmall) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), textStyle = MaterialTheme.typography.bodySmall)
@@ -312,13 +312,13 @@ fun EditorCategorias() {
                     }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(value = nuevaSub, onValueChange = { nuevaSub = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva subcategoría de $cat") })
+                    CampoTexto(value = nuevaSub, onValueChange = { nuevaSub = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva subcategoría de $cat") })
                     TextButton(onClick = { D.agregarSub(cat, nuevaSub); nuevaSub = "" }, enabled = nuevaSub.isNotBlank()) { Text("Añadir") }
                 }
             }
         }
         Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría") })
+            CampoTexto(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría") })
             TextButton(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias) { Repo.cambiarConfig { it.copy(categorias = it.categorias + n) }; nueva = "" } }) { Text("Añadir") }
         }
         Ayuda("El monto vacío es automático: el que más se repite en tus últimos 10 gastos de esa subcategoría. Quitar una categoría no cambia los gastos ya registrados.", Modifier.padding(top = 6.dp))
@@ -330,7 +330,7 @@ fun EditorCategorias() {
         Dialogo(onDismissRequest = { renombrar = null }, title = { Text(if (sb == null) "Renombrar categoría" else "Renombrar subcategoría") },
             text = {
                 Column {
-                    OutlinedTextField(value = t, onValueChange = { t = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    CampoTexto(value = t, onValueChange = { t = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
                     if (n > 0) Interruptor("Cambiar también ${if (n == 1) "el gasto anterior" else "los $n gastos anteriores"}", tambien) { tambien = it }
                 }
             },
@@ -366,7 +366,7 @@ fun EditorCategoriasIngreso() {
             }
         }
         Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría de ingreso") })
+            CampoTexto(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría de ingreso") })
             TextButton(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias_ingreso) { Repo.cambiarConfig { it.copy(categorias_ingreso = it.categorias_ingreso + n) }; nueva = "" } }) { Text("Añadir") }
         }
     }
@@ -377,7 +377,7 @@ fun EditorCategoriasIngreso() {
         Dialogo(onDismissRequest = { renombrar = null }, title = { Text("Renombrar categoría de ingreso") },
             text = {
                 Column {
-                    OutlinedTextField(value = t, onValueChange = { t = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    CampoTexto(value = t, onValueChange = { t = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
                     if (n > 0) Interruptor("Cambiar también ${if (n == 1) "el ingreso anterior" else "los $n ingresos anteriores"}", tambien) { tambien = it }
                 }
             },
@@ -432,7 +432,7 @@ private fun DialogoDinero(
         title = { Text("$titulo · " + (cuando?.let { "${Fechas.corto(Fechas.iso(it.toLocalDate()))} ${"%02d:%02d".format(it.hour, it.minute)}" } ?: "${Fechas.corto(fecha0)} ${hora0.take(5)}")) },
         text = {
             Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
-                OutlinedTextField(value = monto, onValueChange = { monto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(it) }, modifier = Modifier.fillMaxWidth(),
+                CampoTexto(value = monto, onValueChange = { monto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(it) }, modifier = Modifier.fillMaxWidth(),
                     prefix = { Text("$ ") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                 Etiqueta("Categoría")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -449,7 +449,7 @@ private fun DialogoDinero(
                 io.github.ruddy2003.vestigium.ui.SelectorHora(cuando) { cuando = it }
                 Interruptor(marca, m) { m = it }
                 if (marca2 != null) Interruptor(marca2, m2) { m2 = it }
-                OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
+                CampoTexto(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
                 // Borrar va adentro, en rojo y con confirmación; abajo quedan «cancelar» y «Guardar», como en los demás diálogos.
                 if (borrar != null) TextButton(onClick = { if (confirmar) { borrar(); cerrar() } else confirmar = true }, modifier = Modifier.padding(top = 6.dp)) {
                     Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error)

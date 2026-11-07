@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -40,7 +41,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -505,7 +505,7 @@ fun PantallaNoche(nav: Nav) {
                     Ficha(o.nombre, activo) { cambiar(d.copy(ctx = if (activo) d.ctx - o.id else d.ctx + (o.id to true))) }
                 }
             }
-            OutlinedTextField(value = d.ctx_otro, onValueChange = { cambiar(d.copy(ctx_otro = it.take(80))) }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            CampoTexto(value = d.ctx_otro, onValueChange = { cambiar(d.copy(ctx_otro = it.take(80))) }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 singleLine = true, placeholder = { Text("otro (opcional)", style = MaterialTheme.typography.bodyMedium) })
         }
         Seccion("Hábitos", "Siempre aquí, para marcarlos al cerrar el día.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqHabitos)) {
@@ -570,10 +570,10 @@ fun PantallaNoche(nav: Nav) {
             }
         }
         Seccion("Lo mejor y lo peor", "Unas palabras de cada uno.", numero = n(), plegable = true, plegadaPorDefecto = true) {
-            OutlinedTextField(value = d.mejor_momento, onValueChange = { cambiar(d.copy(mejor_momento = it)) }, modifier = Modifier.fillMaxWidth(),
+            CampoTexto(value = d.mejor_momento, onValueChange = { cambiar(d.copy(mejor_momento = it)) }, modifier = Modifier.fillMaxWidth(),
                 label = { Text("lo mejor", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
             Spacer(Modifier.padding(top = 8.dp))
-            OutlinedTextField(value = d.peor_momento, onValueChange = { cambiar(d.copy(peor_momento = it)) }, modifier = Modifier.fillMaxWidth(),
+            CampoTexto(value = d.peor_momento, onValueChange = { cambiar(d.copy(peor_momento = it)) }, modifier = Modifier.fillMaxWidth(),
                 label = { Text("lo peor", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
         }
         Seccion("Hitos", "Lo que no pasa todos los días: un vuelo, un beso, una decisión importante. Una etiqueta corta por cosa.", numero = n(), plegable = true, plegadaPorDefecto = true) {

@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -93,7 +93,7 @@ fun PantallaConocer(nav: Nav) {
 
         Seccion("Tú", numero = 1) {
             Tarjeta {
-                OutlinedTextField(p.nombre, { cambiar(p.copy(nombre = it)) }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("¿Cómo te llamas? (firma tus cartas)") })
+                CampoTexto(p.nombre, { cambiar(p.copy(nombre = it)) }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("¿Cómo te llamas? (firma tus cartas)") })
                 Etiqueta("Cuándo naciste")
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     BotonSecundario(if (p.nacimiento.isBlank()) "elegir fecha" else Fechas.larga(p.nacimiento)) {
@@ -104,11 +104,11 @@ fun PantallaConocer(nav: Nav) {
                 }
                 Etiqueta("Dónde vives")
                 CiudadDeCasa(p) { cambiar(it) }
-                OutlinedTextField(p.ciudad_natal, { cambiar(p.copy(ciudad_natal = it)) }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true,
+                CampoTexto(p.ciudad_natal, { cambiar(p.copy(ciudad_natal = it)) }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true,
                     label = { Text("¿Dónde creciste?") })
                 Etiqueta("Sexo (solo para las referencias de salud)")
                 FilaFichas(Perfiles.SEXO, p.sexo.ifBlank { null }) { cambiar(p.copy(sexo = it.orEmpty())) }
-                OutlinedTextField(p.estatura_cm?.toString() ?: "", { t -> cambiar(p.copy(estatura_cm = t.filter { it.isDigit() }.take(3).toIntOrNull())) },
+                CampoTexto(p.estatura_cm?.toString() ?: "", { t -> cambiar(p.copy(estatura_cm = t.filter { it.isDigit() }.take(3).toIntOrNull())) },
                     Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true, label = { Text("Estatura (cm)") },
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
             }
@@ -130,7 +130,7 @@ fun PantallaConocer(nav: Nav) {
                 }
                 var mascota by remember { mutableStateOf("") }
                 var especie by remember { mutableStateOf<String?>("perro") }
-                OutlinedTextField(mascota, { mascota = it }, Modifier.fillMaxWidth().padding(top = 4.dp), singleLine = true, placeholder = { Text("nombre de tu mascota") })
+                CampoTexto(mascota, { mascota = it }, Modifier.fillMaxWidth().padding(top = 4.dp), singleLine = true, placeholder = { Text("nombre de tu mascota") })
                 if (mascota.isNotBlank()) {
                     Row(Modifier.padding(top = 8.dp)) { FilaFichas(Perfiles.ESPECIES, especie) { especie = it } }
                     BotonSecundario("+ añadir mascota", Modifier.padding(top = 8.dp)) {
@@ -152,7 +152,7 @@ fun PantallaConocer(nav: Nav) {
                 var quien by remember { mutableStateOf("") }
                 var relacion by remember { mutableStateOf<String?>("familia") }
                 val sugeridas = remember { Etiquetas.frecuentes().first }
-                OutlinedTextField(quien, { quien = Texto.etiqueta(it) }, Modifier.fillMaxWidth().padding(top = 4.dp), singleLine = true, prefix = { Text("@") },
+                CampoTexto(quien, { quien = Texto.etiqueta(it) }, Modifier.fillMaxWidth().padding(top = 4.dp), singleLine = true, prefix = { Text("@") },
                     placeholder = { Text("nombre") })
                 val sug = sugeridas.filter { s -> p.cercanas.none { it.nombre == s } && s != quien && (quien.isBlank() || s.startsWith(quien)) }.take(8)
                 if (sug.isNotEmpty()) FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -172,11 +172,11 @@ fun PantallaConocer(nav: Nav) {
         Seccion("A qué te dedicas", numero = 5) {
             Tarjeta {
                 Varias(Perfiles.OCUPACION, p.ocupacion) { cambiar(p.copy(ocupacion = it)) }
-                OutlinedTextField(p.ocupacion_detalle, { cambiar(p.copy(ocupacion_detalle = it)) }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true,
+                CampoTexto(p.ocupacion_detalle, { cambiar(p.copy(ocupacion_detalle = it)) }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true,
                     placeholder = { Text("qué estudias o en qué trabajas") })
                 Etiqueta("Hasta dónde has estudiado"); FilaFichas(Perfiles.ESTUDIOS, p.estudios.ifBlank { null }) { cambiar(p.copy(estudios = it.orEmpty())) }
                 Etiqueta("Dónde trabajas o estudias"); FilaFichas(Perfiles.MODALIDAD, p.modalidad.ifBlank { null }) { cambiar(p.copy(modalidad = it.orEmpty())) }
-                OutlinedTextField(p.horas_semana?.toString() ?: "", { t -> cambiar(p.copy(horas_semana = t.filter { it.isDigit() }.take(3).toIntOrNull())) },
+                CampoTexto(p.horas_semana?.toString() ?: "", { t -> cambiar(p.copy(horas_semana = t.filter { it.isDigit() }.take(3).toIntOrNull())) },
                     Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true, label = { Text("Horas a la semana de trabajo o escuela") },
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
                 Etiqueta("Tu horario"); FilaFichas(Perfiles.HORARIO, p.horario.ifBlank { null }) { cambiar(p.copy(horario = it.orEmpty())) }
@@ -198,10 +198,10 @@ fun PantallaConocer(nav: Nav) {
                 Etiqueta("Cómo te mueves casi siempre"); FilaFichas(Perfiles.TRANSPORTE, p.transporte.ifBlank { null }) { cambiar(p.copy(transporte = it.orEmpty())) }
                 Etiqueta("Tipo de vivienda"); FilaFichas(Perfiles.VIVIENDA, p.vivienda.ifBlank { null }) { cambiar(p.copy(vivienda = it.orEmpty())) }
                 Etiqueta("Cómo comes"); FilaFichas(Perfiles.DIETA, p.dieta.ifBlank { null }) { cambiar(p.copy(dieta = it.orEmpty())) }
-                OutlinedTextField(p.hijos?.toString() ?: "", { t -> cambiar(p.copy(hijos = t.filter { it.isDigit() }.take(2).toIntOrNull())) },
+                CampoTexto(p.hijos?.toString() ?: "", { t -> cambiar(p.copy(hijos = t.filter { it.isDigit() }.take(2).toIntOrNull())) },
                     Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true, label = { Text("¿Cuántos hijos tienes?") },
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
-                OutlinedTextField(p.deporte, { cambiar(p.copy(deporte = it)) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
+                CampoTexto(p.deporte, { cambiar(p.copy(deporte = it)) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
                     label = { Text("Tu deporte o actividad principal") })
                 Etiqueta("Tu horario de sueño ideal")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -226,7 +226,7 @@ fun PantallaConocer(nav: Nav) {
         }
 
         Seccion("Lo que está pasando en tu vida", "Algo grande de esta temporada: una mudanza, un trabajo nuevo, una pérdida, una relación que empieza o termina.", numero = 9) {
-            OutlinedTextField(p.momento, { cambiar(p.copy(momento = it)) }, Modifier.fillMaxWidth(), minLines = 3)
+            CampoTexto(p.momento, { cambiar(p.copy(momento = it)) }, Modifier.fillMaxWidth(), minLines = 3)
         }
 
         BotonPrincipal(if (primera) "Listo" else "Guardar cambios", Modifier.fillMaxWidth().padding(top = 22.dp), habilitado = primera || p != Repo.config.perfil) { guardar() }
@@ -266,7 +266,7 @@ private fun CiudadDeCasa(p: Perfil, cambiar: (Perfil) -> Unit) {
         Text("${Mundo.bandera(p.pais)}  ${p.ciudad}" + (Mundo.pais(ctx, p.pais)?.nombre?.let { ", $it" } ?: ""), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
         TextButton(onClick = { cambiar(p.copy(ciudad = "", pais = "", ciudad_lat = null, ciudad_lon = null)) }) { Text("cambiar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
     } else {
-        OutlinedTextField(q, { q = it }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("escribe tu ciudad") })
+        CampoTexto(q, { q = it }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("escribe tu ciudad") })
         if (resultados.isNotEmpty()) FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             resultados.forEach { (n, pa, ll) ->
                 Ficha("${Mundo.bandera(pa)} $n" + (Mundo.pais(ctx, pa)?.nombre?.let { ", $it" } ?: ""), false) {

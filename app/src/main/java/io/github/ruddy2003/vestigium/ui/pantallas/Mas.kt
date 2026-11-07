@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -206,7 +206,7 @@ fun PantallaHabitos(nav: Nav) {
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(value = nuevo, onValueChange = { nuevo = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nombre del hábito") })
+                    CampoTexto(value = nuevo, onValueChange = { nuevo = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nombre del hábito") })
                     TextButton(onClick = { agregar(nuevo.trim()) }) { Text("Añadir") }
                 }
                 FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

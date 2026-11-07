@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.esAnimo
@@ -22,7 +23,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import io.github.ruddy2003.vestigium.ui.aMillis
@@ -325,7 +325,7 @@ fun PantallaLugares(nav: Nav) {
                     }
                     renombrar?.let { t ->
                         Dialogo(onDismissRequest = { renombrar = null }, title = { Text("Renombrar lugar") },
-                            text = { OutlinedTextField(value = t, onValueChange = { renombrar = it }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
+                            text = { CampoTexto(value = t, onValueChange = { renombrar = it }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
                             confirmButton = { TextButton(enabled = t.isNotBlank(), onClick = { Repo.guardarLugar(l.copy(nombre = t.trim())); renombrar = null }) { Text("Guardar") } },
                             dismissButton = { TextButton(onClick = { renombrar = null }) { Text("cancelar") } })
                     }
@@ -410,7 +410,7 @@ private fun Mapa(puntos: List<Db.Punto>, lugares: List<Lugar>, muestreos: List<i
  */
 @Composable
 fun CamposLugar(nombre: String, tipo: String?, radio: Float, onNombre: (String) -> Unit, onTipo: (String?) -> Unit, onRadio: (Float) -> Unit) {
-    OutlinedTextField(value = nombre, onValueChange = onNombre, modifier = Modifier.fillMaxWidth(), singleLine = true, isError = nombre.isBlank(),
+    CampoTexto(value = nombre, onValueChange = onNombre, modifier = Modifier.fillMaxWidth(), singleLine = true, isError = nombre.isBlank(),
         label = { Text("Nombre") }, placeholder = { Text("casa de mis abuelos, la biblioteca, el muro de escalada…") })
     Etiqueta("Tipo"); FilaFichas(Catalogo.TIPOS_LUGAR, tipo) { onTipo(it) }
     Etiqueta("Radio: ${radio.toInt()} m")

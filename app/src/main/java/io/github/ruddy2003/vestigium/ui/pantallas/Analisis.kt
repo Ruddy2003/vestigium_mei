@@ -147,7 +147,7 @@ internal fun ElegirVariable(vars: List<Variable>, cerrar: () -> Unit, elegir: (S
         title = { Text("Variable · ${vars.size}", style = MaterialTheme.typography.titleLarge) },
         text = {
             Column {
-                androidx.compose.material3.OutlinedTextField(q, { q = it }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("buscar: @ana, sueño, instagram, hierro…") })
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto(q, { q = it }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("buscar: @ana, sueño, instagram, hierro…") })
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Ficha("todas", grupo == null) { grupo = null }
                     grupos.forEach { g -> Ficha(g.lowercase(), grupo == g) { grupo = if (grupo == g) null else g } }

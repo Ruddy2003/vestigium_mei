@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.foundation.BorderStroke
@@ -18,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -106,7 +106,7 @@ private fun FormularioPersona(nombre: String, alGuardar: () -> Unit, clave: Stri
     }
     Etiqueta("¿Qué tan cerca?")
     CirculosCercania(cerca) { cerca = it }
-    OutlinedTextField(detalle, { detalle = it.take(80) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
+    CampoTexto(detalle, { detalle = it.take(80) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
         placeholder = { Text("detalle opcional: «mi prima», «de la prepa»…") })
     // Fechas (opcionales): con el año de nacimiento se ve su edad; los dos días cuentan como días especiales.
     // Se eligen en el calendario; «sin año» deja solo día y mes (para un cumpleaños sin saber la edad).
@@ -193,7 +193,7 @@ fun PantallaPersonas(nav: Nav) {
                 dismissButton = { TextButton(onClick = { nueva = null }) { Text("cancelar") } },
                 text = {
                     Column(Modifier.verticalScroll(rememberScrollState())) {
-                        androidx.compose.material3.OutlinedTextField(value = t, onValueChange = { nueva = it }, singleLine = true, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nombre, como la escribirías con @") })
+                        io.github.ruddy2003.vestigium.ui.comun.CampoTexto(value = t, onValueChange = { nueva = it }, singleLine = true, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nombre, como la escribirías con @") })
                         val etiqueta = io.github.ruddy2003.vestigium.data.Texto.etiqueta(t)
                         if (etiqueta.isNotEmpty()) Ayuda("Se guarda como @$etiqueta. No tendrá días hasta que la menciones.", Modifier.padding(top = 6.dp))
                         FormularioPersona(etiqueta, alGuardar = { nueva = null }, clave = "nueva")
@@ -322,9 +322,9 @@ private fun DiasEspeciales() {
             title = { Text(if (existe) "Fecha propia" else "Nueva fecha propia") },
             text = {
                 Column {
-                    OutlinedTextField(nombre, { nombre = it.take(60) }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("qué es") },
+                    CampoTexto(nombre, { nombre = it.take(60) }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("qué es") },
                         placeholder = { Text("«boda de mis papás», «llegué a la ciudad»…") })
-                    OutlinedTextField(fecha, { fecha = it.take(10) }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, isError = fecha.isNotBlank() && ok == null,
+                    CampoTexto(fecha, { fecha = it.take(10) }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, isError = fecha.isNotBlank() && ok == null,
                         label = { Text("fecha") }, placeholder = { Text("15/03/1990 o 15/03") })
                     FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Especiales.TIPOS_PROPIOS.forEach { o -> Ficha(o.nombre, tipo == o.id) { tipo = o.id } }

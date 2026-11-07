@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.privado
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -40,7 +41,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -730,7 +730,7 @@ fun ListaEtiquetas(lista: List<String>, pista: String, prefijo: String = "", nor
             }
         }
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
+            CampoTexto(
                 value = texto, onValueChange = { texto = it }, modifier = Modifier.weight(1f), singleLine = true,
                 placeholder = { Text(pista, style = MaterialTheme.typography.labelLarge) }, textStyle = MaterialTheme.typography.labelLarge,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, imeAction = ImeAction.Done),

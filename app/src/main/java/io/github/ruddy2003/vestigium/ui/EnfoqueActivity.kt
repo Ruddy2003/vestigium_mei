@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
@@ -28,7 +29,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -233,7 +233,7 @@ private fun Corriendo(p: PlanEnfoque, ahora: Long, cerrar: () -> Unit) {
             text = {
                 Column {
                     Text(if (min >= 1) "Se guardan ${hm(min)}" + (if (p.tipo == "siesta") " de siesta." else " de enfoque.") else "Va menos de un minuto: no se guarda nada.", style = MaterialTheme.typography.bodyMedium)
-                    if (p.tipo != "siesta") OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true,
+                    if (p.tipo != "siesta") CampoTexto(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true,
                         placeholder = { Text("Qué hiciste (opcional): #tesis, capítulo 2…") }, visualTransformation = rememberMarcas())
                 }
             },
@@ -251,7 +251,7 @@ private fun Terminado(p: PlanEnfoque, cerrar: () -> Unit) {
         Text(if (p.tipo == "siesta") "Hora de despertar" else "¡Terminaste!", style = MaterialTheme.typography.headlineMedium, color = cs.primary)
         Text(hm(min) + if (p.tipo == "siesta") " de siesta" else " de ${Catalogo.nombreTramo(p.tipo).lowercase()}" + (if (Enfoque.bloques(p) > 1) " en ${Enfoque.bloques(p)} bloques" else ""),
             style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 6.dp))
-        if (p.tipo != "siesta") OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 18.dp), singleLine = true,
+        if (p.tipo != "siesta") CampoTexto(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 18.dp), singleLine = true,
             placeholder = { Text("Qué hiciste (opcional)") }, visualTransformation = rememberMarcas())
         BotonPrincipal("Listo", Modifier.fillMaxWidth().padding(top = 16.dp)) { if (nota.isNotBlank()) Enfoque.anotarSesion(p.inicio, nota); cerrar() }
     }

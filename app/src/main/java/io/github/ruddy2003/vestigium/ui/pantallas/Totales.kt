@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -20,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -98,7 +98,7 @@ fun PantallaTotales(nav: Nav, buscar: Boolean = false) {
             }
         }
         Ayuda(if (periodo == "todo") "Desde el primer dato que tengas hasta hoy." else "Del ${Totales.fecha(desde)} a hoy.", Modifier.padding(top = 4.dp))
-        OutlinedTextField(
+        CampoTexto(
             busqueda, { busqueda = it }, Modifier.fillMaxWidth().padding(top = 8.dp).focusRequester(foco), singleLine = true,
             placeholder = { Text("Buscar en todo: diario, plátano, @persona, artista, lugar…") },
             trailingIcon = if (busqueda.isNotEmpty()) ({ TextButton(onClick = { busqueda = "" }) { Text("×") } }) else null,

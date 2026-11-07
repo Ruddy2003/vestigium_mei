@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -21,7 +22,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -145,7 +145,7 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
         title = { Text("${Catalogo.titulo(m, discreto)} · ${Fechas.corto(m.fecha)} ${Fechas.horaDe(m.ts)}") },
         text = {
         Column(Modifier.verticalScroll(rememberScrollState())) {
-            OutlinedTextField(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth(), minLines = 2, visualTransformation = io.github.ruddy2003.vestigium.ui.rememberMarcas())
+            CampoTexto(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth(), minLines = 2, visualTransformation = io.github.ruddy2003.vestigium.ui.rememberMarcas())
             if (registro) {
                 Etiqueta("Qué tan agradable (1 a 7)"); Escala(valencia, 1, 7) { valencia = it }
                 Etiqueta("Energía (1 a 7)"); Escala(activacion, 1, 7) { activacion = it }
@@ -168,7 +168,7 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Catalogo.DETONANTES.forEach { o -> io.github.ruddy2003.vestigium.ui.Ficha(o.nombre, o.id in det) { det = if (o.id in det) det - o.id else det + o.id } }
                 }
-                if ("otro" in det) OutlinedTextField(value = detOtro, onValueChange = { detOtro = it }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
+                if ("otro" in det) CampoTexto(value = detOtro, onValueChange = { detOtro = it }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
                 Etiqueta("Qué hacías justo antes")
                 io.github.ruddy2003.vestigium.ui.FilaFichas(Catalogo.ANTES, antes) { antes = it }
                 Etiqueta("En qué aparato")

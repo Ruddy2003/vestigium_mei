@@ -786,6 +786,43 @@ class Capturas {
     @Test fun alrededorA5Ruinas() = alrededorA5Tema(TemaId.RUINAS)
     @Test fun alrededorA5Espacio() = alrededorA5Tema(TemaId.ESPACIO)
     @Test fun alrededorA5Distopia() = alrededorA5Tema(TemaId.DISTOPIA)
+    /**
+     * Los campos de texto (lote B1): vacío con rótulo y pista, con texto, con error y prefijo, de varios renglones, apagado,
+     * con sufijo, la lista de etiquetas y el marco con el foco (de un renglón y de varios), dibujado directo porque en la
+     * captura no se puede enfocar. En claro y en oscuro. Datos inventados.
+     */
+    private fun camposB1(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(t)
+        captura(t, oscuro, 3400, "tema_${t.id}_${modo}_campos") {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto("", {}, Modifier.fillMaxWidth(), singleLine = true,
+                    label = { Text("Nombre") }, placeholder = { Text("como aparece en tu diario") })
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto("Paseo largo por el parque", {}, Modifier.fillMaxWidth(), singleLine = true, label = { Text("Nota") })
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto("doce", {}, Modifier.fillMaxWidth(), singleLine = true, isError = true,
+                    label = { Text("Monto") }, prefix = { Text("$ ") })
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto("Hoy aprendí a cocinar algo nuevo. Salió bien a la segunda y lo repetiría el domingo.", {},
+                    Modifier.fillMaxWidth(), minLines = 3, label = { Text("Qué pasó") })
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto("solo lectura", {}, Modifier.fillMaxWidth(), enabled = false, singleLine = true, label = { Text("Apagado") })
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    io.github.ruddy2003.vestigium.ui.comun.CampoTexto("72.5", {}, Modifier.weight(1f), singleLine = true, label = { Text("Peso") }, suffix = { Text(" kg") })
+                    io.github.ruddy2003.vestigium.ui.comun.CampoTexto("", {}, Modifier.weight(1f), singleLine = true, placeholder = { Text("0") })
+                }
+                io.github.ruddy2003.vestigium.ui.ListaEtiquetas(listOf("trabajo", "familia"), "otra etiqueta", normalizar = { it.trim() }) {}
+                androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(d.altoCampo)) {
+                    with(d) { marcoCampo(io.github.ruddy2003.vestigium.ui.comun.EstadoMarco(true, false, true, false, false, 5), oscuro) }
+                }
+                androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(110.dp)) {
+                    with(d) { marcoCampo(io.github.ruddy2003.vestigium.ui.comun.EstadoMarco(true, false, true, true, false, 6), oscuro) }
+                }
+            }
+        }
+    }
+    private fun camposB1Tema(t: TemaId) { camposB1(t, t.soloOscuro); if (!t.soloOscuro) camposB1(t, true) }
+    @Test fun camposB1a() = ESTANTE_A1A.forEach { camposB1Tema(it) }
+    @Test fun camposB1b() = (ESTANTE_A1B + TemaId.EDO).forEach { camposB1Tema(it) }
+    @Test fun camposB1c() = ESTANTE_A1C.forEach { camposB1Tema(it) }
+    @Test fun camposB1d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { camposB1Tema(it) }
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -174,7 +174,7 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
             text = {
                 Column {
                     Ayuda("Escribe la contraseña con la que se cifró este respaldo.")
-                    OutlinedTextField(clave, { clave = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("contraseña") },
+                    CampoTexto(clave, { clave = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("contraseña") },
                         visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
                 }
             },
@@ -211,9 +211,9 @@ private fun DialogoNuevaClave(cambio: Boolean, cerrar: () -> Unit, listo: (Strin
                 Ayuda("Se guarda solo en este teléfono. Si cambias de teléfono, la necesitarás para restaurar; si la olvidas, nadie puede recuperar los respaldos cifrados.")
                 // Las copias hechas no se vuelven a cifrar (H-8-15).
                 if (cambio) Aviso("Las copias que ya existen (en Drive, las semanales y mensuales, y las que guardaste o compartiste) siguen con la contraseña anterior: guárdala si quieres poder abrirlas.")
-                OutlinedTextField(a, { a = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("contraseña") },
+                CampoTexto(a, { a = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("contraseña") },
                     visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
-                OutlinedTextField(b, { b = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("otra vez") },
+                CampoTexto(b, { b = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("otra vez") },
                     visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
                 error?.let { Ayuda(it, Modifier.padding(top = 6.dp)) }
                 Ayuda("Último respaldo: " + (listOfNotNull(Repo.config.respaldo_ultimo, Repo.config.drive_ultimo).maxOrNull()?.let { Fechas.titulo(it.take(10)) } ?: "ninguno"),

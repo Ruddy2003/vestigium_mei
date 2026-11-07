@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,7 +22,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -593,7 +593,7 @@ private fun EditorLogro(previo: LogroPropio? = null, cerrar: () -> Unit) {
     var version by remember { mutableIntStateOf(0) }
     Tarjeta(Modifier.padding(top = 10.dp)) {
         Text(if (previo == null) "Nuevo logro" else "Corregir el logro", style = MaterialTheme.typography.titleMedium)
-        OutlinedTextField(nombre, { nombre = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("Nombre") })
+        CampoTexto(nombre, { nombre = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("Nombre") })
         Etiqueta("Qué cuenta")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf("habito" to "Un hábito", "variable" to "Algo de tu día", "etiqueta" to "@persona o #tema").forEach { (id, n) -> Ficha(n, fuente == id) { fuente = id; clave = "" } }
@@ -605,7 +605,7 @@ private fun EditorLogro(previo: LogroPropio? = null, cerrar: () -> Unit) {
                 hs.forEach { h -> Ficha(h.nombre, clave == h.id) { clave = h.id; if (nombre.isBlank()) nombre = h.nombre } }
             }
             "etiqueta" -> {
-                OutlinedTextField(clave, { clave = it.trim() }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("@abuela o #guitarra") },
+                CampoTexto(clave, { clave = it.trim() }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("@abuela o #guitarra") },
                     isError = clave.isNotEmpty() && !clave.startsWith("@") && !clave.startsWith("#"))
                 if (clave.isNotEmpty() && !clave.startsWith("@") && !clave.startsWith("#")) Ayuda("Empieza con @ para una persona o con # para un tema.", Modifier.padding(top = 4.dp))
                 // Tus @ y # más usados, a un toque.
@@ -615,7 +615,7 @@ private fun EditorLogro(previo: LogroPropio? = null, cerrar: () -> Unit) {
                 }
             }
             else -> {
-                OutlinedTextField(buscar, { buscar = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("buscar: pasos, sueño, palabras…") })
+                CampoTexto(buscar, { buscar = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("buscar: pasos, sueño, palabras…") })
                 val q = buscar.trim().lowercase()
                 FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     variables.filter { q.isEmpty() || it.nombre.lowercase().contains(q) || it.id.contains(q) }.take(14).forEach { v ->
@@ -626,7 +626,7 @@ private fun EditorLogro(previo: LogroPropio? = null, cerrar: () -> Unit) {
                     Ficha("pasa de", !umbralMax) { umbralMax = false }
                     Ficha("queda en o menos de", umbralMax) { umbralMax = true }
                 }
-                OutlinedTextField(umbral, { umbral = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(it) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
+                CampoTexto(umbral, { umbral = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(it) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
                     label = { Text(if (umbralMax) "Un día cuenta si queda en… o menos" else "Un día cuenta si pasa de… (opcional)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
             }
         }
@@ -637,9 +637,9 @@ private fun EditorLogro(previo: LogroPropio? = null, cerrar: () -> Unit) {
                 .forEach { (id, n) -> Ficha(n, modo == id) { modo = id } }
         }
         Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(meta, { meta = it.filter { ch -> ch.isDigit() || ch == '.' } }, Modifier.weight(1f), singleLine = true,
+            CampoTexto(meta, { meta = it.filter { ch -> ch.isDigit() || ch == '.' } }, Modifier.weight(1f), singleLine = true,
                 label = { Text(if (modo == "total") "Meta (suma)" else "Días") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-            if (modo == "dias") OutlinedTextField(ventana, { ventana = it.filter { ch -> ch.isDigit() } }, Modifier.weight(1f), singleLine = true,
+            if (modo == "dias") CampoTexto(ventana, { ventana = it.filter { ch -> ch.isDigit() } }, Modifier.weight(1f), singleLine = true,
                 label = { Text("en una ventana de … días (vacío o 0: desde siempre)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
         }
         Ayuda(when (modo) {

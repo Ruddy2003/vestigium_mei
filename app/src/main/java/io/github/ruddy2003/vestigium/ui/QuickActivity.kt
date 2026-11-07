@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -31,7 +32,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -359,7 +359,7 @@ class QuickActivity : FragmentActivity() {
             pensamientos = l
             asegurar { it.copy(pensamientos = l, pensamiento = l.firstOrNull()) }
         }
-        OutlinedTextField(value = nota, onValueChange = { t -> nota = t; asegurar { it.copy(texto = t) } },
+        CampoTexto(value = nota, onValueChange = { t -> nota = t; asegurar { it.copy(texto = t) } },
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp), minLines = 2, placeholder = { Text("¿Qué está pasando? Usa @persona y #tema") }, visualTransformation = rememberMarcas())
         Row(Modifier.padding(top = 6.dp)) { BotonDictado { d -> nota = (nota + " " + d).trim(); val t = nota; asegurar { it.copy(texto = t) } } }
         Etiqueta("¿Con quién estás? (opcional)")
@@ -433,7 +433,7 @@ class QuickActivity : FragmentActivity() {
         if (mm.tipo == "libido") { DetalleLibido(mm); return }
         if (mm.tipo == "recaida") DetalleRecaida(mm) { m = it }
         Etiqueta(t?.pregunta ?: "Detalle")
-        OutlinedTextField(value = texto, onValueChange = { texto = it; actualizar(mm.id) { x -> x.copy(texto = it) } },
+        CampoTexto(value = texto, onValueChange = { texto = it; actualizar(mm.id) { x -> x.copy(texto = it) } },
             modifier = Modifier.fillMaxWidth(), minLines = 2, placeholder = { Text("Usa @persona y #tema") }, visualTransformation = rememberMarcas())
         Row(Modifier.padding(top = 8.dp)) { BotonDictado { d -> texto = (texto + " " + d).trim(); actualizar(mm.id) { x -> x.copy(texto = texto) } } }
         Etiqueta(if (mm.tipo == "recaida") "Qué tan fuerte era el impulso" else "Intensidad")
@@ -519,7 +519,7 @@ class QuickActivity : FragmentActivity() {
         }
         if ("otro" in det) {
             var otro by remember(mm.id) { mutableStateOf(mm.detonante_otro.orEmpty()) }
-            OutlinedTextField(value = otro, onValueChange = { t -> otro = t; actualizar(mm.id) { it.copy(detonante_otro = t.trim().ifBlank { null }) } },
+            CampoTexto(value = otro, onValueChange = { t -> otro = t; actualizar(mm.id) { it.copy(detonante_otro = t.trim().ifBlank { null }) } },
                 modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
         }
         Etiqueta("Qué hacías justo antes")
@@ -592,7 +592,7 @@ class QuickActivity : FragmentActivity() {
         var via by remember(id) { mutableStateOf<String?>(null) }
         var otra by remember(id) { mutableStateOf("") }
         var con by remember(id) { mutableStateOf<List<String>>(emptyList()) }
-        if (id == "otra") OutlinedTextField(value = otra, onValueChange = { otra = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("¿Cuál?") })
+        if (id == "otra") CampoTexto(value = otra, onValueChange = { otra = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("¿Cuál?") })
         Etiqueta(if (info.conNivel) "¿Desde cuándo?" else "¿Cuándo?")
         SelectorHora(cuando, atajos = listOf(30, 60, 120, 180)) { cuando = it }
         if (info.conNivel) {
@@ -648,7 +648,7 @@ class QuickActivity : FragmentActivity() {
             else if (cantidad > 0 && sustancia == "alcohol") Ficha("− 1", false) { poner(cantidad - 1) }
             if (cantidad > 0) Ficha("poner en 0", false) { pila = emptyList(); poner(0.0) }
         }
-        OutlinedTextField(value = texto, onValueChange = { t -> texto = D.limpiarMonto(t); onCambio(texto.toDoubleOrNull() ?: 0.0) },
+        CampoTexto(value = texto, onValueChange = { t -> texto = D.limpiarMonto(t); onCambio(texto.toDoubleOrNull() ?: 0.0) },
             modifier = Modifier.padding(top = 6.dp).width(200.dp), singleLine = true, label = { Text("o escribe el total") },
             suffix = { Text(if (sustancia == "cafeina") "mg" else unidad) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
     }
@@ -669,7 +669,7 @@ class QuickActivity : FragmentActivity() {
         var con by remember { mutableStateOf(c0.con_quien) }
         var otra by remember { mutableStateOf(c0.otra_nombre) }
         Encabezado((if (c0.fecha < Fechas.diaLogico()) "Lo de anoche: " else "Editar: ") + Catalogo.nombreSustancia(c0).lowercase(), "Unos toques. Lo que no recuerdes, déjalo vacío.")
-        if (c0.sustancia == "otra") OutlinedTextField(value = otra, onValueChange = { otra = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("¿Cuál?") })
+        if (c0.sustancia == "otra") CampoTexto(value = otra, onValueChange = { otra = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("¿Cuál?") })
         Etiqueta("¿Desde cuándo?")
         SelectorHora(inicio, etiquetaAhora = "no sé") { inicio = it }
         Etiqueta("¿Hasta cuándo te duró el efecto?")
@@ -692,7 +692,7 @@ class QuickActivity : FragmentActivity() {
             Catalogo.SINTOMAS.forEach { o -> val a = o.id in sintomas; Ficha(o.nombre, a) { sintomas = if (a) sintomas - o.id else sintomas + o.id } }
         }
         if ("otro" in sintomas) Ayuda("Escribe cuál en la nota.", Modifier.padding(top = 4.dp))
-        OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Nota (opcional): @persona, #lugar…") },
+        CampoTexto(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Nota (opcional): @persona, #lugar…") },
             visualTransformation = rememberMarcas())
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             var confirmar by remember { mutableStateOf(false) }
@@ -787,7 +787,7 @@ class QuickActivity : FragmentActivity() {
             }
         }
         Etiqueta(if (entra) "Monto" else "Otro gasto")
-        OutlinedTextField(value = monto, onValueChange = { monto = D.limpiarMonto(it); error = null }, modifier = Modifier.fillMaxWidth(),
+        CampoTexto(value = monto, onValueChange = { monto = D.limpiarMonto(it); error = null }, modifier = Modifier.fillMaxWidth(),
             prefix = { Text("$ ") }, placeholder = { Text("0") }, singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), textStyle = MaterialTheme.typography.headlineSmall)
         Etiqueta("Categoría")
@@ -814,7 +814,7 @@ class QuickActivity : FragmentActivity() {
             Interruptor("¿Fue imprevisto?", imprevisto) { imprevisto = it }
             Interruptor("¿Se repite? (renta, suscripción, servicios)", repite) { repite = it }
         }
-        OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
+        CampoTexto(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
             if (registrado != null && !embebido) TextButton(onClick = { terminar() }) { Text("Listo") }

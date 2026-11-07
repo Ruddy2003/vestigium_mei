@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,7 +24,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -256,7 +256,7 @@ fun PantallaNotas(nav: Nav) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Catalogo.TIPOS_NOTA.forEach { o -> Ficha(o.nombre, tipo == o.id) { tipo = o.id } }
             }
-            OutlinedTextField(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), minLines = 3,
+            CampoTexto(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), minLines = 3,
                 placeholder = { Text("Escribe… usa @persona y #tema") }, visualTransformation = marcas)
             if (tipo == "recordatorio") Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Ficha(recordar?.let { "el ${Fechas.corto(it)}" } ?: "¿qué día?", recordar != null) { elegirFecha(ctx, recordar, desdeManana = false) { recordar = it } }
@@ -274,7 +274,7 @@ fun PantallaNotas(nav: Nav) {
                 texto = ""; recordar = null; paraDia = null
             }
         }
-        OutlinedTextField(value = buscar, onValueChange = { buscar = it }, modifier = Modifier.fillMaxWidth().padding(top = 14.dp), singleLine = true,
+        CampoTexto(value = buscar, onValueChange = { buscar = it }, modifier = Modifier.fillMaxWidth().padding(top = 14.dp), singleLine = true,
             placeholder = { Text("Buscar en tus notas") })
         FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("todas", filtro == "todas") { filtro = "todas" }
@@ -305,7 +305,7 @@ fun DialogoNota(n: Nota, cerrar: () -> Unit) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Catalogo.TIPOS_NOTA.forEach { o -> Ficha(o.nombre, tp == o.id) { tp = o.id } }
                 }
-                OutlinedTextField(value = t, onValueChange = { t = it }, minLines = 4, visualTransformation = marcas, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+                CampoTexto(value = t, onValueChange = { t = it }, minLines = 4, visualTransformation = marcas, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
                 Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Ayuda("Del ${Fechas.titulo(f).lowercase()}", Modifier.weight(1f))
                     Text("cambiar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
@@ -435,7 +435,7 @@ private fun PlantillaPropositos(anio: Int) {
             (Metas.IDEAS_PROPOSITOS + elegidos.filter { it !in Metas.IDEAS_PROPOSITOS }).forEach { p -> Ficha(p, p in elegidos) { elegidos = if (p in elegidos) elegidos - p else elegidos + p } }
         }
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
-            OutlinedTextField(value = propio, onValueChange = { propio = it }, singleLine = true, modifier = Modifier.weight(1f), placeholder = { Text("Otro propósito") })
+            CampoTexto(value = propio, onValueChange = { propio = it }, singleLine = true, modifier = Modifier.weight(1f), placeholder = { Text("Otro propósito") })
             TextButton(onClick = { if (propio.isNotBlank()) { elegidos = elegidos + propio.trim(); propio = "" } }) { Text("+") }
         }
         BotonPrincipal("Guardar ${elegidos.size} propósito${if (elegidos.size == 1) "" else "s"}", Modifier.fillMaxWidth().padding(top = 8.dp), habilitado = elegidos.isNotEmpty()) {
@@ -457,8 +457,8 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
     Dialogo(onDismissRequest = cerrar, title = { Text(if (previa == null) "Nueva meta" else "Meta") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                OutlinedTextField(value = m.nombre, onValueChange = { m = m.copy(nombre = it) }, label = { Text("Qué quieres lograr") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = m.detalle, onValueChange = { m = m.copy(detalle = it) }, label = { Text("Detalle (opcional)") }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
+                CampoTexto(value = m.nombre, onValueChange = { m = m.copy(nombre = it) }, label = { Text("Qué quieres lograr") }, modifier = Modifier.fillMaxWidth())
+                CampoTexto(value = m.detalle, onValueChange = { m = m.copy(detalle = it) }, label = { Text("Detalle (opcional)") }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
                 Etiqueta("Fecha objetivo")
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Ficha(m.fecha_objetivo?.let { Fechas.corto(it) + " " + it.take(4) } ?: "elegir…", m.fecha_objetivo != null) {
@@ -485,7 +485,7 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
                         io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().filter { it.activo }.forEach { h -> Ficha(h.nombre, m.medida_clave == h.id) { m = m.copy(medida_clave = h.id) } }
                     }
                     else -> {
-                        OutlinedTextField(value = buscarVar, onValueChange = { buscarVar = it }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                        CampoTexto(value = buscarVar, onValueChange = { buscarVar = it }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                             placeholder = { Text("Buscar variable (enfoque, pasos, sueño…)") })
                         val q = io.github.ruddy2003.vestigium.ciencia.Totales.normal(buscarVar)
                         val elegida = vars.firstOrNull { it.id == m.medida_clave }
@@ -501,13 +501,13 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
                                 Ficha("al menos", !m.umbral_max) { m = m.copy(umbral_max = false) }
                                 Ficha("como mucho", m.umbral_max) { m = m.copy(umbral_max = true) }
                             }
-                            OutlinedTextField(value = umbralTexto, onValueChange = { t -> umbralTexto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(t); m = m.copy(umbral = umbralTexto.toDoubleOrNull() ?: 0.0) },
+                            CampoTexto(value = umbralTexto, onValueChange = { t -> umbralTexto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(t); m = m.copy(umbral = umbralTexto.toDoubleOrNull() ?: 0.0) },
                                 singleLine = true, label = { Text(if (m.umbral_max) "Un día cuenta si queda en (p. ej. 120 minutos) o menos" else "Un día cuenta desde (p. ej. 60 minutos)") },
                                 modifier = Modifier.fillMaxWidth().padding(top = 6.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                         }
                     }
                 }
-                if (m.medida_tipo != null) OutlinedTextField(value = objetivoTexto, onValueChange = { t -> objetivoTexto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(t); m = m.copy(objetivo = objetivoTexto.toDoubleOrNull()) },
+                if (m.medida_tipo != null) CampoTexto(value = objetivoTexto, onValueChange = { t -> objetivoTexto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(t); m = m.copy(objetivo = objetivoTexto.toDoubleOrNull()) },
                     singleLine = true, label = { Text(if (m.medida_modo == "dias") "Cuántos días" else "Meta numérica") }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 Etiqueta("Revisión")

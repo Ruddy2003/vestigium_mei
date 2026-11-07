@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import android.content.ContentValues
@@ -45,7 +46,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -797,7 +797,7 @@ private fun Predicciones(anio: Int, editable: Boolean) {
     val r = remember(anio) { mutableStateMapOf<String, String>().apply { putAll(previas) } }
     Tarjeta {
         TuAnio.PREGUNTAS.forEach { (k, q) ->
-            OutlinedTextField(r[k].orEmpty(), { r[k] = it }, Modifier.fillMaxWidth().padding(vertical = 4.dp), enabled = editable, singleLine = true, label = { Text(q) },
+            CampoTexto(r[k].orEmpty(), { r[k] = it }, Modifier.fillMaxWidth().padding(vertical = 4.dp), enabled = editable, singleLine = true, label = { Text(q) },
                 keyboardOptions = KeyboardOptions(keyboardType = if (k == "persona") KeyboardType.Text else KeyboardType.Decimal))
         }
         if (editable) BotonPrincipal("Guardar predicciones", Modifier.fillMaxWidth().padding(top = 8.dp)) {

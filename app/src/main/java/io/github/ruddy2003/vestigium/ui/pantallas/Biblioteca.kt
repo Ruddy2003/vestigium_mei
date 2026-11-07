@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -31,7 +32,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -246,10 +246,10 @@ private fun Claves() {
     var estado by remember { mutableStateOf<String?>(null) }
     Tarjeta {
         Etiqueta("TMDB · películas (y series en español)")
-        OutlinedTextField(tmdb, { tmdb = it.trim() }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("API Key") },
+        CampoTexto(tmdb, { tmdb = it.trim() }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("API Key") },
             visualTransformation = PasswordVisualTransformation())
         Etiqueta("RAWG · videojuegos")
-        OutlinedTextField(rawg, { rawg = it.trim() }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("API key") },
+        CampoTexto(rawg, { rawg = it.trim() }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("API key") },
             visualTransformation = PasswordVisualTransformation())
         Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BotonPrincipal("Guardar y probar") {
@@ -377,7 +377,7 @@ fun PantallaBuscarObra(nav: Nav) {
             TIPOS_OBRA.forEach { t -> Ficha(t.nombre.lowercase(), tipo == t.id) { BusquedaObra.tipo = t.id; resultados = emptyList(); mensaje = null } }
         }
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(BusquedaObra.texto, { BusquedaObra.texto = it }, Modifier.weight(1f), singleLine = true,
+            CampoTexto(BusquedaObra.texto, { BusquedaObra.texto = it }, Modifier.weight(1f), singleLine = true,
                 placeholder = { Text(when (tipo) { "articulo" -> "título o DOI"; "pelicula" -> "título de la película"; "serie" -> "título de la serie"; "juego" -> "título del juego"; else -> "título o autor" }) },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { buscar() }))
             Spacer(Modifier.width(8.dp))
@@ -463,17 +463,17 @@ fun PantallaObra(nav: Nav) {
             Tarjeta {
                 FilaFichas(TIPOS_OBRA, o.tipo) { g(o.copy(tipo = it ?: o.tipo)) }
                 Etiqueta("Título")
-                OutlinedTextField(o.titulo, { g(o.copy(titulo = it)) }, Modifier.fillMaxWidth(), singleLine = true)
+                CampoTexto(o.titulo, { g(o.copy(titulo = it)) }, Modifier.fillMaxWidth(), singleLine = true)
                 Etiqueta(autorDe(o.tipo))
-                OutlinedTextField(o.autor, { g(o.copy(autor = it)) }, Modifier.fillMaxWidth(), singleLine = true)
+                CampoTexto(o.autor, { g(o.copy(autor = it)) }, Modifier.fillMaxWidth(), singleLine = true)
                 if (o.tipo == "articulo") {
                     Etiqueta("Revista")
-                    OutlinedTextField(o.revista, { g(o.copy(revista = it)) }, Modifier.fillMaxWidth(), singleLine = true)
+                    CampoTexto(o.revista, { g(o.copy(revista = it)) }, Modifier.fillMaxWidth(), singleLine = true)
                     Etiqueta("DOI")
-                    OutlinedTextField(o.doi, { g(o.copy(doi = it.trim())) }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("10.xxxx/…") })
+                    CampoTexto(o.doi, { g(o.copy(doi = it.trim())) }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("10.xxxx/…") })
                 }
                 Etiqueta("Año de publicación o estreno")
-                OutlinedTextField(o.anio?.toString() ?: "", { t -> g(o.copy(anio = t.filter { it.isDigit() }.take(4).toIntOrNull())) }, Modifier.width(140.dp), singleLine = true,
+                CampoTexto(o.anio?.toString() ?: "", { t -> g(o.copy(anio = t.filter { it.isDigit() }.take(4).toIntOrNull())) }, Modifier.width(140.dp), singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
             }
         }
@@ -489,7 +489,7 @@ fun PantallaObra(nav: Nav) {
                     Etiqueta("Qué tan pronto la quieres")
                     FilaFichas(io.github.ruddy2003.vestigium.data.Catalogo.PRIORIDADES_DESEO, o.prioridad.ifBlank { null }) { g(o.copy(prioridad = it.orEmpty())) }
                     Etiqueta("Dónde verla o conseguirla")
-                    OutlinedTextField(o.donde, { g(o.copy(donde = it.take(80))) }, Modifier.fillMaxWidth(), singleLine = true,
+                    CampoTexto(o.donde, { g(o.copy(donde = it.take(80))) }, Modifier.fillMaxWidth(), singleLine = true,
                         placeholder = { Text("plataforma, biblioteca, quien te la presta…") })
                 }
                 Etiqueta("Te la recomendó")
@@ -504,10 +504,10 @@ fun PantallaObra(nav: Nav) {
                 }
                 Etiqueta("Progreso (${unidad(o.tipo)})")
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(o.progreso?.toString() ?: "", { t -> g(o.copy(progreso = t.filter { it.isDigit() }.take(6).toIntOrNull())) }, Modifier.width(110.dp), singleLine = true,
+                    CampoTexto(o.progreso?.toString() ?: "", { t -> g(o.copy(progreso = t.filter { it.isDigit() }.take(6).toIntOrNull())) }, Modifier.width(110.dp), singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                     Text("  de  ", style = MaterialTheme.typography.labelLarge)
-                    OutlinedTextField(o.total?.toString() ?: "", { t -> g(o.copy(total = t.filter { it.isDigit() }.take(6).toIntOrNull())) }, Modifier.width(110.dp), singleLine = true,
+                    CampoTexto(o.total?.toString() ?: "", { t -> g(o.copy(total = t.filter { it.isDigit() }.take(6).toIntOrNull())) }, Modifier.width(110.dp), singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 }
                 Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -576,9 +576,9 @@ private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit, anotar: (Cita) -> 
             }
         }
         if (o.citas.isNotEmpty()) Spacer(Modifier.height(10.dp))
-        OutlinedTextField(texto, { texto = it }, Modifier.fillMaxWidth(), placeholder = { Text("Copia aquí la frase") }, minLines = 2)
+        CampoTexto(texto, { texto = it }, Modifier.fillMaxWidth(), placeholder = { Text("Copia aquí la frase") }, minLines = 2)
         Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(pagina, { pagina = it.take(20) }, Modifier.width(130.dp), singleLine = true, placeholder = { Text(if (o.tipo in setOf("pelicula", "serie", "documental", "podcast", "audiolibro", "album")) "minuto" else "página") })
+            CampoTexto(pagina, { pagina = it.take(20) }, Modifier.width(130.dp), singleLine = true, placeholder = { Text(if (o.tipo in setOf("pelicula", "serie", "documental", "podcast", "audiolibro", "album")) "minuto" else "página") })
             Spacer(Modifier.width(10.dp))
             BotonPrincipal("Guardar cita", habilitado = texto.isNotBlank()) {
                 val c = Cita(Repo.nuevoId(), texto.trim().removePrefix("«").removeSuffix("»").removePrefix("\"").removeSuffix("\"").trim(), pagina.trim(), Fechas.diaLogico())
@@ -592,8 +592,8 @@ private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit, anotar: (Cita) -> 
         io.github.ruddy2003.vestigium.ui.Dialogo(onDismissRequest = { editando = null }, title = { Text("Corregir la cita") },
             text = {
                 Column {
-                    OutlinedTextField(t, { t = it }, Modifier.fillMaxWidth(), minLines = 3)
-                    OutlinedTextField(p, { p = it.take(20) }, Modifier.width(160.dp).padding(top = 8.dp), singleLine = true, label = { Text("página o minuto") })
+                    CampoTexto(t, { t = it }, Modifier.fillMaxWidth(), minLines = 3)
+                    CampoTexto(p, { p = it.take(20) }, Modifier.width(160.dp).padding(top = 8.dp), singleLine = true, label = { Text("página o minuto") })
                 }
             },
             confirmButton = { TextButton(enabled = t.isNotBlank(), onClick = {
@@ -696,7 +696,7 @@ fun PantallaDeseados(nav: Nav) {
         Seccion("Añadir", "Elige qué es, escribe el título y listo.") {
             Tarjeta {
                 FilaFichas(TIPOS_OBRA, tipoNuevo) { tipoNuevo = it ?: tipoNuevo }
-                OutlinedTextField(titulo, { titulo = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("título") },
+                CampoTexto(titulo, { titulo = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("título") },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { anadir() }))
                 Etiqueta("Qué tan pronto")
                 FilaFichas(io.github.ruddy2003.vestigium.data.Catalogo.PRIORIDADES_DESEO, prioridad.ifBlank { null }) { prioridad = it.orEmpty() }

@@ -73,6 +73,7 @@ class UnicidadTemas {
         r["diseno_ideas"] = iguales { disenoIdeas(it) }
         // La biblioteca del diario: cada tema con su propio estante (los que aún no lo tienen dan null y no cuentan).
         r["diseno_biblioteca"] = iguales { io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(it) }
+        r["diseno_comun"] = iguales { io.github.ruddy2003.vestigium.ui.comun.disenoComun(it) }
         return r
     }
 

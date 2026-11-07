@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import android.Manifest
@@ -23,7 +24,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -812,8 +812,8 @@ private fun Equivalencias() {
             }
         }
         Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(value = a, onValueChange = { a = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("variante") })
-            OutlinedTextField(value = b, onValueChange = { b = it }, modifier = Modifier.weight(1f).padding(start = 6.dp), singleLine = true, placeholder = { Text("canónica") })
+            CampoTexto(value = a, onValueChange = { a = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("variante") })
+            CampoTexto(value = b, onValueChange = { b = it }, modifier = Modifier.weight(1f).padding(start = 6.dp), singleLine = true, placeholder = { Text("canónica") })
             TextButton(onClick = {
                 val x = Texto.etiqueta(a); val y = Texto.etiqueta(b)
                 if (x.isNotEmpty() && y.isNotEmpty() && x != y) { Repo.cambiarConfig { it.copy(equivalencias = it.equivalencias + (x to y)) }; a = ""; b = "" }
@@ -864,7 +864,7 @@ private fun SpotifyTarjeta(tarea: (suspend () -> String) -> Unit) {
             TextButton(onClick = { copiar(Spotify.REDIRECCION) }) { Text("copiar dirección", style = MaterialTheme.typography.labelLarge) }
             Ayuda("4. En «Which API/SDKs…» marca «Web API», acepta los términos y guarda.\n" +
                 "5. En la app recién creada abre «Settings», copia el Client ID y pégalo aquí:")
-            OutlinedTextField(clientId, { clientId = it.trim() }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Client ID") })
+            CampoTexto(clientId, { clientId = it.trim() }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Client ID") })
             BotonPrincipal(if (esperando) "esperando al navegador…" else "Conectar con Spotify", Modifier.fillMaxWidth().padding(top = 8.dp)) {
                 if (clientId.length < 20) Spotify.mensaje.value = "Ese Client ID se ve incompleto: son 32 letras y números."
                 else runCatching {
@@ -874,7 +874,7 @@ private fun SpotifyTarjeta(tarea: (suspend () -> String) -> Unit) {
             Ayuda("Requisito de Spotify desde 2026: el dueño de la app de desarrollador necesita Premium. Sin Premium, usa la importación del historial en «Otros servicios»: da lo mismo, solo que no al momento.", Modifier.padding(top = 6.dp))
             Etiqueta("si al volver el navegador muestra un error")
             Ayuda("Copia la dirección completa de esa página (empieza con http://127.0.0.1) y pégala aquí:")
-            OutlinedTextField(pegada, { pegada = it.trim() }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, placeholder = { Text("http://127.0.0.1:43117/callback?code=…") })
+            CampoTexto(pegada, { pegada = it.trim() }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, placeholder = { Text("http://127.0.0.1:43117/callback?code=…") })
             if (pegada.isNotBlank()) BotonSecundario("usar dirección") { val d = pegada; pegada = ""; tarea { Spotify.canjearPegada(ctx, d) } }
         }
         msg?.let { Aviso(it) }

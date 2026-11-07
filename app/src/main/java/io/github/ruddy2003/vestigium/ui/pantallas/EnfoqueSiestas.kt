@@ -145,13 +145,13 @@ fun DialogoTramo(t: io.github.ruddy2003.vestigium.data.Tramo, cerrar: () -> Unit
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     (Catalogo.ENFOQUE + Catalogo.SIESTA).forEach { o -> io.github.ruddy2003.vestigium.ui.Ficha(o.nombre, tipo == o.id) { tipo = o.id } }
                 }
-                if (tipo == "otro") androidx.compose.material3.OutlinedTextField(otro, { otro = it.take(40) }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true,
+                if (tipo == "otro") io.github.ruddy2003.vestigium.ui.comun.CampoTexto(otro, { otro = it.take(40) }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true,
                     label = { Text("¿En qué?") })
                 io.github.ruddy2003.vestigium.ui.Etiqueta("Empezó")
                 io.github.ruddy2003.vestigium.ui.SelectorHora(cuando) { cuando = it }
                 io.github.ruddy2003.vestigium.ui.Etiqueta("Duró")
                 io.github.ruddy2003.vestigium.ui.SelectorDuracion(min, listOf(5, 10, 15, 30, 45, 60, 90, 120, 180, 240)) { min = it }
-                androidx.compose.material3.OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Qué hiciste (opcional; @persona y #tema)") },
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Qué hiciste (opcional; @persona y #tema)") },
                     visualTransformation = io.github.ruddy2003.vestigium.ui.rememberMarcas())
                 TextButton(onClick = {
                     if (confirmar) { Repo.borrarTramo(t.id); cerrar(); Deshacer.ofrecer("Tramo borrado") { Repo.guardarTramo(t) } } else confirmar = true
