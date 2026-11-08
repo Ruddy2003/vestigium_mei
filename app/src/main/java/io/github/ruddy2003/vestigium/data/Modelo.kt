@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 20
+const val SCHEMA_V = 21
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -38,7 +38,10 @@ data class Dia(
     val ctx: Map<String, Boolean> = emptyMap(),
     /** Otro contexto del día, escrito a mano (esquema 17); solo se exporta. */
     val ctx_otro: String = "",
+    /** Hitos de antes del esquema 21: etiquetas sueltas. Ya no se escriben; se leen como fechas señaladas de tipo «otro» (ver `Senaladas`). */
     val hitos: List<String> = emptyList(),
+    /** Fechas señaladas (esquema 21): lo que quieres recordar del día, cada una con su tipo (Catalogo.SENALADAS) y una frase. */
+    val senaladas: List<Senalada> = emptyList(),
     val flow: String? = null,
     val sdt_necesidad: String? = null,
     val apreciacion: String? = null,
@@ -143,7 +146,46 @@ data class Momento(
     val ts_creado: String? = null,
     /** Cuándo se corrigió por última vez después de anotarlo (esquema 14). */
     val ts_editado: String? = null,
+    // ---- Esquema 21: masturbación e intimidad (privados) y episodios.
+    /** Masturbación: qué la acompañó (Catalogo.ESTIMULOS); «otro» lleva su texto en [estimulo_otro]. */
+    val estimulo: String? = null,
+    val estimulo_otro: String? = null,
+    /** Masturbación e intimidad: dónde (Catalogo.SITIOS); «otro» lleva su texto en [sitio_otro]. */
+    val sitio: String? = null,
+    val sitio_otro: String? = null,
+    /** Intimidad: qué pasó, varias a la vez (ids de Catalogo.PRACTICAS); «otra» lleva su texto en [practica_otra]. */
+    val practicas: List<String> = emptyList(),
+    val practica_otra: String? = null,
+    /** Intimidad: el nivel más alto de [practicas] (0 a distancia, 1 beso, 2 caricias, 3 oral, 4 coito; ver Catalogo.nivelIntimidad). */
+    val nivel: Int? = null,
+    /** Intimidad y masturbación: escalas de 1 a 5 (Catalogo.ANCLAS). */
+    val satisfaccion: Int? = null,
+    val placer: Int? = null,
+    val conexion: Int? = null,
+    val comodidad: Int? = null,
+    /** Intimidad: orgasmo propio y de la otra persona («si», «no», «no_se»). */
+    val orgasmo: String? = null,
+    val orgasmo_otra: String? = null,
+    /** Intimidad: protección (Catalogo.PROTECCION) y quién empezó (Catalogo.INICIATIVA). */
+    val proteccion: String? = null,
+    val iniciativa: String? = null,
+    /**
+     * Con quién, por nombre (sin @, en minúsculas, como las menciones): en la intimidad (privado; cuenta en la ficha de la
+     * persona solo con el seguimiento privado) y en un episodio de pelea (normal; cuenta como mención).
+     */
+    val personas: List<String> = emptyList(),
+    /** Episodio: qué fue (Catalogo.EPISODIOS); «otro» lleva su texto en [episodio_otro]. */
+    val episodio: String? = null,
+    val episodio_otro: String? = null,
+    /** Episodio de crisis: los síntomas (Catalogo.SINTOMAS_CRISIS). */
+    val sintomas: List<String> = emptyList(),
+    /** El momento gemelo: la recaída que creó una masturbación con pornografía, y al revés. */
+    val vinculo: String? = null,
 )
+
+/** Una fecha señalada del día (esquema 21): su tipo (Catalogo.SENALADAS) y una frase. */
+@Serializable
+data class Senalada(val tipo: String, val texto: String = "")
 
 /**
  * Los avisos de ánimo de un día (esquema 13): cuántos se planearon, cuáles ya vencieron (pasó su hora) y cuáles se mostraron
@@ -245,6 +287,8 @@ data class Tramo(
     val tipo_otro: String = "",
     /** Cuándo se anotó (esquema 14). */
     val ts_creado: String? = null,
+    /** Los minutos planeados de este bloque (esquema 21); null en el cronómetro libre o lo anotado a mano. [min] es lo real, con lo de más. */
+    val plan_min: Int? = null,
 )
 
 /**
@@ -269,6 +313,8 @@ data class PlanEnfoque(
     /** Enfoque ya guardado en los bloques terminados de esta sesión (ms). */
     val hecho_ms: Long = 0L,
     val pausas: Int = 0,
+    /** Ya se avisó que el segmento en curso llegó a su meta (esquema 21): desde entonces sigue contando, lo de más. */
+    val avisado: Boolean = false,
 )
 
 /**
@@ -899,8 +945,10 @@ data class Config(
     val metas_hora: Int = 19,
     // ---- Lote 3: suplementos, red de personas y la laptop (Cold Turkey).
     val suplementos: List<Suplemento> = Suplementos.INICIALES,
-    /** Recordatorio diario de suplementos (hora; null = apagado). */
+    /** Recordatorio diario de suplementos (hora; null = apagado). Hasta el esquema 20; desde el 21, ver [suplementos_horas]. */
     val suplementos_hora: Int? = null,
+    /** Horas del recordatorio de suplementos (esquema 21), una o varias; vacío = la de [suplementos_hora] (ver Suplementos.horas). */
+    val suplementos_horas: List<Int> = emptyList(),
     /** Palabras de tu bitácora de MacroFactor que cuentan como una porción de probióticos (estimado). */
     val probioticos_palabras: List<String> = listOf("kéfir", "kefir", "yogur", "yogurt", "yakult", "kombucha", "chucrut", "kimchi", "miso", "tempeh"),
     /** Quién conoce a quién: pares de personas con el tipo de vínculo que dijiste. */
@@ -935,6 +983,8 @@ data class Suplemento(
     val carga_dias: Int = 28,
     val lavado_dias: Int = 35,
     val activo: Boolean = true,
+    /** Cuántas tomas al día (esquema 21): mientras lleves menos, falta (recordatorio, mosaico, «Ya los tomé»). */
+    val tomas_dia: Int = 1,
 )
 
 /** Una toma de suplemento. [estimado] = inferida de tu bitácora de comidas, no anotada a mano. */

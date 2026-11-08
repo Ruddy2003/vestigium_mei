@@ -16,15 +16,17 @@ class PrivadoPrueba {
     private fun momento(tipo: String) = Momento(id = tipo, ts = "2026-10-27T12:00:00-06:00", fecha = "2026-10-27", tipo = tipo)
 
     @Test fun momentosPrivados() {
-        listOf("impulso", "recaida", "libido").forEach { assertTrue(it, momento(it).privado) }
-        listOf("animo", "muestreo", "alegria", "idea", "pensando_en").forEach { assertFalse(it, momento(it).privado) }
+        listOf("impulso", "recaida", "libido", "masturbacion", "intimidad").forEach { assertTrue(it, momento(it).privado) }
+        // Un episodio (una crisis, una pelea) es un dato normal (esquema 21).
+        listOf("animo", "muestreo", "alegria", "idea", "pensando_en", "episodio").forEach { assertFalse(it, momento(it).privado) }
     }
 
     @Test fun variablesPrivadas() {
         val privadas = listOf("impulso", "recaida", "n_recaida", "recaida_min", "libido_max", "n_libido", "n_impulso", "medicamentos_n",
-            "med_paracetamol", "det_estres")
+            "med_paracetamol", "det_estres", "n_masturbacion", "masturbacion_min", "masturbacion_satisfaccion", "n_intimidad", "intimidad_nivel",
+            "intimidad_satisfaccion", "intimidad_comodidad", "n_coito", "intimidad_distancia")
         privadas.forEach { assertTrue(it, Privado.esVariable(it, null)) }
-        listOf("valencia", "sueno_horas", "hab_leer", "per_ana", "tema_tesis", "medicina", "detalle").forEach { assertFalse(it, Privado.esVariable(it, null)) }
+        listOf("valencia", "sueno_horas", "hab_leer", "per_ana", "tema_tesis", "medicina", "detalle", "n_episodio", "epi_crisis", "hitos_n", "supl_creatina_n").forEach { assertFalse(it, Privado.esVariable(it, null)) }
     }
 
     @Test fun habitoLigado() {

@@ -101,6 +101,12 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
                 intentar { Geocercas.registrar(ctx) }
             }
         }
+        // Esquema 21: los hitos de antes pasan a fechas señaladas de tipo «otra». Cada vez (es barato): así también los que
+        // llegan después en un respaldo viejo o una importación.
+        intentar {
+            val viejos = Repo.dias.values.filter { it.hitos.isNotEmpty() }
+            if (viejos.isNotEmpty()) Repo.importarDias(viejos.map { io.github.ruddy2003.vestigium.data.Senaladas.migrar(it) }, sobrescribir = true)
+        }
         intentar { Ubicacion.muestrear(ctx) }
         // Las visitas abiertas de las que tus ubicaciones ya dicen que saliste (si Android no avisó la salida). No en el
         // pulso de la corrección: la lista en memoria se actualiza un instante después y partiría de la de antes.

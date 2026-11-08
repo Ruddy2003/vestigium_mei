@@ -36,11 +36,27 @@ object Suplementos {
         return t
     }
 
-    /** Las de los activos que faltan hoy, con su dosis habitual (lo que hacen «Ya los tomé» y el mosaico). */
+    /** Las de los activos que faltan hoy, una toma de cada uno con su dosis habitual (lo que hacen «Ya los tomé» y el mosaico). */
     fun registrarFaltantes(): List<TomaSuplemento> {
         val hoy = Fechas.diaLogico()
-        return activos().filter { it.modelo != "exposicion" && !tomadoHoy(it.id, hoy) }.map { registrar(it) }
+        return activos().filter { it.modelo != "exposicion" && faltan(it, hoy) }.map { registrar(it) }
     }
+
+    /** Tomas anotadas a mano de un suplemento en un día. */
+    fun tomasDe(id: String, fecha: String): List<TomaSuplemento> = Repo.tomas.filter { it.suplemento == id && it.fecha == fecha && !it.estimado }
+
+    /** Le faltan tomas ese día: llevas menos de [Suplemento.tomas_dia] (esquema 21). */
+    fun faltan(s: Suplemento, fecha: String = Fechas.diaLogico()) = tomasDe(s.id, fecha).size < s.tomas_dia.coerceAtLeast(1)
+
+    /** Quita la última toma del día (la de hora más tarde); devuelve la que quitó, para deshacer. */
+    fun quitarUltima(id: String, fecha: String): TomaSuplemento? {
+        val t = tomasDe(id, fecha).maxByOrNull { it.ts } ?: return null
+        Repo.borrarToma(t.id)
+        return t
+    }
+
+    /** Las horas del recordatorio (esquema 21): las de la lista nueva o, si está vacía, la única de antes. Vacío = apagado. */
+    fun horas(c: Config = Repo.config): List<Int> = c.suplementos_horas.ifEmpty { listOfNotNull(c.suplementos_hora) }.distinct().sorted()
 
     /** «Creatina 5 g · Vitamina D 2000 UI»: para decir qué se anotó. */
     fun resumen(tomas: List<TomaSuplemento>): String = tomas.joinToString(" · ") { t ->
@@ -105,6 +121,7 @@ object Suplementos {
         fun put(f: String, k: String, v: Double) { out.getOrPut(f) { HashMap() }[k] = v }
         c.suplementos.forEach { s ->
             val dosis = dosisPorDia(s.id)
+            val tomas = Repo.tomas.filter { it.suplemento == s.id && !it.estimado }.groupingBy { it.fecha }.eachCount()
             val estimados = if (s.id == "probioticos") probioticosEstimados(c) else emptyMap()
             val inicio = (dosis.keys + estimados.keys).minOrNull() ?: return@forEach
             var f = inicio
@@ -112,6 +129,8 @@ object Suplementos {
             while (f <= hoy) {
                 val d = dosis[f] ?: 0.0
                 put(f, "supl_${s.id}_dosis", d); put(f, "supl_${s.id}_tomado", if (d > 0) 1.0 else 0.0)
+                // Cuántas tomas (esquema 21): ahora se pueden anotar varias al día.
+                put(f, "supl_${s.id}_n", (tomas[f] ?: 0).toDouble())
                 when (s.modelo) {
                     "carga" -> niveles[f]?.let { put(f, "supl_${s.id}_nivel", it); if (s.id == "creatina") put(f, "creatina_saturacion_pct", it) }
                     // Con vida media corta (melatonina, 1 h), lo que queda a las 5:00 es casi siempre 0: no se exporta (H-4-7).

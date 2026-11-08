@@ -248,7 +248,7 @@ object Estadistica {
             Variable("desbloqueos", "Desbloqueos del teléfono", "Teléfono"), Variable("gasto_total", "Gasto del día", "Dinero"),
             Variable("gasto_imprevisto", "Hubo gasto imprevisto (0/1)", "Dinero"), Variable("gasto_imprevisto_monto", "Gasto imprevisto (monto)", "Dinero"),
             Variable("palabras", "Palabras en el diario", "Texto"),
-            Variable("personas", "Personas distintas mencionadas", "Social"), Variable("hitos_n", "Número de hitos", "Texto"),
+            Variable("personas", "Personas distintas mencionadas", "Social"), Variable("hitos_n", "Fechas señaladas del día", "Texto"),
             Variable("presencias_revisado", "Revisaste quién estuvo y en quién solo pensaste (0/1)", "Social"),
             Variable("rt_media", "Tiempo de reacción (ms)", "Mente"), Variable("lugares_distintos", "Lugares distintos visitados", "Movilidad"),
             Variable("distancia_km", "Kilómetros recorridos (aprox.)", "Movilidad"),
@@ -378,12 +378,32 @@ object Estadistica {
         if (Repo.momentos.any { it.tipo == "libido" }) {
             v += Variable("libido_max", "Libido máxima del día (0 a 5)", "Privado"); v += Variable("n_libido", "Registros de libido", "Privado")
         }
+        // Esquema 21: masturbación e intimidad (privadas) y episodios.
+        if (Repo.momentos.any { it.tipo == "masturbacion" }) {
+            v += Variable("n_masturbacion", "Masturbaciones registradas", "Privado"); v += Variable("masturbacion_min", "Minutos de masturbación", "Privado")
+            v += Variable("masturbacion_satisfaccion", "Satisfacción con la masturbación (1 a 5, promedio)", "Privado")
+        }
+        if (Repo.momentos.any { it.tipo == "intimidad" }) {
+            v += Variable("n_intimidad", "Encuentros íntimos registrados", "Privado")
+            v += Variable("intimidad_nivel", "Intimidad: nivel más alto del día (0 a distancia a 4 coito)", "Privado")
+            v += Variable("intimidad_satisfaccion", "Intimidad: satisfacción (1 a 5, promedio)", "Privado")
+            v += Variable("intimidad_comodidad", "Intimidad: comodidad (1 a 5, promedio)", "Privado")
+            v += Variable("n_coito", "Encuentros con coito", "Privado")
+            v += Variable("intimidad_distancia", "Intimidad solo a distancia (0/1)", "Privado")
+        }
+        if (Repo.momentos.any { it.tipo == "episodio" }) {
+            v += Variable("n_episodio", "Episodios del día (crisis, llanto, pelea, salud…)", "Episodios")
+            v += Variable("episodio_intensidad_max", "Intensidad del episodio más fuerte (1 a 5)", "Episodios")
+            listOf("crisis" to "Crisis de ansiedad o pánico", "llanto" to "Llanto o bajón fuerte", "pelea" to "Pelea o discusión", "salud" to "Migraña, enfermedad o accidente")
+                .forEach { (k, n) -> v += Variable("epi_$k", "$n (0/1)", "Episodios") }
+        }
         // Suplementos: dosis, si se tomó y el nivel del modelo (o porciones).
         val sup = runCatching { io.github.ruddy2003.vestigium.data.Suplementos.panel() }.getOrDefault(emptyMap())
         val clavesSup = sup.values.flatMap { it.keys }.toSet()
         Repo.config.suplementos.forEach { s ->
             val u = s.unidad
             listOf("supl_${s.id}_dosis" to "${s.nombre}: dosis del día ($u)", "supl_${s.id}_tomado" to "${s.nombre}: lo tomaste (0/1)",
+                "supl_${s.id}_n" to "${s.nombre}: tomas del día",
                 "supl_${s.id}_nivel" to (if (s.modelo == "carga") "${s.nombre}: reserva estimada (0 a 100 %)" else "${s.nombre}: cantidad estimada en el cuerpo al final del día ($u)"),
                 "supl_${s.id}_porciones" to "${s.nombre}: porciones del día").forEach { (k, n) -> if (k in clavesSup) v += Variable(k, n, "Suplementos") }
         }
@@ -458,7 +478,7 @@ object Estadistica {
             r["sueno_recordado"] = if (d.sueno_recordado) 1.0 else if (d.sueno_calidad != null || d.sueno_texto.isNotBlank()) 0.0 else null
             r["sueno_valencia"] = if (d.sueno_recordado) d.sueno_valencia?.toDouble() else null
             r["palabras"] = Texto.palabras(d.nota).toDouble()
-            r["hitos_n"] = d.hitos.size.toDouble()
+            r["hitos_n"] = io.github.ruddy2003.vestigium.data.Senaladas.de(d).size.toDouble()
             r["impulso"] = d.impulso?.toDouble(); r["recaida"] = d.recaida?.let(b)
             Catalogo.CONTEXTOS.forEach { r["ctx_${it.id}"] = b(d.ctx[it.id] == true) }
             Catalogo.CIENTIFICAS.forEach { p ->
@@ -472,7 +492,7 @@ object Estadistica {
             if (d.presencias_ok || Texto.personas(d.nota).isNotEmpty()) r["presencias_revisado"] = b(d.presencias_ok)
         }
         // Personas distintas nombradas con @ en el diario y en los momentos no privados (H-14-2): los mismos días en que vale 0.
-        val personasMomentos = Repo.momentos.filter { !it.privado }.groupBy { it.fecha }.mapValues { (_, l) -> l.flatMap { Texto.personas(it.texto) } }
+        val personasMomentos = Repo.momentos.filter { !it.privado }.groupBy { it.fecha }.mapValues { (_, l) -> l.flatMap { Texto.personas(it.texto) + it.personas } }
         for (f in sociales) fila(f)["personas"] = (Texto.personas(Repo.dias[f]?.nota.orEmpty()) + personasMomentos[f].orEmpty()).map { Texto.canon(it, eq) }.toSet().size.toDouble()
         // «No hubo» (0) desde el primer registro de cada fuente y solo en días con diario; antes, sin dato (P-15).
         ceroDesde(Repo.gastos.map { it.dia }, Repo.dias.keys).forEach { f -> val r = fila(f); r["gasto_total"] = 0.0; r["gasto_imprevisto"] = 0.0; r["gasto_imprevisto_monto"] = 0.0 }
@@ -613,6 +633,32 @@ object Estadistica {
         Repo.conexiones.forEach { (f, c) -> if (c.presion_n > 0) { val r = fila(f); r["presion_local_hpa"] = io.github.ruddy2003.vestigium.data.Barometro.local(c, ajusteBar); r["cambio_presion_3h"] = c.cambio_presion_3h } }
         Repo.momentos.filter { it.tipo == "libido" }.groupBy { it.fecha }.forEach { (f, l) ->
             val r = fila(f); r["libido_max"] = l.mapNotNull { it.intensidad }.maxOrNull()?.toDouble(); r["n_libido"] = l.size.toDouble()
+        }
+        // Esquema 21. Masturbación e intimidad: desde el primer registro, los días con diario sin nada cuentan como 0 (P-15).
+        fun ceroTipo(tipo: String, claves: List<String>) {
+            val p0 = Repo.momentos.filter { it.tipo == tipo }.minOfOrNull { it.fecha } ?: return
+            ceroDesde(listOf(p0), Repo.dias.keys).forEach { f -> val r = fila(f); claves.forEach { r[it] = 0.0 } }
+        }
+        ceroTipo("masturbacion", listOf("n_masturbacion")); ceroTipo("intimidad", listOf("n_intimidad", "n_coito")); ceroTipo("episodio", listOf("n_episodio", "epi_crisis", "epi_llanto", "epi_pelea", "epi_salud"))
+        Repo.momentos.filter { it.tipo == "masturbacion" }.groupBy { it.fecha }.forEach { (f, l) ->
+            val r = fila(f); r["n_masturbacion"] = l.size.toDouble()
+            l.mapNotNull { it.duracion_min }.takeIf { it.isNotEmpty() }?.let { r["masturbacion_min"] = it.sum().toDouble() }
+            r["masturbacion_satisfaccion"] = media(l.mapNotNull { it.satisfaccion?.toDouble() })
+        }
+        Repo.momentos.filter { it.tipo == "intimidad" }.groupBy { it.fecha }.forEach { (f, l) ->
+            val r = fila(f); r["n_intimidad"] = l.size.toDouble()
+            r["intimidad_nivel"] = l.mapNotNull { it.nivel ?: Catalogo.nivelIntimidad(it.practicas) }.maxOrNull()?.toDouble()
+            r["intimidad_satisfaccion"] = media(l.mapNotNull { it.satisfaccion?.toDouble() })
+            r["intimidad_comodidad"] = media(l.mapNotNull { it.comodidad?.toDouble() })
+            r["n_coito"] = l.count { m -> m.practicas.any { it.startsWith("coito_") } }.toDouble()
+            val niveles = l.flatMap { m -> m.practicas.mapNotNull { Catalogo.practica(it)?.nivel } }
+            r["intimidad_distancia"] = if (niveles.isEmpty()) null else if (niveles.all { it == 0 }) 1.0 else 0.0
+        }
+        Repo.momentos.filter { it.tipo == "episodio" }.groupBy { it.fecha }.forEach { (f, l) ->
+            val r = fila(f); r["n_episodio"] = l.size.toDouble()
+            r["episodio_intensidad_max"] = l.mapNotNull { it.intensidad }.maxOrNull()?.toDouble()
+            val grupos = l.mapNotNull { m -> Catalogo.EPISODIOS.firstOrNull { it.id == m.episodio }?.detalle?.takeIf { it.isNotBlank() } }.toSet()
+            listOf("crisis", "llanto", "pelea", "salud").forEach { k -> r["epi_$k"] = if (k in grupos) 1.0 else 0.0 }
         }
         runCatching { io.github.ruddy2003.vestigium.data.Suplementos.panel().forEach { (f, m) -> val r = fila(f); m.forEach { (k, x) -> r[k] = x } } }
         Repo.laptop.forEach { (f, d) -> val r = fila(f); io.github.ruddy2003.vestigium.data.ColdTurkey.resumen(d).forEach { (k, x) -> r[k] = x } }
@@ -966,7 +1012,11 @@ object Estadistica {
         setOf("t_max", "t_min", "precip_mm", "nubes_pct", "luz_horas", "sol_horas", "presion_hpa"),
         setOf("aqi_us", "pm25"),
         setOf("gasto_total", "gasto_imprevisto", "gasto_imprevisto_monto", "balance_dinero"),
-        setOf("impulso", "recaida", "n_recaida", "n_impulso", "recaida_min", "libido_max", "n_libido"),
+        setOf("impulso", "recaida", "n_recaida", "n_impulso", "recaida_min", "libido_max", "n_libido", "n_masturbacion", "masturbacion_min"),
+        // Esquema 21: las de la intimidad se mueven juntas (una cuenta y sus partes); la masturbación con pornografía crea una recaída.
+        setOf("n_masturbacion", "masturbacion_min", "masturbacion_satisfaccion"),
+        setOf("n_intimidad", "intimidad_nivel", "intimidad_satisfaccion", "intimidad_comodidad", "n_coito", "intimidad_distancia"),
+        setOf("n_episodio", "episodio_intensidad_max", "epi_crisis", "epi_llanto", "epi_pelea", "epi_salud"),
         setOf("presion_local_hpa", "presion_hpa", "cambio_presion_3h"),
         setOf("laptop_min", "laptop_web_min", "laptop_productivo_min", "laptop_ocio_min", "laptop_social_min", "laptop_otro_min"),
         setOf("laptop_productivo_min", "enfoque_min", "enfoque_estudio_min", "enfoque_tesis_min", "enfoque_trabajo_min"),

@@ -103,7 +103,7 @@ object Diccionario {
         "ts_creado" to "Cuándo se anotó el registro. En momentos, gastos, ingresos, tomas, consumos y tramos, desde el esquema 14 (vacío en los de antes); comparado con su hora dice si se anotó tarde",
         "ts_editado" to "Cuándo se corrigió por última vez después de anotarlo (en momentos, gastos e ingresos, desde el esquema 14)",
         "version_noche" to "Con qué orden de preguntas se llenó la hoja de la noche (desde el esquema 14): 1 = el orden anterior; 2 = el orden nuevo, con el ánimo del momento primero. Vacío = no pasó por la hoja o es de antes",
-        "hitos" to "Hitos del día (lista)", "flow" to "Experiencia de flujo (Csikszentmihalyi)", "sdt_necesidad" to "Necesidad psicológica más presente (Deci y Ryan)",
+        "hitos" to "Fechas señaladas del día: la frase de cada una (lista; desde el esquema 21, con los hitos de antes; el tipo, en vm_senaladas.csv)", "flow" to "Experiencia de flujo (Csikszentmihalyi)", "sdt_necesidad" to "Necesidad psicológica más presente (Deci y Ryan)",
         "apreciacion" to "Evaluación del estrés (Lazarus)", "sueno_recordado" to "Recordó un sueño (0/1)", "sueno_valencia" to "Qué tan agradable fue el sueño (1 a 7)",
         "sueno_lucidez" to "Lucidez del sueño", "sueno_vividez" to "Qué tan claro lo recuerdas: vago (solo fragmentos), moderado (partes claras) o muy_vivido (casi completo y nítido)", "sueno_tipo" to "Tipo de sueño (solo hasta el esquema 17: mundano, ansioso_pesadilla, bizarro_surreal, recurrente; después, ver sueno_rareza y sueno_pesadilla)",
         "sueno_rareza" to "Qué tan raro fue el sueño: realista, raro (pero posible) o imposible (o surreal); en días de antes del esquema 17, deducido del tipo (mundano = realista, bizarro = imposible)",
@@ -257,6 +257,36 @@ object Diccionario {
         "libido_max" to "Libido máxima registrada en el día (0 nada a 5 dominante), seguimiento privado", "n_libido" to "Registros de libido del día, seguimiento privado",
         "foco" to "Libido: en qué estaba el foco (pensando, viendo, conversando, nada, otro)", "cierre" to "Es el «Cómo estás ahora» al cerrar el día (0/1)",
         "tipo_lugar" to "Tipo del lugar donde se registró (casa, trabajo, bar…)",
+        // Esquema 21: masturbación e intimidad (seguimiento privado), episodios, fechas señaladas, varias tomas y la extra del enfoque.
+        "estimulo" to "Masturbación: qué la acompañó (pornografia, fantasia, recuerdo, mensajes, ninguno, otro); con pornografía cuenta como recaída (seguimiento privado)",
+        "estimulo_otro" to "Masturbación: el estímulo escrito cuando elegiste «otro»",
+        "sitio" to "Masturbación o intimidad: dónde (cama, bano, sofa, otro)", "sitio_otro" to "El sitio escrito cuando elegiste «otro»",
+        "practicas" to "Intimidad: qué pasó (lista: mensajes_eroticos, llamada_erotica, beso_breve, beso_profundo, caricias_ropa, caricias_intimas, estimulacion_manual, oral_dar, oral_recibir, coito_vaginal, coito_anal, no_convencional, juguetes, otra), seguimiento privado",
+        "practica_otra" to "Intimidad: la práctica escrita cuando elegiste «otra»",
+        "nivel" to "Intimidad: el nivel más alto de sus prácticas (0 a distancia, 1 besos, 2 caricias, 3 oral, 4 coito; vacío si solo hubo prácticas sin nivel)",
+        "vm_momentos.csv:satisfaccion" to "Intimidad o masturbación: satisfacción (1 me dejó mal a 5 me dejó muy bien)", "placer" to "Intimidad: placer (1 nada a 5 muchísimo)",
+        "conexion" to "Intimidad: cercanía con la otra persona (1 distante a 5 en sintonía)", "comodidad" to "Intimidad: qué tan a gusto y con control (1 muy incómodo, no lo quería, a 5 muy a gusto)",
+        "orgasmo" to "Intimidad: orgasmo propio (si, no, no_se)", "orgasmo_otra" to "Intimidad: orgasmo de la otra persona (si, no, no_se)",
+        "proteccion" to "Intimidad: protección (barrera, otro_metodo, ninguno, no_aplica)", "iniciativa" to "Intimidad: quién empezó (yo, otra, ambos)",
+        "vm_momentos.csv:personas" to "Personas del registro: el «con quién» (en la intimidad y en un episodio de pelea) y las @personas del texto (lista)",
+        "episodio" to "Episodio: qué fue (crisis, llanto, pelea, migrana, enfermedad, accidente, otro)", "episodio_otro" to "El episodio escrito cuando elegiste «otro»",
+        "vm_momentos.csv:sintomas" to "Episodio de crisis: los síntomas (lista: corazon, aire, temblor, mareo, sudor, miedo, irrealidad)",
+        "vinculo" to "El registro gemelo: la recaída que creó una masturbación con pornografía, y al revés",
+        "bajo_sustancia" to "Intimidad o masturbación con alcohol o cannabis encima: un consumo que empezó en las 3 horas de antes o cuyo efecto seguía (0/1; vacío antes del primer consumo de esas dos)",
+        "n_masturbacion" to "Masturbaciones registradas en el día (0 desde la primera, en días con diario), seguimiento privado",
+        "masturbacion_min" to "Minutos de masturbación en el día, seguimiento privado", "masturbacion_satisfaccion" to "Satisfacción con la masturbación (1 a 5, promedio del día), seguimiento privado",
+        "n_intimidad" to "Encuentros íntimos registrados en el día (0 desde el primero, en días con diario), seguimiento privado",
+        "intimidad_nivel" to "Nivel más alto de intimidad del día (0 a distancia a 4 coito), seguimiento privado",
+        "intimidad_satisfaccion" to "Satisfacción con la intimidad (1 a 5, promedio del día), seguimiento privado",
+        "intimidad_comodidad" to "Comodidad en la intimidad (1 a 5, promedio del día), seguimiento privado",
+        "n_coito" to "Encuentros con coito en el día, seguimiento privado", "intimidad_distancia" to "Toda la intimidad del día fue a distancia: mensajes o llamadas (0/1), seguimiento privado",
+        "n_episodio" to "Episodios del día: crisis, llanto, pelea, migraña, enfermedad, accidente u otro (0 desde el primero, en días con diario)",
+        "episodio_intensidad_max" to "Intensidad del episodio más fuerte del día (1 leve a 5 lo peor)",
+        "epi_crisis" to "Hubo una crisis de ansiedad o pánico (0/1)", "epi_llanto" to "Hubo llanto o un bajón fuerte (0/1)", "epi_pelea" to "Hubo una pelea o discusión (0/1)",
+        "epi_salud" to "Hubo migraña, enfermedad o accidente (0/1)", "hitos_n" to "Fechas señaladas del día (con los hitos de antes)",
+        "vm_senaladas.csv:tipo" to "Tipo de fecha señalada: primera_vez, viaje, logro, cambio, perdida, encuentro, celebracion, otro (los hitos de antes son «otro»)",
+        "vm_senaladas.csv:tipo_nombre" to "El nombre del tipo", "vm_senaladas.csv:texto" to "La frase de la fecha señalada",
+        "plan_min" to "Minutos planeados del bloque (vacío en el cronómetro libre o lo anotado a mano); min es lo que duró de verdad", "extra_min" to "Minutos de más sobre lo planeado (min − plan_min; negativo si terminaste antes)",
         // Ideario (esquema 16).
         "vm_ideas.csv:titulo" to "La idea en una línea (opcional)", "vm_ideas.csv:texto" to "Lo que entendiste, con tus palabras (con @personas y #temas)",
         "vm_ideas.csv:origen" to "leido, visto (o escuchado), contado (te lo contaron) o propia; vacío = sin decir",
@@ -355,7 +385,7 @@ object Diccionario {
             col.startsWith("supl_") -> {
                 val resto = col.removePrefix("supl_"); val id = resto.substringBeforeLast('_'); val s = Repo.config.suplementos.firstOrNull { it.id == id }
                 val n = s?.nombre ?: id
-                when (resto.substringAfterLast('_')) { "dosis" -> "$n: dosis del día (${s?.unidad ?: ""})"; "tomado" -> "$n: lo tomaste (0/1)"; "porciones" -> "$n: porciones del día"
+                when (resto.substringAfterLast('_')) { "dosis" -> "$n: dosis del día (${s?.unidad ?: ""})"; "tomado" -> "$n: lo tomaste (0/1)"; "porciones" -> "$n: porciones del día"; "n" -> "$n: tomas del día"
                     else -> if (s?.modelo == "carga") "$n: reserva estimada (0 a 100 %)" else "$n: cantidad estimada en el cuerpo al final del día" }
             }
             col.startsWith("horas_tipo_") -> "Horas en lugares de tipo ${Catalogo.nombreTipoLugar(col.removePrefix("horas_tipo_")).lowercase()}"
@@ -432,6 +462,8 @@ object Diccionario {
     private const val VERSION_ESQUEMA_19 = 129
     /** La versión de la app con la que llega el esquema 20 (avisos de ánimo a su hora): la misma v129. */
     private const val VERSION_ESQUEMA_20 = 129
+    /** La versión de la app con la que llega el esquema 21 (masturbación e intimidad, episodios, fechas señaladas, varias tomas, la extra del enfoque). */
+    private const val VERSION_ESQUEMA_21 = 170
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
@@ -624,6 +656,28 @@ object Diccionario {
         "vm_biblioteca.csv:prioridad" to (VERSION_ESQUEMA_18 to "nueva: qué tan pronto quieres lo pendiente (D.145)"),
         "vm_biblioteca.csv:recomendo" to (VERSION_ESQUEMA_18 to "nueva: quién te lo recomendó (D.145)"),
         "vm_biblioteca.csv:donde" to (VERSION_ESQUEMA_18 to "nueva: dónde verlo o conseguirlo (D.145)"),
+        // Esquema 21.
+        "vm_dias.csv:hitos" to (VERSION_ESQUEMA_21 to "las frases de las fechas señaladas, con los hitos de antes (D.161)"),
+        "hitos_n" to (VERSION_ESQUEMA_21 to "cuenta las fechas señaladas (D.161)"),
+        "hito_*" to (VERSION_ESQUEMA_21 to "ya no se calcula: los hitos son fechas señaladas (D.161)"),
+        "vm_senaladas.csv:tipo" to (VERSION_ESQUEMA_21 to "nueva: tabla de fechas señaladas (D.161)"),
+        "vm_senaladas.csv:texto" to (VERSION_ESQUEMA_21 to "nueva: tabla de fechas señaladas (D.161)"),
+        "n_episodio" to (VERSION_ESQUEMA_21 to "nueva: episodios del día (D.162)"),
+        "episodio_intensidad_max" to (VERSION_ESQUEMA_21 to "nueva (D.162)"), "epi_*" to (VERSION_ESQUEMA_21 to "nueva: tipos de episodio (D.162)"),
+        "vm_momentos.csv:episodio" to (VERSION_ESQUEMA_21 to "nueva: tipo de episodio (D.162)"),
+        "vm_momentos.csv:personas" to (VERSION_ESQUEMA_21 to "suma el «con quién» de la intimidad y de una pelea (D.162, D.163)"),
+        "vm_panel.csv:personas" to (VERSION_ESQUEMA_21 to "suma el «con quién» de un episodio de pelea (D.162)"),
+        "n_masturbacion" to (VERSION_ESQUEMA_21 to "nueva, seguimiento privado (D.163)"), "masturbacion_min" to (VERSION_ESQUEMA_21 to "nueva, seguimiento privado (D.163)"),
+        "masturbacion_satisfaccion" to (VERSION_ESQUEMA_21 to "nueva, seguimiento privado (D.163)"),
+        "n_intimidad" to (VERSION_ESQUEMA_21 to "nueva, seguimiento privado (D.163)"), "intimidad_nivel" to (VERSION_ESQUEMA_21 to "nueva, seguimiento privado (D.163)"),
+        "intimidad_satisfaccion" to (VERSION_ESQUEMA_21 to "nueva, seguimiento privado (D.163)"), "intimidad_comodidad" to (VERSION_ESQUEMA_21 to "nueva, seguimiento privado (D.163)"),
+        "n_coito" to (VERSION_ESQUEMA_21 to "nueva, seguimiento privado (D.163)"), "intimidad_distancia" to (VERSION_ESQUEMA_21 to "nueva, seguimiento privado (D.163)"),
+        "vm_dias.csv:recaida" to (VERSION_ESQUEMA_21 to "también la marca una masturbación con pornografía (D.163)"),
+        "n_recaida" to (VERSION_ESQUEMA_21 to "cuenta también las recaídas gemelas de una masturbación con pornografía (D.163)"),
+        "supl_*_n" to (VERSION_ESQUEMA_21 to "nueva: tomas del día, ahora pueden ser varias (D.164)"),
+        "plan_min" to (VERSION_ESQUEMA_21 to "nueva: minutos planeados del bloque (D.165)"), "extra_min" to (VERSION_ESQUEMA_21 to "nueva: minutos de más (D.165)"),
+        "vm_tramos.csv:min" to (VERSION_ESQUEMA_21 to "lo que duró de verdad: el bloque ya no se corta en la meta, sigue contando hasta que pasas al descanso o terminas (D.165)"),
+        "enfoque_min" to (VERSION_ESQUEMA_21 to "con los minutos de más sobre la meta (D.165)"),
     )
 
     // Las claves con «*», como patrones; la más larga primero, para que «app_min_*» gane a «app_*».

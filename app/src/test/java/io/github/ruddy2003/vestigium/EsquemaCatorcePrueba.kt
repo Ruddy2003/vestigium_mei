@@ -23,8 +23,9 @@ class EsquemaCatorcePrueba {
     // El esquema 15 (10f) agregó el historial de zonas, la fuente del clima, el wifi sin dato, el criterio sellado y la fuerza de referencia;
     // el 16, el Ideario (ver IdearioPrueba); el 17, la rareza y la pesadilla del sueño, los temas de las ideas y más campos de captura;
     // el 18, los deseados (prioridad, quién lo recomendó y dónde) y las listas libres (ver DeseadosPrueba); el 19, cómo se
-    // supo la salida de cada visita (ver VisitasPrueba); el 20, la hora real en que salió cada aviso de ánimo (AvisosDia.reales).
-    @Test fun esquema() = assertEquals(20, SCHEMA_V)
+    // supo la salida de cada visita (ver VisitasPrueba); el 20, la hora real en que salió cada aviso de ánimo (AvisosDia.reales);
+    // el 21, masturbación e intimidad, episodios, fechas señaladas, varias tomas y la extra del enfoque (ver EsquemaVeintiunoPrueba).
+    @Test fun esquema() = assertEquals(21, SCHEMA_V)
 
     @Test fun avisosSinHoraReal() {
         // Un día de avisos de antes del esquema 20 no trae la hora real: queda vacía (y su latencia_min, sin dato).
