@@ -8,7 +8,6 @@ import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Frases
 import io.github.ruddy2003.vestigium.ui.MapasCampana
 import io.github.ruddy2003.vestigium.ui.NombresNuevos
-import io.github.ruddy2003.vestigium.ui.SalonesTema
 import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.Textos
