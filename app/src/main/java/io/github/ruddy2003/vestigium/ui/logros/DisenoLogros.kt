@@ -53,7 +53,31 @@ interface DisenoLogros {
      * pasa por detrás de una. Todo va tenue sobre [EstadoSalon.fondo] para que los trofeos y sus placas se lean encima.
      */
     fun DrawScope.escenaSalon(e: EstadoSalon, oscuro: Boolean)
+
+    // ---------------------------------------------------------------- las campañas
+
+    /**
+     * El marcador de la campaña, de pie sobre la parada a la que llegaste ([EstadoMarcador.punto], en píxeles del mapa;
+     * el mapa mide todo el ancho × 1/2.4 del ancho, ≈ 360 × 150 dp): una figura entera del tema de ≈ 18–28 dp de alto (el
+     * legionario con su estandarte, la barca del Nilo, la vela del scriptorium, la locomotora, el banderín del punto de
+     * control, la nave…), con su sombra en el suelo. [EstadoMarcador.salto] (0 a 1) lo hace brincar mientras hoy falta
+     * cumplir. [EstadoMarcador.acento] es el color de acento del esquema.
+     */
+    fun DrawScope.marcadorCampana(e: EstadoMarcador, oscuro: Boolean)
+
+    /**
+     * La escena en la meta ([EstadoVictoria.meta], en píxeles del mapa) cuando se gana la campaña: la corona triunfal, los
+     * fuegos, el estandarte plantado, el cofre abierto… de ≈ 30–50 dp, arriba de la meta, sin tapar el nombre de la parada
+     * más de lo necesario.
+     */
+    fun DrawScope.victoriaCampana(e: EstadoVictoria, oscuro: Boolean)
 }
+
+/** El marcador de una campaña: dónde está, cuánto brinca (0 a 1) y el color de acento del esquema. */
+class EstadoMarcador(val punto: androidx.compose.ui.geometry.Offset, val salto: Float, val acento: Color)
+
+/** La victoria de una campaña: el punto de la meta y el color de acento del esquema. */
+class EstadoVictoria(val meta: androidx.compose.ui.geometry.Offset, val acento: Color)
 
 /** El salón: cuántas columnas de trofeos hay, el color de fondo de la pantalla y una semilla. */
 class EstadoSalon(val columnas: Int, val fondo: Color, val semilla: Int)

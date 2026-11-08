@@ -992,6 +992,25 @@ class Capturas {
     @Test fun salonesC2Ruinas() = salonesC2Tema(TemaId.RUINAS)
     @Test fun salonesC2Espacio() = salonesC2Tema(TemaId.ESPACIO)
     @Test fun salonesC2Distopia() = salonesC2Tema(TemaId.DISTOPIA)
+    /** Las campañas (lote C3): una ganada (con la victoria en la meta) y una a medias (con el marcador). En claro y en oscuro. */
+    private fun campanasC3(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        captura(t, oscuro, 1400, "tema_${t.id}_${modo}_campana") {
+            val f = io.github.ruddy2003.vestigium.data.Fechas
+            val l = f.lunesDe(f.diaLogico())
+            val c = io.github.ruddy2003.vestigium.data.Campana("cv", l, "diario", 5, t.id)
+            val dias = (0 until 7).map { f.sumar(l, it.toLong()) }
+            Column(Modifier.padding(16.dp)) {
+                io.github.ruddy2003.vestigium.ui.pantallas.MapaCampana(io.github.ruddy2003.vestigium.ciencia.Campanas.Estado(c, null, dias.map { it to true }, 7, true, false, true, dias[4]), tema = t)
+                io.github.ruddy2003.vestigium.ui.pantallas.MapaCampana(io.github.ruddy2003.vestigium.ciencia.Campanas.Estado(c, null, dias.mapIndexed { i, d -> d to (if (i < 3) true else null) }, 3, false, false, false, null), Modifier.padding(top = 16.dp), tema = t)
+            }
+        }
+    }
+    private fun campanasC3Tema(t: TemaId) { campanasC3(t, t.soloOscuro); if (!t.soloOscuro) campanasC3(t, true) }
+    @Test fun campanasC3a() = ESTANTE_A1A.forEach { campanasC3Tema(it) }
+    @Test fun campanasC3b() = (ESTANTE_A1B + TemaId.EDO).forEach { campanasC3Tema(it) }
+    @Test fun campanasC3c() = ESTANTE_A1C.forEach { campanasC3Tema(it) }
+    @Test fun campanasC3d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { campanasC3Tema(it) }
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

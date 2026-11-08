@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.ui.graphics.luminance
 import io.github.ruddy2003.vestigium.ui.comun.Separador
 import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.animation.core.LinearEasing
@@ -113,9 +114,12 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
         lugaresNombre.forEach { (t, o) -> drawText(t, topLeft = o) }
         // El marcador del tema avanza por la ruta con los días cumplidos (brinca si hoy falta cumplir).
         val hoyFalta = e.dias.any { it.first == hoy && it.second != true } && !e.ganada
-        with(io.github.ruddy2003.vestigium.ui.MapasMas) { marcador(temaMapa, cs, pts[e.hechos.coerceIn(0, 6)], if (animar && hoyFalta) pulso else 0f) }
+        val dl = io.github.ruddy2003.vestigium.ui.logros.disenoLogros(temaMapa)
+        val oscuroMapa = cs.background.luminance() < 0.5f
+        // Ganada, en la meta va la escena de la victoria en lugar del marcador.
+        if (!e.ganada) with(dl) { marcadorCampana(io.github.ruddy2003.vestigium.ui.logros.EstadoMarcador(pts[e.hechos.coerceIn(0, 6)], if (animar && hoyFalta) pulso else 0f, cs.tertiary), oscuroMapa) }
         // La escena de la meta si se ganó.
-        if (e.ganada) with(MapasCampana) { victoria(temaMapa, cs, pts[6]) }
+        if (e.ganada) with(dl) { victoriaCampana(io.github.ruddy2003.vestigium.ui.logros.EstadoVictoria(pts[6], cs.tertiary), oscuroMapa) }
     }
 }
 
