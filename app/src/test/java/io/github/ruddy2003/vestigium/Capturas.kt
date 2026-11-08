@@ -1054,6 +1054,26 @@ class Capturas {
     @Test fun adornosD1b() = (ESTANTE_A1B + TemaId.EDO).forEach { adornosD1Tema(it) }
     @Test fun adornosD1c() = ESTANTE_A1C.forEach { adornosD1Tema(it) }
     @Test fun adornosD1d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { adornosD1Tema(it) }
+    /**
+     * El pulido por archivo (lote D2): las marcas de @persona y #tema, la banda del título y la textura del fondo (todo
+     * captura lleva el fondo del tema), el cielo de noche y la esfera de enfoque. En claro y en oscuro.
+     */
+    private fun pulidoD2(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        captura(t, oscuro, 1300, "tema_${t.id}_${modo}_marcas") {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                io.github.ruddy2003.vestigium.ui.Meandro()
+                io.github.ruddy2003.vestigium.ui.TextoMarcado("Café con @ana y @luis_m después del #protocolo de la #tesis", style = MaterialTheme.typography.bodyLarge, tema = t)
+                io.github.ruddy2003.vestigium.ui.CieloNoche { Box(Modifier.fillMaxWidth().height(160.dp)) }
+            }
+        }
+        v73(t, oscuro, 2400, { it.copy(enfoque_plan = planEnfoque(0, 12)) }, "tema_${t.id}_${modo}_enfoque") { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
+    }
+    private fun pulidoD2Tema(t: TemaId) { pulidoD2(t, t.soloOscuro); if (!t.soloOscuro) pulidoD2(t, true) }
+    @Test fun pulidoD2a() = ESTANTE_A1A.forEach { pulidoD2Tema(it) }
+    @Test fun pulidoD2b() = (ESTANTE_A1B + TemaId.EDO).forEach { pulidoD2Tema(it) }
+    @Test fun pulidoD2c() = ESTANTE_A1C.forEach { pulidoD2Tema(it) }
+    @Test fun pulidoD2d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { pulidoD2Tema(it) }
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

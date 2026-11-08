@@ -55,6 +55,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -424,14 +425,54 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
                 drawLine(col, o, Offset(o.x, o.y + s.y * l), 1.5f * u)
             }
         }
-        // Un reloj de tubo de neón: el aro apagado, el tramo encendido con su halo y un foquito que corre por delante.
+        // El reloj de neón de un local: la caja de lata con su bisel y cuatro tornillos, doce índices en la esfera y, por
+        // dentro del bisel, el tubo de vidrio que da casi toda la vuelta; arriba, sus dos electrodos con los cables que
+        // entran a la caja. El gas se enciende desde el primer electrodo y avanza con el tiempo (halo, tubo y el núcleo casi
+        // blanco), y en la punta corre la chispa.
         TemaId.NEON -> {
-            drawCircle(pista, r, c, style = Stroke(3 * u))
-            val barrido = 360f * p
-            drawArc(color.copy(alpha = 0.3f), -90f, barrido, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(12 * u, cap = StrokeCap.Round))
-            drawArc(color, -90f, barrido, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(3.5f * u, cap = StrokeCap.Round))
-            val q = en(p, r)
-            drawCircle(e.tertiary.copy(alpha = 0.35f), 8 * u, q); drawCircle(e.tertiary, 3.5f * u, q)
+            val a0 = 0.035f; val a1 = 0.965f; val fin = a0 + (a1 - a0) * p
+            val lata = tenue.copy(alpha = 0.45f)
+            drawCircle(e.surfaceVariant.copy(alpha = 0.7f), R - 3 * u, c, style = Stroke(4 * u))
+            drawCircle(lata, R - u, c, style = Stroke(0.8f * u))
+            drawCircle(lata.copy(alpha = 0.25f), R - 5.5f * u, c, style = Stroke(0.6f * u))
+            for (k in 0 until 4) {
+                val q = en(k / 4f + 1f / 8f, R - 3 * u)
+                drawCircle(lata, 1.5f * u, q)
+                drawLine(e.background.copy(alpha = 0.8f), Offset(q.x - u, q.y + u), Offset(q.x + u, q.y - u), 0.6f * u)
+            }
+            // Los índices de las horas: se encienden con su propio halo al pasar.
+            for (k in 0 until 12) {
+                val f = k / 12f; val largo = (if (k % 3 == 0) 8 else 5) * u
+                val q0 = en(f, r - g * 1.1f); val q1 = en(f, r - g * 1.1f - largo)
+                if (p > 0f && f <= p) { drawLine(color.copy(alpha = 0.25f), q0, q1, 6 * u, StrokeCap.Round); drawLine(color, q0, q1, 2 * u, StrokeCap.Round) }
+                else drawLine(pista, q0, q1, 2 * u, StrokeCap.Round)
+            }
+            // El tubo apagado, con el brillo del vidrio, y lo encendido encima.
+            arco(pista, a0, a1, r, 4.5f * u, StrokeCap.Round)
+            arco(tenue.copy(alpha = 0.18f), a0, a1, r - 1.2f * u, 0.7f * u)
+            arco(color.copy(alpha = 0.12f), a0, fin, r, 16 * u, StrokeCap.Round)
+            arco(color.copy(alpha = 0.3f), a0, fin, r, 8 * u, StrokeCap.Round)
+            arco(color, a0, fin, r, 3.6f * u, StrokeCap.Round)
+            arco(Color.White.copy(alpha = 0.55f), a0, fin, r, 1.2f * u, StrokeCap.Round)
+            // Los electrodos: un casquillo de metal en cada punta del tubo y su cable hasta el pasamuros de arriba.
+            val metal = e.onSurfaceVariant.copy(alpha = 0.6f)
+            val pasa = en(0f, r + 4 * u)
+            listOf(a0 to -1f, a1 to 1f).forEach { (f, s) ->
+                val q = en(f, r)
+                if (s < 0f && p > 0f) drawCircle(color.copy(alpha = 0.25f), 6 * u, q)
+                rotate(f * 360f, q) {
+                    val x0 = if (s < 0f) q.x - 7 * u else q.x
+                    drawRoundRect(metal, Offset(x0, q.y - 3 * u), Size(7 * u, 6 * u), CornerRadius(1.2f * u))
+                    for (i in 1..2) drawLine(e.background.copy(alpha = 0.6f), Offset(x0 + i * 2.3f * u, q.y - 3 * u), Offset(x0 + i * 2.3f * u, q.y + 3 * u), 0.6f * u)
+                }
+                val punta = en(f + s * 7 * u / (6.2832f * r), r)
+                drawPath(Path().apply { moveTo(punta.x, punta.y); quadraticTo(punta.x - s * 2 * u, pasa.y, pasa.x, pasa.y) }, metal, style = Stroke(0.8f * u))
+            }
+            drawCircle(e.surfaceVariant, 3 * u, pasa); drawCircle(lata, 3 * u, pasa, style = Stroke(0.8f * u))
+            if (p > 0f && p < 1f) {
+                val q = en(fin, r)
+                drawCircle(e.tertiary.copy(alpha = 0.3f), 7 * u, q); drawCircle(e.tertiary, 3 * u, q); drawCircle(Color.White.copy(alpha = 0.8f), 1.2f * u, q)
+            }
         }
         // Sol de Vergina: dieciséis rayos que se encienden uno a uno alrededor de un doble aro.
         TemaId.HELENO -> {
@@ -493,21 +534,30 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             listOf(y0, y1).forEach { y -> drawRect(tenue.copy(alpha = 0.35f), Offset(c.x - hw - 6 * u, y - 2.5f * u), Size(hw * 2 + 12 * u, 5 * u)) }
         }
         // La vela de horas de los castillos: una vela marcada con doce rayas rojas que se consume conforme pasa el bloque;
-        // alrededor, el anillo de acero con doce clavos, que se tiñe de rojo con lo recorrido.
+        // alrededor, el anillo de acero con doce clavos, que se tiñe de rojo con lo recorrido. De noche la cera se apaga y
+        // la llama brilla, con su halo.
         TemaId.TEMPLARIO -> {
+            val noche = e.background.luminance() < 0.5f
+            val cera = if (noche) Color(0xFFC9BFA8).copy(alpha = 0.82f) else Color(0xFFF2EBDA).copy(alpha = 0.9f)
+            val llama = if (noche) Color(0xFFFFB347) else Color(0xFFF0A040)
+            val alma = if (noche) Color(0xFFFFF4D8) else Color(0xFFFFE2A8)
             drawCircle(pista, r, c, style = Stroke(1.2f * u))
             arco(color, 0f, p, r, 4 * u)
             for (k in 0 until 12) drawCircle(if (pasado(k, 12)) color else e.secondary.copy(alpha = 0.6f), 2.2f * u, en(k / 12f, r + 8 * u))
             val hw = r * 0.16f; val base = c.y + r * 0.62f; val alto = r * 1.15f
             val arriba = base - alto * (1f - p).coerceIn(0.04f, 1f)
             drawRect(tenue.copy(alpha = 0.35f), Offset(c.x - r * 0.34f, base), Size(r * 0.68f, 4 * u))
-            drawRect(Color(0xFFF2EBDA).copy(alpha = 0.9f), Offset(c.x - hw, arriba), Size(hw * 2, base - arriba))
+            drawRect(cera, Offset(c.x - hw, arriba), Size(hw * 2, base - arriba))
             drawRect(tenue.copy(alpha = 0.4f), Offset(c.x - hw, arriba), Size(hw * 2, base - arriba), style = Stroke(1 * u))
             for (k in 1 until 12) { val y = base - alto * k / 12f; if (y > arriba) drawLine(e.primary, Offset(c.x - hw, y), Offset(c.x + hw, y), 1.4f * u) }
             if (p < 1f) {
+                if (noche) {
+                    drawCircle(llama.copy(alpha = 0.14f), 16 * u, Offset(c.x, arriba - 10 * u))
+                    drawCircle(llama.copy(alpha = 0.22f), 9 * u, Offset(c.x, arriba - 10 * u))
+                }
                 drawLine(tenue, Offset(c.x, arriba), Offset(c.x, arriba - 4 * u), 1.2f * u)
-                drawPath(Path().apply { moveTo(c.x - 4 * u, arriba - 4 * u); quadraticTo(c.x - 4 * u, arriba - 12 * u, c.x, arriba - 18 * u); quadraticTo(c.x + 4 * u, arriba - 12 * u, c.x + 4 * u, arriba - 4 * u); close() }, Color(0xFFF0A040))
-                drawCircle(Color(0xFFFFE2A8), 1.8f * u, Offset(c.x, arriba - 8 * u))
+                drawPath(Path().apply { moveTo(c.x - 4 * u, arriba - 4 * u); quadraticTo(c.x - 4 * u, arriba - 12 * u, c.x, arriba - 18 * u); quadraticTo(c.x + 4 * u, arriba - 12 * u, c.x + 4 * u, arriba - 4 * u); close() }, llama)
+                drawCircle(alma, (if (noche) 2.2f else 1.8f) * u, Offset(c.x, arriba - 8 * u))
             }
         }
         // El ojo que vigila: el iris es el anillo, con sus estrías; los párpados lo cierran por arriba y por abajo.
@@ -815,14 +865,40 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             for (i in 0 until 13) drawCircle(e.tertiary.copy(alpha = 0.55f), 1.7f * u, en(i / 13f, r - g * 1.15f))
             granoCacao(en(p, r + g * 0.75f), 3.4f * u, e.secondary, e.surface)
         }
-        // La rueda del techo de la yurta: las varas que salen de ella se tiñen al avanzar; afuera, la costura del fieltro.
+        // El toono, la rueda del techo de la ger, visto desde abajo: su aro doble pintado, las sesenta varas del techo (uni)
+        // que salen de él, una de cada cinco más larga y con la punta pintada, como las horas, y afuera el fieltro con su
+        // costura. La luz que entra por el toono recorre las varas a lo largo del día (así se leía la hora en la ger): las
+        // varas que ya tocó se tiñen y el sol marca dónde va. Detrás de la cuenta, muy tenues, los arcos cruzados del toono.
         TemaId.MONGOL -> {
-            val rIn = r - g * 0.7f; val rOut = r + g * 0.45f
-            drawCircle(tenue.copy(alpha = 0.6f), rIn, c, style = Stroke(2.5f * u))
-            drawCircle(tenue.copy(alpha = 0.6f), rIn - 4 * u, c, style = Stroke(u))
-            val n = 36
-            for (k in 0 until n) drawLine(if (pasado(k, n)) color else pista, en((k + 0.5f) / n, rIn + 2 * u), en((k + 0.5f) / n, rOut), 3 * u, cap = StrokeCap.Round)
-            drawCircle(e.primary.copy(alpha = 0.5f), R - 2 * u, c, style = Stroke(1.5f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * u, 3 * u))))
+            val rIn = r - g * 0.7f; val rOut = r + g * 0.45f; val rf = (rOut + R) / 2
+            val madera = tenue.copy(alpha = 0.6f)
+            for (s in listOf(-1f, 1f)) {
+                val d = rIn * 0.2f; val h = sqrt(rIn * rIn - d * d) - 3 * u
+                drawLine(tenue.copy(alpha = 0.06f), Offset(c.x + s * d, c.y - h), Offset(c.x + s * d, c.y + h), 3 * u)
+                drawLine(tenue.copy(alpha = 0.06f), Offset(c.x - h, c.y + s * d), Offset(c.x + h, c.y + s * d), 3 * u)
+            }
+            // El fieltro: su franja, lo recorrido teñido y la costura.
+            drawCircle(e.surfaceVariant.copy(alpha = 0.45f), rf, c, style = Stroke(R - rOut))
+            arco(color.copy(alpha = 0.3f), 0f, p, rf, R - rOut)
+            drawCircle(e.primary.copy(alpha = 0.5f), R - 2 * u, c, style = Stroke(1.2f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * u, 3 * u))))
+            drawCircle(e.primary.copy(alpha = 0.3f), rOut + 1.5f * u, c, style = Stroke(0.8f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * u, 3 * u))))
+            // Las varas.
+            val n = 60
+            for (k in 0 until n) {
+                val f = k.toFloat() / n; val hora = k % 5 == 0
+                val fuera = if (hora) rOut + 2 * u else rOut - 3 * u
+                drawLine(if (p > 0f && f <= p) color else pista, en(f, rIn + 2 * u), en(f, fuera), (if (hora) 3f else 1.8f) * u, cap = StrokeCap.Round)
+                if (hora) drawLine(e.secondary.copy(alpha = 0.85f), en(f, rOut - 3 * u), en(f, fuera), 3 * u, cap = StrokeCap.Round)
+            }
+            // El aro del toono, doble, con su hilera de puntos pintados.
+            drawCircle(madera, rIn, c, style = Stroke(3 * u))
+            drawCircle(madera.copy(alpha = 0.4f), rIn - 5 * u, c, style = Stroke(u))
+            for (k in 0 until 30) drawCircle(e.tertiary.copy(alpha = 0.55f), 0.9f * u, en((k + 0.5f) / 30f, rIn - 2.8f * u))
+            // El sol que entra por el toono.
+            val sol = en(p, rf)
+            drawCircle(e.tertiary.copy(alpha = 0.18f), 9 * u, sol)
+            for (k in 0 until 8) { val a = Math.toRadians(k * 45.0); val d = Offset(cos(a).toFloat(), sin(a).toFloat()); drawLine(e.tertiary, sol + d * (4.4f * u), sol + d * (6.6f * u), u, StrokeCap.Round) }
+            drawCircle(e.tertiary, 3.2f * u, sol)
         }
         // Construcción a la manera de Vitruvio: cuadrado y círculo a tinta, golpes de compás y la marcha a sanguina en dos trazos.
         TemaId.RENACIMIENTO -> {
@@ -914,12 +990,46 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             }
             for (j in 1..4) rombo(en(j / 4f, r), 4 * u, 6.5f * u, if (j / 4f <= p) e.tertiary else pista)
         }
+        // El disco de piedra con las rayas de cuenta, como las lajas y los huesos marcados de la Prehistoria: cuarenta
+        // muescas en ocho grupos de cinco (la quinta cruza a las otras cuatro) que se pintan de ocre al pasar, sobre una
+        // mancha de ocre soplado que sigue la marcha; en cada cuarto, un punto de ocre, y donde va, la mano en positivo
+        // con su nube de pigmento.
         TemaId.CUEVA -> {
-            // Un corro de veinticuatro puntos de ocre que se van pintando y, en cada cuarto, una mano que se pinta al llegar.
-            drawCircle(tenue.copy(alpha = 0.25f), R - 2 * u, c, style = Stroke(1.6f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 3 * u))))
-            val n = 24
-            for (k in 0 until n) { val f = (k + 0.5f) / n; drawCircle(if (pasado(k, n)) color else pista, (2.2f + (k % 3) * 0.5f) * u, en(f, r)) }
-            for (j in 1..4) drawPath(manoUnida(en(j / 4f, r - 16 * u), 6 * u), if (j / 4f <= p) e.primary else pista)
+            /** Agrega a [camino] un contorno de piedra (un círculo irregular) a [radio], con relieve [amp]. */
+            fun contorno(camino: Path, radio: Float, amp: Float, s: Float) {
+                val m = 64
+                for (i in 0 until m) {
+                    val a = i * 6.2832f / m
+                    val q = en(i.toFloat() / m, radio + amp * (0.6f * sin(a * 7 + s) + 0.4f * sin(a * 3 + s * 2)))
+                    if (i == 0) camino.moveTo(q.x, q.y) else camino.lineTo(q.x, q.y)
+                }
+                camino.close()
+            }
+            val borde = Path().apply { contorno(this, R - 3 * u, 1.6f * u, 0.7f) }
+            val laja = Path().apply { contorno(this, R - 3 * u, 1.6f * u, 0.7f); contorno(this, r - g * 0.8f, u, 2.1f); fillType = PathFillType.EvenOdd }
+            drawPath(laja, tenue.copy(alpha = 0.08f))
+            drawPath(borde, tenue.copy(alpha = 0.4f), style = Stroke(1.4f * u))
+            drawPath(Path().apply { contorno(this, r - g * 0.8f, u, 2.1f) }, tenue.copy(alpha = 0.22f), style = Stroke(0.8f * u))
+            arco(color.copy(alpha = 0.2f), 0f, p, r, g * 0.95f)
+            // Las muescas: ocho grupos de cinco.
+            val s = 1f / 8; val h = g * 0.38f; val apagada = tenue.copy(alpha = 0.3f)
+            for (k in 0 until 40) {
+                val grupo = k / 5; val i = k % 5; val f0 = grupo * s
+                if (i < 4) {
+                    val f = f0 + (0.18f + i * 0.16f) * s; val l = h * (0.85f + 0.15f * sin(k * 2.7f)); val ladeo = 0.0015f * sin(k * 1.9f)
+                    drawLine(if (f <= p) color else apagada, en(f - ladeo, r - l), en(f + ladeo, r + l), 2.4f * u, StrokeCap.Round)
+                } else drawLine(if (f0 + 0.74f * s <= p) color else apagada, en(f0 + 0.1f * s, r - h * 0.7f), en(f0 + 0.74f * s, r + h * 0.7f), 2f * u, StrokeCap.Round)
+            }
+            for (j in 0 until 4) drawCircle(if (j / 4f <= p) e.tertiary else apagada, 2.2f * u, en(j / 4f, r - g * 0.95f))
+            // La mano de ocre donde va, con los dedos hacia afuera y su nube de pigmento.
+            val q = en(p, r - g * 1.8f)
+            rotate(p * 360f, q) {
+                for (k in 0 until 18) {
+                    val a = k * 0.349f + 0.4f * sin(k * 3.3f); val d = (8.5f + 2.5f * sin(k * 1.7f)) * u
+                    drawCircle(color.copy(alpha = 0.22f + 0.15f * sin(k * 2.1f).coerceAtLeast(0f)), (0.7f + 0.5f * (k % 3)) * u, Offset(q.x + d * cos(a), q.y + d * sin(a)))
+                }
+                drawPath(manoUnida(q, 7.5f * u), color)
+            }
         }
     }
 }

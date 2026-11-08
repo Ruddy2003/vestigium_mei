@@ -485,16 +485,20 @@ internal fun DrawScope.mediaLuna(c: Offset, r: Float, color: Color) {
     drawPath(Path.combine(androidx.compose.ui.graphics.PathOperation.Difference, a, b), color)
 }
 
-/** Estrellas fijas: la misma semilla da siempre el mismo cielo. Las más grandes llevan destello en cruz. */
-internal fun DrawScope.estrellas(semilla: Int, n: Int, color: Color, area: Rect = size.toRect(), max: Float = 1.6f) {
+/**
+ * Estrellas fijas: la misma semilla da siempre el mismo cielo. Las más grandes llevan destello en cruz.
+ * Los radios van en dp: 0.18 dp más hasta [max] dp (0.64 dp ≈ 1.6 px en un teléfono de densidad 2.6).
+ */
+internal fun DrawScope.estrellas(semilla: Int, n: Int, color: Color, area: Rect = size.toRect(), max: Float = 0.64f) {
+    val u = density
     val az = java.util.Random(semilla.toLong())
     repeat(n) {
         val x = area.left + az.nextFloat() * area.width; val y = area.top + az.nextFloat() * area.height
-        val r = 0.45f + az.nextFloat() * max
+        val rd = 0.18f + az.nextFloat() * max; val r = rd * u
         drawCircle(color.copy(alpha = 0.25f + az.nextFloat() * 0.6f), r, Offset(x, y))
-        if (r > max * 0.92f) {
-            drawLine(color.copy(alpha = 0.45f), Offset(x - r * 2.8f, y), Offset(x + r * 2.8f, y), 0.8f)
-            drawLine(color.copy(alpha = 0.45f), Offset(x, y - r * 2.8f), Offset(x, y + r * 2.8f), 0.8f)
+        if (rd > max * 0.92f) {
+            drawLine(color.copy(alpha = 0.45f), Offset(x - r * 2.8f, y), Offset(x + r * 2.8f, y), 0.32f * u)
+            drawLine(color.copy(alpha = 0.45f), Offset(x, y - r * 2.8f), Offset(x, y + r * 2.8f), 0.32f * u)
         }
     }
 }
@@ -519,20 +523,26 @@ private fun DrawScope.asterisco(ce: Offset, l: Float, color: Color, brazos: Int,
 
 /** Copo de nieve: seis brazos con sus ramitas. */
 private fun DrawScope.copoNieve(ce: Offset, l: Float, color: Color) {
+    val u = density
     for (i in 0 until 6) {
         val a = PI * i / 3
         val punta = ce + polarLibro(l, a); val medio = ce + polarLibro(l * 0.6f, a)
-        drawLine(color, ce, punta, 0.8f)
-        drawLine(color, medio, medio + polarLibro(l * 0.3f, a + 0.7), 0.7f); drawLine(color, medio, medio + polarLibro(l * 0.3f, a - 0.7), 0.7f)
+        drawLine(color, ce, punta, 0.32f * u)
+        drawLine(color, medio, medio + polarLibro(l * 0.3f, a + 0.7), 0.28f * u); drawLine(color, medio, medio + polarLibro(l * 0.3f, a - 0.7), 0.28f * u)
     }
 }
 
-/** Las estrellas de cada tema: puntos, píxeles, cruces, asteriscos, copos, rombos… La misma semilla da siempre el mismo cielo. */
-private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: Color, area: Rect = size.toRect(), max: Float = 1.6f) {
+/**
+ * Las estrellas de cada tema: puntos, píxeles, cruces, asteriscos, copos, rombos… La misma semilla da siempre el mismo cielo.
+ * Radios y trazos en dp: el radio base es 0.18 dp más hasta [max] dp (0.64 dp ≈ 1.6 px en un teléfono de densidad 2.6).
+ */
+private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: Color, area: Rect = size.toRect(), max: Float = 0.64f) {
+    val u = density
     val az = java.util.Random(semilla.toLong())
     repeat(n) { i ->
         val o = Offset(area.left + az.nextFloat() * area.width, area.top + az.nextFloat() * area.height)
-        val r = 0.45f + az.nextFloat() * max
+        // [rd] en dp decide qué estrellas son grandes; [r] es el mismo radio en píxeles, para dibujar.
+        val rd = 0.18f + az.nextFloat() * max; val r = rd * u
         val col = color.copy(alpha = 0.25f + az.nextFloat() * 0.6f)
         when (t) {
             TemaId.ROMANO -> drawCircle(col, r, o)
@@ -544,11 +554,11 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
             TemaId.NEON -> drawLine(col, o, o + Offset(r * 3.2f, 0f), r * 0.7f, cap = StrokeCap.Round)
             TemaId.HELENO -> {
                 drawCircle(col, r, o)
-                if (r > max * 0.92f) { drawLine(col, o - Offset(r * 2.8f, 0f), o + Offset(r * 2.8f, 0f), 0.8f); drawLine(col, o - Offset(0f, r * 2.8f), o + Offset(0f, r * 2.8f), 0.8f) }
+                if (rd > max * 0.92f) { drawLine(col, o - Offset(r * 2.8f, 0f), o + Offset(r * 2.8f, 0f), 0.32f * u); drawLine(col, o - Offset(0f, r * 2.8f), o + Offset(0f, r * 2.8f), 0.32f * u) }
             }
             // Las estrellas de cinco puntas de los techos de las tumbas; las pequeñas, puntos.
             TemaId.EGIPTO -> {
-                if (r > max * 0.5f) {
+                if (rd > max * 0.5f) {
                     val p = Path()
                     for (k in 0 until 10) {
                         val q = o + polarLibro(if (k % 2 == 0) r * 2.2f else r * 0.9f, -PI / 2 + PI * k / 5)
@@ -557,15 +567,15 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
                     p.close(); drawPath(p, col)
                 } else drawCircle(col, r * 0.8f, o)
             }
-            TemaId.MEDIEVAL -> asterisco(o, r * 1.7f, col, 6, 0.9f)
+            TemaId.MEDIEVAL -> asterisco(o, r * 1.7f, col, 6, 0.36f * u)
             TemaId.TEMPLARIO -> drawPath(cruzPatada(o, r * 1.8f), col)
             TemaId.DISTOPIA -> drawCircle(col.copy(alpha = col.alpha * 0.45f), r * 0.8f, o)
             TemaId.REFUGIO -> { val p = r * 0.8f; drawRect(col, Offset(o.x - p / 2, o.y - p * 1.5f), Size(p, p * 3)); drawRect(col, Offset(o.x - p * 1.5f, o.y - p / 2), Size(p * 3, p)) }
-            TemaId.ORDEN -> { drawLine(col, o - Offset(r * 2.4f, 0f), o + Offset(r * 2.4f, 0f), 1f); drawLine(col, o - Offset(0f, r * 2.4f), o + Offset(0f, r * 2.4f), 1f); drawCircle(col, r * 0.7f, o) }
+            TemaId.ORDEN -> { drawLine(col, o - Offset(r * 2.4f, 0f), o + Offset(r * 2.4f, 0f), 0.4f * u); drawLine(col, o - Offset(0f, r * 2.4f), o + Offset(0f, r * 2.4f), 0.4f * u); drawCircle(col, r * 0.7f, o) }
             // Con tanto hollín apenas se ven estrellas: son chispas de la chimenea que suben, con su halo.
-            TemaId.VAPOR -> { drawCircle(col.copy(alpha = col.alpha * 0.25f), r * 2f, o); drawCircle(col, r * 0.6f, o); if (i % 5 == 0) drawLine(col.copy(alpha = col.alpha * 0.5f), o, o + Offset(-r * 1.5f, r * 3f), 0.8f) }
-            TemaId.LABORATORIO -> { drawLine(col, o - Offset(r * 1.5f, 0f), o + Offset(r * 1.5f, 0f), 0.7f); drawLine(col, o - Offset(0f, r * 1.5f), o + Offset(0f, r * 1.5f), 0.7f) }
-            TemaId.COLONOS -> { drawCircle(col, r * 0.8f, o); drawCircle(col.copy(alpha = col.alpha * 0.3f), r * 2f, o, style = Stroke(0.6f)) }
+            TemaId.VAPOR -> { drawCircle(col.copy(alpha = col.alpha * 0.25f), r * 2f, o); drawCircle(col, r * 0.6f, o); if (i % 5 == 0) drawLine(col.copy(alpha = col.alpha * 0.5f), o, o + Offset(-r * 1.5f, r * 3f), 0.32f * u) }
+            TemaId.LABORATORIO -> { drawLine(col, o - Offset(r * 1.5f, 0f), o + Offset(r * 1.5f, 0f), 0.28f * u); drawLine(col, o - Offset(0f, r * 1.5f), o + Offset(0f, r * 1.5f), 0.28f * u) }
+            TemaId.COLONOS -> { drawCircle(col, r * 0.8f, o); drawCircle(col.copy(alpha = col.alpha * 0.3f), r * 2f, o, style = Stroke(0.24f * u)) }
             TemaId.NAPOLEON -> estrellaPuntas(o, r * 1.8f, col, 5, 0.42f)
             // Destellos finos de cuatro puntas, como las bombillas de una marquesina vistas de lejos.
             TemaId.DECO -> estrellaPuntas(o, r * 1.7f, col, 4, 0.2f)
@@ -585,10 +595,10 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
             TemaId.ANDALUS -> estrellaPuntas(o, r * 1.8f, col, 6, 0.55f)
             // Lamat, el signo de Venus: la estrella de cuatro puntas con un punto en cada hueco.
             TemaId.MESO -> { estrellaPuntas(o, r * 1.7f, col, 4, 0.3f); for (k in 0 until 4) { val a = Math.toRadians(45.0 + 90.0 * k); drawCircle(col, r * 0.28f, Offset(o.x + r * 1.1f * cos(a).toFloat(), o.y + r * 1.1f * sin(a).toFloat())) } }
-            TemaId.MONGOL -> drawCircle(col, r * 1.2f, o, style = Stroke(0.9f))
-            TemaId.RENACIMIENTO -> { val l = r * 1.3f; drawLine(col, o + Offset(-l, -l), o + Offset(l, l), 0.9f); drawLine(col, o + Offset(-l, l), o + Offset(l, -l), 0.9f) }
+            TemaId.MONGOL -> drawCircle(col, r * 1.2f, o, style = Stroke(0.36f * u))
+            TemaId.RENACIMIENTO -> { val l = r * 1.3f; drawLine(col, o + Offset(-l, -l), o + Offset(l, l), 0.36f * u); drawLine(col, o + Offset(-l, l), o + Offset(l, -l), 0.36f * u) }
             // Las estrellas de marear de las cartas: cuatro puntas, la vertical más larga.
-            TemaId.PIRATA -> { val l = r * 1.7f; drawLine(col, o + Offset(0f, -l), o + Offset(0f, l), 0.8f); drawLine(col, o + Offset(-l * 0.6f, 0f), o + Offset(l * 0.6f, 0f), 0.8f); drawCircle(col, r * 0.45f, o) }
+            TemaId.PIRATA -> { val l = r * 1.7f; drawLine(col, o + Offset(0f, -l), o + Offset(0f, l), 0.32f * u); drawLine(col, o + Offset(-l * 0.6f, 0f), o + Offset(l * 0.6f, 0f), 0.32f * u); drawCircle(col, r * 0.45f, o) }
             TemaId.URSS -> if (i % 9 == 0) estrellaPuntas(o, r * 2.2f, Color(0xFFE53935).copy(alpha = col.alpha), 5, 0.42f) else drawCircle(col, r * 0.8f, o)
             TemaId.REVOLUCION -> drawCircle(listOf(Color(0xFF8FA6E8), col, Color(0xFFE57373))[i % 3].copy(alpha = col.alpha), r, o)
             TemaId.ANTIGUAS -> estrellaPuntas(o, r * 2.2f, col, 4, 0.3f)
@@ -604,6 +614,8 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
  */
 private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema, sola: Boolean = false) {
     val luna = n.luna
+    // Los trazos finos van en dp (0.4 dp ≈ 1 px en un teléfono de densidad 2.6); lo demás es proporcional a [r].
+    val u = density
     when (t) {
         // Luna llena con su halo, como sobre el Foro.
         TemaId.ROMANO -> { drawCircle(luna.copy(alpha = 0.18f), r * 1.45f, ce); drawCircle(luna, r * 0.9f, ce); drawCircle(n.cielo.copy(alpha = 0.18f), r * 0.25f, ce + Offset(-r * 0.25f, -r * 0.1f)) }
@@ -618,7 +630,7 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
         }
         // Una media luna hecha de cuadritos, como en una consola.
         TemaId.CIBER -> {
-            val paso = r / 3.5f; var y = -r
+            val paso = maxOf(r / 3.5f, 1f); var y = -r
             while (y <= r) {
                 var x = -r
                 while (x <= r) {
@@ -658,7 +670,7 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
             }
         }
         // Media luna con una estrellita de seis puntas, como en los márgenes iluminados.
-        TemaId.MEDIEVAL -> { mediaLuna(ce, r, luna); if (!sola) asterisco(ce + Offset(-r * 1.9f, r * 0.6f), r * 0.45f, luna, 6, 1.4f) }
+        TemaId.MEDIEVAL -> { mediaLuna(ce, r, luna); if (!sola) asterisco(ce + Offset(-r * 1.9f, r * 0.6f), r * 0.45f, luna, 6, 0.56f * u) }
         // Media luna sobre la torre de vigía, con su antorcha.
         TemaId.TEMPLARIO -> { mediaLuna(ce, r, luna)
             if (!sola) { val b = ce + Offset(-r * 2.2f, r * 0.4f); drawRect(luna.copy(alpha = 0.7f), Offset(b.x - r * 0.3f, b.y), Size(r * 0.6f, r * 1.4f))
@@ -671,12 +683,12 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
         }
         // Luna de fósforo: un círculo hecho de líneas de barrido.
         TemaId.REFUGIO -> {
-            drawCircle(n.luz, r, ce, style = Stroke(1f))
-            var y = -r + r / 5f
-            while (y < r) { val m = sqrt(r * r - y * y); drawLine(n.luz.copy(alpha = 0.8f), Offset(ce.x - m, ce.y + y), Offset(ce.x + m, ce.y + y), 1.2f); y += r / 5f }
+            drawCircle(n.luz, r, ce, style = Stroke(0.4f * u))
+            val paso = maxOf(r / 5f, 1f); var y = -r + paso
+            while (y < r) { val m = sqrt(r * r - y * y); drawLine(n.luz.copy(alpha = 0.8f), Offset(ce.x - m, ce.y + y), Offset(ce.x + m, ce.y + y), 0.48f * u); y += paso }
         }
         // Media luna de acero: un semicírculo recto, con su anillo.
-        TemaId.ORDEN -> { drawArc(luna, 90f, 180f, true, Offset(ce.x - r, ce.y - r), Size(2 * r, 2 * r)); drawCircle(luna.copy(alpha = 0.4f), r * 1.25f, ce, style = Stroke(1.2f)) }
+        TemaId.ORDEN -> { drawArc(luna, 90f, 180f, true, Offset(ce.x - r, ce.y - r), Size(2 * r, 2 * r)); drawCircle(luna.copy(alpha = 0.4f), r * 1.25f, ce, style = Stroke(0.48f * u)) }
         // En lugar de luna, el reloj de la estación, con la hora del ferrocarril: esfera, doce marcas y las dos agujas.
         TemaId.VAPOR -> {
             drawCircle(luna.copy(alpha = 0.16f), r * 1.5f, ce); drawCircle(luna, r * 0.95f, ce)
@@ -688,9 +700,9 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
         }
         // Diagrama de fase: la mitad iluminada y las marcas de los grados.
         TemaId.LABORATORIO -> {
-            drawCircle(luna, r, ce, style = Stroke(1.2f))
+            drawCircle(luna, r, ce, style = Stroke(0.48f * u))
             drawArc(luna, -90f, 180f, true, Offset(ce.x - r, ce.y - r), Size(2 * r, 2 * r))
-            if (!sola) for (i in 0 until 12) { val a = PI * i / 6; drawLine(luna.copy(alpha = 0.6f), ce + polarLibro(r * 1.15f, a), ce + polarLibro(r * 1.35f, a), 1f) }
+            if (!sola) for (i in 0 until 12) { val a = PI * i / 6; drawLine(luna.copy(alpha = 0.6f), ce + polarLibro(r * 1.15f, a), ce + polarLibro(r * 1.35f, a), 0.4f * u) }
         }
         // Media luna y el Carro (la Osa Mayor), con que se orientaban los colonos.
         TemaId.COLONOS -> {
@@ -698,8 +710,8 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
             if (!sola) {
                 val s = r * 0.55f; val o = ce + Offset(-r * 2.8f, r * 0.4f)
                 val puntos = listOf(-1.6f to -0.5f, -1.0f to -0.3f, -0.45f to -0.15f, 0f to 0f, 0.1f to 0.6f, 0.9f to 0.65f, 0.95f to 0.05f).map { (x, y) -> o + Offset(x * s, y * s) }
-                puntos.zipWithNext().forEach { (a, b) -> drawLine(luna.copy(alpha = 0.35f), a, b, 0.8f) }
-                drawLine(luna.copy(alpha = 0.35f), puntos[6], puntos[3], 0.8f)
+                puntos.zipWithNext().forEach { (a, b) -> drawLine(luna.copy(alpha = 0.35f), a, b, 0.32f * u) }
+                drawLine(luna.copy(alpha = 0.35f), puntos[6], puntos[3], 0.32f * u)
                 puntos.forEach { drawCircle(luna, s * 0.14f, it) }
             }
         }
@@ -723,15 +735,15 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
             drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x - s, o.y - s * 0.7f); lineTo(o.x - s * 0.8f, o.y + s * 0.5f); close() }, n.cielo)
             drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x + s, o.y - s * 0.7f); lineTo(o.x + s * 0.8f, o.y + s * 0.5f); close() }, n.cielo)
             drawLine(n.cielo, o + Offset(0f, -s * 0.3f), o + Offset(0f, s * 0.5f), s * 0.18f)
-            drawLine(n.cielo, o + Offset(0f, -s * 0.3f), o + Offset(-s * 0.35f, -s * 0.8f), 1f); drawLine(n.cielo, o + Offset(0f, -s * 0.3f), o + Offset(s * 0.35f, -s * 0.8f), 1f)
+            drawLine(n.cielo, o + Offset(0f, -s * 0.3f), o + Offset(-s * 0.35f, -s * 0.8f), 0.4f * u); drawLine(n.cielo, o + Offset(0f, -s * 0.3f), o + Offset(s * 0.35f, -s * 0.8f), 0.4f * u)
         }
         TemaId.RUINAS -> {
             // La luna llena detrás de la punta de una torre rota, con su antena doblada.
             drawCircle(luna, r, ce)
             val b = ce.y + r * 1.1f
             drawPath(Path().apply { moveTo(ce.x - r * 0.9f, b); lineTo(ce.x - r * 0.9f, ce.y + r * 0.1f); lineTo(ce.x - r * 0.6f, ce.y - r * 0.15f); lineTo(ce.x - r * 0.45f, ce.y + r * 0.2f); lineTo(ce.x - r * 0.2f, ce.y + r * 0.05f); lineTo(ce.x - r * 0.1f, b); close() }, n.cielo)
-            drawLine(n.cielo, Offset(ce.x - r * 0.6f, ce.y - r * 0.15f), Offset(ce.x - r * 0.55f, ce.y - r * 0.7f), 1.5f)
-            drawLine(n.cielo, Offset(ce.x - r * 0.55f, ce.y - r * 0.7f), Offset(ce.x - r * 0.3f, ce.y - r * 0.85f), 1.5f)
+            drawLine(n.cielo, Offset(ce.x - r * 0.6f, ce.y - r * 0.15f), Offset(ce.x - r * 0.55f, ce.y - r * 0.7f), 0.6f * u)
+            drawLine(n.cielo, Offset(ce.x - r * 0.55f, ce.y - r * 0.7f), Offset(ce.x - r * 0.3f, ce.y - r * 0.85f), 0.6f * u)
         }
         // La estrella de Belén, con su cola larga, y una luna pequeña.
         TemaId.NAVIDAD -> {
@@ -769,7 +781,7 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
             listOf(0.15f, 0.45f).forEach { f -> drawRect(n.cielo.copy(alpha = 0.55f), Offset(ce.x - r * 1.6f, ce.y + r * f), Size(r * 3.2f, r * 0.14f)) }
         }
         // Un planeta con su anillo.
-        TemaId.ESPACIO -> { drawCircle(luna, r * 0.75f, ce); rotate(-20f, ce) { drawOval(n.luz, Offset(ce.x - r * 1.5f, ce.y - r * 0.38f), Size(r * 3f, r * 0.76f), style = Stroke(1.6f)) } }
+        TemaId.ESPACIO -> { drawCircle(luna, r * 0.75f, ce); rotate(-20f, ce) { drawOval(n.luz, Offset(ce.x - r * 1.5f, ce.y - r * 0.38f), Size(r * 3f, r * 0.76f), style = Stroke(0.64f * u)) } }
         // La linterna del rape: la luz al final de su varilla curva, con su halo.
         TemaId.ABISMO -> {
             drawCircle(n.luz.copy(alpha = 0.2f), r * 1.5f, ce)
@@ -802,17 +814,17 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
         }
         // La luz cenicienta que dibujó Leonardo: el creciente iluminado y el resto rayado a pluma.
         TemaId.RENACIMIENTO -> {
-            drawCircle(luna.copy(alpha = 0.5f), r, ce, style = Stroke(1f))
+            drawCircle(luna.copy(alpha = 0.5f), r, ce, style = Stroke(0.4f * u))
             mediaLuna(ce, r, luna)
-            var x = r * 0.05f
-            while (x < r) { val m = sqrt(r * r - x * x) * 0.92f; drawLine(luna.copy(alpha = 0.35f), Offset(ce.x + x, ce.y - m), Offset(ce.x + x - r * 0.15f, ce.y + m), 0.8f); x += r / 5f }
+            val paso = maxOf(r / 5f, 1f); var x = r * 0.05f
+            while (x < r) { val m = sqrt(r * r - x * x) * 0.92f; drawLine(luna.copy(alpha = 0.35f), Offset(ce.x + x, ce.y - m), Offset(ce.x + x - r * 0.15f, ce.y + m), 0.32f * u); x += paso }
         }
         // La luna sobre el mar, con su reflejo roto en las olas.
         TemaId.PIRATA -> {
             mediaLuna(ce, r, luna)
             for (k in 1..6) {
                 val y = ce.y + r * (1.5f + k * 0.32f); val a = r * (0.7f - k * 0.08f)
-                drawLine(luna.copy(alpha = 0.35f * (1f - k / 7f)), Offset(ce.x - a, y), Offset(ce.x + a * 0.8f, y), 1.2f)
+                drawLine(luna.copy(alpha = 0.35f * (1f - k / 7f)), Offset(ce.x - a, y), Offset(ce.x + a * 0.8f, y), 0.48f * u)
             }
         }
         // El Sputnik cruza junto a la luna.
@@ -821,7 +833,7 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
             if (!sola) {
                 val o = ce + Offset(-r * 1.8f, r * 0.6f); val s = r * 0.28f
                 drawCircle(n.luz, s, o)
-                listOf(20.0, 34.0, -20.0, -34.0).forEach { a -> drawLine(n.luz, o, o + polarLibro(s * 4f, Math.toRadians(a)), 0.9f) }
+                listOf(20.0, 34.0, -20.0, -34.0).forEach { a -> drawLine(n.luz, o, o + polarLibro(s * 4f, Math.toRadians(a)), 0.36f * u) }
             }
         }
         // Media luna y la escarapela.
@@ -832,12 +844,12 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
         // La luna con su anillo de runas inventadas.
         TemaId.ANTIGUAS -> {
             drawCircle(luna, r * 0.8f, ce)
-            if (!sola) for (i in 0 until 16) { val a = 2 * PI * i / 16; val p0 = ce + polarLibro(r * 1.1f, a); drawLine(luna.copy(alpha = 0.7f), p0, p0 + polarLibro(r * 0.25f, a + if (i % 3 == 0) 0.6 else -0.4), 1.1f) }
+            if (!sola) for (i in 0 until 16) { val a = 2 * PI * i / 16; val p0 = ce + polarLibro(r * 1.1f, a); drawLine(luna.copy(alpha = 0.7f), p0, p0 + polarLibro(r * 0.25f, a + if (i % 3 == 0) 0.6 else -0.4), 0.44f * u) }
         }
         // La luna llena y, alrededor, una hilera de muescas en zigzag: las noches de una luna contadas en un hueso.
         TemaId.CUEVA -> {
             drawCircle(luna.copy(alpha = 0.16f), r * 1.3f, ce); drawCircle(luna, r * 0.8f, ce)
-            if (!sola) for (i in 0 until 15) { val a = -PI / 2 + PI * 1.6 * i / 14 - PI * 0.3; val p0 = ce + polarLibro(r * (if (i % 2 == 0) 1.2f else 1.38f), a); drawCircle(luna.copy(alpha = 0.75f), 1.2f, p0) }
+            if (!sola) for (i in 0 until 15) { val a = -PI / 2 + PI * 1.6 * i / 14 - PI * 0.3; val p0 = ce + polarLibro(r * (if (i % 2 == 0) 1.2f else 1.38f), a); drawCircle(luna.copy(alpha = 0.75f), 0.48f * u, p0) }
         }
     }
 }
@@ -1368,7 +1380,7 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
         Canvas(Modifier.fillMaxSize()) {
             // Los adornos del papel y, en modo oscuro, la luz con que se lee: los dibuja el tema.
             with(d) { pagina(p, oscuro, noche) }
-            if (noche) estrellasDelTema(t, t.ordinal * 17 + 3, (size.width * size.height / 5200f).toInt().coerceIn(60, 260), n.luna, max = 1.5f)
+            if (noche) estrellasDelTema(t, t.ordinal * 17 + 3, (size.width * size.height / 5200f).toInt().coerceIn(60, 260), n.luna, max = 0.6f)
         }
     }
 }
@@ -1397,11 +1409,12 @@ internal fun Modifier.rayado(p: Pagina, layout: TextLayoutResult?): Modifier {
         fun fondoDe(i: Int) = if (layout != null && i < lineas) layout.getLineBottom(i) else (if (lineas > 0) layout!!.getLineBottom(lineas - 1) else 0f) + paso * (i - lineas + 1)
         val total = ((size.height / paso).toInt() + 1).coerceIn(0, 2000)
         when (p.rayas) {
-            Rayas.RENGLONES -> for (i in 0 until total) { val y = fondoDe(i) - paso * 0.12f; if (y < size.height) drawLine(p.tenue.copy(alpha = 0.3f), Offset(-12.dp.toPx(), y), Offset(size.width + 12.dp.toPx(), y), 1f) }
+            Rayas.RENGLONES -> for (i in 0 until total) { val y = fondoDe(i) - paso * 0.12f; if (y < size.height) drawLine(p.tenue.copy(alpha = 0.3f), Offset(-12.dp.toPx(), y), Offset(size.width + 12.dp.toPx(), y), 0.4.dp.toPx()) }
             Rayas.CUADRICULA -> {
-                val g = paso / 2; var x = -g * 2
-                while (x < size.width + g * 2) { drawLine(p.acento.copy(alpha = 0.12f), Offset(x, -g), Offset(x, size.height), 1f); x += g }
-                var y = 0f; while (y < size.height) { drawLine(p.acento.copy(alpha = 0.12f), Offset(-g * 2, y), Offset(size.width + g * 2, y), 1f); y += g }
+                // Paso mínimo de 1 px y tope de 2000 rayas por dirección, por si el lienzo es enorme.
+                val g = maxOf(paso / 2, 1f); val grosor = 0.4.dp.toPx(); var x = -g * 2; var k = 0
+                while (x < size.width + g * 2 && k++ < 2000) { drawLine(p.acento.copy(alpha = 0.12f), Offset(x, -g), Offset(x, size.height), grosor); x += g }
+                var y = 0f; k = 0; while (y < size.height && k++ < 2000) { drawLine(p.acento.copy(alpha = 0.12f), Offset(-g * 2, y), Offset(size.width + g * 2, y), grosor); y += g }
             }
             Rayas.NUMEROS -> for (i in 0 until minOf(total, 999)) {
                 val top = if (layout != null && i < lineas) layout.getLineTop(i) else fondoDe(i) - paso

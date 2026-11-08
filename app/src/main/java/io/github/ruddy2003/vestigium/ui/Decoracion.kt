@@ -1315,14 +1315,14 @@ internal fun Zarcillo(modifier: Modifier) {
         val mid = size.height / 2; val amp = size.height * 0.26f; val lam = 30.dp.toPx()
         val p = Path(); var x = 0f
         p.moveTo(0f, mid)
-        while (x <= size.width) { p.lineTo(x, mid + amp * sin(2 * PI * x / lam).toFloat()); x += 2f }
-        drawPath(p, oro, style = Stroke(1.4f))
+        while (x <= size.width) { p.lineTo(x, mid + amp * sin(2 * PI * x / lam).toFloat()); x += maxOf(0.8.dp.toPx(), 1f) }
+        drawPath(p, oro, style = Stroke(0.55.dp.toPx()))
         var k = 0; x = lam / 4
         while (x < size.width) {
             val arriba = k % 2 == 0
             val y = mid + if (arriba) -amp else amp
             if (k % 4 < 2) rotate(if (arriba) -35f else 35f, Offset(x, y)) {
-                drawOval(azul, Offset(x - 5.dp.toPx() / 2, y - (if (arriba) 4.dp.toPx() else -1f)), Size(5.dp.toPx(), 3.dp.toPx()))
+                drawOval(azul, Offset(x - 5.dp.toPx() / 2, y - (if (arriba) 4.dp.toPx() else -0.4.dp.toPx())), Size(5.dp.toPx(), 3.dp.toPx()))
             } else drawCircle(rojo, 1.6.dp.toPx(), Offset(x, mid + if (arriba) amp * 1.9f else -amp * 1.9f))
             x += lam / 2; k++
         }
@@ -1335,16 +1335,16 @@ internal fun Adarve(modifier: Modifier) {
     val e = MaterialTheme.colorScheme
     val piedra = e.onBackground.copy(alpha = 0.55f); val rojo = e.primary; val lino = e.surface
     Canvas(modifier.fillMaxWidth().height(16.dp)) {
-        val h = size.height; val m = 8.dp.toPx(); val base = h * 0.62f
+        val h = size.height; val m = 8.dp.toPx(); val base = h * 0.62f; val b = 0.2.dp.toPx()
         drawRect(piedra, Offset(0f, base), Size(size.width, h * 0.2f))
         var x = 0f; var k = 0
         while (x + m <= size.width) {
             if (k % 6 == 3) {
                 val cx = x + m / 2
                 val escudo = Path().apply {
-                    moveTo(cx - m * 0.62f, 0.5f); lineTo(cx + m * 0.62f, 0.5f); quadraticTo(cx + m * 0.66f, h * 0.6f, cx, h - 0.5f); quadraticTo(cx - m * 0.66f, h * 0.6f, cx - m * 0.62f, 0.5f); close()
+                    moveTo(cx - m * 0.62f, b); lineTo(cx + m * 0.62f, b); quadraticTo(cx + m * 0.66f, h * 0.6f, cx, h - b); quadraticTo(cx - m * 0.66f, h * 0.6f, cx - m * 0.62f, b); close()
                 }
-                drawPath(escudo, lino); drawPath(escudo, piedra, style = Stroke(1.1f))
+                drawPath(escudo, lino); drawPath(escudo, piedra, style = Stroke(0.45.dp.toPx()))
                 drawPath(cruzPatada(Offset(cx, h * 0.36f), h * 0.26f), rojo)
             } else if (k % 2 == 0) drawRect(piedra, Offset(x, base - h * 0.42f), Size(m, h * 0.42f))
             x += maxOf(m, 1f); k++
@@ -1358,7 +1358,7 @@ internal fun Destellos(modifier: Modifier) {
     val linea = MaterialTheme.colorScheme.primary; val estrella = MaterialTheme.colorScheme.secondary
     Canvas(modifier.fillMaxWidth().height(14.dp)) {
         val y = size.height / 2
-        drawLine(linea.copy(alpha = 0.55f), Offset(0f, y), Offset(size.width, y), 1.5f)
+        drawLine(linea.copy(alpha = 0.55f), Offset(0f, y), Offset(size.width, y), 0.6.dp.toPx())
         var x = 18.dp.toPx(); var k = 0
         while (x < size.width) {
             val s = if (k % 3 == 0) size.height * 0.5f else size.height * 0.3f
@@ -1384,7 +1384,7 @@ internal fun Galones(modifier: Modifier) {
             drawPath(p, rojo)
         }
         val ini = 5 * paso + h
-        drawRect(acero, Offset(ini, y - 1.5f), Size(size.width - ini, 3f))
+        drawRect(acero, Offset(ini, y - 0.6.dp.toPx()), Size(size.width - ini, 1.2.dp.toPx()))
         var x = ini + 8.dp.toPx()
         while (x < size.width) { drawCircle(laton, h * 0.2f, Offset(x, y)); x += 26.dp.toPx() }
     }
@@ -1419,7 +1419,7 @@ internal fun Laureles(modifier: Modifier) {
     val oro = MaterialTheme.colorScheme.tertiary; val azul = MaterialTheme.colorScheme.primary
     Canvas(modifier.fillMaxWidth().height(14.dp)) {
         val y = size.height / 2
-        drawLine(oro, Offset(0f, y), Offset(size.width, y), 1.4f)
+        drawLine(oro, Offset(0f, y), Offset(size.width, y), 0.55.dp.toPx())
         val paso = 11.dp.toPx(); var x = paso / 2; var k = 0
         val largo = 7.dp.toPx(); val ancho = 2.6.dp.toPx()
         while (x < size.width) {
@@ -1484,8 +1484,8 @@ internal fun Enredadera(modifier: Modifier) {
         val mid = size.height / 2; val amp = size.height * 0.12f; val lam = 80.dp.toPx()
         val p = Path(); var x = 0f
         p.moveTo(0f, mid)
-        while (x <= size.width) { p.lineTo(x, mid + amp * sin(2 * PI * x / lam).toFloat()); x += 2f }
-        drawPath(p, e.onBackground.copy(alpha = 0.55f), style = Stroke(1.2f))
+        while (x <= size.width) { p.lineTo(x, mid + amp * sin(2 * PI * x / lam).toFloat()); x += maxOf(0.8.dp.toPx(), 1f) }
+        drawPath(p, e.onBackground.copy(alpha = 0.55f), style = Stroke(0.5.dp.toPx()))
         var k = 0; x = 10.dp.toPx()
         val l = 7.dp.toPx()
         while (x < size.width - l) {
@@ -1493,9 +1493,9 @@ internal fun Enredadera(modifier: Modifier) {
             val a = atan2((amp * 2 * PI / lam * cos(2 * PI * x / lam)).toFloat(), 1f)
             if (k % 11 == 6) {
                 // Escarabajo.
-                rotate(Math.toDegrees(a.toDouble()).toFloat() + 90f, Offset(x, y - 1f)) {
+                rotate(Math.toDegrees(a.toDouble()).toFloat() + 90f, Offset(x, y - 0.4.dp.toPx())) {
                     drawOval(e.tertiary, Offset(x - 2.6.dp.toPx(), y - 3.4.dp.toPx()), Size(5.2.dp.toPx(), 6.dp.toPx()))
-                    drawLine(e.onBackground.copy(alpha = 0.7f), Offset(x, y - 3.dp.toPx()), Offset(x, y + 2.4.dp.toPx()), 1f)
+                    drawLine(e.onBackground.copy(alpha = 0.7f), Offset(x, y - 3.dp.toPx()), Offset(x, y + 2.4.dp.toPx()), 0.4.dp.toPx())
                     drawCircle(e.onBackground, 1.3.dp.toPx(), Offset(x, y - 4.dp.toPx()))
                 }
                 x += l * 2.4f
@@ -1515,7 +1515,7 @@ internal fun BandaCalle(modifier: Modifier) {
     Canvas(modifier.fillMaxWidth().height(16.dp)) {
         val mid = size.height * 0.62f; val tramo = 18.dp.toPx(); val hueco = 12.dp.toPx(); val g = 2.2.dp.toPx()
         val pintura = e.tertiary.copy(alpha = 0.7f)
-        drawLine(e.onBackground.copy(alpha = 0.18f), Offset(0f, size.height - 1f), Offset(size.width, size.height - 1f), 1f)
+        drawLine(e.onBackground.copy(alpha = 0.18f), Offset(0f, size.height - 0.4.dp.toPx()), Offset(size.width, size.height - 0.4.dp.toPx()), 0.4.dp.toPx())
         var x = 4.dp.toPx(); var k = 0
         while (x < size.width) {
             val fin = (x + tramo).coerceAtMost(size.width)
@@ -1532,7 +1532,7 @@ internal fun BandaCalle(modifier: Modifier) {
             if (cx < size.width) {
                 if (k % 3 == 2) hojaHiedraEmblema(Offset(cx, mid + 1.dp.toPx()), 6.dp.toPx(), e.primary.copy(alpha = 0.85f))
                 else for (j in -1..1) {
-                    drawLine(e.primary.copy(alpha = 0.8f), Offset(cx + j * 1.2.dp.toPx(), mid + 1.dp.toPx()), Offset(cx + j * 2.6.dp.toPx(), mid - (if (j == 0) 4.5f else 3.5f).dp.toPx()), 1.1f)
+                    drawLine(e.primary.copy(alpha = 0.8f), Offset(cx + j * 1.2.dp.toPx(), mid + 1.dp.toPx()), Offset(cx + j * 2.6.dp.toPx(), mid - (if (j == 0) 4.5f else 3.5f).dp.toPx()), 0.45.dp.toPx())
                 }
             }
             x = fin + hueco; k++
@@ -1548,17 +1548,17 @@ internal fun Arqueria(modifier: Modifier) {
     val piedra = if (oscuro) e.primary else e.onBackground.copy(alpha = 0.7f)
     val vidrios = listOf(e.secondary, if (oscuro) e.tertiary else e.primary, Color(0xFF2E8B57), Color(0xFFE2B34A))
     Canvas(modifier.fillMaxWidth().height(16.dp)) {
-        val h = size.height; val a = 16.dp.toPx(); var x = 0f; var k = 0
-        drawLine(piedra, Offset(0f, h - 1f), Offset(size.width, h - 1f), 1.4f)
+        val h = size.height; val a = 16.dp.toPx(); var x = 0f; var k = 0; val v = 0.4.dp.toPx(); val m = 0.8.dp.toPx()
+        drawLine(piedra, Offset(0f, h - v), Offset(size.width, h - v), 0.55.dp.toPx())
         while (x + a <= size.width) {
             val arco = Path().apply {
-                moveTo(x + 2f, h - 1f); lineTo(x + 2f, h * 0.55f)
-                quadraticTo(x + 2f, h * 0.12f, x + a / 2, 1f); quadraticTo(x + a - 2f, h * 0.12f, x + a - 2f, h * 0.55f); lineTo(x + a - 2f, h - 1f)
+                moveTo(x + m, h - v); lineTo(x + m, h * 0.55f)
+                quadraticTo(x + m, h * 0.12f, x + a / 2, v); quadraticTo(x + a - m, h * 0.12f, x + a - m, h * 0.55f); lineTo(x + a - m, h - v)
             }
             drawPath(arco, vidrios[k % vidrios.size].copy(alpha = 0.32f))
-            drawPath(arco, piedra, style = Stroke(1.2f))
+            drawPath(arco, piedra, style = Stroke(0.5.dp.toPx()))
             drawCircle(vidrios[(k + 1) % vidrios.size], 1.6.dp.toPx(), Offset(x + a / 2, h * 0.42f))
-            x += a; k++
+            x += maxOf(a, 1f); k++
         }
     }
 }
@@ -1604,11 +1604,11 @@ internal fun Orbita(modifier: Modifier) {
     Canvas(modifier.fillMaxWidth().height(14.dp).clipToBounds()) {
         val y = size.height / 2
         var x = 0f
-        while (x < size.width) { drawCircle(e.primary.copy(alpha = 0.55f), 0.9f, Offset(x, y)); x += 5.dp.toPx() }
+        while (x < size.width) { drawCircle(e.primary.copy(alpha = 0.55f), 0.35.dp.toPx(), Offset(x, y)); x += 5.dp.toPx() }
         x = 24.dp.toPx(); var k = 0
         while (x < size.width) {
             when (k % 3) {
-                0 -> { drawCircle(e.primary, size.height * 0.24f, Offset(x, y)); drawOval(e.secondary, Offset(x - size.height * 0.46f, y - size.height * 0.1f), Size(size.height * 0.92f, size.height * 0.2f), style = Stroke(1.2f)) }
+                0 -> { drawCircle(e.primary, size.height * 0.24f, Offset(x, y)); drawOval(e.secondary, Offset(x - size.height * 0.46f, y - size.height * 0.1f), Size(size.height * 0.92f, size.height * 0.2f), style = Stroke(0.5.dp.toPx())) }
                 1 -> { val s = size.height * 0.42f
                     val p = Path().apply { moveTo(x, y - s); quadraticTo(x, y, x + s, y); quadraticTo(x, y, x, y + s); quadraticTo(x, y, x - s, y); quadraticTo(x, y, x, y - s); close() }
                     drawPath(p, e.onBackground.copy(alpha = 0.7f)) }
@@ -1650,17 +1650,17 @@ internal fun Lazo(modifier: Modifier) {
     val oscuro = e.background.luminance() < 0.5f
     val oro = if (oscuro) e.primary else e.tertiary
     Canvas(modifier.fillMaxWidth().height(14.dp).clipToBounds()) {
-        val h = size.height; val p = h * 1.2f
+        val h = size.height; val p = h * 1.2f; val o = 0.6.dp.toPx(); val g = 0.85.dp.toPx()
         val a = Path(); val b = Path(); var x = 0f; var arriba = true
-        a.moveTo(0f, 1.5f); b.moveTo(0f, h - 1.5f)
-        while (x <= size.width + p) { x += p; arriba = !arriba; a.lineTo(x, if (arriba) 1.5f else h - 1.5f); b.lineTo(x, if (arriba) h - 1.5f else 1.5f) }
-        drawPath(a, oro, style = Stroke(2.2f)); drawPath(b, e.secondary, style = Stroke(2.2f))
+        a.moveTo(0f, o); b.moveTo(0f, h - o)
+        while (x <= size.width + p) { x += maxOf(p, 1f); arriba = !arriba; a.lineTo(x, if (arriba) o else h - o); b.lineTo(x, if (arriba) h - o else o) }
+        drawPath(a, oro, style = Stroke(g)); drawPath(b, e.secondary, style = Stroke(g))
         x = p
         while (x < size.width) {
             val c = Offset(x, h / 2); val s = h * 0.24f
             val est = Path().apply { for (i in 0 until 16) { val rr = if (i % 2 == 0) s else s * 0.5f; val q = c.mas(rr, rad(-90.0 + 22.5 * i)); if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }; close() }
             drawPath(est, e.primary)
-            x += p * 2
+            x += maxOf(p * 2, 1f)
         }
     }
 }
@@ -1687,15 +1687,16 @@ internal fun Trazo(modifier: Modifier) {
     Canvas(modifier.fillMaxWidth().height(14.dp).clipToBounds()) {
         val y = size.height * 0.6f
         val azar = java.util.Random(5)
+        val u = 1.dp.toPx()
         val p = Path(); var x = 0f; p.moveTo(0f, y)
-        while (x < size.width) { x += 6f; p.lineTo(x, y + (azar.nextFloat() - 0.5f) * 0.9f) }
-        drawPath(p, tinta, style = Stroke(1.1f))
+        while (x < size.width) { x += maxOf(2.3f * u, 1f); p.lineTo(x, y + (azar.nextFloat() - 0.5f) * 0.35f * u) }
+        drawPath(p, tinta, style = Stroke(0.45f * u))
         var i = 0; x = 0f
         val paso = 12.dp.toPx()
-        while (x < size.width) { val alto = if (i % 6 == 0) size.height * 0.5f else size.height * 0.22f; drawLine(tinta, Offset(x, y), Offset(x, y - alto), 0.9f); x += paso; i++ }
+        while (x < size.width) { val alto = if (i % 6 == 0) size.height * 0.5f else size.height * 0.22f; drawLine(tinta, Offset(x, y), Offset(x, y - alto), 0.35f * u); x += paso; i++ }
         val cx = size.width * 0.72f
-        drawArc(e.primary, 200f, 140f, false, Offset(cx - size.height, y - size.height * 0.9f), Size(size.height * 2, size.height * 2), style = Stroke(1.3f))
-        for (k in 0 until 6) { val xx = size.width * 0.18f + k * 3.dp.toPx(); drawLine(e.primary.copy(alpha = 0.5f), Offset(xx, y - 1f), Offset(xx + 4.dp.toPx(), y - size.height * 0.5f), 0.9f) }
+        drawArc(e.primary, 200f, 140f, false, Offset(cx - size.height, y - size.height * 0.9f), Size(size.height * 2, size.height * 2), style = Stroke(0.5f * u))
+        for (k in 0 until 6) { val xx = size.width * 0.18f + k * 3.dp.toPx(); drawLine(e.primary.copy(alpha = 0.5f), Offset(xx, y - 0.4f * u), Offset(xx + 4 * u, y - size.height * 0.5f), 0.35f * u) }
     }
 }
 
@@ -1735,18 +1736,18 @@ internal fun Guirnalda(modifier: Modifier) {
     val e = MaterialTheme.colorScheme
     val focos = listOf(e.primary, e.tertiary, e.secondary, Color(0xFF64B5F6))
     Canvas(modifier.fillMaxWidth().height(16.dp)) {
-        val h = size.height; val tramo = 64.dp.toPx(); var x = 0f; var k = 0
+        val h = size.height; val tramo = 64.dp.toPx(); var x = 0f; var k = 0; val o = 0.8.dp.toPx()
         while (x < size.width) {
-            val p = Path().apply { moveTo(x, 2f); quadraticTo(x + tramo / 2, h * 1.05f, x + tramo, 2f) }
-            drawPath(p, e.secondary, style = Stroke(3.5f, cap = StrokeCap.Round))
-            drawPath(p, e.secondary.copy(alpha = 0.4f), style = Stroke(7f, cap = StrokeCap.Round))
+            val p = Path().apply { moveTo(x, o); quadraticTo(x + tramo / 2, h * 1.05f, x + tramo, o) }
+            drawPath(p, e.secondary, style = Stroke(1.35.dp.toPx(), cap = StrokeCap.Round))
+            drawPath(p, e.secondary.copy(alpha = 0.4f), style = Stroke(2.7.dp.toPx(), cap = StrokeCap.Round))
             listOf(0.25f, 0.5f, 0.75f).forEach { f ->
-                val px = x + tramo * f; val py = 2f + (h * 1.05f - 2f) * 2 * f * (1 - f)
+                val px = x + tramo * f; val py = o + (h * 1.05f - o) * 2 * f * (1 - f)
                 drawCircle(focos[k % focos.size], 2.6.dp.toPx(), Offset(px, py + 2.6.dp.toPx()))
                 k++
             }
-            drawCircle(e.tertiary, 2.dp.toPx(), Offset(x, 3f))
-            x += tramo
+            drawCircle(e.tertiary, 2.dp.toPx(), Offset(x, 1.15.dp.toPx()))
+            x += maxOf(tramo, 1f)
         }
     }
 }
@@ -1763,9 +1764,9 @@ internal fun Barra(modifier: Modifier) {
         val ini = h * 1.5f
         val franja = Path().apply { moveTo(ini + h * 0.5f, 0f); lineTo(size.width * 0.62f, 0f); lineTo(size.width * 0.62f - h * 0.5f, h * 0.62f); lineTo(ini, h * 0.62f); close() }
         drawPath(franja, rojo)
-        drawRect(negro, Offset(ini, h * 0.78f), Size(size.width - ini, 2.2f))
+        drawRect(negro, Offset(ini, h * 0.78f), Size(size.width - ini, 0.85.dp.toPx()))
         var x = size.width * 0.66f
-        while (x < size.width) { drawLine(negro, Offset(x, h * 0.62f), Offset(x + h * 0.4f, 0f), 2f); x += 7.dp.toPx() }
+        while (x < size.width) { drawLine(negro, Offset(x, h * 0.62f), Offset(x + h * 0.4f, 0f), 0.8.dp.toPx()); x += 7.dp.toPx() }
     }
 }
 
@@ -1818,8 +1819,8 @@ internal fun Tricolor(modifier: Modifier) {
             drawRect(c, Offset(i * tercio, y - h * 0.12f), Size(tercio, h * 0.24f))
             drawRect(c, Offset(size.width - (i + 1) * tercio, y - h * 0.12f), Size(tercio, h * 0.24f))
         }
-        drawLine(e.onBackground.copy(alpha = 0.25f), Offset(0f, y + h * 0.2f), Offset(cx - r * 1.6f, y + h * 0.2f), 1f)
-        drawLine(e.onBackground.copy(alpha = 0.25f), Offset(cx + r * 1.6f, y + h * 0.2f), Offset(size.width, y + h * 0.2f), 1f)
+        drawLine(e.onBackground.copy(alpha = 0.25f), Offset(0f, y + h * 0.2f), Offset(cx - r * 1.6f, y + h * 0.2f), 0.4.dp.toPx())
+        drawLine(e.onBackground.copy(alpha = 0.25f), Offset(cx + r * 1.6f, y + h * 0.2f), Offset(size.width, y + h * 0.2f), 0.4.dp.toPx())
         drawCircle(e.primary, r, Offset(cx, y)); drawCircle(blanco, r * 0.66f, Offset(cx, y)); drawCircle(e.secondary, r * 0.34f, Offset(cx, y))
     }
 }
@@ -1827,6 +1828,20 @@ internal fun Tricolor(modifier: Modifier) {
 // =====================================================================
 //  Fondo con textura según el tema
 // =====================================================================
+
+/**
+ * Una espiral que se cierra hacia su centro [c]: arranca en el radio [r] al ángulo [a0] (en radianes) y da [vueltas]
+ * vueltas en el sentido de [s] (+1 o −1), con el radio bajando hasta un quinto. Si [unir], sigue el trazo desde el punto
+ * actual del camino en vez de empezar uno nuevo.
+ */
+private fun Path.espiralFondo(c: Offset, r: Float, a0: Float, vueltas: Float, s: Float, unir: Boolean = false) {
+    val n = (vueltas * 20).toInt().coerceIn(8, 48)
+    for (k in 0..n) {
+        val f = k.toFloat() / n; val a = a0 + s * f * vueltas * 2 * PI.toFloat(); val rr = r * (1f - 0.8f * f)
+        val x = c.x + cos(a) * rr; val y = c.y + sin(a) * rr
+        if (k == 0 && !unir) moveTo(x, y) else lineTo(x, y)
+    }
+}
 
 /**
  * Una textura muy tenue detrás de todo: vetas de mármol, retícula de terminal, guijarros de Pela, renglones de pergamino,
@@ -1837,14 +1852,70 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
     val oscuro = esquema.background.luminance() < 0.5f
     val trazo = Path()
     val puntos = Path()
+    // Un segundo trazo, en su propio color, para el motivo de los temas que lo piden (abejas, moléculas, monedas…).
+    val trazo2 = Path()
     var color = Color.Transparent
     var color2 = Color.Transparent
+    var color3 = Color.Transparent
+    // El grosor del trazo, en dp: igual de fino en cualquier pantalla. Las texturas muy tupidas lo bajan para no empastar.
+    var grosor = 0.6f
     val w = size.width; val h = size.height
     when (tema) {
         TemaId.CIBER -> {
-            color = esquema.primary.copy(alpha = 0.045f)
-            val p = 28.dp.toPx(); var x = 0f; while (x < w) { trazo.moveTo(x, 0f); trazo.lineTo(x, h); x += p }
-            var y = 0f; while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += p }
+            // La placa bajo la consola: una rejilla de puntos, pistas que corren en ángulo recto y doblan a 45° (con su vía
+            // hueca al arrancar y su pastilla de soldadura al final), algún bus de cuatro pistas paralelas que entra por la
+            // orilla y, aquí y allá, un chip con sus patas.
+            color = esquema.primary.copy(alpha = 0.05f); color2 = esquema.primary.copy(alpha = 0.07f)
+            val u = 1.dp.toPx(); val p = 28 * u; val c = p / 2
+            val azar = java.util.Random(2077)
+            var gy = 0f
+            while (gy < h) {
+                var gx = 0f
+                while (gx < w) { puntos.addRect(Rect(gx - 0.7f * u, gy - 0.7f * u, gx + 0.7f * u, gy + 0.7f * u)); gx += maxOf(p, 1f) }
+                gy += maxOf(p, 1f)
+            }
+            val dx = floatArrayOf(1f, 0f, -1f, 0f); val dy = floatArrayOf(0f, 1f, 0f, -1f)
+            val columnas = (w / c).toInt() + 1; val filas = (h / c).toInt() + 1
+            val via = 2.2f * u; val pad = 1.8f * u
+            repeat(((w * h) / 40000f).toInt().coerceIn(6, 40)) {
+                var x = azar.nextInt(columnas) * c; var y = azar.nextInt(filas) * c; var d = azar.nextInt(4)
+                trazo.addOval(Rect(x - via, y - via, x + via, y + via))
+                trazo.moveTo(x + dx[d] * via, y + dy[d] * via)
+                repeat(1 + azar.nextInt(3)) {
+                    val tramo = (1 + azar.nextInt(4)) * c
+                    x += dx[d] * tramo; y += dy[d] * tramo; trazo.lineTo(x, y)
+                    // El doblez: media celda en diagonal hacia el lado al que gira.
+                    val nd = (d + if (azar.nextBoolean()) 1 else 3) % 4
+                    x += (dx[d] + dx[nd]) * c * 0.5f; y += (dy[d] + dy[nd]) * c * 0.5f; trazo.lineTo(x, y)
+                    d = nd
+                }
+                val tramo = (1 + azar.nextInt(3)) * c
+                x += dx[d] * tramo; y += dy[d] * tramo; trazo.lineTo(x, y)
+                puntos.addRect(Rect(x - pad, y - pad, x + pad, y + pad))
+            }
+            // Buses: cuatro pistas que entran por la izquierda, bajan a 45° y siguen; cada una dobla un poco antes que la de
+            // arriba (tan 22.5° ≈ 0.414 de la separación) para que no se junten en la curva.
+            repeat(((w * h) / 250000f).toInt().coerceIn(1, 4)) {
+                val y0 = azar.nextFloat() * h * 0.9f; val xb = (30f + azar.nextFloat() * 120f) * u; val baja = (20f + azar.nextFloat() * 40f) * u
+                val s = 4 * u
+                for (i in 0 until 4) {
+                    val k = i * s * 0.414f; val y = y0 + i * s; val fin = xb + baja + (40f + i * 9f) * u
+                    trazo.moveTo(-4 * u, y); trazo.lineTo(xb - k, y); trazo.lineTo(xb - k + baja, y + baja); trazo.lineTo(fin, y + baja)
+                    puntos.addRect(Rect(fin - pad, y + baja - pad, fin + pad, y + baja + pad))
+                }
+            }
+            // Chips: el cuerpo, la marca de la pata 1 y una fila de patas arriba y otra abajo.
+            repeat(((w * h) / 200000f).toInt().coerceIn(1, 4)) {
+                val cx = azar.nextFloat() * w; val cy = azar.nextFloat() * h
+                val n = 4 + azar.nextInt(4); val paso = 3.5f * u
+                val medio = n * paso / 2 + 2 * u; val alto = 7 * u
+                trazo.addRect(Rect(cx - medio, cy - alto, cx + medio, cy + alto))
+                puntos.addOval(Rect(cx - medio + 2 * u, cy - alto + 2 * u, cx - medio + 4 * u, cy - alto + 4 * u))
+                for (i in 0 until n) {
+                    val x = cx - medio + 2 * u + paso * (i + 0.5f)
+                    trazo.moveTo(x, cy - alto); trazo.lineTo(x, cy - alto - 3 * u); trazo.moveTo(x, cy + alto); trazo.lineTo(x, cy + alto + 3 * u)
+                }
+            }
         }
         TemaId.NEON -> {
             // La llovizna que cae en diagonal y, abajo, la silueta de los edificios con sus ventanas.
@@ -1858,9 +1929,39 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             }
         }
         TemaId.MEDIEVAL -> {
-            color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.06f); color2 = esquema.primary.copy(alpha = 0.12f)
-            var y = 30.dp.toPx(); while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += 30.dp.toPx() }
-            listOf(8.dp.toPx(), 11.dp.toPx()).forEach { x -> puntos.addRect(Rect(x, 0f, x + 1.2f, h)) }
+            // La pauta del copista: los renglones a punta seca entre las líneas del margen, los agujeritos del picado por
+            // donde se guió la regla y, aquí y allá, la filigrana a pluma de las capitulares (una espiral con su cola y sus
+            // pelos) y florecitas de cuatro pétalos.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.06f); color2 = esquema.primary.copy(alpha = if (oscuro) 0.09f else 0.1f)
+            color3 = esquema.primary.copy(alpha = if (oscuro) 0.08f else 0.07f)
+            val u = 1.dp.toPx(); val renglon = 30 * u; val izq = 14 * u; val der = w - 10 * u
+            var y = renglon
+            while (y < h) {
+                trazo.moveTo(izq, y); trazo.lineTo(der, y)
+                puntos.addOval(Rect(4.3f * u - 0.7f * u, y - 0.7f * u, 4.3f * u + 0.7f * u, y + 0.7f * u))
+                y += maxOf(renglon, 1f)
+            }
+            listOf(8 * u, 11 * u, der).forEach { x -> puntos.addRect(Rect(x, 0f, x + 0.5f * u, h)) }
+            val azar = java.util.Random(1150)
+            repeat(((w * h) / 110000f).toInt().coerceIn(3, 10)) {
+                val cx = izq + 20 * u + azar.nextFloat() * (der - izq - 60 * u).coerceAtLeast(1f); val cy = azar.nextFloat() * h
+                val r = (6f + azar.nextFloat() * 6f) * u; val lado = if (azar.nextBoolean()) 1f else -1f
+                // La cola llega desde abajo, entra por el costado de la espiral y se enrosca hacia arriba.
+                trazo2.moveTo(cx + lado * r * 3.2f, cy + r * 1.4f)
+                trazo2.quadraticTo(cx + lado * r * 1.6f, cy + r * 1.6f, cx + lado * r, cy)
+                trazo2.espiralFondo(Offset(cx, cy), r, if (lado > 0f) 0f else PI.toFloat(), 1.8f, -lado, unir = true)
+                trazo2.moveTo(cx + lado * r * 2.2f, cy + r * 1.52f)
+                trazo2.quadraticTo(cx + lado * r * 2.6f, cy + r * 2.4f, cx + lado * r * 1.9f, cy + r * 2.8f)
+                val q = 0.9f * u; val fx = cx + lado * r * 3.2f; val fy = cy + r * 1.4f
+                puntos.addOval(Rect(fx - q, fy - q, fx + q, fy + q))
+            }
+            repeat(((w * h) / 70000f).toInt().coerceIn(4, 18)) {
+                val cx = azar.nextFloat() * w; val cy = azar.nextFloat() * h; val q = 1.2f * u
+                for (k in 0 until 4) {
+                    val a = PI.toFloat() / 2 * k + PI.toFloat() / 4; val px = cx + cos(a) * q * 1.3f; val py = cy + sin(a) * q * 1.3f
+                    puntos.addOval(Rect(px - q, py - q, px + q, py + q))
+                }
+            }
         }
         TemaId.TEMPLARIO -> {
             // Los sillares de la muralla, a soga (cada hilada corre media piedra), y de tanto en tanto una cruz grabada en la piedra.
@@ -1885,15 +1986,15 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 while (x < w) {
                     val k = ((x / w) * (1f - y / (h * 0.45f))).coerceIn(0f, 1f)
                     val rr = p * 0.32f * k
-                    if (rr > 0.6f) puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
+                    if (rr > 0.25.dp.toPx()) puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
                     x += p
                 }
                 y += p * 0.87f; fila++
             }
         }
         TemaId.REFUGIO -> if (oscuro) {
-            color = esquema.primary.copy(alpha = 0.035f)
-            var y = 0f; while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += 3.dp.toPx() }
+            color = esquema.primary.copy(alpha = 0.035f); grosor = 0.4f
+            var y = 0f; while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += maxOf(3.dp.toPx(), 1f) }
         } else {
             // De día, papel tapiz de la era atómica: destellos de cuatro puntas, órbitas sueltas con su núcleo y bumeranes.
             color = esquema.primary.copy(alpha = 0.06f); color2 = esquema.secondary.copy(alpha = 0.07f)
@@ -1932,7 +2033,7 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                     trazo.lineTo(x, y)
                     if (azar.nextFloat() < 0.06f) {
                         val b = a + (if (azar.nextBoolean()) 0.7f else -0.7f); var bx = x; var by = y
-                        repeat(6) { bx += cos(b) * paso * 0.65f; by += sin(b) * paso * 0.65f + (azar.nextFloat() - 0.5f) * 3f; trazo.lineTo(bx, by) }
+                        repeat(6) { bx += cos(b) * paso * 0.65f; by += sin(b) * paso * 0.65f + (azar.nextFloat() - 0.5f) * 1.2.dp.toPx(); trazo.lineTo(bx, by) }
                         trazo.moveTo(x, y)
                     }
                 }
@@ -2010,25 +2111,102 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             // y cada tanto la franja de la unión de dos hojas pegadas.
             color = (if (oscuro) esquema.primary else esquema.onBackground).copy(alpha = if (oscuro) 0.045f else 0.05f)
             color2 = (if (oscuro) esquema.primary else esquema.secondary).copy(alpha = if (oscuro) 0.05f else 0.045f)
-            val azar = java.util.Random(4217)
+            grosor = 0.5f
+            val azar = java.util.Random(4217); val u = 1.dp.toPx()
             var y = 0f
-            while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y + (azar.nextFloat() - 0.5f) * 2f); y += (3f + azar.nextFloat() * 4f).dp.toPx() }
+            while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y + (azar.nextFloat() - 0.5f) * 0.8f * u); y += maxOf((3f + azar.nextFloat() * 4f) * u, 1f) }
             var x = 0f
-            while (x < w) { trazo.moveTo(x, 0f); trazo.lineTo(x + (azar.nextFloat() - 0.5f) * 3f, h); x += (9f + azar.nextFloat() * 10f).dp.toPx() }
+            while (x < w) { trazo.moveTo(x, 0f); trazo.lineTo(x + (azar.nextFloat() - 0.5f) * 1.2f * u, h); x += maxOf((9f + azar.nextFloat() * 10f) * u, 1f) }
             var j = 140.dp.toPx()
             while (j < w) { puntos.addRect(Rect(j, 0f, j + 4.dp.toPx(), h)); j += 140.dp.toPx() }
         }
         TemaId.LABORATORIO -> {
+            // El papel milimétrico del cuaderno de laboratorio (cada quinta línea, más marcada) y, encima, lo que se fue
+            // midiendo, en violeta: una curva que sube y se aplana, con sus puntos y sus barras de error, y fórmulas de
+            // anillo (el hexágono con sus tres dobles enlaces y una cadena que sale de él).
             color = esquema.primary.copy(alpha = 0.05f); color2 = esquema.primary.copy(alpha = 0.06f)
-            val p = 12.dp.toPx(); var x = 0f; var i = 0
-            while (x < w) { if (i % 5 == 0) puntos.addRect(Rect(x, 0f, x + 1f, h)) else { trazo.moveTo(x, 0f); trazo.lineTo(x, h) }; x += p; i++ }
+            color3 = esquema.secondary.copy(alpha = if (oscuro) 0.08f else 0.065f)
+            grosor = 0.5f
+            val u = 1.dp.toPx(); val p = 12 * u; val g = 0.9f * u; var x = 0f; var i = 0
+            while (x < w) { if (i % 5 == 0) puntos.addRect(Rect(x, 0f, x + g, h)) else { trazo.moveTo(x, 0f); trazo.lineTo(x, h) }; x += maxOf(p, 1f); i++ }
             var y = 0f; i = 0
-            while (y < h) { if (i % 5 == 0) puntos.addRect(Rect(0f, y, w, y + 1f)) else { trazo.moveTo(0f, y); trazo.lineTo(w, y) }; y += p; i++ }
+            while (y < h) { if (i % 5 == 0) puntos.addRect(Rect(0f, y, w, y + g)) else { trazo.moveTo(0f, y); trazo.lineTo(w, y) }; y += maxOf(p, 1f); i++ }
+            val azar = java.util.Random(310)
+            val curvas = ((w * h) / 300000f).toInt().coerceIn(1, 3)
+            repeat(curvas) { n ->
+                val y0 = ((n + 0.75f) / curvas + azar.nextFloat() * 0.1f) * h * 0.9f
+                val amp = (30f + azar.nextFloat() * 30f) * u; val k = 1.5f + azar.nextFloat() * 2f
+                // Las curvas alternan: una que sube y se aplana (saturación) y otra que cae (decaimiento).
+                fun f(x: Float) = if (n % 2 == 0) y0 - amp * (1f - kotlin.math.exp(-k * x / w)) else y0 - amp * kotlin.math.exp(-k * x / w)
+                trazo2.moveTo(0f, y0); var cx = 0f
+                while (cx < w) { cx += maxOf(6 * u, 1f); trazo2.lineTo(cx, f(cx)) }
+                var px = p * 5
+                while (px < w) {
+                    val py = f(px) + (azar.nextFloat() - 0.5f) * 6 * u; val e = (3f + azar.nextFloat() * 4f) * u; val r = 1.6f * u
+                    trazo2.addOval(Rect(px - r, py - r, px + r, py + r))
+                    trazo2.moveTo(px, py - r - e); trazo2.lineTo(px, py - r); trazo2.moveTo(px, py + r); trazo2.lineTo(px, py + r + e)
+                    trazo2.moveTo(px - 2 * u, py - r - e); trazo2.lineTo(px + 2 * u, py - r - e); trazo2.moveTo(px - 2 * u, py + r + e); trazo2.lineTo(px + 2 * u, py + r + e)
+                    px += maxOf(p * 5, 1f)
+                }
+            }
+            repeat(((w * h) / 120000f).toInt().coerceIn(2, 8)) {
+                val c = Offset(azar.nextFloat() * w, azar.nextFloat() * h); val r = (8f + azar.nextFloat() * 4f) * u
+                val giro = if (azar.nextBoolean()) 0f else PI.toFloat() / 6
+                val v = List(6) { k -> c.mas(r, giro + k * PI.toFloat() / 3) }
+                v.forEachIndexed { k, q -> if (k == 0) trazo2.moveTo(q.x, q.y) else trazo2.lineTo(q.x, q.y) }; trazo2.close()
+                for (k in 0 until 6 step 2) {
+                    val ia = v[k] + (c - v[k]) * 0.22f; val ib = v[(k + 1) % 6] + (c - v[(k + 1) % 6]) * 0.22f
+                    val s = ia + (ib - ia) * 0.15f; val e = ia + (ib - ia) * 0.85f
+                    trazo2.moveTo(s.x, s.y); trazo2.lineTo(e.x, e.y)
+                }
+                repeat(1 + azar.nextInt(2)) {
+                    val k = azar.nextInt(6); val a = giro + k * PI.toFloat() / 3; val q = v[k]; val f1 = q.mas(r, a)
+                    val f2 = f1.mas(r * 0.9f, a + (if (azar.nextBoolean()) 1f else -1f) * PI.toFloat() / 3)
+                    trazo2.moveTo(q.x, q.y); trazo2.lineTo(f1.x, f1.y); trazo2.lineTo(f2.x, f2.y)
+                }
+            }
         }
         TemaId.ORDEN -> {
-            color = esquema.onBackground.copy(alpha = 0.03f)
-            val p = 9.dp.toPx(); var x = -h
-            while (x < w) { trazo.moveTo(x, h); trazo.lineTo(x + h, 0f); x += p }
+            // Las placas de acero de la armería: juntas a soga con remaches de latón en las esquinas y a media orilla;
+            // algunas placas llevan la chapa estriada (rombos cortos que alternan su inclinación) y otras, en estarcido,
+            // los tres galones de la Orden.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.045f else 0.04f); color2 = esquema.secondary.copy(alpha = if (oscuro) 0.09f else 0.08f)
+            val u = 1.dp.toPx(); val ancho = 104 * u; val alto = 136 * u; val r = 1.3f * u; val m = 5 * u
+            var y = 0f; var fila = 0
+            while (y < h) {
+                trazo.moveTo(0f, y); trazo.lineTo(w, y)
+                var x = if (fila % 2 == 0) 0f else -ancho / 2; var col = 0
+                while (x < w) {
+                    trazo.moveTo(x, y); trazo.lineTo(x, y + alto)
+                    listOf(m to m, ancho - m to m, m to alto - m, ancho - m to alto - m, m to alto / 2, ancho - m to alto / 2).forEach { (ox, oy) ->
+                        puntos.addOval(Rect(x + ox - r, y + oy - r, x + ox + r, y + oy + r))
+                    }
+                    when ((fila * 5 + col * 3) % 7) {
+                        0 -> {
+                            val p = 14 * u; val l = 2.6f * u; var ty = y + 14 * u; var k = 0
+                            while (ty < y + alto - 12 * u) {
+                                var tx = x + 14 * u + (if (k % 2 == 0) 0f else p / 2); var j = 0
+                                while (tx < x + ancho - 12 * u) {
+                                    val s = if ((j + k) % 2 == 0) 1f else -1f
+                                    trazo.moveTo(tx - l, ty + s * l * 0.6f); trazo.lineTo(tx + l, ty - s * l * 0.6f)
+                                    tx += maxOf(p, 1f); j++
+                                }
+                                ty += maxOf(p / 2, 1f); k++
+                            }
+                        }
+                        3 -> {
+                            val cx = x + ancho / 2; val g = 18 * u; val cy = y + alto / 2 - g * 0.6f
+                            for (i in 0 until 3) {
+                                val yy = cy + i * g * 0.45f
+                                trazo.moveTo(cx - g, yy + g * 0.5f); trazo.lineTo(cx, yy); trazo.lineTo(cx + g, yy + g * 0.5f)
+                                trazo.lineTo(cx + g, yy + g * 0.8f); trazo.lineTo(cx, yy + g * 0.3f); trazo.lineTo(cx - g, yy + g * 0.8f); trazo.close()
+                            }
+                        }
+                    }
+                    x += maxOf(ancho, 1f); col++
+                }
+                y += maxOf(alto, 1f); fila++
+            }
         }
         TemaId.VAPOR -> {
             // El papel de plano: la cuadrícula del dibujante, un gran engrane trazado a compás en la esquina de abajo, con
@@ -2051,31 +2229,97 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             for (k in 0 until 6) { val q = Vapor.en(ce, rr * 0.41f, k * Math.PI / 3); puntos.addOval(Rect(q, rr * 0.045f)) }
         }
         TemaId.COLONOS -> {
-            color2 = esquema.onBackground.copy(alpha = 0.05f)
-            val azar = java.util.Random(17)
-            repeat(((w * h) / 2500f).toInt().coerceAtMost(900)) {
-                val x = azar.nextFloat() * w; val y = azar.nextFloat() * h; val rr = 0.4f + azar.nextFloat() * 0.9f
+            // La gaceta del pueblo, desvaída: las motas del papel de periódico, la doble raya bajo la cabecera, las rayas
+            // que separan columnas y noticias y, en la columna de la derecha, el grabado en semitono de los tejados que
+            // los vecinos levantan de nuevo (tres casas de dos aguas, con sus ventanas, en puntos de imprenta).
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.055f); color2 = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.055f)
+            val u = 1.dp.toPx(); val azar = java.util.Random(17)
+            repeat(((w * h) / 5000f).toInt().coerceAtMost(320)) {
+                val x = azar.nextFloat() * w; val y = azar.nextFloat() * h; val rr = (0.2f + azar.nextFloat() * 0.4f) * u
                 puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
+            }
+            val cab = 56 * u; val col = w / 3
+            val gx0 = col * 2 + 10 * u; val gx1 = w - 10 * u; val gy0 = h * 0.58f; val gy1 = gy0 + 100 * u
+            trazo.moveTo(0f, cab); trazo.lineTo(w, cab); trazo.moveTo(0f, cab + 3 * u); trazo.lineTo(w, cab + 3 * u)
+            for (k in 1..2) { trazo.moveTo(col * k, cab + 12 * u); trazo.lineTo(col * k, h) }
+            for (k in 0..2) {
+                var y = cab + (60f + azar.nextFloat() * 120f) * u
+                while (y < h) {
+                    if (k < 2 || y < gy0 - 16 * u || y > gy1 + 24 * u) { trazo.moveTo(col * k + 10 * u, y); trazo.lineTo(col * (k + 1) - 10 * u, y) }
+                    y += maxOf((90f + azar.nextFloat() * 160f) * u, 1f)
+                }
+            }
+            // El grabado: el tono de cada punto sale de la escena (cielo que oscurece hacia abajo, casas, ventanas y suelo).
+                        val casas = arrayOf(floatArrayOf(0.02f, 0.34f, 0.55f, 0.3f), floatArrayOf(0.3f, 0.6f, 0.62f, 0.42f), floatArrayOf(0.56f, 0.98f, 0.5f, 0.22f))
+            fun tono(fx: Float, fy: Float): Float {
+                if (fy > 0.86f) return 0.6f
+                for (c in casas) if (fx >= c[0] && fx <= c[1]) {
+                    val medio = (c[0] + c[1]) / 2; val techo = c[3] + (c[2] - c[3]) * abs(fx - medio) / ((c[1] - c[0]) / 2)
+                    if (fy > techo) {
+                        val vx = ((fx - c[0]) / (c[1] - c[0]) * 4f) % 1f; val vy = (fy - c[2]) / (0.86f - c[2])
+                        return if (vy in 0.25f..0.55f && vx in 0.35f..0.75f) 0.2f else 0.8f
+                    }
+                }
+                return 0.1f + fy * 0.25f
+            }
+            if (gx1 - gx0 > 40 * u) {
+                trazo.addRect(Rect(gx0 - 2 * u, gy0 - 2 * u, gx1 + 2 * u, gy1 + 2 * u))
+                val paso = 6 * u; var py = gy0 + paso / 2; var fila = 0
+                while (py < gy1) {
+                    var px = gx0 + (if (fila % 2 == 0) paso / 2 else paso)
+                    while (px < gx1) {
+                        val rr = paso * 0.5f * kotlin.math.sqrt(tono((px - gx0) / (gx1 - gx0), (py - gy0) / (gy1 - gy0)))
+                        puntos.addOval(Rect(px - rr, py - rr, px + rr, py + rr))
+                        px += maxOf(paso, 1f)
+                    }
+                    py += maxOf(paso * 0.87f, 1f); fila++
+                }
+                // El pie del grabado: dos renglones cortos.
+                trazo.moveTo(gx0, gy1 + 8 * u); trazo.lineTo(gx1, gy1 + 8 * u); trazo.moveTo(gx0, gy1 + 12 * u); trazo.lineTo(gx0 + (gx1 - gx0) * 0.6f, gy1 + 12 * u)
             }
         }
         TemaId.NAPOLEON -> {
-            // Tela imperial: rombos finos con un punto dorado en cada cruce.
-            color = esquema.primary.copy(alpha = if (oscuro) 0.05f else 0.04f); color2 = esquema.tertiary.copy(alpha = 0.12f)
-            val p = 26.dp.toPx(); var x = -h
-            while (x < w + h) { trazo.moveTo(x, 0f); trazo.lineTo(x + h, h); trazo.moveTo(x, h); trazo.lineTo(x + h, 0f); x += p }
-            var y = 0f; var fila = 0
-            while (y < h) { var xx = if (fila % 2 == 0) 0f else p / 2; while (xx < w) { puntos.addOval(Rect(xx - 1.4f, y - 1.4f, xx + 1.4f, y + 1.4f)); xx += p }; y += p / 2; fila++ }
+            // El manto de la coronación: una red de rombos finos sembrada de abejas de oro, el emblema del Imperio (cabeza,
+            // tórax y abdomen llenos; las alas, a trazo), con un puntito en los rombos de en medio.
+            color = (if (oscuro) esquema.onBackground else esquema.primary).copy(alpha = if (oscuro) 0.04f else 0.045f)
+            color2 = (if (oscuro) esquema.primary else esquema.tertiary).copy(alpha = if (oscuro) 0.11f else 0.12f)
+            color3 = (if (oscuro) esquema.primary else esquema.tertiary).copy(alpha = if (oscuro) 0.1f else 0.11f)
+            val u = 1.dp.toPx(); val p = 52 * u
+            // Las dos familias de líneas a 45°: x − y = k·p y x + y = k·p. Se cruzan en la rejilla de p/2; los centros de los
+            // rombos son los nudos (i·p/2, j·p/2) con i + j impar.
+            var k = -((h / p).toInt() + 1)
+            while (k * p < w) { trazo.moveTo(k * p, 0f); trazo.lineTo(k * p + h, h); k++ }
+            k = 0
+            while (k * p < w + h) { trazo.moveTo(k * p, 0f); trazo.lineTo(k * p - h, h); k++ }
+            val b = 1.25f * u
+            var j = 0
+            while (j * p / 2 < h + p) {
+                var i = if (j % 2 == 0) 1 else 0
+                while (i * p / 2 < w + p) {
+                    val cx = i * p / 2; val cy = j * p / 2
+                    if (j % 2 == 0) {
+                        puntos.addOval(Rect(cx - 0.9f * b, cy - 3.2f * b, cx + 0.9f * b, cy - 1.6f * b))
+                        puntos.addOval(Rect(cx - 1.2f * b, cy - 1.8f * b, cx + 1.2f * b, cy + 0.4f * b))
+                        puntos.addOval(Rect(cx - 1.4f * b, cy + 0.2f * b, cx + 1.4f * b, cy + 4f * b))
+                        trazo2.addOval(Rect(cx - 4.4f * b, cy - 2.8f * b, cx - 1f * b, cy + 0.2f * b))
+                        trazo2.addOval(Rect(cx + 1f * b, cy - 2.8f * b, cx + 4.4f * b, cy + 0.2f * b))
+                    } else puntos.addOval(Rect(cx - 0.9f * u, cy - 0.9f * u, cx + 0.9f * u, cy + 0.9f * u))
+                    i += 2
+                }
+                j++
+            }
         }
         TemaId.DECO -> {
             // Papel pintado de abanicos: escamas de medio círculo en filas alternas, cada una con dos arcos dentro y un
             // punto de oro en su centro, como en los vestíbulos de los años veinte.
             color = esquema.primary.copy(alpha = if (oscuro) 0.06f else 0.05f); color2 = esquema.primary.copy(alpha = if (oscuro) 0.1f else 0.08f)
-            val rr = 22.dp.toPx(); var y = rr; var fila = 0
+            grosor = 0.5f
+            val rr = 22.dp.toPx(); val q = 0.6.dp.toPx(); var y = rr; var fila = 0
             while (y < h + rr) {
                 var x = if (fila % 2 == 0) 0f else rr
                 while (x < w + rr) {
                     listOf(1f, 0.66f, 0.33f).forEach { k -> trazo.arcTo(Rect(x - rr * k, y - rr * k, x + rr * k, y + rr * k), 180f, 180f, true) }
-                    puntos.addOval(Rect(x - 1.5f, y - 1.5f, x + 1.5f, y + 1.5f))
+                    puntos.addOval(Rect(x - q, y - q, x + q, y + q))
                     x += maxOf(2 * rr, 1f)
                 }
                 y += maxOf(rr * 0.75f, 1f); fila++
@@ -2157,7 +2401,7 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 color2 = esquema.primary.copy(alpha = 0.16f)
                 val azar = java.util.Random(31)
                 repeat(((w * h) / 9000f).toInt().coerceAtMost(260)) {
-                    val cx = azar.nextFloat() * w; val cy = azar.nextFloat() * h; val s = 1.6f + azar.nextFloat() * 2.4f
+                    val cx = azar.nextFloat() * w; val cy = azar.nextFloat() * h; val s = (0.6f + azar.nextFloat() * 0.9f).dp.toPx()
                     for (i in 0 until 8) { val rr = if (i % 2 == 0) s else s * 0.35f; val q = Offset(cx, cy).mas(rr, rad(-90.0 + 45.0 * i)); if (i == 0) puntos.moveTo(q.x, q.y) else puntos.lineTo(q.x, q.y) }
                     puntos.close()
                 }
@@ -2204,7 +2448,7 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             val azar = java.util.Random(41)
             repeat(((w * h) / (if (oscuro) 1800f else 5000f)).toInt().coerceAtMost(900)) {
                 val x = azar.nextFloat() * w; val y = azar.nextFloat() * h
-                val g = azar.nextFloat(); val rr = if (g > 0.97f) 1.9f else if (g > 0.85f) 1.2f else 0.6f
+                val g = azar.nextFloat(); val rr = (if (g > 0.97f) 0.75f else if (g > 0.85f) 0.45f else 0.25f).dp.toPx()
                 puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
             }
             if (!oscuro) { color = esquema.primary.copy(alpha = 0.035f); var y = 0f; while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += 48.dp.toPx() } }
@@ -2226,24 +2470,49 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 val azar = java.util.Random(53)
                 repeat(((w * h) / 3200f).toInt().coerceAtMost(500)) {
                     val x = azar.nextFloat() * w; val y = azar.nextFloat() * h
-                    val g = azar.nextFloat(); val rr = if (g > 0.98f) 2.4f else if (g > 0.9f) 1.3f else 0.7f
+                    val g = azar.nextFloat(); val rr = (if (g > 0.98f) 0.9f else if (g > 0.9f) 0.5f else 0.27f).dp.toPx()
                     puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
                 }
             }
         }
         TemaId.ANDALUS -> {
-            // Lacería: retícula a 0°, 45° y 90° que forma estrellas de ocho puntas, como el alicatado.
-            color = (if (oscuro) esquema.primary else esquema.primary).copy(alpha = if (oscuro) 0.05f else 0.045f)
-            val p = 34.dp.toPx()
-            var x = 0f; while (x < w) { trazo.moveTo(x, 0f); trazo.lineTo(x, h); x += p }
-            var y = 0f; while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += p }
-            x = -h; while (x < w) { trazo.moveTo(x, 0f); trazo.lineTo(x + h, h); trazo.moveTo(x, h); trazo.lineTo(x + h, 0f); x += p }
+            // Alicatado de lazo: en cada nudo de la retícula, una estrella de ocho puntas agudas (el radio de dentro es 0.56
+            // del de fuera); sus puntas rectas se enlazan con las de las vecinas en cintas, y las de
+            // 45° con un cuadrito que queda en el hueco entre cuatro estrellas, con su punto de color en medio.
+            color = esquema.primary.copy(alpha = if (oscuro) 0.05f else 0.045f)
+            color2 = (if (oscuro) esquema.secondary else esquema.tertiary).copy(alpha = if (oscuro) 0.08f else 0.065f)
+            val u = 1.dp.toPx(); val p = 52 * u; val rr = p * 0.32f; val ri = rr * 0.56f; val d = p * 0.15f
+            val diag = rr * 0.7071f; val q = 1.2f * u
+            var gy = 0f
+            while (gy < h + p) {
+                var gx = 0f
+                while (gx < w + p) {
+                    for (i in 0 until 16) {
+                        val a = rad(22.5 * i - 90.0); val r = if (i % 2 == 0) rr else ri
+                        val x = gx + cos(a) * r; val y = gy + sin(a) * r
+                        if (i == 0) trazo.moveTo(x, y) else trazo.lineTo(x, y)
+                    }
+                    trazo.close()
+                    trazo.moveTo(gx + rr, gy); trazo.lineTo(gx + p - rr, gy)
+                    trazo.moveTo(gx, gy + rr); trazo.lineTo(gx, gy + p - rr)
+                    val cx = gx + p / 2; val cy = gy + p / 2
+                    trazo.addRect(Rect(cx - d, cy - d, cx + d, cy + d))
+                    listOf(-1f to -1f, 1f to -1f, -1f to 1f, 1f to 1f).forEach { (sx, sy) ->
+                        trazo.moveTo(cx + sx * d, cy + sy * d); trazo.lineTo(cx + sx * (p / 2 - diag), cy + sy * (p / 2 - diag))
+                    }
+                    puntos.addOval(Rect(cx - q, cy - q, cx + q, cy + q))
+                    puntos.addOval(Rect(gx - q * 0.8f, gy - q * 0.8f, gx + q * 0.8f, gy + q * 0.8f))
+                    gx += maxOf(p, 1f)
+                }
+                gy += maxOf(p, 1f)
+            }
         }
         TemaId.MESO -> {
             // Papel amate: la corteza se golpea en una red de fibras que se cruzan sin orden, unas largas y torcidas, y deja
             // grumos oscuros donde quedó un nudo; en oscuro, las fibras se ven como vetas de obsidiana.
             color = esquema.onBackground.copy(alpha = if (oscuro) 0.04f else 0.055f)
             color2 = (if (oscuro) esquema.primary else esquema.onBackground).copy(alpha = if (oscuro) 0.05f else 0.07f)
+            grosor = 0.5f
             val azar = java.util.Random(7313)
             repeat(((w * h) / 2600f).toInt().coerceAtMost(900)) {
                 val x = azar.nextFloat() * w; val y = azar.nextFloat() * h
@@ -2259,7 +2528,7 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
         }
         TemaId.MONGOL -> {
             // Fieltro: fibras cortas en todas direcciones.
-            color = esquema.onBackground.copy(alpha = if (oscuro) 0.035f else 0.04f)
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.035f else 0.04f); grosor = 0.5f
             val azar = java.util.Random(53)
             repeat(((w * h) / 1400f).toInt().coerceAtMost(1400)) {
                 val x = azar.nextFloat() * w; val y = azar.nextFloat() * h; val a = azar.nextFloat() * 2 * PI.toFloat(); val l = 2.dp.toPx() + azar.nextFloat() * 4.dp.toPx()
@@ -2275,7 +2544,7 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 trazo.addOval(Rect(cx - rr, cy - rr, cx + rr, cy + rr))
                 trazo.moveTo(cx - rr, cy); trazo.lineTo(cx + rr, cy); trazo.moveTo(cx, cy - rr); trazo.lineTo(cx, cy + rr)
             }
-            repeat(18) { val x = azar.nextFloat() * w; val y = azar.nextFloat() * h; val rr = 1f + azar.nextFloat() * 3.5f; puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr)) }
+            repeat(18) { val x = azar.nextFloat() * w; val y = azar.nextFloat() * h; val rr = (0.4f + azar.nextFloat() * 1.35f).dp.toPx(); puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr)) }
         }
         TemaId.PIRATA -> {
             // Carta náutica: las líneas de rumbo que salen de dos rosas (como en los portulanos), la cuadrícula de grados y
@@ -2302,20 +2571,49 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             color2 = (if (oscuro) Color.White else esquema.secondary).copy(alpha = if (oscuro) 0.09f else 0.05f)
             val azar = java.util.Random(25)
             repeat(((w * h) / 4000f).toInt().coerceAtMost(500)) {
-                val x = azar.nextFloat() * w; val y = azar.nextFloat() * h; val rr = 0.8f + azar.nextFloat() * 2.2f
+                val x = azar.nextFloat() * w; val y = azar.nextFloat() * h; val rr = (0.3f + azar.nextFloat() * 0.85f).dp.toPx()
                 puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
             }
         }
         TemaId.SEDA -> {
-            // Tejido de seda: diagonales cruzadas muy finas.
-            color = esquema.primary.copy(alpha = 0.035f)
-            val p = 7.dp.toPx(); var x = -h
-            while (x < w) { trazo.moveTo(x, h); trazo.lineTo(x + h, 0f); x += p }
-            x = 0f; while (x < w + h) { trazo.moveTo(x, h); trazo.lineTo(x - h * 0.5f, 0f); x += p * 3 }
+            // La seda de la caravana: la sarga del tejido en diagonal, los nudos de la seda cruda (hilos más gruesos, sueltos,
+            // en la dirección de la trama) y, en cinabrio (oro de noche), nubes de buen augurio que se enroscan y monedas de
+            // cobre con su agujero cuadrado y las cuatro rayitas de su leyenda.
+            color = (if (oscuro) esquema.onBackground else esquema.primary).copy(alpha = if (oscuro) 0.03f else 0.035f)
+            color2 = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.045f)
+            color3 = (if (oscuro) esquema.primary else esquema.secondary).copy(alpha = if (oscuro) 0.08f else 0.065f)
+            grosor = 0.5f
+            val u = 1.dp.toPx(); val p = 8 * u; var x = -h
+            while (x < w) { trazo.moveTo(x, h); trazo.lineTo(x + h, 0f); x += maxOf(p, 1f) }
+            val azar = java.util.Random(139)
+            repeat(((w * h) / 9000f).toInt().coerceAtMost(220)) {
+                val x0 = azar.nextFloat() * w; val y0 = azar.nextFloat() * h; val l = (2f + azar.nextFloat() * 5f) * u; val g = (0.35f + azar.nextFloat() * 0.35f) * u
+                puntos.addOval(Rect(x0 - l, y0 - g, x0 + l, y0 + g))
+            }
+            // Nubes: dos volutas que se miran sobre una base, una tercera encima y la cola que se va hacia un lado.
+            repeat(((w * h) / 90000f).toInt().coerceIn(3, 9)) {
+                val cx = azar.nextFloat() * w; val cy = azar.nextFloat() * h; val s = (8f + azar.nextFloat() * 6f) * u
+                val lado = if (azar.nextBoolean()) 1f else -1f
+                trazo2.moveTo(cx + lado * s * 4f, cy + s * 1.4f)
+                trazo2.quadraticTo(cx + lado * s * 2.2f, cy + s * 0.9f, cx + lado * 0.9f * s, cy + s)
+                trazo2.lineTo(cx - lado * 0.9f * s, cy + s)
+                trazo2.espiralFondo(Offset(cx - lado * 0.9f * s, cy), s, PI.toFloat() / 2, 1.4f, lado, unir = true)
+                trazo2.espiralFondo(Offset(cx + lado * 0.9f * s, cy), s, PI.toFloat() / 2, 1.4f, -lado)
+                trazo2.espiralFondo(Offset(cx, cy - 0.75f * s), 0.65f * s, PI.toFloat(), 1.2f, 1f)
+            }
+            repeat(((w * h) / 70000f).toInt().coerceIn(3, 14)) {
+                val cx = azar.nextFloat() * w; val cy = azar.nextFloat() * h; val r = (6f + azar.nextFloat() * 4f) * u; val q = r * 0.3f
+                trazo2.addOval(Rect(cx - r, cy - r, cx + r, cy + r)); trazo2.addOval(Rect(cx - r * 0.84f, cy - r * 0.84f, cx + r * 0.84f, cy + r * 0.84f))
+                trazo2.addRect(Rect(cx - q, cy - q, cx + q, cy + q))
+                for (k in 0 until 4) {
+                    val a = k * PI.toFloat() / 2 - PI.toFloat() / 2; val ex = cx + cos(a) * r * 0.58f; val ey = cy + sin(a) * r * 0.58f; val t = r * 0.14f
+                    trazo2.moveTo(ex - sin(a) * t, ey + cos(a) * t); trazo2.lineTo(ex + sin(a) * t, ey - cos(a) * t)
+                }
+            }
         }
         TemaId.EDO -> {
             // Seigaiha: hileras alternas de olas de tres arcos, muy tenues, como el estampado de un kimono de verano.
-            color = esquema.primary.copy(alpha = if (oscuro) 0.05f else 0.045f)
+            color = esquema.primary.copy(alpha = if (oscuro) 0.05f else 0.045f); grosor = 0.5f
             val r = 16.dp.toPx(); var fila = 0; var y = r
             while (y < h + r) {
                 var x = if (fila % 2 == 0) 0f else r
@@ -2374,9 +2672,15 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             }
         }
     }
+    val ancho = grosor.dp.toPx()
     onDrawBehind {
-        if (color.alpha > 0f) drawPath(trazo, color, style = Stroke(1f))
-        if (color2.alpha > 0f) drawPath(puntos, color2)
+        // Recortado a la caja: varias texturas arrancan fuera de la orilla (diagonales, buses, engranes) y no deben
+        // asomar sobre lo vecino cuando el fondo va en una caja chica (vista previa del tapiz, la tarjeta del año).
+        clipRect {
+            if (color.alpha > 0f) drawPath(trazo, color, style = Stroke(ancho))
+            if (color2.alpha > 0f) drawPath(puntos, color2)
+            if (color3.alpha > 0f) drawPath(trazo2, color3, style = Stroke(ancho, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        }
     }
 }
 
