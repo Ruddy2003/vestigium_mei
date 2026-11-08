@@ -2,6 +2,13 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.draw.drawBehind
 import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
@@ -29,7 +36,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -100,19 +106,19 @@ fun PantallaGastos(nav: Nav? = null) {
     Hoja("Gastos", subtitulo = "Registra en el momento de pagar o de cobrar. Lo que se cuadra después ya no dice en qué se fue el dinero.", buscar = nav?.let { n -> { n.ir("buscar") } }) {
         Seccion("Registrar") {
             Tarjeta {
-                // Gasto o ingreso: dos fichas grandes, como una balanza.
-                Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(false to "− Gasto", true to "+ Ingreso").forEach { (v, t) ->
-                        val sel = entra == v
-                        val color = if (v) io.github.ruddy2003.vestigium.ui.Tonos.ingreso(io.github.ruddy2003.vestigium.ui.esOscuro()) else io.github.ruddy2003.vestigium.ui.Tonos.gasto(io.github.ruddy2003.vestigium.ui.esOscuro())
-                        androidx.compose.material3.Surface(
-                            onClick = { if (entra != v) { entra = v; cat = null; sub = ""; error = null; sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.ELEGIR) } },
-                            shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f),
-                            color = if (sel) color.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surface,
-                            border = androidx.compose.foundation.BorderStroke(if (sel) 2.dp else 1.dp, if (sel) color else MaterialTheme.colorScheme.outlineVariant),
-                        ) {
-                            Text(t, style = MaterialTheme.typography.titleMedium, color = if (sel) color else MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = 10.dp))
+                // Gasto o ingreso: la balanza del tema; cada mitad se toca.
+                val dc = io.github.ruddy2003.vestigium.ui.comun.disenoComun(io.github.ruddy2003.vestigium.ui.Estilo.tema)
+                val osc = io.github.ruddy2003.vestigium.ui.esOscuro()
+                val medidor = androidx.compose.ui.text.rememberTextMeasurer(cacheSize = 8)
+                val eb = io.github.ruddy2003.vestigium.ui.comun.EstadoBalanza(entra, "− Gasto", "+ Ingreso",
+                    io.github.ruddy2003.vestigium.ui.Tonos.gasto(osc), io.github.ruddy2003.vestigium.ui.Tonos.ingreso(osc))
+                Box(Modifier.fillMaxWidth().padding(bottom = 8.dp).height(dc.altoBalanza)) {
+                    Canvas(Modifier.matchParentSize()) { with(dc) { balanza(eb, medidor, osc) } }
+                    Row(Modifier.matchParentSize()) {
+                        listOf(false to "Gasto", true to "Ingreso").forEach { (v, t) ->
+                            Box(Modifier.weight(1f).fillMaxHeight()
+                                .semantics { contentDescription = t; selected = entra == v; role = androidx.compose.ui.semantics.Role.Tab }
+                                .clickable { if (entra != v) { entra = v; cat = null; sub = ""; error = null; sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.ELEGIR) } })
                         }
                     }
                 }
@@ -182,10 +188,16 @@ fun PantallaGastos(nav: Nav? = null) {
         val total = items.sumOf { it.monto }
         val ingresado = entradas.sumOf { it.monto }
         val imp = items.filter { it.imprevisto }.sumOf { it.monto }
-        Row(Modifier.fillMaxWidth().padding(top = 22.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedIconButton(onClick = { mes = Fechas.mesDe(Fechas.iso(Fechas.parse("$mes-01").minusMonths(1))); armado = null }) { Text("‹", fontSize = 20.sp) }
-            Text(Fechas.mesTitulo(mes), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-            OutlinedIconButton(onClick = { mes = Fechas.mesDe(Fechas.iso(Fechas.parse("$mes-01").plusMonths(1))); armado = null }) { Text("›", fontSize = 20.sp) }
+        val dcm = io.github.ruddy2003.vestigium.ui.comun.disenoComun(io.github.ruddy2003.vestigium.ui.Estilo.tema)
+        val oscm = io.github.ruddy2003.vestigium.ui.esOscuro()
+        val medidorMes = androidx.compose.ui.text.rememberTextMeasurer(cacheSize = 8)
+        val em = io.github.ruddy2003.vestigium.ui.comun.EstadoMes(Fechas.mesTitulo(mes))
+        Box(Modifier.fillMaxWidth().padding(top = 22.dp).height(dcm.altoMes).semantics { contentDescription = em.titulo }) {
+            Canvas(Modifier.matchParentSize()) { with(dcm) { encabezadoMes(em, medidorMes, oscm) } }
+            Box(Modifier.align(Alignment.CenterStart).size(48.dp).semantics { contentDescription = "mes anterior" }
+                .clickable { mes = Fechas.mesDe(Fechas.iso(Fechas.parse("$mes-01").minusMonths(1))); armado = null })
+            Box(Modifier.align(Alignment.CenterEnd).size(48.dp).semantics { contentDescription = "mes siguiente" }
+                .clickable { mes = Fechas.mesDe(Fechas.iso(Fechas.parse("$mes-01").plusMonths(1))); armado = null })
         }
         Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Cifra(dinero(total), "gastado", Modifier.weight(1f)); Cifra(dinero(ingresado), "ingresos", Modifier.weight(1f)); Cifra(dinero(imp), "imprevistos", Modifier.weight(1f))
@@ -195,7 +207,8 @@ fun PantallaGastos(nav: Nav? = null) {
             Tarjeta {
                 Etiqueta("ingresos del mes")
                 entradas.sortedByDescending { it.dia + it.hora }.forEach { i ->
-                    Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().drawBehind { with(dcm) { asiento(io.github.ruddy2003.vestigium.ui.comun.EstadoAsiento(true, i.id.hashCode()), oscm) } }
+                        .padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f).clickable { editandoIngreso = i }) {
                             Text(i.categoria + if (i.fijo) " · se repite" else "", style = MaterialTheme.typography.bodyLarge)
                             Text("${Fechas.corto(i.dia)} · ${i.hora}" + if (i.nota.isNotBlank()) " · ${i.nota}" else "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -243,9 +256,13 @@ fun PantallaGastos(nav: Nav? = null) {
             items.forEach { g ->
                 if (g.dia != ultimo) {
                     ultimo = g.dia
-                    Text(Fechas.corto(g.dia).uppercase(), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp, bottom = 2.dp))
+                    val rotulo = Fechas.corto(g.dia).uppercase()
+                    Canvas(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 2.dp).height(dcm.altoRotuloDia).semantics { contentDescription = rotulo }) {
+                        with(dcm) { rotuloDia(rotulo, medidorMes, oscm) }
+                    }
                 }
-                Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().drawBehind { with(dcm) { asiento(io.github.ruddy2003.vestigium.ui.comun.EstadoAsiento(false, g.id.hashCode()), oscm) } }
+                    .padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     // Tocar un gasto abre su corrección: monto, categoría, fecha u hora, o borrarlo.
                     Column(Modifier.weight(1f).clickable { editando = g }) {
                         Text(g.categoria + (if (g.subcategoria.isNotBlank()) " → ${g.subcategoria}" else "") + (if (g.imprevisto) " · imprevisto" else "") + (if (g.se_repite) " · se repite" else ""), style = MaterialTheme.typography.bodyLarge)

@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
@@ -15,11 +16,21 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.ruddy2003.vestigium.ui.Letra
+import io.github.ruddy2003.vestigium.ui.LetraExtra
+import io.github.ruddy2003.vestigium.ui.biblioteca.textoEn
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.bisel
 import io.github.ruddy2003.vestigium.ui.ideario.contornoIrregular
@@ -45,6 +56,48 @@ private fun DrawScope.renglonesAntiguedad(izq: Float, der: Float, arriba: Float,
         if (luz != null) drawLine(luz, Offset(izq, y + grosor), Offset(der, y + grosor), grosor * 0.8f)
         y += paso; k++
     }
+}
+
+
+/** El contraste entre dos colores, como lo mide la WCAG: de 1 (iguales) a 21 (negro sobre blanco). */
+private fun contrasteAnt(a: Color, b: Color): Float {
+    val la = a.luminance() + 0.05f; val lb = b.luminance() + 0.05f
+    return maxOf(la, lb) / minOf(la, lb)
+}
+
+/**
+ * [c] corrida hacia la tinta (casi negro sobre fondos claros, casi blanco sobre los oscuros) lo justo para leerse con un
+ * contraste de al menos [minimo] sobre [fondo] y sobre [otro] (la parte más clara u oscura de ese fondo, si tiene luz): así el
+ * gasto y el ingreso guardan su color, el que da la app, pero nunca quedan ilegibles sobre la piedra, la cera o el papel del
+ * tema. A lo más 24 pasos.
+ */
+private fun legibleAnt(c: Color, minimo: Float, fondo: Color, otro: Color = fondo): Color {
+    val claro = (fondo.luminance() + otro.luminance()) / 2 > 0.18f
+    val meta = if (claro) Color(0xFF0E0A07) else Color(0xFFFFFBF2)
+    var x = c
+    for (k in 1..24) {
+        if (contrasteAnt(x, fondo) >= minimo && contrasteAnt(x, otro) >= minimo) return x
+        x = mezcla(c, meta, k / 24f)
+    }
+    return meta
+}
+
+/** Lo que mide de ancho [texto] en una sola línea, con esa letra (sin achicar). */
+private fun anchoTextoAnt(medidor: TextMeasurer, texto: String, letra: FontFamily, tam: Float, peso: FontWeight, espaciado: Float): Float =
+    if (texto.isBlank()) 0f
+    else medidor.measure(texto, TextStyle(fontFamily = letra, fontSize = tam.sp, fontWeight = peso, letterSpacing = espaciado.sp), maxLines = 1, softWrap = false).size.width.toFloat()
+
+/**
+ * Las dos flechas del encabezado del mes: [dibujo] (la flecha de las filas del tema, que apunta a la derecha) en un cuadro de
+ * [lado] × 0,6 centrado en los [lado] del extremo derecho, y la misma en espejo en el extremo izquierdo.
+ */
+private fun DrawScope.flechasMesAnt(lado: Float, dibujo: DrawScope.() -> Unit) {
+    val w = size.width; val h = size.height
+    val q = minOf(lado * 0.6f, h * 0.72f)
+    if (q < 4f || w < 2 * lado) return
+    val x = w - lado + (lado - q) / 2; val y = (h - q) / 2
+    inset(x, y, w - x - q, h - y - q) { dibujo() }
+    scale(-1f, 1f, Offset(w / 2, h / 2)) { inset(x, y, w - x - q, h - y - q) { dibujo() } }
 }
 
 /**
@@ -748,6 +801,152 @@ object ComunCueva : DisenoComun {
         agujeros(a, b, Offset(0f, 1f)); agujeros(b, c, Offset(-1f, 0f)); agujeros(c, d, Offset(0f, -1f)); agujeros(d, a, Offset(1f, 0f))
         if (e.destacado) for (j in 0 until 3) drawCircle(if (oscuro) mezcla(OCRE, OCRE_AMARILLO, 0.5f) else OCRE, 1.3f * u, Offset(w - 16 * u + j * 4.5f * u, h - 9 * u))
     }
+
+    // ---------------------------------------------------------------- Gastos
+
+    override val altoBalanza: Dp = 58.dp
+
+    /** La cara de una mitad de la laja de la balanza: la elegida, alisada y clara; la otra, roca sin pulir. */
+    private fun caraBalanza(elegida: Boolean, oscuro: Boolean): Color = when {
+        elegida && oscuro -> mezcla(CALIZA, Color(0xFF0F0B08), 0.7f)
+        elegida -> mezcla(CALIZA, Color.White, 0.18f)
+        oscuro -> mezcla(ROCA_HONDA, Color(0xFF0F0B08), 0.62f)
+        else -> mezcla(CALIZA, ROCA, 0.42f)
+    }
+
+    /**
+     * Balanza: una laja de caliza a todo el ancho, partida al medio por una grieta pintada de carbón. La mitad elegida es la
+     * cara alisada a mano, clara, rodeada por una pasada de ocre hecha con el dedo, con una mano en positivo en su orilla y,
+     * de noche, la luz de la lumbre encima; su texto va grueso. La otra mitad se queda en roca sin pulir, más apagada, con su
+     * grano de carbón, y el texto delgado (pero con contraste de sobra). Un degradado: la lumbre.
+     */
+    override fun DrawScope.balanza(e: EstadoBalanza, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 40 * u || h < 20 * u) return
+        val laja = Rect(1 * u, 1.5f * u, w - 1 * u, h - 1 * u)
+        val contorno = contornoIrregular(laja, 31, ((laja.width + laja.height) * 2 / (9 * u)).toInt().coerceIn(16, 140), 2.2f * u / laja.height)
+        drawPath(contorno, if (oscuro) mezcla(ROCA_HONDA, Color(0xFF0F0B08), 0.4f) else ROCA)
+        drawPath(contorno, (if (oscuro) Color.Black else ROCA_HONDA).copy(alpha = 0.5f), style = Stroke(1 * u))
+        val xm = w / 2
+        for (lado in 0..1) {
+            val elegida = (lado == 1) == e.ingreso
+            val x0 = if (lado == 0) laja.left + 6 * u else xm + 5 * u
+            val x1 = if (lado == 0) xm - 5 * u else laja.right - 6 * u
+            val r = Rect(x0, laja.top + 5 * u, x1, laja.bottom - 5 * u)
+            val fondo = caraBalanza(elegida, oscuro)
+            val cara = contornoIrregular(r, 40 + lado, ((r.width + r.height) * 2 / (10 * u)).toInt().coerceIn(12, 90), 1.6f * u / r.height)
+            drawPath(cara, fondo)
+            var luz = fondo
+            if (elegida) {
+                if (oscuro) {
+                    luz = mezcla(fondo, BRASA, 0.16f)
+                    drawPath(cara, Brush.radialGradient(listOf(BRASA.copy(alpha = 0.16f), Color.Transparent), Offset(r.center.x, r.bottom), r.width * 0.55f))
+                }
+                val ocre = if (oscuro) mezcla(OCRE, OCRE_AMARILLO, 0.45f) else OCRE
+                drawPath(contornoIrregular(r.inflate(1.2f * u), 50 + lado, ((r.width + r.height) * 2 / (12 * u)).toInt().coerceIn(12, 80), 1.4f * u / r.height),
+                    ocre.copy(alpha = 0.9f), style = Stroke(2.2f * u, cap = StrokeCap.Round))
+                val k = (r.height * 0.72f) / 24f
+                val mx = if (lado == 0) r.left + 4 * u else r.right - 4 * u - 24 * k
+                mano(Offset(mx, r.center.y - 12 * k), k, ocre.copy(alpha = if (oscuro) 0.55f else 0.42f))
+            } else {
+                val grano = (if (oscuro) ROCA_LUZ else ROCA_HONDA).copy(alpha = if (oscuro) 0.16f else 0.22f)
+                for (j in 0 until 22) drawCircle(grano, (0.5f + 0.7f * azar(60 + lado, j)) * u,
+                    Offset(r.left + r.width * azar(70 + lado, j), r.top + r.height * azar(80 + lado, j)))
+            }
+            val texto = if (lado == 0) e.textoGasto else e.textoIngreso
+            val base = if (lado == 0) e.colorGasto else e.colorIngreso
+            val margen = r.height * 0.95f
+            val caja = Rect(r.left + margen, r.top + 2 * u, r.right - margen, r.bottom - 2 * u)
+            if (elegida) textoEn(medidor, texto, caja, LetraExtra.trazo, legibleAnt(base, 5f, fondo, luz), 23f, peso = FontWeight.Bold, espaciado = 0.5f)
+            else textoEn(medidor, texto, caja, LetraExtra.trazo, legibleAnt(mezcla(base, fondo, 0.22f), 4.7f, fondo), 20f, espaciado = 0.5f)
+        }
+        // La grieta del medio, pintada de carbón.
+        val carbon = (if (oscuro) Color.Black else CARBON).copy(alpha = 0.7f)
+        val grieta = Path().apply {
+            moveTo(xm + 0.6f * u, laja.top + 1 * u)
+            for (j in 1..5) lineTo(xm + (azar(33, j) - 0.5f) * 3.2f * u, laja.top + (laja.height - 2 * u) * j / 5f + 1 * u)
+        }
+        drawPath(grieta, carbon, style = Stroke(1.6f * u, cap = StrokeCap.Round))
+    }
+
+    override val altoMes: Dp = 52.dp
+
+    /**
+     * Encabezado del mes: un saliente de roca a todo el ancho, con la cara del medio alisada para el nombre del mes, escrito
+     * grande con carbón, y tres puntos de ocre a cada lado. En los extremos, sobre la roca, las puntas de sílex de las filas,
+     * grandes, una de ida y otra de vuelta. Sin degradados.
+     */
+    override fun DrawScope.encabezadoMes(e: EstadoMes, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 120 * u || h < 20 * u) return
+        val roca = Rect(1 * u, 2 * u, w - 1 * u, h - 1.5f * u)
+        val contorno = contornoIrregular(roca, 91, ((roca.width + roca.height) * 2 / (9 * u)).toInt().coerceIn(16, 140), 2.4f * u / roca.height)
+        drawPath(contorno, if (oscuro) mezcla(ROCA_HONDA, Color(0xFF0F0B08), 0.35f) else mezcla(ROCA, ROCA_LUZ, 0.35f))
+        drawPath(contorno, (if (oscuro) Color.Black else ROCA_HONDA).copy(alpha = 0.5f), style = Stroke(1 * u))
+        val r = Rect(52 * u, roca.top + 4 * u, w - 52 * u, roca.bottom - 4 * u)
+        val fondo = caraBalanza(true, oscuro)
+        drawPath(contornoIrregular(r, 92, ((r.width + r.height) * 2 / (10 * u)).toInt().coerceIn(12, 100), 1.5f * u / r.height), fondo)
+        val ocre = if (oscuro) mezcla(OCRE, OCRE_AMARILLO, 0.45f) else OCRE
+        for (lado in listOf(-1f, 1f)) for (j in 0..2) {
+            val x = if (lado < 0) r.left + (7 + j * 5.5f) * u else r.right - (7 + j * 5.5f) * u
+            drawCircle(ocre.copy(alpha = 0.85f), (1.5f + 0.3f * azar(93, j)) * u, Offset(x, r.center.y + (azar(94, j + (lado * 3).toInt()) - 0.5f) * 1.6f * u))
+        }
+        textoEn(medidor, e.titulo, Rect(r.left + 26 * u, r.top, r.right - 26 * u, r.bottom), LetraExtra.trazo,
+            legibleAnt(if (oscuro) CALIZA else CARBON, 7f, fondo), 30f, peso = FontWeight.Bold, espaciado = 1f)
+        flechasMesAnt(48 * u) { flechaFila(oscuro) }
+    }
+
+    /**
+     * Asiento: casi nada sobre la roca: un trazo de carbón muy fino abajo, que tiembla, y al principio de ese trazo la marca
+     * del tipo: una pasada de ocre con el dedo si es un gasto, o dos rayas de cuenta de carbón (de caliza, de noche) si es un
+     * ingreso. Sin degradados.
+     */
+    override fun DrawScope.asiento(e: EstadoAsiento, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 30 * u || h < 8 * u) return
+        val s = e.semilla
+        val y = h - 1.2f * u
+        trazoCarbon(26 * u, w - 4 * u, y, s, (if (oscuro) CALIZA else CARBON).copy(alpha = if (oscuro) 0.16f else 0.2f), 0.9f * u, 1.2f * u)
+        if (e.ingreso) {
+            val c = (if (oscuro) CALIZA else CARBON).copy(alpha = 0.62f)
+            for (j in 0..1) {
+                val x = (4 + j * 5) * u + azar(s, 90 + j) * u
+                drawLine(c, Offset(x, y + 1 * u), Offset(x + 1.6f * u, y - 6 * u), 1.4f * u, StrokeCap.Round)
+            }
+        } else {
+            val ocre = if (oscuro) mezcla(OCRE, OCRE_AMARILLO, 0.45f) else OCRE
+            val p = Path().apply { moveTo(2 * u, y + 0.4f * u); quadraticTo(11 * u, y - 1.6f * u, 21 * u, y - 0.2f * u) }
+            drawPath(p, ocre.copy(alpha = 0.72f), style = Stroke(2.4f * u, cap = StrokeCap.Round))
+        }
+    }
+
+    override val altoRotuloDia: Dp = 24.dp
+
+    /**
+     * Rótulo del día: la fecha pintada con ocre tostado (de noche, con el color de la lumbre) sobre una lajita de caliza alisada,
+     * y de ahí hacia la derecha un trazo de carbón que acaba en los tres puntos de ocre. Sin degradados.
+     */
+    override fun DrawScope.rotuloDia(texto: String, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 40 * u || h < 10 * u) return
+        val tam = 17f
+        val ancho = minOf(anchoTextoAnt(medidor, texto, LetraExtra.trazo, tam, FontWeight.Bold, 1.2f) + 2 * u, w * 0.7f)
+        val r = Rect(1 * u, 1 * u, ancho + 15 * u, h - 1 * u)
+        val fondo = if (oscuro) mezcla(CALIZA, Color(0xFF0F0B08), 0.74f) else mezcla(CALIZA, Color.White, 0.25f)
+        val laja = contornoIrregular(r, texto.hashCode(), ((r.width + r.height) * 2 / (8 * u)).toInt().coerceIn(10, 80), 1.3f * u / r.height)
+        drawPath(laja, fondo)
+        drawPath(laja, (if (oscuro) ROCA_LUZ else ROCA_OSC).copy(alpha = 0.5f), style = Stroke(0.8f * u))
+        textoEn(medidor, texto, Rect(r.left + 7 * u, r.top, r.left + 7 * u + ancho, r.bottom), LetraExtra.trazo,
+            legibleAnt(if (oscuro) FUEGO else TOSTADO, 5f, fondo), tam, peso = FontWeight.Bold, espaciado = 1.2f)
+        val x1 = w - 22 * u
+        trazoCarbon(r.right + 6 * u, x1, h / 2, texto.hashCode(), (if (oscuro) CALIZA else CARBON).copy(alpha = if (oscuro) 0.3f else 0.4f), 1.1f * u, 1.6f * u)
+        val ocre = (if (oscuro) mezcla(OCRE, OCRE_AMARILLO, 0.45f) else OCRE).copy(alpha = 0.85f)
+        for (j in 0..2) drawCircle(ocre, 1.5f * u, Offset(x1 + (5 + j * 5) * u, h / 2))
+    }
 }
 
 /**
@@ -1373,6 +1572,157 @@ object ComunRomano : DisenoComun {
         drawRect((if (oscuro) Color.Black else NEGRO).copy(alpha = if (oscuro) 0.5f else 0.35f), p.topLeft, p.size, style = Stroke(0.6f * u))
         if (e.destacado) drawRect(amarillo, p.deflate(1.4f * u).topLeft, p.deflate(1.4f * u).size, style = Stroke(1 * u))
     }
+
+    // ---------------------------------------------------------------- Gastos
+
+    /** El verde del bronce viejo (el cardenillo): la marca de los ingresos. */
+    private val CARDENILLO = Color(0xFF2F6E62)
+
+    override val altoBalanza: Dp = 58.dp
+
+    /**
+     * Balanza: un díptico de tablillas de cera abierto, a todo el ancho: el marco de haya con sus vetas y, en medio, la bisagra
+     * de dos agujeros con el cordón de lino. La tablilla de la izquierda es el gasto y la de la derecha el ingreso. La elegida
+     * tiene la cera recién alisada, clara de día (de noche, la cera negra a la luz), con el borde del rebaje marcado de púrpura,
+     * dos clavillos de bronce en su lado del marco y el texto grueso; la otra queda con la cera vieja, opaca y hundida, y el
+     * texto delgado. Sin degradados.
+     */
+    override fun DrawScope.balanza(e: EstadoBalanza, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 40 * u || h < 24 * u) return
+        val marco = Rect(1 * u, 1 * u, w - 1 * u, h - 1 * u)
+        drawRoundRect(if (oscuro) mezcla(HAYA_VETA, Color(0xFF100D0B), 0.55f) else HAYA, marco.topLeft, marco.size, CornerRadius(3 * u))
+        vetas(marco.deflate(2 * u), (if (oscuro) Color.Black else HAYA_VETA).copy(alpha = if (oscuro) 0.3f else 0.22f), 12, grosor = 0.8f)
+        drawRoundRect((if (oscuro) Color.Black else HAYA_VETA).copy(alpha = 0.6f), marco.topLeft, marco.size, CornerRadius(3 * u), style = Stroke(1 * u))
+        val xm = w / 2
+        for (lado in 0..1) {
+            val elegida = (lado == 1) == e.ingreso
+            val r = if (lado == 0) Rect(marco.left + 7 * u, marco.top + 6 * u, xm - 7 * u, marco.bottom - 6 * u)
+            else Rect(xm + 7 * u, marco.top + 6 * u, marco.right - 7 * u, marco.bottom - 6 * u)
+            val fondo = when {
+                elegida && oscuro -> mezcla(CERA_NEGRA, HAYA, 0.16f)
+                elegida -> mezcla(CERA_MIEL, LINO, 0.55f)
+                oscuro -> mezcla(CERA_NEGRA, Color.Black, 0.45f)
+                else -> mezcla(CERA_MIEL, HAYA_VETA, 0.24f)
+            }
+            drawRect(fondo, r.topLeft, r.size)
+            // El rebaje: la sombra arriba y a la izquierda, la luz abajo.
+            val sombra = Color.Black.copy(alpha = if (elegida) 0.22f else 0.38f)
+            drawLine(sombra, Offset(r.left, r.top + 0.8f * u), Offset(r.right, r.top + 0.8f * u), 1.6f * u)
+            drawLine(sombra, Offset(r.left + 0.8f * u, r.top), Offset(r.left + 0.8f * u, r.bottom), 1.6f * u)
+            drawLine((if (oscuro) HAYA else HAYA_LUZ).copy(alpha = 0.6f), Offset(r.left, r.bottom + 0.6f * u), Offset(r.right, r.bottom + 0.6f * u), 1 * u)
+            if (elegida) {
+                drawRect(if (oscuro) mezcla(PURPURA, LINO, 0.45f) else PURPURA, r.topLeft + Offset(2.5f * u, 2.5f * u),
+                    Size(r.width - 5 * u, r.height - 5 * u), style = Stroke(1.4f * u))
+                val xc = if (lado == 0) marco.left + 3.6f * u else marco.right - 3.6f * u
+                for (yc in listOf(marco.top + 9 * u, marco.bottom - 9 * u)) {
+                    drawCircle(BRONCE_OSC, 2.3f * u, Offset(xc, yc))
+                    drawCircle(if (oscuro) BRONCE else BRONCE_LUZ, 1.5f * u, Offset(xc - 0.4f * u, yc - 0.4f * u))
+                }
+            } else {
+                // Las rayas viejas del estilo, en las orillas de la cera.
+                val raya = (if (oscuro) LINO else HAYA_VETA).copy(alpha = if (oscuro) 0.12f else 0.22f)
+                for (j in 0 until 4) {
+                    val xa = if (j % 2 == 0) r.left + (5 + 3 * azar(21 + lado, j)) * u else r.right - (24 + 3 * azar(21 + lado, j)) * u
+                    val ya = r.top + r.height * (0.22f + 0.18f * j)
+                    drawLine(raya, Offset(xa, ya), Offset(xa + (14 + 6 * azar(23, j)) * u, ya + 0.6f * u), 0.7f * u)
+                }
+            }
+            val texto = if (lado == 0) e.textoGasto else e.textoIngreso
+            val base = if (lado == 0) e.colorGasto else e.colorIngreso
+            val caja = Rect(r.left + 10 * u, r.top + 4 * u, r.right - 10 * u, r.bottom - 4 * u)
+            if (elegida) textoEn(medidor, texto, caja, Letra.inscripcion, legibleAnt(base, 5f, fondo), 17f, peso = FontWeight.Bold, espaciado = 0.8f)
+            else textoEn(medidor, texto, caja, Letra.inscripcion, legibleAnt(mezcla(base, fondo, 0.2f), 4.7f, fondo), 15f, espaciado = 0.8f)
+        }
+        // La bisagra: dos agujeros en el marco del medio y el cordón de lino que los une.
+        val lino = if (oscuro) mezcla(LINO, Color.Black, 0.35f) else LINO
+        val ya = h * 0.34f; val yb = h * 0.66f
+        for (y in listOf(ya, yb)) drawCircle(NEGRO.copy(alpha = 0.75f), 1.8f * u, Offset(xm, y))
+        val cordon = Path().apply { moveTo(xm, ya); cubicTo(xm - 4.5f * u, ya + 3 * u, xm + 4.5f * u, yb - 3 * u, xm, yb) }
+        drawPath(cordon, lino, style = Stroke(1.3f * u, cap = StrokeCap.Round))
+    }
+
+    override val altoMes: Dp = 50.dp
+
+    /**
+     * Encabezado del mes: una tabula ansata de bronce, la cartela de las inscripciones, con sus dos asas en cola de milano y un
+     * clavo en cada una; la cara pulida (de noche, el bronce oscuro) lleva la raya grabada por dentro y el mes en capitales. A
+     * los lados, fuera de la cartela, las hojas de hiedra de las filas, grandes, para ir y volver. Un degradado: el brillo del
+     * bronce.
+     */
+    override fun DrawScope.encabezadoMes(e: EstadoMes, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 140 * u || h < 24 * u) return
+        val r = Rect(54 * u, 3 * u, w - 54 * u, h - 3 * u)
+        val cy = h / 2
+        val claro = if (oscuro) mezcla(BRONCE_OSC, Color(0xFF100D0B), 0.4f) else mezcla(BRONCE_LUZ, LINO, 0.55f)
+        val hondo = if (oscuro) mezcla(BRONCE_OSC, Color(0xFF100D0B), 0.62f) else mezcla(BRONCE_LUZ, BRONCE, 0.35f)
+        val canto = if (oscuro) BRONCE else BRONCE_OSC
+        val asas = Path().apply {
+            for (lado in listOf(-1f, 1f)) {
+                val x = if (lado < 0) r.left + 1 * u else r.right - 1 * u
+                moveTo(x, cy - 5 * u); lineTo(x + lado * 13 * u, cy - 11 * u); lineTo(x + lado * 13 * u, cy + 11 * u); lineTo(x, cy + 5 * u); close()
+            }
+        }
+        drawPath(asas, hondo)
+        drawPath(asas, canto, style = Stroke(1 * u))
+        drawRect(Brush.verticalGradient(listOf(claro, hondo), r.top, r.bottom), r.topLeft, r.size)
+        drawRect(canto, r.topLeft, r.size, style = Stroke(1.2f * u))
+        drawRect((if (oscuro) BRONCE_LUZ else BRONCE_OSC).copy(alpha = 0.5f), r.topLeft + Offset(3.5f * u, 3.5f * u), Size(r.width - 7 * u, r.height - 7 * u), style = Stroke(0.8f * u))
+        for (lado in listOf(-1f, 1f)) {
+            val c = Offset(if (lado < 0) r.left - 7.5f * u else r.right + 7.5f * u, cy)
+            drawCircle(BRONCE_OSC, 2.2f * u, c); drawCircle(if (oscuro) BRONCE else BRONCE_LUZ, 1.3f * u, c - Offset(0.4f * u, 0.4f * u))
+        }
+        textoEn(medidor, e.titulo.uppercase(), Rect(r.left + 10 * u, r.top + 3 * u, r.right - 10 * u, r.bottom - 3 * u), Letra.inscripcion,
+            legibleAnt(if (oscuro) BRONCE_LUZ else NEGRO, 7f, claro, hondo), 19f, peso = FontWeight.Bold, espaciado = 1.5f)
+        flechasMesAnt(48 * u) { flechaFila(oscuro) }
+    }
+
+    /**
+     * Asiento: la raya grabada de las inscripciones abajo, tenue, y al principio un interpunto triangular del tipo: de minio si
+     * es un gasto, de cardenillo (el verde del bronce viejo) si es un ingreso. Sin degradados.
+     */
+    override fun DrawScope.asiento(e: EstadoAsiento, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 30 * u || h < 8 * u) return
+        val y = h - 1.6f * u
+        grabado(Offset(14 * u, y), Offset(w - 2 * u, y), oscuro, 0.75f)
+        val c = if (e.ingreso) CARDENILLO else MINIO
+        interpunto(Offset(6 * u, y - 0.6f * u), 5.5f * u, (if (oscuro) mezcla(c, LINO, 0.4f) else c).copy(alpha = 0.85f))
+    }
+
+    override val altoRotuloDia: Dp = 22.dp
+
+    /**
+     * Rótulo del día: una tabula ansata pequeña de piedra clara (de noche, la piedra honda), con su canto de bronce y la fecha en
+     * capitales; de ahí sale hacia la derecha la raya grabada, que acaba en la hoja de hiedra. Sin degradados.
+     */
+    override fun DrawScope.rotuloDia(texto: String, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 60 * u || h < 10 * u) return
+        val tam = 12.5f
+        val ancho = minOf(anchoTextoAnt(medidor, texto, Letra.inscripcion, tam, FontWeight.Bold, 1.6f) + 2 * u, w * 0.6f)
+        val r = Rect(9 * u, 1 * u, 9 * u + ancho + 14 * u, h - 1 * u)
+        val cy = h / 2
+        val fondo = if (oscuro) LAPIDA_NOCHE else LAPIDA
+        val canto = if (oscuro) BRONCE else BRONCE_OSC
+        val asas = Path().apply {
+            moveTo(r.left, cy - 3 * u); lineTo(r.left - 8 * u, cy - 7 * u); lineTo(r.left - 8 * u, cy + 7 * u); lineTo(r.left, cy + 3 * u); close()
+            moveTo(r.right, cy - 3 * u); lineTo(r.right + 8 * u, cy - 7 * u); lineTo(r.right + 8 * u, cy + 7 * u); lineTo(r.right, cy + 3 * u); close()
+        }
+        drawPath(asas, if (oscuro) mezcla(BRONCE_OSC, Color.Black, 0.3f) else BRONCE)
+        drawRect(fondo, r.topLeft, r.size)
+        drawRect(canto, r.topLeft, r.size, style = Stroke(1 * u))
+        textoEn(medidor, texto, Rect(r.left + 7 * u, r.top, r.left + 7 * u + ancho, r.bottom), Letra.inscripcion,
+            legibleAnt(if (oscuro) ORO else PURPURA, 5.5f, fondo), tam, peso = FontWeight.Bold, espaciado = 1.6f)
+        val x0 = r.right + 14 * u; val x1 = w - 18 * u
+        if (x1 > x0) grabado(Offset(x0, cy), Offset(x1, cy), oscuro, 1.2f)
+        hedera(Offset(w - 9 * u, cy), if (oscuro) mezcla(PURPURA, LINO, 0.6f) else PURPURA, u)
+    }
 }
 
 /**
@@ -1936,6 +2286,143 @@ object ComunHeleno : DisenoComun {
         drawLine(negro, Offset(5 * u, r.bottom - 2.6f * u), Offset(w - 5 * u, r.bottom - 2.6f * u), 1.1f * u)
         drawRoundRect(negro.copy(alpha = if (oscuro) 0.4f else 0.25f), r.topLeft, r.size, radio, style = Stroke(0.7f * u))
         if (e.destacado) drawRoundRect(egeo(oscuro), r.deflate(1 * u).topLeft, r.deflate(1 * u).size, CornerRadius(4 * u), style = Stroke(1.2f * u))
+    }
+
+    // ---------------------------------------------------------------- Gastos
+
+    /**
+     * Una greca corrida (el meandro) de [x0] a [x1], de [alto] con la base en [base]: una llave tras otra, cada una de [alto] de
+     * ancho más su paso, unidas por la raya de abajo. A lo más 80 llaves.
+     */
+    private fun DrawScope.grecaCorrida(x0: Float, x1: Float, base: Float, alto: Float, color: Color, grosor: Float) {
+        val paso = maxOf(alto * 1.45f, 1f)
+        val n = ((x1 - x0) / paso).toInt().coerceIn(0, 80)
+        if (n == 0) return
+        val sobra = (x1 - x0 - n * paso) / 2
+        for (j in 0 until n) llave(Offset(x0 + sobra + j * paso + alto * 0.2f, base - alto), alto, 1f, 1f, color, grosor)
+        drawLine(color, Offset(x0, base), Offset(x1, base), grosor)
+    }
+
+    override val altoBalanza: Dp = 60.dp
+
+    /**
+     * Balanza: un friso de mármol a todo el ancho, con dos metopas separadas por un triglifo (tres canales) y, abajo, la greca
+     * corrida. La metopa elegida tiene la cara pulida y clara, el filete del Egeo grueso con otro de oro por dentro y la greca de
+     * debajo pintada de azul; la otra queda en mármol sin pulir, más gris, con la greca apenas grabada y el texto delgado.
+     * Sin degradados.
+     */
+    override fun DrawScope.balanza(e: EstadoBalanza, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 60 * u || h < 30 * u) return
+        val losa = Rect(1 * u, 1 * u, w - 1 * u, h - 1 * u)
+        drawRect(if (oscuro) mezcla(MARMOL_SOMBRA, Color(0xFF0F0C0A), 0.72f) else MARMOL_OSC, losa.topLeft, losa.size)
+        drawRect((if (oscuro) Color.Black else MARMOL_SOMBRA).copy(alpha = 0.7f), losa.topLeft, losa.size, style = Stroke(1 * u))
+        val xm = w / 2
+        val baseGreca = losa.bottom - 3 * u
+        val altoGreca = 6.5f * u
+        val abajo = baseGreca - altoGreca - 3.5f * u
+        // El triglifo del medio, con sus tres canales.
+        val tri = Rect(xm - 7 * u, losa.top + 3 * u, xm + 7 * u, abajo)
+        drawRect(if (oscuro) mezcla(MARMOL_SOMBRA, Color(0xFF0F0C0A), 0.55f) else MARMOL_SOMBRA, tri.topLeft, tri.size)
+        for (j in -1..1) drawLine((if (oscuro) Color.Black else BARNIZ).copy(alpha = 0.45f), Offset(xm + j * 4 * u, tri.top + 2 * u), Offset(xm + j * 4 * u, tri.bottom - 1 * u), 1.4f * u)
+        for (lado in 0..1) {
+            val elegida = (lado == 1) == e.ingreso
+            val r = if (lado == 0) Rect(losa.left + 4 * u, losa.top + 3 * u, tri.left - 3 * u, abajo)
+            else Rect(tri.right + 3 * u, losa.top + 3 * u, losa.right - 4 * u, abajo)
+            val fondo = when {
+                elegida && oscuro -> mezcla(MARMOL, Color(0xFF0F0C0A), 0.7f)
+                elegida -> MARMOL_LUZ
+                oscuro -> mezcla(MARMOL, Color(0xFF0F0C0A), 0.86f)
+                else -> mezcla(MARMOL, MARMOL_OSC, 0.6f)
+            }
+            drawRect(fondo, r.topLeft, r.size)
+            val gx0 = if (lado == 0) losa.left + 4 * u else xm + 2 * u
+            val gx1 = if (lado == 0) xm - 2 * u else losa.right - 4 * u
+            if (elegida) {
+                drawRect(egeo(oscuro), r.topLeft, r.size, style = Stroke(2.2f * u))
+                drawRect(if (oscuro) LLAMA.copy(alpha = 0.75f) else ORO, r.topLeft + Offset(4 * u, 4 * u), Size(r.width - 8 * u, r.height - 8 * u), style = Stroke(0.9f * u))
+                grecaCorrida(gx0, gx1, baseGreca, altoGreca, egeo(oscuro), 1.3f * u)
+            } else {
+                drawRect(MARMOL_SOMBRA.copy(alpha = 0.5f), r.topLeft, r.size, style = Stroke(0.8f * u))
+                grecaCorrida(gx0, gx1, baseGreca, altoGreca, (if (oscuro) MARMOL_OSC else MARMOL_SOMBRA).copy(alpha = 0.45f), 1 * u)
+            }
+            val texto = if (lado == 0) e.textoGasto else e.textoIngreso
+            val base = if (lado == 0) e.colorGasto else e.colorIngreso
+            val caja = Rect(r.left + 10 * u, r.top + 5 * u, r.right - 10 * u, r.bottom - 5 * u)
+            if (elegida) textoEn(medidor, texto, caja, Letra.garamond, legibleAnt(base, 5f, fondo), 21f, peso = FontWeight.Bold, espaciado = 0.4f)
+            else textoEn(medidor, texto, caja, Letra.garamond, legibleAnt(mezcla(base, fondo, 0.2f), 4.7f, fondo), 18f, espaciado = 0.4f)
+        }
+    }
+
+    override val altoMes: Dp = 52.dp
+
+    /**
+     * Encabezado del mes: un dintel de mármol a todo el ancho, con un filete del Egeo arriba y abajo; al centro, la cartela lisa
+     * con el mes, enmarcada por un filete fino con una llave de la greca en cada esquina. En los extremos del dintel, las
+     * flechas de las filas (con sus plumas azules), grandes. Sin degradados.
+     */
+    override fun DrawScope.encabezadoMes(e: EstadoMes, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 140 * u || h < 24 * u) return
+        val dintel = Rect(1 * u, 2 * u, w - 1 * u, h - 2 * u)
+        val fondo = losa(oscuro)
+        drawRect(fondo, dintel.topLeft, dintel.size)
+        drawRect((if (oscuro) Color.Black else MARMOL_SOMBRA).copy(alpha = 0.7f), dintel.topLeft, dintel.size, style = Stroke(1 * u))
+        val azul = egeo(oscuro)
+        drawLine(azul, Offset(dintel.left, dintel.top + 2.5f * u), Offset(dintel.right, dintel.top + 2.5f * u), 1.6f * u)
+        drawLine(azul, Offset(dintel.left, dintel.bottom - 2.5f * u), Offset(dintel.right, dintel.bottom - 2.5f * u), 1.6f * u)
+        val r = Rect(54 * u, dintel.top + 6 * u, w - 54 * u, dintel.bottom - 6 * u)
+        val filete = (if (oscuro) MARMOL_OSC else MARMOL_SOMBRA).copy(alpha = 0.8f)
+        drawRect(filete, r.topLeft, r.size, style = Stroke(0.9f * u))
+        val k = 7 * u
+        llave(Offset(r.left + 3 * u, r.top + 3 * u), k, 1f, 1f, azul, 1.1f * u)
+        llave(Offset(r.right - 3 * u, r.top + 3 * u), k, -1f, 1f, azul, 1.1f * u)
+        llave(Offset(r.left + 3 * u, r.bottom - 3 * u), k, 1f, -1f, azul, 1.1f * u)
+        llave(Offset(r.right - 3 * u, r.bottom - 3 * u), k, -1f, -1f, azul, 1.1f * u)
+        textoEn(medidor, e.titulo, Rect(r.left + 16 * u, r.top, r.right - 16 * u, r.bottom), Letra.garamond,
+            legibleAnt(if (oscuro) MARMOL_LUZ else BARNIZ, 7f, fondo), 24f, peso = FontWeight.SemiBold, espaciado = 0.6f)
+        flechasMesAnt(48 * u) { flechaFila(oscuro) }
+    }
+
+    /**
+     * Asiento: una raya fina grabada en el mármol, abajo, y al principio una llave pequeña de la greca del color del tipo: rojo
+     * de vaso si es un gasto, azul del Egeo si es un ingreso. Sin degradados.
+     */
+    override fun DrawScope.asiento(e: EstadoAsiento, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 30 * u || h < 10 * u) return
+        val y = h - 1.4f * u
+        drawLine((if (oscuro) MARMOL_OSC else MARMOL_SOMBRA).copy(alpha = if (oscuro) 0.22f else 0.45f), Offset(13 * u, y), Offset(w - 2 * u, y), 0.8f * u)
+        val c = if (e.ingreso) egeo(oscuro) else if (oscuro) mezcla(ROJO_VASO, MARMOL_LUZ, 0.4f) else ROJO_VASO
+        llave(Offset(2 * u, y), 6 * u, 1f, -1f, c.copy(alpha = 0.85f), 1.1f * u)
+    }
+
+    override val altoRotuloDia: Dp = 22.dp
+
+    /**
+     * Rótulo del día: una cartela de figuras rojas, como la banda de un vaso: el barniz negro con la fecha en el rojo del barro, y
+     * de ahí hacia la derecha la greca corrida, fina y tenue. Sin degradados.
+     */
+    override fun DrawScope.rotuloDia(texto: String, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 60 * u || h < 10 * u) return
+        val tam = 13f
+        val ancho = minOf(anchoTextoAnt(medidor, texto, Letra.garamond, tam, FontWeight.Bold, 1.4f) + 2 * u, w * 0.6f)
+        val r = Rect(1 * u, 1 * u, ancho + 17 * u, h - 1 * u)
+        val fondo = BARNIZ
+        drawRoundRect(fondo, r.topLeft, r.size, CornerRadius(1.5f * u))
+        if (oscuro) drawRoundRect(MARMOL_SOMBRA.copy(alpha = 0.6f), r.topLeft, r.size, CornerRadius(1.5f * u), style = Stroke(0.8f * u))
+        // Las dos rayas de barro de la banda, arriba y abajo.
+        drawLine(ARCILLA.copy(alpha = 0.7f), Offset(r.left + 2 * u, r.top + 2.2f * u), Offset(r.right - 2 * u, r.top + 2.2f * u), 0.7f * u)
+        drawLine(ARCILLA.copy(alpha = 0.7f), Offset(r.left + 2 * u, r.bottom - 2.2f * u), Offset(r.right - 2 * u, r.bottom - 2.2f * u), 0.7f * u)
+        textoEn(medidor, texto, Rect(r.left + 8 * u, r.top + 2.5f * u, r.left + 8 * u + ancho, r.bottom - 2.5f * u), Letra.garamond,
+            legibleAnt(ARCILLA, 5f, fondo), tam, peso = FontWeight.Bold, espaciado = 1.4f)
+        val alto = minOf(7 * u, h * 0.4f)
+        grecaCorrida(r.right + 8 * u, w - 2 * u, h / 2 + alto / 2, alto, egeo(oscuro).copy(alpha = if (oscuro) 0.5f else 0.42f), 0.9f * u)
     }
 }
 
@@ -2526,6 +3013,158 @@ object ComunEgipto : DisenoComun {
         }
         if (e.destacado) drawRect(azul, cuerpo.deflate(1 * u).topLeft, cuerpo.deflate(1 * u).size, style = Stroke(1 * u))
     }
+
+    // ---------------------------------------------------------------- Gastos
+
+    /**
+     * La banda de rectángulos de colores de las tumbas, de [x0] a [x1], de [alto] con el borde de arriba en [y]: lapislázuli,
+     * rojo y verde, con su hueco de yeso, entre dos rayas negras. Con [fuerza] menor que 1, desvaída. A lo más 120 rectángulos.
+     */
+    private fun DrawScope.bandaColores(x0: Float, x1: Float, y: Float, alto: Float, oscuro: Boolean, fuerza: Float) {
+        val u = density
+        if (x1 - x0 < 4 * u) return
+        val paso = maxOf(alto * 1.5f, 1f)
+        val n = ((x1 - x0) / paso).toInt().coerceIn(1, 120)
+        val ancho = (x1 - x0) / n
+        val colores = if (oscuro) listOf(LAPIS_NOCHE, mezcla(ROJO, LINO, 0.25f), VERDE_NOCHE) else listOf(LAPIS, ROJO, VERDE)
+        for (j in 0 until n) drawRect(colores[j % 3].copy(alpha = fuerza), Offset(x0 + j * ancho + 0.6f * u, y + 1.2f * u), Size(ancho - 1.2f * u, alto - 2.4f * u))
+        val negro = (if (oscuro) LINO else NEGRO).copy(alpha = (if (oscuro) 0.5f else 0.85f) * fuerza)
+        drawLine(negro, Offset(x0, y), Offset(x1, y), 0.8f * u)
+        drawLine(negro, Offset(x0, y + alto), Offset(x1, y + alto), 0.8f * u)
+    }
+
+    /** Un cartucho: el óvalo alargado donde se escriben los nombres (la raya del nudo se dibuja aparte). */
+    private fun cartucho(r: Rect): Path = Path().apply { addRoundRect(RoundRect(r, CornerRadius(r.height / 2))) }
+
+    override val altoBalanza: Dp = 60.dp
+
+    /**
+     * Balanza: la tablilla del escriba a todo el ancho, de yeso blanco en su marco de madera, con la banda de colores arriba y
+     * dos cartuchos: el del gasto a la izquierda y el del ingreso a la derecha, cada uno con la raya de su nudo hacia afuera. El
+     * elegido se rellena de papiro, se marca con un contorno grueso de lapislázuli y la banda de encima toma todo su color; el
+     * otro queda en yeso, con el contorno fino y la banda desvaída. Sin degradados.
+     */
+    override fun DrawScope.balanza(e: EstadoBalanza, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 60 * u || h < 30 * u) return
+        val marco = Rect(1 * u, 1 * u, w - 1 * u, h - 1 * u)
+        drawRoundRect(t(MADERA, oscuro), marco.topLeft, marco.size, CornerRadius(2 * u))
+        vetas(marco, (if (oscuro) Color.Black else MADERA_VETA).copy(alpha = 0.35f), 44, grosor = 0.8f)
+        val yeso = marco.deflate(3.5f * u)
+        val fondoYeso = hondo(YESO, oscuro)
+        drawRect(fondoYeso, yeso.topLeft, yeso.size)
+        val altoBanda = 7 * u
+        val xm = w / 2
+        val lapis = if (oscuro) LAPIS_NOCHE else LAPIS
+        for (lado in 0..1) {
+            val elegido = (lado == 1) == e.ingreso
+            val bx0 = if (lado == 0) yeso.left else xm
+            val bx1 = if (lado == 0) xm else yeso.right
+            bandaColores(bx0, bx1, yeso.top, altoBanda, oscuro, if (elegido) 1f else 0.3f)
+            val r = Rect(bx0 + 8 * u, yeso.top + altoBanda + 4 * u, bx1 - 8 * u, yeso.bottom - 4 * u)
+            val fondo = when {
+                elegido && oscuro -> mezcla(PAPIRO, Color(0xFF110D08), 0.7f)
+                elegido -> PAPIRO
+                else -> fondoYeso
+            }
+            val c = cartucho(r)
+            drawPath(c, fondo)
+            drawPath(c, if (elegido) lapis else (if (oscuro) LINO else NEGRO).copy(alpha = 0.35f), style = Stroke(if (elegido) 2.2f * u else 1 * u))
+            // La raya del nudo, hacia afuera.
+            val xn = if (lado == 0) r.left - 3.5f * u else r.right + 3.5f * u
+            drawLine(if (elegido) lapis else (if (oscuro) LINO else NEGRO).copy(alpha = 0.35f), Offset(xn, r.top + 2 * u), Offset(xn, r.bottom - 2 * u), if (elegido) 2.2f * u else 1 * u)
+            val texto = if (lado == 0) e.textoGasto else e.textoIngreso
+            val base = if (lado == 0) e.colorGasto else e.colorIngreso
+            val caja = Rect(r.left + r.height * 0.5f, r.top + 2 * u, r.right - r.height * 0.5f, r.bottom - 2 * u)
+            if (elegido) textoEn(medidor, texto, caja, Letra.messiri, legibleAnt(base, 5f, fondo), 18f, peso = FontWeight.Bold)
+            else textoEn(medidor, texto, caja, Letra.messiri, legibleAnt(mezcla(base, fondo, 0.2f), 4.7f, fondo), 16f)
+        }
+        drawLine((if (oscuro) LINO else NEGRO).copy(alpha = 0.5f), Offset(xm, yeso.top), Offset(xm, yeso.bottom), 0.8f * u)
+    }
+
+    override val altoMes: Dp = 54.dp
+
+    /**
+     * Encabezado del mes: un dintel de templo a todo el ancho: arriba la gola, la cornisa curva con sus hojas de palma pintadas
+     * (lapislázuli, verde y rojo), debajo el baquetón atado y, en la cara de yeso, el mes. En los extremos de la cara, los
+     * capullos de loto de las filas, grandes, para ir y volver. Sin degradados.
+     */
+    override fun DrawScope.encabezadoMes(e: EstadoMes, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 140 * u || h < 30 * u) return
+        val gola = Rect(1 * u, 1 * u, w - 1 * u, 1 * u + h * 0.26f)
+        val cara = Rect(4 * u, gola.bottom + 4 * u, w - 4 * u, h - 1 * u)
+        // La gola: hojas de palma verticales, un poco más anchas arriba.
+        drawRect(if (oscuro) mezcla(YESO, Color(0xFF110D08), 0.72f) else YESO, gola.topLeft, gola.size)
+        val paso = maxOf(9 * u, 1f)
+        val n = (gola.width / paso).toInt().coerceIn(1, 120)
+        val hoja = gola.width / n
+        val colores = if (oscuro) listOf(LAPIS_NOCHE, VERDE_NOCHE, mezcla(ROJO, LINO, 0.25f)) else listOf(LAPIS, VERDE, ROJO)
+        for (j in 0 until n) {
+            val x = gola.left + j * hoja
+            val p = Path().apply {
+                moveTo(x + 1 * u, gola.top + 1 * u); lineTo(x + hoja - 1 * u, gola.top + 1 * u)
+                lineTo(x + hoja - 2 * u, gola.bottom - 1 * u); lineTo(x + 2 * u, gola.bottom - 1 * u); close()
+            }
+            drawPath(p, colores[j % 3].copy(alpha = if (oscuro) 0.8f else 0.9f))
+        }
+        // El baquetón, atado en diagonal.
+        val toro = Rect(2 * u, gola.bottom, w - 2 * u, gola.bottom + 4 * u)
+        drawRect(if (oscuro) mezcla(AMARILLO, Color(0xFF110D08), 0.5f) else AMARILLO, toro.topLeft, toro.size)
+        val ataduras = (toro.width / maxOf(6 * u, 1f)).toInt().coerceIn(1, 200)
+        for (j in 0 until ataduras) {
+            val x = toro.left + j * toro.width / ataduras
+            drawLine(NEGRO.copy(alpha = 0.6f), Offset(x, toro.bottom), Offset(x + 3 * u, toro.top), 0.8f * u)
+        }
+        drawRect(NEGRO.copy(alpha = 0.7f), toro.topLeft, toro.size, style = Stroke(0.7f * u))
+        val fondo = hondo(YESO, oscuro)
+        drawRect(fondo, cara.topLeft, cara.size)
+        drawRect((if (oscuro) LINO else NEGRO).copy(alpha = 0.45f), cara.topLeft, cara.size, style = Stroke(0.8f * u))
+        textoEn(medidor, e.titulo, Rect(56 * u, cara.top + 1 * u, w - 56 * u, cara.bottom - 1 * u), Letra.messiri,
+            legibleAnt(if (oscuro) LINO else NEGRO, 7f, fondo), 22f, peso = FontWeight.Bold, espaciado = 0.5f)
+        inset(0f, cara.top - 1 * u, 0f, h - cara.bottom - 1 * u) { flechasMesAnt(48 * u) { flechaFila(oscuro) } }
+    }
+
+    /**
+     * Asiento: abajo, la raya negra fina de las pinturas (de noche, de lino), tenue, y al principio un rectángulo de la banda del
+     * color del tipo: rojo si es un gasto, verde si es un ingreso, con su hueco y otro de lapislázuli. Sin degradados.
+     */
+    override fun DrawScope.asiento(e: EstadoAsiento, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 30 * u || h < 10 * u) return
+        val y = h - 1.4f * u
+        drawLine((if (oscuro) LINO else NEGRO).copy(alpha = if (oscuro) 0.2f else 0.26f), Offset(18 * u, y), Offset(w - 2 * u, y), 0.8f * u)
+        val c = if (e.ingreso) (if (oscuro) VERDE_NOCHE else VERDE) else (if (oscuro) mezcla(ROJO, LINO, 0.25f) else ROJO)
+        drawRect(c.copy(alpha = 0.85f), Offset(2 * u, y - 3.5f * u), Size(7 * u, 3.5f * u))
+        drawRect((if (oscuro) LAPIS_NOCHE else LAPIS).copy(alpha = 0.6f), Offset(10.5f * u, y - 3.5f * u), Size(4 * u, 3.5f * u))
+    }
+
+    override val altoRotuloDia: Dp = 24.dp
+
+    /**
+     * Rótulo del día: la fecha dentro de un cartucho de papiro con contorno de lapislázuli y la raya de su nudo, y de ahí hacia la
+     * derecha la banda de colores, fina y desvaída. Sin degradados.
+     */
+    override fun DrawScope.rotuloDia(texto: String, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 60 * u || h < 10 * u) return
+        val tam = 13f
+        val ancho = minOf(anchoTextoAnt(medidor, texto, Letra.messiri, tam, FontWeight.Bold, 1.2f) + 2 * u, w * 0.6f)
+        val r = Rect(1 * u, 1.5f * u, ancho + 1 * u + (h - 3 * u), h - 1.5f * u)
+        val fondo = papiro(oscuro)
+        val lapis = if (oscuro) LAPIS_NOCHE else LAPIS
+        drawPath(cartucho(r), fondo)
+        drawPath(cartucho(r), lapis, style = Stroke(1.3f * u))
+        drawLine(lapis, Offset(r.right + 2.5f * u, r.top + 1.5f * u), Offset(r.right + 2.5f * u, r.bottom - 1.5f * u), 1.3f * u)
+        textoEn(medidor, texto, Rect(r.left + r.height / 2, r.top, r.left + r.height / 2 + ancho, r.bottom), Letra.messiri,
+            legibleAnt(if (oscuro) LINO else NEGRO, 7f, fondo), tam, peso = FontWeight.Bold, espaciado = 1.2f)
+        val alto = minOf(6 * u, h * 0.3f)
+        bandaColores(r.right + 9 * u, w - 2 * u, h / 2 - alto / 2, alto, oscuro, 0.5f)
+    }
 }
 
 /**
@@ -3109,6 +3748,132 @@ object ComunMeso : DisenoComun {
         for (j in 0 until 3) drawCircle(rojo, 0.9f * u, Offset(r.right - (8.5f + j * 3) * u, r.bottom - 7.6f * u))
         if (e.destacado) drawRoundRect(rojo, r.deflate(1 * u).topLeft, r.deflate(1 * u).size, CornerRadius(4 * u), style = Stroke(1.2f * u))
     }
+
+    // ---------------------------------------------------------------- Gastos
+
+    override val altoBalanza: Dp = 58.dp
+
+    /**
+     * Balanza: un friso de estuco a todo el ancho, partido al medio por la greca escalonada (el xicalcoliuhqui) pintada de
+     * cinabrio. El tablero elegido lleva el marco de cinabrio grueso con el escalón en cada esquina, el estuco recién bruñido y,
+     * en su orilla, una cuenta de jade que brilla; el otro queda en estuco opaco, con un filete fino y la cuenta apagada, y el
+     * texto delgado. Sin degradados.
+     */
+    override fun DrawScope.balanza(e: EstadoBalanza, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 60 * u || h < 30 * u) return
+        val friso = Rect(1 * u, 1 * u, w - 1 * u, h - 1 * u)
+        drawRect(if (oscuro) mezcla(CALIZA_OSC, Color(0xFF100C08), 0.78f) else mezcla(ESTUCO, CALIZA_OSC, 0.5f), friso.topLeft, friso.size)
+        drawRect(t(NEGRO, oscuro).copy(alpha = 0.6f), friso.topLeft, friso.size, style = Stroke(1 * u))
+        val xm = w / 2
+        val rojo = cinabrio(oscuro)
+        for (lado in 0..1) {
+            val elegido = (lado == 1) == e.ingreso
+            val r = if (lado == 0) Rect(friso.left + 4 * u, friso.top + 4 * u, xm - 10 * u, friso.bottom - 4 * u)
+            else Rect(xm + 10 * u, friso.top + 4 * u, friso.right - 4 * u, friso.bottom - 4 * u)
+            val fondo = when {
+                elegido -> estucoRecuadro(oscuro)
+                oscuro -> mezcla(ESTUCO, Color(0xFF100C08), 0.9f)
+                else -> mezcla(ESTUCO, CALIZA_OSC, 0.3f)
+            }
+            drawRect(fondo, r.topLeft, r.size)
+            if (elegido) {
+                drawRect(rojo, r.topLeft + Offset(1.4f * u, 1.4f * u), Size(r.width - 2.8f * u, r.height - 2.8f * u), style = Stroke(2.8f * u))
+                val k = 7 * u
+                drawPath(escalon(Offset(r.left, r.top), k, 1f, 1f), rojo); drawPath(escalon(Offset(r.right, r.top), k, -1f, 1f), rojo)
+                drawPath(escalon(Offset(r.left, r.bottom), k, 1f, -1f), rojo); drawPath(escalon(Offset(r.right, r.bottom), k, -1f, -1f), rojo)
+            } else drawRect(t(NEGRO, oscuro).copy(alpha = if (oscuro) 0.5f else 0.3f), r.topLeft, r.size, style = Stroke(0.9f * u))
+            val xc = if (lado == 0) r.left + 15 * u else r.right - 15 * u
+            cuenta(Offset(xc, r.center.y), if (elegido) 4.2f * u else 3.2f * u, oscuro, elegido)
+            val texto = if (lado == 0) e.textoGasto else e.textoIngreso
+            val base = if (lado == 0) e.colorGasto else e.colorIngreso
+            val caja = Rect(r.left + 26 * u, r.top + 5 * u, r.right - 26 * u, r.bottom - 5 * u)
+            if (elegido) textoEn(medidor, texto, caja, LetraExtra.codice, legibleAnt(base, 5f, fondo), 19f, peso = FontWeight.Bold, espaciado = 0.6f)
+            else textoEn(medidor, texto, caja, LetraExtra.codice, legibleAnt(mezcla(base, fondo, 0.2f), 4.7f, fondo), 17f, espaciado = 0.6f)
+        }
+        // La greca escalonada del medio: una escalera que sube y baja, de arriba abajo.
+        val alto = friso.height - 6 * u
+        val paso = maxOf(alto / 6f, 1f)
+        val greca = Path().apply {
+            moveTo(xm - 6 * u, friso.top + 3 * u)
+            var y = friso.top + 3 * u
+            var j = 0
+            while (y < friso.bottom - 3 * u - 0.5f && j < 12) {
+                val x = if (j % 2 == 0) xm + 6 * u else xm - 6 * u
+                lineTo(x, y); y = minOf(y + paso, friso.bottom - 3 * u); lineTo(x, y); j++
+            }
+        }
+        drawPath(greca, rojo, style = Stroke(2.4f * u))
+    }
+
+    override val altoMes: Dp = 52.dp
+
+    /**
+     * Encabezado del mes: un tablero de estuco bruñido a todo el ancho, con su marco de cinabrio y el escalón de la greca en cada
+     * esquina; el mes al centro, entre dos cuentas de jade, y en los extremos las flechas escalonadas de las filas, grandes.
+     * Sin degradados.
+     */
+    override fun DrawScope.encabezadoMes(e: EstadoMes, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 140 * u || h < 24 * u) return
+        val r = Rect(1 * u, 2 * u, w - 1 * u, h - 2 * u)
+        val fondo = estucoRecuadro(oscuro)
+        drawRect(fondo, r.topLeft, r.size)
+        val rojo = cinabrio(oscuro)
+        drawRect(rojo, r.topLeft + Offset(1.2f * u, 1.2f * u), Size(r.width - 2.4f * u, r.height - 2.4f * u), style = Stroke(2.4f * u))
+        val k = 8 * u
+        drawPath(escalon(Offset(r.left, r.top), k, 1f, 1f), rojo); drawPath(escalon(Offset(r.right, r.top), k, -1f, 1f), rojo)
+        drawPath(escalon(Offset(r.left, r.bottom), k, 1f, -1f), rojo); drawPath(escalon(Offset(r.right, r.bottom), k, -1f, -1f), rojo)
+        val texto = Rect(58 * u, r.top + 3 * u, w - 58 * u, r.bottom - 3 * u)
+        cuenta(Offset(texto.left - 2 * u, r.center.y), 3.4f * u, oscuro, true)
+        cuenta(Offset(texto.right + 2 * u, r.center.y), 3.4f * u, oscuro, true)
+        textoEn(medidor, e.titulo, Rect(texto.left + 8 * u, texto.top, texto.right - 8 * u, texto.bottom), LetraExtra.codice,
+            legibleAnt(if (oscuro) ESTUCO else NEGRO, 7f, fondo), 24f, peso = FontWeight.Bold, espaciado = 0.8f)
+        flechasMesAnt(48 * u) { flechaFila(oscuro) }
+    }
+
+    /**
+     * Asiento: una raya de cinabrio muy fina abajo y, al principio, la marca del tipo: un punto de cinabrio (el punto de los
+     * numerales) si es un gasto, una cuenta de jade incrustada si es un ingreso. Sin degradados.
+     */
+    override fun DrawScope.asiento(e: EstadoAsiento, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 30 * u || h < 10 * u) return
+        val y = h - 1.4f * u
+        drawLine(cinabrio(oscuro).copy(alpha = if (oscuro) 0.28f else 0.3f), Offset(12 * u, y), Offset(w - 2 * u, y), 0.8f * u)
+        if (e.ingreso) cuenta(Offset(5 * u, y - 1 * u), 2.4f * u, oscuro, false)
+        else drawCircle(cinabrio(oscuro).copy(alpha = 0.9f), 2.4f * u, Offset(5 * u, y - 1 * u))
+    }
+
+    override val altoRotuloDia: Dp = 22.dp
+
+    /**
+     * Rótulo del día: la fecha en un bloque de glifo (el cartucho de esquinas redondas de las inscripciones), de estuco con su
+     * borde de cinabrio, y de ahí hacia la derecha una hilera de puntos de cinabrio, como los de los numerales, con una cuenta
+     * de jade al final. Sin degradados.
+     */
+    override fun DrawScope.rotuloDia(texto: String, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 60 * u || h < 10 * u) return
+        val tam = 14f
+        val ancho = minOf(anchoTextoAnt(medidor, texto, LetraExtra.codice, tam, FontWeight.Bold, 1.2f) + 2 * u, w * 0.6f)
+        val r = Rect(1 * u, 1 * u, ancho + 15 * u, h - 1 * u)
+        val fondo = estucoRecuadro(oscuro)
+        val rojo = cinabrio(oscuro)
+        drawRoundRect(fondo, r.topLeft, r.size, CornerRadius(5 * u))
+        drawRoundRect(rojo, r.topLeft, r.size, CornerRadius(5 * u), style = Stroke(1.6f * u))
+        textoEn(medidor, texto, Rect(r.left + 7 * u, r.top, r.left + 7 * u + ancho, r.bottom), LetraExtra.codice,
+            legibleAnt(if (oscuro) ESTUCO else JADE_HONDO, 6f, fondo), tam, peso = FontWeight.Bold, espaciado = 1.2f)
+        val x0 = r.right + 10 * u; val x1 = w - 14 * u
+        val paso = maxOf(8 * u, 1f)
+        val n = ((x1 - x0) / paso).toInt().coerceIn(0, 80)
+        for (j in 0..n) drawCircle(rojo.copy(alpha = 0.55f), 1.2f * u, Offset(x0 + j * paso, h / 2))
+        cuenta(Offset(w - 6 * u, h / 2), 3 * u, oscuro, true)
+    }
 }
 
 /**
@@ -3644,6 +4409,145 @@ object ComunArcano : DisenoComun {
         drawLine(borde, Offset(2.5f * u, boca + 1 * u), Offset(2.5f * u, h - 2.4f * u), 0.5f * u)
         drawLine(borde, Offset(w - 2.5f * u, boca + 1 * u), Offset(w - 2.5f * u, h - 2.4f * u), 0.5f * u)
         if (e.destacado) drawPath(bolsillo, VERDE_RARO.copy(alpha = 0.7f), style = Stroke(1.4f * u))
+    }
+
+    // ---------------------------------------------------------------- Gastos
+
+    /** El verde de la cuenta saldada: el de los ingresos. */
+    private val VERDE_LIBRO = Color(0xFF2D5446)
+
+    override val altoBalanza: Dp = 60.dp
+
+    /**
+     * Balanza: dos fichas del catálogo, una junto a otra, con su doble margen rojo y su raya azul. La elegida queda delante,
+     * entera y clara, un poco más grande, clavada con una tachuela de latón en su esquina de afuera y con su sombra; alrededor,
+     * apenas, el resplandor verdoso que no debería estar ahí (unos cercos cada vez más tenues). La otra queda atrás, más chica y
+     * amarillenta, con el texto a máquina sin remarcar. Sin degradados.
+     */
+    override fun DrawScope.balanza(e: EstadoBalanza, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 60 * u || h < 30 * u) return
+        val xm = w / 2
+        val atras = if (e.ingreso) 0 else 1
+        val tinta = tinta(oscuro)
+        // Primero la de atrás, luego la de delante, que la tapa un poco en el medio.
+        for (lado in listOf(atras, 1 - atras)) {
+            val elegida = lado != atras
+            val r = when {
+                lado == 0 && elegida -> Rect(1.5f * u, 1.5f * u, xm + 6 * u, h - 3 * u)
+                lado == 0 -> Rect(4 * u, 6 * u, xm + 2 * u, h - 5 * u)
+                elegida -> Rect(xm - 6 * u, 1.5f * u, w - 1.5f * u, h - 3 * u)
+                else -> Rect(xm - 2 * u, 6 * u, w - 4 * u, h - 5 * u)
+            }
+            val fondo = if (elegida) hoja(FICHA, oscuro) else if (oscuro) mezcla(PAPEL_VIEJO, Color(0xFF0A0806), 0.88f) else PAPEL_VIEJO
+            if (elegida) {
+                clipRect {
+                    for (j in 1..4) {
+                        val halo = r.inflate(j * 1.6f * u)
+                        drawRoundRect(VERDE_RARO.copy(alpha = (if (oscuro) 0.11f else 0.16f) * (5 - j) / 4f), halo.topLeft, halo.size,
+                            CornerRadius(j * 1.6f * u), style = Stroke(1.7f * u))
+                    }
+                }
+                drawRect(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.16f), r.topLeft + Offset(1.5f * u, 2 * u), r.size)
+            }
+            drawRect(fondo, r.topLeft, r.size)
+            drawRect((if (oscuro) PAPEL else TE).copy(alpha = if (oscuro) 0.25f else 0.4f), r.topLeft, r.size, style = Stroke(0.8f * u))
+            // El doble margen rojo, del lado de afuera, y la raya azul de escribir abajo.
+            val rojo = margenRojo(oscuro).copy(alpha = if (elegida) 0.85f else 0.4f)
+            val xr = if (lado == 0) r.left + 11 * u else r.right - 11 * u
+            drawLine(rojo, Offset(xr, r.top), Offset(xr, r.bottom), 0.8f * u)
+            drawLine(rojo, Offset(xr + (if (lado == 0) 2.2f else -2.2f) * u, r.top), Offset(xr + (if (lado == 0) 2.2f else -2.2f) * u, r.bottom), 0.8f * u)
+            drawLine(RAYADO.copy(alpha = if (elegida) 0.8f else 0.4f), Offset(r.left, r.bottom - 7 * u), Offset(r.right, r.bottom - 7 * u), 0.8f * u)
+            if (elegida) {
+                val c = Offset(if (lado == 0) r.left + 5.5f * u else r.right - 5.5f * u, r.top + 6 * u)
+                drawCircle(Color.Black.copy(alpha = 0.3f), 3 * u, c + Offset(0.6f * u, 0.8f * u))
+                drawCircle(LATON, 2.8f * u, c)
+                drawCircle(LATON_OSC, 2.8f * u, c, style = Stroke(0.6f * u))
+                drawCircle(Color.White.copy(alpha = 0.55f), 0.9f * u, c - Offset(0.9f * u, 0.9f * u))
+            }
+            val texto = if (lado == 0) e.textoGasto else e.textoIngreso
+            val base = if (lado == 0) e.colorGasto else e.colorIngreso
+            val caja = if (lado == 0) Rect(r.left + 18 * u, r.top + 3 * u, r.right - 10 * u, r.bottom - 9 * u)
+            else Rect(r.left + 10 * u, r.top + 3 * u, r.right - 18 * u, r.bottom - 9 * u)
+            if (elegida) textoEn(medidor, texto, caja, LetraExtra.maquina, legibleAnt(base, 5f, fondo), 18f, peso = FontWeight.Bold)
+            else textoEn(medidor, texto, caja, LetraExtra.maquina, legibleAnt(mezcla(base, fondo, 0.2f), 4.7f, fondo), 15f)
+            if (!elegida) drawLine(tinta.copy(alpha = 0.08f), Offset(r.left, r.top), Offset(r.right, r.top), 1 * u)
+        }
+    }
+
+    override val altoMes: Dp = 52.dp
+
+    /**
+     * Encabezado del mes: la cabecera de una página del libro mayor: una tira de papel con el filete doble de imprenta arriba,
+     * el sencillo abajo, y el mes al centro entre dos asterismos; en los extremos, las manículas de las filas, grandes, que
+     * señalan hacia atrás y hacia adelante. Sin degradados.
+     */
+    override fun DrawScope.encabezadoMes(e: EstadoMes, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 140 * u || h < 24 * u) return
+        val r = Rect(1 * u, 1 * u, w - 1 * u, h - 1 * u)
+        val fondo = hoja(PAPEL, oscuro)
+        drawRect(fondo, r.topLeft, r.size)
+        val tinta = tinta(oscuro)
+        drawLine(tinta.copy(alpha = 0.85f), Offset(r.left + 4 * u, r.top + 3 * u), Offset(r.right - 4 * u, r.top + 3 * u), 1.6f * u)
+        drawLine(tinta.copy(alpha = 0.85f), Offset(r.left + 4 * u, r.top + 6 * u), Offset(r.right - 4 * u, r.top + 6 * u), 0.6f * u)
+        drawLine(tinta.copy(alpha = 0.6f), Offset(r.left + 4 * u, r.bottom - 3.5f * u), Offset(r.right - 4 * u, r.bottom - 3.5f * u), 0.7f * u)
+        // Las pecas del tiempo.
+        for (j in 0 until 14) drawCircle(TE.copy(alpha = if (oscuro) 0.14f else 0.22f), (0.5f + 0.8f * azar(71, j)) * u,
+            Offset(r.left + r.width * azar(72, j), r.top + 8 * u + (r.height - 14 * u) * azar(73, j)))
+        val texto = Rect(62 * u, r.top + 7 * u, w - 62 * u, r.bottom - 4 * u)
+        val ast = (if (oscuro) mezcla(MARGEN_ROJO, PAPEL, 0.3f) else MARGEN_ROJO)
+        asterisco(Offset(texto.left, texto.center.y), 3 * u, ast, 0.9f * u)
+        asterisco(Offset(texto.right, texto.center.y), 3 * u, ast, 0.9f * u)
+        textoEn(medidor, e.titulo, Rect(texto.left + 8 * u, texto.top, texto.right - 8 * u, texto.bottom), Letra.castoro,
+            legibleAnt(tinta, 7f, fondo), 23f, espaciado = 0.4f)
+        inset(0f, 3 * u, 0f, 0f) { flechasMesAnt(48 * u) { flechaFila(oscuro) } }
+    }
+
+    /**
+     * Asiento: el renglón de un fichero: la raya azul de escribir abajo, tenue, y al principio dos rayitas del color del tipo,
+     * como el doble margen: rojas si es un gasto, del verde de la cuenta saldada si es un ingreso. Sin degradados.
+     */
+    override fun DrawScope.asiento(e: EstadoAsiento, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 30 * u || h < 10 * u) return
+        val y = h - 1.4f * u
+        drawLine(RAYADO.copy(alpha = if (oscuro) 0.3f else 0.5f), Offset(10 * u, y), Offset(w - 2 * u, y), 0.8f * u)
+        val c = if (e.ingreso) (if (oscuro) mezcla(VERDE_LIBRO, VERDE_RARO, 0.55f) else VERDE_LIBRO) else margenRojo(oscuro)
+        for (j in 0..1) drawLine(c.copy(alpha = 0.8f), Offset((3 + j * 2.6f) * u, y + 0.5f * u), Offset((3 + j * 2.6f) * u, y - 7 * u), 0.9f * u)
+    }
+
+    override val altoRotuloDia: Dp = 22.dp
+
+    /**
+     * Rótulo del día: la pestaña de una ficha separadora del fichero, con la fecha escrita a máquina, y de ahí hacia la derecha el
+     * canto de la ficha con su raya azul, que acaba en un asterisco rojo. Sin degradados.
+     */
+    override fun DrawScope.rotuloDia(texto: String, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 60 * u || h < 10 * u) return
+        val tam = 13f
+        val ancho = minOf(anchoTextoAnt(medidor, texto, LetraExtra.maquina, tam, FontWeight.Bold, 1f) + 2 * u, w * 0.6f)
+        val fondo = hoja(FICHA, oscuro)
+        val borde = (if (oscuro) PAPEL else TE).copy(alpha = if (oscuro) 0.35f else 0.6f)
+        val pestana = Path().apply {
+            moveTo(1 * u, h - 1 * u); lineTo(1 * u, 4 * u); quadraticTo(1 * u, 1 * u, 4 * u, 1 * u)
+            lineTo(ancho + 14 * u, 1 * u); quadraticTo(ancho + 18 * u, 1 * u, ancho + 19 * u, 4 * u); lineTo(ancho + 21 * u, h - 1 * u); close()
+        }
+        drawPath(pestana, fondo)
+        drawPath(pestana, borde, style = Stroke(0.8f * u))
+        textoEn(medidor, texto, Rect(8 * u, 1 * u, 8 * u + ancho, h - 1 * u), LetraExtra.maquina,
+            legibleAnt(tinta(oscuro), 7f, fondo), tam, peso = FontWeight.Bold, espaciado = 1f)
+        val x0 = ancho + 21 * u; val x1 = w - 12 * u
+        if (x1 > x0) {
+            drawLine(borde, Offset(x0, h - 1 * u), Offset(x1, h - 1 * u), 0.8f * u)
+            drawLine(RAYADO.copy(alpha = if (oscuro) 0.4f else 0.6f), Offset(x0 + 4 * u, h / 2 + 1 * u), Offset(x1, h / 2 + 1 * u), 0.8f * u)
+        }
+        asterisco(Offset(w - 6 * u, h / 2 + 1 * u), 3 * u, if (oscuro) mezcla(MARGEN_ROJO, PAPEL, 0.3f) else MARGEN_ROJO, 0.9f * u)
     }
 }
 
@@ -4211,5 +5115,146 @@ object ComunAntiguas : DisenoComun {
         drawPath(rombo(gema, 4.2f * u, 2.6f * u), laton)
         drawPath(rombo(gema, 2.4f * u, 1.5f * u), if (e.destacado) rojoMapa(oscuro) else t(LATON_OSC, oscuro))
         if (e.destacado) drawRect(laton, c.deflate(1.2f * u).topLeft, c.deflate(1.2f * u).size, style = Stroke(0.9f * u))
+    }
+
+    // ---------------------------------------------------------------- Gastos
+
+    /** El verde de los bosques del mapa: la marca de los ingresos. */
+    private val VERDE_BOSQUE = Color(0xFF2E5A3E)
+
+    /** Una cantonera de latón en la esquina [c] de un recuadro, de [l] de lado, con su remache; [sx] y [sy] dicen hacia dónde abre. */
+    private fun DrawScope.cantoneraGastos(c: Offset, l: Float, sx: Float, sy: Float, oscuro: Boolean) {
+        val p = Path().apply { moveTo(c.x, c.y); lineTo(c.x + sx * l, c.y); lineTo(c.x, c.y + sy * l); close() }
+        drawPath(p, if (oscuro) mezcla(LATON, Color(0xFF0D0906), 0.25f) else LATON)
+        drawPath(p, LATON_OSC, style = Stroke(0.6f * density))
+        drawCircle(LATON_OSC, l * 0.13f, Offset(c.x + sx * l * 0.28f, c.y + sy * l * 0.28f))
+    }
+
+    override val altoBalanza: Dp = 60.dp
+
+    /**
+     * Balanza: una tabla de madera tallada a todo el ancho que sujeta una tira de pergamino, partida al medio por una muesca; sobre
+     * la mitad elegida corre un marco de latón, como la corredera de un ábaco o de un astrolabio, con su canto claro y un remache
+     * en cada esquina, y el pergamino de debajo se aclara a la luz de la vela; la otra mitad queda en pergamino viejo, tostado, sin
+     * marco, con el texto delgado. Un degradado: la luz de la vela.
+     */
+    override fun DrawScope.balanza(e: EstadoBalanza, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 60 * u || h < 30 * u) return
+        val tabla = Rect(1 * u, 1 * u, w - 1 * u, h - 1 * u)
+        drawRoundRect(t(MADERA, oscuro), tabla.topLeft, tabla.size, CornerRadius(3 * u))
+        vetas(tabla, (if (oscuro) Color.Black else NUDO).copy(alpha = 0.32f), 61, grosor = 0.9f)
+        drawRoundRect(NUDO.copy(alpha = 0.7f), tabla.topLeft, tabla.size, CornerRadius(3 * u), style = Stroke(1 * u))
+        val xm = w / 2
+        for (lado in 0..1) {
+            val elegida = (lado == 1) == e.ingreso
+            val r = if (lado == 0) Rect(tabla.left + 6 * u, tabla.top + 6 * u, xm - 3 * u, tabla.bottom - 6 * u)
+            else Rect(xm + 3 * u, tabla.top + 6 * u, tabla.right - 6 * u, tabla.bottom - 6 * u)
+            val fondo = when {
+                elegida -> pergamino(oscuro)
+                oscuro -> mezcla(PERGAMINO_OSC, Color(0xFF0D0906), 0.86f)
+                else -> mezcla(PERGAMINO, PERGAMINO_OSC, 0.55f)
+            }
+            val hoja = contornoIrregular(r, 62 + lado, ((r.width + r.height) * 2 / (10 * u)).toInt().coerceIn(12, 90), 0.9f * u / r.height)
+            drawPath(hoja, fondo)
+            var luz = fondo
+            if (elegida) {
+                luz = mezcla(fondo, LLAMA, if (oscuro) 0.14f else 0.2f)
+                drawPath(hoja, Brush.radialGradient(listOf(LLAMA.copy(alpha = if (oscuro) 0.14f else 0.2f), Color.Transparent), r.center, r.width * 0.5f))
+                val marco = r.inflate(2.5f * u)
+                drawRect(if (oscuro) mezcla(LATON, Color(0xFF0D0906), 0.3f) else LATON, marco.topLeft, marco.size, style = Stroke(3 * u))
+                drawRect(if (oscuro) LATON else LATON_LUZ, marco.topLeft + Offset(-1 * u, -1 * u), Size(marco.width + 2 * u, marco.height + 2 * u), style = Stroke(0.7f * u))
+                drawRect(LATON_OSC, marco.topLeft + Offset(1.6f * u, 1.6f * u), Size(marco.width - 3.2f * u, marco.height - 3.2f * u), style = Stroke(0.6f * u))
+                for (c in listOf(marco.topLeft, marco.topRight, marco.bottomLeft, marco.bottomRight)) {
+                    drawCircle(LATON_OSC, 1.7f * u, c); drawCircle(LATON_LUZ, 0.8f * u, c - Offset(0.4f * u, 0.4f * u))
+                }
+            } else drawPath(hoja, TINTA.copy(alpha = if (oscuro) 0.3f else 0.22f), style = Stroke(0.8f * u))
+            val texto = if (lado == 0) e.textoGasto else e.textoIngreso
+            val base = if (lado == 0) e.colorGasto else e.colorIngreso
+            val caja = Rect(r.left + 10 * u, r.top + 3 * u, r.right - 10 * u, r.bottom - 3 * u)
+            if (elegida) textoEn(medidor, texto, caja, LetraExtra.camino, legibleAnt(base, 5f, fondo, luz), 20f, espaciado = 0.6f)
+            else textoEn(medidor, texto, caja, LetraExtra.camino, legibleAnt(mezcla(base, fondo, 0.22f), 4.7f, fondo), 17f, espaciado = 0.6f)
+        }
+        // La muesca tallada del medio.
+        drawLine(NUDO.copy(alpha = 0.8f), Offset(xm, tabla.top + 3 * u), Offset(xm, tabla.bottom - 3 * u), 2 * u)
+        drawLine((if (oscuro) MADERA else LATON_LUZ).copy(alpha = 0.35f), Offset(xm + 1.4f * u, tabla.top + 3 * u), Offset(xm + 1.4f * u, tabla.bottom - 3 * u), 0.7f * u)
+    }
+
+    override val altoMes: Dp = 52.dp
+
+    /**
+     * Encabezado del mes: una banderola de pergamino, como las de los mapas antiguos: la cinta del medio con el mes y, detrás, sus
+     * dos colas plegadas, más oscuras, cortadas en cola de golondrina; en los extremos, las agujas de brújula de las filas,
+     * grandes, una hacia cada lado. Sin degradados.
+     */
+    override fun DrawScope.encabezadoMes(e: EstadoMes, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 140 * u || h < 24 * u) return
+        val r = Rect(58 * u, 2 * u, w - 58 * u, h - 8 * u)
+        val cola = if (oscuro) mezcla(PERGAMINO_OSC, Color(0xFF0D0906), 0.7f) else PERGAMINO_OSC
+        val tinta = TINTA.copy(alpha = if (oscuro) 0.8f else 0.6f)
+        for (lado in listOf(-1f, 1f)) {
+            val xi = if (lado < 0) r.left + 8 * u else r.right - 8 * u
+            val xf = if (lado < 0) 46 * u else w - 46 * u
+            val p = Path().apply {
+                moveTo(xi, r.top + 6 * u); lineTo(xf, r.top + 6 * u); lineTo(xf - lado * 7 * u, (r.top + 6 * u + h - 1 * u) / 2)
+                lineTo(xf, h - 1 * u); lineTo(xi, h - 1 * u); close()
+            }
+            drawPath(p, cola); drawPath(p, tinta, style = Stroke(0.8f * u))
+            // El pliegue: el triangulito de sombra donde la cola pasa por detrás.
+            val xp = if (lado < 0) r.left else r.right
+            val pliegue = Path().apply { moveTo(xp, r.bottom); lineTo(xp - lado * 8 * u, h - 1 * u); lineTo(xp - lado * 8 * u, r.bottom); close() }
+            drawPath(pliegue, NUDO.copy(alpha = if (oscuro) 0.9f else 0.55f))
+        }
+        val fondo = pergamino(oscuro)
+        drawRect(fondo, r.topLeft, r.size)
+        drawRect(tinta, r.topLeft, r.size, style = Stroke(0.9f * u))
+        drawLine(rojoMapa(oscuro).copy(alpha = 0.6f), Offset(r.left + 4 * u, r.top + 3 * u), Offset(r.right - 4 * u, r.top + 3 * u), 0.7f * u)
+        drawLine(rojoMapa(oscuro).copy(alpha = 0.6f), Offset(r.left + 4 * u, r.bottom - 3 * u), Offset(r.right - 4 * u, r.bottom - 3 * u), 0.7f * u)
+        textoEn(medidor, e.titulo, Rect(r.left + 10 * u, r.top + 3 * u, r.right - 10 * u, r.bottom - 3 * u), LetraExtra.camino,
+            legibleAnt(if (oscuro) PERGAMINO else TINTA, 7f, fondo), 22f, espaciado = 0.8f)
+        inset(0f, 0f, 0f, 6 * u) { flechasMesAnt(46 * u) { flechaFila(oscuro) } }
+    }
+
+    /**
+     * Asiento: una raya tenue de pauta abajo y, al principio, un rombo pequeño del color del tipo, como las marcas de un mapa:
+     * rojo de mapa si es un gasto, verde de bosque si es un ingreso. Sin degradados.
+     */
+    override fun DrawScope.asiento(e: EstadoAsiento, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 30 * u || h < 10 * u) return
+        val y = h - 1.6f * u
+        drawLine((if (oscuro) PERGAMINO else TINTA).copy(alpha = if (oscuro) 0.16f else 0.2f), Offset(11 * u, y), Offset(w - 2 * u, y), 0.8f * u)
+        val c = if (e.ingreso) (if (oscuro) mezcla(VERDE_BOSQUE, Color.White, 0.42f) else VERDE_BOSQUE) else rojoMapa(oscuro)
+        drawPath(rombo(Offset(4.5f * u, y), 3 * u, 3.6f * u), c.copy(alpha = 0.85f))
+    }
+
+    override val altoRotuloDia: Dp = 22.dp
+
+    /**
+     * Rótulo del día: una etiqueta de pergamino con una cantonera de latón en cada esquina, como las de los tomos, y la fecha a
+     * pluma; de ahí hacia la derecha, la raya de pauta, que acaba en un rombo rojo de mapa. Sin degradados.
+     */
+    override fun DrawScope.rotuloDia(texto: String, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 60 * u || h < 10 * u) return
+        val tam = 14f
+        val ancho = minOf(anchoTextoAnt(medidor, texto, LetraExtra.camino, tam, FontWeight.Normal, 1.2f) + 2 * u, w * 0.6f)
+        val r = Rect(1 * u, 1 * u, ancho + 17 * u, h - 1 * u)
+        val fondo = pergamino(oscuro)
+        drawRect(fondo, r.topLeft, r.size)
+        drawRect(TINTA.copy(alpha = if (oscuro) 0.8f else 0.45f), r.topLeft, r.size, style = Stroke(0.8f * u))
+        val l = minOf(6 * u, r.height * 0.32f)
+        cantoneraGastos(r.topLeft, l, 1f, 1f, oscuro); cantoneraGastos(r.topRight, l, -1f, 1f, oscuro)
+        cantoneraGastos(r.bottomLeft, l, 1f, -1f, oscuro); cantoneraGastos(r.bottomRight, l, -1f, -1f, oscuro)
+        textoEn(medidor, texto, Rect(r.left + 8 * u, r.top, r.left + 8 * u + ancho, r.bottom), LetraExtra.camino,
+            legibleAnt(if (oscuro) LATON_LUZ else LATON_VIEJO, 6f, fondo), tam, espaciado = 1.2f)
+        val x0 = r.right + 8 * u; val x1 = w - 14 * u
+        if (x1 > x0) drawLine((if (oscuro) PERGAMINO else TINTA).copy(alpha = if (oscuro) 0.25f else 0.3f), Offset(x0, h / 2), Offset(x1, h / 2), 0.9f * u)
+        drawPath(rombo(Offset(w - 7 * u, h / 2), 3.5f * u, 4.5f * u), rojoMapa(oscuro))
     }
 }

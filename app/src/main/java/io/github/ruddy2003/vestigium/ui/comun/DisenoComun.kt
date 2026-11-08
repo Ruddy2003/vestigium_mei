@@ -2,6 +2,7 @@ package io.github.ruddy2003.vestigium.ui.comun
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.unit.Dp
 import io.github.ruddy2003.vestigium.ui.TemaId
 
@@ -113,7 +114,47 @@ interface DisenoComun {
      * aparta de tu normal, la noche ya sellada. [EstadoTarjeta.presionado] al tocarla.
      */
     fun DrawScope.tarjeta(e: EstadoTarjeta, oscuro: Boolean)
+
+    // ---------------------------------------------------------------- Gastos
+
+    /** Alto de la balanza de Gastos (a todo el ancho). */
+    val altoBalanza: Dp
+
+    /**
+     * La elección entre gasto e ingreso, como un solo objeto del tema a todo el ancho (la balanza de dos platillos, la
+     * moneda de dos caras, las dos pestañas del libro de cuentas…): la mitad izquierda es el gasto y la derecha el ingreso
+     * (ahí se toca), cada una con su texto dibujado con [textoEn] y su color ([EstadoBalanza.colorGasto],
+     * [EstadoBalanza.colorIngreso]); la elegida ([EstadoBalanza.ingreso]) se nota.
+     */
+    fun DrawScope.balanza(e: EstadoBalanza, medidor: TextMeasurer, oscuro: Boolean)
+
+    /** Alto del encabezado del mes en Gastos (a todo el ancho). */
+    val altoMes: Dp
+
+    /**
+     * El encabezado del mes del libro de cuentas: el nombre del mes ([EstadoMes.titulo]) al centro, dibujado con [textoEn], y
+     * las flechas para ir al mes anterior y al siguiente en los extremos (48 dp cada una: ahí se toca).
+     */
+    fun DrawScope.encabezadoMes(e: EstadoMes, medidor: TextMeasurer, oscuro: Boolean)
+
+    /** Lo que va detrás de cada movimiento de la lista (un gasto o un ingreso), del tamaño de la fila; discreto. */
+    fun DrawScope.asiento(e: EstadoAsiento, oscuro: Boolean)
+
+    /** Alto del rótulo de un día en la lista de movimientos. */
+    val altoRotuloDia: Dp
+
+    /** El rótulo de un día en la lista de movimientos («LUN 3 NOV»), a todo el ancho, con [textoEn]. */
+    fun DrawScope.rotuloDia(texto: String, medidor: TextMeasurer, oscuro: Boolean)
 }
+
+/** La balanza: si está elegido el ingreso, los textos de cada lado y sus colores. */
+class EstadoBalanza(val ingreso: Boolean, val textoGasto: String, val textoIngreso: String, val colorGasto: Color, val colorIngreso: Color)
+
+/** El encabezado del mes: su nombre. */
+class EstadoMes(val titulo: String)
+
+/** Un movimiento de la lista: si es un ingreso y una semilla. */
+class EstadoAsiento(val ingreso: Boolean, val semilla: Int)
 
 /** Qué tarjeta es: una cifra del tablero de Hoy, «Te falta hoy», la noche de Día o una tarjeta de Vida. */
 enum class TipoTarjeta { METRICA, PENDIENTE, NOCHE, VIDA }

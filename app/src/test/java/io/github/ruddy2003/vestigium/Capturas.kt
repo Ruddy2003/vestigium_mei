@@ -917,6 +917,26 @@ class Capturas {
     @Test fun tarjetasB4b() = (ESTANTE_A1B + TemaId.EDO).forEach { tarjetasB4Tema(it) }
     @Test fun tarjetasB4c() = ESTANTE_A1C.forEach { tarjetasB4Tema(it) }
     @Test fun tarjetasB4d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { tarjetasB4Tema(it) }
+    /** Gastos e ingresos inventados de este mes, para las capturas de Gastos. */
+    private fun gastosEjemplo() {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        fun d(k: Long) = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -k).let { if (it.take(7) == hoy.take(7)) it else hoy }
+        Repo.gastosEnMemoria(listOf(
+            io.github.ruddy2003.vestigium.data.Gasto("g1", d(0), "13:20", 85.0, Repo.config.categorias.first(), nota = "comida"),
+            io.github.ruddy2003.vestigium.data.Gasto("g2", d(0), "09:05", 32.5, Repo.config.categorias.last(), imprevisto = true),
+            io.github.ruddy2003.vestigium.data.Gasto("g3", d(1), "19:40", 240.0, Repo.config.categorias.first(), se_repite = true),
+        ), listOf(io.github.ruddy2003.vestigium.data.Ingreso("i1", d(2), "10:00", 1500.0, Repo.config.categorias_ingreso.first(), "", true)))
+    }
+    /** Gastos (lote B5): la pantalla entera con la balanza, el mes, los movimientos y sus rótulos. En claro y en oscuro. */
+    private fun gastosB5(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        pantalla(t, oscuro, 4600, "tema_${t.id}_${modo}_gastos") { gastosEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaGastos(navVacia) }
+    }
+    private fun gastosB5Tema(t: TemaId) { gastosB5(t, t.soloOscuro); if (!t.soloOscuro) gastosB5(t, true) }
+    @Test fun gastosB5a() = ESTANTE_A1A.forEach { gastosB5Tema(it) }
+    @Test fun gastosB5b() = (ESTANTE_A1B + TemaId.EDO).forEach { gastosB5Tema(it) }
+    @Test fun gastosB5c() = ESTANTE_A1C.forEach { gastosB5Tema(it) }
+    @Test fun gastosB5d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { gastosB5Tema(it) }
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

@@ -22,13 +22,16 @@ Paquete nuevo `ui/comun/`: interfaz `DisenoComun`, un `object Comun<Tema>` por t
 
 ## Fase C — Logros y viaje
 
+Paquete nuevo `ui/logros/`: interfaz `DisenoLogros`, un `object Logros<Tema>` por tema en cuatro archivos por época y `disenoLogros(t)`.
+
+Revisión del código al empezar la fase: las figuras de los trofeos ya son propias y ricas (una función de 75–150 líneas por tema en `TrofeosTema.kt` / `TrofeosMas.kt`); las medallas del hall (`PiezaLogro`) y la medalla vieja (`MedallaLogro`) ya no se ven en ninguna pantalla de la app (el hall muestra los trofeos), así que no se rehacen. Lo que sí falta:
+
 | Lote | Qué |
 |---|---|
-| C1 | Medallas del hall con glifos propios por tema, oscuro y letra del tema (`Hall.kt`) |
-| C2 | Trofeos más ricos (CIBER y NEON sin ASCII) y pedestales con forma |
-| C3 | Salones con escenas más llenas y trazos en dp |
-| C4 | Marcadores de campaña propios (los 25 temas con alfiler) y la victoria en oscuro (`MapasMas.kt`) |
-| C5 | La luna, la huella y la pesa de Tu año por tema (`TuAnioVisual.kt`) |
+| C1 | Pedestales de los trofeos (6–15 líneas por tema) y del hall (1–10 líneas, trazos en px), la placa del hall dibujada, y los trofeos de la Terminal sin ASCII |
+| C2 | Las escenas de los salones del hall, más llenas y en dp (`SalonesTema.escena`, `SalonesMas`) |
+| C3 | Marcadores de campaña propios (25 temas con alfiler) y la victoria con oscuro (`MapasMas.marcador`, `MapasCampana.victoria`) |
+| C4 | La luna, la huella y la pesa de Tu año por tema (`TuAnioVisual.objetoComun`) |
 
 ## Fase D — Pulido
 
