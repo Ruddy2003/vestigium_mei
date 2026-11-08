@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.foundation.Canvas
@@ -20,10 +22,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -147,7 +147,7 @@ internal fun ElegirVariable(vars: List<Variable>, cerrar: () -> Unit, elegir: (S
         title = { Text("Variable · ${vars.size}", style = MaterialTheme.typography.titleLarge) },
         text = {
             Column {
-                androidx.compose.material3.OutlinedTextField(q, { q = it }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("buscar: @ana, sueño, instagram, hierro…") })
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto(q, { q = it }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("buscar: @ana, sueño, instagram, hierro…") })
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Ficha("todas", grupo == null) { grupo = null }
                     grupos.forEach { g -> Ficha(g.lowercase(), grupo == g) { grupo = if (grupo == g) null else g } }
@@ -162,7 +162,7 @@ internal fun ElegirVariable(vars: List<Variable>, cerrar: () -> Unit, elegir: (S
                 }
             }
         },
-        confirmButton = { TextButton(onClick = cerrar) { Text("cerrar", style = MaterialTheme.typography.labelLarge) } },
+        confirmButton = { BotonTexto(onClick = cerrar) { Text("cerrar", style = MaterialTheme.typography.labelLarge) } },
     )
 }
 
@@ -272,7 +272,7 @@ private fun Factores(panel: Map<String, Map<String, Double?>>, vars: List<Variab
     val eg = estiloGrafica()
     Tarjeta(Modifier.padding(top = 8.dp)) {
         l.take(20).forEachIndexed { i, f ->
-            if (i > 0) HorizontalDivider()
+            if (i > 0) Separador()
             Column(Modifier.padding(vertical = 8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(f.v.nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
@@ -438,7 +438,7 @@ private fun Atipicos(panel: Map<String, Map<String, Double?>>, vars: List<Variab
     if (l.isEmpty()) { Vacio("Ningún día del último año se sale claramente de lo normal (o aún hay pocos datos)."); return }
     Tarjeta {
         l.take(40).forEachIndexed { i, a ->
-            if (i > 0) HorizontalDivider()
+            if (i > 0) Separador()
             Column(Modifier.fillMaxWidth().clickable { Seleccion.abrir(nav, a.fecha) }.padding(vertical = 8.dp)) {
                 Text(Fechas.titulo(a.fecha), style = MaterialTheme.typography.bodyMedium)
                 a.razones.take(3).forEach { Text("› $it", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }

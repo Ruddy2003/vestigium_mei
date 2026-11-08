@@ -2,6 +2,14 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,11 +20,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -90,7 +96,7 @@ object Pantallas {
     ) + HERRAMIENTAS.map { (id, n, d) -> P("analisis", n, d, "análisis herramienta $id", antes = { Herramienta.actual = id }) } + listOfNotNull(
         P("gastos", "Gastos", "Gastos e ingresos, por mes y por categoría", "dinero ingresos gasto mes mensual categorías"),
         P("personas", "Tu gente", "Quién es cada @persona para ti", "personas amigos familia relaciones cercanía"),
-        P("temas", "Tus temas", "Tus #temas: unir, renombrar, pasar a hitos", "temas etiquetas hashtag # normalizar duplicados renombrar"),
+        P("temas", "Tus temas", "Tus #temas: unir, renombrar, pasar a fecha señalada", "temas etiquetas hashtag # normalizar duplicados renombrar"),
         P("presencias", "¿Estuviste o pensaste?", "Quién estuvo de verdad y en quién solo pensaste", "personas ver pensar mensajes presencia"),
         P("sustancias", "Sustancias", "Alcohol, cannabis, tabaco, cafeína", "alcohol pedo cannabis weed mota cafeína café tabaco vape cruda"),
         P("biblioteca_momentos", "Libreta de momentos", "Un día por hoja, con todo lo que sentiste", "momentos ánimo emociones"),
@@ -163,7 +169,7 @@ fun EnPantallas(q: String, ir: (String) -> Unit) {
     Seccion("Pantallas y acciones") {
         Tarjeta {
             (if (todos) l else l.take(12)).forEachIndexed { i, p ->
-                if (i > 0) HorizontalDivider()
+                if (i > 0) Separador()
                 Row(Modifier.fillMaxWidth().clickable { Seleccion.limpiarFechas(); p.antes?.invoke(); ir(p.ruta) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text((if (p.accion) "✎ " + p.titulo else Estilo.pantalla(p.titulo, Romano.latin(p.titulo)).first), style = MaterialTheme.typography.bodyLarge)
@@ -172,24 +178,34 @@ fun EnPantallas(q: String, ir: (String) -> Unit) {
                     Text("→", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 }
             }
-            if (!todos && l.size > 12) TextButton(onClick = { todos = true }) { Text("ver los ${l.size - 12} siguientes ▾") }
+            if (!todos && l.size > 12) BotonTexto(onClick = { todos = true }) { Text("ver los ${l.size - 12} siguientes ▾") }
         }
     }
 }
 
-/** Una fila de «Más» con estrella para fijarla arriba. */
+/** Una fila de «Más», con el fondo y la flecha del tema, y la marca del tema para fijarla arriba. */
 @Composable
 fun FilaMas(ruta: String, titulo: String, detalle: String?, ir: (String) -> Unit) {
     val fija = ruta in Repo.config.favoritos_mas
     val cs = MaterialTheme.colorScheme
-    Row(Modifier.fillMaxWidth().clickable { Seleccion.limpiarFechas(); ir(ruta) }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(Estilo.tema)
+    val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+    val toque = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val presionado by toque.collectIsPressedAsState()
+    val e = io.github.ruddy2003.vestigium.ui.comun.EstadoFila(presionado, detalle != null, ruta.hashCode())
+    Row(Modifier.fillMaxWidth().drawBehind { with(d) { fila(e, oscuro) } }
+        .clickable(toque, androidx.compose.foundation.LocalIndication.current) { Seleccion.limpiarFechas(); ir(ruta) }
+        .padding(start = d.margenFila, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f).padding(vertical = 7.dp)) {
             Text(titulo, style = MaterialTheme.typography.bodyLarge)
             if (detalle != null) Text(detalle, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
         }
-        TextButton(onClick = {
-            Repo.cambiarConfig { c -> c.copy(favoritos_mas = if (fija) c.favoritos_mas - ruta else c.favoritos_mas + ruta) }
-        }) { Text(if (fija) "★" else "☆", style = MaterialTheme.typography.titleMedium, color = if (fija) cs.primary else cs.onSurfaceVariant) }
+        androidx.compose.foundation.layout.Box(Modifier.size(48.dp)
+            .semantics { contentDescription = if (fija) "Quitar de los atajos" else "Fijar en los atajos" }
+            .clickable { Repo.cambiarConfig { c -> c.copy(favoritos_mas = if (fija) c.favoritos_mas - ruta else c.favoritos_mas + ruta) } },
+            contentAlignment = Alignment.Center) {
+            androidx.compose.foundation.Canvas(Modifier.size(24.dp)) { with(d) { marcaFija(fija, oscuro) } }
+        }
     }
 }
 

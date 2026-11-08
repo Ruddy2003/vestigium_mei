@@ -225,9 +225,17 @@ Lo típico es no llenar el diario precisamente los días malos. Cuando la probab
 
 ---
 
+## 3.14b Fechas señaladas y episodios (esquema 21)
+
+Los **hitos** pasan a dos cosas. Las **fechas señaladas** son lo que quieres recordar del día: un tipo de un toque (primera vez, viaje, logro, cambio de vida, pérdida, encuentro, celebración u otra) y una frase; `hitos_n` las cuenta, y los hitos de antes se leen como «otra». Los **episodios** son algo fuerte que te pasa y que puede repetirse (crisis de ansiedad o pánico, llanto, pelea, migraña, enfermedad, accidente). Se anotan como momentos, con hora, intensidad de 1 a 5, duración y detonantes, y dan `n_episodio`, `episodio_intensidad_max` y `epi_*`. La familia `hito_*` ya no se calcula. Un día sin episodio anotado no distingue «no pasó» de «no lo anoté» (H-21-3). **[Diseño propio]**.
+
 ## 3.15 Seguimiento privado (solo la mecánica)
 
-Tres registros: **impulso** (0 a 5 en el día; momentos de 1 a 5), **recaída** (sí o no; momentos con hora, duración, detonantes, aparato y qué hacías antes) y **libido** (0 a 5 y foco), con anclas propias. Desde el módulo 10a, junto con los medicamentos, se anotan y se ven solo en la pantalla Privado y no entran en los análisis de la app, pero **sí** en el panel que se exporta a R (`n_recaida`, `recaida_min`, `n_impulso`…), para entender qué días y contextos lo hacen más difícil (capítulo 10). **[Diseño propio]**. Efectos posibles, sin comprobar: menos reactividad y más datos faltantes.
+Cinco registros: **impulso** (0 a 5 en el día; momentos de 1 a 5), **recaída** (sí o no; momentos con hora, duración, detonantes, aparato y qué hacías antes), **libido** (0 a 5 y foco) y, desde el esquema 21, dos más:
+- **masturbación**: hora, duración, estímulo, dónde y aparato. Con pornografía crea una recaída gemela ligada (decisión del autor);
+- **intimidad**: qué pasó, con nombres de manual y un nivel de 0 a 4 (de a distancia a coito); con quién; satisfacción, placer, conexión y comodidad de 1 a 5; las emociones de después y los detalles.
+
+Usan anclas propias. La ficha de la persona en Tu gente dice cuántas veces y cuándo fue la última, solo con el seguimiento privado encendido. Desde el módulo 10a, junto con los medicamentos, se anotan y se ven solo en la pantalla Privado y no entran en los análisis de la app, pero **sí** en el panel que se exporta a R (`n_recaida`, `recaida_min`, `n_impulso`…), para entender qué días y contextos lo hacen más difícil (capítulo 10). **[Diseño propio]**. Efectos posibles, sin comprobar: menos reactividad y más datos faltantes.
 
 ---
 

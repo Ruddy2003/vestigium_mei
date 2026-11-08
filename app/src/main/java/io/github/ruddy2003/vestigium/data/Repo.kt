@@ -826,6 +826,10 @@ object Repo {
 
     /** Solo para las capturas de diseño: obras de ejemplo en memoria. */
     fun obrasEnMemoria(l: List<Obra>) { obras = l }
+    /** Para las capturas de diseño: gastos e ingresos inventados en memoria, sin tocar la base. */
+    fun gastosEnMemoria(g: List<Gasto>, i: List<Ingreso>) { gastos = g; ingresos = i }
+    /** Para las capturas: momentos inventados sin tocar la base. */
+    fun momentosEnMemoria(l: List<Momento>) { momentos = l.sortedBy { it.ts } }
 
     /** Solo para las capturas de diseño: días de ejemplo en memoria. */
     fun diasEnMemoria(d: Map<String, Dia>) { dias = d }

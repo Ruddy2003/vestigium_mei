@@ -2,6 +2,9 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -29,11 +32,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,15 +44,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -86,20 +81,16 @@ import io.github.ruddy2003.vestigium.ui.Etiqueta
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.FilaFichas
 import io.github.ruddy2003.vestigium.ui.Hoja
-import io.github.ruddy2003.vestigium.ui.Letra
 import io.github.ruddy2003.vestigium.ui.ListaEtiquetas
 import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.Tarjeta
-import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.Vacio
-import io.github.ruddy2003.vestigium.ui.materia
 import io.github.ruddy2003.vestigium.ui.rememberSentir
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.abs
 import java.time.LocalDate
 import io.github.ruddy2003.vestigium.ui.elegirFecha
 
@@ -159,300 +150,23 @@ fun PortadaObra(o: Obra, modifier: Modifier = Modifier, lado: Int = 360) {
             if (nuevo != null) Repo.obras.firstOrNull { it.id == o.id }?.let { Repo.guardarObra(it.copy(portada = nuevo)) }
         }
     }
-    val tema = Estilo.tema
-    val m = materia(tema)
-    // La letra de los títulos del tema (la gótica, la de estarcido, la de consola…).
-    val letraTema = MaterialTheme.typography.headlineSmall.fontFamily ?: Letra.garamond
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(Estilo.tema)
+    val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+    val medidor = androidx.compose.ui.text.rememberTextMeasurer(cacheSize = 8)
     Box(modifier.clip(RoundedCornerShape(4.dp))) {
         val b = bmp
         if (b != null) Image(b.asImageBitmap(), o.titulo, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-        else androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(m.brillo, m.cuerpo, m.sombra)))) {
-            // Letra que se lea sobre la tapa: la tinta del tema si contrasta, si no crema o tinta oscura.
-            val ancho = maxWidth
-            val fondo = m.cuerpo.luminance()
-            val letra = if (abs(m.textoCuerpo.luminance() - fondo) > 0.3f) m.textoCuerpo else if (fondo < 0.4f) Color(0xFFF4ECD8) else Color(0xFF231A12)
-            androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) { adornoPortada(tema, m.acento, letra) }
-            if (ancho < 64.dp) {
-                // Miniatura de lista: solo la inicial, grande, dentro del filete.
-                Box(Modifier.fillMaxSize().padding(3.dp).border(1.dp, m.acento.copy(alpha = 0.8f), RoundedCornerShape(2.dp)), contentAlignment = Alignment.Center) {
-                    Text(o.titulo.trim().firstOrNull()?.uppercase() ?: "·", fontFamily = letraTema, fontSize = (ancho.value * 0.45f).sp, color = letra)
-                }
-            } else Box(Modifier.fillMaxSize().padding(5.dp).border(1.dp, m.acento.copy(alpha = 0.8f), RoundedCornerShape(2.dp)).padding(5.dp)) {
-                val escala = (ancho.value / 78f).coerceIn(1f, 1.6f)
-                Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text((TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre ?: "").uppercase(), fontSize = (7 * escala).sp, color = m.acento, letterSpacing = 1.sp, maxLines = 1)
-                    Text(o.titulo.ifBlank { "—" }, fontFamily = letraTema, fontSize = (11 * escala).sp, lineHeight = (12 * escala).sp, color = letra, textAlign = TextAlign.Center,
-                        maxLines = 5, overflow = TextOverflow.Ellipsis)
-                    Text(listOfNotNull(o.revista.ifBlank { null } ?: o.autor.substringBefore(",").ifBlank { null }, o.anio?.toString()).joinToString(" · "),
-                        fontSize = (7 * escala).sp, color = letra.copy(alpha = 0.8f), maxLines = 2, textAlign = TextAlign.Center, lineHeight = (8 * escala).sp)
-                }
-            }
+        else androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+            // Sin imagen, la tapa la dibuja el tema; en una miniatura de lista, solo la inicial.
+            val e = io.github.ruddy2003.vestigium.ui.biblioteca.EstadoPortada(
+                tipo = (TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre ?: "").uppercase(), titulo = o.titulo.ifBlank { "—" },
+                autor = o.revista.ifBlank { null } ?: o.autor.substringBefore(",").substringBefore(";").trim(), anio = o.anio?.toString() ?: "",
+                mini = maxWidth < 64.dp, semilla = (o.id + o.titulo).hashCode(),
+            )
+            androidx.compose.foundation.Canvas(Modifier.fillMaxSize().semantics { contentDescription = o.titulo }) { with(d) { portadaObra(e, medidor, oscuro) } }
         }
     }
 }
-
-/**
- * El adorno de la tapa dibujada, uno por tema: laurel, renglones de consola, grecas, cuadrifolios, tachones de censura,
- * remaches y franjas, galones, papel cuadriculado, columnas de gaceta, abejas, helecho, copos, moneda, arco ojival, órbita,
- * estrellas de lazo, cuernos de carnero, círculo y cuadrado de Vitruvio, cuña roja, la franja tricolor o una hilera de runas.
- * Va tenue, en los bordes y abajo, para que el título se siga leyendo. `a` es el color de acento y `l` el de la letra.
- */
-private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
-    val w = size.width; val h = size.height; val u = w / 80f
-    val tenue = a.copy(alpha = 0.45f)
-    fun linea(x0: Float, y0: Float, x1: Float, y1: Float, color: Color = tenue, grosor: Float = 1f * u) = drawLine(color, Offset(x0, y0), Offset(x1, y1), grosor)
-    fun rombo(o: Offset, rx: Float, ry: Float, color: Color) =
-        drawPath(Path().apply { moveTo(o.x, o.y - ry); lineTo(o.x + rx, o.y); lineTo(o.x, o.y + ry); lineTo(o.x - rx, o.y); close() }, color)
-    when (t) {
-        // Dos ramas de laurel que suben desde abajo.
-        TemaId.ROMANO -> for (lado in listOf(-1f, 1f)) for (k in 0 until 6) {
-            val g = Math.toRadians(20.0 + 12.0 * k); val r = w * 0.3f
-            val o = Offset(w / 2 + lado * r * kotlin.math.cos(g).toFloat(), h * 0.74f + r * 0.6f * kotlin.math.sin(g).toFloat())
-            drawOval(tenue, Offset(o.x - 2.6f * u, o.y - 1.4f * u), Size(5.2f * u, 2.8f * u))
-        }
-        // El perfil de los tejados abajo (dos cúpulas y un campanario) y la raya doble de la cabecera arriba.
-        TemaId.URBE -> {
-            linea(6 * u, 5 * u, w - 6 * u, 5 * u, tenue, 1.6f * u); linea(6 * u, 7.5f * u, w - 6 * u, 7.5f * u, tenue, 0.6f * u)
-            val base = h - 6 * u
-            drawRect(tenue, Offset(4 * u, base), Size(w - 8 * u, 2 * u))
-            listOf(0.3f to 9f, 0.68f to 13f).forEach { (fx, r) ->
-                drawArc(tenue, 180f, 180f, true, Offset(w * fx - r * u, base - r * u), Size(2 * r * u, 2 * r * u))
-                drawRect(tenue, Offset(w * fx - 0.8f * u, base - r * u - 4 * u), Size(1.6f * u, 4 * u))
-            }
-            drawRect(tenue, Offset(w * 0.47f, base - 18 * u), Size(4 * u, 18 * u))
-        }
-        // Renglones de pantalla y el indicador con su cursor.
-        TemaId.CIBER -> {
-            var y = 0f
-            while (y < h) { linea(0f, y, w, y, a.copy(alpha = 0.08f), 0.6f * u); y += 3 * u }
-            linea(8 * u, h - 14 * u, 12 * u, h - 11 * u, a.copy(alpha = 0.7f)); linea(12 * u, h - 11 * u, 8 * u, h - 8 * u, a.copy(alpha = 0.7f))
-            drawRect(a.copy(alpha = 0.7f), Offset(15 * u, h - 14 * u), Size(4 * u, 6 * u))
-        }
-        // El reflejo de un letrero en el vidrio mojado del local: una franja magenta y gotas que resbalan.
-        TemaId.NEON -> {
-            drawRect(Brush.verticalGradient(listOf(a.copy(alpha = 0.1f), Color.Transparent), 0f, h * 0.4f), Offset.Zero, Size(w, h * 0.4f))
-            val az = java.util.Random(3)
-            repeat(10) { val x = az.nextFloat() * w; val y = az.nextFloat() * h; linea(x, y, x, y + 7 * u, a.copy(alpha = 0.18f), 0.8f * u) }
-        }
-        // Una greca arriba y otra abajo.
-        TemaId.HELENO -> listOf(16 * u, h - 20 * u).forEach { y0 ->
-            val p = 3.5f * u
-            drawPath(Path().apply {
-                moveTo(6 * u, y0 + p); var x = 6 * u
-                while (x + 2 * p <= w - 6 * u) { lineTo(x, y0); lineTo(x + p, y0); lineTo(x + p, y0 + p); lineTo(x + 2 * p, y0 + p); x += 2 * p }
-            }, tenue, style = Stroke(1f * u))
-        }
-        // El friso jeker arriba y la cenefa de rectángulos abajo.
-        TemaId.EGIPTO -> {
-            var x = 8 * u
-            while (x < w - 8 * u) { drawRect(tenue, Offset(x - 1 * u, 18 * u), Size(2 * u, 6 * u)); drawCircle(tenue, 1.5f * u, Offset(x, 17 * u)); x += 5 * u }
-            var x2 = 6 * u; var k = 0
-            while (x2 < w - 6 * u) { drawRect(if (k % 2 == 0) tenue else tenue.copy(alpha = tenue.alpha * 0.5f), Offset(x2, h - 20 * u), Size(4 * u, 3 * u)); x2 += 5 * u; k++ }
-        }
-        // Cuadrifolios en las esquinas y la raya roja del margen.
-        TemaId.MEDIEVAL -> {
-            linea(10 * u, 8 * u, 10 * u, h - 8 * u, a.copy(alpha = 0.6f), 1.2f * u)
-            listOf(Offset(10 * u, 10 * u), Offset(w - 10 * u, 10 * u), Offset(10 * u, h - 10 * u), Offset(w - 10 * u, h - 10 * u)).forEach { o ->
-                listOf(Offset(0f, -1f), Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f)).forEach { d -> drawCircle(tenue, 2.2f * u, o + d * (2.2f * u)) }
-            }
-        }
-        // Almenas arriba, la banda roja de la sobreveste al margen y la cruz patada abajo.
-        TemaId.TEMPLARIO -> {
-            var x = 8 * u; while (x + 6 * u < w - 8 * u) { drawRect(tenue, Offset(x, 6 * u), Size(6 * u, 5 * u)); x += 12 * u }
-            drawRect(a.copy(alpha = 0.35f), Offset(8 * u, 14 * u), Size(3 * u, h - 22 * u))
-            drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(w / 2, h - 16 * u), 6 * u), a.copy(alpha = 0.6f))
-        }
-        // Tachones de censura y el sello de goma.
-        TemaId.DISTOPIA -> {
-            drawRect(l.copy(alpha = 0.35f), Offset(8 * u, h - 22 * u), Size(w * 0.55f, 4 * u))
-            drawRect(l.copy(alpha = 0.35f), Offset(8 * u, h - 15 * u), Size(w * 0.35f, 4 * u))
-            drawCircle(a.copy(alpha = 0.55f), 9 * u, Offset(w - 16 * u, 22 * u), style = Stroke(1.4f * u))
-            drawCircle(a.copy(alpha = 0.55f), 6.5f * u, Offset(w - 16 * u, 22 * u), style = Stroke(0.8f * u))
-        }
-        // Tres franjas de folleto abajo y un remache en cada esquina.
-        TemaId.REFUGIO -> {
-            for (k in 0 until 3) drawRect(a.copy(alpha = 0.22f + 0.1f * k), Offset(0f, h - (8 + 6 * k) * u), Size(w, 3.5f * u))
-            listOf(Offset(7 * u, 7 * u), Offset(w - 7 * u, 7 * u), Offset(7 * u, h - 26 * u), Offset(w - 7 * u, h - 26 * u)).forEach { drawCircle(tenue, 1.8f * u, it) }
-        }
-        // Galones de grado abajo, uno sobre otro.
-        TemaId.ORDEN -> for (k in 0 until 3) {
-            val y = h - (12 + 5 * k) * u
-            drawPath(Path().apply { moveTo(w / 2 - 12 * u, y - 5 * u); lineTo(w / 2, y); lineTo(w / 2 + 12 * u, y - 5 * u) }, tenue, style = Stroke(2f * u))
-        }
-        // El engrane estampado al pie de la portada, entre dos filetes, y dos remaches arriba.
-        TemaId.VAPOR -> {
-            val y = h - 16 * u
-            drawPath(io.github.ruddy2003.vestigium.ui.Vapor.engrane(Offset(w / 2, y), 7 * u, 10, 0.78f), tenue)
-            drawCircle(l, 2.4f * u, Offset(w / 2, y))
-            linea(w * 0.18f, y, w / 2 - 10 * u, y); linea(w / 2 + 10 * u, y, w * 0.82f, y)
-            listOf(w * 0.14f, w * 0.86f).forEach { x -> drawCircle(tenue, 1.8f * u, Offset(x, 8 * u)) }
-        }
-        // Papel cuadriculado de cuaderno de laboratorio.
-        TemaId.LABORATORIO -> {
-            val malla = a.copy(alpha = 0.12f); var x = 0f
-            while (x < w) { linea(x, 0f, x, h, malla, 0.5f * u); x += 6 * u }
-            var y = 0f
-            while (y < h) { linea(0f, y, w, y, malla, 0.5f * u); y += 6 * u }
-        }
-        // Raya gruesa y fina arriba, y columnas de gaceta abajo.
-        TemaId.COLONOS -> {
-            linea(6 * u, 14 * u, w - 6 * u, 14 * u, tenue, 2f * u); linea(6 * u, 17 * u, w - 6 * u, 17 * u, tenue, 0.6f * u)
-            listOf(w / 3, 2 * w / 3).forEach { x -> linea(x, h * 0.72f, x, h - 8 * u, tenue, 0.6f * u) }
-        }
-        // Abejas sembradas, como en el manto imperial.
-        TemaId.NAPOLEON -> for (fila in 0 until 3) for (col in 0 until 3) {
-            if ((fila + col) % 2 == 0) drawPath(simboloCalificacion(t, Offset(w * (0.2f + 0.3f * col), h * (0.62f + 0.13f * fila)), 3.2f * u), a.copy(alpha = 0.35f))
-        }
-        // Un abanico de rayos que sube desde el pie de la portada y tres filetes escalonados encima.
-        TemaId.DECO -> {
-            val b = Offset(w / 2, h * 0.92f); val r = w * 0.36f
-            for (i in 0 until 11) if (i % 2 == 0) drawArc(tenue, 180f + i * 180f / 11, 180f / 11, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
-            listOf(0.7f, 0.5f, 0.3f).forEachIndexed { k, f -> linea(w * (1 - f) / 2, h * (0.46f - k * 0.04f), w * (1 + f) / 2, h * (0.46f - k * 0.04f)) }
-        }
-        // Un helecho que sube por el borde izquierdo.
-        TemaId.BOTANICO -> {
-            val x0 = 9 * u
-            linea(x0, h - 6 * u, x0 + 3 * u, h * 0.45f, tenue)
-            for (k in 0 until 7) {
-                val y = h - 10 * u - k * (h * 0.075f); val x = x0 + 3 * u * (k / 7f); val largo = (7 - k) * 0.9f * u + 2 * u
-                linea(x, y, x + largo, y - 2.5f * u); linea(x, y, x - largo * 0.5f, y - 2 * u)
-            }
-        }
-        TemaId.RUINAS -> {
-            // Una guía de hiedra que trepa por la tapa desde abajo, y una grieta arriba a la derecha.
-            val x0 = 10 * u
-            linea(x0, h - 4 * u, x0 + 6 * u, h * 0.4f, tenue, 0.8f * u)
-            for (k in 0 until 6) {
-                val y = h - 10 * u - k * (h * 0.09f); val x = x0 + 6 * u * (k / 6f) + (if (k % 2 == 0) -3f else 3f) * u; val r = (6 - k) * 0.5f * u + 2.5f * u
-                drawPath(Path().apply {
-                    moveTo(x, y + r * 0.5f); lineTo(x - r * 0.55f, y + r * 0.35f); lineTo(x - r * 0.8f, y - r * 0.05f); lineTo(x - r * 0.32f, y - r * 0.05f)
-                    lineTo(x, y - r * 0.5f); lineTo(x + r * 0.32f, y - r * 0.05f); lineTo(x + r * 0.8f, y - r * 0.05f); lineTo(x + r * 0.55f, y + r * 0.35f); close()
-                }, tenue)
-            }
-            linea(w - 14 * u, 4 * u, w - 18 * u, 12 * u, l); linea(w - 18 * u, 12 * u, w - 13 * u, 18 * u, l); linea(w - 13 * u, 18 * u, w - 17 * u, 26 * u, l)
-        }
-        // Copos de nieve.
-        TemaId.NAVIDAD -> listOf(Offset(w * 0.2f, h * 0.2f) to 5f, Offset(w * 0.82f, h * 0.36f) to 3.5f, Offset(w * 0.3f, h * 0.84f) to 4f, Offset(w * 0.75f, h * 0.8f) to 3f).forEach { (o, r) ->
-            for (k in 0 until 3) { val g = Math.toRadians(90.0 + 60.0 * k); val d = Offset(kotlin.math.cos(g).toFloat(), kotlin.math.sin(g).toFloat()) * (r * u); drawLine(tenue, o - d, o + d, 0.8f * u) }
-        }
-        // Una moneda con su agujero cuadrado, abajo al centro.
-        TemaId.SEDA -> {
-            val o = Offset(w / 2, h - 16 * u)
-            drawCircle(tenue, 8 * u, o, style = Stroke(1.4f * u)); drawCircle(tenue, 5.5f * u, o, style = Stroke(0.7f * u))
-            drawRect(tenue, Offset(o.x - 2.2f * u, o.y - 2.2f * u), Size(4.4f * u, 4.4f * u), style = Stroke(1f * u))
-        }
-        // La etiqueta del título (daisen) arriba a la izquierda y la costura de cuatro agujeros en el lomo de la derecha.
-        TemaId.EDO -> {
-            drawRect(tenue, Offset(w * 0.12f, h * 0.08f), Size(w * 0.16f, h * 0.5f), style = Stroke(1f * u))
-            val xs = w - 7 * u
-            linea(xs, 4 * u, xs, h - 4 * u)
-            listOf(0.15f, 0.38f, 0.62f, 0.85f).forEach { f -> linea(xs, h * f, w, h * f); drawCircle(tenue, 1.2f * u, Offset(xs, h * f)) }
-        }
-        // Un arco ojival que enmarca el título.
-        TemaId.GOTICO -> {
-            val x0 = 8 * u; val x1 = w - 8 * u; val base = h - 8 * u; val arranque = h * 0.36f
-            drawPath(Path().apply {
-                moveTo(x0, base); lineTo(x0, arranque); quadraticTo(x0, arranque - h * 0.2f, w / 2, 10 * u)
-                quadraticTo(x1, arranque - h * 0.2f, x1, arranque); lineTo(x1, base)
-            }, tenue, style = Stroke(1.2f * u))
-        }
-        // La etiqueta del tomo del archivo, el signo debajo y una mancha de humedad en la esquina.
-        TemaId.ARCANO -> {
-            drawRect(tenue, Offset(w * 0.2f, h * 0.14f), Size(w * 0.6f, h * 0.16f), style = Stroke(1f * u))
-            linea(w * 0.28f, h * 0.2f, w * 0.72f, h * 0.2f); linea(w * 0.28f, h * 0.25f, w * 0.6f, h * 0.25f)
-            with(io.github.ruddy2003.vestigium.ui.Contenedores) { signoOjo(Offset(w / 2, h * 0.55f), w * 0.16f, tenue, 1f * u) }
-            drawCircle(a.copy(alpha = 0.12f), w * 0.16f, Offset(w * 0.85f, h * 0.88f))
-        }
-        // Estrellas sueltas y un planeta con su órbita.
-        TemaId.ESPACIO -> {
-            listOf(0.15f to 0.12f, 0.8f to 0.2f, 0.12f to 0.55f, 0.88f to 0.6f, 0.5f to 0.08f).forEach { (x, y) -> drawCircle(a.copy(alpha = 0.6f), 0.9f * u, Offset(w * x, h * y)) }
-            drawOval(tenue, Offset(w * 0.2f, h - 20 * u), Size(w * 0.6f, 9 * u), style = Stroke(0.8f * u))
-            drawCircle(tenue, 3.5f * u, Offset(w / 2, h - 15.5f * u))
-        }
-        // La superficie ondulada arriba, burbujas que suben por un lado y una medusa pequeña abajo.
-        TemaId.ABISMO -> {
-            val ola = Path(); var x = 0f
-            ola.moveTo(0f, 8 * u)
-            while (x <= w) { ola.lineTo(x, 8 * u + 1.6f * u * kotlin.math.sin(x / (5 * u))); x += 2 * u }
-            drawPath(ola, tenue, style = Stroke(1f * u))
-            listOf(0.3f to 1.4f, 0.42f to 2f, 0.55f to 1.2f, 0.66f to 1.7f).forEach { (y, r) -> drawCircle(a.copy(alpha = 0.6f), r * u, Offset(w * 0.86f, h * y), style = Stroke(0.6f * u)) }
-            val c = Offset(w / 2, h - 18 * u)
-            drawArc(tenue, 180f, 180f, true, Offset(c.x - 7 * u, c.y - 5 * u), Size(14 * u, 10 * u))
-            for (k in 0 until 3) linea(c.x - 4 * u + k * 4 * u, c.y, c.x - 4.5f * u + k * 4 * u, c.y + 9 * u, tenue, 0.7f * u)
-        }
-        // Estrellas de lazo de ocho puntas en las esquinas.
-        TemaId.ANDALUS -> listOf(Offset(11 * u, 11 * u), Offset(w - 11 * u, 11 * u), Offset(11 * u, h - 11 * u), Offset(w - 11 * u, h - 11 * u)).forEach { o ->
-            listOf(-90.0, -45.0).forEach { g0 ->
-                drawPath(Path().apply {
-                    for (i in 0 until 4) { val g = Math.toRadians(g0 + 90.0 * i); val x = o.x + 5 * u * kotlin.math.cos(g).toFloat(); val y = o.y + 5 * u * kotlin.math.sin(g).toFloat(); if (i == 0) moveTo(x, y) else lineTo(x, y) }
-                    close()
-                }, tenue)
-            }
-        }
-        // Un bloque de glifo en cada esquina, con su numeral de punto y barra; arriba, la greca escalonada.
-        TemaId.MESO -> {
-            listOf(Offset(11 * u, 11 * u), Offset(w - 11 * u, 11 * u), Offset(11 * u, h - 11 * u), Offset(w - 11 * u, h - 11 * u)).forEach { o ->
-                drawRoundRect(tenue, Offset(o.x - 5 * u, o.y - 5 * u), Size(10 * u, 10 * u), androidx.compose.ui.geometry.CornerRadius(2.5f * u), style = Stroke(1f * u))
-                numeralMaya(6, o, 6 * u, tenue)
-            }
-            grecaEscalonada(20 * u, w - 20 * u, 6 * u, 12 * u, tenue, 0.8f * u)
-        }
-        // Cuernos de carnero enroscados en las esquinas de abajo.
-        TemaId.MONGOL -> listOf(Offset(13 * u, h - 13 * u), Offset(w - 13 * u, h - 13 * u)).forEach { o ->
-            drawArc(tenue, 0f, 270f, false, Offset(o.x - 6 * u, o.y - 6 * u), Size(12 * u, 12 * u), style = Stroke(1.4f * u))
-            drawArc(tenue, 90f, 270f, false, Offset(o.x - 3 * u, o.y - 3 * u), Size(6 * u, 6 * u), style = Stroke(1.4f * u))
-        }
-        // El círculo y el cuadrado de Vitruvio, a lápiz, detrás del título.
-        TemaId.RENACIMIENTO -> {
-            val c = Offset(w / 2, h * 0.52f); val r = w * 0.36f
-            drawCircle(a.copy(alpha = 0.25f), r, c, style = Stroke(0.7f * u))
-            drawRect(a.copy(alpha = 0.25f), Offset(c.x - r * 0.88f, c.y - r * 0.6f), Size(r * 1.76f, r * 1.76f), style = Stroke(0.7f * u))
-            linea(c.x, c.y - r, c.x, c.y + r, a.copy(alpha = 0.18f), 0.5f * u); linea(c.x - r, c.y, c.x + r, c.y, a.copy(alpha = 0.18f), 0.5f * u)
-        }
-        // La portada de la bitácora: cantoneras de latón en las cuatro esquinas, el cabo que la ciñe abajo y una rosa en lo alto.
-        TemaId.PIRATA -> {
-            val e = w * 0.14f
-            listOf(Offset(0f, 0f) to Offset(1f, 1f), Offset(w, 0f) to Offset(-1f, 1f), Offset(0f, h) to Offset(1f, -1f), Offset(w, h) to Offset(-1f, -1f)).forEach { (o, s) ->
-                drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x + s.x * e, o.y); lineTo(o.x, o.y + s.y * e); close() }, tenue)
-            }
-            val y = h * 0.86f
-            linea(0f, y, w, y, l.copy(alpha = 0.35f), 2.4f * u)
-            var x = 0f; while (x < w) { linea(x, y + 1.2f * u, x + 1.6f * u, y - 1.2f * u, a.copy(alpha = 0.5f), 0.5f * u); x += 2.2f * u }
-            val c = Offset(w / 2, h * 0.2f); val r = w * 0.09f
-            for (k in 0 until 8) { val an = Math.toRadians(-90.0 + 45.0 * k); val rr = if (k % 2 == 0) r else r * 0.55f
-                linea(c.x, c.y, c.x + (rr * kotlin.math.cos(an)).toFloat(), c.y + (rr * kotlin.math.sin(an)).toFloat(), tenue, 0.8f * u) }
-        }
-        // Una cuña roja desde la esquina y una barra en diagonal.
-        TemaId.URSS -> {
-            drawPath(Path().apply { moveTo(0f, h); lineTo(0f, h * 0.7f); lineTo(w * 0.45f, h); close() }, a.copy(alpha = 0.5f))
-            linea(w * 0.55f, h - 6 * u, w - 6 * u, h * 0.62f, l.copy(alpha = 0.35f), 3 * u)
-        }
-        // La franja tricolor a lo largo del borde izquierdo.
-        TemaId.REVOLUCION -> listOf(Color(0xFF1F3A93), Color(0xFFF4F1EA), Color(0xFFC8102E)).forEachIndexed { k, col ->
-            drawRect(col.copy(alpha = 0.75f), Offset((3 + 3 * k) * u, 0f), Size(3 * u, h))
-        }
-        // Una hilera de runas abajo y una gema arriba.
-        TemaId.ANTIGUAS -> {
-            rombo(Offset(w / 2, 9 * u), 3 * u, 4.5f * u, a.copy(alpha = 0.55f))
-            var x = 12 * u; var i = 0; val y0 = h - 14 * u
-            while (x < w - 10 * u) {
-                linea(x, y0, x, y0 + 7 * u)
-                if (i % 2 == 0) linea(x, y0, x + 3.5f * u, y0 + 2.5f * u) else linea(x - 3 * u, y0 + 2 * u, x + 3 * u, y0 + 5 * u)
-                x += 9 * u; i++
-            }
-        }
-        TemaId.CUEVA -> {
-            // Una mano de ocre arriba y, abajo, una hilera de puntos de grosor desparejo.
-            drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(Offset(w / 2, 11 * u), 5 * u), a.copy(alpha = 0.55f))
-            var x = 12 * u; var i = 0; val y0 = h - 10 * u
-            while (x < w - 10 * u) { drawCircle(tenue, (1.2f + (i % 3) * 0.4f) * u, Offset(x, y0 + (if (i % 2 == 0) -u else u))); x += 7 * u; i++ }
-        }
-    }
-}
-
-// =====================================================================
-//  Biblioteca
-// =====================================================================
 
 @Composable
 fun PantallaBiblioteca(nav: Nav) {
@@ -503,7 +217,7 @@ fun PantallaBiblioteca(nav: Nav) {
             var abierto by remember { mutableStateOf<String?>(null) }
             Tarjeta {
                 Repo.subrayados.groupBy { it.libro }.entries.sortedByDescending { e -> e.value.maxOfOrNull { it.ts ?: "" } }.forEachIndexed { i, (libro, l) ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     Row(Modifier.fillMaxWidth().clickable { abierto = if (abierto == libro) null else libro }.padding(vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(libro, style = MaterialTheme.typography.bodyLarge)
@@ -532,10 +246,10 @@ private fun Claves() {
     var estado by remember { mutableStateOf<String?>(null) }
     Tarjeta {
         Etiqueta("TMDB · películas (y series en español)")
-        OutlinedTextField(tmdb, { tmdb = it.trim() }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("API Key") },
+        CampoTexto(tmdb, { tmdb = it.trim() }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("API Key") },
             visualTransformation = PasswordVisualTransformation())
         Etiqueta("RAWG · videojuegos")
-        OutlinedTextField(rawg, { rawg = it.trim() }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("API key") },
+        CampoTexto(rawg, { rawg = it.trim() }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("API key") },
             visualTransformation = PasswordVisualTransformation())
         Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BotonPrincipal("Guardar y probar") {
@@ -585,7 +299,7 @@ private fun Lista(obras: List<Obra>, nav: Nav, porAnio: Boolean = false) {
                 anioPrevio = anio
                 Text(Estilo.numeral(anio.toIntOrNull() ?: 0).let { if (it == anio) anio else "$it · $anio" }, style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = if (i == 0) 0.dp else 12.dp, bottom = 4.dp))
-            } else if (i > 0) HorizontalDivider()
+            } else if (i > 0) Separador()
             Row(Modifier.fillMaxWidth().clickable { EdicionObra.id = o.id; nav.ir("obra") }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 PortadaObra(o, Modifier.width(40.dp).aspectRatio(2f / 3f), lado = 160)
                 Column(Modifier.weight(1f).padding(start = 12.dp)) {
@@ -663,7 +377,7 @@ fun PantallaBuscarObra(nav: Nav) {
             TIPOS_OBRA.forEach { t -> Ficha(t.nombre.lowercase(), tipo == t.id) { BusquedaObra.tipo = t.id; resultados = emptyList(); mensaje = null } }
         }
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(BusquedaObra.texto, { BusquedaObra.texto = it }, Modifier.weight(1f), singleLine = true,
+            CampoTexto(BusquedaObra.texto, { BusquedaObra.texto = it }, Modifier.weight(1f), singleLine = true,
                 placeholder = { Text(when (tipo) { "articulo" -> "título o DOI"; "pelicula" -> "título de la película"; "serie" -> "título de la serie"; "juego" -> "título del juego"; else -> "título o autor" }) },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { buscar() }))
             Spacer(Modifier.width(8.dp))
@@ -677,7 +391,7 @@ fun PantallaBuscarObra(nav: Nav) {
         if (resultados.isNotEmpty()) Box(Modifier.padding(top = 12.dp)) {
             Tarjeta {
                 resultados.forEachIndexed { i, r ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     Row(Modifier.fillMaxWidth().clickable(enabled = eligiendo == null) { elegir(r) }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         if (tipo == "articulo") PortadaObra(Obra("", "articulo", r.titulo, r.autor, r.anio, revista = r.revista), Modifier.width(48.dp).aspectRatio(2f / 3f))
                         else ImagenRed(r.portada, Modifier.width(48.dp).aspectRatio(2f / 3f))
@@ -691,7 +405,7 @@ fun PantallaBuscarObra(nav: Nav) {
                 }
             }
         }
-        if (soloPortada == null) TextButton(onClick = {
+        if (soloPortada == null) BotonTexto(onClick = {
             val o = Obra(id = Repo.nuevoId(), tipo = tipo, titulo = BusquedaObra.texto.trim(), agregado = Fechas.diaLogico())
             Repo.guardarObra(o); EdicionObra.id = o.id; nav.atras(); nav.ir("obra")
         }, modifier = Modifier.padding(top = 10.dp)) { Text("No está: añadir a mano", style = MaterialTheme.typography.labelLarge) }
@@ -737,10 +451,10 @@ fun PantallaObra(nav: Nav) {
                 if (o.dias.isNotEmpty()) Text("${o.dias.size} día${if (o.dias.size == 1) "" else "s"} marcados · último ${Fechas.relativo(o.dias.max())}",
                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
                 FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    if (o.tipo != "articulo") TextButton(onClick = { BusquedaObra.tipo = o.tipo; BusquedaObra.texto = o.titulo; BusquedaObra.portadaDe = o.id; nav.ir("buscar_obra") }) {
+                    if (o.tipo != "articulo") BotonTexto(onClick = { BusquedaObra.tipo = o.tipo; BusquedaObra.texto = o.titulo; BusquedaObra.portadaDe = o.id; nav.ir("buscar_obra") }) {
                         Text("buscar portada", style = MaterialTheme.typography.labelMedium) }
-                    TextButton(onClick = { foto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) { Text("foto", style = MaterialTheme.typography.labelMedium) }
-                    if (o.portada != null) TextButton(onClick = { Portadas.borrar(ctx, o.portada); g(o.copy(portada = null, portada_url = null)) }) {
+                    BotonTexto(onClick = { foto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) { Text("foto", style = MaterialTheme.typography.labelMedium) }
+                    if (o.portada != null) BotonTexto(onClick = { Portadas.borrar(ctx, o.portada); g(o.copy(portada = null, portada_url = null)) }) {
                         Text("quitar portada", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
             }
@@ -749,17 +463,17 @@ fun PantallaObra(nav: Nav) {
             Tarjeta {
                 FilaFichas(TIPOS_OBRA, o.tipo) { g(o.copy(tipo = it ?: o.tipo)) }
                 Etiqueta("Título")
-                OutlinedTextField(o.titulo, { g(o.copy(titulo = it)) }, Modifier.fillMaxWidth(), singleLine = true)
+                CampoTexto(o.titulo, { g(o.copy(titulo = it)) }, Modifier.fillMaxWidth(), singleLine = true)
                 Etiqueta(autorDe(o.tipo))
-                OutlinedTextField(o.autor, { g(o.copy(autor = it)) }, Modifier.fillMaxWidth(), singleLine = true)
+                CampoTexto(o.autor, { g(o.copy(autor = it)) }, Modifier.fillMaxWidth(), singleLine = true)
                 if (o.tipo == "articulo") {
                     Etiqueta("Revista")
-                    OutlinedTextField(o.revista, { g(o.copy(revista = it)) }, Modifier.fillMaxWidth(), singleLine = true)
+                    CampoTexto(o.revista, { g(o.copy(revista = it)) }, Modifier.fillMaxWidth(), singleLine = true)
                     Etiqueta("DOI")
-                    OutlinedTextField(o.doi, { g(o.copy(doi = it.trim())) }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("10.xxxx/…") })
+                    CampoTexto(o.doi, { g(o.copy(doi = it.trim())) }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("10.xxxx/…") })
                 }
                 Etiqueta("Año de publicación o estreno")
-                OutlinedTextField(o.anio?.toString() ?: "", { t -> g(o.copy(anio = t.filter { it.isDigit() }.take(4).toIntOrNull())) }, Modifier.width(140.dp), singleLine = true,
+                CampoTexto(o.anio?.toString() ?: "", { t -> g(o.copy(anio = t.filter { it.isDigit() }.take(4).toIntOrNull())) }, Modifier.width(140.dp), singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
             }
         }
@@ -775,7 +489,7 @@ fun PantallaObra(nav: Nav) {
                     Etiqueta("Qué tan pronto la quieres")
                     FilaFichas(io.github.ruddy2003.vestigium.data.Catalogo.PRIORIDADES_DESEO, o.prioridad.ifBlank { null }) { g(o.copy(prioridad = it.orEmpty())) }
                     Etiqueta("Dónde verla o conseguirla")
-                    OutlinedTextField(o.donde, { g(o.copy(donde = it.take(80))) }, Modifier.fillMaxWidth(), singleLine = true,
+                    CampoTexto(o.donde, { g(o.copy(donde = it.take(80))) }, Modifier.fillMaxWidth(), singleLine = true,
                         placeholder = { Text("plataforma, biblioteca, quien te la presta…") })
                 }
                 Etiqueta("Te la recomendó")
@@ -790,10 +504,10 @@ fun PantallaObra(nav: Nav) {
                 }
                 Etiqueta("Progreso (${unidad(o.tipo)})")
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(o.progreso?.toString() ?: "", { t -> g(o.copy(progreso = t.filter { it.isDigit() }.take(6).toIntOrNull())) }, Modifier.width(110.dp), singleLine = true,
+                    CampoTexto(o.progreso?.toString() ?: "", { t -> g(o.copy(progreso = t.filter { it.isDigit() }.take(6).toIntOrNull())) }, Modifier.width(110.dp), singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                     Text("  de  ", style = MaterialTheme.typography.labelLarge)
-                    OutlinedTextField(o.total?.toString() ?: "", { t -> g(o.copy(total = t.filter { it.isDigit() }.take(6).toIntOrNull())) }, Modifier.width(110.dp), singleLine = true,
+                    CampoTexto(o.total?.toString() ?: "", { t -> g(o.copy(total = t.filter { it.isDigit() }.take(6).toIntOrNull())) }, Modifier.width(110.dp), singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 }
                 Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -823,7 +537,7 @@ fun PantallaObra(nav: Nav) {
         }
         val marcas = Repo.subrayados.filter { o.titulo.isNotBlank() && (it.libro.equals(o.titulo, true) || it.libro.contains(o.titulo, true) || o.titulo.contains(it.libro, true)) }
         if (marcas.isNotEmpty()) Seccion("Subrayados de Kindle", numero = 6, latin = "EXCERPTA") { Tarjeta { Subrayados(marcas) } }
-        TextButton(onClick = { if (confirmar) { Repo.borrarObra(o.id); nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Obra borrada", alExpirar = { Portadas.borrar(ctx, o.portada) }) { Repo.guardarObra(o) } } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
+        BotonTexto(onClick = { if (confirmar) { Repo.borrarObra(o.id); nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Obra borrada", alExpirar = { Portadas.borrar(ctx, o.portada) }) { Repo.guardarObra(o) } } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
             Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
         }
     }
@@ -838,7 +552,7 @@ private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit, anotar: (Cita) -> 
     var editando by remember { mutableStateOf<Cita?>(null) }
     Tarjeta {
         o.citas.forEachIndexed { i, c ->
-            if (i > 0) HorizontalDivider(Modifier.padding(vertical = 6.dp))
+            if (i > 0) Separador(Modifier.padding(vertical = 6.dp))
             Row(verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f)) {
                     // Tocar la cita la corrige (texto y página o minuto).
@@ -849,11 +563,11 @@ private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit, anotar: (Cita) -> 
                     Text(if (n > 0) "✎ $n ${if (n == 1) "idea" else "ideas"} · anotar otra" else "✎ anotar lo que entendí", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { anotar(c) }.padding(top = 4.dp))
                 }
-                TextButton(onClick = {
+                BotonTexto(onClick = {
                     sentir(Sentidos.Evento.ELEGIR)
                     Repo.guardarObra(o.copy(citas = o.citas.map { if (it.id == c.id) it.copy(favorita = !it.favorita) else it }))
                 }) { Text(if (c.favorita) "♥" else "♡", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge) }
-                TextButton(onClick = { if (armado == c.id) {
+                BotonTexto(onClick = { if (armado == c.id) {
                     Repo.guardarObra(o.copy(citas = o.citas.filterNot { it.id == c.id })); armado = null
                     io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Cita borrada") { Repo.obras.firstOrNull { it.id == o.id }?.let { x -> if (x.citas.none { it.id == c.id }) Repo.guardarObra(x.copy(citas = x.citas + c)) } }
                 } else armado = c.id }) {
@@ -862,9 +576,9 @@ private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit, anotar: (Cita) -> 
             }
         }
         if (o.citas.isNotEmpty()) Spacer(Modifier.height(10.dp))
-        OutlinedTextField(texto, { texto = it }, Modifier.fillMaxWidth(), placeholder = { Text("Copia aquí la frase") }, minLines = 2)
+        CampoTexto(texto, { texto = it }, Modifier.fillMaxWidth(), placeholder = { Text("Copia aquí la frase") }, minLines = 2)
         Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(pagina, { pagina = it.take(20) }, Modifier.width(130.dp), singleLine = true, placeholder = { Text(if (o.tipo in setOf("pelicula", "serie", "documental", "podcast", "audiolibro", "album")) "minuto" else "página") })
+            CampoTexto(pagina, { pagina = it.take(20) }, Modifier.width(130.dp), singleLine = true, placeholder = { Text(if (o.tipo in setOf("pelicula", "serie", "documental", "podcast", "audiolibro", "album")) "minuto" else "página") })
             Spacer(Modifier.width(10.dp))
             BotonPrincipal("Guardar cita", habilitado = texto.isNotBlank()) {
                 val c = Cita(Repo.nuevoId(), texto.trim().removePrefix("«").removeSuffix("»").removePrefix("\"").removeSuffix("\"").trim(), pagina.trim(), Fechas.diaLogico())
@@ -878,15 +592,15 @@ private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit, anotar: (Cita) -> 
         io.github.ruddy2003.vestigium.ui.Dialogo(onDismissRequest = { editando = null }, title = { Text("Corregir la cita") },
             text = {
                 Column {
-                    OutlinedTextField(t, { t = it }, Modifier.fillMaxWidth(), minLines = 3)
-                    OutlinedTextField(p, { p = it.take(20) }, Modifier.width(160.dp).padding(top = 8.dp), singleLine = true, label = { Text("página o minuto") })
+                    CampoTexto(t, { t = it }, Modifier.fillMaxWidth(), minLines = 3)
+                    CampoTexto(p, { p = it.take(20) }, Modifier.width(160.dp).padding(top = 8.dp), singleLine = true, label = { Text("página o minuto") })
                 }
             },
-            confirmButton = { TextButton(enabled = t.isNotBlank(), onClick = {
+            confirmButton = { BotonTexto(enabled = t.isNotBlank(), onClick = {
                 Repo.obras.firstOrNull { it.id == o.id }?.let { x -> Repo.guardarObra(x.copy(citas = x.citas.map { if (it.id == c.id) it.copy(texto = t.trim(), pagina = p.trim()) else it })) }
                 editando = null
             }) { Text("Guardar") } },
-            dismissButton = { TextButton(onClick = { editando = null }) { Text("cancelar") } })
+            dismissButton = { BotonTexto(onClick = { editando = null }) { Text("cancelar") } })
     }
 }
 
@@ -904,7 +618,7 @@ private fun Subrayados(l: List<io.github.ruddy2003.vestigium.data.Subrayado>) {
                     Text(listOfNotNull(s.tipo, s.pagina?.let { "p. $it" }, s.ubicacion.ifBlank { null }?.let { "pos. $it" }, s.fecha?.let { Fechas.corto(it) }).joinToString(" · "),
                         style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                if (s.tipo != "nota" && s.texto.isNotBlank()) TextButton(onClick = {
+                if (s.tipo != "nota" && s.texto.isNotBlank()) BotonTexto(onClick = {
                     sentir(Sentidos.Evento.ELEGIR)
                     Repo.cambiarConfig { c ->
                         c.copy(frases_guardadas = if (guardada) c.frases_guardadas.filterNot { it.texto == s.texto && it.autor == autor }
@@ -982,7 +696,7 @@ fun PantallaDeseados(nav: Nav) {
         Seccion("Añadir", "Elige qué es, escribe el título y listo.") {
             Tarjeta {
                 FilaFichas(TIPOS_OBRA, tipoNuevo) { tipoNuevo = it ?: tipoNuevo }
-                OutlinedTextField(titulo, { titulo = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("título") },
+                CampoTexto(titulo, { titulo = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("título") },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { anadir() }))
                 Etiqueta("Qué tan pronto")
                 FilaFichas(io.github.ruddy2003.vestigium.data.Catalogo.PRIORIDADES_DESEO, prioridad.ifBlank { null }) { prioridad = it.orEmpty() }
@@ -1001,7 +715,7 @@ fun PantallaDeseados(nav: Nav) {
             if (l.isNotEmpty()) Seccion(io.github.ruddy2003.vestigium.data.Catalogo.nombrePrioridad(p) ?: "Sin decir cuándo", "${l.size}") {
                 Tarjeta {
                     l.forEachIndexed { i, o ->
-                        if (i > 0) HorizontalDivider()
+                        if (i > 0) Separador()
                         FilaDeseo(o, hoy, nav)
                     }
                 }
@@ -1025,6 +739,6 @@ private fun FilaDeseo(o: Obra, hoy: String, nav: Nav) {
             ).joinToString(" · ")
             if (detalle.isNotBlank()) Text(detalle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        TextButton(onClick = { Repo.guardarObra(o.copy(estado = "en_curso", inicio = o.inicio ?: hoy)) }) { Text("empezar", style = MaterialTheme.typography.labelLarge) }
+        BotonTexto(onClick = { Repo.guardarObra(o.copy(estado = "en_curso", inicio = o.inicio ?: hoy)) }) { Text("empezar", style = MaterialTheme.typography.labelLarge) }
     }
 }

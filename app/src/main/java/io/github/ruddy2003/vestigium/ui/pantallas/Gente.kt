@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.foundation.BorderStroke
@@ -18,10 +20,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -106,7 +106,7 @@ private fun FormularioPersona(nombre: String, alGuardar: () -> Unit, clave: Stri
     }
     Etiqueta("¿Qué tan cerca?")
     CirculosCercania(cerca) { cerca = it }
-    OutlinedTextField(detalle, { detalle = it.take(80) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
+    CampoTexto(detalle, { detalle = it.take(80) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
         placeholder = { Text("detalle opcional: «mi prima», «de la prepa»…") })
     // Fechas (opcionales): con el año de nacimiento se ve su edad; los dos días cuentan como días especiales.
     // Se eligen en el calendario; «sin año» deja solo día y mes (para un cumpleaños sin saber la edad).
@@ -120,7 +120,7 @@ private fun FormularioPersona(nombre: String, alGuardar: () -> Unit, clave: Stri
     if (previo != null && rel != null && (rel != previo.relacion || cerca != previo.cercania)) {
         val cuando = if (desde == hoy) "hoy" else "el ${Fechas.corto(desde)} ${desde.take(4)}"
         Ayuda("Lo de antes (${Personas.nombreRelacion(previo.relacion).lowercase()}${previo.cercania?.let { ", cercanía $it" } ?: ""}) queda guardado hasta $cuando: los días anteriores se siguen analizando así.", Modifier.padding(top = 6.dp))
-        TextButton(onClick = {
+        BotonTexto(onClick = {
             io.github.ruddy2003.vestigium.ui.elegirFecha(ctx, desde) { f -> desde = f.coerceAtMost(hoy).let { d -> if (minimo != null && d <= minimo) Fechas.sumar(minimo, 1).coerceAtMost(hoy) else d } }
         }) { Text(if (desde == hoy) "cambió antes de hoy…" else "cambió el ${Fechas.corto(desde)} ${desde.take(4)} · cambiar", style = MaterialTheme.typography.labelLarge) }
     }
@@ -142,7 +142,7 @@ private fun CampoFechaPersona(rotulo: String, ok: String?, poner: (String) -> Un
             io.github.ruddy2003.vestigium.ui.elegirFecha(ctx, ok?.takeIf { it.length == 10 }) { f -> poner(Especiales.paraEditar(f)) }
         }
         if (ok != null && ok.length == 10) Ficha("sin año", false) { poner(Especiales.paraEditar(ok).take(5)) }
-        if (!ok.isNullOrBlank()) TextButton(onClick = { poner("") }) { Text("quitar", style = MaterialTheme.typography.labelLarge) }
+        if (!ok.isNullOrBlank()) BotonTexto(onClick = { poner("") }) { Text("quitar", style = MaterialTheme.typography.labelLarge) }
     }
 }
 
@@ -157,12 +157,12 @@ fun TarjetaQuienEs(modifier: Modifier = Modifier, compacta: Boolean = false, abr
         Text("¿Quién es @$nombre?", style = MaterialTheme.typography.titleMedium)
         Ayuda("La mencionaste en ${porNumero(n, "1 día", "$n días")}." + if (pend.size > 1) " Faltan ${pend.size - 1} más." else "")
         if (!abierta) Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.End) {
-            TextButton(onClick = { Personas.posponer() }) { Text("después") }
+            BotonTexto(onClick = { Personas.posponer() }) { Text("después") }
             BotonSecundario("responder") { abierta = true }
         } else FormularioPersona(nombre, alGuardar = {}) {
-            TextButton(onClick = { Personas.omitir(nombre) }) { Text("no preguntar") }
-            if (compacta) TextButton(onClick = { Personas.posponer() }) { Text("después") }
-            if (abrirTodo != null && pend.size > 1) TextButton(onClick = abrirTodo) { Text("todas") }
+            BotonTexto(onClick = { Personas.omitir(nombre) }) { Text("no preguntar") }
+            if (compacta) BotonTexto(onClick = { Personas.posponer() }) { Text("después") }
+            if (abrirTodo != null && pend.size > 1) BotonTexto(onClick = abrirTodo) { Text("todas") }
         }
     }
 }
@@ -186,14 +186,14 @@ fun PantallaPersonas(nav: Nav) {
         val clasif = c.personas.sortedByDescending { menc[it.nombre]?.first ?: 0 }
         // Alguien que aún no mencionas (N-25): nombre, y después relación y nacimiento en su ficha.
         var nueva by remember { mutableStateOf<String?>(null) }
-        TextButton(onClick = { nueva = "" }, modifier = Modifier.padding(top = 8.dp)) { Text("+ persona", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+        BotonTexto(onClick = { nueva = "" }, modifier = Modifier.padding(top = 8.dp)) { Text("+ persona", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         // Todo en un paso: el nombre y, en el mismo diálogo, su relación, cercanía y fechas.
         nueva?.let { t ->
             Dialogo(onDismissRequest = { nueva = null }, title = { Text("Nueva persona") }, confirmButton = {},
-                dismissButton = { TextButton(onClick = { nueva = null }) { Text("cancelar") } },
+                dismissButton = { BotonTexto(onClick = { nueva = null }) { Text("cancelar") } },
                 text = {
                     Column(Modifier.verticalScroll(rememberScrollState())) {
-                        androidx.compose.material3.OutlinedTextField(value = t, onValueChange = { nueva = it }, singleLine = true, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nombre, como la escribirías con @") })
+                        io.github.ruddy2003.vestigium.ui.comun.CampoTexto(value = t, onValueChange = { nueva = it }, singleLine = true, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nombre, como la escribirías con @") })
                         val etiqueta = io.github.ruddy2003.vestigium.data.Texto.etiqueta(t)
                         if (etiqueta.isNotEmpty()) Ayuda("Se guarda como @$etiqueta. No tendrá días hasta que la menciones.", Modifier.padding(top = 6.dp))
                         FormularioPersona(etiqueta, alGuardar = { nueva = null }, clave = "nueva")
@@ -247,12 +247,16 @@ fun PantallaPersonas(nav: Nav) {
         }
     }
     editando?.let { n ->
-        Dialogo(onDismissRequest = { editando = null }, confirmButton = {}, dismissButton = { TextButton(onClick = { editando = null }) { Text("cancelar") } },
+        Dialogo(onDismissRequest = { editando = null }, confirmButton = {}, dismissButton = { BotonTexto(onClick = { editando = null }) { Text("cancelar") } },
             title = { Text("@$n") },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     Personas.de(n)?.historial?.takeIf { it.isNotEmpty() }?.let { h ->
                         Ayuda("Antes: " + h.sortedBy { it.hasta }.joinToString(" · ") { "${Personas.nombreRelacion(it.relacion).lowercase()} hasta ${Fechas.corto(it.hasta)}" })
+                    }
+                    // Esquema 21: solo con el seguimiento privado encendido (si no, intimidadCon da null). Nada más de lo privado aquí.
+                    Personas.intimidadCon(n)?.let { (veces, ultima) ->
+                        Ayuda("Intimidad: ${porNumero(veces, "1 vez", "$veces veces")} · la última, ${Fechas.corto(ultima)}", Modifier.padding(top = 4.dp))
                     }
                     FormularioPersona(n, alGuardar = { editando = null })
                     AQuienConoce(n)
@@ -302,7 +306,7 @@ private fun DiasEspeciales() {
         val existe = c.fechas_propias.any { it.id == fp0.id }
         Dialogo(onDismissRequest = { editando = null },
             confirmButton = {
-                TextButton(enabled = ok != null && nombre.isNotBlank(), onClick = {
+                BotonTexto(enabled = ok != null && nombre.isNotBlank(), onClick = {
                     val n = fp0.copy(nombre = nombre.trim(), fecha = ok!!, tipo = tipo)
                     Repo.cambiarConfig { cc -> cc.copy(fechas_propias = cc.fechas_propias.filter { it.id != n.id } + n) }
                     editando = null
@@ -311,20 +315,20 @@ private fun DiasEspeciales() {
             dismissButton = {
                 Row {
                     var confirmar by remember(fp0.id) { mutableStateOf(false) }
-                    if (existe) TextButton(onClick = {
-                        if (!confirmar) { confirmar = true; return@TextButton }
+                    if (existe) BotonTexto(onClick = {
+                        if (!confirmar) { confirmar = true; return@BotonTexto }
                         Repo.cambiarConfig { cc -> cc.copy(fechas_propias = cc.fechas_propias.filter { it.id != fp0.id }) }; editando = null
                         io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Fecha borrada") { Repo.cambiarConfig { cc -> if (cc.fechas_propias.any { it.id == fp0.id }) cc else cc.copy(fechas_propias = cc.fechas_propias + fp0) } }
                     }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
-                    TextButton(onClick = { editando = null }) { Text("cancelar") }
+                    BotonTexto(onClick = { editando = null }) { Text("cancelar") }
                 }
             },
             title = { Text(if (existe) "Fecha propia" else "Nueva fecha propia") },
             text = {
                 Column {
-                    OutlinedTextField(nombre, { nombre = it.take(60) }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("qué es") },
+                    CampoTexto(nombre, { nombre = it.take(60) }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("qué es") },
                         placeholder = { Text("«boda de mis papás», «llegué a la ciudad»…") })
-                    OutlinedTextField(fecha, { fecha = it.take(10) }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, isError = fecha.isNotBlank() && ok == null,
+                    CampoTexto(fecha, { fecha = it.take(10) }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, isError = fecha.isNotBlank() && ok == null,
                         label = { Text("fecha") }, placeholder = { Text("15/03/1990 o 15/03") })
                     FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Especiales.TIPOS_PROPIOS.forEach { o -> Ficha(o.nombre, tipo == o.id) { tipo = o.id } }

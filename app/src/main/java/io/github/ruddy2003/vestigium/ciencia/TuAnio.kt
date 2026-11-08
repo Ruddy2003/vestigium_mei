@@ -134,8 +134,9 @@ object TuAnio {
         // ---- lo que pasó una sola vez
         val eq = Repo.equivalencias()
         val unaVez = buildList {
-            val hitos = p.fechas.mapNotNull { Repo.dias[it] }.flatMap { it.hitos }.groupingBy { it }.eachCount().filter { it.value == 1 }.keys
-            hitos.take(3).forEach { add(it.replace('_', ' ')) }
+            // Las fechas señaladas (con los hitos de antes) que pasaron una sola vez, como en todas las vistas: «✈ Viaje a la costa».
+            val senaladas = p.fechas.flatMap { io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(Repo.dias[it]) }.groupingBy { it }.eachCount().filter { it.value == 1 }.keys
+            senaladas.take(3).forEach { add(it) }
             val mundo = runCatching { Mundo.diario(ctx) }.getOrNull()
             val ciudadesDias = p.fechas.flatMap { fe -> mundo?.get(Fechas.parse(fe).toEpochDay().toInt())?.ciudades?.map { it.first.nombre to fe }.orEmpty() }
                 .groupBy { it.first }.filter { it.value.map { x -> x.second }.distinct().size == 1 }.keys

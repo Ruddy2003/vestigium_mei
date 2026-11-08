@@ -1,7 +1,8 @@
 package io.github.ruddy2003.vestigium.data
 
 /**
- * Lo privado, en un solo lugar: impulsos, recaídas, libido, detonantes, medicamentos y el hábito ligado a las recaídas.
+ * Lo privado, en un solo lugar: impulsos, recaídas, libido, masturbación e intimidad (esquema 21), detonantes, medicamentos
+ * y el hábito ligado a las recaídas.
  * Se ve solo en la pantalla Privado. No sale en ninguna otra pantalla, reporte, widget, logro, meta, campaña, mapa
  * ni análisis de la app; sí va en la exportación para R y en el respaldo (que, con datos privados, exige contraseña).
  * La única excepción es el reporte para terapia (`ciencia/Terapia.kt`), y solo si al generarlo marcas su casilla,
@@ -9,10 +10,13 @@ package io.github.ruddy2003.vestigium.data
  */
 object Privado {
     /** Tipos de momento privados (ver `Momento.privado`). */
-    val TIPOS = setOf("recaida", "libido", "impulso")
+    val TIPOS = setOf("recaida", "libido", "impulso", "masturbacion", "intimidad")
 
     /** Variables del panel que solo existen para R. */
-    val VARIABLES = setOf("impulso", "recaida", "n_recaida", "recaida_min", "libido_max", "n_libido", "n_impulso", "medicamentos_n")
+    val VARIABLES = setOf("impulso", "recaida", "n_recaida", "recaida_min", "libido_max", "n_libido", "n_impulso", "medicamentos_n",
+        // Esquema 21.
+        "n_masturbacion", "masturbacion_min", "masturbacion_satisfaccion", "n_intimidad", "intimidad_nivel", "intimidad_satisfaccion",
+        "intimidad_comodidad", "n_coito", "intimidad_distancia")
 
     /** Familias dinámicas privadas: medicamentos (med_) y detonantes (det_). */
     val PREFIJOS = listOf("med_", "det_")

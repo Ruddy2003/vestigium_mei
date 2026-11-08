@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -145,7 +144,7 @@ fun PantallaDiario(nav: Nav) {
         Seccion("Libreta de momentos", if (hojas.isEmpty()) null else "${hojas.size} ${if (hojas.size == 1) "hoja" else "hojas"}, una por día") {
             if (hojas.isEmpty()) Vacio("Toca «¿Cómo estás ahora?» y aquí se irá llenando, una hoja por día.")
             else androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().padding(top = 4.dp), contentAlignment = Alignment.Center) {
-                LibretaCerrada(hojas.size, hojas.lastOrNull(), Modifier.fillMaxWidth(0.46f)) { Seleccion.momentos = hojas.first(); nav.ir("hoja_momentos") }
+                LibretaCerrada(hojas.size, hojas.lastOrNull(), Modifier.fillMaxWidth()) { Seleccion.momentos = hojas.first(); nav.ir("hoja_momentos") }
             }
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BotonSecundario("entrar a la libreta →", Modifier.weight(1f)) { nav.ir("biblioteca_momentos") }
@@ -181,8 +180,7 @@ fun PantallaDiario(nav: Nav) {
         // La línea de tiempo y la exportación empiezan plegadas, y se vuelven a plegar al cerrar la app o al cambiar de día.
         Seccion("Línea de tiempo", "Entradas, momentos y sueños, día por día, con buscador y filtros.", autoPlegar = true) { Column {
         Text("${porNumero(visiblesM.size, "1 registro", "${visiblesM.size} registros")} de ánimo y momentos", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-        OutlinedTextField(busca, { busca = it; mostrar = 30 }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
-            placeholder = { Text("buscar en tu diario, @personas, #temas", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+        io.github.ruddy2003.vestigium.ui.biblioteca.CampoTema(busca, { busca = it; mostrar = 30 }, "buscar en tu diario, @personas, #temas", Modifier.padding(top = 8.dp))
         FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf("todo" to "todo", "entradas" to "entradas", "momentos" to "momentos", "suenos" to "sueños").forEach { (id, n) -> Ficha(n, tipo == id) { tipo = id; mostrar = 30 } }
         }

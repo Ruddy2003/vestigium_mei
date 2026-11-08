@@ -2,6 +2,15 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.draw.drawBehind
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import android.app.DatePickerDialog
@@ -27,10 +36,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedIconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -100,23 +106,23 @@ fun PantallaGastos(nav: Nav? = null) {
     Hoja("Gastos", subtitulo = "Registra en el momento de pagar o de cobrar. Lo que se cuadra después ya no dice en qué se fue el dinero.", buscar = nav?.let { n -> { n.ir("buscar") } }) {
         Seccion("Registrar") {
             Tarjeta {
-                // Gasto o ingreso: dos fichas grandes, como una balanza.
-                Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(false to "− Gasto", true to "+ Ingreso").forEach { (v, t) ->
-                        val sel = entra == v
-                        val color = if (v) io.github.ruddy2003.vestigium.ui.Tonos.ingreso(io.github.ruddy2003.vestigium.ui.esOscuro()) else io.github.ruddy2003.vestigium.ui.Tonos.gasto(io.github.ruddy2003.vestigium.ui.esOscuro())
-                        androidx.compose.material3.Surface(
-                            onClick = { if (entra != v) { entra = v; cat = null; sub = ""; error = null; sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.ELEGIR) } },
-                            shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f),
-                            color = if (sel) color.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surface,
-                            border = androidx.compose.foundation.BorderStroke(if (sel) 2.dp else 1.dp, if (sel) color else MaterialTheme.colorScheme.outlineVariant),
-                        ) {
-                            Text(t, style = MaterialTheme.typography.titleMedium, color = if (sel) color else MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = 10.dp))
+                // Gasto o ingreso: la balanza del tema; cada mitad se toca.
+                val dc = io.github.ruddy2003.vestigium.ui.comun.disenoComun(io.github.ruddy2003.vestigium.ui.Estilo.tema)
+                val osc = io.github.ruddy2003.vestigium.ui.esOscuro()
+                val medidor = androidx.compose.ui.text.rememberTextMeasurer(cacheSize = 8)
+                val eb = io.github.ruddy2003.vestigium.ui.comun.EstadoBalanza(entra, "− Gasto", "+ Ingreso",
+                    io.github.ruddy2003.vestigium.ui.Tonos.gasto(osc), io.github.ruddy2003.vestigium.ui.Tonos.ingreso(osc))
+                Box(Modifier.fillMaxWidth().padding(bottom = 8.dp).height(dc.altoBalanza)) {
+                    Canvas(Modifier.matchParentSize()) { with(dc) { balanza(eb, medidor, osc) } }
+                    Row(Modifier.matchParentSize()) {
+                        listOf(false to "Gasto", true to "Ingreso").forEach { (v, t) ->
+                            Box(Modifier.weight(1f).fillMaxHeight()
+                                .semantics { contentDescription = t; selected = entra == v; role = androidx.compose.ui.semantics.Role.Tab }
+                                .clickable { if (entra != v) { entra = v; cat = null; sub = ""; error = null; sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.ELEGIR) } })
                         }
                     }
                 }
-                OutlinedTextField(value = monto, onValueChange = { monto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(it); error = null }, modifier = Modifier.fillMaxWidth(),
+                CampoTexto(value = monto, onValueChange = { monto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(it); error = null }, modifier = Modifier.fillMaxWidth(),
                     prefix = { Text("$ ") }, placeholder = { Text("0") }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), textStyle = MaterialTheme.typography.headlineSmall)
                 Etiqueta("Categoría")
@@ -144,7 +150,7 @@ fun PantallaGastos(nav: Nav? = null) {
                     Interruptor("¿Fue imprevisto?", imprevisto) { imprevisto = it }
                     Interruptor("¿Se repite? (renta, suscripción, servicios)", repite) { repite = it }
                 }
-                OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
+                CampoTexto(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
                 BotonPrincipal(if (entra) "Registrar ingreso" else "Registrar gasto", Modifier.fillMaxWidth().padding(top = 10.dp)) {
                     val v = monto.toDoubleOrNull()
@@ -182,10 +188,16 @@ fun PantallaGastos(nav: Nav? = null) {
         val total = items.sumOf { it.monto }
         val ingresado = entradas.sumOf { it.monto }
         val imp = items.filter { it.imprevisto }.sumOf { it.monto }
-        Row(Modifier.fillMaxWidth().padding(top = 22.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedIconButton(onClick = { mes = Fechas.mesDe(Fechas.iso(Fechas.parse("$mes-01").minusMonths(1))); armado = null }) { Text("‹", fontSize = 20.sp) }
-            Text(Fechas.mesTitulo(mes), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-            OutlinedIconButton(onClick = { mes = Fechas.mesDe(Fechas.iso(Fechas.parse("$mes-01").plusMonths(1))); armado = null }) { Text("›", fontSize = 20.sp) }
+        val dcm = io.github.ruddy2003.vestigium.ui.comun.disenoComun(io.github.ruddy2003.vestigium.ui.Estilo.tema)
+        val oscm = io.github.ruddy2003.vestigium.ui.esOscuro()
+        val medidorMes = androidx.compose.ui.text.rememberTextMeasurer(cacheSize = 8)
+        val em = io.github.ruddy2003.vestigium.ui.comun.EstadoMes(Fechas.mesTitulo(mes))
+        Box(Modifier.fillMaxWidth().padding(top = 22.dp).height(dcm.altoMes).semantics { contentDescription = em.titulo }) {
+            Canvas(Modifier.matchParentSize()) { with(dcm) { encabezadoMes(em, medidorMes, oscm) } }
+            Box(Modifier.align(Alignment.CenterStart).size(48.dp).semantics { contentDescription = "mes anterior" }
+                .clickable { mes = Fechas.mesDe(Fechas.iso(Fechas.parse("$mes-01").minusMonths(1))); armado = null })
+            Box(Modifier.align(Alignment.CenterEnd).size(48.dp).semantics { contentDescription = "mes siguiente" }
+                .clickable { mes = Fechas.mesDe(Fechas.iso(Fechas.parse("$mes-01").plusMonths(1))); armado = null })
         }
         Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Cifra(dinero(total), "gastado", Modifier.weight(1f)); Cifra(dinero(ingresado), "ingresos", Modifier.weight(1f)); Cifra(dinero(imp), "imprevistos", Modifier.weight(1f))
@@ -195,7 +207,8 @@ fun PantallaGastos(nav: Nav? = null) {
             Tarjeta {
                 Etiqueta("ingresos del mes")
                 entradas.sortedByDescending { it.dia + it.hora }.forEach { i ->
-                    Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().drawBehind { with(dcm) { asiento(io.github.ruddy2003.vestigium.ui.comun.EstadoAsiento(true, i.id.hashCode()), oscm) } }
+                        .padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f).clickable { editandoIngreso = i }) {
                             Text(i.categoria + if (i.fijo) " · se repite" else "", style = MaterialTheme.typography.bodyLarge)
                             Text("${Fechas.corto(i.dia)} · ${i.hora}" + if (i.nota.isNotBlank()) " · ${i.nota}" else "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -243,9 +256,13 @@ fun PantallaGastos(nav: Nav? = null) {
             items.forEach { g ->
                 if (g.dia != ultimo) {
                     ultimo = g.dia
-                    Text(Fechas.corto(g.dia).uppercase(), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp, bottom = 2.dp))
+                    val rotulo = Fechas.corto(g.dia).uppercase()
+                    Canvas(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 2.dp).height(dcm.altoRotuloDia).semantics { contentDescription = rotulo }) {
+                        with(dcm) { rotuloDia(rotulo, medidorMes, oscm) }
+                    }
                 }
-                Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().drawBehind { with(dcm) { asiento(io.github.ruddy2003.vestigium.ui.comun.EstadoAsiento(false, g.id.hashCode()), oscm) } }
+                    .padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     // Tocar un gasto abre su corrección: monto, categoría, fecha u hora, o borrarlo.
                     Column(Modifier.weight(1f).clickable { editando = g }) {
                         Text(g.categoria + (if (g.subcategoria.isNotBlank()) " → ${g.subcategoria}" else "") + (if (g.imprevisto) " · imprevisto" else "") + (if (g.se_repite) " · se repite" else ""), style = MaterialTheme.typography.bodyLarge)
@@ -284,13 +301,13 @@ fun EditorCategorias() {
     var renombrar by remember { mutableStateOf<Pair<String, String?>?>(null) }
     Tarjeta {
         c.categorias.forEachIndexed { i, cat ->
-            if (i > 0) androidx.compose.material3.HorizontalDivider()
+            if (i > 0) io.github.ruddy2003.vestigium.ui.comun.Separador()
             val subs = D.subcategorias(cat)
             Row(Modifier.fillMaxWidth().clickable { abierta = if (abierta == cat) null else cat; nuevaSub = "" }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text((if (abierta == cat) "▾ " else "▸ ") + cat + if (subs.isNotEmpty()) " · ${subs.size}" else "", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                if (i > 0) TextButton(onClick = { D.subir(cat) }) { Text("↑") }
-                TextButton(onClick = { renombrar = cat to null }) { Text("✎") }
-                TextButton(onClick = {
+                if (i > 0) BotonTexto(onClick = { D.subir(cat) }) { Text("↑") }
+                BotonTexto(onClick = { renombrar = cat to null }) { Text("✎") }
+                BotonTexto(onClick = {
                     Repo.cambiarConfig { it.copy(categorias = it.categorias - cat) }
                     io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Categoría quitada") { Repo.cambiarConfig { cc -> if (cat in cc.categorias) cc else cc.copy(categorias = cc.categorias.toMutableList().apply { add(i.coerceIn(0, size), cat) }) } }
                 }) { Text("×", color = MaterialTheme.colorScheme.error) }
@@ -300,26 +317,26 @@ fun EditorCategorias() {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(sc.nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                         var m by remember(cat, sc.nombre) { mutableStateOf(sc.monto?.let { D.texto(it) } ?: "") }
-                        OutlinedTextField(value = m, onValueChange = { t -> m = D.limpiarMonto(t); D.fijarMonto(cat, sc.nombre, m.toDoubleOrNull()?.takeIf { it > 0 }) },
+                        CampoTexto(value = m, onValueChange = { t -> m = D.limpiarMonto(t); D.fijarMonto(cat, sc.nombre, m.toDoubleOrNull()?.takeIf { it > 0 }) },
                             modifier = Modifier.width(112.dp), singleLine = true, prefix = { Text("$") },
                             placeholder = { Text(D.montoHabitual(cat, sc.nombre)?.let { D.texto(it) } ?: "auto", style = MaterialTheme.typography.bodySmall) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), textStyle = MaterialTheme.typography.bodySmall)
-                        TextButton(onClick = { renombrar = cat to sc.nombre }) { Text("✎") }
-                        TextButton(onClick = {
+                        BotonTexto(onClick = { renombrar = cat to sc.nombre }) { Text("✎") }
+                        BotonTexto(onClick = {
                             D.quitarSub(cat, sc.nombre)
                             io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Subcategoría quitada") { Repo.cambiarConfig { cc -> cc.copy(subcategorias = cc.subcategorias + (cat to (cc.subcategorias[cat].orEmpty() + sc))) } }
                         }) { Text("×", color = MaterialTheme.colorScheme.error) }
                     }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedTextField(value = nuevaSub, onValueChange = { nuevaSub = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva subcategoría de $cat") })
-                    TextButton(onClick = { D.agregarSub(cat, nuevaSub); nuevaSub = "" }, enabled = nuevaSub.isNotBlank()) { Text("Añadir") }
+                    CampoTexto(value = nuevaSub, onValueChange = { nuevaSub = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva subcategoría de $cat") })
+                    BotonTexto(onClick = { D.agregarSub(cat, nuevaSub); nuevaSub = "" }, enabled = nuevaSub.isNotBlank()) { Text("Añadir") }
                 }
             }
         }
         Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría") })
-            TextButton(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias) { Repo.cambiarConfig { it.copy(categorias = it.categorias + n) }; nueva = "" } }) { Text("Añadir") }
+            CampoTexto(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría") })
+            BotonTexto(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias) { Repo.cambiarConfig { it.copy(categorias = it.categorias + n) }; nueva = "" } }) { Text("Añadir") }
         }
         Ayuda("El monto vacío es automático: el que más se repite en tus últimos 10 gastos de esa subcategoría. Quitar una categoría no cambia los gastos ya registrados.", Modifier.padding(top = 6.dp))
     }
@@ -330,15 +347,15 @@ fun EditorCategorias() {
         Dialogo(onDismissRequest = { renombrar = null }, title = { Text(if (sb == null) "Renombrar categoría" else "Renombrar subcategoría") },
             text = {
                 Column {
-                    OutlinedTextField(value = t, onValueChange = { t = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    CampoTexto(value = t, onValueChange = { t = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
                     if (n > 0) Interruptor("Cambiar también ${if (n == 1) "el gasto anterior" else "los $n gastos anteriores"}", tambien) { tambien = it }
                 }
             },
-            confirmButton = { TextButton(onClick = {
+            confirmButton = { BotonTexto(onClick = {
                 if (sb == null) D.renombrarCategoria(cat, t, tambien) else D.renombrarSub(cat, sb, t, tambien)
                 renombrar = null
             }, enabled = t.isNotBlank()) { Text("Guardar") } },
-            dismissButton = { TextButton(onClick = { renombrar = null }) { Text("cancelar") } })
+            dismissButton = { BotonTexto(onClick = { renombrar = null }) { Text("cancelar") } })
     }
 }
 
@@ -354,20 +371,20 @@ fun EditorCategoriasIngreso() {
     var renombrar by remember { mutableStateOf<String?>(null) }
     Tarjeta {
         c.categorias_ingreso.forEachIndexed { i, cat ->
-            if (i > 0) androidx.compose.material3.HorizontalDivider()
+            if (i > 0) io.github.ruddy2003.vestigium.ui.comun.Separador()
             Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(cat, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                if (i > 0) TextButton(onClick = { D.subirIngreso(cat) }) { Text("↑") }
-                TextButton(onClick = { renombrar = cat }) { Text("✎") }
-                TextButton(onClick = {
+                if (i > 0) BotonTexto(onClick = { D.subirIngreso(cat) }) { Text("↑") }
+                BotonTexto(onClick = { renombrar = cat }) { Text("✎") }
+                BotonTexto(onClick = {
                     Repo.cambiarConfig { it.copy(categorias_ingreso = it.categorias_ingreso - cat) }
                     io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Categoría quitada") { Repo.cambiarConfig { cc -> if (cat in cc.categorias_ingreso) cc else cc.copy(categorias_ingreso = cc.categorias_ingreso.toMutableList().apply { add(i.coerceIn(0, size), cat) }) } }
                 }) { Text("×", color = MaterialTheme.colorScheme.error) }
             }
         }
         Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría de ingreso") })
-            TextButton(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias_ingreso) { Repo.cambiarConfig { it.copy(categorias_ingreso = it.categorias_ingreso + n) }; nueva = "" } }) { Text("Añadir") }
+            CampoTexto(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría de ingreso") })
+            BotonTexto(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias_ingreso) { Repo.cambiarConfig { it.copy(categorias_ingreso = it.categorias_ingreso + n) }; nueva = "" } }) { Text("Añadir") }
         }
     }
     renombrar?.let { cat ->
@@ -377,12 +394,12 @@ fun EditorCategoriasIngreso() {
         Dialogo(onDismissRequest = { renombrar = null }, title = { Text("Renombrar categoría de ingreso") },
             text = {
                 Column {
-                    OutlinedTextField(value = t, onValueChange = { t = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    CampoTexto(value = t, onValueChange = { t = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
                     if (n > 0) Interruptor("Cambiar también ${if (n == 1) "el ingreso anterior" else "los $n ingresos anteriores"}", tambien) { tambien = it }
                 }
             },
-            confirmButton = { TextButton(onClick = { D.renombrarIngreso(cat, t, tambien); renombrar = null }, enabled = t.isNotBlank()) { Text("Guardar") } },
-            dismissButton = { TextButton(onClick = { renombrar = null }) { Text("cancelar") } })
+            confirmButton = { BotonTexto(onClick = { D.renombrarIngreso(cat, t, tambien); renombrar = null }, enabled = t.isNotBlank()) { Text("Guardar") } },
+            dismissButton = { BotonTexto(onClick = { renombrar = null }) { Text("cancelar") } })
     }
 }
 
@@ -432,7 +449,7 @@ private fun DialogoDinero(
         title = { Text("$titulo · " + (cuando?.let { "${Fechas.corto(Fechas.iso(it.toLocalDate()))} ${"%02d:%02d".format(it.hour, it.minute)}" } ?: "${Fechas.corto(fecha0)} ${hora0.take(5)}")) },
         text = {
             Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
-                OutlinedTextField(value = monto, onValueChange = { monto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(it) }, modifier = Modifier.fillMaxWidth(),
+                CampoTexto(value = monto, onValueChange = { monto = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(it) }, modifier = Modifier.fillMaxWidth(),
                     prefix = { Text("$ ") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                 Etiqueta("Categoría")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -449,15 +466,15 @@ private fun DialogoDinero(
                 io.github.ruddy2003.vestigium.ui.SelectorHora(cuando) { cuando = it }
                 Interruptor(marca, m) { m = it }
                 if (marca2 != null) Interruptor(marca2, m2) { m2 = it }
-                OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
+                CampoTexto(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
                 // Borrar va adentro, en rojo y con confirmación; abajo quedan «cancelar» y «Guardar», como en los demás diálogos.
-                if (borrar != null) TextButton(onClick = { if (confirmar) { borrar(); cerrar() } else confirmar = true }, modifier = Modifier.padding(top = 6.dp)) {
+                if (borrar != null) BotonTexto(onClick = { if (confirmar) { borrar(); cerrar() } else confirmar = true }, modifier = Modifier.padding(top = 6.dp)) {
                     Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error)
                 }
             }
         },
         confirmButton = {
-            TextButton(enabled = v != null && v > 0, onClick = {
+            BotonTexto(enabled = v != null && v > 0, onClick = {
                 // Si la hora guardada no se pudo leer y no la cambiaste, se conservan su fecha y su hora: antes el gasto se
                 // movía a hoy en silencio. Solo uno nuevo, sin fecha, toma la de ahora.
                 val (f, h) = cuando?.let { c -> Fechas.iso(c.toLocalDate()) to "%02d:%02d".format(c.hour, c.minute) }
@@ -466,7 +483,7 @@ private fun DialogoDinero(
                 cerrar()
             }) { Text("Guardar") }
         },
-        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
+        dismissButton = { BotonTexto(onClick = cerrar) { Text("cancelar") } },
     )
 }
 

@@ -109,7 +109,8 @@ object Exportar {
                 "valencia" to d.valencia, "activacion" to d.activacion, "dolor" to d.dolor,
             )
             Catalogo.CONTEXTOS.forEach { r["ctx_${it.id}"] = d.ctx[it.id] == true }
-            r["hitos"] = d.hitos
+            // Desde el esquema 21, las fechas señaladas (con los hitos de antes); su tipo va en vm_senaladas.csv.
+            r["hitos"] = Senaladas.de(d).map { it.texto.ifBlank { Catalogo.senalada(it.tipo).nombre } }
             r["flow"] = d.flow; r["sdt_necesidad"] = d.sdt_necesidad; r["apreciacion"] = d.apreciacion
             r["sueno_recordado"] = d.sueno_recordado; r["sueno_valencia"] = d.sueno_valencia; r["sueno_lucidez"] = d.sueno_lucidez
             r["sueno_vividez"] = d.sueno_vividez; r["sueno_tipo"] = d.sueno_tipo; r["sueno_temas"] = d.sueno_temas
@@ -140,8 +141,19 @@ object Exportar {
         return l.mapNotNull { c -> if (ms >= Fechas.millis(c.inicio) && ms <= Sustancias.finEfectivo(c)) Sustancias.nivelEn(c, ms) else null }.maxOrNull() ?: 0.0
     }
 
+    /**
+     * Bajo alcohol o cannabis en un instante (esquema 21, para la intimidad y la masturbación): un consumo que empezó en las 3 horas
+     * de antes o cuyo efecto seguía. 1 o 0; vacío antes del primer consumo anotado de esas dos sustancias.
+     */
+    private fun bajoSustancia(ms: Long, l: List<Consumo>): Int? {
+        val p0 = l.minOfOrNull { Fechas.millis(it.inicio) } ?: return null
+        if (ms < p0) return null
+        return if (l.any { c -> val i = Fechas.millis(c.inicio); (i <= ms && ms - i <= 3 * 3_600_000L) || (i <= ms && ms <= Sustancias.finEfectivo(c)) }) 1 else 0
+    }
+
     fun filasMomentos(): List<Map<String, Any?>> {
         val cons = Repo.consumos.filter { Catalogo.sustancia(it.sustancia)?.conNivel == true }
+        val todos = Repo.consumos.filter { it.sustancia == "alcohol" || it.sustancia == "cannabis" }
         // La hora real en que salió cada aviso (esquema 20), por su hora planeada.
         val reales = Repo.avisos.values.flatMap { it.reales.entries }.associate { it.key to it.value }
         return Repo.momentos.map {
@@ -150,7 +162,7 @@ object Exportar {
             "es_animo" to Catalogo.esRegistro(it), "emociones" to Catalogo.emocionesDe(it), "emocion_otra" to it.emocion_otra, "intensidades" to Catalogo.emocionesDe(it).mapNotNull { e -> it.intensidades[e]?.let { n -> "$e:$n" } },
             "pensamiento" to Catalogo.pensamientoDe(it), "pensamientos" to Catalogo.pensamientosDe(it),
             "intensidad" to it.intensidad, "valencia" to it.valencia, "activacion" to it.activacion, "texto" to it.texto,
-            "personas" to Texto.personas(it.texto), "temas" to Texto.temas(it.texto),
+            "personas" to (it.personas.map { p -> p.lowercase() } + Texto.personas(it.texto)).distinct(), "temas" to Texto.temas(it.texto),
             "lat" to it.lat, "lon" to it.lon, "precision_m" to it.precision_m, "lugar" to Repo.lugares.firstOrNull { l -> l.id == it.lugar }?.nombre,
             "origen" to it.origen, "aviso_ts" to it.aviso_ts,
             // Desde el esquema 20 (decisión del autor): latencia_min desde que el aviso salió de verdad (vacía si no se sabe,
@@ -161,6 +173,13 @@ object Exportar {
             "ruido_db" to it.ruido_db, "luz_lux" to it.luz_lux,
             "con_quien" to it.con_quien, "detonantes" to it.detonantes, "detonante_otro" to it.detonante_otro, "dispositivo" to it.dispositivo, "antes" to it.antes, "duracion_min" to it.duracion_min, "foco" to it.foco, "cierre" to it.esCierre,
             "tipo_lugar" to Repo.lugares.firstOrNull { l -> l.id == it.lugar }?.tipo,
+            // Esquema 21: masturbación, intimidad (privadas) y episodios.
+            "estimulo" to it.estimulo, "estimulo_otro" to it.estimulo_otro, "sitio" to it.sitio, "sitio_otro" to it.sitio_otro,
+            "practicas" to it.practicas, "practica_otra" to it.practica_otra, "nivel" to it.nivel,
+            "satisfaccion" to it.satisfaccion, "placer" to it.placer, "conexion" to it.conexion, "comodidad" to it.comodidad,
+            "orgasmo" to it.orgasmo, "orgasmo_otra" to it.orgasmo_otra, "proteccion" to it.proteccion, "iniciativa" to it.iniciativa,
+            "episodio" to it.episodio, "episodio_otro" to it.episodio_otro, "sintomas" to it.sintomas, "vinculo" to it.vinculo,
+            "bajo_sustancia" to if (it.tipo == "intimidad" || it.tipo == "masturbacion") bajoSustancia(ms, todos) else null,
             "alcohol_nivel" to nivelSustancia("alcohol", ms, cons), "cannabis_nivel" to nivelSustancia("cannabis", ms, cons), "otra_nivel" to nivelSustancia("otra", ms, cons),
             "ts_creado" to it.ts_creado, "ts_editado" to it.ts_editado)
         }
@@ -323,7 +342,12 @@ object Exportar {
     fun filasTramos() = Repo.tramos.map {
         linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "tipo" to it.tipo, "tipo_otro" to it.tipo_otro.ifBlank { null }, "es_siesta" to (it.tipo == "siesta"), "inicio" to it.inicio, "fin" to it.fin,
             "hora" to Fechas.horaDe(it.inicio), "min" to it.min, "nota" to it.nota, "personas" to Texto.personas(it.nota), "temas" to Texto.temas(it.nota), "origen" to it.origen,
-            "ts_creado" to it.ts_creado)
+            "ts_creado" to it.ts_creado, "plan_min" to it.plan_min, "extra_min" to it.plan_min?.let { p -> it.min - p })
+    }
+
+    /** Fechas señaladas (esquema 21): una por fila, con los hitos de antes como tipo «otro». */
+    fun filasSenaladas(): List<Map<String, Any?>> = Senaladas.dias().flatMap { (f, l) ->
+        l.map { linkedMapOf<String, Any?>("fecha" to f, "tipo" to it.tipo, "tipo_nombre" to Catalogo.senalada(it.tipo).nombre, "texto" to it.texto) }
     }
 
     fun filasSuplementos(): List<Map<String, Any?>> {
@@ -960,6 +984,7 @@ object Exportar {
         Tabla("vm_dias.csv", "Diario: lo que llenaste cada día", filasDias()),
         Tabla("vm_momentos.csv", "Momentos y avisos de ánimo, uno por fila", filasMomentos()),
         Tabla("vm_tramos.csv", "Cronómetro: bloques de enfoque (estudio, lectura, idiomas, tesis…) y siestas, uno por fila", filasTramos()),
+        Tabla("vm_senaladas.csv", "Fechas señaladas: lo que quieres recordar de cada día, con su tipo (primera vez, viaje, logro…)", filasSenaladas()),
         Tabla("vm_sustancias.csv", "Sustancias: cada consumo (alcohol, cannabis, tabaco, cafeína, otra) con su nivel, duración y cruda", filasSustancias()),
         Tabla("vm_horas.csv", "Una fila por hora: dormido, lugar, pantalla, notificaciones, luz, música, ánimo, cafeína y alcohol en el cuerpo, sustancias, enfoque, gastos y comidas", filasHoras()),
         Tabla("vm_gastos.csv", "Gastos, uno por fila", filasGastos()),

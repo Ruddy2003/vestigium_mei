@@ -9,7 +9,7 @@ import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.data.privado
 
 /**
- * Variables que dependen de lo que registraste: una por cada persona, tema, hito, lugar, app, categoría de gasto,
+ * Variables que dependen de lo que registraste: una por cada persona, tema, lugar, app, categoría de gasto,
  * artista, canal, obra, género, medicamento, ciudad, país, músculo, nutriente, alimento… Así todo se puede cruzar con todo.
  *
  * En los análisis entran las más frecuentes de cada familia (para no ahogar los resultados en casos raros);
@@ -24,7 +24,7 @@ object Dinamicas {
             "personas_vistas", "personas_pensadas", "personas_mensajes", "vi_expareja", "vi_trabajo", "cercania_media", "presencias_revisado",
             "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades"),
         "pen_" to setOf("personas", "personas_pensadas", "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades"),
-        "tema_" to setOf("palabras"), "hito_" to setOf("hitos_n"),
+        "tema_" to setOf("palabras"),
         "lug_" to setOf("lugares_distintos", "distancia_km"),
         "app_" to setOf("pantalla_min", "desbloqueos"), "ntf_" to setOf("notificaciones"),
         "gcat_" to setOf("gasto_total", "gasto_imprevisto", "gasto_imprevisto_monto", "balance_dinero"), "icat_" to setOf("ingreso_total", "balance_dinero"),
@@ -137,7 +137,8 @@ object Dinamicas {
         }
         if (pensadas.isNotEmpty()) familia("pen_", "Personas", pensadas, diasPersonas, 10, 3, { "Pensé en @$it sin verla (0/1)" })
         familia("tema_", "Temas", temas, diasTemas, 12, 5, { "Aparece #$it (0/1)" })
-        familia("hito_", "Hitos", Repo.dias.mapValues { (_, d) -> d.hitos.associateWith { 1.0 } }, Repo.dias.keys, 10, 3, { "Hito: ${it.replace('_', ' ')} (0/1)" })
+        // Los hitos ya no son variables (esquema 21): una fecha señalada pasa una vez, y una variable de 0/1 que casi nunca vale 1
+        // no deja ver nada. Cuentan en hitos_n; lo que se repite (una crisis, una pelea) es un episodio (n_episodio, epi_*).
 
         // ---- Lugares marcados: horas en cada uno.
         // Cada visita se reparte entre los días lógicos que cruza, como horas_tipo_* (Lugares.minutosPorTipo). Antes iba entera

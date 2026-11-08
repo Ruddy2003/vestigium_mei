@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -7,7 +8,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,7 +61,7 @@ fun EditarSueno(fecha: String, cerrar: () -> Unit) {
                         val fuera = k in s0.sueno_descartadas
                         androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                             Text("· $f", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-                            TextButton(onClick = {
+                            BotonTexto(onClick = {
                                 val app = ctx.applicationContext
                                 Repo.guardarSalud(s0.copy(sueno_descartadas = if (fuera) s0.sueno_descartadas - k else s0.sueno_descartadas + k))
                                 // Se vuelve a leer el reloj de esa noche para rehacer la cuenta sin (o con) esa sesión.
@@ -79,7 +79,7 @@ fun EditarSueno(fecha: String, cerrar: () -> Unit) {
                         // Si el reloj no trajo nada esa noche, volver a él deja la noche vacía: se avisa antes.
                         Ayuda(if (s0.sueno_fuentes.isEmpty()) "El reloj no tiene esta noche: si vuelves a él, el sueño de esa fecha quedará vacío."
                             else "Se usará lo que midió el reloj y se pierde tu corrección.", Modifier.padding(top = 10.dp))
-                        TextButton(onClick = {
+                        BotonTexto(onClick = {
                             val app = ctx.applicationContext
                             Repo.guardarSalud(s0.copy(sueno_manual = false))
                             cerrar()
@@ -90,12 +90,12 @@ fun EditarSueno(fecha: String, cerrar: () -> Unit) {
                                 }
                             }) { Repo.guardarSalud(s0) }
                         }, modifier = Modifier.fillMaxWidth()) { Text("sí, volver a lo del reloj", color = MaterialTheme.colorScheme.error) }
-                    } else TextButton(onClick = { volver = true }, modifier = Modifier.fillMaxWidth()) { Text("quitar la corrección y volver a lo del reloj") }
+                    } else BotonTexto(onClick = { volver = true }, modifier = Modifier.fillMaxWidth()) { Text("quitar la corrección y volver a lo del reloj") }
                 }
             }
         },
         confirmButton = {
-            TextButton(enabled = valido, onClick = {
+            BotonTexto(enabled = valido, onClick = {
                 // Al corregir a mano, las etapas del reloj dejan de cuadrar con el total: se quitan.
                 val cambioHoras = s0.sueno_inicio == null || Fechas.millis(s0.sueno_inicio) != a || s0.sueno_fin == null || Fechas.millis(s0.sueno_fin) != b
                 Repo.guardarSalud(s0.copy(sueno_min = total, sueno_inicio = Fechas.isoDeMillis(a), sueno_fin = Fechas.isoDeMillis(b), sueno_despierto_min = despierto,
@@ -104,6 +104,6 @@ fun EditarSueno(fecha: String, cerrar: () -> Unit) {
                 cerrar()
             }) { Text("Guardar") }
         },
-        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
+        dismissButton = { BotonTexto(onClick = cerrar) { Text("cancelar") } },
     )
 }

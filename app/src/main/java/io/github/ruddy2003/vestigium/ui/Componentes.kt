@@ -2,6 +2,9 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.privado
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -40,10 +43,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -724,13 +725,13 @@ fun ListaEtiquetas(lista: List<String>, pista: String, prefijo: String = "", nor
                 Surface(shape = forma, color = MaterialTheme.colorScheme.surfaceVariant) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 12.dp)) {
                         Text(prefijo + t, style = MaterialTheme.typography.labelLarge)
-                        TextButton(onClick = { onCambio(lista.filterIndexed { j, _ -> j != i }) }, contentPadding = PaddingValues(0.dp), modifier = Modifier.size(36.dp)) { Text(piel.quitar, fontSize = 16.sp) }
+                        BotonTexto(onClick = { onCambio(lista.filterIndexed { j, _ -> j != i }) }, contentPadding = PaddingValues(0.dp), modifier = Modifier.size(36.dp)) { Text(piel.quitar, fontSize = 16.sp) }
                     }
                 }
             }
         }
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
+            CampoTexto(
                 value = texto, onValueChange = { texto = it }, modifier = Modifier.weight(1f), singleLine = true,
                 placeholder = { Text(pista, style = MaterialTheme.typography.labelLarge) }, textStyle = MaterialTheme.typography.labelLarge,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, imeAction = ImeAction.Done),
@@ -869,68 +870,65 @@ fun BotonSecundario(texto: String, modifier: Modifier = Modifier, habilitado: Bo
     }
 }
 
-/** Una cifra grande con su rótulo; lleva las esquinas del tema en chico. */
+/** Una cifra grande con su rótulo, sobre la pieza del tema (la tesela, la placa, el contador…). */
 @Composable
 fun Cifra(valor: String, etiqueta: String, modifier: Modifier = Modifier) {
-    val tema = Estilo.tema
-    val e = MaterialTheme.colorScheme
-    Surface(modifier = modifier.drawWithContent { drawContent(); esquinasComp(tema, e, 0.7f) }, shape = R4, color = e.surfaceVariant) {
-        Column(Modifier.padding(10.dp)) {
+    val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(Estilo.tema)
+    val oscuro = esOscuro()
+    val e = io.github.ruddy2003.vestigium.ui.comun.EstadoCifra(etiqueta.hashCode())
+    Box(modifier.drawBehind { with(d) { cifra(e, oscuro) } }) {
+        Column(Modifier.padding(d.margenCifra)) {
             // Si la cifra no cabe (cifras largas o letra grande del sistema), se achica en vez de cortarse: antes «-0.12»
             // podía verse como «-0.1», que es otro número.
             var tam by remember(valor) { mutableFloatStateOf(19f) }
-            Text(contando(valor), style = MaterialTheme.typography.labelLarge.copy(fontSize = tam.sp, letterSpacing = 0.sp), maxLines = 1, softWrap = false,
+            Text(contando(valor), style = MaterialTheme.typography.labelLarge.copy(fontSize = tam.sp, letterSpacing = 0.sp), color = d.tintaCifra(oscuro), maxLines = 1, softWrap = false,
                 onTextLayout = { r -> if (r.hasVisualOverflow && tam > 10f) tam = maxOf(10f, tam * 0.9f) })
-            Text(etiqueta.uppercase(), style = MaterialTheme.typography.labelSmall, color = e.onSurfaceVariant, maxLines = 2)
+            Text(etiqueta.uppercase(), style = MaterialTheme.typography.labelSmall, color = d.rotuloCifra(oscuro), maxLines = 2)
         }
     }
 }
 
-/** Nada que mostrar: un recuadro punteado con el trazo del tema y una ilustración pequeña de algo vacío (un ánfora, una lata, un frasco…). */
+/** Nada que mostrar: el recuadro del tema y una ilustración pequeña de algo vacío (un ánfora, una lata, un frasco…), dibujados por el tema. */
 @Composable
 fun Vacio(texto: String) {
-    val tema = Estilo.tema
-    val piel = pielDe(tema)
-    val e = MaterialTheme.colorScheme
-    val linea = e.outline
-    Box(
-        Modifier.fillMaxWidth().drawBehind {
-            val guiones = FloatArray(piel.guiones.size) { piel.guiones[it] * 1.dp.toPx() }
-            drawRoundRect(linea, cornerRadius = CornerRadius(minOf(radioDe(tema).radio, 8).dp.toPx()), style = Stroke(width = 1.5f, pathEffect = PathEffect.dashPathEffect(guiones)))
-        }.padding(18.dp),
-        contentAlignment = Alignment.Center,
-    ) {
+    val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(Estilo.tema)
+    val oscuro = esOscuro()
+    val e = io.github.ruddy2003.vestigium.ui.comun.EstadoVacio(texto.hashCode())
+    Box(Modifier.fillMaxWidth().drawBehind { with(d) { marcoVacio(e, oscuro) } }.padding(18.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Canvas(Modifier.size(26.dp)) { dibujoVacio(tema, e) }
-            Text(texto, style = MaterialTheme.typography.bodyMedium, color = e.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp))
+            Canvas(Modifier.size(d.tamDibujoVacio)) { with(d) { dibujoVacio(e, oscuro) } }
+            Text(texto, style = MaterialTheme.typography.bodyMedium, color = d.tintaVacio(oscuro), textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp))
         }
     }
 }
 
-/** Aviso: la barra del tema a la izquierda (doble, punteada, de remaches, en zigzag…) y su glifo al empezar. */
+/** Aviso: el fondo y la marca del tema a la izquierda (la barra, el glifo, el sello…), dibujados por el tema. */
 @Composable
 fun Aviso(texto: String) {
-    val tema = Estilo.tema
-    val piel = pielDe(tema)
-    val e = MaterialTheme.colorScheme
-    Row(Modifier.fillMaxWidth().padding(top = 10.dp).height(IntrinsicSize.Min).background(e.secondaryContainer)) {
-        Canvas(Modifier.width(6.dp).fillMaxHeight()) { barraAviso(tema, e) }
-        Text(buildAnnotatedString {
-            withStyle(SpanStyle(color = e.secondary, fontWeight = FontWeight.SemiBold)) { append(piel.aviso) }
-            append("  "); append(texto)
-        }, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(10.dp))
+    val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(Estilo.tema)
+    val oscuro = esOscuro()
+    val e = io.github.ruddy2003.vestigium.ui.comun.EstadoAviso(texto.length)
+    Box(Modifier.fillMaxWidth().padding(top = 10.dp).drawBehind { with(d) { aviso(e, oscuro) } }) {
+        Text(texto, style = MaterialTheme.typography.bodySmall, color = d.tintaAviso(oscuro),
+            modifier = Modifier.padding(start = d.margenAviso, end = 10.dp, top = 10.dp, bottom = 10.dp))
     }
 }
 
+/** Una fila de menú: el fondo, el filete y la flecha del tema, dibujados por el tema. */
 @Composable
 fun FilaMenu(titulo: String, detalle: String? = null, onClick: () -> Unit) {
-    val piel = pielDe(Estilo.tema)
-    Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 13.dp), verticalAlignment = Alignment.CenterVertically) {
+    val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(Estilo.tema)
+    val oscuro = esOscuro()
+    val toque = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val presionado by toque.collectIsPressedAsState()
+    val e = io.github.ruddy2003.vestigium.ui.comun.EstadoFila(presionado, detalle != null, titulo.hashCode())
+    Row(Modifier.fillMaxWidth().drawBehind { with(d) { fila(e, oscuro) } }.clickable(toque, androidx.compose.foundation.LocalIndication.current, onClick = onClick)
+        .padding(horizontal = d.margenFila, vertical = 13.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(titulo, style = MaterialTheme.typography.bodyLarge)
             if (detalle != null) Text(detalle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Text(piel.flecha, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Canvas(Modifier.size(20.dp)) { with(d) { flechaFila(oscuro) } }
     }
 }
 
@@ -1773,279 +1771,6 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
     }
 }
 
-/** Ilustración pequeña de algo vacío, para el recuadro de «nada que mostrar». */
-private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
-    val s = size.minDimension
-    fun f(v: Float) = v * s
-    val l = e.onSurfaceVariant.copy(alpha = 0.8f); val a = e.primary
-    val tr = Stroke(1.4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-    when (t) {
-        TemaId.ROMANO -> {
-            // Ánfora vacía.
-            drawPath(Path().apply { moveTo(f(0.42f), f(0.1f)); lineTo(f(0.42f), f(0.26f)); quadraticTo(f(0.16f), f(0.42f), f(0.5f), f(0.94f)); quadraticTo(f(0.84f), f(0.42f), f(0.58f), f(0.26f)); lineTo(f(0.58f), f(0.1f)) }, l, style = tr)
-            drawLine(a, Offset(f(0.36f), f(0.1f)), Offset(f(0.64f), f(0.1f)), tr.width)
-            drawArc(l, 90f, 180f, false, Offset(f(0.3f), f(0.14f)), Size(f(0.14f), f(0.2f)), style = tr)
-            drawArc(l, -90f, 180f, false, Offset(f(0.56f), f(0.14f)), Size(f(0.14f), f(0.2f)), style = tr)
-        }
-        TemaId.URBE -> {
-            // La tazzina del café ya bebido, en su platito: sin vapor.
-            drawOval(l, Offset(f(0.1f), f(0.72f)), Size(f(0.8f), f(0.16f)), style = tr)
-            drawPath(Path().apply { moveTo(f(0.24f), f(0.4f)); lineTo(f(0.3f), f(0.7f)); quadraticTo(f(0.5f), f(0.8f), f(0.7f), f(0.7f)); lineTo(f(0.76f), f(0.4f)) }, l, style = tr)
-            drawOval(a, Offset(f(0.24f), f(0.35f)), Size(f(0.52f), f(0.1f)), style = tr)
-            drawArc(l, -80f, 190f, false, Offset(f(0.7f), f(0.44f)), Size(f(0.16f), f(0.16f)), style = tr)
-        }
-        TemaId.CIBER -> {
-            // Consola sin salida: el indicador y el cursor.
-            drawRect(l, Offset(f(0.06f), f(0.18f)), Size(f(0.88f), f(0.64f)), style = tr)
-            drawPath(Path().apply { moveTo(f(0.2f), f(0.36f)); lineTo(f(0.34f), f(0.5f)); lineTo(f(0.2f), f(0.64f)) }, a, style = tr)
-            drawLine(e.secondary, Offset(f(0.42f), f(0.64f)), Offset(f(0.62f), f(0.64f)), tr.width)
-        }
-        TemaId.NEON -> {
-            // El puesto cerrado: la cortina metálica bajada y, encima, el letrero apagado.
-            drawRect(l.copy(alpha = 0.4f), Offset(f(0.1f), f(0.1f)), Size(f(0.8f), f(0.18f)), style = tr)
-            drawLine(a.copy(alpha = 0.35f), Offset(f(0.2f), f(0.19f)), Offset(f(0.8f), f(0.19f)), tr.width)
-            drawRect(l, Offset(f(0.14f), f(0.34f)), Size(f(0.72f), f(0.56f)), style = tr)
-            var y = f(0.42f); while (y < f(0.88f)) { drawLine(l.copy(alpha = 0.6f), Offset(f(0.14f), y), Offset(f(0.86f), y), tr.width * 0.7f); y += maxOf(f(0.08f), 1f) }
-            drawCircle(e.secondary, f(0.03f), Offset(f(0.5f), f(0.86f)))
-        }
-        TemaId.HELENO -> {
-            // Cílica vacía: copa baja con dos asas y pie.
-            drawArc(l, 0f, 180f, false, Offset(f(0.12f), f(0.12f)), Size(f(0.76f), f(0.5f)), style = tr)
-            drawLine(l, Offset(f(0.12f), f(0.37f)), Offset(f(0.88f), f(0.37f)), tr.width)
-            drawLine(l, Offset(f(0.5f), f(0.62f)), Offset(f(0.5f), f(0.82f)), tr.width)
-            drawLine(a, Offset(f(0.32f), f(0.86f)), Offset(f(0.68f), f(0.86f)), tr.width)
-            drawArc(l, 180f, 180f, false, Offset(0f, f(0.3f)), Size(f(0.16f), f(0.14f)), style = tr)
-            drawArc(l, 180f, 180f, false, Offset(f(0.84f), f(0.3f)), Size(f(0.16f), f(0.14f)), style = tr)
-        }
-        TemaId.EGIPTO -> {
-            // Un cartucho vacío: el óvalo de cuerda, sin nombre todavía, con su barra abajo.
-            drawRoundRect(l, Offset(f(0.3f), f(0.06f)), Size(f(0.4f), f(0.76f)), CornerRadius(f(0.2f)), style = tr)
-            drawLine(l, Offset(f(0.24f), f(0.9f)), Offset(f(0.76f), f(0.9f)), tr.width * 1.6f)
-            drawLine(a, Offset(f(0.42f), f(0.82f)), Offset(f(0.42f), f(0.9f)), tr.width)
-            drawLine(a, Offset(f(0.58f), f(0.82f)), Offset(f(0.58f), f(0.9f)), tr.width)
-        }
-        TemaId.MEDIEVAL -> {
-            // Tintero seco y la pluma apoyada.
-            drawRoundRect(l, Offset(f(0.14f), f(0.58f)), Size(f(0.4f), f(0.32f)), CornerRadius(f(0.06f)), style = tr)
-            drawLine(l, Offset(f(0.24f), f(0.58f)), Offset(f(0.24f), f(0.5f)), tr.width)
-            drawLine(l, Offset(f(0.44f), f(0.58f)), Offset(f(0.44f), f(0.5f)), tr.width)
-            drawPath(Path().apply { moveTo(f(0.36f), f(0.62f)); quadraticTo(f(0.6f), f(0.2f), f(0.92f), f(0.06f)); quadraticTo(f(0.78f), f(0.36f), f(0.36f), f(0.62f)) }, a, style = tr)
-        }
-        TemaId.TEMPLARIO -> {
-            // El yelmo de cubo sin nadie dentro: la ranura de la vista y la cruz de los respiraderos.
-            drawPath(Path().apply {
-                moveTo(f(0.22f), f(0.88f)); lineTo(f(0.22f), f(0.3f)); quadraticTo(f(0.22f), f(0.1f), f(0.5f), f(0.08f))
-                quadraticTo(f(0.78f), f(0.1f), f(0.78f), f(0.3f)); lineTo(f(0.78f), f(0.88f)); close()
-            }, l, style = tr)
-            drawLine(a, Offset(f(0.3f), f(0.42f)), Offset(f(0.7f), f(0.42f)), tr.width * 1.6f)
-            drawLine(l, Offset(f(0.5f), f(0.52f)), Offset(f(0.5f), f(0.8f)), tr.width); drawLine(l, Offset(f(0.38f), f(0.65f)), Offset(f(0.62f), f(0.65f)), tr.width)
-        }
-        TemaId.DISTOPIA -> {
-            // Carpeta de expediente vacía, cruzada por una franja roja.
-            drawPath(Path().apply { moveTo(f(0.08f), f(0.86f)); lineTo(f(0.08f), f(0.2f)); lineTo(f(0.38f), f(0.2f)); lineTo(f(0.46f), f(0.3f)); lineTo(f(0.92f), f(0.3f)); lineTo(f(0.92f), f(0.86f)); close() }, l, style = tr)
-            drawLine(a, Offset(f(0.2f), f(0.74f)), Offset(f(0.8f), f(0.44f)), tr.width * 1.6f)
-        }
-        TemaId.REFUGIO -> {
-            // Lata de conservas abierta y vacía, con la tapa levantada.
-            drawOval(l, Offset(f(0.22f), f(0.24f)), Size(f(0.56f), f(0.16f)), style = tr)
-            drawLine(l, Offset(f(0.22f), f(0.32f)), Offset(f(0.22f), f(0.82f)), tr.width)
-            drawLine(l, Offset(f(0.78f), f(0.32f)), Offset(f(0.78f), f(0.82f)), tr.width)
-            drawArc(l, 0f, 180f, false, Offset(f(0.22f), f(0.74f)), Size(f(0.56f), f(0.16f)), style = tr)
-            drawLine(a, Offset(f(0.22f), f(0.56f)), Offset(f(0.78f), f(0.56f)), tr.width)
-            drawArc(a, 200f, 120f, false, Offset(f(0.3f), f(0.02f)), Size(f(0.56f), f(0.2f)), style = tr)
-        }
-        TemaId.ORDEN -> {
-            // Yunque sin pieza.
-            drawPath(Path().apply {
-                moveTo(f(0.06f), f(0.34f)); lineTo(f(0.86f), f(0.34f)); lineTo(f(0.94f), f(0.26f)); lineTo(f(0.94f), f(0.46f)); lineTo(f(0.66f), f(0.5f))
-                lineTo(f(0.6f), f(0.7f)); lineTo(f(0.76f), f(0.86f)); lineTo(f(0.24f), f(0.86f)); lineTo(f(0.4f), f(0.7f)); lineTo(f(0.34f), f(0.5f))
-                quadraticTo(f(0.14f), f(0.48f), f(0.06f), f(0.34f)); close()
-            }, l, style = tr)
-            drawLine(a, Offset(f(0.24f), f(0.94f)), Offset(f(0.76f), f(0.94f)), tr.width)
-        }
-        TemaId.VAPOR -> {
-            // Un manómetro con la aguja en cero: la caldera está fría.
-            drawCircle(l, f(0.4f), Offset(f(0.5f), f(0.5f)), style = tr)
-            for (k in 0..8) { val ang = Math.toRadians(135.0 + 33.75 * k); val c0 = Offset(f(0.5f), f(0.5f)); drawLine(l, Vapor.en(c0, f(0.32f), ang), Vapor.en(c0, f(if (k % 4 == 0) 0.24f else 0.28f), ang), tr.width * 0.8f) }
-            drawLine(a, Offset(f(0.5f), f(0.5f)), Vapor.en(Offset(f(0.5f), f(0.5f)), f(0.26f), Math.toRadians(135.0)), tr.width * 1.4f)
-            drawCircle(a, f(0.04f), Offset(f(0.5f), f(0.5f)))
-            drawLine(l, Offset(f(0.5f), f(0.9f)), Offset(f(0.5f), f(0.98f)), tr.width * 2f)
-        }
-        TemaId.LABORATORIO -> rotate(18f) {
-            // Tubo de ensayo vacío, con su graduación.
-            drawLine(l, Offset(f(0.38f), f(0.08f)), Offset(f(0.38f), f(0.72f)), tr.width)
-            drawLine(l, Offset(f(0.62f), f(0.08f)), Offset(f(0.62f), f(0.72f)), tr.width)
-            drawArc(l, 0f, 180f, false, Offset(f(0.38f), f(0.6f)), Size(f(0.24f), f(0.24f)), style = tr)
-            drawLine(a, Offset(f(0.32f), f(0.08f)), Offset(f(0.68f), f(0.08f)), tr.width)
-            listOf(0.3f, 0.42f, 0.54f).forEach { y -> drawLine(a.copy(alpha = 0.6f), Offset(f(0.38f), f(y)), Offset(f(0.48f), f(y)), tr.width * 0.6f) }
-        }
-        TemaId.COLONOS -> {
-            // Gaceta sin noticias: la cabecera y columnas en blanco.
-            drawRect(l, Offset(f(0.12f), f(0.1f)), Size(f(0.76f), f(0.8f)), style = tr)
-            drawLine(a, Offset(f(0.2f), f(0.24f)), Offset(f(0.8f), f(0.24f)), tr.width * 1.8f)
-            drawLine(l, Offset(f(0.2f), f(0.34f)), Offset(f(0.8f), f(0.34f)), tr.width * 0.6f)
-            drawLine(l, Offset(f(0.5f), f(0.42f)), Offset(f(0.5f), f(0.82f)), tr.width * 0.6f)
-        }
-        TemaId.NAPOLEON -> {
-            // Bicornio sin dueño, con su escarapela.
-            drawPath(Path().apply { moveTo(f(0.04f), f(0.66f)); quadraticTo(f(0.5f), 0f, f(0.96f), f(0.66f)); quadraticTo(f(0.5f), f(0.5f), f(0.04f), f(0.66f)); close() }, l, style = tr)
-            drawCircle(a, f(0.08f), Offset(f(0.66f), f(0.4f)))
-            drawLine(l, Offset(f(0.2f), f(0.78f)), Offset(f(0.8f), f(0.78f)), tr.width)
-        }
-        TemaId.DECO -> {
-            // La copa de champán vacía (la «coupe»), con su tallo y su pie, y una sola burbuja que quedó.
-            drawPath(Path().apply { moveTo(f(0.16f), f(0.26f)); quadraticTo(f(0.18f), f(0.52f), f(0.5f), f(0.54f)); quadraticTo(f(0.82f), f(0.52f), f(0.84f), f(0.26f)); close() }, l, style = tr)
-            drawLine(l, Offset(f(0.5f), f(0.54f)), Offset(f(0.5f), f(0.86f)), tr.width)
-            drawOval(l, Offset(f(0.32f), f(0.84f)), Size(f(0.36f), f(0.08f)), style = tr)
-            drawCircle(a, f(0.035f), Offset(f(0.56f), f(0.16f)), style = Stroke(tr.width * 0.8f))
-        }
-        TemaId.BOTANICO -> {
-            // Frasco de especímenes vacío, con su corcho y la etiqueta.
-            drawRoundRect(l, Offset(f(0.22f), f(0.26f)), Size(f(0.56f), f(0.66f)), CornerRadius(f(0.1f)), style = tr)
-            drawRect(a, Offset(f(0.3f), f(0.1f)), Size(f(0.4f), f(0.14f)), style = tr)
-            drawRect(l, Offset(f(0.32f), f(0.5f)), Size(f(0.36f), f(0.18f)), style = Stroke(tr.width * 0.6f))
-        }
-        TemaId.RUINAS -> {
-            // Una lata vacía, abierta, de la que asoma un brote.
-            drawRect(l, Offset(f(0.3f), f(0.36f)), Size(f(0.4f), f(0.52f)), style = tr)
-            drawOval(l, Offset(f(0.3f), f(0.31f)), Size(f(0.4f), f(0.1f)), style = tr)
-            drawLine(l, Offset(f(0.3f), f(0.55f)), Offset(f(0.7f), f(0.55f)), tr.width * 0.5f)
-            drawLine(l, Offset(f(0.3f), f(0.7f)), Offset(f(0.7f), f(0.7f)), tr.width * 0.5f)
-            drawLine(a, Offset(f(0.5f), f(0.36f)), Offset(f(0.52f), f(0.12f)), tr.width)
-            rotate(-35f, Offset(f(0.52f), f(0.2f))) { drawOval(a, Offset(f(0.52f), f(0.16f)), Size(f(0.18f), f(0.08f))) }
-            rotate(30f, Offset(f(0.51f), f(0.26f))) { drawOval(a, Offset(f(0.33f), f(0.22f)), Size(f(0.18f), f(0.08f))) }
-        }
-        TemaId.NAVIDAD -> {
-            // Calcetín colgado, sin regalos.
-            drawPath(Path().apply {
-                moveTo(f(0.34f), f(0.16f)); lineTo(f(0.66f), f(0.16f)); lineTo(f(0.66f), f(0.6f)); quadraticTo(f(0.66f), f(0.9f), f(0.36f), f(0.9f))
-                lineTo(f(0.2f), f(0.9f)); quadraticTo(f(0.1f), f(0.78f), f(0.24f), f(0.7f)); lineTo(f(0.34f), f(0.62f)); close()
-            }, l, style = tr)
-            drawRect(a, Offset(f(0.3f), f(0.06f)), Size(f(0.4f), f(0.12f)))
-        }
-        TemaId.SEDA -> {
-            // Cuenco vacío con sus palillos.
-            drawArc(l, 0f, 180f, true, Offset(f(0.12f), f(0.2f)), Size(f(0.76f), f(0.6f)), style = tr)
-            drawLine(l, Offset(f(0.36f), f(0.88f)), Offset(f(0.64f), f(0.88f)), tr.width)
-            drawLine(a, Offset(f(0.56f), f(0.06f)), Offset(f(0.9f), f(0.44f)), tr.width)
-            drawLine(a, Offset(f(0.66f), f(0.04f)), Offset(f(0.96f), f(0.38f)), tr.width)
-        }
-        TemaId.EDO -> {
-            // Un farolillo de papel apagado: el cuerpo con sus costillas, las tapas y el gancho.
-            drawOval(l, Offset(f(0.24f), f(0.18f)), Size(f(0.52f), f(0.66f)), style = tr)
-            for (k in 1..4) {
-                val y = f(0.18f + 0.66f * k / 5f); val dy = (y - f(0.51f)) / f(0.33f)
-                val media = f(0.26f) * kotlin.math.sqrt(maxOf(0f, 1f - dy * dy))
-                drawLine(l, Offset(f(0.5f) - media, y), Offset(f(0.5f) + media, y), tr.width * 0.6f)
-            }
-            drawRect(a, Offset(f(0.36f), f(0.12f)), Size(f(0.28f), f(0.07f)))
-            drawRect(a, Offset(f(0.36f), f(0.83f)), Size(f(0.28f), f(0.07f)))
-            drawLine(a, Offset(f(0.5f), f(0.02f)), Offset(f(0.5f), f(0.12f)), tr.width)
-        }
-        TemaId.GOTICO -> {
-            // Vela apagada en su palmatoria, con un hilo de humo.
-            drawRect(l, Offset(f(0.4f), f(0.3f)), Size(f(0.2f), f(0.48f)), style = tr)
-            drawLine(l, Offset(f(0.5f), f(0.3f)), Offset(f(0.52f), f(0.2f)), tr.width)
-            drawOval(a, Offset(f(0.2f), f(0.76f)), Size(f(0.6f), f(0.14f)), style = tr)
-            drawPath(Path().apply { moveTo(f(0.52f), f(0.18f)); quadraticTo(f(0.62f), f(0.1f), f(0.54f), f(0.03f)) }, l.copy(alpha = 0.5f), style = tr)
-        }
-        TemaId.ARCANO -> {
-            // Caja de archivo abierta y vacía, con su ficha caída y una telaraña en la esquina.
-            drawPath(Path().apply { moveTo(f(0.1f), f(0.4f)); lineTo(f(0.9f), f(0.4f)); lineTo(f(0.84f), f(0.92f)); lineTo(f(0.16f), f(0.92f)); close() }, l, style = tr)
-            drawPath(Path().apply { moveTo(f(0.1f), f(0.4f)); lineTo(f(0.22f), f(0.22f)); lineTo(f(0.98f), f(0.22f)); lineTo(f(0.9f), f(0.4f)) }, l, style = tr)
-            rotate(-14f, Offset(f(0.5f), f(0.66f))) { drawRect(a, Offset(f(0.36f), f(0.6f)), Size(f(0.28f), f(0.14f)), style = Stroke(tr.width * 0.7f)) }
-            val t = Offset(f(0.84f), f(0.44f))
-            listOf(180f, 225f, 270f).forEach { g -> val r = Math.toRadians(g.toDouble()); drawLine(l.copy(alpha = 0.5f), t, Offset(t.x + f(0.2f) * kotlin.math.cos(r).toFloat(), t.y - f(0.2f) * kotlin.math.sin(r).toFloat()), tr.width * 0.4f) }
-            drawArc(l.copy(alpha = 0.5f), 90f, 90f, false, Offset(t.x - f(0.12f), t.y), Size(f(0.24f), f(0.24f)), style = Stroke(tr.width * 0.4f))
-        }
-        TemaId.ESPACIO -> {
-            // Órbita sin planeta.
-            drawOval(l, Offset(f(0.06f), f(0.3f)), Size(f(0.88f), f(0.4f)), style = Stroke(tr.width, pathEffect = PathEffect.dashPathEffect(floatArrayOf(f(0.06f), f(0.05f)))))
-            drawCircle(a, f(0.1f), Offset(f(0.5f), f(0.5f)), style = tr)
-            estrellaComp(Offset(f(0.82f), f(0.16f)), f(0.08f), l, puntas = 4, dentro = 0.35f)
-        }
-        TemaId.ABISMO -> {
-            // La pantalla del sonar sin un solo eco: anillos, la cruz y el haz que barre en vano.
-            val c = Offset(f(0.5f), f(0.5f))
-            drawCircle(l, f(0.44f), c, style = tr)
-            drawCircle(l.copy(alpha = 0.5f), f(0.29f), c, style = Stroke(tr.width, pathEffect = PathEffect.dashPathEffect(floatArrayOf(f(0.04f), f(0.04f)))))
-            drawCircle(l.copy(alpha = 0.5f), f(0.14f), c, style = Stroke(tr.width, pathEffect = PathEffect.dashPathEffect(floatArrayOf(f(0.03f), f(0.03f)))))
-            drawLine(l.copy(alpha = 0.4f), Offset(f(0.06f), f(0.5f)), Offset(f(0.94f), f(0.5f)), tr.width * 0.7f)
-            drawLine(l.copy(alpha = 0.4f), Offset(f(0.5f), f(0.06f)), Offset(f(0.5f), f(0.94f)), tr.width * 0.7f)
-            drawLine(a, c, Offset(f(0.81f), f(0.19f)), tr.width * 1.4f)
-            drawCircle(a, f(0.035f), c)
-        }
-        TemaId.ANDALUS -> {
-            // Arco de herradura sin nadie bajo él.
-            drawArc(l, 160f, 220f, false, Offset(f(0.2f), f(0.1f)), Size(f(0.6f), f(0.6f)), style = tr)
-            drawLine(l, Offset(f(0.22f), f(0.5f)), Offset(f(0.22f), f(0.92f)), tr.width)
-            drawLine(l, Offset(f(0.78f), f(0.5f)), Offset(f(0.78f), f(0.92f)), tr.width)
-            drawLine(a, Offset(f(0.12f), f(0.92f)), Offset(f(0.88f), f(0.92f)), tr.width)
-        }
-        TemaId.MESO -> {
-            // El cartucho de un glifo, sobre su pie de tres lóbulos, sin nada pintado adentro.
-            drawRoundRect(l, Offset(f(0.18f), f(0.14f)), Size(f(0.64f), f(0.58f)), CornerRadius(f(0.14f)), style = tr)
-            for (k in -1..1) drawCircle(a, f(0.07f), Offset(f(0.5f + k * 0.15f), f(0.8f)), style = tr)
-            drawLine(l, Offset(f(0.3f), f(0.94f)), Offset(f(0.7f), f(0.94f)), tr.width)
-        }
-        TemaId.MONGOL -> {
-            // Ger sin fieltro: el muro de celosía y la cúpula.
-            drawPath(Path().apply { moveTo(f(0.1f), f(0.86f)); lineTo(f(0.1f), f(0.52f)); quadraticTo(f(0.5f), f(0.08f), f(0.9f), f(0.52f)); lineTo(f(0.9f), f(0.86f)); close() }, l, style = tr)
-            for (n in 0 until 4) {
-                val x0 = f(0.1f + n * 0.2f)
-                drawLine(l.copy(alpha = 0.5f), Offset(x0, f(0.86f)), Offset(x0 + f(0.2f), f(0.52f)), tr.width * 0.6f)
-            }
-            drawCircle(a, f(0.07f), Offset(f(0.5f), f(0.3f)), style = tr)
-        }
-        TemaId.RENACIMIENTO -> {
-            // Hoja en blanco y un compás abierto.
-            rotate(-6f) { drawRect(l, Offset(f(0.14f), f(0.12f)), Size(f(0.56f), f(0.76f)), style = tr) }
-            drawLine(a, Offset(f(0.72f), f(0.14f)), Offset(f(0.56f), f(0.9f)), tr.width)
-            drawLine(a, Offset(f(0.72f), f(0.14f)), Offset(f(0.92f), f(0.88f)), tr.width)
-            drawCircle(a, f(0.05f), Offset(f(0.72f), f(0.14f)))
-        }
-        TemaId.PIRATA -> {
-            // Mar en calma: una isla pequeña con su palmera, dos olas y, en la arena, la «X» que aún no se ha marcado.
-            drawPath(Path().apply { moveTo(f(0.18f), f(0.72f)); quadraticTo(f(0.5f), f(0.52f), f(0.82f), f(0.72f)) }, l, style = tr)
-            drawPath(Path().apply { moveTo(f(0.52f), f(0.64f)); quadraticTo(f(0.5f), f(0.4f), f(0.58f), f(0.24f)) }, l, style = tr)
-            listOf(-0.2f, 0.06f, 0.24f).forEach { dx ->
-                drawPath(Path().apply { moveTo(f(0.58f), f(0.24f)); quadraticTo(f(0.58f + dx * 0.6f), f(0.14f), f(0.58f + dx), f(0.3f)) }, l, style = tr)
-            }
-            listOf(0.84f, 0.94f).forEach { y ->
-                drawPath(Path().apply { moveTo(f(0.1f), f(y)); quadraticTo(f(0.2f), f(y - 0.05f), f(0.3f), f(y)); quadraticTo(f(0.4f), f(y + 0.05f), f(0.5f), f(y)); quadraticTo(f(0.6f), f(y - 0.05f), f(0.7f), f(y)); quadraticTo(f(0.8f), f(y + 0.05f), f(0.9f), f(y)) }, l.copy(alpha = 0.5f), style = tr)
-            }
-            val x = Offset(f(0.38f), f(0.64f)); val d = f(0.04f)
-            drawLine(a.copy(alpha = 0.5f), x - Offset(d, d), x + Offset(d, d), tr.width, StrokeCap.Round)
-            drawLine(a.copy(alpha = 0.5f), x + Offset(-d, d), x + Offset(d, -d), tr.width, StrokeCap.Round)
-        }
-        TemaId.URSS -> {
-            // Estrella de cartel sin pintar, sobre su barra.
-            estrellaComp(Offset(f(0.5f), f(0.48f)), f(0.42f), a, estilo = tr)
-            drawLine(l, Offset(f(0.1f), f(0.95f)), Offset(f(0.9f), f(0.95f)), tr.width * 1.6f)
-        }
-        TemaId.REVOLUCION -> {
-            // Urna sin papeletas, con la escarapela.
-            drawRect(l, Offset(f(0.16f), f(0.34f)), Size(f(0.68f), f(0.56f)), style = tr)
-            drawLine(a, Offset(f(0.38f), f(0.34f)), Offset(f(0.62f), f(0.34f)), tr.width * 1.8f)
-            val c = Offset(f(0.5f), f(0.62f))
-            drawCircle(e.secondary, f(0.1f), c); drawCircle(Color.White, f(0.065f), c); drawCircle(e.primary, f(0.03f), c)
-        }
-        TemaId.ANTIGUAS -> {
-            // Cofre abierto y vacío: la tapa levantada y la gema de la cerradura.
-            drawRect(l, Offset(f(0.12f), f(0.5f)), Size(f(0.76f), f(0.38f)), style = tr)
-            drawArc(l, 180f, 180f, false, Offset(f(0.12f), f(0.08f)), Size(f(0.76f), f(0.36f)), style = tr)
-            drawLine(l, Offset(f(0.12f), f(0.26f)), Offset(f(0.88f), f(0.26f)), tr.width)
-            romboComp(Offset(f(0.5f), f(0.62f)), f(0.06f), f(0.08f), a)
-        }
-        TemaId.CUEVA -> {
-            // La bolsa de piel, abierta y vacía, con su cordón suelto y tres puntos de ocre.
-            drawPath(Path().apply { moveTo(f(0.24f), f(0.34f)); quadraticTo(f(0.06f), f(0.9f), f(0.5f), f(0.92f)); quadraticTo(f(0.94f), f(0.9f), f(0.76f), f(0.34f)) }, l, style = tr)
-            drawOval(l, Offset(f(0.22f), f(0.24f)), Size(f(0.56f), f(0.16f)), style = tr)
-            drawPath(Path().apply { moveTo(f(0.7f), f(0.36f)); quadraticTo(f(0.86f), f(0.5f), f(0.8f), f(0.62f)) }, a, style = tr)
-            for (k in 0 until 3) drawCircle(a, f(0.025f), Offset(f(0.36f + k * 0.14f), f(0.66f)))
-        }
-    }
-}
 
 /** La marca del color de cada valor en una casilla de la escala ([fondo] es el de la casilla). */
 private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
@@ -2570,182 +2295,3 @@ private fun DrawScope.margenEditor(m: MargenEditor, e: ColorScheme) {
     }
 }
 
-/** La barra izquierda de un aviso (6 dp de ancho). */
-private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
-    val c = e.secondary; val w = size.width; val h = size.height; val d = 1.dp.toPx()
-    when (t) {
-        TemaId.ROMANO -> drawRect(c, Offset.Zero, Size(3 * d, h))
-        // El poste de la parada: tramos de color y tramos vacíos, como la pintura de los postes.
-        TemaId.URBE -> { var y = 0f; var i = 0; while (y < h) { drawRect(if (i % 2 == 0) c else e.primary, Offset(0f, y), Size(3 * d, minOf(5 * d, h - y))); y += 5 * d; i++ } }
-        TemaId.CIBER -> {
-            var y = 0f
-            while (y < h) { drawRect(c, Offset(0f, y), Size(2 * d, 4 * d)); y += 7 * d }
-        }
-        // La cinta de precaución de obra: franjas ámbar en diagonal.
-        TemaId.NEON -> {
-            drawRect(c.copy(alpha = 0.25f), Offset.Zero, Size(4 * d, h))
-            var y = -4 * d; while (y < h) { drawPath(Path().apply { moveTo(0f, y + 3 * d); lineTo(4 * d, y); lineTo(4 * d, y + 3 * d); lineTo(0f, y + 6 * d); close() }, c); y += 8 * d }
-        }
-        TemaId.HELENO -> {
-            drawRect(c, Offset.Zero, Size(1.4f * d, h))
-            drawRect(c, Offset(3.2f * d, 0f), Size(1.4f * d, h))
-        }
-        // La cenefa vertical de rectángulos de colores: cornalina, oro y lapislázuli.
-        TemaId.EGIPTO -> {
-            val colores = listOf(c, e.tertiary, e.primary, e.tertiary)
-            var y = 0f; var k = 0
-            while (y < h) { drawRect(colores[k % 4], Offset(0f, y), Size(3 * d, minOf(5 * d, h - y))); y += 6 * d; k++ }
-        }
-        TemaId.MEDIEVAL -> {
-            drawRect(e.tertiary, Offset(d, 0f), Size(1.2f * d, h))
-            var y = 5 * d
-            while (y < h) { drawCircle(e.primary, 1.5f * d, Offset(4.2f * d, y)); y += 9 * d }
-        }
-        TemaId.TEMPLARIO -> {
-            drawRect(e.secondary, Offset.Zero, Size(2 * d, h))
-            var y = 6 * d
-            while (y < h) { drawPath(cruzPatada(Offset(4.4f * d, y), 1.7f * d), e.primary); y += 10 * d }
-        }
-        TemaId.DISTOPIA -> drawRect(e.onSurface, Offset.Zero, Size(w, h))
-        TemaId.REFUGIO -> drawRoundRect(c, Offset(d, d), Size(4 * d, h - 2 * d), CornerRadius(2 * d))
-        TemaId.ORDEN -> {
-            // Galones apilados.
-            val p = Path(); var y = 0f
-            p.moveTo(0f, 0f)
-            while (y < h) { p.lineTo(w * 0.8f, y + 3 * d); p.lineTo(0f, y + 6 * d); y += 6 * d }
-            drawPath(p, c, style = Stroke(1.4f * d))
-        }
-        // El tubo de vapor vertical con sus bridas.
-        TemaId.VAPOR -> {
-            drawRect(e.primary.copy(alpha = 0.8f), Offset(0f, 0f), Size(3 * d, h))
-            var y = 4 * d; while (y < h) { drawRect(e.primary, Offset(-1 * d, y), Size(5 * d, 1.6f * d)); y += 14 * d }
-        }
-        TemaId.LABORATORIO -> {
-            drawRect(c, Offset.Zero, Size(d, h))
-            var y = 0f; var n = 0
-            while (y < h) { drawLine(c, Offset(0f, y), Offset(if (n % 5 == 0) w else w * 0.55f, y), d); y += 4 * d; n++ }
-        }
-        TemaId.COLONOS -> {
-            drawRect(c, Offset.Zero, Size(3 * d, h))
-            drawRect(c, Offset(4.4f * d, 0f), Size(0.8f * d, h))
-        }
-        TemaId.NAPOLEON -> {
-            drawRect(e.tertiary, Offset(2.5f * d, 0f), Size(d, h))
-            var y = 6 * d
-            while (y < h) { romboComp(Offset(3 * d, y), 2.4f * d, 3.2f * d, e.tertiary); y += 14 * d }
-        }
-        // Doble filete de oro y, de trecho en trecho, la corona escalonada de una torre.
-        TemaId.DECO -> {
-            drawRect(e.primary, Offset(0.5f * d, 0f), Size(d, h)); drawRect(e.primary.copy(alpha = 0.5f), Offset(3f * d, 0f), Size(0.7f * d, h))
-            var y = 8 * d
-            while (y < h) {
-                drawRect(c, Offset(0f, y), Size(5 * d, 1.6f * d)); drawRect(c, Offset(0.8f * d, y - 1.6f * d), Size(3.4f * d, 1.6f * d))
-                drawRect(c, Offset(1.6f * d, y - 3.2f * d), Size(1.8f * d, 1.6f * d))
-                y += 18 * d
-            }
-        }
-        TemaId.BOTANICO -> {
-            // Un tallo que ondula.
-            val p = Path(); var y = 0f
-            p.moveTo(3 * d, 0f)
-            while (y <= h) { p.lineTo(3 * d + 1.8f * d * sin(y / (5 * d)), y); y += 2f }
-            drawPath(p, c, style = Stroke(1.3f * d))
-        }
-        TemaId.RUINAS -> {
-            // Una valla de calle cortada: franjas en diagonal, óxido y ámbar.
-            var y = 0f; var n = 0
-            while (y < h) {
-                drawPath(Path().apply { moveTo(0f, y); lineTo(4 * d, y - 3 * d); lineTo(4 * d, y + 2 * d); lineTo(0f, y + 5 * d); close() }, if (n % 2 == 0) c else e.tertiary)
-                y += 5 * d; n++
-            }
-        }
-        TemaId.NAVIDAD -> {
-            // Bastón de caramelo: tramos rojos y verdes.
-            var y = 0f; var n = 0
-            while (y < h) { drawRect(if (n % 2 == 0) e.primary else e.secondary, Offset(0f, y), Size(4 * d, 5 * d)); y += 5 * d; n++ }
-        }
-        TemaId.SEDA -> {
-            drawRect(c, Offset(2.6f * d, 0f), Size(0.8f * d, h))
-            var y = 6 * d
-            while (y < h) { drawCircle(e.tertiary, 2.6f * d, Offset(3 * d, y)); drawRect(e.secondaryContainer, Offset(2.2f * d, y - 0.8f * d), Size(1.6f * d, 1.6f * d)); y += 10 * d }
-        }
-        // Un tanzaku de bermellón con su tapa de tinta y las tiras de papel que se le pegan.
-        TemaId.EDO -> {
-            drawRect(c, Offset.Zero, Size(3.5f * d, h))
-            drawRect(e.onSurface, Offset.Zero, Size(3.5f * d, 3 * d))
-            var y = 9 * d
-            while (y < h) { drawLine(e.surface.copy(alpha = 0.7f), Offset(0.7f * d, y), Offset(2.8f * d, y), 0.8f * d); y += 12 * d }
-        }
-        TemaId.GOTICO -> {
-            drawRect(c, Offset(2 * d, 0f), Size(2 * d, h))
-            var y = 7 * d
-            while (y < h) { drawRect(e.tertiary, Offset(0f, y - 0.6f * d), Size(w, 1.2f * d)); y += 14 * d }
-        }
-        // Una línea temblorosa a tinta, con una gota que se corrió.
-        TemaId.ARCANO -> {
-            val p = Path(); var y = 0f; p.moveTo(2.5f * d, 0f)
-            while (y <= h) { p.lineTo(2.5f * d + 0.8f * d * sin(y / (2.2f * d)) + 0.5f * d * sin(y / (7f * d)), y); y += 2f }
-            drawPath(p, c, style = Stroke(1.6f * d))
-            drawCircle(c, 2.2f * d, Offset(2.5f * d, h * 0.3f)); drawLine(c, Offset(2.5f * d, h * 0.3f), Offset(2.5f * d, h * 0.3f + 6 * d), 1.4f * d)
-        }
-        TemaId.ESPACIO -> {
-            var y = 2 * d
-            while (y < h) { drawCircle(c, d, Offset(2.5f * d, y)); y += 4 * d }
-        }
-        TemaId.ABISMO -> {
-            // Una corriente: la línea ondula de arriba abajo.
-            val p = Path(); var y = 0f
-            p.moveTo(2.5f * d, 0f)
-            while (y < h) { y += maxOf(d, 1f); p.lineTo(2.5f * d + 1.6f * d * sin(y / (3 * d)), y) }
-            drawPath(p, c, style = Stroke(1.6f * d))
-        }
-        TemaId.ANDALUS -> {
-            // Cinta de lazo en zigzag.
-            val p = Path(); var y = 0f; var izq = true
-            p.moveTo(0.5f * d, 0f)
-            while (y < h) { y += 4 * d; izq = !izq; p.lineTo(if (izq) 0.5f * d else w - 0.5f * d, y) }
-            drawPath(p, e.tertiary, style = Stroke(1.4f * d))
-        }
-        TemaId.MESO -> {
-            // Una columna de puntos y barras, como un numeral muy largo, en cinabrio y jade.
-            var y = d; var k = 0
-            while (y < h) {
-                if (k % 3 == 2) { drawRect(e.primary, Offset(0f, y), Size(w, 1.6f * d)); y += 4f * d }
-                else { drawCircle(e.tertiary, minOf(w / 2, 1.6f * d), Offset(w / 2, y + 1.6f * d)); y += 5f * d }
-                k++
-            }
-        }
-        TemaId.MONGOL -> {
-            drawRect(c, Offset.Zero, Size(4.5f * d, h))
-            drawLine(e.secondaryContainer, Offset(2.2f * d, 0f), Offset(2.2f * d, h), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 2 * d)))
-        }
-        TemaId.RENACIMIENTO -> {
-            drawLine(c, Offset(1.5f * d, 0f), Offset(2 * d, h), 0.9f * d)
-            drawLine(c.copy(alpha = 0.6f), Offset(3.5f * d, 2 * d), Offset(3 * d, h - 3 * d), 0.7f * d)
-        }
-        // Un cabo trenzado: dos cordones que se cruzan en diagonal.
-        TemaId.PIRATA -> {
-            var y = 0f; var k = 0
-            while (y < h) {
-                drawLine(if (k % 2 == 0) c else c.copy(alpha = 0.55f), Offset(0.4f * d, y), Offset(3.6f * d, y + 3 * d), 1.4f * d, StrokeCap.Round)
-                y += 2.5f * d; k++
-            }
-        }
-        TemaId.URSS -> drawPath(Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(0f, h); close() }, e.primary)
-        TemaId.REVOLUCION -> listOf(e.secondary, e.outline, e.primary).forEachIndexed { k, cc -> drawRect(cc, Offset(k * 2 * d, 0f), Size(1.6f * d, h)) }
-        TemaId.ANTIGUAS -> {
-            drawRect(c, Offset(2.5f * d, 0f), Size(d, h))
-            var y = 4 * d; var n = 0
-            while (y < h) {
-                val lado = if (n % 2 == 0) 1f else -1f
-                drawLine(c, Offset(3 * d, y), Offset(3 * d + lado * 2.5f * d, y - 2.5f * d), d)
-                y += 6 * d; n++
-            }
-        }
-        TemaId.CUEVA -> {
-            // Una hilera de puntos de ocre, de grosor desparejo, como pintados con la yema del dedo.
-            var y = 3 * d; var k = 0
-            while (y < h) { drawCircle(e.primary, (1.4f + (k * 7 % 5) * 0.25f) * d, Offset(2.5f * d, y)); y += 6 * d; k++ }
-        }
-    }
-}

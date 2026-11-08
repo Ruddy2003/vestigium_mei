@@ -142,12 +142,14 @@ object TusTemas {
         return lista().filter { it.dias == 1 && it.ultima < limite && !it.nombre.startsWith("sentimiento") }
     }
 
-    /** Pasa un #tema de un solo día a los hitos de ese día y le quita el # en el texto. */
+    /** Pasa un #tema de un solo día a las fechas señaladas de ese día (tipo «otra», esquema 21) y le quita el # en el texto. */
     fun aHito(t: Tema): Pair<Int, Antes> {
         val antes = foto()
         val d = Repo.dia(t.primera)
-        val hito = Texto.slug(t.nombre)
-        if (hito.isNotBlank() && hito !in d.hitos) Repo.importarDias(listOf(d.copy(hitos = d.hitos + hito)), sobrescribir = true)
+        val texto = Senaladas.texto(t.nombre)
+        val ya = Senaladas.de(d)
+        if (texto.isNotBlank() && ya.none { Senaladas.normal(it.texto) == Senaladas.normal(texto) })
+            Repo.importarDias(listOf(d.copy(senaladas = ya + Senalada("otro", texto), hitos = emptyList())), sobrescribir = true)
         val (k, _) = quitarAlmohadilla(t.nombre)
         return k to antes
     }

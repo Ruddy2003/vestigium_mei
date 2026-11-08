@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -20,7 +21,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -73,6 +73,12 @@ private val METAL = listOf(
 )
 val NIVELES = listOf("Bronce", "Plata", "Oro", "Legendario")
 
+/** El pedestal (o la placa) de un logro: si se ganó, su nivel y los tonos del metal de ese nivel. */
+internal fun estadoPedestal(l: Logros.Logro): io.github.ruddy2003.vestigium.ui.logros.EstadoPedestal {
+    val n = l.nivel.coerceIn(1, 4); val (o, b, br) = METAL[n - 1]
+    return io.github.ruddy2003.vestigium.ui.logros.EstadoPedestal(l.hecho, n, o, b, br, l.id.hashCode())
+}
+
 private val SINGULAR = mapOf("días" to "día", "sueños" to "sueño", "cartas" to "carta", "momentos" to "momento", "avisos" to "aviso", "veces" to "vez",
     "libros" to "libro", "ciudades" to "ciudad", "países" to "país", "palabras" to "palabra", "semanas" to "semana", "sesiones" to "sesión",
     "kilómetros" to "kilómetro", "horas" to "hora", "bloques" to "bloque", "obras" to "obra", "películas" to "película", "series" to "serie",
@@ -109,10 +115,9 @@ fun TrofeoLogro(l: Logros.Logro, alto: Dp, modifier: Modifier = Modifier, tema: 
     val cs = MaterialTheme.colorScheme
     val oscuro = esOscuro()
     val secreto = l.secreto && !l.hecho
-    val pedestal = if (oscuro) Color(0xFF2B2622) else Color(0xFF4A3A2C)
     Box(modifier.size(width = alto * 0.82f, height = alto), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
-            dibujarTrofeoTema(tema, l.categoria, l.nivel.coerceIn(1, 4), l.hecho, pedestal, cs.onSurface)
+            dibujarTrofeoTema(tema, l.categoria, l.nivel.coerceIn(1, 4), l.hecho, oscuro, cs.onSurface, l.id.hashCode())
         }
         if (secreto) Text("?", fontSize = (alto.value * 0.26f).sp, color = cs.onSurfaceVariant.copy(alpha = 0.7f), fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = alto * 0.3f))
@@ -121,15 +126,19 @@ fun TrofeoLogro(l: Logros.Logro, alto: Dp, modifier: Modifier = Modifier, tema: 
 
 /** El trofeo de un logro en un lienzo cualquiera (la imagen del hall). */
 internal fun DrawScope.dibujarTrofeoDe(l: Logros.Logro, tema: TemaId, oscuro: Boolean, tinta: Color) {
-    val pedestal = if (oscuro) Color(0xFF2B2622) else Color(0xFF4A3A2C)
-    dibujarTrofeoTema(tema, l.categoria, l.nivel.coerceIn(1, 4), l.hecho, pedestal, tinta)
+    dibujarTrofeoTema(tema, l.categoria, l.nivel.coerceIn(1, 4), l.hecho, oscuro, tinta, l.id.hashCode())
 }
 
-/** El trofeo del tema: la obra o el objeto de su categoría (ver [TrofeosTema]) sobre el pedestal del tema. */
-internal fun DrawScope.dibujarTrofeoTema(tema: TemaId, categoria: String, nivel: Int, hecho: Boolean, colorPedestal: Color, tinta: Color) {
+/**
+ * El trofeo del tema: la obra o el objeto de su categoría (ver [TrofeosTema]) sobre el pedestal del tema
+ * ([io.github.ruddy2003.vestigium.ui.logros.DisenoLogros.pedestalTrofeo]).
+ */
+internal fun DrawScope.dibujarTrofeoTema(tema: TemaId, categoria: String, nivel: Int, hecho: Boolean, modoOscuro: Boolean, tinta: Color, semilla: Int = 0) {
     val (oscuro, base, brillo) = METAL[nivel - 1]
     val p = TrofeosTema.Pincel(size.width, size.height, hecho, nivel, oscuro, base, brillo, tinta.copy(alpha = 0.13f))
-    with(TrofeosTema) { pedestal(tema, p, colorPedestal); figura(tema, categoria, p) }
+    val d = io.github.ruddy2003.vestigium.ui.logros.disenoLogros(tema)
+    with(d) { pedestalTrofeo(io.github.ruddy2003.vestigium.ui.logros.EstadoPedestal(hecho, nivel, oscuro, base, brillo, semilla), modoOscuro) }
+    with(TrofeosTema) { figura(tema, categoria, p) }
     destellos(tema, nivel - 1, hecho)
 }
 
@@ -207,19 +216,19 @@ fun DetalleTrofeo(l: Logros.Logro, todos: List<Logros.Logro>, editar: (() -> Uni
     val secreto = l.secreto && !l.hecho
     val serie = l.id.substringBeforeLast('_')
     val siguiente = todos.filter { it.id != l.id && it.id.substringBeforeLast('_') == serie && it.categoria == l.categoria && !it.hecho }.minByOrNull { it.meta }
-    Dialogo(onDismissRequest = cerrar, confirmButton = { TextButton(onClick = cerrar) { Text("cerrar") } },
+    Dialogo(onDismissRequest = cerrar, confirmButton = { BotonTexto(onClick = cerrar) { Text("cerrar") } },
         dismissButton = {
             if (l.hecho) {
                 val enHall = l.id in Repo.config.hall_logros
-                TextButton(onClick = {
+                BotonTexto(onClick = {
                     Repo.cambiarConfig { c -> c.copy(hall_logros = if (enHall) c.hall_logros - l.id else (c.hall_logros + l.id).takeLast(12)) }
                 }) { Text(if (enHall) "quitar del hall" else "ponerlo en el hall") }
             } else if (l.propio) androidx.compose.foundation.layout.Row {
                 // Un logro propio se puede corregir (nombre, qué cuenta, umbral, meta) o borrar.
-                if (editar != null) TextButton(onClick = editar) { Text("editar") }
+                if (editar != null) BotonTexto(onClick = editar) { Text("editar") }
                 var confirmar by remember(l.id) { mutableStateOf(false) }
-                TextButton(onClick = {
-                    if (!confirmar) { confirmar = true; return@TextButton }
+                BotonTexto(onClick = {
+                    if (!confirmar) { confirmar = true; return@BotonTexto }
                     val previos = Repo.config.logros_propios.filter { "p_" + it.id == l.id }
                     Repo.cambiarConfig { c -> c.copy(logros_propios = c.logros_propios.filterNot { "p_" + it.id == l.id }) }; cerrar()
                     io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Logro borrado") { Repo.cambiarConfig { c -> c.copy(logros_propios = c.logros_propios + previos.filter { p -> c.logros_propios.none { it.id == p.id } }) } }

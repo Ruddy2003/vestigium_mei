@@ -18,7 +18,7 @@ Vestigium Mei («mi rastro», en latín) es una app de Android, escrita en Kotli
 
 **Lo que devuelve:** análisis de relaciones entre cualquier par de variables, quitando tendencias y corrigiendo por días parecidos y por muchas comparaciones (capítulo 6); **experimentos personales** sorteados, con la hipótesis sellada antes de empezar (desde 10f, si se quiere, también el criterio de decisión; capítulo 8); reportes, «Tu año», logros y campañas (capítulo 9), y una **exportación** de 51 tablas CSV, un diccionario y un script de R (`vestigium.R`) que repite los análisis de la app.
 
-**Lo privado.** Impulsos, recaídas, libido, detonantes, medicamentos y el hábito ligado a las recaídas se ven **solo en la pantalla Privado** y viajan completos a R; no entran en ningún otro análisis de la app (capítulo 10). Aquí se describen solo en su mecánica.
+**Lo privado.** Impulsos, recaídas, libido, masturbación e intimidad (desde el esquema 21), detonantes, medicamentos y el hábito ligado a las recaídas se ven **solo en la pantalla Privado** y viajan completos a R; no entran en ningún otro análisis de la app (capítulo 10). Aquí se describen solo en su mecánica.
 
 ---
 

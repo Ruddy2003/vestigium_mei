@@ -31,7 +31,7 @@ Vestigium Mei («mi rastro», en latín) es una app de Android, escrita en Kotli
 
 **Lo que devuelve:** análisis de relaciones entre cualquier par de variables, quitando tendencias y corrigiendo por días parecidos y por muchas comparaciones (capítulo 6); **experimentos personales** sorteados, con la hipótesis sellada antes de empezar (desde 10f, si se quiere, también el criterio de decisión; capítulo 8); reportes, «Tu año», logros y campañas (capítulo 9), y una **exportación** de 51 tablas CSV, un diccionario y un script de R (`vestigium.R`) que repite los análisis de la app.
 
-**Lo privado.** Impulsos, recaídas, libido, detonantes, medicamentos y el hábito ligado a las recaídas se ven **solo en la pantalla Privado** y viajan completos a R; no entran en ningún otro análisis de la app (capítulo 10). Aquí se describen solo en su mecánica.
+**Lo privado.** Impulsos, recaídas, libido, masturbación e intimidad (desde el esquema 21), detonantes, medicamentos y el hábito ligado a las recaídas se ven **solo en la pantalla Privado** y viajan completos a R; no entran en ningún otro análisis de la app (capítulo 10). Aquí se describen solo en su mecánica.
 
 ## 1.2 El autoseguimiento y para qué sirve
 
@@ -523,9 +523,17 @@ Lo típico es no llenar el diario precisamente los días malos. Cuando la probab
 
 **Editar después.** Hasta el esquema 13 un registro de ánimo corregido no guardaba que fue editado, y un dato momentáneo podía volverse retrospectivo sin que se supiera (H-2-9). Desde el 14, cada corrección guarda `ts_editado` y cada registro nuevo `ts_creado`; en R, `vm_retraso()` dice qué se anotó tarde (Apéndice C).
 
+## 3.14b Fechas señaladas y episodios (esquema 21)
+
+Los **hitos** pasan a dos cosas. Las **fechas señaladas** son lo que quieres recordar del día: un tipo de un toque (primera vez, viaje, logro, cambio de vida, pérdida, encuentro, celebración u otra) y una frase; `hitos_n` las cuenta, y los hitos de antes se leen como «otra». Los **episodios** son algo fuerte que te pasa y que puede repetirse (crisis de ansiedad o pánico, llanto, pelea, migraña, enfermedad, accidente). Se anotan como momentos, con hora, intensidad de 1 a 5, duración y detonantes, y dan `n_episodio`, `episodio_intensidad_max` y `epi_*`. La familia `hito_*` ya no se calcula. Un día sin episodio anotado no distingue «no pasó» de «no lo anoté» (H-21-3). **[Diseño propio]**.
+
 ## 3.15 Seguimiento privado (solo la mecánica)
 
-Tres registros: **impulso** (0 a 5 en el día; momentos de 1 a 5), **recaída** (sí o no; momentos con hora, duración, detonantes, aparato y qué hacías antes) y **libido** (0 a 5 y foco), con anclas propias. Desde el módulo 10a, junto con los medicamentos, se anotan y se ven solo en la pantalla Privado y no entran en los análisis de la app, pero **sí** en el panel que se exporta a R (`n_recaida`, `recaida_min`, `n_impulso`…), para entender qué días y contextos lo hacen más difícil (capítulo 10). **[Diseño propio]**. Efectos posibles, sin comprobar: menos reactividad y más datos faltantes.
+Cinco registros: **impulso** (0 a 5 en el día; momentos de 1 a 5), **recaída** (sí o no; momentos con hora, duración, detonantes, aparato y qué hacías antes), **libido** (0 a 5 y foco) y, desde el esquema 21, dos más:
+- **masturbación**: hora, duración, estímulo, dónde y aparato. Con pornografía crea una recaída gemela ligada (decisión del autor);
+- **intimidad**: qué pasó, con nombres de manual y un nivel de 0 a 4 (de a distancia a coito); con quién; satisfacción, placer, conexión y comodidad de 1 a 5; las emociones de después y los detalles.
+
+Usan anclas propias. La ficha de la persona en Tu gente dice cuántas veces y cuándo fue la última, solo con el seguimiento privado encendido. Desde el módulo 10a, junto con los medicamentos, se anotan y se ven solo en la pantalla Privado y no entran en los análisis de la app, pero **sí** en el panel que se exporta a R (`n_recaida`, `recaida_min`, `n_impulso`…), para entender qué días y contextos lo hacen más difícil (capítulo 10). **[Diseño propio]**. Efectos posibles, sin comprobar: menos reactividad y más datos faltantes.
 
 ## 3.16 Una medida que no es autorreporte: la prueba de reacción
 
@@ -812,7 +820,7 @@ Para alcohol y cannabis puedes decir **qué tan fuerte lo sientes** de 0 a 10. C
 
 ## 5.5 Suplementos (`data/Lote3.kt`)
 
-`Suplementos` ofrece tres modelos, elegibles por suplemento y con parámetros editables. Para todos se guardan `supl_<id>_dosis` y `supl_<id>_tomado` (0/1).
+`Suplementos` ofrece tres modelos, elegibles por suplemento y con parámetros editables. Para todos se guardan `supl_<id>_dosis` (la suma de las tomas del día), `supl_<id>_tomado` (0/1) y, desde el esquema 21, `supl_<id>_n` (cuántas tomas). Desde ese esquema se pueden anotar varias tomas al día, y cada suplemento dice cuántas lleva (`tomas_dia`), lo que decide el recordatorio (con varias horas posibles).
 
 **Carga: la creatina (`Suplementos.carga`).** La creatina no sube y baja en horas: se **acumula** en el músculo durante semanas. El modelo representa esa reserva de 0 a 100 % (su **saturación**):
 
@@ -856,7 +864,7 @@ Hultman et al. (1996) midieron que la creatina del músculo aumentaba alrededor 
 
 - **Aire libre y kilómetros** (capítulo 4): `aire_libre_min` es el mayor entre los minutos con **1000 lux o más** y los minutos caminando, corriendo o en bici, y **subestima**; `distancia_km` es una **cota inferior** del recorrido (H-3-5). **[Aproximación]**.
 - **Fase lunar** (`Luna`): con el **mes sinódico medio** de 29.530588853 días; iluminación = (1 − cos 2π*f*)/2 (`luna_ilum`). **[Validado]** como aproximación astronómica; cuánto se desvía de la fase real no se cuantificó **[sin verificar]**.
-- **Enfoque y siestas** (`data/Enfoque.kt`): bloques del cronómetro **sin contar las pausas**; los de **menos de 1 minuto** no se guardan. Son **mediciones** de tu cronómetro, no modelos.
+- **Enfoque y siestas** (`data/Enfoque.kt`): bloques del cronómetro **sin contar las pausas**; los de **menos de 1 minuto** no se guardan. Son **mediciones** de tu cronómetro, no modelos. Desde el esquema 21, un bloque no se corta en su meta: avisa y sigue contando hasta que pasas al descanso o terminas. Se guarda lo real (`min`) y lo planeado (`plan_min`), así que `enfoque_min` incluye lo de más (H-21-1).
 - **Repetición máxima estimada** (1RM, el mayor peso que podrías levantar una vez): peso × (1 + repeticiones/30), la **fórmula de Epley** (con 1 repetición, el peso mismo desde el 5 nov 2026); su fuente original **[sin verificar]**. Desde la 10c hay **un solo criterio** en toda la app (`Macrofactor.e1rm`): series de 1 a **12** repeticiones, sin calentamientos. *Ejemplo:* con 100 kg × 15, 120 kg × 5 y un calentamiento de 130 kg × 8, da 120 × (1 + 5/30) = **140 kg** (H-4-13, resuelto). Desde la 10f (D.114; H-7-14), `fuerza_ref_kg` es la mayor de esas cifras del día en un solo ejercicio fijo, el press inclinado con mancuernas, reconocido por su nombre en inglés o en español (`Macrofactor.esReferencia`, **[Diseño propio]**); vacía los días sin ese ejercicio. La plantilla de experimento de la creatina la mide en vez del volumen, que cambia según qué entrenaste; si vas subiendo de peso, la cifra sube sola.
 - **Grados de escalada** (`Grados`): tablas fijas de equivalencia. **[Aproximación]**: las tablas publicadas no coinciden entre sí.
 
@@ -1324,7 +1332,7 @@ Las variables de la sección 7.4 entran en Explorar con el mismo método que las
 
 ## 7.10 Privacidad: dónde entran los momentos privados
 
-Un momento es privado si su tipo es `impulso`, `recaida` o `libido` (`Momento.privado`, regla única en `data/Privado.kt`). Sus @menciones y #temas **no entran en nada de este capítulo** (presencias, `vi_*`, `per_`, `pen_`, Constelación, Red, `vm_red_*`, «Tu gente» ni las sugerencias al escribir), con o sin el seguimiento privado activado. Solo se ven en la pantalla Privado y van completos a `vm_momentos.csv`. Hasta v84, recaídas y libido entraban en `per_` y en «Tu gente», y los impulsos en todo (H-6-1).
+Un momento es privado si su tipo es `impulso`, `recaida`, `libido` o, desde el esquema 21, `masturbacion` o `intimidad` (`Momento.privado`, regla única en `data/Privado.kt`). Sus @menciones y #temas **no entran en nada de este capítulo** (presencias, `vi_*`, `per_`, `pen_`, Constelación, Red, `vm_red_*`, «Tu gente» ni las sugerencias al escribir), con o sin el seguimiento privado activado. Solo se ven en la pantalla Privado y van completos a `vm_momentos.csv`. La única excepción, desde el esquema 21, es la ficha de una persona, que con el seguimiento privado encendido dice cuántas veces hubo intimidad con ella y cuándo fue la última. En un episodio de pelea, la persona sí cuenta como mención. Hasta v84, recaídas y libido entraban en `per_` y en «Tu gente», y los impulsos en todo (H-6-1).
 
 ## 7.11 En resumen
 
@@ -1661,9 +1669,9 @@ También desde el esquema 13, una campaña aceptada el miércoles ya no cuenta e
 
 ### 10.2.1 Qué es y dónde se ve
 
-El **seguimiento privado** son los impulsos, recaídas, libido, detonantes, medicamentos y el hábito ligado a las recaídas. Desde el módulo 10a hay **una sola regla, en un solo archivo** (`data/Privado.kt`). Es privado:
+El **seguimiento privado** son los impulsos, recaídas, libido, masturbación e intimidad (esquema 21), detonantes, medicamentos y el hábito ligado a las recaídas. Desde el módulo 10a hay **una sola regla, en un solo archivo** (`data/Privado.kt`). Es privado:
 
-- todo momento de tipo `impulso`, `recaida` o `libido` (`Momento.privado`, que usa `Privado.TIPOS`);
+- todo momento de tipo `impulso`, `recaida`, `libido`, `masturbacion` o `intimidad` (`Momento.privado`, que usa `Privado.TIPOS`);
 - en el día, la intensidad del impulso (0 a 5), si hubo recaída, los detonantes y los **medicamentos**;
 - el **hábito ligado a las recaídas**: con el interruptor encendido, el que elegiste en Privacidad o, si no elegiste, un hábito activo cuyo nombre contenga ciertas palabras clave; con el interruptor apagado, solo el que elegiste.
 

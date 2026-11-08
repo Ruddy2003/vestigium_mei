@@ -59,9 +59,42 @@ object Recaidas {
      * qué había antes). El hábito ligado se queda sin marcar, como lo dejó la recaída.
      */
     fun alBorrar(m: Momento) {
-        if (m.tipo != "recaida") return
+        // Con gemela (esquema 21): al borrar una masturbación se va su recaída; al borrar la recaída, la masturbación se queda sin vínculo.
+        soltarGemela(m)
+        if (m.tipo == "recaida") limpiarDia(m, null)
+    }
+
+    private fun limpiarDia(m: Momento, otro: String?) {
         val d = Repo.dias[m.fecha] ?: return
-        if (d.recaida == true && Repo.momentos.none { it.tipo == "recaida" && it.fecha == m.fecha && it.id != m.id }) Repo.guardarDia(d.copy(recaida = null))
+        if (d.recaida == true && Repo.momentos.none { it.tipo == "recaida" && it.fecha == m.fecha && it.id != m.id && it.id != otro }) Repo.guardarDia(d.copy(recaida = null))
+    }
+
+    /**
+     * Una masturbación con pornografía cuenta como recaída (decisión del autor, esquema 21): crea la recaída gemela a la misma
+     * hora, con su duración y aparato, la liga a la masturbación ([Momento.vinculo] en las dos) y marca el día y el hábito.
+     * Si ya tenía gemela, no crea otra. Devuelve la recaída y cómo estaba el día, para deshacerlo.
+     */
+    fun registrarDesdeMasturbacion(m: Momento): Pair<Momento, Previo>? {
+        if (m.tipo != "masturbacion" || m.estimulo != "pornografia") return null
+        m.vinculo?.let { id -> Repo.momentos.firstOrNull { it.id == id && it.tipo == "recaida" }?.let { return null } }
+        val r = Momento(Repo.nuevoId(), m.ts, m.fecha, "recaida", lat = m.lat, lon = m.lon, precision_m = m.precision_m, lugar = m.lugar,
+            origen = m.origen, dispositivo = m.dispositivo, duracion_min = m.duracion_min, vinculo = m.id, ts_creado = Fechas.ahoraIso())
+        Repo.guardarMomento(r)
+        Repo.guardarMomento(m.copy(vinculo = r.id))
+        return r to registrar(r)
+    }
+
+    /** La gemela de un momento (la recaída de una masturbación, o al revés), si sigue guardada. */
+    fun gemela(m: Momento): Momento? = m.vinculo?.let { id -> Repo.momentos.firstOrNull { it.id == id } }
+
+    /**
+     * Si la masturbación deja de ser con pornografía (o se borra), su recaída gemela sobra: la borra y limpia la marca del día
+     * si era la única. Si se borra la recaída, la masturbación solo pierde el vínculo. La pantalla pregunta antes de llamarla.
+     */
+    fun soltarGemela(m: Momento) {
+        val g = gemela(m) ?: return
+        if (g.tipo == "recaida") { Repo.borrarMomento(g.id); limpiarDia(g, m.id) }
+        else Repo.guardarMomento(g.copy(vinculo = null))
     }
 
     /** Días con recaída: los marcados en el día y los que tienen una recaída registrada con hora. */

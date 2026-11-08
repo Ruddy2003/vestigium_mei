@@ -11,6 +11,11 @@ import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -180,85 +185,8 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
 }
 
 // =====================================================================
-//  La forma del sobre: solapa, esquinas, cierre y adorno de cada tema
+//  El sello de cada tema (el sobre lo dibuja el tema: ui/biblioteca, DisenoBiblioteca.sobre); el PDF de la carta lo usa
 // =====================================================================
-
-/** El perfil del borde de la solapa, de una esquina a la otra: en pico, redondo, recto, en ondas, en ojiva… */
-internal enum class SolapaSobre { PICO, REDONDA, RECTA, ONDAS, LENGUA, BISEL, OJIVA, DIENTES, PARABOLA, ESCALON, CORONA, RASGADA, ALMENA }
-
-/** Con qué se ata el sobre sellado: cordón en cruz, dos vueltas, cinta vertical, faja, hilo y botones o precinto. */
-internal enum class CierreSobre { CRUZ, DOBLE, VERTICAL, BANDA, HILO, PRECINTO }
-
-/** La forma del sobre de un tema: el perfil de la solapa, el redondeo de las esquinas (en fracción del alto) y el cierre. */
-internal class FormaSobre(val solapa: SolapaSobre, val radio: Float, val cierre: CierreSobre)
-
-internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
-    TemaId.ROMANO -> FormaSobre(SolapaSobre.PICO, 0.03f, CierreSobre.CRUZ)
-    TemaId.URBE -> FormaSobre(SolapaSobre.RECTA, 0.03f, CierreSobre.VERTICAL)
-    TemaId.CIBER -> FormaSobre(SolapaSobre.RECTA, 0f, CierreSobre.PRECINTO)
-    TemaId.NEON -> FormaSobre(SolapaSobre.DIENTES, 0.05f, CierreSobre.BANDA)
-    TemaId.HELENO -> FormaSobre(SolapaSobre.REDONDA, 0.03f, CierreSobre.DOBLE)
-    TemaId.EGIPTO -> FormaSobre(SolapaSobre.RECTA, 0.035f, CierreSobre.VERTICAL)
-    TemaId.MEDIEVAL -> FormaSobre(SolapaSobre.LENGUA, 0.015f, CierreSobre.VERTICAL)
-    TemaId.TEMPLARIO -> FormaSobre(SolapaSobre.ALMENA, 0.01f, CierreSobre.CRUZ)
-    TemaId.DISTOPIA -> FormaSobre(SolapaSobre.RECTA, 0.01f, CierreSobre.HILO)
-    TemaId.REFUGIO -> FormaSobre(SolapaSobre.REDONDA, 0.08f, CierreSobre.BANDA)
-    TemaId.ORDEN -> FormaSobre(SolapaSobre.BISEL, 0.01f, CierreSobre.CRUZ)
-    TemaId.VAPOR -> FormaSobre(SolapaSobre.ESCALON, 0.02f, CierreSobre.PRECINTO)
-    TemaId.LABORATORIO -> FormaSobre(SolapaSobre.PARABOLA, 0.05f, CierreSobre.HILO)
-    TemaId.COLONOS -> FormaSobre(SolapaSobre.PICO, 0.02f, CierreSobre.DOBLE)
-    TemaId.NAPOLEON -> FormaSobre(SolapaSobre.PICO, 0.025f, CierreSobre.BANDA)
-    TemaId.DECO -> FormaSobre(SolapaSobre.CORONA, 0.008f, CierreSobre.VERTICAL)
-    TemaId.BOTANICO -> FormaSobre(SolapaSobre.ONDAS, 0.04f, CierreSobre.CRUZ)
-    TemaId.RUINAS -> FormaSobre(SolapaSobre.RASGADA, 0.005f, CierreSobre.HILO)
-    TemaId.NAVIDAD -> FormaSobre(SolapaSobre.DIENTES, 0.04f, CierreSobre.CRUZ)
-    TemaId.SEDA -> FormaSobre(SolapaSobre.RECTA, 0.02f, CierreSobre.BANDA)
-    TemaId.EDO -> FormaSobre(SolapaSobre.BISEL, 0.005f, CierreSobre.BANDA)
-    TemaId.GOTICO -> FormaSobre(SolapaSobre.OJIVA, 0.015f, CierreSobre.VERTICAL)
-    TemaId.ARCANO -> FormaSobre(SolapaSobre.PICO, 0.01f, CierreSobre.HILO)
-    TemaId.ESPACIO -> FormaSobre(SolapaSobre.REDONDA, 0.08f, CierreSobre.PRECINTO)
-    TemaId.ABISMO -> FormaSobre(SolapaSobre.ONDAS, 0.06f, CierreSobre.BANDA)
-    TemaId.ANDALUS -> FormaSobre(SolapaSobre.ESCALON, 0.03f, CierreSobre.DOBLE)
-    TemaId.MESO -> FormaSobre(SolapaSobre.ESCALON, 0.01f, CierreSobre.CRUZ)      // el perfil de la pirámide; el códice atado en cruz
-    TemaId.MONGOL -> FormaSobre(SolapaSobre.PARABOLA, 0.06f, CierreSobre.CRUZ)
-    TemaId.RENACIMIENTO -> FormaSobre(SolapaSobre.BISEL, 0.02f, CierreSobre.DOBLE)
-    TemaId.PIRATA -> FormaSobre(SolapaSobre.ONDAS, 0.012f, CierreSobre.DOBLE)
-    TemaId.URSS -> FormaSobre(SolapaSobre.PICO, 0f, CierreSobre.PRECINTO)
-    TemaId.REVOLUCION -> FormaSobre(SolapaSobre.LENGUA, 0.01f, CierreSobre.CRUZ)
-    TemaId.ANTIGUAS -> FormaSobre(SolapaSobre.RASGADA, 0.02f, CierreSobre.CRUZ)
-    TemaId.CUEVA -> FormaSobre(SolapaSobre.PARABOLA, 0.06f, CierreSobre.DOBLE)      // la piel doblada y atada con dos vueltas de tendón
-}
-
-/** Qué tan abajo llega el borde de la solapa en [u] (0 a 1, de una esquina a la otra): 0 en las esquinas y 1 al centro. */
-private fun perfilSolapa(s: SolapaSobre, u: Float): Float {
-    val p = 1f - abs(2f * u - 1f)
-    val borde = (minOf(u, 1f - u) / 0.05f).coerceAtMost(1f)
-    return when (s) {
-        SolapaSobre.PICO -> p
-        SolapaSobre.REDONDA -> sqrt(1f - (1f - p) * (1f - p))
-        SolapaSobre.RECTA -> borde
-        SolapaSobre.ONDAS -> borde * (0.86f + 0.14f * abs(cos((u - 0.5f) * PI.toFloat() * 5f)))
-        SolapaSobre.LENGUA -> p.pow(1.8f)
-        SolapaSobre.BISEL -> (p * 2.4f).coerceAtMost(1f)
-        SolapaSobre.OJIVA -> p.pow(0.45f)
-        SolapaSobre.DIENTES -> { val x = (u - 0.5f) * 8f; borde * (0.82f + 0.18f * (1f - 2f * abs(x - round(x)))) }
-        SolapaSobre.PARABOLA -> 1f - (2f * u - 1f) * (2f * u - 1f)
-        SolapaSobre.ESCALON -> ceil(p * 4f) / 4f
-        // La corona de un rascacielos: tres retranqueos simétricos y, al centro, la aguja que baja hasta la punta.
-        SolapaSobre.CORONA -> if (p > 0.92f) 1f else ceil(p * 3f) / 3f * 0.78f
-        SolapaSobre.RASGADA -> ((p * 1.6f).coerceAtMost(1f) + 0.05f * sin(u * 37f) * sin(u * PI.toFloat())).coerceIn(0f, 1f)
-        // El borde de la solapa en almenas: merlones y troneras alternados.
-        SolapaSobre.ALMENA -> borde * (if ((u * 9f).toInt() % 2 == 0) 1f else 0.8f)
-    }
-}
-
-/** La solapa: de la esquina izquierda a la derecha por el borde de arriba y de vuelta por su perfil, que llega hasta [puntaY]. */
-private fun rutaSolapa(s: SolapaSobre, l: Float, r: Float, top: Float, puntaY: Float): Path = Path().apply {
-    moveTo(l, top)
-    for (i in 1..63) { val u = i / 64f; lineTo(l + (r - l) * u, top + (puntaY - top) * perfilSolapa(s, u)) }
-    lineTo(r, top)
-    close()
-}
 
 /** Una estrella de [puntas] puntas (o un sol dentado, si [r] es casi [R]). */
 private fun estrellaRuta(c: Offset, R: Float, r: Float, puntas: Int, giro: Double = -PI / 2): Path = Path().apply {
@@ -809,451 +737,6 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
     }
 }
 
-/** Un destello de cuatro puntas. */
-private fun DrawScope.destelloSobre(c: Offset, r: Float, color: Color) = drawPath(estrellaRuta(c, r, r * 0.25f, 4), color)
-
-/** El adorno de cada tema en el frente del sobre (por los lados, para no tapar lo que va escrito abajo). */
-private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
-    val l = cuerpo.left; val r = cuerpo.right; val top = cuerpo.top; val bot = cuerpo.bottom
-    val W = cuerpo.width; val H = cuerpo.height
-    when (t) {
-        // Los clavi: dos franjas de púrpura, como en la toga.
-        TemaId.ROMANO -> listOf(l + W * 0.035f, r - W * 0.053f).forEach { x -> drawRect(Color(0xFF7C2433).copy(alpha = 0.7f), Offset(x, top), Size(W * 0.018f, H)) }
-        // La orilla del correo urgente: rayas en diagonal, rojo pompeyano y verde de persiana, por arriba y por abajo.
-        TemaId.URBE -> {
-            val franja = H * 0.045f; val paso = W * 0.05f
-            listOf(top, bot - franja).forEach { y0 ->
-                var x = l; var i = 0
-                while (x < r) {
-                    val col = if (i % 2 == 0) Color(0xFFA8432A) else Color(0xFF3D5E45)
-                    drawPath(Path().apply { moveTo(x, y0 + franja); lineTo(x + paso * 0.5f, y0); lineTo(x + paso, y0); lineTo(x + paso * 0.5f, y0 + franja); close() }, col.copy(alpha = 0.6f))
-                    x += maxOf(paso, 1f); i++
-                }
-            }
-        }
-        TemaId.CIBER -> {
-            // Líneas de barrido y la ventana del sobre, por donde asoma la dirección en cian.
-            var y = top; while (y < bot) { drawLine(Color(0xFF00E5FF).copy(alpha = 0.035f), Offset(l, y), Offset(r, y), 1f); y += 3f }
-            val o = Offset(l + W * 0.05f, top + H * 0.42f); val s = Size(W * 0.25f, H * 0.18f)
-            drawRect(Color.Black.copy(alpha = 0.55f), o, s); drawRect(Color(0xFF00E5FF).copy(alpha = 0.6f), o, s, style = Stroke(1.2f))
-            for (j in 0 until 3) {
-                val yy = o.y + s.height * (0.28f + j * 0.24f)
-                drawLine(Color(0xFF00E5FF).copy(alpha = 0.5f), Offset(o.x + s.width * 0.1f, yy), Offset(o.x + s.width * (0.85f - j * 0.2f), yy), 1.4f)
-            }
-        }
-        TemaId.NEON -> {
-            // Gotas de lluvia en el plástico y la etiqueta de entrega con su código de barras y el número del puesto.
-            val az = java.util.Random(19)
-            repeat(18) { val x = l + az.nextFloat() * W; val y = top + az.nextFloat() * H; drawLine(Color.White.copy(alpha = 0.07f), Offset(x, y), Offset(x, y + H * 0.05f), 1.5f, StrokeCap.Round) }
-            val o = Offset(l + W * 0.05f, top + H * 0.52f); val s = Size(W * 0.3f, H * 0.28f)
-            drawRect(Color(0xFFEFE3EA), o, s)
-            drawRect(pa.cordon, o, Size(s.width, s.height * 0.22f))
-            var x = o.x + s.width * 0.08f; var k = 0
-            while (x < o.x + s.width * 0.92f) { val g = if (k % 3 == 0) 2.2f else 1f; drawLine(Color(0xFF1C0010), Offset(x, o.y + s.height * 0.38f), Offset(x, o.y + s.height * 0.86f), g); x += 3.4f; k++ }
-        }
-        TemaId.HELENO -> {
-            // Un meandro en columna junto al borde derecho, entre dos filetes.
-            val u = W * 0.016f; val x0 = r - W * 0.075f; val purpura = Color(0xFF5B2A6E)
-            val p = Path(); var y = top + H * 0.12f
-            while (y + 3 * u <= top + H * 0.66f) { p.moveTo(x0, y); p.lineTo(x0 + 2 * u, y); p.lineTo(x0 + 2 * u, y + 2 * u); p.lineTo(x0 + u, y + 2 * u); p.lineTo(x0 + u, y + u); y += 3 * u }
-            drawPath(p, purpura.copy(alpha = 0.65f), style = Stroke(1.3f))
-            listOf(x0 - u * 0.6f, x0 + u * 2.6f).forEach { x -> drawLine(purpura.copy(alpha = 0.5f), Offset(x, top + H * 0.1f), Offset(x, top + H * 0.68f), 1f) }
-        }
-        TemaId.EGIPTO -> {
-            // Un cartucho vertical junto al borde derecho, con tres signos en lapislázuli, y las fibras del papiro en cruz.
-            val lapis = Color(0xFF1D2F7A)
-            var y = top + H * 0.05f; while (y < bot) { drawLine(Color(0xFF8A6E3A).copy(alpha = 0.08f), Offset(l, y), Offset(r, y), 1f); y += maxOf(H * 0.035f, 1f) }
-            var x = l + W * 0.02f; while (x < r) { drawLine(Color(0xFF8A6E3A).copy(alpha = 0.05f), Offset(x, top), Offset(x, bot), 1f); x += maxOf(W * 0.03f, 1f) }
-            val ancho = W * 0.075f; val x0 = r - W * 0.12f; val y0 = top + H * 0.1f; val alto = H * 0.56f
-            drawRoundRect(lapis.copy(alpha = 0.7f), Offset(x0, y0), Size(ancho, alto), CornerRadius(ancho / 2), style = Stroke(1.6f))
-            drawLine(lapis.copy(alpha = 0.7f), Offset(x0 - ancho * 0.15f, y0 + alto + 3f), Offset(x0 + ancho * 1.15f, y0 + alto + 3f), 2.2f)
-            for (j in 0 until 3) signoEgipcio(j, Offset(x0 + ancho / 2, y0 + alto * (0.2f + j * 0.3f)), ancho * 0.72f, lapis.copy(alpha = 0.7f), 1.3f)
-        }
-        // Calderones de copista en rojo y azul a los dos lados.
-        TemaId.MEDIEVAL -> listOf(0.3f, 0.44f, 0.58f).forEachIndexed { i, f ->
-            val col = if (i % 2 == 0) Color(0xFFB3261E) else Color(0xFF1F3A93)
-            listOf(l + W * 0.05f, r - W * 0.07f).forEach { x ->
-                drawRect(col.copy(alpha = 0.75f), Offset(x, top + H * f), Size(W * 0.02f, W * 0.02f))
-                drawLine(col.copy(alpha = 0.6f), Offset(x + W * 0.01f, top + H * f + W * 0.02f), Offset(x + W * 0.01f, top + H * (f + 0.08f)), 1.2f)
-            }
-        }
-        TemaId.TEMPLARIO -> {
-            // El estandarte «baucent», la mitad de arriba negra y la de abajo blanca, en su asta a la izquierda; a la derecha, la cruz patada roja.
-            val x = l + W * 0.05f; val y = top + H * 0.24f; val bw = W * 0.06f; val bh = H * 0.34f
-            drawLine(pa.tinta.copy(alpha = 0.7f), Offset(x, y - H * 0.05f), Offset(x, y + bh + H * 0.1f), 1.4f)
-            drawRect(Color(0xFF1A1816).copy(alpha = 0.85f), Offset(x, y), Size(bw, bh / 2))
-            drawRect(Color.White.copy(alpha = 0.95f), Offset(x, y + bh / 2), Size(bw, bh / 2))
-            drawRect(pa.tinta.copy(alpha = 0.5f), Offset(x, y), Size(bw, bh), style = Stroke(1f))
-            drawPath(cruzPatada(Offset(r - W * 0.08f, top + H * 0.36f), W * 0.035f), pa.forro.copy(alpha = 0.85f))
-        }
-        TemaId.DISTOPIA -> {
-            // Los agujeros del sobre de correo interno y la franja roja de «confidencial» en la esquina.
-            var y = top + H * 0.2f; while (y < top + H * 0.7f) { drawCircle(Color.Black.copy(alpha = 0.3f), H * 0.025f, Offset(l + W * 0.04f, y)); y += H * 0.12f }
-            drawLine(Color(0xFFC8102E).copy(alpha = 0.8f), Offset(r - W * 0.2f, bot + 4f), Offset(r + 4f, bot - W * 0.2f), W * 0.045f)
-        }
-        TemaId.REFUGIO -> {
-            // La franja verde azulada del pie y dos destellos naranjas.
-            drawRect(Color(0xFF1C6E6A).copy(alpha = 0.8f), Offset(l, bot - H * 0.035f), Size(W, H * 0.035f))
-            destelloSobre(Offset(r - W * 0.12f, top + H * 0.36f), H * 0.1f, Color(0xFFD9572B))
-            destelloSobre(Offset(r - W * 0.2f, top + H * 0.5f), H * 0.063f, Color(0xFFD9572B))
-        }
-        // Remaches a los dos lados.
-        TemaId.ORDEN -> listOf(l + W * 0.03f, r - W * 0.03f).forEach { x ->
-            var y = top + H * 0.14f
-            while (y < bot - H * 0.05f) { drawCircle(Color(0xFF6E757D), H * 0.018f, Offset(x, y)); drawCircle(Color.White.copy(alpha = 0.5f), H * 0.007f, Offset(x - H * 0.005f, y - H * 0.005f)); y += H * 0.1f }
-        }
-        // El sobre de telegrama: la franja impresa de la compañía, con su locomotora de grabado, y la línea perforada de abajo.
-        TemaId.VAPOR -> {
-            val grabado = pa.tinta.copy(alpha = 0.5f)
-            drawRect(pa.lacre.copy(alpha = 0.7f), Offset(l, top + H * 0.06f), Size(W, H * 0.03f))
-            val x0 = l + W * 0.06f; val y0 = top + H * 0.17f; val s = H * 0.08f
-            drawRect(grabado, Offset(x0, y0), Size(s * 2.2f, s * 0.9f))
-            drawRect(grabado, Offset(x0 + s * 2.2f, y0 - s * 0.5f), Size(s * 1.1f, s * 1.4f))
-            drawRect(grabado, Offset(x0 + s * 0.3f, y0 - s * 0.6f), Size(s * 0.35f, s * 0.6f))
-            drawCircle(grabado, s * 0.22f, Offset(x0 + s * 1.2f, y0 - s * 0.05f))
-            for (k in 0..2) drawCircle(grabado, s * 0.32f, Offset(x0 + s * (0.5f + k * 0.95f), y0 + s * 1.15f))
-            drawLine(grabado, Offset(x0 - s * 0.3f, y0 + s * 1.5f), Offset(x0 + s * 3.6f, y0 + s * 1.5f), s * 0.08f)
-            var x = l + W * 0.04f
-            while (x < r - W * 0.04f) { drawCircle(pa.sombra.copy(alpha = 0.7f), H * 0.009f, Offset(x, bot - H * 0.08f)); x += maxOf(W * 0.025f, 1f) }
-        }
-        TemaId.LABORATORIO -> {
-            // El código de barras de la muestra, de canto junto al borde derecho.
-            val az = java.util.Random(4); var y = top + H * 0.16f; val x = r - W * 0.1f
-            while (y < top + H * 0.62f) { val g = H * (0.006f + az.nextFloat() * 0.014f); drawRect(Color(0xFF1B2733).copy(alpha = 0.75f), Offset(x, y), Size(W * 0.07f, g)); y += g + H * (0.008f + az.nextFloat() * 0.01f) }
-            drawRect(Color(0xFF0B8FA1), Offset(x, top + H * 0.64f), Size(W * 0.07f, H * 0.02f))
-        }
-        TemaId.COLONOS -> {
-            // Las ondas del matasellos del correo del pueblo.
-            for (j in 0 until 4) {
-                val y = top + H * (0.34f + j * 0.055f); val p = Path(); var x = r - W * 0.26f; p.moveTo(x, y); var s = 1f
-                while (x < r - W * 0.03f) { p.quadraticTo(x + W * 0.015f, y - s * H * 0.025f, x + W * 0.03f, y); x += W * 0.03f; s = -s }
-                drawPath(p, Color(0xFF1E1A16).copy(alpha = 0.45f), style = Stroke(1.1f))
-            }
-        }
-        TemaId.NAPOLEON -> {
-            // El doble filete de oro de los despachos.
-            val oro = Color(0xFFD9B25B)
-            drawRect(oro.copy(alpha = 0.8f), Offset(l + W * 0.03f, top + W * 0.03f), Size(W * 0.94f, H - W * 0.06f), style = Stroke(1.6f))
-            drawRect(oro.copy(alpha = 0.5f), Offset(l + W * 0.045f, top + W * 0.045f), Size(W * 0.91f, H - W * 0.09f), style = Stroke(0.8f))
-        }
-        TemaId.DECO -> {
-            // Doble filete de oro y, en cada esquina, tres escalones que se meten hacia dentro, como un marco de ascensor.
-            val oro = Color(0xFFD9B44A)
-            val m = W * 0.035f
-            drawRect(oro.copy(alpha = 0.85f), Offset(l + m, top + m), Size(W - 2 * m, H - 2 * m), style = Stroke(1.6f))
-            drawRect(oro.copy(alpha = 0.45f), Offset(l + m * 1.5f, top + m * 1.5f), Size(W - 3 * m, H - 3 * m), style = Stroke(0.8f))
-            val paso = W * 0.022f
-            listOf(Offset(l + m, top + m) to Offset(1f, 1f), Offset(r - m, top + m) to Offset(-1f, 1f), Offset(l + m, bot - m) to Offset(1f, -1f), Offset(r - m, bot - m) to Offset(-1f, -1f)).forEach { (o, d) ->
-                val esc = Path().apply {
-                    moveTo(o.x, o.y + d.y * 4 * paso)
-                    for (i in 1..3) { lineTo(o.x + d.x * i * paso, o.y + d.y * (4 - i + 1) * paso); lineTo(o.x + d.x * i * paso, o.y + d.y * (4 - i) * paso) }
-                    lineTo(o.x + d.x * 4 * paso, o.y + d.y * paso); lineTo(o.x + d.x * 4 * paso, o.y)
-                }
-                drawPath(esc, oro.copy(alpha = 0.8f), style = Stroke(1.2f))
-            }
-        }
-        TemaId.BOTANICO -> {
-            // Un helecho a tinta junto al borde izquierdo.
-            val musgo = Color(0xFF5A6A3A).copy(alpha = 0.6f)
-            val a = Offset(l + W * 0.06f, bot - H * 0.32f); val b = Offset(l + W * 0.16f, top + H * 0.3f)
-            drawLine(musgo, a, b, 1.3f)
-            for (j in 1..7) {
-                val f = j / 8f; val p = Offset(a.x + (b.x - a.x) * f, a.y + (b.y - a.y) * f); val largo = W * 0.05f * (1f - f * 0.6f)
-                listOf(-1f, 1f).forEach { s -> drawLine(musgo, p, Offset(p.x + s * largo, p.y - largo * 0.5f), 2.2f, StrokeCap.Round) }
-            }
-        }
-        TemaId.RUINAS -> {
-            // El sobre se cortó de un plano viejo de la ciudad: calles en cuadrícula y una avenida en diagonal. En una esquina,
-            // una hoja de hiedra prensada, sujeta con un trozo de cinta.
-            val calle = pa.tinta.copy(alpha = 0.10f)
-            for (i in 1..5) { val x = l + W * i / 6f; drawLine(calle, Offset(x, top), Offset(x, bot), 1f) }
-            for (j in 1..3) { val y = top + H * j / 4f; drawLine(calle, Offset(l, y), Offset(r, y), 1f) }
-            drawLine(pa.tinta.copy(alpha = 0.14f), Offset(l, bot - H * 0.1f), Offset(r, top + H * 0.2f), 3f)
-            val p = Offset(r - W * 0.14f, bot - H * 0.3f); val s = H * 0.16f
-            val hoja = Path().apply {
-                moveTo(p.x, p.y + s * 0.5f); lineTo(p.x - s * 0.3f, p.y + s * 0.1f); lineTo(p.x - s * 0.55f, p.y - s * 0.1f); lineTo(p.x - s * 0.2f, p.y - s * 0.12f)
-                lineTo(p.x, p.y - s * 0.55f); lineTo(p.x + s * 0.2f, p.y - s * 0.12f); lineTo(p.x + s * 0.55f, p.y - s * 0.1f); lineTo(p.x + s * 0.3f, p.y + s * 0.1f); close()
-            }
-            drawPath(hoja, pa.forro.copy(alpha = 0.75f))
-            drawLine(pa.forro, Offset(p.x, p.y + s * 0.45f), Offset(p.x, p.y + s * 0.95f), 1.4f)
-            rotate(-20f, p) { drawRect(Color(0xFFE8DFC4).copy(alpha = 0.6f), Offset(p.x - s * 0.5f, p.y + s * 0.3f), Size(s, s * 0.28f)) }
-        }
-        TemaId.NAVIDAD -> {
-            // El borde de bastón de caramelo, blanco y verde, y unos copos.
-            val m = W * 0.025f; val o = Offset(l + m, top + m); val s = Size(W - 2 * m, H - 2 * m); val paso = H * 0.05f
-            drawRect(Color.White.copy(alpha = 0.85f), o, s, style = Stroke(H * 0.022f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(paso, paso), 0f)))
-            drawRect(Color(0xFF1B5E20), o, s, style = Stroke(H * 0.022f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(paso, paso), paso)))
-            val az = java.util.Random(25); repeat(16) { drawCircle(Color.White.copy(alpha = 0.45f), 1f + az.nextFloat() * 1.8f, Offset(l + az.nextFloat() * W, top + az.nextFloat() * H)) }
-        }
-        // Tres monedas de agujero cuadrado.
-        TemaId.SEDA -> listOf(Offset(0.1f, 0.42f), Offset(0.17f, 0.5f), Offset(0.085f, 0.57f)).forEach { f ->
-            val c = Offset(r - W * f.x, top + H * f.y); val rr = H * 0.055f
-            drawCircle(Color(0xFFD9B25B), rr, c); drawCircle(Color(0xFF8E6A1F), rr, c, style = Stroke(1f))
-            drawRect(pa.sobre, Offset(c.x - rr * 0.32f, c.y - rr * 0.32f), Size(rr * 0.64f, rr * 0.64f))
-        }
-        // El noshi: el adorno de papel plegado de los regalos, con su tira amarilla, arriba a la derecha.
-        TemaId.EDO -> {
-            val c = Offset(r - W * 0.1f, top + H * 0.2f); val a = H * 0.05f; val b = H * 0.13f
-            rotate(-18f, c) {
-                drawPath(Path().apply { moveTo(c.x, c.y - b); lineTo(c.x + a, c.y - b * 0.6f); lineTo(c.x + a, c.y + b * 0.6f); lineTo(c.x, c.y + b); lineTo(c.x - a, c.y + b * 0.6f); lineTo(c.x - a, c.y - b * 0.6f); close() }, pa.lacre)
-                drawPath(Path().apply { moveTo(c.x, c.y - b * 0.8f); lineTo(c.x + a * 0.55f, c.y - b * 0.45f); lineTo(c.x + a * 0.55f, c.y + b * 0.45f); lineTo(c.x, c.y + b * 0.8f); lineTo(c.x - a * 0.55f, c.y + b * 0.45f); lineTo(c.x - a * 0.55f, c.y - b * 0.45f); close() }, Color.White)
-                drawRect(Color(0xFFE8C04A), Offset(c.x - a * 0.18f, c.y - b * 0.6f), Size(a * 0.36f, b * 1.2f))
-            }
-        }
-        TemaId.GOTICO -> {
-            // Las estrellas de oro de la bóveda.
-            val az = java.util.Random(9); val oro = Color(0xFFE2B34A)
-            repeat(26) {
-                val p = Offset(l + az.nextFloat() * W, top + az.nextFloat() * H); val s = H * (0.012f + az.nextFloat() * 0.016f)
-                drawLine(oro.copy(alpha = 0.7f), Offset(p.x - s, p.y), Offset(p.x + s, p.y), 1f); drawLine(oro.copy(alpha = 0.7f), Offset(p.x, p.y - s), Offset(p.x, p.y + s), 1f)
-                drawCircle(oro.copy(alpha = 0.8f), s * 0.35f, p)
-            }
-        }
-        TemaId.ARCANO -> {
-            // El sobre del archivo: la etiqueta con sus renglones, el matasellos redondo que no se lee y el cerco de una taza.
-            val tinta = pa.tinta
-            drawRect(Color(0xFFEDE4C8), Offset(l + W * 0.08f, top + H * 0.12f), Size(W * 0.34f, H * 0.2f))
-            for (k in 0 until 3) drawLine(tinta.copy(alpha = 0.35f), Offset(l + W * 0.1f, top + H * (0.17f + k * 0.05f)), Offset(l + W * (0.38f - k * 0.06f), top + H * (0.17f + k * 0.05f)), 1.2f)
-            val m = Offset(r - W * 0.16f, top + H * 0.26f)
-            drawCircle(tinta.copy(alpha = 0.3f), H * 0.13f, m, style = Stroke(1.6f)); drawCircle(tinta.copy(alpha = 0.22f), H * 0.09f, m, style = Stroke(1f))
-            for (k in 0 until 4) drawLine(tinta.copy(alpha = 0.2f), Offset(m.x - H * 0.36f, m.y - H * 0.06f + k * H * 0.04f), Offset(m.x - H * 0.15f, m.y - H * 0.06f + k * H * 0.04f), 1.4f)
-            drawCircle(Color(0xFF6A4B26).copy(alpha = 0.16f), H * 0.16f, Offset(l + W * 0.7f, bot - H * 0.24f), style = Stroke(H * 0.02f))
-        }
-        TemaId.ESPACIO -> {
-            // Las juntas remachadas del estuche y las luces de estado.
-            val junta = Color(0xFF5E6A80).copy(alpha = 0.5f)
-            listOf(l + W * 0.12f, r - W * 0.12f).forEach { x ->
-                drawLine(junta, Offset(x, top), Offset(x, bot), 1f)
-                var y = top + H * 0.16f; while (y < bot) { drawCircle(junta, H * 0.01f, Offset(x + W * 0.02f, y)); y += H * 0.12f }
-            }
-            listOf(Color(0xFF3DDC84), Color(0xFFFFB86B), Color(0xFFFF5470)).forEachIndexed { i, col -> drawCircle(col, H * 0.022f, Offset(r - W * 0.06f, top + H * (0.3f + i * 0.08f))) }
-        }
-        TemaId.ABISMO -> {
-            // La costura del hule, pespunteada a todo el borde, gotas que resbalan y la chapa de latón con la cota.
-            val hilo = Color(0xFFCDB88C).copy(alpha = 0.55f)
-            val m = W * 0.035f
-            val costura = Stroke(1.2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 5f)))
-            drawRoundRect(hilo, Offset(l + m, top + m), Size(W - 2 * m, H - 2 * m), CornerRadius(H * 0.05f), style = costura)
-            listOf(0.18f to 0.55f, 0.27f to 0.72f, 0.74f to 0.62f, 0.86f to 0.4f).forEach { (fx, fy) ->
-                val g = Offset(l + W * fx, top + H * fy); val s = H * 0.025f
-                drawPath(Path().apply { moveTo(g.x, g.y - s * 1.6f); quadraticTo(g.x + s, g.y, g.x, g.y + s); quadraticTo(g.x - s, g.y, g.x, g.y - s * 1.6f); close() }, Color.White.copy(alpha = 0.22f))
-            }
-            val chapa = Offset(l + W * 0.07f, bot - H * 0.2f)
-            drawRoundRect(Color(0xFFB8913E).copy(alpha = 0.85f), chapa, Size(W * 0.16f, H * 0.1f), CornerRadius(H * 0.02f))
-            for (j in 0 until 3) drawLine(Color(0xFF15333F).copy(alpha = 0.6f), Offset(chapa.x + W * 0.02f, chapa.y + H * (0.03f + 0.025f * j)), Offset(chapa.x + W * (0.14f - 0.03f * j), chapa.y + H * (0.03f + 0.025f * j)), 1f)
-        }
-        TemaId.ANDALUS -> {
-            // Una columna de estrellas de ocho puntas, de oro con el centro verde.
-            var y = top + H * 0.2f
-            while (y < top + H * 0.66f) { val c = Offset(l + W * 0.05f, y); val rr = H * 0.04f; drawPath(estrellaRuta(c, rr, rr * 0.62f, 8), Color(0xFFD9B25B).copy(alpha = 0.8f)); drawCircle(Color(0xFF1E6B5C), rr * 0.3f, c); y += H * 0.11f }
-        }
-        TemaId.MESO -> {
-            // La columna de glifos de un códice: bloques de cartucho con sus numerales, y una greca escalonada abajo.
-            val tinta = Color(0xFF2A1810).copy(alpha = 0.55f); val cinabrio = Color(0xFFA3301E).copy(alpha = 0.7f)
-            var y = top + H * 0.18f; var k = 0
-            while (y < top + H * 0.62f) {
-                val c = Offset(l + W * 0.07f, y); val rr = H * 0.045f
-                drawRoundRect(cinabrio, Offset(c.x - rr, c.y - rr), Size(rr * 2, rr * 2), CornerRadius(rr * 0.4f), style = Stroke(1.4f))
-                numeralMaya(3 + k * 4, c, rr * 1.2f, tinta)
-                y += maxOf(H * 0.12f, 1f); k++
-            }
-            grecaEscalonada(l + W * 0.04f, r - W * 0.04f, bot - H * 0.12f, bot - H * 0.05f, cinabrio, 1.6f)
-        }
-        TemaId.MONGOL -> {
-            // La costura del fieltro y una nube en espiral.
-            val m = W * 0.035f; val azul = Color(0xFF2E6DB4).copy(alpha = 0.6f)
-            drawRoundRect(azul, Offset(l + m, top + m), Size(W - 2 * m, H - 2 * m), CornerRadius(H * 0.05f), style = Stroke(1.4f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 4f))))
-            val c = Offset(l + W * 0.1f, top + H * 0.5f); val rr = H * 0.05f
-            listOf(-1f, 1f).forEach { s -> drawArc(azul, if (s < 0) 90f else 270f, 270f, false, Offset(c.x + s * rr - rr, c.y - rr), Size(2 * rr, 2 * rr), style = Stroke(1.4f)) }
-        }
-        TemaId.RENACIMIENTO -> {
-            // Trazos de construcción: un círculo con su cuadrado inscrito y una diagonal punteada.
-            val sepia = Color(0xFF5A3A1C).copy(alpha = 0.3f); val c = Offset(r - W * 0.16f, top + H * 0.45f); val rr = W * 0.1f
-            drawCircle(sepia, rr, c, style = Stroke(0.9f))
-            drawRect(sepia, Offset(c.x - rr * 0.707f, c.y - rr * 0.707f), Size(rr * 1.414f, rr * 1.414f), style = Stroke(0.9f))
-            drawLine(sepia, Offset(c.x - rr * 1.4f, c.y + rr * 1.2f), Offset(c.x + rr * 1.3f, c.y - rr * 1.3f), 0.8f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f, 3f)))
-        }
-        TemaId.PIRATA -> {
-            // Las líneas de rumbo de los portulanos, que salen de una rosa pequeña, y la «X» roja del tesoro donde cruzan dos.
-            val sepia = Color(0xFF2A1C0F); val c = Offset(r - W * 0.2f, top + H * 0.62f); val largo = W * 0.34f
-            for (i in 0 until 16) {
-                val a = 2 * PI * i / 16
-                val fin = Offset(c.x + (largo * cos(a)).toFloat(), c.y + (largo * sin(a)).toFloat())
-                drawLine(sepia.copy(alpha = if (i % 4 == 0) 0.22f else 0.11f), c, fin, if (i % 4 == 0) 0.9f else 0.6f)
-            }
-            drawCircle(sepia.copy(alpha = 0.3f), W * 0.025f, c, style = Stroke(0.9f))
-            val x = Offset(c.x - largo * 0.55f, c.y - largo * 0.32f); val s = W * 0.018f
-            drawLine(Color(0xFF9A2A1C).copy(alpha = 0.6f), x - Offset(s, s), x + Offset(s, s), 1.6f, StrokeCap.Round)
-            drawLine(Color(0xFF9A2A1C).copy(alpha = 0.6f), x + Offset(-s, s), x + Offset(s, -s), 1.6f, StrokeCap.Round)
-            val ruta = Path().apply { moveTo(l + W * 0.06f, bot - H * 0.12f); quadraticTo(l + W * 0.3f, bot - H * 0.45f, x.x - s * 1.8f, x.y + s * 1.8f) }
-            drawPath(ruta, sepia.copy(alpha = 0.25f), style = Stroke(0.9f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f))))
-        }
-        TemaId.URSS -> {
-            // La cuña roja y la barra negra del cartel constructivista.
-            drawPath(Path().apply { moveTo(l, top + H * 0.3f); lineTo(l + W * 0.3f, top + H * 0.5f); lineTo(l, top + H * 0.62f); close() }, Color(0xFFC1121F).copy(alpha = 0.85f))
-            drawLine(Color(0xFF161414).copy(alpha = 0.8f), Offset(l + W * 0.04f, top + H * 0.66f), Offset(l + W * 0.36f, top + H * 0.36f), H * 0.03f)
-        }
-        // Las tres franjas de la bandera junto al borde izquierdo.
-        TemaId.REVOLUCION -> listOf(Color(0xFF1F3A6E), Color(0xFFFBF7EE), Color(0xFFB22234)).forEachIndexed { i, col -> drawRect(col, Offset(l + i * W * 0.022f, top), Size(W * 0.022f, H)) }
-        TemaId.ANTIGUAS -> {
-            // Un camino punteado sobre el mapa, con su cruz roja y dos montañas.
-            val tinta = Color(0xFF5A3A22).copy(alpha = 0.55f)
-            val camino = Path().apply { moveTo(r - W * 0.34f, top + H * 0.62f); cubicTo(r - W * 0.2f, top + H * 0.6f, r - W * 0.24f, top + H * 0.4f, r - W * 0.08f, top + H * 0.32f) }
-            drawPath(camino, tinta, style = Stroke(1.3f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 3f))))
-            val x = Offset(r - W * 0.08f, top + H * 0.32f); val s = H * 0.03f
-            drawLine(Color(0xFF8E1B24), x - Offset(s, s), x + Offset(s, s), 1.6f); drawLine(Color(0xFF8E1B24), x + Offset(-s, s), x + Offset(s, -s), 1.6f)
-            listOf(0.26f, 0.2f).forEachIndexed { i, dx ->
-                val b = Offset(r - W * dx, top + H * (0.48f - i * 0.02f))
-                drawPath(Path().apply { moveTo(b.x - H * 0.05f, b.y); lineTo(b.x, b.y - H * 0.07f); lineTo(b.x + H * 0.05f, b.y) }, tinta, style = Stroke(1.2f))
-            }
-        }
-        TemaId.CUEVA -> {
-            // Una hilera de puntos de ocre y un bisonte de carbón pintados en la piel del sobre.
-            for (k in 0 until 5) drawCircle(Color(0xFFA2401F).copy(alpha = 0.6f), H * 0.022f, Offset(l + W * (0.08f + k * 0.04f), top + H * 0.8f))
-            drawPath(bisonte(Offset(r - W * 0.16f, top + H * 0.72f), W * 0.1f), Color(0xFF2A211B).copy(alpha = 0.45f))
-        }
-    }
-}
-
-/** El cierre del sobre sellado; [avance] (0 a 1) lo va atando. */
-private fun DrawScope.cierreSobre(c: CierreSobre, pa: Papeleria, cuerpo: Rect, punta: Float, avance: Float) {
-    val l = cuerpo.left; val top = cuerpo.top; val bot = cuerpo.bottom
-    val W = cuerpo.width; val H = cuerpo.height; val cx = cuerpo.center.x
-    val g = H * 0.032f
-    val sombra = Color.Black.copy(alpha = 0.2f)
-    val hasta = l + W * avance
-    fun horizontal(y: Float, grosor: Float) {
-        drawLine(sombra, Offset(l, y + grosor * 0.7f), Offset(hasta, y + grosor * 0.7f), grosor)
-        drawLine(pa.cordon, Offset(l, y), Offset(hasta, y), grosor)
-        var x = l + grosor; while (x < hasta - grosor) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(x, y - grosor / 2), Offset(x + grosor * 0.8f, y + grosor / 2), 1f); x += grosor * 1.3f }
-    }
-    when (c) {
-        CierreSobre.CRUZ -> {
-            // El cordón cruzado, con su trenzado.
-            horizontal(punta, g)
-            val bajo = top + (punta - top) * avance
-            drawLine(sombra, Offset(cx + g * 0.7f, top), Offset(cx + g * 0.7f, bajo), g)
-            drawLine(pa.cordon, Offset(cx, top), Offset(cx, bajo), g)
-            var y = top + g; while (y < bajo - g) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(cx - g / 2, y), Offset(cx + g / 2, y + g * 0.8f), 1f); y += g * 1.3f }
-        }
-        // Dos vueltas de hilo, sin cruzar.
-        CierreSobre.DOBLE -> { horizontal(punta - H * 0.09f, g * 0.8f); horizontal(punta + H * 0.09f, g * 0.8f) }
-        CierreSobre.VERTICAL -> {
-            // Una cinta plana que baja por el centro, con su brillo.
-            val y1 = top + (bot - top) * avance; val ancho = H * 0.075f
-            drawRect(sombra, Offset(cx - ancho / 2 + 2f, top), Size(ancho, y1 - top))
-            drawRect(pa.cordon, Offset(cx - ancho / 2, top), Size(ancho, y1 - top))
-            drawLine(Color.White.copy(alpha = 0.25f), Offset(cx - ancho * 0.22f, top), Offset(cx - ancho * 0.22f, y1), ancho * 0.16f)
-        }
-        CierreSobre.BANDA -> {
-            // Una faja ancha de papel que da la vuelta al sobre, con dos filetes.
-            val alto = H * 0.17f
-            drawRect(sombra, Offset(l, punta - alto / 2 + 3f), Size(hasta - l, alto))
-            drawRect(pa.cordon, Offset(l, punta - alto / 2), Size(hasta - l, alto))
-            listOf(-0.36f, 0.36f).forEach { f -> drawLine(Color.White.copy(alpha = 0.35f), Offset(l, punta + alto * f), Offset(hasta, punta + alto * f), 1.2f) }
-        }
-        CierreSobre.HILO -> {
-            // Los dos botones de cartón y el hilo que da vueltas en ocho entre ellos.
-            val a = Offset(cx, punta - H * 0.16f); val b = Offset(cx, punta + H * 0.2f); val rb = H * 0.06f
-            listOf(a, b).forEach { p -> drawCircle(sombra, rb, p + Offset(1.5f, 2f)); drawCircle(lerp(pa.sobre, Color.Black, 0.25f), rb, p); drawCircle(Color.Black.copy(alpha = 0.3f), rb * 0.25f, p) }
-            val puntos = listOf(a, b + Offset(rb, 0f), a + Offset(-rb, 0f), b + Offset(-rb, 0f), a + Offset(rb, 0f), b + Offset(0f, rb))
-            val tramos = (puntos.size - 1) * avance
-            for (i in 0 until puntos.size - 1) {
-                val f = (tramos - i).coerceIn(0f, 1f)
-                if (f > 0f) drawLine(pa.cordon, puntos[i], puntos[i] + (puntos[i + 1] - puntos[i]) * f, g * 0.55f, StrokeCap.Round)
-            }
-        }
-        CierreSobre.PRECINTO -> {
-            // Una cinta de precinto con su rayado impreso.
-            val alto = H * 0.11f
-            drawRect(pa.cordon.copy(alpha = 0.85f), Offset(l, punta - alto / 2), Size(hasta - l, alto))
-            var x = l; while (x < hasta) { drawLine(Color.Black.copy(alpha = 0.3f), Offset(x, punta + alto / 2), Offset(minOf(x + alto * 0.6f, hasta), punta - alto / 2), alto * 0.18f); x += alto * 0.9f }
-        }
-    }
-}
-
-/**
- * Un sobre visto por detrás, del lado de la solapa, dentro de [cuerpo], con la forma, el adorno, el cierre y el sello del tema.
- * [abrir] (0 a 1) levanta la solapa, [romper] parte el sello, [subir] saca la carta, [cordon] (0 a 1) lo ata con el cierre del
- * tema y [brillo] hace brillar el sello. Con [abrir] la solapa sale por arriba de [cuerpo]: hay que dejarle sitio.
- */
-internal fun DrawScope.dibujarSobre(t: TemaId, pa: Papeleria, e: ColorScheme, cuerpo: Rect, abrir: Float, romper: Float, subir: Float,
-                                    cordon: Float, brillo: Float, hoja: Color, renglones: Color, escalaSello: Float = 1f, alfaSello: Float = 1f) {
-    val forma = formaSobre(t)
-    val l = cuerpo.left; val r = cuerpo.right; val top = cuerpo.top; val bot = cuerpo.bottom
-    val W = cuerpo.width; val H = cuerpo.height
-    val cx = cuerpo.center.x
-    val punta = top + H * 0.56f
-    val q = H * forma.radio
-    val rad = CornerRadius(q)
-    drawRoundRect(Color.Black.copy(alpha = 0.16f), Offset(l + 3f, top + 5f), cuerpo.size, rad)
-    drawRoundRect(pa.sobre, cuerpo.topLeft, cuerpo.size, rad)
-    // Fibras del papel.
-    val az = java.util.Random(t.ordinal.toLong() * 7 + 1)
-    repeat(18) { val y = top + az.nextFloat() * H; drawLine(pa.sombra.copy(alpha = 0.07f), Offset(l, y), Offset(r, y + (az.nextFloat() - 0.5f) * 4f), 1f) }
-
-    val k = 1f - 2f * abrir
-    val tipY = top + (punta - top) * k
-    val solapa = rutaSolapa(forma.solapa, l, r, top, tipY)
-    val silueta = Path().apply { addRoundRect(RoundRect(cuerpo, rad)) }
-    val rS = H * 0.13f
-    val cS = Offset(cx, tipY)
-    fun sello() {
-        if (alfaSello <= 0f) return
-        if (brillo > 0f) drawCircle(Brush.radialGradient(listOf(pa.lacre.copy(alpha = 0.6f * brillo), Color.Transparent), center = cS, radius = rS * 2.6f), rS * 2.6f, cS)
-        if (romper <= 0f) scale(escalaSello, cS) { selloCarta(t, cS, rS, pa.lacre.copy(alpha = alfaSello), e) }
-        else {
-            // El sello partido en dos mitades que se separan.
-            val d = rS * 0.55f * romper
-            listOf(-1f, 1f).forEach { lado ->
-                rotate(14f * romper * lado, cS) {
-                    clipRect(if (lado < 0) cS.x - rS * 2.6f - d else cS.x + d, cS.y - rS * 2f, if (lado < 0) cS.x - d else cS.x + rS * 2.6f + d, cS.y + rS * 2f) {
-                        translate(d * lado, 0f) { selloCarta(t, cS, rS, pa.lacre.copy(alpha = alfaSello * (1f - 0.25f * romper)), e) }
-                    }
-                }
-            }
-        }
-    }
-    if (abrir > 0f) {
-        // El forro de adentro, con rayas finas.
-        val forro = Path().apply { moveTo(l, top); lineTo(r, top); lineTo(cx, punta); close() }
-        drawPath(forro, pa.forro)
-        clipPath(forro) { var x = l - H; while (x < r) { drawLine(pa.brillo.copy(alpha = 0.16f), Offset(x, top), Offset(x + H, punta + H * 0.1f), 2f); x += 9f } }
-    }
-    if (k < 0f) {
-        // La solapa abierta queda detrás de la carta.
-        drawPath(solapa, pa.forro); drawPath(solapa, pa.sombra.copy(alpha = 0.6f), style = Stroke(1.4f))
-        sello()
-    }
-    if (abrir > 0.35f || subir > 0f) {
-        // La carta, asomando del sobre.
-        val sube = H * 0.62f * subir
-        val pl = l + W * 0.07f; val pr = r - W * 0.07f
-        val pt = top + H * 0.05f - sube
-        drawRect(Color.Black.copy(alpha = 0.12f), Offset(pl + 2f, pt + 2f), Size(pr - pl, H * 0.9f))
-        drawRect(hoja, Offset(pl, pt), Size(pr - pl, H * 0.9f))
-        var yy = pt + H * 0.13f; var i = 0
-        while (yy < top + H * 0.5f && i < 9) {
-            drawLine(renglones, Offset(pl + W * 0.06f, yy), Offset(pr - W * (if (i % 3 == 2) 0.3f else 0.06f), yy), 1.6f, StrokeCap.Round)
-            yy += H * 0.08f; i++
-        }
-    }
-    // El frente: los dos lados y el fondo, con su escote en V y las esquinas del tema.
-    val frente = Path().apply {
-        moveTo(l, top + H * 0.03f); lineTo(cx, top + H * 0.6f); lineTo(r, top + H * 0.03f); lineTo(r, bot - q)
-        quadraticTo(r, bot, r - q, bot); lineTo(l + q, bot); quadraticTo(l, bot, l, bot - q); close()
-    }
-    drawPath(frente, pa.sobre)
-    clipPath(frente) { adornoSobre(t, pa, cuerpo) }
-    drawPath(Path().apply { moveTo(l, top + H * 0.03f); lineTo(cx, top + H * 0.6f); lineTo(r, top + H * 0.03f) }, pa.sombra.copy(alpha = 0.55f), style = Stroke(1.3f))
-    drawLine(pa.sombra.copy(alpha = 0.4f), Offset(l + 2f, bot - 2f), Offset(cx - W * 0.07f, top + H * 0.62f), 1.2f)
-    drawLine(pa.sombra.copy(alpha = 0.4f), Offset(r - 2f, bot - 2f), Offset(cx + W * 0.07f, top + H * 0.62f), 1.2f)
-    if (k >= 0f) clipPath(silueta) {
-        drawPath(solapa, pa.brillo); drawPath(solapa, pa.sombra.copy(alpha = 0.7f), style = Stroke(1.4f))
-    }
-    if (cordon > 0f) cierreSobre(forma.cierre, pa, cuerpo, punta, cordon)
-    if (k >= 0f) sello()
-}
 
 /** El emblema sobre el sello: claro, para que se lea en relieve. */
 @Composable
@@ -1356,44 +839,6 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Nadie la desentierra antes de su luna.", "Toca para pintar en la piedra…")
 }
 
-/** La letra con que se rotula el sobre en cada tema. */
-private fun letraSobre(t: TemaId): FontFamily = when (t) {
-    TemaId.ROMANO -> Letra.codigo
-    TemaId.URBE -> Letra.placa
-    TemaId.CIBER -> Letra.terminal
-    TemaId.NEON -> Letra.letrero
-    TemaId.HELENO -> Letra.garamond
-    TemaId.EGIPTO -> Letra.messiri
-    TemaId.MEDIEVAL -> LetraExtra.gotica
-    TemaId.TEMPLARIO -> LetraExtra.cruzada
-    TemaId.DISTOPIA -> LetraExtra.oswald
-    TemaId.REFUGIO -> LetraExtra.vt323
-    TemaId.ORDEN -> LetraExtra.estarcido
-    TemaId.VAPOR -> LetraExtra.caldera
-    TemaId.LABORATORIO -> LetraExtra.jost
-    TemaId.COLONOS -> LetraExtra.fell
-    TemaId.NAPOLEON -> LetraExtra.bodoniTitulo
-    TemaId.DECO -> LetraExtra.poiret
-    TemaId.BOTANICO -> LetraExtra.fraunces
-    TemaId.RUINAS -> LetraExtra.letrero
-    TemaId.NAVIDAD -> LetraExtra.cinzelDeco
-    TemaId.SEDA -> LetraExtra.almendra
-    TemaId.EDO -> LetraExtra.shippori
-    TemaId.GOTICO -> LetraExtra.textura
-    TemaId.ARCANO -> Letra.spectralCursiva
-    TemaId.ESPACIO -> LetraExtra.orbita
-    TemaId.ABISMO -> LetraExtra.batiscafo
-    TemaId.ANDALUS -> LetraExtra.amiri
-    TemaId.MESO -> LetraExtra.codice
-    TemaId.MONGOL -> LetraExtra.filosofo
-    TemaId.RENACIMIENTO -> LetraExtra.cormorant
-    TemaId.PIRATA -> LetraExtra.corsario
-    TemaId.URSS -> LetraExtra.russo
-    TemaId.REVOLUCION -> LetraExtra.convencion
-    TemaId.ANTIGUAS -> LetraExtra.camino
-    TemaId.CUEVA -> LetraExtra.trazo
-}
-
 /** A quién va, en pocas palabras, en la voz del tema. */
 fun destinatario(c: Carta, tema: TemaId = Estilo.tema): String =
     if (c.alFuturo) vozCarta(tema).yoCorto.format(Fechas.parse(c.abrir_en).let { "${MESES_CORTOS[it.monthValue - 1]} ${it.year}" }) else "Para @${c.para}"
@@ -1413,9 +858,11 @@ fun SobreCarta(c: Carta, modifier: Modifier = Modifier, tema: TemaId = Estilo.te
     val ctx = LocalContext.current
     val hoy = Fechas.diaLogico()
     val estado = estadoSobre(c, hoy)
-    val pa = papeleria(tema); val pg = pagina(tema)
+    val pg = pagina(tema)
     val v = vozCarta(tema)
-    val e = esquemaLacre(pa)
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(tema)
+    val oscuro = esOscuro()
+    val medidor = rememberTextMeasurer()
     val animar = Repo.config.animaciones
     val brillo = if (estado == EstadoSobre.LISTA && animar) {
         val inf = rememberInfiniteTransition(label = "lacre")
@@ -1432,32 +879,30 @@ fun SobreCarta(c: Carta, modifier: Modifier = Modifier, tema: TemaId = Estilo.te
         } else onClick()
     }) {
         val abierta = estado == EstadoSobre.ABIERTA
-        Canvas(Modifier.fillMaxSize()) {
-            val cuerpo = if (abierta) Rect(0f, size.height * 0.34f, size.width, size.height) else Rect(0f, 0f, size.width, size.height)
-            dibujarSobre(tema, pa, e, cuerpo, abrir = if (abierta) 1f else 0f, romper = if (abierta) 1f else 0f, subir = if (abierta) 0.5f else 0f,
-                cordon = if (estado == EstadoSobre.SELLADA) 1f else 0f, brillo = brillo, hoja = pg.color, renglones = pg.tinta.copy(alpha = 0.2f))
+        val linea1 = when (estado) {
+            EstadoSobre.SELLADA -> destinatario(c, tema)
+            EstadoSobre.LISTA -> v.lista
+            EstadoSobre.ABIERTA -> if (c.alFuturo) "De ${Fechas.corto(c.escrita)} · ${c.escrita.take(4)}" else "Para @${c.para}"
         }
-        val fuente = letraSobre(tema)
+        val linea2 = when (estado) {
+            EstadoSobre.SELLADA -> "se abre ${Fechas.corto(c.abrir_en)} ${c.abrir_en.take(4)} · ${cuanto(faltan(c, hoy))}"
+            EstadoSobre.LISTA -> "escrita el ${Fechas.corto(c.escrita)} ${c.escrita.take(4)}"
+            EstadoSobre.ABIERTA -> if (c.alFuturo) "abierta ${c.abierta_el?.let { Fechas.corto(it) } ?: ""}" else "${Fechas.corto(c.escrita)} ${c.escrita.take(4)}${if (c.hora.isNotBlank()) " · ${c.hora}" else ""}"
+        }
+        Canvas(Modifier.fillMaxSize().semantics { contentDescription = "$linea1, $linea2" }) {
+            val cuerpo = if (abierta) Rect(0f, size.height * 0.34f, size.width, size.height) else Rect(0f, 0f, size.width, size.height)
+            with(d) {
+                sobre(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoCarta(linea1, linea2, cuerpo, abrir = if (abierta) 1f else 0f, romper = if (abierta) 1f else 0f,
+                    subir = if (abierta) 0.5f else 0f, cordon = if (estado == EstadoSobre.SELLADA) 1f else 0f, brillo = brillo, escalaSello = 1f, alfaSello = 1f,
+                    hoja = pg.color, renglones = pg.tinta.copy(alpha = 0.2f), semilla = c.id.hashCode(), alFuturo = c.alFuturo), medidor, oscuro)
+            }
+        }
         if (abierta) {
-            // Las primeras palabras, escritas en la carta que asoma.
+            // Las primeras palabras, escritas en la carta que asoma, donde dice el tema.
+            val k = d.cajaPrevia
             Text(c.texto.trim().replace(Regex("\\s+"), " "), fontFamily = pg.texto, fontSize = 9.sp, lineHeight = 11.sp, color = pg.tinta.copy(alpha = 0.8f),
                 maxLines = 2, overflow = TextOverflow.Ellipsis, fontStyle = FontStyle.Italic,
-                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth().padding(start = maxWidth * 0.13f, end = maxWidth * 0.13f, top = maxHeight * 0.2f))
-        }
-        Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = 10.dp, end = 10.dp, bottom = 7.dp)) {
-            val linea1 = when (estado) {
-                EstadoSobre.SELLADA -> destinatario(c, tema)
-                EstadoSobre.LISTA -> v.lista
-                EstadoSobre.ABIERTA -> if (c.alFuturo) "De ${Fechas.corto(c.escrita)} · ${c.escrita.take(4)}" else "Para @${c.para}"
-            }
-            val linea2 = when (estado) {
-                EstadoSobre.SELLADA -> "se abre ${Fechas.corto(c.abrir_en)} ${c.abrir_en.take(4)} · ${cuanto(faltan(c, hoy))}"
-                EstadoSobre.LISTA -> "escrita el ${Fechas.corto(c.escrita)} ${c.escrita.take(4)}"
-                EstadoSobre.ABIERTA -> if (c.alFuturo) "abierta ${c.abierta_el?.let { Fechas.corto(it) } ?: ""}" else "${Fechas.corto(c.escrita)} ${c.escrita.take(4)}${if (c.hora.isNotBlank()) " · ${c.hora}" else ""}"
-            }
-            Text(linea1, fontFamily = fuente, fontSize = 12.sp, lineHeight = 13.sp, color = if (estado == EstadoSobre.LISTA) pa.lacre.let { if (abs(it.luminance() - pa.sobre.luminance()) > 0.25f) it else pa.tinta } else pa.tinta,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(linea2, fontFamily = fuente, fontSize = 9.5.sp, lineHeight = 11.sp, color = pa.tinta.copy(alpha = 0.72f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                modifier = Modifier.offset(maxWidth * k.left, maxHeight * k.top).size(maxWidth * (k.right - k.left), maxHeight * (k.bottom - k.top)))
         }
     }
 }
@@ -1469,8 +914,10 @@ fun AperturaCarta(c: Carta, terminar: () -> Unit) {
     val tema = Estilo.tema
     val t = remember { Animatable(if (animar) 0f else 1f) }
     val sentir = rememberSentir()
-    val pa = papeleria(tema); val pg = pagina(tema)
-    val e = esquemaLacre(pa)
+    val pg = pagina(tema)
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(tema)
+    val oscuro = esOscuro()
+    val medidor = rememberTextMeasurer()
     LaunchedEffect(Unit) {
         sentir(Sentidos.Evento.ABRIR)
         if (animar) t.animateTo(1f, tween(2000, easing = LinearEasing))
@@ -1485,7 +932,10 @@ fun AperturaCarta(c: Carta, terminar: () -> Unit) {
                     val romper = ((v - 0.14f) / 0.2f).coerceIn(0f, 1f)
                     val abrir = ((v - 0.3f) / 0.32f).coerceIn(0f, 1f)
                     val subir = ((v - 0.58f) / 0.42f).coerceIn(0f, 1f)
-                    dibujarSobre(tema, pa, e, Rect(0f, size.height * 0.42f, size.width, size.height), abrir, romper, subir, 0f, brillo, pg.color, pg.tinta.copy(alpha = 0.22f))
+                    with(d) {
+                        sobre(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoCarta("", "", Rect(0f, size.height * 0.42f, size.width, size.height), abrir, romper, subir, 0f, brillo,
+                            1f, 1f, pg.color, pg.tinta.copy(alpha = 0.22f), c.id.hashCode(), c.alFuturo), medidor, oscuro)
+                    }
                 }
                 Text("Escrita el ${Fechas.larga(c.escrita)}", style = MaterialTheme.typography.titleMedium, color = Color.White, modifier = Modifier.padding(top = 18.dp))
                 Text("${java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(c.escrita), Fechas.parse(Fechas.diaLogico()))} días después", style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.7f))
@@ -1501,9 +951,11 @@ fun SelladoCarta(c: Carta, terminar: () -> Unit) {
     val tema = Estilo.tema
     val t = remember { Animatable(if (animar) 0f else 1f) }
     val sentir = rememberSentir()
-    val pa = papeleria(tema); val pg = pagina(tema)
+    val pg = pagina(tema)
     val voz = vozCarta(tema)
-    val e = esquemaLacre(pa)
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(tema)
+    val oscuro = esOscuro()
+    val medidor = rememberTextMeasurer()
     LaunchedEffect(Unit) {
         if (animar) {
             t.animateTo(0.62f, tween(1150, easing = LinearEasing))
@@ -1521,8 +973,10 @@ fun SelladoCarta(c: Carta, terminar: () -> Unit) {
                     val abrir = (1f - (v - 0.28f) / 0.3f).coerceIn(0f, 1f)
                     val caer = ((v - 0.56f) / 0.12f).coerceIn(0f, 1f)
                     val cordon = if (c.alFuturo) ((v - 0.72f) / 0.28f).coerceIn(0f, 1f) else 0f
-                    dibujarSobre(tema, pa, e, Rect(0f, size.height * 0.42f, size.width, size.height), abrir, 0f, subir, cordon, 0f, pg.color, pg.tinta.copy(alpha = 0.22f),
-                        escalaSello = 2.2f - 1.2f * caer, alfaSello = caer)
+                    with(d) {
+                        sobre(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoCarta("", "", Rect(0f, size.height * 0.42f, size.width, size.height), abrir, 0f, subir, cordon, 0f,
+                            2.2f - 1.2f * caer, caer, pg.color, pg.tinta.copy(alpha = 0.22f), c.id.hashCode(), c.alFuturo), medidor, oscuro)
+                    }
                 }
                 Text(if (c.alFuturo) "${voz.sellada} hasta el ${Fechas.larga(c.abrir_en)}" else voz.guardadaOtro.format("@${c.para}"), style = MaterialTheme.typography.titleMedium,
                     color = Color.White, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 18.dp, start = 24.dp, end = 24.dp))
@@ -1537,22 +991,26 @@ fun SelladoCarta(c: Carta, terminar: () -> Unit) {
 //  La carta abierta y la carta que se escribe
 // =====================================================================
 
-/** Encabezado de una carta: emblema, lugar, fecha y hora a la derecha, y a quién va. */
+/**
+ * Encabezado de una carta: la cabecera dibujada del tema (la misma de la página del diario: [io.github.ruddy2003.vestigium.ui.biblioteca.DisenoBiblioteca.encabezado]),
+ * con el lugar, la fecha del tema y la fecha larga con la hora; debajo, a quién va.
+ */
 @Composable
 fun EncabezadoCarta(t: TemaId, p: Pagina, escrita: String, hora: String, lugar: String, para: String, abrirEn: String?) {
     val ty = MaterialTheme.typography
     val v = vozCarta(t)
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(t)
+    val oscuro = oscuroApp()
+    val medidor = rememberTextMeasurer()
+    val rotulo = lugar.ifBlank { "carta" }
+    val fechaTema = Estilo.fecha(escrita)
+    val detalle = Fechas.larga(escrita) + if (hora.isNotBlank()) " · $hora" else ""
+    val numero = runCatching { Fechas.parse(escrita).dayOfYear }.getOrDefault(1)
     Column(Modifier.fillMaxWidth().padding(top = 10.dp)) {
-        Row(verticalAlignment = Alignment.Top) {
-            Emblema(t, 38.dp, MaterialTheme.colorScheme, animado = false)
-            Spacer(Modifier.weight(1f))
-            Column(horizontalAlignment = Alignment.End) {
-                Text(listOfNotNull(lugar.ifBlank { null }, Fechas.larga(escrita)).joinToString(", "), fontFamily = p.texto, fontSize = (p.tam - 4).sp,
-                    fontStyle = FontStyle.Italic, color = p.tinta, textAlign = TextAlign.End)
-                Text(Estilo.fecha(escrita) + if (hora.isNotBlank()) " · $hora" else "", style = ty.labelMedium, color = p.tenue, textAlign = TextAlign.End)
-            }
+        Canvas(Modifier.fillMaxWidth().height(d.altoEncabezado).semantics { contentDescription = "$rotulo. $fechaTema. $detalle" }) {
+            clipRect { with(d) { encabezado(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoEncabezado(rotulo, fechaTema, detalle, numero, false), p, medidor, oscuro) } }
         }
-        Text(paraQuien(v, para, abrirEn), style = ty.titleLarge, color = p.acento, modifier = Modifier.padding(top = 22.dp))
+        Text(paraQuien(v, para, abrirEn), style = ty.titleLarge, color = p.acento, modifier = Modifier.padding(top = 16.dp))
         if (para.isBlank() && abrirEn != null) Text("${v.sellada.replaceFirstChar { it.lowercase() }} hasta ese día", style = ty.labelMedium, color = p.tenue)
         Meandro(Modifier.padding(top = 10.dp, bottom = 16.dp), color = p.acento.copy(alpha = 0.5f))
     }
@@ -1566,11 +1024,13 @@ fun LecturaCarta(c: Carta, volver: () -> Unit, acciones: List<Pair<String, () ->
     val pa = papeleria(tema)
     val v = vozCarta(tema)
     val e = esquemaLacre(pa)
-    MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
+    // Antes de cambiar al esquema del papel: si la app está de noche.
+    val oscuroApp = esOscuro()
+    androidx.compose.runtime.CompositionLocalProvider(LocalOscuroApp provides oscuroApp) { MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         Box(Modifier.fillMaxSize()) {
-            FondoPagina(tema, p)
+            FondoPagina(tema, p, oscuro = oscuroApp)
             Column(Modifier.fillMaxSize()) {
-                BarraPagina(p, volver, "${porNumero(Texto.palabras(c.texto), "1 palabra", "${Texto.palabras(c.texto)} palabras")}") {
+                BarraPagina(p, volver, "${porNumero(Texto.palabras(c.texto), "1 palabra", "${Texto.palabras(c.texto)} palabras")}", oscuro = oscuroApp) {
                     Box {
                         Text("⋯", fontSize = 22.sp, color = p.acento, modifier = Modifier.clickable { menu = true }.padding(horizontal = 10.dp))
                         Menu(expanded = menu, onDismissRequest = { menu = false }, containerColor = p.color) {
@@ -1597,6 +1057,7 @@ fun LecturaCarta(c: Carta, volver: () -> Unit, acciones: List<Pair<String, () ->
                 }
             }
         }
+    }
     }
 }
 

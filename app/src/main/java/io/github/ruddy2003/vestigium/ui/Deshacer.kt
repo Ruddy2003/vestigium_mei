@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -24,7 +25,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -86,7 +86,7 @@ fun BarraDeshacer(texto: String, onDeshacer: () -> Unit, modifier: Modifier = Mo
                 Canvas(Modifier.size(16.dp)) { perillaTema(tema, cs, center, size.minDimension / 2f, cs.inversePrimary, cs.inverseSurface) }
                 Spacer(Modifier.width(10.dp))
                 Box(Modifier.weight(1f)) { Text(texto, style = MaterialTheme.typography.bodyMedium, color = cs.inverseOnSurface) }
-                TextButton(onClick = onDeshacer) { Text("deshacer", style = MaterialTheme.typography.labelLarge, color = cs.inversePrimary) }
+                BotonTexto(onClick = onDeshacer) { Text("deshacer", style = MaterialTheme.typography.labelLarge, color = cs.inversePrimary) }
             }
             Canvas(Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, bottom = 6.dp).height(3.dp)) {
                 rielTema(tema, cs, restante(), 0, cs.inversePrimary, cs.inverseOnSurface.copy(alpha = 0.25f))

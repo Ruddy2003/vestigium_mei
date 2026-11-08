@@ -869,7 +869,7 @@ La «hoja de la noche» (`PantallaNoche`, en `ui/pantallas/Dia.kt`; en la app se
 
 La barra fija de abajo cuenta lo mismo que pide «Sellar el día»: el ánimo y el diario. La predicción y los hábitos aparecen como «extra». Los hábitos cuentan como hechos cuando todos tienen respuesta, sea «sí» o «no». Antes contaba cuatro pasos y los hábitos solo estaban hechos si todos eran «sí».
 6. **Diario** (texto libre con @personas y #temas) y con quién estuviste.
-7. Plegado, como opcional: la «lectura del día», lo mejor y lo peor, hitos, lo que leíste o viste, la foto del día y «privado de este día →».
+7. Plegado, como opcional: la «lectura del día», lo mejor y lo peor, las fechas señaladas (antes «hitos») y los episodios, lo que leíste o viste, la foto del día y «privado de este día →».
 8. Sellar.
 
 «Solo lo que falta» oculta lo ya contestado, pero no cambia el orden.
@@ -883,7 +883,7 @@ Es una **[Aproximación]**: viene de estudios de encuestas y de laboratorio, no 
 
 Además, desde `VERSION_NOCHE = 2`, la línea con los valores de tus avisos de ánimo de ese día solo aparece **después** de elegir la valencia, y la activación usa una paleta de una sola dirección (`Escala(secuencial = true)`), para que «menos energía» no se lea como «peor» (H-2-11).
 
-Desde la entrega N2 de la revisión de navegación hay también una sección **«Suplementos de este día»**: marca o quita la toma de ese día (a la hora habitual o a la de ahora). Y si faltan días, «Ponerte al día» abre la hoja en el primero que falta y, al sellar, pasa al siguiente (hasta 7 días hacia atrás). Lo que se llena así queda como `retroactivo` (sección 3.7.4), y la diferencia entre `ts` y `ts_creado` dice cuánto después se anotó.
+Desde la entrega N2 de la revisión de navegación hay también una sección **«Suplementos de este día»**. Desde el esquema 21, cada suplemento lleva su cuenta: «+» suma una toma (a la hora habitual o a la de ahora) y «−» quita la última (antes, un toque marcaba o quitaba la única toma del día; capítulo 5, sección 5.6). Y si faltan días, «Ponerte al día» abre la hoja en el primero que falta y, al sellar, pasa al siguiente (hasta 7 días hacia atrás). Lo que se llena así queda como `retroactivo` (sección 3.7.4), y la diferencia entre `ts` y `ts_creado` dice cuánto después se anotó.
 
 Se guarda sola mientras escribes (cada 0.7 s sin cambios). Si tiene **valencia y texto del diario**, se puede «sellar» el día; sellar no cambia los datos, es solo un cierre simbólico.
 
@@ -904,10 +904,19 @@ Son tres preguntas de opción única (`Catalogo.CIENTIFICAS`), cada una inspirad
 
 Estas preguntas están **plegadas por omisión**, así que se responden menos y probablemente no al azar (más en días con ganas de escribir). **[Diseño propio]**.
 
-### 3.7.3 Lo mejor, lo peor, hitos, medicamentos, contextos y hábitos
+### 3.7.3 Lo mejor, lo peor, fechas señaladas, medicamentos, contextos y hábitos
 
 - **Lo mejor y lo peor** del día: una línea cada uno, texto libre. No entran al panel como números.
-- **Hitos**: etiquetas cortas de cosas que no pasan todos los días; `hitos_n` cuenta cuántas.
+- **Fechas señaladas** (antes «hitos»; esquema 21, D.161). Son lo que quieres recordar de un día. Cada una tiene un tipo, elegido con un toque (primera vez, viaje, logro, cambio de vida, pérdida, encuentro, celebración u otra), y una frase opcional. Se guardan en `Dia.senaladas` y salen en una sola forma («✈ Viaje a la costa») en el calendario, la semana, el año, Tu año, el libro del diario y los reportes. `hitos_n` cuenta cuántas tiene el día, y `vm_senaladas.csv` trae una por fila con su tipo.
+  - **Por qué cambió.** Los hitos eran etiquetas sueltas, y el autor no sabía qué poner ahí («una crisis de ansiedad no pasa todos los días: ¿va ahí?»). Además:
+    - se guardaban en dos formatos (con espacios y con guiones bajos);
+    - cada pantalla los mostraba distinto;
+    - la pista sugería «un beso», aunque no eran privados;
+    - en el análisis, cada etiqueta solo se volvía variable (`hito_*`) si se repetía en 3 días o más, que es lo contrario de un hito.
+  - **La solución** fue separar dos cosas. Lo que quieres recordar es una fecha señalada. Lo que te pasa con fuerza, con hora y que puede repetirse, es un **episodio** (sección 3.7.6).
+  - **Los hitos de antes** se leen como fechas señaladas de tipo «otra», con el texto sin guiones bajos (`Senaladas.de`). Una tarea periódica los pasa al campo nuevo.
+  - **La familia `hito_*` ya no se calcula.** Una variable de 0/1 que vale 1 un solo día no deja ver nada en un cruce.
+  - **[Diseño propio]**.
 - **Medicamentos**: desde el módulo 10a son privados y se anotan en la pantalla Privado, no en el diario de la noche (al final hay un enlace «privado de este día»). Son etiquetas; `medicamentos_n` cuenta cuántas desde el primer día en que anotaste alguno y solo viaja a R.
 - **Contextos** (`ctx_*`) y **hábitos** (`hab_*`): 1 si lo marcaste. **Ojo (H-2-4):** los contextos valen **0 en todos los días con diario**, también si no abriste esa sección: es la convención declarada en la pantalla («marca lo que aplique»), y se mantiene. Los hábitos valían 0 incluso **antes de crear el hábito**; desde la entrega 10c, antes de `Habito.desde` (el día en que lo creaste) quedan vacíos, salvo que los hayas marcado (D.63). Los hábitos creados antes de que existiera esa fecha siguen valiendo 0 desde el principio.
 - **Hábitos con «sí / no / sin contestar» (esquema 17).** Al contestar un hábito en la hoja de la noche, el día queda marcado (`habitos_tri`). En esos días, «no» vale 0 y un hábito **sin respuesta queda vacío**, no 0. En los días de antes (sin la marca), sin marca sigue valiendo 0. *Ejemplo con datos inventados:* un día con «Leer: sí» y «Meditar» sin tocar da `hab_leer` = 1 y `hab_meditar` vacío; el mismo día sin la marca daba `hab_meditar` = 0. Una recaída deja el hábito ligado en «no» (0), como antes. Con esto se resuelve en parte H-2-4 para los hábitos; en los contextos, «no lo marqué» y «no pasó» siguen siendo lo mismo (H-1-1).
@@ -930,6 +939,33 @@ Dos precisiones (H-2-8):
 
 - El comentario dice «a la misma hora todos los días», pero en realidad es **a la hora en que cierres** el diario, que varía. La hora queda guardada, así que se puede controlar en el análisis.
 - Hasta la entrega N4, si llenabas la hoja de **un día pasado**, el cierre se guardaba **con la fecha de ese día pero con la hora de ahora**: `animo_cierre_valencia` del martes podía ser cómo te sentías el viernes. Desde la N4, el cierre solo se ofrece en la hoja del día lógico de hoy (`cierrePermitido(fecha)`, en `data/Modelo.kt`; lo comprueba `EsquemaCatorcePrueba.cierreSoloHoy`). Los cierres tardíos de antes siguen guardados, pero desde la entrega 10c **el panel no los usa**: `Estadistica.cierreFuera(m)` es verdadero cuando el momento es un cierre y el día lógico de su hora (`Fechas.diaLogicoDeMillis(Fechas.millis(ts))`) no es su `fecha`, y esos momentos no entran en `animo_cierre_*`, `animo_valencia`, `animo_activacion` ni `registros_animo`. Así se arreglan también los datos viejos (D.74). Ejemplo: un cierre con fecha martes y hora viernes 09:00 queda fuera; uno con fecha martes y hora martes 21:00 cuenta.
+
+### 3.7.6 Los episodios (esquema 21)
+
+Un **episodio** es algo fuerte que te pasa y que puede repetirse. Hay seis tipos, más «otro» escrito:
+- crisis de ansiedad o pánico;
+- llanto o bajón fuerte;
+- pelea o discusión;
+- migraña;
+- enfermedad;
+- accidente.
+
+Se anota como un momento (`tipo = "episodio"`) desde el ⊕ o desde el día. Lleva:
+- la hora;
+- la intensidad, de 1 a 5 (`Catalogo.ANCLAS["episodio"]`, de «leve» a «lo peor que he vivido así»);
+- la duración, en días si es una enfermedad;
+- los detonantes, con la lista de siempre;
+- en una crisis, los síntomas: corazón acelerado, falta de aire, temblor, mareo, sudor, miedo intenso, sensación de irrealidad;
+- en una pelea, con quién, y esa persona cuenta como mención.
+
+No es privado. Salen en el panel:
+- `n_episodio`, que vale 0 desde el primer episodio, en días con diario, como `n_impulso` (P-15);
+- `episodio_intensidad_max`;
+- cuatro marcas de 0/1: `epi_crisis`, `epi_llanto`, `epi_pelea` y `epi_salud` (migraña, enfermedad o accidente).
+
+Las seis se tratan como una familia obvia entre sí (capítulo 6). Así se puede ver cuántos hay por mes, qué los detona y cómo salen el sueño y el ánimo esos días o el siguiente. *Ejemplo inventado:* una crisis a las 23:10 de intensidad 4 y una discusión a las 18:00 de intensidad 2 dan, ese día, `n_episodio` = 2, `episodio_intensidad_max` = 4, `epi_crisis` = 1 y `epi_pelea` = 1.
+
+*Cuándo falla:* como todo registro a mano, depende de que se anote. Un episodio fuerte es justo el momento en que menos ganas hay de abrir la app. Un día sin episodio anotado puede ser un día en que no se anotó, y no se puede distinguir de uno sin episodio (H-1-1). **[Diseño propio]**; los síntomas de la crisis siguen, en lenguaje simple, los de un ataque de pánico, pero la app no diagnostica nada.
 
 ## 3.8 La predicción de mañana
 
@@ -1149,14 +1185,54 @@ En R, `vm_retraso()` dice qué registros se anotaron tarde (Apéndice C). Los re
 
 ## 3.16 Seguimiento privado (solo la mecánica)
 
-Hay tres registros:
+Hay cinco registros (los dos últimos desde el esquema 21, D.163):
 - **impulso**: intensidad de 0 a 5 en el día, y momentos con intensidad de 1 a 5;
 - **recaída**: sí o no en el día; momentos con hora, duración, detonantes, aparato y qué hacías antes;
-- **libido**: de 0 a 5 y en qué está el foco; es distinta del impulso.
+- **libido**: de 0 a 5 y en qué está el foco; es distinta del impulso;
+- **masturbación**:
+  - hora y duración;
+  - el estímulo: pornografía, fantasía, un recuerdo, conversación o mensajes, nada en particular u otro;
+  - dónde;
+  - en qué aparato, solo con pornografía o mensajes;
+  - satisfacción de 1 a 5, las emociones de después y una descripción opcional.
 
-Usan anclas propias (`Catalogo.ANCLAS["impulso"]`, `["libido"]`). Los momentos de impulso se pueden registrar siempre. La intensidad del día, las recaídas, la libido y los detonantes solo con el seguimiento privado activado.
+  **Con pornografía cuenta como recaída** (decisión del autor). La app crea una recaída gemela a la misma hora, con su duración y aparato, y las liga (`vinculo`). Así, la marca del día, el hábito ligado y las rachas se comportan igual que con una recaída anotada a mano. Si la masturbación se borra o deja de ser con pornografía, la gemela se quita. Las dos cuentan en sus variables, así que `n_masturbacion` y `n_recaida` suben juntas ese día; por eso están en la misma familia obvia.
+- **intimidad**: un encuentro con alguien. Lleva:
+  - **qué pasó**: varias opciones, con nombres de manual y la palabra de todos los días al lado:
+    - a distancia: mensajes eróticos (sexting), llamada o videollamada erótica;
+    - besos: beso breve (pico), beso profundo;
+    - caricias: sobre la ropa (faje superficial), íntimas sin ropa (faje), estimulación manual;
+    - oral: dar o recibir;
+    - coito: vaginal o anal;
+    - otras: prácticas no convencionales (kinks), juguetes u otra;
+  - una descripción opcional;
+  - con quién, elegido de tu gente;
+  - cuatro escalas de 1 a 5:
+    - **satisfacción**, qué tan bien te dejó;
+    - **placer**, cuánto lo disfrutaste en el cuerpo;
+    - **conexión**, qué tan cerca te sentiste;
+    - **comodidad**, qué tan a gusto y con control. Es la que distingue una experiencia buena de una que no quisiste del todo;
+  - las emociones de después;
+  - en los detalles: orgasmo propio y de la otra persona, protección, quién empezó, dónde y duración.
 
-Desde el módulo 10a todo esto, junto con los medicamentos, **se anota y se ve solo en la pantalla Privado**. No aparece en el Día, los momentos, la cinta, los reportes, los logros, «Tu año», los mapas, los widgets ni los análisis de la app, y la red de personas no lo usa. **Sí** entra en el panel que se exporta a R (por ejemplo, `n_recaida`, `recaida_min`, `n_impulso`), porque su propósito es entender qué días y contextos lo hacen más difícil. El capítulo 10 detalla cómo se protege. **[Diseño propio]**.
+  El **nivel** (`Catalogo.nivelIntimidad`) es el más alto de lo que pasó: 0 a distancia, 1 besos, 2 caricias, 3 oral, 4 coito. Las prácticas sin nivel no lo cambian. *Ejemplo inventado:* beso profundo y caricias sobre la ropa dan nivel 2.
+
+Usan anclas propias (`Catalogo.ANCLAS["impulso"]`, `["libido"]` y, desde el esquema 21, `["satisfaccion"]`, `["placer"]`, `["conexion"]` y `["comodidad"]`).
+
+Las variables nuevas son:
+- de la masturbación: `n_masturbacion`, `masturbacion_min` y `masturbacion_satisfaccion`;
+- de la intimidad:
+  - `n_intimidad`;
+  - `intimidad_nivel`, el máximo del día;
+  - `intimidad_satisfaccion` e `intimidad_comodidad`, promedios del día;
+  - `n_coito`;
+  - `intimidad_distancia`, que vale 1 si todo lo del día fue a distancia.
+
+`n_masturbacion` y `n_intimidad` valen 0 desde el primer registro, en días con diario (P-15).
+
+En `vm_momentos.csv`, la columna `bajo_sustancia` dice si había alcohol o cannabis de por medio: un consumo que empezó en las 3 horas de antes o cuyo efecto seguía. No se pregunta, se cruza con lo que ya anotaste. Los momentos de impulso se pueden registrar siempre. La intensidad del día, las recaídas, la libido y los detonantes solo con el seguimiento privado activado.
+
+Desde el módulo 10a todo esto, junto con los medicamentos, **se anota y se ve solo en la pantalla Privado**. No aparece en el Día, los momentos, la cinta, los reportes, los logros, «Tu año», los mapas, los widgets ni los análisis de la app, y la red de personas no lo usa. La única excepción, desde el esquema 21, es la persona de la intimidad: con el seguimiento privado encendido, su ficha en Tu gente dice cuántas veces y cuándo fue la última (decisión del autor). No entra en las menciones, la red ni el panel de personas. **Sí** entra en el panel que se exporta a R (por ejemplo, `n_recaida`, `recaida_min`, `n_impulso`), porque su propósito es entender qué días y contextos lo hacen más difícil. El capítulo 10 detalla cómo se protege. **[Diseño propio]**.
 
 **Para la medición, el cambio tiene dos efectos posibles, sin comprobar:**
 - Ver menos estos datos en el día a día puede reducir la reactividad (que registrar cambie lo registrado).
@@ -2018,7 +2094,9 @@ Variables: `alcohol_nivel_max`, `cannabis_nivel_max` (el mayor nivel del día) y
 
 : Tabla 5.4. Suplementos: tres modelos
 
-Para todos se guardan, por día, `supl_<id>_dosis` (lo anotado) y `supl_<id>_tomado` (0/1), desde la primera toma.
+Para todos se guardan, por día, `supl_<id>_dosis` (lo anotado, la suma de las tomas del día), `supl_<id>_tomado` (0/1) y, desde el esquema 21, `supl_<id>_n` (cuántas tomas), desde la primera toma.
+
+**Varias tomas al día (esquema 21, D.164).** Cada toma siempre fue un registro aparte (`TomaSuplemento`, con su hora), y la dosis del día ya era la suma. Lo que impedía una segunda toma era la pantalla: en «Suplementos de este día» un toque marcaba o quitaba, y en el ⊕ pedía confirmar. Ahora cada suplemento dice cuántas tomas lleva al día (`Suplemento.tomas_dia`, 1 por omisión), y `Suplementos.faltan` es verdadero mientras lleves menos. Con eso se deciden el recordatorio, que puede tener varias horas (`Config.suplementos_horas`, y sale a cada una mientras falte alguna toma), «Ya los tomé» (que anota una toma de cada suplemento al que le falta) y el mosaico. Los modelos no cambian: la carga usa la dosis del día (la suma), y la vida media decae cada toma desde su hora. *Ejemplo inventado:* magnesio, 300 mg a las 8:00 y 300 mg a las 21:00, da `supl_magnesio_dosis` = 600, `_tomado` = 1 y `_n` = 2. **[Diseño propio]**.
 
 Una toma olvidada se puede anotar después, con su hora real («¿Cuándo la tomaste?», o «Suplementos de este día» en la hoja de la noche), y una toma de más se puede quitar. Los niveles se recalculan con lo corregido. Cada toma guarda `ts` (cuándo se tomó) y `ts_creado` (cuándo se anotó), así que en R se ve cuáles se anotaron tarde (`vm_retraso`). Esto es desde la entrega N2 de la revisión de navegación (H-NAV-1).
 
@@ -2125,6 +2203,7 @@ Ambas están descritas con detalle en el capítulo 4. En resumen:
 
 - **Fase lunar** (`Luna`, `data/Calculos.kt`): edad de la luna a partir de una luna nueva de referencia (6 ene 2000, 18:14 UTC) y del **mes sinódico medio** de 29.530588853 días, evaluada al mediodía local; iluminación = (1 − cos 2π*f*)/2 (variable `luna_ilum`). **[Validado]** como aproximación astronómica: el mes real varía alrededor de ese promedio, así que la fase puede desviarse algunas horas; no lo cuantifiqué **[sin verificar]**.
 - **Enfoque y siestas** (`Enfoque`, `data/Enfoque.kt`): el cronómetro guarda cada bloque como un tramo **sin contar las pausas**, redondeado a minutos; los bloques de **menos de 1 minuto** no se guardan. Con meta y descansos, la meta se reparte en bloques iguales (2 h con 3 descansos = 4 bloques de 30 min). Los tramos anotados después con hora antes de las 5:00 se asignan a la madrugada del día lógico. Variables: `enfoque_min`, `enfoque_<tipo>_min`, `siesta`, `siesta_min`. Son **mediciones** (de tu cronómetro), no modelos.
+  **Desde el esquema 21 (D.165), un bloque ya no se corta en su meta.** Al llegar a la hora planeada, la app avisa con sonido (una sola vez por segmento, `PlanEnfoque.avisado`) y el cronómetro **sigue contando**. Tú decides cuándo «Pasar a descanso». El descanso tampoco se corta: al acabar avisa y sigue contando hasta «Volver al enfoque». En el último bloque, hasta «Terminar». Antes, cada bloque se guardaba recortado en la meta y la app saltaba sola al descanso, así que el tiempo de más no quedaba en ningún lado. Cada tramo guarda ahora lo que duró de verdad (`min`) y lo planeado (`plan_min`), y `vm_tramos.csv` trae `extra_min` = `min − plan_min`. *Ejemplo inventado:* un bloque planeado de 30 min que dejas correr hasta 41 se guarda con `min` = 41, `plan_min` = 30 y `extra_min` = 11; antes se guardaba con 30. Por eso, desde esta versión, `enfoque_min` incluye lo de más, y no es comparable sin más con los días de antes: en R se puede usar `plan_min` para separarlo. El largo del descanso admite cualquier número de minutos («Otra», de 1 a 180). **[Diseño propio]**.
 - **Repetición máxima estimada** (1RM): peso × (1 + repeticiones/30), la **fórmula de Epley** (con 1 repetición, el peso mismo desde el 5 nov 2026, D.156), una de las habituales para estimar el máximo; no verifiqué su fuente original **[sin verificar]**. Desde la entrega 10c (D.72) hay **un solo criterio** en toda la app, `Macrofactor.e1rm`: series de 1 a **12** repeticiones, sin calentamientos, redondeada a una décima. Lo usan la exportación, `vm_fuerza()` de R, Fuerza, Totales, los reportes (`Periodo`) y Tus apps. Antes, los reportes aceptaban hasta 15 repeticiones con calentamientos y Tus apps no tenía límite (H-4-13). *Ejemplo:* series de 100 kg × 15, 120 kg × 5 y un calentamiento de 130 kg × 8: antes el reporte daba 130 × (1 + 8/30) = **164.7 kg** (el calentamiento); ahora, 120 × (1 + 5/30) = **140 kg**, como en R.
 - **Fuerza de referencia** (`fuerza_ref_kg`, desde 10f; D.114, H-7-14): la mayor 1RM estimada del día (`Macrofactor.e1rm`, con sus mismas reglas) entre las series de **un solo ejercicio fijo**, el press inclinado con mancuernas (`Macrofactor.fuerzaReferencia`). Vacía los días sin ese ejercicio. `Macrofactor.esReferencia` lo reconoce por el nombre, en inglés o en español: el nombre simplificado (`Texto.slug`: minúsculas, sin acentos) debe contener «inclin»; «mancuern», «dumbbell» o la palabra «db», y «press», «banc» o «bench». Así entran «Incline Dumbbell Press», «Incline Dumbbell Bench Press» y «Press inclinado con mancuernas», y no «Incline Barbell Bench Press» ni «Dumbbell Bench Press». Se calcula al importar MacroFactor y, una sola vez, para lo ya importado (`Repo.completarFuerzaReferencia`). Va en el panel (grupo «Cuerpo»), en `vm_entrenos.csv` y en `vm_panel.csv`, y `vm_series.csv` marca las series del ejercicio (`referencia`). *Ejemplo* (inventado): 30 kg × 8, 32 kg × 5 y un calentamiento de 40 kg × 3 dan 30 × (1 + 8/30) = 38.0 y 32 × (1 + 5/30) = 37.3; el calentamiento no cuenta, y `fuerza_ref_kg` = **38.0 kg**. **[Aproximación]** la 1RM de Epley; **[Diseño propio]** reconocer el ejercicio por su nombre. *Cuándo falla.* (a) Con un nombre sin esas palabras, el día queda vacío; el nombre exacto con que MacroFactor exporta este ejercicio no se comprobó. (b) Al revés, un ejercicio que no es press pero se llama con «banco inclinado» y «mancuernas» (por ejemplo, «Aperturas en banco inclinado con mancuernas») también cuenta, porque «banc» basta. (c) Solo hay dato los días en que hiciste el ejercicio: si lo haces una vez por semana, un experimento de creatina tiene pocos días medidos en cada condición (capítulo 8).
 - **Grados de escalada** (`Grados`): los grados de Fontainebleau se convierten a la escala V con una tabla fija (6A = V3, 7A = V6…) y los de YDS a número (5.10a = 10, 5.10b = 10.25…). **[Aproximación]**: las tablas de equivalencia publicadas no coinciden entre sí.
@@ -2991,7 +3070,9 @@ La misma persona puede «aparecer» de forma distinta según la función, porque
 
 : Tabla 7.2. Mapa: de una @mención a cada salida
 
-«Momentos privados» son los de tipo `impulso`, `recaida` o `libido` (la propiedad `Momento.privado` en `data/Modelo.kt`, que desde el módulo 10a incluye el impulso). Ninguna fila de esta tabla los usa (sección 7.13). Hasta v84 el impulso no contaba como privado y entraba en todas las filas que dicen «Momentos».
+«Momentos privados» son los de tipo `impulso`, `recaida` o `libido` y, desde el esquema 21, `masturbacion` o `intimidad` (la propiedad `Momento.privado` en `data/Modelo.kt`, que desde el módulo 10a incluye el impulso). Ninguna fila de esta tabla los usa (sección 7.13). Hay dos novedades en el esquema 21:
+- La ficha de una persona, con el seguimiento privado encendido, dice cuántas veces hubo intimidad con ella y cuándo fue la última (`Personas.intimidadCon`, decisión del autor). Eso no entra en menciones, red ni variables.
+- La persona de un episodio de pelea (`Momento.personas`), que no es privado, sí cuenta como mención. Hasta v84 el impulso no contaba como privado y entraba en todas las filas que dicen «Momentos».
 
 ## 7.3 Menciones con @ y equivalencias
 
@@ -3979,7 +4060,7 @@ Arriba, hasta **9 cifras** (días con diario, ánimo medio, sueño, pasos, panta
 - **La semana de un vistazo** (solo el semanal; Figura 9.1).
 - **El mes de un vistazo** (solo el mensual): calendario del ánimo, curva del sueño, comparación con el mes anterior, nubes de personas y temas, y un **mapa abstracto**: cada lugar guardado es un punto sobre una cuadrícula, **sin calles ni nombres**.
 - **Ánimo**: gráfica de valencia (con la activación detrás) o, en el anual, un cuadro por día del color del ánimo; mejor y peor día, cambio frente al periodo anterior, el mejor día de la semana (si el periodo pasa de 13 días), hábitos y racha. Desde el esquema 18 (D.146), también tres líneas de los registros de ánimo: *affectus* («lo que más sentiste»: las 5 emociones más nombradas, con cuántas veces fueron «mucho»), *cogitatio* (los 3 pensamientos más frecuentes) y *comites* (con quién, con de cuántos registros sale). La sección aparece aunque no haya valencia del diario si hay registros con estos datos. Ejemplo (inventado): «lo que más sentiste: ansiedad 6 (2 «mucho») · calma 4 · cansancio 3».
-- **Cuerpo, Mente, Gente, Mundo, Cultura, Dinero, Teléfono, Lo memorable** (hitos y logros del periodo).
+- **Cuerpo, Mente, Gente, Mundo, Cultura, Dinero, Teléfono, Lo memorable** (fechas señaladas, episodios por tipo y logros del periodo; desde el esquema 21).
 
 **El modo discreto** (`Config.discreto`, apagado por omisión), en los reportes, cambia los nombres de las personas por iniciales (`@ana_luisa` → «A.L.», `Reportes.persona`) y, desde el esquema 18, quita las tres líneas de emociones, pensamientos y compañía. No toca nada más del reporte (en otras pantallas también oculta, por ejemplo, los nombres de las emociones). Como los reportes que se generan solos van siempre en modo discreto (9.3.1), esas líneas solo salen en los que pides a mano.
 
@@ -4253,7 +4334,7 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 _Esta sección describe el código después del módulo 10a (decisiones D-1 y D-2 de `revision_propuestas.md`). Hasta v84 la regla era otra; el cambio está en el Apéndice D._
 
 - **Una sola regla, en un solo archivo** (`data/Privado.kt`). Es privado:
-  - todo momento de tipo `impulso`, `recaida` o `libido` (`Momento.privado`, que usa `Privado.TIPOS`);
+  - todo momento de tipo `impulso`, `recaida` o `libido` y, desde el esquema 21, `masturbacion` e `intimidad` (`Momento.privado`, que usa `Privado.TIPOS`; capítulo 3, sección 3.16);
   - en el día, la intensidad del impulso (0 a 5), si hubo recaída, los detonantes y los **medicamentos**;
   - el **hábito ligado a las recaídas**. Con el interruptor encendido es el que elegiste en Privacidad o, si no elegiste, un hábito activo cuyo nombre contenga ciertas palabras clave. Con el interruptor apagado, solo el que elegiste. Elegir «ninguno» funciona; hasta v84 caía de nuevo en las palabras clave.
 - **Dónde se ve: solo en la pantalla Privado** (Más → Privado; antes «Impulsos y recaídas»). Siempre, con el interruptor encendido o apagado (`ui/pantallas/Recaidas.kt`):
@@ -4263,18 +4344,19 @@ _Esta sección describe el código después del módulo 10a (decisiones D-1 y D-
 
   Con el interruptor encendido, además:
   - en el día, la intensidad del impulso (0 a 5), si hubo recaída, los detonantes y el hábito ligado;
-  - los botones para registrar una recaída o la libido;
+  - los botones para registrar una recaída, la libido y, desde el esquema 21, una masturbación o un encuentro de intimidad, con su resumen (veces en 30 días, la última y, en la intimidad, el nivel más alto, la satisfacción media y cuántas veces la comodidad fue baja, como dato y sin juicios);
   - el resto del resumen privado (rachas, recaídas por hora y por día de la semana, lugares, detonantes…), los días con recaída en la tendencia y la sección de libido.
 
   Desde Día, el enlace «privado de este día» abre la pantalla en esa fecha. Las correlaciones de estas variables se hacen **solo en R**, como decidiste.
 - **Dónde no se ve: en ninguna otra parte de la app**, ni con el interruptor encendido:
   - Día, Hoy, momentos, cinta, diarios, libreta, calendario, semana, año, totales, mapa y widgets;
   - reportes, «Tu año», logros (también los propios), metas, campañas y experimentos (el impulso dejó de ser una medida posible);
-  - Constelación, Red, Tu gente, las sugerencias de @ y # al escribir, «Tus temas», y las variables `per_`, `pen_` y `tema_`;
-  - todas las listas de análisis: `Estadistica.variables()` excluye `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `n_impulso`, `medicamentos_n`, las familias `med_` y `det_` y `hab_` del hábito ligado.
+  - Constelación, Red, Tu gente, las sugerencias de @ y # al escribir, «Tus temas», y las variables `per_`, `pen_` y `tema_`. La única excepción es la ficha de una persona en Tu gente, desde el esquema 21 (decisión del autor). Con el interruptor encendido, la ficha dice cuántas veces hubo intimidad con ella y cuándo fue la última (`Personas.intimidadCon`); con el interruptor apagado no dice nada. Las @personas escritas en la descripción de un momento privado no cuentan como menciones;
+  - todas las listas de análisis: `Estadistica.variables()` excluye `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `n_impulso`, `medicamentos_n`, las del esquema 21 (`n_masturbacion`, `masturbacion_min`, `masturbacion_satisfaccion`, `n_intimidad`, `intimidad_nivel`, `intimidad_satisfaccion`, `intimidad_comodidad`, `n_coito`, `intimidad_distancia`), las familias `med_` y `det_` y `hab_` del hábito ligado.
 - **El interruptor `Config.seguimiento_privado`** (apagado por omisión) solo decide qué se **ofrece** en la pantalla Privado: con él apagado, medicamentos y momentos de impulso; con él encendido, también la intensidad del impulso del día, recaídas, libido y detonantes (la lista de arriba). Ya no decide qué se muestra fuera de Privado: fuera, nunca se muestra.
 - **La exportación para R lleva todo, siempre.** El panel calcula las variables privadas aunque el interruptor esté apagado, y `vm_momentos.csv`, `vm_dias.csv`, `vm_panel_extendido.csv` y `vm_respaldo.json` las llevan. Desde la entrega 10d, `vm_variables.csv` lista las variables que la app cruza y marca las privadas (`privada` = 1, con `Privado.esVariable`). Por omisión, `vm_relaciones()` y `vm_factores()` de R **no** las cruzan, para dar lo mismo que la app; con `privadas = TRUE` sí, y esa es la vía para hacer en R las correlaciones del seguimiento privado. Las coordenadas de un momento privado ya no se usan para pedir el clima (`Entorno.lugarDe`).
 - **Registrar una recaída** (`Recaidas.registrar`) guarda el momento con hora y lugar, marca el día con recaída y **desmarca el hábito ligado**. Se puede deshacer tal cual (`deshacer`) y cambiar la hora (`moverHora`), que busca la ubicación de esa hora (la más cercana en ±30 min) y descarta la luz y el ruido medidos al registrar. Desde el esquema 14 (H-NAV-6): cambiar solo el día, con la misma hora, también la mueve, porque se compara el minuto completo; y borrarla desde el diálogo de Privado quita la marca del día si era la única recaída de ese día (`alBorrar`; el día queda sin respuesta, porque no se sabe qué había antes).
+- **Una masturbación con pornografía** (esquema 21) crea su recaída gemela (`Recaidas.registrarDesdeMasturbacion`). La gemela marca el día y el hábito como cualquier recaída, y las dos quedan ligadas (`vinculo`). Borrar la masturbación, o cambiar su estímulo, quita la gemela. Borrar la gemela deja la masturbación sin vínculo.
 - **El resumen privado** (`Recaidas.resumen`):
   - impulsos y recaídas por hora; recaídas por día de la semana;
   - lugares, detonantes, qué hacías antes y aparato;
@@ -4928,7 +5010,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | Identificador | Descripción | Tipo | Unidad | Existe |
 |---|---|---|---|---|
 | `palabras` | Palabras en el diario | numérica | — | Si hay datos de la fuente |
-| `hitos_n` | Número de hitos | numérica | — | Si hay datos de la fuente |
+| `hitos_n` | Fechas señaladas del día (antes «hitos»; desde el esquema 21 cuenta las fechas señaladas, con los hitos de antes) | numérica | — | Si hay datos de la fuente |
 | `carta_escrita` | Escribí una carta (0/1) | binaria (0/1) | — | Si hay datos de la fuente |
 
 : Tabla A.6. Texto
@@ -5140,6 +5222,15 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `recaida_min` | Minutos de recaída | numérica | — | Si hay recaídas con duración |
 | `libido_max` | Libido máxima del día (0 a 5) | numérica | — | Si hay registros de libido |
 | `n_libido` | Registros de libido | numérica | — | Si hay registros de libido |
+| `n_masturbacion` | Masturbaciones registradas (esquema 21) | numérica | — | Si hay alguna; 0 desde la primera, en días con diario |
+| `masturbacion_min` | Minutos de masturbación (esquema 21) | numérica | min | Días con duración anotada |
+| `masturbacion_satisfaccion` | Satisfacción con la masturbación, promedio del día (1 a 5; esquema 21) | numérica | — | Días con satisfacción anotada |
+| `n_intimidad` | Encuentros íntimos registrados (esquema 21) | numérica | — | Si hay alguno; 0 desde el primero, en días con diario |
+| `intimidad_nivel` | Nivel más alto del día: 0 a distancia, 1 besos, 2 caricias, 3 oral, 4 coito (esquema 21) | numérica | — | Días con intimidad |
+| `intimidad_satisfaccion` | Satisfacción con la intimidad, promedio del día (1 a 5; esquema 21) | numérica | — | Días con satisfacción anotada |
+| `intimidad_comodidad` | Comodidad en la intimidad, promedio del día (1 a 5; esquema 21) | numérica | — | Días con comodidad anotada |
+| `n_coito` | Encuentros con coito (esquema 21) | numérica | — | Si hay intimidad; 0 desde la primera, en días con diario |
+| `intimidad_distancia` | Toda la intimidad del día fue a distancia (0/1; esquema 21) | binaria (0/1) | — | Días con intimidad con alguna práctica de nivel |
 | `n_impulso` | Momentos de impulso | numérica | — | Días con diario desde el primer impulso (10c; antes, todos los días con diario). Hasta v84 estaba en el grupo «Momentos» y entraba en los análisis |
 | `medicamentos_n` | Medicamentos tomados | numérica | — | Desde el primer día con medicamentos. En el código conserva el grupo «Salud» (así sale en `vm_variables.csv`), pero desde 10a es privada; hasta v84 entraba en los análisis |
 
@@ -5151,9 +5242,21 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 
 | Identificador | Descripción | Tipo | Unidad | Existe |
 |---|---|---|---|---|
-| `enfoque_min` | Minutos de enfoque (cronómetro) | numérica | — | Si hay tramos del cronómetro |
+| `enfoque_min` | Minutos de enfoque (cronómetro); desde el esquema 21, con lo de más sobre la meta de cada bloque (D.165) | numérica | — | Si hay tramos del cronómetro |
 
 : Tabla A.19. Enfoque
+
+### Episodios
+
+*Fuente:* Momentos de tipo «episodio» (esquema 21; capítulo 3, sección 3.7.6)
+
+| Identificador | Descripción | Tipo | Unidad | Existe |
+|---|---|---|---|---|
+| `n_episodio` | Episodios del día | numérica | — | Si hay alguno; 0 desde el primero, en días con diario |
+| `episodio_intensidad_max` | Intensidad del episodio más fuerte (1 a 5) | numérica | — | Días con episodio con intensidad |
+| `epi_crisis`, `epi_llanto`, `epi_pelea`, `epi_salud` | Hubo crisis de ansiedad o pánico, llanto o bajón fuerte, pelea o discusión, o migraña, enfermedad o accidente (0/1) | binaria (0/1) | — | Como `n_episodio` |
+
+: Tabla A.20. Episodios
 
 ### Suplementos
 
@@ -5165,7 +5268,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `probioticos_porciones` | Porciones de probióticos (anotadas y estimadas) | numérica | — | Si el suplemento correspondiente tiene datos |
 | `probioticos_estimado` | Porciones de probióticos leídas en tu bitácora de comidas | numérica | — | Si el suplemento correspondiente tiene datos |
 
-: Tabla A.20. Suplementos
+: Tabla A.21. Suplementos
 
 ### Laptop
 
@@ -5176,7 +5279,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `laptop_min` | Minutos en la laptop | numérica | — | Si se importó Cold Turkey |
 | `laptop_web_min` | Minutos en sitios web (laptop) | numérica | — | Si se importó Cold Turkey con sitios web |
 
-: Tabla A.21. Laptop
+: Tabla A.22. Laptop
 
 _Cuántas son. Regla de conteo: una variable fija es un `Variable("id", …)` con el identificador escrito tal cual en `Estadistica.variables()`. Desde el esquema 17 son **193, con 24 nombres de grupo** (187 desde 10f, 186 en la v91 y 184 en la v90). Las tablas de arriba traen **192 en 21 grupos** (186 hasta el esquema 16), porque: `dia_especial` («Calendario») y `campanas_n` («Campañas») van en la tabla siguiente, junto a las de su grupo; `n_impulso` se agrega aquí aunque el código la arma con una plantilla (`n_${it.id}` sobre `Catalogo.MOMENTOS`, que solo da esa), y `medicamentos_n`, la única del grupo «Salud», se lista en Privado. En la v81 eran 177 en 22 grupos; el esquema 13 (10b) agregó `avisos_planeados`, `avisos_mostrados`, `avisos_respondidos`, `tasa_respuesta`, `campanas_n` y `dia_especial`, 10c, `presencias_revisado`, 10e, `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94), y 10f, `fuerza_ref_kg` (D.114); el esquema 17 agregó tres contextos (`ctx_casa`, `ctx_fiesta`, `ctx_tramites`) y tres compañías (`con_hijos`, `con_mascota`, `con_mensaje`), D.132 y D.133. No todas existen en cada instalación: 133 se agregan siempre (entre ellas, las dos de 10e, los tres contextos nuevos y 4 privadas) y las otras 60 (entre ellas, la de 10f y las tres compañías nuevas), según la columna «Existe»._
 
@@ -5196,12 +5299,12 @@ Estas se crean una por cada elemento que el usuario ha usado (o, en las de catá
 | `ctx_<id>` | Contexto: ‹nombre› (0/1); siempre, los 13 contextos: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, cita o tiempo en pareja (`ctx_romantico`), familia y, desde el esquema 17, casa o descanso, fiesta, trámites o pendientes | Contexto |
 | `flow_<id>`, `sdt_necesidad_<id>`, `apreciacion_<id>` | Opción elegida en las tres preguntas científicas del día (0/1); siempre, 13 opciones (4, 5 y 4; «No aplica» no cuenta) | Lectura del día |
 | `hab_<id>` | Hábito: ‹nombre› (0/1; vacío si ese día no lo contestaste, desde el esquema 17) | Hábitos |
-| `supl_<id>_dosis/_tomado/_nivel/_porciones` | Dosis, toma, reserva o cantidad estimada y porciones del suplemento. Desde 10e, `_nivel` no existe en los suplementos de vida media menor de 6 horas (`Suplementos.VIDA_MEDIA_MIN_NIVEL`, A.8) | Suplementos |
+| `supl_<id>_dosis/_tomado/_n/_nivel/_porciones` | Dosis (la suma de las tomas del día), toma, número de tomas (`_n`, desde el esquema 21), reserva o cantidad estimada y porciones del suplemento. Desde 10e, `_nivel` no existe en los suplementos de vida media menor de 6 horas (`Suplementos.VIDA_MEDIA_MIN_NIVEL`, A.8) | Suplementos |
 | `campana_<reto>`, `campana_hab_<id>` | En campaña ese día (0/1; la tenías aceptada). 0 desde tu primera campaña, vacío antes. Desde el esquema 13 | Campañas |
 | `campanas_n` | Campañas que tenías ese día. Desde el esquema 13 | Campañas |
 | `dia_especial` | Ese día cae un cumpleaños, un aniversario o una fecha propia (0/1). Existe si hay alguna fecha guardada. Desde el esquema 13 | Calendario |
 
-: Tabla A.22. Variables con nombre generado
+: Tabla A.23. Variables con nombre generado
 
 **Pantalla y pasos, desde el esquema 13.** `pantalla_min`, `desbloqueos`, `primer_uso_h`, `ultimo_uso_h` y `pasos` se calculan por **día lógico** (de 05:00 a 05:00) en los días nuevos; los de antes quedaron por día de calendario. La ventana de cada día está en `vm_pantalla.csv:ventana`, `vm_salud.csv:ventana_pasos` y, en el panel exportado, `ventana_pantalla` y `ventana_pasos` (capítulo 2, sección 2.3.2).
 
@@ -5214,7 +5317,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 | `per_` | Personas | 15 | 5 | Aparece @‹elemento› (diario, mejor y peor momento, momentos, sueños o cartas) (0/1); 0 solo en días con diario escrito o momento con @ (10c) |
 | `pen_` | Personas | 10 | 3 | Pensé en @‹elemento› sin verla (0/1) |
 | `tema_` | Temas | 12 | 5 | Aparece #‹elemento› (0/1); 0 solo en días con diario escrito o momento con #tema (10c) |
-| `hito_` | Hitos | 10 | 3 | Hito: ‹elemento› (0/1) |
+| `hito_` | Hitos | — | — | Ya no se calcula desde el esquema 21 (D.161): los hitos son fechas señaladas y cuentan en `hitos_n` |
 | `lug_` | Lugares | 15 | 3 | Horas en «‹elemento›» (repartidas por día lógico desde el 5 nov 2026; D.155) |
 | `app_` | Apps | 12 | 5 | Minutos en ‹elemento› |
 | `ntf_` | Notificaciones | 8 | 5 | Notificaciones de ‹elemento› |
@@ -5239,7 +5342,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 | `pol_` | Política | ejes | — | «Brújula: ‹eje› (−100 ‹polo›, +100 ‹polo›)»; la posición de cada test vale hasta el test siguiente (máx. 400 días) |
 | `vida_` | Etapas de vida | 14 + ciudades | — | «Etapa: ‹campo de Conocerte›»; se reconstruye con el historial de cambios. Desde 10c, vacía antes del primer guardado de «Conocerte» para los campos llenados ese día (`Perfiles.primerGuardado`) |
 
-: Tabla A.23. Familias de variables dinámicas
+: Tabla A.24. Familias de variables dinámicas
 
 ## A.3 Tablas exportadas
 
@@ -5260,6 +5363,7 @@ La exportación genera 54 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_notas.csv` | Notas sueltas: ideas, pensamientos, propósitos y recordatorios |
 | `vm_ideas.csv` | Ideario: lo que aprendiste o pensaste, con quién lo dice, su fuente y cómo la tienes (esquema 16) |
 | `vm_ideas_revisiones.csv` | Ideario: cada vez que volviste a ver una idea y qué respondiste (esquema 16) |
+| `vm_senaladas.csv` | Fechas señaladas: una por fila, con su tipo y su frase; los hitos de antes como «otro» (esquema 21) |
 | `vm_suplementos.csv` | Cada toma de suplemento (y las porciones de probióticos estimadas de tu bitácora de comidas) |
 | `vm_laptop.csv` | Minutos por app y por sitio en la laptop, por día (Cold Turkey) |
 | `vm_red_nodos.csv` | Personas de tu red: relación, grupo de relación (columna `grupo`, desde 10c), cercanía, días mencionada y grado |
@@ -5302,7 +5406,7 @@ La exportación genera 54 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_entrenos.csv` | MacroFactor Workouts: resumen por día y por grupo muscular; desde el esquema 15, `fuerza_ref_kg` |
 | `vm_series.csv` | MacroFactor Workouts: cada serie; desde el esquema 15, si es del ejercicio de referencia (`referencia`) |
 
-: Tabla A.24. Tablas exportadas
+: Tabla A.25. Tablas exportadas
 
 ## A.4 Columnas nuevas del esquema 13 (entrega 10b)
 
@@ -5321,7 +5425,7 @@ La exportación genera 54 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_fechas_propias.csv` | `nombre`, `fecha`, `mes_dia`, `anio`, `tipo` | Fechas propias que se repiten cada año |
 | `vm_respaldo.json` | `avisos` | Los avisos de ánimo de cada día, para restaurarlos |
 
-: Tabla A.25. Columnas nuevas del esquema 13 (entrega 10b)
+: Tabla A.26. Columnas nuevas del esquema 13 (entrega 10b)
 
 ## A.5 Columnas nuevas del esquema 14 (revisión de navegación, entrega NE)
 
@@ -5333,7 +5437,7 @@ La exportación genera 54 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_dias.csv`, `vm_panel.csv` | `version_noche` | Con qué orden de preguntas se llenó la hoja de la noche (`VERSION_NOCHE`): 1 = el orden con que se creó el campo en la entrega NE; 2 = el orden nuevo (N-18, desde la entrega N4: el ánimo del momento primero; capítulo 3, sección 3.7.1). Vacío = no pasó por la hoja o es de antes del esquema 14 |
 | `vm_salud.csv` | `sueno_descartadas` | Las sesiones del reloj de esa noche que marcaste «no cuenta» (fuente y horas, por ejemplo, «Samsung Health 15:10–16:05»); no entran ni en `sueno_min` ni en `siesta_reloj_min` |
 
-: Tabla A.26. Columnas nuevas del esquema 14 (revisión de navegación, entrega NE)
+: Tabla A.27. Columnas nuevas del esquema 14 (revisión de navegación, entrega NE)
 
 **Cómo leer `ts_creado`.** La hora de un registro (`ts`, `inicio` o `fecha` + `hora`) dice **cuándo pasó**; `ts_creado`, **cuándo lo anotaste**. La diferencia dice si se anotó en el momento o después. En R, `vm_retraso(tabla, umbral_min = 60)` la calcula (`retraso_min`) y marca `tarde` si pasó más del umbral o cayó en otro día lógico (Apéndice C). El umbral es **[Diseño propio]**.
 
@@ -5368,7 +5472,7 @@ No cambia lo que se guarda (`SCHEMA_V` = 14); cambia cómo se calcula el panel c
 | `cafeina_total_mg`, `alcohol_bebidas` | Incluyen las tomas de MacroFactor sin hora legible (al mediodía de su día) | Esas tomas se perdían |
 | `n_momentos` (`vm_panel.csv`) | Sin cambio de cálculo; el diccionario aclara que incluye los momentos privados | Igual |
 
-: Tabla A.27. Definiciones que cambiaron en la entrega 10c (cálculos)
+: Tabla A.28. Definiciones que cambiaron en la entrega 10c (cálculos)
 
 **Columnas nuevas en la exportación (10c).**
 
@@ -5378,7 +5482,7 @@ No cambia lo que se guarda (`SCHEMA_V` = 14); cambia cómo se calcula el panel c
 | `vm_panel.csv` | `dia_libre` | Sábado, domingo o festivo (0/1): la regla de día libre del jet lag social (`Fechas.esDiaLibre`) |
 | `vm_red_nodos.csv` | `grupo` | Grupo de la relación: familia, pareja, amistad, trabajo u otro; el que da el color en la Red |
 
-: Tabla A.28. Definiciones que cambiaron en la entrega 10c (cálculos)
+: Tabla A.29. Definiciones que cambiaron en la entrega 10c (cálculos)
 
 **Por día de calendario.** Las descripciones del diccionario de `vm_panel.csv` y `vm_panel_extendido.csv` terminan con «· por día de calendario (0:00 a 24:00)» en las variables de `Diccionario.CALENDARIO` y en las familias `ciu_` y `pais_` (capítulo 2, sección 2.3.2).
 
@@ -5400,7 +5504,7 @@ Tampoco cambia lo que se guarda (`SCHEMA_V` = 14). Cambian los valores de alguna
 | `luna_ilum` | La iluminación calculada de la fase lunar, en todos los días del panel | La de `vm_entorno.csv` si existía |
 | `ruido_db_medio` | `ruido_db` de la app: la media de todos los registros del día con ruido | La media solo de los momentos que no son avisos |
 
-: Tabla A.29. La exportación en la entrega 10d (R y exportación)
+: Tabla A.30. La exportación en la entrega 10d (R y exportación)
 
 **Once columnas con otro nombre en la app** (`Exportar.EQUIVALENTES`; no se renombran, y el diccionario lo dice en las dos):
 
@@ -5418,7 +5522,7 @@ Tampoco cambia lo que se guarda (`SCHEMA_V` = 14). Cambian los valores de alguna
 | `temp_piel_delta` | `temp_piel` | Sí |
 | `ruido_db_medio` | `ruido_db` | Sí |
 
-: Tabla A.30. La exportación en la entrega 10d (R y exportación)
+: Tabla A.31. La exportación en la entrega 10d (R y exportación)
 
 **Tablas nuevas.**
 
@@ -5431,7 +5535,7 @@ Tampoco cambia lo que se guarda (`SCHEMA_V` = 14). Cambian los valores de alguna
 | `vm_familias.csv` | `variable` | Columna de `vm_panel_extendido.csv`, o su nombre en `vm_panel.csv` |
 | `vm_familias.csv` | `lado` | 0 = obvia con todas las de la familia; 1 o 2 = obvia solo con las del otro lado |
 
-: Tabla A.31. La exportación en la entrega 10d (R y exportación)
+: Tabla A.32. La exportación en la entrega 10d (R y exportación)
 
 **Otras columnas que cambiaron (P-33).** `vm_dias.csv:schema_v` vale 0 en los días importados de Obsidian o de la versión web que no traían versión; `ts_creado` y `ts_editado` de los días de Obsidian quedan vacíos si la nota no los traía. `vm_ubicaciones.csv:precision_m` guarda la precisión de los puntos del formato viejo de Takeout (antes vacía). La descripción de `vm_red_nodos.csv:grado` aclara que usa 1 día juntas y hasta 400 personas, frente a 2 días y 45 personas en la app.
 
@@ -5451,7 +5555,7 @@ Tampoco cambia lo que se guarda (`SCHEMA_V` = 14): cambia cómo se calculan algu
 | `creatina_saturacion_pct` | Llega al 95 % en los días de carga (28 por omisión) con **3 g** al día, la dosis de referencia (`Suplementos.dosisReferencia`); con 5 g al día se llena antes, en unos 17 días (D.98) | Con la dosis que pusiste (5 g en el catálogo) llegaba al 95 % en 28 días (H-4-6) |
 | `supl_<id>_nivel` | Solo en los suplementos con vida media de 6 horas o más (`Suplementos.VIDA_MEDIA_MIN_NIVEL`); la melatonina del catálogo (1 hora) ya no lo tiene (D.98) | También en los de vida media corta, que a las 5:00 casi siempre valían 0 (H-4-7, en parte) |
 
-: Tabla A.32. Definiciones que cambiaron en la entrega 10e
+: Tabla A.33. Definiciones que cambiaron en la entrega 10e
 
 **El diccionario y el LEEME (10e).** La descripción de `cafeina_al_dormir_mg`, `creatina_saturacion_pct` y cada `supl_<id>_nivel` termina con los parámetros vigentes al exportar (vida media, o días de carga y de lavado con la dosis de referencia) y con el aviso de que cambiarlos recalcula toda la historia (`Diccionario.conParametros`, D.99; H-4-11, en parte). El LEEME y el diccionario dicen «esquema 13» y «esquema 14» donde decían «v13» y «v14», y el LEEME dice que el esquema de cada día está en `schema_v` de `vm_dias.csv` (D.107, H-14-1). Las descripciones nuevas del diccionario son las de `error_prediccion_signo`, `gasto_imprevisto_monto`, `cafeina_ultima_h` y `vm_panel_extendido.csv:personas`.
 
@@ -5472,7 +5576,7 @@ Cambia lo que se guarda: `SCHEMA_V` = 15. Una variable nueva en el panel de la a
 | `vm_series.csv` | `referencia` | 0/1: la serie es del ejercicio de referencia (`Macrofactor.esReferencia`) |
 | `vm_diccionario.csv` | `desde_version`, `cambio` | Desde qué versión de la app rige la definición actual de la columna y qué cambió entonces, con su fila del Apéndice D; vacío = sin cambios desde la v84 (`Diccionario.desde`; D.115, H-1-8). La tabla que las llena (`Diccionario.DESDE`, 165 entradas, con comodines como `per_*`) se armó con las filas del Apéndice D (capítulo 2, sección 2.8) |
 
-: Tabla A.33. Columnas nuevas del esquema 15 (entrega 10f)
+: Tabla A.34. Columnas nuevas del esquema 15 (entrega 10f)
 
 **Lo que cambia sin columna nueva.** `sin_wifi_min` (arriba) y todas las horas que la app saca de un instante: `primer_uso_h`, `ultimo_uso_h`, `cafeina_ultima_h`, las horas de `vm_horas.csv` y las demás `*_h` se calculan con la zona que tenía el teléfono entonces, o con el desfase de la propia nota (`Fechas.local`, `Fechas.localDe`). Mientras no viajes, nada cambia. Lo que el teléfono ya guardó sumado por día (sueño, pasos, pantalla, ubicaciones) no se recalcula. La plantilla «Creatina» mide desde 10f `fuerza_ref_kg` en lugar de `volumen_kg`; un experimento creado con la plantilla de antes sigue midiendo `volumen_kg`.
 
@@ -5495,7 +5599,7 @@ Cambia lo que se guarda: `SCHEMA_V` = 16, con una colección nueva (`ideas`) y u
 | `fijada`, `n_revisiones` | 0/1 si está fijada arriba; cuántas veces la respondiste en «Una idea de antes» |
 | `personas`, `temas` | Las @personas escritas en el texto; los temas del campo «Temas» (desde el esquema 17) y los #temas del texto, sin repetir (listas) |
 
-: Tabla A.34. Tablas nuevas del esquema 16 (Ideario)
+: Tabla A.35. Tablas nuevas del esquema 16 (Ideario)
 
 `vm_ideas_revisiones.csv` tiene una fila por respuesta (`Exportar.filasIdeasRevisiones`): `idea_id`, `fecha` (día lógico en que respondiste) y `respuesta` (`sigue`, «sigo pensando igual»; `cambio`, «ya no»; `ignorar`, «ahora no»). En R se leen como `vm$ideas` y `vm$ideas_revisiones`.
 
@@ -5515,7 +5619,7 @@ Cambia lo que se guarda: `SCHEMA_V` = 17. El detalle está en el capítulo 3 y e
 | `sueno_categorias`, `sueno_<categoría>` | Nueve ejes (prefijos `per_`, `esc_`, `int_`, `tema_`, `res_`, `sen_`, `est_`, `emo_`, `desp_`). El tipo «recurrente» de antes cuenta como `est_recurrente` |
 | `suenot_realista`, `suenot_raro`, `suenot_imposible`, `suenot_pesadilla` (panel extendido) | Reemplazan a `suenot_<tipo>` |
 
-: Tabla A.35. Cambios del esquema 17 (pantallas de captura)
+: Tabla A.36. Cambios del esquema 17 (pantallas de captura)
 
 **Momentos y hoja de la noche** (`vm_momentos.csv`, `vm_dias.csv`, `vm_panel.csv`):
 
@@ -5531,7 +5635,7 @@ Cambia lo que se guarda: `SCHEMA_V` = 17. El detalle está en el capítulo 3 y e
 | `vm_dias.csv:ctx_otro` | Otro contexto escrito a mano |
 | `vm_dias.csv:habitos_tri`, `hab_*` | Con `habitos_tri` = 1, un hábito sin respuesta queda vacío en `hab_*` en vez de 0 |
 
-: Tabla A.36. Cambios del esquema 17 (pantallas de captura)
+: Tabla A.37. Cambios del esquema 17 (pantallas de captura)
 
 **Ideario** (`vm_ideas.csv`): `temas` reúne los temas del campo «Temas» (desde el esquema 17) y los `#temas` escritos en el texto, sin repetir. Antes eran solo los del texto.
 
@@ -5549,7 +5653,7 @@ Cambia lo que se guarda: `SCHEMA_V` = 18. El detalle está en el capítulo 2 (se
 | `recomendo` | Quién te la recomendó: personas de tu gente, sin @ (lista) |
 | `donde` | Dónde verla o conseguirla, escrito a mano |
 
-: Tabla A.37. Cambios del esquema 18 (deseados y listas)
+: Tabla A.38. Cambios del esquema 18 (deseados y listas)
 
 La descripción de `estado` ahora incluye `pausado`, que ya existía desde D.143 pero el diccionario no nombraba.
 
@@ -5564,7 +5668,7 @@ La descripción de `estado` ahora incluye `pausado`, que ya existía desde D.143
 | `hecho` | Día lógico en que lo tachaste; vacío = pendiente |
 | `dias_hasta_hecho` | Días entre `agregado` y `hecho` (vacío si sigue pendiente). *Ejemplo inventado:* agregado el 1 de octubre y hecho el 11 → 10 |
 
-: Tabla A.38. Cambios del esquema 18 (deseados y listas)
+: Tabla A.39. Cambios del esquema 18 (deseados y listas)
 
 En R se lee como `vm$listas`.
 
@@ -6423,6 +6527,27 @@ No cambia lo que se guarda: `SCHEMA_V` sigue en 20.
 | D.160 | **Pantalla.** Singular y plural según la cifra en unas 250 frases (`porNumero`: «1 día», no «1 días»). Las cifras de los recuadros y los números de la escala de 0 a 10 se achican si no caben, en vez de cortarse; la barra de pestañas crece con la letra grande del sistema y TalkBack dice cuál está elegida. Momentos muestra de 200 en 200 con «ver más». Dos cierres posibles corregidos (Medir, Gastos). Los widgets se actualizan uno por uno aunque falle otro. La presentación de Art déco recorta sus rayos al marco. Otra app ya no puede abrir la captura rápida saltándose el candado | `data/Texto.kt` (`porNumero`), `ui/Componentes.kt`, `ui/MainActivity.kt`, `ui/pantallas/Momentos.kt`, `ui/pantallas/Medir.kt`, `ui/pantallas/Gastos.kt`, `widget/Widgets.kt`, `ui/Musica.kt`, `AndroidManifest.xml` y unas 50 pantallas | Detalles de la revisión del 5 nov 2026 |
 
 : Tabla D.23. Detalles (6 nov 2026)
+
+## Esquema 21 (8 nov 2026)
+
+Decisiones del autor (8 nov 2026):
+- la masturbación, con sus condiciones, y con pornografía cuenta como recaída;
+- el beso, el faje y el sexo, con quién y cómo fue, como dato privado que cuenta en la ficha de la persona;
+- los hitos, divididos en episodios y fechas señaladas;
+- los suplementos, varias veces al día;
+- el enfoque, que no se corte en la meta.
+
+`SCHEMA_V` pasa a 21. Todo campo nuevo tiene valor por omisión, así que los registros de antes se leen igual.
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.161 | **Fechas señaladas en vez de hitos.** `Dia.senaladas`: cada una con su tipo (primera vez, viaje, logro, cambio de vida, pérdida, encuentro, celebración u otra) y una frase. Los hitos de antes se leen como tipo «otra» (`Senaladas.de`) y la tarea periódica los pasa. Se muestran igual en todas las pantallas (`Senaladas.etiqueta`). Tabla nueva `vm_senaladas.csv`. `vm_dias.csv:hitos` lleva las frases. `hitos_n` cuenta las fechas señaladas. Se quita la familia `hito_*` (3.7.3) | `data/Senaladas.kt`, `data/Modelo.kt`, `data/Exportar.kt`, `ciencia/Dinamicas.kt`, `ciencia/Estadistica.kt`, `ui/pantallas/Dia.kt` y las vistas del calendario, la semana, el año, Tu año, el libro y los reportes | El autor no sabía qué poner en «Hitos». Además, se guardaban en dos formatos, cada pantalla los mostraba distinto, y una etiqueta solo se volvía variable si se repetía en 3 días, lo contrario de un hito |
+| D.162 | **Episodios.** Un momento nuevo, normal, `tipo = "episodio"`: crisis de ansiedad o pánico, llanto o bajón fuerte, pelea o discusión, migraña, enfermedad, accidente u otro. Lleva hora, intensidad de 1 a 5, duración, detonantes, síntomas (en la crisis) y con quién (en la pelea, que cuenta como mención). Variables `n_episodio`, `episodio_intensidad_max` y `epi_crisis`/`_llanto`/`_pelea`/`_salud`, en una familia obvia (3.7.6) | `data/Catalogo.kt` (`EPISODIOS`, `SINTOMAS_CRISIS`), `ciencia/Estadistica.kt`, `ui/QuickActivity.kt`, `ui/pantallas/Dia.kt` | Lo que pasa con fuerza y puede repetirse necesita hora e intensidad, no una etiqueta del día |
+| D.163 | **Masturbación e intimidad (seguimiento privado).** Dos tipos privados más (`Privado.TIPOS`). La masturbación lleva el estímulo, dónde, el aparato, la satisfacción, las emociones y una descripción. Con pornografía crea su recaída gemela (`Recaidas.registrarDesdeMasturbacion`, `vinculo`). La intimidad lleva las prácticas (con nombres de manual y su nivel de 0 a 4), una descripción, con quién, cuatro escalas de 1 a 5 (satisfacción, placer, conexión, comodidad), las emociones y los detalles (orgasmo, protección, iniciativa, dónde, duración). Variables privadas `n_masturbacion`, `masturbacion_min`, `masturbacion_satisfaccion`, `n_intimidad`, `intimidad_nivel`, `intimidad_satisfaccion`, `intimidad_comodidad`, `n_coito` e `intimidad_distancia`. Columna derivada `bajo_sustancia` en `vm_momentos.csv`. La ficha de la persona dice cuántas veces y cuándo fue la última, solo con el seguimiento privado (3.16, 10.3.1) | `data/Privado.kt`, `data/Recaidas.kt`, `data/Personas.kt` (`intimidadCon`), `data/Exportar.kt`, `ciencia/Estadistica.kt`, `ui/QuickActivity.kt`, `ui/pantallas/Recaidas.kt`, `ui/pantallas/Gente.kt` | Pedido del autor. La comodidad es la escala que separa una experiencia buena de una que no se quiso del todo |
+| D.164 | **Suplementos varias veces al día.** `Suplemento.tomas_dia` y `Config.suplementos_horas` (varias horas de recordatorio). `Suplementos.faltan` decide el recordatorio, «Ya los tomé» y el mosaico. «Suplementos de este día» suma y quita tomas (+/−), y el ⊕ suma otra toma sin confirmar, con deshacer. Variable nueva `supl_<id>_n` (5.6) | `data/Lote3.kt`, `ui/pantallas/Lote3.kt`, `ui/pantallas/Dia.kt`, `ui/QuickActivity.kt`, `avisos/Recordatorios.kt`, `widget/Mosaicos.kt` | Las tomas ya eran registros sueltos con su hora, pero la pantalla solo dejaba una por día |
+| D.165 | **El enfoque sigue contando.** Al llegar a la meta del bloque, la app avisa una vez (`PlanEnfoque.avisado`) y no corta. «Pasar a descanso», «Volver al enfoque» y «Terminar» los decides tú. El tramo guarda lo real (`min`) y lo planeado (`plan_min`). `vm_tramos.csv` trae `plan_min` y `extra_min`, y `enfoque_min` incluye lo de más. El descanso admite cualquier largo («Otra», de 1 a 180 min) (5.9) | `data/Enfoque.kt`, `ui/EnfoqueActivity.kt`, `widget/Widgets.kt`, `avisos/Avisos.kt` (`vozEnfoque`) | Antes, cada bloque se guardaba recortado en la meta y la app pasaba sola al descanso: el tiempo de más se perdía y cortaba la concentración |
+
+: Tabla D.24. Esquema 21 (8 nov 2026)
 
 
 # Apéndice E. Glosario

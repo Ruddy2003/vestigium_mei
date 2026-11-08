@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Opcion
 import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.data.privado
 
 /** Lo que se elige en «¿qué sientes?»: las emociones, el nombre de «otro» y cuánto de cada una. */
 data class EleccionEmociones(val emociones: List<String>, val otra: String, val intensidades: Map<String, Int>)
@@ -33,9 +34,10 @@ data class EleccionEmociones(val emociones: List<String>, val otra: String, val 
  */
 @Composable
 fun SelectorEmociones(actual: EleccionEmociones, discreto: Boolean, onCambio: (EleccionEmociones) -> Unit) {
-    val usos = remember(Repo.momentos.size) { Repo.momentos.flatMap { Catalogo.emocionesDe(it) }.groupingBy { it }.eachCount() }
+    val usos = remember(Repo.momentos.size) { Repo.momentos.filter { !it.privado }.flatMap { Catalogo.emocionesDe(it) }.groupingBy { it }.eachCount() }
     val otrasAntes = remember(Repo.momentos.size) {
-        Repo.momentos.mapNotNull { it.emocion_otra?.trim()?.takeIf { t -> t.isNotEmpty() } }.groupingBy { it.lowercase() }.eachCount()
+        // Lo escrito en un momento privado (masturbación, intimidad) no se sugiere en el ánimo de siempre.
+        Repo.momentos.filter { !it.privado }.mapNotNull { it.emocion_otra?.trim()?.takeIf { t -> t.isNotEmpty() } }.groupingBy { it.lowercase() }.eachCount()
             .entries.sortedByDescending { it.value }.map { it.key }.take(6)
     }
     val sel = actual.emociones
@@ -63,7 +65,7 @@ fun SelectorEmociones(actual: EleccionEmociones, discreto: Boolean, onCambio: (E
             }
         }
         if (Catalogo.OTRO in sel) {
-            OutlinedTextField(value = actual.otra, onValueChange = { t -> onCambio(actual.copy(otra = t)) },
+            CampoTexto(value = actual.otra, onValueChange = { t -> onCambio(actual.copy(otra = t)) },
                 modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
             val sugeridas = otrasAntes.filter { !it.equals(actual.otra.trim(), ignoreCase = true) }
             if (!discreto && sugeridas.isNotEmpty()) FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

@@ -2,6 +2,15 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.role
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxHeight
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -24,10 +33,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -38,12 +45,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -69,7 +70,6 @@ import io.github.ruddy2003.vestigium.ui.DialogoCarta
 import io.github.ruddy2003.vestigium.ui.Escrito
 import io.github.ruddy2003.vestigium.ui.EscribirSueno
 import io.github.ruddy2003.vestigium.ui.EstadoSobre
-import io.github.ruddy2003.vestigium.ui.EstanteDiario
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Etiquetas
 import io.github.ruddy2003.vestigium.ui.Ficha
@@ -84,10 +84,8 @@ import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.SelladoCarta
 import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.SobreCarta
-import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.Vacio
 import io.github.ruddy2003.vestigium.ui.estadoSobre
-import io.github.ruddy2003.vestigium.ui.mediaLuna
 import io.github.ruddy2003.vestigium.ui.rememberSentir
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -147,72 +145,28 @@ fun PantallaBibliotecas(nav: Nav, inicial: String) {
     }
 }
 
-/** Las pestañas, con su dibujo y cuántas cosas hay en cada una. */
+/**
+ * Las pestañas, dibujadas por el tema ([io.github.ruddy2003.vestigium.ui.biblioteca.DisenoBiblioteca.pestanas]) con su emblema,
+ * su nombre y cuántas cosas hay en cada una. Encima, cinco cajas transparentes del mismo ancho reciben el toque.
+ */
 @Composable
 private fun SelectorBibliotecas(actual: String, elegir: (String) -> Unit) {
-    val cs = MaterialTheme.colorScheme
     val n = mapOf("diario" to Repo.dias.values.count { it.nota.isNotBlank() }, "suenos" to Repo.dias.values.count { it.sueno_texto.isNotBlank() },
         "momentos" to diasConMomentos().size, "cartas" to Repo.cartas.size, "ideas" to Repo.ideas.size)
-    val tema = Estilo.tema
-    Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        BIBLIOTECAS.forEach { (id, nombre, _) ->
-            val sel = id == actual
-            Surface(onClick = { elegir(id) }, shape = MaterialTheme.shapes.small, color = if (sel) cs.primary else cs.surface,
-                border = BorderStroke(1.dp, if (sel) cs.primary else cs.outline), modifier = Modifier.weight(1f)) {
-                Column(Modifier.padding(vertical = 9.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    val tinta = if (sel) cs.onPrimary else cs.primary
-                    Canvas(Modifier.size(width = 30.dp, height = 20.dp)) { icono(id, tinta, tema, if (sel) cs.primary else cs.surface) }
-                    // Con cinco pestañas «Momentos» casi no cabe (y en mayúsculas con letra ancha, griego o Revolución, menos): se achica
-                    // un poco en lugar de partirse.
-                    val estilo = MaterialTheme.typography.labelLarge.let { if (nombre.length > 7) it.copy(fontSize = it.fontSize * (if (Estilo.mayusculas) 0.76f else 0.9f), letterSpacing = 0.sp) else it }
-                    Text(if (Estilo.mayusculas) nombre.uppercase() else nombre, style = estilo, color = if (sel) cs.onPrimary else cs.onSurface,
-                        maxLines = 1, softWrap = false, modifier = Modifier.padding(top = 4.dp))
-                    Text("${n[id] ?: 0}", style = MaterialTheme.typography.labelSmall, color = (if (sel) cs.onPrimary else cs.onSurfaceVariant).copy(alpha = 0.85f))
-                }
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(Estilo.tema)
+    val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+    val medidor = androidx.compose.ui.text.rememberTextMeasurer(cacheSize = 32)
+    val i = BIBLIOTECAS.indexOfFirst { it.first == actual }.coerceAtLeast(0)
+    val e = io.github.ruddy2003.vestigium.ui.biblioteca.EstadoPestanas(BIBLIOTECAS.map { it.second }, BIBLIOTECAS.map { n[it.first] ?: 0 }, i, Estilo.tema.ordinal)
+    androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().padding(top = 14.dp).height(d.altoPestanas)) {
+        Canvas(Modifier.matchParentSize()) { with(d) { pestanas(e, medidor, oscuro) } }
+        Row(Modifier.matchParentSize()) {
+            BIBLIOTECAS.forEachIndexed { k, (id, nombre, _) ->
+                val toque = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                androidx.compose.foundation.layout.Box(Modifier.weight(1f).fillMaxHeight()
+                    .semantics { contentDescription = "$nombre, ${n[id] ?: 0}"; selected = k == i; role = androidx.compose.ui.semantics.Role.Tab }
+                    .clickable(toque, null) { elegir(id) })
             }
-        }
-    }
-}
-
-/**
- * Un libro abierto, una luna con estrellas, una libreta, un sobre o una ficha de fichero, y en cada uno el símbolo del tema (el mismo con que se
- * califica: hoja de laurel, cruz de malta, abeja, engrane, rosetón…): en la página derecha del libro, como la estrella mayor
- * junto a la luna, en la tapa de la libreta y como el sello del sobre.
- */
-private fun DrawScope.icono(id: String, c: Color, t: TemaId, fondo: Color) {
-    val w = size.width; val h = size.height
-    val trazo = Stroke(1.6.dp.toPx())
-    fun sello(o: Offset, r: Float, aro: Boolean = false) {
-        if (aro) drawCircle(fondo, r * 1.25f, o)
-        drawPath(simboloCalificacion(t, o, r), c)
-    }
-    when (id) {
-        "suenos" -> {
-            mediaLuna(Offset(w * 0.42f, h * 0.52f), h * 0.42f, c)
-            sello(Offset(w * 0.82f, h * 0.24f), h * 0.18f)
-            listOf(Offset(w * 0.72f, h * 0.76f) to 1.1f, Offset(w * 0.94f, h * 0.58f) to 0.9f).forEach { (o, r) -> drawCircle(c, r.dp.toPx(), o) }
-        }
-        "momentos" -> {
-            // Una libreta de espiral con el símbolo del tema en la tapa.
-            drawRect(c, Offset(w * 0.22f, h * 0.08f), Size(w * 0.6f, h * 0.84f), style = trazo)
-            for (k in 0 until 4) drawCircle(c, 1.4.dp.toPx(), Offset(w * 0.22f, h * (0.22f + k * 0.19f)))
-            sello(Offset(w * 0.54f, h * 0.5f), h * 0.27f)
-        }
-        "ideas" -> {
-            // Una ficha de fichero con su pestaña y el símbolo del tema.
-            drawRect(c, Offset(w * 0.14f, h * 0.24f), Size(w * 0.72f, h * 0.68f), style = trazo)
-            drawPath(Path().apply { moveTo(w * 0.14f, h * 0.24f); lineTo(w * 0.2f, h * 0.06f); lineTo(w * 0.46f, h * 0.06f); lineTo(w * 0.52f, h * 0.24f) }, c, style = trazo)
-            sello(Offset(w * 0.5f, h * 0.58f), h * 0.2f)
-        }
-        "cartas" -> {
-            drawRect(c, Offset(w * 0.12f, h * 0.15f), Size(w * 0.76f, h * 0.7f), style = trazo)
-            drawPath(Path().apply { moveTo(w * 0.12f, h * 0.15f); lineTo(w * 0.5f, h * 0.55f); lineTo(w * 0.88f, h * 0.15f) }, c, style = trazo)
-            sello(Offset(w * 0.5f, h * 0.56f), h * 0.2f, aro = true)
-        }
-        else -> {
-            drawPath(Path().apply { moveTo(w * 0.5f, h * 0.25f); quadraticTo(w * 0.3f, h * 0.1f, w * 0.08f, h * 0.18f); lineTo(w * 0.08f, h * 0.88f); quadraticTo(w * 0.3f, h * 0.8f, w * 0.5f, h * 0.92f); close() }, c, style = trazo)
-            drawPath(Path().apply { moveTo(w * 0.5f, h * 0.25f); quadraticTo(w * 0.7f, h * 0.1f, w * 0.92f, h * 0.18f); lineTo(w * 0.92f, h * 0.88f); quadraticTo(w * 0.7f, h * 0.8f, w * 0.5f, h * 0.92f); close() }, c, style = trazo)
-            sello(Offset(w * 0.71f, h * 0.53f), h * 0.18f)
         }
     }
 }
@@ -230,18 +184,26 @@ private fun BibliotecaDiario(nav: Nav) {
     val q = sinAcentos(busca.trim())
     val visibles = todas.filter { d -> (anio == null || d.fecha.startsWith(anio!!)) && (q.isBlank() || sinAcentos(d.nota + " " + d.mejor_momento + " " + d.peor_momento).contains(q)) }
     val porMes = visibles.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
-    OutlinedTextField(busca, { busca = it }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true,
-        placeholder = { Text("buscar en las entradas", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+    io.github.ruddy2003.vestigium.ui.biblioteca.CampoTema(busca, { busca = it }, "buscar en las entradas", Modifier.padding(top = 12.dp))
     FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         todas.map { it.fecha.take(4) }.distinct().forEach { a -> Ficha(a, anio == a) { anio = if (anio == a) null else a } }
     }
     if (todas.isEmpty()) Vacio("Todavía no hay entradas. Escribe la de hoy desde la pestaña Diario o al llenar el día.")
     else if (visibles.isEmpty()) Vacio("Nada coincide con la búsqueda.")
-    porMes.entries.take(meses).forEach { (mes, lista) ->
-        Text(rotuloMes(mes), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp, bottom = 2.dp))
-        EstanteDiario(lista) { f -> Seleccion.entrada = f; nav.ir("entrada") }
-    }
+    EstantePorMeses(porMes.entries.take(meses).map { (mes, lista) -> rotuloMes(mes) to lista }, noche = false) { f -> Seleccion.entrada = f; nav.ir("entrada") }
     if (porMes.size > meses) BotonSecundario("ver más meses", Modifier.padding(top = 14.dp)) { meses += 6 }
+}
+
+/** Las entradas de varios meses en el mueble del tema: cada mes empieza en su repisa, con su rótulo en el canto de la tabla. De noche, bajo el cielo del tema. */
+@Composable
+private fun EstantePorMeses(meses: List<Pair<String, List<io.github.ruddy2003.vestigium.data.Dia>>>, noche: Boolean, abrir: (String) -> Unit) {
+    if (meses.isEmpty()) return
+    val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(Estilo.tema)
+    val grupos = meses.map { (titulo, lista) -> io.github.ruddy2003.vestigium.ui.biblioteca.GrupoEstante(titulo, lista) }
+    androidx.compose.foundation.layout.Box(Modifier.padding(top = 18.dp)) {
+        if (noche) CieloNoche { io.github.ruddy2003.vestigium.ui.biblioteca.EstanteTema(d, grupos, true, abrir) }
+        else io.github.ruddy2003.vestigium.ui.biblioteca.EstanteTema(d, grupos, false, abrir)
+    }
 }
 
 // ---------------------------------------------------------------- Sueños
@@ -285,18 +247,14 @@ private fun BibliotecaSuenos(nav: Nav) {
         (anio == null || d.fecha.startsWith(anio!!)) && (q.isBlank() || sinAcentos(d.sueno_texto + " " + d.sueno_temas.joinToString(" ")).contains(q)) &&
             (tema == null || tema!!.removePrefix("@").removePrefix("#").let { t -> t in d.sueno_temas || sinAcentos(d.sueno_texto).contains(sinAcentos(tema!!)) })
     }
-    OutlinedTextField(busca, { busca = it }, Modifier.fillMaxWidth().padding(top = 14.dp), singleLine = true,
-        placeholder = { Text("buscar en tus sueños", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+    io.github.ruddy2003.vestigium.ui.biblioteca.CampoTema(busca, { busca = it }, "buscar en tus sueños", Modifier.padding(top = 14.dp))
     FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         todas.map { it.fecha.take(4) }.distinct().forEach { a -> Ficha(a, anio == a) { anio = if (anio == a) null else a } }
     }
     if (todas.isEmpty()) Vacio("Todavía no hay sueños escritos. Cuéntalo arriba, o en la mañana desde Día → Sueño.")
     else if (visibles.isEmpty()) Vacio("Ningún sueño coincide.")
     val porMes = visibles.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
-    porMes.entries.take(meses).forEach { (mes, lista) ->
-        Text(rotuloMes(mes), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp, bottom = 6.dp))
-        CieloNoche { EstanteDiario(lista, noche = true) { f -> Seleccion.sueno = f; nav.ir("sueno") } }
-    }
+    EstantePorMeses(porMes.entries.take(meses).map { (mes, lista) -> rotuloMes(mes) to lista }, noche = true) { f -> Seleccion.sueno = f; nav.ir("sueno") }
     if (porMes.size > meses) BotonSecundario("ver más meses", Modifier.padding(top = 14.dp)) { meses += 6 }
     escribiendo?.let { f -> EscribirSueno(f) { escribiendo = null } }
 }
@@ -392,6 +350,15 @@ private fun BibliotecaCartas(nav: Nav) {
     var persona by remember { mutableStateOf<String?>(null) }
     var abriendo by remember { mutableStateOf<Carta?>(null) }
     val todas = Repo.cartas
+    // El buzón del tema, con sus cartas: las listas para abrir brillan, las selladas van atadas.
+    val nListas = todas.count { it.lista(hoy) }; val nSelladas = todas.count { it.sellada(hoy) }; val nAbiertas = todas.count { it.legible }
+    val diseno = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(Estilo.tema)
+    val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+    val medidor = androidx.compose.ui.text.rememberTextMeasurer()
+    androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().padding(top = 14.dp).height(diseno.altoBuzon)
+        .semantics { contentDescription = "Buzón: $nListas listas para abrir, $nSelladas selladas, $nAbiertas abiertas" }) {
+        clipRect { with(diseno) { buzon(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoBuzon(nListas, nSelladas, nAbiertas), medidor, oscuro) } }
+    }
     BotonPrincipal("✉  escribir una carta", Modifier.fillMaxWidth().padding(top = 14.dp)) { nav.ir("carta_nueva") }
     val listas = todas.filter { it.lista(hoy) }.sortedBy { it.abrir_en }
     if (listas.isNotEmpty()) Seccion("Listas para abrir", "Ya llegó su fecha. Toca el sobre para romper el lacre.") { RejillaCartas(listas) { abriendo = it } }
@@ -402,8 +369,7 @@ private fun BibliotecaCartas(nav: Nav) {
     }
     val legibles = todas.filter { it.legible }
     if (legibles.isEmpty()) return
-    OutlinedTextField(busca, { busca = it }, Modifier.fillMaxWidth().padding(top = 18.dp), singleLine = true,
-        placeholder = { Text("buscar en tus cartas", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+    io.github.ruddy2003.vestigium.ui.biblioteca.CampoTema(busca, { busca = it }, "buscar en tus cartas", Modifier.padding(top = 18.dp))
     val q = sinAcentos(busca.trim())
     fun coincide(c: Carta) = q.isBlank() || sinAcentos(c.texto + " " + c.para).contains(q)
     val aOtros = legibles.filter { !it.alFuturo && coincide(it) }
@@ -457,7 +423,7 @@ fun PantallaCartaNueva(nav: Nav) {
                 OpcionCarta("Alguien", "Una carta para una persona, con su @. Se guarda abierta.", !b.alFuturo, Modifier.weight(1f)) { b.alFuturo = false }
             }
             if (!b.alFuturo) {
-                OutlinedTextField(b.para, { b.para = Texto.etiqueta(it) }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true,
+                CampoTexto(b.para, { b.para = Texto.etiqueta(it) }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true,
                     prefix = { Text("@") }, placeholder = { Text("nombre, como lo escribes en tu diario") })
                 val sug = conocidas.filter { it != b.para && (b.para.isBlank() || it.startsWith(b.para)) }.take(10)
                 if (sug.isNotEmpty()) FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -485,7 +451,7 @@ fun PantallaCartaNueva(nav: Nav) {
                 hora = hora, tema = Estilo.tema.id, lugar = lugar, abierta_el = if (b.alFuturo) null else hoy)
             Repo.guardarCarta(c); sellando = c
         }
-        if (b.texto.isNotBlank()) TextButton(onClick = { b.limpiar() }, modifier = Modifier.padding(top = 4.dp)) { Text("descartar el borrador", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        if (b.texto.isNotBlank()) BotonTexto(onClick = { b.limpiar() }, modifier = Modifier.padding(top = 4.dp)) { Text("descartar el borrador", color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
     if (escribiendo) DialogoCarta(lugar, hora) { escribiendo = false }
     sellando?.let { c -> SelladoCarta(c) { b.limpiar(); sellando = null; nav.atras() } }
@@ -541,6 +507,6 @@ fun PantallaCarta(nav: Nav) {
     }
     if (borrar) Dialogo(onDismissRequest = { borrar = false },
         title = { Text("¿Borrar esta carta?") }, text = { Text("Tendrás unos segundos para deshacerlo.") },
-        confirmButton = { TextButton(onClick = { Repo.borrarCarta(c.id); borrar = false; nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Carta borrada") { Repo.guardarCarta(c) } }) { Text("Borrar", color = MaterialTheme.colorScheme.error) } },
-        dismissButton = { TextButton(onClick = { borrar = false }) { Text("cancelar") } })
+        confirmButton = { BotonTexto(onClick = { Repo.borrarCarta(c.id); borrar = false; nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Carta borrada") { Repo.guardarCarta(c) } }) { Text("Borrar", color = MaterialTheme.colorScheme.error) } },
+        dismissButton = { BotonTexto(onClick = { borrar = false }) { Text("cancelar") } })
 }

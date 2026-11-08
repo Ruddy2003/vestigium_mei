@@ -61,12 +61,12 @@ object LibroDiario {
         Repo.salud[d.fecha]?.sueno_min?.let { "${it / 60} h ${"%02d".format(it % 60)} según el reloj" },
     ).joinToString(" · ")
 
-    /** Una línea con lo medido ese día: ánimo, energía, sueño, contexto, hitos. */
+    /** Una línea con lo medido ese día: ánimo, energía, sueño, contexto, fechas señaladas. */
     fun meta(d: Dia): String = listOfNotNull(
         d.valencia?.let { "ánimo $it/7" }, d.activacion?.let { "energía $it/7" }, d.dolor?.takeIf { it > 0 }?.let { "dolor $it/5" },
         Repo.salud[d.fecha]?.sueno_min?.let { "sueño ${it / 60} h ${"%02d".format(it % 60)}" },
         Catalogo.CONTEXTOS.filter { d.ctx[it.id] == true }.takeIf { it.isNotEmpty() }?.joinToString(", ") { it.nombre.lowercase() },
-        d.hitos.takeIf { it.isNotEmpty() }?.joinToString(", ") { "★ " + it.replace('_', ' ') },
+        io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(d).takeIf { it.isNotEmpty() }?.joinToString(", "),
     ).joinToString(" · ")
 
     private fun carpeta(ctx: Context) = File(File(ctx.cacheDir, "export"), "diario").apply { mkdirs(); listFiles()?.forEach { it.delete() } }
@@ -117,7 +117,8 @@ object LibroDiario {
                     d.sueno_calidad?.let { add("sueno_calidad: $it") }; d.prediccion_manana?.let { add("prediccion_manana: $it") }
                     Repo.salud[d.fecha]?.sueno_min?.let { add("sueno_min: $it") }
                     Catalogo.CONTEXTOS.filter { d.ctx[it.id] == true }.takeIf { it.isNotEmpty() }?.let { l -> add("contexto: [" + l.joinToString(", ") { it.id } + "]") }
-                    if (d.hitos.isNotEmpty()) add("hitos: [" + d.hitos.joinToString(", ") + "]")
+                    // Las fechas señaladas (con los hitos de antes), como en todas las vistas: «✈ Viaje a la costa».
+                    io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(d).takeIf { it.isNotEmpty() }?.let { l -> add("senaladas: [" + l.joinToString(", ") { yaml(it) } + "]") }
                     if (personas.isNotEmpty()) add("personas: [" + personas.joinToString(", ") { yaml(it) } + "]")
                     if (temas.isNotEmpty()) add("tags: [" + temas.joinToString(", ") { it.replace(' ', '_') } + "]")
                     if (d.mejor_momento.isNotBlank()) add("mejor: " + yaml(d.mejor_momento))

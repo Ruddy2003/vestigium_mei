@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.Canvas
 import io.github.ruddy2003.vestigium.ui.aMillis
 import androidx.compose.runtime.setValue
@@ -17,10 +19,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -65,12 +65,15 @@ fun PantallaEnfoque(nav: Nav) {
         if (corriendo != null) Tarjeta(Modifier.padding(top = 12.dp)) {
             @Suppress("UNUSED_VARIABLE") val tic = ahora
             val p = Enfoque.plan()
+            // Pasada la meta sigue contando: lo de más («+12 min sobre la meta»).
+            val deMas = p?.takeIf { Enfoque.pasadoDeMeta(it) }?.let { (Enfoque.extra(it) / 60_000L).toInt() }
             Text("Corriendo: ${Catalogo.nombreTramo(corriendo.first).lowercase()} · ${horasMin(Enfoque.minutosCorriendo())} de enfoque" +
-                (p?.let { if (Enfoque.bloques(it) > 1) " · bloque ${Enfoque.numeroBloque(it)} de ${Enfoque.bloques(it)}" else "" } ?: ""),
+                (p?.let { if (Enfoque.bloques(it) > 1) " · bloque ${Enfoque.numeroBloque(it)} de ${Enfoque.bloques(it)}" else "" } ?: "") +
+                (deMas?.let { " · +${horasMin(it)} " + if (p != null && Enfoque.enDescanso(p)) "de más en el descanso" else "sobre la meta" } ?: ""),
                 style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
                 BotonPrincipal("Ver el reloj") { abrir() }
-                TextButton(onClick = { Enfoque.terminar(ctx) }) { Text("terminar") }
+                BotonTexto(onClick = { Enfoque.terminar(ctx) }) { Text("terminar") }
             }
         } else BotonPrincipal("Empezar o anotar", Modifier.fillMaxWidth().padding(top = 12.dp)) { abrir() }
         val semana = (0 until 7).map { Fechas.sumar(hoy, -it.toLong()) }.toSet()
@@ -105,7 +108,7 @@ fun PantallaEnfoque(nav: Nav) {
         Seccion("Registro", "Lo más reciente primero. Puedes borrar lo que fue un error.") {
             Tarjeta {
                 tr.sortedByDescending { it.inicio }.take(40).forEachIndexed { i, t ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     // Tocar un tramo lo abre para corregir el tipo, la hora, la duración o la nota, o para borrarlo.
                     Row(Modifier.fillMaxWidth().clickable { abierto = t }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
@@ -145,21 +148,21 @@ fun DialogoTramo(t: io.github.ruddy2003.vestigium.data.Tramo, cerrar: () -> Unit
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     (Catalogo.ENFOQUE + Catalogo.SIESTA).forEach { o -> io.github.ruddy2003.vestigium.ui.Ficha(o.nombre, tipo == o.id) { tipo = o.id } }
                 }
-                if (tipo == "otro") androidx.compose.material3.OutlinedTextField(otro, { otro = it.take(40) }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true,
+                if (tipo == "otro") io.github.ruddy2003.vestigium.ui.comun.CampoTexto(otro, { otro = it.take(40) }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true,
                     label = { Text("¿En qué?") })
                 io.github.ruddy2003.vestigium.ui.Etiqueta("Empezó")
                 io.github.ruddy2003.vestigium.ui.SelectorHora(cuando) { cuando = it }
                 io.github.ruddy2003.vestigium.ui.Etiqueta("Duró")
                 io.github.ruddy2003.vestigium.ui.SelectorDuracion(min, listOf(5, 10, 15, 30, 45, 60, 90, 120, 180, 240)) { min = it }
-                androidx.compose.material3.OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Qué hiciste (opcional; @persona y #tema)") },
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Qué hiciste (opcional; @persona y #tema)") },
                     visualTransformation = io.github.ruddy2003.vestigium.ui.rememberMarcas())
-                TextButton(onClick = {
+                BotonTexto(onClick = {
                     if (confirmar) { Repo.borrarTramo(t.id); cerrar(); Deshacer.ofrecer("Tramo borrado") { Repo.guardarTramo(t) } } else confirmar = true
                 }, modifier = Modifier.padding(top = 6.dp)) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
             }
         },
         confirmButton = {
-            TextButton(enabled = (min ?: 0) > 0, onClick = {
+            BotonTexto(enabled = (min ?: 0) > 0, onClick = {
                 val ini = (cuando ?: io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(t.inicio))).aMillis()
                 val m = min ?: t.min
                 val n = t.copy(tipo = tipo, inicio = Fechas.isoDeMillis(ini), fin = Fechas.isoDeMillis(ini + m * 60_000L), min = m, fecha = Fechas.diaLogicoDeMillis(ini), nota = nota.trim(),
@@ -168,6 +171,6 @@ fun DialogoTramo(t: io.github.ruddy2003.vestigium.data.Tramo, cerrar: () -> Unit
                 cerrar()
             }) { Text("Guardar") }
         },
-        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
+        dismissButton = { BotonTexto(onClick = cerrar) { Text("cancelar") } },
     )
 }

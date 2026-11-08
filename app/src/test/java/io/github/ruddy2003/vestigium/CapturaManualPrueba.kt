@@ -65,7 +65,7 @@ class CapturaManualPrueba {
     @Test fun emocionesNuevasSinChoqueDeIds() {
         val ids = Catalogo.SENTIMIENTOS.map { it.id }
         assertEquals(ids.size, ids.distinct().size)
-        assertEquals(47, ids.size)
+        assertEquals(48, ids.size)
         val letras = Catalogo.SENTIMIENTOS.map { it.discreto }
         assertEquals(letras.size, letras.distinct().size)
         assertTrue(Catalogo.SUENO_EJES.flatMap { e -> e.opciones.map { it.id } }.let { it.size == it.distinct().size })

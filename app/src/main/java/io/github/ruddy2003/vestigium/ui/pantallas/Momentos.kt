@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -21,10 +23,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -140,12 +140,26 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
     val esRecaida = m.tipo == "recaida"
     var cuando by remember(m.id) { mutableStateOf<java.time.LocalDateTime?>(io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(m.ts))) }
     var dur by remember(m.id) { mutableStateOf(m.duracion_min) }
+    // Esquema 21: masturbación e intimidad (privadas, se abren desde Privado) y episodios tienen sus propios campos, los mismos
+    // de la hoja rápida (QuickActivity.kt). Se editan sobre un borrador que se guarda al tocar «Guardar».
+    val propio = m.tipo == "masturbacion" || m.tipo == "intimidad" || m.tipo == "episodio"
+    var borrador by remember(m.id) { mutableStateOf(m) }
+    val cambiarBorrador: ((Momento) -> Momento) -> Unit = { f -> borrador = f(borrador) }
+    // La masturbación dejó de ser con pornografía y tenía su recaída gemela: se pregunta antes de cerrar.
+    var preguntarGemela by remember(m.id) { mutableStateOf<Momento?>(null) }
+    val pregunta = preguntarGemela
+    if (pregunta != null) { io.github.ruddy2003.vestigium.ui.PreguntaGemela(pregunta) { cerrar() }; return }
     Dialogo(
         onDismissRequest = { cerrar() },
         title = { Text("${Catalogo.titulo(m, discreto)} · ${Fechas.corto(m.fecha)} ${Fechas.horaDe(m.ts)}") },
         text = {
         Column(Modifier.verticalScroll(rememberScrollState())) {
-            OutlinedTextField(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth(), minLines = 2, visualTransformation = io.github.ruddy2003.vestigium.ui.rememberMarcas())
+            when (m.tipo) {
+                "masturbacion" -> io.github.ruddy2003.vestigium.ui.CamposMasturbacion(borrador, cambiarBorrador)
+                "intimidad" -> io.github.ruddy2003.vestigium.ui.CamposIntimidad(borrador, cambiarBorrador)
+                "episodio" -> io.github.ruddy2003.vestigium.ui.CamposEpisodio(borrador, cambiarBorrador)
+                else -> CampoTexto(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth(), minLines = 2, visualTransformation = io.github.ruddy2003.vestigium.ui.rememberMarcas())
+            }
             if (registro) {
                 Etiqueta("Qué tan agradable (1 a 7)"); Escala(valencia, 1, 7) { valencia = it }
                 Etiqueta("Energía (1 a 7)"); Escala(activacion, 1, 7) { activacion = it }
@@ -159,7 +173,7 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
                 Etiqueta("Qué tan presente (0 a 5)"); Escala(intensidad, 0, 5, Catalogo.ANCLAS["libido"]) { intensidad = it }
                 Etiqueta("En qué está el foco")
                 io.github.ruddy2003.vestigium.ui.FilaFichas(Catalogo.FOCOS, foco) { foco = it }
-            } else {
+            } else if (!propio) {
                 Etiqueta(if (esRecaida) "Qué tan fuerte era el impulso" else "Intensidad")
                 Escala(intensidad, 1, 5, mapOf(1 to "Muy leve", 2 to "Leve", 3 to "Moderada", 4 to "Fuerte", 5 to "Muy fuerte")) { intensidad = it }
             }
@@ -168,32 +182,35 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Catalogo.DETONANTES.forEach { o -> io.github.ruddy2003.vestigium.ui.Ficha(o.nombre, o.id in det) { det = if (o.id in det) det - o.id else det + o.id } }
                 }
-                if ("otro" in det) OutlinedTextField(value = detOtro, onValueChange = { detOtro = it }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
+                if ("otro" in det) CampoTexto(value = detOtro, onValueChange = { detOtro = it }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
                 Etiqueta("Qué hacías justo antes")
                 io.github.ruddy2003.vestigium.ui.FilaFichas(Catalogo.ANTES, antes) { antes = it }
                 Etiqueta("En qué aparato")
                 io.github.ruddy2003.vestigium.ui.FilaFichas(Catalogo.DISPOSITIVOS, aparato) { aparato = it }
             }
-            Etiqueta(if (esRecaida) "Empezó" else "Cuándo")
+            Etiqueta(if (esRecaida || propio) "Empezó" else "Cuándo")
             io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, atajos = listOf(15, 30, 60, 120)) { cuando = it }
             if (esRecaida) {
                 Etiqueta("Duró")
                 io.github.ruddy2003.vestigium.ui.SelectorDuracion(dur) { dur = it }
             }
             Ayuda("Si cambias la hora, el día se ajusta (empieza a las 5:00) y el lugar se toma de tus ubicaciones de esa hora.", Modifier.padding(top = 4.dp))
-            TextButton(onClick = {
+            BotonTexto(onClick = {
                 if (confirmar) {
+                    // Con su gemela (una masturbación con pornografía y su recaída): al borrar una, la otra se suelta o se va con ella.
+                    val gemela = io.github.ruddy2003.vestigium.data.Recaidas.gemela(m)
                     Repo.borrarMomento(m.id); io.github.ruddy2003.vestigium.data.Recaidas.alBorrar(m); cerrar()
                     io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Momento borrado") {
                         Repo.guardarMomento(m)
                         if (m.tipo == "recaida") io.github.ruddy2003.vestigium.data.Recaidas.registrar(m)
+                        gemela?.let { g -> Repo.guardarMomento(g); if (g.tipo == "recaida") io.github.ruddy2003.vestigium.data.Recaidas.registrar(g) }
                     }
                 } else confirmar = true
             }, modifier = Modifier.padding(top = 6.dp)) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
         }
         },
-        confirmButton = { TextButton(onClick = {
-            val base = m.copy(texto = texto, intensidad = intensidad, valencia = valencia, activacion = activacion,
+        confirmButton = { BotonTexto(onClick = {
+            val base = if (propio) borrador else m.copy(texto = texto, intensidad = intensidad, valencia = valencia, activacion = activacion,
                 emociones = if (registro) eleccion.emociones else m.emociones,
                 emocion_otra = if (registro) eleccion.otra.trim().takeIf { Catalogo.OTRO in eleccion.emociones && it.isNotEmpty() } else m.emocion_otra,
                 intensidades = if (registro) eleccion.intensidades else m.intensidades,
@@ -218,8 +235,21 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
                     else -> Repo.guardarMomento(n)
                 }
             }
-            cerrar()
+            // Masturbación: con pornografía cuenta como recaída (la gemela se crea, o se mueve y sigue su duración y aparato);
+            // si dejó de serlo y había gemela, se pregunta si quitarla.
+            var preguntar: Momento? = null
+            if (m.tipo == "masturbacion") {
+                val r = io.github.ruddy2003.vestigium.data.Recaidas
+                val guardado = Repo.momento(m.id) ?: base
+                io.github.ruddy2003.vestigium.ui.sincronizarGemela(guardado)
+                val g = r.gemela(guardado)?.takeIf { it.tipo == "recaida" }
+                if (guardado.estimulo == "pornografia") {
+                    if (g != null && mover) r.moverHora(g, ms)
+                    r.registrarDesdeMasturbacion(guardado)
+                } else if (m.estimulo == "pornografia" && g != null) preguntar = guardado
+            }
+            if (preguntar != null) preguntarGemela = preguntar else cerrar()
         }) { Text("Guardar") } },
-        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
+        dismissButton = { BotonTexto(onClick = cerrar) { Text("cancelar") } },
     )
 }

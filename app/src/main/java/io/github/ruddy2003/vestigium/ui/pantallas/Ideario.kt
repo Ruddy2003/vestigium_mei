@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,9 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -211,8 +210,8 @@ private fun ContenidoReverso(x: Idea, nav: Nav, p: Pagina, cambiar: (Idea) -> Un
     if (x.revisiones.isNotEmpty()) Ayuda("La volviste a ver ${x.revisiones.size} ${if (x.revisiones.size == 1) "vez" else "veces"}: " +
         x.revisiones.takeLast(3).joinToString(" · ") { r -> Fechas.corto(r.fecha) + " " + (Catalogo.RESPUESTAS_IDEA.firstOrNull { it.id == r.respuesta }?.nombre?.lowercase() ?: r.respuesta) },
         Modifier.padding(top = 6.dp))
-    if (Repo.ideas.any { it.id == x.id }) TextButton(onClick = {
-        if (!confirmar) { confirmar = true; return@TextButton }
+    if (Repo.ideas.any { it.id == x.id }) BotonTexto(onClick = {
+        if (!confirmar) { confirmar = true; return@BotonTexto }
         val antes = Repo.ideas.firstOrNull { it.id == x.id } ?: x
         Repo.borrarIdea(x.id); nav.atras(); Deshacer.ofrecer("Idea borrada") { Repo.guardarIdea(antes) }
     }, modifier = Modifier.padding(top = 8.dp)) {
@@ -242,7 +241,7 @@ private fun FuenteIdea(x: Idea, p: Pagina, cambiar: (Idea) -> Unit) {
     Column(Modifier.fillMaxWidth().padding(top = 4.dp)) {
         if (obra != null) Row(verticalAlignment = Alignment.CenterVertically) {
             Text("${TIPOS_OBRA.firstOrNull { it.id == obra.tipo }?.nombre ?: "Obra"} · ${obra.titulo}", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-            TextButton(onClick = { cambiar(x.copy(obra_id = null, cita_id = null)) }) { Text("quitar", style = MaterialTheme.typography.labelMedium) }
+            BotonTexto(onClick = { cambiar(x.copy(obra_id = null, cita_id = null)) }) { Text("quitar", style = MaterialTheme.typography.labelMedium) }
         } else {
             Ficha(if (buscando) "elegir de tus obras ▾" else "elegir de tus obras…", buscando) { buscando = !buscando }
             if (buscando) {
@@ -337,8 +336,7 @@ fun BibliotecaIdeas(nav: Nav, rotulo: (String) -> String, vistaInicial: String =
     FicheroIdeas(nav, todas)
     if (vistaInicial == "temas") return
     Text("Todas, por mes", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp))
-    OutlinedTextField(busca, { busca = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
-        placeholder = { Text("buscar: idea, tema, autor, fuente…", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+    io.github.ruddy2003.vestigium.ui.biblioteca.CampoTema(busca, { busca = it }, "buscar: idea, tema, autor, fuente…", Modifier.padding(top = 8.dp))
     FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Catalogo.ORIGENES_IDEA.filter { o -> todas.any { it.origen == o.id } }.forEach { o -> Ficha(o.nombre.lowercase(), origen == o.id) { origen = if (origen == o.id) null else o.id } }
         todas.map { it.fecha.take(4) }.distinct().sortedDescending().takeIf { it.size > 1 }?.forEach { a -> Ficha(a, anio == a) { anio = if (anio == a) null else a } }

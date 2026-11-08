@@ -93,7 +93,7 @@ vm_archivos <- c(
   subrayados = "vm_subrayados.csv", google_dia = "vm_google_dia.csv", google = "vm_google.csv", whatsapp = "vm_whatsapp.csv",
   nutricion = "vm_nutricion.csv", comidas = "vm_comidas.csv", entrenos = "vm_entrenos.csv", series = "vm_series.csv",
   tramos = "vm_tramos.csv", sustancias = "vm_sustancias.csv", horas = "vm_horas.csv", notas = "vm_notas.csv", ideas = "vm_ideas.csv", ideas_revisiones = "vm_ideas_revisiones.csv", metas = "vm_metas.csv",
-  suplementos = "vm_suplementos.csv", laptop = "vm_laptop.csv", red_nodos = "vm_red_nodos.csv", red_vinculos = "vm_red_vinculos.csv",
+  suplementos = "vm_suplementos.csv", senaladas = "vm_senaladas.csv", laptop = "vm_laptop.csv", red_nodos = "vm_red_nodos.csv", red_vinculos = "vm_red_vinculos.csv",
   experimentos = "vm_experimentos.csv", personas = "vm_personas.csv", fechas_propias = "vm_fechas_propias.csv", listas = "vm_listas.csv")
 
 vm <- compact(lapply(vm_archivos, vm_leer))
@@ -627,8 +627,8 @@ vm_fuerza <- function(n = 6) {
 #' Registros de ánimo con lugar, coloreados por su valencia (sin mapa de fondo).
 vm_mapa_animo <- function() {
   if (is.null(vm$momentos)) stop("No hay momentos.")
-  # Solo registros de ánimo con su propia valencia: ni el seguimiento privado (impulso, recaída, libido) ni la valencia del diario prestada.
-  d <- vm$momentos |> filter(!is.na(lat), !is.na(lon), as.logical(es_animo) %in% TRUE, !tipo %in% c("impulso", "recaida", "libido")) |>
+  # Solo registros de ánimo con su propia valencia: ni el seguimiento privado (impulso, recaída, libido, masturbación, intimidad) ni la valencia del diario prestada.
+  d <- vm$momentos |> filter(!is.na(lat), !is.na(lon), as.logical(es_animo) %in% TRUE, !tipo %in% c("impulso", "recaida", "libido", "masturbacion", "intimidad")) |>
     mutate(v = as.numeric(valencia)) |> filter(!is.na(v))
   ggplot(d, aes(lon, lat, colour = v)) + geom_point(alpha = .7) + scale_colour_gradient2(low = "#7C2433", mid = "grey85", high = "#2D6B63", midpoint = 4) + coord_quickmap() + theme_minimal()
 }

@@ -2,6 +2,9 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.ui.graphics.luminance
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -19,10 +22,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -113,9 +114,12 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
         lugaresNombre.forEach { (t, o) -> drawText(t, topLeft = o) }
         // El marcador del tema avanza por la ruta con los días cumplidos (brinca si hoy falta cumplir).
         val hoyFalta = e.dias.any { it.first == hoy && it.second != true } && !e.ganada
-        with(io.github.ruddy2003.vestigium.ui.MapasMas) { marcador(temaMapa, cs, pts[e.hechos.coerceIn(0, 6)], if (animar && hoyFalta) pulso else 0f) }
+        val dl = io.github.ruddy2003.vestigium.ui.logros.disenoLogros(temaMapa)
+        val oscuroMapa = cs.background.luminance() < 0.5f
+        // Ganada, en la meta va la escena de la victoria en lugar del marcador.
+        if (!e.ganada) with(dl) { marcadorCampana(io.github.ruddy2003.vestigium.ui.logros.EstadoMarcador(pts[e.hechos.coerceIn(0, 6)], if (animar && hoyFalta) pulso else 0f, cs.tertiary), oscuroMapa) }
         // La escena de la meta si se ganó.
-        if (e.ganada) with(MapasCampana) { victoria(temaMapa, cs, pts[6]) }
+        if (e.ganada) with(dl) { victoriaCampana(io.github.ruddy2003.vestigium.ui.logros.EstadoVictoria(pts[6], cs.tertiary), oscuroMapa) }
     }
 }
 
@@ -140,7 +144,7 @@ fun PantallaCampanas(nav: Nav) {
                     else -> "${e.hechos} de ${c.meta}. " + (e.reto?.descripcion ?: "")
                 }, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
                 // Abandonar la cierra hoy, no la borra: queda en la historia (y en el panel, los días que la tuviste).
-                TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(campanas = cc.campanas.map { if (it.id == c.id) it.copy(abandonada = hoy) else it }) } }) {
+                BotonTexto(onClick = { Repo.cambiarConfig { cc -> cc.copy(campanas = cc.campanas.map { if (it.id == c.id) it.copy(abandonada = hoy) else it }) } }) {
                     Text("abandonar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -152,7 +156,7 @@ fun PantallaCampanas(nav: Nav) {
                 var elegido by remember { mutableStateOf<String?>(null) }
                 Tarjeta {
                     Campanas.retos().filter { r -> actuales.none { it.reto == r.id } }.forEachIndexed { i, r ->
-                        if (i > 0) HorizontalDivider()
+                        if (i > 0) Separador()
                         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Text(r.nombre, style = MaterialTheme.typography.bodyLarge)
@@ -171,7 +175,7 @@ fun PantallaCampanas(nav: Nav) {
                             Repo.cambiarConfig { cc -> cc.copy(campanas = cc.campanas + c) }
                             eligiendo = false; elegido = null
                         }
-                        TextButton(onClick = { eligiendo = false; elegido = null }) { Text("cancelar") }
+                        BotonTexto(onClick = { eligiendo = false; elegido = null }) { Text("cancelar") }
                     }
                 }
             }
@@ -180,7 +184,7 @@ fun PantallaCampanas(nav: Nav) {
         if (pasadas.isNotEmpty()) Seccion("Campañas anteriores", "${Campanas.victorias(hoy).size} ganadas de ${pasadas.size}.") {
             Tarjeta {
                 pasadas.take(20).forEachIndexed { i, c ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     val e = Campanas.estado(c, hoy)
                     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {

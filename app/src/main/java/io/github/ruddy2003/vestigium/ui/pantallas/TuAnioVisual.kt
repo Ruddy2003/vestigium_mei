@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.ui.graphics.luminance
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.foundation.Canvas
@@ -656,7 +657,12 @@ private fun DrawScope.objeto(tema: TemaId, forma: String, c: Offset, r: Float, c
     val relleno = lerp(fondo, col, 0.14f)
     fichaCosa(tema, c, r, col, relleno, fondo)
     val ri = r * 0.64f
-    if (!objetoDelTema(tema, forma, c, ri, col, relleno)) objetoComun(forma, c, ri, col, relleno)
+    // La luna, la huella y la pesa las dibuja el tema entero (ver DisenoLogros.objetoAnio); las demás, como antes.
+    if (forma == "luna" || forma == "huella" || forma == "pesa") {
+        with(io.github.ruddy2003.vestigium.ui.logros.disenoLogros(tema)) {
+            objetoAnio(io.github.ruddy2003.vestigium.ui.logros.EstadoObjeto(forma, c, ri, col, relleno), fondo.luminance() < 0.5f)
+        }
+    } else if (!objetoDelTema(tema, forma, c, ri, col, relleno)) objetoComun(forma, c, ri, col, relleno)
 }
 
 /** La ficha de fondo de cada objeto, una por tema. */
@@ -1622,14 +1628,11 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
     return true
 }
 
-/** Los objetos comunes: luna, huella, alfiler, pesa, taza, estrella y sobre. */
+/** Los objetos comunes: alfiler, taza, estrella y sobre (la luna, la huella y la pesa son del tema). */
 private fun DrawScope.objetoComun(forma: String, c: Offset, r: Float, col: Color, fondo: Color) {
     val d = density
     when (forma) {
-        "luna" -> { drawCircle(col, r, c); drawCircle(fondo, r * 0.85f, Offset(c.x + r * 0.45f, c.y - r * 0.2f)) }
-        "huella" -> { drawOval(col, Offset(c.x - r * 0.45f, c.y - r * 0.9f), Size(r * 0.9f, r * 1.3f)); drawOval(col, Offset(c.x - r * 0.35f, c.y + r * 0.5f), Size(r * 0.7f, r * 0.5f)) }
         "alfiler" -> { drawCircle(col, r * 0.55f, Offset(c.x, c.y - r * 0.35f)); drawLine(col, Offset(c.x, c.y - r * 0.2f), Offset(c.x, c.y + r), 1.4f * d) }
-        "pesa" -> { drawRect(col, Offset(c.x - r, c.y - r * 0.6f), Size(r * 0.45f, r * 1.2f)); drawRect(col, Offset(c.x + r * 0.55f, c.y - r * 0.6f), Size(r * 0.45f, r * 1.2f)); drawLine(col, Offset(c.x - r * 0.6f, c.y), Offset(c.x + r * 0.6f, c.y), 1.6f * d) }
         "taza" -> { drawRoundRect(col, Offset(c.x - r * 0.7f, c.y - r * 0.6f), Size(r * 1.2f, r * 1.3f), CornerRadius(r * 0.25f)); drawCircle(col, r * 0.35f, Offset(c.x + r * 0.55f, c.y), style = Stroke(1.2f * d)) }
         "estrella" -> drawPath(estrellaCosa(c, r, 5, 0.45f), col)
         else -> { drawRect(col, Offset(c.x - r, c.y - r * 0.65f), Size(r * 2, r * 1.3f)); drawPath(Path().apply { moveTo(c.x - r, c.y - r * 0.65f); lineTo(c.x, c.y + r * 0.1f); lineTo(c.x + r, c.y - r * 0.65f) }, fondo, style = Stroke(1.2f * d)) }

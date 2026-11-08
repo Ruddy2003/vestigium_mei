@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.foundation.Canvas
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -166,7 +166,7 @@ fun SelectorDuracion(minutos: Int?, opciones: List<Int> = listOf(5, 10, 15, 30, 
             Ficha(duracionTexto(d), minutos == d && texto.isEmpty()) { texto = ""; onCambio(if (minutos == d) null else d) }
         }
     }
-    OutlinedTextField(value = texto, onValueChange = { t -> texto = t.filter { it.isDigit() }.take(4); onCambio(texto.toIntOrNull()?.takeIf { it > 0 }) },
+    CampoTexto(value = texto, onValueChange = { t -> texto = t.filter { it.isDigit() }.take(4); onCambio(texto.toIntOrNull()?.takeIf { it > 0 }) },
         modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Otra (minutos)") },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
 }

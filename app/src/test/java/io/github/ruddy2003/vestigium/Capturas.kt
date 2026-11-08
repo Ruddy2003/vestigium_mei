@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
@@ -574,6 +575,508 @@ class Capturas {
     @Test fun idearioLote4() = LOTE4.forEach { t -> pantalla(t, t.soloOscuro, 4000, "lote4_${t.id}") {
         ideasArchivo()
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "ideas")
+    } }
+
+    // ---------------------------------------------------------------- Bibliotecas: el estante del diario (fase A)
+
+    /** [n] días inventados de octubre y noviembre, con más o menos palabras, ánimo y sueño. */
+    private fun diasEstante(n: Int, desde: Int = 0) = (0 until n).map { i ->
+        val k = desde + i
+        val fecha = if (k < 31) "2026-10-%02d".format(31 - k) else "2026-09-%02d".format(30 - (k - 31) % 30)
+        io.github.ruddy2003.vestigium.data.Dia(fecha = fecha, valencia = (k * 3) % 7 - 3, nota = TEXTO.repeat(1 + k % 5).take(40 + (k * 211) % 1600),
+            sueno_texto = "Volaba sobre un río. ".repeat(1 + k % 6), sueno_valencia = 3 - (k * 2) % 7)
+    }
+    /** Los temas con la biblioteca nueva. */
+    private val ESTANTE_A0 = listOf(TemaId.EDO, TemaId.DISTOPIA)
+    /**
+     * El estante de un tema: (a) con 1 y con 12 entradas; (b) 40 entradas en tres meses, con sus rótulos; (c) de noche, bajo
+     * su cielo. En partes: con muchos degradados en una imagen, Paparazzi pinta de negro los últimos.
+     */
+    private fun estante(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(t)
+        captura(t, oscuro, 2200, "tema_${t.id}_${modo}_a") {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                io.github.ruddy2003.vestigium.ui.EstanteDiario(diasEstante(1), t) {}
+                io.github.ruddy2003.vestigium.ui.EstanteDiario(diasEstante(12), t) {}
+            }
+        }
+        captura(t, oscuro, 2600, "tema_${t.id}_${modo}_b") {
+            val todos = diasEstante(40)
+            val grupos = todos.groupBy { it.fecha.take(7) }.map { (mes, l) -> io.github.ruddy2003.vestigium.ui.biblioteca.GrupoEstante(if (mes.endsWith("10")) "octubre · 2026" else "septiembre · 2026", l) } +
+                io.github.ruddy2003.vestigium.ui.biblioteca.GrupoEstante("un mes con un nombre muy largo · 2026", diasEstante(3, 50))
+            Box(Modifier.padding(16.dp)) { io.github.ruddy2003.vestigium.ui.biblioteca.EstanteTema(d, grupos, false, {}) }
+        }
+        captura(t, oscuro, 2000, "tema_${t.id}_${modo}_c") {
+            Box(Modifier.padding(16.dp)) {
+                io.github.ruddy2003.vestigium.ui.CieloNoche(tema = t) {
+                    io.github.ruddy2003.vestigium.ui.biblioteca.EstanteTema(d, listOf(io.github.ruddy2003.vestigium.ui.biblioteca.GrupoEstante("octubre · 2026", diasEstante(12))), true, {})
+                }
+            }
+        }
+    }
+    @Test fun estanteA0() = ESTANTE_A0.forEach { t -> estante(t, t.soloOscuro); if (!t.soloOscuro) estante(t, true) }
+    /** La biblioteca del diario entera, con el estante por meses. */
+    @Test fun bibliotecaDiarioA0() = ESTANTE_A0.forEach { t -> pantalla(t, false, 3600, "a0_${t.id}") {
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")
+    } }
+    /** El estante de los otros 32 temas, por épocas (lote A1), en claro y en oscuro; los de solo oscuro, solo en oscuro. */
+    private val ESTANTE_A1A = listOf(TemaId.CUEVA, TemaId.ROMANO, TemaId.HELENO, TemaId.EGIPTO, TemaId.MESO, TemaId.ARCANO, TemaId.ANTIGUAS)
+    private val ESTANTE_A1B = listOf(TemaId.MEDIEVAL, TemaId.TEMPLARIO, TemaId.SEDA, TemaId.GOTICO, TemaId.ANDALUS, TemaId.MONGOL, TemaId.RENACIMIENTO, TemaId.PIRATA, TemaId.REVOLUCION)
+    private val ESTANTE_A1C = listOf(TemaId.URBE, TemaId.CIBER, TemaId.VAPOR, TemaId.NAPOLEON, TemaId.DECO, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.ABISMO, TemaId.URSS)
+    private val ESTANTE_A1D = listOf(TemaId.NEON, TemaId.REFUGIO, TemaId.ORDEN, TemaId.LABORATORIO, TemaId.COLONOS, TemaId.RUINAS, TemaId.ESPACIO)
+    @Test fun estanteA1a() = ESTANTE_A1A.forEach { t -> estante(t, t.soloOscuro); if (!t.soloOscuro) estante(t, true) }
+    @Test fun estanteA1b() = ESTANTE_A1B.forEach { t -> estante(t, t.soloOscuro); if (!t.soloOscuro) estante(t, true) }
+    @Test fun estanteA1c() = ESTANTE_A1C.forEach { t -> estante(t, t.soloOscuro); if (!t.soloOscuro) estante(t, true) }
+    @Test fun estanteA1d() = ESTANTE_A1D.forEach { t -> estante(t, t.soloOscuro); if (!t.soloOscuro) estante(t, true) }
+    /**
+     * La tapa del diario (lote A2a): con texto, en blanco, de noche y a medio abrir, en claro y en oscuro (los de solo
+     * oscuro, solo en oscuro).
+     */
+    private fun tapa(t: TemaId, oscuro: Boolean) = captura(t, oscuro, 2700, "tema_${t.id}_${if (oscuro) "oscuro" else "claro"}") {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            io.github.ruddy2003.vestigium.ui.TapaDiario("2026-10-16", TEXTO, tema = t)
+            io.github.ruddy2003.vestigium.ui.TapaDiario("2026-10-17", "", tema = t)
+            io.github.ruddy2003.vestigium.ui.TapaDiario("2026-10-16", "Volaba sobre un río y el agua subía hasta el puente.", tema = t, noche = true)
+            io.github.ruddy2003.vestigium.ui.TapaDiario("2026-10-16", TEXTO, tema = t) { 0.55f }
+        }
+    }
+    @Test fun tapaA2a() = ESTANTE_A1A.forEach { t -> tapa(t, t.soloOscuro); if (!t.soloOscuro) tapa(t, true) }
+    @Test fun tapaA2b() = (ESTANTE_A1B + TemaId.EDO).forEach { t -> tapa(t, t.soloOscuro); if (!t.soloOscuro) tapa(t, true) }
+    @Test fun tapaA2c() = ESTANTE_A1C.forEach { t -> tapa(t, t.soloOscuro); if (!t.soloOscuro) tapa(t, true) }
+    @Test fun tapaA2d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { t -> tapa(t, t.soloOscuro); if (!t.soloOscuro) tapa(t, true) }
+    /**
+     * La página abierta (lote A2b): la entrada leída con su encabezado y su barra, el sueño leído de noche y el escritor con
+     * su botón de guardar, en claro y en oscuro (los de solo oscuro, solo en oscuro).
+     */
+    private fun paginaAbierta(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val dia = io.github.ruddy2003.vestigium.data.Dia(fecha = "2026-10-16", valencia = 2, nota = TEXTO, mejor_momento = "La caminata.", peor_momento = "El tráfico.",
+            sueno_texto = "Volaba sobre un río y el agua subía hasta el puente.", sueno_valencia = 1)
+        captura(t, oscuro, 2000, "tema_${t.id}_${modo}_lectura") { io.github.ruddy2003.vestigium.ui.LecturaTema("2026-10-16", dia, {}, {}, null, emptyList(), tema = t) }
+        captura(t, oscuro, 1600, "tema_${t.id}_${modo}_sueno") { io.github.ruddy2003.vestigium.ui.LecturaTema("2026-10-16", dia, {}, null, null, emptyList(), tema = t, modo = io.github.ruddy2003.vestigium.ui.Escrito.SUENO) }
+        captura(t, oscuro, 1600, "tema_${t.id}_${modo}_escritor") { io.github.ruddy2003.vestigium.ui.EscritorTema("2026-10-16", TEXTO.take(220), {}, {}, t) }
+    }
+    @Test fun paginaA2a() = ESTANTE_A1A.forEach { t -> paginaAbierta(t, t.soloOscuro); if (!t.soloOscuro) paginaAbierta(t, true) }
+    @Test fun paginaA2b() = (ESTANTE_A1B + TemaId.EDO).forEach { t -> paginaAbierta(t, t.soloOscuro); if (!t.soloOscuro) paginaAbierta(t, true) }
+    @Test fun paginaA2c() = ESTANTE_A1C.forEach { t -> paginaAbierta(t, t.soloOscuro); if (!t.soloOscuro) paginaAbierta(t, true) }
+    @Test fun paginaA2d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { t -> paginaAbierta(t, t.soloOscuro); if (!t.soloOscuro) paginaAbierta(t, true) }
+    /**
+     * La libreta de momentos (lote A3): sola con 1 y con 40 hojas y a medio abrir; la pestaña Momentos de la biblioteca (la
+     * libreta y su índice) y una hoja abierta con sus barras. En claro y en oscuro (los de solo oscuro, solo en oscuro).
+     */
+    private fun libretaA3(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(t)
+        val c = io.github.ruddy2003.vestigium.ui.contenedorDe(t)
+        captura(t, oscuro, 2000, "tema_${t.id}_${modo}_sola") {
+            val medidor = androidx.compose.ui.text.rememberTextMeasurer()
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                listOf(Triple(1, 0f, "1 ${c.hoja} · desde el 6 nov"), Triple(40, 0f, "40 ${io.github.ruddy2003.vestigium.ui.pantallas.pluralHoja(c.hoja)} · desde el 3 sep"), Triple(40, 0.55f, "40 ${io.github.ruddy2003.vestigium.ui.pantallas.pluralHoja(c.hoja)} · desde el 3 sep")).forEach { (h, a, cuenta) ->
+                    androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(d.altoLibreta)) {
+                        with(d) { libreta(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoLibreta(c.nombre, cuenta, h, a, 7), medidor, oscuro) }
+                    }
+                }
+            }
+        }
+        v73(t, oscuro, 3000, nombre = "tema_${t.id}_${modo}_biblioteca") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "momentos") }
+        v73(t, oscuro, 2000, nombre = "tema_${t.id}_${modo}_hoja") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaHojaMomentos(navVacia) }
+    }
+    @Test fun libretaA3a() = ESTANTE_A1A.forEach { t -> libretaA3(t, t.soloOscuro); if (!t.soloOscuro) libretaA3(t, true) }
+    @Test fun libretaA3b() = (ESTANTE_A1B + TemaId.EDO).forEach { t -> libretaA3(t, t.soloOscuro); if (!t.soloOscuro) libretaA3(t, true) }
+    @Test fun libretaA3c() = ESTANTE_A1C.forEach { t -> libretaA3(t, t.soloOscuro); if (!t.soloOscuro) libretaA3(t, true) }
+    @Test fun libretaA3d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { t -> libretaA3(t, t.soloOscuro); if (!t.soloOscuro) libretaA3(t, true) }
+    /**
+     * Las cartas (lote A4): el sobre del tema en cinco momentos (sellado y atado, listo con su brillo, abriéndose con el sello
+     * partido, abierto con la carta afuera y cerrándose con el sello que cae), la biblioteca de cartas con su buzón y una
+     * carta abierta con su encabezado. En claro y en oscuro (los de solo oscuro, solo en oscuro).
+     */
+    private fun cartasA4(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(t)
+        val pg = io.github.ruddy2003.vestigium.ui.pagina(t)
+        captura(t, oscuro, 2500, "tema_${t.id}_${modo}_sobres") {
+            val medidor = androidx.compose.ui.text.rememberTextMeasurer()
+            // linea1, linea2, abrir, romper, subir, cordón, brillo, escala y alfa del sello, ¿abierta?
+            class M(val l1: String, val l2: String, val a: Float, val r: Float, val s: Float, val c: Float, val b: Float, val es: Float, val al: Float, val abierta: Boolean)
+            val momentos = listOf(
+                M("A mí, dentro de un año", "se abre 7 nov 2027 · en 365 días", 0f, 0f, 0f, 1f, 0f, 1f, 1f, false),
+                M("Ya se puede abrir", "escrita el 2 oct 2025", 0f, 0f, 0f, 0f, 0.9f, 1f, 1f, false),
+                M("", "", 0.5f, 0.8f, 0f, 0f, 0.3f, 1f, 1f, false),
+                M("Para @ana", "2 nov 2026 · 21:40", 1f, 1f, 0.55f, 0f, 0f, 1f, 1f, true),
+                M("", "", 0f, 0f, 0f, 0.4f, 0f, 1.6f, 0.6f, false),
+            )
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                momentos.forEach { m ->
+                    androidx.compose.foundation.Canvas(Modifier.width(300.dp).height(if (m.abierta) 290.dp else 190.dp)) {
+                        val cuerpo = if (m.abierta) androidx.compose.ui.geometry.Rect(0f, size.height * 0.34f, size.width, size.height) else androidx.compose.ui.geometry.Rect(0f, 0f, size.width, size.height)
+                        with(d) { sobre(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoCarta(m.l1, m.l2, cuerpo, m.a, m.r, m.s, m.c, m.b, m.es, m.al, pg.color, pg.tinta.copy(alpha = 0.2f), 7, true), medidor, oscuro) }
+                    }
+                }
+            }
+        }
+        cartas(t, oscuro, "tema_${t.id}_${modo}_biblioteca")
+        pantalla(t, oscuro, 2200, "tema_${t.id}_${modo}_carta") {
+            Repo.configEnMemoria(Repo.config.copy(perfil = io.github.ruddy2003.vestigium.data.Perfil(nombre = "Ana")))
+            cartasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.carta = "k4"
+            io.github.ruddy2003.vestigium.ui.pantallas.PantallaCarta(navVacia)
+        }
+    }
+    @Test fun cartasA4a() = ESTANTE_A1A.forEach { t -> cartasA4(t, t.soloOscuro); if (!t.soloOscuro) cartasA4(t, true) }
+    @Test fun cartasA4b() = (ESTANTE_A1B + TemaId.EDO).forEach { t -> cartasA4(t, t.soloOscuro); if (!t.soloOscuro) cartasA4(t, true) }
+    @Test fun cartasA4c() = ESTANTE_A1C.forEach { t -> cartasA4(t, t.soloOscuro); if (!t.soloOscuro) cartasA4(t, true) }
+    // El futuro, tema por tema (si uno falla, la prueba dice cuál).
+    private fun cartasA4Tema(t: TemaId) { cartasA4(t, t.soloOscuro); if (!t.soloOscuro) cartasA4(t, true) }
+    @Test fun cartasA4Neon() = cartasA4Tema(TemaId.NEON)
+    @Test fun cartasA4Refugio() = cartasA4Tema(TemaId.REFUGIO)
+    @Test fun cartasA4Orden() = cartasA4Tema(TemaId.ORDEN)
+    @Test fun cartasA4Laboratorio() = cartasA4Tema(TemaId.LABORATORIO)
+    @Test fun cartasA4Colonos() = cartasA4Tema(TemaId.COLONOS)
+    @Test fun cartasA4Ruinas() = cartasA4Tema(TemaId.RUINAS)
+    @Test fun cartasA4Espacio() = cartasA4Tema(TemaId.ESPACIO)
+    @Test fun cartasA4Distopia() = cartasA4Tema(TemaId.DISTOPIA)
+    /**
+     * Lo de alrededor (lote A5): las pestañas de las bibliotecas (con la primera, la tercera y la última elegidas), el
+     * buscador vacío y con texto, el recuadro de Obras, tapas dibujadas de 40, 78 y 118 dp, y dos tarjetas de «hace un año»
+     * (una completa y una con solo la franja); aparte, la galería de Obras. Datos inventados.
+     */
+    private fun alrededorA5(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(t)
+        captura(t, oscuro, 3800, "tema_${t.id}_${modo}_alrededor") {
+            obrasEjemplo()
+            val medidor = androidx.compose.ui.text.rememberTextMeasurer()
+            val nombres = listOf("Diario", "Momentos", "Sueños", "Ideario", "Cartas")
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                listOf(0, 2, 4).forEach { k ->
+                    androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(d.altoPestanas)) {
+                        with(d) { pestanas(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoPestanas(nombres, listOf(128, 46, 0, 12, 7), k, 3), medidor, oscuro) }
+                    }
+                }
+                io.github.ruddy2003.vestigium.ui.biblioteca.CampoTema("", {}, "buscar en tu diario, @personas, #temas")
+                io.github.ruddy2003.vestigium.ui.biblioteca.CampoTema("mar y montaña", {}, "buscar en tus sueños")
+                io.github.ruddy2003.vestigium.ui.pantallas.RecuadroObras(navVacia)
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
+                    val l = Repo.obras
+                    io.github.ruddy2003.vestigium.ui.pantallas.PortadaObra(l[0], Modifier.width(40.dp).aspectRatio(2f / 3f))
+                    io.github.ruddy2003.vestigium.ui.pantallas.PortadaObra(l[4], Modifier.width(40.dp).aspectRatio(2f / 3f))
+                    io.github.ruddy2003.vestigium.ui.pantallas.PortadaObra(l[2], Modifier.width(78.dp).aspectRatio(2f / 3f))
+                    io.github.ruddy2003.vestigium.ui.pantallas.PortadaObra(l[0], Modifier.width(118.dp).aspectRatio(2f / 3f))
+                }
+                io.github.ruddy2003.vestigium.ui.pantallas.TarjetaRecuerdo(io.github.ruddy2003.vestigium.ui.pantallas.Recuerdo(
+                    io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), -365), 1,
+                    listOf("Un café inventado", "El parque"), "Una canción · Un grupo", "Fue un día tranquilo, con lluvia por la tarde y una caminata larga.",
+                    "☂ lluvia 18°", 5, null)) {}
+                io.github.ruddy2003.vestigium.ui.pantallas.TarjetaRecuerdo(io.github.ruddy2003.vestigium.ui.pantallas.Recuerdo(
+                    io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), -1096), 3,
+                    emptyList(), null, null, "☀ despejado 24°", null, null)) {}
+            }
+        }
+        pantalla(t, oscuro, 4200, "tema_${t.id}_${modo}_obras") { obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaObras(navVacia) }
+    }
+    private fun alrededorA5Tema(t: TemaId) { alrededorA5(t, t.soloOscuro); if (!t.soloOscuro) alrededorA5(t, true) }
+    @Test fun alrededorA5a() = ESTANTE_A1A.forEach { alrededorA5Tema(it) }
+    @Test fun alrededorA5b() = (ESTANTE_A1B + TemaId.EDO).forEach { alrededorA5Tema(it) }
+    @Test fun alrededorA5c() = ESTANTE_A1C.forEach { alrededorA5Tema(it) }
+    @Test fun alrededorA5Neon() = alrededorA5Tema(TemaId.NEON)
+    @Test fun alrededorA5Refugio() = alrededorA5Tema(TemaId.REFUGIO)
+    @Test fun alrededorA5Orden() = alrededorA5Tema(TemaId.ORDEN)
+    @Test fun alrededorA5Laboratorio() = alrededorA5Tema(TemaId.LABORATORIO)
+    @Test fun alrededorA5Colonos() = alrededorA5Tema(TemaId.COLONOS)
+    @Test fun alrededorA5Ruinas() = alrededorA5Tema(TemaId.RUINAS)
+    @Test fun alrededorA5Espacio() = alrededorA5Tema(TemaId.ESPACIO)
+    @Test fun alrededorA5Distopia() = alrededorA5Tema(TemaId.DISTOPIA)
+    /**
+     * Los campos de texto (lote B1): vacío con rótulo y pista, con texto, con error y prefijo, de varios renglones, apagado,
+     * con sufijo, la lista de etiquetas y el marco con el foco (de un renglón y de varios), dibujado directo porque en la
+     * captura no se puede enfocar. En claro y en oscuro. Datos inventados.
+     */
+    private fun camposB1(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(t)
+        captura(t, oscuro, 3400, "tema_${t.id}_${modo}_campos") {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto("", {}, Modifier.fillMaxWidth(), singleLine = true,
+                    label = { Text("Nombre") }, placeholder = { Text("como aparece en tu diario") })
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto("Paseo largo por el parque", {}, Modifier.fillMaxWidth(), singleLine = true, label = { Text("Nota") })
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto("doce", {}, Modifier.fillMaxWidth(), singleLine = true, isError = true,
+                    label = { Text("Monto") }, prefix = { Text("$ ") })
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto("Hoy aprendí a cocinar algo nuevo. Salió bien a la segunda y lo repetiría el domingo.", {},
+                    Modifier.fillMaxWidth(), minLines = 3, label = { Text("Qué pasó") })
+                io.github.ruddy2003.vestigium.ui.comun.CampoTexto("solo lectura", {}, Modifier.fillMaxWidth(), enabled = false, singleLine = true, label = { Text("Apagado") })
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    io.github.ruddy2003.vestigium.ui.comun.CampoTexto("72.5", {}, Modifier.weight(1f), singleLine = true, label = { Text("Peso") }, suffix = { Text(" kg") })
+                    io.github.ruddy2003.vestigium.ui.comun.CampoTexto("", {}, Modifier.weight(1f), singleLine = true, placeholder = { Text("0") })
+                }
+                io.github.ruddy2003.vestigium.ui.ListaEtiquetas(listOf("trabajo", "familia"), "otra etiqueta", normalizar = { it.trim() }) {}
+                androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(d.altoCampo)) {
+                    with(d) { marcoCampo(io.github.ruddy2003.vestigium.ui.comun.EstadoMarco(true, false, true, false, false, 5), oscuro) }
+                }
+                androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(110.dp)) {
+                    with(d) { marcoCampo(io.github.ruddy2003.vestigium.ui.comun.EstadoMarco(true, false, true, true, false, 6), oscuro) }
+                }
+            }
+        }
+    }
+    private fun camposB1Tema(t: TemaId) { camposB1(t, t.soloOscuro); if (!t.soloOscuro) camposB1(t, true) }
+    @Test fun camposB1a() = ESTANTE_A1A.forEach { camposB1Tema(it) }
+    @Test fun camposB1b() = (ESTANTE_A1B + TemaId.EDO).forEach { camposB1Tema(it) }
+    @Test fun camposB1c() = ESTANTE_A1C.forEach { camposB1Tema(it) }
+    @Test fun camposB1d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { camposB1Tema(it) }
+    /**
+     * Separadores y botones de texto (lote B2): el separador a todo el ancho, tenue y angosto; una lista corta separada;
+     * botones de texto de varios anchos, apagado y presionado (este dibujado directo); y la pantalla Más, que tiene muchos
+     * separadores. En claro y en oscuro.
+     */
+    private fun separadoresB2(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(t)
+        captura(t, oscuro, 2600, "tema_${t.id}_${modo}_separadores") {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                io.github.ruddy2003.vestigium.ui.comun.Separador()
+                io.github.ruddy2003.vestigium.ui.comun.Separador(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                androidx.compose.foundation.layout.Box(Modifier.width(140.dp)) { io.github.ruddy2003.vestigium.ui.comun.Separador() }
+                Column {
+                    listOf("Pasos", "Sueño", "Ánimo").forEachIndexed { k, x ->
+                        if (k > 0) io.github.ruddy2003.vestigium.ui.comun.Separador()
+                        Text(x, Modifier.padding(vertical = 10.dp), style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    io.github.ruddy2003.vestigium.ui.comun.BotonTexto({}) { Text("×") }
+                    io.github.ruddy2003.vestigium.ui.comun.BotonTexto({}) { Text("cancelar") }
+                    io.github.ruddy2003.vestigium.ui.comun.BotonTexto({}, enabled = false) { Text("deshacer") }
+                }
+                io.github.ruddy2003.vestigium.ui.comun.BotonTexto({}, Modifier.fillMaxWidth()) { Text("ver más meses") }
+                androidx.compose.foundation.Canvas(Modifier.width(140.dp).height(48.dp)) {
+                    with(d) { botonTexto(io.github.ruddy2003.vestigium.ui.comun.EstadoBotonTexto(true, true, 3), oscuro) }
+                }
+            }
+        }
+        pantalla(t, oscuro, 4200, "tema_${t.id}_${modo}_mas") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
+    }
+    private fun separadoresB2Tema(t: TemaId) { separadoresB2(t, t.soloOscuro); if (!t.soloOscuro) separadoresB2(t, true) }
+    @Test fun separadoresB2a() = ESTANTE_A1A.forEach { separadoresB2Tema(it) }
+    @Test fun separadoresB2b() = (ESTANTE_A1B + TemaId.EDO).forEach { separadoresB2Tema(it) }
+    @Test fun separadoresB2c() = ESTANTE_A1C.forEach { separadoresB2Tema(it) }
+    @Test fun separadoresB2d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { separadoresB2Tema(it) }
+    /**
+     * Filas, vacío, aviso y cifra (lote B3): dos filas de menú, una presionada (dibujada directo), dos filas de Más (una
+     * fijada), un vacío, un aviso y tres cifras. En claro y en oscuro. Datos inventados.
+     */
+    private fun filasB3(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(t)
+        captura(t, oscuro, 2800, "tema_${t.id}_${modo}_filas") {
+            Repo.configEnMemoria(Repo.config.copy(favoritos_mas = Repo.config.favoritos_mas + "gastos"))
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                io.github.ruddy2003.vestigium.ui.FilaMenu("Respaldo automático", "cada noche, en la carpeta elegida") {}
+                io.github.ruddy2003.vestigium.ui.FilaMenu("Acerca de") {}
+                androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(56.dp)) {
+                    with(d) { fila(io.github.ruddy2003.vestigium.ui.comun.EstadoFila(true, false, 4), oscuro) }
+                }
+                io.github.ruddy2003.vestigium.ui.pantallas.FilaMas("gastos", "Gastos", "Gastos e ingresos del mes") {}
+                io.github.ruddy2003.vestigium.ui.pantallas.FilaMas("escalada", "Escalada", null) {}
+                io.github.ruddy2003.vestigium.ui.Vacio("Todavía no hay entradas. Escribe la de hoy desde la pestaña Diario.")
+                io.github.ruddy2003.vestigium.ui.Aviso("Los datos se guardan solo en este teléfono. Haz un respaldo de vez en cuando.")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    io.github.ruddy2003.vestigium.ui.Cifra("128", "entradas", Modifier.width(100.dp))
+                    io.github.ruddy2003.vestigium.ui.Cifra("6.4", "ánimo medio", Modifier.width(100.dp))
+                    io.github.ruddy2003.vestigium.ui.Cifra("-0.12", "tendencia", Modifier.width(100.dp))
+                }
+            }
+        }
+    }
+    private fun filasB3Tema(t: TemaId) { filasB3(t, t.soloOscuro); if (!t.soloOscuro) filasB3(t, true) }
+    @Test fun filasB3a() = ESTANTE_A1A.forEach { filasB3Tema(it) }
+    @Test fun filasB3b() = (ESTANTE_A1B + TemaId.EDO).forEach { filasB3Tema(it) }
+    @Test fun filasB3c() = ESTANTE_A1C.forEach { filasB3Tema(it) }
+    @Test fun filasB3d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { filasB3Tema(it) }
+    /**
+     * Las tarjetas (lote B4): «Te falta hoy», el tablero de Hoy y la rejilla de Vida en una hoja; aparte, Día con su tarjeta
+     * de la noche. En claro y en oscuro. Datos inventados (los de cada pantalla vacía).
+     */
+    private fun tarjetasB4(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        captura(t, oscuro, 3600, "tema_${t.id}_${modo}_tarjetas") {
+            Column(Modifier.padding(16.dp)) {
+                io.github.ruddy2003.vestigium.ui.pantallas.TeFaltaHoy(io.github.ruddy2003.vestigium.data.Dia(fecha = hoy), hoy) {}
+                io.github.ruddy2003.vestigium.ui.pantallas.Tablero(hoy, max = 4)
+                io.github.ruddy2003.vestigium.ui.pantallas.RejillaTarjetas(listOf(
+                    io.github.ruddy2003.vestigium.ui.pantallas.Tarjetita("Resumen semanal", "5.8 ↑", "ánimo de esta semana", "semana"),
+                    io.github.ruddy2003.vestigium.ui.pantallas.Tarjetita("Calendario", "12 / 20", "días con diario este mes", "calendario"),
+                    io.github.ruddy2003.vestigium.ui.pantallas.Tarjetita("Tu gente", "14", "personas que mencionas", "personas"),
+                )) {}
+            }
+        }
+        pantalla(t, oscuro, 4200, "tema_${t.id}_${modo}_dia") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) }
+    }
+    private fun tarjetasB4Tema(t: TemaId) { tarjetasB4(t, t.soloOscuro); if (!t.soloOscuro) tarjetasB4(t, true) }
+    @Test fun tarjetasB4a() = ESTANTE_A1A.forEach { tarjetasB4Tema(it) }
+    @Test fun tarjetasB4b() = (ESTANTE_A1B + TemaId.EDO).forEach { tarjetasB4Tema(it) }
+    @Test fun tarjetasB4c() = ESTANTE_A1C.forEach { tarjetasB4Tema(it) }
+    @Test fun tarjetasB4d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { tarjetasB4Tema(it) }
+    /** Gastos e ingresos inventados de este mes, para las capturas de Gastos. */
+    private fun gastosEjemplo() {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        fun d(k: Long) = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -k).let { if (it.take(7) == hoy.take(7)) it else hoy }
+        Repo.gastosEnMemoria(listOf(
+            io.github.ruddy2003.vestigium.data.Gasto("g1", d(0), "13:20", 85.0, Repo.config.categorias.first(), nota = "comida"),
+            io.github.ruddy2003.vestigium.data.Gasto("g2", d(0), "09:05", 32.5, Repo.config.categorias.last(), imprevisto = true),
+            io.github.ruddy2003.vestigium.data.Gasto("g3", d(1), "19:40", 240.0, Repo.config.categorias.first(), se_repite = true),
+        ), listOf(io.github.ruddy2003.vestigium.data.Ingreso("i1", d(2), "10:00", 1500.0, Repo.config.categorias_ingreso.first(), "", true)))
+    }
+    /** Gastos (lote B5): la pantalla entera con la balanza, el mes, los movimientos y sus rótulos. En claro y en oscuro. */
+    private fun gastosB5(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        pantalla(t, oscuro, 4600, "tema_${t.id}_${modo}_gastos") { gastosEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaGastos(navVacia) }
+    }
+    private fun gastosB5Tema(t: TemaId) { gastosB5(t, t.soloOscuro); if (!t.soloOscuro) gastosB5(t, true) }
+    @Test fun gastosB5a() = ESTANTE_A1A.forEach { gastosB5Tema(it) }
+    @Test fun gastosB5b() = (ESTANTE_A1B + TemaId.EDO).forEach { gastosB5Tema(it) }
+    @Test fun gastosB5c() = ESTANTE_A1C.forEach { gastosB5Tema(it) }
+    @Test fun gastosB5d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { gastosB5Tema(it) }
+    /**
+     * Pedestales y placa (lote C1): los trofeos del tema en tres tamaños (46, 96 y 180 dp), en los cuatro niveles y sin
+     * conseguir; y el hall de logros con sus pedestales y placas. En claro y en oscuro. Datos inventados.
+     */
+    private fun pedestalesC1(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        captura(t, oscuro, 2200, "tema_${t.id}_${modo}_pedestales") {
+            val cats = io.github.ruddy2003.vestigium.ciencia.Logros.CATEGORIAS
+            fun logro(k: Int, nivel: Int, hecho: Boolean) = io.github.ruddy2003.vestigium.ciencia.Logros.Logro("x_$k", cats[k % cats.size], "", "★", cats[k % cats.size], nivel, 1.0,
+                if (hecho) 1.0 else 0.3, if (hecho) "2026-10-19" else null)
+            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                listOf(46.dp, 96.dp).forEach { alto ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
+                        (1..4).forEach { n -> io.github.ruddy2003.vestigium.ui.pantallas.TrofeoLogro(logro(n, n, true), alto, tema = t) }
+                        io.github.ruddy2003.vestigium.ui.pantallas.TrofeoLogro(logro(5, 1, false), alto, tema = t)
+                    }
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
+                    io.github.ruddy2003.vestigium.ui.pantallas.TrofeoLogro(logro(2, 3, true), 180.dp, tema = t)
+                    io.github.ruddy2003.vestigium.ui.pantallas.TrofeoLogro(logro(6, 4, true), 180.dp, tema = t)
+                }
+            }
+        }
+        hall(t, oscuro, "tema_${t.id}_${modo}_hall")
+    }
+    private fun pedestalesC1Tema(t: TemaId) { pedestalesC1(t, t.soloOscuro); if (!t.soloOscuro) pedestalesC1(t, true) }
+    @Test fun pedestalesC1a() = ESTANTE_A1A.forEach { pedestalesC1Tema(it) }
+    @Test fun pedestalesC1b() = (ESTANTE_A1B + TemaId.EDO).forEach { pedestalesC1Tema(it) }
+    @Test fun pedestalesC1c() = ESTANTE_A1C.forEach { pedestalesC1Tema(it) }
+    @Test fun pedestalesC1Neon() = pedestalesC1Tema(TemaId.NEON)
+    @Test fun pedestalesC1Refugio() = pedestalesC1Tema(TemaId.REFUGIO)
+    @Test fun pedestalesC1Orden() = pedestalesC1Tema(TemaId.ORDEN)
+    @Test fun pedestalesC1Laboratorio() = pedestalesC1Tema(TemaId.LABORATORIO)
+    @Test fun pedestalesC1Colonos() = pedestalesC1Tema(TemaId.COLONOS)
+    @Test fun pedestalesC1Ruinas() = pedestalesC1Tema(TemaId.RUINAS)
+    @Test fun pedestalesC1Espacio() = pedestalesC1Tema(TemaId.ESPACIO)
+    @Test fun pedestalesC1Distopia() = pedestalesC1Tema(TemaId.DISTOPIA)
+    /** El salón del hall (lote C2): el hall de logros y la imagen para compartir (con 3 columnas y textos). En claro y en oscuro. */
+    private fun salonesC2(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        hall(t, oscuro, "tema_${t.id}_${modo}_salon")
+        hallImagen(t, oscuro, true, "tema_${t.id}_${modo}_imagen")
+    }
+    private fun salonesC2Tema(t: TemaId) { salonesC2(t, t.soloOscuro); if (!t.soloOscuro) salonesC2(t, true) }
+    @Test fun salonesC2a() = ESTANTE_A1A.forEach { salonesC2Tema(it) }
+    @Test fun salonesC2b() = (ESTANTE_A1B + TemaId.EDO).forEach { salonesC2Tema(it) }
+    @Test fun salonesC2c() = ESTANTE_A1C.forEach { salonesC2Tema(it) }
+    @Test fun salonesC2Neon() = salonesC2Tema(TemaId.NEON)
+    @Test fun salonesC2Refugio() = salonesC2Tema(TemaId.REFUGIO)
+    @Test fun salonesC2Orden() = salonesC2Tema(TemaId.ORDEN)
+    @Test fun salonesC2Laboratorio() = salonesC2Tema(TemaId.LABORATORIO)
+    @Test fun salonesC2Colonos() = salonesC2Tema(TemaId.COLONOS)
+    @Test fun salonesC2Ruinas() = salonesC2Tema(TemaId.RUINAS)
+    @Test fun salonesC2Espacio() = salonesC2Tema(TemaId.ESPACIO)
+    @Test fun salonesC2Distopia() = salonesC2Tema(TemaId.DISTOPIA)
+    /** Las campañas (lote C3): una ganada (con la victoria en la meta) y una a medias (con el marcador). En claro y en oscuro. */
+    private fun campanasC3(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        captura(t, oscuro, 1400, "tema_${t.id}_${modo}_campana") {
+            val f = io.github.ruddy2003.vestigium.data.Fechas
+            val l = f.lunesDe(f.diaLogico())
+            val c = io.github.ruddy2003.vestigium.data.Campana("cv", l, "diario", 5, t.id)
+            val dias = (0 until 7).map { f.sumar(l, it.toLong()) }
+            Column(Modifier.padding(16.dp)) {
+                io.github.ruddy2003.vestigium.ui.pantallas.MapaCampana(io.github.ruddy2003.vestigium.ciencia.Campanas.Estado(c, null, dias.map { it to true }, 7, true, false, true, dias[4]), tema = t)
+                io.github.ruddy2003.vestigium.ui.pantallas.MapaCampana(io.github.ruddy2003.vestigium.ciencia.Campanas.Estado(c, null, dias.mapIndexed { i, d -> d to (if (i < 3) true else null) }, 3, false, false, false, null), Modifier.padding(top = 16.dp), tema = t)
+            }
+        }
+    }
+    private fun campanasC3Tema(t: TemaId) { campanasC3(t, t.soloOscuro); if (!t.soloOscuro) campanasC3(t, true) }
+    @Test fun campanasC3a() = ESTANTE_A1A.forEach { campanasC3Tema(it) }
+    @Test fun campanasC3b() = (ESTANTE_A1B + TemaId.EDO).forEach { campanasC3Tema(it) }
+    @Test fun campanasC3c() = ESTANTE_A1C.forEach { campanasC3Tema(it) }
+    @Test fun campanasC3d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { campanasC3Tema(it) }
+    /** Los objetos de Tu año (lote C4): la tarjeta de las cosas contadas del año. En claro y en oscuro. */
+    private fun anioC4Tema(t: TemaId) {
+        tarjetaAnio(t, t.soloOscuro, "cosas", "tema_${t.id}_${if (t.soloOscuro) "oscuro" else "claro"}_cosas")
+        if (!t.soloOscuro) tarjetaAnio(t, true, "cosas", "tema_${t.id}_oscuro_cosas")
+        tarjetaAnio(t, t.soloOscuro, "sueno", "tema_${t.id}_${if (t.soloOscuro) "oscuro" else "claro"}_sueno")
+    }
+    @Test fun anioC4a() = ESTANTE_A1A.forEach { anioC4Tema(it) }
+    @Test fun anioC4b() = (ESTANTE_A1B + TemaId.EDO).forEach { anioC4Tema(it) }
+    @Test fun anioC4c() = ESTANTE_A1C.forEach { anioC4Tema(it) }
+    @Test fun anioC4d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { anioC4Tema(it) }
+    /**
+     * Los adornos (lote D1): la hoja rápida con su menú, tres tarjetas de Relaciones e iconos de la cinta en tres tamaños.
+     * En claro y en oscuro.
+     */
+    private fun adornosD1(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        captura(t, oscuro, 2000, "tema_${t.id}_${modo}_quick") {
+            Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.BottomCenter) {
+                io.github.ruddy2003.vestigium.ui.HojaQuick(Modifier.fillMaxWidth()) {
+                    io.github.ruddy2003.vestigium.ui.EncabezadoQuick("Registrar", "10:32 · sábado", "Lo de todos los días en un toque.")
+                    io.github.ruddy2003.vestigium.ui.MenuQuick(listOf("Enfoque" to "enfoque", "Siesta" to "siesta", "Sustancias" to "consumo", "Gasto o ingreso" to "gasto",
+                        "Sueño" to "sueno", "Llenar el día" to "diario", "Nota" to "notas")) {}
+                }
+            }
+        }
+        relaciones(t, oscuro, "tema_${t.id}_${modo}_relaciones")
+        captura(t, oscuro, 700, "tema_${t.id}_${modo}_pistas") {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                listOf(14.dp, 18.dp, 28.dp).forEach { tam ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        listOf("animo", "sueno", "pasos", "comida", "cafe", "nota").forEach { id ->
+                            io.github.ruddy2003.vestigium.ui.IconoPista(id, MaterialTheme.colorScheme.primary, tam = tam, tema = t)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    private fun adornosD1Tema(t: TemaId) { adornosD1(t, t.soloOscuro); if (!t.soloOscuro) adornosD1(t, true) }
+    @Test fun adornosD1a() = ESTANTE_A1A.forEach { adornosD1Tema(it) }
+    @Test fun adornosD1b() = (ESTANTE_A1B + TemaId.EDO).forEach { adornosD1Tema(it) }
+    @Test fun adornosD1c() = ESTANTE_A1C.forEach { adornosD1Tema(it) }
+    @Test fun adornosD1d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { adornosD1Tema(it) }
+    /**
+     * El pulido por archivo (lote D2): las marcas de @persona y #tema, la banda del título y la textura del fondo (todo
+     * captura lleva el fondo del tema), el cielo de noche y la esfera de enfoque. En claro y en oscuro.
+     */
+    private fun pulidoD2(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        captura(t, oscuro, 1300, "tema_${t.id}_${modo}_marcas") {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                io.github.ruddy2003.vestigium.ui.Meandro()
+                io.github.ruddy2003.vestigium.ui.TextoMarcado("Café con @ana y @luis_m después del #protocolo de la #tesis", style = MaterialTheme.typography.bodyLarge, tema = t)
+                io.github.ruddy2003.vestigium.ui.CieloNoche { Box(Modifier.fillMaxWidth().height(160.dp)) }
+            }
+        }
+        v73(t, oscuro, 2400, { it.copy(enfoque_plan = planEnfoque(0, 12)) }, "tema_${t.id}_${modo}_enfoque") { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
+    }
+    private fun pulidoD2Tema(t: TemaId) { pulidoD2(t, t.soloOscuro); if (!t.soloOscuro) pulidoD2(t, true) }
+    @Test fun pulidoD2a() = ESTANTE_A1A.forEach { pulidoD2Tema(it) }
+    @Test fun pulidoD2b() = (ESTANTE_A1B + TemaId.EDO).forEach { pulidoD2Tema(it) }
+    @Test fun pulidoD2c() = ESTANTE_A1C.forEach { pulidoD2Tema(it) }
+    @Test fun pulidoD2d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { pulidoD2Tema(it) }
+    /** La biblioteca del diario entera de los 32, en su modo de siempre. */
+    @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")
     } }
     /** Escribir una idea: una muestra por forma de ficha (tarjeta, tablilla, tira, ticket, expediente, ventana, laja y recorte). */
     @Test fun escritorIdea() = listOf(TemaId.MEDIEVAL, TemaId.ROMANO, TemaId.EDO, TemaId.NEON, TemaId.DISTOPIA, TemaId.CIBER, TemaId.CUEVA, TemaId.PIRATA).forEach { t ->
@@ -1146,6 +1649,67 @@ class Capturas {
     @Test fun enfoqueCorriendoCiber() = v73(TemaId.CIBER, true, 2400, { it.copy(enfoque_plan = planEnfoque(0, 12)) }) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
     @Test fun enfoqueDescansoBotanico() = v73(TemaId.BOTANICO, false, 2400, { it.copy(enfoque_plan = planEnfoque(1, 4, hechoMin = 30)) }) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
     @Test fun enfoqueEsperandoSeda() = v73(TemaId.SEDA, false, 2400, { it.copy(enfoque_plan = planEnfoque(2, 0, esperando = true, hechoMin = 30)) }) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
+    // ---------------- esquema 21: el enfoque sigue contando, descanso «otra», suplementos varias veces, fechas señaladas y episodios ----------------
+    private fun planExtra(segmento: Int, haceMin: Int, hechoMin: Int = 0) = planEnfoque(segmento, haceMin, hechoMin = hechoMin).copy(avisado = true)
+    private fun enfoque21(tema: TemaId, oscuro: Boolean, plan: io.github.ruddy2003.vestigium.data.PlanEnfoque?, nombre: String) =
+        v73(tema, oscuro, 2400, { c -> if (plan != null) c.copy(enfoque_plan = plan) else c.copy(enfoque_ultimo = io.github.ruddy2003.vestigium.data.PlanEnfoque("tesis", 120, 3, 7)) }, nombre) {
+            io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {}
+        }
+    // Bloque 1 de 4 (30 min) con 10 de más; descanso de 10 con 4 de más; el último bloque con 5 de más; planear con descanso de 7 (otra).
+    private val ENFOQUE21 = listOf(TemaId.ROMANO to false, TemaId.GOTICO to true, TemaId.CIBER to true, TemaId.BOTANICO to false, TemaId.SEDA to true, TemaId.NAPOLEON to false)
+    @Test fun enfoqueExtra21() = ENFOQUE21.forEach { (t, o) ->
+        enfoque21(t, o, planExtra(0, 40), "e21_bloque_${t.id}")
+        enfoque21(t, o, planExtra(1, 14, 40), "e21_descanso_${t.id}")
+        enfoque21(t, o, planExtra(6, 35, 90), "e21_ultimo_${t.id}")
+        enfoque21(t, o, null, "e21_planear_${t.id}")
+    }
+
+    /** Un día de ejemplo con dos fechas señaladas (una de antes, como hito), dos episodios y dos tomas de creatina de tres al día. */
+    private fun ejemplo21() {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        fun iso(h: Int, m: Int = 0) = java.time.LocalDate.parse(hoy).atTime(h, m).atZone(java.time.ZoneId.systemDefault()).toOffsetDateTime().withNano(0).toString()
+        Repo.diasEnMemoria(Repo.dias + (hoy to (Repo.dias[hoy] ?: io.github.ruddy2003.vestigium.data.Dia(hoy)).copy(hitos = listOf("primer_dia_de_clases"),
+            senaladas = listOf(io.github.ruddy2003.vestigium.data.Senalada("viaje", "Viaje corto a la sierra"), io.github.ruddy2003.vestigium.data.Senalada("logro")))))
+        Repo.momentosEnMemoria(Repo.momentos + listOf(
+            io.github.ruddy2003.vestigium.data.Momento("e21a", iso(9, 30), hoy, "episodio", intensidad = 4, episodio = "crisis", duracion_min = 20, sintomas = listOf("corazon", "aire")),
+            io.github.ruddy2003.vestigium.data.Momento("e21b", iso(13, 10), hoy, "episodio", intensidad = 2, episodio = "pelea", personas = listOf("luis"))))
+        Repo.lote3EnMemoria(listOf(
+            io.github.ruddy2003.vestigium.data.TomaSuplemento("t21a", "creatina", iso(8), hoy, 5.0),
+            io.github.ruddy2003.vestigium.data.TomaSuplemento("t21b", "creatina", iso(14), hoy, 5.0)), emptyMap())
+    }
+    private fun dia21(tema: TemaId, oscuro: Boolean, nombre: String, alto: Int, cont: @Composable () -> Unit) =
+        v73(tema, oscuro, alto, { c -> ejemplo21(); io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.noche = null
+            c.copy(suplementos = listOf(io.github.ruddy2003.vestigium.data.Suplementos.CATALOGO[0].copy(tomas_dia = 3),
+            io.github.ruddy2003.vestigium.data.Suplementos.CATALOGO[2]), suplementos_horas = listOf(8, 14, 21)) }, nombre) { cont() }
+    @Test fun nocheSenaladas21() = ENFOQUE21.forEach { (t, o) -> dia21(t, o, "e21_noche_${t.id}", 9000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) } }
+    @Test fun suplementos21() = ENFOQUE21.forEach { (t, o) -> dia21(t, o, "e21_supl_${t.id}", 3600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaSuplementos(navVacia) } }
+    @Test fun diaEpisodios21() = ENFOQUE21.take(3).forEach { (t, o) -> dia21(t, o, "e21_dia_${t.id}", 8000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) } }
+
+    // Las formas del esquema 21 (masturbación, intimidad, episodio) con datos inventados, y la pantalla Privado con ellas.
+    private fun momento21(tipo: String, f: (io.github.ruddy2003.vestigium.data.Momento) -> io.github.ruddy2003.vestigium.data.Momento): io.github.ruddy2003.vestigium.data.Momento {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        return f(io.github.ruddy2003.vestigium.data.Momento("p21_$tipo", hoy + "T22:10:00-06:00", hoy, tipo))
+    }
+    private val MASTURBACION21 get() = momento21("masturbacion") { it.copy(duracion_min = 15, estimulo = "pornografia", dispositivo = "telefono", sitio = "cama", satisfaccion = 2, emociones = listOf("culpa", "alivio")) }
+    private val INTIMIDAD21 get() = momento21("intimidad") { it.copy(practicas = listOf("beso_profundo", "caricias_ropa"), nivel = 2, personas = listOf("ana"), satisfaccion = 4, placer = 4, conexion = 5, comodidad = 5,
+        emociones = listOf("ternura", "alegria"), texto = "Texto inventado de prueba.", orgasmo = "no", iniciativa = "ambos") }
+    private val EPISODIO21 get() = momento21("episodio") { it.copy(episodio = "crisis", intensidad = 4, duracion_min = 20, sintomas = listOf("corazon", "aire", "mareo"), detonantes = listOf("estres")) }
+    private fun forma21(tema: TemaId, oscuro: Boolean, nombre: String, m: io.github.ruddy2003.vestigium.data.Momento, alto: Int,
+                        campos: @Composable (io.github.ruddy2003.vestigium.data.Momento, ((io.github.ruddy2003.vestigium.data.Momento) -> io.github.ruddy2003.vestigium.data.Momento) -> Unit) -> Unit) =
+        v73(tema, oscuro, alto, { it.copy(seguimiento_privado = true) }, nombre) {
+            Column(Modifier.padding(16.dp)) { campos(m) { } }
+        }
+    @Test fun formasPrivadas21() = ENFOQUE21.forEach { (t, o) ->
+        forma21(t, o, "e21_masturbacion_${t.id}", MASTURBACION21, 2600) { m, c -> io.github.ruddy2003.vestigium.ui.CamposMasturbacion(m, c) }
+        forma21(t, o, "e21_intimidad_${t.id}", INTIMIDAD21, 4200) { m, c -> io.github.ruddy2003.vestigium.ui.CamposIntimidad(m, c) }
+        forma21(t, o, "e21_episodio_${t.id}", EPISODIO21, 2600) { m, c -> io.github.ruddy2003.vestigium.ui.CamposEpisodio(m, c) }
+    }
+    @Test fun privado21() = ENFOQUE21.take(4).forEach { (t, o) ->
+        v73(t, o, 6000, { c -> Repo.momentosEnMemoria(Repo.momentos + listOf(MASTURBACION21, INTIMIDAD21)); c.copy(seguimiento_privado = true) }, "e21_privado_${t.id}") {
+            io.github.ruddy2003.vestigium.ui.pantallas.PantallaRecaidas(navVacia)
+        }
+    }
+
     @Test fun trofeosRomano() = v73(TemaId.ROMANO, false, 7000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
     @Test fun trofeosOrden() = v73(TemaId.ORDEN, true, 5000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
 

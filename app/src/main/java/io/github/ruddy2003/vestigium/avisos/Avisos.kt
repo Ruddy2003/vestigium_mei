@@ -94,11 +94,11 @@ object Avisos {
 
     private fun nombreCanal(base: String) = when (base) {
         CANAL_ANIMO -> "Ánimo durante el día"; CANAL_DIARIO -> "Diario y sueños"; CANAL_ESCALAS -> "Escalas periódicas"
-        io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> "Fin de bloque o descanso"; else -> "Reportes"
+        io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> "Meta del bloque o del descanso"; else -> "Reportes"
     }
     private fun descripcionCanal(base: String) = when (base) {
         CANAL_ANIMO -> "Avisos breves para registrar cómo te sientes"; CANAL_DIARIO -> "Recordatorio de la mañana y de la noche"
-        io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> "Avisa cuando empieza un descanso, cuando termina y cuando acabas"; else -> "Cuestionarios que tocan"
+        io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> "Avisa cuando un bloque o un descanso llega a su meta (y sigue contando) y cuando suena la siesta"; else -> "Cuestionarios que tocan"
     }
     private fun importancia(base: String) = when (base) {
         CANAL_ANIMO, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> NotificationManager.IMPORTANCE_HIGH
@@ -417,44 +417,47 @@ object Avisos {
             "Las lunas de %d ya están en la pared", "Un año entero en pinturas: lo más hecho, lo único, lo curioso.")
     }
 
-    /** El cronómetro de enfoque en la voz del tema: nombre del descanso, consejo, fin del descanso, despertar y fin. */
-    internal class VozEnfoque(val descanso: String, val consejo: String, val finDescanso: String, val despertar: String, val terminaste: String)
+    /**
+     * El cronómetro de enfoque en la voz del tema: nombre del descanso, consejo, fin del descanso, despertar, fin y
+     * [meta] (esquema 21): el aviso de que un bloque llegó a su meta; desde ahí sigue contando hasta que pases al descanso o termines.
+     */
+    internal class VozEnfoque(val descanso: String, val consejo: String, val finDescanso: String, val despertar: String, val terminaste: String, val meta: String)
 
     internal fun vozEnfoque(t: TemaId = temaActual()): VozEnfoque = when (t) {
-        TemaId.ROMANO -> VozEnfoque("Otium", "Levántate y bebe agua, como en las termas.", "Se acabó el otium", "Surge: hora de despertar", "Opus perfectum: terminaste")
-        TemaId.URBE -> VozEnfoque("Pausa caffè", "Levántate y bebe agua del nasone, como en la calle.", "Fine della pausa", "Sveglia! Hora de despertar", "Fatto! Terminaste")
-        TemaId.CIBER -> VozEnfoque("> pausa", "Despega la vista de la pantalla. Agua.", "> pausa terminada", "> wake: hora de despertar", "> proceso completado")
-        TemaId.NEON -> VozEnfoque("Respira, sal a la banqueta", "Despega la vista del letrero. Un vaso de agua.", "De vuelta al puesto", "Sube la persiana: hora de despertar", "Pedido terminado")
-        TemaId.HELENO -> VozEnfoque("Σχολή · pausa", "Levántate, bebe agua de la fuente.", "Terminó la pausa", "Llega Eos: hora de despertar", "Τέλος · terminaste")
-        TemaId.EGIPTO -> VozEnfoque("Reposo del escriba", "Deja el cálamo, bebe agua de la jarra.", "Vuelve a la paleta", "Ra sale del horizonte: hora de despertar", "Columna terminada")
-        TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste")
-        TemaId.TEMPLARIO -> VozEnfoque("Alto en la marcha", "Desciñe la espada y bebe agua del aljibe.", "Se acabó el alto: a la silla", "Toca a maitines: hora de levantarse", "Non nobis: guardia cumplida")
-        TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA")
-        TemaId.REFUGIO -> VozEnfoque("DESCANSO DE TURNO", "Levántate, bebe agua filtrada.", "FIN DEL DESCANSO", "HORA DE DESPERTAR, RESIDENTE", "TURNO COMPLETADO")
-        TemaId.ORDEN -> VozEnfoque("ALTO", "Rompan filas: agua y estiramiento.", "FIN DEL ALTO", "DIANA", "MISIÓN CUMPLIDA")
-        TemaId.VAPOR -> VozEnfoque("Parada en la estación", "Baja al andén: estira las piernas y bebe agua del aguador.", "¡Viajeros al tren!", "Silba la locomotora: hora de despertar", "Llegada a destino: terminaste")
-        TemaId.LABORATORIO -> VozEnfoque("Intervalo", "Levántate, hidrátate.", "Fin del intervalo", "Fin del registro de sueño: despierta", "Ensayo completado")
-        TemaId.COLONOS -> VozEnfoque("Descanso", "Levántate, toma agua del pozo.", "Se acabó el descanso", "Hora de despertar", "¡Faena terminada!")
-        TemaId.NAPOLEON -> VozEnfoque("Halte", "Levántate y bebe, soldado.", "Fin de la halte", "Diana: ¡arriba!", "Victoire!")
-        TemaId.DECO -> VozEnfoque("Entreacto", "Levántate, da una vuelta por cubierta y bebe agua.", "Se acabó el entreacto", "Suena la campana del desayuno: hora de despertar", "¡Telón! Función terminada")
-        TemaId.BOTANICO -> VozEnfoque("Pausa de campo", "Levántate y riégate: toma agua.", "Termina la pausa de campo", "Hora de despertar, como las flores", "Muestra completa")
-        TemaId.RUINAS -> VozEnfoque("Sombra bajo el puente", "Levántate y bebe del agua de lluvia que guardaste.", "Se acabó la sombra", "Ya salió el sol sobre las azoteas", "Faena cumplida, sigues en pie")
-        TemaId.NAVIDAD -> VozEnfoque("Descanso junto al fuego", "Levántate, toma algo caliente o agua.", "Se acabó el descanso junto al fuego", "Hora de despertar", "¡Terminaste!")
-        TemaId.SEDA -> VozEnfoque("Alto en el caravasar", "Levántate, bebe agua del pozo.", "La caravana sigue", "Hora de levantar el campamento", "Jornada cumplida")
-        TemaId.EDO -> VozEnfoque("Un té en la casa de té", "Levántate, estira las piernas, bebe agua del pozo.", "Se reanuda el camino", "Suena la campana del alba: a levantarse", "Llegaste a la posta")
-        TemaId.URSS -> VozEnfoque("DESCANSO REGLAMENTARIO", "Levántate, toma agua, camarada.", "DE VUELTA AL TRABAJO", "¡ARRIBA, CAMARADA!", "¡NORMA CUMPLIDA!")
-        TemaId.GOTICO -> VozEnfoque("Recreatio", "Levántate, bebe agua.", "Termina la recreatio", "Laudes: hora de despertar", "Deo gratias: terminaste")
-        TemaId.ARCANO -> VozEnfoque("Aparta la vista de los legajos", "Levántate, bebe agua, mira por la ventana hacia el faro.", "Vuelve a la mesa del archivo", "Amaneció: la niebla se levanta", "Pesquisa cumplida: guarda los papeles")
-        TemaId.ESPACIO -> VozEnfoque("PAUSA ORBITAL", "Despega del asiento. Hidrátate.", "FIN DE LA PAUSA ORBITAL", "DESPERTAR DE LA TRIPULACIÓN", "MISIÓN COMPLETADA")
-        TemaId.ABISMO -> VozEnfoque("PARADA DE DESCOMPRESIÓN", "Sube despacio: levántate y toma agua.", "FIN DE LA PARADA", "EMERSIÓN: HORA DE DESPERTAR", "INMERSIÓN COMPLETADA")
-        TemaId.ANDALUS -> VozEnfoque("Pausa en el patio", "Levántate, bebe agua de la fuente.", "Terminó la pausa en el patio", "Al alba: hora de despertar", "¡Obra acabada!")
-        TemaId.MESO -> VozEnfoque("Descanso del pintor", "Deja el pincel, bebe agua del cenote.", "Vuelve al códice", "K'in sale por el oriente: hora de despertar", "Página pintada")
-        TemaId.MONGOL -> VozEnfoque("Alto en la estepa", "Levántate, bebe agua.", "A caballo otra vez", "El sol sale sobre la estepa: despierta", "¡Jornada ganada!")
-        TemaId.RENACIMIENTO -> VozEnfoque("Pausa", "Lascia il pennello: levántate, toma agua.", "Fine della pausa", "Sveglia: hora de despertar", "Opera compiuta")
-        TemaId.PIRATA -> VozEnfoque("Se volteó la ampolleta", "Estira las piernas en cubierta y bebe agua dulce.", "Otra vuelta de ampolleta", "Toque de diana: a cubierta", "¡Guardia cumplida!")
-        TemaId.REVOLUCION -> VozEnfoque("Repos", "Levántate, toma agua, ciudadano.", "Fin du repos", "Réveil: hora de despertar", "Ça ira: terminaste")
-        TemaId.ANTIGUAS -> VozEnfoque("Alto en el camino", "Levántate, bebe del odre.", "La compañía sigue", "El alba: hora de despertar", "¡Hazaña cumplida!")
-        TemaId.CUEVA -> VozEnfoque("Descanso junto al fuego", "Levántate, estira las piernas, bebe del arroyo.", "De vuelta al acecho", "Sale el sol sobre el valle: hora de despertar", "¡Presa cobrada!")
+        TemaId.ROMANO -> VozEnfoque("Otium", "Levántate y bebe agua, como en las termas.", "Se acabó el otium", "Surge: hora de despertar", "Opus perfectum: terminaste", "Ad metam: llegaste a la meta")
+        TemaId.URBE -> VozEnfoque("Pausa caffè", "Levántate y bebe agua del nasone, como en la calle.", "Fine della pausa", "Sveglia! Hora de despertar", "Fatto! Terminaste", "Meta raggiunta: llegaste")
+        TemaId.CIBER -> VozEnfoque("> pausa", "Despega la vista de la pantalla. Agua.", "> pausa terminada", "> wake: hora de despertar", "> proceso completado", "> meta alcanzada")
+        TemaId.NEON -> VozEnfoque("Respira, sal a la banqueta", "Despega la vista del letrero. Un vaso de agua.", "De vuelta al puesto", "Sube la persiana: hora de despertar", "Pedido terminado", "Luz verde: llegaste a la meta")
+        TemaId.HELENO -> VozEnfoque("Σχολή · pausa", "Levántate, bebe agua de la fuente.", "Terminó la pausa", "Llega Eos: hora de despertar", "Τέλος · terminaste", "Τέρμα · llegaste a la meta")
+        TemaId.EGIPTO -> VozEnfoque("Reposo del escriba", "Deja el cálamo, bebe agua de la jarra.", "Vuelve a la paleta", "Ra sale del horizonte: hora de despertar", "Columna terminada", "El escriba llegó al final de la línea")
+        TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste", "Explicit: llegaste a la meta")
+        TemaId.TEMPLARIO -> VozEnfoque("Alto en la marcha", "Desciñe la espada y bebe agua del aljibe.", "Se acabó el alto: a la silla", "Toca a maitines: hora de levantarse", "Non nobis: guardia cumplida", "Llegaste al castillo: meta cumplida")
+        TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
+        TemaId.REFUGIO -> VozEnfoque("DESCANSO DE TURNO", "Levántate, bebe agua filtrada.", "FIN DEL DESCANSO", "HORA DE DESPERTAR, RESIDENTE", "TURNO COMPLETADO", "META DE TURNO ALCANZADA")
+        TemaId.ORDEN -> VozEnfoque("ALTO", "Rompan filas: agua y estiramiento.", "FIN DEL ALTO", "DIANA", "MISIÓN CUMPLIDA", "OBJETIVO ALCANZADO")
+        TemaId.VAPOR -> VozEnfoque("Parada en la estación", "Baja al andén: estira las piernas y bebe agua del aguador.", "¡Viajeros al tren!", "Silba la locomotora: hora de despertar", "Llegada a destino: terminaste", "Estación a la vista: llegaste a la meta")
+        TemaId.LABORATORIO -> VozEnfoque("Intervalo", "Levántate, hidrátate.", "Fin del intervalo", "Fin del registro de sueño: despierta", "Ensayo completado", "Tiempo objetivo alcanzado")
+        TemaId.COLONOS -> VozEnfoque("Descanso", "Levántate, toma agua del pozo.", "Se acabó el descanso", "Hora de despertar", "¡Faena terminada!", "¡Meta de la faena cumplida!")
+        TemaId.NAPOLEON -> VozEnfoque("Halte", "Levántate y bebe, soldado.", "Fin de la halte", "Diana: ¡arriba!", "Victoire!", "Objectif atteint!")
+        TemaId.DECO -> VozEnfoque("Entreacto", "Levántate, da una vuelta por cubierta y bebe agua.", "Se acabó el entreacto", "Suena la campana del desayuno: hora de despertar", "¡Telón! Función terminada", "¡Fin del acto!")
+        TemaId.BOTANICO -> VozEnfoque("Pausa de campo", "Levántate y riégate: toma agua.", "Termina la pausa de campo", "Hora de despertar, como las flores", "Muestra completa", "Muestra del bloque recogida")
+        TemaId.RUINAS -> VozEnfoque("Sombra bajo el puente", "Levántate y bebe del agua de lluvia que guardaste.", "Se acabó la sombra", "Ya salió el sol sobre las azoteas", "Faena cumplida, sigues en pie", "Llegaste a la azotea: meta cumplida")
+        TemaId.NAVIDAD -> VozEnfoque("Descanso junto al fuego", "Levántate, toma algo caliente o agua.", "Se acabó el descanso junto al fuego", "Hora de despertar", "¡Terminaste!", "¡Llegaste a la meta! Otra vela encendida")
+        TemaId.SEDA -> VozEnfoque("Alto en el caravasar", "Levántate, bebe agua del pozo.", "La caravana sigue", "Hora de levantar el campamento", "Jornada cumplida", "La caravana llegó al oasis")
+        TemaId.EDO -> VozEnfoque("Un té en la casa de té", "Levántate, estira las piernas, bebe agua del pozo.", "Se reanuda el camino", "Suena la campana del alba: a levantarse", "Llegaste a la posta", "Llegaste a la siguiente posta")
+        TemaId.URSS -> VozEnfoque("DESCANSO REGLAMENTARIO", "Levántate, toma agua, camarada.", "DE VUELTA AL TRABAJO", "¡ARRIBA, CAMARADA!", "¡NORMA CUMPLIDA!", "¡PLAN DEL BLOQUE CUMPLIDO!")
+        TemaId.GOTICO -> VozEnfoque("Recreatio", "Levántate, bebe agua.", "Termina la recreatio", "Laudes: hora de despertar", "Deo gratias: terminaste", "Hora cumplida: llegaste a la meta")
+        TemaId.ARCANO -> VozEnfoque("Aparta la vista de los legajos", "Levántate, bebe agua, mira por la ventana hacia el faro.", "Vuelve a la mesa del archivo", "Amaneció: la niebla se levanta", "Pesquisa cumplida: guarda los papeles", "El faro dio la vuelta: meta cumplida")
+        TemaId.ESPACIO -> VozEnfoque("PAUSA ORBITAL", "Despega del asiento. Hidrátate.", "FIN DE LA PAUSA ORBITAL", "DESPERTAR DE LA TRIPULACIÓN", "MISIÓN COMPLETADA", "OBJETIVO ORBITAL ALCANZADO")
+        TemaId.ABISMO -> VozEnfoque("PARADA DE DESCOMPRESIÓN", "Sube despacio: levántate y toma agua.", "FIN DE LA PARADA", "EMERSIÓN: HORA DE DESPERTAR", "INMERSIÓN COMPLETADA", "PROFUNDIDAD OBJETIVO ALCANZADA")
+        TemaId.ANDALUS -> VozEnfoque("Pausa en el patio", "Levántate, bebe agua de la fuente.", "Terminó la pausa en el patio", "Al alba: hora de despertar", "¡Obra acabada!", "Llegaste a la fuente: meta cumplida")
+        TemaId.MESO -> VozEnfoque("Descanso del pintor", "Deja el pincel, bebe agua del cenote.", "Vuelve al códice", "K'in sale por el oriente: hora de despertar", "Página pintada", "Glifo terminado: llegaste a la meta")
+        TemaId.MONGOL -> VozEnfoque("Alto en la estepa", "Levántate, bebe agua.", "A caballo otra vez", "El sol sale sobre la estepa: despierta", "¡Jornada ganada!", "Llegaste al ovoo: meta cumplida")
+        TemaId.RENACIMIENTO -> VozEnfoque("Pausa", "Lascia il pennello: levántate, toma agua.", "Fine della pausa", "Sveglia: hora de despertar", "Opera compiuta", "Meta raggiunta")
+        TemaId.PIRATA -> VozEnfoque("Se volteó la ampolleta", "Estira las piernas en cubierta y bebe agua dulce.", "Otra vuelta de ampolleta", "Toque de diana: a cubierta", "¡Guardia cumplida!", "¡Tierra a la vista! Llegaste a la meta")
+        TemaId.REVOLUCION -> VozEnfoque("Repos", "Levántate, toma agua, ciudadano.", "Fin du repos", "Réveil: hora de despertar", "Ça ira: terminaste", "But atteint!")
+        TemaId.ANTIGUAS -> VozEnfoque("Alto en el camino", "Levántate, bebe del odre.", "La compañía sigue", "El alba: hora de despertar", "¡Hazaña cumplida!", "La compañía llegó a la posada")
+        TemaId.CUEVA -> VozEnfoque("Descanso junto al fuego", "Levántate, estira las piernas, bebe del arroyo.", "De vuelta al acecho", "Sale el sol sobre el valle: hora de despertar", "¡Presa cobrada!", "El rastro termina aquí: meta cumplida")
     }
 
     /**

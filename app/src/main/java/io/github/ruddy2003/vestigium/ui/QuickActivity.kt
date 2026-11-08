@@ -2,6 +2,9 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import androidx.compose.ui.graphics.luminance
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -23,6 +26,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CutCornerShape
@@ -31,10 +35,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,6 +61,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -96,6 +99,8 @@ class QuickActivity : FragmentActivity() {
         const val SUBCATEGORIA = "subcategoria"; const val MONTO = "monto"
         /** Día (AAAA-MM-DD) para el que se anota, desde «＋ agregar a este día». */
         const val FECHA = "fecha"
+        /** Con [TIPO] = "episodio": el id del tipo de episodio (Catalogo.EPISODIOS) que ya va marcado al abrir. */
+        const val EPISODIO = "episodio_tipo"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -114,7 +119,11 @@ class QuickActivity : FragmentActivity() {
         val tipo = intent.getStringExtra(TIPO)
         var pantallaInicial = when (modo) { M_MOMENTO, M_ANIMO -> M_ANIMO; else -> modo }
         if (modo == M_MOMENTO && tipo != null) {
-            if (tipo == "impulso" || tipo == "recaida" || (tipo == "libido" && Repo.config.seguimiento_privado)) { inicial = crear(tipo, origen, null, null); pantallaInicial = "privado" }
+            if (tipo == "impulso" || tipo == "recaida" || (tipo in PRIVADOS_CON_SEGUIMIENTO && Repo.config.seguimiento_privado)) { inicial = crear(tipo, origen, null, null); pantallaInicial = "privado" }
+            // Un episodio (normal, no privado) va por la misma hoja de captura; puede llegar con su tipo ya elegido.
+            else if (tipo == "episodio") { inicial = crearEpisodio(origen, intent.getStringExtra(EPISODIO), intent.getStringExtra(FECHA)); pantallaInicial = "privado" }
+            // Sin el seguimiento privado no se anota nada privado (antes la libido caía aquí como un ánimo vacío).
+            else if (tipo in PRIVADOS_CON_SEGUIMIENTO) pantallaInicial = M_MENU
             else {
                 // Un sentimiento (del widget) o un tipo de momento de antes: se guarda como registro de ánimo.
                 val m0 = crear("animo", origen, null, null)
@@ -159,7 +168,8 @@ class QuickActivity : FragmentActivity() {
                         .navigationBarsPadding().imePadding()) {
                         val ir: (String) -> Unit = { destino ->
                             when (destino) {
-                                "impulso", "recaida", "libido" -> { privado = crear(destino, origen, null, null); pantalla = "privado" }
+                                // «privado» es la hoja de captura de un momento; el episodio, que no es privado, también va por ahí.
+                                "impulso", "recaida", "libido", "masturbacion", "intimidad", "episodio" -> { privado = crear(destino, origen, null, null); pantalla = "privado" }
                                 else -> pantalla = destino
                             }
                         }
@@ -235,6 +245,22 @@ class QuickActivity : FragmentActivity() {
 
     private fun actualizar(id: String, f: (Momento) -> Momento) { Repo.momento(id)?.let { Repo.guardarMomento(f(it)) } }
 
+    /** Privados que solo se anotan con el seguimiento privado encendido. */
+    private val PRIVADOS_CON_SEGUIMIENTO = setOf("libido", "masturbacion", "intimidad")
+
+    /**
+     * Un episodio se guarda al instante, como los demás; con [tipoEpisodio] (desde el día) ya va con su tipo. Con [fecha] de otro
+     * día («＋ agregar a este día») va a mediodía de ese día, sin la ubicación de ahora; la hora se corrige en la hoja.
+     */
+    private fun crearEpisodio(origen: String, tipoEpisodio: String?, fecha: String?): Momento {
+        val ms = fecha?.takeIf { it != Fechas.diaLogico() }?.let { f -> runCatching { Fechas.parse(f).atTime(12, 0).aMillis() }.getOrNull() }
+        val m = crear("episodio", origen, null, null, ms)
+        val id = tipoEpisodio?.takeIf { t -> Catalogo.EPISODIOS.any { it.id == t } } ?: return m
+        val n = m.copy(episodio = id)
+        Repo.guardarMomento(n)
+        return n
+    }
+
     @Composable
     private fun Encabezado(titulo: String, sub: String, fecha: String? = null) {
         // El día va también en palabras: con algunos temas la fecha del estilo no se lee de un vistazo (N-08).
@@ -253,42 +279,36 @@ class QuickActivity : FragmentActivity() {
         Encabezado("Registrar", "Lo de todos los días en un toque. Lo demás, cuando quieras.")
         val botones = listOfNotNull(
             "Enfoque" to M_ENFOQUE, "Siesta" to M_SIESTA, "Sustancias" to M_CONSUMO, "Gasto o ingreso" to M_GASTO, "Sueño" to M_SUENO, "Llenar el día" to "diario",
-            "Nota" to "notas", "Idea" to "idea_nueva", "Impulso" to "impulso", if (Repo.config.seguimiento_privado) "Recaída" to "recaida" else null,
+            "Nota" to "notas", "Idea" to "idea_nueva", "Episodio" to "episodio", "Impulso" to "impulso", if (Repo.config.seguimiento_privado) "Recaída" to "recaida" else null,
             if (Repo.config.seguimiento_privado) "Libido" to "libido" else null,
+            if (Repo.config.seguimiento_privado) "Masturbación" to "masturbacion" else null,
+            if (Repo.config.seguimiento_privado) "Intimidad" to "intimidad" else null,
         )
         MenuQuick(botones) { d ->
             if (d == "diario" || d == "notas" || d == "idea_nueva") { startActivity(android.content.Intent(this@QuickActivity, MainActivity::class.java).putExtra(MainActivity.PANTALLA, d)
                 .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish() }
             else ir(d)
         }
-        // Suplementos: un toque anota la dosis habitual.
+        // Suplementos: un toque anota la dosis habitual. Con una toma ya hecha hoy, el toque suma otra (esquema 21: se pueden
+        // varias al día) y la barra de abajo deja deshacerla durante 5 segundos.
         val supl = io.github.ruddy2003.vestigium.data.Suplementos.activos()
         if (supl.isNotEmpty()) {
-            var tomados by remember { mutableStateOf(supl.filter { io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id) }.map { it.id }.toSet()) }
-            var duda by remember { mutableStateOf<String?>(null) }
+            val hoySupl = Fechas.diaLogico()
             FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
                 supl.forEach { sp ->
-                    val ya = sp.id in tomados
+                    // Repo.tomas es estado: al anotar o deshacer, la cuenta se vuelve a leer sola.
+                    val n = io.github.ruddy2003.vestigium.data.Suplementos.tomasDe(sp.id, hoySupl).size
+                    val ya = n > 0
                     val dosis = if (sp.dosis == Math.floor(sp.dosis)) "%.0f".format(sp.dosis) else "%.1f".format(sp.dosis)
-                    // Si ya lo tomaste hoy, un toque pregunta (otra toma o quitar la de hoy) en vez de sumar otra sin querer.
-                    Surface(onClick = { if (ya) duda = if (duda == sp.id) null else sp.id else { io.github.ruddy2003.vestigium.data.Suplementos.registrar(sp); tomados = tomados + sp.id } },
-                        modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = forma, color = if (ya) cs.primary.copy(alpha = 0.12f) else cs.surface,
+                    Surface(onClick = {
+                        val t = io.github.ruddy2003.vestigium.data.Suplementos.registrar(sp)
+                        io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer(if (ya) "Otra toma: ${sp.nombre.lowercase()}" else "Anotado: ${sp.nombre.lowercase()}") { Repo.borrarToma(t.id) }
+                    }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = forma, color = if (ya) cs.primary.copy(alpha = 0.12f) else cs.surface,
                         border = BorderStroke(1.dp, if (ya) cs.primary else cs.outline)) {
-                        Box(contentAlignment = Alignment.Center) { Text((if (ya) "✓ " else "Tomé ") + sp.nombre.lowercase() + " · $dosis ${sp.unidad}", style = MaterialTheme.typography.labelLarge) }
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(if (ya) "✓ Tomé ${sp.nombre.lowercase()} ($n hoy)" else "Tomé ${sp.nombre.lowercase()} · $dosis ${sp.unidad}", style = MaterialTheme.typography.labelLarge)
+                        }
                     }
-                }
-            }
-            supl.firstOrNull { it.id == duda }?.let { sp ->
-                Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(sp.nombre + " ya está hoy:", style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
-                    TextButton(onClick = { io.github.ruddy2003.vestigium.data.Suplementos.registrar(sp); duda = null; Toast.makeText(this@QuickActivity, "Otra toma anotada", Toast.LENGTH_SHORT).show() }) { Text("otra toma") }
-                    TextButton(onClick = {
-                        // Se cuentan antes de borrar: la lista en memoria se actualiza después, en el hilo principal.
-                        val deHoy = Repo.tomas.filter { it.suplemento == sp.id && it.fecha == Fechas.diaLogico() }
-                        deHoy.maxByOrNull { it.ts }?.let { Repo.borrarToma(it.id) }
-                        if (deHoy.size <= 1) tomados = tomados - sp.id
-                        duda = null; Toast.makeText(this@QuickActivity, "Quitada la de hoy (7 días en la papelera)", Toast.LENGTH_SHORT).show()
-                    }) { Text("quitar la de hoy") }
                 }
             }
         }
@@ -335,10 +355,10 @@ class QuickActivity : FragmentActivity() {
         // Lo guardó el toque en el widget o en el aviso: se dice qué quedó y se puede borrar si fue sin querer (N-15).
         if (inicial != null && m != null) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("Guardado con el toque" + (m!!.valencia?.let { ": $it/7" } ?: "") + ".", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-            TextButton(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("borrar") }
+            BotonTexto(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("borrar") }
         }
         if (avisoMs == null && inicial == null) {
-            if (!elegirCuando) TextButton(onClick = { elegirCuando = true }) {
+            if (!elegirCuando) BotonTexto(onClick = { elegirCuando = true }) {
                 Text(if (cuando == null) "¿fue antes? anotarlo en otra hora o día" else "cuándo: ${Fechas.corto(Fechas.diaLogicoDeMillis(cuando!!.aMillis()))} ${"%02d:%02d".format(cuando!!.hour, cuando!!.minute)}",
                     style = MaterialTheme.typography.labelLarge)
             } else io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, ayer = true, atajos = listOf(60, 180)) { nuevo ->
@@ -359,7 +379,7 @@ class QuickActivity : FragmentActivity() {
             pensamientos = l
             asegurar { it.copy(pensamientos = l, pensamiento = l.firstOrNull()) }
         }
-        OutlinedTextField(value = nota, onValueChange = { t -> nota = t; asegurar { it.copy(texto = t) } },
+        CampoTexto(value = nota, onValueChange = { t -> nota = t; asegurar { it.copy(texto = t) } },
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp), minLines = 2, placeholder = { Text("¿Qué está pasando? Usa @persona y #tema") }, visualTransformation = rememberMarcas())
         Row(Modifier.padding(top = 6.dp)) { BotonDictado { d -> nota = (nota + " " + d).trim(); val t = nota; asegurar { it.copy(texto = t) } } }
         Etiqueta("¿Con quién estás? (opcional)")
@@ -377,6 +397,8 @@ class QuickActivity : FragmentActivity() {
             BotonSecundario("＋ impulso") { ir("impulso") }
             if (Repo.config.seguimiento_privado) BotonSecundario("＋ recaída") { ir("recaida") }
             if (Repo.config.seguimiento_privado) BotonSecundario("＋ libido") { ir("libido") }
+            if (Repo.config.seguimiento_privado) BotonSecundario("＋ masturbación") { ir("masturbacion") }
+            if (Repo.config.seguimiento_privado) BotonSecundario("＋ intimidad") { ir("intimidad") }
         }
         // Para no olvidar el dinero: cuánto llevas anotado hoy, lo que acabas de anotar aquí y, al abrirlo, el mismo formulario
         // del ⊕ (con la hora del momento si lo estás anotando tarde). Registrar no cierra la hoja.
@@ -392,7 +414,7 @@ class QuickActivity : FragmentActivity() {
             }
         }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            if (m != null) TextButton(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
+            if (m != null) BotonTexto(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
             else Spacer(Modifier.width(1.dp))
             BotonPrincipal("Listo") { terminar() }
         }
@@ -412,8 +434,8 @@ class QuickActivity : FragmentActivity() {
                     Text("$nombre desde las ${Fechas.horaDe(c.inicio)} · ¿cómo vas?", style = MaterialTheme.typography.titleSmall, color = cs.onSecondaryContainer)
                     Escala(nivel, 0, 10, Catalogo.anclasNivel(c.sustancia)) { v -> nivel = v; if (v != null) io.github.ruddy2003.vestigium.data.Sustancias.lectura(Repo.consumo(c.id) ?: c, v) }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
-                        TextButton(onClick = { io.github.ruddy2003.vestigium.data.Sustancias.cerrar(Repo.consumo(c.id) ?: c); Toast.makeText(this@QuickActivity, "Anotado: ya se te pasó", Toast.LENGTH_SHORT).show() }) { Text("ya se me pasó") }
-                        TextButton(onClick = { ir(M_CONSUMO) }) { Text("más detalles") }
+                        BotonTexto(onClick = { io.github.ruddy2003.vestigium.data.Sustancias.cerrar(Repo.consumo(c.id) ?: c); Toast.makeText(this@QuickActivity, "Anotado: ya se te pasó", Toast.LENGTH_SHORT).show() }) { Text("ya se me pasó") }
+                        BotonTexto(onClick = { ir(M_CONSUMO) }) { Text("más detalles") }
                     }
                 }
             }
@@ -431,9 +453,12 @@ class QuickActivity : FragmentActivity() {
         val t = Catalogo.tipo(mm.tipo)
         Encabezado("Guardado: ${if (discreto) t?.discreto ?: "" else t?.nombre ?: mm.tipo}", "A las ${Fechas.horaDe(mm.ts)}. Lo demás es opcional; puedes cerrar.")
         if (mm.tipo == "libido") { DetalleLibido(mm); return }
+        if (mm.tipo == "masturbacion") { DetalleMasturbacion(mm) { m = it }; return }
+        if (mm.tipo == "intimidad") { DetalleIntimidad(mm) { m = it }; return }
+        if (mm.tipo == "episodio") { DetalleEpisodio(mm) { m = it }; return }
         if (mm.tipo == "recaida") DetalleRecaida(mm) { m = it }
         Etiqueta(t?.pregunta ?: "Detalle")
-        OutlinedTextField(value = texto, onValueChange = { texto = it; actualizar(mm.id) { x -> x.copy(texto = it) } },
+        CampoTexto(value = texto, onValueChange = { texto = it; actualizar(mm.id) { x -> x.copy(texto = it) } },
             modifier = Modifier.fillMaxWidth(), minLines = 2, placeholder = { Text("Usa @persona y #tema") }, visualTransformation = rememberMarcas())
         Row(Modifier.padding(top = 8.dp)) { BotonDictado { d -> texto = (texto + " " + d).trim(); actualizar(mm.id) { x -> x.copy(texto = texto) } } }
         Etiqueta(if (mm.tipo == "recaida") "Qué tan fuerte era el impulso" else "Intensidad")
@@ -441,7 +466,7 @@ class QuickActivity : FragmentActivity() {
             intensidad = v; actualizar(mm.id) { it.copy(intensidad = v) }
         }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            TextButton(onClick = {
+            BotonTexto(onClick = {
                 Repo.borrarMomento(mm.id)
                 previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }; previoRecaida = null
                 Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar()
@@ -467,15 +492,15 @@ class QuickActivity : FragmentActivity() {
         }
         Ayuda("Solo para ti: no sale en reportes, logros, «Tu año», mapas ni widgets. Sí en tu exportación a R.", Modifier.padding(top = 10.dp))
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            if (impulso == null) TextButton(onClick = {
+            if (impulso == null) BotonTexto(onClick = {
                 val i = Momento(Repo.nuevoId(), mm.ts, mm.fecha, "impulso", intensidad = nivel?.coerceIn(1, 5), lat = mm.lat, lon = mm.lon, lugar = mm.lugar, origen = mm.origen, ts_creado = Fechas.ahoraIso())
                 Repo.guardarMomento(i); impulso = i
                 Toast.makeText(this@QuickActivity, "Impulso registrado a la misma hora", Toast.LENGTH_SHORT).show()
             }) { Text("también es un impulso") }
-            else TextButton(onClick = { impulso?.let { Repo.borrarMomento(it.id) }; impulso = null }) { Text("quitar el impulso") }
+            else BotonTexto(onClick = { impulso?.let { Repo.borrarMomento(it.id) }; impulso = null }) { Text("quitar el impulso") }
             BotonPrincipal("Listo") { terminar() }
         }
-        TextButton(onClick = { Repo.borrarMomento(mm.id); impulso?.let { Repo.borrarMomento(it.id) }; Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
+        BotonTexto(onClick = { Repo.borrarMomento(mm.id); impulso?.let { Repo.borrarMomento(it.id) }; Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
     }
 
     /** Lo que ayuda a entender una recaída: qué la detonó, en qué aparato y qué hacías antes. Todo opcional. */
@@ -519,7 +544,7 @@ class QuickActivity : FragmentActivity() {
         }
         if ("otro" in det) {
             var otro by remember(mm.id) { mutableStateOf(mm.detonante_otro.orEmpty()) }
-            OutlinedTextField(value = otro, onValueChange = { t -> otro = t; actualizar(mm.id) { it.copy(detonante_otro = t.trim().ifBlank { null }) } },
+            CampoTexto(value = otro, onValueChange = { t -> otro = t; actualizar(mm.id) { it.copy(detonante_otro = t.trim().ifBlank { null }) } },
                 modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
         }
         Etiqueta("Qué hacías justo antes")
@@ -530,6 +555,106 @@ class QuickActivity : FragmentActivity() {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Catalogo.DISPOSITIVOS.forEach { o -> Ficha(o.nombre, aparato == o.id) { aparato = if (aparato == o.id) null else o.id; actualizar(mm.id) { it.copy(dispositivo = aparato) } } }
         }
+    }
+
+    /**
+     * «¿Cuándo empezó?», para registrarlo a otra hora: el momento se mueve con su día y con la ubicación que había a esa hora
+     * (como en [DetalleRecaida]). [alMover] recibe cómo estaba y cómo quedó.
+     */
+    @Composable
+    private fun CuandoEmpezo(mm: Momento, alMover: (antes: Momento, despues: Momento) -> Unit) {
+        val ahoraMs = remember(mm.id) { Fechas.millis(mm.ts).takeIf { it > 0 } ?: System.currentTimeMillis() }
+        var cuando by remember(mm.id) { mutableStateOf<java.time.LocalDateTime?>(null) }
+        Etiqueta("¿Cuándo empezó?")
+        SelectorHora(cuando, atajos = listOf(15, 30, 60, 120, 180), ayer = true) { t ->
+            cuando = t
+            val ms = t?.aMillis() ?: ahoraMs
+            lifecycleScope.launch {
+                val actual = Repo.momento(mm.id) ?: return@launch
+                if (Fechas.millis(actual.ts) / 60_000L == ms / 60_000L) return@launch
+                val n = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { io.github.ruddy2003.vestigium.data.Recaidas.aOtraHora(actual, ms) }
+                Repo.guardarMomento(n)
+                alMover(actual, n)
+            }
+        }
+        if (cuando != null) Ayuda("El lugar se toma de tus ubicaciones de esa hora.", Modifier.padding(top = 4.dp))
+    }
+
+    /** Borra el momento de la hoja (con su recaída gemela, si la tiene) y deja el día como estaba antes de anotarlo. */
+    private fun borrarCaptura(mm: Momento) {
+        val actual = Repo.momento(mm.id) ?: mm
+        io.github.ruddy2003.vestigium.data.Recaidas.alBorrar(actual)
+        Repo.borrarMomento(actual.id)
+        previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }; previoRecaida = null
+        Toast.makeText(this, "Borrado", Toast.LENGTH_SHORT).show(); terminar()
+    }
+
+    @Composable
+    private fun PieCaptura(mm: Momento) {
+        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            BotonTexto(onClick = { borrarCaptura(mm) }) { Text("Borrar este registro") }
+            BotonPrincipal("Listo") { terminar() }
+        }
+    }
+
+    /**
+     * Masturbación (seguimiento privado): cuándo y cuánto duró, con qué, dónde, en qué aparato, satisfacción, emociones de
+     * después y cómo fue. Con pornografía cuenta como recaída: se crea su recaída gemela (y se quita si cambias el estímulo).
+     */
+    @Composable
+    private fun DetalleMasturbacion(mm: Momento, alCambiar: (Momento) -> Unit) {
+        var m by remember(mm.id) { mutableStateOf(Repo.momento(mm.id) ?: mm) }
+        var preguntar by remember(mm.id) { mutableStateOf(false) }
+        fun cambiar(f: (Momento) -> Momento) {
+            val n = f(Repo.momento(mm.id) ?: m)
+            Repo.guardarMomento(n); sincronizarGemela(n); m = n
+        }
+        CuandoEmpezo(mm) { _, n ->
+            m = n; alCambiar(n)
+            // La recaída gemela se mueve con ella (y, si cambia de día, la marca del día también).
+            val g = io.github.ruddy2003.vestigium.data.Recaidas.gemela(n)?.takeIf { it.tipo == "recaida" }
+            if (g != null) {
+                val g2 = io.github.ruddy2003.vestigium.data.Recaidas.aOtraHora(g, Fechas.millis(n.ts))
+                Repo.guardarMomento(g2)
+                if (g2.fecha != g.fecha) {
+                    previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }
+                    previoRecaida = io.github.ruddy2003.vestigium.data.Recaidas.registrar(g2)
+                }
+            }
+        }
+        CamposMasturbacion(m, { f -> cambiar(f) }) { antes, despues ->
+            val actual = Repo.momento(mm.id) ?: m
+            if (despues == "pornografia") {
+                io.github.ruddy2003.vestigium.data.Recaidas.registrarDesdeMasturbacion(actual)?.let { (_, previo) -> previoRecaida = previo }
+                Repo.momento(mm.id)?.let { m = it }
+            } else if (antes == "pornografia" && io.github.ruddy2003.vestigium.data.Recaidas.gemela(actual)?.tipo == "recaida") preguntar = true
+        }
+        if (preguntar) PreguntaGemela(Repo.momento(mm.id) ?: m) { quitada ->
+            preguntar = false
+            if (quitada) { previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }; previoRecaida = null }
+            Repo.momento(mm.id)?.let { m = it }
+        }
+        Ayuda("Solo para ti: no sale en reportes, logros, «Tu año», mapas ni widgets. Sí en tu exportación a R.", Modifier.padding(top = 10.dp))
+        PieCaptura(mm)
+    }
+
+    /** Intimidad (seguimiento privado): qué pasó, cómo fue, con quién, las escalas, los detalles plegados y la hora. */
+    @Composable
+    private fun DetalleIntimidad(mm: Momento, alCambiar: (Momento) -> Unit) {
+        var m by remember(mm.id) { mutableStateOf(Repo.momento(mm.id) ?: mm) }
+        CamposIntimidad(m) { f -> val n = f(Repo.momento(mm.id) ?: m); Repo.guardarMomento(n); m = n }
+        CuandoEmpezo(mm) { _, n -> m = n; alCambiar(n) }
+        Ayuda("Solo para ti: no sale en reportes, logros, «Tu año», mapas, menciones ni widgets. Sí en tu exportación a R.", Modifier.padding(top = 10.dp))
+        PieCaptura(mm)
+    }
+
+    /** Episodio (normal, no privado): qué fue, qué tan fuerte, cuánto duró, síntomas, qué lo detonó, con quién y una nota. */
+    @Composable
+    private fun DetalleEpisodio(mm: Momento, alCambiar: (Momento) -> Unit) {
+        var m by remember(mm.id) { mutableStateOf(Repo.momento(mm.id) ?: mm) }
+        CamposEpisodio(m) { f -> val n = f(Repo.momento(mm.id) ?: m); Repo.guardarMomento(n); m = n }
+        CuandoEmpezo(mm) { _, n -> m = n; alCambiar(n) }
+        PieCaptura(mm)
     }
 
     /** El cronómetro: elegir qué empieza, ver cuánto lleva y terminarlo; también anotar una siesta que ya pasó. */
@@ -577,7 +702,7 @@ class QuickActivity : FragmentActivity() {
             Etiqueta("¿Ya se te pasó? ¿A qué hora?")
             SelectorHora(fin, atajos = listOf(15, 30, 60)) { fin = it }
             Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { terminar() }) { Text("sigue") }
+                BotonTexto(onClick = { terminar() }) { Text("sigue") }
                 BotonPrincipal("Ya se me pasó") {
                     sus.cerrar(Repo.consumo(abierto.id) ?: abierto, (fin ?: java.time.LocalDateTime.now()).aMillis())
                     Toast.makeText(ctx, "Anotado. Mañana te pregunto cómo terminó.", Toast.LENGTH_SHORT).show(); terminar()
@@ -592,7 +717,7 @@ class QuickActivity : FragmentActivity() {
         var via by remember(id) { mutableStateOf<String?>(null) }
         var otra by remember(id) { mutableStateOf("") }
         var con by remember(id) { mutableStateOf<List<String>>(emptyList()) }
-        if (id == "otra") OutlinedTextField(value = otra, onValueChange = { otra = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("¿Cuál?") })
+        if (id == "otra") CampoTexto(value = otra, onValueChange = { otra = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("¿Cuál?") })
         Etiqueta(if (info.conNivel) "¿Desde cuándo?" else "¿Cuándo?")
         SelectorHora(cuando, atajos = listOf(30, 60, 120, 180)) { cuando = it }
         if (info.conNivel) {
@@ -648,7 +773,7 @@ class QuickActivity : FragmentActivity() {
             else if (cantidad > 0 && sustancia == "alcohol") Ficha("− 1", false) { poner(cantidad - 1) }
             if (cantidad > 0) Ficha("poner en 0", false) { pila = emptyList(); poner(0.0) }
         }
-        OutlinedTextField(value = texto, onValueChange = { t -> texto = D.limpiarMonto(t); onCambio(texto.toDoubleOrNull() ?: 0.0) },
+        CampoTexto(value = texto, onValueChange = { t -> texto = D.limpiarMonto(t); onCambio(texto.toDoubleOrNull() ?: 0.0) },
             modifier = Modifier.padding(top = 6.dp).width(200.dp), singleLine = true, label = { Text("o escribe el total") },
             suffix = { Text(if (sustancia == "cafeina") "mg" else unidad) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
     }
@@ -669,7 +794,7 @@ class QuickActivity : FragmentActivity() {
         var con by remember { mutableStateOf(c0.con_quien) }
         var otra by remember { mutableStateOf(c0.otra_nombre) }
         Encabezado((if (c0.fecha < Fechas.diaLogico()) "Lo de anoche: " else "Editar: ") + Catalogo.nombreSustancia(c0).lowercase(), "Unos toques. Lo que no recuerdes, déjalo vacío.")
-        if (c0.sustancia == "otra") OutlinedTextField(value = otra, onValueChange = { otra = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("¿Cuál?") })
+        if (c0.sustancia == "otra") CampoTexto(value = otra, onValueChange = { otra = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("¿Cuál?") })
         Etiqueta("¿Desde cuándo?")
         SelectorHora(inicio, etiquetaAhora = "no sé") { inicio = it }
         Etiqueta("¿Hasta cuándo te duró el efecto?")
@@ -692,12 +817,12 @@ class QuickActivity : FragmentActivity() {
             Catalogo.SINTOMAS.forEach { o -> val a = o.id in sintomas; Ficha(o.nombre, a) { sintomas = if (a) sintomas - o.id else sintomas + o.id } }
         }
         if ("otro" in sintomas) Ayuda("Escribe cuál en la nota.", Modifier.padding(top = 4.dp))
-        OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Nota (opcional): @persona, #lugar…") },
+        CampoTexto(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Nota (opcional): @persona, #lugar…") },
             visualTransformation = rememberMarcas())
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             var confirmar by remember { mutableStateOf(false) }
-            TextButton(onClick = {
-                if (!confirmar) { confirmar = true; return@TextButton }
+            BotonTexto(onClick = {
+                if (!confirmar) { confirmar = true; return@BotonTexto }
                 Repo.borrarConsumo(c0.id); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Registro borrado") { Repo.guardarConsumo(c0) }
                 Toast.makeText(ctx, "Borrado. Queda 7 días en la papelera.", Toast.LENGTH_LONG).show(); terminar()
             }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = if (confirmar) MaterialTheme.colorScheme.error else androidx.compose.ui.graphics.Color.Unspecified) }
@@ -765,8 +890,8 @@ class QuickActivity : FragmentActivity() {
             Surface(shape = formaPiezaQuick(Estilo.tema), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f), modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
                 Row(Modifier.padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("${g.subcategoria.ifBlank { g.categoria }} ${dinero(g.monto)} registrado", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-                    TextButton(onClick = { corrigiendo = true }) { Text("cambiar monto") }
-                    TextButton(onClick = { Repo.borrarGasto(g.id); registrado = null; Toast.makeText(this@QuickActivity, "Gasto quitado", Toast.LENGTH_SHORT).show() }) { Text("deshacer") }
+                    BotonTexto(onClick = { corrigiendo = true }) { Text("cambiar monto") }
+                    BotonTexto(onClick = { Repo.borrarGasto(g.id); registrado = null; Toast.makeText(this@QuickActivity, "Gasto quitado", Toast.LENGTH_SHORT).show() }) { Text("deshacer") }
                 }
             }
         }
@@ -787,7 +912,7 @@ class QuickActivity : FragmentActivity() {
             }
         }
         Etiqueta(if (entra) "Monto" else "Otro gasto")
-        OutlinedTextField(value = monto, onValueChange = { monto = D.limpiarMonto(it); error = null }, modifier = Modifier.fillMaxWidth(),
+        CampoTexto(value = monto, onValueChange = { monto = D.limpiarMonto(it); error = null }, modifier = Modifier.fillMaxWidth(),
             prefix = { Text("$ ") }, placeholder = { Text("0") }, singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), textStyle = MaterialTheme.typography.headlineSmall)
         Etiqueta("Categoría")
@@ -814,10 +939,10 @@ class QuickActivity : FragmentActivity() {
             Interruptor("¿Fue imprevisto?", imprevisto) { imprevisto = it }
             Interruptor("¿Se repite? (renta, suscripción, servicios)", repite) { repite = it }
         }
-        OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
+        CampoTexto(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, minLines = 2)
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-            if (registrado != null && !embebido) TextButton(onClick = { terminar() }) { Text("Listo") }
+            if (registrado != null && !embebido) BotonTexto(onClick = { terminar() }) { Text("Listo") }
             BotonPrincipal(if (entra) "Registrar ingreso" else "Registrar gasto") {
                 // Un toque doble no registra dos veces.
                 if (guardando) return@BotonPrincipal
@@ -861,7 +986,7 @@ class QuickActivity : FragmentActivity() {
         val delWidget = remember { intent.getIntExtra(CALIDAD, 0).takeIf { it in 1..5 } }
         if (delWidget != null && d.sueno_calidad == delWidget) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("Guardado con el toque: calidad $delWidget.", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-            TextButton(onClick = { guardar(d.copy(sueno_calidad = null)) }) { Text("quitar") }
+            BotonTexto(onClick = { guardar(d.copy(sueno_calidad = null)) }) { Text("quitar") }
         }
         // La narración arriba, en el libro de noche del tema (es lo que se olvida primero); lo demás, debajo.
         io.github.ruddy2003.vestigium.ui.FormularioSueno(fecha, d, narracionPrimero = true) { guardar(it) }
@@ -896,7 +1021,7 @@ internal fun HojaQuick(modifier: Modifier = Modifier, contenido: @Composable Col
     val e = MaterialTheme.colorScheme
     Surface(modifier = modifier, shape = formaHojaQuick(t), color = e.background, border = BorderStroke(1.dp, e.outline)) {
         Column(
-            Modifier.fondoTema(t, e).drawWithContent { drawContent(); adornoHojaQuick(t, e) }
+            Modifier.fondoTema(t, e).drawWithContent { drawContent(); with(io.github.ruddy2003.vestigium.ui.comun.disenoComun(t)) { adornoQuick(io.github.ruddy2003.vestigium.ui.comun.EstadoAdorno(e.primary, e.secondary, e.background), e.background.luminance() < 0.5f) } }
                 .padding(start = 18.dp, end = 18.dp, bottom = 18.dp, top = 12.dp + perfilHojaQuick(t))
                 .verticalScroll(rememberScrollState()),
         ) {
@@ -1194,269 +1319,6 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
     }
 }
 
-/** El adorno del borde de arriba de la hoja; cabe en el aire que deja [perfilHojaQuick] más 12 dp. */
-private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
-    val w = size.width; val u = 1.dp.toPx()
-    when (t) {
-        // Filete interior con una cola de milano en cada punta, como una tabula ansata.
-        TemaId.ROMANO -> {
-            val y = 5 * u; val x0 = 16 * u; val x1 = w - 16 * u; val col = e.primary.copy(alpha = 0.45f)
-            drawLine(col, Offset(x0 + 6 * u, y), Offset(x1 - 6 * u, y), 0.8f * u)
-            drawPath(Path().apply { moveTo(x0, y); lineTo(x0 + 6 * u, y - 3.5f * u); lineTo(x0 + 6 * u, y + 3.5f * u); close() }, col)
-            drawPath(Path().apply { moveTo(x1, y); lineTo(x1 - 6 * u, y - 3.5f * u); lineTo(x1 - 6 * u, y + 3.5f * u); close() }, col)
-        }
-        // La moldura que sigue el arco por dentro y la clave en lo más alto.
-        TemaId.URBE -> {
-            val f = 16 * u; val col = e.primary.copy(alpha = 0.45f)
-            drawPath(Path().apply { moveTo(10 * u, f + 4 * u); quadraticTo(w / 2, -f + 10 * u, w - 10 * u, f + 4 * u) }, col, style = Stroke(0.9f * u))
-            drawPath(Path().apply { moveTo(w / 2 - 7 * u, 2 * u); lineTo(w / 2 + 7 * u, 2 * u); lineTo(w / 2 + 5 * u, 11 * u); lineTo(w / 2 - 5 * u, 11 * u); close() }, col)
-        }
-        // Barra de estado de la consola: la línea, tres rayas de señal y el cursor.
-        TemaId.CIBER -> {
-            val y = 7 * u; val x = w * 0.55f
-            drawLine(e.primary.copy(alpha = 0.5f), Offset(10 * u, y), Offset(x, y), u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 3 * u)))
-            (0 until 3).forEach { k -> drawRect(e.primary.copy(alpha = 0.75f - k * 0.2f), Offset(x + (6 + k * 6) * u, y - 2.5f * u), Size(4 * u, 5 * u)) }
-            drawRect(e.secondary, Offset(x + 26 * u, y - 3 * u), Size(7 * u, 6 * u))
-        }
-        // El tubo magenta a lo largo del borde de arriba, con su halo, y el foquito verde de «abierto».
-        TemaId.NEON -> {
-            val y = 6 * u
-            drawLine(e.primary.copy(alpha = 0.25f), Offset(24 * u, y), Offset(w - 24 * u, y), 5 * u, StrokeCap.Round)
-            drawLine(e.primary, Offset(24 * u, y), Offset(w - 24 * u, y), 1.4f * u, StrokeCap.Round)
-            drawCircle(e.tertiary, 2.4f * u, Offset(w - 14 * u, y + 8 * u))
-        }
-        // El tímpano del frontón con su roseta y el arquitrabe debajo.
-        TemaId.HELENO -> {
-            val f = 14 * u; val col = e.tertiary.copy(alpha = 0.7f)
-            drawPath(Path().apply { moveTo(12 * u, f + u); lineTo(w / 2, 4 * u); lineTo(w - 12 * u, f + u) }, col, style = Stroke(u))
-            drawLine(col, Offset(12 * u, f + 4 * u), Offset(w - 12 * u, f + 4 * u), u)
-            drawCircle(e.tertiary, 2.2f * u, Offset(w / 2, 10.5f * u))
-        }
-        // El disco solar alado bajo el arco de la estela.
-        TemaId.EGIPTO -> {
-            val c = Offset(w / 2, 10 * u); val col = e.primary.copy(alpha = 0.7f)
-            listOf(-1f, 1f).forEach { s ->
-                drawPath(Path().apply {
-                    moveTo(c.x + s * 4 * u, c.y - 1.5f * u); quadraticTo(c.x + s * 14 * u, c.y - 5 * u, c.x + s * 26 * u, c.y - 2 * u)
-                    lineTo(c.x + s * 23 * u, c.y + 1.5f * u); quadraticTo(c.x + s * 13 * u, c.y + 1 * u, c.x + s * 4 * u, c.y + 2.5f * u); close()
-                }, col)
-            }
-            drawCircle(e.secondary, 3.4f * u, c)
-        }
-        // Doble filete de rúbrica y tres puntos de oro.
-        TemaId.MEDIEVAL -> {
-            val y = 14 * u
-            drawLine(e.primary.copy(alpha = 0.7f), Offset(14 * u, y), Offset(w - 14 * u, y), 1.4f * u)
-            drawLine(e.primary.copy(alpha = 0.5f), Offset(14 * u, y + 3 * u), Offset(w - 14 * u, y + 3 * u), 0.6f * u)
-            listOf(-8f, 0f, 8f).forEach { dx -> drawCircle(e.tertiary, 1.8f * u, Offset(w / 2 + dx * u, 9 * u)) }
-        }
-        // La línea de acero bajo las almenas y la cruz patada en medio.
-        TemaId.TEMPLARIO -> {
-            drawLine(e.secondary.copy(alpha = 0.6f), Offset(10 * u, 15 * u), Offset(w - 10 * u, 15 * u), 1.2f * u)
-            drawCircle(e.surface, 7 * u, Offset(w / 2, 15 * u))
-            drawPath(cruzPatada(Offset(w / 2, 15 * u), 6 * u), e.primary)
-        }
-        // Renglones del rótulo en la pestaña y el ojo que vigila a la derecha.
-        TemaId.DISTOPIA -> {
-            val a = w * 0.38f; val tinta = e.onBackground.copy(alpha = 0.45f)
-            listOf(4f, 7f, 10f).forEachIndexed { k, y -> drawLine(tinta, Offset(12 * u, y * u), Offset(a - (12 + k * 14) * u, y * u), 0.8f * u) }
-            val c = Offset(w - 30 * u, 18 * u)
-            drawPath(Path().apply {
-                moveTo(c.x - 11 * u, c.y); quadraticTo(c.x, c.y - 9 * u, c.x + 11 * u, c.y); quadraticTo(c.x, c.y + 9 * u, c.x - 11 * u, c.y); close()
-            }, tinta, style = Stroke(1.2f * u))
-            drawCircle(e.primary, 2.6f * u, c)
-        }
-        // Rejilla de ventilación al centro y una luz piloto, como en un aparato de los cincuenta.
-        TemaId.REFUGIO -> {
-            (0 until 3).forEach { k -> drawRoundRect(e.primary.copy(alpha = 0.45f), Offset(w / 2 - 22 * u, (4 + k * 4) * u), Size(44 * u, 2 * u), CornerRadius(u)) }
-            drawCircle(e.secondary.copy(alpha = 0.85f), 2.5f * u, Offset(w / 2 + 32 * u, 8 * u))
-        }
-        // Remaches a lo largo del borde.
-        TemaId.ORDEN -> {
-            var x = 24 * u
-            while (x < w - 20 * u) {
-                drawCircle(e.secondary.copy(alpha = 0.75f), 1.8f * u, Offset(x, 8 * u))
-                drawCircle(e.background.copy(alpha = 0.5f), 0.7f * u, Offset(x - 0.5f * u, 7.5f * u))
-                x += 34 * u
-            }
-        }
-        // La línea perforada del talonario de billetes y, debajo, el filete de latón.
-        TemaId.VAPOR -> {
-            var x = 20 * u
-            while (x < w - 18 * u) { drawCircle(e.onSurface.copy(alpha = 0.25f), 1.2f * u, Offset(x, 6 * u)); x += 6 * u }
-            drawLine(e.primary.copy(alpha = 0.7f), Offset(18 * u, 10 * u), Offset(w - 18 * u, 10 * u), 1.4f * u)
-        }
-        // Graduación a lo largo del borde.
-        TemaId.LABORATORIO -> {
-            var x = 30 * u; var n = 0
-            while (x < w - 10 * u) { drawLine(e.secondary.copy(alpha = 0.6f), Offset(x, 10 * u), Offset(x, (if (n % 5 == 0) 17 else 13) * u), 0.8f * u); x += 8 * u; n++ }
-        }
-        // Raya inglesa de gaceta: gruesa y fina.
-        TemaId.COLONOS -> {
-            drawRect(e.onBackground.copy(alpha = 0.8f), Offset(12 * u, 5 * u), Size(w - 24 * u, 1.6f * u))
-            drawRect(e.onBackground.copy(alpha = 0.8f), Offset(12 * u, 8.5f * u), Size(w - 24 * u, 0.6f * u))
-        }
-        // Estrella de oro en el medallón y un filete de oro a cada lado.
-        TemaId.NAPOLEON -> {
-            estrellaHoja(Offset(w / 2, 10 * u), 7 * u, e.tertiary)
-            drawLine(e.tertiary.copy(alpha = 0.6f), Offset(12 * u, 19 * u), Offset(w / 2 - 18 * u, 19 * u), u)
-            drawLine(e.tertiary.copy(alpha = 0.6f), Offset(w / 2 + 18 * u, 19 * u), Offset(w - 12 * u, 19 * u), u)
-        }
-        // El abanico de oro en la corona de la hoja y tres líneas de velocidad a cada lado.
-        TemaId.DECO -> {
-            val b = Offset(w / 2, 15 * u); val r = 10 * u
-            for (i in 0 until 9) if (i % 2 == 0) drawArc(e.primary, 180f + i * 20f, 20f, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
-            drawArc(e.secondary, 180f, 180f, true, Offset(b.x - r * 0.35f, b.y - r * 0.35f), Size(r * 0.7f, r * 0.7f))
-            for (k in 0..2) {
-                val y = (20 + k * 3) * u
-                drawLine(e.primary.copy(alpha = 0.6f - k * 0.15f), Offset((12 + k * 10) * u, y), Offset(w / 2 - 46 * u, y), 0.8f * u)
-                drawLine(e.primary.copy(alpha = 0.6f - k * 0.15f), Offset(w / 2 + 46 * u, y), Offset(w - (12 + k * 10) * u, y), 0.8f * u)
-            }
-        }
-        // Un tallo con hojitas a lo largo del borde.
-        TemaId.BOTANICO -> {
-            val y = 9 * u; val col = e.primary.copy(alpha = 0.7f); val fin = w * 0.45f
-            drawLine(col, Offset(34 * u, y), Offset(fin, y), 0.9f * u)
-            var x = 40 * u; var k = 0
-            while (x < fin - 6 * u) {
-                val dy = if (k % 2 == 0) -3.2f * u else 3.2f * u
-                drawOval(col, Offset(x - 3 * u, y + dy - 1.8f * u), Size(6 * u, 3.6f * u)); x += 9 * u; k++
-            }
-        }
-        TemaId.RUINAS -> {
-            // Una guía de hiedra que cuelga del borde quebrado, con hojas de cinco puntas, y una grieta que baja.
-            val col = e.primary.copy(alpha = 0.7f)
-            drawLine(col, Offset(24 * u, 6 * u), Offset(30 * u, 40 * u), 0.9f * u)
-            listOf(12f to 1f, 20f to -1f, 28f to 1f, 36f to -1f).forEach { (yy, lado) ->
-                val q = Offset(24 * u + yy * 0.18f * u + lado * 5 * u, yy * u); val r = 5 * u
-                drawPath(Path().apply {
-                    moveTo(q.x, q.y - r * 0.5f); lineTo(q.x - r * 0.55f, q.y - r * 0.35f); lineTo(q.x - r * 0.8f, q.y + r * 0.05f); lineTo(q.x - r * 0.32f, q.y + r * 0.05f)
-                    lineTo(q.x, q.y + r * 0.5f); lineTo(q.x + r * 0.32f, q.y + r * 0.05f); lineTo(q.x + r * 0.8f, q.y + r * 0.05f); lineTo(q.x + r * 0.55f, q.y - r * 0.35f); close()
-                }, col)
-            }
-            drawPath(Path().apply { moveTo(w * 0.62f, 2 * u); lineTo(w * 0.6f, 10 * u); lineTo(w * 0.63f, 16 * u); lineTo(w * 0.61f, 24 * u) }, e.onSurface.copy(alpha = 0.3f), style = Stroke(0.8f * u))
-        }
-        // Nieve en cada festón y una baya roja entre dos.
-        TemaId.NAVIDAD -> {
-            val n = (w / (44 * u)).toInt().coerceAtLeast(3); val paso = w / n
-            (0 until n).forEach { i ->
-                drawCircle(Color.White.copy(alpha = 0.85f), 2.2f * u, Offset(i * paso + paso / 2, 4 * u))
-                if (i < n - 1) drawCircle(e.primary.copy(alpha = 0.75f), 1.6f * u, Offset((i + 1) * paso, 12 * u))
-            }
-        }
-        // El alero a tinta y un sello de cinabrio.
-        TemaId.SEDA -> {
-            drawPath(Path().apply { moveTo(4 * u, 3 * u); quadraticTo(w * 0.1f, 15 * u, w * 0.28f, 15 * u); lineTo(w * 0.72f, 15 * u); quadraticTo(w * 0.9f, 15 * u, w - 4 * u, 3 * u) },
-                e.primary.copy(alpha = 0.5f), style = Stroke(u))
-            drawRect(e.secondary, Offset(w - 40 * u, 17 * u), Size(8 * u, 8 * u))
-            drawRect(e.background, Offset(w - 38.5f * u, 18.5f * u), Size(5 * u, 5 * u), style = Stroke(0.8f * u))
-        }
-        TemaId.EDO -> {
-            // El alero repetido por dentro y, debajo, las cabezas de las vigas (taruki) en fila.
-            val p = 19 * u
-            drawPath(Path().apply { moveTo(0f, p); cubicTo(w * 0.25f, p, w * 0.38f, p * 0.92f, w * 0.44f, p * 0.5f); quadraticTo(w * 0.5f, p * 0.2f, w * 0.56f, p * 0.5f); cubicTo(w * 0.62f, p * 0.92f, w * 0.75f, p, w, p) },
-                e.primary.copy(alpha = 0.5f), style = Stroke(u))
-            var x = 10 * u; while (x < w - 6 * u) { if (kotlin.math.abs(x - w / 2) > w * 0.08f) drawCircle(e.primary.copy(alpha = 0.35f), 1.3f * u, Offset(x, p + 4 * u)); x += 14 * u }
-        }
-        // Trébol de tracería bajo la punta del gablete y un filete.
-        TemaId.GOTICO -> {
-            val c = Offset(w / 2, 12 * u); val r = 3 * u
-            listOf(Offset(0f, -r), Offset(-r * 0.9f, r * 0.6f), Offset(r * 0.9f, r * 0.6f)).forEach { o -> drawCircle(e.tertiary, r, c + o, style = Stroke(u)) }
-            drawLine(e.tertiary.copy(alpha = 0.5f), Offset(10 * u, 23 * u), Offset(w - 10 * u, 23 * u), 0.8f * u)
-        }
-        // Dos tiras de cinta que sujetan la hoja y, al centro, el ojo del signo entre dos rayas a pulso.
-        TemaId.ARCANO -> {
-            listOf(Offset(24 * u, 6 * u) to -24f, Offset(w - 24 * u, 6 * u) to 24f).forEach { (o, g) ->
-                rotate(g, o) { drawRect(e.secondary.copy(alpha = 0.25f), Offset(o.x - 14 * u, o.y - 4 * u), Size(28 * u, 8 * u)) }
-            }
-            val c = Offset(w / 2, 14 * u)
-            drawPath(Path().apply { moveTo(c.x - 7 * u, c.y); quadraticTo(c.x, c.y - 6 * u, c.x + 7 * u, c.y); quadraticTo(c.x, c.y + 6 * u, c.x - 7 * u, c.y); close() }, e.onSurface.copy(alpha = 0.55f), style = Stroke(u))
-            drawOval(e.tertiary, Offset(c.x - 1 * u, c.y - 2.6f * u), Size(2 * u, 5.2f * u))
-            drawLine(e.onSurface.copy(alpha = 0.3f), Offset(10 * u, c.y), Offset(c.x - 10 * u, c.y + 1 * u), 0.8f * u)
-            drawLine(e.onSurface.copy(alpha = 0.3f), Offset(c.x + 10 * u, c.y + 1 * u), Offset(w - 10 * u, c.y - 0.5f * u), 0.8f * u)
-        }
-        // Tres luces de consola y una línea de telemetría.
-        TemaId.ESPACIO -> {
-            listOf(e.primary, e.tertiary, e.secondary).forEachIndexed { k, col -> drawCircle(col, 2.4f * u, Offset(w / 2 + (k - 1) * 14 * u, 6 * u)) }
-            drawLine(e.primary.copy(alpha = 0.45f), Offset(16 * u, 18 * u), Offset(w - 16 * u, 18 * u), 0.8f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * u, 4 * u)))
-        }
-        // Tres burbujas que suben en el centro y, debajo, la línea de flotación.
-        TemaId.ABISMO -> {
-            listOf(Offset(-6f, 16f) to 2.2f, Offset(3f, 12f) to 3f, Offset(-1f, 6f) to 1.6f).forEach { (o, r) ->
-                drawCircle(e.tertiary, r * u, Offset(w / 2 + o.x * u, o.y * u), style = Stroke(0.9f * u))
-            }
-            drawLine(e.primary.copy(alpha = 0.45f), Offset(16 * u, 22 * u), Offset(w - 16 * u, 22 * u), 0.8f * u)
-        }
-        // Estrella de ocho puntas en el lóbulo de la clave y un filete de oro.
-        TemaId.ANDALUS -> {
-            estrellaHoja(Offset(w / 2, 11 * u), 5 * u, e.tertiary, puntas = 8, dentro = 0.6f)
-            drawLine(e.tertiary.copy(alpha = 0.6f), Offset(12 * u, 23 * u), Offset(w - 12 * u, 23 * u), 0.8f * u)
-        }
-        // El cartucho del glifo del día en lo alto del templo y el renglón rojo del códice debajo.
-        TemaId.MESO -> {
-            cartuchoMaya(Offset(w / 2, 7 * u), 4.5f * u, e.primary, e.surface, e.onSurface, 1)
-            drawLine(e.primary.copy(alpha = 0.6f), Offset(12 * u, 21 * u), Offset(w - 12 * u, 21 * u), 0.9f * u)
-        }
-        // La rueda del techo de la yurta al centro y la costura del fieltro.
-        TemaId.MONGOL -> {
-            val c = Offset(w / 2, 9 * u)
-            drawCircle(e.tertiary, 5 * u, c, style = Stroke(1.2f * u))
-            drawLine(e.tertiary, Offset(c.x - 5 * u, c.y), Offset(c.x + 5 * u, c.y), u)
-            drawLine(e.tertiary, Offset(c.x, c.y - 5 * u), Offset(c.x, c.y + 5 * u), u)
-            drawLine(e.primary.copy(alpha = 0.5f), Offset(20 * u, 20 * u), Offset(w - 20 * u, 20 * u), u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * u, 3 * u)))
-        }
-        // Trazos de construcción: un golpe de compás en la esquina, una línea guía y una cruz de centro.
-        TemaId.RENACIMIENTO -> {
-            val col = e.primary.copy(alpha = 0.55f)
-            drawArc(col, 0f, 90f, false, Offset(2 * u, -12 * u), Size(24 * u, 24 * u), style = Stroke(0.8f * u))
-            drawLine(col, Offset(14 * u, 5 * u), Offset(w - 14 * u, 5 * u), 0.6f * u)
-            val c = Offset(w / 2, 10 * u)
-            drawCircle(col, 4 * u, c, style = Stroke(0.8f * u))
-            drawLine(col, Offset(c.x - 7 * u, c.y), Offset(c.x + 7 * u, c.y), 0.6f * u)
-            drawLine(col, Offset(c.x, c.y - 7 * u), Offset(c.x, c.y + 7 * u), 0.6f * u)
-        }
-        // Los ollaos de latón de la vela y la relinga (el cabo cosido al borde).
-        TemaId.PIRATA -> {
-            val col = e.secondary.copy(alpha = 0.7f)
-            listOf(10 * u, w - 10 * u).forEach { x -> drawCircle(col, 3.2f * u, Offset(x, 6 * u), style = Stroke(1.4f * u)) }
-            drawPath(Path().apply { moveTo(16 * u, 9 * u); quadraticTo(w / 2, 22 * u, w - 16 * u, 9 * u) }, e.primary.copy(alpha = 0.45f), style = Stroke(1.6f * u, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.6f * u, 1.4f * u))))
-        }
-        // Una franja roja y otra negra, paralelas a la diagonal.
-        TemaId.URSS -> {
-            val k = 20 * u / w
-            drawPath(Path().apply { moveTo(0f, 4 * u); lineTo(w, 24 * u); lineTo(w, 29 * u); lineTo(0f, 9 * u); close() }, e.primary)
-            val x0 = w * 0.06f; val x1 = w * 0.4f
-            drawPath(Path().apply { moveTo(x0, 12 * u + k * x0); lineTo(x1, 12 * u + k * x1); lineTo(x1, 14.5f * u + k * x1); lineTo(x0, 14.5f * u + k * x0); close() }, e.onBackground)
-        }
-        // Tramo azul, blanco y rojo bajo el borde roto.
-        TemaId.REVOLUCION -> {
-            val tercio = 28 * u; val y = 13 * u
-            listOf(e.secondary, Color.White, e.primary).forEachIndexed { k, c -> drawRect(c, Offset(14 * u + k * tercio, y), Size(tercio, 3 * u)) }
-            drawRect(e.onBackground.copy(alpha = 0.3f), Offset(14 * u, y), Size(3 * tercio, 3 * u), style = Stroke(0.5f * u))
-        }
-        // Línea tallada con runas pequeñas y una gema al centro.
-        TemaId.ANTIGUAS -> {
-            val y = 14 * u; val col = e.secondary.copy(alpha = 0.7f)
-            drawLine(col, Offset(24 * u, y), Offset(w / 2 - 9 * u, y), u)
-            drawLine(col, Offset(w / 2 + 9 * u, y), Offset(w - 24 * u, y), u)
-            listOf(1f, -1f).forEach { s ->
-                (0 until 4).forEach { k ->
-                    val x = if (s > 0f) (34 + k * 16) * u else w - (34 + k * 16) * u
-                    drawLine(col, Offset(x, y - 5 * u), Offset(x, y - u), u)
-                    drawLine(col, Offset(x, y - 5 * u), Offset(x + s * (if (k % 2 == 0) 3f else -3f) * u, y - 3 * u), u)
-                }
-            }
-            drawPath(Path().apply { moveTo(w / 2, y - 7 * u); lineTo(w / 2 + 5 * u, y); lineTo(w / 2, y + 7 * u); lineTo(w / 2 - 5 * u, y); close() }, e.primary)
-        }
-        TemaId.CUEVA -> {
-            // Una hilera de puntos de ocre que se abre al centro para una mano pequeña.
-            val y = 20 * u
-            var x = 26 * u; var k = 0
-            while (x < w - 26 * u) { if (kotlin.math.abs(x - w / 2) > 14 * u) drawCircle(e.primary.copy(alpha = 0.55f), (1.4f + (k % 3) * 0.4f) * u, Offset(x, y)); x += 11 * u; k++ }
-            drawPath(manoUnida(Offset(w / 2, y), 7 * u), e.primary)
-        }
-    }
-}
 
 /** Estrella de [puntas] puntas; [dentro] es el radio de los valles respecto al de las puntas. */
 private fun DrawScope.estrellaHoja(c: Offset, r: Float, color: Color, puntas: Int = 5, dentro: Float = 0.45f) {
@@ -1585,4 +1447,288 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
         moveTo(10 * u, 0f); lineTo(w - 14 * u, 2 * u); quadraticTo(w, 2 * u, w, h * 0.5f); quadraticTo(w - 2 * u, h, w - 16 * u, h); lineTo(12 * u, h - 1 * u)
         quadraticTo(0f, h - 2 * u, 0f, h * 0.5f); quadraticTo(0f, 0f, 10 * u, 0f); close()
     }
+}
+
+// ============================================================================ esquema 21: masturbación, intimidad y episodios
+// Los campos van aquí, fuera de la actividad, para que la hoja rápida y el diálogo de editar un momento (Momentos.kt) usen los
+// mismos. Reciben el momento como está y [cambiar], que dice cómo cambiarlo: la hoja lo guarda al instante; el diálogo, al
+// tocar «Guardar». La hora va aparte, porque cada uno la mueve a su manera.
+
+/** Si la masturbación tiene su recaída gemela, la duración y el aparato de la recaída siguen a los de la masturbación. */
+internal fun sincronizarGemela(n: Momento) {
+    if (n.tipo != "masturbacion") return
+    val g = io.github.ruddy2003.vestigium.data.Recaidas.gemela(n)?.takeIf { it.tipo == "recaida" } ?: return
+    if (g.duracion_min != n.duracion_min || g.dispositivo != n.dispositivo) Repo.guardarMomento(g.copy(duracion_min = n.duracion_min, dispositivo = n.dispositivo))
+}
+
+/** La recaída se queda aunque la masturbación ya no sea con pornografía: las dos pierden el vínculo y la recaída sigue sola. */
+internal fun desligarGemela(m: Momento) {
+    val g = io.github.ruddy2003.vestigium.data.Recaidas.gemela(m) ?: return
+    Repo.guardarMomento(g.copy(vinculo = null))
+    (Repo.momento(m.id) ?: m).let { Repo.guardarMomento(it.copy(vinculo = null)) }
+}
+
+/**
+ * La masturbación dejó de ser con pornografía y tenía su recaída gemela: «¿Quitar también la recaída?». «Quitarla» la borra
+ * ([io.github.ruddy2003.vestigium.data.Recaidas.soltarGemela]); «dejarla» la deja como recaída sola. [alTerminar] dice si se quitó.
+ */
+@Composable
+internal fun PreguntaGemela(m: Momento, alTerminar: (quitada: Boolean) -> Unit) {
+    Dialogo(
+        onDismissRequest = { alTerminar(false) },
+        title = { Text("¿Quitar también la recaída?") },
+        text = { Text("Con pornografía se anotó también una recaída a la misma hora. Si ya no fue así, puedes quitarla.") },
+        confirmButton = { BotonTexto(onClick = {
+            val actual = Repo.momento(m.id) ?: m
+            io.github.ruddy2003.vestigium.data.Recaidas.soltarGemela(actual)
+            Repo.momento(actual.id)?.let { Repo.guardarMomento(it.copy(vinculo = null)) }
+            alTerminar(true)
+        }) { Text("quitarla") } },
+        dismissButton = { BotonTexto(onClick = { desligarGemela(m); alTerminar(false) }) { Text("dejarla") } },
+    )
+}
+
+/** Una ficha con su nombre y, al lado, una aclaración entre paréntesis en letra chica (como [Ficha], con la forma del tema). */
+@Composable
+private fun FichaConAyuda(texto: String, ayuda: String, activa: Boolean, onClick: () -> Unit) {
+    if (ayuda.isBlank()) { Ficha(texto, activa, onClick); return }
+    val sentir = rememberSentir()
+    val toque = remember { MutableInteractionSource() }
+    val tema = Estilo.tema
+    val e = MaterialTheme.colorScheme
+    Surface(
+        onClick = { sentir(Sentidos.Evento.ELEGIR); onClick() }, shape = formaBotonTema(tema), interactionSource = toque, modifier = Modifier.presion(toque, 0.93f),
+        color = if (activa) e.primaryContainer else e.surface,
+        border = BorderStroke(1.dp, if (activa) e.primary else e.outline),
+    ) {
+        Row(Modifier.padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (activa) {
+                androidx.compose.foundation.Canvas(Modifier.size(11.dp)) { perillaTema(tema, e, center, size.minDimension / 2f, e.primary, e.primaryContainer) }
+                Spacer(Modifier.width(7.dp))
+            }
+            val nombre = MaterialTheme.typography.labelLarge.copy(fontWeight = if (activa) FontWeight.SemiBold else FontWeight.Normal)
+            // Una aclaración corta va al lado («pico»); una larga, debajo, para que no se encime con el nombre.
+            if (ayuda.length <= 18) {
+                Text(texto, style = nombre)
+                Text(" ($ayuda)", style = MaterialTheme.typography.labelSmall, color = e.onSurfaceVariant)
+            } else Column {
+                Text(texto, style = nombre)
+                Text("($ayuda)", style = MaterialTheme.typography.labelSmall, color = e.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+/** Un texto libre que se guarda limpio (sin espacios a los lados; vacío = null) sin estorbar mientras escribes. */
+@Composable
+private fun CampoOtro(clave: String, inicial: String?, etiqueta: String = "¿Cuál?", alCambiar: (String?) -> Unit) {
+    var t by remember(clave) { mutableStateOf(inicial.orEmpty()) }
+    CampoTexto(value = t, onValueChange = { v -> t = v; alCambiar(v.trim().ifBlank { null }) },
+        modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text(etiqueta) })
+}
+
+/** «¿Cómo fue? (opcional)»: varias líneas, en [Momento.texto]. */
+@Composable
+private fun CampoComoFue(m: Momento, placeholder: String, cambiar: ((Momento) -> Momento) -> Unit) {
+    var t by remember(m.id) { mutableStateOf(m.texto) }
+    CampoTexto(value = t, onValueChange = { v -> t = v; cambiar { it.copy(texto = v) } },
+        modifier = Modifier.fillMaxWidth(), minLines = 3, placeholder = { Text(placeholder) }, visualTransformation = rememberMarcas())
+}
+
+/** Las emociones de después: el mismo selector que en «¿Cómo estás ahora?». */
+@Composable
+private fun EmocionesDespues(m: Momento, cambiar: ((Momento) -> Momento) -> Unit) {
+    var eleccion by remember(m.id) { mutableStateOf(EleccionEmociones(m.emociones, m.emocion_otra.orEmpty(), m.intensidades)) }
+    Etiqueta("¿Qué sentiste después? (opcional, varios)")
+    SelectorEmociones(eleccion, Repo.config.discreto) { e ->
+        eleccion = e
+        cambiar { it.copy(emociones = e.emociones, emocion_otra = if (Catalogo.OTRO in e.emociones) e.otra.trim().ifBlank { null } else null, intensidades = e.intensidades) }
+    }
+}
+
+/** Dónde (Catalogo.SITIOS); «otro» con su texto. */
+@Composable
+private fun CampoSitio(m: Momento, cambiar: ((Momento) -> Momento) -> Unit) {
+    FilaFichas(Catalogo.SITIOS, m.sitio) { v -> cambiar { it.copy(sitio = v, sitio_otro = if (v == "otro") it.sitio_otro else null) } }
+    if (m.sitio == "otro") CampoOtro(m.id + "|sitio", m.sitio_otro) { t -> cambiar { it.copy(sitio_otro = t) } }
+}
+
+/**
+ * Con quién, de tu gente: las de Tu gente y las que más mencionas (como «¿A quién conoce?»), varias a la vez, y un campo para
+ * escribir otra. Se guardan sin @ y en minúsculas, como las menciones.
+ */
+@Composable
+internal fun ConQuienPersonas(clave: String, sel: List<String>, onCambio: (List<String>) -> Unit) {
+    val menc = remember(Repo.dias) { io.github.ruddy2003.vestigium.data.Personas.menciones() }
+    val tuyas = (Repo.config.personas.map { it.nombre.lowercase() } + menc.entries.sortedByDescending { it.value.first }.take(20).map { it.key })
+        .distinct().take(24)
+    val todas = (sel + tuyas).distinct()
+    if (todas.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        todas.forEach { p -> Ficha("@$p", p in sel) { onCambio(if (p in sel) sel - p else sel + p) } }
+    }
+    var otra by remember(clave) { mutableStateOf("") }
+    // Como una mención: sin @, en minúsculas, los espacios a guion bajo y solo letras, números y guion bajo.
+    val nombre = io.github.ruddy2003.vestigium.data.Texto.etiqueta(otra).filter { it.isLetterOrDigit() || it == '_' }
+    Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        CampoTexto(value = otra, onValueChange = { otra = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("@persona") })
+        BotonTexto(onClick = { if (nombre.isNotEmpty() && nombre !in sel) onCambio(sel + nombre); otra = "" }, enabled = nombre.isNotEmpty()) { Text("agregar") }
+    }
+}
+
+/**
+ * Masturbación: cuánto duró, con qué (con pornografía, «Cuenta como recaída»), en qué aparato (solo con los estímulos de
+ * Catalogo.ESTIMULOS_CON_APARATO), dónde, satisfacción, emociones de después y cómo fue. [alCambiarEstimulo] recibe el
+ * estímulo de antes y el nuevo, para crear o quitar la recaída gemela.
+ */
+@Composable
+internal fun CamposMasturbacion(m: Momento, cambiar: ((Momento) -> Momento) -> Unit, alCambiarEstimulo: (antes: String?, despues: String?) -> Unit = { _, _ -> }) {
+    Etiqueta("¿Cuánto duró?")
+    SelectorDuracion(m.duracion_min) { d -> cambiar { it.copy(duracion_min = d) } }
+    Etiqueta("Con qué")
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Catalogo.ESTIMULOS.forEach { o ->
+            Ficha(o.nombre, m.estimulo == o.id) {
+                val antes = m.estimulo
+                val nuevo = if (antes == o.id) null else o.id
+                cambiar { it.copy(estimulo = nuevo, estimulo_otro = if (nuevo == "otro") it.estimulo_otro else null,
+                    dispositivo = if (nuevo in Catalogo.ESTIMULOS_CON_APARATO) it.dispositivo else null) }
+                alCambiarEstimulo(antes, nuevo)
+            }
+        }
+    }
+    if (m.estimulo == "pornografia") Ayuda("Cuenta como recaída: se anota también una recaída a la misma hora.", Modifier.padding(top = 6.dp))
+    if (m.estimulo == "otro") CampoOtro(m.id + "|estimulo", m.estimulo_otro) { t -> cambiar { it.copy(estimulo_otro = t) } }
+    if (m.estimulo in Catalogo.ESTIMULOS_CON_APARATO) {
+        Etiqueta("En qué aparato")
+        FilaFichas(Catalogo.DISPOSITIVOS, m.dispositivo) { v -> cambiar { it.copy(dispositivo = v) } }
+    }
+    Etiqueta("Dónde")
+    CampoSitio(m, cambiar)
+    Etiqueta("Satisfacción (1 a 5)")
+    Escala(m.satisfaccion, 1, 5, Catalogo.ANCLAS["satisfaccion"]) { v -> cambiar { it.copy(satisfaccion = v) } }
+    EmocionesDespues(m, cambiar)
+    Etiqueta("Descripción")
+    CampoComoFue(m, "¿Cómo fue? (opcional)", cambiar)
+}
+
+/**
+ * Intimidad, en este orden: qué pasó (varias, por grupo; guarda también el nivel, Catalogo.nivelIntimidad), cómo fue, con
+ * quién, las escalas de 1 a 5 y las emociones de después, y los detalles plegados (orgasmo, protección, quién empezó, dónde y
+ * duración). Todo es opcional salvo lo que pasó.
+ */
+@Composable
+internal fun CamposIntimidad(m: Momento, cambiar: ((Momento) -> Momento) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Etiqueta("Qué pasó (varias)")
+    Catalogo.PRACTICAS.groupBy { it.grupo }.forEach { (grupo, l) ->
+        Text(grupo, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 2.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            l.forEach { p ->
+                val activa = p.id in m.practicas
+                FichaConAyuda(p.nombre, p.ayuda, activa) {
+                    val nuevas = if (activa) m.practicas - p.id else m.practicas + p.id
+                    cambiar { it.copy(practicas = nuevas, nivel = Catalogo.nivelIntimidad(nuevas), practica_otra = if ("otra" in nuevas) it.practica_otra else null) }
+                }
+            }
+        }
+    }
+    if ("otra" in m.practicas) CampoOtro(m.id + "|practica", m.practica_otra) { t -> cambiar { it.copy(practica_otra = t) } }
+    Etiqueta("Descripción")
+    CampoComoFue(m, "¿Cómo fue? (opcional)", cambiar)
+    Etiqueta("Con quién")
+    ConQuienPersonas(m.id, m.personas) { l -> cambiar { it.copy(personas = l) } }
+    Etiqueta("Satisfacción (1 a 5)")
+    Escala(m.satisfaccion, 1, 5, Catalogo.ANCLAS["satisfaccion"]) { v -> cambiar { it.copy(satisfaccion = v) } }
+    Etiqueta("Placer (1 a 5)")
+    Escala(m.placer, 1, 5, Catalogo.ANCLAS["placer"]) { v -> cambiar { it.copy(placer = v) } }
+    Etiqueta("Conexión (1 a 5)")
+    Escala(m.conexion, 1, 5, Catalogo.ANCLAS["conexion"]) { v -> cambiar { it.copy(conexion = v) } }
+    Etiqueta("Comodidad (1 a 5)")
+    Escala(m.comodidad, 1, 5, Catalogo.ANCLAS["comodidad"]) { v -> cambiar { it.copy(comodidad = v) } }
+    EmocionesDespues(m, cambiar)
+    // Los detalles, plegados; se abren solos si ya hay alguno.
+    var detalles by remember(m.id) { mutableStateOf(listOf(m.orgasmo, m.orgasmo_otra, m.proteccion, m.iniciativa, m.sitio).any { it != null } || m.duracion_min != null) }
+    BotonTexto(onClick = { detalles = !detalles }, modifier = Modifier.padding(top = 8.dp)) {
+        Text(if (detalles) "− detalles" else "＋ detalles: orgasmo, protección, quién empezó, dónde, duración", style = MaterialTheme.typography.labelLarge)
+    }
+    if (detalles) {
+        Etiqueta("Orgasmo, tú")
+        FilaFichas(Catalogo.SI_NO_NOSE, m.orgasmo) { v -> cambiar { it.copy(orgasmo = v) } }
+        Etiqueta("Orgasmo, la otra persona")
+        FilaFichas(Catalogo.SI_NO_NOSE, m.orgasmo_otra) { v -> cambiar { it.copy(orgasmo_otra = v) } }
+        Etiqueta("Protección")
+        FilaFichas(Catalogo.PROTECCION, m.proteccion) { v -> cambiar { it.copy(proteccion = v) } }
+        Etiqueta("Quién empezó")
+        FilaFichas(Catalogo.INICIATIVA, m.iniciativa) { v -> cambiar { it.copy(iniciativa = v) } }
+        Etiqueta("Dónde")
+        CampoSitio(m, cambiar)
+        Etiqueta("¿Cuánto duró?")
+        SelectorDuracion(m.duracion_min) { d -> cambiar { it.copy(duracion_min = d) } }
+    }
+}
+
+/**
+ * Episodio: qué fue («otro» con su texto), qué tan fuerte (1 a 5), cuánto duró (en la enfermedad, en días: se guarda
+ * días × 1440 minutos), los síntomas (solo en una crisis), qué lo detonó, con quién (solo en una pelea) y una nota.
+ */
+@Composable
+internal fun CamposEpisodio(m: Momento, cambiar: ((Momento) -> Momento) -> Unit) {
+    val enDias = m.episodio in Catalogo.EPISODIOS_EN_DIAS
+    Etiqueta("¿Qué fue?")
+    FilaFichas(Catalogo.EPISODIOS, m.episodio) { v ->
+        val nuevoEnDias = v in Catalogo.EPISODIOS_EN_DIAS
+        cambiar { it.copy(episodio = v, episodio_otro = if (v == "otro") it.episodio_otro else null,
+            sintomas = if (v == "crisis") it.sintomas else emptyList(), personas = if (v == "pelea") it.personas else emptyList(),
+            // Minutos y días no se mezclan: al cambiar de unidad, la duración se vuelve a decir.
+            duracion_min = if (nuevoEnDias != enDias) null else it.duracion_min) }
+    }
+    if (m.episodio == "otro") CampoOtro(m.id + "|episodio", m.episodio_otro) { t -> cambiar { it.copy(episodio_otro = t) } }
+    Etiqueta("Qué tan fuerte (1 a 5)")
+    Escala(m.intensidad, 1, 5, Catalogo.ANCLAS["episodio"], secuencial = true) { v -> cambiar { it.copy(intensidad = v) } }
+    if (enDias) {
+        Etiqueta("¿Cuántos días duró?")
+        SelectorDias(m.id, m.duracion_min?.let { (it + 720) / 1440 }) { d -> cambiar { it.copy(duracion_min = d?.let { n -> n * 1440 }) } }
+    } else {
+        Etiqueta("¿Cuánto duró?")
+        SelectorDuracion(m.duracion_min, listOf(5, 10, 15, 30, 45, 60, 90, 120, 180, 240)) { d -> cambiar { it.copy(duracion_min = d) } }
+    }
+    if (m.episodio == "crisis") {
+        Etiqueta("Síntomas (varios)")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Catalogo.SINTOMAS_CRISIS.forEach { o ->
+                val activo = o.id in m.sintomas
+                Ficha(o.nombre, activo) { val l = if (activo) m.sintomas - o.id else m.sintomas + o.id; cambiar { it.copy(sintomas = l) } }
+            }
+        }
+    }
+    Etiqueta("Qué lo detonó (varios)")
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Catalogo.DETONANTES.forEach { d ->
+            val activo = d.id in m.detonantes
+            Ficha(d.nombre, activo) {
+                val l = if (activo) m.detonantes - d.id else m.detonantes + d.id
+                cambiar { it.copy(detonantes = l, detonante_otro = if ("otro" in l) it.detonante_otro else null) }
+            }
+        }
+    }
+    if ("otro" in m.detonantes) CampoOtro(m.id + "|detonante", m.detonante_otro) { t -> cambiar { it.copy(detonante_otro = t) } }
+    if (m.episodio == "pelea") {
+        Etiqueta("Con quién")
+        ConQuienPersonas(m.id, m.personas) { l -> cambiar { it.copy(personas = l) } }
+    }
+    Etiqueta("Nota (opcional)")
+    CampoComoFue(m, "¿Qué pasó? Usa @persona y #tema", cambiar)
+}
+
+/** Duración en días (la de una enfermedad): atajos y «otra». */
+@Composable
+private fun SelectorDias(clave: String, dias: Int?, onCambio: (Int?) -> Unit) {
+    val opciones = listOf(1, 2, 3, 5, 7, 14)
+    var texto by remember(clave) { mutableStateOf(if (dias != null && dias !in opciones) "$dias" else "") }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        opciones.forEach { d -> Ficha(if (d == 1) "1 día" else "$d días", dias == d && texto.isEmpty()) { texto = ""; onCambio(if (dias == d) null else d) } }
+    }
+    CampoTexto(value = texto, onValueChange = { t -> texto = t.filter { it.isDigit() }.take(3); onCambio(texto.toIntOrNull()?.takeIf { it > 0 }) },
+        modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Otra (días)") },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
 }

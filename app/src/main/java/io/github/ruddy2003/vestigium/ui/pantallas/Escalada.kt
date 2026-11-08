@@ -2,6 +2,9 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.foundation.Canvas
@@ -18,11 +21,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -102,7 +102,7 @@ fun PantallaEscalada(nav: Nav) {
         delReloj.take(3).forEach { s ->
             Tarjeta(Modifier.padding(top = 8.dp)) {
                 Text("Tu reloj registró escalada el ${Fechas.corto(s.fecha)} · ${s.min} min" + (s.fc_media?.let { " · %.0f lpm".format(it) } ?: ""), style = MaterialTheme.typography.bodyMedium)
-                TextButton(onClick = { nueva(s) }) { Text("+ anotar los bloques de esa sesión", style = MaterialTheme.typography.labelLarge) }
+                BotonTexto(onClick = { nueva(s) }) { Text("+ anotar los bloques de esa sesión", style = MaterialTheme.typography.labelLarge) }
             }
         }
         if (sesiones.isEmpty()) { Spacer(Modifier.height(12.dp)); Vacio("Aún no hay sesiones. Al terminar de escalar, anota cada bloque que intentaste."); return@Hoja }
@@ -134,7 +134,7 @@ fun PantallaEscalada(nav: Nav) {
         Seccion("Sesiones") {
             Tarjeta {
                 sesiones.forEachIndexed { i, a ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     Row(Modifier.fillMaxWidth().clickable { EdicionEscalada.id = a.id; nav.ir("ascenso") }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(Fechas.corto(a.fecha) + (if (a.lugar.isNotBlank()) " · ${a.lugar}" else ""), style = MaterialTheme.typography.bodyLarge)
@@ -224,14 +224,14 @@ fun PantallaAscenso(nav: Nav) {
                     elegirFecha(ctx, a.fecha) { g(a.copy(fecha = it)) }
                 }
                 Etiqueta("Lugar")
-                OutlinedTextField(a.lugar, { g(a.copy(lugar = it)) }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("gimnasio o zona", style = MaterialTheme.typography.labelLarge) })
+                CampoTexto(a.lugar, { g(a.copy(lugar = it)) }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("gimnasio o zona", style = MaterialTheme.typography.labelLarge) })
                 if (gimnasios.isNotEmpty()) FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     gimnasios.forEach { l -> Ficha(l, a.lugar == l) { g(a.copy(lugar = l)) } }
                 }
                 Etiqueta("Modalidad")
                 FilaFichas(MODALIDADES, a.modalidad) { g(a.copy(modalidad = it ?: "boulder")) }
                 Etiqueta("Duración en minutos")
-                OutlinedTextField(a.min?.toString() ?: "", { t -> g(a.copy(min = t.filter { it.isDigit() }.take(4).toIntOrNull())) }, Modifier.width(140.dp), singleLine = true,
+                CampoTexto(a.min?.toString() ?: "", { t -> g(a.copy(min = t.filter { it.isDigit() }.take(4).toIntOrNull())) }, Modifier.width(140.dp), singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 a.sesion_reloj?.let { s -> Repo.sesiones.firstOrNull { it.id == s }?.let { x -> Clave("horologium", "${x.min} min" + (x.fc_media?.let { " · fc media %.0f".format(it) } ?: "") + (x.fc_max?.let { " · máx %.0f".format(it) } ?: "")) } }
             }
@@ -247,7 +247,7 @@ fun PantallaAscenso(nav: Nav) {
             }
             if (a.bloques.isNotEmpty()) Tarjeta(Modifier.padding(top = 10.dp)) {
                 a.bloques.forEachIndexed { i, b ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     fun cambiarB(n: Bloque) = g(a.copy(bloques = a.bloques.mapIndexed { j, x -> if (j == i) n else x }))
                     Row(Modifier.fillMaxWidth().clickable { abierto = if (abierto == i) null else i }.padding(vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("${i + 1}".padStart(2, '0') + "  ", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -272,9 +272,9 @@ fun PantallaAscenso(nav: Nav) {
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                             Grados.RASGOS.forEach { r -> val on = r in b.rasgos; Ficha(Grados.nombreRasgo(r), on) { cambiarB(b.copy(rasgos = if (on) b.rasgos - r else b.rasgos + r)) } }
                         }
-                        OutlinedTextField(b.nota, { cambiarB(b.copy(nota = it)) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
+                        CampoTexto(b.nota, { cambiarB(b.copy(nota = it)) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
                             placeholder = { Text("nota: color, nombre, beta…", style = MaterialTheme.typography.labelLarge) })
-                        TextButton(onClick = {
+                        BotonTexto(onClick = {
                             val antes = a
                             g(a.copy(bloques = a.bloques.filterIndexed { j, _ -> j != i })); abierto = null
                             io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Bloque quitado") { g(antes) }
@@ -293,12 +293,12 @@ fun PantallaAscenso(nav: Nav) {
                 Etiqueta("Esfuerzo de la sesión (1 a 10)"); Escala(a.esfuerzo, 1, 10, mapOf(1 to "paseo", 5 to "moderado", 8 to "duro", 10 to "al límite")) { g(a.copy(esfuerzo = it)) }
                 Etiqueta("Satisfacción"); Escala(a.satisfaccion, 1, 5, mapOf(1 to "frustrado", 3 to "bien", 5 to "increíble")) { g(a.copy(satisfaccion = it)) }
                 Etiqueta("Dolor o lesión")
-                OutlinedTextField(a.dolor, { g(a.copy(dolor = it)) }, Modifier.fillMaxWidth(), minLines = 2, placeholder = { Text("dedo anular izquierdo, hombro…", style = MaterialTheme.typography.labelLarge) })
+                CampoTexto(a.dolor, { g(a.copy(dolor = it)) }, Modifier.fillMaxWidth(), minLines = 2, placeholder = { Text("dedo anular izquierdo, hombro…", style = MaterialTheme.typography.labelLarge) })
                 Etiqueta("Notas")
                 Editor(a.nota, "ascensus_${a.fecha}.txt", "Qué funcionó, qué no, con quién fuiste…", minimo = 90) { g(a.copy(nota = it)) }
             }
         }
-        TextButton(onClick = { if (confirmar) { Repo.borrarAscenso(a.id); nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Sesión borrada") { Repo.guardarAscenso(a) } } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
+        BotonTexto(onClick = { if (confirmar) { Repo.borrarAscenso(a.id); nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Sesión borrada") { Repo.guardarAscenso(a) } } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
             Text(if (confirmar) "¿borrar la sesión de verdad?" else "borrar sesión", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
         }
     }

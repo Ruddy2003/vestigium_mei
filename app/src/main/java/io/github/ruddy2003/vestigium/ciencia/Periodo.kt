@@ -216,7 +216,7 @@ object Periodo {
             actMedia = acts.filterNotNull().takeIf { it.isNotEmpty() }?.average(), mejorDia = mejor, peorDia = peor,
             mejorMomento = mejor?.let { Repo.dias[it]?.mejor_momento?.takeIf { m -> m.isNotBlank() } },
             valPorMes = porMes, valPorSemana = porSem,
-            suenosRecordados = vividos.size, suenoVivido = vivido, hitos = dias.flatMap { it.hitos }.distinct(),
+            suenosRecordados = vividos.size, suenoVivido = vivido, hitos = dias.flatMap { io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(it) }.distinct(),
             emociones = animo.first, pensamientos = animo.second, conQuien = animo.third.first, conQuienRegistros = animo.third.second,
             registrosAnimo = mu.count { Catalogo.esRegistro(it) },
             momentos = mu.filter { it.tipo != "muestreo" }.groupingBy { it.tipo }.eachCount().entries.sortedByDescending { it.value }.map { Catalogo.nombreTipo(it.key) to it.value },

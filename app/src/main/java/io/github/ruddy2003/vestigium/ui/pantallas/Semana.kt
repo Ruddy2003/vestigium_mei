@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -17,7 +18,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -117,7 +117,7 @@ fun PantallaSemana(nav: Nav) {
             val mejor = conValencia.maxBy { it.second!! }; val peor = conValencia.minBy { it.second!! }
             Tarjeta {
                 listOf("Mejor día" to mejor, "Día más difícil" to peor).forEachIndexed { k, (t, p) ->
-                    if (k > 0) HorizontalDivider(Modifier.padding(vertical = 6.dp))
+                    if (k > 0) Separador(Modifier.padding(vertical = 6.dp))
                     Column(Modifier.fillMaxWidth().clickable { Seleccion.abrir(nav, p.first) }) {
                         Text("$t · ${Fechas.titulo(p.first).lowercase()} · ${"%.0f".format(p.second)}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                         Repo.dias[p.first]?.nota?.takeIf { it.isNotBlank() }?.let { Text(it.take(220) + if (it.length > 220) "…" else "", style = MaterialTheme.typography.bodySmall) }
@@ -130,13 +130,14 @@ fun PantallaSemana(nav: Nav) {
         val notas = dias.mapNotNull { Repo.dias[it]?.nota } + r.momentos.map { it.texto }
         val personas = notas.flatMap { Texto.personas(it).map { p -> Texto.canon(p, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }
         val temas = notas.flatMap { Texto.temas(it).map { p -> Texto.canon(p, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }
-        val hitos = dias.flatMap { f -> Repo.dias[f]?.hitos.orEmpty() }
-        if (personas.isNotEmpty() || temas.isNotEmpty() || hitos.isNotEmpty()) Seccion("Personas, temas e hitos") {
+        // Las fechas señaladas de la semana (con los hitos de antes), cada una con su día: tocarla abre ese día.
+        val senaladas = dias.flatMap { f -> io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(Repo.dias[f]).map { f to it } }.distinctBy { it.second }
+        if (personas.isNotEmpty() || temas.isNotEmpty() || senaladas.isNotEmpty()) Seccion("Personas, temas e hitos") {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 // Llevan su texto al buscador (N-22).
                 personas.take(8).forEach { (p, n) -> Ficha("@$p · $n", false) { Seleccion.buscar = "@$p"; nav.ir("buscar") } }
                 temas.take(8).forEach { (t, n) -> Ficha("#$t · $n", false) { Seleccion.buscar = "#$t"; nav.ir("buscar") } }
-                hitos.distinct().forEach { h -> Ficha("★ ${h.replace('_', ' ')}", true) {} }
+                senaladas.forEach { (f, e) -> Ficha(e, true) { Seleccion.abrir(nav, f) } }
             }
         }
 

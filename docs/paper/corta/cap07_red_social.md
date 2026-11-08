@@ -158,7 +158,7 @@ Las variables de la sección 7.4 entran en Explorar con el mismo método que las
 
 ## 7.10 Privacidad: dónde entran los momentos privados
 
-Un momento es privado si su tipo es `impulso`, `recaida` o `libido` (`Momento.privado`, regla única en `data/Privado.kt`). Sus @menciones y #temas **no entran en nada de este capítulo** (presencias, `vi_*`, `per_`, `pen_`, Constelación, Red, `vm_red_*`, «Tu gente» ni las sugerencias al escribir), con o sin el seguimiento privado activado. Solo se ven en la pantalla Privado y van completos a `vm_momentos.csv`. Hasta v84, recaídas y libido entraban en `per_` y en «Tu gente», y los impulsos en todo (H-6-1).
+Un momento es privado si su tipo es `impulso`, `recaida`, `libido` o, desde el esquema 21, `masturbacion` o `intimidad` (`Momento.privado`, regla única en `data/Privado.kt`). Sus @menciones y #temas **no entran en nada de este capítulo** (presencias, `vi_*`, `per_`, `pen_`, Constelación, Red, `vm_red_*`, «Tu gente» ni las sugerencias al escribir), con o sin el seguimiento privado activado. Solo se ven en la pantalla Privado y van completos a `vm_momentos.csv`. La única excepción, desde el esquema 21, es la ficha de una persona, que con el seguimiento privado encendido dice cuántas veces hubo intimidad con ella y cuándo fue la última. En un episodio de pelea, la persona sí cuenta como mención. Hasta v84, recaídas y libido entraban en `per_` y en «Tu gente», y los impulsos en todo (H-6-1).
 
 ---
 

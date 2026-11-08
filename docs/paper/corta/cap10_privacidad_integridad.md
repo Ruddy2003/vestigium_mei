@@ -17,9 +17,9 @@
 
 ### 10.2.1 Qué es y dónde se ve
 
-El **seguimiento privado** son los impulsos, recaídas, libido, detonantes, medicamentos y el hábito ligado a las recaídas. Desde el módulo 10a hay **una sola regla, en un solo archivo** (`data/Privado.kt`). Es privado:
+El **seguimiento privado** son los impulsos, recaídas, libido, masturbación e intimidad (esquema 21), detonantes, medicamentos y el hábito ligado a las recaídas. Desde el módulo 10a hay **una sola regla, en un solo archivo** (`data/Privado.kt`). Es privado:
 
-- todo momento de tipo `impulso`, `recaida` o `libido` (`Momento.privado`, que usa `Privado.TIPOS`);
+- todo momento de tipo `impulso`, `recaida`, `libido`, `masturbacion` o `intimidad` (`Momento.privado`, que usa `Privado.TIPOS`);
 - en el día, la intensidad del impulso (0 a 5), si hubo recaída, los detonantes y los **medicamentos**;
 - el **hábito ligado a las recaídas**: con el interruptor encendido, el que elegiste en Privacidad o, si no elegiste, un hábito activo cuyo nombre contenga ciertas palabras clave; con el interruptor apagado, solo el que elegiste.
 

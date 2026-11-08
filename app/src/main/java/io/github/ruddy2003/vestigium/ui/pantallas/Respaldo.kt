@@ -1,5 +1,8 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -9,11 +12,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -115,7 +115,7 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
         BotonSecundario("Restaurar desde Drive (la copia más reciente)", Modifier.fillMaxWidth().padding(top = 8.dp), habilitado = !ocupado) {
             confirmarRestaurar = { soloVerificar = false; drive() }
         }
-        HorizontalDivider(Modifier.padding(vertical = 12.dp))
+        Separador(Modifier.padding(vertical = 12.dp))
         Ayuda("¿Tus respaldos sirven? Revísalo de vez en cuando: se abre el archivo completo (descifrado si lleva contraseña) y se cuenta lo que trae, sin cambiar nada de aquí.")
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BotonSecundario("Verificar un archivo", Modifier.weight(1f), habilitado = !ocupado) { archivoVerificar.launch(arrayOf("*/*")) }
@@ -126,13 +126,13 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
         if (ocupado) Ayuda("Trabajando… (con muchas ubicaciones puede tardar un minuto)", Modifier.padding(top = 8.dp))
         msg?.let { Aviso(it) }
         if (!soloRestaurar) {
-            HorizontalDivider(Modifier.padding(vertical = 14.dp))
+            Separador(Modifier.padding(vertical = 14.dp))
             Interruptor("Cifrar con contraseña", cifra,
                 if (cifra) "Drive, la carpeta y el respaldo que guardes van cifrados (.vmc). Los CSV sueltos dejan de subirse; para R, usa «Exportar extendido»."
                 else "Tus respaldos van como texto: diario, cartas, seguimiento privado y chats. Con contraseña, aunque alguien entre a tu Drive no puede leerlos.") { v ->
                 if (v) ponerClave = true else confirmarQuitar = true
             }
-            if (cifra) TextButton(onClick = { ponerClave = true }) { Text("cambiar contraseña", style = MaterialTheme.typography.labelLarge) }
+            if (cifra) BotonTexto(onClick = { ponerClave = true }) { Text("cambiar contraseña", style = MaterialTheme.typography.labelLarge) }
         }
     }
 
@@ -150,8 +150,8 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
             title = { Text("¿Restaurar un respaldo?", style = MaterialTheme.typography.titleLarge) },
             text = { Ayuda(if (Repo.dias.isEmpty()) "La app está vacía: se traerá todo, también tus ajustes." else
                 "Se agregan los días, ubicaciones y demás que no tengas aquí. Lo que ya existe en este teléfono no se toca.") },
-            confirmButton = { TextButton(onClick = { confirmarRestaurar = null; seguir() }) { Text("restaurar", style = MaterialTheme.typography.labelLarge) } },
-            dismissButton = { TextButton(onClick = { confirmarRestaurar = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
+            confirmButton = { BotonTexto(onClick = { confirmarRestaurar = null; seguir() }) { Text("restaurar", style = MaterialTheme.typography.labelLarge) } },
+            dismissButton = { BotonTexto(onClick = { confirmarRestaurar = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
         )
     }
     // Se pregunta antes de borrarla: después ya no hay forma de verla, y las copias cifradas de antes la siguen pidiendo (H-8-15).
@@ -160,11 +160,11 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
         title = { Text("¿Quitar la contraseña?", style = MaterialTheme.typography.titleLarge) },
         text = { Ayuda("El próximo respaldo vuelve a ser .zip. Las copias que ya existen (en Drive, las semanales y mensuales, y las que guardaste o compartiste) " +
             "siguen cifradas con esta contraseña: guárdala si quieres poder abrirlas.") },
-        confirmButton = { TextButton(onClick = {
+        confirmButton = { BotonTexto(onClick = {
             confirmarQuitar = false; Respaldos.ponerContrasena(ctx, null); cifra = false
             msg = "Cifrado apagado: el próximo respaldo vuelve a ser .zip. Las copias cifradas que ya tenías siguen pidiendo la contraseña de antes."
         }) { Text("quitar", style = MaterialTheme.typography.labelLarge) } },
-        dismissButton = { TextButton(onClick = { confirmarQuitar = false }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
+        dismissButton = { BotonTexto(onClick = { confirmarQuitar = false }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
     )
     pedirClave?.let { reintento ->
         var clave by remember { mutableStateOf("") }
@@ -174,12 +174,12 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
             text = {
                 Column {
                     Ayuda("Escribe la contraseña con la que se cifró este respaldo.")
-                    OutlinedTextField(clave, { clave = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("contraseña") },
+                    CampoTexto(clave, { clave = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("contraseña") },
                         visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
+                BotonTexto(onClick = {
                     val c = clave.toCharArray(); pedirClave = null
                     scope.launch {
                         ocupado = true
@@ -189,7 +189,7 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
                     }
                 }) { Text("abrir", style = MaterialTheme.typography.labelLarge) }
             },
-            dismissButton = { TextButton(onClick = { pedirClave = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
+            dismissButton = { BotonTexto(onClick = { pedirClave = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
         )
     }
 }
@@ -211,16 +211,16 @@ private fun DialogoNuevaClave(cambio: Boolean, cerrar: () -> Unit, listo: (Strin
                 Ayuda("Se guarda solo en este teléfono. Si cambias de teléfono, la necesitarás para restaurar; si la olvidas, nadie puede recuperar los respaldos cifrados.")
                 // Las copias hechas no se vuelven a cifrar (H-8-15).
                 if (cambio) Aviso("Las copias que ya existen (en Drive, las semanales y mensuales, y las que guardaste o compartiste) siguen con la contraseña anterior: guárdala si quieres poder abrirlas.")
-                OutlinedTextField(a, { a = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("contraseña") },
+                CampoTexto(a, { a = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("contraseña") },
                     visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
-                OutlinedTextField(b, { b = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("otra vez") },
+                CampoTexto(b, { b = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("otra vez") },
                     visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
                 error?.let { Ayuda(it, Modifier.padding(top = 6.dp)) }
                 Ayuda("Último respaldo: " + (listOfNotNull(Repo.config.respaldo_ultimo, Repo.config.drive_ultimo).maxOrNull()?.let { Fechas.titulo(it.take(10)) } ?: "ninguno"),
                     Modifier.padding(top = 6.dp))
             }
         },
-        confirmButton = { TextButton(enabled = a.length >= 8 && a == b, onClick = { listo(a) }) { Text("Guardar", style = MaterialTheme.typography.labelLarge) } },
-        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
+        confirmButton = { BotonTexto(enabled = a.length >= 8 && a == b, onClick = { listo(a) }) { Text("Guardar", style = MaterialTheme.typography.labelLarge) } },
+        dismissButton = { BotonTexto(onClick = cerrar) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
     )
 }

@@ -2,6 +2,11 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.draw.drawBehind
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,10 +24,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -72,7 +75,6 @@ import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.LibroDiario
 import io.github.ruddy2003.vestigium.ui.Nav
-import io.github.ruddy2003.vestigium.ui.SalonesTema
 import io.github.ruddy2003.vestigium.ui.signoEgipcio
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.TemaId
@@ -2256,12 +2258,17 @@ fun PiezaLogro(l: Logros.Logro, tam: Dp, modifier: Modifier = Modifier, tema: Te
     Canvas(modifier.size(tam)) { with(PiezasLogro) { pieza(l, tema, cs) } }
 }
 
-/** El fondo del salón: la escena del tema ([SalonesTema]). */
+/** El fondo del salón: la escena del tema ([io.github.ruddy2003.vestigium.ui.logros.DisenoLogros.escenaSalon]). */
 @Composable
 private fun BoxScope.FondoSalon(tema: TemaId) {
     val cs = MaterialTheme.colorScheme
     Canvas(Modifier.matchParentSize()) {
-        with(SalonesTema) { escena(tema, cs) }
+        // Recortada a su lienzo: el Canvas no recorta solo y la escena no debe salirse del hall.
+        clipRect {
+            with(io.github.ruddy2003.vestigium.ui.logros.disenoLogros(tema)) {
+                escenaSalon(io.github.ruddy2003.vestigium.ui.logros.EstadoSalon(2, cs.background, 0), cs.background.luminance() < 0.5f)
+            }
+        }
     }
 }
 
@@ -2283,7 +2290,7 @@ fun CuerpoHall(l: List<Logros.Logro>) {
         val enHall = ids.mapNotNull { id -> hechos.firstOrNull { it.id == id } }
         Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("${enHall.size} de 12 lugares", style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
-            TextButton(onClick = { editar = !editar }) { Text(if (editar) "listo" else "elegir piezas", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
+            BotonTexto(onClick = { editar = !editar }) { Text(if (editar) "listo" else "elegir piezas", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
         }
         if (enHall.isEmpty() && !editar) {
             Vacio(if (hechos.isEmpty()) "Cuando consigas logros, aquí podrás exhibir los que más te gusten." else "Tu hall está vacío. Elige qué exhibir o llénalo con los mejores.")
@@ -2309,7 +2316,7 @@ fun CuerpoHall(l: List<Logros.Logro>) {
                 Checkbox(checked = conTextos, onCheckedChange = { conTextos = it })
                 Text("con nombres y fechas", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f).clickable { conTextos = !conTextos })
                 // La imagen (1080 × 1350) se dibuja en otro hilo: antes se hacía dentro del toque y la pantalla se trababa.
-                TextButton(enabled = !creando, onClick = {
+                BotonTexto(enabled = !creando, onClick = {
                     creando = true
                     alcance.launch {
                         val f = withContext(Dispatchers.Default) { runCatching { HallImagen.crear(ctx, enHall, tema, cs, conTextos) }.getOrNull() }
@@ -2324,12 +2331,12 @@ fun CuerpoHall(l: List<Logros.Logro>) {
             if (enHall.isNotEmpty()) Tarjeta(Modifier.padding(top = 8.dp)) {
                 Text("En el hall", style = MaterialTheme.typography.titleMedium)
                 enHall.forEachIndexed { i, g ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         TrofeoLogro(g, 44.dp, tema = tema)
                         Text(g.nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f).padding(start = 10.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        TextButton(onClick = { mover(ids, i, -1) }, enabled = i > 0) { Text("↑") }
-                        TextButton(onClick = { mover(ids, i, 1) }, enabled = i < ids.lastIndex) { Text("↓") }
+                        BotonTexto(onClick = { mover(ids, i, -1) }, enabled = i > 0) { Text("↑") }
+                        BotonTexto(onClick = { mover(ids, i, 1) }, enabled = i < ids.lastIndex) { Text("↓") }
                     }
                 }
             }
@@ -2342,7 +2349,7 @@ fun CuerpoHall(l: List<Logros.Logro>) {
             }
             Tarjeta(Modifier.padding(top = 8.dp)) {
                 hechos.filter { cat == null || it.categoria == cat }.sortedByDescending { it.conseguido }.forEachIndexed { i, g ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     val dentro = g.id in ids
                     Row(Modifier.fillMaxWidth().clickable {
                         Repo.cambiarConfig { c -> c.copy(hall_logros = if (dentro) c.hall_logros - g.id else if (c.hall_logros.size >= 12) c.hall_logros else c.hall_logros + g.id) }
@@ -2370,19 +2377,19 @@ private fun mover(ids: List<String>, i: Int, d: Int) {
 /** Una pieza en su pedestal, con la placa: nombre, fecha y nivel. */
 @Composable
 private fun Pedestal(g: Logros.Logro, tema: TemaId, modifier: Modifier) {
-    val cs = MaterialTheme.colorScheme
-    val metal = metalHall(tema, g.nivel)
+    val d = io.github.ruddy2003.vestigium.ui.logros.disenoLogros(tema)
+    val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+    val e = estadoPedestal(g)
     Column(modifier.padding(horizontal = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         // El trofeo del tema (el mismo de la sala de trofeos), sobre la repisa del salón.
         TrofeoLogro(g, 118.dp, tema = tema)
-        // El pedestal del tema (ver [SalonesTema.pedestal]).
-        Canvas(Modifier.fillMaxWidth().height(22.dp).padding(horizontal = 18.dp)) {
-            with(SalonesTema) { pedestal(tema, cs, metal) }
-        }
-        Box(Modifier.padding(top = 4.dp).background(metal.copy(alpha = 0.22f), MaterialTheme.shapes.small).padding(horizontal = 8.dp, vertical = 4.dp)) {
+        // El pedestal del hall y la placa, dibujados por el tema.
+        Canvas(Modifier.fillMaxWidth().height(22.dp).padding(horizontal = 18.dp)) { with(d) { pedestalHall(e, oscuro) } }
+        Box(Modifier.padding(top = 4.dp).drawBehind { with(d) { placaHall(e, oscuro) } }.padding(d.margenPlaca)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(g.nombre, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold), textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(Fechas.corto(g.conseguido ?: "") + " · " + g.conseguido?.take(4), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, fontSize = 10.sp)
+                Text(g.nombre, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold), color = d.tintaPlaca(oscuro),
+                    textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(Fechas.corto(g.conseguido ?: "") + " · " + g.conseguido?.take(4), style = MaterialTheme.typography.labelSmall, color = d.rotuloPlaca(oscuro), fontSize = 10.sp)
             }
         }
     }

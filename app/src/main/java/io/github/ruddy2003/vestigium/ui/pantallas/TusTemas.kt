@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.foundation.layout.Arrangement
@@ -14,9 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -46,7 +46,7 @@ import io.github.ruddy2003.vestigium.ui.Dialogo
 
 /**
  * Tus #temas en orden: cuántos días aparece cada uno, los que parecen el mismo escrito distinto, los de un solo día
- * (quizá eran hitos) y los que en realidad son sentimientos. Unir no toca tus textos; renombrar sí, con vista previa
+ * (quizá eran fechas señaladas) y los que en realidad son sentimientos. Unir no toca tus textos; renombrar sí, con vista previa
  * y «deshacer».
  */
 @Composable
@@ -88,10 +88,10 @@ fun PantallaTusTemas(nav: Nav) {
             }
         }
 
-        if (unDia.isNotEmpty()) Seccion("Aparecen un solo día", "Un tema que pasa una vez en la vida quizá es un hito (un vuelo, una mudanza). Pasarlo a hitos lo guarda en ese día y le quita el #.") {
+        if (unDia.isNotEmpty()) Seccion("Aparecen un solo día", "Un tema que pasa una vez en la vida quizá es una fecha señalada (un vuelo, una mudanza). Pasarlo a fecha señalada lo guarda en ese día, como «otra», y le quita el #.") {
             Tarjeta {
                 unDia.take(12).forEach { t ->
-                    FilaMenu("#${t.nombre}", "${Fechas.corto(t.primera)} · pasar a hitos") { val (n, antes) = TusTemas.aHito(t); hecho("#${t.nombre} ahora es un hito ($n textos).", antes) }
+                    FilaMenu("#${t.nombre}", "${Fechas.corto(t.primera)} · pasar a fecha señalada") { val (n, antes) = TusTemas.aHito(t); hecho("#${t.nombre} ahora es una fecha señalada ($n textos).", antes) }
                 }
             }
         }
@@ -118,7 +118,7 @@ fun PantallaTusTemas(nav: Nav) {
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     Ayuda("${porNumero(t.dias, "1 día", "${t.dias} días")} · de ${Fechas.corto(t.primera)} a ${Fechas.corto(t.ultima)}")
-                    OutlinedTextField(nuevo, { nuevo = it }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true, label = { Text("nuevo nombre") }, prefix = { Text("#") })
+                    CampoTexto(nuevo, { nuevo = it }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true, label = { Text("nuevo nombre") }, prefix = { Text("#") })
                     previa?.let { (n, ej) ->
                         Ayuda("Cambiaría $n ${if (n == 1) "texto" else "textos"}." + if (existe) " #$destino ya existe: quedan juntos." else "", Modifier.padding(top = 8.dp))
                         ej?.let { (a, b) ->
@@ -130,11 +130,11 @@ fun PantallaTusTemas(nav: Nav) {
                 }
             },
             confirmButton = {
-                TextButton(enabled = previa != null, onClick = {
+                BotonTexto(enabled = previa != null, onClick = {
                     val (n, antes) = TusTemas.renombrar(t.nombre, destino); editando = null; hecho("Renombré #${t.nombre} → #$destino en $n textos.", antes)
                 }) { Text("renombrar en todo") }
             },
-            dismissButton = { TextButton(onClick = { editando = null }) { Text("cancelar") } })
+            dismissButton = { BotonTexto(onClick = { editando = null }) { Text("cancelar") } })
     }
 }
 
@@ -174,7 +174,7 @@ fun PantallaPresencias(nav: Nav) {
                 Text(Fechas.titulo(d.fecha) + if (todos && d.presencias_ok) " · revisado" else "", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                 TextoMarcado(d.nota.trim().take(220) + if (d.nota.length > 220) "…" else "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
                 ChipsPresencia(d, revisado = false) { n -> Repo.importarDias(listOf(n), sobrescribir = true) }
-                TextButton(onClick = { Repo.importarDias(listOf(Repo.dia(d.fecha).copy(presencias_ok = true)), sobrescribir = true); listos = listos + d.fecha }) {
+                BotonTexto(onClick = { Repo.importarDias(listOf(Repo.dia(d.fecha).copy(presencias_ok = true)), sobrescribir = true); listos = listos + d.fecha }) {
                     Text("así está bien", style = MaterialTheme.typography.labelLarge)
                 }
             }

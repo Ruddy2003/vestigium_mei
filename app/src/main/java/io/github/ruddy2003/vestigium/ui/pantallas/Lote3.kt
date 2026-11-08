@@ -2,6 +2,9 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -22,11 +25,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -112,29 +112,49 @@ fun PantallaSuplementos(nav: Nav) {
             Tarjeta(Modifier.padding(top = 10.dp)) {
                 val tomas = Repo.tomas.filter { it.suplemento == s.id && it.fecha == dia }
                 val ese = if (dia == hoy) "Hoy" else Fechas.titulo(dia)
+                // La cuenta del día (esquema 21): «Hoy 1 de 2» si va más de una vez al día; «Hoy ×3» si va una y llevas más.
+                val n = s.tomas_dia.coerceAtLeast(1)
+                val k = tomas.count { !it.estimado }
+                val cuenta = when { n > 1 -> " $k de $n"; k > 1 -> " ×$k"; else -> "" }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(s.nombre, style = MaterialTheme.typography.titleMedium)
-                        Ayuda(if (tomas.isEmpty()) "$ese: todavía no" else "$ese: " + tomas.joinToString(" + ") { "${cifra(it.cantidad)} ${s.unidad} a las ${Fechas.horaDe(it.ts)}" })
+                        Ayuda(if (tomas.isEmpty()) "$ese$cuenta: todavía no" else "$ese$cuenta: " + tomas.joinToString(" + ") { "${cifra(it.cantidad)} ${s.unidad} a las ${Fechas.horaDe(it.ts)}" })
                     }
-                    TextButton(onClick = { editando = s }) { Text("ajustar") }
+                    BotonTexto(onClick = { editando = s }) { Text("ajustar") }
                 }
                 Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     BotonPrincipal("Tomé ${cifra(s.dosis)} ${s.unidad}" + if (cuando != null) " · ${Fechas.corto(dia)}" else "", Modifier.weight(1f)) { tomar(s, s.dosis) }
                     if (s.modelo == "carga") BotonSecundario("Carga ×4") { tomar(s, s.dosis * 4) }
                     if (tomas.isNotEmpty()) BotonSecundario("corregir") { toma = tomas.last() }
                 }
+                // Quita la última toma de ese día (la anotada por error o de más), con Deshacer.
+                if (k > 0) BotonTexto(onClick = {
+                    Suplementos.quitarUltima(s.id, dia)?.let { t -> io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Toma quitada") { Repo.guardarToma(t) } }
+                }) { Text("quitar la última") }
                 NivelSuplemento(s, hoy)
             }
         }
-        Seccion("Recordatorio", "Un aviso al día si falta alguno, con «Ya los tomé» (anota la dosis habitual) y «En una hora».") {
+        Seccion("Recordatorio", "Un aviso a cada hora que marques si te falta alguno, con «Ya los tomé» (anota la dosis habitual) y «En una hora».") {
             Tarjeta {
-                Interruptor("Recordarme cada día", c.suplementos_hora != null) { v -> Repo.cambiarConfig { it.copy(suplementos_hora = if (v) 9 else null) } }
-                c.suplementos_hora?.let { h ->
-                    Etiqueta("Hora")
+                // Varias horas (esquema 21): se escribe la lista nueva y la hora única de antes queda vacía.
+                val horas = Suplementos.horas(c)
+                Interruptor("Recordarme cada día", horas.isNotEmpty()) { v ->
+                    Repo.cambiarConfig { it.copy(suplementos_horas = if (v) listOf(9) else emptyList(), suplementos_hora = null) }
+                }
+                if (horas.isNotEmpty()) {
+                    Etiqueta("Horas")
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf(7, 8, 9, 10, 12, 14, 18, 21, 22).forEach { x -> Ficha("%02d:00".format(x), h == x) { Repo.cambiarConfig { it.copy(suplementos_hora = x) } } }
+                        (listOf(7, 8, 9, 10, 12, 14, 18, 21, 22) + horas).distinct().sorted().forEach { x ->
+                            Ficha("%02d:00".format(x), x in horas) {
+                                Repo.cambiarConfig { cc ->
+                                    val ya = Suplementos.horas(cc)
+                                    cc.copy(suplementos_horas = if (x in ya) ya.filter { it != x } else (ya + x).sorted(), suplementos_hora = null)
+                                }
+                            }
+                        }
                     }
+                    Ayuda("Si tomas algo dos veces al día, marca dos horas y pon “2 tomas al día” en el suplemento.", Modifier.padding(top = 6.dp))
                 }
             }
         }
@@ -158,8 +178,8 @@ fun PantallaSuplementos(nav: Nav) {
                     Ayuda("Probióticos: también se cuentan como porciones estimadas los alimentos de tu bitácora de MacroFactor que contienen: " + c.probioticos_palabras.joinToString(", ") + ".",
                         Modifier.padding(top = 10.dp))
                     var palabras by remember { mutableStateOf(c.probioticos_palabras.joinToString(", ")) }
-                    OutlinedTextField(palabras, { palabras = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Palabras (separadas por coma)") })
-                    TextButton(onClick = { Repo.cambiarConfig { it.copy(probioticos_palabras = palabras.split(',').map { p -> p.trim() }.filter { p -> p.isNotEmpty() }) } }) { Text("guardar palabras") }
+                    CampoTexto(palabras, { palabras = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Palabras (separadas por coma)") })
+                    BotonTexto(onClick = { Repo.cambiarConfig { it.copy(probioticos_palabras = palabras.split(',').map { p -> p.trim() }.filter { p -> p.isNotEmpty() }) } }) { Text("guardar palabras") }
                 }
             }
         }
@@ -167,7 +187,7 @@ fun PantallaSuplementos(nav: Nav) {
         if (pasadas.isNotEmpty()) Seccion("Últimas tomas", "Toca una para corregir la cantidad o la hora, o para quitarla.") {
             Tarjeta {
                 pasadas.forEachIndexed { i, t ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     val s = Suplementos.de(t.suplemento)
                     Row(Modifier.fillMaxWidth().clickable { toma = t }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("${s?.nombre ?: t.suplemento} · ${cifra(t.cantidad)} ${s?.unidad ?: ""} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.ts)}", style = MaterialTheme.typography.bodySmall,
@@ -230,6 +250,7 @@ private fun EditorSuplemento(s0: Suplemento, cerrar: () -> Unit) {
     var vida by remember { mutableStateOf(cifra(s0.vida_media_h)) }
     var carga by remember { mutableStateOf(s0.carga_dias.toString()) }
     var lavado by remember { mutableStateOf(s0.lavado_dias.toString()) }
+    var tomasDia by remember { mutableStateOf(s0.tomas_dia.coerceIn(1, 6)) }
     // Uno nuevo (todavía no está en tus suplementos): se agrega activo al guardar.
     val nuevo = Repo.config.suplementos.none { it.id == s0.id }
     // Los números se revisan antes de guardar: si uno no se entiende, se avisa en lugar de volver en silencio al anterior.
@@ -240,36 +261,42 @@ private fun EditorSuplemento(s0: Suplemento, cerrar: () -> Unit) {
     val valido = nombre.isNotBlank() && dosisOk != null && vidaOk != null && cargaOk != null && lavadoOk != null
     Dialogo(onDismissRequest = cerrar, title = { Text(if (nuevo) "Nuevo suplemento" else s0.nombre) },
         confirmButton = {
-            TextButton(enabled = valido, onClick = {
+            BotonTexto(enabled = valido, onClick = {
                 val n = s0.copy(nombre = nombre.trim(), unidad = unidad.trim().ifBlank { s0.unidad }, dosis = dosisOk ?: s0.dosis,
                     modelo = modelo, vida_media_h = vidaOk ?: s0.vida_media_h, carga_dias = cargaOk ?: s0.carga_dias, lavado_dias = lavadoOk ?: s0.lavado_dias,
-                    activo = if (nuevo) true else s0.activo)
+                    activo = if (nuevo) true else s0.activo, tomas_dia = tomasDia)
                 Repo.cambiarConfig { c -> c.copy(suplementos = if (nuevo) c.suplementos + n else c.suplementos.map { if (it.id == s0.id) n else it }) }
                 cerrar()
             }) { Text("Guardar") }
         },
         dismissButton = {
             Row {
-                if (!nuevo) TextButton(onClick = { Repo.cambiarConfig { c -> c.copy(suplementos = c.suplementos.map { if (it.id == s0.id) it.copy(activo = false) else it }) }; cerrar() }) { Text("dejar de usar") }
-                TextButton(onClick = cerrar) { Text("cancelar") }
+                if (!nuevo) BotonTexto(onClick = { Repo.cambiarConfig { c -> c.copy(suplementos = c.suplementos.map { if (it.id == s0.id) it.copy(activo = false) else it }) }; cerrar() }) { Text("dejar de usar") }
+                BotonTexto(onClick = cerrar) { Text("cancelar") }
             }
         },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                OutlinedTextField(nombre, { nombre = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("Nombre") }, isError = nombre.isBlank())
+                CampoTexto(nombre, { nombre = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("Nombre") }, isError = nombre.isBlank())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
-                    OutlinedTextField(dosis, { dosis = it }, Modifier.weight(1f), singleLine = true, label = { Text("Dosis habitual") }, isError = dosisOk == null, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-                    OutlinedTextField(unidad, { unidad = it }, Modifier.weight(1f), singleLine = true, label = { Text("Unidad") })
+                    CampoTexto(dosis, { dosis = it }, Modifier.weight(1f), singleLine = true, label = { Text("Dosis habitual") }, isError = dosisOk == null, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                    CampoTexto(unidad, { unidad = it }, Modifier.weight(1f), singleLine = true, label = { Text("Unidad") })
                 }
+                // Cuántas veces al día (esquema 21): mientras lleves menos, el recordatorio, el mosaico y «Ya los tomé» lo cuentan como faltante.
+                Etiqueta("Tomas al día")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    (1..6).forEach { x -> Ficha(x.toString(), tomasDia == x) { tomasDia = x } }
+                }
+                if (tomasDia > 1) Ayuda("Pon una hora de recordatorio por cada toma (en «Recordatorio», abajo de tus suplementos).", Modifier.padding(top = 4.dp))
                 Etiqueta("Modelo")
                 FilaFichas(Suplementos.MODELOS, modelo) { modelo = it ?: modelo }
                 when (modelo) {
                     "carga" -> {
-                        OutlinedTextField(carga, { carga = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Días para llenar la reserva") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                        OutlinedTextField(lavado, { lavado = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Días para vaciarla sin tomar") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                        CampoTexto(carga, { carga = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Días para llenar la reserva") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                        CampoTexto(lavado, { lavado = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Días para vaciarla sin tomar") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                         Ayuda("Creatina: con 3–5 g diarios la reserva del músculo se llena en unas 4 semanas (en una con dosis de carga) y vuelve a lo normal 4 a 6 semanas después de dejarla.", Modifier.padding(top = 6.dp))
                     }
-                    "vida_media" -> OutlinedTextField(vida, { vida = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Vida media (horas)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                    "vida_media" -> CampoTexto(vida, { vida = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Vida media (horas)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                     else -> Ayuda("Solo se cuentan porciones por día.", Modifier.padding(top = 6.dp))
                 }
                 Ayuda("Los valores iniciales son aproximados. Cámbialos si sabes algo mejor.", Modifier.padding(top = 8.dp))
@@ -345,7 +372,7 @@ fun PantallaLaptop(nav: Nav) {
         Seccion("Apps y sitios", "Toca la categoría para cambiarla. El navegador no cuenta en las categorías: sus minutos ya están en los sitios.") {
             Tarjeta {
                 ColdTurkey.nombres().take(25).forEachIndexed { i, (n, m) ->
-                    if (i > 0) HorizontalDivider()
+                    if (i > 0) Separador()
                     val cat = ColdTurkey.categoria(n)
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
@@ -498,10 +525,10 @@ fun PantallaExperimentos(nav: Nav) {
                     }
                 }
                 Experimentos.PLANTILLAS.firstOrNull { it.id == plantilla }?.let { Ayuda(it.nota, Modifier.padding(top = 4.dp)) }
-                OutlinedTextField(nombre, { nombre = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("Nombre") }, singleLine = true)
-                OutlinedTextField(pregunta, { pregunta = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Pregunta") })
-                OutlinedTextField(accion, { accion = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Qué vas a cambiar (la acción)") })
-                OutlinedTextField(hipotesis, { hipotesis = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Qué crees que pasará (hipótesis)") })
+                CampoTexto(nombre, { nombre = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("Nombre") }, singleLine = true)
+                CampoTexto(pregunta, { pregunta = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Pregunta") })
+                CampoTexto(accion, { accion = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Qué vas a cambiar (la acción)") })
+                CampoTexto(hipotesis, { hipotesis = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Qué crees que pasará (hipótesis)") })
                 Etiqueta("Qué vas a medir")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     (listOf("valencia", "activacion", "sueno_calidad", "sueno_horas", "muestreo_valencia", "pantalla_min", "rt_media", "volumen_kg", "fuerza_ref_kg", "enfoque_min") +
@@ -513,7 +540,7 @@ fun PantallaExperimentos(nav: Nav) {
                     Ficha("debería subir", sentido == 1) { sentido = if (sentido == 1) null else 1 }
                     Ficha("debería bajar", sentido == -1) { sentido = if (sentido == -1) null else -1 }
                 }
-                if (sentido != null) OutlinedTextField(umbral, { umbral = it.replace(',', '.') }, Modifier.fillMaxWidth().padding(top = 6.dp),
+                if (sentido != null) CampoTexto(umbral, { umbral = it.replace(',', '.') }, Modifier.fillMaxWidth().padding(top = 6.dp),
                     label = { Text("Diferencia mínima que te importaría (opcional, en las unidades de la medida)") }, singleLine = true,
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal))
                 Ayuda(if (sentido == null) "Opcional, pero recomendable: di antes de empezar hacia dónde esperas el cambio. Al final la app te dirá si se cumplió."
@@ -607,7 +634,7 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
                 r.cociente?.let { Ayuda("Si el efecto viene de hacerlo, hacerlo de verdad cambiaría tu medida en unos ${"%+.2f".format(it)} (la diferencia según el plan entre la diferencia de cumplimiento). " +
                     "Es una aproximación: supone que saber qué semana tocaba no cambia nada por sí solo.") }
             }
-            if (Experimentos.enCurso(e, hoy)) TextButton(onClick = { Repo.guardarExperimento(e.copy(activo = false, fin = hoy)) }) { Text("Terminar experimento") }
+            if (Experimentos.enCurso(e, hoy)) BotonTexto(onClick = { Repo.guardarExperimento(e.copy(activo = false, fin = hoy)) }) { Text("Terminar experimento") }
         }
     }
 }
@@ -649,24 +676,24 @@ fun DialogoToma(t: io.github.ruddy2003.vestigium.data.TomaSuplemento, cerrar: ()
         title = { Text("${s?.nombre ?: t.suplemento} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.ts)}") },
         text = {
             Column {
-                OutlinedTextField(cantidad, { cantidad = it }, Modifier.fillMaxWidth(), singleLine = true, suffix = { Text(s?.unidad ?: "") }, label = { Text("Cantidad") },
+                CampoTexto(cantidad, { cantidad = it }, Modifier.fillMaxWidth(), singleLine = true, suffix = { Text(s?.unidad ?: "") }, label = { Text("Cantidad") },
                     isError = v == null || v <= 0, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal))
                 Etiqueta("Cuándo")
                 io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, ayer = true) { cuando = it }
-                TextButton(onClick = {
-                    if (!confirmar) { confirmar = true; return@TextButton }
+                BotonTexto(onClick = {
+                    if (!confirmar) { confirmar = true; return@BotonTexto }
                     Repo.borrarToma(t.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Toma borrada") { Repo.guardarToma(t) }
                 }, modifier = Modifier.padding(top = 6.dp)) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
             }
         },
         confirmButton = {
-            TextButton(enabled = v != null && v > 0, onClick = {
+            BotonTexto(enabled = v != null && v > 0, onClick = {
                 val ms = (cuando ?: java.time.LocalDateTime.now()).aMillis()
                 val n = t.copy(cantidad = v ?: t.cantidad, ts = Fechas.isoDeMillis(ms), fecha = Fechas.diaLogicoDeMillis(ms))
                 if (n != t) Repo.guardarToma(n)
                 cerrar()
             }) { Text("Guardar") }
         },
-        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } },
+        dismissButton = { BotonTexto(onClick = cerrar) { Text("cancelar") } },
     )
 }

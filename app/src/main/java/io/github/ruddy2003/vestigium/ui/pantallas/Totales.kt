@@ -2,6 +2,9 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -18,11 +21,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -98,10 +98,10 @@ fun PantallaTotales(nav: Nav, buscar: Boolean = false) {
             }
         }
         Ayuda(if (periodo == "todo") "Desde el primer dato que tengas hasta hoy." else "Del ${Totales.fecha(desde)} a hoy.", Modifier.padding(top = 4.dp))
-        OutlinedTextField(
+        CampoTexto(
             busqueda, { busqueda = it }, Modifier.fillMaxWidth().padding(top = 8.dp).focusRequester(foco), singleLine = true,
             placeholder = { Text("Buscar en todo: diario, plátano, @persona, artista, lugar…") },
-            trailingIcon = if (busqueda.isNotEmpty()) ({ TextButton(onClick = { busqueda = "" }) { Text("×") } }) else null,
+            trailingIcon = if (busqueda.isNotEmpty()) ({ BotonTexto(onClick = { busqueda = "" }) { Text("×") } }) else null,
         )
         if (busqueda.isNotBlank()) EnPantallas(busqueda) { ruta -> nav.ir(ruta) }
         val r = res
@@ -117,7 +117,7 @@ fun PantallaTotales(nav: Nav, buscar: Boolean = false) {
             else -> {
                 r.grupos.forEach { g ->
                     Seccion(g.titulo, latin = g.latin) {
-                        Tarjeta { g.cifras.forEachIndexed { k, c -> if (k > 0) HorizontalDivider(); FilaCifra(c) } }
+                        Tarjeta { g.cifras.forEachIndexed { k, c -> if (k > 0) Separador(); FilaCifra(c) } }
                     }
                 }
                 if (r.indices.isNotEmpty()) Seccion("Índices", "Elige una lista y toca cualquier renglón para ver su historia mes a mes.", latin = "INDICES") {
@@ -127,8 +127,8 @@ fun PantallaTotales(nav: Nav, buscar: Boolean = false) {
                     }
                     Tarjeta {
                         val l = if (todos) sel.entradas.take(150) else sel.entradas.take(12)
-                        l.forEachIndexed { k, e -> if (k > 0) HorizontalDivider(); FilaEntrada(sel, e, k + 1) { abierta = sel to e } }
-                        if (sel.entradas.size > 12) TextButton(onClick = { todos = !todos }) {
+                        l.forEachIndexed { k, e -> if (k > 0) Separador(); FilaEntrada(sel, e, k + 1) { abierta = sel to e } }
+                        if (sel.entradas.size > 12) BotonTexto(onClick = { todos = !todos }) {
                             Text(if (todos) "ver menos" else "ver ${minOf(150, sel.entradas.size)} de ${sel.entradas.size}", style = MaterialTheme.typography.labelLarge)
                         }
                     }
@@ -171,19 +171,19 @@ private fun Resultados(r: Totales.Resultado, q: String, abrir: (Totales.Indice, 
     }
     if (cifras.isNotEmpty()) {
         Etiqueta("cifras")
-        Tarjeta { cifras.forEachIndexed { k, c -> if (k > 0) HorizontalDivider(); FilaCifra(c) } }
+        Tarjeta { cifras.forEachIndexed { k, c -> if (k > 0) Separador(); FilaCifra(c) } }
     }
     hallados.forEach { (i, l) ->
         Etiqueta(i.titulo.lowercase())
         Tarjeta {
-            l.take(10).forEachIndexed { k, e -> if (k > 0) HorizontalDivider(); FilaEntrada(i, e) { abrir(i, e) } }
+            l.take(10).forEachIndexed { k, e -> if (k > 0) Separador(); FilaEntrada(i, e) { abrir(i, e) } }
             if (l.size > 10) Ayuda("y ${l.size - 10} más; escribe algo más específico.")
             // Si hay varias coincidencias (p. ej. tipos de plátano), también la suma de todas.
             if (l.size > 1 && l.map { it.unidad }.distinct().size == 1) {
                 val s = Totales.Entrada("Todo lo que coincide con «$q»", l.first().unidad)
                 l.forEach { e -> e.porMes.forEach { (m, v) -> s.porMes.merge(m, v, Double::plus) }; s.total += e.total; s.veces += e.veces; s.dias.addAll(e.dias); s.extra += e.extra
                     if (s.primera.isEmpty() || e.primera < s.primera) s.primera = e.primera; if (e.ultima > s.ultima) s.ultima = e.ultima }
-                HorizontalDivider()
+                Separador()
                 FilaEntrada(i, s) { abrir(i, s) }
             }
         }
@@ -211,7 +211,7 @@ private fun Detalle(i: Totales.Indice, e: Totales.Entrada, cerrar: () -> Unit) {
                 if (e.porMes.size >= 2) Meses(e.porMes, e.unidad)
             }
         },
-        confirmButton = { TextButton(onClick = cerrar) { Text("cerrar", style = MaterialTheme.typography.labelLarge) } },
+        confirmButton = { BotonTexto(onClick = cerrar) { Text("cerrar", style = MaterialTheme.typography.labelLarge) } },
     )
 }
 
@@ -263,7 +263,7 @@ private fun EnDiario(q: String, desde: String, hasta: String, abrir: (String) ->
     Etiqueta("en tu diario · ${hallados.size} ${if (hallados.size == 1) "día" else "días"}")
     Tarjeta {
         hallados.take(20).forEachIndexed { k, (f, t) ->
-            if (k > 0) HorizontalDivider()
+            if (k > 0) Separador()
             Column(Modifier.fillMaxWidth().clickable { abrir(f) }.padding(vertical = 8.dp)) {
                 Text(Totales.fecha(f), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 // Un fragmento alrededor de lo que buscaste.
@@ -289,7 +289,7 @@ private fun EnIdeas(q: String, desde: String, hasta: String, abrir: (io.github.r
     Etiqueta("en tu ideario · ${hallados.size}")
     Tarjeta {
         hallados.take(12).forEachIndexed { k, i ->
-            if (k > 0) HorizontalDivider()
+            if (k > 0) Separador()
             Column(Modifier.fillMaxWidth().clickable { abrir(i) }.padding(vertical = 8.dp)) {
                 Text(Totales.fecha(i.fecha) + (i.quien.joinToString(", ").ifBlank { null }?.let { " · $it" } ?: ""), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 io.github.ruddy2003.vestigium.ui.TextoMarcado(i.titulo.ifBlank { i.texto }.replace("\n", " ").take(160), style = MaterialTheme.typography.bodySmall, maxLines = 3)
@@ -312,7 +312,7 @@ private fun EnCartas(q: String, desde: String, hasta: String, abrir: (String) ->
     Etiqueta("en tus cartas · ${hallados.size}")
     Tarjeta {
         hallados.take(12).forEachIndexed { k, c ->
-            if (k > 0) HorizontalDivider()
+            if (k > 0) Separador()
             Column(Modifier.fillMaxWidth().clickable { abrir(c.id) }.padding(vertical = 8.dp)) {
                 Text((if (c.alFuturo) "A mi yo del futuro" else "Para @${c.para}") + " · " + Totales.fecha(c.escrita), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 val t = c.texto; val n = Totales.normal(t); val i = n.indexOf(nq).coerceAtLeast(0)

@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.privado
@@ -29,11 +31,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -221,22 +221,26 @@ fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (
         }
     }
     if (l.isEmpty()) {
-        if (tarde && d.valencia != null) Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
-            Text("✓ Hoy completo. Buenas noches.", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onPrimaryContainer)
+        if (tarde && d.valencia != null) io.github.ruddy2003.vestigium.ui.comun.TarjetaTema(io.github.ruddy2003.vestigium.ui.comun.TipoTarjeta.PENDIENTE,
+            Modifier.fillMaxWidth().padding(top = 10.dp), destacado = true) {
+            Text("✓ Hoy completo. Buenas noches.", style = MaterialTheme.typography.bodyMedium)
         } else if (extra.isNotEmpty()) Column(Modifier.fillMaxWidth().padding(top = 4.dp)) { invitaciones(MaterialTheme.colorScheme.primary) }
         return
     }
-    Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
-        Column(Modifier.padding(12.dp)) {
-            Text(Estilo.seccion("Te falta hoy", null).first, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+    val dcp = io.github.ruddy2003.vestigium.ui.comun.disenoComun(Estilo.tema)
+    val oscp = io.github.ruddy2003.vestigium.ui.esOscuro()
+    val tipoP = io.github.ruddy2003.vestigium.ui.comun.TipoTarjeta.PENDIENTE
+    io.github.ruddy2003.vestigium.ui.comun.TarjetaTema(tipoP, Modifier.fillMaxWidth().padding(top = 10.dp)) {
+        run {
+            Text(Estilo.seccion("Te falta hoy", null).first, style = MaterialTheme.typography.titleLarge, color = dcp.acentoTarjeta(tipoP, oscp))
             FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 l.forEach { p -> Ficha("${p.texto} →", false) { accion(p.accion) } }
             }
             // El diario de ayer se puede dejar pasar.
-            if (l.any { it.clave == "p:ayer" }) TextButton(onClick = {
+            if (l.any { it.clave == "p:ayer" }) BotonTexto(onClick = {
                 Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + ("p:ayer" to hoy)) }
             }) { Text("hoy no: " + (l.first { it.clave == "p:ayer" }.texto.removePrefix("Te faltan ").lowercase()), style = MaterialTheme.typography.labelMedium) }
-            invitaciones(MaterialTheme.colorScheme.onPrimaryContainer)
+            invitaciones(dcp.tintaTarjeta(tipoP, oscp))
         }
     }
 }
@@ -309,7 +313,7 @@ fun DatosQueFaltan(nav: io.github.ruddy2003.vestigium.ui.Nav, compacto: Boolean 
     // En Hoy, solo un contador que se despliega (N-16).
     var abierto by remember { mutableStateOf(!compacto) }
     if (!abierto) {
-        TextButton(onClick = { abierto = true }) {
+        BotonTexto(onClick = { abierto = true }) {
             Text(if (faltas.size == 1) "1 dato que falta →" else "${faltas.size} datos que faltan →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.error)
         }
         return
@@ -317,10 +321,10 @@ fun DatosQueFaltan(nav: io.github.ruddy2003.vestigium.ui.Nav, compacto: Boolean 
     Tarjeta(Modifier.padding(top = 10.dp)) {
         Text(Estilo.seccion("Datos que faltan", null).first, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.error)
         faltas.forEachIndexed { i, f ->
-            if (i > 0) HorizontalDivider(Modifier.padding(vertical = 6.dp))
+            if (i > 0) Separador(Modifier.padding(vertical = 6.dp))
             Text(f.texto, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                TextButton(onClick = {
+                BotonTexto(onClick = {
                     when (f.arreglo) {
                         "permisos" -> nav.ir("permisos")
                         "datos" -> nav.ir("datos")
@@ -328,16 +332,16 @@ fun DatosQueFaltan(nav: io.github.ruddy2003.vestigium.ui.Nav, compacto: Boolean 
                         else -> scope.launch { msg = runCatching { withContext(Dispatchers.IO) { f.hacer(ctx) } }.getOrElse { "No se pudo: ${it.message}" }; version++ }
                     }
                 }) { Text(f.arreglo, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
-                TextButton(onClick = { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + (f.clave to hoy)) } }) {
+                BotonTexto(onClick = { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + (f.clave to hoy)) } }) {
                     Text("ignorar hoy", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                TextButton(onClick = { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + (f.clave to "siempre")) } }) {
+                BotonTexto(onClick = { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + (f.clave to "siempre")) } }) {
                     Text("no volver a avisar", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
         msg?.let { Ayuda(it, Modifier.padding(top = 4.dp)) }
-        if (Repo.config.avisos_ignorados.values.any { it == "siempre" }) TextButton(onClick = {
+        if (Repo.config.avisos_ignorados.values.any { it == "siempre" }) BotonTexto(onClick = {
             Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados.filterValues { it != "siempre" }) }
         }) { Text("volver a avisar de todo", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
@@ -475,10 +479,10 @@ fun FraseDelDia(fecha: String) {
         }
         // Recorte de gaceta: filete grueso y fino arriba, fino abajo.
         TemaId.COLONOS -> Column(arriba) {
-            HorizontalDivider(thickness = 2.dp, color = cs.onSurface)
-            HorizontalDivider(Modifier.padding(top = 2.dp), thickness = 0.5.dp, color = cs.onSurface)
+            Separador(thickness = 2.dp, color = cs.onSurface)
+            Separador(Modifier.padding(top = 2.dp), thickness = 0.5.dp, color = cs.onSurface)
             Box(Modifier.padding(vertical = 6.dp)) { CuerpoFrase(f, fecha, rotulo.uppercase(), "“", "”") }
-            HorizontalDivider(thickness = 0.5.dp, color = cs.onSurface)
+            Separador(thickness = 0.5.dp, color = cs.onSurface)
         }
         // Boletín: un filete de Didot (grueso al centro, fino en las puntas) arriba y abajo; el texto centrado.
         TemaId.NAPOLEON -> Column(arriba, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -832,10 +836,10 @@ fun Tablero(fecha: String, max: Int? = null, tocar: (String) -> Unit = {}) {
         }
     }
     if (!todo && completa.size > lista.size) {
-        TextButton(onClick = { todo = true }) { Text("ver todo (${completa.size}) ▾", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary) }
+        BotonTexto(onClick = { todo = true }) { Text("ver todo (${completa.size}) ▾", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary) }
         return
     }
-    TextButton(onClick = { editando = !editando }) {
+    BotonTexto(onClick = { editando = !editando }) {
         Text(if (editando) "listo" else "editar tablero", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     if (editando) Tarjeta {
@@ -848,8 +852,8 @@ fun Tablero(fecha: String, max: Int? = null, tocar: (String) -> Unit = {}) {
                 Checkbox(activa, onCheckedChange = { v -> Repo.cambiarConfig { c -> c.copy(tablero = if (v) elegidas + id else elegidas - id) } })
                 Text(m.nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                 if (activa) {
-                    TextButton(onClick = { mover(elegidas, id, -1) }) { Text("↑") }
-                    TextButton(onClick = { mover(elegidas, id, 1) }) { Text("↓") }
+                    BotonTexto(onClick = { mover(elegidas, id, -1) }) { Text("↑") }
+                    BotonTexto(onClick = { mover(elegidas, id, 1) }) { Text("↓") }
                 }
             }
         }
@@ -869,8 +873,11 @@ private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<Str
     val v = semana.last()
     val previos = (1..28).mapNotNull { k -> m.valor(Fechas.sumar(fecha, -k.toLong()), extra) }
     val normal = if (previos.size >= 5) previos.average() else null
-    val color = MaterialTheme.colorScheme.primary
-    val tenue = MaterialTheme.colorScheme.outline
+    val dc = io.github.ruddy2003.vestigium.ui.comun.disenoComun(Estilo.tema)
+    val osc = io.github.ruddy2003.vestigium.ui.esOscuro()
+    val tipo = io.github.ruddy2003.vestigium.ui.comun.TipoTarjeta.METRICA
+    val color = dc.acentoTarjeta(tipo, osc)
+    val tenue = dc.rotuloTarjeta(tipo, osc).copy(alpha = 0.6f)
     val eg = estiloGrafica()
     // Las barras crecen al abrir el día.
     val crecer = remember(fecha, m.id) { androidx.compose.animation.core.Animatable(if (Repo.config.animaciones) 0f else 1f) }
@@ -878,15 +885,14 @@ private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<Str
         crecer.animateTo(1f, androidx.compose.animation.core.tween(700, delayMillis = 60, easing = androidx.compose.animation.core.FastOutSlowInEasing))
     }
     // Tocar la cifra lleva a donde se corrige o se ve de dónde salió (P1).
-    Surface(onClick = tocar, modifier = modifier, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
-        Column(Modifier.padding(10.dp)) {
+    val dif = if (v != null && normal != null && normal != 0.0) (v - normal) / abs(normal) else null
+    io.github.ruddy2003.vestigium.ui.comun.TarjetaTema(tipo, modifier, destacado = dif != null && abs(dif) >= 0.2, onClick = tocar) {
+        run {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(m.nombre.lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, modifier = Modifier.weight(1f))
-                Text("›", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline)
+                Text(m.nombre.lowercase(), style = MaterialTheme.typography.labelMedium, color = dc.rotuloTarjeta(tipo, osc), maxLines = 1, modifier = Modifier.weight(1f))
+                Text("›", style = MaterialTheme.typography.labelMedium, color = dc.rotuloTarjeta(tipo, osc))
             }
             Text(v?.let(m.formato) ?: "—", style = estiloCifra(), maxLines = 1)
-            val dif = if (v != null && normal != null && normal != 0.0) (v - normal) / abs(normal) else null
             Text(
                 when {
                     v == null -> "sin dato"
@@ -895,7 +901,7 @@ private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<Str
                     else -> "${if (dif > 0) "↑" else "↓"} ${"%.0f".format(abs(dif) * 100)}% vs tu normal"
                 },
                 style = MaterialTheme.typography.labelSmall, maxLines = 1,
-                color = if (dif != null && abs(dif) >= 0.2) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (dif != null && abs(dif) >= 0.2) dc.acentoTarjeta(tipo, osc) else dc.rotuloTarjeta(tipo, osc),
             )
             // Últimos 7 días: la barra de este día resaltada; los días sin dato, un punto.
             val max = semana.filterNotNull().maxOrNull()?.takeIf { it > 0 } ?: 1.0
@@ -1488,7 +1494,7 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
         Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(if (partes.isEmpty()) "Esta semana todavía no hay datos." else "esta semana: " + partes.joinToString(" · "),
                 style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
-            if (faltan > 0) TextButton(onClick = ponerse) {
+            if (faltan > 0) BotonTexto(onClick = ponerse) {
                 Text(if (faltan == 1) "1 día sin llenar →" else "$faltan días sin llenar →", style = MaterialTheme.typography.labelMedium, color = cs.primary)
             }
         }

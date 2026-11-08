@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -46,7 +47,6 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -1777,11 +1777,11 @@ fun CuerpoSelectorFecha(inicial: LocalDate, titulo: String = "¿Qué día?", min
     val estado = rememberDatePickerState(initialSelectedDateMillis = inicial.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(), selectableDates = limites)
     CuerpoDialogo(
         confirmButton = {
-            TextButton(onClick = { estado.selectedDateMillis?.let { onElegir(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()) } },
+            BotonTexto(onClick = { estado.selectedDateMillis?.let { onElegir(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()) } },
                 enabled = estado.selectedDateMillis != null) { Text("aceptar") }
         },
         modifier = modifier,
-        dismissButton = { TextButton(onClick = onCerrar) { Text("cancelar") } },
+        dismissButton = { BotonTexto(onClick = onCerrar) { Text("cancelar") } },
         title = { Text(titulo) },
         text = {
             DatePicker(state = estado, title = null, showModeToggle = false, colors = DatePickerDefaults.colors(
@@ -1811,9 +1811,9 @@ fun CuerpoSelectorHora(hora: Int, minuto: Int, titulo: String = "¿A qué hora?"
     val e = MaterialTheme.colorScheme
     val estado = rememberTimePickerState(initialHour = hora, initialMinute = minuto, is24Hour = true)
     CuerpoDialogo(
-        confirmButton = { TextButton(onClick = { onElegir(estado.hour, estado.minute) }) { Text("aceptar") } },
+        confirmButton = { BotonTexto(onClick = { onElegir(estado.hour, estado.minute) }) { Text("aceptar") } },
         modifier = modifier,
-        dismissButton = { TextButton(onClick = onCerrar) { Text("cancelar") } },
+        dismissButton = { BotonTexto(onClick = onCerrar) { Text("cancelar") } },
         title = { Text(titulo) },
         text = {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {

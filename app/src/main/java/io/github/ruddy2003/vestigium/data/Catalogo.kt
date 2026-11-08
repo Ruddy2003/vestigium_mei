@@ -34,6 +34,12 @@ object Catalogo {
             4 to "Muy fuerte, casi todo el día", 5 to "Incontrolable"),
         "libido" to mapOf(
             0 to "Nada", 1 to "Leve", 2 to "Presente", 3 to "Notable", 4 to "Fuerte", 5 to "Dominante"),
+        // Esquema 21: cómo fue la intimidad o la masturbación (1 a 5) y la intensidad de un episodio.
+        "satisfaccion" to mapOf(1 to "Muy poca: me dejó mal", 2 to "Poca", 3 to "Regular", 4 to "Buena", 5 to "Mucha: me dejó muy bien"),
+        "placer" to mapOf(1 to "Nada o casi nada", 2 to "Poco", 3 to "Algo", 4 to "Bastante", 5 to "Muchísimo"),
+        "conexion" to mapOf(1 to "Distante", 2 to "Poca cercanía", 3 to "Algo de cercanía", 4 to "Cercanía", 5 to "Muy cerca, en sintonía"),
+        "comodidad" to mapOf(1 to "Muy incómodo, no lo quería", 2 to "Incómodo", 3 to "Con dudas", 4 to "A gusto", 5 to "Muy a gusto y con control"),
+        "episodio" to mapOf(1 to "Leve", 2 to "Moderado", 3 to "Fuerte", 4 to "Muy fuerte", 5 to "Lo peor que he vivido así"),
         "prediccion_manana" to mapOf(
             1 to "Muy desagradable", 2 to "Desagradable", 3 to "Algo desagradable", 4 to "Neutral",
             5 to "Algo agradable", 6 to "Agradable", 7 to "Muy agradable"),
@@ -100,7 +106,62 @@ object Catalogo {
     /** Libido: solo con el seguimiento privado; distinta del impulso. Sin texto, sin logros, rachas ni widget. */
     val LIBIDO = TipoMomento("libido", "Libido", "L", "¿En qué está el foco?")
     val FOCOS = listOf(Opcion("pensando", "Pensando"), Opcion("viendo", "Viendo"), Opcion("conversando", "Conversando"), Opcion("nada", "Nada en particular"), Opcion("otro", "Otro"))
-    fun tipo(id: String): TipoMomento? = MOMENTOS.firstOrNull { it.id == id } ?: RECAIDA.takeIf { it.id == id } ?: LIBIDO.takeIf { it.id == id }
+    // ---- Esquema 21: masturbación e intimidad (privados, solo con el seguimiento privado) y episodios (normales).
+    val MASTURBACION = TipoMomento("masturbacion", "Masturbación", "M", "¿Cómo fue?")
+    val INTIMIDAD = TipoMomento("intimidad", "Intimidad", "N", "¿Cómo fue?")
+    /** Un episodio: algo fuerte que te pasa (una crisis, un llanto, una pelea, una migraña…), con hora, intensidad y duración. */
+    val EPISODIO = TipoMomento("episodio", "Episodio", "O", "¿Qué pasó?")
+    /** Masturbación: qué la acompañó. Con pornografía, cuenta como recaída (decisión del autor). */
+    val ESTIMULOS = listOf(Opcion("pornografia", "Pornografía"), Opcion("fantasia", "Fantasía"), Opcion("recuerdo", "Un recuerdo"),
+        Opcion("mensajes", "Conversación o mensajes"), Opcion("ninguno", "Nada en particular"), Opcion("otro", "Otro"))
+    /** Estímulos con los que se pregunta en qué aparato. */
+    val ESTIMULOS_CON_APARATO = setOf("pornografia", "mensajes")
+    val SITIOS = listOf(Opcion("cama", "Cama"), Opcion("bano", "Baño"), Opcion("sofa", "Sofá"), Opcion("otro", "Otro"))
+    /**
+     * Intimidad: lo que pasó, con nombres de manual. [Practica.nivel] ordena de menos a más contacto (0 a distancia, 1 beso,
+     * 2 caricias, 3 oral, 4 coito); las que no tienen nivel (null) no cambian el del momento.
+     */
+    data class Practica(val id: String, val nombre: String, val ayuda: String, val grupo: String, val nivel: Int?)
+    val PRACTICAS = listOf(
+        Practica("mensajes_eroticos", "Mensajes eróticos", "sexting, fotos", "A distancia", 0),
+        Practica("llamada_erotica", "Llamada o videollamada erótica", "", "A distancia", 0),
+        Practica("beso_breve", "Beso breve", "pico", "Besos", 1),
+        Practica("beso_profundo", "Beso profundo", "", "Besos", 1),
+        Practica("caricias_ropa", "Caricias sobre la ropa", "faje superficial", "Caricias", 2),
+        Practica("caricias_intimas", "Caricias íntimas sin ropa", "faje", "Caricias", 2),
+        Practica("estimulacion_manual", "Estimulación manual", "", "Caricias", 2),
+        Practica("oral_dar", "Sexo oral, dar", "", "Oral", 3),
+        Practica("oral_recibir", "Sexo oral, recibir", "", "Oral", 3),
+        Practica("coito_vaginal", "Coito vaginal", "", "Coito", 4),
+        Practica("coito_anal", "Coito anal", "", "Coito", 4),
+        Practica("no_convencional", "Prácticas no convencionales", "kinks: BDSM, fetiches, juego de roles", "Otras prácticas", null),
+        Practica("juguetes", "Con juguetes", "", "Otras prácticas", null),
+        Practica("otra", "Otra", "", "Otras prácticas", null),
+    )
+    val NIVELES_INTIMIDAD = listOf(0 to "A distancia", 1 to "Besos", 2 to "Caricias", 3 to "Oral", 4 to "Coito")
+    fun practica(id: String) = PRACTICAS.firstOrNull { it.id == id }
+    /** El nivel de un momento de intimidad: el más alto de sus prácticas (null si ninguna tiene nivel). */
+    fun nivelIntimidad(practicas: List<String>): Int? = practicas.mapNotNull { practica(it)?.nivel }.maxOrNull()
+    val SI_NO_NOSE = listOf(Opcion("si", "Sí"), Opcion("no", "No"), Opcion("no_se", "No sé"))
+    val PROTECCION = listOf(Opcion("barrera", "Condón u otra barrera"), Opcion("otro_metodo", "Otro método"), Opcion("ninguno", "Ninguna"), Opcion("no_aplica", "No aplica"))
+    val INICIATIVA = listOf(Opcion("yo", "Yo"), Opcion("otra", "La otra persona"), Opcion("ambos", "Los dos"))
+    /** Episodios: [Opcion.detalle] es el grupo del panel (epi_crisis, epi_llanto, epi_pelea, epi_salud). */
+    val EPISODIOS = listOf(Opcion("crisis", "Crisis de ansiedad o pánico", "crisis"), Opcion("llanto", "Llanto o bajón fuerte", "llanto"),
+        Opcion("pelea", "Pelea o discusión", "pelea"), Opcion("migrana", "Migraña", "salud"), Opcion("enfermedad", "Enfermedad", "salud"),
+        Opcion("accidente", "Accidente", "salud"), Opcion("otro", "Otro", ""))
+    /** En la enfermedad la duración se dice en días. */
+    val EPISODIOS_EN_DIAS = setOf("enfermedad")
+    val SINTOMAS_CRISIS = listOf(Opcion("corazon", "Corazón acelerado"), Opcion("aire", "Falta de aire"), Opcion("temblor", "Temblor"),
+        Opcion("mareo", "Mareo"), Opcion("sudor", "Sudor"), Opcion("miedo", "Miedo intenso"), Opcion("irrealidad", "Sensación de irrealidad"))
+    fun nombreEpisodio(m: Momento): String = if (m.episodio == "otro" && !m.episodio_otro.isNullOrBlank()) m.episodio_otro.trim()
+        else EPISODIOS.firstOrNull { it.id == m.episodio }?.nombre ?: "Episodio"
+    /** Fechas señaladas (esquema 21): lo que quieres recordar de un día. [Opcion.detalle] es su emblema. */
+    val SENALADAS = listOf(Opcion("primera_vez", "Primera vez", "✦"), Opcion("viaje", "Viaje", "✈"), Opcion("logro", "Logro", "★"),
+        Opcion("cambio", "Cambio de vida", "↻"), Opcion("perdida", "Pérdida", "✝"), Opcion("encuentro", "Encuentro", "◎"),
+        Opcion("celebracion", "Celebración", "✺"), Opcion("otro", "Otra", "•"))
+    fun senalada(id: String) = SENALADAS.firstOrNull { it.id == id } ?: SENALADAS.last()
+
+    fun tipo(id: String): TipoMomento? = MOMENTOS.firstOrNull { it.id == id } ?: listOf(RECAIDA, LIBIDO, MASTURBACION, INTIMIDAD, EPISODIO).firstOrNull { it.id == id }
     fun nombreTipo(id: String): String = if (id == "muestreo" || id == "animo") "Ánimo" else tipo(id)?.nombre ?: id
 
     // ------------------------------------------------------------------ ánimo: sentimientos y pensamientos
@@ -127,6 +188,8 @@ object Catalogo {
         Sentimiento("vacio", "Vacío o apatía", -1, "ο"), Sentimiento("desesperanza", "Desesperanza", -1, "π"), Sentimiento("arrepentimiento", "Arrepentimiento", -1, "ρ"),
         Sentimiento("inquietud", "Inquietud", -1, "σ"),
         Sentimiento("anhelo", "Anhelo", 0, "τ"), Sentimiento("encontrados", "Sentimientos encontrados", 0, "υ"), Sentimiento("vulnerable", "Vulnerable", 0, "φ"),
+        // Esquema 21: para después de la intimidad.
+        Sentimiento("deseo", "Deseo", 0, "χ"),
     )
     /** Cuánto de cada emoción (esquema 17): 1 un poco, 2 bastante, 3 mucho. */
     val INTENSIDADES = listOf(1 to "un poco", 2 to "bastante", 3 to "mucho")
@@ -160,7 +223,8 @@ object Catalogo {
 
     /** Cómo se nombra un registro: sus sentimientos o, si no hay, su pensamiento o «Ánimo». */
     fun titulo(m: Momento, discreto: Boolean): String {
-        if (m.tipo == "impulso" || m.tipo == "recaida" || m.tipo == "libido") return nombreTipo(m.tipo).let { n -> if (discreto) tipo(m.tipo)?.discreto ?: n else n }
+        if (m.tipo in setOf("impulso", "recaida", "libido", "masturbacion", "intimidad")) return nombreTipo(m.tipo).let { n -> if (discreto) tipo(m.tipo)?.discreto ?: n else n }
+        if (m.tipo == "episodio") return if (discreto) EPISODIO.discreto else nombreEpisodio(m)
         val e = emocionesDe(m).map { if (it == OTRO && !m.emocion_otra.isNullOrBlank() && !discreto) m.emocion_otra else nombreSentimiento(it, discreto) }
         if (e.isNotEmpty()) return e.joinToString(" · ")
         pensamientosDe(m).takeIf { it.isNotEmpty() }?.let { l -> return if (discreto) "·" else l.joinToString(" · ") { nombrePensamiento(it) } }
@@ -178,7 +242,7 @@ object Catalogo {
     /** Como [titulo], pero cada emoción con su intensidad (esquema 17). Sin emociones, igual que [titulo]. */
     fun tituloDetallado(m: Momento, discreto: Boolean): String {
         val e = emocionesDe(m)
-        if (e.isEmpty() || m.tipo == "impulso" || m.tipo == "recaida" || m.tipo == "libido") return titulo(m, discreto)
+        if (e.isEmpty() || m.tipo in setOf("impulso", "recaida", "libido", "masturbacion", "intimidad", "episodio")) return titulo(m, discreto)
         return e.joinToString(" · ") { emocionConIntensidad(m, it, discreto) }
     }
 

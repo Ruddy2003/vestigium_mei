@@ -2,6 +2,8 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.esAnimo
@@ -22,12 +24,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import io.github.ruddy2003.vestigium.ui.aMillis
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -262,7 +262,7 @@ fun PantallaLugares(nav: Nav) {
         }
         TiposDeLugar(Modifier.padding(top = 10.dp))
         val pendLug = io.github.ruddy2003.vestigium.data.Lugares.pendientes().size
-        TextButton(onClick = { nav.ir("lugar_nuevo") }) {
+        BotonTexto(onClick = { nav.ir("lugar_nuevo") }) {
             Text(if (pendLug > 0) "$pendLug sitio(s) nuevos esperando que digas si son especiales ›" else "lugares especiales: cuándo pregunta y sitios ignorados ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         }
         Seccion("Marcar dónde estoy ahora") {
@@ -307,9 +307,9 @@ fun PantallaLugares(nav: Nav) {
                     var renombrar by remember(l.id) { mutableStateOf<String?>(null) }
                     var radioAbierto by remember(l.id) { mutableStateOf(false) }
                     Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                        TextButton(onClick = { renombrar = l.nombre }) { Text("renombrar", style = MaterialTheme.typography.labelMedium) }
-                        TextButton(onClick = { radioAbierto = !radioAbierto }) { Text("radio ${l.radio_m} m", style = MaterialTheme.typography.labelMedium) }
-                        TextButton(onClick = { borrar = true }) { Text("quitar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error) }
+                        BotonTexto(onClick = { renombrar = l.nombre }) { Text("renombrar", style = MaterialTheme.typography.labelMedium) }
+                        BotonTexto(onClick = { radioAbierto = !radioAbierto }) { Text("radio ${l.radio_m} m", style = MaterialTheme.typography.labelMedium) }
+                        BotonTexto(onClick = { borrar = true }) { Text("quitar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error) }
                     }
                     if (radioAbierto) {
                         androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -325,9 +325,9 @@ fun PantallaLugares(nav: Nav) {
                     }
                     renombrar?.let { t ->
                         Dialogo(onDismissRequest = { renombrar = null }, title = { Text("Renombrar lugar") },
-                            text = { OutlinedTextField(value = t, onValueChange = { renombrar = it }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
-                            confirmButton = { TextButton(enabled = t.isNotBlank(), onClick = { Repo.guardarLugar(l.copy(nombre = t.trim())); renombrar = null }) { Text("Guardar") } },
-                            dismissButton = { TextButton(onClick = { renombrar = null }) { Text("cancelar") } })
+                            text = { CampoTexto(value = t, onValueChange = { renombrar = it }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
+                            confirmButton = { BotonTexto(enabled = t.isNotBlank(), onClick = { Repo.guardarLugar(l.copy(nombre = t.trim())); renombrar = null }) { Text("Guardar") } },
+                            dismissButton = { BotonTexto(onClick = { renombrar = null }) { Text("cancelar") } })
                     }
                     if (borrar) {
                         val suyas = Repo.visitas.filter { it.lugar == l.id }
@@ -353,13 +353,13 @@ fun PantallaLugares(nav: Nav) {
                                             }
                                         }
                                     }
-                                    TextButton(onClick = { quitar(null, true) }, modifier = Modifier.padding(top = 8.dp)) {
+                                    BotonTexto(onClick = { quitar(null, true) }, modifier = Modifier.padding(top = 8.dp)) {
                                         Text("quitarlo e ignorar este sitio para siempre", color = MaterialTheme.colorScheme.error)
                                     }
                                 }
                             },
-                            confirmButton = { TextButton(onClick = { quitar(null, false) }) { Text(if (suyas.isEmpty()) "Quitar" else "Quitar con sus visitas", color = MaterialTheme.colorScheme.error) } },
-                            dismissButton = { TextButton(onClick = { borrar = false }) { Text("cancelar") } })
+                            confirmButton = { BotonTexto(onClick = { quitar(null, false) }) { Text(if (suyas.isEmpty()) "Quitar" else "Quitar con sus visitas", color = MaterialTheme.colorScheme.error) } },
+                            dismissButton = { BotonTexto(onClick = { borrar = false }) { Text("cancelar") } })
                     }
                 }
             }
@@ -410,7 +410,7 @@ private fun Mapa(puntos: List<Db.Punto>, lugares: List<Lugar>, muestreos: List<i
  */
 @Composable
 fun CamposLugar(nombre: String, tipo: String?, radio: Float, onNombre: (String) -> Unit, onTipo: (String?) -> Unit, onRadio: (Float) -> Unit) {
-    OutlinedTextField(value = nombre, onValueChange = onNombre, modifier = Modifier.fillMaxWidth(), singleLine = true, isError = nombre.isBlank(),
+    CampoTexto(value = nombre, onValueChange = onNombre, modifier = Modifier.fillMaxWidth(), singleLine = true, isError = nombre.isBlank(),
         label = { Text("Nombre") }, placeholder = { Text("casa de mis abuelos, la biblioteca, el muro de escalada…") })
     Etiqueta("Tipo"); FilaFichas(Catalogo.TIPOS_LUGAR, tipo) { onTipo(it) }
     Etiqueta("Radio: ${radio.toInt()} m")
@@ -449,14 +449,14 @@ fun DialogoVisita(v: io.github.ruddy2003.vestigium.data.Visita, cerrar: () -> Un
                     Repo.lugares.forEach { l -> io.github.ruddy2003.vestigium.ui.Ficha(l.nombre, l.id == lugar) { lugar = l.id } }
                 }
                 Ayuda("Si no fue en ninguno de tus lugares, «no estuve aquí» la quita.", Modifier.padding(top = 6.dp))
-                TextButton(onClick = {
-                    if (!confirmar) { confirmar = true; return@TextButton }
+                BotonTexto(onClick = {
+                    if (!confirmar) { confirmar = true; return@BotonTexto }
                     Repo.borrarVisita(v.id); cerrar()
                     io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Visita quitada") { Repo.guardarVisita(v) }
                 }) { Text(if (confirmar) "¿quitarla de verdad?" else "no estuve aquí", color = MaterialTheme.colorScheme.error) }
             }
         },
-        confirmButton = { TextButton(enabled = valida, onClick = {
+        confirmButton = { BotonTexto(enabled = valida, onClick = {
             val nuevaSalida = fin?.let { Fechas.isoDeMillis(it) }
             // Si cambiaste la salida, la visita dice que la pusiste tú (esquema 19); «sigo aquí» la deja abierta.
             val cierre = when { nuevaSalida == null -> null; fin != v.salida?.let { Fechas.millis(it) } -> io.github.ruddy2003.vestigium.data.Lugares.CIERRE_MANUAL; else -> v.cierre }
@@ -467,6 +467,6 @@ fun DialogoVisita(v: io.github.ruddy2003.vestigium.data.Visita, cerrar: () -> Un
             }
             cerrar()
         }) { Text("Guardar") } },
-        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } })
+        dismissButton = { BotonTexto(onClick = cerrar) { Text("cancelar") } })
 }
 

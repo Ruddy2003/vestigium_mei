@@ -603,7 +603,7 @@ object Romano {
         "Reportes" to "RELATIONES", "Bienvenido" to "SALVE", "Calendario" to "CALENDARIVM", "Escalada" to "ASCENSVS",
         "Obras" to "OPERA", "Tu año" to "ANNVS", "Privacidad" to "SECRETVM",
         // Secciones
-        "Sueño" to "SOMNVS", "Contexto" to "CONTEXTVS", "Hitos" to "MEMORABILIA", "Ánimo y cuerpo" to "ANIMVS ET CORPVS",
+        "Sueño" to "SOMNVS", "Contexto" to "CONTEXTVS", "Hitos" to "MEMORABILIA", "Episodios" to "CASVS", "Ánimo y cuerpo" to "ANIMVS ET CORPVS",
         "Lectura del día" to "LECTIO DIEI", "Lo mejor y lo peor" to "OPTIMVM ET PESSIMVM", "Medicamentos" to "MEDICAMENTA",
         "Seguimiento privado" to "ARCANVM", "Diario" to "DIARIVM", "Predicción" to "PRAESAGIVM", "Momentos de este día" to "MOMENTA DIEI",
         "Este día hace un año" to "ANTE ANNVM", "Lo que registró el teléfono" to "VESTIGIA", "Registrar" to "SCRIBERE",

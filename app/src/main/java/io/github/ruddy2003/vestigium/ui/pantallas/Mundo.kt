@@ -1,5 +1,8 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.ui.comun.Separador
+import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
+import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import android.content.Context
@@ -34,12 +37,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -866,10 +866,10 @@ fun PantallaMundo(nav: Nav) {
                     val max = l.first().totalDias.coerceAtLeast(1)
                     val mostrar = if (todas) l.take(60) else l.take(10)
                     mostrar.forEachIndexed { i, e ->
-                        if (i > 0) HorizontalDivider(Modifier.padding(vertical = 6.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                        if (i > 0) Separador(Modifier.padding(vertical = 6.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                         FilaEstancia(i + 1, e, max, vista == "ciudades")
                     }
-                    if (l.size > 10) TextButton(onClick = { todas = !todas }) { Text(if (todas) "ver menos" else "ver ${min(l.size, 60) - 10} más") }
+                    if (l.size > 10) BotonTexto(onClick = { todas = !todas }) { Text(if (todas) "ver menos" else "ver ${min(l.size, 60) - 10} más") }
                 }
             }
         }
@@ -885,7 +885,7 @@ fun PantallaMundo(nav: Nav) {
             else Tarjeta {
                 var abiertas by remember { mutableStateOf(false) }
                 (if (abiertas) lista else lista.take(12)).forEachIndexed { i, e ->
-                    if (i > 0) HorizontalDivider(Modifier.padding(vertical = 5.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                    if (i > 0) Separador(Modifier.padding(vertical = 5.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text("${Mundo.bandera(e.pais)}  ${e.nombre}", style = MaterialTheme.typography.bodyLarge)
@@ -894,22 +894,22 @@ fun PantallaMundo(nav: Nav) {
                         }
                         val propia = manuales.firstOrNull { m -> Mundo.ciudadEn(ctx, m.lat, m.lon, m.pais).let { ci -> "c$ci" == e.clave } || "m${m.id}" == e.clave }
                         if (propia != null) {
-                            TextButton(onClick = { editar = propia }) { Text("editar", color = MaterialTheme.colorScheme.primary) }
-                            TextButton(onClick = { borrar = propia }) { Text("quitar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                            BotonTexto(onClick = { editar = propia }) { Text("editar", color = MaterialTheme.colorScheme.primary) }
+                            BotonTexto(onClick = { borrar = propia }) { Text("quitar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
                         }
                     }
                 }
-                if (lista.size > 12) TextButton(onClick = { abiertas = !abiertas }) { Text(if (abiertas) "ver menos" else "ver las ${lista.size}") }
+                if (lista.size > 12) BotonTexto(onClick = { abiertas = !abiertas }) { Text(if (abiertas) "ver menos" else "ver las ${lista.size}") }
             }
             editar?.let { e -> DialogoCiudad(e) { editar = null } }
             borrar?.let { b ->
                 Dialogo(onDismissRequest = { borrar = null }, title = { Text("¿Quitar ${b.nombre}?") },
                     text = { Text("Se borra lo que anotaste a mano. Si tus ubicaciones pasan por ahí, la ciudad seguirá apareciendo.") },
-                    confirmButton = { TextButton(onClick = {
+                    confirmButton = { BotonTexto(onClick = {
                         Repo.cambiarConfig { c -> c.copy(ciudades_visitadas = c.ciudades_visitadas.filter { it.id != b.id }) }; borrar = null
                         io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Ciudad quitada") { Repo.cambiarConfig { c -> if (c.ciudades_visitadas.any { it.id == b.id }) c else c.copy(ciudades_visitadas = c.ciudades_visitadas + b) } }
                     }) { Text("quitar") } },
-                    dismissButton = { TextButton(onClick = { borrar = null }) { Text("cancelar") } })
+                    dismissButton = { BotonTexto(onClick = { borrar = null }) { Text("cancelar") } })
             }
         }
 
@@ -928,7 +928,7 @@ fun PantallaMundo(nav: Nav) {
             val recientes = sitios.filter { it.i in vistos }.sortedByDescending { vistos[it.i] ?: 0 }.take(6)
             if (recientes.isNotEmpty()) Tarjeta {
                 recientes.forEachIndexed { i, s ->
-                    if (i > 0) HorizontalDivider(Modifier.padding(vertical = 5.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                    if (i > 0) Separador(Modifier.padding(vertical = 5.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                     Text("${s.p.joinToString("") { Mundo.bandera(it) }}  ${s.n}", style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Ayuda("${s.categoria} · inscrito en ${s.a}" + (vistos[s.i]?.takeIf { it > 0 }?.let { " · ${mesAnio(it)}" } ?: ""))
                 }
@@ -1177,15 +1177,15 @@ fun PantallaRascar(nav: Nav) {
 
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = nav.atras) { Text(Estilo.atras, color = MaterialTheme.colorScheme.primary) }
+            BotonTexto(onClick = nav.atras) { Text(Estilo.atras, color = MaterialTheme.colorScheme.primary) }
             Column(Modifier.weight(1f)) {
                 Text(Estilo.pantalla("Mapa para rascar", io.github.ruddy2003.vestigium.ui.Romano.latin("Mapa para rascar")).first, style = MaterialTheme.typography.titleLarge)
                 Ayuda("${porNumero(visitados.size, "1 país", "${visitados.size} países")} · toca un país para verlo; pellizca o usa − y +")
             }
             // Alternativa visible a pellizcar y al doble toque (N-24).
-            TextButton(onClick = { zoom = (zoom / 1.6f).coerceAtLeast(1f); if (zoom == 1f) pan = Offset.Zero }) { Text("−", style = MaterialTheme.typography.titleLarge) }
-            TextButton(onClick = { zoom = (zoom * 1.6f).coerceAtMost(16f) }) { Text("+", style = MaterialTheme.typography.titleLarge) }
-            TextButton(onClick = { zoom = 1f; pan = Offset.Zero }) { Text("todo", style = MaterialTheme.typography.labelLarge) }
+            BotonTexto(onClick = { zoom = (zoom / 1.6f).coerceAtLeast(1f); if (zoom == 1f) pan = Offset.Zero }) { Text("−", style = MaterialTheme.typography.titleLarge) }
+            BotonTexto(onClick = { zoom = (zoom * 1.6f).coerceAtMost(16f) }) { Text("+", style = MaterialTheme.typography.titleLarge) }
+            BotonTexto(onClick = { zoom = 1f; pan = Offset.Zero }) { Text("todo", style = MaterialTheme.typography.labelLarge) }
         }
         Box(Modifier.weight(1f).fillMaxWidth().onSizeChanged { area = it }
             .pointerInput(Unit) {
@@ -1273,7 +1273,7 @@ fun PantallaCiudadNueva(nav: Nav) {
     Hoja("Añadir ciudad", nav.atras, "Busca la ciudad por su nombre. Si sabes cuándo fuiste, ponlo: así cuenta en el tiempo de cada ciudad y país.") {
         val c = remember { Mundo.ciudades(ctx) }
         if (elegida < 0) {
-            OutlinedTextField(texto, { texto = it }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true, placeholder = { Text("nombre de la ciudad") })
+            CampoTexto(texto, { texto = it }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true, placeholder = { Text("nombre de la ciudad") })
             Spacer(Modifier.height(8.dp))
             if (texto.length >= 2 && resultados.isEmpty()) Ayuda("Nada con ese nombre. Prueba sin acentos o con el nombre local.")
             resultados.forEach { i ->
@@ -1284,14 +1284,14 @@ fun PantallaCiudadNueva(nav: Nav) {
                         Ayuda(listOfNotNull(Mundo.pais(ctx, c.pais(i))?.nombre, poblacion(c.pob[i]), if (raiz != i) "parte de ${c.nombre(raiz)}" else null).joinToString(" · "))
                     }
                 }
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                Separador(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
             }
         } else {
             val i = elegida
             Tarjeta {
                 Text("${Mundo.bandera(c.pais(i))}  ${c.nombre(i)}", style = MaterialTheme.typography.titleLarge)
                 Ayuda(listOfNotNull(Mundo.pais(ctx, c.pais(i))?.nombre, poblacion(c.pob[i])).joinToString(" · "))
-                TextButton(onClick = { elegida = -1 }) { Text("elegir otra") }
+                BotonTexto(onClick = { elegida = -1 }) { Text("elegir otra") }
             }
             Seccion("¿Cuándo?", "Opcional. Con fechas cuenta los días exactos; si no las recuerdas, pon solo cuántos días fueron.") {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1299,10 +1299,10 @@ fun PantallaCiudadNueva(nav: Nav) {
                     // «Hasta» no puede quedar antes de «desde»: si eliges una fecha anterior, pasa a ser el inicio.
                     BotonSecundario(hasta?.let { "hasta ${Fechas.corto(it)}" } ?: "hasta…") { fecha(hasta ?: desde) { h -> if (desde != null && h < desde!!) { hasta = desde; desde = h } else hasta = h } }
                 }
-                if (desde != null) TextButton(onClick = { desde = null; hasta = null }) { Text("quitar las fechas", style = MaterialTheme.typography.labelLarge) }
-                if (desde == null) OutlinedTextField(dias, { dias = it.filter { ch -> ch.isDigit() }.take(4) }, Modifier.padding(top = 8.dp).width(180.dp), singleLine = true,
+                if (desde != null) BotonTexto(onClick = { desde = null; hasta = null }) { Text("quitar las fechas", style = MaterialTheme.typography.labelLarge) }
+                if (desde == null) CampoTexto(dias, { dias = it.filter { ch -> ch.isDigit() }.take(4) }, Modifier.padding(top = 8.dp).width(180.dp), singleLine = true,
                     label = { Text("días (aprox.)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("nota (opcional)") })
+                CampoTexto(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("nota (opcional)") })
             }
             BotonPrincipal("Guardar", Modifier.fillMaxWidth().padding(top = 18.dp)) {
                 val nueva = CiudadVisitada(UUID.randomUUID().toString().take(8), c.nombre(i), c.pais(i), c.lat[i] / 1e5, c.lon[i] / 1e5,
@@ -1331,18 +1331,18 @@ private fun DialogoCiudad(c0: CiudadVisitada, cerrar: () -> Unit) {
                     BotonSecundario(desde?.let { "desde ${Fechas.corto(it)}" } ?: "desde…") { elegirFecha(ctx, desde) { d -> desde = d; if (hasta == null || hasta!! < d) hasta = d } }
                     BotonSecundario(hasta?.let { "hasta ${Fechas.corto(it)}" } ?: "hasta…") { elegirFecha(ctx, hasta ?: desde) { h -> if (desde != null && h < desde!!) { hasta = desde; desde = h } else hasta = h } }
                 }
-                if (desde != null) TextButton(onClick = { desde = null; hasta = null }) { Text("quitar las fechas", style = MaterialTheme.typography.labelLarge) }
-                else OutlinedTextField(dias, { dias = it.filter { ch -> ch.isDigit() }.take(4) }, Modifier.padding(top = 8.dp).width(180.dp), singleLine = true,
+                if (desde != null) BotonTexto(onClick = { desde = null; hasta = null }) { Text("quitar las fechas", style = MaterialTheme.typography.labelLarge) }
+                else CampoTexto(dias, { dias = it.filter { ch -> ch.isDigit() }.take(4) }, Modifier.padding(top = 8.dp).width(180.dp), singleLine = true,
                     label = { Text("días (aprox.)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("nota (opcional)") })
+                CampoTexto(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), label = { Text("nota (opcional)") })
             }
         },
-        confirmButton = { TextButton(onClick = {
+        confirmButton = { BotonTexto(onClick = {
             val n = c0.copy(desde = desde, hasta = hasta, dias = if (desde == null) dias.toIntOrNull() else null, nota = nota.trim())
             Repo.cambiarConfig { cf -> cf.copy(ciudades_visitadas = cf.ciudades_visitadas.map { if (it.id == c0.id) n else it }) }
             cerrar()
         }) { Text("Guardar") } },
-        dismissButton = { TextButton(onClick = cerrar) { Text("cancelar") } })
+        dismissButton = { BotonTexto(onClick = cerrar) { Text("cancelar") } })
 }
 
 private fun poblacion(p: Int): String? = when {
@@ -1370,7 +1370,7 @@ fun PantallaUnesco(nav: Nav) {
     val q = Mundo.normalizar(texto)
 
     Hoja("Patrimonio Mundial", nav.atras, "Los ${"%,d".format(sitios.size)} sitios de la lista de la UNESCO, por país. ✓ quiere decir que estuviste ahí.") {
-        OutlinedTextField(texto, { texto = it }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true, placeholder = { Text("buscar un sitio o un país") })
+        CampoTexto(texto, { texto = it }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true, placeholder = { Text("buscar un sitio o un país") })
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf("todos" to "todos", "visitados" to "visitados", "pendientes" to "pendientes", "c" to "culturales", "n" to "naturales", "m" to "mixtos", "peligro" to "en peligro").forEach { (id, n) -> Ficha(n, filtro == id) { filtro = id } }
         }
@@ -1394,7 +1394,7 @@ fun PantallaUnesco(nav: Nav) {
             }
             if (abierto) Tarjeta {
                 l.sortedBy { it.n }.forEachIndexed { i, s ->
-                    if (i > 0) HorizontalDivider(Modifier.padding(vertical = 5.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                    if (i > 0) Separador(Modifier.padding(vertical = 5.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                     Row(Modifier.fillMaxWidth().clickable { detalle = s }, verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(26.dp).border(1.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
                             .background(if (s.i in vistos) MaterialTheme.colorScheme.primary else Color.Transparent, RoundedCornerShape(4.dp)), contentAlignment = Alignment.Center) {
@@ -1407,7 +1407,7 @@ fun PantallaUnesco(nav: Nav) {
                     }
                 }
             }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+            Separador(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
         }
         Ayuda("Datos: Centro del Patrimonio Mundial de la UNESCO (lista vigente a agosto de 2026). Los nombres van como los publica la UNESCO en inglés.", Modifier.padding(top = 16.dp, bottom = 30.dp))
     }
@@ -1426,11 +1426,11 @@ fun PantallaUnesco(nav: Nav) {
                         visto -> "Tu ubicación pasó cerca" + (vistos[s.i]?.takeIf { it > 0 }?.let { " en ${mesAnio(it)}" } ?: "") + "."
                         else -> "Todavía no."
                     }, Modifier.padding(top = 8.dp))
-                    TextButton(onClick = { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(s.url))) } }) { Text("ver en whc.unesco.org") }
+                    BotonTexto(onClick = { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(s.url))) } }) { Text("ver en whc.unesco.org") }
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
+                BotonTexto(onClick = {
                     Repo.cambiarConfig { c ->
                         when {
                             !visto -> c.copy(unesco_marcados = c.unesco_marcados + SitioMarcado(s.i, Fechas.diaLogico()), unesco_descartados = c.unesco_descartados - s.i)
@@ -1445,6 +1445,6 @@ fun PantallaUnesco(nav: Nav) {
                     detalle = null
                 }) { Text(when { !visto -> "estuve aquí"; manual -> "quitar"; else -> "no cuenta" }) }
             },
-            dismissButton = { TextButton(onClick = { detalle = null }) { Text("cerrar") } })
+            dismissButton = { BotonTexto(onClick = { detalle = null }) { Text("cerrar") } })
     }
 }

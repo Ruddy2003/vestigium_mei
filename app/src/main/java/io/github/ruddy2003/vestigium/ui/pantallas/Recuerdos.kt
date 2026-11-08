@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,6 +16,14 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.rememberTextMeasurer
+import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.biblioteca.EstadoRecuerdo
+import io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.data.Fechas
@@ -26,9 +33,6 @@ import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.TextoMarcado
 import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.esOscuro
-import io.github.ruddy2003.vestigium.ui.estiloCifras
-import io.github.ruddy2003.vestigium.ui.estiloGrafica
-import io.github.ruddy2003.vestigium.ui.puntoGrafica
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -81,36 +85,35 @@ fun HaceUnAnio(fecha: String, nav: Nav) {
         }
     }
     if (anios.isEmpty()) return
-    val cs = MaterialTheme.colorScheme
-    val oscuro = esOscuro()
-    val eg = estiloGrafica()
     Seccion("Este día hace un año", if (anios.size > 1) "Y más atrás: lo que pasaba en esta misma fecha." else null, plegable = true) {
-        anios.forEach { r ->
-            Surface(shape = MaterialTheme.shapes.medium, color = cs.surface, border = androidx.compose.foundation.BorderStroke(1.dp, cs.outline),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp).clickable { Seleccion.abrir(nav, r.fecha) }) {
-                Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
-                    if (r.foto != null) Box(Modifier.size(64.dp).clip(RoundedCornerShape(6.dp))) {
-                        Miniatura(android.net.Uri.parse(r.foto), 300, Modifier.size(64.dp))
-                    }
-                    Column(Modifier.weight(1f).padding(start = if (r.foto != null) 12.dp else 0.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(if (r.anios == 1) "Hace un año" else "Hace ${r.anios} años", style = MaterialTheme.typography.titleMedium, color = cs.primary, modifier = Modifier.weight(1f))
-                            r.animo?.let { a ->
-                                // Sin recorte redondo: el punto toma la forma del tema y algunas asoman un poco del círculo.
-                                Box(Modifier.size(12.dp)) {
-                                    androidx.compose.foundation.Canvas(Modifier.size(12.dp)) {
-                                        puntoGrafica(eg, center, size.minDimension / 2, Tonos.valencia(a.toDouble(), oscuro) ?: cs.outline)
-                                    }
-                                }
-                                Text(" $a/7", style = estiloCifras(MaterialTheme.typography.labelMedium), color = cs.onSurfaceVariant)
-                            }
-                        }
-                        Text(Fechas.titulo(r.fecha).lowercase() + (r.clima?.let { " · $it" } ?: ""), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
-                        if (r.lugares.isNotEmpty()) Text("⌂ " + r.lugares.take(3).joinToString(", "), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
-                        r.cancion?.let { Text("♫ $it", style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp)) }
-                        r.linea?.let { TextoMarcado("«$it»", style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp)) }
-                    }
-                }
+        anios.forEach { r -> TarjetaRecuerdo(r, Modifier.padding(bottom = 8.dp)) { Seleccion.abrir(nav, r.fecha) } }
+    }
+}
+
+/**
+ * La tarjeta de un recuerdo, dibujada por el tema ([io.github.ruddy2003.vestigium.ui.biblioteca.DisenoBiblioteca.recuerdo]): en la
+ * franja de arriba, hace cuántos años, la fecha, el clima y el ánimo; debajo, la foto, los lugares, la canción y la primera línea del diario.
+ */
+@Composable
+fun TarjetaRecuerdo(r: Recuerdo, modifier: Modifier = Modifier, abrir: () -> Unit) {
+    val d = disenoBiblioteca(Estilo.tema)
+    val oscuro = esOscuro()
+    val medidor = rememberTextMeasurer(cacheSize = 16)
+    val tinta = d.tintaRecuerdo(oscuro)
+    val cuando = if (r.anios == 1) "Hace un año" else "Hace ${r.anios} años"
+    val e = EstadoRecuerdo(r.anios, Fechas.titulo(r.fecha).lowercase(), r.clima.orEmpty(), r.animo?.let { Tonos.valencia(it.toDouble(), oscuro) }, r.fecha.hashCode())
+    Box(modifier.fillMaxWidth().drawBehind { with(d) { recuerdo(e, medidor, oscuro) } }
+        .semantics(mergeDescendants = true) { contentDescription = cuando + ", " + e.fecha + (r.animo?.let { ", ánimo $it de 7" } ?: "") }
+        .clickable(onClick = abrir)) {
+        Row(Modifier.padding(start = d.margenRecuerdo, end = d.margenRecuerdo, bottom = d.margenRecuerdo, top = d.altoRotuloRecuerdo).heightIn(min = 8.dp),
+            verticalAlignment = Alignment.Top) {
+            if (r.foto != null) Box(Modifier.size(64.dp).clip(RoundedCornerShape(6.dp))) {
+                Miniatura(android.net.Uri.parse(r.foto), 300, Modifier.size(64.dp))
+            }
+            Column(Modifier.weight(1f).padding(start = if (r.foto != null) 12.dp else 0.dp)) {
+                if (r.lugares.isNotEmpty()) Text("⌂ " + r.lugares.take(3).joinToString(", "), style = MaterialTheme.typography.bodySmall, color = tinta)
+                r.cancion?.let { Text("♫ $it", style = MaterialTheme.typography.bodySmall, color = tinta, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp)) }
+                r.linea?.let { TextoMarcado("«$it»", style = MaterialTheme.typography.bodyMedium, color = tinta, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp)) }
             }
         }
     }
