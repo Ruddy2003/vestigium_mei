@@ -112,10 +112,14 @@ fun PantallaSuplementos(nav: Nav) {
             Tarjeta(Modifier.padding(top = 10.dp)) {
                 val tomas = Repo.tomas.filter { it.suplemento == s.id && it.fecha == dia }
                 val ese = if (dia == hoy) "Hoy" else Fechas.titulo(dia)
+                // La cuenta del día (esquema 21): «Hoy 1 de 2» si va más de una vez al día; «Hoy ×3» si va una y llevas más.
+                val n = s.tomas_dia.coerceAtLeast(1)
+                val k = tomas.count { !it.estimado }
+                val cuenta = when { n > 1 -> " $k de $n"; k > 1 -> " ×$k"; else -> "" }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(s.nombre, style = MaterialTheme.typography.titleMedium)
-                        Ayuda(if (tomas.isEmpty()) "$ese: todavía no" else "$ese: " + tomas.joinToString(" + ") { "${cifra(it.cantidad)} ${s.unidad} a las ${Fechas.horaDe(it.ts)}" })
+                        Ayuda(if (tomas.isEmpty()) "$ese$cuenta: todavía no" else "$ese$cuenta: " + tomas.joinToString(" + ") { "${cifra(it.cantidad)} ${s.unidad} a las ${Fechas.horaDe(it.ts)}" })
                     }
                     BotonTexto(onClick = { editando = s }) { Text("ajustar") }
                 }
@@ -124,17 +128,33 @@ fun PantallaSuplementos(nav: Nav) {
                     if (s.modelo == "carga") BotonSecundario("Carga ×4") { tomar(s, s.dosis * 4) }
                     if (tomas.isNotEmpty()) BotonSecundario("corregir") { toma = tomas.last() }
                 }
+                // Quita la última toma de ese día (la anotada por error o de más), con Deshacer.
+                if (k > 0) BotonTexto(onClick = {
+                    Suplementos.quitarUltima(s.id, dia)?.let { t -> io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Toma quitada") { Repo.guardarToma(t) } }
+                }) { Text("quitar la última") }
                 NivelSuplemento(s, hoy)
             }
         }
-        Seccion("Recordatorio", "Un aviso al día si falta alguno, con «Ya los tomé» (anota la dosis habitual) y «En una hora».") {
+        Seccion("Recordatorio", "Un aviso a cada hora que marques si te falta alguno, con «Ya los tomé» (anota la dosis habitual) y «En una hora».") {
             Tarjeta {
-                Interruptor("Recordarme cada día", c.suplementos_hora != null) { v -> Repo.cambiarConfig { it.copy(suplementos_hora = if (v) 9 else null) } }
-                c.suplementos_hora?.let { h ->
-                    Etiqueta("Hora")
+                // Varias horas (esquema 21): se escribe la lista nueva y la hora única de antes queda vacía.
+                val horas = Suplementos.horas(c)
+                Interruptor("Recordarme cada día", horas.isNotEmpty()) { v ->
+                    Repo.cambiarConfig { it.copy(suplementos_horas = if (v) listOf(9) else emptyList(), suplementos_hora = null) }
+                }
+                if (horas.isNotEmpty()) {
+                    Etiqueta("Horas")
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf(7, 8, 9, 10, 12, 14, 18, 21, 22).forEach { x -> Ficha("%02d:00".format(x), h == x) { Repo.cambiarConfig { it.copy(suplementos_hora = x) } } }
+                        (listOf(7, 8, 9, 10, 12, 14, 18, 21, 22) + horas).distinct().sorted().forEach { x ->
+                            Ficha("%02d:00".format(x), x in horas) {
+                                Repo.cambiarConfig { cc ->
+                                    val ya = Suplementos.horas(cc)
+                                    cc.copy(suplementos_horas = if (x in ya) ya.filter { it != x } else (ya + x).sorted(), suplementos_hora = null)
+                                }
+                            }
+                        }
                     }
+                    Ayuda("Si tomas algo dos veces al día, marca dos horas y pon “2 tomas al día” en el suplemento.", Modifier.padding(top = 6.dp))
                 }
             }
         }
@@ -230,6 +250,7 @@ private fun EditorSuplemento(s0: Suplemento, cerrar: () -> Unit) {
     var vida by remember { mutableStateOf(cifra(s0.vida_media_h)) }
     var carga by remember { mutableStateOf(s0.carga_dias.toString()) }
     var lavado by remember { mutableStateOf(s0.lavado_dias.toString()) }
+    var tomasDia by remember { mutableStateOf(s0.tomas_dia.coerceIn(1, 6)) }
     // Uno nuevo (todavía no está en tus suplementos): se agrega activo al guardar.
     val nuevo = Repo.config.suplementos.none { it.id == s0.id }
     // Los números se revisan antes de guardar: si uno no se entiende, se avisa en lugar de volver en silencio al anterior.
@@ -243,7 +264,7 @@ private fun EditorSuplemento(s0: Suplemento, cerrar: () -> Unit) {
             BotonTexto(enabled = valido, onClick = {
                 val n = s0.copy(nombre = nombre.trim(), unidad = unidad.trim().ifBlank { s0.unidad }, dosis = dosisOk ?: s0.dosis,
                     modelo = modelo, vida_media_h = vidaOk ?: s0.vida_media_h, carga_dias = cargaOk ?: s0.carga_dias, lavado_dias = lavadoOk ?: s0.lavado_dias,
-                    activo = if (nuevo) true else s0.activo)
+                    activo = if (nuevo) true else s0.activo, tomas_dia = tomasDia)
                 Repo.cambiarConfig { c -> c.copy(suplementos = if (nuevo) c.suplementos + n else c.suplementos.map { if (it.id == s0.id) n else it }) }
                 cerrar()
             }) { Text("Guardar") }
@@ -261,6 +282,12 @@ private fun EditorSuplemento(s0: Suplemento, cerrar: () -> Unit) {
                     CampoTexto(dosis, { dosis = it }, Modifier.weight(1f), singleLine = true, label = { Text("Dosis habitual") }, isError = dosisOk == null, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                     CampoTexto(unidad, { unidad = it }, Modifier.weight(1f), singleLine = true, label = { Text("Unidad") })
                 }
+                // Cuántas veces al día (esquema 21): mientras lleves menos, el recordatorio, el mosaico y «Ya los tomé» lo cuentan como faltante.
+                Etiqueta("Tomas al día")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    (1..6).forEach { x -> Ficha(x.toString(), tomasDia == x) { tomasDia = x } }
+                }
+                if (tomasDia > 1) Ayuda("Pon una hora de recordatorio por cada toma (en «Recordatorio», abajo de tus suplementos).", Modifier.padding(top = 4.dp))
                 Etiqueta("Modelo")
                 FilaFichas(Suplementos.MODELOS, modelo) { modelo = it ?: modelo }
                 when (modelo) {

@@ -14,7 +14,8 @@ import java.time.LocalDateTime
 /**
  * El motor de recordatorios: un solo aviso a la semana con las importaciones que tocan (MacroFactor cada 7 días,
  * Cold Turkey cada 7, Takeout cada mes) y, cada día a la hora elegida, las metas que toca revisar y las notas
- * de recordatorio que llegaron a su fecha. Cada fuente se puede posponer a mañana, a una fecha o apagar.
+ * de recordatorio que llegaron a su fecha; y los suplementos, a cada hora elegida mientras falte alguna toma.
+ * Cada fuente se puede posponer a mañana, a una fecha o apagar.
  */
 object Recordatorios {
     class Fuente(val id: String, val nombre: String, val cada: Int, val activa: Boolean, val que: String)
@@ -75,20 +76,31 @@ object Recordatorios {
                 if (pend.isNotEmpty()) Avisos.importar(ctx, pend.map { it.nombre + (hace(it.id, hoy)?.let { d -> " (hace ${porNumero(d, "1 día", "$d días")})" } ?: " (nunca)") })
             }
         }
-        // Suplementos: a la hora elegida (o una hora después de «en una hora»), solo si falta alguno.
-        c.suplementos_hora?.let { h ->
+        // Suplementos (esquema 21): a cada hora elegida (o una hora después de «en una hora»), solo si a alguno le faltan tomas.
+        // Cada hora tiene su marca («supl:<día>:<hora>»); si el pulso llega tarde a varias, sale un solo aviso y se marcan todas.
+        val horasSupl = io.github.ruddy2003.vestigium.data.Suplementos.horas(c)
+        if (horasSupl.isNotEmpty()) {
             val hoyL = Fechas.diaLogico()
             val pospuesto = ctx.getSharedPreferences("recordatorios", Context.MODE_PRIVATE).getLong("supl_hasta", 0L)
-            if (ahora.hour >= h && !yaFue("supl:$hoy") && System.currentTimeMillis() >= pospuesto) {
-                val faltan = io.github.ruddy2003.vestigium.data.Suplementos.activos(c).filter { it.modelo != "exposicion" && !io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id, hoyL) }
-                marcar("supl:$hoy")
-                if (faltan.isNotEmpty()) Avisos.suplementos(ctx, faltan.map { it.nombre })
+            val vencidas = horasSupl.filter { h -> ahora.hour >= h && !yaFue("supl:$hoy:$h") }
+            if (vencidas.isNotEmpty() && System.currentTimeMillis() >= pospuesto) {
+                val faltan = io.github.ruddy2003.vestigium.data.Suplementos.activos(c).filter { it.modelo != "exposicion" && io.github.ruddy2003.vestigium.data.Suplementos.faltan(it, hoyL) }
+                vencidas.forEach { h -> marcar("supl:$hoy:$h") }
+                if (faltan.isNotEmpty()) Avisos.suplementos(ctx, faltan.map { nombreConToma(it, hoyL) })
             }
         }
         if (ahora.hour >= c.metas_hora && !yaFue("metas:$hoy")) {
             val metas = Metas.porRevisar(hoy); val notas = notasVencidas(hoy)
             if (metas.isNotEmpty() || notas.isNotEmpty()) { marcar("metas:$hoy"); Avisos.metas(ctx, metas.map { it.nombre }, notas.map { it.texto.lineSequence().first().take(60) }) }
         }
+    }
+
+    /** «Creatina (1 de 2)»: el nombre con la toma que toca, si se toma más de una vez al día; si no, solo el nombre. */
+    fun nombreConToma(s: io.github.ruddy2003.vestigium.data.Suplemento, dia: String = Fechas.diaLogico()): String {
+        val n = s.tomas_dia.coerceAtLeast(1)
+        if (n <= 1) return s.nombre
+        val lleva = io.github.ruddy2003.vestigium.data.Suplementos.tomasDe(s.id, dia).size
+        return "${s.nombre} (${(lleva + 1).coerceAtMost(n)} de $n)"
     }
 
     /** Borra la marca «ya se avisó hoy» para que el pulso vuelva a avisar. */
@@ -124,9 +136,11 @@ class RecordatorioReceiver : BroadcastReceiver() {
                 NotificationManagerCompat.from(context).cancel(Avisos.ID_SUPLEMENTOS)
             }
             Recordatorios.UNA_HORA -> {
-                // Se vuelve a preguntar en una hora: se borra la marca del día y se guarda desde cuándo.
+                // Se vuelve a preguntar en una hora: se borra la marca de la última hora que ya pasó y se guarda desde cuándo.
                 context.getSharedPreferences("recordatorios", Context.MODE_PRIVATE).edit().putLong("supl_hasta", System.currentTimeMillis() + 3_600_000L).apply()
-                Recordatorios.desmarcar(context, "supl:" + Fechas.hoyCalendario())
+                val hora = LocalDateTime.now().hour
+                io.github.ruddy2003.vestigium.data.Suplementos.horas().filter { it <= hora }.maxOrNull()
+                    ?.let { Recordatorios.desmarcar(context, "supl:" + Fechas.hoyCalendario() + ":" + it) }
                 NotificationManagerCompat.from(context).cancel(Avisos.ID_SUPLEMENTOS)
             }
         }

@@ -94,7 +94,7 @@ Para alcohol y cannabis puedes decir **qué tan fuerte lo sientes** de 0 a 10. C
 
 ## 5.5 Suplementos (`data/Lote3.kt`)
 
-`Suplementos` ofrece tres modelos, elegibles por suplemento y con parámetros editables. Para todos se guardan `supl_<id>_dosis` y `supl_<id>_tomado` (0/1).
+`Suplementos` ofrece tres modelos, elegibles por suplemento y con parámetros editables. Para todos se guardan `supl_<id>_dosis` (la suma de las tomas del día), `supl_<id>_tomado` (0/1) y, desde el esquema 21, `supl_<id>_n` (cuántas tomas). Desde ese esquema se pueden anotar varias tomas al día, y cada suplemento dice cuántas lleva (`tomas_dia`), lo que decide el recordatorio (con varias horas posibles).
 
 **Carga: la creatina (`Suplementos.carga`).** La creatina no sube y baja en horas: se **acumula** en el músculo durante semanas. El modelo representa esa reserva de 0 a 100 % (su **saturación**):
 
@@ -144,7 +144,7 @@ Hultman et al. (1996) midieron que la creatina del músculo aumentaba alrededor 
 
 - **Aire libre y kilómetros** (capítulo 4): `aire_libre_min` es el mayor entre los minutos con **1000 lux o más** y los minutos caminando, corriendo o en bici, y **subestima**; `distancia_km` es una **cota inferior** del recorrido (H-3-5). **[Aproximación]**.
 - **Fase lunar** (`Luna`): con el **mes sinódico medio** de 29.530588853 días; iluminación = (1 − cos 2π*f*)/2 (`luna_ilum`). **[Validado]** como aproximación astronómica; cuánto se desvía de la fase real no se cuantificó **[sin verificar]**.
-- **Enfoque y siestas** (`data/Enfoque.kt`): bloques del cronómetro **sin contar las pausas**; los de **menos de 1 minuto** no se guardan. Son **mediciones** de tu cronómetro, no modelos.
+- **Enfoque y siestas** (`data/Enfoque.kt`): bloques del cronómetro **sin contar las pausas**; los de **menos de 1 minuto** no se guardan. Son **mediciones** de tu cronómetro, no modelos. Desde el esquema 21, un bloque no se corta en su meta: avisa y sigue contando hasta que pasas al descanso o terminas. Se guarda lo real (`min`) y lo planeado (`plan_min`), así que `enfoque_min` incluye lo de más (H-21-1).
 - **Repetición máxima estimada** (1RM, el mayor peso que podrías levantar una vez): peso × (1 + repeticiones/30), la **fórmula de Epley** (con 1 repetición, el peso mismo desde el 5 nov 2026); su fuente original **[sin verificar]**. Desde la 10c hay **un solo criterio** en toda la app (`Macrofactor.e1rm`): series de 1 a **12** repeticiones, sin calentamientos. *Ejemplo:* con 100 kg × 15, 120 kg × 5 y un calentamiento de 130 kg × 8, da 120 × (1 + 5/30) = **140 kg** (H-4-13, resuelto). Desde la 10f (D.114; H-7-14), `fuerza_ref_kg` es la mayor de esas cifras del día en un solo ejercicio fijo, el press inclinado con mancuernas, reconocido por su nombre en inglés o en español (`Macrofactor.esReferencia`, **[Diseño propio]**); vacía los días sin ese ejercicio. La plantilla de experimento de la creatina la mide en vez del volumen, que cambia según qué entrenaste; si vas subiendo de peso, la cifra sube sola.
 - **Grados de escalada** (`Grados`): tablas fijas de equivalencia. **[Aproximación]**: las tablas publicadas no coinciden entre sí.
 

@@ -121,7 +121,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | Identificador | Descripción | Tipo | Unidad | Existe |
 |---|---|---|---|---|
 | `palabras` | Palabras en el diario | numérica | — | Si hay datos de la fuente |
-| `hitos_n` | Número de hitos | numérica | — | Si hay datos de la fuente |
+| `hitos_n` | Fechas señaladas del día (antes «hitos»; desde el esquema 21 cuenta las fechas señaladas, con los hitos de antes) | numérica | — | Si hay datos de la fuente |
 | `carta_escrita` | Escribí una carta (0/1) | binaria (0/1) | — | Si hay datos de la fuente |
 
 ### Social
@@ -309,6 +309,15 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `recaida_min` | Minutos de recaída | numérica | — | Si hay recaídas con duración |
 | `libido_max` | Libido máxima del día (0 a 5) | numérica | — | Si hay registros de libido |
 | `n_libido` | Registros de libido | numérica | — | Si hay registros de libido |
+| `n_masturbacion` | Masturbaciones registradas (esquema 21) | numérica | — | Si hay alguna; 0 desde la primera, en días con diario |
+| `masturbacion_min` | Minutos de masturbación (esquema 21) | numérica | min | Días con duración anotada |
+| `masturbacion_satisfaccion` | Satisfacción con la masturbación, promedio del día (1 a 5; esquema 21) | numérica | — | Días con satisfacción anotada |
+| `n_intimidad` | Encuentros íntimos registrados (esquema 21) | numérica | — | Si hay alguno; 0 desde el primero, en días con diario |
+| `intimidad_nivel` | Nivel más alto del día: 0 a distancia, 1 besos, 2 caricias, 3 oral, 4 coito (esquema 21) | numérica | — | Días con intimidad |
+| `intimidad_satisfaccion` | Satisfacción con la intimidad, promedio del día (1 a 5; esquema 21) | numérica | — | Días con satisfacción anotada |
+| `intimidad_comodidad` | Comodidad en la intimidad, promedio del día (1 a 5; esquema 21) | numérica | — | Días con comodidad anotada |
+| `n_coito` | Encuentros con coito (esquema 21) | numérica | — | Si hay intimidad; 0 desde la primera, en días con diario |
+| `intimidad_distancia` | Toda la intimidad del día fue a distancia (0/1; esquema 21) | binaria (0/1) | — | Días con intimidad con alguna práctica de nivel |
 | `n_impulso` | Momentos de impulso | numérica | — | Días con diario desde el primer impulso (10c; antes, todos los días con diario). Hasta v84 estaba en el grupo «Momentos» y entraba en los análisis |
 | `medicamentos_n` | Medicamentos tomados | numérica | — | Desde el primer día con medicamentos. En el código conserva el grupo «Salud» (así sale en `vm_variables.csv`), pero desde 10a es privada; hasta v84 entraba en los análisis |
 
@@ -318,7 +327,17 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 
 | Identificador | Descripción | Tipo | Unidad | Existe |
 |---|---|---|---|---|
-| `enfoque_min` | Minutos de enfoque (cronómetro) | numérica | — | Si hay tramos del cronómetro |
+| `enfoque_min` | Minutos de enfoque (cronómetro); desde el esquema 21, con lo de más sobre la meta de cada bloque (D.165) | numérica | — | Si hay tramos del cronómetro |
+
+### Episodios
+
+*Fuente:* Momentos de tipo «episodio» (esquema 21; capítulo 3, sección 3.7.6)
+
+| Identificador | Descripción | Tipo | Unidad | Existe |
+|---|---|---|---|---|
+| `n_episodio` | Episodios del día | numérica | — | Si hay alguno; 0 desde el primero, en días con diario |
+| `episodio_intensidad_max` | Intensidad del episodio más fuerte (1 a 5) | numérica | — | Días con episodio con intensidad |
+| `epi_crisis`, `epi_llanto`, `epi_pelea`, `epi_salud` | Hubo crisis de ansiedad o pánico, llanto o bajón fuerte, pelea o discusión, o migraña, enfermedad o accidente (0/1) | binaria (0/1) | — | Como `n_episodio` |
 
 ### Suplementos
 
@@ -357,7 +376,7 @@ Estas se crean una por cada elemento que el usuario ha usado (o, en las de catá
 | `ctx_<id>` | Contexto: ‹nombre› (0/1); siempre, los 13 contextos: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, cita o tiempo en pareja (`ctx_romantico`), familia y, desde el esquema 17, casa o descanso, fiesta, trámites o pendientes | Contexto |
 | `flow_<id>`, `sdt_necesidad_<id>`, `apreciacion_<id>` | Opción elegida en las tres preguntas científicas del día (0/1); siempre, 13 opciones (4, 5 y 4; «No aplica» no cuenta) | Lectura del día |
 | `hab_<id>` | Hábito: ‹nombre› (0/1; vacío si ese día no lo contestaste, desde el esquema 17) | Hábitos |
-| `supl_<id>_dosis/_tomado/_nivel/_porciones` | Dosis, toma, reserva o cantidad estimada y porciones del suplemento. Desde 10e, `_nivel` no existe en los suplementos de vida media menor de 6 horas (`Suplementos.VIDA_MEDIA_MIN_NIVEL`, A.8) | Suplementos |
+| `supl_<id>_dosis/_tomado/_n/_nivel/_porciones` | Dosis (la suma de las tomas del día), toma, número de tomas (`_n`, desde el esquema 21), reserva o cantidad estimada y porciones del suplemento. Desde 10e, `_nivel` no existe en los suplementos de vida media menor de 6 horas (`Suplementos.VIDA_MEDIA_MIN_NIVEL`, A.8) | Suplementos |
 | `campana_<reto>`, `campana_hab_<id>` | En campaña ese día (0/1; la tenías aceptada). 0 desde tu primera campaña, vacío antes. Desde el esquema 13 | Campañas |
 | `campanas_n` | Campañas que tenías ese día. Desde el esquema 13 | Campañas |
 | `dia_especial` | Ese día cae un cumpleaños, un aniversario o una fecha propia (0/1). Existe si hay alguna fecha guardada. Desde el esquema 13 | Calendario |
@@ -373,7 +392,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 | `per_` | Personas | 15 | 5 | Aparece @‹elemento› (diario, mejor y peor momento, momentos, sueños o cartas) (0/1); 0 solo en días con diario escrito o momento con @ (10c) |
 | `pen_` | Personas | 10 | 3 | Pensé en @‹elemento› sin verla (0/1) |
 | `tema_` | Temas | 12 | 5 | Aparece #‹elemento› (0/1); 0 solo en días con diario escrito o momento con #tema (10c) |
-| `hito_` | Hitos | 10 | 3 | Hito: ‹elemento› (0/1) |
+| `hito_` | Hitos | — | — | Ya no se calcula desde el esquema 21 (D.161): los hitos son fechas señaladas y cuentan en `hitos_n` |
 | `lug_` | Lugares | 15 | 3 | Horas en «‹elemento›» (repartidas por día lógico desde el 5 nov 2026; D.155) |
 | `app_` | Apps | 12 | 5 | Minutos en ‹elemento› |
 | `ntf_` | Notificaciones | 8 | 5 | Notificaciones de ‹elemento› |
@@ -417,6 +436,7 @@ La exportación genera 54 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_notas.csv` | Notas sueltas: ideas, pensamientos, propósitos y recordatorios |
 | `vm_ideas.csv` | Ideario: lo que aprendiste o pensaste, con quién lo dice, su fuente y cómo la tienes (esquema 16) |
 | `vm_ideas_revisiones.csv` | Ideario: cada vez que volviste a ver una idea y qué respondiste (esquema 16) |
+| `vm_senaladas.csv` | Fechas señaladas: una por fila, con su tipo y su frase; los hitos de antes como «otro» (esquema 21) |
 | `vm_suplementos.csv` | Cada toma de suplemento (y las porciones de probióticos estimadas de tu bitácora de comidas) |
 | `vm_laptop.csv` | Minutos por app y por sitio en la laptop, por día (Cold Turkey) |
 | `vm_red_nodos.csv` | Personas de tu red: relación, grupo de relación (columna `grupo`, desde 10c), cercanía, días mencionada y grado |

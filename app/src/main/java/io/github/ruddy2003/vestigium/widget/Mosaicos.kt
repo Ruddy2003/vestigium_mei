@@ -47,19 +47,28 @@ class MosaicoEnfoque : MosaicoBase(QuickActivity.M_ENFOQUE, 3404) {
     }
 }
 
-/** Suplementos: un toque anota la dosis habitual de los que faltan hoy; encendido cuando ya están todos. */
+/**
+ * Suplementos: un toque anota la dosis habitual de los que les falta una toma hoy; si ya no falta ninguno, suma otra toma
+ * de cada uno (para quien toma algo más veces que las que puso). Encendido cuando a ninguno le falta.
+ */
 class MosaicoSuplemento : TileService() {
-    private fun pendientes(): List<io.github.ruddy2003.vestigium.data.Suplemento> = runCatching {
+    /** Los activos que se toman (sin los de «solo porciones»). */
+    private fun tomables(): List<io.github.ruddy2003.vestigium.data.Suplemento> = runCatching {
         io.github.ruddy2003.vestigium.data.Repo.init(this)
-        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
-        io.github.ruddy2003.vestigium.data.Suplementos.activos().filter { it.modelo != "exposicion" && !io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id, hoy) }
+        io.github.ruddy2003.vestigium.data.Suplementos.activos().filter { it.modelo != "exposicion" }
     }.getOrDefault(emptyList())
 
+    /** Cuántas tomas faltan hoy, sumando las de todos (esquema 21: un suplemento puede ir más de una vez al día). */
+    private fun faltantes(): Int = runCatching {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        tomables().sumOf { s -> (s.tomas_dia.coerceAtLeast(1) - io.github.ruddy2003.vestigium.data.Suplementos.tomasDe(s.id, hoy).size).coerceAtLeast(0) }
+    }.getOrDefault(0)
+
     private fun pintar() {
-        val faltan = pendientes()
+        val n = faltantes()
         qsTile?.let {
-            it.state = if (faltan.isEmpty()) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
-            if (Build.VERSION.SDK_INT >= 29) it.subtitle = if (faltan.isEmpty()) "hoy ya" else faltan.joinToString(", ") { s -> s.nombre.lowercase() }
+            it.state = if (n == 0) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+            if (Build.VERSION.SDK_INT >= 29) it.subtitle = if (n == 0) "hoy ya" else "falta $n"
             it.updateTile()
         }
     }
@@ -68,7 +77,12 @@ class MosaicoSuplemento : TileService() {
 
     override fun onClick() {
         super.onClick()
-        val l = pendientes().map { io.github.ruddy2003.vestigium.data.Suplementos.registrar(it) }
+        val l = runCatching {
+            val todos = tomables()
+            val faltan = io.github.ruddy2003.vestigium.data.Suplementos.registrarFaltantes()
+            // Si no faltaba ninguno, otra toma de cada uno.
+            if (faltan.isEmpty()) todos.map { io.github.ruddy2003.vestigium.data.Suplementos.registrar(it) } else faltan
+        }.getOrDefault(emptyList())
         // Avisa qué anotó, con «deshacer».
         if (l.isNotEmpty()) runCatching { io.github.ruddy2003.vestigium.avisos.Avisos.tomasAnotadas(this, l) }
         // El guardado en la base es inmediato; el estado en memoria se actualiza en el hilo principal.

@@ -1393,3 +1393,28 @@ Encontrados al llevar la información nueva de los momentos a pantallas y report
 - **Por qué importa:** `acompanado_pct` y `valencia_acompanado` mezclan estar con alguien en persona con hablar por mensaje, según cómo se marcó.
 - **Gravedad:** Baja.
 - **Propuesta:** contar como acompañado solo si hay alguna compañía en persona (todo menos `solo` y `mensaje`), o corregir el Apéndice A.11 para que diga la regla actual.
+
+## Esquema 21 (8 nov 2026, sin módulo)
+
+Encontrados al hacer los cambios del esquema 21 (D.161 a D.165). Quedan anotados; no piden cambio de código ahora.
+
+### H-21-1 · `enfoque_min` cambia de definición
+- **Dónde:** `data/Enfoque.kt` (`guardarBloque`, `pasarADescanso`), `vm_tramos.csv:min`, `enfoque_min`.
+- **Qué pasa:** desde el esquema 21, un bloque se guarda con lo que duró de verdad, con lo de más sobre la meta. Antes se guardaba recortado en la meta.
+- **Por qué importa:** una serie larga de `enfoque_min` puede subir en la fecha del cambio sin que hayas estudiado más.
+- **Gravedad:** Baja.
+- **Propuesta:** en R, comparar antes y después con `plan_min`, o con el mínimo entre `min` y `plan_min`. El Diccionario marca el cambio (`desde`).
+
+### H-21-2 · La masturbación con pornografía cuenta dos veces
+- **Dónde:** `data/Recaidas.kt` (`registrarDesdeMasturbacion`), `ciencia/Estadistica.kt` (`FAMILIAS`).
+- **Qué pasa:** ese registro crea una recaída gemela, así que un solo hecho suma 1 a `n_masturbacion` y 1 a `n_recaida`.
+- **Por qué importa:** si se suman las dos variables, el hecho se cuenta doble. Si se cruzan entre sí, se correlacionan por construcción.
+- **Gravedad:** Baja.
+- **Propuesta:** ya están en la misma familia obvia, así que la app no las cruza. En R, para contar hechos, usar `vinculo` y descontar las gemelas.
+
+### H-21-3 · Un día sin episodio puede ser un día sin anotar
+- **Dónde:** `ciencia/Estadistica.kt` (`n_episodio`, `epi_*`).
+- **Qué pasa:** `n_episodio` vale 0 en todo día con diario, desde el primer episodio. Pero un episodio fuerte es justo cuando menos se abre la app.
+- **Por qué importa:** los episodios pueden quedar subregistrados, sobre todo los más intensos. Un 0 no distingue entre «no pasó» y «no lo anoté» (como H-1-1).
+- **Gravedad:** Media.
+- **Propuesta:** revisar su frecuencia contra el diario de esos días. Una pregunta de la noche («¿hubo algo fuerte hoy?») daría un «no» explícito; no se agregó, para no alargar la hoja.

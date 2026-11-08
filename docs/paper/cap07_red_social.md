@@ -43,7 +43,9 @@ La misma persona puede «aparecer» de forma distinta según la función, porque
 | Red y exportación `vm_red_*` (`RedPersonas.calcular`) | sí | sí | no | no | no | no | no | sí |
 | Tarjeta «personas en tu cielo este año» (`Vida.kt`) | sí | no | no | no | no | no | no | sí (desde 10c) |
 
-«Momentos privados» son los de tipo `impulso`, `recaida` o `libido` (la propiedad `Momento.privado` en `data/Modelo.kt`, que desde el módulo 10a incluye el impulso). Ninguna fila de esta tabla los usa (sección 7.13). Hasta v84 el impulso no contaba como privado y entraba en todas las filas que dicen «Momentos».
+«Momentos privados» son los de tipo `impulso`, `recaida` o `libido` y, desde el esquema 21, `masturbacion` o `intimidad` (la propiedad `Momento.privado` en `data/Modelo.kt`, que desde el módulo 10a incluye el impulso). Ninguna fila de esta tabla los usa (sección 7.13). Hay dos novedades en el esquema 21:
+- La ficha de una persona, con el seguimiento privado encendido, dice cuántas veces hubo intimidad con ella y cuándo fue la última (`Personas.intimidadCon`, decisión del autor). Eso no entra en menciones, red ni variables.
+- La persona de un episodio de pelea (`Momento.personas`), que no es privado, sí cuenta como mención. Hasta v84 el impulso no contaba como privado y entraba en todas las filas que dicen «Momentos».
 
 ---
 

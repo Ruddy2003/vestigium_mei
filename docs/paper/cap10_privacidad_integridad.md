@@ -41,7 +41,7 @@
 _Esta sección describe el código después del módulo 10a (decisiones D-1 y D-2 de `revision_propuestas.md`). Hasta v84 la regla era otra; el cambio está en el Apéndice D._
 
 - **Una sola regla, en un solo archivo** (`data/Privado.kt`). Es privado:
-  - todo momento de tipo `impulso`, `recaida` o `libido` (`Momento.privado`, que usa `Privado.TIPOS`);
+  - todo momento de tipo `impulso`, `recaida` o `libido` y, desde el esquema 21, `masturbacion` e `intimidad` (`Momento.privado`, que usa `Privado.TIPOS`; capítulo 3, sección 3.16);
   - en el día, la intensidad del impulso (0 a 5), si hubo recaída, los detonantes y los **medicamentos**;
   - el **hábito ligado a las recaídas**. Con el interruptor encendido es el que elegiste en Privacidad o, si no elegiste, un hábito activo cuyo nombre contenga ciertas palabras clave. Con el interruptor apagado, solo el que elegiste. Elegir «ninguno» funciona; hasta v84 caía de nuevo en las palabras clave.
 - **Dónde se ve: solo en la pantalla Privado** (Más → Privado; antes «Impulsos y recaídas»). Siempre, con el interruptor encendido o apagado (`ui/pantallas/Recaidas.kt`):
@@ -51,18 +51,19 @@ _Esta sección describe el código después del módulo 10a (decisiones D-1 y D-
 
   Con el interruptor encendido, además:
   - en el día, la intensidad del impulso (0 a 5), si hubo recaída, los detonantes y el hábito ligado;
-  - los botones para registrar una recaída o la libido;
+  - los botones para registrar una recaída, la libido y, desde el esquema 21, una masturbación o un encuentro de intimidad, con su resumen (veces en 30 días, la última y, en la intimidad, el nivel más alto, la satisfacción media y cuántas veces la comodidad fue baja, como dato y sin juicios);
   - el resto del resumen privado (rachas, recaídas por hora y por día de la semana, lugares, detonantes…), los días con recaída en la tendencia y la sección de libido.
 
   Desde Día, el enlace «privado de este día» abre la pantalla en esa fecha. Las correlaciones de estas variables se hacen **solo en R**, como decidiste.
 - **Dónde no se ve: en ninguna otra parte de la app**, ni con el interruptor encendido:
   - Día, Hoy, momentos, cinta, diarios, libreta, calendario, semana, año, totales, mapa y widgets;
   - reportes, «Tu año», logros (también los propios), metas, campañas y experimentos (el impulso dejó de ser una medida posible);
-  - Constelación, Red, Tu gente, las sugerencias de @ y # al escribir, «Tus temas», y las variables `per_`, `pen_` y `tema_`;
-  - todas las listas de análisis: `Estadistica.variables()` excluye `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `n_impulso`, `medicamentos_n`, las familias `med_` y `det_` y `hab_` del hábito ligado.
+  - Constelación, Red, Tu gente, las sugerencias de @ y # al escribir, «Tus temas», y las variables `per_`, `pen_` y `tema_`. La única excepción es la ficha de una persona en Tu gente, desde el esquema 21 (decisión del autor). Con el interruptor encendido, la ficha dice cuántas veces hubo intimidad con ella y cuándo fue la última (`Personas.intimidadCon`); con el interruptor apagado no dice nada. Las @personas escritas en la descripción de un momento privado no cuentan como menciones;
+  - todas las listas de análisis: `Estadistica.variables()` excluye `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `n_impulso`, `medicamentos_n`, las del esquema 21 (`n_masturbacion`, `masturbacion_min`, `masturbacion_satisfaccion`, `n_intimidad`, `intimidad_nivel`, `intimidad_satisfaccion`, `intimidad_comodidad`, `n_coito`, `intimidad_distancia`), las familias `med_` y `det_` y `hab_` del hábito ligado.
 - **El interruptor `Config.seguimiento_privado`** (apagado por omisión) solo decide qué se **ofrece** en la pantalla Privado: con él apagado, medicamentos y momentos de impulso; con él encendido, también la intensidad del impulso del día, recaídas, libido y detonantes (la lista de arriba). Ya no decide qué se muestra fuera de Privado: fuera, nunca se muestra.
 - **La exportación para R lleva todo, siempre.** El panel calcula las variables privadas aunque el interruptor esté apagado, y `vm_momentos.csv`, `vm_dias.csv`, `vm_panel_extendido.csv` y `vm_respaldo.json` las llevan. Desde la entrega 10d, `vm_variables.csv` lista las variables que la app cruza y marca las privadas (`privada` = 1, con `Privado.esVariable`). Por omisión, `vm_relaciones()` y `vm_factores()` de R **no** las cruzan, para dar lo mismo que la app; con `privadas = TRUE` sí, y esa es la vía para hacer en R las correlaciones del seguimiento privado. Las coordenadas de un momento privado ya no se usan para pedir el clima (`Entorno.lugarDe`).
 - **Registrar una recaída** (`Recaidas.registrar`) guarda el momento con hora y lugar, marca el día con recaída y **desmarca el hábito ligado**. Se puede deshacer tal cual (`deshacer`) y cambiar la hora (`moverHora`), que busca la ubicación de esa hora (la más cercana en ±30 min) y descarta la luz y el ruido medidos al registrar. Desde el esquema 14 (H-NAV-6): cambiar solo el día, con la misma hora, también la mueve, porque se compara el minuto completo; y borrarla desde el diálogo de Privado quita la marca del día si era la única recaída de ese día (`alBorrar`; el día queda sin respuesta, porque no se sabe qué había antes).
+- **Una masturbación con pornografía** (esquema 21) crea su recaída gemela (`Recaidas.registrarDesdeMasturbacion`). La gemela marca el día y el hábito como cualquier recaída, y las dos quedan ligadas (`vinculo`). Borrar la masturbación, o cambiar su estímulo, quita la gemela. Borrar la gemela deja la masturbación sin vínculo.
 - **El resumen privado** (`Recaidas.resumen`):
   - impulsos y recaídas por hora; recaídas por día de la semana;
   - lugares, detonantes, qué hacías antes y aparato;

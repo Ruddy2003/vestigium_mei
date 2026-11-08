@@ -273,7 +273,7 @@ La «hoja de la noche» (`PantallaNoche`, en `ui/pantallas/Dia.kt`; en la app se
 
 La barra fija de abajo cuenta lo mismo que pide «Sellar el día»: el ánimo y el diario. La predicción y los hábitos aparecen como «extra». Los hábitos cuentan como hechos cuando todos tienen respuesta, sea «sí» o «no». Antes contaba cuatro pasos y los hábitos solo estaban hechos si todos eran «sí».
 6. **Diario** (texto libre con @personas y #temas) y con quién estuviste.
-7. Plegado, como opcional: la «lectura del día», lo mejor y lo peor, hitos, lo que leíste o viste, la foto del día y «privado de este día →».
+7. Plegado, como opcional: la «lectura del día», lo mejor y lo peor, las fechas señaladas (antes «hitos») y los episodios, lo que leíste o viste, la foto del día y «privado de este día →».
 8. Sellar.
 
 «Solo lo que falta» oculta lo ya contestado, pero no cambia el orden.
@@ -287,7 +287,7 @@ Es una **[Aproximación]**: viene de estudios de encuestas y de laboratorio, no 
 
 Además, desde `VERSION_NOCHE = 2`, la línea con los valores de tus avisos de ánimo de ese día solo aparece **después** de elegir la valencia, y la activación usa una paleta de una sola dirección (`Escala(secuencial = true)`), para que «menos energía» no se lea como «peor» (H-2-11).
 
-Desde la entrega N2 de la revisión de navegación hay también una sección **«Suplementos de este día»**: marca o quita la toma de ese día (a la hora habitual o a la de ahora). Y si faltan días, «Ponerte al día» abre la hoja en el primero que falta y, al sellar, pasa al siguiente (hasta 7 días hacia atrás). Lo que se llena así queda como `retroactivo` (sección 3.7.4), y la diferencia entre `ts` y `ts_creado` dice cuánto después se anotó.
+Desde la entrega N2 de la revisión de navegación hay también una sección **«Suplementos de este día»**. Desde el esquema 21, cada suplemento lleva su cuenta: «+» suma una toma (a la hora habitual o a la de ahora) y «−» quita la última (antes, un toque marcaba o quitaba la única toma del día; capítulo 5, sección 5.6). Y si faltan días, «Ponerte al día» abre la hoja en el primero que falta y, al sellar, pasa al siguiente (hasta 7 días hacia atrás). Lo que se llena así queda como `retroactivo` (sección 3.7.4), y la diferencia entre `ts` y `ts_creado` dice cuánto después se anotó.
 
 Se guarda sola mientras escribes (cada 0.7 s sin cambios). Si tiene **valencia y texto del diario**, se puede «sellar» el día; sellar no cambia los datos, es solo un cierre simbólico.
 
@@ -308,10 +308,19 @@ Son tres preguntas de opción única (`Catalogo.CIENTIFICAS`), cada una inspirad
 
 Estas preguntas están **plegadas por omisión**, así que se responden menos y probablemente no al azar (más en días con ganas de escribir). **[Diseño propio]**.
 
-### 3.7.3 Lo mejor, lo peor, hitos, medicamentos, contextos y hábitos
+### 3.7.3 Lo mejor, lo peor, fechas señaladas, medicamentos, contextos y hábitos
 
 - **Lo mejor y lo peor** del día: una línea cada uno, texto libre. No entran al panel como números.
-- **Hitos**: etiquetas cortas de cosas que no pasan todos los días; `hitos_n` cuenta cuántas.
+- **Fechas señaladas** (antes «hitos»; esquema 21, D.161). Son lo que quieres recordar de un día. Cada una tiene un tipo, elegido con un toque (primera vez, viaje, logro, cambio de vida, pérdida, encuentro, celebración u otra), y una frase opcional. Se guardan en `Dia.senaladas` y salen en una sola forma («✈ Viaje a la costa») en el calendario, la semana, el año, Tu año, el libro del diario y los reportes. `hitos_n` cuenta cuántas tiene el día, y `vm_senaladas.csv` trae una por fila con su tipo.
+  - **Por qué cambió.** Los hitos eran etiquetas sueltas, y el autor no sabía qué poner ahí («una crisis de ansiedad no pasa todos los días: ¿va ahí?»). Además:
+    - se guardaban en dos formatos (con espacios y con guiones bajos);
+    - cada pantalla los mostraba distinto;
+    - la pista sugería «un beso», aunque no eran privados;
+    - en el análisis, cada etiqueta solo se volvía variable (`hito_*`) si se repetía en 3 días o más, que es lo contrario de un hito.
+  - **La solución** fue separar dos cosas. Lo que quieres recordar es una fecha señalada. Lo que te pasa con fuerza, con hora y que puede repetirse, es un **episodio** (sección 3.7.6).
+  - **Los hitos de antes** se leen como fechas señaladas de tipo «otra», con el texto sin guiones bajos (`Senaladas.de`). Una tarea periódica los pasa al campo nuevo.
+  - **La familia `hito_*` ya no se calcula.** Una variable de 0/1 que vale 1 un solo día no deja ver nada en un cruce.
+  - **[Diseño propio]**.
 - **Medicamentos**: desde el módulo 10a son privados y se anotan en la pantalla Privado, no en el diario de la noche (al final hay un enlace «privado de este día»). Son etiquetas; `medicamentos_n` cuenta cuántas desde el primer día en que anotaste alguno y solo viaja a R.
 - **Contextos** (`ctx_*`) y **hábitos** (`hab_*`): 1 si lo marcaste. **Ojo (H-2-4):** los contextos valen **0 en todos los días con diario**, también si no abriste esa sección: es la convención declarada en la pantalla («marca lo que aplique»), y se mantiene. Los hábitos valían 0 incluso **antes de crear el hábito**; desde la entrega 10c, antes de `Habito.desde` (el día en que lo creaste) quedan vacíos, salvo que los hayas marcado (D.63). Los hábitos creados antes de que existiera esa fecha siguen valiendo 0 desde el principio.
 - **Hábitos con «sí / no / sin contestar» (esquema 17).** Al contestar un hábito en la hoja de la noche, el día queda marcado (`habitos_tri`). En esos días, «no» vale 0 y un hábito **sin respuesta queda vacío**, no 0. En los días de antes (sin la marca), sin marca sigue valiendo 0. *Ejemplo con datos inventados:* un día con «Leer: sí» y «Meditar» sin tocar da `hab_leer` = 1 y `hab_meditar` vacío; el mismo día sin la marca daba `hab_meditar` = 0. Una recaída deja el hábito ligado en «no» (0), como antes. Con esto se resuelve en parte H-2-4 para los hábitos; en los contextos, «no lo marqué» y «no pasó» siguen siendo lo mismo (H-1-1).
@@ -336,6 +345,33 @@ Dos precisiones (H-2-8):
 - Hasta la entrega N4, si llenabas la hoja de **un día pasado**, el cierre se guardaba **con la fecha de ese día pero con la hora de ahora**: `animo_cierre_valencia` del martes podía ser cómo te sentías el viernes. Desde la N4, el cierre solo se ofrece en la hoja del día lógico de hoy (`cierrePermitido(fecha)`, en `data/Modelo.kt`; lo comprueba `EsquemaCatorcePrueba.cierreSoloHoy`). Los cierres tardíos de antes siguen guardados, pero desde la entrega 10c **el panel no los usa**: `Estadistica.cierreFuera(m)` es verdadero cuando el momento es un cierre y el día lógico de su hora (`Fechas.diaLogicoDeMillis(Fechas.millis(ts))`) no es su `fecha`, y esos momentos no entran en `animo_cierre_*`, `animo_valencia`, `animo_activacion` ni `registros_animo`. Así se arreglan también los datos viejos (D.74). Ejemplo: un cierre con fecha martes y hora viernes 09:00 queda fuera; uno con fecha martes y hora martes 21:00 cuenta.
 
 ---
+
+### 3.7.6 Los episodios (esquema 21)
+
+Un **episodio** es algo fuerte que te pasa y que puede repetirse. Hay seis tipos, más «otro» escrito:
+- crisis de ansiedad o pánico;
+- llanto o bajón fuerte;
+- pelea o discusión;
+- migraña;
+- enfermedad;
+- accidente.
+
+Se anota como un momento (`tipo = "episodio"`) desde el ⊕ o desde el día. Lleva:
+- la hora;
+- la intensidad, de 1 a 5 (`Catalogo.ANCLAS["episodio"]`, de «leve» a «lo peor que he vivido así»);
+- la duración, en días si es una enfermedad;
+- los detonantes, con la lista de siempre;
+- en una crisis, los síntomas: corazón acelerado, falta de aire, temblor, mareo, sudor, miedo intenso, sensación de irrealidad;
+- en una pelea, con quién, y esa persona cuenta como mención.
+
+No es privado. Salen en el panel:
+- `n_episodio`, que vale 0 desde el primer episodio, en días con diario, como `n_impulso` (P-15);
+- `episodio_intensidad_max`;
+- cuatro marcas de 0/1: `epi_crisis`, `epi_llanto`, `epi_pelea` y `epi_salud` (migraña, enfermedad o accidente).
+
+Las seis se tratan como una familia obvia entre sí (capítulo 6). Así se puede ver cuántos hay por mes, qué los detona y cómo salen el sueño y el ánimo esos días o el siguiente. *Ejemplo inventado:* una crisis a las 23:10 de intensidad 4 y una discusión a las 18:00 de intensidad 2 dan, ese día, `n_episodio` = 2, `episodio_intensidad_max` = 4, `epi_crisis` = 1 y `epi_pelea` = 1.
+
+*Cuándo falla:* como todo registro a mano, depende de que se anote. Un episodio fuerte es justo el momento en que menos ganas hay de abrir la app. Un día sin episodio anotado puede ser un día en que no se anotó, y no se puede distinguir de uno sin episodio (H-1-1). **[Diseño propio]**; los síntomas de la crisis siguen, en lenguaje simple, los de un ataque de pánico, pero la app no diagnostica nada.
 
 ## 3.8 La predicción de mañana
 
@@ -573,14 +609,54 @@ En R, `vm_retraso()` dice qué registros se anotaron tarde (Apéndice C). Los re
 
 ## 3.16 Seguimiento privado (solo la mecánica)
 
-Hay tres registros:
+Hay cinco registros (los dos últimos desde el esquema 21, D.163):
 - **impulso**: intensidad de 0 a 5 en el día, y momentos con intensidad de 1 a 5;
 - **recaída**: sí o no en el día; momentos con hora, duración, detonantes, aparato y qué hacías antes;
-- **libido**: de 0 a 5 y en qué está el foco; es distinta del impulso.
+- **libido**: de 0 a 5 y en qué está el foco; es distinta del impulso;
+- **masturbación**:
+  - hora y duración;
+  - el estímulo: pornografía, fantasía, un recuerdo, conversación o mensajes, nada en particular u otro;
+  - dónde;
+  - en qué aparato, solo con pornografía o mensajes;
+  - satisfacción de 1 a 5, las emociones de después y una descripción opcional.
 
-Usan anclas propias (`Catalogo.ANCLAS["impulso"]`, `["libido"]`). Los momentos de impulso se pueden registrar siempre. La intensidad del día, las recaídas, la libido y los detonantes solo con el seguimiento privado activado.
+  **Con pornografía cuenta como recaída** (decisión del autor). La app crea una recaída gemela a la misma hora, con su duración y aparato, y las liga (`vinculo`). Así, la marca del día, el hábito ligado y las rachas se comportan igual que con una recaída anotada a mano. Si la masturbación se borra o deja de ser con pornografía, la gemela se quita. Las dos cuentan en sus variables, así que `n_masturbacion` y `n_recaida` suben juntas ese día; por eso están en la misma familia obvia.
+- **intimidad**: un encuentro con alguien. Lleva:
+  - **qué pasó**: varias opciones, con nombres de manual y la palabra de todos los días al lado:
+    - a distancia: mensajes eróticos (sexting), llamada o videollamada erótica;
+    - besos: beso breve (pico), beso profundo;
+    - caricias: sobre la ropa (faje superficial), íntimas sin ropa (faje), estimulación manual;
+    - oral: dar o recibir;
+    - coito: vaginal o anal;
+    - otras: prácticas no convencionales (kinks), juguetes u otra;
+  - una descripción opcional;
+  - con quién, elegido de tu gente;
+  - cuatro escalas de 1 a 5:
+    - **satisfacción**, qué tan bien te dejó;
+    - **placer**, cuánto lo disfrutaste en el cuerpo;
+    - **conexión**, qué tan cerca te sentiste;
+    - **comodidad**, qué tan a gusto y con control. Es la que distingue una experiencia buena de una que no quisiste del todo;
+  - las emociones de después;
+  - en los detalles: orgasmo propio y de la otra persona, protección, quién empezó, dónde y duración.
 
-Desde el módulo 10a todo esto, junto con los medicamentos, **se anota y se ve solo en la pantalla Privado**. No aparece en el Día, los momentos, la cinta, los reportes, los logros, «Tu año», los mapas, los widgets ni los análisis de la app, y la red de personas no lo usa. **Sí** entra en el panel que se exporta a R (por ejemplo, `n_recaida`, `recaida_min`, `n_impulso`), porque su propósito es entender qué días y contextos lo hacen más difícil. El capítulo 10 detalla cómo se protege. **[Diseño propio]**.
+  El **nivel** (`Catalogo.nivelIntimidad`) es el más alto de lo que pasó: 0 a distancia, 1 besos, 2 caricias, 3 oral, 4 coito. Las prácticas sin nivel no lo cambian. *Ejemplo inventado:* beso profundo y caricias sobre la ropa dan nivel 2.
+
+Usan anclas propias (`Catalogo.ANCLAS["impulso"]`, `["libido"]` y, desde el esquema 21, `["satisfaccion"]`, `["placer"]`, `["conexion"]` y `["comodidad"]`).
+
+Las variables nuevas son:
+- de la masturbación: `n_masturbacion`, `masturbacion_min` y `masturbacion_satisfaccion`;
+- de la intimidad:
+  - `n_intimidad`;
+  - `intimidad_nivel`, el máximo del día;
+  - `intimidad_satisfaccion` e `intimidad_comodidad`, promedios del día;
+  - `n_coito`;
+  - `intimidad_distancia`, que vale 1 si todo lo del día fue a distancia.
+
+`n_masturbacion` y `n_intimidad` valen 0 desde el primer registro, en días con diario (P-15).
+
+En `vm_momentos.csv`, la columna `bajo_sustancia` dice si había alcohol o cannabis de por medio: un consumo que empezó en las 3 horas de antes o cuyo efecto seguía. No se pregunta, se cruza con lo que ya anotaste. Los momentos de impulso se pueden registrar siempre. La intensidad del día, las recaídas, la libido y los detonantes solo con el seguimiento privado activado.
+
+Desde el módulo 10a todo esto, junto con los medicamentos, **se anota y se ve solo en la pantalla Privado**. No aparece en el Día, los momentos, la cinta, los reportes, los logros, «Tu año», los mapas, los widgets ni los análisis de la app, y la red de personas no lo usa. La única excepción, desde el esquema 21, es la persona de la intimidad: con el seguimiento privado encendido, su ficha en Tu gente dice cuántas veces y cuándo fue la última (decisión del autor). No entra en las menciones, la red ni el panel de personas. **Sí** entra en el panel que se exporta a R (por ejemplo, `n_recaida`, `recaida_min`, `n_impulso`), porque su propósito es entender qué días y contextos lo hacen más difícil. El capítulo 10 detalla cómo se protege. **[Diseño propio]**.
 
 **Para la medición, el cambio tiene dos efectos posibles, sin comprobar:**
 - Ver menos estos datos en el día a día puede reducir la reactividad (que registrar cambie lo registrado).
