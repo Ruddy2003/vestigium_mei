@@ -253,7 +253,7 @@ private fun Corriendo(p: PlanEnfoque, ahora: Long, cerrar: () -> Unit) {
                     val grande = MaterialTheme.typography.displayLarge
                     // El «+» de lo de más, en negrita: en algunas letras del tema (la Didot de Napoleón) sale muy delgado.
                     val texto = androidx.compose.ui.text.buildAnnotatedString {
-                        if (cuenta.startsWith("+")) withStyle(androidx.compose.ui.text.SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Black)) { append("+") }
+                        if (cuenta.startsWith("+")) withStyle(androidx.compose.ui.text.SpanStyle(fontFamily = androidx.compose.ui.text.font.FontFamily.Default, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)) { append("+") }
                         append(cuenta.removePrefix("+"))
                     }
                     Text(texto, style = if (cuenta.removePrefix("+").length > 5) grande.copy(fontSize = grande.fontSize * 0.74f) else grande,
