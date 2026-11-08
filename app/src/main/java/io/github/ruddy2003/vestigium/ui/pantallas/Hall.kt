@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.draw.drawBehind
 import io.github.ruddy2003.vestigium.ui.comun.Separador
@@ -2263,7 +2264,7 @@ private fun BoxScope.FondoSalon(tema: TemaId) {
     val cs = MaterialTheme.colorScheme
     Canvas(Modifier.matchParentSize()) {
         // Recortada a su lienzo: el Canvas no recorta solo y la escena no debe salirse del hall.
-        androidx.compose.ui.graphics.drawscope.clipRect {
+        clipRect {
             with(io.github.ruddy2003.vestigium.ui.logros.disenoLogros(tema)) {
                 escenaSalon(io.github.ruddy2003.vestigium.ui.logros.EstadoSalon(2, cs.background, 0), cs.background.luminance() < 0.5f)
             }
