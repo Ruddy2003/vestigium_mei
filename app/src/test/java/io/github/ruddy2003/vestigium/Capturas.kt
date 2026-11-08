@@ -1685,6 +1685,31 @@ class Capturas {
     @Test fun suplementos21() = ENFOQUE21.forEach { (t, o) -> dia21(t, o, "e21_supl_${t.id}", 3600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaSuplementos(navVacia) } }
     @Test fun diaEpisodios21() = ENFOQUE21.take(3).forEach { (t, o) -> dia21(t, o, "e21_dia_${t.id}", 8000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) } }
 
+    // Las formas del esquema 21 (masturbación, intimidad, episodio) con datos inventados, y la pantalla Privado con ellas.
+    private fun momento21(tipo: String, f: (io.github.ruddy2003.vestigium.data.Momento) -> io.github.ruddy2003.vestigium.data.Momento): io.github.ruddy2003.vestigium.data.Momento {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        return f(io.github.ruddy2003.vestigium.data.Momento("p21_$tipo", hoy + "T22:10:00-06:00", hoy, tipo))
+    }
+    private val MASTURBACION21 get() = momento21("masturbacion") { it.copy(duracion_min = 15, estimulo = "pornografia", dispositivo = "telefono", sitio = "cama", satisfaccion = 2, emociones = listOf("culpa", "alivio")) }
+    private val INTIMIDAD21 get() = momento21("intimidad") { it.copy(practicas = listOf("beso_profundo", "caricias_ropa"), nivel = 2, personas = listOf("ana"), satisfaccion = 4, placer = 4, conexion = 5, comodidad = 5,
+        emociones = listOf("ternura", "alegria"), texto = "Texto inventado de prueba.", orgasmo = "no", iniciativa = "ambos") }
+    private val EPISODIO21 get() = momento21("episodio") { it.copy(episodio = "crisis", intensidad = 4, duracion_min = 20, sintomas = listOf("corazon", "aire", "mareo"), detonantes = listOf("estres")) }
+    private fun forma21(tema: TemaId, oscuro: Boolean, nombre: String, m: io.github.ruddy2003.vestigium.data.Momento, alto: Int,
+                        campos: @Composable (io.github.ruddy2003.vestigium.data.Momento, ((io.github.ruddy2003.vestigium.data.Momento) -> io.github.ruddy2003.vestigium.data.Momento) -> Unit) -> Unit) =
+        v73(tema, oscuro, alto, { it.copy(seguimiento_privado = true) }, nombre) {
+            Column(Modifier.padding(16.dp)) { campos(m) { } }
+        }
+    @Test fun formasPrivadas21() = ENFOQUE21.forEach { (t, o) ->
+        forma21(t, o, "e21_masturbacion_${t.id}", MASTURBACION21, 2600) { m, c -> io.github.ruddy2003.vestigium.ui.CamposMasturbacion(m, c) }
+        forma21(t, o, "e21_intimidad_${t.id}", INTIMIDAD21, 4200) { m, c -> io.github.ruddy2003.vestigium.ui.CamposIntimidad(m, c) }
+        forma21(t, o, "e21_episodio_${t.id}", EPISODIO21, 2600) { m, c -> io.github.ruddy2003.vestigium.ui.CamposEpisodio(m, c) }
+    }
+    @Test fun privado21() = ENFOQUE21.take(4).forEach { (t, o) ->
+        v73(t, o, 6000, { c -> Repo.momentosEnMemoria(Repo.momentos + listOf(MASTURBACION21, INTIMIDAD21)); c.copy(seguimiento_privado = true) }, "e21_privado_${t.id}") {
+            io.github.ruddy2003.vestigium.ui.pantallas.PantallaRecaidas(navVacia)
+        }
+    }
+
     @Test fun trofeosRomano() = v73(TemaId.ROMANO, false, 7000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
     @Test fun trofeosOrden() = v73(TemaId.ORDEN, true, 5000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
 

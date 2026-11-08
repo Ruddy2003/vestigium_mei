@@ -254,6 +254,10 @@ fun PantallaPersonas(nav: Nav) {
                     Personas.de(n)?.historial?.takeIf { it.isNotEmpty() }?.let { h ->
                         Ayuda("Antes: " + h.sortedBy { it.hasta }.joinToString(" · ") { "${Personas.nombreRelacion(it.relacion).lowercase()} hasta ${Fechas.corto(it.hasta)}" })
                     }
+                    // Esquema 21: solo con el seguimiento privado encendido (si no, intimidadCon da null). Nada más de lo privado aquí.
+                    Personas.intimidadCon(n)?.let { (veces, ultima) ->
+                        Ayuda("Intimidad: ${porNumero(veces, "1 vez", "$veces veces")} · la última, ${Fechas.corto(ultima)}", Modifier.padding(top = 4.dp))
+                    }
                     FormularioPersona(n, alGuardar = { editando = null })
                     AQuienConoce(n)
                 }

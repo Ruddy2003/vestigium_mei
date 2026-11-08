@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Opcion
 import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.data.privado
 
 /** Lo que se elige en «¿qué sientes?»: las emociones, el nombre de «otro» y cuánto de cada una. */
 data class EleccionEmociones(val emociones: List<String>, val otra: String, val intensidades: Map<String, Int>)
@@ -33,9 +34,10 @@ data class EleccionEmociones(val emociones: List<String>, val otra: String, val 
  */
 @Composable
 fun SelectorEmociones(actual: EleccionEmociones, discreto: Boolean, onCambio: (EleccionEmociones) -> Unit) {
-    val usos = remember(Repo.momentos.size) { Repo.momentos.flatMap { Catalogo.emocionesDe(it) }.groupingBy { it }.eachCount() }
+    val usos = remember(Repo.momentos.size) { Repo.momentos.filter { !it.privado }.flatMap { Catalogo.emocionesDe(it) }.groupingBy { it }.eachCount() }
     val otrasAntes = remember(Repo.momentos.size) {
-        Repo.momentos.mapNotNull { it.emocion_otra?.trim()?.takeIf { t -> t.isNotEmpty() } }.groupingBy { it.lowercase() }.eachCount()
+        // Lo escrito en un momento privado (masturbación, intimidad) no se sugiere en el ánimo de siempre.
+        Repo.momentos.filter { !it.privado }.mapNotNull { it.emocion_otra?.trim()?.takeIf { t -> t.isNotEmpty() } }.groupingBy { it.lowercase() }.eachCount()
             .entries.sortedByDescending { it.value }.map { it.key }.take(6)
     }
     val sel = actual.emociones

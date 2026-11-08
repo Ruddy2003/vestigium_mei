@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.data.privado
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -231,7 +232,7 @@ object Gato {
         val horas = Repo.salud[hoy]?.sueno_min?.let { it / 60.0 }
         val cansado = (horas != null && horas < 6.0) || (d?.sueno_calidad != null && d.sueno_calidad <= 2)
         val v = d?.valencia?.takeIf { d.nota.isNotBlank() }
-        val enojo = v != null && v <= 4 && Repo.momentos.any { m -> m.fecha == hoy && Catalogo.emocionesDe(m).any { it == "enojo" || it == "frustracion" } }
+        val enojo = v != null && v <= 4 && Repo.momentos.any { m -> m.fecha == hoy && !m.privado && Catalogo.emocionesDe(m).any { it == "enojo" || it == "frustracion" } }
         val animo = when {
             v == null -> Animo.NORMAL
             enojo -> Animo.ENOJADO

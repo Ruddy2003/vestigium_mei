@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CutCornerShape
@@ -60,6 +61,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -97,6 +99,8 @@ class QuickActivity : FragmentActivity() {
         const val SUBCATEGORIA = "subcategoria"; const val MONTO = "monto"
         /** Día (AAAA-MM-DD) para el que se anota, desde «＋ agregar a este día». */
         const val FECHA = "fecha"
+        /** Con [TIPO] = "episodio": el id del tipo de episodio (Catalogo.EPISODIOS) que ya va marcado al abrir. */
+        const val EPISODIO = "episodio_tipo"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -115,7 +119,11 @@ class QuickActivity : FragmentActivity() {
         val tipo = intent.getStringExtra(TIPO)
         var pantallaInicial = when (modo) { M_MOMENTO, M_ANIMO -> M_ANIMO; else -> modo }
         if (modo == M_MOMENTO && tipo != null) {
-            if (tipo == "impulso" || tipo == "recaida" || (tipo == "libido" && Repo.config.seguimiento_privado)) { inicial = crear(tipo, origen, null, null); pantallaInicial = "privado" }
+            if (tipo == "impulso" || tipo == "recaida" || (tipo in PRIVADOS_CON_SEGUIMIENTO && Repo.config.seguimiento_privado)) { inicial = crear(tipo, origen, null, null); pantallaInicial = "privado" }
+            // Un episodio (normal, no privado) va por la misma hoja de captura; puede llegar con su tipo ya elegido.
+            else if (tipo == "episodio") { inicial = crearEpisodio(origen, intent.getStringExtra(EPISODIO), intent.getStringExtra(FECHA)); pantallaInicial = "privado" }
+            // Sin el seguimiento privado no se anota nada privado (antes la libido caía aquí como un ánimo vacío).
+            else if (tipo in PRIVADOS_CON_SEGUIMIENTO) pantallaInicial = M_MENU
             else {
                 // Un sentimiento (del widget) o un tipo de momento de antes: se guarda como registro de ánimo.
                 val m0 = crear("animo", origen, null, null)
@@ -160,7 +168,8 @@ class QuickActivity : FragmentActivity() {
                         .navigationBarsPadding().imePadding()) {
                         val ir: (String) -> Unit = { destino ->
                             when (destino) {
-                                "impulso", "recaida", "libido" -> { privado = crear(destino, origen, null, null); pantalla = "privado" }
+                                // «privado» es la hoja de captura de un momento; el episodio, que no es privado, también va por ahí.
+                                "impulso", "recaida", "libido", "masturbacion", "intimidad", "episodio" -> { privado = crear(destino, origen, null, null); pantalla = "privado" }
                                 else -> pantalla = destino
                             }
                         }
@@ -236,6 +245,22 @@ class QuickActivity : FragmentActivity() {
 
     private fun actualizar(id: String, f: (Momento) -> Momento) { Repo.momento(id)?.let { Repo.guardarMomento(f(it)) } }
 
+    /** Privados que solo se anotan con el seguimiento privado encendido. */
+    private val PRIVADOS_CON_SEGUIMIENTO = setOf("libido", "masturbacion", "intimidad")
+
+    /**
+     * Un episodio se guarda al instante, como los demás; con [tipoEpisodio] (desde el día) ya va con su tipo. Con [fecha] de otro
+     * día («＋ agregar a este día») va a mediodía de ese día, sin la ubicación de ahora; la hora se corrige en la hoja.
+     */
+    private fun crearEpisodio(origen: String, tipoEpisodio: String?, fecha: String?): Momento {
+        val ms = fecha?.takeIf { it != Fechas.diaLogico() }?.let { f -> runCatching { Fechas.parse(f).atTime(12, 0).aMillis() }.getOrNull() }
+        val m = crear("episodio", origen, null, null, ms)
+        val id = tipoEpisodio?.takeIf { t -> Catalogo.EPISODIOS.any { it.id == t } } ?: return m
+        val n = m.copy(episodio = id)
+        Repo.guardarMomento(n)
+        return n
+    }
+
     @Composable
     private fun Encabezado(titulo: String, sub: String, fecha: String? = null) {
         // El día va también en palabras: con algunos temas la fecha del estilo no se lee de un vistazo (N-08).
@@ -254,42 +279,36 @@ class QuickActivity : FragmentActivity() {
         Encabezado("Registrar", "Lo de todos los días en un toque. Lo demás, cuando quieras.")
         val botones = listOfNotNull(
             "Enfoque" to M_ENFOQUE, "Siesta" to M_SIESTA, "Sustancias" to M_CONSUMO, "Gasto o ingreso" to M_GASTO, "Sueño" to M_SUENO, "Llenar el día" to "diario",
-            "Nota" to "notas", "Idea" to "idea_nueva", "Impulso" to "impulso", if (Repo.config.seguimiento_privado) "Recaída" to "recaida" else null,
+            "Nota" to "notas", "Idea" to "idea_nueva", "Episodio" to "episodio", "Impulso" to "impulso", if (Repo.config.seguimiento_privado) "Recaída" to "recaida" else null,
             if (Repo.config.seguimiento_privado) "Libido" to "libido" else null,
+            if (Repo.config.seguimiento_privado) "Masturbación" to "masturbacion" else null,
+            if (Repo.config.seguimiento_privado) "Intimidad" to "intimidad" else null,
         )
         MenuQuick(botones) { d ->
             if (d == "diario" || d == "notas" || d == "idea_nueva") { startActivity(android.content.Intent(this@QuickActivity, MainActivity::class.java).putExtra(MainActivity.PANTALLA, d)
                 .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish() }
             else ir(d)
         }
-        // Suplementos: un toque anota la dosis habitual.
+        // Suplementos: un toque anota la dosis habitual. Con una toma ya hecha hoy, el toque suma otra (esquema 21: se pueden
+        // varias al día) y la barra de abajo deja deshacerla durante 5 segundos.
         val supl = io.github.ruddy2003.vestigium.data.Suplementos.activos()
         if (supl.isNotEmpty()) {
-            var tomados by remember { mutableStateOf(supl.filter { io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id) }.map { it.id }.toSet()) }
-            var duda by remember { mutableStateOf<String?>(null) }
+            val hoySupl = Fechas.diaLogico()
             FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
                 supl.forEach { sp ->
-                    val ya = sp.id in tomados
+                    // Repo.tomas es estado: al anotar o deshacer, la cuenta se vuelve a leer sola.
+                    val n = io.github.ruddy2003.vestigium.data.Suplementos.tomasDe(sp.id, hoySupl).size
+                    val ya = n > 0
                     val dosis = if (sp.dosis == Math.floor(sp.dosis)) "%.0f".format(sp.dosis) else "%.1f".format(sp.dosis)
-                    // Si ya lo tomaste hoy, un toque pregunta (otra toma o quitar la de hoy) en vez de sumar otra sin querer.
-                    Surface(onClick = { if (ya) duda = if (duda == sp.id) null else sp.id else { io.github.ruddy2003.vestigium.data.Suplementos.registrar(sp); tomados = tomados + sp.id } },
-                        modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = forma, color = if (ya) cs.primary.copy(alpha = 0.12f) else cs.surface,
+                    Surface(onClick = {
+                        val t = io.github.ruddy2003.vestigium.data.Suplementos.registrar(sp)
+                        io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer(if (ya) "Otra toma: ${sp.nombre.lowercase()}" else "Anotado: ${sp.nombre.lowercase()}") { Repo.borrarToma(t.id) }
+                    }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = forma, color = if (ya) cs.primary.copy(alpha = 0.12f) else cs.surface,
                         border = BorderStroke(1.dp, if (ya) cs.primary else cs.outline)) {
-                        Box(contentAlignment = Alignment.Center) { Text((if (ya) "✓ " else "Tomé ") + sp.nombre.lowercase() + " · $dosis ${sp.unidad}", style = MaterialTheme.typography.labelLarge) }
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(if (ya) "✓ Tomé ${sp.nombre.lowercase()} ($n hoy)" else "Tomé ${sp.nombre.lowercase()} · $dosis ${sp.unidad}", style = MaterialTheme.typography.labelLarge)
+                        }
                     }
-                }
-            }
-            supl.firstOrNull { it.id == duda }?.let { sp ->
-                Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(sp.nombre + " ya está hoy:", style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
-                    BotonTexto(onClick = { io.github.ruddy2003.vestigium.data.Suplementos.registrar(sp); duda = null; Toast.makeText(this@QuickActivity, "Otra toma anotada", Toast.LENGTH_SHORT).show() }) { Text("otra toma") }
-                    BotonTexto(onClick = {
-                        // Se cuentan antes de borrar: la lista en memoria se actualiza después, en el hilo principal.
-                        val deHoy = Repo.tomas.filter { it.suplemento == sp.id && it.fecha == Fechas.diaLogico() }
-                        deHoy.maxByOrNull { it.ts }?.let { Repo.borrarToma(it.id) }
-                        if (deHoy.size <= 1) tomados = tomados - sp.id
-                        duda = null; Toast.makeText(this@QuickActivity, "Quitada la de hoy (7 días en la papelera)", Toast.LENGTH_SHORT).show()
-                    }) { Text("quitar la de hoy") }
                 }
             }
         }
@@ -378,6 +397,8 @@ class QuickActivity : FragmentActivity() {
             BotonSecundario("＋ impulso") { ir("impulso") }
             if (Repo.config.seguimiento_privado) BotonSecundario("＋ recaída") { ir("recaida") }
             if (Repo.config.seguimiento_privado) BotonSecundario("＋ libido") { ir("libido") }
+            if (Repo.config.seguimiento_privado) BotonSecundario("＋ masturbación") { ir("masturbacion") }
+            if (Repo.config.seguimiento_privado) BotonSecundario("＋ intimidad") { ir("intimidad") }
         }
         // Para no olvidar el dinero: cuánto llevas anotado hoy, lo que acabas de anotar aquí y, al abrirlo, el mismo formulario
         // del ⊕ (con la hora del momento si lo estás anotando tarde). Registrar no cierra la hoja.
@@ -432,6 +453,9 @@ class QuickActivity : FragmentActivity() {
         val t = Catalogo.tipo(mm.tipo)
         Encabezado("Guardado: ${if (discreto) t?.discreto ?: "" else t?.nombre ?: mm.tipo}", "A las ${Fechas.horaDe(mm.ts)}. Lo demás es opcional; puedes cerrar.")
         if (mm.tipo == "libido") { DetalleLibido(mm); return }
+        if (mm.tipo == "masturbacion") { DetalleMasturbacion(mm) { m = it }; return }
+        if (mm.tipo == "intimidad") { DetalleIntimidad(mm) { m = it }; return }
+        if (mm.tipo == "episodio") { DetalleEpisodio(mm) { m = it }; return }
         if (mm.tipo == "recaida") DetalleRecaida(mm) { m = it }
         Etiqueta(t?.pregunta ?: "Detalle")
         CampoTexto(value = texto, onValueChange = { texto = it; actualizar(mm.id) { x -> x.copy(texto = it) } },
@@ -531,6 +555,106 @@ class QuickActivity : FragmentActivity() {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Catalogo.DISPOSITIVOS.forEach { o -> Ficha(o.nombre, aparato == o.id) { aparato = if (aparato == o.id) null else o.id; actualizar(mm.id) { it.copy(dispositivo = aparato) } } }
         }
+    }
+
+    /**
+     * «¿Cuándo empezó?», para registrarlo a otra hora: el momento se mueve con su día y con la ubicación que había a esa hora
+     * (como en [DetalleRecaida]). [alMover] recibe cómo estaba y cómo quedó.
+     */
+    @Composable
+    private fun CuandoEmpezo(mm: Momento, alMover: (antes: Momento, despues: Momento) -> Unit) {
+        val ahoraMs = remember(mm.id) { Fechas.millis(mm.ts).takeIf { it > 0 } ?: System.currentTimeMillis() }
+        var cuando by remember(mm.id) { mutableStateOf<java.time.LocalDateTime?>(null) }
+        Etiqueta("¿Cuándo empezó?")
+        SelectorHora(cuando, atajos = listOf(15, 30, 60, 120, 180), ayer = true) { t ->
+            cuando = t
+            val ms = t?.aMillis() ?: ahoraMs
+            lifecycleScope.launch {
+                val actual = Repo.momento(mm.id) ?: return@launch
+                if (Fechas.millis(actual.ts) / 60_000L == ms / 60_000L) return@launch
+                val n = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { io.github.ruddy2003.vestigium.data.Recaidas.aOtraHora(actual, ms) }
+                Repo.guardarMomento(n)
+                alMover(actual, n)
+            }
+        }
+        if (cuando != null) Ayuda("El lugar se toma de tus ubicaciones de esa hora.", Modifier.padding(top = 4.dp))
+    }
+
+    /** Borra el momento de la hoja (con su recaída gemela, si la tiene) y deja el día como estaba antes de anotarlo. */
+    private fun borrarCaptura(mm: Momento) {
+        val actual = Repo.momento(mm.id) ?: mm
+        io.github.ruddy2003.vestigium.data.Recaidas.alBorrar(actual)
+        Repo.borrarMomento(actual.id)
+        previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }; previoRecaida = null
+        Toast.makeText(this, "Borrado", Toast.LENGTH_SHORT).show(); terminar()
+    }
+
+    @Composable
+    private fun PieCaptura(mm: Momento) {
+        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            BotonTexto(onClick = { borrarCaptura(mm) }) { Text("Borrar este registro") }
+            BotonPrincipal("Listo") { terminar() }
+        }
+    }
+
+    /**
+     * Masturbación (seguimiento privado): cuándo y cuánto duró, con qué, dónde, en qué aparato, satisfacción, emociones de
+     * después y cómo fue. Con pornografía cuenta como recaída: se crea su recaída gemela (y se quita si cambias el estímulo).
+     */
+    @Composable
+    private fun DetalleMasturbacion(mm: Momento, alCambiar: (Momento) -> Unit) {
+        var m by remember(mm.id) { mutableStateOf(Repo.momento(mm.id) ?: mm) }
+        var preguntar by remember(mm.id) { mutableStateOf(false) }
+        fun cambiar(f: (Momento) -> Momento) {
+            val n = f(Repo.momento(mm.id) ?: m)
+            Repo.guardarMomento(n); sincronizarGemela(n); m = n
+        }
+        CuandoEmpezo(mm) { _, n ->
+            m = n; alCambiar(n)
+            // La recaída gemela se mueve con ella (y, si cambia de día, la marca del día también).
+            val g = io.github.ruddy2003.vestigium.data.Recaidas.gemela(n)?.takeIf { it.tipo == "recaida" }
+            if (g != null) {
+                val g2 = io.github.ruddy2003.vestigium.data.Recaidas.aOtraHora(g, Fechas.millis(n.ts))
+                Repo.guardarMomento(g2)
+                if (g2.fecha != g.fecha) {
+                    previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }
+                    previoRecaida = io.github.ruddy2003.vestigium.data.Recaidas.registrar(g2)
+                }
+            }
+        }
+        CamposMasturbacion(m, { f -> cambiar(f) }) { antes, despues ->
+            val actual = Repo.momento(mm.id) ?: m
+            if (despues == "pornografia") {
+                io.github.ruddy2003.vestigium.data.Recaidas.registrarDesdeMasturbacion(actual)?.let { (_, previo) -> previoRecaida = previo }
+                Repo.momento(mm.id)?.let { m = it }
+            } else if (antes == "pornografia" && io.github.ruddy2003.vestigium.data.Recaidas.gemela(actual)?.tipo == "recaida") preguntar = true
+        }
+        if (preguntar) PreguntaGemela(Repo.momento(mm.id) ?: m) { quitada ->
+            preguntar = false
+            if (quitada) { previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }; previoRecaida = null }
+            Repo.momento(mm.id)?.let { m = it }
+        }
+        Ayuda("Solo para ti: no sale en reportes, logros, «Tu año», mapas ni widgets. Sí en tu exportación a R.", Modifier.padding(top = 10.dp))
+        PieCaptura(mm)
+    }
+
+    /** Intimidad (seguimiento privado): qué pasó, cómo fue, con quién, las escalas, los detalles plegados y la hora. */
+    @Composable
+    private fun DetalleIntimidad(mm: Momento, alCambiar: (Momento) -> Unit) {
+        var m by remember(mm.id) { mutableStateOf(Repo.momento(mm.id) ?: mm) }
+        CamposIntimidad(m) { f -> val n = f(Repo.momento(mm.id) ?: m); Repo.guardarMomento(n); m = n }
+        CuandoEmpezo(mm) { _, n -> m = n; alCambiar(n) }
+        Ayuda("Solo para ti: no sale en reportes, logros, «Tu año», mapas, menciones ni widgets. Sí en tu exportación a R.", Modifier.padding(top = 10.dp))
+        PieCaptura(mm)
+    }
+
+    /** Episodio (normal, no privado): qué fue, qué tan fuerte, cuánto duró, síntomas, qué lo detonó, con quién y una nota. */
+    @Composable
+    private fun DetalleEpisodio(mm: Momento, alCambiar: (Momento) -> Unit) {
+        var m by remember(mm.id) { mutableStateOf(Repo.momento(mm.id) ?: mm) }
+        CamposEpisodio(m) { f -> val n = f(Repo.momento(mm.id) ?: m); Repo.guardarMomento(n); m = n }
+        CuandoEmpezo(mm) { _, n -> m = n; alCambiar(n) }
+        PieCaptura(mm)
     }
 
     /** El cronómetro: elegir qué empieza, ver cuánto lleva y terminarlo; también anotar una siesta que ya pasó. */
@@ -1323,4 +1447,281 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
         moveTo(10 * u, 0f); lineTo(w - 14 * u, 2 * u); quadraticTo(w, 2 * u, w, h * 0.5f); quadraticTo(w - 2 * u, h, w - 16 * u, h); lineTo(12 * u, h - 1 * u)
         quadraticTo(0f, h - 2 * u, 0f, h * 0.5f); quadraticTo(0f, 0f, 10 * u, 0f); close()
     }
+}
+
+// ============================================================================ esquema 21: masturbación, intimidad y episodios
+// Los campos van aquí, fuera de la actividad, para que la hoja rápida y el diálogo de editar un momento (Momentos.kt) usen los
+// mismos. Reciben el momento como está y [cambiar], que dice cómo cambiarlo: la hoja lo guarda al instante; el diálogo, al
+// tocar «Guardar». La hora va aparte, porque cada uno la mueve a su manera.
+
+/** Si la masturbación tiene su recaída gemela, la duración y el aparato de la recaída siguen a los de la masturbación. */
+internal fun sincronizarGemela(n: Momento) {
+    if (n.tipo != "masturbacion") return
+    val g = io.github.ruddy2003.vestigium.data.Recaidas.gemela(n)?.takeIf { it.tipo == "recaida" } ?: return
+    if (g.duracion_min != n.duracion_min || g.dispositivo != n.dispositivo) Repo.guardarMomento(g.copy(duracion_min = n.duracion_min, dispositivo = n.dispositivo))
+}
+
+/** La recaída se queda aunque la masturbación ya no sea con pornografía: las dos pierden el vínculo y la recaída sigue sola. */
+internal fun desligarGemela(m: Momento) {
+    val g = io.github.ruddy2003.vestigium.data.Recaidas.gemela(m) ?: return
+    Repo.guardarMomento(g.copy(vinculo = null))
+    (Repo.momento(m.id) ?: m).let { Repo.guardarMomento(it.copy(vinculo = null)) }
+}
+
+/**
+ * La masturbación dejó de ser con pornografía y tenía su recaída gemela: «¿Quitar también la recaída?». «Quitarla» la borra
+ * ([io.github.ruddy2003.vestigium.data.Recaidas.soltarGemela]); «dejarla» la deja como recaída sola. [alTerminar] dice si se quitó.
+ */
+@Composable
+internal fun PreguntaGemela(m: Momento, alTerminar: (quitada: Boolean) -> Unit) {
+    Dialogo(
+        onDismissRequest = { alTerminar(false) },
+        title = { Text("¿Quitar también la recaída?") },
+        text = { Text("Con pornografía se anotó también una recaída a la misma hora. Si ya no fue así, puedes quitarla.") },
+        confirmButton = { BotonTexto(onClick = {
+            val actual = Repo.momento(m.id) ?: m
+            io.github.ruddy2003.vestigium.data.Recaidas.soltarGemela(actual)
+            Repo.momento(actual.id)?.let { Repo.guardarMomento(it.copy(vinculo = null)) }
+            alTerminar(true)
+        }) { Text("quitarla") } },
+        dismissButton = { BotonTexto(onClick = { desligarGemela(m); alTerminar(false) }) { Text("dejarla") } },
+    )
+}
+
+/** Una ficha con su nombre y, al lado, una aclaración entre paréntesis en letra chica (como [Ficha], con la forma del tema). */
+@Composable
+private fun FichaConAyuda(texto: String, ayuda: String, activa: Boolean, onClick: () -> Unit) {
+    if (ayuda.isBlank()) { Ficha(texto, activa, onClick); return }
+    val sentir = rememberSentir()
+    val toque = remember { MutableInteractionSource() }
+    val tema = Estilo.tema
+    val e = MaterialTheme.colorScheme
+    Surface(
+        onClick = { sentir(Sentidos.Evento.ELEGIR); onClick() }, shape = formaBotonTema(tema), interactionSource = toque, modifier = Modifier.presion(toque, 0.93f),
+        color = if (activa) e.primaryContainer else e.surface,
+        border = BorderStroke(1.dp, if (activa) e.primary else e.outline),
+    ) {
+        Row(Modifier.padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (activa) {
+                androidx.compose.foundation.Canvas(Modifier.size(11.dp)) { perillaTema(tema, e, center, size.minDimension / 2f, e.primary, e.primaryContainer) }
+                Spacer(Modifier.width(7.dp))
+            }
+            Text(texto, style = MaterialTheme.typography.labelLarge.copy(fontWeight = if (activa) FontWeight.SemiBold else FontWeight.Normal))
+            Text(" ($ayuda)", style = MaterialTheme.typography.labelSmall, color = e.onSurfaceVariant)
+        }
+    }
+}
+
+/** Un texto libre que se guarda limpio (sin espacios a los lados; vacío = null) sin estorbar mientras escribes. */
+@Composable
+private fun CampoOtro(clave: String, inicial: String?, etiqueta: String = "¿Cuál?", alCambiar: (String?) -> Unit) {
+    var t by remember(clave) { mutableStateOf(inicial.orEmpty()) }
+    CampoTexto(value = t, onValueChange = { v -> t = v; alCambiar(v.trim().ifBlank { null }) },
+        modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text(etiqueta) })
+}
+
+/** «¿Cómo fue? (opcional)»: varias líneas, en [Momento.texto]. */
+@Composable
+private fun CampoComoFue(m: Momento, placeholder: String, cambiar: ((Momento) -> Momento) -> Unit) {
+    var t by remember(m.id) { mutableStateOf(m.texto) }
+    CampoTexto(value = t, onValueChange = { v -> t = v; cambiar { it.copy(texto = v) } },
+        modifier = Modifier.fillMaxWidth(), minLines = 3, placeholder = { Text(placeholder) }, visualTransformation = rememberMarcas())
+}
+
+/** Las emociones de después: el mismo selector que en «¿Cómo estás ahora?». */
+@Composable
+private fun EmocionesDespues(m: Momento, cambiar: ((Momento) -> Momento) -> Unit) {
+    var eleccion by remember(m.id) { mutableStateOf(EleccionEmociones(m.emociones, m.emocion_otra.orEmpty(), m.intensidades)) }
+    Etiqueta("¿Qué sentiste después? (opcional, varios)")
+    SelectorEmociones(eleccion, Repo.config.discreto) { e ->
+        eleccion = e
+        cambiar { it.copy(emociones = e.emociones, emocion_otra = if (Catalogo.OTRO in e.emociones) e.otra.trim().ifBlank { null } else null, intensidades = e.intensidades) }
+    }
+}
+
+/** Dónde (Catalogo.SITIOS); «otro» con su texto. */
+@Composable
+private fun CampoSitio(m: Momento, cambiar: ((Momento) -> Momento) -> Unit) {
+    FilaFichas(Catalogo.SITIOS, m.sitio) { v -> cambiar { it.copy(sitio = v, sitio_otro = if (v == "otro") it.sitio_otro else null) } }
+    if (m.sitio == "otro") CampoOtro(m.id + "|sitio", m.sitio_otro) { t -> cambiar { it.copy(sitio_otro = t) } }
+}
+
+/**
+ * Con quién, de tu gente: las de Tu gente y las que más mencionas (como «¿A quién conoce?»), varias a la vez, y un campo para
+ * escribir otra. Se guardan sin @ y en minúsculas, como las menciones.
+ */
+@Composable
+internal fun ConQuienPersonas(clave: String, sel: List<String>, onCambio: (List<String>) -> Unit) {
+    val menc = remember(Repo.dias) { io.github.ruddy2003.vestigium.data.Personas.menciones() }
+    val tuyas = (Repo.config.personas.map { it.nombre.lowercase() } + menc.entries.sortedByDescending { it.value.first }.take(20).map { it.key })
+        .distinct().take(24)
+    val todas = (sel + tuyas).distinct()
+    if (todas.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        todas.forEach { p -> Ficha("@$p", p in sel) { onCambio(if (p in sel) sel - p else sel + p) } }
+    }
+    var otra by remember(clave) { mutableStateOf("") }
+    // Como una mención: sin @, en minúsculas, los espacios a guion bajo y solo letras, números y guion bajo.
+    val nombre = io.github.ruddy2003.vestigium.data.Texto.etiqueta(otra).filter { it.isLetterOrDigit() || it == '_' }
+    Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        CampoTexto(value = otra, onValueChange = { otra = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("@persona") })
+        BotonTexto(onClick = { if (nombre.isNotEmpty() && nombre !in sel) onCambio(sel + nombre); otra = "" }, enabled = nombre.isNotEmpty()) { Text("agregar") }
+    }
+}
+
+/**
+ * Masturbación: cuánto duró, con qué (con pornografía, «Cuenta como recaída»), en qué aparato (solo con los estímulos de
+ * Catalogo.ESTIMULOS_CON_APARATO), dónde, satisfacción, emociones de después y cómo fue. [alCambiarEstimulo] recibe el
+ * estímulo de antes y el nuevo, para crear o quitar la recaída gemela.
+ */
+@Composable
+internal fun CamposMasturbacion(m: Momento, cambiar: ((Momento) -> Momento) -> Unit, alCambiarEstimulo: (antes: String?, despues: String?) -> Unit = { _, _ -> }) {
+    Etiqueta("¿Cuánto duró?")
+    SelectorDuracion(m.duracion_min) { d -> cambiar { it.copy(duracion_min = d) } }
+    Etiqueta("Con qué")
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Catalogo.ESTIMULOS.forEach { o ->
+            Ficha(o.nombre, m.estimulo == o.id) {
+                val antes = m.estimulo
+                val nuevo = if (antes == o.id) null else o.id
+                cambiar { it.copy(estimulo = nuevo, estimulo_otro = if (nuevo == "otro") it.estimulo_otro else null,
+                    dispositivo = if (nuevo in Catalogo.ESTIMULOS_CON_APARATO) it.dispositivo else null) }
+                alCambiarEstimulo(antes, nuevo)
+            }
+        }
+    }
+    if (m.estimulo == "pornografia") Ayuda("Cuenta como recaída: se anota también una recaída a la misma hora.", Modifier.padding(top = 6.dp))
+    if (m.estimulo == "otro") CampoOtro(m.id + "|estimulo", m.estimulo_otro) { t -> cambiar { it.copy(estimulo_otro = t) } }
+    if (m.estimulo in Catalogo.ESTIMULOS_CON_APARATO) {
+        Etiqueta("En qué aparato")
+        FilaFichas(Catalogo.DISPOSITIVOS, m.dispositivo) { v -> cambiar { it.copy(dispositivo = v) } }
+    }
+    Etiqueta("Dónde")
+    CampoSitio(m, cambiar)
+    Etiqueta("Satisfacción (1 a 5)")
+    Escala(m.satisfaccion, 1, 5, Catalogo.ANCLAS["satisfaccion"]) { v -> cambiar { it.copy(satisfaccion = v) } }
+    EmocionesDespues(m, cambiar)
+    Etiqueta("Descripción")
+    CampoComoFue(m, "¿Cómo fue? (opcional)", cambiar)
+}
+
+/**
+ * Intimidad, en este orden: qué pasó (varias, por grupo; guarda también el nivel, Catalogo.nivelIntimidad), cómo fue, con
+ * quién, las escalas de 1 a 5 y las emociones de después, y los detalles plegados (orgasmo, protección, quién empezó, dónde y
+ * duración). Todo es opcional salvo lo que pasó.
+ */
+@Composable
+internal fun CamposIntimidad(m: Momento, cambiar: ((Momento) -> Momento) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    Etiqueta("Qué pasó (varias)")
+    Catalogo.PRACTICAS.groupBy { it.grupo }.forEach { (grupo, l) ->
+        Text(grupo, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 2.dp))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            l.forEach { p ->
+                val activa = p.id in m.practicas
+                FichaConAyuda(p.nombre, p.ayuda, activa) {
+                    val nuevas = if (activa) m.practicas - p.id else m.practicas + p.id
+                    cambiar { it.copy(practicas = nuevas, nivel = Catalogo.nivelIntimidad(nuevas), practica_otra = if ("otra" in nuevas) it.practica_otra else null) }
+                }
+            }
+        }
+    }
+    if ("otra" in m.practicas) CampoOtro(m.id + "|practica", m.practica_otra) { t -> cambiar { it.copy(practica_otra = t) } }
+    Etiqueta("Descripción")
+    CampoComoFue(m, "¿Cómo fue? (opcional)", cambiar)
+    Etiqueta("Con quién")
+    ConQuienPersonas(m.id, m.personas) { l -> cambiar { it.copy(personas = l) } }
+    Etiqueta("Satisfacción (1 a 5)")
+    Escala(m.satisfaccion, 1, 5, Catalogo.ANCLAS["satisfaccion"]) { v -> cambiar { it.copy(satisfaccion = v) } }
+    Etiqueta("Placer (1 a 5)")
+    Escala(m.placer, 1, 5, Catalogo.ANCLAS["placer"]) { v -> cambiar { it.copy(placer = v) } }
+    Etiqueta("Conexión (1 a 5)")
+    Escala(m.conexion, 1, 5, Catalogo.ANCLAS["conexion"]) { v -> cambiar { it.copy(conexion = v) } }
+    Etiqueta("Comodidad (1 a 5)")
+    Escala(m.comodidad, 1, 5, Catalogo.ANCLAS["comodidad"]) { v -> cambiar { it.copy(comodidad = v) } }
+    EmocionesDespues(m, cambiar)
+    // Los detalles, plegados; se abren solos si ya hay alguno.
+    var detalles by remember(m.id) { mutableStateOf(listOf(m.orgasmo, m.orgasmo_otra, m.proteccion, m.iniciativa, m.sitio).any { it != null } || m.duracion_min != null) }
+    BotonTexto(onClick = { detalles = !detalles }, modifier = Modifier.padding(top = 8.dp)) {
+        Text(if (detalles) "− detalles" else "＋ detalles: orgasmo, protección, quién empezó, dónde, duración", style = MaterialTheme.typography.labelLarge)
+    }
+    if (detalles) {
+        Etiqueta("Orgasmo, tú")
+        FilaFichas(Catalogo.SI_NO_NOSE, m.orgasmo) { v -> cambiar { it.copy(orgasmo = v) } }
+        Etiqueta("Orgasmo, la otra persona")
+        FilaFichas(Catalogo.SI_NO_NOSE, m.orgasmo_otra) { v -> cambiar { it.copy(orgasmo_otra = v) } }
+        Etiqueta("Protección")
+        FilaFichas(Catalogo.PROTECCION, m.proteccion) { v -> cambiar { it.copy(proteccion = v) } }
+        Etiqueta("Quién empezó")
+        FilaFichas(Catalogo.INICIATIVA, m.iniciativa) { v -> cambiar { it.copy(iniciativa = v) } }
+        Etiqueta("Dónde")
+        CampoSitio(m, cambiar)
+        Etiqueta("¿Cuánto duró?")
+        SelectorDuracion(m.duracion_min) { d -> cambiar { it.copy(duracion_min = d) } }
+    }
+}
+
+/**
+ * Episodio: qué fue («otro» con su texto), qué tan fuerte (1 a 5), cuánto duró (en la enfermedad, en días: se guarda
+ * días × 1440 minutos), los síntomas (solo en una crisis), qué lo detonó, con quién (solo en una pelea) y una nota.
+ */
+@Composable
+internal fun CamposEpisodio(m: Momento, cambiar: ((Momento) -> Momento) -> Unit) {
+    val enDias = m.episodio in Catalogo.EPISODIOS_EN_DIAS
+    Etiqueta("¿Qué fue?")
+    FilaFichas(Catalogo.EPISODIOS, m.episodio) { v ->
+        val nuevoEnDias = v in Catalogo.EPISODIOS_EN_DIAS
+        cambiar { it.copy(episodio = v, episodio_otro = if (v == "otro") it.episodio_otro else null,
+            sintomas = if (v == "crisis") it.sintomas else emptyList(), personas = if (v == "pelea") it.personas else emptyList(),
+            // Minutos y días no se mezclan: al cambiar de unidad, la duración se vuelve a decir.
+            duracion_min = if (nuevoEnDias != enDias) null else it.duracion_min) }
+    }
+    if (m.episodio == "otro") CampoOtro(m.id + "|episodio", m.episodio_otro) { t -> cambiar { it.copy(episodio_otro = t) } }
+    Etiqueta("Qué tan fuerte (1 a 5)")
+    Escala(m.intensidad, 1, 5, Catalogo.ANCLAS["episodio"], secuencial = true) { v -> cambiar { it.copy(intensidad = v) } }
+    if (enDias) {
+        Etiqueta("¿Cuántos días duró?")
+        SelectorDias(m.id, m.duracion_min?.let { (it + 720) / 1440 }) { d -> cambiar { it.copy(duracion_min = d?.let { n -> n * 1440 }) } }
+    } else {
+        Etiqueta("¿Cuánto duró?")
+        SelectorDuracion(m.duracion_min, listOf(5, 10, 15, 30, 45, 60, 90, 120, 180, 240)) { d -> cambiar { it.copy(duracion_min = d) } }
+    }
+    if (m.episodio == "crisis") {
+        Etiqueta("Síntomas (varios)")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Catalogo.SINTOMAS_CRISIS.forEach { o ->
+                val activo = o.id in m.sintomas
+                Ficha(o.nombre, activo) { val l = if (activo) m.sintomas - o.id else m.sintomas + o.id; cambiar { it.copy(sintomas = l) } }
+            }
+        }
+    }
+    Etiqueta("Qué lo detonó (varios)")
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Catalogo.DETONANTES.forEach { d ->
+            val activo = d.id in m.detonantes
+            Ficha(d.nombre, activo) {
+                val l = if (activo) m.detonantes - d.id else m.detonantes + d.id
+                cambiar { it.copy(detonantes = l, detonante_otro = if ("otro" in l) it.detonante_otro else null) }
+            }
+        }
+    }
+    if ("otro" in m.detonantes) CampoOtro(m.id + "|detonante", m.detonante_otro) { t -> cambiar { it.copy(detonante_otro = t) } }
+    if (m.episodio == "pelea") {
+        Etiqueta("Con quién")
+        ConQuienPersonas(m.id, m.personas) { l -> cambiar { it.copy(personas = l) } }
+    }
+    Etiqueta("Nota (opcional)")
+    CampoComoFue(m, "¿Qué pasó? Usa @persona y #tema", cambiar)
+}
+
+/** Duración en días (la de una enfermedad): atajos y «otra». */
+@Composable
+private fun SelectorDias(clave: String, dias: Int?, onCambio: (Int?) -> Unit) {
+    val opciones = listOf(1, 2, 3, 5, 7, 14)
+    var texto by remember(clave) { mutableStateOf(if (dias != null && dias !in opciones) "$dias" else "") }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        opciones.forEach { d -> Ficha(if (d == 1) "1 día" else "$d días", dias == d && texto.isEmpty()) { texto = ""; onCambio(if (dias == d) null else d) } }
+    }
+    CampoTexto(value = texto, onValueChange = { t -> texto = t.filter { it.isDigit() }.take(3); onCambio(texto.toIntOrNull()?.takeIf { it > 0 }) },
+        modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Otra (días)") },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
 }

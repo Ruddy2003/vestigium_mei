@@ -134,6 +134,10 @@ fun PantallaRecaidas(nav: Nav) {
                 BotonSecundario("Una recaída", Modifier.weight(1f)) { registrar("recaida") }
                 BotonSecundario("La libido", Modifier.weight(1f)) { registrar("libido") }
             }
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BotonSecundario("Masturbación", Modifier.weight(1f)) { registrar("masturbacion") }
+                BotonSecundario("Intimidad", Modifier.weight(1f)) { registrar("intimidad") }
+            }
             Ayuda("También con los botones del registro rápido. Las ganas que pasaron sin recaer se anotan como «Impulso».", Modifier.padding(top = 6.dp))
         } else Ayuda("Para anotar también recaídas, libido y detonantes, activa el seguimiento privado en Más → Privacidad.", Modifier.padding(top = 6.dp))
 
@@ -223,6 +227,8 @@ fun PantallaRecaidas(nav: Nav) {
                     .map { (k, v) -> (Catalogo.FOCOS.firstOrNull { it.id == k }?.nombre ?: k) to v })
             }
         }
+        // Masturbación e intimidad (esquema 21): cuántas veces en los últimos 30 días y la última. Sin metas ni juicios.
+        if (c.seguimiento_privado) ResumenIntimo(hoy)
         val lista = Repo.momentos.filter { it.privado }.sortedByDescending { it.ts }
         if (lista.isNotEmpty()) Seccion("Registro", "Los últimos 30. Toca uno para corregir la hora, la duración o la nota.") {
             Tarjeta {
@@ -230,10 +236,10 @@ fun PantallaRecaidas(nav: Nav) {
                     if (i > 0) Separador()
                     Row(Modifier.fillMaxWidth().clickable { editando = m }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("${Fechas.corto(m.fecha)} · ${Fechas.horaDe(m.ts)} · ${Catalogo.nombreTipo(m.tipo)}" + (m.intensidad?.let { " $it" } ?: "") +
+                            Text("${Fechas.corto(m.fecha)} · ${Fechas.horaDe(m.ts)} · ${Catalogo.titulo(m, false)}" + (m.intensidad?.let { " $it" } ?: "") +
                                 (m.duracion_min?.let { " · ${duracion(it.toDouble())}" } ?: ""), style = MaterialTheme.typography.bodyLarge)
                             val extra = listOfNotNull(Repo.lugares.firstOrNull { it.id == m.lugar }?.nombre, m.detonantes.joinToString(", ") { if (it == "otro" && !m.detonante_otro.isNullOrBlank()) m.detonante_otro else Catalogo.nombreDetonante(it) }.ifBlank { null },
-                                m.antes?.let { a -> Catalogo.ANTES.firstOrNull { it.id == a }?.nombre?.lowercase() }, m.texto.ifBlank { null }).joinToString(" · ")
+                                m.antes?.let { a -> Catalogo.ANTES.firstOrNull { it.id == a }?.nombre?.lowercase() }, detalleIntimo(m), m.texto.ifBlank { null }).joinToString(" · ")
                             if (extra.isNotEmpty()) Text(extra, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Text("✎", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
@@ -242,12 +248,64 @@ fun PantallaRecaidas(nav: Nav) {
             }
         }
         Ayuda((if (c.seguimiento_privado) "${porNumero(r.totalDias, "1 día", "${r.totalDias} días")} con recaída de ${porNumero(r.diasConRespuesta, "1 día", "${r.diasConRespuesta} días")} con seguimiento. " else "") +
-            "Para cruzar esto con sueño, pantalla o ánimo, usa tu exportación en R (vm_panel_extendido.csv: impulso, recaida, n_recaida, n_impulso, libido_max, medicamentos_n, med_…, det_…).",
+            "Para cruzar esto con sueño, pantalla o ánimo, usa tu exportación en R (vm_panel_extendido.csv: impulso, recaida, n_recaida, n_impulso, libido_max, medicamentos_n, " +
+            "n_masturbacion, n_intimidad, intimidad_nivel, med_…, det_…).",
             Modifier.padding(top = 12.dp))
         // Lo privado borrado se recupera aquí, nunca en la papelera general (N-14).
         ListaPapelera(privado = true)
     }
 }
+
+/**
+ * Masturbación e intimidad: veces en los últimos 30 días (hoy incluido) y la última. En la masturbación, cuántas fueron con
+ * pornografía (cuentan como recaída); en la intimidad, el nivel más alto, la satisfacción media y, si alguna tuvo comodidad
+ * de 2 o menos, cuántas, en una línea neutra.
+ */
+@Composable
+private fun ResumenIntimo(hoy: String) {
+    val desde = Fechas.sumar(hoy, -29)
+    val mast = Repo.momentos.filter { it.tipo == "masturbacion" }
+    val inti = Repo.momentos.filter { it.tipo == "intimidad" }
+    if (mast.isEmpty() && inti.isEmpty()) return
+    Seccion("Masturbación e intimidad", "Los últimos 30 días.") {
+        mast.maxByOrNull { it.ts }?.let { ultima ->
+            val m30 = mast.filter { it.fecha >= desde }
+            Tarjeta(Modifier.padding(bottom = 8.dp)) {
+                Text("Masturbación · ${porNumero(m30.size, "1 vez", "${m30.size} veces")}", style = MaterialTheme.typography.titleMedium)
+                val porno = m30.count { it.estimulo == "pornografia" }
+                val sat = m30.mapNotNull { it.satisfaccion }
+                Ayuda(listOfNotNull("la última: ${Fechas.corto(ultima.fecha)} ${Fechas.horaDe(ultima.ts)}",
+                    if (porno > 0) porNumero(porno, "1 con pornografía (cuenta como recaída)", "$porno con pornografía (cuentan como recaída)") else null,
+                    if (sat.isNotEmpty()) "satisfacción media %.1f de 5".format(sat.average()) else null).joinToString(" · "))
+            }
+        }
+        inti.maxByOrNull { it.ts }?.let { ultima ->
+            val i30 = inti.filter { it.fecha >= desde }
+            Tarjeta(Modifier.padding(bottom = 8.dp)) {
+                Text("Intimidad · ${porNumero(i30.size, "1 vez", "${i30.size} veces")}", style = MaterialTheme.typography.titleMedium)
+                val nivel = i30.mapNotNull { it.nivel }.maxOrNull()
+                val sat = i30.mapNotNull { it.satisfaccion }
+                Ayuda(listOfNotNull("la última: ${Fechas.corto(ultima.fecha)} ${Fechas.horaDe(ultima.ts)}",
+                    nivel?.let { n -> Catalogo.NIVELES_INTIMIDAD.firstOrNull { it.first == n }?.let { "nivel más alto: ${it.second.lowercase()}" } },
+                    if (sat.isNotEmpty()) "satisfacción media %.1f de 5".format(sat.average()) else null).joinToString(" · "))
+                val baja = i30.count { c -> c.comodidad?.let { it <= 2 } == true }
+                if (baja > 0) Ayuda("Con comodidad baja: $baja", Modifier.padding(top = 4.dp))
+            }
+        }
+    }
+}
+
+/** En el registro privado: lo propio de una masturbación (con qué, satisfacción) o de una intimidad (nivel, con quién). */
+private fun detalleIntimo(m: Momento): String? = when (m.tipo) {
+    "masturbacion" -> listOfNotNull(
+        m.estimulo?.let { e -> if (e == "otro" && !m.estimulo_otro.isNullOrBlank()) m.estimulo_otro else Catalogo.ESTIMULOS.firstOrNull { it.id == e }?.nombre?.lowercase() },
+        m.satisfaccion?.let { "satisfacción $it" })
+    "intimidad" -> listOfNotNull(
+        m.nivel?.let { n -> Catalogo.NIVELES_INTIMIDAD.firstOrNull { it.first == n }?.second?.lowercase() },
+        m.personas.takeIf { it.isNotEmpty() }?.joinToString(" ") { "@$it" },
+        m.satisfaccion?.let { "satisfacción $it" })
+    else -> emptyList<String>()
+}.joinToString(" · ").ifBlank { null }
 
 private class Mes(val nombre: String, val recaidas: Int, val impulsos: Int, val medicamentos: Int)
 
