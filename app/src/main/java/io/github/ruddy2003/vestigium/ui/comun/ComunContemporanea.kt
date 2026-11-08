@@ -717,6 +717,117 @@ object ComunUrbe : DisenoComun {
             drawCircle(naranja, 3 * u, Offset(w - 4 * u, cy), style = Stroke(1.4f * u))
         }
     }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /**
+     * La hoja rápida es un portón de travertino: bajo el arco rebajado, la moldura doble que lo sigue, las juntas de las
+     * dovelas entre sus dos líneas y la clave en lo más alto; a cada lado, la imposta donde nace el arco, con su tornillo de
+     * aluminio; por los cantos, la cadena de sillares de una esquina romana (uno largo, uno corto) y, en las esquinas de
+     * abajo, unos sampietrini del empedrado.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val f = 16 * u
+        val linea = e.primario.copy(alpha = 0.5f)
+        val tenue = e.primario.copy(alpha = 0.24f)
+        // La orilla del arco: f en los lados y 0 en el centro (la misma curva que la silueta), bajada [baja].
+        fun arco(x: Float, baja: Float): Float { val s = x / w; return f * (1 - 4 * s * (1 - s)) + baja }
+        // La moldura doble que sigue el arco por dentro.
+        listOf(4f to 1.1f, 8.5f to 0.6f).forEach { (baja, g) ->
+            drawPath(Path().apply { moveTo(0f, f + baja * u); quadraticTo(w / 2, -f + baja * u, w, f + baja * u) }, linea, style = Stroke(g * u))
+        }
+        // Las juntas de las dovelas, perpendiculares al arco, entre las dos líneas (menos donde va la clave).
+        val paso = maxOf(24 * u, 1f)
+        var x = paso / 2; var n = 0
+        while (x < w && n < 80) {
+            if (kotlin.math.abs(x - w / 2) > 14 * u) {
+                val m = -4 * f / w * (1 - 2 * x / w); val l = kotlin.math.sqrt(1 + m * m)
+                val p = Offset(x, arco(x, 4.6f * u))
+                drawLine(tenue, p, p + Offset(-m, 1f) * (3.4f * u / l), 0.8f * u)
+            }
+            x += paso; n++
+        }
+        // La clave: la dovela del centro, más alta, con su filete.
+        val clave = Path().apply {
+            moveTo(w / 2 - 7 * u, 0.5f * u); lineTo(w / 2 + 7 * u, 0.5f * u); lineTo(w / 2 + 5 * u, 13 * u); lineTo(w / 2 - 5 * u, 13 * u); close()
+        }
+        drawPath(clave, e.primario.copy(alpha = 0.55f))
+        drawPath(clave, e.fondo.copy(alpha = 0.45f), style = Stroke(0.7f * u))
+        drawLine(e.fondo.copy(alpha = 0.5f), Offset(w / 2 - 4 * u, 4 * u), Offset(w / 2 + 4 * u, 4 * u), 0.7f * u)
+        // Las impostas, donde nace el arco, cada una con su tornillo de aluminio.
+        val aluminio = t(ALUMINIO, oscuro); val hierro = t(HIERRO, oscuro)
+        listOf(0f to 1f, w to -1f).forEach { (x0, d) ->
+            drawRect(linea, Offset(if (d > 0) x0 else x0 - 12 * u, f + 10 * u), Size(12 * u, 3.5f * u))
+            drawLine(tenue, Offset(x0, f + 15.5f * u), Offset(x0 + d * 9 * u, f + 15.5f * u), 0.8f * u)
+            val p = Offset(x0 + d * 7 * u, f + 22 * u)
+            drawCircle(Color.Black.copy(alpha = 0.22f), 1.9f * u, p + Offset(0f, 0.4f * u))
+            drawCircle(aluminio, 1.7f * u, p)
+            drawLine(hierro, Offset(p.x - 1f * u, p.y - 0.6f * u), Offset(p.x + 1f * u, p.y + 0.6f * u), 0.6f * u)
+        }
+        // La cadena de sillares de los cantos: un bloque largo y uno corto, alternados, hasta el empedrado.
+        val sillar = maxOf(17 * u, 1f)
+        var y = f + 32 * u; var k = 0
+        while (y + 14 * u < h - 30 * u && k < 60) {
+            val largo = if (k % 2 == 0) 11f * u else 6.5f * u
+            listOf(0f, w - largo).forEach { x0 ->
+                drawRect(e.primario.copy(alpha = 0.08f), Offset(x0, y), Size(largo, 14 * u))
+                drawRect(tenue, Offset(x0, y), Size(largo, 14 * u), style = Stroke(0.7f * u))
+            }
+            y += sillar; k++
+        }
+        // Los sampietrini de las esquinas de abajo: tres hileras que se acortan.
+        for (fila in 0..2) for (col in 0..(2 - fila)) {
+            val dx = (2.5f + col * 7.5f + fila * 1.5f) * u; val dy = (3.5f + fila * 7f + 6f) * u
+            listOf(dx, w - dx - 6 * u).forEach { x0 ->
+                drawRoundRect(e.primario.copy(alpha = 0.16f), Offset(x0, h - dy), Size(6 * u, 6 * u), CornerRadius(1.6f * u))
+                drawRoundRect(tenue, Offset(x0, h - dy), Size(6 * u, 6 * u), CornerRadius(1.6f * u), style = Stroke(0.6f * u))
+            }
+        }
+    }
+
+    /**
+     * El recuadro de una variable es la placa de mármol de una calle: el marco fino grabado por dentro, la raya gruesa del
+     * pie, un tornillo de aluminio en cada esquina y, arriba al centro, el escudito del rione, muy tenue.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val c = e.primario
+        // El marco grabado, con las esquinas de arriba redondas como la placa.
+        drawPath(Path().apply {
+            addRoundRect(RoundRect(4 * u, 4 * u, w - 4 * u, h - 7 * u, CornerRadius(10 * u), CornerRadius(10 * u), CornerRadius(1.5f * u), CornerRadius(1.5f * u)))
+        }, c.copy(alpha = 0.3f), style = Stroke(0.7f * u))
+        // La raya gruesa del pie, y la fina encima.
+        drawLine(c.copy(alpha = 0.45f), Offset(5 * u, h - 3.5f * u), Offset(w - 5 * u, h - 3.5f * u), 1.6f * u)
+        drawLine(c.copy(alpha = 0.25f), Offset(8 * u, h - 5.8f * u), Offset(w - 8 * u, h - 5.8f * u), 0.5f * u)
+        // Los tornillos de las esquinas.
+        val aluminio = t(ALUMINIO, oscuro); val hierro = t(HIERRO, oscuro)
+        listOf(Offset(9 * u, 9.5f * u), Offset(w - 9 * u, 9.5f * u), Offset(8 * u, h - 10.5f * u), Offset(w - 8 * u, h - 10.5f * u)).forEach { p ->
+            drawCircle(Color.Black.copy(alpha = 0.2f), 1.7f * u, p + Offset(0f, 0.4f * u))
+            drawCircle(aluminio.copy(alpha = 0.85f), 1.5f * u, p)
+            drawLine(hierro, Offset(p.x - 0.8f * u, p.y - 0.5f * u), Offset(p.x + 0.8f * u, p.y + 0.5f * u), 0.5f * u)
+        }
+        // El escudito del rione, arriba al centro.
+        val cx = w / 2
+        drawPath(Path().apply {
+            moveTo(cx - 3.5f * u, 2.5f * u); lineTo(cx + 3.5f * u, 2.5f * u); lineTo(cx + 3.5f * u, 6 * u)
+            quadraticTo(cx + 3.5f * u, 9 * u, cx, 10.5f * u); quadraticTo(cx - 3.5f * u, 9 * u, cx - 3.5f * u, 6 * u); close()
+        }, c.copy(alpha = 0.22f))
+        drawLine(c.copy(alpha = 0.3f), Offset(cx - 10 * u, 6 * u), Offset(cx - 5 * u, 6 * u), 0.6f * u)
+        drawLine(c.copy(alpha = 0.3f), Offset(cx + 5 * u, 6 * u), Offset(cx + 10 * u, 6 * u), 0.6f * u)
+    }
+
+    /** La placa de la parada del autobús: el rectángulo de esquinas romas, la franja del número de línea, sus dos tornillos y el poste. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f; val c = e.primario
+        drawRoundRect(c, Offset(s * 0.06f, s * 0.04f), Size(s * 0.88f, s * 0.78f), CornerRadius(s * 0.1f), style = Stroke(g))
+        drawRect(c.copy(alpha = c.alpha * 0.6f), Offset(s * 0.12f, s * 0.09f), Size(s * 0.76f, s * 0.09f))
+        drawCircle(c, s * 0.035f, Offset(s * 0.15f, s * 0.72f)); drawCircle(c, s * 0.035f, Offset(s * 0.85f, s * 0.72f))
+        drawLine(c, Offset(s * 0.5f, s * 0.82f), Offset(s * 0.5f, s * 0.97f), g * 1.3f)
+        drawLine(c, Offset(s * 0.36f, s * 0.97f), Offset(s * 0.64f, s * 0.97f), g, StrokeCap.Round)
+    }
 }
 
 /**
@@ -1225,6 +1336,98 @@ object ComunCiber : DisenoComun {
             drawLine(FOSFORO, Offset(w - 7 * u, cy), Offset(w - 1 * u, cy), 1.4f * u)
             drawLine(FOSFORO, Offset(w - 4 * u, cy - 3 * u), Offset(w - 4 * u, cy + 3 * u), 1.4f * u)
         }
+    }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /**
+     * La hoja rápida es una ventana de la consola: arriba, la barra de estado (el nombre de la sesión entre corchetes, la
+     * línea de guiones, las rayas de señal y el cursor); la esquina cortada, con su chaflán doble y sus marcas; corchetes de
+     * mira en las otras esquinas; por el canto izquierdo, el margen de los números de línea y, por el derecho, la barra de
+     * desplazamiento; abajo, el prompt «›» con su cursor y la marca de fin de archivo.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val c = e.primario
+        val tenue = c.copy(alpha = 0.3f)
+        // La barra de estado: [····] ------ ▮▮▮ █
+        val y = 7 * u
+        drawLine(c.copy(alpha = 0.6f), Offset(16 * u, y - 3 * u), Offset(16 * u, y + 3 * u), u)
+        (0 until 4).forEach { k -> drawRect(c.copy(alpha = 0.55f), Offset((18.5f + k * 4.5f) * u, y - 2.5f * u), Size(3.2f * u, 5 * u)) }
+        drawLine(c.copy(alpha = 0.6f), Offset(37 * u, y - 3 * u), Offset(37 * u, y + 3 * u), u)
+        val fin = w * 0.55f
+        drawLine(c.copy(alpha = 0.45f), Offset(42 * u, y), Offset(fin, y), u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 3 * u)))
+        (0 until 3).forEach { k -> drawRect(c.copy(alpha = 0.75f - k * 0.2f), Offset(fin + (6 + k * 6) * u, y + (1.5f - k * 1.5f) * u), Size(4 * u, (2 + k * 1.5f) * u)) }
+        drawRect(e.secundario.copy(alpha = 0.85f), Offset(fin + 26 * u, y - 3 * u), Size(7 * u, 6 * u))
+        // La esquina cortada (de 18 dp): dos chaflanes paralelos y tres marcas entre ellos.
+        listOf(6f, 10f).forEachIndexed { i, d ->
+            drawLine(c.copy(alpha = if (i == 0) 0.6f else 0.3f), Offset(w - (18 + d) * u, 0f), Offset(w, (18 + d) * u), (if (i == 0) 1.2f else 0.7f) * u)
+        }
+        (1..3).forEach { k -> val p = Offset(w - (24 - k * 5.5f) * u, k * 5.5f * u); drawLine(tenue, p, p + Offset(-2.6f * u, 2.6f * u), 0.8f * u) }
+        // Los corchetes de mira en las otras tres esquinas.
+        val l = 9 * u; val m = 3 * u
+        drawPath(Path().apply {
+            moveTo(m, m + l); lineTo(m, m); lineTo(m + l, m)
+            moveTo(m, h - m - l); lineTo(m, h - m); lineTo(m + l, h - m)
+            moveTo(w - m - l, h - m); lineTo(w - m, h - m); lineTo(w - m, h - m - l)
+        }, c.copy(alpha = 0.6f), style = Stroke(1.2f * u))
+        // El margen de los números de línea, por el canto izquierdo: una marca por renglón y una más larga cada cinco.
+        val paso = maxOf(16 * u, 1f)
+        var yy = 26 * u; var n = 0
+        while (yy < h - 26 * u && n < 120) {
+            drawLine(if (n % 5 == 0) c.copy(alpha = 0.5f) else tenue, Offset(3 * u, yy), Offset((if (n % 5 == 0) 9f else 6f) * u, yy), u)
+            yy += paso; n++
+        }
+        // La barra de desplazamiento del canto derecho: el riel, el tirador y sus dos flechas.
+        val x = w - 5 * u; val a = 34 * u; val b = h - 30 * u
+        if (b > a + 20 * u) {
+            drawLine(c.copy(alpha = 0.15f), Offset(x, a), Offset(x, b), 3 * u)
+            drawRect(c.copy(alpha = 0.5f), Offset(x - 1.5f * u, a + 4 * u), Size(3 * u, (b - a) * 0.22f))
+            drawPath(Path().apply { moveTo(x - 2.5f * u, a - 3 * u); lineTo(x + 2.5f * u, a - 3 * u); lineTo(x, a - 6.5f * u); close() }, tenue)
+            drawPath(Path().apply { moveTo(x - 2.5f * u, b + 3 * u); lineTo(x + 2.5f * u, b + 3 * u); lineTo(x, b + 6.5f * u); close() }, tenue)
+        }
+        // El prompt «›» con su cursor, abajo a la izquierda, y la marca de fin de archivo a la derecha.
+        val yp = h - 9 * u
+        drawPath(Path().apply { moveTo(16 * u, yp - 3 * u); lineTo(19 * u, yp); lineTo(16 * u, yp + 3 * u) }, c.copy(alpha = 0.7f), style = Stroke(1.2f * u))
+        drawRect(e.secundario.copy(alpha = 0.7f), Offset(22 * u, yp - 3 * u), Size(5 * u, 6 * u))
+        (0 until 3).forEach { k -> drawRect(tenue, Offset(w - (34 - k * 5) * u, yp - 2 * u), Size(3.5f * u, 4 * u)) }
+    }
+
+    /**
+     * El recuadro de una variable es un bloque de memoria en la pantalla: corchetes de consola a los lados, la dirección
+     * (unos signos) arriba a la izquierda, las líneas de barrido muy tenues detrás del texto y el cursor abajo a la derecha.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val k = e.primario.copy(alpha = 0.8f)
+        // Las líneas de barrido, cada 3 dp, casi invisibles.
+        val paso = maxOf(3 * u, 1f)
+        var y = 4 * u; var n = 0
+        while (y < h - 3 * u && n < 80) { drawLine(e.primario.copy(alpha = 0.05f), Offset(3 * u, y), Offset(w - 3 * u, y), 0.6f * u); y += paso; n++ }
+        // Los corchetes.
+        listOf(4 * u to 1f, w - 4 * u to -1f).forEach { (x, d) ->
+            drawLine(k, Offset(x, 4 * u), Offset(x, h - 4 * u), 1.5f * u)
+            drawLine(k, Offset(x, 4 * u), Offset(x + d * 4.5f * u, 4 * u), 1.5f * u)
+            drawLine(k, Offset(x, h - 4 * u), Offset(x + d * 4.5f * u, h - 4 * u), 1.5f * u)
+        }
+        // La dirección: cuatro signos y dos puntos.
+        (0 until 4).forEach { i -> drawRect(e.primario.copy(alpha = 0.4f), Offset((11 + i * 3.4f) * u, 4 * u), Size(2.4f * u, 3.6f * u)) }
+        drawCircle(e.primario.copy(alpha = 0.4f), 0.6f * u, Offset(26 * u, 5 * u)); drawCircle(e.primario.copy(alpha = 0.4f), 0.6f * u, Offset(26 * u, 7 * u))
+        // El cursor y una fila de guiones que lo precede.
+        drawLine(e.primario.copy(alpha = 0.3f), Offset(w * 0.55f, h - 6.2f * u), Offset(w - 17 * u, h - 6.2f * u), u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * u, 2 * u)))
+        drawRect(e.secundario.copy(alpha = 0.85f), Offset(w - 14 * u, h - 8 * u), Size(5 * u, 3.2f * u))
+    }
+
+    /** Los corchetes de la consola, [ ], con el cursor parpadeante al pie del de la derecha. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f; val c = e.primario
+        drawPath(Path().apply {
+            moveTo(s * 0.2f, s * 0.06f); lineTo(s * 0.05f, s * 0.06f); lineTo(s * 0.05f, s * 0.94f); lineTo(s * 0.2f, s * 0.94f)
+            moveTo(s * 0.8f, s * 0.06f); lineTo(s * 0.95f, s * 0.06f); lineTo(s * 0.95f, s * 0.94f); lineTo(s * 0.8f, s * 0.94f)
+        }, c, style = Stroke(g * 1.2f))
+        drawRect(c.copy(alpha = c.alpha * 0.5f), Offset(s * 0.6f, s * 0.84f), Size(s * 0.14f, s * 0.08f))
     }
 }
 
@@ -1815,6 +2018,114 @@ object ComunVapor : DisenoComun {
             drawRect(laton, Offset(w - 5 * u, cy - 4 * u), Size(2.5f * u, 8 * u))
         }
     }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /** Un remache de latón: la cabeza, su canto de sombra y el brillo de arriba. */
+    private fun DrawScope.remache(p: Offset, r: Float, c: Color, oscuro: Boolean) {
+        drawCircle(Color.Black.copy(alpha = 0.25f), r, p + Offset(0f, r * 0.3f))
+        drawCircle(c, r, p)
+        drawCircle(t(LATON_LUZ, oscuro).copy(alpha = 0.7f), r * 0.4f, p + Offset(-r * 0.3f, -r * 0.3f))
+    }
+
+    /**
+     * La hoja rápida es un billete de tren del talonario, montado en la sala de máquinas: arriba, la línea perforada por
+     * donde se arrancó y la pletina de latón remachada; en las dos esquinas recortadas, un aro de latón que sigue el corte;
+     * en el canto derecho, un manómetro pequeño de donde baja el tubo de vapor, y en el izquierdo otro tubo, los dos con sus
+     * bridas; abajo, una cartela triangular remachada en cada esquina.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val laton = e.primario
+        val c = 13 * u
+        // La línea perforada del talonario.
+        val paso = maxOf(6 * u, 1f)
+        var x = c + 6 * u; var n = 0
+        while (x < w - c - 5 * u && n < 300) { drawCircle(laton.copy(alpha = 0.3f), 1.1f * u, Offset(x, 3.5f * u)); x += paso; n++ }
+        // La pletina de latón, con un remache cada 40 dp.
+        drawLine(laton.copy(alpha = 0.55f), Offset(c + 4 * u, 9.5f * u), Offset(w - c - 4 * u, 9.5f * u), 2.2f * u)
+        drawLine(t(LATON_LUZ, oscuro).copy(alpha = 0.5f), Offset(c + 4 * u, 8.8f * u), Offset(w - c - 4 * u, 8.8f * u), 0.5f * u)
+        val tramo = maxOf(40 * u, 1f)
+        x = c + 10 * u; n = 0
+        while (x < w - c - 6 * u && n < 60) { remache(Offset(x, 9.5f * u), 1.5f * u, laton.copy(alpha = 0.9f), oscuro); x += tramo; n++ }
+        // Los aros de latón de las esquinas recortadas, cada uno con su remache.
+        listOf(Offset(0f, 0f) to 0f, Offset(w, 0f) to 90f).forEach { (o, ini) ->
+            val r = c + 3.5f * u
+            drawArc(laton.copy(alpha = 0.6f), ini, 90f, false, Offset(o.x - r, o.y - r), Size(2 * r, 2 * r), style = Stroke(1.8f * u))
+            val a = Math.toRadians(ini + 45.0)
+            remache(Offset(o.x + (r + 4 * u) * cos(a).toFloat(), o.y + (r + 4 * u) * sin(a).toFloat()), 1.6f * u, laton, oscuro)
+        }
+        // El manómetro del canto derecho: el bisel, la cara, la escala y la aguja.
+        val g = Offset(w - 9 * u, 34 * u); val rg = 6.5f * u
+        drawCircle(laton.copy(alpha = 0.8f), rg, g, style = Stroke(1.6f * u))
+        drawCircle(t(CARA, oscuro).copy(alpha = if (oscuro) 0.25f else 0.7f), rg - 0.8f * u, g)
+        for (k in 0..4) {
+            val a = Math.toRadians(135.0 + k * 67.5)
+            drawLine(laton.copy(alpha = 0.7f), g + Offset(cos(a).toFloat(), sin(a).toFloat()) * (rg * 0.55f), g + Offset(cos(a).toFloat(), sin(a).toFloat()) * (rg * 0.8f), 0.6f * u)
+        }
+        val aguja = Math.toRadians(-20.0)
+        drawLine(e.secundario.copy(alpha = 0.9f), g, g + Offset(cos(aguja).toFloat(), sin(aguja).toFloat()) * (rg * 0.75f), 0.8f * u, StrokeCap.Round)
+        // Los tubos de vapor por los cantos, con una brida cada 64 dp.
+        val brida = maxOf(64 * u, 1f)
+        listOf(5 * u to 26 * u, w - 9 * u to g.y + rg + 1 * u).forEach { (xt, y0) ->
+            val y1 = h - 28 * u
+            if (y1 > y0 + 10 * u) {
+                drawLine(laton.copy(alpha = 0.22f), Offset(xt, y0), Offset(xt, y1), 3.4f * u)
+                drawLine(t(LATON_LUZ, oscuro).copy(alpha = 0.35f), Offset(xt - 0.9f * u, y0), Offset(xt - 0.9f * u, y1), 0.6f * u)
+                var y = y0 + 24 * u; var k = 0
+                while (y < y1 - 6 * u && k < 40) {
+                    drawRect(laton.copy(alpha = 0.55f), Offset(xt - 4 * u, y - 1.2f * u), Size(8 * u, 2.4f * u))
+                    y += brida; k++
+                }
+            }
+        }
+        // Las cartelas triangulares de las esquinas de abajo, con dos remaches.
+        listOf(0f to 1f, w to -1f).forEach { (x0, d) ->
+            val cartela = Path().apply { moveTo(x0, h); lineTo(x0 + d * 22 * u, h); lineTo(x0, h - 22 * u); close() }
+            drawPath(cartela, laton.copy(alpha = 0.18f))
+            drawPath(cartela, laton.copy(alpha = 0.5f), style = Stroke(0.8f * u))
+            remache(Offset(x0 + d * 4.5f * u, h - 9 * u), 1.4f * u, laton.copy(alpha = 0.9f), oscuro)
+            remache(Offset(x0 + d * 10 * u, h - 4 * u), 1.4f * u, laton.copy(alpha = 0.9f), oscuro)
+        }
+    }
+
+    /**
+     * El recuadro de una variable es la placa de latón de una máquina: la pletina de arriba, un remache en cada esquina, la
+     * columna perforada del talón a la izquierda, la muesca de picado a la derecha y, al pie, un engrane pequeño.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val c = e.primario
+        drawLine(c.copy(alpha = 0.6f), Offset(14 * u, 3.5f * u), Offset(w - 14 * u, 3.5f * u), 1.6f * u)
+        drawLine(c.copy(alpha = 0.25f), Offset(14 * u, 6 * u), Offset(w - 14 * u, 6 * u), 0.5f * u)
+        listOf(Offset(7 * u, 8 * u), Offset(w - 7 * u, 8 * u), Offset(7 * u, h - 7 * u), Offset(w - 7 * u, h - 7 * u)).forEach { remache(it, 1.8f * u, c.copy(alpha = 0.8f), oscuro) }
+        // La columna perforada del talón.
+        val paso = maxOf(4 * u, 1f)
+        var y = 14 * u; var n = 0
+        while (y < h - 13 * u && n < 40) { drawCircle(c.copy(alpha = 0.25f), 0.8f * u, Offset(3.5f * u, y)); y += paso; n++ }
+        // La muesca de picado.
+        drawCircle(e.fondo, 2.2f * u, Offset(w - 4 * u, h / 2))
+        drawCircle(c.copy(alpha = 0.4f), 2.2f * u, Offset(w - 4 * u, h / 2), style = Stroke(0.8f * u))
+        // El engrane del pie.
+        drawPath(engrane(Offset(w / 2, h - 4.5f * u), 3.4f * u, 8), c.copy(alpha = 0.3f))
+        drawCircle(e.fondo.copy(alpha = 0.8f), 1 * u, Offset(w / 2, h - 4.5f * u))
+    }
+
+    /** La esfera de un manómetro: el bisel grueso, el aro fino de la escala con sus marcas y la zona roja al final. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f; val c = e.primario; val o = Offset(s / 2, s / 2)
+        drawCircle(c, s * 0.46f, o, style = Stroke(g * 1.2f))
+        drawArc(c.copy(alpha = c.alpha * 0.5f), 135f, 270f, false, Offset(o.x - s * 0.4f, o.y - s * 0.4f), Size(s * 0.8f, s * 0.8f), style = Stroke(g * 0.5f))
+        drawArc(e.secundario.copy(alpha = e.secundario.alpha * 0.7f), 350f, 55f, false, Offset(o.x - s * 0.4f, o.y - s * 0.4f), Size(s * 0.8f, s * 0.8f), style = Stroke(g * 1.4f))
+        for (k in 0..5) {
+            val a = Math.toRadians(135.0 + k * 54.0)
+            val v = Offset(cos(a).toFloat(), sin(a).toFloat())
+            drawLine(c, o + v * (s * 0.36f), o + v * (s * 0.43f), g * 0.6f)
+        }
+        drawLine(c, Offset(o.x, s * 0.92f), Offset(o.x, s), g * 1.4f)
+    }
 }
 
 /**
@@ -2375,6 +2686,119 @@ object ComunNapoleon : DisenoComun {
             drawPath(estrella(Offset(w - 5.5f * u, cy), 4.5f * u, 5, 0.42f), oro)
         }
     }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /** Una rama de laurel desde [desde] hacia [hasta], con [n] pares de hojas que se achican hacia la punta. */
+    private fun DrawScope.laurel(desde: Offset, hasta: Offset, n: Int, largo: Float, color: Color, grosor: Float) {
+        drawLine(color, desde, hasta, grosor)
+        val d = hasta - desde; val l = d.getDistance().coerceAtLeast(0.01f); val dir = d / l
+        val ang = Math.toDegrees(kotlin.math.atan2(dir.y, dir.x).toDouble()).toFloat()
+        for (k in 0 until n) {
+            val p = desde + d * ((k + 0.6f) / n)
+            val hl = largo * (1f - k * 0.08f)
+            listOf(-38f, 38f).forEach { g ->
+                rotate(ang + g, p) { drawOval(color, Offset(p.x, p.y - hl * 0.2f), Size(hl, hl * 0.4f)) }
+            }
+        }
+    }
+
+    /**
+     * La hoja rápida es una orden del Imperio: la estrella de oro en el medallón, con su aro; a cada lado sale una rama de
+     * laurel y, bajo el borde, el doble filete de oro que termina en una abeja; por los cantos baja el galón de oficial (el
+     * trenzado en zigzag entre dos hilos) y en las esquinas de abajo, una roseta de oro con su escuadra.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val p = 14 * u
+        val oro = t(ORO, oscuro)
+        val linea = e.primario.copy(alpha = 0.55f)
+        // El medallón: el aro por dentro y la estrella.
+        drawArc(linea, 180f, 180f, false, Offset(w / 2 - p + 2.5f * u, 2.5f * u), Size(2 * p - 5 * u, 2 * p - 5 * u), style = Stroke(0.8f * u))
+        drawPath(estrella(Offset(w / 2, 11 * u), 6.5f * u, 5, 0.42f), oro)
+        // Las ramas de laurel, desde el medallón hacia fuera.
+        listOf(-1f, 1f).forEach { d ->
+            laurel(Offset(w / 2 + d * (p + 2 * u), p + 4 * u), Offset(w / 2 + d * (p + 44 * u), p + 1.5f * u), 5, 6 * u, oro.copy(alpha = 0.75f), 0.8f * u)
+        }
+        // El doble filete, de la abeja de cada orilla hasta el laurel.
+        listOf(-1f, 1f).forEach { d ->
+            val x0 = if (d < 0) 20 * u else w - 20 * u; val x1 = w / 2 + d * (p + 50 * u)
+            drawLine(oro.copy(alpha = 0.7f), Offset(x0, p + 4 * u), Offset(x1, p + 4 * u), 1.1f * u)
+            drawLine(oro.copy(alpha = 0.45f), Offset(x0, p + 6.5f * u), Offset(x1, p + 6.5f * u), 0.5f * u)
+            abeja(Offset(if (d < 0) 11 * u else w - 11 * u, p + 6 * u), 11 * u, linea, e.fondo.copy(alpha = 0.6f))
+        }
+        // El galón de los cantos: dos hilos y el trenzado entre ellos.
+        val y0 = p + 22 * u; val y1 = h - 26 * u
+        if (y1 > y0 + 10 * u) listOf(2.5f * u, w - 7.5f * u).forEach { x ->
+            drawLine(oro.copy(alpha = 0.55f), Offset(x, y0), Offset(x, y1), 0.6f * u)
+            drawLine(oro.copy(alpha = 0.55f), Offset(x + 5 * u, y0), Offset(x + 5 * u, y1), 0.6f * u)
+            val z = Path().apply {
+                moveTo(x, y0); var y = y0; var izq = false; var n = 0
+                val paso = maxOf(2.5f * u, 1f)
+                while (y + paso <= y1 && n < 600) { y += paso; lineTo(if (izq) x else x + 5 * u, y); izq = !izq; n++ }
+            }
+            drawPath(z, oro.copy(alpha = 0.4f), style = Stroke(0.7f * u))
+        }
+        // Las rosetas de las esquinas de abajo, con su escuadra de filete.
+        listOf(0f to 1f, w to -1f).forEach { (x0, d) ->
+            val c = Offset(x0 + d * 11 * u, h - 11 * u)
+            drawLine(oro.copy(alpha = 0.5f), Offset(x0 + d * 3 * u, h - 22 * u), Offset(x0 + d * 3 * u, h - 3 * u), 0.7f * u)
+            drawLine(oro.copy(alpha = 0.5f), Offset(x0 + d * 3 * u, h - 3 * u), Offset(x0 + d * 22 * u, h - 3 * u), 0.7f * u)
+            for (k in 0 until 8) {
+                val a = k * PI / 4
+                drawCircle(oro.copy(alpha = 0.6f), 1.3f * u, c + Offset(cos(a).toFloat(), sin(a).toFloat()) * (3.6f * u))
+            }
+            drawCircle(e.secundario.copy(alpha = 0.7f), 1.8f * u, c)
+        }
+    }
+
+    /**
+     * El recuadro de una variable lleva los galones de un oficial: el doble hilo de oro arriba, el trenzado en zigzag abajo,
+     * una abeja muy tenue arriba al centro y un punto de oro en cada esquina.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val k = t(ORO, oscuro).copy(alpha = 0.8f)
+        // Arriba: el doble hilo, cortado al centro por la abeja.
+        listOf(4f to 0.9f, 6.5f to 0.5f).forEach { (y, g) ->
+            drawLine(k, Offset(9 * u, y * u), Offset(w / 2 - 9 * u, y * u), g * u)
+            drawLine(k, Offset(w / 2 + 9 * u, y * u), Offset(w - 9 * u, y * u), g * u)
+        }
+        abeja(Offset(w / 2, 6 * u), 9 * u, e.primario.copy(alpha = 0.4f), e.fondo.copy(alpha = 0.5f))
+        // Abajo: el galón.
+        val y0 = h - 8 * u
+        drawLine(k, Offset(5 * u, y0), Offset(w - 5 * u, y0), 0.6f * u)
+        drawLine(k, Offset(5 * u, y0 + 4 * u), Offset(w - 5 * u, y0 + 4 * u), 0.6f * u)
+        val z = Path().apply {
+            moveTo(5 * u, y0 + 4 * u); var x = 5 * u; var arriba = true; var n = 0
+            val paso = maxOf(2 * u, 1f)
+            while (x + paso <= w - 5 * u && n < 400) { x += paso; lineTo(x, if (arriba) y0 else y0 + 4 * u); arriba = !arriba; n++ }
+        }
+        drawPath(z, k, style = Stroke(0.8f * u))
+        // Los puntos de oro de las esquinas.
+        listOf(Offset(4.5f * u, 5 * u), Offset(w - 4.5f * u, 5 * u)).forEach { drawRect(k, it - Offset(1.2f * u, 1.2f * u), Size(2.4f * u, 2.4f * u)) }
+        listOf(Offset(3 * u, h - 6 * u), Offset(w - 3 * u, h - 6 * u)).forEach { drawCircle(k, 1.2f * u, it) }
+    }
+
+    /** La corona de laurel, abierta arriba, con la estrella en el hueco y el lazo abajo donde se cruzan las ramas. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f; val c = e.primario; val o = Offset(s / 2, s / 2)
+        val caja = Offset(s * 0.06f, s * 0.06f); val lado = Size(s * 0.88f, s * 0.88f)
+        drawArc(c, 100f, 140f, false, caja, lado, style = Stroke(g * 0.7f))
+        drawArc(c, 80f, -140f, false, caja, lado, style = Stroke(g * 0.7f))
+        for (k in 0..4) {
+            listOf(110f + k * 30f, 70f - k * 30f).forEach { a ->
+                val r = Math.toRadians(a.toDouble())
+                val q = o + Offset(cos(r).toFloat(), sin(r).toFloat()) * (s * 0.44f)
+                rotate(a + 90f, q) { drawOval(c, Offset(q.x - s * 0.07f, q.y - s * 0.035f), Size(s * 0.14f, s * 0.07f)) }
+            }
+        }
+        drawPath(estrella(Offset(o.x, s * 0.08f), s * 0.08f, 5, 0.42f), c)
+        drawLine(c, Offset(o.x, s * 0.94f), Offset(o.x - s * 0.1f, s), g * 0.7f)
+        drawLine(c, Offset(o.x, s * 0.94f), Offset(o.x + s * 0.1f, s), g * 0.7f)
+    }
 }
 
 /**
@@ -2924,6 +3348,96 @@ object ComunDeco : DisenoComun {
             val p = Offset(w - 2 * u, cy)
             listOf(-0.6f, 0f, 0.6f).forEach { a -> drawLine(oro, Offset(p.x - 9 * u * cos(a), p.y + 9 * u * sin(a)), p, 1 * u) }
         }
+    }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /**
+     * La hoja rápida es la puerta del ascensor de un rascacielos: en la corona escalonada, el abanico de oro con su sol de
+     * jade y la silueta de la corona repetida por dentro; a cada lado, tres líneas de velocidad que se acortan; por los
+     * cantos, tres filetes verticales con un rombo a media altura, y en las esquinas de abajo, un abanico de rayos.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val p = 16 * u; val a = p / 3; val s = 14 * u; val cx = w / 2
+        val oro = e.primario
+        // La corona repetida por dentro, 3.5 dp más abajo.
+        val b = 3.5f * u
+        drawPath(Path().apply {
+            moveTo(cx - 3 * s - 18 * u, p + b); lineTo(cx - 3 * s + b, p + b); lineTo(cx - 3 * s + b, 2 * a + b); lineTo(cx - 2 * s + b, 2 * a + b)
+            lineTo(cx - 2 * s + b, a + b); lineTo(cx - s + b, a + b); lineTo(cx - s + b, b); lineTo(cx + s - b, b); lineTo(cx + s - b, a + b)
+            lineTo(cx + 2 * s - b, a + b); lineTo(cx + 2 * s - b, 2 * a + b); lineTo(cx + 3 * s - b, 2 * a + b); lineTo(cx + 3 * s - b, p + b); lineTo(cx + 3 * s + 18 * u, p + b)
+        }, oro.copy(alpha = 0.5f), style = Stroke(0.8f * u))
+        // El abanico de oro y su sol de jade.
+        val base = Offset(cx, p + 1.5f * u); val r = 9.5f * u
+        for (i in 0 until 9) if (i % 2 == 0) drawArc(oro.copy(alpha = 0.85f), 180f + i * 20f, 20f, true, Offset(base.x - r, base.y - r), Size(2 * r, 2 * r))
+        drawArc(e.secundario.copy(alpha = 0.9f), 180f, 180f, true, Offset(base.x - r * 0.38f, base.y - r * 0.38f), Size(r * 0.76f, r * 0.76f))
+        // Las líneas de velocidad a cada lado de la corona.
+        for (k in 0..2) {
+            val y = p + (4 + k * 3) * u
+            val col = oro.copy(alpha = 0.6f - k * 0.15f)
+            drawLine(col, Offset((10 + k * 12) * u, y), Offset(cx - 3 * s - 22 * u, y), 0.8f * u)
+            drawLine(col, Offset(cx + 3 * s + 22 * u, y), Offset(w - (10 + k * 12) * u, y), 0.8f * u)
+        }
+        // Los filetes de los cantos: el de fuera más largo, como los retranqueos de una torre, y un rombo a media altura.
+        val y0 = p + 22 * u; val y1 = h - 34 * u
+        if (y1 > y0 + 30 * u) listOf(1f, -1f).forEach { d ->
+            val x0 = if (d > 0) 0f else w
+            for (k in 0..2) {
+                val recorte = k * 10 * u
+                drawLine(oro.copy(alpha = 0.5f - k * 0.1f), Offset(x0 + d * (3 + k * 2.5f) * u, y0 + recorte), Offset(x0 + d * (3 + k * 2.5f) * u, y1 - recorte), 0.7f * u)
+            }
+            val m = Offset(x0 + d * 5.5f * u, (y0 + y1) / 2)
+            val rombo = Path().apply { moveTo(m.x, m.y - 7 * u); lineTo(m.x + 4 * u, m.y); lineTo(m.x, m.y + 7 * u); lineTo(m.x - 4 * u, m.y); close() }
+            drawPath(rombo, e.fondo); drawPath(rombo, oro.copy(alpha = 0.8f)); drawCircle(e.secundario, 1.2f * u, m)
+        }
+        // Los abanicos de rayos de las esquinas de abajo: rayos largos y cortos alternados y el cuarto de sol.
+        listOf(Offset(0f, h) to 270f, Offset(w, h) to 180f).forEach { (o, ini) ->
+            for (k in 0..6) {
+                val ang = Math.toRadians(ini + k * 15.0)
+                val l = (if (k % 2 == 0) 30f else 20f) * u
+                drawLine(oro.copy(alpha = 0.45f), o + Offset(cos(ang).toFloat(), sin(ang).toFloat()) * (10 * u), o + Offset(cos(ang).toFloat(), sin(ang).toFloat()) * l, 0.8f * u)
+            }
+            drawArc(oro.copy(alpha = 0.65f), ini, 90f, true, Offset(o.x - 7 * u, o.y - 7 * u), Size(14 * u, 14 * u))
+        }
+    }
+
+    /**
+     * El recuadro de una variable es una cartela de laca: el chaflán repetido por dentro, el abanico de oro arriba al centro
+     * sobre su filete, tres filetes que se acortan en escalones abajo y un punto de jade en cada chaflán.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val c = e.primario
+        // El chaflán por dentro.
+        val i = 3.5f * u; val ch = 6 * u
+        drawPath(Path().apply {
+            moveTo(i + ch, i); lineTo(w - i - ch, i); lineTo(w - i, i + ch); lineTo(w - i, h - i - ch); lineTo(w - i - ch, h - i)
+            lineTo(i + ch, h - i); lineTo(i, h - i - ch); lineTo(i, i + ch); close()
+        }, c.copy(alpha = 0.35f), style = Stroke(0.6f * u))
+        // El abanico, posado sobre el filete de arriba.
+        val b = Offset(w / 2, i + 6.5f * u); val r = 6.5f * u
+        for (k in 0 until 7) if (k % 2 == 0) drawArc(c.copy(alpha = 0.7f), 180f + k * 180f / 7, 180f / 7, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+        drawLine(c.copy(alpha = 0.55f), Offset(b.x - r - 6 * u, b.y), Offset(b.x + r + 6 * u, b.y), 0.8f * u)
+        // Los tres filetes de abajo.
+        listOf(0.7f, 0.48f, 0.26f).forEachIndexed { k, f ->
+            val y = h - (6.5f + k * 2.8f) * u
+            drawLine(c.copy(alpha = 0.6f - k * 0.15f), Offset(w * (1 - f) / 2, y), Offset(w * (1 + f) / 2, y), 0.7f * u)
+        }
+        // Los puntos de jade de los chaflanes.
+        listOf(Offset(5.2f * u, 5.2f * u), Offset(w - 5.2f * u, 5.2f * u), Offset(5.2f * u, h - 5.2f * u), Offset(w - 5.2f * u, h - 5.2f * u)).forEach {
+            drawCircle(e.secundario.copy(alpha = 0.8f), 1.1f * u, it)
+        }
+    }
+
+    /** El octógono escalonado de la puerta de un ascensor, con su filete por dentro y un punto en cada esquina del filete. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f; val c = e.primario
+        drawPath(escalonado(Rect(s * 0.04f, s * 0.04f, s * 0.96f, s * 0.96f), s * 0.16f), c, style = Stroke(g * 0.8f))
+        drawRect(c.copy(alpha = c.alpha * 0.5f), Offset(s * 0.17f, s * 0.17f), Size(s * 0.66f, s * 0.66f), style = Stroke(g * 0.35f))
+        listOf(Offset(0.17f, 0.17f), Offset(0.83f, 0.17f), Offset(0.17f, 0.83f), Offset(0.83f, 0.83f)).forEach { drawCircle(c, s * 0.03f, it * s) }
     }
 }
 
@@ -3539,6 +4053,119 @@ object ComunBotanico : DisenoComun {
             }
             drawOval(if (oscuro) Color(0xFFE0906A) else Color(0xFFA3482A), Offset(fin2, cy - 2.2f * u), Size(7 * u, 4.4f * u))
         }
+    }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /**
+     * La hoja rápida es una página del cuaderno del naturalista: en la esquina redonda, el báculo de un helecho que se
+     * desenrolla y sigue por el borde de arriba como un tallo con hojitas; arriba a la derecha, un escarabajo clavado con
+     * su alfiler; por el canto izquierdo, la regla en milímetros para medir los ejemplares y, por el derecho, una hilera de
+     * hormigas que baja; abajo, una ramita a la izquierda y tres semillas a la derecha.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val tinta = e.primario.copy(alpha = 0.7f)
+        val tenue = e.primario.copy(alpha = 0.3f)
+        val nervio = e.fondo.copy(alpha = 0.5f)
+        // El báculo: tres medias vueltas que se cierran, en la esquina redonda.
+        val o = Offset(17 * u, 17 * u)
+        drawPath(Path().apply {
+            moveTo(o.x + 17 * u, o.y - 8.5f * u)
+            quadraticTo(o.x + 2 * u, o.y - 10 * u, o.x - 6 * u, o.y - 1 * u)
+            quadraticTo(o.x - 9 * u, o.y + 6 * u, o.x - 2 * u, o.y + 6.5f * u)
+            quadraticTo(o.x + 3.5f * u, o.y + 6 * u, o.x + 3 * u, o.y + 1.5f * u)
+            quadraticTo(o.x + 2.2f * u, o.y - 1.6f * u, o.x - 0.6f * u, o.y + 0.6f * u)
+        }, tinta, style = Stroke(1.1f * u, cap = StrokeCap.Round))
+        // El tallo que sigue por el borde, con hojitas alternadas que se achican hacia la punta.
+        val y = 8.5f * u; val ini = o.x + 17 * u; val fin = maxOf(w * 0.45f, ini + 30 * u)
+        drawLine(tinta, Offset(ini, y), Offset(fin, y), 0.9f * u)
+        val paso = maxOf(9 * u, 1f)
+        var x = ini + 5 * u; var k = 0
+        while (x < fin - 4 * u && k < 60) {
+            val l = (7f - 3.5f * ((x - ini) / (fin - ini))) * u
+            hojita(Offset(x + l * 0.3f, y + (if (k % 2 == 0) -1 else 1) * l * 0.42f), l, if (k % 2 == 0) -35f else 35f, tinta, nervio)
+            x += paso; k++
+        }
+        // El escarabajo clavado arriba a la derecha: las patas, los élitros con su raya, el pronoto, la cabeza y el alfiler.
+        val b = Offset(w - 24 * u, 15 * u)
+        listOf(-2.5f, 0.5f, 3.5f).forEachIndexed { i, dy ->
+            listOf(-1f, 1f).forEach { d ->
+                drawPath(Path().apply {
+                    moveTo(b.x + d * 2.5f * u, b.y + dy * u); lineTo(b.x + d * 6 * u, b.y + (dy + (i - 1) * 1.5f) * u); lineTo(b.x + d * 7.5f * u, b.y + (dy + (i - 1) * 3f) * u)
+                }, tenue, style = Stroke(0.6f * u))
+            }
+        }
+        drawOval(e.primario.copy(alpha = 0.55f), Offset(b.x - 3.4f * u, b.y - 2 * u), Size(6.8f * u, 8.5f * u))
+        drawLine(nervio, Offset(b.x, b.y - 1.6f * u), Offset(b.x, b.y + 6.2f * u), 0.5f * u)
+        drawOval(e.primario.copy(alpha = 0.65f), Offset(b.x - 2.4f * u, b.y - 5 * u), Size(4.8f * u, 3.4f * u))
+        drawCircle(e.primario.copy(alpha = 0.65f), 1.3f * u, Offset(b.x, b.y - 6 * u))
+        listOf(-1f, 1f).forEach { d -> drawLine(tenue, Offset(b.x + d * 0.6f * u, b.y - 7 * u), Offset(b.x + d * 2.6f * u, b.y - 10 * u), 0.5f * u) }
+        drawCircle(e.secundario.copy(alpha = 0.9f), 1.4f * u, Offset(b.x, b.y - 3.3f * u))
+        // La regla del canto izquierdo: una marca cada milímetro de 5 dp y una larga cada cinco.
+        val regla = maxOf(5 * u, 1f)
+        var yy = 36 * u; var n = 0
+        while (yy < h - 32 * u && n < 300) {
+            drawLine(if (n % 5 == 0) tenue else e.primario.copy(alpha = 0.18f), Offset(0f, yy), Offset((if (n % 5 == 0) 6f else 3f) * u, yy), 0.6f * u)
+            yy += regla; n++
+        }
+        // La hilera de hormigas del canto derecho, con su leve vaivén.
+        val tramo = maxOf(24 * u, 1f)
+        yy = 40 * u; n = 0
+        while (yy < h - 40 * u && n < 60) {
+            val c = Offset(w - 7 * u + (azar(31, n) - 0.5f) * 3 * u, yy)
+            listOf(-1.4f, 0f, 1.4f).forEach { dy -> drawLine(tenue, Offset(c.x - 2.6f * u, c.y + dy * u), Offset(c.x + 2.6f * u, c.y + dy * u - 0.6f * u), 0.4f * u) }
+            drawCircle(tinta, 0.9f * u, Offset(c.x, c.y + 2.6f * u))
+            drawCircle(tinta, 0.75f * u, c)
+            drawOval(tinta, Offset(c.x - 1.2f * u, c.y - 4.2f * u), Size(2.4f * u, 3.4f * u))
+            yy += tramo; n++
+        }
+        // Abajo: la ramita de la izquierda y las tres semillas de la derecha.
+        val r0 = Offset(4 * u, h - 4 * u); val r1 = Offset(20 * u, h - 26 * u)
+        drawLine(tinta, r0, r1, 0.8f * u)
+        for (i in 1..4) {
+            val p = r0 + (r1 - r0) * (i / 5f)
+            hojita(p + Offset(-2.5f * u, -1 * u), 5.5f * u, -120f, tinta, nervio)
+            hojita(p + Offset(2.5f * u, 0.8f * u), 5.5f * u, -20f, tinta, nervio)
+        }
+        listOf(Offset(14f, 8f) to 20f, Offset(9f, 14f) to -40f, Offset(18f, 15f) to 70f).forEach { (d, g) ->
+            val c = Offset(w - d.x * u, h - d.y * u)
+            rotate(g, c) { drawOval(e.secundario.copy(alpha = 0.6f), Offset(c.x - 2.6f * u, c.y - 1.5f * u), Size(5.2f * u, 3 * u)) }
+        }
+    }
+
+    /**
+     * El recuadro de una variable es la etiqueta de un ejemplar del herbario: el alfiler arriba al centro, el doble marco
+     * impreso muy tenue, una hojita prensada en la esquina de arriba y la línea punteada de la fecha al pie, entre dos
+     * esquineras de papel.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val c = e.primario
+        drawRoundRect(c.copy(alpha = 0.22f), Offset(4 * u, 4 * u), Size(w - 8 * u, h - 8 * u), CornerRadius(5 * u), style = Stroke(0.7f * u))
+        drawRoundRect(c.copy(alpha = 0.14f), Offset(6 * u, 6 * u), Size(w - 12 * u, h - 12 * u), CornerRadius(3.5f * u), style = Stroke(0.4f * u))
+        // El alfiler.
+        drawLine(c.copy(alpha = 0.4f), Offset(w / 2, 2 * u), Offset(w / 2 + 2 * u, 8.5f * u), 0.7f * u)
+        drawCircle(e.secundario.copy(alpha = 0.9f), 2 * u, Offset(w / 2, 3 * u))
+        // La hojita prensada de la esquina.
+        hojita(Offset(12 * u, 10 * u), 8 * u, -35f, c.copy(alpha = 0.45f), e.fondo.copy(alpha = 0.6f))
+        hojita(Offset(16 * u, 13 * u), 6 * u, 20f, c.copy(alpha = 0.35f), e.fondo.copy(alpha = 0.6f))
+        // La línea de la fecha y las esquineras de abajo.
+        drawLine(c.copy(alpha = 0.35f), Offset(14 * u, h - 8.5f * u), Offset(w - 14 * u, h - 8.5f * u), 0.6f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * u, 2 * u)))
+        listOf(0f to 1f, w to -1f).forEach { (x0, d) ->
+            drawPath(Path().apply { moveTo(x0 + d * 3 * u, h - 3 * u); lineTo(x0 + d * 13 * u, h - 3 * u); lineTo(x0 + d * 3 * u, h - 13 * u); close() }, e.secundario.copy(alpha = 0.18f))
+        }
+    }
+
+    /** La etiqueta del ejemplar, clavada con su alfiler, con el renglón del nombre al pie. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f; val c = e.primario
+        drawRect(c, Offset(s * 0.07f, s * 0.15f), Size(s * 0.86f, s * 0.8f), style = Stroke(g * 0.7f))
+        drawLine(c.copy(alpha = c.alpha * 0.6f), Offset(s * 0.22f, s * 0.87f), Offset(s * 0.78f, s * 0.87f), g * 0.5f)
+        drawLine(c, Offset(s * 0.5f, s * 0.02f), Offset(s * 0.55f, s * 0.24f), g * 0.6f)
+        drawCircle(e.secundario.copy(alpha = e.secundario.alpha * 0.8f), s * 0.075f, Offset(s * 0.5f, s * 0.07f))
     }
 }
 
@@ -4207,6 +4834,129 @@ object ComunNavidad : DisenoComun {
             drawPath(estrella(Offset(w - 5.5f * u, cy), 5.5f * u, 5, 0.42f), ORO)
         }
     }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /** Una ramita de acebo en [a]: tres hojas de orilla dentada que salen de un punto (giradas [giro] grados) y tres bayas. */
+    private fun DrawScope.ramitaAcebo(a: Offset, escala: Float, giro: Float, verde: Color, verde2: Color, rojo: Color) {
+        val u = density * escala
+        listOf(-30f to verde, 60f to verde2, 195f to verde).forEach { (g, color) ->
+            rotate(g + giro, a) {
+                drawPath(Path().apply {
+                    moveTo(a.x, a.y)
+                    quadraticTo(a.x + 3 * u, a.y - 3 * u, a.x + 6.5f * u, a.y - 0.6f * u)
+                    lineTo(a.x + 5.2f * u, a.y + 0.4f * u); lineTo(a.x + 4.4f * u, a.y + 1.8f * u); lineTo(a.x + 3 * u, a.y + 1.4f * u)
+                    lineTo(a.x + 1.8f * u, a.y + 2.2f * u); close()
+                }, color)
+            }
+        }
+        listOf(Offset(-0.6f, 0.2f), Offset(1.4f, 1.2f), Offset(0.2f, 2.2f)).forEach { d ->
+            val b = a + d * u
+            drawCircle(rojo, 1.4f * u, b)
+            drawCircle(Color.White.copy(alpha = 0.45f * rojo.alpha), 0.4f * u, b - Offset(0.4f * u, 0.4f * u))
+        }
+    }
+
+    /** Un copo de nieve de seis brazos en [c], de radio [r]. */
+    private fun DrawScope.copo(c: Offset, r: Float, color: Color, grosor: Float) {
+        for (k in 0 until 3) {
+            val a = k * PI / 3 + PI / 2
+            val v = Offset(cos(a).toFloat(), sin(a).toFloat()) * r
+            drawLine(color, c - v, c + v, grosor)
+        }
+    }
+
+    /**
+     * La hoja rápida es una tarjeta de Navidad con su glaseado: nieve sobre cada festón del borde de arriba; colgada de
+     * festón en festón, la guirnalda de lucecitas rojas, de oro y verdes; una ramita de acebo en cada esquina de arriba;
+     * copos que caen por los cantos y, abajo, un montón de nieve en cada esquina, con una estrella de oro a la derecha.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val f = 7 * u
+        val n = (w / (44 * u)).toInt().coerceAtLeast(3); val paso = w / n
+        val nieve = if (oscuro) NIEVE.copy(alpha = 0.85f) else NIEVE
+        val orillaNieve = if (oscuro) Color(0xFFB8C8DA).copy(alpha = 0.5f) else Color(0xFF8FA6B8).copy(alpha = 0.7f)
+        val oro = t(ORO, oscuro)
+        // La nieve de cada festón: una media luna que sigue la orilla.
+        for (i in 0 until n) {
+            val x0 = i * paso; val x1 = (i + 1) * paso; val m = (x0 + x1) / 2
+            drawPath(Path().apply { moveTo(x0, f); quadraticTo(m, -f, x1, f); quadraticTo(m, -f + 9 * u, x0, f); close() }, nieve)
+            drawPath(Path().apply { moveTo(x0 + 2 * u, f); quadraticTo(m, -f + 9 * u, x1 - 2 * u, f) }, orillaNieve, style = Stroke(0.6f * u))
+        }
+        // La guirnalda: el hilo cuelga de festón en festón y en cada vuelta lleva una lucecita.
+        val luces = listOf(e.primario, oro, e.secundario)
+        for (i in 1 until n - 1) {
+            val x0 = i * paso; val x1 = (i + 1) * paso; val m = (x0 + x1) / 2
+            drawPath(Path().apply { moveTo(x0, f + 2 * u); quadraticTo(m, f + 11 * u, x1, f + 2 * u) }, e.secundario.copy(alpha = 0.55f), style = Stroke(0.8f * u))
+            val b = Offset(m, f + 6.5f * u)
+            drawRect(oro.copy(alpha = 0.7f), Offset(b.x - 0.9f * u, b.y), Size(1.8f * u, 1.4f * u))
+            drawOval(luces[i % 3].copy(alpha = 0.9f), Offset(b.x - 1.4f * u, b.y + 1.2f * u), Size(2.8f * u, 4 * u))
+            drawCircle(Color.White.copy(alpha = 0.5f), 0.5f * u, Offset(b.x - 0.5f * u, b.y + 2.3f * u))
+        }
+        // Las ramitas de acebo de las esquinas de arriba, donde empieza y acaba la guirnalda.
+        val verde = e.secundario.copy(alpha = 0.85f); val verde2 = t(VERDE, oscuro).copy(alpha = 0.85f)
+        ramitaAcebo(Offset(9 * u, 12 * u), 1.4f, 0f, verde, verde2, e.primario)
+        ramitaAcebo(Offset(w - 9 * u, 12 * u), 1.4f, 180f, verde, verde2, e.primario)
+        // Los copos que caen por los cantos: la mitad por cada lado, repartidos a lo alto.
+        val copos = (h / (30 * u)).toInt().coerceIn(4, 40)
+        val colorCopo = if (oscuro) NIEVE.copy(alpha = 0.6f) else Color(0xFF7F98AE).copy(alpha = 0.6f)
+        for (k in 0 until copos) {
+            val y = 32 * u + (k / 2 + azar(25, k)) / ((copos + 1) / 2) * maxOf(h - 70 * u, 1f)
+            val x = 2.5f * u + azar(25, k + 40) * 9 * u
+            val p = if (k % 2 == 0) Offset(x, y) else Offset(w - x, y)
+            if (k % 3 == 0) copo(p, (2 + azar(25, k + 80) * 1.2f) * u, colorCopo, 0.6f * u) else drawCircle(colorCopo, (0.8f + azar(25, k + 80) * 0.8f) * u, p)
+        }
+        // Los montones de nieve de abajo y la estrella de oro.
+        listOf(0f to 1f, w to -1f).forEach { (x0, d) ->
+            val monton = Path().apply {
+                moveTo(x0, h - 14 * u); quadraticTo(x0 + d * 10 * u, h - 15 * u, x0 + d * 18 * u, h - 6 * u)
+                quadraticTo(x0 + d * 26 * u, h - 3 * u, x0 + d * 36 * u, h); lineTo(x0, h); close()
+            }
+            drawPath(monton, nieve)
+            drawPath(monton, orillaNieve, style = Stroke(0.7f * u))
+        }
+        drawPath(estrella(Offset(w - 9 * u, h - 22 * u), 4.5f * u, 5, 0.42f), oro)
+    }
+
+    /**
+     * El recuadro de una variable es una tarjetita de regalo: una ramita de acebo en la esquina de arriba, un hilo de nieve
+     * a lo largo del borde de arriba, una estrellita de oro en la otra esquina y un renglón de copos al pie.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val nieve = if (oscuro) NIEVE.copy(alpha = 0.55f) else Color(0xFF8FA6B8).copy(alpha = 0.5f)
+        // La nieve del borde de arriba: una franja fina con su orilla ondulada.
+        drawPath(Path().apply {
+            moveTo(10 * u, 2.5f * u); lineTo(w - 10 * u, 2.5f * u)
+            var x = w - 10 * u; var k = 0
+            val paso = maxOf(7 * u, 1f)
+            while (x > 10 * u && k < 60) { val x1 = maxOf(x - paso, 10 * u); quadraticTo((x + x1) / 2, (if (k % 2 == 0) 6.5f else 5f) * u, x1, 4 * u); x = x1; k++ }
+            close()
+        }, nieve)
+        ramitaAcebo(Offset(7 * u, 7 * u), 1f, 0f, e.secundario.copy(alpha = 0.85f), t(VERDE, oscuro).copy(alpha = 0.85f), e.primario)
+        drawPath(estrella(Offset(w - 8 * u, 9 * u), 3 * u, 5, 0.42f), t(ORO, oscuro).copy(alpha = 0.8f))
+        // El renglón de copos del pie.
+        val k = (w / (16 * u)).toInt().coerceIn(3, 12)
+        for (i in 0 until k) {
+            val p = Offset(w * (i + 0.5f) / k, h - 5 * u)
+            if (i % 2 == 0) copo(p, 1.6f * u, nieve, 0.5f * u) else drawCircle(nieve, 0.7f * u, p)
+        }
+    }
+
+    /** Una esfera del árbol: el globo, la tapa de oro con su argolla y dos hojitas de acebo a los lados de la tapa. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f; val c = e.primario
+        drawCircle(c, s * 0.41f, Offset(s / 2, s * 0.57f), style = Stroke(g))
+        drawRect(c, Offset(s * 0.4f, s * 0.08f), Size(s * 0.2f, s * 0.1f))
+        drawCircle(c, s * 0.045f, Offset(s / 2, s * 0.04f), style = Stroke(g * 0.5f))
+        listOf(-1f, 1f).forEach { d ->
+            val p = Offset(s / 2 + d * s * 0.2f, s * 0.12f)
+            rotate(d * 20f, p) { drawOval(c.copy(alpha = c.alpha * 0.8f), Offset(p.x - s * 0.09f, p.y - s * 0.035f), Size(s * 0.18f, s * 0.07f)) }
+        }
+    }
 }
 
 /**
@@ -4755,6 +5505,116 @@ object ComunAbismo : DisenoComun {
             drawArc(color, -45f, 90f, false, Offset(w - 15 * u, cy - 6 * u), Size(12 * u, 12 * u), style = Stroke(1.2f * u))
         }
     }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /** Un perno de latón del casco: la cabeza y su brillo. */
+    private fun DrawScope.pernoCasco(p: Offset, r: Float, oscuro: Boolean) {
+        drawCircle(Color.Black.copy(alpha = 0.25f), r, p + Offset(0f, r * 0.3f))
+        drawCircle(t(LATON, oscuro), r, p)
+        drawCircle(t(LATON_LUZ, oscuro).copy(alpha = 0.7f), r * 0.4f, p - Offset(r * 0.3f, r * 0.3f))
+    }
+
+    /**
+     * La hoja rápida es la bajada del batiscafo: bajo la ola del borde, la línea de flotación que la repite; los pernos de
+     * latón de las esquinas de arriba; por el canto izquierdo, la escala de profundidad con su marca de dónde vas y, por el
+     * derecho, una columna de burbujas que suben (más grandes cuanto más arriba); abajo, el eco del sonar a la izquierda y
+     * una medusa a la derecha.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val p = 8 * u; val c = e.primario
+        // La línea de flotación: la misma ola de cuatro crestas, 4.5 dp más abajo.
+        val b = 4.5f * u
+        drawPath(Path().apply {
+            moveTo(0f, p + b)
+            for (i in 0 until 4) {
+                val x0 = w * i / 4; val x1 = w * (i + 1) / 4
+                quadraticTo((x0 + x1) / 2, (if (i % 2 == 0) -p * 0.4f else p * 2.2f) + b, x1, p + b)
+            }
+        }, c.copy(alpha = 0.4f), style = Stroke(0.9f * u))
+        // Los pernos de las esquinas de arriba.
+        listOf(Offset(6 * u, 17 * u), Offset(13 * u, 21 * u), Offset(w - 6 * u, 17 * u), Offset(w - 13 * u, 21 * u)).forEach { pernoCasco(it, 1.6f * u, oscuro) }
+        // La escala de profundidad del canto izquierdo: una marca cada 12 dp, larga cada cinco, y el indicador.
+        val y0 = 32 * u; val y1 = h - 34 * u
+        if (y1 > y0 + 24 * u) {
+            drawLine(c.copy(alpha = 0.3f), Offset(3 * u, y0), Offset(3 * u, y1), 0.7f * u)
+            val paso = maxOf(12 * u, 1f)
+            var y = y0; var n = 0
+            while (y <= y1 && n < 120) {
+                drawLine(c.copy(alpha = if (n % 5 == 0) 0.55f else 0.3f), Offset(3 * u, y), Offset((if (n % 5 == 0) 10f else 6.5f) * u, y), 0.7f * u)
+                y += paso; n++
+            }
+            val m = y0 + (y1 - y0) * 0.62f
+            drawPath(Path().apply { moveTo(11 * u, m); lineTo(15 * u, m - 2.6f * u); lineTo(15 * u, m + 2.6f * u); close() }, e.secundario.copy(alpha = 0.85f))
+        }
+        // La columna de burbujas del canto derecho.
+        val burbujas = (h / (26 * u)).toInt().coerceIn(4, 30)
+        for (k in 0 until burbujas) {
+            val f = (k + azar(17, k)) / burbujas
+            val y = 30 * u + f * maxOf(h - 80 * u, 1f)
+            val x = w - 7 * u + (azar(17, k + 40) - 0.5f) * 6 * u
+            drawCircle(c.copy(alpha = 0.5f), (1.2f + 2f * (1 - f)) * u, Offset(x, y), style = Stroke(0.8f * u))
+        }
+        // El eco del sonar, abajo a la izquierda: tres arcos y el punto del eco.
+        listOf(10f, 17f, 24f).forEachIndexed { i, r ->
+            drawArc(e.secundario.copy(alpha = 0.55f - i * 0.15f), 270f, 90f, false, Offset(-r * u, h - r * u), Size(2 * r * u, 2 * r * u), style = Stroke(0.9f * u))
+        }
+        drawCircle(e.secundario.copy(alpha = 0.8f), 1.6f * u, Offset(13 * u, h - 13 * u))
+        // La medusa de abajo a la derecha: la campana y sus cuatro tentáculos.
+        val m = Offset(w - 24 * u, h - 32 * u)
+        val campana = Path().apply {
+            moveTo(m.x - 8 * u, m.y); quadraticTo(m.x - 8 * u, m.y - 9 * u, m.x, m.y - 9 * u); quadraticTo(m.x + 8 * u, m.y - 9 * u, m.x + 8 * u, m.y)
+            quadraticTo(m.x, m.y - 2.5f * u, m.x - 8 * u, m.y); close()
+        }
+        drawPath(campana, c.copy(alpha = 0.18f)); drawPath(campana, c.copy(alpha = 0.55f), style = Stroke(0.8f * u))
+        listOf(-5f, -1.8f, 1.8f, 5f).forEachIndexed { i, dx ->
+            val x = m.x + dx * u; val s = if (i % 2 == 0) 1f else -1f
+            drawPath(Path().apply { moveTo(x, m.y - 1 * u); quadraticTo(x + s * 3 * u, m.y + 6 * u, x, m.y + 11 * u); quadraticTo(x - s * 3 * u, m.y + 16 * u, x + s * 1 * u, m.y + 21 * u) },
+                c.copy(alpha = 0.4f), style = Stroke(0.6f * u))
+        }
+    }
+
+    /**
+     * El recuadro de una variable es una placa del tablero del batiscafo: la hilera de pernos de arriba, una mirilla con su
+     * brida en la esquina, la escala de profundidad del canto izquierdo y unas burbujas que suben al pie.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val c = e.primario
+        // Los pernos de arriba.
+        val paso = maxOf(9 * u, 1f)
+        var x = 14 * u; var n = 0
+        while (x < w - 30 * u && n < 40) { drawCircle(t(LATON, oscuro).copy(alpha = 0.75f), 1.1f * u, Offset(x, 5 * u)); x += paso; n++ }
+        // La mirilla de la esquina.
+        val o = Offset(w - 13 * u, 12 * u)
+        drawCircle(t(LATON, oscuro).copy(alpha = 0.8f), 6 * u, o, style = Stroke(1.6f * u))
+        drawCircle(c.copy(alpha = 0.25f), 3.8f * u, o)
+        drawArc(Color.White.copy(alpha = 0.35f), 200f, 60f, false, Offset(o.x - 2.6f * u, o.y - 2.6f * u), Size(5.2f * u, 5.2f * u), style = Stroke(0.6f * u))
+        // La escala del canto izquierdo, hasta donde empieza la curva de abajo.
+        val pasoY = maxOf(5 * u, 1f)
+        var y = 9 * u; n = 0
+        while (y < h - 22 * u && n < 40) { drawLine(c.copy(alpha = if (n % 3 == 0) 0.45f else 0.25f), Offset(3 * u, y), Offset((if (n % 3 == 0) 7.5f else 5f) * u, y), 0.6f * u); y += pasoY; n++ }
+        // Las burbujas del pie.
+        listOf(Offset(-6f, 5f) to 1.2f, Offset(-1f, 8f) to 1.8f, Offset(5f, 4.5f) to 1f).forEach { (d, r) ->
+            drawCircle(c.copy(alpha = 0.45f), r * u, Offset(w / 2 + d.x * u, h - d.y * u), style = Stroke(0.6f * u))
+        }
+    }
+
+    /** El ojo de buey del batiscafo: el aro de la brida con sus ocho pernos, la bisagra a la izquierda y el cierre a la derecha. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f; val c = e.primario; val o = Offset(s / 2, s / 2)
+        drawCircle(c, s * 0.44f, o, style = Stroke(g * 0.7f))
+        drawCircle(c, s * 0.36f, o, style = Stroke(g * 0.5f))
+        for (k in 0 until 8) {
+            val a = k * PI / 4 + PI / 8
+            drawCircle(c, g * 0.75f, o + Offset(cos(a).toFloat(), sin(a).toFloat()) * (s * 0.4f))
+        }
+        drawRect(c, Offset(0f, s * 0.42f), Size(s * 0.07f, s * 0.16f))
+        drawRect(c, Offset(s * 0.93f, s * 0.46f), Size(s * 0.07f, s * 0.08f))
+    }
 }
 
 /**
@@ -5231,5 +6091,76 @@ object ComunUrss : DisenoComun {
             drawLine(tinta.copy(alpha = 0.7f), Offset(ini, cy), Offset(w - 12 * u, cy), 1 * u)
             drawRect(tinta, Offset(w - 12 * u, cy - 2 * u), Size(12 * u, 4 * u))
         }
+    }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /**
+     * La hoja rápida es un cartel constructivista: bajo la diagonal del borde, la franja roja que la sigue y, debajo, la barra
+     * negra y su raya fina; la cuña roja que entra por la esquina de arriba y una estrella roja a la derecha; por el canto
+     * izquierdo, una barra roja que sigue en negro y, por el derecho, una columna de rayas tipográficas; abajo, un cuarto de
+     * círculo negro cruzado por una raya roja a la izquierda y un triángulo rojo a la derecha.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val rojo = e.primario; val negro = e.secundario
+        val k = 20 * u / w
+        fun diag(x: Float, dy: Float) = Offset(x, k * x + dy * u)
+        // La franja roja paralela a la diagonal.
+        drawPath(Path().apply { moveTo(0f, 4 * u); lineTo(w, 24 * u); lineTo(w, 29 * u); lineTo(0f, 9 * u); close() }, rojo.copy(alpha = 0.9f))
+        // La barra negra y, siguiéndola, la raya fina.
+        val x0 = w * 0.08f; val x1 = w * 0.42f
+        drawPath(Path().apply { val a = diag(x0, 12f); val b = diag(x1, 12f); moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(b.x, b.y + 2.6f * u); lineTo(a.x, a.y + 2.6f * u); close() }, negro.copy(alpha = 0.8f))
+        drawLine(negro.copy(alpha = 0.5f), diag(x1 + 6 * u, 13.3f), diag(w - 8 * u, 13.3f), 0.7f * u)
+        // La cuña roja que entra por la esquina de arriba a la izquierda.
+        drawPath(Path().apply { moveTo(0f, 13 * u); lineTo(15 * u, 21 * u); lineTo(0f, 29 * u); close() }, rojo.copy(alpha = 0.85f))
+        // La estrella roja de la derecha, bajo la franja.
+        drawPath(estrella(Offset(w - 16 * u, 40 * u), 5.5f * u, 5, 0.4f), rojo)
+        // Los cantos: a la izquierda, la barra roja que sigue en negro; a la derecha, la columna de rayas tipográficas.
+        val y0 = 40 * u; val y1 = h - 36 * u
+        if (y1 > y0 + 20 * u) {
+            val corte = y0 + (y1 - y0) * 0.45f
+            drawRect(rojo.copy(alpha = 0.75f), Offset(0f, y0), Size(4 * u, corte - y0))
+            drawRect(negro.copy(alpha = 0.6f), Offset(0f, corte + 3 * u), Size(2.5f * u, y1 - corte - 3 * u))
+            val paso = maxOf(14 * u, 1f)
+            var y = 56 * u; var n = 0
+            while (y < y1 && n < 80) {
+                val l = (if (n % 3 == 0) 11f else if (n % 3 == 1) 6f else 8.5f) * u
+                drawRect(negro.copy(alpha = if (n % 3 == 0) 0.6f else 0.35f), Offset(w - l - 2 * u, y), Size(l, (if (n % 3 == 0) 2.4f else 1.2f) * u))
+                y += paso; n++
+            }
+        }
+        // Abajo a la izquierda: el cuarto de círculo negro y la raya roja que lo cruza.
+        drawArc(negro.copy(alpha = 0.7f), 270f, 90f, true, Offset(-20 * u, h - 20 * u), Size(40 * u, 40 * u))
+        drawLine(rojo.copy(alpha = 0.9f), Offset(0f, h - 28 * u), Offset(30 * u, h + 2 * u), 2.4f * u)
+        // Abajo a la derecha: el triángulo rojo.
+        drawPath(Path().apply { moveTo(w, h - 26 * u); lineTo(w, h); lineTo(w - 26 * u, h); close() }, rojo.copy(alpha = 0.8f))
+    }
+
+    /**
+     * El recuadro de una variable es un recorte de cartel: la cuña roja abajo a la izquierda, la barra negra arriba, una raya
+     * roja paralela al corte de la esquina y una estrellita roja con su raya negra al pie, a la derecha.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val c = e.primario; val negro = e.secundario
+        drawPath(Path().apply { moveTo(2 * u, h - 2 * u); lineTo(2 * u, h - 14 * u); lineTo(18 * u, h - 2 * u); close() }, c.copy(alpha = 0.35f))
+        drawRect(negro.copy(alpha = 0.5f), Offset(4 * u, 4 * u), Size(13 * u, 2.4f * u))
+        drawRect(negro.copy(alpha = 0.3f), Offset(19 * u, 4.6f * u), Size(7 * u, 1.2f * u))
+        // La raya paralela al corte de 12 dp, a 5 dp por dentro.
+        drawLine(c.copy(alpha = 0.55f), Offset(w - 19 * u, 1.5f * u), Offset(w - 1.5f * u, 19 * u), 1.2f * u)
+        drawPath(estrella(Offset(w - 9 * u, h - 9 * u), 3.2f * u, 5, 0.4f), c.copy(alpha = 0.7f))
+        drawLine(negro.copy(alpha = 0.35f), Offset(w * 0.55f, h - 4 * u), Offset(w - 15 * u, h - 4 * u), 0.8f * u)
+    }
+
+    /** Un cuadro constructivista: el marco fino, la cuña roja en la esquina de arriba y la barra gruesa al pie. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f; val c = e.primario
+        drawRect(c, Offset(s * 0.05f, s * 0.05f), Size(s * 0.9f, s * 0.9f), style = Stroke(g * 0.7f))
+        drawPath(Path().apply { moveTo(s * 0.6f, s * 0.05f); lineTo(s * 0.95f, s * 0.05f); lineTo(s * 0.95f, s * 0.4f); close() }, c)
+        drawRect(c, Offset(s * 0.05f, s * 0.84f), Size(s * 0.9f, s * 0.11f))
+        drawLine(c, Offset(s * 0.05f, s * 0.2f), Offset(s * 0.18f, s * 0.05f), g * 0.7f)
     }
 }

@@ -100,6 +100,9 @@ private fun DrawScope.flechasMesAnt(lado: Float, dibujo: DrawScope.() -> Unit) {
     scale(-1f, 1f, Offset(w / 2, h / 2)) { inset(x, y, w - x - q, h - y - q) { dibujo() } }
 }
 
+/** [c] con su transparencia multiplicada por [a]: los adornos de la hoja, las relaciones y la cinta, cuyo color ya puede traer la suya. */
+private fun alfaAnt(c: Color, a: Float): Color = c.copy(alpha = (c.alpha * a).coerceIn(0f, 1f))
+
 /**
  * Prehistoria: el campo es una laja de caliza de borde desportillado, con el grano de la roca en la orilla y la cara del medio
  * alisada a mano, lisa, donde va el texto. A la izquierda, tres puntos de ocre puestos con el dedo; abajo a la derecha, unas
@@ -947,6 +950,132 @@ object ComunCueva : DisenoComun {
         val ocre = (if (oscuro) mezcla(OCRE, OCRE_AMARILLO, 0.45f) else OCRE).copy(alpha = 0.85f)
         for (j in 0..2) drawCircle(ocre, 1.5f * u, Offset(x1 + (5 + j * 5) * u, h / 2))
     }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /**
+     * La altura, en [x], del borde de arriba de la hoja rápida (el de su forma: la laja partida, tres curvas que ondulan y quedan
+     * más altas a la derecha), en píxeles; [u] es la densidad. Cada curva se resuelve por bisección, en 16 pasos.
+     */
+    private fun bordeLaja(x: Float, w: Float, u: Float): Float {
+        val q = when {
+            x <= 0.45f * w -> floatArrayOf(0f, 14f, 0.2f * w, 2f, 0.45f * w, 8f)
+            x <= 0.86f * w -> floatArrayOf(0.45f * w, 8f, 0.7f * w, 14f, 0.86f * w, 4f)
+            else -> floatArrayOf(0.86f * w, 4f, 0.95f * w, 0f, w, 10f)
+        }
+        var a = 0f; var b = 1f
+        repeat(16) {
+            val m = (a + b) / 2
+            if ((1 - m) * (1 - m) * q[0] + 2 * (1 - m) * m * q[2] + m * m * q[4] < x) a = m else b = m
+        }
+        val t = (a + b) / 2
+        return ((1 - t) * (1 - t) * q[1] + 2 * (1 - t) * t * q[3] + t * t * q[5]) * u
+    }
+
+    /**
+     * Hoja rápida: bajo el borde de la laja, un trazo de carbón que sigue su perfil y una hilera de puntos de ocre que se abre al
+     * centro para una mano chica en positivo; arriba a la izquierda, una mano en negativo (la roca desnuda con el ocre soplado
+     * alrededor) y debajo, por ese canto, puntos de ocre cada vez más tenues; por el canto derecho, rayas de cuenta de carbón en
+     * grupos de cinco; abajo, tres puntos de ocre a la izquierda y una cuenta más a la derecha. Un degradado: el soplo de la mano.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 120 * u || h < 120 * u) return
+        val carbon = alfaAnt(e.secundario, if (oscuro) 0.4f else 0.45f)
+        val ocre = alfaAnt(e.primario, 0.6f)
+        val hueco = 18 * u
+        // El trazo de carbón bajo el borde, cortado al centro, donde va la mano.
+        listOf(22 * u to w / 2 - hueco, w / 2 + hueco to w - 22 * u).forEach { (x0, x1) ->
+            if (x1 - x0 < 8 * u) return@forEach
+            val n = ((x1 - x0) / maxOf(6 * u, 1f)).toInt().coerceIn(2, 120)
+            val p = Path()
+            for (j in 0..n) {
+                val x = x0 + (x1 - x0) * j / n
+                val y = bordeLaja(x, w, u) + 7 * u + (azar(31, j) - 0.5f) * 0.9f * u
+                if (j == 0) p.moveTo(x, y) else p.lineTo(x, y)
+            }
+            drawPath(p, carbon, style = Stroke(1.1f * u, cap = StrokeCap.Round))
+        }
+        // La hilera de puntos de ocre, más abajo, que sigue también el borde.
+        var x = 26 * u; var k = 0
+        while (x < w - 26 * u && k < 80) {
+            if (kotlin.math.abs(x - w / 2) > hueco) drawCircle(ocre, (1.2f + (k % 3) * 0.4f) * u, Offset(x, minOf(bordeLaja(x, w, u) + 13 * u, 25 * u)))
+            x += maxOf(11 * u, 1f); k++
+        }
+        // La mano chica en positivo, al centro.
+        mano(Offset(w / 2 - 12.4f * 0.6f * u, bordeLaja(w / 2, w, u) + 1.5f * u), 0.6f * u, alfaAnt(e.primario, 0.85f))
+        // La mano en negativo arriba a la izquierda: el ocre soplado alrededor y la roca desnuda donde estuvo la mano.
+        val cn = Offset(9 * u, 31 * u)
+        drawCircle(Brush.radialGradient(listOf(alfaAnt(e.primario, 0.65f), alfaAnt(e.primario, 0.3f), Color.Transparent), cn, 13 * u), 13 * u, cn)
+        mano(Offset(cn.x - 12.4f * 0.6f * u, cn.y - 14f * 0.6f * u), 0.6f * u, e.fondo.copy(alpha = 0.92f))
+        // Por el canto izquierdo, puntos de ocre que se desvanecen.
+        val nPuntos = ((h * 0.4f) / maxOf(16 * u, 1f)).toInt().coerceIn(0, 14)
+        for (j in 0 until nPuntos) drawCircle(alfaAnt(e.primario, 0.5f * (1f - j / (nPuntos + 1f))), (1.5f - (j % 2) * 0.4f) * u, Offset((8 + (j % 2) * 1.5f) * u, 50 * u + j * 16 * u))
+        // Por el canto derecho, rayas de cuenta: dos grupos de cuatro con la quinta cruzada.
+        fun cuenta(y0: Float, rayas: Int, cruzada: Boolean) {
+            for (j in 0 until rayas) {
+                val y = y0 + j * 3.6f * u
+                drawLine(carbon, Offset(w - 13 * u, y + (azar(7, j) - 0.5f) * u), Offset(w - 5 * u, y + 0.6f * u), 1.1f * u, StrokeCap.Round)
+            }
+            if (cruzada) drawLine(carbon, Offset(w - 14 * u, y0 - 1.5f * u), Offset(w - 4.5f * u, y0 + (rayas - 1) * 3.6f * u + 1.5f * u), 1f * u, StrokeCap.Round)
+        }
+        cuenta(42 * u, 4, true); cuenta(64 * u, 4, true)
+        if (h > 260 * u) cuenta(h - 40 * u, 3, false)
+        // Abajo a la izquierda, tres puntos de ocre puestos con el dedo.
+        listOf(Offset(7 * u, h - 16 * u), Offset(12.5f * u, h - 12 * u), Offset(7.5f * u, h - 8.5f * u))
+            .forEachIndexed { j, o -> drawCircle(alfaAnt(e.primario, 0.7f), (2f - j * 0.2f) * u, o) }
+    }
+
+    /**
+     * Relación: un canto rodado pintado. Tres puntos de ocre arriba y abajo, al centro; una mano chica en la esquina de arriba a la
+     * derecha; por el canto izquierdo, un trazo de carbón que tiembla, y abajo a la izquierda, cuatro rayas de cuenta con la quinta
+     * cruzada. Al centro, apenas un soplo de ocre. Un degradado: ese soplo.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 40 * u || h < 30 * u) return
+        mancha(center, minOf(w, h) * 0.55f, alfaAnt(e.primario, 0.08f))
+        val ocre = alfaAnt(e.primario, 0.7f)
+        listOf(4.5f * u, h - 4.5f * u).forEach { y -> for (k in -1..1) drawCircle(ocre, (if (k == 0) 1.8f else 1.4f) * u, Offset(w / 2 + k * 5 * u, y)) }
+        mano(Offset(w - 13 * u, 2 * u), 0.38f * u, alfaAnt(e.primario, 0.55f))
+        val carbon = alfaAnt(e.secundario, if (oscuro) 0.4f else 0.45f)
+        val p = Path().apply {
+            moveTo(4 * u, 16 * u)
+            val n = ((h - 30 * u) / maxOf(10 * u, 1f)).toInt().coerceIn(1, 12)
+            for (j in 1..n) {
+                val y0 = 16 * u + (h - 30 * u) * (j - 0.5f) / n; val y1 = 16 * u + (h - 30 * u) * j / n
+                quadraticTo(4 * u + (azar(13, j) - 0.5f) * 2.4f * u, y0, 4 * u + (azar(29, j) - 0.5f) * 0.8f * u, y1)
+            }
+        }
+        drawPath(p, carbon, style = Stroke(1f * u, cap = StrokeCap.Round))
+        for (j in 0 until 4) drawLine(carbon, Offset(10 * u + j * 3 * u, h - 11 * u), Offset(10.6f * u + j * 3 * u, h - 5.5f * u), 0.9f * u, StrokeCap.Round)
+        drawLine(carbon, Offset(8.5f * u, h - 6.5f * u), Offset(21 * u, h - 10 * u), 0.8f * u, StrokeCap.Round)
+    }
+
+    /**
+     * Pista: un canto rodado, un óvalo apenas torcido con su brillo arriba a la izquierda, y abajo los tres puntos de ocre en el
+     * color pleno. Sin degradados.
+     */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val l = size.minDimension; val g = l * 0.06f
+        val x0 = (size.width - l) / 2; val y0 = (size.height - l) / 2
+        fun p(x: Float, y: Float) = Offset(x0 + x * l, y0 + y * l)
+        val canto = Path().apply {
+            p(0.5f, 0.05f).let { moveTo(it.x, it.y) }
+            fun c(a: Offset, b: Offset, d: Offset) = cubicTo(a.x, a.y, b.x, b.y, d.x, d.y)
+            c(p(0.8f, 0.04f), p(0.96f, 0.26f), p(0.95f, 0.52f))
+            c(p(0.94f, 0.8f), p(0.74f, 0.95f), p(0.48f, 0.95f))
+            c(p(0.2f, 0.95f), p(0.05f, 0.76f), p(0.06f, 0.5f))
+            c(p(0.07f, 0.24f), p(0.22f, 0.06f), p(0.5f, 0.05f))
+            close()
+        }
+        drawPath(canto, e.primario, style = Stroke(g))
+        val brillo = Path().apply { p(0.12f, 0.34f).let { moveTo(it.x, it.y) }; p(0.17f, 0.14f).let { a -> p(0.34f, 0.1f).let { b -> quadraticTo(a.x, a.y, b.x, b.y) } } }
+        drawPath(brillo, alfaAnt(e.primario, 0.7f), style = Stroke(g * 0.6f, cap = StrokeCap.Round))
+        for (k in -1..1) drawCircle(e.secundario, l * 0.042f, p(0.5f + k * 0.13f, 0.865f))
+    }
 }
 
 /**
@@ -1723,6 +1852,91 @@ object ComunRomano : DisenoComun {
         if (x1 > x0) grabado(Offset(x0, cy), Offset(x1, cy), oscuro, 1.2f)
         hedera(Offset(w - 9 * u, cy), if (oscuro) mezcla(PURPURA, LINO, 0.6f) else PURPURA, u)
     }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /**
+     * El marco de la tabla a [m] del borde, con las esquinas de arriba cóncavas como las de la hoja (de radio [m] + 14 dp) y las de
+     * abajo en escuadra.
+     */
+    private fun marcoTabula(w: Float, h: Float, m: Float, u: Float): Path {
+        val r = m + 14 * u
+        return Path().apply {
+            moveTo(r, m); lineTo(w - r, m); quadraticTo(w - r, r, w - m, r); lineTo(w - m, h - m); lineTo(m, h - m); lineTo(m, r)
+            quadraticTo(r, r, r, m); close()
+        }
+    }
+
+    /**
+     * Hoja rápida: la tabla de bronce clavada a la pared. Un doble filete grabado (la raya honda con su luz al lado) corre por
+     * arriba, baja por los dos cantos y se cierra abajo, con las esquinas de arriba cóncavas como las de la hoja; en cada canto, a
+     * media altura, la cola de milano de una tabula ansata; arriba al centro, una corona de laurel chica con su interpunto; un clavo
+     * en cada esquina y, abajo al centro, una hoja de hiedra que corta el filete. Sin degradados.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 120 * u || h < 120 * u) return
+        val linea = alfaAnt(e.primario, 0.5f)
+        val fina = alfaAnt(e.primario, 0.28f)
+        val luz = if (oscuro) Color.Black.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.65f)
+        val grueso = marcoTabula(w, h, 6 * u, u); val delgado = marcoTabula(w, h, 9.5f * u, u)
+        // La hiedra de abajo corta el filete: se deja libre su hueco.
+        clipRect(w / 2 - 9 * u, h - 13 * u, w / 2 + 9 * u, h, clipOp = androidx.compose.ui.graphics.ClipOp.Difference) {
+            translate(0.7f * u, 0.7f * u) { drawPath(grueso, luz, style = Stroke(1.2f * u)) }
+            drawPath(grueso, linea, style = Stroke(1.2f * u))
+            drawPath(delgado, fina, style = Stroke(0.7f * u))
+        }
+        hedera(Offset(w / 2 + 1.2f * u, h - 6 * u), alfaAnt(e.primario, 0.6f), u)
+        // Las colas de milano, a media altura de cada canto, por fuera del filete.
+        listOf(6 * u to -1f, w - 6 * u to 1f).forEach { (x, d) ->
+            val y = h / 2
+            drawPath(Path().apply { moveTo(x, y - 8 * u); lineTo(x + d * 4.6f * u, y - 3 * u); lineTo(x + d * 4.6f * u, y + 3 * u); lineTo(x, y + 8 * u); close() }, linea)
+            drawLine(fina, Offset(x - d * 3.5f * u, y - 5 * u), Offset(x - d * 3.5f * u, y + 5 * u), 0.7f * u)
+        }
+        // La corona de laurel, arriba al centro, entre el filete y el texto.
+        val hoja = alfaAnt(e.secundario, if (oscuro) 0.8f else 0.65f); val tallo = alfaAnt(e.secundario, 0.5f)
+        ramaLaurel(Offset(w / 2 - 2.5f * u, 21.5f * u), -2.7f, 17 * u, hoja, tallo)
+        ramaLaurel(Offset(w / 2 + 2.5f * u, 21.5f * u), -0.44f, 17 * u, hoja, tallo)
+        interpunto(Offset(w / 2, 15.5f * u), 3.8f * u, alfaAnt(e.primario, 0.8f))
+        // Los clavos: dos en el hueco de las esquinas cóncavas y dos abajo.
+        val bronce = mezcla(e.secundario, if (oscuro) BRONCE_LUZ else BRONCE, 0.4f)
+        listOf(Offset(12 * u, 12 * u), Offset(w - 12 * u, 12 * u), Offset(13 * u, h - 13 * u), Offset(w - 13 * u, h - 13 * u))
+            .forEach { clavo(it, 1.9f * u, bronce, oscuro) }
+    }
+
+    /**
+     * Relación: una tabula ansata. El doble filete (grueso afuera, fino adentro), la cola de milano a cada lado, un clavito en cada
+     * esquina y, arriba al centro, tres interpuntos sobre el filete; el centro, liso. Sin degradados.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 40 * u || h < 30 * u) return
+        val c = e.primario
+        drawRect(alfaAnt(c, 0.45f), Offset(3 * u, 3 * u), Size(w - 6 * u, h - 6 * u), style = Stroke(0.8f * u))
+        drawRect(alfaAnt(c, 0.25f), Offset(5.5f * u, 5.5f * u), Size(w - 11 * u, h - 11 * u), style = Stroke(0.6f * u))
+        listOf(0f to 1f, w to -1f).forEach { (x0, d) ->
+            drawPath(Path().apply {
+                moveTo(x0 + d * 5.5f * u, h / 2); lineTo(x0 + d * 1.5f * u, h / 2 - 6 * u); lineTo(x0 + d * 1.5f * u, h / 2 + 6 * u); close()
+            }, alfaAnt(c, 0.4f))
+        }
+        val bronce = mezcla(e.secundario, if (oscuro) BRONCE_LUZ else BRONCE, 0.4f)
+        listOf(Offset(3 * u, 3 * u), Offset(w - 3 * u, 3 * u), Offset(3 * u, h - 3 * u), Offset(w - 3 * u, h - 3 * u))
+            .forEach { clavo(it, 1.3f * u, bronce, oscuro) }
+        for (k in -1..1) interpunto(Offset(w / 2 + k * 6 * u, 3 * u), 2.4f * u, alfaAnt(c, if (k == 0) 0.6f else 0.4f))
+    }
+
+    /** Pista: el clípeo, el escudo redondo con su doble canto, unido por cuatro tachones de bronce. Sin degradados. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val l = size.minDimension; val g = l * 0.06f; val o = center
+        drawCircle(e.primario, l * 0.47f, o, style = Stroke(g))
+        drawCircle(e.primario, l * 0.4f, o, style = Stroke(g * 0.5f))
+        for (k in 0 until 4) {
+            val a = Math.PI / 4 + k * Math.PI / 2
+            drawCircle(alfaAnt(e.secundario, 0.85f), l * 0.032f, Offset(o.x + (l * 0.435f * kotlin.math.cos(a)).toFloat(), o.y + (l * 0.435f * kotlin.math.sin(a)).toFloat()))
+        }
+    }
 }
 
 /**
@@ -2423,6 +2637,93 @@ object ComunHeleno : DisenoComun {
             legibleAnt(ARCILLA, 5f, fondo), tam, peso = FontWeight.Bold, espaciado = 1.4f)
         val alto = minOf(7 * u, h * 0.4f)
         grecaCorrida(r.right + 8 * u, w - 2 * u, h / 2 + alto / 2, alto, egeo(oscuro).copy(alpha = if (oscuro) 0.5f else 0.42f), 0.9f * u)
+    }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /** Una tira de llaves de la greca, de [k] de alto, entre [x0] y [x1] con la base en [y]: las llaves y la raya de abajo. A lo más 80. */
+    private fun DrawScope.tiraGreca(x0: Float, x1: Float, y: Float, k: Float, color: Color, grosor: Float) {
+        val paso = maxOf(k * 1.45f, 1f)
+        val n = ((x1 - x0) / paso).toInt().coerceIn(0, 80)
+        if (n == 0) return
+        val x = x0 + ((x1 - x0) - n * paso + (paso - k)) / 2
+        for (j in 0 until n) llave(Offset(x + j * paso, y), k, 1f, -1f, color, grosor)
+        drawLine(color, Offset(x0, y + grosor * 1.5f), Offset(x1, y + grosor * 1.5f), grosor)
+    }
+
+    /**
+     * Hoja rápida: la fachada de un templo. Bajo el frontón de la hoja, la moldura que sigue sus dos aguas y la cornisa horizontal
+     * con su hilera de dentículos; en el tímpano, el sol de Vergina de dieciséis rayos; por los dos cantos, una columna jónica con
+     * sus estrías, el capitel de volutas arriba y la basa abajo; y abajo, una tira de greca y el escalón del estilóbato. Sin
+     * degradados.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 120 * u || h < 120 * u) return
+        val linea = alfaAnt(e.primario, 0.5f)
+        val tenue = alfaAnt(e.primario, 0.22f)
+        // Las dos aguas y la cornisa.
+        drawPath(Path().apply { moveTo(0f, 18.5f * u); lineTo(w / 2, 4.5f * u); lineTo(w, 18.5f * u) }, linea, style = Stroke(1f * u))
+        drawLine(linea, Offset(0f, 19.5f * u), Offset(w, 19.5f * u), 1f * u)
+        // Los dentículos bajo la cornisa, entre los capiteles.
+        var x = 18 * u; var k = 0
+        while (x < w - 20 * u && k < 120) { drawRect(alfaAnt(e.primario, 0.3f), Offset(x, 20.8f * u), Size(2.4f * u, 2.6f * u)); x += maxOf(5 * u, 1f); k++ }
+        // El sol en el tímpano.
+        val sol = Offset(w / 2, 12.2f * u)
+        drawPath(estrella(sol, 4.6f * u, 16, 0.5f), alfaAnt(e.secundario, 0.7f))
+        drawCircle(alfaAnt(e.primario, 0.8f), 1.5f * u, sol)
+        // Las columnas de los cantos: estrías, capitel de volutas y basa.
+        val alto = h - 16 * u
+        listOf(8.5f * u, w - 8.5f * u).forEach { cx ->
+            for (j in -1..1) drawLine(tenue, Offset(cx + j * 2.8f * u, 28 * u), Offset(cx + j * 2.8f * u, alto - 3 * u), 0.7f * u)
+            drawRect(linea, Offset(cx - 5.5f * u, 21.5f * u), Size(11 * u, 1.6f * u))
+            listOf(-1f, 1f).forEach { s ->
+                drawCircle(linea, 1.6f * u, Offset(cx + s * 3.6f * u, 25.2f * u), style = Stroke(0.8f * u))
+                drawCircle(linea, 0.5f * u, Offset(cx + s * 3.6f * u, 25.2f * u))
+            }
+            drawLine(linea, Offset(cx - 3.6f * u, 23.6f * u), Offset(cx + 3.6f * u, 23.6f * u), 0.8f * u)
+            drawLine(linea, Offset(cx - 4.5f * u, alto - 2.5f * u), Offset(cx + 4.5f * u, alto - 2.5f * u), 1f * u)
+            drawLine(linea, Offset(cx - 5.5f * u, alto), Offset(cx + 5.5f * u, alto), 1.2f * u)
+        }
+        // Abajo, la greca entre las basas y el estilóbato.
+        tiraGreca(18 * u, w - 18 * u, h - 11 * u, 4.4f * u, alfaAnt(e.primario, 0.32f), 0.8f * u)
+        drawLine(linea, Offset(0f, h - 6 * u), Offset(w, h - 6 * u), 1f * u)
+        drawLine(tenue, Offset(0f, h - 3 * u), Offset(w, h - 3 * u), 0.8f * u)
+    }
+
+    /**
+     * Relación: un friso de meandros arriba y otro abajo, las llaves de la greca sobre su raya, y un punto de oro en cada esquina;
+     * el centro, liso. Sin degradados.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 40 * u || h < 30 * u) return
+        val c = alfaAnt(e.primario, 0.45f)
+        tiraGreca(8 * u, w - 8 * u, 8 * u, 4.4f * u, c, 0.8f * u)
+        tiraGreca(8 * u, w - 8 * u, h - 5 * u, 4.4f * u, c, 0.8f * u)
+        listOf(Offset(4.5f * u, 4.5f * u), Offset(w - 4.5f * u, 4.5f * u), Offset(4.5f * u, h - 4.5f * u), Offset(w - 4.5f * u, h - 4.5f * u))
+            .forEach { drawCircle(alfaAnt(e.secundario, 0.6f), 1.2f * u, it) }
+        listOf(4.5f * u, w - 4.5f * u).forEach { x -> drawLine(alfaAnt(e.primario, 0.25f), Offset(x, 10 * u), Offset(x, h - 10 * u), 0.7f * u) }
+    }
+
+    /**
+     * Pista: la fachada del templo: el frontón con el sol en su tímpano, dos columnas a los lados y las dos gradas abajo. Sin
+     * degradados.
+     */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val l = size.minDimension; val g = l * 0.06f
+        val x0 = (size.width - l) / 2; val y0 = (size.height - l) / 2
+        fun p(x: Float, y: Float) = Offset(x0 + x * l, y0 + y * l)
+        val c = e.primario
+        drawPath(Path().apply { p(0.04f, 0.19f).let { moveTo(it.x, it.y) }; p(0.5f, 0.03f).let { lineTo(it.x, it.y) }; p(0.96f, 0.19f).let { lineTo(it.x, it.y) }; close() },
+            c, style = Stroke(g * 0.8f))
+        drawCircle(e.secundario, l * 0.032f, p(0.5f, 0.125f))
+        listOf(0.1f, 0.9f).forEach { x -> drawLine(c, p(x, 0.24f), p(x, 0.84f), g * 0.75f) }
+        listOf(0.165f, 0.835f).forEach { x -> drawLine(alfaAnt(c, 0.6f), p(x, 0.26f), p(x, 0.82f), g * 0.4f) }
+        drawLine(c, p(0.12f, 0.875f), p(0.88f, 0.875f), g * 0.6f)
+        drawLine(c, p(0.04f, 0.95f), p(0.96f, 0.95f), g)
     }
 }
 
@@ -3165,6 +3466,102 @@ object ComunEgipto : DisenoComun {
         val alto = minOf(6 * u, h * 0.3f)
         bandaColores(r.right + 9 * u, w - 2 * u, h / 2 - alto / 2, alto, oscuro, 0.5f)
     }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /**
+     * El disco solar alado con centro en [c]: el disco de [r], las dos alas de [ala] de largo con sus plumas marcadas y las dos
+     * cobras que cuelgan a los lados del disco.
+     */
+    private fun DrawScope.discoAlado(c: Offset, r: Float, ala: Float, alas: Color, disco: Color, plumas: Color) {
+        val u = ala / 32f
+        listOf(-1f, 1f).forEach { s ->
+            drawPath(Path().apply {
+                moveTo(c.x + s * r * 1.1f, c.y - 1.5f * u); quadraticTo(c.x + s * 16 * u, c.y - 6 * u, c.x + s * ala, c.y - 3 * u)
+                lineTo(c.x + s * (ala - 3 * u), c.y + 1.2f * u); quadraticTo(c.x + s * 16 * u, c.y + 1 * u, c.x + s * r * 1.1f, c.y + 2.5f * u); close()
+            }, alas)
+            for (j in 0 until 4) {
+                val x = c.x + s * (r * 1.1f + (5 + j * 5.5f) * u)
+                drawLine(plumas, Offset(x, c.y - (3.4f - 0.2f * j) * u), Offset(x + s * 1.4f * u, c.y + 1.6f * u), 0.6f * u)
+            }
+            drawPath(Path().apply {
+                moveTo(c.x + s * r * 0.8f, c.y + r * 0.5f); quadraticTo(c.x + s * r * 1.35f, c.y + r * 0.9f, c.x + s * r * 0.95f, c.y + r * 1.45f)
+            }, alas, style = Stroke(0.8f * u, cap = StrokeCap.Round))
+            drawCircle(alas, 0.9f * u, Offset(c.x + s * r * 0.8f, c.y + r * 0.5f))
+        }
+        drawCircle(disco, r, c)
+    }
+
+    /** Una flor de loto que nace en [b] y se abre hacia arriba, de [alto]: tres pétalos y los dos sépalos abiertos. */
+    private fun loto(b: Offset, alto: Float): Path = Path().apply {
+        val a = alto
+        moveTo(b.x, b.y); quadraticTo(b.x - a * 0.28f, b.y - a * 0.55f, b.x, b.y - a); quadraticTo(b.x + a * 0.28f, b.y - a * 0.55f, b.x, b.y); close()
+        listOf(-1f, 1f).forEach { s ->
+            moveTo(b.x, b.y); quadraticTo(b.x + s * a * 0.2f, b.y - a * 0.7f, b.x + s * a * 0.55f, b.y - a * 0.78f)
+            quadraticTo(b.x + s * a * 0.42f, b.y - a * 0.3f, b.x, b.y); close()
+        }
+    }
+
+    /**
+     * Hoja rápida: la estela pintada. Bajo el arco de la hoja, una moldura que lo sigue y, en lo más alto, el disco solar alado con
+     * sus dos cobras; por los dos cantos, la banda de rectángulos de colores (lapislázuli, rojo y verde) entre sus rayas negras, que
+     * nace abajo de una flor de loto; abajo, la misma banda de lado a lado. Sin degradados.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 120 * u || h < 120 * u) return
+        // La moldura bajo el arco.
+        drawPath(Path().apply { moveTo(0f, 20.5f * u); quadraticTo(w / 2, -10.6f * u, w, 20.5f * u) }, alfaAnt(e.primario, 0.45f), style = Stroke(1f * u))
+        drawPath(Path().apply { moveTo(0f, 23.5f * u); quadraticTo(w / 2, -7.6f * u, w, 23.5f * u) }, alfaAnt(e.primario, 0.22f), style = Stroke(0.7f * u))
+        discoAlado(Offset(w / 2, 13 * u), 3.6f * u, 32 * u, alfaAnt(e.primario, 0.72f), e.secundario, e.fondo.copy(alpha = 0.55f))
+        // Las bandas de los cantos.
+        val colores = if (oscuro) listOf(LAPIS_NOCHE, mezcla(ROJO, LINO, 0.25f), VERDE_NOCHE) else listOf(LAPIS, ROJO, VERDE)
+        val negro = (if (oscuro) LINO else NEGRO).copy(alpha = if (oscuro) 0.35f else 0.5f)
+        val y0 = 30 * u; val y1 = h - 26 * u
+        if (y1 > y0) {
+            val paso = maxOf(6 * u, 1f)
+            val n = ((y1 - y0) / paso).toInt().coerceIn(1, 160)
+            listOf(4.5f * u, w - 10.5f * u).forEach { x ->
+                for (j in 0 until n) drawRect(alfaAnt(colores[j % 3], 0.45f), Offset(x + 0.7f * u, y0 + j * paso + 0.7f * u), Size(4.6f * u, paso - 1.4f * u))
+                drawLine(negro, Offset(x, y0), Offset(x, y0 + n * paso), 0.8f * u)
+                drawLine(negro, Offset(x + 6 * u, y0), Offset(x + 6 * u, y0 + n * paso), 0.8f * u)
+                drawPath(loto(Offset(x + 3 * u, y0 + n * paso + 10 * u), 9 * u), alfaAnt(e.primario, 0.55f))
+            }
+        }
+        bandaColores(18 * u, w - 18 * u, h - 11 * u, 5 * u, oscuro, 0.5f)
+    }
+
+    /**
+     * Relación: arriba, bajo el remate redondo, un disco alado chico; abajo, la cenefa de rectángulos de colores entre sus rayas
+     * negras, como el borde de una pintura de tumba; a los lados, una raya fina. El centro, liso. Sin degradados.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 40 * u || h < 30 * u) return
+        discoAlado(Offset(w / 2, 6.5f * u), 2.4f * u, 16 * u, alfaAnt(e.primario, 0.55f), alfaAnt(e.secundario, 0.8f), e.fondo.copy(alpha = 0.5f))
+        bandaColores(5 * u, w - 5 * u, h - 8 * u, 4.5f * u, oscuro, 0.45f)
+        listOf(3.5f * u, w - 3.5f * u).forEach { x -> drawLine(alfaAnt(e.primario, 0.3f), Offset(x, 14 * u), Offset(x, h - 10 * u), 0.7f * u) }
+    }
+
+    /**
+     * Pista: un pilono, los dos muros en talud y la gola que se abre arriba, con el disco solar alado sobre la puerta. Sin
+     * degradados.
+     */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val l = size.minDimension; val g = l * 0.06f
+        val x0 = (size.width - l) / 2; val y0 = (size.height - l) / 2
+        fun px(x: Float) = x0 + x * l
+        fun py(y: Float) = y0 + y * l
+        drawPath(Path().apply {
+            moveTo(px(0.1f), py(0.96f)); lineTo(px(0.18f), py(0.2f)); quadraticTo(px(0.15f), py(0.07f), px(0.04f), py(0.04f))
+            lineTo(px(0.96f), py(0.04f)); quadraticTo(px(0.85f), py(0.07f), px(0.82f), py(0.2f)); lineTo(px(0.9f), py(0.96f)); close()
+        }, e.primario, style = Stroke(g * 0.8f))
+        drawLine(e.primario, Offset(px(0.17f), py(0.2f)), Offset(px(0.83f), py(0.2f)), g * 0.5f)
+        drawLine(e.primario, Offset(px(0.3f), py(0.12f)), Offset(px(0.7f), py(0.12f)), g * 0.7f, StrokeCap.Round)
+        drawCircle(e.secundario, l * 0.045f, Offset(px(0.5f), py(0.12f)))
+    }
 }
 
 /**
@@ -3874,6 +4271,98 @@ object ComunMeso : DisenoComun {
         for (j in 0..n) drawCircle(rojo.copy(alpha = 0.55f), 1.2f * u, Offset(x0 + j * paso, h / 2))
         cuenta(Offset(w - 6 * u, h / 2), 3 * u, oscuro, true)
     }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /**
+     * Una greca escalonada (la xicalcoliuhqui) entre [x0] y [x1], de [k] de alto con la base en [y]: escalones que suben y bajan,
+     * encajados. A lo más 120.
+     */
+    private fun DrawScope.grecaEscalonada(x0: Float, x1: Float, y: Float, k: Float, color: Color) {
+        val paso = maxOf(k * 1.2f, 1f)
+        val n = ((x1 - x0) / paso).toInt().coerceIn(0, 120)
+        val x = x0 + ((x1 - x0) - n * paso) / 2
+        for (j in 0 until n) {
+            if (j % 2 == 0) drawPath(escalon(Offset(x + j * paso, y), k, 1f, -1f), color)
+            else drawPath(escalon(Offset(x + j * paso + k, y - k), k, -1f, 1f), color)
+        }
+    }
+
+    /** Un cartucho de glifo de día en [r]: el marco redondeado, dos puntos y una barra (el siete de los mayas) y un ojo al medio. */
+    private fun DrawScope.glifoDia(r: Rect, marco: Color, relleno: Color, u: Float) {
+        drawRoundRect(relleno, r.topLeft, r.size, CornerRadius(r.height * 0.3f))
+        drawRoundRect(marco, r.topLeft, r.size, CornerRadius(r.height * 0.3f), style = Stroke(1f * u))
+        drawCircle(marco, 1.1f * u, Offset(r.center.x - r.width * 0.18f, r.top + r.height * 0.3f))
+        drawCircle(marco, 1.1f * u, Offset(r.center.x + r.width * 0.18f, r.top + r.height * 0.3f))
+        drawLine(marco, Offset(r.left + r.width * 0.22f, r.top + r.height * 0.72f), Offset(r.right - r.width * 0.22f, r.top + r.height * 0.72f), 1.3f * u, StrokeCap.Round)
+        drawOval(marco, Offset(r.center.x - 1.4f * u, r.top + r.height * 0.32f), Size(2.8f * u, 2 * u), style = Stroke(0.7f * u))
+    }
+
+    /**
+     * Hoja rápida: el templo sobre la pirámide. Bajo las gradas de la hoja, una moldura de cinabrio que sigue su perfil y, en el
+     * cuerpo de la pirámide, el cartucho de un glifo de día; de lado a lado, la greca escalonada; por los dos cantos, un cordel con
+     * cuentas de jade ensartadas, y en las esquinas de abajo, el escalón de la greca, grande. Sin degradados.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 120 * u || h < 120 * u) return
+        val linea = alfaAnt(e.primario, 0.5f)
+        val x0 = w / 2 - 40 * u
+        val perfil = Path().apply {
+            moveTo(10 * u, 19 * u); lineTo(x0, 19 * u)
+            for (k in 0 until 3) { lineTo(x0 + k * 10 * u, (15 - 4 * k) * u); lineTo(x0 + (k + 1) * 10 * u, (15 - 4 * k) * u) }
+            for (k in 3 downTo 1) { lineTo(x0 + (9 - k) * 10 * u, (19 - 4 * k) * u); lineTo(x0 + (9 - k) * 10 * u, (23 - 4 * k) * u) }
+            lineTo(w - 10 * u, 19 * u)
+        }
+        drawPath(perfil, linea, style = Stroke(1f * u))
+        glifoDia(Rect(w / 2 - 8 * u, 7.5f * u, w / 2 + 8 * u, 18.5f * u), alfaAnt(e.primario, 0.75f), alfaAnt(e.secundario, 0.14f), u)
+        grecaEscalonada(14 * u, w - 14 * u, 26.5f * u, 4.5f * u, alfaAnt(e.primario, 0.3f))
+        // El cordel de los cantos con sus cuentas de jade.
+        val y0 = 34 * u; val y1 = h - 26 * u
+        listOf(8 * u, w - 8 * u).forEach { x ->
+            if (y1 > y0) drawLine(alfaAnt(e.secundario, 0.3f), Offset(x, y0), Offset(x, y1), 0.8f * u)
+            cuenta(Offset(x, 24 * u), 2.4f * u, oscuro, false)
+            val paso = maxOf(44 * u, 1f)
+            var y = y0 + 10 * u; var k = 0
+            while (y < y1 - 6 * u && k < 20) { cuenta(Offset(x, y), if (k % 2 == 0) 2 * u else 1.5f * u, oscuro, false); y += paso / 2; k++ }
+        }
+        // Los escalones de las esquinas de abajo, con una raya de cinabrio entre ellos.
+        drawPath(escalon(Offset(3 * u, h - 3 * u), 13 * u, 1f, -1f), alfaAnt(e.primario, 0.42f))
+        drawPath(escalon(Offset(w - 3 * u, h - 3 * u), 13 * u, -1f, -1f), alfaAnt(e.primario, 0.42f))
+        drawLine(linea, Offset(20 * u, h - 5 * u), Offset(w - 20 * u, h - 5 * u), 0.9f * u)
+    }
+
+    /**
+     * Relación: bajo el dintel, una greca escalonada; una moldura paralela a cada esquina cortada; a media altura de cada lado, una
+     * cuenta de jade; abajo, una raya de cinabrio con un escalón en cada esquina. El centro, liso. Sin degradados.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 40 * u || h < 30 * u) return
+        val c = alfaAnt(e.primario, 0.5f)
+        grecaEscalonada(w * 0.28f, w * 0.72f, 8.5f * u, 4 * u, c)
+        drawLine(c, Offset(2 * u, 21.5f * u), Offset(21.5f * u, 2 * u), 0.9f * u)
+        drawLine(c, Offset(w - 2 * u, 21.5f * u), Offset(w - 21.5f * u, 2 * u), 0.9f * u)
+        cuenta(Offset(4.5f * u, h / 2), 1.9f * u, oscuro, false)
+        cuenta(Offset(w - 4.5f * u, h / 2), 1.9f * u, oscuro, false)
+        drawLine(c, Offset(10 * u, h - 4 * u), Offset(w - 10 * u, h - 4 * u), 0.9f * u)
+        drawPath(escalon(Offset(2.5f * u, h - 2.5f * u), 6 * u, 1f, -1f), alfaAnt(e.primario, 0.45f))
+        drawPath(escalon(Offset(w - 2.5f * u, h - 2.5f * u), 6 * u, -1f, -1f), alfaAnt(e.primario, 0.45f))
+    }
+
+    /** Pista: el cartucho de un glifo de día, con su pie de tres lóbulos (el del medio, una cuenta). Sin degradados. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val l = size.minDimension; val g = l * 0.06f
+        val x0 = (size.width - l) / 2; val y0 = (size.height - l) / 2
+        drawRoundRect(e.primario, Offset(x0 + l * 0.06f, y0 + l * 0.04f), Size(l * 0.88f, l * 0.78f), CornerRadius(l * 0.2f), style = Stroke(g * 0.8f))
+        for (k in -1..1) {
+            val c = Offset(x0 + l * (0.5f + k * 0.2f), y0 + l * 0.9f)
+            if (k == 0) drawCircle(e.secundario, l * 0.065f, c) else drawCircle(e.primario, l * 0.065f, c, style = Stroke(g * 0.6f))
+        }
+        listOf(0.13f, 0.87f).forEach { x -> drawCircle(alfaAnt(e.secundario, 0.8f), l * 0.028f, Offset(x0 + x * l, y0 + l * 0.12f)) }
+    }
 }
 
 /**
@@ -4548,6 +5037,107 @@ object ComunArcano : DisenoComun {
             drawLine(RAYADO.copy(alpha = if (oscuro) 0.4f else 0.6f), Offset(x0 + 4 * u, h / 2 + 1 * u), Offset(x1, h / 2 + 1 * u), 0.8f * u)
         }
         asterisco(Offset(w - 6 * u, h / 2 + 1 * u), 3 * u, if (oscuro) mezcla(MARGEN_ROJO, PAPEL, 0.3f) else MARGEN_ROJO, 0.9f * u)
+    }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /** Un trozo de cinta engomada con centro en [c], de [largo] × [ancho], girado [giro] grados, con las dos puntas rasgadas en dientes. */
+    private fun DrawScope.cintaEngomada(c: Offset, largo: Float, ancho: Float, giro: Float, color: Color) {
+        val x0 = c.x - largo / 2; val x1 = c.x + largo / 2; val y0 = c.y - ancho / 2
+        val dientes = 4; val d = ancho / dientes
+        val p = Path().apply {
+            moveTo(x0, y0); lineTo(x1, y0)
+            for (j in 1..dientes) lineTo(x1 + if (j % 2 == 1) -d * 0.5f else 0f, y0 + j * d)
+            lineTo(x0, y0 + ancho)
+            for (j in dientes - 1 downTo 0) lineTo(x0 + if (j % 2 == 1) d * 0.5f else 0f, y0 + j * d)
+            close()
+        }
+        rotate(giro, c) {
+            drawPath(p, color)
+            drawPath(p, color.copy(alpha = color.alpha * 0.8f), style = Stroke(0.6f * density))
+        }
+    }
+
+    /** El ojo que no debería estar ahí: la almendra, el iris y la pupila en ranura, con centro en [c] y [ancho] de punta a punta. */
+    private fun DrawScope.ojoArcano(c: Offset, ancho: Float, linea: Color, pupila: Color, u: Float) {
+        val a = ancho / 2
+        drawPath(Path().apply {
+            moveTo(c.x - a, c.y); quadraticTo(c.x, c.y - a * 0.8f, c.x + a, c.y); quadraticTo(c.x, c.y + a * 0.8f, c.x - a, c.y); close()
+        }, linea, style = Stroke(1f * u))
+        drawCircle(linea, a * 0.36f, c, style = Stroke(0.8f * u))
+        drawOval(pupila, Offset(c.x - a * 0.12f, c.y - a * 0.34f), Size(a * 0.24f, a * 0.68f))
+    }
+
+    /**
+     * Hoja rápida: la hoja arrancada de un legajo. Por el canto izquierdo, el doble margen rojo de la ficha, de arriba abajo; en
+     * las dos esquinas de arriba, un trozo de cinta engomada que la sujeta; al centro, bajo la orilla rasgada, un ojo con su
+     * pupila en ranura y el resplandor verdoso, algo que no debería estar ahí, y a sus lados dos filetes de rúbrica; abajo a la
+     * izquierda, la manícula que señala, y en la esquina de abajo a la derecha, el cerco desvaído de una taza de té. Un degradado:
+     * el resplandor.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 120 * u || h < 120 * u) return
+        // El doble margen rojo.
+        val rojo = margenRojo(oscuro)
+        drawLine(alfaAnt(rojo, if (oscuro) 0.6f else 0.45f), Offset(12 * u, 6 * u), Offset(12 * u, h), 0.9f * u)
+        drawLine(alfaAnt(rojo, if (oscuro) 0.42f else 0.3f), Offset(14.5f * u, 6 * u), Offset(14.5f * u, h), 0.7f * u)
+        // El ojo y su resplandor.
+        val c = Offset(w / 2, 13.5f * u)
+        drawCircle(Brush.radialGradient(listOf(VERDE_RARO.copy(alpha = if (oscuro) 0.3f else 0.4f), Color.Transparent), c, 17 * u), 17 * u, c)
+        ojoArcano(c, 15 * u, alfaAnt(e.primario, 0.7f), alfaAnt(e.secundario, 0.9f), u)
+        val rubrica = alfaAnt(e.primario, 0.3f)
+        drawLine(rubrica, Offset(42 * u, 15 * u), Offset(c.x - 13 * u, 13.5f * u), 0.8f * u)
+        drawLine(rubrica, Offset(46 * u, 17.5f * u), Offset(c.x - 16 * u, 16.5f * u), 0.6f * u)
+        drawLine(rubrica, Offset(c.x + 13 * u, 13.5f * u), Offset(w - 42 * u, 14.5f * u), 0.8f * u)
+        drawLine(rubrica, Offset(c.x + 16 * u, 16.5f * u), Offset(w - 46 * u, 17 * u), 0.6f * u)
+        asterisco(Offset(c.x - 21 * u, 18 * u), 1.6f * u, alfaAnt(e.primario, 0.45f), 0.6f * u)
+        asterisco(Offset(c.x + 21 * u, 18 * u), 1.6f * u, alfaAnt(e.primario, 0.45f), 0.6f * u)
+        // Las cintas de las esquinas (encima del margen).
+        val cinta = alfaAnt(e.secundario, if (oscuro) 0.22f else 0.2f)
+        cintaEngomada(Offset(20 * u, 13 * u), 32 * u, 9 * u, -28f, cinta)
+        cintaEngomada(Offset(w - 20 * u, 13 * u), 32 * u, 9 * u, 28f, cinta)
+        // La manícula abajo, en el aire que deja el contenido.
+        manicula(Rect(22 * u, h - 16 * u, 46 * u, h - 4 * u), alfaAnt(e.primario, 0.55f), 0.9f * u)
+        // El cerco de té en la esquina de abajo a la derecha.
+        val te = t(TE, oscuro)
+        val ct = Offset(w - 9 * u, h - 11 * u)
+        drawCircle(alfaAnt(te, if (oscuro) 0.3f else 0.22f), 12 * u, ct, style = Stroke(1.6f * u))
+        drawArc(alfaAnt(te, 0.14f), 200f, 210f, false, Offset(ct.x - 10.5f * u, ct.y - 10.5f * u), Size(21 * u, 21 * u), style = Stroke(2.4f * u))
+    }
+
+    /**
+     * Relación: una ficha del catálogo. A la izquierda, el doble margen rojo; abajo, la raya azul de escribir; arriba, una tachuela
+     * de latón con su sombra; en la esquina cortada, el doblez; abajo a la derecha, el cerco desvaído de una taza. El centro, liso.
+     * Sin degradados.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 40 * u || h < 30 * u) return
+        val rojo = margenRojo(oscuro)
+        drawLine(alfaAnt(rojo, 0.45f), Offset(6.5f * u, 2 * u), Offset(6.5f * u, h - 2 * u), 0.8f * u)
+        drawLine(alfaAnt(rojo, 0.3f), Offset(8.5f * u, 2 * u), Offset(8.5f * u, h - 2 * u), 0.6f * u)
+        drawLine(alfaAnt(t(RAYADO, oscuro), 0.45f), Offset(3 * u, h - 6.5f * u), Offset(w - 3 * u, h - 6.5f * u), 0.7f * u)
+        val o = Offset(w / 2, 5 * u)
+        drawCircle(Color.Black.copy(alpha = 0.18f), 2.5f * u, o + Offset(0.8f * u, 1f * u))
+        drawCircle(t(LATON, oscuro), 2.3f * u, o)
+        drawCircle(t(LATON_OSC, oscuro), 2.3f * u, o, style = Stroke(0.5f * u))
+        drawLine(alfaAnt(e.primario, 0.4f), Offset(w - 21 * u, 1.5f * u), Offset(w - 1.5f * u, 21 * u), 0.8f * u)
+        drawCircle(alfaAnt(t(TE, oscuro), 0.2f), 8 * u, Offset(w - 12 * u, h - 12 * u), style = Stroke(1.2f * u))
+    }
+
+    /** Pista: el signo de siete lados que no cierra, con un punto en cada vértice. Sin degradados. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val l = size.minDimension; val g = l * 0.06f
+        val cx = size.width / 2; val cy = (size.height - l) / 2 + l * 0.52f
+        val vertices = (0..6).map { k ->
+            val a = Math.toRadians(-90.0 + k * 360.0 / 7)
+            Offset(cx + l * 0.45f * kotlin.math.cos(a).toFloat(), cy + l * 0.45f * kotlin.math.sin(a).toFloat())
+        }
+        drawPath(Path().apply { vertices.forEachIndexed { i, p -> if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y) } }, e.primario, style = Stroke(g, cap = StrokeCap.Round))
+        vertices.forEach { drawCircle(e.secundario, l * 0.036f, it) }
     }
 }
 
@@ -5256,5 +5846,112 @@ object ComunAntiguas : DisenoComun {
         val x0 = r.right + 8 * u; val x1 = w - 14 * u
         if (x1 > x0) drawLine((if (oscuro) PERGAMINO else TINTA).copy(alpha = if (oscuro) 0.25f else 0.3f), Offset(x0, h / 2), Offset(x1, h / 2), 0.9f * u)
         drawPath(rombo(Offset(w - 7 * u, h / 2), 3.5f * u, 4.5f * u), rojoMapa(oscuro))
+    }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /**
+     * Una cantonera de latón para la esquina de arriba a la izquierda de la losa (la del chaflán a 45°): una escuadra que sigue el
+     * chaflán, de [largo] por lado, con tres remaches. La de la derecha es la misma en espejo.
+     */
+    private fun DrawScope.cantoneraLosa(largo: Float, metal: Color, borde: Color, remache: Color, u: Float) {
+        val p = Path().apply {
+            moveTo(2 * u, largo); lineTo(2 * u, 19 * u); lineTo(19 * u, 2.5f * u); lineTo(largo, 2.5f * u)
+            lineTo(largo, 7 * u); lineTo(21 * u, 7 * u); lineTo(7 * u, 21 * u); lineTo(7 * u, largo); close()
+        }
+        drawPath(p, metal)
+        drawPath(p, borde, style = Stroke(0.7f * u))
+        listOf(Offset(4.5f * u, largo - 4 * u), Offset(largo - 4 * u, 4.8f * u), Offset(12.2f * u, 12.2f * u)).forEach { o ->
+            drawCircle(borde, 1.3f * u, o); drawCircle(remache, 0.6f * u, o - Offset(0.3f * u, 0.3f * u))
+        }
+    }
+
+    /**
+     * Hoja rápida: la tapa de un tomo de viaje. En las dos esquinas de arriba, cantoneras de latón remachadas que siguen el chaflán
+     * de la losa; de una a otra, una costura de cuero en puntadas que se abre al centro para una gema engastada; por el canto
+     * izquierdo, el camino punteado de un mapa que baja serpenteando hasta la cruz roja del tesoro, abajo; por el canto derecho,
+     * muescas talladas en grupos de tres, y en las esquinas de abajo, dos cantoneras más. Sin degradados.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 120 * u || h < 120 * u) return
+        val laton = mezcla(t(LATON, oscuro), e.secundario, 0.4f).copy(alpha = 0.8f)
+        val borde = t(LATON_OSC, oscuro).copy(alpha = 0.85f)
+        val luz = LATON_LUZ.copy(alpha = if (oscuro) 0.5f else 0.8f)
+        cantoneraLosa(40 * u, laton, borde, luz, u)
+        translate(0f, 3.5f * u) { scale(-1f, 1f, Offset(w / 2, 0f)) { cantoneraLosa(40 * u, laton, borde, luz, u) } }
+        // La costura y la gema al centro.
+        val y = 15 * u
+        val puntadas = Stroke(1f * u, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3.5f * u, 3 * u)))
+        listOf(46 * u to w / 2 - 12 * u, w / 2 + 12 * u to w - 46 * u).forEach { (a, b) ->
+            if (b > a) drawPath(Path().apply { moveTo(a, y); lineTo(b, y) }, alfaAnt(e.secundario, 0.6f), style = puntadas)
+        }
+        drawLine(alfaAnt(e.primario, 0.2f), Offset(46 * u, y + 3 * u), Offset(w - 46 * u, y + 3 * u), 0.7f * u)
+        drawPath(rombo(Offset(w / 2, y), 6.5f * u, 8.5f * u), laton)
+        drawPath(rombo(Offset(w / 2, y), 4.5f * u, 6.2f * u), alfaAnt(e.primario, 0.9f))
+        drawPath(rombo(Offset(w / 2 - 1.2f * u, y - 2 * u), 1.2f * u, 1.8f * u), Color.White.copy(alpha = if (oscuro) 0.35f else 0.6f))
+        // El camino del mapa por el canto izquierdo, hasta la cruz.
+        val rojo = rojoMapa(oscuro)
+        val y0 = 48 * u; val y1 = h - 26 * u
+        if (y1 > y0 + 20 * u) {
+            val n = ((y1 - y0) / maxOf(4 * u, 1f)).toInt().coerceIn(2, 200)
+            val camino = Path().apply {
+                for (j in 0..n) {
+                    val yy = y0 + (y1 - y0) * j / n
+                    val xx = 8 * u + 3 * u * kotlin.math.sin((yy - y0) / (26 * u))
+                    if (j == 0) moveTo(xx, yy) else lineTo(xx, yy)
+                }
+            }
+            drawPath(camino, alfaAnt(e.primario, 0.4f), style = Stroke(0.9f * u, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.5f * u, 2.5f * u))))
+            val cx = Offset(8 * u + 3 * u * kotlin.math.sin((y1 - y0) / (26 * u)), y1 + 6 * u)
+            drawLine(alfaAnt(rojo, 0.75f), cx - Offset(3 * u, 3 * u), cx + Offset(3 * u, 3 * u), 1.4f * u, StrokeCap.Round)
+            drawLine(alfaAnt(rojo, 0.75f), cx + Offset(3 * u, -3 * u), cx + Offset(-3 * u, 3 * u), 1.4f * u, StrokeCap.Round)
+        }
+        // Las muescas talladas del canto derecho.
+        val talla = alfaAnt(if (oscuro) LATON_LUZ else TALLA, 0.4f)
+        var ym = 50 * u; var k = 0
+        while (ym < h - 30 * u && k < 60) {
+            for (j in 0..2) drawLine(talla, Offset(w - 11 * u, ym + j * 3 * u), Offset(w - 5 * u, ym + j * 3 * u + (if (j == 1) 1.2f else 0f) * u), 1f * u, StrokeCap.Round)
+            ym += maxOf(34 * u, 1f); k++
+        }
+        cantoneraGastos(Offset(2 * u, h - 2 * u), 13 * u, 1f, -1f, oscuro)
+        cantoneraGastos(Offset(w - 2 * u, h - 2 * u), 13 * u, -1f, -1f, oscuro)
+    }
+
+    /**
+     * Relación: una casilla del tomo. Cantoneras de latón en las cuatro esquinas; una gema arriba y otra abajo, al centro; muescas
+     * talladas por los dos cantos, a media altura. El centro, liso. Sin degradados.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 40 * u || h < 30 * u) return
+        listOf(Offset(2.5f * u, 2.5f * u) to (1f to 1f), Offset(w - 2.5f * u, 2.5f * u) to (-1f to 1f), Offset(2.5f * u, h - 2.5f * u) to (1f to -1f),
+            Offset(w - 2.5f * u, h - 2.5f * u) to (-1f to -1f)).forEach { (o, d) -> cantoneraGastos(o, 8 * u, d.first, d.second, oscuro) }
+        listOf(Offset(w / 2, 4.5f * u), Offset(w / 2, h - 4.5f * u)).forEach { o ->
+            drawPath(rombo(o, 2.2f * u, 2.9f * u), alfaAnt(e.secundario, 0.85f))
+            drawLine(alfaAnt(e.primario, 0.3f), Offset(o.x - 12 * u, o.y), Offset(o.x - 4 * u, o.y), 0.7f * u)
+            drawLine(alfaAnt(e.primario, 0.3f), Offset(o.x + 4 * u, o.y), Offset(o.x + 12 * u, o.y), 0.7f * u)
+        }
+        val talla = alfaAnt(e.primario, 0.45f)
+        listOf(0.36f, 0.5f, 0.64f).forEachIndexed { i, f ->
+            val y = h * f; val d = (if (i % 2 == 0) -1.6f else 1.6f) * u
+            drawLine(talla, Offset(3 * u, y), Offset(6.5f * u, y + d), 0.8f * u)
+            drawLine(talla, Offset(w - 3 * u, y), Offset(w - 6.5f * u, y + d), 0.8f * u)
+        }
+    }
+
+    /** Pista: una piedra rúnica de cabeza redonda, con su gema en lo alto y la raya del pie. Sin degradados. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val l = size.minDimension; val g = l * 0.06f
+        val x0 = (size.width - l) / 2; val y0 = (size.height - l) / 2
+        drawPath(Path().apply {
+            moveTo(x0 + l * 0.12f, y0 + l * 0.96f); lineTo(x0 + l * 0.12f, y0 + l * 0.42f)
+            arcTo(Rect(x0 + l * 0.12f, y0 + l * 0.04f, x0 + l * 0.88f, y0 + l * 0.8f), 180f, 180f, false)
+            lineTo(x0 + l * 0.88f, y0 + l * 0.96f); close()
+        }, e.primario, style = Stroke(g))
+        drawLine(e.primario, Offset(x0 + l * 0.3f, y0 + l * 0.9f), Offset(x0 + l * 0.7f, y0 + l * 0.9f), g * 0.5f)
+        drawPath(rombo(Offset(x0 + l * 0.5f, y0 + l * 0.135f), l * 0.04f, l * 0.052f), e.secundario)
     }
 }

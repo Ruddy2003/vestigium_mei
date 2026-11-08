@@ -672,6 +672,106 @@ object ComunDistopia : DisenoComun {
         if (sello.right + 8 * u < w) drawLine(rayaFicha(oscuro).copy(alpha = 0.55f), Offset(sello.right + 6 * u, h / 2), Offset(w - 2 * u, h / 2), 1.2f * u, StrokeCap.Round,
             PathEffect.dashPathEffect(floatArrayOf(0.01f, maxOf(3.5f * u, 1f))))
     }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /** Un tornillo de cabeza ranurada, con la ranura girada según [semilla]. */
+    private fun DrawScope.tornilloHoja(c: Offset, r: Float, color: Color, semilla: Int) {
+        drawCircle(color.copy(alpha = color.alpha * 0.35f), r, c)
+        drawCircle(color, r, c, style = Stroke(0.8f * density))
+        val a = (azar(semilla, 1) * 180f) * (Math.PI / 180f).toFloat()
+        val d = Offset(kotlin.math.cos(a), kotlin.math.sin(a)) * (r * 0.75f)
+        drawLine(color, c - d, c + d, 0.8f * density)
+    }
+
+    /**
+     * La hoja rápida es la carpeta del expediente. En la pestaña, el portaetiquetas con sus dos remaches y tres renglones a
+     * máquina; a lo largo del borde, la raya punteada del formulario; arriba a la derecha, el ojo que todo lo mira con su
+     * pupila roja. En el canto izquierdo, las perforaciones del archivador; en el derecho, la regla del margen. Abajo, el
+     * código de barras del folio y la esquina roja de «clasificado»; un tornillo en cada esquina.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val acero = e.secundario.copy(alpha = 0.6f); val fino = e.secundario.copy(alpha = 0.32f); val rojo = e.primario
+        val a = w * 0.38f
+        // El portaetiquetas de la pestaña (baja hasta la raya del formulario) y los renglones a máquina.
+        val et = Rect(15 * u, 3.5f * u, minOf(a - 4 * u, 150 * u), 18.5f * u)
+        drawRect(fino.copy(alpha = 0.1f), et.topLeft, et.size)
+        drawRect(acero, et.topLeft, et.size, style = Stroke(0.9f * u))
+        listOf(et.left + 3.5f * u, et.right - 3.5f * u).forEach { x -> drawCircle(acero, 1.4f * u, Offset(x, et.center.y)) }
+        listOf(0.82f, 0.6f, 0.7f).forEachIndexed { k, f ->
+            val y = et.top + (4f + k * 3.6f) * u; val x0 = et.left + 7.5f * u
+            drawLine(fino.copy(alpha = 0.55f), Offset(x0, y), Offset(x0 + (et.width - 15 * u) * f, y), 1.1f * u,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(maxOf(2.2f * u, 1f), maxOf(0.9f * u, 1f))))
+        }
+        // La raya punteada del formulario, del escalón de la pestaña al ojo.
+        if (w - 46 * u > a + 22 * u) drawLine(fino, Offset(a + 22 * u, 18 * u), Offset(w - 46 * u, 18 * u), 0.9f * u,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(maxOf(3 * u, 1f), maxOf(2.5f * u, 1f))))
+        // El ojo: el párpado, el iris y la pupila roja.
+        val ojo = Offset(w - 30 * u, 18.5f * u)
+        drawPath(Path().apply {
+            moveTo(ojo.x - 11 * u, ojo.y); quadraticTo(ojo.x, ojo.y - 11 * u, ojo.x + 11 * u, ojo.y); quadraticTo(ojo.x, ojo.y + 11 * u, ojo.x - 11 * u, ojo.y); close()
+        }, acero, style = Stroke(1.2f * u, join = StrokeJoin.Round))
+        drawCircle(acero, 3.6f * u, ojo, style = Stroke(0.8f * u))
+        drawCircle(rojo, 2.2f * u, ojo)
+        // Las perforaciones del archivador en el canto izquierdo.
+        var y = 58 * u; var k = 0
+        while (y < h - 44 * u && k < 30) {
+            drawCircle(fino.copy(alpha = 0.12f), 2.6f * u, Offset(8 * u, y)); drawCircle(acero, 2.6f * u, Offset(8 * u, y), style = Stroke(0.8f * u))
+            y += maxOf(34 * u, 1f); k++
+        }
+        // La regla del margen derecho, con una raya larga cada cinco.
+        drawLine(fino, Offset(w - 6 * u, 40 * u), Offset(w - 6 * u, h - 36 * u), 0.7f * u)
+        y = 40 * u; k = 0
+        while (y < h - 36 * u && k < 120) {
+            drawLine(fino, Offset(w - 6 * u, y), Offset(w - (if (k % 5 == 0) 12 else 9) * u, y), 0.7f * u)
+            y += maxOf(12 * u, 1f); k++
+        }
+        // El código de barras del folio, abajo a la izquierda.
+        var x = 18 * u
+        for (i in 0 until 24) {
+            val g = (0.6f + 1.2f * (azar(41, i) * 2.99f).toInt() * 0.5f) * u
+            drawRect(acero, Offset(x, h - 14 * u), Size(g, 8 * u)); x += g + 1.2f * u
+        }
+        // La esquina roja de «clasificado» y los tornillos.
+        drawPath(Path().apply { moveTo(w - 24 * u, h); lineTo(w, h); lineTo(w, h - 24 * u); close() }, rojo.copy(alpha = 0.55f))
+        drawLine(rojo.copy(alpha = 0.5f), Offset(w - 31 * u, h), Offset(w, h - 31 * u), 0.9f * u)
+        tornilloHoja(Offset(7.5f * u, 7.5f * u), 2.6f * u, acero, 1)
+        tornilloHoja(Offset(w - 8 * u, 21 * u), 2.6f * u, acero, 2)
+        tornilloHoja(Offset(8 * u, h - 8 * u), 2.6f * u, acero, 3)
+        tornilloHoja(Offset(w - 7 * u, h - 7 * u), 2.4f * u, Color.White.copy(alpha = 0.6f), 4)
+    }
+
+    /**
+     * El recuadro de Relaciones es una ficha del expediente: la franja del encabezado con su raya, dos perforaciones del
+     * archivador a la izquierda, un renglón a máquina abajo y el sello rojo, ladeado, en la esquina de abajo a la derecha.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val acero = e.secundario.copy(alpha = 0.5f)
+        drawRect(e.secundario.copy(alpha = 0.12f), Offset.Zero, Size(w, 6 * u))
+        drawLine(acero, Offset(0f, 6 * u), Offset(w, 6 * u), 0.8f * u)
+        listOf(0.2f, 0.32f, 0.26f).forEachIndexed { k, f ->
+            drawLine(acero.copy(alpha = 0.4f), Offset(8 * u + k * w * 0.3f, 3 * u), Offset(8 * u + k * w * 0.3f + w * f * 0.6f, 3 * u), 0.9f * u)
+        }
+        listOf(0.38f, 0.68f).forEach { f -> drawCircle(acero, 1.9f * u, Offset(5.5f * u, h * f), style = Stroke(0.9f * u)) }
+        drawLine(acero.copy(alpha = 0.3f), Offset(12 * u, h - 5 * u), Offset(w * 0.5f, h - 5 * u), 0.9f * u,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(maxOf(2.4f * u, 1f), maxOf(1.6f * u, 1f))))
+        val s = Offset(w - 14 * u, h - 9 * u)
+        rotate(-9f, s) {
+            val r = Rect(s.x - 10 * u, s.y - 4.5f * u, s.x + 10 * u, s.y + 4.5f * u)
+            drawRect(e.primario.copy(alpha = 0.5f), r.topLeft, r.size, style = Stroke(1.1f * u))
+            drawLine(e.primario.copy(alpha = 0.4f), Offset(r.left + 3 * u, s.y), Offset(r.right - 3 * u, s.y), 1.4f * u)
+        }
+    }
+
+    /** El icono de la cinta en su ficha de expediente: el borde grueso, la pestaña de la carpeta y la esquina roja. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f
+        drawRect(e.primario, Offset(s * 0.06f, s * 0.13f), Size(s * 0.88f, s * 0.81f), style = Stroke(g * 1.3f))
+        drawPath(Path().apply { moveTo(s * 0.06f, s * 0.14f); lineTo(s * 0.06f, s * 0.02f); lineTo(s * 0.36f, s * 0.02f); lineTo(s * 0.46f, s * 0.13f); close() }, e.primario)
+        drawPath(Path().apply { moveTo(s * 0.94f, s * 0.7f); lineTo(s * 0.94f, s * 0.94f); lineTo(s * 0.7f, s * 0.94f); close() }, e.secundario)
+    }
 }
 
 /**
@@ -1221,6 +1321,92 @@ object ComunNeon : DisenoComun {
             drawLine(apagado.copy(alpha = 0.6f), Offset(placa.right + 6 * u, h / 2), Offset(w - 6 * u, h / 2), 0.7f * u)
             drawRoundRect(t(Color(0xFF6A6478), true), Offset(w - 5 * u, h / 2 - 1.3f * u), Size(2.2f * u, 2.6f * u), CornerRadius(0.5f * u))
         }
+    }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /** Un electrodo: el casquillo de metal en la punta de un tubo, en [c]. */
+    private fun DrawScope.electrodo(c: Offset, r: Float) {
+        drawCircle(ALAMBRE.copy(alpha = 0.75f), r, c)
+        drawCircle(CARCASA, r * 0.45f, c)
+    }
+
+    /**
+     * La hoja rápida es el letrero del callejón. Un tubo magenta baja por cada canto, dobla por las esquinas redondas y corre
+     * por el borde de arriba hasta el centro, donde se corta en dos electrodos y deja lugar a una estrella de tubo ámbar;
+     * los alambres que lo sujetan llegan desde fuera. Arriba a la derecha, el foquito ámbar. Abajo, dos escuadras de tubo
+     * ámbar en las esquinas, la de la izquierda con sus electrodos y el cable que baja.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val c = 22 * u; val i = 6 * u; val gr = 1.3f * u; val hueco = 24 * u
+        val baja = minOf(h * 0.3f, 150 * u)
+        // El tubo de arriba, en dos mitades, y sus electrodos junto al hueco.
+        listOf(-1f, 1f).forEach { s ->
+            val x = if (s < 0) i else w - i
+            val p = Path().apply {
+                moveTo(x, baja); lineTo(x, c); quadraticTo(x, i, x - s * (c - i), i); lineTo(w / 2 + s * hueco, i)
+            }
+            tubo(p, e.primario, gr)
+            electrodo(Offset(w / 2 + s * (hueco + 1.5f * u), i), 1.8f * u)
+            electrodo(Offset(x, baja + 2 * u), 1.8f * u)
+            // Los alambres que lo sujetan: dos en el borde de arriba y dos en el canto.
+            val xa = w / 2 + s * w * 0.3f
+            drawLine(ALAMBRE.copy(alpha = 0.5f), Offset(xa, 0f), Offset(xa, i + 2.5f * u), 0.9f * u)
+            listOf(c + 26 * u, baja - 18 * u).forEach { ya ->
+                if (ya > c + 4 * u) drawLine(ALAMBRE.copy(alpha = 0.5f), Offset(x + s * i, ya), Offset(x - s * 2.5f * u, ya), 0.9f * u)
+            }
+        }
+        // La estrella ámbar en el hueco.
+        tubo(estrella(Offset(w / 2, i + 2.5f * u), 6.5f * u, 4, 0.42f), e.secundario, 1f * u)
+        // El foquito de la esquina.
+        val f = Offset(w - 17 * u, 17 * u)
+        drawCircle(e.secundario.copy(alpha = 0.14f), 8 * u, f); drawCircle(e.secundario.copy(alpha = 0.3f), 4.5f * u, f)
+        drawCircle(mezcla(e.secundario, Color.White, 0.45f), 2.2f * u, f)
+        // Las escuadras de abajo.
+        listOf(-1f, 1f).forEach { s ->
+            val x = if (s < 0) i else w - i
+            val p = Path().apply {
+                moveTo(x, h - 42 * u); lineTo(x, h - i - 8 * u); quadraticTo(x, h - i, x - s * 8 * u, h - i); lineTo(x - s * 40 * u, h - i)
+            }
+            tubo(p, e.secundario, 1.1f * u)
+            if (s < 0) {
+                electrodo(Offset(x, h - 44 * u), 1.6f * u); electrodo(Offset(x + 42 * u, h - i), 1.6f * u)
+                drawPath(Path().apply { moveTo(x + 44 * u, h - i); quadraticTo(x + 54 * u, h - i + 1 * u, x + 58 * u, h) }, ALAMBRE.copy(alpha = 0.45f),
+                    style = Stroke(1.1f * u, cap = StrokeCap.Round))
+            }
+        }
+    }
+
+    /**
+     * El recuadro de Relaciones lleva un tubo magenta alrededor, cortado en la esquina de abajo a la derecha por sus dos
+     * electrodos; dos alambres lo cuelgan del borde de arriba y el foquito ámbar luce en la esquina de arriba.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val m = 4.5f * u; val r = 11 * u
+        val p = Path().apply {
+            moveTo(w - m - r - 8 * u, h - m); lineTo(m + r, h - m); quadraticTo(m, h - m, m, h - m - r); lineTo(m, m + r); quadraticTo(m, m, m + r, m)
+            lineTo(w - m - r, m); quadraticTo(w - m, m, w - m, m + r); lineTo(w - m, h - m - r - 8 * u)
+        }
+        tubo(p, e.primario, 0.9f * u)
+        electrodo(Offset(w - m - r - 9.5f * u, h - m), 1.4f * u); electrodo(Offset(w - m, h - m - r - 9.5f * u), 1.4f * u)
+        listOf(0.28f, 0.72f).forEach { f -> drawLine(ALAMBRE.copy(alpha = 0.45f), Offset(w * f, 0f), Offset(w * f, m + 2 * u), 0.8f * u) }
+        val o = Offset(w - 14 * u, 14 * u)
+        drawCircle(e.secundario.copy(alpha = 0.18f), 4.5f * u, o); drawCircle(mezcla(e.secundario, Color.White, 0.4f), 1.8f * u, o)
+    }
+
+    /** El icono de la cinta en una placa de tubo: el halo, el alma ámbar y, abajo, el corte con sus dos electrodos. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f
+        val a = s * 0.08f; val b = s * 0.92f; val r = s * 0.24f
+        val p = Path().apply {
+            moveTo(s * 0.38f, b); lineTo(a + r, b); quadraticTo(a, b, a, b - r); lineTo(a, a + r); quadraticTo(a, a, a + r, a)
+            lineTo(b - r, a); quadraticTo(b, a, b, a + r); lineTo(b, b - r); quadraticTo(b, b, b - r, b); lineTo(s * 0.62f, b)
+        }
+        drawPath(p, e.primario.copy(alpha = e.primario.alpha * 0.5f), style = Stroke(g * 2.3f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        drawPath(p, e.secundario, style = Stroke(g * 0.95f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        listOf(0.36f, 0.64f).forEach { f -> drawCircle(e.secundario, g * 0.8f, Offset(s * f, b)) }
     }
 }
 
@@ -1803,6 +1989,99 @@ object ComunRefugio : DisenoComun {
         if (placa.right + 8 * u < w) drawLine((if (oscuro) FOSFORO else TUBO_OSC).copy(alpha = if (oscuro) 0.3f else 0.4f), Offset(placa.right + 6 * u, h / 2),
             Offset(w, h / 2), 1 * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * u, 2.5f * u)))
     }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /** Un tornillo de cabeza de cruz en [c]. */
+    private fun DrawScope.tornilloRefugio(c: Offset, r: Float, color: Color) {
+        drawCircle(color.copy(alpha = color.alpha * 0.3f), r, c)
+        drawCircle(color, r, c, style = Stroke(0.8f * density))
+        drawLine(color, c - Offset(r * 0.55f, 0f), c + Offset(r * 0.55f, 0f), 0.8f * density)
+        drawLine(color, c - Offset(0f, r * 0.55f), c + Offset(0f, r * 0.55f), 0.8f * density)
+    }
+
+    /**
+     * La hoja rápida es el aparato del refugio: el bisel de chapa que sigue las esquinas redondas por dentro, con un tornillo
+     * de cruz en cada esquina. Arriba al centro, la rejilla de ventilación entre un medidor de aguja y la luz piloto ámbar
+     * con su resplandor. En el canto derecho, la columna del contador (las dos casillas de abajo encendidas); en el
+     * izquierdo, la rejilla del altavoz; abajo, la plaquita de fábrica.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val chapa = e.primario.copy(alpha = 0.42f); val fino = e.primario.copy(alpha = 0.22f)
+        // El bisel: baja por los cantos, sigue las esquinas redondas y cruza abajo.
+        val b = 4.5f * u; val r = 21.5f * u
+        drawPath(Path().apply {
+            moveTo(b, h - b); lineTo(b, b + r); arcTo(Rect(b, b, b + 2 * r, b + 2 * r), 180f, 90f, false); lineTo(w - b - r, b)
+            arcTo(Rect(w - b - 2 * r, b, w - b, b + 2 * r), 270f, 90f, false); lineTo(w - b, h - b); close()
+        }, fino, style = Stroke(1.1f * u))
+        // La rejilla de ventilación.
+        val cx = w / 2
+        drawRoundRect(chapa, Offset(cx - 26 * u, 7.5f * u), Size(52 * u, 9.5f * u), CornerRadius(3 * u), style = Stroke(0.9f * u))
+        for (k in 0 until 11) drawRoundRect(chapa, Offset(cx - 22.2f * u + k * 4.2f * u, 9.8f * u), Size(1.8f * u, 5 * u), CornerRadius(0.9f * u))
+        // El medidor de aguja, a la izquierda.
+        val m = Offset(cx - 40 * u, 16 * u); val rm = 7 * u
+        drawArc(chapa, 200f, 140f, false, Offset(m.x - rm, m.y - rm), Size(2 * rm, 2 * rm), style = Stroke(1 * u))
+        for (k in 0..4) {
+            val a = (200f + k * 35f) * (Math.PI / 180f).toFloat()
+            val d = Offset(kotlin.math.cos(a), kotlin.math.sin(a))
+            drawLine(chapa, m + d * (rm * 0.72f), m + d * rm, 0.8f * u)
+        }
+        val ag = 300f * (Math.PI / 180f).toFloat()
+        drawLine(e.secundario.copy(alpha = 0.85f), m, m + Offset(kotlin.math.cos(ag), kotlin.math.sin(ag)) * (rm * 0.9f), 0.9f * u, StrokeCap.Round)
+        drawCircle(chapa, 1.2f * u, m)
+        // La luz piloto con su resplandor (el único degradado).
+        val pl = Offset(cx + 40 * u, 12 * u)
+        drawCircle(Brush.radialGradient(listOf(e.secundario.copy(alpha = 0.4f), e.secundario.copy(alpha = 0f)), pl, 10 * u), 10 * u, pl)
+        drawCircle(chapa, 4.2f * u, pl, style = Stroke(1 * u))
+        drawCircle(e.secundario.copy(alpha = 0.9f), 2.5f * u, pl)
+        drawCircle(Color.White.copy(alpha = 0.55f), 0.8f * u, pl - Offset(0.8f * u, 0.8f * u))
+        // Los tornillos de las esquinas.
+        listOf(Offset(14 * u, 14 * u), Offset(w - 14 * u, 14 * u), Offset(11 * u, h - 11 * u), Offset(w - 11 * u, h - 11 * u)).forEach { tornilloRefugio(it, 2.6f * u, chapa) }
+        // La columna del contador, en el canto derecho.
+        for (k in 0 until 6) {
+            val o = Offset(w - 13.5f * u, 42 * u + k * 8.5f * u)
+            if (k >= 4) drawRect(e.secundario.copy(alpha = 0.75f), o, Size(5 * u, 5.5f * u))
+            drawRect(chapa, o, Size(5 * u, 5.5f * u), style = Stroke(0.8f * u))
+        }
+        // La rejilla del altavoz, en el canto izquierdo, a media altura.
+        for (k in 0 until 7) drawRoundRect(fino.copy(alpha = 0.32f), Offset(8 * u, h * 0.5f + (k - 3) * 4.5f * u - 0.9f * u), Size(6.5f * u, 1.8f * u), CornerRadius(0.9f * u))
+        // La plaquita de fábrica.
+        val pq = Rect(cx - 22 * u, h - 13 * u, cx + 22 * u, h - 6 * u)
+        drawRoundRect(chapa, pq.topLeft, pq.size, CornerRadius(1.5f * u), style = Stroke(0.8f * u))
+        listOf(0.3f, 0.5f).forEachIndexed { k, f -> drawLine(fino, Offset(pq.left + 5 * u, pq.top + (2.3f + k * 2.4f) * u), Offset(pq.left + 5 * u + pq.width * f * 1.6f, pq.top + (2.3f + k * 2.4f) * u), 0.8f * u) }
+        listOf(pq.left + 2.2f * u, pq.right - 2.2f * u).forEach { x -> drawCircle(chapa, 0.9f * u, Offset(x, pq.center.y)) }
+    }
+
+    /**
+     * El recuadro de Relaciones es un panel del refugio: el bisel por dentro, el átomo de los cincuenta en la esquina de
+     * arriba, la rejilla abajo a la izquierda y la luz piloto ámbar abajo a la derecha.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val k = e.primario.copy(alpha = 0.5f)
+        drawRoundRect(e.primario.copy(alpha = 0.2f), Offset(3.5f * u, 3.5f * u), Size(w - 7 * u, h - 7 * u), CornerRadius(8.5f * u), style = Stroke(0.7f * u))
+        val o = Offset(w - 12 * u, 11 * u)
+        listOf(0f, 60f, 120f).forEach { g -> rotate(g, o) { drawOval(k, Offset(o.x - 5.5f * u, o.y - 2 * u), Size(11 * u, 4 * u), style = Stroke(0.8f * u)) } }
+        drawCircle(e.secundario.copy(alpha = 0.8f), 1.3f * u, o)
+        for (i in 0 until 3) drawRoundRect(e.primario.copy(alpha = 0.28f), Offset(8 * u, h - 14 * u + i * 3.2f * u), Size(9 * u, 1.6f * u), CornerRadius(0.8f * u))
+        val p = Offset(w - 10 * u, h - 10 * u)
+        drawCircle(e.secundario.copy(alpha = 0.2f), 3.6f * u, p)
+        drawCircle(k, 2.6f * u, p, style = Stroke(0.7f * u)); drawCircle(e.secundario.copy(alpha = 0.85f), 1.6f * u, p)
+    }
+
+    /** El icono de la cinta en la esfera de un medidor: el arco con sus rayas, la zona ámbar del final y el tornillo de abajo. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f; val o = center; val r = s * 0.44f
+        drawArc(e.primario, 135f, 216f, false, Offset(o.x - r, o.y - r), Size(2 * r, 2 * r), style = Stroke(g))
+        drawArc(e.secundario, 351f, 54f, false, Offset(o.x - r, o.y - r), Size(2 * r, 2 * r), style = Stroke(g * 1.7f))
+        for (k in 0..6) {
+            val a = (135f + k * 45f) * (Math.PI / 180f).toFloat()
+            val d = Offset(kotlin.math.cos(a), kotlin.math.sin(a))
+            drawLine(e.primario, o + d * (s * 0.4f), o + d * (s * 0.49f), g * 0.7f)
+        }
+        drawCircle(e.secundario, s * 0.055f, Offset(o.x, s * 0.92f))
+    }
 }
 
 /**
@@ -2357,6 +2636,84 @@ object ComunOrden : DisenoComun {
             drawCircle(filete(oscuro), 1.6f * u, Offset(w - 3 * u, h / 2))
         }
     }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /** Un remache de latón en [c], con su brillo arriba a la izquierda. */
+    private fun DrawScope.remacheOrden(c: Offset, r: Float, laton: Color, brillo: Color) {
+        drawCircle(laton, r, c)
+        drawCircle(brillo, r * 0.4f, c - Offset(r * 0.3f, r * 0.3f))
+    }
+
+    /**
+     * La hoja rápida es la compuerta del archivo sellado: un filete doble de latón que sigue las esquinas cortadas y baja por
+     * los cantos hasta tres galones, la fila de remaches bajo el borde y, en cada esquina de arriba, un engrane de latón con su
+     * lente roja. Abajo, una escuadra de refuerzo en cada esquina, con dos remaches, y la luz de alerta al centro.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val laton = e.secundario.copy(alpha = 0.65f); val tenue = e.secundario.copy(alpha = 0.3f); val brillo = e.fondo.copy(alpha = 0.55f)
+        val baja = minOf(h * 0.25f, 120 * u)
+        // El filete doble: el de fuera grueso, el de dentro fino.
+        listOf(4f to 1.3f, 7f to 0.6f).forEachIndexed { k, (m, g) ->
+            val d = m * u; val q = 14 * u + d * 0.414f
+            drawPath(Path().apply {
+                moveTo(d, baja - k * 4 * u); lineTo(d, q); lineTo(q, d); lineTo(w - q, d); lineTo(w - d, q); lineTo(w - d, baja - k * 4 * u)
+            }, if (k == 0) laton else tenue, style = Stroke(g * u, join = StrokeJoin.Miter))
+        }
+        // Los galones al pie de cada filete.
+        listOf(5.5f * u, w - 5.5f * u).forEach { x ->
+            drawPath(galones(Offset(x, baja + 8 * u), 7 * u, 4 * u, 3, 4.5f * u, Offset(0f, 1f)), laton, style = Stroke(1.1f * u, join = StrokeJoin.Miter))
+        }
+        // La fila de remaches.
+        var x = 34 * u; var n = 0
+        while (x < w - 34 * u && n < 40) { remacheOrden(Offset(x, 12 * u), 1.7f * u, laton, brillo); x += maxOf(30 * u, 1f); n++ }
+        // Los engranes de las esquinas de arriba, con su lente.
+        listOf(Offset(18 * u, 13.5f * u), Offset(w - 18 * u, 13.5f * u)).forEach { c ->
+            drawPath(engrane(c, 4.8f * u, 8), laton, style = Stroke(0.9f * u, join = StrokeJoin.Miter))
+            drawCircle(e.primario.copy(alpha = 0.75f), 1.7f * u, c)
+            drawCircle(brillo, 0.6f * u, c - Offset(0.6f * u, 0.6f * u))
+        }
+        // Las escuadras de abajo.
+        listOf(-1f, 1f).forEach { s ->
+            val x0 = if (s < 0) 0f else w
+            val p = Path().apply { moveTo(x0 - s * 6 * u, h - 26 * u); lineTo(x0 - s * 6 * u, h - 6 * u); lineTo(x0 - s * 26 * u, h - 6 * u) }
+            drawPath(p, e.secundario.copy(alpha = 0.18f), style = Stroke(6 * u, join = StrokeJoin.Miter))
+            drawPath(p, laton, style = Stroke(0.8f * u, join = StrokeJoin.Miter))
+            remacheOrden(Offset(x0 - s * 6 * u, h - 19 * u), 1.5f * u, laton, brillo)
+            remacheOrden(Offset(x0 - s * 19 * u, h - 6 * u), 1.5f * u, laton, brillo)
+        }
+        // La luz de alerta, entre dos tramos de filete.
+        val a = Offset(w / 2, h - 8 * u)
+        drawLine(tenue, Offset(a.x - 44 * u, a.y), Offset(a.x - 7 * u, a.y), 1 * u); drawLine(tenue, Offset(a.x + 7 * u, a.y), Offset(a.x + 44 * u, a.y), 1 * u)
+        drawCircle(e.primario.copy(alpha = 0.18f), 5 * u, a)
+        drawCircle(laton, 3.4f * u, a, style = Stroke(0.9f * u)); drawCircle(e.primario.copy(alpha = 0.85f), 2.2f * u, a)
+    }
+
+    /**
+     * El recuadro de Relaciones es una placa blindada: el filete de latón ochavado por dentro, un remache en cada esquina y,
+     * abajo al centro, la plaquita de la matrícula montada sobre el filete.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val laton = e.secundario.copy(alpha = 0.55f)
+        drawPath(ochavado(Rect(3.5f * u, 3.5f * u, w - 3.5f * u, h - 3.5f * u), 5.5f * u), e.secundario.copy(alpha = 0.3f), style = Stroke(0.7f * u))
+        listOf(Offset(8 * u, 8 * u), Offset(w - 8 * u, 8 * u), Offset(8 * u, h - 8 * u), Offset(w - 8 * u, h - 8 * u)).forEach {
+            drawCircle(e.secundario.copy(alpha = 0.8f), 1.9f * u, it); drawCircle(e.primario.copy(alpha = 0.45f), 1.9f * u, it, style = Stroke(0.6f * u))
+        }
+        // La plaquita de latón de la matrícula, montada sobre el filete de abajo.
+        val pq = Rect(w * 0.36f, h - 6.5f * u, w * 0.64f, h - 2.5f * u)
+        drawRect(e.secundario.copy(alpha = 0.22f), pq.topLeft, pq.size)
+        drawRect(laton, pq.topLeft, pq.size, style = Stroke(0.6f * u))
+        listOf(pq.left + 2 * u, pq.right - 2 * u).forEach { x -> drawCircle(laton, 0.8f * u, Offset(x, pq.center.y)) }
+    }
+
+    /** El icono de la cinta dentro de un engrane de diez dientes, con la marca de latón que apunta desde arriba. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f; val o = center
+        drawPath(engrane(o, s * 0.49f, 10), e.primario, style = Stroke(g * 0.9f, join = StrokeJoin.Miter))
+        drawPath(Path().apply { moveTo(o.x - s * 0.06f, o.y - s * 0.49f); lineTo(o.x + s * 0.06f, o.y - s * 0.49f); lineTo(o.x, o.y - s * 0.38f); close() }, e.secundario)
+    }
 }
 
 /**
@@ -2909,6 +3266,101 @@ object ComunLaboratorio : DisenoComun {
             drawLine(filo(oscuro).copy(alpha = 0.45f), Offset(r.right + 6 * u, y), Offset(w - 2 * u, y), 0.6f * u)
             escala(r.right + 6 * u, w - 2 * u, y, filo(oscuro).copy(alpha = 0.4f))
         }
+    }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /** Una pinza de la platina: la lámina, girada [giro] grados alrededor de su tornillo en [c], que se alarga hacia [hacia]. */
+    private fun DrawScope.pinzaLab(c: Offset, giro: Float, hacia: Float, color: Color) {
+        val u = density
+        rotate(giro, c) {
+            val x0 = if (hacia < 0) c.x - 32 * u else c.x
+            drawRoundRect(color.copy(alpha = color.alpha * 0.25f), Offset(x0, c.y - 2.5f * u), Size(32 * u, 5 * u), CornerRadius(2.5f * u))
+            drawRoundRect(color, Offset(x0, c.y - 2.5f * u), Size(32 * u, 5 * u), CornerRadius(2.5f * u), style = Stroke(0.8f * u))
+        }
+        drawCircle(color, 3 * u, c, style = Stroke(0.9f * u))
+        drawLine(color, c - Offset(2 * u, 0f), c + Offset(2 * u, 0f), 0.8f * u)
+    }
+
+    /**
+     * La hoja rápida es el vaso de precipitados sobre la platina: la escala graduada a lo largo del borde de arriba (raya larga
+     * cada cinco, con su punto), la gota que se escurre por el pico, la graduación en mililitros del canto izquierdo y las
+     * burbujas que suben por el derecho; una pinza de la platina arriba a la derecha y otra abajo a la izquierda.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val esc = e.primario.copy(alpha = 0.5f); val fino = e.primario.copy(alpha = 0.3f); val metal = e.secundario.copy(alpha = 0.5f)
+        // La escala de arriba.
+        val fin = w - 52 * u
+        drawLine(esc, Offset(30 * u, 12 * u), Offset(fin, 12 * u), 0.8f * u)
+        var x = 30 * u; var n = 0
+        while (x <= fin && n < 200) {
+            val mayor = n % 5 == 0
+            drawLine(esc, Offset(x, 12 * u), Offset(x, (if (mayor) 18.5f else 15f) * u), (if (mayor) 1f else 0.7f) * u)
+            if (n % 10 == 0) drawCircle(esc, 0.9f * u, Offset(x, 9.5f * u))
+            x += maxOf(6 * u, 1f); n++
+        }
+        // La gota del pico, y otra que ya cae.
+        drawPath(Path().apply {
+            moveTo(5.5f * u, 8 * u); quadraticTo(8.5f * u, 12 * u, 8.2f * u, 14 * u); quadraticTo(8 * u, 16.6f * u, 5.5f * u, 16.6f * u)
+            quadraticTo(3 * u, 16.6f * u, 2.8f * u, 14 * u); quadraticTo(2.5f * u, 12 * u, 5.5f * u, 8 * u); close()
+        }, e.primario.copy(alpha = 0.6f))
+        drawCircle(e.primario.copy(alpha = 0.45f), 1.5f * u, Offset(5.5f * u, 23 * u))
+        // La graduación del canto izquierdo, cada 10 dp.
+        var y = 40 * u; n = 0
+        while (y < h - 34 * u && n < 120) {
+            val mayor = n % 5 == 0
+            drawLine(fino, Offset(0f, y), Offset((if (mayor) 10f else 6f) * u, y), (if (mayor) 1f else 0.7f) * u)
+            if (mayor) drawCircle(fino, 0.9f * u, Offset(12.5f * u, y))
+            y += maxOf(10 * u, 1f); n++
+        }
+        // Las burbujas del canto derecho, de abajo arriba y cada vez más chicas.
+        for (k in 0 until 7) {
+            val c = Offset(w - (7 + 4 * azar(19, k)) * u, h - 30 * u - k * 20 * u)
+            if (c.y < h * 0.45f) break
+            drawCircle(fino, (2.6f - k * 0.22f) * u, c, style = Stroke(0.8f * u))
+            drawCircle(fino, 0.5f * u, c - Offset(0.8f * u, 0.8f * u))
+        }
+        // Las pinzas de la platina.
+        pinzaLab(Offset(w - 11 * u, 15 * u), -8f, -1f, metal)
+        pinzaLab(Offset(11 * u, h - 11 * u), -8f, 1f, metal)
+    }
+
+    /**
+     * El recuadro de Relaciones es un portaobjetos: la graduación en el canto izquierdo, el extremo esmerilado a la derecha
+     * (rayado en diagonal) y dos burbujas atrapadas bajo el cubreobjetos.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val c = e.primario.copy(alpha = 0.5f)
+        var y = 9 * u; var i = 0
+        while (y < h - 8 * u && i < 60) { drawLine(c, Offset(2.5f * u, y), Offset((if (i % 4 == 0) 7.5f else 5f) * u, y), 0.8f * u); y += maxOf(3.5f * u, 1f); i++ }
+        val es = Rect(w - 12 * u, 8 * u, w - 4 * u, h - 8 * u)
+        drawRect(e.primario.copy(alpha = 0.1f), es.topLeft, es.size)
+        clipRect(es.left, es.top, es.right, es.bottom) {
+            var x = es.left - es.height; var k = 0
+            while (x < es.right && k < 80) { drawLine(e.primario.copy(alpha = 0.2f), Offset(x, es.bottom), Offset(x + es.height, es.top), 0.6f * u); x += maxOf(2.6f * u, 1f); k++ }
+        }
+        drawLine(c, Offset(es.left, es.top), Offset(es.left, es.bottom), 0.7f * u)
+        drawCircle(e.secundario.copy(alpha = 0.4f), 1.8f * u, Offset(w - 22 * u, 7 * u), style = Stroke(0.7f * u))
+        drawCircle(e.secundario.copy(alpha = 0.35f), 1.1f * u, Offset(w - 28 * u, 10 * u), style = Stroke(0.6f * u))
+    }
+
+    /** El icono de la cinta en el anillo de benceno: el hexágono de punta arriba, sus dos dobles enlaces y dos átomos. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f; val o = center
+        fun p(r: Float, grados: Float): Offset {
+            val a = grados * (Math.PI / 180f).toFloat(); return o + Offset(kotlin.math.cos(a), kotlin.math.sin(a)) * (s * r)
+        }
+        drawPath(Path().apply {
+            for (k in 0 until 6) { val q = p(0.48f, -90f + k * 60f); if (k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }
+            close()
+        }, e.primario, style = Stroke(g, join = StrokeJoin.Round))
+        listOf(-30f to 30f, 150f to 210f).forEach { (a, b) ->
+            val q1 = p(0.37f, a); val q2 = p(0.37f, b)
+            drawLine(e.primario, q1 + (q2 - q1) * 0.2f, q1 + (q2 - q1) * 0.8f, g * 0.75f, StrokeCap.Round)
+        }
+        drawCircle(e.secundario, s * 0.06f, p(0.48f, -90f)); drawCircle(e.secundario, s * 0.06f, p(0.48f, 90f))
     }
 }
 
@@ -3483,6 +3935,90 @@ object ComunColonos : DisenoComun {
         textoEn(medidor, texto, cajaIzq(ancho, r.left + 13 * u, r.top, r.bottom, r.right - 4 * u), letraGastos, tintaTarjeta(TipoTarjeta.VIDA, oscuro), tam, espaciado = esp)
         if (r.right + 10 * u < w) drawLine((if (oscuro) Color(0xFFA9B0BC) else Color(0xFF525866)).copy(alpha = if (oscuro) 0.3f else 0.4f), Offset(r.right + 6 * u, h / 2 + 3 * u),
             Offset(w, h / 2 + 3 * u), 0.7f * u)
+    }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /** La cabeza de un clavo de forja en [c]: el disco y su brillo. */
+    private fun DrawScope.clavoColonos(c: Offset, r: Float, color: Color, brillo: Color) {
+        drawCircle(color, r, c)
+        drawCircle(brillo, r * 0.35f, c - Offset(r * 0.3f, r * 0.3f))
+    }
+
+    /** Un rombo de imprenta (el fleurón de la gaceta) centrado en [c]. */
+    private fun rombo(c: Offset, a: Float, b: Float): Path = Path().apply {
+        moveTo(c.x - a, c.y); lineTo(c.x, c.y - b); lineTo(c.x + a, c.y); lineTo(c.x, c.y + b); close()
+    }
+
+    /**
+     * La hoja rápida es el boleto de la gaceta clavado en la tabla del almacén: arriba, la raya inglesa (gruesa y fina) con un
+     * rombo en cada punta y una estrella al centro; junto a cada muesca, el trozo de línea perforada por donde se arranca; un
+     * clavo en cada esquina; por los cantos, las vetas del pino; abajo, la raya de cierre con su fleurón.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val tinta = e.primario.copy(alpha = 0.7f); val veta = e.primario.copy(alpha = 0.16f)
+        val clavo = mezcla(e.primario, Color.Black, 0.35f).copy(alpha = 0.6f); val brillo = e.fondo.copy(alpha = 0.6f)
+        // La raya inglesa, cortada al centro por la estrella.
+        val x0 = 18 * u; val x1 = w - 18 * u; val hueco = 11 * u
+        listOf(x0 to w / 2 - hueco, w / 2 + hueco to x1).forEach { (a, b) ->
+            drawRect(tinta, Offset(a, 4 * u), Size(b - a, 1.6f * u))
+            drawRect(tinta, Offset(a, 7.6f * u), Size(b - a, 0.6f * u))
+        }
+        listOf(x0 - 3 * u, x1 + 3 * u).forEach { x -> drawPath(rombo(Offset(x, 6.1f * u), 3 * u, 2.2f * u), tinta) }
+        drawPath(estrella(Offset(w / 2, 6.3f * u), 5.5f * u, 5, 0.45f), tinta)
+        // La línea perforada junto a cada muesca.
+        listOf(7 * u to 15 * u, w - 15 * u to w - 7 * u).forEach { (a, b) ->
+            drawLine(tinta.copy(alpha = 0.45f), Offset(a, 16 * u), Offset(b, 16 * u), 0.9f * u,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(maxOf(1.4f * u, 1f), maxOf(1.4f * u, 1f))))
+        }
+        // Las vetas del pino por los cantos: dos hilos ondulados de cada lado.
+        listOf(4.5f * u to 0f, 10f * u to 1f, w - 4.5f * u to 1f, w - 10f * u to 0f).forEach { (x, fase) ->
+            val p = Path(); var y = 28 * u; var k = 0
+            p.moveTo(x, y)
+            while (y < h - 24 * u && k < 60) {
+                val paso = maxOf(34 * u, 1f)
+                val d = (if ((k + fase.toInt()) % 2 == 0) 1.6f else -1.6f) * u
+                p.quadraticTo(x + d, y + paso / 2, x, minOf(y + paso, h - 24 * u)); y += paso; k++
+            }
+            drawPath(p, veta, style = Stroke(0.8f * u))
+        }
+        // La raya de cierre con su fleurón.
+        drawLine(tinta.copy(alpha = 0.5f), Offset(x0, h - 7 * u), Offset(w / 2 - 7 * u, h - 7 * u), 0.7f * u)
+        drawLine(tinta.copy(alpha = 0.5f), Offset(w / 2 + 7 * u, h - 7 * u), Offset(x1, h - 7 * u), 0.7f * u)
+        drawPath(rombo(Offset(w / 2, h - 7 * u), 4.5f * u, 2.6f * u), tinta.copy(alpha = 0.6f))
+        drawCircle(e.fondo, 0.9f * u, Offset(w / 2, h - 7 * u))
+        // Los clavos de las esquinas.
+        listOf(Offset(7 * u, 6.5f * u), Offset(w - 7 * u, 6.5f * u), Offset(7.5f * u, h - 7.5f * u), Offset(w - 7.5f * u, h - 7.5f * u))
+            .forEach { clavoColonos(it, 2.3f * u, clavo, brillo) }
+    }
+
+    /**
+     * El recuadro de Relaciones es un recorte de gaceta: la raya inglesa arriba (gruesa y fina) partida por una estrellita, la
+     * misma raya invertida abajo y un filete fino que baja por cada lado entre las dos.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val k = e.primario.copy(alpha = 0.55f); val hueco = 6 * u
+        listOf(4 * u to w / 2 - hueco, w / 2 + hueco to w - 4 * u).forEach { (a, b) ->
+            drawLine(k, Offset(a, 3.8f * u), Offset(b, 3.8f * u), 1.6f * u)
+            drawLine(k, Offset(a, 6.6f * u), Offset(b, 6.6f * u), 0.6f * u)
+        }
+        drawPath(estrella(Offset(w / 2, 5.4f * u), 3.6f * u, 5, 0.45f), k)
+        drawLine(k, Offset(4 * u, h - 6.6f * u), Offset(w - 4 * u, h - 6.6f * u), 0.6f * u)
+        drawLine(k, Offset(4 * u, h - 3.8f * u), Offset(w - 4 * u, h - 3.8f * u), 1.6f * u)
+        listOf(4 * u, w - 4 * u).forEach { x -> drawLine(e.primario.copy(alpha = 0.22f), Offset(x, 8.5f * u), Offset(x, h - 8.5f * u), 0.6f * u) }
+    }
+
+    /** El icono de la cinta en un letrero de tabla colgado de un clavo: el cordel, la tabla y sus dos clavos. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f
+        drawPath(Path().apply { moveTo(s * 0.14f, s * 0.27f); lineTo(s * 0.5f, s * 0.05f); lineTo(s * 0.86f, s * 0.27f) }, e.primario,
+            style = Stroke(g * 0.6f, join = StrokeJoin.Round))
+        drawCircle(e.secundario, s * 0.055f, Offset(s * 0.5f, s * 0.05f))
+        drawRoundRect(e.primario, Offset(s * 0.04f, s * 0.19f), Size(s * 0.92f, s * 0.74f), CornerRadius(s * 0.06f), style = Stroke(g))
+        drawCircle(e.secundario, s * 0.05f, Offset(s * 0.13f, s * 0.29f)); drawCircle(e.secundario, s * 0.05f, Offset(s * 0.87f, s * 0.29f))
+        drawLine(e.primario, Offset(s * 0.2f, s * 0.86f), Offset(s * 0.8f, s * 0.86f), g * 0.4f)
     }
 }
 
@@ -4127,6 +4663,86 @@ object ComunRuinas : DisenoComun {
             drawPath(raya, grieta(oscuro).copy(alpha = if (oscuro) 0.9f else 0.5f), style = Stroke(0.8f * u, join = StrokeJoin.Round))
         }
     }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /**
+     * La hoja rápida es un cartel arrancado del muro que la ciudad verde ya está tomando: una guía de hiedra cuelga del borde
+     * roto por el canto izquierdo, con hojas cada vez más chicas; una grieta baja del pico del borde y otra por el canto
+     * derecho, desde el trozo de cinta que sujeta la esquina. Abajo, matas de musgo en las esquinas y, a la derecha, dos
+     * luciérnagas.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val hoja = e.primario.copy(alpha = 0.72f); val nervio = mezcla(e.primario, e.fondo, 0.55f).copy(alpha = 0.8f)
+        val raja = grieta(oscuro).copy(alpha = 0.75f)
+        // La guía de hiedra: un tallo que ondula hacia abajo y una hoja en cada nudo, alternando la inclinación.
+        val largo = minOf(h * 0.42f, 220 * u)
+        val paso = maxOf(17 * u, 1f); val n = ((largo - 10 * u) / paso).toInt().coerceIn(1, 14)
+        val tallo = Path().apply { moveTo(16 * u, 4 * u) }
+        var prev = Offset(16 * u, 4 * u)
+        for (k in 0..n) {
+            val q = Offset((7 + (if (k % 2 == 0) 2.2f else -1.2f) + 4f * (1f - k / n.toFloat()).coerceAtLeast(0f)) * u, 4 * u + (k + 0.6f) * paso)
+            tallo.quadraticTo((prev.x + q.x) / 2 + (if (k % 2 == 0) -2f else 2f) * u, (prev.y + q.y) / 2, q.x, q.y)
+            val l = (12f - 6.5f * k / n.toFloat()) * u
+            hojita(q, if (k % 2 == 0) 28f else -14f, l, hoja, nervio, grosor = 1.1f * u)
+            if (k % 2 == 0) hojita(q, 75f, l * 0.7f, hoja, nervio, grosor = 1.1f * u)
+            prev = q
+        }
+        drawPath(tallo, hoja, style = Stroke(1 * u, cap = StrokeCap.Round))
+        // La grieta que baja del pico del borde roto.
+        drawPath(Path().apply { moveTo(w * 0.62f, 2 * u); lineTo(w * 0.605f, 9 * u); lineTo(w * 0.625f, 14 * u); lineTo(w * 0.61f, 20 * u) }, raja,
+            style = Stroke(0.9f * u, join = StrokeJoin.Round))
+        // El trozo de cinta que sujeta la esquina de arriba y la grieta del canto derecho.
+        val pc = Offset(w - 13 * u, 25 * u)
+        rotate(52f, pc) {
+            val r = Rect(pc.x - 16 * u, pc.y - 4.5f * u, pc.x + 16 * u, pc.y + 4.5f * u)
+            drawRect(e.secundario.copy(alpha = 0.2f), r.topLeft, r.size)
+            drawLine(e.secundario.copy(alpha = 0.35f), r.topLeft, Offset(r.right, r.top), 0.6f * u)
+            drawLine(e.secundario.copy(alpha = 0.35f), Offset(r.left, r.bottom), r.bottomRight, 0.6f * u)
+        }
+        drawPath(Path().apply {
+            moveTo(w - 7 * u, 42 * u); lineTo(w - 10 * u, 54 * u); lineTo(w - 6 * u, 66 * u); lineTo(w - 9.5f * u, 80 * u); lineTo(w - 7 * u, 92 * u)
+            moveTo(w - 6 * u, 66 * u); lineTo(w - 2 * u, 72 * u)
+        }, raja, style = Stroke(0.9f * u, join = StrokeJoin.Round))
+        // El musgo de abajo y las luciérnagas.
+        matita(Offset(10 * u, h - 3 * u), 13 * u, 16, 3, oscuro)
+        matita(Offset(34 * u, h - 1.5f * u), 8 * u, 9, 11, oscuro)
+        matita(Offset(w - 12 * u, h - 2.5f * u), 8 * u, 10, 7, oscuro)
+        luciernaga(Offset(w - 10 * u, h * 0.64f), 1.4f * u, oscuro, if (oscuro) 1f else 0.7f)
+        luciernaga(Offset(w - 6 * u, h * 0.64f - 26 * u), 1f * u, oscuro, if (oscuro) 0.6f else 0.45f)
+    }
+
+    /**
+     * El recuadro de Relaciones es una losa del muro: dos hojas de hiedra cuelgan de un tallo arriba a la izquierda, una mata
+     * de musgo abajo a la izquierda y una grieta sube desde la esquina de abajo a la derecha.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val hoja = e.primario.copy(alpha = 0.7f); val nervio = mezcla(e.primario, e.fondo, 0.55f).copy(alpha = 0.8f)
+        drawPath(Path().apply { moveTo(9 * u, 0f); quadraticTo(8 * u, 4 * u, 11 * u, 8 * u) }, hoja, style = Stroke(0.8f * u))
+        hojita(Offset(11 * u, 8 * u), 70f, 8.5f * u, hoja, nervio, grosor = 0.9f * u)
+        hojita(Offset(9 * u, 3 * u), 20f, 6 * u, hoja, nervio, grosor = 0.8f * u)
+        matita(Offset(11 * u, h - 3 * u), 7 * u, 9, 5, oscuro)
+        drawPath(Path().apply { moveTo(w - 10 * u, h - 1 * u); lineTo(w - 13 * u, h - 7 * u); lineTo(w - 9 * u, h - 12 * u); lineTo(w - 12 * u, h - 19 * u) },
+            grieta(oscuro).copy(alpha = 0.6f), style = Stroke(0.8f * u, join = StrokeJoin.Round))
+    }
+
+    /**
+     * El icono de la cinta en una placa de calle caída: la chapa con la esquina mordida, el tornillo que queda y el agujero
+     * del que se cayó el otro, el poste y una hoja de hiedra.
+     */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f
+        drawPath(Path().apply {
+            moveTo(s * 0.06f, s * 0.16f); lineTo(s * 0.7f, s * 0.16f); lineTo(s * 0.76f, s * 0.21f); lineTo(s * 0.83f, s * 0.15f); lineTo(s * 0.94f, s * 0.28f)
+            lineTo(s * 0.94f, s * 0.86f); lineTo(s * 0.06f, s * 0.86f); close()
+        }, e.primario, style = Stroke(g * 0.8f, join = StrokeJoin.Round))
+        drawCircle(e.primario, s * 0.04f, Offset(s * 0.15f, s * 0.26f))
+        drawCircle(e.primario, s * 0.035f, Offset(s * 0.85f, s * 0.38f), style = Stroke(g * 0.4f))
+        drawLine(e.primario, Offset(s * 0.5f, s * 0.86f), Offset(s * 0.5f, s), g * 0.8f)
+        hojita(Offset(s * 0.04f, s * 0.97f), -35f, s * 0.24f, e.secundario, e.secundario.copy(alpha = 0f), grosor = g * 0.5f)
+    }
 }
 
 /**
@@ -4686,5 +5302,88 @@ object ComunEspacio : DisenoComun {
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(8 * u, 3 * u)))
             drawRect(azul.copy(alpha = 0.7f), Offset(w - 4 * u, h / 2 - 1.5f * u), Size(3 * u, 3 * u))
         }
+    }
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /**
+     * La hoja rápida es un panel del casco: la junta que sigue por dentro el lomo de arriba, con las tres luces de estado al
+     * centro entre dos rejillas de ventilación; los corchetes de mira en las cuatro esquinas; por el canto izquierdo, el bus
+     * de datos punteado con sus nodos; por el derecho, la columna de carga (dos casillas encendidas); abajo, la marca de
+     * atraque al centro y dos estrellas que se ven por las esquinas.
+     */
+    override fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val junta = e.primario.copy(alpha = 0.38f); val fino = e.primario.copy(alpha = 0.25f); val mira = e.primario.copy(alpha = 0.6f)
+        val a = w * 0.3f
+        // La junta del lomo.
+        drawPath(Path().apply {
+            moveTo(22 * u, 17 * u); lineTo(a + 1.5f * u, 17 * u); lineTo(a + 13.5f * u, 5 * u); lineTo(w - a - 13.5f * u, 5 * u)
+            lineTo(w - a - 1.5f * u, 17 * u); lineTo(w - 22 * u, 17 * u)
+        }, junta, style = Stroke(0.8f * u, join = StrokeJoin.Miter))
+        // Las tres luces de estado, con su aro.
+        listOf(e.primario, mezcla(e.primario, e.secundario, 0.5f), e.secundario).forEachIndexed { k, col ->
+            val c = Offset(w / 2 + (k - 1) * 13 * u, 11 * u)
+            drawCircle(col.copy(alpha = 0.18f), 4.4f * u, c); drawCircle(junta, 4.4f * u, c, style = Stroke(0.6f * u))
+            drawCircle(col.copy(alpha = 0.9f), 2.2f * u, c)
+        }
+        // Las rejillas a cada lado de las luces.
+        listOf(-1f, 1f).forEach { s ->
+            for (k in 0 until 5) {
+                val x = w / 2 + s * (25 + k * 4.5f) * u
+                drawLine(fino, Offset(x, 8.5f * u), Offset(x, 13.5f * u), 1.4f * u, StrokeCap.Round)
+            }
+        }
+        // Los corchetes de las cuatro esquinas.
+        drawPath(corchetes(Rect(5 * u, 19 * u, w - 5 * u, h - 5 * u), 11 * u), mira, style = Stroke(1.4f * u))
+        // El bus de datos del canto izquierdo.
+        drawLine(fino, Offset(6.5f * u, 40 * u), Offset(6.5f * u, h - 26 * u), 0.8f * u,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(maxOf(2 * u, 1f), maxOf(4 * u, 1f))))
+        var y = 56 * u; var n = 0
+        while (y < h - 30 * u && n < 30) {
+            drawRect(junta, Offset(4.5f * u, y - 2 * u), Size(4 * u, 4 * u), style = Stroke(0.7f * u))
+            y += maxOf(64 * u, 1f); n++
+        }
+        // La columna de carga del canto derecho.
+        for (k in 0 until 6) {
+            val o = Offset(w - 11 * u, 38 * u + k * 7 * u)
+            if (k >= 4) drawRect(e.secundario.copy(alpha = 0.7f), o, Size(4 * u, 4 * u))
+            drawRect(junta, o, Size(4 * u, 4 * u), style = Stroke(0.7f * u))
+        }
+        // La marca de atraque y las estrellas.
+        val m = Offset(w / 2, h - 8 * u)
+        drawPath(Path().apply { moveTo(m.x - 4 * u, m.y + 2.5f * u); lineTo(m.x, m.y - 2.5f * u); lineTo(m.x + 4 * u, m.y + 2.5f * u) }, mira,
+            style = Stroke(1.2f * u, join = StrokeJoin.Miter))
+        drawLine(fino, Offset(m.x - 34 * u, m.y + 1 * u), Offset(m.x - 9 * u, m.y + 1 * u), 0.8f * u)
+        drawLine(fino, Offset(m.x + 9 * u, m.y + 1 * u), Offset(m.x + 34 * u, m.y + 1 * u), 0.8f * u)
+        drawPath(estrella(Offset(26 * u, h - 11 * u), 2.8f * u, 4, 0.32f), e.primario.copy(alpha = 0.5f))
+        drawPath(estrella(Offset(w - 28 * u, h - 13 * u), 2 * u, 4, 0.32f), e.secundario.copy(alpha = 0.5f))
+    }
+
+    /**
+     * El recuadro de Relaciones es una pantalla de la nave: los corchetes de mira en las esquinas, la junta punteada arriba,
+     * dos estrellitas y, abajo al centro, las tres luces de estado.
+     */
+    override fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val k = e.primario.copy(alpha = 0.75f); val m = 6.5f * u
+        drawPath(corchetes(Rect(m, m, w - m, h - m), 6 * u), k, style = Stroke(1.4f * u))
+        drawLine(e.primario.copy(alpha = 0.22f), Offset(m + 9 * u, 4 * u), Offset(w - m - 9 * u, 4 * u), 0.7f * u,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(maxOf(3 * u, 1f), maxOf(2.5f * u, 1f))))
+        drawPath(estrella(Offset(w * 0.78f, 9 * u), 2 * u, 4, 0.32f), k)
+        drawPath(estrella(Offset(w * 0.2f, h - 9 * u), 1.6f * u, 4, 0.32f), k)
+        listOf(e.primario, mezcla(e.primario, e.secundario, 0.5f), e.secundario).forEachIndexed { i, col ->
+            drawCircle(col.copy(alpha = 0.85f), 1.2f * u, Offset(w / 2 + (i - 1) * 4.5f * u, h - 4 * u))
+        }
+    }
+
+    /** El icono de la cinta en la mira de la pantalla de control: los cuatro corchetes y una marca a media altura de cada lado. */
+    override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
+        val s = size.minDimension; val g = s * 0.06f
+        val a = s * 0.06f; val b = s * 0.94f
+        drawPath(corchetes(Rect(a, a, b, b), s * 0.25f), e.primario, style = Stroke(g * 1.3f, join = StrokeJoin.Miter))
+        listOf(Offset(s / 2, a) to Offset(s / 2, s * 0.15f), Offset(s / 2, b) to Offset(s / 2, s * 0.85f),
+            Offset(a, s / 2) to Offset(s * 0.15f, s / 2), Offset(b, s / 2) to Offset(s * 0.85f, s / 2))
+            .forEach { (p, q) -> drawLine(e.secundario, p, q, g * 0.8f) }
     }
 }

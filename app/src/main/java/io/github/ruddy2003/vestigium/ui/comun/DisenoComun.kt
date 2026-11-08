@@ -145,7 +145,31 @@ interface DisenoComun {
 
     /** El rótulo de un día en la lista de movimientos («LUN 3 NOV»), a todo el ancho, con [textoEn]. */
     fun DrawScope.rotuloDia(texto: String, medidor: TextMeasurer, oscuro: Boolean)
+
+    // ---------------------------------------------------------------- adornos de la hoja rápida, las relaciones y la cinta
+
+    /**
+     * El adorno de la hoja rápida (la que se abre desde el aviso para anotar al momento), dibujado ENCIMA de su contenido,
+     * del tamaño de la hoja (≈ 360 × 300–700 dp): solo en el borde de arriba (bajo su perfil), las esquinas y los cantos,
+     * nunca sobre el centro donde van los botones y el texto.
+     */
+    fun DrawScope.adornoQuick(e: EstadoAdorno, oscuro: Boolean)
+
+    /**
+     * El detalle de un recuadro de variable en Relaciones (≈ 100–160 × 56–90 dp), DETRÁS de su nombre y su grupo:
+     * molduras, corchetes, grecas, remaches, sellos, gemas… tenue en el centro.
+     */
+    fun DrawScope.adornoRelacion(e: EstadoAdorno, oscuro: Boolean)
+
+    /**
+     * El marco de un icono de pista de la cinta (≈ 14–28 dp cuadrado), en [EstadoAdorno.primario]: el clípeo, los corchetes
+     * de la consola, el frontón, el sello… El glifo de la pista va dentro, con un margen de 22 % por lado: deja ese hueco libre.
+     */
+    fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean)
 }
+
+/** Los colores de un adorno: el primario (ya con su transparencia), el secundario y el fondo sobre el que va. */
+class EstadoAdorno(val primario: Color, val secundario: Color, val fondo: Color)
 
 /** La balanza: si está elegido el ingreso, los textos de cada lado y sus colores. */
 class EstadoBalanza(val ingreso: Boolean, val textoGasto: String, val textoIngreso: String, val colorGasto: Color, val colorIngreso: Color)

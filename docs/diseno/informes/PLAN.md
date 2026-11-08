@@ -35,11 +35,11 @@ Revisión del código al empezar la fase: las figuras de los trofeos ya son prop
 
 ## Fase D — Pulido
 
+Revisión del código al empezar la fase: las esferas de enfoque, los controles (`ControlesTema.kt`) y la hoja rápida ya trazan en dp y toman el oscuro de la paleta propia de cada tema (cada tema tiene su esquema claro y su esquema oscuro), así que no les faltaba «modo oscuro» como se había anotado. Lo que sí quedó flojo:
+
 | Lote | Qué |
 |---|---|
-| D1 | Modo oscuro en las esferas de enfoque (`EnfoqueActivity.kt`), `ControlesTema.kt` y la hoja rápida (`QuickActivity.kt`) |
-| D2 | Adornos de Relación (`Relacion.kt`), `IconosCinta.kt` y los huecos de `Marcas.kt` |
-| D3 | Texturas de CIBER, MEDIEVAL y ORDEN |
-| D4 | Trazos en píxeles a dp en `Decoracion.kt` y `Libros.kt` |
+| D1 | Los adornos de la hoja rápida (`adornoHojaQuick`, 5–14 líneas), de los recuadros de Relaciones (`adorno`, Heleno/al-Ándalus/Meso de una línea) y el marco de los iconos de la cinta (`marcoPista`, Roma/Orden/Laboratorio/Seda de una línea): pasan a `DisenoComun` (un objeto por tema) |
+| D2 | Arreglos por archivo: las marcas de @persona y #tema que faltan (Medieval, Refugio, Napoleón en `Marcas.kt`); las texturas de fondo de 5–8 líneas (Terminal, Medieval, Orden, Laboratorio, Seda, Colonos, Napoleón, al-Ándalus en `fondoTema`); las esferas de enfoque más pobres (Cueva, Ciudad neón, Mongol); y los trazos en píxeles de las bandas de títulos (`Decoracion.kt`) y del cielo nocturno (`Libros.kt`), que pasan a dp |
 
 El detalle de cada lote se escribe al empezarlo, en su informe.

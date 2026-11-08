@@ -1021,6 +1021,39 @@ class Capturas {
     @Test fun anioC4b() = (ESTANTE_A1B + TemaId.EDO).forEach { anioC4Tema(it) }
     @Test fun anioC4c() = ESTANTE_A1C.forEach { anioC4Tema(it) }
     @Test fun anioC4d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { anioC4Tema(it) }
+    /**
+     * Los adornos (lote D1): la hoja rápida con su menú, tres tarjetas de Relaciones e iconos de la cinta en tres tamaños.
+     * En claro y en oscuro.
+     */
+    private fun adornosD1(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        captura(t, oscuro, 2000, "tema_${t.id}_${modo}_quick") {
+            Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.BottomCenter) {
+                io.github.ruddy2003.vestigium.ui.HojaQuick(Modifier.fillMaxWidth()) {
+                    io.github.ruddy2003.vestigium.ui.EncabezadoQuick("Registrar", "10:32 · sábado", "Lo de todos los días en un toque.")
+                    io.github.ruddy2003.vestigium.ui.MenuQuick(listOf("Enfoque" to "enfoque", "Siesta" to "siesta", "Sustancias" to "consumo", "Gasto o ingreso" to "gasto",
+                        "Sueño" to "sueno", "Llenar el día" to "diario", "Nota" to "notas")) {}
+                }
+            }
+        }
+        relaciones(t, oscuro, "tema_${t.id}_${modo}_relaciones")
+        captura(t, oscuro, 700, "tema_${t.id}_${modo}_pistas") {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                listOf(14.dp, 18.dp, 28.dp).forEach { tam ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        listOf("animo", "sueno", "pasos", "comida", "cafe", "nota").forEach { id ->
+                            io.github.ruddy2003.vestigium.ui.IconoPista(id, MaterialTheme.colorScheme.primary, tam = tam, tema = t)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    private fun adornosD1Tema(t: TemaId) { adornosD1(t, t.soloOscuro); if (!t.soloOscuro) adornosD1(t, true) }
+    @Test fun adornosD1a() = ESTANTE_A1A.forEach { adornosD1Tema(it) }
+    @Test fun adornosD1b() = (ESTANTE_A1B + TemaId.EDO).forEach { adornosD1Tema(it) }
+    @Test fun adornosD1c() = ESTANTE_A1C.forEach { adornosD1Tema(it) }
+    @Test fun adornosD1d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { adornosD1Tema(it) }
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")
