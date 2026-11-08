@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -250,7 +251,12 @@ private fun Corriendo(p: PlanEnfoque, ahora: Long, cerrar: () -> Unit) {
                     // La letra grande del tema (displayLarge); con horas («1:05:00») se achica para que quepa en la esfera.
                     val cuenta = if (pasado) reloj(deMas, mas = true) else reloj(rest ?: Enfoque.transcurrido(p, ahora))
                     val grande = MaterialTheme.typography.displayLarge
-                    Text(cuenta, style = if (cuenta.removePrefix("+").length > 5) grande.copy(fontSize = grande.fontSize * 0.74f) else grande,
+                    // El «+» de lo de más, en negrita: en algunas letras del tema (la Didot de Napoleón) sale muy delgado.
+                    val texto = androidx.compose.ui.text.buildAnnotatedString {
+                        if (cuenta.startsWith("+")) withStyle(androidx.compose.ui.text.SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Black)) { append("+") }
+                        append(cuenta.removePrefix("+"))
+                    }
+                    Text(texto, style = if (cuenta.removePrefix("+").length > 5) grande.copy(fontSize = grande.fontSize * 0.74f) else grande,
                         color = if (pausa) cs.onSurfaceVariant else cs.onBackground, maxLines = 1, softWrap = false)
                     Text(when {
                         pausa && pasado -> "en pausa · " + if (descanso) "de más en el descanso" else "sobre la meta"
@@ -268,7 +274,7 @@ private fun Corriendo(p: PlanEnfoque, ahora: Long, cerrar: () -> Unit) {
         Spacer(Modifier.height(18.dp))
         TiraSesion(p, ahora, Modifier.padding(horizontal = 8.dp))
         val fin = Enfoque.finEstimado(p, ahora)
-        Text("enfoque en esta sesión: " + reloj(Enfoque.enfoqueTotal(p, ahora)).let { if (it.length == 5) "${it.substringBefore(':').toInt()} min" else it } +
+        Text("enfoque en esta sesión: " + hm((Enfoque.enfoqueTotal(p, ahora) / 60_000L).toInt()) +
             (fin?.takeIf { !pausa && !p.esperando && !ultimoPasado }?.let { " · terminas a las " + Fechas.horaDe(Fechas.isoDeMillis(it)) } ?: ""),
             style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 10.dp), textAlign = TextAlign.Center)
         Spacer(Modifier.weight(1f))

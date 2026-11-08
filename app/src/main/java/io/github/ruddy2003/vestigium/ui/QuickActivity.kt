@@ -1506,8 +1506,15 @@ private fun FichaConAyuda(texto: String, ayuda: String, activa: Boolean, onClick
                 androidx.compose.foundation.Canvas(Modifier.size(11.dp)) { perillaTema(tema, e, center, size.minDimension / 2f, e.primary, e.primaryContainer) }
                 Spacer(Modifier.width(7.dp))
             }
-            Text(texto, style = MaterialTheme.typography.labelLarge.copy(fontWeight = if (activa) FontWeight.SemiBold else FontWeight.Normal))
-            Text(" ($ayuda)", style = MaterialTheme.typography.labelSmall, color = e.onSurfaceVariant)
+            val nombre = MaterialTheme.typography.labelLarge.copy(fontWeight = if (activa) FontWeight.SemiBold else FontWeight.Normal)
+            // Una aclaración corta va al lado («pico»); una larga, debajo, para que no se encime con el nombre.
+            if (ayuda.length <= 18) {
+                Text(texto, style = nombre)
+                Text(" ($ayuda)", style = MaterialTheme.typography.labelSmall, color = e.onSurfaceVariant)
+            } else Column {
+                Text(texto, style = nombre)
+                Text("($ayuda)", style = MaterialTheme.typography.labelSmall, color = e.onSurfaceVariant)
+            }
         }
     }
 }
