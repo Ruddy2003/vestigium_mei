@@ -937,6 +937,43 @@ class Capturas {
     @Test fun gastosB5b() = (ESTANTE_A1B + TemaId.EDO).forEach { gastosB5Tema(it) }
     @Test fun gastosB5c() = ESTANTE_A1C.forEach { gastosB5Tema(it) }
     @Test fun gastosB5d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { gastosB5Tema(it) }
+    /**
+     * Pedestales y placa (lote C1): los trofeos del tema en tres tamaños (46, 96 y 180 dp), en los cuatro niveles y sin
+     * conseguir; y el hall de logros con sus pedestales y placas. En claro y en oscuro. Datos inventados.
+     */
+    private fun pedestalesC1(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        captura(t, oscuro, 2200, "tema_${t.id}_${modo}_pedestales") {
+            val cats = io.github.ruddy2003.vestigium.ciencia.Logros.CATEGORIAS
+            fun logro(k: Int, nivel: Int, hecho: Boolean) = io.github.ruddy2003.vestigium.ciencia.Logros.Logro("x_$k", cats[k % cats.size], "", "★", cats[k % cats.size], nivel, 1.0,
+                if (hecho) 1.0 else 0.3, if (hecho) "2026-10-19" else null)
+            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                listOf(46.dp, 96.dp).forEach { alto ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
+                        (1..4).forEach { n -> io.github.ruddy2003.vestigium.ui.pantallas.TrofeoLogro(logro(n, n, true), alto, tema = t) }
+                        io.github.ruddy2003.vestigium.ui.pantallas.TrofeoLogro(logro(5, 1, false), alto, tema = t)
+                    }
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
+                    io.github.ruddy2003.vestigium.ui.pantallas.TrofeoLogro(logro(2, 3, true), 180.dp, tema = t)
+                    io.github.ruddy2003.vestigium.ui.pantallas.TrofeoLogro(logro(6, 4, true), 180.dp, tema = t)
+                }
+            }
+        }
+        hall(t, oscuro, "tema_${t.id}_${modo}_hall")
+    }
+    private fun pedestalesC1Tema(t: TemaId) { pedestalesC1(t, t.soloOscuro); if (!t.soloOscuro) pedestalesC1(t, true) }
+    @Test fun pedestalesC1a() = ESTANTE_A1A.forEach { pedestalesC1Tema(it) }
+    @Test fun pedestalesC1b() = (ESTANTE_A1B + TemaId.EDO).forEach { pedestalesC1Tema(it) }
+    @Test fun pedestalesC1c() = ESTANTE_A1C.forEach { pedestalesC1Tema(it) }
+    @Test fun pedestalesC1Neon() = pedestalesC1Tema(TemaId.NEON)
+    @Test fun pedestalesC1Refugio() = pedestalesC1Tema(TemaId.REFUGIO)
+    @Test fun pedestalesC1Orden() = pedestalesC1Tema(TemaId.ORDEN)
+    @Test fun pedestalesC1Laboratorio() = pedestalesC1Tema(TemaId.LABORATORIO)
+    @Test fun pedestalesC1Colonos() = pedestalesC1Tema(TemaId.COLONOS)
+    @Test fun pedestalesC1Ruinas() = pedestalesC1Tema(TemaId.RUINAS)
+    @Test fun pedestalesC1Espacio() = pedestalesC1Tema(TemaId.ESPACIO)
+    @Test fun pedestalesC1Distopia() = pedestalesC1Tema(TemaId.DISTOPIA)
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

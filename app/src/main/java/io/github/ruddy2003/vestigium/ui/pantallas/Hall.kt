@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.ui.draw.drawBehind
 import io.github.ruddy2003.vestigium.ui.comun.Separador
 import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import androidx.compose.foundation.Canvas
@@ -2370,19 +2371,19 @@ private fun mover(ids: List<String>, i: Int, d: Int) {
 /** Una pieza en su pedestal, con la placa: nombre, fecha y nivel. */
 @Composable
 private fun Pedestal(g: Logros.Logro, tema: TemaId, modifier: Modifier) {
-    val cs = MaterialTheme.colorScheme
-    val metal = metalHall(tema, g.nivel)
+    val d = io.github.ruddy2003.vestigium.ui.logros.disenoLogros(tema)
+    val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+    val e = estadoPedestal(g)
     Column(modifier.padding(horizontal = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         // El trofeo del tema (el mismo de la sala de trofeos), sobre la repisa del salón.
         TrofeoLogro(g, 118.dp, tema = tema)
-        // El pedestal del tema (ver [SalonesTema.pedestal]).
-        Canvas(Modifier.fillMaxWidth().height(22.dp).padding(horizontal = 18.dp)) {
-            with(SalonesTema) { pedestal(tema, cs, metal) }
-        }
-        Box(Modifier.padding(top = 4.dp).background(metal.copy(alpha = 0.22f), MaterialTheme.shapes.small).padding(horizontal = 8.dp, vertical = 4.dp)) {
+        // El pedestal del hall y la placa, dibujados por el tema.
+        Canvas(Modifier.fillMaxWidth().height(22.dp).padding(horizontal = 18.dp)) { with(d) { pedestalHall(e, oscuro) } }
+        Box(Modifier.padding(top = 4.dp).drawBehind { with(d) { placaHall(e, oscuro) } }.padding(d.margenPlaca)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(g.nombre, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold), textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(Fechas.corto(g.conseguido ?: "") + " · " + g.conseguido?.take(4), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, fontSize = 10.sp)
+                Text(g.nombre, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold), color = d.tintaPlaca(oscuro),
+                    textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(Fechas.corto(g.conseguido ?: "") + " · " + g.conseguido?.take(4), style = MaterialTheme.typography.labelSmall, color = d.rotuloPlaca(oscuro), fontSize = 10.sp)
             }
         }
     }

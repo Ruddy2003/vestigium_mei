@@ -76,9 +76,8 @@ object HallImagen {
             val y0 = arriba + fila * celdaH + 18f
             val cx = x0 + celdaW / 2
             zona(cx - diam * 0.41f, y0, diam * 0.82f, diam) { dibujarTrofeoDe(g, tema, cs.background.luminance() < 0.5f, cs.onSurface) }
-            val metal = metalHall(tema, g.nivel)
             zona(cx - diam * 0.55f, y0 + diam + 4f, diam * 1.1f, 30f) {
-                with(SalonesTema) { pedestal(tema, cs, metal) }
+                with(io.github.ruddy2003.vestigium.ui.logros.disenoLogros(tema)) { pedestalHall(estadoPedestal(g), cs.background.luminance() < 0.5f) }
             }
             if (conTextos) {
                 val nombre = recortar(g.nombre, pNombre, celdaW - 24f)
