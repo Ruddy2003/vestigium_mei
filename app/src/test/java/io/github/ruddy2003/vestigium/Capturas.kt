@@ -974,6 +974,24 @@ class Capturas {
     @Test fun pedestalesC1Ruinas() = pedestalesC1Tema(TemaId.RUINAS)
     @Test fun pedestalesC1Espacio() = pedestalesC1Tema(TemaId.ESPACIO)
     @Test fun pedestalesC1Distopia() = pedestalesC1Tema(TemaId.DISTOPIA)
+    /** El salón del hall (lote C2): el hall de logros y la imagen para compartir (con 3 columnas y textos). En claro y en oscuro. */
+    private fun salonesC2(t: TemaId, oscuro: Boolean) {
+        val modo = if (oscuro) "oscuro" else "claro"
+        hall(t, oscuro, "tema_${t.id}_${modo}_salon")
+        hallImagen(t, oscuro, true, "tema_${t.id}_${modo}_imagen")
+    }
+    private fun salonesC2Tema(t: TemaId) { salonesC2(t, t.soloOscuro); if (!t.soloOscuro) salonesC2(t, true) }
+    @Test fun salonesC2a() = ESTANTE_A1A.forEach { salonesC2Tema(it) }
+    @Test fun salonesC2b() = (ESTANTE_A1B + TemaId.EDO).forEach { salonesC2Tema(it) }
+    @Test fun salonesC2c() = ESTANTE_A1C.forEach { salonesC2Tema(it) }
+    @Test fun salonesC2Neon() = salonesC2Tema(TemaId.NEON)
+    @Test fun salonesC2Refugio() = salonesC2Tema(TemaId.REFUGIO)
+    @Test fun salonesC2Orden() = salonesC2Tema(TemaId.ORDEN)
+    @Test fun salonesC2Laboratorio() = salonesC2Tema(TemaId.LABORATORIO)
+    @Test fun salonesC2Colonos() = salonesC2Tema(TemaId.COLONOS)
+    @Test fun salonesC2Ruinas() = salonesC2Tema(TemaId.RUINAS)
+    @Test fun salonesC2Espacio() = salonesC2Tema(TemaId.ESPACIO)
+    @Test fun salonesC2Distopia() = salonesC2Tema(TemaId.DISTOPIA)
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

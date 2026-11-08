@@ -19,7 +19,6 @@ import io.github.ruddy2003.vestigium.ciencia.Logros
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.reportes.Lienzo
 import io.github.ruddy2003.vestigium.ui.Estilo
-import io.github.ruddy2003.vestigium.ui.SalonesTema
 import io.github.ruddy2003.vestigium.ui.TemaId
 import java.io.File
 
@@ -50,7 +49,9 @@ object HallImagen {
         // Fondo y escena.
         zona(0f, 0f, ANCHO.toFloat(), ALTO.toFloat()) { drawRect(cs.background) }
         zona(0f, arriba, ANCHO.toFloat(), ALTO - arriba - abajo) {
-            with(SalonesTema) { escena(tema, cs, porFila) }
+            with(io.github.ruddy2003.vestigium.ui.logros.disenoLogros(tema)) {
+                escenaSalon(io.github.ruddy2003.vestigium.ui.logros.EstadoSalon(porFila, cs.background, 0), cs.background.luminance() < 0.5f)
+            }
         }
 
         // Encabezado.

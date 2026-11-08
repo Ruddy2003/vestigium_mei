@@ -43,7 +43,20 @@ interface DisenoLogros {
      * etiqueta de museo, la chapa grabada… con el metal del nivel en su borde. El nombre y la fecha los pone la pantalla encima.
      */
     fun DrawScope.placaHall(e: EstadoPedestal, oscuro: Boolean)
+
+    // ---------------------------------------------------------------- el salón del hall
+
+    /**
+     * El salón del hall detrás de los trofeos, a todo el lienzo (≈ 360 × 600–1400 dp en la app; 1080 × 1350 px en la
+     * imagen para compartir): el atrio con su impluvio, la nave con su rosetón, el caravasar, la estación de metro… Su
+     * arquitectura (columnas, arcos, hornacinas) enmarca cada una de las [EstadoSalon.columnas] columnas de trofeos y nunca
+     * pasa por detrás de una. Todo va tenue sobre [EstadoSalon.fondo] para que los trofeos y sus placas se lean encima.
+     */
+    fun DrawScope.escenaSalon(e: EstadoSalon, oscuro: Boolean)
 }
+
+/** El salón: cuántas columnas de trofeos hay, el color de fondo de la pantalla y una semilla. */
+class EstadoSalon(val columnas: Int, val fondo: Color, val semilla: Int)
 
 /**
  * Un pedestal o una placa: si el logro ya se ganó, su nivel (1 a 4: bronce, plata, oro, legendario), los tonos del metal de

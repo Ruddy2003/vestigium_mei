@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.draw.drawBehind
 import io.github.ruddy2003.vestigium.ui.comun.Separador
 import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
@@ -73,7 +74,6 @@ import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.LibroDiario
 import io.github.ruddy2003.vestigium.ui.Nav
-import io.github.ruddy2003.vestigium.ui.SalonesTema
 import io.github.ruddy2003.vestigium.ui.signoEgipcio
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.TemaId
@@ -2257,12 +2257,17 @@ fun PiezaLogro(l: Logros.Logro, tam: Dp, modifier: Modifier = Modifier, tema: Te
     Canvas(modifier.size(tam)) { with(PiezasLogro) { pieza(l, tema, cs) } }
 }
 
-/** El fondo del salón: la escena del tema ([SalonesTema]). */
+/** El fondo del salón: la escena del tema ([io.github.ruddy2003.vestigium.ui.logros.DisenoLogros.escenaSalon]). */
 @Composable
 private fun BoxScope.FondoSalon(tema: TemaId) {
     val cs = MaterialTheme.colorScheme
     Canvas(Modifier.matchParentSize()) {
-        with(SalonesTema) { escena(tema, cs) }
+        // Recortada a su lienzo: el Canvas no recorta solo y la escena no debe salirse del hall.
+        androidx.compose.ui.graphics.drawscope.clipRect {
+            with(io.github.ruddy2003.vestigium.ui.logros.disenoLogros(tema)) {
+                escenaSalon(io.github.ruddy2003.vestigium.ui.logros.EstadoSalon(2, cs.background, 0), cs.background.luminance() < 0.5f)
+            }
+        }
     }
 }
 
