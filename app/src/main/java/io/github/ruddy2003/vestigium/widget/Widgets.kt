@@ -585,7 +585,10 @@ object Widgets {
         return v
     }
 
-    /** El cronómetro de enfoque: corre mientras hay un bloque en marcha; tocarlo abre el registro rápido para empezar o terminar. */
+    /**
+     * El cronómetro de enfoque: corre mientras hay un bloque en marcha (hacia atrás hasta la meta y, pasada la meta,
+     * hacia arriba lo de más); tocarlo abre el registro rápido para empezar o terminar.
+     */
     fun vistaEnfoque(ctx: Context): RemoteViews {
         val v = RemoteViews(ctx.packageName, R.layout.widget_enfoque)
         pintar(v, PielNuevos.ENFOQUE)
@@ -599,14 +602,21 @@ object Widgets {
             val ahora = System.currentTimeMillis()
             val rest = E.restante(p, ahora)
             val corre = p.seg_inicio != null
-            // Con meta, cuenta hacia atrás lo que queda del bloque o del descanso; libre, hacia arriba. En pausa se detiene.
-            if (rest != null) { v.setChronometer(R.id.crono_enfoque, android.os.SystemClock.elapsedRealtime() + rest, null, corre); v.setChronometerCountDown(R.id.crono_enfoque, true) }
+            val pasado = E.pasadoDeMeta(p, ahora)
+            val deMas = E.extra(p, ahora)
+            // Con meta, cuenta hacia atrás lo que queda del bloque o del descanso; pasada la meta, hacia arriba lo de más
+            // («+12:34»); libre, hacia arriba. En pausa se detiene.
+            if (pasado) { v.setChronometer(R.id.crono_enfoque, android.os.SystemClock.elapsedRealtime() - deMas, "+%s", corre); v.setChronometerCountDown(R.id.crono_enfoque, false) }
+            else if (rest != null) { v.setChronometer(R.id.crono_enfoque, android.os.SystemClock.elapsedRealtime() + rest, null, corre); v.setChronometerCountDown(R.id.crono_enfoque, true) }
             else { v.setChronometer(R.id.crono_enfoque, android.os.SystemClock.elapsedRealtime() - E.transcurrido(p, ahora), null, corre); v.setChronometerCountDown(R.id.crono_enfoque, false) }
+            val bloque = if (E.bloques(p) > 1) " · bloque ${E.numeroBloque(p)} de ${E.bloques(p)}" else ""
             v.setTextViewText(R.id.estado_enfoque, when {
                 p.esperando -> "¿empezamos el bloque ${E.numeroBloque(p)}?"
                 E.enPausa(p) -> "en pausa · toca para ver"
+                E.enDescanso(p) && pasado -> "de más en el descanso · toca para ver"
                 E.enDescanso(p) -> "descanso · toca para ver"
-                else -> io.github.ruddy2003.vestigium.data.Catalogo.nombreTramo(c.first).lowercase() + (if (E.bloques(p) > 1) " · bloque ${E.numeroBloque(p)} de ${E.bloques(p)}" else "") + " · toca para ver"
+                pasado -> "sobre la meta$bloque · toca para ver"
+                else -> io.github.ruddy2003.vestigium.data.Catalogo.nombreTramo(c.first).lowercase() + bloque + " · toca para ver"
             })
         } else {
             v.setChronometer(R.id.crono_enfoque, android.os.SystemClock.elapsedRealtime(), null, false)

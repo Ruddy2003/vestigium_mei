@@ -65,8 +65,11 @@ fun PantallaEnfoque(nav: Nav) {
         if (corriendo != null) Tarjeta(Modifier.padding(top = 12.dp)) {
             @Suppress("UNUSED_VARIABLE") val tic = ahora
             val p = Enfoque.plan()
+            // Pasada la meta sigue contando: lo de más («+12 min sobre la meta»).
+            val deMas = p?.takeIf { Enfoque.pasadoDeMeta(it) }?.let { (Enfoque.extra(it) / 60_000L).toInt() }
             Text("Corriendo: ${Catalogo.nombreTramo(corriendo.first).lowercase()} · ${horasMin(Enfoque.minutosCorriendo())} de enfoque" +
-                (p?.let { if (Enfoque.bloques(it) > 1) " · bloque ${Enfoque.numeroBloque(it)} de ${Enfoque.bloques(it)}" else "" } ?: ""),
+                (p?.let { if (Enfoque.bloques(it) > 1) " · bloque ${Enfoque.numeroBloque(it)} de ${Enfoque.bloques(it)}" else "" } ?: "") +
+                (deMas?.let { " · +${horasMin(it)} " + if (p != null && Enfoque.enDescanso(p)) "de más en el descanso" else "sobre la meta" } ?: ""),
                 style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
                 BotonPrincipal("Ver el reloj") { abrir() }

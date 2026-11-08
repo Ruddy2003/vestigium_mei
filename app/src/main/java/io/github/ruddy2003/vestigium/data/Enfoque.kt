@@ -17,11 +17,17 @@ import io.github.ruddy2003.vestigium.R
  * El cronómetro de enfoque y siestas.
  * - Libre: cuenta hacia arriba hasta que lo terminas.
  * - Con meta: el tiempo de enfoque se reparte solo en bloques iguales con los descansos en medio
- *   (2 h con 3 descansos de 10 min = 4 bloques de 30 min). Al acabar un bloque empieza el descanso; al acabar el
- *   descanso pregunta antes de empezar el siguiente bloque. Se puede pausar, saltar el descanso o terminar antes.
- * - Siesta: con alarma opcional para despertar.
- * Cada bloque de enfoque se guarda como un [Tramo] (sin contar pausas). Una alarma exacta avanza de segmento aunque la app
- * esté cerrada, y la notificación fija lleva la cuenta regresiva y los botones.
+ *   (2 h con 3 descansos de 10 min = 4 bloques de 30 min). La duración de cada bloque y de cada descanso es su **meta**,
+ *   no un corte (esquema 21): al llegar a ella suena un aviso ([PlanEnfoque.avisado]) y el reloj **sigue contando** lo
+ *   de más. Tú decides cuándo cambiar: en un bloque, «Pasar a descanso» ([pasarADescanso]); en un descanso, «Volver al
+ *   enfoque» ([volverAlEnfoque]); en el último bloque, «Terminar» ([terminar]). Se puede pasar al descanso antes de la
+ *   meta, pausar y terminar en cualquier momento.
+ * - Siesta: con alarma opcional para despertar; al sonar sigue contando hasta que la termines.
+ * Cada bloque de enfoque se guarda como un [Tramo] con su largo real ([Tramo.min], sin pausas y con lo de más) y los
+ * minutos planeados ([Tramo.plan_min]). Una alarma exacta da el aviso de la meta aunque la app esté cerrada, y la
+ * notificación fija lleva la cuenta regresiva (o, pasada la meta, la cuenta hacia arriba) y los botones.
+ * Un plan guardado por una versión anterior con [PlanEnfoque.esperando] se respeta: pregunta «¿Empezamos el bloque N?»
+ * hasta que toques «Empezar» ([reanudar]); ya no se crea ese estado.
  */
 object Enfoque {
     const val CANAL = "enfoque"
@@ -55,12 +61,26 @@ object Enfoque {
     fun enCurso(c: Config = Repo.config): Pair<String, Long>? = plan(c)?.let { it.tipo to it.inicio }
 
     fun transcurrido(p: PlanEnfoque, ahora: Long = System.currentTimeMillis()) = p.seg_acumulado_ms + (p.seg_inicio?.let { (ahora - it).coerceAtLeast(0) } ?: 0L)
+    /** Lo que falta para la meta del segmento (nunca baja de 0; pasada la meta, ver [extra]). Null sin meta. */
     fun restante(p: PlanEnfoque, ahora: Long = System.currentTimeMillis()): Long? = segmentos(p).getOrNull(p.segmento)?.ms?.let { (it - transcurrido(p, ahora)).coerceAtLeast(0) }
+    /** Lo de más: los ms que el segmento lleva sobre su meta (0 si no ha llegado o no tiene meta). */
+    fun extra(p: PlanEnfoque, ahora: Long = System.currentTimeMillis()): Long =
+        segmentos(p).getOrNull(p.segmento)?.ms?.takeIf { !p.esperando }?.let { (transcurrido(p, ahora) - it).coerceAtLeast(0) } ?: 0L
+    /** ¿El segmento ya llegó a su meta? (Ya avisado, o el tiempo ya la alcanzó.) Falso sin meta. */
+    fun pasadoDeMeta(p: PlanEnfoque, ahora: Long = System.currentTimeMillis()): Boolean {
+        val ms = segmentos(p).getOrNull(p.segmento)?.ms ?: return false
+        return !p.esperando && (p.avisado || transcurrido(p, ahora) >= ms)
+    }
+    /** ¿Después del segmento actual viene un descanso? (Solo en un bloque que no es el último.) */
+    fun hayDescansoDespues(p: PlanEnfoque) = !enDescanso(p) && segmentos(p).getOrNull(p.segmento + 1)?.enfoque == false
     fun enDescanso(p: PlanEnfoque) = segmentos(p).getOrNull(p.segmento)?.enfoque == false
     fun enPausa(p: PlanEnfoque) = p.seg_inicio == null && !p.esperando
     /** Enfoque de toda la sesión: lo guardado más lo que va del bloque actual. */
     fun enfoqueTotal(p: PlanEnfoque, ahora: Long = System.currentTimeMillis()) = p.hecho_ms + if (enDescanso(p) || p.esperando) 0 else transcurrido(p, ahora)
-    /** A qué hora termina todo si no pausas (null en libre). */
+    /**
+     * A qué hora termina todo si no pausas y cambias justo en cada meta (null en libre). Si el segmento actual ya pasó su
+     * meta, lo que sigue empieza ahora ([restante] es 0).
+     */
     fun finEstimado(p: PlanEnfoque, ahora: Long = System.currentTimeMillis()): Long? {
         val segs = segmentos(p)
         if (segs.any { it.ms == null }) return null
@@ -76,7 +96,7 @@ object Enfoque {
     fun iniciarPlan(ctx: Context, tipo: String, metaMin: Int?, descansos: Int, descansoMin: Int) {
         if (plan() != null) terminar(ctx)
         val ahora = System.currentTimeMillis()
-        val p = PlanEnfoque(tipo, metaMin?.takeIf { it > 0 }, descansos.coerceIn(0, 12), descansoMin.coerceIn(1, 60), inicio = ahora, seg_inicio = ahora, seg_primer_inicio = ahora)
+        val p = PlanEnfoque(tipo, metaMin?.takeIf { it > 0 }, descansos.coerceIn(0, 12), descansoMin.coerceIn(1, 180), inicio = ahora, seg_inicio = ahora, seg_primer_inicio = ahora)
         Repo.cambiarConfig { it.copy(enfoque_ultimo = p.copy(inicio = 0L, seg_inicio = null, seg_primer_inicio = null)) }
         guardar(ctx, p)
     }
@@ -87,7 +107,7 @@ object Enfoque {
         guardar(ctx, p.copy(seg_acumulado_ms = transcurrido(p), seg_inicio = null, pausas = p.pausas + 1))
     }
 
-    /** Reanuda una pausa o empieza el bloque que estaba esperando tu confirmación. */
+    /** Reanuda una pausa o empieza el bloque que estaba esperando tu confirmación (planes de antes del esquema 21). */
     fun reanudar(ctx: Context) {
         val p = plan() ?: return
         if (p.seg_inicio != null) return
@@ -96,19 +116,39 @@ object Enfoque {
         NotificationManagerCompat.from(ctx).cancel(NOTIF_AVISO)
     }
 
-    /** Termina el descanso ya y empieza el siguiente bloque. */
-    fun saltarDescanso(ctx: Context) {
+    /**
+     * «Pasar a descanso»: en un bloque de enfoque que no es el último, guarda el bloque con su largo real (con lo de más,
+     * sin pausas) y empieza el descanso que sigue. Se puede antes de la meta. En el último bloque no hace nada: ahí solo
+     * se termina.
+     */
+    fun pasarADescanso(ctx: Context) {
+        val p = plan() ?: return
+        if (p.esperando || !hayDescansoDespues(p)) return
+        val ahora = System.currentTimeMillis()
+        val hecho = if (guardarBloque(p, ahora) != null) transcurrido(p, ahora) else 0L
+        guardar(ctx, p.copy(segmento = p.segmento + 1, seg_inicio = ahora, seg_acumulado_ms = 0, seg_primer_inicio = ahora, esperando = false,
+            avisado = false, hecho_ms = p.hecho_ms + hecho))
+        NotificationManagerCompat.from(ctx).cancel(NOTIF_AVISO)
+    }
+
+    /** «Volver al enfoque»: termina el descanso (antes o después de su meta) y empieza el siguiente bloque. */
+    fun volverAlEnfoque(ctx: Context) {
         val p = plan() ?: return
         if (!enDescanso(p)) return
         val sig = p.segmento + 1
         val ahora = System.currentTimeMillis()
         if (sig >= segmentos(p).size) { completar(ctx, p); return }
-        guardar(ctx, p.copy(segmento = sig, seg_inicio = ahora, seg_acumulado_ms = 0, seg_primer_inicio = ahora, esperando = false))
+        guardar(ctx, p.copy(segmento = sig, seg_inicio = ahora, seg_acumulado_ms = 0, seg_primer_inicio = ahora, esperando = false, avisado = false))
+        NotificationManagerCompat.from(ctx).cancel(NOTIF_AVISO)
     }
 
+    /** El nombre de antes de [volverAlEnfoque]. */
+    fun saltarDescanso(ctx: Context) = volverAlEnfoque(ctx)
+
     /**
-     * Termina la sesión: guarda lo que llevaba el bloque actual (si es de un minuto o más) y le pone la nota a todos los
-     * bloques de esta sesión. Devuelve los minutos de enfoque (o de siesta) guardados en total.
+     * Termina la sesión: guarda lo que llevaba el bloque actual con su largo real (si es de un minuto o más, con lo de más
+     * sobre la meta) y le pone la nota a todos los bloques de esta sesión. Un descanso en curso no se guarda. Devuelve los
+     * minutos de enfoque (o de siesta) guardados en total.
      */
     fun terminar(ctx: Context, nota: String = ""): Int {
         val p = plan() ?: return 0
@@ -123,28 +163,28 @@ object Enfoque {
     /** Lo detiene sin guardar el bloque en curso (los bloques ya terminados se quedan). */
     fun descartar(ctx: Context) { limpiar(ctx) }
 
-    /** Revisa si el segmento actual ya terminó y avanza (lo llama la alarma y la pantalla del reloj). */
+    /**
+     * Revisa si el segmento actual llegó a su meta (lo llaman la alarma, la tarea de 15 minutos y la pantalla del reloj).
+     * No corta ni cambia de segmento: la primera vez avisa con sonido y guarda [PlanEnfoque.avisado]; el tiempo sigue
+     * corriendo. Con un margen de 1,5 s por si la alarma llega un poco antes. Ya avisado, solo refresca la notificación
+     * fija (el «+N min»).
+     */
     fun avanzar(ctx: Context, ahora: Long = System.currentTimeMillis()) {
-        var q = plan() ?: return
-        val segs = segmentos(q)
-        var cambio: String? = null
-        while (true) {
-            val cur = segs.getOrNull(q.segmento) ?: break
-            val dur = cur.ms ?: break
-            val ini = q.seg_inicio ?: break
-            val fin = ini + dur - q.seg_acumulado_ms
-            if (fin > ahora + 1500) break
-            if (cur.enfoque) { guardarBloque(q, fin); q = q.copy(hecho_ms = q.hecho_ms + dur) }
-            val sig = q.segmento + 1
-            if (sig >= segs.size) { completar(ctx, q); return }
-            q = if (segs[sig].enfoque) { cambio = "esperando"; q.copy(segmento = sig, seg_inicio = null, seg_acumulado_ms = 0, seg_primer_inicio = null, esperando = true) }
-            else { cambio = "descanso"; q.copy(segmento = sig, seg_inicio = fin, seg_acumulado_ms = 0, seg_primer_inicio = fin, esperando = false) }
-        }
-        if (cambio == null) { programar(ctx, q); return }
+        val p = plan() ?: return
+        val dur = segmentos(p).getOrNull(p.segmento)?.ms
+        if (dur == null || p.esperando || p.seg_inicio == null) { programar(ctx, p); return }
+        if (p.avisado) { notificar(ctx, p); return }
+        if (transcurrido(p, ahora) + 1500 < dur) { programar(ctx, p); return }
+        val q = p.copy(avisado = true)
         guardar(ctx, q)
-        when (cambio) {
-            "descanso" -> avisar(ctx, "${voz().descanso} · ${segs[q.segmento].ms!! / MIN} min", "Bloque ${numeroBloque(q)} de ${bloques(q)} listo. ${voz().consejo}")
-            "esperando" -> avisar(ctx, voz().finDescanso, "¿Empezamos el bloque ${numeroBloque(q)} de ${bloques(q)}? Toca «Empezar» cuando estés listo.")
+        val n = bloques(q)
+        val k = numeroBloque(q)
+        when {
+            q.tipo == "siesta" -> avisar(ctx, voz().despertar, "Siesta de ${dur / MIN} min. Sigue contando: toca «Terminar» cuando te levantes.")
+            enDescanso(q) -> avisar(ctx, voz().finDescanso, "Se acabó el descanso · vuelve al enfoque cuando quieras: sigue el bloque ${k + 1} de $n.")
+            hayDescansoDespues(q) -> avisar(ctx, voz().meta, "Llegaste a la meta del bloque $k de $n · sigue contando; pasa al descanso cuando quieras. ${voz().consejo}")
+            n > 1 -> avisar(ctx, voz().meta, "Llegaste a la meta del bloque $k de $n · sigue contando; termina cuando quieras.")
+            else -> avisar(ctx, voz().meta, "Llegaste a la meta de ${horasMin((dur / MIN).toInt())} · sigue contando; termina cuando quieras.")
         }
     }
 
@@ -164,13 +204,14 @@ object Enfoque {
         Repo.tramos.filter { it.id.startsWith("enf${inicio}_") }.forEach { Repo.guardarTramo(it.copy(nota = nota.trim())) }
     }
 
-    /** Guarda el bloque actual como tramo (sin las pausas). */
+    /** Guarda el bloque actual como tramo: [Tramo.min] es lo real (sin las pausas, con lo de más) y [Tramo.plan_min], su meta. */
     private fun guardarBloque(p: PlanEnfoque, fin: Long, nota: String = ""): Tramo? {
         val ms = transcurrido(p, fin)
         if (ms < MIN) return null
         val ini = p.seg_primer_inicio ?: (fin - ms)
+        val planMin = segmentos(p).getOrNull(p.segmento)?.ms?.let { (it / MIN).toInt() }
         val t = Tramo(prefijo(p) + p.segmento, Fechas.diaLogicoDeMillis(ini), p.tipo, Fechas.isoDeMillis(ini), Fechas.isoDeMillis(fin), Math.round(ms / 60_000.0).toInt(),
-            nota = nota.trim(), origen = if (p.meta_min != null) "plan" else "cronometro", ts_creado = Fechas.ahoraIso())
+            nota = nota.trim(), origen = if (p.meta_min != null) "plan" else "cronometro", ts_creado = Fechas.ahoraIso(), plan_min = planMin)
         Repo.guardarTramo(t)
         return t
     }
@@ -186,6 +227,7 @@ object Enfoque {
         Repo.cambiarConfig { it.copy(enfoque_plan = null, enfoque_tipo = null, enfoque_inicio = null) }
         programar(ctx, null)
         runCatching { NotificationManagerCompat.from(ctx).cancel(NOTIF) }
+        runCatching { NotificationManagerCompat.from(ctx).cancel(NOTIF_AVISO) }
         refrescar(ctx)
     }
 
@@ -194,12 +236,13 @@ object Enfoque {
     private fun intentAlarma(ctx: Context) = PendingIntent.getBroadcast(ctx, 4103, Intent(ctx, EnfoqueReceiver::class.java).setAction(EnfoqueReceiver.AVANZAR),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-    /** Una alarma exacta para el fin del segmento (si el sistema no deja, una aproximada). */
+    /** Una alarma exacta para el aviso de la meta del segmento, si aún no se dio (si el sistema no deja, una aproximada). */
     private fun programar(ctx: Context, p: PlanEnfoque?) {
         val am = ctx.getSystemService(AlarmManager::class.java) ?: return
         val pi = intentAlarma(ctx)
         am.cancel(pi)
         p ?: return
+        if (p.avisado || p.esperando) return
         val dur = segmentos(p).getOrNull(p.segmento)?.ms ?: return
         val ini = p.seg_inicio ?: return
         val at = ini + dur - p.seg_acumulado_ms
@@ -233,7 +276,10 @@ object Enfoque {
     private fun accion(ctx: Context, accion: String, req: Int) = PendingIntent.getBroadcast(ctx, req, Intent(ctx, EnfoqueReceiver::class.java).setAction(accion),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-    /** La notificación fija: cuenta regresiva (o hacia arriba en libre) y los botones que tocan según el estado. */
+    /**
+     * La notificación fija: cuenta regresiva hasta la meta; pasada la meta (y en libre), hacia arriba con lo que lleva el
+     * segmento y «+N min» en el título. Los botones que tocan según el estado (Android muestra hasta tres).
+     */
     private fun notificar(ctx: Context, p: PlanEnfoque) {
         if (!io.github.ruddy2003.vestigium.avisos.Avisos.permitido(ctx)) return
         canales(ctx)
@@ -245,17 +291,48 @@ object Enfoque {
             .setContentIntent(abrirReloj(ctx)).setCategory(NotificationCompat.CATEGORY_STOPWATCH)
         color(ctx)?.let { b.setColor(it) }
         val rest = restante(p, ahora)
+        val pasado = pasadoDeMeta(p, ahora)
+        val mas = extra(p, ahora) / MIN
+        val descanso = enDescanso(p)
+        val conDescanso = hayDescansoDespues(p)
+        val luego = "Luego sigue $nombre".lowercase().replaceFirstChar { it.uppercase() }
         when {
             p.esperando -> b.setContentTitle("¿Empezamos el bloque ${numeroBloque(p)} de $n?").setContentText("$nombre · toca «Empezar» cuando estés listo")
                 .addAction(0, "Empezar", accion(ctx, EnfoqueReceiver.REANUDAR, 4105))
-            enPausa(p) -> b.setContentTitle("En pausa · $nombre$bloque").setContentText(rest?.let { "Quedan ${(it + MIN - 1) / MIN} min de este " + if (enDescanso(p)) "descanso" else "bloque" } ?: "Llevas ${transcurrido(p, ahora) / MIN} min")
-                .addAction(0, "Reanudar", accion(ctx, EnfoqueReceiver.REANUDAR, 4105))
-            enDescanso(p) -> b.setContentTitle("${voz().descanso}$bloque").setContentText("Luego sigue $nombre".lowercase().replaceFirstChar { it.uppercase() })
+            enPausa(p) -> {
+                b.setContentTitle("En pausa · $nombre$bloque").setContentText(when {
+                    pasado -> "+$mas min sobre la meta de este " + if (descanso) "descanso" else "bloque"
+                    rest != null -> "Quedan ${(rest + MIN - 1) / MIN} min de este " + if (descanso) "descanso" else "bloque"
+                    else -> "Llevas ${transcurrido(p, ahora) / MIN} min"
+                }).addAction(0, "Reanudar", accion(ctx, EnfoqueReceiver.REANUDAR, 4105))
+                if (descanso) b.addAction(0, "Volver al enfoque", accion(ctx, EnfoqueReceiver.VOLVER, 4106))
+                else if (conDescanso) b.addAction(0, "Pasar a descanso", accion(ctx, EnfoqueReceiver.DESCANSO, 4110))
+            }
+            descanso && pasado -> b.setContentTitle("${voz().descanso} · +$mas min").setContentText("$luego · vuelve cuando quieras")
+                .setWhen(ahora - transcurrido(p, ahora)).setShowWhen(true).setUsesChronometer(true)
+                .addAction(0, "Volver al enfoque", accion(ctx, EnfoqueReceiver.VOLVER, 4106))
+            descanso -> b.setContentTitle("${voz().descanso}$bloque").setContentText(luego)
                 .setWhen(ahora + (rest ?: 0)).setShowWhen(true).setUsesChronometer(true).setChronometerCountDown(true)
-                .addAction(0, "Saltar descanso", accion(ctx, EnfoqueReceiver.SALTAR, 4106))
-            rest != null -> b.setContentTitle("$nombre$bloque").setContentText("Termina a las " + Fechas.horaDe(Fechas.isoDeMillis(ahora + rest)))
-                .setWhen(ahora + rest).setShowWhen(true).setUsesChronometer(true).setChronometerCountDown(true)
-                .addAction(0, "Pausar", accion(ctx, EnfoqueReceiver.PAUSAR, 4107))
+                .addAction(0, "Volver al enfoque", accion(ctx, EnfoqueReceiver.VOLVER, 4106))
+            pasado -> {
+                b.setContentTitle(when {
+                    p.tipo == "siesta" -> "Siesta · +$mas min desde la alarma"
+                    mas < 1 -> "Llegaste a la meta$bloque"
+                    else -> "+$mas min sobre la meta$bloque"
+                }).setContentText(when {
+                    p.tipo == "siesta" -> "Toca «Terminar» cuando te levantes"
+                    conDescanso -> "$nombre · pasa al descanso cuando quieras"
+                    else -> "$nombre · termina cuando quieras"
+                }).setWhen(ahora - transcurrido(p, ahora)).setShowWhen(true).setUsesChronometer(true)
+                if (conDescanso) b.addAction(0, "Pasar a descanso", accion(ctx, EnfoqueReceiver.DESCANSO, 4110))
+                b.addAction(0, "Pausar", accion(ctx, EnfoqueReceiver.PAUSAR, 4107))
+            }
+            rest != null -> {
+                b.setContentTitle("$nombre$bloque").setContentText("Meta a las " + Fechas.horaDe(Fechas.isoDeMillis(ahora + rest)))
+                    .setWhen(ahora + rest).setShowWhen(true).setUsesChronometer(true).setChronometerCountDown(true)
+                if (conDescanso) b.addAction(0, "Pasar a descanso", accion(ctx, EnfoqueReceiver.DESCANSO, 4110))
+                b.addAction(0, "Pausar", accion(ctx, EnfoqueReceiver.PAUSAR, 4107))
+            }
             else -> b.setContentTitle(nombre).setContentText("Toca para ver el reloj")
                 .setWhen(ahora - transcurrido(p, ahora)).setShowWhen(true).setUsesChronometer(true)
                 .addAction(0, "Pausar", accion(ctx, EnfoqueReceiver.PAUSAR, 4107))
@@ -264,7 +341,7 @@ object Enfoque {
         try { NotificationManagerCompat.from(ctx).notify(NOTIF, b.build()) } catch (e: SecurityException) { }
     }
 
-    /** Un aviso con sonido en cada cambio (empieza el descanso, se acaba, terminaste). */
+    /** Un aviso con sonido (llegaste a la meta, se acabó el descanso, hora de despertar), con el botón que toca después. */
     private fun avisar(ctx: Context, titulo: String, texto: String) {
         if (!io.github.ruddy2003.vestigium.avisos.Avisos.permitido(ctx)) return
         canales(ctx)
@@ -274,7 +351,14 @@ object Enfoque {
             .setStyle(NotificationCompat.BigTextStyle().bigText(texto)).setAutoCancel(true).setTimeoutAfter(45 * MIN)
             .setPriority(NotificationCompat.PRIORITY_HIGH).setCategory(NotificationCompat.CATEGORY_ALARM).setContentIntent(abrirReloj(ctx, 4108))
         color(ctx)?.let { b.setColor(it) }
-        if (plan()?.esperando == true) b.addAction(0, "Empezar", accion(ctx, EnfoqueReceiver.REANUDAR, 4109))
+        plan()?.let { p ->
+            when {
+                p.esperando -> b.addAction(0, "Empezar", accion(ctx, EnfoqueReceiver.REANUDAR, 4109))
+                enDescanso(p) -> b.addAction(0, "Volver al enfoque", accion(ctx, EnfoqueReceiver.VOLVER, 4111))
+                hayDescansoDespues(p) -> b.addAction(0, "Pasar a descanso", accion(ctx, EnfoqueReceiver.DESCANSO, 4112))
+                else -> b.addAction(0, "Terminar", accion(ctx, EnfoqueReceiver.TERMINAR, 4113))
+            }
+        }
         try { NotificationManagerCompat.from(ctx).notify(NOTIF_AVISO, b.build()) } catch (e: SecurityException) { }
     }
 
@@ -304,13 +388,18 @@ object Enfoque {
     fun delDia(fecha: String): Map<String, Int> = Repo.tramos.filter { it.fecha == fecha }.groupBy { it.tipo }.mapValues { (_, l) -> l.sumOf { it.min } }
 }
 
-/** Los botones de la notificación del cronómetro y la alarma de fin de segmento. */
+/** Los botones de la notificación del cronómetro y la alarma del aviso de la meta. */
 class EnfoqueReceiver : BroadcastReceiver() {
     companion object {
         const val TERMINAR = "io.github.ruddy2003.vestigium.ENFOQUE_TERMINAR"
         const val AVANZAR = "io.github.ruddy2003.vestigium.ENFOQUE_AVANZAR"
         const val PAUSAR = "io.github.ruddy2003.vestigium.ENFOQUE_PAUSAR"
         const val REANUDAR = "io.github.ruddy2003.vestigium.ENFOQUE_REANUDAR"
+        /** Pasar a descanso (esquema 21). */
+        const val DESCANSO = "io.github.ruddy2003.vestigium.ENFOQUE_DESCANSO"
+        /** Volver al enfoque desde el descanso (esquema 21). */
+        const val VOLVER = "io.github.ruddy2003.vestigium.ENFOQUE_VOLVER"
+        /** El nombre de antes de [VOLVER] (por si queda alguna notificación vieja con ese botón). */
         const val SALTAR = "io.github.ruddy2003.vestigium.ENFOQUE_SALTAR"
     }
     override fun onReceive(context: Context, intent: Intent) {
@@ -319,7 +408,8 @@ class EnfoqueReceiver : BroadcastReceiver() {
             AVANZAR -> Enfoque.avanzar(context)
             PAUSAR -> Enfoque.pausar(context)
             REANUDAR -> Enfoque.reanudar(context)
-            SALTAR -> Enfoque.saltarDescanso(context)
+            DESCANSO -> Enfoque.pasarADescanso(context)
+            VOLVER, SALTAR -> Enfoque.volverAlEnfoque(context)
             TERMINAR -> {
                 val min = Enfoque.terminar(context)
                 android.os.Handler(android.os.Looper.getMainLooper()).post {

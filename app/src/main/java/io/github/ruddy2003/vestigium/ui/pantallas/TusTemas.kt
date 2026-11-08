@@ -46,7 +46,7 @@ import io.github.ruddy2003.vestigium.ui.Dialogo
 
 /**
  * Tus #temas en orden: cuántos días aparece cada uno, los que parecen el mismo escrito distinto, los de un solo día
- * (quizá eran hitos) y los que en realidad son sentimientos. Unir no toca tus textos; renombrar sí, con vista previa
+ * (quizá eran fechas señaladas) y los que en realidad son sentimientos. Unir no toca tus textos; renombrar sí, con vista previa
  * y «deshacer».
  */
 @Composable
@@ -88,10 +88,10 @@ fun PantallaTusTemas(nav: Nav) {
             }
         }
 
-        if (unDia.isNotEmpty()) Seccion("Aparecen un solo día", "Un tema que pasa una vez en la vida quizá es un hito (un vuelo, una mudanza). Pasarlo a hitos lo guarda en ese día y le quita el #.") {
+        if (unDia.isNotEmpty()) Seccion("Aparecen un solo día", "Un tema que pasa una vez en la vida quizá es una fecha señalada (un vuelo, una mudanza). Pasarlo a fecha señalada lo guarda en ese día, como «otra», y le quita el #.") {
             Tarjeta {
                 unDia.take(12).forEach { t ->
-                    FilaMenu("#${t.nombre}", "${Fechas.corto(t.primera)} · pasar a hitos") { val (n, antes) = TusTemas.aHito(t); hecho("#${t.nombre} ahora es un hito ($n textos).", antes) }
+                    FilaMenu("#${t.nombre}", "${Fechas.corto(t.primera)} · pasar a fecha señalada") { val (n, antes) = TusTemas.aHito(t); hecho("#${t.nombre} ahora es una fecha señalada ($n textos).", antes) }
                 }
             }
         }

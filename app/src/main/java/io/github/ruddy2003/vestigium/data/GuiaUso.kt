@@ -29,9 +29,10 @@ object GuiaUso {
             "Si no recuerdas nada, marca solo la calidad: también es un dato. El reloj llena las horas por su cuenta.",
         )),
         Seccion("noche", "Hoja de la noche", listOf(
-            "Ánimo y energía del día completo, hábitos, contexto (gym, viaje, enfermo…), hitos y una predicción para mañana.",
+            "Ánimo y energía del día completo, hábitos, contexto (gym, viaje, enfermo…), episodios, fechas señaladas y una predicción para mañana.",
             "Al final, «Cómo estás ahora»: un registro a la misma hora cada día, que se puede comparar entre días mejor que el promedio.",
-            "Hitos en minúsculas y con guion bajo (primer_dia_de_trabajo). Si un #tema aparece un solo día, Tus temas te propone pasarlo a hito.",
+            "Una fecha señalada es lo que quieres recordar de un día (una primera vez, un viaje, un logro, una pérdida): eliges el tipo con un toque y, si quieres, escribes una frase. Un episodio es algo fuerte que te pasa a una hora (una crisis, un llanto, una pelea, una migraña): se anota desde ⊕ con su intensidad.",
+            "Si un #tema aparece un solo día, Tus temas te propone pasarlo a fecha señalada.",
         )),
         Seccion("sustancias_gente", "Sustancias y gente", listOf(
             "Sustancias (alcohol, cannabis, tabaco, cafeína) son un dato normal: registra el inicio y, si quieres, cómo va el nivel y la cruda.",

@@ -74,7 +74,8 @@ import kotlin.math.sqrt
 /**
  * El reloj del enfoque a pantalla completa: se planea (en qué, cuánto tiempo, cuántos descansos y de cuánto) y luego
  * se ve la cuenta regresiva grande con el anillo del bloque, la tira de bloques y descansos, y los botones de pausar,
- * saltar el descanso y terminar. La pantalla no se apaga mientras está abierta.
+ * pasar al descanso, volver al enfoque y terminar. Al llegar a la meta sigue contando lo de más («+12:34»): tú decides
+ * cuándo cambiar (ver [Enfoque]). La pantalla no se apaga mientras está abierta.
  */
 class EnfoqueActivity : ComponentActivity() {
     companion object { const val SIESTA = "siesta" }
@@ -94,9 +95,11 @@ class EnfoqueActivity : ComponentActivity() {
     }
 }
 
-private fun reloj(ms: Long): String {
+/** «25:00» o «1:05:00»; con [mas], lo de más sobre la meta: «+12:34». */
+private fun reloj(ms: Long, mas: Boolean = false): String {
     val s = (ms / 1000).coerceAtLeast(0)
-    return if (s >= 3600) "%d:%02d:%02d".format(s / 3600, (s / 60) % 60, s % 60) else "%02d:%02d".format(s / 60, s % 60)
+    val t = if (s >= 3600) "%d:%02d:%02d".format(s / 3600, (s / 60) % 60, s % 60) else "%02d:%02d".format(s / 60, s % 60)
+    return if (mas) "+$t" else t
 }
 
 private fun hm(min: Int) = if (min < 60) "$min min" else "${min / 60} h" + if (min % 60 > 0) " ${min % 60}" else ""
@@ -108,8 +111,8 @@ fun RelojEnfoque(siestaInicial: Boolean, cerrar: () -> Unit) {
     var ultima by remember { mutableStateOf<PlanEnfoque?>(null) }
     LaunchedEffect(plan) { if (plan != null) ultima = plan }
     val ahora by produceState(System.currentTimeMillis()) { while (true) { kotlinx.coroutines.delay(250); value = System.currentTimeMillis() } }
-    // Si la alarma se atrasa, la pantalla avanza sola al terminar el segmento.
-    LaunchedEffect(ahora / 1000) { plan?.let { p -> if (p.seg_inicio != null && Enfoque.restante(p, ahora) == 0L) Enfoque.avanzar(ctx) } }
+    // Si la alarma se atrasa, la pantalla da el aviso de la meta (no cambia de segmento: eso lo decides tú).
+    LaunchedEffect(ahora / 1000) { plan?.let { p -> if (p.seg_inicio != null && !p.avisado && Enfoque.pasadoDeMeta(p, ahora)) Enfoque.avanzar(ctx) } }
     val cs = MaterialTheme.colorScheme
     Box(Modifier.fillMaxSize().background(cs.background).fondoTema(Estilo.tema, cs).safeDrawingPadding()) {
         when {
@@ -123,40 +126,75 @@ fun RelojEnfoque(siestaInicial: Boolean, cerrar: () -> Unit) {
 /**
  * La esfera del segmento: se llena según lo que va, del color del enfoque, del descanso o de la pausa. Cada tema tiene su
  * propio instrumento (corona de laurel, reloj de arena, astrolabio, esfera de radar, rosetón…); ver [esferaEnfoque].
+ * Pasada la meta, la esfera queda llena y [extra] (lo de más como fracción de la meta, hasta una vuelta) se marca con una
+ * segunda vuelta fina, en el acento, por fuera del instrumento.
  */
 @Composable
-private fun Anillo(progreso: Float, descanso: Boolean, pausa: Boolean, modifier: Modifier = Modifier, contenido: @Composable () -> Unit) {
+private fun Anillo(progreso: Float, descanso: Boolean, pausa: Boolean, modifier: Modifier = Modifier, extra: Float = 0f, contenido: @Composable () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val tema = Estilo.tema
     val color = when { pausa -> cs.outline; descanso -> cs.tertiary; else -> cs.primary }
+    val acento = if (pausa) cs.outline else cs.secondary
     Box(modifier.aspectRatio(1f), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.fillMaxSize()) { esferaEnfoque(tema, progreso.coerceIn(0f, 1f), color, cs) }
+        Canvas(Modifier.fillMaxSize()) {
+            esferaEnfoque(tema, progreso.coerceIn(0f, 1f), color, cs)
+            if (extra > 0f) {
+                val grosor = 2.5.dp.toPx()
+                val radio = size.minDimension / 2 - grosor
+                val esq = Offset(center.x - radio, center.y - radio)
+                drawArc(acento.copy(alpha = 0.18f), -90f, 360f, false, esq, Size(radio * 2, radio * 2), style = Stroke(1.dp.toPx()))
+                drawArc(acento, -90f, extra.coerceIn(0.01f, 1f) * 360f, false, esq, Size(radio * 2, radio * 2), style = Stroke(grosor, cap = StrokeCap.Round))
+            }
+        }
         contenido()
     }
 }
 
-/** La tira de la sesión: una pieza por bloque (enfoque) o descanso, del largo de su duración, con la forma del tema. */
+/**
+ * La tira de la sesión: una pieza por bloque (enfoque) o descanso, del largo de su duración, con la forma del tema. No
+ * recorta lo de más: los bloques ya guardados miden lo que duraron de verdad (su tramo), el segmento en curso crece si
+ * pasa de su meta y esa parte de más va en el acento. Los descansos pasados y lo que falta, a su largo planeado.
+ */
 @Composable
 private fun TiraSesion(p: PlanEnfoque, ahora: Long, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
     val tema = Estilo.tema
     val segs = Enfoque.segmentos(p)
     if (segs.size < 2) return
-    val total = segs.sumOf { it.ms ?: 0 }.toFloat().coerceAtLeast(1f)
     val va = Enfoque.transcurrido(p, ahora)
+    // Lo que duraron de verdad los bloques ya guardados de esta sesión (por número de segmento).
+    val reales = remember(p.inicio, p.segmento, p.hecho_ms) {
+        val pre = "enf${p.inicio}_"
+        Repo.tramos.filter { it.id.startsWith(pre) }.mapNotNull { t -> t.id.removePrefix(pre).toIntOrNull()?.let { it to t.min * 60_000L } }.toMap()
+    }
+    val largos = segs.mapIndexed { i, s ->
+        val plan = s.ms ?: 0L
+        when {
+            i < p.segmento && s.enfoque -> reales[i] ?: plan
+            i == p.segmento && !p.esperando -> maxOf(plan, va)
+            else -> plan
+        }
+    }
+    val total = largos.sum().toFloat().coerceAtLeast(1f)
     Canvas(modifier.fillMaxWidth().height(18.dp)) {
         var x = 0f
         val hueco = 3.dp.toPx()
         segs.forEachIndexed { i, s ->
-            val w = (s.ms ?: 0) / total * size.width - hueco
+            val largo = largos[i]
+            val w = largo / total * size.width - hueco
             val color = if (s.enfoque) cs.primary else cs.tertiary
             val alto = if (s.enfoque) size.height else size.height * 0.5f
             val y = (size.height - alto) / 2
             if (w > 1f) {
                 val pieza = piezaTira(tema, x, y, w, alto, 1.dp.toPx())
                 drawPath(pieza, color.copy(alpha = 0.22f))
-                val lleno = when { i < p.segmento -> 1f; i == p.segmento -> (va.toFloat() / (s.ms ?: 1L)).coerceIn(0f, 1f); else -> 0f }
+                val lleno = when { i < p.segmento -> 1f; i == p.segmento && !p.esperando -> (va.toFloat() / largo.coerceAtLeast(1L)).coerceIn(0f, 1f); else -> 0f }
                 if (lleno > 0f) clipRect(left = x - 1f, top = 0f, right = x + w * lleno, bottom = size.height) { drawPath(pieza, color) }
+                // Lo de más del segmento en curso: desde su meta hasta donde va.
+                val meta = s.ms
+                if (i == p.segmento && meta != null && va > meta) {
+                    clipRect(left = x + w * (meta.toFloat() / largo), top = 0f, right = x + w + 1f, bottom = size.height) { drawPath(pieza, cs.secondary) }
+                }
             }
             x += w + hueco
         }
@@ -176,6 +214,12 @@ private fun Corriendo(p: PlanEnfoque, ahora: Long, cerrar: () -> Unit) {
     val rest = Enfoque.restante(p, ahora)
     val nombre = if (p.tipo == "siesta") "Siesta" else Catalogo.nombreTramo(p.tipo)
     val n = Enfoque.bloques(p)
+    // Pasada la meta sigue contando: lo de más («+12:34»). En un bloque con descanso después se puede pasar a él cuando
+    // quieras; en el último bloque (o la siesta), pasada la meta, el botón principal es «Terminar».
+    val pasado = Enfoque.pasadoDeMeta(p, ahora)
+    val deMas = Enfoque.extra(p, ahora)
+    val conDescanso = Enfoque.hayDescansoDespues(p)
+    val ultimoPasado = pasado && !descanso && !conDescanso
     Column(Modifier.fillMaxSize().padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             BotonTexto(onClick = cerrar) { Text("✕", style = MaterialTheme.typography.titleLarge, color = cs.onSurfaceVariant) }
@@ -184,26 +228,40 @@ private fun Corriendo(p: PlanEnfoque, ahora: Long, cerrar: () -> Unit) {
         }
         Text(when {
             p.esperando -> "descanso terminado"
+            descanso && pasado -> "se acabó el descanso · vuelve cuando quieras"
             descanso -> "descanso · luego bloque ${Enfoque.numeroBloque(p) + 1} de $n"
+            n > 1 && pasado -> "bloque ${Enfoque.numeroBloque(p)} de $n · llegaste a la meta"
             n > 1 -> "bloque ${Enfoque.numeroBloque(p)} de $n"
+            p.meta_min != null && p.tipo == "siesta" && pasado -> "ya sonó la alarma · termina cuando te levantes"
             p.meta_min != null && p.tipo == "siesta" -> "te despierto a las " + Fechas.horaDe(Fechas.isoDeMillis(ahora + (rest ?: 0)))
+            p.meta_min != null && pasado -> "llegaste a la meta de ${hm(p.meta_min)}"
             p.meta_min != null -> "meta: ${hm(p.meta_min)}"
             else -> "cronómetro libre"
-        }, style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+        }, style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, textAlign = TextAlign.Center)
         Spacer(Modifier.weight(1f))
         val progreso = if (p.esperando) 1f else seg?.ms?.let { 1f - (rest ?: 0).toFloat() / it } ?: ((Enfoque.transcurrido(p, ahora) % 3_600_000L) / 3_600_000f)
-        Anillo(progreso, descanso, pausa || p.esperando, Modifier.fillMaxWidth(0.86f).widthIn(max = 420.dp)) {
+        val vuelta = if (pasado) seg?.ms?.let { deMas.toFloat() / it } ?: 0f else 0f
+        Anillo(progreso, descanso, pausa || p.esperando, Modifier.fillMaxWidth(0.86f).widthIn(max = 420.dp), extra = vuelta) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (p.esperando) {
                     Text("¿Listo para el", style = MaterialTheme.typography.titleMedium, color = cs.onSurfaceVariant)
                     Text("bloque ${Enfoque.numeroBloque(p)} de $n?", style = MaterialTheme.typography.headlineMedium, color = cs.primary)
                 } else {
                     // La letra grande del tema (displayLarge); con horas («1:05:00») se achica para que quepa en la esfera.
-                    val cuenta = reloj(rest ?: Enfoque.transcurrido(p, ahora))
+                    val cuenta = if (pasado) reloj(deMas, mas = true) else reloj(rest ?: Enfoque.transcurrido(p, ahora))
                     val grande = MaterialTheme.typography.displayLarge
-                    Text(cuenta, style = if (cuenta.length > 5) grande.copy(fontSize = grande.fontSize * 0.74f) else grande,
+                    Text(cuenta, style = if (cuenta.removePrefix("+").length > 5) grande.copy(fontSize = grande.fontSize * 0.74f) else grande,
                         color = if (pausa) cs.onSurfaceVariant else cs.onBackground, maxLines = 1, softWrap = false)
-                    Text(when { pausa -> "en pausa"; descanso -> "de descanso"; rest != null -> "quedan"; else -> "llevas" }, style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+                    Text(when {
+                        pausa && pasado -> "en pausa · " + if (descanso) "de más en el descanso" else "sobre la meta"
+                        pausa -> "en pausa"
+                        pasado && descanso -> "de más en el descanso"
+                        pasado && p.tipo == "siesta" -> "desde la alarma"
+                        pasado -> "sobre la meta"
+                        descanso -> "de descanso"
+                        rest != null -> "quedan"
+                        else -> "llevas"
+                    }, style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
                 }
             }
         }
@@ -211,18 +269,30 @@ private fun Corriendo(p: PlanEnfoque, ahora: Long, cerrar: () -> Unit) {
         TiraSesion(p, ahora, Modifier.padding(horizontal = 8.dp))
         val fin = Enfoque.finEstimado(p, ahora)
         Text("enfoque en esta sesión: " + reloj(Enfoque.enfoqueTotal(p, ahora)).let { if (it.length == 5) "${it.substringBefore(':').toInt()} min" else it } +
-            (fin?.takeIf { !pausa && !p.esperando }?.let { " · terminas a las " + Fechas.horaDe(Fechas.isoDeMillis(it)) } ?: ""),
+            (fin?.takeIf { !pausa && !p.esperando && !ultimoPasado }?.let { " · terminas a las " + Fechas.horaDe(Fechas.isoDeMillis(it)) } ?: ""),
             style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 10.dp), textAlign = TextAlign.Center)
         Spacer(Modifier.weight(1f))
-        if (p.esperando) BotonPrincipal("Empezar", Modifier.fillMaxWidth().height(60.dp)) { sentir(Sentidos.Evento.CAMBIO); Enfoque.reanudar(ctx) }
-        else Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (descanso && !pausa) BotonSecundario("Saltar descanso", Modifier.weight(1f).height(56.dp)) { Enfoque.saltarDescanso(ctx) }
-            else BotonSecundario(if (pausa) "Reanudar" else "Pausar", Modifier.weight(1f).height(56.dp)) {
-                sentir(Sentidos.Evento.TOQUE); if (pausa) Enfoque.reanudar(ctx) else Enfoque.pausar(ctx)
+        val pausarOReanudar = { sentir(Sentidos.Evento.TOQUE); if (pausa) Enfoque.reanudar(ctx) else Enfoque.pausar(ctx) }
+        when {
+            p.esperando -> BotonPrincipal("Empezar", Modifier.fillMaxWidth().height(60.dp)) { sentir(Sentidos.Evento.CAMBIO); Enfoque.reanudar(ctx) }
+            ultimoPasado -> BotonPrincipal("Terminar", Modifier.fillMaxWidth().height(60.dp)) { sentir(Sentidos.Evento.CAMBIO); terminando = true }
+            else -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (descanso) {
+                    val volver = { sentir(Sentidos.Evento.CAMBIO); Enfoque.volverAlEnfoque(ctx) }
+                    if (pasado) BotonPrincipal("Volver al enfoque", Modifier.weight(1f).height(56.dp), onClick = volver)
+                    else BotonSecundario("Volver al enfoque", Modifier.weight(1f).height(56.dp), onClick = volver)
+                } else if (conDescanso) {
+                    val pasar = { sentir(Sentidos.Evento.CAMBIO); Enfoque.pasarADescanso(ctx) }
+                    if (pasado) BotonPrincipal("Pasar a descanso", Modifier.weight(1f).height(56.dp), onClick = pasar)
+                    else BotonSecundario("Pasar a descanso", Modifier.weight(1f).height(56.dp), onClick = pasar)
+                }
+                BotonSecundario(if (pausa) "Reanudar" else "Pausar", Modifier.weight(1f).height(56.dp), onClick = pausarOReanudar)
             }
-            if (descanso && !pausa) BotonSecundario("Pausar", Modifier.weight(1f).height(56.dp)) { Enfoque.pausar(ctx) }
         }
-        BotonTexto(onClick = { terminando = true }, modifier = Modifier.padding(top = 6.dp, bottom = 12.dp)) {
+        if (ultimoPasado) BotonTexto(onClick = pausarOReanudar, modifier = Modifier.padding(top = 6.dp, bottom = 12.dp)) {
+            Text(if (pausa) "reanudar" else "pausar", style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+        }
+        else BotonTexto(onClick = { terminando = true }, modifier = Modifier.padding(top = 6.dp, bottom = 12.dp)) {
             Text("terminar ahora", style = MaterialTheme.typography.labelLarge, color = cs.error)
         }
     }
@@ -230,7 +300,7 @@ private fun Corriendo(p: PlanEnfoque, ahora: Long, cerrar: () -> Unit) {
         var nota by remember { mutableStateOf("") }
         val min = (Enfoque.enfoqueTotal(p) / 60_000).toInt()
         Dialogo(onDismissRequest = { terminando = false },
-            title = { Text(if (p.tipo == "siesta") "¿Terminar la siesta?" else "¿Terminar ya?") },
+            title = { Text(if (p.tipo == "siesta") "¿Terminar la siesta?" else if (ultimoPasado) "¿Terminamos?" else "¿Terminar ya?") },
             text = {
                 Column {
                     Text(if (min >= 1) "Se guardan ${hm(min)}" + (if (p.tipo == "siesta") " de siesta." else " de enfoque.") else "Va menos de un minuto: no se guarda nada.", style = MaterialTheme.typography.bodyMedium)
@@ -268,6 +338,7 @@ private fun Planear(siestaInicial: Boolean, cerrar: () -> Unit) {
     var meta by remember { mutableStateOf<Int?>(u?.meta_min ?: 120) }
     var descansos by remember { mutableStateOf(u?.descansos ?: 3) }
     var largo by remember { mutableStateOf(u?.descanso_min ?: 10) }
+    val largos = listOf(5, 10, 15, 20, 30)
     var alarma by remember { mutableStateOf<Int?>(25) }
     var pasado by remember { mutableStateOf(false) }
     val siesta = tipo == "siesta"
@@ -286,7 +357,7 @@ private fun Planear(siestaInicial: Boolean, cerrar: () -> Unit) {
                 listOf(15, 20, 25, 30, 45, 60, 90).forEach { m -> Ficha("en ${hm(m)}", alarma == m) { alarma = m } }
                 Ficha("sin alarma", alarma == null) { alarma = null }
             }
-            Ayuda(alarma?.let { "Suena a las " + Fechas.horaDe(Fechas.isoDeMillis(System.currentTimeMillis() + it * 60_000L)) + "." } ?: "Cuenta hasta que la termines.", Modifier.padding(top = 6.dp))
+            Ayuda(alarma?.let { "Suena a las " + Fechas.horaDe(Fechas.isoDeMillis(System.currentTimeMillis() + it * 60_000L)) + " y sigue contando hasta que la termines." } ?: "Cuenta hasta que la termines.", Modifier.padding(top = 6.dp))
         } else {
             Etiqueta("¿Cuánto tiempo de enfoque?")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -302,20 +373,23 @@ private fun Planear(siestaInicial: Boolean, cerrar: () -> Unit) {
                 if (descansos > 0) {
                     Etiqueta("¿De cuánto cada uno?")
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf(5, 10, 15, 20, 30).forEach { m -> Ficha("$m min", largo == m) { largo = m } }
+                        largos.forEach { m -> Ficha("$m min", largo == m) { largo = m } }
                     }
+                    SelectorDuracion(largo.takeIf { it !in largos }, emptyList()) { largo = it ?: largo }
                 }
                 val m = meta ?: 0
                 if (m > 0) {
-                    val prueba = PlanEnfoque(tipo, m, descansos, largo)
+                    // El descanso, como lo guardará [Enfoque.iniciarPlan] (de 1 a 180 min).
+                    val dl = largo.coerceIn(1, 180)
+                    val prueba = PlanEnfoque(tipo, m, descansos, dl)
                     val k = Enfoque.bloques(prueba)
                     val bloque = m / k
-                    val total = m + descansos * largo
+                    val total = m + descansos * dl
                     Spacer(Modifier.height(14.dp))
                     TiraSesion(prueba, 0L)
-                    Ayuda((if (k > 1) "$k bloques de ${hm(bloque)}" + (if (m % k != 0) " (aprox.)" else "") + " con $descansos descanso${if (descansos > 1) "s" else ""} de $largo min" else "Un bloque de ${hm(m)}") +
+                    Ayuda((if (k > 1) "$k bloques de ${hm(bloque)}" + (if (m % k != 0) " (aprox.)" else "") + " con $descansos descanso${if (descansos > 1) "s" else ""} de ${hm(dl)}" else "Un bloque de ${hm(m)}") +
                         " · ${hm(total)} en total · terminas hacia las " + Fechas.horaDe(Fechas.isoDeMillis(System.currentTimeMillis() + total * 60_000L)) +
-                        ". Al acabar cada descanso te pregunto antes de seguir.", Modifier.padding(top = 6.dp))
+                        ". Al llegar a la meta te aviso y sigue contando: tú decides cuándo pasar al descanso y cuándo terminar.", Modifier.padding(top = 6.dp))
                 }
             } else Ayuda("Cuenta hacia arriba hasta que lo termines. Puedes pausarlo.", Modifier.padding(top = 6.dp))
         }

@@ -96,7 +96,7 @@ object Pantallas {
     ) + HERRAMIENTAS.map { (id, n, d) -> P("analisis", n, d, "análisis herramienta $id", antes = { Herramienta.actual = id }) } + listOfNotNull(
         P("gastos", "Gastos", "Gastos e ingresos, por mes y por categoría", "dinero ingresos gasto mes mensual categorías"),
         P("personas", "Tu gente", "Quién es cada @persona para ti", "personas amigos familia relaciones cercanía"),
-        P("temas", "Tus temas", "Tus #temas: unir, renombrar, pasar a hitos", "temas etiquetas hashtag # normalizar duplicados renombrar"),
+        P("temas", "Tus temas", "Tus #temas: unir, renombrar, pasar a fecha señalada", "temas etiquetas hashtag # normalizar duplicados renombrar"),
         P("presencias", "¿Estuviste o pensaste?", "Quién estuvo de verdad y en quién solo pensaste", "personas ver pensar mensajes presencia"),
         P("sustancias", "Sustancias", "Alcohol, cannabis, tabaco, cafeína", "alcohol pedo cannabis weed mota cafeína café tabaco vape cruda"),
         P("biblioteca_momentos", "Libreta de momentos", "Un día por hoja, con todo lo que sentiste", "momentos ánimo emociones"),

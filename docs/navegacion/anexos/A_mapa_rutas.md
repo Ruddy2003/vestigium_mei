@@ -234,7 +234,7 @@ DIÁLOGOS PRINCIPALES (no son rutas)
 | Suplementos (`suplementos`, `:290`) | `"suplementos"` (`:298`) | «Ya los tomé» → TOME: registra la dosis de los que faltan **hoy** (`Recordatorios.kt:111-116`). «En una hora» → UNA_HORA (`:117-122`). Ninguna se puede deshacer desde el aviso |
 | ¿Es un lugar especial? (`lugar`, `:306`) | `"lugar_nuevo"` (`:313`) | — |
 | Respaldos en pausa / Drive (`:320`, `:331`, `:342`) | `"datos"` (`:325`, `:337`, `:347`) | — |
-| Cronómetro de enfoque (`data/Enfoque.kt:240`) | EnfoqueActivity (`Enfoque.kt:225-227`) | Empezar, Reanudar, Saltar descanso, Pausar, Terminar → `EnfoqueReceiver` (`Enfoque.kt:229-230`, `:244-256`) |
+| Cronómetro de enfoque (`data/Enfoque.kt:240`) | EnfoqueActivity (`Enfoque.kt:225-227`) | Empezar, Reanudar, Pasar a descanso, Volver al enfoque, Pausar, Terminar (desde el esquema 21) → `EnfoqueReceiver` (`Enfoque.kt:229-230`, `:244-256`) |
 | Fin de bloque (`Enfoque.kt:266`) | (no se revisó el intent) | — |
 
 ### 3.4 Accesos directos del ícono (`app/src/main/res/xml/accesos.xml`)

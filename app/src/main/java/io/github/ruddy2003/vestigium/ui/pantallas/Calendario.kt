@@ -224,8 +224,9 @@ fun PantallaCalendario(nav: Nav) {
                 Clave("momenta", "$mom")
                 val gasto = Repo.gastos.filter { it.fecha.startsWith(mes) }.sumOf { it.monto }
                 if (gasto > 0) Clave("svmptvs", "$%,.0f".format(gasto))
-                val hitos = dias.flatMap { Repo.dias[it]?.hitos ?: emptyList() }
-                if (hitos.isNotEmpty()) Clave("memorabilia", hitos.distinct().take(8).joinToString(", "))
+                // Las fechas señaladas del mes (con los hitos de antes), en el formato de siempre: «✈ Viaje a la costa».
+                val senaladas = dias.flatMap { io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(Repo.dias[it]) }
+                if (senaladas.isNotEmpty()) Clave("memorabilia", senaladas.distinct().take(8).joinToString(", "))
                 val esc = Repo.ascensos.count { it.fecha.startsWith(mes) }
                 if (esc > 0) Clave("ascensvs", "${porNumero(esc, "1 sesión", "$esc sesiones")}")
             }
@@ -647,7 +648,7 @@ private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean,
         if (marca != null) Text(marca, style = MaterialTheme.typography.titleLarge.copy(fontSize = 7.sp, letterSpacing = 0.5.sp), color = tinta.copy(alpha = 0.7f), modifier = Modifier.align(Alignment.TopEnd))
         Row(Modifier.align(Alignment.BottomStart), verticalAlignment = Alignment.CenterVertically) {
             if (d != null && d.nota.isNotBlank()) Box(Modifier.size(5.dp).background(tinta))
-            if (d != null && d.hitos.isNotEmpty()) Text("✦", fontSize = 8.sp, color = tinta, modifier = Modifier.padding(start = 2.dp))
+            if (io.github.ruddy2003.vestigium.data.Senaladas.de(d).isNotEmpty()) Text("✦", fontSize = 8.sp, color = tinta, modifier = Modifier.padding(start = 2.dp))
             if (nMom > 0) Text("•".repeat(minOf(nMom, 3)), fontSize = 9.sp, color = tinta, modifier = Modifier.padding(start = 2.dp))
         }
         if (d?.foto != null && !conFoto) Box(Modifier.align(Alignment.BottomEnd).size(4.dp).background(MaterialTheme.colorScheme.primary))

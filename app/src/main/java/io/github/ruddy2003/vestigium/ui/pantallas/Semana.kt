@@ -130,13 +130,14 @@ fun PantallaSemana(nav: Nav) {
         val notas = dias.mapNotNull { Repo.dias[it]?.nota } + r.momentos.map { it.texto }
         val personas = notas.flatMap { Texto.personas(it).map { p -> Texto.canon(p, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }
         val temas = notas.flatMap { Texto.temas(it).map { p -> Texto.canon(p, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }
-        val hitos = dias.flatMap { f -> Repo.dias[f]?.hitos.orEmpty() }
-        if (personas.isNotEmpty() || temas.isNotEmpty() || hitos.isNotEmpty()) Seccion("Personas, temas e hitos") {
+        // Las fechas señaladas de la semana (con los hitos de antes), cada una con su día: tocarla abre ese día.
+        val senaladas = dias.flatMap { f -> io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(Repo.dias[f]).map { f to it } }.distinctBy { it.second }
+        if (personas.isNotEmpty() || temas.isNotEmpty() || senaladas.isNotEmpty()) Seccion("Personas, temas e hitos") {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 // Llevan su texto al buscador (N-22).
                 personas.take(8).forEach { (p, n) -> Ficha("@$p · $n", false) { Seleccion.buscar = "@$p"; nav.ir("buscar") } }
                 temas.take(8).forEach { (t, n) -> Ficha("#$t · $n", false) { Seleccion.buscar = "#$t"; nav.ir("buscar") } }
-                hitos.distinct().forEach { h -> Ficha("★ ${h.replace('_', ' ')}", true) {} }
+                senaladas.forEach { (f, e) -> Ficha(e, true) { Seleccion.abrir(nav, f) } }
             }
         }
 

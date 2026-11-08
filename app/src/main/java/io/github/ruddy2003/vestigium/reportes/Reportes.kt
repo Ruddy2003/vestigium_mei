@@ -1407,10 +1407,19 @@ object Reportes {
             ).forEach { (k, v) -> h.clave(k, v) }
         }
 
-        // ---- Lo memorable
-        if (d.hitos.isNotEmpty() || logros.isNotEmpty()) {
+        // ---- Lo memorable: las fechas señaladas (con los hitos de antes, «✈ Viaje a la costa»), los episodios del periodo
+        // (por tipo) y los logros. Los episodios son datos normales; la masturbación y la intimidad, privadas, nunca entran.
+        val senaladas = d.fechas.flatMap { io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(Repo.dias[it]) }.distinct()
+        val enPeriodo = d.fechas.toSet()
+        val episodios = Repo.momentos.filter { it.tipo == "episodio" && !it.privado && it.fecha in enPeriodo }
+        if (senaladas.isNotEmpty() || episodios.isNotEmpty() || logros.isNotEmpty()) {
             h.titulo("Lo memorable", "MEMORABILIA")
-            if (d.hitos.isNotEmpty()) h.clave("memorabilia", d.hitos.take(8).joinToString(", ") { it.replace('_', ' ') })
+            if (senaladas.isNotEmpty()) h.clave("memorabilia", senaladas.take(8).joinToString(", "))
+            if (episodios.isNotEmpty()) {
+                val porTipo = episodios.groupingBy { Catalogo.nombreEpisodio(it) }.eachCount().entries.sortedByDescending { it.value }
+                h.clave("casus", porNumero(episodios.size, "1 episodio", "${episodios.size} episodios") +
+                    " · " + porTipo.joinToString(", ") { (nombre, k) -> "${nombre.lowercase()} ×$k" })
+            }
             if (logros.isNotEmpty()) h.clave("palmae", logros.take(8).joinToString(" · ") { "${it.icono} ${it.nombre}" })
         }
     }

@@ -250,6 +250,17 @@ object Estilo {
 
     /** Título y comentario de una sección. */
     fun seccion(titulo: String, latin: String?): Pair<String, String?> {
+        // Las fechas señaladas (esquema 21) heredan el nombre que cada tema le daba a los hitos («MEMORABILIA», «Hechos
+        // notables»…); donde el tema no lo renombraba, se llaman «Fechas señaladas».
+        if (titulo == "Fechas señaladas") {
+            val h = seccionBase("Hitos", latin)
+            return if (h.first.contains("hitos", ignoreCase = true)) seccionBase(titulo, latin)
+            else h.first to h.second?.replace("hitos", "fechas señaladas")
+        }
+        return seccionBase(titulo, latin)
+    }
+
+    private fun seccionBase(titulo: String, latin: String?): Pair<String, String?> {
         val la = latin ?: Romano.latin(titulo)
         return when (tema) {
             TemaId.ROMANO -> (la ?: titulo.uppercase()) to (if (la != null) comentario + titulo.lowercase() else null)
@@ -840,8 +851,11 @@ object Estilo {
             TemaId.ANTIGUAS -> es(Claves.ANTIGUAS)?.uppercase()
             TemaId.CUEVA -> es(Claves.CUEVA)
         }
-        return sangria + (v ?: k)
+        // Las claves nuevas que un tema todavía no traduce (esquema 21: «casus», los episodios) van en español, no en latín.
+        return sangria + (v ?: (if (tema != TemaId.ROMANO && k in NUEVAS_ES) CLAVES_ES[k] else null) ?: k)
     }
+
+    private val NUEVAS_ES = setOf("casus")
 
     /** Letras que no se leen sin saber la lengua: griego, cirílico, árabe, mongol, chino, japonés y coreano. */
     private val AJENAS = Regex("[\\u0370-\\u03FF\\u1F00-\\u1FFF\\u0400-\\u052F\\u0600-\\u06FF\\u1800-\\u18AF\\u3000-\\u303F\\u3040-\\u30FF\\u4E00-\\u9FFF\\uAC00-\\uD7AF]")
@@ -869,7 +883,7 @@ object Estilo {
         "aer" to "air", "corpus" to "body", "nutritio" to "food", "cibus" to "meals", "robur" to "gym", "musculi" to "muscles",
         "voces" to "calls", "soni" to "audio", "retia" to "wifi", "lumen" to "light", "vis" to "charge", "lectio" to "kindle",
         "strepitus" to "noise", "luna" to "moon", "dias" to "days", "animus" to "mood", "optimus" to "best", "momenta" to "events",
-        "svmptvs" to "spent", "memorabilia" to "milestones", "ascensvs" to "climbing",
+        "svmptvs" to "spent", "memorabilia" to "milestones", "ascensvs" to "climbing", "casus" to "episodes",
         "dies" to "days", "quaestiones" to "tests", "celeritas" to "reaction", "bibliotheca" to "library", "synchronia" to "sync", "opera" to "works", "iudicium" to "review", "citatio" to "quote", "sententia" to "phrase", "orbis" to "world", "nova" to "new", "mirabilia" to "sites", "somnium" to "dream", "epistulae" to "letters", "aperta" to "opened", "initium" to "start", "finis" to "end", "pessimus" to "worst", "personae" to "people", "themata" to "topics", "praeclarum" to "top", "dies felix" to "best_day", "apps" to "apps",
         "consuetudo" to "habits", "series" to "streak", "palmae" to "achievements", "reditus" to "income",
     )
@@ -882,7 +896,7 @@ object Estilo {
         "passus" to "cuadras", "cor" to "pulso", "iter" to "bajada", "telephonum" to "pantallita", "telephon" to "pantallita",
         "aer" to "vapor", "strepitus" to "barullo", "lumen" to "neón", "series" to "noches_seguidas", "reditus" to "lana",
         "dies" to "noches", "dias" to "noches", "horologium" to "reloj_de_pulso", "robur" to "dojo", "voces" to "llamadas",
-        "nutritio" to "lo_que_comí", "optimus" to "la_mejor", "memorabilia" to "hitos", "ascensvs" to "escaleras",
+        "nutritio" to "lo_que_comí", "optimus" to "la_mejor", "memorabilia" to "lo_memorable", "ascensvs" to "escaleras",
     )
     private val CLAVES_GRIEGO = mapOf(
         "horologium" to "ὡρολόγιον", "somnus" to "ὕπνος", "stadia" to "στάδια", "cor" to "καρδία", "passus" to "βήματα", "motus" to "κίνησις",
@@ -926,7 +940,7 @@ object Estilo {
         "aer" to "aire", "corpus" to "cuerpo", "nutritio" to "nutrición", "cibus" to "comidas", "robur" to "gimnasio", "musculi" to "músculos",
         "voces" to "llamadas", "soni" to "audio", "retia" to "wifi", "lumen" to "luz", "vis" to "carga", "lectio" to "lectura",
         "strepitus" to "ruido", "luna" to "luna", "dias" to "días", "animus" to "ánimo", "optimus" to "mejor", "momenta" to "momentos",
-        "svmptvs" to "gasto", "memorabilia" to "hitos", "ascensvs" to "escalada",
+        "svmptvs" to "gasto", "memorabilia" to "fechas_señaladas", "ascensvs" to "escalada", "casus" to "episodios",
         "dies" to "días", "quaestiones" to "cuestionarios", "celeritas" to "reacción", "bibliotheca" to "biblioteca", "synchronia" to "sincronía", "opera" to "obras", "iudicium" to "opinión", "citatio" to "cita", "sententia" to "frase", "orbis" to "mundo", "nova" to "nuevo", "mirabilia" to "maravillas", "somnium" to "soñé", "epistulae" to "cartas", "aperta" to "abierta", "initium" to "inicio", "finis" to "fin", "pessimus" to "peor", "personae" to "personas", "themata" to "temas", "praeclarum" to "la_mejor", "dies felix" to "día_feliz",
         "consuetudo" to "hábitos", "series" to "racha", "palmae" to "logros", "reditus" to "ingresos",
     )

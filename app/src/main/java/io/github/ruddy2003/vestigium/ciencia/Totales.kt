@@ -195,7 +195,11 @@ object Totales {
             conteo("Momentos registrados", mo.size, mo.minOfOrNull { it.fecha })?.let(c::add)
             val mu = momentos.filter { it.tipo == "muestreo" }
             conteo("Avisos respondidos", mu.size, mu.minOfOrNull { it.fecha })?.let(c::add)
-            conteo("Hitos", dias.sumOf { it.hitos.size }, dias.filter { it.hitos.isNotEmpty() }.minOfOrNull { it.fecha })?.let(c::add)
+            // Las fechas señaladas (con los hitos de antes) y los episodios (esquema 21; los momentos privados ya no están en [momentos]).
+            conteo("Fechas señaladas", dias.sumOf { io.github.ruddy2003.vestigium.data.Senaladas.de(it).size },
+                dias.filter { io.github.ruddy2003.vestigium.data.Senaladas.de(it).isNotEmpty() }.minOfOrNull { it.fecha })?.let(c::add)
+            val ep = momentos.filter { it.tipo == "episodio" }
+            conteo("Episodios", ep.size, ep.minOfOrNull { it.fecha })?.let(c::add)
             conteo("Sueños recordados", dias.count { it.sueno_recordado }, dias.filter { it.sueno_recordado }.minOfOrNull { it.fecha })?.let(c::add)
             val re = Repo.respuestas.filter { en(it.fecha) }
             conteo("Cuestionarios respondidos", re.size, re.minOfOrNull { it.fecha })?.let(c::add)
@@ -316,8 +320,9 @@ object Totales {
 
         run {
             val m = LinkedHashMap<String, Entrada>()
-            dias.forEach { d -> d.hitos.forEach { h -> m.getOrPut(normal(h)) { Entrada(h, "días") }.sumar(d.fecha, 1.0) } }
-            if (m.isNotEmpty()) indices.add(Indice("hitos", "Hitos", m.values.sortedByDescending { it.total }) { e -> "${porNumero(e.total, "1 día", "${n(e.total)} días")}" })
+            // Las fechas señaladas (con los hitos de antes), como en todas las vistas: «✈ Viaje a la costa».
+            dias.forEach { d -> io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(d).distinct().forEach { h -> m.getOrPut(normal(h)) { Entrada(h, "días") }.sumar(d.fecha, 1.0) } }
+            if (m.isNotEmpty()) indices.add(Indice("senaladas", "Fechas señaladas", m.values.sortedByDescending { it.total }) { e -> "${porNumero(e.total, "1 día", "${n(e.total)} días")}" })
         }
 
         if (escuchas.isNotEmpty()) {

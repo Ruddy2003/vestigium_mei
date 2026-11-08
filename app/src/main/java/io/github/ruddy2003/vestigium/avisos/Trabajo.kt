@@ -121,7 +121,7 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         intentar { io.github.ruddy2003.vestigium.data.Spotify.quizaSincronizar(ctx) }
         intentar { avisos(ctx) }
         intentar { diario(ctx) }
-        // Por si la alarma del enfoque se perdió (reinicio del teléfono): avanza y la vuelve a programar.
+        // Por si la alarma del enfoque se perdió (reinicio del teléfono): avisa de la meta si no se avisó y la vuelve a programar.
         intentar { io.github.ruddy2003.vestigium.data.Enfoque.avanzar(ctx) }
         // El tema del día (si pediste que cambie solo): también el widget y el ícono.
         intentar { if (io.github.ruddy2003.vestigium.ui.RotacionTema.revisar()) { io.github.ruddy2003.vestigium.widget.Widgets.actualizar(ctx); io.github.ruddy2003.vestigium.ui.IconoApp.aplicar(ctx); io.github.ruddy2003.vestigium.ui.AccesosDirectos.publicar(ctx) } }

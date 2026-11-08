@@ -1649,6 +1649,42 @@ class Capturas {
     @Test fun enfoqueCorriendoCiber() = v73(TemaId.CIBER, true, 2400, { it.copy(enfoque_plan = planEnfoque(0, 12)) }) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
     @Test fun enfoqueDescansoBotanico() = v73(TemaId.BOTANICO, false, 2400, { it.copy(enfoque_plan = planEnfoque(1, 4, hechoMin = 30)) }) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
     @Test fun enfoqueEsperandoSeda() = v73(TemaId.SEDA, false, 2400, { it.copy(enfoque_plan = planEnfoque(2, 0, esperando = true, hechoMin = 30)) }) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
+    // ---------------- esquema 21: el enfoque sigue contando, descanso «otra», suplementos varias veces, fechas señaladas y episodios ----------------
+    private fun planExtra(segmento: Int, haceMin: Int, hechoMin: Int = 0) = planEnfoque(segmento, haceMin, hechoMin = hechoMin).copy(avisado = true)
+    private fun enfoque21(tema: TemaId, oscuro: Boolean, plan: io.github.ruddy2003.vestigium.data.PlanEnfoque?, nombre: String) =
+        v73(tema, oscuro, 2400, { c -> if (plan != null) c.copy(enfoque_plan = plan) else c.copy(enfoque_ultimo = io.github.ruddy2003.vestigium.data.PlanEnfoque("tesis", 120, 3, 7)) }, nombre) {
+            io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {}
+        }
+    // Bloque 1 de 4 (30 min) con 10 de más; descanso de 10 con 4 de más; el último bloque con 5 de más; planear con descanso de 7 (otra).
+    private val ENFOQUE21 = listOf(TemaId.ROMANO to false, TemaId.GOTICO to true, TemaId.CIBER to true, TemaId.BOTANICO to false, TemaId.SEDA to true, TemaId.NAPOLEON to false)
+    @Test fun enfoqueExtra21() = ENFOQUE21.forEach { (t, o) ->
+        enfoque21(t, o, planExtra(0, 40), "e21_bloque_${t.id}")
+        enfoque21(t, o, planExtra(1, 14, 40), "e21_descanso_${t.id}")
+        enfoque21(t, o, planExtra(6, 35, 90), "e21_ultimo_${t.id}")
+        enfoque21(t, o, null, "e21_planear_${t.id}")
+    }
+
+    /** Un día de ejemplo con dos fechas señaladas (una de antes, como hito), dos episodios y dos tomas de creatina de tres al día. */
+    private fun ejemplo21() {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        fun iso(h: Int, m: Int = 0) = java.time.LocalDate.parse(hoy).atTime(h, m).atZone(java.time.ZoneId.systemDefault()).toOffsetDateTime().withNano(0).toString()
+        Repo.diasEnMemoria(Repo.dias + (hoy to (Repo.dias[hoy] ?: io.github.ruddy2003.vestigium.data.Dia(hoy)).copy(hitos = listOf("primer_dia_de_clases"),
+            senaladas = listOf(io.github.ruddy2003.vestigium.data.Senalada("viaje", "Viaje corto a la sierra"), io.github.ruddy2003.vestigium.data.Senalada("logro")))))
+        Repo.momentosEnMemoria(Repo.momentos + listOf(
+            io.github.ruddy2003.vestigium.data.Momento("e21a", iso(9, 30), hoy, "episodio", intensidad = 4, episodio = "crisis", duracion_min = 20, sintomas = listOf("corazon", "aire")),
+            io.github.ruddy2003.vestigium.data.Momento("e21b", iso(13, 10), hoy, "episodio", intensidad = 2, episodio = "pelea", personas = listOf("luis"))))
+        Repo.lote3EnMemoria(listOf(
+            io.github.ruddy2003.vestigium.data.TomaSuplemento("t21a", "creatina", iso(8), hoy, 5.0),
+            io.github.ruddy2003.vestigium.data.TomaSuplemento("t21b", "creatina", iso(14), hoy, 5.0)), emptyMap())
+    }
+    private fun dia21(tema: TemaId, oscuro: Boolean, nombre: String, alto: Int, cont: @Composable () -> Unit) =
+        v73(tema, oscuro, alto, { c -> ejemplo21(); io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.noche = null
+            c.copy(suplementos = listOf(io.github.ruddy2003.vestigium.data.Suplementos.CATALOGO[0].copy(tomas_dia = 3),
+            io.github.ruddy2003.vestigium.data.Suplementos.CATALOGO[2]), suplementos_horas = listOf(8, 14, 21)) }, nombre) { cont() }
+    @Test fun nocheSenaladas21() = ENFOQUE21.forEach { (t, o) -> dia21(t, o, "e21_noche_${t.id}", 9000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) } }
+    @Test fun suplementos21() = ENFOQUE21.forEach { (t, o) -> dia21(t, o, "e21_supl_${t.id}", 3600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaSuplementos(navVacia) } }
+    @Test fun diaEpisodios21() = ENFOQUE21.take(3).forEach { (t, o) -> dia21(t, o, "e21_dia_${t.id}", 8000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) } }
+
     @Test fun trofeosRomano() = v73(TemaId.ROMANO, false, 7000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
     @Test fun trofeosOrden() = v73(TemaId.ORDEN, true, 5000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
 

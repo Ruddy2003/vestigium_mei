@@ -294,8 +294,9 @@ data class Tramo(
 /**
  * Un enfoque planeado: [meta_min] minutos de enfoque repartidos en bloques iguales con [descansos] descansos de
  * [descanso_min] minutos en medio. Sin meta = cronómetro libre. El estado va en el mismo objeto: en qué segmento vas
- * (bloque o descanso), desde cuándo cuenta ([seg_inicio]; null = en pausa o esperando que confirmes el siguiente bloque)
- * y cuánto llevaba antes de pausar.
+ * (bloque o descanso), desde cuándo cuenta ([seg_inicio]; null = en pausa o, en un plan de antes del esquema 21, esperando
+ * que confirmes el siguiente bloque) y cuánto llevaba antes de pausar. Desde el esquema 21 la meta de cada segmento no lo
+ * corta: avisa una vez ([avisado]) y sigue contando hasta que pasas al descanso, vuelves al enfoque o terminas.
  */
 @Serializable
 data class PlanEnfoque(

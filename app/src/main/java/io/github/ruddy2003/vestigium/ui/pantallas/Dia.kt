@@ -74,6 +74,8 @@ import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Experimentos
 import io.github.ruddy2003.vestigium.data.Luna
 import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.data.Senalada
+import io.github.ruddy2003.vestigium.data.Senaladas
 import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.sensores.Actividad
 import io.github.ruddy2003.vestigium.sensores.Galeria
@@ -91,7 +93,6 @@ import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.FilaFichas
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.Interruptor
-import io.github.ruddy2003.vestigium.ui.ListaEtiquetas
 import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Opciones
 import io.github.ruddy2003.vestigium.ui.Romano
@@ -532,9 +533,9 @@ fun PantallaNoche(nav: Nav) {
                 if (activos.any { !d.habitos.containsKey(it.id) }) Ayuda("Sin respuesta queda en blanco, no como «no».", Modifier.padding(top = 4.dp))
             }
         }
-        // Lo que tomaste ese día: sirve también para lo que olvidaste anotar (N-09, E-11). Tocar de nuevo lo quita.
+        // Lo que tomaste ese día: sirve también para lo que olvidaste anotar (N-09, E-11). «+» suma una toma y «−» quita la última.
         if (io.github.ruddy2003.vestigium.data.Suplementos.activos(c).isNotEmpty())
-            Seccion("Suplementos de este día", "Toca lo que tomaste ese día; si ya está, tocarlo lo quita.", numero = n(), plegable = true) { SuplementosDelDia(fecha) }
+            Seccion("Suplementos de este día", "Toca + por cada toma; − quita la última.", numero = n(), plegable = true) { SuplementosDelDia(fecha) }
         // 6. El diario, lo que más mueve el ánimo, al final de lo esencial.
         if (ver("diario")) Seccion("Diario", "Escribe libre. Usa @persona y #tema; abajo ves lo que se detecta y si alguna etiqueta parece error de dedo.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqDiario)) {
             // El diario es un objeto del tema (rollo, libro, carta…): al tocarlo se abre a pantalla completa para escribir.
@@ -551,7 +552,7 @@ fun PantallaNoche(nav: Nav) {
             BotonTexto(onClick = { nav.ir("biblioteca_diario") }) { Text("abrir la biblioteca del diario →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }
 
-        // 7. Lo opcional, plegado y en orden fijo: lectura, lo mejor y lo peor, hitos, obras, foto y lo privado.
+        // 7. Lo opcional, plegado y en orden fijo: lectura, lo mejor y lo peor, episodios, fechas señaladas, obras, foto y lo privado.
         Text("opcional", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 28.dp))
         Seccion("Lectura del día", "Tres preguntas de marcos científicos. Toca «cómo elegir» si dudas.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             Tarjeta {
@@ -577,8 +578,16 @@ fun PantallaNoche(nav: Nav) {
             CampoTexto(value = d.peor_momento, onValueChange = { cambiar(d.copy(peor_momento = it)) }, modifier = Modifier.fillMaxWidth(),
                 label = { Text("lo peor", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
         }
-        Seccion("Hitos", "Lo que no pasa todos los días: un vuelo, un beso, una decisión importante. Una etiqueta corta por cosa.", numero = n(), plegable = true, plegadaPorDefecto = true) {
-            ListaEtiquetas(d.hitos.map { it.replace('_', ' ') }, "primer vuelo, mudanza, una decisión importante", normalizar = { it.trim().replace(Regex("\\s+"), " ") }) { cambiar(d.copy(hitos = it)) }
+        // Esquema 21: los hitos se dividen en episodios (algo fuerte que te pasa, con hora; se anotan desde ⊕) y fechas
+        // señaladas (lo que quieres recordar, con su tipo y una frase). Cada una abierta si el día ya tiene alguna.
+        val episodios = Repo.momentos.filter { it.tipo == "episodio" && it.fecha == fecha }.sortedBy { it.ts }
+        Seccion("Episodios", "Algo fuerte que te pasó, con su hora: una crisis, un llanto, una pelea, una migraña. Toca uno para corregirlo.", numero = n(),
+            plegable = true, plegadaPorDefecto = episodios.isEmpty()) {
+            EpisodiosDelDia(fecha, episodios) { if (sucio) { Repo.guardarDia(d); sucio = false } }
+        }
+        Seccion("Fechas señaladas", "Lo que quieres recordar de este día: una primera vez, un viaje, un logro, un cambio, una pérdida, un encuentro. Una crisis o una pelea van como episodio, en ⊕.",
+            numero = n(), plegable = true, plegadaPorDefecto = Senaladas.de(d).isEmpty()) {
+            FechasSenaladas(d) { cambiar(it) }
         }
         Seccion("Lo que leí o vi hoy", "Toca la portada de lo que le dedicaste tiempo hoy: libro, serie, película, juego o artículo.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             ObrasDeHoy(fecha, nav)
@@ -942,37 +951,144 @@ private fun TuDia(fecha: String, nav: Nav, numero: Int, guardarAntes: () -> Unit
                     val f = if (fecha == Fechas.diaLogico()) Fechas.hoyCalendario() else fecha
                     abrir(io.github.ruddy2003.vestigium.data.Gasto(Repo.nuevoId(), f, hora, 0.0, c.categorias.firstOrNull() ?: "Otros"))
                 }
+                Ficha("episodio", false) {
+                    guardarAntes()
+                    ctx.startActivity(android.content.Intent(ctx, io.github.ruddy2003.vestigium.ui.QuickActivity::class.java)
+                        .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.MODO, io.github.ruddy2003.vestigium.ui.QuickActivity.M_MOMENTO)
+                        .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.TIPO, "episodio")
+                        .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.ORIGEN, "dia")
+                        .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.FECHA, fecha))
+                }
                 Ficha("nota", false) { guardarAntes(); Seleccion.notaPara = fecha; nav.ir("notas") }
                 Ficha("idea", false) { guardarAntes(); EdicionIdea.abrir(nav, EdicionIdea.nueva(fecha)) }
             }
             if (io.github.ruddy2003.vestigium.data.Suplementos.activos(c).isNotEmpty()) {
                 Etiqueta("Suplementos de ese día")
+                Ayuda("Toca + por cada toma; − quita la última.")
                 SuplementosDelDia(fecha)
             }
         }
     }
 }
 
-/** Las fichas de los suplementos activos para un día: tocar anota la toma (o la quita si ya estaba, con Deshacer). */
+/**
+ * Los suplementos activos de un día, uno por fila: «Creatina · ×2» con «−» y «+». «+» anota una toma más (hoy, a la hora de
+ * ahora; otro día, a la hora del recordatorio que toca a esa toma, o a las 9); «−» quita la última, con Deshacer (esquema 21).
+ */
 @Composable
 fun SuplementosDelDia(fecha: String) {
     val c = Repo.config
-    val suplementos = io.github.ruddy2003.vestigium.data.Suplementos.activos(c)
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        suplementos.forEach { s ->
-            val tomas = Repo.tomas.filter { it.suplemento == s.id && it.fecha == fecha }
+    val sup = io.github.ruddy2003.vestigium.data.Suplementos
+    val horas = sup.horas(c)
+    Column(Modifier.fillMaxWidth()) {
+        sup.activos(c).forEach { s ->
+            val n = sup.tomasDe(s.id, fecha).size
             val dosis = if (s.dosis % 1.0 == 0.0) s.dosis.toLong().toString() else s.dosis.toString()
-            Ficha((if (tomas.isNotEmpty()) "✓ " else "") + "${s.nombre.lowercase()} · $dosis ${s.unidad}", tomas.isNotEmpty()) {
-                if (tomas.isEmpty()) {
-                    // Hoy, con la hora de ahora; otro día, a tu hora habitual (o a las 9).
+            Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("${s.nombre} · ×$n" + (if (s.tomas_dia > 1) " de ${s.tomas_dia}" else ""), style = MaterialTheme.typography.bodyLarge,
+                        color = if (n > 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("$dosis ${s.unidad}".trim() + " por toma", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                BotonTexto(onClick = {
+                    val t = sup.quitarUltima(s.id, fecha)
+                    if (t != null) io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Toma quitada") { Repo.guardarToma(t) }
+                }, enabled = n > 0, modifier = Modifier.semantics { contentDescription = "Quitar la última toma de ${s.nombre}" }) {
+                    Text("−", style = MaterialTheme.typography.titleLarge)
+                }
+                BotonTexto(onClick = {
+                    // Hoy, con la hora de ahora; otro día, a la hora del recordatorio de esa toma (la primera si hay menos), o a las 9.
                     val ts = if (fecha == Fechas.diaLogico()) Fechas.ahoraIso()
-                        else Fechas.isoDeMillis(Fechas.millisDe(Fechas.parse(fecha).atTime((c.suplementos_hora ?: 9).coerceIn(5, 23), 0)))
-                    io.github.ruddy2003.vestigium.data.Suplementos.registrar(s, s.dosis, ts)
-                } else {
-                    val t = tomas.maxBy { it.ts }
-                    Repo.borrarToma(t.id); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Toma quitada") { Repo.guardarToma(t) }
+                        else Fechas.isoDeMillis(Fechas.millisDe(Fechas.parse(fecha).atTime((horas.getOrNull(n) ?: horas.firstOrNull() ?: 9).coerceIn(5, 23), 0)))
+                    sup.registrar(s, s.dosis, ts)
+                }, modifier = Modifier.semantics { contentDescription = "Anotar una toma de ${s.nombre}" }) {
+                    Text("+", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                 }
             }
+        }
+    }
+}
+
+/**
+ * Los episodios del día (esquema 21): algo fuerte que te pasó, con hora (una crisis, un llanto, una pelea, una migraña). Se
+ * anotan como un momento «episodio» desde el ⊕; aquí se ven, se corrigen al tocarlos y «+ un episodio» abre el registro con
+ * la fecha ya puesta. Son datos normales, no privados.
+ */
+@Composable
+private fun EpisodiosDelDia(fecha: String, episodios: List<io.github.ruddy2003.vestigium.data.Momento>, guardarAntes: () -> Unit) {
+    val ctx = LocalContext.current
+    var editando by remember(fecha) { mutableStateOf<io.github.ruddy2003.vestigium.data.Momento?>(null) }
+    editando?.let { m -> DialogoMomento(m) { editando = null } }
+    if (episodios.isNotEmpty()) Tarjeta {
+        episodios.forEach { m ->
+            Row(Modifier.fillMaxWidth().clickable { editando = m }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(Fechas.horaDe(m.ts) + "  ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                val fuerza = m.intensidad?.let { i -> " · " + (Catalogo.ANCLAS["episodio"]?.get(i)?.lowercase() ?: "$i/5") }.orEmpty()
+                Text(Catalogo.nombreEpisodio(m) + fuerza, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                Text(" ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.outline)
+            }
+        }
+    }
+    BotonTexto(onClick = {
+        guardarAntes()
+        ctx.startActivity(android.content.Intent(ctx, io.github.ruddy2003.vestigium.ui.QuickActivity::class.java)
+            .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.MODO, io.github.ruddy2003.vestigium.ui.QuickActivity.M_MOMENTO)
+            .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.TIPO, "episodio")
+            .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.ORIGEN, "dia")
+            .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.FECHA, fecha))
+    }) { Text("+ un episodio", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+}
+
+/**
+ * Las fechas señaladas del día (esquema 21): una ficha por tipo (emblema y nombre); al tocarla se abre «Una frase (opcional)»
+ * y «Agregar». Tocar una de la lista deja cambiar su tipo o su frase, o borrarla. Al guardar se escriben en [Dia.senaladas] con
+ * los hitos de antes ya incluidos (por [Senaladas.de]) y [Dia.hitos] vacío: así los viejos pasan solos.
+ */
+@Composable
+private fun FechasSenaladas(d: Dia, onCambio: (Dia) -> Unit) {
+    val lista = Senaladas.de(d)
+    // Lo que se está escribiendo: el tipo elegido y, si se corrige una de la lista, su lugar en ella.
+    var tipo by remember(d.fecha) { mutableStateOf<String?>(null) }
+    var indice by remember(d.fecha) { mutableStateOf<Int?>(null) }
+    var frase by remember(d.fecha) { mutableStateOf("") }
+    fun cerrar() { tipo = null; indice = null; frase = "" }
+    fun guardar(l: List<Senalada>) = onCambio(d.copy(senaladas = l, hitos = emptyList()))
+    if (lista.isNotEmpty()) Tarjeta(Modifier.padding(bottom = 8.dp)) {
+        lista.forEachIndexed { i, s ->
+            Row(Modifier.fillMaxWidth().clickable {
+                if (indice == i) cerrar() else { indice = i; tipo = s.tipo; frase = s.texto }
+            }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(Senaladas.etiqueta(s), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f),
+                    color = if (indice == i) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                Text(" ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.outline)
+            }
+        }
+    }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Catalogo.SENALADAS.forEach { o ->
+            Ficha("${o.detalle} ${o.nombre}", tipo == o.id) {
+                // En una nueva, tocar otra vez el mismo tipo la cierra; al corregir, cambia el tipo.
+                if (tipo == o.id && indice == null) cerrar() else { tipo = o.id }
+            }
+        }
+    }
+    val t = tipo ?: return
+    val i = indice
+    Tarjeta(Modifier.padding(top = 8.dp)) {
+        val o = Catalogo.senalada(t)
+        Text((if (i == null) "" else "Corregir · ") + "${o.detalle} ${o.nombre}", style = MaterialTheme.typography.titleMedium)
+        CampoTexto(value = frase, onValueChange = { frase = it.take(120) }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true,
+            placeholder = { Text("Una frase (opcional)", style = MaterialTheme.typography.bodyMedium) })
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            io.github.ruddy2003.vestigium.ui.BotonPrincipal(if (i == null) "Agregar" else "Guardar", Modifier.weight(1f)) {
+                val nueva = Senalada(t, frase.trim().replace(Regex("\\s+"), " "))
+                guardar(if (i == null || i !in lista.indices) lista + nueva else lista.mapIndexed { k, s -> if (k == i) nueva else s })
+                cerrar()
+            }
+            if (i != null) BotonTexto(onClick = { if (i in lista.indices) guardar(lista.filterIndexed { k, _ -> k != i }); cerrar() }) {
+                Text("borrar", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.error)
+            }
+            BotonTexto(onClick = { cerrar() }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) }
         }
     }
 }

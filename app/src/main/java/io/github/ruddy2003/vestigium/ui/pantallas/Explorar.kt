@@ -290,11 +290,14 @@ fun PantallaExplorar(nav: Nav) {
             val eq = Repo.equivalencias()
             val p = Repo.dias.values.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct() }.groupingBy { it }.eachCount()
             val t = Repo.dias.values.flatMap { d -> Texto.temas(d.nota).map { Texto.canon(it, eq) }.distinct() }.groupingBy { it }.eachCount()
-            val h = Repo.dias.values.flatMap { it.hitos }.groupingBy { it }.eachCount()
+            // Las fechas señaladas (con los hitos de antes) ya no son variables (esquema 21): cada una abre su día (el último, si se repite).
+            val senaladas = io.github.ruddy2003.vestigium.data.Senaladas.dias().flatMap { (f, l) -> l.map { io.github.ruddy2003.vestigium.data.Senaladas.etiqueta(it) }.distinct().map { it to f } }
+            val h = senaladas.groupingBy { it.first }.eachCount()
+            val diaDe = senaladas.groupBy({ it.first }, { it.second }).mapValues { (_, fs) -> fs.maxOrNull() }
             val ids = vars.map { it.id }.toSet()
             fun id(pre: String, k: String): String? = (pre + Texto.slug(k).take(40)).takeIf { it in ids }
             Ayuda("Toca una para ver todo lo que se mueve con ella.", Modifier.padding(bottom = 6.dp))
-            Lista("Personas", p, "@", { id("per_", it) }, ::abrirFicha); Lista("Temas", t, "#", { id("tema_", it) }, ::abrirFicha); Lista("Hitos", h, "", { id("hito_", it) }, ::abrirFicha)
+            Lista("Personas", p, "@", { id("per_", it) }, ::abrirFicha); Lista("Temas", t, "#", { id("tema_", it) }, ::abrirFicha); Lista("Fechas señaladas", h, "", { diaDe[it] }) { Seleccion.abrir(nav, it) }
             BotonTexto(onClick = { nav.ir("totales") }) { Text("Ver menciones con fechas y por mes en Totales ›") }
         }
 

@@ -205,8 +205,9 @@ fun PantallaAnno(nav: Nav) {
                 if (fotos > 0) Clave("imagines", porNumero(fotos, "1 foto", "%,d fotos".format(fotos)))
                 val notif = Repo.notifs.values.filter { it.fecha.startsWith(pre) }.sumOf { it.total }
                 if (notif > 0) Clave("monita", "%,d notificaciones".format(notif))
-                val hitos = dias.flatMap { it.hitos }.distinct()
-                if (hitos.isNotEmpty()) Clave("memorabilia", hitos.take(12).joinToString(", "))
+                // Las fechas señaladas del año (con los hitos de antes): «✈ Viaje a la costa».
+                val senaladas = dias.flatMap { io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(it) }.distinct()
+                if (senaladas.isNotEmpty()) Clave("memorabilia", senaladas.take(12).joinToString(", "))
                 val feliz = dias.filter { it.valencia != null }.maxByOrNull { it.valencia!! }
                 feliz?.let { Clave("dies felix", Fechas.titulo(it.fecha).lowercase()) }
             }

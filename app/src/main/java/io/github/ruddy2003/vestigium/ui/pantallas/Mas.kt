@@ -115,7 +115,7 @@ fun PantallaMas(nav: Nav) {
                 Separador()
                 FilaMas("red", "Red", "Quién conoce a quién, como un grafo", ir)
                 Separador()
-                FilaMas("temas", "Tus temas", if (temasN == 0) "Tus #temas, ordenados y sin duplicados" else "$temasN #temas · juntar los que se parecen, renombrar, pasar a hitos", ir)
+                FilaMas("temas", "Tus temas", if (temasN == 0) "Tus #temas, ordenados y sin duplicados" else "$temasN #temas · juntar los que se parecen, renombrar, pasar a fecha señalada", ir)
                 Separador()
                 FilaMas("sustancias", "Sustancias", "Alcohol, cannabis, tabaco, cafeína: episodios, niveles y cruda", ir)
                 Separador()

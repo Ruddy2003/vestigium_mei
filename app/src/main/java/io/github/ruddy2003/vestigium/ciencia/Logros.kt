@@ -258,13 +258,13 @@ object Logros {
         }
         val animo = Repo.momentos.filter { it.esAnimo }.sortedBy { it.ts }
         secreto("cien_animo", "Cien estados de ánimo", "Registra tu ánimo 100 veces", "◔", 2, 100.0, animo.size.toDouble(), animo.getOrNull(99)?.fecha, "registros")
-        // Un hito en cada mes de un mismo año.
-        val hitosPorAnio = Repo.dias.values.filter { it.hitos.isNotEmpty() }.groupBy { it.fecha.take(4) }
+        // Una fecha señalada (o un hito de antes) en cada mes de un mismo año.
+        val hitosPorAnio = Repo.dias.values.filter { io.github.ruddy2003.vestigium.data.Senaladas.de(it).isNotEmpty() }.groupBy { it.fecha.take(4) }
         val anioMemorable = hitosPorAnio.entries.mapNotNull { (_, l) ->
             val primeroPorMes = l.groupBy { it.fecha.substring(5, 7) }.mapValues { (_, x) -> x.minOf { it.fecha } }
             if (primeroPorMes.size == 12) primeroPorMes.values.max() else null
         }.minOrNull()
-        secreto("anio_memorable", "Un año memorable", "Anota al menos un hito en cada mes de un mismo año", "✶", 3, 12.0,
+        secreto("anio_memorable", "Un año memorable", "Anota al menos una fecha señalada en cada mes de un mismo año", "✶", 3, 12.0,
             hitosPorAnio.values.maxOfOrNull { l -> l.map { it.fecha.substring(5, 7) }.toSet().size }?.toDouble() ?: 0.0, anioMemorable, "meses")
         // Una carta abierta al menos un año después de escribirla.
         val cartaVieja = Repo.cartas.filter { it.alFuturo && it.abierta }.mapNotNull { c ->
