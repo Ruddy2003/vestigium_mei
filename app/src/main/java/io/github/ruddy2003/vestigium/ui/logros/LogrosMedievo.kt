@@ -38,11 +38,11 @@ import kotlin.math.sqrt
 // ---------------------------------------------------------------- ayudantes de este archivo
 
 /** Los tonos del metal del nivel, un poco apagados de noche; [cristal] es el legendario (nivel 4), que lleva destellos. */
-private class Metal(val o: Color, val b: Color, val br: Color, val cristal: Boolean)
+private class MetalMedievo(val o: Color, val b: Color, val br: Color, val cristal: Boolean)
 
 private fun metal(e: EstadoPedestal, oscuro: Boolean) =
-    if (oscuro) Metal(mezcla(e.metalOscuro, Color.Black, 0.22f), mezcla(e.base, Color.Black, 0.14f), mezcla(e.brillo, Color.Black, 0.1f), e.nivel >= 4)
-    else Metal(e.metalOscuro, e.base, e.brillo, e.nivel >= 4)
+    if (oscuro) MetalMedievo(mezcla(e.metalOscuro, Color.Black, 0.22f), mezcla(e.base, Color.Black, 0.14f), mezcla(e.brillo, Color.Black, 0.1f), e.nivel >= 4)
+    else MetalMedievo(e.metalOscuro, e.base, e.brillo, e.nivel >= 4)
 
 /** El gris translúcido de lo que aún no se gana (como la figura sin ganar): oscuro sobre fondo claro, claro sobre fondo oscuro. */
 private fun silueta(oscuro: Boolean) = if (oscuro) Color(0xFFE6E0D6).copy(alpha = 0.11f) else Color(0xFF2E2A26).copy(alpha = 0.11f)
@@ -61,21 +61,21 @@ private fun DrawScope.sombraPie(x0: Float, x1: Float, y: Float, alto: Float, fue
 }
 
 /** Un clavo o remache del metal del nivel: la cabeza, su luz y, si cabe, el punto de brillo. */
-private fun DrawScope.remache(c: Offset, r: Float, m: Metal) {
+private fun DrawScope.remache(c: Offset, r: Float, m: MetalMedievo) {
     drawCircle(m.o, r, c)
     drawCircle(m.b, r * 0.72f, Offset(c.x - r * 0.12f, c.y - r * 0.12f))
     if (r > 1.1f * density) drawCircle(m.br, r * 0.3f, Offset(c.x - r * 0.3f, c.y - r * 0.3f))
 }
 
 /** Una barra del metal del nivel: la base, el filo de luz arriba y la sombra abajo. */
-private fun DrawScope.barra(r: Rect, m: Metal) {
+private fun DrawScope.barra(r: Rect, m: MetalMedievo) {
     drawRect(m.b, r.topLeft, r.size)
     drawRect(m.br, r.topLeft, Size(r.width, r.height * 0.3f))
     drawRect(m.o, Offset(r.left, r.bottom - r.height * 0.28f), Size(r.width, r.height * 0.28f))
 }
 
 /** El destello del cristal (legendario): una estrellita de cuatro puntas, solo si se ve. */
-private fun DrawScope.destello(c: Offset, r: Float, m: Metal) {
+private fun DrawScope.destello(c: Offset, r: Float, m: MetalMedievo) {
     if (!m.cristal || r < 1.4f * density) return
     drawPath(estrella(c, r, 4, 0.22f), Color.White.copy(alpha = 0.85f))
     drawCircle(m.br, r * 0.22f, c)
@@ -98,7 +98,7 @@ private fun rombo(c: Offset, rx: Float, ry: Float): Path = Path().apply {
 }
 
 /** Una escuadra de metal en ele en la esquina ([sx], [sy] = ±1 hacia adentro) con su remache. */
-private fun DrawScope.escuadra(x: Float, y: Float, sx: Float, sy: Float, largo: Float, grueso: Float, m: Metal) {
+private fun DrawScope.escuadra(x: Float, y: Float, sx: Float, sy: Float, largo: Float, grueso: Float, m: MetalMedievo) {
     val p = Path().apply {
         moveTo(x, y); lineTo(x + sx * largo, y); lineTo(x + sx * largo, y + sy * grueso); lineTo(x + sx * grueso, y + sy * grueso)
         lineTo(x + sx * grueso, y + sy * largo); lineTo(x, y + sy * largo); close()
@@ -115,7 +115,7 @@ private fun DrawScope.escuadra(x: Float, y: Float, sx: Float, sy: Float, largo: 
  * filas cada 230 dp desde los 60 dp (como mucho 8). [pilar] cabe en el hueco entre dos trofeos vecinos; [semi] es el
  * semiancho de la hornacina que enmarca cada trofeo, y su arco [arranque] lo bastante abajo para no cortar sus esquinas.
  */
-private class Planta(val w: Float, val h: Float, val u: Float, columnas: Int) {
+private class PlantaMedievo(val w: Float, val h: Float, val u: Float, columnas: Int) {
     val n = columnas.coerceIn(1, 4)
     val paso = w / n
     /** Lo que queda libre a cada lado de un trofeo dentro de su franja. */
@@ -328,7 +328,7 @@ object LogrosMedieval : DisenoLogros {
      */
     override fun DrawScope.escenaSalon(e: EstadoSalon, oscuro: Boolean) {
         val w = size.width; val h = size.height; val u = density
-        val p = Planta(w, h, u, e.columnas)
+        val p = PlantaMedievo(w, h, u, e.columnas)
         fun v(c: Color, f: Float) = mezcla(e.fondo, c, f)
         val piedra = if (oscuro) Color(0xFF5A4834) else SILLAR
         val junta = if (oscuro) Color(0xFF000000) else Color(0xFF5E4A33)
@@ -580,7 +580,7 @@ object LogrosTemplario : DisenoLogros {
      */
     override fun DrawScope.escenaSalon(e: EstadoSalon, oscuro: Boolean) {
         val w = size.width; val h = size.height; val u = density
-        val p = Planta(w, h, u, e.columnas)
+        val p = PlantaMedievo(w, h, u, e.columnas)
         fun v(c: Color, f: Float) = mezcla(e.fondo, c, f)
         val cal = if (oscuro) Color(0xFF4A4740) else CAL
         val sillar = t(SILLAR, oscuro)
@@ -834,7 +834,7 @@ object LogrosSeda : DisenoLogros {
      */
     override fun DrawScope.escenaSalon(e: EstadoSalon, oscuro: Boolean) {
         val w = size.width; val h = size.height; val u = density
-        val p = Planta(w, h, u, e.columnas)
+        val p = PlantaMedievo(w, h, u, e.columnas)
         fun v(c: Color, f: Float) = mezcla(e.fondo, c, f)
         val adobe = if (oscuro) Color(0xFF4A3C30) else ADOBE
         val junta = if (oscuro) Color.Black else ADOBE_OSC
@@ -967,7 +967,7 @@ object LogrosGotico : DisenoLogros {
     private fun t(c: Color, oscuro: Boolean): Color = if (oscuro) mezcla(c, Color(0xFF0C0A08), 0.34f) else c
 
     /** Un cuadrifolio: cuatro lóbulos alrededor de [c]. */
-    private fun DrawScope.cuadrifolio(c: Offset, r: Float, m: Metal) {
+    private fun DrawScope.cuadrifolio(c: Offset, r: Float, m: MetalMedievo) {
         for (k in 0 until 4) {
             val a = Math.toRadians(45.0 + k * 90.0); val p = Offset(c.x + r * 0.45f * kotlin.math.cos(a).toFloat(), c.y + r * 0.45f * kotlin.math.sin(a).toFloat())
             drawCircle(m.o, r * 0.5f, p)
@@ -1091,7 +1091,7 @@ object LogrosGotico : DisenoLogros {
      */
     override fun DrawScope.escenaSalon(e: EstadoSalon, oscuro: Boolean) {
         val w = size.width; val h = size.height; val u = density
-        val p = Planta(w, h, u, e.columnas)
+        val p = PlantaMedievo(w, h, u, e.columnas)
         fun v(c: Color, f: Float) = mezcla(e.fondo, c, f)
         val piedra = if (oscuro) Color(0xFF5A5F78) else PIEDRA
         val junta = if (oscuro) Color.Black else MURO
@@ -1353,7 +1353,7 @@ object LogrosAndalus : DisenoLogros {
      */
     override fun DrawScope.escenaSalon(e: EstadoSalon, oscuro: Boolean) {
         val w = size.width; val h = size.height; val u = density
-        val p = Planta(w, h, u, e.columnas)
+        val p = PlantaMedievo(w, h, u, e.columnas)
         fun v(c: Color, f: Float) = mezcla(e.fondo, c, f)
         val yeso = if (oscuro) Color(0xFF3E5A54) else YESO
         val sombra = if (oscuro) Color.Black else YESO_SOMBRA
@@ -1597,7 +1597,7 @@ object LogrosMongol : DisenoLogros {
      */
     override fun DrawScope.escenaSalon(e: EstadoSalon, oscuro: Boolean) {
         val w = size.width; val h = size.height; val u = density
-        val p = Planta(w, h, u, e.columnas)
+        val p = PlantaMedievo(w, h, u, e.columnas)
         fun v(c: Color, f: Float) = mezcla(e.fondo, c, f)
         val fieltro = if (oscuro) Color(0xFF6A5644) else FIELTRO; val fieltroOsc = if (oscuro) Color(0xFF4E3E30) else FIELTRO_OSC
         val madera = t(NARANJA, oscuro)
@@ -1773,7 +1773,7 @@ object LogrosEdo : DisenoLogros {
             drawArc(m.br, 20f, 60f, false, Offset(c.x - r * 1.1f, c.y - r * 0.2f), Size(r * 2.2f, r * 2f), style = Stroke(maxOf(0.4f * u, r * 0.12f)))
         }
         // Las escuadras de hierro de las esquinas.
-        val hierro = Metal(t(SUMI, oscuro), t(Color(0xFF3A3530), oscuro), t(Color(0xFF6A625A), oscuro), false)
+        val hierro = MetalMedievo(t(SUMI, oscuro), t(Color(0xFF3A3530), oscuro), t(Color(0xFF6A625A), oscuro), false)
         val l = h * 0.32f; val g = maxOf(1f * u, h * 0.1f)
         escuadra(cuerpo.left, cuerpo.top, 1f, 1f, l, g, hierro); escuadra(cuerpo.right, cuerpo.top, -1f, 1f, l, g, hierro)
         escuadra(cuerpo.left, cuerpo.bottom, 1f, -1f, l, g, hierro); escuadra(cuerpo.right, cuerpo.bottom, -1f, -1f, l, g, hierro)
@@ -1819,7 +1819,7 @@ object LogrosEdo : DisenoLogros {
      */
     override fun DrawScope.escenaSalon(e: EstadoSalon, oscuro: Boolean) {
         val w = size.width; val h = size.height; val u = density
-        val p = Planta(w, h, u, e.columnas)
+        val p = PlantaMedievo(w, h, u, e.columnas)
         fun v(c: Color, f: Float) = mezcla(e.fondo, c, f)
         val madera = t(HINOKI, oscuro); val veta = t(KIRI_VETA, oscuro)
         val barro = if (oscuro) Color(0xFF4A4036) else TSUCHI
@@ -2067,7 +2067,7 @@ object LogrosRenacimiento : DisenoLogros {
      */
     override fun DrawScope.escenaSalon(e: EstadoSalon, oscuro: Boolean) {
         val w = size.width; val h = size.height; val u = density
-        val p = Planta(w, h, u, e.columnas)
+        val p = PlantaMedievo(w, h, u, e.columnas)
         fun v(c: Color, f: Float) = mezcla(e.fondo, c, f)
         val muro = n(INTONACO, oscuro); val serena = t(SERENA, oscuro)
         val vela = Color(0xFFFFC15A)
@@ -2316,7 +2316,7 @@ object LogrosPirata : DisenoLogros {
      */
     override fun DrawScope.escenaSalon(e: EstadoSalon, oscuro: Boolean) {
         val w = size.width; val h = size.height; val u = density
-        val p = Planta(w, h, u, e.columnas)
+        val p = PlantaMedievo(w, h, u, e.columnas)
         fun v(c: Color, f: Float) = mezcla(e.fondo, c, f)
         val roble = t(ROBLE, oscuro); val robleLuz = t(ROBLE_LUZ, oscuro); val brea = t(BREA, oscuro)
         val luzFarol = Color(0xFFFFC266)
@@ -2557,7 +2557,7 @@ object LogrosRevolucion : DisenoLogros {
      */
     override fun DrawScope.escenaSalon(e: EstadoSalon, oscuro: Boolean) {
         val w = size.width; val h = size.height; val u = density
-        val p = Planta(w, h, u, e.columnas)
+        val p = PlantaMedievo(w, h, u, e.columnas)
         fun v(c: Color, f: Float) = mezcla(e.fondo, c, f)
         val piedra = if (oscuro) Color(0xFF55504A) else PIEDRA
         val junta = if (oscuro) Color.Black else PIEDRA_JUNTA

@@ -128,7 +128,7 @@ private fun DrawScope.estrellaFacetada(e: EstadoPedestal, c: Offset, r: Float) {
  * hall, ≈ 215 dp cada una con 12 dp arriba y abajo; tope de 8) para poner hornacinas y faroles a la altura de cada trofeo.
  * Nada fuerte va en el centro de una franja ([cx]): ahí va el trofeo.
  */
-private class Planta(val w: Float, val h: Float, val u: Float, columnas: Int) {
+private class PlantaContemporanea(val w: Float, val h: Float, val u: Float, columnas: Int) {
     val n = columnas.coerceIn(1, 6)
     val paso = w / n
     val filas = ((h - 24 * u) / (215 * u)).roundToInt().coerceIn(1, 8)
@@ -141,7 +141,7 @@ private class Planta(val w: Float, val h: Float, val u: Float, columnas: Int) {
     fun y(k: Int) = 12 * u + alto * k
 }
 
-private fun DrawScope.planta(e: EstadoSalon) = Planta(size.width, size.height, density, e.columnas)
+private fun DrawScope.planta(e: EstadoSalon) = PlantaContemporanea(size.width, size.height, density, e.columnas)
 
 /** Un halo sin degradado: [capas] círculos concéntricos del mismo alfa bajo, que se suman hacia el centro. */
 private fun DrawScope.halo(c: Offset, r: Float, color: Color, capas: Int = 5) {
