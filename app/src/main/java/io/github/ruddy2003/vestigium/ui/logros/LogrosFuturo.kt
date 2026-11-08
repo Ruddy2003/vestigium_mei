@@ -8,6 +8,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -147,6 +148,40 @@ private fun DrawScope.pieVictoriaFuturo(m: Offset, ancho: Float, alto: Float, so
     val x = if (size.width > ancho + 2 * mg) m.x.coerceIn(ancho / 2 + mg, size.width - ancho / 2 - mg) else size.width / 2
     val y = if (size.height > alto + 2 * mg) (m.y - sobre * u).coerceIn(alto + mg, size.height - mg) else size.height - mg
     return Offset(x, y)
+}
+
+/** El grosor de un trazo de los objetos de Tu año: [f] veces el radio [r], pero nunca menos de 0.8 dp. */
+private fun DrawScope.grosorFuturo(r: Float, f: Float): Float = maxOf(r * f, 0.8f * density)
+
+/**
+ * Una creciente: el círculo de centro [c] y radio [r] menos otro de radio r · [k] corrido ([dx], [dy]); la boca queda del lado
+ * del corrimiento. Es un trazado de verdad (no un círculo tapado con el fondo), para rellenarlo o pasarle un tubo.
+ */
+private fun crecienteFuturo(c: Offset, r: Float, dx: Float, dy: Float, k: Float = 0.8f): Path =
+    Path.combine(PathOperation.Difference, Path().apply { addOval(Rect(c, r)) }, Path().apply { addOval(Rect(Offset(c.x + dx, c.y + dy), r * k)) })
+
+/** Un trazado por puntos dados en radios [r] alrededor de [c] (x0, y0, x1, y1…), cerrado si [cerrar]. */
+private fun trazadoFuturo(c: Offset, r: Float, cerrar: Boolean, vararg f: Float): Path = Path().apply {
+    var k = 0
+    while (k + 1 < f.size) { val x = c.x + r * f[k]; val y = c.y + r * f[k + 1]; if (k == 0) moveTo(x, y) else lineTo(x, y); k += 2 }
+    if (cerrar) close()
+}
+
+/**
+ * Un dibujo de pixeles centrado en [c], con celdas cuadradas de [celda]: cada letra de [filas] es una celda ('X' en [color], 'o'
+ * en [hueco], cualquier otra queda vacía). Las celdas de cada color van en un solo trazado, para que no se vean costuras.
+ */
+private fun DrawScope.pixelesFuturo(c: Offset, celda: Float, filas: List<String>, color: Color, hueco: Color) {
+    val n = filas.size; val m = filas.maxOf { it.length }
+    val x0 = c.x - m * celda / 2; val y0 = c.y - n * celda / 2
+    val lleno = Path(); val huecos = Path()
+    filas.forEachIndexed { i, fila ->
+        fila.forEachIndexed { j, ch ->
+            val celdaR = Rect(x0 + j * celda, y0 + i * celda, x0 + (j + 1) * celda, y0 + (i + 1) * celda)
+            when (ch) { 'X' -> lleno.addRect(celdaR); 'o' -> huecos.addRect(celdaR) }
+        }
+    }
+    drawPath(lleno, color); drawPath(huecos, hueco)
 }
 
 /**
@@ -618,6 +653,68 @@ object LogrosDistopia : DisenoLogros {
         // Unas gotas de tinta que saltaron.
         listOf(Offset(9f, -3f) to 0.7f, Offset(12f, -6f) to 0.45f, Offset(-15f, 4f) to 0.5f).forEach { (o, r) -> drawCircle(rojo.copy(alpha = 0.8f), r * u, Offset(sc.x + o.x * u, sc.y + o.y * u)) }
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Los objetos de Tu año del archivo: la luna, la creciente en cuya boca se abre el ojo que vigila también de noche; la
+     * huella, la suela de la bota reglamentaria con el código de barras del ciudadano en la planta; la pesa, el lingote de
+     * hierro del gimnasio del ministerio, con su argolla y su placa sellada.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        when (e.forma) {
+            "luna" -> lunaAnio(e)
+            "huella" -> huellaAnio(e)
+            "pesa" -> pesaAnio(e)
+            else -> {}
+        }
+    }
+
+    /** La creciente con la boca arriba a la derecha y, en ella, el ojo: la almendra, el iris en el fondo y la pupila. */
+    private fun DrawScope.lunaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro
+        drawPath(crecienteFuturo(Offset(c.x - r * 0.18f, c.y + r * 0.05f), r * 0.86f, r * 0.5f, -r * 0.22f, 0.78f), e.color)
+        val o = Offset(c.x + r * 0.36f, c.y - r * 0.2f)
+        val a = r * 0.5f; val b = r * 0.3f
+        drawPath(Path().apply {
+            moveTo(o.x - a, o.y); quadraticTo(o.x, o.y - b * 2f, o.x + a, o.y); quadraticTo(o.x, o.y + b * 2f, o.x - a, o.y); close()
+        }, e.color)
+        drawCircle(e.fondo, maxOf(r * 0.17f, 0.7f * density), o)
+        drawCircle(e.color, maxOf(r * 0.08f, 0.4f * density), o)
+    }
+
+    /**
+     * La suela de la bota, ladeada como al pisar: la planta y el tacón aparte, y en la planta las barras del código (tres si es
+     * pequeña, cinco si cabe). El tacón lleva su raya de clavos.
+     */
+    private fun DrawScope.huellaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y; val u = density
+        rotate(-14f, c) {
+            drawOval(e.color, Offset(x - r * 0.5f, y - r), Size(r * 1.0f, r * 1.22f))
+            val hueco = grosorFuturo(r, 0.1f)
+            drawRoundRect(e.color, Offset(x - r * 0.38f, y + r * 0.22f + hueco), Size(r * 0.76f, r * 0.78f - hueco), CornerRadius(r * 0.3f))
+            val barras = if (r < 7f * u) listOf(-0.24f to 0.8f, 0f to 0.8f, 0.24f to 0.8f) else listOf(-0.3f to 0.1f, -0.15f to 0.05f, -0.02f to 0.11f, 0.13f to 0.05f, 0.27f to 0.09f)
+            barras.forEach { (f, g) ->
+                val w = if (r < 7f * u) 0.8f * u else maxOf(r * g, 0.8f * u)
+                drawRect(e.fondo, Offset(x + r * f - w / 2, y - r * 0.68f), Size(w, r * 0.68f))
+            }
+            if (r >= 6f * u) drawLine(e.fondo, Offset(x - r * 0.22f, y + r * 0.62f), Offset(x + r * 0.22f, y + r * 0.62f), grosorFuturo(r, 0.08f))
+        }
+    }
+
+    /** El lingote: el trapecio de hierro con su argolla arriba y la placa del sello en el frente (con el ojo, si cabe). */
+    private fun DrawScope.pesaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y; val u = density
+        drawCircle(e.color, r * 0.34f, Offset(x, y - r * 0.56f), style = Stroke(grosorFuturo(r, 0.16f)))
+        drawPath(trazadoFuturo(c, r, true, -0.58f, -0.3f, 0.58f, -0.3f, 0.92f, 0.88f, -0.92f, 0.88f), e.color)
+        val placa = Rect(x - r * 0.46f, y + r * 0.12f, x + r * 0.46f, y + r * 0.56f)
+        drawRect(e.fondo, placa.topLeft, placa.size)
+        if (r >= 7f * u) {
+            val o = placa.center; val a = r * 0.26f; val b = r * 0.13f
+            drawPath(Path().apply { moveTo(o.x - a, o.y); quadraticTo(o.x, o.y - b * 2f, o.x + a, o.y); quadraticTo(o.x, o.y + b * 2f, o.x - a, o.y); close() }, e.color)
+            drawCircle(e.fondo, maxOf(r * 0.07f, 0.5f * u), o)
+        }
+    }
 }
 
 /**
@@ -1051,6 +1148,62 @@ object LogrosNeon : DisenoLogros {
             drawLine(AMBAR, Offset(c.x, c.y + 4.6f * u), Offset(c.x, c.y + 7 * u), 0.6f * u)
         }
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Los objetos de Tu año del callejón, todos letreros de tubo (el tema solo es oscuro): la luna, la creciente del letrero del
+     * hotel de paso con su destello cian; la huella, el tenis de la calle con su raya de suela cian; la pesa, la mancuerna del
+     * gimnasio de la azotea, los discos en el color del tema y la barra en cian.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        when (e.forma) {
+            "luna" -> lunaAnio(e)
+            "huella" -> huellaAnio(e)
+            "pesa" -> pesaAnio(e)
+            else -> {}
+        }
+    }
+
+    /** El grosor del tubo de los objetos: 0.13 del radio, con su mínimo de 0.8 dp. */
+    private fun DrawScope.tuboObjeto(r: Float): Float = grosorFuturo(r, 0.13f)
+
+    /** La creciente de tubo, con la boca arriba a la derecha, y el destello de cuatro puntas en cian dentro de la boca. */
+    private fun DrawScope.lunaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val g = tuboObjeto(r)
+        tuboNeon(crecienteFuturo(Offset(c.x - r * 0.14f, c.y + r * 0.06f), r * 0.8f, r * 0.42f, -r * 0.24f, 0.8f), e.color, g)
+        val s = Offset(c.x + r * 0.42f, c.y - r * 0.3f); val l = maxOf(r * 0.24f, 1.2f * density)
+        tuboNeon(Path().apply { moveTo(s.x - l, s.y); lineTo(s.x + l, s.y); moveTo(s.x, s.y - l); lineTo(s.x, s.y + l) }, CIAN, g * 0.8f)
+    }
+
+    /**
+     * El tenis de perfil, de punta a la derecha: el talón, la suela plana, la puntera redonda, el empeine que sube a las agujetas
+     * y el cuello; abajo, la raya cian de la entresuela.
+     */
+    private fun DrawScope.huellaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y; val g = tuboObjeto(r)
+        val tenis = Path().apply {
+            moveTo(x - r * 0.86f, y + r * 0.5f); lineTo(x + r * 0.7f, y + r * 0.5f)
+            quadraticTo(x + r * 1.0f, y + r * 0.5f, x + r * 0.94f, y + r * 0.18f)
+            quadraticTo(x + r * 0.72f, y - r * 0.02f, x + r * 0.3f, y - r * 0.1f)
+            lineTo(x - r * 0.24f, y - r * 0.52f); lineTo(x - r * 0.74f, y - r * 0.56f)
+            quadraticTo(x - r * 0.96f, y - r * 0.1f, x - r * 0.86f, y + r * 0.5f); close()
+        }
+        tuboNeon(tenis, e.color, g)
+        if (r >= 6f * density) tuboNeon(Path().apply { moveTo(x - r * 0.62f, y + r * 0.2f); lineTo(x + r * 0.6f, y + r * 0.2f) }, CIAN, g * 0.75f)
+    }
+
+    /** La mancuerna de tubo: la barra cian y, a cada lado, el disco (un rectángulo redondeado) en el color del tema. */
+    private fun DrawScope.pesaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y; val g = tuboObjeto(r)
+        tuboNeon(Path().apply { moveTo(x - r * 0.5f, y); lineTo(x + r * 0.5f, y) }, CIAN, g)
+        listOf(-1f, 1f).forEach { s ->
+            val disco = Path().apply {
+                addRoundRect(RoundRect(Rect(x + s * r * 0.72f - r * 0.2f, y - r * 0.62f, x + s * r * 0.72f + r * 0.2f, y + r * 0.62f), CornerRadius(r * 0.14f)))
+            }
+            tuboNeon(disco, e.color, g)
+        }
+    }
 }
 
 /**
@@ -1471,6 +1624,59 @@ object LogrosRefugio : DisenoLogros {
         drawOval(t(Color(0xFF8FCB6A), oscuro), Offset(br.x - 3.2f * u, br.y - 6.4f * u), Size(3.2f * u, 1.8f * u))
         drawOval(t(Color(0xFF8FCB6A), oscuro), Offset(br.x, br.y - 7.6f * u), Size(3.2f * u, 1.8f * u))
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Los objetos de Tu año, en los pixeles gruesos de la terminal del refugio: la luna, la creciente con sus dos cráteres y una
+     * estrella de un pixel; la huella, la bota de hule de perfil con los tacos de la suela; la pesa, la barra con sus discos.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val filas = when (e.forma) {
+            "luna" -> LUNA_PIXELES
+            "huella" -> BOTA_PIXELES
+            "pesa" -> BARRA_PIXELES
+            else -> return
+        }
+        val celda = e.radio * 1.9f / maxOf(filas.size, filas.maxOf { it.length })
+        pixelesFuturo(e.centro, celda, filas, e.color, e.fondo)
+    }
+
+    /** La creciente de la terminal, con la boca a la derecha, dos cráteres ('o') y la estrella de un pixel. */
+    private val LUNA_PIXELES = listOf(
+        "..XXX....",
+        ".XXX...X.",
+        "XXX......",
+        "XXX......",
+        "XoX......",
+        "XXXX.....",
+        "XXXoX....",
+        ".XXXXXXX.",
+        "..XXXXX..",
+    )
+
+    /** La bota de hule de perfil, con la punta a la derecha y los tacos de la suela. */
+    private val BOTA_PIXELES = listOf(
+        ".XXXX...",
+        ".XXXX...",
+        ".XXXX...",
+        ".XXXX...",
+        ".XXXXX..",
+        ".XXXXXXX",
+        "XXXXXXXX",
+        "X.XX.XX.",
+    )
+
+    /** La barra con dos discos a cada lado y las puntas de la barra afuera. */
+    private val BARRA_PIXELES = listOf(
+        "..X.....X..",
+        ".XX.....XX.",
+        ".XX.....XX.",
+        "XXXXXXXXXXX",
+        ".XX.....XX.",
+        ".XX.....XX.",
+        "..X.....X..",
+    )
 }
 
 /**
@@ -1888,6 +2094,70 @@ object LogrosOrden : DisenoLogros {
         drawCircle(carmesi, 1.2f * u, Offset(x + 7 * u, y - 40.4f * u))
         drawPath(ban, laton, style = Stroke(0.7f * u, join = StrokeJoin.Round))
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Los objetos de Tu año de la orden: la luna, la insignia de la guardia nocturna (la plancha ochavada con la creciente
+     * calada); la huella, el escarpe de la armadura de perfil, con sus láminas; la pesa, el yunque de la herrería de la orden,
+     * con la cara templada en un tono más claro.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        when (e.forma) {
+            "luna" -> lunaAnio(e)
+            "huella" -> huellaAnio(e)
+            "pesa" -> pesaAnio(e)
+            else -> {}
+        }
+    }
+
+    /** La plancha ochavada llena, la creciente calada en el fondo y, si cabe, el filete interior y cuatro remaches. */
+    private fun DrawScope.lunaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val u = density
+        val placa = Rect(c.x - r * 0.92f, c.y - r * 0.92f, c.x + r * 0.92f, c.y + r * 0.92f)
+        drawPath(ochavado(placa, r * 0.32f), e.color)
+        drawPath(crecienteFuturo(Offset(c.x - r * 0.1f, c.y + r * 0.02f), r * 0.56f, r * 0.3f, -r * 0.16f, 0.8f), e.fondo)
+        if (r >= 8f * u) {
+            drawPath(ochavado(placa.deflate(r * 0.14f), r * 0.24f), e.fondo, style = Stroke(grosorFuturo(r, 0.04f)))
+            for (sx in listOf(-1f, 1f)) for (sy in listOf(-1f, 1f)) drawCircle(e.fondo, r * 0.06f, Offset(c.x + sx * r * 0.62f, c.y + sy * r * 0.62f))
+        }
+    }
+
+    /**
+     * El escarpe de perfil, con la punta a la derecha: la greba arriba, el empeine que baja en láminas hasta la punta y la suela.
+     * Las juntas de las láminas son rayas en el fondo que no llegan a la suela, para no partir la silueta.
+     */
+    private fun DrawScope.huellaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val u = density
+        drawPath(trazadoFuturo(c, r, true,
+            -0.62f, -0.95f, -0.04f, -0.95f, -0.04f, -0.2f, 0.34f, -0.02f, 0.7f, 0.2f, 0.98f, 0.46f, 0.98f, 0.66f, -0.8f, 0.66f, -0.8f, 0.22f, -0.62f, 0.02f), e.color)
+        if (r >= 6f * u) {
+            val g = grosorFuturo(r, 0.07f)
+            drawLine(e.fondo, Offset(c.x + r * 0.16f, c.y - r * 0.06f), Offset(c.x + r * 0.12f, c.y + r * 0.42f), g)
+            drawLine(e.fondo, Offset(c.x + r * 0.5f, c.y + r * 0.13f), Offset(c.x + r * 0.44f, c.y + r * 0.42f), g)
+            drawLine(e.fondo, Offset(c.x - r * 0.62f, c.y - r * 0.5f), Offset(c.x - r * 0.04f, c.y - r * 0.5f), g)
+        }
+    }
+
+    /**
+     * El yunque, con el cuerno a la izquierda: la cara plana, el cuerno que se afila, la cintura y el pie que se abre. La franja
+     * de la cara va en el color aclarado.
+     */
+    private fun DrawScope.pesaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y
+        drawPath(Path().apply {
+            moveTo(x - r * 0.42f, y - r * 0.5f); lineTo(x + r * 0.9f, y - r * 0.5f); lineTo(x + r * 0.9f, y - r * 0.14f)
+            quadraticTo(x + r * 0.4f, y - r * 0.08f, x + r * 0.3f, y + r * 0.18f); lineTo(x + r * 0.3f, y + r * 0.42f)
+            quadraticTo(x + r * 0.42f, y + r * 0.6f, x + r * 0.76f, y + r * 0.62f); lineTo(x + r * 0.76f, y + r * 0.86f)
+            lineTo(x - r * 0.64f, y + r * 0.86f); lineTo(x - r * 0.64f, y + r * 0.62f)
+            quadraticTo(x - r * 0.32f, y + r * 0.6f, x - r * 0.22f, y + r * 0.42f); lineTo(x - r * 0.22f, y + r * 0.18f)
+            quadraticTo(x - r * 0.32f, y - r * 0.08f, x - r * 0.46f, y - r * 0.14f)
+            quadraticTo(x - r * 0.8f, y - r * 0.2f, x - r * 1.0f, y - r * 0.44f)
+            quadraticTo(x - r * 0.76f, y - r * 0.5f, x - r * 0.42f, y - r * 0.5f); close()
+        }, e.color)
+        val franja = maxOf(r * 0.1f, 0.8f * density)
+        drawRect(mezcla(e.color, Color.White, 0.42f), Offset(x - r * 0.36f, y - r * 0.5f), Size(r * 1.26f, franja))
+    }
 }
 
 /**
@@ -2301,6 +2571,61 @@ object LogrosLaboratorio : DisenoLogros {
             drawPath(estrella(c, r * u, 4, 0.32f, 0f), AVISO)
         }
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Los objetos de Tu año del laboratorio: la luna, la del laboratorio del sueño (la creciente sobre el trazo del
+     * electroencefalograma, con su pico); la huella, la planta del pie en la placa de presiones, con las curvas de apoyo del
+     * talón y del metatarso en el fondo; la pesa, la pesa patrón de la balanza, con su perilla y su reflejo.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        when (e.forma) {
+            "luna" -> lunaAnio(e)
+            "huella" -> huellaAnio(e)
+            "pesa" -> pesaAnio(e)
+            else -> {}
+        }
+    }
+
+    /** La creciente arriba, con la boca a la derecha, y abajo el trazo del sueño: plano, la onda y el pico, otra vez plano. */
+    private fun DrawScope.lunaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro
+        drawPath(crecienteFuturo(Offset(c.x - r * 0.12f, c.y - r * 0.3f), r * 0.6f, r * 0.32f, -r * 0.16f, 0.8f), e.color)
+        drawPath(trazadoFuturo(c, r, false, -0.95f, 0.62f, -0.5f, 0.62f, -0.36f, 0.42f, -0.2f, 0.9f, -0.04f, 0.5f, 0.12f, 0.7f, 0.3f, 0.62f, 0.95f, 0.62f),
+            e.color, style = Stroke(grosorFuturo(r, 0.11f), cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+
+    /**
+     * La planta del pie derecho: el metatarso, el talón, el puente por fuera y los cinco dedos en arco; si cabe, un anillo de
+     * presión en el metatarso y otro en el talón, en el fondo.
+     */
+    private fun DrawScope.huellaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y; val u = density
+        rotate(8f, c) {
+            drawOval(e.color, Offset(x - r * 0.42f, y - r * 0.5f), Size(r * 0.86f, r * 0.68f))
+            drawOval(e.color, Offset(x - r * 0.26f, y + r * 0.32f), Size(r * 0.56f, r * 0.66f))
+            drawPath(trazadoFuturo(c, r, true, 0.04f, -0.2f, 0.42f, -0.12f, 0.3f, 0.6f, 0.02f, 0.62f, -0.04f, 0.2f), e.color)
+            listOf(Triple(-0.3f, -0.7f, 0.16f), Triple(-0.04f, -0.8f, 0.11f), Triple(0.16f, -0.76f, 0.1f), Triple(0.32f, -0.66f, 0.09f), Triple(0.44f, -0.52f, 0.08f))
+                .forEach { (dx, dy, k) -> drawCircle(e.color, maxOf(r * k, 0.55f * u), Offset(x + r * dx, y + r * dy)) }
+            if (r >= 6f * u) {
+                val g = Stroke(grosorFuturo(r, 0.05f))
+                drawOval(e.fondo, Offset(x - r * 0.24f, y - r * 0.36f), Size(r * 0.5f, r * 0.38f), style = g)
+                drawOval(e.fondo, Offset(x - r * 0.12f, y + r * 0.48f), Size(r * 0.28f, r * 0.32f), style = g)
+            }
+        }
+    }
+
+    /** La pesa patrón: el cuerpo cilíndrico de cantos redondos, el collarín, el cuello y la perilla; un reflejo en el fondo. */
+    private fun DrawScope.pesaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y
+        drawRoundRect(e.color, Offset(x - r * 0.62f, y - r * 0.36f), Size(r * 1.24f, r * 1.28f), CornerRadius(r * 0.2f))
+        drawRoundRect(e.color, Offset(x - r * 0.42f, y - r * 0.5f), Size(r * 0.84f, r * 0.2f), CornerRadius(r * 0.06f))
+        drawRect(e.color, Offset(x - r * 0.18f, y - r * 0.64f), Size(r * 0.36f, r * 0.2f))
+        drawOval(e.color, Offset(x - r * 0.3f, y - r * 0.98f), Size(r * 0.6f, r * 0.4f))
+        val w = grosorFuturo(r, 0.1f)
+        drawRoundRect(e.fondo, Offset(x - r * 0.4f, y - r * 0.18f), Size(w, r * 0.86f), CornerRadius(w / 2))
+    }
 }
 
 /**
@@ -2703,6 +3028,72 @@ object LogrosColonos : DisenoLogros {
     }
 
     private fun lona(oscuro: Boolean): Color = if (oscuro) mezcla(TIZA, Color(0xFF100C08), 0.2f) else Color(0xFFF1E6C8)
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Los objetos de Tu año del pueblo: la luna, la creciente calada en la puerta de tablas de la letrina del fondo del patio; la
+     * huella, la bota de montar de punta fina y tacón alto, con su espuela; la pesa, el hacha clavada en el tocón, que es como se
+     * entrena en el claro.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        when (e.forma) {
+            "luna" -> lunaAnio(e)
+            "huella" -> huellaAnio(e)
+            "pesa" -> pesaAnio(e)
+            else -> {}
+        }
+    }
+
+    /** La puerta de tablas con la creciente calada arriba y, si cabe, las dos juntas de las tablas y el pasador. */
+    private fun DrawScope.lunaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y; val u = density
+        drawRect(e.color, Offset(x - r * 0.64f, y - r * 0.95f), Size(r * 1.28f, r * 1.9f))
+        drawPath(crecienteFuturo(Offset(x - r * 0.04f, y - r * 0.4f), r * 0.4f, r * 0.17f, -r * 0.08f, 0.78f), e.fondo)
+        if (r >= 6f * u) {
+            val g = grosorFuturo(r, 0.05f)
+            listOf(-0.22f, 0.22f).forEach { f -> drawLine(e.fondo, Offset(x + r * f, y + r * 0.12f), Offset(x + r * f, y + r * 0.95f), g) }
+            drawCircle(e.fondo, maxOf(r * 0.07f, 0.6f * u), Offset(x + r * 0.44f, y + r * 0.08f))
+        }
+    }
+
+    /**
+     * La bota de montar de perfil, con la punta a la derecha: la caña alta, el empeine que baja a la punta fina, la suela, el arco
+     * levantado y el tacón alto; detrás del tacón, la espuela con su rodaja (con puntas, si cabe) y, arriba, el ribete de la caña.
+     */
+    private fun DrawScope.huellaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y; val u = density
+        drawPath(Path().apply {
+            moveTo(x - r * 0.6f, y - r * 0.95f); lineTo(x + r * 0.02f, y - r * 0.95f); lineTo(x + r * 0.06f, y - r * 0.16f)
+            quadraticTo(x + r * 0.56f, y - r * 0.08f, x + r * 0.96f, y + r * 0.56f); lineTo(x + r * 0.84f, y + r * 0.8f)
+            lineTo(x + r * 0.06f, y + r * 0.8f); lineTo(x - r * 0.02f, y + r * 0.6f); lineTo(x - r * 0.28f, y + r * 0.6f)
+            lineTo(x - r * 0.32f, y + r * 0.82f); lineTo(x - r * 0.68f, y + r * 0.82f); lineTo(x - r * 0.66f, y + r * 0.36f); close()
+        }, e.color)
+        val ro = Offset(x - r * 0.9f, y + r * 0.44f)
+        drawLine(e.color, Offset(x - r * 0.64f, y + r * 0.48f), ro, grosorFuturo(r, 0.1f), StrokeCap.Round)
+        drawCircle(e.color, maxOf(r * 0.12f, 0.8f * u), ro)
+        if (r >= 8f * u) {
+            for (k in 0 until 6) { val a = k * Math.PI / 3; drawLine(e.color, ro, Offset(ro.x + (r * 0.22f * kotlin.math.cos(a)).toFloat(), ro.y + (r * 0.22f * kotlin.math.sin(a)).toFloat()), 0.8f * u, StrokeCap.Round) }
+        }
+        if (r >= 7f * u) drawLine(e.fondo, Offset(x - r * 0.6f, y - r * 0.74f), Offset(x + r * 0.03f, y - r * 0.74f), grosorFuturo(r, 0.06f))
+    }
+
+    /**
+     * El tocón con el hacha clavada: el tronco con sus raíces, la cara cortada en un tono más claro (con su anillo, si cabe), la
+     * cabeza del hacha hundida en la cara y el mango en diagonal hacia arriba.
+     */
+    private fun DrawScope.pesaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y; val u = density
+        drawRect(e.color, Offset(x - r * 0.6f, y + r * 0.02f), Size(r * 1.2f, r * 0.78f))
+        drawPath(trazadoFuturo(c, r, true, -0.6f, 0.5f, -0.6f, 0.92f, -0.88f, 0.92f), e.color)
+        drawPath(trazadoFuturo(c, r, true, 0.6f, 0.5f, 0.6f, 0.92f, 0.88f, 0.92f), e.color)
+        drawRect(e.color, Offset(x - r * 0.6f, y + r * 0.78f), Size(r * 1.2f, r * 0.14f))
+        val cara = Rect(x - r * 0.6f, y - r * 0.14f, x + r * 0.6f, y + r * 0.18f)
+        drawOval(mezcla(e.color, e.fondo, 0.5f), cara.topLeft, cara.size)
+        if (r >= 8f * u) drawOval(e.color.copy(alpha = 0.6f), cara.deflate(r * 0.16f).topLeft, cara.deflate(r * 0.16f).size, style = Stroke(grosorFuturo(r, 0.04f)))
+        drawLine(e.color, Offset(x + r * 0.02f, y - r * 0.34f), Offset(x + r * 0.62f, y - r * 0.94f), grosorFuturo(r, 0.13f), StrokeCap.Round)
+        drawPath(trazadoFuturo(c, r, true, -0.06f, -0.46f, 0.16f, -0.28f, -0.08f, 0.06f, -0.58f, 0.06f, -0.3f, -0.22f), e.color)
+    }
 }
 
 /**
@@ -3177,6 +3568,67 @@ object LogrosRuinas : DisenoLogros {
             drawCircle(LUCIERNAGA.copy(alpha = 0.2f), 1.8f * u, c); drawCircle(LUCIERNAGA, 0.55f * u, c)
         }
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Los objetos de Tu año de la ciudad verde: la luna, la creciente con la hiedra que cuelga de su cuerno; la huella, la del
+     * venado que ya pasea por las calles (las dos pezuñas del casco partido y, si cabe, los dos espolones); la pesa, la barra
+     * hecha con un tubo y dos bloques de hormigón, con una hoja que le salió encima.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        when (e.forma) {
+            "luna" -> lunaAnio(e)
+            "huella" -> huellaAnio(e)
+            "pesa" -> pesaAnio(e)
+            else -> {}
+        }
+    }
+
+    /** La creciente con la boca a la derecha y la guía de hiedra que baja del cuerno de arriba, con dos hojas. */
+    private fun DrawScope.lunaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y; val u = density
+        drawPath(crecienteFuturo(Offset(x - r * 0.2f, y + r * 0.02f), r * 0.84f, r * 0.44f, -r * 0.2f, 0.8f), e.color)
+        drawPath(Path().apply {
+            moveTo(x + r * 0.02f, y - r * 0.76f); quadraticTo(x + r * 0.42f, y - r * 0.5f, x + r * 0.42f, y + r * 0.04f)
+        }, e.color, style = Stroke(grosorFuturo(r, 0.07f), cap = StrokeCap.Round))
+        val h = maxOf(r * 0.21f, 1.1f * u)
+        hoja(Offset(x + r * 0.35f + h * 0.9f, y - r * 0.4f), h * 0.9f, 90f, e.color)
+        hoja(Offset(x + r * 0.42f, y + r * 0.04f + h * 0.9f), h, 180f, e.color)
+    }
+
+    /** La huella del venado, un poco ladeada: dos pezuñas en gota con su raya libre entre ellas y, si cabe, los espolones. */
+    private fun DrawScope.huellaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y; val u = density
+        val g = grosorFuturo(r, 0.07f)
+        rotate(-10f, c) {
+            listOf(-1f, 1f).forEach { s ->
+                drawPath(Path().apply {
+                    moveTo(x + s * g, y - r * 0.88f)
+                    quadraticTo(x + s * r * 0.62f, y - r * 0.3f, x + s * r * 0.5f, y + r * 0.34f)
+                    quadraticTo(x + s * r * 0.42f, y + r * 0.72f, x + s * g, y + r * 0.66f); close()
+                }, e.color)
+            }
+            if (r >= 6f * u) listOf(-1f, 1f).forEach { s -> drawOval(e.color, Offset(x + s * r * 0.32f - r * 0.1f, y + r * 0.8f), Size(r * 0.2f, r * 0.16f)) }
+        }
+    }
+
+    /**
+     * La barra del patio: el tubo y, en cada punta, un bloque de hormigón parado, con sus dos huecos en el fondo; si cabe, una
+     * hoja que creció sobre el bloque de la derecha.
+     */
+    private fun DrawScope.pesaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y; val u = density
+        drawLine(e.color, Offset(x - r * 0.96f, y), Offset(x + r * 0.96f, y), grosorFuturo(r, 0.13f), StrokeCap.Round)
+        listOf(-1f, 1f).forEach { s ->
+            val b = Rect(x + s * r * 0.6f - r * 0.27f, y - r * 0.6f, x + s * r * 0.6f + r * 0.27f, y + r * 0.6f)
+            drawRect(e.color, b.topLeft, b.size)
+            val m = grosorFuturo(r, 0.13f)
+            drawRect(e.fondo, Offset(b.left + m, b.top + m), Size(b.width - 2 * m, b.height / 2 - m * 1.6f))
+            drawRect(e.fondo, Offset(b.left + m, b.center.y + m * 0.6f), Size(b.width - 2 * m, b.height / 2 - m * 1.6f))
+        }
+        if (r >= 8f * u) hoja(Offset(x + r * 0.72f, y - r * 0.74f), r * 0.16f, 30f, e.color)
+    }
 }
 
 /**
@@ -3596,5 +4048,65 @@ object LogrosEspacio : DisenoLogros {
         drawRect(AMBAR, Offset(asta, y - 27.6f * u), Size(8.6f * u, 1.2f * u))
         drawPath(estrella(Offset(asta + 4.3f * u, y - 29.8f * u), 1.6f * u, 5, 0.42f), Color.White)
         drawRect(borde, Offset(asta, y - 32 * u), Size(8.6f * u, 5.6f * u), style = Stroke(0.4f * u))
+    }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Los objetos de Tu año de la nave: la luna, vista por el ojo de buey (el aro con sus pernos y la creciente con un cráter y
+     * una estrella); la huella, la de la bota del traje en el polvo lunar, con las nervaduras de la suela; la pesa, la mancuerna
+     * que flota ladeada en la ingravidez, con sus dos rayas de flotar abajo.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        when (e.forma) {
+            "luna" -> lunaAnio(e)
+            "huella" -> huellaAnio(e)
+            "pesa" -> pesaAnio(e)
+            else -> {}
+        }
+    }
+
+    /** El ojo de buey: el aro grueso, con seis pernos en el fondo si cabe; adentro, la creciente con su cráter y una estrella. */
+    private fun DrawScope.lunaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val u = density
+        val aro = grosorFuturo(r, 0.2f); val ra = r * 0.96f - aro / 2
+        drawCircle(e.color, ra, c, style = Stroke(aro))
+        if (r >= 7f * u) for (k in 0 until 6) {
+            val a = k * Math.PI / 3 + Math.PI / 6
+            drawCircle(e.fondo, maxOf(r * 0.05f, 0.5f * u), Offset(c.x + (ra * kotlin.math.cos(a)).toFloat(), c.y + (ra * kotlin.math.sin(a)).toFloat()))
+        }
+        val lc = Offset(c.x - r * 0.1f, c.y + r * 0.04f)
+        drawPath(crecienteFuturo(lc, r * 0.48f, r * 0.26f, -r * 0.14f, 0.8f), e.color)
+        if (r >= 7f * u) drawCircle(e.fondo, r * 0.07f, Offset(lc.x - r * 0.3f, lc.y + r * 0.1f))
+        drawCircle(e.color, maxOf(r * 0.06f, 0.6f * u), Offset(c.x + r * 0.4f, c.y - r * 0.34f))
+    }
+
+    /** La suela de la bota, ladeada: un óvalo largo con las nervaduras en el fondo (tres si es pequeña, cinco si cabe). */
+    private fun DrawScope.huellaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y; val u = density
+        rotate(-12f, c) {
+            drawRoundRect(e.color, Offset(x - r * 0.46f, y - r * 0.98f), Size(r * 0.92f, r * 1.96f), CornerRadius(r * 0.42f))
+            val n = if (r < 6f * u) 3 else 5
+            val g = grosorFuturo(r, 0.09f)
+            for (k in 0 until n) {
+                val f = -0.66f + 1.32f * k / (n - 1)
+                drawLine(e.fondo, Offset(x - r * 0.3f, y + r * f), Offset(x + r * 0.3f, y + r * f), g, StrokeCap.Round)
+            }
+        }
+    }
+
+    /** La mancuerna ladeada: la barra y los dos discos de cantos redondos; abajo, sin ladear, las dos rayas de que flota. */
+    private fun DrawScope.pesaAnio(e: EstadoObjeto) {
+        val r = e.radio; val c = e.centro; val x = c.x; val y = c.y
+        rotate(-24f, Offset(x, y - r * 0.12f)) {
+            val yc = y - r * 0.12f
+            drawRect(e.color, Offset(x - r * 0.5f, yc - grosorFuturo(r, 0.18f) / 2), Size(r * 1.0f, grosorFuturo(r, 0.18f)))
+            listOf(-1f, 1f).forEach { s ->
+                drawRoundRect(e.color, Offset(x + s * r * 0.64f - r * 0.18f, yc - r * 0.46f), Size(r * 0.36f, r * 0.92f), CornerRadius(r * 0.14f))
+            }
+        }
+        val g = grosorFuturo(r, 0.08f)
+        drawLine(e.color.copy(alpha = 0.6f), Offset(x - r * 0.5f, y + r * 0.78f), Offset(x - r * 0.06f, y + r * 0.78f), g, StrokeCap.Round)
+        drawLine(e.color.copy(alpha = 0.6f), Offset(x + r * 0.12f, y + r * 0.78f), Offset(x + r * 0.42f, y + r * 0.78f), g, StrokeCap.Round)
     }
 }

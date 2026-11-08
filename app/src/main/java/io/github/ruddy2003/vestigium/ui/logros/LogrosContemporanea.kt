@@ -196,6 +196,31 @@ private fun DrawScope.fuegoContemporanea(c: Offset, r: Float, n: Int, color: Col
     drawCircle(mezcla(color, Color.White, 0.5f), 0.9f * u, c)
 }
 
+// ---------------------------------------------------------------- ayudantes de los objetos de Tu año
+
+/**
+ * Un trazo de los objetos de Tu año, con sus puntos en fracciones del radio [r] alrededor del centro [c]: así el mismo
+ * dibujo sirve de 4 a 20 dp.
+ */
+private class TrazoAnioContemporanea(val c: Offset, val r: Float) {
+    val camino = Path()
+    fun m(a: Float, b: Float) = camino.moveTo(c.x + a * r, c.y + b * r)
+    fun l(a: Float, b: Float) = camino.lineTo(c.x + a * r, c.y + b * r)
+    fun q(a: Float, b: Float, x: Float, y: Float) = camino.quadraticTo(c.x + a * r, c.y + b * r, c.x + x * r, c.y + y * r)
+    fun z() = camino.close()
+}
+
+/** Arma un trazo de Tu año (ver [TrazoAnioContemporanea]). */
+private fun trazoAnioContemporanea(c: Offset, r: Float, cuerpo: TrazoAnioContemporanea.() -> Unit): Path =
+    TrazoAnioContemporanea(c, r).apply(cuerpo).camino
+
+/** Una luna creciente de verdad (el disco de radio [r] en [c] menos el de radio [rCorte], corrido [corte]): sin pintar el fondo. */
+private fun crecienteContemporanea(c: Offset, r: Float, corte: Offset, rCorte: Float): Path = Path.combine(
+    androidx.compose.ui.graphics.PathOperation.Difference,
+    Path().apply { addOval(Rect(c, r)) },
+    Path().apply { addOval(Rect(c + corte, rCorte)) },
+)
+
 // =====================================================================
 
 /**
@@ -659,6 +684,54 @@ object LogrosUrbe : DisenoLogros {
             drawPath(trazoContemporanea(b, u, true, fx - 2.2f, -24f, fx + 2.2f, -24f, fx, -26f), t(HIERRO, oscuro))
         }
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Urbe: la luna creciente sobre una cúpula de la ciudad (el tambor con sus ventanas, la cúpula y su linterna), dos
+     * huellas de zapato de suela de cuero, una tras otra, y la barra de la palestra con sus discos.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        fun p(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        fun g(f: Float) = maxOf(r * f, 0.8f * u)
+        when (e.forma) {
+            "luna" -> {
+                drawPath(crecienteContemporanea(p(0.4f, -0.42f), r * 0.52f, Offset(r * 0.27f, -r * 0.17f), r * 0.44f), col)
+                // La cúpula: media elipse sobre el tambor, la linterna arriba con su bolita.
+                drawArc(col, 180f, 180f, true, p(-0.9f, 0.02f), Size(r * 1.36f, r * 1.06f))
+                drawRect(col, p(-0.95f, 0.53f), Size(r * 1.46f, r * 0.42f))
+                drawRect(col, p(-0.31f, -0.16f), Size(r * 0.18f, r * 0.24f))
+                drawCircle(col, maxOf(r * 0.08f, 0.6f * u), p(-0.22f, -0.2f))
+                if (r > 6 * u) {
+                    drawLine(fondo, p(-0.9f, 0.55f), p(0.46f, 0.55f), g(0.05f))
+                    for (k in 0..2) drawRoundRect(fondo, p(-0.74f + k * 0.42f, 0.64f), Size(maxOf(r * 0.14f, 0.8f * u), r * 0.22f), CornerRadius(r * 0.07f))
+                }
+            }
+            "huella" -> {
+                // Cada huella: la planta y el tacón aparte, como deja la suela de cuero en la piedra mojada.
+                fun suela(cx: Float, cy: Float, giro: Float) = rotate(giro, p(cx, cy)) {
+                    drawOval(col, p(cx - 0.24f, cy - 0.74f), Size(r * 0.48f, r * 0.82f))
+                    drawOval(col, p(cx - 0.18f, cy + 0.2f), Size(r * 0.36f, r * 0.4f))
+                    if (r > 8 * u) listOf(-0.5f, -0.28f).forEach { f -> drawLine(fondo, p(cx - 0.16f, cy + f), p(cx + 0.16f, cy + f), g(0.05f)) }
+                }
+                suela(-0.34f, 0.2f, -10f); suela(0.34f, -0.16f, 10f)
+            }
+            "pesa" -> {
+                // La barra con sus collarines y dos discos por lado, el grande adentro.
+                val b = g(0.07f)
+                drawRect(col, Offset(x - r * 0.98f, y - b), Size(r * 1.96f, 2 * b))
+                for (s in listOf(-1f, 1f)) {
+                    drawRoundRect(col, p(s * 0.53f - 0.12f, -0.74f), Size(r * 0.24f, r * 1.48f), CornerRadius(r * 0.07f))
+                    drawRoundRect(col, p(s * 0.77f - 0.08f, -0.5f), Size(r * 0.16f, r * 1.0f), CornerRadius(r * 0.05f))
+                    drawRect(col, p(s * 0.33f - 0.05f, -0.2f), Size(r * 0.1f, r * 0.4f))
+                    if (r > 6 * u) drawLine(fondo, p(s * 0.53f, -0.5f), p(s * 0.53f, -0.2f), g(0.05f))
+                }
+            }
+            else -> {}
+        }
+    }
 }
 
 /**
@@ -1071,6 +1144,68 @@ object LogrosCiber : DisenoLogros {
             drawRect(colores[k % colores.size], Offset(c.x - s / 2, c.y - s / 2), Size(s, s))
         }
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Terminal: los tres objetos en celdas de pantalla, como arte de caracteres: la luna con su lado en sombra y sus
+     * cráteres, la suela con su dibujo y la mancuerna.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y
+        val col = e.color; val tenue = mezcla(e.fondo, col, 0.3f)
+        // «#» el fósforo encendido, «+» el tenue, «.» nada. Las celdas se enciman medio píxel para que no queden rendijas.
+        fun celdas(mapa: Array<String>) {
+            val filas = mapa.size; val cols = mapa[0].length
+            val lado = 2 * r / maxOf(filas, cols)
+            val x0 = x - cols * lado / 2; val y0 = y - filas * lado / 2
+            for (i in 0 until filas) for (j in 0 until cols) {
+                val t = mapa[i][j]
+                if (t == '#' || t == '+') drawRect(if (t == '#') col else tenue, Offset(x0 + j * lado, y0 + i * lado), Size(lado + 0.5f, lado + 0.5f))
+            }
+        }
+        when (e.forma) {
+            "luna" -> celdas(LUNA_ANIO)
+            "huella" -> celdas(HUELLA_ANIO)
+            "pesa" -> celdas(PESA_ANIO)
+            else -> {}
+        }
+    }
+
+    private val LUNA_ANIO = arrayOf(
+        "...#++...",
+        ".###++++.",
+        ".##++.++.",
+        "###++++++",
+        "#.#+++.++",
+        "####+++++",
+        ".#.##+++.",
+        ".#######.",
+        "...###...",
+    )
+    private val HUELLA_ANIO = arrayOf(
+        "##.#....",
+        "##...#..",
+        ".......#",
+        ".######.",
+        "########",
+        "########",
+        ".######.",
+        "...####.",
+        "...####.",
+        "..#####.",
+        "..#####.",
+        "...###..",
+    )
+    private val PESA_ANIO = arrayOf(
+        ".##.....##.",
+        "###.....###",
+        "#+#.....#+#",
+        "###########",
+        "#+#.....#+#",
+        "###.....###",
+        ".##.....##.",
+    )
 }
 
 /**
@@ -1506,6 +1641,52 @@ object LogrosVapor : DisenoLogros {
             drawPath(trazoContemporanea(b, u, true, fx - 2.6f, -18f, fx + 2.6f, -18f, fx, -20f), hierro)
         }
         drawLine(t(HIERRO_LUZ, oscuro), Offset(x(-28f), y(0f)), Offset(x(28f), y(0f)), 1.2f * u)
+    }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Vapor: la luna llena tras el humo de la chimenea de la fábrica, el botín abotonado con su tacón y el halterio de
+     * bolas de los forzudos de feria, con el brillo en cada bola.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        fun p(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        fun g(f: Float) = maxOf(r * f, 0.8f * u)
+        when (e.forma) {
+            "luna" -> {
+                drawCircle(col, r * 0.6f, p(0.24f, -0.26f))
+                // La chimenea con su remate.
+                drawRect(col, p(-0.8f, -0.04f), Size(r * 0.34f, r * 1.0f))
+                drawRect(col, p(-0.88f, -0.18f), Size(r * 0.5f, r * 0.17f))
+                // El humo: bocanadas en un tono del color, recortadas con el fondo para que se separen de la luna.
+                val humo = mezcla(col, fondo, 0.55f)
+                val bocanadas = listOf(Triple(-0.6f, -0.36f, 0.16f), Triple(-0.38f, -0.5f, 0.2f), Triple(-0.1f, -0.58f, 0.23f), Triple(0.22f, -0.66f, 0.22f), Triple(0.5f, -0.74f, 0.17f))
+                bocanadas.forEach { (a, b, rr) -> drawCircle(fondo, r * rr + g(0.07f), p(a, b)) }
+                bocanadas.forEach { (a, b, rr) -> drawCircle(humo, r * rr, p(a, b)) }
+            }
+            "huella" -> {
+                drawPath(trazoAnioContemporanea(e.centro, r) {
+                    m(-0.6f, -0.9f); l(-0.08f, -0.9f); l(-0.02f, -0.12f); q(0.12f, 0.08f, 0.55f, 0.18f); q(0.96f, 0.28f, 0.93f, 0.6f)
+                    l(0.93f, 0.66f); l(-0.12f, 0.66f); l(-0.2f, 0.56f); l(-0.3f, 0.56f); l(-0.3f, 0.9f); l(-0.62f, 0.9f); l(-0.64f, 0.3f)
+                    q(-0.67f, -0.3f, -0.6f, -0.9f); z()
+                }, col)
+                // Los botones del costado y, más grande, la costura de la suela.
+                listOf(-0.68f, -0.44f, -0.2f).forEach { b -> drawCircle(fondo, maxOf(r * 0.065f, 0.5f * u), p(-0.2f, b)) }
+                if (r > 6 * u) drawLine(fondo, p(0.04f, 0.53f), p(0.9f, 0.53f), g(0.05f))
+            }
+            "pesa" -> {
+                val b = g(0.11f)
+                drawRect(col, Offset(x - r * 0.5f, y - b), Size(r, 2 * b))
+                for (s in listOf(-1f, 1f)) {
+                    drawCircle(col, r * 0.42f, p(s * 0.56f, 0f))
+                    drawCircle(fondo, maxOf(r * 0.1f, 0.55f * u), p(s * 0.56f - 0.15f, -0.15f))
+                }
+                if (r > 8 * u) listOf(-0.06f, 0.06f).forEach { a -> drawLine(fondo, p(a, -0.08f), p(a, 0.08f), g(0.04f)) }
+            }
+            else -> {}
+        }
     }
 }
 
@@ -1950,6 +2131,56 @@ object LogrosNapoleon : DisenoLogros {
         drawLine(t(ROBLE, oscuro), Offset(x(4f), y(-11.6f)), Offset(x(11f), y(-8.6f)), 0.8f * u, StrokeCap.Round)
         drawLine(t(ROBLE, oscuro), Offset(x(11f), y(-11.8f)), Offset(x(4.6f), y(-8.4f)), 0.8f * u, StrokeCap.Round)
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Napoleón: la luna creciente sobre la tienda del vivac con su banderola, la bota de montar con la caña vuelta y la
+     * espuela, y la bala encadenada: dos balas de cañón unidas por la cadena tensa.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        fun p(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        fun g(f: Float) = maxOf(r * f, 0.8f * u)
+        when (e.forma) {
+            "luna" -> {
+                drawPath(crecienteContemporanea(p(0.52f, -0.52f), r * 0.4f, Offset(r * 0.2f, -r * 0.14f), r * 0.34f), col)
+                drawPath(trazoAnioContemporanea(e.centro, r) { m(-0.95f, 0.88f); l(-0.2f, -0.3f); l(0.55f, 0.88f); z() }, col)
+                drawPath(trazoAnioContemporanea(e.centro, r) { m(-0.2f, 0.18f); l(0.04f, 0.88f); l(-0.44f, 0.88f); z() }, fondo)
+                drawLine(col, p(-0.2f, -0.2f), p(-0.2f, -0.8f), g(0.07f))
+                drawPath(trazoAnioContemporanea(e.centro, r) { m(-0.2f, -0.8f); l(-0.58f, -0.68f); l(-0.2f, -0.56f); z() }, col)
+            }
+            "huella" -> {
+                val bota = trazoAnioContemporanea(e.centro, r) {
+                    m(-0.52f, -0.95f); l(0.14f, -0.95f); l(0.06f, -0.7f); l(0.04f, 0.22f); q(0.14f, 0.42f, 0.55f, 0.5f); q(0.9f, 0.56f, 0.88f, 0.8f)
+                    l(0.88f, 0.84f); l(-0.02f, 0.84f); l(-0.1f, 0.74f); l(-0.22f, 0.74f); l(-0.22f, 0.96f); l(-0.5f, 0.96f); l(-0.5f, 0.3f)
+                    q(-0.44f, -0.3f, -0.52f, -0.95f); z()
+                }
+                drawPath(bota, col)
+                // La caña vuelta, en un tono del color.
+                clipPath(bota) { drawRect(mezcla(col, fondo, 0.5f), p(-0.6f, -1f), Size(r * 0.8f, r * 0.32f)) }
+                // La espuela con su rodaja.
+                drawLine(col, p(-0.5f, 0.68f), p(-0.76f, 0.62f), g(0.08f))
+                drawCircle(col, r * 0.14f, p(-0.82f, 0.61f))
+                drawCircle(fondo, maxOf(r * 0.05f, 0.4f * u), p(-0.82f, 0.61f))
+            }
+            "pesa" -> {
+                // Las dos balas y la cadena tensa entre ellas.
+                val izq = p(-0.66f, 0f); val der = p(0.66f, 0f)
+                // Los eslabones, echados y parados por turno, como en una cadena de verdad.
+                val t = Stroke(g(0.07f))
+                listOf(-0.22f, 0.22f).forEach { a -> drawOval(col, p(a - 0.16f, -0.1f), Size(r * 0.32f, r * 0.2f), style = t) }
+                drawOval(col, p(-0.07f, -0.17f), Size(r * 0.14f, r * 0.34f), style = t)
+                // Las balas, con su brillo de hierro: un arco, no un punto, para que no parezcan ojos.
+                listOf(izq, der).forEach { b ->
+                    drawCircle(col, r * 0.33f, b)
+                    if (r > 5 * u) drawArc(fondo, 200f, 60f, false, b - Offset(r * 0.22f, r * 0.22f), Size(r * 0.44f, r * 0.44f), style = Stroke(g(0.06f), cap = StrokeCap.Round))
+                }
+            }
+            else -> {}
+        }
+    }
 }
 
 /**
@@ -2332,6 +2563,52 @@ object LogrosDeco : DisenoLogros {
         drawPath(Path().apply { moveTo(x(-2.6f), y(0f)); lineTo(x(-2.6f), y(-4f)); quadraticTo(x(0f), y(-7.4f), x(2.6f), y(-4f)); lineTo(x(2.6f), y(0f)); close() }, if (oscuro) LUZ else oro)
         drawRect(oro, Offset(x(-3.6f), y(-6.6f)), Size(7.2f * u, 0.7f * u))
         drawLine(oro, Offset(x(-16f), y(0.4f)), Offset(x(16f), y(0.4f)), 1.2f * u)
+    }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Art déco: la luna creciente con sus líneas de velocidad y una estrella de cuatro puntas, el zapato de dos tonos con
+     * su tacón, y la mancuerna escalonada como un zigurat, de pura geometría.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        fun p(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        fun g(f: Float) = maxOf(r * f, 0.8f * u)
+        when (e.forma) {
+            "luna" -> {
+                drawPath(crecienteContemporanea(p(0.14f, 0f), r * 0.8f, Offset(r * 0.36f, -r * 0.22f), r * 0.66f), col)
+                drawPath(estrella(p(0.52f, -0.24f), r * 0.28f, 4, 0.32f), col)
+                listOf(0f to -0.98f, 0.26f to -0.88f, 0.52f to -0.76f).forEach { (b, a) ->
+                    drawRect(col, Offset(x + a * r, y + b * r - g(0.05f)), Size(r * 0.5f, 2 * g(0.05f)))
+                }
+            }
+            "huella" -> {
+                val zapato = trazoAnioContemporanea(e.centro, r) {
+                    m(-0.8f, -0.3f); l(-0.25f, -0.22f); q(0.15f, -0.4f, 0.55f, -0.18f); q(0.97f, 0f, 0.94f, 0.22f)
+                    l(0.92f, 0.3f); l(-0.3f, 0.3f); l(-0.4f, 0.22f); l(-0.55f, 0.22f); l(-0.6f, 0.44f); l(-0.84f, 0.44f); l(-0.87f, 0.2f)
+                    q(-0.93f, -0.05f, -0.8f, -0.3f); z()
+                }
+                drawPath(zapato, col)
+                // El empeine claro entre la puntera y el talón, como en los zapatos de dos tonos.
+                clipPath(zapato) { drawRect(mezcla(col, fondo, 0.62f), p(-0.62f, -0.6f), Size(r * 0.9f, r * 0.82f)) }
+                if (r > 7 * u) listOf(0.4f, 0.5f, 0.6f).forEach { a -> drawCircle(fondo, maxOf(r * 0.035f, 0.4f * u), p(a, 0.05f)) }
+            }
+            "pesa" -> {
+                val b = g(0.08f)
+                drawRect(col, Offset(x - r * 0.45f, y - b), Size(r * 0.9f, 2 * b))
+                for (s in listOf(-1f, 1f)) {
+                    // Tres escalones de afuera hacia adentro, cada uno más alto.
+                    listOf(Triple(0.76f, 0.92f, 0.32f), Triple(0.6f, 0.78f, 0.56f), Triple(0.42f, 0.62f, 0.82f)).forEach { (a0, a1, h) ->
+                        val izq = if (s < 0) -a1 else a0
+                        drawRect(col, p(izq, -h), Size(r * (a1 - a0), r * 2 * h))
+                    }
+                    if (r > 6 * u) drawLine(fondo, p(s * 0.52f, -0.58f), p(s * 0.52f, 0.58f), g(0.04f))
+                }
+            }
+            else -> {}
+        }
     }
 }
 
@@ -2790,6 +3067,53 @@ object LogrosBotanico : DisenoLogros {
             val c = Offset(x(fx), y(fy))
             halo(c, 2.6f * u, LUMBRE.copy(alpha = 0.1f), 2)
             drawCircle(LUMBRE, 0.55f * u, c)
+        }
+    }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Botánico: la luna creciente sobre una rama con sus hojas, la suela de la bota de expedición con sus tacos, y las
+     * pesas de latón de la balanza del herbario, la grande y la chica, con su pomo.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        fun p(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        fun g(f: Float) = maxOf(r * f, 0.8f * u)
+        when (e.forma) {
+            "luna" -> {
+                drawPath(crecienteContemporanea(p(0.22f, -0.3f), r * 0.66f, Offset(r * 0.32f, -r * 0.22f), r * 0.56f), col)
+                // La rama bajo la luna: el tallo y tres hojas.
+                drawPath(Path().apply { moveTo(x - r * 0.95f, y + r * 0.9f); quadraticTo(x - r * 0.2f, y + r * 0.58f, x + r * 0.85f, y + r * 0.66f) }, col, style = Stroke(g(0.08f)))
+                listOf(Triple(-0.55f, 0.72f, -55f), Triple(-0.02f, 0.64f, 50f), Triple(0.42f, 0.64f, -40f)).forEach { (a, b, giro) ->
+                    val hoja = trazoAnioContemporanea(p(a, b), r) { m(0f, 0f); q(0.26f, -0.24f, 0f, -0.52f); q(-0.26f, -0.24f, 0f, 0f); z() }
+                    rotate(giro, p(a, b)) { drawPath(hoja, col) }
+                }
+            }
+            "huella" -> rotate(-12f, e.centro) {
+                drawPath(Path().apply {
+                    addOval(Rect(x - r * 0.42f, y - r * 0.95f, x + r * 0.42f, y + r * 0.15f))
+                    addOval(Rect(x - r * 0.33f, y + r * 0.28f, x + r * 0.33f, y + r * 0.95f))
+                    addRect(Rect(x - r * 0.28f, y - r * 0.1f, x + r * 0.26f, y + r * 0.55f))
+                }, col)
+                // Los tacos de la suela, menos cuando es tan chica que se volverían una mancha.
+                val tacos = if (r > 7 * u) listOf(-0.68f to 0.26f, -0.42f to 0.32f, -0.16f to 0.28f, 0.5f to 0.2f, 0.74f to 0.2f) else listOf(-0.42f to 0.3f, 0.6f to 0.2f)
+                tacos.forEach { (b, a) -> drawRoundRect(fondo, Offset(x - r * a, y + r * b - g(0.06f)), Size(2 * a * r, 2 * g(0.06f)), CornerRadius(g(0.06f))) }
+            }
+            "pesa" -> {
+                // La grande: el cuerpo, el cuello y el pomo; la chica, a su lado, más abajo.
+                drawRoundRect(col, p(-0.88f, -0.2f), Size(r * 0.9f, r * 0.98f), CornerRadius(r * 0.12f))
+                drawRect(col, p(-0.55f, -0.38f), Size(r * 0.24f, r * 0.2f))
+                drawCircle(col, r * 0.2f, p(-0.43f, -0.53f))
+                drawRoundRect(col, p(0.16f, 0.2f), Size(r * 0.68f, r * 0.58f), CornerRadius(r * 0.1f))
+                drawRect(col, p(0.41f, 0.06f), Size(r * 0.18f, r * 0.16f))
+                drawCircle(col, r * 0.15f, p(0.5f, -0.06f))
+                // Las molduras grabadas en el latón.
+                drawLine(fondo, p(-0.8f, 0.06f), p(-0.06f, 0.06f), g(0.06f))
+                drawLine(fondo, p(0.22f, 0.42f), p(0.78f, 0.42f), g(0.05f))
+            }
+            else -> {}
         }
     }
 }
@@ -3300,6 +3624,59 @@ object LogrosNavidad : DisenoLogros {
             listOf(-1f, 1f).forEach { s -> drawOval(cinta, Offset(x(l + ancho / 2 + s * 1f - 0.9f), y(-2.8f - alto)), Size(1.8f * u, 1.3f * u)) }
         }
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Navidad: la luna creciente que duerme con su gorro de dormir (la borla y el ribete de piel), la bota de nieve con su
+     * puño de piel, y una mancuerna cuyos discos son dos regalos con su cinta y su moño.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        fun p(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        fun g(f: Float) = maxOf(r * f, 0.8f * u)
+        when (e.forma) {
+            "luna" -> {
+                drawPath(crecienteContemporanea(p(-0.12f, 0.18f), r * 0.74f, Offset(r * 0.42f, -r * 0.14f), r * 0.56f), col)
+                // El gorro sobre el cuerno de arriba, caído hacia la derecha.
+                drawPath(trazoAnioContemporanea(e.centro, r) { m(-0.62f, -0.32f); q(-0.4f, -1.12f, 0.34f, -1f); q(0.78f, -0.9f, 0.8f, -0.44f); q(0.58f, -0.72f, 0.18f, -0.56f); z() }, col)
+                // El ribete y la borla de piel: del color del fondo, con su orilla del color.
+                val ancho = maxOf(r * 0.2f, 1.6f * u)
+                drawLine(col, p(-0.64f, -0.3f), p(0.2f, -0.55f), ancho + 2 * g(0.05f), StrokeCap.Round)
+                drawLine(fondo, p(-0.64f, -0.3f), p(0.2f, -0.55f), ancho, StrokeCap.Round)
+                drawCircle(col, r * 0.18f + g(0.05f), p(0.8f, -0.36f)); drawCircle(fondo, r * 0.18f, p(0.8f, -0.36f))
+            }
+            "huella" -> {
+                drawPath(trazoAnioContemporanea(e.centro, r) {
+                    m(-0.52f, -0.55f); l(0.12f, -0.55f); l(0.14f, 0.15f); q(0.2f, 0.28f, 0.6f, 0.32f); q(0.98f, 0.4f, 0.92f, 0.72f)
+                    q(0.88f, 0.9f, 0.62f, 0.9f); l(-0.48f, 0.9f); q(-0.6f, 0.9f, -0.58f, 0.7f); z()
+                }, col)
+                if (r > 6 * u) drawLine(fondo, p(-0.56f, 0.72f), p(0.86f, 0.72f), g(0.05f))
+                // El puño de piel.
+                val puno = Rect(x - r * 0.66f, y - r * 0.92f, x + r * 0.26f, y - r * 0.48f)
+                drawRoundRect(fondo, puno.topLeft, puno.size, CornerRadius(r * 0.2f))
+                drawRoundRect(col, puno.topLeft, puno.size, CornerRadius(r * 0.2f), style = Stroke(g(0.08f)))
+            }
+            "pesa" -> {
+                val b = g(0.08f)
+                drawRect(col, Offset(x - r * 0.4f, y + r * 0.1f - b), Size(r * 0.8f, 2 * b))
+                for (s in listOf(-1f, 1f)) {
+                    val cx = s * 0.64f
+                    drawRect(col, p(cx - 0.32f, -0.3f), Size(r * 0.64f, r * 0.78f))
+                    // La cinta en cruz; muy chica, solo la de arriba abajo, para que no se vuelva una mancha.
+                    drawLine(fondo, p(cx, -0.3f), p(cx, 0.48f), g(0.08f))
+                    if (r > 7 * u) drawLine(fondo, p(cx - 0.32f, 0.1f), p(cx + 0.32f, 0.1f), g(0.08f))
+                    // El moño: dos triángulos que se juntan en el nudo.
+                    drawPath(trazoAnioContemporanea(e.centro, r) {
+                        m(cx, -0.38f); l(cx - 0.22f, -0.56f); l(cx - 0.22f, -0.26f); z()
+                        m(cx, -0.38f); l(cx + 0.22f, -0.56f); l(cx + 0.22f, -0.26f); z()
+                    }, col)
+                }
+            }
+            else -> {}
+        }
+    }
 }
 
 /**
@@ -3747,6 +4124,53 @@ object LogrosAbismo : DisenoLogros {
             drawCircle((if (oscuro) bio else t(AGUA_CLARA, false)).copy(alpha = 0.7f), r * u, Offset(x(px), y(py)), style = Stroke(0.4f * u))
         }
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Abismo: la luna vista por el ojo de buey (el aro de bronce con sus pernos), la bota de buzo con su suela de plomo,
+     * sus correas y las burbujas que suben, y el ancla, lo más pesado que se lleva al fondo.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        fun p(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        fun g(f: Float) = maxOf(r * f, 0.8f * u)
+        when (e.forma) {
+            "luna" -> {
+                drawCircle(col, r * 0.8f, e.centro, style = Stroke(maxOf(r * 0.24f, 1.4f * u)))
+                if (r > 6 * u) for (k in 0 until 6) {
+                    val a = (k * PI / 3 + PI / 6).toFloat()
+                    drawCircle(fondo, maxOf(r * 0.06f, 0.5f * u), p(0.8f * cos(a), 0.8f * sin(a)))
+                }
+                drawPath(crecienteContemporanea(p(-0.08f, 0.02f), r * 0.42f, Offset(r * 0.2f, -r * 0.13f), r * 0.35f), col)
+            }
+            "huella" -> {
+                drawPath(trazoAnioContemporanea(e.centro, r) {
+                    m(-0.5f, -0.88f); l(0.1f, -0.88f); l(0.12f, 0.1f); q(0.3f, 0.2f, 0.6f, 0.24f); q(0.96f, 0.3f, 0.92f, 0.6f); l(-0.52f, 0.6f); z()
+                }, col)
+                // La suela de plomo, gruesa, separada del cuero por una raya del fondo.
+                drawRoundRect(col, p(-0.62f, 0.56f), Size(r * 1.6f, r * 0.34f), CornerRadius(r * 0.08f))
+                if (r > 6 * u) drawLine(fondo, p(-0.56f, 0.58f), p(0.92f, 0.58f), g(0.05f))
+                listOf(-0.56f, -0.22f).forEach { b -> drawLine(fondo, p(-0.5f, b), p(0.11f, b), g(0.08f)) }
+                drawCircle(col, r * 0.13f, p(0.5f, -0.5f), style = Stroke(g(0.06f)))
+                drawCircle(col, r * 0.09f, p(0.7f, -0.82f), style = Stroke(g(0.06f)))
+            }
+            "pesa" -> {
+                val gr = g(0.15f)
+                drawCircle(col, r * 0.15f, p(0f, -0.76f), style = Stroke(g(0.09f)))
+                drawLine(col, p(0f, -0.6f), p(0f, 0.78f), gr)
+                drawLine(col, p(-0.42f, -0.42f), p(0.42f, -0.42f), gr, StrokeCap.Round)
+                drawArc(col, 15f, 150f, false, p(-0.62f, -0.44f), Size(r * 1.24f, r * 1.24f), style = Stroke(gr))
+                // Las uñas en las puntas de los brazos.
+                for (s in listOf(-1f, 1f)) {
+                    val ex = s * 0.6f; val ey = 0.34f
+                    drawPath(trazoAnioContemporanea(e.centro, r) { m(ex + s * 0.14f, ey - 0.34f); l(ex + s * 0.14f, ey + 0.08f); l(ex - s * 0.2f, ey + 0.02f); z() }, col)
+                }
+            }
+            else -> {}
+        }
+    }
 }
 
 /**
@@ -4150,5 +4574,49 @@ object LogrosUrss : DisenoLogros {
         val claro = if (oscuro) Color(0xFFFF6A5A) else Color(0xFFE5484A)
         estrellaFacetada(EstadoPedestal(true, 1, t(ROJO_OSC, oscuro), ROJO, claro, 0), st, 6.4f * u)
         drawPath(estrella(st, 6.4f * u, 5, 0.42f), oro, style = Stroke(0.6f * u))
+    }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * URSS: la luna creciente con el Sputnik y sus cuatro antenas, el valenki (la bota de fieltro) con su chanclo, y la
+     * pesa rusa con su asa y la estrella.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        fun p(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        fun g(f: Float) = maxOf(r * f, 0.8f * u)
+        when (e.forma) {
+            "luna" -> {
+                drawPath(crecienteContemporanea(p(-0.24f, 0.2f), r * 0.68f, Offset(r * 0.32f, -r * 0.26f), r * 0.56f), col)
+                // El satélite: la bola y sus antenas hacia atrás, en diagonal.
+                val sat = p(0.5f, -0.52f)
+                listOf(25f, 40f, 55f, 70f).forEach { gr ->
+                    val a = Math.toRadians(gr.toDouble()); drawLine(col, sat, sat + Offset((r * 0.55f * cos(a)).toFloat(), (r * 0.55f * sin(a)).toFloat()), g(0.06f))
+                }
+                drawCircle(col, maxOf(r * 0.18f, 1.2f * u), sat)
+            }
+            "huella" -> {
+                val bota = trazoAnioContemporanea(e.centro, r) {
+                    m(-0.5f, -0.9f); l(0.06f, -0.9f); l(0.06f, 0.15f); q(0.1f, 0.35f, 0.55f, 0.4f); q(0.95f, 0.46f, 0.9f, 0.74f)
+                    q(0.86f, 0.92f, 0.6f, 0.92f); l(-0.4f, 0.92f); q(-0.58f, 0.92f, -0.56f, 0.7f); z()
+                }
+                drawPath(bota, col)
+                // El chanclo de goma abajo y el doblez del fieltro arriba.
+                drawLine(fondo, p(-0.6f, 0.62f), p(0.96f, 0.62f), g(0.07f))
+                if (r > 6 * u) drawLine(fondo, p(-0.5f, -0.68f), p(0.06f, -0.68f), g(0.05f))
+            }
+            "pesa" -> {
+                // El cuerpo de bola con la base plana y el asa ancha, que nace de los hombros.
+                drawCircle(col, r * 0.66f, p(0f, 0.26f))
+                drawRect(col, p(-0.32f, 0.74f), Size(r * 0.64f, r * 0.18f))
+                val asa = maxOf(r * 0.17f, 1f * u)
+                drawArc(col, 180f, 180f, false, p(-0.5f, -0.96f), Size(r * 1.0f, r * 0.8f), style = Stroke(asa))
+                listOf(-1f, 1f).forEach { s -> drawLine(col, p(s * 0.5f, -0.57f), p(s * 0.46f, -0.1f), asa) }
+                drawPath(estrella(p(0f, 0.3f), r * 0.3f, 5, 0.42f), fondo)
+            }
+            else -> {}
+        }
     }
 }

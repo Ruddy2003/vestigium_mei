@@ -1011,6 +1011,16 @@ class Capturas {
     @Test fun campanasC3b() = (ESTANTE_A1B + TemaId.EDO).forEach { campanasC3Tema(it) }
     @Test fun campanasC3c() = ESTANTE_A1C.forEach { campanasC3Tema(it) }
     @Test fun campanasC3d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { campanasC3Tema(it) }
+    /** Los objetos de Tu año (lote C4): la tarjeta de las cosas contadas del año. En claro y en oscuro. */
+    private fun anioC4Tema(t: TemaId) {
+        tarjetaAnio(t, t.soloOscuro, "cosas", "tema_${t.id}_${if (t.soloOscuro) "oscuro" else "claro"}_cosas")
+        if (!t.soloOscuro) tarjetaAnio(t, true, "cosas", "tema_${t.id}_oscuro_cosas")
+        tarjetaAnio(t, t.soloOscuro, "sueno", "tema_${t.id}_${if (t.soloOscuro) "oscuro" else "claro"}_sueno")
+    }
+    @Test fun anioC4a() = ESTANTE_A1A.forEach { anioC4Tema(it) }
+    @Test fun anioC4b() = (ESTANTE_A1B + TemaId.EDO).forEach { anioC4Tema(it) }
+    @Test fun anioC4c() = ESTANTE_A1C.forEach { anioC4Tema(it) }
+    @Test fun anioC4d() = (ESTANTE_A1D + TemaId.DISTOPIA).forEach { anioC4Tema(it) }
     /** La biblioteca del diario entera de los 32, en su modo de siempre. */
     @Test fun bibliotecaDiarioA1() = (ESTANTE_A1A + ESTANTE_A1B + ESTANTE_A1C + ESTANTE_A1D).forEach { t -> pantalla(t, t.soloOscuro, 3600, "a1_${t.id}") {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario")

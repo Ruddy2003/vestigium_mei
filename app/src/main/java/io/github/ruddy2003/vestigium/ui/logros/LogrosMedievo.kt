@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -243,6 +244,38 @@ private fun DrawScope.estallidoMedievo(c: Offset, r: Float, rayos: Int, color: C
 private fun DrawScope.resplandorMedievo(c: Offset, r: Float, color: Color) {
     if (r <= 0f) return
     drawCircle(Brush.radialGradient(listOf(color, color.copy(alpha = color.alpha * 0.35f), Color.Transparent), c, r), r, c)
+}
+
+// ---------------------------------------------------------------- ayudantes de los objetos de Tu año
+
+/** El grosor de un trazo de un objeto de Tu año: [k] veces el radio [r], nunca menos de 0.8 dp (que no se pierda chico). */
+private fun DrawScope.grosorMedievo(r: Float, k: Float) = maxOf(r * k, 0.8f * density)
+
+/** El radio de un punto de un objeto de Tu año: [k] veces el radio [r], nunca menos de 0.45 dp (0.9 dp de ancho). */
+private fun DrawScope.motaMedievo(r: Float, k: Float) = maxOf(r * k, 0.45f * density)
+
+/** Una luna creciente de verdad (no un disco tapado): el disco de centro [c] y radio [r] menos el de [corte] y radio [rc]. */
+private fun crecienteMedievo(c: Offset, r: Float, corte: Offset, rc: Float): Path = Path().apply {
+    op(Path().apply { addOval(Rect(c, r)) }, Path().apply { addOval(Rect(corte, rc)) }, PathOperation.Difference)
+}
+
+/** Un polígono por sus puntos ([p] son pares x, y en fracciones de [s] alrededor de [c]). */
+private fun poligonoMedievo(c: Offset, s: Float, vararg p: Float): Path = Path().apply {
+    moveTo(c.x + p[0] * s, c.y + p[1] * s)
+    for (k in 1 until p.size / 2) lineTo(c.x + p[2 * k] * s, c.y + p[2 * k + 1] * s)
+    close()
+}
+
+/**
+ * Una silueta simétrica respecto a la vertical de [c] (el murciélago, el águila): [p] son pares x, y de la mitad derecha,
+ * de un extremo del eje al otro, en fracciones de [s]; la mitad izquierda es su espejo.
+ */
+private fun simetricoMedievo(c: Offset, s: Float, vararg p: Float): Path = Path().apply {
+    val n = p.size / 2
+    moveTo(c.x + p[0] * s, c.y + p[1] * s)
+    for (k in 1 until n) lineTo(c.x + p[2 * k] * s, c.y + p[2 * k + 1] * s)
+    for (k in n - 1 downTo 0) lineTo(c.x - p[2 * k] * s, c.y + p[2 * k + 1] * s)
+    close()
 }
 
 /**
@@ -627,6 +660,57 @@ object LogrosMedieval : DisenoLogros {
         for (k in 1..5) { val a = (PI + k * PI / 6).toFloat(); drawLine(mezcla(oro, Color.Black, 0.3f), Offset(v.x, v.y + 4.6f * u), Offset(v.x + 5.6f * u * cos(a), v.y + 5.6f * u * sin(a)), 0.5f * u) }
         drawRect(oro, Offset(v.x - 2.6f * u, v.y + 3.6f * u), Size(5.2f * u, 1.6f * u))
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * La luna de los márgenes iluminados, creciente y con la cara de perfil (nariz y ojo) y una estrella de pan de oro en su
+     * hueco; la bota del peregrino con su venera en la caña; el yunque del herrero del burgo con el martillo encima.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val x = e.centro.x; val y = e.centro.y; val r = e.radio
+        val c = e.color; val f = e.fondo
+        fun q(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        when (e.forma) {
+            "luna" -> {
+                drawPath(crecienteMedievo(q(-0.12f, 0f), r * 0.95f, q(0.34f, -0.14f), r * 0.78f), c)
+                // La nariz que asoma del borde de adentro y el ojo, como en las lunas de los calendarios.
+                drawPath(poligonoMedievo(e.centro, r, -0.46f, -0.04f, -0.22f, 0.1f, -0.43f, 0.16f), c)
+                drawCircle(f, motaMedievo(r, 0.085f), q(-0.62f, -0.22f))
+                drawPath(estrella(q(0.4f, 0.14f), r * 0.25f, 4, 0.38f), c)
+            }
+            "huella" -> {
+                val bota = Path().apply {
+                    moveTo(x - 0.58f * r, y - 0.92f * r); lineTo(x - 0.04f * r, y - 0.92f * r); lineTo(x + 0.02f * r, y + 0.04f * r)
+                    quadraticTo(x + 0.72f * r, y + 0.08f * r, x + 0.96f * r, y + 0.52f * r); quadraticTo(x + 1.02f * r, y + 0.82f * r, x + 0.7f * r, y + 0.82f * r)
+                    lineTo(x - 0.56f * r, y + 0.82f * r); quadraticTo(x - 0.74f * r, y + 0.82f * r, x - 0.7f * r, y + 0.58f * r); close()
+                }
+                drawPath(bota, c)
+                // El doblez de la caña y la suela, en el fondo.
+                drawLine(f, q(-0.62f, -0.68f), q(0.0f, -0.68f), grosorMedievo(r, 0.08f))
+                drawLine(f, q(-0.62f, 0.64f), q(0.84f, 0.64f), grosorMedievo(r, 0.07f))
+                // La venera de Santiago cosida en la caña: un abanico con sus costillas.
+                val v = q(-0.29f, -0.2f); val rv = r * 0.27f
+                drawArc(f, 180f, 180f, true, Offset(v.x - rv, v.y - rv * 0.8f), Size(2 * rv, 1.6f * rv))
+                drawPath(poligonoMedievo(v, rv, -1f, 0f, 1f, 0f, 0.22f, 0.9f, -0.22f, 0.9f), f)
+                if (r >= 8f * density) for (k in -1..1) drawLine(c, Offset(v.x, v.y + 0.75f * rv), Offset(v.x + k * 0.55f * rv, v.y - 0.6f * rv), grosorMedievo(r, 0.035f))
+            }
+            "pesa" -> {
+                drawPath(poligonoMedievo(e.centro, r,
+                    -1.0f, -0.3f, 0.82f, -0.3f, 0.82f, -0.06f, 0.36f, -0.02f, 0.28f, 0.42f, 0.7f, 0.54f, 0.7f, 0.76f,
+                    -0.52f, 0.76f, -0.52f, 0.54f, -0.1f, 0.42f, -0.18f, -0.02f, -0.52f, -0.08f), c)
+                // El agujero de la tajadera y el canto de la mesa.
+                drawRect(f, Offset(x + 0.5f * r, y - 0.24f * r), Size(maxOf(0.13f * r, 0.9f * density), maxOf(0.12f * r, 0.9f * density)))
+                drawLine(f, q(-0.58f, -0.13f), q(0.32f, -0.13f), grosorMedievo(r, 0.05f))
+                // El martillo, apoyado de lado sobre la mesa.
+                rotate(-28f, q(0.25f, -0.62f)) {
+                    drawLine(c, q(-0.05f, -0.62f), q(0.78f, -0.62f), grosorMedievo(r, 0.11f), StrokeCap.Round)
+                    drawRect(c, Offset(x - 0.2f * r, y - 0.86f * r), Size(0.24f * r, 0.48f * r))
+                }
+            }
+            else -> {}
+        }
+    }
 }
 
 /**
@@ -996,6 +1080,62 @@ object LogrosTemplario : DisenoLogros {
                 lineTo(x + 14f * u, top + 6f * u + dy * u + ola(x + 14f * u)); quadraticTo(x + 7f * u, top + 6f * u + dy * u + ola(x + 7f * u) * 2f, x, top + 6f * u + dy * u); close()
             }
             piezaMedievo(franja, c, borde)
+        }
+    }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * La luna de las vigilias sobre la muralla almenada de la encomienda, con su saetera; el pie del caballero con la
+     * espuela de rodaja; la espada de armas con su guarda en cruz junto al escudo con la cruz de la orden.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val x = e.centro.x; val y = e.centro.y; val r = e.radio
+        val c = e.color; val f = e.fondo
+        fun q(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        when (e.forma) {
+            "luna" -> {
+                drawPath(crecienteMedievo(q(0.18f, -0.42f), r * 0.56f, q(0.42f, -0.6f), r * 0.46f), c)
+                // La muralla con cuatro merlones y la saetera en medio.
+                drawRect(c, Offset(x - 0.92f * r, y + 0.34f * r), Size(1.84f * r, 0.62f * r))
+                for (k in 0 until 4) drawRect(c, Offset(x + (-0.92f + k * 0.5f) * r, y + 0.08f * r), Size(0.34f * r, 0.3f * r))
+                drawRect(f, Offset(x - maxOf(0.06f * r, 0.45f * density), y + 0.5f * r), Size(maxOf(0.12f * r, 0.9f * density), 0.32f * r))
+            }
+            "huella" -> {
+                // La espuela de rodaja, detrás del talón.
+                drawLine(c, q(-0.6f, 0.42f), q(-0.82f, 0.46f), grosorMedievo(r, 0.08f))
+                drawPath(estrella(q(-0.86f, 0.46f), r * 0.24f, 6, 0.42f), c)
+                drawCircle(f, motaMedievo(r, 0.05f), q(-0.86f, 0.46f))
+                val pie = Path().apply {
+                    moveTo(x - 0.52f * r, y - 0.9f * r); lineTo(x - 0.04f * r, y - 0.9f * r); lineTo(x + 0.02f * r, y + 0.02f * r)
+                    quadraticTo(x + 0.6f * r, y + 0.16f * r, x + 1f * r, y + 0.72f * r)
+                    lineTo(x - 0.46f * r, y + 0.72f * r); quadraticTo(x - 0.66f * r, y + 0.72f * r, x - 0.62f * r, y + 0.44f * r); close()
+                }
+                drawPath(pie, c)
+                // Las lamas del escarpe y la correa de la espuela, en el fondo.
+                val g = grosorMedievo(r, 0.06f)
+                drawLine(f, q(0.08f, 0.12f), q(0.0f, 0.62f), g)
+                drawLine(f, q(0.38f, 0.24f), q(0.32f, 0.62f), g)
+                drawLine(f, q(-0.58f, 0.3f), q(0.0f, 0.3f), g)
+            }
+            "pesa" -> {
+                // El escudo de lágrima, con la cruz de la orden en el fondo.
+                val escudo = Path().apply {
+                    moveTo(x - 0.9f * r, y - 0.5f * r); lineTo(x + 0.2f * r, y - 0.5f * r); lineTo(x + 0.2f * r, y + 0.05f * r)
+                    quadraticTo(x + 0.16f * r, y + 0.62f * r, x - 0.35f * r, y + 0.92f * r)
+                    quadraticTo(x - 0.86f * r, y + 0.62f * r, x - 0.9f * r, y + 0.05f * r); close()
+                }
+                drawPath(escudo, c)
+                val g = grosorMedievo(r, 0.13f)
+                drawLine(f, q(-0.35f, -0.36f), q(-0.35f, 0.66f), g)
+                drawLine(f, q(-0.76f, -0.02f), q(0.06f, -0.02f), g)
+                // La espada de pie, con la punta abajo.
+                drawPath(poligonoMedievo(e.centro, r, 0.44f, -0.42f, 0.7f, -0.42f, 0.68f, 0.72f, 0.57f, 0.98f, 0.46f, 0.72f), c)
+                drawLine(c, q(0.3f, -0.5f), q(0.84f, -0.5f), grosorMedievo(r, 0.12f), StrokeCap.Round)
+                drawLine(c, q(0.57f, -0.5f), q(0.57f, -0.82f), grosorMedievo(r, 0.12f))
+                drawCircle(c, r * 0.14f, q(0.57f, -0.88f))
+            }
+            else -> {}
         }
     }
 }
@@ -1381,6 +1521,51 @@ object LogrosSeda : DisenoLogros {
             drawCircle(oro, 1.6f * u, m); drawRect(mezcla(oro, Color.Black, 0.45f), Offset(m.x - 0.5f * u, m.y - 0.5f * u), Size(1f * u, 1f * u))
         }
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * La luna llena del Medio Otoño con el conejo de jade en ella; las huellas de dos dedos del camello de la caravana;
+     * el candado de piedra (la pesa china de agarrar por el asa) con una moneda de agujero cuadrado grabada.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val x = e.centro.x; val y = e.centro.y; val r = e.radio
+        val c = e.color; val f = e.fondo
+        fun q(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        when (e.forma) {
+            "luna" -> {
+                drawCircle(c, r * 0.94f, e.centro)
+                // El conejo sentado, de perfil: lomo, cabeza, dos orejas largas y la cola.
+                drawOval(f, Offset(x - 0.22f * r, y + 0.0f * r), Size(0.74f * r, 0.5f * r))
+                drawCircle(f, r * 0.21f, q(-0.3f, 0.02f))
+                val oreja = maxOf(0.14f * r, 0.85f * density)
+                rotate(-18f, q(-0.25f, -0.12f)) { drawOval(f, Offset(x - 0.25f * r - oreja, y - 0.62f * r), Size(oreja, 0.52f * r)) }
+                rotate(-4f, q(-0.2f, -0.12f)) { drawOval(f, Offset(x - 0.2f * r, y - 0.6f * r), Size(oreja, 0.5f * r)) }
+                drawCircle(f, motaMedievo(r, 0.1f), q(0.55f, 0.3f))
+                drawCircle(c, motaMedievo(r, 0.045f), q(-0.36f, -0.02f))
+            }
+            "huella" -> {
+                // Dos pisadas en diagonal: cada una, una almohadilla ancha partida adelante en dos dedos.
+                for ((p, giro) in listOf(q(-0.4f, 0.4f) to -14f, q(0.4f, -0.38f) to 10f)) rotate(giro, p) {
+                    drawOval(c, Offset(p.x - 0.38f * r, p.y - 0.5f * r), Size(0.76f * r, 0.96f * r))
+                    val hueco = maxOf(0.07f * r, 0.45f * density)
+                    drawPath(Path().apply { moveTo(p.x - hueco, p.y - 0.56f * r); lineTo(p.x + hueco, p.y - 0.56f * r); lineTo(p.x, p.y - 0.06f * r); close() }, f)
+                }
+            }
+            "pesa" -> {
+                // El asa: un arco grueso con su hueco.
+                drawRoundRect(c, Offset(x - 0.56f * r, y - 0.95f * r), Size(1.12f * r, 1f * r), CornerRadius(0.4f * r))
+                drawRoundRect(f, Offset(x - 0.3f * r, y - 0.68f * r), Size(0.6f * r, 0.5f * r), CornerRadius(0.2f * r))
+                // El cuerpo del candado, ancho y de esquinas romas.
+                drawRoundRect(c, Offset(x - 0.88f * r, y - 0.18f * r), Size(1.76f * r, 1.08f * r), CornerRadius(0.32f * r))
+                // La moneda grabada, con su agujero cuadrado.
+                drawCircle(f, r * 0.27f, q(0f, 0.36f))
+                val h = maxOf(0.1f * r, 0.45f * density)
+                drawRect(c, Offset(x - h, y + 0.36f * r - h), Size(2 * h, 2 * h))
+            }
+            else -> {}
+        }
+    }
 }
 
 /**
@@ -1751,6 +1936,62 @@ object LogrosGotico : DisenoLogros {
         drawCircle(if (oscuro) Color(0xFFFFE6A0) else Color(0xFFD8A73A), 1.2f * u, rosa)
         drawCircle(junta, r + 0.6f * u, rosa, style = Stroke(1.2f * u))
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * La luna llena con el murciélago que cruza delante; el laberinto del suelo de la catedral, que se recorre a pie, con su
+     * rosa en el centro; la pesa del reloj de la torre, rematada en pináculo, colgada de su cadena.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val x = e.centro.x; val y = e.centro.y; val r = e.radio
+        val c = e.color; val f = e.fondo
+        fun q(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        when (e.forma) {
+            "luna" -> {
+                drawCircle(c, r * 0.94f, e.centro)
+                // El murciélago, de alas abiertas con el borde festoneado.
+                drawPath(simetricoMedievo(q(0f, 0.06f), r,
+                    0f, -0.12f, 0.07f, -0.28f, 0.12f, -0.12f, 0.3f, -0.2f, 0.62f, -0.32f, 0.8f, -0.06f, 0.62f, -0.02f,
+                    0.54f, 0.1f, 0.42f, 0.0f, 0.3f, 0.12f, 0.18f, 0.04f, 0.1f, 0.24f, 0f, 0.3f), f)
+            }
+            "huella" -> {
+                // Anillos con su vano, que se alternan arriba y abajo, y los muros que los unen.
+                val g = grosorMedievo(r, 0.13f)
+                val anillos = if (r < 7f * density) listOf(0.88f, 0.48f) else listOf(0.9f, 0.62f, 0.34f)
+                anillos.forEachIndexed { i, a ->
+                    val vano = if (i % 2 == 0) 90f else 270f
+                    drawArc(c, vano + 22f, 316f, false, Offset(x - a * r, y - a * r), Size(2 * a * r, 2 * a * r), style = Stroke(g, cap = StrokeCap.Butt))
+                    if (i > 0) {
+                        val s = if (i % 2 == 0) 1f else -1f
+                        drawLine(c, q(s * a, 0f), q(s * anillos[i - 1], 0f), g)
+                    }
+                }
+                drawCircle(c, motaMedievo(r, 0.16f), e.centro)
+            }
+            "pesa" -> {
+                // La cadena: eslabones de frente y de canto, alternados.
+                val g = grosorMedievo(r, 0.08f)
+                drawOval(c, Offset(x - 0.12f * r, y - 1f * r), Size(0.24f * r, 0.34f * r), style = Stroke(g))
+                drawLine(c, q(0f, -0.72f), q(0f, -0.5f), g)
+                drawOval(c, Offset(x - 0.12f * r, y - 0.58f * r), Size(0.24f * r, 0.3f * r), style = Stroke(g))
+                // La pesa, un cilindro con remate de pináculo y una lanceta calada.
+                val pesa = Path().apply {
+                    moveTo(x, y - 0.36f * r); quadraticTo(x + 0.18f * r, y - 0.12f * r, x + 0.46f * r, y - 0.02f * r)
+                    lineTo(x + 0.46f * r, y + 0.9f * r); lineTo(x - 0.46f * r, y + 0.9f * r); lineTo(x - 0.46f * r, y - 0.02f * r)
+                    quadraticTo(x - 0.18f * r, y - 0.12f * r, x, y - 0.36f * r); close()
+                }
+                drawPath(pesa, c)
+                val ancho = maxOf(0.1f * r, 0.5f * density)
+                drawPath(Path().apply {
+                    moveTo(x - ancho, y + 0.56f * r); lineTo(x - ancho, y + 0.22f * r); quadraticTo(x - ancho, y + 0.08f * r, x, y + 0.02f * r)
+                    quadraticTo(x + ancho, y + 0.08f * r, x + ancho, y + 0.22f * r); lineTo(x + ancho, y + 0.56f * r); close()
+                }, f)
+                drawLine(f, q(-0.46f, 0.72f), q(0.46f, 0.72f), grosorMedievo(r, 0.06f))
+            }
+            else -> {}
+        }
+    }
 }
 
 /**
@@ -2110,6 +2351,51 @@ object LogrosAndalus : DisenoLogros {
         drawPath(estrella(es, 3.2f * u, 8, 0.62f, -67.5f), e.acento)
         drawCircle(oro, 0.9f * u, es)
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * El hilal, la luna nueva que abre el mes del calendario hégira, con la estrella de ocho puntas del lazo; la babucha de
+     * punta vuelta con su banda bordada; la adarga de dos lóbulos de los jinetes con la lanza del juego de cañas detrás.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val x = e.centro.x; val y = e.centro.y; val r = e.radio
+        val c = e.color; val f = e.fondo
+        fun q(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        when (e.forma) {
+            "luna" -> {
+                drawPath(crecienteMedievo(q(-0.16f, 0f), r * 0.9f, q(0.2f, -0.1f), r * 0.74f), c)
+                drawPath(estrella(q(0.4f, -0.02f), r * 0.32f, 8, 0.62f, -90f + 22.5f), c)
+            }
+            "huella" -> {
+                // De lado: la suela plana, la punta que se enrosca hacia arriba y el talón pisado, bajo.
+                val babucha = Path().apply {
+                    moveTo(x - 0.96f * r, y + 0.5f * r); lineTo(x + 0.56f * r, y + 0.5f * r)
+                    quadraticTo(x + 0.94f * r, y + 0.48f * r, x + 1f * r, y - 0.12f * r)
+                    quadraticTo(x + 0.82f * r, y + 0.16f * r, x + 0.5f * r, y + 0.1f * r)
+                    quadraticTo(x + 0.14f * r, y - 0.36f * r, x - 0.2f * r, y - 0.12f * r)
+                    quadraticTo(x - 0.6f * r, y + 0.16f * r, x - 0.92f * r, y + 0.14f * r)
+                    quadraticTo(x - 1f * r, y + 0.3f * r, x - 0.96f * r, y + 0.5f * r); close()
+                }
+                drawPath(babucha, c)
+                // La costura de la suela y la estrella bordada del empeine.
+                drawLine(f, q(-0.88f, 0.36f), q(0.66f, 0.36f), grosorMedievo(r, 0.06f))
+                if (r >= 8f * density) drawPath(estrella(q(0.3f, 0.1f), r * 0.17f, 8, 0.6f), f)
+            }
+            "pesa" -> {
+                // La lanza, en diagonal por detrás, con su hoja.
+                drawLine(c, q(-0.96f, 0.96f), q(0.78f, -0.78f), grosorMedievo(r, 0.08f), StrokeCap.Round)
+                drawPath(poligonoMedievo(e.centro, r, 0.98f, -0.98f, 0.62f, -0.8f, 0.8f, -0.62f), c)
+                // La adarga: dos óvalos de cuero unidos, con la escotadura arriba y abajo.
+                drawOval(c, Offset(x - 0.66f * r, y - 0.74f * r), Size(0.76f * r, 1.48f * r))
+                drawOval(c, Offset(x - 0.1f * r, y - 0.74f * r), Size(0.76f * r, 1.48f * r))
+                // La bloca del centro: un anillo en el fondo con su botón.
+                drawCircle(f, r * 0.24f, q(0f, 0f), style = Stroke(grosorMedievo(r, 0.07f)))
+                drawCircle(f, motaMedievo(r, 0.08f), q(0f, 0f))
+            }
+            else -> {}
+        }
+    }
 }
 
 /**
@@ -2468,6 +2754,57 @@ object LogrosMongol : DisenoLogros {
             piezaMedievo(bufanda, if (oscuro && col != e.acento) mezcla(col, Color.White, 0.15f) else col, borde)
         }
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * La luna llena de la cetrería con el águila que vuela delante; la huella del casco del caballo de la estepa (la
+     * pared en herradura y la ranilla); el arco compuesto de puntas vueltas, tenso, con la flecha emplumada lista.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val x = e.centro.x; val y = e.centro.y; val r = e.radio
+        val c = e.color; val f = e.fondo
+        fun q(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        when (e.forma) {
+            "luna" -> {
+                drawCircle(c, r * 0.94f, e.centro)
+                // El águila de alas rectas, con las primarias abiertas como dedos y la cola en abanico.
+                drawPath(simetricoMedievo(q(0f, 0.02f), r,
+                    0f, -0.26f, 0.07f, -0.2f, 0.08f, -0.1f, 0.3f, -0.16f, 0.66f, -0.22f, 0.84f, -0.14f, 0.7f, -0.08f, 0.8f, -0.02f,
+                    0.64f, 0f, 0.7f, 0.06f, 0.5f, 0.06f, 0.16f, 0.1f, 0.18f, 0.36f, 0f, 0.4f), f)
+            }
+            "huella" -> {
+                // La pared del casco, abierta atrás, con los clavos de la herradura.
+                val g = grosorMedievo(r, 0.3f)
+                val a = 0.84f - 0.15f
+                drawArc(c, 150f, 240f, false, Offset(x - a * r, y - 0.92f * r + 0.15f * r), Size(2 * a * r, 1.6f * r), style = Stroke(g, cap = StrokeCap.Round))
+                if (r >= 7f * density) for (grados in listOf(170f, 205f, 240f, 300f, 335f, 370f)) {
+                    val ang = grados * PI.toFloat() / 180f
+                    drawCircle(f, motaMedievo(r, 0.06f), Offset(x + a * r * cos(ang), y + 0.03f * r + 0.8f * r * sin(ang)))
+                }
+            }
+            "pesa" -> {
+                // El arco compuesto: dos palas que se curvan hacia la cuerda y, en las puntas, las orejas vueltas hacia afuera.
+                val arco = Path().apply {
+                    moveTo(x + 0.36f * r, y - 1f * r); quadraticTo(x + 0.06f * r, y - 0.98f * r, x + 0.1f * r, y - 0.76f * r)
+                    quadraticTo(x + 0.66f * r, y - 0.5f * r, x + 0.52f * r, y)
+                    quadraticTo(x + 0.66f * r, y + 0.5f * r, x + 0.1f * r, y + 0.76f * r)
+                    quadraticTo(x + 0.06f * r, y + 0.98f * r, x + 0.36f * r, y + 1f * r)
+                }
+                // La cuerda tirada hasta atrás.
+                val cuerda = grosorMedievo(r, 0.045f)
+                drawLine(c, q(0.1f, -0.76f), q(-0.5f, 0f), cuerda)
+                drawLine(c, q(0.1f, 0.76f), q(-0.5f, 0f), cuerda)
+                drawPath(arco, c, style = Stroke(grosorMedievo(r, 0.13f), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawLine(c, q(0.56f, -0.16f), q(0.56f, 0.16f), grosorMedievo(r, 0.22f))
+                // La flecha: el astil, la punta y las plumas.
+                drawLine(c, q(-0.56f, 0f), q(0.82f, 0f), grosorMedievo(r, 0.07f))
+                drawPath(poligonoMedievo(e.centro, r, 1.02f, 0f, 0.74f, -0.15f, 0.8f, 0f, 0.74f, 0.15f), c)
+                drawPath(poligonoMedievo(e.centro, r, -0.62f, -0.2f, -0.4f, -0.2f, -0.24f, 0f, -0.4f, 0.2f, -0.62f, 0.2f, -0.48f, 0f), c)
+            }
+            else -> {}
+        }
+    }
 }
 
 /**
@@ -2802,6 +3139,63 @@ object LogrosEdo : DisenoLogros {
         drawRect(if (oscuro) Color(0xFFFFD27A) else Color(0xFF3A3530), Offset(l - 1.2f * u, y - 10.4f * u), Size(2.4f * u, 2.6f * u))
         drawLine(piedraOsc, Offset(l, y - 10.4f * u), Offset(l, y - 7.8f * u), 0.4f * u)
         if (!oscuro) for ((px, py) in listOf(-8f to -32f, 3f to -36f, 12f to -32f)) drawOval(Color(0xFFF2B8C6), Offset(x + px * u, y + py * u), Size(2f * u, 1.3f * u))
+    }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * La luna llena detrás del torii (la luna en un tono del color y el arco delante); el par de geta de madera, vistos
+     * de arriba, con la tira en V; la piedra de fuerza del santuario (chikaraishi) ceñida por su cuerda de paja con el papel
+     * en zigzag.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val x = e.centro.x; val y = e.centro.y; val r = e.radio
+        val c = e.color; val f = e.fondo
+        fun q(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        when (e.forma) {
+            "luna" -> {
+                drawCircle(mezcla(c, f, 0.42f), r * 0.62f, q(0f, -0.3f))
+                // El torii: el travesaño de arriba con las puntas alzadas, el de abajo y los dos pilares.
+                val kasagi = Path().apply {
+                    moveTo(x - 1f * r, y - 0.5f * r); quadraticTo(x, y - 0.3f * r, x + 1f * r, y - 0.5f * r)
+                    lineTo(x + 0.9f * r, y - 0.28f * r); quadraticTo(x, y - 0.12f * r, x - 0.9f * r, y - 0.28f * r); close()
+                }
+                drawPath(kasagi, c)
+                drawRect(c, Offset(x - 0.74f * r, y - 0.02f * r), Size(1.48f * r, maxOf(0.13f * r, 0.9f * density)))
+                drawPath(poligonoMedievo(e.centro, r, -0.58f, -0.24f, -0.42f, -0.24f, -0.4f, 0.96f, -0.62f, 0.96f), c)
+                drawPath(poligonoMedievo(e.centro, r, 0.42f, -0.24f, 0.58f, -0.24f, 0.62f, 0.96f, 0.4f, 0.96f), c)
+                drawRect(c, Offset(x - 0.07f * r, y - 0.24f * r), Size(0.14f * r, 0.24f * r))
+            }
+            "huella" -> {
+                for ((p, giro) in listOf(q(-0.42f, 0.1f) to -8f, q(0.42f, -0.08f) to 8f)) rotate(giro, p) {
+                    drawRoundRect(c, Offset(p.x - 0.36f * r, p.y - 0.86f * r), Size(0.72f * r, 1.72f * r), CornerRadius(0.26f * r))
+                    // La tira (hanao): del nudo de adelante a los dos costados.
+                    val g = grosorMedievo(r, 0.1f)
+                    val nudo = Offset(p.x, p.y - 0.5f * r)
+                    drawLine(f, nudo, Offset(p.x - 0.36f * r, p.y + 0.1f * r), g)
+                    drawLine(f, nudo, Offset(p.x + 0.36f * r, p.y + 0.1f * r), g)
+                    drawCircle(f, motaMedievo(r, 0.08f), nudo)
+                }
+            }
+            "pesa" -> {
+                // La piedra, redonda y tosca, de canto facetado.
+                drawPath(poligonoMedievo(e.centro, r, -0.92f, 0.18f, -0.82f, -0.22f, -0.5f, -0.5f, -0.04f, -0.6f, 0.46f, -0.5f, 0.84f, -0.24f,
+                    0.94f, 0.16f, 0.78f, 0.58f, 0.4f, 0.84f, -0.3f, 0.86f, -0.74f, 0.6f), c)
+                // La cuerda sagrada que la ciñe (de paja, en un tono del color), con sus torceduras.
+                val paja = mezcla(c, f, 0.55f)
+                val cuerda = Path().apply { moveTo(x - 0.98f * r, y - 0.2f * r); quadraticTo(x, y + 0.06f * r, x + 0.98f * r, y - 0.2f * r) }
+                drawPath(cuerda, paja, style = Stroke(grosorMedievo(r, 0.22f), cap = StrokeCap.Round))
+                if (r >= 8f * density) for (k in -2..2) {
+                    val t = Offset(x + k * 0.32f * r, y - 0.07f * r - (k * k) * 0.025f * r)
+                    drawLine(c, Offset(t.x - 0.07f * r, t.y - 0.09f * r), Offset(t.x + 0.07f * r, t.y + 0.09f * r), grosorMedievo(r, 0.04f))
+                }
+                // El papel en zigzag (shide) que cuelga en medio, en el fondo.
+                drawPath(Path().apply {
+                    moveTo(x - 0.02f * r, y + 0.02f * r); lineTo(x + 0.16f * r, y + 0.22f * r); lineTo(x - 0.1f * r, y + 0.38f * r); lineTo(x + 0.08f * r, y + 0.62f * r)
+                }, f, style = Stroke(grosorMedievo(r, 0.11f), join = StrokeJoin.Miter))
+            }
+            else -> {}
+        }
     }
 }
 
@@ -3155,6 +3549,72 @@ object LogrosRenacimiento : DisenoLogros {
         drawLine(nogal, Offset(pc.x - 9f * u, pc.y + 2.6f * u), Offset(pc.x + 1f * u, pc.y - 5.4f * u), 0.7f * u, StrokeCap.Round)
         drawCircle(t(SANGUINA, oscuro), 0.7f * u, Offset(pc.x + 1.2f * u, pc.y - 5.6f * u))
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * La luna del anteojo, como la dibujó Galileo: el disco entero de contorno, la mitad alumbrada y los cráteres a lo
+     * largo de la línea de sombra; el par de zapatos de pico de pato, vistos de arriba; la polea de los
+     * cuadernos de máquinas con la pesa colgada de la cuerda.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val x = e.centro.x; val y = e.centro.y; val r = e.radio
+        val c = e.color; val f = e.fondo
+        fun q(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        when (e.forma) {
+            "luna" -> {
+                drawCircle(c, r * 0.9f, e.centro, style = Stroke(grosorMedievo(r, 0.07f)))
+                // La parte alumbrada: la mitad derecha, con la línea de sombra quebrada por las montañas.
+                drawPath(Path().apply {
+                    moveTo(x, y - 0.9f * r); arcTo(Rect(e.centro, r * 0.9f), -90f, 180f, false)
+                    lineTo(x - 0.06f * r, y + 0.6f * r); lineTo(x + 0.06f * r, y + 0.3f * r); lineTo(x - 0.04f * r, y)
+                    lineTo(x + 0.08f * r, y - 0.32f * r); lineTo(x - 0.02f * r, y - 0.6f * r); close()
+                }, c)
+                drawCircle(f, motaMedievo(r, 0.15f), q(0.3f, -0.36f))
+                drawCircle(f, motaMedievo(r, 0.12f), q(0.24f, 0.32f))
+                drawCircle(f, motaMedievo(r, 0.08f), q(0.56f, 0.1f))
+                // Las cumbres que ya reciben luz del otro lado de la sombra.
+                if (r >= 7f * density) {
+                    drawCircle(c, motaMedievo(r, 0.06f), q(-0.2f, -0.18f))
+                    drawCircle(c, motaMedievo(r, 0.05f), q(-0.16f, 0.46f))
+                }
+            }
+            "huella" -> for ((s, alto) in listOf(-1f to 0.08f, 1f to -0.08f)) {
+                // Cada zapato: la punta ancha y cuadrada, estrecha en el talón, con la boca y la tira en el fondo.
+                val p = q(s * 0.44f, alto)
+                rotate(s * 6f, p) {
+                    drawPath(Path().apply {
+                        moveTo(p.x - 0.18f * r, p.y + 0.9f * r); lineTo(p.x + 0.18f * r, p.y + 0.9f * r)
+                        quadraticTo(p.x + 0.3f * r, p.y + 0.2f * r, p.x + 0.42f * r, p.y - 0.46f * r)
+                        quadraticTo(p.x + 0.44f * r, p.y - 0.9f * r, p.x, p.y - 0.9f * r)
+                        quadraticTo(p.x - 0.44f * r, p.y - 0.9f * r, p.x - 0.42f * r, p.y - 0.46f * r)
+                        quadraticTo(p.x - 0.3f * r, p.y + 0.2f * r, p.x - 0.18f * r, p.y + 0.9f * r); close()
+                    }, c)
+                    drawOval(f, Offset(p.x - 0.15f * r, p.y - 0.12f * r), Size(0.3f * r, 0.76f * r))
+                    drawLine(c, Offset(p.x - 0.2f * r, p.y + 0.24f * r), Offset(p.x + 0.2f * r, p.y + 0.24f * r), grosorMedievo(r, 0.08f))
+                    if (r >= 11f * density) drawLine(f, Offset(p.x - 0.2f * r, p.y - 0.56f * r), Offset(p.x + 0.2f * r, p.y - 0.56f * r), grosorMedievo(r, 0.05f))
+                }
+            }
+            "pesa" -> {
+                // La viga, el gancho y la rueda de la polea con su eje.
+                val g = grosorMedievo(r, 0.06f)
+                drawRect(c, Offset(x - 0.7f * r, y - 1f * r), Size(1.4f * r, maxOf(0.14f * r, 0.9f * density)))
+                drawLine(c, q(0f, -0.9f), q(0f, -0.62f), grosorMedievo(r, 0.08f))
+                drawCircle(c, r * 0.34f, q(0f, -0.38f))
+                drawCircle(f, r * 0.34f - grosorMedievo(r, 0.1f), q(0f, -0.38f), style = Stroke(g))
+                drawCircle(f, motaMedievo(r, 0.07f), q(0f, -0.38f))
+                // Las dos cuerdas: una baja a la pesa y la otra cuelga con su lazada.
+                drawLine(c, q(-0.34f, -0.38f), q(-0.34f, 0.2f), g)
+                drawLine(c, q(0.34f, -0.38f), q(0.34f, 0.72f), g)
+                drawCircle(c, r * 0.1f, q(0.34f, 0.8f), style = Stroke(g))
+                // La pesa: un tronco de cono con su argolla.
+                drawCircle(c, r * 0.1f, q(-0.34f, 0.22f), style = Stroke(g))
+                drawPath(poligonoMedievo(e.centro, r, -0.56f, 0.32f, -0.12f, 0.32f, 0.02f, 0.96f, -0.7f, 0.96f), c)
+                drawLine(f, q(-0.62f, 0.62f), q(-0.06f, 0.62f), grosorMedievo(r, 0.05f))
+            }
+            else -> {}
+        }
+    }
 }
 
 /**
@@ -3496,6 +3956,56 @@ object LogrosPirata : DisenoLogros {
         for (k in 0..6) { val f = k / 6f; drawCircle(if (oscuro) Color(0xFFF6F0E4) else Color(0xFFF2ECE0), 0.75f * u, Offset(c.x + 3.4f * u + f * 7f * u, c.y + 0.4f * u + sin(f * PI.toFloat()) * 4f * u)) }
         for ((ox, oy) in listOf(-17f to 0.4f, -15f to -1.6f, 19f to -8f, -19f to -3f)) drawOval(oro, Offset(x + ox * u - 2f * u, y + oy * u - 1f * u), Size(4f * u, 2f * u))
         if (oscuro) for ((sx, sy) in listOf(-14f to -26f, 9f to -30f, 17f to -14f)) drawPath(estrella(Offset(x + sx * u, y + sy * u), 2f * u, 4, 0.25f), Color(0xFFFFF0B0))
+    }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * La luna vista por el ojo de buey: el aro grueso de latón con sus pernos y la creciente dentro; las pisadas en la
+     * arena de la bota y de la pata de palo; la bala de cañón con su cadena y el grillete.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val x = e.centro.x; val y = e.centro.y; val r = e.radio
+        val c = e.color; val f = e.fondo
+        fun q(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        when (e.forma) {
+            "luna" -> {
+                val aro = grosorMedievo(r, 0.24f)
+                drawCircle(c, r * 0.96f - aro / 2f, e.centro, style = Stroke(aro))
+                if (r >= 7f * density) for (k in 0 until 6) {
+                    val a = (k * PI / 3 + PI / 6).toFloat(); val rr = r * 0.96f - aro / 2f
+                    drawCircle(f, motaMedievo(r, 0.055f), Offset(x + rr * cos(a), y + rr * sin(a)))
+                }
+                drawPath(crecienteMedievo(q(-0.08f, 0.02f), r * 0.44f, q(0.12f, -0.1f), r * 0.36f), c)
+            }
+            "huella" -> {
+                // La pisada de la bota: la planta y el tacón, aparte.
+                rotate(-10f, q(-0.4f, 0f)) {
+                    drawOval(c, Offset(x - 0.72f * r, y - 0.96f * r), Size(0.64f * r, 1.1f * r))
+                    drawRoundRect(c, Offset(x - 0.66f * r, y + 0.3f * r), Size(0.52f * r, 0.6f * r), CornerRadius(0.2f * r))
+                }
+                // El hoyo redondo de la pata de palo, con su cerco de arena.
+                drawCircle(c, r * 0.28f, q(0.52f, 0.2f))
+                drawCircle(f, motaMedievo(r, 0.1f), q(0.52f, 0.2f))
+                drawCircle(c, r * 0.4f, q(0.52f, 0.2f), style = Stroke(grosorMedievo(r, 0.05f)))
+            }
+            "pesa" -> {
+                // La cadena: eslabones en diagonal, de la bala al grillete.
+                val g = grosorMedievo(r, 0.09f)
+                for (k in 0 until 3) {
+                    val p = q(-0.18f - k * 0.26f, -0.16f - k * 0.26f)
+                    rotate(45f, p) {
+                        if (k % 2 == 0) drawOval(c, Offset(p.x - 0.2f * r, p.y - 0.12f * r), Size(0.4f * r, 0.24f * r), style = Stroke(g))
+                        else drawLine(c, Offset(p.x - 0.2f * r, p.y), Offset(p.x + 0.2f * r, p.y), g)
+                    }
+                }
+                drawCircle(c, r * 0.2f, q(-0.82f, -0.8f), style = Stroke(grosorMedievo(r, 0.1f)))
+                // La bala, con su brillo.
+                drawCircle(c, r * 0.6f, q(0.32f, 0.34f))
+                drawCircle(f, motaMedievo(r, 0.13f), q(0.12f, 0.14f))
+            }
+            else -> {}
+        }
     }
 }
 
@@ -3845,5 +4355,62 @@ object LogrosRevolucion : DisenoLogros {
             moveTo(ax - 2.6f * u, top + 0.6f * u); cubicTo(ax - 3f * u, top - 3.4f * u, ax, top - 5.4f * u, ax + 2.4f * u, top - 4.6f * u)
             quadraticTo(ax + 3.8f * u, top - 3.6f * u, ax + 3.2f * u, top - 1.8f * u); quadraticTo(ax + 2.4f * u, top - 2.6f * u, ax + 1.8f * u, top - 1.6f * u); lineTo(ax + 2.2f * u, top + 0.6f * u); close()
         }, rojo, borde)
+    }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * La luna creciente sobre los tejados de París, con sus chimeneas y una buhardilla encendida; el zueco de madera de los
+     * sans-culottes; la pesa de un kilogramo, el cilindro con botón del sistema métrico que nació con
+     * la Revolución.
+     */
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val x = e.centro.x; val y = e.centro.y; val r = e.radio
+        val c = e.color; val f = e.fondo
+        fun q(a: Float, b: Float) = Offset(x + a * r, y + b * r)
+        when (e.forma) {
+            "luna" -> {
+                drawPath(crecienteMedievo(q(0.2f, -0.56f), r * 0.42f, q(0.38f, -0.7f), r * 0.34f), c)
+                // Los tejados: un hastial, un tramo bajo y una mansarda, con dos chimeneas.
+                drawPath(poligonoMedievo(e.centro, r,
+                    -0.96f, 0.96f, -0.96f, 0.26f, -0.54f, -0.1f, -0.12f, 0.26f, -0.12f, 0.36f, 0.1f, 0.36f, 0.1f, 0.12f,
+                    0.28f, 0f, 0.76f, 0f, 0.94f, 0.12f, 0.94f, 0.96f), c)
+                drawRect(c, Offset(x - 0.86f * r, y - 0.12f * r), Size(0.14f * r, 0.3f * r))
+                drawRect(c, Offset(x + 0.6f * r, y - 0.2f * r), Size(0.14f * r, 0.24f * r))
+                if (r >= 7f * density) {
+                    drawRect(f, Offset(x - 0.62f * r, y + 0.38f * r), Size(0.16f * r, 0.2f * r))
+                    drawRect(f, Offset(x + 0.38f * r, y + 0.28f * r), Size(0.16f * r, 0.2f * r))
+                }
+            }
+            "huella" -> {
+                // El zueco de lado: el talón alto, la boca y la punta redonda, un poco alzada.
+                drawPath(Path().apply {
+                    moveTo(x - 0.86f * r, y + 0.56f * r); lineTo(x + 0.56f * r, y + 0.56f * r)
+                    quadraticTo(x + 1f * r, y + 0.56f * r, x + 1f * r, y + 0.12f * r)
+                    quadraticTo(x + 0.98f * r, y - 0.28f * r, x + 0.42f * r, y - 0.3f * r)
+                    lineTo(x - 0.2f * r, y - 0.3f * r)
+                    quadraticTo(x - 0.62f * r, y - 0.5f * r, x - 0.92f * r, y - 0.46f * r)
+                    quadraticTo(x - 0.98f * r, y + 0.1f * r, x - 0.86f * r, y + 0.56f * r); close()
+                }, c)
+                // La boca del zueco y el entrante entre el tacón y la planta.
+                drawOval(f, Offset(x - 0.74f * r, y - 0.3f * r), Size(0.58f * r, maxOf(0.2f * r, 0.9f * density)))
+                drawRect(f, Offset(x - 0.4f * r, y + 0.44f * r), Size(0.5f * r, 0.14f * r))
+            }
+            "pesa" -> {
+                // El botón con su cuello y el cilindro, con el filete de arriba y la banda grabada.
+                drawCircle(c, r * 0.24f, q(0f, -0.74f))
+                drawRect(c, Offset(x - 0.13f * r, y - 0.62f * r), Size(0.26f * r, 0.3f * r))
+                drawRoundRect(c, Offset(x - 0.66f * r, y - 0.36f * r), Size(1.32f * r, 1.3f * r), CornerRadius(0.12f * r))
+                val g = grosorMedievo(r, 0.06f)
+                drawLine(f, q(-0.56f, -0.2f), q(0.56f, -0.2f), g)
+                drawLine(f, q(-0.56f, 0.78f), q(0.56f, 0.78f), g)
+                // El «1» del kilogramo, en el fondo.
+                val g1 = grosorMedievo(r, 0.11f)
+                drawLine(f, q(0.04f, 0.04f), q(0.04f, 0.58f), g1)
+                drawLine(f, q(0.04f, 0.04f), q(-0.14f, 0.18f), g1, StrokeCap.Round)
+                drawLine(f, q(-0.12f, 0.58f), q(0.2f, 0.58f), grosorMedievo(r, 0.08f))
+            }
+            else -> {}
+        }
     }
 }

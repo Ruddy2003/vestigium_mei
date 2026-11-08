@@ -71,7 +71,24 @@ interface DisenoLogros {
      * más de lo necesario.
      */
     fun DrawScope.victoriaCampana(e: EstadoVictoria, oscuro: Boolean)
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    /**
+     * Uno de los objetos de Tu año del tema, centrado en [EstadoObjeto.centro] con radio [EstadoObjeto.radio] (de ≈ 4 a 20 dp:
+     * es un icono, dentro de la ficha del tema), en el color [EstadoObjeto.color] sobre [EstadoObjeto.fondo]:
+     * - `"luna"`: los días enteros dormido (la luna del cielo del tema: la de Khonsu, la de la cetrería, la luna llena tras
+     *   las nubes, la luna de neón, la luna vista desde la nave…);
+     * - `"huella"`: los kilómetros caminados (la huella del tema: la sandalia de clavos, la bota del peregrino, el zueco, la
+     *   rodada de bicicleta, la bota del astronauta, la pata de bisonte…);
+     * - `"pesa"`: los entrenamientos (la piedra de levantar, la pesa rusa, el yunque, la bala de cañón, el halterio del gimnasio…).
+     * Que se reconozca a ese tamaño: silueta clara, pocos detalles.
+     */
+    fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean)
 }
+
+/** Un objeto de Tu año: su forma (luna, huella o pesa), dónde va, su radio y sus colores. */
+class EstadoObjeto(val forma: String, val centro: androidx.compose.ui.geometry.Offset, val radio: Float, val color: Color, val fondo: Color)
 
 /** El marcador de una campaña: dónde está, cuánto brinca (0 a 1) y el color de acento del esquema. */
 class EstadoMarcador(val punto: androidx.compose.ui.geometry.Offset, val salto: Float, val acento: Color)

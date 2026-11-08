@@ -7,7 +7,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -93,6 +95,62 @@ private fun tabulaAnt(x0: Float, y0: Float, x1: Float, y1: Float, ans: Float): P
     moveTo(x0, y0); lineTo(x1, y0); lineTo(x1, y0 + a * 0.3f); lineTo(x1 + ans, y0 + a * 0.08f); lineTo(x1 + ans, y1 - a * 0.08f)
     lineTo(x1, y1 - a * 0.3f); lineTo(x1, y1); lineTo(x0, y1); lineTo(x0, y1 - a * 0.3f); lineTo(x0 - ans, y1 - a * 0.08f)
     lineTo(x0 - ans, y0 + a * 0.08f); lineTo(x0, y0 + a * 0.3f); close()
+}
+
+// ---------------------------------------------------------------- ayudantes de los objetos de Tu año
+
+/** El grueso de un trazo de los objetos de Tu año: [f] veces el radio [r], pero nunca menos de 0.8 dp. */
+private fun DrawScope.gruesoAnt(r: Float, f: Float): Float = maxOf(r * f, 0.8f * density)
+
+/**
+ * Una luna creciente: el círculo de radio [r] con centro en [c] menos otro de radio [r] × [hueco], corrido ([dx], [dy])
+ * radios. Con el hueco arriba (dy < 0) queda la luna «con los cuernos arriba» de las monedas y los tocados.
+ */
+private fun crecienteAnt(c: Offset, r: Float, hueco: Float, dx: Float, dy: Float): Path {
+    val a = Path().apply { addOval(Rect(c, r)) }
+    val b = Path().apply { addOval(Rect(Offset(c.x + dx * r, c.y + dy * r), r * hueco)) }
+    return Path().apply { op(a, b, PathOperation.Difference) }
+}
+
+/**
+ * La planta de un pie o de una suela, con la punta arriba, centrada en [c], de [largo] × [ancho]: ancha en la parte de
+ * los dedos, angosta en el arco (del lado de adentro) y redonda en el talón. [s] = 1 es el pie derecho; −1, el izquierdo.
+ */
+private fun plantaAnt(c: Offset, largo: Float, ancho: Float, s: Float = 1f): Path = Path().apply {
+    fun px(f: Float) = c.x + s * f * ancho
+    fun py(f: Float) = c.y + f * largo
+    moveTo(px(-0.02f), py(-0.5f))
+    cubicTo(px(0.36f), py(-0.5f), px(0.52f), py(-0.3f), px(0.48f), py(-0.08f))
+    cubicTo(px(0.45f), py(0.1f), px(0.34f), py(0.22f), px(0.36f), py(0.36f))
+    cubicTo(px(0.38f), py(0.53f), px(-0.34f), py(0.55f), px(-0.32f), py(0.36f))
+    cubicTo(px(-0.3f), py(0.2f), px(-0.16f), py(0.06f), px(-0.32f), py(-0.14f))
+    cubicTo(px(-0.48f), py(-0.36f), px(-0.36f), py(-0.5f), px(-0.02f), py(-0.5f))
+    close()
+}
+
+/**
+ * Los cinco dedos de un pie descalzo sobre la planta de [plantaAnt] con el mismo centro [c], [largo], [ancho] y [s]: el
+ * gordo del lado de adentro y los demás cada vez más chicos. Ninguno de menos de 0.8 dp de diámetro.
+ */
+private fun DrawScope.dedosAnt(c: Offset, largo: Float, ancho: Float, s: Float, color: Color) {
+    val minimo = 0.4f * density
+    listOf(Triple(-0.2f, -0.6f, 0.17f), Triple(0.06f, -0.63f, 0.12f), Triple(0.24f, -0.58f, 0.105f), Triple(0.38f, -0.5f, 0.095f), Triple(0.48f, -0.39f, 0.085f))
+        .forEach { (dx, dy, rr) -> drawCircle(color, maxOf(rr * ancho, minimo), Offset(c.x + s * dx * ancho, c.y + dy * largo)) }
+}
+
+/**
+ * Una piedra de canto irregular: [n] vértices (de 5 a 16) alrededor de la elipse de semiejes [rx] × [ry] con centro en [c],
+ * cada uno a una distancia de entre 1 − [hondo] y 1 vez la de la elipse, siempre la misma para cada [semilla].
+ */
+private fun piedraAnt(c: Offset, rx: Float, ry: Float, semilla: Int, n: Int = 9, hondo: Float = 0.18f): Path = Path().apply {
+    val m = n.coerceIn(5, 16)
+    for (k in 0 until m) {
+        val a = k * 2.0 * Math.PI / m + 0.3
+        val f = 1f - hondo + hondo * azar(semilla, k)
+        val p = Offset(c.x + rx * f * kotlin.math.cos(a).toFloat(), c.y + ry * f * kotlin.math.sin(a).toFloat())
+        if (k == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+    }
+    close()
 }
 
 // ---------------------------------------------------------------- ayudantes del salón del hall
@@ -681,6 +739,48 @@ object LogrosCueva : DisenoLogros {
         drawArc(c(CALIZA), 200f, 120f, false, Offset(-15.4f * u, -8.6f * u), Size(3.6f * u, 3f * u), style = Stroke(0.55f * u))
         if (oscuro) trazoAnt(llama.copy(alpha = 0.55f), -16.6f, -10.6f, -13.4f, -7f, 0.5f)
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        when (e.forma) {
+            // La luna creciente de ocre y, en su hueco, tres muescas: las lunas contadas en el hueso.
+            "luna" -> {
+                drawPath(crecienteAnt(Offset(x - r * 0.18f, y), r * 0.9f, 0.8f, 0.42f, -0.1f), col)
+                val g = gruesoAnt(r, 0.13f)
+                for (k in 0 until 3) {
+                    val mx = x + r * (0.22f + k * 0.27f)
+                    drawLine(col, Offset(mx + r * 0.05f, y - r * 0.34f), Offset(mx - r * 0.05f, y + r * 0.34f), g, StrokeCap.Round)
+                }
+            }
+            // El pie en negativo: el ocre soplado alrededor del pie, como las manos de la pared, con unas gotas sueltas.
+            "huella" -> {
+                drawPath(piedraAnt(Offset(x, y), r * 0.84f, r * 1f, 41, 15, 0.12f), col)
+                val pie = Offset(x - r * 0.04f, y + r * 0.16f); val largo = r * 1.36f; val ancho = r * 0.7f
+                drawPath(plantaAnt(pie, largo, ancho), fondo)
+                dedosAnt(pie, largo, ancho, 1f, fondo)
+                if (r > 6f * u) listOf(Offset(-0.98f, -0.62f), Offset(0.96f, 0.5f), Offset(-0.9f, 0.78f)).forEach { o ->
+                    drawCircle(col, maxOf(r * 0.06f, 0.45f * u), Offset(x + o.x * r, y + o.y * r))
+                }
+            }
+            // Una rama con su ramita y un canto rodado clavado en cada punta: la primera pesa.
+            "pesa" -> {
+                val g = gruesoAnt(r, 0.15f)
+                drawLine(col, Offset(x - r * 1.02f, y + r * 0.12f), Offset(x + r * 1.02f, y - r * 0.12f), g, StrokeCap.Round)
+                drawLine(col, Offset(x - r * 0.06f, y), Offset(x + r * 0.16f, y - r * 0.4f), maxOf(g * 0.7f, 0.8f * u), StrokeCap.Round)
+                val veta = gruesoAnt(r, 0.06f)
+                listOf(Triple(-1f, 7, 0.42f), Triple(1f, 19, 0.38f)).forEach { (s, semilla, rr) ->
+                    val cp = Offset(x + s * r * 0.6f, y - s * r * 0.07f + r * 0.04f)
+                    drawPath(piedraAnt(cp, r * rr, r * (rr + 0.16f), semilla, 8, 0.2f), col)
+                    // Una lasca saltada en el canto, si cabe.
+                    if (r > 7f * u) drawLine(fondo, Offset(cp.x - r * 0.16f, cp.y - r * 0.3f), Offset(cp.x + r * 0.04f, cp.y - r * 0.12f), veta, StrokeCap.Round)
+                }
+            }
+            else -> Unit
+        }
+    }
 }
 
 // =====================================================================
@@ -1134,6 +1234,47 @@ object LogrosRomano : DisenoLogros {
             if (oscuro) llamaAnt(Offset(x * u, -6.4f * u), 8f * u, fuego, Color(0xFFFFF1B8))
         }
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        when (e.forma) {
+            // La luna de los áureos: la creciente ladeada y, en su hueco, dos estrellas.
+            "luna" -> {
+                drawPath(crecienteAnt(Offset(x - r * 0.1f, y + r * 0.1f), r * 0.84f, 0.82f, 0.32f, -0.38f), col)
+                listOf(Triple(0.42f, -0.5f, 0.3f), Triple(0.2f, 0.02f, 0.2f)).forEach { (dx, dy, rr) ->
+                    drawPath(estrella(Offset(x + dx * r, y + dy * r), maxOf(rr * r, 0.8f * u), 4, 0.4f), col)
+                }
+            }
+            // La suela de la cáliga, la sandalia del legionario: la planta y sus clavos.
+            "huella" -> {
+                val pie = Offset(x, y); val largo = r * 1.85f; val ancho = r * 0.9f
+                drawPath(plantaAnt(pie, largo, ancho), col)
+                val clavos = listOf(
+                    -0.02f to -0.4f, 0.24f to -0.34f, 0.34f to -0.16f, 0.28f to 0.02f, 0.2f to 0.2f, 0.18f to 0.36f, 0f to 0.42f,
+                    -0.18f to 0.36f, -0.17f to 0.18f, -0.14f to 0.01f, -0.24f to -0.16f, -0.24f to -0.34f, 0.04f to -0.18f, 0.04f to 0.06f, 0f to 0.24f,
+                )
+                val chico = r < 8f * u
+                clavos.forEachIndexed { k, (fx, fy) ->
+                    if (!chico || k % 2 == 0) drawCircle(fondo, maxOf(r * 0.065f, 0.4f * u), Offset(pie.x + fx * ancho, pie.y + fy * largo))
+                }
+            }
+            // Las halteras del mosaico de las atletas: dos medias esferas con su asa, y el canto marcado.
+            "pesa" -> {
+                drawLine(col, Offset(x - r * 0.5f, y), Offset(x + r * 0.5f, y), gruesoAnt(r, 0.2f), StrokeCap.Round)
+                val g = gruesoAnt(r, 0.07f)
+                listOf(-1f, 1f).forEach { s ->
+                    val cx = x + s * r * 0.42f
+                    val caja = Offset(cx - r * 0.58f, y - r * 0.58f); val lado = Size(r * 1.16f, r * 1.16f)
+                    drawArc(col, if (s < 0) 90f else -90f, 180f, true, caja, lado)
+                    drawArc(fondo, if (s < 0) 120f else -60f, 120f, false, Offset(cx - r * 0.36f, y - r * 0.36f), Size(r * 0.72f, r * 0.72f), style = Stroke(g))
+                }
+            }
+            else -> Unit
+        }
+    }
 }
 
 // =====================================================================
@@ -1565,6 +1706,61 @@ object LogrosHeleno : DisenoLogros {
         listOf(-2.6f, 2.6f).forEach { dx -> drawCircle(c(Color(0xFFB98B4A)), 1.1f * u, Offset((tx + dx) * u, -11.6f * u), style = Stroke(0.45f * u)) }
         llamaAnt(Offset(tx * u, -10.6f * u), (if (oscuro) 10f else 8f) * u, fuego, LLAMA)
         if (oscuro) listOf(Offset(tx - 2f, -22f), Offset(tx + 2.4f, -24.6f)).forEach { o -> circuloAnt(LLAMA, o.x, o.y, 0.55f) }
+    }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        when (e.forma) {
+            // Selene sobre el Egeo: la creciente y dos olas debajo.
+            "luna" -> {
+                drawPath(crecienteAnt(Offset(x + r * 0.08f, y - r * 0.26f), r * 0.64f, 0.84f, -0.44f, -0.16f), col)
+                val g = gruesoAnt(r, 0.12f)
+                listOf(0.56f to 1f, 0.86f to 0.55f).forEach { (fy, a) ->
+                    val oy = y + fy * r; val paso = r * 0.6f
+                    drawPath(Path().apply {
+                        moveTo(x - r * 0.9f, oy)
+                        for (k in 0 until 3) { val x0 = x - r * 0.9f + k * paso; quadraticTo(x0 + paso * 0.5f, oy - r * 0.2f, x0 + paso, oy) }
+                    }, col.copy(alpha = col.alpha * a), style = Stroke(g, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                }
+            }
+            // La sandalia de suela y correas: la suela en un tono del color, el borde, la correa en V del dedo y las que se
+            // cruzan sobre el empeine hasta el tobillo.
+            "huella" -> {
+                val pie = Offset(x, y + r * 0.04f); val largo = r * 1.8f; val ancho = r * 0.82f
+                val suela = plantaAnt(pie, largo, ancho)
+                drawPath(suela, mezcla(fondo, col, 0.42f))
+                drawPath(suela, col, style = Stroke(gruesoAnt(r, 0.07f)))
+                val g = gruesoAnt(r, 0.12f)
+                val poste = Offset(pie.x - ancho * 0.08f, pie.y - largo * 0.34f)
+                fun px(f: Float) = pie.x + f * ancho
+                fun py(f: Float) = pie.y + f * largo
+                drawPath(Path().apply {
+                    moveTo(px(-0.56f), py(-0.04f)); lineTo(poste.x, poste.y); lineTo(px(0.6f), py(-0.08f))
+                    moveTo(px(-0.52f), py(0.04f)); lineTo(px(0.54f), py(0.3f))
+                    moveTo(px(0.56f), py(0.02f)); lineTo(px(-0.48f), py(0.3f))
+                }, col, style = Stroke(g, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawCircle(col, maxOf(r * 0.1f, 0.5f * u), poste)
+            }
+            // El disco del discóbolo, inclinado en el aire: su canto, el centro y dos estelas del lanzamiento.
+            "pesa" -> {
+                val g = gruesoAnt(r, 0.09f)
+                listOf(0.46f, 0.12f).forEach { fy ->
+                    drawLine(col.copy(alpha = col.alpha * 0.5f), Offset(x - r * 1.02f, y + fy * r + r * 0.06f), Offset(x - r * 0.42f, y + fy * r - r * 0.12f), g, StrokeCap.Round)
+                }
+                rotate(-16f, Offset(x + r * 0.12f, y - r * 0.08f)) {
+                    val cx = x + r * 0.12f; val cy = y - r * 0.08f
+                    // El canto (el grueso del disco, en un tono más oscuro), la cara y el brillo del bronce.
+                    drawOval(mezcla(col, Color.Black, if (oscuro) 0.35f else 0.25f), Offset(cx - r * 0.8f, cy - r * 0.54f), Size(r * 1.6f, r * 1.34f))
+                    drawOval(col, Offset(cx - r * 0.8f, cy - r * 0.7f), Size(r * 1.6f, r * 1.3f))
+                    drawArc(fondo, 195f, 85f, false, Offset(cx - r * 0.58f, cy - r * 0.52f), Size(r * 1.16f, r * 0.94f), style = Stroke(g, cap = StrokeCap.Round))
+                    drawOval(mezcla(col, fondo, 0.3f), Offset(cx - r * 0.17f, cy - r * 0.19f), Size(r * 0.34f, r * 0.28f))
+                }
+            }
+            else -> Unit
+        }
     }
 }
 
@@ -2003,6 +2199,57 @@ object LogrosEgipto : DisenoLogros {
         drawPath(estrella(Offset(-0.4f * u, -37.2f * u), 3.2f * u, 4, 0.2f), oroLuz)
         circuloAnt(Color.White.copy(alpha = 0.9f), -0.4f, -37.2f, 0.5f)
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        when (e.forma) {
+            // La luna de Khonsu: la creciente con los cuernos arriba que sostiene el disco lleno.
+            "luna" -> {
+                drawPath(crecienteAnt(Offset(x, y + r * 0.3f), r * 0.7f, 0.84f, 0f, -0.4f), col)
+                drawCircle(col, r * 0.4f, Offset(x, y - r * 0.4f))
+                if (r > 7f * u) drawCircle(fondo, r * 0.27f, Offset(x, y - r * 0.4f), style = Stroke(gruesoAnt(r, 0.06f)))
+            }
+            // La sandalia de papiro: la suela de punta alzada y vuelta, las fibras tejidas y la correa del dedo.
+            "huella" -> {
+                val suela = Path().apply {
+                    moveTo(x + r * 0.08f, y - r * 0.98f)
+                    cubicTo(x + r * 0.5f, y - r * 0.7f, x + r * 0.46f, y - r * 0.2f, x + r * 0.38f, y + r * 0.1f)
+                    cubicTo(x + r * 0.3f, y + r * 0.4f, x + r * 0.4f, y + r * 0.96f, x, y + r * 0.96f)
+                    cubicTo(x - r * 0.38f, y + r * 0.96f, x - r * 0.34f, y + r * 0.4f, x - r * 0.3f, y + r * 0.1f)
+                    cubicTo(x - r * 0.42f, y - r * 0.3f, x - r * 0.36f, y - r * 0.7f, x + r * 0.08f, y - r * 0.98f)
+                    close()
+                }
+                drawPath(suela, col)
+                val g = gruesoAnt(r, 0.06f)
+                // La punta vuelta hacia atrás, como en las sandalias de los faraones.
+                drawPath(Path().apply { moveTo(x + r * 0.08f, y - r * 0.98f); quadraticTo(x - r * 0.12f, y - r * 1.04f, x - r * 0.1f, y - r * 0.82f) },
+                    col, style = Stroke(gruesoAnt(r, 0.12f), cap = StrokeCap.Round))
+                // Las fibras del papiro tejidas de lado a lado (tres si cabe; si no, dos).
+                val n = if (r > 6f * u) 3 else 2
+                for (k in 0 until n) { val fy = y + r * 0.12f + k * r * 0.62f / n; drawLine(fondo, Offset(x - r * 0.42f, fy), Offset(x + r * 0.42f, fy), g) }
+                // La correa: del dedo a los lados.
+                drawPath(Path().apply { moveTo(x - r * 0.36f, y - r * 0.08f); quadraticTo(x - r * 0.05f, y - r * 0.22f, x + r * 0.02f, y - r * 0.58f); quadraticTo(x + r * 0.08f, y - r * 0.22f, x + r * 0.4f, y - r * 0.08f) },
+                    fondo, style = Stroke(gruesoAnt(r, 0.1f), cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
+            // El bloque de piedra de la cantera, con su asa de soga y la pirámide grabada en la cara.
+            "pesa" -> {
+                drawArc(col, 180f, 180f, false, Offset(x - r * 0.44f, y - r * 0.68f), Size(r * 0.88f, r * 0.68f), style = Stroke(gruesoAnt(r, 0.16f)))
+                drawPath(Path().apply {
+                    moveTo(x - r * 0.56f, y - r * 0.3f); lineTo(x + r * 0.56f, y - r * 0.3f); lineTo(x + r * 0.86f, y + r * 0.86f)
+                    lineTo(x - r * 0.86f, y + r * 0.86f); close()
+                }, col)
+                val g = gruesoAnt(r, 0.07f)
+                if (r > 6f * u) drawPath(Path().apply {
+                    moveTo(x, y - r * 0.04f); lineTo(x + r * 0.36f, y + r * 0.5f); lineTo(x - r * 0.36f, y + r * 0.5f); close()
+                }, fondo)
+                drawLine(fondo, Offset(x - r * 0.62f, y + r * 0.66f), Offset(x + r * 0.62f, y + r * 0.66f), g)
+            }
+            else -> Unit
+        }
+    }
 }
 
 // =====================================================================
@@ -2391,6 +2638,53 @@ object LogrosMeso : DisenoLogros {
                 (if (oscuro) Color(0xFFD8D0C0) else Color(0xFF8A8478)).copy(alpha = 0.4f), style = Stroke(1.2f * u, cap = StrokeCap.Round))
         }
     }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        when (e.forma) {
+            // La luna llena con el conejo sentado adentro, como la ven los códices: el lomo, el anca, la cabeza y las orejas.
+            "luna" -> {
+                drawCircle(col, r * 0.9f, Offset(x, y))
+                drawOval(fondo, Offset(x - r * 0.3f, y - r * 0.08f), Size(r * 0.8f, r * 0.62f))
+                drawCircle(fondo, r * 0.3f, Offset(x + r * 0.22f, y + r * 0.26f))
+                drawOval(fondo, Offset(x - r * 0.52f, y + r * 0.34f), Size(r * 0.42f, r * 0.2f))
+                drawCircle(fondo, r * 0.23f, Offset(x - r * 0.34f, y - r * 0.18f))
+                listOf(-0.3f to 28f, -0.18f to 48f).forEach { (dx, giro) ->
+                    val oreja = Offset(x + dx * r, y - r * 0.32f)
+                    rotate(giro, oreja) { drawOval(fondo, Offset(oreja.x - r * 0.09f, oreja.y - r * 0.5f), Size(r * 0.18f, r * 0.54f)) }
+                }
+                if (r > 7f * u) drawCircle(col, maxOf(r * 0.05f, 0.4f * u), Offset(x - r * 0.4f, y - r * 0.22f))
+            }
+            // Dos pisadas del camino de los códices: el pie izquierdo atrás y el derecho adelante, con sus dedos.
+            "huella" -> {
+                val largo = r * 0.98f; val ancho = r * 0.46f
+                listOf(Triple(-0.36f, 0.42f, -1f), Triple(0.34f, -0.4f, 1f)).forEach { (dx, dy, s) ->
+                    val pie = Offset(x + dx * r, y + dy * r)
+                    rotate(12f, pie) {
+                        drawPath(plantaAnt(pie, largo, ancho, s), col)
+                        if (r > 6.5f * u) dedosAnt(Offset(pie.x, pie.y + largo * 0.04f), largo, ancho, s, col)
+                    }
+                }
+            }
+            // El juego de pelota: el talud de la cancha, el aro de piedra clavado en él y la pelota de hule que va hacia el aro.
+            "pesa" -> {
+                drawPath(Path().apply { moveTo(x - r * 0.96f, y + r * 0.78f); lineTo(x - r * 0.96f, y - r * 0.5f); lineTo(x - r * 0.06f, y + r * 0.78f); close() }, mezcla(fondo, col, 0.38f))
+                val aro = Offset(x - r * 0.3f, y - r * 0.26f)
+                drawCircle(col, r * 0.58f, aro)
+                drawCircle(fondo, r * 0.26f, aro)
+                drawCircle(fondo, r * 0.43f, aro, style = Stroke(gruesoAnt(r, 0.06f)))
+                val bola = Offset(x + r * 0.5f, y + r * 0.44f)
+                val g = gruesoAnt(r, 0.09f)
+                listOf(0.18f, -0.06f).forEach { d -> drawLine(col.copy(alpha = col.alpha * 0.5f), Offset(bola.x + r * (0.38f + d), bola.y + r * (0.24f - d)), Offset(bola.x + r * (0.52f + d), bola.y + r * (0.34f - d)), g, StrokeCap.Round) }
+                drawCircle(col, r * 0.36f, bola)
+                drawArc(fondo, 200f, 80f, false, Offset(bola.x - r * 0.22f, bola.y - r * 0.22f), Size(r * 0.44f, r * 0.44f), style = Stroke(gruesoAnt(r, 0.08f), cap = StrokeCap.Round))
+            }
+            else -> Unit
+        }
+    }
 }
 
 // =====================================================================
@@ -2763,6 +3057,61 @@ object LogrosArcano : DisenoLogros {
             val a = Math.PI * (1.15 + i * 0.175)
             val ca = kotlin.math.cos(a).toFloat(); val sa = kotlin.math.sin(a).toFloat()
             trazoAnt(ojo.copy(alpha = 0.8f), ca * 4.6f, -39.4f + sa * 3.4f, ca * 6.2f, -39.4f + sa * 5f, 0.45f)
+        }
+    }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        when (e.forma) {
+            // La luna creciente sobre el pueblo, cortada por dos jirones de niebla que siguen más allá de ella.
+            "luna" -> {
+                drawPath(crecienteAnt(Offset(x + r * 0.06f, y - r * 0.04f), r * 0.82f, 0.8f, 0.46f, -0.3f), col)
+                val g = gruesoAnt(r, 0.15f)
+                listOf(Triple(-0.22f, -0.98f, 0.3f), Triple(0.3f, -0.4f, 0.98f)).forEach { (fy, x0, x1) ->
+                    drawLine(fondo, Offset(x + x0 * r, y + fy * r), Offset(x + x1 * r, y + fy * r), g, StrokeCap.Round)
+                }
+                val tenue = col.copy(alpha = col.alpha * 0.45f)
+                drawLine(tenue, Offset(x + r * 0.5f, y - r * 0.22f), Offset(x + r * 0.84f, y - r * 0.22f), g * 0.8f, StrokeCap.Round)
+                drawLine(tenue, Offset(x - r * 1.0f, y + r * 0.3f), Offset(x - r * 0.84f, y + r * 0.3f), g * 0.8f, StrokeCap.Round)
+            }
+            // La huella palmeada en la arena del muelle: la planta, tres dedos largos con su garra y la membrana entre ellos.
+            "huella" -> {
+                val base = Offset(x, y + r * 0.4f)
+                val puntas = listOf(-122f, -90f, -58f).map { a ->
+                    val t = Math.toRadians(a.toDouble())
+                    Offset(base.x + r * 0.95f * kotlin.math.cos(t).toFloat(), base.y + r * 1.15f * kotlin.math.sin(t).toFloat())
+                }
+                drawPath(Path().apply {
+                    moveTo(base.x, base.y); lineTo(puntas[0].x, puntas[0].y)
+                    quadraticTo(base.x - r * 0.2f, base.y - r * 0.55f, puntas[1].x, puntas[1].y)
+                    quadraticTo(base.x + r * 0.2f, base.y - r * 0.55f, puntas[2].x, puntas[2].y); close()
+                }, mezcla(fondo, col, 0.5f))
+                val g = gruesoAnt(r, 0.16f)
+                puntas.forEach { p ->
+                    drawLine(col, base, p, g, StrokeCap.Round)
+                    val d = Offset(p.x - base.x, p.y - base.y); val n = maxOf(kotlin.math.hypot(d.x, d.y), 1f)
+                    drawLine(col, p, Offset(p.x + d.x / n * r * 0.2f, p.y + d.y / n * r * 0.2f), maxOf(g * 0.5f, 0.8f * u), StrokeCap.Round)
+                }
+                drawOval(col, Offset(base.x - r * 0.36f, base.y - r * 0.24f), Size(r * 0.72f, r * 0.6f))
+            }
+            // El ancla del faro: la argolla, la caña, el cepo y los brazos con sus uñas.
+            "pesa" -> {
+                val g = gruesoAnt(r, 0.15f)
+                drawCircle(col, r * 0.16f, Offset(x, y - r * 0.8f), style = Stroke(gruesoAnt(r, 0.11f)))
+                drawLine(col, Offset(x, y - r * 0.64f), Offset(x, y + r * 0.84f), gruesoAnt(r, 0.17f))
+                drawLine(col, Offset(x - r * 0.46f, y - r * 0.46f), Offset(x + r * 0.46f, y - r * 0.46f), g, StrokeCap.Round)
+                drawArc(col, 18f, 144f, false, Offset(x - r * 0.74f, y - r * 0.62f), Size(r * 1.48f, r * 1.48f), style = Stroke(g))
+                listOf(-1f, 1f).forEach { s ->
+                    val p = Offset(x + s * r * 0.7f, y + r * 0.35f)
+                    drawPath(Path().apply {
+                        moveTo(p.x + s * r * 0.18f, p.y - r * 0.32f); lineTo(p.x + s * r * 0.14f, p.y + r * 0.08f); lineTo(p.x - s * r * 0.16f, p.y + r * 0.04f); close()
+                    }, col)
+                }
+            }
+            else -> Unit
         }
     }
 }
@@ -3169,5 +3518,59 @@ object LogrosAntiguas : DisenoLogros {
         llamaAnt(Offset(1.9f * u, -32f * u), 6.4f * u, fuego, llama)
         llamaAnt(Offset(0f, -32f * u), (if (oscuro) 12f else 10.4f) * u, llama, brasa)
         listOf(Offset(-3.6f, -42f), Offset(3.4f, -44f), Offset(1f, -45f), Offset(5f, -39.6f)).forEach { o -> circuloAnt(llama, o.x, o.y, 0.6f) }
+    }
+
+    // ---------------------------------------------------------------- objetos de Tu año
+
+    override fun DrawScope.objetoAnio(e: EstadoObjeto, oscuro: Boolean) {
+        val r = e.radio; val x = e.centro.x; val y = e.centro.y; val u = density
+        val col = e.color; val fondo = e.fondo
+        when (e.forma) {
+            // La luna que cuenta el viaje, asomada detrás de las montañas del mapa con nieve en la cumbre.
+            "luna" -> {
+                drawPath(crecienteAnt(Offset(x + r * 0.38f, y - r * 0.4f), r * 0.5f, 0.82f, -0.42f, -0.22f), col)
+                val sierra = Path().apply {
+                    moveTo(x - r, y + r * 0.82f); lineTo(x - r * 0.3f, y - r * 0.4f); lineTo(x + r * 0.06f, y + r * 0.16f)
+                    lineTo(x + r * 0.46f, y - r * 0.08f); lineTo(x + r, y + r * 0.82f); close()
+                }
+                drawPath(sierra, fondo, style = Stroke(gruesoAnt(r, 0.12f), join = StrokeJoin.Round))
+                drawPath(sierra, col)
+                drawPath(Path().apply { moveTo(x - r * 0.3f, y - r * 0.4f); lineTo(x - r * 0.1f, y - r * 0.06f); lineTo(x - r * 0.3f, y - r * 0.14f); lineTo(x - r * 0.48f, y - r * 0.08f); close() }, fondo)
+            }
+            // La bota del caminante: la suela y el tacón aparte, con los tacos en V para la roca.
+            "huella" -> {
+                val suela = Path().apply {
+                    moveTo(x, y - r * 0.98f)
+                    cubicTo(x + r * 0.52f, y - r * 0.98f, x + r * 0.5f, y - r * 0.2f, x + r * 0.34f, y + r * 0.2f)
+                    lineTo(x - r * 0.3f, y + r * 0.2f)
+                    cubicTo(x - r * 0.5f, y - r * 0.2f, x - r * 0.52f, y - r * 0.98f, x, y - r * 0.98f); close()
+                }
+                drawPath(suela, col)
+                drawRoundRect(col, Offset(x - r * 0.32f, y + r * 0.36f), Size(r * 0.64f, r * 0.6f), CornerRadius(r * 0.22f))
+                val tacos = Stroke(gruesoAnt(r, 0.09f), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                val filas = if (r > 6f * u) listOf(-0.68f, -0.38f, -0.08f) else listOf(-0.6f, -0.18f)
+                filas.forEach { fy ->
+                    drawPath(Path().apply { moveTo(x - r * 0.28f, y + fy * r); lineTo(x, y + (fy + 0.16f) * r); lineTo(x + r * 0.28f, y + fy * r) }, fondo, style = tacos)
+                }
+                drawPath(Path().apply { moveTo(x - r * 0.18f, y + r * 0.6f); lineTo(x, y + r * 0.72f); lineTo(x + r * 0.18f, y + r * 0.6f) }, fondo, style = tacos)
+            }
+            // El yunque de la forja de la mina: el cuerno, la mesa, la cintura y el pie, con una runa grabada.
+            "pesa" -> {
+                drawPath(Path().apply {
+                    moveTo(x - r * 1.02f, y - r * 0.44f); lineTo(x + r * 0.78f, y - r * 0.48f); lineTo(x + r * 0.78f, y - r * 0.16f)
+                    lineTo(x + r * 0.36f, y - r * 0.12f); lineTo(x + r * 0.24f, y + r * 0.36f); lineTo(x + r * 0.66f, y + r * 0.48f)
+                    lineTo(x + r * 0.66f, y + r * 0.7f); lineTo(x - r * 0.62f, y + r * 0.7f); lineTo(x - r * 0.62f, y + r * 0.48f)
+                    lineTo(x - r * 0.22f, y + r * 0.36f); lineTo(x - r * 0.32f, y - r * 0.12f)
+                    quadraticTo(x - r * 0.66f, y - r * 0.18f, x - r * 1.02f, y - r * 0.44f); close()
+                }, col)
+                if (r > 6.5f * u) {
+                    val g = gruesoAnt(r, 0.06f)
+                    drawLine(fondo, Offset(x, y - r * 0.02f), Offset(x, y + r * 0.36f), g, StrokeCap.Round)
+                    drawLine(fondo, Offset(x, y + r * 0.06f), Offset(x + r * 0.12f, y + r * 0.18f), g, StrokeCap.Round)
+                    drawLine(fondo, Offset(x - r * 0.4f, y - r * 0.36f), Offset(x + r * 0.62f, y - r * 0.38f), g, StrokeCap.Round)
+                }
+            }
+            else -> Unit
+        }
     }
 }
