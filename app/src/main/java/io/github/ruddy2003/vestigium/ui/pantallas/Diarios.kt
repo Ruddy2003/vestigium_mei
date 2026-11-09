@@ -160,7 +160,7 @@ fun PantallaDiario(nav: Nav) {
         Seccion("Biblioteca de sueños", if (suenos.isEmpty()) null else "${Repo.dias.values.count { it.sueno_texto.isNotBlank() }} sueños escritos") {
             if (suenos.isEmpty()) Vacio("Cuando escribas un sueño, aparece aquí, en el estante de noche.")
             else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), fondo = false) {
-                io.github.ruddy2003.vestigium.ui.CieloNoche { io.github.ruddy2003.vestigium.ui.EstanteDiario(suenos, noche = true) { f -> Seleccion.sueno = f; nav.ir("sueno") } }
+                io.github.ruddy2003.vestigium.ui.CieloNoche(relleno = 0.dp) { io.github.ruddy2003.vestigium.ui.EstanteDiario(suenos, noche = true) { f -> Seleccion.sueno = f; nav.ir("sueno") } }
             }
             BotonSecundario("entrar a la biblioteca de sueños →", Modifier.fillMaxWidth().padding(top = 10.dp)) { nav.ir("biblioteca_suenos") }
         }

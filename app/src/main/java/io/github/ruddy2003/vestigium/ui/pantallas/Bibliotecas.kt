@@ -201,7 +201,7 @@ private fun EstantePorMeses(meses: List<Pair<String, List<io.github.ruddy2003.ve
     val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(Estilo.tema)
     val grupos = meses.map { (titulo, lista) -> io.github.ruddy2003.vestigium.ui.biblioteca.GrupoEstante(titulo, lista) }
     androidx.compose.foundation.layout.Box(Modifier.padding(top = 18.dp)) {
-        if (noche) CieloNoche { io.github.ruddy2003.vestigium.ui.biblioteca.EstanteTema(d, grupos, true, abrir) }
+        if (noche) CieloNoche(relleno = 0.dp) { io.github.ruddy2003.vestigium.ui.biblioteca.EstanteTema(d, grupos, true, abrir) }
         else io.github.ruddy2003.vestigium.ui.biblioteca.EstanteTema(d, grupos, false, abrir)
     }
 }

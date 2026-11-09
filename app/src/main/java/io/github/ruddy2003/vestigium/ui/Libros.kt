@@ -865,7 +865,7 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
 
 /** Un cielo de noche propio de cada tema (su color, su luna y sus estrellas), para los estantes de los sueños. */
 @Composable
-fun CieloNoche(modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, content: @Composable () -> Unit) {
+fun CieloNoche(modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, relleno: androidx.compose.ui.unit.Dp = 10.dp, content: @Composable () -> Unit) {
     val m = materiaNoche(tema); val n = nocheDe(tema)
     val alto = lerp(n.cielo, n.luz, 0.16f)
     // Las mismas esquinas que las demás escenas, y sin línea de contorno: el cielo es el fondo (9 nov 2026).
@@ -880,7 +880,8 @@ fun CieloNoche(modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, conten
             }
         }
         MaterialTheme(colorScheme = e, typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
-            Box(Modifier.padding(horizontal = 10.dp, vertical = 10.dp)) { content() }
+            // [relleno] en 0 cuando lo de dentro trae su propia pared de noche: si no, el cielo queda como un marco alrededor.
+            Box(Modifier.padding(relleno)) { content() }
         }
     }
 }
