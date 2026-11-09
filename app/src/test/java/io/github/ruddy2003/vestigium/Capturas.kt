@@ -2014,7 +2014,7 @@ class Capturas {
     // Lote E6 (9 nov 2026): Vida con sus muebles y la pestaña Diario con el tablero de notas, en claro y oscuro (CAPTURAS=vida).
     @Test fun temaVida() = porTema("vida") { t, o, n ->
         v73(t, o, 5400, nombre = n + "_vida") { mundoEjemplo(); obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(navVacia) }
-        v73(t, o, 7200, nombre = n + "_vida_diario") { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
+        v73(t, o, 9600, nombre = n + "_vida_diario") { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
         v73(t, o, 3000, nombre = n + "_vida_mapas") { mundoEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMapas(navVacia) }
     }
     @Test fun temaConstelacion() = porTema("constelacion") { t, o, n -> v67(t, o, 3000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "cielo"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(navVacia) } }
