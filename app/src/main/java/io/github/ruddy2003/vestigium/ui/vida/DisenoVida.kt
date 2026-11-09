@@ -127,8 +127,8 @@ fun disenoVida(t: TemaId): DisenoVida = when (t) {
     TemaId.DECO -> VidaDeco
     TemaId.BOTANICO -> VidaPlana
     TemaId.RUINAS -> VidaPlana
-    TemaId.NAVIDAD -> VidaPlana
-    TemaId.SEDA -> VidaPlana
+    TemaId.NAVIDAD -> VidaNavidad
+    TemaId.SEDA -> VidaSeda
     TemaId.EDO -> VidaEdo
     TemaId.URSS -> VidaUrss
     TemaId.GOTICO -> VidaGotico
