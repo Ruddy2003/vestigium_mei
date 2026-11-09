@@ -262,16 +262,15 @@ fun Calificacion(valor: Int?, modifier: Modifier = Modifier, tam: Dp = 14.dp, co
 
 /**
  * Un recuadro grande con su dibujo arriba y el título abajo. El dibujo va en su [io.github.ruddy2003.vestigium.ui.Escena]:
- * la pared del tema detrás, sin tarjeta ni línea de contorno, y el aura del tema alrededor, que se enciende al tocar el
- * dibujo o el título (9 nov 2026; antes, una tarjeta con borde y el marco del mapa encima).
+ * la pared del tema detrás, sin tarjeta ni línea de contorno (9 nov 2026; antes, una tarjeta con borde y el marco del mapa
+ * encima). Sin aura: el recuadro entero es un solo botón, y el aura va solo en los objetos que se tocan uno por uno.
  */
 @Composable
 internal fun Recuadro(titulo: String, detalle: String, modifier: Modifier = Modifier, alto: Dp = 150.dp, onClick: () -> Unit, dibujo: @Composable BoxScope.() -> Unit) {
     val cs = MaterialTheme.colorScheme
     val sentir = rememberSentir()
-    val fuente = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    Column(modifier.fillMaxWidth().clickable(interactionSource = fuente, indication = null) { sentir(Sentidos.Evento.ABRIR); onClick() }) {
-        io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth().height(alto), fuente = fuente) { dibujo() }
+    Column(modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).clickable { sentir(Sentidos.Evento.ABRIR); onClick() }) {
+        io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth().height(alto)) { dibujo() }
         Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(Estilo.seccion(titulo, Romano.latin(titulo)).first, style = MaterialTheme.typography.titleLarge)

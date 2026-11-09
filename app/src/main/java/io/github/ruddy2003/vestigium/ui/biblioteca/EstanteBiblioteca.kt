@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.biblioteca
 
+import io.github.ruddy2003.vestigium.ui.halo
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -116,6 +117,7 @@ fun EstanteTema(d: DisenoBiblioteca, grupos: List<GrupoEstante>, noche: Boolean,
                     val etiqueta = Fechas.corto(dia.fecha) + ", " + porNumero(n, "1 palabra", "$n palabras")
                     Canvas(Modifier.offset(lu.x, lu.y).size(lu.ancho, lu.alto)
                         .graphicsLayer { translationY = -anim.value * lu.alto.toPx() * 0.22f }
+                        .halo()
                         .semantics { contentDescription = etiqueta }
                         .clickable(toque, null) {
                             alcance.launch {

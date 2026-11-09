@@ -879,7 +879,7 @@ fun SobreCarta(c: Carta, modifier: Modifier = Modifier, tema: TemaId = Estilo.te
     val sacudir = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val sentir = rememberSentir()
-    BoxWithConstraints(modifier.graphicsLayer { translationX = sacudir.value }.clickable {
+    BoxWithConstraints(modifier.graphicsLayer { translationX = sacudir.value }.halo().clickable {
         if (estado == EstadoSobre.SELLADA) {
             sentir(Sentidos.Evento.TOQUE)
             if (animar) scope.launch { sacudir.animateTo(0f, keyframes { durationMillis = 380; -14f at 50; 12f at 110; -9f at 170; 6f at 240; -3f at 300; 0f at 380 }) }
