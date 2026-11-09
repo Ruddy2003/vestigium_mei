@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.verticalScroll
+import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -208,6 +210,10 @@ fun PantallaDiario(nav: Nav) {
 
         Seccion("Exportar", porNumero(entradas.size, "La entrada", "Las ${entradas.size} entradas") + " de lo que estás viendo. El PDF y el HTML llevan el diseño del tema; el de Obsidian es una nota por día con sus datos.",
             autoPlegar = true) {
+            // El libro: un periodo, con portada e índice del tema, una página por día con su foto y sus datos, y el resumen de cada mes.
+            var libro by remember { mutableStateOf(false) }
+            BotonPrincipal("Libro del diario (PDF)…", Modifier.fillMaxWidth().padding(bottom = 10.dp), habilitado = Repo.dias.isNotEmpty()) { libro = true }
+            if (libro) DialogoLibro { libro = false }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 BotonSecundario("PDF", habilitado = entradas.isNotEmpty()) { exportar("pdf", { LibroDiario.pdf(ctx, entradas) }, "application/pdf") }
                 BotonSecundario("HTML", habilitado = entradas.isNotEmpty()) { exportar("html", { LibroDiario.html(ctx, entradas) }, "text/html") }
@@ -325,4 +331,78 @@ fun PantallaEntrada(nav: Nav) {
             },
         ))
     if (escribiendo) io.github.ruddy2003.vestigium.ui.EscribirDia(fecha) { escribiendo = false }
+}
+
+/**
+ * Elegir y armar el libro del diario (9 nov 2026): el periodo, el tema (el de ahora o Básico, para imprimir), si lleva las
+ * fotos del día y el resumen de cada mes. Más de tres meses salen en tomos, juntos en un .zip.
+ */
+@Composable
+private fun DialogoLibro(cerrar: () -> Unit) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val hoy = Fechas.diaLogico()
+    val mesPasado = Fechas.iso(Fechas.parse(hoy).withDayOfMonth(1).minusMonths(1))
+    val opciones = listOf(
+        "este mes" to (hoy.take(7) + "-01" to hoy),
+        "mes pasado" to (mesPasado to Fechas.iso(Fechas.parse(mesPasado).plusMonths(1).minusDays(1))),
+        "este año" to (hoy.take(4) + "-01-01" to hoy),
+        "año pasado" to ((hoy.take(4).toInt() - 1).toString() + "-01-01" to (hoy.take(4).toInt() - 1).toString() + "-12-31"),
+        "todo" to ((Repo.dias.keys.minOrNull() ?: hoy) to hoy),
+    )
+    var desde by remember { mutableStateOf(opciones[0].second.first) }
+    var hasta by remember { mutableStateOf(opciones[0].second.second) }
+    val basico = io.github.ruddy2003.vestigium.ui.TemaId.entries.firstOrNull { it.id == "basico" }
+    var deBasico by remember { mutableStateOf(false) }
+    var fotos by remember { mutableStateOf(true) }
+    var resumenes by remember { mutableStateOf(true) }
+    var trabajando by remember { mutableStateOf(false) }
+    var aviso by remember { mutableStateOf<String?>(null) }
+    val valido = runCatching { Fechas.parse(desde); Fechas.parse(hasta); desde <= hasta }.getOrDefault(false)
+    val n = if (valido) LibroDiario.diasDelLibro(desde, hasta).size else 0
+    io.github.ruddy2003.vestigium.ui.Dialogo(onDismissRequest = { if (!trabajando) cerrar() },
+        title = { Text("Libro del diario", style = MaterialTheme.typography.titleLarge) },
+        text = {
+            Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
+                Ayuda("Portada e índice con el diseño del tema, una página por día con su texto, su foto y sus datos (ánimo, sueño, pasos, clima, lugares, personas, gasto, fechas señaladas) y, al final de cada mes, su resumen. Nunca lleva el seguimiento privado.")
+                FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    opciones.forEach { (t, r) -> Ficha(t, desde == r.first && hasta == r.second) { desde = r.first; hasta = r.second } }
+                }
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    io.github.ruddy2003.vestigium.ui.comun.CampoTexto(desde, { desde = it.take(10) }, Modifier.weight(1f), singleLine = true, label = { Text("desde") })
+                    io.github.ruddy2003.vestigium.ui.comun.CampoTexto(hasta, { hasta = it.take(10) }, Modifier.weight(1f), singleLine = true, label = { Text("hasta") })
+                }
+                Ayuda(if (!valido) "Escribe las fechas como AAAA-MM-DD." else porNumero(n, "1 día con algo que contar", "$n días con algo que contar") +
+                    if (valido && Fechas.diasEntre(desde, hasta) > 92) ". Más de tres meses: sale en tomos, uno por trimestre." else ".", Modifier.padding(top = 4.dp))
+                if (basico != null) Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Ficha("con el tema de ahora", !deBasico) { deBasico = false }
+                    Ficha("Básico, para imprimir", deBasico) { deBasico = true }
+                }
+                io.github.ruddy2003.vestigium.ui.Interruptor("Con la foto de cada día", fotos) { fotos = it }
+                io.github.ruddy2003.vestigium.ui.Interruptor("Con el resumen de cada mes", resumenes) { resumenes = it }
+                if (trabajando) Ayuda("Armando el libro… (con muchos días puede tardar un minuto)", Modifier.padding(top = 8.dp))
+                aviso?.let { Ayuda(it, Modifier.padding(top = 8.dp)) }
+            }
+        },
+        confirmButton = {
+            io.github.ruddy2003.vestigium.ui.comun.BotonTexto(enabled = valido && n > 0 && !trabajando, onClick = {
+                trabajando = true; aviso = null
+                scope.launch {
+                    val o = LibroDiario.OpcionesLibro(desde, hasta, if (deBasico && basico != null) basico else io.github.ruddy2003.vestigium.ui.Estilo.tema, fotos, resumenes)
+                    val r = withContext(Dispatchers.IO) { runCatching { LibroDiario.libro(ctx, o) } }
+                    trabajando = false
+                    val l = r.getOrNull().orEmpty()
+                    when {
+                        r.isFailure -> aviso = "No pude armar el libro: ${r.exceptionOrNull()?.message ?: "error desconocido"}" + if (r.exceptionOrNull() is OutOfMemoryError) " (prueba sin fotos o con un periodo más corto)" else ""
+                        l.isEmpty() -> aviso = "No hay días en ese periodo."
+                        l.size == 1 -> { LibroDiario.compartir(ctx, l.first(), "application/pdf"); cerrar() }
+                        else -> {
+                            val z = withContext(Dispatchers.IO) { LibroDiario.juntar(ctx, l, "diario_${desde}_a_${hasta}.zip") }
+                            LibroDiario.compartir(ctx, z, "application/zip"); cerrar()
+                        }
+                    }
+                }
+            }) { Text("armar y compartir") }
+        },
+        dismissButton = { io.github.ruddy2003.vestigium.ui.comun.BotonTexto(enabled = !trabajando, onClick = cerrar) { Text("cancelar") } })
 }
