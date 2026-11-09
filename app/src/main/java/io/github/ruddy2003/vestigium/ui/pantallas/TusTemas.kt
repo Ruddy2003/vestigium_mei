@@ -21,6 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -52,10 +55,22 @@ import io.github.ruddy2003.vestigium.ui.Dialogo
 @Composable
 fun PantallaTusTemas(nav: Nav) {
     val c = Repo.config
-    val lista = remember(Repo.dias, Repo.momentos, Repo.tramos, Repo.consumos, Repo.cartas, c.equivalencias) { TusTemas.lista() }
-    val pares = remember(lista, c.temas_distintos) { TusTemas.parecidos() }
-    val unDia = remember(lista) { TusTemas.deUnDia() }
-    val sentimientos = remember(lista) { TusTemas.deSentimientos() }
+    // Todo se cuenta fuera del hilo principal: con años de diario y cientos de #temas, contarlo al dibujar la pantalla
+    // tardaba segundos y Android la cerraba. Mientras se recalcula, se queda a la vista lo de antes.
+    val calculo by produceState<CalculoTemas?>(null, Repo.dias, Repo.momentos, Repo.tramos, Repo.consumos, Repo.cartas, c.equivalencias, c.temas_distintos) {
+        value = withContext(Dispatchers.Default) {
+            try {
+                val l = TusTemas.lista()
+                CalculoTemas(l, TusTemas.parecidos(l), TusTemas.deUnDia(l), TusTemas.deSentimientos(l), null)
+            } catch (e: Exception) {
+                CalculoTemas(emptyList(), emptyList(), emptyList(), emptyList(), e.message ?: e.javaClass.simpleName)
+            }
+        }
+    }
+    val lista = calculo?.lista.orEmpty()
+    val pares = calculo?.pares.orEmpty()
+    val unDia = calculo?.unDia.orEmpty()
+    val sentimientos = calculo?.sentimientos.orEmpty()
     var editando by remember { mutableStateOf<TusTemas.Tema?>(null) }
     var verTodos by remember { mutableIntStateOf(25) }
     var aviso by remember { mutableStateOf<String?>(null) }
@@ -63,7 +78,9 @@ fun PantallaTusTemas(nav: Nav) {
 
     Hoja("Tus temas", nav.atras, "Cada #tema con los días en que aparece. Un mismo tema escrito de dos formas cuenta como dos en los análisis: aquí los juntas.") {
         aviso?.let { Ayuda(it, Modifier.padding(top = 8.dp)) }
-        if (lista.isEmpty()) Vacio("Todavía no usas #temas. Escribe #tesis, #familia o #dinero en el diario o en un momento y aparecerán aquí.")
+        if (calculo == null) { Ayuda("Contando tus #temas…", Modifier.padding(top = 8.dp)); return@Hoja }
+        calculo?.error?.let { Ayuda("No pude contar tus #temas ($it). Tus textos no se tocaron.", Modifier.padding(top = 8.dp)) }
+        if (lista.isEmpty() && calculo?.error == null) Vacio("Todavía no usas #temas. Escribe #tesis, #familia o #dinero en el diario o en un momento y aparecerán aquí.")
 
         if (pares.isNotEmpty()) Seccion("¿Es el mismo tema?", "Se parecen. «Unir» los cuenta juntos en los análisis sin tocar tus textos; «renombrar» los corrige en todos tus textos.") {
             pares.take(8).forEach { (a, b) ->
@@ -91,7 +108,7 @@ fun PantallaTusTemas(nav: Nav) {
         if (unDia.isNotEmpty()) Seccion("Aparecen un solo día", "Un tema que pasa una vez en la vida quizá es una fecha señalada (un vuelo, una mudanza). Pasarlo a fecha señalada lo guarda en ese día, como «otra», y le quita el #.") {
             Tarjeta {
                 unDia.take(12).forEach { t ->
-                    FilaMenu("#${t.nombre}", "${Fechas.corto(t.primera)} · pasar a fecha señalada") { val (n, antes) = TusTemas.aHito(t); hecho("#${t.nombre} ahora es una fecha señalada ($n textos).", antes) }
+                    FilaMenu("#${t.nombre}", "${fechaCorta(t.primera)} · pasar a fecha señalada") { val (n, antes) = TusTemas.aHito(t); hecho("#${t.nombre} ahora es una fecha señalada ($n textos).", antes) }
                 }
             }
         }
@@ -100,8 +117,8 @@ fun PantallaTusTemas(nav: Nav) {
             Tarjeta {
                 lista.take(verTodos).forEach { t ->
                     val unidos = c.equivalencias.filterValues { it == t.nombre }.keys
-                    FilaMenu("#${t.nombre}", "${t.dias} ${if (t.dias == 1) "día" else "días"} · desde ${Fechas.corto(t.primera)}" +
-                        (if (t.ultima != t.primera) " · última vez ${Fechas.corto(t.ultima)}" else "") + if (unidos.isNotEmpty()) " · incluye " + unidos.joinToString(", ") { "#$it" } else "") { editando = t }
+                    FilaMenu("#${t.nombre}", "${t.dias} ${if (t.dias == 1) "día" else "días"} · desde ${fechaCorta(t.primera)}" +
+                        (if (t.ultima != t.primera) " · última vez ${fechaCorta(t.ultima)}" else "") + if (unidos.isNotEmpty()) " · incluye " + unidos.joinToString(", ") { "#$it" } else "") { editando = t }
                 }
             }
             if (lista.size > verTodos) BotonSecundario("ver más", Modifier.padding(top = 8.dp)) { verTodos += 50 }
@@ -117,7 +134,7 @@ fun PantallaTusTemas(nav: Nav) {
             title = { TextoMarcado("#${t.nombre}", style = MaterialTheme.typography.titleLarge) },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
-                    Ayuda("${porNumero(t.dias, "1 día", "${t.dias} días")} · de ${Fechas.corto(t.primera)} a ${Fechas.corto(t.ultima)}")
+                    Ayuda("${porNumero(t.dias, "1 día", "${t.dias} días")} · de ${fechaCorta(t.primera)} a ${fechaCorta(t.ultima)}")
                     CampoTexto(nuevo, { nuevo = it }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true, label = { Text("nuevo nombre") }, prefix = { Text("#") })
                     previa?.let { (n, ej) ->
                         Ayuda("Cambiaría $n ${if (n == 1) "texto" else "textos"}." + if (existe) " #$destino ya existe: quedan juntos." else "", Modifier.padding(top = 8.dp))
@@ -137,6 +154,15 @@ fun PantallaTusTemas(nav: Nav) {
             dismissButton = { BotonTexto(onClick = { editando = null }) { Text("cancelar") } })
     }
 }
+
+/** Lo que se cuenta al abrir «Tus temas». */
+private class CalculoTemas(
+    val lista: List<TusTemas.Tema>, val pares: List<Pair<String, String>>, val unDia: List<TusTemas.Tema>,
+    val sentimientos: List<TusTemas.Tema>, val error: String?,
+)
+
+/** Una fecha vacía o mal importada no tumba la pantalla: se muestra tal cual. */
+private fun fechaCorta(s: String): String = try { Fechas.corto(s) } catch (e: Exception) { s.ifBlank { "sin fecha" } }
 
 /**
  * Los días con personas que todavía no revisaste: para cada @persona, si estuviste con ella, solo pensaste en ella

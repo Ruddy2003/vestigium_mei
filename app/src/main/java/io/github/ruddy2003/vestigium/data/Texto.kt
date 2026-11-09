@@ -56,9 +56,12 @@ object Texto {
     fun parecidos(a: String, b: String): Boolean =
         a != b && (a.replace("_", "") == b.replace("_", "") || (a.length >= 4 && b.length >= 4 && levenshtein(a, b) <= 2))
 
-    /** Reemplaza una etiqueta completa (no dentro de otra palabra). */
+    /**
+     * Reemplaza una etiqueta completa (no dentro de otra palabra). El nombre nuevo va tal cual: un «$» o una «\\» en él
+     * ya no se leen como parte de la regla de reemplazo (antes, escribir «$» al renombrar cerraba la app).
+     */
     fun reemplazar(texto: String, simbolo: Char, de: String, a: String): String =
-        Regex(Regex.escape("$simbolo$de") + "(?![\\p{L}\\p{N}_])", RegexOption.IGNORE_CASE).replace(texto, "$simbolo$a")
+        Regex(Regex.escape("$simbolo$de") + "(?![\\p{L}\\p{N}_])", RegexOption.IGNORE_CASE).replace(texto, Regex.escapeReplacement("$simbolo$a"))
 }
 
 /**

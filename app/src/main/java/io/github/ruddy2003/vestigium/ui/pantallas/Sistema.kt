@@ -265,7 +265,14 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             // Los temas por época, en una cuadrícula de tres por fila.
             val vista = androidx.compose.ui.platform.LocalView.current
             val centros = remember { HashMap<String, androidx.compose.ui.geometry.Offset>() }
-            io.github.ruddy2003.vestigium.ui.TemaId.entries.groupBy { it.epoca }.toSortedMap().forEach { (epoca, temas) ->
+            // Una época a la vez (la del tema de ahora al abrir): antes se dibujaban las 34 muestras juntas, cada una con su
+            // letra y su emblema, y la pantalla tardaba en abrir.
+            val epocas = io.github.ruddy2003.vestigium.ui.TemaId.entries.groupBy { it.epoca }.toSortedMap()
+            var epocaVista by remember { mutableStateOf(io.github.ruddy2003.vestigium.ui.Estilo.tema.epoca) }
+            FlowRow(Modifier.padding(bottom = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                epocas.keys.forEach { ep -> Ficha(ep.nombre, ep == epocaVista) { epocaVista = ep } }
+            }
+            epocas.filterKeys { it == epocaVista }.forEach { (epoca, temas) ->
                 Etiqueta(epoca.nombre)
                 temas.chunked(3).forEach { fila ->
                     Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

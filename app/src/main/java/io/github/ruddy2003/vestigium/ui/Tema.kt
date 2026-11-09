@@ -710,8 +710,9 @@ object Urbe {
 @Composable
 fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier, onClick: () -> Unit) {
     val o = tema.soloOscuro || oscuro
-    val e = esquemaDe(tema, o)
-    val t = tipoDe(tema, o)
+    val e = androidx.compose.runtime.remember(tema, o) { esquemaDe(tema, o) }
+    // La letra de cada tema se arma una vez por muestra, no en cada redibujo (abrir Apariencia cargaba decenas de letras).
+    val t = androidx.compose.runtime.remember(tema, o) { tipoDe(tema, o) }
     val titulo = when (tema) {
         TemaId.ROMANO -> "DIES"
         TemaId.URBE -> "OGGI"
