@@ -132,20 +132,22 @@ fun PantallaDiario(nav: Nav) {
         // El diario de hoy, como objeto del tema: al tocarlo se abre a pantalla completa.
         val hoy = Fechas.diaLogico()
         Seccion("Hoy", "Toca para escribir. Se guarda mientras escribes.") {
-            io.github.ruddy2003.vestigium.ui.ObjetoDiario(hoy, Repo.dias[hoy]?.nota.orEmpty()) { escribiendo = hoy }
+            io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 14.dp)) {
+                io.github.ruddy2003.vestigium.ui.ObjetoDiario(hoy, Repo.dias[hoy]?.nota.orEmpty()) { escribiendo = hoy }
+            }
         }
         // Las cinco bibliotecas, cada una con su objeto: el estante del diario, la libreta de momentos, el estante de sueños de
         // noche, el fichero del Ideario y las cartas. Cada una tiene su puerta para entrar.
         val ultimas = remember(Repo.dias) { LibroDiario.entradas().take(9) }
         Seccion("Biblioteca del diario", Repo.dias.values.count { it.nota.isNotBlank() }.let { n -> porNumero(n, "1 entrada", "$n entradas") } + " · %,d palabras".format(palabras)) {
             if (ultimas.isEmpty()) Vacio("Aquí se irán guardando tus entradas.")
-            else io.github.ruddy2003.vestigium.ui.EstanteDiario(ultimas) { f -> Seleccion.entrada = f; nav.ir("entrada") }
+            else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth()) { io.github.ruddy2003.vestigium.ui.EstanteDiario(ultimas) { f -> Seleccion.entrada = f; nav.ir("entrada") } }
             BotonSecundario("entrar a la biblioteca del diario →", Modifier.fillMaxWidth().padding(top = 10.dp)) { nav.ir("biblioteca_diario") }
         }
         val hojas = remember(Repo.momentos, Repo.consumos) { diasConMomentos() }
         Seccion("Libreta de momentos", if (hojas.isEmpty()) null else "${hojas.size} ${if (hojas.size == 1) "hoja" else "hojas"}, una por día") {
             if (hojas.isEmpty()) Vacio("Toca «¿Cómo estás ahora?» y aquí se irá llenando, una hoja por día.")
-            else androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().padding(top = 4.dp), contentAlignment = Alignment.Center) {
+            else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth().padding(top = 4.dp)) {
                 LibretaCerrada(hojas.size, hojas.lastOrNull(), Modifier.fillMaxWidth()) { Seleccion.momentos = hojas.first(); nav.ir("hoja_momentos") }
             }
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -157,12 +159,14 @@ fun PantallaDiario(nav: Nav) {
         val suenos = remember(Repo.dias) { LibroDiario.suenos().take(9) }
         Seccion("Biblioteca de sueños", if (suenos.isEmpty()) null else "${Repo.dias.values.count { it.sueno_texto.isNotBlank() }} sueños escritos") {
             if (suenos.isEmpty()) Vacio("Cuando escribas un sueño, aparece aquí, en el estante de noche.")
-            else io.github.ruddy2003.vestigium.ui.CieloNoche { io.github.ruddy2003.vestigium.ui.EstanteDiario(suenos, noche = true) { f -> Seleccion.sueno = f; nav.ir("sueno") } }
+            else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), fondo = false) {
+                io.github.ruddy2003.vestigium.ui.CieloNoche { io.github.ruddy2003.vestigium.ui.EstanteDiario(suenos, noche = true) { f -> Seleccion.sueno = f; nav.ir("sueno") } }
+            }
             BotonSecundario("entrar a la biblioteca de sueños →", Modifier.fillMaxWidth().padding(top = 10.dp)) { nav.ir("biblioteca_suenos") }
         }
         Seccion("Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste y pensaste, un cajón por tema." else "${porNumero(Repo.ideas.size, "1 idea", "${Repo.ideas.size} ideas")} · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas") {
             if (Repo.ideas.isEmpty()) Vacio("Anota una idea y ponle un tema: cada tema es un cajón del fichero.")
-            else FicheroIdeas(nav, Repo.ideas, max = 6)
+            else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(10.dp)) { FicheroIdeas(nav, Repo.ideas, max = 6) }
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BotonSecundario("entrar al Ideario →", Modifier.weight(1f)) { nav.ir("biblioteca_ideas") }
                 BotonSecundario("＋ idea", Modifier.weight(1f)) { EdicionIdea.abrir(nav, EdicionIdea.nueva()) }
@@ -172,7 +176,7 @@ fun PantallaDiario(nav: Nav) {
         Seccion("Notas", if (Repo.notas.isEmpty()) "Ideas sueltas, pensamientos, propósitos y recordatorios." else
             "${porNumero(Repo.notas.size, "1 nota", "${Repo.notas.size} notas")} · ${Repo.notas.count { it.fijada }} fijadas") {
             if (Repo.notas.isEmpty()) Vacio("Una idea suelta, un pensamiento, un propósito o un recordatorio: van a tu tablero.")
-            else io.github.ruddy2003.vestigium.ui.vida.TableroDeNotas(Repo.notas) { nav.ir("notas") }
+            else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(10.dp)) { io.github.ruddy2003.vestigium.ui.vida.TableroDeNotas(Repo.notas) { nav.ir("notas") } }
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BotonSecundario("entrar a las notas →", Modifier.weight(1f)) { nav.ir("notas") }
                 BotonSecundario("＋ nota", Modifier.weight(1f)) { nav.ir("notas") }
@@ -180,10 +184,10 @@ fun PantallaDiario(nav: Nav) {
         }
         val cartas = remember(Repo.cartas) { Repo.cartas.sortedByDescending { it.escrita }.take(2) }
         Seccion("Cartas", if (Repo.cartas.isEmpty()) "A tu yo del futuro y a otras personas." else "${Repo.cartas.size} ${if (Repo.cartas.size == 1) "carta" else "cartas"}") {
-            if (cartas.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (cartas.isNotEmpty()) io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(12.dp)) { Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 cartas.forEach { c -> io.github.ruddy2003.vestigium.ui.SobreCarta(c, Modifier.weight(1f).height(112.dp)) { nav.ir("cartas") } }
                 if (cartas.size == 1) androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
-            }
+            } }
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BotonSecundario("entrar a las cartas →", Modifier.weight(1f)) { nav.ir("cartas") }
                 BotonSecundario("✉ escribir una", Modifier.weight(1f)) { nav.ir("carta_nueva") }

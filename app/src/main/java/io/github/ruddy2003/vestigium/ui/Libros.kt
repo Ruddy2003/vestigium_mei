@@ -868,9 +868,10 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
 fun CieloNoche(modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, content: @Composable () -> Unit) {
     val m = materiaNoche(tema); val n = nocheDe(tema)
     val alto = lerp(n.cielo, n.luz, 0.16f)
-    val forma = RoundedCornerShape(10.dp)
+    // Las mismas esquinas que las demás escenas, y sin línea de contorno: el cielo es el fondo (9 nov 2026).
+    val forma = MaterialTheme.shapes.medium
     val e = MaterialTheme.colorScheme.copy(onSurfaceVariant = Color(0xFFB8BEDA), onSurface = Color(0xFFE8E6F2), onBackground = Color(0xFFE8E6F2), primary = m.acento)
-    Box(modifier.fillMaxWidth().clip(forma).background(Brush.verticalGradient(listOf(n.cielo, alto))).border(1.dp, n.luz.copy(alpha = 0.35f), forma)) {
+    Box(modifier.fillMaxWidth().clip(forma).background(Brush.verticalGradient(listOf(n.cielo, alto)))) {
         Canvas(Modifier.matchParentSize()) {
             // Básico, sin partículas: ni estrellas ni luna, solo el cielo liso.
             if (!tema.sinDiseno) {

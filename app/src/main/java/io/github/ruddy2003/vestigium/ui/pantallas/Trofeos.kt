@@ -531,7 +531,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
  * papel a rayas con rombos, pliegos de herbario, guirnalda con nieve, monedas entrelazadas, sillares con arcos ciegos,
  * estrellas, lazo de ocho, celosía de la ger, trazos de construcción, cuña constructivista, carteles y piedra tosca.
  */
-private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
+internal fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
     val w = size.width; val h = size.height; val d = 1.dp.toPx()
     val v = tinta.copy(alpha = 0.07f); val a = acento.copy(alpha = 0.09f)
     when (tema) {

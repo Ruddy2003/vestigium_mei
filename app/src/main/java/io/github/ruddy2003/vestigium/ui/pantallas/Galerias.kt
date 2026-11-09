@@ -261,28 +261,23 @@ fun Calificacion(valor: Int?, modifier: Modifier = Modifier, tam: Dp = 14.dp, co
 // =====================================================================
 
 /**
- * Un recuadro grande con su dibujo arriba y el título abajo. El dibujo lleva encima el marco del tema (el mismo que el mapa:
- * dentículos, greca, remaches, galones, nieve, runas…), más fino, y solo en los bordes.
+ * Un recuadro grande con su dibujo arriba y el título abajo. El dibujo va en su [io.github.ruddy2003.vestigium.ui.Escena]:
+ * la pared del tema detrás, sin tarjeta ni línea de contorno, y el aura del tema alrededor, que se enciende al tocar el
+ * dibujo o el título (9 nov 2026; antes, una tarjeta con borde y el marco del mapa encima).
  */
 @Composable
 internal fun Recuadro(titulo: String, detalle: String, modifier: Modifier = Modifier, alto: Dp = 150.dp, onClick: () -> Unit, dibujo: @Composable BoxScope.() -> Unit) {
     val cs = MaterialTheme.colorScheme
     val sentir = rememberSentir()
-    val tema = Estilo.tema
-    Surface(onClick = { sentir(Sentidos.Evento.ABRIR); onClick() }, shape = MaterialTheme.shapes.medium, color = cs.surface,
-        border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.55f)), modifier = modifier.fillMaxWidth()) {
-        Column {
-            Box(Modifier.fillMaxWidth().height(alto).clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))) {
-                dibujo()
-                Canvas(Modifier.matchParentSize()) { marcoDelMapa(tema, 0.75.dp.toPx(), cs.onSurface.copy(alpha = 0.8f), cs.primary, cs.surface) }
+    val fuente = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    Column(modifier.fillMaxWidth().clickable(interactionSource = fuente, indication = null) { sentir(Sentidos.Evento.ABRIR); onClick() }) {
+        io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth().height(alto), fuente = fuente) { dibujo() }
+        Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(Estilo.seccion(titulo, Romano.latin(titulo)).first, style = MaterialTheme.typography.titleLarge)
+                Text(detalle, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
-            Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(Estilo.seccion(titulo, Romano.latin(titulo)).first, style = MaterialTheme.typography.titleLarge)
-                    Text(detalle, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                }
-                Text("→", style = MaterialTheme.typography.titleLarge, color = cs.primary)
-            }
+            Text("→", style = MaterialTheme.typography.titleLarge, color = cs.primary)
         }
     }
 }
