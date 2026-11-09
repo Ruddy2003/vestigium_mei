@@ -270,7 +270,7 @@ internal object Formas {
             TemaId.ORDEN -> { p.reset(); p.moveTo(x - r, y - r); p.lineTo(x + r, y - r); p.lineTo(x + r, y - r * 0.1f); p.quadTo(x + r, y + r * 0.7f, x, y + r * 1.2f)
                 p.quadTo(x - r, y + r * 0.7f, x - r, y - r * 0.1f); p.close() }
             // Un engrane de diez dientes.
-            TemaId.VAPOR -> poligono(x, y, r * 1.15f, 10, -90.0, r * 0.88f)
+            TemaId.VAPOR -> poligono(x, y, r * 1.15f, 10, -90.0, 0.88f)   // `interior` es proporción del radio, no una medida
             // El anillo de benceno: un hexágono (con borde lleva su círculo dentro).
             TemaId.LABORATORIO -> poligono(x, y, r, 6, -90.0)
             // Una casita del pueblo.

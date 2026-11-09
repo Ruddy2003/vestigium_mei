@@ -196,7 +196,10 @@ internal fun DrawScope.dibujarGrafo(m: GrafoSocial.Modelo, zoom: Float, pan: Off
             if (n.nombre == elegido) drawCircle(cs.onSurface, r + 4f * density, p, style = Stroke(1.5f * density))
             if (n.dias >= umbral || n.nombre == elegido || m.nodos.size <= 15) {
                 val t = medidor.measure("@" + n.nombre, estilo)
-                drawText(t, topLeft = Offset((p.x - t.size.width / 2).coerceIn(0f, (w - t.size.width).coerceAtLeast(0f)), (p.y + r + 2f).coerceAtMost((h - t.size.height).coerceAtLeast(0f))))
+                // Debajo del punto; si no cabe (puntos pegados al borde de abajo), encima, para no taparlo.
+                val abajo = p.y + r + 2f
+                val y = if (abajo + t.size.height <= h) abajo else (p.y - r - 2f - t.size.height).coerceAtLeast(0f)
+                drawText(t, topLeft = Offset((p.x - t.size.width / 2).coerceIn(0f, (w - t.size.width).coerceAtLeast(0f)), y))
             }
         }
     }

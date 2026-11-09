@@ -255,16 +255,32 @@ fun RecuadroOtrasVidas(nav: Nav) {
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                         muestra.getOrNull(i)?.let { v ->
                             MedallaVida(v, 46.dp, elegida = v.tema != null)
-                            // Los años largos («40.000 a. C.») van más chicos para no salirse de su nicho.
-                            val a = anio(v.anio)
-                            Text(a, style = if (a.length > 7) MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp) else MaterialTheme.typography.labelSmall,
-                                color = cs.onSurfaceVariant, maxLines = 1, softWrap = false, modifier = Modifier.padding(top = 4.dp))
+                            AnioAjustado(anio(v.anio), cs.onSurfaceVariant)
                         }
                     }
                 }
             }
             }
         }
+    }
+}
+
+/**
+ * El año bajo la medalla, del tamaño que quepa en su compartimento: los largos («13,000 a. C.») y las letras anchas
+ * (monoespaciadas) se achican hasta 7 sp en vez de pegarse a la columna o al año de al lado.
+ */
+@Composable
+private fun AnioAjustado(a: String, color: androidx.compose.ui.graphics.Color) {
+    val base = MaterialTheme.typography.labelSmall
+    val medidor = androidx.compose.ui.text.rememberTextMeasurer()
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 4.dp), contentAlignment = Alignment.Center) {
+        val disponible = constraints.maxWidth - with(androidx.compose.ui.platform.LocalDensity.current) { 4.dp.roundToPx() }
+        val estilo = remember(a, base, disponible) {
+            var tam = base.fontSize.value
+            while (tam > 7f && medidor.measure(a, base.copy(fontSize = tam.sp), maxLines = 1, softWrap = false).size.width > disponible) tam -= 0.5f
+            base.copy(fontSize = tam.sp)
+        }
+        Text(a, style = estilo, color = color, maxLines = 1, softWrap = false)
     }
 }
 
