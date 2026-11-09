@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.vida
 
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -14,415 +15,674 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.unit.dp
-import io.github.ruddy2003.vestigium.ui.cruzPatada
-import java.util.Random
-import kotlin.math.acos
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 /**
- * Templario: la encomienda de frontera, con los materiales de su biblioteca, su Ideario y su sala de armas: sillares de
- * arenisca, la sobreveste de lino blanco con la cruz patada roja, el baucent negro y blanco, hierro, roble, la arena del
- * desierto y el zócalo de almagra.
- * - Social: la sala capitular bajo la cruz patada (grande y tenue detrás de la red). A los lados, los muros de sillería
- *   con los escudos de la orden colgados; arriba, el dintel de piedra con su línea de almagra; abajo, el banco corrido de
- *   piedra y, al centro, la mesa del capítulo con el mantel de la cruz, la Regla, el cáliz y dos velas.
- * - Mapas: la mesa de campaña: un pergamino con la costa de Tierra Santa (apenas, bajo el mapa), las cantoneras de
- *   hierro, un castillo y dos estandartes como piezas, la espada tendida abajo y unos besantes de oro.
- * - Otras vidas: un muro de sillería con una hornacina apenas apuntada para cada medalla, con sus dovelas, su clave y su
- *   repisa; cruces patadas entre ellas y el zócalo de almagra abajo.
- * - Íconos: el castillo con su estandarte, una espada que raspa y tres cruces patadas.
- * - Notas: una puerta de tablas con sus bisagras de hierro de punta de lanza y su aldaba; cada nota es un pergamino con
- *   su sello de lacre (del color del tipo) clavado con un clavo o, si está fijada, con una daga.
+ * Templario: la encomienda de frontera, con los materiales de su cámara del tesoro (el Ideario) y de su biblioteca:
+ * sillares de caliza, roble oscuro con flejes y candados de hierro, la sobreveste de lino blanco con la cruz patada roja,
+ * el baucent negro y blanco, el zócalo de almagra, el lacre y el fuego de las antorchas.
+ * - Social: la sala capitular. El muro de sillería con su cornisa y sus canecillos, el escudo de la cruz entre dos
+ *   baucents, dos columnas con capitel y basa, una antorcha en cada una, el banco corrido de piedra y el piso ajedrezado.
+ *   Al centro cuelga de su barra de hierro el gran paño de la orden (el nicho): de lana blanca de día y negra de noche (el
+ *   manto de los sargentos), con la franja del baucent arriba, la orla roja, la cruz apenas y las puntas con borlas.
+ * - Mapas: la mesa de campaña sobre caballetes: tablones con flejes y cantoneras de hierro, el pergamino del mapa (el nicho)
+ *   clavado en sus esquinas; alrededor, los rollos de cartas atados con cordón rojo, los besantes de oro, la matriz del
+ *   sello, la lucerna encendida, el tintero, la daga, el astrolabio, dos torres de ajedrez y la espada tendida abajo.
+ * - Otras vidas: el adarve: almenas contra el cielo, la cornisa, un escudo de la orden sobre cada hornacina, cinco
+ *   hornacinas de arco apuntado con sus dovelas (encaladas, el nicho), la repisa, el zócalo de almagra y el piso ajedrezado.
+ * - Íconos: el castillo con su estandarte, el mapa que raspa un besante y tres banderolas de la cruz sobre la arena.
+ * - Notas: el tablón de la regla: un dintel de piedra con tres escudos y dos lanzas cruzadas, el marco de roble con sus
+ *   bisagras de punta de lanza, el fondo encalado (el nicho) y, al pie, la espada sobre el poyo. Cada nota es una carta
+ *   doblada en tercios con su sello de cera pendiente (rojo, negro, verde o amarillo según el tipo), clavada con un clavo
+ *   de hierro o, si está fijada, atravesada por una daga.
  */
 internal object VidaTemplario : DisenoVida {
-    private val SILLAR = Color(0xFFC4B79C)
-    private val SILLAR_LUZ = Color(0xFFDCD2BC)
-    private val SILLAR_JUNTA = Color(0xFF8C826F)
-    private val ROJO = Color(0xFFB0241E)
-    private val BLANCO = Color(0xFFEFEADF)
-    private val NEGRO = Color(0xFF17161A)
-    private val CREMA = Color(0xFFEDE3CB)
-    private val HIERRO = Color(0xFF4E5257)
-    private val HIERRO_LUZ = Color(0xFFA8B0B8)
-    private val MADERA = Color(0xFF6B4A2E)
-    private val MADERA_OSC = Color(0xFF3E2A18)
-    private val ARENA = Color(0xFFD8C49A)
-    private val MAR = Color(0xFF4A6F8A)
-    private val ALMAGRA = Color(0xFFA04A2A)
-    private val ORO = Color(0xFFC99A4A)
-    private val LACRE = Color(0xFF9E1B1B)
-    private val CERA_AMARILLA = Color(0xFFC9962E)
+    private val PIEDRA = Color(0xFFC9BC9E)
+    private val PIEDRA_LUZ = Color(0xFFE0D5BC)
+    private val PIEDRA_OSC = Color(0xFF8E8168)
+    private val JUNTA = Color(0xFF6A604E)
+    private val ROBLE = Color(0xFF5A3D25)
+    private val ROBLE_LUZ = Color(0xFF7A5634)
+    private val ROBLE_OSC = Color(0xFF2C1C10)
+    private val HIERRO = Color(0xFF1F1E1D)
+    private val HIERRO_LUZ = Color(0xFF6E6A63)
+    private val ACERO = Color(0xFFC3C7CC)
+    private val ROJO = Color(0xFFB0191F)
+    private val BLANCO = Color(0xFFF4EFE4)
+    private val NEGRO = Color(0xFF1C1A18)
+    private val LINO = Color(0xFFECE4D0)
+    private val CERA = Color(0xFF8E1A16)
+    private val CERA_NEGRA = Color(0xFF2E2622)
     private val CERA_VERDE = Color(0xFF3E6B3A)
-    private val CERA_PARDA = Color(0xFF4A3426)
-    private val LLAMA = Color(0xFFF2B84A)
-    private val NOCHE = Color(0xFF0F0D0B)
+    private val CERA_AMARILLA = Color(0xFFC9962E)
+    private val ALMAGRA = Color(0xFFA04A2A)
+    private val ORO = Color(0xFFD1A54A)
+    private val ORO_LUZ = Color(0xFFF0D58A)
+    private val LATON = Color(0xFFC29A48)
+    private val CUERO = Color(0xFF6B4226)
+    private val ARENA = Color(0xFFDCC69A)
+    private val CIELO = Color(0xFFC9DCEA)
+    private val CIELO_NOCHE = Color(0xFF1B2433)
+    private val TINTA = Color(0xFF201E1B)
+    private val FUEGO = Color(0xFFF2B65A)
+    private val NOCHE = Color(0xFF0D0C0A)
 
-    /** El pergamino de las notas: claro de día; de noche, en la penumbra de la vigilia (con la tinta clara de [tintaNota]). */
-    private val HOJA_CLARA = Color(0xFFF1E9D6)
-    private val HOJA_OSCURA = Color(0xFF35302A)
+    // ---------------------------------------------------------------- Ayudas
 
-    private fun DrawScope.u() = size.minDimension / 100f
-    private fun mez(a: Color, b: Color, f: Float): Color = lerp(a, b, f.coerceIn(0f, 1f))
-    private fun n(c: Color, oscuro: Boolean): Color = if (oscuro) mez(c, NOCHE, 0.5f) else c
-    /** El material sobre la superficie de la tarjeta: [k] es cuánto se ve (0, nada; 1, el material pleno). */
-    private fun v(fondo: Color, c: Color, k: Float, oscuro: Boolean): Color = mez(fondo, n(c, oscuro), if (oscuro) minOf(k * 1.5f, 1f) else k)
+    /** Un número estable de 0 a 1: cada piedra con su tono, siempre el mismo. */
+    private fun azar(semilla: Int, k: Int): Float {
+        var x = semilla * 374761393 + k * 668265263
+        x = (x xor (x ushr 13)) * 1274126177
+        x = x xor (x ushr 16)
+        return (x and 0x7fffffff) / 2147483647f
+    }
 
-    /** Los centros de las cinco medallas de Otras vidas (una fila repartida con 10 dp de margen) y la distancia entre ellas. */
-    private fun DrawScope.centrosMedallas(): Pair<List<Float>, Float> {
-        val margen = 10.dp.toPx(); val ancho = 52.dp.toPx(); val n = 5
-        val hueco = ((size.width - 2 * margen - n * ancho) / (n + 1)).coerceAtLeast(0f)
-        return List(n) { i -> margen + hueco * (i + 1) + ancho * (i + 0.5f) } to (hueco + ancho)
+    private fun mezcla(a: Color, b: Color, f: Float): Color = lerp(a, b, f.coerceIn(0f, 1f))
+
+    /** El material de día o en la vigilia: de noche, la piedra y la madera en penumbra de verdad. */
+    private fun t(c: Color, oscuro: Boolean, cuanto: Float = 0.5f): Color = if (oscuro) mezcla(c, NOCHE, cuanto) else c
+
+    /** El color sólido de un nicho: el material, llevado hasta la luminancia de la tarjeta. */
+    private fun nicho(e: EstadoMueble, oscuro: Boolean, material: Color): Color =
+        if (oscuro) mezcla(e.fondo, material, 0.1f) else mezcla(e.fondo, material, 0.4f)
+
+    private fun DrawScope.caja(r: Rect) = Rect(size.width * r.left, size.height * r.top, size.width * r.right, size.height * r.bottom)
+
+    private fun Rect.crece(d: Float) = Rect(left - d, top - d, right + d, bottom + d)
+
+    /** La cruz patada: cuatro brazos que se abren hacia la punta. */
+    private fun cruzPatada(c: Offset, r: Float): Path = Path().apply {
+        val a = r * 0.13f; val b = r * 0.42f
+        moveTo(c.x - a, c.y - a)
+        lineTo(c.x - b, c.y - r); lineTo(c.x + b, c.y - r); lineTo(c.x + a, c.y - a)
+        lineTo(c.x + r, c.y - b); lineTo(c.x + r, c.y + b); lineTo(c.x + a, c.y + a)
+        lineTo(c.x + b, c.y + r); lineTo(c.x - b, c.y + r); lineTo(c.x - a, c.y + a)
+        lineTo(c.x - r, c.y + b); lineTo(c.x - r, c.y - b); close()
+    }
+
+    /** Un escudo de punta: arriba recto, abajo en punta; [a] de ancho y [h] de alto. */
+    private fun escudo(c: Offset, a: Float, h: Float) = Path().apply {
+        moveTo(c.x - a / 2, c.y - h / 2); lineTo(c.x + a / 2, c.y - h / 2); lineTo(c.x + a / 2, c.y)
+        quadraticTo(c.x + a / 2, c.y + h * 0.35f, c.x, c.y + h / 2); quadraticTo(c.x - a / 2, c.y + h * 0.35f, c.x - a / 2, c.y); close()
     }
 
     /**
-     * Los puntos de un arco de [xL] a [xR] que arranca a la altura [ys]: dos arcos de radio [k] × la luz que se cortan en la
-     * clave (con [k] = 0.5, medio punto; un poco más, apenas apuntado).
+     * Un escudo de la orden con su sombra y su borde: [tipo] 0 es el blanco de la cruz roja, 1 el baucent (negro arriba,
+     * blanco abajo) y 2 el rojo de la cruz blanca.
      */
-    private fun arco(xL: Float, xR: Float, ys: Float, k: Float, pasos: Int = 8): List<Offset> {
-        val luz = xR - xL; val r = luz * k; val mid = (xL + xR) / 2
-        val th = acos(((mid - (xL + r)) / r).coerceIn(-1f, 1f).toDouble())
-        val izq = (0..pasos).map { i ->
-            val a = Math.PI + (th - Math.PI) * i / pasos
-            Offset(xL + r + r * cos(a).toFloat(), ys - r * sin(a).toFloat())
-        }
-        val der = (1..pasos).map { i ->
-            val a = (Math.PI - th) - (Math.PI - th) * i / pasos
-            Offset(xR - r + r * cos(a).toFloat(), ys - r * sin(a).toFloat())
-        }
-        return izq + der
-    }
-
-    /** Un hueco con arco: de la base [yb] sube por las jambas hasta [ys] y cierra por el arco. */
-    private fun hueco(xL: Float, xR: Float, ys: Float, yb: Float, k: Float): Path = Path().apply {
-        moveTo(xL, yb)
-        arco(xL, xR, ys, k).forEach { lineTo(it.x, it.y) }
-        lineTo(xR, yb); close()
-    }
-
-    /** Un sello de lacre: un círculo con el borde ondulado de la cera aplastada. */
-    private fun sello(c: Offset, r: Float): Path = Path().apply {
-        val n = 18
-        for (k in 0 until n) {
-            val a = 2 * Math.PI * k / n
-            val rr = if (k % 2 == 0) r else r * 0.9f
-            val x = c.x + rr * cos(a).toFloat(); val y = c.y + rr * sin(a).toFloat()
-            if (k == 0) moveTo(x, y) else lineTo(x, y)
-        }
-        close()
-    }
-
-    /** Un muro de sillares en [r]: hiladas de [alto] con las juntas a matajunta y algún sillar un poco distinto. */
-    private fun DrawScope.sillares(r: Rect, alto: Float, largo: Float, piedra: Color, junta: Color, rnd: Random, u: Float) {
-        drawRect(piedra, r.topLeft, r.size)
-        var y = r.top; var fila = 0
-        while (y < r.bottom && fila < 30) {
-            val yb = minOf(y + alto, r.bottom)
-            var x = r.left - (if (fila % 2 == 0) 0f else largo / 2); var k = 0
-            while (x < r.right && k < 40) {
-                val x0 = maxOf(x, r.left); val x1 = minOf(x + largo, r.right)
-                if (rnd.nextFloat() > 0.7f) drawRect(mez(piedra, junta, 0.12f), Offset(x0, y), Size(x1 - x0, yb - y))
-                if (x > r.left) drawLine(junta, Offset(x, y), Offset(x, yb), 0.45f * u)
-                x += largo; k++
+    private fun DrawScope.blason(c: Offset, a: Float, h: Float, tipo: Int, oscuro: Boolean, u: Float) {
+        val e = escudo(c, a, h)
+        translate(0.6f * u, 0.8f * u) { drawPath(e, Color.Black.copy(alpha = 0.35f)) }
+        when (tipo) {
+            0 -> {
+                drawPath(e, t(BLANCO, oscuro, 0.3f))
+                drawRect(t(ROJO, oscuro, 0.25f), Offset(c.x - a * 0.08f, c.y - h / 2), Size(a * 0.16f, h * 0.92f))
+                drawRect(t(ROJO, oscuro, 0.25f), Offset(c.x - a / 2, c.y - h * 0.2f), Size(a, h * 0.15f))
             }
-            if (y > r.top) drawLine(junta, Offset(r.left, y), Offset(r.right, y), 0.45f * u)
-            y += alto; fila++
+            1 -> clipPath(e) {
+                drawRect(t(BLANCO, oscuro, 0.3f), Offset(c.x - a / 2, c.y - h / 2), Size(a, h))
+                drawRect(t(NEGRO, oscuro, 0.2f), Offset(c.x - a / 2, c.y - h / 2), Size(a, h * 0.42f))
+            }
+            else -> {
+                drawPath(e, t(ROJO, oscuro, 0.25f))
+                drawRect(t(BLANCO, oscuro, 0.3f), Offset(c.x - a * 0.07f, c.y - h * 0.38f), Size(a * 0.14f, h * 0.7f))
+                drawRect(t(BLANCO, oscuro, 0.3f), Offset(c.x - a * 0.36f, c.y - h * 0.12f), Size(a * 0.72f, h * 0.13f))
+            }
+        }
+        clipPath(e) { drawRect(Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.18f), Color.Transparent, Color.Black.copy(alpha = 0.18f)), c.x - a / 2, c.x + a / 2), Offset(c.x - a / 2, c.y - h / 2), Size(a, h)) }
+        drawPath(e, t(HIERRO, oscuro, 0.2f), style = Stroke(0.45f * u))
+    }
+
+    /** Sillares en [r]: hiladas de [alto] con juntas alternadas, cada piedra con su tono. */
+    private fun DrawScope.sillares(r: Rect, alto: Float, claro: Color, osc: Color, semilla: Int, oscuro: Boolean, u: Float) {
+        clipRect(r.left, r.top, r.right, r.bottom) {
+            drawRect(t(JUNTA, oscuro), r.topLeft, r.size)
+            var y = r.top; var hilada = 0
+            val j = 0.35f * u
+            while (y < r.bottom) {
+                var x = r.left - (if (hilada % 2 == 0) 0f else alto * 1.1f)
+                var k = 0
+                while (x < r.right) {
+                    val largo = alto * (1.8f + 0.9f * azar(semilla + hilada, k))
+                    val c = mezcla(osc, claro, 0.45f + 0.4f * azar(semilla + 100 + hilada, k))
+                    drawRect(t(c, oscuro), Offset(x + j, y + j), Size(largo - 2 * j, alto - 2 * j))
+                    drawRect(Color.White.copy(alpha = if (oscuro) 0.04f else 0.14f), Offset(x + j, y + j), Size(largo - 2 * j, 0.3f * u))
+                    drawRect(Color.Black.copy(alpha = 0.12f), Offset(x + j, y + alto - j - 0.3f * u), Size(largo - 2 * j, 0.3f * u))
+                    x += largo; k++
+                }
+                y += alto; hilada++
+            }
         }
     }
 
-    /** Un escudo de lágrima colgado de su tiracol: blanco con la cruz roja o, si [baucent], el campo negro y blanco. */
-    private fun DrawScope.escudo(c: Offset, an: Float, baucent: Boolean, blanco: Color, rojo: Color, negro: Color, borde: Color, u: Float) {
-        val al = an * 1.2f
-        val forma = Path().apply {
-            moveTo(c.x - an / 2, c.y - al / 2); lineTo(c.x + an / 2, c.y - al / 2)
-            quadraticTo(c.x + an * 0.55f, c.y + al * 0.15f, c.x, c.y + al / 2)
-            quadraticTo(c.x - an * 0.55f, c.y + al * 0.15f, c.x - an / 2, c.y - al / 2); close()
+    /** El piso ajedrezado de losas blancas y negras, como el baucent. */
+    private fun DrawScope.ajedrez(r: Rect, lado: Float, oscuro: Boolean) {
+        clipRect(r.left, r.top, r.right, r.bottom) {
+            var y = r.top; var f = 0
+            while (y < r.bottom) {
+                var x = r.left; var k = 0
+                while (x < r.right) {
+                    drawRect(t(if ((k + f) % 2 == 0) mezcla(BLANCO, PIEDRA, 0.35f) else mezcla(NEGRO, JUNTA, 0.25f), oscuro, 0.55f), Offset(x, y), Size(lado + 0.5f, lado + 0.5f))
+                    x += lado; k++
+                }
+                y += lado; f++
+            }
+            drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.3f), Color.Transparent), r.top, r.bottom), r.topLeft, r.size)
         }
-        drawLine(borde, Offset(c.x - an * 0.3f, c.y - al / 2), Offset(c.x, c.y - al / 2 - 2.4f * u), 0.4f * u)
-        drawLine(borde, Offset(c.x + an * 0.3f, c.y - al / 2), Offset(c.x, c.y - al / 2 - 2.4f * u), 0.4f * u)
-        drawCircle(borde, 0.5f * u, Offset(c.x, c.y - al / 2 - 2.4f * u))
-        drawPath(forma, blanco)
-        if (baucent) clipPath(forma) { drawRect(negro, Offset(c.x - an, c.y - al / 2), Size(an * 2, al * 0.38f)) }
-        else drawPath(cruzPatada(Offset(c.x, c.y - al * 0.08f), an * 0.36f, 0.14f, 0.42f), rojo)
-        drawPath(forma, borde, style = Stroke(0.5f * u))
+    }
+
+    /** Vetas de madera: líneas onduladas a lo largo, separadas ≈ [paso]. */
+    private fun DrawScope.vetas(r: Rect, color: Color, semilla: Int, paso: Float, vertical: Boolean = false, grosor: Float = 1f) {
+        val largo = if (vertical) r.height else r.width
+        val ancho = if (vertical) r.width else r.height
+        val n = (ancho / paso).toInt().coerceIn(2, 60)
+        clipRect(r.left, r.top, r.right, r.bottom) {
+            for (k in 0 until n) {
+                val base = ancho * (k + azar(semilla, k)) / n
+                val amp = paso * (0.15f + 0.45f * azar(semilla, k + 100))
+                val fase = azar(semilla, k + 200) * 6.28f
+                val ondas = 1.2f + 2.2f * azar(semilla, k + 300)
+                val p = Path()
+                for (s in 0..16) {
+                    val a = largo * s / 16
+                    val v = base + amp * sin(fase + ondas * 6.28f * s / 16)
+                    if (s == 0) p.moveTo(if (vertical) r.left + v else r.left + a, if (vertical) r.top + a else r.top + v)
+                    else p.lineTo(if (vertical) r.left + v else r.left + a, if (vertical) r.top + a else r.top + v)
+                }
+                drawPath(p, color.copy(alpha = color.alpha * (0.3f + 0.7f * azar(semilla, k + 400))), style = Stroke(grosor * (0.5f + azar(semilla, k + 500))))
+            }
+        }
+    }
+
+    /** Una tabla de roble con veta, luz arriba y sombra abajo. */
+    private fun DrawScope.tabla(r: Rect, base: Color, oscuro: Boolean, semilla: Int, u: Float, vertical: Boolean = false) {
+        drawRect(t(base, oscuro), r.topLeft, r.size)
+        vetas(r, t(ROBLE_OSC, oscuro).copy(alpha = 0.5f), semilla, 1.3f * u, vertical, 0.35f * u)
+        drawRect(Color.White.copy(alpha = if (oscuro) 0.05f else 0.12f), r.topLeft, Size(r.width, 0.35f * u))
+        drawRect(Color.Black.copy(alpha = 0.3f), Offset(r.left, r.bottom - 0.35f * u), Size(r.width, 0.35f * u))
+    }
+
+    private fun DrawScope.halo(c: Offset, r: Float, color: Color) =
+        drawCircle(Brush.radialGradient(listOf(color, color.copy(alpha = 0f)), c, r.coerceAtLeast(1f)), r, c)
+
+    /** Un remache de hierro con su brillo. */
+    private fun DrawScope.remache(c: Offset, r: Float, oscuro: Boolean, metal: Color = HIERRO, luz: Color = HIERRO_LUZ) {
+        drawCircle(Color.Black.copy(alpha = 0.35f), r, c + Offset(r * 0.35f, r * 0.45f))
+        drawCircle(t(metal, oscuro, 0.25f), r, c)
+        drawCircle(t(luz, oscuro, 0.25f), r * 0.42f, c - Offset(r * 0.3f, r * 0.3f))
+    }
+
+    /** Un clavo de cabeza cuadrada, forjado. */
+    private fun DrawScope.clavoCuadrado(c: Offset, r: Float, oscuro: Boolean) {
+        drawRect(Color.Black.copy(alpha = 0.35f), Offset(c.x - r + r * 0.4f, c.y - r + r * 0.5f), Size(2 * r, 2 * r))
+        drawRect(t(HIERRO, oscuro, 0.2f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r))
+        drawPath(Path().apply { moveTo(c.x - r, c.y - r); lineTo(c.x + r, c.y - r); lineTo(c.x, c.y); close() }, t(HIERRO_LUZ, oscuro, 0.2f))
+        drawPath(Path().apply { moveTo(c.x - r, c.y - r); lineTo(c.x - r, c.y + r); lineTo(c.x, c.y); close() }, t(mezcla(HIERRO_LUZ, HIERRO, 0.5f), oscuro, 0.2f))
+    }
+
+    /** Una llama (de antorcha o de lámpara) con su halo. */
+    private fun DrawScope.llama(base: Offset, alto: Float, oscuro: Boolean, halo: Float = 3.2f) {
+        halo(base - Offset(0f, alto * 0.5f), alto * halo, FUEGO.copy(alpha = if (oscuro) 0.45f else 0.3f))
+        val p = Path().apply {
+            moveTo(base.x, base.y - alto)
+            quadraticTo(base.x + alto * 0.45f, base.y - alto * 0.3f, base.x, base.y)
+            quadraticTo(base.x - alto * 0.45f, base.y - alto * 0.3f, base.x, base.y - alto)
+            close()
+        }
+        drawPath(p, Color(0xFFF0922E))
+        drawOval(Color(0xFFFFF0C0), Offset(base.x - alto * 0.13f, base.y - alto * 0.55f), Size(alto * 0.26f, alto * 0.45f))
+    }
+
+    /** Un arco apuntado (ojival): [r] con la punta arriba al centro; [flecha] es el alto de la parte curva. */
+    private fun apuntado(r: Rect, flecha: Float): Path = Path().apply {
+        val cx = r.center.x
+        moveTo(r.left, r.bottom); lineTo(r.left, r.top + flecha)
+        cubicTo(r.left, r.top + flecha * 0.45f, cx - r.width * 0.22f, r.top + flecha * 0.1f, cx, r.top)
+        cubicTo(cx + r.width * 0.22f, r.top + flecha * 0.1f, r.right, r.top + flecha * 0.45f, r.right, r.top + flecha)
+        lineTo(r.right, r.bottom); close()
+    }
+
+    /** Una espada tendida de [a] (el pomo) a [b] (la punta), con su cruz, su puño de cuero y la acanaladura. */
+    private fun DrawScope.espada(a: Offset, b: Offset, ancho: Float, oscuro: Boolean, u: Float) {
+        val d = b - a; val largo = d.getDistance(); val dir = d / largo; val nor = Offset(-dir.y, dir.x)
+        val cruz = a + dir * (largo * 0.2f)
+        fun q(p: Offset, n: Float) = p + nor * n
+        val hoja = Path().apply {
+            val p1 = q(cruz, -ancho * 0.5f); val p2 = q(b - dir * (ancho * 1.6f), -ancho * 0.42f); val p3 = q(b - dir * (ancho * 1.6f), ancho * 0.42f); val p4 = q(cruz, ancho * 0.5f)
+            moveTo(p1.x, p1.y); lineTo(p2.x, p2.y); lineTo(b.x, b.y); lineTo(p3.x, p3.y); lineTo(p4.x, p4.y); close()
+        }
+        translate(0.5f * u, 0.8f * u) { drawPath(hoja, Color.Black.copy(alpha = 0.35f)) }
+        drawPath(hoja, t(ACERO, oscuro, 0.3f))
+        drawLine(Color.White.copy(alpha = 0.55f), q(cruz, -ancho * 0.22f), q(b - dir * (ancho * 2f), -ancho * 0.18f), ancho * 0.18f)
+        drawLine(t(mezcla(ACERO, Color.Black, 0.35f), oscuro, 0.3f), cruz + dir * (ancho * 0.5f), b - dir * (largo * 0.25f), ancho * 0.16f)
+        drawPath(hoja, t(Color(0xFF6E7277), oscuro, 0.3f), style = Stroke(0.2f * u))
+        // El puño de cuero, la cruz y el pomo.
+        drawLine(Color.Black.copy(alpha = 0.3f), a + Offset(0.5f * u, 0.8f * u), cruz + Offset(0.5f * u, 0.8f * u), ancho * 0.75f)
+        drawLine(t(CUERO, oscuro, 0.3f), a, cruz, ancho * 0.7f)
+        var k = 0.15f
+        while (k < 0.95f) { val p = a + (cruz - a) * k; drawLine(t(mezcla(CUERO, Color.Black, 0.4f), oscuro, 0.3f), q(p, -ancho * 0.35f), q(p + dir * (ancho * 0.3f), ancho * 0.35f), 0.2f * u); k += 0.16f }
+        drawLine(Color.Black.copy(alpha = 0.3f), q(cruz, -ancho * 2.2f) + Offset(0.5f * u, 0.8f * u), q(cruz, ancho * 2.2f) + Offset(0.5f * u, 0.8f * u), ancho * 0.6f, StrokeCap.Round)
+        drawLine(t(HIERRO_LUZ, oscuro, 0.3f), q(cruz, -ancho * 2.2f), q(cruz, ancho * 2.2f), ancho * 0.55f, StrokeCap.Round)
+        drawLine(t(ACERO, oscuro, 0.3f), q(cruz, -ancho * 2.1f), q(cruz, ancho * 2.1f), ancho * 0.18f, StrokeCap.Round)
+        drawCircle(t(HIERRO_LUZ, oscuro, 0.3f), ancho * 0.75f, a)
+        drawCircle(t(ACERO, oscuro, 0.3f), ancho * 0.3f, a - nor * (ancho * 0.2f))
+    }
+
+    // ---------------------------------------------------------------- Nichos
+
+    override fun area(m: MuebleVida): Rect = when (m) {
+        MuebleVida.SOCIAL -> Rect(0.12f, 0.18f, 0.88f, 0.80f)
+        MuebleVida.MAPAS -> Rect(0.12f, 0.14f, 0.88f, 0.76f)
+        MuebleVida.OTRAS_VIDAS -> Rect(0.035f, 0.25f, 0.965f, 0.80f)
+        MuebleVida.NOTAS -> Rect(0.07f, 0.15f, 0.93f, 0.89f)
     }
 
     // ---------------------------------------------------------------- Social
 
     override fun DrawScope.muebleSocial(e: EstadoMueble, oscuro: Boolean) {
-        val w = size.width; val h = size.height; val u = u()
-        fun m(c: Color, k: Float) = v(e.fondo, c, k, oscuro)
-        fun s(c: Color, k: Float) = mez(e.fondo, c, k)
-        val rnd = Random(e.semilla.toLong())
-        val lado = minOf(w * 0.1f, 20f * u)
-        val banco = h - 5f * u
-
-        // La cruz patada grande y tenue en el centro: el capítulo se reúne bajo ella.
-        drawPath(cruzPatada(Offset(w / 2, h * 0.5f), h * 0.4f, 0.13f, 0.42f), s(e.acento, if (oscuro) 0.07f else 0.06f))
-
-        // Los muros de sillería a los lados, con los escudos colgados.
-        val piedra = m(SILLAR, 0.3f); val junta = m(SILLAR_JUNTA, 0.42f)
-        sillares(Rect(0f, 6.8f * u, lado, banco), 8f * u, lado * 0.6f, piedra, junta, rnd, u)
-        sillares(Rect(w - lado, 6.8f * u, w, banco), 8f * u, lado * 0.6f, piedra, junta, rnd, u)
-        val ae = minOf(lado * 0.6f, 11f * u)
-        val blanco = m(BLANCO, 0.75f); val rojo = s(e.acento, 0.7f); val negro = m(NEGRO, 0.6f); val borde = m(HIERRO, 0.6f)
-        escudo(Offset(lado * 0.5f, h * 0.32f), ae, false, blanco, rojo, negro, borde, u)
-        escudo(Offset(lado * 0.5f, h * 0.66f), ae, true, blanco, rojo, negro, borde, u)
-        escudo(Offset(w - lado * 0.5f, h * 0.32f), ae, true, blanco, rojo, negro, borde, u)
-        escudo(Offset(w - lado * 0.5f, h * 0.66f), ae, false, blanco, rojo, negro, borde, u)
-
-        // El dintel de piedra arriba, con sus juntas y la línea de almagra.
-        drawRect(m(SILLAR_LUZ, 0.5f), Offset.Zero, Size(w, 6f * u))
-        var x = 6f * u; var k = 0
-        while (x < w && k < 60) { drawLine(junta, Offset(x, 0f), Offset(x, 6f * u), 0.45f * u); x += 14f * u; k++ }
-        drawRect(m(ALMAGRA, 0.5f), Offset(0f, 6f * u), Size(w, 0.8f * u))
-
-        // El banco corrido de piedra abajo.
-        drawRect(m(SILLAR, 0.4f), Offset(0f, banco), Size(w, h - banco))
-        drawLine(m(SILLAR_LUZ, 0.7f), Offset(0f, banco + 0.3f * u), Offset(w, banco + 0.3f * u), 0.5f * u)
-        x = 4f * u; k = 0
-        while (x < w && k < 60) { drawLine(junta, Offset(x, banco + 0.8f * u), Offset(x, h), 0.45f * u); x += 12f * u; k++ }
-
-        // La mesa del capítulo: el tablero, el mantel con la cruz, la Regla, el cáliz y dos velas.
-        val cx = w / 2; val an = minOf(w * 0.2f, 34f * u)
-        val mesaY = h - 11.5f * u
-        drawRect(m(MADERA, 0.62f), Offset(cx - an, mesaY), Size(an * 2, 1.2f * u))
-        val mantel = Rect(cx - an + 0.6f * u, mesaY + 1.2f * u, cx + an - 0.6f * u, banco - 0.4f * u)
-        drawRect(m(BLANCO, if (oscuro) 0.42f else 0.6f), mantel.topLeft, mantel.size)
-        drawRect(m(SILLAR_JUNTA, 0.45f), mantel.topLeft, mantel.size, style = Stroke(0.35f * u))
-        drawPath(cruzPatada(mantel.center, minOf(2.4f * u, mantel.height * 0.45f), 0.14f, 0.42f), s(e.acento, 0.65f))
-        // La Regla: un libro cerrado con su canto.
-        drawRect(m(ROJO, 0.5f), Offset(cx - 9f * u, mesaY - 1.8f * u), Size(6f * u, 1.8f * u))
-        drawLine(m(CREMA, 0.7f), Offset(cx - 8.6f * u, mesaY - 0.9f * u), Offset(cx - 3.4f * u, mesaY - 0.9f * u), 0.4f * u)
-        // El cáliz.
-        val oro = m(ORO, 0.7f)
-        drawArc(oro, 0f, 180f, true, Offset(cx + 1f * u, mesaY - 5.4f * u), Size(3.6f * u, 2.6f * u))
-        drawLine(oro, Offset(cx + 2.8f * u, mesaY - 4.2f * u), Offset(cx + 2.8f * u, mesaY - 0.8f * u), 0.6f * u)
-        drawOval(oro, Offset(cx + 1.4f * u, mesaY - 1f * u), Size(2.8f * u, 1f * u))
-        // Las dos velas en sus candeleros.
-        listOf(cx - an * 0.8f, cx + an * 0.8f).forEach { vx ->
-            drawRect(m(HIERRO, 0.6f), Offset(vx - 1.2f * u, mesaY - 0.6f * u), Size(2.4f * u, 0.6f * u))
-            drawLine(m(HIERRO, 0.6f), Offset(vx, mesaY - 0.6f * u), Offset(vx, mesaY - 2.4f * u), 0.5f * u)
-            drawRect(m(CREMA, 0.8f), Offset(vx - 0.5f * u, mesaY - 5.6f * u), Size(1f * u, 3.2f * u))
-            drawOval(m(LLAMA, 0.85f), Offset(vx - 0.5f * u, mesaY - 7.4f * u), Size(1f * u, 1.8f * u))
+        val w = size.width; val h = size.height; val u = size.minDimension / 100f
+        val n = caja(area(MuebleVida.SOCIAL))
+        // El muro de sillería de la sala capitular.
+        sillares(Rect(0f, 0f, w, h * 0.86f), 5.4f * u, PIEDRA_LUZ, PIEDRA_OSC, 3, oscuro, u)
+        // La cornisa con su línea de almagra y los canecillos debajo.
+        val cor = Rect(0f, 0f, w, h * 0.07f)
+        drawRect(t(PIEDRA_LUZ, oscuro), cor.topLeft, cor.size)
+        drawRect(t(ALMAGRA, oscuro, 0.4f), Offset(0f, cor.bottom - 1.6f * u), Size(w, 0.9f * u))
+        drawRect(Color.Black.copy(alpha = 0.35f), Offset(0f, cor.bottom), Size(w, 0.7f * u))
+        var x = 3f * u
+        while (x < w - 2f * u) {
+            val r = Rect(x, cor.bottom, x + 2.4f * u, cor.bottom + 3.2f * u)
+            drawRect(Color.Black.copy(alpha = 0.3f), Offset(r.left + 0.5f * u, r.top), Size(r.width, r.height + 0.6f * u))
+            drawRoundRect(t(PIEDRA, oscuro), r.topLeft, r.size, CornerRadius(0f, 0f))
+            drawOval(t(PIEDRA, oscuro), Offset(r.left, r.bottom - 1.2f * u), Size(r.width, 2.4f * u))
+            drawRect(Color.Black.copy(alpha = 0.18f), Offset(r.right - 0.7f * u, r.top), Size(0.7f * u, r.height + 0.6f * u))
+            x += 7f * u
         }
+        // Las dos columnas, con basa, fuste redondo, capitel de crochets y ábaco, y una antorcha en cada una.
+        listOf(w * 0.018f to w * 0.072f, w * 0.928f to w * 0.982f).forEachIndexed { i, (a, z) ->
+            val cx = (a + z) / 2; val fw = z - a
+            val abaco = Rect(a - fw * 0.2f, h * 0.105f, z + fw * 0.2f, h * 0.13f)
+            val capitel = Rect(a - fw * 0.1f, abaco.bottom, z + fw * 0.1f, h * 0.2f)
+            val fuste = Rect(a + fw * 0.12f, capitel.bottom, z - fw * 0.12f, h * 0.8f)
+            drawRect(Color.Black.copy(alpha = 0.3f), Offset(fuste.right, fuste.top), Size(1.2f * u, fuste.height))
+            drawRect(Brush.horizontalGradient(listOf(t(PIEDRA, oscuro), t(PIEDRA_LUZ, oscuro), t(PIEDRA, oscuro), t(PIEDRA_OSC, oscuro)), fuste.left, fuste.right), fuste.topLeft, fuste.size)
+            drawRect(t(PIEDRA_LUZ, oscuro), Offset(fuste.left - fw * 0.06f, fuste.top), Size(fuste.width + fw * 0.12f, 0.9f * u))
+            drawPath(Path().apply { moveTo(capitel.left, capitel.top); lineTo(capitel.right, capitel.top); lineTo(fuste.right, capitel.bottom); lineTo(fuste.left, capitel.bottom); close() }, t(PIEDRA_LUZ, oscuro))
+            drawPath(Path().apply { moveTo(cx, capitel.top); lineTo(capitel.right, capitel.top); lineTo(fuste.right, capitel.bottom); lineTo(cx, capitel.bottom); close() }, Color.Black.copy(alpha = 0.12f))
+            listOf(capitel.left + 0.8f * u, capitel.right - 0.8f * u).forEach { vx -> drawCircle(t(PIEDRA_LUZ, oscuro), 1f * u, Offset(vx, capitel.top + 1.2f * u)); drawCircle(t(JUNTA, oscuro), 1f * u, Offset(vx, capitel.top + 1.2f * u), style = Stroke(0.3f * u)) }
+            drawPath(Path().apply { moveTo(cx - fw * 0.22f, capitel.bottom); quadraticTo(cx, capitel.top + 1f * u, cx + fw * 0.22f, capitel.bottom) }, t(JUNTA, oscuro), style = Stroke(0.35f * u))
+            drawRect(t(PIEDRA_LUZ, oscuro), abaco.topLeft, abaco.size)
+            drawRect(Color.Black.copy(alpha = 0.25f), Offset(abaco.left, abaco.bottom - 0.4f * u), Size(abaco.width, 0.4f * u))
+            val toro = Rect(a - fw * 0.02f, fuste.bottom, z + fw * 0.02f, fuste.bottom + 1.6f * u)
+            drawRoundRect(t(PIEDRA_LUZ, oscuro), toro.topLeft, toro.size, CornerRadius(0.8f * u))
+            drawRect(t(PIEDRA, oscuro), Offset(a - fw * 0.15f, toro.bottom), Size(fw * 1.3f, h * 0.86f - toro.bottom))
+            drawRect(Color.Black.copy(alpha = 0.2f), Offset(a - fw * 0.15f, toro.bottom), Size(fw * 1.3f, 0.4f * u))
+            // La antorcha en su argolla, del lado del paño.
+            val tx = if (i == 0) (z + n.left - 2f * u) / 2 else (n.right + 2f * u + a) / 2
+            val ty = h * 0.4f
+            drawLine(t(HIERRO, oscuro, 0.2f), Offset(if (i == 0) z else a, ty + 2.4f * u), Offset(tx, ty + 2.4f * u), 0.6f * u)
+            drawPath(Path().apply { moveTo(tx - 1.6f * u, ty); lineTo(tx + 1.6f * u, ty); lineTo(tx + 0.6f * u, ty + 7f * u); lineTo(tx - 0.6f * u, ty + 7f * u); close() }, t(ROBLE, oscuro, 0.3f))
+            drawRect(t(HIERRO, oscuro, 0.2f), Offset(tx - 1.8f * u, ty - 0.2f * u), Size(3.6f * u, 1f * u))
+            drawRect(t(HIERRO, oscuro, 0.2f), Offset(tx - 1.2f * u, ty + 2f * u), Size(2.4f * u, 0.8f * u))
+            llama(Offset(tx, ty), 4.2f * u, oscuro, halo = 3.4f)
+        }
+        // El banco corrido de piedra y el piso ajedrezado.
+        val banco = Rect(0f, h * 0.86f, w, h * 0.93f)
+        drawRect(t(PIEDRA_LUZ, oscuro), banco.topLeft, Size(w, 1.6f * u))
+        drawRect(t(PIEDRA, oscuro), Offset(0f, banco.top + 1.6f * u), Size(w, banco.height - 1.6f * u))
+        drawRect(Color.Black.copy(alpha = 0.25f), Offset(0f, banco.top + 1.6f * u), Size(w, 0.5f * u))
+        var bx = 4f * u; var k = 0
+        while (bx < w) { drawLine(t(JUNTA, oscuro), Offset(bx, banco.top + 1.6f * u), Offset(bx, banco.bottom), 0.35f * u); bx += (11f + 4f * azar(5, k)) * u; k++ }
+        ajedrez(Rect(0f, banco.bottom, w, h), (h - banco.bottom) / 2f, oscuro)
+        // El paño de la orden colgado de su barra: la sombra, la tela, la franja del baucent, la orla roja y las puntas.
+        val blanco = !oscuro
+        val tela = nicho(e, oscuro, if (blanco) LINO else NEGRO)
+        val pano = Rect(n.left - 2f * u, h * 0.15f, n.right + 2f * u, n.bottom + 2f * u)
+        val puntas = 7
+        val forma = Path().apply {
+            moveTo(pano.left, pano.top); lineTo(pano.right, pano.top); lineTo(pano.right, pano.bottom)
+            for (j in puntas downTo 1) {
+                val x1 = pano.left + pano.width * (j - 0.5f) / puntas; val x0 = pano.left + pano.width * (j - 1) / puntas
+                lineTo(x1, pano.bottom + 3.4f * u); lineTo(x0, pano.bottom)
+            }
+            close()
+        }
+        translate(1f * u, 1.4f * u) { drawPath(forma, Color.Black.copy(alpha = 0.35f)) }
+        drawPath(forma, tela)
+        clipPath(forma) {
+            // Los pliegues, muy suaves, y la caída de la luz.
+            for (j in 0..10) {
+                val fx = pano.left + pano.width * j / 10f
+                drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = if (oscuro) 0.06f else 0.035f), Color.Transparent), fx - 3f * u, fx + 3f * u), Offset(fx - 3f * u, pano.top), Size(6f * u, pano.height + 4f * u))
+            }
+            drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = if (oscuro) 0.2f else 0.08f), Color.Transparent), pano.top, pano.top + 6f * u), pano.topLeft, Size(pano.width, 6f * u))
+        }
+        val franja = Rect(pano.left, pano.top, pano.right, n.top - 0.6f * u)
+        drawRect(if (blanco) NEGRO else mezcla(BLANCO, NOCHE, 0.55f), franja.topLeft, franja.size)
+        drawRect(t(ROJO, oscuro, 0.25f), Offset(franja.left, franja.bottom - 0.7f * u), Size(franja.width, 0.7f * u))
+        drawRect(t(ROJO, oscuro, 0.25f), n.crece(1.1f * u).let { Offset(it.left, n.top - 0.6f * u) }, Size(0.7f * u, n.height + 1.7f * u))
+        drawRect(t(ROJO, oscuro, 0.25f), Offset(n.right + 0.4f * u, n.top - 0.6f * u), Size(0.7f * u, n.height + 1.7f * u))
+        drawRect(t(ROJO, oscuro, 0.25f), Offset(n.left - 1.1f * u, n.bottom + 0.4f * u), Size(n.width + 2.2f * u, 0.7f * u))
+        for (j in 0 until puntas) {
+            val px = pano.left + pano.width * (j + 0.5f) / puntas
+            drawLine(t(ROJO, oscuro, 0.25f), Offset(px, pano.bottom + 3.2f * u), Offset(px, pano.bottom + 5f * u), 0.5f * u)
+            drawOval(t(ROJO, oscuro, 0.25f), Offset(px - 0.8f * u, pano.bottom + 4.6f * u), Size(1.6f * u, 2.4f * u))
+        }
+        // La barra de hierro con sus anillas y sus remates de punta de lanza.
+        val by = pano.top - 0.6f * u
+        drawLine(Color.Black.copy(alpha = 0.3f), Offset(pano.left - 2.5f * u, by + 0.8f * u), Offset(pano.right + 2.5f * u, by + 0.8f * u), 0.9f * u)
+        drawLine(t(HIERRO, oscuro, 0.2f), Offset(pano.left - 2.5f * u, by), Offset(pano.right + 2.5f * u, by), 0.9f * u)
+        listOf(-1f, 1f).forEach { s ->
+            val ex = if (s < 0) pano.left - 2.5f * u else pano.right + 2.5f * u
+            drawPath(Path().apply { moveTo(ex, by - 1.1f * u); lineTo(ex + s * 2.6f * u, by); lineTo(ex, by + 1.1f * u); close() }, t(HIERRO, oscuro, 0.2f))
+        }
+        val anillas = 9
+        for (j in 0..anillas) {
+            val ax = pano.left + 1f * u + (pano.width - 2f * u) * j / anillas
+            drawCircle(t(HIERRO_LUZ, oscuro, 0.2f), 0.9f * u, Offset(ax, by + 0.3f * u), style = Stroke(0.35f * u))
+        }
+        // El nicho, liso, y la cruz encima apenas; los escudos en la cornisa.
+        drawRect(tela, n.topLeft, n.size)
+        clipRect(n.left, n.top, n.right, n.bottom) {
+            for (j in 0..10) {
+                val fx = pano.left + pano.width * j / 10f
+                drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = if (oscuro) 0.05f else 0.03f), Color.Transparent), fx - 3f * u, fx + 3f * u), Offset(fx - 3f * u, n.top), Size(6f * u, n.height))
+            }
+        }
+        drawPath(cruzPatada(n.center, n.height * 0.4f), t(ROJO, oscuro, 0.2f).copy(alpha = if (oscuro) 0.1f else 0.045f))
+        blason(Offset(w / 2, h * 0.075f), 7.4f * u, 9f * u, 0, oscuro, u)
+        blason(Offset(w * 0.32f, h * 0.075f), 5.6f * u, 7f * u, 1, oscuro, u)
+        blason(Offset(w * 0.68f, h * 0.075f), 5.6f * u, 7f * u, 1, oscuro, u)
     }
 
     // ---------------------------------------------------------------- Mapas
 
     override fun DrawScope.muebleMapas(e: EstadoMueble, oscuro: Boolean) {
-        val w = size.width; val h = size.height; val u = u()
-        fun m(c: Color, k: Float) = v(e.fondo, c, k, oscuro)
-        fun s(c: Color, k: Float) = mez(e.fondo, c, k)
-        val rnd = Random(e.semilla.toLong())
-
-        // La mesa de campaña: tablas de roble con sus juntas.
-        drawRect(m(MADERA, 0.3f))
-        listOf(0.25f, 0.5f, 0.75f).forEach { f ->
-            drawLine(m(MADERA_OSC, 0.4f), Offset(0f, h * f), Offset(w, h * f), 0.6f * u)
-            val y = h * f - h * 0.12f + rnd.nextFloat() * u
-            drawLine(m(MADERA_OSC, 0.15f), Offset(0f, y), Offset(w, y + (rnd.nextFloat() - 0.5f) * 2f * u), 0.4f * u)
+        val w = size.width; val h = size.height; val u = size.minDimension / 100f
+        val n = caja(area(MuebleVida.MAPAS))
+        // El piso de losas de la tienda de campaña, en penumbra.
+        sillares(Rect(0f, 0f, w, h), 7f * u, PIEDRA, PIEDRA_OSC, 11, oscuro, u)
+        drawRect(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.3f))
+        // Los caballetes en tijera.
+        val tope = h * 0.86f; val canto = h * 0.905f
+        listOf(w * 0.09f, w * 0.91f).forEach { cx ->
+            drawOval(Color.Black.copy(alpha = 0.4f), Offset(cx - 7f * u, h - 1.8f * u), Size(14f * u, 2.6f * u))
+            listOf(-1f, 1f).forEach { s ->
+                drawLine(t(ROBLE, oscuro), Offset(cx - s * 1f * u, canto), Offset(cx + s * 5.5f * u, h), 1.8f * u)
+                drawLine(Color.Black.copy(alpha = 0.3f), Offset(cx - s * 1f * u + 0.6f * u, canto), Offset(cx + s * 5.5f * u + 0.6f * u, h), 0.5f * u)
+            }
+            drawRect(t(ROBLE_LUZ, oscuro), Offset(cx - 4f * u, canto + (h - canto) * 0.55f), Size(8f * u, 1.2f * u))
+            remache(Offset(cx, canto + (h - canto) * 0.3f), 0.6f * u, oscuro)
         }
-
-        // El pergamino con la costa de Tierra Santa, apenas: el mar a la izquierda, la arena a la derecha.
-        val hoja = Rect(5f * u, 3.2f * u, w - 5f * u, h - 3.2f * u)
-        drawRect(m(CREMA, 0.42f), hoja.topLeft, hoja.size)
-        val costa = listOf(0.43f, 0.44f, 0.41f, 0.42f, 0.39f, 0.4f, 0.37f, 0.36f).mapIndexed { i, f -> Offset(hoja.left + hoja.width * f, hoja.top + hoja.height * i / 7f) }
-        val mar = Path().apply {
-            moveTo(hoja.left, hoja.top); costa.forEach { lineTo(it.x, it.y) }; lineTo(hoja.left, hoja.bottom); close()
+        // El canto grueso de los tablones, con los flejes que lo abrazan.
+        val frente = Rect(w * 0.015f, tope, w * 0.985f, canto)
+        tabla(frente, ROBLE_OSC, oscuro, 41, u)
+        // El tablero: tres tablones a lo largo, con su canto.
+        val top = Rect(w * 0.015f, h * 0.02f, w * 0.985f, tope)
+        drawRect(t(ROBLE_OSC, oscuro), top.topLeft, top.size)
+        val campo = top.crece(-0.7f * u)
+        for (k in 0 until 3) {
+            val r = Rect(campo.left, campo.top + campo.height * k / 3, campo.right, campo.top + campo.height * (k + 1) / 3)
+            drawRect(t(mezcla(ROBLE, ROBLE_LUZ, 0.2f + 0.4f * azar(e.semilla, k)), oscuro), r.topLeft, r.size)
+            vetas(r, t(ROBLE_OSC, oscuro).copy(alpha = 0.55f), e.semilla * 3 + k, 1.3f * u, grosor = 0.35f * u)
+            drawLine(Color.Black.copy(alpha = 0.55f), Offset(r.left, r.top), Offset(r.right, r.top), 0.4f * u)
+            drawLine(Color.White.copy(alpha = if (oscuro) 0.04f else 0.1f), Offset(r.left, r.top + 0.5f * u), Offset(r.right, r.top + 0.5f * u), 0.3f * u)
         }
-        clipRect(hoja.left, hoja.top, hoja.right, hoja.bottom) {
-            drawRect(m(ARENA, 0.14f), hoja.topLeft, hoja.size)
-            drawPath(mar, m(MAR, if (oscuro) 0.1f else 0.08f))
-            drawPath(Path().apply { costa.forEachIndexed { i, p -> if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y) } }, m(MADERA_OSC, 0.18f), style = Stroke(0.6f * u))
+        // Los flejes de hierro que cruzan los tablones cerca de cada extremo, remachados, y las cantoneras.
+        listOf(campo.left + 1.4f * u, campo.right - 3.6f * u).forEach { fx ->
+            drawRect(t(HIERRO, oscuro, 0.25f), Offset(fx, top.top), Size(2.2f * u, canto - top.top))
+            drawRect(t(HIERRO_LUZ, oscuro, 0.25f).copy(alpha = 0.4f), Offset(fx, top.top), Size(0.5f * u, canto - top.top))
+            var y = top.top + 2f * u
+            while (y < canto - 1f * u) { remache(Offset(fx + 1.1f * u, y), 0.45f * u, oscuro); y += 5f * u }
         }
-        drawRect(s(e.acento, 0.5f), Offset(hoja.left + 1.4f * u, hoja.top + 1.4f * u), Size(hoja.width - 2.8f * u, hoja.height - 2.8f * u), style = Stroke(0.6f * u))
-
-        // Las cantoneras de hierro de la mesa, con sus clavos.
-        val hierro = m(HIERRO, 0.62f); val clavo = m(HIERRO_LUZ, 0.75f)
-        listOf(Offset(0f, 0f) to Offset(1f, 1f), Offset(w, 0f) to Offset(-1f, 1f), Offset(0f, h) to Offset(1f, -1f), Offset(w, h) to Offset(-1f, -1f)).forEach { (o, d) ->
-            val l = 6f * u; val g = 1.4f * u
-            drawRect(hierro, Offset(if (d.x > 0) o.x else o.x - l, if (d.y > 0) o.y else o.y - g), Size(l, g))
-            drawRect(hierro, Offset(if (d.x > 0) o.x else o.x - g, if (d.y > 0) o.y else o.y - l), Size(g, l))
-            drawCircle(clavo, 0.45f * u, Offset(o.x + d.x * 4.4f * u, o.y + d.y * 0.7f * u))
-            drawCircle(clavo, 0.45f * u, Offset(o.x + d.x * 0.7f * u, o.y + d.y * 4.4f * u))
+        val ca = 5.5f * u
+        listOf(campo.topLeft to Offset(1f, 1f), Offset(campo.right, campo.top) to Offset(-1f, 1f)).forEach { (c, d) ->
+            drawPath(Path().apply { moveTo(c.x, c.y); lineTo(c.x + d.x * ca, c.y); lineTo(c.x, c.y + d.y * ca); close() }, t(HIERRO, oscuro, 0.25f))
+            remache(c + Offset(d.x * ca * 0.3f, d.y * ca * 0.3f), 0.5f * u, oscuro)
         }
-
-        // Arriba a la izquierda, un castillo como pieza.
-        val cb = Offset(10f * u, 8.6f * u)
-        val sillar = m(SILLAR_JUNTA, 0.7f)
-        drawRect(sillar, Offset(cb.x - 2.4f * u, cb.y - 1f * u), Size(4.8f * u, 1f * u))
-        drawRect(sillar, Offset(cb.x - 1.7f * u, cb.y - 5f * u), Size(3.4f * u, 4f * u))
-        for (j in 0 until 3) drawRect(sillar, Offset(cb.x - 1.7f * u + j * 1.25f * u, cb.y - 6.2f * u), Size(0.9f * u, 1.2f * u))
-        drawRect(m(NEGRO, 0.55f), Offset(cb.x - 0.5f * u, cb.y - 2.4f * u), Size(1f * u, 1.4f * u))
-
-        // Arriba a la derecha, dos estandartes: el de la cruz y el baucent.
-        listOf(Triple(w - 8f * u, 1f, false), Triple(w - 12f * u, -1f, true)).forEach { (px, sg, bau) ->
-            val base = Offset(px, 8.8f * u)
-            drawOval(m(HIERRO, 0.6f), Offset(base.x - 1.4f * u, base.y - 0.6f * u), Size(2.8f * u, 1.2f * u))
-            drawLine(m(MADERA_OSC, 0.7f), base, Offset(base.x, 1.4f * u), 0.5f * u)
-            val bandera = Rect(minOf(base.x, base.x + sg * 4f * u), 1.6f * u, maxOf(base.x, base.x + sg * 4f * u), 4.6f * u)
-            drawRect(m(BLANCO, 0.8f), bandera.topLeft, bandera.size)
-            if (bau) drawRect(m(NEGRO, 0.65f), bandera.topLeft, Size(bandera.width, bandera.height * 0.45f))
-            else drawPath(cruzPatada(bandera.center, 1.2f * u, 0.15f, 0.42f), s(e.acento, 0.75f))
-            drawRect(m(HIERRO, 0.5f), bandera.topLeft, bandera.size, style = Stroke(0.25f * u))
+        // El pergamino del mapa, con su filete negro y rojo y un clavo forjado en cada esquina; el campo es el nicho.
+        val perg = n.crece(2.6f * u)
+        val colorPerg = nicho(e, oscuro, LINO)
+        drawRect(Color.Black.copy(alpha = 0.4f), Offset(perg.left + 0.7f * u, perg.top + 1f * u), perg.size)
+        drawRect(colorPerg, perg.topLeft, perg.size)
+        drawRect(t(ARENA, oscuro, 0.3f).copy(alpha = 0.6f), perg.topLeft, perg.size, style = Stroke(0.7f * u))
+        drawRect(t(NEGRO, oscuro, 0.1f), n.crece(1.5f * u).topLeft, n.crece(1.5f * u).size, style = Stroke(0.4f * u))
+        drawRect(t(ROJO, oscuro, 0.25f), n.crece(0.9f * u).topLeft, n.crece(0.9f * u).size, style = Stroke(0.3f * u))
+        drawRect(colorPerg, n.topLeft, n.size)
+        listOf(perg.topLeft, Offset(perg.right, perg.top), Offset(perg.left, perg.bottom), perg.bottomRight).forEach { c ->
+            clavoCuadrado(c + Offset(if (c.x < w / 2) 1.1f * u else -1.1f * u, if (c.y < h / 2) 1.1f * u else -1.1f * u), 0.9f * u, oscuro)
         }
-
-        // Abajo, la espada tendida y unos besantes de oro.
-        val y = h - 5.2f * u
-        val x0 = 7f * u; val largo = minOf(w * 0.4f, 70f * u)
-        val guarda = x0 + largo * 0.74f
-        val filo = Path().apply { moveTo(x0, y); lineTo(x0 + 2f * u, y - 0.8f * u); lineTo(guarda, y - 0.8f * u); lineTo(guarda, y + 0.8f * u); lineTo(x0 + 2f * u, y + 0.8f * u); close() }
-        drawPath(filo, m(HIERRO_LUZ, 0.8f))
-        drawPath(filo, m(HIERRO, 0.7f), style = Stroke(0.35f * u))
-        drawLine(m(HIERRO, 0.5f), Offset(x0 + 3f * u, y), Offset(guarda - 1f * u, y), 0.35f * u)
-        drawLine(m(HIERRO, 0.75f), Offset(guarda, y - 2.4f * u), Offset(guarda, y + 2.4f * u), 0.9f * u, StrokeCap.Round)
-        drawLine(m(MADERA_OSC, 0.75f), Offset(guarda, y), Offset(x0 + largo * 0.94f, y), 1f * u)
-        drawCircle(m(HIERRO, 0.75f), 1.1f * u, Offset(x0 + largo * 0.96f, y))
-        listOf(Offset(w - 9f * u, h - 6.2f * u), Offset(w - 12f * u, h - 4.4f * u), Offset(w - 7.4f * u, h - 3.6f * u)).forEach { o ->
-            drawCircle(m(ORO, 0.75f), 1.5f * u, o)
-            drawCircle(m(MADERA_OSC, 0.45f), 1.5f * u, o, style = Stroke(0.3f * u))
+        // Arriba: los rollos de cartas atados con cordón rojo, la matriz del sello y los besantes de oro.
+        val ys = (campo.top + perg.top) / 2; val alto = perg.top - campo.top
+        listOf(Triple(w * 0.15f, w * 0.36f, 0f), Triple(w * 0.19f, w * 0.41f, 1f)).forEach { (a, z, k) ->
+            val r = Rect(a, ys - alto * 0.3f + k * alto * 0.12f - alto * 0.06f, z, ys + alto * 0.06f + k * alto * 0.12f)
+            drawRoundRect(Color.Black.copy(alpha = 0.3f), Offset(r.left + 0.5f * u, r.top + 0.7f * u), r.size, CornerRadius(r.height / 2))
+            drawRoundRect(Brush.verticalGradient(listOf(t(mezcla(LINO, ARENA, 0.5f), oscuro, 0.35f), t(LINO, oscuro, 0.35f), t(ARENA, oscuro, 0.35f)), r.top, r.bottom), r.topLeft, r.size, CornerRadius(r.height / 2))
+            drawOval(t(mezcla(ARENA, JUNTA, 0.3f), oscuro, 0.35f), Offset(r.right - r.height * 0.6f, r.top), Size(r.height * 0.6f, r.height))
+            drawCircle(t(JUNTA, oscuro, 0.3f), r.height * 0.12f, Offset(r.right - r.height * 0.3f, r.center.y))
+            val cx = r.left + r.width * (0.45f + 0.1f * k)
+            drawRect(t(ROJO, oscuro, 0.25f), Offset(cx, r.top), Size(0.7f * u, r.height))
+            drawLine(t(ROJO, oscuro, 0.25f), Offset(cx + 0.35f * u, r.bottom), Offset(cx + 1.6f * u, r.bottom + 1.2f * u), 0.4f * u, StrokeCap.Round)
         }
+        val sello = Offset(w * 0.5f, ys)
+        val rs = minOf(alto * 0.32f, 2.4f * u)
+        drawCircle(Color.Black.copy(alpha = 0.3f), rs, sello + Offset(0.5f * u, 0.7f * u))
+        drawCircle(t(LATON, oscuro, 0.25f), rs, sello)
+        drawCircle(t(mezcla(LATON, Color.Black, 0.35f), oscuro, 0.25f), rs * 0.78f, sello, style = Stroke(0.3f * u))
+        drawPath(cruzPatada(sello, rs * 0.55f), t(mezcla(LATON, Color.Black, 0.35f), oscuro, 0.25f))
+        listOf(Offset(0.62f, -0.15f), Offset(0.655f, 0.12f), Offset(0.69f, -0.1f), Offset(0.66f, -0.02f), Offset(0.72f, 0.14f)).forEachIndexed { i, p ->
+            val c = Offset(w * p.x, ys + alto * p.y); val rb = minOf(alto * 0.22f, 1.7f * u)
+            drawCircle(Color.Black.copy(alpha = 0.3f), rb, c + Offset(0.3f * u, 0.5f * u))
+            drawCircle(t(ORO, oscuro, 0.2f), rb, c)
+            drawCircle(t(mezcla(ORO, Color.Black, 0.3f), oscuro, 0.2f), rb * 0.75f, c, style = Stroke(0.2f * u))
+            if (i % 2 == 0) drawPath(cruzPatada(c, rb * 0.45f), t(mezcla(ORO, Color.Black, 0.3f), oscuro, 0.2f))
+            drawCircle(t(ORO_LUZ, oscuro, 0.2f), rb * 0.25f, c - Offset(rb * 0.35f, rb * 0.35f))
+        }
+        // A la izquierda: la lucerna encendida, el tintero y la daga.
+        val xl = (campo.left + 3.6f * u + perg.left) / 2
+        val anchoL = perg.left - campo.left - 3.6f * u
+        val lu = Offset(xl, h * 0.32f); val rl = minOf(2.6f * u, anchoL * 0.4f)
+        drawOval(Color.Black.copy(alpha = 0.35f), Offset(lu.x - rl + 0.5f * u, lu.y - rl * 0.8f + 0.7f * u), Size(rl * 2, rl * 1.6f))
+        drawPath(Path().apply { moveTo(lu.x - rl * 0.5f, lu.y - rl * 0.5f); lineTo(lu.x, lu.y - rl * 1.9f); lineTo(lu.x + rl * 0.5f, lu.y - rl * 0.5f); close() }, t(LATON, oscuro, 0.25f))
+        drawOval(t(LATON, oscuro, 0.25f), Offset(lu.x - rl, lu.y - rl * 0.8f), Size(rl * 2, rl * 1.6f))
+        drawOval(t(mezcla(LATON, Color.Black, 0.45f), oscuro, 0.25f), Offset(lu.x - rl * 0.4f, lu.y - rl * 0.3f), Size(rl * 0.8f, rl * 0.6f))
+        drawArc(t(mezcla(LATON, Color.Black, 0.3f), oscuro, 0.25f), 30f, 120f, false, Offset(lu.x - rl * 0.9f, lu.y + rl * 0.2f), Size(rl * 1.8f, rl * 1.2f), style = Stroke(0.4f * u))
+        llama(Offset(lu.x, lu.y - rl * 1.8f), rl * 1.1f, oscuro)
+        val tin = Offset(xl, h * 0.54f); val rt = minOf(2.2f * u, anchoL * 0.35f)
+        drawCircle(Color.Black.copy(alpha = 0.35f), rt, tin + Offset(0.5f * u, 0.7f * u))
+        drawCircle(t(Color(0xFF3B3633), oscuro, 0.2f), rt, tin)
+        drawCircle(t(HIERRO_LUZ, oscuro, 0.2f), rt, tin, style = Stroke(0.35f * u))
+        drawCircle(Color.Black, rt * 0.5f, tin)
+        drawCircle(Color.White.copy(alpha = 0.3f), rt * 0.2f, tin - Offset(rt * 0.4f, rt * 0.4f))
+        espada(Offset(xl, h * 0.64f), Offset(xl, h * 0.82f), minOf(1f * u, anchoL * 0.16f), oscuro, u)
+        // A la derecha: el astrolabio de latón y dos torres de ajedrez, blanca y negra.
+        val xr = (perg.right + campo.right - 3.6f * u) / 2
+        val anchoR = campo.right - 3.6f * u - perg.right
+        val as0 = Offset(xr, h * 0.36f); val ra = minOf(3.4f * u, anchoR * 0.42f)
+        drawCircle(Color.Black.copy(alpha = 0.35f), ra, as0 + Offset(0.6f * u, 0.8f * u))
+        drawCircle(t(LATON, oscuro, 0.25f), ra * 0.25f, as0 - Offset(0f, ra * 1.12f), style = Stroke(0.4f * u))
+        drawCircle(t(LATON, oscuro, 0.25f), ra, as0)
+        drawCircle(t(mezcla(LATON, Color.Black, 0.35f), oscuro, 0.25f), ra * 0.82f, as0, style = Stroke(0.3f * u))
+        for (k in 0 until 12) { val a = k * Math.PI / 6; drawLine(t(mezcla(LATON, Color.Black, 0.35f), oscuro, 0.25f), as0 + Offset(cos(a).toFloat(), sin(a).toFloat()) * (ra * 0.82f), as0 + Offset(cos(a).toFloat(), sin(a).toFloat()) * ra, 0.2f * u) }
+        drawCircle(t(mezcla(LATON, Color.Black, 0.35f), oscuro, 0.25f), ra * 0.45f, as0 + Offset(0f, -ra * 0.15f), style = Stroke(0.25f * u))
+        drawLine(t(mezcla(LATON, Color.Black, 0.45f), oscuro, 0.25f), as0 - Offset(ra * 0.8f, -ra * 0.3f), as0 + Offset(ra * 0.8f, -ra * 0.3f), 0.5f * u)
+        drawCircle(t(HIERRO, oscuro, 0.2f), 0.4f * u, as0)
+        listOf(Pair(h * 0.6f, true), Pair(h * 0.72f, false)).forEach { (y, blanca) ->
+            val c = Offset(xr, y); val rr = minOf(2f * u, anchoR * 0.3f)
+            val col = if (blanca) mezcla(BLANCO, ARENA, 0.25f) else NEGRO
+            drawCircle(Color.Black.copy(alpha = 0.35f), rr * 1.2f, c + Offset(0.5f * u, 0.7f * u))
+            drawCircle(t(mezcla(col, Color.Black, 0.2f), oscuro, 0.35f), rr * 1.2f, c)
+            drawCircle(t(col, oscuro, 0.35f), rr, c)
+            for (k in 0 until 4) { val a = k * Math.PI / 2 + Math.PI / 4; drawRect(t(col, oscuro, 0.35f), Offset(c.x + cos(a).toFloat() * rr - rr * 0.25f, c.y + sin(a).toFloat() * rr - rr * 0.25f), Size(rr * 0.5f, rr * 0.5f)) }
+            drawCircle(t(mezcla(col, Color.Black, 0.35f), oscuro, 0.35f), rr * 0.5f, c)
+            drawCircle(Color.White.copy(alpha = if (blanca) 0.4f else 0.15f), rr * 0.2f, c - Offset(rr * 0.4f, rr * 0.4f))
+        }
+        // Abajo, la espada tendida a lo largo del tablero.
+        val ye = (perg.bottom + campo.bottom) / 2
+        val ae = minOf(1.6f * u, (campo.bottom - perg.bottom) * 0.2f)
+        espada(Offset(w * 0.22f, ye), Offset(w * 0.8f, ye), ae, oscuro, u)
     }
 
     // ---------------------------------------------------------------- Otras vidas
 
     override fun DrawScope.muebleOtrasVidas(e: EstadoMueble, oscuro: Boolean) {
-        val w = size.width; val h = size.height; val u = u()
-        fun m(c: Color, k: Float) = v(e.fondo, c, k, oscuro)
-        fun s(c: Color, k: Float) = mez(e.fondo, c, k)
-        val rnd = Random(e.semilla.toLong())
-        val (centros, paso) = centrosMedallas()
-        val nw = paso * 0.8f
-        val anillo = 3f * u
-        val k = 0.56f
-        val cornisa = 10f * u; val repisa = 82f * u; val zocalo = 89f * u
-        // El arranque, lo bastante abajo para que el trasdós no se meta en la cornisa (la flecha del arco es ≈ 0.557 × la luz).
-        val ys = maxOf(34f * u, cornisa + 1f * u + (nw + 2 * anillo) * 0.557f)
-
-        // El muro de sillería.
-        sillares(Rect(0f, cornisa, w, zocalo), 11f * u, 22f * u, m(SILLAR, 0.28f), m(SILLAR_JUNTA, 0.32f), rnd, u)
-
-        // Cada hornacina: las dovelas con su clave, el fondo hundido y la repisa.
-        centros.forEach { cx ->
-            val xL = cx - nw / 2; val xR = cx + nw / 2
-            drawPath(hueco(xL - anillo, xR + anillo, ys, repisa, k), m(SILLAR_LUZ, 0.5f))
-            val forma = hueco(xL, xR, ys, repisa, k)
-            drawPath(forma, mez(e.fondo, n(NEGRO, oscuro), if (oscuro) 0.25f else 0.06f))
-            clipPath(forma) {
-                drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = if (oscuro) 0.3f else 0.12f), Color.Transparent), cornisa, ys), Offset(xL, cornisa), Size(nw, ys - cornisa))
-                drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = if (oscuro) 0.2f else 0.08f), Color.Transparent), xL, xL + 3f * u), Offset(xL, cornisa), Size(3f * u, repisa - cornisa))
+        val w = size.width; val h = size.height; val u = size.minDimension / 100f
+        val n = caja(area(MuebleVida.OTRAS_VIDAS))
+        // El muro del adarve, entero, y el cielo entre las almenas.
+        val adarve = h * 0.11f
+        drawRect(if (oscuro) mezcla(e.fondo, CIELO_NOCHE, 0.7f) else mezcla(e.fondo, CIELO, 0.6f), Offset.Zero, Size(w, adarve))
+        if (oscuro) listOf(0.13f to 0.3f, 0.47f to 0.18f, 0.81f to 0.4f).forEach { (fx, fy) -> drawCircle(Color(0xFFF2EBD8).copy(alpha = 0.7f), 0.35f * u, Offset(w * fx, adarve * fy)) }
+        sillares(Rect(0f, adarve, w, h * 0.93f), 4.6f * u, PIEDRA_LUZ, PIEDRA_OSC, 5, oscuro, u)
+        val merlon = 7.5f * u; val vano = 4.5f * u
+        val nm = ((w + vano) / (merlon + vano)).toInt()
+        val x0 = (w - (nm * merlon + (nm - 1) * vano)) / 2
+        for (k in 0 until nm) {
+            val r = Rect(x0 + k * (merlon + vano), 0.8f * u, x0 + k * (merlon + vano) + merlon, adarve)
+            drawRect(t(JUNTA, oscuro), r.topLeft, r.size)
+            listOf(0f, 0.5f).forEachIndexed { j, f ->
+                val q = Rect(r.left + 0.35f * u, r.top + r.height * f + 0.35f * u, r.right - 0.35f * u, r.top + r.height * (f + 0.5f) - 0.35f * u)
+                drawRect(t(mezcla(PIEDRA, PIEDRA_LUZ, 0.4f + 0.5f * azar(40 + k, j)), oscuro), q.topLeft, q.size)
             }
-            val dentro = arco(xL, xR, ys, k); val fuera = arco(xL - anillo, xR + anillo, ys, k)
-            val junta = m(SILLAR_JUNTA, 0.55f)
-            for (i in 2 until dentro.size - 1 step 2) drawLine(junta, dentro[i], fuera[i], 0.45f * u)
-            val mi = dentro.size / 2
-            drawPath(Path().apply {
-                moveTo(dentro[mi - 1].x, dentro[mi - 1].y); lineTo(fuera[mi - 1].x, fuera[mi - 1].y - 0.6f * u)
-                lineTo(fuera[mi + 1].x, fuera[mi + 1].y - 0.6f * u); lineTo(dentro[mi + 1].x, dentro[mi + 1].y); close()
-            }, m(SILLAR, 0.6f))
-            drawPath(hueco(xL - anillo, xR + anillo, ys, repisa, k), junta, style = Stroke(0.5f * u))
-            drawPath(forma, junta, style = Stroke(0.5f * u))
-            // La repisa de piedra que sobresale, con su sombra.
-            drawRect(Color.Black.copy(alpha = if (oscuro) 0.3f else 0.12f), Offset(xL - 2f * u, repisa + 2.6f * u), Size(nw + 4f * u, 1.2f * u))
-            drawRect(m(SILLAR_LUZ, 0.62f), Offset(xL - 2f * u, repisa), Size(nw + 4f * u, 2.6f * u))
-            drawLine(junta, Offset(xL - 2f * u, repisa + 2.6f * u), Offset(xR + 2f * u, repisa + 2.6f * u), 0.5f * u)
+            drawRect(t(PIEDRA_LUZ, oscuro), Offset(r.left - 0.4f * u, r.top), Size(r.width + 0.8f * u, 1f * u))
+            drawRect(Color.Black.copy(alpha = 0.2f), Offset(r.right - 0.8f * u, r.top + 1f * u), Size(0.8f * u, r.height - 1f * u))
+            if (k % 2 == 1) drawRect(t(NEGRO, oscuro, 0.1f), Offset(r.center.x - 0.4f * u, r.top + r.height * 0.3f), Size(0.8f * u, r.height * 0.5f))
         }
-
-        // La cornisa, con una cruz patada sobre cada pilar.
-        drawRect(m(SILLAR_LUZ, 0.5f), Offset.Zero, Size(w, cornisa))
-        drawLine(m(SILLAR_JUNTA, 0.55f), Offset(0f, cornisa), Offset(w, cornisa), 0.6f * u)
-        drawLine(m(SILLAR_JUNTA, 0.35f), Offset(0f, 1.4f * u), Offset(w, 1.4f * u), 0.4f * u)
-        val pilares = mutableListOf(centros.first() - paso / 2)
-        centros.zipWithNext().forEach { (a, b) -> pilares += (a + b) / 2 }
-        pilares += centros.last() + paso / 2
-        val rc = minOf(3f * u, cornisa * 0.32f)
-        pilares.forEach { x -> if (x > rc && x < w - rc) drawPath(cruzPatada(Offset(x, cornisa * 0.56f), rc, 0.14f, 0.42f), s(e.acento, 0.6f)) }
-
-        // El zócalo de almagra con su línea de cal.
-        drawRect(m(ALMAGRA, 0.32f), Offset(0f, zocalo), Size(w, h - zocalo))
-        drawLine(m(BLANCO, 0.7f), Offset(0f, zocalo), Offset(w, zocalo), 0.8f * u)
+        // La cornisa de piedra, con su sombra, y el friso de escudos sobre las hornacinas.
+        val cor = Rect(0f, adarve, w, adarve + 2.4f * u)
+        drawRect(t(PIEDRA_LUZ, oscuro), cor.topLeft, cor.size)
+        drawRect(Color.White.copy(alpha = if (oscuro) 0.05f else 0.25f), cor.topLeft, Size(w, 0.4f * u))
+        drawRect(Color.Black.copy(alpha = 0.35f), Offset(0f, cor.bottom), Size(w, 0.9f * u))
+        val col = n.width / 5f
+        val ph = 1.7f * u
+        for (i in 0 until 5) {
+            val cx = n.left + col * (i + 0.5f)
+            val ey = (cor.bottom + n.top) / 2
+            val eh = minOf((n.top - cor.bottom) * 0.82f, 9f * u)
+            blason(Offset(cx, ey), eh * 0.8f, eh, if (i % 2 == 0) 0 else if (i == 1) 1 else 2, oscuro, u)
+        }
+        // Las cinco hornacinas de arco apuntado: el anillo de dovelas y el fondo encalado (el nicho).
+        val cal = nicho(e, oscuro, if (oscuro) PIEDRA_OSC else LINO)
+        for (i in 0 until 5) {
+            val r = Rect(n.left + col * i + ph, n.top + 1.8f * u, n.left + col * (i + 1) - ph, n.bottom)
+            val fl = r.width * 0.55f
+            val ext = apuntado(r.crece(1.6f * u), fl + 1.6f * u)
+            val int = apuntado(r, fl)
+            drawPath(ext, t(PIEDRA_LUZ, oscuro))
+            clipPath(ext) {
+                val centro = Offset(r.center.x, r.top + fl)
+                for (k in 0..8) {
+                    val a = Math.toRadians(180.0 + k * 22.5)
+                    drawLine(t(JUNTA, oscuro), centro, centro + Offset(cos(a).toFloat(), sin(a).toFloat()) * (r.width * 1.5f), 0.35f * u)
+                }
+                var y = r.top + fl + 3.6f * u
+                while (y < r.bottom) { drawLine(t(JUNTA, oscuro), Offset(r.left - 2f * u, y), Offset(r.right + 2f * u, y), 0.35f * u); y += 3.6f * u }
+            }
+            drawPath(ext, Color.Black.copy(alpha = 0.25f), style = Stroke(0.35f * u))
+            drawPath(int, cal)
+            clipPath(int) {
+                drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = if (oscuro) 0.3f else 0.12f), Color.Transparent), r.top, r.top + fl * 1.3f), r.topLeft, r.size)
+                drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = if (oscuro) 0.22f else 0.1f), Color.Transparent), r.left, r.left + 3f * u), r.topLeft, r.size)
+            }
+            drawPath(int, Color.Black.copy(alpha = 0.3f), style = Stroke(0.4f * u))
+        }
+        // La repisa, el zócalo de almagra y el piso ajedrezado.
+        val repisa = Rect(0f, n.bottom, w, n.bottom + 2f * u)
+        drawRect(t(PIEDRA_LUZ, oscuro), repisa.topLeft, repisa.size)
+        drawRect(Color.White.copy(alpha = if (oscuro) 0.05f else 0.3f), repisa.topLeft, Size(w, 0.4f * u))
+        drawRect(Color.Black.copy(alpha = 0.35f), Offset(0f, repisa.bottom), Size(w, 0.9f * u))
+        val zoc = Rect(0f, repisa.bottom + 0.9f * u, w, h * 0.93f)
+        drawRect(t(ALMAGRA, oscuro, 0.45f), zoc.topLeft, zoc.size)
+        drawRect(t(BLANCO, oscuro, 0.4f), Offset(0f, zoc.top + 1f * u), Size(w, 0.4f * u))
+        drawRect(t(BLANCO, oscuro, 0.4f), Offset(0f, zoc.bottom - 1.4f * u), Size(w, 0.4f * u))
+        ajedrez(Rect(0f, h * 0.93f, w, h), h * 0.07f / 1.5f, oscuro)
     }
 
     // ---------------------------------------------------------------- Íconos de mapa
 
     override fun DrawScope.iconoMapa(id: String, e: EstadoIcono, oscuro: Boolean) {
-        val c = Offset(size.width / 2, size.height / 2)
-        val s = size.height * 0.4f
-        val g = s * 0.07f
+        val w = size.width; val h = size.height; val u = size.minDimension / 108f
+        val c = Offset(w / 2, h / 2)
+        val piedra = t(Color(0xFFD8CBAE), oscuro, 0.3f); val sombra = t(Color(0xFFAE9F80), oscuro, 0.3f); val linea = t(Color(0xFF4E4536), oscuro, 0.25f)
         when (id) {
             "unesco" -> {
-                // El castillo de frontera: la torre del homenaje con su estandarte, dos torres, los lienzos y la puerta.
-                val suelo = c.y + s * 0.9f
-                fun almenas(x0: Float, x1: Float, y: Float, n: Int, ancho: Float) {
-                    for (j in 0 until n) {
-                        val x = if (n == 1) (x0 + x1) / 2 - ancho / 2 else x0 + (x1 - x0 - ancho) * j / (n - 1)
-                        drawRect(e.c1, Offset(x, y - s * 0.17f), Size(ancho, s * 0.17f))
-                    }
+                // El castillo de frontera: dos torres almenadas, el muro con su puerta y el estandarte de la cruz.
+                val suelo = c.y + 40 * u
+                drawOval(t(ARENA, oscuro, 0.4f), Offset(c.x - 50 * u, suelo - 4 * u), Size(100 * u, 8 * u))
+                fun almenas(r: Rect) {
+                    val m = r.width / 5
+                    for (k in 0 until 3) drawRect(piedra, Offset(r.left + k * 2 * m, r.top - 5 * u), Size(m, 5 * u))
+                    for (k in 0 until 3) drawRect(linea, Offset(r.left + k * 2 * m, r.top - 5 * u), Size(m, 5 * u), style = Stroke(0.9f * u))
                 }
-                listOf(-1f, 1f).forEach { sg ->
-                    val t0 = c.x + sg * s * 0.82f; val t1 = c.x + sg * s * 1.32f
-                    val l = minOf(t0, t1); val r = maxOf(t0, t1)
-                    drawRect(e.c1, Offset(l, c.y - s * 0.3f), Size(r - l, suelo - (c.y - s * 0.3f)))
-                    almenas(l, r, c.y - s * 0.3f, 2, s * 0.16f)
-                    drawRect(e.fondo, Offset((l + r) / 2 - s * 0.03f, c.y), Size(s * 0.06f, s * 0.24f))
-                    val m0 = c.x + sg * s * 0.42f; val m1 = c.x + sg * s * 0.82f
-                    val ml = minOf(m0, m1); val mr = maxOf(m0, m1)
-                    drawRect(e.c1, Offset(ml, c.y + s * 0.08f), Size(mr - ml, suelo - (c.y + s * 0.08f)))
-                    almenas(ml, mr, c.y + s * 0.08f, 1, s * 0.14f)
+                val muro = Rect(c.x - 24 * u, c.y - 6 * u, c.x + 24 * u, suelo)
+                drawRect(piedra, muro.topLeft, muro.size); almenas(muro)
+                drawRect(linea, muro.topLeft, muro.size, style = Stroke(1.1f * u))
+                listOf(-1f, 1f).forEach { s ->
+                    val tr = Rect(c.x + s * 30 * u - 9 * u, c.y - 22 * u, c.x + s * 30 * u + 9 * u, suelo)
+                    drawRect(piedra, tr.topLeft, tr.size)
+                    drawRect(sombra, Offset(if (s > 0) tr.right - 5 * u else tr.left, tr.top), Size(5 * u, tr.height))
+                    almenas(tr)
+                    drawRect(linea, tr.topLeft, tr.size, style = Stroke(1.1f * u))
+                    drawRect(t(NEGRO, oscuro, 0.1f), Offset(tr.center.x - 1.2f * u, tr.top + 8 * u), Size(2.4f * u, 9 * u))
+                    var y = tr.top + 6 * u
+                    while (y < tr.bottom - 2 * u) { drawLine(linea.copy(alpha = 0.35f), Offset(tr.left, y), Offset(tr.right, y), 0.5f * u); y += 6 * u }
                 }
-                drawRect(e.c1, Offset(c.x - s * 0.42f, c.y - s * 0.58f), Size(s * 0.84f, suelo - (c.y - s * 0.58f)))
-                almenas(c.x - s * 0.42f, c.x + s * 0.42f, c.y - s * 0.58f, 3, s * 0.2f)
-                drawPath(hueco(c.x - s * 0.17f, c.x + s * 0.17f, c.y + s * 0.55f, suelo, 0.5f), e.fondo)
-                drawPath(cruzPatada(Offset(c.x, c.y - s * 0.2f), s * 0.2f, 0.14f, 0.42f), e.fondo)
-                drawLine(e.c2, Offset(c.x, c.y - s * 0.75f), Offset(c.x, c.y - s * 1.02f), g, StrokeCap.Round)
-                drawPath(Path().apply { moveTo(c.x, c.y - s * 1.02f); lineTo(c.x + s * 0.4f, c.y - s * 0.94f); lineTo(c.x, c.y - s * 0.84f); close() }, e.c2)
-                drawLine(e.c2, Offset(c.x - s * 1.6f, suelo), Offset(c.x + s * 1.6f, suelo), g * 1.3f, StrokeCap.Round)
+                val pu = Rect(c.x - 7 * u, c.y + 14 * u, c.x + 7 * u, suelo)
+                drawPath(apuntado(pu, 8 * u), t(Color(0xFF2A221A), oscuro, 0.1f))
+                drawLine(t(HIERRO_LUZ, oscuro, 0.2f), Offset(pu.left + 3 * u, pu.top + 8 * u), Offset(pu.left + 3 * u, pu.bottom), 0.6f * u)
+                drawLine(t(HIERRO_LUZ, oscuro, 0.2f), Offset(pu.right - 3 * u, pu.top + 8 * u), Offset(pu.right - 3 * u, pu.bottom), 0.6f * u)
+                // El estandarte blanco de la cruz en la torre de la derecha, con el acento.
+                val mx = c.x + 30 * u
+                drawLine(linea, Offset(mx, c.y - 27 * u), Offset(mx, c.y - 46 * u), 1.1f * u)
+                val ban = Path().apply { moveTo(mx, c.y - 46 * u); lineTo(mx + 18 * u, c.y - 43 * u); lineTo(mx + 14 * u, c.y - 39.5f * u); lineTo(mx + 18 * u, c.y - 36 * u); lineTo(mx, c.y - 34 * u); close() }
+                drawPath(ban, t(BLANCO, oscuro, 0.2f))
+                drawPath(ban, linea, style = Stroke(0.6f * u))
+                drawPath(cruzPatada(Offset(mx + 6.5f * u, c.y - 40 * u), 4.2f * u), t(e.c1, oscuro, 0.1f))
+                blason(Offset(c.x, c.y + 3 * u), 10 * u, 12 * u, 0, oscuro, u)
             }
             "rascar" -> {
-                // Un pergamino con una franja raspada y la espada que raspa con la punta.
-                val hoja = Rect(c.x - s * 1.5f, c.y - s * 0.82f, c.x + s * 1.0f, c.y + s * 0.82f)
-                drawRect(e.c2.copy(alpha = 0.3f), hoja.topLeft, hoja.size)
-                clipRect(hoja.left, hoja.top, hoja.right, hoja.bottom) {
-                    val raspa = Path().apply {
-                        moveTo(c.x - s * 1.2f, c.y - s * 0.35f)
-                        var x = c.x - s * 1.2f; var arriba = false; var k = 0
-                        while (x < c.x + s * 0.2f && k < 20) { x += s * 0.22f; lineTo(x, if (arriba) c.y - s * 0.42f else c.y + s * 0.4f); arriba = !arriba; k++ }
-                    }
-                    drawPath(raspa, e.c1, style = Stroke(s * 0.2f, cap = StrokeCap.Round))
+                // El mapa de la costa con una franja raspada, y el besante de oro que la raspa.
+                val r = Rect(c.x - 52 * u, c.y - 34 * u, c.x + 30 * u, c.y + 36 * u)
+                translate(1.5f * u, 2f * u) { drawRect(Color.Black.copy(alpha = 0.25f), r.topLeft, r.size) }
+                drawRect(t(LINO, oscuro, 0.3f), r.topLeft, r.size)
+                drawRect(t(ARENA, oscuro, 0.3f), r.topLeft, r.size, style = Stroke(1.4f * u))
+                drawRect(t(NEGRO, oscuro, 0.1f), r.crece(-4 * u).topLeft, r.crece(-4 * u).size, style = Stroke(0.8f * u))
+                val costa = Path().apply { moveTo(r.left + 8 * u, r.bottom - 20 * u); cubicTo(r.left + 24 * u, r.bottom - 34 * u, r.left + 34 * u, r.bottom - 14 * u, r.left + 48 * u, r.bottom - 26 * u); cubicTo(r.left + 60 * u, r.bottom - 36 * u, r.left + 66 * u, r.bottom - 18 * u, r.right - 8 * u, r.bottom - 22 * u) }
+                drawPath(costa, t(TINTA, oscuro, 0.1f).copy(alpha = 0.55f), style = Stroke(1f * u))
+                val raspa = Rect(r.left + 10 * u, r.top + 9 * u, r.right - 14 * u, r.top + 30 * u)
+                clipRect(raspa.left, raspa.top, raspa.right, raspa.bottom) {
+                    drawRect(t(e.c1, oscuro, 0.15f), raspa.topLeft, raspa.size)
+                    drawOval(t(e.c2, oscuro, 0.15f), Offset(raspa.left + 18 * u, raspa.top + 4 * u), Size(24 * u, 18 * u))
+                    var x = raspa.left - 10 * u
+                    while (x < raspa.right) { drawLine(Color.White.copy(alpha = 0.35f), Offset(x, raspa.bottom), Offset(x + 10 * u, raspa.top), 0.8f * u); x += 5 * u }
                 }
-                drawRect(e.c2, hoja.topLeft, hoja.size, style = Stroke(g))
-                val punta = Offset(c.x + s * 0.25f, c.y + s * 0.42f)
-                val guarda = Offset(c.x + s * 1.05f, c.y - s * 0.42f)
-                val dx = guarda.x - punta.x; val dy = guarda.y - punta.y
-                val l = sqrt(dx * dx + dy * dy).coerceAtLeast(1f)
-                val d = Offset(dx / l, dy / l); val nn = Offset(-d.y, d.x)
-                fun p(t: Float, lado: Float) = Offset(punta.x + d.x * l * t + nn.x * lado, punta.y + d.y * l * t + nn.y * lado)
-                // La hoja, con un contorno del fondo para que se despegue del pergamino.
-                val hojaEspada = Path().apply {
-                    val a = p(0f, 0f); val b = p(0.15f, s * 0.08f); val c2 = p(1f, s * 0.08f); val d2 = p(1f, -s * 0.08f); val e2 = p(0.15f, -s * 0.08f)
-                    moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(c2.x, c2.y); lineTo(d2.x, d2.y); lineTo(e2.x, e2.y); close()
-                }
-                drawPath(hojaEspada, e.fondo, style = Stroke(g * 1.6f))
-                drawPath(hojaEspada, e.c1)
-                drawLine(e.c2, p(1f, s * 0.32f), p(1f, -s * 0.32f), g * 1.6f, StrokeCap.Round)
-                drawLine(e.c1, p(1f, 0f), p(1.3f, 0f), g * 1.6f, StrokeCap.Round)
-                drawCircle(e.c2, s * 0.1f, p(1.36f, 0f))
+                drawPath(Path().apply { moveTo(raspa.right, raspa.top); lineTo(raspa.right + 4 * u, raspa.top + 3 * u); lineTo(raspa.right, raspa.top + 7 * u); lineTo(raspa.right + 3 * u, raspa.top + 12 * u); lineTo(raspa.right, raspa.bottom) }, t(ARENA, oscuro, 0.3f), style = Stroke(1f * u))
+                val mo = Offset(r.right + 6 * u, r.top + 20 * u); val rm = 15 * u
+                drawCircle(Color.Black.copy(alpha = 0.3f), rm, mo + Offset(1.5f * u, 2f * u))
+                drawCircle(t(ORO, oscuro, 0.15f), rm, mo)
+                drawCircle(t(mezcla(ORO, Color.Black, 0.3f), oscuro, 0.15f), rm * 0.8f, mo, style = Stroke(1f * u))
+                drawPath(cruzPatada(mo, rm * 0.5f), t(mezcla(ORO, Color.Black, 0.3f), oscuro, 0.15f))
+                for (k in 0 until 24) { val a = k * Math.PI / 12; drawCircle(t(mezcla(ORO, Color.Black, 0.25f), oscuro, 0.15f), 0.6f * u, mo + Offset(cos(a).toFloat(), sin(a).toFloat()) * (rm * 0.9f)) }
+                drawArc(t(ORO_LUZ, oscuro, 0.15f), 200f, 70f, false, Offset(mo.x - rm * 0.7f, mo.y - rm * 0.7f), Size(rm * 1.4f, rm * 1.4f), style = Stroke(1.4f * u))
             }
             else -> {
-                // Tus lugares: tres cruces patadas unidas por un camino de puntos.
-                val pts = listOf(Offset(c.x - s * 1.1f, c.y + s * 0.32f), Offset(c.x, c.y - s * 0.38f), Offset(c.x + s * 1.1f, c.y + s * 0.22f))
-                val camino = Path().apply {
-                    moveTo(pts[0].x, pts[0].y); quadraticTo(c.x - s * 0.6f, c.y - s * 0.45f, pts[1].x, pts[1].y)
-                    quadraticTo(c.x + s * 0.6f, c.y - s * 0.45f, pts[2].x, pts[2].y)
-                }
-                drawPath(camino, e.c2, style = Stroke(g, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.1f, g * 2.6f))))
-                pts.forEachIndexed { i, o ->
-                    val r = s * 0.42f * (1f - 0.08f * i)
-                    drawCircle(e.fondo, r * 1.05f, o)
-                    drawPath(cruzPatada(o, r, 0.15f, 0.44f), e.c1)
+                // Tus lugares: tres banderolas de la cruz clavadas en la arena, unidas por un camino.
+                drawOval(t(ARENA, oscuro, 0.35f), Offset(c.x - 66 * u, c.y + 22 * u), Size(132 * u, 18 * u))
+                val ps = listOf(Offset(c.x - 44 * u, c.y + 30 * u), Offset(c.x, c.y + 26 * u), Offset(c.x + 44 * u, c.y + 31 * u))
+                val camino = Path().apply { moveTo(ps[0].x, ps[0].y); quadraticTo(c.x - 22 * u, c.y + 38 * u, ps[1].x, ps[1].y); quadraticTo(c.x + 22 * u, c.y + 16 * u, ps[2].x, ps[2].y) }
+                drawPath(camino, t(JUNTA, oscuro, 0.2f), style = Stroke(1.2f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * u, 3 * u))))
+                listOf(e.c1, e.c2, ROJO).forEachIndexed { i, cr ->
+                    val p = ps[i]; val alto = 54 * u
+                    drawOval(Color.Black.copy(alpha = 0.25f), Offset(p.x - 4 * u, p.y - 1.5f * u), Size(8 * u, 3 * u))
+                    drawLine(t(ROBLE, oscuro, 0.2f), p, Offset(p.x, p.y - alto), 1.6f * u)
+                    drawPath(Path().apply { moveTo(p.x, p.y - alto - 4 * u); lineTo(p.x + 2 * u, p.y - alto); lineTo(p.x - 2 * u, p.y - alto); close() }, t(ACERO, oscuro, 0.2f))
+                    val y0 = p.y - alto + 1 * u
+                    val ban = Path().apply { moveTo(p.x, y0); lineTo(p.x + 22 * u, y0 + 1 * u); lineTo(p.x + 17 * u, y0 + 7 * u); lineTo(p.x + 22 * u, y0 + 13 * u); lineTo(p.x, y0 + 14 * u); close() }
+                    translate(1f * u, 1.4f * u) { drawPath(ban, Color.Black.copy(alpha = 0.2f)) }
+                    drawPath(ban, t(BLANCO, oscuro, 0.2f))
+                    drawPath(ban, linea, style = Stroke(0.6f * u))
+                    drawPath(cruzPatada(Offset(p.x + 8.5f * u, y0 + 7 * u), 5 * u), t(cr, oscuro, 0.1f))
                 }
             }
         }
@@ -431,104 +691,103 @@ internal object VidaTemplario : DisenoVida {
     // ---------------------------------------------------------------- Notas
 
     override fun DrawScope.tableroNotas(e: EstadoMueble, oscuro: Boolean) {
-        val w = size.width; val h = size.height; val u = u()
-        fun m(c: Color, k: Float) = v(e.fondo, c, k, oscuro)
-        val rnd = Random(e.semilla.toLong())
-
-        // La puerta: tablas verticales de roble con sus juntas y sus vetas.
-        val tablas = 6
-        for (k in 0 until tablas) {
-            val x0 = w * k / tablas
-            drawRect(m(mez(MADERA, MADERA_OSC, rnd.nextFloat() * 0.35f), 0.42f), Offset(x0, 0f), Size(w / tablas + 0.5f, h))
-            if (k > 0) drawLine(m(MADERA_OSC, 0.6f), Offset(x0, 0f), Offset(x0, h), 0.8f * u)
-            repeat(2) {
-                val x = x0 + w / tablas * (0.2f + 0.6f * rnd.nextFloat())
-                val amp = (0.5f + rnd.nextFloat()) * u
-                drawPath(Path().apply { moveTo(x, 0f); cubicTo(x + amp, h * 0.3f, x - amp, h * 0.7f, x + amp * 0.4f, h) }, m(MADERA_OSC, 0.22f), style = Stroke(0.4f * u))
+        val w = size.width; val h = size.height; val u = size.minDimension / 100f
+        val n = caja(area(MuebleVida.NOTAS))
+        // El muro de sillares y el poyo de piedra al pie, con la espada tendida.
+        sillares(Rect(0f, 0f, w, h), 5f * u, PIEDRA_LUZ, PIEDRA_OSC, 7, oscuro, u)
+        val poyo = Rect(0f, h * 0.935f, w, h)
+        drawRect(t(PIEDRA_LUZ, oscuro), poyo.topLeft, Size(w, 1.2f * u))
+        drawRect(t(PIEDRA, oscuro), Offset(0f, poyo.top + 1.2f * u), Size(w, poyo.height - 1.2f * u))
+        drawRect(Color.Black.copy(alpha = 0.25f), Offset(0f, poyo.top + 1.2f * u), Size(w, 0.4f * u))
+        // El marco de roble, de tablas verticales, con su sombra en el muro.
+        val marco = Rect(w * 0.022f, h * 0.105f, w * 0.978f, h * 0.925f)
+        drawRect(Color.Black.copy(alpha = 0.4f), Offset(marco.left + 0.8f * u, marco.top + 1f * u), marco.size)
+        drawRect(t(ROBLE, oscuro), marco.topLeft, marco.size)
+        vetas(marco, t(ROBLE_OSC, oscuro).copy(alpha = 0.5f), 9, 1.3f * u, vertical = true, grosor = 0.35f * u)
+        drawRect(t(ROBLE_OSC, oscuro), marco.topLeft, marco.size, style = Stroke(0.6f * u))
+        // El fondo encalado: el nicho, hundido en el marco.
+        val cal = nicho(e, oscuro, if (oscuro) PIEDRA_OSC else LINO)
+        drawRect(t(ROBLE_OSC, oscuro), n.crece(0.8f * u).topLeft, n.crece(0.8f * u).size)
+        drawRect(cal, n.topLeft, n.size)
+        clipRect(n.left, n.top, n.right, n.bottom) {
+            for (k in 0 until 9) {
+                val c = Offset(n.left + n.width * azar(91, k), n.top + n.height * azar(92, k))
+                halo(c, n.width * (0.08f + 0.1f * azar(93, k)), (if (oscuro) Color.White else PIEDRA_OSC).copy(alpha = 0.035f))
+            }
+            drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = if (oscuro) 0.35f else 0.14f), Color.Transparent), n.top, n.top + 4f * u), n.topLeft, Size(n.width, 4f * u))
+            drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = if (oscuro) 0.25f else 0.1f), Color.Transparent), n.left, n.left + 3f * u), n.topLeft, Size(3f * u, n.height))
+        }
+        // Las bisagras de punta de lanza en los travesaños de arriba y de abajo.
+        listOf((marco.top + n.top) / 2, (n.bottom + marco.bottom) / 2).forEach { y ->
+            listOf(-1f, 1f).forEach { s ->
+                val x0 = if (s < 0) marco.left else marco.right
+                val x1 = if (s < 0) w * 0.3f else w * 0.7f
+                val g = 1.3f * u
+                drawRect(Color.Black.copy(alpha = 0.3f), Offset(minOf(x0, x1), y - g / 2 + 0.5f * u), Size(abs(x1 - x0), g))
+                drawRect(t(HIERRO, oscuro, 0.25f), Offset(minOf(x0, x1), y - g / 2), Size(abs(x1 - x0), g))
+                drawPath(Path().apply { moveTo(x1, y - g * 1.3f); lineTo(x1 - s * 3.2f * u, y); lineTo(x1, y + g * 1.3f); close() }, t(HIERRO, oscuro, 0.25f))
+                drawCircle(t(HIERRO, oscuro, 0.25f), g * 0.9f, Offset(x1 + s * 0.4f * u, y))
+                listOf(0.25f, 0.55f, 0.85f).forEach { f -> remache(Offset(x0 + (x1 - x0) * f, y), 0.4f * u, oscuro) }
             }
         }
-        // Las bisagras de hierro con su punta de lanza y sus clavos.
-        val hierro = m(HIERRO, 0.7f); val clavo = m(HIERRO_LUZ, 0.75f)
-        listOf(2f * u, h - 6f * u).forEach { y ->
-            val alto = 3.4f * u; val fin = w * 0.78f
-            drawRect(hierro, Offset(0f, y), Size(fin, alto))
-            drawPath(Path().apply { moveTo(fin, y - 1f * u); lineTo(fin + 5f * u, y + alto / 2); lineTo(fin, y + alto + 1f * u); close() }, hierro)
-            drawRect(hierro, Offset(0f, y - 0.8f * u), Size(2.6f * u, alto + 1.6f * u))
-            val nc = (fin / (16f * u)).toInt().coerceIn(2, 30)
-            for (k in 0 until nc) drawCircle(clavo, 0.6f * u, Offset(fin * (k + 0.5f) / nc, y + alto / 2))
+        // El dintel de piedra con su línea de almagra, las dos lanzas cruzadas y los tres escudos.
+        val dintel = Rect(0f, h * 0.015f, w, h * 0.1f)
+        drawRect(Color.Black.copy(alpha = 0.35f), Offset(0f, dintel.bottom), Size(w, 0.8f * u))
+        drawRect(t(PIEDRA_LUZ, oscuro), dintel.topLeft, dintel.size)
+        drawRect(t(ALMAGRA, oscuro, 0.4f), Offset(0f, dintel.bottom - 1.6f * u), Size(w, 0.8f * u))
+        var dx = 7f * u; var k = 0
+        while (dx < w) { drawLine(t(JUNTA, oscuro), Offset(dx, dintel.top), Offset(dx, dintel.bottom - 1.6f * u), 0.3f * u); dx += (18f + 8f * azar(3, k)) * u; k++ }
+        val cx = w / 2
+        listOf(-1f, 1f).forEach { s ->
+            val a = Offset(cx - s * 14f * u, h * 0.135f); val b = Offset(cx + s * 12f * u, h * 0.005f)
+            drawLine(Color.Black.copy(alpha = 0.3f), a + Offset(0.5f * u, 0.7f * u), b + Offset(0.5f * u, 0.7f * u), 0.8f * u)
+            drawLine(t(ROBLE_LUZ, oscuro, 0.3f), a, b, 0.75f * u, StrokeCap.Round)
+            val d = (b - a) / (b - a).getDistance(); val nn = Offset(-d.y, d.x)
+            drawPath(Path().apply { val p0 = b + d * (2.6f * u); moveTo(p0.x, p0.y); lineTo((b + nn * (0.9f * u)).x, (b + nn * (0.9f * u)).y); lineTo((b - nn * (0.9f * u)).x, (b - nn * (0.9f * u)).y); close() }, t(ACERO, oscuro, 0.3f))
         }
-        // La aldaba, en el margen de la derecha.
-        val ca = Offset(w - 5.2f * u, h * 0.5f)
-        drawRect(hierro, Offset(ca.x - 2.4f * u, ca.y - 4.6f * u), Size(4.8f * u, 4.8f * u))
-        drawCircle(clavo, 0.5f * u, Offset(ca.x, ca.y - 2.2f * u))
-        drawCircle(hierro, 3.2f * u, Offset(ca.x, ca.y + 0.6f * u), style = Stroke(0.9f * u))
+        blason(Offset(cx, h * 0.07f), 7.5f * u, 9.2f * u, 0, oscuro, u)
+        blason(Offset(w * 0.24f, h * 0.06f), 5.4f * u, 6.6f * u, 1, oscuro, u)
+        blason(Offset(w * 0.76f, h * 0.06f), 5.4f * u, 6.6f * u, 2, oscuro, u)
+        // La espada envainada sobre el poyo.
+        espada(Offset(w * 0.32f, (poyo.top + h) / 2 + 0.4f * u), Offset(w * 0.7f, (poyo.top + h) / 2 + 0.4f * u), 0.9f * u, oscuro, u)
     }
 
     override fun DrawScope.notaTablero(e: EstadoNota, oscuro: Boolean) {
-        val r = e.rect
-        translate(r.left, r.top) {
-            val w = r.width; val h = r.height; val u = minOf(w, h) / 100f
-            val papel = if (oscuro) HOJA_OSCURA else HOJA_CLARA
-            val rnd = Random(e.indice.toLong() * 977L + 5L)
-            fun j() = (rnd.nextFloat() - 0.5f) * minOf(w, h) * 0.035f
-            val x0 = w * 0.025f; val x1 = w * 0.975f; val y0 = h * 0.03f; val y1 = h * 0.965f
-            val forma = Path().apply { moveTo(x0 + j(), y0 + j()); lineTo(x1 + j(), y0 + j()); lineTo(x1 + j(), y1 + j()); lineTo(x0 + j(), y1 + j()); close() }
-            translate(1.2f * u, 2.2f * u) { drawPath(forma, Color.Black.copy(alpha = if (oscuro) 0.45f else 0.22f)) }
-            drawPath(forma, papel)
-            clipPath(forma) {
-                drawRect(Brush.verticalGradient(listOf(Color.Transparent, MADERA.copy(alpha = if (oscuro) 0.1f else 0.07f)), h * 0.7f, h), Offset(0f, h * 0.7f), Size(w, h * 0.3f))
-            }
-            val borde = when {
-                e.fijada -> e.acento
-                oscuro -> mez(papel, CREMA, 0.3f)
-                else -> mez(papel, SILLAR_JUNTA, 0.6f)
-            }
-            drawPath(forma, borde, style = Stroke(if (e.fijada) 2f * u else 1f * u))
-
-            // El sello de lacre abajo a la derecha, con su cinta, del color del tipo.
-            val cera = when (e.tipo) {
-                "idea" -> CERA_AMARILLA
-                "pensamiento" -> CERA_VERDE
-                "proposito" -> LACRE
-                "recordatorio" -> CERA_PARDA
-                else -> LACRE
-            }
-            val cs = Offset(w * 0.9f, h * 0.88f); val rs = h * 0.075f
-            val cinta = if (oscuro) mez(ROJO, Color.White, 0.2f) else ROJO
-            drawLine(cinta, cs, Offset(cs.x - w * 0.03f, h * 0.995f), 1.4f * u)
-            drawLine(cinta, cs, Offset(cs.x + w * 0.035f, h * 0.99f), 1.4f * u)
-            val gota = sello(cs, rs)
-            drawPath(gota, cera)
-            drawPath(gota, mez(cera, Color.Black, 0.3f), style = Stroke(0.6f * u))
-            drawPath(cruzPatada(cs, rs * 0.55f, 0.15f, 0.42f), mez(cera, Color.Black, 0.35f))
-            drawCircle(Color.White.copy(alpha = 0.25f), rs * 0.25f, Offset(cs.x - rs * 0.4f, cs.y - rs * 0.4f))
-
-            if (e.fijada) {
-                // Clavada con una daga: el pomo, el puño de cuero, la cruz y la hoja que entra en la madera.
-                val x = w * 0.5f
-                val acero = if (oscuro) HIERRO_LUZ else HIERRO
-                translate(0.8f * u, 1.1f * u) {
-                    drawRect(Color.Black.copy(alpha = 0.3f), Offset(x - w * 0.11f, h * 0.112f), Size(w * 0.22f, h * 0.03f))
-                    drawRect(Color.Black.copy(alpha = 0.3f), Offset(x - w * 0.017f, h * 0.05f), Size(w * 0.034f, h * 0.1f))
-                }
-                drawPath(Path().apply { moveTo(x - w * 0.022f, h * 0.142f); lineTo(x + w * 0.022f, h * 0.142f); lineTo(x + w * 0.01f, h * 0.158f); lineTo(x - w * 0.01f, h * 0.158f); close() }, acero)
-                drawRect(Color.Black.copy(alpha = 0.5f), Offset(x - w * 0.016f, h * 0.155f), Size(w * 0.032f, h * 0.007f))
-                drawRect(MADERA_OSC, Offset(x - w * 0.017f, h * 0.05f), Size(w * 0.034f, h * 0.065f))
-                for (k in 1..3) drawLine(Color.Black.copy(alpha = 0.35f), Offset(x - w * 0.017f, h * (0.05f + 0.016f * k)), Offset(x + w * 0.017f, h * (0.056f + 0.016f * k)), 0.5f * u)
-                drawRect(acero, Offset(x - w * 0.11f, h * 0.112f), Size(w * 0.22f, h * 0.03f))
-                drawCircle(acero, h * 0.04f, Offset(x - w * 0.11f, h * 0.127f))
-                drawCircle(acero, h * 0.04f, Offset(x + w * 0.11f, h * 0.127f))
-                drawCircle(acero, h * 0.036f, Offset(x, h * 0.04f))
-                drawCircle(Color.White.copy(alpha = 0.35f), h * 0.012f, Offset(x - h * 0.01f, h * 0.03f))
-            } else {
-                // Clavada con un clavo de hierro.
-                val cl = Offset(w * 0.5f, h * 0.075f)
-                drawCircle(Color.Black.copy(alpha = 0.3f), h * 0.042f, Offset(cl.x + 0.6f * u, cl.y + 0.9f * u))
-                drawCircle(if (oscuro) HIERRO_LUZ else HIERRO, h * 0.04f, cl)
-                drawCircle(Color.White.copy(alpha = 0.35f), h * 0.014f, Offset(cl.x - h * 0.012f, cl.y - h * 0.012f))
-            }
+        val r = e.rect; val w = r.width; val h = r.height; val s = minOf(w, h) / 100f
+        // La carta: un pliego de lino blanco con sus dobleces en tercios y la sombra en la cal.
+        val hoja = Rect(r.left + w * 0.025f, r.top + h * 0.03f, r.right - w * 0.025f, r.bottom - h * 0.03f)
+        drawRect(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.28f), Offset(hoja.left + 1.2f * s, hoja.top + 1.8f * s), hoja.size)
+        val papel = if (oscuro) mezcla(LINO, NOCHE, 0.4f) else BLANCO
+        drawRect(papel, hoja.topLeft, hoja.size)
+        listOf(hoja.top + hoja.height / 3, hoja.top + hoja.height * 2 / 3).forEach { y ->
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.07f)), y - 3f * s, y), Offset(hoja.left, y - 3f * s), Size(hoja.width, 3f * s))
+            drawLine(Color.White.copy(alpha = if (oscuro) 0.08f else 0.6f), Offset(hoja.left, y + 0.4f * s), Offset(hoja.right, y + 0.4f * s), 0.7f * s)
         }
+        drawRect(mezcla(ARENA, Color.Black, if (oscuro) 0.5f else 0.1f), hoja.topLeft, hoja.size, style = Stroke(0.7f * s))
+        // El filete del baucent arriba: una raya negra y una roja.
+        drawLine(mezcla(NEGRO, NOCHE, 0f).copy(alpha = 0.55f), Offset(hoja.left + w * 0.08f, r.top + h * 0.13f), Offset(hoja.right - w * 0.08f, r.top + h * 0.13f), 0.7f * s)
+        drawLine(ROJO.copy(alpha = 0.55f), Offset(hoja.left + w * 0.08f, r.top + h * 0.145f), Offset(hoja.right - w * 0.08f, r.top + h * 0.145f), 0.5f * s)
+        // El sello de cera pendiente, con su cordón y la cruz: el color de la cera dice el tipo.
+        val cera = when (e.tipo) { "idea" -> CERA; "pensamiento" -> CERA_NEGRA; "proposito" -> CERA_VERDE; else -> CERA_AMARILLA }
+        val sc = Offset(r.center.x, r.bottom - h * 0.06f)
+        val rs = 5.6f * s
+        val ranura = hoja.bottom - h * 0.13f
+        drawLine(Color.Black.copy(alpha = 0.45f), Offset(sc.x - 3f * s, ranura), Offset(sc.x + 3f * s, ranura), 0.9f * s)
+        listOf(-1f, 1f).forEach { k -> drawLine(mezcla(ROJO, NOCHE, if (oscuro) 0.25f else 0f), Offset(sc.x + k * 1.6f * s, ranura), Offset(sc.x + k * 1.2f * s, sc.y), 0.9f * s) }
+        drawCircle(Color.Black.copy(alpha = 0.35f), rs, sc + Offset(0.7f * s, 1f * s))
+        drawCircle(cera, rs, sc)
+        drawCircle(mezcla(cera, Color.Black, 0.4f), rs * 0.78f, sc, style = Stroke(0.7f * s))
+        drawPath(cruzPatada(sc, rs * 0.52f), mezcla(cera, Color.Black, 0.4f))
+        drawCircle(Color.White.copy(alpha = 0.3f), rs * 0.22f, sc - Offset(rs * 0.42f, rs * 0.42f))
+        // Arriba: un clavo de hierro forjado o, si está fijada, una daga que atraviesa la carta.
+        if (e.fijada) {
+            val y = r.top + h * 0.065f
+            val a = Offset(r.left + w * 0.22f, y); val b = Offset(r.right - w * 0.2f, y)
+            espada(a, b, 1.6f * s, oscuro = false, u = s)
+            drawLine(Color.Black.copy(alpha = 0.35f), Offset(r.left + w * 0.52f, y - 1.2f * s), Offset(r.left + w * 0.6f, y - 1.2f * s), 0.6f * s)
+        } else clavoCuadrado(Offset(r.center.x, r.top + h * 0.07f), 2.1f * s, oscuro = false)
     }
 
-    override fun tintaNota(oscuro: Boolean): Color = if (oscuro) Color(0xFFEEE7D8) else Color(0xFF201A14)
+    /** La tinta de hierro de las cartas: el lino es blanco de día y, en la vigilia, se ve a la luz de la antorcha. */
+    override fun tintaNota(oscuro: Boolean): Color = TINTA
 }
