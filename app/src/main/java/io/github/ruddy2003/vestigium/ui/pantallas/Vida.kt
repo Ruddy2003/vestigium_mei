@@ -54,11 +54,11 @@ private fun animoEn(dias: List<String>): Double? = dias.mapNotNull { f ->
 }.takeIf { it.isNotEmpty() }?.average()
 
 /**
- * Vida: tu vida vista de lejos. La semana, el mes y el año; la cinta del día; tu gente; los mapas y lo que leíste;
- * los logros y las campañas; el dinero y las sustancias. Lo que se analiza (relaciones, herramientas) está en Análisis.
+ * Lo de «Tu vida vista desde lejos» (9 nov 2026, antes en Vida; ahora arriba de Análisis): la semana, la cinta, el mes,
+ * el año, lo acumulado, y el gasto y el ingreso del mes.
  */
 @Composable
-fun PantallaVida(nav: Nav) {
+fun VidaDesdeLejos(nav: Nav) {
     val hoy = Fechas.diaLogico()
     val lunes = Fechas.lunesDe(hoy)
     val transcurridos = (java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(lunes), Fechas.parse(hoy)) + 1).toInt()
@@ -68,40 +68,38 @@ fun PantallaVida(nav: Nav) {
     val mes = hoy.take(7)
     val diasMes = Repo.dias.keys.count { it.startsWith(mes) && Repo.dias[it]?.let { d -> d.valencia != null || d.nota.isNotBlank() } == true }
     val anio = hoy.take(4)
+    val gasto = Repo.gastos.filter { it.dia.startsWith(mes) }.sumOf { it.monto }
+    val ingreso = Repo.ingresos.filter { it.dia.startsWith(mes) }.sumOf { it.monto }
     val ir: (String) -> Unit = { if (it == "cinta") Seleccion.cinta = null; nav.ir(it) }
-    Hoja("Vida", subtitulo = "Tu vida vista de lejos: la semana, el año, tu gente, tus lugares y tus logros.", buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
-        RejillaTarjetas(listOf(
-            Tarjetita("Resumen semanal", a?.let { "%.1f".format(it) + flecha } ?: "—", "ánimo de esta semana", "semana"),
-            Tarjetita("La cinta", "${Repo.momentos.count { it.fecha == hoy && !it.privado } + Repo.tramos.count { it.fecha == hoy } + Repo.consumos.count { it.fecha == hoy && Sustancias.visible(it) }}",
-                "cosas con hora hoy", "cinta"),
-            Tarjetita("Calendario", "$diasMes / ${hoy.takeLast(2).toInt()}", "días con diario este mes", "calendario"),
-            Tarjetita("Tu año", "${Repo.dias.keys.count { it.startsWith(anio) }}", "días registrados en $anio", "anno"),
-            Tarjetita("Tu gente", "${io.github.ruddy2003.vestigium.data.Personas.menciones().size}",
-                io.github.ruddy2003.vestigium.data.Personas.pendientes().size.let { if (it > 0) "personas · $it por clasificar" else "personas que mencionas" }, "personas"),
-            Tarjetita("Constelación", "${Repo.dias.values.filter { it.fecha >= Fechas.sumar(hoy, -365) }.flatMap { Texto.personas(it.nota).map { n -> Texto.canon(n, Repo.equivalencias()) } }.toSet().size}", "personas en tu cielo este año", "constelacion"),
-            Tarjetita("Totales", "${Repo.dias.size}", "días de datos" + (Repo.dias.keys.minOrNull()?.let { " desde ${Fechas.corto(it)}" } ?: ""), "totales"),
-            Tarjetita("Mapa", "${Repo.lugares.size}", "lugares marcados", "mapa"),
-        ), ir)
-        // Lo semanal arriba; las galerías juntas y plegadas abajo (N-20).
-        Column(Modifier.padding(top = 16.dp)) { RecuadroCampanas(nav) }
-        Seccion("Dinero y sustancias") {
-            val gasto = Repo.gastos.filter { it.dia.startsWith(mes) }.sumOf { it.monto }
-            val ingreso = Repo.ingresos.filter { it.dia.startsWith(mes) }.sumOf { it.monto }
-            val semanaSus = Repo.consumos.filter { it.fecha >= Fechas.sumar(hoy, -6) && Sustancias.visible(it) }
-            RejillaTarjetas(listOfNotNull(
-                Tarjetita("Dinero", dinero(gasto), "gastado este mes" + if (ingreso > 0) " · entró ${dinero(ingreso)}" else "", "gastos"),
-                Tarjetita("Sustancias", "${semanaSus.map { it.fecha }.distinct().size}", "días con algo en 7 días", "sustancias"),
-                Tarjetita("Enfoque y siestas", horasMin(io.github.ruddy2003.vestigium.data.Enfoque.delDia(hoy).filterKeys { it != "siesta" }.values.sum()), "de enfoque hoy", "enfoque"),
-            ), ir)
-        }
-        Seccion("Galerías", "Tu año en historias, logros, mapas, obras y otras vidas.", plegable = true, plegadaPorDefecto = true) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                RecuadroTuAnio(nav)
-                RecuadroLogros(nav)
-                RecuadroMapas(nav)
-                RecuadroObras(nav)
-                RecuadroOtrasVidas(nav)
-            }
+    RejillaTarjetas(listOf(
+        Tarjetita("Resumen semanal", a?.let { "%.1f".format(it) + flecha } ?: "—", "ánimo de esta semana", "semana"),
+        Tarjetita("La cinta", "${Repo.momentos.count { it.fecha == hoy && !it.privado } + Repo.tramos.count { it.fecha == hoy } + Repo.consumos.count { it.fecha == hoy && Sustancias.visible(it) }}",
+            "cosas con hora hoy", "cinta"),
+        Tarjetita("Calendario", "$diasMes / ${hoy.takeLast(2).toInt()}", "días con diario este mes", "calendario"),
+        Tarjetita("Tu año", "${Repo.dias.keys.count { it.startsWith(anio) }}", "días registrados en $anio", "anno"),
+        Tarjetita("Gasto", dinero(gasto), "gastado este mes", "gastos"),
+        Tarjetita("Ingreso", dinero(ingreso), "entró este mes", "gastos"),
+        Tarjetita("Totales", "${Repo.dias.size}", "días de datos" + (Repo.dias.keys.minOrNull()?.let { " desde ${Fechas.corto(it)}" } ?: ""), "totales"),
+    ), ir)
+}
+
+/**
+ * Vida (9 nov 2026): las secciones especiales, cada una con su dibujo: tu gente (Social), tu año en historias, los
+ * campañas, los logros, los mapas, las obras y las otras vidas. Lo que se mira «desde lejos» (la semana, el mes, el año,
+ * el dinero) pasó a Análisis; Sustancias y Enfoque siguen en Más.
+ */
+@Composable
+fun PantallaVida(nav: Nav) {
+    Hoja("Vida", subtitulo = "Tu gente, tu año, tus logros, tus mapas, tus obras y tus otras vidas.", buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
+        Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            RecuadroSocial(nav)
+            // Lo de esta semana, arriba (N-20).
+            RecuadroCampanas(nav)
+            RecuadroTuAnio(nav)
+            RecuadroLogros(nav)
+            RecuadroMapas(nav)
+            RecuadroObras(nav)
+            RecuadroOtrasVidas(nav)
         }
     }
 }

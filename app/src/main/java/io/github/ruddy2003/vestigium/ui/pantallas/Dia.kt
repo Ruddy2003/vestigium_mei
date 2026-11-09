@@ -824,7 +824,6 @@ private fun Imagenes(fecha: String, dia: io.github.ruddy2003.vestigium.data.Dia,
     Ayuda("$camara de cámara · ${fotos.count { it.tipo == "captura" }} capturas · ${fotos.count { it.tipo == "otra" }} de otras apps", Modifier.padding(top = 6.dp))
 }
 
-@Composable
 /** La foto del día de [d]: su copia guardada en la app o, si no hay, la de la galería (esquema 22). */
 @Composable
 fun MiniaturaDe(d: io.github.ruddy2003.vestigium.data.Dia?, px: Int, modifier: Modifier) {

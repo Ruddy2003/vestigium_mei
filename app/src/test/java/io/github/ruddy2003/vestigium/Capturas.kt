@@ -1505,8 +1505,8 @@ class Capturas {
     }
     @Test fun cintaRomano() = v67(TemaId.ROMANO, false, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(navVacia) }
     @Test fun cintaCiber() = v67(TemaId.CIBER, true, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(navVacia) }
-    @Test fun constelacionGotico() = v67(TemaId.GOTICO, true, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(navVacia) }
-    @Test fun constelacionNavidad() = v67(TemaId.NAVIDAD, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(navVacia) }
+    @Test fun constelacionGotico() = v67(TemaId.GOTICO, true, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "cielo"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(navVacia) }
+    @Test fun constelacionNavidad() = v67(TemaId.NAVIDAD, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "cielo"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(navVacia) }
     @Test fun recaidasMedieval() = v67(TemaId.MEDIEVAL, false, 3600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaRecaidas(navVacia) }
     @Test fun enfoqueLaboratorio() = v67(TemaId.LABORATORIO, false, 2800) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaEnfoque(navVacia) }
     @Test fun estadoDatosOrden() = v67(TemaId.ORDEN, true, 2400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaEstadoDatos(navVacia) }
@@ -1898,8 +1898,11 @@ class Capturas {
     @Test fun l3SuplementosDistopia() = v73(TemaId.DISTOPIA, true, 2400) { datosLote3(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaSuplementos(navVacia) }
     @Test fun l3LaptopGotico() = v73(TemaId.GOTICO, false, 3600) { datosLote3(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaLaptop(navVacia) }
     @Test fun l3RedBotanico() = v73(TemaId.BOTANICO, false, 3000, { c -> c.copy(vinculos = listOf(io.github.ruddy2003.vestigium.data.Vinculo("ana", "luis", "colegas"),
-        io.github.ruddy2003.vestigium.data.Vinculo("ana", "marta", "familia"))) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaRed(navVacia) }
-    @Test fun l3RedCiber() = v73(TemaId.CIBER, true, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaRed(navVacia) }
+        io.github.ruddy2003.vestigium.data.Vinculo("ana", "marta", "familia"))) }) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "red"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(navVacia) }
+    // Social (9 nov 2026): el grafo en pantalla completa y la pantalla con Tu gente plegada.
+    @Test fun socialGrafoRomano() = v73(TemaId.ROMANO, false, 1800) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "red"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaGrafoSocial(navVacia) }
+    @Test fun socialGrafoGoticoOscuro() = v73(TemaId.GOTICO, true, 1800) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "cielo"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaGrafoSocial(navVacia) }
+    @Test fun l3RedCiber() = v73(TemaId.CIBER, true, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "red"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(navVacia) }
     @Test fun l3ExperimentosSeda() = v73(TemaId.SEDA, false, 4200) {
         val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
         Repo.experimentosEnMemoria(listOf(io.github.ruddy2003.vestigium.data.Experimento("e1", "Hora de dormir", "Estar en la cama antes de las 00:00", "valencia",
@@ -2008,7 +2011,7 @@ class Capturas {
 
     // Pantallas genéricas y gráficas.
     @Test fun temaCalendario() = porTema("calendario") { t, o, n -> v73(t, o, 3000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCalendario(navVacia) } }
-    @Test fun temaConstelacion() = porTema("constelacion") { t, o, n -> v67(t, o, 3000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(navVacia) } }
+    @Test fun temaConstelacion() = porTema("constelacion") { t, o, n -> v67(t, o, 3000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "cielo"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(navVacia) } }
     /** Las medallas de logro (los cuatro niveles y una a medias) y las de las otras vidas. */
     @Test fun temaMedalla() = porTema("medalla") { t, o, n -> captura(t, o, 1200, n) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {

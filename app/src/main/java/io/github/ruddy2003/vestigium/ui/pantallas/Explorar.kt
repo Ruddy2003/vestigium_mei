@@ -114,7 +114,9 @@ fun PantallaExplorar(nav: Nav) {
 
     Hoja("Análisis", subtitulo = "Qué se mueve con qué: relaciones, herramientas y experimentos. Para modelos completos, exporta y abre vestigium.R.",
         buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
-        // Los resultados primero (N-19): tus experimentos y las relaciones más marcadas. Totales vive en Vida (N-20).
+        // Arriba, tu vida vista desde lejos (9 nov 2026, antes en Vida): la semana, el mes, el año y el dinero.
+        Seccion("Tu vida vista desde lejos") { VidaDesdeLejos(nav) }
+        // Luego los resultados (N-19): tus experimentos y las relaciones más marcadas.
         RejillaTarjetas(listOf(
             Tarjetita("Experimentos personales", "${Repo.experimentos.count { io.github.ruddy2003.vestigium.data.Experimentos.enCurso(it) }}", "en curso · prueba algo y mide si sirve", "experimentos"),
         )) { nav.ir(it) }

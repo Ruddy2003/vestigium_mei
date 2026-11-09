@@ -407,79 +407,7 @@ fun AQuienConoce(nombre: String) {
     }
 }
 
-/** La red de tu gente: un gráfico de fuerzas con lo que dijiste (líneas firmes) y lo que se deriva de aparecer juntas (líneas finas). */
-@Composable
-fun PantallaRed(nav: Nav) {
-    val cs = MaterialTheme.colorScheme
-    var soloDichas by remember { mutableStateOf(false) }
-    val datos = remember(Repo.dias, Repo.momentos, Repo.config.vinculos, Repo.config.personas, soloDichas) {
-        val (n, a) = RedPersonas.calcular(minJuntos = 2)
-        val aa = if (soloDichas) a.filter { it.tipo != null } else a
-        // El grado y los grupos, con las líneas que se ven (P-25).
-        RedPersonas.grados(n, aa)
-        RedPersonas.acomodar(n, aa); Triple(n, aa, RedPersonas.componentes(n, aa))
-    }
-    val (nodos, aristas, comp) = datos
-    var elegido by remember { mutableStateOf<String?>(null) }
-    val medidor = rememberTextMeasurer()
-    val estilo = MaterialTheme.typography.labelSmall.copy(color = cs.onSurface)
-    val eg = estiloGrafica()
-    val tonos = mapOf("familia" to cs.tertiary, "pareja" to cs.error, "amistad" to cs.secondary, "casa" to cs.primary, "trabajo" to cs.outline, "expareja" to cs.error.copy(alpha = 0.45f))
-    Hoja("Red", nav.atras, "Quién conoce a quién. Las líneas firmes son lo que dijiste en Tu gente; las finas, personas que aparecen juntas en tu diario al menos dos días.") {
-        Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Ficha("todo", !soloDichas) { soloDichas = false }; Ficha("solo lo que dije", soloDichas) { soloDichas = true }
-        }
-        if (nodos.isEmpty()) { Vacio("Menciona a personas con @ en tu diario, o di quién conoce a quién en Tu gente."); return@Hoja }
-        val lazos = aristas.filter { it.tipo != "no_se_conocen" }
-        val n = nodos.size
-        Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Cifra("$n", "personas", Modifier.weight(1f))
-            Cifra(if (n > 1) "%.0f%%".format(100.0 * lazos.size / (n * (n - 1) / 2.0)) else "—", "densidad", Modifier.weight(1f))
-            Cifra("$comp", if (comp == 1) "grupo" else "grupos", Modifier.weight(1f))
-        }
-        val maxDias = nodos.maxOf { it.dias }.coerceAtLeast(1)
-        Canvas(Modifier.fillMaxWidth().aspectRatio(1f).padding(top = 10.dp).pointerInput(nodos) {
-            detectTapGestures { o -> elegido = nodos.minByOrNull { val dx = it.x * size.width - o.x; val dy = it.y * size.height - o.y; dx * dx + dy * dy }?.nombre }
-        }) {
-            val w = size.width; val h = size.height
-            lazos.forEach { a ->
-                val p = nodos.firstOrNull { it.nombre == a.a } ?: return@forEach; val q = nodos.firstOrNull { it.nombre == a.b } ?: return@forEach
-                val resaltado = elegido != null && (a.a == elegido || a.b == elegido)
-                val col = if (a.tipo != null) cs.primary else cs.onSurfaceVariant
-                val colLazo = col.copy(alpha = if (resaltado) 0.9f else if (a.tipo != null) 0.55f else 0.22f)
-                val anchoLazo = (if (a.tipo != null) 2f else 1f) * density
-                // Los colegas conservan su guion propio (distingue el tipo de lazo); los demás llevan el trazo del tema.
-                if (a.tipo == "colegas") drawLine(colLazo, Offset(p.x * w, p.y * h), Offset(q.x * w, q.y * h), anchoLazo,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f * density, 4f * density)))
-                else lineaGrafica(eg, listOf(Offset(p.x * w, p.y * h), Offset(q.x * w, q.y * h)), colLazo, anchoLazo)
-            }
-            nodos.forEach { nd ->
-                val r = (4f + 8f * kotlin.math.sqrt(nd.dias.toFloat() / maxDias)) * density
-                // Color por grupo de relación, como la Constelación: una amistad cercana es «amistad», un colega es «trabajo» (P-25).
-                val col = tonos[nd.grupo] ?: cs.onSurfaceVariant
-                puntoGrafica(eg, Offset(nd.x * w, nd.y * h), r, col)
-                // El anillo de selección es de la interfaz, no un dato: sigue siendo un círculo fino.
-                if (nd.nombre == elegido) drawCircle(cs.onSurface, r + 3f * density, Offset(nd.x * w, nd.y * h), style = Stroke(1.5f * density))
-                if (nd.dias >= maxDias / 4 || nd.nombre == elegido || n <= 15) {
-                    val t = medidor.measure("@" + nd.nombre, estilo)
-                    drawText(t, topLeft = Offset((nd.x * w - t.size.width / 2).coerceIn(0f, w - t.size.width), (nd.y * h + r + 2f).coerceAtMost(h - t.size.height)))
-                }
-            }
-        }
-        elegido?.let { e ->
-            val nd = nodos.first { it.nombre == e }
-            Tarjeta(Modifier.padding(top = 8.dp)) {
-                Text("@$e", style = MaterialTheme.typography.titleMedium)
-                Ayuda(listOfNotNull(nd.relacion?.let { Personas.nombreRelacion(it) }, "${porNumero(nd.dias, "1 día", "${nd.dias} días")} mencionada", "unida a ${nd.grado}").joinToString(" · "))
-                val suyos = lazos.filter { it.a == e || it.b == e }.sortedByDescending { it.juntos }
-                if (suyos.isNotEmpty()) Ayuda(suyos.take(8).joinToString(" · ") { a -> "@" + (if (a.a == e) a.b else a.a) + (a.tipo?.let { " (${RedPersonas.nombreTipo(it).lowercase()})" } ?: " (${porNumero(a.juntos, "1 día", "${a.juntos} días")} juntas)") },
-                    Modifier.padding(top = 4.dp))
-            }
-        }
-        Ayuda("Colores: familia, pareja, amistad, casa y trabajo como en la Constelación. Para la restricción de Burt y la composición de tu red, usa vm_red() en R.", Modifier.padding(top = 10.dp))
-        BotonSecundario("Decir quién conoce a quién (Tu gente)", Modifier.fillMaxWidth().padding(top = 8.dp)) { nav.ir("personas") }
-    }
-}
+// La pantalla de la Red pasó a Social, vista «red» (9 nov 2026): ver Social.kt.
 
 // ============================================================================ experimentos guiados
 
@@ -645,7 +573,8 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
 @Composable
 fun PantallaGuiaUso(nav: Nav, seccion: String = "") {
     val sola = io.github.ruddy2003.vestigium.data.GuiaUso.de(seccion)
-    Hoja("Cómo usar la app", nav.atras, if (sola != null) null else "Cómo usar la app para que tus datos digan algo. Los ejemplos marcan las @personas y los #temas como el tema de hoy.") {
+    Hoja("Guía", nav.atras, if (sola != null) null else "Cómo usar la app para que tus datos digan algo. Los ejemplos marcan las @personas y los #temas como el tema de hoy.") {
+        if (sola == null) PestanasGuia("guia_uso", nav)
         val lista = if (sola != null) listOf(sola) else io.github.ruddy2003.vestigium.data.GuiaUso.SECCIONES
         lista.forEach { s ->
             Seccion(s.titulo, plegable = sola == null, plegadaPorDefecto = sola == null && s.id != "principios") {

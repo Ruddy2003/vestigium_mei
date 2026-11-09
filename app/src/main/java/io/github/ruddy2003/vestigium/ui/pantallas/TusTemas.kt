@@ -57,15 +57,8 @@ fun PantallaTusTemas(nav: Nav) {
     val c = Repo.config
     // Todo se cuenta fuera del hilo principal: con años de diario y cientos de #temas, contarlo al dibujar la pantalla
     // tardaba segundos y Android la cerraba. Mientras se recalcula, se queda a la vista lo de antes.
-    val calculo by produceState<CalculoTemas?>(null, Repo.dias, Repo.momentos, Repo.tramos, Repo.consumos, Repo.cartas, c.equivalencias, c.temas_distintos) {
-        value = withContext(Dispatchers.Default) {
-            try {
-                val l = TusTemas.lista()
-                CalculoTemas(l, TusTemas.parecidos(l), TusTemas.deUnDia(l), TusTemas.deSentimientos(l), null)
-            } catch (e: Exception) {
-                CalculoTemas(emptyList(), emptyList(), emptyList(), emptyList(), e.message ?: e.javaClass.simpleName)
-            }
-        }
+    val calculo by produceState(if (io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono) calcularTemas() else null, Repo.dias, Repo.momentos, Repo.tramos, Repo.consumos, Repo.cartas, c.equivalencias, c.temas_distintos) {
+        if (!io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono) value = withContext(Dispatchers.Default) { calcularTemas() }
     }
     val lista = calculo?.lista.orEmpty()
     val pares = calculo?.pares.orEmpty()
@@ -160,6 +153,13 @@ private class CalculoTemas(
     val lista: List<TusTemas.Tema>, val pares: List<Pair<String, String>>, val unDia: List<TusTemas.Tema>,
     val sentimientos: List<TusTemas.Tema>, val error: String?,
 )
+
+private fun calcularTemas(): CalculoTemas = try {
+    val l = TusTemas.lista()
+    CalculoTemas(l, TusTemas.parecidos(l), TusTemas.deUnDia(l), TusTemas.deSentimientos(l), null)
+} catch (e: Exception) {
+    CalculoTemas(emptyList(), emptyList(), emptyList(), emptyList(), e.message ?: e.javaClass.simpleName)
+}
 
 /** Una fecha vacía o mal importada no tumba la pantalla: se muestra tal cual. */
 private fun fechaCorta(s: String): String = try { Fechas.corto(s) } catch (e: Exception) { s.ifBlank { "sin fecha" } }

@@ -1843,7 +1843,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         },
         containerColor = MaterialTheme.colorScheme.background,
         // Al leer una entrada, la página ocupa toda la pantalla.
-        bottomBar = { if (pila.lastOrNull() !in setOf("entrada", "sueno", "carta", "hoja_momentos", "cajon_ideas", "ficha_idea", "idea")) BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
+        bottomBar = { if (pila.lastOrNull() !in setOf("entrada", "sueno", "carta", "hoja_momentos", "cajon_ideas", "ficha_idea", "idea", "social_grafo")) BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
     ) { pad ->
         val esquema = MaterialTheme.colorScheme
         // En Art déco y Edo el papel tapiz va en su propia capa, guardada como imagen: así no se vuelve a trazar (cientos de
@@ -1941,7 +1941,10 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "cajon_ideas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCajonIdeas(nav)
                     "ficha_idea" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaFichaIdea(nav)
                     "cinta" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(nav)
-                    "constelacion" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(nav)
+                    // La Constelación y la Red viven en Social (9 nov 2026): sus rutas abren Social con su vista.
+                    "constelacion" -> { remember { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "cielo"; 0 }; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(nav) }
+                    "social" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(nav)
+                    "social_grafo" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaGrafoSocial(nav)
                     "hall" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(nav)
                     "campanas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCampanas(nav)
                     "recaidas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaRecaidas(nav)
@@ -1953,7 +1956,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "metas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaMetas(nav)
                     "suplementos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSuplementos(nav)
                     "laptop" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLaptop(nav)
-                    "red" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaRed(nav)
+                    "red" -> { remember { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "red"; 0 }; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(nav) }
                     else -> if (actual.startsWith("guia_uso")) io.github.ruddy2003.vestigium.ui.pantallas.PantallaGuiaUso(nav, actual.substringAfter(':', ""))
                         else Text("Pantalla desconocida: $actual")
                 }

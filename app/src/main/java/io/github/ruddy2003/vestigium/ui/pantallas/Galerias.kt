@@ -460,6 +460,7 @@ fun PantallaObras(nav: Nav) {
         }
     }
     Hoja("Obras", nav.atras, "Lo que has visto, leído y jugado, con su portada y tu calificación. Toca una para ver su ficha, tus notas y tus citas.") {
+        PestanasObras("obras", nav)
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BotonPrincipal("+ añadir", Modifier.weight(1f)) {
                 BusquedaObra.tipo = tipo ?: "libro"; BusquedaObra.texto = ""; BusquedaObra.portadaDe = null; nav.ir("buscar_obra")
@@ -525,5 +526,18 @@ private fun CeldaObra(o: Obra, columnas: Int, modifier: Modifier, abrir: () -> U
         if (grande) Text(listOfNotNull(o.autor.substringBefore(",").substringBefore(";").ifBlank { null }, (o.fin ?: o.anio?.toString())?.take(4)).joinToString(" · "),
             style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Calificacion(o.calificacion, Modifier.padding(top = 4.dp), tam = if (grande) 16.dp else 10.dp)
+    }
+}
+
+/**
+ * Las tres pantallas de obras como pestañas de un solo lugar (9 nov 2026): la galería de portadas, la lista con lo pendiente
+ * y lo que quieres leer y ver. Antes eran tres entradas sueltas en Vida y en Más.
+ */
+@Composable
+fun PestanasObras(actual: String, nav: Nav) {
+    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf("obras" to "Galería", "biblioteca" to "Lista y pendientes", "deseados" to "Quiero leer y ver").forEach { (r, n) ->
+            Ficha(n, actual == r) { if (actual != r) nav.reemplazar(r) }
+        }
     }
 }
