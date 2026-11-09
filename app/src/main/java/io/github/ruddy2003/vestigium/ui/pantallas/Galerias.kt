@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.ui.graphics.luminance
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.foundation.BorderStroke
@@ -291,8 +292,13 @@ internal fun Recuadro(titulo: String, detalle: String, modifier: Modifier = Modi
 fun RecuadroMapas(nav: Nav) {
     val r = rememberResumen("todo")
     val detalle = r?.let { "${porNumero(it.paises.size, "1 país", "${it.paises.size} países")} · ${porNumero(it.ciudades.size, "1 ciudad", "${it.ciudades.size} ciudades")} · ${porNumero(it.sitios.size, "1 sitio", "${it.sitios.size} sitios")} del Patrimonio Mundial" } ?: "Mundo, mapa para rascar, Patrimonio Mundial y tus lugares"
+    // La mesa de mapas del tema (lote E6) y el mapa para rascar encima.
+    val cs = MaterialTheme.colorScheme
+    val d = io.github.ruddy2003.vestigium.ui.vida.disenoVida(Estilo.tema)
+    val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
     Recuadro("Mapas", detalle, alto = 168.dp, onClick = { nav.ir("mapas") }) {
-        MapaRascar(r?.codigosPaises ?: emptySet(), Modifier.fillMaxSize().padding(6.dp))
+        Canvas(Modifier.fillMaxSize()) { with(d) { muebleMapas(io.github.ruddy2003.vestigium.ui.vida.EstadoMueble(cs.surface, cs.primary, cs.secondary, cs.onSurface, 9), oscuro) } }
+        MapaRascar(r?.codigosPaises ?: emptySet(), Modifier.fillMaxSize().padding(horizontal = 22.dp, vertical = 16.dp))
     }
 }
 
@@ -387,7 +393,10 @@ private fun TarjetaMapa(id: String, titulo: String, detalle: String, modifier: M
         Column(Modifier.padding(12.dp)) {
             // El dibujo del mapa dentro del marco del tema, en pequeño.
             Canvas(Modifier.fillMaxWidth().height(70.dp)) {
-                dibujoMapa(id, cs.primary, cs.secondary, tema, cs.surface)
+                // El Patrimonio Mundial, el mapa para rascar y los lugares con los íconos del tema (lote E6); los demás, como antes.
+                if (id == "unesco" || id == "rascar" || id == "lugares") with(io.github.ruddy2003.vestigium.ui.vida.disenoVida(tema)) {
+                    iconoMapa(id, io.github.ruddy2003.vestigium.ui.vida.EstadoIcono(cs.primary, cs.secondary, cs.surface, cs.onSurface), cs.surface.luminance() < 0.5f)
+                } else dibujoMapa(id, cs.primary, cs.secondary, tema, cs.surface)
                 marcoDelMapa(tema, 0.55.dp.toPx(), cs.onSurface.copy(alpha = 0.7f), cs.primary, cs.surface)
             }
             Text(Estilo.seccion(titulo, Romano.latin(titulo)).first, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)

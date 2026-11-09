@@ -2,6 +2,10 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.luminance
 import io.github.ruddy2003.vestigium.ui.comun.BotonTexto
 import io.github.ruddy2003.vestigium.ui.comun.CampoTexto
 import androidx.compose.foundation.Canvas
@@ -447,12 +451,21 @@ fun RecuadroLogros(nav: Nav) {
         nuevos > 0 && Repo.config.logros_vistos.isNotEmpty() -> "¡$nuevos nuevo${if (nuevos == 1) "" else "s"}! · ${hechos.size} de ${l.size} conseguidos"
         else -> "${hechos.size} de ${l.size} conseguidos" + (l.filter { !it.hecho && !it.secreto }.maxByOrNull { it.fraccion }?.let { " · cerca: ${it.nombre}" } ?: "")
     }
-    Recuadro("Logros", detalle, alto = 118.dp, onClick = { nav.ir("logros") }) {
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(cs.primary.copy(alpha = 0.10f), cs.surface)))) {
-            Row(Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                val muestra = (hechos.take(5) + l.orEmpty().filter { !it.hecho && !it.secreto }.sortedByDescending { it.fraccion }.take(5)).take(6)
+    // La antesala del Hall (lote E6): el salón del tema en pequeño, con los últimos trofeos al frente.
+    val tema = Estilo.tema
+    Recuadro("Logros", detalle, alto = 150.dp, onClick = { nav.ir("logros") }) {
+        Box(Modifier.fillMaxSize().clipToBounds()) {
+            Canvas(Modifier.fillMaxWidth().requiredHeight(420.dp).align(Alignment.TopCenter)) {
+                clipRect {
+                    with(io.github.ruddy2003.vestigium.ui.logros.disenoLogros(tema)) {
+                        escenaSalon(io.github.ruddy2003.vestigium.ui.logros.EstadoSalon(5, cs.surface, 0), cs.surface.luminance() < 0.5f)
+                    }
+                }
+            }
+            Row(Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Bottom) {
+                val muestra = (hechos.take(5) + l.orEmpty().filter { !it.hecho && !it.secreto }.sortedByDescending { it.fraccion }.take(5)).take(5)
                 if (muestra.isEmpty()) Text("Tus medallas aparecerán aquí", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
-                muestra.forEach { TrofeoLogro(it, 76.dp) }
+                muestra.forEach { TrofeoLogro(it, 96.dp) }
             }
         }
     }

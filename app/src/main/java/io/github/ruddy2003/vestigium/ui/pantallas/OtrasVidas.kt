@@ -242,12 +242,12 @@ fun RecuadroOtrasVidas(nav: Nav) {
     val vidas = remember(tema) { OtrasVidas.visibles(tema).sortedBy { it.anio } }
     val cs = MaterialTheme.colorScheme
     Recuadro("Otras vidas", "Cómo vivía alguien del Paleolítico, de Roma, de Edo o de 1960, frente a cómo vives tú", alto = 150.dp, onClick = { nav.ir("otras_vidas") }) {
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(cs.surfaceVariant.copy(alpha = 0.5f), cs.surface)))) {
-            Canvas(Modifier.fillMaxSize()) {
-                val y = size.height * 0.55f
-                drawLine(cs.outline.copy(alpha = 0.6f), Offset(14.dp.toPx(), y), Offset(size.width - 14.dp.toPx(), y), 1.5.dp.toPx())
-            }
-            val muestra = vidas.filterIndexed { i, v -> v.tema != null || i % 2 == 0 }.take(7)
+        // La vitrina del tema (lote E6): un nicho por medalla.
+        val d = io.github.ruddy2003.vestigium.ui.vida.disenoVida(Estilo.tema)
+        val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+        Box(Modifier.fillMaxSize()) {
+            Canvas(Modifier.fillMaxSize()) { with(d) { muebleOtrasVidas(io.github.ruddy2003.vestigium.ui.vida.EstadoMueble(cs.surface, cs.primary, cs.secondary, cs.onSurface, 7), oscuro) } }
+            val muestra = vidas.filterIndexed { i, v -> v.tema != null || i % 2 == 0 }.take(5)
             Row(Modifier.fillMaxSize().padding(horizontal = 10.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                 muestra.forEach { v ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
