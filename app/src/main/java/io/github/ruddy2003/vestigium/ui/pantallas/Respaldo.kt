@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,6 +31,7 @@ import io.github.ruddy2003.vestigium.data.Exportar
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Respaldos
+import io.github.ruddy2003.vestigium.data.porNumero
 import io.github.ruddy2003.vestigium.ui.Aviso
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonPrincipal
@@ -208,7 +210,7 @@ private fun DialogoNuevaClave(cambio: Boolean, cerrar: () -> Unit, listo: (Strin
         title = { Text("Contraseña de respaldo", style = MaterialTheme.typography.titleLarge) },
         text = {
             Column {
-                Ayuda("Se guarda solo en este teléfono. Si cambias de teléfono, la necesitarás para restaurar; si la olvidas, nadie puede recuperar los respaldos cifrados.")
+                Ayuda("Se guarda solo en este teléfono. Si cambias de teléfono, la necesitarás para restaurar; si la olvidas, nadie puede recuperar los respaldos cifrados. Escríbela en papel y guárdala lejos del teléfono.")
                 // Las copias hechas no se vuelven a cifrar (H-8-15).
                 if (cambio) Aviso("Las copias que ya existen (en Drive, las semanales y mensuales, y las que guardaste o compartiste) siguen con la contraseña anterior: guárdala si quieres poder abrirlas.")
                 CampoTexto(a, { a = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("contraseña") },
@@ -223,4 +225,62 @@ private fun DialogoNuevaClave(cambio: Boolean, cerrar: () -> Unit, listo: (Strin
         confirmButton = { BotonTexto(enabled = a.length >= 8 && a == b, onClick = { listo(a) }) { Text("Guardar", style = MaterialTheme.typography.labelLarge) } },
         dismissButton = { BotonTexto(onClick = cerrar) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
     )
+}
+
+/**
+ * El estado de tus respaldos de un vistazo (9 nov 2026): una luz por cada lugar donde se guardan, cuándo salió la última
+ * copia buena y qué traía, y lo que hay que hacer si algo está en rojo.
+ */
+@Composable
+fun EstadoRespaldos(alRespaldar: () -> Unit) {
+    val ctx = LocalContext.current
+    val c = Repo.config
+    val bloqueado = Respaldos.bloqueado(ctx)
+    fun hace(iso: String?): String = iso?.let { val ms = Fechas.millis(it); if (ms <= 0) null else {
+        val h = (System.currentTimeMillis() - ms) / 3_600_000
+        if (h < 1) "hace un momento" else if (h < 48) "hace ${porNumero(h, "1 hora", "$h horas")}" else "hace ${porNumero(h / 24, "1 día", "${h / 24} días")}"
+    } } ?: "nunca"
+    Tarjeta(Modifier.padding(top = 10.dp)) {
+        val fuera = Respaldos.ultimaFuera(c)
+        val general = if (bloqueado || (c.carpeta_respaldo == null && !c.drive)) Respaldos.Luz.ROJO else Respaldos.luz(fuera)
+        FilaLuz(general, when {
+            bloqueado -> "Tus respaldos están en pausa"
+            c.carpeta_respaldo == null && !c.drive -> "Tus datos solo están en este teléfono"
+            general == Respaldos.Luz.VERDE -> "Tus datos están a salvo"
+            else -> "Hace falta un respaldo"
+        }, when {
+            bloqueado -> "Llevan datos privados y no tienen contraseña. Ponla abajo, en «Cifrar con contraseña»: hasta entonces ninguna copia sale del teléfono."
+            c.carpeta_respaldo == null && !c.drive -> "Si pierdes el teléfono, se pierde todo. Elige abajo una carpeta para el respaldo automático y, si puedes, conecta Google Drive."
+            else -> "Última copia buena fuera del teléfono: ${hace(fuera)}."
+        }, titulo = true)
+        io.github.ruddy2003.vestigium.ui.comun.Separador(Modifier.padding(vertical = 10.dp))
+        if (c.carpeta_respaldo != null) FilaLuz(if (bloqueado) Respaldos.Luz.ROJO else Respaldos.luz(c.respaldo_verificado ?: c.respaldo_ultimo), "Carpeta",
+            (if (c.respaldo_verificado != null) "Revisada ${hace(c.respaldo_verificado)}" else "Escrita ${hace(c.respaldo_ultimo)}, todavía sin revisar") + (c.respaldo_detalle.takeIf { it.isNotBlank() }?.let { " · $it" } ?: "") +
+                ". Guarda la última, 7 diarias, 8 semanales, 12 mensuales y la base de datos de cada semana." + (c.respaldo_error?.let { "\n⚠ $it" } ?: ""))
+        else FilaLuz(Respaldos.Luz.ROJO, "Carpeta", "Sin carpeta elegida.")
+        FilaLuz(if (!c.drive) Respaldos.Luz.AMARILLO else if (bloqueado) Respaldos.Luz.ROJO else Respaldos.luz(c.drive_ultimo), "Google Drive",
+            if (c.drive) "Subido ${hace(c.drive_ultimo)}. Guarda 8 semanales y 12 mensuales." else "Sin conectar. Es la copia que sobrevive si pierdes el teléfono y la carpeta.")
+        FilaLuz(if (c.bd_revision_ok) Respaldos.Luz.VERDE else Respaldos.Luz.ROJO, "Base de datos",
+            if (c.bd_revision == null) "Se revisa una vez por semana; todavía no toca." else if (c.bd_revision_ok) "Sana en la revisión de ${hace(c.bd_revision)}." else "La revisión de ${hace(c.bd_revision)} encontró un problema. Haz un respaldo a mano y no borres tus copias.")
+        c.respaldo_ensayo?.let { e -> FilaLuz(if (c.respaldo_ensayo_resultado.startsWith("Bien")) Respaldos.Luz.VERDE else Respaldos.Luz.ROJO, "Ensayo del mes",
+            "${hace(e).replaceFirstChar { it.uppercase() }}: ${c.respaldo_ensayo_resultado}") }
+        if (c.carpeta_respaldo != null && !bloqueado) BotonSecundario(if (c.respaldo_error == Respaldos.EMPOBRECIDO) "aceptar el respaldo más pequeño" else "respaldar y revisar ahora",
+            Modifier.fillMaxWidth().padding(top = 8.dp)) { alRespaldar() }
+    }
+}
+
+@Composable
+private fun FilaLuz(luz: Respaldos.Luz, nombre: String, detalle: String, titulo: Boolean = false) {
+    val color = when (luz) {
+        Respaldos.Luz.VERDE -> androidx.compose.ui.graphics.Color(0xFF2E7D32)
+        Respaldos.Luz.AMARILLO -> androidx.compose.ui.graphics.Color(0xFFE0A100)
+        Respaldos.Luz.ROJO -> MaterialTheme.colorScheme.error
+    }
+    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = androidx.compose.ui.Alignment.Top) {
+        androidx.compose.foundation.Canvas(Modifier.padding(top = if (titulo) 6.dp else 4.dp, end = 10.dp).size(if (titulo) 14.dp else 10.dp)) { drawCircle(color) }
+        Column(Modifier.weight(1f)) {
+            Text(nombre, style = if (titulo) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall)
+            Text(detalle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
 }

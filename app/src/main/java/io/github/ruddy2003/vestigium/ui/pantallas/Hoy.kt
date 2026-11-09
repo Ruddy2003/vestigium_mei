@@ -283,11 +283,14 @@ object Faltas {
         Repo.ilegibles.values.sum().takeIf { it > 0 }?.let { n ->
             l += Falta("ilegibles", "${porNumero(n, "1 registro guardado", "$n registros guardados")} no se pudieron leer. Mira de qué tipo en Estado de los datos.", "estado") { null }
         }
-        val respaldo = listOfNotNull(c.respaldo_ultimo?.takeIf { c.carpeta_respaldo != null }, c.drive_ultimo?.takeIf { c.drive }).maxOrNull()
-        if ((c.carpeta_respaldo != null || c.drive) && io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx))
-            l += Falta("respaldo", io.github.ruddy2003.vestigium.data.Respaldos.PAUSA, "datos") { null }
+        // El respaldo, lo primero que importa (9 nov 2026): cuenta solo la copia que se volvió a leer completa.
+        val respaldo = io.github.ruddy2003.vestigium.data.Respaldos.ultimaFuera(c)
+        if (io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx))
+            l.add(0, Falta("respaldo", io.github.ruddy2003.vestigium.data.Respaldos.PAUSA, "datos") { null })
+        else if (c.carpeta_respaldo == null && !c.drive && Repo.dias.size >= 3)
+            l.add(0, Falta("respaldo", "Tus datos solo están en este teléfono. Elige una carpeta de respaldo en Datos.", "datos") { null })
         else if ((c.carpeta_respaldo != null || c.drive) && (respaldo == null || System.currentTimeMillis() - Fechas.millis(respaldo) > 36 * 3_600_000L))
-            l += Falta("respaldo", "Sin respaldo " + (respaldo?.let { "desde el ${it.take(10)}" } ?: "todavía") + ".", "datos") { null }
+            l.add(0, Falta("respaldo", "Sin respaldo revisado " + (respaldo?.let { "desde el ${it.take(10)}" } ?: "todavía") + (c.respaldo_error?.let { ". $it" } ?: ".") , "datos") { null })
         // Lector de notificaciones: concedido pero sin contar nada en todo el día suele ser que Android lo desconectó.
         if (Oyente.activo(ctx) && ahora.hour >= 13 && (Repo.notifs[hoy]?.total ?: 0) == 0 && Repo.notifs.keys.any { it >= Fechas.sumar(hoy, -7) })
             l += Falta("notificaciones", "El lector de notificaciones no ha contado nada hoy; puede estar desconectado.", "reconectar") { x ->

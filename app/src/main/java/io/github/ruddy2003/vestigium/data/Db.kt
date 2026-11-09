@@ -16,6 +16,42 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 2) {
     }
 
 
+    /**
+     * Escritura con registro aparte (WAL, 9 nov 2026): un corte de luz o un cierre a mitad de una escritura ya no puede dejar
+     * la base a medias, y leer mientras la tarea de fondo escribe no se bloquea.
+     */
+    override fun onConfigure(db: SQLiteDatabase) {
+        super.onConfigure(db)
+        db.enableWriteAheadLogging()
+    }
+
+    /** Revisión rápida de la base (PRAGMA quick_check): «ok» si está sana; si no, lo que SQLite encontró. */
+    fun revisar(): String = readableDatabase.rawQuery("PRAGMA quick_check", null).use { c ->
+        val l = ArrayList<String>(); while (c.moveToNext() && l.size < 5) l += c.getString(0); l.joinToString("; ").ifBlank { "ok" }
+    }
+
+    /** Una copia cruda y coherente de la base (VACUUM INTO): la red por si algún día el JSON del respaldo no se pudiera leer. */
+    fun copiaCruda(destino: java.io.File) {
+        destino.delete()
+        writableDatabase.execSQL("VACUUM INTO ?", arrayOf<Any>(destino.absolutePath))
+    }
+
+    /** Las colecciones que hay guardadas. */
+    fun colecciones(): List<String> = readableDatabase.rawQuery("SELECT DISTINCT col FROM docs", null).use { c ->
+        val l = ArrayList<String>(); while (c.moveToNext()) l += c.getString(0); l
+    }
+
+    /** Cada documento de [col] con su id y su fecha. */
+    fun filas(col: String, f: (id: String, fecha: String?, json: String) -> Unit) {
+        readableDatabase.rawQuery("SELECT id, fecha, json FROM docs WHERE col = ?", arrayOf(col)).use { c ->
+            while (c.moveToNext()) f(c.getString(0), if (c.isNull(1)) null else c.getString(1), c.getString(2))
+        }
+    }
+
+    /** La fecha con que está guardado un documento. */
+    fun fechaDe(col: String, id: String): String? =
+        readableDatabase.rawQuery("SELECT fecha FROM docs WHERE col = ? AND id = ?", arrayOf(col, id)).use { c -> if (c.moveToFirst() && !c.isNull(0)) c.getString(0) else null }
+
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE docs (col TEXT NOT NULL, id TEXT NOT NULL, fecha TEXT, json TEXT NOT NULL, editado INTEGER NOT NULL, PRIMARY KEY(col, id))")
         db.execSQL("CREATE INDEX docs_fecha ON docs(col, fecha)")

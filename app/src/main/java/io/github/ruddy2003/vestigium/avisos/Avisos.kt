@@ -717,11 +717,35 @@ object Avisos {
         val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("Tu respaldo automático no está saliendo")
-            .setContentText("Lleva más de 3 días sin poder guardarse en tu carpeta. Toca para revisarlo.")
-            .setStyle(NotificationCompat.BigTextStyle().bigText("Lleva más de 3 días sin poder guardarse en tu carpeta: puede faltar espacio o que la carpeta ya no deje escribir. Toca para revisarlo o hacer uno a mano."))
+            .setContentText("Lleva más de 2 días sin poder guardarse en tu carpeta. Toca para revisarlo.")
+            .setStyle(NotificationCompat.BigTextStyle().bigText("Lleva más de 2 días sin poder guardarse en tu carpeta" +
+                (io.github.ruddy2003.vestigium.data.Repo.config.respaldo_error?.let { ": $it" } ?: ": puede faltar espacio o que la carpeta ya no deje escribir.") + " Toca para revisarlo o hacer uno a mano."))
             .setContentIntent(abrirApp(ctx, 2035, "datos"))
             .setAutoCancel(true)
         mostrar(ctx, 2035, b)
+    }
+
+    /** El respaldo a la carpeta vino mucho más pobre que el anterior y se guardó aparte (9 nov 2026). */
+    fun respaldoEmpobrecido(ctx: Context) {
+        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("No reemplacé tu respaldo")
+            .setContentText("El de hoy trae muchos menos días o momentos que el anterior. Toca para revisarlo.")
+            .setStyle(NotificationCompat.BigTextStyle().bigText(io.github.ruddy2003.vestigium.data.Respaldos.EMPOBRECIDO))
+            .setContentIntent(abrirApp(ctx, 2036, "datos"))
+            .setAutoCancel(true)
+        mostrar(ctx, 2036, b)
+    }
+
+    /** La revisión semanal encontró la base de datos dañada (9 nov 2026). */
+    fun baseDanada(ctx: Context) {
+        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("La base de datos tiene un problema")
+            .setContentText("Haz un respaldo a mano ahora y no borres tus copias. Toca para ver el detalle.")
+            .setContentIntent(abrirApp(ctx, 2037, "datos"))
+            .setAutoCancel(true)
+        mostrar(ctx, 2037, b)
     }
 
     /** El respaldo automático de Drive vino mucho más pobre que el último y se guardó aparte. */

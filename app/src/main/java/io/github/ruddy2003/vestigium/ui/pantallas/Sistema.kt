@@ -562,12 +562,17 @@ fun PantallaDatos(nav: Nav) {
     var ocupado by remember { mutableStateOf(false) }
 
     fun tarea(b: suspend () -> String) { if (ocupado) return; ocupado = true; scope.launch { msg = try { withContext(Dispatchers.IO) { b() } } catch (e: Exception) { "Algo falló: ${e.message}" }; ocupado = false } }
+    // Respaldar a mano: si el último se detuvo por venir más pobre, este lo acepta.
+    fun respaldarAhora() = tarea {
+        val forzar = Repo.config.respaldo_error == io.github.ruddy2003.vestigium.data.Respaldos.EMPOBRECIDO
+        if (io.github.ruddy2003.vestigium.data.Respaldos.aCarpeta(ctx, forzar)) "Respaldo escrito y revisado: ${Repo.config.respaldo_detalle}." else Repo.config.respaldo_error ?: "No pude escribir en la carpeta."
+    }
 
     val carpeta = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
             ctx.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             Repo.cambiarConfig { it.copy(carpeta_respaldo = uri.toString()) }
-            tarea { if (Exportar.respaldoAutomatico(ctx)) "Carpeta lista. Cada mañana se actualizan ahí tus archivos." else "No pude escribir en esa carpeta." }
+            tarea { if (Exportar.respaldoAutomatico(ctx)) "Carpeta lista y el primer respaldo revisado. Cada mañana se actualiza, con copias de cada día, semana y mes." else Repo.config.respaldo_error ?: "No pude escribir en esa carpeta." }
         }
     }
     val respaldo = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { Importar.respaldo(ctx, uri).mensaje } }
@@ -606,6 +611,8 @@ fun PantallaDatos(nav: Nav) {
     Hoja("Datos", nav.atras, "Todo lo que guarda la app, listo para R.") {
         msg?.let { Aviso(it) }
         if (ocupado) Ayuda("Trabajando…", Modifier.padding(top = 8.dp))
+        // Lo primero: si tus datos están a salvo (9 nov 2026).
+        EstadoRespaldos { respaldarAhora() }
         // Lo borrado en los últimos 7 días (N-14).
         Tarjeta(Modifier.padding(top = 10.dp)) { io.github.ruddy2003.vestigium.ui.FilaMenu("Papelera", "Lo que borraste en los últimos 7 días, para recuperarlo") { nav.ir("papelera") } }
         Seccion("Recordatorios de importación", "Un solo aviso a la semana con lo que toca importar. Cada fuente se puede posponer o apagar.", plegable = true) {
@@ -652,12 +659,12 @@ fun PantallaDatos(nav: Nav) {
         Seccion("Respaldo completo", "Todo en un archivo, y de vuelta en un toque.") {
             RespaldoCompleto()
         }
-        Seccion("Respaldo automático", "Elige una carpeta del teléfono; cada mañana la app deja ahí el respaldo completo y los CSV actualizados (o solo el respaldo cifrado, si pusiste contraseña). Si eliges una carpeta que sincronizas con la computadora, R siempre tendrá los datos frescos.") {
+        Seccion("Respaldo automático", "Elige una carpeta del teléfono; cada mañana la app deja ahí el respaldo completo, ya revisado, y los CSV actualizados (o solo el respaldo cifrado, si pusiste contraseña). En la subcarpeta «copias» guarda uno por día (7), por semana (8) y por mes (12), y la base de datos de cada semana. Si eliges una carpeta que sincronizas con la computadora o con la nube, la copia también sobrevive si pierdes el teléfono.") {
             Tarjeta {
                 Ayuda(Repo.config.carpeta_respaldo?.let { "Carpeta configurada." } ?: "Sin carpeta.")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
                     OutlinedButton(onClick = { carpeta.launch(null) }) { Text("Elegir carpeta") }
-                    if (Repo.config.carpeta_respaldo != null) OutlinedButton(enabled = !ocupado, onClick = { if (!ocupado) tarea { if (Exportar.respaldoAutomatico(ctx)) "Respaldo escrito." else "No pude escribir en la carpeta." } }) { Text("Respaldar ahora") }
+                    if (Repo.config.carpeta_respaldo != null) OutlinedButton(enabled = !ocupado, onClick = { if (!ocupado) respaldarAhora() }) { Text("Respaldar ahora") }
                 }
             }
         }

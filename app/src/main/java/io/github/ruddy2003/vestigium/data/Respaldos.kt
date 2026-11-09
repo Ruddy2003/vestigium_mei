@@ -22,7 +22,9 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.decodeFromStream
+import kotlinx.serialization.json.encodeToStream
 
 /**
  * Respaldo completo en un solo archivo y su restauración de un toque.
@@ -192,34 +194,163 @@ object Respaldos {
 
     // ------------------------------------------------------------ armar el respaldo
 
-    /** Lo indispensable para rehacer la app en otro teléfono: el respaldo, ubicaciones, catálogo de fotos y portadas. */
-    private fun escribirZip(ctx: Context, destino: File, conTablas: Boolean) {
+    // ------------------------------------------------------------ manifiesto (9 nov 2026)
+
+    const val MANIFIESTO = "manifiesto.json"
+    const val EXTRA = "vm_extra.json"
+
+    @Serializable class EntradaManifiesto(val sha256: String, val bytes: Long)
+
+    /**
+     * Lo que dice el respaldo de sí mismo: cuándo y con qué versión se hizo, cuántos registros trae de cada cosa y la huella
+     * (SHA-256) y el tamaño de cada archivo que lleva. Al volver a abrirlo se recalcula todo y se compara: si un solo byte
+     * cambió (un corte a la mitad, una tarjeta dañada), se nota.
+     */
+    @Serializable class Manifiesto(
+        val hecho: String, val schema_v: Int, val app: String = "",
+        val conteos: Map<String, Int> = emptyMap(), val archivos: Map<String, EntradaManifiesto> = emptyMap(),
+    )
+
+    /** Lo que no está en vm_respaldo.json pero tampoco se debe perder: la papelera, los ajustes ilegibles y los registros que no se pudieron leer. */
+    @Serializable class Fila(val col: String, val id: String, val fecha: String? = null, val json: String)
+    @Serializable class Extra(val filas: List<Fila> = emptyList())
+
+    /** Cuántos registros trae un respaldo, por colección (lo que se compara contra el manifiesto). */
+    fun conteoDe(r: Respaldo): Map<String, Int> = linkedMapOf(
+        "dias" to r.dias.size, "momentos" to r.momentos.size, "gastos" to r.gastos.size, "ingresos" to r.ingresos.size,
+        "respuestas" to r.respuestas.size, "cartas" to r.cartas.size, "experimentos" to r.experimentos.size, "notas" to r.notas.size,
+        "metas" to r.metas.size, "ideas" to r.ideas.size, "listas" to r.listas.size, "obras" to r.obras.size, "tramos" to r.tramos.size,
+        "consumos" to r.consumos.size, "tomas" to r.tomas.size, "lugares" to r.lugares.size, "visitas" to r.visitas.size,
+        "salud" to r.salud.size, "pantalla" to r.pantalla.size, "escuchas" to r.escuchas.size, "comidas" to r.comidas.size,
+        "series" to r.series.size, "ascensos" to r.ascensos.size, "avisos" to r.avisos.size,
+    )
+
+    private fun hex(b: ByteArray) = b.joinToString("") { "%02x".format(it) }
+
+    /** Huella SHA-256 y largo de todo lo que sale de [i]. */
+    fun huella(i: java.io.InputStream): Pair<String, Long> {
+        val md = java.security.MessageDigest.getInstance("SHA-256"); val buf = ByteArray(TROZO); var n = 0L
+        while (true) { val k = i.read(buf); if (k < 0) break; md.update(buf, 0, k); n += k }
+        return hex(md.digest()) to n
+    }
+
+    fun huella(f: File): String = f.inputStream().buffered(TROZO).use { huella(it).first }
+
+    /** Cuenta y calcula la huella de lo que pasa hacia [o], sin cerrarlo nunca (el zip sigue abierto para la siguiente entrada). */
+    private class Contador(private val o: java.io.OutputStream) : java.io.OutputStream() {
+        val md: java.security.MessageDigest = java.security.MessageDigest.getInstance("SHA-256")
+        var n = 0L
+        override fun write(b: Int) { o.write(b); md.update(b.toByte()); n++ }
+        override fun write(b: ByteArray, off: Int, len: Int) { o.write(b, off, len); md.update(b, off, len); n += len }
+        override fun flush() = o.flush()
+        override fun close() { flush() }
+    }
+
+    /** Las filas de [Extra] que hay en este teléfono. */
+    private fun extra(): Extra {
+        val db = Repo.db(); val l = ArrayList<Fila>()
+        listOf("papelera", "config_ilegible").forEach { col -> db.filas(col) { id, fecha, json -> l += Fila(col, id, fecha, json) } }
+        // Los que no se pudieron leer al abrir la app (con su texto tal cual) y los que llegaron así de un respaldo anterior.
+        Repo.crudosIlegibles().forEach { (col, textos) -> textos.forEach { t -> l += Fila("ilegible_$col", hex(java.security.MessageDigest.getInstance("SHA-1").digest(t.toByteArray())), null, t) } }
+        db.colecciones().filter { it.startsWith("ilegible_") }.forEach { col -> db.filas(col) { id, fecha, json -> l += Fila(col, id, fecha, json) } }
+        return Extra(l.distinctBy { it.col + "|" + it.id })
+    }
+
+    /** Devuelve a la base lo de [Extra] que no esté. Cuántas filas entraron. */
+    private fun aplicarExtra(e: Extra): Int {
+        val db = Repo.db(); var n = 0
+        db.transaccion { e.filas.forEach { f -> if (db.uno(f.col, f.id) == null) { db.poner(f.col, f.id, f.fecha, f.json); n++ } } }
+        return n
+    }
+
+    private fun version(ctx: Context): String = runCatching {
+        val p = ctx.packageManager.getPackageInfo(ctx.packageName, 0); "${p.versionName} (${p.longVersionCode})"
+    }.getOrDefault("")
+
+    /**
+     * Lo indispensable para rehacer la app en otro teléfono: el respaldo, ubicaciones, catálogo de fotos, portadas, lo de
+     * [Extra] y, al final, el manifiesto con la huella de cada archivo.
+     */
+    private fun escribirZip(ctx: Context, destino: File, conTablas: Boolean, r: Respaldo): Manifiesto {
+        val huellas = LinkedHashMap<String, EntradaManifiesto>()
         // Cada entrada se escribe directo al zip (antes se armaba todo como texto primero: con años de ubicaciones no cabía).
-        ZipOutputStream(destino.outputStream().buffered(TROZO)).use { z ->
-            fun poner(nombre: String, escribir: (java.io.OutputStream) -> Unit) { z.putNextEntry(ZipEntry(nombre)); escribir(z); z.closeEntry() }
-            poner("vm_respaldo.json") { Exportar.escribirRespaldo(it) }
+        return ZipOutputStream(destino.outputStream().buffered(TROZO)).use { z ->
+            fun poner(nombre: String, escribir: (java.io.OutputStream) -> Unit) {
+                z.putNextEntry(ZipEntry(nombre))
+                val c = Contador(z); escribir(c); c.flush()
+                z.closeEntry()
+                huellas[nombre] = EntradaManifiesto(hex(c.md.digest()), c.n)
+            }
+            poner("vm_respaldo.json") { o -> JSON.encodeToStream(Respaldo.serializer(), r, o) }
             poner("vm_ubicaciones.csv") { o -> Exportar.texto(o) { Exportar.escribirUbicaciones(it) } }
             poner("vm_fotos_catalogo.csv") { o -> Exportar.texto(o) { Exportar.escribirCatalogoFotos(it) } }
+            poner(EXTRA) { o -> JSON.encodeToStream(Extra.serializer(), extra(), o) }
             if (conTablas) Exportar.archivos(ctx).filter { it.nombre !in setOf("vm_respaldo.json", "vm_ubicaciones.csv", "vm_fotos_catalogo.csv") }.forEach { a -> poner(a.nombre, a.escribir) }
-            else poner("LEEME.txt") { it.write("Respaldo completo de Vestigium Mei (${Fechas.ahoraIso()}).\nPara restaurarlo: Más → Datos → Respaldo completo → Restaurar desde un archivo.\n".toByteArray()) }
-            Portadas.carpeta(ctx).listFiles()?.forEach { p -> z.putNextEntry(ZipEntry("portadas/" + p.name)); p.inputStream().use { it.copyTo(z) }; z.closeEntry() }
+            else poner("LEEME.txt") { it.write("Respaldo completo de Vestigium Mei (${Fechas.ahoraIso()}).\nPara restaurarlo: Más → Datos → Respaldo completo → Restaurar desde un archivo.\nmanifiesto.json dice qué trae y la huella de cada archivo.\n".toByteArray()) }
+            Portadas.carpeta(ctx).listFiles()?.forEach { p -> poner("portadas/" + p.name) { o -> p.inputStream().use { it.copyTo(o) } } }
+            FotosDia.carpeta(ctx).listFiles()?.forEach { p -> poner("fotos_dia/" + p.name) { o -> p.inputStream().use { it.copyTo(o) } } }
+            val m = Manifiesto(Fechas.ahoraIso(), SCHEMA_V, version(ctx), conteoDe(r), huellas)
+            z.putNextEntry(ZipEntry(MANIFIESTO)); z.write(JSON.encodeToString(Manifiesto.serializer(), m).toByteArray()); z.closeEntry()
+            m
         }
     }
 
     /**
-     * El respaldo completo listo para guardar: .zip, o .vmc cifrado si pusiste contraseña.
-     * [fecha] lo nombra (copias semanales); sin fecha, el nombre fijo se reemplaza cada día.
+     * Vuelve a abrir un respaldo (.zip ya descifrado) y lo compara con su manifiesto: la huella y el tamaño de cada archivo,
+     * y que vm_respaldo.json se lea completo con las mismas cifras. null si todo coincide; si no, qué falló. Un respaldo de
+     * antes del 9 nov 2026 no trae manifiesto: con [estricto] eso cuenta como falla.
      */
-    fun archivo(ctx: Context, fecha: String? = null, conTablas: Boolean = false): File {
+    fun verificarZip(f: File, estricto: Boolean = true): String? = try {
+        ZipFile(f).use { z ->
+            val me = z.getEntry(MANIFIESTO) ?: return if (estricto) "no trae manifiesto" else null
+            val m = z.getInputStream(me).use { JSON.decodeFromStream(Manifiesto.serializer(), it) }
+            if (m.archivos.isEmpty()) return "el manifiesto está vacío"
+            for ((n, e) in m.archivos) {
+                val x = z.getEntry(n) ?: return "le falta $n"
+                val (h, b) = z.getInputStream(x).use { huella(it) }
+                if (h != e.sha256 || b != e.bytes) return "$n no coincide con su huella"
+            }
+            val rj = z.getEntry("vm_respaldo.json") ?: return "le falta vm_respaldo.json"
+            // Leerlo completo pide memoria: si no alcanza, basta con que la huella coincida (los bytes son los que se escribieron).
+            val r = try { z.getInputStream(rj).buffered(TROZO).use { JSON.decodeFromStream(Respaldo.serializer(), it) } } catch (e: OutOfMemoryError) { null }
+            if (r != null) {
+                val c = conteoDe(r)
+                val distintas = m.conteos.filter { (k, v) -> c[k] != v }.keys
+                if (distintas.isNotEmpty()) return "las cifras no coinciden (" + distintas.joinToString(", ") + ")"
+            }
+            null
+        }
+    } catch (e: Exception) { "no se pudo leer: ${e.message ?: e.javaClass.simpleName}" }
+
+    /** Un respaldo listo para salir del teléfono, ya revisado, con lo que trae. */
+    class Hecho(val archivo: File, val conteo: Map<String, Int>, val detalle: String)
+
+    /**
+     * El respaldo completo listo para guardar: .zip, o .vmc cifrado si pusiste contraseña. Antes de entregarlo se vuelve a
+     * abrir y se compara con su manifiesto; el cifrado se descifra otra vez y debe dar el mismo zip byte por byte. Si algo no
+     * coincide, lanza una excepción y no sale nada. [fecha] lo nombra; sin fecha, el nombre fijo.
+     */
+    fun armar(ctx: Context, fecha: String? = null, conTablas: Boolean = false): Hecho {
         val dir = File(ctx.cacheDir, "respaldo").apply { mkdirs() }
         val nombre = BASE + (fecha?.let { "_$it" } ?: "")
         val zip = File(dir, "$nombre.zip")
-        escribirZip(ctx, zip, conTablas)
-        val clave = contrasena(ctx) ?: return zip
+        val m = escribirZip(ctx, zip, conTablas, Exportar.respaldo())
+        verificarZip(zip)?.let { zip.delete(); error("el respaldo recién hecho no pasó la revisión: $it") }
+        val conteo = mapOf("dias" to (m.conteos["dias"] ?: 0), "momentos" to (m.conteos["momentos"] ?: 0))
+        fun detalle(f: File) = porNumero(conteo["dias"] ?: 0, "1 día", "%,d días".format(conteo["dias"] ?: 0)) + " · " +
+            porNumero(conteo["momentos"] ?: 0, "1 momento", "%,d momentos".format(conteo["momentos"] ?: 0)) + " · " + "%.1f MB".format(f.length() / 1_048_576.0)
+        val clave = contrasena(ctx) ?: return Hecho(zip, conteo, detalle(zip))
         val vmc = File(dir, "$nombre.vmc")
-        try { cifrarArchivo(zip, vmc, clave) } finally { clave.fill(' '); zip.delete() }
-        return vmc
+        val prueba = File(dir, "$nombre.prueba")
+        try {
+            cifrarArchivo(zip, vmc, clave)
+            if (!descifrarArchivo(vmc, prueba, clave) || huella(prueba) != huella(zip)) { vmc.delete(); error("el respaldo cifrado no se pudo volver a abrir igual") }
+        } finally { clave.fill(' '); zip.delete(); prueba.delete() }
+        return Hecho(vmc, conteo, detalle(vmc))
     }
+
+    /** Como [armar], solo el archivo. */
+    fun archivo(ctx: Context, fecha: String? = null, conTablas: Boolean = false): File = armar(ctx, fecha, conTablas).archivo
 
     /** Una copia fechada en la carpeta que se puede compartir (Guardar en Drive, en Archivos, mandarla a la compu…). */
     fun paraCompartir(ctx: Context): File {
@@ -256,59 +387,168 @@ object Respaldos {
 
     const val PAUSA = "Tus respaldos están en pausa: llevan datos privados y no tienen contraseña. Ponla en Más → Datos → Respaldo completo → Cifrar con contraseña."
 
-    /** Con contraseña: solo el .vmc cifrado (y se borran los CSV sueltos de antes). Sin contraseña: los CSV para R y el .zip completo. */
-    fun aCarpeta(ctx: Context): Boolean {
-        if (bloqueado(ctx)) return false
-        val uriTxt = Repo.config.carpeta_respaldo ?: return false
-        val dir = DocumentFile.fromTreeUri(ctx, Uri.parse(uriTxt)) ?: return false
-        if (!dir.canWrite()) return false
-        val cifra = cifradoActivo(ctx)
-        if (!cifra) Exportar.archivos(ctx).forEach { a ->
-            val nombre = a.nombre
-            // Para .R se usa un tipo genérico: así el sistema no le agrega «.txt» al nombre.
-            val m = when { nombre.endsWith(".csv") -> "text/csv"; nombre.endsWith(".json") -> "application/json"; nombre.endsWith(".R") -> "application/octet-stream"; else -> "text/plain" }
-            val f = dir.findFile(nombre) ?: dir.createFile(m, nombre) ?: return@forEach
-            ctx.contentResolver.openOutputStream(f.uri, "wt")?.buffered(TROZO)?.use { a.escribir(it) }
-        }
-        val a = archivo(ctx)
-        val escrito = try { escribirSinRomper(ctx, dir, a) } finally { a.delete() }
-        if (!escrito) return false
-        // Los archivos en claro de antes se borran solo cuando ya quedó la copia cifrada.
-        if (cifra) dir.listFiles().filter { x -> x.name?.let { esArchivoPlano(it) } == true }.forEach { runCatching { it.delete() } }
-        // Si cambió el modo, el archivo del otro tipo ya no sirve.
-        dir.findFile(BASE + if (cifra) ".zip" else ".vmc")?.let { runCatching { it.delete() } }
-        Repo.cambiarConfig { it.copy(respaldo_ultimo = Fechas.ahoraIso()) }
-        return true
+    // ------------------------------------------------------------ estado (9 nov 2026)
+
+    enum class Luz { VERDE, AMARILLO, ROJO }
+
+    /** Verde: la última copia buena tiene 36 h o menos; amarillo, hasta 48 h; rojo, más (o nunca). */
+    fun luz(ultimo: String?, ahora: Long = System.currentTimeMillis()): Luz {
+        val ms = ultimo?.let { Fechas.millis(it) }?.takeIf { it > 0 } ?: return Luz.ROJO
+        val h = (ahora - ms) / 3_600_000.0
+        return when { h <= 36 -> Luz.VERDE; h <= 48 -> Luz.AMARILLO; else -> Luz.ROJO }
+    }
+
+    /** La copia buena más reciente fuera del teléfono (la carpeta revisada o Drive). */
+    fun ultimaFuera(c: Config = Repo.config): String? =
+        // Las copias de antes del 9 nov 2026 no se revisaban: cuentan hasta que salga la primera revisada.
+        listOfNotNull((c.respaldo_verificado ?: c.respaldo_ultimo)?.takeIf { c.carpeta_respaldo != null }, c.drive_ultimo?.takeIf { c.drive }).maxOrNull()
+
+    /** Nombre de la copia que se guarda aparte cuando el respaldo nuevo trae mucho menos que el anterior. */
+    const val REVISAR = "vestigium_revisar"
+    const val EMPOBRECIDO = "El respaldo de hoy trae muchos menos días o momentos que el anterior. No reemplacé tus copias: lo guardé aparte como «vestigium_revisar». Si borraste a propósito, toca «Respaldar ahora» en Respaldo para aceptarlo."
+
+    /** La subcarpeta con las copias fechadas. */
+    const val COPIAS = "copias"
+    const val COPIAS_DIA = 7
+    const val COPIAS_SEMANA = 8
+    const val COPIAS_MES = 12
+    const val COPIAS_BD = 4
+
+    /** De los [nombres] que siguen [patron], los que sobran si se conservan los [conservar] más recientes (el nombre lleva la fecha). */
+    fun sobran(nombres: Collection<String>, patron: Regex, conservar: Int): List<String> =
+        nombres.filter { patron.matches(it) }.distinct().sortedDescending().drop(conservar)
+
+    /** Lo que hay en [f] de la carpeta, con su huella; null si no se pudo leer. */
+    private fun huellaDe(ctx: Context, f: DocumentFile?): String? = f?.let { d ->
+        runCatching { ctx.contentResolver.openInputStream(d.uri)?.buffered(TROZO)?.use { huella(it).first } }.getOrNull()
     }
 
     /**
-     * Escribe [a] en [dir] sin dejar nunca el respaldo a medias: primero a un archivo aparte («….nuevo») y, solo cuando
-     * está completo, toma el nombre del respaldo; el anterior se borra al final. Antes se escribía encima del único
-     * respaldo, y si la tarea se cortaba (o el teléfono se apagaba) quedaba truncado. Si la carpeta no deja renombrar,
+     * Respaldo automático en la carpeta que elegiste. Deja:
+     * - vestigium_respaldo.zip (o .vmc cifrado): el último, que se reemplaza solo cuando el nuevo ya pasó su revisión y se
+     *   volvió a leer igual desde la carpeta;
+     * - en «copias»: uno por día (los últimos 7), uno por semana (8), uno por mes (12) y, cada semana, la base de datos tal
+     *   cual (las últimas 4). Antes había un solo archivo y un día malo pisaba la única copia buena.
+     * Si el nuevo trae mucho menos que el anterior, se guarda aparte («vestigium_revisar») y no se toca nada; [forzar] lo acepta.
+     * Sin contraseña también deja los CSV para R; con contraseña, solo lo cifrado.
+     */
+    fun aCarpeta(ctx: Context, forzar: Boolean = false): Boolean {
+        fun fallo(m: String): Boolean { Repo.cambiarConfig { it.copy(respaldo_error = m) }; return false }
+        if (bloqueado(ctx)) return fallo(PAUSA)
+        val uriTxt = Repo.config.carpeta_respaldo ?: return false
+        val dir = DocumentFile.fromTreeUri(ctx, Uri.parse(uriTxt)) ?: return fallo("No encuentro la carpeta de respaldos: vuelve a elegirla en Respaldo.")
+        if (!dir.canWrite()) return fallo("La carpeta de respaldos ya no deja escribir: vuelve a elegirla en Respaldo.")
+        val cifra = cifradoActivo(ctx)
+        val ext = if (cifra) ".vmc" else ".zip"
+        val hecho = try { armar(ctx) } catch (e: OutOfMemoryError) { return fallo("El respaldo no cupo en la memoria del teléfono.") }
+            catch (e: Exception) { return fallo("No pude armar el respaldo: ${e.message ?: e.javaClass.simpleName}") }
+        val a = hecho.archivo
+        try {
+            if (!forzar && empobrecido(Repo.config.respaldo_conteo, hecho.conteo)) {
+                escribirSinRomper(ctx, dir, a, REVISAR + ext)
+                runCatching { io.github.ruddy2003.vestigium.avisos.Avisos.respaldoEmpobrecido(ctx) }
+                return fallo(EMPOBRECIDO)
+            }
+            if (!cifra) Exportar.archivos(ctx).forEach { x ->
+                val nombre = x.nombre
+                // Para .R se usa un tipo genérico: así el sistema no le agrega «.txt» al nombre.
+                val m = when { nombre.endsWith(".csv") -> "text/csv"; nombre.endsWith(".json") -> "application/json"; nombre.endsWith(".R") -> "application/octet-stream"; else -> "text/plain" }
+                val f = dir.findFile(nombre) ?: dir.createFile(m, nombre) ?: return@forEach
+                ctx.contentResolver.openOutputStream(f.uri, "wt")?.buffered(TROZO)?.use { x.escribir(it) }
+            }
+            if (!escribirSinRomper(ctx, dir, a, BASE + ext)) return fallo("No pude escribir el respaldo en la carpeta. ¿Falta espacio?")
+            val propia = huella(a)
+            if (huellaDe(ctx, dir.findFile(BASE + ext)) != propia) return fallo("El respaldo de la carpeta no se lee igual que el que escribí. ¿Falta espacio?")
+            val ok = runCatching { copias(ctx, dir, a, ext, cifra) }.getOrDefault(false)
+            // Los archivos en claro de antes se borran solo cuando ya quedó la copia cifrada.
+            if (cifra) dir.listFiles().filter { x -> x.name?.let { esArchivoPlano(it) } == true }.forEach { runCatching { it.delete() } }
+            // Si cambió el modo, el archivo del otro tipo ya no sirve; el «revisar» de antes, tampoco.
+            dir.findFile(BASE + if (cifra) ".zip" else ".vmc")?.let { runCatching { it.delete() } }
+            listOf(".zip", ".vmc").forEach { e -> dir.findFile(REVISAR + e)?.let { runCatching { it.delete() } } }
+            val ahora = Fechas.ahoraIso()
+            Repo.cambiarConfig {
+                it.copy(respaldo_ultimo = ahora, respaldo_verificado = ahora, respaldo_conteo = hecho.conteo, respaldo_detalle = hecho.detalle,
+                    respaldo_error = if (ok) null else "El último quedó bien, pero no pude guardar las copias con fecha en «$COPIAS».")
+            }
+            return true
+        } finally { a.delete() }
+    }
+
+    /** Las copias con fecha en «copias» y su limpieza. true si quedaron. */
+    private fun copias(ctx: Context, dir: DocumentFile, a: File, ext: String, cifra: Boolean): Boolean {
+        val c = dir.findFile(COPIAS)?.takeIf { it.isDirectory } ?: dir.createDirectory(COPIAS) ?: return false
+        val hoy = Fechas.hoyCalendario()
+        val lunes = Fechas.lunesDe(hoy)
+        val nombres = c.listFiles().mapNotNull { it.name }.toMutableSet()
+        var ok = escribirSinRomper(ctx, c, a, "vestigium_dia_$hoy$ext")
+        if ("vestigium_semana_$lunes$ext" !in nombres) ok = escribirSinRomper(ctx, c, a, "vestigium_semana_$lunes$ext") && ok
+        if ("vestigium_mes_${hoy.take(7)}$ext" !in nombres) ok = escribirSinRomper(ctx, c, a, "vestigium_mes_${hoy.take(7)}$ext") && ok
+        // La base de datos tal cual, una vez por semana: la red por si algún día el JSON del respaldo no se pudiera leer.
+        val bdNombre = "vestigium_bd_$lunes.sqlite" + if (cifra) ".vmc" else ""
+        if (bdNombre !in nombres) runCatching {
+            val tmp = File(ctx.cacheDir, "respaldo/bd.sqlite"); val tmpC = File(ctx.cacheDir, "respaldo/bd.sqlite.vmc")
+            try {
+                Repo.db().copiaCruda(tmp)
+                val sale = if (cifra) { val k = contrasena(ctx) ?: error("sin contraseña"); try { cifrarArchivo(tmp, tmpC, k) } finally { k.fill(' ') }; tmpC } else tmp
+                escribirSinRomper(ctx, c, sale, bdNombre)
+            } finally { tmp.delete(); tmpC.delete() }
+        }
+        val ahora = c.listFiles().mapNotNull { it.name }
+        val e = Regex.escape(ext)
+        val sobra = sobran(ahora, Regex("vestigium_dia_\\d{4}-\\d{2}-\\d{2}$e"), COPIAS_DIA) +
+            sobran(ahora, Regex("vestigium_semana_\\d{4}-\\d{2}-\\d{2}$e"), COPIAS_SEMANA) +
+            sobran(ahora, Regex("vestigium_mes_\\d{4}-\\d{2}$e"), COPIAS_MES) +
+            sobran(ahora, Regex("vestigium_bd_\\d{4}-\\d{2}-\\d{2}\\.sqlite(\\.vmc)?"), COPIAS_BD) +
+            // Con contraseña, ninguna copia en claro se queda (podría llevar lo que antes no era privado y ahora sí).
+            (if (cifra) ahora.filter { it.startsWith("vestigium_") && !it.endsWith(".vmc") } else emptyList())
+        sobra.distinct().forEach { n -> c.findFile(n)?.let { runCatching { it.delete() } } }
+        return ok
+    }
+
+    /**
+     * El ensayo del mes: abre la última copia de la carpeta como si fuera a restaurarla (descifrándola con la contraseña
+     * guardada), la compara con su manifiesto y con lo que hay en el teléfono, y anota el resultado. No cambia nada.
+     */
+    fun ensayo(ctx: Context): String {
+        val dir = Repo.config.carpeta_respaldo?.let { DocumentFile.fromTreeUri(ctx, Uri.parse(it)) }
+        val f = dir?.let { d -> d.findFile("$BASE.vmc") ?: d.findFile("$BASE.zip") }
+        val resultado = if (f == null) "No encontré el respaldo en la carpeta." else when (val r = verificarUri(ctx, f.uri, null)) {
+            is Lectura.Listo -> "Bien: " + r.mensaje.lines().first { it.isNotBlank() } + " " + r.mensaje.lines().last()
+            is Lectura.Error -> "Falló: " + r.mensaje
+            Lectura.PideContrasena -> "Falló: la contraseña guardada no abre el respaldo de la carpeta."
+        }
+        Repo.cambiarConfig { it.copy(respaldo_ensayo = Fechas.ahoraIso(), respaldo_ensayo_resultado = resultado) }
+        return resultado
+    }
+
+    /**
+     * Escribe [a] en [dir] con el nombre [nombre] sin dejar nunca el respaldo a medias: primero a un archivo aparte
+     * («….nuevo») y, solo cuando está completo, toma el nombre; el anterior se borra al final. Antes se escribía encima del
+     * único respaldo, y si la tarea se cortaba (o el teléfono se apagaba) quedaba truncado. Si la carpeta no deja renombrar,
      * se escribe encima como antes.
      */
-    private fun escribirSinRomper(ctx: Context, dir: DocumentFile, a: java.io.File): Boolean {
+    private fun escribirSinRomper(ctx: Context, dir: DocumentFile, a: java.io.File, nombre: String = a.name): Boolean {
         fun copiar(f: DocumentFile): Boolean =
-            ctx.contentResolver.openOutputStream(f.uri, "wt")?.use { o -> a.inputStream().use { it.copyTo(o) }; true } ?: false
-        val nuevoNombre = a.name + ".nuevo"; val viejoNombre = a.name + ".anterior"
+            ctx.contentResolver.openOutputStream(f.uri, "wt")?.use { o -> a.inputStream().use { it.copyTo(o, TROZO) }; true } ?: false
+        val nuevoNombre = "$nombre.nuevo"; val viejoNombre = "$nombre.anterior"
         dir.findFile(nuevoNombre)?.delete()
         val nuevo = dir.createFile("application/octet-stream", nuevoNombre)
         if (nuevo == null || nuevo.name != nuevoNombre) {
             nuevo?.delete()
-            val f = dir.findFile(a.name) ?: dir.createFile(mime(a.name), a.name) ?: return false
+            val f = dir.findFile(nombre) ?: dir.createFile(mime(nombre), nombre) ?: return false
             return copiar(f)
         }
         if (!runCatching { copiar(nuevo) }.getOrDefault(false)) { nuevo.delete(); return false }
-        val viejo = dir.findFile(a.name)
+        val viejo = dir.findFile(nombre)
         dir.findFile(viejoNombre)?.delete()
         if (viejo != null && !viejo.renameTo(viejoNombre)) {
             // No deja renombrar: se escribe encima, como antes (el «.nuevo» ya no sirve).
             nuevo.delete()
             return copiar(viejo)
         }
-        if (!nuevo.renameTo(a.name)) {
+        if (!nuevo.renameTo(nombre)) {
             // El nuevo no tomó el nombre: el anterior vuelve a su lugar.
-            dir.findFile(viejoNombre)?.renameTo(a.name)
+            dir.findFile(viejoNombre)?.renameTo(nombre)
             nuevo.delete()
             return false
         }
@@ -391,7 +631,16 @@ object Respaldos {
                     val p = File(portadas, x.name.substringAfterLast('/'))
                     if (!p.exists()) { z.getInputStream(x).use { i -> p.outputStream().use { i.copyTo(it) } }; nPo++ }
                 }
-                return Lectura.Listo(msg + " Ubicaciones nuevas: %,d. Fotos con lugar: %,d. Portadas: %d.".format(nUb, nFo, nPo))
+                var nFd = 0
+                val fotosDia = FotosDia.carpeta(ctx)
+                z.entries().asSequence().filter { !it.isDirectory && it.name.contains("fotos_dia/") }.forEach { x ->
+                    val p = File(fotosDia, x.name.substringAfterLast('/'))
+                    if (!p.exists()) { z.getInputStream(x).use { i -> p.outputStream().use { i.copyTo(it) } }; nFd++ }
+                }
+                // La papelera, los ajustes ilegibles y lo que no se pudo leer (esquema 22).
+                val nEx = z.entradaQueTermina(EXTRA)?.let { x -> runCatching { z.getInputStream(x).use { aplicarExtra(JSON.decodeFromStream(Extra.serializer(), it)) } }.getOrDefault(0) } ?: 0
+                return Lectura.Listo(msg + " Ubicaciones nuevas: %,d. Fotos con lugar: %,d. Portadas: %d.".format(nUb, nFo, nPo) +
+                    (if (nFd > 0) " Fotos del día: %,d.".format(nFd) else "") + (if (nEx > 0) " En la papelera y aparte: %,d.".format(nEx) else ""))
             }
         } catch (e: Exception) {
             return Lectura.Error("No pude abrir el respaldo: ${e.message}")
@@ -486,10 +735,12 @@ object Respaldos {
             val c = try { contenido(f) } catch (e: Exception) { return Lectura.Error("El archivo está dañado o incompleto: ${e.message}") }
                 catch (e: OutOfMemoryError) { return Lectura.Error("El respaldo no cupo en la memoria del teléfono para revisarlo.") }
                 ?: return Lectura.Error("Ese archivo no es un respaldo de Vestigium Mei.")
+            // Con manifiesto (desde el 9 nov 2026), cada archivo se compara con su huella.
+            val manifiesto = if (esZip(f)) verificarZip(f, estricto = false).let { p -> if (p == null) (if (ZipFile(f).use { it.getEntry(MANIFIESTO) != null }) "Coincide con su manifiesto, archivo por archivo.\n" else "") else return Lectura.Error("El respaldo no coincide con su manifiesto: $p") } else ""
             val aqui = "Respaldo / este teléfono: %,d / %,d días · %,d / %,d momentos · %,d / %,d gastos · %,d / %,d experimentos.".format(
                 c.r.dias.size, Repo.dias.size, c.r.momentos.size, Repo.momentos.size, c.r.gastos.size, Repo.gastos.size, c.r.experimentos.size, Repo.experimentos.size)
             // «Se lee completo» es lo único que se comprobó: que no le falte nada depende de qué había cuando se hizo.
-            return Lectura.Listo((if (cifrado) "Cifrado y abierto con la contraseña. " else "") + "El respaldo se lee completo.\n" +
+            return Lectura.Listo((if (cifrado) "Cifrado y abierto con la contraseña. " else "") + "El respaldo se lee completo.\n" + manifiesto +
                 (Importar.esquemaFuturo(c.r.schema_v)?.let { "$it\n" } ?: "") + informe(c).joinToString("\n") { "· $it" } + "\n" + aqui)
         } finally { claro.delete() }
     }
