@@ -296,9 +296,11 @@ fun RecuadroMapas(nav: Nav) {
     val cs = MaterialTheme.colorScheme
     val d = io.github.ruddy2003.vestigium.ui.vida.disenoVida(Estilo.tema)
     val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
-    Recuadro("Mapas", detalle, alto = 168.dp, onClick = { nav.ir("mapas") }) {
+    Recuadro("Mapas", detalle, alto = 220.dp, onClick = { nav.ir("mapas") }) {
         Canvas(Modifier.fillMaxSize()) { with(d) { muebleMapas(io.github.ruddy2003.vestigium.ui.vida.EstadoMueble(cs.surface, cs.primary, cs.secondary, cs.onSurface, 9), oscuro) } }
-        MapaRascar(r?.codigosPaises ?: emptySet(), Modifier.fillMaxSize().padding(horizontal = 22.dp, vertical = 16.dp))
+        io.github.ruddy2003.vestigium.ui.vida.EnNicho(d.area(io.github.ruddy2003.vestigium.ui.vida.MuebleVida.MAPAS)) {
+            MapaRascar(r?.codigosPaises ?: emptySet(), Modifier.fillMaxSize().padding(2.dp))
+        }
     }
 }
 

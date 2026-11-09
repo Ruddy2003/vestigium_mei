@@ -29,7 +29,7 @@ import io.github.ruddy2003.vestigium.ui.esOscuro
  * fijadas y luego las más recientes. Tocar una nota (o el tablero) abre Notas.
  */
 @Composable
-fun TableroDeNotas(notas: List<Nota>, modifier: Modifier = Modifier, alto: androidx.compose.ui.unit.Dp = 200.dp, abrir: () -> Unit) {
+fun TableroDeNotas(notas: List<Nota>, modifier: Modifier = Modifier, alto: androidx.compose.ui.unit.Dp = 280.dp, abrir: () -> Unit) {
     val d = disenoVida(Estilo.tema)
     val cs = MaterialTheme.colorScheme
     val oscuro = esOscuro()
@@ -39,10 +39,13 @@ fun TableroDeNotas(notas: List<Nota>, modifier: Modifier = Modifier, alto: andro
         Canvas(Modifier.fillMaxSize()) { with(d) { tableroNotas(e, oscuro) } }
         val dens = LocalDensity.current
         val w = constraints.maxWidth.toFloat(); val h = constraints.maxHeight.toFloat()
-        val mx = w * 0.06f; val my = h * 0.08f; val hueco = w * 0.025f
-        val cw = (w - 2 * mx - 2 * hueco) / 3f; val ch = (h - 2 * my - hueco) / 2f
+        // Las notas en el nicho del tablero, en tres columnas y dos filas.
+        val a = d.area(MuebleVida.NOTAS)
+        val x0 = w * a.left; val y0 = h * a.top; val aw = w * a.width; val ah = h * a.height
+        val hueco = aw * 0.03f
+        val cw = (aw - 2 * hueco) / 3f; val ch = (ah - hueco) / 2f
         muestra.forEachIndexed { i, n ->
-            val x = mx + (i % 3) * (cw + hueco); val y = my + (i / 3) * (ch + hueco)
+            val x = x0 + (i % 3) * (cw + hueco); val y = y0 + (i / 3) * (ch + hueco)
             with(dens) {
                 Box(Modifier.offset(x.toDp(), y.toDp()).size(cw.toDp(), ch.toDp())) {
                     Canvas(Modifier.fillMaxSize()) {

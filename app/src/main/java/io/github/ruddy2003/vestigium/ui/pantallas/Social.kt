@@ -374,12 +374,14 @@ fun RecuadroSocial(nav: Nav) {
     val pendientes = remember(Repo.dias, Repo.config.personas) { Personas.pendientes().size }
     val n = m?.nodos?.size ?: 0
     Recuadro("Social", if (n == 0) "Tu gente, quién conoce a quién y tu cielo de personas" else
-        porNumero(n, "1 persona", "$n personas") + (if (pendientes > 0) " · $pendientes por clasificar" else "") + " · red y cielo", alto = 168.dp, onClick = { nav.ir("social") }) {
+        porNumero(n, "1 persona", "$n personas") + (if (pendientes > 0) " · $pendientes por clasificar" else "") + " · red y cielo", alto = 230.dp, onClick = { nav.ir("social") }) {
         // El mueble del tema donde se reúne tu gente (lote E6), y el grafo encima, en el centro.
         val d = io.github.ruddy2003.vestigium.ui.vida.disenoVida(tema)
         val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
         Canvas(Modifier.fillMaxSize()) { with(d) { muebleSocial(io.github.ruddy2003.vestigium.ui.vida.EstadoMueble(cs.surface, cs.primary, cs.secondary, cs.onSurface, 5), oscuro) } }
-        if (m != null && m.nodos.isNotEmpty()) Canvas(Modifier.fillMaxSize().padding(horizontal = 36.dp, vertical = 16.dp)) { dibujarGrafo(m, 1f, Offset.Zero, null, cs, eg, tema, medidor, estilo, 0f, false) }
-        else Text("menciona a alguien con @", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.align(Alignment.Center))
+        io.github.ruddy2003.vestigium.ui.vida.EnNicho(d.area(io.github.ruddy2003.vestigium.ui.vida.MuebleVida.SOCIAL)) {
+            if (m != null && m.nodos.isNotEmpty()) Canvas(Modifier.fillMaxSize().padding(6.dp)) { dibujarGrafo(m, 1f, Offset.Zero, null, cs, eg, tema, medidor, estilo, 0f, false) }
+            else Text("menciona a alguien con @", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.align(Alignment.Center))
+        }
     }
 }

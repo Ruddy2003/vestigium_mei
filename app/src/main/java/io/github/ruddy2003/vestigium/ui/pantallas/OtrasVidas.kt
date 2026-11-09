@@ -241,20 +241,25 @@ fun RecuadroOtrasVidas(nav: Nav) {
     val tema = Estilo.tema.id
     val vidas = remember(tema) { OtrasVidas.visibles(tema).sortedBy { it.anio } }
     val cs = MaterialTheme.colorScheme
-    Recuadro("Otras vidas", "Cómo vivía alguien del Paleolítico, de Roma, de Edo o de 1960, frente a cómo vives tú", alto = 150.dp, onClick = { nav.ir("otras_vidas") }) {
+    Recuadro("Otras vidas", "Cómo vivía alguien del Paleolítico, de Roma, de Edo o de 1960, frente a cómo vives tú", alto = 190.dp, onClick = { nav.ir("otras_vidas") }) {
         // La vitrina del tema (lote E6): un nicho por medalla.
         val d = io.github.ruddy2003.vestigium.ui.vida.disenoVida(Estilo.tema)
         val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
         Box(Modifier.fillMaxSize()) {
             Canvas(Modifier.fillMaxSize()) { with(d) { muebleOtrasVidas(io.github.ruddy2003.vestigium.ui.vida.EstadoMueble(cs.surface, cs.primary, cs.secondary, cs.onSurface, 7), oscuro) } }
             val muestra = vidas.filterIndexed { i, v -> v.tema != null || i % 2 == 0 }.take(5)
-            Row(Modifier.fillMaxSize().padding(horizontal = 10.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                muestra.forEach { v ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        MedallaVida(v, 46.dp, elegida = v.tema != null)
-                        Text(anio(v.anio), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
+            io.github.ruddy2003.vestigium.ui.vida.EnNicho(d.area(io.github.ruddy2003.vestigium.ui.vida.MuebleVida.OTRAS_VIDAS)) {
+            // Cinco columnas iguales: cada medalla, al centro de su compartimento del nicho.
+            Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                (0 until 5).forEach { i ->
+                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                        muestra.getOrNull(i)?.let { v ->
+                            MedallaVida(v, 46.dp, elegida = v.tema != null)
+                            Text(anio(v.anio), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
+                        }
                     }
                 }
+            }
             }
         }
     }
