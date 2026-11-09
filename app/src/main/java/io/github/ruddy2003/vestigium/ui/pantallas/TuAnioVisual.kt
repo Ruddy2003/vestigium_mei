@@ -406,6 +406,7 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             listOf(0.25f, 0.68f).forEach { f -> drawRect(Color(0xFFD9C29A), Offset(x0 + w * f, y0 - 0.5f * d), Size(w * 0.04f, h + 1f * d)) }
             drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(Offset(x0 + w * 0.47f, cy), h * 0.3f), Color(0xFFA2401F))
         }
+        TemaId.BASICO -> drawRoundRect(c, Offset(x0, y0), Size(w, h), CornerRadius(2 * d))
     }
     drawRect(fondo.copy(alpha = 0.12f), o, Size(w, 1f * d))
 }
@@ -863,6 +864,7 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             lleno(Path().apply { addOval(androidx.compose.ui.geometry.Rect(c.x - r, c.y - r * 0.8f, c.x + r, c.y + r * 0.85f)) })
             for (k in -1..1) drawCircle(borde, r * 0.1f, Offset(c.x + k * r * 0.35f, c.y))
         }
+        TemaId.BASICO -> { drawCircle(relleno, r, c); drawCircle(borde, r, c, style = fino) }
     }
 }
 
@@ -1624,6 +1626,7 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
             }
             else -> return false
         }
+        TemaId.BASICO -> return false
     }
     return true
 }

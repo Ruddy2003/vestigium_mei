@@ -71,6 +71,8 @@ object Repo {
     @Synchronized
     fun init(ctx: Context) {
         if (listo) return
+        // En un teléfono nuevo, la base que trajo la copia de Android (si la encendiste), antes de abrirla.
+        runCatching { CopiaAndroid.restaurarSiHace(ctx.applicationContext) }
         db = Db(ctx.applicationContext)
         // Las colecciones se leen y decodifican a la vez, en varios hilos: antes iban una tras otra en el hilo principal y
         // el arranque se alargaba con cada año de datos (con riesgo de que Android diera la app por congelada).
@@ -209,7 +211,7 @@ object Repo {
 
     /** Decodifica y anota cuántos documentos de [col] no se pudieron leer (en las consultas por fechas, el mayor conteo visto). */
     private fun <T> leer(col: String, textos: List<String>, s: KSerializer<T>): List<T> {
-        val (l, fallidos) = Decodificar.todos(textos, s)
+        val (l, fallidos) = Decodificar.todos(textos, s) { t -> crudosIlegibles.getOrPut(col) { java.util.concurrent.ConcurrentHashMap.newKeySet() }.let { if (it.size < 20_000) it.add(t) } }
         if (fallidos > 0) {
             // Al abrir, varios hilos leen a la vez: se juntan aparte y se publican al final de init.
             if (listo) { val n = maxOf(fallidos, ilegibles[col] ?: 0); enMain { ilegibles = ilegibles + (col to n) } }
@@ -219,6 +221,13 @@ object Repo {
     }
 
     private val ilegiblesAlAbrir = java.util.concurrent.ConcurrentHashMap<String, Int>()
+
+    /**
+     * El texto tal cual de lo que no se pudo leer, por colección (9 nov 2026). El respaldo se arma con lo que está en
+     * memoria, así que antes lo ilegible no viajaba en ningún respaldo: ahora va aparte, en vm_extra.json.
+     */
+    private val crudosIlegibles = java.util.concurrent.ConcurrentHashMap<String, MutableSet<String>>()
+    fun crudosIlegibles(): Map<String, List<String>> = crudosIlegibles.mapValues { it.value.toList() }.filterValues { it.isNotEmpty() }
 
     /** El resultado de una lectura en paralelo; si falló, el error original (no el envoltorio del hilo). */
     private fun <R> java.util.concurrent.Future<R>.dato(): R =
@@ -456,7 +465,7 @@ object Repo {
         val suyas = visitas.filter { it.lugar == id }
         db.transaccion {
             suyas.forEach { v ->
-                if (pasarA == null) db.borrar("visitas", v.id)
+                if (pasarA == null) { aPapelera("visitas", v.id); db.borrar("visitas", v.id) }
                 else db.poner("visitas", v.id, v.entrada.take(10), JSON.encodeToString(Visita.serializer(), v.copy(lugar = pasarA)))
             }
         }
@@ -471,7 +480,7 @@ object Repo {
     }
 
     /** «No estuve aquí»: quita una visita. */
-    fun borrarVisita(id: String) { db.borrar("visitas", id); enMain { visitas = visitas.filter { it.id != id } } }
+    fun borrarVisita(id: String) { aPapelera("visitas", id); db.borrar("visitas", id); enMain { visitas = visitas.filter { it.id != id } } }
 
     /** Guarda y quita varias visitas de una vez (en una transacción) y las publica juntas. */
     @Synchronized
@@ -535,7 +544,7 @@ object Repo {
     fun importarYoutube(lista: List<YtEvento>, reemplazarSuscripciones: Boolean) {
         val viejasSubs = if (reemplazarSuscripciones) youtube.filter { it.tipo == "suscripcion" }.map { it.id }.toSet() - lista.map { it.id }.toSet() else emptySet()
         db.transaccion {
-            viejasSubs.forEach { db.borrar("youtube", it) }
+            viejasSubs.forEach { aPapelera("youtube", it); db.borrar("youtube", it) }
             lista.forEach { db.poner("youtube", it.id, it.fecha.ifBlank { null }, JSON.encodeToString(YtEvento.serializer(), it)) }
         }
         val ids = lista.map { it.id }.toSet()
@@ -693,7 +702,7 @@ object Repo {
     fun importarEscuchas(lista: List<Escucha>) {
         db.transaccion { lista.forEach { db.poner("escuchas", it.id, it.fecha, JSON.encodeToString(Escucha.serializer(), it)) } }
     }
-    fun borrarEscuchas(ids: Collection<String>) { db.transaccion { ids.forEach { db.borrar("escuchas", it) } } }
+    fun borrarEscuchas(ids: Collection<String>) { db.transaccion { ids.forEach { aPapelera("escuchas", it); db.borrar("escuchas", it) } } }
 
     fun importarSubrayados(lista: List<Subrayado>) {
         db.transaccion { lista.forEach { db.poner("subrayados", it.id, it.fecha, JSON.encodeToString(Subrayado.serializer(), it)) } }
@@ -720,6 +729,8 @@ object Repo {
     /** Reemplaza todo lo de MacroFactor entre dos fechas con lo recién importado (así reimportar no duplica). */
     fun importarMacrofactor(desde: String, hasta: String, dias: List<NutricionDia>, comidas: List<Comida>, series: List<Serie>, entr: List<EntrenoDia>) {
         db.transaccion {
+            // Lo de antes pasa 7 días a la papelera: si la reimportación vino incompleta, se puede recuperar.
+            rangoAPapelera("comidas", desde, hasta); rangoAPapelera("series", desde, hasta)
             db.borrarRango("comidas", desde, hasta); db.borrarRango("series", desde, hasta)
             dias.forEach { db.poner("nutricion", it.fecha, it.fecha, JSON.encodeToString(NutricionDia.serializer(), it)) }
             comidas.forEach { db.poner("comidas", it.id, it.fecha, JSON.encodeToString(Comida.serializer(), it)) }
@@ -778,13 +789,26 @@ object Repo {
 
     // ---------- Papelera (v14) ----------
     /** Lo que se guarda 7 días al borrarlo: los registros que haces tú (no lo que llega solo ni lo que se reimporta). */
-    private val EN_PAPELERA = setOf("momentos", "tramos", "consumos", "notas", "metas", "tomas", "gastos", "ingresos", "lugares", "cartas", "ascensos", "obras", "ideas", "listas")
+    private val EN_PAPELERA = setOf("momentos", "tramos", "consumos", "notas", "metas", "tomas", "gastos", "ingresos", "lugares", "cartas", "ascensos", "obras", "ideas", "listas",
+        // Esquema 22 (9 nov 2026): también las visitas que quitas y lo que una reimportación reemplaza o borra.
+        "visitas", "escuchas", "comidas", "series", "youtube")
+
+    /** Lo que vuelve de la papelera tal cual a la base (se ve al volver a abrir la app): lo que reemplazó una reimportación. */
+    val PAPELERA_CRUDA = setOf("escuchas", "comidas", "series", "youtube")
 
     private fun aPapelera(col: String, id: String) {
         if (col !in EN_PAPELERA) return
         val json = db.uno(col, id) ?: return
-        val b = Borrado(col, id, json, Fechas.ahoraIso())
+        val b = Borrado(col, id, json, Fechas.ahoraIso(), db.fechaDe(col, id))
         runCatching { db.poner("papelera", "$col:$id", Fechas.diaLogico(), JSON.encodeToString(Borrado.serializer(), b)) }
+    }
+
+    /** Antes de borrar todo un rango de [col] (al reimportar): cada documento pasa 7 días a la papelera. */
+    private fun rangoAPapelera(col: String, desde: String, hasta: String) {
+        val ahora = Fechas.ahoraIso(); val hoy = Fechas.diaLogico()
+        val l = ArrayList<Borrado>()
+        db.filas(col) { id, fecha, json -> if (fecha != null && fecha >= desde && fecha <= hasta) l += Borrado(col, id, json, ahora, fecha) }
+        l.forEach { b -> runCatching { db.poner("papelera", "${b.col}:${b.id}", hoy, JSON.encodeToString(Borrado.serializer(), b)) } }
     }
 
     /** Lo que está en la papelera y no se ha recuperado (lo que volvió con «deshacer» ya no cuenta), lo más reciente primero. */
@@ -809,6 +833,8 @@ object Repo {
                 "obras" -> guardarObra(JSON.decodeFromString(Obra.serializer(), b.json))
                 "ideas" -> guardarIdea(JSON.decodeFromString(Idea.serializer(), b.json))
                 "listas" -> guardarLista(JSON.decodeFromString(Lista.serializer(), b.json))
+                "visitas" -> guardarVisita(JSON.decodeFromString(Visita.serializer(), b.json))
+                in PAPELERA_CRUDA -> db.poner(b.col, b.id, b.fecha, b.json)
                 else -> error("colección sin papelera")
             }
         }.isSuccess

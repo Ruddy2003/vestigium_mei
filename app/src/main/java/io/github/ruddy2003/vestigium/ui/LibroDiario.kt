@@ -31,6 +31,7 @@ import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.data.alFuturo
+import io.github.ruddy2003.vestigium.data.porNumero
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -45,6 +46,13 @@ import kotlin.math.sin
 object LibroDiario {
     /** Entradas con texto, de la más reciente a la más antigua. */
     fun entradas(): List<Dia> = Repo.dias.values.filter { it.nota.isNotBlank() }.sortedByDescending { it.fecha }
+
+    /**
+     * El libro del diario de un año entero, para la cápsula del año, en un solo PDF (sin fotos, para que quepa en memoria);
+     * null si ese año no tiene entradas.
+     */
+    fun libroDelAnio(ctx: Context, anio: String): File? =
+        libro(ctx, OpcionesLibro("$anio-01-01", "$anio-12-31", Estilo.tema, fotos = false, porTomos = false)).firstOrNull()
 
     /** Noches con un sueño escrito, de la más reciente a la más antigua. */
     fun suenos(): List<Dia> = Repo.dias.values.filter { it.sueno_texto.isNotBlank() }.sortedByDescending { it.fecha }
@@ -173,6 +181,8 @@ object LibroDiario {
         TemaId.REVOLUCION -> Fuentes(R.font.convencion_titulo, R.font.ciudadana_regular)
         // La uncial de los caminos y el libro de crónicas.
         TemaId.ANTIGUAS -> Fuentes(R.font.camino_titulo, R.font.vollkorn_regular)
+        // Básico (sin diseño): la letra del sistema.
+        TemaId.BASICO -> Fuentes(R.font.plex_sans_semibold, R.font.plex_sans_regular)
         TemaId.CUEVA -> Fuentes(R.font.amatic_bold, R.font.abrigo_regular)
     }
 
@@ -279,6 +289,7 @@ object LibroDiario {
             TemaId.ANTIGUAS -> "article{border:2px solid $p;padding:18px;margin-bottom:18px;background:linear-gradient(135deg,$s 10px,transparent 10px),linear-gradient(225deg,$s 10px,transparent 10px)," +
                 "linear-gradient(315deg,$s 10px,transparent 10px),linear-gradient(45deg,$s 10px,transparent 10px)}" + capitular("2.8em", p)
             // Una hilera de puntos de ocre a la izquierda de cada día, los títulos a mano alzada y la primera letra grande, de ocre.
+            TemaId.BASICO -> ""
             TemaId.CUEVA -> "article{border-left:4px dotted $p;padding:6px 14px;margin-bottom:20px}h1,.fecha{font-family:T,cursive;letter-spacing:.06em}" +
                 ".fecha{font-size:1.4em;color:$p}.meta{color:$v}" + capitular("3em", p)
         }
@@ -386,6 +397,349 @@ object LibroDiario {
         return f
     }
 
+    // ------------------------------------------------------------------ el libro del diario (9 nov 2026)
+
+    /**
+     * Qué libro armar: del [desde] al [hasta] (AAAA-MM-DD), con el diseño de [tema], con la foto de cada día y con la página
+     * de resumen al final de cada mes. Con [porTomos], un periodo de más de tres meses sale en varios PDF (uno por trimestre):
+     * Android guarda todas las páginas en memoria hasta el final, y un año con fotos no cabría.
+     */
+    class OpcionesLibro(val desde: String, val hasta: String, val tema: TemaId, val fotos: Boolean = true, val resumenes: Boolean = true, val porTomos: Boolean = true)
+
+    /** Lo que se cuenta de un mes en su página de resumen. Nada del seguimiento privado. */
+    class ResumenMes(
+        val mes: String, val dias: Int, val conDiario: Int, val animo: Double?, val energia: Double?, val suenoMin: Double?, val pasos: Double?,
+        val gasto: Double, val ingreso: Double, val categorias: List<Pair<String, Double>>, val personas: List<Pair<String, Int>>,
+        val temas: List<Pair<String, Int>>, val lugares: List<Pair<String, Int>>, val senaladas: List<Pair<String, String>>,
+        val mejor: Dia?, val curva: List<Pair<Int, Int>>, val palabras: Int,
+    )
+
+    fun resumenMes(mes: String, hasta: String = "9999-12-31"): ResumenMes {
+        val eq = Repo.equivalencias()
+        val ultimo = Fechas.parse("$mes-01").lengthOfMonth()
+        val fechas = (1..ultimo).map { "$mes-%02d".format(it) }.filter { it <= hasta }
+        val dias = fechas.mapNotNull { Repo.dias[it] }
+        fun cuenta(l: List<String>) = l.groupingBy { it }.eachCount().entries.sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key }).take(6).map { it.key to it.value }
+        val gastos = Repo.gastos.filter { it.dia.startsWith(mes) && it.dia <= hasta }
+        val visitas = Repo.visitas.filter { it.entrada.take(10).startsWith(mes) && it.entrada.take(10) <= hasta }
+        val nombres = Repo.lugares.associate { it.id to it.nombre }
+        return ResumenMes(
+            mes = mes, dias = fechas.size, conDiario = dias.count { it.nota.isNotBlank() },
+            animo = dias.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average(),
+            energia = dias.mapNotNull { it.activacion }.takeIf { it.isNotEmpty() }?.average(),
+            suenoMin = fechas.mapNotNull { Repo.salud[it]?.sueno_min }.takeIf { it.isNotEmpty() }?.average(),
+            pasos = fechas.mapNotNull { Repo.salud[it]?.pasos }.takeIf { it.isNotEmpty() }?.average(),
+            gasto = gastos.sumOf { it.monto }, ingreso = Repo.ingresos.filter { it.dia.startsWith(mes) && it.dia <= hasta }.sumOf { it.monto },
+            categorias = gastos.groupBy { it.categoria }.mapValues { e -> e.value.sumOf { it.monto } }.entries.sortedByDescending { it.value }.take(4).map { it.key to it.value },
+            personas = cuenta(dias.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct() }),
+            temas = cuenta(dias.flatMap { d -> Texto.temas(d.nota).map { Texto.canon(it, eq) }.distinct() }),
+            lugares = cuenta(visitas.mapNotNull { nombres[it.lugar] }),
+            senaladas = dias.flatMap { d -> io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(d).map { d.fecha to it } },
+            mejor = dias.filter { it.valencia != null }.maxWithOrNull(compareBy<Dia> { it.valencia }.thenBy { it.mejor_momento.length }),
+            curva = fechas.mapIndexedNotNull { i, f -> Repo.dias[f]?.valencia?.let { i + 1 to it } },
+            palabras = dias.sumOf { Texto.palabras(it.nota) },
+        )
+    }
+
+    /** Los datos importantes de un día, en frases cortas (sin nada privado). */
+    fun datosDelDia(d: Dia): List<String> {
+        val s = Repo.salud[d.fecha]
+        val e = Repo.entorno[d.fecha]
+        val nombres = Repo.lugares.associate { it.id to it.nombre }
+        val lugares = Repo.visitas.filter { it.entrada.take(10) == d.fecha }.mapNotNull { nombres[it.lugar] }.distinct().take(3)
+        val eq = Repo.equivalencias()
+        val personas = Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct().take(6)
+        val gasto = Repo.gastos.filter { it.dia == d.fecha }.sumOf { it.monto }
+        return listOfNotNull(
+            d.valencia?.let { "ánimo $it/7" }, d.activacion?.let { "energía $it/7" },
+            s?.sueno_min?.let { "sueño ${it / 60} h ${"%02d".format(it % 60)}" }, s?.pasos?.let { "%,d pasos".format(it) },
+            io.github.ruddy2003.vestigium.ui.pantallas.Recuerdos.clima(e?.codigo, e?.t_max),
+            lugares.takeIf { it.isNotEmpty() }?.joinToString(", "),
+            personas.takeIf { it.isNotEmpty() }?.joinToString(" ") { "@$it" },
+            if (gasto > 0) "gasto " + io.github.ruddy2003.vestigium.ui.pantallas.dinero(gasto) else null,
+            io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(d).takeIf { it.isNotEmpty() }?.joinToString(", "),
+        )
+    }
+
+    /** Varios tomos en un .zip, para compartirlos juntos. */
+    fun juntar(ctx: Context, tomos: List<File>, nombre: String): File {
+        val f = File(File(ctx.cacheDir, "export").apply { mkdirs() }, nombre)
+        ZipOutputStream(f.outputStream().buffered()).use { z -> tomos.forEach { t -> z.putNextEntry(ZipEntry(t.name)); t.inputStream().use { it.copyTo(z) }; z.closeEntry() } }
+        return f
+    }
+
+    /** Los días con algo que contar (diario, ánimo o foto) entre dos fechas, del más antiguo al más reciente. */
+    fun diasDelLibro(desde: String, hasta: String): List<Dia> =
+        Repo.dias.values.filter { it.fecha in desde..hasta && (it.nota.isNotBlank() || it.valencia != null || io.github.ruddy2003.vestigium.data.FotoDelDia.tiene(it)) }.sortedBy { it.fecha }
+
+    /** El libro, en uno o varios tomos. Vacío si en el periodo no hay días. */
+    fun libro(ctx: Context, o: OpcionesLibro): List<File> {
+        val dias = diasDelLibro(o.desde, o.hasta)
+        if (dias.isEmpty()) return emptyList()
+        val meses = dias.map { it.fecha.take(7) }.distinct()
+        val tomos = if (o.porTomos && meses.size > 3) meses.chunked(3) else listOf(meses)
+        val dir = carpeta(ctx)
+        return tomos.mapIndexed { i, ms ->
+            val enTomo = dias.filter { it.fecha.take(7) in ms }
+            val desde = maxOf(o.desde, enTomo.first().fecha); val hasta = minOf(o.hasta, enTomo.last().fecha)
+            // Primero se arma sin dibujar fotos, solo para saber en qué página empieza cada mes (el índice va antes).
+            val paginas = componer(ctx, enTomo, o, desde, hasta, null, if (tomos.size > 1) i + 1 to tomos.size else null, ensayo = true).second
+            val (doc, _) = componer(ctx, enTomo, o, desde, hasta, paginas, if (tomos.size > 1) i + 1 to tomos.size else null, ensayo = false)
+            val nombre = "diario_${desde}_a_${hasta}" + (if (tomos.size > 1) "_tomo${i + 1}" else "") + ".pdf"
+            val f = File(dir, nombre)
+            try { f.outputStream().use { doc!!.writeTo(it) } } finally { doc?.close() }
+            f
+        }
+    }
+
+    /**
+     * Arma un tomo: portada, índice, una página (o más) por día y el resumen al final de cada mes. Devuelve el documento y en
+     * qué página quedó cada parte. Con [ensayo] no dibuja fotos y descarta el documento: solo cuenta páginas.
+     */
+    private fun componer(ctx: Context, dias: List<Dia>, o: OpcionesLibro, desde: String, hasta: String, paginas: Map<String, Int>?,
+                         tomo: Pair<Int, Int>?, ensayo: Boolean): Pair<PdfDocument?, Map<String, Int>> {
+        val tema = o.tema
+        val pg = pagina(tema)
+        val e = esquemaDe(tema, tema.soloOscuro)
+        val fu = fuentes(tema)
+        val tfTitulo = runCatching { ResourcesCompat.getFont(ctx, fu.titulo) }.getOrNull() ?: Typeface.SERIF
+        val tfTexto = runCatching { ResourcesCompat.getFont(ctx, fu.texto) }.getOrNull() ?: Typeface.SERIF
+        val fondo = pg.color.toArgb(); val tinta = pg.tinta.toArgb(); val tenue = pg.tenue.toArgb(); val acento = pg.acento.toArgb()
+        val papel = if (ensayo) null else pg.fondo?.let { runCatching { android.graphics.BitmapFactory.decodeResource(ctx.resources, it) }.getOrNull() }
+        val doc = PdfDocument()
+        val m = MARGEN
+        val ancho = (ANCHO - 2 * m).toInt()
+        var hoja: PdfDocument.Page? = null
+        var num = 0
+        var y = m
+        val donde = LinkedHashMap<String, Int>()
+        val pie = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = 8f; color = tenue }
+        val titulo = Estilo.seccion("Diario", Romano.latin("Diario")).first
+        fun nueva(conPie: Boolean = true) {
+            hoja?.let { doc.finishPage(it) }
+            num++
+            val p = doc.startPage(PdfDocument.PageInfo.Builder(ANCHO, ALTO, num).create())
+            val cv = p.canvas
+            cv.drawColor(fondo)
+            papel?.let { b ->
+                val k = maxOf(ANCHO.toFloat() / b.width, ALTO.toFloat() / b.height)
+                val w = b.width * k; val h = b.height * k
+                cv.drawBitmap(b, null, android.graphics.RectF((ANCHO - w) / 2, (ALTO - h) / 2, (ANCHO + w) / 2, (ALTO + h) / 2), Paint(Paint.FILTER_BITMAP_FLAG))
+            }
+            marco(tema, cv, acento, tinta)
+            if (conPie) {
+                cv.drawText("Vestigium Mei · $titulo", m, ALTO - 30f, pie)
+                val n = Estilo.numeral(num)
+                cv.drawText(n, ANCHO - m - pie.measureText(n), ALTO - 30f, pie)
+            }
+            hoja = p; y = m
+        }
+        fun lienzo() = hoja!!.canvas
+        fun layout(t: CharSequence, paint: TextPaint, interlineado: Float = 1.3f, alineado: Layout.Alignment = Layout.Alignment.ALIGN_NORMAL, w: Int = ancho) =
+            StaticLayout.Builder.obtain(t, 0, t.length, paint, w).setAlignment(alineado).setLineSpacing(0f, interlineado).setIncludePad(false).build()
+        fun bloque(l: StaticLayout, x: Float = m) {
+            var linea = 0
+            while (linea < l.lineCount) {
+                val disponible = ALTO - m - 24 - y
+                var fin = linea
+                while (fin < l.lineCount && l.getLineBottom(fin) - l.getLineTop(linea) <= disponible) fin++
+                if (fin == linea) { nueva(); continue }
+                val c = lienzo()
+                c.save(); c.translate(x, y - l.getLineTop(linea))
+                c.clipRect(0f, l.getLineTop(linea).toFloat(), l.width.toFloat(), l.getLineBottom(fin - 1).toFloat())
+                l.draw(c); c.restore()
+                y += l.getLineBottom(fin - 1) - l.getLineTop(linea)
+                linea = fin
+                if (linea < l.lineCount) nueva()
+            }
+        }
+        fun emblema(cx: Float, cy: Float, lado: Float) {
+            val c = lienzo()
+            c.save(); c.translate(cx - lado / 2, cy - lado / 2)
+            CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, androidx.compose.ui.graphics.Canvas(c), Size(lado, lado)) { dibujarEmblema(tema, 0.3f, e, tema.soloOscuro) }
+            c.restore()
+        }
+        val pPortada = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTitulo; textSize = 40f; color = tinta }
+        val pSub = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = 13f; color = tenue }
+        val pTitulo = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTitulo; textSize = 21f; color = tinta }
+        val pEtiqueta = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTitulo; textSize = 9f; color = acento; letterSpacing = 0.12f }
+        val pDia = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = 9.5f; color = tenue }
+        val pDato = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = 9f; color = tinta }
+        val med = medidas(tema, carta = false)
+        val pTexto = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = med.tam; color = tinta }
+        val pExtra = TextPaint(pTexto).apply { textSize = pTexto.textSize * 0.88f; color = tenue; textSkewX = -0.15f }
+        val pIndice = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = 12f; color = tinta }
+        val rotulo = titulo.let { if (Estilo.mayusculas) it.uppercase() else it }
+
+        // ---- Portada: el emblema grande, el título del tema, el periodo y el marco.
+        nueva(conPie = false)
+        emblema(ANCHO / 2f, 230f, 150f)
+        val tPortada = layout(titulo, pPortada, 1.1f, Layout.Alignment.ALIGN_CENTER)
+        lienzo().save(); lienzo().translate(m, 340f); tPortada.draw(lienzo()); lienzo().restore()
+        y = 340f + tPortada.height + 18f
+        filete(tema, lienzo(), m + 60f, ANCHO - m - 60f, y, acento, tinta, fondo, tfTitulo)
+        y += 26f
+        val periodo = "del ${Fechas.larga(desde)}\nal ${Fechas.larga(hasta)}" + (tomo?.let { "\n\ntomo ${Estilo.numeral(it.first)} de ${Estilo.numeral(it.second)}" } ?: "")
+        val tPer = layout(periodo, pSub, 1.4f, Layout.Alignment.ALIGN_CENTER)
+        lienzo().save(); lienzo().translate(m, y); tPer.draw(lienzo()); lienzo().restore()
+        val conDiario = dias.count { it.nota.isNotBlank() }
+        val cuenta = "${porNumero(dias.size, "1 día", "${dias.size} días")} · ${porNumero(conDiario, "1 con diario", "$conDiario con diario")} · " +
+            "%,d palabras".format(dias.sumOf { Texto.palabras(it.nota) })
+        val tCuenta = layout(cuenta, pDia, 1.3f, Layout.Alignment.ALIGN_CENTER)
+        lienzo().save(); lienzo().translate(m, ALTO - 120f); tCuenta.draw(lienzo()); lienzo().restore()
+        val tNombre = layout("Vestigium Mei", pEtiqueta, 1.2f, Layout.Alignment.ALIGN_CENTER)
+        lienzo().save(); lienzo().translate(m, ALTO - 96f); tNombre.draw(lienzo()); lienzo().restore()
+
+        // ---- Índice: cada mes con la página de su primer día y la de su resumen (con el diseño del tema).
+        val meses = dias.map { it.fecha.take(7) }.distinct()
+        nueva()
+        lienzo().drawText(rotulo, m, y + 9f, pEtiqueta); y += 18f
+        bloque(layout(Estilo.seccion("Índice", Romano.latin("Índice")).first, pTitulo, 1.1f)); y += 6f
+        filete(tema, lienzo(), m, ANCHO - m, y, acento, tinta, fondo, tfTitulo); y += 18f
+        meses.forEach { ms ->
+            if (y + 24f > ALTO - m - 24) { nueva(); y += 8f }
+            val c = lienzo()
+            val nombreMes = Estilo.mes(ms.drop(5).toInt(), ms.take(4).toInt()).let { if (it.contains(ms.take(4))) it else "$it · ${ms.take(4)}" }
+            c.drawText(nombreMes, m, y + 12f, pIndice)
+            val pag = paginas?.get(ms)?.let { Estilo.numeral(it) } ?: "—"
+            val res = if (o.resumenes) paginas?.get("resumen:$ms")?.let { " · resumen ${Estilo.numeral(it)}" } ?: "" else ""
+            val der = pag + res
+            c.drawText(der, ANCHO - m - pIndice.measureText(der), y + 12f, pIndice)
+            // Puntos guía entre el mes y la página.
+            val desdeX = m + pIndice.measureText(nombreMes) + 8f; val hastaX = ANCHO - m - pIndice.measureText(der) - 8f
+            var x = desdeX; val punto = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = tenue }
+            while (x < hastaX) { c.drawCircle(x, y + 9f, 0.7f, punto); x += 5f }
+            y += 22f
+        }
+
+        // ---- Los días: uno por página (si el texto no cabe, sigue en la siguiente); al cerrar cada mes, su resumen.
+        dias.forEachIndexed { i, d ->
+            nueva()
+            val ms = d.fecha.take(7)
+            if (ms !in donde) donde[ms] = num
+            val c = lienzo()
+            c.drawText(rotulo, m, y + 9f, pEtiqueta)
+            val tFecha = layout(Estilo.fecha(d.fecha), pTitulo, 1.1f, w = ancho - 50)
+            c.save(); c.translate(m, y + 16f); tFecha.draw(c); c.restore()
+            emblema(ANCHO - m - 19f, y + 19f, 38f)
+            y += 16f + tFecha.height + 4f
+            c.drawText(Fechas.titulo(d.fecha) + " de " + d.fecha.take(4), m, y + 9f, pDia); y += 18f
+            filete(tema, c, m, ANCHO - m, y, acento, tinta, fondo, tfTitulo)
+            y += 14f
+            // La franja de datos del día, en un recuadro fino con el acento del tema.
+            val datos = datosDelDia(d)
+            if (datos.isNotEmpty()) {
+                val tDatos = layout(datos.joinToString("   ·   "), pDato, 1.35f, w = ancho - 20)
+                val caja = android.graphics.RectF(m, y, ANCHO - m, y + tDatos.height + 16f)
+                c.drawRoundRect(caja, 4f, 4f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = acento; alpha = 22 })
+                c.drawRoundRect(caja, 4f, 4f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = acento; alpha = 120; style = Paint.Style.STROKE; strokeWidth = 0.8f })
+                c.save(); c.translate(m + 10f, y + 8f); tDatos.draw(c); c.restore()
+                y = caja.bottom + 14f
+            }
+            // La foto del día, centrada, con un marco fino.
+            if (o.fotos && io.github.ruddy2003.vestigium.data.FotoDelDia.tiene(d)) {
+                val altoFoto = 210f
+                if (!ensayo) runCatching { io.github.ruddy2003.vestigium.data.FotoDelDia.miniatura(ctx, d, 600) }.getOrNull()?.let { b ->
+                    val k = minOf(ancho.toFloat() / b.width, altoFoto / b.height)
+                    val w = b.width * k; val h = b.height * k
+                    val r = android.graphics.RectF((ANCHO - w) / 2, y, (ANCHO + w) / 2, y + h)
+                    c.drawBitmap(b, null, r, Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
+                    c.drawRect(r, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = acento; style = Paint.Style.STROKE; strokeWidth = 0.8f })
+                    b.recycle()
+                }
+                y += altoFoto + 16f
+            }
+            // Las frases con ♥ de ese día, como epígrafe a la derecha.
+            Frases.deLaHoja(d.fecha).forEach { f -> bloque(layout("«${f.texto}»\n— ${f.autor}", pExtra, 1.25f, Layout.Alignment.ALIGN_OPPOSITE)); y += 8f }
+            if (d.nota.isNotBlank()) bloque(layout(conInicial(ctx, tema, d.nota.trim(), acento, fondo, tinta), pTexto, med.interlinea))
+            else bloque(layout("(Sin diario este día.)", pExtra))
+            if (d.mejor_momento.isNotBlank()) { y += 8f; bloque(layout("Lo mejor: " + d.mejor_momento, pExtra)) }
+            if (d.peor_momento.isNotBlank()) { y += 4f; bloque(layout("Lo peor: " + d.peor_momento, pExtra)) }
+            val siguiente = dias.getOrNull(i + 1)?.fecha?.take(7)
+            if (o.resumenes && siguiente != ms) {
+                nueva(); donde["resumen:$ms"] = num
+                paginaResumen(resumenMes(ms, hasta), lienzo(), m, ancho, tema, acento, tinta, tenue, fondo, tfTitulo, tfTexto, rotulo) { y = it }
+            }
+        }
+        hoja?.let { doc.finishPage(it) }
+        if (ensayo) { doc.close(); return null to donde }
+        return doc to donde
+    }
+
+    /** La página de resumen de un mes: cifras, la curva del ánimo y lo más presente. */
+    private fun paginaResumen(r: ResumenMes, c: android.graphics.Canvas, m: Float, ancho: Int, tema: TemaId, acento: Int, tinta: Int, tenue: Int, fondo: Int,
+                              tfTitulo: Typeface, tfTexto: Typeface, rotulo: String, alTerminar: (Float) -> Unit) {
+        var y = m
+        val pEtiqueta = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTitulo; textSize = 9f; color = acento; letterSpacing = 0.12f }
+        val pTitulo = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTitulo; textSize = 24f; color = tinta }
+        val pCifra = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTitulo; textSize = 20f; color = acento }
+        val pRot = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = 8.5f; color = tenue }
+        val pTexto = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = 10f; color = tinta }
+        val pSub = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTitulo; textSize = 11f; color = acento }
+        fun layout(t: CharSequence, p: TextPaint, w: Int = ancho) = StaticLayout.Builder.obtain(t, 0, t.length, p, w).setLineSpacing(0f, 1.3f).setIncludePad(false).build()
+        fun texto(t: CharSequence, p: TextPaint, x: Float = m, w: Int = ancho) { val l = layout(t, p, w); c.save(); c.translate(x, y); l.draw(c); c.restore(); y += l.height }
+        c.drawText(rotulo + " · resumen", m, y + 9f, pEtiqueta); y += 18f
+        val nombreMes = Estilo.mes(r.mes.drop(5).toInt(), r.mes.take(4).toInt()).let { if (it.contains(r.mes.take(4))) it else "$it de ${r.mes.take(4)}" }
+        texto(nombreMes, pTitulo); y += 6f
+        filete(tema, c, m, m + ancho, y, acento, tinta, fondo, tfTitulo); y += 18f
+        // Cuatro cifras en fila.
+        val cifras = listOf(
+            "${r.conDiario}/${r.dias}" to "días con diario",
+            (r.animo?.let { "%.1f".format(it) } ?: "—") to "ánimo medio (1 a 7)",
+            (r.suenoMin?.let { "${(it / 60).toInt()} h ${"%02d".format((it % 60).toInt())}" } ?: "—") to "sueño medio",
+            (if (r.gasto > 0) io.github.ruddy2003.vestigium.ui.pantallas.dinero(r.gasto) else "—") to "gastado",
+        )
+        val col = ancho / cifras.size.toFloat()
+        cifras.forEachIndexed { i, (v, t) ->
+            c.drawText(v, m + i * col, y + 20f, pCifra)
+            c.drawText(t, m + i * col, y + 34f, pRot)
+        }
+        y += 50f
+        // La curva del ánimo día por día (1 a 7).
+        if (r.curva.size >= 2) {
+            val alto = 110f
+            val caja = android.graphics.RectF(m, y, m + ancho, y + alto)
+            val linea = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = tenue; alpha = 90; strokeWidth = 0.5f }
+            for (k in 1..7) { val yy = caja.bottom - (k - 1) / 6f * alto; c.drawLine(caja.left, yy, caja.right, yy, linea) }
+            fun px(dia: Int) = caja.left + (dia - 1) / (r.dias - 1).coerceAtLeast(1).toFloat() * caja.width()
+            fun py(v: Int) = caja.bottom - (v - 1) / 6f * alto
+            val trazo = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = acento; strokeWidth = 1.6f; style = Paint.Style.STROKE; strokeJoin = Paint.Join.ROUND }
+            val path = android.graphics.Path()
+            r.curva.forEachIndexed { i, (dia, v) -> if (i == 0) path.moveTo(px(dia), py(v)) else path.lineTo(px(dia), py(v)) }
+            c.drawPath(path, trazo)
+            val punto = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = acento }
+            r.curva.forEach { (dia, v) -> c.drawCircle(px(dia), py(v), 2.2f, punto) }
+            c.drawText("7", caja.left - 10f, caja.top + 3f, pRot); c.drawText("1", caja.left - 10f, caja.bottom + 3f, pRot)
+            y += alto + 8f
+            c.drawText("El ánimo de cada día (del diario), del 1 al ${r.dias}.", m, y + 8f, pRot); y += 22f
+        }
+        // Lo más presente, en dos columnas.
+        val mitad = (ancho - 20) / 2
+        fun lista(titulo: String, l: List<String>, x: Float, y0: Float): Float {
+            var yy = y0
+            c.drawText(titulo, x, yy + 10f, pSub); yy += 16f
+            val t = layout(if (l.isEmpty()) "—" else l.joinToString("\n"), pTexto, mitad)
+            c.save(); c.translate(x, yy); t.draw(c); c.restore()
+            return yy + t.height + 14f
+        }
+        val y0 = y
+        val izq = lista("Personas", r.personas.map { "@${it.first} · ${porNumero(it.second, "1 día", "${it.second} días")}" }, m, y0).let { lista("Temas", r.temas.map { "#${it.first} · ${it.second}" }, m, it) }
+        val der = lista("Lugares", r.lugares.map { "${it.first} · ${porNumero(it.second, "1 visita", "${it.second} visitas")}" }, m + mitad + 20f, y0)
+            .let { lista("Dinero", r.categorias.map { "${it.first} · ${io.github.ruddy2003.vestigium.ui.pantallas.dinero(it.second)}" } +
+                (if (r.ingreso > 0) listOf("entró ${io.github.ruddy2003.vestigium.ui.pantallas.dinero(r.ingreso)}") else emptyList()), m + mitad + 20f, it) }
+        y = maxOf(izq, der)
+        if (r.senaladas.isNotEmpty()) { c.drawText("Fechas señaladas", m, y + 10f, pSub); y += 16f; texto(r.senaladas.joinToString("\n") { "${Fechas.corto(it.first)} · ${it.second}" }, pTexto); y += 12f }
+        r.mejor?.let { d ->
+            if (y < ALTO - m - 90f) {
+                c.drawText("El mejor día", m, y + 10f, pSub); y += 16f
+                texto("${Fechas.titulo(d.fecha)} · ánimo ${d.valencia}/7" + (d.mejor_momento.takeIf { it.isNotBlank() }?.let { "\n«${it.take(220)}»" } ?: ""), pTexto)
+            }
+        }
+        val extra = listOfNotNull(r.energia?.let { "energía media %.1f".format(it) }, r.pasos?.let { "%,d pasos al día".format(it.toLong()) }, "%,d palabras escritas".format(r.palabras))
+        c.drawText(extra.joinToString(" · "), m, ALTO - m - 8f, pRot)
+        alTerminar(ALTO - m)
+    }
+
     // ------------------------------------------------------------------ piezas de los PDF, propias de cada tema
 
     /** El tamaño y el interlineado del texto en los PDF de cada tema ([carta]: el de la carta, un poco más aireado). */
@@ -427,6 +781,7 @@ object LibroDiario {
             TemaId.URSS -> Medidas(11f, aire)
             TemaId.REVOLUCION -> Medidas(11f, aire)
             TemaId.ANTIGUAS -> Medidas(11f, aire)
+            TemaId.BASICO -> Medidas(11f, aire)
             TemaId.CUEVA -> Medidas(11.5f, if (carta) 1.5f else 1.46f)
         }
     }
@@ -497,6 +852,7 @@ object LibroDiario {
         TemaId.REVOLUCION -> Inicial(R.font.cormorant_medium, 2.6f)
         TemaId.ANTIGUAS -> Inicial(R.font.cinzel_semibold, 2.5f)
         // Una capitular grande a mano alzada, en ocre.
+        TemaId.BASICO -> Inicial(R.font.plex_sans_semibold, 1f)
         TemaId.CUEVA -> Inicial(R.font.amatic_bold, 2.9f, tinta = true)
     }
 
@@ -775,6 +1131,7 @@ object LibroDiario {
                     if (i == 2) cv.drawLine(x - 3f, y + 1.5f, x + 3f, y - 1.5f, runa)
                 }
             }
+            TemaId.BASICO -> lados(0f)
             TemaId.CUEVA -> {
                 // Una hilera de puntos de ocre de grosor desparejo y, en el centro, tres más grandes en triángulo.
                 var x = x0 + 2f; var k = 0
@@ -1023,6 +1380,7 @@ object LibroDiario {
                     cv.drawCircle(x + sx * 5f, y + sy * 5f, 2.4f, gema)
                 }
             }
+            TemaId.BASICO -> rect(28f, fino)
             TemaId.CUEVA -> {
                 // El borde ondulado de una piel curtida, la costura de tendón por dentro y tres puntos de ocre en cada esquina.
                 cv.drawPath(android.graphics.Path().apply { moveTo(24f, 30f); quadTo(A / 2, 16f, A - 24f, 28f); quadTo(A - 12f, B / 2, A - 26f, B - 24f); quadTo(A / 2, B - 12f, 26f, B - 28f); quadTo(14f, B / 2, 24f, 30f); close() }, trazo)

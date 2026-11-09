@@ -173,11 +173,19 @@ fun TarjetaQuienEs(modifier: Modifier = Modifier, compacta: Boolean = false, abr
  */
 @Composable
 fun PantallaPersonas(nav: Nav) {
+    Hoja("Tu gente", nav.atras, "Quién es cada @persona para ti. Si una relación cambia (pareja → expareja), lo de antes se guarda y los análisis usan lo que había cada día.") {
+        ContenidoGente(nav)
+    }
+}
+
+/** Lo de Tu gente, para su propia pantalla y para la sección de Social (9 nov 2026). */
+@Composable
+fun ContenidoGente(nav: Nav) {
     val c = Repo.config
     val menc = remember(Repo.dias, Repo.momentos, Repo.tramos, Repo.cartas, c.equivalencias) { Personas.menciones() }
     var editando by remember { mutableStateOf<String?>(null) }
     var verTodas by remember { mutableStateOf(false) }
-    Hoja("Tu gente", nav.atras, "Quién es cada @persona para ti. Si una relación cambia (pareja → expareja), lo de antes se guarda y los análisis usan lo que había cada día.") {
+    Column {
         TarjetaQuienEs(Modifier.padding(top = 14.dp))
         val porRevisar = remember(Repo.dias) { io.github.ruddy2003.vestigium.data.Presencias.porRevisar().size + io.github.ruddy2003.vestigium.data.Presencias.paraReabrir().size }
         if (porRevisar > 0) Tarjeta(Modifier.padding(top = 10.dp)) {

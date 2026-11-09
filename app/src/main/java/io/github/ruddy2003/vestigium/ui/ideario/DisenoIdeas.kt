@@ -145,6 +145,7 @@ fun disenoIdeas(t: TemaId): DisenoIdeas = when (t) {
     TemaId.REVOLUCION -> IdeasRevolucion
     TemaId.ANTIGUAS -> IdeasAntiguas
     TemaId.CUEVA -> IdeasCueva
+    TemaId.BASICO -> IdeasBasico
 }
 
 // =====================================================================

@@ -265,7 +265,14 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             // Los temas por época, en una cuadrícula de tres por fila.
             val vista = androidx.compose.ui.platform.LocalView.current
             val centros = remember { HashMap<String, androidx.compose.ui.geometry.Offset>() }
-            io.github.ruddy2003.vestigium.ui.TemaId.entries.groupBy { it.epoca }.toSortedMap().forEach { (epoca, temas) ->
+            // Una época a la vez (la del tema de ahora al abrir): antes se dibujaban las 34 muestras juntas, cada una con su
+            // letra y su emblema, y la pantalla tardaba en abrir.
+            val epocas = io.github.ruddy2003.vestigium.ui.TemaId.entries.groupBy { it.epoca }.toSortedMap()
+            var epocaVista by remember { mutableStateOf(io.github.ruddy2003.vestigium.ui.Estilo.tema.epoca) }
+            FlowRow(Modifier.padding(bottom = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                epocas.keys.forEach { ep -> Ficha(ep.nombre, ep == epocaVista) { epocaVista = ep } }
+            }
+            epocas.filterKeys { it == epocaVista }.forEach { (epoca, temas) ->
                 Etiqueta(epoca.nombre)
                 temas.chunked(3).forEach { fila ->
                     Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -294,7 +301,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             }
             if (c.tema_rotar) {
                 Etiqueta("Entre cuáles (ninguno marcado = todos)")
-                io.github.ruddy2003.vestigium.ui.TemaId.entries.groupBy { it.epoca }.toSortedMap().forEach { (epoca, temas) ->
+                io.github.ruddy2003.vestigium.ui.RotacionTema.rotables.groupBy { it.epoca }.toSortedMap().forEach { (epoca, temas) ->
                     Text(epoca.nombre, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 4.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         temas.forEach { t ->
@@ -305,7 +312,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
                     BotonTexto(onClick = { cambiar { it.copy(temas_rotacion = emptyList()) } }) { Text("todos", style = MaterialTheme.typography.labelLarge) }
-                    BotonTexto(onClick = { cambiar { it.copy(temas_rotacion = io.github.ruddy2003.vestigium.ui.TemaId.entries.map { t -> t.id } - it.tema) } }) {
+                    BotonTexto(onClick = { cambiar { it.copy(temas_rotacion = io.github.ruddy2003.vestigium.ui.RotacionTema.rotables.map { t -> t.id } - it.tema) } }) {
                         Text("todos menos este", style = MaterialTheme.typography.labelLarge)
                     }
                 }
@@ -555,12 +562,17 @@ fun PantallaDatos(nav: Nav) {
     var ocupado by remember { mutableStateOf(false) }
 
     fun tarea(b: suspend () -> String) { if (ocupado) return; ocupado = true; scope.launch { msg = try { withContext(Dispatchers.IO) { b() } } catch (e: Exception) { "Algo falló: ${e.message}" }; ocupado = false } }
+    // Respaldar a mano: si el último se detuvo por venir más pobre, este lo acepta.
+    fun respaldarAhora() = tarea {
+        val forzar = Repo.config.respaldo_error == io.github.ruddy2003.vestigium.data.Respaldos.EMPOBRECIDO
+        if (io.github.ruddy2003.vestigium.data.Respaldos.aCarpeta(ctx, forzar)) "Respaldo escrito y revisado: ${Repo.config.respaldo_detalle}." else Repo.config.respaldo_error ?: "No pude escribir en la carpeta."
+    }
 
     val carpeta = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
             ctx.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             Repo.cambiarConfig { it.copy(carpeta_respaldo = uri.toString()) }
-            tarea { if (Exportar.respaldoAutomatico(ctx)) "Carpeta lista. Cada mañana se actualizan ahí tus archivos." else "No pude escribir en esa carpeta." }
+            tarea { if (Exportar.respaldoAutomatico(ctx)) "Carpeta lista y el primer respaldo revisado. Cada mañana se actualiza, con copias de cada día, semana y mes." else Repo.config.respaldo_error ?: "No pude escribir en esa carpeta." }
         }
     }
     val respaldo = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { Importar.respaldo(ctx, uri).mensaje } }
@@ -599,6 +611,8 @@ fun PantallaDatos(nav: Nav) {
     Hoja("Datos", nav.atras, "Todo lo que guarda la app, listo para R.") {
         msg?.let { Aviso(it) }
         if (ocupado) Ayuda("Trabajando…", Modifier.padding(top = 8.dp))
+        // Lo primero: si tus datos están a salvo (9 nov 2026).
+        EstadoRespaldos { respaldarAhora() }
         // Lo borrado en los últimos 7 días (N-14).
         Tarjeta(Modifier.padding(top = 10.dp)) { io.github.ruddy2003.vestigium.ui.FilaMenu("Papelera", "Lo que borraste en los últimos 7 días, para recuperarlo") { nav.ir("papelera") } }
         Seccion("Recordatorios de importación", "Un solo aviso a la semana con lo que toca importar. Cada fuente se puede posponer o apagar.", plegable = true) {
@@ -645,12 +659,32 @@ fun PantallaDatos(nav: Nav) {
         Seccion("Respaldo completo", "Todo en un archivo, y de vuelta en un toque.") {
             RespaldoCompleto()
         }
-        Seccion("Respaldo automático", "Elige una carpeta del teléfono; cada mañana la app deja ahí el respaldo completo y los CSV actualizados (o solo el respaldo cifrado, si pusiste contraseña). Si eliges una carpeta que sincronizas con la computadora, R siempre tendrá los datos frescos.") {
+        Seccion("Respaldo automático", "Elige una carpeta del teléfono; cada mañana la app deja ahí el respaldo completo, ya revisado, y los CSV actualizados (o solo el respaldo cifrado, si pusiste contraseña). En la subcarpeta «copias» guarda uno por día (7), por semana (8) y por mes (12), y la base de datos de cada semana. Si eliges una carpeta que sincronizas con la computadora o con la nube, la copia también sobrevive si pierdes el teléfono.") {
             Tarjeta {
                 Ayuda(Repo.config.carpeta_respaldo?.let { "Carpeta configurada." } ?: "Sin carpeta.")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
                     OutlinedButton(onClick = { carpeta.launch(null) }) { Text("Elegir carpeta") }
-                    if (Repo.config.carpeta_respaldo != null) OutlinedButton(enabled = !ocupado, onClick = { if (!ocupado) tarea { if (Exportar.respaldoAutomatico(ctx)) "Respaldo escrito." else "No pude escribir en la carpeta." } }) { Text("Respaldar ahora") }
+                    if (Repo.config.carpeta_respaldo != null) OutlinedButton(enabled = !ocupado, onClick = { if (!ocupado) respaldarAhora() }) { Text("Respaldar ahora") }
+                }
+                // La cápsula del año (9 nov 2026): todo el año, legible sin la app, en «capsulas». Sale sola cada enero.
+                if (Repo.config.carpeta_respaldo != null) {
+                    io.github.ruddy2003.vestigium.ui.comun.Separador(Modifier.padding(vertical = 12.dp))
+                    Text("Cápsula del año", style = MaterialTheme.typography.titleSmall)
+                    Ayuda("Todo el año en un archivo que se lee sin la app: las tablas con su diccionario, una base SQLite, el script de R, la foto de cada día y el libro del diario en PDF. Cada enero sale sola la del año que terminó; nunca se borra.")
+                    val anio = io.github.ruddy2003.vestigium.data.Fechas.diaLogico().take(4)
+                    OutlinedButton(enabled = !ocupado, onClick = {
+                        tarea {
+                            val libro = runCatching { io.github.ruddy2003.vestigium.ui.LibroDiario.libroDelAnio(ctx, anio) }.getOrNull()
+                            try { io.github.ruddy2003.vestigium.data.Respaldos.capsula(ctx, anio, libro) } finally { libro?.delete() }
+                        }
+                    }, modifier = Modifier.padding(top = 6.dp)) { Text("Guardar la cápsula de $anio hasta hoy") }
+                }
+                io.github.ruddy2003.vestigium.ui.comun.Separador(Modifier.padding(vertical = 12.dp))
+                var copiaAndroid by remember { mutableStateOf(io.github.ruddy2003.vestigium.data.CopiaAndroid.activa(ctx)) }
+                io.github.ruddy2003.vestigium.ui.Interruptor("Copia de seguridad de Android", copiaAndroid,
+                    "Una tercera capa, sin configurar nada: cuando Android respalda tus apps (de noche, cargando y con wifi), se lleva una copia de la base, y al instalar la app en un teléfono nuevo con tu misma cuenta de Google vuelve sola. Solo sale cifrada con el bloqueo de pantalla de tu teléfono. Android acepta hasta 25 MB: si tu base crece más, deja de salir y se avisa aquí. No lleva las fotos." +
+                        io.github.ruddy2003.vestigium.data.CopiaAndroid.ultima(ctx).let { (f, r) -> if (f != null) "\nÚltima vez (${f.take(10)}): $r" else "" }) { v ->
+                    io.github.ruddy2003.vestigium.data.CopiaAndroid.activar(ctx, v); copiaAndroid = v
                 }
             }
         }

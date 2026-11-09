@@ -101,6 +101,12 @@ object TrofeosTema {
             TemaId.NAVIDAD -> with(TrofeosMas) { navidad(categoria, p) }
             TemaId.ANTIGUAS -> with(TrofeosMas) { antiguas(categoria, p) }
             TemaId.CUEVA -> with(TrofeosMas) { cueva(categoria, p) }
+            TemaId.BASICO -> {
+                // Una copa lisa, la misma en todas las categorías: el tema no tiene figuras propias.
+                drawRoundRect(p.metal(0.32f, 0.68f), Offset(p.x(0.32f), p.y(0.16f)), Size(p.x(0.36f), p.y(0.32f)), CornerRadius(p.x(0.06f)))
+                caja(p, 0.47f, 0.48f, 0.53f, 0.64f)
+                caja(p, 0.36f, 0.64f, 0.64f, 0.72f)
+            }
             TemaId.DISTOPIA -> with(TrofeosMas) { distopia(categoria, p) }
             TemaId.CIBER -> with(TrofeosMas) { terminal(categoria, p) }
             TemaId.NEON -> with(TrofeosMas) { neon(categoria, p) }

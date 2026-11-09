@@ -117,6 +117,8 @@ object Exportar {
             r["sueno_rareza"] = Catalogo.rarezaDe(d); r["sueno_pesadilla"] = Catalogo.pesadillaDe(d)
             r["sueno_calidad"] = d.sueno_calidad; r["sueno_categorias"] = Catalogo.categoriasSuenoDe(d); r["sueno_texto"] = d.sueno_texto
             r["mejor_momento"] = d.mejor_momento; r["peor_momento"] = d.peor_momento
+            // Esquema 22: el nombre de la copia de la foto del día (en fotos_dia/ dentro del respaldo y de la cápsula del año).
+            r["foto_archivo"] = d.foto_archivo
             r["impulso"] = d.impulso; r["recaida"] = d.recaida; r["detonantes"] = d.detonantes; r["detonante_otro"] = d.detonante_otro
             r["medicamentos"] = d.medicamentos; r["prediccion_manana"] = d.prediccion_manana
             // Antes de que existiera el hábito no se sabe (P-15).

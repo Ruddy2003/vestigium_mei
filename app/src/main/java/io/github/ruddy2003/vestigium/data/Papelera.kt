@@ -33,6 +33,13 @@ object Papelera {
             "obras" -> JSON.decodeFromString(Obra.serializer(), b.json).let { "Obra · ${it.titulo}" }
             "listas" -> JSON.decodeFromString(Lista.serializer(), b.json).let { "Lista · ${it.nombre} (${it.elementos.size})" }
             "ideas" -> JSON.decodeFromString(Idea.serializer(), b.json).let { "Idea · " + it.titulo.ifBlank { it.texto.lines().first() }.take(60) }
+            "visitas" -> JSON.decodeFromString(Visita.serializer(), b.json).let { v ->
+                "Visita · " + (Repo.lugares.firstOrNull { it.id == v.lugar }?.nombre ?: "un lugar") + " · ${Fechas.corto(v.entrada.take(10))} ${Fechas.horaDe(v.entrada)}"
+            }
+            "escuchas" -> "Canción reemplazada al volver a importar" + (b.fecha?.let { " · ${Fechas.corto(it)}" } ?: "")
+            "comidas" -> "Comida de MacroFactor reemplazada al reimportar" + (b.fecha?.let { " · ${Fechas.corto(it)}" } ?: "")
+            "series" -> "Serie de MacroFactor reemplazada al reimportar" + (b.fecha?.let { " · ${Fechas.corto(it)}" } ?: "")
+            "youtube" -> "Suscripción de YouTube que ya no venía en la importación"
             else -> "Un registro"
         }
     }.getOrDefault("Un registro")

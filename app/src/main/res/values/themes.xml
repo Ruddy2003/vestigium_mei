@@ -219,4 +219,10 @@
     <style name="Theme.Vestigium.Arranque.Cueva.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_cueva_oscuro</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Basico" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_basico</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Basico.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_basico_oscuro</item>
+    </style>
 </resources>

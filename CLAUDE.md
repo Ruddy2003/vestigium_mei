@@ -23,6 +23,17 @@ App personal de Android (Kotlin + Jetpack Compose) para registrar, a lo largo de
 - **No toques la firma** (`app/vestigium.jks` y `signingConfigs` en `app/build.gradle.kts`): con otra llave las versiones nuevas ya no se instalan encima y se perderían datos. Nunca la menciones en documentos.
 - No mandes la APK por el chat; di qué versión salió.
 
+## Congelación desde el 1 de enero de 2027
+
+2026 fue el año de prueba. Desde el 1 de enero de 2027, lo que se guarda queda fijo para que los años se puedan comparar entre sí.
+- **No cambies qué se registra ni cómo se calcula lo que se guarda** (campos, escalas, umbrales, horarios de los cuestionarios), salvo para corregir un error.
+- Toda corrección que cambie lo que se guarda:
+  - sube `SCHEMA_V`;
+  - pone en `Diccionario.kt` (`DESDE`) la versión desde la que rige cada columna afectada, con qué cambió y su fila del Apéndice D;
+  - se anota en `docs/paper/apendiceD_cambios.md`.
+- **Lo que sí puede cambiar con libertad:** el diseño, los temas, los textos de la interfaz, el acomodo de las pantallas, los análisis y las funciones de R, porque todo eso se puede rehacer a partir de los datos.
+- Si alguien pide algo que rompe la congelación, dilo antes de hacerlo y propón cómo hacerlo sin romper la comparación: un campo nuevo opcional en vez de cambiar uno que ya existe.
+
 ## Privacidad (siempre)
 
 - Nunca subas al repositorio datos reales: exportaciones (`vm_*.csv`, `.sqlite`, `.zip`), respaldos, capturas con datos, nombres de personas, texto del diario, lugares ni cifras personales.

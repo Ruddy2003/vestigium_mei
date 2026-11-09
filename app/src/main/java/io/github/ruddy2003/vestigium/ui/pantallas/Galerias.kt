@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import androidx.compose.ui.graphics.luminance
 import io.github.ruddy2003.vestigium.data.porNumero
 
 import androidx.compose.foundation.BorderStroke
@@ -223,6 +224,15 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     TemaId.ANTIGUAS -> estrella(c, r, 6, 0.72f)
     // La mano de ocre: cada calificación, una mano más en la pared.
     TemaId.CUEVA -> io.github.ruddy2003.vestigium.ui.manoUnida(c, r)
+    // Una estrella de cinco puntas.
+    TemaId.BASICO -> Path().apply {
+        for (i in 0 until 10) {
+            val a = -Math.PI / 2 + i * Math.PI / 5; val rr = if (i % 2 == 0) r else r * 0.45f
+            val x = c.x + (rr * kotlin.math.cos(a)).toFloat(); val y = c.y + (rr * kotlin.math.sin(a)).toFloat()
+            if (i == 0) moveTo(x, y) else lineTo(x, y)
+        }
+        close()
+    }
 }
 
 /**
@@ -251,28 +261,22 @@ fun Calificacion(valor: Int?, modifier: Modifier = Modifier, tam: Dp = 14.dp, co
 // =====================================================================
 
 /**
- * Un recuadro grande con su dibujo arriba y el título abajo. El dibujo lleva encima el marco del tema (el mismo que el mapa:
- * dentículos, greca, remaches, galones, nieve, runas…), más fino, y solo en los bordes.
+ * Un recuadro grande con su dibujo arriba y el título abajo. El dibujo va en su [io.github.ruddy2003.vestigium.ui.Escena]:
+ * la pared del tema detrás, sin tarjeta ni línea de contorno (9 nov 2026; antes, una tarjeta con borde y el marco del mapa
+ * encima). Sin aura: el recuadro entero es un solo botón, y el aura va solo en los objetos que se tocan uno por uno.
  */
 @Composable
 internal fun Recuadro(titulo: String, detalle: String, modifier: Modifier = Modifier, alto: Dp = 150.dp, onClick: () -> Unit, dibujo: @Composable BoxScope.() -> Unit) {
     val cs = MaterialTheme.colorScheme
     val sentir = rememberSentir()
-    val tema = Estilo.tema
-    Surface(onClick = { sentir(Sentidos.Evento.ABRIR); onClick() }, shape = MaterialTheme.shapes.medium, color = cs.surface,
-        border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.55f)), modifier = modifier.fillMaxWidth()) {
-        Column {
-            Box(Modifier.fillMaxWidth().height(alto).clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))) {
-                dibujo()
-                Canvas(Modifier.matchParentSize()) { marcoDelMapa(tema, 0.75.dp.toPx(), cs.onSurface.copy(alpha = 0.8f), cs.primary, cs.surface) }
+    Column(modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).clickable { sentir(Sentidos.Evento.ABRIR); onClick() }) {
+        io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth().height(alto)) { dibujo() }
+        Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(Estilo.seccion(titulo, Romano.latin(titulo)).first, style = MaterialTheme.typography.titleLarge)
+                Text(detalle, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
-            Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(Estilo.seccion(titulo, Romano.latin(titulo)).first, style = MaterialTheme.typography.titleLarge)
-                    Text(detalle, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                }
-                Text("→", style = MaterialTheme.typography.titleLarge, color = cs.primary)
-            }
+            Text("→", style = MaterialTheme.typography.titleLarge, color = cs.primary)
         }
     }
 }
@@ -282,8 +286,15 @@ internal fun Recuadro(titulo: String, detalle: String, modifier: Modifier = Modi
 fun RecuadroMapas(nav: Nav) {
     val r = rememberResumen("todo")
     val detalle = r?.let { "${porNumero(it.paises.size, "1 país", "${it.paises.size} países")} · ${porNumero(it.ciudades.size, "1 ciudad", "${it.ciudades.size} ciudades")} · ${porNumero(it.sitios.size, "1 sitio", "${it.sitios.size} sitios")} del Patrimonio Mundial" } ?: "Mundo, mapa para rascar, Patrimonio Mundial y tus lugares"
-    Recuadro("Mapas", detalle, alto = 168.dp, onClick = { nav.ir("mapas") }) {
-        MapaRascar(r?.codigosPaises ?: emptySet(), Modifier.fillMaxSize().padding(6.dp))
+    // La mesa de mapas del tema (lote E6) y el mapa para rascar encima.
+    val cs = MaterialTheme.colorScheme
+    val d = io.github.ruddy2003.vestigium.ui.vida.disenoVida(Estilo.tema)
+    val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+    Recuadro("Mapas", detalle, alto = 220.dp, onClick = { nav.ir("mapas") }) {
+        Canvas(Modifier.fillMaxSize()) { with(d) { muebleMapas(io.github.ruddy2003.vestigium.ui.vida.EstadoMueble(cs.surface, cs.primary, cs.secondary, cs.onSurface, 9), oscuro) } }
+        io.github.ruddy2003.vestigium.ui.vida.EnNicho(d.area(io.github.ruddy2003.vestigium.ui.vida.MuebleVida.MAPAS)) {
+            MapaRascar(r?.codigosPaises ?: emptySet(), Modifier.fillMaxSize().padding(2.dp))
+        }
     }
 }
 
@@ -378,7 +389,10 @@ private fun TarjetaMapa(id: String, titulo: String, detalle: String, modifier: M
         Column(Modifier.padding(12.dp)) {
             // El dibujo del mapa dentro del marco del tema, en pequeño.
             Canvas(Modifier.fillMaxWidth().height(70.dp)) {
-                dibujoMapa(id, cs.primary, cs.secondary, tema, cs.surface)
+                // El Patrimonio Mundial, el mapa para rascar y los lugares con los íconos del tema (lote E6); los demás, como antes.
+                if (id == "unesco" || id == "rascar" || id == "lugares") with(io.github.ruddy2003.vestigium.ui.vida.disenoVida(tema)) {
+                    iconoMapa(id, io.github.ruddy2003.vestigium.ui.vida.EstadoIcono(cs.primary, cs.secondary, cs.surface, cs.onSurface), cs.surface.luminance() < 0.5f)
+                } else dibujoMapa(id, cs.primary, cs.secondary, tema, cs.surface)
                 marcoDelMapa(tema, 0.55.dp.toPx(), cs.onSurface.copy(alpha = 0.7f), cs.primary, cs.surface)
             }
             Text(Estilo.seccion(titulo, Romano.latin(titulo)).first, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -460,6 +474,7 @@ fun PantallaObras(nav: Nav) {
         }
     }
     Hoja("Obras", nav.atras, "Lo que has visto, leído y jugado, con su portada y tu calificación. Toca una para ver su ficha, tus notas y tus citas.") {
+        PestanasObras("obras", nav)
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BotonPrincipal("+ añadir", Modifier.weight(1f)) {
                 BusquedaObra.tipo = tipo ?: "libro"; BusquedaObra.texto = ""; BusquedaObra.portadaDe = null; nav.ir("buscar_obra")
@@ -525,5 +540,18 @@ private fun CeldaObra(o: Obra, columnas: Int, modifier: Modifier, abrir: () -> U
         if (grande) Text(listOfNotNull(o.autor.substringBefore(",").substringBefore(";").ifBlank { null }, (o.fin ?: o.anio?.toString())?.take(4)).joinToString(" · "),
             style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Calificacion(o.calificacion, Modifier.padding(top = 4.dp), tam = if (grande) 16.dp else 10.dp)
+    }
+}
+
+/**
+ * Las tres pantallas de obras como pestañas de un solo lugar (9 nov 2026): la galería de portadas, la lista con lo pendiente
+ * y lo que quieres leer y ver. Antes eran tres entradas sueltas en Vida y en Más.
+ */
+@Composable
+fun PestanasObras(actual: String, nav: Nav) {
+    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf("obras" to "Galería", "biblioteca" to "Lista y pendientes", "deseados" to "Quiero leer y ver").forEach { (r, n) ->
+            Ficha(n, actual == r) { if (actual != r) nav.reemplazar(r) }
+        }
     }
 }

@@ -1107,6 +1107,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.REVOLUCION -> 9.dp
     TemaId.ANTIGUAS -> 16.dp
     TemaId.CUEVA -> 18.dp
+    TemaId.BASICO -> 4.dp
 }
 
 /** La silueta de la hoja: solo cambia el borde de arriba; abajo llega al borde de la pantalla. */
@@ -1317,6 +1318,7 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         moveTo(0f, 14 * u); quadraticTo(w * 0.2f, 2 * u, w * 0.45f, 8 * u); quadraticTo(w * 0.7f, 14 * u, w * 0.86f, 4 * u); quadraticTo(w * 0.95f, 0f, w, 10 * u)
         lineTo(w, h); lineTo(0f, h); close()
     }
+    TemaId.BASICO -> RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 }
 
 
@@ -1447,6 +1449,7 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
         moveTo(10 * u, 0f); lineTo(w - 14 * u, 2 * u); quadraticTo(w, 2 * u, w, h * 0.5f); quadraticTo(w - 2 * u, h, w - 16 * u, h); lineTo(12 * u, h - 1 * u)
         quadraticTo(0f, h - 2 * u, 0f, h * 0.5f); quadraticTo(0f, 0f, 10 * u, 0f); close()
     }
+    TemaId.BASICO -> RoundedCornerShape(12.dp)
 }
 
 // ============================================================================ esquema 21: masturbación, intimidad y episodios

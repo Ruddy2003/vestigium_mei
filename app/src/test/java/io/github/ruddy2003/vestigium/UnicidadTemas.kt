@@ -78,13 +78,20 @@ class UnicidadTemas {
         return r
     }
 
+    /**
+     * Los temas que se comparan. Básico (TemaId.sinDiseno) queda fuera a propósito: es el tema sin diseño, con los textos,
+     * la letra, las esquinas y las piezas de siempre, así que se parecería a los genéricos (y a los que usan el español
+     * normal) sin que eso sea un error.
+     */
+    private val TEMAS = TemaId.entries.filterNot { it.sinDiseno }
+
     /** Los temas cuyo valor (si no es null) es igual al de otro tema. */
     private fun iguales(valor: (TemaId) -> Any?): Set<String> =
-        TemaId.entries.mapNotNull { t -> valor(t)?.let { t.id to it } }.groupBy({ it.second }, { it.first }).values.filter { it.size > 1 }.flatten().toSet()
+        TEMAS.mapNotNull { t -> valor(t)?.let { t.id to it } }.groupBy({ it.second }, { it.first }).values.filter { it.size > 1 }.flatten().toSet()
 
     /** Los temas que comparten al menos un nombre de su lista con otro tema. */
     private fun comparten(nombres: (TemaId) -> Collection<String>): Set<String> {
-        val n = TemaId.entries.associate { it.id to nombres(it).map { s -> s.lowercase() }.toSet() }
+        val n = TEMAS.associate { it.id to nombres(it).map { s -> s.lowercase() }.toSet() }
         return n.filter { (id, s) -> n.any { (otro, s2) -> otro != id && s.any { it in s2 } } }.keys
     }
 

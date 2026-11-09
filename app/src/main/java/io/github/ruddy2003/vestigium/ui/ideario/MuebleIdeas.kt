@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.ideario
 
+import io.github.ruddy2003.vestigium.ui.halo
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -100,7 +101,7 @@ fun MuebleIdeas(cajones: List<CajonIdeas>, rotulo: (String) -> String, sub: (Caj
                         val anim = remember { Animatable(0f) }
                         val toque = remember { MutableInteractionSource() }
                         CompartimentoIdeas(d, c.n, c.tema.isEmpty(), c.tema.hashCode(), rotulo(c.tema), sub(c), oscuro,
-                            lugar.clickable(toque, null, enabled = abrir != null) {
+                            lugar.then(if (abrir != null) Modifier.halo() else Modifier).clickable(toque, null, enabled = abrir != null) {
                                 alcance.launch {
                                     sentir(Sentidos.Evento.ABRIR)
                                     anim.animateTo(1f, tween(260))

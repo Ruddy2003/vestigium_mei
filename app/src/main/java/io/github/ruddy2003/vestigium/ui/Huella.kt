@@ -85,6 +85,7 @@ fun textoSello(tema: TemaId): String = when (tema) {
     TemaId.REVOLUCION -> "CAHIER FIRMADO"
     TemaId.ANTIGUAS -> "SELLADO EN LA CRÓNICA"
     TemaId.CUEVA -> "Tu mano quedó en la pared"
+    TemaId.BASICO -> "Día sellado"
 }
 
 /** Pantalla completa: la huella del tema se va formando desde el centro, como en un lector, y luego se sella. Toca para cerrar. */
@@ -106,8 +107,11 @@ fun CapaHuella() {
     VistaHuella(prog.value, Sello.fecha, Modifier.clickable(remember { MutableInteractionSource() }, null) { visible = false })
 }
 
-/** La huella de cada tema: el fondo con su textura (papiro, terminal, lacre, cartel…) y la huella entintada encima. */
-fun recursosHuella(t: TemaId): Pair<Int, Int> = when (t) {
+/**
+ * La huella de cada tema: el fondo con su textura (papiro, terminal, lacre, cartel…) y la huella entintada encima. null: el
+ * tema no tiene imágenes propias (Básico) y el sello es un círculo liso con una palomita.
+ */
+fun recursosHuella(t: TemaId): Pair<Int, Int>? = when (t) {
     TemaId.ROMANO -> R.drawable.huella_fondo_romano to R.drawable.huella_romano
     TemaId.URBE -> R.drawable.huella_fondo_urbe to R.drawable.huella_urbe
     TemaId.CIBER -> R.drawable.huella_fondo_ciber to R.drawable.huella_ciber
@@ -142,13 +146,16 @@ fun recursosHuella(t: TemaId): Pair<Int, Int> = when (t) {
     TemaId.REVOLUCION -> R.drawable.huella_fondo_revolucion to R.drawable.huella_revolucion
     TemaId.ANTIGUAS -> R.drawable.huella_fondo_antiguas to R.drawable.huella_antiguas
     TemaId.CUEVA -> R.drawable.huella_fondo_cueva to R.drawable.huella_cueva
+    TemaId.BASICO -> null
 }
 
 /** El sello del tema en un círculo: fondo con textura y huella. [revela] (0–1) la descubre desde el núcleo, como un lector. */
 @Composable
 fun SelloHuella(modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, revela: Float = 1f, fondo: Float = 1f) {
     val cs = MaterialTheme.colorScheme
-    val (rf, rh) = recursosHuella(tema)
+    val recursos = recursosHuella(tema)
+    if (recursos == null) { SelloLiso(modifier, revela, fondo); return }
+    val (rf, rh) = recursos
     val pf = painterResource(rf); val ph = painterResource(rh)
     Box(modifier.clip(CircleShape).border(2.dp, cs.primary.copy(alpha = 0.6f), CircleShape)) {
         Image(pf, null, Modifier.fillMaxSize().graphicsLayer { alpha = fondo }, contentScale = ContentScale.Crop)
@@ -163,6 +170,19 @@ fun SelloHuella(modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, revel
             }
         }, contentScale = ContentScale.Crop)
     }
+}
+
+/** El sello sin imágenes (Básico): un círculo con su borde y una palomita que se dibuja con [revela]. */
+@Composable
+private fun SelloLiso(modifier: Modifier, revela: Float, fondo: Float) {
+    val cs = MaterialTheme.colorScheme
+    Box(modifier.clip(CircleShape).background(cs.surfaceVariant.copy(alpha = fondo)).border(2.dp, cs.primary.copy(alpha = 0.6f), CircleShape).drawWithContent {
+        val r = size.minDimension
+        val p = Path().apply { moveTo(r * 0.3f, r * 0.52f); lineTo(r * 0.44f, r * 0.66f); lineTo(r * 0.72f, r * 0.36f) }
+        if (revela > 0f) clipPath(Path().apply { addRect(androidx.compose.ui.geometry.Rect(0f, 0f, r * (0.28f + 0.46f * revela), r)) }) {
+            drawPath(p, cs.primary, style = Stroke(r * 0.06f, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+        }
+    })
 }
 
 /** La huella en un punto de la animación (0 = vacía, 1 = sellada). Separada para poder verla en las capturas. */

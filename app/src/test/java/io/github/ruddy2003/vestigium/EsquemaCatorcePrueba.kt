@@ -24,8 +24,19 @@ class EsquemaCatorcePrueba {
     // el 16, el Ideario (ver IdearioPrueba); el 17, la rareza y la pesadilla del sueño, los temas de las ideas y más campos de captura;
     // el 18, los deseados (prioridad, quién lo recomendó y dónde) y las listas libres (ver DeseadosPrueba); el 19, cómo se
     // supo la salida de cada visita (ver VisitasPrueba); el 20, la hora real en que salió cada aviso de ánimo (AvisosDia.reales);
-    // el 21, masturbación e intimidad, episodios, fechas señaladas, varias tomas y la extra del enfoque (ver EsquemaVeintiunoPrueba).
-    @Test fun esquema() = assertEquals(21, SCHEMA_V)
+    // el 21, masturbación e intimidad, episodios, fechas señaladas, varias tomas y la extra del enfoque (ver EsquemaVeintiunoPrueba);
+    // el 22, el respaldo blindado (estado del respaldo en Config, fecha en Borrado) y la copia de la foto del día (Dia.foto_archivo).
+    @Test fun esquema() = assertEquals(22, SCHEMA_V)
+
+    @Test fun esquema22SeLeeSinLoNuevo() {
+        // Un día y unos ajustes de antes del esquema 22: la foto sin copia y el respaldo sin estado.
+        val d = JSON.decodeFromString(io.github.ruddy2003.vestigium.data.Dia.serializer(), """{"fecha":"2026-10-01","foto":"content://x/1"}""")
+        assertEquals(null, d.foto_archivo)
+        val c = JSON.decodeFromString(io.github.ruddy2003.vestigium.data.Config.serializer(), """{"respaldo_ultimo":"2026-10-01T06:00:00-06:00"}""")
+        assertEquals(null, c.respaldo_verificado); assertEquals(true, c.bd_revision_ok); assertEquals(emptyMap<String, Int>(), c.respaldo_conteo)
+        val b = JSON.decodeFromString(io.github.ruddy2003.vestigium.data.Borrado.serializer(), """{"col":"gastos","id":"g1","json":"{}","borrado":"2026-10-01T06:00:00-06:00"}""")
+        assertEquals(null, b.fecha)
+    }
 
     @Test fun avisosSinHoraReal() {
         // Un día de avisos de antes del esquema 20 no trae la hora real: queda vacía (y su latencia_min, sin dato).

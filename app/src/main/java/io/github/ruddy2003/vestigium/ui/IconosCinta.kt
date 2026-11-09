@@ -329,6 +329,7 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawCircle(color, r, c)
             drawPath(manoUnida(Offset(c.x, c.y + r * 0.04f), r * 0.66f), hueco.copy(alpha = 0.85f))
         }
+        TemaId.BASICO -> drawCircle(color, r, c)
     }
 }
 

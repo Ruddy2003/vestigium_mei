@@ -243,21 +243,41 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             paso(s, "agenda") { Agenda.sincronizar(ctx) }
             paso(s, "comunicacion") { io.github.ruddy2003.vestigium.sensores.Comunicacion.sincronizar(ctx, 3) }
             paso(s, "entorno") { Entorno.sincronizar(ctx) }
+            // Las fotos del día que todavía no tienen su copia dentro de la app, antes del respaldo para que viajen en él.
+            paso(s, "fotos_dia") { io.github.ruddy2003.vestigium.data.FotoDelDia.completarPendientes(ctx) }
             paso(s, "respaldo") {
                 val ok = try { Exportar.respaldoAutomatico(ctx) } catch (e: CancellationException) { throw e } catch (e: Throwable) { false }
                 // Si falla (sin espacio, la carpeta ya no deja escribir, sin memoria…) y van 3 días sin respaldo, se avisa una vez
                 // por semana: antes el error se tragaba y solo se notaba al ir a buscar el respaldo.
                 val c = Repo.config
+                // Desde el 9 nov 2026: a los 2 días y cada día, no a los 3 y una vez por semana.
                 if (!ok && c.carpeta_respaldo != null && !io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx) &&
-                    (c.respaldo_ultimo == null || System.currentTimeMillis() - Fechas.millis(c.respaldo_ultimo) > 3 * 86_400_000L) &&
-                    !yaFue("respaldo_falla:${Fechas.lunesDe(hoy)}")) { marcar("respaldo_falla:${Fechas.lunesDe(hoy)}"); Avisos.respaldoFallido(ctx) }
+                    (c.respaldo_ultimo == null || System.currentTimeMillis() - Fechas.millis(c.respaldo_ultimo) > 2 * 86_400_000L) &&
+                    !yaFue("respaldo_falla:$hoy")) { marcar("respaldo_falla:$hoy"); Avisos.respaldoFallido(ctx) }
+            }
+            // La cápsula del año que terminó, la primera mañana de enero en que se pueda (9 nov 2026).
+            val anioPasado = (ahora.year - 1).toString()
+            if (ahora.monthValue == 1 && Repo.config.carpeta_respaldo != null && !yaFue("capsula:$anioPasado")) paso(s, "capsula") {
+                val libro = runCatching { io.github.ruddy2003.vestigium.ui.LibroDiario.libroDelAnio(ctx, anioPasado) }.getOrNull()
+                val r = try { io.github.ruddy2003.vestigium.data.Respaldos.capsula(ctx, anioPasado, libro) } finally { libro?.delete() }
+                if (r.startsWith("Guardé")) marcar("capsula:$anioPasado")
+            }
+            // La base de datos, revisada una vez por semana (PRAGMA quick_check).
+            paso(s, "revisar_bd") {
+                val ultima = Repo.config.bd_revision
+                if (ultima == null || System.currentTimeMillis() - Fechas.millis(ultima) > 6 * 86_400_000L) {
+                    val r = Repo.db().revisar()
+                    val sana = r == "ok"
+                    Repo.cambiarConfig { it.copy(bd_revision = Fechas.ahoraIso(), bd_revision_ok = sana) }
+                    if (!sana) Avisos.baseDanada(ctx)
+                }
             }
             if (isStopped) return
             // Lo que lleva más de 7 días en la papelera se va (v14).
             intentar { Repo.limpiarPapelera() }
             intentar {
-                if ((Repo.config.carpeta_respaldo != null || Repo.config.drive) && io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx) &&
-                    !yaFue("respaldo_pausa:${Fechas.lunesDe(hoy)}")) { marcar("respaldo_pausa:${Fechas.lunesDe(hoy)}"); Avisos.respaldoPausado(ctx) }
+                // Cada día, no una vez por semana: mientras siga en pausa, ninguna copia sale del teléfono.
+                if (io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx) && !yaFue("respaldo_pausa:$hoy")) { marcar("respaldo_pausa:$hoy"); Avisos.respaldoPausado(ctx) }
             }
             intentar {
                 if (Repo.config.drive && !Drive.automatico(ctx) && !yaFue("drive_aviso:${Fechas.lunesDe(hoy)}")) {
@@ -283,6 +303,8 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             paso(s, "agenda") { Agenda.historia(ctx) }
             paso(s, "comunicacion") { io.github.ruddy2003.vestigium.sensores.Comunicacion.historia(ctx) }
             paso(s, "entorno") { Entorno.sincronizar(ctx, maxPeticiones = 20) }
+            // El ensayo del mes: abrir la última copia de la carpeta como si se fuera a restaurar (9 nov 2026).
+            paso(s, "ensayo") { if (Repo.config.carpeta_respaldo != null) io.github.ruddy2003.vestigium.data.Respaldos.ensayo(ctx) }
             if (isStopped) return
             marcar(s)
         }

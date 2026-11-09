@@ -243,4 +243,5 @@ fun disenoComun(t: TemaId): DisenoComun = when (t) {
     TemaId.REVOLUCION -> ComunRevolucion
     TemaId.ANTIGUAS -> ComunAntiguas
     TemaId.CUEVA -> ComunCueva
+    TemaId.BASICO -> ComunBasico
 }

@@ -171,6 +171,25 @@ Esta media esconde los extremos: un día de +300 y otro de −300 se anulan. Por
 
 ---
 
+### 9.3.7 El libro del diario (desde el 9 nov 2026, D.170)
+
+Un PDF tamaño carta con el diseño del tema (`LibroDiario.libro`), para leer el diario como un libro. Se arma desde la pestaña Diario → Exportar → «Libro del diario».
+- **Periodo y tema.** Eliges el periodo (este mes, el pasado, este año, el pasado, todo, o dos fechas) y el tema: el de ahora o Básico, para imprimir.
+- **Portada e índice** con el emblema, el marco, la letra y los números del tema. El índice da la página del primer día de cada mes y la de su resumen. Para saberlas, el tomo se arma dos veces: la primera sin dibujar fotos y solo para contar páginas.
+- **Una página por día** con algo que contar: diario, ánimo o foto (`diasDelLibro`). Si el texto no cabe, sigue en la siguiente. Cada página lleva:
+  - la fecha del tema y la normal;
+  - una franja con los datos del día (`datosDelDia`): ánimo y energía del diario, sueño del reloj, pasos, clima, hasta 3 lugares visitados, hasta 6 personas mencionadas, el gasto y las fechas señaladas;
+  - la foto del día (su copia, capítulo 2), las frases con ♥, el texto con la inicial del tema, y lo mejor y lo peor.
+- **El resumen de cada mes** (`resumenMes`), al final del mes:
+  - días con diario, ánimo y energía medios, sueño medio, pasos al día y gasto;
+  - la curva del ánimo día por día (1 a 7);
+  - las 6 personas y los 6 #temas más presentes, contados en días distintos; los lugares más visitados y las categorías de gasto;
+  - las fechas señaladas y el mejor día (el de ánimo más alto; en empate, el de «lo mejor» más largo), con las palabras escritas.
+
+  Son **promedios simples** de los días con dato, sin rellenar los que faltan: describen el mes, no estiman nada. **[Diseño propio]**.
+- **Nada privado.** No usa los momentos privados ni los campos del seguimiento privado. Las personas salen de las @menciones del diario, como en Social.
+- **Tomos.** `PdfDocument` guarda todas las páginas en memoria hasta el final, así que un periodo de más de tres meses sale en tomos, uno por trimestre, juntos en un .zip. Las fotos se dibujan a 600 px como máximo. El libro de la cápsula del año (10.5.1 ter) va en un solo tomo y sin fotos. No medí en esta sesión cuánta memoria ocupa un trimestre con fotos en un teléfono real **[sin verificar]**.
+
 ## 9.4 Logros
 
 ### 9.4.1 Qué son (`ciencia/Logros.kt`)

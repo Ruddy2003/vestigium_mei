@@ -172,6 +172,7 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     // La nube de ocre que se sopla desde el toque; las secciones se asientan despacio, como polvo de pigmento, y el botón
     // pesa como una piedra que se apoya.
     TemaId.CUEVA -> MatizMovimiento(BarridoTema.SOPLO, 960, CubicBezierEasing(0.3f, 0f, 0.5f, 1f), 0f, 10f, 0.98f, 540, 70, LinearOutSlowInEasing, 1.08f, 0.6f, 560f)
+    TemaId.BASICO -> MatizMovimiento(BarridoTema.CIRCULO, 400, FastOutSlowInEasing, 0f, 8f, 1f, 220, 30, FastOutSlowInEasing, 0.6f, 1f, 1500f)   // corto y sin rebote
 }
 
 /** Aparece desde un lado y aclarándose, con el matiz del tema. [orden] retrasa unos milisegundos, para que las secciones entren una tras otra. */
@@ -248,6 +249,8 @@ internal enum class VivoTema(val periodo: Int) {
     TZOLKIN(260000),
     /** Vapor victoriano: el hollín de las chimeneas y, de noche, el gas de alumbrado. */
     HOLLIN(20000),
+    /** Básico: nada se mueve detrás (no se dibuja ni se anima). */
+    NINGUNO(60000),
 }
 
 /** El tipo de fondo vivo de cada tema (solo el Botánico cambia entre el día y la noche; el Refugio suma el barrido de noche). */
@@ -286,6 +289,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.REVOLUCION -> VivoTema.CONFETI        // confeti azul, blanco y rojo, tenue
     TemaId.ANTIGUAS -> VivoTema.RUNAS            // runas que brillan y se apagan
     TemaId.CUEVA -> if (oscuro) VivoTema.HOGUERA else VivoTema.MANOS   // de día, manos que se soplan en la pared; de noche, la hoguera
+    TemaId.BASICO -> VivoTema.NINGUNO          // sin fondo vivo
 }
 
 internal class MotaVivo(val x: Float, val y: Float, val v: Float, val fase: Float, val tam: Float, val tono: Int)
@@ -374,6 +378,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
     // 1, 2 o 3 vueltas por periodo: unas motas van más rápido que otras y el ciclo cierra justo.
     fun vueltas(m: MotaVivo) = 1 + (m.v * 2.99f).toInt()
     when (v) {
+        VivoTema.NINGUNO -> {}
         VivoTema.LUCERNA -> motas.take(22).forEach { m ->
             // Chispas que suben de la llama y se apagan al subir, parpadeando.
             val k = vueltas(m)
@@ -1095,6 +1100,7 @@ fun FondoVivo(tema: TemaId = Estilo.tema, fijo: Float? = null) {
     val e = MaterialTheme.colorScheme
     val oscuro = e.background.luminance() < 0.5f
     val tipo = vivoTema(tema, oscuro)
+    if (tipo == VivoTema.NINGUNO) return
     val motas = remember(tema) { motasVivo(tema) }
     if (fijo == null && animacionLigera(tema)) {
         // Art déco y Edo: el fondo va en su propia capa y el tiempo se lee al dibujar, unas 30 veces por segundo. Antes cada
@@ -1152,6 +1158,7 @@ fun animacionLigera(t: TemaId): Boolean = when (t) {
     TemaId.REVOLUCION -> false
     TemaId.ANTIGUAS -> false
     TemaId.CUEVA -> false
+    TemaId.BASICO -> false
 }
 
 // =====================================================================

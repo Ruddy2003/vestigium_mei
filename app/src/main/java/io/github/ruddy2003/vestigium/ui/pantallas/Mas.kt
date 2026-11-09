@@ -59,7 +59,7 @@ fun PantallaMas(nav: Nav) {
     val abrir = remember { androidx.compose.runtime.mutableStateListOf(0, 0, 0, 0) }
     val alcance = androidx.compose.runtime.rememberCoroutineScope()
     Hoja("Más", nav.atras, buscar = { nav.ir("buscar") }) {
-        val indice = listOf("Registros" to 12, "Gente" to 6, "Medir" to 9, "Sistema" to 12)
+        val indice = listOf("Registros" to 9, "Gente" to 4, "Medir" to 9, "Sistema" to 10)
         FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             indice.forEachIndexed { i, (t, n) ->
                 Ficha("${i + 1} $t · $n", false) { abrir[i]++; alcance.launch { kotlinx.coroutines.delay(150); req[i].bringIntoView() } }
@@ -70,10 +70,7 @@ fun PantallaMas(nav: Nav) {
         Seccion("Registros especiales", "Lo que no anotas todos los días.", numero = 1, plegable = true, abrir = abrir[0], modifier = Modifier.bringIntoViewRequester(req[0])) {
             Tarjeta {
                 val ult = Repo.ascensos.maxByOrNull { it.fecha }
-                FilaMas("gastos", "Gastos", "Gastos e ingresos del mes, por categoría y subcategoría", ir)
-                Separador()
-                FilaMas("campanas", "Campañas", "Retos de la semana", ir)
-                Separador()
+                // Gastos y campañas ya están a la vista en Análisis y en Vida; Ideario, notas, cartas y sueños, en la pestaña Diario (9 nov 2026).
                 FilaMas("escalada", "Escalada", if (ult == null) "Bitácora de sesiones y bloques" else "${porNumero(Repo.ascensos.size, "1 sesión", "${Repo.ascensos.size} sesiones")} · última ${Fechas.relativo(ult.fecha)}", ir)
                 Separador()
                 FilaMas("fuerza", "Gimnasio", if (Repo.entrenos.isEmpty()) "Entrenamientos de MacroFactor Workouts" else "${Repo.entrenos.values.count { it.series > 0 }} entrenamientos importados", ir)
@@ -87,35 +84,22 @@ fun PantallaMas(nav: Nav) {
                 FilaMas("suplementos", "Suplementos", if (supl.isEmpty()) "Lo que tomas y su nivel estimado" else supl.joinToString(", ") { it.nombre } +
                     " · " + (if (supl.none { it.modelo != "exposicion" && io.github.ruddy2003.vestigium.data.Suplementos.faltan(it) }) "hoy ya" else "hoy falta"), ir)
                 Separador()
-                FilaMas("biblioteca_ideas", "Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste o pensaste, con su fuente y quién lo dice" else "${porNumero(Repo.ideas.size, "1 idea", "${Repo.ideas.size} ideas")} · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas", ir)
-                Separador()
-                FilaMas("deseados", "Quiero leer y ver", Repo.obras.count { it.estado == "quiero" }.let { n -> if (n == 0) "Libros, películas, series y juegos que quieres" else "$n pendientes · ${Repo.obras.count { it.estado == "quiero" && it.prioridad == "pronto" }} para pronto" }, ir)
-                Separador()
                 FilaMas("listas", "Listas", if (Repo.listas.isEmpty()) "Lugares por visitar, cosas por comprar, restaurantes…" else Repo.listas.joinToString(", ") { it.nombre }.take(80), ir)
-                Separador()
-                FilaMas("notas", "Notas", if (Repo.notas.isEmpty()) "Ideas, pensamientos especiales, propósitos y recordatorios" else "${porNumero(Repo.notas.size, "1 nota", "${Repo.notas.size} notas")} · ${Repo.notas.count { it.fijada }} fijadas", ir)
                 Separador()
                 val porRev = io.github.ruddy2003.vestigium.data.Metas.porRevisar().size
                 FilaMas("metas", "Metas", if (Repo.metas.isEmpty()) "Corto, mediano y largo plazo, con su progreso" else "${io.github.ruddy2003.vestigium.data.Metas.activas().size} activas" + if (porRev > 0) " · $porRev por revisar" else "", ir)
                 Separador()
-                FilaMas("cartas", "Cartas", "${Repo.cartas.count { !it.abierta }} selladas para tu yo del futuro · ${Repo.cartas.count { it.para.isNotBlank() }} a otras personas", ir)
-                Separador()
-                FilaMas("biblioteca_suenos", "Biblioteca de sueños", "${Repo.dias.values.count { it.sueno_texto.isNotBlank() }} sueños escritos", ir)
-                Separador()
                 FilaMas("frases", "Frases guardadas", (Repo.config.frases_guardadas.size + Repo.obras.sumOf { o -> o.citas.count { it.favorita } }).let { if (it == 0) "Las frases del día a las que les des ♥" else "$it frase${if (it == 1) "" else "s"} con ♥" }, ir)
             }
         }
-        Seccion("Tu gente y sustancias", numero = 2, plegable = true, abrir = abrir[1], modifier = Modifier.bringIntoViewRequester(req[1])) {
+        Seccion("Gente y sustancias", numero = 2, plegable = true, abrir = abrir[1], modifier = Modifier.bringIntoViewRequester(req[1])) {
             Tarjeta {
                 val pend = io.github.ruddy2003.vestigium.data.Personas.pendientes().size
-                FilaMas("personas", "Tu gente", if (pend > 0) "$pend por clasificar · quién es cada @persona para ti" else "Quién es cada @persona para ti, y qué tan cerca", ir)
+                // Tu gente, la red, el cielo y los días especiales, en un solo lugar (9 nov 2026).
+                FilaMas("social", "Social", (if (pend > 0) "$pend por clasificar · " else "") + "Tu gente, quién conoce a quién, cumpleaños y fechas especiales", ir)
                 Separador()
-                val temasN = Repo.dias.values.flatMap { io.github.ruddy2003.vestigium.data.Texto.temas(it.nota) }.toSet().size
-                FilaMas("personas", "Días especiales y cumpleaños", "Cumpleaños, aniversarios y tus fechas, con su aviso (en Tu gente)", ir)
-                Separador()
-                FilaMas("red", "Red", "Quién conoce a quién, como un grafo", ir)
-                Separador()
-                FilaMas("temas", "Tus temas", if (temasN == 0) "Tus #temas, ordenados y sin duplicados" else "$temasN #temas · juntar los que se parecen, renombrar, pasar a fecha señalada", ir)
+                val temasN = remember(Repo.dias) { Repo.dias.values.flatMap { io.github.ruddy2003.vestigium.data.Texto.temas(it.nota) }.toSet().size }
+                FilaMas("temas", "Tus #etiquetas", if (temasN == 0) "Tus #temas, ordenados y sin duplicados" else "$temasN #temas · juntar los que se parecen, renombrar, pasar a fecha señalada", ir)
                 Separador()
                 FilaMas("sustancias", "Sustancias", "Alcohol, cannabis, tabaco, cafeína: episodios, niveles y cruda", ir)
                 Separador()
@@ -148,7 +132,8 @@ fun PantallaMas(nav: Nav) {
         }
         Seccion("Sistema", numero = 4, plegable = true, abrir = abrir[3], modifier = Modifier.bringIntoViewRequester(req[3])) {
             Tarjeta {
-                FilaMas("guia_uso", "Cómo usar la app", "Qué poner, cuándo y cómo leerte", ir)
+                // Una sola guía con sus dos partes (antes, dos filas casi iguales al principio y al final).
+                FilaMas("guia_uso", "Guía", "Cómo usar la app y cómo leer tus datos: qué mide cada cosa y por qué", ir)
                 Separador()
                 FilaMas("apariencia", "Apariencia", "Tema, claro u oscuro, ícono, letra, animaciones, tus últimos días, semana corta, vibraciones y sonidos", ir)
                 Separador()
@@ -162,15 +147,11 @@ fun PantallaMas(nav: Nav) {
                 Separador()
                 FilaMas("estado_datos", "Estado de los datos", "Qué fuentes registraron hoy, qué permiso falta y el último respaldo", ir)
                 Separador()
-                FilaMas("cobertura", "Cobertura de variables", "Cuántos días tiene cada variable y cuánto falta para 30", ir)
-                Separador()
                 FilaMas("lugar_nuevo", "Lugares especiales", io.github.ruddy2003.vestigium.data.Lugares.pendientes().size.let { if (it > 0) "$it sitio(s) esperando respuesta" else "Cuándo pregunta «¿es un lugar especial?» y los sitios ignorados" }, ir)
                 Separador()
                 FilaMas("reportes", "Reportes", "Semanal en imagen, mensual en PDF y uno para terapia", ir)
                 Separador()
                 FilaMas("permisos", "Permisos y sensores", "Ubicación, reloj, pantalla, fotos, agenda, notificaciones, clima", ir)
-                Separador()
-                FilaMas("guia", "Cómo leer tus datos", "Qué mide cada cosa, de dónde viene y por qué", ir)
             }
         }
         BotonTexto(onClick = { nav.ir("guia_uso:atajos") }, modifier = Modifier.padding(top = 12.dp)) { Text("Atajos, corregir y deshacer →") }
@@ -231,6 +212,7 @@ fun PantallaHabitos(nav: Nav) {
 @Composable
 fun PantallaGuia(nav: Nav) {
     Hoja("Cómo leer tus datos", nav.atras, "Qué mide cada cosa y por qué la app la mide así.") {
+        PestanasGuia("guia", nav)
         Seccion("Cómo leer tus datos") {
             Tarjeta {
                 Text("Con pocos días todo es pista, no evidencia. Para detectar una relación moderada se necesitan unos 85 días con ambos datos.", style = MaterialTheme.typography.bodyMedium)
@@ -257,5 +239,14 @@ fun PantallaGuia(nav: Nav) {
                 }
             }
         }
+    }
+}
+
+/** Las dos partes de la guía como pestañas (9 nov 2026): una sola fila en Más y se cambia de una a otra sin volver. */
+@Composable
+fun PestanasGuia(actual: String, nav: Nav) {
+    Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Ficha("Cómo usarla", actual == "guia_uso") { if (actual != "guia_uso") nav.reemplazar("guia_uso") }
+        Ficha("Cómo leer tus datos", actual == "guia") { if (actual != "guia") nav.reemplazar("guia") }
     }
 }

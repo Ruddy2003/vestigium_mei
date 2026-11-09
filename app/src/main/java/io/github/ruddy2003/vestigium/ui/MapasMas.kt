@@ -91,6 +91,7 @@ object MapasMas {
         // La migración tras las manadas: del abrigo del risco (abajo a la izquierda) se cruza el río helado y la estepa, el vado
         // de los renos, la cueva de los caballos y las fuentes tibias, hasta los pastos del verano arriba a la derecha.
         TemaId.CUEVA -> listOf(Offset(0.08f, 0.78f), Offset(0.24f, 0.62f), Offset(0.4f, 0.72f), Offset(0.54f, 0.48f), Offset(0.66f, 0.28f), Offset(0.8f, 0.42f), Offset(0.92f, 0.22f))
+        TemaId.BASICO -> listOf(Offset(0.08f, 0.8f), Offset(0.22f, 0.66f), Offset(0.36f, 0.7f), Offset(0.5f, 0.5f), Offset(0.64f, 0.4f), Offset(0.78f, 0.44f), Offset(0.92f, 0.24f))
         // Los puntos de control: piso por piso, de la ventanilla de abajo al Ministerio en lo alto.
         TemaId.DISTOPIA -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
         // La traza de la red: saltos de servidor en servidor, de la máquina propia a la raíz.
@@ -275,6 +276,7 @@ object MapasMas {
                 listOf(0f, 1f).forEach { k -> val x = w * 0.8f + k * 6 * d
                     drawPath(Path().apply { moveTo(x, h * 0.42f); cubicTo(x - 4 * d, h * 0.38f, x + 4 * d, h * 0.34f, x, h * 0.3f) }, Color.White.copy(alpha = if (oscuro) 0.25f else 0.6f), style = Stroke(1.4f * d)) }
             }
+            TemaId.BASICO -> {}   // sin paisaje: solo la ruta y las paradas
             TemaId.DISTOPIA -> {
                 // Pisos de un edificio de oficinas en corte, con sus ventanillas; a la derecha, la torre del Ministerio.
                 val linea = cs.onSurface.copy(alpha = if (oscuro) 0.18f else 0.14f)
@@ -764,6 +766,7 @@ object MapasMas {
             TemaId.ANTIGUAS -> drawPath(p, Color(0xFF7A1A12).copy(alpha = 0.8f), style = Stroke(1.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * d, 3 * d))))
             // Una hilera de puntos de ocre, como las que se pintaban en la pared.
             TemaId.CUEVA -> drawPath(p, Color(0xFFA2401F).copy(alpha = 0.85f), style = Stroke(2.6f * d, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.1f * d, 5 * d))))
+            TemaId.BASICO -> drawPath(p, cs.primary.copy(alpha = 0.8f), style = Stroke(2.4f * d, cap = StrokeCap.Round))
             // La línea roja del trámite, como cinta de señalización.
             TemaId.DISTOPIA -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
             // El enlace de la traza: la línea cian y los paquetes que viajan de nodo en nodo.
@@ -910,6 +913,10 @@ object MapasMas {
                 drawCircle(col, r, c)
                 drawPath(manoUnida(c, r * 0.7f), cs.surface)
                 if (meta) drawCircle(Color(0xFFA2401F), r * 1.3f, c, style = Stroke(1.2f * d))
+            }
+            TemaId.BASICO -> {
+                drawCircle(col, r * 0.8f, c)
+                if (meta) drawCircle(cs.primary, r * 1.2f, c, style = Stroke(1.2f * d))
             }
             // Una ventanilla de control: caseta cuadrada con su número.
             TemaId.DISTOPIA -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }

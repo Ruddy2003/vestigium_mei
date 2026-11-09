@@ -69,4 +69,6 @@
     <color name="arranque_cueva">#EADCC6</color>
     <color name="arranque_antiguas_oscuro">#151618</color>
     <color name="arranque_cueva_oscuro">#16100C</color>
+    <color name="arranque_basico">#F7F8FA</color>
+    <color name="arranque_basico_oscuro">#121316</color>
 </resources>

@@ -64,7 +64,11 @@
 
     <application
         android:name=".App"
-        android:allowBackup="false"
+        android:allowBackup="true"
+        android:fullBackupOnly="true"
+        android:backupAgent=".data.CopiaAndroid"
+        android:dataExtractionRules="@xml/copia_android"
+        android:fullBackupContent="@xml/copia_android_vieja"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
@@ -537,6 +541,20 @@
             android:exported="true"
             android:icon="@mipmap/ic_launcher_cueva"
             android:roundIcon="@mipmap/ic_launcher_cueva"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <!-- Básico (sin diseño): el ícono por omisión de la app. -->
+        <activity-alias
+            android:name=".IconoBasico"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher"
             android:targetActivity=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

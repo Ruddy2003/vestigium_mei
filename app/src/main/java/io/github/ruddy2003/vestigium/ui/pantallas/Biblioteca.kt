@@ -185,6 +185,7 @@ fun PantallaBiblioteca(nav: Nav) {
 
     // «Lista y pendientes», para no confundirla con la galería «Obras» (N-23).
     Hoja("Lista y pendientes", nav.atras, "Libros, películas, series, juegos y artículos: qué tienes pendiente, qué empezaste, qué terminaste, qué te dejó y qué frases te quedaron.", latin = "INDEX OPERVM") {
+        PestanasObras("biblioteca", nav)
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("todo", filtro == null) { filtro = null }
             TIPOS_OBRA.forEach { t -> Ficha(t.nombre.lowercase(), filtro == t.id) { filtro = if (filtro == t.id) null else t.id } }
@@ -689,6 +690,7 @@ fun PantallaDeseados(nav: Nav) {
         sentir(Sentidos.Evento.GUARDAR); titulo = ""
     }
     Hoja("Quiero leer y ver", nav.atras, "Lo que quieres leer, ver, escuchar o jugar. Basta el título; lo demás, cuando quieras.") {
+        PestanasObras("deseados", nav)
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("todo · ${pendientes.size}", filtro == null) { filtro = null }
             TIPOS_OBRA.forEach { t -> val n = pendientes.count { it.tipo == t.id }; if (n > 0) Ficha("${plural(t.id)} · $n", filtro == t.id) { filtro = if (filtro == t.id) null else t.id } }

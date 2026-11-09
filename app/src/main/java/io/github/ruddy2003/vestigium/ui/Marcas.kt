@@ -195,6 +195,7 @@ object Marcas {
             TemaId.ANTIGUAS -> if (persona) Aspecto(p, s, Forma.PIEDRA, negrita = true) else Aspecto(t, t, Forma.MUESCAS, cursiva = true)
             // Las personas, en la nube de ocre soplado, como una mano en la pared; los asuntos, sobre una hilera de puntos.
             TemaId.CUEVA -> if (persona) Aspecto(cs.onBackground, p, Forma.SOPLO, negrita = true) else Aspecto(p, p, Forma.PUNTEADO)
+            TemaId.BASICO -> if (persona) Aspecto(p, p, Forma.SUBRAYADO, negrita = true) else Aspecto(s, s, Forma.NINGUNA)
         }
     }
 

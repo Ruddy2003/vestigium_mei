@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 21
+const val SCHEMA_V = 22
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -85,6 +85,8 @@ data class Dia(
     val dia_dificil: Boolean = false,
     /** Foto elegida para representar el día (content:// de la galería). */
     val foto: String? = null,
+    /** Esquema 22: la copia de esa foto dentro de la app (`fotos_dia/<fecha>.jpg`), que viaja en el respaldo. */
+    val foto_archivo: String? = null,
     val retroactivo: Boolean = false,
     val ts_creado: String? = null,
     val ts_editado: String? = null,
@@ -539,7 +541,11 @@ data class Subcategoria(val nombre: String, val monto: Double? = null)
  * La papelera no viaja en los respaldos ni en la exportación.
  */
 @Serializable
-data class Borrado(val col: String, val id: String, val json: String, val borrado: String)
+/**
+ * Algo borrado, 7 días en la papelera. [fecha] (esquema 22) es la fecha con que estaba guardado: la necesitan los registros
+ * que se reemplazan al reimportar (MacroFactor, Spotify, YouTube) para volver a su lugar.
+ */
+data class Borrado(val col: String, val id: String, val json: String, val borrado: String, val fecha: String? = null)
 
 @Serializable
 data class SaludDia(
@@ -816,6 +822,21 @@ data class Config(
     val widget_cifra: String = "racha",
     /** Última vez que se escribió el respaldo en la carpeta elegida. */
     val respaldo_ultimo: String? = null,
+    /**
+     * Esquema 22 (9 nov 2026), el estado del respaldo a la carpeta: cuándo salió la última copia que se volvió a leer completa
+     * y coincidió con su manifiesto, qué traía, el último error y cuántos días y momentos llevaba (para no reemplazarla por una
+     * mucho más pobre, como ya hacía Drive).
+     */
+    val respaldo_verificado: String? = null,
+    val respaldo_detalle: String = "",
+    val respaldo_error: String? = null,
+    val respaldo_conteo: Map<String, Int> = emptyMap(),
+    /** Esquema 22: el ensayo de restauración del mes (abrir la última copia de la carpeta y compararla con el teléfono). */
+    val respaldo_ensayo: String? = null,
+    val respaldo_ensayo_resultado: String = "",
+    /** Esquema 22: la revisión semanal de la base de datos (PRAGMA quick_check): cuándo y si salió bien. */
+    val bd_revision: String? = null,
+    val bd_revision_ok: Boolean = true,
     /** Claro u oscuro: «sistema» sigue al teléfono, «claro» u «oscuro» lo fijan dentro de la app. */
     val modo: String = "sistema",
     /** Emblemas que se mueven, transiciones y barras que crecen. */

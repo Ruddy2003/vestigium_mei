@@ -43,11 +43,14 @@ object TusTemas {
         return m.map { (t, f) -> Tema(t, f.size, f.min(), f.max()) }.sortedWith(compareByDescending<Tema> { it.dias }.thenBy { it.nombre })
     }
 
-    private fun sinAcentos(s: String) = java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
+    private val MARCAS = Regex("\\p{Mn}+")
+    private fun sinAcentos(s: String) = java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD).replace(MARCAS, "")
 
     /** Singular aproximado en español: examenes → examen, tesis → tesis, amigos → amigo, viajes → viaje. */
-    private fun raiz(s: String): String {
-        val x = sinAcentos(s).replace("_", "")
+    private fun raiz(s: String): String = raizSinAcentos(sinAcentos(s))
+
+    private fun raizSinAcentos(sa: String): String {
+        val x = sa.replace("_", "")
         return when {
             x.length > 4 && x.endsWith("es") && !x.endsWith("ies") -> x.dropLast(2)
             x.length > 3 && x.endsWith("s") && !x.endsWith("is") -> x.dropLast(1)
@@ -55,22 +58,38 @@ object TusTemas {
         }
     }
 
-    /** Pares que parecen el mismo tema escrito distinto (y que no dijiste que son distintos). */
-    fun parecidos(): List<Pair<String, String>> {
+    /**
+     * Pares que parecen el mismo tema escrito distinto (y que no dijiste que son distintos), a lo más 30, en el orden de
+     * [l] (del más usado al menos). Antes comparaba cada par normalizando las dos palabras en cada vuelta (con un regex
+     * nuevo cada vez): con cientos de #temas la pantalla tardaba segundos y Android la cerraba. Ahora cada nombre se
+     * normaliza una sola vez, la distancia de edición solo se calcula entre nombres de largo parecido y la búsqueda para
+     * en cuanto hay 30 pares. Da los mismos pares que antes.
+     */
+    fun parecidos(l: List<Tema> = lista()): List<Pair<String, String>> {
         val eq = Repo.equivalencias()
-        val l = lista()
-        val dias = l.associate { it.nombre to it.dias }
+        val distintos = Repo.config.temas_distintos.toHashSet()
         val nombres = l.map { it.nombre }
+        val dias = IntArray(l.size) { l[it].dias }
+        val sa = nombres.map { sinAcentos(it) }
+        val ra = sa.map { raizSinAcentos(it) }
+        val sg = nombres.map { it.replace("_", "") }
+        val canon = nombres.map { Texto.canon(it, eq) }
         val out = ArrayList<Pair<String, String>>()
-        for (i in nombres.indices) for (j in i + 1 until nombres.size) {
-            val a = nombres[i]; val b = nombres[j]
-            if ("$a|$b" in Repo.config.temas_distintos || "$b|$a" in Repo.config.temas_distintos) continue
-            if (Texto.canon(a, eq) == Texto.canon(b, eq)) continue
-            val parecido = Texto.parecidos(a, b) || raiz(a) == raiz(b) || sinAcentos(a) == sinAcentos(b)
-            // El más usado primero: es el nombre que se propone conservar.
-            if (parecido) out += if ((dias[a] ?: 0) >= (dias[b] ?: 0)) a to b else b to a
+        for (i in nombres.indices) {
+            for (j in i + 1 until nombres.size) {
+                val a = nombres[i]; val b = nombres[j]
+                if (a == b) continue
+                val parecido = sg[i] == sg[j] || ra[i] == ra[j] || sa[i] == sa[j] ||
+                    (a.length >= 4 && b.length >= 4 && kotlin.math.abs(a.length - b.length) <= 2 && Texto.levenshtein(a, b) <= 2)
+                if (!parecido) continue
+                if ("$a|$b" in distintos || "$b|$a" in distintos) continue
+                if (canon[i] == canon[j]) continue
+                // El más usado primero: es el nombre que se propone conservar.
+                out += if (dias[i] >= dias[j]) a to b else b to a
+                if (out.size >= 30) return out
+            }
         }
-        return out.take(30)
+        return out
     }
 
     /** [de] pasa a contarse como [a] en los análisis, reportes y la exportación. Tus textos no cambian. */
@@ -82,8 +101,9 @@ object TusTemas {
     fun vistaPrevia(de: String, a: String): Pair<Int, Pair<String, String>?> {
         val l = lugares().filter { l -> Texto.temas(l.texto).contains(de.lowercase()) }
         val ej = l.firstOrNull()?.let { x ->
-            val i = x.texto.lowercase().indexOf("#" + de.lowercase()).coerceAtLeast(0)
-            val desde = (i - 50).coerceAtLeast(0); val hasta = (i + de.length + 60).coerceAtMost(x.texto.length)
+            // La posición se busca en el texto original (sin pasarlo a minúsculas, que puede cambiar su largo).
+            val i = Regex(Regex.escape("#$de"), RegexOption.IGNORE_CASE).find(x.texto)?.range?.first ?: 0
+            val desde = (i - 50).coerceAtLeast(0); val hasta = (i + de.length + 60).coerceIn(desde, x.texto.length)
             val trozo = x.texto.substring(desde, hasta)
             trozo to Texto.reemplazar(trozo, '#', de, a)
         }
@@ -129,17 +149,17 @@ object TusTemas {
         val limpio = d.removePrefix("sentimiento_").removePrefix("sentimientos_").replace('_', ' ')
         val rx = Regex("#" + Regex.escape(d) + "(?![\\p{L}\\p{N}_])", RegexOption.IGNORE_CASE)
         var k = 0
-        lugares().forEach { l -> if (rx.containsMatchIn(l.texto)) { l.cambiar(rx.replace(l.texto, limpio)); k++ } }
+        lugares().forEach { l -> if (rx.containsMatchIn(l.texto)) { l.cambiar(rx.replace(l.texto, Regex.escapeReplacement(limpio))); k++ } }
         return k to antes
     }
 
     /** Los que empiezan con «sentimiento_»: son lo que sentiste, que va mejor en los botones de «¿Cómo estás ahora?». */
-    fun deSentimientos(): List<Tema> = lista().filter { it.nombre.startsWith("sentimiento") }
+    fun deSentimientos(l: List<Tema> = lista()): List<Tema> = l.filter { it.nombre.startsWith("sentimiento") }
 
     /** Temas que solo aparecieron un día y hace más de dos semanas: quizá eran un hito. */
-    fun deUnDia(): List<Tema> {
+    fun deUnDia(l: List<Tema> = lista()): List<Tema> {
         val limite = Fechas.sumar(Fechas.diaLogico(), -14)
-        return lista().filter { it.dias == 1 && it.ultima < limite && !it.nombre.startsWith("sentimiento") }
+        return l.filter { it.dias == 1 && it.ultima < limite && !it.nombre.startsWith("sentimiento") }
     }
 
     /** Pasa un #tema de un solo día a las fechas señaladas de ese día (tipo «otra», esquema 21) y le quita el # en el texto. */

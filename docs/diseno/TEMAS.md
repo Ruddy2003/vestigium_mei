@@ -282,6 +282,7 @@ La matriz de arriba dice si cada superficie es **propia**; esta segunda pasada m
 | Campos, separadores, botones de texto, filas, vacío, aviso, cifra, tarjetas y Gastos | `ui/comun/` (`DisenoComun`, `CampoTexto`, `Separador`, `BotonTexto`, `TarjetaTema`) | Hecho (fase B, lotes B1–B5): un objeto por tema; reemplaza 122 `OutlinedTextField`, 101 `HorizontalDivider` y 257 `TextButton`. Ver `informes/B1.md` a `B5.md`. |
 | Pedestales, placa del hall, salones, campañas y objetos de Tu año | `ui/logros/` (`DisenoLogros`) | Hecho (fase C, lotes C1–C4): un objeto por tema; trofeos de la Terminal sin ASCII. Las medallas del hall (`PiezaLogro`) y `MedallaLogro` no se ven en la app y no se rehicieron. Ver `informes/C1.md` a `C4.md`. |
 | Hoja rápida, Relaciones, cinta, marcas, texturas, bandas, cielo de noche y esferas de enfoque | `DisenoComun` (adornos), `Marcas.kt`, `Decoracion.kt`, `Libros.kt`, `EnfoqueActivity.kt` | Hecho (fase D, lotes D1–D2). Ver `informes/D1.md` y `D2.md`. |
+| Muebles de Vida (Social, Mapas, Otras vidas), íconos de «Tus mapas» y tablero de Notas del Diario | `ui/vida/` (`DisenoVida`, `disenoVida`, `MuebleNotas.kt`, `Nicho.kt`) | Hecho (lote E6, 9 nov 2026): un `object Vida<Tema>` por tema con cada mueble entero y su nicho sólido (`area`) para el contenido; Logros es el salón del Hall en pequeño (`escenaSalon`). Básico usa `VidaPlana`. Ver `informes/E6_PLAN.md`, `E6_V1.md` y `E6_V2.md`. |
 
 ## Fuera de la matriz
 
@@ -296,3 +297,10 @@ La matriz de arriba dice si cada superficie es **propia**; esta segunda pasada m
 - **Se quedan a propósito:**
   - `Avisos.SONIDOS`, que se deriva de `sonidosDe` (la superficie `avisos_mapa` de la prueba ya no puede fallar);
   - `soporte()`, que usa `Cartas.kt` como ayudante.
+- **Básico** (`TemaId.BASICO`, id `basico`, época «Sin diseño») es un tema **sin diseño, a propósito**, para probar la app de forma más fluida. No tiene columna en la matriz ni cuenta en el resumen:
+  - es Material 3 limpio: grises neutros con un acento azul sobrio (`PaletaBasica` en `ui/Tema.kt`, con contraste AA en todo el texto), la letra del sistema (`FontFamily.Default`) con los tamaños de Material 3 y esquinas estándar (8 dp los botones, 12 dp las tarjetas);
+  - los nombres y textos van en español normal («Hoy», «Diario», «Vida», «Análisis», «Más», «← volver»), sin latín; la fecha, «lunes 9 de noviembre de 2026»; los números, arábigos;
+  - usa piezas planas propias, sin texturas ni ornamentos: `BibliotecaBasico`, `IdeasBasico`, `LogrosBasico` y `ComunBasico` (y `VidaPlana` en Vida); la libreta es `Contenedor.SIMPLE` y el fondo vivo, `VivoTema.NINGUNO`;
+  - no tiene emblema, fondo vivo, lluvia de celebración, presentación, gato, sonidos ni música propios (los avisos suenan con el sonido del teléfono y el toque, con el clic del sistema); la vibración es un clic corto de siempre; el ícono es el de la app y el sello del día, un círculo liso;
+  - no entra en la rotación diaria (`RotacionTema.rotables`, por `TemaId.sinDiseno`);
+  - las pruebas de cobertura y de unicidad lo dejan fuera de forma explícita (se parecería a los genéricos); sus `when (tema)` sí los vigila el compilador. Sus capturas son `basicoClaro` y `basicoOscuro` en `Capturas.kt`.

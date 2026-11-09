@@ -211,7 +211,10 @@ object Importar {
      */
     fun combinarConfig(c: Config, r: Config, nuevo: Boolean): Config {
         if (nuevo) return r.copy(carpeta_respaldo = null, disparos = emptyMap(), plan_muestreo = emptyMap(), ultimo_sync = c.ultimo_sync, enfoque_tipo = null, enfoque_inicio = null, enfoque_plan = null,
-            bienvenida_vista = true, drive = c.drive, drive_carpeta = c.drive_carpeta ?: r.drive_carpeta, drive_ultimo = c.drive_ultimo, respaldo_ultimo = c.respaldo_ultimo)
+            bienvenida_vista = true, drive = c.drive, drive_carpeta = c.drive_carpeta ?: r.drive_carpeta, drive_ultimo = c.drive_ultimo, respaldo_ultimo = c.respaldo_ultimo,
+            // El estado del respaldo es de este teléfono, no del que hizo la copia.
+            respaldo_verificado = c.respaldo_verificado, respaldo_detalle = c.respaldo_detalle, respaldo_error = c.respaldo_error, respaldo_conteo = c.respaldo_conteo,
+            respaldo_ensayo = c.respaldo_ensayo, respaldo_ensayo_resultado = c.respaldo_ensayo_resultado, bd_revision = c.bd_revision, bd_revision_ok = c.bd_revision_ok)
         val perfilVacio = c.perfil == Perfil()
         return c.copy(
             habitos = (c.habitos + r.habitos).distinctBy { it.id }, equivalencias = r.equivalencias + c.equivalencias,

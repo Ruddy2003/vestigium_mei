@@ -386,6 +386,7 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
         quadraticTo(w - 6 * d, h * 0.5f, w - d, h - 4 * d); quadraticTo(w * 0.6f, h + 3 * d, w * 0.3f, h - 5 * d); quadraticTo(w * 0.1f, h - 9 * d, 0f, h)
         quadraticTo(5 * d, h * 0.5f, 0f, 10 * d); close()
     }, 4.dp, 2.dp, false, 1.dp)
+    TemaId.BASICO -> PielDialogo(RoundedCornerShape(24.dp), 0.dp, 0.dp, false, 1.dp)
 }
 
 /** Los adornos del marco del diálogo, dibujados encima del contenido y siempre en el margen. */
@@ -756,6 +757,7 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             piezasMano(m, 9 * d).forEach { drawPath(it, androidx.compose.ui.graphics.lerp(e.surface, e.primary, 0.45f)) }
             var x = w / 2 - 20 * d; while (x <= w / 2 + 20 * d) { drawCircle(e.primary.copy(alpha = 0.6f), 1.8f * d, Offset(x, h - 17 * d)); x += 10 * d }
         }
+        TemaId.BASICO -> {}
     }
 }
 
@@ -1010,6 +1012,7 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             drawLine(e.onSurface.copy(alpha = 0.4f), Offset(w / 2 + 14 * d, cy), Offset(w, cy), d, StrokeCap.Round)
             for (k in -1..1) drawCircle(e.primary, 2.2f * d, Offset(w / 2 + k * 8 * d, cy))
         }
+        TemaId.BASICO -> drawLine(e.outlineVariant, Offset(0f, cy), Offset(w, cy), d)
     }
 }
 
@@ -1416,6 +1419,10 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             var m = 6 * d; while (m < x - 2 * d) { drawLine(e.surface.copy(alpha = 0.7f), Offset(m, cy - g * 0.27f), Offset(m, cy + g * 0.27f), 0.8f * d); m += 7 * d }
             if (x > 0f) drawCircle(activo, g * 0.45f, Offset(x, cy))
         }
+        TemaId.BASICO -> {
+            linea(inactivo, x, w, g * 0.8f, cap = StrokeCap.Round)
+            linea(activo, 0f, x, g * 0.8f, cap = StrokeCap.Round)
+        }
     }
     if (pasos in 1..40) for (k in 1..pasos) {
         val fx = k / (pasos + 1f)
@@ -1671,6 +1678,7 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             drawOval(color, Offset(c.x - r * 0.95f, c.y - r * 0.78f), Size(r * 1.9f, r * 1.56f))
             drawCircle(hueco.copy(alpha = 0.55f), r * 0.24f, c)
         }
+        TemaId.BASICO -> drawCircle(color, r * 0.8f, c)
     }
 }
 

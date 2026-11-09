@@ -191,6 +191,7 @@ object FondosTelefono {
         TemaId.REVOLUCION -> "VESTIGIUM · MEI · AN I"
         TemaId.ANTIGUAS -> "VESTIGIUM · MEI · CRÓNICA"
         TemaId.CUEVA -> "VESTIGIUM MEI · LA PARED"
+        TemaId.BASICO -> "VESTIGIUM MEI"
     }
 }
 
@@ -700,6 +701,7 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 }
                 for (k in -3..3) drawCircle(col, 2 * u, Offset(cx + k * 10 * u, aba - 20 * u))
             }
+            TemaId.BASICO -> {}   // sin marco
         }
     }
 }
@@ -946,4 +948,5 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.REVOLUCION -> R.drawable.logo_revolucion
     TemaId.ANTIGUAS -> R.drawable.logo_antiguas
     TemaId.CUEVA -> R.drawable.logo_cueva
+    TemaId.BASICO -> R.drawable.logo_mono
 }

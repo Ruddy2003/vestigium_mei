@@ -1505,8 +1505,8 @@ class Capturas {
     }
     @Test fun cintaRomano() = v67(TemaId.ROMANO, false, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(navVacia) }
     @Test fun cintaCiber() = v67(TemaId.CIBER, true, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(navVacia) }
-    @Test fun constelacionGotico() = v67(TemaId.GOTICO, true, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(navVacia) }
-    @Test fun constelacionNavidad() = v67(TemaId.NAVIDAD, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(navVacia) }
+    @Test fun constelacionGotico() = v67(TemaId.GOTICO, true, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "cielo"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(navVacia) }
+    @Test fun constelacionNavidad() = v67(TemaId.NAVIDAD, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "cielo"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(navVacia) }
     @Test fun recaidasMedieval() = v67(TemaId.MEDIEVAL, false, 3600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaRecaidas(navVacia) }
     @Test fun enfoqueLaboratorio() = v67(TemaId.LABORATORIO, false, 2800) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaEnfoque(navVacia) }
     @Test fun estadoDatosOrden() = v67(TemaId.ORDEN, true, 2400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaEstadoDatos(navVacia) }
@@ -1898,8 +1898,11 @@ class Capturas {
     @Test fun l3SuplementosDistopia() = v73(TemaId.DISTOPIA, true, 2400) { datosLote3(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaSuplementos(navVacia) }
     @Test fun l3LaptopGotico() = v73(TemaId.GOTICO, false, 3600) { datosLote3(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaLaptop(navVacia) }
     @Test fun l3RedBotanico() = v73(TemaId.BOTANICO, false, 3000, { c -> c.copy(vinculos = listOf(io.github.ruddy2003.vestigium.data.Vinculo("ana", "luis", "colegas"),
-        io.github.ruddy2003.vestigium.data.Vinculo("ana", "marta", "familia"))) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaRed(navVacia) }
-    @Test fun l3RedCiber() = v73(TemaId.CIBER, true, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaRed(navVacia) }
+        io.github.ruddy2003.vestigium.data.Vinculo("ana", "marta", "familia"))) }) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "red"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(navVacia) }
+    // Social (9 nov 2026): el grafo en pantalla completa y la pantalla con Tu gente plegada.
+    @Test fun socialGrafoRomano() = v73(TemaId.ROMANO, false, 1800) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "red"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaGrafoSocial(navVacia) }
+    @Test fun socialGrafoGoticoOscuro() = v73(TemaId.GOTICO, true, 1800) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "cielo"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaGrafoSocial(navVacia) }
+    @Test fun l3RedCiber() = v73(TemaId.CIBER, true, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "red"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(navVacia) }
     @Test fun l3ExperimentosSeda() = v73(TemaId.SEDA, false, 4200) {
         val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
         Repo.experimentosEnMemoria(listOf(io.github.ruddy2003.vestigium.data.Experimento("e1", "Hora de dormir", "Estar en la cama antes de las 00:00", "valencia",
@@ -2008,7 +2011,13 @@ class Capturas {
 
     // Pantallas genéricas y gráficas.
     @Test fun temaCalendario() = porTema("calendario") { t, o, n -> v73(t, o, 3000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCalendario(navVacia) } }
-    @Test fun temaConstelacion() = porTema("constelacion") { t, o, n -> v67(t, o, 3000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(navVacia) } }
+    // Lote E6 (9 nov 2026): Vida con sus muebles y la pestaña Diario con el tablero de notas, en claro y oscuro (CAPTURAS=vida).
+    @Test fun temaVida() = porTema("vida") { t, o, n ->
+        v73(t, o, 5400, nombre = n + "_vida") { mundoEjemplo(); obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(navVacia) }
+        v73(t, o, 9600, nombre = n + "_vida_diario") { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
+        v73(t, o, 3000, nombre = n + "_vida_mapas") { mundoEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMapas(navVacia) }
+    }
+    @Test fun temaConstelacion() = porTema("constelacion") { t, o, n -> v67(t, o, 3000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "cielo"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(navVacia) } }
     /** Las medallas de logro (los cuatro niveles y una a medias) y las de las otras vidas. */
     @Test fun temaMedalla() = porTema("medalla") { t, o, n -> captura(t, o, 1200, n) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -2329,6 +2338,24 @@ class Capturas {
         agregar(w.vistaHabitos(ctx), 420)
         paparazzi.snapshot(col, n)
     }
+
+    // ---------------------------------------------------------------- Básico (el tema sin diseño, 9 nov 2026)
+
+    /** Básico, en claro o en oscuro: Hoy, Diario, Vida, Análisis, Más, el Hall de logros, Apariencia y la biblioteca del diario. */
+    private fun basico(oscuro: Boolean) {
+        val t = TemaId.BASICO
+        val modo = if (oscuro) "oscuro" else "claro"
+        v73(t, oscuro, 8000, nombre = "basico_${modo}_hoy") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) }
+        v73(t, oscuro, 3400, nombre = "basico_${modo}_diario") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
+        v73(t, oscuro, 4200, nombre = "basico_${modo}_vida") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(navVacia) }
+        pantalla(t, oscuro, 2600, "basico_${modo}_analisis") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaExplorar(navVacia) }
+        pantalla(t, oscuro, 4200, "basico_${modo}_mas") { mundoEjemplo(); obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
+        hall(t, oscuro, "basico_${modo}_hall")
+        pantalla(t, oscuro, 3600, "basico_${modo}_apariencia") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaAjustes(navVacia, "apariencia") }
+        pantalla(t, oscuro, 3000, "basico_${modo}_biblioteca") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario") }
+    }
+    @Test fun basicoClaro() = basico(false)
+    @Test fun basicoOscuro() = basico(true)
 }
 
 @Composable

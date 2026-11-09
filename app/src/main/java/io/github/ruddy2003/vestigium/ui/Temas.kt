@@ -342,6 +342,7 @@ object Temas {
             TemaId.REVOLUCION -> MARCAS_REVOLUCION[md]
             TemaId.ANTIGUAS -> MARCAS_ANTIGUAS[md]
             TemaId.CUEVA -> MARCAS_CUEVA[md]
+            TemaId.BASICO -> null
         }
     }
 
@@ -525,6 +526,7 @@ object Temas {
         TemaId.REVOLUCION -> REVOLUCION[titulo]
         TemaId.ANTIGUAS -> ANTIGUAS[titulo]
         TemaId.CUEVA -> CUEVA[titulo]
+        TemaId.BASICO -> null
     }
 
     fun widget(tema: TemaId, clave: String): String {
@@ -563,6 +565,7 @@ object Temas {
             TemaId.REVOLUCION -> mapOf("animo" to "ESPÍRITU", "momento" to "SUCESO", "gasto" to "ASIGNADOS", "sueno" to "REPOSO", "habitos" to "VIRTUDES", "hoy" to "CAHIER", "cifra" to "CIFRA", "foto" to "ESTAMPA", "enfoque" to "ESTUDIO")
             TemaId.ANTIGUAS -> mapOf("animo" to "TEMPLE", "momento" to "SUCESO", "gasto" to "MONEDAS", "sueno" to "VIGILIA", "habitos" to "JURAMENTOS", "hoy" to "CRÓNICA", "cifra" to "CUENTA", "foto" to "GRABADO", "enfoque" to "ESTUDIO")
             TemaId.CUEVA -> mapOf("animo" to "Aliento", "momento" to "Señal", "gasto" to "Conchas", "sueno" to "Reposo", "habitos" to "Costumbres", "hoy" to "Este sol", "cifra" to "Muescas", "foto" to "Pintura", "enfoque" to "Acecho")
+            TemaId.BASICO -> mapOf("animo" to "Ánimo", "momento" to "Momento", "gasto" to "Gasto", "sueno" to "Sueño", "habitos" to "Hábitos", "hoy" to "Hoy", "cifra" to "Cifra", "foto" to "Foto", "enfoque" to "Enfoque")
         }
         return m[clave] ?: clave.uppercase()
     }

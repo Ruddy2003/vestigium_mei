@@ -280,6 +280,8 @@ Por eso la app exige **al menos 2 días juntas** para dibujar una línea derivad
 
 ## 7.9 La Constelación
 
+> **Desde el 9 nov 2026 (D.169)**, la Constelación y la Red son las dos vistas («cielo» y «red») de un solo grafo, en la pantalla **Social** de Vida, junto con Tu gente (plegada). El cálculo no cambió: `GrafoSocial.cielo` usa `Constelacion.calcular` con las mismas reglas de distancia, tamaño y ángulo, y `GrafoSocial.red` usa `RedPersonas` (`ui/pantallas/Social.kt`). Lo nuevo es cómo se mira: el grafo se abre en pantalla completa y se acerca con los dedos, de 1× a 16×. Los puntos y las letras no crecen al acercar, se separan, y con más zoom aparecen más nombres: se ven los de quienes tienen al menos `máximo de días / (4 × zoom²)`. Lo de esta sección y la siguiente que menciona `PantallaConstelacion` o `PantallaRed` describe lo que hoy hace `PantallaSocial`.
+
 ### 7.9.1 Qué muestra
 
 Tu gente como un cielo: tú en el centro, cada persona una estrella. **Más grande** si la mencionaste más días; **más cerca del centro** si la mencionaste hace poco. Las personas que aparecen juntas quedan unidas por líneas. El color indica la relación. Está en `ui/pantallas/Constelacion.kt`.

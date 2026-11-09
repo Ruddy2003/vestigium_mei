@@ -283,11 +283,14 @@ object Faltas {
         Repo.ilegibles.values.sum().takeIf { it > 0 }?.let { n ->
             l += Falta("ilegibles", "${porNumero(n, "1 registro guardado", "$n registros guardados")} no se pudieron leer. Mira de qué tipo en Estado de los datos.", "estado") { null }
         }
-        val respaldo = listOfNotNull(c.respaldo_ultimo?.takeIf { c.carpeta_respaldo != null }, c.drive_ultimo?.takeIf { c.drive }).maxOrNull()
-        if ((c.carpeta_respaldo != null || c.drive) && io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx))
-            l += Falta("respaldo", io.github.ruddy2003.vestigium.data.Respaldos.PAUSA, "datos") { null }
+        // El respaldo, lo primero que importa (9 nov 2026): cuenta solo la copia que se volvió a leer completa.
+        val respaldo = io.github.ruddy2003.vestigium.data.Respaldos.ultimaFuera(c)
+        if (io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx))
+            l.add(0, Falta("respaldo", io.github.ruddy2003.vestigium.data.Respaldos.PAUSA, "datos") { null })
+        else if (c.carpeta_respaldo == null && !c.drive && Repo.dias.size >= 3)
+            l.add(0, Falta("respaldo", "Tus datos solo están en este teléfono. Elige una carpeta de respaldo en Datos.", "datos") { null })
         else if ((c.carpeta_respaldo != null || c.drive) && (respaldo == null || System.currentTimeMillis() - Fechas.millis(respaldo) > 36 * 3_600_000L))
-            l += Falta("respaldo", "Sin respaldo " + (respaldo?.let { "desde el ${it.take(10)}" } ?: "todavía") + ".", "datos") { null }
+            l.add(0, Falta("respaldo", "Sin respaldo revisado " + (respaldo?.let { "desde el ${it.take(10)}" } ?: "todavía") + (c.respaldo_error?.let { ". $it" } ?: ".") , "datos") { null })
         // Lector de notificaciones: concedido pero sin contar nada en todo el día suele ser que Android lo desconectó.
         if (Oyente.activo(ctx) && ahora.hour >= 13 && (Repo.notifs[hoy]?.total ?: 0) == 0 && Repo.notifs.keys.any { it >= Fechas.sumar(hoy, -7) })
             l += Falta("notificaciones", "El lector de notificaciones no ha contado nada hoy; puede estar desconectado.", "reconectar") { x ->
@@ -663,6 +666,9 @@ fun FraseDelDia(fecha: String) {
                 for (k in 0 until 3) drawCircle(cs.primary.copy(alpha = 0.7f), 2 * u, Offset(size.width - (12 + k * 7) * u, size.height - 10 * u))
             }.padding(horizontal = 22.dp, vertical = 14.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»", centrado = true) }
         }
+        TemaId.BASICO -> Surface(shape = MaterialTheme.shapes.medium, color = cs.surfaceVariant, modifier = arriba) {
+            Box(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»") }
+        }
     }
 }
 
@@ -967,6 +973,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.REVOLUCION -> c(LetraExtra.bodoni, FontWeight.Normal, 24f, 0.2f, "lnum", cursiva = true)
         TemaId.ANTIGUAS -> c(LetraExtra.cinzelDeco, FontWeight.Normal, 21f, 1f)
         TemaId.CUEVA -> c(LetraExtra.trazo, FontWeight.Bold, 30f, 1f)          // cifras a mano alzada
+        TemaId.BASICO -> c(FontFamily.Default, FontWeight.Medium, 22f, 0f, "tnum")   // la letra del sistema
     }
 }
 
@@ -1458,6 +1465,10 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             })
                             val veta = if (color != null) Color.Black.copy(alpha = 0.15f) else linea.copy(alpha = 0.4f)
                             for (k in 1..2) { val y = top + barH * k / 3f; drawLine(veta, Offset(w * 0.3f, y), Offset(w * 0.7f, y + 1.5f * u), 0.7f * u) }
+                            sello = cs.primary
+                        }
+                        TemaId.BASICO -> {
+                            pinta(caja(w * 0.15f, top, w * 0.7f, barH))
                             sello = cs.primary
                         }
                     }

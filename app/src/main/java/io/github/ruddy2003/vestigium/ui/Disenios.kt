@@ -476,6 +476,7 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.REVOLUCION -> if (oscuro) listOf(0xFFE5525E, 0xFF25282F, 0xFF8FAEE8, 0xFF8CC08A) else listOf(0xFFB22234, 0xFFE6DDC8, 0xFF1F3A6E, 0xFF3F6B3A)
     TemaId.ANTIGUAS -> if (oscuro) listOf(0xFFE06A72, 0xFF2A2B2F, 0xFF8CC79A, 0xFFD9BC6A) else listOf(0xFF8E1B24, 0xFFDCD5C3, 0xFF2E5A3E, 0xFF9A7B2E)
     TemaId.CUEVA -> if (oscuro) listOf(0xFFE8804F, 0xFF2D2219, 0xFFDCC9A8, 0xFFF4C76E) else listOf(0xFFA2401F, 0xFFE0D0B6, 0xFF3B302A, 0xFFB07418)   // ocre rojo, caliza, carbón y ocre amarillo
+    TemaId.BASICO -> if (oscuro) listOf(0xFFE8817D, 0xFF2A2D33, 0xFF8DB4F0, 0xFF9DBDF0) else listOf(0xFFC0504D, 0xFFE6E8EC, 0xFF2F5D9A, 0xFF2F5D9A)   // rojo apagado, gris y el azul del tema
 }.map { Color(it) }
 
 /** Escala de calor del mapa: poco, medio, mucho. */
@@ -515,4 +516,5 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.REVOLUCION -> if (oscuro) listOf(0xFF8FAEE8, 0xFF8CC08A, 0xFFE5525E) else listOf(0xFF1F3A6E, 0xFF3F6B3A, 0xFFB22234)
     TemaId.ANTIGUAS -> if (oscuro) listOf(0xFF8CC79A, 0xFFD9BC6A, 0xFFE06A72) else listOf(0xFF2E5A3E, 0xFF9A7B2E, 0xFF8E1B24)
     TemaId.CUEVA -> if (oscuro) listOf(0xFF8C7A66, 0xFFD9AE62, 0xFFE8804F) else listOf(0xFF7A6A58, 0xFFB07418, 0xFFA2401F)   // del carbón al ocre rojo
+    TemaId.BASICO -> if (oscuro) listOf(0xFF34465E, 0xFF5F86BF, 0xFFA9C7F2) else listOf(0xFFC9D6E8, 0xFF6F95C9, 0xFF23487A)   // del gris azulado al azul
 }.map { Color(it) }

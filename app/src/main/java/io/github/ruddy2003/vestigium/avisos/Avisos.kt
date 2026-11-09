@@ -35,8 +35,11 @@ object Avisos {
     const val ID_LUGAR = 2030
     const val ID_SUPLEMENTOS = 2040
 
-    /** Sonido de cada tema: el de los avisos de ánimo y el solemne (diario, sueños, cartas, cuestionarios). */
-    private fun sonidosDe(t: TemaId): Pair<Int, Int> = when (t) {
+    /**
+     * Sonido de cada tema: el de los avisos de ánimo y el solemne (diario, sueños, cartas, cuestionarios). null: el tema no
+     * tiene sonidos propios (Básico) y los avisos suenan con el sonido normal del teléfono.
+     */
+    private fun sonidosDe(t: TemaId): Pair<Int, Int>? = when (t) {
         TemaId.ROMANO -> R.raw.n_romano_aviso to R.raw.n_romano_solemne
         TemaId.URBE -> R.raw.n_urbe_aviso to R.raw.n_urbe_solemne
         TemaId.CIBER -> R.raw.n_ciber_aviso to R.raw.n_ciber_solemne
@@ -71,10 +74,11 @@ object Avisos {
         TemaId.REVOLUCION -> R.raw.n_revolucion_aviso to R.raw.n_revolucion_solemne
         TemaId.ANTIGUAS -> R.raw.n_antiguas_aviso to R.raw.n_antiguas_solemne
         TemaId.CUEVA -> R.raw.n_cueva_aviso to R.raw.n_cueva_solemne
+        TemaId.BASICO -> null                                                // sin sonido propio: el del teléfono
     }
 
     /** Los mismos sonidos por id de tema (lo revisa la prueba de cobertura). Sale del `when` de arriba: no puede faltar ninguno. */
-    internal val SONIDOS: Map<String, Pair<Int, Int>> get() = TemaId.entries.associate { it.id to sonidosDe(it) }
+    internal val SONIDOS: Map<String, Pair<Int, Int>> get() = TemaId.entries.mapNotNull { t -> sonidosDe(t)?.let { t.id to it } }.toMap()
 
     /** El tema guardado en la configuración, con la misma regla que `Estilo.tema` (un id desconocido vuelve al romano). */
     private fun temaDe(id: String): TemaId = TemaId.entries.firstOrNull { it.id == id } ?: if (id == "muertos") TemaId.BOTANICO else TemaId.ROMANO
@@ -107,7 +111,7 @@ object Avisos {
 
     /** Recurso de sonido para un canal según el tema elegido (null = sonido normal del teléfono). */
     fun sonido(base: String, tema: String = runCatching { io.github.ruddy2003.vestigium.data.Repo.config.tema }.getOrDefault("romano")): Int? {
-        val par = sonidosDe(temaDe(tema))
+        val par = sonidosDe(temaDe(tema)) ?: return null
         return when (base) {
             CANAL_ANIMO, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> par.first
             CANAL_DIARIO, CANAL_ESCALAS -> par.second
@@ -415,6 +419,13 @@ object Avisos {
             "⁘ Desenterraste una piedra marcada por tu yo de otras lunas", "Llegó la luna que elegiste para sacarla.",
             "Presa nueva en la pared", "presas nuevas",
             "Las lunas de %d ya están en la pared", "Un año entero en pinturas: lo más hecho, lo único, lo curioso.")
+        TemaId.BASICO -> Voz("¿Cómo te sientes ahora?", "Dos toques: qué tan agradable y cuánta energía.",
+            "¿Qué soñaste?", "Anótalo antes de levantarte; los sueños se olvidan rápido.",
+            "¿Cómo fue tu día?", "Llena el día. Si fue difícil, basta con un número.",
+            "Día difícil: solo un número", "Hoy:",
+            "Carta de tu yo del pasado", "Llegó la fecha que elegiste para abrirla.",
+            "Logro nuevo", "logros nuevos",
+            "Tu año %d está listo", "Un año entero en historias: lo que más hiciste, lo único, lo curioso. Toca para leerlo.")
     }
 
     /**
@@ -458,6 +469,7 @@ object Avisos {
         TemaId.REVOLUCION -> VozEnfoque("Repos", "Levántate, toma agua, ciudadano.", "Fin du repos", "Réveil: hora de despertar", "Ça ira: terminaste", "But atteint!")
         TemaId.ANTIGUAS -> VozEnfoque("Alto en el camino", "Levántate, bebe del odre.", "La compañía sigue", "El alba: hora de despertar", "¡Hazaña cumplida!", "La compañía llegó a la posada")
         TemaId.CUEVA -> VozEnfoque("Descanso junto al fuego", "Levántate, estira las piernas, bebe del arroyo.", "De vuelta al acecho", "Sale el sol sobre el valle: hora de despertar", "¡Presa cobrada!", "El rastro termina aquí: meta cumplida")
+        TemaId.BASICO -> VozEnfoque("Descanso", "Levántate y toma agua.", "Se acabó el descanso", "Hora de despertar", "Terminaste", "Llegaste a la meta")
     }
 
     /**
@@ -717,11 +729,35 @@ object Avisos {
         val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("Tu respaldo automático no está saliendo")
-            .setContentText("Lleva más de 3 días sin poder guardarse en tu carpeta. Toca para revisarlo.")
-            .setStyle(NotificationCompat.BigTextStyle().bigText("Lleva más de 3 días sin poder guardarse en tu carpeta: puede faltar espacio o que la carpeta ya no deje escribir. Toca para revisarlo o hacer uno a mano."))
+            .setContentText("Lleva más de 2 días sin poder guardarse en tu carpeta. Toca para revisarlo.")
+            .setStyle(NotificationCompat.BigTextStyle().bigText("Lleva más de 2 días sin poder guardarse en tu carpeta" +
+                (io.github.ruddy2003.vestigium.data.Repo.config.respaldo_error?.let { ": $it" } ?: ": puede faltar espacio o que la carpeta ya no deje escribir.") + " Toca para revisarlo o hacer uno a mano."))
             .setContentIntent(abrirApp(ctx, 2035, "datos"))
             .setAutoCancel(true)
         mostrar(ctx, 2035, b)
+    }
+
+    /** El respaldo a la carpeta vino mucho más pobre que el anterior y se guardó aparte (9 nov 2026). */
+    fun respaldoEmpobrecido(ctx: Context) {
+        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("No reemplacé tu respaldo")
+            .setContentText("El de hoy trae muchos menos días o momentos que el anterior. Toca para revisarlo.")
+            .setStyle(NotificationCompat.BigTextStyle().bigText(io.github.ruddy2003.vestigium.data.Respaldos.EMPOBRECIDO))
+            .setContentIntent(abrirApp(ctx, 2036, "datos"))
+            .setAutoCancel(true)
+        mostrar(ctx, 2036, b)
+    }
+
+    /** La revisión semanal encontró la base de datos dañada (9 nov 2026). */
+    fun baseDanada(ctx: Context) {
+        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("La base de datos tiene un problema")
+            .setContentText("Haz un respaldo a mano ahora y no borres tus copias. Toca para ver el detalle.")
+            .setContentIntent(abrirApp(ctx, 2037, "datos"))
+            .setAutoCancel(true)
+        mostrar(ctx, 2037, b)
     }
 
     /** El respaldo automático de Drive vino mucho más pobre que el último y se guardó aparte. */

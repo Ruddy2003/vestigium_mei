@@ -53,6 +53,7 @@ object ArranqueTema {
         TemaId.REVOLUCION -> if (oscuro) R.style.Theme_Vestigium_Arranque_Revolucion_Oscuro else R.style.Theme_Vestigium_Arranque_Revolucion
         TemaId.ANTIGUAS -> if (oscuro) R.style.Theme_Vestigium_Arranque_Antiguas_Oscuro else R.style.Theme_Vestigium_Arranque_Antiguas
         TemaId.CUEVA -> if (oscuro) R.style.Theme_Vestigium_Arranque_Cueva_Oscuro else R.style.Theme_Vestigium_Arranque_Cueva
+        TemaId.BASICO -> if (oscuro) R.style.Theme_Vestigium_Arranque_Basico_Oscuro else R.style.Theme_Vestigium_Arranque_Basico
     }
 
     /** ¿Va en oscuro? Lo mismo que [modoOscuro], pero fuera de Compose (antes de dibujar el primer cuadro). */

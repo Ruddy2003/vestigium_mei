@@ -311,6 +311,14 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(THUD, 0.53f), g(THUD, 0.53f, 135)); Evento.ERROR -> listOf(g(THUD, 0.87f), g(TICK_GRAVE, 0.43f, 75), g(BAJA, 0.36f, 65))
             Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.8f), g(THUD, 0.6f, 150), g(THUD, 0.8f, 150), g(SUBE_LENTO, 0.45f, 120), g(TICK, 0.6f, 85))
         }
+        // Básico: la vibración de siempre, un clic corto y parejo.
+        TemaId.BASICO -> when (e) {
+            Evento.TOQUE -> listOf(g(CLICK, 0.5f)); Evento.PASAR -> listOf(g(TICK, 0.4f))
+            Evento.GUARDAR -> listOf(g(CLICK, 0.75f))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.4f)); Evento.ABRIR -> listOf(g(TICK, 0.5f))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.6f)); Evento.ERROR -> listOf(g(THUD, 0.6f))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.6f), g(CLICK, 0.8f, 80))
+        }
         // Tambor de las milicias: redoble y golpe.
         TemaId.REVOLUCION -> when (e) {
             Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.7f)); Evento.PASAR -> listOf(g(TICK, 0.5f), g(TICK, 0.5f, 40))
@@ -411,6 +419,7 @@ object Sentidos {
         TemaId.URSS -> intArrayOf(R.raw.s_urss_toque, R.raw.s_urss_guardar, R.raw.s_urss_logro, R.raw.s_urss_pasar, R.raw.s_urss_elegir, R.raw.s_urss_abrir, R.raw.s_urss_tema, R.raw.s_urss_error, R.raw.s_urss_cambio, R.raw.s_tecla_urss, R.raw.s_rascar_urss)
         TemaId.ANTIGUAS -> intArrayOf(R.raw.s_antiguas_toque, R.raw.s_antiguas_guardar, R.raw.s_antiguas_logro, R.raw.s_antiguas_pasar, R.raw.s_antiguas_elegir, R.raw.s_antiguas_abrir, R.raw.s_antiguas_tema, R.raw.s_antiguas_error, R.raw.s_antiguas_cambio, R.raw.s_tecla_antiguas, R.raw.s_rascar_antiguas)
         TemaId.CUEVA -> intArrayOf(R.raw.s_cueva_toque, R.raw.s_cueva_guardar, R.raw.s_cueva_logro, R.raw.s_cueva_pasar, R.raw.s_cueva_elegir, R.raw.s_cueva_abrir, R.raw.s_cueva_tema, R.raw.s_cueva_error, R.raw.s_cueva_cambio, R.raw.s_tecla_cueva, R.raw.s_rascar_cueva)
+        TemaId.BASICO -> intArrayOf()   // sin sonidos propios: el toque suena con el clic del sistema
         TemaId.REVOLUCION -> intArrayOf(R.raw.s_revolucion_toque, R.raw.s_revolucion_guardar, R.raw.s_revolucion_logro, R.raw.s_revolucion_pasar, R.raw.s_revolucion_elegir, R.raw.s_revolucion_abrir, R.raw.s_revolucion_tema, R.raw.s_revolucion_error, R.raw.s_revolucion_cambio, R.raw.s_tecla_revolucion, R.raw.s_rascar_revolucion)
     }
     internal val SONIDOS: Map<String, IntArray> = TemaId.entries.associate { it.id to sonidos(it) }
@@ -521,6 +530,7 @@ object Sentidos {
         TemaId.ANTIGUAS -> Afinacion(st(-5, -2, 0, 3), st(-5, -2, 0, 5), pasarRuido = true, elegirRuido = false)
         // Mi, en cuartas y quintas, como una flauta de hueso de pocos agujeros (no se sabe cómo se afinaban); las pisadas son ruido.
         TemaId.CUEVA -> Afinacion(st(-7, -5, 0, 5, 7), st(-12, -5, 0, 7), pasarRuido = true, elegirRuido = false)
+        TemaId.BASICO -> Afinacion(st(0), null, pasarRuido = true, elegirRuido = true)   // no suena: no tiene sonidos
         // Sol mayor; el tambor, en la quinta y el tono.
         TemaId.REVOLUCION -> Afinacion(st(-5, 0, 2), st(-7, 0, 4, 7), pasarRuido = true, elegirRuido = false)
     }
@@ -564,7 +574,9 @@ object Sentidos {
         val i = when (e) { Evento.TOQUE -> 0; Evento.GUARDAR -> 1; Evento.LOGRO -> 2; Evento.PASAR -> 3; Evento.ELEGIR -> 4; Evento.ABRIR -> 5; Evento.TEMA -> 6; Evento.ERROR -> 7; Evento.CAMBIO -> 8 }
         val audio = ctx.getSystemService(AudioManager::class.java)
         if (audio != null && audio.ringerMode != AudioManager.RINGER_MODE_NORMAL) return
-        val r = SONIDOS[tema.id]?.get(i) ?: return
+        // Un tema sin sonidos propios (Básico) solo da el clic del sistema al tocar, y solo si el teléfono tiene activados
+        // los sonidos al tocar (playSoundEffect lo respeta).
+        val r = SONIDOS[tema.id]?.getOrNull(i) ?: run { if (i == 0) audio?.playSoundEffect(AudioManager.FX_KEY_CLICK); return }
         val vol = when (i) { 0, 4 -> 0.45f; 3 -> 0.38f; 5, 7 -> 0.6f; 8 -> 0.5f; 6 -> 0.75f; else -> 0.8f }
         val escala = notas(tema, i)
         val tono = when {
@@ -590,7 +602,7 @@ object Sentidos {
     /** Una tecla del diario, propia de cada tema: estilo sobre cera, cálamo, pluma, lápiz, pincel, máquina de escribir, consola… */
     fun tecla(ctx: Context, tema: TemaId) {
         if (!puedeSonar(ctx)) return
-        val r = SONIDOS[tema.id]?.get(TECLA) ?: return
+        val r = SONIDOS[tema.id]?.getOrNull(TECLA) ?: return
         runCatching { tocar(ctx, r, 0.32f, 0.95f + azar.nextFloat() * 0.1f) }
     }
 
@@ -633,6 +645,7 @@ object Sentidos {
         TemaId.URSS -> pasadas(CLICK, 0.9f, 40, 3)   // acero ennegrecido
         TemaId.ANTIGUAS -> pasadas(TICK_GRAVE, 0.8f, 60, 3)   // hierro viejo
         TemaId.CUEVA -> pasadas(THUD, 0.66f, 85, 4)   // carbón que raspa la caliza
+        TemaId.BASICO -> pasadas(CLICK, 0.4f, 60, 4)
         TemaId.REVOLUCION -> pasadas(CLICK, 0.45f, 50, 4)   // estaño
     }
 
@@ -640,7 +653,7 @@ object Sentidos {
     fun rascar(ctx: Context) {
         val tema = Estilo.tema
         if (Repo.config.vibracion) runCatching { vibrar(ctx, patronRascar(tema)) }
-        if (puedeSonar(ctx)) runCatching { SONIDOS[tema.id]?.get(RASCAR)?.let { tocar(ctx, it, 0.7f) } }
+        if (puedeSonar(ctx)) runCatching { SONIDOS[tema.id]?.getOrNull(RASCAR)?.let { tocar(ctx, it, 0.7f) } }
     }
 }
 

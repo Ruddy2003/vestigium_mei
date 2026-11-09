@@ -182,6 +182,7 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.ANTIGUAS -> Papeleria(Color(0xFFE3D5B4), Color(0xFFA8946A), Color(0xFFF1E6C8), Color(0xFF5A3A22), Color(0xFF2E7A5A), Color(0xFF5A3A22), Color(0xFF1E1D1A))
     // Piel de ante curtida, el revés más claro, un disco de ocre por sello y tendón por cordón.
     TemaId.CUEVA -> Papeleria(Color(0xFFCDB089), Color(0xFF8C6B48), Color(0xFFE6D2AE), Color(0xFFE8DCC4), Color(0xFFA2401F), Color(0xFFD9C29A), Color(0xFF2A211B))
+    TemaId.BASICO -> Papeleria(Color(0xFFEEF0F3), Color(0xFFC4C9D1), Color(0xFFFFFFFF), Color(0xFFDCE6F5), Color(0xFF2F5D9A), Color(0xFFAEB6C2), Color(0xFF1B1D21))
 }
 
 // =====================================================================
@@ -734,6 +735,11 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             for (j in 0 until 10) { val ang = j * PI / 5; drawCircle(hondo, r * 0.045f, Offset(c.x + (r * 0.78f * cos(ang)).toFloat(), c.y + (r * 0.78f * sin(ang)).toFloat())) }
             drawPath(manoUnida(Offset(c.x, c.y + r * 0.04f), r * 0.55f), claro)
         }
+        TemaId.BASICO -> {
+            // Un sello redondo y liso, con un aro claro.
+            drawCircle(col, r * 0.8f, c)
+            drawCircle(claro, r * 0.55f, c, style = Stroke(r * 0.08f))
+        }
     }
 }
 
@@ -837,6 +843,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
     TemaId.CUEVA -> VozCarta("Llegó su luna: desentiérrala", "Enterrada bajo la laja", "Para el que pintará dentro de muchas lunas · %s", "Dentro de muchas lunas · %s",
         "Para el que pintará dentro de muchas lunas", "Al que seré cuando vuelvan las manadas…", "Pinta tu mensaje para otro clan…", "Piedra para %s, enterrada",
         "Nadie la desentierra antes de su luna.", "Toca para pintar en la piedra…")
+    TemaId.BASICO -> VozCarta("Ya puedes abrirla", "Cerrada", "Para mí, el %s", "Para mí · %s", "Para mí, más adelante",
+        "Hola, yo del futuro:", "Escribe tu carta…", "Carta para %s guardada", "No se puede abrir antes de la fecha.", "Toca para escribir…")
 }
 
 /** A quién va, en pocas palabras, en la voz del tema. */
@@ -871,7 +879,7 @@ fun SobreCarta(c: Carta, modifier: Modifier = Modifier, tema: TemaId = Estilo.te
     val sacudir = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val sentir = rememberSentir()
-    BoxWithConstraints(modifier.graphicsLayer { translationX = sacudir.value }.clickable {
+    BoxWithConstraints(modifier.graphicsLayer { translationX = sacudir.value }.halo().clickable {
         if (estado == EstadoSobre.SELLADA) {
             sentir(Sentidos.Evento.TOQUE)
             if (animar) scope.launch { sacudir.animateTo(0f, keyframes { durationMillis = 380; -14f at 50; 12f at 110; -9f at 170; 6f at 240; -3f at 300; 0f at 380 }) }

@@ -97,6 +97,13 @@ object Drive {
 
     private fun mime(n: String) = when { n.endsWith(".csv") -> "text/csv"; n.endsWith(".json") -> "application/json"; n.endsWith(".zip") -> "application/zip"; else -> "text/plain" }
 
+    /** Un respaldo, por partes: si ya existe con ese nombre se reemplaza su contenido; si no, se crea en [dir]. */
+    private fun subirRespaldo(token: String, dir: String, existentes: Map<String, String>, nombre: String, tipo: String, f: java.io.File) {
+        val id = existentes[nombre]
+        if (id != null) Red.subirPorPartes("$SUBIR/$id?uploadType=resumable", "PATCH", "{}", tipo, f, h(token))
+        else Red.subirPorPartes("$SUBIR?uploadType=resumable", "POST", """{"name":${JsonPrimitive(nombre)},"parents":["$dir"]}""", tipo, f, h(token))
+    }
+
     private fun subirArchivo(token: String, dir: String, existentes: Map<String, String>, nombre: String, tipo: String, datos: ByteArray) {
         val id = existentes[nombre]
         if (id != null) Red.enviar("$SUBIR/$id?uploadType=media", "PATCH", tipo, datos, h(token), 180_000)
@@ -117,37 +124,36 @@ object Drive {
         // Mucho más pobre que el último: se guarda aparte y no se tocan la copia del día, la semanal ni la mensual.
         if (!forzar && Respaldos.empobrecido(Repo.config.drive_conteo, conteo)) {
             val a = Respaldos.archivo(ctx)
-            val b = a.readBytes(); a.delete()
-            subirArchivo(token, dir, existentes, REVISAR + ext, Respaldos.mime(ext), b)
+            try { subirRespaldo(token, dir, existentes, REVISAR + ext, Respaldos.mime(ext), a) } finally { a.delete() }
             Repo.cambiarConfig { it.copy(drive_ultimo = Fechas.ahoraIso()) }
             return EMPOBRECIDO
         }
         var n = 0
         if (!cifra) for (a in Exportar.archivos(ctx)) { subirArchivo(token, dir, existentes, a.nombre, mime(a.nombre), a.bytes()); n++ }
+        // El respaldo del día sale del archivo por partes (antes se leía entero en memoria, y otra copia para el envío).
         val diario = Respaldos.archivo(ctx)
-        val bytes = diario.readBytes(); diario.delete()
-        subirArchivo(token, dir, existentes, Respaldos.BASE + ext, Respaldos.mime(ext), bytes); n++
-        // Los archivos en claro de antes se borran solo cuando ya subió el cifrado (si falla la subida, quedan).
-        if (cifra) existentes.filterKeys { Respaldos.esArchivoPlano(it) }.values.forEach { runCatching { Red.borrar("$API/$it", h(token)) } }
-        existentes[REVISAR + ext]?.let { runCatching { Red.borrar("$API/$it", h(token)) } }
-        // Copia semanal fechada (el lunes de la semana) y limpieza de las más viejas.
-        val nombreSem = "vestigium_${Fechas.lunesDe(Fechas.hoyCalendario())}$ext"
-        if (!existentes.containsKey(nombreSem)) {
-            val (tipo, cuerpo) = multipart(nombreSem, dir, Respaldos.mime(ext), bytes)
-            Red.enviar("$SUBIR?uploadType=multipart", "POST", tipo, cuerpo, h(token), 180_000); n++
-            val patron = Regex("vestigium_\\d{4}-\\d{2}-\\d{2}\\$ext")
-            val copias = (existentes.keys.filter { patron.matches(it) } + nombreSem).distinct().sortedDescending()
-            copias.drop(COPIAS).forEach { viejo -> existentes[viejo]?.let { runCatching { Red.borrar("$API/$it", h(token)) } } }
-        }
-        // Copia mensual (una por mes) y limpieza de las de hace más de un año.
-        val nombreMes = "vestigium_mes_${Fechas.hoyCalendario().take(7)}$ext"
-        if (!existentes.containsKey(nombreMes)) {
-            val (tipo, cuerpo) = multipart(nombreMes, dir, Respaldos.mime(ext), bytes)
-            Red.enviar("$SUBIR?uploadType=multipart", "POST", tipo, cuerpo, h(token), 180_000); n++
-            val patron = Regex("vestigium_mes_\\d{4}-\\d{2}\\$ext")
-            (existentes.keys.filter { patron.matches(it) } + nombreMes).distinct().sortedDescending().drop(COPIAS_MES)
-                .forEach { viejo -> existentes[viejo]?.let { runCatching { Red.borrar("$API/$it", h(token)) } } }
-        }
+        try {
+            subirRespaldo(token, dir, existentes, Respaldos.BASE + ext, Respaldos.mime(ext), diario); n++
+            // Los archivos en claro de antes se borran solo cuando ya subió el cifrado (si falla la subida, quedan).
+            if (cifra) existentes.filterKeys { Respaldos.esArchivoPlano(it) }.values.forEach { runCatching { Red.borrar("$API/$it", h(token)) } }
+            existentes[REVISAR + ext]?.let { runCatching { Red.borrar("$API/$it", h(token)) } }
+            // Copia semanal fechada (el lunes de la semana) y limpieza de las más viejas.
+            val nombreSem = "vestigium_${Fechas.lunesDe(Fechas.hoyCalendario())}$ext"
+            if (!existentes.containsKey(nombreSem)) {
+                subirRespaldo(token, dir, existentes, nombreSem, Respaldos.mime(ext), diario); n++
+                val patron = Regex("vestigium_\\d{4}-\\d{2}-\\d{2}\\$ext")
+                val copias = (existentes.keys.filter { patron.matches(it) } + nombreSem).distinct().sortedDescending()
+                copias.drop(COPIAS).forEach { viejo -> existentes[viejo]?.let { runCatching { Red.borrar("$API/$it", h(token)) } } }
+            }
+            // Copia mensual (una por mes) y limpieza de las de hace más de un año.
+            val nombreMes = "vestigium_mes_${Fechas.hoyCalendario().take(7)}$ext"
+            if (!existentes.containsKey(nombreMes)) {
+                subirRespaldo(token, dir, existentes, nombreMes, Respaldos.mime(ext), diario); n++
+                val patron = Regex("vestigium_mes_\\d{4}-\\d{2}\\$ext")
+                (existentes.keys.filter { patron.matches(it) } + nombreMes).distinct().sortedDescending().drop(COPIAS_MES)
+                    .forEach { viejo -> existentes[viejo]?.let { runCatching { Red.borrar("$API/$it", h(token)) } } }
+            }
+        } finally { diario.delete() }
         // El respaldo del otro modo (si cambiaste la contraseña) ya no sirve.
         existentes[Respaldos.BASE + if (cifra) ".zip" else ".vmc"]?.let { runCatching { Red.borrar("$API/$it", h(token)) } }
         Repo.cambiarConfig { it.copy(drive_ultimo = Fechas.ahoraIso(), drive_conteo = conteo) }
@@ -168,11 +174,15 @@ object Drive {
 
     fun bajar(token: String, id: String): ByteArray = Red.bajar("$API/$id?alt=media", h(token))
 
+    /** Baja una copia de Drive a un archivo, por partes. */
+    private fun bajarA(ctx: Context, token: String, id: String): java.io.File =
+        java.io.File(ctx.cacheDir, "drive_bajada").also { Red.bajarA("$API/$id?alt=media", it, h(token)) }
+
     /** Trae la copia más reciente de Drive y la restaura. [contrasena] para un respaldo cifrado de otro teléfono. */
     fun restaurar(ctx: Context, token: String, contrasena: CharArray?): Respaldos.Lectura {
         val (id, nombre, cuando) = ultimaCopia(token) ?: return Respaldos.Lectura.Error("No encontré respaldos de Vestigium Mei en tu Drive.")
-        val datos = bajar(token, id)
-        return when (val r = Respaldos.restaurar(ctx, datos, contrasena)) {
+        val f = bajarA(ctx, token, id)
+        return when (val r = try { Respaldos.restaurarArchivoBajado(ctx, f, contrasena) } finally { f.delete() }) {
             is Respaldos.Lectura.Listo -> Respaldos.Lectura.Listo("Restauré «$nombre» (${cuando.take(10)}). " + r.mensaje)
             else -> r
         }
@@ -181,7 +191,8 @@ object Drive {
     /** Baja la copia más reciente de Drive y dice qué trae, sin restaurar nada. */
     fun verificar(ctx: Context, token: String, contrasena: CharArray?): Respaldos.Lectura {
         val (id, nombre, cuando) = ultimaCopia(token) ?: return Respaldos.Lectura.Error("No encontré respaldos de Vestigium Mei en tu Drive.")
-        return when (val r = Respaldos.verificar(ctx, bajar(token, id), contrasena)) {
+        val f = bajarA(ctx, token, id)
+        return when (val r = try { Respaldos.verificarArchivoBajado(ctx, f, contrasena) } finally { f.delete() }) {
             is Respaldos.Lectura.Listo -> Respaldos.Lectura.Listo("«$nombre» (subido el ${cuando.take(10)}). " + r.mensaje)
             else -> r
         }

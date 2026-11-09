@@ -134,7 +134,7 @@ object EstadoDatos {
             l += Fuente(f.nombre, estado, (hace?.let { if (it == 0L) "importado hoy" else "importado hace ${porNumero(it, "1 día", "$it días")}" } ?: "nunca importado") + " · toca cada ${if (f.cada >= 28) "mes" else "${porNumero(f.cada, "1 día", "${f.cada} días")}"}", "datos")
         }
         // Respaldos.
-        val respaldo = listOfNotNull(c.respaldo_ultimo?.takeIf { c.carpeta_respaldo != null }, c.drive_ultimo?.takeIf { c.drive }).maxOrNull()
+        val respaldo = io.github.ruddy2003.vestigium.data.Respaldos.ultimaFuera(c)
         l += if (c.carpeta_respaldo == null && !c.drive) Fuente("Respaldo automático", Salud3.APAGADA, "Sin carpeta ni Google Drive", "datos")
         else Fuente("Respaldo automático", if (respaldo != null && System.currentTimeMillis() - Fechas.millis(respaldo) < 36 * 3_600_000L) Salud3.BIEN else Salud3.ATRASADA,
             "último: " + (respaldo?.let { Fechas.corto(it.take(10)) + " " + Fechas.horaDe(it) } ?: "nunca"), "datos")

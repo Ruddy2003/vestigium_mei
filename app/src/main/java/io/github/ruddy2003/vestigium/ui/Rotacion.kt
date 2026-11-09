@@ -4,10 +4,16 @@ import io.github.ruddy2003.vestigium.data.Config
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
 
-/** El tema que cambia solo cada día (a las 5:00, cuando empieza el día de la app), entre los que elegiste. */
+/**
+ * El tema que cambia solo cada día (a las 5:00, cuando empieza el día de la app), entre los que elegiste. Básico
+ * ([TemaId.sinDiseno]) nunca entra: es para probar la app, no para que toque un día.
+ */
 object RotacionTema {
+    /** Los temas que pueden tocar en la rotación (todos menos Básico). */
+    val rotables: List<TemaId> get() = TemaId.entries.filterNot { it.sinDiseno }
+
     fun candidatos(c: Config = Repo.config): List<TemaId> =
-        c.temas_rotacion.mapNotNull { id -> TemaId.entries.firstOrNull { it.id == id } }.ifEmpty { TemaId.entries.toList() }
+        c.temas_rotacion.mapNotNull { id -> rotables.firstOrNull { it.id == id } }.ifEmpty { rotables }
 
     /** El tema que le toca a [dia]: al azar, pero siempre el mismo para ese día y nunca igual al de ayer. */
     fun deDia(dia: String, actual: String, c: Config = Repo.config): TemaId {

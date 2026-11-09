@@ -100,6 +100,7 @@ object Gato {
         TemaId.REVOLUCION -> true
         TemaId.ANTIGUAS -> true
         TemaId.CUEVA -> true
+        TemaId.BASICO -> false
     }
 
     // ---- Índice de recursos (assets/gato/gato.json).

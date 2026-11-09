@@ -34,7 +34,9 @@ class CoberturaTemas {
 
     private fun huecos(): Map<String, Set<String>> {
         val h = linkedMapOf<String, Set<String>>()
-        fun superficie(nombre: String, falta: (TemaId) -> Boolean) { h[nombre] = TemaId.entries.filter(falta).map { it.id }.toSet() }
+        // Básico (TemaId.sinDiseno) queda fuera a propósito: es el tema sin diseño, para probar la app, y no tiene lo suyo
+        // (ni sonidos, ni ícono, ni sello, ni gato, ni frases, ni nombres propios). Sus `when (tema)` sí los vigila el compilador.
+        fun superficie(nombre: String, falta: (TemaId) -> Boolean) { h[nombre] = TemaId.entries.filterNot { it.sinDiseno }.filter(falta).map { it.id }.toSet() }
         fun Id(t: TemaId) = t.id.replaceFirstChar { it.uppercase() }
 
         // Mapas que todavía van por texto (hasta que pasen a `when (tema)` exhaustivos).

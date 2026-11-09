@@ -868,7 +868,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** la protección contra pérdida depende de copias más viejas que la app no ofrece restaurar; criterio (d).
 - **Gravedad:** Media.
 - **Propuesta:** no sobrescribir si el respaldo nuevo trae muchos menos días o momentos que el anterior (y avisar); dejar elegir la copia a restaurar.
-- **Estado:** Resuelto en parte en el módulo 10b (esquema 13) (P-09): Drive ya no reemplaza la copia por una con menos del 90 % de días o momentos; la guarda aparte y avisa. Elegir qué copia restaurar sigue pendiente.
+- **Estado:** Resuelto en parte en el módulo 10b (esquema 13) (P-09): Drive ya no reemplaza la copia por una con menos del 90 % de días o momentos; la guarda aparte y avisa. Elegir qué copia restaurar sigue pendiente. La carpeta, resuelto en el esquema 22 (9 nov 2026, D.166): misma guarda y copias con fecha (7 diarias, 8 semanales, 12 mensuales) que se pueden restaurar con «Restaurar desde un archivo».
 
 ### H-8-15 · Cambiar la contraseña deja copias viejas con la contraseña anterior
 - **Dónde:** `data/Respaldos.kt`, `ponerContrasena()`; copias semanales y mensuales de `data/Drive.kt`.

@@ -241,22 +241,46 @@ fun RecuadroOtrasVidas(nav: Nav) {
     val tema = Estilo.tema.id
     val vidas = remember(tema) { OtrasVidas.visibles(tema).sortedBy { it.anio } }
     val cs = MaterialTheme.colorScheme
-    Recuadro("Otras vidas", "Cómo vivía alguien del Paleolítico, de Roma, de Edo o de 1960, frente a cómo vives tú", alto = 150.dp, onClick = { nav.ir("otras_vidas") }) {
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(cs.surfaceVariant.copy(alpha = 0.5f), cs.surface)))) {
-            Canvas(Modifier.fillMaxSize()) {
-                val y = size.height * 0.55f
-                drawLine(cs.outline.copy(alpha = 0.6f), Offset(14.dp.toPx(), y), Offset(size.width - 14.dp.toPx(), y), 1.5.dp.toPx())
-            }
-            val muestra = vidas.filterIndexed { i, v -> v.tema != null || i % 2 == 0 }.take(7)
-            Row(Modifier.fillMaxSize().padding(horizontal = 10.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                muestra.forEach { v ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        MedallaVida(v, 46.dp, elegida = v.tema != null)
-                        Text(anio(v.anio), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
+    Recuadro("Otras vidas", "Cómo vivía alguien del Paleolítico, de Roma, de Edo o de 1960, frente a cómo vives tú", alto = 190.dp, onClick = { nav.ir("otras_vidas") }) {
+        // La vitrina del tema (lote E6): un nicho por medalla.
+        val d = io.github.ruddy2003.vestigium.ui.vida.disenoVida(Estilo.tema)
+        val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+        Box(Modifier.fillMaxSize()) {
+            Canvas(Modifier.fillMaxSize()) { with(d) { muebleOtrasVidas(io.github.ruddy2003.vestigium.ui.vida.EstadoMueble(cs.surface, cs.primary, cs.secondary, cs.onSurface, 7), oscuro) } }
+            val muestra = vidas.filterIndexed { i, v -> v.tema != null || i % 2 == 0 }.take(5)
+            io.github.ruddy2003.vestigium.ui.vida.EnNicho(d.area(io.github.ruddy2003.vestigium.ui.vida.MuebleVida.OTRAS_VIDAS)) {
+            // Cinco columnas iguales: cada medalla, al centro de su compartimento del nicho.
+            Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                (0 until 5).forEach { i ->
+                    Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                        muestra.getOrNull(i)?.let { v ->
+                            MedallaVida(v, 46.dp, elegida = v.tema != null)
+                            AnioAjustado(anio(v.anio), cs.onSurfaceVariant)
+                        }
                     }
                 }
             }
+            }
         }
+    }
+}
+
+/**
+ * El año bajo la medalla, del tamaño que quepa en su compartimento: los largos («13,000 a. C.») y las letras anchas
+ * (monoespaciadas) se achican hasta 7 sp en vez de pegarse a la columna o al año de al lado.
+ */
+@Composable
+private fun AnioAjustado(a: String, color: androidx.compose.ui.graphics.Color) {
+    val base = MaterialTheme.typography.labelSmall
+    val medidor = androidx.compose.ui.text.rememberTextMeasurer()
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 4.dp), contentAlignment = Alignment.Center) {
+        val disponible = constraints.maxWidth - with(androidx.compose.ui.platform.LocalDensity.current) { 4.dp.roundToPx() }
+        val estilo = remember(a, base, disponible) {
+            var tam = base.fontSize.value
+            while (tam > 7f && medidor.measure(a, base.copy(fontSize = tam.sp), maxLines = 1, softWrap = false).size.width > disponible) tam -= 0.5f
+            base.copy(fontSize = tam.sp)
+        }
+        Text(a, style = estilo, color = color, maxLines = 1, softWrap = false)
     }
 }
 
@@ -769,6 +793,10 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 while (x < fw - 1f * d) { drawLine(oscuro, Offset(x, h * 0.2f), Offset(x, h * 0.8f), 0.7f * d); x += maxOf(if (k % 5 == 4) 5f * d else 2.5f * d, 1f); k++ }
             }
         }
+        TemaId.BASICO -> {
+            drawRoundRect(pista, Offset.Zero, Size(w, h), CornerRadius(h / 2))
+            if (fw > 0f) drawRoundRect(color, Offset.Zero, Size(fw, h), CornerRadius(h / 2))
+        }
     }
 }
 
@@ -1131,6 +1159,7 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawCircle(t2, q, c, style = Stroke(1.4f * d)); drawCircle(t2, q * 0.3f, c)
             for (k in 0 until 8) drawLine(t2, polarFig(c, q * 1.3f, k * 45f), polarFig(c, q * 1.8f, k * 45f), 1.2f * d)
         }
+        TemaId.BASICO -> marcas(24, 2.5f * d, d, linea)
     }
 }
 

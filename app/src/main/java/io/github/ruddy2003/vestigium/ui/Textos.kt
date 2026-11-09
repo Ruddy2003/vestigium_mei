@@ -520,6 +520,22 @@ object Textos {
         "widget_discreto_momento" to "Señal",
     )
 
+    /** Básico: los nombres de siempre, en español normal. */
+    private val BASICO: Map<String, String> = mapOf(
+        "pestana_dia" to "Hoy",
+        "pestana_diario" to "Diario",
+        "pestana_registrar" to "Registrar",
+        "pestana_vida" to "Vida",
+        "pestana_entender" to "Análisis",
+        "escala_vacia" to "sin marcar · toca o desliza",
+        "lista_anadir" to "+ añadir",
+        "palabras" to "%d palabras",
+        "widget_animo" to "¿Cómo te sientes ahora?",
+        "widget_momento" to "Ahora mismo siento…",
+        "widget_discreto_animo" to "Ahora",
+        "widget_discreto_momento" to "Escribir",
+    )
+
     fun de(tema: TemaId, clave: String): String? = when (tema) {
         TemaId.ROMANO -> ROMANO
         TemaId.URBE -> URBE
@@ -555,5 +571,6 @@ object Textos {
         TemaId.REVOLUCION -> REVOLUCION
         TemaId.ANTIGUAS -> ANTIGUAS
         TemaId.CUEVA -> CUEVA
+        TemaId.BASICO -> BASICO
     }[clave]
 }

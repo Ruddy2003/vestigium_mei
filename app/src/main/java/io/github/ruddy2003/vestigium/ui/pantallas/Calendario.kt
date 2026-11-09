@@ -273,6 +273,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.REVOLUCION -> RoundedCornerShape(1.dp)
     TemaId.ANTIGUAS -> CutCornerShape(4.dp)
     TemaId.CUEVA -> RoundedCornerShape(topStart = 7.dp, topEnd = 3.dp, bottomEnd = 8.dp, bottomStart = 4.dp)   // un canto de río
+    TemaId.BASICO -> RoundedCornerShape(6.dp)
 }
 
 /**
@@ -603,6 +604,10 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             if (hoy) drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(Offset(w / 2, 4f * s), 2.6f * s), acento)
             if (sellado) sello(oro)
         }
+        TemaId.BASICO -> {
+            contorno(if (hoy) acento else linea, if (hoy) 1.3f else 0.7f)
+            if (sellado) sello(oro)
+        }
     }
 }
 
@@ -639,7 +644,7 @@ private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean,
             .clickable(onClick = onClick),
     ) {
         if (conFoto) {
-            Miniatura(android.net.Uri.parse(d!!.foto), 200, Modifier.matchParentSize())
+            MiniaturaDe(d, 200, Modifier.matchParentSize())
             Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.28f)))
         }
         Box(Modifier.matchParentSize().padding(3.dp)) {
