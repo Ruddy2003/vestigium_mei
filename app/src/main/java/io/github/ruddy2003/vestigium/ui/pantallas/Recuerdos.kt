@@ -108,7 +108,7 @@ fun TarjetaRecuerdo(r: Recuerdo, modifier: Modifier = Modifier, abrir: () -> Uni
         Row(Modifier.padding(start = d.margenRecuerdo, end = d.margenRecuerdo, bottom = d.margenRecuerdo, top = d.altoRotuloRecuerdo).heightIn(min = 8.dp),
             verticalAlignment = Alignment.Top) {
             if (r.foto != null) Box(Modifier.size(64.dp).clip(RoundedCornerShape(6.dp))) {
-                Miniatura(android.net.Uri.parse(r.foto), 300, Modifier.size(64.dp))
+                MiniaturaDe(Repo.dias[r.fecha], 300, Modifier.size(64.dp))
             }
             Column(Modifier.weight(1f).padding(start = if (r.foto != null) 12.dp else 0.dp)) {
                 if (r.lugares.isNotEmpty()) Text("⌂ " + r.lugares.take(3).joinToString(", "), style = MaterialTheme.typography.bodySmall, color = tinta)

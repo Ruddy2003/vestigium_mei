@@ -116,6 +116,8 @@ En las pantallas donde se anota, el corte se dice en palabras antes de las 05:00
 | `ubicaciones` | — | `ms`, `lat`, `lon`, `precision`, `fuente` (índice por `ms`) |
 | `fotos` | `clave` | catálogo de fotos con lugar: aparato, origen, fechas |
 
+Desde el esquema 22 (D.168), la **foto del día** ya no es solo un enlace a la galería (`Dia.foto`): `FotoDelDia.copiar` guarda una copia reducida en `files/fotos_dia/<fecha>.jpg` (`Dia.foto_archivo`), que viaja en el respaldo. La tarea diaria copia las que falten mientras su enlace siga vivo (`FotoDelDia.completarPendientes`). Las pantallas muestran primero la copia (`FotoDelDia.miniatura`).
+
 *Qué hace.* Un enfoque de **almacén de documentos sobre SQLite**: cada colección (`dias`, `momentos`, `gastos`…) es un conjunto de filas `docs` con el JSON del objeto. Las ubicaciones (muy numerosas, de tamaño fijo) van en una tabla con columnas numéricas.
 
 *Razonamiento.* Para un instrumento que cambia continuamente, el costo de migrar un esquema relacional supera el beneficio; el JSON permite añadir campos con valor por omisión. SQLite aporta transacciones atómicas y robustez ante apagados. La separación de `ubicaciones` es una decisión de eficiencia: millones de puntos como documentos JSON serían lentos. **[Diseño propio]**, práctica común en apps móviles.

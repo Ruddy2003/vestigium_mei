@@ -71,6 +71,8 @@ object Repo {
     @Synchronized
     fun init(ctx: Context) {
         if (listo) return
+        // En un teléfono nuevo, la base que trajo la copia de Android (si la encendiste), antes de abrirla.
+        runCatching { CopiaAndroid.restaurarSiHace(ctx.applicationContext) }
         db = Db(ctx.applicationContext)
         // Las colecciones se leen y decodifican a la vez, en varios hilos: antes iban una tras otra en el hilo principal y
         // el arranque se alargaba con cada año de datos (con riesgo de que Android diera la app por congelada).

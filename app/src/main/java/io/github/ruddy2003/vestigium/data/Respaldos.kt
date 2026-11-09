@@ -288,7 +288,7 @@ object Respaldos {
             if (conTablas) Exportar.archivos(ctx).filter { it.nombre !in setOf("vm_respaldo.json", "vm_ubicaciones.csv", "vm_fotos_catalogo.csv") }.forEach { a -> poner(a.nombre, a.escribir) }
             else poner("LEEME.txt") { it.write("Respaldo completo de Vestigium Mei (${Fechas.ahoraIso()}).\nPara restaurarlo: Más → Datos → Respaldo completo → Restaurar desde un archivo.\nmanifiesto.json dice qué trae y la huella de cada archivo.\n".toByteArray()) }
             Portadas.carpeta(ctx).listFiles()?.forEach { p -> poner("portadas/" + p.name) { o -> p.inputStream().use { it.copyTo(o) } } }
-            FotosDia.carpeta(ctx).listFiles()?.forEach { p -> poner("fotos_dia/" + p.name) { o -> p.inputStream().use { it.copyTo(o) } } }
+            FotoDelDia.carpeta(ctx).listFiles()?.forEach { p -> poner("fotos_dia/" + p.name) { o -> p.inputStream().use { it.copyTo(o) } } }
             val m = Manifiesto(Fechas.ahoraIso(), SCHEMA_V, version(ctx), conteoDe(r), huellas)
             z.putNextEntry(ZipEntry(MANIFIESTO)); z.write(JSON.encodeToString(Manifiesto.serializer(), m).toByteArray()); z.closeEntry()
             m
@@ -505,6 +505,51 @@ object Respaldos {
         return ok
     }
 
+    // ------------------------------------------------------------ la cápsula del año (9 nov 2026)
+
+    const val CAPSULAS = "capsulas"
+
+    /**
+     * El año [anio] entero, listo para leerse dentro de muchos años sin la app: todas las tablas en CSV con su diccionario,
+     * la misma información en una base SQLite, el respaldo JSON, el script de R, las fotos del día de ese año y, si se da,
+     * el libro del diario en PDF ([libro]). Va en «capsulas» dentro de la carpeta de respaldo y nunca se borra sola. Con
+     * contraseña, cifrada como los respaldos. Devuelve qué pasó, en una frase.
+     */
+    fun capsula(ctx: Context, anio: String, libro: File? = null): String {
+        if (bloqueado(ctx)) return PAUSA
+        val dir = Repo.config.carpeta_respaldo?.let { DocumentFile.fromTreeUri(ctx, Uri.parse(it)) }?.takeIf { it.canWrite() }
+            ?: return "Elige primero una carpeta de respaldo (Respaldo automático)."
+        val base = File(ctx.cacheDir, "respaldo").apply { mkdirs() }
+        val zip = File(base, "vestigium_${anio}_capsula.zip")
+        val ts = Exportar.tablas()
+        try {
+            ZipOutputStream(zip.outputStream().buffered(TROZO)).use { z ->
+                fun poner(nombre: String, escribir: (java.io.OutputStream) -> Unit) { z.putNextEntry(ZipEntry(nombre)); val c = Contador(z); escribir(c); c.flush(); z.closeEntry() }
+                Exportar.archivos(ctx, ts).forEach { a -> poner(a.nombre, a.escribir) }
+                runCatching { Exportar.sqlite(ctx, ts) }.getOrNull()?.let { db -> try { poner("vm_datos.sqlite") { o -> db.inputStream().use { it.copyTo(o, TROZO) } } } finally { db.delete() } }
+                FotoDelDia.carpeta(ctx).listFiles()?.filter { it.name.startsWith(anio) }?.sortedBy { it.name }?.forEach { p -> poner("fotos_dia/" + p.name) { o -> p.inputStream().use { it.copyTo(o, TROZO) } } }
+                libro?.takeIf { it.exists() }?.let { l -> poner("libro_del_diario_$anio.pdf") { o -> l.inputStream().use { it.copyTo(o, TROZO) } } }
+                poner("LEEME_CAPSULA.txt") { it.write(("Cápsula del año $anio de Vestigium Mei, hecha el ${Fechas.ahoraIso()}.\n\n" +
+                    "Todo lo que guardaste, para leerlo sin la app:\n" +
+                    "· vm_*.csv: una tabla por cosa (vm_panel.csv, una fila por día con lo principal); vm_diccionario.csv dice qué es cada columna.\n" +
+                    "· vm_datos.sqlite: las mismas tablas en una sola base SQLite.\n" +
+                    "· vm_respaldo.json: el respaldo completo (se restaura en la app).\n" +
+                    "· vestigium.R: el script de R que lee todo (source(\"vestigium.R\")).\n" +
+                    "· fotos_dia/: la foto de cada día (AAAA-MM-DD.jpg).\n" +
+                    (if (libro != null) "· libro_del_diario_$anio.pdf: el diario del año, una página por día, con el resumen de cada mes.\n" else "") +
+                    "\nLas tablas traen todos los años registrados hasta hoy, no solo $anio.\n").toByteArray()) }
+            }
+            val clave = contrasena(ctx)
+            val sale = if (clave != null) { val v = File(base, zip.name.removeSuffix(".zip") + ".vmc"); try { cifrarArchivo(zip, v, clave) } finally { clave.fill(' ') }; zip.delete(); v } else zip
+            try {
+                val c = dir.findFile(CAPSULAS)?.takeIf { it.isDirectory } ?: dir.createDirectory(CAPSULAS) ?: return "No pude crear la carpeta «$CAPSULAS»."
+                if (!escribirSinRomper(ctx, c, sale)) return "No pude escribir la cápsula en la carpeta. ¿Falta espacio?"
+                if (huellaDe(ctx, c.findFile(sale.name)) != huella(sale)) return "La cápsula de la carpeta no se lee igual que la que escribí."
+                return "Guardé la cápsula de $anio en «$CAPSULAS» (" + "%.1f MB".format(sale.length() / 1_048_576.0) + (if (clave != null) ", cifrada" else "") + ")."
+            } finally { sale.delete() }
+        } finally { zip.delete() }
+    }
+
     /**
      * El ensayo del mes: abre la última copia de la carpeta como si fuera a restaurarla (descifrándola con la contraseña
      * guardada), la compara con su manifiesto y con lo que hay en el teléfono, y anota el resultado. No cambia nada.
@@ -590,6 +635,12 @@ object Respaldos {
         return try { restaurarArchivo(ctx, f, contrasena) } finally { f.delete() }
     }
 
+    /** Restaura un archivo ya bajado (de Drive), sin pasarlo por la memoria. */
+    fun restaurarArchivoBajado(ctx: Context, f: File, contrasena: CharArray?): Lectura = restaurarArchivo(ctx, f, contrasena)
+
+    /** Verifica un archivo ya bajado (de Drive), sin pasarlo por la memoria. */
+    fun verificarArchivoBajado(ctx: Context, f: File, contrasena: CharArray?): Lectura = verificarArchivo(ctx, f, contrasena)
+
     /** Restaura un respaldo: .vmc cifrado, .zip (completo o la exportación extendida) o el JSON suelto. Lo que ya existe no se duplica. */
     fun restaurar(ctx: Context, datos: ByteArray, contrasena: CharArray?): Lectura {
         val f = File(ctx.cacheDir, "restaurar_entrada")
@@ -632,7 +683,7 @@ object Respaldos {
                     if (!p.exists()) { z.getInputStream(x).use { i -> p.outputStream().use { i.copyTo(it) } }; nPo++ }
                 }
                 var nFd = 0
-                val fotosDia = FotosDia.carpeta(ctx)
+                val fotosDia = FotoDelDia.carpeta(ctx)
                 z.entries().asSequence().filter { !it.isDirectory && it.name.contains("fotos_dia/") }.forEach { x ->
                     val p = File(fotosDia, x.name.substringAfterLast('/'))
                     if (!p.exists()) { z.getInputStream(x).use { i -> p.outputStream().use { i.copyTo(it) } }; nFd++ }

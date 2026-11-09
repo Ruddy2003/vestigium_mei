@@ -64,7 +64,11 @@
 
     <application
         android:name=".App"
-        android:allowBackup="false"
+        android:allowBackup="true"
+        android:fullBackupOnly="true"
+        android:backupAgent=".data.CopiaAndroid"
+        android:dataExtractionRules="@xml/copia_android"
+        android:fullBackupContent="@xml/copia_android_vieja"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"

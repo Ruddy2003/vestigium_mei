@@ -597,7 +597,18 @@ fun PantallaNoche(nav: Nav) {
             IdeasDelDia(fecha, nav) { if (sucio) { Repo.guardarDia(d); sucio = false } }
         }
         if (ver("foto")) Seccion("Foto del día", "Toca «elegir» (o mantén presionada la foto) para que sea la foto del día: sale en el calendario, en la biblioteca del diario y en el widget. Tócala para verla.", numero = n(), plegable = true, plegadaPorDefecto = true) {
-            Imagenes(fecha, d.foto, nav) { uri -> cambiar(d.copy(foto = if (d.foto == uri) null else uri)) }
+            val ctxFoto = LocalContext.current
+            val scopeFoto = androidx.compose.runtime.rememberCoroutineScope()
+            Imagenes(fecha, d, nav) { uri ->
+                val nueva = if (d.foto == uri) null else uri
+                cambiar(d.copy(foto = nueva, foto_archivo = null))
+                // La copia dentro de la app (esquema 22): así la foto no se pierde si se borra de la galería o cambias de teléfono.
+                if (nueva == null) io.github.ruddy2003.vestigium.data.FotoDelDia.borrar(ctxFoto, fecha)
+                else scopeFoto.launch {
+                    val n = withContext(Dispatchers.IO) { io.github.ruddy2003.vestigium.data.FotoDelDia.copiar(ctxFoto, Uri.parse(nueva), fecha) }
+                    if (n != null && d.foto == nueva) cambiar(d.copy(foto_archivo = n))
+                }
+            }
         }
         // Medicamentos, impulsos, recaídas y libido se anotan y se ven solo en la pantalla Privado.
         BotonTexto(onClick = { if (sucio) { Repo.guardarDia(d); sucio = false }; Seleccion.privado = fecha; nav.ir("recaidas") }) {
@@ -763,8 +774,19 @@ private fun Vestigios(fecha: String, nav: Nav) {
 private fun aqiTexto(a: Int) = when { a <= 50 -> "buena"; a <= 100 -> "aceptable"; a <= 150 -> "mala para sensibles"; a <= 200 -> "mala"; else -> "muy mala" }
 
 @Composable
-private fun Imagenes(fecha: String, elegida: String?, nav: Nav, onElegir: (String) -> Unit) {
+private fun Imagenes(fecha: String, dia: io.github.ruddy2003.vestigium.data.Dia, nav: Nav, onElegir: (String) -> Unit) {
     val ctx = LocalContext.current
+    val elegida = dia.foto
+    // La elegida primero, aunque ya no esté en la galería (se ve su copia guardada).
+    if (elegida != null || dia.foto_archivo != null) {
+        Box(Modifier.fillMaxWidth().aspectRatio(1.6f).clip(RoundedCornerShape(4.dp)).border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))) {
+            MiniaturaDe(dia, 720, Modifier.fillMaxWidth().aspectRatio(1.6f))
+            Text(" IMAGO DIEI ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.align(Alignment.BottomStart).padding(8.dp).background(MaterialTheme.colorScheme.primary))
+        }
+        if (dia.foto_archivo == null && elegida != null) Ayuda("Guardando una copia dentro de la app…", Modifier.padding(top = 4.dp))
+        Spacer(Modifier.height(8.dp))
+    }
     val permiso = Galeria.tienePermiso(ctx) || Galeria.parcial(ctx)
     if (!permiso) {
         Vacio("Da acceso a tus fotos en Permisos y sensores para ver aquí las del día.")
@@ -774,14 +796,6 @@ private fun Imagenes(fecha: String, elegida: String?, nav: Nav, onElegir: (Strin
     val fotos by produceState(emptyList<Galeria.Foto>(), fecha) { value = withContext(Dispatchers.IO) { Galeria.delDia(ctx, fecha) } }
     if (fotos.isEmpty()) { Vacio("No hay fotos de este día en tu galería."); return }
     val orden = fotos.sortedWith(compareBy({ it.uri.toString() != elegida }, { it.tipo != "camara" }, { it.ms }))
-    elegida?.let { u ->
-        Box(Modifier.fillMaxWidth().aspectRatio(1.6f).clip(RoundedCornerShape(4.dp)).border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))) {
-            Miniatura(Uri.parse(u), 720, Modifier.fillMaxWidth().aspectRatio(1.6f))
-            Text(" IMAGO DIEI ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.align(Alignment.BottomStart).padding(8.dp).background(MaterialTheme.colorScheme.primary))
-        }
-        Spacer(Modifier.height(8.dp))
-    }
     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         items(orden, key = { it.id }) { f ->
             val sel = f.uri.toString() == elegida
@@ -808,6 +822,17 @@ private fun Imagenes(fecha: String, elegida: String?, nav: Nav, onElegir: (Strin
     }
     val camara = fotos.count { it.tipo == "camara" }
     Ayuda("$camara de cámara · ${fotos.count { it.tipo == "captura" }} capturas · ${fotos.count { it.tipo == "otra" }} de otras apps", Modifier.padding(top = 6.dp))
+}
+
+@Composable
+/** La foto del día de [d]: su copia guardada en la app o, si no hay, la de la galería (esquema 22). */
+@Composable
+fun MiniaturaDe(d: io.github.ruddy2003.vestigium.data.Dia?, px: Int, modifier: Modifier) {
+    val ctx = LocalContext.current
+    val bmp by produceState<Bitmap?>(null, d?.fecha, d?.foto, d?.foto_archivo, px) { value = withContext(Dispatchers.IO) { io.github.ruddy2003.vestigium.data.FotoDelDia.miniatura(ctx, d, px) } }
+    val b = bmp
+    if (b != null) Image(b.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop, modifier = modifier)
+    else Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant))
 }
 
 @Composable

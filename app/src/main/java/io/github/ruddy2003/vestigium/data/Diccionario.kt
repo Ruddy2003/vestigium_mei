@@ -108,7 +108,7 @@ object Diccionario {
         "sueno_lucidez" to "Lucidez del sueño", "sueno_vividez" to "Qué tan claro lo recuerdas: vago (solo fragmentos), moderado (partes claras) o muy_vivido (casi completo y nítido)", "sueno_tipo" to "Tipo de sueño (solo hasta el esquema 17: mundano, ansioso_pesadilla, bizarro_surreal, recurrente; después, ver sueno_rareza y sueno_pesadilla)",
         "sueno_rareza" to "Qué tan raro fue el sueño: realista, raro (pero posible) o imposible (o surreal); en días de antes del esquema 17, deducido del tipo (mundano = realista, bizarro = imposible)",
         "sueno_pesadilla" to "Si fue pesadilla: angustia fuerte o te despertó (TRUE/FALSE; vacío = no se dijo); en días de antes del esquema 17, TRUE si el tipo era ansioso o pesadilla", "sueno_temas" to "Personas y temas del sueño (lista)",
-        "sueno_texto" to "Narración del sueño", "mejor_momento" to "Lo mejor del día", "peor_momento" to "Lo peor del día",
+        "sueno_texto" to "Narración del sueño", "mejor_momento" to "Lo mejor del día", "peor_momento" to "Lo peor del día", "foto_archivo" to "Nombre de la copia de la foto del día, en la carpeta fotos_dia/ del respaldo o de la cápsula del año (vacío = sin foto o sin copia)",
         "impulso" to "Intensidad del impulso (0 a 5), seguimiento privado", "recaida" to "Hubo recaída (0/1), seguimiento privado", "detonantes" to "Detonantes (lista)",
         "medicamentos" to "Medicamentos tomados (lista)", "prediccion_manana" to "Predicción del ánimo de mañana (1 a 7)",
         // Momentos
@@ -464,6 +464,8 @@ object Diccionario {
     private const val VERSION_ESQUEMA_20 = 129
     /** La versión de la app con la que llega el esquema 21 (masturbación e intimidad, episodios, fechas señaladas, varias tomas, la extra del enfoque). */
     private const val VERSION_ESQUEMA_21 = 175
+    /** La versión que trae el esquema 22 (respaldo blindado y foto del día copiada, 9 nov 2026). */
+    private const val VERSION_ESQUEMA_22 = 177
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
@@ -678,6 +680,8 @@ object Diccionario {
         "plan_min" to (VERSION_ESQUEMA_21 to "nueva: minutos planeados del bloque (D.165)"), "extra_min" to (VERSION_ESQUEMA_21 to "nueva: minutos de más (D.165)"),
         "vm_tramos.csv:min" to (VERSION_ESQUEMA_21 to "lo que duró de verdad: el bloque ya no se corta en la meta, sigue contando hasta que pasas al descanso o terminas (D.165)"),
         "enfoque_min" to (VERSION_ESQUEMA_21 to "con los minutos de más sobre la meta (D.165)"),
+        // Esquema 22.
+        "vm_dias.csv:foto_archivo" to (VERSION_ESQUEMA_22 to "nueva: la copia de la foto del día dentro del respaldo (D.168)"),
     )
 
     // Las claves con «*», como patrones; la más larga primero, para que «app_min_*» gane a «app_*».

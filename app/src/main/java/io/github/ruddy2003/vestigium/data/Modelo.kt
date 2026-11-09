@@ -85,6 +85,8 @@ data class Dia(
     val dia_dificil: Boolean = false,
     /** Foto elegida para representar el día (content:// de la galería). */
     val foto: String? = null,
+    /** Esquema 22: la copia de esa foto dentro de la app (`fotos_dia/<fecha>.jpg`), que viaja en el respaldo. */
+    val foto_archivo: String? = null,
     val retroactivo: Boolean = false,
     val ts_creado: String? = null,
     val ts_editado: String? = null,

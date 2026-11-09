@@ -639,7 +639,7 @@ private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean,
             .clickable(onClick = onClick),
     ) {
         if (conFoto) {
-            Miniatura(android.net.Uri.parse(d!!.foto), 200, Modifier.matchParentSize())
+            MiniaturaDe(d, 200, Modifier.matchParentSize())
             Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.28f)))
         }
         Box(Modifier.matchParentSize().padding(3.dp)) {

@@ -666,6 +666,26 @@ fun PantallaDatos(nav: Nav) {
                     OutlinedButton(onClick = { carpeta.launch(null) }) { Text("Elegir carpeta") }
                     if (Repo.config.carpeta_respaldo != null) OutlinedButton(enabled = !ocupado, onClick = { if (!ocupado) respaldarAhora() }) { Text("Respaldar ahora") }
                 }
+                // La cápsula del año (9 nov 2026): todo el año, legible sin la app, en «capsulas». Sale sola cada enero.
+                if (Repo.config.carpeta_respaldo != null) {
+                    io.github.ruddy2003.vestigium.ui.comun.Separador(Modifier.padding(vertical = 12.dp))
+                    Text("Cápsula del año", style = MaterialTheme.typography.titleSmall)
+                    Ayuda("Todo el año en un archivo que se lee sin la app: las tablas con su diccionario, una base SQLite, el script de R, la foto de cada día y el libro del diario en PDF. Cada enero sale sola la del año que terminó; nunca se borra.")
+                    val anio = io.github.ruddy2003.vestigium.data.Fechas.diaLogico().take(4)
+                    OutlinedButton(enabled = !ocupado, onClick = {
+                        tarea {
+                            val libro = runCatching { io.github.ruddy2003.vestigium.ui.LibroDiario.libroDelAnio(ctx, anio) }.getOrNull()
+                            try { io.github.ruddy2003.vestigium.data.Respaldos.capsula(ctx, anio, libro) } finally { libro?.delete() }
+                        }
+                    }, modifier = Modifier.padding(top = 6.dp)) { Text("Guardar la cápsula de $anio hasta hoy") }
+                }
+                io.github.ruddy2003.vestigium.ui.comun.Separador(Modifier.padding(vertical = 12.dp))
+                var copiaAndroid by remember { mutableStateOf(io.github.ruddy2003.vestigium.data.CopiaAndroid.activa(ctx)) }
+                io.github.ruddy2003.vestigium.ui.Interruptor("Copia de seguridad de Android", copiaAndroid,
+                    "Una tercera capa, sin configurar nada: cuando Android respalda tus apps (de noche, cargando y con wifi), se lleva una copia de la base, y al instalar la app en un teléfono nuevo con tu misma cuenta de Google vuelve sola. Solo sale cifrada con el bloqueo de pantalla de tu teléfono. Android acepta hasta 25 MB: si tu base crece más, deja de salir y se avisa aquí. No lleva las fotos." +
+                        io.github.ruddy2003.vestigium.data.CopiaAndroid.ultima(ctx).let { (f, r) -> if (f != null) "\nÚltima vez (${f.take(10)}): $r" else "" }) { v ->
+                    io.github.ruddy2003.vestigium.data.CopiaAndroid.activar(ctx, v); copiaAndroid = v
+                }
             }
         }
         Seccion("Google Drive", "Cada mañana reemplaza el respaldo completo y tus CSV en la carpeta «Vestigium Mei» de tu Drive, y cada semana guarda una copia fechada (se conservan las últimas 12). Con contraseña, solo sube el respaldo cifrado. La app solo puede ver lo que ella misma sube.") {

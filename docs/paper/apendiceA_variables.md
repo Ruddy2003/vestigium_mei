@@ -489,6 +489,7 @@ La exportación genera 54 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_panel.csv` | `ventana_pantalla`, `ventana_pasos` | `logica` o `calendario` |
 | `vm_panel.csv` | `dia_especial`, `dia_especial_tipo` | Día especial y de qué tipo: `mi_cumpleanos`, `cumpleanos`, `fallecimiento`, `aniversario` u `otra` (lista) |
 | `vm_dias.csv` | `ts_valencia` | Cuándo se llenó o cambió la valencia; decide `retroactivo` |
+| `vm_dias.csv` | `foto_archivo` | Desde el esquema 22 (D.168): el nombre de la copia de la foto del día (`AAAA-MM-DD.jpg`, 1600 px de lado, JPEG al 85 %) que viaja en `fotos_dia/` del respaldo y de la cápsula del año. Vacío = sin foto del día, o la foto ya no estaba en la galería cuando se intentó copiar |
 | `vm_experimentos.csv` | `fin`, `hecho` | Fecha de fin; respuestas de «¿Lo hiciste hoy?» como `fecha:1` o `fecha:0` (lista; sin fecha = sin respuesta) |
 | `vm_pantalla.csv` | `ventana` | `logica` (05:00 a 05:00) o `calendario` (0:00 a 24:00) |
 | `vm_salud.csv` | `ventana_pasos` | Igual, para los pasos |

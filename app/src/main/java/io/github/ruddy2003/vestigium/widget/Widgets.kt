@@ -539,8 +539,7 @@ object Widgets {
             Repo.dias[haceUnAnio]?.foto != null -> haceUnAnio to "hace un año"
             else -> (Repo.dias.values.filter { it.foto != null }.maxByOrNull { it.fecha }?.fecha ?: "") to "la más reciente"
         }
-        val uri = Repo.dias[fecha]?.foto
-        val bmp = uri?.let { runCatching { io.github.ruddy2003.vestigium.sensores.Galeria.miniatura(ctx, android.net.Uri.parse(it), 640) }.getOrNull() }
+        val bmp = runCatching { io.github.ruddy2003.vestigium.data.FotoDelDia.miniatura(ctx, Repo.dias[fecha], 640) }.getOrNull()
         if (bmp != null) {
             v.setImageViewBitmap(R.id.img_foto, bmp)
             v.setTextViewText(R.id.sub_foto, rotulo)

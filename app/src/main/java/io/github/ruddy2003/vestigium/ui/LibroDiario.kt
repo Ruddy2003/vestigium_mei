@@ -46,6 +46,10 @@ object LibroDiario {
     /** Entradas con texto, de la más reciente a la más antigua. */
     fun entradas(): List<Dia> = Repo.dias.values.filter { it.nota.isNotBlank() }.sortedByDescending { it.fecha }
 
+    /** El libro del diario de un año entero, para la cápsula del año; null si ese año no tiene entradas. */
+    fun libroDelAnio(ctx: Context, anio: String): File? =
+        entradas().filter { it.fecha.startsWith(anio) }.takeIf { it.isNotEmpty() }?.let { pdf(ctx, it) }
+
     /** Noches con un sueño escrito, de la más reciente a la más antigua. */
     fun suenos(): List<Dia> = Repo.dias.values.filter { it.sueno_texto.isNotBlank() }.sortedByDescending { it.fecha }
 

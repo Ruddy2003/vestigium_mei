@@ -243,6 +243,8 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             paso(s, "agenda") { Agenda.sincronizar(ctx) }
             paso(s, "comunicacion") { io.github.ruddy2003.vestigium.sensores.Comunicacion.sincronizar(ctx, 3) }
             paso(s, "entorno") { Entorno.sincronizar(ctx) }
+            // Las fotos del día que todavía no tienen su copia dentro de la app, antes del respaldo para que viajen en él.
+            paso(s, "fotos_dia") { io.github.ruddy2003.vestigium.data.FotoDelDia.completarPendientes(ctx) }
             paso(s, "respaldo") {
                 val ok = try { Exportar.respaldoAutomatico(ctx) } catch (e: CancellationException) { throw e } catch (e: Throwable) { false }
                 // Si falla (sin espacio, la carpeta ya no deja escribir, sin memoria…) y van 3 días sin respaldo, se avisa una vez
@@ -252,6 +254,13 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
                 if (!ok && c.carpeta_respaldo != null && !io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx) &&
                     (c.respaldo_ultimo == null || System.currentTimeMillis() - Fechas.millis(c.respaldo_ultimo) > 2 * 86_400_000L) &&
                     !yaFue("respaldo_falla:$hoy")) { marcar("respaldo_falla:$hoy"); Avisos.respaldoFallido(ctx) }
+            }
+            // La cápsula del año que terminó, la primera mañana de enero en que se pueda (9 nov 2026).
+            val anioPasado = (ahora.year - 1).toString()
+            if (ahora.monthValue == 1 && Repo.config.carpeta_respaldo != null && !yaFue("capsula:$anioPasado")) paso(s, "capsula") {
+                val libro = runCatching { io.github.ruddy2003.vestigium.ui.LibroDiario.libroDelAnio(ctx, anioPasado) }.getOrNull()
+                val r = try { io.github.ruddy2003.vestigium.data.Respaldos.capsula(ctx, anioPasado, libro) } finally { libro?.delete() }
+                if (r.startsWith("Guardé")) marcar("capsula:$anioPasado")
             }
             // La base de datos, revisada una vez por semana (PRAGMA quick_check).
             paso(s, "revisar_bd") {

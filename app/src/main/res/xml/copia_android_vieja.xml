@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11: lo mismo, solo si la copia va cifrada con el bloqueo de pantalla o de teléfono a teléfono. -->
+<full-backup-content>
+    <include domain="file" path="copia_android/" requireFlags="clientSideEncryption|deviceToDeviceTransfer" />
+</full-backup-content>
