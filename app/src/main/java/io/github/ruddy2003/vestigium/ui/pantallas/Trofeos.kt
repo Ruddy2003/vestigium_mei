@@ -482,6 +482,7 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             drawCircle(col, s * 0.32f, o)
             drawLine(col.copy(alpha = 0.6f), o, Offset(o.x + s * 0.2f, o.y + s * 1.1f), s * 0.14f, StrokeCap.Round)
         }
+        TemaId.BASICO -> drawCircle(Color.White.copy(alpha = 0.9f), s * 0.3f, o)
     }
 }
 
@@ -521,6 +522,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.REVOLUCION -> Color(0xFFD6CCB8)
     TemaId.ANTIGUAS -> Color(0xFF7D7668)
     TemaId.CUEVA -> Color(0xFFB59A78)          // la caliza de la cueva
+    TemaId.BASICO -> Color(0xFFDDE1E6)          // gris claro
 }
 
 /**
@@ -816,6 +818,7 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
                 x += 110 * d; i++
             }
         }
+        TemaId.BASICO -> {}   // pared lisa
     }
 }
 
@@ -1075,6 +1078,12 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             var x = 26 * d; while (x < w) { for (j in 0 until 3) drawCircle(m(Color(0xFFA2401F)), 1.8f * d, Offset(x + j * 6 * d, h * 0.55f)); x += 84 * d }
             drawRect(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.18f)), h * 0.75f, h), Offset(0f, h * 0.75f), Size(w, h * 0.25f))
         }
+        TemaId.BASICO -> {
+            // Una tabla lisa con su canto.
+            val c = m(Color(0xFFC9CED6))
+            drawRect(c, Offset(0f, 0f), Size(w, h * 0.5f))
+            drawLine(lerp(c, Color.Black, 0.2f), Offset(0f, h * 0.5f), Offset(w, h * 0.5f), d)
+        }
     }
 }
 
@@ -1313,6 +1322,10 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             }
             drawPath(p, tinta.copy(alpha = 0.08f * f)); drawPath(p, borde, style = Stroke(1.2f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 2 * d))))
             for (k in 0 until 5) drawCircle(ac, 1.4f * d, Offset(w * 0.4f + k * 5 * d, h - 4 * d))
+        }
+        TemaId.BASICO -> {
+            drawRoundRect(fondo, cornerRadius = CornerRadius(8 * d))
+            drawRoundRect(borde, cornerRadius = CornerRadius(8 * d), style = fino)
         }
     }
 }

@@ -185,6 +185,7 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Prehistoria: el plano en tonos de ocre y caliza de día; de noche, la roca a la luz del fuego.
         TemaId.CUEVA -> if (oscuro) { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.85f, 0.72f, 0.6f, 8f, 4f, 0f)) }
             else { m.setSaturation(0.35f); m.postConcat(tinte(1.0f, 0.92f, 0.8f, 8f, 2f, -6f)) }
+        TemaId.BASICO -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.84f, 0.88f, 6f, 8f, 12f)) } else m.setSaturation(0.5f)
     }
     return ColorMatrixColorFilter(m)
 }
@@ -328,6 +329,7 @@ internal object Formas {
             TemaId.REVOLUCION -> poligono(x, y, r * 1.12f, 14, -90.0, 0.84f)   // escarapela plisada
             TemaId.ANTIGUAS -> poligono(x, y, r * 1.2f, 6, -90.0, 0.5f)   // gema tallada de seis puntas
             TemaId.CUEVA -> { p.reset(); p.addOval(android.graphics.RectF(x - r * 0.62f, y - r * 0.85f, x + r * 0.62f, y + r * 0.95f), horario) }   // la huella de un pie
+            TemaId.BASICO -> { p.reset(); p.addCircle(x, y, r * 0.75f, horario) }
         }
         c.drawPath(p, relleno)
         borde?.let { b -> c.drawPath(p, b) }
@@ -377,6 +379,7 @@ internal object Formas {
             TemaId.REVOLUCION -> c.drawCircle(x, y, r * 0.42f, d)
             TemaId.ANTIGUAS -> { raya(c, x, y, r, 0f, -0.5f, 0f, 0.5f, d); raya(c, x, y, r, -0.3f, -0.15f, 0.3f, 0.15f, d) }   // una runa
             TemaId.CUEVA -> listOf(-0.42f to 1.12f, 0f to 1.24f, 0.4f to 1.14f).forEach { (dx, dy) -> c.drawCircle(x + dx * r, y - dy * r, r * 0.17f, d) }   // los dedos de la huella
+            TemaId.BASICO -> {}
         }
     }
 }
@@ -1111,6 +1114,7 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
             while (x < w - 18 * u) { drawCircle(acento.copy(alpha = 0.6f), (1.4f + (k % 3) * 0.4f) * u, Offset(x, h - 12 * u)); x += 10 * u; k++ }
             esquinas(14 * u) { o, _, _ -> drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(o, 5 * u), acento.copy(alpha = 0.7f)) }
         }
+        TemaId.BASICO -> filete(4 * u, tinta.copy(alpha = 0.3f), 1 * u)
     }
 }
 
@@ -1389,6 +1393,11 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
                 drawLine(if (i == 0) acento else tenue, q0, q1, (if (i % 3 == 0) 2f else 1.2f) * u, androidx.compose.ui.graphics.StrokeCap.Round)
             }
             punta(n, r * 1.0f, r * 0.12f, acento)
+        }
+        TemaId.BASICO -> {
+            punta(n, r * 0.9f, r * 0.14f, acento)
+            punta(n + 180.0, r * 0.9f, r * 0.14f, tenue)
+            anillo(r * 0.3f, tenue)
         }
     }
 }

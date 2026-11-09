@@ -59,6 +59,8 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     VUELO("Bitácora de vuelo", "órbita"),
     INMERSION("Bitácora del batiscafo", "inmersión"),
     TETRAD("Cuaderno escolar", "hoja"),
+    /** Básico: una libreta lisa, sin dibujo propio (el papel es la superficie del esquema). */
+    SIMPLE("Libreta de momentos", "página"),
 }
 
 fun contenedorDe(t: TemaId): Contenedor = when (t) {
@@ -86,6 +88,7 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.NAVIDAD -> Contenedor.ADVIENTO
     TemaId.ANTIGUAS -> Contenedor.MAPAS
     TemaId.CUEVA -> Contenedor.BOLSA
+    TemaId.BASICO -> Contenedor.SIMPLE
     TemaId.DISTOPIA -> Contenedor.EXPEDIENTE
     TemaId.CIBER -> Contenedor.CONSOLA
     TemaId.NEON -> Contenedor.TICKETS
@@ -150,6 +153,7 @@ object Contenedores {
         Contenedor.SUPERVIVIENTE -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.TICKETS -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.PATENTES -> ContenedoresMas.papel(c, cs, oscuro)
+        Contenedor.SIMPLE -> cs.surface
     }
 
     private fun DrawScope.sombra(o: Offset, s: Size, r: Float) = drawRoundRect(Color.Black.copy(alpha = 0.18f), o, s, CornerRadius(r))
@@ -341,6 +345,7 @@ object Contenedores {
             Contenedor.SUPERVIVIENTE -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.TICKETS -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.PATENTES -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
+            Contenedor.SIMPLE -> {}   // la hoja lisa
         }
     }
 
@@ -433,6 +438,7 @@ object Contenedores {
             Contenedor.SUPERVIVIENTE -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.TICKETS -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.PATENTES -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
+            Contenedor.SIMPLE -> {}   // sin encuadernación
         }
     }
 }

@@ -1111,6 +1111,11 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
                 drawPath(manoUnida(q, 7.5f * u), color)
             }
         }
+        TemaId.BASICO -> {
+            // La pista y el arco de lo que va, sin adornos.
+            drawCircle(pista, r, c, style = Stroke(g * 0.5f))
+            arco(color, 0f, p, r, g * 0.5f, StrokeCap.Round)
+        }
     }
 }
 
@@ -1313,5 +1318,6 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             moveTo(x + k, y); quadraticTo(x + w * 0.5f, y - h * 0.04f, x + w - k, y + h * 0.04f); quadraticTo(x + w, y + h * 0.1f, x + w, y + h * 0.5f)
             quadraticTo(x + w, y + h, x + w - k, y + h); lineTo(x + k, y + h); quadraticTo(x, y + h * 0.96f, x, y + h * 0.5f); quadraticTo(x, y + h * 0.04f, x + k, y); close()
         }
+        TemaId.BASICO -> addRoundRect(androidx.compose.ui.geometry.RoundRect(x, y, x + w, y + h, androidx.compose.ui.geometry.CornerRadius(minOf(h, w) * 0.3f)))
     }
 }

@@ -92,6 +92,8 @@ object Paleta {
  * Solo ordenan la lista: no se guardan.
  */
 enum class Epoca(val nombre: String) {
+    /** Básico: el tema sin diseño, a propósito (va primero en el selector). */
+    SIN_EPOCA("Sin diseño"),
     ANTIGUEDAD("Prehistoria y Antigüedad"),
     EDAD_MEDIA("Edad Media"),
     EDAD_MODERNA("Edad Moderna"),
@@ -138,6 +140,18 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     REVOLUCION("revolucion", "Revolución francesa", "Papel de cartel, tinta y la escarapela azul, blanca y roja. Cuadernos de quejas, el árbol de la libertad y el calendario republicano.", Epoca.EDAD_MODERNA),
     ANTIGUAS("antiguas", "Tierras Antiguas", "Salones de piedra, runas inventadas, mapas y gemas. Una compañía que cruza aldeas, bosques, montañas y minas, contando el tiempo por lunas.", Epoca.FANTASIA),
     CUEVA("cueva", "Prehistoria", "Ocre, carbón y caliza: manos en negativo y bisontes en la pared de una cueva. Las lunas se cuentan desde el primer registro y los números son muescas en un hueso.", Epoca.ANTIGUEDAD),
+    /**
+     * Básico: sin diseño, a propósito, para probar la app de forma más fluida. Material 3 limpio: grises con un acento azul
+     * ([PaletaBasica]), la letra del sistema, esquinas estándar, nombres y fechas en español normal, sin emblema, sin fondo
+     * vivo, sin partículas y sin sonidos propios. Queda fuera de la rotación diaria ([sinDiseno]).
+     */
+    BASICO("basico", "Básico", "Sin diseño: grises neutros con un acento azul, la letra del sistema y los nombres de siempre. Para probar la app sin adornos.", Epoca.SIN_EPOCA, false);
+
+    /**
+     * El tema sin diseño (Básico): no entra en la rotación diaria, no muestra presentación ni lluvia de celebración y su
+     * emblema no se anima. Se lee de la época, no de una comparación con el tema.
+     */
+    val sinDiseno: Boolean get() = epoca == Epoca.SIN_EPOCA
 }
 
 internal val romanoClaro = lightColorScheme(
@@ -161,6 +175,81 @@ internal val romanoOscuro = darkColorScheme(
     surfaceContainer = Paleta.basaltoAlto, surfaceContainerHigh = Paleta.basaltoVeta, surfaceContainerHighest = Paleta.basaltoVeta,
     surfaceContainerLow = Paleta.basaltoAlto, surfaceContainerLowest = Paleta.basalto,
 ).conInversos()
+
+/** Los tonos de un modo del tema Básico (ver [PaletaBasica]). */
+class TonosBasicos(
+    val fondo: Color, val superficie: Color, val variante: Color,
+    val contenedorBajo: Color, val contenedor: Color, val contenedorAlto: Color, val contenedorMasAlto: Color, val contenedorMasBajo: Color,
+    val texto: Color, val tenue: Color, val borde: Color, val bordeSuave: Color,
+    val acento: Color, val sobreAcento: Color, val acentoSuave: Color, val sobreAcentoSuave: Color,
+    val secundario: Color, val sobreSecundario: Color, val secundarioSuave: Color,
+    val terciario: Color, val sobreTerciario: Color, val error: Color, val sobreError: Color,
+)
+
+/**
+ * Los colores del tema Básico: grises neutros con un acento azul sobrio, en claro y en oscuro. Todo el texto pasa WCAG AA
+ * (4.5:1 o más) sobre su fondo: el texto sobre el fondo da 15.9:1 en claro y 14.7:1 en oscuro; el tenue, 7.7:1 y 8.2:1;
+ * el azul, 6.3:1 y 9.7:1. Los usan su esquema ([basicoClaro], [basicoOscuro]) y sus piezas planas (la biblioteca, el
+ * Ideario, los logros y las piezas comunes), que no reciben el esquema.
+ */
+object PaletaBasica {
+    val claro = TonosBasicos(
+        fondo = Color(0xFFF7F8FA), superficie = Color(0xFFFFFFFF), variante = Color(0xFFE9ECF0),
+        contenedorBajo = Color(0xFFF4F5F7), contenedor = Color(0xFFF0F2F5), contenedorAlto = Color(0xFFE9ECF0), contenedorMasAlto = Color(0xFFE3E6EA), contenedorMasBajo = Color(0xFFFFFFFF),
+        texto = Color(0xFF1B1D21), tenue = Color(0xFF4A5059), borde = Color(0xFF868D97), bordeSuave = Color(0xFFCDD2D9),
+        acento = Color(0xFF2F5D9A), sobreAcento = Color(0xFFFFFFFF), acentoSuave = Color(0xFFDCE6F5), sobreAcentoSuave = Color(0xFF0F2747),
+        secundario = Color(0xFF545E6B), sobreSecundario = Color(0xFFFFFFFF), secundarioSuave = Color(0xFFE1E5EB),
+        terciario = Color(0xFF2E6E6A), sobreTerciario = Color(0xFFFFFFFF), error = Color(0xFFB3261E), sobreError = Color(0xFFFFFFFF),
+    )
+    val oscuro = TonosBasicos(
+        fondo = Color(0xFF121316), superficie = Color(0xFF1A1C20), variante = Color(0xFF26292E),
+        contenedorBajo = Color(0xFF17191C), contenedor = Color(0xFF1E2024), contenedorAlto = Color(0xFF26292E), contenedorMasAlto = Color(0xFF2E3136), contenedorMasBajo = Color(0xFF0E0F11),
+        texto = Color(0xFFE3E5E9), tenue = Color(0xFFA7ADB6), borde = Color(0xFF8C929B), bordeSuave = Color(0xFF3A3F46),
+        acento = Color(0xFF9DBDF0), sobreAcento = Color(0xFF0D2240), acentoSuave = Color(0xFF243A5C), sobreAcentoSuave = Color(0xFFDCE6F5),
+        secundario = Color(0xFFB4BCC7), sobreSecundario = Color(0xFF1E242C), secundarioSuave = Color(0xFF30363F),
+        terciario = Color(0xFF86C9C3), sobreTerciario = Color(0xFF0B2A28), error = Color(0xFFF2B8B5), sobreError = Color(0xFF601410),
+    )
+
+    fun de(oscuro: Boolean): TonosBasicos = if (oscuro) this.oscuro else claro
+}
+
+private fun esquemaBasico(p: TonosBasicos, oscuro: Boolean) = (if (oscuro) darkColorScheme(
+    primary = p.acento, onPrimary = p.sobreAcento, primaryContainer = p.acentoSuave, onPrimaryContainer = p.sobreAcentoSuave,
+    secondary = p.secundario, onSecondary = p.sobreSecundario, secondaryContainer = p.secundarioSuave, onSecondaryContainer = p.texto,
+    tertiary = p.terciario, onTertiary = p.sobreTerciario,
+    background = p.fondo, onBackground = p.texto, surface = p.superficie, onSurface = p.texto,
+    surfaceVariant = p.variante, onSurfaceVariant = p.tenue, outline = p.borde, outlineVariant = p.bordeSuave,
+    error = p.error, onError = p.sobreError,
+    surfaceContainer = p.contenedor, surfaceContainerHigh = p.contenedorAlto, surfaceContainerHighest = p.contenedorMasAlto,
+    surfaceContainerLow = p.contenedorBajo, surfaceContainerLowest = p.contenedorMasBajo,
+) else lightColorScheme(
+    primary = p.acento, onPrimary = p.sobreAcento, primaryContainer = p.acentoSuave, onPrimaryContainer = p.sobreAcentoSuave,
+    secondary = p.secundario, onSecondary = p.sobreSecundario, secondaryContainer = p.secundarioSuave, onSecondaryContainer = p.texto,
+    tertiary = p.terciario, onTertiary = p.sobreTerciario,
+    background = p.fondo, onBackground = p.texto, surface = p.superficie, onSurface = p.texto,
+    surfaceVariant = p.variante, onSurfaceVariant = p.tenue, outline = p.borde, outlineVariant = p.bordeSuave,
+    error = p.error, onError = p.sobreError,
+    surfaceContainer = p.contenedor, surfaceContainerHigh = p.contenedorAlto, surfaceContainerHighest = p.contenedorMasAlto,
+    surfaceContainerLow = p.contenedorBajo, surfaceContainerLowest = p.contenedorMasBajo,
+)).conInversos()
+
+/** Básico, claro: fondo gris muy claro, tarjetas blancas y el azul sobrio. */
+internal val basicoClaro = esquemaBasico(PaletaBasica.claro, false)
+
+/** Básico, oscuro: gris casi negro, tarjetas un poco más claras y el azul aclarado. */
+internal val basicoOscuro = esquemaBasico(PaletaBasica.oscuro, true)
+
+/** La letra de Básico: los tamaños de Material 3, todos con la letra del sistema ([FontFamily.Default]). */
+internal val tipoBasico: Typography = Typography().let { b ->
+    fun f(s: TextStyle) = s.copy(fontFamily = FontFamily.Default)
+    Typography(
+        displayLarge = f(b.displayLarge), displayMedium = f(b.displayMedium), displaySmall = f(b.displaySmall),
+        headlineLarge = f(b.headlineLarge), headlineMedium = f(b.headlineMedium), headlineSmall = f(b.headlineSmall),
+        titleLarge = f(b.titleLarge), titleMedium = f(b.titleMedium), titleSmall = f(b.titleSmall),
+        bodyLarge = f(b.bodyLarge), bodyMedium = f(b.bodyMedium), bodySmall = f(b.bodySmall),
+        labelLarge = f(b.labelLarge), labelMedium = f(b.labelMedium), labelSmall = f(b.labelSmall),
+    )
+}
 
 /** Consola monocroma: cian de fósforo en tres intensidades sobre negro. El error es el único color que no es cian. */
 internal val ciber = darkColorScheme(
@@ -388,6 +477,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.REVOLUCION -> if (oscuro) revolucionOscuro else revolucionClaro
     TemaId.ANTIGUAS -> if (oscuro) antiguasOscuro else antiguasClaro
     TemaId.CUEVA -> if (oscuro) cuevaOscuro else cuevaClaro
+    TemaId.BASICO -> if (oscuro) basicoOscuro else basicoClaro
 }
 
 internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
@@ -425,6 +515,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.REVOLUCION -> tipoRevolucion
     TemaId.ANTIGUAS -> tipoAntiguas
     TemaId.CUEVA -> tipoCueva
+    TemaId.BASICO -> tipoBasico
 }.conReloj(tema)
 
 /**
@@ -468,6 +559,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.REVOLUCION -> 60f to 1f      // Convención (Playfair)
     TemaId.ANTIGUAS -> 56f to 1f        // uncial del camino
     TemaId.CUEVA -> 78f to 1f           // Amatic SC, angosta y de trazo fino
+    TemaId.BASICO -> 64f to 0f           // la letra del sistema
 }
 
 private fun Typography.conReloj(tema: TemaId): Typography {
@@ -510,6 +602,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.REVOLUCION -> Esquinas(2, Esquina.CORTADA)      // el cartel recortado
     TemaId.ANTIGUAS -> Esquinas(4, Esquina.ARCO)           // la puerta de piedra
     TemaId.CUEVA -> Esquinas(7, Esquina.HOJA)          // la lasca de sílex
+    TemaId.BASICO -> Esquinas(8, Esquina.REDONDA)          // las de Material 3: 8 dp los botones, 12 dp las tarjetas
 }
 
 /** ¿Va en oscuro? Lo decide el botón de la app (claro, oscuro o como el teléfono); Terminal y Ciudad neón siempre son oscuros. */
@@ -748,6 +841,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.REVOLUCION -> "CAHIER"
         TemaId.ANTIGUAS -> "CRÓNICA"
         TemaId.CUEVA -> "Pared"
+        TemaId.BASICO -> "Hoy"
     }
     val linea = when (tema) {
         TemaId.ROMANO -> "XVII · X"
@@ -784,6 +878,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.REVOLUCION -> "26 vendémiaire"
         TemaId.ANTIGUAS -> "17 de la Luna de las Hojas"
         TemaId.CUEVA -> "sol 12 · luna 9"
+        TemaId.BASICO -> "sábado 17 de octubre"
     }
     val forma = formaPrevia(tema)
     // Las formas con arco, frontón o punta necesitan más aire arriba o abajo para que nada quede cortado; la suma es la misma en todas, para que las filas queden parejas.
@@ -822,6 +917,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.REVOLUCION -> 12 to 20
         TemaId.ANTIGUAS -> 18 to 14
         TemaId.CUEVA -> 17 to 15
+        TemaId.BASICO -> 16 to 16
     }
     // En el trapecio y el paralelogramo los lados se meten: un poco más de margen a los lados.
     val lados = when (tema) {
@@ -859,6 +955,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.REVOLUCION -> 10
         TemaId.ANTIGUAS -> 12
         TemaId.CUEVA -> 13
+        TemaId.BASICO -> 12
     }
     androidx.compose.material3.Surface(
         onClick = onClick, modifier = modifier, color = e.background, shape = forma,
@@ -1072,6 +1169,8 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
         quadraticTo(w - a * 1.2f, h * 0.45f, w - a * 0.2f, h - a); quadraticTo(w * 0.6f, h + a * 0.4f, w * 0.35f, h - a * 0.4f)
         quadraticTo(w * 0.12f, h - a * 1.1f, 0f, h); quadraticTo(a * 1.1f, h * 0.5f, 0f, a); close()
     }
+    // Una tarjeta de esquinas redondas, sin forma propia.
+    TemaId.BASICO -> RoundedCornerShape(12.dp)
 }
 
 /** Cuadrito de color de la muestra, con la figura del tema (tesela, píxel, moneda, rombo, tuerca, probeta, hoja, estrella…). */
@@ -1207,5 +1306,7 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
             drawCircle(c.copy(alpha = 0.6f), r * 0.78f, Offset(cx, cy))
             piezasMano(Offset(cx, cy), r * 0.82f).forEach { drawPath(it, fondo) }
         }
+        // Un cuadrito de esquinas redondas.
+        TemaId.BASICO -> drawRoundRect(c, cornerRadius = CornerRadius(w * 0.25f))
     }
 }

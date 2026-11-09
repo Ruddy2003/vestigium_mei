@@ -1082,6 +1082,15 @@ object Frases {
         TemaId.REVOLUCION -> REVOLUCION
         TemaId.ANTIGUAS -> ANTIGUAS
         TemaId.CUEVA -> CUEVA
+        TemaId.BASICO -> TODAS
+    }
+
+    /**
+     * Básico: las frases de todos los demás temas, solo en español (sin el original en otra lengua). Todas son las mismas
+     * citas reales, con su autor.
+     */
+    private val TODAS: List<Frase> by lazy {
+        TemaId.entries.filterNot { it.sinDiseno }.flatMap { de(it) }.distinctBy { it.texto }.map { it.copy(original = null) }
     }
 
     /** La del día para el tema elegido: cambia cada día y recorre todas antes de repetir. */
@@ -1126,6 +1135,7 @@ object Frases {
         TemaId.REVOLUCION -> "CARTEL DEL DÍA"
         TemaId.ANTIGUAS -> "Dicho del camino"
         TemaId.CUEVA -> "Palabras junto al fuego"
+        TemaId.BASICO -> "Frase del día"
     }
 
     // ------------------------------------------------------------ frases guardadas («me gusta»)

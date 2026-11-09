@@ -132,6 +132,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.URSS -> R.font.russo
     TemaId.REVOLUCION -> R.font.fell                // tipos de imprenta de cartel
     TemaId.ANTIGUAS -> R.font.cinzel_semibold       // números tallados en piedra
+    TemaId.BASICO -> R.font.plex_sans_medium
     TemaId.CUEVA -> R.font.amatic_bold          // cifras a mano alzada, como trazos de carbón
 }
 
@@ -170,6 +171,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.URSS -> "ДНЕВНИК · VESTIGIUM MEI"
     TemaId.REVOLUCION -> "Cahier de Vestigium Mei"
     TemaId.ANTIGUAS -> "Crónica de Vestigium Mei"
+    TemaId.BASICO -> "Vestigium Mei"
     TemaId.CUEVA -> "Vestigium Mei · la pared del clan"
 }
 
@@ -774,6 +776,7 @@ object Reportes {
                     }
                     y += 50f
                 }
+                TemaId.BASICO -> {}
                 TemaId.CUEVA -> {
                     // Una hilera de puntos de ocre de orilla a orilla y, al centro, una mano en negativo: la nube soplada y la
                     // mano del color del papel.

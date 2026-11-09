@@ -56,6 +56,7 @@ object Estilo {
         TemaId.REVOLUCION -> "✶ "
         TemaId.ANTIGUAS -> "⟡ "
         TemaId.CUEVA -> "∵ "
+        TemaId.BASICO -> ""
     }
 
     /**
@@ -97,6 +98,7 @@ object Estilo {
         TemaId.REVOLUCION -> true      // cartel de la Convención
         TemaId.ANTIGUAS -> true        // capitales grabadas
         TemaId.CUEVA -> false          // Amatic SC ya es de versalitas
+        TemaId.BASICO -> false          // como se escribe
     }
 
     /** Nombre del tema para un título en español, o null si ese tema no lo renombra. */
@@ -148,6 +150,7 @@ object Estilo {
             TemaId.REVOLUCION -> if (igual) null else "✶ $t ✶"
             TemaId.ANTIGUAS -> if (igual) null else "⟡ $t"
             TemaId.CUEVA -> if (igual) null else "⁘ $t"
+            TemaId.BASICO -> null
         }
     }
 
@@ -189,6 +192,7 @@ object Estilo {
             TemaId.REVOLUCION -> propio(titulo, true)
             TemaId.ANTIGUAS -> propio(titulo, true)
             TemaId.CUEVA -> propio(titulo, true)
+            TemaId.BASICO -> titulo to null       // sin nombre especial ni comentario
         }
     }
 
@@ -234,6 +238,7 @@ object Estilo {
         TemaId.REVOLUCION -> false
         TemaId.ANTIGUAS -> false
         TemaId.CUEVA -> false
+        TemaId.BASICO -> false
     }
 
     /**
@@ -297,6 +302,7 @@ object Estilo {
             TemaId.REVOLUCION -> propio(titulo, false)
             TemaId.ANTIGUAS -> propio(titulo, false)
             TemaId.CUEVA -> propio(titulo, false)
+            TemaId.BASICO -> titulo to null
         }
     }
 
@@ -355,6 +361,7 @@ object Estilo {
         TemaId.ANTIGUAS -> if (n in 1..999) "${n}ª" else "$n"
         // Muescas en un hueso: «×» vale diez, «^» cinco y «|» uno, como en los huesos marcados del Paleolítico; 17 es «×^||».
         TemaId.CUEVA -> if (n in 1..39) "×".repeat(n / 10) + "^".repeat(n % 10 / 5) + "|".repeat(n % 5) else "$n"
+        TemaId.BASICO -> "$n"
     }
 
     /** Días desde el primer registro: «día N en el refugio», «T+N» en el laboratorio. */
@@ -410,6 +417,8 @@ object Estilo {
             (diasDesdeInicio(iso)?.takeIf { it > 0 }?.let { n -> val (luna, sol) = Temas.lunaYSol(n); "sol $sol de la luna $luna" }
                 ?: "${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]}") + " · " + Temas.MESES_CUEVA[d.monthValue - 1].lowercase()
         }.getOrDefault(iso)
+        // «lunes 9 de noviembre de 2026».
+        TemaId.BASICO -> runCatching { val d = Fechas.parse(iso); "${SEMANA_LARGA[d.dayOfWeek.value - 1]} ${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]} de ${d.year}" }.getOrDefault(iso)
         TemaId.BOTANICO -> runCatching { val d = Fechas.parse(iso); "${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]} · ${Temas.estacion(d)}" }.getOrDefault(iso)
         // «Día N tras el silencio», contado desde el primer registro, y la estación; sin registros, la fecha y la estación.
         TemaId.RUINAS -> runCatching {
@@ -509,6 +518,7 @@ object Estilo {
             TemaId.REVOLUCION -> Temas.mesRepublicano(n).uppercase() + (anio?.let { " " + Temas.anRepublicano(it, n) } ?: "")
             TemaId.ANTIGUAS -> Temas.LUNAS[i] + (anio?.let { " · $it" } ?: "")
             TemaId.CUEVA -> Temas.MESES_CUEVA[i] + (anio?.let { " · $it" } ?: "")
+            TemaId.BASICO -> MESES_LARGOS[i].replaceFirstChar { it.uppercase() } + (anio?.let { " de $it" } ?: "")
         }
     }
 
@@ -563,6 +573,7 @@ object Estilo {
         TemaId.ANTIGUAS -> listOf("Luna", "Forja", "Viento", "Roble", "Hogar", "Piedra", "Sol")
         // Los días por lo que hay en la cueva: ocre, carbón, sílex, hueso, fuego, piel y musgo.
         TemaId.CUEVA -> listOf("Ocre", "Carbón", "Sílex", "Hueso", "Fuego", "Piel", "Musgo")
+        TemaId.BASICO -> listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
     }
 
     /** Dos o tres letras por día, para el widget del mes. */
@@ -601,6 +612,7 @@ object Estilo {
         TemaId.REVOLUCION -> semana.map { it.take(2) }
         TemaId.ANTIGUAS -> semana.map { it.take(2) }
         TemaId.CUEVA -> listOf("Oc", "Ca", "Sí", "Hu", "Fu", "Pi", "Mu")
+        TemaId.BASICO -> listOf("L", "M", "X", "J", "V", "S", "D")
     }
 
     /** Marcas del calendario: calendas, nonas e idus (romano); las fiestas que dividían el año (medieval). */
@@ -643,6 +655,7 @@ object Estilo {
         TemaId.REVOLUCION -> "$n JOURS DE VERTU"
         TemaId.ANTIGUAS -> "$n JORNADAS DE CAMINO"
         TemaId.CUEVA -> "$n soles seguidos tras la manada"
+        TemaId.BASICO -> "$n días seguidos"
     }
 
     val atras: String get() = when (tema) {
@@ -680,6 +693,7 @@ object Estilo {
         TemaId.REVOLUCION -> "← retour"
         TemaId.ANTIGUAS -> "← volver al camino"
         TemaId.CUEVA -> "← de vuelta al abrigo"
+        TemaId.BASICO -> "← volver"
     }
     val prefijo: String get() = when (tema) {
         TemaId.ROMANO -> "› "
@@ -716,6 +730,7 @@ object Estilo {
         TemaId.REVOLUCION -> "• "
         TemaId.ANTIGUAS -> "◆ "
         TemaId.CUEVA -> "⁖ "
+        TemaId.BASICO -> ""
     }
 
     /**
@@ -757,6 +772,7 @@ object Estilo {
         TemaId.REVOLUCION -> ""
         TemaId.ANTIGUAS -> ""
         TemaId.CUEVA -> ""
+        TemaId.BASICO -> ""
     }
 
     /**
@@ -798,6 +814,7 @@ object Estilo {
         TemaId.REVOLUCION -> EstiloFecha(1.08f, 2.0f, cursiva = true)
         TemaId.ANTIGUAS -> EstiloFecha(1.1f, 2.6f, peso = 600)
         TemaId.CUEVA -> EstiloFecha(1.24f, 1.1f, peso = 700, abre = "⁝")
+        TemaId.BASICO -> EstiloFecha(1.0f, 0f)
     }
 
     /** Un texto corto del tema (ver [Textos]); si faltara, la clave misma. */
@@ -850,6 +867,7 @@ object Estilo {
             TemaId.REVOLUCION -> (Claves.REVOLUCION[k] ?: Claves.FRANCES[k])?.uppercase()
             TemaId.ANTIGUAS -> es(Claves.ANTIGUAS)?.uppercase()
             TemaId.CUEVA -> es(Claves.CUEVA)
+            TemaId.BASICO -> CLAVES_ES[k]
         }
         // Las claves nuevas que un tema todavía no traduce (esquema 21: «casus», los episodios) van en español, no en latín.
         // (El romano ya devolvió la clave latina: v no es null.)

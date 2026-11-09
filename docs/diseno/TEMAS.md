@@ -296,3 +296,10 @@ La matriz de arriba dice si cada superficie es **propia**; esta segunda pasada m
 - **Se quedan a propósito:**
   - `Avisos.SONIDOS`, que se deriva de `sonidosDe` (la superficie `avisos_mapa` de la prueba ya no puede fallar);
   - `soporte()`, que usa `Cartas.kt` como ayudante.
+- **Básico** (`TemaId.BASICO`, id `basico`, época «Sin diseño») es un tema **sin diseño, a propósito**, para probar la app de forma más fluida. No tiene columna en la matriz ni cuenta en el resumen:
+  - es Material 3 limpio: grises neutros con un acento azul sobrio (`PaletaBasica` en `ui/Tema.kt`, con contraste AA en todo el texto), la letra del sistema (`FontFamily.Default`) con los tamaños de Material 3 y esquinas estándar (8 dp los botones, 12 dp las tarjetas);
+  - los nombres y textos van en español normal («Hoy», «Diario», «Vida», «Análisis», «Más», «← volver»), sin latín; la fecha, «lunes 9 de noviembre de 2026»; los números, arábigos;
+  - usa piezas planas propias, sin texturas ni ornamentos: `BibliotecaBasico`, `IdeasBasico`, `LogrosBasico` y `ComunBasico` (y `VidaPlana`, la de todos); la libreta es `Contenedor.SIMPLE` y el fondo vivo, `VivoTema.NINGUNO`;
+  - no tiene emblema, fondo vivo, lluvia de celebración, presentación, gato, sonidos ni música propios (los avisos suenan con el sonido del teléfono y el toque, con el clic del sistema); la vibración es un clic corto de siempre; el ícono es el de la app y el sello del día, un círculo liso;
+  - no entra en la rotación diaria (`RotacionTema.rotables`, por `TemaId.sinDiseno`);
+  - las pruebas de cobertura y de unicidad lo dejan fuera de forma explícita (se parecería a los genéricos); sus `when (tema)` sí los vigila el compilador. Sus capturas son `basicoClaro` y `basicoOscuro` en `Capturas.kt`.

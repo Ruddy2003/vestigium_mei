@@ -147,6 +147,7 @@ fun soporte(t: TemaId): Soporte = when (t) {
     TemaId.REVOLUCION -> Soporte.LIBRO
     TemaId.ANTIGUAS -> Soporte.LIBRO
     TemaId.CUEVA -> Soporte.LIBRO      // una laja que se da vuelta, como una tapa
+    TemaId.BASICO -> Soporte.LIBRO
     TemaId.NAPOLEON -> Soporte.SOBRE
     TemaId.DECO -> Soporte.SOBRE
     TemaId.NAVIDAD -> Soporte.SOBRE
@@ -213,6 +214,7 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.ANTIGUAS -> Materia(c(0xFF5A3A22), c(0xFF33210F), c(0xFF7A5232), c(0xFFC9A04A), c(0xFF4A4E54), c(0xFFEDE2C6), c(0xFF1E1D1A), extra = c(0xFF2E7A5A))
     // La laja de caliza: la piedra, su sombra y su brillo, el ocre rojo, el carbón, la cara lisa donde se pinta y el ocre amarillo de la fecha.
     TemaId.CUEVA -> Materia(c(0xFFD9C7A6), c(0xFF9C8664), c(0xFFEFE3CC), c(0xFFA2401F), c(0xFF2E2620), c(0xFFEFE4D0), c(0xFF2A211B), extra = c(0xFFB07418))
+    TemaId.BASICO -> Materia(c(0xFF4A5B72), c(0xFF33404F), c(0xFF6C7D93), c(0xFF2F5D9A), c(0xFFAEB6C2), c(0xFFFAFAF7), c(0xFF1B1D21))
 }
 
 // =====================================================================
@@ -302,6 +304,7 @@ private fun nocheDe(t: TemaId): NocheTema = when (t) {
     TemaId.ANTIGUAS -> NocheTema(c(0xFF0E1612), c(0xFFB8E0C8), 0.73f, 0.87f, c(0xFFDCEFE2))
     // Lo hondo de la cueva: la roca casi negra y la luz amarilla de la lámpara de grasa.
     TemaId.CUEVA -> NocheTema(c(0xFF120C08), c(0xFFF2B36B), 0.7f, 0.85f, c(0xFFF6D9AE))
+    TemaId.BASICO -> NocheTema(c(0xFF121316), c(0xFFB9C7DE), 0.6f, 0.82f, c(0xFFE3E5E9))
 }
 
 /** El objeto bajo su noche: el cuerpo se hunde en el cielo del tema y el oro toma la luz que lo alumbra. */
@@ -354,6 +357,7 @@ fun materiaNoche(t: TemaId): Materia {
         TemaId.ANTIGUAS -> materiaTenida(m, n)
         // La laja a la luz del fuego: la piedra se oscurece, el ocre se enciende y la cara lisa queda en sombra.
         TemaId.CUEVA -> Materia(c(0xFF5A4634), c(0xFF2E2219), c(0xFF8A6A4A), c(0xFFE8804F), c(0xFF1A130E), c(0xFF3A2C20), c(0xFFF2DDB8), extra = c(0xFFF4C76E))
+        TemaId.BASICO -> materiaTenida(m, n)
     }
 }
 
@@ -399,6 +403,7 @@ fun paginaNoche(t: TemaId): Pagina {
         TemaId.REVOLUCION -> paginaTenida(p, n)
         TemaId.ANTIGUAS -> paginaTenida(p, n)
         TemaId.CUEVA -> Pagina(null, c(0xFF1C140E), c(0xFFEEDFC8), c(0xFF9A8670), c(0xFFE8804F), c(0xFFF4C76E), p.texto, p.tam, p.interlinea, true, p.rayas, p.capitular)
+        TemaId.BASICO -> paginaTenida(p, n)
     }
 }
 
@@ -438,6 +443,7 @@ fun rotuloSueno(t: TemaId): String = when (t) {
     TemaId.REVOLUCION -> "RÊVE · SUEÑO"
     TemaId.ANTIGUAS -> "VISIONES DE LA NOCHE"
     TemaId.CUEVA -> "Visiones junto al fuego"
+    TemaId.BASICO -> "Sueño"
 }
 
 /** Lo que cierra la página de un sueño: el despertar, en cada tema. */
@@ -476,6 +482,7 @@ fun colofonSueno(t: TemaId): String = when (t) {
     TemaId.REVOLUCION -> "DEBOUT · EN PIE"
     TemaId.ANTIGUAS -> "Y la compañía despertó."
     TemaId.CUEVA -> "— y el fuego aún tenía brasas —"
+    TemaId.BASICO -> "Fin"
 }
 
 /** Media luna: un círculo menos otro corrido hacia un lado. */
@@ -604,6 +611,7 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
             TemaId.ANTIGUAS -> estrellaPuntas(o, r * 2.2f, col, 4, 0.3f)
             // Puntos de dos en dos, como las parejas de puntos pintados en la roca.
             TemaId.CUEVA -> { drawCircle(col, r * 0.8f, o); drawCircle(col.copy(alpha = col.alpha * 0.5f), r * 0.5f, o + Offset(r * 2.2f, r * 0.6f)) }
+            TemaId.BASICO -> drawCircle(col, r * 0.8f, o)
         }
     }
 }
@@ -851,6 +859,7 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
             drawCircle(luna.copy(alpha = 0.16f), r * 1.3f, ce); drawCircle(luna, r * 0.8f, ce)
             if (!sola) for (i in 0 until 15) { val a = -PI / 2 + PI * 1.6 * i / 14 - PI * 0.3; val p0 = ce + polarLibro(r * (if (i % 2 == 0) 1.2f else 1.38f), a); drawCircle(luna.copy(alpha = 0.75f), 0.48f * u, p0) }
         }
+        TemaId.BASICO -> drawCircle(luna, r * 0.85f, ce)
     }
 }
 
@@ -863,8 +872,11 @@ fun CieloNoche(modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, conten
     val e = MaterialTheme.colorScheme.copy(onSurfaceVariant = Color(0xFFB8BEDA), onSurface = Color(0xFFE8E6F2), onBackground = Color(0xFFE8E6F2), primary = m.acento)
     Box(modifier.fillMaxWidth().clip(forma).background(Brush.verticalGradient(listOf(n.cielo, alto))).border(1.dp, n.luz.copy(alpha = 0.35f), forma)) {
         Canvas(Modifier.matchParentSize()) {
-            estrellasDelTema(tema, tema.ordinal * 31 + 5, (size.width * size.height / 9000f).toInt().coerceIn(20, 140), n.luna)
-            lunaDelTema(tema, Offset(size.width - 24.dp.toPx(), 22.dp.toPx()), 10.dp.toPx(), n)
+            // Básico, sin partículas: ni estrellas ni luna, solo el cielo liso.
+            if (!tema.sinDiseno) {
+                estrellasDelTema(tema, tema.ordinal * 31 + 5, (size.width * size.height / 9000f).toInt().coerceIn(20, 140), n.luna)
+                lunaDelTema(tema, Offset(size.width - 24.dp.toPx(), 22.dp.toPx()), 10.dp.toPx(), n)
+            }
         }
         MaterialTheme(colorScheme = e, typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
             Box(Modifier.padding(horizontal = 10.dp, vertical = 10.dp)) { content() }
@@ -908,6 +920,7 @@ fun textoGuardar(t: TemaId): String = when (t) {
     TemaId.REVOLUCION -> "FIRMAR"
     TemaId.ANTIGUAS -> "ASENTAR EN LA CRÓNICA"
     TemaId.CUEVA -> "Pintar en la pared"
+    TemaId.BASICO -> "Guardar"
 }
 
 /** Lo que cierra cada página al leerla. */
@@ -946,6 +959,7 @@ fun colofon(t: TemaId): String = when (t) {
     TemaId.REVOLUCION -> "Lu et approuvé."
     TemaId.ANTIGUAS -> "Así quedó escrito en la crónica."
     TemaId.CUEVA -> "Aquí termina la pintura; sigue la roca."
+    TemaId.BASICO -> "Fin"
 }
 
 /** Lo que invita a abrir el objeto cerrado cuando aún no tiene nada escrito. */
@@ -984,6 +998,7 @@ private fun pistaDia(t: TemaId): String = when (t) {
     TemaId.REVOLUCION -> "toca para abrir el cuaderno de quejas"
     TemaId.ANTIGUAS -> "toca para abrir la crónica"
     TemaId.CUEVA -> "toca para dar vuelta la laja"
+    TemaId.BASICO -> "toca para abrir"
 }
 
 /** Lo mismo, de noche: invita a contar el sueño. */
@@ -1022,6 +1037,7 @@ private fun pistaNoche(t: TemaId): String = when (t) {
     TemaId.REVOLUCION -> "toca para levantar acta del sueño"
     TemaId.ANTIGUAS -> "toca para contar las visiones de la noche"
     TemaId.CUEVA -> "toca para contar lo que viste con los ojos cerrados"
+    TemaId.BASICO -> "toca para anotar lo que soñaste"
 }
 
 /** Lo que dice la página de un día sin nada escrito. */
@@ -1060,6 +1076,7 @@ private fun textoVacio(t: TemaId): String = when (t) {
     TemaId.REVOLUCION -> "Rien à signaler: nada escrito este día."
     TemaId.ANTIGUAS -> "Las crónicas callan sobre este día."
     TemaId.CUEVA -> "Pared lisa: este sol no dejó pintura."
+    TemaId.BASICO -> "Sin entrada este día."
 }
 
 /** Lo que dice la página de una noche sin sueño anotado. */
@@ -1098,6 +1115,7 @@ private fun textoSinSueno(t: TemaId): String = when (t) {
     TemaId.REVOLUCION -> "Nuit sans rêve: no anotaste ningún sueño."
     TemaId.ANTIGUAS -> "La compañía no recordó visiones esa noche."
     TemaId.CUEVA -> "Esa noche el fuego no trajo visiones."
+    TemaId.BASICO -> "Esa noche no anotaste sueños."
 }
 
 /** Cómo se anuncian «lo mejor» y «lo peor» del día al pie de la página. */
@@ -1136,6 +1154,7 @@ private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
     TemaId.REVOLUCION -> "Bonheur — " to "Doléance — "
     TemaId.ANTIGUAS -> "La hazaña — " to "El tropiezo — "
     TemaId.CUEVA -> "La mejor presa — " to "La que se escapó — "
+    TemaId.BASICO -> "Lo mejor: " to "Lo peor: "
 }
 
 /** La invitación a escribir en la página en blanco del día. */
@@ -1174,6 +1193,7 @@ private fun pistaEscribir(t: TemaId): String = when (t) {
     TemaId.REVOLUCION -> "Escribe tus quejas y tus esperanzas del día."
     TemaId.ANTIGUAS -> "¿Qué caminos recorrió hoy la compañía?"
     TemaId.CUEVA -> "¿Qué pasó este sol? Píntalo con palabras."
+    TemaId.BASICO -> "¿Qué pasó hoy?"
 }
 
 /** La invitación a escribir el sueño. */
@@ -1212,6 +1232,7 @@ private fun pistaSonar(t: TemaId): String = when (t) {
     TemaId.REVOLUCION -> "Le rêve: ¿qué soñaste?"
     TemaId.ANTIGUAS -> "¿Qué visiones tuvo la compañía esta noche?"
     TemaId.CUEVA -> "¿Qué viste con los ojos cerrados, junto al fuego?"
+    TemaId.BASICO -> "¿Qué soñaste?"
 }
 
 /** Un esquema de color con los colores del objeto, para que bandas, botones y fichas combinen con la página. */
@@ -1362,6 +1383,7 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.REVOLUCION -> Pagina(R.drawable.papel_revolucion, c(0xFFF2ECDD), c(0xFF1C1A17), c(0xFF5E584E), c(0xFFB22234), c(0xFF1F3A6E), LetraExtra.ciudadana, 17.5f, 28f, false, Rayas.NADA, LetraExtra.convencion)
     TemaId.ANTIGUAS -> Pagina(R.drawable.papel_antiguas, c(0xFFEDE2C6), c(0xFF1E1D1A), c(0xFF5E5646), c(0xFF8E1B24), c(0xFF2E5A3E), LetraExtra.vollkorn, 18f, 27f, false, Rayas.NADA, LetraExtra.camino)
     TemaId.CUEVA -> Pagina(R.drawable.papel_cueva, c(0xFFEADCC2), c(0xFF2A211B), c(0xFF6A5A48), c(0xFFA2401F), c(0xFFB07418), LetraExtra.abrigo, 17f, 27f, false, Rayas.NADA, LetraExtra.trazo)
+    TemaId.BASICO -> Pagina(null, c(0xFFFFFFFF), c(0xFF1B1D21), c(0xFF5D636C), c(0xFF2F5D9A), c(0xFF545E6B), FontFamily.Default, 16f, 24f, false)
 }
 
 /**
@@ -1380,7 +1402,7 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
         Canvas(Modifier.fillMaxSize()) {
             // Los adornos del papel y, en modo oscuro, la luz con que se lee: los dibuja el tema.
             with(d) { pagina(p, oscuro, noche) }
-            if (noche) estrellasDelTema(t, t.ordinal * 17 + 3, (size.width * size.height / 5200f).toInt().coerceIn(60, 260), n.luna, max = 0.6f)
+            if (noche && !t.sinDiseno) estrellasDelTema(t, t.ordinal * 17 + 3, (size.width * size.height / 5200f).toInt().coerceIn(60, 260), n.luna, max = 0.6f)
         }
     }
 }
@@ -1469,6 +1491,7 @@ private fun rotuloPagina(t: TemaId, fecha: String): String {
         TemaId.REVOLUCION -> "CAHIER DE DOLÉANCES · de la commune · Nº $nDia"
         TemaId.ANTIGUAS -> "CRÓNICA DE LA COMPAÑÍA"
         TemaId.CUEVA -> "La pared de este sol"
+        TemaId.BASICO -> "Diario"
     }
 }
 

@@ -666,6 +666,9 @@ fun FraseDelDia(fecha: String) {
                 for (k in 0 until 3) drawCircle(cs.primary.copy(alpha = 0.7f), 2 * u, Offset(size.width - (12 + k * 7) * u, size.height - 10 * u))
             }.padding(horizontal = 22.dp, vertical = 14.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»", centrado = true) }
         }
+        TemaId.BASICO -> Surface(shape = MaterialTheme.shapes.medium, color = cs.surfaceVariant, modifier = arriba) {
+            Box(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»") }
+        }
     }
 }
 
@@ -970,6 +973,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.REVOLUCION -> c(LetraExtra.bodoni, FontWeight.Normal, 24f, 0.2f, "lnum", cursiva = true)
         TemaId.ANTIGUAS -> c(LetraExtra.cinzelDeco, FontWeight.Normal, 21f, 1f)
         TemaId.CUEVA -> c(LetraExtra.trazo, FontWeight.Bold, 30f, 1f)          // cifras a mano alzada
+        TemaId.BASICO -> c(FontFamily.Default, FontWeight.Medium, 22f, 0f, "tnum")   // la letra del sistema
     }
 }
 
@@ -1461,6 +1465,10 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             })
                             val veta = if (color != null) Color.Black.copy(alpha = 0.15f) else linea.copy(alpha = 0.4f)
                             for (k in 1..2) { val y = top + barH * k / 3f; drawLine(veta, Offset(w * 0.3f, y), Offset(w * 0.7f, y + 1.5f * u), 0.7f * u) }
+                            sello = cs.primary
+                        }
+                        TemaId.BASICO -> {
+                            pinta(caja(w * 0.15f, top, w * 0.7f, barH))
                             sello = cs.primary
                         }
                     }

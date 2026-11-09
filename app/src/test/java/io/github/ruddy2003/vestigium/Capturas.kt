@@ -2332,6 +2332,24 @@ class Capturas {
         agregar(w.vistaHabitos(ctx), 420)
         paparazzi.snapshot(col, n)
     }
+
+    // ---------------------------------------------------------------- Básico (el tema sin diseño, 9 nov 2026)
+
+    /** Básico, en claro o en oscuro: Hoy, Diario, Vida, Análisis, Más, el Hall de logros, Apariencia y la biblioteca del diario. */
+    private fun basico(oscuro: Boolean) {
+        val t = TemaId.BASICO
+        val modo = if (oscuro) "oscuro" else "claro"
+        v73(t, oscuro, 8000, nombre = "basico_${modo}_hoy") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) }
+        v73(t, oscuro, 3400, nombre = "basico_${modo}_diario") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
+        v73(t, oscuro, 4200, nombre = "basico_${modo}_vida") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(navVacia) }
+        pantalla(t, oscuro, 2600, "basico_${modo}_analisis") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaExplorar(navVacia) }
+        pantalla(t, oscuro, 4200, "basico_${modo}_mas") { mundoEjemplo(); obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
+        hall(t, oscuro, "basico_${modo}_hall")
+        pantalla(t, oscuro, 3600, "basico_${modo}_apariencia") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaAjustes(navVacia, "apariencia") }
+        pantalla(t, oscuro, 3000, "basico_${modo}_biblioteca") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario") }
+    }
+    @Test fun basicoClaro() = basico(false)
+    @Test fun basicoOscuro() = basico(true)
 }
 
 @Composable

@@ -350,6 +350,7 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
         }
         // Guardar una frase es dejar la mano en la pared.
         TemaId.CUEVA -> pinta(io.github.ruddy2003.vestigium.ui.manoUnida(p(12f, 12.2f), 9.4f * u), 1.3f)
+        TemaId.BASICO -> pinta(corazon())
     }
 }
 

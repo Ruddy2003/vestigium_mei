@@ -422,6 +422,7 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(Offset(c.x, c.y + r * 0.08f), r * 0.5f), luz)
             drawCircle(sombra, r * 0.08f, Offset(c.x, c.y - r * 0.72f))
         }
+        TemaId.BASICO -> forma(disco(c, r * 0.9f))
     }
 }
 

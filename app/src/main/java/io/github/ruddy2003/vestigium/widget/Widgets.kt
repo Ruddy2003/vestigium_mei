@@ -176,6 +176,11 @@ object Widgets {
             0xFFE8804F.toInt(), 0xFFEEDFC8.toInt(), 0xFFB5A08A.toInt(), 0xFF4B3A2B.toInt(),
             intArrayOf(0xFFB8432A.toInt(), 0xFFCC6A42.toInt(), 0xFFDB9560.toInt(), 0xFFE6C9A0.toInt(), 0xFFE2BC6E.toInt(), 0xFFD9AE52.toInt(), 0xFFF4C76E.toInt()),
             0xFF211913.toInt(), 0xFF16100C.toInt())
+        // Básico: gris oscuro y el azul del tema; el ánimo va del rojo apagado al azul.
+        TemaId.BASICO -> Colores(R.drawable.widget_fondo_basico, R.drawable.widget_boton_basico, R.drawable.widget_boton_activo_basico, R.drawable.widget_boton_ambar_basico,
+            0xFF9DBDF0.toInt(), 0xFFE3E5E9.toInt(), 0xFFA7ADB6.toInt(), 0xFF3A3F46.toInt(),
+            intArrayOf(0xFFE8817D.toInt(), 0xFFE0A090.toInt(), 0xFFD6C3A6.toInt(), 0xFFC9CDD3.toInt(), 0xFFA9C2E2.toInt(), 0xFF9AB9EA.toInt(), 0xFF8DB4F0.toInt()),
+            0xFF26292E.toInt(), 0xFF0D2240.toInt())
     }
 
     /** Pinta fondo, botones, líneas y textos según el tema. Va primero: lo que se pinta después (estado activo, colores de ánimo) lo sobrescribe. */
@@ -230,6 +235,7 @@ object Widgets {
         TemaId.REVOLUCION -> "L'INSTANT" to "NOTER"
         TemaId.ANTIGUAS -> "VIGÍA" to "PERGAMINO"
         TemaId.CUEVA -> "Este sol" to "A la pared"
+        TemaId.BASICO -> "Ahora" to "Escribir"
     }
 
     /**
@@ -272,8 +278,11 @@ object Widgets {
             TemaId.REVOLUCION -> R.font.bodoni_texto to 1.05f
             TemaId.ANTIGUAS -> R.font.cinzel_semibold to 0.95f
             TemaId.CUEVA -> R.font.amatic_bold to 1.3f
+            TemaId.BASICO -> 0 to 1f                          // 0: la letra del sistema
         }
-        val tf = runCatching { androidx.core.content.res.ResourcesCompat.getFont(ctx, fuente) }.getOrNull() ?: android.graphics.Typeface.SERIF
+        // 0: el tema usa la letra del sistema (Básico).
+        val tf = if (fuente == 0) android.graphics.Typeface.DEFAULT
+            else runCatching { androidx.core.content.res.ResourcesCompat.getFont(ctx, fuente) }.getOrNull() ?: android.graphics.Typeface.SERIF
         return tf to escala
     }
 

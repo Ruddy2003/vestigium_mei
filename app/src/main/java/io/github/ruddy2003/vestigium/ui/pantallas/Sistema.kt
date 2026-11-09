@@ -301,7 +301,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             }
             if (c.tema_rotar) {
                 Etiqueta("Entre cuáles (ninguno marcado = todos)")
-                io.github.ruddy2003.vestigium.ui.TemaId.entries.groupBy { it.epoca }.toSortedMap().forEach { (epoca, temas) ->
+                io.github.ruddy2003.vestigium.ui.RotacionTema.rotables.groupBy { it.epoca }.toSortedMap().forEach { (epoca, temas) ->
                     Text(epoca.nombre, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 4.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         temas.forEach { t ->
@@ -312,7 +312,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
                     BotonTexto(onClick = { cambiar { it.copy(temas_rotacion = emptyList()) } }) { Text("todos", style = MaterialTheme.typography.labelLarge) }
-                    BotonTexto(onClick = { cambiar { it.copy(temas_rotacion = io.github.ruddy2003.vestigium.ui.TemaId.entries.map { t -> t.id } - it.tema) } }) {
+                    BotonTexto(onClick = { cambiar { it.copy(temas_rotacion = io.github.ruddy2003.vestigium.ui.RotacionTema.rotables.map { t -> t.id } - it.tema) } }) {
                         Text("todos menos este", style = MaterialTheme.typography.labelLarge)
                     }
                 }

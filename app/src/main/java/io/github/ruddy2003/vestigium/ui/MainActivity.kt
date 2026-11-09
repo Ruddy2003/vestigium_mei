@@ -288,6 +288,7 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.ANTIGUAS -> BloqueoMarco(TextosBloqueo("VESTIGIUM MEI", "⟡ La cámara del tesoro está cerrada con runas.", "TRAZAR LA RUNA"), arriba = 10, reintentar = reintentar) { cs -> bloqueoRunico(cs) }
         // La boca de la cueva, tapada con una laja: se abre apoyando la mano, como las manos de la pared.
         TemaId.CUEVA -> BloqueoMarco(TextosBloqueo("La boca de la cueva", "⁘ Una laja tapa la entrada: solo tu mano la reconoce.", "Apoyar la mano"), arriba = 26, reintentar = reintentar) { cs -> bloqueoCueva(cs) }
+        TemaId.BASICO -> BloqueoCentrado(TextosBloqueo("Vestigium Mei", "Tu diario está bloqueado.", "Desbloquear"), tituloArriba = true, sello = 150, reintentar = reintentar)
     }
 }
 
@@ -1036,6 +1037,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.REVOLUCION -> false
     TemaId.ANTIGUAS -> false
     TemaId.CUEVA -> true             // la mano de ocre, llena
+    TemaId.BASICO -> false            // una pastilla tenue detrás del ícono
 }
 
 /** ¿El botón central es una figura rellena? Si no (consola, moneda con agujero, círculo de construcción), el ícono va en el color del tema. */
@@ -1074,6 +1076,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.REVOLUCION -> true
     TemaId.ANTIGUAS -> true
     TemaId.CUEVA -> false            // la mano en negativo: la deja la nube de ocre
+    TemaId.BASICO -> true
 }
 
 /** Polígono regular (o estrella, si se da el radio interior) centrado en (cx, cy); `giro` es el ángulo del primer vértice. */
@@ -1337,6 +1340,7 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
             drawLine(cs.onSurface.copy(alpha = 0.3f * p), Offset(cx - 18 * u, y), Offset(cx - 13 * u, y + 0.5f * u), 1.2f * u, StrokeCap.Round)
             drawLine(cs.onSurface.copy(alpha = 0.3f * p), Offset(cx + 13 * u, y + 0.5f * u), Offset(cx + 18 * u, y), 1.2f * u, StrokeCap.Round)
         }
+        TemaId.BASICO -> drawRoundRect(cs.primary.copy(alpha = 0.16f * p), Offset(cx - 26 * u, cy - 15 * u), Size(52 * u, 30 * u), CornerRadius(15 * u))
     }
 }
 
@@ -1574,6 +1578,7 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             drawCircle(c.copy(alpha = 0.35f), 26 * u, Offset(cx, cy)); drawCircle(c, 22 * u, Offset(cx, cy))
             piezasMano(Offset(cx, cy + 1 * u), 15 * u).forEach { drawPath(it, sobre) }
         }
+        TemaId.BASICO -> drawRoundRect(c, Offset(cx - 24 * u, cy - 24 * u), Size(48 * u, 48 * u), CornerRadius(16 * u))
     }
 }
 
@@ -1751,6 +1756,7 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
             drawPath(Path().apply { moveTo(0f, 1 * u); var x = 0f; var k = 0; while (x < w) { x += 24 * u; quadraticTo(x - 12 * u, if (k % 2 == 0) 0f else 2 * u, x, 1 * u); k++ } }, base, style = Stroke(1f * u))
             var x = 20 * u; while (x < w) { drawCircle(acento, 1.1f * u, Offset(x, 3.5f * u)); drawCircle(acento, 1.1f * u, Offset(x + 4 * u, 3.5f * u)); x += 46 * u }
         }
+        TemaId.BASICO -> filete()
     }
 }
 
@@ -2034,6 +2040,7 @@ private fun origenTransicion(tema: TemaId, atras: Boolean): Alignment = when (te
     TemaId.REVOLUCION -> Alignment.TopStart
     TemaId.ANTIGUAS -> Alignment.TopStart
     TemaId.CUEVA -> Alignment.TopStart
+    TemaId.BASICO -> Alignment.TopStart
 }
 
 /**
@@ -2136,5 +2143,7 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
             val llama = androidx.compose.animation.core.Easing { f -> (f + 0.08f * kotlin.math.sin(f * 19f) * (1f - f)).coerceIn(0f, 1f) }
             (fadeIn(tween(440, 0, llama)) + scaleIn(t(460), initialScale = 1.03f)) togetherWith fadeOut(t(240, lineal))
         }
+        // Un fundido corto, sin movimiento.
+        TemaId.BASICO -> fadeIn(t(180)) togetherWith fadeOut(t(120))
     }
 }

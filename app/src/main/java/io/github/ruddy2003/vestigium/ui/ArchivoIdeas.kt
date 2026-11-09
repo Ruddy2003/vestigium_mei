@@ -68,6 +68,7 @@ fun archivoIdeas(t: TemaId): ArchivoIdeas = when (t) {
     TemaId.REVOLUCION -> ArchivoIdeas("caja de los cahiers", "cajas de los cahiers", "pasquín", "pasquines", true, "el estante de la sección")
     TemaId.ANTIGUAS -> ArchivoIdeas("arcón de la compañía", "arcones de la compañía", "página del cronista", "páginas del cronista", false, "la sala de piedra")
     TemaId.CUEVA -> ArchivoIdeas("nicho", "nichos", "laja", "lajas", false, "la pared de la cueva")
+    TemaId.BASICO -> ArchivoIdeas("carpeta", "carpetas", "nota", "notas", true, "el archivo")
 }
 
 // =====================================================================

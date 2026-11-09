@@ -274,6 +274,7 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.ANTIGUAS -> LaminaRascar(0xFF3A342C.toInt(), 0xFF7B6E5C.toInt(), 0xFFD1C3A8.toInt())
     // Una capa de ocre soplado sobre la roca: el rojo de la hematita y su brillo.
     TemaId.CUEVA -> LaminaRascar(0xFF5A2A14.toInt(), 0xFFA2401F.toInt(), 0xFFE0A070.toInt())
+    TemaId.BASICO -> LaminaRascar(0xFF5B6470.toInt(), 0xFFAAB2BD.toInt(), 0xFFE3E7EC.toInt())   // plata lisa
 }
 
 private fun conAlfaLamina(c: Int, a: Int): Int = (c and 0x00FFFFFF) or (a shl 24)
@@ -637,6 +638,7 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawLine(l * 0.3f, l * 0.62f, l * 0.62f, l * 0.6f, linea)
             c.drawCircle(l * 0.7f, l * 0.61f, s * 0.8f, relleno); c.drawCircle(l * 0.78f, l * 0.6f, s * 0.8f, relleno)
         }
+        TemaId.BASICO -> {}   // sin motivo grabado
     }
 }
 

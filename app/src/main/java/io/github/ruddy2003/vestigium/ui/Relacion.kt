@@ -124,6 +124,7 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.REVOLUCION -> MarcoRecuadro(RoundedCornerShape(2.dp), 12.dp)
     TemaId.ANTIGUAS -> MarcoRecuadro(CutCornerShape(4.dp), 12.dp)
     TemaId.CUEVA -> MarcoRecuadro(RoundedCornerShape(topStart = 16.dp, topEnd = 6.dp, bottomEnd = 14.dp, bottomStart = 8.dp), 13.dp)   // un canto rodado
+    TemaId.BASICO -> MarcoRecuadro(RoundedCornerShape(12.dp), 12.dp)
 }
 
 /** Un recuadro con el nombre de la variable y su grupo, con el marco y el adorno de cada tema. */
@@ -496,5 +497,6 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
             var x = paso / 2; var k = 0
             while (x < w) { drawCircle(if (azar && k % 2 == 1) col.copy(alpha = col.alpha * 0.4f) else col, grosor * 0.55f + 0.6f * u, Offset(x, y + (if (k % 2 == 0) -1f else 1f) * 1.2f * u)); x += maxOf(paso, 1f); k++ }
         }
+        TemaId.BASICO -> drawLine(col, Offset(0f, y), Offset(w, y), grosor, pathEffect = punteado)
     }
 }

@@ -125,6 +125,7 @@ private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.REVOLUCION -> Color(0xFFF2EFE6)
     TemaId.ANTIGUAS -> Color(0xFF8E7CC3)
     TemaId.CUEVA -> Color(0xFFA2401F)          // el ocre rojo de la hematita
+    TemaId.BASICO -> Color(0xFF5B6B80)          // un gris azulado
 }
 
 /** El metal de un nivel (1 a 4) en el hall del tema: conserva bronce, plata, oro o cristal, teñido con el matiz del tema. */
@@ -248,6 +249,7 @@ object PiezasLogro {
         TemaId.ANTIGUAS -> Trazo(u, 1.2f, StrokeCap.Round, StrokeJoin.Bevel, null, 3f, false, Color(0xFFD9D2C2))
         // Un tizón de carbón: trazo grueso, redondo y que se corta, sobre piel de ante.
         TemaId.CUEVA -> Trazo(u, 1.35f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(5f, 1.2f, 1f, 1.2f), 0.8f, false, Color(0xFFE3D2B4))
+        TemaId.BASICO -> Trazo(u, 1f, StrokeCap.Round, StrokeJoin.Round, null, 0f, false, Color(0xFFF2F4F7))
     }
 
     /** Un contorno con el trazo del tema (doble si el tema lo pide). */
@@ -419,6 +421,7 @@ object PiezasLogro {
             TemaId.ANTIGUAS -> drawCircle(t, r * 0.9f, c, style = Stroke(2 * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(9 * u, 2 * u, 2 * u, 2 * u))))
             // Un aro de puntos de ocre de tamaños desparejos, como pintados con la yema del dedo.
             TemaId.CUEVA -> for (i in 0 until 26) drawCircle(pri, (1.1f + (i * 7 % 4) * 0.35f) * u, en(i * PI / 13, 0.91f))
+            TemaId.BASICO -> drawCircle(m, r * 0.92f, c, style = Stroke(1.2f * u))
         }
     }
 
@@ -536,6 +539,7 @@ object PiezasLogro {
                 tri(6 * u, x - 1 * u, x + an + 1 * u)
                 drawLine(tinta, Offset(cx - 1.5f * u, y - 6 * u), Offset(cx - 3 * u, y - 8.5f * u), 0.8f * u); drawLine(tinta, Offset(cx + 1.5f * u, y - 6 * u), Offset(cx + 3 * u, y - 8.5f * u), 0.8f * u)
             }
+            TemaId.BASICO -> {}   // azotea plana
         }
     }
 
@@ -673,6 +677,7 @@ object PiezasLogro {
             // Un canto rodado con un aro de puntos de ocre por dentro.
             TemaId.CUEVA -> { traza(Path().apply { addOval(Rect(c.x - 29 * u, c.y - 24 * u, c.x + 29 * u, c.y + 24 * u)) })
                 for (i in 0 until 12) drawCircle(tinto, 1.2f * u, Offset(c.x + (24 * u * cos(i * PI / 6)).toFloat(), c.y + (19 * u * sin(i * PI / 6)).toFloat())) }
+            TemaId.BASICO -> traza(caja(c.x - 26 * u, c.y - 20 * u, c.x + 26 * u, c.y + 20 * u, 6 * u))
         }
         val col = listOf(cs.primary, cs.secondary, cs.tertiary)
         drawLine(tinta, Offset(c.x - 14 * u, c.y + 16 * u), Offset(c.x - 14 * u, c.y - 16 * u), 1.6f * u)
@@ -1115,6 +1120,12 @@ object PiezasLogro {
                 io.github.ruddy2003.vestigium.ui.piezasMano(Offset(c.x + 17 * u, base - 18 * u), 4.5f * u).forEach { drawPath(it, hueco) }
                 suelo()
             }
+            TemaId.BASICO -> {
+                // Un edificio sencillo: el bloque, tres ventanas y el suelo.
+                drawPath(caja(c.x - 22 * u, base - 26 * u, c.x + 22 * u, base, 3 * u), tinta)
+                for (k in 0 until 3) drawRect(hueco, Offset(c.x - 16 * u + k * 12 * u, base - 19 * u), Size(8 * u, 10 * u))
+                suelo()
+            }
         }
     }
 
@@ -1431,6 +1442,7 @@ object PiezasLogro {
                 io.github.ruddy2003.vestigium.ui.piezasMano(Offset(c.x + 4 * u, arriba + 12 * u), 7 * u).forEach { drawPath(it, Color(0xFFA2401F)) }
                 listOf(c.x + 10 * u, c.x + 16 * u).forEach { x -> drawLine(tinta, Offset(x, arriba + 25 * u), Offset(x, arriba + 33 * u), 0.8f * u); drawCircle(claro, 1.4f * u, Offset(x, arriba + 33 * u)) }
             }
+            TemaId.BASICO -> { asta(); pano(caja(px, arriba, px + 28 * u, c.y + 2 * u, 2 * u)) }
         }
     }
 
@@ -1669,6 +1681,7 @@ object PiezasLogro {
                 for (i in 0 until 20) { val a = i * PI / 10; drawLine(tinta, en(a, 0.88f), en(a, 1f), 1 * u) }
                 drawPath(io.github.ruddy2003.vestigium.ui.bisonte(Offset(c.x, c.y + 3 * u), R * 0.55f), tinta)
             }
+            TemaId.BASICO -> { disco(); letra("$", c, 14 * u, tinta) }
         }
     }
 
@@ -1967,6 +1980,7 @@ object PiezasLogro {
                 listOf(-10f, 6f).forEach { dx -> drawLine(tinta, Offset(c.x + dx * u, c.y - 10.5f * u), Offset(c.x + dx * u, c.y + 10.5f * u), 1.6f * u) }
                 for (k in 0 until 4) drawCircle(Color(0xFFA2401F), 1.6f * u, Offset(c.x - 4 * u + k * 2.5f * u, c.y + (if (k % 2 == 0) -3f else 3f) * u))
             }
+            TemaId.BASICO -> paginas()
         }
     }
 
@@ -2246,6 +2260,10 @@ object PiezasLogro {
                 drawLine(tono, Offset(c.x - 14 * u, c.y + 3 * u), Offset(c.x + 2 * u, c.y + 3 * u), 1.6f * u, StrokeCap.Round)
                 drawPath(Path().apply { moveTo(c.x + 7 * u, c.y + 7 * u); lineTo(c.x + 11 * u, c.y + 1 * u); lineTo(c.x + 15 * u, c.y + 7 * u) }, tono, style = Stroke(1.6f * u, cap = StrokeCap.Round))
                 drawLine(lerp(papel, tinta, 0.5f), Offset(c.x + 18 * u, c.y - 16 * u), Offset(c.x + 18 * u, c.y + 16 * u), 1.8f * u)
+            }
+            TemaId.BASICO -> {
+                hoja(c.x - 22 * u, c.y - 14 * u, c.x + 22 * u, c.y + 14 * u, papel, 2 * u)
+                solapaV(c.x - 22 * u, c.y - 14 * u, c.x + 22 * u, c.y + 2 * u)
             }
         }
     }

@@ -141,4 +141,5 @@ fun disenoLogros(t: TemaId): DisenoLogros = when (t) {
     TemaId.REVOLUCION -> LogrosRevolucion
     TemaId.ANTIGUAS -> LogrosAntiguas
     TemaId.CUEVA -> LogrosCueva
+    TemaId.BASICO -> LogrosBasico
 }

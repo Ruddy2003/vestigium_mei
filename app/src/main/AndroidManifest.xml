@@ -548,6 +548,20 @@
             </intent-filter>
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
+        <!-- Básico (sin diseño): el ícono por omisión de la app. -->
+        <activity-alias
+            android:name=".IconoBasico"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
 
         <!-- Solo la abre la propia app (widgets, accesos directos, mosaicos, avisos): antes otra app podía abrirla y
              saltarse el candado. Los accesos directos se lanzan con la identidad de la app, así que no necesita estar exportada. -->

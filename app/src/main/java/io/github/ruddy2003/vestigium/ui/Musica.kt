@@ -71,6 +71,9 @@ import kotlinx.coroutines.delay
  * distinto de estos, para que sepas que es Vestigium Mei.
  */
 object Musica {
+    /** El tema no tiene música ni tonos propios (Básico): no suena nada y no hay tono que instalar. */
+    const val SIN_SONIDO = 0
+
     fun presentacion(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.s_romano_presentacion
         TemaId.URBE -> R.raw.s_urbe_presentacion
@@ -106,6 +109,7 @@ object Musica {
         TemaId.REVOLUCION -> R.raw.s_revolucion_presentacion
         TemaId.ANTIGUAS -> R.raw.s_antiguas_presentacion
         TemaId.CUEVA -> R.raw.s_cueva_presentacion
+        TemaId.BASICO -> SIN_SONIDO
     }
     /** La música larga de «Tu año»: la frase del tema que va creciendo (~1 min y medio). */
     fun anual(t: TemaId): Int = when (t) {
@@ -143,6 +147,7 @@ object Musica {
         TemaId.REVOLUCION -> R.raw.s_revolucion_anual
         TemaId.ANTIGUAS -> R.raw.s_antiguas_anual
         TemaId.CUEVA -> R.raw.s_cueva_anual
+        TemaId.BASICO -> SIN_SONIDO
     }
     fun llamada(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_llamada
@@ -179,6 +184,7 @@ object Musica {
         TemaId.REVOLUCION -> R.raw.t_revolucion_llamada
         TemaId.ANTIGUAS -> R.raw.t_antiguas_llamada
         TemaId.CUEVA -> R.raw.t_cueva_llamada
+        TemaId.BASICO -> SIN_SONIDO
     }
     fun notificacion(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_notificacion
@@ -215,6 +221,7 @@ object Musica {
         TemaId.REVOLUCION -> R.raw.t_revolucion_notificacion
         TemaId.ANTIGUAS -> R.raw.t_antiguas_notificacion
         TemaId.CUEVA -> R.raw.t_cueva_notificacion
+        TemaId.BASICO -> SIN_SONIDO
     }
 
     private var reproductor: MediaPlayer? = null
@@ -222,6 +229,7 @@ object Musica {
     /** Toca un recurso de principio a fin (respeta el modo silencio). Si ya sonaba otro, lo corta. */
     fun tocar(ctx: Context, res: Int, forzar: Boolean = false) {
         detener()
+        if (res == SIN_SONIDO) return
         if (!forzar) {
             if (!Repo.config.sonidos) return
             val audio = ctx.getSystemService(AudioManager::class.java)
@@ -240,6 +248,7 @@ object Musica {
     /** Para «Tu año»: la música larga, que se puede bajar poco a poco y se repite si las historias duran más. */
     fun anualTocar(ctx: Context, t: TemaId): MediaPlayer? {
         detener()
+        if (anual(t) == SIN_SONIDO) return null
         if (!Repo.config.sonidos) return null
         val audio = ctx.getSystemService(AudioManager::class.java)
         if (audio != null && audio.ringerMode != AudioManager.RINGER_MODE_NORMAL) return null
@@ -269,7 +278,8 @@ object PresentacionTema {
     fun mostrar(ctx: Context, t: TemaId) {
         Sentidos.vibrarEvento(ctx, Sentidos.Evento.TEMA)
         Musica.tocar(ctx, Musica.presentacion(t))
-        if (!Repo.config.animaciones) return
+        // Básico no tiene presentación ni lluvia: el cambio de tema es inmediato.
+        if (!Repo.config.animaciones || t.sinDiseno) return
         frase = Frases.de(t).random()
         tema = t
         vuelta++
@@ -953,6 +963,8 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         }
         var x = w * 0.3f; while (x < w * 0.7f) { drawCircle(e.primary, 2.4f * u, Offset(x, h - 18 * u)); x += 14 * u }
     }
+    // Básico no tiene presentación (PresentacionTema no la muestra); esto es solo por si se pide: el nombre, sin marco.
+    TemaId.BASICO -> DisenoPresentacion(OrdenPresentacion.TITULO_ARRIBA, false, t.nombre, "toca para seguir", emblema = 0.dp) { }
 }
 
 @Composable
@@ -1075,6 +1087,7 @@ object TonosTelefono {
 
     /** Pone el tono del tema como predeterminado del teléfono. Los avisos de la app siguen con su propio sonido. */
     fun poner(ctx: Context, t: TemaId, llamada: Boolean): String {
+        if ((if (llamada) Musica.llamada(t) else Musica.notificacion(t)) == Musica.SIN_SONIDO) return "El tema ${t.nombre} no tiene tonos propios."
         if (!puedeCambiar(ctx)) { pedirPermiso(ctx); return "Activa «Modificar ajustes del sistema» para Vestigium Mei y vuelve a tocar el botón." }
         val uri = instalar(ctx, t, llamada) ?: return "No pude guardar el tono en el teléfono."
         return runCatching {

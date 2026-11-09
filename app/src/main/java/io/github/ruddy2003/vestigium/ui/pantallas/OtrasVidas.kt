@@ -769,6 +769,10 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 while (x < fw - 1f * d) { drawLine(oscuro, Offset(x, h * 0.2f), Offset(x, h * 0.8f), 0.7f * d); x += maxOf(if (k % 5 == 4) 5f * d else 2.5f * d, 1f); k++ }
             }
         }
+        TemaId.BASICO -> {
+            drawRoundRect(pista, Offset.Zero, Size(w, h), CornerRadius(h / 2))
+            if (fw > 0f) drawRoundRect(color, Offset.Zero, Size(fw, h), CornerRadius(h / 2))
+        }
     }
 }
 
@@ -1131,6 +1135,7 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawCircle(t2, q, c, style = Stroke(1.4f * d)); drawCircle(t2, q * 0.3f, c)
             for (k in 0 until 8) drawLine(t2, polarFig(c, q * 1.3f, k * 45f), polarFig(c, q * 1.8f, k * 45f), 1.2f * d)
         }
+        TemaId.BASICO -> marcas(24, 2.5f * d, d, linea)
     }
 }
 

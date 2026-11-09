@@ -106,6 +106,7 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.REVOLUCION -> 9000
     TemaId.ANTIGUAS -> 16000
     TemaId.CUEVA -> 9000                       // el soplo de ocre respira despacio
+    TemaId.BASICO -> 6000                       // no se anima: no tiene emblema
 }
 
 /**
@@ -115,7 +116,8 @@ private fun periodo(t: TemaId) = when (t) {
 @Composable
 fun Emblema(tema: TemaId = Estilo.tema, tam: Dp = 30.dp, esquema: ColorScheme = MaterialTheme.colorScheme, animado: Boolean = Repo.config.animaciones,
             modifier: Modifier = Modifier) {
-    val t: State<Float> = if (animado) {
+    // Básico no tiene emblema: no se anima (no hay nada que mover).
+    val t: State<Float> = if (animado && !tema.sinDiseno) {
         val inf = rememberInfiniteTransition(label = "emblema")
         inf.animateFloat(0f, 1f, infiniteRepeatable(tween(periodo(tema), easing = LinearEasing)), label = "t")
     } else remember { mutableFloatStateOf(0.3f) }
@@ -165,6 +167,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.REVOLUCION -> escarapelaEmblema(c, r, e.primary, if (oscuro) Color(0xFFF0EADB) else Color.White, e.secondary, e.onBackground, t)
         TemaId.ANTIGUAS -> gemaRunas(c, r, e.primary, e.secondary, e.tertiary, e.onBackground, t)
         TemaId.CUEVA -> manoEmblema(c, r, e.primary, e.tertiary, e.background, e.onBackground, t)
+        TemaId.BASICO -> {}                        // sin emblema
     }
 }
 
@@ -2662,6 +2665,7 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 for (k in 0 until n) { val cx = x0 + k * rr * 3.2f; val cy = y0 + (if (k % 2 == 0) 0f else rr * 0.8f); puntos.addOval(Rect(cx - rr, cy - rr, cx + rr, cy + rr)) }
             }
         }
+        TemaId.BASICO -> {}   // sin textura
         TemaId.URSS -> {
             // Rayos que salen de una esquina, como en los carteles.
             color = esquema.primary.copy(alpha = if (oscuro) 0.06f else 0.05f)
@@ -2838,6 +2842,7 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         moveTo(0.5f * w, 0.05f * h); quadraticTo(0.95f * w, 0.02f * h, 0.97f * w, 0.52f * h); quadraticTo(0.96f * w, 0.97f * h, 0.52f * w, 0.97f * h)
         quadraticTo(0.03f * w, 0.96f * h, 0.04f * w, 0.5f * h); quadraticTo(0.07f * w, 0.07f * h, 0.5f * w, 0.05f * h); close()
     }
+    TemaId.BASICO -> androidx.compose.foundation.shape.CircleShape
 }
 
 /** La palabra bajo el engrane de «Más», en la voz de cada tema (la descripción para lectores de pantalla sigue en español). */
@@ -2876,6 +2881,7 @@ private fun textoMas(t: TemaId): String = when (t) {
     TemaId.REVOLUCION -> "Club"
     TemaId.ANTIGUAS -> "Morral"
     TemaId.CUEVA -> "Lo hondo"
+    TemaId.BASICO -> "Más"
 }
 
 /** El sol (se ofrece en oscuro, para pasar a claro) o la luna (en claro, para pasar a oscuro), a la manera de cada tema. */
@@ -3026,6 +3032,7 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             // El sol de los grabados en la roca: un anillo con su punto y diez rayos, uno largo y uno corto.
             TemaId.CUEVA -> { drawCircle(color, r * 0.42f, c, style = Stroke(r * 0.12f)); drawCircle(color, r * 0.13f, c)
                 for (i in 0 until 10) { val a = rad(36.0 * i - 90); drawLine(color, c.mas(r * 0.62f, a), c.mas(r * (if (i % 2 == 0) 0.98f else 0.8f), a), r * 0.1f, StrokeCap.Round) } }
+            TemaId.BASICO -> { drawCircle(color, r * 0.36f, c); rayos(8, 0.56f, 0.86f, 0.1f) }
         }
     } else {
         when (tema) {
@@ -3144,6 +3151,7 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             TemaId.CUEVA -> { luna(0.6f, 0.3f, -0.24f, c + Offset(0f, -r * 0.18f))
                 drawLine(color, Offset(c.x - r * 0.8f, c.y + r * 0.72f), Offset(c.x + r * 0.8f, c.y + r * 0.72f), r * 0.16f, StrokeCap.Round)
                 for (k in 0 until 7) { val x = c.x - r * 0.6f + k * r * 0.2f; drawLine(fondo, Offset(x, c.y + r * 0.62f), Offset(x, c.y + r * 0.76f), r * 0.05f) } }
+            TemaId.BASICO -> luna()
         }
     }
 }
@@ -3269,6 +3277,7 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
         // Una lasca de sílex por cristal y un hueso por mango, con sus dos nudos al final.
         TemaId.CUEVA -> { drawPath(poli(7, lr * 1.08f, -80.0), color, style = Stroke(g * 0.9f, join = StrokeJoin.Round)); mango(0.84f, 0.12f, 0.68f)
             drawCircle(color, r * 0.065f, Offset(r * 0.91f, r * 0.84f)); drawCircle(color, r * 0.065f, Offset(r * 0.84f, r * 0.91f)) }
+        TemaId.BASICO -> { lente(); mango() }
     }
 }
 
@@ -3360,6 +3369,7 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.REVOLUCION -> false
     TemaId.ANTIGUAS -> false
     TemaId.CUEVA -> false            // las manos de ocre y los puntos caen soplados sobre la pared
+    TemaId.BASICO -> false            // no tiene lluvia: CapaFiesta no la lanza
 }
 
 /**
@@ -3373,7 +3383,8 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
 @Composable
 fun CapaFiesta(fijo: Float? = null) {
     val n = if (fijo != null) 1 else Fiesta.n
-    if (n == 0 || (fijo == null && !Repo.config.animaciones)) return
+    // Básico, sin partículas ni confeti: la lluvia no se lanza (salvo el instante quieto de las capturas).
+    if (n == 0 || (fijo == null && (!Repo.config.animaciones || Estilo.tema.sinDiseno))) return
     val progreso = remember(n) { androidx.compose.animation.core.Animatable(fijo ?: 0f) }
     var activa by remember(n) { mutableStateOf(true) }
     LaunchedEffect(n) { if (fijo == null) { progreso.animateTo(1f, tween(1600, easing = LinearEasing)); activa = false } }
@@ -3535,6 +3546,7 @@ fun CapaFiesta(fijo: Float? = null) {
                     // Manos de ocre en positivo que giran al caer, e hileras de tres puntos.
                     TemaId.CUEVA -> if (p.tono == 0) rotate(p.giro * 40f, pos) { drawPath(manoUnida(pos, s * 0.9f), col) }
                         else for (k in 0 until 3) drawCircle(col, s * 0.26f, pos + Offset((k - 1) * s * 0.7f, (k % 2) * s * 0.3f))
+                    TemaId.BASICO -> drawCircle(col, s * 0.35f, pos)
                 }
             }
         }

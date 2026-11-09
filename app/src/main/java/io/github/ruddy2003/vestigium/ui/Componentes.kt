@@ -146,6 +146,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.REVOLUCION -> Tricolor(modifier)
         TemaId.ANTIGUAS -> Runica(modifier)
         TemaId.CUEVA -> BandaCueva(modifier)
+        TemaId.BASICO -> Spacer(modifier.fillMaxWidth().height(8.dp))   // sin banda: solo el aire
         TemaId.ROMANO -> BandaOvas(modifier, color)
         TemaId.URBE -> BandaSampietrini(modifier, color)
     }
@@ -1157,6 +1158,10 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "!·", igual = "≈ ", nulo = "nada pintado", elegido = "●", riel = RolColor.PRIMARIO, quitar = "⨯", listaVacia = "( la bolsa está vacía )", flecha = "⟶",
         sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0.8f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.PUNTOS,
         guiones = floatArrayOf(1f, 2.5f), tamBoton = 15, letraBoton = null, borde = RolColor.CONTORNO, grosor = 1.2f)
+    TemaId.BASICO -> PielComponentes(sep = "  ", cerrada = "▸", abierta = "▾", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
+        aviso = "Nota:", igual = ": ", nulo = "sin marcar", elegido = "●", riel = RolColor.PRIMARIO, quitar = "×", listaVacia = "(vacío)", flecha = "›",
+        sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.NINGUNO,
+        guiones = floatArrayOf(4f, 3f), tamBoton = 14, letraBoton = null, borde = RolColor.CONTORNO, grosor = 1f)
 }
 
 /** El título de una sección, con el trazo del tema (capitular, rótulo en bloque, subrayado doble, sello, tramo tricolor…). */
@@ -1337,6 +1342,7 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
                 e.onBackground.copy(alpha = 0.6f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
             for (k in 0 until 3) drawCircle(e.primary, 1.6f * u, Offset(fin - 8 * u + k * 4 * u, y - u))
         }.padding(bottom = 7.dp))
+        TemaId.BASICO -> Text(nombre, style = estilo, modifier = peso)
     }
 }
 
@@ -1457,6 +1463,7 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         quadraticTo(w, h * 0.1f, w, h * 0.55f); quadraticTo(w * 0.99f, h, w * 0.7f, h - a * 0.2f); quadraticTo(w * 0.35f, h + a * 0.3f, w * 0.1f, h - a * 0.4f)
         quadraticTo(-a * 0.2f, h * 0.8f, 0f, h * 0.22f); close()
     }
+    TemaId.BASICO -> RoundedCornerShape(12.dp)
 }
 
 /** El rótulo de la barra del editor: dónde se escribe en cada tema. Los nombres de archivo en latín se traducen fuera del romano. */
@@ -1500,6 +1507,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.REVOLUCION -> "cahier · $es"
         TemaId.ANTIGUAS -> "crónica de la compañía · $es"
         TemaId.CUEVA -> "pared pintada · $es"
+        TemaId.BASICO -> es
     }
 }
 
@@ -1768,6 +1776,7 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             }
             drawLine(e.onBackground.copy(alpha = 0.35f), Offset(i + u * 1.8f, i + u * 0.2f), Offset(i + u * 3f, i + u * 0.35f), fino, StrokeCap.Round)
         }
+        TemaId.BASICO -> {}
     }
 }
 
@@ -1869,6 +1878,7 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
         }
         // Una mano pequeña de ocre, en positivo.
         TemaId.CUEVA -> drawPath(manoUnida(Offset(w / 2, h - d * 1.2f), d * 1.1f), c)
+        TemaId.BASICO -> drawRoundRect(c, Offset(0f, h - d), Size(w, d), CornerRadius(d / 2))
     }
 }
 
@@ -2033,6 +2043,7 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         TemaId.ANTIGUAS -> listOf(m * 2.6f, w - m * 2.6f).forEach { x -> romboComp(Offset(x, h / 2), m * 0.7f, m * 1.1f, c) }
         // Dos puntos de ocre a cada lado, como los que flanquean los animales pintados.
         TemaId.CUEVA -> listOf(m * 2.4f, w - m * 2.4f).forEach { x -> drawCircle(c, m * 0.38f, Offset(x, h / 2 - m * 0.5f)); drawCircle(c, m * 0.38f, Offset(x, h / 2 + m * 0.5f)) }
+        TemaId.BASICO -> {}
     }
 }
 
@@ -2270,6 +2281,7 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawPath(Path().apply { moveTo(f(0.14f), f(0.86f)); quadraticTo(f(0.4f), f(0.7f), f(0.62f), f(0.8f)) }, l, style = tr)
             rotate(-40f, Offset(f(0.66f), f(0.42f))) { drawRoundRect(a, Offset(f(0.6f), f(0.04f)), Size(f(0.13f), f(0.72f)), CornerRadius(f(0.05f))) }
         }
+        TemaId.BASICO -> drawLine(a, Offset(f(0.22f), f(0.78f)), Offset(f(0.78f), f(0.22f)), tr.width, StrokeCap.Round)   // un lápiz
     }
 }
 

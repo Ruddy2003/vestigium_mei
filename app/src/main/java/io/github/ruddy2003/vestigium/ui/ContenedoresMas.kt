@@ -68,6 +68,7 @@ object ContenedoresMas {
             Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> return Contenedores.papel(c, cs, oscuro)
             Contenedor.RECORTES -> return Contenedores.papel(c, cs, oscuro)
             Contenedor.BIOMBO -> return Contenedores.papel(c, cs, oscuro)
+            Contenedor.SIMPLE -> return Contenedores.papel(c, cs, oscuro)
         }
         return if (oscuro) lerp(claro, Color.Black, 0.76f) else claro
     }
@@ -350,6 +351,7 @@ object ContenedoresMas {
             Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
             Contenedor.RECORTES -> {}
             Contenedor.BIOMBO -> {}
+            Contenedor.SIMPLE -> {}
         }
     }
 
@@ -528,6 +530,7 @@ object ContenedoresMas {
             Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
             Contenedor.RECORTES -> {}
             Contenedor.BIOMBO -> {}
+            Contenedor.SIMPLE -> {}
         }
     }
 }

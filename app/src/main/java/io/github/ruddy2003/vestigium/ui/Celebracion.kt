@@ -183,6 +183,7 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.REVOLUCION -> listOf("ciudadano activo", "guardia nacional", "héroe de la patria", "al Panteón")
     TemaId.ANTIGUAS -> listOf("hierro de la mina", "plata lunar", "oro de las profundidades", "gema de las edades")
     TemaId.CUEVA -> listOf("carbón de hoguera", "ocre amarillo", "ocre rojo", "hematita que brilla")
+    TemaId.BASICO -> listOf("bronce", "plata", "oro", "legendario")
 }
 
 /** Un polígono estrellado: [puntas] vértices a [fuera] y otros tantos a [dentro]; con los dos iguales, un polígono regular. */
@@ -755,5 +756,6 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                 rotate(Math.toDegrees(a).toFloat() + 90f, p) { drawPath(manoUnida(p, m * 0.05f), ocre.copy(alpha = 0.3f)) }
             }
         }
+        TemaId.BASICO -> {}   // sin motivo detrás
     }
 }

@@ -141,7 +141,7 @@ data class EstiloGrafica(
     val alfaRejilla: Float,
     val eje: Eje,
     val barra: FormaBarra,
-    /** Letra de las cifras (un `R.font`), su peso, rasgos OpenType («tnum», «onum»…), espaciado (em) y escala del tamaño. */
+    /** Letra de las cifras (un `R.font`; 0, la del sistema), su peso, rasgos OpenType («tnum», «onum»…), espaciado (em) y escala del tamaño. */
     val letraCifras: Int,
     val pesoCifras: FontWeight,
     val rasgosCifras: String?,
@@ -150,7 +150,7 @@ data class EstiloGrafica(
     val cursivaCifras: Boolean = false,
 ) {
     /** La letra de las cifras para Compose. */
-    val familiaCifras: FontFamily = FontFamily(Font(letraCifras, pesoCifras))
+    val familiaCifras: FontFamily = if (letraCifras == 0) FontFamily.Default else FontFamily(Font(letraCifras, pesoCifras))
 }
 
 /** Formas del punto de datos. */
@@ -333,6 +333,9 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // puntos, muescas en la rejilla y cifras a mano alzada.
     TemaId.CUEVA -> EstiloGrafica(FormaPunto.MANO, 2.4f, listOf(7f, 1.5f), StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.BOCETO, listOf(0.1f, 5f),
         Rejilla.MUESCAS, 0.5f, Eje.CUENTAS, FormaBarra.REDONDA, R.font.amatic_bold, FontWeight.Bold, null, 0.02f, 1.3f)
+    // Básico: el punto redondo, la línea seguida, la rejilla de líneas y la letra del sistema (0) con cifras de ancho fijo.
+    TemaId.BASICO -> EstiloGrafica(FormaPunto.CIRCULO, 2f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(4f, 4f),
+        Rejilla.LINEAS, 0.5f, Eje.LINEA, FormaBarra.REDONDA, 0, FontWeight.Normal, "tnum", 0f, 1f)
 }
 
 // =====================================================================
@@ -354,7 +357,7 @@ private val TIPOS_CIFRAS = ConcurrentHashMap<Int, Typeface>()
 
 /** La letra de las cifras como `Typeface` de android (se carga una vez). */
 fun EstiloGrafica.tipoCifras(ctx: Context): Typeface = TIPOS_CIFRAS[letraCifras]
-    ?: (runCatching { ResourcesCompat.getFont(ctx, letraCifras) }.getOrNull() ?: Typeface.DEFAULT).also { TIPOS_CIFRAS[letraCifras] = it }
+    ?: ((if (letraCifras == 0) null else runCatching { ResourcesCompat.getFont(ctx, letraCifras) }.getOrNull()) ?: Typeface.DEFAULT).also { TIPOS_CIFRAS[letraCifras] = it }
 
 /** Pone a [paint] la letra, el espaciado, los rasgos y la escala de las cifras del tema. Llamarla una sola vez por pincel (multiplica el tamaño). */
 fun EstiloGrafica.pincelCifras(paint: Paint, ctx: Context): Paint {

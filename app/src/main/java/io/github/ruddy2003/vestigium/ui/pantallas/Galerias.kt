@@ -223,6 +223,15 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     TemaId.ANTIGUAS -> estrella(c, r, 6, 0.72f)
     // La mano de ocre: cada calificación, una mano más en la pared.
     TemaId.CUEVA -> io.github.ruddy2003.vestigium.ui.manoUnida(c, r)
+    // Una estrella de cinco puntas.
+    TemaId.BASICO -> Path().apply {
+        for (i in 0 until 10) {
+            val a = -Math.PI / 2 + i * Math.PI / 5; val rr = if (i % 2 == 0) r else r * 0.45f
+            val x = c.x + (rr * kotlin.math.cos(a)).toFloat(); val y = c.y + (rr * kotlin.math.sin(a)).toFloat()
+            if (i == 0) moveTo(x, y) else lineTo(x, y)
+        }
+        close()
+    }
 }
 
 /**
