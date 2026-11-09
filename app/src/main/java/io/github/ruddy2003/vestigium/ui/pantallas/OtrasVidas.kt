@@ -255,7 +255,10 @@ fun RecuadroOtrasVidas(nav: Nav) {
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                         muestra.getOrNull(i)?.let { v ->
                             MedallaVida(v, 46.dp, elegida = v.tema != null)
-                            Text(anio(v.anio), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
+                            // Los años largos («40.000 a. C.») van más chicos para no salirse de su nicho.
+                            val a = anio(v.anio)
+                            Text(a, style = if (a.length > 7) MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp) else MaterialTheme.typography.labelSmall,
+                                color = cs.onSurfaceVariant, maxLines = 1, softWrap = false, modifier = Modifier.padding(top = 4.dp))
                         }
                     }
                 }
