@@ -88,14 +88,14 @@ class EstadoNota(val rect: Rect, val tipo: String, val fijada: Boolean, val indi
 
 /** Los muebles de Vida y de Diario de cada tema: cada uno con su objeto. */
 fun disenoVida(t: TemaId): DisenoVida = when (t) {
-    TemaId.ROMANO -> VidaPlana
-    TemaId.URBE -> VidaPlana
-    TemaId.CIBER -> VidaPlana
-    TemaId.NEON -> VidaPlana
-    TemaId.HELENO -> VidaPlana
-    TemaId.EGIPTO -> VidaPlana
-    TemaId.MEDIEVAL -> VidaPlana
-    TemaId.TEMPLARIO -> VidaPlana
+    TemaId.ROMANO -> VidaRomano
+    TemaId.URBE -> VidaUrbe
+    TemaId.CIBER -> VidaCiber
+    TemaId.NEON -> VidaNeon
+    TemaId.HELENO -> VidaHeleno
+    TemaId.EGIPTO -> VidaEgipto
+    TemaId.MEDIEVAL -> VidaMedieval
+    TemaId.TEMPLARIO -> VidaTemplario
     TemaId.DISTOPIA -> VidaDistopia
     TemaId.REFUGIO -> VidaRefugio
     TemaId.ORDEN -> VidaOrden
