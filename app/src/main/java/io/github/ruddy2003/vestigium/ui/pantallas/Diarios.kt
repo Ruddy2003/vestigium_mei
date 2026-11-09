@@ -168,6 +168,16 @@ fun PantallaDiario(nav: Nav) {
                 BotonSecundario("＋ idea", Modifier.weight(1f)) { EdicionIdea.abrir(nav, EdicionIdea.nueva()) }
             }
         }
+        // Las notas, con su propio mueble (9 nov 2026; antes solo estaban en Más).
+        Seccion("Notas", if (Repo.notas.isEmpty()) "Ideas sueltas, pensamientos, propósitos y recordatorios." else
+            "${porNumero(Repo.notas.size, "1 nota", "${Repo.notas.size} notas")} · ${Repo.notas.count { it.fijada }} fijadas") {
+            if (Repo.notas.isEmpty()) Vacio("Una idea suelta, un pensamiento, un propósito o un recordatorio: van a tu tablero.")
+            else io.github.ruddy2003.vestigium.ui.vida.TableroDeNotas(Repo.notas) { nav.ir("notas") }
+            Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BotonSecundario("entrar a las notas →", Modifier.weight(1f)) { nav.ir("notas") }
+                BotonSecundario("＋ nota", Modifier.weight(1f)) { nav.ir("notas") }
+            }
+        }
         val cartas = remember(Repo.cartas) { Repo.cartas.sortedByDescending { it.escrita }.take(2) }
         Seccion("Cartas", if (Repo.cartas.isEmpty()) "A tu yo del futuro y a otras personas." else "${Repo.cartas.size} ${if (Repo.cartas.size == 1) "carta" else "cartas"}") {
             if (cartas.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
