@@ -465,7 +465,7 @@ object Diccionario {
     /** La versión de la app con la que llega el esquema 21 (masturbación e intimidad, episodios, fechas señaladas, varias tomas, la extra del enfoque). */
     private const val VERSION_ESQUEMA_21 = 175
     /** La versión que trae el esquema 22 (respaldo blindado y foto del día copiada, 9 nov 2026). */
-    private const val VERSION_ESQUEMA_22 = 177
+    private const val VERSION_ESQUEMA_22 = 189
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
