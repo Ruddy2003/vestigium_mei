@@ -42,6 +42,7 @@ La misma persona puede «aparecer» de forma distinta según la función, porque
 | Constelación (`Constelacion.calcular`) | sí | sí | no | no | no | no | no | sí |
 | Red y exportación `vm_red_*` (`RedPersonas.calcular`) | sí | sí | no | no | no | no | no | sí |
 | Tarjeta «personas en tu cielo este año» (`Vida.kt`) | sí | no | no | no | no | no | no | sí (desde 10c) |
+| Reportes y «Tu año» (`Periodo.calcular`, con `Personas.diasCon` acotado al periodo; desde el 10 nov 2026, D.171) | sí | sí | no | sí | no | sí | destinatario | sí |
 
 «Momentos privados» son los de tipo `impulso`, `recaida` o `libido` y, desde el esquema 21, `masturbacion` o `intimidad` (la propiedad `Momento.privado` en `data/Modelo.kt`, que desde el módulo 10a incluye el impulso). Ninguna fila de esta tabla los usa (sección 7.13). Hay dos novedades en el esquema 21:
 - La ficha de una persona, con el seguimiento privado encendido, dice cuántas veces hubo intimidad con ella y cuándo fue la última (`Personas.intimidadCon`, decisión del autor). Eso no entra en menciones, red ni variables.

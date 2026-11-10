@@ -414,7 +414,8 @@ private fun cartas(d: TuAnio.Datos): List<CartaAnio> {
     if (d.unaVez.isNotEmpty() || d.raro != null || d.records.isNotEmpty()) l += CartaAnio("curioso", "Único y curioso", "MIRABILIA") { v ->
         if (d.unaVez.isNotEmpty()) {
             Text("Una sola vez:", style = MaterialTheme.typography.titleMedium)
-            d.unaVez.take(5).forEach { Text("· " + it.replace(Regex("@(\\S+)")) { m -> v.nombre(m.groupValues[1]) }, style = MaterialTheme.typography.bodyLarge) }
+            // Las fechas señaladas ya traen su signo delante («• cumpleaños», «✈ viaje»): a esas no se les pone otro punto.
+            d.unaVez.take(5).forEach { Text((if (it.firstOrNull()?.isLetterOrDigit() == true) "· " else "") + it.replace(Regex("@(\\S+)")) { m -> v.nombre(m.groupValues[1]) }, style = MaterialTheme.typography.bodyLarge) }
         }
         d.raro?.let { (f, razones) -> Spacer(Modifier.height(10.dp)); Renglon("tu día más raro", Fechas.titulo(f).lowercase() + ": " + razones.joinToString("; ").lowercase()) }
         d.records.take(4).forEach { (k, x) -> Renglon(k, x) }
