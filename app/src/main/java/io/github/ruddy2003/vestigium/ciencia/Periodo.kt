@@ -65,8 +65,12 @@ object Periodo {
         val conQuien: List<Pair<String, Int>> = emptyList(), val conQuienRegistros: Int = 0,
         /** Registros de ánimo del periodo (de un aviso o abiertos por ti). */
         val registrosAnimo: Int = 0,
+        /** Días del periodo desde el primer gasto anotado (y hasta hoy): entre ellos se reparte el gasto «al día». */
+        val diasGasto: Int = 0,
     ) {
         val n: Int get() = fechas.size
+        /** Gasto medio por día desde que se anotan gastos; null si en el periodo aún no se anotaba ninguno. */
+        val gastoAlDia: Double? get() = if (diasGasto > 0) gasto / diasGasto else null
     }
 
     /** Una emoción del periodo: su nombre, cuántos registros la nombran y en cuántos fue «mucho». */
@@ -110,7 +114,15 @@ object Periodo {
         return kotlin.math.sqrt(v(a) / a.size + v(b) / b.size)
     }
 
-    fun calcular(ctx: Context?, ini: String, fin: String): Datos {
+    /** Un puntaje de cuestionario: entero si lo es, con un decimal si no (para no redondear los medios puntos). */
+    private fun puntaje(x: Double): String = if (x == Math.rint(x)) "%.0f".format(x) else "%.1f".format(x)
+
+    /**
+     * [anterior]: con qué periodo se compara. Sin él, los mismos días de justo antes (la semana anterior). El reporte del mes
+     * y el del año pasan el mes o el año entero de antes: así «frente al mes anterior» es de verdad el mes anterior, también
+     * cuando el mes en curso va a medias.
+     */
+    fun calcular(ctx: Context?, ini: String, fin: String, anterior: Pair<String, String>? = null): Datos {
         val n = (ChronoUnit.DAYS.between(Fechas.parse(ini), Fechas.parse(fin)).toInt() + 1).coerceAtLeast(1)
         val fechas = (0 until n).map { Fechas.sumar(ini, it.toLong()) }
         val en = fechas.toHashSet()
@@ -165,7 +177,7 @@ object Periodo {
         val reac = Repo.reacciones.filter { it.fecha in en }
         val cuest = Repo.respuestas.filter { it.fecha in en }.map { rr ->
             val inst = Escalas.por(rr.instrumento)
-            (inst?.nombre ?: rr.instrumento) + ": " + rr.puntajes.entries.joinToString(" · ") { "${it.key} ${"%.0f".format(it.value)}" }
+            (inst?.nombre ?: rr.instrumento) + ": " + rr.puntajes.entries.joinToString(" · ") { "${it.key} ${puntaje(it.value)}" }
         }
 
         // ---- gente
@@ -188,7 +200,12 @@ object Periodo {
         val genero = obras.flatMap { it.etiquetas }.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key
         val frases = Repo.config.frases_guardadas.filter { it.fecha in en }
         val esc = runCatching { Repo.escuchas(ini, fin) }.getOrDefault(emptyList())
-        fun minutos(e: io.github.ruddy2003.vestigium.data.Escucha) = (e.ms?.toDouble() ?: e.duracion_s?.times(1000.0) ?: 180_000.0) / 60000
+        // Lo que llega por la notificación no trae cuánto se escuchó: la pista cuenta su duración, pero nunca más allá del
+        // comienzo de la siguiente. Antes una canción saltada a los pocos segundos contaba entera.
+        val hastaLaSiguiente = HashMap<String, Double>()
+        esc.sortedBy { it.ts }.zipWithNext { a, b -> val hueco = (Fechas.millis(b.ts) - Fechas.millis(a.ts)) / 60000.0; if (hueco > 0) hastaLaSiguiente[a.id] = hueco }
+        fun minutos(e: io.github.ruddy2003.vestigium.data.Escucha): Double =
+            e.ms?.let { it.toDouble() / 60000 } ?: minOf((e.duracion_s?.times(1000.0) ?: 180_000.0) / 60000, hastaLaSiguiente[e.id] ?: Double.MAX_VALUE)
         val artistas = esc.filter { it.artista.isNotBlank() }.groupBy { it.artista }.mapValues { (_, l) -> l.sumOf { minutos(it) } }.entries.sortedByDescending { it.value }.take(8).map { it.key to it.value }
         val cancion = esc.filter { it.titulo.isNotBlank() && (it.ms ?: 30_000) >= 30_000 }.groupingBy { it.titulo + if (it.artista.isNotBlank()) " — ${it.artista}" else "" }.eachCount().maxByOrNull { it.value }?.toPair()
         val previos = runCatching { Repo.escuchas("0000-01-01", Fechas.sumar(ini, -1)).map { it.artista }.toHashSet() }.getOrDefault(hashSetOf())
@@ -206,9 +223,15 @@ object Periodo {
         val apps = HashMap<String, Long>(); pant.forEach { p -> p.por_app_min.forEach { (a, m) -> apps.merge(a, m.toLong(), Long::plus) } }
         val ntf = fechas.mapNotNull { Repo.notifs[it] }
 
-        // ---- el periodo anterior de la misma duración
-        val pIni = Fechas.sumar(ini, -n.toLong()); val pFin = Fechas.sumar(ini, -1)
-        val pf = (0 until n).map { Fechas.sumar(pIni, it.toLong()) }
+        // ---- el periodo anterior: el que se pida (el mes o el año entero de antes) o, si no, los mismos días de justo antes
+        val pIni = anterior?.first ?: Fechas.sumar(ini, -n.toLong()); val pFin = anterior?.second ?: Fechas.sumar(ini, -1)
+        val pn = (ChronoUnit.DAYS.between(Fechas.parse(pIni), Fechas.parse(pFin)).toInt() + 1).coerceAtLeast(1)
+        val pf = (0 until pn).map { Fechas.sumar(pIni, it.toLong()) }
+        // El gasto «al día» se reparte entre los días desde el primer gasto anotado, no entre todo el periodo: los días de
+        // antes de empezar a anotar no son días de cero pesos.
+        val primerGasto = Repo.gastos.minOfOrNull { it.dia }
+        val hoyLogico = Fechas.diaLogico()
+        val diasGasto = if (primerGasto == null) 0 else fechas.count { it >= primerGasto && it <= hoyLogico }
         val pv = pf.mapNotNull { valDe(it) }
         val ps = pf.mapNotNull { Repo.salud[it]?.sueno_min?.takeIf { m -> m > 120 }?.div(60.0) }
         val pp = pf.mapNotNull { Repo.salud[it]?.pasos?.toDouble()?.takeIf { x -> x > 0 } }
@@ -258,7 +281,7 @@ object Periodo {
             notifs = ntf.sumOf { it.total.toLong() }, apps = apps.entries.sortedByDescending { it.value }.take(6).map { it.key to it.value },
             valAnterior = pv.takeIf { it.size >= 3 }?.average(), suenoAnterior = ps.takeIf { it.size >= 3 }?.average(),
             pasosAnterior = pp.takeIf { it.size >= 3 }?.average(), pantallaAnterior = ppa.takeIf { it.size >= 3 }?.average(),
-            diasSoloAvisos = fechas.count { soloAvisos(it) },
+            diasSoloAvisos = fechas.count { soloAvisos(it) }, diasGasto = diasGasto,
             errorAnterior = listOfNotNull(
                 errorDif(vals.filterNotNull(), pv)?.let { "valencia" to it },
                 errorDif(sue.mapNotNull { it.sueno_min?.div(60.0) }, ps)?.let { "sueno" to it },

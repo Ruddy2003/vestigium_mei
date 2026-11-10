@@ -236,7 +236,9 @@ object Terapia {
         val nut = fechas.mapNotNull { Repo.nutricion[it] }
         val nutReg = nut.filter { (it.valores["kcal"] ?: 0.0) >= MINIMO_KCAL }
         val nutricion = if (nutReg.isEmpty()) null else {
-            fun prom(k: String) = media(nutReg.mapNotNull { it.valores[k] })
+            // MacroFactor deja en blanco el nutriente que vale cero: un día con registro y sin ese nutriente es un día de
+            // cero. Antes solo se promediaban los días con valor, y lo de unos pocos días salía como si fuera de todos.
+            fun prom(k: String) = nutReg.mapNotNull { it.valores[k] }.takeIf { it.isNotEmpty() }?.let { it.sum() / nutReg.size }
             fun contra(k: String, o: String) = media(nutReg.mapNotNull { it.valores[k] })?.let { it to media(nutReg.mapNotNull { n -> n.valores[o] }) }
             Nutricion(
                 diasConRegistro = nutReg.size, diasSinRegistro = fechas.size - nutReg.size,

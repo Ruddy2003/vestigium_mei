@@ -528,7 +528,8 @@ vm_palabras <- function(min_dias = 5) {
 vm_atipicos <- function(vars = c("valencia", "sueno_horas", "pasos", "pantalla_min", "desbloqueos", "gasto_total", "notificaciones", "fotos",
                                  "distancia_km", "min_hablado", "wa_mios", "musica_min", "fc_reposo", "hrv", "palabras"), z = 3, datos = panel) {
   vars <- intersect(vars, names(datos))
-  datos |> select(fecha, all_of(vars)) |> pivot_longer(-fecha, names_to = "variable", values_to = "valor") |> filter(!is.na(valor)) |>
+  # Una columna que aún no tiene datos puede haberse leído como texto: se pasa a número para poder apilarla con las demás.
+  datos |> select(fecha, all_of(vars)) |> mutate(across(all_of(vars), ~ suppressWarnings(as.numeric(.x)))) |> pivot_longer(-fecha, names_to = "variable", values_to = "valor") |> filter(!is.na(valor)) |>
     group_by(variable) |> mutate(z = (valor - median(valor)) / mad(valor)) |> ungroup() |> filter(is.finite(z), abs(z) >= !!z) |> arrange(desc(fecha))
 }
 

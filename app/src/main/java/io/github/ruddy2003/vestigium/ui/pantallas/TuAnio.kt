@@ -320,7 +320,7 @@ private fun cartas(d: TuAnio.Datos): List<CartaAnio> {
         Grande(p.diasDiario.toDouble(), "días escritos de ${p.n}", v)
         if (p.palabras > 0) {
             Grande(p.palabras.toDouble(), "palabras en el diario", v)
-            Text("Un libro de ${n0(d.paginas.toDouble())} páginas. Leerlo en voz alta te tomaría ${n1(d.horasLeerlo)} horas.", style = MaterialTheme.typography.bodyLarge)
+            Text("Un libro de ${n0(d.paginas.toDouble())} páginas. Leerlo en voz alta te tomaría ${if (d.horasLeerlo < 0.95) "${n0(d.horasLeerlo * 60)} minutos" else if (d.horasLeerlo < 1.05) "una hora" else "${n1(d.horasLeerlo)} horas"}.", style = MaterialTheme.typography.bodyLarge)
         }
     }
     // El año visual: el diario como pilas de libros y las cifras como objetos que se cuentan de un vistazo.
@@ -403,7 +403,7 @@ private fun cartas(d: TuAnio.Datos): List<CartaAnio> {
     }
     if (p.gasto > 0) l += CartaAnio("dinero", "Tu dinero", "PECVNIA") { v ->
         Grande(p.gasto, "gastados", v) { "$" + n0(it) }
-        Ayuda("$" + n0(p.gasto / p.n) + " al día")
+        p.gastoAlDia?.let { Ayuda("$" + n0(it) + " al día" + if (p.diasGasto < p.n) ", en los ${p.diasGasto} días desde tu primer gasto anotado" else "") }
         p.gastoCategorias.take(3).forEach { (c, m) -> Renglon(c.lowercase(), "$" + n0(m)) }
         if (p.ingresos > 0) Renglon("ingresos", "$" + n0(p.ingresos))
     }

@@ -219,7 +219,7 @@ object ReporteTerapia {
                 nu.grasa?.let { (v, o) -> p.clave("Grasa", "${n0(v)} g al día" + (o?.let { " (objetivo ${n0(it)} g)" } ?: "")) }
                 nu.nutrientes.forEach { (nombre, v, u) -> p.clave(nombre, "${if (v < 10) n1(v) else n0(v)} $u al día") }
                 horaYVariacion(nu.cafeinaUltima)?.let { p.clave("Última cafeína", it) }
-                nu.comidasPorDia?.let { p.clave("Comidas al día", n1(it)) }
+                nu.comidasPorDia?.let { p.clave("Alimentos anotados al día", n1(it)) }
                 horaYVariacion(nu.primera)?.let { p.clave("Primera comida", it) }
                 horaYVariacion(nu.ultima)?.let { p.clave("Última comida", it) }
                 p.nota("Datos de MacroFactor. Los días con menos de ${Terapia.MINIMO_KCAL.toInt()} kcal cuentan como sin registro y no entran en los promedios" +
