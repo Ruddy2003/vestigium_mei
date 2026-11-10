@@ -443,7 +443,7 @@ object Exportar {
                 "desde" to m.desde, "hasta" to m.hasta, "dias" to m.dias, "nota" to m.nota.ifBlank { null })
         } + c.paises_rascados.map { linkedMapOf<String, Any?>("tipo" to "pais_rascado", "id" to it, "nombre" to null, "pais" to it, "lat" to null, "lon" to null, "desde" to null, "hasta" to null, "dias" to null, "nota" to null) } +
             c.paises_tapados.map { linkedMapOf<String, Any?>("tipo" to "pais_tapado", "id" to it, "nombre" to null, "pais" to it, "lat" to null, "lon" to null, "desde" to null, "hasta" to null, "dias" to null, "nota" to null) } +
-            c.unesco_marcados.map { linkedMapOf<String, Any?>("tipo" to "unesco", "id" to it.id.toString(), "nombre" to null, "pais" to null, "lat" to null, "lon" to null, "desde" to it.fecha, "hasta" to null, "dias" to null, "nota" to null) } +
+            c.unesco_marcados.map { linkedMapOf<String, Any?>("tipo" to "unesco", "id" to it.id.toString(), "nombre" to null, "pais" to null, "lat" to null, "lon" to null, "desde" to it.visita, "hasta" to null, "dias" to null, "nota" to null) } +
             c.unesco_descartados.map { linkedMapOf<String, Any?>("tipo" to "unesco_no_cuenta", "id" to it.toString(), "nombre" to null, "pais" to null, "lat" to null, "lon" to null, "desde" to null, "hasta" to null, "dias" to null, "nota" to null) }
     }
 

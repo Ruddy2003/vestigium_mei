@@ -66,7 +66,7 @@ Se guardan en las carpetas públicas del teléfono: **`Pictures/VestigiumMei`** 
 
 ### 9.3.2 Qué muestran (`Reportes.cuerpo`)
 
-Arriba, hasta **9 cifras** (días con diario, ánimo medio, sueño, pasos, pantalla, palabras, gasto, entrenamientos, música). Después, **solo las secciones que tienen datos**, cada una con un nombre en español y otro en latín (*Animus*, *Corpus*, *Mens*, *Homines*, *Orbis*, *Cultura*, *Pecunia*, *Telephonum*, *Memorabilia*):
+El encabezado y el pie fechan con el **calendario común** («Noviembre de 2026»); si el tema tiene calendario propio, su fecha va debajo, más pequeña (desde el 10 nov 2026, D.179). Arriba, hasta **9 cifras** (días con diario, ánimo medio, sueño, pasos, pantalla, palabras, gasto, entrenamientos, música). Después, **solo las secciones que tienen datos**, cada una con un nombre en español y otro en latín (*Animus*, *Corpus*, *Mens*, *Homines*, *Orbis*, *Cultura*, *Pecunia*, *Telephonum*, *Memorabilia*):
 
 - **La semana de un vistazo** (solo el semanal; Figura 9.1).
 - **El mes de un vistazo** (solo el mensual): calendario del ánimo, curva del sueño, comparación con el mes anterior, nubes de personas y temas, y un **mapa abstracto**: cada lugar guardado es un punto sobre una cuadrícula, **sin calles ni nombres**.

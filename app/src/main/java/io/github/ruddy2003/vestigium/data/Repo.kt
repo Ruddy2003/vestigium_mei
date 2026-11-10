@@ -171,6 +171,24 @@ object Repo {
         Fechas.usarHistorial(config.zonas)
         listo = true
         runCatching { registrarZona() }
+        runCatching { quitarRepetidos() }
+    }
+
+    /**
+     * Limpia lo que se guardó de más por un error ya corregido (esquema 23, D.177). Se puede llamar cuantas veces haga falta:
+     * si no hay nada repetido, no hace nada. Corre al abrir y después de restaurar un respaldo (que puede traerlos de vuelta).
+     *  - El ánimo del cierre de la noche es uno por día: si hay varios, queda el más reciente (el último que tocaste).
+     *  - Una toma de suplemento idéntica a otra (mismo suplemento, misma hora y cantidad) es un doble toque: queda una.
+     * Lo que se quita va a la papelera, como cualquier borrado.
+     */
+    fun quitarRepetidosLuego() { main.post { runCatching { quitarRepetidos() } } }
+    fun quitarRepetidos(): Int {
+        val cierres = momentos.filter { it.esCierre }.groupBy { it.fecha }.values.filter { it.size > 1 }
+            .flatMap { l -> val queda = l.maxWith(compareBy<Momento> { Fechas.millis(it.ts) }.thenBy { it.ts }); l.filter { it.id != queda.id } }
+        val tomasDeMas = tomas.groupBy { Triple(it.suplemento, it.ts, it.cantidad) }.values.filter { it.size > 1 }.flatMap { it.drop(1) }
+        cierres.forEach { borrarMomento(it.id) }
+        tomasDeMas.forEach { borrarToma(it.id) }
+        return cierres.size + tomasDeMas.size
     }
 
     /**
@@ -380,6 +398,8 @@ object Repo {
 
     // ---------- Suplementos y laptop ----------
     fun guardarToma(t: TomaSuplemento) {
+        // Un doble toque no guarda dos tomas: la misma toma (suplemento, hora y cantidad) con otro id se ignora.
+        if (tomas.any { it.id != t.id && it.suplemento == t.suplemento && it.ts == t.ts && it.cantidad == t.cantidad }) return
         db.poner("tomas", t.id, t.fecha, JSON.encodeToString(TomaSuplemento.serializer(), t))
         enMain { tomas = (tomas.filter { it.id != t.id } + t).sortedBy { it.ts } }
     }

@@ -518,6 +518,8 @@ Para convertir coordenadas en **países y ciudades** la app no manda tus ubicaci
 
 **Razonamiento.** Procesar localmente es una decisión de **privacidad** (capítulo 10) y también de **disponibilidad** (funciona sin internet). El precio es resolución: los contornos están simplificados, así que **en la frontera** el país puede ser el equivocado. **[Aproximación]**.
 
+**Lo marcado a mano.** Además de lo que sale de tus ubicaciones, puedes añadir ciudades, rascar países y marcar sitios del Patrimonio que visitaste antes de usar la app. Cada cosa lleva una **fecha de visita opcional** (`CiudadVisitada.desde` y `hasta`; `SitioMarcado.visita`, desde el esquema 23, D.178). Con fecha, cuenta en ese día y en los reportes de ese periodo. **Sin fecha, cuenta en tus totales de siempre, pero no en el día, el mes ni el año de ningún reporte**: así se pueden anotar los viajes viejos sin que parezcan de hoy. El día en que hiciste la marca (`SitioMarcado.fecha`) se guarda, pero no cuenta como visita. *Ejemplo (inventado):* marcas hoy unas ruinas que visitaste en 2019 y eliges «sin fecha»: tu total de sitios sube en uno y el reporte de este mes no las menciona. **[Diseño propio]**
+
 ---
 
 ## 4.8 Cobertura y huecos: ¿cómo se ve un dato que falta?

@@ -25,8 +25,19 @@ class EsquemaCatorcePrueba {
     // el 18, los deseados (prioridad, quién lo recomendó y dónde) y las listas libres (ver DeseadosPrueba); el 19, cómo se
     // supo la salida de cada visita (ver VisitasPrueba); el 20, la hora real en que salió cada aviso de ánimo (AvisosDia.reales);
     // el 21, masturbación e intimidad, episodios, fechas señaladas, varias tomas y la extra del enfoque (ver EsquemaVeintiunoPrueba);
-    // el 22, el respaldo blindado (estado del respaldo en Config, fecha en Borrado) y la copia de la foto del día (Dia.foto_archivo).
-    @Test fun esquema() = assertEquals(22, SCHEMA_V)
+    // el 22, el respaldo blindado (estado del respaldo en Config, fecha en Borrado) y la copia de la foto del día (Dia.foto_archivo);
+    // el 23, un solo ánimo de cierre por noche y la fecha de visita de lo marcado a mano en Mundo (SitioMarcado.visita).
+    @Test fun esquema() = assertEquals(23, SCHEMA_V)
+
+    @Test fun sitioMarcadoDeAntesQuedaSinFechaDeVisita() {
+        // Una marca de antes del esquema 23 solo trae el día en que se hizo: no cuenta como visita en ningún periodo.
+        val vieja = JSON.decodeFromString(io.github.ruddy2003.vestigium.data.SitioMarcado.serializer(), """{"id":7,"fecha":"2026-03-02"}""")
+        assertNull(vieja.visita); assertNull(vieja.diaVisita)
+        val nueva = io.github.ruddy2003.vestigium.data.SitioMarcado(7, "2026-03-02", "2019-07-14")
+        assertEquals(java.time.LocalDate.of(2019, 7, 14).toEpochDay().toInt(), nueva.diaVisita)
+        // Una fecha ilegible no rompe: queda sin día.
+        assertNull(io.github.ruddy2003.vestigium.data.SitioMarcado(7, "2026-03-02", "no es fecha").diaVisita)
+    }
 
     @Test fun esquema22SeLeeSinLoNuevo() {
         // Un día y unos ajustes de antes del esquema 22: la foto sin copia y el respaldo sin estado.

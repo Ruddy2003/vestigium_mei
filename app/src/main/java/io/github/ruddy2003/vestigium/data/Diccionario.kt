@@ -466,6 +466,11 @@ object Diccionario {
     private const val VERSION_ESQUEMA_21 = 175
     /** La versión que trae el esquema 22 (respaldo blindado y foto del día copiada, 9 nov 2026). */
     private const val VERSION_ESQUEMA_22 = 189
+    /**
+     * La versión que trae el esquema 23 (un solo ánimo de cierre por noche y la fecha de visita de lo marcado en Mundo, 10 nov 2026):
+     * la 196 es la primera compilación que lo lleva; entre la 189 y ella no se publicó ninguna.
+     */
+    private const val VERSION_ESQUEMA_23 = 196
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
@@ -543,7 +548,7 @@ object Diccionario {
         "personas_pensadas" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
         "personas_vistas" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
         "probioticos_estimado" to (88 to "vacío sin bitácora de MacroFactor (D.63)"),
-        "registros_animo" to (88 to "sin los «Cómo estás ahora» guardados otro día que el que cierran (D.74)"),
+        "registros_animo" to (VERSION_ESQUEMA_23 to "un solo «Cómo estás ahora» por noche: antes cada toque en la cuadrícula guardaba un registro (D.177); desde la v88, sin los guardados otro día que el que cierran (D.74)"),
         "rt_media" to (88 to "un toque a menos de 100 ms es anticipación y se repite (D.74)"),
         "sdt_necesidad_*" to (88 to "«las tres» cuenta en autonomía, competencia y relación (D.63)"),
         "tema_*" to (88 to "vacío los días sin diario ni momento con un #tema (D.63)"),
@@ -682,6 +687,10 @@ object Diccionario {
         "enfoque_min" to (VERSION_ESQUEMA_21 to "con los minutos de más sobre la meta (D.165)"),
         // Esquema 22.
         "vm_dias.csv:foto_archivo" to (VERSION_ESQUEMA_22 to "nueva: la copia de la foto del día dentro del respaldo (D.168)"),
+        // Esquema 23.
+        "n_registros" to (VERSION_ESQUEMA_23 to "un solo «Cómo estás ahora» por noche: antes cada toque guardaba un registro (D.177)"),
+        "vm_mundo.csv:desde" to (VERSION_ESQUEMA_23 to "en los sitios del Patrimonio marcados a mano, el día de la visita si lo dijiste (vacío si no); antes, el día en que lo marcaste (D.178)"),
+        "unesco" to (VERSION_ESQUEMA_23 to "un sitio marcado a mano cuenta en el día de la visita, si lo dijiste, no en el día en que lo marcaste (D.178)"),
     )
 
     // Las claves con «*», como patrones; la más larga primero, para que «app_min_*» gane a «app_*».

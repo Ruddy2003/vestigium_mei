@@ -188,6 +188,9 @@ fun CuadriculaAfecto(valencia: Int?, activacion: Int?, modifier: Modifier = Modi
     val tema = Estilo.tema
     val forma = formaCeldaAfecto(tema)
     val fondo = cs.surface
+    // El toque llama siempre a la función vigente. `pointerInput(Unit)` se queda con la primera que recibió: quien dependía
+    // de algo que cambia después (el registro ya guardado de esta noche) seguía viendo lo del primer dibujo.
+    val alCambiar by androidx.compose.runtime.rememberUpdatedState(onCambio)
     Column(modifier) {
         Text("más energía ↑", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         // Para TalkBack (N-27): qué es, qué tiene marcado y cuatro acciones para moverse sin ver la cuadrícula.
@@ -196,16 +199,16 @@ fun CuadriculaAfecto(valencia: Int?, activacion: Int?, modifier: Modifier = Modi
             contentDescription = "Cuadrícula de ánimo: de izquierda a derecha, de desagradable a agradable; de abajo arriba, de menos a más energía"
             stateDescription = if (valencia == null) "sin marcar" else "agrado $valencia de 7, energía ${activacion ?: "sin marcar"} de 7"
             customActions = listOf(
-                CustomAccessibilityAction("más agradable") { onCambio((v0 + 1).coerceAtMost(7), a0); true },
-                CustomAccessibilityAction("menos agradable") { onCambio((v0 - 1).coerceAtLeast(1), a0); true },
-                CustomAccessibilityAction("más energía") { onCambio(v0, (a0 + 1).coerceAtMost(7)); true },
-                CustomAccessibilityAction("menos energía") { onCambio(v0, (a0 - 1).coerceAtLeast(1)); true },
+                CustomAccessibilityAction("más agradable") { alCambiar((v0 + 1).coerceAtMost(7), a0); true },
+                CustomAccessibilityAction("menos agradable") { alCambiar((v0 - 1).coerceAtLeast(1), a0); true },
+                CustomAccessibilityAction("más energía") { alCambiar(v0, (a0 + 1).coerceAtMost(7)); true },
+                CustomAccessibilityAction("menos energía") { alCambiar(v0, (a0 - 1).coerceAtLeast(1)); true },
             )
         }.pointerInput(Unit) {
             detectTapGestures { o ->
                 val v = (o.x / size.width * 7).toInt().coerceIn(0, 6) + 1
                 val a = 7 - (o.y / size.height * 7).toInt().coerceIn(0, 6)
-                sentir(Sentidos.Evento.ELEGIR); onCambio(v, a)
+                sentir(Sentidos.Evento.ELEGIR); alCambiar(v, a)
             }
         }) {
             val w = size.width / 7; val h = size.height / 7

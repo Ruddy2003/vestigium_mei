@@ -130,6 +130,8 @@ object Importar {
             if (r.listas.isNotEmpty()) Repo.importarListas(r.listas)
             if (r.metas.isNotEmpty()) Repo.importarMetas(r.metas)
             if (r.tomas.isNotEmpty()) Repo.importarTomas(r.tomas)
+            // Un respaldo anterior al esquema 23 puede traer de vuelta los cierres repetidos: se limpian al terminar de entrar.
+            Repo.quitarRepetidosLuego()
             Repo.importarAvisos(r.avisos)
             if (r.laptop.isNotEmpty()) Repo.guardarLaptop(r.laptop.filter { it.fecha !in Repo.laptop })
             Repo.importarRespuestas(r.respuestas)
