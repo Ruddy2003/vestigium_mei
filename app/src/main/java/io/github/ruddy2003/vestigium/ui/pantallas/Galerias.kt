@@ -279,7 +279,7 @@ internal fun Recuadro(titulo: String, detalle: String, modifier: Modifier = Modi
             }
             Text("→", style = MaterialTheme.typography.titleLarge, color = cs.primary)
         }
-        io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth().height(alto), luz = luz) { dibujo() }
+        io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth().height(alto), luz = luz, llena = true) { dibujo() }
     }
 }
 

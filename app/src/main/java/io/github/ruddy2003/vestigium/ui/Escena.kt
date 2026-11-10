@@ -56,6 +56,8 @@ import kotlin.math.sin
  * sobre la pared, con las esquinas más hondas, y esa misma luz sumada sobre la parte alta del mueble. Solo la llevan algunas
  * escenas (la de hoy, el Ideario y las cartas en Diario; Social, Logros y Otras vidas en Vida): las demás quedan en penumbra,
  * y de ese contraste sale que lo iluminado se note. De día no hace nada, y Básico no la lleva (va sin adornos).
+ * Con [llena] (el mueble ocupa toda la escena y tapa la pared, como en los recuadros de Vida), la luz va toda sobre el
+ * mueble: más viva arriba, con las esquinas de abajo en sombra.
  */
 @Composable
 fun Escena(
@@ -64,6 +66,7 @@ fun Escena(
     relleno: PaddingValues = PaddingValues(0.dp),
     forma: Shape = MaterialTheme.shapes.medium,
     luz: Boolean = false,
+    llena: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val cs = MaterialTheme.colorScheme
@@ -83,7 +86,7 @@ fun Escena(
                 if (fondo) paredTema(tema, cs.onSurface, cs.primary)
                 if (lampara && fondo) luzEnPared(calida)
                 drawContent()
-                if (lampara) luzEnMueble(calida)
+                if (lampara) luzEnMueble(calida, llena)
             }
             .padding(relleno),
         content = content,
@@ -183,8 +186,15 @@ private fun DrawScope.luzEnPared(calida: Color) {
  * La misma lámpara sobre el mueble: suma luz en su parte alta (no lo cubre con un velo), poca, para que los bordes de arriba
  * la tomen sin que el texto de los nichos pierda contraste.
  */
-private fun DrawScope.luzEnMueble(calida: Color) {
+private fun DrawScope.luzEnMueble(calida: Color, llena: Boolean) {
     val w = size.width; val h = size.height
-    drawRect(Brush.radialGradient(0f to calida.copy(alpha = 0.12f), 0.5f to calida.copy(alpha = 0.04f), 1f to Color.Transparent,
+    val fuerza = if (llena) 0.24f else 0.12f
+    drawRect(Brush.radialGradient(0f to calida.copy(alpha = fuerza), 0.5f to calida.copy(alpha = fuerza / 3), 1f to Color.Transparent,
         center = Offset(w * 0.5f, -h * 0.05f), radius = maxOf(w * 0.5f, h)), blendMode = BlendMode.Plus)
+    // El borde de arriba toma la luz: una línea fina, viva al centro, que se pierde hacia los lados.
+    drawRect(Brush.horizontalGradient(0f to Color.Transparent, 0.5f to calida.copy(alpha = if (llena) 0.6f else 0.42f), 1f to Color.Transparent,
+        startX = w * 0.1f, endX = w * 0.9f), topLeft = Offset(w * 0.1f, 0f), size = androidx.compose.ui.geometry.Size(w * 0.8f, 1.5.dp.toPx()), blendMode = BlendMode.Plus)
+    // Sin pared a la vista, la sombra de las esquinas de abajo va sobre el propio mueble.
+    if (llena) drawRect(Brush.radialGradient(0f to Color.Transparent, 0.6f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.22f),
+        center = Offset(w * 0.5f, h * 0.2f), radius = hypot(w * 0.5f, h * 0.9f)))
 }
