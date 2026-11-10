@@ -1,0 +1,4 @@
+e: file:///home/runner/work/vestigium_mei/vestigium_mei/app/src/main/java/io/github/ruddy2003/vestigium/data/Repo.kt:89:20 Overload resolution ambiguity between candidates:
+> Task :app:compileReleaseKotlin FAILED
+* What went wrong:
+BUILD FAILED in 2m 3s
