@@ -22,7 +22,7 @@ El autor pidió:
 | Hoy, Ideario, Notas, Cartas | Objeto solo | Dentro de su escena |
 | Biblioteca del diario, Libreta | Fondo propio | Dentro de su escena: las esquinas del tema |
 | Sueños | Cielo con línea de contorno y un margen de 10 dp que se veía como marco | El cielo sin contorno y sin margen: el estante de noche ocupa todo y el cielo solo asoma donde el dibujo es transparente. Igual en la biblioteca de sueños. |
-| Recuadros de Vida | Tarjeta con borde y el marco del mapa encima | El dibujo en su escena y el título debajo, sin tarjeta; el toque de siempre |
+| Recuadros de Vida | Tarjeta con borde y el marco del mapa encima | El dibujo en su escena, sin tarjeta; el toque de siempre. El título va arriba, como en Diario (10 nov 2026; al principio iba debajo) |
 | Aura (`Modifier.halo`) | — | Sigue la silueta del objeto. Va en cada volumen de los estantes del diario y de los sueños, en el diario de hoy, en cada cajón del Ideario y en cada sobre. |
 
 ### Cómo es el aura

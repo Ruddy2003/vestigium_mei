@@ -1792,7 +1792,10 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         consumir()
     }
 
-    val nav = Nav(ir = { pila = pila + it }, atras = { pila = pila.dropLast(1) }, pestana = { pestana = it; pila = emptyList() },
+    // La hoja de la noche no se apila sobre sí misma. Pasaba al abrirla desde un aviso, el atajo o el toque largo en la pestaña:
+    // la pila ya la traía y Día, que seguía en pantalla durante el cambio, la pedía otra vez por la sección; al guardar se
+    // cerraba una y la otra se quedaba abierta.
+    val nav = Nav(ir = { if (!(it == "noche" && pila.lastOrNull() == "noche")) pila = pila + it }, atras = { pila = pila.dropLast(1) }, pestana = { pestana = it; pila = emptyList() },
         reemplazar = { pila = if (pila.isEmpty()) listOf(it) else pila.dropLast(1) + it })
     BackHandler(enabled = pila.isNotEmpty()) { pila = pila.dropLast(1) }
     // Las fechas de los días abiertos encima de otra pantalla se olvidan al cerrar esos niveles.

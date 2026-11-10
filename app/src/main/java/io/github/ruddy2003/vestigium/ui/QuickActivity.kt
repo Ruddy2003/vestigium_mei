@@ -61,6 +61,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Density
@@ -164,18 +165,44 @@ class QuickActivity : FragmentActivity() {
                 ) {
                     var pantalla by remember { mutableStateOf(pantallaInicial) }
                     var privado by remember { mutableStateOf(inicial?.takeIf { pantallaInicial == "privado" }) }
+                    // El momento («¿Cómo estás ahora?») sigue vivo debajo de lo que se abre desde él (impulso, libido, sustancia…):
+                    // al terminar ahí se vuelve a él con todo lo que llevabas, en vez de cerrarse la hoja entera.
+                    var momentoAbierto by remember { mutableStateOf(pantallaInicial == M_ANIMO) }
+                    var desdeMomento by remember { mutableStateOf(false) }
+                    var anotadoFuera by remember { mutableStateOf<List<String>>(emptyList()) }
+                    val foco = androidx.compose.ui.platform.LocalFocusManager.current
+                    androidx.compose.runtime.DisposableEffect(Unit) {
+                        volverAlMomento = {
+                            if (desdeMomento && pantalla != M_ANIMO) {
+                                // Lo que se anotó (si no se borró) queda dicho en el momento.
+                                privado?.takeIf { pantalla == "privado" }?.let { p -> Repo.momento(p.id) }?.let { p ->
+                                    val t = Catalogo.tipo(p.tipo)
+                                    val nombre = if (Repo.config.discreto) t?.discreto ?: "Registro" else t?.nombre ?: p.tipo
+                                    anotadoFuera = anotadoFuera + "$nombre · ${Fechas.horaDe(p.ts)}"
+                                }
+                                desdeMomento = false; pantalla = M_ANIMO; true
+                            } else false
+                        }
+                        onDispose { volverAlMomento = null }
+                    }
+                    // «Atrás» desde lo que se abrió en el momento también regresa a él.
+                    androidx.activity.compose.BackHandler(enabled = desdeMomento && pantalla != M_ANIMO) { terminar() }
                     HojaQuick(Modifier.fillMaxWidth().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
                         .navigationBarsPadding().imePadding()) {
                         val ir: (String) -> Unit = { destino ->
+                            if (pantalla == M_ANIMO && destino != M_ANIMO) { desdeMomento = true; foco.clearFocus() }
+                            if (destino == M_ANIMO) momentoAbierto = true
                             when (destino) {
                                 // «privado» es la hoja de captura de un momento; el episodio, que no es privado, también va por ahí.
                                 "impulso", "recaida", "libido", "masturbacion", "intimidad", "episodio" -> { privado = crear(destino, origen, null, null); pantalla = "privado" }
                                 else -> pantalla = destino
                             }
                         }
+                        // Oculto no se mide ni se dibuja ni recibe toques, pero conserva lo escrito.
+                        if (momentoAbierto) Column(Modifier.fillMaxWidth().soloVisible(pantalla == M_ANIMO)) { Animo(inicial, origen, avisoMs, anotadoFuera, ir) }
                         when (pantalla) {
-                            M_ANIMO -> Animo(inicial, origen, avisoMs, ir)
-                            "privado" -> privado?.let { MomentoCaptura(it) } ?: Animo(null, origen, avisoMs, ir)
+                            M_ANIMO -> Unit
+                            "privado" -> privado?.let { androidx.compose.runtime.key(it.id) { MomentoCaptura(it) } } ?: Registrar(ir)
                             M_MENU -> Registrar(ir)
                             M_GASTO -> GastoRapido(catInicial, subInicial, gastoInicial)
                             M_SUENO -> SuenoRapido()
@@ -192,7 +219,11 @@ class QuickActivity : FragmentActivity() {
         }
     }
 
-    private fun terminar() { runCatching { Widgets.actualizar(this) }; finish() }
+    /** Si lo que está abierto se abrió desde el momento, regresa a él y devuelve true; si no, false y la hoja se cierra. */
+    private var volverAlMomento: (() -> Boolean)? = null
+
+    /** Cierra lo que está abierto: de vuelta al momento si se abrió desde él; si no, la hoja entera. */
+    private fun terminar() { runCatching { Widgets.actualizar(this) }; if (volverAlMomento?.invoke() == true) return; finish() }
 
     /** Hay algo escrito que no se ha guardado (el monto de un gasto): tocar fuera avisa una vez antes de cerrar. */
     private var sinGuardar = false
@@ -323,7 +354,7 @@ class QuickActivity : FragmentActivity() {
      * De un aviso se guarda como «muestreo»; si lo abres tú, como «animo».
      */
     @Composable
-    private fun Animo(inicial: Momento?, origen: String, avisoMs: Long?, ir: (String) -> Unit) {
+    private fun Animo(inicial: Momento?, origen: String, avisoMs: Long?, anotadoFuera: List<String>, ir: (String) -> Unit) {
         var m by remember { mutableStateOf(inicial) }
         var valencia by remember { mutableStateOf(inicial?.valencia) }
         var activacion by remember { mutableStateOf(inicial?.activacion) }
@@ -406,7 +437,7 @@ class QuickActivity : FragmentActivity() {
         val deHoy = Repo.gastos.filter { it.dia == hoyDia }
         Text(if (deHoy.isEmpty()) "Hoy no has anotado gastos." else "Hoy: ${deHoy.size} ${if (deHoy.size == 1) "gasto" else "gastos"} · ${io.github.ruddy2003.vestigium.ui.pantallas.dinero(deHoy.sumOf { it.monto })}",
             style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
-        anotado.forEach { Text("✓ $it", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 4.dp)) }
+        (anotadoFuera + anotado).forEach { Text("✓ $it", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 4.dp)) }
         if (dinero) Surface(shape = formaPiezaQuick(Estilo.tema), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline), modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
@@ -1065,6 +1096,12 @@ internal fun MenuQuick(botones: List<Pair<String, String>>, alElegir: (String) -
     }
 }
 
+/** Con [visible] en false la pieza sigue compuesta (conserva su estado), pero no ocupa lugar, no se dibuja ni recibe toques. */
+private fun Modifier.soloVisible(visible: Boolean): Modifier = if (visible) this else this.layout { medible, limites ->
+    medible.measure(limites)
+    layout(0, 0) { }
+}
+
 /** Una forma que se traza en píxeles con [u] = píxeles por dp, para que las medidas no dependan del tamaño de la pieza. */
 private fun formaDp(trazo: Path.(w: Float, h: Float, u: Float) -> Unit): Shape = object : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline =
@@ -1562,16 +1599,18 @@ private fun CampoSitio(m: Momento, cambiar: ((Momento) -> Momento) -> Unit) {
  */
 @Composable
 internal fun ConQuienPersonas(clave: String, sel: List<String>, onCambio: (List<String>) -> Unit) {
-    val menc = remember(Repo.dias) { io.github.ruddy2003.vestigium.data.Personas.menciones() }
-    val tuyas = (Repo.config.personas.map { it.nombre.lowercase() } + menc.entries.sortedByDescending { it.value.first }.take(20).map { it.key })
-        .distinct().take(24)
-    val todas = (sel + tuyas).distinct()
-    if (todas.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        todas.forEach { p -> Ficha("@$p", p in sel) { onCambio(if (p in sel) sel - p else sel + p) } }
-    }
+    val c = Repo.config
+    val menc = remember(Repo.dias, Repo.momentos, c.equivalencias) { io.github.ruddy2003.vestigium.data.Personas.menciones() }
+    val conocidas = remember(menc, c.personas, c.perfil, c.equivalencias) { io.github.ruddy2003.vestigium.data.Personas.todas(menc, c) }
     var otra by remember(clave) { mutableStateOf("") }
     // Como una mención: sin @, en minúsculas, los espacios a guion bajo y solo letras, números y guion bajo.
     val nombre = io.github.ruddy2003.vestigium.data.Texto.etiqueta(otra).filter { it.isLetterOrDigit() || it == '_' }
+    // A la vista, las 24 que más aparecen; al escribir en el campo salen todas las que coinciden (antes, quien no estaba entre
+    // esas 24 solo se podía poner escribiendo su nombre completo).
+    val todas = (sel + if (nombre.isEmpty()) conocidas.take(24) else conocidas.filter { nombre in it }).distinct()
+    if (todas.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        todas.forEach { p -> Ficha("@$p", p in sel) { onCambio(if (p in sel) sel - p else sel + p) } }
+    }
     Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         CampoTexto(value = otra, onValueChange = { otra = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("@persona") })
         BotonTexto(onClick = { if (nombre.isNotEmpty() && nombre !in sel) onCambio(sel + nombre); otra = "" }, enabled = nombre.isNotEmpty()) { Text("agregar") }

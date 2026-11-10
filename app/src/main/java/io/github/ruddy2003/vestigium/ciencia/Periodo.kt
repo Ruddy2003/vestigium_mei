@@ -128,10 +128,16 @@ object Periodo {
         val peor = conVal.minByOrNull { it.second!! }?.first
         val porMes = conVal.groupBy { it.first.substring(5, 7).toInt() }.mapValues { (_, l) -> l.map { it.second!! }.average() }
         val porSem = conVal.groupBy { Fechas.parse(it.first).dayOfWeek.value }.mapValues { (_, l) -> l.map { it.second!! }.average() }
-        val personasL = dias.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct() } + mu.flatMap { Texto.personas(it.texto).map { p -> Texto.canon(p, eq) } }
+        // Días en que aparece cada persona, con la misma cuenta que Tu gente (Personas.diasCon). Antes se sumaba un día por la
+        // nota del diario y, aparte, uno por cada mención en cada momento: quien salía en la nota y en dos momentos del mismo día
+        // contaba 3, y el reporte lo rotulaba «días» (podía dar más días que los que tiene el periodo).
+        val personasDias = io.github.ruddy2003.vestigium.data.Personas.diasCon(ini, fin).map { it.key to it.value.size }
+            .sortedWith(compareByDescending<Pair<String, Int>> { it.second }.thenBy { it.first }).take(6)
         val antes = Repo.dias.values.filter { it.fecha < ini }.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) } }.toHashSet()
         val nueva = dias.sortedBy { it.fecha }.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) } }.firstOrNull { it !in antes && Repo.dias.isNotEmpty() && Repo.dias.keys.min() < ini }
-        val temasL = dias.flatMap { d -> Texto.temas(d.nota).map { Texto.canon(it, eq) }.distinct() } + mu.flatMap { Texto.temas(it.texto).map { t -> Texto.canon(t, eq) } }
+        // Los temas, igual: días en que aparece cada uno (en la nota o en algún momento de ese día), no menciones sueltas.
+        val muPorDia = mu.groupBy { it.fecha }
+        val temasL = fechas.flatMap { f -> (Texto.temas(Repo.dias[f]?.nota) + muPorDia[f].orEmpty().flatMap { Texto.temas(it.texto) }).map { t -> Texto.canon(t, eq) }.distinct() }
         val activos = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().filter { it.activo }
         val habPct = if (activos.isEmpty() || dias.isEmpty()) null else dias.sumOf { d -> activos.count { d.habitos[it.id] == true } }.toDouble() / (activos.size * dias.size)
         val habitos = activos.map { h -> h.nombre to dias.count { it.habitos[h.id] == true } }.filter { it.second > 0 }.sortedByDescending { it.second }
@@ -220,7 +226,7 @@ object Periodo {
             emociones = animo.first, pensamientos = animo.second, conQuien = animo.third.first, conQuienRegistros = animo.third.second,
             registrosAnimo = mu.count { Catalogo.esRegistro(it) },
             momentos = mu.filter { it.tipo != "muestreo" }.groupingBy { it.tipo }.eachCount().entries.sortedByDescending { it.value }.map { Catalogo.nombreTipo(it.key) to it.value },
-            personas = top(personasL), temas = top(temasL), personaNueva = nueva,
+            personas = personasDias, temas = top(temasL), personaNueva = nueva,
             habitosPct = habPct, habitos = habitos, rachaDiario = racha,
             suenoH = sue.mapNotNull { it.sueno_min }.takeIf { it.isNotEmpty() }?.average()?.div(60), suenoTotalH = sue.sumOf { it.sueno_min ?: 0 } / 60.0,
             dormirH = sue.mapNotNull { horaDec(it.sueno_inicio, true) }.takeIf { it.isNotEmpty() }?.average(),

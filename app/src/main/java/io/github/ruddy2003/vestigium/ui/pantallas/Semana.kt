@@ -127,16 +127,19 @@ fun PantallaSemana(nav: Nav) {
         }
 
         val eq = Repo.equivalencias()
-        val notas = dias.mapNotNull { Repo.dias[it]?.nota } + r.momentos.map { it.texto }
-        val personas = notas.flatMap { Texto.personas(it).map { p -> Texto.canon(p, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }
-        val temas = notas.flatMap { Texto.temas(it).map { p -> Texto.canon(p, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }
+        // Días de la semana en que aparece cada persona o tema (en la nota o en algún momento de ese día). Antes cada texto
+        // contaba aparte, y alguien podía salir con más de 7.
+        val momentosDia = r.momentos.groupBy { it.fecha }
+        val textosDia = dias.map { f -> listOfNotNull(Repo.dias[f]?.nota) + momentosDia[f].orEmpty().map { it.texto } }
+        val personas = textosDia.flatMap { l -> l.flatMap { Texto.personas(it) }.map { p -> Texto.canon(p, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }
+        val temas = textosDia.flatMap { l -> l.flatMap { Texto.temas(it) }.map { p -> Texto.canon(p, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }
         // Las fechas señaladas de la semana (con los hitos de antes), cada una con su día: tocarla abre ese día.
         val senaladas = dias.flatMap { f -> io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(Repo.dias[f]).map { f to it } }.distinctBy { it.second }
         if (personas.isNotEmpty() || temas.isNotEmpty() || senaladas.isNotEmpty()) Seccion("Personas, temas e hitos") {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 // Llevan su texto al buscador (N-22).
-                personas.take(8).forEach { (p, n) -> Ficha("@$p · $n", false) { Seleccion.buscar = "@$p"; nav.ir("buscar") } }
-                temas.take(8).forEach { (t, n) -> Ficha("#$t · $n", false) { Seleccion.buscar = "#$t"; nav.ir("buscar") } }
+                personas.take(8).forEach { (p, n) -> Ficha("@$p · $n d", false) { Seleccion.buscar = "@$p"; nav.ir("buscar") } }
+                temas.take(8).forEach { (t, n) -> Ficha("#$t · $n d", false) { Seleccion.buscar = "#$t"; nav.ir("buscar") } }
                 senaladas.forEach { (f, e) -> Ficha(e, true) { Seleccion.abrir(nav, f) } }
             }
         }

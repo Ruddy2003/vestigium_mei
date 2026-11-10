@@ -261,7 +261,8 @@ fun Calificacion(valor: Int?, modifier: Modifier = Modifier, tam: Dp = 14.dp, co
 // =====================================================================
 
 /**
- * Un recuadro grande con su dibujo arriba y el título abajo. El dibujo va en su [io.github.ruddy2003.vestigium.ui.Escena]:
+ * Un recuadro grande con el título arriba, como las secciones de Diario, y su dibujo debajo (10 nov 2026; antes el título
+ * iba abajo y se leía como si fuera del recuadro siguiente). El dibujo va en su [io.github.ruddy2003.vestigium.ui.Escena]:
  * la pared del tema detrás, sin tarjeta ni línea de contorno (9 nov 2026; antes, una tarjeta con borde y el marco del mapa
  * encima). Sin aura: el recuadro entero es un solo botón, y el aura va solo en los objetos que se tocan uno por uno.
  */
@@ -270,14 +271,14 @@ internal fun Recuadro(titulo: String, detalle: String, modifier: Modifier = Modi
     val cs = MaterialTheme.colorScheme
     val sentir = rememberSentir()
     Column(modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).clickable { sentir(Sentidos.Evento.ABRIR); onClick() }) {
-        io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth().height(alto)) { dibujo() }
-        Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(Estilo.seccion(titulo, Romano.latin(titulo)).first, style = MaterialTheme.typography.titleLarge)
                 Text(detalle, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
             Text("→", style = MaterialTheme.typography.titleLarge, color = cs.primary)
         }
+        io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth().height(alto)) { dibujo() }
     }
 }
 
