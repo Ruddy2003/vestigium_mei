@@ -86,7 +86,7 @@ object Repo {
         if (listo || errorAlAbrir != null) return
         try { abrir(ctx) } catch (e: Throwable) {
             val texto = (e::class.simpleName ?: "error") + (e.message?.let { ": " + it.take(300) } ?: "")
-            if (!::db.isInitialized) runCatching { db = Db(ctx.applicationContext) }
+            if (runCatching { db }.isFailure) runCatching { db = Db(ctx.applicationContext) }
             errorAlAbrir = texto
             runCatching { Rescate.prefs(ctx).edit().putString(Rescate.MARCA_ERROR, Fechas.ahoraIso() + " · " + texto).apply() }
         }
