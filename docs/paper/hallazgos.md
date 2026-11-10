@@ -1429,6 +1429,7 @@ Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11
 - **Por qué importa:** infla los conteos de registros de ánimo del panel, de `vm_horas` y de los reportes. `animo_cierre_valencia` y `animo_cierre_activacion` toman el último, así que esos no se dañan.
 - **Gravedad:** Alta.
 - **Propuesta:** `rememberUpdatedState` en la cuadrícula y buscar el previo dentro de la función. Cambia lo que se guarda: `SCHEMA_V`, `DESDE` y Apéndice D. Para los datos ya guardados, en R quedarse con el último `cierre` de cada fecha; en la app, una limpieza que mande los sobrantes a la papelera, con aprobación.
+- **Estado:** Resuelto en el esquema 23 (commit `c19f53b`, D.177): cada toque corrige el mismo registro, y `Repo.quitarRepetidos()` dejó de cada noche el más reciente.
 
 ### H-22-2 · Lo importado de antes de instalar la app usa la zona horaria de la instalación
 - **Dónde:** `data/Repo.kt` (historial de zonas, primera entrada desde 1970), `data/Fechas.kt` (`zonaEn`), `data/Importaciones.kt`; `vm_google`, `vm_youtube`, `vm_huellas`, ubicaciones y fotos importadas.
@@ -1436,6 +1437,7 @@ Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11
 - **Por qué importa:** las variables que dependen de la hora («de madrugada», primera y última actividad) y el día al que se asigna cada huella salen mal para todo ese periodo. Lo registrado por el teléfono desde la instalación no se afecta.
 - **Gravedad:** Alta para quien haya cambiado de huso; nula para quien no.
 - **Propuesta:** poder declarar periodos de zona pasados (con sugerencia a partir de las ubicaciones importadas) y recalcular `fecha` de lo importado. Cambia lo guardado: `SCHEMA_V` y Apéndice D. Mientras tanto, no usar en análisis las horas de lo importado de esa época.
+- **Estado:** Decidido el 10 nov 2026: no se cambia; los datos importados se quedan como están. Vale como advertencia al analizar horas de lo importado.
 
 ### H-22-3 · Una relectura vacía de la fuente borra datos pasivos ya guardados
 - **Dónde:** `sensores/Salud.kt` (`sincronizar`), `sensores/Pantalla.kt`, `data/Fusion.kt` (`salud`).
@@ -1499,6 +1501,7 @@ Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11
 - **Por qué importa:** en un documento que se guarda, es una fecha inexacta.
 - **Gravedad:** Baja.
 - **Propuesta:** en reportes y PDF, el mes común siempre, con el del tema al lado si se quiere; quitar el nombre del calendario de los rótulos de conteo.
+- **Estado:** Resuelto en los reportes (commit `c19f53b`, D.179). Pendiente en pantallas y widget.
 
 ### H-22-12 · El reporte de terapia cuenta dos veces el gimnasio y da medias sin su número de días
 - **Dónde:** `ciencia/Terapia.kt` (`FUERZA`, `otras`), `reportes/ReporteTerapia.kt`.

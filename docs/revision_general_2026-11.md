@@ -10,7 +10,7 @@ Diagnóstico pedido por el autor tras las primeras semanas de uso real. **No cam
 
 **Qué significa «cambia lo guardado».** Es una corrección de error, permitida por la regla, pero pide subir `SCHEMA_V`, anotar la columna en `Diccionario.kt` (`DESDE`) y una fila en el Apéndice D. Conviene hacerlas **antes del 1 de enero de 2027**, para que 2027 empiece limpio. Los hallazgos metodológicos están además en `docs/paper/hallazgos.md` (H-22-1 a H-22-12).
 
-**Lo ya resuelto** en la revisión de uso del 10 de noviembre (Apéndice D.171 a D.176) no se repite aquí: el cierre de la hoja de la noche, el regreso a «¿Cómo estás ahora?», la lista completa de personas, los días por persona en los reportes, el libro por meses del calendario, los promedios «al día», la comparación con el mes anterior y el desplazamiento de Diario y Vida.
+**Lo ya resuelto** en la revisión de uso del 10 de noviembre (Apéndice D.171 a D.179) no se repite aquí: el cierre de la hoja de la noche, el regreso a «¿Cómo estás ahora?», la lista completa de personas, los días por persona en los reportes, el libro por meses del calendario, los promedios «al día», la comparación con el mes anterior y el desplazamiento de Diario y Vida.
 
 ---
 
@@ -18,9 +18,9 @@ Diagnóstico pedido por el autor tras las primeras semanas de uso real. **No cam
 
 | # | Cambio | Por qué primero | Esfuerzo | Congelación |
 |---|---|---|---|---|
-| 1 | Que el ánimo del cierre de la noche guarde **un** registro, no uno por toque | Hoy infla los conteos de registros de ánimo en el panel y en los reportes | Bajo | Cambia lo guardado (corrección) |
+| 1 | ~~Que el ánimo del cierre de la noche guarde **un** registro, no uno por toque~~ (hecho, D.177) | Hoy infla los conteos de registros de ánimo en el panel y en los reportes | Bajo | Cambia lo guardado (corrección) |
 | 2 | Que una relectura vacía del reloj o del teléfono **no borre** datos buenos | Pérdida silenciosa justo al cambiar de teléfono | Bajo-medio | No rompe |
-| 3 | Declarar en qué zona horaria vivías **antes de instalar la app** | Todo lo importado de esa época está en la hora equivocada | Medio-alto | Cambia lo guardado (corrección) |
+| 3 | ~~Declarar en qué zona horaria vivías **antes de instalar la app**~~ (decidido: no se cambia) | Todo lo importado de esa época está en la hora equivocada | Medio-alto | Cambia lo guardado (corrección) |
 | 4 | Rescate ante una base dañada o un documento ilegible | Hoy Android borra el archivo y la app arranca vacía | Bajo-medio | No rompe |
 | 5 | Una sola definición del «ánimo de la semana» | La misma semana da números distintos en Hoy, Vida, el widget y el reporte | Bajo | No rompe |
 | 6 | Que todos los resúmenes (y los días por persona) salgan de la misma función | El libro, la pantalla y el reporte del mismo mes no cuadran entre sí | Medio | No rompe |
@@ -40,6 +40,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 ## Hallazgos, por impacto
 
 ### 1. El ánimo del cierre de la noche guarda un registro por cada toque
+- **Estado:** **resuelto** el 10 de noviembre (esquema 23, Apéndice D.177): cada toque corrige el mismo registro y de cada noche quedó solo el más reciente; los demás fueron a la papelera.
 - **Tema:** datos.
 - **Dónde:** Llenar el día → «Cómo estás ahora» (`ui/pantallas/Lote2.kt`, `BloqueCierre`); la cuadrícula está en `ui/Selectores.kt` (`CuadriculaAfecto`).
 - **Qué pasa:** la cuadrícula escucha los toques con `pointerInput(Unit)`, que se queda con la **primera** función que recibió. En esa primera función, «el registro previo de esta noche» todavía era «ninguno». Así que cada toque crea un momento nuevo con `origen = "cierre"` en lugar de corregir el anterior. Ejemplo inventado: tocas tres casillas hasta dar con la tuya y quedan tres registros con segundos de diferencia.
@@ -58,6 +59,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe (no cambia campos ni fórmulas). Anotado como H-22-3.
 
 ### 3. Lo importado de antes de instalar la app está en la zona horaria de hoy
+- **Estado:** **decidido el 10 de noviembre: no se cambia.** El autor prefiere dejar los datos importados como están. Queda como advertencia para el análisis (H-22-2).
 - **Tema:** datos.
 - **Dónde:** `data/Repo.kt` (el historial de zonas empieza con una sola entrada desde 1970), `data/Fechas.kt` (`zonaEn`), `data/Importaciones.kt`.
 - **Qué pasa:** la app sabe en qué zona estás desde que se instaló, pero para todo lo anterior supone la zona del teléfono el día de la instalación. Si entonces vivías en otro huso, el historial importado (ubicaciones, YouTube, actividad de Google, fotos, huellas) queda corrido varias horas. Ejemplo inventado: con siete horas de diferencia, un video visto a las 21:00 queda como visto a las 14:00, o a las 4:00 del día siguiente, según hacia dónde sea el desfase.
@@ -131,6 +133,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 11. Nombres que afirman un calendario que el dato no usa
+- **Estado:** **resuelto en los reportes** el 10 de noviembre (Apéndice D.179): el encabezado y el pie dicen la fecha común y, debajo, la del tema. Sigue pendiente en las pantallas y el widget.
 - **Tema:** diseño.
 - **Dónde:** `ui/Estilo.kt` (`mes`, `fecha`), `ui/nombres/NombresTemplario.kt`, `ui/Temas.kt`; se ve en Diario, libreta de momentos, bibliotecas, el reporte mensual y el widget.
 - **Qué pasa:** en Templario un mes del calendario común se rotula «<mes> juliano» y el conteo dice «este mes juliano», aunque los días contados son los del mes gregoriano; el encabezado y el pie de un mismo reporte pueden dar meses distintos. Revolución, Egipto y Neón hacen algo parecido con sus nombres de mes o con numeraciones inventadas que parecen dato. Solo el Calendario añade el mes común al lado.
@@ -221,6 +224,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe si solo cambian rótulos; unificar las escalas sí la rompería. Anotado como H-22-7.
 
 ### 21. Un doble toque guarda dos veces
+- **Estado:** **resuelto en parte** el 10 de noviembre (Apéndice D.177): una toma de suplemento idéntica a otra ya no se guarda. Falta el guardián general de los botones.
 - **Tema:** datos.
 - **Dónde:** hoja rápida ⊕ (`ui/QuickActivity.kt`: suplementos, registros privados), huella del día.
 - **Qué pasa:** la auditoría encontró registros gemelos con la misma marca de tiempo o a segundos de distancia en una toma de suplemento, en un registro con hora y en una huella. Los botones de guardar no se desactivan tras el primer toque.
@@ -275,6 +279,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 27. Lo que se marca a mano entra en el reporte del mes como si hubiera pasado ese mes
+- **Estado:** **resuelto** el 10 de noviembre (esquema 23, Apéndice D.178), como lo pidió el autor: al marcar se pregunta «hoy», «otra fecha» o «sin fecha»; sin fecha cuenta en el total y no en los reportes. Las marcas de antes quedaron sin fecha.
 - **Tema:** reportes.
 - **Dónde:** Mundo → Patrimonio (`ui/pantallas/Mundo.kt`; `data/Mundo.kt`, `SitioMarcado.fecha`) y los reportes (`ciencia/Periodo.kt`, `sitios`).
 - **Qué pasa:** al marcar a mano un sitio de Patrimonio que visitaste hace años, el reporte toma la fecha de la marca: aparece entre los lugares del mes y suma al total del año.
