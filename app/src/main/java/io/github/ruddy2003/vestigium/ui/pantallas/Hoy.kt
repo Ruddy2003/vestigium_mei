@@ -1050,6 +1050,7 @@ fun LineaDelTiempo(fecha: String) {
         }
         val medidor = androidx.compose.ui.text.rememberTextMeasurer()
         val estiloEtq = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onPrimary)
+        val estiloEtqFuera = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurface)
         val estiloEje = estiloCifras(MaterialTheme.typography.labelSmall.copy(color = texto))
         val eg = estiloGrafica()
         Canvas(Modifier.weight(1f).height(alto * (pistas.size + 1))) {
@@ -1072,11 +1073,25 @@ fun LineaDelTiempo(fecha: String) {
                     val xa = x(a).coerceIn(0f, size.width); val xb = x(b).coerceIn(0f, size.width)
                     if (xb > xa) barraGrafica(eg, Offset(xa, y + h * 0.2f), Size(xb - xa, h * 0.6f), c.copy(alpha = 0.75f), horizontal = true)
                 }
-                p.etiquetas.forEach { (a, t) ->
-                    val xa = x(a)
+                // El rótulo va dentro de su bloque solo si cabe; si no, al lado (después del bloque), en el color del texto y
+                // sin encimarse con el bloque ni con el rótulo que sigue (hallazgo 32). Si tampoco cabe ahí, no se escribe.
+                var ocupado = -1f
+                p.etiquetas.forEachIndexed { j, et ->
+                    val t = et.second
+                    val xa = x(et.first)
                     if (t.isNotBlank() && xa in 0f..size.width - 30f) {
                         val r = medidor.measure(t.take(12), estiloEtq)
-                        drawText(r, topLeft = Offset(xa + 3f, y + (h - r.size.height) / 2))
+                        val xb = p.bloques.getOrNull(j)?.let { b -> x(b.second).coerceIn(0f, size.width) } ?: xa
+                        if (r.size.width + 6f <= xb - xa) {
+                            if (xa + 3f >= ocupado) { drawText(r, topLeft = Offset(xa + 3f, y + (h - r.size.height) / 2)); ocupado = xa + 3f + r.size.width }
+                        } else {
+                            val fuera = medidor.measure(t.take(12), estiloEtqFuera)
+                            val xo = maxOf(xb, xa) + 3f
+                            val tope = p.bloques.map { b -> x(b.first) }.filter { it > xa + 0.5f }.minOrNull() ?: size.width
+                            if (xo >= ocupado && xo + fuera.size.width <= minOf(tope, size.width)) {
+                                drawText(fuera, topLeft = Offset(xo, y + (h - fuera.size.height) / 2)); ocupado = xo + fuera.size.width
+                            }
+                        }
                     }
                 }
                 p.marcas.forEach { (a, c) -> val xa = x(a); if (xa in 0f..size.width) drawLine(c, Offset(xa, y + h * 0.18f), Offset(xa, y + h * 0.82f), 3f) }

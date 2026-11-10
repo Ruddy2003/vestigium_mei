@@ -2,14 +2,51 @@ package io.github.ruddy2003.vestigium.data
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+
+/**
+ * Qué se hace si SQLite avisa que el archivo de la base está dañado. El manejador de Android lo **borra** y la app arranca
+ * vacía; este lo aparta con otro nombre («vestigium.db.dañada-<fecha>», junto con sus archivos -wal y -shm) y deja una marca
+ * para avisarte en «Estado de los datos». Una base dañada casi siempre se puede recuperar en buena parte: borrarla perdía
+ * todo lo posterior al último respaldo. Después, la app sigue con una base nueva (como antes), pero el archivo queda.
+ */
+class Rescate(private val ctx: Context) : DatabaseErrorHandler {
+    companion object {
+        const val PREFS = "rescate"
+        /** Nombre del archivo apartado la última vez que la base se dañó. */
+        const val MARCA_DANADA = "base_danada"
+        /** Cuándo se apartó (fecha y hora). */
+        const val MARCA_DANADA_TS = "base_danada_ts"
+        /** El último error al abrir la base, con su fecha. */
+        const val MARCA_ERROR = "error_al_abrir"
+        fun prefs(ctx: Context) = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    }
+
+    override fun onCorruption(dbObj: SQLiteDatabase) {
+        val ruta = runCatching { dbObj.path }.getOrNull()
+        runCatching { if (dbObj.isOpen) dbObj.close() }
+        if (ruta.isNullOrEmpty() || ruta == ":memory:") return
+        val sello = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss"))
+        val destino = "$ruta.dañada-$sello"
+        var apartada = false
+        listOf("", "-wal", "-shm", "-journal").forEach { cola ->
+            val f = java.io.File(ruta + cola)
+            if (f.exists()) { val ok = runCatching { f.renameTo(java.io.File(destino + cola)) }.getOrDefault(false); if (cola.isEmpty()) apartada = ok }
+        }
+        runCatching {
+            prefs(ctx).edit().putString(MARCA_DANADA, if (apartada) java.io.File(destino).name else "no se pudo apartar el archivo")
+                .putString(MARCA_DANADA_TS, sello).commit()
+        }
+    }
+}
 
 /**
  * Almacén local. Cada colección guarda documentos JSON (flexible para que el esquema crezca con los años)
  * y las ubicaciones, que son muchas, van en su propia tabla con columnas numéricas.
  */
-class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 2) {
+class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 2, Rescate(ctx.applicationContext ?: ctx)) {
     companion object {
         /** Precisión prudente (metros) para los puntos que no la traen, como los importados de Google Maps (P-33). */
         const val PRECISION_SIN_DATO = 100.0
@@ -225,6 +262,12 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 2) {
 
     fun ultimaUbicacion(): Long? =
         readableDatabase.rawQuery("SELECT MAX(ms) FROM ubicaciones", null).use { c -> if (c.moveToFirst() && !c.isNull(0)) c.getLong(0) else null }
+
+    /** El punto más reciente que tomó el teléfono o vino de un historial (no los de fotos): tu última ubicación conocida. */
+    fun ultimoPunto(): Punto? =
+        readableDatabase.rawQuery("SELECT ms, lat, lon, precision, fuente FROM ubicaciones WHERE fuente IS NULL OR fuente NOT LIKE 'foto%' ORDER BY ms DESC LIMIT 1", null).use { c ->
+            if (c.moveToFirst()) Punto(c.getLong(0), c.getDouble(1), c.getDouble(2), if (c.isNull(3)) null else c.getDouble(3), c.getString(4)) else null
+        }
 
     fun contarUbicaciones(): Long =
         readableDatabase.rawQuery("SELECT COUNT(*) FROM ubicaciones", null).use { c -> if (c.moveToFirst()) c.getLong(0) else 0 }

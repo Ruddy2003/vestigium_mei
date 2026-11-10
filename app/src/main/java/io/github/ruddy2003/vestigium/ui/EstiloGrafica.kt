@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import androidx.core.content.res.ResourcesCompat
 import io.github.ruddy2003.vestigium.R
 import java.util.concurrent.ConcurrentHashMap
@@ -346,8 +347,18 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
 fun EstiloGrafica.textoCifras(base: TextStyle): TextStyle = base.copy(
     fontFamily = familiaCifras, fontWeight = pesoCifras, fontFeatureSettings = rasgosCifras ?: base.fontFeatureSettings,
     letterSpacing = espaciadoCifras.em, fontStyle = if (cursivaCifras) FontStyle.Italic else FontStyle.Normal,
-    fontSize = if (base.fontSize.isSp) base.fontSize * escalaCifras else base.fontSize,
+    // La escala de la letra de adorno no baja la cifra de 11 sp (hallazgo 25); si [base] ya era menor, se queda como venía.
+    fontSize = if (base.fontSize.isSp) maxOf(base.fontSize.value * escalaCifras, minOf(11f, base.fontSize.value)).sp else base.fontSize,
 )
+
+/**
+ * El estilo de los importes y de las cifras que son el contenido (hallazgo 25): la letra de texto del tema (la de [base]),
+ * con cifras tabulares («tnum», todas del mismo ancho, para que las columnas cuadren) y el color pleno del texto. La letra
+ * de adorno de [estiloCifras] queda para los ejes de las gráficas.
+ */
+@Composable
+fun estiloImporte(base: TextStyle = MaterialTheme.typography.bodyMedium): TextStyle =
+    base.copy(fontFeatureSettings = "tnum", color = MaterialTheme.colorScheme.onSurface)
 
 /** El estilo de las cifras de las gráficas del tema, para `Text` o `drawText`. */
 @Composable

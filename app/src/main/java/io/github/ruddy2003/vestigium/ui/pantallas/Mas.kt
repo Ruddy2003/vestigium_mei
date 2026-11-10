@@ -59,7 +59,7 @@ fun PantallaMas(nav: Nav) {
     val abrir = remember { androidx.compose.runtime.mutableStateListOf(0, 0, 0, 0) }
     val alcance = androidx.compose.runtime.rememberCoroutineScope()
     Hoja("Más", nav.atras, buscar = { nav.ir("buscar") }) {
-        val indice = listOf("Registros" to 9, "Gente" to 4, "Medir" to 9, "Sistema" to 10)
+        val indice = listOf("Registros" to 10, "Gente" to 4, "Medir" to 9, "Sistema" to 10)
         FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             indice.forEachIndexed { i, (t, n) ->
                 Ficha("${i + 1} $t · $n", false) { abrir[i]++; alcance.launch { kotlinx.coroutines.delay(150); req[i].bringIntoView() } }
@@ -70,7 +70,11 @@ fun PantallaMas(nav: Nav) {
         Seccion("Registros especiales", "Lo que no anotas todos los días.", numero = 1, plegable = true, abrir = abrir[0], modifier = Modifier.bringIntoViewRequester(req[0])) {
             Tarjeta {
                 val ult = Repo.ascensos.maxByOrNull { it.fecha }
-                // Gastos y campañas ya están a la vista en Análisis y en Vida; Ideario, notas, cartas y sueños, en la pestaña Diario (9 nov 2026).
+                // Las campañas ya están a la vista en Vida; Ideario, notas, cartas y sueños, en la pestaña Diario (9 nov 2026).
+                // Gastos vuelve a tener su puerta aquí (hallazgo 17): antes solo se abría desde Análisis o el Tablero.
+                val gastosMes = Repo.gastos.count { it.fecha.startsWith(Fechas.mesDe(Fechas.hoyCalendario())) }
+                FilaMas("gastos", "Gastos", if (gastosMes == 0) "Gastos e ingresos, por mes y por categoría" else "${porNumero(gastosMes, "1 gasto", "$gastosMes gastos")} este mes · por mes y por categoría", ir)
+                Separador()
                 FilaMas("escalada", "Escalada", if (ult == null) "Bitácora de sesiones y bloques" else "${porNumero(Repo.ascensos.size, "1 sesión", "${Repo.ascensos.size} sesiones")} · última ${Fechas.relativo(ult.fecha)}", ir)
                 Separador()
                 FilaMas("fuerza", "Gimnasio", if (Repo.entrenos.isEmpty()) "Entrenamientos de MacroFactor Workouts" else "${Repo.entrenos.values.count { it.series > 0 }} entrenamientos importados", ir)

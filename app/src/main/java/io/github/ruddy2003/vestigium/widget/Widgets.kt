@@ -428,7 +428,8 @@ object Widgets {
         val col = colores()
         val hoy = Fechas.parse(Fechas.diaLogico())
         val ini = hoy.withDayOfMonth(1)
-        v.setTextViewText(R.id.titulo_mes, Estilo.mes(hoy.monthValue, hoy.year))
+        // El mes del tema y, al lado, el mes común (hallazgo 11).
+        v.setTextViewText(R.id.titulo_mes, Estilo.mesConComun(hoy.monthValue, hoy.year))
         val dias = (0 until ini.lengthOfMonth()).map { ini.plusDays(it.toLong()) }
         // El ánimo de cada día con la definición única de las vistas (Periodo.animoDia): el del diario o, si falta, la media de
         // los avisos, que se dibuja hueca (solo el contorno) y se cuenta aparte en el rótulo.
@@ -475,14 +476,19 @@ object Widgets {
         return (0xFF shl 24) or (m(16) shl 16) or (m(8) shl 8) or m(0)
     }
 
-    private fun linea(k: String, v: String) = Estilo.clave(k).padEnd(9) + "= " + v
+    /** Aísla la dirección de [t] (U+2066 … U+2069): una clave en árabe ya no voltea las cifras del renglón (hallazgo 24). */
+    private fun aislado(t: String) = "⁦" + t + "⁩"
+
+    /** Una línea «clave = valor». Si la clave del tema va en otro alfabeto (chino, árabe, griego…), lleva su español, como el reporte del día. */
+    private fun linea(k: String, v: String) =
+        aislado((Estilo.clave(k) + (Estilo.claveEspanol(k)?.let { " · $it" } ?: "")).padEnd(9)) + "= " + aislado(v)
 
     fun vistaHoy(ctx: Context): RemoteViews {
         val v = RemoteViews(ctx.packageName, R.layout.widget_hoy)
         pintar(v, Piel.HOY)
         val f = Fechas.diaLogico()
         val fase = Luna.fase(f)
-        v.setTextViewText(R.id.hoy_fecha, Estilo.widget("hoy") + " · " + Estilo.fecha(f))
+        v.setTextViewText(R.id.hoy_fecha, aislado(Estilo.widget("hoy")) + " · " + aislado(Estilo.fecha(f)))
         v.setTextViewText(R.id.hoy_sub, com + Fechas.corto(f) + " · " + Luna.glifo(fase) + " " + Luna.nombre(fase))
         val l = ArrayList<String>()
         val d = Repo.dias[f]
@@ -499,7 +505,7 @@ object Widgets {
         l += linea("momenta", "$mom")
         Repo.pantalla[f]?.let { l += linea("telephon", "${it.total_min / 60} h ${"%02d".format(it.total_min % 60)}") }
         Repo.entorno[f]?.let { e -> if (e.t_max != null) l += linea("caelum", "%.0f°".format(e.t_max) + (e.codigo?.let { " " + Clima.descripcion(it) } ?: "")) }
-        if (Repo.config.discreto) l.retainAll { k -> listOf("animus", "somnus", "passus").any { k.startsWith(Estilo.clave(it)) } }
+        if (Repo.config.discreto) l.retainAll { k -> listOf("animus", "somnus", "passus").any { k.removePrefix("⁦").startsWith(Estilo.clave(it)) } }
         v.setTextViewText(R.id.hoy_lineas, l.joinToString("\n"))
         val abrir = Intent(ctx, MainActivity::class.java).putExtra(MainActivity.PANTALLA, "dia").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         clic(v, R.id.raiz_hoy, pi(ctx, 3400, abrir))

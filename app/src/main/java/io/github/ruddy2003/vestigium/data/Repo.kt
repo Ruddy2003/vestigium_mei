@@ -68,9 +68,32 @@ object Repo {
     /** Si la configuración no se pudo leer al abrir: la hora con que se guardó la copia del original (colección config_ilegible). */
     var configIlegible by mutableStateOf<String?>(null); private set
 
+    /**
+     * Si la base no se pudo abrir o leer al arrancar: el error, en texto. Mientras no sea null, lo que hay en memoria está
+     * incompleto; se avisa en «Estado de los datos» y la tarea de fondo no sincroniza ni respalda.
+     */
+    var errorAlAbrir by mutableStateOf<String?>(null); private set
+    /** Si alguna vez la base se dañó y su archivo se apartó (no se borró): el nombre con que quedó guardado. */
+    var baseDanada by mutableStateOf<String?>(null); private set
+
+    /**
+     * Abre la base y carga todo en memoria. Nunca lanza: antes, si fallaba, la app se cerraba al abrir una y otra vez (este
+     * método se llama al arrancar y en cada pantalla, aviso y widget) y tampoco dejaba exportar. Ahora el error queda en
+     * [errorAlAbrir] y en una marca guardada, y no se reintenta en este arranque.
+     */
     @Synchronized
     fun init(ctx: Context) {
-        if (listo) return
+        if (listo || errorAlAbrir != null) return
+        try { abrir(ctx) } catch (e: Throwable) {
+            val texto = (e::class.simpleName ?: "error") + (e.message?.let { ": " + it.take(300) } ?: "")
+            if (!::db.isInitialized) runCatching { db = Db(ctx.applicationContext) }
+            errorAlAbrir = texto
+            runCatching { Rescate.prefs(ctx).edit().putString(Rescate.MARCA_ERROR, Fechas.ahoraIso() + " · " + texto).apply() }
+        }
+        runCatching { baseDanada = Rescate.prefs(ctx).getString(Rescate.MARCA_DANADA, null) }
+    }
+
+    private fun abrir(ctx: Context) {
         // En un teléfono nuevo, la base que trajo la copia de Android (si la encendiste), antes de abrirla.
         runCatching { CopiaAndroid.restaurarSiHace(ctx.applicationContext) }
         db = Db(ctx.applicationContext)
@@ -229,7 +252,10 @@ object Repo {
 
     /** Decodifica y anota cuántos documentos de [col] no se pudieron leer (en las consultas por fechas, el mayor conteo visto). */
     private fun <T> leer(col: String, textos: List<String>, s: KSerializer<T>): List<T> {
-        val (l, fallidos) = Decodificar.todos(textos, s) { t -> crudosIlegibles.getOrPut(col) { java.util.concurrent.ConcurrentHashMap.newKeySet() }.let { if (it.size < 20_000) it.add(t) } }
+        val (l, fallidos) = Decodificar.todos(textos, s) { t ->
+            crudosIlegibles.getOrPut(col) { java.util.concurrent.ConcurrentHashMap.newKeySet() }.let { if (it.size < 20_000) it.add(t) }
+            copiarIlegible(col, t)
+        }
         if (fallidos > 0) {
             // Al abrir, varios hilos leen a la vez: se juntan aparte y se publican al final de init.
             if (listo) { val n = maxOf(fallidos, ilegibles[col] ?: 0); enMain { ilegibles = ilegibles + (col to n) } }
@@ -239,6 +265,23 @@ object Repo {
     }
 
     private val ilegiblesAlAbrir = java.util.concurrent.ConcurrentHashMap<String, Int>()
+
+    /** Las colecciones con un documento por día, donde lo ilegible se muestra vacío y la siguiente escritura lo reemplaza. */
+    private val COPIAR_ILEGIBLES = setOf("dias", "salud", "notifs")
+
+    /**
+     * Un día, una salud o un conteo de notificaciones que no se pudo leer: su texto tal cual se copia a la colección
+     * `ilegible_<col>` de la base (como ya se hace con los ajustes en `config_ilegible`). Así, aunque el día se vuelva a
+     * guardar encima, el original no se pierde, y el respaldo ya recoge esas colecciones. La clave es la huella del texto
+     * (la misma que usa el respaldo): el mismo documento no se copia dos veces.
+     */
+    private fun copiarIlegible(col: String, t: String) {
+        if (col !in COPIAR_ILEGIBLES) return
+        runCatching {
+            val id = java.security.MessageDigest.getInstance("SHA-1").digest(t.toByteArray()).joinToString("") { "%02x".format(it) }
+            if (db.uno("ilegible_$col", id) == null) db.poner("ilegible_$col", id, null, t)
+        }
+    }
 
     /**
      * El texto tal cual de lo que no se pudo leer, por colección (9 nov 2026). El respaldo se arma con lo que está en
