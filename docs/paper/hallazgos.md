@@ -1418,3 +1418,91 @@ Encontrados al hacer los cambios del esquema 21 (D.161 a D.165). Quedan anotados
 - **Por qué importa:** los episodios pueden quedar subregistrados, sobre todo los más intensos. Un 0 no distingue entre «no pasó» y «no lo anoté» (como H-1-1).
 - **Gravedad:** Media.
 - **Propuesta:** revisar su frecuencia contra el diario de esos días. Una pregunta de la noche («¿hubo algo fuerte hoy?») daría un «no» explícito; no se agregó, para no alargar la hoja.
+
+## Revisión general (10 nov 2026, esquema 22, sin módulo)
+
+Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11.md`), que cruzó el código con una exportación real y sus reportes. Aquí van solo los que tocan qué se mide o cómo se calcula; los de navegación y diseño están en ese documento. No se cambió código: cada uno espera decisión. Los ejemplos son inventados.
+
+### H-22-1 · El ánimo del cierre de la noche guarda un registro por cada toque
+- **Dónde:** `ui/pantallas/Lote2.kt` (`BloqueCierre`), `ui/Selectores.kt` (`CuadriculaAfecto`); `registros_animo`, `n_momentos`, `vm_horas`.
+- **Qué pasa:** la cuadrícula escucha los toques con `pointerInput(Unit)`, que conserva la primera función recibida. En ella, el registro previo de la noche era «ninguno», así que cada toque crea un momento nuevo con `origen = "cierre"` en vez de corregir el anterior. Ejemplo: tres toques para afinar la casilla dejan tres registros en pocos segundos.
+- **Por qué importa:** infla los conteos de registros de ánimo del panel, de `vm_horas` y de los reportes. `animo_cierre_valencia` y `animo_cierre_activacion` toman el último, así que esos no se dañan.
+- **Gravedad:** Alta.
+- **Propuesta:** `rememberUpdatedState` en la cuadrícula y buscar el previo dentro de la función. Cambia lo que se guarda: `SCHEMA_V`, `DESDE` y Apéndice D. Para los datos ya guardados, en R quedarse con el último `cierre` de cada fecha; en la app, una limpieza que mande los sobrantes a la papelera, con aprobación.
+
+### H-22-2 · Lo importado de antes de instalar la app usa la zona horaria de la instalación
+- **Dónde:** `data/Repo.kt` (historial de zonas, primera entrada desde 1970), `data/Fechas.kt` (`zonaEn`), `data/Importaciones.kt`; `vm_google`, `vm_youtube`, `vm_huellas`, ubicaciones y fotos importadas.
+- **Qué pasa:** para todo instante anterior a la instalación se supone la zona que tenía el teléfono ese día. Si entonces se vivía en otro huso, la hora local y el día lógico de lo importado quedan corridos.
+- **Por qué importa:** las variables que dependen de la hora («de madrugada», primera y última actividad) y el día al que se asigna cada huella salen mal para todo ese periodo. Lo registrado por el teléfono desde la instalación no se afecta.
+- **Gravedad:** Alta para quien haya cambiado de huso; nula para quien no.
+- **Propuesta:** poder declarar periodos de zona pasados (con sugerencia a partir de las ubicaciones importadas) y recalcular `fecha` de lo importado. Cambia lo guardado: `SCHEMA_V` y Apéndice D. Mientras tanto, no usar en análisis las horas de lo importado de esa época.
+
+### H-22-3 · Una relectura vacía de la fuente borra datos pasivos ya guardados
+- **Dónde:** `sensores/Salud.kt` (`sincronizar`), `sensores/Pantalla.kt`, `data/Fusion.kt` (`salud`).
+- **Qué pasa:** al releer un día, pasos, frecuencia cardiaca y sueño se sustituyen por lo que devuelva Health Connect aunque sea nada, y la pantalla sin eventos se guarda como 0 minutos. Tras restaurar en un teléfono nuevo, esas fuentes suelen llegar vacías.
+- **Por qué importa:** los días restaurados pueden quedar en blanco o en cero sin aviso, y un 0 de pantalla parece un dato real.
+- **Gravedad:** Alta (pérdida silenciosa), aunque solo ocurre al migrar o al forzar la sincronización.
+- **Propuesta:** no reemplazar un valor por nulo o cero cuando la fuente vino vacía, como ya se hace con `fc_reposo`, `spo2` y `hrv`. No cambia campos ni fórmulas.
+
+### H-22-4 · El «ánimo de la semana» se calcula de cuatro maneras
+- **Dónde:** `ciencia/Periodo.kt` (`valDe`) frente a `ui/pantallas/Semana.kt`, `Vida.kt`, `Hoy.kt`, `Anno.kt`, `Calendario.kt` y `widget/Widgets.kt`.
+- **Qué pasa:** los reportes usan solo la valencia del diario; las pantallas rellenan los días sin valencia con la media de los registros de ánimo. «Esta semana» de Hoy son 7 días móviles y las demás van de lunes a domingo.
+- **Por qué importa:** la misma semana muestra cifras distintas, y el relleno mezcla la valencia recordada con la momentánea, que el capítulo 3 (3.3.4) pide no mezclar.
+- **Gravedad:** Media.
+- **Propuesta:** una sola función para todas las vistas; el relleno con avisos, si se conserva, rotulado aparte.
+
+### H-22-5 · Los resúmenes usan definiciones distintas de la misma cifra
+- **Dónde:** `ciencia/Periodo.kt` frente a `ui/pantallas/Semana.kt`, `Anno.kt`, `Calendario.kt`, `ui/LibroDiario.kt` (`resumenMes`), `ciencia/Totales.kt`, `widget/Widgets.kt`; los días por persona, en `data/Personas.kt` (`diasCon`) frente a ocho copias.
+- **Qué pasa:** «días con diario» es nota o valencia, solo nota o cualquier día guardado, según el sitio. El sueño medio descarta las noches de menos de 120 minutos solo en `Periodo`. Los pasos medios cuentan o no los días en cero. El gasto va por día lógico en unos y por calendario en otros. Los días por persona miran fuentes distintas.
+- **Por qué importa:** el resumen del libro, el de la pantalla y el del reporte del mismo mes no coinciden.
+- **Gravedad:** Media.
+- **Propuesta:** `Periodo.calcular` y `Personas.diasCon` como únicas fuentes.
+
+### H-22-6 · «Tu año» afirma con muy pocos casos o con datos de antes de usar la app
+- **Dónde:** `ciencia/TuAnio.kt` (`moda`, lo común, el día más raro, la palabra del año), `ciencia/Periodo.kt` (`mejorDia`), `ui/pantallas/TuAnio.kt`.
+- **Qué pasa:** el horario de sueño y los pasos «de costumbre» son la moda en cajas de 15 minutos y de 1,000 pasos: con pocas noches gana una caja con cuatro o cinco casos, lejos de la media. El mejor día de la semana se decide con tres o cuatro días por barra. «El día más raro» y «dónde estabas» pueden salir del historial importado, anterior al primer día de diario. Los empates se resuelven por el primero sin decirlo. Sin años anteriores, la palabra del año es solo la más frecuente.
+- **Por qué importa:** son frases rotundas con poco detrás; se prestan a leerse como hechos.
+- **Gravedad:** Media.
+- **Propuesta:** un mínimo de casos por frase (por ejemplo, 14 noches y 5 días por barra) y callar por debajo; limitar esas frases a los días desde el primer registro propio; decir los empates.
+
+### H-22-7 · El impulso se mide en el día y en el momento, con escalas distintas
+- **Dónde:** `ui/pantallas/Recaidas.kt`, `ui/QuickActivity.kt`, `data/Recaidas.kt`, `ciencia/Terapia.kt`.
+- **Qué pasa:** el día guarda una escala de 0 a 5 y el registro con hora otra de 1 a 5. Una recaída con hora marca también el día; un impulso con hora no toca la escala del día. El reporte cuenta unos y promedia la otra sin distinguirlos.
+- **Por qué importa:** quien lea el reporte puede tomarlas por una sola medida.
+- **Gravedad:** Baja.
+- **Propuesta:** conservar ambas y rotularlas («el peor momento del día» y «registros con hora»). Unificar las escalas rompería la comparación.
+
+### H-22-8 · `dia_dificil` mide el camino de entrada, no el día
+- **Dónde:** `avisos/Avisos.kt`, `ui/QuickActivity.kt` (registro mínimo), `ciencia/Estadistica.kt` (`dia_dificil`), `reportes/ReporteTerapia.kt`.
+- **Qué pasa:** la marca solo se enciende al registrar la valencia desde el botón de la notificación, sea cual sea la valencia. En la hoja del día se puede quitar, no poner.
+- **Por qué importa:** la variable no significa lo que su nombre dice: un día bueno registrado por el camino corto cuenta como difícil, y uno malo registrado en la hoja no.
+- **Gravedad:** Media.
+- **Propuesta:** rotularla «registro mínimo» en el reporte y en el diccionario. Una marca real de día difícil sería un campo nuevo: decidirlo antes de 2027.
+
+### H-22-9 · Variables que son el mismo hecho salen como relación
+- **Dónde:** `ciencia/Estadistica.kt` (`FAMILIAS`; `ctx_*`, `gimnasio`, `vi_*`, `con_*`).
+- **Qué pasa:** el contexto «gym», el día de gimnasio y el entrenamiento importado son un solo hecho medido tres veces, y lo mismo «vi a mi familia» y «con familia». Ninguna `ctx_*` está en las familias de relaciones obvias.
+- **Por qué importa:** esas correlaciones por construcción encabezan la lista de hallazgos y cuentan en la corrección por comparaciones múltiples.
+- **Gravedad:** Baja.
+- **Propuesta:** añadirlas a `FAMILIAS`.
+
+### H-22-10 · «Cumplí» significa «≥» en las metas y «>» en los logros propios
+- **Dónde:** `data/Metas.kt`, `ciencia/Logros.kt`, `data/Modelo.kt` (el texto del logro propio dice «desde»).
+- **Qué pasa:** con el mismo umbral, un día que lo iguala cuenta en una meta y no en un logro propio.
+- **Por qué importa:** dos conteos del mismo objetivo pueden diferir, y el texto promete una regla que el código no aplica.
+- **Gravedad:** Baja.
+- **Propuesta:** una función compartida que respete la regla con que se creó cada registro, y corregir el texto.
+
+### H-22-11 · Los temas rotulan meses del calendario común con nombres de otros calendarios
+- **Dónde:** `ui/Estilo.kt` (`mes`, `fecha`), `ui/nombres/NombresTemplario.kt`, `ui/Temas.kt`; se ve en el reporte mensual, el widget y varias pantallas.
+- **Qué pasa:** un mes gregoriano se rotula, por ejemplo, «<mes> juliano», y el encabezado y el pie de un mismo reporte pueden nombrar meses distintos. Los días contados son siempre los del mes común.
+- **Por qué importa:** en un documento que se guarda, es una fecha inexacta.
+- **Gravedad:** Baja.
+- **Propuesta:** en reportes y PDF, el mes común siempre, con el del tema al lado si se quiere; quitar el nombre del calendario de los rótulos de conteo.
+
+### H-22-12 · El reporte de terapia cuenta dos veces el gimnasio y da medias sin su número de días
+- **Dónde:** `ciencia/Terapia.kt` (`FUERZA`, `otras`), `reportes/ReporteTerapia.kt`.
+- **Qué pasa:** la sesión del reloj de un día de gimnasio solo se descuenta de «otras sesiones» si su tipo es «fuerza» o «pesas»; si el reloj la guarda como «otro», sale en las dos filas. Varias medias se dan aunque salgan de un solo día. Los avisos mostrados pueden superar a los planeados si un día no tiene fila de plan.
+- **Por qué importa:** es el reporte que lee otra persona.
+- **Gravedad:** Media.
+- **Propuesta:** descontar la sesión del reloj de todo día de gimnasio; añadir «(N días)» a cada media; contar como planeados al menos los mostrados.
