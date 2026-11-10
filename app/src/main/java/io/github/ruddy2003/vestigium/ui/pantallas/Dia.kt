@@ -161,11 +161,9 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
         Seleccion.noche = fecha; Seleccion.seccion = sec
         nav.ir("noche")
     }
-    // Si se pidió una sección de la noche (avisos, atajos), se abre la hoja de la noche en ella.
-    LaunchedEffect(Seleccion.seccion, fecha) {
-        val sec = Seleccion.seccion ?: return@LaunchedEffect
-        abrirNoche(sec)
-    }
+    // Aquí había un efecto que, al ver una sección pedida, abría la hoja de la noche. Sobraba: quien pide una sección (el
+    // aviso, el atajo, el toque largo, «ponerte al día») ya abre la hoja por su cuenta. Y hacía daño: la apilaba otra vez (al
+    // guardar quedaba una abierta) y le ponía la fecha que Día tuviera abierta en ese momento, que podía no ser la pedida.
     val umbral = with(LocalDensity.current) { 120.dp.toPx() }
     val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
     // Deslizar a los lados cambia de día: a la derecha, el anterior; a la izquierda, el siguiente.
@@ -397,6 +395,12 @@ fun PantallaNoche(nav: Nav) {
     var sucio by remember(fecha) { mutableStateOf(false) }
     val dActual by rememberUpdatedState(d)
     val sucioActual by rememberUpdatedState(sucio)
+    // Si la hoja ya estaba abierta (de ayer, sin sellar) y se pide otra fecha (el aviso o el atajo de hoy), cambia a esa:
+    // antes seguía en el día con que se abrió y lo de hoy se escribía en ayer. Lo que hubiera sin guardar se guarda primero.
+    val nochePedida = Seleccion.noche
+    LaunchedEffect(nochePedida) {
+        if (nochePedida != null && nochePedida != fecha && Seleccion.ponerse.isEmpty()) { if (sucioActual) Repo.guardarDia(dActual); fecha = nochePedida }
+    }
     LaunchedEffect(guardado) { if (!sucio && guardado != null) d = guardado }
     LaunchedEffect(d, sucio) { if (sucio) { delay(700); Repo.guardarDia(d); sucio = false } }
     DisposableEffect(fecha) { onDispose { if (sucioActual) Repo.guardarDia(dActual) } }
