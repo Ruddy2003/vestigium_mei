@@ -33,7 +33,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 
 **Toques por tarea** (contando el de cerrar; hoy → posible): sueño de la mañana 2 → 2 · cierre de la noche desde el aviso 6 → 5 · ánimo dentro de la app 4 → 3 · impulso 3 → 3 · gasto frecuente 4 → 3 · gasto nuevo 5–6 → 4–5 · diario 2–3 · nota 4 → 3 · sustancia 5 → 3 · ficha de una persona 4–5 → 3.
 
-**Capturas.** La parte de diseño se apoya en unas 35 capturas de la rama `capturas` y en el contraste calculado sobre los esquemas de `ui/Disenios.kt`. Faltan por publicar las superficies por tema de Hoy, Llenar el día, controles, diálogo, gráficas y reporte del día (existen como pruebas), y no hay captura del formulario «Ánimo ahora» ni de la app con letra grande del sistema.
+**Capturas.** La parte de diseño se apoya en unas 35 capturas de la rama `capturas` y en el contraste calculado sobre los esquemas de `ui/Disenios.kt`. Para esta revisión se generaron además, por tema y en claro y oscuro, la hoja rápida, la barra de pestañas, los controles, los componentes, el diálogo y las gráficas (ejecución 258 de «Capturas de diseño»): con ellas se confirmaron a la vista los hallazgos 10 (pestañas solo en la lengua del tema) y 12 (pestañas no elegidas con poco contraste). Siguen sin captura Hoy y Llenar el día por tema, el formulario «Ánimo ahora» y la app con letra grande del sistema; lo que depende de ellas se dedujo del código.
 
 ---
 
