@@ -68,9 +68,32 @@ object Repo {
     /** Si la configuración no se pudo leer al abrir: la hora con que se guardó la copia del original (colección config_ilegible). */
     var configIlegible by mutableStateOf<String?>(null); private set
 
+    /**
+     * Si la base no se pudo abrir o leer al arrancar: el error, en texto. Mientras no sea null, lo que hay en memoria está
+     * incompleto; se avisa en «Estado de los datos» y la tarea de fondo no sincroniza ni respalda.
+     */
+    var errorAlAbrir by mutableStateOf<String?>(null); private set
+    /** Si alguna vez la base se dañó y su archivo se apartó (no se borró): el nombre con que quedó guardado. */
+    var baseDanada by mutableStateOf<String?>(null); private set
+
+    /**
+     * Abre la base y carga todo en memoria. Nunca lanza: antes, si fallaba, la app se cerraba al abrir una y otra vez (este
+     * método se llama al arrancar y en cada pantalla, aviso y widget) y tampoco dejaba exportar. Ahora el error queda en
+     * [errorAlAbrir] y en una marca guardada, y no se reintenta en este arranque.
+     */
     @Synchronized
     fun init(ctx: Context) {
-        if (listo) return
+        if (listo || errorAlAbrir != null) return
+        try { abrir(ctx) } catch (e: Throwable) {
+            val texto = (e::class.simpleName ?: "error") + (e.message?.let { ": " + it.take(300) } ?: "")
+            if (runCatching { db }.isFailure) runCatching { db = Db(ctx.applicationContext) }
+            errorAlAbrir = texto
+            runCatching { Rescate.prefs(ctx).edit().putString(Rescate.MARCA_ERROR, Fechas.ahoraIso() + " · " + texto).apply() }
+        }
+        runCatching { baseDanada = Rescate.prefs(ctx).getString(Rescate.MARCA_DANADA, null) }
+    }
+
+    private fun abrir(ctx: Context) {
         // En un teléfono nuevo, la base que trajo la copia de Android (si la encendiste), antes de abrirla.
         runCatching { CopiaAndroid.restaurarSiHace(ctx.applicationContext) }
         db = Db(ctx.applicationContext)
@@ -171,6 +194,24 @@ object Repo {
         Fechas.usarHistorial(config.zonas)
         listo = true
         runCatching { registrarZona() }
+        runCatching { quitarRepetidos() }
+    }
+
+    /**
+     * Limpia lo que se guardó de más por un error ya corregido (esquema 23, D.177). Se puede llamar cuantas veces haga falta:
+     * si no hay nada repetido, no hace nada. Corre al abrir y después de restaurar un respaldo (que puede traerlos de vuelta).
+     *  - El ánimo del cierre de la noche es uno por día: si hay varios, queda el más reciente (el último que tocaste).
+     *  - Una toma de suplemento idéntica a otra (mismo suplemento, misma hora y cantidad) es un doble toque: queda una.
+     * Lo que se quita va a la papelera, como cualquier borrado.
+     */
+    fun quitarRepetidosLuego() { main.post { runCatching { quitarRepetidos() } } }
+    fun quitarRepetidos(): Int {
+        val cierres = momentos.filter { it.esCierre }.groupBy { it.fecha }.values.filter { it.size > 1 }
+            .flatMap { l -> val queda = l.maxWith(compareBy<Momento> { Fechas.millis(it.ts) }.thenBy { it.ts }); l.filter { it.id != queda.id } }
+        val tomasDeMas = tomas.groupBy { Triple(it.suplemento, it.ts, it.cantidad) }.values.filter { it.size > 1 }.flatMap { it.drop(1) }
+        cierres.forEach { borrarMomento(it.id) }
+        tomasDeMas.forEach { borrarToma(it.id) }
+        return cierres.size + tomasDeMas.size
     }
 
     /**
@@ -211,7 +252,10 @@ object Repo {
 
     /** Decodifica y anota cuántos documentos de [col] no se pudieron leer (en las consultas por fechas, el mayor conteo visto). */
     private fun <T> leer(col: String, textos: List<String>, s: KSerializer<T>): List<T> {
-        val (l, fallidos) = Decodificar.todos(textos, s) { t -> crudosIlegibles.getOrPut(col) { java.util.concurrent.ConcurrentHashMap.newKeySet() }.let { if (it.size < 20_000) it.add(t) } }
+        val (l, fallidos) = Decodificar.todos(textos, s) { t ->
+            crudosIlegibles.getOrPut(col) { java.util.concurrent.ConcurrentHashMap.newKeySet() }.let { if (it.size < 20_000) it.add(t) }
+            copiarIlegible(col, t)
+        }
         if (fallidos > 0) {
             // Al abrir, varios hilos leen a la vez: se juntan aparte y se publican al final de init.
             if (listo) { val n = maxOf(fallidos, ilegibles[col] ?: 0); enMain { ilegibles = ilegibles + (col to n) } }
@@ -221,6 +265,23 @@ object Repo {
     }
 
     private val ilegiblesAlAbrir = java.util.concurrent.ConcurrentHashMap<String, Int>()
+
+    /** Las colecciones con un documento por día, donde lo ilegible se muestra vacío y la siguiente escritura lo reemplaza. */
+    private val COPIAR_ILEGIBLES = setOf("dias", "salud", "notifs")
+
+    /**
+     * Un día, una salud o un conteo de notificaciones que no se pudo leer: su texto tal cual se copia a la colección
+     * `ilegible_<col>` de la base (como ya se hace con los ajustes en `config_ilegible`). Así, aunque el día se vuelva a
+     * guardar encima, el original no se pierde, y el respaldo ya recoge esas colecciones. La clave es la huella del texto
+     * (la misma que usa el respaldo): el mismo documento no se copia dos veces.
+     */
+    private fun copiarIlegible(col: String, t: String) {
+        if (col !in COPIAR_ILEGIBLES) return
+        runCatching {
+            val id = java.security.MessageDigest.getInstance("SHA-1").digest(t.toByteArray()).joinToString("") { "%02x".format(it) }
+            if (db.uno("ilegible_$col", id) == null) db.poner("ilegible_$col", id, null, t)
+        }
+    }
 
     /**
      * El texto tal cual de lo que no se pudo leer, por colección (9 nov 2026). El respaldo se arma con lo que está en
@@ -273,9 +334,23 @@ object Repo {
     // ---------- Momentos ----------
     @Synchronized
     fun guardarMomento(m: Momento) {
+        // Un doble toque no guarda dos momentos (hallazgo 21): uno NUEVO (su id no existe) idéntico a otro (tipo, día, texto,
+        // valencia, activación, intensidad y todo lo demás; solo cambian el id y las marcas de hora) y con menos de 2 segundos
+        // entre la hora de uno y la del otro se ignora. Editar uno que ya existe pasa siempre. Se compara todo, no solo lo
+        // principal: muchas hojas guardan el momento vacío al abrir y lo van completando, y uno que ya difiere en algo
+        // (con quién, emociones…) no es un doble toque. Se mira también lo recién escrito que aún no se publicó a la interfaz.
+        val t = Fechas.millis(m.ts)
+        fun gemelo(o: Momento) = o.id != m.id && o.tipo == m.tipo && o.fecha == m.fecha && o.texto == m.texto && o.valencia == m.valencia &&
+            o.activacion == m.activacion && o.intensidad == m.intensidad && t > 0 && Math.abs(Fechas.millis(o.ts) - t) < 2000 &&
+            o.copy(id = m.id, ts = m.ts, ts_creado = m.ts_creado, ts_editado = m.ts_editado) == m
+        val reciente = momentoReciente
+        if (momentos.none { it.id == m.id } && reciente?.id != m.id && ((reciente != null && gemelo(reciente)) || momentos.any { gemelo(it) })) return
+        momentoReciente = m
         db.poner("momentos", m.id, m.fecha, JSON.encodeToString(Momento.serializer(), m))
         enMain { momentos = (momentos.filter { it.id != m.id } + m).sortedBy { it.ts } }
     }
+    /** El último momento guardado: la lista en memoria se publica un instante después si se guarda fuera del hilo principal. */
+    private var momentoReciente: Momento? = null
     /** Los momentos de un respaldo que no están aquí, de una vez: una transacción y un solo reordenamiento. */
     fun importarMomentos(lista: List<Momento>) {
         val ids = momentos.map { it.id }.toHashSet()
@@ -380,6 +455,8 @@ object Repo {
 
     // ---------- Suplementos y laptop ----------
     fun guardarToma(t: TomaSuplemento) {
+        // Un doble toque no guarda dos tomas: la misma toma (suplemento, hora y cantidad) con otro id se ignora.
+        if (tomas.any { it.id != t.id && it.suplemento == t.suplemento && it.ts == t.ts && it.cantidad == t.cantidad }) return
         db.poner("tomas", t.id, t.fecha, JSON.encodeToString(TomaSuplemento.serializer(), t))
         enMain { tomas = (tomas.filter { it.id != t.id } + t).sortedBy { it.ts } }
     }
@@ -568,14 +645,34 @@ object Repo {
         lugares.map { it to Geo.distanciaM(lat, lon, it.lat, it.lon) }.filter { it.second <= it.first.radio_m }.minByOrNull { it.second }?.first
 
     // ---------- Sensores ----------
+    /** Lo último escrito de cada día de salud: la publicación a la interfaz llega un instante después, y entre hilos hay que partir de esto. */
+    private val saludMem = HashMap<String, SaludDia>()
+    /** La salud de [fecha] tal como está guardada ahora mismo (aunque aún no se haya publicado a la interfaz). */
+    @Synchronized
+    fun saludActual(fecha: String): SaludDia? = saludMem[fecha] ?: salud[fecha]
+    @Synchronized
     fun guardarSalud(s: SaludDia) {
+        saludMem[s.fecha] = s
         db.poner("salud", s.fecha, s.fecha, JSON.encodeToString(SaludDia.serializer(), s))
         enMain { salud = salud + (s.fecha to s) }
     }
+    /**
+     * Lee, cambia y guarda la salud de un día de una sola vez. Sincronizado: la lectura del reloj tarda, y si mientras tanto
+     * corregías el sueño a mano, el que escribía al final borraba el cambio del otro (H-22-3). [f] recibe lo que hay ahora.
+     */
+    @Synchronized
+    fun cambiarSalud(fecha: String, f: (SaludDia) -> SaludDia) {
+        val previo = saludActual(fecha)
+        val n = f(previo ?: SaludDia(fecha = fecha))
+        if (n == previo) return
+        guardarSalud(n)
+    }
     /** Varios días de salud de una vez (al restaurar): una transacción y un solo cambio en memoria. */
+    @Synchronized
     fun importarSalud(lista: List<SaludDia>) {
         if (lista.isEmpty()) return
         db.transaccion { lista.forEach { db.poner("salud", it.fecha, it.fecha, JSON.encodeToString(SaludDia.serializer(), it)) } }
+        lista.forEach { saludMem[it.fecha] = it }
         enMain { salud = salud + lista.associateBy { it.fecha } }
     }
     fun guardarPantalla(p: PantallaDia) {
@@ -703,6 +800,13 @@ object Repo {
         db.transaccion { lista.forEach { db.poner("escuchas", it.id, it.fecha, JSON.encodeToString(Escucha.serializer(), it)) } }
     }
     fun borrarEscuchas(ids: Collection<String>) { db.transaccion { ids.forEach { aPapelera("escuchas", it); db.borrar("escuchas", it) } } }
+    /** Quita unas escuchas (a la papelera) y guarda otras en una sola transacción: si algo falla a medias, no cambia nada. */
+    fun reemplazarEscuchas(quitar: Collection<String>, poner: List<Escucha>) {
+        db.transaccion {
+            quitar.forEach { aPapelera("escuchas", it); db.borrar("escuchas", it) }
+            poner.forEach { db.poner("escuchas", it.id, it.fecha, JSON.encodeToString(Escucha.serializer(), it)) }
+        }
+    }
 
     fun importarSubrayados(lista: List<Subrayado>) {
         db.transaccion { lista.forEach { db.poner("subrayados", it.id, it.fecha, JSON.encodeToString(Subrayado.serializer(), it)) } }
@@ -726,12 +830,18 @@ object Repo {
         enMain { chats = (chats.filter { it.id !in ids } + lista).sortedBy { it.fecha } }
     }
 
-    /** Reemplaza todo lo de MacroFactor entre dos fechas con lo recién importado (así reimportar no duplica). */
-    fun importarMacrofactor(desde: String, hasta: String, dias: List<NutricionDia>, comidas: List<Comida>, series: List<Serie>, entr: List<EntrenoDia>) {
+    /**
+     * Guarda lo recién importado de MacroFactor y reemplaza lo que había de esos mismos días (así reimportar no duplica).
+     * Se borra por hoja y por día: los alimentos, solo de los días que traen alimentos; las series, solo de los días que traen
+     * series. Antes se borraba todo entre la primera y la última fecha del archivo, y un archivo que solo traía nutrición
+     * se llevaba las series de gimnasio de ese rango (y al revés). Todo va en una sola transacción: o entra completo o no cambia nada.
+     */
+    fun importarMacrofactor(dias: List<NutricionDia>, comidas: List<Comida>, series: List<Serie>, entr: List<EntrenoDia>) {
+        val fComidas = comidas.mapTo(HashSet()) { it.fecha }; val fSeries = series.mapTo(HashSet()) { it.fecha }
         db.transaccion {
             // Lo de antes pasa 7 días a la papelera: si la reimportación vino incompleta, se puede recuperar.
-            rangoAPapelera("comidas", desde, hasta); rangoAPapelera("series", desde, hasta)
-            db.borrarRango("comidas", desde, hasta); db.borrarRango("series", desde, hasta)
+            if (fComidas.isNotEmpty()) { fechasAPapelera("comidas", fComidas); db.borrarFechas("comidas", fComidas) }
+            if (fSeries.isNotEmpty()) { fechasAPapelera("series", fSeries); db.borrarFechas("series", fSeries) }
             dias.forEach { db.poner("nutricion", it.fecha, it.fecha, JSON.encodeToString(NutricionDia.serializer(), it)) }
             comidas.forEach { db.poner("comidas", it.id, it.fecha, JSON.encodeToString(Comida.serializer(), it)) }
             series.forEach { db.poner("series", it.id, it.fecha, JSON.encodeToString(Serie.serializer(), it)) }
@@ -739,6 +849,8 @@ object Repo {
         }
         enMain { nutricion = nutricion + dias.associateBy { it.fecha }; entrenos = entrenos + entr.associateBy { it.fecha } }
     }
+    /** Las fechas que ya tienen algún documento guardado en [col] (para completar al restaurar solo lo que falte). */
+    fun fechasGuardadas(col: String): Set<String> = db.fechas(col)
     fun comidas(desde: String, hasta: String): List<Comida> =
         leer("comidas", db.porFecha("comidas", desde, hasta), Comida.serializer()).sortedWith(compareBy({ it.fecha }, { it.hora }))
     fun series(desde: String, hasta: String): List<Serie> =
@@ -803,11 +915,11 @@ object Repo {
         runCatching { db.poner("papelera", "$col:$id", Fechas.diaLogico(), JSON.encodeToString(Borrado.serializer(), b)) }
     }
 
-    /** Antes de borrar todo un rango de [col] (al reimportar): cada documento pasa 7 días a la papelera. */
-    private fun rangoAPapelera(col: String, desde: String, hasta: String) {
+    /** Antes de borrar de [col] lo de ciertos días (al reimportar): cada documento pasa 7 días a la papelera. */
+    private fun fechasAPapelera(col: String, fechas: Set<String>) {
         val ahora = Fechas.ahoraIso(); val hoy = Fechas.diaLogico()
         val l = ArrayList<Borrado>()
-        db.filas(col) { id, fecha, json -> if (fecha != null && fecha >= desde && fecha <= hasta) l += Borrado(col, id, json, ahora, fecha) }
+        db.filas(col) { id, fecha, json -> if (fecha != null && fecha in fechas) l += Borrado(col, id, json, ahora, fecha) }
         l.forEach { b -> runCatching { db.poner("papelera", "${b.col}:${b.id}", hoy, JSON.encodeToString(Borrado.serializer(), b)) } }
     }
 

@@ -317,10 +317,12 @@ private fun cartas(d: TuAnio.Datos): List<CartaAnio> {
             Emblema(tam = 120.dp, animado = v.animar)
             Text("${d.anio}", style = MaterialTheme.typography.displayLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 10.dp))
         }
-        Grande(p.diasDiario.toDouble(), "días escritos de ${p.n}", v)
+        // Si el diario empezó a mitad del periodo, se cuenta desde su primer día y no entre todos los días del año.
+        val primero = d.primerDiario
+        Grande(p.diasDiario.toDouble(), if (primero != null && primero > p.ini) "días escritos desde el ${Fechas.corto(primero)} (de ${d.diasDesdePrimero})" else "días escritos de ${p.n}", v)
         if (p.palabras > 0) {
             Grande(p.palabras.toDouble(), "palabras en el diario", v)
-            Text("Un libro de ${n0(d.paginas.toDouble())} páginas. Leerlo en voz alta te tomaría ${n1(d.horasLeerlo)} horas.", style = MaterialTheme.typography.bodyLarge)
+            Text("Un libro de ${n0(d.paginas.toDouble())} páginas. Leerlo en voz alta te tomaría ${if (d.horasLeerlo < 0.95) "${n0(d.horasLeerlo * 60)} minutos" else if (d.horasLeerlo < 1.05) "una hora" else "${n1(d.horasLeerlo)} horas"}.", style = MaterialTheme.typography.bodyLarge)
         }
     }
     // El año visual: el diario como pilas de libros y las cifras como objetos que se cuentan de un vistazo.
@@ -403,7 +405,7 @@ private fun cartas(d: TuAnio.Datos): List<CartaAnio> {
     }
     if (p.gasto > 0) l += CartaAnio("dinero", "Tu dinero", "PECVNIA") { v ->
         Grande(p.gasto, "gastados", v) { "$" + n0(it) }
-        Ayuda("$" + n0(p.gasto / p.n) + " al día")
+        p.gastoAlDia?.let { Ayuda("$" + n0(it) + " al día" + if (p.diasGasto < p.n) ", en los ${p.diasGasto} días desde tu primer gasto anotado" else "") }
         p.gastoCategorias.take(3).forEach { (c, m) -> Renglon(c.lowercase(), "$" + n0(m)) }
         if (p.ingresos > 0) Renglon("ingresos", "$" + n0(p.ingresos))
     }
@@ -414,7 +416,8 @@ private fun cartas(d: TuAnio.Datos): List<CartaAnio> {
     if (d.unaVez.isNotEmpty() || d.raro != null || d.records.isNotEmpty()) l += CartaAnio("curioso", "Único y curioso", "MIRABILIA") { v ->
         if (d.unaVez.isNotEmpty()) {
             Text("Una sola vez:", style = MaterialTheme.typography.titleMedium)
-            d.unaVez.take(5).forEach { Text("· " + it.replace(Regex("@(\\S+)")) { m -> v.nombre(m.groupValues[1]) }, style = MaterialTheme.typography.bodyLarge) }
+            // Las fechas señaladas ya traen su signo delante («• cumpleaños», «✈ viaje»): a esas no se les pone otro punto.
+            d.unaVez.take(5).forEach { Text((if (it.firstOrNull()?.isLetterOrDigit() == true) "· " else "") + it.replace(Regex("@(\\S+)")) { m -> v.nombre(m.groupValues[1]) }, style = MaterialTheme.typography.bodyLarge) }
         }
         d.raro?.let { (f, razones) -> Spacer(Modifier.height(10.dp)); Renglon("tu día más raro", Fechas.titulo(f).lowercase() + ": " + razones.joinToString("; ").lowercase()) }
         d.records.take(4).forEach { (k, x) -> Renglon(k, x) }
@@ -511,8 +514,10 @@ private fun Animo(d: TuAnio.Datos, v: Vista) {
     Grande(p.valMedia ?: 0.0, "de 7, tu ánimo medio", v) { n1(it) }
     MesesAnimo(d)
     d.mesMejor?.let { Renglon("tu mejor mes", mesLargo(it) + (p.valPorMes[it]?.let { x -> " · ${n1(x)}" } ?: "")) }
-    p.valPorSemana.maxByOrNull { it.value }?.let { Renglon("tu mejor día", "los " + DIAS[it.key - 1]) }
-    p.mejorDia?.let { f -> Renglon("el día más feliz", Fechas.titulo(f).lowercase()) }
+    // Solo con 5 días o más por día de la semana (TuAnio.MIN_DIAS_BARRA); con menos, no se dice.
+    d.mejorDiaSemana?.let { Renglon("tu mejor día", "los " + DIAS[it - 1]) }
+    // Si varios días comparten la valencia más alta, se dice el empate (se muestra el primero).
+    p.mejorDia?.let { f -> Renglon(if (d.empateFeliz > 1) "uno de tus ${d.empateFeliz} días más felices" else "el día más feliz", Fechas.titulo(f).lowercase()) }
     p.mejorMomento?.let { Text("«${it.take(140)}»", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 8.dp)) }
 }
 

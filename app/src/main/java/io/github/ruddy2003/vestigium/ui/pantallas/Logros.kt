@@ -453,7 +453,7 @@ fun RecuadroLogros(nav: Nav) {
     }
     // La antesala del Hall (lote E6): el salón del tema en pequeño, con los últimos trofeos al frente.
     val tema = Estilo.tema
-    Recuadro("Logros", detalle, alto = 150.dp, onClick = { nav.ir("logros") }) {
+    Recuadro("Logros", detalle, alto = 150.dp, luz = true, onClick = { nav.ir("logros") }) {
         Box(Modifier.fillMaxSize().clipToBounds()) {
             Canvas(Modifier.fillMaxWidth().requiredHeight(420.dp).align(Alignment.TopCenter)) {
                 clipRect {
@@ -636,11 +636,11 @@ private fun EditorLogro(previo: LogroPropio? = null, cerrar: () -> Unit) {
                     }
                 }
                 FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Ficha("pasa de", !umbralMax) { umbralMax = false }
+                    Ficha("más de", !umbralMax) { umbralMax = false }
                     Ficha("queda en o menos de", umbralMax) { umbralMax = true }
                 }
                 CampoTexto(umbral, { umbral = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(it) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
-                    label = { Text(if (umbralMax) "Un día cuenta si queda en… o menos" else "Un día cuenta si pasa de… (opcional)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                    label = { Text(if (umbralMax) "Un día cuenta si queda en… o menos" else "Un día cuenta con más de… (no igual; opcional)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
             }
         }
         Etiqueta("Cómo se cuenta")

@@ -339,6 +339,8 @@ Cada documento de día guarda `retroactivo`: verdadero si el día se llenó **de
 
 Al **principio** de la hoja (hasta `VERSION_NOCHE = 1` iba al final; sección 3.7.1) hay una cuadrícula «Cómo estás ahora» (`BloqueCierre`, en `ui/pantallas/Lote2.kt`). Guarda un registro de ánimo con la **hora real** (tipo `animo`, origen `cierre`). La idea es tener **la misma medición, en el mismo punto del día, todos los días**. **[Diseño propio]**, buena idea: es un dato momentáneo comparable entre días, menos afectado por el recuerdo que la valencia del diario.
 
+Es **un registro por noche**: si tocas otra casilla, se corrige el mismo registro y se le pone la hora de ahora. Hasta el esquema 22 no era así por un error: cada toque guardaba un registro nuevo, y `registros_animo` contaba todos. Desde el esquema 23 (D.177) se corrige el mismo, y `Repo.quitarRepetidos()` dejó de cada noche solo el más reciente (los demás fueron a la papelera).
+
 Dos precisiones (H-2-8):
 
 - El comentario dice «a la misma hora todos los días», pero en realidad es **a la hora en que cierres** el diario, que varía. La hora queda guardada, así que se puede controlar en el análisis.

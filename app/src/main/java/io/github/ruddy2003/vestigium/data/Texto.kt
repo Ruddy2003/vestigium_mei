@@ -9,7 +9,9 @@ object Texto {
 
     fun personas(t: String?): List<String> = RX_P.findAll(t ?: "").map { it.groupValues[1].lowercase() }.toList()
     fun temas(t: String?): List<String> = RX_T.findAll(t ?: "").map { it.groupValues[1].lowercase() }.toList()
-    fun palabras(t: String?): Int = (t ?: "").trim().split(Regex("\\s+")).count { it.isNotBlank() }
+    private val RX_ESPACIOS = Regex("\\s+")
+    /** Cuántas palabras tiene un texto. La expresión se compila una sola vez: se llama por cada entrada del estante. */
+    fun palabras(t: String?): Int = (t ?: "").trim().split(RX_ESPACIOS).count { it.isNotBlank() }
 
     /**
      * El nombre con que se cuenta una etiqueta, siguiendo las uniones encadenadas (a → b y b → c: a cuenta como c) hasta 8

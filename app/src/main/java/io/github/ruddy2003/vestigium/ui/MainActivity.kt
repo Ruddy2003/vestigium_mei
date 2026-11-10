@@ -54,6 +54,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -131,10 +132,15 @@ object Reanudar {
 }
 
 class MainActivity : FragmentActivity() {
-    companion object { const val PANTALLA = "pantalla" }
+    companion object {
+        const val PANTALLA = "pantalla"
+        /** Con true, [PANTALLA] se apila sobre lo que esté abierto (viene del ⊕ tocado dentro de la app), sin cambiar de pestaña. */
+        const val APILAR = "apilar"
+    }
 
     private var desbloqueado by mutableStateOf(false)
     private var pedida by mutableStateOf<String?>(null)
+    private var apilar by mutableStateOf(false)
     private var enFondoDesde = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -157,7 +163,7 @@ class MainActivity : FragmentActivity() {
                 val oscuroArranque = modoOscuro(temaArranque)
                 LaunchedEffect(temaArranque, oscuroArranque) { ArranqueTema.aplicar(this@MainActivity, temaArranque, oscuroArranque) }
                 if (!desbloqueado) Bloqueo { pedirHuella() }
-                else Raiz(pedida) { pedida = null }
+                else Raiz(pedida, apilar) { pedida = null; apilar = false }
             }
         }
         if (!desbloqueado) pedirHuella()
@@ -165,6 +171,8 @@ class MainActivity : FragmentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        // Primero el modo y luego el destino: los dos se leen juntos al atender el pedido.
+        apilar = intent.getBooleanExtra(APILAR, false)
         pedida = compartido(intent) ?: intent.getStringExtra(PANTALLA)
     }
 
@@ -928,13 +936,17 @@ private fun DrawScope.bloqueoOjoDeBuey(cs: ColorScheme) {
 
 // ------------------------------------------------------------------------------------------------ barra inferior
 
-private data class Pestana(val id: String, val nombre: String)
+/** [espanol]: el nombre en español, cuando el tema le pone otro a la pestaña (va pequeño debajo). */
+private data class Pestana(val id: String, val nombre: String, val espanol: String? = null)
 private val PESTANAS = listOf(
     Pestana("dia", "Hoy"), Pestana("diario", "Diario"), Pestana("registrar", "Registrar"), Pestana("vida", "Vida"), Pestana("entender", "Análisis"),
 )
 
 /** Nombres cortos de las pestañas en la voz del tema (claves `pestana_<id>` de [Textos]). */
-private fun nombresPestanas(tema: TemaId): List<Pestana> = PESTANAS.map { p -> Pestana(p.id, Textos.de(tema, "pestana_${p.id}") ?: p.nombre) }
+private fun nombresPestanas(tema: TemaId): List<Pestana> = PESTANAS.map { p ->
+    val n = Textos.de(tema, "pestana_${p.id}") ?: p.nombre
+    Pestana(p.id, n, p.nombre.takeIf { !n.trim().equals(it, ignoreCase = true) })
+}
 
 /**
  * Barra inferior propia: íconos del tema, un indicador de la pestaña activa con la figura del tema (subrayado de oro,
@@ -948,14 +960,16 @@ internal fun BarraPestanas(activa: String?, tema: TemaId, tocar: (String) -> Uni
     val pestanas = nombresPestanas(tema)
     // Con la letra grande del sistema, la barra crece (hasta 20 dp más con el doble de tamaño): antes medía siempre 66 dp
     // y las etiquetas se cortaban.
-    val extra = ((androidx.compose.ui.platform.LocalDensity.current.fontScale - 1f).coerceIn(0f, 1f) * 20f).dp
+    // Con el español debajo del nombre del tema, un renglón más.
+    val conEspanol = pestanas.any { it.id != "registrar" && it.espanol != null }
+    val extra = ((androidx.compose.ui.platform.LocalDensity.current.fontScale - 1f).coerceIn(0f, 1f) * 20f).dp + (if (conEspanol) 12.dp else 0.dp)
     Column(Modifier.background(cs.surface)) {
         Canvas(Modifier.fillMaxWidth().height(5.dp)) { divisorBarra(tema, cs) }
         Row(Modifier.fillMaxWidth().navigationBarsPadding().height(66.dp + extra), verticalAlignment = Alignment.CenterVertically) {
             pestanas.forEach { p ->
                 // El botón del centro registra: una figura grande con el ícono, sin pestaña propia.
                 if (p.id == "registrar") {
-                    Box(Modifier.weight(1f).fillMaxHeight().combinedClickable(onClick = { tocar(p.id) }, onLongClick = { largo(p.id) }, onLongClickLabel = "ánimo ahora"),
+                    Box(Modifier.weight(1f).fillMaxHeight().combinedClickable(onClick = { tocar(p.id) }, onLongClick = { largo(p.id) }, onLongClickLabel = "registro de ánimo"),
                         contentAlignment = Alignment.Center) {
                         Box(Modifier.size(54.dp).drawBehind { botonCentral(tema, cs) }, contentAlignment = Alignment.Center) {
                             CompositionLocalProvider(LocalContentColor provides if (centroRelleno(tema)) cs.onPrimary else cs.primary) { IconoPestana("registrar", tema, p.nombre) }
@@ -976,10 +990,11 @@ internal fun BarraPestanas(activa: String?, tema: TemaId, tocar: (String) -> Uni
                 ) {
                     Box(Modifier.size(width = 58.dp, height = 30.dp).drawBehind { if (marca > 0.01f) indicadorBarra(tema, cs, marca) }
                         .graphicsLayer { scaleX = salto; scaleY = salto }, contentAlignment = Alignment.Center) {
-                        val icono = if (!sel) cs.primary.copy(alpha = 0.72f) else if (indicadorRelleno(tema)) cs.onPrimary else cs.primary
+                        // La pestaña no elegida va en el tono de texto secundario del esquema, que sí contrasta con la barra (hallazgo 12).
+                        val icono = if (!sel) cs.onSurfaceVariant else if (indicadorRelleno(tema)) cs.onPrimary else cs.primary
                         CompositionLocalProvider(LocalContentColor provides icono) { IconoPestana(p.id, tema, p.nombre) }
                     }
-                    EtiquetaPestana(p.nombre, sel, cs.primary)
+                    EtiquetaPestana(p.nombre, p.espanol, sel, if (sel) cs.primary else cs.onSurfaceVariant, cs.onSurfaceVariant)
                 }
             }
         }
@@ -991,14 +1006,22 @@ internal fun BarraPestanas(activa: String?, tema: TemaId, tocar: (String) -> Uni
  * los de más de 12 letras con espacios van en dos renglones.
  */
 @Composable
-private fun EtiquetaPestana(nombre: String, sel: Boolean, color: Color) {
+private fun EtiquetaPestana(nombre: String, espanol: String?, sel: Boolean, color: Color, colorEspanol: Color) {
     val base = MaterialTheme.typography.labelMedium.copy(fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Medium, textAlign = TextAlign.Center)
     val n = nombre.length
-    val dosRenglones = n > 12 && ' ' in nombre
+    // Con el español debajo, el nombre del tema va en un solo renglón.
+    val dosRenglones = espanol == null && n > 12 && ' ' in nombre
     val factor = if (dosRenglones) 0.84f else if (n > 8) maxOf(0.72f, 8.5f / n) else 1f
-    val estilo = if (factor < 1f) base.copy(fontSize = base.fontSize * factor, lineHeight = base.fontSize * (factor + 0.08f)) else base
-    Text(nombre, style = estilo, color = if (sel) color else color.copy(alpha = 0.72f), maxLines = if (dosRenglones) 2 else 1,
+    // Nunca por debajo de 10 sp (hallazgo 12): si aun así no cabe, se corta con puntos suspensivos.
+    val tam = base.fontSize.value.let { t -> if (t.isNaN()) 11f else t }.let { t -> maxOf(10f, t * factor) }
+    val estilo = if (factor < 1f) base.copy(fontSize = tam.sp,
+        lineHeight = (tam * 1.12f).sp) else base
+    Text(nombre, style = estilo, color = color, maxLines = if (dosRenglones) 2 else 1,
         overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp, start = 2.dp, end = 2.dp))
+    // El español, pequeño, cuando el tema le pone otro nombre a la pestaña (hallazgo 10): con la rotación diaria el nombre cambia cada día.
+    if (espanol != null) Text(espanol.lowercase(), style = base.copy(fontWeight = FontWeight.Normal,
+        fontSize = 10.sp, lineHeight = 11.sp),
+        color = colorEspanol, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 2.dp))
 }
 
 /** ¿El indicador de la pestaña activa es una figura rellena (el ícono va en el color de encima) o solo un trazo? */
@@ -1764,7 +1787,7 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
 class Nav(val ir: (String) -> Unit, val atras: () -> Unit, val pestana: (String) -> Unit = {}, val reemplazar: (String) -> Unit = {})
 
 @Composable
-private fun Raiz(pedida: String?, consumir: () -> Unit) {
+private fun Raiz(pedida: String?, apilar: Boolean, consumir: () -> Unit) {
     // Se guardan con el estado de la actividad: si Android la rehace, vuelves a la misma pantalla.
     var pestana by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("dia") }
     // Al instalar: primero «Conocerte» (se puede omitir) y luego los permisos. Si ya se llenó o se omitió, no vuelve a salir.
@@ -1778,6 +1801,21 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         val S = io.github.ruddy2003.vestigium.ui.pantallas.Seleccion
         val hoyL = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
         if (p == "dia") S.pedida = hoyL
+        // Lo que llega con algo abierto (un aviso a media carta) o desde el ⊕ de dentro de la app se apila encima: «atrás»
+        // vuelve a donde estabas (hallazgo 15). Las pestañas y un día pedido por su fecha siguen cambiando de pestaña.
+        val esPestana = p == "momentos" || p == "explorar" || p.startsWith("dia:") || PESTANAS.any { it.id == p }
+        if ((apilar || pila.isNotEmpty()) && !esPestana) {
+            val ruta = when (p) {
+                "diario" -> { S.noche = hoyL; S.seccion = "Ánimo y cuerpo"; "noche" }
+                "diarios" -> "biblioteca_diario"
+                "idea" -> "idea"
+                "idea_nueva" -> { io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.idea = null; io.github.ruddy2003.vestigium.ui.pantallas.EdicionIdea.contexto = null; "idea" }
+                else -> p
+            }
+            if (pila.lastOrNull() != ruta) pila = pila + ruta
+            consumir()
+            return@LaunchedEffect
+        }
         // «diario» (atajo del ícono y avisos de la noche) abre la hoja de la noche de hoy.
         if (p == "diario") { S.pedida = hoyL; S.noche = hoyL; S.seccion = "Ánimo y cuerpo"; pestana = "dia"; pila = listOf("noche") }
         else if (p.startsWith("dia:")) { S.pedida = p.drop(4); pestana = "dia"; pila = emptyList() }
@@ -1792,7 +1830,14 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         consumir()
     }
 
-    val nav = Nav(ir = { pila = pila + it }, atras = { pila = pila.dropLast(1) }, pestana = { pestana = it; pila = emptyList() },
+    // La hoja de la noche no se apila sobre sí misma. Pasaba al abrirla desde un aviso, el atajo o el toque largo en la pestaña:
+    // la pila ya la traía y Día, que seguía en pantalla durante el cambio, la pedía otra vez por la sección; al guardar se
+    // cerraba una y la otra se quedaba abierta.
+    // Una pestaña no se apila como copia sin «←»: pedirla (desde el buscador) cambia de pestaña.
+    val nav = Nav(ir = { r ->
+        if (r != "registrar" && PESTANAS.any { it.id == r }) { pestana = r; pila = emptyList() }
+        else if (!(r == "noche" && pila.lastOrNull() == "noche")) pila = pila + r
+    }, atras = { pila = pila.dropLast(1) }, pestana = { pestana = it; pila = emptyList() },
         reemplazar = { pila = if (pila.isEmpty()) listOf(it) else pila.dropLast(1) + it })
     BackHandler(enabled = pila.isNotEmpty()) { pila = pila.dropLast(1) }
     // Las fechas de los días abiertos encima de otra pantalla se olvidan al cerrar esos niveles.
@@ -1834,7 +1879,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
             "dia" -> abrirNoche()
             "diario" -> rapido(QuickActivity.M_ANIMO)
             "registrar" -> rapido(QuickActivity.M_ANIMO)
-            "vida" -> { pestana = "vida"; pila = listOf("semana") }
+            // Vida → Social (el resumen semanal ya vive en Análisis).
+            "vida" -> { pestana = "vida"; pila = listOf("social") }
             else -> { pila = pila + "buscar" }
         }
     }
@@ -1879,7 +1925,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     // Un día abierto desde otra pantalla (calendario, diario, cinta…): se apila y «atrás» regresa.
                     "dia_fecha" -> PantallaDia(nav, apilado = true, nivel = destino.nivel)
                     "diario", "diarios" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(nav)
-                    "momentos" -> PantallaMomentos(nav)
+                    // «Todos tus registros» se retiró (hallazgo 31): su ruta abre la Libreta, donde cada renglón se toca para corregirlo.
+                    "momentos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "momentos")
                     "gastos" -> PantallaGastos(nav)
                     "entender", "explorar" -> PantallaExplorar(nav)
                     "vida" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(nav)

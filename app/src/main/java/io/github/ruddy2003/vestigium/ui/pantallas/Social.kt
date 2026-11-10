@@ -104,7 +104,7 @@ object GrafoSocial {
         RedPersonas.grados(n, aa)
         RedPersonas.acomodar(n, aa)
         val grupos = RedPersonas.componentes(n, aa)
-        val lazos = aa.filter { it.tipo != "no_se_conocen" }.map { Lazo(it.a, it.b, it.tipo, it.juntos) }
+        val lazos = aa.filter { RedPersonas.une(it.tipo) }.map { Lazo(it.a, it.b, it.tipo, it.juntos) }
         return Modelo("red", n.map { Nodo(it.nombre, it.dias, null, it.relacion, it.grupo, it.grado, it.x, it.y) }, lazos, grupos)
     }
 
@@ -175,7 +175,8 @@ internal fun DrawScope.dibujarGrafo(m: GrafoSocial.Modelo, zoom: Float, pan: Off
                 val res = elegido != null && (l.a == elegido || l.b == elegido)
                 val col = if (l.tipo != null) cs.primary else cs.onSurfaceVariant
                 val colLazo = col.copy(alpha = if (res) 0.9f else if (l.tipo != null) 0.55f else 0.22f)
-                val ancho = (if (l.tipo != null) 2f else 1f) * density
+                // El grosor sigue la fuerza del vínculo: pareja y familia 3, amigos 2.6, colegas 2.2, se conocen 1.6; sin tipo, 1.
+                val ancho = (if (l.tipo != null) 1f + 2f * RedPersonas.peso(l.tipo) else 1f) * density
                 // Los colegas conservan su guion propio (distingue el tipo de lazo); los demás llevan el trazo del tema.
                 if (l.tipo == "colegas") drawLine(colLazo, pos(a), pos(b), ancho, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f * density, 4f * density)))
                 else lineaGrafica(eg, listOf(pos(a), pos(b)), colLazo, ancho)
@@ -247,7 +248,10 @@ private fun FichaPersona(m: GrafoSocial.Modelo, e: String, nav: Nav) {
     if (suyos.isNotEmpty()) io.github.ruddy2003.vestigium.ui.TextoMarcado(
         "Con " + suyos.take(8).joinToString(" · ") { l -> "@" + (if (l.a == e) l.b else l.a) + (l.tipo?.let { " (${RedPersonas.nombreTipo(it).lowercase()})" } ?: " (${porNumero(l.juntos, "1 día", "${l.juntos} días")} juntas)") },
         style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
-    BotonTexto(onClick = { nav.ir("personas") }) { Text("ver en Tu gente →", style = MaterialTheme.typography.labelLarge) }
+    // Su ficha se abre aquí mismo (hallazgo 26); antes este botón llevaba a la lista general de Tu gente.
+    var ficha by remember(e) { mutableStateOf(false) }
+    BotonTexto(onClick = { ficha = true }) { Text("abrir su ficha →", style = MaterialTheme.typography.labelLarge) }
+    if (ficha) DialogoPersona(e) { ficha = false }
 }
 
 @Composable
@@ -267,6 +271,7 @@ fun PantallaSocial(nav: Nav) {
     val tema = Estilo.tema
     val animar = Repo.config.animaciones && GrafoSocial.vista == "cielo"
     val fase = if (animar) animacionCielo() else 0f
+    var fichaAbierta by remember { mutableStateOf<String?>(null) }
     Hoja("Social", nav.atras, "Tu gente y cómo se conecta. «Red»: quién conoce a quién. «Cielo»: más cerca del centro, más reciente; más grande, más días mencionada.") {
         SelectorVista { elegido = null }
         when {
@@ -283,21 +288,25 @@ fun PantallaSocial(nav: Nav) {
                 }
                 val dens = androidx.compose.ui.platform.LocalDensity.current.density
                 Canvas(Modifier.fillMaxWidth().aspectRatio(1f).padding(top = 10.dp).pointerInput(m) {
-                    detectTapGestures { o -> elegido = tocada(m, o, size.width.toFloat(), size.height.toFloat(), 1f, Offset.Zero, dens) }
+                    // Un toque elige a la persona (se ve con quién aparece); otro toque sobre la misma abre su ficha.
+                    detectTapGestures { o ->
+                        val t = tocada(m, o, size.width.toFloat(), size.height.toFloat(), 1f, Offset.Zero, dens)
+                        if (t != null && t == elegido) fichaAbierta = t else elegido = t
+                    }
                 }) { dibujarGrafo(m, 1f, Offset.Zero, elegido, cs, eg, tema, medidor, estilo, fase, animar) }
                 BotonPrincipal("abrir en pantalla completa", Modifier.fillMaxWidth().padding(top = 6.dp)) { nav.ir("social_grafo") }
                 Tarjeta(Modifier.padding(top = 10.dp)) {
                     val e = elegido
-                    if (e == null) Ayuda("Toca a una persona para ver con quién aparece.") else FichaPersona(m, e, nav)
+                    if (e == null) Ayuda("Toca a una persona para ver con quién aparece; tócala otra vez para abrir su ficha.") else FichaPersona(m, e, nav)
                 }
                 Ayuda("Colores: quien vive contigo, familia, pareja, amistades, colegas y exparejas (tenue); las demás, del color del texto. Las relaciones vienen de «Tu gente» y de «Conocerte». En R: vm_red().",
                     Modifier.padding(top = 8.dp))
             }
         }
-        Seccion("Tu gente", "Quién es cada @persona para ti, sus fechas y a quién conoce.", plegable = true, plegadaPorDefecto = true) {
-            ContenidoGente(nav)
-        }
+        // Una sola «Tu gente» (hallazgo 26): su pantalla. Aquí queda la puerta, no una copia plegada.
+        BotonSecundario("Tu gente: quién es cada persona, sus fechas y a quién conoce →", Modifier.fillMaxWidth().padding(top = 14.dp)) { nav.ir("personas") }
     }
+    fichaAbierta?.let { n -> DialogoPersona(n) { fichaAbierta = null } }
 }
 
 /** El grafo en pantalla completa, sin la barra de pestañas: se navega como el mapa para rascar. */
@@ -377,7 +386,7 @@ fun RecuadroSocial(nav: Nav) {
     val pendientes = remember(Repo.dias, Repo.config.personas) { Personas.pendientes().size }
     val n = m?.nodos?.size ?: 0
     Recuadro("Social", if (n == 0) "Tu gente, quién conoce a quién y tu cielo de personas" else
-        porNumero(n, "1 persona", "$n personas") + (if (pendientes > 0) " · $pendientes por clasificar" else "") + " · red y cielo", alto = 230.dp, onClick = { nav.ir("social") }) {
+        porNumero(n, "1 persona", "$n personas") + (if (pendientes > 0) " · $pendientes por clasificar" else "") + " · red y cielo", alto = 230.dp, luz = true, onClick = { nav.ir("social") }) {
         // El mueble del tema donde se reúne tu gente (lote E6), y el grafo encima, en el centro.
         val d = io.github.ruddy2003.vestigium.ui.vida.disenoVida(tema)
         val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()

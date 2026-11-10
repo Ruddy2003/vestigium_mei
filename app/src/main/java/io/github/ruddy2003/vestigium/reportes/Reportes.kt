@@ -799,7 +799,8 @@ object Reportes {
             }
         }
 
-        fun encabezado(titulo: String, latin: String?, rango: String) {
+        /** [rango] va con la fecha del calendario común; [rangoTema], la misma en el calendario del tema, más pequeña y debajo. */
+        fun encabezado(titulo: String, latin: String?, rango: String, rangoTema: String? = null) {
             c.drawColor(L.fondo)
             y = 92f
             val pm = L.p(L.tenue, 26f, L.titulo, 0.2f)
@@ -807,7 +808,9 @@ object Reportes {
             val (t, com) = Estilo.pantalla(titulo, latin)
             texto(t, L.p(L.primario, if (t.length > 22) 60f else 76f, L.titulo, 0.03f), max = 2); y += 8f
             com?.let { texto(it, L.p(L.tenue, 24f, L.texto), max = 1); y += 4f }
-            texto(rango, L.p(L.tinta, 26f, L.texto), max = 2); y += 18f
+            texto(rango, L.p(L.tinta, 26f, L.texto), max = 2)
+            rangoTema?.takeIf { !it.equals(rango, ignoreCase = true) }?.let { y += 2f; texto(it, L.p(L.tenue, 19f, L.texto), max = 1) }
+            y += 18f
             ornamento()
         }
 
@@ -1206,10 +1209,26 @@ object Reportes {
         fun pie(fin: String) {
             y += 24f
             ornamento()
-            val t = "Vestigium Mei · " + Estilo.fecha(fin)
+            // La fecha del calendario común, y debajo, más pequeña, la del tema (si dice otra cosa).
+            val comun = Fechas.titulo(fin) + " de " + fin.take(4)
+            val t = "Vestigium Mei · $comun"
             val p = L.p(L.tenue, 19f, L.texto)
-            c.drawText(t, W / 2 - p.measureText(t) / 2, y + 10f, p); y += 50f
+            c.drawText(t, W / 2 - p.measureText(t) / 2, y + 10f, p)
+            val delTema = Estilo.fecha(fin)
+            if (!delTema.equals(comun, ignoreCase = true)) {
+                val p2 = L.p(L.tenue, 15f, L.texto); val t2 = recortar(delTema, p2, ancho)
+                c.drawText(t2, W / 2 - p2.measureText(t2) / 2, y + 34f, p2); y += 22f
+            }
+            y += 50f
         }
+    }
+
+    /** Corta un texto largo en un espacio, sin partir palabras, y avisa con «…» de que sigue. */
+    private fun acortar(s: String, max: Int): String {
+        val t = s.trim()
+        if (t.length <= max) return t
+        val corte = t.take(max).lastIndexOf(' ').takeIf { it > max / 2 } ?: max
+        return t.take(corte).trimEnd(' ', ',', ';', ':', '.') + "…"
     }
 
     private fun recortar(s: String, p: Paint, ancho: Float): String {
@@ -1220,7 +1239,9 @@ object Reportes {
     }
 
     /** El nombre del mes en la voz del tema. */
-    private fun mesNombre(m: Int) = Estilo.mes(m)
+    /** El mes del calendario común, en minúsculas («octubre»): los reportes fechan con él; el del tema va aparte, más pequeño. */
+    private fun mesNombre(m: Int) = java.time.Month.of(m.coerceIn(1, 12)).getDisplayName(java.time.format.TextStyle.FULL, Fechas.ES)
+    private fun mesComun(d: java.time.LocalDate) = mesNombre(d.monthValue).replaceFirstChar { it.uppercase() } + " de " + d.year
     private fun n0(x: Double) = "%,.0f".format(x)
     private fun n1(x: Double) = "%.1f".format(x)
     private fun hm(min: Double) = "${(min / 60).toInt()} h ${(min % 60).toInt()} min"
@@ -1258,7 +1279,7 @@ object Reportes {
         val valTipo = runCatching { Lugares.valenciaPorTipo(d.ini, d.fin) }.getOrDefault(emptyMap()).filterValues { it.second >= 2 }
         h.cifras(listOfNotNull(
             "${d.diasDiario}/${d.n}" to "días con diario",
-            d.valMedia?.let { n1(it) to ("ánimo medio del diario (de 7)" + if (d.diasSoloAvisos > 0) "; ${porNumero(d.diasSoloAvisos, "1 día", "${d.diasSoloAvisos} días")} solo con avisos no cuentan" else "") },
+            d.valMedia?.let { n1(it) to "ánimo medio del diario (de 7)" },
             d.suenoH?.let { n1(it) + " h" to "sueño por noche" },
             d.pasos?.let { n0(it) to "pasos al día" },
             d.pantallaMin?.let { hm(it) to "pantalla al día" },
@@ -1267,6 +1288,8 @@ object Reportes {
             (d.entrenos > 0).takeIf { it }?.let { "${d.entrenos}" to "entrenamientos" },
             (d.musicaH > 0.5).takeIf { it }?.let { n0(d.musicaH) + " h" to "de música" },
         ).take(9))
+        // Va en su renglón: dentro del recuadro del ánimo no cabía y se salía.
+        if (d.valMedia != null && d.diasSoloAvisos > 0) h.nota(porNumero(d.diasSoloAvisos, "Hubo 1 día con ánimo solo en los avisos: no cuenta en el ánimo medio.", "Hubo ${d.diasSoloAvisos} días con ánimo solo en los avisos: no cuentan en el ánimo medio."))
 
         // ---- La semana de un vistazo (solo en el reporte semanal)
         if (!anual && d.n <= 8) {
@@ -1384,7 +1407,7 @@ object Reportes {
                 d.artistaNuevo?.let { "nova" to "descubriste a $it" },
                 d.ytVideos.takeIf { it > 0 }?.let { "youtube" to "${n0(it.toDouble())} videos" + (d.ytCanales.firstOrNull()?.let { c -> " · más: ${c.first}" } ?: "") + if (d.ytMadrugada > 0) " · ${d.ytMadrugada} de madrugada" else "" },
                 d.subrayados.takeIf { it > 0 }?.let { "lectio" to "${porNumero(it, "1 subrayado", "$it subrayados")}" },
-                d.frase?.let { "sententia" to "«${it.texto.take(110)}» — ${it.autor}" },
+                d.frase?.let { "sententia" to "«${acortar(it.texto, 110)}» — ${it.autor}" },
             ).forEach { (k, v) -> h.clave(k, v) }
         }
 
@@ -1393,7 +1416,7 @@ object Reportes {
             h.titulo("Dinero", "PECVNIA")
             if (d.gastoCategorias.isNotEmpty()) h.barras(d.gastoCategorias.take(5).map { Triple(it.first, it.second, dinero(it.second)) }, L.terciario)
             listOfNotNull(
-                "svmptvs" to dinero(d.gasto) + " gastados · ${dinero(d.gasto / d.n)} al día",
+                "svmptvs" to dinero(d.gasto) + " gastados" + (d.gastoAlDia?.let { " · ${dinero(it)} al día" + if (d.diasGasto < d.n) " (en los ${d.diasGasto} días desde tu primer gasto anotado)" else "" } ?: ""),
                 d.gastoImprevisto.takeIf { it > 0 }?.let { "svmptvs" to dinero(it) + " en imprevistos" },
                 d.ingresos.takeIf { it > 0 }?.let { "reditus" to dinero(it) + " · balance ${if (it - d.gasto >= 0) "+" else "−"}${dinero(abs(it - d.gasto))}" },
             ).forEach { (k, v) -> h.clave(k, v) }
@@ -1517,13 +1540,19 @@ object Reportes {
      * Ese va siempre en modo discreto (iniciales en vez de nombres) y sin la frase del mejor momento.
      */
     private fun reporte(ctx: Context, titulo: String, latin: String, rango: String, ini: String, fin: String, anual: Boolean, mensual: Boolean = false,
-                        automatico: Boolean = false): Triple<Picture, Int, Int> {
+                        automatico: Boolean = false, rangoTema: String? = null): Triple<Picture, Int, Int> {
         val L = Lienzo(ctx)
-        val d = Periodo.calcular(ctx, ini, fin)
+        // El mensual y el anual se comparan con el mes o el año entero de antes; el semanal, con los siete días anteriores.
+        val anterior = when {
+            mensual -> java.time.YearMonth.from(Fechas.parse(ini)).minusMonths(1).let { Fechas.iso(it.atDay(1)) to Fechas.iso(it.atEndOfMonth()) }
+            anual -> Fechas.parse(ini).year.let { a -> "${a - 1}-01-01" to "${a - 1}-12-31" }
+            else -> null
+        }
+        val d = Periodo.calcular(ctx, ini, fin, anterior)
         val logros = runCatching { io.github.ruddy2003.vestigium.ciencia.Logros.todos(ctx).filter { l -> l.conseguido?.let { it in ini..fin } == true } }.getOrDefault(emptyList())
         val (pic, alto) = dibujarMedido(ctx) { c ->
             val h = Hoja(c, L, Repo.config.discreto || automatico, sinFrases = automatico)
-            h.encabezado(titulo, latin, rango)
+            h.encabezado(titulo, latin, rango, rangoTema)
             cuerpo(h, d, anual, logros, mensual)
             h.pie(fin)
             h.y
@@ -1547,7 +1576,7 @@ object Reportes {
     fun imagenMes(ctx: Context, ym: String): Bitmap {
         val ini = "$ym-01"; val d = Fechas.parse(ini)
         val fin = minOf(Fechas.iso(d.plusMonths(1).minusDays(1)), Fechas.diaLogico())
-        val (pic, alto, fondo) = reporte(ctx, "Tu mes", "MENSIS", Estilo.mes(d.monthValue, d.year), ini, fin, false, mensual = true)
+        val (pic, alto, fondo) = reporte(ctx, "Tu mes", "MENSIS", mesComun(d), ini, fin, false, mensual = true, rangoTema = Estilo.mes(d.monthValue, d.year))
         return bitmap(pic, alto, fondo)
     }
 
@@ -1569,7 +1598,7 @@ object Reportes {
         val d = Fechas.parse(ini)
         // Igual que imagenMes: hasta hoy si el mes no ha terminado.
         val fin = minOf(Fechas.iso(d.plusMonths(1).minusDays(1)), Fechas.diaLogico())
-        val (pic, alto, fondo) = reporte(ctx, "Tu mes", "MENSIS", Estilo.mes(d.monthValue, d.year), ini, fin, false, mensual = true, automatico = avisar)
+        val (pic, alto, fondo) = reporte(ctx, "Tu mes", "MENSIS", mesComun(d), ini, fin, false, mensual = true, automatico = avisar, rangoTema = Estilo.mes(d.monthValue, d.year))
         guardarPng(ctx, "mes_$ym.png", bitmap(pic, alto, fondo))
         val uri = guardarPdf(ctx, "mes_$ym.pdf", pic, alto, fondo)
         if (avisar && uri != null) Avisos.reporte(ctx, "Tu reporte de ${Fechas.mesTitulo(ym)} está listo", uri, "application/pdf")

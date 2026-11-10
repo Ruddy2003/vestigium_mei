@@ -9,7 +9,9 @@ import io.github.ruddy2003.vestigium.sensores.Geocercas
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
-        Repo.init(this)
+        // Repo.init ya no lanza (deja el error en Repo.errorAlAbrir); por si acaso, un fallo aquí tampoco cierra la app:
+        // sin esto, un error al abrir la base la dejaba cerrándose una y otra vez, sin poder ni exportar.
+        runCatching { Repo.init(this) }
         io.github.ruddy2003.vestigium.data.Mundo.app = this
         Avisos.crearCanales(this)
         Programador.asegurar(this)

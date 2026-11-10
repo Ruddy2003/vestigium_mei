@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -161,11 +162,9 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
         Seleccion.noche = fecha; Seleccion.seccion = sec
         nav.ir("noche")
     }
-    // Si se pidió una sección de la noche (avisos, atajos), se abre la hoja de la noche en ella.
-    LaunchedEffect(Seleccion.seccion, fecha) {
-        val sec = Seleccion.seccion ?: return@LaunchedEffect
-        abrirNoche(sec)
-    }
+    // Aquí había un efecto que, al ver una sección pedida, abría la hoja de la noche. Sobraba: quien pide una sección (el
+    // aviso, el atajo, el toque largo, «ponerte al día») ya abre la hoja por su cuenta. Y hacía daño: la apilaba otra vez (al
+    // guardar quedaba una abierta) y le ponía la fecha que Día tuviera abierta en ese momento, que podía no ser la pedida.
     val umbral = with(LocalDensity.current) { 120.dp.toPx() }
     val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
     // Deslizar a los lados cambia de día: a la derecha, el anterior; a la izquierda, el siguiente.
@@ -372,7 +371,10 @@ private fun TarjetaNoche(d: Dia, fecha: String, c: io.github.ruddy2003.vestigium
     io.github.ruddy2003.vestigium.ui.comun.TarjetaTema(tipo, Modifier.fillMaxWidth().padding(top = 18.dp), destacado = listo) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(io.github.ruddy2003.vestigium.ui.Estilo.seccion("Llenar el día", Romano.latin("Llenar el día")).first.let { io.github.ruddy2003.vestigium.ui.Estilo.conEspanol(it, "Llenar el día") }, style = MaterialTheme.typography.titleLarge)
+                // El nombre del tema y, debajo, el mismo comentario en español que llevan las demás secciones (hallazgo 10).
+                val (nombreNoche, comentarioNoche) = io.github.ruddy2003.vestigium.ui.Estilo.seccion("Llenar el día", Romano.latin("Llenar el día"))
+                Text(nombreNoche, style = MaterialTheme.typography.titleLarge)
+                if (comentarioNoche != null) Text(comentarioNoche, style = MaterialTheme.typography.labelMedium, color = dc.rotuloTarjeta(tipo, osc))
                 Text(partes.joinToString("  ") { (t, ok) -> (if (ok) "✓ " else "○ ") + t }, style = MaterialTheme.typography.labelMedium,
                     color = dc.rotuloTarjeta(tipo, osc), modifier = Modifier.padding(top = 4.dp))
                 if (listo) Text("día sellado", style = MaterialTheme.typography.labelMedium, color = dc.acentoTarjeta(tipo, osc))
@@ -397,6 +399,12 @@ fun PantallaNoche(nav: Nav) {
     var sucio by remember(fecha) { mutableStateOf(false) }
     val dActual by rememberUpdatedState(d)
     val sucioActual by rememberUpdatedState(sucio)
+    // Si la hoja ya estaba abierta (de ayer, sin sellar) y se pide otra fecha (el aviso o el atajo de hoy), cambia a esa:
+    // antes seguía en el día con que se abrió y lo de hoy se escribía en ayer. Lo que hubiera sin guardar se guarda primero.
+    val nochePedida = Seleccion.noche
+    LaunchedEffect(nochePedida) {
+        if (nochePedida != null && nochePedida != fecha && Seleccion.ponerse.isEmpty()) { if (sucioActual) Repo.guardarDia(dActual); fecha = nochePedida }
+    }
     LaunchedEffect(guardado) { if (!sucio && guardado != null) d = guardado }
     LaunchedEffect(d, sucio) { if (sucio) { delay(700); Repo.guardarDia(d); sucio = false } }
     DisposableEffect(fecha) { onDispose { if (sucioActual) Repo.guardarDia(dActual) } }
@@ -470,9 +478,11 @@ fun PantallaNoche(nav: Nav) {
                 Ficha((if (lleno) "✓ " else "") + Fechas.corto(f), f == fecha) { if (sucio) { Repo.guardarDia(d); sucio = false }; fecha = f }
             }
         }
-        // «Día difícil» se marca desde el aviso del diario; aquí se ve y se puede quitar si fue un toque equivocado.
+        // Día difícil: lo marcas tú aquí (esquema 23). Es aparte del «registro mínimo» de abajo, que solo dice por dónde se anotó.
+        Ficha((if (d.dificil) "✓ " else "") + "Fue un día difícil", d.dificil) { cambiar(d.copy(dificil = !d.dificil)) }
+        // El registro mínimo se marca al anotar la valencia desde el aviso; aquí se ve y se puede quitar si fue un toque equivocado.
         if (d.dia_dificil) Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Marcaste este día como «día difícil».", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Text("La valencia de este día se anotó desde el aviso (registro mínimo).", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f))
             BotonTexto(onClick = { cambiar(d.copy(dia_dificil = false)) }) { Text("quitar", style = MaterialTheme.typography.labelLarge) }
         }
@@ -617,12 +627,12 @@ fun PantallaNoche(nav: Nav) {
         // Cerrar el día: guarda y, si está completo, lo sella con la huella.
         val faltan = listOfNotNull(if (d.valencia == null) "la valencia" else null, if (d.nota.isBlank()) "la nota del diario" else null)
         Spacer(Modifier.height(24.dp))
-        io.github.ruddy2003.vestigium.ui.BotonPrincipal(if (completo) "Sellar el día" else "Guardar y volver", Modifier.fillMaxWidth().bringIntoViewRequester(reqSellar)) { sellar() }
+        io.github.ruddy2003.vestigium.ui.BotonPrincipal(if (completo) "Sellar el día" else "Listo",Modifier.fillMaxWidth().bringIntoViewRequester(reqSellar)) { sellar() }
         if (!completo) Ayuda("Para sellar el día con tu huella falta " + faltan.joinToString(" y ") + ".", Modifier.padding(top = 6.dp))
         Spacer(Modifier.height(72.dp))
     }
     // Barra fija abajo: cuánto llevas y un salto a lo siguiente que falta.
-    BarraNoche(pasos.map { it.first to it.second }, extras.map { it.first to it.second }, completo, Modifier.align(Alignment.BottomCenter)) {
+    BarraNoche(pasos.map { it.first to it.second }, extras.map { it.first to it.second }, completo, Modifier.align(Alignment.BottomCenter), sellar = { sellar() }) {
         val sig = pasos.firstOrNull { !it.second } ?: extras.firstOrNull { !it.second }
         scope.launch { (sig?.third ?: reqSellar).bringIntoView() }
     }
@@ -630,7 +640,7 @@ fun PantallaNoche(nav: Nav) {
 }
 
 @Composable
-private fun BarraNoche(pasos: List<Pair<String, Boolean>>, extras: List<Pair<String, Boolean>>, completo: Boolean, modifier: Modifier, siguiente: () -> Unit) {
+private fun BarraNoche(pasos: List<Pair<String, Boolean>>, extras: List<Pair<String, Boolean>>, completo: Boolean, modifier: Modifier, sellar: () -> Unit, siguiente: () -> Unit) {
     val hechos = pasos.count { it.second }
     val cs = MaterialTheme.colorScheme
     Surface(modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), shape = MaterialTheme.shapes.medium, color = cs.surface,
@@ -645,8 +655,13 @@ private fun BarraNoche(pasos: List<Pair<String, Boolean>>, extras: List<Pair<Str
                     (if (faltaExtra.isNotEmpty()) " · extra: " + faltaExtra.joinToString(", ") else ""),
                     style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
             }
-            BotonTexto(onClick = siguiente) {
-                Text(if (hechos < pasos.size || extras.any { !it.second }) "siguiente →" else if (completo) "sellar ↓" else "guardar ↓", style = MaterialTheme.typography.labelLarge, color = cs.primary)
+            // Con el día completo (ánimo y diario), el botón sella de una vez (hallazgo 8); antes solo bajaba hasta «Sellar el día».
+            // Los extras que falten (predicción, hábitos) siguen a un toque en «ir a …».
+            if (completo && extras.any { !it.second }) BotonTexto(onClick = siguiente) {
+                Text("ir a " + (extras.firstOrNull { !it.second }?.first ?: "lo que falta"), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+            }
+            BotonTexto(onClick = if (completo) sellar else siguiente) {
+                Text(if (completo) "Sellar el día" else "siguiente →", style = MaterialTheme.typography.labelLarge, color = cs.primary)
             }
         }
     }
@@ -709,7 +724,8 @@ private fun Vestigios(fecha: String, nav: Nav) {
         Repo.comunicacion[fecha]?.let { co ->
             if (co.sms_enviados + co.sms_recibidos > 0 || co.contactos > 0) { algo = true; ClaveDia("voces", (if (co.sms_enviados + co.sms_recibidos > 0) "${co.sms_enviados + co.sms_recibidos} sms · " else "") + "${porNumero(co.contactos, "1 persona", "${co.contactos} personas")}") }
         }
-        val wa = Repo.chats.filter { it.fecha == fecha }
+        // Los filtros de colecciones enteras se recuerdan por fecha y lista: no se repiten con cada tecla del diario.
+        val wa = remember(fecha, Repo.chats) { Repo.chats.filter { it.fecha == fecha } }
         if (wa.isNotEmpty()) {
             algo = true
             ClaveDia("whatsapp", "${wa.sumOf { it.mios }} enviados · ${wa.sumOf { it.otros }} recibidos · ${porNumero(wa.size, "1 chat", "${wa.size} chats")}")
@@ -725,12 +741,12 @@ private fun Vestigios(fecha: String, nav: Nav) {
             if (cx.carga_noche_inicio != null) ClaveDia("vis", "conectado ${Fechas.horaDe(cx.carga_noche_inicio)} → ${cx.carga_noche_fin?.let { Fechas.horaDe(it) } ?: "?"}")
         }
         Repo.huellas[fecha]?.let { h -> algo = true; ClaveDia("google", "${h.yt_vistos} videos · ${h.busquedas + h.yt_busquedas} búsquedas" + (h.canales.keys.firstOrNull()?.let { " · más: $it" } ?: "")) }
-        val sub = Repo.subrayados.filter { it.fecha == fecha }
+        val sub = remember(fecha, Repo.subrayados) { Repo.subrayados.filter { it.fecha == fecha } }
         if (sub.isNotEmpty()) { algo = true; ClaveDia("lectio", "${porNumero(sub.size, "1 subrayado", "${sub.size} subrayados")} · " + sub.map { it.libro }.distinct().take(2).joinToString(", ")) }
-        val ruidos = Repo.momentos.filter { it.fecha == fecha && !it.privado }.mapNotNull { it.ruido_db }
+        val ruidos = remember(fecha, Repo.momentos) { Repo.momentos.filter { it.fecha == fecha && !it.privado }.mapNotNull { it.ruido_db } }
         if (ruidos.isNotEmpty()) ClaveDia("strepitus", "%.0f dB de media al registrar".format(ruidos.average()))
         // Lo que leíste, viste o jugaste; si lo terminaste ese día, tu calificación y lo que opinaste.
-        val obras = Repo.obras.filter { it.titulo.isNotBlank() && (fecha in it.dias || (it.estado == "terminado" && it.fin == fecha)) }
+        val obras = remember(fecha, Repo.obras) { Repo.obras.filter { it.titulo.isNotBlank() && (fecha in it.dias || (it.estado == "terminado" && it.fin == fecha)) } }
         if (obras.isNotEmpty()) {
             algo = true
             ClaveDia("opera", obras.joinToString(" · ") { o ->
@@ -757,9 +773,10 @@ private fun Vestigios(fecha: String, nav: Nav) {
             algo = true
             ClaveDia("somnium", (io.github.ruddy2003.vestigium.ui.LibroDiario.metaSueno(d).ifBlank { "soñaste" }) + " · «" + d.sueno_texto.trim().replace(Regex("\\s+"), " ").take(90) + "…»")
         }
-        val cartas = Repo.cartas.filter { it.escrita == fecha }
+        val cartas = remember(fecha, Repo.cartas) { Repo.cartas.filter { it.escrita == fecha } }
+        val cartasAbiertas = remember(fecha, Repo.cartas) { Repo.cartas.filter { it.para.isBlank() && it.abierta_el == fecha } }
         if (cartas.isNotEmpty()) { algo = true; ClaveDia("epistulae", cartas.joinToString(" · ") { if (it.para.isBlank()) "sellaste una carta hasta el ${Fechas.corto(it.abrir_en)} ${it.abrir_en.take(4)}" else "carta a @${it.para}" }) }
-        Repo.cartas.filter { it.para.isBlank() && it.abierta_el == fecha }.forEach { ClaveDia("  aperta", "abriste la carta que te escribiste el ${Fechas.larga(it.escrita)}") }
+        cartasAbiertas.forEach { ClaveDia("  aperta", "abriste la carta que te escribiste el ${Fechas.larga(it.escrita)}") }
         if (!algo) Ayuda("Aún no hay datos automáticos de este día. Activa fuentes en Más → Permisos y sensores.", Modifier.padding(top = 8.dp))
         Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             BotonSecundario(if (ocupado) "sincronizando…" else "↻ sincronizar", habilitado = !ocupado) {
@@ -896,41 +913,52 @@ private fun TuDia(fecha: String, nav: Nav, numero: Int, guardarAntes: () -> Unit
     fun msDe(f: String, h: String) = runCatching { java.time.LocalDateTime.of(Fechas.parse(f), java.time.LocalTime.parse(h.take(5))).aMillis() }.getOrDefault(0L)
     fun cifra(x: Double) = if (x % 1.0 == 0.0) x.toLong().toString() else "%.1f".format(x)
     fun nota(t: String) = if (t.isNotBlank()) " · $t" else ""
+    // Lo del día de cada colección, recordado por fecha y lista: antes los nueve filtros (y la fecha de todas las visitas de
+    // la historia) se repetían con cada cambio del día, es decir, con cada tecla.
+    val momentosDia = remember(fecha, Repo.momentos) { Repo.momentos.filter { it.fecha == fecha && !it.privado } }
+    val consumosDia = remember(fecha, Repo.consumos, c) { Repo.consumos.filter { it.fecha == fecha && io.github.ruddy2003.vestigium.data.Sustancias.visible(it) } }
+    val tramosDia = remember(fecha, Repo.tramos) { Repo.tramos.filter { it.fecha == fecha } }
+    val gastosDia = remember(fecha, Repo.gastos) { Repo.gastos.filter { it.dia == fecha } }
+    val ingresosDia = remember(fecha, Repo.ingresos) { Repo.ingresos.filter { it.dia == fecha } }
+    val tomasDia = remember(fecha, Repo.tomas) { Repo.tomas.filter { it.fecha == fecha } }
+    val visitasDia = remember(fecha, Repo.visitas) { Repo.visitas.filter { Fechas.diaLogicoDeMillis(Fechas.millis(it.entrada)) == fecha } }
+    val notasDia = remember(fecha, Repo.notas) { Repo.notas.filter { it.fecha == fecha } }
+    val ideasDia = remember(fecha, Repo.ideas) { Repo.ideas.filter { it.fecha == fecha } }
     val filas = buildList {
-        Repo.momentos.filter { it.fecha == fecha && !it.privado }.forEach { m ->
+        momentosDia.forEach { m ->
             add(Fila(Fechas.millis(m.ts), Fechas.horaDe(m.ts), Catalogo.tituloDetallado(m, c.discreto) + (m.valencia?.let { " · $it/7" } ?: "") +
                 Catalogo.detalleMomento(m, c.discreto).let { if (it.isNotBlank()) " · $it" else "" } + nota(m.texto)) { abrir(m) })
         }
-        Repo.consumos.filter { it.fecha == fecha && io.github.ruddy2003.vestigium.data.Sustancias.visible(it) }.forEach { x ->
+        consumosDia.forEach { x ->
             add(Fila(Fechas.millis(x.inicio), Fechas.horaDe(x.inicio), Catalogo.nombreSustancia(x) + nota(resumenConsumo(x))) { abrirConsumo(ctx, id = x.id) })
         }
-        Repo.tramos.filter { it.fecha == fecha }.forEach { t ->
+        tramosDia.forEach { t ->
             add(Fila(Fechas.millis(t.inicio), Fechas.horaDe(t.inicio), Catalogo.nombreTramo(t.tipo) + " · " + horasMin(t.min) + nota(t.nota)) { abrir(t) })
         }
-        Repo.gastos.filter { it.dia == fecha }.forEach { g ->
+        gastosDia.forEach { g ->
             add(Fila(msDe(g.fecha, g.hora), g.hora.take(5), "Gasto · $${"%,.2f".format(g.monto)} · ${g.categoria}" + nota(g.nota)) { abrir(g) })
         }
-        Repo.ingresos.filter { it.dia == fecha }.forEach { i ->
+        ingresosDia.forEach { i ->
             add(Fila(msDe(i.fecha, i.hora), i.hora.take(5), "Ingreso · $${"%,.2f".format(i.monto)} · ${i.categoria}" + nota(i.nota)) { abrir(i) })
         }
-        Repo.tomas.filter { it.fecha == fecha }.forEach { t ->
+        tomasDia.forEach { t ->
             val s = io.github.ruddy2003.vestigium.data.Suplementos.de(t.suplemento)
             add(Fila(Fechas.millis(t.ts), Fechas.horaDe(t.ts), "${s?.nombre ?: t.suplemento} · ${cifra(t.cantidad)} ${s?.unidad ?: ""}".trim()) { abrir(t) })
         }
         // Las visitas a tus lugares, por día lógico: tocar una dice «fue en…» o «no estuve aquí» (N-05).
-        Repo.visitas.filter { Fechas.diaLogicoDeMillis(Fechas.millis(it.entrada)) == fecha }.forEach { v ->
+        visitasDia.forEach { v ->
             val l = Repo.lugares.firstOrNull { it.id == v.lugar }
             add(Fila(Fechas.millis(v.entrada), Fechas.horaDe(v.entrada), "En ${l?.nombre ?: "un lugar quitado"}" + (v.salida?.let { " hasta las ${Fechas.horaDe(it)}" } ?: "")) { abrir(v) })
         }
         // Las notas van a la hora en que se escribieron si fue ese mismo día; si no, al final.
-        Repo.notas.filter { it.fecha == fecha }.forEach { n ->
+        notasDia.forEach { n ->
             val ms = Fechas.millis(n.creada)
             val mismoDia = ms > 0 && Fechas.diaLogicoDeMillis(ms) == fecha
             add(Fila(if (mismoDia) ms else Long.MAX_VALUE, if (mismoDia) Fechas.horaDe(n.creada) else "nota",
                 (Catalogo.TIPOS_NOTA.firstOrNull { it.id == n.tipo }?.nombre ?: "Nota") + " · " + n.texto.lines().first().take(90)) { abrir(n) })
         }
         // Las ideas del Ideario, igual que las notas.
-        Repo.ideas.filter { it.fecha == fecha }.forEach { i ->
+        ideasDia.forEach { i ->
             val ms = Fechas.millis(i.creada)
             val mismoDia = ms > 0 && Fechas.diaLogicoDeMillis(ms) == fecha
             add(Fila(if (mismoDia) ms else Long.MAX_VALUE, if (mismoDia) Fechas.horaDe(i.creada) else "idea",
@@ -943,13 +971,14 @@ private fun TuDia(fecha: String, nav: Nav, numero: Int, guardarAntes: () -> Unit
         LineaDelTiempo(fecha)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             BotonTexto(onClick = { Seleccion.cinta = fecha; nav.ir("cinta") }) { Text("la cinta completa →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
-            if (Repo.momentos.any { it.fecha == fecha && !it.privado }) BotonTexto(onClick = { Seleccion.momentos = fecha; nav.ir("hoja_momentos") }) {
+            if (momentosDia.isNotEmpty()) BotonTexto(onClick = { Seleccion.momentos = fecha; nav.ir("hoja_momentos") }) {
                 Text("la hoja de la libreta →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
         }
         if (filas.isNotEmpty()) Tarjeta(Modifier.padding(top = 4.dp)) {
             filas.forEach { f ->
-                Row(Modifier.fillMaxWidth().clickable(onClick = f.tocar).padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                // Cada fila mide al menos 48 dp de alto, lo que pide Android para acertar el toque (hallazgo 12).
+                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = f.tocar).padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(f.hora + "  ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     io.github.ruddy2003.vestigium.ui.TextoMarcado(f.texto, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                     Text(" ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.outline)
@@ -962,7 +991,7 @@ private fun TuDia(fecha: String, nav: Nav, numero: Int, guardarAntes: () -> Unit
         if (agregar) Tarjeta {
             Ayuda("Con la fecha ya puesta: ${Fechas.titulo(fecha).lowercase()}. Lo que anotes después de ese día queda marcado como anotado tarde.")
             FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Ficha("ánimo con hora", false) {
+                Ficha("registro de ánimo", false) {
                     guardarAntes()
                     ctx.startActivity(android.content.Intent(ctx, io.github.ruddy2003.vestigium.ui.QuickActivity::class.java)
                         .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.MODO, io.github.ruddy2003.vestigium.ui.QuickActivity.M_ANIMO)

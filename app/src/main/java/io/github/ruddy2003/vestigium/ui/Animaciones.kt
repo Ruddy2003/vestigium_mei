@@ -1112,11 +1112,11 @@ fun FondoVivo(tema: TemaId = Estilo.tema, fijo: Float? = null) {
         Canvas(Modifier.fillMaxSize().graphicsLayer()) { pintarVivoTema(tipo, t, oscuro, e, motas) }
         return
     }
-    val t = if (fijo != null) fijo else {
-        val v by rememberInfiniteTransition(label = "fondo").animateFloat(0f, 1f, infiniteRepeatable(tween(tipo.periodo, easing = LinearEasing)), label = "t")
-        v
-    }
-    Canvas(Modifier.fillMaxSize()) { pintarVivoTema(tipo, t, oscuro, e, motas) }
+    if (fijo != null) { Canvas(Modifier.fillMaxSize()) { pintarVivoTema(tipo, fijo, oscuro, e, motas) }; return }
+    // Los demás temas siguen a 60 cuadros por segundo, pero el tiempo se lee al dibujar y el fondo va en su propia capa
+    // (10 nov 2026): cada cuadro ya no recompone esta función ni obliga a volver a grabar lo que comparte capa con ella.
+    val anim = rememberInfiniteTransition(label = "fondo").animateFloat(0f, 1f, infiniteRepeatable(tween(tipo.periodo, easing = LinearEasing)), label = "t")
+    Canvas(Modifier.fillMaxSize().graphicsLayer()) { pintarVivoTema(tipo, anim.value, oscuro, e, motas) }
 }
 
 /**

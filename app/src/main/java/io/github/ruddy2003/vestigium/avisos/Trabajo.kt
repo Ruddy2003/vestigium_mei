@@ -75,11 +75,56 @@ internal inline fun intentar(f: () -> Unit) {
     try { f() } catch (e: CancellationException) { throw e } catch (e: Throwable) { }
 }
 
+/**
+ * Bitácora corta de la tarea de fondo: qué paso falló, con qué error y a qué hora. Antes los errores se tragaban sin dejar
+ * rastro. Se guarda en el teléfono (como mucho [MAX] líneas, la más reciente primero) y se ve en «Estado de los datos».
+ * Un mismo fallo repetido no llena la lista: se queda una sola línea, con la última hora y cuántas veces pasó.
+ */
+object Bitacora {
+    private const val MAX = 20
+    private const val CLAVE = "lineas"
+    private fun prefs(ctx: Context) = ctx.getSharedPreferences("pulso_bitacora", Context.MODE_PRIVATE)
+    private fun limpio(s: String) = s.replace('\n', ' ').replace('\t', ' ').trim()
+
+    /** Anota que [paso] falló con [error] (texto corto). */
+    @Synchronized
+    fun anotar(ctx: Context, paso: String, error: String) {
+        runCatching {
+            val p = limpio(paso); val e = limpio(error).take(160)
+            val viejas = prefs(ctx).getString(CLAVE, "").orEmpty().split('\n').filter { it.isNotBlank() }
+            val igual = viejas.firstOrNull { l -> l.split('\t').let { it.getOrNull(1) == p && it.getOrNull(2) == e } }
+            val veces = (igual?.split('\t')?.getOrNull(3)?.toIntOrNull() ?: 0) + 1
+            val nueva = listOf(Fechas.ahoraIso(), p, e, veces.toString()).joinToString("\t")
+            prefs(ctx).edit().putString(CLAVE, (listOf(nueva) + viejas.filter { it !== igual }).take(MAX).joinToString("\n")).apply()
+        }
+    }
+
+    fun anotar(ctx: Context, paso: String, e: Throwable) = anotar(ctx, paso, (e::class.simpleName ?: "error") + (e.message?.let { ": $it" } ?: ""))
+
+    /** Las líneas para mostrar, la más reciente primero: «10 nov 08:15 · respaldo · IOException: … (×3)». */
+    fun leer(ctx: Context): List<String> = runCatching {
+        prefs(ctx).getString(CLAVE, "").orEmpty().split('\n').filter { it.isNotBlank() }.map { l ->
+            val c = l.split('\t')
+            val ts = c.getOrNull(0).orEmpty()
+            val veces = c.getOrNull(3)?.toIntOrNull() ?: 1
+            Fechas.corto(ts.take(10)) + " " + Fechas.horaDe(ts) + " · " + c.getOrNull(1).orEmpty() + " · " + c.getOrNull(2).orEmpty() + (if (veces > 1) " (×$veces)" else "")
+        }
+    }.getOrDefault(emptyList())
+}
+
 /** Tarea cada 15 minutos: ubicación, avisos que tocan, sincronización diaria y reportes. */
 class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
+    /** Como [intentar], pero el error queda en la [Bitacora] con el nombre del paso. */
+    private inline fun anotando(nombre: String, f: () -> Unit) {
+        try { f() } catch (e: CancellationException) { throw e } catch (e: Throwable) { Bitacora.anotar(applicationContext, nombre, e) }
+    }
+
     override suspend fun doWork(): Result {
         val ctx = applicationContext
         Repo.init(ctx)
+        // Si la base no se pudo abrir bien, lo que hay en memoria está incompleto: sincronizar o respaldar así pisaría datos
+        // buenos con otros vacíos. No se hace nada hasta que se arregle (el aviso está en «Estado de los datos»).
+        Repo.errorAlAbrir?.let { Bitacora.anotar(ctx, "abrir la base", it); return Result.success() }
         intentar { Repo.registrarZona() }
         // Una sola vez: la fuerza de referencia de los entrenos que ya estaban (H-7-14).
         intentar {
@@ -107,7 +152,7 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             val viejos = Repo.dias.values.filter { it.hitos.isNotEmpty() }
             if (viejos.isNotEmpty()) Repo.importarDias(viejos.map { io.github.ruddy2003.vestigium.data.Senaladas.migrar(it) }, sobrescribir = true)
         }
-        intentar { Ubicacion.muestrear(ctx) }
+        anotando("ubicación") { Ubicacion.muestrear(ctx) }
         // Las visitas abiertas de las que tus ubicaciones ya dicen que saliste (si Android no avisó la salida). No en el
         // pulso de la corrección: la lista en memoria se actualiza un instante después y partiría de la de antes.
         if (!visitasCorregidas) intentar { if (io.github.ruddy2003.vestigium.data.Lugares.cerrarAbiertas()) Geocercas.registrar(ctx) }
@@ -119,8 +164,8 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             }
         }
         intentar { io.github.ruddy2003.vestigium.data.Spotify.quizaSincronizar(ctx) }
-        intentar { avisos(ctx) }
-        intentar { diario(ctx) }
+        anotando("avisos") { avisos(ctx) }
+        anotando("tareas del día") { diario(ctx) }
         // Por si la alarma del enfoque se perdió (reinicio del teléfono): avisa de la meta si no se avisó y la vuelve a programar.
         intentar { io.github.ruddy2003.vestigium.data.Enfoque.avanzar(ctx) }
         // El tema del día (si pediste que cambie solo): también el widget y el ícono.
@@ -143,8 +188,10 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         val clave = "$tanda|$nombre"
         val antes = pasos.getInt(clave, 0)
         if (antes == PASO_HECHO || antes >= 2) return
+        // Si ya se había empezado y no quedó como hecho, es que la vez anterior se cortó a la mitad.
+        if (antes == 1) Bitacora.anotar(applicationContext, nombre, "la vez anterior se cortó sin terminar; segundo y último intento de hoy")
         pasos.edit().putInt(clave, antes + 1).commit()
-        try { f() } catch (e: CancellationException) { throw e } catch (e: Throwable) { }
+        try { f() } catch (e: CancellationException) { throw e } catch (e: Throwable) { Bitacora.anotar(applicationContext, nombre, e) }
         if (!isStopped) pasos.edit().putInt(clave, PASO_HECHO).apply()
     }
 
@@ -153,6 +200,36 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         val viejas = pasos.all.keys.filter { it.substringBefore('|') !in vigentes }
         if (viejas.isNotEmpty()) pasos.edit().apply { viejas.forEach { remove(it) } }.apply()
     }
+
+    /**
+     * El aviso «tu respaldo no está saliendo» mira la antigüedad del último respaldo, fuera del paso que lo hace: si el paso
+     * se corta las dos veces (por tiempo, o porque el sistema mata el proceso), antes el aviso nunca sonaba. Suena cuando el
+     * paso de hoy ya tuvo su oportunidad (terminó, bien o mal, o se empezó dos veces) y el último respaldo sigue teniendo más
+     * de 2 días. Una vez al día, como antes.
+     */
+    private fun avisarRespaldoAtrasado(ctx: Context, hoy: String) {
+        val c = Repo.config
+        if (c.carpeta_respaldo == null || yaFue("respaldo_falla:$hoy")) return
+        if (c.respaldo_ultimo != null && System.currentTimeMillis() - Fechas.millis(c.respaldo_ultimo) <= 2 * 86_400_000L) return
+        val estado = pasos.getInt("sync:$hoy|respaldo", 0)
+        if (estado != PASO_HECHO && estado < 2) return
+        if (io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx)) return
+        marcar("respaldo_falla:$hoy"); Avisos.respaldoFallido(ctx)
+    }
+
+    /**
+     * Un reporte automático (semanal, mensual, «Tu año»): se hace el día que toca o el primero posterior en que se pueda, y
+     * se marca como hecho al terminar, no antes. Antes se marcaba primero y solo se intentaba ese día exacto: si fallaba o
+     * el teléfono estaba apagado, ya no salía. Si falla, se vuelve a intentar al día siguiente (una vez por día) y queda
+     * anotado en la bitácora. [hacer] devuelve si salió.
+     */
+    private inline fun reporte(clave: String, nombre: String, hoy: String, hacer: () -> Boolean) {
+        if (yaFue(clave) || yaFue("intento:$clave:$hoy")) return
+        marcar("intento:$clave:$hoy")
+        val ok = try { hacer() } catch (e: CancellationException) { throw e } catch (e: Throwable) { Bitacora.anotar(applicationContext, nombre, e); return }
+        if (ok) marcar(clave) else Bitacora.anotar(applicationContext, nombre, "no se pudo guardar; se intentará mañana")
+    }
+
     private fun marcar(clave: String) {
         val limite = System.currentTimeMillis() - 40L * 86_400_000
         Repo.cambiarConfig { c -> c.copy(disparos = c.disparos.filterValues { it > limite } + (clave to System.currentTimeMillis())) }
@@ -231,6 +308,8 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         if (ahora.hour < 6) return
         val mes = Fechas.mesDe(hoy)
         olvidarPasos(setOf("sync:$hoy", "sync2:$hoy", "historia:$mes"))
+        // En cada pulso, no dentro del paso del respaldo: si ese paso se cortó, aquí se nota.
+        intentar { avisarRespaldoAtrasado(ctx, hoy) }
         // Cada paso se anota al terminar, no antes: si WorkManager corta la tarea (su límite son 10 min), el siguiente pulso
         // sigue donde se quedó. Antes la tanda entera se daba por hecha al empezar y lo que faltaba no se hacía ese día.
         if (!yaFue("sync:$hoy")) {
@@ -246,15 +325,13 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             // Las fotos del día que todavía no tienen su copia dentro de la app, antes del respaldo para que viajen en él.
             paso(s, "fotos_dia") { io.github.ruddy2003.vestigium.data.FotoDelDia.completarPendientes(ctx) }
             paso(s, "respaldo") {
-                val ok = try { Exportar.respaldoAutomatico(ctx) } catch (e: CancellationException) { throw e } catch (e: Throwable) { false }
-                // Si falla (sin espacio, la carpeta ya no deja escribir, sin memoria…) y van 3 días sin respaldo, se avisa una vez
-                // por semana: antes el error se tragaba y solo se notaba al ir a buscar el respaldo.
-                val c = Repo.config
-                // Desde el 9 nov 2026: a los 2 días y cada día, no a los 3 y una vez por semana.
-                if (!ok && c.carpeta_respaldo != null && !io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx) &&
-                    (c.respaldo_ultimo == null || System.currentTimeMillis() - Fechas.millis(c.respaldo_ultimo) > 2 * 86_400_000L) &&
-                    !yaFue("respaldo_falla:$hoy")) { marcar("respaldo_falla:$hoy"); Avisos.respaldoFallido(ctx) }
+                val ok = try { Exportar.respaldoAutomatico(ctx) } catch (e: CancellationException) { throw e } catch (e: Throwable) { Bitacora.anotar(ctx, "respaldo", e); false }
+                // Si falla (sin espacio, la carpeta ya no deja escribir, sin memoria…) queda en la bitácora; el aviso de que van
+                // 2 días sin respaldo lo da [avisarRespaldoAtrasado], que no depende de que este paso termine.
+                if (!ok && Repo.config.carpeta_respaldo != null) Bitacora.anotar(ctx, "respaldo", "el respaldo automático no salió")
             }
+            // Recién terminado (o fallado) el paso: si el último respaldo ya es viejo, se avisa en este mismo pulso.
+            intentar { avisarRespaldoAtrasado(ctx, hoy) }
             // La cápsula del año que terminó, la primera mañana de enero en que se pueda (9 nov 2026).
             val anioPasado = (ahora.year - 1).toString()
             if (ahora.monthValue == 1 && Repo.config.carpeta_respaldo != null && !yaFue("capsula:$anioPasado")) paso(s, "capsula") {
@@ -318,21 +395,16 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
                 if (nuevos.isNotEmpty()) { nuevos.forEach { marcar("logro_aviso:${it.id}") }; Avisos.logros(ctx, nuevos.map { it.nombre }) }
             }
         }
-        // «Tu año»: el 31 de diciembre por la mañana.
-        if (ahora.monthValue == 12 && ahora.dayOfMonth == 31 && ahora.hour >= 9 && !yaFue("tu_anio:${ahora.year}")) {
-            marcar("tu_anio:${ahora.year}")
-            intentar { Avisos.tuAnio(ctx, ahora.year) }
-        }
-        // Reporte semanal: lunes, de la semana anterior
-        if (ahora.dayOfWeek == DayOfWeek.MONDAY && ahora.hour >= 8 && !yaFue("reporte_sem:$hoy")) {
-            marcar("reporte_sem:$hoy")
-            intentar { Reportes.semanal(ctx, Fechas.sumar(Fechas.lunesDe(hoy), -7), avisar = true) }
-        }
-        // Reporte mensual: día 1, del mes anterior
-        if (ahora.dayOfMonth == 1 && ahora.hour >= 9 && !yaFue("reporte_mes:$hoy")) {
-            marcar("reporte_mes:$hoy")
-            intentar { Reportes.mensual(ctx, Fechas.mesDe(Fechas.sumar(hoy, -1)), avisar = true) }
-        }
+        // «Tu año»: el 31 de diciembre por la mañana o, si ese día no se pudo, el primer día de enero en que se pueda.
+        val anioDeTuAnio = if (ahora.monthValue == 12 && ahora.dayOfMonth == 31) ahora.year else if (ahora.monthValue == 1) ahora.year - 1 else null
+        if (anioDeTuAnio != null && ahora.hour >= 9) reporte("tu_anio:$anioDeTuAnio", "aviso de «Tu año»", hoy) { Avisos.tuAnio(ctx, anioDeTuAnio); true }
+        // Reporte semanal, de la semana anterior: el lunes o el primer día posterior de esa semana en que se pueda.
+        // La clave lleva el lunes de la semana (la misma de antes, cuando solo se hacía en lunes).
+        val lunes = Fechas.lunesDe(hoy)
+        if (ahora.hour >= 8) reporte("reporte_sem:$lunes", "reporte semanal", hoy) { Reportes.semanal(ctx, Fechas.sumar(lunes, -7), avisar = true) != null }
+        // Reporte mensual, del mes anterior: el día 1 o el primer día posterior del mes en que se pueda.
+        val dia1 = "$mes-01"
+        if (ahora.hour >= 9) reporte("reporte_mes:$dia1", "reporte mensual", hoy) { Reportes.mensual(ctx, Fechas.mesDe(Fechas.sumar(dia1, -1)), avisar = true) != null }
         intentar { Widgets.actualizar(ctx) }
     }
 }

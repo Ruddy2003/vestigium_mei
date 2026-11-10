@@ -428,11 +428,16 @@ object Widgets {
         val col = colores()
         val hoy = Fechas.parse(Fechas.diaLogico())
         val ini = hoy.withDayOfMonth(1)
-        v.setTextViewText(R.id.titulo_mes, Estilo.mes(hoy.monthValue, hoy.year))
+        // El mes del tema y, al lado, el mes común (hallazgo 11).
+        v.setTextViewText(R.id.titulo_mes, Estilo.mesConComun(hoy.monthValue, hoy.year))
         val dias = (0 until ini.lengthOfMonth()).map { ini.plusDays(it.toLong()) }
-        val vals = dias.map { d -> val f = Fechas.iso(d); Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average() }
+        // El ánimo de cada día con la definición única de las vistas (Periodo.animoDia): el del diario o, si falta, la media de
+        // los avisos, que se dibuja hueca (solo el contorno) y se cuenta aparte en el rótulo.
+        val animos = io.github.ruddy2003.vestigium.ciencia.Periodo.animoDias(dias.map { Fechas.iso(it) })
+        val vals = animos.map { it?.valor }
         val conDato = vals.filterNotNull()
-        v.setTextViewText(R.id.sub_mes, if (conDato.isEmpty()) Estilo.numeral(hoy.year) else "μ %.1f · ${porNumero(conDato.size, "1 día", "${conDato.size} días")}".format(conDato.average()))
+        val nAvisos = animos.count { it?.deAvisos == true }
+        v.setTextViewText(R.id.sub_mes, if (conDato.isEmpty()) Estilo.numeral(hoy.year) else "μ %.1f · ${porNumero(conDato.size, "1 día", "${conDato.size} días")}".format(conDato.average()) + (if (nAvisos > 0) " · $nAvisos de avisos (huecos)" else ""))
         val celda = 64; val sep = 6; val cab = 34
         val filas = (ini.dayOfWeek.value - 1 + dias.size + 6) / 7
         val w = 7 * celda + 6 * sep; val h = cab + filas * celda + (filas - 1) * sep
@@ -446,12 +451,15 @@ object Widgets {
             val pos = ini.dayOfWeek.value - 1 + k
             val x = (pos % 7) * (celda + sep); val y = cab + (pos / 7) * (celda + sep)
             val vv = vals[k]
-            p.color = if (vv == null) col.vacio else colorValencia(vv, col.animo)
+            val hueco = animos[k]?.deAvisos == true
+            p.color = if (vv == null || hueco) col.vacio else colorValencia(vv, col.animo)
             c.drawRoundRect(android.graphics.RectF(x.toFloat(), y.toFloat(), (x + celda).toFloat(), (y + celda).toFloat()), 8f, 8f, p)
+            if (hueco && vv != null) { val b = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { style = android.graphics.Paint.Style.STROKE; strokeWidth = 6f; color = colorValencia(vv, col.animo) }
+                c.drawRoundRect(android.graphics.RectF(x + 3f, y + 3f, x + celda - 3f, y + celda - 3f), 6f, 6f, b) }
             if (d == hoy) { val b = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { style = android.graphics.Paint.Style.STROKE; strokeWidth = 4f; color = col.oro }
                 c.drawRoundRect(android.graphics.RectF(x + 2f, y + 2f, x + celda - 2f, y + celda - 2f), 8f, 8f, b) }
             t.color = if (vv == null || d.isAfter(hoy)) 0xFF5B6067.toInt() else col.sobreActivo
-            if (vv == null && !d.isAfter(hoy)) t.color = col.tenue
+            if ((vv == null || hueco) && !d.isAfter(hoy)) t.color = col.tenue
             c.drawText("${d.dayOfMonth}", (x + celda / 2).toFloat(), (y + celda / 2 + 8).toFloat(), t)
         }
         v.setImageViewBitmap(R.id.img_mes, bmp)
@@ -468,22 +476,28 @@ object Widgets {
         return (0xFF shl 24) or (m(16) shl 16) or (m(8) shl 8) or m(0)
     }
 
-    private fun linea(k: String, v: String) = Estilo.clave(k).padEnd(9) + "= " + v
+    /** Aísla la dirección de [t] (U+2066 … U+2069): una clave en árabe ya no voltea las cifras del renglón (hallazgo 24). */
+    private fun aislado(t: String) = "⁦" + t + "⁩"
+
+    /** Una línea «clave = valor». Si la clave del tema va en otro alfabeto (chino, árabe, griego…), lleva su español, como el reporte del día. */
+    private fun linea(k: String, v: String) =
+        aislado((Estilo.clave(k) + (Estilo.claveEspanol(k)?.let { " · $it" } ?: "")).padEnd(9)) + "= " + aislado(v)
 
     fun vistaHoy(ctx: Context): RemoteViews {
         val v = RemoteViews(ctx.packageName, R.layout.widget_hoy)
         pintar(v, Piel.HOY)
         val f = Fechas.diaLogico()
         val fase = Luna.fase(f)
-        v.setTextViewText(R.id.hoy_fecha, Estilo.widget("hoy") + " · " + Estilo.fecha(f))
+        v.setTextViewText(R.id.hoy_fecha, aislado(Estilo.widget("hoy")) + " · " + aislado(Estilo.fecha(f)))
         v.setTextViewText(R.id.hoy_sub, com + Fechas.corto(f) + " · " + Luna.glifo(fase) + " " + Luna.nombre(fase))
         val l = ArrayList<String>()
         val d = Repo.dias[f]
-        val mu = Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia }
+        // El ánimo de hoy con la definición única de las vistas (Periodo.animoDia); si sale de los avisos, se dice.
+        val animoHoy = io.github.ruddy2003.vestigium.ciencia.Periodo.animoDia(f)
         when {
-            d?.valencia != null -> l += linea("animus", "${d.valencia} / 7")
-            mu.isNotEmpty() -> l += linea("animus", "%.1f (%s)".format(mu.average(), porNumero(mu.size, "1 aviso", "${mu.size} avisos")))
-            else -> l += linea("animus", "—")
+            animoHoy == null -> l += linea("animus", "—")
+            animoHoy.deAvisos -> l += linea("animus", "%.1f (avisos)".format(animoHoy.valor))
+            else -> l += linea("animus", "%.0f / 7".format(animoHoy.valor))
         }
         Repo.salud[f]?.sueno_min?.let { l += linea("somnus", "${it / 60} h ${"%02d".format(it % 60)}") }
         Repo.salud[f]?.pasos?.let { l += linea("passus", "%,d".format(it)) }
@@ -491,7 +505,7 @@ object Widgets {
         l += linea("momenta", "$mom")
         Repo.pantalla[f]?.let { l += linea("telephon", "${it.total_min / 60} h ${"%02d".format(it.total_min % 60)}") }
         Repo.entorno[f]?.let { e -> if (e.t_max != null) l += linea("caelum", "%.0f°".format(e.t_max) + (e.codigo?.let { " " + Clima.descripcion(it) } ?: "")) }
-        if (Repo.config.discreto) l.retainAll { k -> listOf("animus", "somnus", "passus").any { k.startsWith(Estilo.clave(it)) } }
+        if (Repo.config.discreto) l.retainAll { k -> listOf("animus", "somnus", "passus").any { k.removePrefix("⁦").startsWith(Estilo.clave(it)) } }
         v.setTextViewText(R.id.hoy_lineas, l.joinToString("\n"))
         val abrir = Intent(ctx, MainActivity::class.java).putExtra(MainActivity.PANTALLA, "dia").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         clic(v, R.id.raiz_hoy, pi(ctx, 3400, abrir))

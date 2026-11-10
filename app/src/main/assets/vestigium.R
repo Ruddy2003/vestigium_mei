@@ -73,6 +73,9 @@ vm_leer <- function(archivo) {
   tipos <- setNames(lapply(d$tipo, .vm_parser), d$columna)
   x <- read_csv(ruta, col_types = do.call(cols, c(tipos, list(.default = col_guess()))), na = "",
                 show_col_types = FALSE, progress = FALSE, locale = locale(encoding = "UTF-8"))
+  # Una columna sin ningún dato todavía se queda como NA «neutro»: así se puede sumar, dividir o apilar con cifras o con
+  # texto. Antes, si el diccionario la daba por texto, las cuentas con ella fallaban (vm_buscar, vm_atipicos).
+  for (cc in names(x)) if (is.character(x[[cc]]) && all(is.na(x[[cc]]))) x[[cc]] <- rep(NA, nrow(x))
   for (cc in d$columna[d$tipo == "logico"]) x[[cc]] <- x[[cc]] == 1
   for (cc in d$columna[d$tipo == "fecha_hora"]) x[[cc]] <- vm_fecha_hora(x[[cc]])
   for (cc in d$columna[d$tipo == "entero"]) {
@@ -94,7 +97,9 @@ vm_archivos <- c(
   nutricion = "vm_nutricion.csv", comidas = "vm_comidas.csv", entrenos = "vm_entrenos.csv", series = "vm_series.csv",
   tramos = "vm_tramos.csv", sustancias = "vm_sustancias.csv", horas = "vm_horas.csv", notas = "vm_notas.csv", ideas = "vm_ideas.csv", ideas_revisiones = "vm_ideas_revisiones.csv", metas = "vm_metas.csv",
   suplementos = "vm_suplementos.csv", senaladas = "vm_senaladas.csv", laptop = "vm_laptop.csv", red_nodos = "vm_red_nodos.csv", red_vinculos = "vm_red_vinculos.csv",
-  experimentos = "vm_experimentos.csv", personas = "vm_personas.csv", fechas_propias = "vm_fechas_propias.csv", listas = "vm_listas.csv")
+  experimentos = "vm_experimentos.csv", personas = "vm_personas.csv", fechas_propias = "vm_fechas_propias.csv", listas = "vm_listas.csv",
+  cartas = "vm_cartas.csv", citas = "vm_citas.csv", fotos_catalogo = "vm_fotos_catalogo.csv", mundo = "vm_mundo.csv", perfil = "vm_perfil.csv",
+  politica = "vm_politica.csv", youtube = "vm_youtube.csv")
 
 vm <- compact(lapply(vm_archivos, vm_leer))
 
@@ -528,7 +533,8 @@ vm_palabras <- function(min_dias = 5) {
 vm_atipicos <- function(vars = c("valencia", "sueno_horas", "pasos", "pantalla_min", "desbloqueos", "gasto_total", "notificaciones", "fotos",
                                  "distancia_km", "min_hablado", "wa_mios", "musica_min", "fc_reposo", "hrv", "palabras"), z = 3, datos = panel) {
   vars <- intersect(vars, names(datos))
-  datos |> select(fecha, all_of(vars)) |> pivot_longer(-fecha, names_to = "variable", values_to = "valor") |> filter(!is.na(valor)) |>
+  # Una columna que aún no tiene datos puede haberse leído como texto: se pasa a número para poder apilarla con las demás.
+  datos |> select(fecha, all_of(vars)) |> mutate(across(all_of(vars), ~ suppressWarnings(as.numeric(.x)))) |> pivot_longer(-fecha, names_to = "variable", values_to = "valor") |> filter(!is.na(valor)) |>
     group_by(variable) |> mutate(z = (valor - median(valor)) / mad(valor)) |> ungroup() |> filter(is.finite(z), abs(z) >= !!z) |> arrange(desc(fecha))
 }
 
@@ -760,13 +766,17 @@ vm_red <- function(declaradas = FALSE, min_juntos = 2, min_dias = 3) {
   if (is.null(vm$red_nodos) || !nrow(vm$red_nodos)) stop("No hay red: menciona personas con @ o di quién conoce a quién en Tu gente.")
   v <- vm$red_vinculos
   if (is.null(v) || !nrow(v)) v <- tibble(a = character(), b = character(), tipo_declarado = character(), dias_juntos = integer())
-  no <- !is.na(v$tipo_declarado) & v$tipo_declarado == "no_se_conocen"
+  # No unen: «no se conocen» y, desde el esquema 23, «se conocen, sin trato» (se guardan, pero no son una línea de la red).
+  no <- !is.na(v$tipo_declarado) & v$tipo_declarado %in% c("no_se_conocen", "sin_trato")
   con_dicha <- unique(c(v$a[!is.na(v$tipo_declarado) & !no], v$b[!is.na(v$tipo_declarado) & !no]))
   nodos <- vm$red_nodos[coalesce(as.numeric(vm$red_nodos$dias_mencion), 0) >= min_dias | vm$red_nodos$persona %in% con_dicha, ]
   if (!nrow(nodos)) stop("Nadie se mencionó al menos ", min_dias, " días; prueba con un min_dias menor.")
   if (nrow(nodos) < nrow(vm$red_nodos)) message("Quedan ", nrow(nodos), " de ", nrow(vm$red_nodos), " personas (mencionadas al menos ", min_dias, " días o con una línea dicha).")
   v <- v[!no & (!is.na(v$tipo_declarado) | (!declaradas & v$dias_juntos >= min_juntos)) & v$a %in% nodos$persona & v$b %in% nodos$persona, ]
-  g <- igraph::graph_from_data_frame(as.data.frame(v[, c("a", "b")]), directed = FALSE, vertices = as.data.frame(nodos))
+  # La fuerza de cada vínculo, como RedPersonas.peso de la app: la columna «peso» de la exportación o, en las de antes, del tipo.
+  v$peso <- if ("peso" %in% names(v)) as.numeric(v$peso) else unname(c(pareja = 1, familia = 1, amigos = .8, colegas = .6)[v$tipo_declarado])
+  v$peso[is.na(v$peso) | v$peso <= 0] <- .3
+  g <- igraph::graph_from_data_frame(as.data.frame(v[, c("a", "b", "peso")]), directed = FALSE, vertices = as.data.frame(nodos))
   # Tú (ego) unido a todas: así la restricción de Burt se calcula sobre tu red personal.
   g_ego <- igraph::add_vertices(g, 1, name = "yo")
   g_ego <- igraph::add_edges(g_ego, as.vector(rbind("yo", igraph::V(g)$name)))
@@ -774,15 +784,18 @@ vm_red <- function(declaradas = FALSE, min_juntos = 2, min_dias = 3) {
     densidad = igraph::edge_density(g),
     componentes = sum(igraph::components(g)$csize > 1),
     aisladas = sum(igraph::components(g)$csize == 1),
-    restriccion_burt = unname(igraph::constraint(g_ego)[igraph::V(g_ego)$name == "yo"]),
+    restriccion_burt = unname(igraph::constraint(g_ego, weights = rep(1, igraph::ecount(g_ego)))[igraph::V(g_ego)$name == "yo"]),
+    # La misma, con cada vínculo pesando según su tipo (tus propios lazos con cada persona valen 1). Es una cifra aparte:
+    # la de arriba sigue contando «hay línea o no», para compararse con las de antes y con la literatura.
+    restriccion_burt_ponderada = unname(igraph::constraint(g_ego, weights = c(igraph::E(g)$peso, rep(1, igraph::vcount(g))))[igraph::V(g_ego)$name == "yo"]),
     grado = sort(igraph::degree(g), decreasing = TRUE),
     # Composición y color por grupo de relación (familia, pareja, amistad, trabajo…), como la Red de la app; las exportaciones
     # de antes de la columna «grupo» usan la relación tal cual.
     composicion = table(if (!is.null(nodos$grupo)) nodos$grupo else nodos$relacion, useNA = "ifany")
   )
-  print(r[c("densidad", "componentes", "aisladas", "restriccion_burt")])
+  print(r[c("densidad", "componentes", "aisladas", "restriccion_burt", "restriccion_burt_ponderada")])
   grupo <- if (!is.null(nodos$grupo)) nodos$grupo else nodos$relacion
-  plot(g, vertex.size = 4 + 2 * sqrt(nodos$dias_mencion), vertex.label.cex = .7, vertex.color = as.integer(factor(grupo)))
+  plot(g, edge.width = 1 + 2 * igraph::E(g)$peso, vertex.size = 4 + 2 * sqrt(nodos$dias_mencion), vertex.label.cex = .7, vertex.color = as.integer(factor(grupo)))
   invisible(r)
 }
 

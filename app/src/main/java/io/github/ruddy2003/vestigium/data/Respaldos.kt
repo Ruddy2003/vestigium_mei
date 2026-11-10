@@ -641,15 +641,9 @@ object Respaldos {
     /** Verifica un archivo ya bajado (de Drive), sin pasarlo por la memoria. */
     fun verificarArchivoBajado(ctx: Context, f: File, contrasena: CharArray?): Lectura = verificarArchivo(ctx, f, contrasena)
 
-    /** Restaura un respaldo: .vmc cifrado, .zip (completo o la exportación extendida) o el JSON suelto. Lo que ya existe no se duplica. */
-    fun restaurar(ctx: Context, datos: ByteArray, contrasena: CharArray?): Lectura {
-        val f = File(ctx.cacheDir, "restaurar_entrada")
-        f.writeBytes(datos)
-        return try { restaurarArchivo(ctx, f, contrasena) } finally { f.delete() }
-    }
-
     /**
-     * Restaura desde un archivo, sin cargarlo entero en memoria: se descifra a otro archivo, el zip se lee entrada por
+     * Restaura un respaldo: .vmc cifrado, .zip (completo o la exportación extendida) o el JSON suelto. Lo que ya existe no se duplica.
+     * Se hace desde un archivo, sin cargarlo entero en memoria: se descifra a otro archivo, el zip se lee entrada por
      * entrada, el respaldo se decodifica directo del archivo y las ubicaciones, línea por línea. Antes, entre los bytes del
      * archivo, los descifrados, el texto del JSON y su árbol, un respaldo de varios años no cabía en un teléfono nuevo.
      */
@@ -765,12 +759,6 @@ object Respaldos {
     }
 
     /** Abre el respaldo (descifrándolo si hace falta) y dice qué trae, comparado con lo que hay en este teléfono. No cambia nada. */
-    fun verificar(ctx: Context, datos: ByteArray, contrasena: CharArray?): Lectura {
-        val f = File(ctx.cacheDir, "verificar_entrada")
-        f.writeBytes(datos)
-        return try { verificarArchivo(ctx, f, contrasena) } finally { f.delete() }
-    }
-
     fun verificarUri(ctx: Context, uri: Uri, contrasena: CharArray?): Lectura {
         val f = File(ctx.cacheDir, "verificar_entrada")
         if (!copiarUri(ctx, uri, f)) return Lectura.Error("No pude leer el archivo.")

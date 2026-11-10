@@ -522,6 +522,19 @@ object Estilo {
         }
     }
 
+    /**
+     * «Mes del tema · mes común» (hallazgo 11), para rotular un mes del calendario común: el nombre que le da el tema y, al
+     * lado, «octubre de 2026», salvo que el nombre del tema ya diga el mes (entero o abreviado) y el año con cifras. Así un
+     * mes republicano, egipcio o «juliano» nunca queda como la única fecha de lo que se cuenta por meses del calendario común.
+     */
+    fun mesConComun(n: Int, anio: Int): String {
+        val i = (n - 1).coerceIn(0, 11)
+        val delTema = mes(n, anio)
+        val llano = slug(delTema)
+        return if (llano.contains(MESES_LARGOS[i].take(3)) && delTema.contains(anio.toString()) && !llano.contains("juliano")) delTema
+        else delTema + " · " + MESES_LARGOS[i] + " de " + anio
+    }
+
     /** Los días de la semana, de lunes a domingo (cortos: van en columnas de calendario). */
     val semana: List<String> get() = when (tema) {
         TemaId.ROMANO -> Romano.SEMANA

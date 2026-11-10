@@ -112,8 +112,8 @@ object TusNumeros {
             Repo.ultimaRespuesta(ins)?.let { r -> r.puntajes[p]?.let { out[ins] = Valor(it, 1, r.fecha, r.fecha) } }
         }
         // Lo que no es por día.
-        val gente = HashSet<String>()
-        (Repo.dias.values.map { it.nota } + Repo.dias.values.map { it.sueno_texto } + Repo.momentos.filter { !it.privado }.map { it.texto }).forEach { gente += Texto.personas(it) }
+        // Las personas distintas que aparecen, con la cuenta única (Personas.diasCon: aplica las uniones de nombres).
+        val gente = io.github.ruddy2003.vestigium.data.Personas.diasCon().keys
         if (gente.isNotEmpty()) out["conocidas"] = Valor(gente.size.toDouble(), 0, "", hoy)
         val hace = Fechas.sumar(hoy, -365)
         Repo.obras.count { it.tipo == "libro" && it.estado == "terminado" && (it.fin ?: "") >= hace }.takeIf { Repo.obras.any { o -> o.tipo == "libro" } }

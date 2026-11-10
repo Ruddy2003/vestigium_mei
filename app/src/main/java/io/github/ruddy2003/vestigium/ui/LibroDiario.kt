@@ -424,14 +424,17 @@ object LibroDiario {
         val visitas = Repo.visitas.filter { it.entrada.take(10).startsWith(mes) && it.entrada.take(10) <= hasta }
         val nombres = Repo.lugares.associate { it.id to it.nombre }
         return ResumenMes(
-            mes = mes, dias = fechas.size, conDiario = dias.count { it.nota.isNotBlank() },
+            // Las mismas definiciones de los reportes (Periodo): día con diario = nota o valencia; sueño medio solo de noches de
+            // más de 120 min; pasos medios sin los días en cero; personas con la cuenta única (Personas.diasCon).
+            mes = mes, dias = fechas.size, conDiario = io.github.ruddy2003.vestigium.ciencia.Periodo.diasConDiario(fechas),
             animo = dias.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average(),
             energia = dias.mapNotNull { it.activacion }.takeIf { it.isNotEmpty() }?.average(),
-            suenoMin = fechas.mapNotNull { Repo.salud[it]?.sueno_min }.takeIf { it.isNotEmpty() }?.average(),
-            pasos = fechas.mapNotNull { Repo.salud[it]?.pasos }.takeIf { it.isNotEmpty() }?.average(),
+            suenoMin = io.github.ruddy2003.vestigium.ciencia.Periodo.suenoMedioH(fechas)?.times(60),
+            pasos = io.github.ruddy2003.vestigium.ciencia.Periodo.pasosMedios(fechas),
             gasto = gastos.sumOf { it.monto }, ingreso = Repo.ingresos.filter { it.dia.startsWith(mes) && it.dia <= hasta }.sumOf { it.monto },
             categorias = gastos.groupBy { it.categoria }.mapValues { e -> e.value.sumOf { it.monto } }.entries.sortedByDescending { it.value }.take(4).map { it.key to it.value },
-            personas = cuenta(dias.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct() }),
+            personas = if (fechas.isEmpty()) emptyList() else io.github.ruddy2003.vestigium.data.Personas.diasCon(fechas.first(), fechas.last()).map { it.key to it.value.size }
+                .sortedWith(compareByDescending<Pair<String, Int>> { it.second }.thenBy { it.first }).take(6),
             temas = cuenta(dias.flatMap { d -> Texto.temas(d.nota).map { Texto.canon(it, eq) }.distinct() }),
             lugares = cuenta(visitas.mapNotNull { nombres[it.lugar] }),
             senaladas = dias.flatMap { d -> io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(d).map { d.fecha to it } },
@@ -599,7 +602,8 @@ object LibroDiario {
         meses.forEach { ms ->
             if (y + 24f > ALTO - m - 24) { nueva(); y += 8f }
             val c = lienzo()
-            val nombreMes = Estilo.mes(ms.drop(5).toInt(), ms.take(4).toInt()).let { if (it.contains(ms.take(4))) it else "$it · ${ms.take(4)}" }
+            // Los meses del calendario, como los encabezados de los días y los resúmenes.
+            val nombreMes = Fechas.parse("$ms-01").month.getDisplayName(java.time.format.TextStyle.FULL, Fechas.ES).replaceFirstChar { it.uppercase() } + " de " + ms.take(4)
             c.drawText(nombreMes, m, y + 12f, pIndice)
             val pag = paginas?.get(ms)?.let { Estilo.numeral(it) } ?: "—"
             val res = if (o.resumenes) paginas?.get("resumen:$ms")?.let { " · resumen ${Estilo.numeral(it)}" } ?: "" else ""
@@ -619,11 +623,20 @@ object LibroDiario {
             if (ms !in donde) donde[ms] = num
             val c = lienzo()
             c.drawText(rotulo, m, y + 9f, pEtiqueta)
-            val tFecha = layout(Estilo.fecha(d.fecha), pTitulo, 1.1f, w = ancho - 50)
+            // La fecha del calendario va en grande y la del tema, debajo (10 nov 2026; antes, al revés). El índice y los resúmenes
+            // del libro van por meses del calendario; con la fecha del tema en grande (juliana, republicana, del haab…) el
+            // resumen de octubre quedaba después de un «18 de octubre» y parecía estar a mitad del mes.
+            val fechaComun = Fechas.titulo(d.fecha) + " de " + d.fecha.take(4)
+            val tFecha = layout(fechaComun, pTitulo, 1.1f, w = ancho - 50)
             c.save(); c.translate(m, y + 16f); tFecha.draw(c); c.restore()
             emblema(ANCHO - m - 19f, y + 19f, 38f)
             y += 16f + tFecha.height + 4f
-            c.drawText(Fechas.titulo(d.fecha) + " de " + d.fecha.take(4), m, y + 9f, pDia); y += 18f
+            val fechaTema = Estilo.fecha(d.fecha)
+            if (!fechaTema.equals(fechaComun, ignoreCase = true)) {
+                val tTema = layout(fechaTema, pDia, 1.2f, w = ancho - 50)
+                c.save(); c.translate(m, y); tTema.draw(c); c.restore()
+                y += tTema.height + 7f
+            } else y += 4f
             filete(tema, c, m, ANCHO - m, y, acento, tinta, fondo, tfTitulo)
             y += 14f
             // La franja de datos del día, en un recuadro fino con el acento del tema.
@@ -658,7 +671,9 @@ object LibroDiario {
             val siguiente = dias.getOrNull(i + 1)?.fecha?.take(7)
             if (o.resumenes && siguiente != ms) {
                 nueva(); donde["resumen:$ms"] = num
-                paginaResumen(resumenMes(ms, hasta), lienzo(), m, ancho, tema, acento, tinta, tenue, fondo, tfTitulo, tfTexto, rotulo) { y = it }
+                // El mes entero (o hasta donde llega el libro, sin pasar de hoy). Antes se cortaba en el último día con entrada
+                // del tomo, y el resumen del último mes contaba menos días de los que tuvo.
+                paginaResumen(resumenMes(ms, minOf(o.hasta, Fechas.diaLogico())), lienzo(), m, ancho, tema, acento, tinta, tenue, fondo, tfTitulo, tfTexto, rotulo) { y = it }
             }
         }
         hoja?.let { doc.finishPage(it) }
@@ -679,8 +694,11 @@ object LibroDiario {
         fun layout(t: CharSequence, p: TextPaint, w: Int = ancho) = StaticLayout.Builder.obtain(t, 0, t.length, p, w).setLineSpacing(0f, 1.3f).setIncludePad(false).build()
         fun texto(t: CharSequence, p: TextPaint, x: Float = m, w: Int = ancho) { val l = layout(t, p, w); c.save(); c.translate(x, y); l.draw(c); c.restore(); y += l.height }
         c.drawText(rotulo + " · resumen", m, y + 9f, pEtiqueta); y += 18f
-        val nombreMes = Estilo.mes(r.mes.drop(5).toInt(), r.mes.take(4).toInt()).let { if (it.contains(r.mes.take(4))) it else "$it de ${r.mes.take(4)}" }
-        texto(nombreMes, pTitulo); y += 6f
+        // El mes del calendario y los días que cubre, dichos tal cual: el nombre que le da el tema («octubre juliano», «Paofi»)
+        // es de otro calendario y no coincide con estos días.
+        val mesLlano = Fechas.parse(r.mes + "-01").month.getDisplayName(java.time.format.TextStyle.FULL, Fechas.ES)
+        texto(mesLlano.replaceFirstChar { it.uppercase() } + " de " + r.mes.take(4), pTitulo); y += 2f
+        texto(if (r.dias == 1) "El 1 de $mesLlano" else "Del 1 al ${r.dias} de $mesLlano", pRot); y += 6f
         filete(tema, c, m, m + ancho, y, acento, tinta, fondo, tfTitulo); y += 18f
         // Cuatro cifras en fila.
         val cifras = listOf(

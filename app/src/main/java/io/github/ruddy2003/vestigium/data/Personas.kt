@@ -69,16 +69,36 @@ object Personas {
     fun omitir(nombre: String) = Repo.cambiarConfig { c -> c.copy(personas_omitidas = (c.personas_omitidas + nombre).distinct()) }
     fun posponer(hoy: String = Fechas.diaLogico()) = Repo.cambiarConfig { c -> c.copy(personas_pospuesto = hoy) }
 
-    /** Quién aparece y cuántos días: diario, momentos, sueños, notas del cronómetro y cartas. */
-    fun menciones(): Map<String, Pair<Int, String>> {
+    /**
+     * En qué días aparece cada persona: diario, momentos (su texto y su «con quién»), sueños, notas del cronómetro y cartas.
+     * Un día cuenta una vez por persona, la nombres las veces que la nombres. Con [ini] y [fin] (incluidos), solo esos días.
+     * Es la única cuenta de «días» por persona: la usan Tu gente, «Tu año» y los reportes ([io.github.ruddy2003.vestigium.ciencia.Periodo]).
+     */
+    fun diasCon(ini: String? = null, fin: String? = null): Map<String, Set<String>> {
         val eq = Repo.equivalencias()
         val dias = HashMap<String, MutableSet<String>>()
+        fun en(f: String) = (ini == null || f >= ini) && (fin == null || f <= fin)
         fun sumar(f: String, t: String?) { Texto.personas(t).forEach { dias.getOrPut(Texto.canon(it, eq)) { HashSet() }.add(f) } }
-        Repo.dias.values.forEach { d -> sumar(d.fecha, d.nota); sumar(d.fecha, d.sueno_texto); d.sueno_temas.filter { it.startsWith("@") }.forEach { t -> sumar(d.fecha, t) } }
-        Repo.momentos.filter { !it.privado }.forEach { m -> sumar(m.fecha, m.texto); m.personas.forEach { p -> dias.getOrPut(Texto.canon(p.lowercase(), eq)) { HashSet() }.add(m.fecha) } }
-        Repo.tramos.forEach { t -> sumar(t.fecha, t.nota) }
-        Repo.cartas.filter { it.para.isNotBlank() }.forEach { c -> dias.getOrPut(Texto.canon(c.para.lowercase(), eq)) { HashSet() }.add(c.escrita) }
-        return dias.mapValues { (_, s) -> s.size to (s.maxOrNull() ?: "") }
+        Repo.dias.values.forEach { d -> if (en(d.fecha)) { sumar(d.fecha, d.nota); sumar(d.fecha, d.sueno_texto); d.sueno_temas.filter { it.startsWith("@") }.forEach { t -> sumar(d.fecha, t) } } }
+        Repo.momentos.forEach { m -> if (!m.privado && en(m.fecha)) { sumar(m.fecha, m.texto); m.personas.forEach { p -> dias.getOrPut(Texto.canon(p.lowercase(), eq)) { HashSet() }.add(m.fecha) } } }
+        Repo.tramos.forEach { t -> if (en(t.fecha)) sumar(t.fecha, t.nota) }
+        Repo.cartas.forEach { c -> if (c.para.isNotBlank() && en(c.escrita)) dias.getOrPut(Texto.canon(c.para.lowercase(), eq)) { HashSet() }.add(c.escrita) }
+        return dias
+    }
+
+    /** Quién aparece, en cuántos días y cuál fue el último ([diasCon], sin acotar). */
+    fun menciones(): Map<String, Pair<Int, String>> = diasCon().mapValues { (_, s) -> s.size to (s.maxOrNull() ?: "") }
+
+    /**
+     * Todas las personas que la app conoce, sin tope: las de Tu gente, las de «Conocerte» y las mencionadas ([menc], de
+     * [menciones]). Cada una con el nombre con que se cuenta (las uniones ya aplicadas) y una sola vez, de la que aparece en
+     * más días a la que menos y, a igual número, por orden alfabético.
+     */
+    fun todas(menc: Map<String, Pair<Int, String>> = menciones(), c: Config = Repo.config): List<String> {
+        val eq = c.equivalencias
+        return (c.personas.map { it.nombre } + c.perfil.cercanas.map { it.nombre } + c.perfil.convivientes + menc.keys)
+            .map { Texto.canon(it.trim().lowercase().removePrefix("@"), eq) }.filter { it.isNotBlank() }.distinct()
+            .sortedWith(compareByDescending<String> { menc[it]?.first ?: 0 }.thenBy { it })
     }
 
     /** Cuántas veces y la última fecha de intimidad con alguien (esquema 21). Solo con el seguimiento privado encendido; si no, null. */

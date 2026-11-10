@@ -80,7 +80,17 @@ object Geocercas {
         if (!Ubicacion.tieneSegundoPlano(ctx)) return
         val cliente = LocationServices.getGeofencingClient(ctx)
         val pi = intent(ctx)
-        val lugares = Repo.lugares.take(95)
+        // Android admite 100 geocercas por app; se usan 95. Con más lugares, antes se tomaban los 95 primeros por orden de
+        // creación y los últimos nunca registraban visitas. Ahora, los 95 más cercanos a tu última ubicación conocida (sin
+        // ubicación, como antes). Se dejan en su orden de siempre para que la firma solo cambie si cambia el conjunto.
+        val todos = Repo.lugares
+        val lugares = if (todos.size <= 95) todos else {
+            val p = runCatching { Repo.db().ultimoPunto() }.getOrNull()
+            if (p == null) todos.take(95) else {
+                val cercanos = todos.sortedBy { io.github.ruddy2003.vestigium.data.Geo.distanciaM(p.lat, p.lon, it.lat, it.lon) }.take(95).mapTo(HashSet()) { it.id }
+                todos.filter { it.id in cercanos }
+            }
+        }
         val firma = lugares.joinToString("|") { "${it.id},${it.lat},${it.lon},${it.radio_m}" }.hashCode()
         val prefs = ctx.getSharedPreferences("geocercas", Context.MODE_PRIVATE)
         val ahora = System.currentTimeMillis()

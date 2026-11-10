@@ -51,13 +51,14 @@ import kotlin.math.sqrt
 class Estrella(val nombre: String, val dias: Int, val ultima: String, val relacion: String?, var x: Float = 0f, var y: Float = 0f, var r: Float = 0f)
 
 object Constelacion {
-    /** Las personas mencionadas (@) en el diario y los momentos dentro del periodo, y con quién aparece cada una el mismo día. */
+    /**
+     * Las personas del periodo y con quién aparece cada una el mismo día. Los días por persona salen de la cuenta única
+     * ([io.github.ruddy2003.vestigium.data.Personas.diasCon]: diario, momentos y su «con quién», sueños, cronómetro y cartas),
+     * la misma de Tu gente y de los reportes.
+     */
     fun calcular(desde: String, hoy: String = Fechas.diaLogico()): Pair<List<Estrella>, Map<Pair<String, String>, Int>> {
-        val eq = Repo.equivalencias()
         val porDia = HashMap<String, MutableSet<String>>()
-        fun sumar(f: String, t: String) { if (f >= desde) Texto.personas(t).forEach { porDia.getOrPut(f) { HashSet() }.add(Texto.canon(it, eq)) } }
-        Repo.dias.values.forEach { d -> sumar(d.fecha, d.nota) }
-        Repo.momentos.filter { !it.privado }.forEach { m -> sumar(m.fecha, m.texto) }
+        io.github.ruddy2003.vestigium.data.Personas.diasCon(ini = desde).forEach { (p, fs) -> fs.forEach { f -> porDia.getOrPut(f) { HashSet() }.add(p) } }
         val dias = HashMap<String, Int>(); val ultima = HashMap<String, String>()
         val juntos = HashMap<Pair<String, String>, Int>()
         porDia.forEach { (f, gente) ->

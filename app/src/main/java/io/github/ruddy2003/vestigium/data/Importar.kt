@@ -130,6 +130,8 @@ object Importar {
             if (r.listas.isNotEmpty()) Repo.importarListas(r.listas)
             if (r.metas.isNotEmpty()) Repo.importarMetas(r.metas)
             if (r.tomas.isNotEmpty()) Repo.importarTomas(r.tomas)
+            // Un respaldo anterior al esquema 23 puede traer de vuelta los cierres repetidos: se limpian al terminar de entrar.
+            Repo.quitarRepetidosLuego()
             Repo.importarAvisos(r.avisos)
             if (r.laptop.isNotEmpty()) Repo.guardarLaptop(r.laptop.filter { it.fecha !in Repo.laptop })
             Repo.importarRespuestas(r.respuestas)
@@ -168,21 +170,31 @@ object Importar {
             if (r.huellas_dia.isNotEmpty()) Repo.guardarHuellasDia(r.huellas_dia.filter { it.fecha !in Repo.huellas })
             if (r.chats.isNotEmpty()) { val aqui = Repo.chats.map { it.id }.toSet(); Repo.importarChats(r.chats.filter { it.id !in aqui }) }
             if (r.youtube.isNotEmpty()) { val aqui = Repo.youtube.map { it.id }.toSet(); Repo.importarYoutube(r.youtube.filter { it.id !in aqui }, reemplazarSuscripciones = false) }
-            if (r.nutricion.isNotEmpty() || r.series.isNotEmpty()) {
-                val fs = r.nutricion.map { it.fecha } + r.comidas.map { it.fecha } + r.series.map { it.fecha } + r.entrenos.map { it.fecha }
-                if (fs.isNotEmpty() && Repo.nutricion.isEmpty() && Repo.entrenos.isEmpty()) {
-                    Repo.importarMacrofactor(fs.min(), fs.max(), r.nutricion, r.comidas, r.series, r.entrenos)
+            // Lo de MacroFactor: se completan los días que aquí falten (antes solo entraba si aquí no había nada, sin avisar).
+            // Un día que ya tiene nutrición, alimentos, series o entreno aquí se queda como está.
+            var avisoMacro = ""
+            if (r.nutricion.isNotEmpty() || r.comidas.isNotEmpty() || r.series.isNotEmpty() || r.entrenos.isNotEmpty()) {
+                val conComidas = Repo.fechasGuardadas("comidas"); val conSeries = Repo.fechasGuardadas("series")
+                val nut = r.nutricion.filter { it.fecha !in Repo.nutricion }
+                val com = r.comidas.filter { it.fecha !in conComidas }
+                val ser = r.series.filter { it.fecha !in conSeries }
+                val ent = r.entrenos.filter { it.fecha !in Repo.entrenos }
+                if (nut.isNotEmpty() || com.isNotEmpty() || ser.isNotEmpty() || ent.isNotEmpty()) {
+                    Repo.importarMacrofactor(nut, com, ser, ent)
                     // Un respaldo de antes del esquema 15 no trae la fuerza de referencia: se calcula con sus series (H-7-14).
-                    // Con los entrenos del respaldo: la lista en memoria se actualiza un instante después y todavía estaría vacía.
-                    runCatching { Repo.completarFuerzaReferencia(r.entrenos) }
+                    // Con los entrenos del respaldo: la lista en memoria se actualiza un instante después y todavía no los tendría.
+                    runCatching { Repo.completarFuerzaReferencia(ent) }
+                    avisoMacro = " De MacroFactor completé lo que faltaba aquí: %,d días de nutrición, %,d alimentos, %,d series y %,d días de entreno.".format(nut.size, com.size, ser.size, ent.size)
                 }
+                val yaEstaban = (r.nutricion.size - nut.size) + (r.entrenos.size - ent.size)
+                if (yaEstaban > 0) avisoMacro += " Los días de MacroFactor que ya estaban aquí (%,d) no se tocaron.".format(yaEstaban)
             }
             Repo.cambiarConfig { c -> combinarConfig(c, r.config, nuevo) }
             val avisoSaltados = saltados.filterValues { it > 0 }.takeIf { it.isNotEmpty() }?.let { m ->
                 " No se pudieron leer y se saltaron: " + m.entries.joinToString(", ") { (k, v) -> if (k == "config") "los ajustes" else "%,d de «%s»".format(v, k) } + "."
             }.orEmpty()
             return ResultadoImport("Respaldo importado: ${porNumero(n, "1 día nuevo", "$n días nuevos")}, ${porNumero(r.momentos.size, "1 momento", "${r.momentos.size} momentos")}, ${porNumero(r.gastos.size, "1 gasto", "${r.gastos.size} gastos")} y ${porNumero(r.visitas.size, "1 visita", "${r.visitas.size} visitas")} revisados" +
-                (if (nuevo) "; también tus ajustes, Conocerte, la brújula y el mapa." else if ("config" in saltados) "." else "; tus ajustes se combinaron con los de aquí.") + avisoSaltados)
+                (if (nuevo) "; también tus ajustes, Conocerte, la brújula y el mapa." else if ("config" in saltados) "." else "; tus ajustes se combinaron con los de aquí.") + avisoMacro + avisoSaltados)
     }
 
     /** El JSON de la versión web de Vestigium Mei. */

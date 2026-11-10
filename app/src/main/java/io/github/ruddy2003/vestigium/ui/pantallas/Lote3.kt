@@ -390,19 +390,36 @@ fun PantallaLaptop(nav: Nav) {
 
 // ============================================================================ red de personas
 
-/** En la ficha de una persona: «¿A quién conoce?». Cada toque cambia el tipo de vínculo. */
+/**
+ * En la ficha de una persona: «¿A quién conoce?». Cada toque cambia el tipo de vínculo. Salen todas las personas
+ * ([Personas.todas]): antes la lista se cortaba a las primeras 24 (las de Tu gente en el orden en que se guardaron y luego las
+ * 20 más mencionadas), y con más gente que eso había pares que no se podían unir desde ninguna de las dos fichas.
+ */
 @Composable
 fun AQuienConoce(nombre: String) {
-    val menc = remember(Repo.dias, Repo.momentos) { Personas.menciones() }
-    val otras = (Repo.config.personas.map { it.nombre } + menc.entries.sortedByDescending { it.value.first }.take(20).map { it.key })
-        .distinct().filter { it != nombre }.take(24)
+    val c = Repo.config
+    val menc = remember(Repo.dias, Repo.momentos, Repo.tramos, Repo.cartas, c.equivalencias) { Personas.menciones() }
+    val yo = io.github.ruddy2003.vestigium.data.Texto.canon(nombre.trim().lowercase().removePrefix("@"), c.equivalencias)
+    // Primero las que ya tienen un vínculo dicho con esta persona; luego, de la más mencionada a la menos. El orden se fija al
+    // abrir la ficha: si dependiera de lo que vas tocando, las fichas saltarían de lugar.
+    val otras = remember(nombre, menc, c.personas, c.perfil, c.equivalencias) {
+        val dichas = RedPersonas.dichos(c).mapNotNull { v -> if (v.a == yo) v.b else if (v.b == yo) v.a else null }.toSet()
+        Personas.todas(menc, c).filter { it != yo }.sortedByDescending { it in dichas }
+    }
     if (otras.isEmpty()) return
+    var buscar by remember(nombre) { mutableStateOf("") }
     Etiqueta("¿A quién conoce?")
-    Ayuda("Toca para cambiar: se conocen → familia entre sí → pareja → colegas → no se conocen → sin decir.")
+    Ayuda("Marca un vínculo solo si tendrían trato entre sí aunque tú no estuvieras.")
+    Ayuda("Toca para cambiar: se conocen → amigos → familia entre sí → pareja → colegas → se conocen, sin trato → no se conocen → sin decir. «Sin trato» y «no se conocen» se guardan, pero no cuentan como línea de la red.")
+    if (otras.size > 12) CampoTexto(value = buscar, onValueChange = { buscar = it }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), singleLine = true,
+        placeholder = { Text("Buscar entre ${otras.size} personas") })
+    val q = buscar.trim().lowercase().removePrefix("@")
+    val visibles = if (q.isEmpty()) otras else otras.filter { q in it }
+    if (visibles.isEmpty()) Ayuda("Nadie con ese nombre. Las personas salen aquí cuando las mencionas con @ o las agregas a Tu gente.", Modifier.padding(top = 4.dp))
     FlowRow(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        otras.forEach { o ->
+        visibles.forEach { o ->
             val t = RedPersonas.tipo(nombre, o)
-            Ficha("@$o" + (t?.let { " · " + RedPersonas.nombreTipo(it).lowercase() } ?: ""), t != null && t != "no_se_conocen") { RedPersonas.poner(nombre, o, RedPersonas.siguiente(t)) }
+            Ficha("@$o" + (t?.let { " · " + RedPersonas.nombreTipo(it).lowercase() } ?: ""), t != null && RedPersonas.une(t)) { RedPersonas.poner(nombre, o, RedPersonas.siguiente(t)) }
         }
     }
 }

@@ -345,7 +345,10 @@ object Logros {
     fun propio(p: LogroPropio): Logro {
         val s = serie(p.fuente, p.clave)
         // «Como mucho» (esquema 17): cuentan los días que quedan en el umbral o por debajo; si no, los que lo pasan.
-        val utiles = if (p.umbral_max && p.fuente == "variable") s.filter { it.second <= p.umbral } else s.filter { it.second > p.umbral || (p.umbral == 0.0 && it.second > 0) }
+        // La comparación es la compartida con las metas (Metas.cumple), con la regla de los logros propios: «pasa de» es
+        // estrictamente más que el umbral (con umbral 0, cualquier valor mayor que cero); «como mucho» solo vale para variables.
+        val comoMucho = p.umbral_max && p.fuente == "variable"
+        val utiles = s.filter { io.github.ruddy2003.vestigium.data.Metas.cumple(it.second, p.umbral, comoMucho = comoMucho, estricto = !comoMucho) }
         return when (p.modo) {
             "total" -> Logro("p_${p.id}", p.nombre, "Suma %s".format(fmt(p.meta)), p.icono, "Tuyos", 2, p.meta, s.sumOf { it.second }, acumulado(s, p.meta), propio = true)
             "racha" -> { val (m, c) = racha(utiles.map { it.first }, p.meta.toInt()); Logro("p_${p.id}", p.nombre, "${porNumero(p.meta.toInt(), "1 día seguido", "${p.meta.toInt()} días seguidos")}", p.icono, "Tuyos", 2, p.meta, m.toDouble(), c, propio = true, unidad = "días") }

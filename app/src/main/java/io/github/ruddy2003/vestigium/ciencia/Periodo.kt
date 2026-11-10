@@ -65,8 +65,12 @@ object Periodo {
         val conQuien: List<Pair<String, Int>> = emptyList(), val conQuienRegistros: Int = 0,
         /** Registros de ánimo del periodo (de un aviso o abiertos por ti). */
         val registrosAnimo: Int = 0,
+        /** Días del periodo desde el primer gasto anotado (y hasta hoy): entre ellos se reparte el gasto «al día». */
+        val diasGasto: Int = 0,
     ) {
         val n: Int get() = fechas.size
+        /** Gasto medio por día desde que se anotan gastos; null si en el periodo aún no se anotaba ninguno. */
+        val gastoAlDia: Double? get() = if (diasGasto > 0) gasto / diasGasto else null
     }
 
     /** Una emoción del periodo: su nombre, cuántos registros la nombran y en cuántos fue «mucho». */
@@ -100,6 +104,67 @@ object Periodo {
     /** Días con valencia en los avisos pero sin la del diario: no entran en el ánimo medio, y el reporte dice cuántos son. */
     private fun soloAvisos(f: String): Boolean = Repo.dias[f]?.valencia == null && Repo.momentos.any { it.fecha == f && it.esAnimo && it.valencia != null }
 
+    // =====================================================================
+    //  Definiciones compartidas con las pantallas y los widgets (revisión de noviembre de 2026, hallazgos 5 y 6)
+    // =====================================================================
+
+    /**
+     * El ánimo de un día para las VISTAS (semana, calendario, año, widget): [valor] de 1 a 7 y [deAvisos] = true cuando el día
+     * no tiene la valencia del diario y el valor es la media de sus registros de ánimo. Los reportes no la usan ([valDe]).
+     */
+    class AnimoDia(val valor: Double, val deAvisos: Boolean)
+
+    /**
+     * El ánimo de [fecha]: la valencia del diario; si falta, la media de los registros de ánimo (de un aviso o abiertos por ti)
+     * no privados de ese día, marcada [AnimoDia.deAvisos]. Null si el día no tiene ninguna de las dos.
+     */
+    fun animoDia(fecha: String): AnimoDia? {
+        Repo.dias[fecha]?.valencia?.let { return AnimoDia(it.toDouble(), false) }
+        val l = Repo.momentos.filter { it.fecha == fecha && it.esAnimo && !it.privado }.mapNotNull { it.valencia }
+        return if (l.isEmpty()) null else AnimoDia(l.average(), true)
+    }
+
+    /** [animoDia] de muchos días de una vez (recorre los momentos una sola vez): un elemento por fecha, en el mismo orden. */
+    fun animoDias(fechas: List<String>): List<AnimoDia?> {
+        val en = fechas.toHashSet()
+        val avisos = HashMap<String, MutableList<Int>>()
+        Repo.momentos.forEach { m -> val v = m.valencia; if (v != null && m.fecha in en && m.esAnimo && !m.privado) avisos.getOrPut(m.fecha) { ArrayList() }.add(v) }
+        return fechas.map { f ->
+            val v = Repo.dias[f]?.valencia
+            if (v != null) AnimoDia(v.toDouble(), false) else avisos[f]?.let { AnimoDia(it.average(), true) }
+        }
+    }
+
+    /** Media de [animoDias] en esos días (cada día pesa lo mismo, salga del diario o de los avisos); null sin ninguno. */
+    fun animoMedio(fechas: List<String>): Double? = animoDias(fechas).mapNotNull { it?.valor }.takeIf { it.isNotEmpty() }?.average()
+
+    /** «Día con diario»: tiene nota o valencia. La misma regla de [calcular] (`diasDiario`). */
+    fun conDiario(fecha: String): Boolean = Repo.dias[fecha]?.let { it.nota.isNotBlank() || it.valencia != null } == true
+
+    /** Cuántos de esos días tienen diario ([conDiario]). */
+    fun diasConDiario(fechas: Collection<String>): Int = fechas.count { conDiario(it) }
+
+    /** Los minutos de sueño de la noche de [fecha] si pasa de 120 (menos se toma por lectura rota o siesta, como en [calcular]). */
+    fun suenoMin(fecha: String): Int? = Repo.salud[fecha]?.sueno_min?.takeIf { it > 120 }
+
+    /** Sueño medio en horas, solo de las noches de más de 120 min; null sin ninguna. */
+    fun suenoMedioH(fechas: Collection<String>): Double? = fechas.mapNotNull { suenoMin(it) }.takeIf { it.isNotEmpty() }?.average()?.div(60)
+
+    /** Los pasos de [fecha] si son más de cero (un día en cero es un día sin medir, como en [calcular]). */
+    fun pasosDia(fecha: String): Double? = Repo.salud[fecha]?.pasos?.toDouble()?.takeIf { it > 0 }
+
+    /** Pasos medios por día, sin los días en cero; null sin ninguno. */
+    fun pasosMedios(fechas: Collection<String>): Double? = fechas.mapNotNull { pasosDia(it) }.takeIf { it.isNotEmpty() }?.average()
+
+    /** Lo gastado en esos días, por día lógico del gasto (`Gasto.dia`), como en [calcular]. */
+    fun gastoEn(fechas: Collection<String>): Double { val en = fechas.toHashSet(); return Repo.gastos.filter { it.dia in en }.sumOf { it.monto } }
+
+    /** Los días de [ini] a [fin], incluidos (vacío si [fin] es anterior). */
+    fun fechasDe(ini: String, fin: String): List<String> {
+        val n = ChronoUnit.DAYS.between(Fechas.parse(ini), Fechas.parse(fin)).toInt() + 1
+        return (0 until n.coerceAtLeast(0)).map { Fechas.sumar(ini, it.toLong()) }
+    }
+
     /**
      * Error típico de la diferencia de dos promedios de días, √(s₁²/n₁ + s₂²/n₂) (H-8-11): una diferencia menor no se distingue
      * de lo que varían tus días. No descuenta que los días seguidos se parecen, así que se queda corto. Null con menos de 3 días.
@@ -110,7 +175,15 @@ object Periodo {
         return kotlin.math.sqrt(v(a) / a.size + v(b) / b.size)
     }
 
-    fun calcular(ctx: Context?, ini: String, fin: String): Datos {
+    /** Un puntaje de cuestionario: entero si lo es, con un decimal si no (para no redondear los medios puntos). */
+    private fun puntaje(x: Double): String = if (x == Math.rint(x)) "%.0f".format(x) else "%.1f".format(x)
+
+    /**
+     * [anterior]: con qué periodo se compara. Sin él, los mismos días de justo antes (la semana anterior). El reporte del mes
+     * y el del año pasan el mes o el año entero de antes: así «frente al mes anterior» es de verdad el mes anterior, también
+     * cuando el mes en curso va a medias.
+     */
+    fun calcular(ctx: Context?, ini: String, fin: String, anterior: Pair<String, String>? = null): Datos {
         val n = (ChronoUnit.DAYS.between(Fechas.parse(ini), Fechas.parse(fin)).toInt() + 1).coerceAtLeast(1)
         val fechas = (0 until n).map { Fechas.sumar(ini, it.toLong()) }
         val en = fechas.toHashSet()
@@ -128,10 +201,16 @@ object Periodo {
         val peor = conVal.minByOrNull { it.second!! }?.first
         val porMes = conVal.groupBy { it.first.substring(5, 7).toInt() }.mapValues { (_, l) -> l.map { it.second!! }.average() }
         val porSem = conVal.groupBy { Fechas.parse(it.first).dayOfWeek.value }.mapValues { (_, l) -> l.map { it.second!! }.average() }
-        val personasL = dias.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct() } + mu.flatMap { Texto.personas(it.texto).map { p -> Texto.canon(p, eq) } }
+        // Días en que aparece cada persona, con la misma cuenta que Tu gente (Personas.diasCon). Antes se sumaba un día por la
+        // nota del diario y, aparte, uno por cada mención en cada momento: quien salía en la nota y en dos momentos del mismo día
+        // contaba 3, y el reporte lo rotulaba «días» (podía dar más días que los que tiene el periodo).
+        val personasDias = io.github.ruddy2003.vestigium.data.Personas.diasCon(ini, fin).map { it.key to it.value.size }
+            .sortedWith(compareByDescending<Pair<String, Int>> { it.second }.thenBy { it.first }).take(6)
         val antes = Repo.dias.values.filter { it.fecha < ini }.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) } }.toHashSet()
         val nueva = dias.sortedBy { it.fecha }.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) } }.firstOrNull { it !in antes && Repo.dias.isNotEmpty() && Repo.dias.keys.min() < ini }
-        val temasL = dias.flatMap { d -> Texto.temas(d.nota).map { Texto.canon(it, eq) }.distinct() } + mu.flatMap { Texto.temas(it.texto).map { t -> Texto.canon(t, eq) } }
+        // Los temas, igual: días en que aparece cada uno (en la nota o en algún momento de ese día), no menciones sueltas.
+        val muPorDia = mu.groupBy { it.fecha }
+        val temasL = fechas.flatMap { f -> (Texto.temas(Repo.dias[f]?.nota) + muPorDia[f].orEmpty().flatMap { Texto.temas(it.texto) }).map { t -> Texto.canon(t, eq) }.distinct() }
         val activos = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().filter { it.activo }
         val habPct = if (activos.isEmpty() || dias.isEmpty()) null else dias.sumOf { d -> activos.count { d.habitos[it.id] == true } }.toDouble() / (activos.size * dias.size)
         val habitos = activos.map { h -> h.nombre to dias.count { it.habitos[h.id] == true } }.filter { it.second > 0 }.sortedByDescending { it.second }
@@ -159,7 +238,7 @@ object Periodo {
         val reac = Repo.reacciones.filter { it.fecha in en }
         val cuest = Repo.respuestas.filter { it.fecha in en }.map { rr ->
             val inst = Escalas.por(rr.instrumento)
-            (inst?.nombre ?: rr.instrumento) + ": " + rr.puntajes.entries.joinToString(" · ") { "${it.key} ${"%.0f".format(it.value)}" }
+            (inst?.nombre ?: rr.instrumento) + ": " + rr.puntajes.entries.joinToString(" · ") { "${it.key} ${puntaje(it.value)}" }
         }
 
         // ---- gente
@@ -182,7 +261,12 @@ object Periodo {
         val genero = obras.flatMap { it.etiquetas }.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key
         val frases = Repo.config.frases_guardadas.filter { it.fecha in en }
         val esc = runCatching { Repo.escuchas(ini, fin) }.getOrDefault(emptyList())
-        fun minutos(e: io.github.ruddy2003.vestigium.data.Escucha) = (e.ms?.toDouble() ?: e.duracion_s?.times(1000.0) ?: 180_000.0) / 60000
+        // Lo que llega por la notificación no trae cuánto se escuchó: la pista cuenta su duración, pero nunca más allá del
+        // comienzo de la siguiente. Antes una canción saltada a los pocos segundos contaba entera.
+        val hastaLaSiguiente = HashMap<String, Double>()
+        esc.sortedBy { it.ts }.zipWithNext { a, b -> val hueco = (Fechas.millis(b.ts) - Fechas.millis(a.ts)) / 60000.0; if (hueco > 0) hastaLaSiguiente[a.id] = hueco }
+        fun minutos(e: io.github.ruddy2003.vestigium.data.Escucha): Double =
+            e.ms?.let { it.toDouble() / 60000 } ?: minOf((e.duracion_s?.times(1000.0) ?: 180_000.0) / 60000, hastaLaSiguiente[e.id] ?: Double.MAX_VALUE)
         val artistas = esc.filter { it.artista.isNotBlank() }.groupBy { it.artista }.mapValues { (_, l) -> l.sumOf { minutos(it) } }.entries.sortedByDescending { it.value }.take(8).map { it.key to it.value }
         val cancion = esc.filter { it.titulo.isNotBlank() && (it.ms ?: 30_000) >= 30_000 }.groupingBy { it.titulo + if (it.artista.isNotBlank()) " — ${it.artista}" else "" }.eachCount().maxByOrNull { it.value }?.toPair()
         val previos = runCatching { Repo.escuchas("0000-01-01", Fechas.sumar(ini, -1)).map { it.artista }.toHashSet() }.getOrDefault(hashSetOf())
@@ -200,9 +284,15 @@ object Periodo {
         val apps = HashMap<String, Long>(); pant.forEach { p -> p.por_app_min.forEach { (a, m) -> apps.merge(a, m.toLong(), Long::plus) } }
         val ntf = fechas.mapNotNull { Repo.notifs[it] }
 
-        // ---- el periodo anterior de la misma duración
-        val pIni = Fechas.sumar(ini, -n.toLong()); val pFin = Fechas.sumar(ini, -1)
-        val pf = (0 until n).map { Fechas.sumar(pIni, it.toLong()) }
+        // ---- el periodo anterior: el que se pida (el mes o el año entero de antes) o, si no, los mismos días de justo antes
+        val pIni = anterior?.first ?: Fechas.sumar(ini, -n.toLong()); val pFin = anterior?.second ?: Fechas.sumar(ini, -1)
+        val pn = (ChronoUnit.DAYS.between(Fechas.parse(pIni), Fechas.parse(pFin)).toInt() + 1).coerceAtLeast(1)
+        val pf = (0 until pn).map { Fechas.sumar(pIni, it.toLong()) }
+        // El gasto «al día» se reparte entre los días desde el primer gasto anotado, no entre todo el periodo: los días de
+        // antes de empezar a anotar no son días de cero pesos.
+        val primerGasto = Repo.gastos.minOfOrNull { it.dia }
+        val hoyLogico = Fechas.diaLogico()
+        val diasGasto = if (primerGasto == null) 0 else fechas.count { it >= primerGasto && it <= hoyLogico }
         val pv = pf.mapNotNull { valDe(it) }
         val ps = pf.mapNotNull { Repo.salud[it]?.sueno_min?.takeIf { m -> m > 120 }?.div(60.0) }
         val pp = pf.mapNotNull { Repo.salud[it]?.pasos?.toDouble()?.takeIf { x -> x > 0 } }
@@ -220,7 +310,7 @@ object Periodo {
             emociones = animo.first, pensamientos = animo.second, conQuien = animo.third.first, conQuienRegistros = animo.third.second,
             registrosAnimo = mu.count { Catalogo.esRegistro(it) },
             momentos = mu.filter { it.tipo != "muestreo" }.groupingBy { it.tipo }.eachCount().entries.sortedByDescending { it.value }.map { Catalogo.nombreTipo(it.key) to it.value },
-            personas = top(personasL), temas = top(temasL), personaNueva = nueva,
+            personas = personasDias, temas = top(temasL), personaNueva = nueva,
             habitosPct = habPct, habitos = habitos, rachaDiario = racha,
             suenoH = sue.mapNotNull { it.sueno_min }.takeIf { it.isNotEmpty() }?.average()?.div(60), suenoTotalH = sue.sumOf { it.sueno_min ?: 0 } / 60.0,
             dormirH = sue.mapNotNull { horaDec(it.sueno_inicio, true) }.takeIf { it.isNotEmpty() }?.average(),
@@ -252,7 +342,7 @@ object Periodo {
             notifs = ntf.sumOf { it.total.toLong() }, apps = apps.entries.sortedByDescending { it.value }.take(6).map { it.key to it.value },
             valAnterior = pv.takeIf { it.size >= 3 }?.average(), suenoAnterior = ps.takeIf { it.size >= 3 }?.average(),
             pasosAnterior = pp.takeIf { it.size >= 3 }?.average(), pantallaAnterior = ppa.takeIf { it.size >= 3 }?.average(),
-            diasSoloAvisos = fechas.count { soloAvisos(it) },
+            diasSoloAvisos = fechas.count { soloAvisos(it) }, diasGasto = diasGasto,
             errorAnterior = listOfNotNull(
                 errorDif(vals.filterNotNull(), pv)?.let { "valencia" to it },
                 errorDif(sue.mapNotNull { it.sueno_min?.div(60.0) }, ps)?.let { "sueno" to it },

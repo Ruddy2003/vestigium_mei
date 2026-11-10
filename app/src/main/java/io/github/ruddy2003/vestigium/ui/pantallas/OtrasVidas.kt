@@ -241,7 +241,7 @@ fun RecuadroOtrasVidas(nav: Nav) {
     val tema = Estilo.tema.id
     val vidas = remember(tema) { OtrasVidas.visibles(tema).sortedBy { it.anio } }
     val cs = MaterialTheme.colorScheme
-    Recuadro("Otras vidas", "Cómo vivía alguien del Paleolítico, de Roma, de Edo o de 1960, frente a cómo vives tú", alto = 190.dp, onClick = { nav.ir("otras_vidas") }) {
+    Recuadro("Otras vidas", "Cómo vivía alguien del Paleolítico, de Roma, de Edo o de 1960, frente a cómo vives tú", alto = 190.dp, luz = true, onClick = { nav.ir("otras_vidas") }) {
         // La vitrina del tema (lote E6): un nicho por medalla.
         val d = io.github.ruddy2003.vestigium.ui.vida.disenoVida(Estilo.tema)
         val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()

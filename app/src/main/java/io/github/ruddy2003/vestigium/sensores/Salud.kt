@@ -151,14 +151,19 @@ object Salud {
             val ini = Instant.ofEpochMilli(Fechas.inicioDia(fecha))
             val fin = Instant.ofEpochMilli(Fechas.finDia(fecha))
             val rango = TimeRangeFilter.between(ini, fin)
-            var s = Repo.salud[fecha] ?: SaludDia(fecha = fecha)
+            // Lo que había al empezar a leer: al guardar se compara con lo que haya entonces, por si lo corregiste entretanto.
+            val base = Repo.saludActual(fecha) ?: SaludDia(fecha = fecha)
+            var s = base
 
             // Los pasos, del día lógico (v13): de las 05:00 a las 05:00 del día siguiente; lo de la madrugada es del día anterior.
             val iniPasos = Instant.ofEpochMilli(Fechas.inicioDiaLogico(fecha))
             val finPasos = Instant.ofEpochMilli(minOf(Fechas.finDiaLogico(fecha), System.currentTimeMillis()))
             if (finPasos > iniPasos) intentar("pasos", HealthPermission.getReadPermission(StepsRecord::class)) {
                 val ag = cliente.aggregate(AggregateRequest(setOf(StepsRecord.COUNT_TOTAL), TimeRangeFilter.between(iniPasos, finPasos)))
-                s = s.copy(pasos = ag[StepsRecord.COUNT_TOTAL], ventana_pasos = "logica"); if (s.pasos != null) bien("pasos")
+                // Una relectura vacía (teléfono nuevo, Health Connect sin historial) no borra los pasos que ya había (H-22-3).
+                val pasos = ag[StepsRecord.COUNT_TOTAL]
+                if (pasos != null || s.pasos == null) s = s.copy(pasos = pasos, ventana_pasos = "logica")
+                if (pasos != null) bien("pasos")
             }
             intentar("ritmo cardiaco", HealthPermission.getReadPermission(HeartRateRecord::class)) {
                 val ag = cliente.aggregate(AggregateRequest(setOf(HeartRateRecord.BPM_AVG, HeartRateRecord.BPM_MIN, HeartRateRecord.BPM_MAX), rango))
@@ -168,7 +173,9 @@ object Salud {
                     val m = leer(cliente, HeartRateRecord::class, rango).flatMap { it.samples }.map { it.beatsPerMinute.toDouble() }
                     if (m.isNotEmpty()) { media = m.average(); min = m.min(); max = m.max() }
                 }
-                s = s.copy(fc_media = r(media, 1), fc_min = min, fc_max = max); if (media != null) bien("ritmo cardiaco")
+                // Sin lecturas, se queda lo que ya había (H-22-3).
+                if (media != null || s.fc_media == null) s = s.copy(fc_media = r(media, 1), fc_min = min, fc_max = max)
+                if (media != null) bien("ritmo cardiaco")
             }
             intentar("frecuencia en reposo", HealthPermission.getReadPermission(RestingHeartRateRecord::class)) {
                 val l = leer(cliente, RestingHeartRateRecord::class, rango)
@@ -182,7 +189,11 @@ object Salud {
             val ventana = TimeRangeFilter.between(Instant.ofEpochMilli(Fechas.millisDe(d.minusDays(1).atTime(12, 0))), fin)
             var bloqueNoche: Bloque? = null
             intentar("sueño", HealthPermission.getReadPermission(SleepSessionRecord::class)) {
-                val leidas = leer(cliente, SleepSessionRecord::class, ventana).filter { Fechas.local(it.endTime.toEpochMilli()).toLocalDate() == d && it.endTime > it.startTime }
+                val crudas = leer(cliente, SleepSessionRecord::class, ventana)
+                // Health Connect no devolvió ninguna sesión (teléfono nuevo, historial que no llegó): lo que ya había de esa
+                // noche se queda como está. El sueño solo se borra si llegaron sesiones y ninguna sirve (H-22-3).
+                if (crudas.isEmpty() && (s.sueno_min != null || s.siesta_reloj_min != null || s.sueno_fuentes.isNotEmpty())) return@intentar
+                val leidas = crudas.filter { Fechas.local(it.endTime.toEpochMilli()).toLocalDate() == d && it.endTime > it.startTime }
                 fun clave(ses: SleepSessionRecord) = "${fuente(ses.metadata.dataOrigin.packageName)} ${hm(ses.startTime)}–${hm(ses.endTime)}"
                 // Lo que marcaste «no cuenta» (la siesta del sofá, una noche que no fue tuya) no entra en la cuenta (N-04).
                 val noCuentan = leidas.filter { clave(it) in s.sueno_descartadas }
@@ -250,7 +261,9 @@ object Salud {
             }
             if (rangoNoche != null) {
                 if (HealthPermission.getReadPermission(HeartRateRecord::class) in ok) runCatching {
-                    s = s.copy(fc_sueno = r(cliente.aggregate(AggregateRequest(setOf(HeartRateRecord.BPM_AVG), rangoNoche))[HeartRateRecord.BPM_AVG]?.toDouble(), 1))
+                    // Solo si hubo lecturas esa noche: una respuesta vacía no borra la que ya estaba.
+                    val fcNoche = r(cliente.aggregate(AggregateRequest(setOf(HeartRateRecord.BPM_AVG), rangoNoche))[HeartRateRecord.BPM_AVG]?.toDouble(), 1)
+                    if (fcNoche != null || s.fc_sueno == null) s = s.copy(fc_sueno = fcNoche)
                 }
                 if (HealthPermission.getReadPermission(OxygenSaturationRecord::class) in ok) runCatching {
                     val l = leer(cliente, OxygenSaturationRecord::class, rangoNoche)
@@ -258,8 +271,9 @@ object Salud {
                 }
             }
             s = extras(cliente, ok, rango, s)
-            s = s.copy(ts = Fechas.ahoraIso())
-            Repo.guardarSalud(s); n++
+            val leido = s.copy(ts = Fechas.ahoraIso())
+            // Leer tarda; si mientras tanto corregiste el sueño a mano o marcaste algo «no cuenta», eso no se pierde.
+            Repo.cambiarSalud(fecha) { actual -> io.github.ruddy2003.vestigium.data.Fusion.saludLeida(base, actual, leido) }; n++
         }
         if (HealthPermission.getReadPermission(ExerciseSessionRecord::class) in ok) runCatching { ejercicio(cliente, dias + 1) }
         // Resumen por tipo: en cuántos de los días revisados hubo dato, o el error/permiso que lo impidió.
@@ -362,7 +376,4 @@ object Salud {
             ))
         }
     }
-
-    @Suppress("unused")
-    private fun Instant.local(): String = Fechas.isoDeMillis(toEpochMilli())
 }

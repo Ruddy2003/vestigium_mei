@@ -294,7 +294,8 @@ object Estadistica {
             Variable("carta_escrita", "Escribí una carta (0/1)", "Texto"), Variable("sueno_palabras", "Palabras del sueño escrito", "Sueño"),
             Variable("cartas_otros", "Cartas escritas a otras personas", "Social"),
             Variable("ingreso_total", "Ingresos del día", "Dinero"), Variable("balance_dinero", "Ingresos menos gastos del día", "Dinero"),
-            Variable("dia_dificil", "Día difícil (0/1)", "Ánimo"), Variable("prediccion", "Predicción para mañana (1 a 7)", "Ánimo"),
+            Variable("dia_dificil", "Registro mínimo: valencia anotada desde el aviso (0/1)", "Ánimo"), Variable("dificil", "Día difícil, marcado por ti (0/1)", "Ánimo"),
+            Variable("recuerdo_menos_momentos", "El día recordado contra lo sentido en el momento (+ lo recuerdas mejor)", "Ánimo"), Variable("prediccion", "Predicción para mañana (1 a 7)", "Ánimo"),
             Variable("error_prediccion", "Cuánto falló la predicción de anoche", "Ánimo"),
             Variable("error_prediccion_signo", "El día contra la predicción de anoche (+ mejor, − peor)", "Ánimo"), Variable("medicamentos_n", "Medicamentos tomados", "Salud"),
             Variable("sueno_lucidez", "Lucidez del sueño (0 no, 1 parcial, 2 total)", "Sueño"), Variable("sueno_vividez", "Vividez del sueño (0 vago, 1 moderado, 2 muy vívido)", "Sueño"),
@@ -787,9 +788,15 @@ object Estadistica {
         }
         // Lo demás del diario: día difícil, predicción y su error, medicamentos, detalle del sueño.
         val conMedicamentos = Repo.dias.values.filter { it.medicamentos.isNotEmpty() }.minOfOrNull { it.fecha }
+        // El recuerdo contra el momento: la valencia del diario menos la media de los registros de ánimo de ese día (no privados,
+        // con valencia), si hubo al menos 2. Positivo: recuerdas el día mejor de lo que lo fuiste sintiendo.
+        val animoDelDia = Repo.momentos.filter { it.esAnimo && !it.privado && it.valencia != null && !cierreFuera(it) }.groupBy { it.fecha }
         for ((f, d) in Repo.dias) {
             val r = fila(f)
             r["dia_dificil"] = b(d.dia_dificil)
+            // La marca propia existe desde el esquema 23: en los días guardados antes no se preguntaba, así que quedan sin dato.
+            if (d.schema_v >= 23) r["dificil"] = b(d.dificil)
+            d.valencia?.let { v -> animoDelDia[f]?.takeIf { it.size >= 2 }?.let { l -> r["recuerdo_menos_momentos"] = Math.round((v - l.map { it.valencia!! }.average()) * 100) / 100.0 } }
             r["prediccion"] = d.prediccion_manana?.toDouble()
             // Con signo (H-2-10): positivo si el día salió mejor de lo que predijiste; el absoluto pierde la dirección.
             Repo.dias[Fechas.sumar(f, -1)]?.prediccion_manana?.let { p -> d.valencia?.let { r["error_prediccion"] = abs(p - it).toDouble(); r["error_prediccion_signo"] = (it - p).toDouble() } }
@@ -993,7 +1000,11 @@ object Estadistica {
         setOf("eventos", "min_ocupado"),
         setOf("sueno_horas", "sueno_profundo", "sueno_rem", "sueno_inicio_h", "sueno_fin_h"),
         setOf("sueno_recordado", "sueno_valencia", "sueno_lucidez", "sueno_vividez", "sueno_palabras"),
-        setOf("ingreso_total", "balance_dinero", "gasto_total"), setOf("prediccion", "error_prediccion", "error_prediccion_signo"), setOf("valencia", "error_prediccion", "error_prediccion_signo"),
+        setOf("ingreso_total", "balance_dinero", "gasto_total"), setOf("prediccion", "error_prediccion", "error_prediccion_signo"), setOf("valencia", "error_prediccion", "error_prediccion_signo"), setOf("valencia", "valencia_muestreo", "recuerdo_menos_momentos"),
+        setOf("dia_dificil", "dificil", "valencia"),
+        // El contexto del día y lo mismo medido por otro lado: el mismo hecho no es un hallazgo.
+        setOf("ctx_gym", "gimnasio", "volumen_kg", "series_gimnasio"), setOf("ctx_familia", "vi_familia", "con_familia"),
+        setOf("ctx_amigos", "vi_amistades", "con_amigos"), setOf("ctx_romantico", "vi_pareja", "con_pareja"), setOf("ctx_trabajo", "vi_trabajo", "con_companeros"),
         setOf("valencia", "muestreo_valencia"), setOf("activacion", "muestreo_activacion"),
         setOf("avisos_planeados", "avisos_mostrados", "avisos_respondidos", "tasa_respuesta", "muestreo_valencia", "muestreo_activacion", "n_muestreos"),
         setOf("hrv", "fc_reposo", "fc_media", "fc_sueno"), setOf("spo2", "spo2_min"),
@@ -1253,27 +1264,55 @@ object Movilidad {
         return out
     }
 
-    fun kmPorDia(puntos: List<io.github.ruddy2003.vestigium.data.Db.Punto> = Repo.db().ubicaciones()): Map<String, Double> {
+    /**
+     * La cuenta de [kmPorDia], punto por punto: así sirve igual para una lista en memoria que para un recorrido de la base.
+     * Un día con ubicaciones y sin movimiento vale 0 km, no «sin dato» (P-15).
+     */
+    private class SumaKm {
         val out = HashMap<String, Double>()
-        var prev: io.github.ruddy2003.vestigium.data.Db.Punto? = null
-        // Un día con ubicaciones y sin movimiento vale 0 km, no «sin dato» (P-15).
-        var desde = Long.MAX_VALUE; var hasta = Long.MIN_VALUE
-        for (p in puntos) {
-            if (p.ms < desde || p.ms >= hasta) {
-                val f = Fechas.diaLogicoDeMillis(p.ms); out.putIfAbsent(f, 0.0)
+        private var hay = false
+        private var pMs = 0L; private var pLat = 0.0; private var pLon = 0.0
+        private var desde = Long.MAX_VALUE; private var hasta = Long.MIN_VALUE
+        fun punto(ms: Long, lat: Double, lon: Double) {
+            if (ms < desde || ms >= hasta) {
+                val f = Fechas.diaLogicoDeMillis(ms); out.putIfAbsent(f, 0.0)
                 desde = Fechas.inicioDiaLogico(f); hasta = Fechas.finDiaLogico(f)
             }
-            val pr = prev
-            if (pr != null) {
-                val dt = (p.ms - pr.ms) / 1000.0
-                val d = io.github.ruddy2003.vestigium.data.Geo.distanciaM(pr.lat, pr.lon, p.lat, p.lon)
+            if (hay) {
+                val dt = (ms - pMs) / 1000.0
+                val d = io.github.ruddy2003.vestigium.data.Geo.distanciaM(pLat, pLon, lat, lon)
                 if (dt in 1.0..7200.0 && d / dt < 70 && d > 30) {
-                    val f = Fechas.diaLogicoDeMillis(p.ms)
+                    val f = Fechas.diaLogicoDeMillis(ms)
                     out[f] = (out[f] ?: 0.0) + d / 1000
                 }
             }
-            prev = p
+            hay = true; pMs = ms; pLat = lat; pLon = lon
         }
-        return out
+    }
+
+    /** Los kilómetros de cada día lógico según una lista de puntos ya ordenada por hora. */
+    fun kmPorDia(puntos: List<io.github.ruddy2003.vestigium.data.Db.Punto>): Map<String, Double> {
+        val s = SumaKm()
+        for (p in puntos) s.punto(p.ms, p.lat, p.lon)
+        return s.out
+    }
+
+    private var kmClave: String? = null
+    private var kmGuardado: Map<String, Double> = emptyMap()
+
+    /**
+     * Los kilómetros de cada día lógico de toda la historia. Recorre la base punto por punto, sin crear un objeto por cada
+     * uno (con años de ubicaciones no cabían en memoria y la distancia salía vacía sin aviso), y recuerda el resultado
+     * mientras no cambien las ubicaciones ni el historial de zonas: el panel lo pide muchas veces seguidas.
+     */
+    @Synchronized
+    fun kmPorDia(): Map<String, Double> {
+        val db = Repo.db()
+        val clave = db.huellaUbicaciones() + "|" + Fechas.zona().id + "|" + Repo.config.zonas.hashCode()
+        if (clave == kmClave) return kmGuardado
+        val s = SumaKm()
+        db.recorrerUbicaciones(0L) { ms, lat, lon, _ -> s.punto(ms, lat, lon) }
+        kmGuardado = s.out; kmClave = clave
+        return s.out
     }
 }

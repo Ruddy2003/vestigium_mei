@@ -95,8 +95,13 @@ fun PantallaRecaidas(nav: Nav) {
                 Text("lo de siempre: " + siempre.joinToString(", ") { it.replace('_', ' ') }, style = MaterialTheme.typography.labelLarge)
             }
             if (c.seguimiento_privado) {
-                Etiqueta("Intensidad del impulso")
+                // Dos mediciones distintas: la escala del día (0 a 5, el peor momento) y los impulsos registrados con hora, cada
+                // uno con su intensidad (1 a 5). Se muestran juntas y con su nombre; ninguna cambia a la otra.
+                Etiqueta("Impulso del día: el peor momento del día (0 a 5)")
                 Escala(d.impulso, 0, 5, Catalogo.ANCLAS["impulso"]) { v -> guardar { it.copy(impulso = v) } }
+                val impulsosDia = Repo.momentos.filter { it.fecha == fecha && it.tipo == "impulso" }.sortedBy { it.ts }
+                Ayuda(if (impulsosDia.isEmpty()) "Sin impulsos registrados con hora este día. Los que registres llevan su propia intensidad (1 a 5) y no cambian esta escala."
+                    else "Registrados con hora este día (intensidad de 1 a 5): " + impulsosDia.joinToString(" · ") { m -> Fechas.horaDe(m.ts) + (m.intensidad?.let { " ($it)" } ?: "") } + ". No cambian la escala de arriba.")
                 Etiqueta("¿Hubo recaída?")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Ficha("No", d.recaida == false) { guardar { x -> x.copy(recaida = if (x.recaida == false) null else false) } }

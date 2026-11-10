@@ -487,10 +487,12 @@ fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: S
     }
     val tema = Estilo.tema
     val piel = pielDe(tema)
-    Column(modifier.fillMaxWidth().padding(top = 26.dp).entrada(numero ?: 0)) {
+    // La cabecera que se pliega mide al menos 48 dp de alto, lo que pide Android para acertar el toque (hallazgo 12); el
+    // margen de arriba se acorta lo mismo que crece la cabecera, para que el título quede donde estaba.
+    Column(modifier.fillMaxWidth().padding(top = if (plegable) 10.dp else 26.dp).entrada(numero ?: 0)) {
         Row(
             verticalAlignment = if (piel.centrar) Alignment.CenterVertically else Alignment.Bottom,
-            modifier = if (!plegable) Modifier else if (autoPlegar) Modifier.fillMaxWidth().clickable { abiertaAuto = !abiertaAuto } else Modifier.fillMaxWidth().clickable {
+            modifier = if (!plegable) Modifier else if (autoPlegar) Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { abiertaAuto = !abiertaAuto } else Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable {
                 io.github.ruddy2003.vestigium.data.Repo.cambiarConfig { c ->
                     val clave = if (plegadaPorDefecto) "+$titulo" else titulo
                     val quitar = if (plegadaPorDefecto) !plegada else plegada
@@ -634,7 +636,10 @@ fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null
         }
         if (anclas != null) Row(Modifier.padding(top = 7.dp)) {
             Text(piel.igual + (valor?.toString() ?: piel.nulo), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-            Text(if (valor == null) "  " + Estilo.texto("escala_vacia") else "  ${anclas[valor] ?: ""}".lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            // Vacía: si el texto del tema empieza con lo mismo que ya dice la marca de «sin valor» («sin marcar · toca o
+            // desliza» junto a «sin marcar»), no se repite (hallazgo 32).
+            val vacia = Estilo.texto("escala_vacia").let { t -> if (t.startsWith(piel.nulo, ignoreCase = true)) t.drop(piel.nulo.length).trimStart(' ', '·') else t }
+            Text(if (valor == null) "  $vacia" else "  ${anclas[valor] ?: ""}".lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -726,7 +731,7 @@ fun ListaEtiquetas(lista: List<String>, pista: String, prefijo: String = "", nor
                 Surface(shape = forma, color = MaterialTheme.colorScheme.surfaceVariant) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 12.dp)) {
                         Text(prefijo + t, style = MaterialTheme.typography.labelLarge)
-                        BotonTexto(onClick = { onCambio(lista.filterIndexed { j, _ -> j != i }) }, contentPadding = PaddingValues(0.dp), modifier = Modifier.size(36.dp)) { Text(piel.quitar, fontSize = 16.sp) }
+                        BotonTexto(onClick = { onCambio(lista.filterIndexed { j, _ -> j != i }) }, contentPadding = PaddingValues(0.dp), modifier = Modifier.size(48.dp)) { Text(piel.quitar, fontSize = 16.sp) }
                     }
                 }
             }

@@ -348,12 +348,15 @@ object Mundo {
         }
         for (cod in Repo.config.paises_rascados) porPais.getOrPut(cod) { Estancia(cod, pais(ctx, cod)?.nombre ?: cod, cod, 0.0, 0.0) }.manual = true
         val tapados = Repo.config.paises_tapados.toSet()
-        val ciudades = porCiudad.values.filter { it.manual || it.horas >= 0.5 }.sortedWith(compareByDescending<Estancia> { it.totalDias }.thenByDescending { it.horas })
-        val paises = porPais.values.filter { it.clave !in tapados && (it.manual || it.horas >= 0.5) }.sortedWith(compareByDescending<Estancia> { it.totalDias }.thenByDescending { it.horas })
+        // Lo añadido a mano sin fecha (o con fecha de otro periodo) solo sale al mirar todo el tiempo, no en «este año».
+        fun aMano(e: Estancia) = e.manual && (desdeDia == null || e.dias.isNotEmpty())
+        val ciudades = porCiudad.values.filter { aMano(it) || it.horas >= 0.5 }.sortedWith(compareByDescending<Estancia> { it.totalDias }.thenByDescending { it.horas })
+        val paises = porPais.values.filter { it.clave !in tapados && (aMano(it) || it.horas >= 0.5) }.sortedWith(compareByDescending<Estancia> { it.totalDias }.thenByDescending { it.horas })
         val descartados = Repo.config.unesco_descartados.toSet()
         val sitios = HashMap<Int, Int>()
         b.sitios.forEach { (id, d) -> if (id !in descartados && (desdeDia == null || d >= desdeDia)) sitios[id] = d }
-        Repo.config.unesco_marcados.forEach { m -> val d = runCatching { Fechas.parse(m.fecha).toEpochDay().toInt() }.getOrNull() ?: 0; if (desdeDia == null || d >= desdeDia) sitios.putIfAbsent(m.id, d) }
+        // Los marcados a mano: con fecha de visita cuentan desde ese día; sin ella (día 0), solo en el total de siempre.
+        Repo.config.unesco_marcados.forEach { m -> val d = m.diaVisita ?: 0; if (desdeDia == null || d >= desdeDia) sitios.putIfAbsent(m.id, d) }
         return Resumen(ciudades, paises, sitios, b.muestras, desdeDia)
     }
 
@@ -382,7 +385,7 @@ object Mundo {
         val sit = HashMap<Int, MutableList<Sitio>>()
         val descartados = Repo.config.unesco_descartados.toSet()
         b.diasSitio.forEach { (id, dias) -> if (id !in descartados) sitiosPorId[id]?.let { s -> dias.forEach { d -> sit.getOrPut(d) { ArrayList() }.add(s) } } }
-        Repo.config.unesco_marcados.forEach { m -> runCatching { Fechas.parse(m.fecha).toEpochDay().toInt() }.getOrNull()?.let { d -> sitiosPorId[m.id]?.let { s -> sit.getOrPut(d) { ArrayList() }.let { l -> if (l.none { it.i == s.i }) l.add(s) } } } }
+        Repo.config.unesco_marcados.forEach { m -> m.diaVisita?.let { d -> sitiosPorId[m.id]?.let { s -> sit.getOrPut(d) { ArrayList() }.let { l -> if (l.none { it.i == s.i }) l.add(s) } } } }
         val dias = ciu.keys + pai.keys + sit.keys
         val res = HashMap<Int, DiaMundo>()
         for (d in dias) {
@@ -415,6 +418,13 @@ object Mundo {
 data class CiudadVisitada(val id: String, val nombre: String, val pais: String, val lat: Double, val lon: Double,
                           val desde: String? = null, val hasta: String? = null, val dias: Int? = null, val nota: String = "")
 
-/** Un sitio del Patrimonio Mundial marcado a mano como visitado. */
+/**
+ * Un sitio del Patrimonio Mundial marcado a mano como visitado. [fecha] es el día en que lo marcaste; [visita] (esquema 23),
+ * el día en que estuviste, si lo dijiste. Sin [visita] cuenta en tus totales pero no en el reporte de ningún periodo: antes
+ * contaba en el día de la marca, y marcar hoy un sitio de un viaje viejo lo ponía en el reporte de este mes.
+ */
 @Serializable
-data class SitioMarcado(val id: Int, val fecha: String)
+data class SitioMarcado(val id: Int, val fecha: String, val visita: String? = null) {
+    /** El día de la visita como número de día, o null si no se sabe. */
+    val diaVisita: Int? get() = visita?.let { v -> runCatching { Fechas.parse(v).toEpochDay().toInt() }.getOrNull() }
+}

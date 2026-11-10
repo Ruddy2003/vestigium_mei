@@ -33,6 +33,14 @@ object TuAnio {
         val medallas: List<Logros.Logro>, val predicciones: List<Triple<String, String, String>>,
         val paisesAnio: Set<String>, val mesMejor: Int?, val mesesOrden: List<Int>,
         val dirigidas: Int,
+        /** El primer día con diario (nota o valencia) dentro del periodo; null si no hay ninguno. */
+        val primerDiario: String? = null,
+        /** Días del periodo desde [primerDiario] (incluido): el «de N» honesto cuando el diario empezó a mitad del año. */
+        val diasDesdePrimero: Int = 0,
+        /** El día de la semana (1 = lunes) con mejor ánimo medio, solo entre los que tienen [MIN_DIAS_BARRA] días o más; null si no hay dos. */
+        val mejorDiaSemana: Int? = null,
+        /** Cuántos días comparten la valencia más alta del periodo (1 = sin empate). */
+        val empateFeliz: Int = 0,
     ) {
         val completo: Boolean get() = faltan <= 0
     }
@@ -77,6 +85,18 @@ object TuAnio {
         return m
     }
 
+    /** Noches (o días) mínimos para decir «dormías…» y «caminabas…»: con menos, la frase se calla. */
+    const val MIN_NOCHES = 14
+    /** Días mínimos con valencia en un día de la semana para que compita por «tu mejor día». */
+    const val MIN_DIAS_BARRA = 5
+
+    /** La mediana: el valor del medio (con un número par, la media de los dos del medio). Null sin datos. */
+    private fun mediana(l: List<Double>): Double? {
+        if (l.isEmpty()) return null
+        val o = l.sorted(); val m = o.size / 2
+        return if (o.size % 2 == 1) o[m] else (o[m - 1] + o[m]) / 2
+    }
+
     private fun moda(l: List<Double>, paso: Double): Double? =
         l.groupingBy { Math.round(it / paso) * paso }.eachCount().maxByOrNull { it.value }?.key
 
@@ -111,11 +131,15 @@ object TuAnio {
         // ---- lo más común: un día típico armado con lo que más se repitió
         val sal = p.fechas.mapNotNull { Repo.salud[it] }.filter { (it.sueno_min ?: 0) > 120 }
         val comun = buildList {
-            val dormir = moda(sal.mapNotNull { horaDec(it.sueno_inicio, true) }, 0.25)
-            val despertar = moda(sal.mapNotNull { horaDec(it.sueno_fin, false) }, 0.25)
-            if (dormir != null && despertar != null) add("dormías" to "de las ${hora(dormir)} a las ${hora(despertar)}")
+            // La mediana de las horas (no la caja de 15 minutos más repetida), y solo con MIN_NOCHES noches o más.
+            val conHoras = sal.mapNotNull { s -> val a = horaDec(s.sueno_inicio, true); val b = horaDec(s.sueno_fin, false); if (a != null && b != null) a to b else null }
+            if (conHoras.size >= MIN_NOCHES) {
+                val dormir = mediana(conHoras.map { it.first }); val despertar = mediana(conHoras.map { it.second })
+                if (dormir != null && despertar != null) add("dormías" to "hacia las ${hora(dormir)} y despertabas hacia las ${hora(despertar)} (mediana de ${conHoras.size} noches)")
+            }
             moda(p.valencia.filterNotNull(), 1.0)?.let { add("tu ánimo" to "${it.toInt()} de 7") }
-            moda(p.fechas.mapNotNull { Repo.salud[it]?.pasos?.takeIf { x -> x > 0 }?.toDouble() }, 1000.0)?.let { add("caminabas" to "unos ${n0(it)} pasos") }
+            val pasosDias = p.fechas.mapNotNull { Repo.salud[it]?.pasos?.takeIf { x -> x > 0 }?.toDouble() }
+            if (pasosDias.size >= MIN_NOCHES) mediana(pasosDias)?.let { add("caminabas" to "unos ${n0(Math.round(it / 100.0) * 100.0)} pasos (mediana de ${pasosDias.size} días)") }
             p.ciudades.firstOrNull()?.let { add("estabas en" to "${Mundo.bandera(it.second)} ${it.first}") }
             p.apps.firstOrNull()?.let { add("abrías" to it.first) }
             p.comidaTop.firstOrNull()?.let { add("comías" to it.first.lowercase()) }
@@ -148,10 +172,13 @@ object TuAnio {
         }.take(8)
 
         // ---- el día más raro y los récords
+        // «El día más raro» solo se busca desde el primer día con diario del periodo: lo importado de antes de usar la app
+        // (pasos, ubicación, música) no compite. La referencia de «lo normal» sigue siendo el panel entero del periodo.
+        val primerDiario = p.fechas.firstOrNull { Periodo.conDiario(it) }
         val panel = runCatching { Estadistica.panel(dinamicas = false) }.getOrDefault(emptyMap())
         val vars = runCatching { Estadistica.variables(dinamicas = false) }.getOrDefault(emptyList())
         val panelAnio = panel.filterKeys { it in en }
-        val raro = runCatching { Analisis.atipicos(panelAnio, vars, 2.8, desde = null) }.getOrDefault(emptyList()).filter { it.fecha in en }.maxByOrNull { it.z * it.razones.size }
+        val raro = runCatching { Analisis.atipicos(panelAnio, vars, 2.8, desde = null) }.getOrDefault(emptyList()).filter { it.fecha in en && primerDiario != null && it.fecha >= primerDiario }.maxByOrNull { it.z * it.razones.size }
             ?.let { it.fecha to it.razones.take(3) }
         val records = buildList {
             p.fechas.mapNotNull { fe -> Repo.salud[fe]?.pasos?.let { fe to it } }.maxByOrNull { it.second }?.let { add("más pasos" to "${n0(it.second.toDouble())} el ${Fechas.titulo(it.first).lowercase()}") }
@@ -229,13 +256,22 @@ object TuAnio {
             Triple(q, dijo, fue)
         }
         val paisesAnio = p.paises.toSet()
+        // «Tu mejor día de la semana»: compiten solo los días de la semana con MIN_DIAS_BARRA días con valencia o más, y hacen
+        // falta al menos dos; si no, se calla. El día más feliz: cuántos días comparten la valencia más alta.
+        val porDiaSemana = p.fechas.zip(p.valencia).mapNotNull { (fe, v) -> v?.let { Fechas.parse(fe).dayOfWeek.value to it } }.groupBy({ it.first }, { it.second })
+        val barras = porDiaSemana.filter { it.value.size >= MIN_DIAS_BARRA }
+        val mejorDiaSemana = if (barras.size < 2) null else barras.maxByOrNull { it.value.average() }?.key
+        val maxValencia = p.valencia.filterNotNull().maxOrNull()
+        val empateFeliz = if (maxValencia == null) 0 else p.valencia.count { it == maxValencia }
         val mesesOrden = p.valPorMes.entries.sortedByDescending { it.value }.map { it.key }
 
         return Datos(anio, faltan, p, previo, paginas, p.palabras / 150.0 / 60.0, dist,
             p.suenoTotalH / 24.0, p.pantallaTotalMin / 60.0 / 24.0, p.volumenKg / 6000.0, p.canciones * 3.5 / 60 / 24,
             comun, unaVez, raro, records, relacion, vida, brujula, palabra, palabra?.let { esta[it] } ?: 0, ranking.drop(1).take(4).map { it.first },
             arquetipo, rasgos.third.second, medallas, predicciones, paisesAnio, mesesOrden.firstOrNull(), mesesOrden,
-            Repo.cartas.count { it.escrita.startsWith("$anio") && it.para.isNotBlank() })
+            Repo.cartas.count { it.escrita.startsWith("$anio") && it.para.isNotBlank() },
+            primerDiario = primerDiario, diasDesdePrimero = p.fechas.count { primerDiario != null && it >= primerDiario },
+            mejorDiaSemana = mejorDiaSemana, empateFeliz = empateFeliz)
     }
 
     /** ¿Ya escribiste la carta que se abre el próximo 31 de diciembre? */

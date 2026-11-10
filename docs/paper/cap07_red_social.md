@@ -42,6 +42,7 @@ La misma persona puede «aparecer» de forma distinta según la función, porque
 | Constelación (`Constelacion.calcular`) | sí | sí | no | no | no | no | no | sí |
 | Red y exportación `vm_red_*` (`RedPersonas.calcular`) | sí | sí | no | no | no | no | no | sí |
 | Tarjeta «personas en tu cielo este año» (`Vida.kt`) | sí | no | no | no | no | no | no | sí (desde 10c) |
+| Reportes y «Tu año» (`Periodo.calcular`, con `Personas.diasCon` acotado al periodo; desde el 10 nov 2026, D.171) | sí | sí | no | sí | no | sí | destinatario | sí |
 
 «Momentos privados» son los de tipo `impulso`, `recaida` o `libido` y, desde el esquema 21, `masturbacion` o `intimidad` (la propiedad `Momento.privado` en `data/Modelo.kt`, que desde el módulo 10a incluye el impulso). Ninguna fila de esta tabla los usa (sección 7.13). Hay dos novedades en el esquema 21:
 - La ficha de una persona, con el seguimiento privado encendido, dice cuántas veces hubo intimidad con ella y cuándo fue la última (`Personas.intimidadCon`, decisión del autor). Eso no entra en menciones, red ni variables.
@@ -334,7 +335,11 @@ Quién conoce a quién, como un grafo. Las **líneas firmes** son lo que **dijis
 
 ### 7.10.2 Vínculos declarados
 
-En la ficha de una persona, «¿A quién conoce?» muestra hasta 24 personas (las clasificadas y las 20 más mencionadas). Cada toque avanza: sin decir → se conocen → familia entre sí → pareja → colegas → no se conocen → sin decir (`RedPersonas.siguiente`). Se guarda un `Vinculo(a, b, tipo)` con el par ordenado alfabéticamente, así que es **simétrico** (si A conoce a B, B conoce a A). «No se conocen» es información explícita: ese par **no** se dibuja ni cuenta como unido, aunque aparezcan juntas.
+En la ficha de una persona, «¿A quién conoce?» muestra a **todas** las personas (primero las ya vinculadas; con buscador si pasan de 12; hasta el 10 nov 2026 solo 24, D.173). La pantalla pide: «Marca un vínculo solo si tendrían trato entre sí aunque tú no estuvieras». Cada toque avanza: sin decir → se conocen → amigos → familia entre sí → pareja → colegas → se conocen, sin trato → no se conocen → sin decir (`RedPersonas.siguiente`). Se guarda un `Vinculo(a, b, tipo)` con el par ordenado alfabéticamente, así que es **simétrico** (si A conoce a B, B conoce a A).
+
+**Qué tipos unen (`RedPersonas.une`).** Todos menos dos. «No se conocen» y, desde el esquema 23 (D.180), «se conocen, sin trato» (se conocen de vista, pero no se hablan) son información explícita: se guardan y se exportan, pero ese par **no** se dibuja ni cuenta como unido, aunque aparezcan juntas. «Amigos» también llega en el esquema 23. Los valores de antes no cambian.
+
+**Qué tan fuerte es cada tipo (`RedPersonas.peso`, D.180).** Pareja y familia 1.0; amigos 0.8; colegas 0.6; se conocen (o un par sin tipo, que solo aparece junto) 0.3; sin trato y no se conocen 0. **[Diseño propio]**: los números son una escala ordinal razonable, no una medida validada. Por eso se usan solo en dos sitios: el **dibujo** (los vínculos fuertes tiran más y su línea es más gruesa) y, en R, una **restricción de Burt ponderada** que se da aparte. El grado, los componentes, la densidad y la restricción de siempre siguen contando «hay línea o no», para poder compararse con lo calculado antes y con la literatura. Los pesos no se guardan: salen del tipo, así que cambiarlos no toca los datos. *Ejemplo (inventado):* marcas a Ana y Luis como pareja y a Ana y Marta como «sin trato»: Ana y Luis quedan pegados y con línea gruesa; entre Ana y Marta no hay línea, y Marta no suma al grado de Ana.
 
 Desde la entrega 10c (D.73, H-9-22), los vínculos pasan por los nombres canónicos: `RedPersonas.dichos()` traduce cada par con `canon`, descarta los que quedan como la misma persona y, si dos vínculos dichos con nombres distintos caen en el mismo par, se queda con el último. Al guardar (`poner`), se quita también lo dicho antes con otro nombre de las mismas dos personas. Antes, si uniste `@anita` con `@ana`, lo dicho de `@anita` no aparecía en la Red.
 
@@ -344,7 +349,7 @@ Desde la entrega 10c (D.73, H-9-22), los vínculos pasan por los nombres canóni
 2. `dias[p]` = días con mención; `juntos[a, b]` = días en que aparecen las dos.
 3. **Nodos**: las **45** personas con más días, **más** todas las que tengan algún vínculo declarado (aunque tengan 0 días).
 4. **Aristas**: pares con `juntos ≥ 2` **o** con vínculo declarado (de cualquier tipo), siempre que ambos estén entre los nodos.
-5. **Líneas que cuentan** («conectadas»): todas menos las declaradas «no se conocen».
+5. **Líneas que cuentan** («conectadas», `RedPersonas.une`): todas menos las declaradas «no se conocen» o, desde el esquema 23, «se conocen, sin trato».
 6. **Grado** de cada nodo: número de líneas que cuentan.
 
 ### 7.10.4 Las tres cifras
@@ -361,7 +366,7 @@ Desde la entrega 10c (D.73, H-9-22), los vínculos pasan por los nombres canóni
 
 Parámetros exactos: posiciones iniciales al azar con semilla fija 7 (el dibujo es siempre igual con los mismos datos); distancia ideal *k* = 0.5/√*n*; repulsión *k*²/*d* entre todos los pares; atracción *d*²/*k*·peso en cada línea que cuenta, con peso **1.4** si es declarada y min(0.5 + 0.05·juntos, 1.2) si es derivada; una leve atracción al centro (0.12 × la distancia al centro) para que los sueltos no se vayan a las orillas; **300** vueltas con un paso máximo («temperatura») que empieza en 0.1 y se multiplica por 0.985 cada vuelta (mínimo 0.002); al final se estira todo al cuadro de 0.1 a 0.9.
 
-Estilo: líneas declaradas de 2 dp y más opacas (punteadas si son «colegas»); derivadas de 1 dp y tenues. Radio del nodo = 4 + 8·√(días / máximo) dp. Nombres visibles si la persona tiene al menos 1/4 de los días de la más mencionada, si hay 15 personas o menos, o si la tocas. El botón «solo lo que dije» quita las líneas derivadas.
+Estilo: líneas declaradas más opacas (punteadas si son «colegas») y de grosor 1 + 2 × peso dp (pareja y familia 3, amigos 2.6, colegas 2.2, se conocen 1.6; hasta el esquema 22, todas de 2 dp); derivadas de 1 dp y tenues. En el acomodo, una línea declarada tira con fuerza 0.8 + peso (antes, 1.4 todas). Radio del nodo = 4 + 8·√(días / máximo) dp. Nombres visibles si la persona tiene al menos 1/4 de los días de la más mencionada, si hay 15 personas o menos, o si la tocas. El botón «solo lo que dije» quita las líneas derivadas.
 
 ### 7.10.6 Constelación frente a Red
 
@@ -397,7 +402,7 @@ Exportar con `minJuntos = 1` permite elegir el umbral en R. Pero ojo: el `grado`
 
 ### 7.11.2 Qué hace `vm_red(declaradas = FALSE, min_juntos = 2, min_dias = 3)`
 
-1. Quita **siempre** los pares declarados «no se conocen», aunque aparezcan juntos muchos días (como la app; desde la entrega 10d). De los demás, se queda con los declarados **o**, si `declaradas = FALSE`, con los pares con `dias_juntos ≥ min_juntos`. Si no hay ningún par (`vm_red_vinculos.csv` vacío o ausente), sigue con una red sin líneas en vez de fallar (H-9-23).
+1. Quita **siempre** los pares declarados «no se conocen» o «sin trato» (este, desde el esquema 23), aunque aparezcan juntos muchos días (como la app; desde la entrega 10d). De los demás, se queda con los declarados **o**, si `declaradas = FALSE`, con los pares con `dias_juntos ≥ min_juntos`. Si no hay ningún par (`vm_red_vinculos.csv` vacío o ausente), sigue con una red sin líneas en vez de fallar (H-9-23).
 2. **Elige a las personas** (desde 10e, D.106): deja fuera a quien se mencionó menos de `min_dias` días (por omisión, 3), salvo que tenga alguna línea dicha en Tu gente que no sea «no se conocen». Avisa cuántas quedan de cuántas, y se detiene si no queda nadie. Las líneas de las personas que salen también se quitan. Con `min_dias = 0` usa **todos** los nodos del archivo (hasta 400), como antes de 10e. El 3 es **[Diseño propio]**: quita a quien apareció una o dos veces sin exigir tanto que la red se vacíe.
 3. Arma el grafo no dirigido con esas personas, tengan o no líneas.
 4. Calcula:
@@ -520,7 +525,7 @@ La pista 4 del plan («la constelación toma los momentos excepto el tipo `recai
 3. La **cercanía** usa la escala IOS, validada, con etiquetas añadidas y respondida una vez por persona; `cercania_media` describe a quién nombras, no cómo te fue con ellos ese día.
 4. Las variables sociales del panel ponían **0 en días sin diario** pero con algún momento o documento (H-6-13); desde 10c quedan vacías los días sin diario escrito ni momento con @. **No hay variable por persona de «estuve con @x»**: `per_` mezcla presencia, pensamiento, sueños y cartas, y su etiqueta lo dice (H-6-2).
 5. La **Constelación** es una visualización de frecuencia y recencia, coloreada con la relación actual. La **Red** combina co-menciones (≥ 2 días) y vínculos declarados (con nombres unidos desde 10c), con un dibujo de fuerzas estándar; sus dos fallos de presentación (color y «solo lo que dije») se corrigieron en 10c (H-6-5, H-6-6).
-6. `vm_red()` calcula densidad, componentes, **restricción de Burt** y composición. Las definiciones son estándar, pero los resultados dependen mucho del número de personas incluidas (H-6-8; desde 10e, `vm_red()` deja fuera por omisión a quien se mencionó menos de 3 días) y **diferían de la app** en cuatro puntos concretos (H-6-7). Desde la entrega 10d, `vm_red()` ya no cuenta como línea los pares «no se conocen» ni cuenta como grupo a quien no tiene líneas, y no falla sin pares; la diferencia de personas (45 frente a 400) y de grado (2 días frente a 1) se documenta en el diccionario.
+6. `vm_red()` calcula densidad, componentes, **restricción de Burt** (y, desde el esquema 23, la misma **ponderada** por el tipo de vínculo, `restriccion_burt_ponderada`, con la columna `peso` de `vm_red_vinculos.csv`; tus propios lazos con cada persona valen 1) y composición. Las definiciones son estándar, pero los resultados dependen mucho del número de personas incluidas (H-6-8; desde 10e, `vm_red()` deja fuera por omisión a quien se mencionó menos de 3 días) y **diferían de la app** en cuatro puntos concretos (H-6-7). Desde la entrega 10d, `vm_red()` ya no cuenta como línea los pares «no se conocen» ni cuenta como grupo a quien no tiene líneas, y no falla sin pares; la diferencia de personas (45 frente a 400) y de grado (2 días frente a 1) se documenta en el diccionario.
 7. Desde 10a, los momentos privados (impulso, recaída, libido) no entran en nada de este capítulo; hasta v84, recaídas y libido entraban en `per_` y en «Tu gente», y los impulsos en todo (H-6-1).
 8. En el módulo 6 se identificaron **15 hallazgos** (H-6-1 a H-6-15) y no se cambió código. Después, el módulo 10 resolvió H-6-1 (10a), H-6-2 (documentándolo), H-6-5, H-6-6, H-6-10, H-6-12 y H-6-14 (10c) y H-6-7 (10d), y resolvió en parte H-6-4, H-6-9, H-6-11 y H-6-13 (10c). En la entrega 10e se resolvió H-6-8 (`vm_red(min_dias = 3)`) y en parte H-6-3 (la fecha del cambio se puede elegir; lo anterior a la primera clasificación sigue proyectado), y H-6-15 (diferencias con la IOS original) se da por resuelto con su descripción en la sección 7.5. Ninguno de los 15 queda pendiente: 10 resueltos y 5 en parte (H-6-3, H-6-4, H-6-9, H-6-11 y H-6-13).
 

@@ -8,6 +8,19 @@ package io.github.ruddy2003.vestigium.data
 object Metas {
     fun activas(): List<Meta> = Repo.metas.filter { it.estado == "activa" }
 
+    /**
+     * ¿Cuenta un día con [valor] frente a [umbral]? La única comparación de metas y logros propios, con la regla con que se
+     * creó cada registro:
+     * - [comoMucho] («como mucho», esquema 17): cuenta si queda en el umbral o por debajo (valor ≤ umbral);
+     * - [estricto] (los logros propios, «pasa de»): cuenta si lo supera (valor > umbral);
+     * - si no (las metas, «al menos»): cuenta si lo alcanza (valor ≥ umbral).
+     */
+    fun cumple(valor: Double, umbral: Double, comoMucho: Boolean = false, estricto: Boolean = false): Boolean = when {
+        comoMucho -> valor <= umbral
+        estricto -> valor > umbral
+        else -> valor >= umbral
+    }
+
     /** Los valores diarios de la medida, desde que se creó la meta hasta hoy (o la fecha objetivo). */
     private fun valores(m: Meta, hoy: String, panel: Map<String, Map<String, Double?>>?): List<Double> {
         val desde = m.creada.take(10)
@@ -28,7 +41,8 @@ object Metas {
         return when (m.medida_modo) {
             "suma" -> v.sum()
             "media" -> v.average()
-            else -> v.count { if (m.medida_tipo == "habito") it >= 1.0 else if (m.umbral_max) it <= m.umbral else it >= m.umbral }.toDouble()
+            // Un hábito cuenta el día en que se hizo (1); una variable, con la regla de la meta: «al menos» (≥) o «como mucho» (≤).
+            else -> v.count { if (m.medida_tipo == "habito") cumple(it, 1.0) else cumple(it, m.umbral, comoMucho = m.umbral_max) }.toDouble()
         }
     }
 

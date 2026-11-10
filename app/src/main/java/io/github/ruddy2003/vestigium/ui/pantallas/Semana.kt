@@ -34,6 +34,8 @@ import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
+import io.github.ruddy2003.vestigium.ciencia.Periodo
+import androidx.compose.foundation.border
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonSecundario
 import io.github.ruddy2003.vestigium.ui.Estilo
@@ -51,13 +53,17 @@ import kotlin.math.abs
 /** Cifras de una semana (lunes a domingo, días lógicos). */
 private class ResumenSemana(val dias: List<String>) {
     private fun prom(l: List<Double>) = if (l.isEmpty()) null else l.average()
-    val diario = dias.count { f -> Repo.dias[f]?.let { it.valencia != null || it.nota.isNotBlank() } == true }
-    val valencias = dias.map { f -> Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average() }
+    // Las mismas definiciones de los reportes (Periodo): día con diario = nota o valencia; sueño, solo noches de más de 120 min.
+    val diario = Periodo.diasConDiario(dias)
+    /** El ánimo de cada día ([Periodo.animoDia]): el del diario o, si falta, la media de los avisos (marcada). */
+    val animos = Periodo.animoDias(dias)
+    val valencias = animos.map { it?.valor }
+    val deAvisos = animos.count { it?.deAvisos == true }
     val animo = prom(valencias.filterNotNull())
-    val sueno = prom(dias.mapNotNull { Repo.salud[it]?.sueno_min?.let { m -> m / 60.0 } })
+    val sueno = Periodo.suenoMedioH(dias)
     val pasos = dias.mapNotNull { Repo.salud[it]?.pasos }.takeIf { it.isNotEmpty() }?.sum()
     val pantalla = prom(dias.mapNotNull { Repo.pantalla[it]?.total_min?.toDouble() })
-    val gasto = Repo.gastos.filter { it.dia in dias }.sumOf { it.monto }
+    val gasto = Periodo.gastoEn(dias)
     val kcal = prom(dias.mapNotNull { Repo.nutricion[it]?.valores?.get("kcal") })
     val entrenos = dias.count { (Repo.entrenos[it]?.series ?: 0) > 0 } + dias.count { f -> Repo.ascensos.any { it.fecha == f } }
     val momentos = Repo.momentos.filter { it.fecha in dias && it.tipo != "muestreo" && !it.privado }
@@ -70,7 +76,7 @@ fun PantallaSemana(nav: Nav) {
     val hoy = Fechas.diaLogico()
     var lunes by remember { mutableStateOf(Fechas.lunesDe(hoy)) }
     val dias = (0..6).map { Fechas.sumar(lunes, it.toLong()) }
-    val r = remember(lunes, Repo.dias.size, Repo.momentos.size, Repo.gastos.size) { ResumenSemana(dias) }
+    val r = remember(lunes, Repo.dias, Repo.momentos, Repo.gastos, Repo.salud) { ResumenSemana(dias) }
     // En la semana en curso se compara con los mismos días de la anterior (de lunes a hoy), no con la semana completa.
     val transcurridos = dias.count { it <= hoy }.coerceAtLeast(1)
     val antes = remember(lunes, Repo.dias.size) { ResumenSemana(dias.take(transcurridos).map { Fechas.sumar(it, -7) }) }
@@ -86,22 +92,29 @@ fun PantallaSemana(nav: Nav) {
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             dias.forEachIndexed { i, f ->
                 val v = r.valencias[i]
-                val fondo = Tonos.valencia(v, oscuro) ?: MaterialTheme.colorScheme.surfaceVariant
+                // Un día cuyo ánimo sale de los avisos (sin el del diario) va hueco: solo el borde con su color.
+                val avisos = r.animos[i]?.deAvisos == true
+                val tono = Tonos.valencia(v, oscuro)
+                val fondo = if (avisos) MaterialTheme.colorScheme.surface else tono ?: MaterialTheme.colorScheme.surfaceVariant
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(Estilo.semana[i].take(3), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Box(Modifier.fillMaxWidth().aspectRatio(0.8f).clip(MaterialTheme.shapes.small).background(fondo).clickable(enabled = f <= hoy) { Seleccion.abrir(nav, f) },
+                    Box(Modifier.fillMaxWidth().aspectRatio(0.8f).clip(MaterialTheme.shapes.small).background(fondo)
+                        .then(if (avisos && tono != null) Modifier.border(2.dp, tono, MaterialTheme.shapes.small) else Modifier)
+                        .clickable(enabled = f <= hoy) { Seleccion.abrir(nav, f) },
                         contentAlignment = Alignment.Center) {
-                        Text(v?.let { "%.0f".format(it) } ?: if (f > hoy) "" else "·", style = MaterialTheme.typography.titleMedium, color = Tonos.sobre(fondo))
+                        Text(v?.let { "%.0f".format(it) } ?: if (f > hoy) "" else "·", style = MaterialTheme.typography.titleMedium,
+                            color = if (avisos) MaterialTheme.colorScheme.onSurface else Tonos.sobre(fondo))
                     }
                     Text(f.takeLast(2).trimStart('0'), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
+        if (r.deAvisos > 0) Ayuda("Hueco = avisos: ese día no tiene ánimo en el diario y se muestra la media de sus registros.", Modifier.padding(top = 4.dp))
 
         Seccion("Cifras") {
             Tarjeta {
                 FilaSemana("Días con diario", r.diario.toDouble(), antes.diario.toDouble()) { "${it.toInt()} de 7" }
-                FilaSemana("Ánimo promedio", r.animo, antes.animo) { "%.1f / 7".format(it) }
+                FilaSemana(if (r.deAvisos > 0) "Ánimo promedio (" + porNumero(r.deAvisos, "1 día", "${r.deAvisos} días") + " de avisos)" else "Ánimo promedio", r.animo, antes.animo) { "%.1f / 7".format(it) }
                 FilaSemana("Sueño por noche", r.sueno, antes.sueno) { "%.1f h".format(it) }
                 FilaSemana("Pasos en la semana", r.pasos?.toDouble(), antes.pasos?.toDouble()) { "%,.0f".format(it) }
                 FilaSemana("Pantalla al día", r.pantalla, antes.pantalla) { "%d h %02d".format((it / 60).toInt(), (it % 60).toInt()) }
@@ -127,16 +140,22 @@ fun PantallaSemana(nav: Nav) {
         }
 
         val eq = Repo.equivalencias()
-        val notas = dias.mapNotNull { Repo.dias[it]?.nota } + r.momentos.map { it.texto }
-        val personas = notas.flatMap { Texto.personas(it).map { p -> Texto.canon(p, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }
-        val temas = notas.flatMap { Texto.temas(it).map { p -> Texto.canon(p, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }
+        // Días de la semana en que aparece cada tema (en la nota o en algún momento de ese día). Las personas, con la cuenta
+        // única de Tu gente y de los reportes (Personas.diasCon).
+        val momentosDia = r.momentos.groupBy { it.fecha }
+        val textosDia = dias.map { f -> listOfNotNull(Repo.dias[f]?.nota) + momentosDia[f].orEmpty().map { it.texto } }
+        val personas = remember(lunes, Repo.dias, Repo.momentos, Repo.tramos, Repo.cartas) {
+            io.github.ruddy2003.vestigium.data.Personas.diasCon(dias.first(), dias.last()).map { it.key to it.value.size }
+                .sortedWith(compareByDescending<Pair<String, Int>> { it.second }.thenBy { it.first })
+        }
+        val temas = textosDia.flatMap { l -> l.flatMap { Texto.temas(it) }.map { p -> Texto.canon(p, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }
         // Las fechas señaladas de la semana (con los hitos de antes), cada una con su día: tocarla abre ese día.
         val senaladas = dias.flatMap { f -> io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(Repo.dias[f]).map { f to it } }.distinctBy { it.second }
         if (personas.isNotEmpty() || temas.isNotEmpty() || senaladas.isNotEmpty()) Seccion("Personas, temas e hitos") {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 // Llevan su texto al buscador (N-22).
-                personas.take(8).forEach { (p, n) -> Ficha("@$p · $n", false) { Seleccion.buscar = "@$p"; nav.ir("buscar") } }
-                temas.take(8).forEach { (t, n) -> Ficha("#$t · $n", false) { Seleccion.buscar = "#$t"; nav.ir("buscar") } }
+                personas.take(8).forEach { (p, n) -> Ficha("@$p · $n d", false) { Seleccion.buscar = "@$p"; nav.ir("buscar") } }
+                temas.take(8).forEach { (t, n) -> Ficha("#$t · $n d", false) { Seleccion.buscar = "#$t"; nav.ir("buscar") } }
                 senaladas.forEach { (f, e) -> Ficha(e, true) { Seleccion.abrir(nav, f) } }
             }
         }

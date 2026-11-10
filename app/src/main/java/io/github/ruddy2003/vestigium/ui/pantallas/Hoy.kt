@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -209,14 +210,18 @@ fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (
     val invitaciones: @Composable (Color) -> Unit = { tinta ->
         if (extra.isNotEmpty()) {
             Text("si tienes tiempo:", style = MaterialTheme.typography.labelMedium, color = tinta.copy(alpha = 0.8f), modifier = Modifier.padding(top = 8.dp))
-            FlowRow(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Cada invitación mide al menos 48 dp de alto, lo que pide Android para acertar el toque (hallazgo 12).
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 extra.forEach { p ->
-                    Text(p.texto.removePrefix("¿").removeSuffix("?").replaceFirstChar { it.lowercase() } + " →", style = MaterialTheme.typography.labelLarge, color = tinta,
-                        modifier = Modifier.clickable { accion(p.accion) }.padding(vertical = 4.dp))
+                    Box(Modifier.heightIn(min = 48.dp).clickable { accion(p.accion) }, contentAlignment = Alignment.CenterStart) {
+                        Text(p.texto.removePrefix("¿").removeSuffix("?").replaceFirstChar { it.lowercase() } + " →", style = MaterialTheme.typography.labelLarge, color = tinta)
+                    }
                 }
-                Text("hoy no", style = MaterialTheme.typography.labelLarge, color = tinta.copy(alpha = 0.6f),
-                    modifier = Modifier.clickable { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + extra.associate { it.clave to hoy },
-                        hoy_no = (c.hoy_no.filter { it >= Fechas.sumar(hoy, -10) } + hoy).distinct()) } }.padding(vertical = 4.dp))
+            }
+            // «Ocultar por hoy» las descarta todas: va aparte de la lista, en su propio renglón, para no tocarlo sin querer.
+            Box(Modifier.padding(top = 8.dp).heightIn(min = 48.dp).clickable { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + extra.associate { it.clave to hoy },
+                hoy_no = (c.hoy_no.filter { it >= Fechas.sumar(hoy, -10) } + hoy).distinct()) } }, contentAlignment = Alignment.CenterStart) {
+                Text("ocultar por hoy", style = MaterialTheme.typography.labelMedium, color = tinta.copy(alpha = 0.8f))
             }
         }
     }
@@ -232,7 +237,10 @@ fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (
     val tipoP = io.github.ruddy2003.vestigium.ui.comun.TipoTarjeta.PENDIENTE
     io.github.ruddy2003.vestigium.ui.comun.TarjetaTema(tipoP, Modifier.fillMaxWidth().padding(top = 10.dp)) {
         run {
-            Text(Estilo.seccion("Te falta hoy", null).first, style = MaterialTheme.typography.titleLarge, color = dcp.acentoTarjeta(tipoP, oscp))
+            // El nombre del tema y, debajo, el mismo comentario en español que llevan las demás secciones (hallazgo 10).
+            val (nombreFalta, comentarioFalta) = Estilo.seccion("Te falta hoy", null)
+            Text(nombreFalta, style = MaterialTheme.typography.titleLarge, color = dcp.acentoTarjeta(tipoP, oscp))
+            if (comentarioFalta != null) Text(comentarioFalta, style = MaterialTheme.typography.labelMedium, color = dcp.tintaTarjeta(tipoP, oscp).copy(alpha = 0.85f))
             FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 l.forEach { p -> Ficha("${p.texto} →", false) { accion(p.accion) } }
             }
@@ -798,7 +806,8 @@ private fun horas(min: Double) = if (min >= 60) "%d h %02d".format((min / 60).to
 val METRICAS = listOf(
     Metrica("sueno", "Sueño", { "%.1f h".format(it) }) { f, _ -> Repo.salud[f]?.sueno_min?.let { it / 60.0 } },
     Metrica("animo", "Ánimo", { "%.1f / 7".format(it) }) { f, _ ->
-        Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average()
+        // El ánimo del día con la definición única de las vistas: el del diario o, si falta, la media de los avisos.
+        io.github.ruddy2003.vestigium.ciencia.Periodo.animoDia(f)?.valor
     },
     Metrica("pasos", "Pasos", { "%,.0f".format(it) }) { f, _ -> Repo.salud[f]?.pasos?.toDouble() },
     Metrica("km", "Kilómetros", { "%.1f km".format(it) }) { f, x -> x["km"]?.get(f) },
@@ -1002,25 +1011,26 @@ fun LineaDelTiempo(fecha: String) {
     val sueno = listOf(fecha, Fechas.sumar(fecha, 1)).mapNotNull { f -> Repo.salud[f]?.let { s -> if (s.sueno_inicio != null && s.sueno_fin != null) Triple(Fechas.millis(s.sueno_inicio), Fechas.millis(s.sueno_fin), sec) else null } }
     if (sueno.isNotEmpty()) pistas += Pista("sueño", sueno)
     val colores = listOf(prim, sec, ter)
-    val visitas = Repo.visitas.filter { Fechas.millis(it.entrada) < fin && (it.salida?.let { s -> Fechas.millis(s) } ?: System.currentTimeMillis()) > ini }
+    // Los filtros de colecciones enteras se recuerdan por fecha y lista: no se repiten en cada redibujado.
+    val visitas = remember(fecha, Repo.visitas) { Repo.visitas.filter { Fechas.millis(it.entrada) < fin && (it.salida?.let { s -> Fechas.millis(s) } ?: System.currentTimeMillis()) > ini } }
     if (visitas.isNotEmpty()) {
         val ids = visitas.map { it.lugar }.distinct()
         val b = visitas.map { v -> Triple(Fechas.millis(v.entrada), v.salida?.let { Fechas.millis(it) } ?: System.currentTimeMillis(), colores[ids.indexOf(v.lugar) % 3]) }
         pistas += Pista("lugares", b, etiquetas = visitas.map { v -> Fechas.millis(v.entrada) to (Repo.lugares.firstOrNull { it.id == v.lugar }?.nombre ?: "") })
     }
-    val ses = Repo.sesiones.filter { it.fecha == fecha }
+    val ses = remember(fecha, Repo.sesiones) { Repo.sesiones.filter { it.fecha == fecha } }
     if (ses.isNotEmpty()) pistas += Pista("ejercicio", ses.map { Triple(Fechas.millis(it.inicio), Fechas.millis(it.fin), ter) })
-    val tramos = Repo.tramos.filter { it.fecha == fecha }
+    val tramos = remember(fecha, Repo.tramos) { Repo.tramos.filter { it.fecha == fecha } }
     if (tramos.isNotEmpty()) pistas += Pista("enfoque", tramos.map { t -> val a = Fechas.millis(t.inicio); Triple(a, a + t.min * 60_000L, if (t.tipo == "siesta") sec else prim) },
         etiquetas = tramos.map { t -> Fechas.millis(t.inicio) to io.github.ruddy2003.vestigium.data.Catalogo.nombreTramo(t).lowercase() })
-    val mom = Repo.momentos.filter { it.fecha == fecha && !it.privado }
+    val mom = remember(fecha, Repo.momentos) { Repo.momentos.filter { it.fecha == fecha && !it.privado } }
     if (mom.isNotEmpty()) pistas += Pista("momentos", marcas = mom.map { m -> Fechas.millis(m.ts) to (Tonos.valencia(m.valencia?.toDouble(), oscuro) ?: sec) })
     Repo.notifs[fecha]?.por_hora?.takeIf { it.sum() > 0 }?.let { h -> pistas += Pista("teléfono", calor = h.map { it.toDouble() }) }
     Repo.conexiones[fecha]?.let { cx -> if (cx.luz_n.sum() > 0) pistas += Pista("luz", calor = cx.luz_suma.indices.map { i -> if (cx.luz_n[i] > 0) kotlin.math.ln(1 + cx.luz_suma[i] / cx.luz_n[i]) else 0.0 }) }
     if (musica.isNotEmpty()) pistas += Pista("música", marcas = musica.map { it to prim })
     if (fotos.isNotEmpty()) pistas += Pista("fotos", marcas = fotos.map { it to ter })
     val rojo = MaterialTheme.colorScheme.error
-    val gastos = Repo.gastos.filter { it.dia == fecha }
+    val gastos = remember(fecha, Repo.gastos) { Repo.gastos.filter { it.dia == fecha } }
     if (gastos.isNotEmpty()) pistas += Pista("gastos", marcas = gastos.mapNotNull { g ->
         runCatching { Fechas.millisDe(java.time.LocalDateTime.of(Fechas.parse(g.fecha), LocalTime.parse(g.hora.take(5)))) to rojo }.getOrNull()
     })
@@ -1040,6 +1050,7 @@ fun LineaDelTiempo(fecha: String) {
         }
         val medidor = androidx.compose.ui.text.rememberTextMeasurer()
         val estiloEtq = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onPrimary)
+        val estiloEtqFuera = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurface)
         val estiloEje = estiloCifras(MaterialTheme.typography.labelSmall.copy(color = texto))
         val eg = estiloGrafica()
         Canvas(Modifier.weight(1f).height(alto * (pistas.size + 1))) {
@@ -1062,11 +1073,25 @@ fun LineaDelTiempo(fecha: String) {
                     val xa = x(a).coerceIn(0f, size.width); val xb = x(b).coerceIn(0f, size.width)
                     if (xb > xa) barraGrafica(eg, Offset(xa, y + h * 0.2f), Size(xb - xa, h * 0.6f), c.copy(alpha = 0.75f), horizontal = true)
                 }
-                p.etiquetas.forEach { (a, t) ->
-                    val xa = x(a)
+                // El rótulo va dentro de su bloque solo si cabe; si no, al lado (después del bloque), en el color del texto y
+                // sin encimarse con el bloque ni con el rótulo que sigue (hallazgo 32). Si tampoco cabe ahí, no se escribe.
+                var ocupado = -1f
+                p.etiquetas.forEachIndexed { j, et ->
+                    val t = et.second
+                    val xa = x(et.first)
                     if (t.isNotBlank() && xa in 0f..size.width - 30f) {
                         val r = medidor.measure(t.take(12), estiloEtq)
-                        drawText(r, topLeft = Offset(xa + 3f, y + (h - r.size.height) / 2))
+                        val xb = p.bloques.getOrNull(j)?.let { b -> x(b.second).coerceIn(0f, size.width) } ?: xa
+                        if (r.size.width + 6f <= xb - xa) {
+                            if (xa + 3f >= ocupado) { drawText(r, topLeft = Offset(xa + 3f, y + (h - r.size.height) / 2)); ocupado = xa + 3f + r.size.width }
+                        } else {
+                            val fuera = medidor.measure(t.take(12), estiloEtqFuera)
+                            val xo = maxOf(xb, xa) + 3f
+                            val tope = p.bloques.map { b -> x(b.first) }.filter { it > xa + 0.5f }.minOrNull() ?: size.width
+                            if (xo >= ocupado && xo + fuera.size.width <= minOf(tope, size.width)) {
+                                drawText(fuera, topLeft = Offset(xo, y + (h - fuera.size.height) / 2)); ocupado = xo + fuera.size.width
+                            }
+                        }
                     }
                 }
                 p.marcas.forEach { (a, c) -> val xa = x(a); if (xa in 0f..size.width) drawLine(c, Offset(xa, y + h * 0.18f), Offset(xa, y + h * 0.82f), 3f) }
@@ -1489,17 +1514,21 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                     color = if (f == hoy) cs.primary else cs.onSurfaceVariant, modifier = Modifier.weight(1f))
             }
         }
-        // La semana en una línea, contra la anterior. Hoy cuenta solo si ya tiene valencia y diario.
-        fun valencias(desde: Int, hasta: Int) = (desde..hasta).mapNotNull { k ->
-            val f = Fechas.sumar(hoy, -k.toLong()); val d = Repo.dias[f]
-            if (k == 0 && (d?.valencia == null || d.nota.isBlank())) null else d?.valencia
-        }
-        val esta = valencias(0, 6).takeIf { it.isNotEmpty() }?.average()
-        val antes = valencias(7, 13).takeIf { it.isNotEmpty() }?.average()
-        val sueno = (0..6).mapNotNull { Repo.salud[Fechas.sumar(hoy, -it.toLong())]?.sueno_min }.takeIf { it.isNotEmpty() }?.average()?.toInt()
+        // La semana en una línea, contra la anterior: de lunes a hoy (como Resumen semanal y Vida), frente a los mismos días de
+        // la semana pasada, con el ánimo de las vistas (Periodo.animoDia: diario o, si falta, avisos). Hoy cuenta solo si ya
+        // tiene valencia y diario, para no influir en cómo lo calificas.
+        val periodo = io.github.ruddy2003.vestigium.ciencia.Periodo
+        val semanaHoy = periodo.fechasDe(Fechas.lunesDe(hoy), hoy)
+        val hoyCompleto = Repo.dias[hoy]?.let { it.valencia != null && it.nota.isNotBlank() } == true
+        val diasAnimo = if (hoyCompleto) semanaHoy else semanaHoy.dropLast(1)
+        val animosSemana = periodo.animoDias(diasAnimo)
+        val conAvisos = animosSemana.any { it?.deAvisos == true }
+        val esta = animosSemana.mapNotNull { it?.valor }.takeIf { it.isNotEmpty() }?.average()
+        val antes = periodo.animoMedio(diasAnimo.map { Fechas.sumar(it, -7) })
+        val sueno = periodo.suenoMedioH(semanaHoy)?.let { (it * 60).toInt() }
         val faltan = Pendientes.faltantes(hoy).size
         val partes = listOfNotNull(
-            esta?.let { e -> "ánimo ${"%.1f".format(e)}" + (antes?.let { a -> val x = e - a; if (abs(x) >= 0.05) " (${if (x > 0) "↑" else "↓"}${"%.1f".format(abs(x))})" else "" } ?: "") },
+            esta?.let { e -> "ánimo ${"%.1f".format(e)}" + (antes?.let { a -> val x = e - a; if (abs(x) >= 0.05) " (${if (x > 0) "↑" else "↓"}${"%.1f".format(abs(x))})" else "" } ?: "") + (if (conAvisos) " · con avisos" else "") },
             sueno?.let { "sueño ${it / 60} h ${"%02d".format(it % 60)}" },
         )
         Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {

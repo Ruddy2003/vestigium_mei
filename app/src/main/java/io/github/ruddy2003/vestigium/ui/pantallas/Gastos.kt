@@ -68,6 +68,7 @@ import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
 import io.github.ruddy2003.vestigium.ui.barraGrafica
 import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloImporte
 import io.github.ruddy2003.vestigium.ui.estiloGrafica
 import io.github.ruddy2003.vestigium.ui.pincelDeCifras
 import kotlinx.coroutines.launch
@@ -103,7 +104,7 @@ fun PantallaGastos(nav: Nav? = null) {
     fun limpiar() { monto = ""; nota = ""; imprevisto = false; fijo = false; repite = false; cuando = null; error = null; sub = ""; auto = null }
     androidx.compose.runtime.LaunchedEffect(Unit) { io.github.ruddy2003.vestigium.data.Dinero.asegurarCategoriasNuevas() }
 
-    Hoja("Gastos", subtitulo = "Registra en el momento de pagar o de cobrar. Lo que se cuadra después ya no dice en qué se fue el dinero.", buscar = nav?.let { n -> { n.ir("buscar") } }) {
+    Hoja("Gastos", nav?.atras, subtitulo = "Registra en el momento de pagar o de cobrar. Lo que se cuadra después ya no dice en qué se fue el dinero.", buscar = nav?.let { n -> { n.ir("buscar") } }) {
         Seccion("Registrar") {
             Tarjeta {
                 // Gasto o ingreso: la balanza del tema; cada mitad se toca.
@@ -213,7 +214,7 @@ fun PantallaGastos(nav: Nav? = null) {
                             Text(i.categoria + if (i.fijo) " · se repite" else "", style = MaterialTheme.typography.bodyLarge)
                             Text("${Fechas.corto(i.dia)} · ${i.hora}" + if (i.nota.isNotBlank()) " · ${i.nota}" else "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Text("+" + dinero(i.monto), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, color = io.github.ruddy2003.vestigium.ui.Tonos.ingreso(io.github.ruddy2003.vestigium.ui.esOscuro()))
+                        Text("+" + dinero(i.monto), style = estiloImporte(), color = io.github.ruddy2003.vestigium.ui.Tonos.ingreso(io.github.ruddy2003.vestigium.ui.esOscuro()))
                         Text("  ›", color = MaterialTheme.colorScheme.outline)
                     }
                 }
@@ -227,7 +228,8 @@ fun PantallaGastos(nav: Nav? = null) {
             val max = porCat.first().value.takeIf { it > 0 } ?: 1.0
             val eg = estiloGrafica()
             val barraCat = MaterialTheme.colorScheme.primary
-            val cifrasCat = estiloCifras(MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp))
+            // Los importes van en la letra de texto del tema, con cifras tabulares y color pleno (hallazgo 25).
+            val cifrasCat = estiloImporte(MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
             Box(Modifier.padding(top = 12.dp)) {
                 Tarjeta {
                     // Cada categoría se despliega por subcategoría al tocarla (Comida $2,300 → Café $620).
@@ -245,7 +247,7 @@ fun PantallaGastos(nav: Nav? = null) {
                             (porSub.entries.sortedByDescending { it.value }.map { it.key to it.value } + (if (sin > 0.004) listOf("sin subcategoría" to sin) else emptyList())).forEach { (n, x) ->
                                 Row(Modifier.fillMaxWidth().padding(start = 16.dp, top = 2.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                                     Text("→ $n", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-                                    Text(dinero(x), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(dinero(x), style = cifrasCat)
                                 }
                             }
                         }
@@ -269,7 +271,7 @@ fun PantallaGastos(nav: Nav? = null) {
                         Text((if (g.dia != g.fecha) "${g.hora} de la madrugada" else g.hora) + if (g.nota.isNotBlank()) " · ${g.nota}" else "",
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Text(dinero(g.monto), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo)
+                    Text(dinero(g.monto), style = estiloImporte())
                     Text("  ›", color = MaterialTheme.colorScheme.outline)
                 }
             }
@@ -497,7 +499,7 @@ private fun Balanza(ingresos: Double, gastos: Double) {
     val max = maxOf(ingresos, gastos).takeIf { it > 0 } ?: 1.0
     val verde = io.github.ruddy2003.vestigium.ui.Tonos.ingreso(io.github.ruddy2003.vestigium.ui.esOscuro())
     val eg = estiloGrafica()
-    val cifras = estiloCifras(MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp))
+    val cifras = estiloImporte(MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
     Etiqueta("balance del mes")
     listOf(Triple("entró", ingresos, verde), Triple("salió", gastos, io.github.ruddy2003.vestigium.ui.Tonos.gasto(io.github.ruddy2003.vestigium.ui.esOscuro()))).forEach { (t, v, c) ->
         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -525,10 +527,12 @@ private fun GastoPorDia(mes: String, items: List<Gasto>) {
     val barra = MaterialTheme.colorScheme.primary
     val alerta = MaterialTheme.colorScheme.error
     val eg = estiloGrafica()
-    val pincel = pincelDeCifras(MaterialTheme.colorScheme.onSurfaceVariant, 22f, android.graphics.Paint.Align.CENTER)
+    // El eje sí va en la letra de adorno del tema, pero nunca por debajo de 11 sp (hallazgo 25).
+    val tamEje = with(androidx.compose.ui.platform.LocalDensity.current) { 11.sp.toPx() } / minOf(1f, eg.escalaCifras)
+    val pincel = pincelDeCifras(MaterialTheme.colorScheme.onSurfaceVariant, tamEje, android.graphics.Paint.Align.CENTER)
     Etiqueta("por día")
     Canvas(Modifier.fillMaxWidth().aspectRatio(2.8f)) {
-        val abajo = 26f
+        val abajo = maxOf(26f, tamEje * 1.35f)
         val w = size.width / dias
         for (k in 0 until dias) {
             val h = (size.height - abajo) * (porDia[k] / max).toFloat()

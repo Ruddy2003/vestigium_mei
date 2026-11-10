@@ -173,6 +173,9 @@ fun PantallaEstadoDatos(nav: Nav) {
             scope.launch { msg = runCatching { withContext(Dispatchers.IO) { Sincronizar.todo(ctx) } }.getOrElse { "No se pudo: ${it.message}" }; ocupado = false; version++ }
         }
         msg?.let { Ayuda(it, Modifier.padding(top = 4.dp)) }
+        // Avisos de rescate: la base no se pudo abrir bien, o alguna vez se dañó y su archivo quedó apartado (no borrado).
+        Repo.errorAlAbrir?.let { Text("La base de datos no se pudo abrir bien ($it). Lo que ves puede estar incompleto: no registres nada por ahora y restaura tu último respaldo.", style = MaterialTheme.typography.bodySmall, color = cs.error, modifier = Modifier.padding(top = 8.dp)) }
+        Repo.baseDanada?.let { Text("La base de datos se dañó y la app siguió con una nueva. El archivo dañado no se borró: quedó guardado como «$it». Restaura tu último respaldo.", style = MaterialTheme.typography.bodySmall, color = cs.error, modifier = Modifier.padding(top = 8.dp)) }
         listOf(Salud3.SIN_PERMISO to "Faltan permisos", Salud3.ATRASADA to "Atrasadas", Salud3.BIEN to "Al día", Salud3.APAGADA to "Apagadas").forEach { (estado, titulo) ->
             val grupo = l.filter { it.estado == estado }
             if (grupo.isNotEmpty()) Seccion(titulo) {
@@ -197,6 +200,12 @@ fun PantallaEstadoDatos(nav: Nav) {
         val diag = Repo.config.hc_diagnostico
         if (diag.isNotEmpty()) Seccion("Detalle de Health Connect", "Última lectura: " + (Repo.config.hc_diagnostico_ts?.let { Fechas.corto(it.take(10)) + " " + Fechas.horaDe(it) } ?: "?"), plegable = true, plegadaPorDefecto = true) {
             Tarjeta { diag.forEach { (k, v) -> Clave(k, v, 18) } }
+        }
+        // Lo que falló en la tarea de fondo (respaldo, sincronización, reportes): antes no quedaba rastro.
+        val bitacora = remember(version, Reanudar.n) { io.github.ruddy2003.vestigium.avisos.Bitacora.leer(ctx) }
+        if (bitacora.isNotEmpty()) {
+            Ayuda("Fallos recientes de la tarea de fondo, el más nuevo primero:", Modifier.padding(top = 14.dp, bottom = 4.dp))
+            Tarjeta { bitacora.forEach { Ayuda(it, Modifier.padding(vertical = 2.dp)) } }
         }
         BotonTexto(onClick = { nav.ir("cobertura") }, modifier = Modifier.padding(top = 8.dp)) { Text("cobertura de cada variable ›", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
         BotonTexto(onClick = { nav.ir("permisos") }) { Text("abrir Permisos y sensores ›", style = MaterialTheme.typography.labelLarge, color = cs.primary) }

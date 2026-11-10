@@ -11,10 +11,14 @@ object Diccionario {
 
     private val SUFIJOS_NUM = listOf("_min", "_h", "_kg", "_pct", "_ms", "_mm", "_db", "_lux", "_km", "_rpm", "_ml", "_num", "_c", "_delta", "_hpa", "_media", "_max", "_medio")
 
+    /** Cifras cuyo nombre no lo dice: mientras estén vacías se declaran «numero», no «texto». */
+    private val NUMERICAS_VACIAS = setOf("fc_reposo", "hrv", "hrv_rmssd", "wa_mios", "wa_otros", "wa_chats", "tabaco_n", "pisos", "vo2max", "temp_piel",
+        "pa_sistolica", "pa_diastolica", "calificacion_obra", "subrayados", "ms_escuchado", "duracion_s", "spo2", "fc_media", "fc_min", "pasos", "peso")
+
     fun tipo(valores: List<Any?>, col: String = ""): String {
         val v = valores.filterNotNull().filter { it !is String || it.isNotBlank() }
         // Columna vacía por ahora: se adivina por el nombre para que en R no quede como texto una cifra.
-        if (v.isEmpty()) return if (SUFIJOS_NUM.any { col.endsWith(it) } || col.startsWith("n_") || col.startsWith("m_") || col.startsWith("luz_h") || col.startsWith("wifi_") || col.startsWith("app_")) "numero" else "texto"
+        if (v.isEmpty()) return if (col in NUMERICAS_VACIAS || SUFIJOS_NUM.any { col.endsWith(it) } || col.startsWith("n_") || col.startsWith("m_") || col.startsWith("luz_h") || col.startsWith("wifi_") || col.startsWith("app_")) "numero" else "texto"
         return when {
             v.all { it is Boolean } -> "logico"
             v.all { it is Int || it is Long || it is Short } -> "entero"
@@ -99,7 +103,9 @@ object Diccionario {
         "valencia_muestreo" to "Promedio de la valencia en los avisos del día", "n_muestreos" to "Avisos de ánimo respondidos (registros «muestreo», con o sin valencia)", "n_momentos" to "Momentos registrados (sin contar avisos; incluye los privados: impulsos, recaídas y libido)",
         "gasto_total" to "Gasto del día (tu moneda); 0 desde tu primer gasto, en días con diario; antes, vacío", "vm_panel_extendido.csv:personas" to "Personas distintas nombradas con @ ese día, en el diario y en los momentos no privados; vale 0 los días con diario escrito o con un momento que nombra a alguien, y si no, vacío", "gasto_imprevisto_monto" to "Suma de los gastos imprevistos del día (tu moneda); gasto_imprevisto solo dice si hubo alguno (0/1)", "error_prediccion_signo" to "Valencia del día menos la predicción de la noche anterior (−6 a +6): positivo, el día salió mejor de lo predicho; error_prediccion es su valor absoluto", "ingreso_total" to "Ingresos del día (tu moneda); 0 desde tu primer ingreso, en días con diario; antes, vacío", "fijo" to "Ingreso que se repite, como sueldo o beca (0/1)", "schema_v" to "Versión del esquema de datos (0 = importado de Obsidian o de la versión web sin versión propia)", "origen" to "De dónde vino el registro (app, web, obsidian, widget…)",
         "retroactivo" to "La valencia se llenó otro día, después (0/1). Desde el esquema 13 se decide con ts_valencia; los días de antes, por si el registro del día se creó después",
-        "ts_valencia" to "Cuándo se llenó o se cambió por última vez la valencia del día (desde el esquema 13)", "dia_dificil" to "Marcado como día difícil (0/1)",
+        "ts_valencia" to "Cuándo se llenó o se cambió por última vez la valencia del día (desde el esquema 13)", "dia_dificil" to "Registro mínimo (0/1): la valencia se anotó desde el botón corto del aviso; no dice cómo fue el día (el nombre es de antes)",
+        "dificil" to "Día difícil, marcado por ti en la hoja del día (0/1); en el panel, solo en días guardados desde el esquema 23",
+        "recuerdo_menos_momentos" to "Valencia del diario menos la media de los registros de ánimo de ese día (con 2 o más): positivo si recuerdas el día mejor de lo que lo sentiste",
         "ts_creado" to "Cuándo se anotó el registro. En momentos, gastos, ingresos, tomas, consumos y tramos, desde el esquema 14 (vacío en los de antes); comparado con su hora dice si se anotó tarde",
         "ts_editado" to "Cuándo se corrigió por última vez después de anotarlo (en momentos, gastos e ingresos, desde el esquema 14)",
         "version_noche" to "Con qué orden de preguntas se llenó la hoja de la noche (desde el esquema 14): 1 = el orden anterior; 2 = el orden nuevo, con el ánimo del momento primero. Vacío = no pasó por la hoja o es de antes",
@@ -313,7 +319,9 @@ object Diccionario {
         "laptop_ocio_min" to "Minutos en apps y sitios de ocio", "laptop_social_min" to "Minutos en apps y sitios sociales", "laptop_otro_min" to "Minutos en el resto de apps y sitios",
         "suplemento" to "Identificador del suplemento", "vm_suplementos.csv:cantidad" to "Cantidad tomada (en la unidad del suplemento)", "estimado" to "Inferido de tu bitácora de comidas (0/1)",
         "dias_mencion" to "Días en que la mencionaste en el diario o los momentos", "vm_red_nodos.csv:grado" to "Con cuántas personas está unida: líneas que dijiste (salvo «no se conocen») o con 1 día o más juntas. La Red de la app pide 2 días y muestra 45 personas; aquí van hasta 400", "vm_red_nodos.csv:grupo" to "Grupo de la relación: familia, pareja, amistad, trabajo u otro (el color de la Red)",
-        "tipo_declarado" to "Cómo se conocen según tú: se_conocen, familia, pareja, colegas, no_se_conocen (vacío = no lo dijiste)",
+        "tipo_declarado" to "Cómo se conocen según tú: se_conocen, amigos, familia, pareja, colegas, sin_trato (se conocen de vista, sin trato), no_se_conocen (vacío = no lo dijiste)",
+        "vm_red_vinculos.csv:une" to "Si el par cuenta como línea de la red (0/1): todo menos sin_trato y no_se_conocen",
+        "vm_red_vinculos.csv:peso" to "Fuerza del vínculo según su tipo, de 0 a 1: pareja y familia 1, amigos 0.8, colegas 0.6, se conocen o sin tipo 0.3, sin trato y no se conocen 0. Solo para el dibujo y la restricción ponderada",
         "dias_juntos" to "Días en que aparecen las dos el mismo día", "vm_laptop.csv:minutos" to "Minutos usados ese día", "vm_laptop.csv:categoria" to "Categoría (productivo, ocio, social, otro)",
         "presencias" to "Cómo estuviste con cada @persona del diario: persona:estuve, persona:pense o persona:mensajes (lista)",
         "presencias_revisado" to "Ya revisaste ese día quién estuvo y en quién solo pensaste (0/1); antes de la versión 10 todo cuenta como «estuve»",
@@ -466,6 +474,11 @@ object Diccionario {
     private const val VERSION_ESQUEMA_21 = 175
     /** La versión que trae el esquema 22 (respaldo blindado y foto del día copiada, 9 nov 2026). */
     private const val VERSION_ESQUEMA_22 = 189
+    /**
+     * La versión que trae el esquema 23 (un solo ánimo de cierre por noche, la fecha de visita de lo marcado en Mundo, los
+     * tipos de vínculo nuevos y el día difícil marcado, 10 nov 2026): la v199, la primera publicada después de la 189.
+     */
+    private const val VERSION_ESQUEMA_23 = 199
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
@@ -543,7 +556,7 @@ object Diccionario {
         "personas_pensadas" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
         "personas_vistas" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
         "probioticos_estimado" to (88 to "vacío sin bitácora de MacroFactor (D.63)"),
-        "registros_animo" to (88 to "sin los «Cómo estás ahora» guardados otro día que el que cierran (D.74)"),
+        "registros_animo" to (VERSION_ESQUEMA_23 to "un solo «Cómo estás ahora» por noche: antes cada toque en la cuadrícula guardaba un registro (D.177); desde la v88, sin los guardados otro día que el que cierran (D.74)"),
         "rt_media" to (88 to "un toque a menos de 100 ms es anticipación y se repite (D.74)"),
         "sdt_necesidad_*" to (88 to "«las tres» cuenta en autonomía, competencia y relación (D.63)"),
         "tema_*" to (88 to "vacío los días sin diario ni momento con un #tema (D.63)"),
@@ -566,7 +579,6 @@ object Diccionario {
         "vm_reaccion.csv:media_ms" to (88 to "sin toques a menos de 100 ms: cuentan como anticipación (D.74)"),
         "vm_reaccion.csv:mediana_ms" to (88 to "sin toques a menos de 100 ms: cuentan como anticipación (D.74)"),
         "vm_red_nodos.csv:dias_mencion" to (88 to "cuenta con el nombre unido (D.73)"),
-        "vm_red_nodos.csv:grado" to (88 to "cuenta con el nombre unido (D.73)"),
         "vm_red_nodos.csv:grupo" to (88 to "nueva: grupo de la relación (D.73)"),
         "vm_red_nodos.csv:persona" to (88 to "nombres unidos siguiendo uniones encadenadas (D.73)"),
         "vm_red_nodos.csv:relacion" to (88 to "relación del nombre unido (D.73)"),
@@ -682,6 +694,17 @@ object Diccionario {
         "enfoque_min" to (VERSION_ESQUEMA_21 to "con los minutos de más sobre la meta (D.165)"),
         // Esquema 22.
         "vm_dias.csv:foto_archivo" to (VERSION_ESQUEMA_22 to "nueva: la copia de la foto del día dentro del respaldo (D.168)"),
+        // Esquema 23.
+        "dificil" to (VERSION_ESQUEMA_23 to "nueva: día difícil marcado por ti (D.181)"),
+        "recuerdo_menos_momentos" to (VERSION_ESQUEMA_23 to "nueva, derivada: el diario contra los registros del día (D.181)"),
+        "por_hora_min" to (VERSION_ESQUEMA_23 to "cada hora se redondea al minuto más cercano; antes se truncaba y las 24 sumaban unos minutos menos que total_min (D.182)"),
+        "vm_panel_extendido.csv:dia_especial" to (VERSION_ESQUEMA_23 to "siempre 0/1 (antes mezclaba 0/1 y 0.0/1.0); el extendido ya no trae la fila de mañana (D.182)"),
+        "tipo_declarado" to (VERSION_ESQUEMA_23 to "valores nuevos: amigos y sin_trato; sin_trato no cuenta como línea (D.180)"),
+        "vm_red_vinculos.csv:une" to (VERSION_ESQUEMA_23 to "nueva (D.180)"), "vm_red_vinculos.csv:peso" to (VERSION_ESQUEMA_23 to "nueva (D.180)"),
+        "vm_red_nodos.csv:grado" to (VERSION_ESQUEMA_23 to "un vínculo «sin trato» no cuenta (D.180); desde la v88, con el nombre unido (D.73)"),
+        "n_registros" to (VERSION_ESQUEMA_23 to "un solo «Cómo estás ahora» por noche: antes cada toque guardaba un registro (D.177)"),
+        "vm_mundo.csv:desde" to (VERSION_ESQUEMA_23 to "en los sitios del Patrimonio marcados a mano, el día de la visita si lo dijiste (vacío si no); antes, el día en que lo marcaste (D.178)"),
+        "unesco" to (VERSION_ESQUEMA_23 to "un sitio marcado a mano cuenta en el día de la visita, si lo dijiste, no en el día en que lo marcaste (D.178)"),
     )
 
     // Las claves con «*», como patrones; la más larga primero, para que «app_min_*» gane a «app_*».

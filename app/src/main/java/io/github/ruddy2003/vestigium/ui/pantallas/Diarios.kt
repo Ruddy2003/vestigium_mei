@@ -132,7 +132,7 @@ fun PantallaDiario(nav: Nav) {
         // El diario de hoy, como objeto del tema: al tocarlo se abre a pantalla completa.
         val hoy = Fechas.diaLogico()
         Seccion("Hoy", "Toca para escribir. Se guarda mientras escribes.") {
-            io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 14.dp)) {
+            io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 14.dp), luz = true) {
                 io.github.ruddy2003.vestigium.ui.ObjetoDiario(hoy, Repo.dias[hoy]?.nota.orEmpty()) { escribiendo = hoy }
             }
         }
@@ -150,11 +150,8 @@ fun PantallaDiario(nav: Nav) {
             else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth().padding(top = 4.dp)) {
                 LibretaCerrada(hojas.size, hojas.lastOrNull(), Modifier.fillMaxWidth()) { Seleccion.momentos = hojas.first(); nav.ir("hoja_momentos") }
             }
-            Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BotonSecundario("entrar a la libreta →", Modifier.weight(1f)) { nav.ir("biblioteca_momentos") }
-                // La lista editable de tus registros de ánimo (N-25).
-                BotonSecundario("todos tus registros", Modifier.weight(1f)) { nav.ir("momentos") }
-            }
+            // «Todos tus registros» se retiró (hallazgo 31): cada renglón de la Libreta se toca para corregirlo.
+            BotonSecundario("entrar a la libreta →", Modifier.fillMaxWidth().padding(top = 10.dp)) { nav.ir("biblioteca_momentos") }
         }
         val suenos = remember(Repo.dias) { LibroDiario.suenos().take(9) }
         Seccion("Biblioteca de sueños", if (suenos.isEmpty()) null else "${Repo.dias.values.count { it.sueno_texto.isNotBlank() }} sueños escritos") {
@@ -166,7 +163,7 @@ fun PantallaDiario(nav: Nav) {
         }
         Seccion("Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste y pensaste, un cajón por tema." else "${porNumero(Repo.ideas.size, "1 idea", "${Repo.ideas.size} ideas")} · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas") {
             if (Repo.ideas.isEmpty()) Vacio("Anota una idea y ponle un tema: cada tema es un cajón del fichero.")
-            else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(10.dp)) { FicheroIdeas(nav, Repo.ideas, max = 6) }
+            else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(10.dp), luz = true) { FicheroIdeas(nav, Repo.ideas, max = 6) }
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BotonSecundario("entrar al Ideario →", Modifier.weight(1f)) { nav.ir("biblioteca_ideas") }
                 BotonSecundario("＋ idea", Modifier.weight(1f)) { EdicionIdea.abrir(nav, EdicionIdea.nueva()) }
@@ -184,7 +181,7 @@ fun PantallaDiario(nav: Nav) {
         }
         val cartas = remember(Repo.cartas) { Repo.cartas.sortedByDescending { it.escrita }.take(2) }
         Seccion("Cartas", if (Repo.cartas.isEmpty()) "A tu yo del futuro y a otras personas." else "${Repo.cartas.size} ${if (Repo.cartas.size == 1) "carta" else "cartas"}") {
-            if (cartas.isNotEmpty()) io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(12.dp)) { Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (cartas.isNotEmpty()) io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(12.dp), luz = true) { Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 cartas.forEach { c -> io.github.ruddy2003.vestigium.ui.SobreCarta(c, Modifier.weight(1f).height(112.dp)) { nav.ir("cartas") } }
                 if (cartas.size == 1) androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
             } }
@@ -213,7 +210,7 @@ fun PantallaDiario(nav: Nav) {
             val mes = f.take(7)
             if (mes != mesAnterior) {
                 mesAnterior = mes
-                val rotulo = Estilo.mes(mes.drop(5).toInt(), mes.take(4).toInt()).let { if (it.contains(mes.take(4))) it else it + " · " + mes.take(4) }
+                val rotulo = Estilo.mesConComun(mes.drop(5).toInt(), mes.take(4).toInt())
                 Text(rotulo, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 18.dp, bottom = 6.dp))
             }
             TarjetaDiaDiario(f, Repo.dias[f], porDia[f].orEmpty(), tipo, discreto,

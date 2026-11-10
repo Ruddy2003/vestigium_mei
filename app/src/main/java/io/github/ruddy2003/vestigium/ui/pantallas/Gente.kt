@@ -178,7 +178,7 @@ fun PantallaPersonas(nav: Nav) {
     }
 }
 
-/** Lo de Tu gente, para su propia pantalla y para la sección de Social (9 nov 2026). */
+/** Lo de Tu gente, en su propia pantalla (la única: Social ya no lo repite en una sección plegada, hallazgo 26). */
 @Composable
 fun ContenidoGente(nav: Nav) {
     val c = Repo.config
@@ -254,23 +254,30 @@ fun ContenidoGente(nav: Nav) {
             if (!verTodas && resto.size > 15) BotonSecundario("ver las ${resto.size}", Modifier.padding(top = 8.dp)) { verTodas = true }
         }
     }
-    editando?.let { n ->
-        Dialogo(onDismissRequest = { editando = null }, confirmButton = {}, dismissButton = { BotonTexto(onClick = { editando = null }) { Text("cancelar") } },
-            title = { Text("@$n") },
-            text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    Personas.de(n)?.historial?.takeIf { it.isNotEmpty() }?.let { h ->
-                        Ayuda("Antes: " + h.sortedBy { it.hasta }.joinToString(" · ") { "${Personas.nombreRelacion(it.relacion).lowercase()} hasta ${Fechas.corto(it.hasta)}" })
-                    }
-                    // Esquema 21: solo con el seguimiento privado encendido (si no, intimidadCon da null). Nada más de lo privado aquí.
-                    Personas.intimidadCon(n)?.let { (veces, ultima) ->
-                        Ayuda("Intimidad: ${porNumero(veces, "1 vez", "$veces veces")} · la última, ${Fechas.corto(ultima)}", Modifier.padding(top = 4.dp))
-                    }
-                    FormularioPersona(n, alGuardar = { editando = null })
-                    AQuienConoce(n)
+    editando?.let { n -> DialogoPersona(n) { editando = null } }
+}
+
+/**
+ * La ficha de una persona, en un diálogo: lo que fue antes, su relación, cercanía y fechas, y a quién conoce. La abren la
+ * lista de Tu gente y, directamente, la persona tocada en el grafo de Social (hallazgo 26).
+ */
+@Composable
+fun DialogoPersona(n: String, cerrar: () -> Unit) {
+    Dialogo(onDismissRequest = { cerrar() }, confirmButton = {}, dismissButton = { BotonTexto(onClick = { cerrar() }) { Text("cancelar") } },
+        title = { Text("@$n") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                Personas.de(n)?.historial?.takeIf { it.isNotEmpty() }?.let { h ->
+                    Ayuda("Antes: " + h.sortedBy { it.hasta }.joinToString(" · ") { "${Personas.nombreRelacion(it.relacion).lowercase()} hasta ${Fechas.corto(it.hasta)}" })
                 }
-            })
-    }
+                // Esquema 21: solo con el seguimiento privado encendido (si no, intimidadCon da null). Nada más de lo privado aquí.
+                Personas.intimidadCon(n)?.let { (veces, ultima) ->
+                    Ayuda("Intimidad: ${porNumero(veces, "1 vez", "$veces veces")} · la última, ${Fechas.corto(ultima)}", Modifier.padding(top = 4.dp))
+                }
+                FormularioPersona(n, alGuardar = { cerrar() })
+                AQuienConoce(n)
+            }
+        })
 }
 
 /**

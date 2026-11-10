@@ -249,9 +249,31 @@ object ColdTurkey {
  * momentos, sin lo privado). En la app solo métricas simples; densidad, restricción de Burt y composición se calculan en R.
  */
 object RedPersonas {
-    val TIPOS = listOf(Opcion("se_conocen", "Se conocen"), Opcion("familia", "Familia entre sí"), Opcion("pareja", "Pareja"), Opcion("colegas", "Colegas"),
-        Opcion("no_se_conocen", "No se conocen"))
+    val TIPOS = listOf(Opcion("se_conocen", "Se conocen"), Opcion("amigos", "Amigos"), Opcion("familia", "Familia entre sí"), Opcion("pareja", "Pareja"),
+        Opcion("colegas", "Colegas"), Opcion("sin_trato", "Se conocen, sin trato"), Opcion("no_se_conocen", "No se conocen"))
     fun nombreTipo(id: String?) = TIPOS.firstOrNull { it.id == id }?.nombre ?: ""
+
+    /**
+     * Si un vínculo cuenta como línea de la red. «No se conocen» y «se conocen, sin trato» (esquema 23: se conocen de vista
+     * pero no se hablan) se guardan, pero no unen: no cuentan en el grado, los componentes, la densidad ni la restricción.
+     * Un par sin tipo (solo aparecen juntos) sí une.
+     */
+    fun une(tipo: String?): Boolean = tipo != "no_se_conocen" && tipo != "sin_trato"
+
+    /**
+     * Qué tan fuerte es un vínculo, de 0 a 1, según su tipo (esquema 23). Solo lo usan el dibujo (las personas con vínculo
+     * fuerte quedan más juntas y su línea es más gruesa) y, en R, una restricción de Burt ponderada aparte. Las medidas de
+     * siempre (grado, componentes, densidad, restricción) siguen contando «hay línea o no», para poder compararse con las de
+     * antes. Los pesos no se guardan: salen del tipo, así que se pueden cambiar sin tocar los datos. Un par sin tipo vale
+     * como «se conocen».
+     */
+    fun peso(tipo: String?): Float = when (tipo) {
+        "pareja", "familia" -> 1f
+        "amigos" -> 0.8f
+        "colegas" -> 0.6f
+        "sin_trato", "no_se_conocen" -> 0f
+        else -> 0.3f
+    }
 
     private fun par(a: String, b: String) = if (a < b) a to b else b to a
 
@@ -279,7 +301,7 @@ object RedPersonas {
         }
     }
 
-    /** El siguiente tipo al tocar la ficha: nada → se conocen → familia → pareja → colegas → no se conocen → nada. */
+    /** El siguiente tipo al tocar la ficha: nada → se conocen → amigos → familia → pareja → colegas → sin trato → no se conocen → nada. */
     fun siguiente(actual: String?): String? = if (actual == null) TIPOS[0].id else TIPOS.indexOfFirst { it.id == actual }.let { i -> TIPOS.getOrNull(i + 1)?.id }
 
     /** [relacion] es la de Tu gente (o «Conocerte»); [grupo], la que da el color y la composición: familia, pareja, amistad, trabajo… */
@@ -314,13 +336,13 @@ object RedPersonas {
 
     /** Con cuántas personas está unida cada una, contando solo [aristas] (al filtrar «solo lo que dije», se recalcula; P-25). */
     fun grados(nodos: List<Nodo>, aristas: List<Arista>) {
-        val conectadas = aristas.filter { it.tipo != "no_se_conocen" }
+        val conectadas = aristas.filter { une(it.tipo) }
         nodos.forEach { nd -> nd.grado = conectadas.count { it.a == nd.nombre || it.b == nd.nombre } }
     }
 
     /** Cuántos grupos separados hay con estas [aristas] (sin contar a quienes no tienen ninguna línea). */
     fun componentes(nodos: List<Nodo>, aristas: List<Arista>): Int {
-        val conectadas = aristas.filter { it.tipo != "no_se_conocen" }
+        val conectadas = aristas.filter { une(it.tipo) }
         val padre = HashMap<String, String>()
         fun raiz(x: String): String { var r = x; while (padre[r] != null && padre[r] != r) r = padre[r]!!; return r }
         val unidos = conectadas.flatMap { listOf(it.a, it.b) }.toSet()
@@ -335,7 +357,7 @@ object RedPersonas {
         val r = java.util.Random(7)
         nodos.forEach { it.x = 0.2f + 0.6f * r.nextFloat(); it.y = 0.2f + 0.6f * r.nextFloat() }
         val idx = nodos.withIndex().associate { it.value.nombre to it.index }
-        val lazos = aristas.filter { it.tipo != "no_se_conocen" }.mapNotNull { a -> val i = idx[a.a]; val j = idx[a.b]; if (i != null && j != null) Triple(i, j, a) else null }
+        val lazos = aristas.filter { une(it.tipo) }.mapNotNull { a -> val i = idx[a.a]; val j = idx[a.b]; if (i != null && j != null) Triple(i, j, a) else null }
         val k = (0.5 / sqrt(nodos.size.toDouble())).toFloat()
         var temp = 0.1f
         repeat(vueltas) {
@@ -349,8 +371,9 @@ object RedPersonas {
             lazos.forEach { (i, j, a) ->
                 val ex = nodos[i].x - nodos[j].x; val ey = nodos[i].y - nodos[j].y
                 val d = sqrt(ex * ex + ey * ey).coerceAtLeast(1e-3f)
-                val peso = if (a.tipo != null) 1.4f else (0.5f + a.juntos * 0.05f).coerceAtMost(1.2f)
-                val f = d * d / k * peso
+                // Lo dicho tira según su tipo (pareja y familia 1.8, amigos 1.6, colegas 1.4, se conocen 1.1; antes todo 1.4).
+                val tiron = if (a.tipo != null) 0.8f + peso(a.tipo) else (0.5f + a.juntos * 0.05f).coerceAtMost(1.2f)
+                val f = d * d / k * tiron
                 dx[i] -= ex / d * f; dy[i] -= ey / d * f; dx[j] += ex / d * f; dy[j] += ey / d * f
             }
             for (i in nodos.indices) {

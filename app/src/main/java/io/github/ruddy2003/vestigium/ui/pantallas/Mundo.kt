@@ -1295,8 +1295,9 @@ fun PantallaCiudadNueva(nav: Nav) {
                 Ayuda(listOfNotNull(Mundo.pais(ctx, c.pais(i))?.nombre, poblacion(c.pob[i])).joinToString(" · "))
                 BotonTexto(onClick = { elegida = -1 }) { Text("elegir otra") }
             }
-            Seccion("¿Cuándo?", "Opcional. Con fechas cuenta los días exactos; si no las recuerdas, pon solo cuántos días fueron.") {
+            Seccion("¿Cuándo?", "Opcional. Con fechas cuenta los días exactos y sale en los reportes de ese periodo. Sin fechas cuenta en tus totales, pero no en el reporte de ningún mes ni año: sirve para los viajes de antes.") {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (desde == null) BotonSecundario("hoy") { desde = Fechas.diaLogico(); hasta = desde }
                     BotonSecundario(desde?.let { "desde ${Fechas.corto(it)}" } ?: "desde…") { fecha(desde) { desde = it; if (hasta == null || hasta!! < it) hasta = it } }
                     // «Hasta» no puede quedar antes de «desde»: si eliges una fecha anterior, pasa a ser el inicio.
                     BotonSecundario(hasta?.let { "hasta ${Fechas.corto(it)}" } ?: "hasta…") { fecha(hasta ?: desde) { h -> if (desde != null && h < desde!!) { hasta = desde; desde = h } else hasta = h } }
@@ -1423,19 +1424,39 @@ fun PantallaUnesco(nav: Nav) {
                 Column {
                     Text(s.p.joinToString(", ") { "${Mundo.bandera(it)} ${Mundo.pais(ctx, it)?.nombre ?: it}" }, style = MaterialTheme.typography.bodyMedium)
                     Ayuda("${s.categoria} · inscrito en ${s.a}" + if (s.enPeligro) " · en la lista del patrimonio en peligro" else "")
+                    val marca = Repo.config.unesco_marcados.firstOrNull { it.id == s.i }
                     Ayuda(when {
-                        visto && manual -> "Lo marcaste a mano."
+                        visto && manual -> "Lo marcaste a mano" + (marca?.visita?.let { " · estuviste el ${Fechas.larga(it)}" } ?: " · sin fecha: cuenta en tu total, no en los reportes") + "."
                         visto -> "Tu ubicación pasó cerca" + (vistos[s.i]?.takeIf { it > 0 }?.let { " en ${mesAnio(it)}" } ?: "") + "."
                         else -> "Todavía no."
                     }, Modifier.padding(top = 8.dp))
+                    // Al marcarlo a mano se pregunta cuándo fue: hoy, otra fecha o sin fecha. Solo con fecha sale en el reporte de ese
+                    // periodo; así se pueden marcar los viajes de antes sin que parezcan de este mes.
+                    fun marcar(visita: String?) {
+                        Repo.cambiarConfig { c -> c.copy(unesco_marcados = c.unesco_marcados.filter { it.id != s.i } + SitioMarcado(s.i, Fechas.diaLogico(), visita), unesco_descartados = c.unesco_descartados - s.i) }
+                        sentir(Sentidos.Evento.LOGRO); detalle = null
+                    }
+                    if (!visto) {
+                        Text("¿Estuviste aquí? ¿Cuándo?", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 12.dp))
+                        Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            BotonSecundario("hoy") { marcar(Fechas.diaLogico()) }
+                            BotonSecundario("otra fecha…") { elegirFecha(ctx, null, maximo = LocalDate.now()) { marcar(it) } }
+                        }
+                        BotonTexto(onClick = { marcar(null) }) { Text("estuve, sin fecha") }
+                        Ayuda("Sin fecha cuenta en tu total, pero no sale en el reporte de ningún mes ni año.")
+                    } else if (manual) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            BotonTexto(onClick = { elegirFecha(ctx, marca?.visita, maximo = LocalDate.now()) { f -> Repo.cambiarConfig { c -> c.copy(unesco_marcados = c.unesco_marcados.map { if (it.id == s.i) it.copy(visita = f) else it }) } } }) { Text(if (marca?.visita == null) "poner la fecha" else "cambiar la fecha") }
+                            if (marca?.visita != null) BotonTexto(onClick = { Repo.cambiarConfig { c -> c.copy(unesco_marcados = c.unesco_marcados.map { if (it.id == s.i) it.copy(visita = null) else it }) } }) { Text("quitar la fecha") }
+                        }
+                    }
                     BotonTexto(onClick = { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(s.url))) } }) { Text("ver en whc.unesco.org") }
                 }
             },
             confirmButton = {
-                BotonTexto(onClick = {
+                if (visto) BotonTexto(onClick = {
                     Repo.cambiarConfig { c ->
                         when {
-                            !visto -> c.copy(unesco_marcados = c.unesco_marcados + SitioMarcado(s.i, Fechas.diaLogico()), unesco_descartados = c.unesco_descartados - s.i)
                             manual -> c.copy(unesco_marcados = c.unesco_marcados.filter { it.id != s.i }).also { _ ->
                                 val previo = c.unesco_marcados.filter { it.id == s.i }
                                 io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Sitio quitado") { Repo.cambiarConfig { cc -> cc.copy(unesco_marcados = cc.unesco_marcados + previo.filter { p -> cc.unesco_marcados.none { it.id == p.id } }) } }
@@ -1443,9 +1464,9 @@ fun PantallaUnesco(nav: Nav) {
                             else -> c.copy(unesco_descartados = (c.unesco_descartados + s.i).distinct())
                         }
                     }
-                    sentir(if (!visto) Sentidos.Evento.LOGRO else Sentidos.Evento.TOQUE)
+                    sentir(Sentidos.Evento.TOQUE)
                     detalle = null
-                }) { Text(when { !visto -> "estuve aquí"; manual -> "quitar"; else -> "no cuenta" }) }
+                }) { Text(if (manual) "quitar" else "no cuenta") }
             },
             dismissButton = { BotonTexto(onClick = { detalle = null }) { Text("cerrar") } })
     }
