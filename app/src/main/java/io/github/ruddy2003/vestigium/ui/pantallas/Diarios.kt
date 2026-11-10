@@ -132,7 +132,7 @@ fun PantallaDiario(nav: Nav) {
         // El diario de hoy, como objeto del tema: al tocarlo se abre a pantalla completa.
         val hoy = Fechas.diaLogico()
         Seccion("Hoy", "Toca para escribir. Se guarda mientras escribes.") {
-            io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 14.dp)) {
+            io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 14.dp), luz = true) {
                 io.github.ruddy2003.vestigium.ui.ObjetoDiario(hoy, Repo.dias[hoy]?.nota.orEmpty()) { escribiendo = hoy }
             }
         }
@@ -166,7 +166,7 @@ fun PantallaDiario(nav: Nav) {
         }
         Seccion("Ideario", if (Repo.ideas.isEmpty()) "Lo que aprendiste y pensaste, un cajón por tema." else "${porNumero(Repo.ideas.size, "1 idea", "${Repo.ideas.size} ideas")} · ${io.github.ruddy2003.vestigium.data.Ideario.temas(Repo.ideas).size} temas") {
             if (Repo.ideas.isEmpty()) Vacio("Anota una idea y ponle un tema: cada tema es un cajón del fichero.")
-            else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(10.dp)) { FicheroIdeas(nav, Repo.ideas, max = 6) }
+            else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(10.dp), luz = true) { FicheroIdeas(nav, Repo.ideas, max = 6) }
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BotonSecundario("entrar al Ideario →", Modifier.weight(1f)) { nav.ir("biblioteca_ideas") }
                 BotonSecundario("＋ idea", Modifier.weight(1f)) { EdicionIdea.abrir(nav, EdicionIdea.nueva()) }
@@ -184,7 +184,7 @@ fun PantallaDiario(nav: Nav) {
         }
         val cartas = remember(Repo.cartas) { Repo.cartas.sortedByDescending { it.escrita }.take(2) }
         Seccion("Cartas", if (Repo.cartas.isEmpty()) "A tu yo del futuro y a otras personas." else "${Repo.cartas.size} ${if (Repo.cartas.size == 1) "carta" else "cartas"}") {
-            if (cartas.isNotEmpty()) io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(12.dp)) { Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (cartas.isNotEmpty()) io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(12.dp), luz = true) { Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 cartas.forEach { c -> io.github.ruddy2003.vestigium.ui.SobreCarta(c, Modifier.weight(1f).height(112.dp)) { nav.ir("cartas") } }
                 if (cartas.size == 1) androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
             } }

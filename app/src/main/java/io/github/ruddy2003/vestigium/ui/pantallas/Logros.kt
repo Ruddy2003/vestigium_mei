@@ -453,7 +453,7 @@ fun RecuadroLogros(nav: Nav) {
     }
     // La antesala del Hall (lote E6): el salón del tema en pequeño, con los últimos trofeos al frente.
     val tema = Estilo.tema
-    Recuadro("Logros", detalle, alto = 150.dp, onClick = { nav.ir("logros") }) {
+    Recuadro("Logros", detalle, alto = 150.dp, luz = true, onClick = { nav.ir("logros") }) {
         Box(Modifier.fillMaxSize().clipToBounds()) {
             Canvas(Modifier.fillMaxWidth().requiredHeight(420.dp).align(Alignment.TopCenter)) {
                 clipRect {

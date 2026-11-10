@@ -31,8 +31,16 @@ El autor pidió:
   - en reposo, 8 direcciones y 2 anillos, con alcance de 2,5 dp y una opacidad total de 0,16;
   - encendida, 16 direcciones y 4 anillos, con alcance de 7 dp y una opacidad total de 0,66.
 - **Encima** va el objeto tal cual, así que el aura solo se ve por fuera.
-- **Cuándo se enciende:** mientras hay un dedo encima (al tocar o al deslizar) o un puntero. Tarda 140 ms en encenderse y 520 ms en apagarse; sin animaciones, cambia de golpe.
+- **Cuándo se enciende:** mientras hay un dedo encima (al tocar) o un puntero. Tarda 140 ms en encenderse y 260 ms en apagarse; sin animaciones, cambia de golpe. Desde el 10 nov 2026 se apaga si el dedo arrastra (la pantalla se está desplazando) y solo usa las 16 direcciones y los 4 anillos cuando ya está encendida del todo; mientras cambia van las 8 y 2 del reposo.
 - **No quita el toque:** solo mira los toques y no los consume, así que cada objeto sigue abriéndose como antes.
+
+### Fluidez y luz (10 nov 2026)
+
+- **La escena se guarda como imagen.** `Escena` va en una capa `Offscreen`: la pared, el mueble y las auras en reposo se trazan una vez, y cada cuadro solo pega la imagen mientras nada cambie dentro. Antes, con el fondo vivo a 60 cuadros por segundo, cada cuadro volvía a trazar todo lo visible, con las 17 copias del aura de cada objeto. El costo en el teléfono no se midió: hay que probarlo en la APK.
+- **La lámpara, solo en los modos oscuros.** `Escena(luz = true)` pone un charco de luz cálida que cae desde arriba sobre la pared (`luzEnPared`), con las esquinas más hondas, y suma esa luz sobre la parte alta del mueble (`luzEnMueble`, `BlendMode.Plus`). El color es el acento del tema entibiado un 60 % hacia el ámbar claro (`luzCalida`).
+  - La llevan: en Diario, la escena de hoy, el Ideario y las cartas; en Vida, Social, Logros y Otras vidas. Las demás quedan en penumbra a propósito: de ese contraste sale que lo iluminado se note.
+  - De día no hace nada. Básico no la lleva.
+- **Objetos que toman la luz.** Con `halo(realce = true)` (el diario de hoy y los sobres), en los modos oscuros el aura en reposo es cálida, más viva (0,30 en vez de 0,16) y asoma por el borde de arriba y los costados; al tocar vuelve a centrarse.
 
 ### Sin aura, porque el mueble entero es un botón
 

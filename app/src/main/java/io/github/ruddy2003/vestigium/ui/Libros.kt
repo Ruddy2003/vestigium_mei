@@ -1274,7 +1274,7 @@ fun ObjetoDiario(fecha: String, texto: String, modifier: Modifier = Modifier, te
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val abre = remember { androidx.compose.animation.core.Animatable(0f) }
     val animar = Repo.config.animaciones
-    TapaDiario(fecha, texto, modifier.halo().clickable {
+    TapaDiario(fecha, texto, modifier.halo(realce = true).clickable {
         sentir(Sentidos.Evento.ABRIR)
         if (animar) scope.launch { abre.animateTo(1f, androidx.compose.animation.core.tween(300)); onClick(); abre.snapTo(0f) } else onClick()
     }, tema, noche) { abre.value }
