@@ -409,7 +409,8 @@ fun AQuienConoce(nombre: String) {
     if (otras.isEmpty()) return
     var buscar by remember(nombre) { mutableStateOf("") }
     Etiqueta("¿A quién conoce?")
-    Ayuda("Toca para cambiar: se conocen → familia entre sí → pareja → colegas → no se conocen → sin decir.")
+    Ayuda("Marca un vínculo solo si tendrían trato entre sí aunque tú no estuvieras.")
+    Ayuda("Toca para cambiar: se conocen → amigos → familia entre sí → pareja → colegas → se conocen, sin trato → no se conocen → sin decir. «Sin trato» y «no se conocen» se guardan, pero no cuentan como línea de la red.")
     if (otras.size > 12) CampoTexto(value = buscar, onValueChange = { buscar = it }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), singleLine = true,
         placeholder = { Text("Buscar entre ${otras.size} personas") })
     val q = buscar.trim().lowercase().removePrefix("@")
@@ -418,7 +419,7 @@ fun AQuienConoce(nombre: String) {
     FlowRow(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         visibles.forEach { o ->
             val t = RedPersonas.tipo(nombre, o)
-            Ficha("@$o" + (t?.let { " · " + RedPersonas.nombreTipo(it).lowercase() } ?: ""), t != null && t != "no_se_conocen") { RedPersonas.poner(nombre, o, RedPersonas.siguiente(t)) }
+            Ficha("@$o" + (t?.let { " · " + RedPersonas.nombreTipo(it).lowercase() } ?: ""), t != null && RedPersonas.une(t)) { RedPersonas.poner(nombre, o, RedPersonas.siguiente(t)) }
         }
     }
 }

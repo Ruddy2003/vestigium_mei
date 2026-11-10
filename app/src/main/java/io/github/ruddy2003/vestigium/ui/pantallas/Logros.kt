@@ -636,11 +636,11 @@ private fun EditorLogro(previo: LogroPropio? = null, cerrar: () -> Unit) {
                     }
                 }
                 FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Ficha("pasa de", !umbralMax) { umbralMax = false }
+                    Ficha("más de", !umbralMax) { umbralMax = false }
                     Ficha("queda en o menos de", umbralMax) { umbralMax = true }
                 }
                 CampoTexto(umbral, { umbral = io.github.ruddy2003.vestigium.data.Dinero.limpiarMonto(it) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
-                    label = { Text(if (umbralMax) "Un día cuenta si queda en… o menos" else "Un día cuenta si pasa de… (opcional)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                    label = { Text(if (umbralMax) "Un día cuenta si queda en… o menos" else "Un día cuenta con más de… (no igual; opcional)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
             }
         }
         Etiqueta("Cómo se cuenta")

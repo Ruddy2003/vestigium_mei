@@ -242,8 +242,10 @@ fun TiposDeLugar(modifier: Modifier = Modifier) {
 @Composable
 fun PantallaNotas(nav: Nav) {
     val ctx = LocalContext.current
-    var texto by remember { mutableStateOf("") }
-    var tipo by remember { mutableStateOf("idea") }
+    // El borrador no se pierde (hallazgo 8): sobrevive a que Android rehaga la pantalla (`rememberSaveable`) y, mientras la
+    // app siga abierta, a salir con «atrás» y volver a entrar ([BorradorNota]). Se vacía al guardar la nota.
+    var texto by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(BorradorNota.texto) }
+    var tipo by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(BorradorNota.tipo) }
     var recordar by remember { mutableStateOf<String?>(null) }
     // null = el día lógico de hoy; se puede mover a otro día (N-11).
     var paraDia by remember { mutableStateOf<String?>(Seleccion.notaPara.also { Seleccion.notaPara = null }) }
@@ -251,12 +253,16 @@ fun PantallaNotas(nav: Nav) {
     var filtro by remember { mutableStateOf("todas") }
     var editando by remember { mutableStateOf<Nota?>(null) }
     val marcas = rememberMarcas()
-    Hoja("Notas", nav.atras, "Ideas, pensamientos especiales, propósitos y recordatorios. Con @persona y #tema, fijar arriba y buscar.") {
+    Hoja("Notas", nav.atras, "Propósitos y recordatorios (y tus notas de antes). Con @persona y #tema, fijar arriba y buscar.") {
         Tarjeta(Modifier.padding(top = 10.dp)) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Catalogo.TIPOS_NOTA.forEach { o -> Ficha(o.nombre, tipo == o.id) { tipo = o.id } }
+                // Las notas nuevas ya no se ofrecen como «idea» ni «pensamiento» (hallazgo 31): las ideas van al Ideario y los
+                // pensamientos, al registro de ánimo. Las notas viejas de esos tipos se conservan, se ven y se filtran abajo.
+                Catalogo.TIPOS_NOTA.filter { it.id in TIPOS_NOTA_NUEVA }.forEach { o -> Ficha(o.nombre, tipo == o.id) { tipo = o.id; BorradorNota.tipo = o.id } }
             }
-            CampoTexto(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), minLines = 3,
+            Text("¿es una idea? al Ideario →", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable { EdicionIdea.abrir(nav, EdicionIdea.nueva(paraDia ?: Fechas.diaLogico())) }.padding(vertical = 6.dp))
+            CampoTexto(value = texto, onValueChange = { texto = it; BorradorNota.texto = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), minLines = 3,
                 placeholder = { Text("Escribe… usa @persona y #tema") }, visualTransformation = marcas)
             if (tipo == "recordatorio") Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Ficha(recordar?.let { "el ${Fechas.corto(it)}" } ?: "¿qué día?", recordar != null) { elegirFecha(ctx, recordar, desdeManana = false) { recordar = it } }
@@ -271,7 +277,7 @@ fun PantallaNotas(nav: Nav) {
             if (paraDia == null) io.github.ruddy2003.vestigium.ui.AvisoMadrugada()
             BotonPrincipal("Guardar nota", Modifier.fillMaxWidth().padding(top = 10.dp), habilitado = texto.isNotBlank()) {
                 Repo.guardarNota(Nota(Repo.nuevoId(), Fechas.ahoraIso(), dia, texto.trim(), tipo, recordar_el = recordar.takeIf { tipo == "recordatorio" }))
-                texto = ""; recordar = null; paraDia = null
+                texto = ""; BorradorNota.texto = ""; recordar = null; paraDia = null
             }
         }
         CampoTexto(value = buscar, onValueChange = { buscar = it }, modifier = Modifier.fillMaxWidth().padding(top = 14.dp), singleLine = true,
@@ -287,6 +293,15 @@ fun PantallaNotas(nav: Nav) {
         lista.forEach { n -> FilaNota(n, onEditar = { editando = n }) }
     }
     editando?.let { n -> DialogoNota(n) { editando = null } }
+}
+
+/** Los tipos que se ofrecen al escribir una nota nueva. Los demás de [Catalogo.TIPOS_NOTA] siguen existiendo para las notas ya guardadas. */
+private val TIPOS_NOTA_NUEVA = setOf("proposito", "recordatorio")
+
+/** El borrador de la nota que se está escribiendo, mientras la app siga abierta. No se guarda en ningún lado. */
+private object BorradorNota {
+    var texto: String = ""
+    var tipo: String = "proposito"
 }
 
 /** Corregir una nota: texto, tipo, fecha y recordatorio; borrar pide confirmación y deja deshacer (N-11). */
@@ -598,7 +613,7 @@ fun SemanaCorta(d: Dia, abrirNoche: () -> Unit) {
             Cifra(pasos?.let { "%,d".format(it) } ?: "—", "pasos", Modifier.weight(1f))
         }
         Spacer(Modifier.height(14.dp))
-        BotonPrincipal("Ánimo ahora", Modifier.fillMaxWidth()) {
+        BotonPrincipal("Registro de ánimo", Modifier.fillMaxWidth()) {
             ctx.startActivity(Intent(ctx, QuickActivity::class.java).putExtra(QuickActivity.MODO, QuickActivity.M_ANIMO).putExtra(QuickActivity.ORIGEN, "app").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

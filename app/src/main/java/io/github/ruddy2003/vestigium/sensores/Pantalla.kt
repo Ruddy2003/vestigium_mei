@@ -93,7 +93,8 @@ object Pantalla {
             primer_uso = primero?.let { Fechas.isoDeMillis(it) },
             ultimo_uso = ultimo?.let { Fechas.isoDeMillis(it) },
             por_app_min = mins,
-            por_hora_min = porHora.map { (it / 60_000).toInt() },
+            // Al minuto más cercano: truncando, las 24 horas sumaban unos minutos menos que el total del día.
+            por_hora_min = porHora.map { Math.round(it / 60_000.0).toInt() },
             cama_min = sueno?.first,
             dormir_tras_tel_min = sueno?.second,
             tel_tras_despertar_min = sueno?.third,
@@ -141,7 +142,13 @@ object Pantalla {
     fun sincronizar(ctx: Context, dias: Int = 2) {
         for (i in 0 until dias) {
             val f = Fechas.sumar(Fechas.diaLogico(), -i.toLong())
-            calcular(ctx, f)?.let { Repo.guardarPantalla(it) }
+            val p = calcular(ctx, f) ?: continue
+            // El sistema no devolvió ningún uso (teléfono nuevo: el historial de uso no viaja con el respaldo, o ya caducó) y ese
+            // día ya tenía minutos: se queda lo que había. Una relectura vacía no pisa un día bueno (H-22-3).
+            val previo = Repo.pantalla[f]
+            val vacio = p.total_min == 0 && p.desbloqueos == 0 && p.primer_uso == null && p.ultimo_uso == null && p.por_app_min.isEmpty()
+            if (vacio && previo != null && previo.total_min > 0) continue
+            Repo.guardarPantalla(p)
         }
     }
 }

@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -170,6 +171,12 @@ class QuickActivity : FragmentActivity() {
                     var momentoAbierto by remember { mutableStateOf(pantallaInicial == M_ANIMO) }
                     var desdeMomento by remember { mutableStateOf(false) }
                     var anotadoFuera by remember { mutableStateOf<List<String>>(emptyList()) }
+                    // El registro de ánimo que creó el toque en la cuadrícula del menú ⊕ (hallazgo 7): se sigue completando en «¿Cómo estás ahora?».
+                    var delMenu by remember { mutableStateOf<Momento?>(null) }
+                    // Lo que se abrió desde el menú ⊕ y todavía no guarda nada: «atrás» regresa al menú.
+                    var desdeMenu by remember { mutableStateOf(false) }
+                    // «Otra vez: <última sustancia>» del menú: abre Sustancias con esa ya elegida.
+                    var sustanciaMenu by remember { mutableStateOf<String?>(null) }
                     val foco = androidx.compose.ui.platform.LocalFocusManager.current
                     androidx.compose.runtime.DisposableEffect(Unit) {
                         volverAlMomento = {
@@ -185,12 +192,25 @@ class QuickActivity : FragmentActivity() {
                         }
                         onDispose { volverAlMomento = null }
                     }
-                    // «Atrás» desde lo que se abrió en el momento también regresa a él.
-                    androidx.activity.compose.BackHandler(enabled = desdeMomento && pantalla != M_ANIMO) { terminar() }
+                    // «Atrás», igual en toda la hoja (hallazgo 8): con algo sin guardar, el mismo aviso que al tocar fuera; desde lo
+                    // que se abrió en el momento, de vuelta a él; desde un formulario abierto en el menú, de vuelta al menú; si no, cierra.
+                    androidx.activity.compose.BackHandler {
+                        if (avisarSinGuardar()) return@BackHandler
+                        if (desdeMomento && pantalla != M_ANIMO) terminar()
+                        else if (desdeMenu && (pantalla == M_GASTO || pantalla == M_CONSUMO || pantalla == M_SUENO || pantalla == M_MINIMO)) {
+                            sinGuardar = false; avisado = false; desdeMenu = false; foco.clearFocus(); pantalla = M_MENU
+                        } else terminar()
+                    }
+                    // «Listo» fijo al pie donde todo se guarda al tocar (ánimo, impulso y demás capturas, sueño): no hay que desplazar para cerrar.
+                    val conPie = pantalla == M_ANIMO || pantalla == M_SUENO || (pantalla == "privado" && privado != null)
+                    val pieListo: @Composable () -> Unit = {
+                        Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.End) { BotonPrincipal("Listo") { terminar() } }
+                    }
                     HojaQuick(Modifier.fillMaxWidth().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
-                        .navigationBarsPadding().imePadding()) {
+                        .navigationBarsPadding().imePadding(), pie = if (conPie) pieListo else null) {
                         val ir: (String) -> Unit = { destino ->
                             if (pantalla == M_ANIMO && destino != M_ANIMO) { desdeMomento = true; foco.clearFocus() }
+                            desdeMenu = pantalla == M_MENU
                             if (destino == M_ANIMO) momentoAbierto = true
                             when (destino) {
                                 // «privado» es la hoja de captura de un momento; el episodio, que no es privado, también va por ahí.
@@ -199,17 +219,29 @@ class QuickActivity : FragmentActivity() {
                             }
                         }
                         // Oculto no se mide ni se dibuja ni recibe toques, pero conserva lo escrito.
-                        if (momentoAbierto) Column(Modifier.fillMaxWidth().soloVisible(pantalla == M_ANIMO)) { Animo(inicial, origen, avisoMs, anotadoFuera, ir) }
+                        if (momentoAbierto) Column(Modifier.fillMaxWidth().soloVisible(pantalla == M_ANIMO)) {
+                            Animo(inicial ?: delMenu, origen, avisoMs, anotadoFuera, ir, deMenu = inicial == null && delMenu != null)
+                        }
+                        // El toque en la cuadrícula del menú guarda el registro de ánimo (mismo tipo y mismo origen que «Ánimo ahora») y lo abre.
+                        val animoDelMenu: (Int, Int) -> Unit = { v, a ->
+                            if (momentoAbierto) pantalla = M_ANIMO
+                            else if (delMenu == null) {
+                                val n = crear("animo", origen, v, null).copy(activacion = a)
+                                Repo.guardarMomento(n)
+                                delMenu = n; momentoAbierto = true; desdeMenu = false; pantalla = M_ANIMO
+                            }
+                        }
+                        val menu: @Composable () -> Unit = { Registrar(ir, origen, animoDelMenu) { s -> sustanciaMenu = s; ir(M_CONSUMO) } }
                         when (pantalla) {
                             M_ANIMO -> Unit
-                            "privado" -> privado?.let { androidx.compose.runtime.key(it.id) { MomentoCaptura(it) } } ?: Registrar(ir)
-                            M_MENU -> Registrar(ir)
+                            "privado" -> privado?.let { androidx.compose.runtime.key(it.id) { MomentoCaptura(it) } } ?: menu()
+                            M_MENU -> menu()
                             M_GASTO -> GastoRapido(catInicial, subInicial, gastoInicial)
                             M_SUENO -> SuenoRapido()
                             M_MINIMO -> Minimo()
                             M_ENFOQUE, M_SIESTA -> androidx.compose.runtime.LaunchedEffect(Unit) { abrirReloj(pantalla == M_SIESTA); terminar() }
-                            M_CONSUMO -> ConsumoRapido(consumoId, sustanciaInicial, origen)
-                            else -> Registrar(ir)
+                            M_CONSUMO -> ConsumoRapido(consumoId, sustanciaMenu ?: sustanciaInicial, origen)
+                            else -> menu()
                         }
                     }
                     // La barra de «deshacer» también aquí (por ejemplo, al borrar un consumo).
@@ -225,13 +257,19 @@ class QuickActivity : FragmentActivity() {
     /** Cierra lo que está abierto: de vuelta al momento si se abrió desde él; si no, la hoja entera. */
     private fun terminar() { runCatching { Widgets.actualizar(this) }; if (volverAlMomento?.invoke() == true) return; finish() }
 
-    /** Hay algo escrito que no se ha guardado (el monto de un gasto): tocar fuera avisa una vez antes de cerrar. */
+    /** Hay algo escrito que no se ha guardado (el monto de un gasto, una sustancia a medias): tocar fuera o «atrás» avisan una vez antes de cerrar. */
     private var sinGuardar = false
     private var avisado = false
-    private fun tocarFuera() {
-        if (sinGuardar && !avisado) { avisado = true; Toast.makeText(this, "Tienes un monto sin registrar. Toca fuera otra vez para salir sin guardarlo.", Toast.LENGTH_LONG).show() }
-        else terminar()
+    /** Qué es lo que falta guardar, para el aviso. */
+    private var queFalta = "un monto sin guardar"
+    /** Si hay algo sin guardar y todavía no se avisó, avisa y devuelve true (no se cierra); si no, false. */
+    private fun avisarSinGuardar(): Boolean {
+        if (!sinGuardar || avisado) return false
+        avisado = true
+        Toast.makeText(this, "Tienes $queFalta. Toca fuera o «atrás» otra vez para salir sin guardarlo.", Toast.LENGTH_LONG).show()
+        return true
     }
+    private fun tocarFuera() { if (!avisarSinGuardar()) terminar() }
 
     /** Cómo estaba el día antes de registrar una recaída, para que «Deshacer» lo deje igual. */
     private var previoRecaida: io.github.ruddy2003.vestigium.data.Recaidas.Previo? = null
@@ -304,10 +342,16 @@ class QuickActivity : FragmentActivity() {
 
     /** El menú del botón ⊕: todo lo que se registra, en botones grandes. */
     @Composable
-    private fun Registrar(ir: (String) -> Unit) {
+    private fun Registrar(ir: (String) -> Unit, origen: String, alAnimo: (Int, Int) -> Unit, otraVez: (String) -> Unit) {
         val cs = MaterialTheme.colorScheme
         val forma = formaPiezaQuick(Estilo.tema)
-        Encabezado("Registrar", "Lo de todos los días en un toque. Lo demás, cuando quieras.")
+        // Lo que llega a la app desde aquí se apila sobre lo que tenías abierto si el ⊕ se tocó dentro de la app (hallazgo 15).
+        fun abrirEnApp(ruta: String) {
+            startActivity(android.content.Intent(this@QuickActivity, MainActivity::class.java).putExtra(MainActivity.PANTALLA, ruta)
+                .putExtra(MainActivity.APILAR, origen == "app")
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish()
+        }
+        Encabezado("Registrar", "Un toque en el cuadro guarda tu registro de ánimo. Lo demás, debajo.")
         val botones = listOfNotNull(
             "Enfoque" to M_ENFOQUE, "Siesta" to M_SIESTA, "Sustancias" to M_CONSUMO, "Gasto o ingreso" to M_GASTO, "Sueño" to M_SUENO, "Llenar el día" to "diario",
             "Nota" to "notas", "Idea" to "idea_nueva", "Episodio" to "episodio", "Impulso" to "impulso", if (Repo.config.seguimiento_privado) "Recaída" to "recaida" else null,
@@ -315,10 +359,33 @@ class QuickActivity : FragmentActivity() {
             if (Repo.config.seguimiento_privado) "Masturbación" to "masturbacion" else null,
             if (Repo.config.seguimiento_privado) "Intimidad" to "intimidad" else null,
         )
-        MenuQuick(botones) { d ->
-            if (d == "diario" || d == "notas" || d == "idea_nueva") { startActivity(android.content.Intent(this@QuickActivity, MainActivity::class.java).putExtra(MainActivity.PANTALLA, d)
-                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish() }
+        // Arriba, la cuadrícula del ánimo ya a la vista (hallazgo 7): el toque guarda y abre «¿Cómo estás ahora?» con lo demás.
+        MenuQuick(botones, arriba = {
+            CuadriculaAfecto(null, null) { v, a -> alAnimo(v, a) }
+            BotonTexto(onClick = { ir(M_ANIMO) }) { Text("sin el cuadro: qué sientes, qué piensas o anotarlo en otra hora →", style = MaterialTheme.typography.labelLarge) }
+        }) { d ->
+            if (d == "diario" || d == "notas" || d == "idea_nueva") abrirEnApp(d)
             else ir(d)
+        }
+        // Gastos frecuentes: un toque registra (los cuatro primeros; los demás, en «Gasto o ingreso»).
+        val frecuentes = remember { io.github.ruddy2003.vestigium.data.Dinero.frecuentes(4) }
+        val abiertosAhora = io.github.ruddy2003.vestigium.data.Sustancias.abiertos()
+        // «Otra vez»: la última sustancia que anotaste (si no la tienes oculta ni sigue en curso).
+        val ultima = Repo.consumos.lastOrNull()?.takeIf { u -> io.github.ruddy2003.vestigium.data.Sustancias.visible(u) && abiertosAhora.none { it.id == u.id } }
+        if (frecuentes.isNotEmpty() || ultima != null) {
+            FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                frecuentes.forEach { f ->
+                    val rotulo = "${f.sub} ${io.github.ruddy2003.vestigium.ui.pantallas.dinero(f.monto)}"
+                    Ficha(rotulo, false) {
+                        val (g, nuevo) = io.github.ruddy2003.vestigium.data.Dinero.registrarFrecuente(f.categoria, f.sub, f.monto)
+                        if (nuevo) {
+                            ubicarGasto(g)
+                            io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Gasto registrado: $rotulo") { Repo.borrarGasto(g.id) }
+                        } else Toast.makeText(this@QuickActivity, "Ya estaba registrado: $rotulo", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                ultima?.let { u -> Ficha("otra vez: " + Catalogo.nombreSustancia(u).lowercase(), false) { otraVez(u.sustancia) } }
+            }
         }
         // Suplementos: un toque anota la dosis habitual. Con una toma ya hecha hoy, el toque suma otra (esquema 21: se pueden
         // varias al día) y la barra de abajo deja deshacerla durante 5 segundos.
@@ -346,6 +413,16 @@ class QuickActivity : FragmentActivity() {
         val abiertos = io.github.ruddy2003.vestigium.data.Sustancias.abiertos()
         if (abiertos.isNotEmpty()) Ayuda("En curso: " + abiertos.joinToString(", ") { if (io.github.ruddy2003.vestigium.data.Sustancias.visible(it)) Catalogo.nombreSustancia(it).lowercase() else "un registro" } +
             ". Tócalo en «Sustancias» para cambiar el nivel o decir que ya se te pasó.", Modifier.padding(top = 10.dp))
+        // «Tus atajos» ★ (los que fijaste en «Más»), también aquí al pie (hallazgo 17).
+        val atajos = Repo.config.favoritos_mas.mapNotNull { io.github.ruddy2003.vestigium.ui.pantallas.Pantallas.de(it) }
+        if (atajos.isNotEmpty()) {
+            Etiqueta("★ Tus atajos")
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                atajos.forEach { a -> Ficha(Estilo.seccion(a.titulo, Romano.latin(a.titulo)).let { (n, _) -> Estilo.conEspanol(n, a.titulo) }, false) {
+                    io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.limpiarFechas(); abrirEnApp(a.ruta)
+                } }
+            }
+        }
     }
 
     /**
@@ -354,7 +431,7 @@ class QuickActivity : FragmentActivity() {
      * De un aviso se guarda como «muestreo»; si lo abres tú, como «animo».
      */
     @Composable
-    private fun Animo(inicial: Momento?, origen: String, avisoMs: Long?, anotadoFuera: List<String>, ir: (String) -> Unit) {
+    private fun Animo(inicial: Momento?, origen: String, avisoMs: Long?, anotadoFuera: List<String>, ir: (String) -> Unit, deMenu: Boolean = false) {
         var m by remember { mutableStateOf(inicial) }
         var valencia by remember { mutableStateOf(inicial?.valencia) }
         var activacion by remember { mutableStateOf(inicial?.activacion) }
@@ -384,11 +461,12 @@ class QuickActivity : FragmentActivity() {
         }
         Encabezado("¿Cómo estás ahora?", if (m != null) "Guardado a las ${Fechas.horaDe(m!!.ts)} del ${Fechas.titulo(m!!.fecha).lowercase()}. Lo demás es opcional; puedes cerrar." else "Un toque en el cuadro basta.")
         // Lo guardó el toque en el widget o en el aviso: se dice qué quedó y se puede borrar si fue sin querer (N-15).
-        if (inicial != null && m != null) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        if (inicial != null && !deMenu && m != null) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("Guardado con el toque" + (m!!.valencia?.let { ": $it/7" } ?: "") + ".", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
             BotonTexto(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("borrar") }
         }
-        if (avisoMs == null && inicial == null) {
+        // También cuando lo guardó el toque en la cuadrícula del menú ⊕: se puede mover a otra hora.
+        if (avisoMs == null && (inicial == null || deMenu)) {
             if (!elegirCuando) BotonTexto(onClick = { elegirCuando = true }) {
                 Text(if (cuando == null) "¿fue antes? anotarlo en otra hora o día" else "cuándo: ${Fechas.corto(Fechas.diaLogicoDeMillis(cuando!!.aMillis()))} ${"%02d:%02d".format(cuando!!.hour, cuando!!.minute)}",
                     style = MaterialTheme.typography.labelLarge)
@@ -444,11 +522,9 @@ class QuickActivity : FragmentActivity() {
                 GastoRapido(null, null, null, embebido = true, cuandoInicial = cuando) { t -> anotado = anotado + t; dinero = false }
             }
         }
-        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            if (m != null) BotonTexto(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
-            else Spacer(Modifier.width(1.dp))
-            BotonPrincipal("Listo") { terminar() }
-        }
+        // «Listo» va fijo al pie de la hoja (hallazgo 7); aquí solo queda borrar.
+        if (m != null) BotonTexto(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() },
+            modifier = Modifier.padding(top = 14.dp)) { Text("Borrar este registro") }
     }
 
     /** Si hay una sustancia en curso: su nivel ahora y «ya se me pasó», sin salir del ánimo. */
@@ -496,14 +572,12 @@ class QuickActivity : FragmentActivity() {
         Escala(intensidad, 1, 5, mapOf(1 to "Muy leve", 2 to "Leve", 3 to "Moderada", 4 to "Fuerte", 5 to "Muy fuerte")) { v ->
             intensidad = v; actualizar(mm.id) { it.copy(intensidad = v) }
         }
-        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            BotonTexto(onClick = {
-                Repo.borrarMomento(mm.id)
-                previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }; previoRecaida = null
-                Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar()
-            }) { Text("Borrar este registro") }
-            BotonPrincipal("Listo") { terminar() }
-        }
+        // «Listo» va fijo al pie de la hoja.
+        BotonTexto(onClick = {
+            Repo.borrarMomento(mm.id)
+            previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }; previoRecaida = null
+            Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar()
+        }, modifier = Modifier.padding(top = 14.dp)) { Text("Borrar este registro") }
     }
 
     /**
@@ -522,14 +596,13 @@ class QuickActivity : FragmentActivity() {
             Catalogo.FOCOS.forEach { o -> Ficha(o.nombre, foco == o.id) { foco = if (foco == o.id) null else o.id; actualizar(mm.id) { it.copy(foco = foco) } } }
         }
         Ayuda("Solo para ti: no sale en reportes, logros, «Tu año», mapas ni widgets. Sí en tu exportación a R.", Modifier.padding(top = 10.dp))
-        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             if (impulso == null) BotonTexto(onClick = {
                 val i = Momento(Repo.nuevoId(), mm.ts, mm.fecha, "impulso", intensidad = nivel?.coerceIn(1, 5), lat = mm.lat, lon = mm.lon, lugar = mm.lugar, origen = mm.origen, ts_creado = Fechas.ahoraIso())
                 Repo.guardarMomento(i); impulso = i
                 Toast.makeText(this@QuickActivity, "Impulso registrado a la misma hora", Toast.LENGTH_SHORT).show()
             }) { Text("también es un impulso") }
             else BotonTexto(onClick = { impulso?.let { Repo.borrarMomento(it.id) }; impulso = null }) { Text("quitar el impulso") }
-            BotonPrincipal("Listo") { terminar() }
         }
         BotonTexto(onClick = { Repo.borrarMomento(mm.id); impulso?.let { Repo.borrarMomento(it.id) }; Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
     }
@@ -622,10 +695,8 @@ class QuickActivity : FragmentActivity() {
 
     @Composable
     private fun PieCaptura(mm: Momento) {
-        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            BotonTexto(onClick = { borrarCaptura(mm) }) { Text("Borrar este registro") }
-            BotonPrincipal("Listo") { terminar() }
-        }
+        // «Listo» va fijo al pie de la hoja.
+        BotonTexto(onClick = { borrarCaptura(mm) }, modifier = Modifier.padding(top = 14.dp)) { Text("Borrar este registro") }
     }
 
     /**
@@ -733,7 +804,7 @@ class QuickActivity : FragmentActivity() {
             Etiqueta("¿Ya se te pasó? ¿A qué hora?")
             SelectorHora(fin, atajos = listOf(15, 30, 60)) { fin = it }
             Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                BotonTexto(onClick = { terminar() }) { Text("sigue") }
+                BotonTexto(onClick = { terminar() }) { Text("Listo") }
                 BotonPrincipal("Ya se me pasó") {
                     sus.cerrar(Repo.consumo(abierto.id) ?: abierto, (fin ?: java.time.LocalDateTime.now()).aMillis())
                     Toast.makeText(ctx, "Anotado. Mañana te pregunto cómo terminó.", Toast.LENGTH_SHORT).show(); terminar()
@@ -748,6 +819,12 @@ class QuickActivity : FragmentActivity() {
         var via by remember(id) { mutableStateOf<String?>(null) }
         var otra by remember(id) { mutableStateOf("") }
         var con by remember(id) { mutableStateOf<List<String>>(emptyList()) }
+        // Con algo ya puesto y sin guardar, tocar fuera o «atrás» avisan una vez (hallazgo 8).
+        androidx.compose.runtime.SideEffect {
+            sinGuardar = !guardado && (cuando != null || nivel != null || cantidad > 0 || via != null || otra.isNotBlank() || con.isNotEmpty())
+            if (sinGuardar) queFalta = "una sustancia sin guardar"
+        }
+        androidx.compose.runtime.DisposableEffect(Unit) { onDispose { sinGuardar = false; avisado = false } }
         if (id == "otra") CampoTexto(value = otra, onValueChange = { otra = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("¿Cuál?") })
         Etiqueta(if (info.conNivel) "¿Desde cuándo?" else "¿Cuándo?")
         SelectorHora(cuando, atajos = listOf(30, 60, 120, 180)) { cuando = it }
@@ -769,11 +846,11 @@ class QuickActivity : FragmentActivity() {
             BotonPrincipal("Guardar", habilitado = (id != "otra" || otra.isNotBlank()) && !guardado) {
                 // Un toque doble no guarda dos consumos.
                 if (guardado) return@BotonPrincipal
-                guardado = true
+                guardado = true; sinGuardar = false
                 val ms = (cuando ?: java.time.LocalDateTime.now()).aMillis()
                 val c = sus.nuevo(id, ms, nivel, cantidad.takeIf { it > 0 }, via, otra, con, origen)
                 if (cuando == null) ubicarConsumo(c)
-                Toast.makeText(ctx, if (info.conNivel) "Guardado. Desde «Ánimo ahora» puedes decir cómo vas." else "Guardado", Toast.LENGTH_SHORT).show()
+                Toast.makeText(ctx, if (info.conNivel) "Guardado. Desde tu registro de ánimo puedes decir cómo vas." else "Guardado", Toast.LENGTH_SHORT).show()
                 terminar()
             }
         }
@@ -879,7 +956,7 @@ class QuickActivity : FragmentActivity() {
 
     /**
      * Gasto o ingreso (N-29). Arriba, «Gasto | Ingreso». En gasto, los frecuentes registran con un toque (⊕ → Gasto →
-     * Café: tres toques); si no, categoría → subcategoría (con su monto habitual) → «Registrar». Escribir el monto o la nota
+     * Café: tres toques); si no, categoría → subcategoría (con su monto habitual) → «Guardar gasto». Escribir el monto o la nota
      * queda para lo muy específico.
      */
     @Composable
@@ -892,7 +969,11 @@ class QuickActivity : FragmentActivity() {
         // El monto que puso la subcategoría: si eliges otra, se reemplaza; si lo escribiste tú, se respeta.
         var auto by remember { mutableStateOf<String?>(null) }
         var guardando by remember { mutableStateOf(false) }
-        androidx.compose.runtime.SideEffect { sinGuardar = monto.isNotBlank() && monto != auto && !guardando }
+        androidx.compose.runtime.SideEffect { sinGuardar = monto.isNotBlank() && monto != auto && !guardando; if (sinGuardar) queFalta = "un monto sin guardar" }
+        androidx.compose.runtime.DisposableEffect(Unit) { onDispose { sinGuardar = false; avisado = false } }
+        // El monto toma el foco al abrir «Gasto o ingreso» (hallazgo 17); no dentro del momento ni si un frecuente ya registró.
+        val focoMonto = remember { androidx.compose.ui.focus.FocusRequester() }
+        if (!embebido && inicial == null) androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { focoMonto.requestFocus() } }
         var cat by remember { mutableStateOf(catInicial.takeIf { inicial == null }) }
         var sub by remember { mutableStateOf("") }
         var imprevisto by remember { mutableStateOf(false) }
@@ -943,7 +1024,7 @@ class QuickActivity : FragmentActivity() {
             }
         }
         Etiqueta(if (entra) "Monto" else "Otro gasto")
-        CampoTexto(value = monto, onValueChange = { monto = D.limpiarMonto(it); error = null }, modifier = Modifier.fillMaxWidth(),
+        CampoTexto(value = monto, onValueChange = { monto = D.limpiarMonto(it); error = null }, modifier = Modifier.fillMaxWidth().focusRequester(focoMonto),
             prefix = { Text("$ ") }, placeholder = { Text("0") }, singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), textStyle = MaterialTheme.typography.headlineSmall)
         Etiqueta("Categoría")
@@ -974,7 +1055,7 @@ class QuickActivity : FragmentActivity() {
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
             if (registrado != null && !embebido) BotonTexto(onClick = { terminar() }) { Text("Listo") }
-            BotonPrincipal(if (entra) "Registrar ingreso" else "Registrar gasto") {
+            BotonPrincipal(if (entra) "Guardar ingreso" else "Guardar gasto") {
                 // Un toque doble no registra dos veces.
                 if (guardando) return@BotonPrincipal
                 val v = monto.toDoubleOrNull()
@@ -1020,8 +1101,8 @@ class QuickActivity : FragmentActivity() {
             BotonTexto(onClick = { guardar(d.copy(sueno_calidad = null)) }) { Text("quitar") }
         }
         // La narración arriba, en el libro de noche del tema (es lo que se olvida primero); lo demás, debajo.
+        // «Listo» va fijo al pie de la hoja: todo esto se guarda al tocar.
         io.github.ruddy2003.vestigium.ui.FormularioSueno(fecha, d, narracionPrimero = true) { guardar(it) }
-        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End) { BotonPrincipal("Listo") { terminar() } }
     }
 
     @Composable
@@ -1044,20 +1125,23 @@ class QuickActivity : FragmentActivity() {
 /**
  * El marco de la hoja del registro rápido: el borde de arriba con la silueta del tema (frontón, arco polilobulado, alero de
  * pagoda, pestaña de carpeta, cartel arrancado…), la textura del fondo, el adorno de ese borde y la banda del tema.
- * [contenido] va debajo y se desplaza; el adorno se queda quieto arriba.
+ * [contenido] va debajo y se desplaza; el adorno se queda quieto arriba y [pie] (por ejemplo «Listo»), fijo abajo.
  */
 @Composable
-internal fun HojaQuick(modifier: Modifier = Modifier, contenido: @Composable ColumnScope.() -> Unit) {
+internal fun HojaQuick(modifier: Modifier = Modifier, pie: (@Composable () -> Unit)? = null, contenido: @Composable ColumnScope.() -> Unit) {
     val t = Estilo.tema
     val e = MaterialTheme.colorScheme
     Surface(modifier = modifier, shape = formaHojaQuick(t), color = e.background, border = BorderStroke(1.dp, e.outline)) {
         Column(
             Modifier.fondoTema(t, e).drawWithContent { drawContent(); with(io.github.ruddy2003.vestigium.ui.comun.disenoComun(t)) { adornoQuick(io.github.ruddy2003.vestigium.ui.comun.EstadoAdorno(e.primary, e.secondary, e.background), e.background.luminance() < 0.5f) } }
-                .padding(start = 18.dp, end = 18.dp, bottom = 18.dp, top = 12.dp + perfilHojaQuick(t))
-                .verticalScroll(rememberScrollState()),
+                .padding(start = 18.dp, end = 18.dp, bottom = 18.dp, top = 12.dp + perfilHojaQuick(t)),
         ) {
-            Meandro(Modifier.padding(bottom = 12.dp))
-            contenido()
+            // Lo que se desplaza ocupa lo que haga falta, sin pasar del alto de la pantalla; [pie] se queda siempre a la vista.
+            Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+                Meandro(Modifier.padding(bottom = 12.dp))
+                contenido()
+            }
+            pie?.invoke()
         }
     }
 }
@@ -1076,14 +1160,18 @@ internal fun EncabezadoQuick(titulo: String, linea: String, sub: String, aviso: 
     Ayuda(sub, Modifier.padding(top = 2.dp, bottom = 12.dp))
 }
 
-/** El menú del botón ⊕: «Ánimo ahora» grande y [botones] (texto y destino) de dos en dos, con la forma del tema. */
+/**
+ * El menú del botón ⊕: arriba [arriba] (la cuadrícula del ánimo, ya a la vista) o, sin ella, el botón grande del registro de
+ * ánimo; debajo, [botones] (texto y destino) de dos en dos, con la forma del tema.
+ */
 @Composable
-internal fun MenuQuick(botones: List<Pair<String, String>>, alElegir: (String) -> Unit) {
+internal fun MenuQuick(botones: List<Pair<String, String>>, arriba: (@Composable () -> Unit)? = null, alElegir: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
     val forma = formaPiezaQuick(Estilo.tema)
-    Surface(onClick = { alElegir(QuickActivity.M_ANIMO) }, modifier = Modifier.fillMaxWidth().heightIn(min = 76.dp), shape = forma, color = cs.primary) {
+    if (arriba != null) arriba()
+    else Surface(onClick = { alElegir(QuickActivity.M_ANIMO) }, modifier = Modifier.fillMaxWidth().heightIn(min = 76.dp), shape = forma, color = cs.primary) {
         Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Ánimo ahora", style = MaterialTheme.typography.titleLarge, color = cs.onPrimary)
+            Text("Registro de ánimo", style = MaterialTheme.typography.titleLarge, color = cs.onPrimary)
             Text("cómo estás, qué sientes y qué piensas", style = MaterialTheme.typography.labelMedium, color = cs.onPrimary.copy(alpha = 0.85f))
         }
     }

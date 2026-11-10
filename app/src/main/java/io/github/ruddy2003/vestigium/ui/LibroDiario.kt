@@ -424,14 +424,17 @@ object LibroDiario {
         val visitas = Repo.visitas.filter { it.entrada.take(10).startsWith(mes) && it.entrada.take(10) <= hasta }
         val nombres = Repo.lugares.associate { it.id to it.nombre }
         return ResumenMes(
-            mes = mes, dias = fechas.size, conDiario = dias.count { it.nota.isNotBlank() },
+            // Las mismas definiciones de los reportes (Periodo): día con diario = nota o valencia; sueño medio solo de noches de
+            // más de 120 min; pasos medios sin los días en cero; personas con la cuenta única (Personas.diasCon).
+            mes = mes, dias = fechas.size, conDiario = io.github.ruddy2003.vestigium.ciencia.Periodo.diasConDiario(fechas),
             animo = dias.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average(),
             energia = dias.mapNotNull { it.activacion }.takeIf { it.isNotEmpty() }?.average(),
-            suenoMin = fechas.mapNotNull { Repo.salud[it]?.sueno_min }.takeIf { it.isNotEmpty() }?.average(),
-            pasos = fechas.mapNotNull { Repo.salud[it]?.pasos }.takeIf { it.isNotEmpty() }?.average(),
+            suenoMin = io.github.ruddy2003.vestigium.ciencia.Periodo.suenoMedioH(fechas)?.times(60),
+            pasos = io.github.ruddy2003.vestigium.ciencia.Periodo.pasosMedios(fechas),
             gasto = gastos.sumOf { it.monto }, ingreso = Repo.ingresos.filter { it.dia.startsWith(mes) && it.dia <= hasta }.sumOf { it.monto },
             categorias = gastos.groupBy { it.categoria }.mapValues { e -> e.value.sumOf { it.monto } }.entries.sortedByDescending { it.value }.take(4).map { it.key to it.value },
-            personas = cuenta(dias.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct() }),
+            personas = if (fechas.isEmpty()) emptyList() else io.github.ruddy2003.vestigium.data.Personas.diasCon(fechas.first(), fechas.last()).map { it.key to it.value.size }
+                .sortedWith(compareByDescending<Pair<String, Int>> { it.second }.thenBy { it.first }).take(6),
             temas = cuenta(dias.flatMap { d -> Texto.temas(d.nota).map { Texto.canon(it, eq) }.distinct() }),
             lugares = cuenta(visitas.mapNotNull { nombres[it.lugar] }),
             senaladas = dias.flatMap { d -> io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(d).map { d.fecha to it } },

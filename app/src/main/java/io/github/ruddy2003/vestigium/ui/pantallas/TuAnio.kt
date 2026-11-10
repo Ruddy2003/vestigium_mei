@@ -317,7 +317,9 @@ private fun cartas(d: TuAnio.Datos): List<CartaAnio> {
             Emblema(tam = 120.dp, animado = v.animar)
             Text("${d.anio}", style = MaterialTheme.typography.displayLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 10.dp))
         }
-        Grande(p.diasDiario.toDouble(), "días escritos de ${p.n}", v)
+        // Si el diario empezó a mitad del periodo, se cuenta desde su primer día y no entre todos los días del año.
+        val primero = d.primerDiario
+        Grande(p.diasDiario.toDouble(), if (primero != null && primero > p.ini) "días escritos desde el ${Fechas.corto(primero)} (de ${d.diasDesdePrimero})" else "días escritos de ${p.n}", v)
         if (p.palabras > 0) {
             Grande(p.palabras.toDouble(), "palabras en el diario", v)
             Text("Un libro de ${n0(d.paginas.toDouble())} páginas. Leerlo en voz alta te tomaría ${if (d.horasLeerlo < 0.95) "${n0(d.horasLeerlo * 60)} minutos" else if (d.horasLeerlo < 1.05) "una hora" else "${n1(d.horasLeerlo)} horas"}.", style = MaterialTheme.typography.bodyLarge)
@@ -512,8 +514,10 @@ private fun Animo(d: TuAnio.Datos, v: Vista) {
     Grande(p.valMedia ?: 0.0, "de 7, tu ánimo medio", v) { n1(it) }
     MesesAnimo(d)
     d.mesMejor?.let { Renglon("tu mejor mes", mesLargo(it) + (p.valPorMes[it]?.let { x -> " · ${n1(x)}" } ?: "")) }
-    p.valPorSemana.maxByOrNull { it.value }?.let { Renglon("tu mejor día", "los " + DIAS[it.key - 1]) }
-    p.mejorDia?.let { f -> Renglon("el día más feliz", Fechas.titulo(f).lowercase()) }
+    // Solo con 5 días o más por día de la semana (TuAnio.MIN_DIAS_BARRA); con menos, no se dice.
+    d.mejorDiaSemana?.let { Renglon("tu mejor día", "los " + DIAS[it - 1]) }
+    // Si varios días comparten la valencia más alta, se dice el empate (se muestra el primero).
+    p.mejorDia?.let { f -> Renglon(if (d.empateFeliz > 1) "uno de tus ${d.empateFeliz} días más felices" else "el día más feliz", Fechas.titulo(f).lowercase()) }
     p.mejorMomento?.let { Text("«${it.take(140)}»", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 8.dp)) }
 }
 

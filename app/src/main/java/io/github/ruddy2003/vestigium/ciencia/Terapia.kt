@@ -53,6 +53,8 @@ object Terapia {
         val fecha: String, val valencia: Int?, val activacion: Double?, val dificil: Boolean, val suenoH: Double?, val calidad: Int?,
         val kcal: Double?, val objetivoKcal: Double?, val gimnasioMin: Double?, val gimnasio: Boolean,
         val mejor: String, val peor: String, val impulso: Int?, val recaida: Boolean?,
+        /** Impulsos registrados con hora ese día (solo con la casilla de lo privado): otra medición que [impulso], la escala del día. */
+        val impulsosHora: Int = 0,
     )
 
     /** Un valor contra su objetivo, día por día: la diferencia (valor − objetivo) de cada día con registro y objetivo. */
@@ -76,6 +78,10 @@ object Terapia {
     class Privados(
         val diasConRecaida: Int, val diasRespondidos: Int, val impulsos: Int, val superados: Int, val impulsoMedio: Double?,
         val detonantes: List<Pair<String, Int>>, val medicamentos: List<Pair<String, Int>>,
+        /** De cuántos días sale [impulsoMedio] (los que tienen la escala del día contestada). */
+        val impulsoDias: Int = 0,
+        /** Intensidad media (1 a 5) de los impulsos registrados con hora, y de cuántos registros con intensidad sale. */
+        val intensidadHora: Double? = null, val intensidadHoraN: Int = 0,
     )
 
     class Datos(
@@ -104,11 +110,18 @@ object Terapia {
         val nutricion: Nutricion?,
         // ---- casillas
         val sustancias: List<Sustancia>?, val mejorMomento: Pair<String, String>?, val peorMomento: Pair<String, String>?, val privados: Privados?,
+        /**
+         * De cuántos días sale cada media del reporte, para decir «(N días)» cuando son menos que el periodo. Claves: «valencia»,
+         * «activacion», «sueno», «dormir», «despertar», «calidad», «cama», «pasos», «aire_libre», «en_casa», «dolor», «pantalla».
+         */
+        val diasDe: Map<String, Int> = emptyMap(),
+        /** Cuántos días comparten la valencia más alta y la más baja del periodo (1 = sin empate). */
+        val empateMejor: Int = 0, val empatePeor: Int = 0,
     ) {
         val n: Int get() = fechas.size
     }
 
-    /** Sesiones del reloj que son el gimnasio mismo (para no contarlas dos veces). */
+    /** Sesiones del reloj que dan la duración del gimnasio cuando MacroFactor no la trae. */
     private val FUERZA = setOf("fuerza", "pesas")
 
     /** Las kcal de un día con menos de esto no son un día registrado (la misma regla de [Periodo]). */
@@ -197,6 +210,8 @@ object Terapia {
         val respAv = io.github.ruddy2003.vestigium.data.AvisosAnimo.respondidos(Repo.momentos)
         val avisos = fechas.mapNotNull { Repo.avisos[it] }.map { io.github.ruddy2003.vestigium.data.AvisosAnimo.cifras(it, respAv) }
         fun sumaAvisos(k: String) = avisos.sumOf { it[k] ?: 0.0 }.toInt()
+        // Planeados: cada día cuenta al menos los que se mostraron (un día sin fila de plan no puede mostrar más de los planeados).
+        val planeados = avisos.sumOf { maxOf(it["avisos_planeados"] ?: 0.0, it["avisos_mostrados"] ?: 0.0) }.toInt()
 
         // ---- ánimo
         val registros = mu.filter { Catalogo.esRegistro(it) && !Estadistica.cierreFuera(it) }
@@ -229,7 +244,9 @@ object Terapia {
             f to (Repo.entrenos[f]?.minutos ?: sesiones.filter { it.fecha == f && it.tipo_nombre in FUERZA }.sumOf { it.min }.takeIf { it > 0 }?.toDouble())
         }
         val diasGym = gimnasio.map { it.first }.toSet()
-        val otras = sesiones.filterNot { it.fecha in diasGym && it.tipo_nombre in FUERZA }.groupBy { it.tipo_nombre }
+        // En un día de gimnasio, la sesión del reloj es el gimnasio mismo, sea cual sea su tipo (el reloj la guarda a veces
+        // como «otro»): no se lista otra vez en «otras sesiones». Antes solo se quitaban las de tipo «fuerza» y «pesas».
+        val otras = sesiones.filterNot { it.fecha in diasGym }.groupBy { it.tipo_nombre }
             .map { (t, l) -> Triple(legible(t), l.size, l.sumOf { it.min }) }.sortedByDescending { it.third }
 
         // ---- nutrición (MacroFactor)
@@ -283,7 +300,8 @@ object Terapia {
             Privados(
                 diasConRecaida = diasRec.size, diasRespondidos = fechas.count { f -> Repo.dias[f]?.recaida != null || f in diasRec },
                 impulsos = imp.size, superados = superados(imp.map { Fechas.millis(it.ts) }, rec.map { Fechas.millis(it.ts) }),
-                impulsoMedio = media(dias.mapNotNull { it.impulso?.toDouble() }),
+                impulsoMedio = media(dias.mapNotNull { it.impulso?.toDouble() }), impulsoDias = dias.count { it.impulso != null },
+                intensidadHora = media(imp.mapNotNull { it.intensidad?.toDouble() }), intensidadHoraN = imp.count { it.intensidad != null },
                 detonantes = conteo(dias.flatMap { detonantesCon(it.detonantes, it.detonante_otro) } +
                     rec.filter { it.fecha in en }.flatMap { detonantesCon(it.detonantes, it.detonante_otro) }, ::detonante).take(5),
                 medicamentos = conteo(dias.flatMap { d -> d.medicamentos.map { it.trim() }.filter { it.isNotBlank() }.distinct() }) { it },
@@ -300,6 +318,7 @@ object Terapia {
                 mejor = if (op.momentosDia) sinNombres(d?.mejor_momento.orEmpty().trim()) else "",
                 peor = if (op.momentosDia) sinNombres(d?.peor_momento.orEmpty().trim()) else "",
                 impulso = if (op.privado) d?.impulso else null, recaida = if (!op.privado) null else if (Repo.momentos.any { it.tipo == "recaida" && it.fecha == f }) true else d?.recaida,
+                impulsosHora = if (op.privado) Repo.momentos.count { it.tipo == "impulso" && it.fecha == f } else 0,
             )
         }
 
@@ -307,7 +326,7 @@ object Terapia {
         fun diasCon(k: String) = sociales.count { panel[it]?.get(k) == 1.0 }
         return Datos(
             op = op, fechas = fechas, filas = filas,
-            diasDiario = p.diasDiario, avisosPlaneados = sumaAvisos("avisos_planeados"), avisosMostrados = sumaAvisos("avisos_mostrados"),
+            diasDiario = p.diasDiario, avisosPlaneados = planeados, avisosMostrados = sumaAvisos("avisos_mostrados"),
             avisosRespondidos = sumaAvisos("avisos_respondidos"), diasSoloAvisos = p.diasSoloAvisos,
             valMedia = p.valMedia, valAnterior = p.valAnterior, errorValencia = p.errorAnterior["valencia"], actMedia = p.actMedia,
             registrosAnimo = registros.size, emociones = emo, negativasPct = neg, pensamientos = pens,
@@ -332,6 +351,16 @@ object Terapia {
             gimnasio = gimnasio, otrasSesiones = otras,
             nutricion = nutricion,
             sustancias = sustancias, mejorMomento = mejor, peorMomento = peor, privados = privados,
+            diasDe = mapOf(
+                "valencia" to p.valencia.count { it != null }, "activacion" to p.activacion.count { it != null },
+                "sueno" to p.suenoPorDia.count { it != null }, "dormir" to dormir.size, "despertar" to despertar.size,
+                "calidad" to dias.count { it.sueno_calidad != null }, "cama" to fechas.count { Repo.pantalla[it]?.cama_min != null },
+                "pasos" to fechas.count { Periodo.pasosDia(it) != null },
+                "aire_libre" to delPanel("aire_libre_min").size, "en_casa" to delPanel("en_casa_min").size,
+                "dolor" to dias.count { it.dolor != null }, "pantalla" to fechas.count { f -> Repo.pantalla[f]?.let { it.total_min > 0 } == true },
+            ),
+            empateMejor = p.valencia.filterNotNull().let { v -> val m = v.maxOrNull(); v.count { it == m } },
+            empatePeor = p.valencia.filterNotNull().let { v -> val m = v.minOrNull(); v.count { it == m } },
         )
     }
 }

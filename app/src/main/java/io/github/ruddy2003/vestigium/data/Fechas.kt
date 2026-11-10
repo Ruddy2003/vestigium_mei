@@ -78,9 +78,6 @@ object Fechas {
         return if (a != b) a to b else null
     }
 
-    /** La zona que rige a mediodía del día [s] (para convertir una fecha sin hora). */
-    fun zonaDelDia(s: String): ZoneId = zonaEn(millisDe(parse(s).atTime(12, 0)))
-
     private fun millisEstricto(iso: String): Long = OffsetDateTime.parse(iso).toInstant().toEpochMilli()
 
     /** Antes de las 5:00 se sigue contando el día anterior. */

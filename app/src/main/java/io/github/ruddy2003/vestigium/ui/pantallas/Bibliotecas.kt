@@ -171,7 +171,7 @@ private fun SelectorBibliotecas(actual: String, elegir: (String) -> Unit) {
     }
 }
 
-private fun rotuloMes(mes: String) = Estilo.mes(mes.drop(5).toInt(), mes.take(4).toInt()).let { if (it.contains(mes.take(4))) it else it + " · " + mes.take(4) }
+private fun rotuloMes(mes: String) = Estilo.mesConComun(mes.drop(5).toInt(), mes.take(4).toInt())
 
 // ---------------------------------------------------------------- Diario
 

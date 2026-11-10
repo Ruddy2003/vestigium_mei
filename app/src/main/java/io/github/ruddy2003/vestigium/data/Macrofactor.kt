@@ -224,12 +224,19 @@ object Macrofactor {
         comidas.groupBy { it.fecha }.forEach { (f, l) ->
             val (primera, ultima) = horario(l.map { it.hora })
             val caf = horario(l.filter { (it.valores["cafeina_mg"] ?: 0.0) > 0 }.map { it.hora }).second
-            val previo = dias[f] ?: NutricionDia(f, emptyMap())
+            // Si el archivo no trae el resumen de ese día (solo la hoja de alimentos), se conservan los totales que ya había.
+            val previo = dias[f] ?: Repo.nutricion[f] ?: NutricionDia(f, emptyMap())
             dias[f] = previo.copy(comidas = l.size, primera = primera, ultima = ultima, cafeina_ultima = caf)
         }
         val fechasEntreno = (series.map { it.fecha } + musSeries.keys + musVol.keys).toSortedSet()
-        val entrenos = fechasEntreno.map { f ->
+        val entrenos = fechasEntreno.mapNotNull { f ->
             val l = series.filter { it.fecha == f }
+            // El archivo trae los músculos de ese día pero no sus series (no vino la hoja de entrenamientos): el entreno que
+            // ya había no se vacía; solo se le ponen los músculos que sí llegaron.
+            val ya = Repo.entrenos[f]
+            if (l.isEmpty() && ya != null && ya.series > 0) return@mapNotNull ya.copy(
+                series_musculo = musSeries[f] ?: ya.series_musculo,
+                volumen_musculo = musVol[f]?.mapValues { Math.round(it.value * 10) / 10.0 } ?: ya.volumen_musculo)
             val efectivas = l.filter { !it.tipo.contains("Warm", true) }
             EntrenoDia(f, l.map { it.entreno }.filter { it.isNotBlank() }.distinct(),
                 l.groupBy { it.entreno }.values.mapNotNull { g -> g.firstOrNull()?.entreno_s }.takeIf { it.isNotEmpty() }?.sum()?.let { Math.round(it / 6.0) / 10.0 },
@@ -239,7 +246,8 @@ object Macrofactor {
         }
         val todas = (dias.keys + comidas.map { it.fecha } + fechasEntreno)
         val desde = todas.min(); val hasta = todas.max()
-        Repo.importarMacrofactor(desde, hasta, dias.values.toList(), comidas, series, entrenos)
+        // Se reemplaza solo lo de los días que trae cada hoja (alimentos por un lado, series por otro), no todo el rango.
+        Repo.importarMacrofactor(dias.values.toList(), comidas, series, entrenos)
         return "Importé del $desde al $hasta: ${porNumero(dias.size, "1 día", "${dias.size} días")} de nutrición, ${porNumero(comidas.size, "1 alimento", "${comidas.size} alimentos")}, ${entrenos.count { it.series > 0 }} entrenamientos y ${porNumero(series.size, "1 serie", "${series.size} series")}."
     }
 

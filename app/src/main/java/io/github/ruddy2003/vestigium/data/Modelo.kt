@@ -82,7 +82,10 @@ data class Dia(
     val presencias: Map<String, String> = emptyMap(),
     /** Ya revisaste a quién viste y en quién solo pensaste ese día (los días de antes de la versión 10 quedan sin revisar). */
     val presencias_ok: Boolean = false,
+    /** Registro mínimo: la valencia se anotó desde el botón corto del aviso. No dice cómo fue el día (el nombre es de antes). */
     val dia_dificil: Boolean = false,
+    /** Día difícil, marcado por ti en la hoja del día (esquema 23). */
+    val dificil: Boolean = false,
     /** Foto elegida para representar el día (content:// de la galería). */
     val foto: String? = null,
     /** Esquema 22: la copia de esa foto dentro de la app (`fotos_dia/<fecha>.jpg`), que viaja en el respaldo. */
@@ -1045,12 +1048,12 @@ data class LogroPropio(
     /** variable (del panel diario), habito, etiqueta (#tema o @persona en el diario). */
     val fuente: String,
     val clave: String,
-    /** dias: días con algo (≥ umbral) dentro de la ventana; total: suma de todo; racha: días seguidos. */
+    /** dias: días con algo (más que el umbral, o ≤ con [umbral_max]) dentro de la ventana; total: suma de todo; racha: días seguidos. */
     val modo: String = "dias",
     val meta: Double = 1.0,
     /** Para «dias»: días que mira hacia atrás (30 = de los últimos 30 días). 0 = desde siempre. */
     val ventana: Int = 0,
-    /** Desde cuánto cuenta un día (por ejemplo, 8000 pasos). */
+    /** Un día cuenta si pasa de esto: más de, no igual (por ejemplo, más de 8000 pasos). Ver `Metas.cumple`. */
     val umbral: Double = 0.0,
     /** Esquema 17: un día cuenta si queda en [umbral] o menos (por ejemplo, menos de 120 min de pantalla). */
     val umbral_max: Boolean = false,

@@ -213,7 +213,7 @@ fun PantallaDiario(nav: Nav) {
             val mes = f.take(7)
             if (mes != mesAnterior) {
                 mesAnterior = mes
-                val rotulo = Estilo.mes(mes.drop(5).toInt(), mes.take(4).toInt()).let { if (it.contains(mes.take(4))) it else it + " · " + mes.take(4) }
+                val rotulo = Estilo.mesConComun(mes.drop(5).toInt(), mes.take(4).toInt())
                 Text(rotulo, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 18.dp, bottom = 6.dp))
             }
             TarjetaDiaDiario(f, Repo.dias[f], porDia[f].orEmpty(), tipo, discreto,

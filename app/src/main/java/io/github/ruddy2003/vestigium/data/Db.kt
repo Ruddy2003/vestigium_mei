@@ -135,6 +135,17 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 2) {
         writableDatabase.delete("docs", "col = ? AND fecha >= ? AND fecha <= ?", arrayOf(col, desde, hasta))
     }
 
+    /** Borra de [col] los documentos de exactamente esas fechas (no lo que quede entre ellas). */
+    fun borrarFechas(col: String, fechas: Collection<String>) {
+        val w = writableDatabase
+        fechas.forEach { w.delete("docs", "col = ? AND fecha = ?", arrayOf(col, it)) }
+    }
+
+    /** Las fechas en que [col] tiene algún documento. */
+    fun fechas(col: String): Set<String> = readableDatabase.rawQuery("SELECT DISTINCT fecha FROM docs WHERE col = ? AND fecha IS NOT NULL", arrayOf(col)).use { c ->
+        val l = HashSet<String>(); while (c.moveToNext()) l += c.getString(0); l
+    }
+
     fun contar(col: String): Long =
         readableDatabase.rawQuery("SELECT COUNT(*) FROM docs WHERE col = ?", arrayOf(col)).use { c -> if (c.moveToFirst()) c.getLong(0) else 0 }
 
@@ -218,16 +229,22 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 2) {
     fun contarUbicaciones(): Long =
         readableDatabase.rawQuery("SELECT COUNT(*) FROM ubicaciones", null).use { c -> if (c.moveToFirst()) c.getLong(0) else 0 }
 
-    /** Varias escrituras de una vez (mucho más rápido para miles de puntos). */
-    fun enTransaccion(f: () -> Unit) {
-        val w = writableDatabase
-        w.beginTransaction()
-        try { f(); w.setTransactionSuccessful() } finally { w.endTransaction() }
-    }
+    /**
+     * Una seña barata de las ubicaciones guardadas (cuántas son, la última fila y la suma de horas y coordenadas): si no
+     * cambia, lo calculado con ellas sigue valiendo. Se saca en la propia base, sin traer los puntos a memoria.
+     */
+    fun huellaUbicaciones(): String =
+        readableDatabase.rawQuery("SELECT COUNT(*), MAX(rowid), TOTAL(ms), TOTAL(lat), TOTAL(lon) FROM ubicaciones", null).use { c ->
+            if (c.moveToFirst()) (0..4).joinToString("/") { if (c.isNull(it)) "" else c.getString(it) } else ""
+        }
+
+    /** Otro nombre de [transaccion] (lo usan las fotos con lugar): hay una sola manera de agrupar escrituras. */
+    fun enTransaccion(f: () -> Unit) = transaccion(f)
 
     fun existeUbicacion(ms: Long): Boolean =
         readableDatabase.rawQuery("SELECT 1 FROM ubicaciones WHERE ms = ? LIMIT 1", arrayOf(ms.toString())).use { it.moveToFirst() }
 
+    /** Varias escrituras de una vez: o entran todas o ninguna (y es mucho más rápido para miles de documentos o puntos). */
     fun transaccion(bloque: () -> Unit) {
         val db = writableDatabase
         db.beginTransaction()

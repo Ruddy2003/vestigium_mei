@@ -101,9 +101,12 @@ object Importaciones {
         // Lo que se anotó desde las notificaciones de Spotify en esos días queda reemplazado por el historial, que es más preciso.
         val desde = lista.minOf { it.fecha }; val hasta = lista.maxOf { it.fecha }
         // También lo leído por la conexión directa: el historial trae además cuánto escuchaste y si la saltaste.
-        val viejas = Repo.escuchas(desde, hasta, todas = true).filter { (it.fuente == "notificacion" && it.app.contains("Spotify", true)) || it.fuente == "spotify_api" }.map { it.id }
-        Repo.borrarEscuchas(viejas)
-        Repo.importarEscuchas(lista)
+        // Solo en los días que trae el historial: si eliges archivos de años salteados, lo captado en los años de en medio
+        // se queda (antes se borraba todo entre la primera y la última fecha).
+        val fechas = lista.mapTo(HashSet()) { it.fecha }
+        val viejas = Repo.escuchas(desde, hasta, todas = true).filter { it.fecha in fechas && ((it.fuente == "notificacion" && it.app.contains("Spotify", true)) || it.fuente == "spotify_api") }.map { it.id }
+        // Quitar y guardar van juntos: si algo falla a medias, no cambia nada.
+        Repo.reemplazarEscuchas(viejas, lista)
         val reales = lista.count { (it.ms ?: 0) >= 30_000 }
         return "Importé ${lista.size} reproducciones de $archivos archivo(s), del $desde al $hasta ($reales de más de 30 segundos)."
     }

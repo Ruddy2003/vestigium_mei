@@ -172,8 +172,6 @@ object Drive {
         }?.filter { it.second.startsWith("vestigium_") && it.second != "vestigium_resumido.zip" && !it.second.startsWith(REVISAR) }?.maxByOrNull { it.third }
     }
 
-    fun bajar(token: String, id: String): ByteArray = Red.bajar("$API/$id?alt=media", h(token))
-
     /** Baja una copia de Drive a un archivo, por partes. */
     private fun bajarA(ctx: Context, token: String, id: String): java.io.File =
         java.io.File(ctx.cacheDir, "drive_bajada").also { Red.bajarA("$API/$id?alt=media", it, h(token)) }

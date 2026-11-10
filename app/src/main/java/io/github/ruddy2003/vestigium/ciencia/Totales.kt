@@ -138,6 +138,8 @@ object Totales {
         val escuchas = runCatching { Repo.escuchas(desde, hasta) }.getOrDefault(emptyList()).filter { (it.ms ?: 30_000) >= 30_000 }
         val huellas = runCatching { Repo.huellasDe(desde, hasta) }.getOrDefault(emptyList())
         val grupos = ArrayList<Grupo>()
+        /** En qué días del periodo aparece cada persona: la cuenta única ([io.github.ruddy2003.vestigium.data.Personas.diasCon]). */
+        val personasDias = io.github.ruddy2003.vestigium.data.Personas.diasCon(desde, hasta)
 
         // ----- Movimiento -----
         run {
@@ -145,7 +147,8 @@ object Totales {
             val km = S(); runCatching { Movilidad.kmEntre(desde, hasta) }.getOrDefault(emptyMap()).forEach { (f, v) -> km.add(f, v) }
             c.poner("Kilómetros recorridos (ubicación)", km, { "${n(it, 1)} km" }) { s -> "récord: ${n(s.max, 1)} km el ${fecha(s.fMax!!)}" }
             c.poner("Kilómetros según el reloj", suma(salud, { it.fecha }, { it.distancia_km }), { "${n(it, 1)} km" })
-            c.poner("Pasos", suma(salud, { it.fecha }, { it.pasos }), { n(it) }) { s -> "${n(s.v / s.n)} al día · récord ${n(s.max)} el ${fecha(s.fMax!!)}" }
+            // Como en los reportes (Periodo): un día con cero pasos es un día sin medir y no entra en la media «al día».
+            c.poner("Pasos", suma(salud, { it.fecha }, { it.pasos?.takeIf { p -> p > 0 } }), { n(it) }) { s -> "${n(s.v / s.n)} al día · récord ${n(s.max)} el ${fecha(s.fMax!!)}" }
             listOf("a_pie" to "A pie", "corriendo" to "Corriendo", "bici" to "En bici", "vehiculo" to "En vehículo").forEach { (k, t) ->
                 c.poner(t, suma(actividad, { it.fecha }, { it.minutos[k] }), ::tiempo)
             }
@@ -157,7 +160,8 @@ object Totales {
         // ----- Cuerpo -----
         run {
             val c = ArrayList<Cifra>()
-            c.poner("Horas dormidas", suma(salud, { it.fecha }, { it.sueno_min }), ::tiempo) { s -> "${n(s.v / s.n / 60, 1)} h por noche en ${porNumero(s.n, "1 noche", "${s.n} noches")}" }
+            // Como en los reportes (Periodo): solo las noches de más de 120 min (menos es una lectura rota o una siesta).
+            c.poner("Horas dormidas", suma(salud, { it.fecha }, { it.sueno_min?.takeIf { m -> m > 120 } }), ::tiempo) { s -> "${n(s.v / s.n / 60, 1)} h por noche en ${porNumero(s.n, "1 noche", "${s.n} noches")}" }
             val ses = Repo.sesiones.filter { en(it.fecha) }
             if (ses.isNotEmpty()) c.add(Cifra("Sesiones de ejercicio (reloj)", "${ses.size} · ${tiempo(ses.sumOf { it.min }.toDouble())}", ses.minOf { it.fecha }))
             if (entrenos.isNotEmpty()) {
@@ -188,8 +192,10 @@ object Totales {
         // ----- Diario y mente -----
         run {
             val c = ArrayList<Cifra>()
-            val d0 = dias.minOfOrNull { it.fecha }
-            conteo("Días con diario", dias.size, d0)?.let(c::add)
+            // «Día con diario» = con nota o valencia, como en los reportes (Periodo.conDiario); no cualquier día guardado.
+            val conDiario = dias.filter { it.nota.isNotBlank() || it.valencia != null }
+            val d0 = conDiario.minOfOrNull { it.fecha }
+            conteo("Días con diario", conDiario.size, d0)?.let(c::add)
             c.poner("Palabras escritas", suma(dias, { it.fecha }, { Texto.palabras(it.nota) }), { n(it) })
             val mo = momentos.filter { it.tipo != "muestreo" }
             conteo("Momentos registrados", mo.size, mo.minOfOrNull { it.fecha })?.let(c::add)
@@ -211,12 +217,13 @@ object Totales {
         if (gastos.isNotEmpty() || ingresos.isNotEmpty()) {
             val c = ArrayList<Cifra>()
             if (gastos.isNotEmpty()) {
-                val g0 = gastos.minOf { it.fecha }
-                val porDia = gastos.groupBy { it.fecha }.mapValues { e -> e.value.sumOf { it.monto } }
+                // Por día lógico del gasto (Gasto.dia), como el filtro de arriba y los reportes.
+                val g0 = gastos.minOf { it.dia }
+                val porDia = gastos.groupBy { it.dia }.mapValues { e -> e.value.sumOf { it.monto } }
                 val top = porDia.maxByOrNull { it.value }!!
                 c.add(Cifra("Gasto total", dinero(gastos.sumOf { it.monto }), g0, "${porNumero(gastos.size, "1 gasto", "${gastos.size} gastos")} · día más caro: ${dinero(top.value)} el ${fecha(top.key)}"))
                 val imp = gastos.filter { it.imprevisto }
-                if (imp.isNotEmpty()) c.add(Cifra("Imprevistos", dinero(imp.sumOf { it.monto }), imp.minOf { it.fecha }, "${porNumero(imp.size, "1 gasto", "${imp.size} gastos")}"))
+                if (imp.isNotEmpty()) c.add(Cifra("Imprevistos", dinero(imp.sumOf { it.monto }), imp.minOf { it.dia }, "${porNumero(imp.size, "1 gasto", "${imp.size} gastos")}"))
             }
             if (ingresos.isNotEmpty()) {
                 val total = ingresos.sumOf { it.monto }
@@ -258,9 +265,8 @@ object Totales {
             val wa = Repo.chats.filter { en(it.fecha) }
             c.poner("WhatsApp enviados", suma(wa, { it.fecha }, { it.mios }), { n(it) })
             c.poner("WhatsApp recibidos", suma(wa, { it.fecha }, { it.otros }), { n(it) })
-            val personas = (dias.flatMap { Texto.personas(it.nota) } + momentos.flatMap { Texto.personas(it.texto) }).map { Texto.canon(it, eq) }.distinct()
-            if (personas.isNotEmpty()) c.add(Cifra("Personas mencionadas", n(personas.size.toDouble()), (dias.filter { Texto.personas(it.nota).isNotEmpty() }.map { it.fecha } +
-                momentos.filter { Texto.personas(it.texto).isNotEmpty() }.map { it.fecha }).minOrNull()))
+            // Con la cuenta única de Tu gente y de los reportes (Personas.diasCon).
+            if (personasDias.isNotEmpty()) c.add(Cifra("Personas mencionadas", n(personasDias.size.toDouble()), personasDias.values.mapNotNull { it.minOrNull() }.minOrNull()))
             if (c.isNotEmpty()) grupos.add(Grupo("Social", "SOCIETAS", c))
         }
         // ----- Entorno -----
@@ -315,7 +321,13 @@ object Totales {
                 "${e.dias.size} ${if (e.dias.size == 1) "día" else "días"} · ${n(e.total)} menciones"
             })
         }
-        texto("personas", "Personas") { Texto.personas(it) }
+        // Las personas, por días en que aparecen (Personas.diasCon): un día cuenta una vez, se nombre las veces que se nombre.
+        run {
+            val m = personasDias.map { (p, fs) -> Entrada(p, "días").also { e -> fs.sorted().forEach { f -> e.sumar(f, 1.0) } } }
+            if (m.isNotEmpty()) indices.add(Indice("personas", "Personas", m.sortedWith(compareByDescending<Entrada> { it.dias.size }.thenBy { it.nombre })) { e ->
+                porNumero(e.dias.size, "1 día", "${e.dias.size} días")
+            })
+        }
         texto("temas", "Temas") { Texto.temas(it) }
 
         run {
@@ -393,7 +405,7 @@ object Totales {
 
         if (gastos.isNotEmpty()) {
             val m = LinkedHashMap<String, Entrada>()
-            gastos.forEach { g -> m.getOrPut(normal(g.categoria)) { Entrada(g.categoria, "$") }.sumar(g.fecha, g.monto) }
+            gastos.forEach { g -> m.getOrPut(normal(g.categoria)) { Entrada(g.categoria, "$") }.sumar(g.dia, g.monto) }
             indices.add(Indice("gastos", "Gastos por categoría", m.values.sortedByDescending { it.total }) { e -> "${dinero(e.total)} · ${porNumero(e.veces, "1 gasto", "${e.veces} gastos")}" })
         }
 

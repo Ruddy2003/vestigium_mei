@@ -105,7 +105,7 @@ object Exportar {
         return Repo.dias.values.sortedBy { it.fecha }.map { d ->
             val r = linkedMapOf<String, Any?>(
                 "fecha" to d.fecha, "schema_v" to d.schema_v, "origen" to d.origen, "retroactivo" to d.retroactivo, "ts_valencia" to d.ts_valencia,
-                "dia_dificil" to d.dia_dificil, "ts_creado" to d.ts_creado, "ts_editado" to d.ts_editado, "version_noche" to d.version_noche,
+                "dia_dificil" to d.dia_dificil, "dificil" to d.dificil, "ts_creado" to d.ts_creado, "ts_editado" to d.ts_editado, "version_noche" to d.version_noche,
                 "valencia" to d.valencia, "activacion" to d.activacion, "dolor" to d.dolor,
             )
             Catalogo.CONTEXTOS.forEach { r["ctx_${it.id}"] = d.ctx[it.id] == true }
@@ -371,7 +371,8 @@ object Exportar {
     fun filasRed(): Pair<List<Map<String, Any?>>, List<Map<String, Any?>>> {
         val (nodos, aristas) = RedPersonas.calcular(minJuntos = 1, max = 400)
         return nodos.map { linkedMapOf<String, Any?>("persona" to it.nombre, "relacion" to it.relacion, "grupo" to it.grupo, "cercania" to it.cercania, "dias_mencion" to it.dias, "grado" to it.grado) } to
-            aristas.map { linkedMapOf<String, Any?>("a" to it.a, "b" to it.b, "tipo_declarado" to it.tipo, "dias_juntos" to it.juntos) }
+            aristas.map { linkedMapOf<String, Any?>("a" to it.a, "b" to it.b, "tipo_declarado" to it.tipo, "dias_juntos" to it.juntos,
+                "une" to RedPersonas.une(it.tipo), "peso" to Math.round(RedPersonas.peso(it.tipo) * 10) / 10.0) }
     }
 
     /** Tu gente (I-7): quién es cada persona, desde cuándo, sus fechas y su edad (hoy, o la que tenía al morir). */
@@ -895,7 +896,11 @@ object Exportar {
             val fila = filas.getOrPut(f) { linkedMapOf<String, Any?>("fecha" to f) }
             apps.forEach { a -> val k = "app_min_" + Texto.slug(a).ifEmpty { "app" }; if (k !in fila) fila[k] = p.por_app_min[a] ?: 0 }
         }
-        return filas.values.toList()
+        // Una sola forma para dia_especial (antes unas filas traían 0/1 y otras 0.0/1.0, y R la leía como texto).
+        filas.values.forEach { r -> (r["dia_especial"] as? Number)?.let { r["dia_especial"] = it.toDouble() == 1.0 } }
+        // Hasta hoy: la agenda y la luna ya no añaden la fila de mañana.
+        val hoy = Fechas.diaLogico()
+        return filas.filterKeys { it <= hoy }.values.toList()
     }
 
     /**
@@ -935,8 +940,6 @@ object Exportar {
     /** Una hora de la noche («la última…»): antes de las 05:00 suma 24, como `cafeina_ultima_h` y `ultimo_uso_h` (00:40 → 24.67). */
     fun horaNoche(hhmm: String): Double? = horaTexto(hhmm)?.let { if (it < 5) Math.round((it + 24) * 100) / 100.0 else it }
 
-    fun csvUbicaciones(): String = StringBuilder().also { escribirUbicaciones(it) }.toString()
-
     /** vm_ubicaciones.csv, punto por punto desde la base: con años de historial no cabría en memoria como texto. */
     fun escribirUbicaciones(w: Appendable) {
         w.append("﻿ts,lat,lon,precision_m,fuente,ms\n")
@@ -945,8 +948,6 @@ object Exportar {
     }
 
     /** El catálogo de fotos con lugar (solo hora, coordenadas y de qué aparato; nunca la foto). Sirve para restaurar en otro teléfono. */
-    fun csvCatalogoFotos(): String = StringBuilder().also { escribirCatalogoFotos(it) }.toString()
-
     fun escribirCatalogoFotos(w: Appendable) {
         w.append("﻿clave,ms,ts,lat,lon,aparato,origen,ms_archivo,fuente\n")
         Repo.db().recorrerFotos { f ->
@@ -954,8 +955,6 @@ object Exportar {
                 .append(celda(f.aparato)).append(',').append(celda(f.origen)).append(',').append(f.msArchivo.toString()).append(',').append(celda(f.fuente)).append('\n')
         }
     }
-
-    fun respaldoJson(): String = JSON.encodeToString(Respaldo.serializer(), respaldo())
 
     /** vm_respaldo.json escrito directo en [o], sin pasar por un texto en memoria (que con años de datos ocupaba el doble). */
     fun escribirRespaldo(o: OutputStream) { val s = SinCerrar(o); JSON.encodeToStream(Respaldo.serializer(), respaldo(), s); s.flush() }

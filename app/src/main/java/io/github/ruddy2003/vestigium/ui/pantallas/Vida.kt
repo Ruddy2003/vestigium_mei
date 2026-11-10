@@ -49,9 +49,8 @@ fun RejillaTarjetas(l: List<Tarjetita>, ir: (String) -> Unit) {
     }
 }
 
-private fun animoEn(dias: List<String>): Double? = dias.mapNotNull { f ->
-    Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average()
-}.takeIf { it.isNotEmpty() }?.average()
+/** El ánimo medio de esos días, con la definición única de las vistas ([io.github.ruddy2003.vestigium.ciencia.Periodo.animoDia]). */
+private fun animoEn(dias: List<String>): Double? = io.github.ruddy2003.vestigium.ciencia.Periodo.animoMedio(dias)
 
 /**
  * Lo de «Tu vida vista desde lejos» (9 nov 2026, antes en Vida; ahora arriba de Análisis): la semana, la cinta, el mes,
@@ -63,16 +62,17 @@ fun VidaDesdeLejos(nav: Nav) {
     val lunes = Fechas.lunesDe(hoy)
     val transcurridos = (java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(lunes), Fechas.parse(hoy)) + 1).toInt()
     val semana = (0 until transcurridos).map { Fechas.sumar(lunes, it.toLong()) }
+    val conAvisos = io.github.ruddy2003.vestigium.ciencia.Periodo.animoDias(semana).any { it?.deAvisos == true }
     val a = animoEn(semana); val b = animoEn(semana.map { Fechas.sumar(it, -7) })
     val flecha = if (a != null && b != null) (if (a - b > 0.15) " ↑" else if (b - a > 0.15) " ↓" else " =") else ""
     val mes = hoy.take(7)
-    val diasMes = Repo.dias.keys.count { it.startsWith(mes) && Repo.dias[it]?.let { d -> d.valencia != null || d.nota.isNotBlank() } == true }
+    val diasMes = Repo.dias.keys.count { it.startsWith(mes) && io.github.ruddy2003.vestigium.ciencia.Periodo.conDiario(it) }
     val anio = hoy.take(4)
     val gasto = Repo.gastos.filter { it.dia.startsWith(mes) }.sumOf { it.monto }
     val ingreso = Repo.ingresos.filter { it.dia.startsWith(mes) }.sumOf { it.monto }
     val ir: (String) -> Unit = { if (it == "cinta") Seleccion.cinta = null; nav.ir(it) }
     RejillaTarjetas(listOf(
-        Tarjetita("Resumen semanal", a?.let { "%.1f".format(it) + flecha } ?: "—", "ánimo de esta semana", "semana"),
+        Tarjetita("Resumen semanal", a?.let { "%.1f".format(it) + flecha } ?: "—", "ánimo de esta semana" + (if (conAvisos) " (con avisos)" else ""), "semana"),
         Tarjetita("La cinta", "${Repo.momentos.count { it.fecha == hoy && !it.privado } + Repo.tramos.count { it.fecha == hoy } + Repo.consumos.count { it.fecha == hoy && Sustancias.visible(it) }}",
             "cosas con hora hoy", "cinta"),
         Tarjetita("Calendario", "$diasMes / ${hoy.takeLast(2).toInt()}", "días con diario este mes", "calendario"),

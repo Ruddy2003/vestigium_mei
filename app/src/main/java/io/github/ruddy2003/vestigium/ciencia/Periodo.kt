@@ -104,6 +104,67 @@ object Periodo {
     /** Días con valencia en los avisos pero sin la del diario: no entran en el ánimo medio, y el reporte dice cuántos son. */
     private fun soloAvisos(f: String): Boolean = Repo.dias[f]?.valencia == null && Repo.momentos.any { it.fecha == f && it.esAnimo && it.valencia != null }
 
+    // =====================================================================
+    //  Definiciones compartidas con las pantallas y los widgets (revisión de noviembre de 2026, hallazgos 5 y 6)
+    // =====================================================================
+
+    /**
+     * El ánimo de un día para las VISTAS (semana, calendario, año, widget): [valor] de 1 a 7 y [deAvisos] = true cuando el día
+     * no tiene la valencia del diario y el valor es la media de sus registros de ánimo. Los reportes no la usan ([valDe]).
+     */
+    class AnimoDia(val valor: Double, val deAvisos: Boolean)
+
+    /**
+     * El ánimo de [fecha]: la valencia del diario; si falta, la media de los registros de ánimo (de un aviso o abiertos por ti)
+     * no privados de ese día, marcada [AnimoDia.deAvisos]. Null si el día no tiene ninguna de las dos.
+     */
+    fun animoDia(fecha: String): AnimoDia? {
+        Repo.dias[fecha]?.valencia?.let { return AnimoDia(it.toDouble(), false) }
+        val l = Repo.momentos.filter { it.fecha == fecha && it.esAnimo && !it.privado }.mapNotNull { it.valencia }
+        return if (l.isEmpty()) null else AnimoDia(l.average(), true)
+    }
+
+    /** [animoDia] de muchos días de una vez (recorre los momentos una sola vez): un elemento por fecha, en el mismo orden. */
+    fun animoDias(fechas: List<String>): List<AnimoDia?> {
+        val en = fechas.toHashSet()
+        val avisos = HashMap<String, MutableList<Int>>()
+        Repo.momentos.forEach { m -> val v = m.valencia; if (v != null && m.fecha in en && m.esAnimo && !m.privado) avisos.getOrPut(m.fecha) { ArrayList() }.add(v) }
+        return fechas.map { f ->
+            val v = Repo.dias[f]?.valencia
+            if (v != null) AnimoDia(v.toDouble(), false) else avisos[f]?.let { AnimoDia(it.average(), true) }
+        }
+    }
+
+    /** Media de [animoDias] en esos días (cada día pesa lo mismo, salga del diario o de los avisos); null sin ninguno. */
+    fun animoMedio(fechas: List<String>): Double? = animoDias(fechas).mapNotNull { it?.valor }.takeIf { it.isNotEmpty() }?.average()
+
+    /** «Día con diario»: tiene nota o valencia. La misma regla de [calcular] (`diasDiario`). */
+    fun conDiario(fecha: String): Boolean = Repo.dias[fecha]?.let { it.nota.isNotBlank() || it.valencia != null } == true
+
+    /** Cuántos de esos días tienen diario ([conDiario]). */
+    fun diasConDiario(fechas: Collection<String>): Int = fechas.count { conDiario(it) }
+
+    /** Los minutos de sueño de la noche de [fecha] si pasa de 120 (menos se toma por lectura rota o siesta, como en [calcular]). */
+    fun suenoMin(fecha: String): Int? = Repo.salud[fecha]?.sueno_min?.takeIf { it > 120 }
+
+    /** Sueño medio en horas, solo de las noches de más de 120 min; null sin ninguna. */
+    fun suenoMedioH(fechas: Collection<String>): Double? = fechas.mapNotNull { suenoMin(it) }.takeIf { it.isNotEmpty() }?.average()?.div(60)
+
+    /** Los pasos de [fecha] si son más de cero (un día en cero es un día sin medir, como en [calcular]). */
+    fun pasosDia(fecha: String): Double? = Repo.salud[fecha]?.pasos?.toDouble()?.takeIf { it > 0 }
+
+    /** Pasos medios por día, sin los días en cero; null sin ninguno. */
+    fun pasosMedios(fechas: Collection<String>): Double? = fechas.mapNotNull { pasosDia(it) }.takeIf { it.isNotEmpty() }?.average()
+
+    /** Lo gastado en esos días, por día lógico del gasto (`Gasto.dia`), como en [calcular]. */
+    fun gastoEn(fechas: Collection<String>): Double { val en = fechas.toHashSet(); return Repo.gastos.filter { it.dia in en }.sumOf { it.monto } }
+
+    /** Los días de [ini] a [fin], incluidos (vacío si [fin] es anterior). */
+    fun fechasDe(ini: String, fin: String): List<String> {
+        val n = ChronoUnit.DAYS.between(Fechas.parse(ini), Fechas.parse(fin)).toInt() + 1
+        return (0 until n.coerceAtLeast(0)).map { Fechas.sumar(ini, it.toLong()) }
+    }
+
     /**
      * Error típico de la diferencia de dos promedios de días, √(s₁²/n₁ + s₂²/n₂) (H-8-11): una diferencia menor no se distingue
      * de lo que varían tus días. No descuenta que los días seguidos se parecen, así que se queda corto. Null con menos de 3 días.

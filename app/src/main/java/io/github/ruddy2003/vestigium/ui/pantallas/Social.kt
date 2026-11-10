@@ -104,7 +104,7 @@ object GrafoSocial {
         RedPersonas.grados(n, aa)
         RedPersonas.acomodar(n, aa)
         val grupos = RedPersonas.componentes(n, aa)
-        val lazos = aa.filter { it.tipo != "no_se_conocen" }.map { Lazo(it.a, it.b, it.tipo, it.juntos) }
+        val lazos = aa.filter { RedPersonas.une(it.tipo) }.map { Lazo(it.a, it.b, it.tipo, it.juntos) }
         return Modelo("red", n.map { Nodo(it.nombre, it.dias, null, it.relacion, it.grupo, it.grado, it.x, it.y) }, lazos, grupos)
     }
 
@@ -175,7 +175,8 @@ internal fun DrawScope.dibujarGrafo(m: GrafoSocial.Modelo, zoom: Float, pan: Off
                 val res = elegido != null && (l.a == elegido || l.b == elegido)
                 val col = if (l.tipo != null) cs.primary else cs.onSurfaceVariant
                 val colLazo = col.copy(alpha = if (res) 0.9f else if (l.tipo != null) 0.55f else 0.22f)
-                val ancho = (if (l.tipo != null) 2f else 1f) * density
+                // El grosor sigue la fuerza del vínculo: pareja y familia 3, amigos 2.6, colegas 2.2, se conocen 1.6; sin tipo, 1.
+                val ancho = (if (l.tipo != null) 1f + 2f * RedPersonas.peso(l.tipo) else 1f) * density
                 // Los colegas conservan su guion propio (distingue el tipo de lazo); los demás llevan el trazo del tema.
                 if (l.tipo == "colegas") drawLine(colLazo, pos(a), pos(b), ancho, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f * density, 4f * density)))
                 else lineaGrafica(eg, listOf(pos(a), pos(b)), colLazo, ancho)

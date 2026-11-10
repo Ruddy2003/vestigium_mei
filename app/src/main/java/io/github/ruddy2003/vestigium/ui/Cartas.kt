@@ -872,10 +872,13 @@ fun SobreCarta(c: Carta, modifier: Modifier = Modifier, tema: TemaId = Estilo.te
     val oscuro = esOscuro()
     val medidor = rememberTextMeasurer()
     val animar = Repo.config.animaciones
-    val brillo = if (estado == EstadoSobre.LISTA && animar) {
+    // El brillo animado se guarda como estado y se lee al dibujar (dentro del Canvas): cada cuadro de la animación solo
+    // redibuja el sobre, sin recomponerlo.
+    val brilloAnimado = if (estado == EstadoSobre.LISTA && animar) {
         val inf = rememberInfiniteTransition(label = "lacre")
-        inf.animateFloat(0.35f, 1f, infiniteRepeatable(tween(1100), RepeatMode.Reverse), label = "brillo").value
-    } else if (estado == EstadoSobre.LISTA) 0.8f else 0f
+        inf.animateFloat(0.35f, 1f, infiniteRepeatable(tween(1100), RepeatMode.Reverse), label = "brillo")
+    } else null
+    val brilloFijo = if (estado == EstadoSobre.LISTA) 0.8f else 0f
     val sacudir = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val sentir = rememberSentir()
@@ -901,7 +904,7 @@ fun SobreCarta(c: Carta, modifier: Modifier = Modifier, tema: TemaId = Estilo.te
             val cuerpo = if (abierta) Rect(0f, size.height * 0.34f, size.width, size.height) else Rect(0f, 0f, size.width, size.height)
             with(d) {
                 sobre(io.github.ruddy2003.vestigium.ui.biblioteca.EstadoCarta(linea1, linea2, cuerpo, abrir = if (abierta) 1f else 0f, romper = if (abierta) 1f else 0f,
-                    subir = if (abierta) 0.5f else 0f, cordon = if (estado == EstadoSobre.SELLADA) 1f else 0f, brillo = brillo, escalaSello = 1f, alfaSello = 1f,
+                    subir = if (abierta) 0.5f else 0f, cordon = if (estado == EstadoSobre.SELLADA) 1f else 0f, brillo = brilloAnimado?.value ?: brilloFijo, escalaSello = 1f, alfaSello = 1f,
                     hoja = pg.color, renglones = pg.tinta.copy(alpha = 0.2f), semilla = c.id.hashCode(), alFuturo = c.alFuturo), medidor, oscuro)
             }
         }

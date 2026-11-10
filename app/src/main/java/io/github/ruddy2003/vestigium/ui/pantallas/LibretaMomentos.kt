@@ -164,7 +164,7 @@ fun BibliotecaMomentosLibreta(nav: Nav) {
     val medidor = rememberTextMeasurer()
     val porMes = visibles.groupBy { it.take(7) }.toSortedMap(compareByDescending { it })
     porMes.entries.take(if (q.isBlank()) meses else 24).forEach { (mes, dias) ->
-        val rotulo = Estilo.mes(mes.drop(5).toInt(), mes.take(4).toInt()).let { if (it.contains(mes.take(4))) it else it + " · " + mes.take(4) }
+        val rotulo = Estilo.mesConComun(mes.drop(5).toInt(), mes.take(4).toInt())
         Canvas(Modifier.fillMaxWidth().padding(top = 18.dp, bottom = 8.dp).height(34.dp).semantics { contentDescription = rotulo }) {
             clipRect { with(d) { rotuloMes(rotulo, medidor, oscuro) } }
         }

@@ -126,12 +126,11 @@ object Seleccion {
 private data class CapaCal(val id: String, val nombre: String, val divergente: Boolean, val valor: (String) -> Double?, val rango: (List<Double>) -> Pair<Double, Double>, val texto: (Double) -> String)
 
 private fun capas(): List<CapaCal> {
-    val mu = Repo.momentos.filter { it.esAnimo && it.valencia != null }.groupBy { it.fecha }
     val gastos = Repo.gastos.groupBy { it.dia }.mapValues { e -> e.value.sumOf { it.monto } }
     val fijo = { a: Double, b: Double -> { _: List<Double> -> a to b } }
     val datos = { xs: List<Double> -> (xs.minOrNull() ?: 0.0) to (xs.maxOrNull()?.takeIf { it > 0 } ?: 1.0) }
     return listOf(
-        CapaCal("animo", "ánimo", true, { f -> Repo.dias[f]?.valencia?.toDouble() ?: mu[f]?.mapNotNull { it.valencia }?.average() }, fijo(1.0, 7.0)) { "%.1f".format(it) },
+        CapaCal("animo", "ánimo", true, { f -> io.github.ruddy2003.vestigium.ciencia.Periodo.animoDia(f)?.valor }, fijo(1.0, 7.0)) { "%.1f".format(it) },
         CapaCal("sueno", "sueño", true, { f -> Repo.salud[f]?.sueno_min?.let { it / 60.0 } }, fijo(5.0, 8.5)) { "%.1f h".format(it) },
         CapaCal("pasos", "pasos", false, { f -> Repo.salud[f]?.pasos?.toDouble() }, datos) { "%,.0f".format(it) },
         CapaCal("pantalla", "pantalla", false, { f -> Repo.pantalla[f]?.total_min?.toDouble() }, datos) { "${(it / 60).toInt()} h ${(it % 60).toInt()} m" },
@@ -154,7 +153,11 @@ fun PantallaCalendario(nav: Nav) {
     val primero = Fechas.parse("$mes-01")
     val hoy = Fechas.diaLogico()
     val dias = (0 until primero.lengthOfMonth()).map { Fechas.iso(primero.plusDays(it.toLong())) }
-    val valores = dias.associateWith { capa.valor(it) }
+    // El ánimo de cada día del mes con la definición única de las vistas (Periodo.animoDia): el del diario o, si falta, la
+    // media de los avisos, que se dibuja hueca y se rotula «avisos».
+    val animosMes = remember(mes, Repo.dias, Repo.momentos) { dias.zip(io.github.ruddy2003.vestigium.ciencia.Periodo.animoDias(dias)).toMap() }
+    val valores = if (capaId == "animo") dias.associateWith { animosMes[it]?.valor } else dias.associateWith { capa.valor(it) }
+    val deAvisos = if (capaId == "animo") dias.filter { animosMes[it]?.deAvisos == true }.toSet() else emptySet()
     val (lo, hi) = capa.rango(valores.values.filterNotNull())
 
     fun ir(fecha: String) { Seleccion.abrir(nav, fecha) }
@@ -186,7 +189,7 @@ fun PantallaCalendario(nav: Nav) {
                         capa.divergente -> Tonos.divergente(t, oscuro)
                         else -> Tonos.secuencial(t, oscuro)
                     }
-                    Celda(Modifier.weight(1f), f, fondo, f == hoy, f > hoy, verFotos) { ir(f) }
+                    Celda(Modifier.weight(1f), f, fondo, f == hoy, f > hoy, verFotos, avisos = f in deAvisos) { ir(f) }
                 }
             }
         }
@@ -202,6 +205,7 @@ fun PantallaCalendario(nav: Nav) {
             Ficha("▣ fotos", verFotos) { verFotos = !verFotos }
             todas.forEach { c -> Ficha(c.nombre, c.id == capaId) { capaId = c.id } }
         }
+        if (deAvisos.isNotEmpty()) Ayuda("Hueco = avisos: día sin ánimo en el diario; el color del borde es la media de sus registros.", Modifier.padding(top = 8.dp))
         Ayuda("▪ diario escrito · • momentos · ✦ hito · sello: día sellado (ánimo y diario) · KAL, NON, ID: calendas, nonas e idus del calendario romano.", Modifier.padding(top = 8.dp))
 
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -213,16 +217,19 @@ fun PantallaCalendario(nav: Nav) {
 
         Seccion("Este mes") {
             Tarjeta {
-                val conDiario = dias.count { Repo.dias[it] != null }
+                // Las mismas definiciones de los reportes (Periodo): día con diario = nota o valencia; gasto por día lógico.
+                val conDiario = io.github.ruddy2003.vestigium.ciencia.Periodo.diasConDiario(dias)
                 val transcurridos = dias.count { it <= hoy }
-                val vals = dias.mapNotNull { Repo.dias[it]?.valencia }
-                Clave("dias", "$conDiario de $transcurridos con registro")
-                if (vals.isNotEmpty()) Clave("animus", "%.2f de media · ${porNumero(vals.size, "1 día", "${vals.size} días")}".format(vals.average()))
+                val animos = dias.mapNotNull { animosMes[it] }
+                val vals = animos.map { it.valor }
+                val nAvisos = animos.count { it.deAvisos }
+                Clave("dias", "$conDiario de $transcurridos con diario")
+                if (vals.isNotEmpty()) Clave("animus", "%.2f de media · ${porNumero(vals.size, "1 día", "${vals.size} días")}".format(vals.average()) + (if (nAvisos > 0) " ($nAvisos de avisos)" else ""))
                 val mejor = dias.filter { Repo.dias[it]?.valencia != null }.maxByOrNull { Repo.dias[it]!!.valencia!! }
                 mejor?.let { Clave("optimus", Fechas.corto(it) + " · " + Repo.dias[it]?.valencia) }
                 val mom = Repo.momentos.count { it.fecha.startsWith(mes) && it.tipo != "muestreo" && !it.privado }
                 Clave("momenta", "$mom")
-                val gasto = Repo.gastos.filter { it.fecha.startsWith(mes) }.sumOf { it.monto }
+                val gasto = io.github.ruddy2003.vestigium.ciencia.Periodo.gastoEn(dias)
                 if (gasto > 0) Clave("svmptvs", "$%,.0f".format(gasto))
                 // Las fechas señaladas del mes (con los hitos de antes), en el formato de siempre: «✈ Viaje a la costa».
                 val senaladas = dias.flatMap { io.github.ruddy2003.vestigium.data.Senaladas.etiquetas(Repo.dias[it]) }
@@ -626,11 +633,13 @@ private object MomentosPorDia {
 }
 
 @Composable
-private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean, futuro: Boolean, verFotos: Boolean, onClick: () -> Unit) {
+private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean, futuro: Boolean, verFotos: Boolean, avisos: Boolean = false, onClick: () -> Unit) {
     val d = Repo.dias[fecha]
     // Con «fotos», los días con foto del día la muestran de fondo (las letras van en blanco sobre una sombra).
     val conFoto = verFotos && d?.foto != null
-    val tinta = if (conFoto) Color.White else Tonos.sobre(fondo)
+    // [avisos]: el valor del día sale de los avisos, no del diario; la celda va hueca, con el color solo en el borde.
+    val relleno = if (avisos) MaterialTheme.colorScheme.surface else fondo
+    val tinta = if (conFoto) Color.White else if (avisos) MaterialTheme.colorScheme.onSurface else Tonos.sobre(fondo)
     val nMom = MomentosPorDia.en(fecha)
     val marca = io.github.ruddy2003.vestigium.ui.Estilo.marca(fecha)
     // Sellado: con ánimo y diario, lo mismo que pide la hoja de la noche para «día sellado».
@@ -639,8 +648,8 @@ private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean,
     val forma = formaCelda(tema)
     val cs = MaterialTheme.colorScheme
     Box(
-        modifier.aspectRatio(0.78f).clip(forma).background(fondo)
-            .drawWithContent { drawContent(); marcoCelda(tema, forma, hoy, sellado, cs.outline, cs.primary, cs.tertiary, cs.onPrimary) }
+        modifier.aspectRatio(0.78f).clip(forma).background(relleno)
+            .drawWithContent { drawContent(); if (avisos) { val g = 3.dp.toPx(); drawRect(fondo, Offset(g / 2, g / 2), Size(size.width - g, size.height - g), style = Stroke(g)) }; marcoCelda(tema, forma, hoy, sellado, cs.outline, cs.primary, cs.tertiary, cs.onPrimary) }
             .clickable(onClick = onClick),
     ) {
         if (conFoto) {

@@ -62,6 +62,8 @@ object ReporteTerapia {
     private fun horaYVariacion(p: Pair<Double, Double?>?) = p?.let { (h, s) -> hora(h) + (s?.let { " ± ${(it * 60).roundToInt()} min" } ?: "") }
     private fun dias(n: Int) = if (n == 1) "1 día" else "$n días"
     private fun fechaCorta(f: String) = Fechas.corto(f)
+    /** « (N días)» cuando la media [clave] de [Terapia.Datos.diasDe] sale de menos días que el periodo; si no, nada. */
+    private fun deDias(d: Terapia.Datos, clave: String): String = d.diasDe[clave]?.takeIf { it < d.n }?.let { " (${dias(it)})" } ?: ""
     private fun lista(l: List<Pair<String, Int>>) = l.joinToString(" · ") { "${it.first} (${it.second})" }
 
     /** La regla de los otros reportes ([Reportes]): si la diferencia cabe en un error típico, se dice «parecido». */
@@ -107,7 +109,8 @@ object ReporteTerapia {
                 add(Col("Gimnasio", 1f) { f -> if (!f.gimnasio) "—" else f.gimnasioMin?.let { "${it.roundToInt()} min" } ?: "sí" })
             }
             if (op.privado) {
-                add(Col("Impulso", 0.8f) { f -> f.impulso?.let { "$it de 5" } ?: "—" })
+                add(Col("Impulso (día)", 0.9f) { f -> f.impulso?.let { "$it de 5" } ?: "—" })
+                add(Col("Impulsos (hora)", 0.9f) { f -> if (f.impulsosHora > 0) "${f.impulsosHora}" else "—" })
                 add(Col("Recaída", 0.8f) { f -> when (f.recaida) { true -> "sí"; false -> "no"; null -> "—" } })
             }
         }
@@ -117,8 +120,9 @@ object ReporteTerapia {
             p.tabla(listOf("Día") + cols.map { it.titulo }, d.filas.map { f -> listOf(fechaCorta(f.fecha) + if (marcarDificil && f.dificil) " *" else "") + cols.map { it.valor(f) } },
                 listOf(1.5f) + cols.map { it.peso })
             listOfNotNull(
-                "* Día que marqué como difícil.".takeIf { op.animo },
+                "* Día anotado con el registro mínimo (el botón corto de la notificación).".takeIf { op.animo },
                 "«kcal vs. objetivo»: lo que comí menos mi objetivo de ese día (sin objetivo, lo que comí).".takeIf { op.cuerpo },
+                "«Impulso (día)»: la escala del día, el peor momento (0 a 5). «Impulsos (hora)»: cuántos registré con hora ese día.".takeIf { op.privado },
             ).joinToString(" ").takeIf { it.isNotEmpty() }?.let { p.nota(it) }
         }
 
@@ -126,10 +130,10 @@ object ReporteTerapia {
             p.seccion("Ánimo")
             p.graficaLinea(d.fechas, listOf(d.filas.map { it.valencia?.toDouble() } to ACENTO, d.filas.map { it.activacion } to SEGUNDO), 1.0, 7.0, (1..7).map { it.toDouble() })
             p.leyenda(listOf("Ánimo del diario" to ACENTO, "Energía" to SEGUNDO))
-            p.clave("Ánimo medio del diario", d.valMedia?.let { n1(it) + " de 7" + (cambio(it, d.valAnterior, anteriores, true, d.errorValencia)?.let { c -> " · $c" } ?: "") } ?: "—")
-            p.clave("Energía media", d.actMedia?.let { n1(it) + " de 7" } ?: "—")
+            p.clave("Ánimo medio del diario", d.valMedia?.let { n1(it) + " de 7" + deDias(d, "valencia") + (cambio(it, d.valAnterior, anteriores, true, d.errorValencia)?.let { c -> " · $c" } ?: "") } ?: "—")
+            p.clave("Energía media", d.actMedia?.let { n1(it) + " de 7" + deDias(d, "activacion") } ?: "—")
             val dificiles = d.filas.filter { it.dificil }
-            p.clave("Días difíciles", if (dificiles.isEmpty()) "Ninguno marcado." else "${dificiles.size}: " + dificiles.joinToString(", ") { fechaCorta(it.fecha) })
+            p.clave("Días con registro mínimo", if (dificiles.isEmpty()) "Ninguno." else "${dificiles.size}: " + dificiles.joinToString(", ") { fechaCorta(it.fecha) })
             p.clave("Registros de ánimo en el día", "${d.registrosAnimo}")
             if (d.emociones.isNotEmpty()) p.clave("Emociones más nombradas", lista(d.emociones))
             d.negativasPct?.let { p.clave("Emociones desagradables", "${pct(it)} de las que nombré") }
@@ -158,26 +162,26 @@ object ReporteTerapia {
         if (op.sueno) {
             p.seccion("Sueño")
             p.barras(d.fechas, d.filas.map { it.suenoH }, ::n1)
-            p.clave("Horas de sueño por noche", d.suenoH?.let { n1(it) + " h" + (cambio(it, d.suenoAnterior, anteriores, true, d.errorSueno)?.let { c -> " · $c" } ?: "") } ?: "—")
-            p.clave("Me dormí", horaYVariacion(d.dormir) ?: "—")
-            p.clave("Desperté", horaYVariacion(d.despertar) ?: "—")
-            p.clave("Calidad que anoté", d.calidad?.let { n1(it) + " de 5" } ?: "—")
+            p.clave("Horas de sueño por noche", d.suenoH?.let { n1(it) + " h" + deDias(d, "sueno") + (cambio(it, d.suenoAnterior, anteriores, true, d.errorSueno)?.let { c -> " · $c" } ?: "") } ?: "—")
+            p.clave("Me dormí", horaYVariacion(d.dormir)?.let { it + deDias(d, "dormir") } ?: "—")
+            p.clave("Desperté", horaYVariacion(d.despertar)?.let { it + deDias(d, "despertar") } ?: "—")
+            p.clave("Calidad que anoté", d.calidad?.let { n1(it) + " de 5" + deDias(d, "calidad") } ?: "—")
             p.clave("Noches con sueño ansioso o pesadilla", "${d.pesadillas}")
-            p.clave("Pantalla en la hora antes de dormir", d.camaMin?.let { "${n0(it)} min por noche" } ?: "—")
+            p.clave("Pantalla en la hora antes de dormir", d.camaMin?.let { "${n0(it)} min por noche" + deDias(d, "cama") } ?: "—")
             p.nota("Horas y horarios del reloj. «±» es la desviación estándar: cuánto se movió el horario de una noche a otra.")
         }
 
         if (op.rutina) {
             p.seccion("Actividad y rutina")
-            p.clave("Pasos al día", d.pasos?.let { n0(it) + (cambio(it, d.pasosAnterior, anteriores, false, d.errorPasos)?.let { c -> " · $c" } ?: "") } ?: "—")
+            p.clave("Pasos al día", d.pasos?.let { n0(it) + deDias(d, "pasos") + (cambio(it, d.pasosAnterior, anteriores, false, d.errorPasos)?.let { c -> " · $c" } ?: "") } ?: "—")
             p.clave("Ejercicio (reloj)", "${d.ejercicioMin} min en total")
-            p.clave("Al aire libre", d.aireLibreMin?.let { "${n0(it)} min al día (estimado)" } ?: "—")
-            p.clave("En casa", d.enCasaMin?.let { "${n1(it / 60)} h al día" } ?: "—")
+            p.clave("Al aire libre", d.aireLibreMin?.let { "${n0(it)} min al día (estimado)" + deDias(d, "aire_libre") } ?: "—")
+            p.clave("En casa", d.enCasaMin?.let { "${n1(it / 60)} h al día" + deDias(d, "en_casa") } ?: "—")
             p.clave("Hábitos cumplidos", d.habitosPct?.let(::pct) ?: "—")
-            p.clave("Dolor (0 a 5)", d.dolorMedio?.let { "medio ${n1(it)} · máximo ${d.dolorMax}" } ?: "—")
+            p.clave("Dolor (0 a 5)", d.dolorMedio?.let { "medio ${n1(it)} · máximo ${d.dolorMax}" + deDias(d, "dolor") } ?: "—")
             p.clave("Días con", d.contextos.joinToString(" · ") { "${it.first.lowercase()}: ${it.second}" })
-            p.clave("Pantalla del teléfono", d.pantallaMin?.let { n1(it / 60) + " h al día" + (cambio(it / 60, d.pantallaAnterior?.div(60), anteriores, true, d.errorPantalla?.div(60))?.let { c -> " · $c" } ?: "") } ?: "—")
-            p.clave("Desbloqueos", d.desbloqueos?.let { "${n0(it)} al día" } ?: "—")
+            p.clave("Pantalla del teléfono", d.pantallaMin?.let { n1(it / 60) + " h al día" + deDias(d, "pantalla") + (cambio(it / 60, d.pantallaAnterior?.div(60), anteriores, true, d.errorPantalla?.div(60))?.let { c -> " · $c" } ?: "") } ?: "—")
+            p.clave("Desbloqueos", d.desbloqueos?.let { "${n0(it)} al día" + deDias(d, "pantalla") } ?: "—")
 
             p.seccion("Contacto con otros")
             if (d.diasSociales == 0) p.nota("No hay días con personas anotadas en el periodo.")
@@ -198,7 +202,7 @@ object ReporteTerapia {
                 p.clave("Duración", d.gimnasio.joinToString(" · ") { "${fechaCorta(it.first)}: ${it.second?.let { m -> "${m.roundToInt()} min" } ?: "sin duración"}" })
                 if (mins.isNotEmpty()) p.clave("En total", "${n0(mins.sum())} min · ${n0(mins.average())} min por entreno")
             }
-            if (d.otrasSesiones.isNotEmpty()) p.clave("Otras sesiones (reloj)", d.otrasSesiones.joinToString(" · ") { "${it.first}: ${it.second} (${it.third} min)" })
+            if (d.otrasSesiones.isNotEmpty()) p.clave("Otras sesiones (reloj, en días sin gimnasio)", d.otrasSesiones.joinToString(" · ") { "${it.first}: ${it.second} (${it.third} min)" })
 
             p.seccion("Alimentación")
             val nu = d.nutricion
@@ -242,8 +246,9 @@ object ReporteTerapia {
         if (op.momentosPeriodo) {
             p.seccion("Momentos del periodo")
             if (d.mejorMomento == null && d.peorMomento == null) p.nota("No anoté lo mejor ni lo peor en el mejor ni en el peor día.")
-            d.mejorMomento?.let { (f, t) -> p.clave("Lo mejor (${fechaCorta(f)}, mi mejor día)", t) }
-            d.peorMomento?.let { (f, t) -> p.clave("Lo peor (${fechaCorta(f)}, mi peor día)", t) }
+            // Si varios días comparten la valencia más alta (o la más baja), se dice el empate: el texto es del primero de ellos.
+            d.mejorMomento?.let { (f, t) -> p.clave("Lo mejor (${fechaCorta(f)}, " + (if (d.empateMejor > 1) "uno de mis ${d.empateMejor} mejores días, empatados" else "mi mejor día") + ")", t) }
+            d.peorMomento?.let { (f, t) -> p.clave("Lo peor (${fechaCorta(f)}, " + (if (d.empatePeor > 1) "uno de mis ${d.empatePeor} peores días, empatados" else "mi peor día") + ")", t) }
         }
 
         if (op.momentosDia) {
@@ -258,8 +263,12 @@ object ReporteTerapia {
         d.privados?.let { pr ->
             p.seccion("Seguimiento privado")
             p.nota("Incluido porque lo elegí al generar este reporte.")
-            p.clave("Impulso del día (0 a 5)", pr.impulsoMedio?.let { "medio ${n1(it)}" } ?: "—")
-            p.clave("Impulsos registrados", "${pr.impulsos}" + if (pr.impulsos > 0) " · sin recaída en las 3 h siguientes: ${pr.superados}" else "")
+            // Dos mediciones distintas, cada una con su nombre: la escala del día y los registros con hora.
+            p.clave("Escala del día: el peor momento (0 a 5)", pr.impulsoMedio?.let { "media ${n1(it)}" + (if (pr.impulsoDias < d.n) " (${dias(pr.impulsoDias)})" else "") } ?: "—")
+            p.clave("Impulsos registrados con hora (intensidad de 1 a 5)", "${pr.impulsos}" +
+                (pr.intensidadHora?.let { " · intensidad media ${n1(it)}" + (if (pr.intensidadHoraN < pr.impulsos) " (de ${pr.intensidadHoraN} con intensidad)" else "") } ?: "") +
+                if (pr.impulsos > 0) " · sin recaída en las 3 h siguientes: ${pr.superados}" else "")
+            p.nota("Son dos mediciones: la escala del día resume el peor momento de ese día; cada registro con hora lleva su propia intensidad. No se promedian juntas.")
             p.clave("Días con recaída", "${pr.diasConRecaida} de ${dias(pr.diasRespondidos)} con respuesta")
             if (pr.detonantes.isNotEmpty()) p.clave("Detonantes más frecuentes", lista(pr.detonantes))
             p.clave("Medicamentos anotados", if (pr.medicamentos.isEmpty()) "Ninguno." else pr.medicamentos.joinToString(" · ") { "${it.first} (${dias(it.second)})" })
