@@ -122,8 +122,9 @@ fun Emblema(tema: TemaId = Estilo.tema, tam: Dp = 30.dp, esquema: ColorScheme = 
         inf.animateFloat(0f, 1f, infiniteRepeatable(tween(periodo(tema), easing = LinearEasing)), label = "t")
     } else remember { mutableFloatStateOf(0.3f) }
     val oscuro = esquema.background.luminance() < 0.5f
-    // Art déco y Edo: el emblema animado en su propia capa, para que su movimiento no redibuje el encabezado entero.
-    val capa = if (animado && animacionLigera(tema)) Modifier.graphicsLayer() else Modifier
+    // El emblema animado va en su propia capa, para que su movimiento no vuelva a grabar el encabezado entero (y con él,
+    // toda la hoja que se desplaza). Al principio solo en Art déco y Edo; desde el 10 nov 2026, en todos los temas.
+    val capa = if (animado) Modifier.graphicsLayer() else Modifier
     Canvas(modifier.size(tam).then(capa).semantics { contentDescription = "emblema ${tema.nombre}" }) {
         dibujarEmblema(tema, t.value, esquema, oscuro)
     }
