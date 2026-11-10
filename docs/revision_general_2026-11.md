@@ -10,7 +10,7 @@ Diagnóstico pedido por el autor tras las primeras semanas de uso real. **No cam
 
 **Qué significa «cambia lo guardado».** Es una corrección de error, permitida por la regla, pero pide subir `SCHEMA_V`, anotar la columna en `Diccionario.kt` (`DESDE`) y una fila en el Apéndice D. Conviene hacerlas **antes del 1 de enero de 2027**, para que 2027 empiece limpio. Los hallazgos metodológicos están además en `docs/paper/hallazgos.md` (H-22-1 a H-22-12).
 
-**Lo ya resuelto** en la revisión de uso del 10 de noviembre (Apéndice D.171 a D.179) no se repite aquí: el cierre de la hoja de la noche, el regreso a «¿Cómo estás ahora?», la lista completa de personas, los días por persona en los reportes, el libro por meses del calendario, los promedios «al día», la comparación con el mes anterior y el desplazamiento de Diario y Vida.
+**Lo ya resuelto** en la revisión de uso del 10 de noviembre (Apéndice D.171 a D.179) no se repite aquí. **Actualización:** el autor aprobó aplicar el resto; cada hallazgo lleva su estado y lo hecho está en el Apéndice D.180 a D.189. Quedan fuera, por decisión suya, reordenar Hoy y la carga perezosa al arrancar: el cierre de la hoja de la noche, el regreso a «¿Cómo estás ahora?», la lista completa de personas, los días por persona en los reportes, el libro por meses del calendario, los promedios «al día», la comparación con el mes anterior y el desplazamiento de Diario y Vida.
 
 ---
 
@@ -50,6 +50,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** cambia lo guardado (corrección): `SCHEMA_V`, `DESDE` en `registros_animo` y `n_momentos`, Apéndice D. Anotado como H-22-1.
 
 ### 2. Una relectura vacía del sensor pisa datos buenos
+- **Estado:** **resuelto** el 10 de noviembre (D.188).
 - **Tema:** datos.
 - **Dónde:** Ajustes → Sistema → «Sincronizar todo ahora» y al conceder Health Connect (`ui/pantallas/Sistema.kt`); `sensores/Salud.kt` (`sincronizar`), `sensores/Pantalla.kt`, `data/Fusion.kt`.
 - **Qué pasa:** al releer un día, pasos, frecuencia cardiaca y sueño se sustituyen por lo que devuelva la fuente, aunque sea «nada»; la pantalla sin eventos se guarda como 0 minutos. En un teléfono nuevo, tras restaurar el respaldo, Health Connect y el uso de apps suelen llegar vacíos: la sincronización de 30 días deja en blanco días que venían completos. Además, la sincronización lee el día al empezar y lo guarda al final, así que una corrección manual del sueño hecha entretanto se pierde. Y al fusionar un respaldo «manda el respaldo» aunque sea más viejo que lo que hay.
@@ -69,6 +70,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** cambia lo guardado (corrección): `SCHEMA_V` y Apéndice D. Anotado como H-22-2.
 
 ### 4. Una base dañada se borra sola, y un documento ilegible se pisa
+- **Estado:** **resuelto** el 10 de noviembre en lo esencial (D.188): la base dañada se aparta en vez de borrarse y lo ilegible se copia. Falta la pantalla de rescate que copie la base a una carpeta.
 - **Tema:** datos.
 - **Dónde:** `data/Db.kt` (sin `DatabaseErrorHandler`), `App.kt` (`Repo.init` sin protección), `data/Repo.kt` (lectura de `dias`, `salud`, `notifs`).
 - **Qué pasa:** ante un error de corrupción, Android usa su manejador por defecto, que **elimina** el archivo; la app arranca vacía y con ajustes nuevos. Si `Repo.init` falla por otra causa, la app se cierra al abrir y tampoco deja exportar. Por otro lado, si un día guardado no se puede leer, se muestra vacío y la siguiente escritura lo reemplaza; solo los ajustes guardan copia de lo ilegible.
@@ -78,6 +80,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 5. El «ánimo de la semana» tiene cuatro fórmulas
+- **Estado:** **resuelto** el 10 de noviembre (D.183): una sola función; los días que salen de avisos se dibujan huecos y se rotulan.
 - **Tema:** cálculo.
 - **Dónde:** Hoy, Vida, Semana, Calendario, «El año», el widget y los reportes (`ciencia/Periodo.kt` `valDe`; `ui/pantallas/Semana.kt`, `Vida.kt`, `Hoy.kt`, `Anno.kt`, `Calendario.kt`; `widget/Widgets.kt`).
 - **Qué pasa:** los reportes usan solo la valencia del diario. Las pantallas rellenan los días sin valencia con la media de los registros de ánimo de ese día. «Esta semana» de Hoy son 7 días móviles; las demás van de lunes a domingo.
@@ -87,6 +90,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe (son vistas). Anotado como H-22-4.
 
 ### 6. Los resúmenes y los días por persona no pasan por la misma función
+- **Estado:** **resuelto** el 10 de noviembre (D.184).
 - **Tema:** cálculo.
 - **Dónde:** `ciencia/Periodo.kt` (reportes) frente a `ui/pantallas/Semana.kt`, `Anno.kt`, `Calendario.kt`, `ui/LibroDiario.kt` (`resumenMes`), `ciencia/Totales.kt`, `widget/Widgets.kt`.
 - **Qué pasa:** «días con diario» es nota o valencia en un sitio, solo nota en otro y cualquier día guardado en otros dos. El sueño medio descarta las noches de menos de 120 minutos solo en `Periodo`. Los pasos medios cuentan o no los días en cero. El gasto va por día lógico en unos y por fecha de calendario en otros.
@@ -97,6 +101,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe en pantallas ni reportes. La Red se exporta: si cambia su cuenta, anotarlo en `DESDE` y en el Apéndice D. Anotado como H-22-5.
 
 ### 7. El ánimo cuesta un toque de más y «Listo» queda al fondo
+- **Estado:** **resuelto** el 10 de noviembre (D.189): ⊕ abre con la cuadrícula a la vista y «Listo» fijo.
 - **Tema:** navegación.
 - **Dónde:** botón ⊕ → «Ánimo ahora» (`ui/QuickActivity.kt`: `MenuQuick`, `Animo`, `HojaQuick`).
 - **Qué pasa:** ⊕ abre un menú y el ánimo es otro toque; el atajo (toque largo en ⊕) no se ve en ningún lado. «Listo» va al final de una columna larga y la hoja no tiene tope de alto: hay que desplazar para cerrar.
@@ -106,6 +111,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe (mismo registro y mismo origen).
 
 ### 8. Tres maneras de guardar, «atrás» pierde sin avisar y «sellar ↓» no sella
+- **Estado:** **resuelto** el 10 de noviembre (D.189).
 - **Tema:** navegación.
 - **Dónde:** hoja rápida ⊕ (`ui/QuickActivity.kt`: `terminar`, `tocarFuera`, `GastoRapido`, `ConsumoRapido`), Notas (`ui/pantallas/Lote2.kt`), Llenar el día.
 - **Qué pasa:** ánimo, sueño e impulso se guardan al tocar y se cierran con «Listo»; gasto y sustancia piden «Registrar» o «Guardar». Tocar fuera avisa solo si hay un monto escrito; «atrás» nunca avisa. Una nota a medio escribir se pierde con «atrás». En la hoja de la noche conviven «se guarda solo mientras escribes» y un botón «Guardar y volver»; y con el día completo, el botón «sellar ↓» de la barra fija (`ui/pantallas/Dia.kt`, `BarraNoche`) solo desplaza hasta «Sellar el día», que está después de las secciones opcionales: hay que tocar otra vez.
@@ -115,6 +121,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 9. El respaldo que falla puede no avisar, y los reportes automáticos se pierden si ese día algo falla
+- **Estado:** **resuelto** el 10 de noviembre (D.188).
 - **Tema:** datos.
 - **Dónde:** `avisos/Trabajo.kt` (pasos de la tarea de fondo).
 - **Qué pasa:** cada paso se intenta como mucho dos veces al día. El aviso «el respaldo falló» vive dentro del mismo paso: si el paso se corta dos veces (por tiempo o porque el sistema mata el proceso), ya no corre y el aviso nunca suena. Los errores se tragan sin dejar rastro. Los reportes semanal, mensual y «Tu año» se marcan como hechos antes de hacerse y solo se intentan en su día exacto: si fallan o el teléfono estuvo apagado, no salen.
@@ -124,6 +131,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 10. Rótulos sin español en lo principal
+- **Estado:** **resuelto** el 10 de noviembre (D.189).
 - **Tema:** diseño.
 - **Dónde:** barra de pestañas (`ui/MainActivity.kt`, `ui/Textos.kt`, `ui/Rotacion.kt`); tarjeta principal de Hoy (`ui/pantallas/Hoy.kt`, que toma solo la primera parte de `Estilo.seccion`).
 - **Qué pasa:** las pestañas cambian de nombre e ícono con el tema; con la rotación diaria cambian cada día y solo la posición es estable. «Te falta hoy» y «Llenar el día» salen solo en la lengua del tema (árabe, latín, griego), sin la traducción pequeña que sí llevan las demás secciones.
@@ -133,7 +141,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 11. Nombres que afirman un calendario que el dato no usa
-- **Estado:** **resuelto en los reportes** el 10 de noviembre (Apéndice D.179): el encabezado y el pie dicen la fecha común y, debajo, la del tema. Sigue pendiente en las pantallas y el widget.
+- **Estado:** **resuelto** el 10 de noviembre (D.179 en reportes; D.189 en pantallas y widget con `Estilo.mesConComun`). El nombre del mes del tema Templario conserva «juliano», siempre con el mes común al lado.
 - **Tema:** diseño.
 - **Dónde:** `ui/Estilo.kt` (`mes`, `fecha`), `ui/nombres/NombresTemplario.kt`, `ui/Temas.kt`; se ve en Diario, libreta de momentos, bibliotecas, el reporte mensual y el widget.
 - **Qué pasa:** en Templario un mes del calendario común se rotula «<mes> juliano» y el conteo dice «este mes juliano», aunque los días contados son los del mes gregoriano; el encabezado y el pie de un mismo reporte pueden dar meses distintos. Revolución, Egipto y Neón hacen algo parecido con sus nombres de mes o con numeraciones inventadas que parecen dato. Solo el Calendario añade el mes común al lado.
@@ -143,6 +151,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe. Anotado como H-22-11.
 
 ### 12. Zonas de toque pequeñas y poco contraste en lo que se toca
+- **Estado:** **resuelto en parte** el 10 de noviembre (D.189): zonas de toque y pestañas. Falta el «contorno de control» de 3:1 en todos los esquemas.
 - **Tema:** diseño.
 - **Dónde:** `ui/pantallas/Hoy.kt` (invitaciones, «hoy no»), `ui/pantallas/Dia.kt` (filas de «Tu día»), `ui/Componentes.kt` (cabecera plegable de `Seccion`, quitar etiqueta, fichas, casillas de `Escala`, botones secundarios), `ui/MainActivity.kt` (pestañas no elegidas), `ui/Disenios.kt` (esquemas de color).
 - **Qué pasa:** las invitaciones miden unos 28 dp de alto; «hoy no», que las descarta todas, queda a 14 dp de la última y atenuado; las filas de «Tu día» miden unos 32 dp y van quince seguidas; la cabecera plegable, entre 22 y 29 dp (la guía de Android pide 48). Además, la pestaña no elegida usa el color de acento al 72 % y letra de 11 sp que puede bajar a 8: queda por debajo de 3:1 de contraste en ocho esquemas, varios de ellos oscuros. La superficie y el fondo casi no se distinguen (de 1.05 a 1.21) y el borde de 1 dp tampoco (de 1.4 a 2.2) en los 58 esquemas, así que fichas y casillas dependen de un borde que apenas se ve. El acento usado como texto baja de 4.5:1 en cuatro esquemas.
@@ -152,6 +161,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 13. Reimportar borra por rango de fechas, no por lo que trae el archivo
+- **Estado:** **resuelto** el 10 de noviembre (D.188).
 - **Tema:** datos.
 - **Dónde:** Importar MacroFactor y Spotify (`data/Macrofactor.kt`, `data/Importaciones.kt`, `data/Repo.kt` `importarMacrofactor`, `data/Importar.kt`).
 - **Qué pasa:** al importar se borra todo entre la primera y la última fecha del archivo. Un archivo de MacroFactor que solo trae nutrición borra las series de gimnasio de ese rango, y al revés. En Spotify, elegir archivos de años no contiguos borra las escuchas captadas por notificación en los años de en medio. Borrar e insertar van en transacciones separadas. Al restaurar un respaldo, nutrición, comidas y series solo entran si aquí no hay nada, sin avisar.
@@ -161,6 +171,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 14. «Tu año» afirma cosas con muy pocos datos o con datos de antes de usar la app
+- **Estado:** **resuelto** el 10 de noviembre (D.185). «Estabas en…» se deja como está por decisión del autor.
 - **Tema:** cálculo.
 - **Dónde:** `ciencia/TuAnio.kt`, `ui/pantallas/TuAnio.kt`, `ciencia/Periodo.kt` (`mejorDia`).
 - **Qué pasa:** (a) «dormías de X a Y» y «caminabas unos N pasos» son la **moda** en cajas (de 15 minutos, de 1,000 pasos): con pocas noches gana una caja con cuatro o cinco casos aunque la media esté una hora más tarde; (b) «tu mejor día de la semana» se decide con tres o cuatro días por barra; (c) «el día más raro» y «estabas en…» pueden salir del historial importado, meses antes del primer día de diario; (d) en un empate («el día más feliz») gana el primero sin decir que hubo empate; (e) «días escritos de N» divide entre todos los días del año aunque el diario empezara en octubre; (f) la «palabra del año», sin años anteriores con que comparar, es solo la más frecuente; (g) los kilómetros del reloj van por día de calendario y los pasos por día lógico.
@@ -170,6 +181,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe (análisis). Anotado como H-22-6.
 
 ### 15. Lo que llega por ⊕ o por un aviso borra lo que tenías abierto
+- **Estado:** **resuelto** el 10 de noviembre (D.189).
 - **Tema:** navegación.
 - **Dónde:** `ui/MainActivity.kt` (`Raiz`, al recibir un destino), `ui/QuickActivity.kt`, `avisos/Avisos.kt`.
 - **Qué pasa:** ⊕ → Nota desde Diario → Biblioteca termina en Hoy → Notas: «atrás» ya no vuelve a donde estabas. Tocar un aviso a media carta o a medio cuestionario descarta lo abierto.
@@ -179,6 +191,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 16. En Hoy, lo que se puede hacer queda debajo del primer pantallazo
+- **Estado:** **no se hace**, por decisión del autor.
 - **Tema:** diseño.
 - **Dónde:** Hoy (`ui/pantallas/Dia.kt` y `Hoy.kt`).
 - **Qué pasa:** antes de «Te falta hoy» van el título (dos o tres renglones), la fecha del tema, la fecha común, una banda, el estado («guardado · racha»), la frase, el gato y los últimos días. La tarjeta empieza entre 715 y 950 dp según el tema: fuera de la primera vista en casi cualquier teléfono. En Básico la fecha sale dos veces. Hoy mide unos 3,000 dp, y Llenar el día unos 3,400 con once secciones.
@@ -188,6 +201,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 17. Lo frecuente está lejos y Gastos no tiene puerta
+- **Estado:** **resuelto** el 10 de noviembre (D.189).
 - **Tema:** navegación.
 - **Dónde:** `ui/pantallas/Mas.kt`, `Vida.kt`, `Explorar.kt`, `Gastos.kt`, `Pantallas.kt` («Tus atajos»); `ui/QuickActivity.kt` (`Registrar`).
 - **Qué pasa:** Gastos solo se abre desde Análisis o el Tablero, no está en «Más» y es la única pantalla apilada sin «←». Sustancias, Suplementos, Hábitos y Privado están a tres toques (⚙ → sección → fila). En ⊕ los suplementos se anotan en un toque, pero los gastos frecuentes están un nivel abajo, la última sustancia pide cinco toques y el monto no toma el foco.
@@ -197,6 +211,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 18. El reporte de terapia cuenta dos veces el gimnasio y da medias sin decir de cuántos días
+- **Estado:** **resuelto** el 10 de noviembre (D.186).
 - **Tema:** reportes.
 - **Dónde:** `ciencia/Terapia.kt`, `reportes/ReporteTerapia.kt`.
 - **Qué pasa:** el reloj guarda la sesión de gimnasio como tipo «otro», y la regla que evita duplicarla solo reconoce «fuerza» y «pesas»: los mismos días salen en «Gimnasio» y en «Otras sesiones». Algunas medias se dan aunque salgan de un solo día del periodo. «Mi mejor día» no dice cuando hay varios empatados. Los avisos «mostrados» pueden superar a los «planeados» cuando un día no tiene fila de plan.
@@ -206,6 +221,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe (presentación). Anotado como H-22-12.
 
 ### 19. «Día difícil» mide por dónde entraste, no cómo fue el día
+- **Estado:** **resuelto** el 10 de noviembre (D.181 y D.186): `dia_dificil` se rotula «registro mínimo» y hay un campo nuevo `dificil` que marca el autor.
 - **Tema:** cálculo.
 - **Dónde:** botón de la notificación (`avisos/Avisos.kt`, `ui/QuickActivity.kt`), `reportes/ReporteTerapia.kt`, `ciencia/Estadistica.kt` (`dia_dificil`).
 - **Qué pasa:** `dia_dificil` solo se enciende al registrar la valencia desde el botón «registro mínimo» de la notificación, sea cual sea la valencia. En la hoja del día solo se puede quitar, no poner.
@@ -215,6 +231,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** el rótulo no rompe; la ficha nueva cambia cómo se registra. Anotado como H-22-8.
 
 ### 20. Impulso, recaída y detonantes viven en el Día y en el Momento, con escalas distintas
+- **Estado:** **resuelto** el 10 de noviembre (D.186): dos filas con su nombre.
 - **Tema:** cálculo.
 - **Dónde:** Privado (`ui/pantallas/Recaidas.kt`), hoja rápida (`ui/QuickActivity.kt`), `data/Recaidas.kt`, `ciencia/Terapia.kt`, `data/Diccionario.kt`.
 - **Qué pasa:** el día guarda una escala de 0 a 5 y el registro con hora otra de 1 a 5. Una recaída con hora marca también el día; un impulso con hora no toca la escala del día. El reporte cuenta los registros con hora y promedia la escala del día, sin decir que son dos mediciones.
@@ -224,7 +241,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe si solo cambian rótulos; unificar las escalas sí la rompería. Anotado como H-22-7.
 
 ### 21. Un doble toque guarda dos veces
-- **Estado:** **resuelto en parte** el 10 de noviembre (Apéndice D.177): una toma de suplemento idéntica a otra ya no se guarda. Falta el guardián general de los botones.
+- **Estado:** **resuelto** el 10 de noviembre (D.177 y D.188).
 - **Tema:** datos.
 - **Dónde:** hoja rápida ⊕ (`ui/QuickActivity.kt`: suplementos, registros privados), huella del día.
 - **Qué pasa:** la auditoría encontró registros gemelos con la misma marca de tiempo o a segundos de distancia en una toma de suplemento, en un registro con hora y en una huella. Los botones de guardar no se desactivan tras el primer toque.
@@ -234,6 +251,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** cambia lo guardado solo en que evita duplicados (corrección): anotarlo en el Apéndice D.
 
 ### 22. El panel carga todas las ubicaciones de la historia cada vez
+- **Estado:** **resuelto en parte** el 10 de noviembre (D.188): `kmPorDia` por cursor y con caché. Falta la caché del panel entero.
 - **Tema:** lentitud.
 - **Dónde:** `ciencia/Estadistica.kt` (`panel`, `kmPorDia`), `data/Exportar.kt`, `ciencia/Logros.kt`.
 - **Qué pasa:** cada cálculo del panel crea un objeto por cada punto de ubicación guardado. Hay doce llamadas sin caché, y una más por cada logro propio que dependa de una variable. Si no cabe en memoria, el error se captura y `distancia_km` sale vacía en la pantalla y en el CSV, sin aviso.
@@ -243,6 +261,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe si el resultado es idéntico (comprobarlo con una prueba).
 
 ### 23. «Tu día» filtra colecciones enteras en cada redibujado
+- **Estado:** **resuelto** el 10 de noviembre (D.184): filtros en `remember`.
 - **Tema:** lentitud.
 - **Dónde:** Hoy y Llenar el día (`ui/pantallas/Dia.kt`, `TuDia` y `Vestigios`; `Hoy.kt`); `ui/Cartas.kt` (`SobreCarta`).
 - **Qué pasa:** nueve filtros sobre colecciones completas sin `remember`; el de visitas interpreta la fecha de todas las visitas de la historia. Se repiten con cada cambio del día, es decir, con cada tecla. El brillo del sobre de las cartas se lee al componer, no al dibujar.
@@ -252,6 +271,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 24. El widget «hoy» desordena las cifras en al-Ándalus y no lleva español en Seda
+- **Estado:** **resuelto** el 10 de noviembre (D.189).
 - **Tema:** diseño.
 - **Dónde:** `widget/Widgets.kt`.
 - **Qué pasa:** la línea empieza con la clave en árabe y el renglón entero se voltea de derecha a izquierda: «6 h 54» se lee «h 54 6», y la fecha igual. En Seda las claves van solo en chino.
@@ -261,6 +281,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 25. Importes y ejes en letra de adorno
+- **Estado:** **resuelto en parte** el 10 de noviembre (D.189): importes de Gastos. Falta el mínimo de 11 sp en los ejes de todas las gráficas.
 - **Tema:** diseño.
 - **Dónde:** Gastos y gráficas (`ui/EstiloGrafica.kt` `letraCifras`, `ui/pantallas/Gastos.kt`).
 - **Qué pasa:** en Art déco el importe va en una letra fina y gris donde la coma parece punto; en Cueva, en una letra angosta; los ejes miden unos 9.7 sp. En una misma pantalla hay tres letras distintas para dinero.
@@ -270,6 +291,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 26. La ficha de una persona está a 4 o 5 toques y el grafo no la abre
+- **Estado:** **resuelto** el 10 de noviembre (D.189).
 - **Tema:** navegación.
 - **Dónde:** Vida → Social (`ui/pantallas/Social.kt`, `Gente.kt`).
 - **Qué pasa:** tocar una persona en el grafo ofrece «ver en Tu gente →», que abre la lista general, no a esa persona. «Tu gente» existe dos veces: como pantalla y como sección plegada de Social.
@@ -298,6 +320,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** campo opcional nuevo (permitido).
 
 ### 29. El análisis presenta como hallazgo lo que es el mismo hecho
+- **Estado:** **resuelto** el 10 de noviembre (D.181).
 - **Tema:** cálculo.
 - **Dónde:** Análisis → relaciones (`ciencia/Estadistica.kt`, `FAMILIAS`; variables `ctx_*`, `gimnasio`, `vi_*`, `con_*`).
 - **Qué pasa:** el contexto «gym», el día de gimnasio y el entrenamiento importado son el mismo hecho medido tres veces, y lo mismo pasa con «vi a mi familia» y «con familia». Ninguna variable `ctx_*` está en las familias de «relaciones obvias», así que salen como descubrimiento.
@@ -307,6 +330,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe (análisis). Anotado como H-22-9.
 
 ### 30. Tres motores para metas, logros propios y campañas
+- **Estado:** **resuelto en parte** el 10 de noviembre (D.187): `cumple()` compartida y texto corregido. Los editores y los propósitos siguen separados.
 - **Tema:** cálculo.
 - **Dónde:** `data/Metas.kt`, `ciencia/Logros.kt`, `ciencia/Campanas.kt`; editores en `ui/pantallas/Lote2.kt` y `Logros.kt`.
 - **Qué pasa:** cada uno evalúa «cumplí hoy» con su propio código. En Metas un día cuenta con «mayor o igual» al umbral; en los logros propios, con «mayor», aunque el texto diga «desde». Los propósitos del año se pueden escribir en tres sitios (el perfil, una meta con año y una nota de tipo «propósito»).
@@ -316,6 +340,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe si cada registro conserva su regla. Anotado como H-22-10.
 
 ### 31. Dos pantallas «Tu año» y el mismo contenido en demasiadas vistas
+- **Estado:** **resuelto** el 10 de noviembre (D.189): «Todos tus registros» se retiró, «El año en píxeles» y notas nuevas sin «idea». Los formatos de exportación del diario siguen igual.
 - **Tema:** redundancia.
 - **Dónde:** `ui/pantallas/Anno.kt` (ruta `anno`) y `TuAnio.kt` (ruta `tu_anio`); `Momentos.kt`, `LibretaMomentos.kt`, `Diarios.kt`, `ui/LibroDiario.kt`.
 - **Qué pasa:** hay dos pantallas con el mismo nombre; el «Resumen» de la primera usa cifras propias y su botón «Guardar imagen del año» genera el reporte con otras. «Todos tus registros» convive con la Libreta, el filtro del Diario y la Cinta. El diario se exporta en cinco formatos con dos motores de PDF.
@@ -325,6 +350,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 32. Rótulos que se salen y nombres distintos para lo mismo
+- **Estado:** **resuelto** el 10 de noviembre (D.189).
 - **Tema:** diseño.
 - **Dónde:** línea de 24 horas de Hoy (`ui/pantallas/Hoy.kt`); textos en `ui/QuickActivity.kt`, `ui/Componentes.kt`, `avisos/Avisos.kt`.
 - **Qué pasa:** en la línea de 24 horas el rótulo se escribe en blanco desde el inicio del bloque sin comprobar si cabe (pasa también en Básico). El mismo registro se llama «Ánimo ahora», «aviso de ánimo», «muestreo de hoy», «momento» y «registro» según la pantalla. La escala vacía dice dos veces «sin marcar».
@@ -334,6 +360,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** no rompe.
 
 ### 33. Detalles de la exportación
+- **Estado:** **resuelto en parte** el 10 de noviembre (D.182), probado con R sobre una exportación real. Falta `video_id` de YouTube: hace falta un Takeout de muestra.
 - **Tema:** exportación.
 - **Dónde:** `data/Diccionario.kt` (`tipo`), `data/Exportar.kt`, `sensores/Pantalla.kt`, `data/Importaciones.kt` (YouTube), `assets/vestigium.R`.
 - **Qué pasa:** (a) una columna que aún no tiene datos se declara «texto» si su nombre no acaba en un sufijo conocido (`fc_reposo`, `hrv`, `wa_mios`…), y R la lee como texto; (b) `dia_especial` sale como `0/1` en unas filas y `0.0/1.0` en otras del panel extendido; (c) el panel extendido trae una fila de mañana (por la agenda y la luna); (d) `por_hora_min` trunca cada hora, así que sus 24 valores suman unos minutos menos que `total_min`; (e) `video_id` de YouTube sale vacío en todo lo importado, quizá por una cabecera no reconocida; (f) `vestigium.R` no carga siete tablas: cartas, citas, catálogo de fotos, mundo, perfil, política y YouTube.
@@ -343,6 +370,7 @@ Le siguen de cerca los nombres de calendario inexactos (11) y las zonas de toque
 - **Congelación:** (d) y (e) cambian lo guardado (corrección); las demás solo cambian la exportación o R.
 
 ### 34. «Idea» en cuatro sitios, ajustes muertos, utilidades copiadas y código sin uso
+- **Estado:** **resuelto en parte** el 10 de noviembre (D.188, D.189): código sin uso borrado e «idea» fuera de las notas nuevas. Faltan las utilidades copiadas y los ajustes muertos.
 - **Tema:** redundancia.
 - **Dónde:** `data/Catalogo.kt` (tipo de momento, tipo de pensamiento y tipo de nota «idea») y el Ideario; `data/Modelo.kt` (`Config`); varios archivos de `ui/`.
 - **Qué pasa:** una idea se puede anotar como momento, como nota o en el Ideario. En los ajustes hay campos sin uso o duplicados (`barometro_ajuste`, `enfoque_tipo` y `enfoque_inicio`, `suplementos_hora`, `salud_sexo` frente a `perfil.sexo`; `metas_hora` se lee pero no tiene control) y la Papelera aparece dos veces. Hay utilidades copiadas: el halo privado 21 veces en `ui/vida/`, el formato de dinero cuatro veces (con y sin centavos), el de horas y minutos tres, y el formulario de gasto dos. Y hay funciones sin ningún uso, justo las versiones «todo en memoria» que ya se sustituyeron: `Exportar.respaldoJson`, `csvUbicaciones` y `csvCatalogoFotos`; las versiones de `Respaldos.restaurar` y `verificar` que reciben todo en memoria; `Drive.bajar` con `Red.bajar`; `Fechas.zonaDelDia`; `Instant.local` en `sensores/Salud.kt`; y `Db.enTransaccion`, que duplica `transaccion`.

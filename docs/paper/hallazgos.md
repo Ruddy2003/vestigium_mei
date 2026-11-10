@@ -1445,6 +1445,7 @@ Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11
 - **Por qué importa:** los días restaurados pueden quedar en blanco o en cero sin aviso, y un 0 de pantalla parece un dato real.
 - **Gravedad:** Alta (pérdida silenciosa), aunque solo ocurre al migrar o al forzar la sincronización.
 - **Propuesta:** no reemplazar un valor por nulo o cero cuando la fuente vino vacía, como ya se hace con `fc_reposo`, `spo2` y `hrv`. No cambia campos ni fórmulas.
+- **Estado:** Resuelto el 10 nov 2026 (D.188).
 
 ### H-22-4 · El «ánimo de la semana» se calcula de cuatro maneras
 - **Dónde:** `ciencia/Periodo.kt` (`valDe`) frente a `ui/pantallas/Semana.kt`, `Vida.kt`, `Hoy.kt`, `Anno.kt`, `Calendario.kt` y `widget/Widgets.kt`.
@@ -1452,6 +1453,7 @@ Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11
 - **Por qué importa:** la misma semana muestra cifras distintas, y el relleno mezcla la valencia recordada con la momentánea, que el capítulo 3 (3.3.4) pide no mezclar.
 - **Gravedad:** Media.
 - **Propuesta:** una sola función para todas las vistas; el relleno con avisos, si se conserva, rotulado aparte.
+- **Estado:** Resuelto el 10 nov 2026 (D.183): `Periodo.animoDia`; los días de avisos van marcados.
 
 ### H-22-5 · Los resúmenes usan definiciones distintas de la misma cifra
 - **Dónde:** `ciencia/Periodo.kt` frente a `ui/pantallas/Semana.kt`, `Anno.kt`, `Calendario.kt`, `ui/LibroDiario.kt` (`resumenMes`), `ciencia/Totales.kt`, `widget/Widgets.kt`; los días por persona, en `data/Personas.kt` (`diasCon`) frente a ocho copias.
@@ -1459,6 +1461,7 @@ Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11
 - **Por qué importa:** el resumen del libro, el de la pantalla y el del reporte del mismo mes no coinciden.
 - **Gravedad:** Media.
 - **Propuesta:** `Periodo.calcular` y `Personas.diasCon` como únicas fuentes.
+- **Estado:** Resuelto el 10 nov 2026 (D.184).
 
 ### H-22-6 · «Tu año» afirma con muy pocos casos o con datos de antes de usar la app
 - **Dónde:** `ciencia/TuAnio.kt` (`moda`, lo común, el día más raro, la palabra del año), `ciencia/Periodo.kt` (`mejorDia`), `ui/pantallas/TuAnio.kt`.
@@ -1466,6 +1469,7 @@ Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11
 - **Por qué importa:** son frases rotundas con poco detrás; se prestan a leerse como hechos.
 - **Gravedad:** Media.
 - **Propuesta:** un mínimo de casos por frase (por ejemplo, 14 noches y 5 días por barra) y callar por debajo; limitar esas frases a los días desde el primer registro propio; decir los empates.
+- **Estado:** Resuelto el 10 nov 2026 (D.185); «estabas en…» se deja igual por decisión del autor.
 
 ### H-22-7 · El impulso se mide en el día y en el momento, con escalas distintas
 - **Dónde:** `ui/pantallas/Recaidas.kt`, `ui/QuickActivity.kt`, `data/Recaidas.kt`, `ciencia/Terapia.kt`.
@@ -1473,6 +1477,7 @@ Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11
 - **Por qué importa:** quien lea el reporte puede tomarlas por una sola medida.
 - **Gravedad:** Baja.
 - **Propuesta:** conservar ambas y rotularlas («el peor momento del día» y «registros con hora»). Unificar las escalas rompería la comparación.
+- **Estado:** Resuelto el 10 nov 2026 (D.186): dos filas rotuladas; las escalas no cambian.
 
 ### H-22-8 · `dia_dificil` mide el camino de entrada, no el día
 - **Dónde:** `avisos/Avisos.kt`, `ui/QuickActivity.kt` (registro mínimo), `ciencia/Estadistica.kt` (`dia_dificil`), `reportes/ReporteTerapia.kt`.
@@ -1480,6 +1485,7 @@ Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11
 - **Por qué importa:** la variable no significa lo que su nombre dice: un día bueno registrado por el camino corto cuenta como difícil, y uno malo registrado en la hoja no.
 - **Gravedad:** Media.
 - **Propuesta:** rotularla «registro mínimo» en el reporte y en el diccionario. Una marca real de día difícil sería un campo nuevo: decidirlo antes de 2027.
+- **Estado:** Resuelto el 10 nov 2026 (D.181): rótulo «registro mínimo» y campo nuevo `dificil`.
 
 ### H-22-9 · Variables que son el mismo hecho salen como relación
 - **Dónde:** `ciencia/Estadistica.kt` (`FAMILIAS`; `ctx_*`, `gimnasio`, `vi_*`, `con_*`).
@@ -1487,6 +1493,7 @@ Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11
 - **Por qué importa:** esas correlaciones por construcción encabezan la lista de hallazgos y cuentan en la corrección por comparaciones múltiples.
 - **Gravedad:** Baja.
 - **Propuesta:** añadirlas a `FAMILIAS`.
+- **Estado:** Resuelto el 10 nov 2026 (D.181).
 
 ### H-22-10 · «Cumplí» significa «≥» en las metas y «>» en los logros propios
 - **Dónde:** `data/Metas.kt`, `ciencia/Logros.kt`, `data/Modelo.kt` (el texto del logro propio dice «desde»).
@@ -1494,6 +1501,7 @@ Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11
 - **Por qué importa:** dos conteos del mismo objetivo pueden diferir, y el texto promete una regla que el código no aplica.
 - **Gravedad:** Baja.
 - **Propuesta:** una función compartida que respete la regla con que se creó cada registro, y corregir el texto.
+- **Estado:** Resuelto el 10 nov 2026 (D.187): función compartida y texto corregido.
 
 ### H-22-11 · Los temas rotulan meses del calendario común con nombres de otros calendarios
 - **Dónde:** `ui/Estilo.kt` (`mes`, `fecha`), `ui/nombres/NombresTemplario.kt`, `ui/Temas.kt`; se ve en el reporte mensual, el widget y varias pantallas.
@@ -1501,7 +1509,7 @@ Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11
 - **Por qué importa:** en un documento que se guarda, es una fecha inexacta.
 - **Gravedad:** Baja.
 - **Propuesta:** en reportes y PDF, el mes común siempre, con el del tema al lado si se quiere; quitar el nombre del calendario de los rótulos de conteo.
-- **Estado:** Resuelto en los reportes (commit `c19f53b`, D.179). Pendiente en pantallas y widget.
+- **Estado:** Resuelto en los reportes (commit `c19f53b`, D.179) y, en pantallas y widget, con el mes común al lado (D.189).
 
 ### H-22-12 · El reporte de terapia cuenta dos veces el gimnasio y da medias sin su número de días
 - **Dónde:** `ciencia/Terapia.kt` (`FUERZA`, `otras`), `reportes/ReporteTerapia.kt`.
@@ -1509,3 +1517,4 @@ Encontrados en la revisión general de noviembre (`docs/revision_general_2026-11
 - **Por qué importa:** es el reporte que lee otra persona.
 - **Gravedad:** Media.
 - **Propuesta:** descontar la sesión del reloj de todo día de gimnasio; añadir «(N días)» a cada media; contar como planeados al menos los mostrados.
+- **Estado:** Resuelto el 10 nov 2026 (D.186).
