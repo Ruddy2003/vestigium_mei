@@ -1925,7 +1925,8 @@ private fun Raiz(pedida: String?, apilar: Boolean, consumir: () -> Unit) {
                     // Un día abierto desde otra pantalla (calendario, diario, cinta…): se apila y «atrás» regresa.
                     "dia_fecha" -> PantallaDia(nav, apilado = true, nivel = destino.nivel)
                     "diario", "diarios" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(nav)
-                    "momentos" -> PantallaMomentos(nav)
+                    // «Todos tus registros» se retiró (hallazgo 31): su ruta abre la Libreta, donde cada renglón se toca para corregirlo.
+                    "momentos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "momentos")
                     "gastos" -> PantallaGastos(nav)
                     "entender", "explorar" -> PantallaExplorar(nav)
                     "vida" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(nav)

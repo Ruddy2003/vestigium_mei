@@ -79,8 +79,9 @@ import io.github.ruddy2003.vestigium.ui.Vacio
 import io.github.ruddy2003.vestigium.ui.esOscuro
 import io.github.ruddy2003.vestigium.ui.rememberSentir
 
-/** Un renglón de la hoja: un registro de ánimo o un consumo, con su hora. */
-private class Renglon(val ms: Long, val hora: String, val titulo: String, val detalle: String, val texto: String, val valencia: Int?, val icono: String)
+/** Un renglón de la hoja: un registro de ánimo o un consumo, con su hora. [momento] o [consumo] dicen qué se abre al tocarlo para corregirlo. */
+private class Renglon(val ms: Long, val hora: String, val titulo: String, val detalle: String, val texto: String, val valencia: Int?, val icono: String,
+                      val momento: io.github.ruddy2003.vestigium.data.Momento? = null, val consumo: String? = null)
 
 private fun cifra(q: Double) = if (q % 1.0 == 0.0) "${q.toInt()}" else "%.1f".format(q)
 
@@ -90,12 +91,12 @@ private fun renglones(fecha: String, discreto: Boolean): List<Renglon> {
             Catalogo.pensamientosDe(m).takeIf { it.isNotEmpty() && !discreto && Catalogo.emocionesDe(m).isNotEmpty() }?.let { l -> "pensando: " + l.joinToString(", ") { Catalogo.nombrePensamiento(it).lowercase() } },
             m.con_quien.takeIf { it.isNotEmpty() && !discreto }?.let { l -> "con " + l.joinToString(", ") { q -> Catalogo.CON_QUIEN.firstOrNull { it.id == q }?.nombre?.lowercase() ?: q } },
             Repo.lugares.firstOrNull { it.id == m.lugar }?.nombre?.takeIf { !discreto }?.let { "en $it" })
-        Renglon(Fechas.millis(m.ts), Fechas.horaDe(m.ts), Catalogo.tituloDetallado(m, discreto), det.joinToString(" · "), m.texto.trim(), m.valencia, "momentos")
+        Renglon(Fechas.millis(m.ts), Fechas.horaDe(m.ts), Catalogo.tituloDetallado(m, discreto), det.joinToString(" · "), m.texto.trim(), m.valencia, "momentos", momento = m)
     }
     val cs = Repo.consumos.filter { it.fecha == fecha && Sustancias.visible(it) }.map { c ->
         val det = listOfNotNull(Sustancias.maximo(c)?.let { "nivel $it/10" }, c.cantidad?.let { "${cifra(it)} ${Catalogo.sustancia(c.sustancia)?.unidad ?: ""}".trim() },
             Sustancias.horas(c)?.let { "%.1f h".format(it) }, c.cruda?.let { "cruda $it/5" }, c.con_quien.takeIf { it.isNotEmpty() }?.let { "con " + it.joinToString(", ") })
-        Renglon(Fechas.millis(c.inicio), Fechas.horaDe(c.inicio), Catalogo.nombreSustancia(c), det.joinToString(" · "), c.nota.trim(), null, if (c.sustancia == "cafeina") "cafeina" else "sustancias")
+        Renglon(Fechas.millis(c.inicio), Fechas.horaDe(c.inicio), Catalogo.nombreSustancia(c), det.joinToString(" · "), c.nota.trim(), null, if (c.sustancia == "cafeina") "cafeina" else "sustancias", consumo = c.id)
     }
     return (ms + cs).sortedBy { it.ms }
 }
@@ -195,6 +196,9 @@ private fun HojaLibreta(fecha: String, numero: Int, total: Int, discreto: Boolea
     val renglon = 30.dp
     val l = remember(fecha, Repo.momentos, Repo.consumos, discreto) { renglones(fecha, discreto) }
     val vals = l.mapNotNull { it.valencia }
+    // Tocar un renglón lo abre para corregirlo (hallazgo 31): es lo que hacía «Todos tus registros», ya retirada.
+    val ctxHoja = LocalContext.current
+    var editando by remember(fecha) { mutableStateOf<io.github.ruddy2003.vestigium.data.Momento?>(null) }
     Box(Modifier.fillMaxSize().padding(start = 6.dp, end = 10.dp, top = 4.dp, bottom = 4.dp)) {
         Surface(color = papel, shape = MaterialTheme.shapes.medium, shadowElevation = 3.dp, modifier = Modifier.fillMaxSize().padding(start = 12.dp)) {
             Column(Modifier.fillMaxSize().drawBehind {
@@ -218,7 +222,11 @@ private fun HojaLibreta(fecha: String, numero: Int, total: Int, discreto: Boolea
                 Spacer(Modifier.height(14.dp))
                 if (l.isEmpty()) Text("Hoja en blanco.", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(start = 46.dp))
                 l.forEach { r ->
-                    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                    Row(Modifier.fillMaxWidth().clickable(onClickLabel = "corregir este registro") {
+                        val m = r.momento; val c = r.consumo
+                        if (m != null) editando = Repo.momento(m.id) ?: m
+                        else if (c != null) abrirConsumo(ctxHoja, id = c)
+                    }.padding(vertical = 6.dp)) {
                         Text(r.hora, style = MaterialTheme.typography.labelLarge, color = cs.primary, modifier = Modifier.width(46.dp))
                         Column(Modifier.weight(1f).padding(start = 8.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -239,6 +247,7 @@ private fun HojaLibreta(fecha: String, numero: Int, total: Int, discreto: Boolea
         // La encuadernación encima del borde izquierdo: el resorte, la varilla del rollo, los cordones, la costura…
         Canvas(Modifier.fillMaxSize()) { with(io.github.ruddy2003.vestigium.ui.Contenedores) { encuadernacion(contenedor, cs, oscuro) } }
     }
+    editando?.let { m -> DialogoMomento(m) { editando = null } }
 }
 
 /**

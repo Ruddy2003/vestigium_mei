@@ -198,7 +198,7 @@ class QuickActivity : FragmentActivity() {
                         if (avisarSinGuardar()) return@BackHandler
                         if (desdeMomento && pantalla != M_ANIMO) terminar()
                         else if (desdeMenu && (pantalla == M_GASTO || pantalla == M_CONSUMO || pantalla == M_SUENO || pantalla == M_MINIMO)) {
-                            sinGuardar = false; avisado = false; desdeMenu = false; foco.clearFocus(); pantalla = M_MENU
+                            sinGuardar = false; avisado = false; desdeMenu = false; sustanciaMenu = null; foco.clearFocus(); pantalla = M_MENU
                         } else terminar()
                     }
                     // «Listo» fijo al pie donde todo se guarda al tocar (ánimo, impulso y demás capturas, sueño): no hay que desplazar para cerrar.

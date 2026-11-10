@@ -76,7 +76,7 @@ fun VidaDesdeLejos(nav: Nav) {
         Tarjetita("La cinta", "${Repo.momentos.count { it.fecha == hoy && !it.privado } + Repo.tramos.count { it.fecha == hoy } + Repo.consumos.count { it.fecha == hoy && Sustancias.visible(it) }}",
             "cosas con hora hoy", "cinta"),
         Tarjetita("Calendario", "$diasMes / ${hoy.takeLast(2).toInt()}", "días con diario este mes", "calendario"),
-        Tarjetita("Tu año", "${Repo.dias.keys.count { it.startsWith(anio) }}", "días registrados en $anio", "anno"),
+        Tarjetita("Año en píxeles", "${Repo.dias.keys.count { it.startsWith(anio) }}", "días registrados en $anio", "anno"),
         Tarjetita("Gasto", dinero(gasto), "gastado este mes", "gastos"),
         Tarjetita("Ingreso", dinero(ingreso), "entró este mes", "gastos"),
         Tarjetita("Totales", "${Repo.dias.size}", "días de datos" + (Repo.dias.keys.minOrNull()?.let { " desde ${Fechas.corto(it)}" } ?: ""), "totales"),

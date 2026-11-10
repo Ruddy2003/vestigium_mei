@@ -627,7 +627,7 @@ fun PantallaNoche(nav: Nav) {
         // Cerrar el día: guarda y, si está completo, lo sella con la huella.
         val faltan = listOfNotNull(if (d.valencia == null) "la valencia" else null, if (d.nota.isBlank()) "la nota del diario" else null)
         Spacer(Modifier.height(24.dp))
-        io.github.ruddy2003.vestigium.ui.BotonPrincipal(if (completo) "Sellar el día" else "Guardar y volver", Modifier.fillMaxWidth().bringIntoViewRequester(reqSellar)) { sellar() }
+        io.github.ruddy2003.vestigium.ui.BotonPrincipal(if (completo) "Sellar el día" else "Listo",Modifier.fillMaxWidth().bringIntoViewRequester(reqSellar)) { sellar() }
         if (!completo) Ayuda("Para sellar el día con tu huella falta " + faltan.joinToString(" y ") + ".", Modifier.padding(top = 6.dp))
         Spacer(Modifier.height(72.dp))
     }

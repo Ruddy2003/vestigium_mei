@@ -150,11 +150,8 @@ fun PantallaDiario(nav: Nav) {
             else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth().padding(top = 4.dp)) {
                 LibretaCerrada(hojas.size, hojas.lastOrNull(), Modifier.fillMaxWidth()) { Seleccion.momentos = hojas.first(); nav.ir("hoja_momentos") }
             }
-            Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BotonSecundario("entrar a la libreta →", Modifier.weight(1f)) { nav.ir("biblioteca_momentos") }
-                // La lista editable de tus registros de ánimo (N-25).
-                BotonSecundario("todos tus registros", Modifier.weight(1f)) { nav.ir("momentos") }
-            }
+            // «Todos tus registros» se retiró (hallazgo 31): cada renglón de la Libreta se toca para corregirlo.
+            BotonSecundario("entrar a la libreta →", Modifier.fillMaxWidth().padding(top = 10.dp)) { nav.ir("biblioteca_momentos") }
         }
         val suenos = remember(Repo.dias) { LibroDiario.suenos().take(9) }
         Seccion("Biblioteca de sueños", if (suenos.isEmpty()) null else "${Repo.dias.values.count { it.sueno_texto.isNotBlank() }} sueños escritos") {

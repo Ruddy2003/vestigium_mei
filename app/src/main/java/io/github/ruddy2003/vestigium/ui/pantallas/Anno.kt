@@ -82,17 +82,18 @@ fun PantallaAnno(nav: Nav) {
 
     // El primer toque dice qué día es y su ánimo; el segundo (o «abrir») lo abre (N-27).
     var tocado by remember(anio) { mutableStateOf<String?>(null) }
-    Hoja("Tu año", nav.atras, subtitulo = "Todo el año de un vistazo. Toca un cuadro para ver su día y su ánimo; tócalo otra vez para abrirlo.") {
+    // «El año en píxeles» (hallazgo 31): antes se llamaba «Tu año», igual que el resumen en historias (ruta `tu_anio`).
+    Hoja("El año en píxeles", nav.atras, subtitulo = "Todo el año de un vistazo. Toca un cuadro para ver su día y su ánimo; tócalo otra vez para abrirlo.") {
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedButton(onClick = { anio-- }, shape = RoundedCornerShape(4.dp)) { Text("‹", fontSize = 18.sp) }
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("${io.github.ruddy2003.vestigium.ui.Estilo.pantalla("Tu año", "ANNVS").first} ${io.github.ruddy2003.vestigium.ui.Estilo.numeral(anio)}", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
+                Text("${io.github.ruddy2003.vestigium.ui.Estilo.pantalla("El año en píxeles", null).first}${io.github.ruddy2003.vestigium.ui.Estilo.numeral(anio)}", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
                 Text("// $anio", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             OutlinedButton(onClick = { anio++ }, shape = RoundedCornerShape(4.dp)) { Text("›", fontSize = 18.sp) }
         }
 
-        Seccion("El año en píxeles", "Cada fila es un mes y cada cuadro un día. Pórfido: días difíciles; bronce: días buenos.", numero = 1) {
+        Seccion("Día por día", "Cada fila es un mes y cada cuadro un día. Pórfido: días difíciles; bronce: días buenos.", numero = 1) {
             androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
                 val celda = (maxWidth - 30.dp) / 31
                 Row {
