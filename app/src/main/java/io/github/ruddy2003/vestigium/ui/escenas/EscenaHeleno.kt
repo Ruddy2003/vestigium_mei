@@ -852,7 +852,8 @@ internal object EscenaHeleno : EscenaVida {
 
     override fun DrawScope.viva(m: Momento, reloj: Float) {
         val l = luces(m)
-        val viento = (if (m.ficha.clima == Clima.DESPEJADO) 0.25f else m.viento) * -1f     // el viento del mar tumba los humos hacia tierra… hacia la izquierda del cuadro
+        // El viento viene del mar: tumba los humos hacia la izquierda del cuadro. Con el día en calma queda una brisa.
+        val viento = -(if (m.ficha.clima == Clima.DESPEJADO) 0.25f else m.viento)
         destellos(l, Rect(0f, H + 1f, ANCHO, 218f), reloj, m.semilla("destellos"))
 
         // Los humos de la guerra y de la peste, al fondo.

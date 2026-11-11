@@ -1,6 +1,5 @@
 package io.github.ruddy2003.vestigium.ui.escenas.paisaje
 
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -45,8 +44,8 @@ fun seMueve(clima: Clima): Boolean = when (clima) {
 
 /**
  * Lo quieto del tiempo, encima del paisaje ya pintado: los bancos de niebla, el velo gris de la lluvia que borra lo
- * lejano, el velo ocre del polvo y la nieve posada no (esa la pone cada escena donde cuaja). Va al final de la parte
- * quieta de la escena.
+ * lejano, el velo ocre del polvo y la claridad lechosa de un día de nieve. La nieve posada no va aquí: la pone cada
+ * escena donde cuaja. Va al final de la parte quieta de la escena.
  */
 fun DrawScope.tiempoQuieto(l: Luces, clima: Clima, horizonte: Float, semilla: Long) {
     val azar = Azar(Semilla.de(semilla, "tiempo"))

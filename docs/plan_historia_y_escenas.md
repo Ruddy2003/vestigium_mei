@@ -73,10 +73,11 @@ _Creado el 10 nov 2026 sobre la v199 (`SCHEMA_V = 23`). Es la guía que cada ses
 - **Cuidado:** la búsqueda también cuenta `when (t|tema) { … else -> }`. Por eso el código nuevo no llama `t` ni `tema` a lo que no es un tema.
 - **Cómo conviven las escenas con los temas:**
   - Cada tema pinta el entorno de **su** personaje, así que la escena solo existe en su tema.
-  - Hay tres despachos exhaustivos de 35 ramas:
+  - Hay cuatro despachos exhaustivos de 35 ramas:
     - `escenaDe(tema)`;
-    - `pelajeDe(tema)`;
-    - `banderitaHistoria(tema)`.
+    - `pelajeDe(tema)` (llega con el gato, en P5);
+    - `banderitaHistoria(tema)`;
+    - `sinCuadro(tema)`: cuáles no lo tendrán nunca. Sirve para que la prueba de cobertura cuente los que faltan.
   - **Navidad, Terminal y Básico** devuelven `null` en su propia rama: siguen con el gato de pixel, o sin gato en Básico.
   - Los temas que aún no tienen escena también devuelven `null` y usan el gato de pixel.
   - **La escena es igual en claro y en oscuro.** Su luz es la de la hora.
@@ -238,10 +239,13 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 
 **3.3 La escena** (`ui/escenas/`)
 
-- **Piezas:**
-  - la interfaz `EscenaVida`;
-  - un `Escena<Tema>.kt` por tema;
-  - `escenaDe(tema)` y una versión plana.
+- **Piezas** (hechas en P4a; ver `docs/historia/informes/P4a.md`):
+  - `Momento`: la ficha del día y la hora. Es lo único que una escena puede leer;
+  - la interfaz `EscenaVida`, con su parte quieta, su parte viva y las anclas del gato;
+  - un `Escena<Tema>.kt` por tema, y `escenaDe(tema)`;
+  - `VistaEscena`: el cuadro, que junta las dos partes y la banderita;
+  - `EscenaPlana`: un paisaje hecho solo con la biblioteca. Ningún tema lo usa; es la muestra de la biblioteca en las capturas y la plantilla de cada escena nueva.
+- **El lienzo:** todas las escenas se dibujan en 380 × 285 unidades y se escalan al ancho del cuadro.
 - **Biblioteca de paisaje compartida** (`ui/escenas/paisaje/`), hecha en el piloto: cielos por franja, nubes, lluvia, nieve, niebla, vegetación por estación, cultivos por etapa, agua, montes, casas y techos por época, humo, fuego, adornos genéricos y ruinas. Cada escena la combina y le agrega lo propio de su tema.
 - **Capas, de abajo hacia arriba:**
   1. cielo y lejanía: montes, mar, el pueblo, la iglesia o el castillo del fondo;
@@ -252,7 +256,10 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   6. arcos;
   7. adornos del día especial, nunca personas;
   8. el gato.
-- **Qué se guarda como imagen:** las capas 1 a 3 y los arcos. Solo se vuelven a trazar al cambiar la franja, el día o el tamaño.
+- **La luz (capa 4) no es un velo:** cada cosa pide su color a `Luces.tono`, que lo tiñe según la hora y el tiempo y lo desvanece con la distancia. Lo que da luz propia se pinta tal cual.
+- **Qué se guarda como imagen:** todo lo que no se mueve (las capas 1 a 3, los arcos, los adornos y su luz). Se vuelve a trazar cada veinte minutos, para que la luz avance, y al cambiar el tramo del día del personaje, el día o el tamaño.
+- **Qué se traza en cada cuadro,** unas 15 veces por segundo: las partículas del tiempo, el humo, las llamas y los destellos del agua. Con las animaciones apagadas o con ahorro de energía queda quieto.
+- **Si una escena falla al dibujar,** el cuadro se queda como estaba: no cierra la app.
 - **La escena cuenta lo mismo que el cuento** (decisión 18). Dibuja según la ficha del día:
   - el **estado** del personaje: con Demeas «en el mar», su nave no está en el puerto;
   - los **arcos**: la nave en su cobertizo o en el agua, el puerto medio vacío, el humo en el horizonte, la obra que sube;
@@ -370,14 +377,15 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - **No piden capturas.** Sus pruebas vuelven a correr en la siguiente corrida de capturas.
   - Si el arnés no se puede armar, esa tanda pide 1 corrida.
 - **Tandas de dibujo:** usan el **arnés de Compose de escritorio** (como en E6) para ver los dibujos a 300, 360 y 420 dp antes de gastar capturas.
-  - Luego se pide `capturas.yml` con `superficies = cuadro`, filtrado a sus temas.
-  - El filtro por tema (`CAPTURAS_TEMAS`) se agrega en P4a.
-  - Una corrida filtrada debería tardar menos que los ~40 min de siempre. **[Sin medir]**
+  - Luego se pide `capturas.yml` con `superficies = cuadro`, `temas = <los suyos>` y `solo = true`.
+  - `temas` (`CAPTURAS_TEMAS`) deja solo esos temas; `solo` (`CAPTURAS_SOLO`) salta las capturas de siempre, que es lo que acorta la corrida. Con `solo`, la rama `capturas` queda solo con las imágenes pedidas hasta la siguiente corrida completa. Los dos se agregaron en P4a.
+  - Cada tanda agrega los días de muestra de sus personajes a `DIAS_CUADRO` (`Capturas.kt`).
+  - En este entorno el arnés usa Compose de escritorio 1.5.12, el único que se resuelve sin el repositorio de Google. La receta está en el informe de P4a.
 - **Las tandas S** también sacan la captura `otrasVidas` de los cuentos de su grupo.
 - **Las tandas de expansión no tocan el motor:** `vidas/Ficha.kt`, `Cuento.kt`, `EscenaVida`, `GatoCuadro` ni la biblioteca de paisaje.
 - **Las tandas con temas:**
-  - actualizan `docs/diseno/TEMAS.md`, con tres filas nuevas: «Cuadro: escena», «Cuadro: gato» y «Cuadro: banderita»;
-  - bajan los pendientes en `CoberturaTemas`.
+  - actualizan `docs/diseno/TEMAS.md`, en sus tres filas (desde P4a): «Cuadro: escena», «Cuadro: gato» y «Cuadro: banderita»;
+  - bajan los pendientes en `CoberturaTemas` (las superficies `cuadro_escena` y `cuadro_banderita`, con la lista `SIN_CUADRO`).
 
 ## 8. Tandas
 
@@ -392,7 +400,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P2 | Las 5 temporadas de Demeas, Pierre, Kei y Amaru | `vidas/anios/AnioPiloto.kt`, `docs/historia/fuentes.md` | Pruebas de certeza, fuentes y continuidad | 0 |
 | P3a | Motor del cuento, cuento de Demeas y la sección «Hoy, en su vida» | `vidas/Cuento.kt`, `vidas/piezas/PiezasDemeas.kt`, `ui/pantallas/OtrasVidas.kt` | Pruebas; captura `otrasVidas`; **el autor aprueba el tono** | 1 |
 | P3b | Cuentos de Pierre, Kei y Amaru | `vidas/piezas/PiezasPierre.kt`, `PiezasKei.kt`, `PiezasAmaru.kt` (uno por personaje, como el de Demeas) | Pruebas | 0 |
-| P4a | Motor de escena, biblioteca de paisaje, filtro de capturas, paisaje de Helénico y su banderita | `ui/escenas/EscenaVida.kt`, `paisaje/`, `EscenaHeleno.kt`, `Banderitas.kt`, `Capturas.kt`, `capturas.yml` | Capturas `cuadro` a las 7, 13 y 21 h, en 3 días (normal, fiesta, guerra), y **el día en que zarpa la flota, sin su nave** (decisión 18); despachos en 0 | 2 |
+| P4a | Motor de escena, biblioteca de paisaje, filtro de capturas, paisaje de Helénico y su banderita | `ui/escenas/EscenaVida.kt`, `VistaEscena.kt`, `EscenaPlana.kt`, `paisaje/`, `EscenaHeleno.kt`, `Banderitas.kt`, `Capturas.kt`, `CapturasAPedido.kt`, `capturas.yml` | Capturas `cuadro` a las 7, 13 y 21 h, en 3 días (normal, fiesta, guerra), y **el día en que zarpa la flota, sin su nave** (decisión 18); despachos en 0 | 2 |
 | P4b | Gótico y Ciudad neón | `EscenaGotico.kt`, `EscenaNeon.kt` | Ídem; con un día en que el cuento cambie lo que se ve (la obra parada, Kei sin bici) | 2 |
 | P5a | Gato: esqueleto, poses y estados | `ui/escenas/GatoCuadro.kt` | Hoja de poses; pruebas de los estados | 2 |
 | P5b | Reacciones, caricia y pelajes de los 3 temas | `GatoCuadro.kt`, `Pelajes.kt` | Capturas; lista de qué probar en el teléfono | 2 |
@@ -461,7 +469,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P2 | claude-fable-5-2 | high | Fija el patrón de los calendarios: historia verosímil, continuidad en 5 años y qué es real y qué inventado | 0 | hecho 11 nov 2026 (`docs/historia/informes/P2.md`) |
 | P3a | claude-fable-5-2 | high | Fija la gramática de los 8 párrafos y el tono que copiarán todas las T | 1 | hecho 11 nov 2026 (`docs/historia/informes/P3a.md`); **tono y largo aprobados por el autor el 11 nov 2026** |
 | P3b | claude-opus-5-5 | medium | Texto con el tono ya aprobado | 0 | hecho 11 nov 2026 (`docs/historia/informes/P3b.md`) |
-| P4a | claude-fable-5-2 | high | Motor de escena, biblioteca de paisaje y primer paisaje con código | 2 | pendiente |
+| P4a | claude-fable-5-2 | high | Motor de escena, biblioteca de paisaje y primer paisaje con código | 2 | hecho 11 nov 2026 (`docs/historia/informes/P4a.md`) |
 | P4b | claude-fable-5-2 | high | Paisajes dibujados con código | 2 | pendiente |
 | P5a | claude-fable-5-2 | **xhigh** | Un esqueleto animado que comparten 32 temas: estados, capas, rendimiento. Un fallo se paga 32 veces y Paparazzi no ve el movimiento | 2 | pendiente |
 | P5b | claude-fable-5-2 | high | Se apoya en el esqueleto ya resuelto. Los gestos se ajustan después de probarlos en el teléfono | 2 | pendiente |
