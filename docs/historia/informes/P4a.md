@@ -276,7 +276,7 @@ Las corridas que valen son las últimas, sobre el commit del cuadro repintado (`
 ## Lo que no se puede comprobar aquí
 
 - **El rendimiento y la batería.** El cuadro traza su parte viva unas 15 veces por segundo. Hay que medirlo en la APK, cuando P6 lo ponga en Hoy.
-  - La parte quieta pesa más que antes: lleva el grano (34,000 puntos) y dos capas de sombra. Solo se vuelve a trazar cada veinte minutos o al cambiar el tramo del día.
+  - La parte quieta pesa más que antes: lleva el grano (34,000 puntos) y hasta cuatro capas de sombra (dos grandes, la del patio y la del follaje sobre las cosas, y dos chicas, la del banco y la de la higuera). Solo se vuelve a trazar cada veinte minutos o al cambiar el tramo del día.
   - En el arnés, dibujar un cuadro entero pequeño (190 px de ancho) toma unos 60 ms. En el teléfono es más grande y puede notarse un tirón al abrir Hoy: hay que medirlo.
 - **El movimiento.** Las capturas y el arnés muestran un instante quieto: no se ve cómo suben el humo, cómo cae la lluvia ni cómo brilla el agua.
 - **Que se vea igual en el teléfono que en el arnés.** El arnés usa otro Compose y otro motor de dibujo. Las capturas de Actions sí usan los de Android.
