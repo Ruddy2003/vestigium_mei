@@ -5,6 +5,7 @@ import io.github.ruddy2003.vestigium.vidas.Calendario
 import io.github.ruddy2003.vestigium.vidas.Clima
 import io.github.ruddy2003.vestigium.vidas.DiaEspecial
 import io.github.ruddy2003.vestigium.vidas.Estacion
+import io.github.ruddy2003.vestigium.vidas.Estado
 import io.github.ruddy2003.vestigium.vidas.RegimenLuz
 import io.github.ruddy2003.vestigium.vidas.TemporadaVida
 import io.github.ruddy2003.vestigium.vidas.TipoArco
@@ -30,6 +31,10 @@ import io.github.ruddy2003.vestigium.vidas.TipoArco
  * 8. Las claves de `escena` son pocas y se repiten (fiesta, luto, humo…): cada escena decide qué dibuja con ellas.
  * 9. Si el personaje está de viaje, la fiesta de siempre que cae en el viaje lleva otro `id` (y otro texto): la vive
  *    de lejos. Así el texto compartido de esa fiesta no lo pone en dos sitios a la vez.
+ * 10. El cuadro tiene que contar lo mismo que el cuento. Todo lo que el cuento dice y se puede ver (la nave que zarpa,
+ *    la casa que se quema, el andamio que cae) va en el calendario, donde lo leen los dos: un `estado` si el personaje
+ *    cambia de sitio o de vida por un tiempo, un arco si algo cambia despacio, una clave de `escena` si es de un día.
+ *    El comentario de cada calendario dice qué tiene que mostrar el cuadro.
  */
 internal object AnioPiloto {
     val TODOS: List<Calendario> by lazy { listOf(DEMEAS, PIERRE, KEI, AMARU) }
@@ -56,8 +61,12 @@ internal object AnioPiloto {
     //
     // Claves de escena: fiesta, antorchas, luto, humo (los campos que arden), piras (la peste), eclipse, partida y
     // regreso (la flota). Arcos: campo (el grano), estragos (el campo arrasado que se ve desde los muros), refugiados
-    // (las chozas junto a los Muros Largos), peste, flota (cuántas naves hay en el puerto; 1 = todas) e higuera (la
-    // que planta en el patio por su padre).
+    // (las chozas junto a los Muros Largos), peste, flota (cuántas naves hay en el puerto; 1 = todas), higuera (la
+    // que planta en el patio por su padre) y nave (el «Aura»: 0 = guardada en su cobertizo, 1 = en el agua).
+    //
+    // Lo que el cuadro tiene que mostrar para contar lo mismo que el cuento: el «Aura» en su cobertizo de noviembre al
+    // 12 de abril y en el agua el resto del año; ninguna nave suya cuando el estado es «mar» (zarpó), y el puerto
+    // medio vacío según `flota`; humo en el horizonte y chozas junto al muro según `estragos` y `refugiados`.
 
     private val W = "https://en.wikipedia.org/wiki/"
     private val F_GUERRA = "La guerra del Peloponeso" to "${W}Peloponnesian_War"
@@ -225,8 +234,10 @@ internal object AnioPiloto {
                 p(2, "07-22", 0.4, true), p(2, "09-01", 1.0, true), p(2, "12-01", 0.85, true), p(3, "06-20", 0.7, true), p(4, "03-30", 0.9, true), p(4, "06-24", 0.65, true),
                 p(4, "08-22", 0.1, true), p(4, "09-01", 0.65, true), p(5, "07-20", 0.7, true), p(5, "09-22", 0.55, true))),
             Arco("higuera", TipoArco.CULTIVO, listOf(p(1, "01-01", 0.0), p(2, "11-18", 0.08, true), p(3, "12-31", 0.3), p(4, "12-31", 0.5), p(5, "12-31", 0.7))),
+            Arco.cadaAnio("nave", TipoArco.OTRO, "01-01" to 0.0, "04-12" to 1.0, "11-01" to 0.0, saltos = setOf("04-12", "11-01")),
         ),
         objetos = listOf("remo", "cojin", "estrobo", "anfora", "lampara", "red", "higos", "dracma", "aulos", "copa", "manto", "pan"),
+        estados = listOf(Estado("mar", "zarpa_flota", "vuelve_flota"), Estado("mar", "zarpa_epidauro", "vuelve_epidauro"), Estado("mar", "cien_naves"), Estado("mar", "segundo_trirreme", "llegan_a_tiempo")),
     )
 
     // =====================================================================
@@ -247,6 +258,11 @@ internal object AnioPiloto {
     // Claves de escena: fiesta, procesion, hogueras, luto, eclipse, obra_parada, inundacion y campanas. Arcos: coro
     // (lo que ha subido la cabecera), andamios (cuánta obra hay: 0.2 es el invierno, con los muros tapados de paja),
     // campo (el trigo), guede (los campos de waide, con sus cogidas) y agua (la crecida del Somme).
+    //
+    // Lo que el cuadro tiene que mostrar para contar lo mismo que el cuento: la cabecera a la altura que diga `coro`;
+    // los andamios llenos de gente o los muros tapados con paja según `andamios` (y la obra parada desde el 3 de
+    // septiembre de la temporada 1); el andamio caído y sus herramientas quietas mientras el estado es «herido»; el
+    // agua en las calles bajas en la crecida; el trigo y la waide como vayan sus arcos.
 
     private val WF = "https://fr.wikipedia.org/wiki/"
     private val F_AMIENS = "La catedral de Amiens" to "${WF}Cath%C3%A9drale_Notre-Dame_d%27Amiens"
@@ -371,6 +387,7 @@ internal object AnioPiloto {
             Arco("agua", TipoArco.OTRO, listOf(p(1, "01-01", 0.0), p(3, "01-17", 0.0), p(3, "01-21", 1.0), p(3, "01-24", 1.0), p(3, "02-08", 0.0))),
         ),
         objetos = listOf("mazo", "cincel", "escuadra", "compas", "plomada", "marca", "cuerda", "jarra", "pan", "plantilla", "capucha", "vela"),
+        estados = listOf(Estado("herido", "cae_andamio", "vuelve_a_tallar")),
     )
 
     // =====================================================================
@@ -393,6 +410,11 @@ internal object AnioPiloto {
     // (cuánto se anega el callejón en las lluvias), luces (los adornos de fin de año), pintas (carteles y pintadas),
     // obra (las máquinas de demolición) y letrero (0 = el tazón magenta parpadea bien; 1 = apagado). Kei tiene además
     // bici (0 = entera; 1 = torcida).
+    //
+    // Lo que el cuadro tiene que mostrar para contar lo mismo que el cuento: el letrero del puesto de Amaru apagado o
+    // parpadeando según `letrero`; el callejón a oscuras en el apagón; carteles y pintadas según `pintas`; las máquinas
+    // en la boca del callejón según `obra`; el agua en el suelo según `agua`; y la bici de Kei, que falta mientras su
+    // estado es «sin_bici» y luego se ve con el cuadro soldado.
 
     /** Lo que vuelve cada año en la ciudad, en la temporada [t]. Es igual para Kei y para Amaru. */
     private fun fiestasDeNeon(t: Int): List<DiaEspecial> = listOf(
@@ -502,6 +524,7 @@ internal object AnioPiloto {
         ),
         arcos = ARCOS_NEON + Arco("bici", TipoArco.DANOS, listOf(p(1, "01-01", 0.0), p(2, "03-22", 1.0, true), p(2, "04-08", 0.3, true), p(4, "12-31", 0.3), p(5, "02-14", 0.0, true))),
         objetos = listOf("casco", "bateria", "candado", "caja", "guantes", "impermeable", "lata", "linterna", "parche", "auricular", "llave", "barra"),
+        estados = listOf(Estado("sin_bici", "choque", "vuelve_a_rodar"), Estado("sin_implante", "sin_implante", "reinicio")),
     )
 
     val AMARU = Calendario(

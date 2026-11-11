@@ -158,6 +158,11 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 15. **Los dos ajustes nuevos** van con los demás, en `Config`. Viajan en el respaldo y `SCHEMA_V` sube a 24.
 16. **Una nota en el cap. 9 del paper** sobre la reactividad del gato.
 17. **Costo:** se aplican solo los ahorros que no recortan contenido (sección 8).
+18. **El cuadro cuenta lo mismo que el cuento** (decidido el 11 nov 2026, al aprobar P3a).
+    - Lo que el cuento dice y se puede ver, se ve en el cuadro ese mismo día.
+    - Ejemplo: la nave de Demeas aparece en el cuadro; el día en que zarpa deja de estar y no vuelve hasta que él vuelve.
+    - Para que no se contradigan, los dos leen lo mismo: la ficha del día (sección 3.1).
+19. **El tono y el largo del cuento están aprobados** (11 nov 2026): el de Demeas en P3a, con unas 1,950 letras por cuento, que se leen en minuto y medio.
 
 ## 3. Diseño
 
@@ -193,7 +198,12 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
     - el valor de cada arco;
     - el objeto del día;
     - las piezas de los 8 párrafos;
-    - el tramo horario actual.
+    - el tramo horario actual;
+    - el **estado** del personaje, si está en alguno que dure días o semanas («en el mar», «herido», «sin bici»).
+  - **Es lo único que leen el cuento y el cuadro,** y por eso cuentan lo mismo (decisión 18). Lo que el cuento dice y se puede ver va en el calendario de una de tres formas:
+    - un **estado**, si el personaje cambia de sitio o de vida por un tiempo;
+    - un **arco**, si algo cambia despacio;
+    - una **clave de escena**, si es cosa de un día.
   - **No lee ningún dato tuyo.**
 - **La luz** sale de `luzDe(hora, regimen)`:
   - 6 franjas en casi todos los temas;
@@ -212,6 +222,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   7. lo que piensa;
   8. el anochecer.
 - **Cada lugar tiene de 6 a 8 variantes,** con concordancia de género y huecos que llena la ficha.
+- **Largo aprobado:** tres o cuatro oraciones por párrafo (unas 240 letras) y unas 1,950 letras por cuento.
 - **En un día especial,** 3 o 4 párrafos se cambian por texto escrito para ese día.
 - **Las pruebas vigilan:**
   - que no aparezca ningún año actual;
@@ -222,6 +233,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - en la sección «Hoy, en su vida», arriba en `DetalleVida`, con sus fuentes al pie;
   - se abre directo con `otras_vidas?vida=<id>&seccion=cuento`.
 - **Volumen:** unos 50 párrafos de variantes y unos 70 especiales por personaje en la temporada 1. En las temporadas 2 a 5 solo se escriben los especiales nuevos.
+  - **Medido en P3a:** Demeas llevó 89 variantes y 106 párrafos especiales, más 50 oraciones sueltas, porque pasa parte del año en el mar. Un personaje que no cambia de estado necesita unas 60 variantes.
 
 **3.3 La escena** (`ui/escenas/`)
 
@@ -240,6 +252,11 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   7. adornos del día especial, nunca personas;
   8. el gato.
 - **Qué se guarda como imagen:** las capas 1 a 3 y los arcos. Solo se vuelven a trazar al cambiar la franja, el día o el tamaño.
+- **La escena cuenta lo mismo que el cuento** (decisión 18). Dibuja según la ficha del día:
+  - el **estado** del personaje: con Demeas «en el mar», su nave no está en el puerto;
+  - los **arcos**: la nave en su cobertizo o en el agua, el puerto medio vacío, el humo en el horizonte, la obra que sube;
+  - la **clave de escena** del día especial y el **objeto del día**, que es el mismo del que habla el cuento.
+  - El comentario de cada calendario (`vidas/anios/`) dice qué tiene que mostrar el cuadro de ese personaje.
 - **Interiores:**
   - **Refugio y Laboratorio:** bajo tierra, con dos estados de luz.
   - **Espacio:** el interior de la nave rumbo a Alfa Centauri, con consolas, cables, plantas del cultivo de a bordo, compuertas y objetos flotantes o sujetos. Una ventana pequeña, una fracción de la vista, muestra una galaxia.
@@ -374,8 +391,8 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P2 | Las 5 temporadas de Demeas, Pierre, Kei y Amaru | `vidas/anios/AnioPiloto.kt`, `docs/historia/fuentes.md` | Pruebas de certeza, fuentes y continuidad | 0 |
 | P3a | Motor del cuento, cuento de Demeas y la sección «Hoy, en su vida» | `vidas/Cuento.kt`, `vidas/piezas/PiezasDemeas.kt`, `ui/pantallas/OtrasVidas.kt` | Pruebas; captura `otrasVidas`; **el autor aprueba el tono** | 1 |
 | P3b | Cuentos de Pierre, Kei y Amaru | `vidas/piezas/PiezasPiloto.kt` | Pruebas | 0 |
-| P4a | Motor de escena, biblioteca de paisaje, filtro de capturas, paisaje de Helénico y su banderita | `ui/escenas/EscenaVida.kt`, `paisaje/`, `EscenaHeleno.kt`, `Banderitas.kt`, `Capturas.kt`, `capturas.yml` | Capturas `cuadro` a las 7, 13 y 21 h, en 3 días (normal, fiesta, guerra); despachos en 0 | 2 |
-| P4b | Gótico y Ciudad neón | `EscenaGotico.kt`, `EscenaNeon.kt` | Ídem | 2 |
+| P4a | Motor de escena, biblioteca de paisaje, filtro de capturas, paisaje de Helénico y su banderita | `ui/escenas/EscenaVida.kt`, `paisaje/`, `EscenaHeleno.kt`, `Banderitas.kt`, `Capturas.kt`, `capturas.yml` | Capturas `cuadro` a las 7, 13 y 21 h, en 3 días (normal, fiesta, guerra), y **el día en que zarpa la flota, sin su nave** (decisión 18); despachos en 0 | 2 |
+| P4b | Gótico y Ciudad neón | `EscenaGotico.kt`, `EscenaNeon.kt` | Ídem; con un día en que el cuento cambie lo que se ve (la obra parada, Kei sin bici) | 2 |
 | P5a | Gato: esqueleto, poses y estados | `ui/escenas/GatoCuadro.kt` | Hoja de poses; pruebas de los estados | 2 |
 | P5b | Reacciones, caricia y pelajes de los 3 temas | `GatoCuadro.kt`, `Pelajes.kt` | Capturas; lista de qué probar en el teléfono | 2 |
 | P6 | El cuadro en Hoy: plegable, marca, gestos, ajustes, `SCHEMA_V` 24, nota del cap. 9 | `CuadroDelDia.kt`, `Dia.kt`, `Sistema.kt`, `data/Modelo.kt`, Apéndice D, `cap09` | Capturas `hoy` y `cuadro`, abiertas, plegadas y con marca | 2 |
@@ -409,6 +426,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - Archivos: `vidas/piezas/Piezas<...>.kt`.
   - 0 capturas cada una.
 - **S: escena, pelaje, especiales y banderita, 4 o 5 temas por tanda.**
+  - Cada escena lee de la ficha el estado, los arcos y la clave de escena de su personaje, para contar lo mismo que el cuento (decisión 18). Sus capturas incluyen un día en que el cuento cambie lo que se ve.
   - Cada S va después del A de sus personajes.
   - Archivos: `ui/escenas/Escena<Tema>.kt`.
   - 2 capturas cada una.
@@ -440,7 +458,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 |---|---|---|---|---|---|
 | P1 | claude-fable-5-2 | high | Motor y diseño de datos: un error se hereda en 45 vidas y en 5 años | 0 | hecho 11 nov 2026 (`docs/historia/informes/P1.md`) |
 | P2 | claude-fable-5-2 | high | Fija el patrón de los calendarios: historia verosímil, continuidad en 5 años y qué es real y qué inventado | 0 | hecho 11 nov 2026 (`docs/historia/informes/P2.md`) |
-| P3a | claude-fable-5-2 | high | Fija la gramática de los 8 párrafos y el tono que copiarán todas las T | 1 | hecho 11 nov 2026 (`docs/historia/informes/P3a.md`); **falta que el autor apruebe el tono** |
+| P3a | claude-fable-5-2 | high | Fija la gramática de los 8 párrafos y el tono que copiarán todas las T | 1 | hecho 11 nov 2026 (`docs/historia/informes/P3a.md`); **tono y largo aprobados por el autor el 11 nov 2026** |
 | P3b | claude-opus-5-5 | medium | Texto con el tono ya aprobado | 0 | pendiente |
 | P4a | claude-fable-5-2 | high | Motor de escena, biblioteca de paisaje y primer paisaje con código | 2 | pendiente |
 | P4b | claude-fable-5-2 | high | Paisajes dibujados con código | 2 | pendiente |

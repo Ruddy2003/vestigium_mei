@@ -85,12 +85,14 @@ data class EspecialDelDia(val dia: DiaEspecial, val inicio: LocalDate, val numer
  * - [especiales]: los días especiales que tocan hoy; manda el primero ([principal]).
  * - [arcos]: el valor de hoy (de 0 a 1) de cada arco de la escena.
  * - [objeto]: el objeto del día, o null si el calendario no tiene objetos.
+ * - [estado]: el estado en que está hoy («mar»), o null si en ninguno. Lo leen el cuento y el cuadro: los dos tienen
+ *   que contar lo mismo.
  */
 data class FichaDelDia(
     val vida: String, val dia: String, val temporada: Int, val vuelta: Int, val avance: Boolean,
     val edad: Int, val anioHistorico: Int, val cuando: String, val mundo: String, val semilla: Long,
     val estacion: Estacion, val clima: Clima, val especiales: List<EspecialDelDia>, val arcos: Map<String, Double>, val objeto: String?,
-    val regimen: RegimenLuz, private val tramos: List<OtrasVidas.Tramo>,
+    val regimen: RegimenLuz, private val tramos: List<OtrasVidas.Tramo>, val estado: String? = null,
 ) {
     /** Hoy es un día especial: enciende la marca del cuadro. */
     val especial: Boolean get() = especiales.isNotEmpty()
@@ -159,7 +161,7 @@ data class FichaDelDia(
                 especiales = especiales,
                 arcos = cal.arcos.associate { it.id to it.valor(temporada, d) },
                 objeto = if (cal.objetos.isEmpty()) null else cal.objetos[Barajas.objetos(cal.vida, d.year, cal.objetos.size)[d.dayOfYear - 1]],
-                regimen = cal.luz, tramos = quien.dia,
+                regimen = cal.luz, tramos = quien.dia, estado = estadoDe(cal, d),
             )
         }
 
@@ -191,6 +193,20 @@ data class FichaDelDia(
                     if (n >= 0 && n < dia.duracion) EspecialDelDia(dia, inicio, n.toInt() + 1) else null
                 }
             }.sortedWith(compareBy<EspecialDelDia> { it.dia.duracion }.thenByDescending { it.inicio })
+
+        /** En qué estado está el personaje el día [d] (ver [Estado]); null si en ninguno. */
+        private fun estadoDe(cal: Calendario, d: LocalDate): String? {
+            if (cal.estados.isEmpty()) return null
+            // Cuentan los días especiales de este año y los del anterior que todavía no terminan.
+            val inicios = inicios(cal, d.year) + inicios(cal, d.year - 1)
+            return cal.estados.firstOrNull { e ->
+                inicios.filter { it.first.id == e.desde }.any { (dia, desde) ->
+                    val hasta = if (e.hasta == null) desde.plusDays(dia.duracion.toLong())
+                        else inicios.firstOrNull { it.first.id == e.hasta && it.second.year == desde.year }?.second ?: return@any false
+                    !d.isBefore(desde) && d.isBefore(hasta)
+                }
+            }?.clave
+        }
 
         private fun sortearClima(pesos: Map<Clima, Int>, azar: Azar): Clima {
             // En el orden del enum, no en el del mapa: así el sorteo no depende de cómo se escribió la tabla.

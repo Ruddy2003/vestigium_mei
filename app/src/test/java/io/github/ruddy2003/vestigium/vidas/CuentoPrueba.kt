@@ -35,7 +35,7 @@ class CuentoPrueba {
         todas.forEach { p ->
             val largos = p.variantes.values.flatten().map { it.texto } + p.especiales.values.flatMap { t -> t.dias.flatMap { it.values } + t.sigue.values.flatten() }
             largos.forEach { s ->
-                assertTrue("${p.vida}: párrafo de ${s.length} letras: «${s.take(50)}…»", s.length <= 330)
+                assertTrue("${p.vida}: párrafo de ${s.length} letras: «${s.take(50)}…»", s.length <= 470)
                 assertTrue("${p.vida}: no termina en punto ni en comilla: «${s.takeLast(30)}»", s.last() in ".»}")
                 assertFalse("${p.vida}: signos de admiración fuera de un grito: «${s.take(50)}…»", '!' in s && '«' !in s)
             }
@@ -90,14 +90,24 @@ class CuentoPrueba {
             c.parrafos.forEachIndexed { i, s ->
                 val donde = "${p.vida}, $dia a las $hora, ${Parrafo.entries[i].nombre}"
                 assertTrue("$donde: muy corto: «$s»", s.length >= 40)
-                assertTrue("$donde: muy largo (${s.length})", s.length <= 420)
+                assertTrue("$donde: muy largo (${s.length})", s.length <= 600)
                 assertFalse("$donde: quedó un hueco: «$s»", '{' in s || '}' in s || '|' in s)
                 assertFalse("$donde: espacios de más: «$s»", "  " in s || " ." in s || s != s.trim())
                 assertTrue("$donde: no empieza con mayúscula: «$s»", s.first().isUpperCase() || s.first() in "«¡¿")
             }
             assertTrue("$dia: título vacío", c.titulo.isNotBlank())
-            assertTrue("$dia: el cuento entero es muy largo (${c.parrafos.sumOf { it.length }})", c.parrafos.sumOf { it.length } <= 2400)
+            assertTrue("$dia: el cuento entero es muy largo (${c.parrafos.sumOf { it.length }})", c.parrafos.sumOf { it.length } <= 2900)
         } } }
+    }
+
+    @Test fun elCuentoTieneElLargoQueAproboElAutor() {
+        // Unas 1,950 letras en promedio (minuto y medio de lectura), y ningún día se queda corto ni se pasa de largo.
+        todas.forEach { p ->
+            val largos = dias(2027, 2027).flatMap { dia -> listOf(9.0, 19.0).map { cuento(p, dia, it).parrafos.sumOf { x -> x.length } } }
+            val medio = largos.average()
+            assertTrue("${p.vida}: el cuento tiene en promedio ${medio.toInt()} letras", medio in 1800.0..2150.0)
+            assertTrue("${p.vida}: el más corto tiene ${largos.min()} letras", largos.min() >= 1450)
+        }
     }
 
     @Test fun esElMismoCuentoTodoElDiaSalvoElParrafoDelTrabajo() {
@@ -202,13 +212,8 @@ class CuentoPrueba {
     private val demeas get() = todas.first { it.vida == "remero" }
 
     @Test fun demeasEstaEnElMarDeJulioASeptiembre() {
-        val c = cal(demeas)
-        assertNull(Cuento.estadoDe(c, demeas, LocalDate.parse("2027-07-04")))
-        assertEquals("mar", Cuento.estadoDe(c, demeas, LocalDate.parse("2027-07-05")))
-        assertEquals("mar", Cuento.estadoDe(c, demeas, LocalDate.parse("2027-09-17")))
-        assertNull(Cuento.estadoDe(c, demeas, LocalDate.parse("2027-09-18")))
-        assertEquals("mar", Cuento.estadoDe(c, demeas, LocalDate.parse("2028-06-20")))   // el viaje a Epidauro
-        assertNull(Cuento.estadoDe(c, demeas, LocalDate.parse("2029-07-20")))
+        fun estado(dia: String) = cuento(demeas, dia).ficha.estado
+        assertNull(estado("2027-07-04")); assertEquals("mar", estado("2027-07-05")); assertEquals("mar", estado("2027-09-17")); assertNull(estado("2027-09-18"))
         // En el mar, la mañana, el pueblo, la gente y el anochecer son de las variantes del mar.
         val delMar = demeas.variantes.mapValues { (_, l) -> l.filter { it.estado == "mar" }.map { Cuento.llenar(it.texto, mapOf("nombre" to "Demeas"), Genero.MASCULINO) }.toSet() }
         dias(2027, 2027).filter { it > "2027-07-05" && it < "2027-09-18" }.forEach { dia ->

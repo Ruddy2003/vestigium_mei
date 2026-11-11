@@ -184,6 +184,33 @@ class AnioPilotoPrueba {
         assertEquals(MesDia.indice(t5.getValue("segundo_trirreme").fecha) + 2, MesDia.indice(t5.getValue("llegan_a_tiempo").fecha))
     }
 
+    @Test fun elCuadroDeDemeasPuedeContarLoMismoQueElCuento() {
+        // Lo que el cuento dice y se ve está en la ficha, que es lo que lee la escena: dónde está él y dónde su nave.
+        val c = AnioPiloto.DEMEAS; val q = vida(c)
+        fun ficha(dia: String) = FichaDelDia.de(dia, q, c)
+        // El «Aura» pasa el invierno en su cobertizo y se echa al agua el 12 de abril.
+        assertEquals(0.0, ficha("2027-04-11").arcos.getValue("nave"), 0.0); assertEquals(1.0, ficha("2027-04-12").arcos.getValue("nave"), 0.0)
+        assertEquals(1.0, ficha("2027-10-31").arcos.getValue("nave"), 0.0); assertEquals(0.0, ficha("2027-11-01").arcos.getValue("nave"), 0.0)
+        // Zarpa el 5 de julio y vuelve el 18 de septiembre: entre tanto está en el «mar» y su nave no está en el puerto.
+        assertEquals(null, ficha("2027-07-04").estado); assertEquals("mar", ficha("2027-07-05").estado)
+        assertEquals("mar", ficha("2027-09-17").estado); assertEquals(null, ficha("2027-09-18").estado)
+        assertEquals("partida", ficha("2027-07-05").escena); assertEquals("regreso", ficha("2027-09-18").escena)
+        assertTrue(ficha("2027-08-01").arcos.getValue("flota") < 0.5); assertEquals(1.0, ficha("2027-09-18").arcos.getValue("flota"), 0.0)
+        // Los otros viajes: Epidauro, las cien naves (diez días) y el segundo trirreme (dos días).
+        assertEquals("mar", ficha("2028-06-20").estado); assertEquals(null, ficha("2028-07-10").estado)
+        assertEquals(null, ficha("2030-08-21").estado); assertEquals("mar", ficha("2030-08-22").estado); assertEquals("mar", ficha("2030-08-31").estado); assertEquals(null, ficha("2030-09-01").estado)
+        assertEquals("mar", ficha("2031-07-15").estado); assertEquals("mar", ficha("2031-07-16").estado); assertEquals(null, ficha("2031-07-17").estado)
+        assertEquals(null, ficha("2029-07-20").estado)
+        // Cuando la temporada 5 se repite, el estado sigue a sus días aunque sean de guerra y no se muevan.
+        assertEquals("mar", ficha("2034-07-15").estado)
+        // Los demás personajes del piloto también tienen los suyos: Pierre herido tras la caída y Kei sin bici.
+        fun de(c2: Calendario, dia: String) = FichaDelDia.de(dia, vida(c2), c2).estado
+        assertEquals(null, de(AnioPiloto.PIERRE, "2028-05-26")); assertEquals("herido", de(AnioPiloto.PIERRE, "2028-05-27"))
+        assertEquals("herido", de(AnioPiloto.PIERRE, "2028-08-24")); assertEquals(null, de(AnioPiloto.PIERRE, "2028-08-25"))
+        assertEquals("sin_bici", de(AnioPiloto.KEI, "2028-03-30")); assertEquals(null, de(AnioPiloto.KEI, "2028-04-08"))
+        assertEquals("sin_implante", de(AnioPiloto.KEI, "2029-05-11")); assertEquals(null, de(AnioPiloto.AMARU, "2029-05-11"))
+    }
+
     @Test fun laCatedralDePierreSubeYNuncaBaja() {
         val c = AnioPiloto.PIERRE
         val coro = fichas(c).map { it.arcos.getValue("coro") }

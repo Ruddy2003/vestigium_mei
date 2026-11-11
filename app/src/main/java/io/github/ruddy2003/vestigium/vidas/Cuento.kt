@@ -20,7 +20,8 @@ enum class Genero { MASCULINO, FEMENINO }
 /**
  * Una variante de un párrafo.
  *
- * - [estado]: solo sale cuando el personaje está en ese estado («mar»: embarcado); sin estado, es la de todos los días.
+ * - [estado]: solo sale cuando el personaje está en ese estado de su calendario («mar»: embarcado; ver [Estado]); sin
+ *   estado, es la de todos los días.
  *   Si para el estado de hoy un lugar no tiene variantes propias, se usan las de todos los días.
  * - [hacer]: solo sale cuando a esta hora el personaje hace eso, según «Un día suyo» (para el párrafo del trabajo).
  * - [desde] y [hasta]: el id de un día especial del calendario. La variante vale desde el día en que pasa [desde] y
@@ -34,12 +35,6 @@ class Variante(val texto: String, val estado: String? = null, val hacer: OtrasVi
  * del cuento en un día normal. [dato]: una oración completa sobre él, que entra en el hueco `{dato_objeto}`.
  */
 class ObjetoCuento(val clave: String, val el: String, val un: String, val titulo: String, val dato: String)
-
-/**
- * Un estado que dura semanas: va del día en que empieza el día especial [desde] a la víspera del día especial [hasta],
- * en cada temporada que tenga los dos (Demeas está en el «mar» de «zarpa_flota» a «vuelve_flota»).
- */
-class Estado(val clave: String, val desde: String, val hasta: String)
 
 /** Una frase que entra en `{entorno}` cuando el arco [arco] vale entre [desde] y [hasta]. Manda la primera regla que se cumple. */
 class Entorno(val arco: String, val desde: Double, val hasta: Double = 1.0, val frases: List<String>)
@@ -64,7 +59,7 @@ class Piezas(
     val vida: String, val genero: Genero, val temporadasEscritas: Set<Int>,
     val variantes: Map<Parrafo, List<Variante>>, val cielos: Map<Clima, List<String>>, val estaciones: Map<Estacion, List<String>>,
     val objetos: List<ObjetoCuento>, val mundos: Map<String, List<String>> = emptyMap(), val entornos: List<Entorno> = emptyList(),
-    val estados: List<Estado> = emptyList(), val especiales: Map<String, TextoEspecial> = emptyMap(),
+    val especiales: Map<String, TextoEspecial> = emptyMap(),
 ) {
     /** Todos los textos, para revisarlos de una vez. */
     fun textos(): List<String> = variantes.values.flatten().map { it.texto } + cielos.values.flatten() + estaciones.values.flatten() + objetos.flatMap { listOf(it.titulo, it.dato, it.el, it.un) } +
@@ -87,10 +82,9 @@ class Piezas(
         }
         variantes.values.flatten().forEach { v ->
             listOfNotNull(v.desde, v.hasta).forEach { if (it !in ids) p += "Una variante depende del día «$it», que no está en el calendario" }
-            if (v.estado != null && estados.none { it.clave == v.estado }) p += "Una variante es del estado «${v.estado}», que no existe"
+            if (v.estado != null && cal.estados.none { it.clave == v.estado }) p += "Una variante es del estado «${v.estado}», que no está en el calendario"
             if (v.meses != null && (v.meses.isEmpty() || v.meses.any { it !in 1..12 })) p += "Una variante tiene meses que no van de 1 a 12"
         }
-        estados.forEach { e -> listOf(e.desde, e.hasta).forEach { if (it !in ids) p += "El estado «${e.clave}» depende del día «$it», que no está en el calendario" } }
         entornos.forEach { e -> if (cal.arcos.none { it.id == e.arco }) p += "Un entorno depende del arco «${e.arco}», que no existe"; if (e.frases.isEmpty()) p += "El entorno del arco «${e.arco}» no tiene frases" }
 
         val climas = cal.clima.flatMap { m -> m.filterValues { it > 0 }.keys }.toSet() + cal.temporadas.flatMap { it.dias }.mapNotNull { it.clima }
@@ -158,7 +152,7 @@ data class Cuento(val vida: String, val dia: String, val titulo: String, val par
         fun de(ficha: FichaDelDia, quien: OtrasVidas.Vida, cal: Calendario, piezas: Piezas, hora: Double): Cuento {
             val d = LocalDate.parse(ficha.dia)
             val hoy = (ficha.temporada - 1) * 365 + MesDia.indice(d)
-            val estado = estadoDe(cal, piezas, d)
+            val estado = ficha.estado
             val hacer = ficha.tramo(hora)?.que
 
             // Los días especiales de hoy, el que manda primero: sus párrafos sustituyen a los de todos los días.
@@ -197,17 +191,6 @@ data class Cuento(val vida: String, val dia: String, val titulo: String, val par
         private fun lugarDe(cal: Calendario, id: String): Int? {
             cal.temporadas.forEachIndexed { t, temp -> temp.dias.firstOrNull { it.id == id }?.let { return t * 365 + MesDia.indice(it.fecha) } }
             return null
-        }
-
-        /** En qué estado está el personaje el día [d] (ver [Estado]); null si en ninguno. */
-        internal fun estadoDe(cal: Calendario, piezas: Piezas, d: LocalDate): String? {
-            if (piezas.estados.isEmpty()) return null
-            val inicios = FichaDelDia.inicios(cal, d.year)
-            return piezas.estados.firstOrNull { e ->
-                val desde = inicios.firstOrNull { it.first.id == e.desde }?.second ?: return@firstOrNull false
-                val hasta = inicios.firstOrNull { it.first.id == e.hasta }?.second ?: return@firstOrNull false
-                !d.isBefore(desde) && d.isBefore(hasta)
-            }?.clave
         }
 
         /**

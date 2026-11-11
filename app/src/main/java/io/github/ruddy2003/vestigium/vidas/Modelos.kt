@@ -202,6 +202,14 @@ class Arco(val id: String, val tipo: TipoArco, val puntos: List<PuntoArco>) {
 class TemporadaVida(val cuando: String, val mundo: String, val resumen: String, val dias: List<DiaEspecial>)
 
 /**
+ * Un estado del personaje que dura días o semanas y que cambian a la vez el cuento y el cuadro («mar»: Demeas está
+ * embarcado, así que el cuento pasa en la flota y en el cuadro falta su nave). Va del día en que empieza el día
+ * especial [desde] a la víspera del día especial [hasta], en cada temporada que tenga los dos. Sin [hasta], dura lo
+ * que dure el día especial [desde].
+ */
+class Estado(val clave: String, val desde: String, val hasta: String? = null)
+
+/**
  * El calendario de un personaje: sus cinco temporadas, escritas de una vez para que la historia sea continua.
  *
  * - [vida]: el id del personaje en [OtrasVidas].
@@ -211,10 +219,11 @@ class TemporadaVida(val cuando: String, val mundo: String, val resumen: String, 
  * - [luz]: cómo cambia la luz de su escena con la hora.
  * - [arcos]: lo que cambia despacio en la escena.
  * - [objetos]: las claves de los objetos que pueden salir como «objeto del día».
+ * - [estados]: los estados por los que pasa (ver [Estado]). Manda el primero que se cumple.
  */
 class Calendario(
     val vida: String, val estaciones: List<Pair<String, Estacion>>, val clima: List<Map<Clima, Int>>, val luz: RegimenLuz = RegimenLuz.SEIS_FRANJAS,
-    val temporadas: List<TemporadaVida>, val arcos: List<Arco> = emptyList(), val objetos: List<String> = emptyList(),
+    val temporadas: List<TemporadaVida>, val arcos: List<Arco> = emptyList(), val objetos: List<String> = emptyList(), val estados: List<Estado> = emptyList(),
 ) {
     /** La estación del día [d]: la del último cambio que ya pasó; antes del primero del año, la que venía del año anterior. */
     fun estacion(d: LocalDate): Estacion {
@@ -281,6 +290,18 @@ class Calendario(
             if (malos.isEmpty()) {
                 if (a.puntos.zipWithNext().any { (x, y) -> y.lugar <= x.lugar }) p += "$donde: los puntos deben ir en orden de fecha, sin repetir día"
                 if (a.puntos.firstOrNull()?.salto == true) p += "$donde: el primer punto no puede ser un salto"
+            }
+        }
+
+        estados.forEach { e ->
+            if (!CLAVE.matches(e.clave)) p += "Estado «${e.clave}»: debe ser una clave en minúsculas"
+            val con = temporadas.count { t -> t.dias.any { it.id == e.desde } }
+            if (con == 0) p += "Estado «${e.clave}»: ninguna temporada tiene el día «${e.desde}»"
+            if (e.hasta != null) temporadas.forEachIndexed { i, t ->
+                val a = t.dias.firstOrNull { it.id == e.desde } ?: return@forEachIndexed
+                val b = t.dias.firstOrNull { it.id == e.hasta }
+                if (b == null) p += "Estado «${e.clave}», temporada ${i + 1}: empieza con «${e.desde}» y falta «${e.hasta}» para terminarlo"
+                else if (MesDia.valido(a.fecha) && MesDia.valido(b.fecha) && MesDia.indice(b.fecha) <= MesDia.indice(a.fecha)) p += "Estado «${e.clave}», temporada ${i + 1}: «${e.hasta}» va antes que «${e.desde}»"
             }
         }
 
