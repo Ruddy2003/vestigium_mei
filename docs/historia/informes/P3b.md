@@ -134,7 +134,7 @@ Los cuentos de la temporada 1 de los otros tres personajes del piloto, con la gr
   - Kei sin bici volvía a casa «pedaleando», y sin implante seguía viendo anuncios: ahora esos estados tienen sus propias variantes.
   - La logia tenía «veinte mazos» en los meses en que solo quedan seis bancos.
   - Pierre volvía herido «con el polvo de la piedra en las cejas».
-- **Compilación de Android:** `apk.yml` lanzado a mano sobre la rama, sin publicar. El resultado está en la descripción del PR.
+- **Compilación de Android:** la corrida 204 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `bc0648e`).
 - **Capturas:** 0, como dice el plan. Las pruebas de `vidas/` vuelven a correr en la siguiente corrida de capturas.
 
 ## Lo que no se puede comprobar aquí
