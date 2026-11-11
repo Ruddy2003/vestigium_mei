@@ -223,8 +223,9 @@ El dibujo del cuadro que irá en Hoy: el paisaje del personaje de cada tema, pin
 
 - **Arnés de Compose de escritorio,** en el scratchpad, sin subirlo. Compila `ui/escenas/` y `vidas/` tal como están en el repositorio y dibuja el cuadro a una imagen.
   - Vi nueve hojas de imágenes: las tres horas, lluvia de invierno, fiesta, invasión, el día en que zarpa la flota, eclipse, luto, peste, regreso, antorchas, la higuera crecida, los 12 objetos y la escena llana con nieve y con niebla.
+  - Al repintar el cuadro volví a ver las mismas hojas con el aspecto nuevo, más las tres variantes entre las que escogió el autor.
   - A 300, 380 y 420 dp de ancho. El plan pedía 300, 360 y 420; como el dibujo se escala entero con el ancho, 360 queda cubierto.
-- **Barrido:** dibujé todos los días de 2026 a 2032, cinco horas cada día, más todos los tiempos y estaciones con las dos escenas y todos los objetos: **17,158 dibujos, 0 fallas.**
+- **Barrido:** dibujé todos los días de 2026 a 2032, cinco horas cada día, más todos los tiempos y estaciones con las dos escenas y todos los objetos: **17,158 dibujos, 0 fallas.** Lo repetí con el cuadro repintado, con el mismo resultado.
   - Antes de arreglarlo encontró un error de verdad: con nieve, un color se pasaba de 1 y la app se habría cerrado. Ahora hay una prueba que recorre todas las horas, tiempos y eclipses.
 - **Pruebas** (en el arnés, y en Actions con las capturas): **13**.
   - cada escena tiene su banderita, su personaje y su calendario; solo Terminal, Navidad y Básico se quedan sin cuadro;
@@ -252,19 +253,24 @@ dependencies { implementation("org.jetbrains.compose.desktop:desktop-jvm-linux-x
 
 ## Resultado en Actions
 
-- **Capturas:** la corrida 265 de `capturas.yml` (`superficies = cuadro`, `temas = heleno`, `solo = true`) **terminó bien**, sin errores de compilación ni pruebas fallidas.
-  - **Tardó 4 minutos,** contra los cerca de 40 de una corrida completa. Es la primera medida de una corrida «solo».
+Las corridas que valen son las últimas, sobre el commit del cuadro repintado (`97395f3`).
+
+- **Capturas:** la corrida 267 de `capturas.yml` (`superficies = cuadro`, `temas = heleno`, `solo = true`) **terminó bien**, sin errores de compilación ni pruebas fallidas.
   - Dejó 14 imágenes en la rama `capturas`: las 12 de Helénico (`…_temaCuadro_heleno_remero_<día>.png`) y las 2 de la biblioteca (`…_cuadroBiblioteca_biblioteca_1.png` y `_2.png`).
-  - Revisé cuatro (`normal`, `zarpa`, `eclipse` y `biblioteca_1`): **se ven igual que en el arnés.** El día en que zarpa la flota no está la nave de Demeas, a ninguna de las tres horas, y se ve la fila de naves saliendo por la bocana.
+  - Revisé la del día normal: **se ve igual que en el arnés.** Las sombras, los reflejos y el grano salen con el motor de dibujo de Android.
   - `despachos.txt` y `unicidad.txt` salieron vacíos; `cobertura.txt` trae justo los 31 temas que faltan.
-  - En esa corrida corrieron también en Actions las pruebas de `vidas/`, las 13 nuevas y la de «despachos en cero».
-  - **Se usó 1 corrida de capturas de las 2 que preveía el plan.**
-- **Compilación de Android:** la corrida 205 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, **terminó bien** (no se publicó ningún Release).
-- **Lo que no pasó por Actions:** las dos corridas son del commit del código (`76f9c47`). Después cambié dos renglones: una cuenta del viento escrita de otra forma, con el mismo resultado, y una importación que sobraba. Compilan en el arnés; Actions los verá en la siguiente corrida.
+  - En esa corrida corrieron también en Actions las pruebas de `vidas/`, las 13 de esta tanda y la de «despachos en cero».
+- **Compilación de Android:** la corrida 207 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, **terminó bien** (no se publicó ningún Release).
+- **Cuántas corridas se usaron:** 3 de capturas, contra las 2 que preveía el plan.
+  - La 265 fue la del primer cuadro. Tardó 4 minutos, contra los cerca de 40 de una corrida completa.
+  - La 266 y la 267 son del cuadro repintado, que el plan no preveía. Cada una tardó unos 7 minutos.
+  - Con `solo`, la rama `capturas` queda solo con estas 14 imágenes hasta la siguiente corrida completa.
 
 ## Lo que no se puede comprobar aquí
 
 - **El rendimiento y la batería.** El cuadro traza su parte viva unas 15 veces por segundo. Hay que medirlo en la APK, cuando P6 lo ponga en Hoy.
+  - La parte quieta pesa más que antes: lleva el grano (34,000 puntos) y dos capas de sombra. Solo se vuelve a trazar cada veinte minutos o al cambiar el tramo del día.
+  - En el arnés, dibujar un cuadro entero pequeño (190 px de ancho) toma unos 60 ms. En el teléfono es más grande y puede notarse un tirón al abrir Hoy: hay que medirlo.
 - **El movimiento.** Las capturas y el arnés muestran un instante quieto: no se ve cómo suben el humo, cómo cae la lluvia ni cómo brilla el agua.
 - **Que se vea igual en el teléfono que en el arnés.** El arnés usa otro Compose y otro motor de dibujo. Las capturas de Actions sí usan los de Android.
 - **El parecido histórico del puerto.** Los cobertizos, los Muros Largos, el Partenón (terminado en 432 a. C.) y los trirremes son como los describen las fuentes abiertas en P2; el lugar exacto de cada cosa en el cuadro es una composición.
