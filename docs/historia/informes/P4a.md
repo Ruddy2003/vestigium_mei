@@ -219,7 +219,14 @@ dependencies { implementation("org.jetbrains.compose.desktop:desktop-jvm-linux-x
 
 ## Resultado en Actions
 
-_Pendiente: se anota al terminar las corridas._
+- **Capturas:** la corrida 265 de `capturas.yml` (`superficies = cuadro`, `temas = heleno`, `solo = true`) **terminó bien**, sin errores de compilación ni pruebas fallidas.
+  - **Tardó 4 minutos,** contra los cerca de 40 de una corrida completa. Es la primera medida de una corrida «solo».
+  - Dejó 14 imágenes en la rama `capturas`: las 12 de Helénico (`…_temaCuadro_heleno_remero_<día>.png`) y las 2 de la biblioteca (`…_cuadroBiblioteca_biblioteca_1.png` y `_2.png`).
+  - Revisé cuatro (`normal`, `zarpa`, `eclipse` y `biblioteca_1`): **se ven igual que en el arnés.** El día en que zarpa la flota no está la nave de Demeas, a ninguna de las tres horas, y se ve la fila de naves saliendo por la bocana.
+  - `despachos.txt` y `unicidad.txt` salieron vacíos; `cobertura.txt` trae justo los 31 temas que faltan.
+  - En esa corrida corrieron también en Actions las pruebas de `vidas/`, las 13 nuevas y la de «despachos en cero».
+  - **Se usó 1 corrida de capturas de las 2 que preveía el plan.**
+- **Compilación de Android:** el código de la app **ya compiló con el Compose de Android** dentro de la corrida de capturas (que compila la app en su variante de pruebas antes de dibujar). La corrida 205 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, que arma la APK de entrega, seguía en curso al escribir esto; su resultado se anota aquí al terminar.
 
 ## Lo que no se puede comprobar aquí
 
