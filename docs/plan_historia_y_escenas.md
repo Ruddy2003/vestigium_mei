@@ -246,7 +246,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - `VistaEscena`: el cuadro, que junta las dos partes y la banderita;
   - `EscenaPlana`: un paisaje hecho solo con la biblioteca. Ningún tema lo usa; es la muestra de la biblioteca en las capturas y la plantilla de cada escena nueva.
 - **El lienzo:** todas las escenas se dibujan en 380 × 285 unidades y se escalan al ancho del cuadro.
-- **Biblioteca de paisaje compartida** (`ui/escenas/paisaje/`), hecha en el piloto: cielos por franja, nubes, lluvia, nieve, niebla, vegetación por estación, cultivos por etapa, agua, montes, casas y techos por época, humo, fuego, adornos genéricos y ruinas. Cada escena la combina y le agrega lo propio de su tema.
+- **Biblioteca de paisaje compartida** (`ui/escenas/paisaje/`), hecha en el piloto: cielos por franja, nubes, lluvia, nieve, niebla, vegetación por estación, cultivos por etapa, agua con sus reflejos, montes, casas y techos por época, humo, fuego, adornos genéricos y ruinas. También la luz con dirección y las sombras que arroja (`Sombras.kt`) y el grano del papel (`Textura.kt`): toda escena los usa, para que el día no quede liso. Cada escena la combina y le agrega lo propio de su tema.
 - **Capas, de abajo hacia arriba:**
   1. cielo y lejanía: montes, mar, el pueblo, la iglesia o el castillo del fondo;
   2. plano medio;

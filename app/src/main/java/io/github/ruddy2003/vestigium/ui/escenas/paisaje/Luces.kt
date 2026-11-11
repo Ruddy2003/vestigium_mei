@@ -68,15 +68,22 @@ private class Hito(
     val sol: Long, val estrellas: Float, val noche: Float,
 )
 
-/** El cielo despejado a lo largo del día (horas de 0 a 24). El día empieza a las 5:00, con la primera claridad. */
+/**
+ * El cielo despejado a lo largo del día (horas de 0 a 24). El día empieza a las 5:00, con la primera claridad.
+ *
+ * La paleta del día es corta y va junta **[Diseño propio]**: el cielo es un azul verdoso apagado que baja a crema en
+ * el horizonte, la luz es blanca y cálida, y las sombras ([Rayo]) son azul violeta. Nada de azul puro: así el cielo y
+ * el agua se llevan con los ocres de la tierra.
+ */
 private val HITOS = listOf(
     Hito(1.0f, 0xFF060A1C, 0xFF0E1836, 0xFF1D2B50, 0xFF3A4672, 0xFF16213F, 0.85f, 0xFFFFE9B0, 1.0f, 1.0f),
     Hito(5.0f, 0xFF172447, 0xFF464B7C, 0xFFD98A62, 0xFF6A6C8C, 0xFF6F6684, 0.90f, 0xFFFFC58A, 0.25f, 0.8f),
-    Hito(6.4f, 0xFF4673AE, 0xFFE9B08A, 0xFFFFD79C, 0xFFF3CBA8, 0xFFEFC6A2, 0.95f, 0xFFFFE2A6, 0.0f, 0.15f),
-    Hito(8.0f, 0xFF3F7FC2, 0xFF9CC6E6, 0xFFE9E6CC, 0xFFFFF0D8, 0xFFD6E2E6, 0.90f, 0xFFFFF2C4, 0.0f, 0.0f),
-    Hito(10.5f, 0xFF3379C6, 0xFF86BCE8, 0xFFD3E9F2, 0xFFFFFAEE, 0xFFC9E0EE, 0.85f, 0xFFFFF7D8, 0.0f, 0.0f),
-    Hito(14.0f, 0xFF2B73C8, 0xFF7AB4E8, 0xFFCDE5F2, 0xFFFFFFFF, 0xFFC4DDEE, 0.82f, 0xFFFFFBE6, 0.0f, 0.0f),
-    Hito(17.5f, 0xFF3A76BA, 0xFF98BEDC, 0xFFF1DEB6, 0xFFFFEED0, 0xFFE2D6BE, 0.88f, 0xFFFFE9A8, 0.0f, 0.0f),
+    Hito(6.4f, 0xFF5A7CA8, 0xFFE9B08A, 0xFFFFD79C, 0xFFF3CBA8, 0xFFEFC6A2, 0.95f, 0xFFFFE2A6, 0.0f, 0.15f),
+    Hito(7.0f, 0xFF769DB8, 0xFFEBCBA5, 0xFFFEE1B0, 0xFFFEDCB8, 0xFFF0CFA9, 0.93f, 0xFFFFE8B1, 0.0f, 0.09f),
+    Hito(8.0f, 0xFF78A5BA, 0xFFCFD3C2, 0xFFF6E6C4, 0xFFFFF0D8, 0xFFDFDAC8, 0.90f, 0xFFFFF2C4, 0.0f, 0.0f),
+    Hito(10.5f, 0xFF72A6BD, 0xFFB0CFD2, 0xFFEEE7CC, 0xFFFFF5E2, 0xFFD2DCD4, 0.85f, 0xFFFFF7D8, 0.0f, 0.0f),
+    Hito(14.0f, 0xFF6FA6BE, 0xFFA9CFD6, 0xFFEDE7CC, 0xFFFFF6E4, 0xFFCFDCD6, 0.82f, 0xFFFFFBE6, 0.0f, 0.0f),
+    Hito(17.5f, 0xFF77A2B8, 0xFFC6D0C0, 0xFFF6DEB2, 0xFFFFEBCB, 0xFFE4D5BA, 0.88f, 0xFFFFE9A8, 0.0f, 0.0f),
     Hito(19.3f, 0xFF3A5596, 0xFFD98C86, 0xFFFFBE72, 0xFFF5B68A, 0xFFE8A688, 0.95f, 0xFFFFC66E, 0.0f, 0.1f),
     Hito(20.3f, 0xFF2A356E, 0xFFB65E80, 0xFFFF9A55, 0xFFC98877, 0xFFB87680, 0.95f, 0xFFFF9C4E, 0.1f, 0.45f),
     Hito(21.0f, 0xFF121938, 0xFF2D2F60, 0xFF7A4E70, 0xFF5B5F88, 0xFF3C3A62, 0.90f, 0xFFFF8A4A, 0.6f, 0.9f),

@@ -65,12 +65,29 @@ fun perfil(azar: Azar, x0: Float, x1: Float, base: Float, alto: Float, quebrado:
 
 /**
  * Una sierra o una loma con el [perfil] dado, rellena hasta [fondo]: más clara y azulada cuanto más [lejos] (0 a 1).
- * Arriba toma un poco más de luz que abajo.
+ * Las laderas que miran al sol toman luz y las otras quedan en sombra; al pie se junta la bruma.
  */
 fun DrawScope.monte(l: Luces, cresta: List<Offset>, fondo: Float, propio: Color, lejos: Float) {
     val arriba = cresta.minOf { it.y }
     val c = l.tono(propio, lejos)
-    drawPath(curva(cresta, fondo), Brush.verticalGradient(listOf(lerp(c, l.tono(Color.White, lejos), 0.10f), c, lerp(c, l.bruma, 0.25f * lejos)), arriba, fondo))
+    val forma = curva(cresta, fondo)
+    drawPath(forma, Brush.verticalGradient(listOf(lerp(c, l.tono(Color.White, lejos), 0.10f), c, lerp(c, l.bruma, 0.25f * lejos)), arriba, fondo))
+    val r = Rayo(l)
+    val cae = if (r.lat >= 0f) -1f else 1f                                      // hacia dónde cae la sombra
+    val sombra = lerp(c, l.tono(Color(0xFF4A4C7A), lejos), 0.55f).copy(alpha = 0.10f + 0.30f * r.dia)
+    val luz = l.tono(lerp(propio, Color(0xFFFFE8C0), 0.6f), lejos).copy(alpha = 0.34f * r.dia)
+    clipPath(forma) {
+        for (i in 1 until cresta.size - 1) {
+            val p = cresta[i]
+            if (p.y <= cresta[i - 1].y && p.y < cresta[i + 1].y) {
+                val h = fondo - p.y
+                drawPath(poligono(p, Offset(p.x + cae * (h * 1.5f + 5f), fondo), Offset(p.x + cae * h * 0.12f, fondo)), sombra)
+                drawPath(poligono(p, Offset(p.x - cae * (h * 1.1f + 4f), fondo), Offset(p.x - cae * h * 0.1f, fondo)), luz)
+            }
+        }
+        drawRect(Brush.verticalGradient(listOf(Color.Transparent, l.bruma.copy(alpha = (0.6f * lejos).coerceIn(0f, 1f))), arriba + (fondo - arriba) * 0.4f, fondo),
+            Offset(cresta.first().x, arriba), Size(cresta.last().x - cresta.first().x, fondo - arriba))
+    }
 }
 
 // ---------------------------------------------------------------- El color del campo

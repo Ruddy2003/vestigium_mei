@@ -4,14 +4,18 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.data.OtrasVidas.Hacer
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
@@ -20,26 +24,37 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Casa
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.LLAMA
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.LUZ_DE_CASA
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Luces
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.MAR_ORILLA
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Rayo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Techo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.agua
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.antorcha
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.arbol
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.astros
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.bajio
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.brasas
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.briznas
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.capaSombra
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.casa
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cielo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cipres
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.corona
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cubicTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.destellos
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.estela
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.grano
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.guirnalda
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.hierbaDe
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.hojaDe
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.humo
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.lineTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.llama
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.monte
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.moveTo
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mult
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.muralla
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.nubes
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.olivo
@@ -48,10 +63,14 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.perfil
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.reflejo
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.reflejoRoto
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sembrado
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombraArrojada
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombraDeFollaje
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.tiempoQuieto
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.tiempoVivo
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.volumen
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Clima
 import io.github.ruddy2003.vestigium.vidas.Estacion
@@ -65,13 +84,21 @@ import kotlin.math.sin
  * Helénico: el puerto de Zea, en el Pireo, visto desde el patio de la casa de Demeas (remero de un trirreme, Atenas,
  * 431 a 427 a. C.). **[Aproximación]**: es una composición con lo que había allí, no la vista desde un punto real.
  *
- * - **Al fondo:** el golfo con Salamina a la izquierda; a la derecha, el llano del Ática con sus campos de cebada, los
- *   Muros Largos que suben hacia la ciudad, la roca de la Acrópolis con el Partenón recién terminado y, detrás, los
- *   montes.
+ * - **Al fondo:** el golfo con Salamina a la izquierda; a la derecha, el llano del Ática: la costa con sus calas, sus
+ *   puntas y la franja de arena y roca que el mar le ha ido comiendo; los campos de cebada; los Muros Largos que suben
+ *   hacia la ciudad; Atenas trepando por su loma hasta el pie de la Acrópolis, con el Partenón recién terminado; el
+ *   Licabeto y, detrás, los montes.
  * - **En medio:** la dársena. En la otra orilla, la fila de cobertizos de la flota; en esta, a la izquierda, el
  *   cobertizo del «Aura», la nave de Demeas.
- * - **Delante:** el patio: el murete encalado, el banco de piedra con el objeto del día, el brasero, la tinaja, el
- *   candelero y, desde la temporada 2, la higuera que planta por su padre.
+ * - **Delante:** el patio, visto un poco desde arriba. El murete encalado, gastado, con un vano a la izquierda por
+ *   donde se baja a la playa. Las cosas de la casa, arrimadas unas a otras: el candelero, dos ánforas, la tinaja, el
+ *   brasero, el banco de piedra con el objeto del día, un canasto y un rollo de cuerda colgado. A la derecha crece un
+ *   olivo cuya copa enmarca el cuadro por arriba; a la izquierda, desde la temporada 2, la higuera que planta por su
+ *   padre.
+ *
+ * Cómo está pintado **[Diseño propio]**: la luz viene del lado del sol ([Rayo]) y todo arroja su sombra, larga por la
+ * mañana y por la tarde y corta a mediodía; la copa del olivo da sombra rota sobre el murete, el suelo y las cosas. El
+ * agua es honda lejos y clara en la orilla, y refleja las naves, los cobertizos y la costa. Encima de todo va el grano.
  *
  * Lo que cuenta, igual que el cuento (todo sale de la ficha; ver el comentario de su calendario en `AnioPiloto.kt`):
  * - **El «Aura»** (arco `nave` y estado `mar`): en su cobertizo de noviembre al 12 de abril; en el agua el resto del
@@ -86,8 +113,9 @@ import kotlin.math.sin
  * - **El eclipse** (clave `eclipse`): pasado el mediodía el sol es una media luna y el día se apaga.
  * - **La partida y el regreso** (claves `partida` y `regreso`): la fila de naves que sale o entra por la bocana.
  * - **La higuera** (arco `higuera`): crece cada año; se pela en invierno.
- * - **El tramo del día:** el brasero encendido con la olla a la hora de comer; el candelero y la copa al anochecer,
- *   cuando hay gente; brasas y todo apagado mientras duerme.
+ * - **El objeto del día:** sobre el banco; el remo, apoyado en el murete; la red y el manto, colgados de él.
+ * - **El tramo del día:** el brasero encendido con la olla a la hora de comer; la lucerna del candelero, la copa y la
+ *   jarra al anochecer, cuando hay gente; brasas y todo apagado mientras duerme.
  */
 internal object EscenaHeleno : EscenaVida {
     override val vidas = listOf("remero")
@@ -95,7 +123,21 @@ internal object EscenaHeleno : EscenaVida {
     /** Dónde está el horizonte del mar. */
     private const val H = 128f
 
-    // Los materiales, con los colores del tema (los de su casa en `ui/vida/VidaHeleno.kt`).
+    // El murete del patio: su lomo, dónde empieza la cara y dónde toca el suelo. A la izquierda de VANO está abierto.
+    private const val CAP = 218f
+    private const val CARA = 224.5f
+    private const val BASE = 250f
+    private const val VANO = 70f
+
+    // Dónde están las cosas del patio que también usa la parte viva, y a qué escala van.
+    private val TINAJA = Offset(148f, 275f)
+    private val BRASERO = Offset(190f, 282f)
+    private const val KB = 1.4f
+    private val CANDELERO = Offset(91f, 264f)
+    private const val KC = 0.66f
+    private val SOBRE = Offset(255f, 255.4f)
+    private const val KO = 1.35f
+
     private val MARMOL = Color(0xFFEDE6D6)
     private val CALIZA = Color(0xFFD8C49A)
     private val ENCALADO = Color(0xFFEFE6D0)
@@ -116,8 +158,6 @@ internal object EscenaHeleno : EscenaVida {
 
     private val CASA_PUERTO = Casa(ENCALADO, Techo.TEJA, TERRACOTA, MADERA_OSC, ventanas = 1, zocalo = ROJO)
     private val CASA_LABOR = Casa(Color(0xFFE2D4B4), Techo.TEJA, Color(0xFFB8683A), MADERA_OSC, ventanas = 1)
-
-    // ---------------------------------------------------------------- Lo que la ficha dice
 
     /** A qué horas se ve el eclipse y con cuánta fuerza: pasado el mediodía, con el máximo hacia las 14:40. */
     private fun eclipse(m: Momento): Float = if (!m.con("eclipse")) 0f else (1.5f - abs(m.hora.toFloat() - 14.7f)).coerceIn(0f, 1f)
@@ -164,64 +204,153 @@ internal object EscenaHeleno : EscenaVida {
     // ---------------------------------------------------------------- La parte quieta
 
     override fun DrawScope.quieta(m: Momento) {
-        val l = luces(m)
+        val l = luces(m); val r = Rayo(l)
         val est = m.ficha.estacion
         val semilla = m.ficha.semilla
         // El perfil de la tierra es siempre el mismo: su azar no depende del día.
         val fijo = Azar(Semilla.de("heleno", "tierra"))
 
         // 1. Cielo y lejanía.
-        cielo(l, H)
+        cielo(l, H, semilla)
         astros(l, H, semilla)
         nubes(l, H, m.ficha.clima, semilla)
-        monte(l, perfil(fijo, 146f, 660f, H + 2f, 52f, 0.6f, 40, isla = true), H + 3f, Color(0xFF566C92), 0.82f)
-        monte(l, perfil(fijo, 190f, 600f, H + 2f, 30f, 0.35f, 36, isla = true), H + 3f, Color(0xFF76845E), 0.6f)
-        agua(l, Rect(0f, H, ANCHO, 236f), m.azar("mar"), viento = m.viento)
-        monte(l, perfil(fijo, -30f, 126f, H + 0.6f, 17f, 0.5f, 16, isla = true), H + 0.8f, Color(0xFF5C7078), 0.78f)
-        monte(l, perfil(fijo, 122f, 164f, H + 0.6f, 6f, 0.3f, 8, isla = true), H + 0.8f, Color(0xFF66786E), 0.7f)
+        monte(l, perfil(fijo, 146f, 660f, H + 2f, 52f, 0.6f, 40, isla = true), H + 3f, Color(0xFF6A7494), 0.82f)
+        monte(l, perfil(fijo, 190f, 600f, H + 2f, 30f, 0.35f, 36, isla = true), H + 3f, Color(0xFF7E8660), 0.6f)
+        agua(l, Rect(0f, H, ANCHO, 238f), m.azar("mar"), viento = m.viento)
+        monte(l, perfil(fijo, -30f, 126f, H + 0.6f, 17f, 0.5f, 16, isla = true), H + 0.8f, Color(0xFF66747A), 0.78f)
+        monte(l, perfil(fijo, 122f, 164f, H + 0.6f, 6f, 0.3f, 8, isla = true), H + 0.8f, Color(0xFF6E7C70), 0.7f)
+        reflejosDeLaCosta(l)
         if (m.con("partida")) flotilla(l, 5, haciaLaIzquierda = true)
         if (m.con("regreso")) flotilla(l, 5, haciaLaIzquierda = false)
-        llano(m, l, est, fijo)
+        llano(m, l, r, est, fijo)
 
         // 2. Plano medio: la otra orilla con sus cobertizos, la dársena y, en esta orilla, el cobertizo del «Aura».
         muelle(m, l, fijo)
+        sombrasDelMuelle(r)
+        reflejosDelMuelle(m, l)
+        estela(l, Rect(0f, H, ANCHO, 236f), m.azar("estela"))
         navesDeLaDarsena(m, l)
+        bajio(l, orillaDeLaPlaya())
         orillaCercana(m, l, est, fijo)
+        espuma(l)
         when (nave(m)) {
-            Nave.REMANDO -> trirreme(l, Offset(250f, 190f), 82f, haciaLaDerecha = false, propia = true, remos = true, lejos = 0.1f)
-            Nave.AMARRADA -> trirreme(l, Offset(152f, 208f), 102f, haciaLaDerecha = true, propia = true, lejos = 0f, conCorona = fiesta(m))
+            Nave.REMANDO -> trirreme(l, Offset(246f, 188f), 82f, haciaLaDerecha = false, propia = true, remos = true, lejos = 0.1f)
+            Nave.AMARRADA -> trirreme(l, Offset(152f, 207f), 88f, haciaLaDerecha = true, propia = true, lejos = 0f, conCorona = fiesta(m))
             Nave.COBERTIZO -> Unit                                              // la dibuja `orillaCercana`, dentro del cobertizo
             Nave.AUSENTE -> Unit
         }
 
-        // 3. Primer plano: el patio.
-        patio(m, l, est, fijo)
+        // 3. Primer plano: el patio, y la copa del olivo que lo enmarca.
+        patio(m, l, r, est)
+        follajeDelOlivo(l, r)
 
-        // 5 y 7. El velo del tiempo que hace.
+        // 4. El velo del tiempo que hace y el grano del papel.
         tiempoQuieto(l, m.ficha.clima, H, semilla)
+        grano(Azar(Semilla.de("heleno", "grano")), 0.6f + 0.4f * r.dia)
     }
 
-    /** El llano del Ática: la costa, los campos, las casas de labor, los Muros Largos, la ciudad y la Acrópolis. */
-    private fun DrawScope.llano(m: Momento, l: Luces, est: Estacion, fijo: Azar) {
-        val hierba = hierbaDe(est, mediterraneo = true)
-        val tierra = Path().apply {
-            moveTo(178f, H - 0.5f); lineTo(ANCHO + 2f, H - 0.5f); lineTo(ANCHO + 2f, 168f); lineTo(196f, 166f)
-            cubicTo(170f, 165f, 150f, 162f, 141f, 155f)
-            cubicTo(140f, 149f, 152f, 145f, 160f, 139f)
-            cubicTo(166f, 134f, 172f, 131f, 178f, H - 0.5f)
-            close()
+    // ---------------------------------------------------------------- El mar
+
+    /** La tierra lejana se refleja en el agua como una franja más oscura pegada a la costa. */
+    private fun DrawScope.reflejosDeLaCosta(l: Luces) {
+        val az = Azar(Semilla.de("heleno", "costa"))
+        reflejoRoto(-10f, 124f, H + 0.9f, 6f, l.tono(Color(0xFF4E5E6A), 0.5f), 0.5f, az, 0.8f)
+        reflejoRoto(124f, 164f, H + 0.9f, 3f, l.tono(Color(0xFF55665E), 0.5f), 0.45f, az, 0.8f)
+    }
+
+    /** Los cobertizos, la torre, la casa y los cipreses de la otra orilla, reflejados; y el agua clara al pie del muelle. */
+    private fun DrawScope.reflejosDelMuelle(m: Momento, l: Luces) {
+        val az = Azar(Semilla.de("heleno", "reflejos")); val lejos = 0.34f
+        drawLine(l.tono(MAR_ORILLA).copy(alpha = 0.45f * (1f - 0.7f * l.noche)), Offset(194f, 168.6f), Offset(ANCHO, 170.6f), 3.6f)
+        // La orilla del llano se refleja en una franja pegada a ella.
+        for (i in 12 until COSTA.size - 1) reflejoRoto(COSTA[i].x, COSTA[i + 1].x, maxOf(COSTA[i].y, COSTA[i + 1].y) + 0.7f, 5f, l.tono(Color(0xFFA09672), 0.4f), 0.42f, az)
+        for (i in 0 until 9) {
+            val x = 204f + i * 15.4f; val y = 169.4f + i * 0.2f
+            reflejoRoto(x + 1.8f, x + 13.6f, y, 9f, l.tono(Color(0xFF2E2620), lejos), 0.45f, az)
+            reflejoRoto(x - 0.7f, x + 2.3f, y, 12f, l.tono(MARMOL, lejos), 0.62f, az)
+            reflejoRoto(x + 1f, x + 14.4f, y + 9f, 6f, l.tono(TERRACOTA, lejos), 0.42f, az)
         }
-        drawPath(tierra, Brush.verticalGradient(listOf(l.tono(hierba, 0.7f), l.tono(hierba, 0.45f), l.tono(lerp(hierba, ARENA, 0.5f), 0.3f)), H, 168f))
+        reflejoRoto(148f, 156f, 156.5f, 13f, l.tono(CALIZA, lejos), 0.55f, az)
+        reflejoRoto(350f, 361f, 170.4f, 16f, l.tono(Color(0xFF24402E), lejos), 0.42f, az)
+        reflejoRoto(363f, 384f, 170.6f, 9f, l.tono(ENCALADO, lejos), 0.5f, az)
+        if (l.noche > 0.5f && m.hacer != Hacer.DORMIR) reflejoRoto(368f, 378f, 170.6f, 14f, LUZ_DE_CASA, 0.6f * l.noche, az)
+    }
+
+    private fun orillaDeLaPlaya() = Path().apply {
+        moveTo(132f, 190f); cubicTo(146f, 194f, 156f, 199f, 160f, 204f); cubicTo(140f, 212f, 90f, 218f, -2f, 224f)
+    }
+
+    /** La línea de espuma donde rompe el agua en la arena, y la arena mojada. */
+    private fun DrawScope.espuma(l: Luces) {
+        val az = Azar(Semilla.de("heleno", "espuma"))
+        val blanco = l.tono(Color.White)
+        translate(1.6f, 1.4f) { drawPath(orillaDeLaPlaya(), blanco.copy(alpha = 0.7f), style = Stroke(0.9f, cap = StrokeCap.Round)) }
+        repeat(26) {
+            val k = az.real(); val p = if (k < 0.3f) Offset(mezcla(134f, 160f, k / 0.3f), mezcla(191f, 204f, k / 0.3f)) else Offset(mezcla(160f, 0f, (k - 0.3f) / 0.7f), mezcla(205f, 224.5f, (k - 0.3f) / 0.7f))
+            drawLine(blanco.copy(alpha = az.entre(0.3f, 0.7f)), p + Offset(3f, 2.4f + az.entre(0f, 2.5f)), p + Offset(3f + az.entre(2f, 7f), 2.6f + az.entre(0f, 2.5f)), 0.6f, StrokeCap.Round)
+        }
+    }
+
+    /**
+     * La costa del llano, de la línea del horizonte al arranque del muelle: entrantes, salientes y la punta de la torre.
+     * Es un trazo fijo, puesto a mano, para que no salga una curva de compás.
+     */
+    private val COSTA = listOf(
+        Offset(183f, H - 0.5f), Offset(177f, 129.8f), Offset(171.5f, 130.6f), Offset(173.5f, 133.2f), Offset(166f, 135.4f), Offset(160.5f, 137f), Offset(163f, 139.8f),
+        Offset(156f, 142f), Offset(149.5f, 143.6f), Offset(151.5f, 146.8f), Offset(145.5f, 149f), Offset(141f, 151.8f), Offset(139.5f, 155.4f), Offset(144f, 157.6f),
+        Offset(151f, 158.6f), Offset(157f, 161.6f), Offset(165f, 162.2f), Offset(171f, 164.8f), Offset(180f, 165.2f), Offset(187f, 167.2f), Offset(196f, 166.2f),
+    )
+
+    /** La tierra del llano con la costa corrida [k] veces hacia dentro: con 0 es la costa; con 1, hasta donde llega la hierba. */
+    private fun tierraDelLlano(k: Float): Path = curva(COSTA.map { p -> val cerca = ((p.y - H) / 40f).coerceIn(0f, 1f); p + Offset(k * (1.5f + 3.5f * cerca), -k * (0.5f + 1.5f * cerca)) }).apply {
+        lineTo(ANCHO + 2f, 168f); lineTo(ANCHO + 2f, H - 0.5f); close()
+    }
+
+    /** El llano del Ática: la costa, los campos, las casas de labor, los Muros Largos y, al fondo, la ciudad con su roca. */
+    private fun DrawScope.llano(m: Momento, l: Luces, r: Rayo, est: Estacion, fijo: Azar) {
+        val hierba = lerp(hierbaDe(est, mediterraneo = true), Color(0xFFB6AE78), 0.35f)
+        val az = Azar(Semilla.de("heleno", "llano"))
+        val tierra = tierraDelLlano(0f); val orilla = curva(COSTA)
+        // El agua clara de la orilla y la espuma que la bordea.
+        bajio(l, orilla, 11f)
+        drawPath(orilla, l.tono(Color.White, 0.3f).copy(alpha = 0.6f * (1f - 0.6f * l.noche)), style = Stroke(1.5f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        // De abajo arriba: la franja que el mar ha ido comiendo (arena en las calas, roca en las puntas), el talud de
+        // tierra que deja al descubierto, en sombra, y la hierba, que no llega hasta el agua.
+        drawPath(tierra, Brush.verticalGradient(listOf(l.tono(Color(0xFFBDAA8A), 0.4f), l.tono(Color(0xFFE6D8B2), 0.3f)), H, 168f))
+        clipPath(tierra) {
+            COSTA.forEachIndexed { i, p ->
+                // Cantos y peñas sobre la franja.
+                if (i > 0) repeat(3) { val q = p + Offset(az.entre(-0.6f, 3f), az.entre(-2.2f, 1.2f)); val w = az.entre(0.6f, 1.7f) * (0.5f + i / 20f); drawOval(l.tono(if (az.real() > 0.5f) Color(0xFF8E8068) else Color(0xFFF0E6CC), 0.3f), Offset(q.x - w, q.y - w * 0.5f), Size(w * 2f, w)) }
+            }
+            drawPath(tierraDelLlano(0.82f), l.tono(mult(Color(0xFF94804E), r.color, 0.6f * r.dia), 0.35f))
+            val pasto = tierraDelLlano(1f)
+            drawPath(pasto, Brush.verticalGradient(listOf(l.tono(hierba, 0.7f), l.tono(hierba, 0.45f), l.tono(lerp(hierba, ARENA, 0.5f), 0.3f)), H, 168f))
+            clipPath(pasto) {
+                // El llano no es una mesa: lomas suaves, con su lado de sombra, y manchas de monte bajo.
+                repeat(5) {
+                    val c = Offset(az.entre(200f, 370f), az.entre(136f, 160f)); val w = az.entre(30f, 70f)
+                    mancha(c, w, az.entre(2f, 4f), l.tono(mult(hierba, Color(0xFF7E86A6), 0.7f), 0.45f), 0.3f)
+                    mancha(c + Offset(r.lat * 6f, -3.4f), w * 0.8f, az.entre(1.4f, 2.6f), l.tono(lerp(hierba, Color(0xFFF2E8B8), 0.5f), 0.45f), 0.3f)
+                }
+                repeat(60) { val p = Offset(az.entre(150f, 380f), az.entre(132f, 166f)); drawOval(l.tono(Color(0xFF6E7E52), 0.45f).copy(alpha = 0.5f), Offset(p.x, p.y), Size(az.entre(1.2f, 3.4f), az.entre(0.6f, 1.1f))) }
+            }
+        }
+        // Peñas en el agua, frente a las puntas, con su espuma.
+        listOf(Offset(157.6f, 136.2f), Offset(146.6f, 143.2f), Offset(136.6f, 153.4f), Offset(134.8f, 156.6f), Offset(153.6f, 162.4f), Offset(168.2f, 166.4f)).forEachIndexed { i, p ->
+            val w = 1.1f + 0.22f * i
+            drawOval(l.tono(Color.White, 0.3f).copy(alpha = 0.55f * (1f - 0.6f * l.noche)), Offset(p.x - w * 1.5f, p.y - 0.1f), Size(w * 3f, w * 0.8f))
+            drawOval(l.tono(Color(0xFF6E6456), 0.3f), Offset(p.x - w, p.y - w * 0.7f), Size(w * 2f, w)); drawOval(l.tono(Color(0xFFCDBFA2), 0.3f), Offset(p.x - w * 0.5f + r.lat * w * 0.3f, p.y - w * 0.7f), Size(w, w * 0.45f))
+        }
 
         // Los campos: una colcha de bancales, cada uno con su grano. Los quemados, según los estragos.
         val campo = m.arco("campo"); val estragos = m.arco("estragos")
         val azar = m.azar("campos")
         val bancales = listOf(
             listOf(Offset(196f, 132f), Offset(232f, 131f), Offset(238f, 138f), Offset(192f, 139f)),
-            listOf(Offset(300f, 131f), Offset(342f, 131f), Offset(352f, 138f), Offset(304f, 138f)),
-            listOf(Offset(346f, 131f), Offset(382f, 131f), Offset(382f, 139f), Offset(356f, 138f)),
+            listOf(Offset(326f, 132f), Offset(346f, 131.6f), Offset(352f, 138f), Offset(322f, 138f)),
+            listOf(Offset(350f, 131.4f), Offset(382f, 131f), Offset(382f, 139f), Offset(356f, 138f)),
             listOf(Offset(186f, 140f), Offset(222f, 139.5f), Offset(224f, 147f), Offset(178f, 148f)),
-            listOf(Offset(256f, 139f), Offset(300f, 139f), Offset(306f, 147f), Offset(258f, 147.5f)),
+            listOf(Offset(256f, 139.4f), Offset(300f, 139.2f), Offset(306f, 147f), Offset(258f, 147.5f)),
             listOf(Offset(308f, 139.5f), Offset(350f, 139f), Offset(358f, 146.5f), Offset(312f, 147f)),
             listOf(Offset(354f, 140f), Offset(382f, 140f), Offset(382f, 147f), Offset(362f, 146.5f)),
         )
@@ -234,45 +363,117 @@ internal object EscenaHeleno : EscenaVida {
             sembrado(l, poligono(b), Rect(b.minOf { it.x }, b.minOf { it.y }, b.maxOf { it.x }, b.maxOf { it.y }), etapa, lejos, azar, quemado, gavillas = m.con("cosecha") && campo > 0.5f)
         }
 
-        // Dos casas de labor, que la guerra va dejando en ruinas, y sus olivos.
+        // Dos casas de labor, que la guerra va dejando en ruinas, y los olivos: sueltos y en un olivar junto a la costa.
         casa(l, Rect(362f, 141.5f, 373f, 146.5f), CASA_LABOR, 0.5f, m.azar("casa1"), dano = (estragos * 1.6f).coerceIn(0f, 1f))
         casa(l, Rect(240f, 140.5f, 250f, 145.5f), CASA_LABOR, 0.5f, m.azar("casa2"), dano = ((estragos - 0.35f) * 1.6f).coerceIn(0f, 1f))
-        listOf(Offset(228f, 148f), Offset(252f, 148.5f), Offset(376f, 148f), Offset(302f, 148.5f)).forEach { olivo(l, it, 7f, 0.5f, fijo) }
+        val olivos = listOf(Offset(228f, 148f), Offset(252f, 148.5f), Offset(376f, 148f), Offset(302f, 148.5f)) +
+            (0 until 11).map { Offset(170f + (it % 4) * 8f + (it / 4) * 3f + az.entre(-1.5f, 1.5f), 152f + (it / 4) * 3.4f + az.entre(-0.6f, 0.6f)) }
+        olivos.sortedBy { it.y }.forEach { sombraCorta(r, it, 5f, 4f); olivo(l, it, if (it.x < 210f) 6f else 7f, 0.5f, fijo) }
 
-        // La ciudad al pie de la roca, la Acrópolis y el Partenón.
-        val roca = l.tono(Color(0xFFCDB48A), 0.42f); val rocaSombra = l.tono(Color(0xFF8E7658), 0.42f)
-        repeat(13) {
-            val x = 258f + it * 4.3f + fijo.entre(-1f, 1f); val w = fijo.entre(2.6f, 4.4f); val h = fijo.entre(1.6f, 3f)
-            drawRect(l.tono(if (it % 3 == 0) Color(0xFFD8C8A8) else Color(0xFFEFE4CC), 0.45f), Offset(x, 131.5f - h), Size(w, h))
-            drawRect(l.tono(Color(0xFFB8683A), 0.45f), Offset(x - 0.3f, 131.5f - h - 0.7f), Size(w + 0.6f, 0.8f))
-            if (l.noche > 0.5f && it % 3 == 1 && m.hacer != Hacer.DORMIR) drawCircle(LUZ_DE_CASA.copy(alpha = 0.8f), 0.45f, Offset(x + w / 2f, 131f - h / 2f))
-        }
-        drawPath(Path().apply {
-            moveTo(268f, 130.5f); cubicTo(270f, 124f, 272f, 121.5f, 276f, 121f); lineTo(296f, 120.4f)
-            cubicTo(300f, 121f, 302f, 125f, 304f, 130.5f); close()
-        }, Brush.horizontalGradient(if (l.solX > 0.75f) listOf(rocaSombra, roca) else listOf(roca, rocaSombra), 268f, 304f))
-        // El Partenón: el basamento, las columnas (se adivinan), el entablamento y el frontón.
-        val marmol = l.tono(Color(0xFFFBF6EA), 0.3f); val sombra = l.tono(Color(0xFF9C8E78), 0.35f)
-        drawRect(marmol, Offset(279.5f, 119.6f), Size(13f, 0.9f))
-        drawRect(sombra, Offset(280.3f, 116.6f), Size(11.4f, 3f))
-        for (i in 0..7) drawRect(marmol, Offset(280.3f + i * 1.53f, 116.6f), Size(0.7f, 3f))
-        drawRect(marmol, Offset(279.8f, 115.7f), Size(12.4f, 1f))
-        drawPath(poligono(Offset(279.6f, 115.7f), Offset(292.4f, 115.7f), Offset(286f, 113.6f)), marmol)
-        // Los Propileos, a un lado, más bajos.
-        drawRect(marmol, Offset(273f, 118.8f), Size(4.2f, 2.2f)); drawPath(poligono(Offset(272.8f, 118.8f), Offset(277.4f, 118.8f), Offset(275.1f, 117.7f)), marmol)
+        ciudad(m, l, r)
 
         // Los Muros Largos: bajan de la ciudad al puerto, con sus torres.
-        val a = Offset(266f, 132.5f); val b = Offset(214f, 149.5f)
+        val a = Offset(266f, 135f); val b = Offset(214f, 149.5f)
+        val lado = if (r.lat >= 0f) -1f else 1f
+        if (r.fuerza > 0.05f) drawLine(r.color, b + Offset(lado * 1.6f, 1.1f), a + Offset(lado * 1.6f, 1.1f), 1.6f, alpha = r.fuerza * 0.85f, blendMode = BlendMode.Multiply)
         muralla(l, b, a, 2.2f, CALIZA, 0.5f)
         for (i in 0..5) { val p = b + (a - b) * (i / 5f); drawRect(l.tono(lerp(CALIZA, Color.White, 0.15f), 0.5f), Offset(p.x - 1f, p.y - 3.6f), Size(2f, 3.6f)) }
         // Las chozas de los refugiados, arrimadas al muro.
         val chozas = (m.arco("refugiados") * 11f).roundToInt()
-        val az = Azar(Semilla.de("heleno", "chozas"))
+        val az2 = Azar(Semilla.de("heleno", "chozas"))
         for (i in 0 until chozas) {
-            val p = b + (a - b) * ((i + 0.5f) / 11f) + Offset(az.entre(1.5f, 4f), az.entre(1.2f, 2.6f))
-            val w = az.entre(2.6f, 3.8f)
+            val p = b + (a - b) * ((i + 0.5f) / 11f) + Offset(az2.entre(1.5f, 4f), az2.entre(1.2f, 2.6f))
+            val w = az2.entre(2.6f, 3.8f)
             drawPath(poligono(p + Offset(-w / 2f, 0f), p + Offset(w / 2f, 0f), p + Offset(w * 0.1f, -w * 0.62f)), l.tono(if (i % 2 == 0) Color(0xFF8A6E4A) else Color(0xFFA4875A), 0.45f))
             drawLine(l.tono(Color(0xFF3A2C20), 0.45f), p + Offset(-w * 0.1f, 0f), p + Offset(-w * 0.1f, -w * 0.3f), 0.5f)
+        }
+    }
+
+    /** La sombra corta de algo lejano que está de pie en [pie]: una mancha tendida hacia el lado contrario al sol. */
+    private fun DrawScope.sombraCorta(r: Rayo, pie: Offset, ancho: Float, alto: Float) {
+        if (r.fuerza < 0.05f) return
+        val d = (r.ax * alto).coerceIn(-20f, 20f)
+        drawOval(r.color, Offset(minOf(pie.x, pie.x + d) - ancho / 2f, pie.y - 0.6f), Size(abs(d) + ancho, maxOf(1f, ancho * 0.3f)), alpha = r.fuerza * 0.85f, blendMode = BlendMode.Multiply)
+    }
+
+    /**
+     * Atenas, lejos: no es una fila de casas pegada al suelo, sino un caserío que sube por una loma hasta el pie de la
+     * roca, con la muralla delante, el Licabeto detrás y una calima que lo despega de los montes. Arriba, la Acrópolis
+     * con el Partenón recién terminado y los Propileos.
+     */
+    private fun DrawScope.ciudad(m: Momento, l: Luces, r: Rayo) {
+        val az = Azar(Semilla.de("heleno", "ciudad"))
+        val cae = if (r.lat >= 0f) -1f else 1f                                  // hacia dónde caen las sombras
+        fun enSombra(c: Color, lejos: Float) = l.tono(mult(c, r.color, 0.25f + 0.65f * r.dia), lejos)
+        // El Licabeto, detrás, y la calima.
+        val licabeto = curva(listOf(Offset(308f, 131f), Offset(320f, 126.4f), Offset(329f, 119.4f), Offset(333.5f, 118.2f), Offset(338f, 121.4f), Offset(348f, 127.6f), Offset(358f, 131f)), 131.4f)
+        drawPath(licabeto, l.tono(Color(0xFF969078), 0.66f))
+        clipPath(licabeto) { drawPath(if (cae < 0f) poligono(Offset(333.5f, 118.2f), Offset(300f, 131.4f), Offset(331f, 131.4f)) else poligono(Offset(333.5f, 118.2f), Offset(362f, 131.4f), Offset(336f, 131.4f)), enSombra(Color(0xFF969078), 0.66f).copy(alpha = 0.7f)) }
+        mancha(Offset(290f, 129.6f), 70f, 4.6f, l.bruma, 0.18f + 0.32f * r.dia)
+        // La loma en que se asienta la ciudad.
+        val loma = curva(listOf(Offset(234f, 136.2f), Offset(248f, 133.4f), Offset(264f, 131.2f), Offset(286f, 130.4f), Offset(306f, 131f), Offset(318f, 133f), Offset(328f, 136.2f)), 136.4f)
+        drawPath(loma, Brush.verticalGradient(listOf(l.tono(Color(0xFFC2B48C), 0.5f), l.tono(Color(0xFFA9A070), 0.42f)), 130.4f, 136.4f))
+
+        // La roca: el lado de la luz, el de la sombra, las grietas del cantil y el muro que la corona.
+        val roca = l.tono(Color(0xFFD2B88C), 0.42f); val rocaSombra = enSombra(Color(0xFFAE9470), 0.42f)
+        val penon = Path().apply { moveTo(266f, 131.4f); cubicTo(268.5f, 125f, 271f, 121.6f, 275.4f, 120.6f); lineTo(296.6f, 120f); cubicTo(301f, 121f, 303.5f, 125.6f, 306f, 131.4f); close() }
+        drawPath(penon, Brush.horizontalGradient(if (cae < 0f) listOf(rocaSombra, rocaSombra, roca, roca) else listOf(roca, roca, rocaSombra, rocaSombra), 266f, 306f))
+        clipPath(penon) {
+            repeat(16) { val x = az.entre(267f, 305f); drawLine(enSombra(Color(0xFF8A7458), 0.42f).copy(alpha = 0.55f), Offset(x, az.entre(121f, 125f)), Offset(x + az.entre(-1f, 1f), az.entre(126f, 131f)), 0.4f) }
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, l.tono(Color(0xFF7E7A52), 0.45f).copy(alpha = 0.6f)), 127f, 131.4f), Offset(264f, 127f), Size(44f, 4.6f))     // la maleza del pie
+        }
+        drawLine(l.tono(Color(0xFFEDE2C8), 0.38f), Offset(274.6f, 120.5f), Offset(297.4f, 119.9f), 0.9f)
+        // El Partenón: el basamento, las columnas (se adivinan), el entablamento y el frontón.
+        val marmol = l.tono(Color(0xFFFBF6EA), 0.3f); val sombra = enSombra(Color(0xFFB4A68E), 0.35f)
+        drawRect(marmol, Offset(279.5f, 119.2f), Size(13f, 0.9f))
+        drawRect(sombra, Offset(280.3f, 116.2f), Size(11.4f, 3f))
+        for (i in 0..7) drawRect(marmol, Offset(280.3f + i * 1.53f, 116.2f), Size(0.7f, 3f))
+        drawRect(marmol, Offset(279.8f, 115.3f), Size(12.4f, 1f))
+        drawPath(poligono(Offset(279.6f, 115.3f), Offset(292.4f, 115.3f), Offset(286f, 113.2f)), marmol)
+        // Los Propileos, a un lado, más bajos.
+        drawRect(marmol, Offset(273f, 118.4f), Size(4.2f, 2.2f)); drawPath(poligono(Offset(272.8f, 118.4f), Offset(277.4f, 118.4f), Offset(275.1f, 117.3f)), marmol)
+
+        // El caserío, de atrás adelante: cada hilera más grande, más nítida y un poco más abajo que la anterior.
+        var n = 0
+        fun casita(x: Float, base: Float, w: Float, h: Float, lejos: Float, puerta: Boolean) {
+            val propio = listOf(Color(0xFFF2E8D2), Color(0xFFE2D2B0), Color(0xFFF6EEDC), Color(0xFFD8C49C))[n % 4]; n++
+            if (r.fuerza > 0.05f) drawOval(r.color, Offset(if (cae < 0f) x - w * 0.7f else x + w * 0.5f, base - 0.5f), Size(w * 1.2f, 0.9f), alpha = r.fuerza * 0.8f, blendMode = BlendMode.Multiply)
+            drawRect(l.tono(propio, lejos), Offset(x, base - h), Size(w, h))
+            drawRect(enSombra(propio, lejos), Offset(if (cae < 0f) x else x + w * 0.62f, base - h), Size(w * 0.38f, h))
+            drawPath(poligono(Offset(x - 0.4f, base - h), Offset(x + w + 0.4f, base - h), Offset(x + w * 0.74f, base - h * 1.36f), Offset(x + w * 0.26f, base - h * 1.36f)), l.tono(if (n % 3 == 0) Color(0xFFA85A34) else Color(0xFFC0703E), lejos))
+            if (puerta) drawRect(l.tono(Color(0xFF4A3A2C), lejos), Offset(x + w * 0.42f, base - h * 0.55f), Size(maxOf(0.5f, w * 0.16f), h * 0.55f))
+            if (l.noche > 0.5f && n % 3 == 1 && m.hacer != Hacer.DORMIR) drawCircle(LUZ_DE_CASA.copy(alpha = 0.85f), 0.45f, Offset(x + w * 0.5f, base - h * 0.5f))
+        }
+        fun hilera(x0: Float, x1: Float, base: (Float) -> Float, w0: Float, w1: Float, h0: Float, h1: Float, lejos: Float, puerta: Boolean) {
+            var x = x0
+            while (x < x1) {
+                val w = az.entre(w0, w1)
+                if (az.real() > 0.2f) casita(x, base(x) + az.entre(-0.4f, 0.4f), w, az.entre(h0, h1), lejos, puerta)
+                else cipres(l, Offset(x + w / 2f, base(x) + 0.2f), az.entre(3f, 5f), lejos)                                    // un hueco con su ciprés
+                x += w + az.entre(0.2f, 1.4f)
+            }
+        }
+        hilera(250f, 320f, { 129.6f + abs(it - 286f) * 0.03f }, 2f, 3.2f, 1.3f, 2.1f, 0.5f, false)
+        hilera(244f, 324f, { 131.5f + abs(it - 286f) * 0.035f }, 2.6f, 4f, 1.7f, 2.7f, 0.44f, false)
+        // La muralla de la ciudad, con sus torres, por delante de la hilera más cercana.
+        hilera(240f, 322f, { 133.5f + abs(it - 284f) * 0.04f }, 3.2f, 5f, 2.2f, 3.3f, 0.38f, true)
+        val pt = listOf(Offset(236f, 136.6f), Offset(252f, 135.9f), Offset(266f, 135.4f), Offset(284f, 135.3f), Offset(304f, 135.8f), Offset(326f, 137f))
+        for (i in 0 until pt.size - 1) {
+            drawLine(l.tono(CALIZA, 0.42f), pt[i], pt[i + 1], 1.5f)
+            drawLine(l.tono(lerp(CALIZA, Color.White, 0.3f), 0.42f), pt[i] + Offset(0f, -0.75f), pt[i + 1] + Offset(0f, -0.75f), 0.4f)
+            drawRect(Brush.horizontalGradient(if (cae < 0f) listOf(enSombra(CALIZA, 0.42f), l.tono(CALIZA, 0.42f)) else listOf(l.tono(CALIZA, 0.42f), enSombra(CALIZA, 0.42f)), pt[i].x - 1f, pt[i].x + 1f), Offset(pt[i].x - 1f, pt[i].y - 2.6f), Size(2f, 3.3f))
+        }
+        if (r.fuerza > 0.05f) drawLine(r.color, pt.first() + Offset(0f, 1.2f), pt.last() + Offset(0f, 1.2f), 0.9f, alpha = r.fuerza * 0.6f, blendMode = BlendMode.Multiply)
+    }
+
+    /** Las sombras cortas de la otra orilla: la torre, los cipreses y los cobertizos (cada frontón le da sombra al de al lado). */
+    private fun DrawScope.sombrasDelMuelle(r: Rayo) {
+        if (r.fuerza < 0.05f) return
+        sombraCorta(r, Offset(152f, 155f), 8f, 9f); sombraCorta(r, Offset(352f, 164f), 4f, 12f); sombraCorta(r, Offset(359f, 164.5f), 4f, 9f)
+        for (i in 0 until 9) {
+            val x = 204f + i * 15.4f; val b = 163f + i * 0.2f
+            drawPath(if (r.lat >= 0f) poligono(Offset(x - 0.4f, b - 11f), Offset(x + 15.4f / 2f, b - 16.5f), Offset(x + 15.4f / 2f, b - 11f)) else poligono(Offset(x + 15.8f, b - 11f), Offset(x + 15.4f / 2f, b - 16.5f), Offset(x + 15.4f / 2f, b - 11f)),
+                r.color, alpha = r.fuerza * 0.68f, blendMode = BlendMode.Multiply)
         }
     }
 
@@ -386,7 +587,9 @@ internal object EscenaHeleno : EscenaVida {
             val faja = l.tono(if (propia) EGEO else ROJO, lejos)
             if (!enSeco) {
                 // El reflejo, bajo la línea del agua.
-                drawRect(Brush.verticalGradient(listOf(brea.copy(alpha = 0.42f), Color.Transparent), y, y + h * 1.5f), Offset(x0 + L * 0.04f, y), Size(L * 0.96f, h * 1.5f))
+                val azr = Azar(Semilla.de("nave", x0.toInt(), y.toInt())); val paso = maxOf(0.7f, h * 0.2f)
+                reflejoRoto(x0 + L * 0.05f, x0 + L * 0.98f, y, h * 1.7f, brea, 0.6f, azr, paso)
+                if (!sencilla) { reflejoRoto(x0 + L * 0.14f, x0 + L * 0.88f, y + h * 0.9f, h * 1.3f, maderaLuz, 0.34f, azr, paso); reflejoRoto(x0 - L * 0.01f, x0 + L * 0.13f, y + h * 1.2f, h * 2.4f, madera, 0.4f, azr, paso) }
                 if (remos) {
                     // La estela.
                     val espuma = l.tono(Color.White, lejos).copy(alpha = 0.6f)
@@ -509,76 +712,410 @@ internal object EscenaHeleno : EscenaVida {
         if (fiesta(m)) for (i in 0..4) { val a = 13f + i * 24f; guirnalda(l, Offset(a, alero(a) + 3f), Offset(a + 19f, alero(a + 19f) + 3f), 5f, m.azar("g", i), flores = listOf(ROJO, ORO, MARMOL), grueso = 1.7f) }
     }
 
-    /** El patio de la casa: el murete, el suelo, la higuera, la tinaja, el brasero, el banco con el objeto del día y el candelero. */
-    private fun DrawScope.patio(m: Momento, l: Luces, est: Estacion, fijo: Azar) {
-        // El olivo de detrás del murete, a la derecha.
-        olivo(l, Offset(360f, 228f), 62f, 0f, fijo)
+    // ---------------------------------------------------------------- El patio
 
-        // El murete encalado, con su albardilla de teja y su zócalo rojo.
-        val cal = l.tono(ENCALADO); val calSombra = l.tono(lerp(ENCALADO, Color(0xFF5A5468), 0.28f))
-        drawRect(Brush.verticalGradient(listOf(cal, lerp(cal, calSombra, 0.6f)), 224f, 258f), Offset(0f, 224f), Size(ANCHO, 34f))
-        repeat(26) { val px = fijo.entre(0f, ANCHO); val py = fijo.entre(226f, 250f); drawLine(calSombra.copy(alpha = 0.22f), Offset(px, py), Offset(px + fijo.entre(3f, 9f), py + fijo.entre(-0.6f, 0.6f)), 0.6f) }
-        drawRect(l.tono(ROJO), Offset(0f, 251f), Size(ANCHO, 7f))
-        drawRect(l.tono(lerp(ROJO, Color.Black, 0.3f)), Offset(0f, 257.2f), Size(ANCHO, 1f))
-        drawRect(Brush.verticalGradient(listOf(l.tono(lerp(TERRACOTA, Color(0xFFFFD9A8), 0.3f)), l.tono(TERRACOTA)), 219.5f, 224.5f), Offset(0f, 219.5f), Size(ANCHO, 5f))
-        var x = 0f
-        while (x < ANCHO) { drawLine(l.tono(TERRA_OSC).copy(alpha = 0.7f), Offset(x, 219.8f), Offset(x, 224.4f), 0.6f); x += 9.5f }
-        drawRect(Color.Black.copy(alpha = 0.16f), Offset(0f, 224.5f), Size(ANCHO, 1.6f))
+    /** Una cosa del patio: su silueta (para la sombra que arroja), dónde pisa y cómo se pinta. */
+    private class Cosa(val forma: Path, val pie: Offset, val bajoElFollaje: Boolean = true, val pintar: DrawScope.() -> Unit)
 
-        // El suelo de tierra apisonada, con unas losas.
-        val suelo = l.tono(Color(0xFFC8B28A)); val sueloOsc = l.tono(Color(0xFF9E8862))
-        drawRect(Brush.verticalGradient(listOf(sueloOsc, suelo, lerp(suelo, sueloOsc, 0.5f)), 258f, ALTO), Offset(0f, 258f), Size(ANCHO, ALTO - 258f))
-        repeat(9) {
-            val cx = 20f + it * 42f + fijo.entre(-8f, 8f); val cy = fijo.entre(266f, 281f); val w = fijo.entre(22f, 34f)
-            drawOval(l.tono(Color(0xFFD8C6A2)).copy(alpha = 0.55f), Offset(cx - w / 2f, cy - 2.2f), Size(w, 4.4f))
-        }
-
-        // Los adornos del murete.
+    private fun DrawScope.patio(m: Momento, l: Luces, r: Rayo, est: Estacion) {
+        val az = Azar(Semilla.de("heleno", "patio"))
+        vano(l, est, az)
+        murete(l, r, az)
+        suelo(l, est, az)
+        // Lo que cuelga del murete: las guirnaldas de las fiestas, el paño del luto y, si es el objeto del día, la red o el manto.
         if (fiesta(m)) {
-            guirnalda(l, Offset(64f, 226.5f), Offset(168f, 226.5f), 11f, m.azar("gm", 1), flores = listOf(ROJO, ORO, MARMOL), grueso = 3.2f)
-            guirnalda(l, Offset(252f, 226.5f), Offset(338f, 226.5f), 10f, m.azar("gm", 2), flores = listOf(ROJO, ORO, MARMOL), grueso = 3.2f)
+            guirnalda(l, Offset(82f, 226.5f), Offset(178f, 226.5f), 10f, m.azar("gm", 1), flores = listOf(ROJO, ORO, MARMOL), grueso = 3.2f)
+            guirnalda(l, Offset(238f, 226.5f), Offset(336f, 226.5f), 10f, m.azar("gm", 2), flores = listOf(ROJO, ORO, MARMOL), grueso = 3.2f)
         }
-        if (m.con("luto")) pano(l, Offset(262f, 219f), Offset(304f, 219f), 26f, Color(0xFF2C2630))
+        if (m.con("luto")) pano(l, Offset(296f, CAP), Offset(334f, CAP), 24f, Color(0xFF2C2630))
+        if (m.ficha.objeto == "red") red(l)
+        if (m.ficha.objeto == "manto") manto(l)
+        val cosas = cosasDelPatio(m, l, r).sortedBy { it.pie.y }
 
-        higuera(m, l, est)
-        tinaja(l, Offset(96f, 268f))
-        brasero(m, l, Offset(136f, 270f))
-        banco(m, l)
-        candelero(m, l, Offset(336f, 270f))
-        // Dos ánforas arrimadas al muro.
-        anfora(l, Offset(292f, 268f), 30f, -0.16f); anfora(l, Offset(306f, 269f), 26f, 0.1f)
+        // Las sombras que caen sobre el murete y el suelo: la del alero, la de cada cosa y la del follaje.
+        capaSombra(r) { c ->
+            val alero = (3.4f * r.tan * 0.55f).coerceIn(0.8f, 5f)
+            drawRect(c, Offset(VANO, CARA), Size(ANCHO - VANO, alero))
+            var x = VANO
+            while (x < ANCHO) { drawOval(c, Offset(x + 1f, CARA + alero - 1.2f), Size(7.5f, 2.4f)); x += 9.5f }
+            drawRect(c, Offset(VANO - 16f, 203f), Size(26f, (2.6f * r.tan * 0.5f).coerceIn(0.6f, 3.4f)))      // bajo la losa del pilar
+            // La cuerda colgada, pegada al muro.
+            translate(r.ax * 1.6f, 1.2f + 0.5f * r.tan) { clipRect(VANO, CARA, ANCHO, BASE) { drawOval(c, Offset(224f, 226f), Size(17f, 21f)) } }
+            sombraDelOlivo(r, c, enCosas = false)
+            cosas.forEach { sombraArrojada(r, it.forma, it.pie, c, BASE, CAP, VANO) }
+            sombraDelRemo(m, r, c)
+        }
+        cuerdaColgada(l, r)
+        cosas.forEach { it.pintar(this) }
+        // El follaje también da sombra sobre las cosas.
+        capaSombra(r, 0.8f) { c -> cosas.filter { it.bajoElFollaje }.forEach { k -> clipPath(k.forma) { sombraDelOlivo(r, c, enCosas = true) } } }
+        higuera(m, l, r, est)
     }
 
-    /** La higuera que planta por su padre el 18 de noviembre de la temporada 2: crece con el arco `higuera`. */
-    private fun DrawScope.higuera(m: Momento, l: Luces, est: Estacion) {
+    /** Por el vano del murete se ve la cuesta que baja del patio a la playa, con su senda y dos escalones. */
+    private fun DrawScope.vano(l: Luces, est: Estacion, az: Azar) {
+        val tierra = l.tono(Color(0xFFCDB487)); val tierraOsc = l.tono(Color(0xFFA88C62))
+        drawPath(Path().apply { moveTo(-2f, 213f); cubicTo(20f, 211f, 50f, 215f, 78f, 221f); lineTo(78f, BASE + 2f); lineTo(-2f, BASE + 2f); close() }, Brush.verticalGradient(listOf(tierra, tierraOsc), 212f, BASE))
+        drawPath(Path().apply { moveTo(14f, BASE); cubicTo(22f, 238f, 44f, 228f, 38f, 214f); lineTo(50f, 216f); cubicTo(58f, 230f, 44f, 240f, 50f, BASE); close() }, l.tono(Color(0xFFE6D3A8)).copy(alpha = 0.75f))
+        val hierba = lerp(hierbaDe(est, true), Color(0xFF8A8A52), 0.3f)
+        briznas(l, 0f, 20f, 228f, hierba, az, 7f, 2f); briznas(l, 54f, 70f, 234f, hierba, az, 6f, 2.2f); briznas(l, 0f, 12f, 244f, hierba, az, 8f, 2f)
+        repeat(9) { drawCircle(l.tono(if (it % 2 == 0) CALIZA else Color(0xFF9E8E72)), az.entre(0.8f, 1.8f), Offset(az.entre(4f, 60f), az.entre(222f, 240f))) }
+        // Los escalones: la huella con luz, el frente en sombra.
+        val luz = l.tono(lerp(MARMOL, CALIZA, 0.4f)); val frente = l.tono(mult(CALIZA, Color(0xFF8C8ABA), 0.7f))
+        drawPath(poligono(Offset(10f, 240.6f), Offset(58f, 240.6f), Offset(61f, 244f), Offset(6f, 244f)), luz); drawRect(frente, Offset(6f, 244f), Size(55f, 2.6f))
+        drawPath(poligono(Offset(4f, 246.6f), Offset(62f, 246.6f), Offset(66f, 250.6f), Offset(-1f, 250.6f)), luz); drawRect(frente, Offset(-1f, 250.6f), Size(67f, 2.4f))
+    }
+
+    /** El murete encalado: la cara con sus brochazos, chorreras, desconchones y grietas; el zócalo rojo gastado; el lomo de teja y el pilar del vano. */
+    private fun DrawScope.murete(l: Luces, r: Rayo, az: Azar) {
+        val x0 = VANO
+        val cal = l.tono(ENCALADO); val calLuz = l.tono(lerp(ENCALADO, Color.White, 0.55f)); val calSombra = l.tono(mult(ENCALADO, r.color, 0.8f))
+        drawRect(Brush.verticalGradient(listOf(calLuz, cal, lerp(cal, calSombra, 0.32f)), CARA, BASE), Offset(x0, CARA), Size(ANCHO - x0, BASE - CARA))
+        clipRect(x0, CARA, ANCHO, BASE) {
+            repeat(170) {
+                val p = Offset(az.entre(x0, ANCHO), az.entre(CARA, BASE)); val w = az.entre(4f, 16f)
+                drawLine((if (az.real() > 0.5f) calLuz else calSombra).copy(alpha = 0.10f + 0.12f * az.real()), p, p + Offset(w, az.entre(-1.2f, 1.2f)), az.entre(0.8f, 2.4f), StrokeCap.Round)
+            }
+            repeat(18) {
+                val x = az.entre(x0, ANCHO); val h = az.entre(5f, 17f)
+                drawRect(Brush.verticalGradient(listOf(l.tono(Color(0xFF8C8478)).copy(alpha = 0.24f), Color.Transparent), CARA, CARA + h), Offset(x, CARA), Size(az.entre(0.8f, 2.6f), h))
+            }
+            // La humedad que sube del suelo.
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, l.tono(Color(0xFF8A7A62)).copy(alpha = 0.22f)), 236f, BASE), Offset(x0, 236f), Size(ANCHO - x0, BASE - 236f))
+        }
+        // El zócalo rojo: el borde de arriba, comido; la pintura, saltada.
+        val zocalo = Path().apply {
+            moveTo(x0, BASE); lineTo(x0, 243.6f)
+            var x = x0
+            while (x < ANCHO + 6f) { x += az.entre(4f, 10f); lineTo(x, 243.6f + az.entre(-0.9f, 1.1f)) }
+            lineTo(ANCHO + 6f, BASE); close()
+        }
+        drawPath(zocalo, Brush.verticalGradient(listOf(l.tono(lerp(ROJO, ENCALADO, 0.2f)), l.tono(lerp(ROJO, Color(0xFF4A2A22), 0.25f))), 243f, BASE))
+        clipPath(zocalo) { repeat(46) { drawOval(cal.copy(alpha = az.entre(0.2f, 0.55f)), Offset(az.entre(x0, ANCHO), az.entre(243.5f, BASE)), Size(az.entre(1.5f, 7f), az.entre(0.7f, 2f))) } }
+        clipRect(x0, CARA, ANCHO, BASE) {
+            listOf(Triple(128f, 244f, 10f), Triple(272f, 238f, 5.5f), Triple(330f, 246f, 8f), Triple(196f, 247f, 5f)).forEach { (cx, cy, rad) -> desconchon(l, r, Offset(cx, cy), rad, az) }
+            repeat(3) {
+                var p = Offset(az.entre(x0 + 20f, ANCHO - 20f), CARA); val g = Path().apply { moveTo(p.x, p.y) }
+                repeat(6) { p += Offset(az.entre(-3f, 3f), az.entre(2f, 5f)); g.lineTo(p.x, p.y) }
+                drawPath(g, l.tono(Color(0xFF6A6058)).copy(alpha = 0.55f), style = Stroke(0.4f))
+            }
+        }
+        // El lomo de teja, que se ve un poco por arriba.
+        val teja = l.tono(TERRACOTA); val tejaLuz = l.tono(lerp(TERRACOTA, Color(0xFFFFE0B0), 0.45f)); val tejaOsc = l.tono(mult(TERRA_OSC, r.color, 0.6f))
+        drawRect(tejaLuz, Offset(x0 - 1f, CAP), Size(ANCHO - x0 + 2f, 3.2f))
+        drawRect(Brush.verticalGradient(listOf(teja, tejaOsc), CAP + 3.2f, CARA + 0.6f), Offset(x0 - 1f, CAP + 3.2f), Size(ANCHO - x0 + 2f, CARA + 0.6f - CAP - 3.2f))
+        var x = x0 - 1f
+        while (x < ANCHO) {
+            drawLine(tejaOsc.copy(alpha = 0.85f), Offset(x, CAP + 0.2f), Offset(x, CARA + 0.5f), 0.7f)
+            drawOval(tejaLuz.copy(alpha = 0.6f), Offset(x + (if (r.lat >= 0f) 5.4f else 1.2f), CAP + 3.5f), Size(3f, 1.8f))
+            if (az.real() > 0.8f) drawCircle(l.tono(Color(0xFFB8B070)).copy(alpha = 0.7f), az.entre(0.5f, 1.1f), Offset(x + az.entre(1f, 8f), CAP + az.entre(0.6f, 2.6f)))   // liquen
+            x += 9.5f
+        }
+        // El pilar del vano: su cara, su canto (hacia el vano) y la losa de encima.
+        val p0 = VANO - 10f; val p1 = VANO + 8f; val pt = 203f
+        val canto = if (r.lat >= 0f) lerp(cal, calSombra, 0.6f) else calLuz
+        drawPath(poligono(Offset(p0, pt), Offset(p0 - 4.5f, pt + 2.5f), Offset(p0 - 4.5f, BASE + 0.5f), Offset(p0, BASE + 2f)), canto)
+        drawRect(Brush.verticalGradient(listOf(calLuz, cal, lerp(cal, calSombra, 0.3f)), pt, BASE), Offset(p0, pt), Size(p1 - p0, BASE + 2f - pt))
+        clipRect(p0, pt, p1, BASE + 2f) {
+            repeat(22) { val p = Offset(az.entre(p0, p1), az.entre(pt, BASE)); drawLine(calSombra.copy(alpha = 0.16f), p, p + Offset(az.entre(2f, 7f), az.entre(-1f, 1f)), az.entre(0.8f, 2f), StrokeCap.Round) }
+            desconchon(l, r, Offset(p0 + 3f, 238f), 5f, az)
+        }
+        drawRect(l.tono(lerp(ROJO, ENCALADO, 0.2f)), Offset(p0, 243.6f), Size(p1 - p0, BASE + 2f - 243.6f))
+        drawPath(poligono(Offset(p0 - 7f, pt), Offset(p1 + 3f, pt), Offset(p1 + 1f, pt - 4.6f), Offset(p0 - 4f, pt - 4.6f)), l.tono(lerp(MARMOL, Color.White, 0.3f)))
+        drawRect(l.tono(mult(CALIZA, r.color, 0.5f)), Offset(p0 - 7f, pt), Size(p1 - p0 + 10f, 1.6f))
+    }
+
+    /** Un desconchón: donde se cayó el encalado asoma el adobe, con sus hiladas. */
+    private fun DrawScope.desconchon(l: Luces, r: Rayo, c: Offset, rad: Float, az: Azar) {
+        val pts = (0 until 11).map { val a = it / 11f * 6.283f; val d = rad * az.entre(0.4f, 1.15f); Offset(c.x + cos(a) * d * 1.6f, c.y + sin(a) * d * 0.75f) }
+        val forma = curva(pts + pts.first()).apply { close() }
+        val junta = l.tono(Color(0xFFA88660))
+        drawPath(forma, l.tono(Color(0xFFD6B88E)))
+        clipPath(forma) {
+            var y = c.y - rad; var fila = 0
+            while (y < c.y + rad) {
+                drawLine(junta.copy(alpha = 0.7f), Offset(c.x - rad * 2f, y), Offset(c.x + rad * 2f, y), 0.5f)
+                var x = c.x - rad * 2f + (fila % 2) * 4f
+                while (x < c.x + rad * 2f) { drawLine(junta.copy(alpha = 0.6f), Offset(x, y), Offset(x, y + 3.4f), 0.45f); x += 8f }
+                y += 3.4f; fila++
+            }
+            // El canto del encalado da sombra dentro, arriba y del lado de la luz.
+            translate(-r.lat * 1.1f, 1.3f) { drawPath(forma, mult(Color.White, r.color).copy(alpha = 0.55f * (0.4f + 0.6f * r.dia)), style = Stroke(2f), blendMode = BlendMode.Multiply) }
+        }
+        drawPath(forma, l.tono(Color.White).copy(alpha = 0.55f), style = Stroke(0.45f))
+    }
+
+    /** El suelo: tierra apisonada con losas en tres hiladas que se agrandan hacia quien mira; guijarros, hojas y hierba en las juntas. */
+    private fun DrawScope.suelo(l: Luces, est: Estacion, az: Azar) {
+        val tierra = l.tono(Color(0xFFC9B088)); val tierraOsc = l.tono(Color(0xFFA08660))
+        drawRect(Brush.verticalGradient(listOf(tierraOsc, tierra, lerp(tierra, tierraOsc, 0.4f)), BASE, ALTO), Offset(0f, BASE + 1.8f), Size(ANCHO, ALTO - BASE))
+        drawRect(tierraOsc, Offset(VANO - 6f, BASE), Size(ANCHO, 2f))
+        fun px(x: Float, y: Float) = 190f + (x - 190f) * (0.86f + 0.14f * (y - BASE) / (ALTO - BASE))
+        listOf(BASE + 2.4f to 258.2f, 259f to 268.6f, 269.6f to 287f).forEachIndexed { f, (y0, y1) ->
+            var x = -az.entre(10f, 40f)
+            while (x < ANCHO + 30f) {
+                val w = az.entre(24f, 46f) * (0.74f + 0.2f * f)
+                if (az.real() > 0.16f) {
+                    val a = Offset(px(x + 0.7f, y0), y0); val b = Offset(px(x + w - 0.7f, y0), y0)
+                    val c = Offset(px(x + w - 0.7f + az.entre(-1.4f, 1.4f), y1), y1); val d = Offset(px(x + 0.7f + az.entre(-1.4f, 1.4f), y1), y1)
+                    val tono = lerp(Color(0xFFD9C9A8), if (az.real() > 0.5f) Color(0xFFC2AE88) else Color(0xFFE8DCC2), az.real() * 0.7f)
+                    drawPath(poligono(a, b, c, d), Brush.verticalGradient(listOf(l.tono(lerp(tono, Color(0xFF8E7C62), 0.14f)), l.tono(tono)), y0, y1))
+                    drawLine(l.tono(Color.White).copy(alpha = 0.32f), a, b, 0.5f); drawLine(l.tono(Color(0xFF5E4E3A)).copy(alpha = 0.5f), d + Offset(0f, 0.6f), c + Offset(0f, 0.6f), 0.7f)
+                    if (az.real() > 0.6f) { val g = a + Offset(az.entre(2f, w * 0.6f), 1f); drawLine(l.tono(Color(0xFF7A6850)).copy(alpha = 0.5f), g, g + Offset(az.entre(3f, 9f), az.entre(2f, y1 - y0 - 2f)), 0.4f) }
+                }
+                x += w
+            }
+        }
+        repeat(150) { drawCircle((if (az.real() > 0.5f) l.tono(Color(0xFF7E6A4E)) else l.tono(Color(0xFFF0E4C8))).copy(alpha = 0.38f), az.entre(0.3f, 0.9f), Offset(az.entre(0f, ANCHO), az.entre(BASE + 2f, ALTO))) }
+        val hierba = lerp(hierbaDe(est, true), Color(0xFF8A8A52), 0.3f)
+        listOf(84f to 96f, 228f to 240f, 304f to 322f, 356f to 372f).forEach { (a, b) -> briznas(l, a, b, BASE + 2f, hierba, az, 4.5f, 1.8f) }
+        // Hojas de olivo caídas.
+        repeat(16) { val p = Offset(az.entre(200f, ANCHO), az.entre(BASE + 4f, ALTO - 2f)); val a = az.entre(0f, 3.14f); drawLine(l.tono(if (it % 2 == 0) Color(0xFF8A9470) else Color(0xFFB0A070)), p, p + Offset(cos(a) * 3.2f, sin(a) * 1.2f), 1f, StrokeCap.Round) }
+    }
+
+    /** Todo lo que hay en el patio, cada cosa con su silueta. */
+    private fun cosasDelPatio(m: Momento, l: Luces, r: Rayo): List<Cosa> = buildList {
+        add(candeleroCosa(m, l))
+        add(anforaCosa(l, r, Offset(108f, 266f), 46f, -0.15f)); add(anforaCosa(l, r, Offset(122f, 270f), 40f, 0.13f))
+        add(tinajaCosa(l, r, TINAJA, 1.5f))
+        add(braseroCosa(m, l))
+        add(bancoCosa(m, l, r))
+        if (m.ficha.objeto == "remo") add(remoCosa(l, r))
+        add(canastoCosa(l, r, Offset(318f, 280f)))
+        add(troncoCosa(l, r))
+    }
+
+    /** La tinaja grande de barro (pithos), con su tapa de madera corrida. */
+    private fun tinajaCosa(l: Luces, r: Rayo, pie: Offset, k: Float): Cosa {
+        fun p(dx: Float, dy: Float) = Offset(pie.x + dx * k, pie.y + dy * k)
+        val forma = Path().apply {
+            moveTo(p(-6f, 0f)); cubicTo(p(-18f, -8f), p(-18f, -29f), p(-8.5f, -35f)); lineTo(p(-10.5f, -36f)); lineTo(p(-10.5f, -39.5f)); lineTo(p(10.5f, -39.5f)); lineTo(p(10.5f, -36f)); lineTo(p(8.5f, -35f))
+            cubicTo(p(18f, -29f), p(18f, -8f), p(6f, 0f)); close()
+        }
+        return Cosa(forma, pie) {
+            drawOval(Color.Black.copy(alpha = 0.26f), p(-16f, -2.6f), Size(33f * k, 6f * k))
+            volumen(l, r, forma, pie.x - 17f * k, pie.x + 17f * k, Color(0xFFC07848))
+            val sombra = l.tono(Color(0xFF7A4226))
+            clipPath(forma) {
+                // Los cordones en relieve, las marcas del torno y lo que el uso le ha dejado.
+                for (y in listOf(-25f, -22.6f)) { drawLine(sombra.copy(alpha = 0.8f), p(-18f, y), p(18f, y), 0.9f * k); drawLine(l.tono(Color(0xFFE8B080)).copy(alpha = 0.6f), p(-18f, y - 0.8f), p(18f, y - 0.8f), 0.4f * k) }
+                val az = Azar(Semilla.de("heleno", "tinaja"))
+                repeat(14) { val y = az.entre(-34f, -2f); drawLine(sombra.copy(alpha = 0.14f), p(-18f, y), p(18f, y), 0.5f) }
+                repeat(9) { mancha(p(az.entre(-14f, 14f), az.entre(-30f, -3f)), az.entre(3f, 8f) * k, az.entre(2f, 6f) * k, if (it % 3 == 0) l.tono(Color(0xFFE6D2B8)) else sombra, 0.22f) }
+                drawRect(Brush.verticalGradient(listOf(Color.Transparent, l.tono(Color(0xFFE2D4BC)).copy(alpha = 0.35f)), p(0f, -7f).y, pie.y), p(-18f, -7f), Size(36f * k, 7f * k))   // el salitre del pie
+            }
+            drawRoundRect(l.tono(Color(0xFFCB8452)), p(-10.5f, -39.5f), Size(21f * k, 3.6f * k), CornerRadius(1.6f * k))
+            drawLine(l.tono(Color(0xFFF0C090)), p(-9f, -39f), p(9f, -39f), 0.5f * k)
+            drawOval(l.tono(MADERA_OSC), p(-9f, -42.2f), Size(20f * k, 4f * k)); drawOval(l.tono(MADERA), p(-8f, -42.4f), Size(18f * k, 2.8f * k))
+        }
+    }
+
+    /** Un ánfora de transporte apoyada: [ladeo] la inclina. */
+    private fun anforaCosa(l: Luces, r: Rayo, pie: Offset, alto: Float, ladeo: Float): Cosa {
+        val w = alto * 0.2f
+        val cima = pie + Offset(ladeo * alto, -alto)
+        fun p(k: Float, dx: Float) = Offset(pie.x + (cima.x - pie.x) * k + dx, pie.y + (cima.y - pie.y) * k)
+        val forma = Path().apply {
+            moveTo(p(0f, 0f)); cubicTo(p(0.25f, -w * 1.2f), p(0.62f, -w * 1.5f), p(0.78f, -w * 0.42f)); lineTo(p(1f, -w * 0.5f)); lineTo(p(1f, w * 0.5f)); lineTo(p(0.78f, w * 0.42f))
+            cubicTo(p(0.62f, w * 1.5f), p(0.25f, w * 1.2f), p(0f, 0f)); close()
+        }
+        return Cosa(forma, pie) {
+            drawOval(Color.Black.copy(alpha = 0.22f), Offset(pie.x - w * 1.3f, pie.y - 1.6f), Size(w * 2.8f, 3.6f))
+            val x = pie.x + ladeo * alto * 0.5f
+            volumen(l, r, forma, x - w * 1.4f, x + w * 1.4f, Color(0xFFCB8A58))
+            val sombra = l.tono(Color(0xFF86502E))
+            for (s in listOf(-1f, 1f)) drawPath(Path().apply { moveTo(p(0.95f, s * w * 0.42f)); cubicTo(p(0.95f, s * w * 1.25f), p(0.72f, s * w * 1.3f), p(0.68f, s * w * 0.95f)) }, if (s * r.lat > 0f) l.tono(Color(0xFFD89A68)) else sombra, style = Stroke(alto * 0.045f, cap = StrokeCap.Round))
+            drawLine(l.tono(Color(0xFFE8B080)), p(1f, -w * 0.55f), p(1f, w * 0.55f), alto * 0.05f, StrokeCap.Round)
+            clipPath(forma) { drawLine(sombra.copy(alpha = 0.6f), p(0.6f, -w * 2f), p(0.6f, w * 2f), 0.6f); drawLine(sombra.copy(alpha = 0.6f), p(0.56f, -w * 2f), p(0.56f, w * 2f), 0.4f) }
+        }
+    }
+
+    /** El brasero, con su olla a la hora de comer. */
+    private fun braseroCosa(m: Momento, l: Luces): Cosa {
+        val pie = BRASERO; val k = KB
+        fun p(dx: Float, dy: Float) = Offset(pie.x + dx * k, pie.y + dy * k)
+        val forma = Path().apply {
+            moveTo(p(-9f, 0f)); lineTo(p(-7f, -8f)); lineTo(p(-13f, -17f)); lineTo(p(-12f, -19f))
+            if (comiendo(m)) { lineTo(p(-9f, -19f)); lineTo(p(-9.5f, -26f)); lineTo(p(-7f, -29.6f)); lineTo(p(7f, -29.6f)); lineTo(p(9.5f, -26f)); lineTo(p(9f, -19f)) }
+            lineTo(p(12f, -19f)); lineTo(p(13f, -17f)); lineTo(p(7f, -8f)); lineTo(p(9f, 0f)); lineTo(p(6f, 0f)); lineTo(p(2f, -7f)); lineTo(p(-2f, -7f)); lineTo(p(-6f, 0f)); close()
+        }
+        return Cosa(forma, pie) {
+            // La ceniza derramada alrededor.
+            val az = Azar(Semilla.de("heleno", "ceniza"))
+            repeat(5) { mancha(p(az.entre(-14f, 16f), az.entre(-1f, 2.4f)), az.entre(4f, 9f) * k, az.entre(1f, 2f) * k, l.tono(Color(0xFF8E8880)), 0.4f) }
+            scale(k, k, pie) { brasero(m, l, pie) }
+        }
+    }
+
+    /** El candelero de bronce con su lucerna. */
+    private fun candeleroCosa(m: Momento, l: Luces): Cosa {
+        val pie = CANDELERO; val k = KC
+        fun p(dx: Float, dy: Float) = Offset(pie.x + dx * k, pie.y + dy * k)
+        val forma = Path().apply {
+            moveTo(p(-7f, 0f)); lineTo(p(-0.9f, -6f)); lineTo(p(-0.9f, -48f)); lineTo(p(-5f, -49f)); lineTo(p(-4.5f, -55f)); lineTo(p(7f, -54f)); lineTo(p(5f, -49f)); lineTo(p(0.9f, -48f)); lineTo(p(0.9f, -6f)); lineTo(p(7f, 0f)); close()
+        }
+        return Cosa(forma, pie) { scale(k, k, pie) { candelero(m, l, pie) } }
+    }
+
+    /** El banco de piedra, visto un poco desde arriba, con el objeto del día encima. */
+    private fun bancoCosa(m: Momento, l: Luces, r: Rayo): Cosa {
+        val x0 = 210f; val x1 = 300f; val yt = 251.6f; val yf = 258.4f; val g = 5.6f; val y1 = 280.5f
+        val forma = poligono(listOf(Offset(x0 + 4f, yt), Offset(x1 - 4f, yt), Offset(x1, yf), Offset(x1, yf + g), Offset(x1 - 7f, yf + g), Offset(x1 - 7f, y1), Offset(x1 - 21f, y1), Offset(x1 - 21f, yf + g),
+            Offset(x0 + 21f, yf + g), Offset(x0 + 21f, y1), Offset(x0 + 7f, y1), Offset(x0 + 7f, yf + g), Offset(x0, yf + g), Offset(x0, yf)))
+        return Cosa(forma, Offset((x0 + x1) / 2f, y1)) {
+            val piedra = l.tono(MARMOL); val luz = l.tono(lerp(MARMOL, Color.White, 0.55f)); val sombra = l.tono(mult(MARMOL, r.color, 0.85f * r.contraste))
+            drawOval(Color.Black.copy(alpha = 0.22f), Offset(x0 + 2f, y1 - 2.4f), Size(x1 - x0 - 4f, 5.4f))
+            // Lo de debajo del tablero, en sombra.
+            drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.34f), Color.Transparent), yf + g, yf + g + 10f), Offset(x0 + 8f, yf + g), Size(x1 - x0 - 16f, 10f))
+            // Las patas: la cara de delante y el canto que mira al sol (o el que le da la espalda).
+            for (px in listOf(x0 + 7f, x1 - 21f)) {
+                drawRect(Brush.verticalGradient(listOf(sombra, piedra), yf + g, y1), Offset(px, yf + g), Size(14f, y1 - yf - g))
+                drawRect(if (r.lat >= 0f) luz else sombra, Offset(px + 11f, yf + g), Size(3f, y1 - yf - g)); drawRect(if (r.lat >= 0f) sombra else luz, Offset(px, yf + g), Size(2.4f, y1 - yf - g))
+            }
+            // El tablero: arriba, con toda la luz; el canto, a media luz.
+            val tablero = poligono(Offset(x0 + 4f, yt), Offset(x1 - 4f, yt), Offset(x1, yf), Offset(x0, yf))
+            drawPath(tablero, Brush.verticalGradient(listOf(piedra, luz), yt, yf))
+            val az = Azar(Semilla.de("heleno", "banco"))
+            clipPath(tablero) { repeat(7) { val x = az.entre(x0, x1); drawLine(l.tono(Color(0xFFB8AC98)).copy(alpha = 0.5f), Offset(x, yt), Offset(x + az.entre(-14f, 14f), yf), 0.4f) } }
+            drawRect(Brush.verticalGradient(listOf(piedra, lerp(piedra, sombra, 0.75f)), yf, yf + g), Offset(x0, yf), Size(x1 - x0, g))
+            // Los desportillados del canto.
+            repeat(6) { val x = az.entre(x0 + 2f, x1 - 4f); drawPath(poligono(Offset(x, yf), Offset(x + az.entre(1.5f, 4f), yf), Offset(x + 1f, yf + az.entre(0.8f, 1.8f))), sombra) }
+            drawLine(luz, Offset(x0, yf), Offset(x1, yf), 0.5f)
+            // El objeto del día, encima.
+            val sobre = SOBRE
+            capaSombra(r) { c -> if (m.ficha.objeto != "remo" && m.ficha.objeto != "red" && m.ficha.objeto != "manto") clipPath(tablero) { drawOval(c, Offset(sobre.x - 20f + r.ax * 4f, sobre.y - 2.6f), Size(40f, 5f)) } }
+            scale(KO, KO, sobre) {
+                when (m.ficha.objeto) {
+                    "cojin" -> cojin(l, sobre)
+                    "estrobo" -> estrobo(l, sobre)
+                    "anfora" -> anfora(l, sobre + Offset(0f, 0.5f), 27f, 0f)
+                    "lampara" -> lucerna(m, l, sobre)
+                    "higos" -> higos(l, sobre)
+                    "dracma" -> dracmas(l, sobre)
+                    "aulos" -> aulos(l, sobre)
+                    "copa" -> copa(l, sobre, 1.25f)
+                    "pan" -> pan(l, sobre)
+                    else -> Unit
+                }
+                if (conGente(m) && m.ficha.objeto != "copa") copa(l, sobre + Offset(-22f, 0f), 0.8f)
+                if (conGente(m)) jarra(l, sobre + Offset(24f, 0.6f))
+                if (m.con("luto")) lecito(l, sobre + Offset(16f, 0f))
+            }
+        }
+    }
+
+    private val REMO_A = Offset(341f, 284f); private val REMO_B = Offset(250f, 201f)
+
+    /** El remo del día, apoyado en el murete: el puño en el suelo y la pala asomando por encima del lomo. */
+    private fun remoCosa(l: Luces, r: Rayo): Cosa {
+        val a = REMO_A; val b = REMO_B
+        val d = b - a; val largo = d.getDistance(); val u = d / largo; val n = Offset(-u.y, u.x)
+        val c = a + u * (largo * 0.74f)                                         // donde empieza la pala
+        val pala = Path().apply {
+            moveTo(c + n * 1.2f); cubicTo(c + u * 8f + n * 4.4f, c + u * 22f + n * 4.2f, b); cubicTo(c + u * 22f - n * 4.2f, c + u * 8f - n * 4.4f, c - n * 1.2f); close()
+        }
+        val forma = Path().apply { addPath(poligono(a + n * 1.4f, c + n * 1.3f, c - n * 1.3f, a - n * 1.4f)); addPath(pala) }
+        return Cosa(forma, a) {
+            val abeto = l.tono(Color(0xFFDCBC84)); val luz = l.tono(Color(0xFFF6E2B0)); val sombra = l.tono(mult(Color(0xFFB08A52), r.color, 0.6f * r.contraste))
+            val arriba = if (r.lat >= 0f) -1f else 1f                            // de qué lado del asta da la luz
+            drawLine(sombra, a - n * (0.7f * arriba), c - n * (0.7f * arriba), 2.9f, StrokeCap.Round); drawLine(abeto, a, c, 2.3f, StrokeCap.Round); drawLine(luz, a + n * (0.7f * arriba), c + n * (0.7f * arriba), 0.6f)
+            drawPath(pala, Brush.linearGradient(listOf(if (arriba > 0f) luz else sombra, abeto, if (arriba > 0f) sombra else luz), c + n * 4f, c - n * 4f))
+            drawLine(sombra.copy(alpha = 0.7f), c + u * 2f, b - u * 2f, 0.5f)
+            // El puño, la marca roja de su dueño y el estrobo de cuero.
+            drawLine(l.tono(Color(0xFF8A6A3E)), a, a + u * 9f, 3.3f, StrokeCap.Round)
+            for (t in listOf(15f, 18.4f)) drawLine(l.tono(ROJO), a + u * t + n * 1.5f, a + u * t - n * 1.5f, 1.4f)
+            drawLine(l.tono(CUERO), a + u * 46f + n * 2f, a + u * 46f - n * 2f, 3f, StrokeCap.Round)
+            drawPath(Path().apply { moveTo(a + u * 46f - n * 2f); cubicTo(a + u * 44f - n * 8f, a + u * 52f - n * 10f, a + u * 50f - n * 14f) }, l.tono(CUERO), style = Stroke(1.1f, cap = StrokeCap.Round))
+        }
+    }
+
+    /** La sombra del remo: nace donde toca el lomo del murete y se abre hacia el suelo. */
+    private fun DrawScope.sombraDelRemo(m: Momento, r: Rayo, c: Color) {
+        if (m.ficha.objeto != "remo") return
+        val d = REMO_B - REMO_A
+        fun enY(y: Float) = REMO_A + d * ((y - REMO_A.y) / d.y)
+        val toca = enY(CAP + 1f); val base = enY(BASE)
+        val corre = (r.ax * 9f).coerceIn(-30f, 30f)
+        clipRect(VANO, CAP, ANCHO, ALTO) { drawPath(poligono(listOf(toca, toca + Offset(2.6f, 0.6f), base + Offset(corre + 3f, 0f), REMO_A + Offset(2f, 0f), REMO_A + Offset(-2f, 0f), base + Offset(corre, 0f))), c) }
+    }
+
+    /** Un canasto de mimbre con un paño dentro. */
+    private fun canastoCosa(l: Luces, r: Rayo, pie: Offset): Cosa {
+        val w = 15f; val h = 17f
+        val forma = Path().apply { moveTo(pie.x - w * 0.8f, pie.y); lineTo(pie.x - w, pie.y - h); lineTo(pie.x + w, pie.y - h); lineTo(pie.x + w * 0.8f, pie.y); close() }
+        return Cosa(forma, pie) {
+            drawOval(Color.Black.copy(alpha = 0.22f), Offset(pie.x - w, pie.y - 2f), Size(w * 2.1f, 4.4f))
+            // El asa, por detrás.
+            drawPath(Path().apply { moveTo(pie.x - w * 0.8f, pie.y - h); cubicTo(pie.x - w * 0.7f, pie.y - h * 2.1f, pie.x + w * 0.7f, pie.y - h * 2.1f, pie.x + w * 0.8f, pie.y - h) }, l.tono(Color(0xFF8A6A3C)), style = Stroke(1.8f, cap = StrokeCap.Round))
+            // El paño que asoma.
+            drawPath(Path().apply { moveTo(pie.x - w * 0.8f, pie.y - h); cubicTo(pie.x - w * 0.4f, pie.y - h - 7f, pie.x + w * 0.3f, pie.y - h - 5f, pie.x + w * 0.85f, pie.y - h); close() }, l.tono(Color(0xFFE6DCC4)))
+            drawPath(Path().apply { moveTo(pie.x + w * 0.2f, pie.y - h - 2f); cubicTo(pie.x + w * 0.7f, pie.y - h - 3f, pie.x + w * 1.1f, pie.y - h + 2f, pie.x + w * 1.05f, pie.y - h + 8f); lineTo(pie.x + w * 0.7f, pie.y - h + 6f); close() }, l.tono(Color(0xFFD8CCB0)))
+            volumen(l, r, forma, pie.x - w, pie.x + w, Color(0xFFC49A5A))
+            clipPath(forma) {
+                val raya = l.tono(Color(0xFF7A5A2E))
+                var y = pie.y - h + 1.6f; var i = 0
+                while (y < pie.y) {
+                    drawLine(raya.copy(alpha = 0.55f), Offset(pie.x - w, y), Offset(pie.x + w, y), 0.5f)
+                    var x = pie.x - w + (i % 2) * 1.6f
+                    while (x < pie.x + w) { drawLine(raya.copy(alpha = 0.45f), Offset(x, y), Offset(x + 0.6f, y + 2.2f), 0.5f); x += 3.2f }
+                    y += 2.2f; i++
+                }
+            }
+            drawLine(l.tono(Color(0xFFE2BC7A)), Offset(pie.x - w, pie.y - h), Offset(pie.x + w, pie.y - h), 1.5f, StrokeCap.Round)
+        }
+    }
+
+    /** Un rollo de cuerda colgado de una estaca en el murete. */
+    private fun DrawScope.cuerdaColgada(l: Luces, r: Rayo) {
+        val c = Offset(232.5f, 236f)
+        val cuerda = l.tono(Color(0xFFCDAE78)); val sombra = l.tono(mult(Color(0xFF9A7A4A), r.color, 0.5f))
+        drawRect(l.tono(MADERA_OSC), Offset(c.x - 1.2f, c.y - 11.4f), Size(2.4f, 3f))
+        for (i in 0..3) {
+            val w = 15f - i * 1.8f; val h = 19.5f - i * 1.4f
+            drawOval(sombra, Offset(c.x - w / 2f + 0.5f, c.y - 9.4f + i * 0.5f), Size(w, h), style = Stroke(2f))
+            drawOval(cuerda, Offset(c.x - w / 2f, c.y - 10f + i * 0.5f), Size(w, h), style = Stroke(1.5f))
+        }
+        drawPath(Path().apply { moveTo(c.x + 4f, c.y + 8f); cubicTo(c.x + 7f, c.y + 12f, c.x + 3f, c.y + 14f, c.x + 5f, c.y + 17f) }, cuerda, style = Stroke(1.4f, cap = StrokeCap.Round))
+    }
+
+    /** Una hoja de higuera: ancha, de cinco lóbulos. */
+    private fun hojaDeHiguera(c: Offset, rad: Float, giro: Float): Path {
+        val radios = listOf(1f, 0.6f, 0.95f, 0.55f, 0.8f, 0.3f, 0.8f, 0.55f, 0.95f, 0.6f)
+        val pts = radios.mapIndexed { i, k -> val a = giro + i / 10f * 6.283f; c + Offset(sin(a), -cos(a)) * (rad * k) }
+        return curva(pts + pts.first()).apply { close() }
+    }
+
+    /**
+     * La higuera que planta por su padre el 18 de noviembre de la temporada 2: crece con el arco `higuera`, junto al
+     * vano del murete. Su alcorque, un cerco de piedras, está desde siempre.
+     */
+    private fun DrawScope.higuera(m: Momento, l: Luces, r: Rayo, est: Estacion) {
         val v = m.arco("higuera")
-        val pie = Offset(34f, 266f)
-        // El alcorque, que está desde siempre: antes de la higuera, vacío.
+        val pie = Offset(32f, 272f)
         drawOval(l.tono(Color(0xFF7A6448)), Offset(pie.x - 13f, pie.y - 3f), Size(26f, 7f))
         for (i in 0..7) { val a = i / 8f * 6.283f; drawCircle(l.tono(if (i % 2 == 0) CALIZA else Color(0xFFB8A888)), 2f, pie + Offset(cos(a) * 13f, sin(a) * 3.4f + 0.5f)) }
         if (v <= 0.01f) return
         val alto = 16f + 118f * v
-        arbol(l, pie, alto, est, 0f, Azar(Semilla.de("heleno", "higuera")), hoja = hojaDe(est)?.let { lerp(it, Color(0xFF4E8A3E), 0.5f) }, tronco = Color(0xFF8A7C6C))
+        val az = Azar(Semilla.de("heleno", "higuera"))
+        val hoja = hojaDe(est)?.let { lerp(it, Color(0xFF4E8A3E), 0.5f) }
+        capaSombra(r) { c -> drawOval(c, Offset(pie.x - alto * 0.34f + r.ax * alto * 0.2f, pie.y - 2f), Size(alto * 0.68f, alto * 0.09f + 3f)) }
+        arbol(l, pie, alto, est, 0f, az, hoja = hoja, tronco = Color(0xFF8A7C6C))
+        if (hoja != null) {
+            // Las hojas, una a una, por encima de la copa: las de arriba y del lado del sol, más claras.
+            val centro = pie + Offset(0f, -alto * 0.68f)
+            repeat((30 + 110 * v).toInt()) {
+                val a = az.entre(0f, 6.283f); val d = az.entre(0.25f, 1.08f)
+                val p = centro + Offset(cos(a) * alto * 0.38f * d, sin(a) * alto * 0.33f * d)
+                val luz = ((centro.y - p.y) / (alto * 0.33f) * 0.5f + (p.x - centro.x) / (alto * 0.38f) * 0.5f * r.lat + 0.5f).coerceIn(0f, 1f)
+                val color = lerp(mult(hoja, r.color, 0.55f * r.contraste), lerp(hoja, Color(0xFFE6E08A), 0.35f * r.dia), luz * az.entre(0.6f, 1f))
+                drawPath(hojaDeHiguera(p, az.entre(3f, 5.2f) * (0.6f + 0.5f * v), az.entre(2.2f, 4f)), l.tono(color))
+            }
+        }
         // Los higos, a finales del verano, cuando ya es un árbol.
         if (v > 0.55f && est == Estacion.VERANO || v > 0.55f && est == Estacion.OTONO && m.ficha.dia.substring(5) < "10-10") {
-            val az = Azar(Semilla.de("heleno", "higos"))
-            repeat(9) { drawCircle(l.tono(HIGO), 1.5f, pie + Offset(az.entre(-0.3f, 0.3f) * alto, -alto * az.entre(0.5f, 0.85f))) }
+            val azh = Azar(Semilla.de("heleno", "higos"))
+            repeat(9) { drawCircle(l.tono(HIGO), 1.5f, pie + Offset(azh.entre(-0.3f, 0.3f) * alto, -alto * azh.entre(0.5f, 0.85f))) }
         }
-    }
-
-    /** Una tinaja grande de barro (pithos), medio tapada. */
-    private fun DrawScope.tinaja(l: Luces, pie: Offset) {
-        val barro = l.tono(Color(0xFFC07848)); val luz = l.tono(Color(0xFFE2A070)); val sombra = l.tono(Color(0xFF7A4226))
-        drawOval(Color.Black.copy(alpha = 0.22f), Offset(pie.x - 15f, pie.y - 2.5f), Size(32f, 6f))
-        val cuerpo = Path().apply {
-            moveTo(pie.x - 6f, pie.y); cubicTo(pie.x - 17f, pie.y - 8f, pie.x - 17f, pie.y - 28f, pie.x - 8f, pie.y - 35f)
-            lineTo(pie.x + 8f, pie.y - 35f); cubicTo(pie.x + 17f, pie.y - 28f, pie.x + 17f, pie.y - 8f, pie.x + 6f, pie.y); close()
-        }
-        drawPath(cuerpo, Brush.horizontalGradient(if (l.solX > 0.3f) listOf(sombra, barro, luz, barro) else listOf(barro, luz, barro, sombra), pie.x - 15f, pie.x + 15f))
-        drawRoundRect(barro, Offset(pie.x - 10f, pie.y - 38.5f), Size(20f, 4.5f), CornerRadius(2f))
-        drawLine(sombra, Offset(pie.x - 13f, pie.y - 24f), Offset(pie.x + 13f, pie.y - 24f), 1f); drawLine(sombra, Offset(pie.x - 13.5f, pie.y - 21.5f), Offset(pie.x + 13.5f, pie.y - 21.5f), 0.6f)
-        // La tapa de madera, corrida.
-        drawOval(l.tono(MADERA_OSC), Offset(pie.x - 9f, pie.y - 41f), Size(19f, 4f))
     }
 
     /** Un ánfora de transporte, de pie, apoyada en el muro; [ladeo] la inclina. */
@@ -634,59 +1171,9 @@ internal object EscenaHeleno : EscenaVida {
             moveTo(pie.x - 4.5f, pie.y - 52f); cubicTo(pie.x - 4.5f, pie.y - 55.5f, pie.x + 3f, pie.y - 55.5f, pie.x + 3.5f, pie.y - 53.5f)
             lineTo(pie.x + 7f, pie.y - 53.6f); lineTo(pie.x + 7f, pie.y - 52.4f); lineTo(pie.x + 3.5f, pie.y - 50.2f); lineTo(pie.x - 3.5f, pie.y - 50.2f); close()
         }, l.tono(Color(0xFFB86A3C)))
-        if (conGente(m) && luces(m).noche > 0.15f) resplandor(pie + Offset(7f, -56f), 46f, 0.5f * luces(m).noche)
-    }
-
-    /** El banco de piedra arrimado al murete, con el objeto del día encima (el mismo del que habla el cuento). */
-    private fun DrawScope.banco(m: Momento, l: Luces) {
-        val piedra = l.tono(MARMOL); val sombra = l.tono(lerp(MARMOL, Color(0xFF5A5468), 0.34f))
-        drawOval(Color.Black.copy(alpha = 0.2f), Offset(170f, 266f), Size(88f, 6f))
-        drawRect(sombra, Offset(178f, 253f), Size(8f, 15f)); drawRect(sombra, Offset(242f, 253f), Size(8f, 15f))
-        drawRect(piedra, Offset(178f, 253f), Size(3f, 15f)); drawRect(piedra, Offset(242f, 253f), Size(3f, 15f))
-        drawRect(Brush.verticalGradient(listOf(l.tono(lerp(MARMOL, Color.White, 0.35f)), piedra, sombra), 247f, 253.5f), Offset(172f, 247f), Size(84f, 6.5f))
-        drawLine(sombra, Offset(172f, 253.4f), Offset(256f, 253.4f), 0.8f)
-        val sobre = Offset(214f, 247f)                                         // el centro del tablero
-        when (m.ficha.objeto) {
-            "remo" -> remo(l)
-            "cojin" -> cojin(l, sobre)
-            "estrobo" -> estrobo(l, sobre)
-            "anfora" -> anfora(l, sobre + Offset(0f, 0.5f), 27f, 0f)
-            "lampara" -> lucerna(m, l, sobre)
-            "red" -> red(l)
-            "higos" -> higos(l, sobre)
-            "dracma" -> dracmas(l, sobre)
-            "aulos" -> aulos(l, sobre)
-            "copa" -> copa(l, sobre, 1.25f)
-            "manto" -> manto(l)
-            "pan" -> pan(l, sobre)
-            else -> Unit
-        }
-        // Al anochecer, con gente: la copa y la jarra del vino, a un lado.
-        if (conGente(m) && m.ficha.objeto != "copa") copa(l, Offset(188f, 247f), 0.8f)
-        if (conGente(m)) jarra(l, Offset(244f, 247f))
-        // De luto: un lécito blanco con su cinta oscura.
-        if (m.con("luto")) lecito(l, Offset(236f, 247f))
     }
 
     // ---------------------------------------------------------------- Los doce objetos del día
-
-    /** El remo: de abeto, largo como dos hombres y medio, tendido sobre el murete, con su marca cerca del puño y su estrobo. */
-    private fun DrawScope.remo(l: Luces) {
-        val abeto = l.tono(Color(0xFFDCBC84)); val luz = l.tono(Color(0xFFF2DCA8)); val sombra = l.tono(Color(0xFF8A6A3E))
-        val a = Offset(150f, 217.2f); val b = Offset(282f, 216f)
-        drawLine(Color.Black.copy(alpha = 0.22f), a + Offset(2f, 2.4f), b + Offset(0f, 2.4f), 2.2f, StrokeCap.Round)
-        drawLine(sombra, a + Offset(0f, 0.9f), b + Offset(0f, 0.9f), 2.6f, StrokeCap.Round); drawLine(abeto, a, b, 2.2f, StrokeCap.Round); drawLine(luz, a + Offset(0f, -0.7f), b + Offset(0f, -0.7f), 0.6f)
-        // La pala.
-        drawPath(Path().apply {
-            moveTo(246f, 216.4f); cubicTo(254f, 211.6f, 276f, 211f, 284f, 215.6f)
-            cubicTo(276f, 220.6f, 254f, 220.6f, 246f, 216.4f); close()
-        }, Brush.verticalGradient(listOf(luz, abeto, sombra), 211f, 220.6f))
-        drawLine(sombra.copy(alpha = 0.6f), Offset(250f, 216.2f), Offset(282f, 215.8f), 0.5f)
-        // El puño, la marca y el estrobo de cuero.
-        drawLine(sombra, Offset(148f, 217.2f), Offset(156f, 217.1f), 3f, StrokeCap.Round)
-        drawLine(l.tono(ROJO), Offset(164f, 215.6f), Offset(164f, 218.6f), 1.3f); drawLine(l.tono(ROJO), Offset(167f, 215.6f), Offset(167f, 218.6f), 1.3f)
-        drawLine(l.tono(CUERO), Offset(190f, 215.2f), Offset(190f, 219f), 2.6f, StrokeCap.Round)
-    }
 
     /** El cojín de remero: una almohadilla de cuero engrasado, con sus correas. */
     private fun DrawScope.cojin(l: Luces, sobre: Offset) {
@@ -723,9 +1210,9 @@ internal object EscenaHeleno : EscenaVida {
     /** La red de pesca, tendida a secar sobre el murete: la malla en rombos, los corchos arriba y los plomos abajo. */
     private fun DrawScope.red(l: Luces) {
         val hilo = l.tono(Color(0xFF5E4E32)).copy(alpha = 0.8f)
-        val x0 = 180f; val x1 = 250f; val arriba = 220f
+        val x0 = 268f; val x1 = 336f; val arriba = CAP + 2f
         // El borde de abajo cuelga en ondas.
-        val abajo = { x: Float -> 243f + 2.4f * sin((x - x0) * 0.21f) }
+        val abajo = { x: Float -> 241f + 2.4f * sin((x - x0) * 0.21f) }
         val contorno = Path().apply {
             moveTo(x0, arriba); lineTo(x1, arriba)
             var x = x1
@@ -789,7 +1276,7 @@ internal object EscenaHeleno : EscenaVida {
 
     /** Una copa de beber (kílix): ancha, baja, de barniz negro, con sus dos asas. */
     private fun DrawScope.copa(l: Luces, sobre: Offset, k: Float) {
-        val negro = l.tono(BARNIZ); val luz = l.tono(Color(0xFF5A4A40))
+        val negro = lerp(l.tono(BARNIZ), Color(0xFF3A2A22), 0.5f * l.noche); val luz = lerp(l.tono(Color(0xFF5A4A40)), LLAMA, 0.45f * l.noche)
         drawPath(Path().apply {
             moveTo(sobre.x - 11f * k, sobre.y - 9f * k); cubicTo(sobre.x - 9f * k, sobre.y - 4.6f * k, sobre.x - 3f * k, sobre.y - 4.2f * k, sobre.x - 1.2f * k, sobre.y - 4.2f * k)
             lineTo(sobre.x - 1.2f * k, sobre.y - 1.2f * k); lineTo(sobre.x - 4.5f * k, sobre.y); lineTo(sobre.x + 4.5f * k, sobre.y); lineTo(sobre.x + 1.2f * k, sobre.y - 1.2f * k)
@@ -801,7 +1288,7 @@ internal object EscenaHeleno : EscenaVida {
 
     /** La jarra del vino (enócoe). */
     private fun DrawScope.jarra(l: Luces, sobre: Offset) {
-        val negro = l.tono(BARNIZ); val luz = l.tono(Color(0xFF5A4A40))
+        val negro = lerp(l.tono(BARNIZ), Color(0xFF3A2A22), 0.5f * l.noche); val luz = lerp(l.tono(Color(0xFF5A4A40)), LLAMA, 0.45f * l.noche)
         drawPath(Path().apply {
             moveTo(sobre.x - 2.6f, sobre.y); cubicTo(sobre.x - 8f, sobre.y - 3f, sobre.x - 7f, sobre.y - 11f, sobre.x - 2f, sobre.y - 13f)
             lineTo(sobre.x - 3f, sobre.y - 17f); lineTo(sobre.x + 3.6f, sobre.y - 16.4f); lineTo(sobre.x + 2f, sobre.y - 13f)
@@ -814,9 +1301,9 @@ internal object EscenaHeleno : EscenaVida {
     /** El manto (himation) de lana, doblado sobre el murete, con su cenefa. */
     private fun DrawScope.manto(l: Luces) {
         val lana = Color(0xFFC8A45A)
-        pano(l, Offset(190f, 219f), Offset(238f, 219f), 25f, lana)
-        drawLine(l.tono(PURPURA), Offset(193f, 241.5f), Offset(236f, 240f), 1.6f)
-        drawRect(l.tono(lerp(lana, Color.White, 0.2f)), Offset(188f, 217.4f), Size(52f, 3.2f))
+        pano(l, Offset(276f, CAP), Offset(324f, CAP), 23f, lana)
+        drawLine(l.tono(PURPURA), Offset(279f, 238.5f), Offset(322f, 237f), 1.6f)
+        drawRect(l.tono(lerp(lana, Color.White, 0.2f)), Offset(274f, CAP - 1.6f), Size(52f, 3.2f))
     }
 
     /** El pan de cebada: dos hogazas en una tabla, con su cuchillo. */
@@ -846,6 +1333,94 @@ internal object EscenaHeleno : EscenaVida {
         drawLine(l.tono(Color(0xFF3A2A44)), Offset(sobre.x + 3f, sobre.y - 11f), Offset(sobre.x + 6f, sobre.y - 5f), 1.1f, StrokeCap.Round)
     }
 
+    // ---------------------------------------------------------------- El olivo que enmarca el cuadro
+
+    private fun mezcla(a: Float, b: Float, k: Float) = a + (b - a) * k
+
+    /** Hasta dónde cuelga la copa del olivo en cada punto del cuadro: deja una ventana para el sol de la mañana. */
+    private fun cuelga(x: Float): Float {
+        val p = listOf(178f to 4f, 230f to 24f, 270f to 38f, 296f to 44f, 324f to 48f, 345f to 80f, 392f to 114f)
+        if (x <= p.first().first) return p.first().second
+        for (i in 0 until p.size - 1) if (x <= p[i + 1].first) return mezcla(p[i].second, p[i + 1].second, (x - p[i].first) / (p[i + 1].first - p[i].first))
+        return p.last().second
+    }
+
+    private fun formaDelTronco() = Path().apply {
+        moveTo(332f, 292f); cubicTo(344f, 268f, 331f, 240f, 341f, 210f); cubicTo(347f, 188f, 337f, 166f, 344f, 144f); lineTo(344f, 126f)
+        cubicTo(338f, 108f, 324f, 76f, 304f, 54f); cubicTo(288f, 40f, 258f, 24f, 224f, 13f); lineTo(225f, 10f)
+        cubicTo(262f, 18f, 294f, 32f, 314f, 50f); cubicTo(330f, 66f, 342f, 88f, 348f, 104f)
+        cubicTo(347f, 76f, 342f, 44f, 335f, 6f); lineTo(340f, 5f); cubicTo(349f, 42f, 354f, 76f, 356f, 102f)
+        cubicTo(364f, 86f, 376f, 68f, 390f, 52f); lineTo(390f, 74f); cubicTo(376f, 92f, 368f, 114f, 365f, 138f)
+        cubicTo(360f, 166f, 369f, 190f, 363f, 214f); cubicTo(357f, 242f, 375f, 266f, 383f, 292f); close()
+    }
+
+    /** El tronco del olivo que crece en el patio, a la derecha: retorcido, con su corteza y sus huecos. */
+    private fun troncoCosa(l: Luces, r: Rayo): Cosa {
+        val forma = formaDelTronco()
+        return Cosa(forma, Offset(357f, 290f), bajoElFollaje = false) {
+            val propio = Color(0xFF93806C)
+            val luz = l.tono(lerp(propio, Color(0xFFFFE9C4), 0.5f * r.contraste)); val medio = l.tono(propio); val sombra = l.tono(mult(propio, r.color, 0.8f * r.contraste))
+            drawPath(forma, Brush.horizontalGradient(if (r.lat >= 0f) listOf(sombra, medio, medio, luz, medio) else listOf(medio, luz, medio, medio, sombra), 336f, 376f))
+            val az = Azar(Semilla.de("heleno", "corteza"))
+            val osc = l.tono(Color(0xFF4A3C34)); val cla = l.tono(Color(0xFFD2C2A8))
+            clipPath(forma) {
+                // Las ramas, vistas desde abajo, quedan a contraluz.
+                drawRect(Brush.verticalGradient(listOf(osc.copy(alpha = 0.6f), Color.Transparent), 20f, 150f), Offset(200f, 0f), Size(190f, 150f))
+                // La corteza: vetas largas que siguen la torsión del tronco.
+                repeat(70) {
+                    val x = az.entre(334f, 380f); val y = az.entre(120f, 285f); val h = az.entre(10f, 38f); val tuerce = az.entre(-6f, 6f)
+                    drawPath(Path().apply { moveTo(x, y); cubicTo(x + tuerce, y + h * 0.3f, x - tuerce, y + h * 0.7f, x + tuerce * 0.4f, y + h) }, (if (it % 3 == 0) cla else osc).copy(alpha = az.entre(0.2f, 0.5f)), style = Stroke(az.entre(0.5f, 1.6f), cap = StrokeCap.Round))
+                }
+                // Un hueco del tronco viejo y un nudo.
+                drawOval(osc.copy(alpha = 0.9f), Offset(346f, 198f), Size(7f, 14f)); drawOval(cla.copy(alpha = 0.5f), Offset(345f, 197f), Size(9f, 16f), style = Stroke(0.8f))
+                drawOval(osc.copy(alpha = 0.6f), Offset(354f, 250f), Size(5f, 8f))
+            }
+        }
+    }
+
+    /** Una ramilla de olivo con sus hojas en pares. [fleco], de 0 (dentro de la copa, a contraluz) a 1 (en el borde, donde les da el sol). */
+    private fun DrawScope.ramilla(l: Luces, r: Rayo, desde: Offset, angulo: Float, largo: Float, az: Azar, k: Float = 1f, fleco: Float = 0.5f) {
+        val fin = desde + Offset(cos(angulo) * largo, sin(angulo) * largo)
+        val comba = Offset(-sin(angulo), cos(angulo)) * (largo * az.entre(-0.2f, 0.2f))
+        fun en(t: Float): Offset { val q = 1f - t; return desde * (q * q) + (desde + (fin - desde) * 0.5f + comba) * (2f * q * t) + fin * (t * t) }
+        val verde = l.tono(Color(0xFF4C5E44)); val medio = l.tono(Color(0xFF6E8660)); val plata = l.tono(Color(0xFFA9B99A)); val sol = l.tono(lerp(Color(0xFF93A878), Color(0xFFE2DE9C), 0.55f * r.dia))
+        drawPath(Path().apply { moveTo(desde); val c = desde + (fin - desde) * 0.5f + comba; cubicTo(c, c, fin) }, l.tono(Color(0xFF5A5044)), style = Stroke(0.5f * k, cap = StrokeCap.Round))
+        var t = 0.1f; var lado = 1f
+        while (t <= 1f) {
+            val p = en(t); val a = angulo + lado * az.entre(0.3f, 0.62f); val n = az.entre(3.4f, 5.2f) * k
+            val suerte = az.real() - 0.3f * (fleco - 0.5f)
+            val c = when { suerte < 0.42f -> verde; suerte < 0.78f -> medio; suerte < 0.93f || lado * r.lat < 0f -> plata; else -> sol }
+            drawLine(c, p, p + Offset(cos(a) * n, sin(a) * n), 1.25f * k, StrokeCap.Round)
+            t += 1.5f * k / largo; lado = -lado
+        }
+    }
+
+    /** La copa del olivo, que entra por arriba y por la derecha: masas oscuras al fondo y ramillas colgando sobre el cielo. */
+    private fun DrawScope.follajeDelOlivo(l: Luces, r: Rayo) {
+        val az = Azar(Semilla.de("heleno", "olivo"))
+        val oscuro = l.tono(Color(0xFF38483A)); val medio = l.tono(Color(0xFF4E6248))
+        repeat(54) {
+            val x = az.entre(196f, 396f); val y = az.entre(-12f, cuelga(x) * 0.6f); val rad = az.entre(7f, 17f)
+            drawOval(if (it % 3 == 0) medio else oscuro, Offset(x - rad * 1.3f, y - rad * 0.7f), Size(rad * 2.6f, rad * 1.4f))
+        }
+        repeat(230) {
+            val x = az.entre(182f, 394f); val tope = cuelga(x); val y = az.entre(-6f, tope * 0.78f)
+            ramilla(l, r, Offset(x, y), 1.57f + az.entre(-1.0f, 1.0f), az.entre(6f, 16f).coerceAtMost(maxOf(6f, tope * 0.36f)), az, fleco = (y / tope).coerceIn(0f, 1f))
+        }
+        // Unos claros: el cielo que se cuela entre las hojas.
+        repeat(22) { val x = az.entre(210f, 384f); val y = az.entre(0f, cuelga(x) * 0.55f); drawOval(lerp(l.medio, l.bajo, 0.4f).copy(alpha = 0.6f), Offset(x, y), Size(az.entre(1.6f, 4.4f), az.entre(1f, 2.6f))) }
+    }
+
+    /**
+     * La sombra de la copa del olivo: cae debajo de ella a mediodía y se va corriendo hacia el otro lado del sol cuando
+     * está bajo. [enCosas]: la que cae sobre las cosas del patio (más arriba que el murete).
+     */
+    private fun DrawScope.sombraDelOlivo(r: Rayo, c: Color, enCosas: Boolean) {
+        val az = Azar(Semilla.de("heleno", "sombra del olivo"))
+        val cx = 330f - r.lat * 150f
+        clipRect(if (enCosas) 0f else VANO, if (enCosas) 150f else CAP, ANCHO, ALTO) { sombraDeFollaje(az, Rect(cx - 100f, 200f, cx + 100f, ALTO + 14f), r, c) }
+    }
+
     // ---------------------------------------------------------------- La parte viva
 
     override fun seMueve(m: Momento): Boolean = true                          // el agua siempre brilla
@@ -854,7 +1429,7 @@ internal object EscenaHeleno : EscenaVida {
         val l = luces(m)
         // El viento viene del mar: tumba los humos hacia la izquierda del cuadro. Con el día en calma queda una brisa.
         val viento = -(if (m.ficha.clima == Clima.DESPEJADO) 0.25f else m.viento)
-        destellos(l, Rect(0f, H + 1f, ANCHO, 218f), reloj, m.semilla("destellos"))
+        destellos(l, Rect(0f, H + 1f, ANCHO, 216f), reloj, m.semilla("destellos"))
 
         // Los humos de la guerra y de la peste, al fondo.
         if (m.con("humo")) {
@@ -874,7 +1449,7 @@ internal object EscenaHeleno : EscenaVida {
         // El fuego de guardia de la torre de la bocana, de noche, y su reflejo.
         if (l.noche > 0.4f) {
             llama(Offset(152f, 139.4f), 3.4f, reloj, 5); resplandor(Offset(152f, 137.6f), 12f, 0.6f * l.noche)
-            reflejo(Offset(152f, 156f), 12f, LLAMA, 0.5f * l.noche, reloj, 5)
+            reflejo(Offset(152f, 156.5f), 14f, LLAMA, 0.6f * l.noche, reloj, 5)
         }
         // Las antorchas del muelle en las fiestas de noche, cada una con su reflejo.
         if (antorchas(m)) for (i in 0..5) {
@@ -891,18 +1466,17 @@ internal object EscenaHeleno : EscenaVida {
         }
 
         // El brasero: la llama y el humo a la hora de comer; brasas después.
-        val brasero = Offset(136f, 270f)
         if (comiendo(m)) {
-            llama(brasero + Offset(-6f, -17f), 7f, reloj, 1); llama(brasero + Offset(6f, -17f), 6f, reloj, 2)
-            resplandor(brasero + Offset(0f, -18f), 30f, 0.25f + 0.5f * l.noche)
-            humo(l, brasero + Offset(0f, -30f), 58f, 15f, reloj, viento, 0.12f, 0f, 4, 10, 0.8f)
+            llama(BRASERO + Offset(-6f * KB, -17f * KB), 7f * KB, reloj, 1); llama(BRASERO + Offset(6f * KB, -17f * KB), 6f * KB, reloj, 2)
+            resplandor(BRASERO + Offset(0f, -18f * KB), 34f * KB, 0.25f + 0.5f * l.noche)
+            humo(l, BRASERO + Offset(0f, -30f * KB), 70f, 17f, reloj, viento, 0.12f, 0f, 4, 10, 0.8f)
         } else if (!enElMar(m)) {
-            brasas(l, brasero + Offset(0f, -16f), 16f, reloj)
-            if (l.noche > 0.3f) resplandor(brasero + Offset(0f, -16f), 14f, 0.35f * l.noche, Color(0xFFFF5A1E))
+            brasas(l, BRASERO + Offset(0f, -16f * KB), 16f * KB, reloj)
+            if (l.noche > 0.3f) resplandor(BRASERO + Offset(0f, -16f * KB), 34f * KB, 0.5f * l.noche, Color(0xFFFF5A1E))
         }
-        // La lucerna del candelero y la del banco.
-        if (conGente(m) && l.noche > 0.15f) llama(Offset(343f, 216.6f), 4.2f, reloj, 3)
-        if (m.ficha.objeto == "lampara" && l.noche > 0.3f && m.hacer != Hacer.DORMIR && !enElMar(m)) llama(Offset(227f, 241.8f), 4f, reloj, 4)
+        // La lucerna del candelero, que alumbra el muro, y la del banco.
+        if (conGente(m) && l.noche > 0.15f) { llama(CANDELERO + Offset(7f * KC, -53.4f * KC), 4.6f * KC, reloj, 3); resplandor(CANDELERO + Offset(7f * KC, -56f * KC), 58f, 0.55f * l.noche) }
+        if (m.ficha.objeto == "lampara" && l.noche > 0.3f && m.hacer != Hacer.DORMIR && !enElMar(m)) llama(SOBRE + Offset(13f * KO, -5.2f * KO), 4f * KO, reloj, 4)
 
         tiempoVivo(l, m.ficha.clima, reloj, H, m.ficha.semilla)
     }
@@ -910,11 +1484,11 @@ internal object EscenaHeleno : EscenaVida {
     // ---------------------------------------------------------------- El gato
 
     override fun anclas(m: Momento): List<Ancla> = buildList {
-        add(Ancla(TipoAncla.SUELO, 18f, 276f, hasta = 362f))
-        add(Ancla(TipoAncla.MIRADOR, 272f, 219.5f))
-        add(Ancla(TipoAncla.OBJETO, 214f, 268f))
-        add(Ancla(TipoAncla.ABRIGO, 214f, 270f))                              // debajo del banco
-        if (comiendo(m)) add(Ancla(TipoAncla.FUEGO, 160f, 274f))
-        if (fiesta(m)) add(Ancla(TipoAncla.ADORNO, 116f, 258f))
+        add(Ancla(TipoAncla.SUELO, 18f, 279f, hasta = 330f))
+        add(Ancla(TipoAncla.MIRADOR, 300f, CAP))
+        add(Ancla(TipoAncla.OBJETO, 255f, 282f))
+        add(Ancla(TipoAncla.ABRIGO, 255f, 279f))                              // debajo del banco
+        if (comiendo(m)) add(Ancla(TipoAncla.FUEGO, 164f, 283f))
+        if (fiesta(m)) add(Ancla(TipoAncla.ADORNO, 128f, 252f))
     }
 }

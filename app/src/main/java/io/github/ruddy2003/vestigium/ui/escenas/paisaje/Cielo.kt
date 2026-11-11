@@ -24,10 +24,20 @@ import kotlin.math.sin
 const val ANCHO = 380f
 const val ALTO = 285f
 
-/** El cielo, del borde de arriba al [horizonte] (y un poco más abajo, por si algo deja ver detrás). */
-fun DrawScope.cielo(l: Luces, horizonte: Float) {
+/**
+ * El cielo, del borde de arriba al [horizonte] (y un poco más abajo, por si algo deja ver detrás). Con [semilla] lleva
+ * además unas pinceladas tendidas, para que no sea un degradado liso, y la calima del horizonte.
+ */
+fun DrawScope.cielo(l: Luces, horizonte: Float, semilla: Long? = null) {
     drawRect(Brush.verticalGradient(0f to l.alto, 0.58f to l.medio, 1f to l.bajo, startY = 0f, endY = horizonte), Offset.Zero, Size(ANCHO, horizonte))
     drawRect(l.bajo, Offset(0f, horizonte - 0.5f), Size(ANCHO, ALTO - horizonte + 0.5f))
+    if (semilla == null) return
+    val az = Azar(Semilla.de(semilla, "pinceladas"))
+    repeat(52) {
+        val y = az.entre(2f, horizonte - 4f); val w = az.entre(50f, 170f); val x = az.entre(-40f, ANCHO)
+        mancha(Offset(x + w / 2f, y), w / 2f, az.entre(1.2f, 3.8f), if (az.real() > 0.5f) lerp(l.bajo, Color.White, 0.3f) else l.alto, 0.06f + 0.07f * az.real())
+    }
+    drawRect(Brush.verticalGradient(listOf(Color.Transparent, lerp(l.bajo, l.solColor, 0.3f * (1f - l.noche)).copy(alpha = 0.6f)), horizonte - 24f, horizonte), Offset(0f, horizonte - 24f), Size(ANCHO, 24f))
 }
 
 /** Dónde está el sol en el lienzo, con el horizonte en [horizonte]. */
@@ -110,34 +120,47 @@ fun DrawScope.mancha(centro: Offset, rx: Float, ry: Float, color: Color, alfa: F
 }
 
 /**
- * Una nube de algodón (cúmulo) apoyada en la línea [y]: de [x] a [x] + [ancho]. La parte de arriba toma la luz del
- * sol y la base queda en sombra. [carga], de 0 a 1: qué tan gris y pesada es.
+ * Una nube de algodón (cúmulo) apoyada en la línea [y], de [x] a [x] + [ancho]: un montón de borbotones, más alto por
+ * el centro, con la base plana. La luz le da por arriba y del lado del sol; la base y el otro lado quedan en sombra
+ * violeta. [carga], de 0 a 1: qué tan gris y pesada es. [lejos] la funde con el cielo; [alza] la hace más alta (las
+ * torres que crecen sobre el horizonte).
  */
-fun DrawScope.nube(l: Luces, x: Float, y: Float, ancho: Float, azar: Azar, carga: Float = 0f, lejos: Float = 0.3f) {
-    val alto = ancho * (0.30f + 0.10f * azar.real())
-    val forma = Path()
-    // Los borbotones de arriba, más altos hacia el centro.
-    val n = 6 + azar.entero(3)
-    for (i in 0 until n) {
-        val k = (i + azar.entre(0.3f, 0.7f)) / n
-        val campana = sin(PI.toFloat() * k)
-        val r = ancho * azar.entre(0.09f, 0.16f) * (0.55f + 0.6f * campana)
-        forma.addOval(Rect(Offset(x + ancho * (0.08f + 0.84f * k), y - r * 0.5f - alto * 0.62f * campana * azar.entre(0.5f, 1f)), r))
+fun DrawScope.nube(l: Luces, x: Float, y: Float, ancho: Float, azar: Azar, carga: Float = 0f, lejos: Float = 0.3f, alza: Float = 1f) {
+    val lado = Rayo(l).lat
+    val alto = ancho * azar.entre(0.30f, 0.42f) * alza
+    val bolas = ArrayList<Pair<Offset, Float>>(); val macizos = ArrayList<Rect>()
+    // Tres pisos: muchos borbotones abajo, pocos arriba, corridos hacia un lado.
+    val sesgo = azar.entre(-0.14f, 0.14f)
+    for (piso in 0..2) {
+        val n = listOf(6, 4, 2)[piso] + azar.entero(2)
+        val w = ancho * listOf(0.86f, 0.58f, 0.3f)[piso]
+        val cx = x + ancho * (0.5f + sesgo * piso)
+        for (i in 0 until n) {
+            val k = (i + azar.entre(0.2f, 0.8f)) / n
+            val rad = ancho * azar.entre(0.085f, 0.14f) * (1f - 0.12f * piso)
+            bolas += Offset(cx - w / 2f + w * k, y - rad * 0.55f - alto * (0.36f * piso) * azar.entre(0.8f, 1.15f)) to rad
+        }
+        // El cuerpo de cada piso, para que entre los borbotones no queden huecos.
+        macizos += Rect(cx - w * 0.4f, y - alto * (0.36f * piso) - ancho * 0.05f, cx + w * 0.4f, y)
     }
-    // El cuerpo y la base plana.
-    for (i in 0 until 4) {
-        val k = (i + 0.5f) / 4f
-        val r = ancho * 0.15f * (0.8f + 0.45f * sin(PI.toFloat() * k))
-        forma.addOval(Rect(Offset(x + ancho * (0.14f + 0.72f * k), y - r * 0.66f), r))
+    val forma = Path().apply {
+        bolas.forEach { addOval(Rect(it.first, it.second)) }
+        macizos.forEach { addRoundRect(androidx.compose.ui.geometry.RoundRect(it, CornerRadius(ancho * 0.06f))) }
+        addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(x + ancho * 0.09f, y - alto * 0.2f, x + ancho * 0.91f, y), CornerRadius(alto * 0.1f)))
     }
-    forma.addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(x + ancho * 0.05f, y - alto * 0.28f, x + ancho * 0.95f, y), CornerRadius(alto * 0.14f)))
-    val blanco = lerp(Color(0xFFFFFFFF), Color(0xFF8E97A6), 0.75f * carga)
-    val luz = lerp(l.tono(blanco, 0f), l.solColor, if (l.solAltura in -0.1f..0.35f && l.nublado < 0.5f) 0.45f else 0.08f)
-    val sombra = lerp(l.tono(lerp(Color(0xFFB9C3D4), Color(0xFF59616F), carga), 0f), l.medio, 0.35f)
-    val alfa = 0.96f - 0.25f * lejos
+    val calido = l.solAltura > -0.1f && l.solAltura < 0.5f && l.nublado < 0.5f
+    val blanco = lerp(Color.White, Color(0xFF8E97A6), 0.75f * carga)
+    val luz = lerp(lerp(l.tono(blanco), l.solColor, if (calido) 0.4f else 0.08f), l.bajo, 0.5f * lejos)
+    val sombra = lerp(lerp(l.tono(lerp(Color(0xFFA9A6CA), Color(0xFF59616F), carga)), l.medio, 0.4f), l.bajo, 0.6f * lejos)
+    val arriba = bolas.minOf { it.first.y - it.second }
     clipPath(forma) {
-        drawRect(Brush.verticalGradient(0f to luz.copy(alpha = alfa), 0.5f to lerp(luz, sombra, 0.4f).copy(alpha = alfa), 1f to sombra.copy(alpha = alfa),
-            startY = y - alto * 1.25f, endY = y), Offset(x - ancho * 0.2f, y - alto * 2.2f), Size(ancho * 1.4f, alto * 2.3f))
+        drawRect(Brush.verticalGradient(0f to luz, 0.45f to luz, 0.82f to lerp(luz, sombra, 0.75f), 1f to sombra, startY = arriba, endY = y), Offset(x - ancho * 0.3f, arriba - 2f), Size(ancho * 1.6f, y - arriba + 4f))
+        // La sombra propia de cada borbotón, del lado contrario al sol, y un toque de luz en lo alto.
+        bolas.forEach { (c, rad) ->
+            mancha(c + Offset(-lado * rad * 0.55f, rad * 0.5f), rad * 0.95f, rad * 0.7f, sombra, 0.6f)
+            mancha(c + Offset(lado * rad * 0.35f, -rad * 0.45f), rad * 0.8f, rad * 0.6f, luz, 0.85f)
+        }
+        drawRect(Brush.verticalGradient(listOf(Color.Transparent, l.bajo.copy(alpha = (0.55f + 0.3f * lejos) * (1f - 0.6f * carga))), y - alto * 0.2f, y), Offset(x - ancho * 0.3f, y - alto * 0.2f), Size(ancho * 1.6f, alto * 0.2f))
     }
 }
 
@@ -166,27 +189,62 @@ fun DrawScope.cirros(l: Luces, horizonte: Float, azar: Azar) {
     }
 }
 
+/** Velos altos y un banco de borreguillos: el cielo de los días de calma. */
+fun DrawScope.velos(l: Luces, horizonte: Float, azar: Azar) {
+    val c = lerp(l.tono(Color.White), l.medio, 0.12f)
+    repeat(7) {
+        val x = azar.entre(-30f, ANCHO - 80f); val y = azar.entre(10f, horizonte * 0.62f); val w = azar.entre(80f, 190f); val sube = azar.entre(6f, 22f)
+        for (i in 0..16) {
+            val k = i / 16f
+            mancha(Offset(x + w * k, y - sube * k * k + azar.entre(-0.8f, 0.8f)), w * 0.09f, (1f + 2.6f * (1f - k)) * azar.entre(0.6f, 1f), c, 0.4f * (1f - 0.55f * k))
+        }
+    }
+    val cx = azar.entre(70f, 250f); val cy = azar.entre(22f, 52f)
+    repeat(46) {
+        val u = azar.entre(-1f, 1f); val v = azar.entre(-1f, 1f)
+        mancha(Offset(cx + u * 78f + v * 16f, cy + v * 13f), azar.entre(4f, 8.5f), azar.entre(1.5f, 2.8f), c, 0.36f * (1f - u * u))
+    }
+}
+
 /**
- * Las nubes del tiempo que hace: ninguna o un par, lejanas, con el cielo despejado; cirros con viento; cúmulos con
- * «nublado»; el cielo cubierto con lluvia, tormenta o nieve. Con niebla y con polvo no hay nubes: el velo lo pone
+ * Las nubes del tiempo que hace. Con el cielo despejado cada día trae las suyas, según su semilla: borregos en filas
+ * que se alejan, torres sobre el horizonte, velos altos o unas barras de calima. Con viento, cirros; con «nublado»,
+ * cúmulos; con lluvia, tormenta o nieve, el cielo cubierto. Con niebla y con polvo no hay nubes: el velo lo pone
  * `tiempoQuieto`.
  */
 fun DrawScope.nubes(l: Luces, horizonte: Float, clima: Clima, semilla: Long) {
     val azar = Azar(Semilla.de(semilla, "nubes"))
+    val h = horizonte
     when (clima) {
-        Clima.DESPEJADO -> repeat(azar.entero(3)) { nube(l, azar.entre(10f, ANCHO - 90f), azar.entre(horizonte * 0.45f, horizonte * 0.86f), azar.entre(34f, 62f), azar, 0f, 0.7f) }
-        Clima.VIENTO -> { cirros(l, horizonte, azar); nube(l, azar.entre(40f, ANCHO - 120f), horizonte * 0.82f, 50f, azar, 0f, 0.7f) }
+        Clima.DESPEJADO -> when (azar.entero(4)) {
+            0 -> {
+                repeat(7) { nube(l, azar.entre(-20f, ANCHO), h * azar.entre(0.80f, 0.90f), azar.entre(16f, 26f), azar, 0f, 0.9f) }
+                repeat(4) { nube(l, azar.entre(-30f, ANCHO - 40f), h * azar.entre(0.54f, 0.68f), azar.entre(34f, 52f), azar, 0f, 0.55f) }
+                repeat(2) { nube(l, azar.entre(44f, ANCHO - 150f), h * azar.entre(0.36f, 0.48f), azar.entre(64f, 92f), azar, 0f, 0.25f) }
+            }
+            1 -> {
+                var x = azar.entre(-30f, 30f)
+                repeat(5) { val w = azar.entre(48f, 86f); nube(l, x, h + 3f, w, azar, 0f, 0.72f, alza = azar.entre(1.3f, 2.1f)); x += w * azar.entre(0.5f, 0.8f) }
+                repeat(2) { nube(l, azar.entre(60f, ANCHO - 160f), h * azar.entre(0.36f, 0.6f), azar.entre(30f, 48f), azar, 0f, 0.45f) }
+            }
+            2 -> { velos(l, h, azar); nube(l, azar.entre(20f, 160f), h * 0.82f, 30f, azar, 0f, 0.8f) }
+            else -> repeat(4) {
+                val y = h * azar.entre(0.62f, 0.93f); val w = azar.entre(90f, 200f); val x = azar.entre(-40f, ANCHO - 60f)
+                for (i in 0..10) mancha(Offset(x + w * i / 10f, y + azar.entre(-0.6f, 0.6f)), w * 0.09f, azar.entre(1.2f, 2.4f), lerp(l.tono(Color.White), l.bajo, 0.3f), 0.5f)
+            }
+        }
+        Clima.VIENTO -> { cirros(l, h, azar); nube(l, azar.entre(40f, ANCHO - 120f), h * 0.82f, 50f, azar, 0f, 0.7f) }
         Clima.NUBES -> {
-            repeat(3) { nube(l, azar.entre(-20f, ANCHO - 60f), azar.entre(horizonte * 0.55f, horizonte * 0.9f), azar.entre(46f, 80f), azar, 0.15f, 0.7f) }
-            repeat(4) { nube(l, azar.entre(-30f, ANCHO - 90f), azar.entre(horizonte * 0.16f, horizonte * 0.55f), azar.entre(90f, 150f), azar, 0.28f, 0.2f) }
+            repeat(3) { nube(l, azar.entre(-20f, ANCHO - 60f), azar.entre(h * 0.55f, h * 0.9f), azar.entre(46f, 80f), azar, 0.15f, 0.7f) }
+            repeat(4) { nube(l, azar.entre(-30f, ANCHO - 90f), azar.entre(h * 0.2f, h * 0.55f), azar.entre(90f, 150f), azar, 0.28f, 0.2f) }
         }
         Clima.LLUVIA -> {
-            estrato(l, horizonte * 0.04f, 30f, azar, 0.75f); estrato(l, horizonte * 0.3f, 24f, azar, 0.55f); estrato(l, horizonte * 0.56f, 16f, azar, 0.4f)
+            estrato(l, h * 0.04f, 30f, azar, 0.75f); estrato(l, h * 0.3f, 24f, azar, 0.55f); estrato(l, h * 0.56f, 16f, azar, 0.4f)
         }
         Clima.TORMENTA -> {
-            estrato(l, 0f, 40f, azar, 1f); estrato(l, horizonte * 0.26f, 32f, azar, 0.9f); estrato(l, horizonte * 0.52f, 20f, azar, 0.65f)
+            estrato(l, 0f, 40f, azar, 1f); estrato(l, h * 0.26f, 32f, azar, 0.9f); estrato(l, h * 0.52f, 20f, azar, 0.65f)
         }
-        Clima.NIEVE -> { estrato(l, 0f, 30f, azar, 0.25f); estrato(l, horizonte * 0.3f, 24f, azar, 0.2f); estrato(l, horizonte * 0.58f, 16f, azar, 0.15f) }
+        Clima.NIEVE -> { estrato(l, 0f, 30f, azar, 0.25f); estrato(l, h * 0.3f, 24f, azar, 0.2f); estrato(l, h * 0.58f, 16f, azar, 0.15f) }
         Clima.NIEBLA -> Unit
         Clima.POLVO -> Unit
         Clima.SIN_CLIMA -> Unit

@@ -28,9 +28,15 @@ El dibujo del cuadro que irá en Hoy: el paisaje del personaje de cada tema, pin
 
 **Qué se ve.** El puerto de Zea, en el Pireo, desde el patio de la casa de Demeas. **[Aproximación]**: es una composición con lo que había allí, no la vista desde un punto real.
 
-- **Al fondo:** el golfo con Salamina a la izquierda; a la derecha, el llano del Ática con sus campos, los Muros Largos que suben a la ciudad, la Acrópolis con el Partenón y los montes.
+- **Al fondo:** el golfo con Salamina a la izquierda; a la derecha, el llano del Ática.
+  - La costa tiene calas, puntas y peñas, y una franja de arena y roca entre la hierba y el agua: lo que el mar le ha ido comiendo.
+  - Detrás, los campos, un olivar y los Muros Largos que suben a la ciudad.
+  - Atenas trepa por una loma en tres hileras de casas, con su muralla delante, hasta el pie de la Acrópolis con el Partenón. Detrás quedan el Licabeto y los montes.
 - **En medio:** la dársena. En la otra orilla, la fila de cobertizos de la flota y la torre de la bocana. En esta orilla, a la izquierda, el cobertizo del «Aura», la nave de Demeas.
-- **Delante:** el patio. El murete encalado, el banco de piedra con el objeto del día, el brasero, la tinaja, dos ánforas, el candelero y un olivo.
+- **Delante:** el patio, visto un poco desde arriba.
+  - El murete encalado, gastado, con un vano a la izquierda por donde se baja a la playa.
+  - Las cosas de la casa, grandes y arrimadas unas a otras: el candelero, dos ánforas, la tinaja, el brasero, el banco de piedra con el objeto del día, un canasto y un rollo de cuerda colgado.
+  - A la derecha crece un olivo. Su tronco cruza el cuadro de abajo arriba y su copa lo enmarca.
 - **No hay personas.** Se ve lo que dejan: el fuego, la olla, las naves, las antorchas.
 
 **Qué cuenta, igual que el cuento** (decisión 18). Todo sale de la ficha del día:
@@ -52,10 +58,22 @@ El dibujo del cuadro que irá en Hoy: el paisaje del personaje de cada tema, pin
 | Clave `luto` | Un paño oscuro sobre el murete y un lécito blanco en el banco |
 | Clave `eclipse` | De las 13:12 a las 16:12 el sol es una media luna, el día se apaga y asoman estrellas |
 | Arco `higuera` | El alcorque vacío hasta que la planta; después crece cada año, se pela en invierno y da higos a finales del verano |
-| El objeto del día | Sobre el banco o el murete: el mismo del que habla el cuento. Son 12, cada uno con su dibujo |
-| El tramo de «Un día suyo» | Comer: el brasero encendido con la olla. Con gente: el candelero encendido, la copa y la jarra. Dormir: brasas |
+| El objeto del día | El mismo del que habla el cuento. Son 12, cada uno con su dibujo: nueve van sobre el banco; el remo, apoyado en el murete; la red y el manto, colgados de él |
+| El tramo de «Un día suyo» | Comer: el brasero encendido con la olla. Con gente: la lucerna del candelero, que alumbra el muro, la copa y la jarra. Dormir: brasas |
 | La estación | El color del llano (verde en invierno, pajizo en verano) y las hojas de la higuera |
 | El tiempo | Nubes, lluvia, tormenta con relámpagos, viento con el mar rizado |
+
+**Cómo está pintado.** El autor vio la primera versión y pidió rehacer el aspecto: de día parecía una ilustración de catálogo. Escogió entre tres variantes dibujadas en el arnés (gouache, acuarela y estampa) y se quedó con la primera. **[Diseño propio]**
+
+| Lo que fallaba | Cómo quedó |
+|---|---|
+| La luz no tenía dirección | Viene del lado del sol. Todo arroja sombra: larga por la mañana y por la tarde, corta a mediodía. Las vasijas, el banco, el tronco, los montes y las casas tienen un lado con luz y otro en sombra. La copa del olivo da sombra rota, con claros, sobre el murete, el suelo y las cosas |
+| El cielo estaba vacío | Con el cielo despejado, cada día trae una de cuatro formaciones de nubes. Por arriba enmarca la copa del olivo |
+| Los colores eran «de fábrica» | Paleta corta: mar turquesa, cielo que baja a crema en el horizonte, luz blanca y cálida, sombras azul violeta |
+| El agua era plana | Honda lejos y clara junto a la orilla, con espuma. Refleja las naves, los cobertizos, la torre y la costa. Lleva la calle de luz del sol bajo o de la luna |
+| El primer plano era una repisa | Cosas más grandes, que se enciman. El murete tiene desconchones, chorreras, grietas y el zócalo gastado; el suelo es de losas |
+| Tres franjas sin nada que las cruce | El tronco del olivo, el pilar del vano, el remo en diagonal y la tinaja las cruzan |
+| Todo era liso | Un grano muy fino sobre toda la parte quieta |
 
 - **Por qué una prueba puede vigilarlo:** dónde está la nave no se decide dentro del dibujo, sino en una función aparte (`EscenaHeleno.nave`), que dice «cobertizo», «amarrada», «remando» o «ausente». La prueba la compara con el calendario todos los días de 2026 a 2032.
 
@@ -83,19 +101,25 @@ El dibujo del cuadro que irá en Hoy: el paisaje del personaje de cada tema, pin
   - lo tiñe con la luz de la hora y del tiempo que hace;
   - lo desvanece hacia la bruma cuanto más lejos está.
 - Lo que da luz propia (una llama, una ventana encendida) se pinta tal cual: por eso de noche resalta.
-- **El cielo despejado** sale de 11 instantes del día; entre uno y otro los colores cambian poco a poco.
+- **El cielo despejado** sale de 12 instantes del día; entre uno y otro los colores cambian poco a poco.
+- **La paleta del día es corta y va junta.** No hay azul puro: así el cielo y el agua se llevan con los ocres de la tierra.
 
 | Hora | Cómo es |
 |---|---|
 | 5:00 | Primera claridad, horizonte anaranjado |
 | 6:24 | Amanecer cálido; el sol acaba de salir por la derecha |
-| 8:00 a 17:30 | Día: azul arriba, claro en el horizonte; la luz más blanca a las 14:00 |
+| 7:00 | Mañana: bruma cálida que lo junta todo |
+| 8:00 a 17:30 | Día: azul verdoso apagado arriba, crema en el horizonte; la luz más blanca a las 14:00 |
 | 19:18 | Tarde dorada; el sol baja por la izquierda, sobre el mar |
 | 20:18 | Atardecer rosa y naranja |
 | 21:00 | Anochecer: todavía queda un resplandor; ya hay que encender |
 | 22:30 a 1:00 | Noche cerrada, con luna y estrellas |
 
 - **El sol** sale a las 5:36 y se pone a las 20:24 todo el año, cruza el cuadro de derecha a izquierda y a mediodía queda por encima del cuadro. **[Aproximación]**: no cambia con la estación ni con el lugar.
+- **Las sombras** (`Rayo`, en `Sombras.kt`) salen de esa misma luz. **[Aproximación]**: el sol se dibuja dentro del cuadro, pero la luz entra de lado, del lado en que está el sol, y un poco desde delante. Con el sol de frente todo quedaría a contraluz.
+  - Caen hacia el otro lado y hacia el fondo; si alcanzan el murete, suben por él.
+  - Son azul violeta y oscurecen lo que tienen debajo una sola vez, aunque se encimen.
+  - De noche, con el cielo cubierto o en un eclipse, no hay.
 - **El tiempo que hace** agrisa el cielo y apaga la luz: nublado, niebla, nieve, lluvia y tormenta, de menos a más. Con el cielo cubierto no se ven el sol ni las estrellas.
 - **Los interiores** (Refugio, Laboratorio, Espacio) no tienen cielo: solo luz encendida o tenue.
 - Las tres horas de las capturas (7, 13 y 21 h) dan tres luces distintas.
@@ -105,13 +129,15 @@ El dibujo del cuadro que irá en Hoy: el paisaje del personaje de cada tema, pin
 | Archivo | Piezas |
 |---|---|
 | `Luces.kt` | La luz de cada hora y de cada tiempo; el eclipse |
-| `Cielo.kt` | El cielo, las estrellas, la luna, el sol (y su media luna en un eclipse), nubes de algodón, capas de nube baja e hilos de nube alta |
-| `Tierra.kt` | Montes e islas; el color de la hierba y de las hojas en cada estación; sembrados por etapa, quemados o con gavillas; árbol de hoja caduca, olivo, ciprés, pino, matas y briznas |
-| `Agua.kt` | El mar o un río, con sus rizos, las crestas del viento, la estela del sol o de la luna, los destellos que se mueven y el reflejo de una luz |
+| `Sombras.kt` | De dónde viene la luz (`Rayo`); la capa de sombras; la sombra que arroja una cosa en el suelo y en la pared de detrás; la sombra rota de un follaje; el lado de luz y el de sombra de un cuerpo redondo |
+| `Cielo.kt` | El cielo con sus pinceladas y su calima, las estrellas, la luna, el sol (y su media luna en un eclipse), nubes de algodón en pisos, las cuatro formaciones del cielo despejado, capas de nube baja, velos e hilos de nube alta |
+| `Tierra.kt` | Montes e islas con sus laderas de luz y de sombra; el color de la hierba y de las hojas en cada estación; sembrados por etapa, quemados o con gavillas; árbol de hoja caduca, olivo, ciprés, pino, matas y briznas |
+| `Agua.kt` | El mar o un río: hondo lejos, claro cerca, con rachas, calmas, rizos y crestas; la estela del sol o de la luna; el reflejo roto de lo que está sobre el agua; el agua clara de una orilla; los destellos que se mueven y el reflejo de una luz |
 | `Casas.kt` | Una casa con cinco techos (teja, paja, azotea, pizarra y madera), encendida o no, y sus daños hasta la ruina; una muralla |
 | `Fuego.kt` | Llama, resplandor, brasas, humo (blanco o negro, que el viento tumba) y antorcha |
 | `Tiempo.kt` | Lluvia, nieve, relámpago, ráfagas y polvo; los velos de la niebla y de la lluvia |
 | `Adornos.kt` | Guirnalda, banderines o cintas, corona y paño (de luto o de fiesta) |
+| `Textura.kt` | El grano del papel |
 
 - **Lo que el paisaje de Helénico no usa** (la nieve, la niebla, el polvo, cuatro de los cinco techos, los pinos, los banderines) se ve en la **escena llana**, que tiene sus dos capturas (`…_cuadroBiblioteca_biblioteca_1.png` y `_2.png`).
 - **Lo que falta para otras escenas** lo agrega la tanda que lo necesite: los interiores, la ciudad de noche de Ciudad neón, la catedral.
@@ -173,10 +199,17 @@ El dibujo del cuadro que irá en Hoy: el paisaje del personaje de cada tema, pin
 - **P4b y las S (una escena nueva):**
   1. copia `EscenaPlana.kt` como `Escena<Tema>.kt` y dibuja encima lo propio; cada color pasa por `Luces.tono`;
   2. lo que el cuento dice y se puede ver, sácalo a una función que una prueba pueda leer (como `EscenaHeleno.nave`);
-  3. cambia su rama en `escenaDe` y en `banderitaHistoria`;
-  4. agrega sus días de muestra a `DIAS_CUADRO`, en `Capturas.kt`, con un día en que el cuento cambie lo que se ve;
-  5. borra el tema de `SIN_CUADRO` en `CoberturaTemas` y pon sus celdas en **P** en `TEMAS.md`;
-  6. pide las capturas con `superficies = cuadro`, `temas = <los suyos>` y `solo = true`.
+  3. dale el mismo oficio que a Helénico, para que el día no quede liso:
+     - `Rayo(luces)` y una `capaSombra` con la sombra de cada cosa (`sombraArrojada`) y la del árbol o el alero que enmarque (`sombraDeFollaje`);
+     - `volumen` para los cuerpos redondos;
+     - `agua`, `bajio`, `reflejoRoto` y `estela` si hay agua;
+     - algo que cruce las franjas y enmarque por arriba;
+     - cosas grandes y arrimadas en primer plano, no en fila;
+     - `grano` al final de la parte quieta;
+  4. cambia su rama en `escenaDe` y en `banderitaHistoria`;
+  5. agrega sus días de muestra a `DIAS_CUADRO`, en `Capturas.kt`, con un día en que el cuento cambie lo que se ve;
+  6. borra el tema de `SIN_CUADRO` en `CoberturaTemas` y pon sus celdas en **P** en `TEMAS.md`;
+  7. pide las capturas con `superficies = cuadro`, `temas = <los suyos>` y `solo = true`.
 - **No uses `Offset` en un `vararg`** (Kotlin no lo permite) ni construyas un `Color` con cuentas que puedan pasar de 1: la app se cerraría. Para mezclar colores, `lerp`.
 - **P5 (el gato):** las anclas salen de `escena.anclas(momento)`. El gato va en una tercera capa de `VistaEscena`, encima de la viva; hay que decidir si la lluvia cae delante o detrás de él.
 - **P6 (el cuadro en Hoy):** usa `VistaEscena(escena, ficha, hora, …)`.
