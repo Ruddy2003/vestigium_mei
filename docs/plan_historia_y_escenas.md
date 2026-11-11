@@ -487,7 +487,8 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P6 | claude-fable-5-2 | high | Integración en Hoy, medidas y esquema | 2 | pendiente |
 | H1 | claude-opus-5-5 | medium | Red, caché y pantalla con patrones que ya existen | 1 | pendiente |
 | H2 | claude-opus-5-5 | medium | Una regla simple de años | 1 | pendiente |
-| A1–A8 | claude-opus-5-5 | high | Calendarios verosímiles con libertad creativa y el patrón de P2. La continuidad de 5 años pide high | 0 c/u | pendiente |
+| A1 | claude-opus-5-5 | high | Calendarios verosímiles con libertad creativa y el patrón de P2. La continuidad de 5 años pide high | 0 | hecho 11 nov 2026 (`docs/historia/informes/A1.md`) |
+| A2–A8 | claude-opus-5-5 | high | Ídem | 0 c/u | pendiente |
 | T1a–T8b | claude-opus-5-5 | medium | Variantes de texto con el tono aprobado | 0 c/u | pendiente |
 | S1–S7 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código | 2 c/u | pendiente |
 | C1 | claude-opus-5-5 | medium | Revisión y cierre sin dibujo nuevo | 1 | pendiente |
