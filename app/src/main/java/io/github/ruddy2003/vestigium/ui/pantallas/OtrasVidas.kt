@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalLayoutApi::class)
+@file:OptIn(ExperimentalLayoutApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -290,13 +291,17 @@ private fun anio(a: Int): String = when { a < -9000 -> "${"%,d".format(-a)} a. C
 //  La pantalla
 // =====================================================================
 
+/**
+ * [vidaPedida] y [seccion] vienen de la ruta `otras_vidas?vida=<id>&seccion=cuento`: abre con esa vida elegida (si el
+ * tema la deja ver) y, con «cuento», baja hasta «Hoy, en su vida».
+ */
 @Composable
-fun PantallaOtrasVidas(nav: Nav) {
+fun PantallaOtrasVidas(nav: Nav, vidaPedida: String? = null, seccion: String? = null) {
     val ctx = LocalContext.current
     val sentir = rememberSentir()
     val tema = Estilo.tema.id
     val vidas = remember(tema) { val l = OtrasVidas.visibles(tema); l.filter { it.tema != null } + l.filter { it.tema == null }.sortedBy { it.anio } }
-    var elegida by rememberSaveable(tema) { mutableStateOf(vidas.first().id) }
+    var elegida by rememberSaveable(tema) { mutableStateOf(vidaPedida?.takeIf { id -> vidas.any { it.id == id } } ?: vidas.first().id) }
     val tuyos by produceState(if (TusNumeros.sincrono) runCatching { TusNumeros.calcular(ctx) }.getOrDefault(emptyMap()) else null) {
         if (!TusNumeros.sincrono) value = withContext(Dispatchers.Default) { runCatching { TusNumeros.calcular(ctx) }.getOrDefault(emptyMap()) }
     }
@@ -333,15 +338,18 @@ fun PantallaOtrasVidas(nav: Nav) {
             }
         }
 
-        AnimatedContent(v, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "vida") { x -> Column { DetalleVida(x, t) } }
+        AnimatedContent(v, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "vida") { x -> Column { DetalleVida(x, t, alCuento = seccion == "cuento" && x.id == vidaPedida) } }
         Spacer(Modifier.height(24.dp))
     }
 }
 
 @Composable
-private fun DetalleVida(v: OtrasVidas.Vida, t: Map<String, TusNumeros.Valor>?) {
+private fun DetalleVida(v: OtrasVidas.Vida, t: Map<String, TusNumeros.Valor>?, alCuento: Boolean = false) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
+    // Al llegar con «seccion=cuento», la pantalla baja sola hasta el cuento.
+    val traerCuento = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
+    androidx.compose.runtime.LaunchedEffect(alCuento) { if (alCuento) { kotlinx.coroutines.delay(250); runCatching { traerCuento.bringIntoView() } } }
     // ---- Retrato.
     Surface(Modifier.fillMaxWidth().padding(top = 14.dp), shape = MaterialTheme.shapes.medium, color = cs.surface, border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.5f))) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -354,6 +362,8 @@ private fun DetalleVida(v: OtrasVidas.Vida, t: Map<String, TusNumeros.Valor>?) {
             }
         }
     }
+    // ---- El cuento del día (solo los personajes que ya tienen el suyo).
+    HoyEnSuVida(v, modifier = Modifier.bringIntoViewRequester(traerCuento))
     // ---- Su historia.
     Seccion("Su vida") {
         Tarjeta {
@@ -394,6 +404,58 @@ private fun DetalleVida(v: OtrasVidas.Vida, t: Map<String, TusNumeros.Valor>?) {
             }
         }
     }
+}
+
+/**
+ * «Hoy, en su vida»: el cuento del día del personaje, con la edad que avanza cada año, lo que hoy tiene de especial
+ * (y qué tan cierto es) y sus fuentes al pie. No sale nada si el personaje todavía no tiene cuento. El texto es el
+ * mismo todo el día, salvo el párrafo de lo que hace a esta [hora]. No lee ningún dato tuyo.
+ */
+@Composable
+internal fun HoyEnSuVida(v: OtrasVidas.Vida, dia: String = io.github.ruddy2003.vestigium.data.Fechas.diaLogico(),
+                         hora: Double = java.time.LocalTime.now().let { it.hour + it.minute / 60.0 }, modifier: Modifier = Modifier) {
+    val cuento = remember(v.id, dia, (hora * 2).toInt()) { runCatching { io.github.ruddy2003.vestigium.vidas.Cuento.de(dia, v.id, hora) }.getOrNull() } ?: return
+    val ctx = LocalContext.current
+    val cs = MaterialTheme.colorScheme
+    val ficha = cuento.ficha
+    Seccion("Hoy, en su vida", modifier = modifier) {
+        Tarjeta {
+            cuento.notas.firstOrNull()?.let { Text("día especial · ${it.tipo.nombre}", style = MaterialTheme.typography.labelMedium, color = cs.primary) }
+            Text(cuento.titulo, style = MaterialTheme.typography.titleLarge)
+            Text("${v.nombre}, ${porNumero(ficha.edad, "1 año", "${ficha.edad} años")} · ${ficha.cuando} · ${ficha.estacion.nombre}",
+                style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
+            if (ficha.avance) Ayuda("Es un avance: su año empieza el 1 de enero. Hasta entonces verás cómo será el primero.", Modifier.padding(top = 6.dp))
+            cuento.parrafos.forEach { Text(it, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 10.dp)) }
+
+            // ---- El pie: qué tan cierto es lo de hoy, la advertencia de siempre y las fuentes.
+            cuento.notas.forEachIndexed { i, n ->
+                Row(Modifier.padding(top = if (i == 0) 14.dp else 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    ChipCertezaDia(n.certeza)
+                    Text(n.titulo, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 8.dp))
+                }
+            }
+            cuento.notas.map { it.certeza }.distinct().forEach { c -> Ayuda("${c.nombre}: ${c.explica}", Modifier.padding(top = 4.dp)) }
+            Text(cuento.nota, style = MaterialTheme.typography.labelMedium, fontStyle = FontStyle.Italic, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp))
+            Ayuda(if (v.ficticia) "Su mundo y su vida son inventados."
+                else "${v.nombre} no existió: es una persona promedio de su época. Su vida y su familia son inventadas; su mundo, no.", Modifier.padding(top = 2.dp))
+            (cuento.notas.mapNotNull { it.fuente } + v.fuentes).distinctBy { it.second }.forEach { (n, u) ->
+                Text(n, style = MaterialTheme.typography.bodyMedium, color = cs.primary, textDecoration = TextDecoration.Underline,
+                    modifier = Modifier.padding(top = 8.dp).clickable { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(u))) } })
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChipCertezaDia(c: io.github.ruddy2003.vestigium.vidas.CertezaDia) {
+    val cs = MaterialTheme.colorScheme
+    val col = when (c) {
+        io.github.ruddy2003.vestigium.vidas.CertezaDia.HISTORICO -> cs.primary
+        io.github.ruddy2003.vestigium.vidas.CertezaDia.APROXIMADO -> cs.tertiary
+        io.github.ruddy2003.vestigium.vidas.CertezaDia.INVENTADO -> cs.secondary
+    }
+    Text(c.nombre, style = MaterialTheme.typography.labelSmall, color = col,
+        modifier = Modifier.border(1.dp, col.copy(alpha = 0.6f), RoundedCornerShape(50)).padding(horizontal = 7.dp, vertical = 1.dp))
 }
 
 @Composable

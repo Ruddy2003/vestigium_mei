@@ -72,7 +72,7 @@ El calendario de Atenas seguía la luna: cada mes empezaba con la luna nueva y e
 | 1 | Invasión, 23 jun, 28 días | Aproximado | La invasión es real. La fecha sale de Tucídides: unos 80 días después de Platea **[sin abrir]**. La duración se eligió | [Peloponnesian War](https://en.wikipedia.org/wiki/Peloponnesian_War) |
 | 1 | Zarpa la flota, 5 jul | Aproximado | El viaje alrededor del Peloponeso es real; el día se eligió | [Peloponnesian War](https://en.wikipedia.org/wiki/Peloponnesian_War) |
 | 1 | Eclipse, 3 ago | **Histórico** | La lista da el 3 de agosto del 431 a. C. El cálculo de la sesión lo confirma | [Eclipses del siglo V a. C.](https://en.wikipedia.org/wiki/List_of_solar_eclipses_in_the_5th_century_BC) |
-| 1 | Vuelve la flota, 2 oct | Aproximado | Volvió en otoño (Tucídides) **[sin abrir]** | — |
+| 1 | Vuelve la flota, 18 sep | Aproximado | Volvió en otoño (Tucídides) **[sin abrir]** | — |
 | 1 | Funeral y discurso, 22 nov | Aproximado | Fue ese invierno, al final del primer año de guerra; el día se eligió | [Funeral Oration](https://en.wikipedia.org/wiki/Pericles%27_Funeral_Oration) |
 | 2 | Invasión, 5 may, 40 días | Aproximado | Duró 40 días, la más larga. Empezó «al comienzo del verano» **[sin abrir]** | [Peloponnesian War](https://en.wikipedia.org/wiki/Peloponnesian_War) |
 | 2 | Llega la peste, 14 may | Aproximado | Año 430; entró por el Pireo. «Pocos días después» de la invasión **[sin abrir]** | [Plague of Athens](https://en.wikipedia.org/wiki/Plague_of_Athens) |

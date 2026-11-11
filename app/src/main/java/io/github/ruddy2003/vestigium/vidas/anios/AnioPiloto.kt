@@ -28,6 +28,8 @@ import io.github.ruddy2003.vestigium.vidas.TipoArco
  * 6. En la temporada 5 los sucesos de su vida no dependen de un día fijo, porque desde 2032 se mueven hasta 45 días.
  * 7. Lo que dura meses (una guerra, una peste, una obra) va en `mundo` y en un arco, no en un día de 200 días.
  * 8. Las claves de `escena` son pocas y se repiten (fiesta, luto, humo…): cada escena decide qué dibuja con ellas.
+ * 9. Si el personaje está de viaje, la fiesta de siempre que cae en el viaje lleva otro `id` (y otro texto): la vive
+ *    de lejos. Así el texto compartido de esa fiesta no lo pone en dos sitios a la vez.
  */
 internal object AnioPiloto {
     val TODOS: List<Calendario> by lazy { listOf(DEMEAS, PIERRE, KEI, AMARU) }
@@ -105,6 +107,7 @@ internal object AnioPiloto {
         fiesta("targelias", TARGELIAS[t - 1], "Las Targelias: las primicias para Apolo", 2, APROXIMADO, F_TARGELIAS),
         if (t >= 3) fiesta("bendidias", BENDIDIAS[t - 1], "Las Bendidias: carrera de antorchas en el Pireo", certeza = APROXIMADO, fuente = F_BENDIDIAS, escena = "antorchas") else null,
         if (t == 2) fiesta("grandes_panateneas", "08-15", "Las Grandes Panateneas, en el año de la peste", 6, APROXIMADO, F_PANATENEAS)
+        else if (t == 1) fiesta("panateneas_en_el_mar", PANATENEAS[0], "Hoy son las Panateneas, y él está en el mar", certeza = APROXIMADO, fuente = F_PANATENEAS, escena = "")
         else fiesta("panateneas", PANATENEAS[t - 1], "Las Panateneas: la procesión sube a la Acrópolis", certeza = APROXIMADO, fuente = F_PANATENEAS),
         fiesta("misterios", MISTERIOS[t - 1], "La procesión de los Misterios sale hacia Eleusis", certeza = APROXIMADO, fuente = F_MISTERIOS),
         fiesta("tesmoforias", TESMOFORIAS[t - 1], "Las Tesmoforias: tres días que son solo de las mujeres", 3, APROXIMADO, F_TESMOFORIAS),
@@ -128,7 +131,7 @@ internal object AnioPiloto {
         ),
         temporadas = listOf(
             TemporadaVida("431 a. C.", "guerra",
-                "Empieza la guerra. Su hermana se casa con Sosias. Los peloponesios arrasan Acarnas y su tío Eufronio se refugia con ellos. Rema tres meses alrededor del Peloponeso y ve el eclipse en el mar.",
+                "Empieza la guerra. Su hermana se casa con Sosias. Los peloponesios arrasan Acarnas y su tío Eufronio se refugia con ellos. Rema dos meses y medio alrededor del Peloponeso (del 5 de julio al 18 de septiembre) y ve el eclipse en el mar.",
                 fiestasAticas(1) + listOf(
                     suceso("boda_clio", "01-27", "Su hermana Clío se casa con Sosias", escena = "fiesta"),
                     fiesta("medea", "03-20", "Eurípides estrena «Medea» y queda en tercer lugar", certeza = APROXIMADO, fuente = F_MEDEA),
@@ -136,11 +139,11 @@ internal object AnioPiloto {
                     suceso("botadura", "04-12", "Echan al agua el «Aura» después del invierno"),
                     cosecha("siega", "05-15", SIEGA_ATICA, 25, APROXIMADO),
                     suceso("llega_eufronio", "06-12", "Su tío Eufronio llega de Acarnas con todo en una carreta"),
-                    guerra("invasion", "06-23", "Los peloponesios entran al Ática y arrasan los campos", 28, APROXIMADO, F_GUERRA, "humo"),
+                    guerra("primera_invasion", "06-23", "Los peloponesios entran al Ática y arrasan los campos", 28, APROXIMADO, F_GUERRA, "humo"),
                     guerra("zarpa_flota", "07-05", "Cien naves zarpan a rodear el Peloponeso", certeza = APROXIMADO, fuente = F_GUERRA, escena = "partida"),
                     mundo("eclipse", "08-03", "El sol se vuelve una media luna en pleno día", certeza = HISTORICO, fuente = F_ECLIPSES, escena = "eclipse", clima = Clima.DESPEJADO),
-                    cosecha("vendimia", "09-08", VENDIMIA_ATICA, 12, APROXIMADO),
-                    guerra("vuelve_flota", "10-02", "La flota vuelve al Pireo", certeza = APROXIMADO, escena = "regreso"),
+                    guerra("vuelve_flota", "09-18", "La flota vuelve al Pireo", certeza = APROXIMADO, escena = "regreso"),
+                    cosecha("vendimia", "09-22", VENDIMIA_ATICA, 10, APROXIMADO),
                     rito("funeral", "11-22", "Entierran a los primeros muertos de la guerra y habla Pericles", certeza = APROXIMADO, fuente = F_ORACION, escena = "luto"),
                     suceso("cojin", "12-18", "Su padre le regala el cojín con el que remó en Salamina"),
                 )),
@@ -148,11 +151,11 @@ internal object AnioPiloto {
                 "La invasión más larga y, con ella, la peste. Rema con Pericles contra Epidauro; al volver encuentra muerto a su padre y cae enfermo él. Se levanta. Recogen a Glicera. Planta una higuera.",
                 fiestasAticas(2) + listOf(
                     suceso("cares_sube", "02-16", "Cares sube por primera vez al «Aura»"),
-                    guerra("invasion", "05-05", "Los peloponesios entran otra vez, y se quedan cuarenta días", 40, APROXIMADO, F_GUERRA, "humo"),
+                    guerra("segunda_invasion", "05-05", "Los peloponesios entran otra vez, y se quedan cuarenta días", 40, APROXIMADO, F_GUERRA, "humo"),
                     mundo("peste_llega", "05-14", "La peste aparece en el Pireo", certeza = APROXIMADO, fuente = F_PESTE, escena = "piras"),
-                    guerra("zarpa_flota", "06-06", "Pericles zarpa con cien naves contra Epidauro", certeza = APROXIMADO, fuente = F_PERICLES, escena = "partida"),
+                    guerra("zarpa_epidauro", "06-06", "Pericles zarpa con cien naves contra Epidauro", certeza = APROXIMADO, fuente = F_PERICLES, escena = "partida"),
                     suceso("muere_estraton", "06-22", "Muere Estratón, su padre, mientras él está en el mar", escena = "luto"),
-                    guerra("vuelve_flota", "07-10", "La flota vuelve con la peste a bordo", certeza = APROXIMADO, escena = "regreso"),
+                    guerra("vuelve_epidauro", "07-10", "La flota vuelve con la peste a bordo", certeza = APROXIMADO, escena = "regreso"),
                     suceso("enferma", "07-14", "Cae enfermo", 9, cadena = "fiebre"),
                     suceso("se_levanta", "08-06", "Se levanta de la cama", cadena = "fiebre"),
                     mundo("multan_pericles", "09-12", "La asamblea multa a Pericles y le quita el mando", certeza = APROXIMADO, fuente = F_PERICLES),
@@ -181,7 +184,7 @@ internal object AnioPiloto {
                     fiesta("hipolito", "03-17", "Eurípides gana el primer premio con «Hipólito»", certeza = APROXIMADO, fuente = F_HIPOLITO),
                     guerra("vuelve_formion", "03-30", "Formión vuelve al Pireo con las naves que capturó", certeza = APROXIMADO, escena = "regreso"),
                     cosecha("siega", "05-01", "La siega, deprisa, antes de que lleguen", 17, APROXIMADO),
-                    guerra("invasion", "05-18", "Los peloponesios entran al Ática por tercera vez", 25, APROXIMADO, F_MITILENE, "humo"),
+                    guerra("tercera_invasion", "05-18", "Los peloponesios entran al Ática por tercera vez", 25, APROXIMADO, F_MITILENE, "humo"),
                     guerra("mitilene", "06-24", "Mitilene se rebela: cuarenta naves salen hacia Lesbos", certeza = APROXIMADO, fuente = F_MITILENE, escena = "partida"),
                     suceso("cares_nada", "07-22", "Cares aprende a nadar en el puerto de Zea"),
                     guerra("cien_naves", "08-22", "Cien naves más, con ciudadanos y metecos al remo, para que Esparta las vea", 10, APROXIMADO, F_MITILENE, "partida"),
@@ -195,7 +198,7 @@ internal object AnioPiloto {
                 fiestasAticas(5) + listOf(
                     suceso("cares_rema", "02-20", "Cares rema por primera vez, en una barca del puerto"),
                     suceso("tela_melita", "04-18", "Melita vende en el ágora la primera tela de su telar"),
-                    guerra("invasion", "05-15", "La cuarta invasión, la peor después de la del año de la peste", 35, APROXIMADO, F_MITILENE, "humo"),
+                    guerra("cuarta_invasion", "05-15", "La cuarta invasión, la peor después de la del año de la peste", 35, APROXIMADO, F_MITILENE, "humo"),
                     guerra("mitilene_cae", "07-08", "Llega la noticia: Mitilene se ha rendido", certeza = APROXIMADO, fuente = F_MITILENE),
                     guerra("condena", "07-14", "La asamblea condena a toda Mitilene y sale un trirreme con la orden", certeza = APROXIMADO, fuente = F_DEBATE),
                     guerra("segundo_trirreme", "07-15", "La asamblea se arrepiente: un segundo trirreme sale a alcanzar al primero", 2, APROXIMADO, F_DEBATE, "partida"),
@@ -218,7 +221,7 @@ internal object AnioPiloto {
                 p(5, "05-09", 0.65), p(5, "05-15", 1.0), p(5, "06-19", 1.0), p(5, "07-25", 0.7), p(5, "12-31", 0.7))),
             Arco("peste", TipoArco.DANOS, listOf(p(1, "01-01", 0.0), p(2, "05-13", 0.0), p(2, "07-01", 1.0), p(3, "03-01", 0.9), p(3, "12-31", 0.35), p(4, "08-01", 0.05),
                 p(5, "11-25", 0.0), p(5, "12-31", 0.5))),
-            Arco("flota", TipoArco.OTRO, listOf(p(1, "01-01", 1.0), p(1, "07-05", 0.3, true), p(1, "10-02", 1.0, true), p(2, "06-06", 0.3, true), p(2, "07-10", 1.0, true),
+            Arco("flota", TipoArco.OTRO, listOf(p(1, "01-01", 1.0), p(1, "07-05", 0.3, true), p(1, "09-18", 1.0, true), p(2, "06-06", 0.3, true), p(2, "07-10", 1.0, true),
                 p(2, "07-22", 0.4, true), p(2, "09-01", 1.0, true), p(2, "12-01", 0.85, true), p(3, "06-20", 0.7, true), p(4, "03-30", 0.9, true), p(4, "06-24", 0.65, true),
                 p(4, "08-22", 0.1, true), p(4, "09-01", 0.65, true), p(5, "07-20", 0.7, true), p(5, "09-22", 0.55, true))),
             Arco("higuera", TipoArco.CULTIVO, listOf(p(1, "01-01", 0.0), p(2, "11-18", 0.08, true), p(3, "12-31", 0.3), p(4, "12-31", 0.5), p(5, "12-31", 0.7))),

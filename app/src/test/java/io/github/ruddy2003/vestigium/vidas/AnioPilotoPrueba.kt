@@ -172,7 +172,7 @@ class AnioPilotoPrueba {
         assertEquals("peste", FichaDelDia.de("2028-08-01", q, c).mundo)
         // El día de fiesta manda sobre la invasión, que dura semanas, y la escena sigue mostrando la fiesta.
         val muniquias = FichaDelDia.de("2028-05-11", q, c)
-        assertEquals(listOf("muniquias", "invasion"), muniquias.especiales.map { it.dia.id })
+        assertEquals(listOf("muniquias", "segunda_invasion"), muniquias.especiales.map { it.dia.id })
         assertEquals("fiesta", muniquias.escena)
         // Las fiestas áticas siguen la luna: cambian de fecha cada año.
         assertEquals(5, c.temporadas.map { t -> t.dias.first { it.id == "dionisias" }.fecha }.toSet().size)

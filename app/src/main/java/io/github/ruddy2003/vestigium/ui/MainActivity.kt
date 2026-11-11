@@ -2011,6 +2011,11 @@ private fun Raiz(pedida: String?, apilar: Boolean, consumir: () -> Unit) {
                     "laptop" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLaptop(nav)
                     "red" -> { remember { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "red"; 0 }; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(nav) }
                     else -> if (actual.startsWith("guia_uso")) io.github.ruddy2003.vestigium.ui.pantallas.PantallaGuiaUso(nav, actual.substringAfter(':', ""))
+                        // «otras_vidas?vida=<id>&seccion=cuento»: abre el cuento del día de ese personaje.
+                        else if (actual.startsWith("otras_vidas?")) {
+                            val pedido = actual.substringAfter('?').split('&').associate { it.substringBefore('=') to it.substringAfter('=', "") }
+                            io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(nav, pedido["vida"], pedido["seccion"])
+                        }
                         else Text("Pantalla desconocida: $actual")
                 }
                 }
