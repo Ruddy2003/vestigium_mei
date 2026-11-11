@@ -114,7 +114,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
    - se permiten fechas exactas aunque no sean del todo precisas.
 5. **Su vida avanza:** cada año real es un año más en la vida del personaje.
    - Se planean 5 años: 2027 a 2031.
-   - Nadie muere; lo que pase después se decide más adelante.
+   - Nadie muere; lo que pase después se decide más adelante. Vale para los protagonistas: la gente que los rodea sí puede morir (aprobado el 11 nov 2026, con el padre de Demeas en la peste).
 6. **El cuento** tiene unos 8 párrafos, con mucha variedad.
    - Hay unos 20 días especiales al año.
    - No todos son fiestas: también hay sucesos de su vida.
