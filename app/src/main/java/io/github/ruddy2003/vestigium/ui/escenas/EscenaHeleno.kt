@@ -21,6 +21,7 @@ import io.github.ruddy2003.vestigium.data.OtrasVidas.Hacer
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Casa
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Cosa
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.LLAMA
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.LUZ_DE_CASA
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Luces
@@ -716,9 +717,6 @@ internal object EscenaHeleno : EscenaVida {
     }
 
     // ---------------------------------------------------------------- El patio
-
-    /** Una cosa del patio: su silueta (para la sombra que arroja), dónde pisa y cómo se pinta. */
-    private class Cosa(val forma: Path, val pie: Offset, val bajoElFollaje: Boolean = true, val pintar: DrawScope.() -> Unit)
 
     private fun DrawScope.patio(m: Momento, l: Luces, r: Rayo, est: Estacion) {
         val az = Azar(Semilla.de("heleno", "patio"))

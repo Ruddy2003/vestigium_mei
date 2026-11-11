@@ -24,7 +24,8 @@ import kotlin.math.tan
 fun mult(c: Color, s: Color, k: Float = 1f): Color = lerp(c, Color(c.red * s.red, c.green * s.green, c.blue * s.blue, c.alpha), k.coerceIn(0f, 1f))
 
 /**
- * De dónde viene la luz del sol y cómo son las sombras que arroja. La calcula con las [Luces] del momento.
+ * De dónde viene la luz y cómo son las sombras que arroja. La del sol se calcula con las [Luces] del momento
+ * (`Rayo(luces)`); la de una luz fija, con [rayoFijo].
  *
  * **[Aproximación]**: el sol se dibuja dentro del cuadro, pero la luz entra de lado (del lado en que está el sol) y un
  * poco desde delante, como en un cuadro pintado: con el sol de frente todo quedaría a contraluz. Por eso las sombras
@@ -38,18 +39,41 @@ fun mult(c: Color, s: Color, k: Float = 1f): Color = lerp(c, Color(c.red * s.red
  * - [color]: el de las sombras, azul violeta; multiplica lo que tiene debajo.
  * - [contraste]: cuánto se distinguen el lado de la luz y el de la sombra de un cuerpo.
  */
-class Rayo(l: Luces) {
-    val dia: Float = (1f - l.noche * 1.6f).coerceIn(0f, 1f)
-    private val cruda = (((if (dia > 0.05f) l.solX else l.lunaX) - 0.5f) * 2.6f).coerceIn(-1f, 1f)
-    val lat: Float = if (abs(cruda) < 0.35f) (if (cruda < 0f) -0.35f else 0.35f) else cruda
-    private val elevacion = Math.toRadians(8.0 + 50.0 * (l.solAltura / 1.35f).coerceIn(0f, 1f))
-    val cot: Float = (1.0 / tan(elevacion)).toFloat()
-    val tan: Float = tan(elevacion).toFloat()
-    val ax: Float = -lat * cot
-    val ay: Float = -0.33f * (1.3f - 0.6f * abs(lat)) * cot
-    val fuerza: Float = 0.72f * l.solFuerza * dia * (1f - 0.8f * l.eclipse) * (l.solAltura / 0.12f).coerceIn(0f, 1f)
-    val color: Color = lerp(Color(0xFF9484BC), Color(0xFF8688C6), ((l.solAltura - 0.3f) / 0.9f).coerceIn(0f, 1f))
-    val contraste: Float = 0.3f + 0.7f * dia * (0.4f + 0.6f * l.solFuerza)
+class Rayo(
+    val dia: Float, val lat: Float, val cot: Float, val tan: Float, val ax: Float, val ay: Float,
+    val fuerza: Float, val color: Color, val contraste: Float,
+)
+
+/** El [Rayo] del sol (o de la luna) con las [Luces] del momento. Es el de todas las escenas al aire libre con sol. */
+fun Rayo(l: Luces): Rayo {
+    val dia = (1f - l.noche * 1.6f).coerceIn(0f, 1f)
+    val cruda = (((if (dia > 0.05f) l.solX else l.lunaX) - 0.5f) * 2.6f).coerceIn(-1f, 1f)
+    val lat = if (abs(cruda) < 0.35f) (if (cruda < 0f) -0.35f else 0.35f) else cruda
+    val elevacion = Math.toRadians(8.0 + 50.0 * (l.solAltura / 1.35f).coerceIn(0f, 1f))
+    val cot = (1.0 / tan(elevacion)).toFloat()
+    return Rayo(
+        dia = dia, lat = lat, cot = cot, tan = tan(elevacion).toFloat(), ax = -lat * cot, ay = -0.33f * (1.3f - 0.6f * abs(lat)) * cot,
+        fuerza = 0.72f * l.solFuerza * dia * (1f - 0.8f * l.eclipse) * (l.solAltura / 0.12f).coerceIn(0f, 1f),
+        color = lerp(Color(0xFF9484BC), Color(0xFF8688C6), ((l.solAltura - 0.3f) / 0.9f).coerceIn(0f, 1f)),
+        contraste = 0.3f + 0.7f * dia * (0.4f + 0.6f * l.solFuerza),
+    )
+}
+
+/**
+ * El [Rayo] de una luz que no es el sol y no se mueve con la hora: un farol, un letrero, una lámpara de techo, una
+ * hoguera. Para las escenas donde siempre es de noche y para los interiores (`docs/diseno/ESCENAS.md`, sección 5).
+ *
+ * - [lat]: de −1 (la luz a la izquierda de lo que alumbra) a 1 (a la derecha).
+ * - [elevacion]: en grados sobre el suelo; baja da sombras largas.
+ * - [fuerza] (de 0 a 1) y [color]: los de las sombras que arroja. El color multiplica lo que tiene debajo: para una
+ *   luz cálida, una sombra fría, y al revés.
+ * - [contraste]: cuánto se distinguen el lado de la luz y el de la sombra de un cuerpo.
+ */
+fun rayoFijo(lat: Float, elevacion: Float, fuerza: Float, color: Color, contraste: Float = 0.8f): Rayo {
+    val e = Math.toRadians(elevacion.coerceIn(5f, 85f).toDouble())
+    val cot = (1.0 / tan(e)).toFloat()
+    return Rayo(dia = 1f, lat = lat, cot = cot, tan = tan(e).toFloat(), ax = -lat * cot, ay = -0.33f * (1.3f - 0.6f * abs(lat)) * cot,
+        fuerza = fuerza.coerceIn(0f, 1f), color = color, contraste = contraste.coerceIn(0f, 1f))
 }
 
 /**
