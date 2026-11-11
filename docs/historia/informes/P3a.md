@@ -188,7 +188,11 @@ Pediste que el cuadro de Hoy refleje el cuento. El cuadro todavía no existe (es
   - nadie aparece antes ni después de tiempo (el padre, el tío, la hermana casada);
   - de noviembre a abril ningún día normal lo pone a remar;
   - el cuento sigue la guerra: lo que se ve desde el muro solo aparece después de la invasión.
-- **Compilación de Android y capturas:** ver el final del PR; se lanzaron `apk.yml` y `capturas.yml` (con `superficies = cuento`) sobre la rama.
+- **Compilación de Android:** la corrida 203 de `apk.yml` sobre la rama terminó bien, sin publicar ningún Release.
+- **Capturas:** la corrida 264 de `capturas.yml` (con `superficies = cuento`) terminó bien, sin errores ni pruebas fallidas. En esa corrida también corrieron en Actions las 72 pruebas de `vidas/` y la de «despachos en cero».
+  - Las cinco imágenes están en la rama `capturas`, con nombres que empiezan por `io.github.ruddy2003.vestigium_Capturas_cuentoDelDia_cuento_`: `normal_claro`, `fiesta_claro`, `eclipse_oscuro`, `avance_oscuro` y `pantalla_claro`.
+  - Lo que se ve: la sección queda bajo el retrato y antes de «Su vida»; el título, la etiqueta «día especial», la línea de la edad y el aviso de avance salen donde deben; al pie están la certeza con su explicación, la nota y las fuentes; se lee bien en claro y en oscuro.
+  - **Se usaron 3 corridas de capturas, no 1:** la primera se canceló al relanzarla con los párrafos largos, y la segunda al subir el alto de las imágenes, que cortaba el pie.
 
 ## Lo que no se puede comprobar aquí
 
