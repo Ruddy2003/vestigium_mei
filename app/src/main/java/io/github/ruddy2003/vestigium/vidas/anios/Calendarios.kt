@@ -3,15 +3,16 @@ package io.github.ruddy2003.vestigium.vidas.anios
 import io.github.ruddy2003.vestigium.vidas.Calendario
 
 /**
- * El registro de los calendarios: qué personajes de «Otras vidas» tienen ya escrito su año. Cada tanda de calendarios
- * (P2, y de A1 a A8) agrega aquí la lista de su archivo `Anio<Grupo>.kt`; el motor (`vidas/Ficha.kt`) no se toca.
+ * El registro de los calendarios: uno por personaje de «Otras vidas» que ya tiene escritas sus cinco temporadas.
+ * Cada tanda de calendarios suma aquí su lista, sin tocar el motor: [AnioPiloto] trae a Demeas, Pierre, Kei y Amaru;
+ * las tandas A1 a A8 agregan `AnioG1.TODOS`, `AnioG2.TODOS`…
+ *
  * Un personaje que no está aquí todavía no tiene ficha del día, ni cuento, ni escena.
  */
 object Calendarios {
-    val TODOS: List<Calendario> = listOf()
+    val TODOS: List<Calendario> by lazy { AnioPiloto.TODOS }
 
     private val porVida: Map<String, Calendario> by lazy { TODOS.associateBy { it.vida } }
 
-    /** El calendario del personaje [vidaId], o null si todavía no se escribe. */
     fun de(vidaId: String): Calendario? = porVida[vidaId]
 }

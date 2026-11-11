@@ -439,7 +439,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | Tanda | Modelo | Esfuerzo | Por qué | Capturas | Estado |
 |---|---|---|---|---|---|
 | P1 | claude-fable-5-2 | high | Motor y diseño de datos: un error se hereda en 45 vidas y en 5 años | 0 | hecho 11 nov 2026 (`docs/historia/informes/P1.md`) |
-| P2 | claude-fable-5-2 | high | Fija el patrón de los calendarios: historia verosímil, continuidad en 5 años y qué es real y qué inventado | 0 | pendiente |
+| P2 | claude-fable-5-2 | high | Fija el patrón de los calendarios: historia verosímil, continuidad en 5 años y qué es real y qué inventado | 0 | hecho 11 nov 2026 (`docs/historia/informes/P2.md`) |
 | P3a | claude-fable-5-2 | high | Fija la gramática de los 8 párrafos y el tono que copiarán todas las T | 1 | pendiente |
 | P3b | claude-opus-5-5 | medium | Texto con el tono ya aprobado | 0 | pendiente |
 | P4a | claude-fable-5-2 | high | Motor de escena, biblioteca de paisaje y primer paisaje con código | 2 | pendiente |

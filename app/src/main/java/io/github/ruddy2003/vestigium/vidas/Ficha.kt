@@ -167,7 +167,7 @@ data class FichaDelDia(
          * Cuándo empieza cada día especial del año real [anio]. De 2027 a 2031 (y en el avance de 2026), en su fecha.
          * Desde 2032, cuando la temporada 5 se repite, los sucesos personales se sortean de nuevo: cada uno (o cada
          * cadena, entera) se mueve hasta [MARGEN_SORTEO] días antes o después de su fecha, sin salirse del año.
-         * Las fiestas, las cosechas, los ritos y los hechos de guerra no se mueven.
+         * Las fiestas, las cosechas, los ritos, los hechos de guerra y los sucesos del mundo no se mueven.
          */
         fun inicios(cal: Calendario, anio: Int): List<Pair<DiaEspecial, LocalDate>> {
             val dias = cal.temporadas[Temporadas.de(anio) - 1].dias

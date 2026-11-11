@@ -73,9 +73,13 @@ object MesDia {
     }
 }
 
-/** Qué clase de día especial es. Solo los sucesos personales se sortean de nuevo cuando la temporada 5 se repite. */
+/**
+ * Qué clase de día especial es. Solo los sucesos personales ([SUCESO]) se sortean de nuevo cuando la temporada 5 se
+ * repite. [MUNDO] es lo que pasa fuera de su casa y no es fiesta ni guerra (un eclipse, una peste, una inundación, un
+ * papa nuevo): tiene su fecha y no se mueve.
+ */
 enum class TipoDia(val nombre: String) {
-    FIESTA("fiesta"), COSECHA("cosecha"), GUERRA("guerra"), RITO("rito"), SUCESO("suceso personal"),
+    FIESTA("fiesta"), COSECHA("cosecha"), GUERRA("guerra"), RITO("rito"), MUNDO("suceso del mundo"), SUCESO("suceso personal"),
 }
 
 /** Qué tan cierto es un día especial. Es otra escala que la de los números de «Otras vidas» ([OtrasVidas.Certeza]). */
