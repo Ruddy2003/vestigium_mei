@@ -234,6 +234,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - se abre directo con `otras_vidas?vida=<id>&seccion=cuento`.
 - **Volumen:** unos 50 párrafos de variantes y unos 70 especiales por personaje en la temporada 1. En las temporadas 2 a 5 solo se escriben los especiales nuevos.
   - **Medido en P3a:** Demeas llevó 89 variantes y 106 párrafos especiales, más 50 oraciones sueltas, porque pasa parte del año en el mar. Un personaje que no cambia de estado necesita unas 60 variantes.
+  - **Medido en P3b:** Pierre, Kei y Amaru llevaron de 196 a 219 textos cada uno (de 70 a 83 variantes y de 70 a 81 párrafos especiales), unas 40,000 letras por personaje. Lo que más suma son las personas que llegan o se van, cada una con su variante con fecha.
 
 **3.3 La escena** (`ui/escenas/`)
 
@@ -390,7 +391,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P1 | Motor: temporadas, ficha, arcos, luz y días especiales | `vidas/Ficha.kt`, `vidas/Modelos.kt`, pruebas | La ficha es determinista y una por día; probados los bordes del año, la temporada 6 o más (se repite la 5) y la continuidad de los arcos | 0 |
 | P2 | Las 5 temporadas de Demeas, Pierre, Kei y Amaru | `vidas/anios/AnioPiloto.kt`, `docs/historia/fuentes.md` | Pruebas de certeza, fuentes y continuidad | 0 |
 | P3a | Motor del cuento, cuento de Demeas y la sección «Hoy, en su vida» | `vidas/Cuento.kt`, `vidas/piezas/PiezasDemeas.kt`, `ui/pantallas/OtrasVidas.kt` | Pruebas; captura `otrasVidas`; **el autor aprueba el tono** | 1 |
-| P3b | Cuentos de Pierre, Kei y Amaru | `vidas/piezas/PiezasPiloto.kt` | Pruebas | 0 |
+| P3b | Cuentos de Pierre, Kei y Amaru | `vidas/piezas/PiezasPierre.kt`, `PiezasKei.kt`, `PiezasAmaru.kt` (uno por personaje, como el de Demeas) | Pruebas | 0 |
 | P4a | Motor de escena, biblioteca de paisaje, filtro de capturas, paisaje de Helénico y su banderita | `ui/escenas/EscenaVida.kt`, `paisaje/`, `EscenaHeleno.kt`, `Banderitas.kt`, `Capturas.kt`, `capturas.yml` | Capturas `cuadro` a las 7, 13 y 21 h, en 3 días (normal, fiesta, guerra), y **el día en que zarpa la flota, sin su nave** (decisión 18); despachos en 0 | 2 |
 | P4b | Gótico y Ciudad neón | `EscenaGotico.kt`, `EscenaNeon.kt` | Ídem; con un día en que el cuento cambie lo que se ve (la obra parada, Kei sin bici) | 2 |
 | P5a | Gato: esqueleto, poses y estados | `ui/escenas/GatoCuadro.kt` | Hoja de poses; pruebas de los estados | 2 |
@@ -459,7 +460,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P1 | claude-fable-5-2 | high | Motor y diseño de datos: un error se hereda en 45 vidas y en 5 años | 0 | hecho 11 nov 2026 (`docs/historia/informes/P1.md`) |
 | P2 | claude-fable-5-2 | high | Fija el patrón de los calendarios: historia verosímil, continuidad en 5 años y qué es real y qué inventado | 0 | hecho 11 nov 2026 (`docs/historia/informes/P2.md`) |
 | P3a | claude-fable-5-2 | high | Fija la gramática de los 8 párrafos y el tono que copiarán todas las T | 1 | hecho 11 nov 2026 (`docs/historia/informes/P3a.md`); **tono y largo aprobados por el autor el 11 nov 2026** |
-| P3b | claude-opus-5-5 | medium | Texto con el tono ya aprobado | 0 | pendiente |
+| P3b | claude-opus-5-5 | medium | Texto con el tono ya aprobado | 0 | hecho 11 nov 2026 (`docs/historia/informes/P3b.md`) |
 | P4a | claude-fable-5-2 | high | Motor de escena, biblioteca de paisaje y primer paisaje con código | 2 | pendiente |
 | P4b | claude-fable-5-2 | high | Paisajes dibujados con código | 2 | pendiente |
 | P5a | claude-fable-5-2 | **xhigh** | Un esqueleto animado que comparten 32 temas: estados, capas, rendimiento. Un fallo se paga 32 veces y Paparazzi no ve el movimiento | 2 | pendiente |
