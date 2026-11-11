@@ -226,7 +226,8 @@ dependencies { implementation("org.jetbrains.compose.desktop:desktop-jvm-linux-x
   - `despachos.txt` y `unicidad.txt` salieron vacíos; `cobertura.txt` trae justo los 31 temas que faltan.
   - En esa corrida corrieron también en Actions las pruebas de `vidas/`, las 13 nuevas y la de «despachos en cero».
   - **Se usó 1 corrida de capturas de las 2 que preveía el plan.**
-- **Compilación de Android:** el código de la app **ya compiló con el Compose de Android** dentro de la corrida de capturas (que compila la app en su variante de pruebas antes de dibujar). La corrida 205 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, que arma la APK de entrega, seguía en curso al escribir esto; su resultado se anota aquí al terminar.
+- **Compilación de Android:** la corrida 205 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, **terminó bien** (no se publicó ningún Release).
+- **Lo que no pasó por Actions:** las dos corridas son del commit del código (`76f9c47`). Después cambié dos renglones: una cuenta del viento escrita de otra forma, con el mismo resultado, y una importación que sobraba. Compilan en el arnés; Actions los verá en la siguiente corrida.
 
 ## Lo que no se puede comprobar aquí
 
