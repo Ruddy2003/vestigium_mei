@@ -2117,11 +2117,11 @@ class Capturas {
         val demeas = io.github.ruddy2003.vestigium.data.OtrasVidas.porId("remero")!!
         listOf(Triple("normal_claro", "2027-02-03" to 9.0, false), Triple("fiesta_claro", "2027-03-18" to 11.0, false),
             Triple("eclipse_oscuro", "2027-08-03" to 14.0, true), Triple("avance_oscuro", "2026-11-11" to 20.0, true)).forEach { (nombre, cuando, oscuro) ->
-            pantalla(TemaId.HELENO, oscuro, 3000, "cuento_$nombre") {
+            pantalla(TemaId.HELENO, oscuro, 4800, "cuento_$nombre") {
                 Column(Modifier.padding(horizontal = 16.dp)) { io.github.ruddy2003.vestigium.ui.pantallas.HoyEnSuVida(demeas, cuando.first, cuando.second) }
             }
         }
-        pantalla(TemaId.HELENO, false, 8200, "cuento_pantalla_claro") { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(navVacia, "remero", "cuento") }
+        pantalla(TemaId.HELENO, false, 9400, "cuento_pantalla_claro") { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(navVacia, "remero", "cuento") }
     }
     /** El estilo de gráfica del tema: serie con puntos (uno hueco) y meta, rejilla, ejes, cifras, barras con su carril y una barra horizontal. */
     @Test fun temaEstiloGrafica() = porTema("estiloGrafica") { t, o, n -> captura(t, o, 1400, n) {
