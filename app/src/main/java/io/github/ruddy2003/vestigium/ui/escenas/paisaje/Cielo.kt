@@ -160,7 +160,7 @@ fun DrawScope.nube(l: Luces, x: Float, y: Float, ancho: Float, azar: Azar, carga
             mancha(c + Offset(-lado * rad * 0.55f, rad * 0.5f), rad * 0.95f, rad * 0.7f, sombra, 0.6f)
             mancha(c + Offset(lado * rad * 0.35f, -rad * 0.45f), rad * 0.8f, rad * 0.6f, luz, 0.85f)
         }
-        drawRect(Brush.verticalGradient(listOf(Color.Transparent, l.bajo.copy(alpha = (0.55f + 0.3f * lejos) * (1f - 0.6f * carga))), y - alto * 0.2f, y), Offset(x - ancho * 0.3f, y - alto * 0.2f), Size(ancho * 1.6f, alto * 0.2f))
+        drawRect(Brush.verticalGradient(listOf(Color.Transparent, l.bajo.copy(alpha = 0.85f * lejos * (1f - 0.6f * carga))), y - alto * 0.2f, y), Offset(x - ancho * 0.3f, y - alto * 0.2f), Size(ancho * 1.6f, alto * 0.2f))
     }
 }
 
