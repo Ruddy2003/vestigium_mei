@@ -61,6 +61,8 @@ class EscenasPrueba {
         }
         assertEquals("Solo Terminal, Navidad y Básico se quedan sin cuadro", setOf(TemaId.CIBER, TemaId.NAVIDAD, TemaId.BASICO), TemaId.entries.filter { sinCuadro(it) }.toSet())
         assertEquals(listOf("remero"), escenaDe(TemaId.HELENO)!!.vidas)
+        assertEquals(listOf("cantero"), escenaDe(TemaId.GOTICO)!!.vidas)
+        assertEquals(listOf("repartidora", "fideos"), escenaDe(TemaId.NEON)!!.vidas)
     }
 
     @Test fun conDosPersonajesSeAlternanUnDiaCadaUno() {

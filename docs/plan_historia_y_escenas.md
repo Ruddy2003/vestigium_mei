@@ -252,7 +252,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - `EscenaPlana`: un paisaje hecho solo con la biblioteca. Ningún tema lo usa; es la muestra de la biblioteca en las capturas y la plantilla de cada escena nueva.
 - **El lienzo:** todas las escenas se dibujan en 380 × 285 unidades y se escalan al ancho del cuadro.
 - **El aspecto** lo fija la guía de arte, `docs/diseno/ESCENAS.md` (decisión del autor del 11 nov 2026, al ver el primer cuadro de Helénico): estilo gouache, diez reglas, cómo se adaptan a cada tema y la lista de comprobación. La vara es `EscenaHeleno.kt`, con su imagen de referencia en `docs/diseno/escenas/`. `EscenaPlana` solo da el orden de las capas.
-- **Biblioteca de paisaje compartida** (`ui/escenas/paisaje/`), hecha en el piloto: cielos por franja, nubes, lluvia, nieve, niebla, vegetación por estación, cultivos por etapa, agua con sus reflejos, montes, casas y techos por época, humo, fuego, adornos genéricos y ruinas. También la luz con dirección y las sombras que arroja (`Sombras.kt`) y el grano del papel (`Textura.kt`): toda escena los usa, para que el día no quede liso. Cada escena la combina y le agrega lo propio de su tema.
+- **Biblioteca de paisaje compartida** (`ui/escenas/paisaje/`), hecha en el piloto: cielos por franja, nubes, lluvia, nieve, niebla, vegetación por estación, cultivos por etapa, agua con sus reflejos, montes, casas y techos por época, humo, fuego, adornos genéricos y ruinas. También la luz con dirección y las sombras que arroja (`Sombras.kt`) y el grano del papel (`Textura.kt`): toda escena los usa, para que el día no quede liso. Desde P4b, además: las cosas del primer plano (`Cosas.kt`), las luces que no son el sol, para las escenas de noche y los interiores (`Focos.kt`), y las piezas de ciudad (`Ciudad.kt`). Cada escena la combina y le agrega lo propio de su tema.
 - **Capas, de abajo hacia arriba:**
   1. cielo y lejanía: montes, mar, el pueblo, la iglesia o el castillo del fondo;
   2. plano medio;
@@ -481,7 +481,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P3a | claude-fable-5-2 | high | Fija la gramática de los 8 párrafos y el tono que copiarán todas las T | 1 | hecho 11 nov 2026 (`docs/historia/informes/P3a.md`); **tono y largo aprobados por el autor el 11 nov 2026** |
 | P3b | claude-opus-5-5 | medium | Texto con el tono ya aprobado | 0 | hecho 11 nov 2026 (`docs/historia/informes/P3b.md`) |
 | P4a | claude-fable-5-2 | high | Motor de escena, biblioteca de paisaje y primer paisaje con código | 2 | hecho 11 nov 2026 (`docs/historia/informes/P4a.md`) |
-| P4b | claude-fable-5-2 | high | Paisajes dibujados con código | 2 | pendiente |
+| P4b | claude-fable-5-2 | high | Paisajes dibujados con código | 2 | hecho 11 nov 2026 (`docs/historia/informes/P4b.md`); **falta que el autor vea los dos cuadros junto al de Helénico** |
 | P5a | claude-fable-5-2 | **xhigh** | Un esqueleto animado que comparten 32 temas: estados, capas, rendimiento. Un fallo se paga 32 veces y Paparazzi no ve el movimiento | 2 | pendiente |
 | P5b | claude-fable-5-2 | high | Se apoya en el esqueleto ya resuelto. Los gestos se ajustan después de probarlos en el teléfono | 2 | pendiente |
 | P6 | claude-fable-5-2 | high | Integración en Hoy, medidas y esquema | 2 | pendiente |

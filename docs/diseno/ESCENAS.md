@@ -202,14 +202,16 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
   - Hierba: rachas que la peinan, senderos, matas, cambio de color de lejos a cerca.
   - Empedrado o asfalto: losas, juntas, charcos después de la lluvia con su `reflejoRoto`.
 - **A bordo de un barco** (Pirata, Botánico, Abismo, Revolución con su barco-lavadero). El agua lo rodea todo: es la protagonista. El primer plano es la cubierta y el marco es la jarcia, una vela o un toldo.
-- **Siempre de noche** (Ciudad neón). `Rayo` no da sombras de noche, así que la regla 1 se cumple con las luces del lugar:
+- **Siempre de noche** (Ciudad neón, hecha en P4b: `EscenaNeon.kt` es el ejemplo). `Rayo(luces)` no da sombras de noche, así que la regla 1 se cumple con las luces del lugar, con las piezas de `paisaje/Focos.kt`:
+  - la escena arma la lista de focos encendidos en ese momento y con ella un `Alumbrado`; cada cosa le pide su color (`Alumbrado.en`) en vez de pedírselo a `luces.tono`;
+  - la sombra de cada cosa la tumba el foco que más la alumbra (`rayoDeFoco`, dentro de una `capaSombra`); para una sola luz que manda, `rayoFijo`;
   - cada letrero o farol tiñe lo que tiene cerca y deja en sombra el otro lado;
   - el suelo mojado refleja las luces (`reflejoRoto`, `reflejo`);
   - la paleta corta son dos o tres colores de luz sobre un fondo azul violeta oscuro;
   - el «cielo» es la franja entre los edificios: bruma, cables, ventanas que se encienden y se apagan según la hora;
   - lo que el día le da a los demás temas (que el cuadro cambie con la hora) aquí lo dan los letreros, las ventanas y la lluvia. Hay que decidirlo y probarlo: tres horas distintas tienen que dar tres cuadros distintos.
 - **Interiores con dos luces** (Refugio, Laboratorio, Espacio). No hay cielo ni tiempo.
-  - Con la luz encendida, `Rayo` da una sombra fija, como de mediodía. Sirve para empezar, pero la luz tiene que venir de las lámparas que se ven en el cuadro.
+  - Con la luz encendida, `Rayo(luces)` da una sombra fija, como de mediodía. No sirve: la luz tiene que venir de las lámparas que se ven en el cuadro, con `Foco`, `Alumbrado` y `rayoDeFoco` (`paisaje/Focos.kt`), como en Ciudad neón.
   - Con la luz tenue no da ninguna: la forma la dan las luces de guardia, las pantallas y lo que brille.
   - La parte de arriba es el techo o la pared del fondo: tuberías, paneles, cables, estantes. En Espacio, la ventana pequeña con la galaxia.
   - Lo que cambia con el día: qué está encendido, qué hay sobre la mesa, cómo va el cultivo.
@@ -220,15 +222,13 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 
 **Si la biblioteca no alcanza** (una luz fija para interiores, un suelo mojado, una bóveda), la tanda que lo necesita lo agrega a `paisaje/`, con estas condiciones:
 - **Agregar piezas, sí. Cambiar cómo se ve una que ya existe, no,** salvo que mejore todas las escenas hechas. En ese caso se vuelven a dibujar las hojas de las escenas ya aprobadas, se comparan con su referencia y se le enseñan al autor.
-- **Lo que una segunda escena necesite de Helénico se sube a la biblioteca en vez de copiarlo:** `Cosa` y el patrón de sombras del patio, `desconchon`, `hilera` y `casita`, `hojaDeHiguera`, `sombraCorta`. Hoy son privados de `EscenaHeleno.kt`. Al subirlos, el cuadro de Helénico tiene que salir idéntico.
+- **Lo que una segunda escena necesite de otra se sube a la biblioteca en vez de copiarlo:** `desconchon`, `hilera` y `casita`, `hojaDeHiguera`, `sombraCorta` siguen siendo privados de `EscenaHeleno.kt` (`Cosa` ya se subió en P4b, a `paisaje/Cosas.kt`). Al subir algo, el cuadro del que sale tiene que quedar idéntico: se comparan las dos imágenes punto por punto.
 - Las tandas S **no tocan el motor** (`EscenaVida.kt`, `VistaEscena.kt`, `vidas/`).
 
-**Los temas que faltan.** Dónde vive cada personaje y por dónde empezar. Son sugerencias: la tanda decide después de leer el calendario y el cuento.
+**Los temas que faltan** (Gótico y Ciudad neón se hicieron en P4b). Dónde vive cada personaje y por dónde empezar. Son sugerencias: la tanda decide después de leer el calendario y el cuento.
 
 | Tema | Personaje y lugar | Tipo | Marco posible | Superficie grande |
 |---|---|---|---|---|
-| Gótico | Pierre, la obra de la catedral de Amiens | Exterior | Un andamio o una grúa de rueda | El empedrado de la obra; el río |
-| Ciudad neón | Kei y Amaru, los niveles bajos | Siempre de noche | Cables, un toldo del puesto | El callejón mojado |
 | Romano | Cayo, un campamento en el Danubio | Exterior | El borde de una tienda, un estandarte | El río |
 | Egipto | Pay, Deir el-Medina | Exterior, sin agua | Un toldo de estera, una palmera | La ladera de piedra y arena |
 | Prehistoria | Ama, un valle del suroeste de Europa | Exterior y fuego | La boca de la cueva | El valle con su río |

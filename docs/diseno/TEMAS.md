@@ -51,7 +51,7 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 | 7 | Limpieza y cierre: sin `else`, sin ramas agrupadas, pruebas sin pendientes, todo en P | hecho 30 oct 2026 (queda el gato, del lote 9) |
 | 8 | Terminal y 13 temas nuevos (de 21 a 34) | hecho: 11 temas el 30 oct 2026; Vapor y Art déco, el 2 nov 2026 |
 | 9 | El gato de cada tema | hecho 2 nov 2026: los 21 originales completos (9a) y los 13 nuevos (9b) |
-| Cuadro de Hoy | La escena, el gato y la banderita de cada tema (plan `docs/plan_historia_y_escenas.md`; aquí, la sección «Historia y escenas») | en curso: Helénico tiene escena y banderita desde la tanda P4a (11 nov 2026) |
+| Cuadro de Hoy | La escena, el gato y la banderita de cada tema (plan `docs/plan_historia_y_escenas.md`; aquí, la sección «Historia y escenas») | en curso: Helénico tiene escena y banderita desde la tanda P4a (11 nov 2026); Gótico y Ciudad neón, desde la P4b (11 nov 2026) |
 
 ## Resumen por tema
 
@@ -62,7 +62,7 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 | ROM | 125 | 0 | 0 | 0 | 3 |
 | URB | 125 | 0 | 0 | 0 | 3 |
 | CIB | 123 | 0 | 0 | 0 | 0 |
-| NEO | 123 | 0 | 0 | 0 | 3 |
+| NEO | 125 | 0 | 0 | 0 | 1 |
 | HEL | 127 | 0 | 0 | 0 | 1 |
 | EGI | 125 | 0 | 0 | 0 | 3 |
 | MED | 125 | 0 | 0 | 0 | 3 |
@@ -80,7 +80,7 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 | NAV | 123 | 0 | 0 | 0 | 0 |
 | SED | 125 | 0 | 0 | 0 | 3 |
 | EDO | 125 | 0 | 0 | 0 | 3 |
-| GOT | 125 | 0 | 0 | 0 | 3 |
+| GOT | 127 | 0 | 0 | 0 | 1 |
 | ARC | 125 | 0 | 0 | 0 | 3 |
 | ESP | 123 | 0 | 0 | 0 | 3 |
 | ABI | 125 | 0 | 0 | 0 | 3 |
@@ -274,9 +274,9 @@ El cuadro que irá en Hoy en lugar del gato de pixel (plan `docs/plan_historia_y
 
 | Superficie | Dónde | ROM | URB | CIB | NEO | HEL | EGI | MED | TEM | DIS | REF | ORD | VAP | LAB | COL | NAP | DEC | BOT | RUI | NAV | SED | EDO | GOT | ARC | ESP | ABI | AND | MES | MON | REN | PIR | URS | REV | ANT | CUE | Nota |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Cuadro: escena | `ui/escenas/Escena<Tema>.kt`, `escenaDe` | ✗ | ✗ | · | ✗ | P | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | · | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | P4a (11 nov 2026): HEL, el puerto de Zea desde el patio de Demeas. Siguen GOT y NEO en P4b y los demás en las tandas S1 a S7. Todas usan la biblioteca `ui/escenas/paisaje/`; lo propio de cada una es su composición y lo que lee de la ficha del día. |
+| Cuadro: escena | `ui/escenas/Escena<Tema>.kt`, `escenaDe` | ✗ | ✗ | · | P | P | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | · | ✗ | ✗ | P | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | P4a (11 nov 2026): HEL, el puerto de Zea desde el patio de Demeas. Siguen GOT y NEO en P4b y los demás en las tandas S1 a S7. Todas usan la biblioteca `ui/escenas/paisaje/`; lo propio de cada una es su composición y lo que lee de la ficha del día. |
 | Cuadro: gato | `ui/escenas/GatoCuadro.kt`, `pelajeDe` | ✗ | ✗ | · | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | · | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | Tandas P5a y P5b (el esqueleto y los pelajes del piloto) y las tandas S. |
-| Cuadro: banderita | `ui/escenas/Banderitas.kt`, `banderitaHistoria` | ✗ | ✗ | · | ✗ | P | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | · | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | P4a: HEL, una cinta de estela púrpura con greca y sol de Vergina, colgada de su varilla de bronce. Va siempre junto con la escena. |
+| Cuadro: banderita | `ui/escenas/Banderitas.kt`, `banderitaHistoria` | ✗ | ✗ | · | P | P | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | · | ✗ | ✗ | P | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | P4a: HEL, una cinta de estela púrpura con greca y sol de Vergina, colgada de su varilla de bronce. Va siempre junto con la escena. |
 
 ## Segunda pasada: detalle (al nivel del Ideario)
 

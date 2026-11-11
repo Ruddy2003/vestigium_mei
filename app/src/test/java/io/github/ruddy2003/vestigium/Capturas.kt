@@ -2547,4 +2547,38 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("antorchas", "2029-06-01", listOf(13.0, 20.5, 22.5)),      // las Bendidias: la carrera de antorchas en el Pireo
         Triple("higuera", "2031-09-01", HORAS_CUADRO),                    // la higuera, cuatro años después, con sus primeros higos
     ),
+    // Pierre (Gótico, tanda P4b).
+    "cantero" to listOf(
+        Triple("normal", "2027-05-10", HORAS_CUADRO),                     // la obra en marcha, con la grúa cargada
+        Triple("fiesta", "2030-06-09", HORAS_CUADRO),                     // la boda de Jehanne: guirnaldas y banderines
+        Triple("parada", "2027-09-03", HORAS_CUADRO),                     // se acaba el dinero: sin andamios y los muros tapados con paja (decisión 18)
+        Triple("herido", "2028-05-27", HORAS_CUADRO),                     // cede el andamio: caído, y su piedra tapada con un saco
+        Triple("crecida", "2029-01-21", HORAS_CUADRO),                    // el Somme fuera de cauce, con lluvia
+        Triple("procesion", "2027-05-16", HORAS_CUADRO),                  // pendones en la calle y colgaduras
+        Triple("invierno", "2027-01-20", HORAS_CUADRO),                   // la obra tapada con paja
+        Triple("coro", "2031-10-10", HORAS_CUADRO),                       // la cabecera, a media altura
+        Triple("eclipse", "2028-10-06", listOf(11.4, 12.4, 13.4)),        // el sol tapado a mediodía
+        Triple("hogueras", "2027-06-24", listOf(13.0, 20.5, 22.5)),       // San Juan: la leña de día y las hogueras de noche
+    ),
+    // Amaru (Ciudad neón, tanda P4b). Los días son de los que le tocan a él: se alterna con Kei.
+    "fideos" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // las tres luces del callejón: dormido, la farmacia abierta y el letrero
+        Triple("faroles", "2028-02-13", HORAS_CUADRO),                    // la Noche de los Faroles
+        Triple("apagon", "2028-08-21", HORAS_CUADRO),                     // sin letreros: gas y velas
+        Triple("roto", "2028-11-15", HORAS_CUADRO),                       // el letrero roto con el puesto abierto
+        Triple("marea", "2027-07-22", HORAS_CUADRO),                      // el agua en el suelo y los tablones
+        Triple("velas", "2027-11-01", HORAS_CUADRO),                      // la Noche de los Ausentes
+        Triple("nochevieja", "2027-12-31", HORAS_CUADRO),                 // las ristras de luces
+        Triple("maquinas", "2030-09-02", HORAS_CUADRO),                   // las máquinas en la boca del callejón, las pintadas y el mural
+    ),
+    // Kei (Ciudad neón, tanda P4b). A las 17:00 y no a las 13:00, que es cuando la bici está en el callejón.
+    "repartidora" to listOf(
+        Triple("normal", "2027-05-06", listOf(7.0, 17.0, 21.0)),          // la bici esperando y, a la hora de cenar, enchufada
+        Triple("sinbici", "2028-03-25", listOf(7.0, 17.0, 21.0)),         // después del choque: la bici no está (decisión 18)
+        Triple("soldada", "2028-04-08", listOf(7.0, 17.0, 21.0)),         // vuelve, con el cuadro soldado
+        Triple("huelga", "2029-03-08", listOf(7.0, 17.0, 21.0)),          // pancartas y cintas rojas
+        Triple("toque", "2029-03-18", listOf(7.0, 17.0, 21.0)),           // toque de queda: el puesto cerrado a las 21:00
+        Triple("cadena", "2030-11-10", listOf(7.0, 17.0, 21.0)),          // la cuerda de trapos delante de las máquinas
+        Triple("tribunal", "2031-03-20", listOf(7.0, 17.0, 21.0)),        // la fiesta, con las máquinas todavía ahí
+    ),
 )
