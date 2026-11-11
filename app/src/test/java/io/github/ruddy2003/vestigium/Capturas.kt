@@ -62,8 +62,11 @@ import org.junit.Test
 
 /** Capturas de una pantalla de muestra en cada tema, para revisar el diseño sin teléfono. */
 class Capturas {
-    @get:Rule
     val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_6, theme = "android:Theme.Material.NoActionBar", showSystemUi = false, useDeviceResolution = true)
+
+    /** Paparazzi, envuelto: en una corrida «solo» las capturas de siempre se saltan antes de prepararlo ([CapturasAPedido]). */
+    @get:Rule
+    val reglas: org.junit.rules.TestRule = CapturasAPedido.regla(paparazzi)
 
     /** Fondo del tema con su textura, como en la app. */
     @Composable
@@ -1919,13 +1922,13 @@ class Capturas {
      * Una superficie en todos los temas, en claro y en oscuro (el que solo existe en oscuro, una vez). Cada imagen se llama
      * `<superficie>_<tema>_<claro|oscuro>`. Son muchas, así que solo corren las superficies que pide la variable CAPTURAS:
      * una lista separada por comas («huella,campana») o «todas». En Actions se pasa con la entrada `superficies` de
-     * capturas.yml; sin ella, estas pruebas se saltan y las capturas de siempre no cambian.
+     * capturas.yml; sin ella, estas pruebas se saltan y las capturas de siempre no cambian. Con CAPTURAS_TEMAS (la
+     * entrada `temas`) solo salen esos temas (ver [CapturasAPedido]).
      */
     // Un alto menor que el ancho (1080) hace que Paparazzi gire la captura: aquí ninguna baja de 1200.
     private fun porTema(superficie: String, captura: (tema: TemaId, oscuro: Boolean, nombre: String) -> Unit) {
-        val pedidas = (System.getenv("CAPTURAS") ?: "").split(',').map { it.trim() }
-        org.junit.Assume.assumeTrue("«$superficie» no está en CAPTURAS", "todas" in pedidas || superficie in pedidas)
-        TemaId.entries.forEach { t ->
+        CapturasAPedido.pedida(superficie)
+        CapturasAPedido.temas().forEach { t ->
             (if (t.soloOscuro) listOf(true) else listOf(false, true)).forEach { o -> captura(t, o, "${t.id}_${if (o) "oscuro" else "claro"}") }
         }
     }
@@ -2112,8 +2115,7 @@ class Capturas {
      * la pantalla entera de «Otras vidas» en Helénico, para ver dónde queda la sección.
      */
     @Test fun cuentoDelDia() {
-        val pedidas = (System.getenv("CAPTURAS") ?: "").split(',').map { it.trim() }
-        org.junit.Assume.assumeTrue("«cuento» no está en CAPTURAS", "todas" in pedidas || "cuento" in pedidas)
+        CapturasAPedido.pedida("cuento")
         val demeas = io.github.ruddy2003.vestigium.data.OtrasVidas.porId("remero")!!
         listOf(Triple("normal_claro", "2027-02-03" to 9.0, false), Triple("fiesta_claro", "2027-03-18" to 11.0, false),
             Triple("eclipse_oscuro", "2027-08-03" to 14.0, true), Triple("avance_oscuro", "2026-11-11" to 20.0, true)).forEach { (nombre, cuando, oscuro) ->
@@ -2123,6 +2125,66 @@ class Capturas {
         }
         pantalla(TemaId.HELENO, false, 9400, "cuento_pantalla_claro") { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(navVacia, "remero", "cuento") }
     }
+
+    // ---------------------------------------------------------------- el cuadro de Hoy (plan de historia y escenas)
+
+    /** Lo que la ficha dice de un momento, para leerlo encima de su cuadro. */
+    private fun rotuloCuadro(ficha: io.github.ruddy2003.vestigium.vidas.FichaDelDia, hora: Double): String {
+        val reloj = "%d:%02d".format(hora.toInt(), Math.round((hora - hora.toInt()) * 60).toInt())
+        val dias = ficha.especiales.joinToString(" + ") { it.dia.titulo }.ifEmpty { "día normal" }
+        return "${ficha.dia} · $reloj · ${ficha.estacion.nombre}, ${ficha.clima.nombre} · objeto: ${ficha.objeto ?: "—"} · estado: ${ficha.estado ?: "—"}\n$dias"
+    }
+
+    /** Una imagen con varios cuadros, uno debajo de otro, cada uno con su rótulo. Sin animación: la parte viva queda en su instante fijo. */
+    private fun cuadros(tema: TemaId, oscuro: Boolean, nombre: String, banderita: io.github.ruddy2003.vestigium.ui.escenas.Banderita?,
+                        celdas: List<Triple<io.github.ruddy2003.vestigium.ui.escenas.EscenaVida, io.github.ruddy2003.vestigium.vidas.FichaDelDia, Double>>) =
+        captura(tema, oscuro, alto = 140 + celdas.size * 900, nombre = nombre) {
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                celdas.forEach { (escena, ficha, hora) ->
+                    Text(rotuloCuadro(ficha, hora), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground, maxLines = 2)
+                    io.github.ruddy2003.vestigium.ui.escenas.VistaEscena(escena, ficha, hora, Modifier.fillMaxWidth(), MaterialTheme.shapes.medium, animar = false, banderita = banderita)
+                }
+            }
+        }
+
+    /**
+     * Tanda P4a del plan de historia y escenas: el cuadro de cada tema que ya tiene escena (CAPTURAS=cuadro; con
+     * CAPTURAS_TEMAS=heleno, solo ese). Una imagen por día de muestra ([DIAS_CUADRO]) con el cuadro a tres horas, que
+     * caen en tres luces distintas. La escena es igual en claro y en oscuro, así que sale una vez por tema. Se llaman
+     * `…_temaCuadro_<tema>_<vida>_<día>.png`.
+     */
+    @Test fun temaCuadro() = porTema("cuadro") { t, o, _ ->
+        val escena = io.github.ruddy2003.vestigium.ui.escenas.escenaDe(t)
+        if (escena != null && o == t.soloOscuro) escena.vidas.forEach { vida ->
+            DIAS_CUADRO[vida].orEmpty().forEach { (nombre, dia, horas) ->
+                val ficha = io.github.ruddy2003.vestigium.vidas.FichaDelDia.de(dia, vida)!!
+                cuadros(t, o, "${t.id}_${vida}_$nombre", io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), horas.map { Triple(escena, ficha, it) })
+            }
+        }
+    }
+
+    /**
+     * La muestra de la biblioteca de paisaje (CAPTURAS=cuadro): la escena llana, que solo usa piezas de la biblioteca,
+     * con los tiempos que el paisaje de un tema quizá no tenga (nieve, niebla, tormenta, polvo) y los cinco techos, uno
+     * por temporada. Las fichas son las de Demeas con el tiempo y la estación cambiados, así que traen también sus
+     * arcos (el campo, los estragos) y sus días especiales. No lleva banderita: no es de ningún tema.
+     */
+    @Test fun cuadroBiblioteca() {
+        CapturasAPedido.pedida("cuadro")
+        val muestras = listOf(
+            Triple("2027-01-15", 13.0, io.github.ruddy2003.vestigium.vidas.Clima.NIEVE to io.github.ruddy2003.vestigium.vidas.Estacion.INVIERNO),
+            Triple("2028-10-15", 8.0, io.github.ruddy2003.vestigium.vidas.Clima.NIEBLA to io.github.ruddy2003.vestigium.vidas.Estacion.OTONO),
+            Triple("2029-07-10", 18.0, io.github.ruddy2003.vestigium.vidas.Clima.TORMENTA to io.github.ruddy2003.vestigium.vidas.Estacion.VERANO),
+            Triple("2030-04-10", 10.0, io.github.ruddy2003.vestigium.vidas.Clima.NUBES to io.github.ruddy2003.vestigium.vidas.Estacion.PRIMAVERA),
+            Triple("2031-08-20", 13.0, io.github.ruddy2003.vestigium.vidas.Clima.POLVO to io.github.ruddy2003.vestigium.vidas.Estacion.SECAS),
+            Triple("2029-06-01", 21.5, io.github.ruddy2003.vestigium.vidas.Clima.DESPEJADO to io.github.ruddy2003.vestigium.vidas.Estacion.LLUVIAS),
+        ).map { (dia, hora, tiempo) ->
+            val ficha = io.github.ruddy2003.vestigium.vidas.FichaDelDia.de(dia, "remero")!!.copy(clima = tiempo.first, estacion = tiempo.second)
+            Triple<io.github.ruddy2003.vestigium.ui.escenas.EscenaVida, io.github.ruddy2003.vestigium.vidas.FichaDelDia, Double>(io.github.ruddy2003.vestigium.ui.escenas.EscenaPlana, ficha, hora)
+        }
+        muestras.chunked(3).forEachIndexed { i, parte -> cuadros(TemaId.HELENO, false, "biblioteca_${i + 1}", null, parte) }
+    }
+
     /** El estilo de gráfica del tema: serie con puntos (uno hueco) y meta, rejilla, ejes, cifras, barras con su carril y una barra horizontal. */
     @Test fun temaEstiloGrafica() = porTema("estiloGrafica") { t, o, n -> captura(t, o, 1400, n) {
         val e = estiloGrafica(t)
@@ -2459,3 +2521,30 @@ object Ejemplo {
     }
 
 }
+
+
+/** Las tres horas de las capturas del cuadro: amanecer, mediodía y noche. */
+private val HORAS_CUADRO = listOf(7.0, 13.0, 21.0)
+
+/**
+ * Los días de muestra de las capturas `cuadro`, por personaje: nombre de la imagen, día lógico y horas. Los pide el
+ * plan de historia y escenas (un día normal, una fiesta, la guerra y un día en que el cuento cambia lo que se ve) y se
+ * agregan los que enseñan algo más de la escena. Cada tanda de escenas agrega los de sus personajes.
+ */
+private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>> = mapOf(
+    // Demeas (Helénico, tanda P4a).
+    "remero" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // primavera: el «Aura» en el agua y la cebada dorada
+        Triple("fiesta", "2027-05-12", HORAS_CUADRO),                     // las Targelias: guirnaldas y, de noche, antorchas
+        Triple("guerra", "2027-06-25", HORAS_CUADRO),                     // la primera invasión: humo en el llano y chozas junto al muro
+        Triple("zarpa", "2027-07-05", HORAS_CUADRO),                      // zarpa la flota: su nave ya no está (decisión 18)
+        Triple("invierno", "2027-02-03", HORAS_CUADRO),                   // lluvia, y el «Aura» en su cobertizo
+        Triple("eclipse", "2027-08-03", listOf(13.0, 14.7, 16.5)),        // antes, en el máximo y después
+        Triple("regreso", "2027-09-18", HORAS_CUADRO),                    // la flota vuelve
+        Triple("luto", "2027-11-22", HORAS_CUADRO),                       // el entierro de los primeros muertos
+        Triple("siega", "2027-05-20", HORAS_CUADRO),                      // las gavillas en los campos
+        Triple("peste", "2028-08-16", HORAS_CUADRO),                      // las Grandes Panateneas en el año de la peste: campos arrasados y piras
+        Triple("antorchas", "2029-06-01", listOf(13.0, 20.5, 22.5)),      // las Bendidias: la carrera de antorchas en el Pireo
+        Triple("higuera", "2031-09-01", HORAS_CUADRO),                    // la higuera, cuatro años después, con sus primeros higos
+    ),
+)

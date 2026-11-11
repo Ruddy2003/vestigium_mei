@@ -82,6 +82,11 @@ class CoberturaTemas {
             val claves = (if (t.soloOscuro) listOf("o") else listOf("c", "o")).map { "${t.id}_$it" }
             gato == null || claves.any { k -> ((gato[k] as? kotlinx.serialization.json.JsonObject)?.get("especiales") as? JsonArray)?.size?.let { it < 2 } ?: true }
         }
+
+        // El cuadro de Hoy (plan de historia y escenas): la escena de su personaje y su banderita. Terminal y Navidad no
+        // lo llevan (`sinCuadro`); a los demás les va llegando por tandas, y cada tanda borra los suyos de los pendientes.
+        superficie("cuadro_escena") { !io.github.ruddy2003.vestigium.ui.escenas.sinCuadro(it) && io.github.ruddy2003.vestigium.ui.escenas.escenaDe(it) == null }
+        superficie("cuadro_banderita") { !io.github.ruddy2003.vestigium.ui.escenas.sinCuadro(it) && io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(it) == null }
         return h
     }
 
@@ -97,8 +102,14 @@ class CoberturaTemas {
         /** Los del lote 6: error, cambio, la tecla del diario y el rascado de la lámina. */
         val SONIDOS_LOTE6 = listOf("s_<id>_error", "s_<id>_cambio", "s_tecla_<id>", "s_rascar_<id>")
 
-        /** Lo que falta hoy, por superficie. Desde el lote 9 no falta nada: todos los temas tienen su gato. */
-        val PENDIENTES: Map<String, Set<String>> = emptyMap()
+        /** Los 31 temas que todavía no tienen su cuadro de Hoy: Helénico lo tiene desde la tanda P4a; siguen P4b y las tandas S. */
+        private val SIN_CUADRO = setOf("romano", "urbe", "neon", "egipto", "medieval", "templario", "distopia", "refugio", "orden", "vapor", "laboratorio", "colonos", "napoleon", "deco", "botanico", "ruinas", "seda", "edo", "gotico", "arcano", "espacio", "abismo", "andalus", "meso", "mongol", "renacimiento", "pirata", "urss", "revolucion", "antiguas", "cueva")
+
+        /**
+         * Lo que falta hoy, por superficie. Del plan de diseño no falta nada desde el lote 9. Lo que queda es del plan de
+         * historia y escenas: el cuadro de Hoy (la escena y la banderita) de cada tema, que va llegando por tandas.
+         */
+        val PENDIENTES: Map<String, Set<String>> = mapOf("cuadro_escena" to SIN_CUADRO, "cuadro_banderita" to SIN_CUADRO)
 
         /** Despachos que el compilador no vigila, por archivo y tipo. Cada lote baja los suyos. */
         val DESPACHOS: Map<String, Int> = emptyMap()
