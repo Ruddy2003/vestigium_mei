@@ -22,6 +22,8 @@ import kotlin.math.sin
  *   el mismo día da siempre el mismo dibujo.
  * - Lo que se mueve recibe un `reloj` en segundos y no guarda nada: con el reloj quieto, el dibujo queda quieto.
  * - Sin personas ni texto.
+ * - Estas piezas las usan escenas ya aprobadas por el autor. Se pueden agregar piezas nuevas; cambiar cómo se ve una
+ *   que ya existe pide volver a dibujar esas escenas y enseñárselas (`docs/diseno/ESCENAS.md`, sección 5).
  */
 
 /**

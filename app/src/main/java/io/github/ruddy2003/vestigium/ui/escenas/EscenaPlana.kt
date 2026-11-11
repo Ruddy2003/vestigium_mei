@@ -55,6 +55,9 @@ import io.github.ruddy2003.vestigium.vidas.Semilla
  *   ruinas y los adornos que el paisaje de un tema concreto quizá no use;
  * - es la plantilla que copian las tandas S: el orden de las capas y cómo se lee el [Momento].
  *
+ * **No es la vara de calidad.** Su dibujo es mucho más simple que el que se pide a la escena de un tema: la vara es
+ * `EscenaHeleno`, y las reglas de aspecto están en `docs/diseno/ESCENAS.md`. De aquí se copia el esqueleto, no el nivel.
+ *
  * Lee de la ficha lo que tenga, con las claves más comunes de los calendarios: los arcos `campo` y `estragos` y las
  * claves de escena `fiesta`, `antorchas` y `luto`. El techo de las casas cambia con la temporada (teja en la 1, paja en
  * la 2, azotea en la 3, pizarra en la 4 y madera en la 5), para que la muestra los enseñe todos.

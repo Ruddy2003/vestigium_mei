@@ -20,6 +20,7 @@ El dibujo del cuadro que irá en Hoy: el paisaje del personaje de cada tema, pin
 | `.github/workflows/capturas.yml` | Dos entradas nuevas: `temas` y `solo` |
 | `app/src/test/…/EscenasPrueba.kt`, `CapturasAPedidoPrueba.kt` | 13 pruebas |
 | `app/src/test/…/CoberturaTemas.kt`, `docs/diseno/TEMAS.md` | El cuadro de cada tema entra a la cuenta de pendientes: faltan 31 |
+| `docs/diseno/ESCENAS.md`, `docs/diseno/escenas/referencia_heleno.jpg` | La guía de arte de las escenas y la imagen del cuadro que sirve de vara |
 
 - **No cambia nada de lo que se guarda:** ni `SCHEMA_V`, ni el diccionario, ni `vestigium.R`, ni el paper.
 - **No lee ningún dato tuyo.** Todo sale de la fecha, la hora y el personaje.
@@ -193,19 +194,25 @@ El dibujo del cuadro que irá en Hoy: el paisaje del personaje de cada tema, pin
 8. **La escena llana** no es de ningún tema. El plan pedía «una versión plana» sin decir para qué; quedó como muestra de la biblioteca y plantilla.
 9. **La entrada `solo`** y la protección ante fallas del dibujo, explicadas arriba.
 10. **Los despachos por tema son tres,** todos exhaustivos y sin `else`: `escenaDe`, `banderitaHistoria` y `sinCuadro` (cuáles no tendrán cuadro nunca). `pelajeDe` llega con el gato.
+11. **La guía de arte** (`docs/diseno/ESCENAS.md`). El autor pidió que lo decidido al repintar el cuadro quede escrito para los temas que siguen, con el mismo nivel y adaptado a cada tema. Tiene las diez reglas, los errores ya cometidos, cómo se adapta cada regla y una lista de comprobación. Quedó como decisión 20 del plan y está enlazada desde `CLAUDE.md`. Tres cosas de la guía son mías y el autor puede cambiarlas **[Diseño propio]**:
+    - la primera escena de cada tipo nuevo (interior, siempre de noche, a bordo, sin agua) se le enseña antes de seguir con las demás de la tanda;
+    - si una tanda no alcanza a dejar todos sus temas a ese nivel, entrega menos temas bien hechos;
+    - una tanda S puede agregar piezas a la biblioteca, pero no cambiar cómo se ve una que ya existe sin volver a enseñar las escenas aprobadas.
 
 ## Para las tandas que siguen
 
 - **P4b y las S (una escena nueva):**
-  1. copia `EscenaPlana.kt` como `Escena<Tema>.kt` y dibuja encima lo propio; cada color pasa por `Luces.tono`;
+  1. copia `EscenaPlana.kt` como `Escena<Tema>.kt` para tener el orden de las capas, y dibuja encima lo propio; cada color pasa por `Luces.tono`;
   2. lo que el cuento dice y se puede ver, sácalo a una función que una prueba pueda leer (como `EscenaHeleno.nave`);
-  3. dale el mismo oficio que a Helénico, para que el día no quede liso:
+  3. **sigue la guía de arte, `docs/diseno/ESCENAS.md`.** Tiene las diez reglas que salieron del repintado, cómo se adaptan a cada tema, los errores ya cometidos y la lista de comprobación. En corto:
      - `Rayo(luces)` y una `capaSombra` con la sombra de cada cosa (`sombraArrojada`) y la del árbol o el alero que enmarque (`sombraDeFollaje`);
      - `volumen` para los cuerpos redondos;
      - `agua`, `bajio`, `reflejoRoto` y `estela` si hay agua;
      - algo que cruce las franjas y enmarque por arriba;
      - cosas grandes y arrimadas en primer plano, no en fila;
+     - orillas con entrantes y una franja de paso entre dos materiales; lo lejano, en varias filas;
      - `grano` al final de la parte quieta;
+     - **la vara es `EscenaHeleno.kt`, no la escena llana:** la nueva se dibuja al lado de Helénico (`docs/diseno/escenas/referencia_heleno.jpg`) y no puede verse más pobre;
   4. cambia su rama en `escenaDe` y en `banderitaHistoria`;
   5. agrega sus días de muestra a `DIAS_CUADRO`, en `Capturas.kt`, con un día en que el cuento cambie lo que se ve;
   6. borra el tema de `SIN_CUADRO` en `CoberturaTemas` y pon sus celdas en **P** en `TEMAS.md`;

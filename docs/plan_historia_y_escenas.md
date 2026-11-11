@@ -7,6 +7,7 @@ _Creado el 10 nov 2026 sobre la v199 (`SCHEMA_V = 23`). Es la guía que cada ses
 1. Antes de cada tanda, configura el modelo y el esfuerzo de la tabla (sección 9).
 2. Escribe «Haz la tanda X del plan de historia y escenas».
 3. La sesión trabaja en una rama propia y verifica según la sección 7.
+   - **Si la tanda dibuja o cambia una escena** (P4b, las S y las S chicas), lee antes, entera, la guía de arte: `docs/diseno/ESCENAS.md`. Sus diez reglas son obligatorias y la vara de calidad es el cuadro de Helénico.
 4. Al terminar, marca su fila como «hecho <fecha>», deja un informe en `docs/historia/informes/<tanda>.md` y abre un PR.
 
 ## 1. Inventario (v199, `SCHEMA_V = 23`)
@@ -164,6 +165,10 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
     - Ejemplo: la nave de Demeas aparece en el cuadro; el día en que zarpa deja de estar y no vuelve hasta que él vuelve.
     - Para que no se contradigan, los dos leen lo mismo: la ficha del día (sección 3.1).
 19. **El tono y el largo del cuento están aprobados** (11 nov 2026): el de Demeas en P3a, con unas 1,950 letras por cuento, que se leen en minuto y medio.
+20. **El aspecto del cuadro está aprobado** (11 nov 2026, en P4a): el de Helénico, después de rehacerlo.
+    - El autor vio el primer cuadro, señaló que de día parecía una ilustración de catálogo y escogió entre tres variantes: se quedó con la de **gouache**.
+    - Lo que pidió: luz con dirección y sombras, cielo con vida y algo que enmarque, paleta corta sin azul puro, agua con profundidad y reflejos, un primer plano grande con cosas que se enciman y que no parezcan puestas para la foto, grano fino, la noche al mismo nivel que el día, orillas naturales con su franja gastada por el agua, y un pueblo lejano con profundidad.
+    - **Todas las escenas quedan a ese nivel.** Las reglas, cómo se adaptan a cada tema y la lista para comprobarlo están en `docs/diseno/ESCENAS.md`.
 
 ## 3. Diseño
 
@@ -246,6 +251,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - `VistaEscena`: el cuadro, que junta las dos partes y la banderita;
   - `EscenaPlana`: un paisaje hecho solo con la biblioteca. Ningún tema lo usa; es la muestra de la biblioteca en las capturas y la plantilla de cada escena nueva.
 - **El lienzo:** todas las escenas se dibujan en 380 × 285 unidades y se escalan al ancho del cuadro.
+- **El aspecto** lo fija la guía de arte, `docs/diseno/ESCENAS.md` (decisión del autor del 11 nov 2026, al ver el primer cuadro de Helénico): estilo gouache, diez reglas, cómo se adaptan a cada tema y la lista de comprobación. La vara es `EscenaHeleno.kt`, con su imagen de referencia en `docs/diseno/escenas/`. `EscenaPlana` solo da el orden de las capas.
 - **Biblioteca de paisaje compartida** (`ui/escenas/paisaje/`), hecha en el piloto: cielos por franja, nubes, lluvia, nieve, niebla, vegetación por estación, cultivos por etapa, agua con sus reflejos, montes, casas y techos por época, humo, fuego, adornos genéricos y ruinas. También la luz con dirección y las sombras que arroja (`Sombras.kt`) y el grano del papel (`Textura.kt`): toda escena los usa, para que el día no quede liso. Cada escena la combina y le agrega lo propio de su tema.
 - **Capas, de abajo hacia arriba:**
   1. cielo y lejanía: montes, mar, el pueblo, la iglesia o el castillo del fondo;
@@ -377,12 +383,16 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - **No piden capturas.** Sus pruebas vuelven a correr en la siguiente corrida de capturas.
   - Si el arnés no se puede armar, esa tanda pide 1 corrida.
 - **Tandas de dibujo:** usan el **arnés de Compose de escritorio** (como en E6) para ver los dibujos a 300, 360 y 420 dp antes de gastar capturas.
+  - **Antes de pedir capturas,** cada escena pasa la lista de comprobación de `docs/diseno/ESCENAS.md` (sección 8) y se dibuja a las 7:00, las 13:00 y las 21:00 **al lado del cuadro de Helénico**: no puede verse más pobre en ningún punto.
+  - **El autor la ve junto a Helénico.** La primera escena de un tipo nuevo (interior, siempre de noche, a bordo, sin agua) se le enseña antes de seguir con los demás temas de la tanda; las demás, al terminar.
+  - El informe lleva, por escena, la tabla de las diez reglas: cómo se cumple cada una y qué se adaptó al tema.
   - Luego se pide `capturas.yml` con `superficies = cuadro`, `temas = <los suyos>` y `solo = true`.
   - `temas` (`CAPTURAS_TEMAS`) deja solo esos temas; `solo` (`CAPTURAS_SOLO`) salta las capturas de siempre, que es lo que acorta la corrida. Con `solo`, la rama `capturas` queda solo con las imágenes pedidas hasta la siguiente corrida completa. Los dos se agregaron en P4a.
   - Cada tanda agrega los días de muestra de sus personajes a `DIAS_CUADRO` (`Capturas.kt`).
   - En este entorno el arnés usa Compose de escritorio 1.5.12, el único que se resuelve sin el repositorio de Google. La receta está en el informe de P4a.
 - **Las tandas S** también sacan la captura `otrasVidas` de los cuentos de su grupo.
-- **Las tandas de expansión no tocan el motor:** `vidas/Ficha.kt`, `Cuento.kt`, `EscenaVida`, `GatoCuadro` ni la biblioteca de paisaje.
+- **Las tandas de expansión no tocan el motor:** `vidas/Ficha.kt`, `Cuento.kt`, `EscenaVida` ni `GatoCuadro`.
+  - **La biblioteca de paisaje:** una tanda S puede **agregarle** piezas que su tema necesite (una luz fija para interiores, un suelo mojado). **No cambia cómo se ve una pieza que ya existe,** porque cambiaría las escenas ya aprobadas; si hace falta, sigue lo que dice `docs/diseno/ESCENAS.md` (sección 5).
 - **Las tandas con temas:**
   - actualizan `docs/diseno/TEMAS.md`, en sus tres filas (desde P4a): «Cuadro: escena», «Cuadro: gato» y «Cuadro: banderita»;
   - bajan los pendientes en `CoberturaTemas` (las superficies `cuadro_escena` y `cuadro_banderita`, con la lista `SIN_CUADRO`).
@@ -401,7 +411,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P3a | Motor del cuento, cuento de Demeas y la sección «Hoy, en su vida» | `vidas/Cuento.kt`, `vidas/piezas/PiezasDemeas.kt`, `ui/pantallas/OtrasVidas.kt` | Pruebas; captura `otrasVidas`; **el autor aprueba el tono** | 1 |
 | P3b | Cuentos de Pierre, Kei y Amaru | `vidas/piezas/PiezasPierre.kt`, `PiezasKei.kt`, `PiezasAmaru.kt` (uno por personaje, como el de Demeas) | Pruebas | 0 |
 | P4a | Motor de escena, biblioteca de paisaje, filtro de capturas, paisaje de Helénico y su banderita | `ui/escenas/EscenaVida.kt`, `VistaEscena.kt`, `EscenaPlana.kt`, `paisaje/`, `EscenaHeleno.kt`, `Banderitas.kt`, `Capturas.kt`, `CapturasAPedido.kt`, `capturas.yml` | Capturas `cuadro` a las 7, 13 y 21 h, en 3 días (normal, fiesta, guerra), y **el día en que zarpa la flota, sin su nave** (decisión 18); despachos en 0 | 2 |
-| P4b | Gótico y Ciudad neón | `EscenaGotico.kt`, `EscenaNeon.kt` | Ídem; con un día en que el cuento cambie lo que se ve (la obra parada, Kei sin bici) | 2 |
+| P4b | Gótico y Ciudad neón | `EscenaGotico.kt`, `EscenaNeon.kt` | Ídem; con un día en que el cuento cambie lo que se ve (la obra parada, Kei sin bici); **la lista de `docs/diseno/ESCENAS.md` completa y el autor las vio junto a Helénico** (Ciudad neón es la primera siempre de noche: se le enseña antes de terminar) | 2 |
 | P5a | Gato: esqueleto, poses y estados | `ui/escenas/GatoCuadro.kt` | Hoja de poses; pruebas de los estados | 2 |
 | P5b | Reacciones, caricia y pelajes de los 3 temas | `GatoCuadro.kt`, `Pelajes.kt` | Capturas; lista de qué probar en el teléfono | 2 |
 | P6 | El cuadro en Hoy: plegable, marca, gestos, ajustes, `SCHEMA_V` 24, nota del cap. 9 | `CuadroDelDia.kt`, `Dia.kt`, `Sistema.kt`, `data/Modelo.kt`, Apéndice D, `cap09` | Capturas `hoy` y `cuadro`, abiertas, plegadas y con marca | 2 |
@@ -437,6 +447,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 - **S: escena, pelaje, especiales y banderita, 4 o 5 temas por tanda.**
   - Cada escena lee de la ficha el estado, los arcos y la clave de escena de su personaje, para contar lo mismo que el cuento (decisión 18). Sus capturas incluyen un día en que el cuento cambie lo que se ve.
   - Cada S va después del A de sus personajes.
+  - **Cada escena sigue la guía de arte** (`docs/diseno/ESCENAS.md`) y queda al nivel del cuadro de Helénico. Terminada cuando su lista de comprobación está completa y el autor la vio junto a Helénico.
   - Archivos: `ui/escenas/Escena<Tema>.kt`.
   - 2 capturas cada una.
 
@@ -490,7 +501,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 3. **Las 5 temporadas de cada calendario se escriben de una vez.** No hay tandas de calendario cada año, y la historia queda continua.
 4. **Los calendarios los hace Opus high** en vez de Fable, con el patrón fijado por Fable en P2.
 5. **P5b baja a high:** se apoya en el esqueleto de P5a.
-6. **Biblioteca de paisaje compartida:** las tandas S combinan piezas y caben 4 o 5 temas.
+6. **Biblioteca de paisaje compartida:** las tandas S combinan piezas y caben 4 o 5 temas. **Ojo:** combinar piezas no basta para llegar al nivel pedido; cada escena lleva además su primer plano, su marco y su lejanía dibujados para ella (`docs/diseno/ESCENAS.md`). Si una tanda no alcanza a dejar todos sus temas a ese nivel, entrega menos temas bien hechos y lo dice.
 7. **Navidad y Terminal fuera:** 2 escenas y 2 personajes menos.
 8. **Los cuentos de cada grupo se capturan dentro de su S.**
 - No se usa max.
@@ -517,6 +528,9 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - hay que medirlo en la APK y vigilar la batería, porque Paparazzi no lo mide.
 - **Gestos y vibración:** los 700 ms, la caricia frente al desplazamiento y el aura encendida no se ven en las capturas.
 - **Medidas en dp:** están calculadas con la letra al 100 %. Con letra más grande, todo baja más.
+- **El nivel de las escenas:** las tandas S se midieron para 4 o 5 temas cada una, cuando se pensaba que bastaba con combinar piezas de la biblioteca. Con el nivel aprobado (decisión 20), cada escena lleva bastante dibujo propio.
+  - Puede que una S no alcance para todos sus temas. En ese caso entrega menos temas bien hechos y lo dice; no baja el nivel.
+  - También pesa más al dibujarse (el grano y las capas de sombra): hay que medirlo en el teléfono en P6, antes de hacer las 29 escenas que faltan.
 - **Continuidad:** un suceso de un año, como una herida o una casa quemada, tiene que seguir al año siguiente. La prueba revisa que los arcos empalmen entre temporadas.
 - **Después de 2031:** la temporada 5 se repite. El autor decide entonces cómo sigue.
 

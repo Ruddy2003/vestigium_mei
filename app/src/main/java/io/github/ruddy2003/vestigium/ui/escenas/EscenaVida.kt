@@ -109,6 +109,10 @@ class Ancla(val tipo: TipoAncla, val x: Float, val y: Float, val hasta: Float = 
  * - **Igual en claro y en oscuro:** la luz es la de la hora, no la del modo del teléfono.
  * - Con piezas de la biblioteca (`paisaje/`) y lo propio del tema encima; cada color pasa por `Luces.tono`.
  * - Determinista: el mismo día y la misma hora dan el mismo cuadro.
+ * - **Con el aspecto de la guía de arte** (`docs/diseno/ESCENAS.md`, decisión 20 del plan): estilo gouache y diez
+ *   reglas (luz con dirección y sombras, cielo con vida, paleta corta, agua con profundidad, primer plano grande y
+ *   con uso, algo que cruce y enmarque, grano, la noche al nivel del día, bordes naturales y lejanía con
+ *   profundidad). La vara es `EscenaHeleno`: una escena nueva se dibuja al lado de esa y no puede verse más pobre.
  */
 interface EscenaVida {
     /** Los personajes cuyo entorno pinta (su id en `OtrasVidas`). Casi siempre uno; en Ciudad neón, dos que se alternan. */

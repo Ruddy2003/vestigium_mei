@@ -100,6 +100,9 @@ import kotlin.math.sin
  * mañana y por la tarde y corta a mediodía; la copa del olivo da sombra rota sobre el murete, el suelo y las cosas. El
  * agua es honda lejos y clara en la orilla, y refleja las naves, los cobertizos y la costa. Encima de todo va el grano.
  *
+ * **Este cuadro es la vara de calidad de todas las escenas** (`docs/diseno/ESCENAS.md`; decisión 20 del plan). Si su
+ * aspecto cambia, hay que rehacer su imagen de referencia (`docs/diseno/escenas/referencia_heleno.jpg`) y la guía.
+ *
  * Lo que cuenta, igual que el cuento (todo sale de la ficha; ver el comentario de su calendario en `AnioPiloto.kt`):
  * - **El «Aura»** (arco `nave` y estado `mar`): en su cobertizo de noviembre al 12 de abril; en el agua el resto del
  *   año, amarrada o, a las horas en que él trabaja, remando en la dársena; **no está** mientras él está en el mar.
