@@ -173,4 +173,13 @@ Una prueba compara con el calendario, todos los días de 2026 a 2032, el estado 
 
 ## Resultado en Actions
 
-_Pendiente: se llena al terminar las corridas._
+Sobre el commit de la tanda (`f5bc71f`).
+
+- **Compilación de Android:** la corrida 208 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, **terminó bien** (no se publicó ningún Release).
+- **Capturas:** la corrida 268 de `capturas.yml` (`superficies = cuadro`, `temas = gotico,neon`, `solo = true`) **terminó bien**, en unos 6 minutos, sin errores de compilación ni pruebas fallidas.
+  - Dejó 27 imágenes en la rama `capturas`: 10 de Gótico, 8 de Amaru, 7 de Kei y las 2 de la biblioteca.
+  - Revisé el día normal de Gótico y el de Kei: **se ven igual que en el arnés.** Las luces de neón, los reflejos del suelo y las sombras salen con el motor de dibujo de Android.
+  - `despachos.txt` y `unicidad.txt` salieron vacíos; `cobertura.txt` trae justo los 29 temas que faltan.
+  - En esa corrida corrieron también en Actions las 29 pruebas de escenas.
+- **Corridas de capturas usadas:** 1 de las 2 que preveía el plan. La otra queda para los cambios que pida el autor al ver los cuadros.
+- Con `solo`, la rama `capturas` queda solo con estas 27 imágenes hasta la siguiente corrida completa.
