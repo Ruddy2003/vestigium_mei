@@ -106,7 +106,7 @@ Cada pueblo lee su arco: el viaducto que se levanta sobre el valle (Albert), las
   - Albert: la calle de los ferroviarios en los textos de todos los días, antes de mudarse; comidas en la plataforma y con su madre en los textos de comer, que salen también en casa y después de la boda; un patio en la baja, cuando todavía no tiene casa con patio; Annie, recién nacida, tendiéndole los brazos;
   - Nikos: la isla «de los turcos» en dos fiestas de cada año, que en 1913 y 1914 ya era italiana; una radio en 1913; la lonja de mitad de año, que en la temporada 4 cae mientras está enfermo y lo ponía a ensartar esponjas (ahora cuenta el reparto de la paga);
   - Lou: dos especiales que usaban párrafos que no existen (no habría compilado); el 4 de julio de la temporada 3, que cae de gira y la ponía en el club de Harlem; que el sindicato de músicos de Nueva York no admitía a los negros, que no puedo afirmar; Valentino, que murió el 23 de agosto y no el 24 (ahora «los periódicos dicen»); y los meses sin club, que no tenían qué hacer por la tarde y la mandaban a ensayar en un club que ya no existe.
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android:** la corrida 225 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `1a090ef`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que no se pudo comprobar

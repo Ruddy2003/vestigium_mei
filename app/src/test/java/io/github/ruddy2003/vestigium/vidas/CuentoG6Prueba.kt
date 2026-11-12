@@ -12,7 +12,7 @@ import java.time.LocalDate
 /**
  * Los cuentos del grupo 6. Las pruebas generales (forma, largo, repeticiones, certeza) están en [CuentoPrueba] y corren
  * solas sobre todas las piezas registradas; aquí va lo propio de cada historia: que nadie aparezca antes ni después de
- * tiempo y que los estados se noten. Tanda T6a: Albert, Nikos y Lou.
+ * tiempo y que los estados se noten. Tanda T6a: Albert, Nikos y Lou. Tanda T6b: Liudmila y Giulia.
  */
 class CuentoG6Prueba {
     private fun pieza(vida: String) = TodasLasPiezas.de(vida)!!
@@ -159,5 +159,77 @@ class CuentoG6Prueba {
         vivenElEstado(v, "sin_club", "2031-02-18", "2031-05-04", listOf(2.0, 15.0, 20.5, 23.0))
         varianEnElEstado(v, "2031-02-18", "2031-05-04", 23.0, 2)
         assertEquals(null, cuento(v, "2031-05-06").ficha.estado)
+    }
+
+    // ---------- Tanda T6b ----------
+
+    @Test fun estanLasPiezasDeLaTandaT6b() {
+        listOf("obrera_moscu", "restauradora").forEach { v ->
+            assertEquals(v, pieza(v).vida)
+            assertEquals("$v: solo la temporada 1 está escrita", setOf(1), pieza(v).temporadasEscritas)
+            assertEquals(emptyList<String>(), pieza(v).problemas(cal(v)))
+            assertEquals(Genero.FEMENINO, pieza(v).genero)
+        }
+    }
+
+    /** El día siguiente a [dia]. */
+    private fun siguiente(dia: String) = LocalDate.parse(dia).plusDays(1).toString()
+
+    // ---------- Liudmila ----------
+
+    @Test fun enElCuentoDeLiudmilaNadieApareceAntesNiDespuesDeTiempo() {
+        val v = "obrera_moscu"
+        // Se mudan el 25 de junio de la 3.
+        nunca(v, "2029-06-25", "2031-12-31", "un edificio viejo de cinco pisos"); nunca(v, "2027-01-01", "2029-06-24", "El piso nuevo está")
+        alguna(v, "2029-07-01", "2029-12-31", "El piso nuevo está")
+        // La suegra cae enferma el 4 de septiembre de la 4 y muere el 20 de octubre.
+        nunca(v, "2030-09-04", "2031-12-31", "vive con ellos desde que se quedó viuda"); nunca(v, "2030-09-04", "2031-12-31", "La suegra pela")
+        nunca(v, "2027-01-01", "2030-09-03", "ya no se levanta de la cama"); nunca(v, "2030-10-20", "2031-12-31", "ya no se levanta de la cama")
+        nunca(v, "2027-01-01", "2030-10-19", "Desde que murió Galina Petrovna"); alguna(v, "2030-10-25", "2031-03-31", "Desde que murió Galina Petrovna")
+        // La nombran jefa de turno el 21 de mayo de la 5.
+        nunca(v, "2031-05-21", "2031-12-31", "Tamara Ivánovna es la jefa"); nunca(v, "2027-01-01", "2031-05-20", "Desde que es jefa de turno")
+        noNombran(v, listOf("Galina", "Tamara"))
+    }
+
+    @Test fun liudmilaVaAlSanatorioYNoTrabajaEnLasFiestas() {
+        val v = "obrera_moscu"
+        val horas = listOf(1.0, 6.5, 7.5, 10.0, 12.5, 14.0, 17.0, 19.0, 21.0)
+        vivenElEstado(v, "sanatorio", "2028-07-06", "2028-07-25", horas); varianEnElEstado(v, "2028-07-06", "2028-07-25", 10.0, 2)
+        vivenElEstado(v, "sanatorio", "2030-07-11", "2030-07-30", horas)
+        assertEquals(null, cuento(v, "2028-07-27").ficha.estado)
+        // Las fiestas de guardar soviéticas, con los segundos días de mayo y de noviembre.
+        (listOf("anio_nuevo", "ocho_marzo", "victoria", "constitucion").flatMap { fechas(v, it) } +
+            listOf("primero_mayo", "revolucion").flatMap { fechas(v, it) }.flatMap { listOf(it, siguiente(it)) }).forEach { descansa(v, it) }
+    }
+
+    // ---------- Giulia ----------
+
+    @Test fun enElCuentoDeGiuliaNadieApareceAntesNiDespuesDeTiempo() {
+        val v = "restauradora"
+        // Samir llega el 16 de junio de la 1 y se va a Nápoles el 10 de julio de la 5.
+        normales(v, "2027-01-01", "2027-06-15").forEach { assertFalse("$it: Samir antes de tiempo", nombra(v, it, "Samir")) }
+        nunca(v, "2031-07-10", "2031-12-31", "Samir es el restaurador joven"); nunca(v, "2027-01-01", "2031-07-09", "Samir se fue a restaurar")
+        // Teresa se jubila el 28 de febrero de la 4.
+        nunca(v, "2030-02-28", "2031-12-31", "Teresa es la jefa"); nunca(v, "2027-01-01", "2030-02-27", "Teresa se ha jubilado")
+        // Matteo: viven juntos desde el 14 de marzo de la 2, se casan el 27 de mayo de la 4, espera un hijo desde el 20 de febrero de la 5.
+        nunca(v, "2028-03-14", "2031-12-31", "Matteo, su novio")
+        nunca(v, "2027-01-01", "2028-03-13", "viven juntos en un piso del Pigneto"); nunca(v, "2030-05-27", "2031-12-31", "viven juntos en un piso del Pigneto")
+        nunca(v, "2027-01-01", "2030-05-26", "Matteo, su marido"); nunca(v, "2031-02-20", "2031-12-31", "Matteo, su marido")
+        nunca(v, "2027-01-01", "2031-02-19", "espera un hijo")
+        // El andamio, del 20 de enero de la 1 al 12 de octubre de la 5.
+        nunca(v, "2027-01-01", "2027-01-19", "limpia el fresco en el andamio"); nunca(v, "2031-10-12", "2031-12-31", "limpia el fresco en el andamio")
+        nunca(v, "2031-10-12", "2031-12-31", "el andamio tiene tres pisos"); nunca(v, "2027-01-01", "2031-10-11", "ya no hay andamio")
+        noNombran(v, listOf("Teresa", "Samir", "Matteo"))
+    }
+
+    @Test fun giuliaPasaAgostoEnRomaYNoTrabajaEnLasFiestas() {
+        val v = "restauradora"
+        val horas = listOf(1.0, 7.5, 8.25, 10.0, 13.5, 16.0, 18.5, 20.0, 21.0, 22.5)
+        vivenElEstado(v, "agosto", "2027-08-02", "2027-08-30", horas); varianEnElEstado(v, "2027-08-02", "2027-08-30", 10.0, 2)
+        vivenElEstado(v, "agosto", "2030-08-02", "2030-08-30", horas)
+        assertEquals(null, cuento(v, "2027-09-01").ficha.estado)
+        // Sus fiestas de guardar, y en 2025 el lunes de Pascua en que muere el papa y el día de su funeral.
+        (listOf("capodanno", "befana", "pascua", "liberazione", "repubblica", "san_pietro", "ferragosto", "inmaculada", "navidad").flatMap { fechas(v, it) } +
+            listOf("2027-04-21", "2027-04-26")).forEach { descansa(v, it) }
     }
 }
