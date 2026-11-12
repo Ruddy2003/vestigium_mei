@@ -157,8 +157,8 @@ class CuentoPrueba {
     }
 
     @Test fun unPersonajeSinPiezasNoTieneCuento() {
-        // Uno sin calendario y, mientras quede alguno, uno con calendario y sin piezas.
-        assertNull(Cuento.de("2027-01-01", "legionario", 10.0))
+        // Mientras quede alguno: uno sin calendario (el primero de la lista que no tenga) y uno con calendario y sin piezas.
+        (io.github.ruddy2003.vestigium.data.OtrasVidas.BASE + io.github.ruddy2003.vestigium.data.OtrasVidas.DE_TEMAS).firstOrNull { Calendarios.de(it.id) == null }?.let { assertNull(Cuento.de("2027-01-01", it.id, 10.0)) }
         Calendarios.TODOS.firstOrNull { TodasLasPiezas.de(it.vida) == null }?.let { assertNull(Cuento.de("2027-01-01", it.vida, 10.0)) }
         assertNull(Cuento.de("2027-01-01", "no_existe", 10.0))
         todas.forEach { assertNotNull(Cuento.de("2027-01-01", it.vida, 10.0)) }
