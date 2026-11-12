@@ -100,7 +100,7 @@ Las revisé todas, las de esta tanda y las de las tandas T1 a T4a, y reescribí 
   - la copa de plata «en la que bebe su madre», que muere en la temporada 4, y Saran «atada en la cuna» cuando ya monta sola;
   - Iacopo pintaba el domingo de Pascua (ver «Lo que decidí»).
 - **Al repasar los textos antes de probarlos** corregí: los datos de objeto y las frases de entorno que usaban `{nombre}`, que en esos lugares no se llena; una comida con el maestro «de buen humor» que habría seguido saliendo después de su muerte; la capilla Sixtina, que en 1490 era «la del papa Sixto»; y el palio de San Juan, que no sé si se corría sin jinete.
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android:** la corrida 220 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `eec3246`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que no se pudo comprobar

@@ -997,6 +997,172 @@ Tienen cuadro (tandas S2 y S3). Las páginas se abrieron el 12 nov 2026.
 | 5 | Echan a Piero, 9 nov | Histórico | | [Piero di Lorenzo de' Medici](https://en.wikipedia.org/wiki/Piero_di_Lorenzo_de%27_Medici) |
 | 5 | Entra el rey de Francia, 17 nov | Histórico | | [Charles VIII of France](https://en.wikipedia.org/wiki/Charles_VIII_of_France) |
 
+## Grupo 5: Tomás, Ochiyo, Marie-Jeanne, Jean-Baptiste y el naturalista (tanda A5)
+
+Tienen cuadro (tandas S3 y S4). Las páginas se abrieron el 12 nov 2026.
+
+**Las fiestas fijas de la Iglesia** (Tomás, Marie-Jeanne, Jean-Baptiste y el naturalista): el año nuevo ([New Year's Day](https://en.wikipedia.org/wiki/New_Year%27s_Day)), la Asunción ([Assumption of Mary](https://en.wikipedia.org/wiki/Assumption_of_Mary)), Todos los Santos ([All Saints' Day](https://en.wikipedia.org/wiki/All_Saints%27_Day)) y la Navidad ([Christmas](https://en.wikipedia.org/wiki/Christmas)). Son «históricas».
+
+**La Pascua gregoriana** de Marie-Jeanne y Jean-Baptiste está calculada (algoritmo de Meeus, Jones y Butcher; lo comprueba también `AnioG5Prueba`), y de ella el martes de carnaval (47 días antes) y la Fête-Dieu, el Corpus (60 días después, un jueves, como dice [Feast of Corpus Christi](https://en.wikipedia.org/wiki/Feast_of_Corpus_Christi)).
+
+| Año | Carnaval | Pascua | Fête-Dieu |
+|---|---|---|---|
+| 1789 | 24 feb | 12 abr | 11 jun |
+| 1790 | 16 feb | 4 abr | 3 jun |
+| 1791 | 8 mar | 24 abr | 23 jun |
+| 1792 | 21 feb | 8 abr | (ya no sale la procesión) |
+| 1793 | 12 feb | 31 mar | (ídem) |
+| 1814 | | 10 abr | |
+| 1815 | | 26 mar | |
+| 1816 | | 14 abr | |
+
+En 1812 y 1813 Jean-Baptiste está en campaña y su calendario no pone Pascua.
+
+### Tomás, grumete de un balandro pirata. Las Bahamas y el Caribe, de 1718 a 1722
+
+**Lo real y lo inventado**
+
+- **Real:** Nassau como puerto de piratas; el perdón del rey y la llegada del gobernador Woodes Rogers; Barbanegra, Bonnet, Vane, Rackham, Mary Read, Roberts y Low, con los días que siguen; la guerra con España; la carena en una playa, que los piratas hacían porque no tenían diques ([Careening](https://en.wikipedia.org/wiki/Careening)); los alisios del nordeste, más fuertes en invierno ([Trade winds](https://en.wikipedia.org/wiki/Trade_winds)); Santo Tomás, el 21 de diciembre, que era su fiesta en el calendario romano hasta 1969 ([Thomas the Apostle](https://en.wikipedia.org/wiki/Thomas_the_Apostle)).
+- **Inventado:** Tomás, su balandro y su gente (el capitán Grady, el capitán Hollis, Kofi, Abel el contramaestre, el piloto), cada presa, la calma, el huracán, la tormenta, la fragata, las ballenas, los tiburones, el puerto holandés y el día en que llega cada noticia.
+- **Las fechas** son las de los ingleses de entonces, que seguían en el calendario juliano: las que dan las páginas.
+
+| Día | Fecha | Certeza | Página |
+|---|---|---|---|
+| La carena (un estado de dos semanas) | 10 mar | Aproximado | [Careening](https://en.wikipedia.org/wiki/Careening) |
+| La vuelta al agua, las tortugas, los huracanes | 24 mar; 20 may; 1 ago | Aproximado | Sin enlace |
+| Los alisios | 15 nov | Aproximado | [Trade winds](https://en.wikipedia.org/wiki/Trade_winds) |
+| Santo Tomás | 21 dic | Histórico | [Thomas the Apostle](https://en.wikipedia.org/wiki/Thomas_the_Apostle) |
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Barbanegra cierra Charles Town, 8 jun | Aproximado | Bloqueó el puerto aliado con otros piratas; la noticia llega en junio | [Blackbeard](https://en.wikipedia.org/wiki/Blackbeard) |
+| 1 | Llega el gobernador, 22 jul | Histórico | Woodes Rogers llegó a Nassau el 22 de julio de 1718 y Vane escapó esa noche con un brulote | [Charles Vane](https://en.wikipedia.org/wiki/Charles_Vane) |
+| 1 | Muere Barbanegra, 12 dic | Aproximado | Murió el 22 de noviembre de 1718 en Ocracoke | [Blackbeard](https://en.wikipedia.org/wiki/Blackbeard) |
+| 2 | Ahorcan a Bonnet, 25 ene | Aproximado | Ahorcado el 10 de diciembre de 1718 | [Stede Bonnet](https://en.wikipedia.org/wiki/Stede_Bonnet) |
+| 2 | La guerra con España, 15 feb | Aproximado | Hacia el 17 de diciembre de 1718 Francia, Gran Bretaña y Austria estaban en guerra con España | [War of the Quadruple Alliance](https://en.wikipedia.org/wiki/War_of_the_Quadruple_Alliance) |
+| 2 | Roberts en el Brasil, 20 oct | Aproximado | Su tripulación votó ir al Brasil en 1719 | [Bartholomew Roberts](https://en.wikipedia.org/wiki/Bartholomew_Roberts) |
+| 3 | Rackham roba un balandro, 5 sep | Aproximado | El 22 de agosto de 1720, en el puerto de Nassau | [Calico Jack](https://en.wikipedia.org/wiki/Calico_Jack) |
+| 3 | Agarran a Rackham, 8 nov | Aproximado | Capturado el 22 de octubre de 1720 | [Calico Jack](https://en.wikipedia.org/wiki/Calico_Jack) |
+| 3 | Ahorcan a Rackham, 8 dic | Aproximado | Ahorcado el 18 de noviembre de 1720 en Port Royal | [Calico Jack](https://en.wikipedia.org/wiki/Calico_Jack) |
+| 4 | Ahorcan a Vane, 20 abr | Aproximado | Murió el 29 de marzo de 1721 | [Charles Vane](https://en.wikipedia.org/wiki/Charles_Vane) |
+| 4 | Roberts para el comercio, 8 may | Aproximado | «Hacia la primavera de 1721 casi había parado el comercio por mar» | [Bartholomew Roberts](https://en.wikipedia.org/wiki/Bartholomew_Roberts) |
+| 4 | Muere Mary Read, 20 jun | Aproximado | Murió en la cárcel en abril de 1721 | [Mary Read](https://en.wikipedia.org/wiki/Mary_Read) |
+| 5 | Matan a Roberts, 5 abr | Aproximado | Murió el 10 de febrero de 1722 frente al cabo López | [Bartholomew Roberts](https://en.wikipedia.org/wiki/Bartholomew_Roberts) |
+| 5 | Low y los pescadores, 25 jul | Aproximado | En junio de 1722 asaltó trece pesqueros en Port Roseway; torturaba a sus víctimas | [Edward Low](https://en.wikipedia.org/wiki/Edward_Low) |
+
+### Ochiyo, sirvienta de una casa de té. Una posta del Tōkaidō, de 1830 a 1834
+
+**Lo real y lo inventado**
+
+- **Real:** el año lunar y sus fiestas; los dos días libres de los sirvientes (el 16 del primer mes y el del séptimo, que dice su ficha); las procesiones de los daimios que van y vuelven de Edo cada año ([Sankin-kōtai](https://en.wikipedia.org/wiki/Sankin-k%C5%8Dtai)); la peregrinación a Ise de 1830, con cinco millones de peregrinos ([Ise Grand Shrine](https://en.wikipedia.org/wiki/Ise_Grand_Shrine)); las vistas del Fuji de Hokusai (hacia 1830–1832; la ola, de 1831) ([Thirty-six Views of Mount Fuji](https://en.wikipedia.org/wiki/Thirty-six_Views_of_Mount_Fuji)); el viaje de Hiroshige por el Tōkaidō en 1832, con la comitiva que llevaba caballos del shogun al emperador, y sus estampas de 1833–1834 ([The Fifty-three Stations of the Tōkaidō](https://en.wikipedia.org/wiki/The_Fifty-three_Stations_of_the_T%C5%8Dkaid%C5%8D)); el hambre de Tenpō desde 1833, por lluvias y frío fuera de estación ([Tenpō famine](https://en.wikipedia.org/wiki/Tenp%C5%8D_famine)).
+- **Inventado:** Ochiyo, la posta (sin nombre), su gente (la señora Tsuru, Osen, Gonta, Sakichi, su madre y su hermano), el río cerrado, la nevada temprana, la boda y el día en que llega cada noticia. Que el camino «descanse» el 12 de agosto de 1830 es mío.
+
+**El año lunar** se calculó como el de Kichizō (lunas nuevas y términos solares a la hora de Japón), con los términos solares **medios**, que son los que usaba el calendario Kansei; los verdaderos solo se usaron desde 1844. Con ellos salen meses repetidos en 1830 (el segundo) y 1832 (el décimo). Con los verdaderos habrían salido el tercero de 1830 y el noveno de 1832; ninguna fiesta de Ochiyo cambia de día por eso salvo el día de las niñas de 1830, que se movería un mes. La página japonesa del calendario Tenpō no se pudo abrir (la red de la sesión no llega a ja.wikipedia), así que el método es **[Aproximación]**.
+
+| Fiesta | Día del año lunar | 1830 | 1831 | 1832 | 1833 | 1834 | Página |
+|---|---|---|---|---|---|---|---|
+| La limpieza del hollín | 12/13 del año anterior | 7 ene | 26 ene | 15 ene | 2 feb | 22 ene | Sin enlace **[sin abrir]** |
+| El año nuevo, 3 días | 1/1 | 25 ene | 13 feb | 2 feb | 20 feb | 9 feb | [Japanese New Year](https://en.wikipedia.org/wiki/Japanese_New_Year) |
+| Su día libre de invierno | 1/16 | 9 feb | 28 feb | 17 feb | 7 mar | 24 feb | Sin enlace |
+| Las niñas | 3/3 | 25 abr | 15 abr | 3 abr | 22 abr | 11 abr | [Hinamatsuri](https://en.wikipedia.org/wiki/Hinamatsuri) |
+| Los niños | 5/5 | 25 jun | 14 jun | 3 jun | 22 jun | 11 jun | [Kodomo no Hi](https://en.wikipedia.org/wiki/Kodomo_no_Hi) |
+| Tanabata | 7/7 | 24 ago | 14 ago | 2 ago | 21 ago | 11 ago | [Tanabata](https://en.wikipedia.org/wiki/Tanabata) |
+| Bon, 3 días | 7/13 | 30 ago | 20 ago | 8 ago | 27 ago | 17 ago | [Bon Festival](https://en.wikipedia.org/wiki/Bon_Festival) |
+| Su día libre de verano | 7/16 | 2 sep | 23 ago | 11 ago | 30 ago | 20 ago | Sin enlace |
+| La luna de otoño | 8/15 | 1 oct | 20 sep | 9 sep | 28 sep | 17 sep | [Tsukimi](https://en.wikipedia.org/wiki/Tsukimi) |
+
+- **El setsubun** es la víspera del comienzo de la primavera ([Setsubun](https://en.wikipedia.org/wiki/Setsubun)): va el 3 de febrero, salvo en 1832, que cae junto al año nuevo y no se pone aparte.
+- **Las procesiones de los daimios** van el 10 de mayo y el 28 de octubre de cada año: los días se eligieron.
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Los peregrinos de Ise, 1 may (un estado hasta el 12 ago) | Aproximado | Cinco millones en 1830; los meses se eligieron | [Ise Grand Shrine](https://en.wikipedia.org/wiki/Ise_Grand_Shrine) |
+| 2 | La estampa de la ola, 28 abr | Aproximado | La ola es de 1831 | [Thirty-six Views of Mount Fuji](https://en.wikipedia.org/wiki/Thirty-six_Views_of_Mount_Fuji) |
+| 3 | La comitiva de los caballos, 16 sep | Aproximado | En 1832; el día se eligió | [The Fifty-three Stations of the Tōkaidō](https://en.wikipedia.org/wiki/The_Fifty-three_Stations_of_the_T%C5%8Dkaid%C5%8D) |
+| 4 | El verano frío, 28 jul; el arroz caro, 20 nov | Aproximado | Desde 1833, por lluvias y frío; lo peor fue en el norte | [Tenpō famine](https://en.wikipedia.org/wiki/Tenp%C5%8D_famine) |
+| 4 | Las estampas de las 53 postas, 5 dic | Aproximado | Edición de 1833–1834 | [The Fifty-three Stations of the Tōkaidō](https://en.wikipedia.org/wiki/The_Fifty-three_Stations_of_the_T%C5%8Dkaid%C5%8D) |
+| 5 | El hambre sigue, 25 may | Aproximado | Duró hasta 1837 | [Tenpō famine](https://en.wikipedia.org/wiki/Tenp%C5%8D_famine) |
+
+### Marie-Jeanne, lavandera. Un barco-lavadero en el Sena, en París, de 1789 a 1793
+
+**Lo real y lo inventado**
+
+- **Real:** los hechos de la Revolución y sus días, que siguen; la torta de los reyes de la Epifanía, con su haba ([Galette des rois](https://en.wikipedia.org/wiki/Galette_des_rois)).
+- **Inventado:** Marie-Jeanne, su gente (Jacques, Paul, Thérèse, el maestro Gaspard, Antoine), el barco, el hielo y la crecida del Sena, la gran colada de primavera y lo que le pasa. Que el Sena estuviera helado en enero de 1789 viene de memoria **[sin abrir]**: va como «aproximado» y sin enlace. Que las fiestas de la Iglesia dejen de salir en 1792 (la procesión) y en 1793 (la Navidad, Todos los Santos, San Juan) es una simplificación mía de la descristianización.
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Réveillon, 27 abr, 3 días | Histórico | Del 26 al 29 de abril de 1789, en el arrabal de Saint-Antoine | [Réveillon riots](https://en.wikipedia.org/wiki/R%C3%A9veillon_riots) |
+| 1 | Los Estados Generales, 5 may | Histórico | | [Estates General of 1789](https://en.wikipedia.org/wiki/Estates_General_of_1789) |
+| 1 | La Bastilla, 14 jul | Histórico | | [Storming of the Bastille](https://en.wikipedia.org/wiki/Storming_of_the_Bastille) |
+| 1 | Leen los derechos del hombre, 28 ago | Aproximado | Aprobados el 26 de agosto | [Declaration of the Rights of Man…](https://en.wikipedia.org/wiki/Declaration_of_the_Rights_of_Man_and_of_the_Citizen) |
+| 1 | La marcha a Versalles, 5 oct, 2 días (un estado) | Histórico | 5 y 6 de octubre de 1789 | [Women's March on Versailles](https://en.wikipedia.org/wiki/Women%27s_March_on_Versailles) |
+| 2 | Los curas, 12 jul | Aproximado | La Constitución civil del clero, de julio de 1790, y su juramento | [Civil Constitution of the Clergy](https://en.wikipedia.org/wiki/Civil_Constitution_of_the_Clergy) |
+| 2 | La Federación, 14 jul | Histórico | Empezó a las cuatro de la mañana, bajo una lluvia fuerte | [Fête de la Fédération](https://en.wikipedia.org/wiki/F%C3%AAte_de_la_F%C3%A9d%C3%A9ration) |
+| 3 | El cura jura, 9 ene | Aproximado | La página dice que más de la mitad del bajo clero no juró; el día es mío | [Civil Constitution of the Clergy](https://en.wikipedia.org/wiki/Civil_Constitution_of_the_Clergy) |
+| 3 | Entierran a Mirabeau, 4 abr | Aproximado | Murió el 2 de abril de 1791 y tuvo un gran entierro | [Mirabeau](https://en.wikipedia.org/wiki/Honor%C3%A9_Gabriel_Riqueti,_comte_de_Mirabeau) |
+| 3 | Vuelve el rey, 25 jun | Histórico | Entre la gente callada, con el sombrero puesto | [Flight to Varennes](https://en.wikipedia.org/wiki/Flight_to_Varennes) |
+| 3 | El Campo de Marte, 17 jul | Histórico | | [Champ de Mars massacre](https://en.wikipedia.org/wiki/Champ_de_Mars_massacre) |
+| 3 | El rey acepta la Constitución, 14 sep | Aproximado | En vigor desde el 14 de septiembre de 1791 | [French Constitution of 1791](https://en.wikipedia.org/wiki/French_Constitution_of_1791) |
+| 4 | La guerra, 20 abr | Histórico | | [War of the First Coalition](https://en.wikipedia.org/wiki/War_of_the_First_Coalition) |
+| 4 | Las Tullerías, 10 ago | Histórico | | [10 August](https://en.wikipedia.org/wiki/10_August_(French_Revolution)) |
+| 4 | Las matanzas, 2 sep, 5 días | Histórico | Del 2 al 6 de septiembre de 1792 | [September massacres](https://en.wikipedia.org/wiki/September_massacres) |
+| 4 | Valmy, 22 sep | Aproximado | La batalla fue el 20 | [Battle of Valmy](https://en.wikipedia.org/wiki/Battle_of_Valmy) |
+| 4 | La República, 23 sep | Aproximado | Proclamada el 22 de septiembre de 1792, primer día del año I | [French Republican calendar](https://en.wikipedia.org/wiki/French_Republican_calendar) |
+| 5 | Muere el rey, 21 ene | Histórico | | [Execution of Louis XVI](https://en.wikipedia.org/wiki/Execution_of_Louis_XVI) |
+| 5 | Caen los girondinos, 2 jun | Histórico | Del 31 de mayo al 2 de junio de 1793 | [Insurrection of 31 May – 2 June](https://en.wikipedia.org/wiki/Insurrection_of_31_May_%E2%80%93_2_June_1793) |
+| 5 | Muere Marat, 15 jul | Aproximado | Asesinado en su baño el 13 de julio | [Death of Marat](https://en.wikipedia.org/wiki/Death_of_Marat) |
+| 5 | La leva en masa, 24 ago | Aproximado | Decretada el 23 de agosto: los solteros de 18 a 25 años | [Levée en masse](https://en.wikipedia.org/wiki/Lev%C3%A9e_en_masse) |
+| 5 | Muere la reina, 16 oct | Histórico | | [Execution of Marie Antoinette](https://en.wikipedia.org/wiki/Execution_of_Marie_Antoinette) |
+| 5 | El calendario nuevo, 24 oct | Histórico | La Convención lo adoptó el 24 de octubre de 1793 | [French Republican calendar](https://en.wikipedia.org/wiki/French_Republican_calendar) |
+| 5 | La fiesta de la Razón, 10 nov | Histórico | El 20 de brumario del año II, en Notre-Dame | [Cult of Reason](https://en.wikipedia.org/wiki/Cult_of_Reason) |
+
+- **El pan de la igualdad** (10 dic de 1793) y **el aniversario de la Bastilla con baile** (desde 1791) vienen de memoria **[sin abrir]**: van como «aproximado».
+
+### Jean-Baptiste, soldado de infantería. De Rusia a un pueblo de Borgoña, de 1812 a 1816
+
+**Lo real y lo inventado**
+
+- **Real:** las batallas y los días que siguen; San Napoleón, el 15 de agosto, fiesta oficial del Imperio ([Saint Napoleon](https://en.wikipedia.org/wiki/Saint_Napoleon)).
+- **Inventado:** Jean-Baptiste, su gente (Lucien, el sargento Morel, su madre, su hermana, Margot y el tonelero), su pueblo (sin nombre), su compañía y lo que le pasa; la helada de mayo de 1816; el día en que llega cada noticia. San Vicente de los viñadores, la vendimia y San Martín vienen de memoria **[sin abrir]**: van como «aproximado» y sin enlace.
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | El Niemen, 24 jun | Histórico | La campaña va del 24 de junio al 24 de diciembre de 1812 | [French invasion of Russia](https://en.wikipedia.org/wiki/French_invasion_of_Russia) |
+| 1 | Smolensk, 17 ago, 2 días | Histórico | Del 16 al 18 de agosto | [Battle of Smolensk (1812)](https://en.wikipedia.org/wiki/Battle_of_Smolensk_(1812)) |
+| 1 | Borodino, 7 sep | Histórico | | [Battle of Borodino](https://en.wikipedia.org/wiki/Battle_of_Borodino) |
+| 1 | Moscú, 14 sep (un estado hasta el 19 oct) | Histórico | Ocupada del 14 de septiembre al 19 de octubre | [French invasion of Russia](https://en.wikipedia.org/wiki/French_invasion_of_Russia) |
+| 1 | El incendio, 15 sep, 4 días | Histórico | Del 14 al 18 de septiembre | [Fire of Moscow (1812)](https://en.wikipedia.org/wiki/Fire_of_Moscow_(1812)) |
+| 1 | Maloyaroslavets, 24 oct | Histórico | | [Battle of Maloyaroslavets](https://en.wikipedia.org/wiki/Battle_of_Maloyaroslavets) |
+| 1 | La nieve, 6 nov | Aproximado | «A principios de noviembre» | [French invasion of Russia](https://en.wikipedia.org/wiki/French_invasion_of_Russia) |
+| 1 | Krasnoi, 15 nov, 4 días | Histórico | Del 15 al 18 de noviembre | [Battle of Krasnoi](https://en.wikipedia.org/wiki/Battle_of_Krasnoi) |
+| 1 | El Berezina, 26 nov, 3 días; queman los puentes, 29 nov | Histórico | Del 26 al 29 de noviembre; el 29 por la mañana se quemaron los puentes y miles se quedaron del otro lado | [Battle of Berezina](https://en.wikipedia.org/wiki/Battle_of_Berezina) |
+| 1 | El emperador se va, 6 dic | Aproximado | Dejó al ejército el 5 de diciembre en Smorgonie, en trineo | [French invasion of Russia](https://en.wikipedia.org/wiki/French_invasion_of_Russia) |
+| 2 | Lützen, 2 may; Bautzen, 20 may, 2 días | Histórico | | [Lützen](https://en.wikipedia.org/wiki/Battle_of_L%C3%BCtzen_(1813)), [Bautzen](https://en.wikipedia.org/wiki/Battle_of_Bautzen_(1813)) |
+| 2 | El armisticio, 4 jun | Histórico | «Los beligerantes declararon un armisticio desde el 4 de junio» | [War of the Sixth Coalition](https://en.wikipedia.org/wiki/War_of_the_Sixth_Coalition) |
+| 2 | Dresde, 26 ago, 2 días | Histórico | 26 y 27 de agosto | [Battle of Dresden](https://en.wikipedia.org/wiki/Battle_of_Dresden) |
+| 2 | Leipzig, 16 oct, 4 días; Hanau, 30 oct, 2 días | Histórico | | [Leipzig](https://en.wikipedia.org/wiki/Battle_of_Leipzig), [Hanau](https://en.wikipedia.org/wiki/Battle_of_Hanau) |
+| 3 | Montmirail, 11 feb | Histórico | | [Battle of Montmirail](https://en.wikipedia.org/wiki/Battle_of_Montmirail) |
+| 3 | Cae París, 2 abr | Aproximado | Del 30 al 31 de marzo de 1814 | [Battle of Paris (1814)](https://en.wikipedia.org/wiki/Battle_of_Paris_(1814)) |
+| 3 | Abdica, 12 abr | Aproximado | El tratado de Fontainebleau es del 11 de abril | [Treaty of Fontainebleau (1814)](https://en.wikipedia.org/wiki/Treaty_of_Fontainebleau_(1814)) |
+| 3 | Vuelve el rey, 3 may | Aproximado | Luis XVIII entró en París el 3 de mayo | [Louis XVIII](https://en.wikipedia.org/wiki/Louis_XVIII) |
+| 3 | Elba, 30 may | Histórico | En Elba desde el 30 de mayo | [Napoleon](https://en.wikipedia.org/wiki/Napoleon) |
+| 4 | Vuelve el emperador, 8 mar | Aproximado | Desembarcó en Golfe-Juan el 1 de marzo de 1815 | [Hundred Days](https://en.wikipedia.org/wiki/Hundred_Days) |
+| 4 | Ligny, 16 jun; Waterloo, 18 jun | Histórico | | [Ligny](https://en.wikipedia.org/wiki/Battle_of_Ligny), [Waterloo](https://en.wikipedia.org/wiki/Battle_of_Waterloo) |
+| 4 | Se lo llevan a una isla, 15 ago | Aproximado | Llegó a Santa Elena en octubre de 1815; el día de la noticia es el de San Napoleón, a propósito | [Napoleon](https://en.wikipedia.org/wiki/Napoleon) |
+| 4 | Fusilan a Ney, 12 dic | Aproximado | Murió el 7 de diciembre de 1815 | [Michel Ney](https://en.wikipedia.org/wiki/Michel_Ney) |
+| 5 | El año sin verano: el frío, 15 jun; la lluvia, 20 jul; el pan caro, 28 nov | Aproximado | Hambre y motines por la comida en Francia; lluvia incesante en junio de 1816 | [Year Without a Summer](https://en.wikipedia.org/wiki/Year_Without_a_Summer) |
+
+- **La vendimia tardía de 1816** no está en la página: va como «aproximado» y sin enlace.
+
+### El joven naturalista. Alrededor del mundo, de 1832 a 1836
+
+**Lo real y lo inventado**
+
+- **Real:** el viaje del bergantín (el Beagle, 1831–1836), día por día según [Second voyage of HMS Beagle](https://en.wikipedia.org/wiki/Second_voyage_of_HMS_Beagle): la isla de Cabo Verde, el paso del ecuador con su ceremonia, Bahía (28 feb), Río (4 abr), la casa de Botafogo, el primer cajón (19 ago), Punta Alta (22 sep), Tierra del Fuego (18 dic), la misión de los fueguinos (23 ene 1833), el general Rosas (12 ago), el río Carcarañá (1 oct), la revuelta de Buenos Aires, el envío de los fósiles desde Montevideo (14 nov), Puerto Deseado y el guanaco de Navidad (23–25 dic), San Julián (9 ene 1834), la misión vacía (5 mar), Valparaíso (23 jul) y los Andes (14 ago), las islas del sur (11 nov), el terremoto (20 feb 1835) y Concepción en ruinas (4 mar), la segunda subida a los Andes (14 mar) y la carta a su familia (23 abr), Copiapó y Lima en revuelta (5 jul), las Galápagos (15 sep a 20 oct), Tahití (15 nov), Nueva Zelanda (19 dic), Australia (12 ene 1836), las Keeling (1 abr), el Cabo (31 may), la carta de su hermana y la visita a Herschel (hacia el 15 jun), Santa Elena (8 jul), la salida hacia casa (17 ago) y Falmouth (2 oct). La goleta que el capitán compró con su dinero y la reprimenda del almirantazgo, en [Robert FitzRoy](https://en.wikipedia.org/wiki/Robert_FitzRoy). El terremoto, en [1835 Concepción earthquake](https://en.wikipedia.org/wiki/1835_Concepci%C3%B3n_earthquake).
+- **Inventado:** que no se nombre a Darwin, al capitán ni al barco (su ficha dice «un joven naturalista» y «un bergantín»); el muchacho que le ayuda, el cirujano, las cartas de sus hermanas, los escarabajos, las fiebres, las ballenas, la tormenta del estrecho, el volcán, el ornitorrinco y lo que siente.
+- **Los días con su fecha exacta** van como «históricos»; los que la página da sin día (el paso del ecuador, las discusiones sobre los esclavos, la goleta, la reprimenda, las tortugas distintas en cada isla, los pájaros distintos, la visita al astrónomo) van como «aproximados».
+
 ## Lo que no se pudo comprobar
 
 - **Los pasajes de Tucídides** marcados **[sin abrir]** vienen de memoria: la red de la sesión solo dejó abrir Wikipedia. Todos van como «aproximado» y sin enlace, o con el enlace de la página que sí confirma el hecho aunque no el detalle.
@@ -1004,6 +1170,7 @@ Tienen cuadro (tandas S2 y S3). Las páginas se abrieron el 12 nov 2026.
 - **En el grupo 2**, lo marcado **[sin abrir]** viene de memoria: los días lunares de Sannō, Kanda y los fuegos de Ryōgoku en Edo, la limpieza del hollín y la fiesta de los carpinteros; el día del correo de un penique y del banquete del pabellón; que la fábrica de Mary solo cerrara en Viernes Santo y Navidad; los días sin oficina y el desfile de Rosa; la visita de Kennedy; que el triunfo de 1962 fuera el primero de México en un Mundial, y el Holi de 2026.
 - **En el grupo 3**, lo marcado **[sin abrir]** viene de memoria: el día de los votos por el emperador, el de la fiesta de Amenhotep I y el de la fiesta de Min. Y toda la vida de Ama es una reconstrucción.
 - **En el grupo 4**, lo marcado **[sin abrir]** viene de memoria: la sangría de los monjes, el libro de cuaresma del capítulo 48, el año nuevo florentino del 25 de marzo, el carro de Pascua en sábado, el día del rayo en la cúpula y el de la capilla Tornabuoni, las costumbres de Córdoba sin fecha (Yannayr, las almunias, la seda nueva) y las de la estepa (la parición, la esquila, la cacería). Tampoco se sabe si los mongoles de 1220 empezaban el año con los chinos.
+- **En el grupo 5**, lo marcado **[sin abrir]** viene de memoria: el Sena helado en enero de 1789, el pan de la igualdad, el baile del aniversario de la Bastilla, la limpieza del hollín en Japón, San Vicente y San Martín en las viñas de Borgoña. Y el año lunar de Ochiyo usa los términos solares medios sin haber podido abrir la página japonesa del calendario.
 - **Las temporadas 3 a 5 de Alguien del mundo y Alguien de México son el futuro** al escribir esto (2027 a 2029). Lo programado puede cambiar: las tandas Y de cada año lo revisan.
 - **Las fechas áticas** son una reconstrucción (ver arriba).
 - **El clima** de cada lugar es una tabla de pesos verosímil, no un registro. **[Aproximación]**
