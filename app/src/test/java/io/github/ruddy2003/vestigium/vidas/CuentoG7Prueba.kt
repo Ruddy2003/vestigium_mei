@@ -13,7 +13,7 @@ import java.time.LocalDate
  * Los cuentos del grupo 7, todos de ficción. Las pruebas generales (forma, largo, repeticiones, certeza) están en
  * [CuentoPrueba] y corren solas sobre todas las piezas registradas; aquí va lo propio de cada historia: que nadie
  * aparezca antes ni después de tiempo y que los estados se noten. Tanda T7a: la astronauta, la recolectora y el
- * funcionario.
+ * funcionario. Tanda T7b: la residente y el archivista.
  */
 class CuentoG7Prueba {
     private fun pieza(vida: String) = TodasLasPiezas.de(vida)!!
@@ -145,5 +145,74 @@ class CuentoG7Prueba {
         vivenElEstado(v, "campana", "2030-03-21", "2030-04-09", horas)
         vivenElEstado(v, "provincia", "2030-06-29", "2030-06-29", horas)
         listOf("anio_nuevo", "fundador", "desfile", "victoria").flatMap { fechas(v, it) }.forEach { descansa(v, it) }
+    }
+
+    // ---------- Tanda T7b ----------
+
+    @Test fun estanLasPiezasDeLaTandaT7bSinElHuecoDelNombre() {
+        mapOf("residente" to Genero.FEMENINO, "archivista" to Genero.MASCULINO).forEach { (v, g) ->
+            assertEquals(v, pieza(v).vida)
+            assertEquals("$v: solo la temporada 1 está escrita", setOf(1), pieza(v).temporadasEscritas)
+            assertEquals(emptyList<String>(), pieza(v).problemas(cal(v)))
+            assertEquals(v, g, pieza(v).genero)
+            assertTrue("$v usa el hueco del nombre", pieza(v).textos().none { "{nombre}" in it })
+            // «Una residente» no sale; «El archivista» sí, porque así lo escribe el cuento.
+            if (v == "residente") listOf("2027-03-03", "2029-09-09", "2031-11-11").forEach { d -> assertFalse("$v, $d", quien(v).nombre in todoElDia(v, d)) }
+        }
+    }
+
+    // ---------- La residente ----------
+
+    @Test fun enElCuentoDeLaResidenteNadieApareceAntesNiDespuesDeTiempo() {
+        val v = "residente"
+        // Lina: permiso el 12 de octubre de la 1, hijo el 8 de julio de la 2.
+        nunca(v, "2027-01-01", "2027-10-11", "A Lina le han dado por fin el permiso"); nunca(v, "2028-07-08", "2031-12-31", "A Lina le han dado por fin el permiso")
+        nunca(v, "2027-01-01", "2028-07-07", "Lina tiene un hijo")
+        // Ezra: piden cuarto el 28 de noviembre de la 2; juntos desde el 2 de mayo de la 3; fuera del 10 de mayo al 28 de julio de la 4.
+        nunca(v, "2027-01-01", "2028-11-27", "han pedido juntos un cuarto doble")
+        nunca(v, "2027-01-01", "2029-05-01", "viven en un cuarto doble")
+        nunca(v, "2027-01-01", "2030-05-09", "Ezra está fuera"); nunca(v, "2030-07-28", "2031-12-31", "Ezra está fuera")
+        alguna(v, "2030-05-15", "2030-07-20", "Ezra está fuera")
+        nunca(v, "2027-01-01", "2031-03-07", "La residente espera un hijo")
+        // Dorotea muere el 10 de diciembre de la 3; el supervisor cambia el 25 de noviembre de la 3.
+        nunca(v, "2029-12-10", "2031-12-31", "vive en el cuarto del fondo"); nunca(v, "2027-01-01", "2029-12-09", "La vieja Dorotea murió")
+        nunca(v, "2027-01-01", "2029-11-24", "El supervisor nuevo")
+        // La Puerta, abierta desde el 20 de septiembre de la 5.
+        nunca(v, "2027-01-01", "2031-09-19", "abierta al fondo del pasillo, y en que ya sabe")
+        noNombran(v, listOf("Lina", "Ezra", "Dorotea"))
+    }
+
+    @Test fun laResidenteRacionaElAguaPasaLaCuarentenaYVeLaPuertaAbierta() {
+        val v = "residente"
+        val horas = listOf(1.0, 6.5, 9.0, 12.5, 15.0, 18.0, 20.0)
+        vivenElEstado(v, "racionamiento", "2028-03-16", "2028-04-20", horas); varianEnElEstado(v, "2028-03-16", "2028-04-20", 9.0, 2)
+        vivenElEstado(v, "cuarentena", "2029-02-02", "2029-02-25", horas); varianEnElEstado(v, "2029-02-02", "2029-02-25", 9.0, 2)
+        vivenElEstado(v, "abierto", "2031-09-21", "2031-12-30", horas); varianEnElEstado(v, "2031-09-21", "2031-12-30", 9.0, 2)
+        listOf("anio_nuevo", "fundadores", "sol_falso", "nochebuena").flatMap { fechas(v, it) }.forEach { descansa(v, it) }
+    }
+
+    // ---------- El archivista ----------
+
+    @Test fun enElCuentoDelArchivistaNadieApareceAntesNiDespuesDeTiempo() {
+        val v = "archivista"
+        // El signo, desde el 14 de septiembre de la 1.
+        nunca(v, "2027-01-01", "2027-09-13", "encuentra otra vez el signo")
+        // El profesor: le escribe el 10 de febrero de la 2 y contesta el 15 de abril de la 5.
+        nunca(v, "2028-02-10", "2031-12-31", "contestó con una postal")
+        nunca(v, "2027-01-01", "2028-02-09", "El profesor no contesta"); nunca(v, "2031-04-15", "2031-12-31", "El profesor no contesta")
+        nunca(v, "2027-01-01", "2031-04-14", "contestó por fin a sus cartas")
+        // Baltasar muere el 22 de octubre de la 4; un torrero nuevo desde el 5 de marzo de la 5.
+        nunca(v, "2030-10-22", "2031-12-31", "vive solo en el faro desde hace cuarenta años")
+        nunca(v, "2027-01-01", "2030-10-21", "Baltasar, el torrero, murió"); nunca(v, "2031-03-05", "2031-12-31", "Baltasar, el torrero, murió")
+        nunca(v, "2027-01-01", "2031-03-04", "llegó un torrero nuevo")
+        noNombran(v, listOf("Baltasar"))
+    }
+
+    @Test fun elArchivistaPasaLaFiebreYElFaroYNoTrabajaEnLasFiestas() {
+        val v = "archivista"
+        val horas = listOf(1.0, 9.5, 12.0, 15.0, 17.5, 18.5, 22.0)
+        vivenElEstado(v, "fiebre", "2029-03-02", "2029-03-24", horas); varianEnElEstado(v, "2029-03-02", "2029-03-24", 12.0, 2)
+        vivenElEstado(v, "faro", "2030-01-21", "2030-02-09", horas); varianEnElEstado(v, "2030-01-21", "2030-02-09", 12.0, 2)
+        listOf("anio_nuevo", "san_pedro", "carmen", "navidad").flatMap { fechas(v, it) }.forEach { descansa(v, it) }
     }
 }

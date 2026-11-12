@@ -17,6 +17,7 @@ object TodasLasPiezas {
         PiezasAlbert.PIEZAS, PiezasNikos.PIEZAS, PiezasLou.PIEZAS,
         PiezasLiudmila.PIEZAS, PiezasGiulia.PIEZAS,
         PiezasAstronauta.PIEZAS, PiezasSemillera.PIEZAS, PiezasFuncionario.PIEZAS,
+        PiezasResidente.PIEZAS, PiezasArchivista.PIEZAS,
     ) }
 
     private val porVida: Map<String, Piezas> by lazy { TODAS.associateBy { it.vida } }

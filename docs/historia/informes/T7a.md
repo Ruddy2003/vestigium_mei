@@ -101,7 +101,7 @@ Cada pueblo lee su arco: la granja de la nave, el puente viejo mientras se arreg
   - en la campaña, el funcionario miraba el cielo «al salir del portal», sin salir del ministerio; en la provincia, el verano hablaba de los bloques de la capital; y un «Duran una hora».
 - **Al repasar los textos antes de probarlos** corregí: Sana en el especial de la parada, que vuelve cada año; un «desayuno» en un especial; y un «cena» en un pensamiento.
 - **Un límite que queda:** el funcionario hace la gimnasia ante la pantalla en el mismo tipo de tramo que el trabajo del ministerio, así que a las 7 puede salir un texto de la oficina y a media mañana no sale la gimnasia (la gimnasia va en la mañana).
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android:** la corrida 228 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `5d876e7`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que no se pudo comprobar
