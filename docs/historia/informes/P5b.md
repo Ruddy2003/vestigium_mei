@@ -170,6 +170,10 @@ Esto no se puede comprobar aquí: las capturas son imágenes quietas y el arnés
 - **Capturas:** la corrida 273 **terminó bien**, con 9 imágenes y sin fallas. Revisé las reacciones de Helénico y la hoja de poses de Ciudad neón: el gato, su pelaje y su accesorio **se ven igual que en el arnés.**
   - **La hoja de poses salía recortada:** con las siete animaciones nuevas y las dos acciones ya no cabía en el alto que tenía. Se corrigió (el alto ahora sale de lo que hay que mostrar) y se repitió la corrida: ver abajo.
 
-**La hoja de poses completa:**
+**La hoja de poses completa** (`daaa6f2`):
 
-_Pendiente: se llena al terminar la corrida._
+- La corrida 274 de `capturas.yml` **terminó bien**, con 9 imágenes y sin fallas (`errores.txt` y `fallas.txt` vacíos).
+- La hoja de Gótico ya sale entera: mide 1080 × 6781 y llega hasta las dos acciones del tema, «sostiene una vela» (4 cuadros) y «mira una estrella de la bóveda» (6 cuadros). Revisé el final de la imagen: están las siete animaciones nuevas y las dos acciones, con su utilería.
+- El cambio fue solo en la captura (`Capturas.kt`); la app no cambió, así que la compilación de la corrida 239 sigue valiendo.
+
+**Corridas de capturas usadas en P5b:** 3 (272, 273 y 274). El plan pedía 2; la tercera fue por la hoja recortada.
