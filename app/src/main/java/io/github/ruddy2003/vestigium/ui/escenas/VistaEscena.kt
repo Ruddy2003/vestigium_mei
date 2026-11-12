@@ -74,7 +74,7 @@ fun VistaEscena(
         Spacer(Modifier.fillMaxSize().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawBehind {
             aSalvo(alFallar) { lienzo { with(escena) { quieta(momento) } } }
         })
-        Spacer(Modifier.fillMaxSize().drawBehind {
+        Spacer(Modifier.fillMaxSize().graphicsLayer().drawBehind {
             val instante = if (seMueve) reloj else relojFijo
             aSalvo(alFallar) { lienzo { with(escena) { viva(momento, instante) } } }
         })

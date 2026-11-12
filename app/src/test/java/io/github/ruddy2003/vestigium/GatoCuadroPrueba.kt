@@ -64,7 +64,7 @@ class GatoCuadroPrueba {
             huesos(p).forEach { q -> assertTrue("$a $k: se hunde en el suelo (${q.y})", q.y <= 0.01f) }
             // La cola puede pedir bajar un poco del suelo cuando la arrastra: el dibujo la deja apoyada.
             cola(p).forEach { q -> assertTrue("$a $k: la cola se hunde mucho en el suelo (${q.y})", q.y <= 3f) }
-            assertTrue("$a $k", p.ancho in 0.2f..1f && p.ojos in 0f..1f && p.orejas in -1f..1f && p.erizo in 0f..1f && p.boca in 0f..1f)
+            assertTrue("$a $k", p.giro in 0f..1f && p.caraVista in 0f..1f && p.ojos in 0f..1f && p.orejas in -1f..1f && p.erizo in 0f..1f && p.boca in 0f..1f)
         }
     }
 
@@ -100,8 +100,11 @@ class GatoCuadroPrueba {
                 assertTrue("$a: el salto baja del suelo", p.dy <= 0f)
             }
         }
-        // En un tramo en el que no cabe ni a dar un paso, se queda en medio.
-        pasos(NORMAL, 3, 4000, desde = 100f, hasta = 130f).forEach { assertEquals(115f, it.x, 0.01f) }
+        // En un tramo en el que no cabe ni a dar un paso, se queda en medio: no camina, ni salta, ni da vueltas en el sitio.
+        for (a in Gato.Animo.entries) pasos(humor(a), 3, 4000, desde = 100f, hasta = 130f).forEach {
+            assertEquals(115f, it.x, 0.01f); assertEquals(0f, it.dy, 0f)
+            assertFalse("$a: ${it.anim} en un tramo donde no cabe", it.anim in setOf(AnimGato.CAMINAR, AnimGato.CAMINAR_TRISTE, AnimGato.GIRAR, AnimGato.SALTAR, AnimGato.JUGAR))
+        }
     }
 
     @Test fun losCambiosDeEstadoSonLosDelGatoDePixel() {

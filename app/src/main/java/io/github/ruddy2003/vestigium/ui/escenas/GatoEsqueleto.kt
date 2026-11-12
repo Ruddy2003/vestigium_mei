@@ -17,7 +17,7 @@ import kotlin.math.sqrt
 // acciones propias.
 //
 // Las medidas van en las unidades del lienzo de la escena (380 × 285) para un gato de talla 1: de pie mide unas 33 de
-// largo sin la cola y 33 de alto hasta la punta de las orejas. El gato mira hacia la derecha (+x) y pisa en y = 0;
+// largo sin la cola y 34 de alto, sentado, hasta la punta de las orejas. El gato mira hacia la derecha (+x) y pisa en y = 0;
 // hacia arriba, y es negativa. Quien dibuja lo voltea si mira a la izquierda.
 
 /** Las animaciones comunes: las mismas 13 del gato de pixel, con los mismos cuadros cada una. */
@@ -38,8 +38,11 @@ enum class AnimGato(val cuadros: Int) {
  * - [cola0], [cola1] y [cola2]: hacia dónde apunta cada tercio de la cola, en radianes: 0 es hacia atrás, π/2 hacia
  *   arriba y π hacia delante. [colaDelante]: la cola pasa por delante del cuerpo (cuando duerme enroscado).
  * - [orejas]: de −1 (gachas, hacia atrás) a 1 (tiesas). [ojos]: de 0 (cerrados) a 1. [boca]: de 0 a 1 (bufa o bosteza).
- * - [erizo]: de 0 a 1, el pelo de punta. [ancho]: 1 de perfil; menos, mientras gira. [frente]: mira a quien lo ve.
- * - [lengua]: se está lamiendo la mano.
+ * - [erizo]: de 0 a 1, el pelo de punta. [lengua]: se está lamiendo la mano.
+ * - [giro]: hacia dónde está vuelto el cuerpo, de 0 (de perfil) a 1 (de frente, mirando a quien lo ve); 0.5 es de
+ *   tres cuartos. No estrecha el dibujo: dice desde dónde se le ve, y con eso se pintan las cuatro patas, el pecho y
+ *   la cola en su sitio. Las posturas de giro traen ya la cadera, el hombro y los pies donde se ven desde ahí.
+ * - [cara]: lo mismo para la cabeza sola, que puede volverse más que el cuerpo. Con −1 sigue al cuerpo.
  */
 data class Pose(
     val cadera: Offset = Offset(-7.2f, -14.6f), val hombro: Offset = Offset(6.6f, -14.9f), val lomo: Float = 0f,
@@ -48,8 +51,11 @@ data class Pose(
     val pieC: Offset = Offset(-9.3f, 0f), val pieL: Offset = Offset(-7.4f, 0f),
     val cola0: Float = 0.45f, val cola1: Float = 0.1f, val cola2: Float = 0.75f, val colaDelante: Boolean = false,
     val orejas: Float = 1f, val ojos: Float = 1f, val boca: Float = 0f, val erizo: Float = 0f,
-    val ancho: Float = 1f, val frente: Boolean = false, val lengua: Boolean = false,
-)
+    val giro: Float = 0f, val cara: Float = -1f, val lengua: Boolean = false,
+) {
+    /** Hacia dónde está vuelta la cabeza, de 0 (de perfil) a 1 (de frente). */
+    val caraVista: Float get() = if (cara < 0f) giro else cara
+}
 
 private fun mz(a: Float, b: Float, t: Float) = a + (b - a) * t
 private fun mz(a: Offset, b: Offset, t: Float) = Offset(mz(a.x, b.x, t), mz(a.y, b.y, t))
@@ -61,7 +67,7 @@ fun mezcla(a: Pose, b: Pose, t: Float): Pose {
         mz(a.cadera, b.cadera, t), mz(a.hombro, b.hombro, t), mz(a.lomo, b.lomo, t), mz(a.cabeza, b.cabeza, t), mz(a.morro, b.morro, t),
         mz(a.manoC, b.manoC, t), mz(a.manoL, b.manoL, t), mz(a.pieC, b.pieC, t), mz(a.pieL, b.pieL, t),
         mz(a.cola0, b.cola0, t), mz(a.cola1, b.cola1, t), mz(a.cola2, b.cola2, t), c.colaDelante,
-        mz(a.orejas, b.orejas, t), mz(a.ojos, b.ojos, t), mz(a.boca, b.boca, t), mz(a.erizo, b.erizo, t), mz(a.ancho, b.ancho, t), c.frente, c.lengua,
+        mz(a.orejas, b.orejas, t), mz(a.ojos, b.ojos, t), mz(a.boca, b.boca, t), mz(a.erizo, b.erizo, t), mz(a.giro, b.giro, t), mz(a.caraVista, b.caraVista, t), c.lengua,
     )
 }
 
@@ -69,7 +75,7 @@ fun mezcla(a: Pose, b: Pose, t: Float): Pose {
 object Gatuno {
     const val R_GRUPA = 5f
     const val R_PECHO = 4.8f
-    const val R_CABEZA = 5.6f
+    const val R_CABEZA = 6.4f
     const val BRAZO = 5.2f
     const val ANTEBRAZO = 10f
     const val MUSLO = 6.4f
@@ -81,12 +87,12 @@ object Gatuno {
 
     /** Lo que ocupa a lo ancho, desde su centro, y a lo alto: para saber si cabe y para tocarlo. */
     const val MEDIO_LARGO = 19f
-    const val ALTO = 33f
+    const val ALTO = 34f
 
     val DE_PIE = Pose()
 
     val SENTADO = Pose(
-        cadera = Offset(-5f, -5.1f), hombro = Offset(3.6f, -14.6f), cabeza = Offset(7.6f, -23.6f),
+        cadera = Offset(-4.8f, -5.1f), hombro = Offset(3.4f, -14.9f), cabeza = Offset(6.6f, -24.3f),
         manoC = Offset(6.1f, 0f), manoL = Offset(7.8f, 0f), pieC = Offset(1f, 0f), pieL = Offset(2.5f, 0f),
         cola0 = -0.2f, cola1 = 0.05f, cola2 = 0.5f,
     )
@@ -148,8 +154,16 @@ object Gatuno {
         // Respira, y mueve la punta de la cola.
         AnimGato.QUIETO -> { val r = sin(PI.toFloat() * k / 2f); DE_PIE.copy(hombro = DE_PIE.hombro + Offset(0f, -0.25f * r), cabeza = DE_PIE.cabeza + Offset(0f, -0.3f * r), cola2 = 0.75f + 0.25f * r, ojos = if (k == 3) 0.15f else 1f) }
         AnimGato.QUIETO_TRISTE -> { val r = sin(PI.toFloat() * k / 2f); DE_PIE.copy(cabeza = Offset(13.6f, -15.6f - 0.2f * r), morro = 0.35f, orejas = 0.05f, ojos = 0.55f, cola0 = -0.6f, cola1 = -0.3f, cola2 = 0.05f + 0.05f * r) }
-        // Da media vuelta: se le ve de escorzo y luego de frente.
-        AnimGato.GIRAR -> if (k == 0) DE_PIE.copy(ancho = 0.62f, cola0 = 0.7f, cola1 = 1.1f, cola2 = 1.4f) else DE_PIE.copy(ancho = 0.42f, frente = true, cola0 = 1.2f, cola1 = 1.5f, cola2 = 1.7f)
+        // Da media vuelta hacia quien lo mira: primero de tres cuartos, con la cabeza ya vuelta; luego de frente.
+        AnimGato.GIRAR -> if (Math.floorMod(k, 2) == 0) Pose(
+            cadera = Offset(-4.9f, -14.8f), hombro = Offset(4.6f, -14.7f), cabeza = Offset(9.2f, -21.6f), giro = 0.5f, cara = 0.7f,
+            manoC = Offset(3.2f, 0f), manoL = Offset(6.8f, -0.5f), pieC = Offset(-8.2f, -0.2f), pieL = Offset(-4.4f, -0.7f),
+            cola0 = 0.85f, cola1 = 1.2f, cola2 = 1.5f,
+        ) else Pose(
+            cadera = Offset(0.5f, -15.3f), hombro = Offset(0f, -14.5f), cabeza = Offset(0.2f, -21.4f), giro = 1f,
+            manoC = Offset(-2.5f, 0f), manoL = Offset(2.6f, 0f), pieC = Offset(-4f, -0.9f), pieL = Offset(4.2f, -0.9f),
+            cola0 = 1.25f, cola1 = 1.5f, cola2 = 1.9f,
+        )
         AnimGato.SALTAR -> when (Math.floorMod(k, 6)) {
             0 -> AGAZAPADO.copy(cadera = Offset(-6.8f, -9f), cola0 = 0.4f, cola1 = 0.3f, cola2 = 0.2f)
             1 -> DE_PIE.copy(cadera = Offset(-7f, -13f), hombro = Offset(7.6f, -18.4f), cabeza = Offset(14.6f, -25f), manoC = Offset(12.4f, -8f), manoL = Offset(13.8f, -9f), pieC = Offset(-11.8f, 0f), pieL = Offset(-10f, 0f), cola0 = 0.1f, cola1 = 0f, cola2 = -0.1f)
@@ -189,21 +203,24 @@ object Gatuno {
     /**
      * Dónde queda el codo o la rodilla de una pata que nace en [raiz] y pisa en [pie], con huesos de largo [a] y [b].
      * [haciaDelante]: la rodilla de atrás dobla hacia delante; el codo, hacia atrás. Si el pie queda fuera de alcance,
-     * la pata se estira hacia él todo lo que da.
+     * la pata se estira hacia él todo lo que da. [doblez]: cuánto del doblez se ve; de frente, casi nada (dobla hacia el fondo).
      */
-    fun articulacion(raiz: Offset, pie: Offset, a: Float, b: Float, haciaDelante: Boolean): Offset {
+    fun articulacion(raiz: Offset, pie: Offset, a: Float, b: Float, haciaDelante: Boolean, doblez: Float = 1f): Offset {
         val v = pie - raiz
         val d = sqrt(v.x * v.x + v.y * v.y).coerceIn(kotlin.math.abs(a - b) + 0.05f, a + b - 0.05f)
         val u = if (v.x == 0f && v.y == 0f) Offset(0f, 1f) else v / sqrt(v.x * v.x + v.y * v.y)
         val largo = (d * d + a * a - b * b) / (2f * d)
         val alto = sqrt((a * a - largo * largo).coerceAtLeast(0f))
         val n = if (haciaDelante) Offset(u.y, -u.x) else Offset(-u.y, u.x)
-        return raiz + u * largo + n * alto
+        return raiz + u * largo + n * (alto * doblez)
     }
 
-    /** El punto [t] (de 0 a 1) de la cola de [p], que nace en [base] y mide [largo]. */
-    fun cola(p: Pose, base: Offset, largo: Float, t: Float): Offset {
-        fun dir(a: Float) = Offset(-cos(a), -sin(a))
+    /**
+     * El punto [t] (de 0 a 1) de la cola de [p], que nace en [base] y mide [largo]. [perfil]: cuánto de lo que la cola
+     * va hacia atrás se ve desde donde se mira (1 de perfil; de frente, casi nada: se le ve subir).
+     */
+    fun cola(p: Pose, base: Offset, largo: Float, t: Float, perfil: Float = 1f): Offset {
+        fun dir(a: Float) = Offset(-cos(a) * perfil, -sin(a))
         val tercio = largo / 3f
         val p1 = base + dir(p.cola0) * tercio; val p2 = p1 + dir(p.cola1) * tercio; val p3 = p2 + dir(p.cola2) * tercio
         val q = 1f - t

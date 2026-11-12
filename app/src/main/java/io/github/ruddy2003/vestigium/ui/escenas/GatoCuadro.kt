@@ -11,6 +11,7 @@ import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import io.github.ruddy2003.vestigium.ui.Gato
 import kotlinx.coroutines.delay
 
@@ -65,13 +66,15 @@ class SimulacionGato(
     val marcha: Float = (when (humor.animo) { Gato.Animo.TRISTE -> 0.6f; Gato.Animo.ALEGRE -> 1.15f; else -> 1f }) * (if (humor.cansado) 0.7f else 1f)
     private val vel = VELOCIDAD * talla * marcha
     private val margen = Gatuno.MEDIO_LARGO * talla
+    /** Si su tramo de suelo da para caminar. Si no, se queda donde está: no camina, ni salta, ni da vueltas en el sitio. */
+    private val puedeCaminar = hasta - desde >= 2 * margen + 12f * talla
     private var x = (desde + hasta) / 2
     private var dir = 1
     private var i = 0
     private var especial = 0
 
     /** Lo que hace ahora mismo. */
-    var estado: EstadoGato = if (humor.noche) EstadoGato.DORMIR else EstadoGato.CAMINAR
+    var estado: EstadoGato = if (humor.noche) EstadoGato.DORMIR else if (puedeCaminar) EstadoGato.CAMINAR else EstadoGato.QUIETO
         private set
     private var resto = durar(estado)
 
@@ -129,11 +132,12 @@ class SimulacionGato(
 
     private fun cambiar(nuevo: EstadoGato) {
         var n = nuevo
+        if (!puedeCaminar && (n == EstadoGato.CAMINAR || n == EstadoGato.SALTAR || n == EstadoGato.JUGAR)) n = EstadoGato.QUIETO
         if (n == EstadoGato.ESPECIAL) {
             // Solo las acciones del tema que parten de esta postura (sentado o de pie).
             val sentado = estado == EstadoGato.SENTADO
             val ok = especiales.indices.filter { especiales[it].sentado == sentado && especiales[it].cuadros > 0 }
-            if (ok.isEmpty()) { n = if (sentado) EstadoGato.ASEARSE else EstadoGato.CAMINAR } else { especial = ok[rnd.nextInt(ok.size)] }
+            if (ok.isEmpty()) { n = if (sentado) EstadoGato.ASEARSE else if (puedeCaminar) EstadoGato.CAMINAR else EstadoGato.SENTARSE } else { especial = ok[rnd.nextInt(ok.size)] }
         }
         estado = n; i = 0; resto = durar(n)
         alCambiar?.invoke(n)
@@ -251,7 +255,8 @@ internal fun CapaGato(
             delay(SimulacionGato.DT_MS)
         }
     }
-    Spacer(modifier.drawBehind {
+    // En su propia capa: al moverse el gato no hay que volver a trazar la parte viva de la escena, ni al revés.
+    Spacer(modifier.graphicsLayer().drawBehind {
         val p = fijo ?: paso ?: gatoQuieto(suelo)
         aSalvo(alFallar) {
             lienzo {

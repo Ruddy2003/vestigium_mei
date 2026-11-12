@@ -24,7 +24,7 @@ El gato que vivirá dentro del cuadro de Hoy. Ya no es una tira de imágenes, co
 ## Cómo es
 
 **El esqueleto.** Una postura dice dónde están la cadera, el hombro, la cabeza, los cuatro pies y la cola, más las orejas, los ojos, la boca y el pelo erizado. Las rodillas y los codos salen solos.
-- Con talla 1 mide unas 33 unidades de largo sin la cola y 33 de alto hasta las orejas: su tamaño real junto a las cosas del primer plano.
+- Con talla 1 mide unas 33 unidades de largo sin la cola y 34 de alto, sentado, hasta las orejas: su tamaño real junto a las cosas del primer plano.
 - **En el cuadro va a talla 1.3,** algo más grande de lo real, porque a su tamaño costaba encontrarlo. **[Diseño propio]**
 
 **Las 13 animaciones** son las del gato de pixel, con los mismos cuadros cada una:
@@ -35,7 +35,7 @@ El gato que vivirá dentro del cuadro de Hoy. Ya no es una tira de imágenes, co
 | caminar triste | 8 | Lo mismo con la cabeza gacha y la cola baja |
 | quieto | 4 | Respira, mueve la punta de la cola y parpadea |
 | quieto triste | 4 | Cabizbajo |
-| girar | 2 | Se le ve de escorzo y luego de frente |
+| girar | 2 | Da la vuelta hacia quien lo mira: de tres cuartos, con la cabeza ya vuelta, y de frente |
 | saltar | 6 | Se agazapa, se impulsa, va por el aire, cae y se recoge |
 | jugar | 6 | Menea la grupa, salta sobre algo y le da manotazos |
 | enojado | 3 | Lomo arqueado, pelo de punta, orejas gachas, bufa |
@@ -49,6 +49,11 @@ El gato que vivirá dentro del cuadro de Hoy. Ya no es una tira de imágenes, co
 - **Cada tema podrá sumar sus dos acciones propias** (tocar la lira, sorber fideos): el pelaje trae sus posturas y lo que lleva en las manos. Llegan en P5b.
 
 **El dibujo.** Al gouache, como las escenas.
+- **Se le puede ver de perfil, de tres cuartos o de frente,** sin estrechar el dibujo (`Pose.giro` para el cuerpo y `Pose.cara` para la cabeza sola).
+  - La cabeza es una bola con cada cosa en su sitio: al volverla, los ojos, las orejas, el hocico y los bigotes quedan donde se verían desde ahí.
+  - El cuerpo pinta sus cuatro patas separadas según desde dónde se le mire: de frente, las dos de delante una a cada lado y las de atrás asomando por detrás.
+  - Con esto, en P5b podrá volver la cabeza hacia donde toques sin dibujar nada nuevo.
+- **La cara:** ojos grandes, con la pupila casi redonda (más aún de noche) y dos brillos; orejas de punta redondeada, con su rosa dentro; hocico corto y claro; mofletes. El autor pidió que fuera más tierno sin dejar de ser realista, ni engordarlo: el cuerpo no cambió.
 - El cuerpo entero se pinta en una capa aparte, con todas sus partes del mismo color, para que no se noten las juntas.
 - Encima, y solo donde ya hay gato, van el dibujo del pelaje y la luz: el lomo claro, el vientre en sombra, un lado más claro que el otro.
 - **Lleva un borde oscuro del lado de la sombra,** del color de su pelo oscurecido. No es un contorno negro: es lo que lo despega del fondo. **[Diseño propio]**
@@ -99,7 +104,9 @@ El gato que vivirá dentro del cuadro de Hoy. Ya no es una tira de imágenes, co
 4. **La lluvia cae por detrás del gato:** su capa va encima de la parte viva de la escena. P4a había dejado esto por decidir.
 5. **El gato tapa lo que tiene detrás.** Camina por delante de las cosas del primer plano; no se mete entre ellas.
 6. **Una superficie de capturas nueva, `gatoCuadro`,** en vez de meter al gato en las de `cuadro`.
-7. **Al girar se le ve de frente,** con las dos orejas y los dos ojos. El de pixel tenía dos cuadros de giro pintados a mano.
+7. **Al girar da la vuelta hacia quien lo mira,** y se le ve de tres cuartos y de frente con su propio dibujo. La primera versión estrechaba el de perfil; el autor pidió cuadros propios.
+8. **Si su tramo de suelo no da para caminar, se queda donde está:** se sienta, se asea, duerme, pero no camina, ni salta, ni da vueltas en el sitio. Hoy todas las escenas le dan sitio de sobra.
+9. **La parte viva de la escena y el gato van cada uno en su capa.** Así, cuando se mueve el gato no hay que volver a trazar la lluvia y el humo, ni al revés.
 
 ## Para las tandas que siguen
 
@@ -118,7 +125,7 @@ El gato que vivirá dentro del cuadro de Hoy. Ya no es una tira de imágenes, co
   - las 13 animaciones tienen los cuadros del gato de pixel, y todas sus posturas caben en su sitio;
   - al caminar los pies no patinan y siempre apoya al menos dos patas;
   - con la misma semilla hace siempre lo mismo;
-  - nunca se sale de su tramo de suelo, con ningún ánimo, y en un tramo donde no cabe se queda en medio;
+  - nunca se sale de su tramo de suelo, con ningún ánimo, y en un tramo donde no cabe se queda en medio, sin caminar ni girar;
   - los pasos de un estado a otro son los del gato de pixel;
   - el ánimo, el cansancio y la noche cambian lo que hace, como dice la tabla de arriba;
   - hace las acciones propias de su tema cuando las tiene;
@@ -126,13 +133,27 @@ El gato que vivirá dentro del cuadro de Hoy. Ya no es una tira de imágenes, co
 - **Barrido:** 173,760 dibujos, 0 fallas.
   - 77,760: todas las posturas con seis pelajes, en las tres escenas, a seis horas, con tres tiempos y mirando a los dos lados.
   - 96,000: el gato suelto en cada escena, con cada ánimo, cansado o no, de día y de noche.
-- **Peso:** 1.3 ms por cuadro del gato en el arnés, a 380 × 285. Se traza 12,5 veces por segundo y no obliga a rehacer la parte quieta de la escena.
+- **Peso:** 1.4 ms por cuadro del gato en el arnés, a 380 × 285. Se traza 12,5 veces por segundo y no obliga a rehacer la parte quieta de la escena.
 - **El movimiento** lo vi en el arnés: dos películas de 26 segundos, una en Helénico y otra en Ciudad neón, hechas con los cuadros que da la simulación.
 - **Compilación de Android y capturas:** ver «Resultado en Actions», abajo.
 
+## La revisión del 12 nov 2026
+
+El autor vio el gato y pidió revisarlo con más esfuerzo. Lo que cambió:
+
+| Lo que pidió o lo que encontré | Cómo quedó |
+|---|---|
+| «Haz cuadros propios del gato volteando, no lo estreches» | El giro se dibuja de tres cuartos y de frente, con las patas, el pecho y la cola en su sitio |
+| «La cara se ve medio creepy»; pupilas más grandes | Pupila grande y casi redonda en vez de una raja, con dos brillos; ojos más grandes y más abajo; el borde del ojo, más fino |
+| «Las orejas, que no sean triángulos súper picudos» | Orejas de punta redondeada, más anchas |
+| «Un poquito más cute, pero realista; ni un gato nuevo ni un gato gordo» | Cabeza un 14 % más grande, hocico más corto y mofletes. El cuerpo, las patas y las animaciones no cambiaron |
+| Revisión: en un tramo de suelo muy corto el gato daba vueltas en el sitio sin parar | Si no cabe a caminar, no camina (una prueba lo vigila) |
+| Revisión: al moverse el gato se volvía a trazar la parte viva de la escena | Cada una va en su capa |
+| Revisión: la máquina de estados, comparada línea por línea con la del gato de pixel | Coincide: mismas tablas, mismos tiempos y el mismo orden al sortear |
+
 ## Lo que quedó flojo
 
-- **El giro de frente es pobre:** el cuerpo es el de perfil estrechado, no un cuerpo visto de frente.
+- **De frente, el cuerpo es una columna angosta** y apenas se le ve el pecho claro.
 - **Sentado se ve algo encorvado,** y dormido es un bulto con poca forma.
 - **Las patas de atrás tienen dos huesos,** no tres: les falta el corvejón.
 - **No hay cuadros intermedios:** se mueve a 12,5 cuadros por segundo, como el de pixel, y los cambios de postura son secos.
@@ -147,7 +168,7 @@ El gato que vivirá dentro del cuadro de Hoy. Ya no es una tira de imágenes, co
 
 ## Resultado en Actions
 
-Sobre el commit del gato (`d084b69`).
+Estas corridas son las de la primera versión del gato (`d084b69`). Las de la revisión están al final.
 
 - **Compilación de Android:** la corrida 230 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, **terminó bien** (no se publicó ningún Release).
 - **Capturas:** la corrida 269 de `capturas.yml` (`superficies = gatoCuadro`, `temas = heleno,gotico,neon`, `solo = true`) **terminó bien**, sin errores de compilación ni pruebas fallidas.
@@ -157,3 +178,7 @@ Sobre el commit del gato (`d084b69`).
 - **Corridas de capturas usadas:** 1 de las 2 que preveía el plan. La otra queda para los cambios que pida el autor al ver el gato.
 - Con `solo`, la rama `capturas` queda solo con estas 6 imágenes hasta la siguiente corrida completa.
 - **Después de esas corridas** entró un cambio de una línea (el gato toma la luz de los letreros de Ciudad neón solo en parte). Se compiló y se probó en el arnés, y la corrida 231 de `apk.yml`, sobre el commit `a619604` y sin publicar, **terminó bien**. Las capturas no se repitieron: ese cambio solo atenúa el color del gato en Ciudad neón.
+
+**Después de la revisión** (el gato con la cara nueva, el giro con cuadros propios y los dos arreglos):
+
+_Pendiente: se llena al terminar las corridas._
