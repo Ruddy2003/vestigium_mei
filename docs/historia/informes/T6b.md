@@ -95,7 +95,7 @@ Cada pueblo lee su arco: el plan del año en la nave de telares (Liudmila) y cu�
   - Liudmila: la suegra en textos de todos los años (el tiempo, la tele, el día de los cosmonautas), el sofá cama y «el piso pequeño» después de la mudanza, «la jefa de turno» en un texto de todos los días cuando desde la temporada 5 lo es ella, las estrellas del Kremlin vistas desde la cocina (en el barrio nuevo no se ven), y dos especiales con un párrafo que no existe (no habría compilado);
   - Giulia: un especial con un párrafo que no existe; Samir el día de León XIV, un mes antes de llegar a la obra; el evangelio que el viento pasa de páginas sobre el ataúd, que recuerdo del funeral de Juan Pablo II y no pude dar por bueno para el de Francisco; y el andamio en textos que valían también con la capilla terminada.
 - **Un límite que queda:** los textos de camino de Liudmila mezclan el metro de ida con las colas de la vuelta, porque el motor no elige texto por hora sino por actividad; a las siete de la mañana puede salir una cola.
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android:** la corrida 226 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `ef49539`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que no se pudo comprobar

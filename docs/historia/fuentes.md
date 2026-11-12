@@ -1306,6 +1306,38 @@ Tienen cuadro (tandas S4 y S5). Las páginas se abrieron el 12 nov 2026.
 
 - **En 2025, el cumpleaños de Roma no va aparte:** cayó el lunes de Pascua, el día en que murió el papa.
 
+## Grupo 7: la astronauta, la recolectora, el funcionario, la residente y el archivista (tanda A7)
+
+Son personajes de ficción: **todo su calendario es inventado**, también las fiestas, y nada lleva enlace. Sus mundos, sus fiestas y su gente son de cada historia, sin nombres, lugares ni sucesos de ninguna obra (el funcionario se inspira en el mundo de *1984*, pero ninguna de sus personas, fiestas ni oficinas sale de la novela). Lo único que viene de fuera es la física del viaje de la astronauta. Las páginas se abrieron el 12 nov 2026.
+
+### La astronauta, ingeniera de vuelo. Una nave rumbo a Alfa Centauri, años 15 a 19 del viaje
+
+Su vida se rehízo en esta tanda (antes estaba en la Estación Espacial Internacional en 2025). La nave, su gente y su vida son inventadas; los números del viaje, no:
+
+- **La distancia:** Alfa Centauri está a 4.37 años luz ([Alpha Centauri](https://en.wikipedia.org/wiki/Alpha_Centauri)).
+- **La velocidad:** una décima parte de la de la luz, unos 30,000 km cada segundo, que es la que se plantea para una nave a otra estrella ([Interstellar travel](https://en.wikipedia.org/wiki/Interstellar_travel)). A esa velocidad recorre unos 946,000 millones de km al año y el viaje dura unos 44 años, sin contar lo que tarda en acelerar y en frenar. **[Aproximación]**
+- **Dónde está:** en el año 15 lleva 1.5 años luz y en el 19, unos 2. El arco `viaje` de su calendario lo sigue (0.34 a 0.45 del camino).
+- **Los mensajes:** uno que sale de la Tierra tiene que alcanzar a una nave que se aleja, así que tarda la distancia dividida entre 0.9 años: a 1.5 años luz, un año y ocho meses. «Casi dos años», dice el calendario.
+- **Cuándo la estrella de delante brilla más que el Sol (temporada 4, 15 de julio).** La página da las magnitudes absolutas de Alfa Centauri A y B: +4.38 y +5.71. Juntas suman +4.10. La del Sol es +4.83 (dato de memoria, **[sin abrir]**). Las dos estrellas se ven igual de brillantes cuando el cociente de sus distancias es 10^((4.83 − 4.10)/5) = 1.40, o sea, a 4.37 / 2.40 = **1.82 años luz** de la Tierra. La nave llega ahí a mitad del año 18. La misma página confirma la cuenta al revés: desde Alfa Centauri, el Sol se vería de magnitud +0.5. `AnioG7Prueba` rehace la cuenta y comprueba que el día cae a menos de 0.015 años luz del cruce.
+- **La nave de varias generaciones:** la idea de un viaje en el que llegan sobre todo los nacidos a bordo ([Generation ship](https://en.wikipedia.org/wiki/Generation_ship)).
+- **Inventado:** todo lo demás (el reactor, el anillo, la granja, las fiestas de a bordo, el planeta y su aurora, la gente).
+
+### La recolectora de semillas. Una ciudad que el bosque recuperó, años 40 a 44 tras el silencio
+
+Todo inventado. Su ficha ya cita de dónde sale la idea (el libro de Alan Weisman, Prípiat). El clima es el de una ciudad templada del norte. **[Diseño propio]**
+
+### El funcionario. La capital de un Estado que todo lo vigila, de 1984 a 1988
+
+Todo inventado. Sus temporadas llevan los años de su ficha, pero ningún hecho real: el Estado, sus fiestas (el Día del Fundador, el Desfile de la Unidad, la Semana de la Gratitud, la Victoria Permanente), sus campañas y su gente son de esta historia. **[Diseño propio]**
+
+### La residente. Un refugio bajo tierra, de 2105 a 2109
+
+Todo inventado. Como la astronauta, no tiene cielo ni estaciones; su primer clima de verdad es la lluvia del día que sale. **[Diseño propio]**
+
+### El archivista. Un pueblo de pescadores en la niebla, de 1926 a 1930
+
+Todo inventado, también las fiestas del pueblo (la Candelaria, San Pedro, la Virgen del Carmen, los difuntos), que son las de muchos pueblos de pescadores pero aquí van como inventadas. Lo raro se insinúa y nunca se explica; no hay criaturas ni nombres de ninguna obra. **[Diseño propio]**
+
 ## Lo que no se pudo comprobar
 
 - **Los pasajes de Tucídides** marcados **[sin abrir]** vienen de memoria: la red de la sesión solo dejó abrir Wikipedia. Todos van como «aproximado» y sin enlace, o con el enlace de la página que sí confirma el hecho aunque no el detalle.
@@ -1315,6 +1347,7 @@ Tienen cuadro (tandas S4 y S5). Las páginas se abrieron el 12 nov 2026.
 - **En el grupo 4**, lo marcado **[sin abrir]** viene de memoria: la sangría de los monjes, el libro de cuaresma del capítulo 48, el año nuevo florentino del 25 de marzo, el carro de Pascua en sábado, el día del rayo en la cúpula y el de la capilla Tornabuoni, las costumbres de Córdoba sin fecha (Yannayr, las almunias, la seda nueva) y las de la estepa (la parición, la esquila, la cacería). Tampoco se sabe si los mongoles de 1220 empezaban el año con los chinos.
 - **En el grupo 5**, lo marcado **[sin abrir]** viene de memoria: el Sena helado en enero de 1789, el pan de la igualdad, el baile del aniversario de la Bastilla, la limpieza del hollín en Japón, San Vicente y San Martín en las viñas de Borgoña. Y el año lunar de Ochiyo usa los términos solares medios sin haber podido abrir la página japonesa del calendario.
 - **En el grupo 6**, lo marcado **[sin abrir]** viene de memoria: el calendario juliano de la Iglesia griega de América en 1910, los trenes de excursión de las fiestas de los bancos, el primer pie del año nuevo en el norte de Inglaterra, el día de la Constitución soviética antes de 1977, el sábado de trabajo cerca del 22 de abril, el día de los pioneros, el frío de enero de 1979 y el desfile de Pascua de Harlem.
+- **En el grupo 7**, lo marcado **[sin abrir]** viene de memoria: la magnitud absoluta del Sol (+4.83). Y el viaje de la astronauta es una cuenta sencilla: velocidad constante de una décima de la luz, sin acelerar ni frenar.
 - **Las temporadas 3 a 5 de Giulia son el futuro** al escribir esto (2027 a 2029), como las de Alguien del mundo y Alguien de México.
 - **Las temporadas 3 a 5 de Alguien del mundo y Alguien de México son el futuro** al escribir esto (2027 a 2029). Lo programado puede cambiar: las tandas Y de cada año lo revisan.
 - **Las fechas áticas** son una reconstrucción (ver arriba).

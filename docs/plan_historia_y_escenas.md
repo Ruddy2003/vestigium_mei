@@ -493,7 +493,8 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | A4 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A4.md`) |
 | A5 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A5.md`) |
 | A6 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A6.md`) |
-| A7–A8 | claude-opus-5-5 | high | Ídem | 0 c/u | pendiente |
+| A7 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A7.md`) |
+| A8 | claude-opus-5-5 | high | Ídem | 0 | pendiente |
 | T1a | claude-opus-5-5 | medium | Variantes de texto con el tono aprobado | 0 | hecho 12 nov 2026 (`docs/historia/informes/T1a.md`) |
 | T1b | claude-opus-5-5 | medium | Variantes de texto con el tono aprobado | 0 | hecho 12 nov 2026 (`docs/historia/informes/T1b.md`) |
 | T2a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T2a.md`) |
