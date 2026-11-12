@@ -20,12 +20,29 @@ import kotlin.math.sqrt
 // largo sin la cola y 38 de alto, sentado, hasta la punta de las orejas. El gato mira hacia la derecha (+x) y pisa en y = 0;
 // hacia arriba, y es negativa. Quien dibuja lo voltea si mira a la izquierda.
 
-/** Las animaciones comunes: las mismas 13 del gato de pixel, con los mismos cuadros cada una. */
+/**
+ * Las animaciones del gato. Las trece primeras son las comunes del gato de pixel, con los mismos cuadros cada una;
+ * después van la acción propia de cada tema y las de sus reacciones a la escena y al dedo (tanda P5b).
+ */
 enum class AnimGato(val cuadros: Int) {
     CAMINAR(8), CAMINAR_TRISTE(8), QUIETO(4), QUIETO_TRISTE(4), GIRAR(2), SALTAR(6), JUGAR(6), ENOJADO(3),
     SENTARSE(4), SENTADO(2), ECHARSE(3), ASEARSE(6), DORMIR(3),
     /** Una de las dos acciones propias del tema: sus posturas las da el pelaje. */
     ESPECIAL(0),
+    /** Se deja acariciar: sentado, con los ojos cerrados y la cabeza hacia la mano. */
+    MIMO(4),
+    /** Lo acarician echado: no se levanta; mueve una oreja y la punta de la cola. */
+    MIMO_ECHADO(2),
+    /** Huele algo que tiene delante. */
+    OLER(4),
+    /** Sentado de espaldas, mirando a lo lejos desde un sitio alto. */
+    VIGIA(2),
+    /** De pie, vuelve la cabeza hacia quien lo mira. */
+    MIRAR(2),
+    /** Lo mismo, sentado. */
+    MIRAR_SENTADO(2),
+    /** Sentado, mira hacia arriba; en el tercer cuadro tira un manotazo. */
+    ARRIBA(3),
 }
 
 /**
@@ -203,6 +220,23 @@ object Gatuno {
         // Dormido: respira despacio.
         AnimGato.DORMIR -> { val r = listOf(0f, 0.5f, 1f)[Math.floorMod(k, 3)]; ECHADO.copy(lomo = 1.4f + 0.7f * r, cadera = ECHADO.cadera + Offset(0f, -0.15f * r)) }
         AnimGato.ESPECIAL -> SENTADO
+        AnimGato.MIMO -> { val q = Math.floorMod(k, 4); val r = listOf(0f, 0.6f, 1f, 0.6f)[q]; SENTADO.copy(cabeza = SENTADO.cabeza + Offset(0.6f * r, -0.9f * r), morro = -0.18f - 0.12f * r, cara = 0.3f, ojos = 0f, orejas = 0.75f - 0.25f * r, cola2 = 2.3f + 0.5f * r) }
+        AnimGato.MIMO_ECHADO -> if (Math.floorMod(k, 2) == 0) ECHADO.copy(orejas = 0.9f, cola2 = 2.9f) else ECHADO.copy(orejas = 0.35f, cola2 = 3.3f, lomo = 1.7f)
+        // El cuello estirado hacia lo que huele, y la nariz que sube y baja.
+        AnimGato.OLER -> { val q = Math.floorMod(k, 4); val r = listOf(0f, 1f, 0.3f, 1f)[q]; DE_PIE.copy(hombro = DE_PIE.hombro + Offset(0.4f, 0.5f), cabeza = Offset(15.6f, -20.4f + 1.2f * r), morro = 0.1f + 0.22f * r, orejas = 0.85f, cola0 = 0.25f, cola1 = 0.1f, cola2 = 0.5f + 0.25f * r) }
+        // De espaldas, sentado: se le ve el lomo, las dos orejas y la cola tendida a un lado.
+        AnimGato.VIGIA -> Pose(
+            cadera = Offset(0f, -4.8f), hombro = Offset(0.2f, -14f), cabeza = Offset(0.3f, -22.6f), giro = -1f, cara = if (Math.floorMod(k, 2) == 0) -1f else -0.72f,
+            manoC = Offset(2.1f, -0.8f), manoL = Offset(-1.9f, -0.8f), pieC = Offset(3.6f, 0f), pieL = Offset(-3.6f, 0f),
+            cola0 = 0.05f, cola1 = 0.5f, cola2 = if (Math.floorMod(k, 2) == 0) 1.8f else 2.4f, orejas = if (Math.floorMod(k, 2) == 0) 1f else 0.8f,
+        )
+        AnimGato.MIRAR -> if (Math.floorMod(k, 2) == 0) DE_PIE.copy(cara = 0.55f) else DE_PIE.copy(cara = 0.62f, cabeza = DE_PIE.cabeza + Offset(-0.3f, -0.5f), cola2 = 1.1f)
+        AnimGato.MIRAR_SENTADO -> if (Math.floorMod(k, 2) == 0) SENTADO.copy(cara = 0.55f) else SENTADO.copy(cara = 0.62f, cabeza = SENTADO.cabeza + Offset(-0.3f, -0.4f), cola2 = 2.7f)
+        AnimGato.ARRIBA -> when (Math.floorMod(k, 3)) {
+            0 -> SENTADO.copy(cabeza = SENTADO.cabeza + Offset(-0.6f, -0.8f), morro = -0.5f)
+            1 -> SENTADO.copy(cabeza = SENTADO.cabeza + Offset(-0.6f, -1f), morro = -0.55f, cola2 = 2.8f)
+            else -> SENTADO.copy(cabeza = SENTADO.cabeza + Offset(-0.4f, -1.2f), morro = -0.58f, manoC = Offset(9.4f, -27f), hombro = SENTADO.hombro + Offset(0.3f, -0.8f))
+        }
     }
 
     /**

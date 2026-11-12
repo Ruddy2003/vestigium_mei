@@ -50,7 +50,7 @@ class GatoCuadroPrueba {
             AnimGato.CAMINAR to 8, AnimGato.CAMINAR_TRISTE to 8, AnimGato.QUIETO to 4, AnimGato.QUIETO_TRISTE to 4, AnimGato.GIRAR to 2, AnimGato.SALTAR to 6,
             AnimGato.JUGAR to 6, AnimGato.ENOJADO to 3, AnimGato.SENTARSE to 4, AnimGato.SENTADO to 2, AnimGato.ECHARSE to 3, AnimGato.ASEARSE to 6, AnimGato.DORMIR to 3,
         )
-        assertEquals(esperados, AnimGato.entries.filter { it != AnimGato.ESPECIAL }.associateWith { it.cuadros })
+        assertEquals(esperados, AnimGato.entries.take(13).associateWith { it.cuadros })
     }
 
     @Test fun todasLasPosturasCabenEnSuSitio() {
@@ -164,6 +164,149 @@ class GatoCuadroPrueba {
         vistos.forEach { assertTrue("Un cuadro que la acción no tiene", it.i in 0 until especiales[it.especial].cuadros) }
         // Los demás cuadros siempre son de una animación con sus cuadros.
         (1L..3L).flatMap { pasos(NORMAL, it, 15000, especiales = especiales) }.filter { it.anim != AnimGato.ESPECIAL }.forEach { assertTrue("${it.anim} ${it.i}", it.i in 0 until it.anim.cuadros) }
+    }
+
+    // ---------------------------------------------------------------- Las reacciones (P5b)
+
+    private val SUELO_Y = 280f
+    private fun ancla(tipo: TipoAncla, x: Float, y: Float = SUELO_Y) = io.github.ruddy2003.vestigium.ui.escenas.Ancla(tipo, x, y)
+    private val REACCIONES = setOf(AnimGato.MIMO, AnimGato.MIMO_ECHADO, AnimGato.OLER, AnimGato.VIGIA, AnimGato.MIRAR, AnimGato.MIRAR_SENTADO, AnimGato.ARRIBA)
+    private fun con(h: Gato.Humor, semilla: Long, anclas: List<io.github.ruddy2003.vestigium.ui.escenas.Ancla>, mojado: Boolean = false, talla: Float = 1.3f) =
+        SimulacionGato(h, semilla, 20f, 330f, emptyList(), talla).also { it.entorno(anclas, SUELO_Y, mojado) }
+
+    @Test fun sinAnclasSePortaComoElDePixel() {
+        // Ni una sola reacción, y exactamente los mismos cuadros que antes de que existieran.
+        (1L..4L).forEach { s -> assertTrue(pasos(NORMAL, s, 6000).none { it.anim in REACCIONES || it.alza != 0f || it.escala != 1f }) }
+        val sin = pasos(NORMAL, 9, 4000).map { "${it.anim}${it.i}${it.x}" }
+        val vacio = SimulacionGato(NORMAL, 9, 20f, 330f, emptyList(), 1.3f).also { it.entorno(emptyList(), SUELO_Y, false) }
+        assertEquals(sin, List(4000) { vacio.siguiente() }.map { "${it.anim}${it.i}${it.x}" })
+    }
+
+    @Test fun vaAlFuegoHueleElObjetoMiraElAdornoYSeSubeAlMirador() {
+        val medio = Gatuno.MEDIO_LARGO * 1.3f
+        val todas = listOf(ancla(TipoAncla.FUEGO, 160f), ancla(TipoAncla.OBJETO, 250f), ancla(TipoAncla.ADORNO, 120f, 250f), ancla(TipoAncla.MIRADOR, 300f, 218f))
+        val vistos = (1L..6L).flatMap { s -> val sim = con(NORMAL, s, todas); List(20000) { sim.siguiente() } }
+        // Huele el objeto a su lado, no encima.
+        val oliendo = vistos.filter { it.anim == AnimGato.OLER }
+        assertTrue("Nunca fue a oler el objeto", oliendo.isNotEmpty())
+        oliendo.forEach { assertEquals("Huele el objeto desde su lado", medio + 8f * 1.3f, abs(it.x - 250f), 0.6f); assertTrue("Lo huele de cara", (250f - it.x) * it.dir > 0) }
+        // Mira el adorno desde debajo.
+        val mirando = vistos.filter { it.anim == AnimGato.ARRIBA }
+        assertTrue("Nunca miró el adorno", mirando.isNotEmpty()); mirando.forEach { assertEquals(120f, it.x, 0.6f) }
+        assertTrue("Nunca le tiró un manotazo", mirando.any { it.i == 2 })
+        // Se sube al mirador, se queda de espaldas, más chico, y baja.
+        val arriba = vistos.filter { it.anim == AnimGato.VIGIA }
+        assertTrue("Nunca se subió al mirador", arriba.isNotEmpty())
+        arriba.forEach { assertEquals(300f, it.x, 0.01f); assertEquals(218f - SUELO_Y, it.alza, 0.01f); assertEquals(SimulacionGato.ESCALA_MIRADOR, it.escala, 0.001f) }
+        assertTrue("Solo está en alto mientras sube, mira o baja", vistos.filter { it.alza != 0f }.all { it.anim == AnimGato.VIGIA || it.anim == AnimGato.SALTAR })
+        assertTrue("Nunca bajó del mirador", vistos.indexOfLast { it.anim == AnimGato.VIGIA }.let { u -> vistos.drop(u).any { it.alza == 0f && it.anim == AnimGato.CAMINAR } })
+        // Junto al fuego duerme: buena parte de sus siestas son a su lado.
+        val siestas = vistos.filter { it.anim == AnimGato.DORMIR }
+        assertTrue("Nunca durmió junto al fuego", siestas.any { abs(abs(it.x - 160f) - (medio + 8f * 1.3f)) < 0.6f })
+    }
+
+    @Test fun sinFuegoNiAdornoNoVaAEllos() {
+        // El fuego solo está entre sus anclas cuando está encendido, y el adorno, cuando hay fiesta.
+        val vistos = (1L..4L).flatMap { s -> val sim = con(NORMAL, s, listOf(ancla(TipoAncla.OBJETO, 250f))); List(12000) { sim.siguiente() } }
+        assertTrue(vistos.none { it.anim == AnimGato.ARRIBA || it.anim == AnimGato.VIGIA })
+        assertTrue(vistos.any { it.anim == AnimGato.OLER })
+    }
+
+    @Test fun cuandoLlueveSeGuareceYNoSale() {
+        val abrigo = ancla(TipoAncla.ABRIGO, 362f)
+        for (a in Gato.Animo.entries) for (noche in listOf(false, true)) {
+            val sim = con(humor(a, noche = noche), 5, listOf(abrigo, ancla(TipoAncla.MIRADOR, 300f, 218f), ancla(TipoAncla.OBJETO, 250f)))
+            repeat(900) { sim.siguiente() }
+            sim.entorno(listOf(abrigo, ancla(TipoAncla.MIRADOR, 300f, 218f), ancla(TipoAncla.OBJETO, 250f)), SUELO_Y, true)
+            val camino = List(700) { sim.siguiente() }
+            // El abrigo queda fuera de su tramo de siempre: llega hasta donde cabe en el cuadro.
+            val sitio = 380f - Gatuno.MEDIO_LARGO * 1.3f - 2f
+            assertTrue("$a: tarda demasiado en guarecerse", camino.any { abs(it.x - sitio) < 0.6f && it.alza == 0f })
+            val despues = List(6000) { sim.siguiente() }
+            despues.forEach { assertTrue("$a: sale del abrigo mientras llueve (${it.x})", abs(it.x - sitio) <= Gatuno.MEDIO_LARGO * 1.3f + 14f * 1.3f + 0.6f && it.alza == 0f && it.anim != AnimGato.OLER) }
+            // Deja de llover: vuelve a andar por su tramo.
+            sim.entorno(listOf(abrigo), SUELO_Y, false)
+            if (!noche) assertTrue("$a: no vuelve a salir", List(9000) { sim.siguiente() }.any { it.x < 200f })
+        }
+    }
+
+    @Test fun seDejaAcariciar() {
+        for (a in Gato.Animo.entries) for (semilla in 1L..5L) {
+            val sim = con(humor(a), semilla, listOf(ancla(TipoAncla.OBJETO, 250f), ancla(TipoAncla.MIRADOR, 300f, 218f)))
+            var antes = sim.siguiente()
+            repeat(40) { vuelta ->
+                repeat(30 + (semilla.toInt() * 37 + vuelta * 53) % 160) { antes = sim.siguiente() }
+                sim.acariciar()
+                val luego = List(40) { sim.siguiente() }
+                // En menos de un segundo ya se está dejando querer (salvo que fuera por el aire o estuviera en lo alto).
+                val enAlto = antes.alza != 0f || luego.take(14).any { it.alza != 0f || it.dy != 0f }
+                if (!enAlto) assertTrue("$a: no reacciona a la caricia (${antes.anim})", luego.take(12).any { it.anim == AnimGato.MIMO || it.anim == AnimGato.MIMO_ECHADO })
+                // Y no da un brinco de sitio.
+                assertTrue("$a: la caricia lo movió de sitio", abs(luego.first().x - antes.x) < 6.5f)
+                antes = luego.last()
+            }
+        }
+        // Dormido no se levanta: lo acarician echado.
+        val dormido = con(humor(Gato.Animo.NORMAL, noche = true), 3, emptyList())
+        repeat(20) { dormido.siguiente() }; dormido.acariciar()
+        val cuadros = List(60) { dormido.siguiente() }
+        assertTrue(cuadros.take(20).all { it.anim == AnimGato.MIMO_ECHADO }); assertTrue(cuadros.drop(24).all { it.anim == AnimGato.DORMIR })
+    }
+
+    @Test fun conUnToqueMiraOVaHaciaAhi() {
+        // Lejos: va hasta ahí y mira.
+        val sim = con(NORMAL, 4, emptyList())
+        repeat(15) { sim.siguiente() }
+        val x0 = sim.donde.x
+        val lejos = if (x0 < 175f) 290f else 60f
+        sim.tocar(lejos)
+        val camino = List(260) { sim.siguiente() }
+        val llega = camino.indexOfFirst { abs(it.x - lejos) < 0.6f }
+        assertTrue("No llegó a donde se tocó", llega >= 0)
+        assertTrue("Al llegar no mira", camino.drop(llega).take(30).any { it.anim == AnimGato.MIRAR })
+        // Cerca: no camina; se vuelve y mira.
+        val otro = con(NORMAL, 4, emptyList())
+        repeat(15) { otro.siguiente() }
+        val x1 = otro.donde.x
+        otro.tocar(x1 - otro.donde.dir * 30f)
+        val cerca = List(40) { otro.siguiente() }
+        assertTrue(cerca.take(26).all { it.x == x1 }); assertTrue(cerca.any { it.anim == AnimGato.GIRAR }); assertTrue(cerca.any { it.anim == AnimGato.MIRAR })
+        assertEquals("Queda mirando hacia el toque", -cerca.first().dir, cerca.last { it.anim == AnimGato.MIRAR }.dir)
+    }
+
+    @Test fun conAnclasYToquesNoSeSaleNiDaBrincosDeSitio() {
+        val medio = Gatuno.MEDIO_LARGO * 1.3f
+        val anclas = listOf(ancla(TipoAncla.FUEGO, 44f), ancla(TipoAncla.OBJETO, 268f), ancla(TipoAncla.ADORNO, 258f, 206f), ancla(TipoAncla.MIRADOR, 84f, 240f), ancla(TipoAncla.ABRIGO, 362f))
+        for (a in Gato.Animo.entries) for (cansado in listOf(false, true)) for (semilla in 1L..3L) {
+            val sim = con(humor(a, cansado), semilla, anclas)
+            val azar = java.util.Random(semilla * 31 + a.ordinal)
+            var antes = sim.siguiente()
+            repeat(14000) { n ->
+                if (n % 97 == 13) { if (azar.nextBoolean()) sim.acariciar() else sim.tocar(azar.nextFloat() * 380f) }
+                if (n == 6000) sim.entorno(anclas, SUELO_Y, true)
+                if (n == 10000) sim.entorno(anclas, SUELO_Y, false)
+                val p = sim.siguiente()
+                assertTrue("$a: se sale del cuadro (${p.x})", p.x - medio * p.escala >= -0.5f && p.x + medio * p.escala <= 380.5f)
+                // De un cuadro al siguiente nunca se mueve más que el paso más largo de un salto.
+                assertTrue("$a: brinco de sitio de ${antes.x} a ${p.x} (${antes.anim} → ${p.anim})", abs(p.x - antes.x) <= 6.6f)
+                assertTrue("$a: cambia de altura de golpe", abs(p.alza - antes.alza) <= 12f)
+                assertTrue("$a: baja del suelo", p.alza <= 0f && p.dy <= 0.001f && p.escala in SimulacionGato.ESCALA_MIRADOR - 0.001f..1.001f)
+                assertTrue("$a: ${p.anim} ${p.i}", p.i in 0 until maxOf(p.anim.cuadros, 1))
+                antes = p
+            }
+        }
+    }
+
+    @Test fun seSabeSiUnDedoCayoSobreEl() {
+        val paso = PasoGato(AnimGato.SENTADO, 0, 150f, 1)
+        assertTrue(io.github.ruddy2003.vestigium.ui.escenas.tocaAlGato(Offset(150f, 260f), paso, 280f, 1.3f))
+        assertTrue(io.github.ruddy2003.vestigium.ui.escenas.tocaAlGato(Offset(172f, 240f), paso, 280f, 1.3f))
+        assertFalse(io.github.ruddy2003.vestigium.ui.escenas.tocaAlGato(Offset(210f, 260f), paso, 280f, 1.3f))
+        assertFalse(io.github.ruddy2003.vestigium.ui.escenas.tocaAlGato(Offset(150f, 200f), paso, 280f, 1.3f))
+        // Subido al mirador, se le toca donde está.
+        val arriba = PasoGato(AnimGato.VIGIA, 0, 300f, 1, alza = -62f, escala = SimulacionGato.ESCALA_MIRADOR)
+        assertTrue(io.github.ruddy2003.vestigium.ui.escenas.tocaAlGato(Offset(300f, 200f), arriba, 280f, 1.3f))
+        assertFalse(io.github.ruddy2003.vestigium.ui.escenas.tocaAlGato(Offset(300f, 262f), arriba, 280f, 1.3f))
     }
 
     // ---------------------------------------------------------------- El gato en las escenas
