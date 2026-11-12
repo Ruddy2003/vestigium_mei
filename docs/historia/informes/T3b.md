@@ -96,7 +96,7 @@ Los cuentos de la temporada 1 de los otros dos personajes del grupo 3. Con esta 
   - Un cielo de Chang'an hablaba de «un azul que solo hay en el desierto».
   - A un mes de camino hacia el oeste, el pueblo hablaba de «las colinas de cerca de la capital»: separé el tramo del arco, y el loess solo sale cerca de Chang'an.
   - Al repasar los textos antes de probarlos quité dos detalles aztecas que no son mayas (la carga de ocho mil granos de cacao y el cacao falsificado), una escalera de Yaxchilan que se talló después de 752 y una exageración sobre las avenidas de Chang'an (la mayor medía unos 150 metros de ancho).
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android:** la corrida 217 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `2e3e632`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que no se pudo comprobar

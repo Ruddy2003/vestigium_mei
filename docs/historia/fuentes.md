@@ -827,12 +827,183 @@ Son los primeros personajes de tema que no son del piloto: tienen cuadro (tandas
 | 5 | El censo, 10 may; el califa, 1 ago | Aproximado | El censo de 754; as-Saffah murió el 10 de junio | [754](https://en.wikipedia.org/wiki/754) |
 | 5 | An Lushan, 15 jun | Aproximado | Se rebela a fines de 755: aquí todavía es un rumor | [An Lushan](https://en.wikipedia.org/wiki/An_Lushan) |
 
+## Grupo 4: Odo, Bernat, Zaynab, Bat e Iacopo (tanda A4)
+
+Tienen cuadro (tandas S2 y S3). Las páginas se abrieron el 12 nov 2026.
+
+**Las fiestas fijas de la Iglesia** (Odo, Bernat e Iacopo): la Candelaria, 2 feb ([Candlemas](https://en.wikipedia.org/wiki/Candlemas)); la Anunciación, 25 mar ([Annunciation](https://en.wikipedia.org/wiki/Annunciation), que dice también que el 25 de marzo fue año nuevo en muchos países cristianos); la Asunción, 15 ago ([Assumption of Mary](https://en.wikipedia.org/wiki/Assumption_of_Mary)); Todos los Santos, 1 nov ([All Saints' Day](https://en.wikipedia.org/wiki/All_Saints%27_Day)); la Navidad, 25 dic ([Christmas](https://en.wikipedia.org/wiki/Christmas)). Son «históricas».
+
+**La Pascua juliana** de cada año está calculada con la regla de siempre (la de Pierre y Alice), y de ella el miércoles de ceniza (46 días antes), el martes de carnaval (47) y Pentecostés (49 después). El cálculo da las Pascuas que ya estaban en el repositorio (15 abr 1240, 10 abr 1300).
+
+| Año | Ceniza | Pascua | Pentecostés |
+|---|---|---|---|
+| 1150 | 1 mar | 16 abr | 4 jun |
+| 1151 | 21 feb | 8 abr | 27 may |
+| 1152 | 13 feb | 30 mar | 18 may |
+| 1153 | 4 mar | 19 abr | 7 jun |
+| 1154 | 17 feb | 4 abr | 23 may |
+| 1250 | 9 feb | 27 mar | |
+| 1251 | 1 mar | 16 abr | |
+| 1252 | 14 feb | 31 mar | |
+| 1253 | 5 mar | 20 abr | |
+| 1254 | 25 feb | 12 abr | |
+| 1490 | 24 feb | 11 abr | |
+| 1491 | 16 feb | 3 abr | |
+| 1492 | 7 mar | 22 abr | |
+| 1493 | 20 feb | 7 abr | |
+| 1494 | 12 feb | 30 mar | |
+
+### Odo, monje copista. Una abadía benedictina junto al Rin, de 1150 a 1154
+
+**Lo real y lo inventado**
+
+- **Real:** el año de la Regla y sus fiestas; Hildegarda funda el monasterio del monte de San Ruperto en 1150 y termina *Scivias* en 1151 o 1152; los hombres y los días de las noticias que siguen.
+- **Inventado:** Odo, la abadía (sin nombre), su gente (el abad Wolfram, Gerhard, Heinrich, Ruotger, su hermana Gertrudis), la Biblia grande, el viaje a Lorsch, la granizada, el rayo, la helada del Rin, la piedra de leer y el día en que llega cada noticia. La sangría de tres días es una costumbre de los monasterios **[sin abrir]**.
+
+| Día | Fecha | Certeza | Página |
+|---|---|---|---|
+| La cuaresma y su libro | ceniza | Histórico (calculado) | [Rule of Saint Benedict](https://en.wikipedia.org/wiki/Rule_of_Saint_Benedict) (la página habla de la cuaresma en la Regla; el libro de cada monje es del capítulo 48, de memoria **[sin abrir]**) |
+| San Benito | 21 mar | Histórico | [Benedict of Nursia](https://en.wikipedia.org/wiki/Benedict_of_Nursia) (murió el 21 de marzo; su fiesta de entonces) |
+| San Benito de verano | 11 jul | Histórico | [Benedict of Nursia](https://en.wikipedia.org/wiki/Benedict_of_Nursia) (la fiesta del 11 de julio) |
+| San Martín | 11 nov | Histórico | [Martinmas](https://en.wikipedia.org/wiki/Martinmas) |
+| La vendimia, 10 días | 25 sep | Aproximado | Sin enlace |
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Hildegarda se muda, 20 may | Aproximado | En 1150; el día se eligió | [Hildegard of Bingen](https://en.wikipedia.org/wiki/Hildegard_of_Bingen) |
+| 2 | Muere Suger, 8 feb | Aproximado | Murió el 13 de enero de 1151; la noticia llega después | [Suger](https://en.wikipedia.org/wiki/Suger) |
+| 2 | *Scivias*, 20 oct | Aproximado | Terminado en 1151 o 1152 | [Scivias](https://en.wikipedia.org/wiki/Scivias) |
+| 3 | Muere el rey Conrado, 25 feb | Aproximado | Murió el 15 de febrero de 1152 | [Conrad III of Germany](https://en.wikipedia.org/wiki/Conrad_III_of_Germany) |
+| 3 | Federico, rey, 12 mar | Aproximado | Elegido en Fráncfort el 4 de marzo de 1152 y coronado en Aquisgrán el 9 | [Frederick I](https://en.wikipedia.org/wiki/Frederick_I,_Holy_Roman_Emperor) |
+| 4 | Muere el papa Eugenio, 28 jul | Aproximado | Murió en Tívoli el 8 de julio de 1153 | [Pope Eugene III](https://en.wikipedia.org/wiki/Pope_Eugene_III) |
+| 4 | Muere Bernardo, 5 sep | Aproximado | Murió el 20 de agosto de 1153 | [Bernard of Clairvaux](https://en.wikipedia.org/wiki/Bernard_of_Clairvaux) |
+| 5 | Muere Roger de Sicilia, 15 mar | Aproximado | Murió el 26 de febrero de 1154 | [Roger II of Sicily](https://en.wikipedia.org/wiki/Roger_II_of_Sicily) |
+| 5 | Federico baja a Italia, 20 oct | Aproximado | Su primera campaña empieza en octubre de 1154 | [Frederick I](https://en.wikipedia.org/wiki/Frederick_I,_Holy_Roman_Emperor) |
+| 5 | Adriano, papa, 28 dic | Aproximado | Papa desde el 4 de diciembre de 1154 | [Pope Adrian IV](https://en.wikipedia.org/wiki/Pope_Adrian_IV) |
+
+- **Lorsch** era benedictina hasta 1232 y tenía una de las bibliotecas más famosas del Imperio ([Lorsch Abbey](https://en.wikipedia.org/wiki/Lorsch_Abbey)). El viaje es inventado y no lleva enlace.
+
+### Bernat, sargento del Temple. El castillo de Safed, de 1250 a 1254
+
+**Lo real y lo inventado**
+
+- **Real:** el castillo de Safed, que los cruzados levantaron de nuevo después del tratado de 1240 y que tomó Baibars en 1266 ([Safed](https://en.wikipedia.org/wiki/Safed)); los sargentos del Temple vestían de negro o de pardo ([Knights Templar](https://en.wikipedia.org/wiki/Knights_Templar)); las fiestas de la Virgen; los hombres y los días de las noticias que siguen.
+- **Inventado:** Bernat, su gente (Ramon, Pere, el comendador, Yusuf, su madre, el Moro), la torre del sur, el ataque a los segadores, el temblor, la nevada, el viento del desierto, el mes en Acre, el comendador nuevo y el día en que llega cada noticia.
+
+| Día | Fecha | Certeza | Página |
+|---|---|---|---|
+| El nacimiento de la Virgen | 8 sep | Histórico | [Nativity of Mary](https://en.wikipedia.org/wiki/Nativity_of_Mary) |
+| La siega, 10 días; la aceituna, 15 | 10 may; 20 oct | Aproximado | Sin enlace |
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Mansura, 26 feb | Aproximado | El ataque fue el 8 de febrero de 1250; los templarios quedaron casi todos en el campo | [Guillaume de Sonnac](https://en.wikipedia.org/wiki/Guillaume_de_Sonnac) |
+| 1 | El rey preso y el maestre muerto, 28 abr | Aproximado | Guillermo de Sonnac murió el 6 de abril de 1250 en Fariskur, cuando el rey cayó preso | [Guillaume de Sonnac](https://en.wikipedia.org/wiki/Guillaume_de_Sonnac) |
+| 1 | El rey en Acre, 25 may | Aproximado | Tras el rescate pasó cuatro años en el reino; el día se eligió | [Louis IX](https://en.wikipedia.org/wiki/Louis_IX_of_France) |
+| 1 | Los mamelucos, 5 ago | Aproximado | Shajar al-Durr reinó del 2 de mayo al 30 de julio de 1250, y luego Aybak | [Shajar al-Durr](https://en.wikipedia.org/wiki/Shajar_al-Durr) |
+| 2 | Muere el emperador Federico, 20 feb | Aproximado | Murió el 13 de diciembre de 1250 | [Frederick II](https://en.wikipedia.org/wiki/Frederick_II,_Holy_Roman_Emperor) |
+| 3 | Alfonso, rey de Castilla, 20 ago | Aproximado | Rey desde el 1 de junio de 1252 | [Alfonso X](https://en.wikipedia.org/wiki/Alfonso_X_of_Castile) |
+| 3 | El maestre Renaud se retira, 5 dic | Aproximado | En 1252 se retiró a un monasterio | [Renaud de Vichiers](https://en.wikipedia.org/wiki/Renaud_de_Vichiers) |
+| 4 | Muere la reina Blanca, 10 abr | Aproximado | Murió el 27 de noviembre de 1252 | [Blanche of Castile](https://en.wikipedia.org/wiki/Blanche_of_Castile) |
+| 5 | El rey zarpa, 26 abr | Aproximado | Salió de Acre el 24 de abril de 1254 | [Louis IX](https://en.wikipedia.org/wiki/Louis_IX_of_France) |
+| 5 | Muere Conrado IV, 2 jul | Aproximado | Murió en mayo de 1254 | [Seventh Crusade](https://en.wikipedia.org/wiki/Seventh_Crusade) |
+
+### Zaynab, tejedora de seda. Córdoba, del 970 al 974
+
+**Lo real y lo inventado**
+
+- **Real:** el año islámico y sus fiestas; el califa al-Hakam II y su hijo Abderramán (962–970); el mihrab y la maqsura nuevos de la mezquita (terminados en 971); la flota vikinga (el califa llamó a Galib el 3 de julio de 971); Ibn Abi Amir, el futuro Almanzor, quitado de la ceca en marzo de 972; Galib, jefe supremo en 972, enviado a África en 973 y de vuelta con al-Hasan ibn Gannun en septiembre de 974; los fatimíes en El Cairo y su mezquita de al-Azhar (970–972); el libro de ʿArīb ibn Saʿīd (973).
+- **Inventado:** Zaynab, su gente (Yusuf, Alí, Maryam, Fátima, Abu Bakr, Juliana, Isaac, Rabia), las telas, la crecida, la nevada, la helada y el día en que llega cada noticia. Las costumbres sin fecha de página: Yannayr, las almunias en flor, la seda nueva y las primeras lluvias **[sin abrir]**.
+
+**Cómo se calcularon las fiestas** **[Aproximación]**
+
+- Con el calendario islámico tabular (el civil, con época el 16 de julio de 622 juliano, que el cálculo da). La luna vista puede moverlas uno o dos días, y por eso van como «aproximado».
+
+| Fiesta | 970 | 971 | 972 | 973 | 974 | Página |
+|---|---|---|---|---|---|---|
+| Empieza el Ramadán (9/1) | 8 jul | 28 jun | 16 jun | 5 jun | 26 may | [Ramadan](https://en.wikipedia.org/wiki/Ramadan) |
+| La noche del destino (9/27) | 3 ago | 24 jul | 12 jul | 1 jul | 21 jun | [Laylat al-Qadr](https://en.wikipedia.org/wiki/Laylat_al-Qadr) |
+| Fin del ayuno, 3 días (10/1) | 7 ago | 28 jul | 16 jul | 5 jul | 25 jun | [Eid al-Fitr](https://en.wikipedia.org/wiki/Eid_al-Fitr) |
+| El sacrificio, 4 días (12/10) | 14 oct | 4 oct | 22 sep | 11 sep | 1 sep | [Eid al-Adha](https://en.wikipedia.org/wiki/Eid_al-Adha) |
+| Año nuevo (1/1) | 4 nov | 24 oct | 12 oct | 2 oct | 21 sep | [Islamic calendar](https://en.wikipedia.org/wiki/Islamic_calendar) |
+| Ashura (1/10) | 13 nov | 2 nov | 21 oct | 11 oct | 30 sep | [Ashura](https://en.wikipedia.org/wiki/Ashura) |
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Muere el hijo del califa, 2 jun | Aproximado | Abderramán, 962–970; el día se eligió | [Al-Hakam II](https://en.wikipedia.org/wiki/Al-Hakam_II) |
+| 1 | La mezquita de los fatimíes, 5 dic | Aproximado | Al-Azhar se empezó en 970 | [Al-Azhar Mosque](https://en.wikipedia.org/wiki/Al-Azhar_Mosque) |
+| 2 | El mihrab nuevo, 16 abr | Aproximado | El mihrab y la maqsura se terminan en 971 | [Mosque–Cathedral of Córdoba](https://en.wikipedia.org/wiki/Mosque%E2%80%93Cathedral_of_C%C3%B3rdoba) |
+| 2 | Los vikingos, 10 jul | Aproximado | El califa llamó a Galib el 3 de julio de 971 | [Ghalib al-Nasiri](https://en.wikipedia.org/wiki/Ghalib_al-Nasiri) |
+| 3 | Ibn Abi Amir sale de la ceca, 24 mar | Aproximado | En marzo de 972 | [Almanzor](https://en.wikipedia.org/wiki/Almanzor) |
+| 3 | Galib, jefe de los ejércitos, 5 nov | Aproximado | En 972 | [Ghalib al-Nasiri](https://en.wikipedia.org/wiki/Ghalib_al-Nasiri) |
+| 4 | Galib sale hacia África, 25 abr | Aproximado | En 973 | [Ghalib al-Nasiri](https://en.wikipedia.org/wiki/Ghalib_al-Nasiri) |
+| 4 | El califa fatimí en El Cairo, 24 sep | Aproximado | Mudó su residencia a El Cairo (la página tiene un dinar de El Cairo de 973) | [Al-Mu'izz li-Din Allah](https://en.wikipedia.org/wiki/Al-Mu%27izz_li-Din_Allah) |
+| 4 | El libro de ʿArīb, 5 dic | Aproximado | Terminado en 973 | [Calendar of Córdoba](https://en.wikipedia.org/wiki/Calendar_of_C%C3%B3rdoba) |
+| 5 | Los fatimíes pierden en África, 15 jul | Aproximado | Derrotados en Marruecos en 974 | [Al-Hakam II](https://en.wikipedia.org/wiki/Al-Hakam_II) |
+| 5 | Galib vuelve con Ibn Gannun, 15 sep | Aproximado | En septiembre de 974 | [Ghalib al-Nasiri](https://en.wikipedia.org/wiki/Ghalib_al-Nasiri) |
+
+### Bat, pastor nómada. El Kerulen, de 1220 a 1224
+
+**Lo real y lo inventado**
+
+- **Real:** el mes blanco, que Gengis celebraba ([Tsagaan Sar](https://en.wikipedia.org/wiki/Tsagaan_Sar)); el ordeño de las yeguas, que en Mongolia va de mediados de junio a principios de octubre ([Kumis](https://en.wikipedia.org/wiki/Kumis)); el ovoo ([Ovoo](https://en.wikipedia.org/wiki/Ovoo)); el fieltro de las tiendas ([Yurt](https://en.wikipedia.org/wiki/Yurt)); el dzud, el invierno que mata el ganado ([Dzud](https://en.wikipedia.org/wiki/Dzud), sin enlace en el calendario porque el de Bat es inventado); y los hechos y los días de las noticias que siguen.
+- **Inventado:** Bat, su gente (Khulan, Mönkh, Saran, su madre, Temür, Bolad, el chamán), el potro blanco, el correo, el lobo, la carrera, el dzud de 1223, las ovejas y el día en que llega cada noticia. Las fechas de la parición, la esquila, la mudanza, la cacería y la matanza son de costumbre **[sin abrir]**.
+
+**Cómo se calculó el mes blanco** **[Aproximación]**
+
+- Como el año chino de Nanai-vandak, con la luna nueva y los términos solares a la hora de 110° este: el primer día cae el 6 feb 1220, el 25 ene 1221, el 14 ene 1222, el 2 feb 1223 y el 22 ene 1224 (1222 tuvo un segundo mes repetido). No se sabe si los mongoles de 1220 empezaban el año el mismo día que los chinos.
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Bujará, 20 abr | Aproximado | Tomada en febrero de 1220 | [Siege of Bukhara](https://en.wikipedia.org/wiki/Siege_of_Bukhara) |
+| 1 | Samarcanda, 15 may | Aproximado | Tomada en marzo de 1220 | [Siege of Samarkand (1220)](https://en.wikipedia.org/wiki/Siege_of_Samarkand_(1220)) |
+| 2 | Changchun, 25 abr | Aproximado | En febrero de 1221 cruza el este de Mongolia hasta el alto Kerulen | [Qiu Chuji](https://en.wikipedia.org/wiki/Qiu_Chuji) |
+| 2 | Urgench, 1 jul | Aproximado | Cayó en abril de 1221 | [Siege of Gurganj](https://en.wikipedia.org/wiki/Siege_of_Gurganj) |
+| 3 | El Indo, 5 mar | Aproximado | El 24 de noviembre de 1221 | [Battle of the Indus](https://en.wikipedia.org/wiki/Battle_of_the_Indus) |
+| 3 | Muqali y el río Amarillo, 15 dic | Aproximado | Toma Hezhong a fines de 1222 | [Muqali](https://en.wikipedia.org/wiki/Muqali) |
+| 4 | Muere Muqali, 5 may | Aproximado | En la primavera de 1223 | [Muqali](https://en.wikipedia.org/wiki/Muqali) |
+| 4 | El Kalka, 15 sep | Aproximado | El 31 de mayo de 1223 | [Battle of the Kalka River](https://en.wikipedia.org/wiki/Battle_of_the_Kalka_River) |
+| 4 | Jochi no vuelve, 5 dic | Aproximado | Se negó a volver en 1223 | [Genghis Khan](https://en.wikipedia.org/wiki/Genghis_Khan) |
+| 5 | Muere Jebe, 1 mar | Aproximado | Murió hacia 1224 (otra página dice 1223) | [Jebe](https://en.wikipedia.org/wiki/Jebe) |
+
+### Iacopo, aprendiz de pintor. El taller de Ghirlandaio, en Florencia, de 1490 a 1494
+
+**Lo real y lo inventado**
+
+- **Real:** el taller de Domenico Ghirlandaio, con sus hermanos Davide y Benedetto y su cuñado Bastiano Mainardi, por donde pasó Miguel Ángel en 1488; la capilla Tornabuoni (1485–1490); la Visitación de 1491; el carro de Pascua; San Juan, el patrón; y los hechos y los días que siguen.
+- **Inventado:** Iacopo, su familia, Masino, Caterina, el ropaje, el sueldo, la tabla del sedero, el viaje al Mugello y el día en que llega cada noticia. Sin fecha de página: el primero de mayo y San Lucas, el de los pintores **[sin abrir]**.
+
+| Día | Fecha | Certeza | Página |
+|---|---|---|---|
+| La Anunciación, año nuevo | 25 mar | Histórico | [Annunciation](https://en.wikipedia.org/wiki/Annunciation) (que Florencia empezara el año ese día, de memoria **[sin abrir]**) |
+| Pascua y el carro de fuego | Pascua | Histórico | [Scoppio del carro](https://en.wikipedia.org/wiki/Scoppio_del_carro) (hoy es el domingo de Pascua; en 1490, de memoria, el sábado **[sin abrir]**) |
+| San Juan, 2 días | 24 jun | Histórico | [Nativity of Saint John the Baptist](https://en.wikipedia.org/wiki/Nativity_of_Saint_John_the_Baptist) (patrón de Florencia) |
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Savonarola vuelve, 20 may | Aproximado | En 1490 lo destinan a San Marcos | [Girolamo Savonarola](https://en.wikipedia.org/wiki/Girolamo_Savonarola) |
+| 1 | La capilla Tornabuoni, 22 dic | Aproximado | La inscripción del arco celebra el final en 1490; el día, de memoria **[sin abrir]** | [Tornabuoni Chapel](https://en.wikipedia.org/wiki/Tornabuoni_Chapel) |
+| 2 | Savonarola en la catedral, 6 mar | Aproximado | Las multitudes lo llevan a la catedral; empezó a profetizar «cuatro años» antes de 1495 | [Girolamo Savonarola](https://en.wikipedia.org/wiki/Girolamo_Savonarola) |
+| 2 | La Visitación, 28 may | Aproximado | Fechada en 1491, la última fecha segura de sus obras | [Domenico Ghirlandaio](https://en.wikipedia.org/wiki/Domenico_Ghirlandaio) |
+| 3 | El rayo en la cúpula, 5 abr | Aproximado | Uno de los presagios de la muerte de Lorenzo; el día, de memoria **[sin abrir]** | [Lorenzo de' Medici](https://en.wikipedia.org/wiki/Lorenzo_de%27_Medici) |
+| 3 | Muere Lorenzo, 9 abr | Aproximado | Murió la noche del 8 de abril de 1492 en Careggi | [Lorenzo de' Medici](https://en.wikipedia.org/wiki/Lorenzo_de%27_Medici) |
+| 3 | La nariz de Miguel Ángel, 30 may | Aproximado | Torrigiano se la rompió cuando tenía 17 años | [Michelangelo](https://en.wikipedia.org/wiki/Michelangelo) |
+| 3 | El papa Borgia, 17 ago | Aproximado | Papa desde el 11 de agosto de 1492 | [Pope Alexander VI](https://en.wikipedia.org/wiki/Pope_Alexander_VI) |
+| 4 | La carta de Colón, 5 jun | Aproximado | La versión latina se imprimió en Roma hacia mayo de 1493 | [Columbus's letter](https://en.wikipedia.org/wiki/Columbus%27s_letter_on_the_first_voyage) |
+| 4 | El crucifijo del Santo Spirito, 12 nov | Aproximado | De 1493 | [Michelangelo](https://en.wikipedia.org/wiki/Michelangelo) |
+| 5 | Muere el maestro, 11 ene | Histórico | De «fiebre pestilencial» | [Domenico Ghirlandaio](https://en.wikipedia.org/wiki/Domenico_Ghirlandaio) |
+| 5 | La estatua de nieve, 20 ene | Histórico | Tras grandes nevadas, Piero la encarga | [Michelangelo](https://en.wikipedia.org/wiki/Michelangelo) |
+| 5 | Muere Poliziano, 24 sep | Histórico | | [Poliziano](https://en.wikipedia.org/wiki/Poliziano) |
+| 5 | Echan a Piero, 9 nov | Histórico | | [Piero di Lorenzo de' Medici](https://en.wikipedia.org/wiki/Piero_di_Lorenzo_de%27_Medici) |
+| 5 | Entra el rey de Francia, 17 nov | Histórico | | [Charles VIII of France](https://en.wikipedia.org/wiki/Charles_VIII_of_France) |
+
 ## Lo que no se pudo comprobar
 
 - **Los pasajes de Tucídides** marcados **[sin abrir]** vienen de memoria: la red de la sesión solo dejó abrir Wikipedia. Todos van como «aproximado» y sin enlace, o con el enlace de la página que sí confirma el hecho aunque no el detalle.
 - **En el grupo 1**, lo marcado **[sin abrir]** viene de memoria por la misma razón: la fecha de la inundación de Tenochtitlan (1500) y su causa, la inauguración del foro de Trajano un 1 de enero, la leva de los campesinos egipcios a las obras del rey durante la crecida, y las fechas de las lentejas de Ata y de la siega de Alice.
 - **En el grupo 2**, lo marcado **[sin abrir]** viene de memoria: los días lunares de Sannō, Kanda y los fuegos de Ryōgoku en Edo, la limpieza del hollín y la fiesta de los carpinteros; el día del correo de un penique y del banquete del pabellón; que la fábrica de Mary solo cerrara en Viernes Santo y Navidad; los días sin oficina y el desfile de Rosa; la visita de Kennedy; que el triunfo de 1962 fuera el primero de México en un Mundial, y el Holi de 2026.
 - **En el grupo 3**, lo marcado **[sin abrir]** viene de memoria: el día de los votos por el emperador, el de la fiesta de Amenhotep I y el de la fiesta de Min. Y toda la vida de Ama es una reconstrucción.
+- **En el grupo 4**, lo marcado **[sin abrir]** viene de memoria: la sangría de los monjes, el libro de cuaresma del capítulo 48, el año nuevo florentino del 25 de marzo, el carro de Pascua en sábado, el día del rayo en la cúpula y el de la capilla Tornabuoni, las costumbres de Córdoba sin fecha (Yannayr, las almunias, la seda nueva) y las de la estepa (la parición, la esquila, la cacería). Tampoco se sabe si los mongoles de 1220 empezaban el año con los chinos.
 - **Las temporadas 3 a 5 de Alguien del mundo y Alguien de México son el futuro** al escribir esto (2027 a 2029). Lo programado puede cambiar: las tandas Y de cada año lo revisan.
 - **Las fechas áticas** son una reconstrucción (ver arriba).
 - **El clima** de cada lugar es una tabla de pesos verosímil, no un registro. **[Aproximación]**
