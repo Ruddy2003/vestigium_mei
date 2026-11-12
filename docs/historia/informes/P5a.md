@@ -156,4 +156,4 @@ Sobre el commit del gato (`d084b69`).
   - En esa corrida corrieron también en Actions las 38 pruebas de escenas y del gato.
 - **Corridas de capturas usadas:** 1 de las 2 que preveía el plan. La otra queda para los cambios que pida el autor al ver el gato.
 - Con `solo`, la rama `capturas` queda solo con estas 6 imágenes hasta la siguiente corrida completa.
-- **Después de esas corridas** entró un cambio de una línea (el gato toma la luz de los letreros de Ciudad neón solo en parte). Se compiló y se probó en el arnés, y se volvió a compilar en Actions: ver abajo.
+- **Después de esas corridas** entró un cambio de una línea (el gato toma la luz de los letreros de Ciudad neón solo en parte). Se compiló y se probó en el arnés, y la corrida 231 de `apk.yml`, sobre el commit `a619604` y sin publicar, **terminó bien**. Las capturas no se repitieron: ese cambio solo atenúa el color del gato en Ciudad neón.
