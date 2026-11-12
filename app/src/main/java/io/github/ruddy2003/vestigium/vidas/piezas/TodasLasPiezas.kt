@@ -11,6 +11,7 @@ object TodasLasPiezas {
     val TODAS: List<Piezas> by lazy { listOf(
         PiezasDemeas.PIEZAS, PiezasPierre.PIEZAS, PiezasKei.PIEZAS, PiezasAmaru.PIEZAS,
         PiezasNaa.PIEZAS, PiezasAta.PIEZAS, PiezasIpy.PIEZAS, PiezasLucio.PIEZAS, PiezasAlice.PIEZAS, PiezasCitlali.PIEZAS,
+        PiezasKichizo.PIEZAS, PiezasMary.PIEZAS, PiezasJose.PIEZAS,
     ) }
 
     private val porVida: Map<String, Piezas> by lazy { TODAS.associateBy { it.vida } }
