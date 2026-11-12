@@ -280,7 +280,7 @@ internal object AnioG5 {
                     mundo("estampas", "12-05", "Llegan a la posta estampas de las cincuenta y tres postas del camino", certeza = APROXIMADO, fuente = F_HIROSHIGE),
                 )),
             TemporadaVida("1834, año 5 de Tenpō", "estampas",
-                "Ochiyo busca su posta en las estampas del camino y la encuentra. El hambre sigue. La señora Tsuru le da permiso para casarse en otoño. Su madre viene a conocer a Sakichi. Gonta se va al norte a buscar trabajo. Se casan.",
+                "Ochiyo busca su posta en las estampas del camino y la encuentra. El hambre sigue. La señora Tsuru le da permiso para casarse en otoño. Su madre baja de la aldea a conocer a Sakichi. Se casan.",
                 anioDeLaPosta(5) + listOf(
                     suceso("su_posta", "03-02", "Busca su posta en las estampas del camino, y la encuentra"),
                     mundo("hambre_sigue", "05-25", "El hambre sigue: en la posta se sirve menos arroz y más mijo", certeza = APROXIMADO, fuente = F_TENPO),
@@ -353,13 +353,13 @@ internal object AnioG5 {
      */
     private fun anioDeParis(t: Int): List<DiaEspecial> = listOfNotNull(
         fiesta("reyes", "01-06", "La Epifanía: la torta de los reyes, con su haba", certeza = APROXIMADO, fuente = F_GALETTE),
-        fiesta("carnaval", CARNAVAL_PARIS[t - 1], "Martes de carnaval: máscaras en la calle y crepes en la sección", certeza = HISTORICO),
+        fiesta("carnaval", CARNAVAL_PARIS[t - 1], "Martes de carnaval: máscaras en la calle y crepes en la escalera", certeza = HISTORICO),
         cosecha("colada", "03-20", "La gran colada de primavera: París lava las sábanas del invierno", 5, APROXIMADO, escena = "colada"),
         fiesta("pascua", PASCUA_PARIS[t - 1], "Pascua: las campanas de Notre-Dame", certeza = HISTORICO, escena = "campanas"),
         FETE_DIEU[t - 1]?.let { fiesta("fete_dieu", it, "La Fête-Dieu: la procesión pasa por la calle con sábanas en las ventanas", certeza = HISTORICO, fuente = F_CORPUS) },
         if (t <= 4 && t != 3) fiesta("san_juan", "06-23", "La noche de San Juan: la hoguera de la plaza de Grève", certeza = APROXIMADO, escena = "fuego") else null,
         if (t >= 3) fiesta("aniversario", "07-14", "El aniversario de la Bastilla: baile en las calles", certeza = HISTORICO, fuente = F_BASTILLA) else null,
-        if (t <= 4) fiesta("asuncion", "08-15", "La Asunción: la procesión del voto del rey", certeza = HISTORICO, fuente = F_ASUNCION) else null,
+        if (t <= 4) fiesta("asuncion", "08-15", "La Asunción: la procesión de la Virgen por la Cité", certeza = HISTORICO, fuente = F_ASUNCION) else null,
         if (t <= 4) fiesta("todos_santos", "11-01", "Todos los Santos: las campanas de los difuntos", certeza = HISTORICO, fuente = F_TODOS_SANTOS) else null,
         if (t <= 4) fiesta("navidad", "12-25", "Navidad: la misa de medianoche", certeza = HISTORICO, fuente = F_NAVIDAD) else null,
     )
@@ -447,7 +447,7 @@ internal object AnioG5 {
         arcos = listOf(Arco("pan", TipoArco.OTRO, listOf(
             p(1, "01-01", 0.6), p(1, "07-14", 1.0), p(1, "11-01", 0.6), p(2, "12-31", 0.4), p(3, "12-31", 0.45), p(4, "12-31", 0.7), p(5, "09-29", 1.0), p(5, "12-31", 0.9),
         ))),
-        objetos = listOf("paleta", "tabla", "jabon", "ceniza", "cesta", "pan", "escarapela", "periodico", "asignado", "farol", "pinzas", "sueco"),
+        objetos = listOf("paleta", "tabla", "jabon", "ceniza", "cesta", "pan", "escarapela", "periodico", "sueldo", "farol", "pinzas", "sueco"),
         estados = listOf(Estado("helada", "hielo", "deshielo"), Estado("marcha", "versalles", "pies")),
     )
 
