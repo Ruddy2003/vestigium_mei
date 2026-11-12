@@ -258,8 +258,8 @@ internal object PiezasCitlali {
             "Dicen que el tlatoani quiere una ciudad tan hermosa que dé envidia a los dioses.",
         ),
         "luto" to listOf(
-            "Se habla del tlatoani muerto y del nuevo, que dicen que es serio y sabio.",
-            "En el barrio se dice que con el nuevo tlatoani todo será más ordenado, y más caro.",
+            "Se habla de los tlatoanis, del que hubo y del que vendrá, y de cómo cambian las cosas con cada uno.",
+            "En el barrio se dice que cada tlatoani nuevo quiere su guerra, sus templos y sus tributos.",
         ),
         "guerra" to listOf(
             "Se habla de guerras lejanas, de cautivos y de tributos nuevos.",

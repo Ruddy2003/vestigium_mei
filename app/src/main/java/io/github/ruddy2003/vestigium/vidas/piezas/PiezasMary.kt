@@ -241,7 +241,7 @@ internal object PiezasMary {
             "Se dice que este año hay más hambre que nunca, y los viejos dicen que han visto años peores, pero no muchos.",
         ),
         "huelga" to listOf(
-            "Se habla de la Carta, de la huelga y de los soldados, y de si los dueños van a ceder.",
+            "Se habla de la Carta, de los salarios que bajan y de si habrá huelga, y de si los dueños van a ceder.",
             "En el patio se dice que en todo el norte las fábricas están paradas, y que esta vez sí.",
         ),
         "ley" to listOf(

@@ -288,12 +288,12 @@ internal object PiezasBernat {
 
     private val MUNDOS = mapOf(
         "mansura" to listOf(
-            "En el castillo se habla de Egipto, de la batalla de Mansura y de los hermanos que no volverán.",
-            "Se dice que el rey Luis pagó un rescate enorme por salir preso de Egipto, y que ahora está en Acre.",
-            "Se habla del maestre nuevo, y de si será tan bueno como el que se perdió.",
+            "En el castillo se habla de Egipto, del ejército del rey Luis y de los hermanos que bajaron con él.",
+            "Se dice que el rey Luis es un santo, y que los santos no siempre ganan.",
+            "Se habla de los maestres de la orden, que mandan desde Acre y mueren en las batallas.",
         ),
         "herida" to listOf(
-            "Se habla de la muerte del emperador Federico, que estuvo excomulgado y fue rey de Jerusalén.",
+            "Se habla del emperador Federico, que se coronó rey de Jerusalén excomulgado y nunca quiso a la orden.",
             "Se dice que los de Damasco y los de Egipto se pelean entre ellos, y que eso es bueno para los cristianos.",
         ),
         "acre" to listOf(
@@ -301,7 +301,7 @@ internal object PiezasBernat {
             "Se dice que el maestre Renaud se peleó con el rey y que lo van a cambiar.",
         ),
         "torre" to listOf(
-            "Se habla de la reina Blanca, la madre del rey Luis, que murió en Francia, y de que el rey tendrá que volver.",
+            "Se habla de Francia, que está lejos y sin rey, y de cuánto tiempo más podrá quedarse aquí el rey Luis.",
             "Se dice que vienen los tártaros desde el este, y que nadie sabe de qué lado estarán.",
         ),
         "rey_se_va" to listOf(

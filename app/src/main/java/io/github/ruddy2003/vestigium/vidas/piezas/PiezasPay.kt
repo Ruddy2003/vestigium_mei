@@ -265,7 +265,7 @@ internal object PiezasPay {
             "Se habla de las raciones, que llegan, y del visir, que viene poco.",
         ),
         "denuncia" to listOf(
-            "Se habla de la denuncia contra el capataz Paneb, que está escrita en un papiro que nadie ha leído entero.",
+            "Se habla del capataz Paneb, de lo que roba y de lo que hace, y de que un día alguien lo denunciará.",
             "En la calle se dice que la tumba de la reina va mejor que la del rey, y eso trae problemas.",
         ),
         "paneb" to listOf(
@@ -273,7 +273,7 @@ internal object PiezasPay {
             "Se habla de quién será el capataz nuevo, y cada casa tiene su candidato.",
         ),
         "muere_rey" to listOf(
-            "Se habla del rey muerto y del rey nuevo, que es joven y está enfermo, dicen.",
+            "Se habla de los reyes de estos años, que duran poco, y de lo que eso significa para las tumbas.",
             "En la aldea se dice que el canciller Bay es el que manda, y que el rey solo firma.",
         ),
         "siptah" to listOf(

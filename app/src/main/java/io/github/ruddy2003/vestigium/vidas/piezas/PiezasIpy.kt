@@ -254,7 +254,7 @@ internal object PiezasIpy {
             "Dicen que con el jubileo el rey se ha renovado, como el río cada año.",
         ),
         "crecida_baja" to listOf(
-            "Este año el río no subió lo que debía, y en la aldea se nota.",
+            "Este año se mira el río con miedo, por si no sube lo que debe.",
             "Se dice que los dioses están enojados, aunque nadie sabe por qué.",
         ),
     )

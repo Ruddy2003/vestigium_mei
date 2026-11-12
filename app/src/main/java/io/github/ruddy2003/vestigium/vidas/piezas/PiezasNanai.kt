@@ -233,13 +233,13 @@ internal object PiezasNanai {
 
     private val MUNDOS = mapOf(
         "abasies" to listOf(
-            "En los caravasares se habla de los abasíes, que vencieron a los omeyas en el oeste, y de qué cambiará para los mercaderes.",
+            "En los caravasares se habla de la guerra entre los abasíes y los omeyas, en el oeste, y de qué cambiará para los mercaderes.",
             "Se dice que el general chino Gao Xianzhi anda por el oeste con su ejército, y nadie sabe para qué.",
             "Se habla del precio de la seda en Chang'an, que sube.",
         ),
         "talas" to listOf(
-            "Se habla de la batalla de Talas, entre árabes y chinos, y de quién mandará ahora en el camino.",
-            "Se dice que en Samarcanda unos prisioneros chinos hacen papel, y que el papel de allá saldrá más barato.",
+            "Se habla de los árabes y los chinos, que se acercan por el camino cada uno desde su lado, y de dónde chocarán.",
+            "Se dice que en el oeste se paga cada vez más por el papel de los chinos.",
         ),
         "farn" to listOf(
             "Se habla de los sogdianos de Chang'an, que son cada vez más, y de los que se casan con chinas.",

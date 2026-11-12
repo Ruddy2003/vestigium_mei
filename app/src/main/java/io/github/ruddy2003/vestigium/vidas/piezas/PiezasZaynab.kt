@@ -275,24 +275,24 @@ internal object PiezasZaynab {
 
     private val MUNDOS = mapOf(
         "principe" to listOf(
-            "En el zoco se habla de la muerte del hijo mayor del califa, que era un niño, y de quién heredará ahora.",
+            "En el zoco se habla de la favorita del califa, la vasca, y de sus hijos, que son la esperanza del califato.",
             "Se habla de los fatimíes, que mandan en Egipto y hacen una ciudad nueva junto al Nilo.",
             "Se dice que el califa compra libros en todas partes del mundo y que su biblioteca ya no cabe en el palacio.",
         ),
         "mihrab" to listOf(
             "Se habla del mihrab nuevo de la mezquita grande, que tiene mosaicos de oro que hicieron artesanos de Bizancio.",
-            "Se dice que una flota de los mayus, los del norte, anda por la costa del océano quemando aldeas.",
+            "Se dice que los mayus, los del norte, vuelven a veces por la costa del océano, y que hay que vigilar.",
         ),
         "maryam" to listOf(
             "Se habla de Ibn Abi Amir, un joven listo de la corte, que dicen que tiene la confianza de la madre del heredero.",
             "Se dice que el general Galib es el hombre más poderoso del califato después del califa.",
         ),
         "africa" to listOf(
-            "Se habla de la guerra en África contra los idrisíes, y de los soldados que salen del puerto.",
-            "Se dice que el califa de los fatimíes se fue de su tierra a Egipto, y que ya no le importa el Magreb.",
+            "Se habla de África, donde los idrisíes cambian de bando cuando les conviene, y de si el califa mandará un ejército.",
+            "Se dice que el califa de los fatimíes mira más a Egipto que al Magreb.",
         ),
         "idrisi" to listOf(
-            "Se habla de la vuelta del general Galib con el señor de los idrisíes prisionero, y de la fiesta que habrá.",
+            "Se habla del general Galib, que pelea en África, y de lo que traerá cuando vuelva.",
             "Se dice que el califa está enfermo, y que el heredero es un niño.",
         ),
     )
@@ -322,6 +322,7 @@ internal object PiezasZaynab {
         ),
         "almunias" to unDia(
             Parrafo.MANANA to "Hoy la familia sale a las almunias de la orilla del río, las huertas de recreo de los ricos, que en primavera abren sus puertas a la gente para ver los almendros, los rosales y los estanques. {nombre} prepara una cesta con pan, queso y dulces.",
+            Parrafo.TRABAJO to "A esta hora no teje: el taller cierra el día de las almunias, como media ciudad. {nombre} pasea con Yusuf y Alí entre los parterres, se sienta junto a un estanque y mira los peces, que no tienen nada que tejer.",
             Parrafo.PUEBLO to "En las almunias del río hay árboles de flores, acequias que corren entre los parterres, estanques con peces, pabellones con columnas. La gente pasea, se sienta en la hierba, come, canta. Por un día, los jardines de los ricos son de todos.",
             Parrafo.ANOCHECER to "Al caer la tarde vuelven a casa por el puente, con Alí dormido en brazos de su padre y la cesta vacía. {nombre} lleva en el pelo una flor de almendro que le puso Yusuf. No se la quita hasta que se seca, tres días después.",
         ),

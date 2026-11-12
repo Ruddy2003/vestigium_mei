@@ -12,7 +12,7 @@ import java.time.LocalDate
 /**
  * Los cuentos del grupo 4. Las pruebas generales (forma, largo, repeticiones, certeza) están en [CuentoPrueba] y corren
  * solas sobre todas las piezas registradas; aquí va lo propio de cada historia: que nadie aparezca antes ni después de
- * tiempo y que los estados se noten. Tanda T4a: Odo, Bernat y Zaynab.
+ * tiempo y que los estados se noten. Tanda T4a: Odo, Bernat y Zaynab. Tanda T4b: Bat e Iacopo.
  */
 class CuentoG4Prueba {
     private fun pieza(vida: String) = TodasLasPiezas.de(vida)!!
@@ -142,6 +142,73 @@ class CuentoG4Prueba {
         listOf("2027-07-09" to "2027-08-06", "2028-06-29" to "2028-07-27", "2029-06-17" to "2029-07-15", "2030-06-06" to "2030-07-04", "2031-05-27" to "2031-06-24").forEach { (a, b) ->
             vivenElEstado(v, "ramadan", a, b, listOf(1.0, 5.25, 6.0, 9.0, 13.0, 15.0, 18.0, 20.0))
             varianEnElEstado(v, a, b, 9.0, 3)
+        }
+    }
+
+    // ---------- Tanda T4b ----------
+
+    @Test fun estanLasPiezasDeLaTandaT4b() {
+        listOf("pastor_mongol", "aprendiz").forEach { v ->
+            assertEquals(v, pieza(v).vida)
+            assertEquals("$v: solo la temporada 1 está escrita", setOf(1), pieza(v).temporadasEscritas)
+            assertEquals(emptyList<String>(), pieza(v).problemas(cal(v)))
+            assertEquals(Genero.MASCULINO, pieza(v).genero)
+        }
+    }
+
+    // ---------- Bat ----------
+
+    @Test fun enElCuentoDeBatNadieApareceAntesNiDespuesDeTiempo() {
+        val v = "pastor_mongol"
+        // Khulan espera desde el 12 de agosto de la 1 y Saran nace el 12 de marzo de la 2; el potro blanco nace el 2 de mayo de la 1.
+        nunca(v, "2027-01-01", "2027-08-11", "Khulan espera")
+        normales(v, "2027-01-01", "2028-03-11").forEach { assertFalse("$it: Saran antes de nacer", nombra(v, it, "Saran")) }
+        alguna(v, "2028-03-20", "2028-12-31", "Saran")
+        nunca(v, "2027-01-01", "2027-05-01", "potro blanco")
+        // Su madre enferma el 30 de enero de la 3 y muere el 8 de marzo de la 4.
+        nunca(v, "2029-01-30", "2031-12-31", "manda en todo el campamento")
+        nunca(v, "2027-01-01", "2029-01-29", "está enferma desde el invierno"); nunca(v, "2030-03-08", "2031-12-31", "está enferma desde el invierno")
+        nunca(v, "2027-01-01", "2030-03-07", "ya no está")
+        // Temür vuelve de la guerra el 28 de julio de la 5; el invierno del hielo empieza el 15 de febrero de la 4.
+        nunca(v, "2031-07-28", "2031-12-31", "sigue en la guerra del oeste")
+        nunca(v, "2027-01-01", "2031-07-27", "volvió de la guerra después de cinco años")
+        nunca(v, "2027-01-01", "2030-02-14", "invierno del hielo")
+        noNombran(v, listOf("Saran", "Temür", "potro blanco"))
+    }
+
+    @Test fun batPasaCadaVeranoEnElLlano() {
+        val v = "pastor_mongol"
+        (2027..2031).forEach { y ->
+            vivenElEstado(v, "verano", "$y-05-26", "$y-09-24", listOf(1.0, 5.5, 9.0, 12.5, 15.0, 20.0))
+            varianEnElEstado(v, "$y-05-26", "$y-09-24", 9.0, 3)
+        }
+    }
+
+    // ---------- Iacopo ----------
+
+    @Test fun enElCuentoDeIacopoNadieApareceAntesNiDespuesDeTiempo() {
+        val v = "aprendiz"
+        // Conoce a Caterina el 10 de julio de la 1 y se promete el 14 de julio de la 4.
+        normales(v, "2027-01-01", "2027-07-09").forEach { assertFalse("$it: Caterina antes de tiempo", nombra(v, it, "Caterina")) }
+        alguna(v, "2027-07-15", "2027-12-31", "Caterina")
+        nunca(v, "2027-01-01", "2030-07-13", "está prometida")
+        // El maestro Domenico muere el 11 de enero de la 5; Nanna se casa el 8 de octubre de la 3.
+        nunca(v, "2031-01-11", "2031-12-31", "El maestro Domenico es un hombre")
+        nunca(v, "2027-01-01", "2031-01-10", "Desde que murió el maestro Domenico")
+        nunca(v, "2027-01-01", "2029-10-07", "está casada con un tejedor"); nunca(v, "2029-10-08", "2031-12-31", "Su padre le busca marido")
+        // Su primera tabla, del 10 de marzo de la 4 al 25 de mayo de la 5; Lorenzo muere el 9 de abril de la 3.
+        nunca(v, "2027-01-01", "2030-03-09", "Desde que empezó su primera tabla"); nunca(v, "2031-05-25", "2031-12-31", "Desde que empezó su primera tabla")
+        nunca(v, "2029-04-09", "2031-12-31", "jardín de los Médici")
+        noNombran(v, listOf("Caterina", "Domenico"))
+    }
+
+    @Test fun iacopoPintaEnElMugelloYNoTrabajaEnLasFiestasDeGuardar() {
+        val v = "aprendiz"
+        vivenElEstado(v, "campo", "2029-06-29", "2029-08-07", listOf(1.0, 5.5, 9.0, 12.5, 15.0, 20.0))
+        varianEnElEstado(v, "2029-06-29", "2029-08-07", 9.0, 3)
+        // Pascua y San Juan de los cinco años: el taller está cerrado.
+        (listOf("2027-04-11", "2028-04-03", "2029-04-22", "2030-04-07", "2031-03-30") + (2027..2031).map { "$it-06-24" }).forEach { d ->
+            assertTrue("$d: trabaja en una fiesta de guardar", "no trabaja" in cuento(v, d, 9.0).parrafos[Parrafo.TRABAJO.ordinal])
         }
     }
 }

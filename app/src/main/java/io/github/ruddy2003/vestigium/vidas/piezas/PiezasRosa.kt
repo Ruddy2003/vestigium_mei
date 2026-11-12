@@ -230,11 +230,11 @@ internal object PiezasRosa {
         ),
         "claudia" to listOf(
             "Se habla del Mundial de Chile y de la selección, que esta vez sí, dicen.",
-            "Se dice que los rusos y los gringos se van a matar por Cuba, y en la oficina se oye la radio todo el día.",
+            "Se dice que los rusos y los gringos se pelean por Cuba, y en la oficina se oye la radio todo el día.",
         ),
         "olimpiada" to listOf(
             "Se habla de que México va a hacer unas Olimpiadas, y nadie se lo cree del todo.",
-            "Se dice que mataron a Kennedy, y la gente llora en la calle como si fuera de aquí.",
+            "Se dice que en Estados Unidos los negros marchan por sus derechos, y en la oficina se oye en la radio.",
         ),
         "tlatelolco" to listOf(
             "Se habla de las elecciones y del candidato del partido, que ya se sabe que va a ganar.",

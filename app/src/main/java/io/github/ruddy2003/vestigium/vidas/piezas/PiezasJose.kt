@@ -234,11 +234,11 @@ internal object PiezasJose {
             "En la hilera se habla de unos papeles que dicen que las deudas de los peones se deberían borrar.",
         ),
         "temblor" to listOf(
-            "Se habla del temblor, y de que en la capital se cayeron casas.",
+            "Se habla de los temblores, que asustan más en la capital que en el campo, porque allá las casas son altas.",
             "Se dice que en Veracruz los soldados dispararon contra los obreros de una fábrica, y nadie sabe cuántos murieron.",
         ),
         "entrevista" to listOf(
-            "Se dice que don Porfirio le dijo a un periodista gringo que ya se va a ir, y nadie le cree.",
+            "Se dice que don Porfirio va a dejar la presidencia, y nadie le cree.",
             "En la tienda se habla de elecciones, que es una palabra que en la hacienda no se usaba.",
         ),
         "antirreeleccion" to listOf(

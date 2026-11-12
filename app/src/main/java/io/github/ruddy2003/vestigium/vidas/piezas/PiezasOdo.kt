@@ -263,20 +263,20 @@ internal object PiezasOdo {
             "Se dice que el rey Conrado está enfermo y que no volvió bien de Oriente.",
         ),
         "lorsch" to listOf(
-            "En la abadía se habla de la muerte de Suger, el abad de Saint-Denis, que mandaba más que el rey de Francia.",
-            "Se dice que la abadesa Hildegarda terminó su libro de visiones, y que el papa lo leyó.",
+            "En la abadía se habla de Suger, el abad de Saint-Denis, que mandó en Francia más que el rey.",
+            "Se dice que la abadesa Hildegarda escribe un libro de visiones, y que el papa ha leído un trozo.",
         ),
         "rey_nuevo" to listOf(
-            "Se habla del rey nuevo, Federico, el de la barba roja, que es joven y quiere ser emperador.",
-            "Se dice que el rey de Francia se separó de su reina, y que ella se casó con un duque de los ingleses.",
+            "Se habla de los reyes, que van y vienen, y de los príncipes que los eligen en Fráncfort.",
+            "Se dice que en Francia el rey y la reina no se quieren, y que eso traerá guerras.",
         ),
         "claraval" to listOf(
-            "Se habla de Bernardo de Claraval, que murió, y de sus monjes blancos, que ya son más que los negros.",
-            "Se dice que el papa nuevo es viejo y que no durará.",
+            "Se habla de Bernardo de Claraval y de sus monjes blancos, que ya son más que los negros.",
+            "Se dice que en Roma los papas duran poco y los romanos mucho.",
         ),
         "italia" to listOf(
-            "Se habla del rey Federico, que baja a Italia a ponerse la corona de emperador.",
-            "Se dice que en Sicilia murió el rey Roger, el que tenía sabios moros en su corte.",
+            "Se habla del rey Federico, que quiere bajar a Italia a ponerse la corona de emperador.",
+            "Se dice que en Sicilia los reyes normandos tienen sabios moros y griegos en su corte.",
         ),
     )
 
@@ -300,6 +300,7 @@ internal object PiezasOdo {
     private val ESPECIALES = mapOf(
         "candelaria" to unDia(
             Parrafo.MANANA to "Hoy es la Candelaria, cuarenta días después de Navidad, y antes de misa el abad bendice las velas, una para cada monje, que se encienden en la puerta de la iglesia. Luego la comunidad entera da la vuelta al claustro en procesión, cantando, cada uno con su luz.",
+            Parrafo.TRABAJO to "A esta hora no copia: en las fiestas grandes los monjes no trabajan con las manos, y el scriptorium se queda cerrado. Odo lee en el claustro, con la vela de la procesión todavía en la manga, apagada.",
             Parrafo.PUEBLO to "La procesión de las velas va por las cuatro galerías del claustro, despacio, y las llamas tiemblan con el aire frío de febrero. Los capiteles tallados aparecen y desaparecen. Desde la puerta, los legos y los criados miran. Es la fiesta más bonita del invierno.",
             Parrafo.PENSAMIENTO to "Odo lleva su vela con cuidado, protegiéndola con la mano, y piensa que así se lleva la fe: una llama pequeña, en un claustro frío, de un año a otro. Al final de la procesión, la apaga con los dedos. La cera se guarda para la iglesia.",
         ),
@@ -310,6 +311,7 @@ internal object PiezasOdo {
         ),
         "san_benito" to unDia(
             Parrafo.MANANA to "Hoy es san Benito, el padre de la casa, el que escribió la Regla, que murió este día hace seiscientos años, de pie, en el coro, sostenido por sus monjes. La abadía lo celebra en plena cuaresma, con el oficio solemne y las mejores capas.",
+            Parrafo.TRABAJO to "A esta hora no copia, que es fiesta grande de la casa: canta, lee y descansa. Pasea por el claustro y mira los capiteles, que de tanto pasar no ve nunca. Hoy los ve. Un león con cara de abad. No se ríe.",
             Parrafo.PUEBLO to "En la iglesia se encienden todas las lámparas y se saca el relicario, y en el refectorio, aunque es cuaresma, hay pescado bueno y un vaso de vino. Hoy el lector lee la vida de san Benito, la que escribió el papa Gregorio, la del cuervo que le quitó el pan envenenado.",
             Parrafo.PENSAMIENTO to "Odo piensa en san Benito, que hizo una Regla para gente común, no para santos: cuánto se come, cuánto se duerme, cómo se castiga a los que llegan tarde. Lo piensa con cariño, como se piensa en un abuelo. Sin él, piensa, él estaría en un campo, o en una guerra.",
         ),
@@ -331,11 +333,13 @@ internal object PiezasOdo {
         ),
         "pentecostes" to unDia(
             Parrafo.MANANA to "Hoy es Pentecostés, cincuenta días después de Pascua, cuando bajó el Espíritu en lenguas de fuego. El abad canta la misa grande, con la capa roja, y en la iglesia se cuelgan guirnaldas. Desde el valle sube gente a la misa, con ropa de fiesta.",
+            Parrafo.TRABAJO to "A esta hora no copia: es Pentecostés, y en las fiestas grandes el scriptorium está cerrado. Odo lee en el claustro un libro de la biblioteca, por gusto, que es la única vez del año que lee algo que no tiene que copiar.",
             Parrafo.PUEBLO to "En la puerta de la abadía hay más pobres que nunca, porque en las fiestas grandes se reparte pan y carne, y el portero no da abasto. Los legos ayudan. Hay niños, viejos, peregrinos, un ciego que canta. La abadía da de comer al valle.",
             Parrafo.PENSAMIENTO to "Odo piensa en las lenguas de fuego, que hicieron que los apóstoles hablaran todas las lenguas. Él solo habla dos, la de su madre y el latín. Pero copia en una tercera, piensa, que es la de las letras, y esa la entienden todos los que saben leerla, en cualquier tierra.",
         ),
         "traslacion_benito" to unDia(
             Parrafo.MANANA to "Hoy es san Benito de verano, el día en que se recuerda que sus huesos llegaron a Francia, hace siglos. Es fiesta grande otra vez, como en marzo, pero con sol. El oficio de la noche es más largo y la misa más bonita.",
+            Parrafo.TRABAJO to "A esta hora no copia, que es fiesta grande. Se sienta en el huerto del claustro, al sol, con el salterio abierto en las rodillas, y se queda dormido. Lo despierta una abeja. Lo despierta la campana.",
             Parrafo.PUEBLO to "El claustro está lleno de flores del huerto, y hay pan blanco y pescado en el refectorio. Los legos tienen la tarde libre y bajan al río a bañarse, que es lo que hacen en las fiestas de verano. Se les oye gritar desde el scriptorium.",
             Parrafo.ANOCHECER to "Esta tarde, después de vísperas, el abad deja que los monjes paseen por el huerto grande, fuera del claustro, hasta la hora de la cena. Odo camina hasta la tapia que da al río y mira el agua. Es lo más lejos que va en meses.",
         ),
@@ -359,6 +363,7 @@ internal object PiezasOdo {
         "todos_santos" to TextoEspecial(
             listOf(dia(
                 Parrafo.MANANA to "Hoy es Todos los Santos, y mañana los difuntos. La abadía canta hoy por los santos del cielo y mañana por los muertos de la casa, cuyos nombres están escritos en un libro largo que el abad lee entero en el capítulo. Son cientos.",
+                Parrafo.TRABAJO to "A esta hora no copia: es fiesta grande, y el scriptorium está cerrado. Odo pasea por el cementerio del claustro, entre las tumbas sin nombre de los monjes de antes, y les habla un poco, por si alguno lo oye.",
                 Parrafo.PUEBLO to "En el cementerio del claustro, junto a la iglesia, donde están enterrados los monjes de antes sin nombre en la tierra, se encienden lámparas. Los legos limpian las hierbas. En el valle se oyen las campanas de todas las iglesias.",
                 Parrafo.PENSAMIENTO to "Odo escucha la lista de los muertos de la casa y piensa que algún día su nombre estará en ese libro, leído por un monje que no lo conoció, en un capítulo frío de noviembre. No le da miedo. Le da algo parecido a la paz.",
             )),
@@ -368,6 +373,7 @@ internal object PiezasOdo {
         ),
         "san_martin" to unDia(
             Parrafo.MANANA to "Hoy es san Martín, el que partió su capa con un pobre, y en la abadía se mata el cerdo, se prueba el vino nuevo y los arrendatarios del valle traen lo que deben. En la puerta hay una fila de carros, de gallinas y de gente que discute con el cillerero.",
+            Parrafo.TRABAJO to "A esta hora no copia: es san Martín y es fiesta. Ayuda al cillerero a contar lo que traen los arrendatarios en la puerta: gallinas, quesos, sacos de grano, un cerdo que no se deja contar. Apunta todo en una tablilla de cera.",
             Parrafo.PUEBLO to "En el patio de la abadía los legos matan los cerdos del invierno y los criados hacen salchichas, que no comerán los monjes, sino los enfermos, los huéspedes y los legos. En la bodega se abre el primer tonel de vino nuevo. El cillerero lo prueba tres veces.",
             Parrafo.ANOCHECER to "Esta noche, en el refectorio, se sirve el vino nuevo, todavía turbio, y los monjes lo prueban en silencio y opinan por señas: bueno, malo, ácido, como el del año pasado. Odo hace la seña de bueno. El cillerero, en la otra mesa, sonríe.",
         ),

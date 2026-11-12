@@ -222,7 +222,7 @@ internal object PiezasMundo {
     private val MUNDOS = mapOf(
         "kumbh" to listOf(
             "En el teléfono no se habla de otra cosa que del Kumbh Mela, al que van millones a bañarse al río sagrado.",
-            "En la oficina se habla del críquet, de los precios y de la guerra que empezó y se acabó en cuatro días.",
+            "En la oficina se habla del críquet, de los precios y de la frontera, que nunca está tranquila.",
             "Se dice que el país es ya el más poblado del mundo, y la calle lo confirma cada mañana.",
         ),
         "censo" to listOf(

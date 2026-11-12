@@ -267,7 +267,7 @@ internal object PiezasCayo {
             "En la legión se dice que el emperador mira hacia oriente, y que eso significa guerra.",
         ),
         "partida" to listOf(
-            "Se habla de la guerra contra los partos, que ya empezó, y de quién se irá y quién se quedará.",
+            "Se habla de la guerra contra los partos, que se huele en el aire, y de quién se irá y quién se quedará.",
             "En el campamento se dice que el emperador viaja hacia oriente, y que se lleva lo mejor de cada legión.",
         ),
         "oriente" to listOf(

@@ -289,7 +289,7 @@ internal object PiezasAma {
             "Se dice que este año vendrá gente de muy lejos, con conchas del mar.",
         ),
         "frio_largo" to listOf(
-            "Se habla del hambre, que llegó con la nieve que no se iba, y de quién comió menos.",
+            "Se habla del frío, que este año no se va, y de la grasa que queda.",
             "Oko dice que hay que pintar más, para que vuelvan los animales.",
         ),
         "friso" to listOf(

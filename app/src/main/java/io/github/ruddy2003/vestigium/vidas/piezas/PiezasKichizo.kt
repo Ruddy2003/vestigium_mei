@@ -267,7 +267,7 @@ internal object PiezasKichizo {
             "Se dice que el antiguo shōgun, el que plantó los cerezos de Asukayama, está viejo y enfermo.",
         ),
         "luto" to listOf(
-            "Se habla de la muerte del antiguo shōgun, que fue bueno para la gente común, según dicen los que no lo conocieron.",
+            "Se habla del antiguo shōgun, que fue bueno para la gente común, según dicen los que no lo conocieron.",
             "Se dice que la era ha cambiado de nombre, y la gente se equivoca al decir el año.",
         ),
         "kakke" to listOf(
@@ -275,7 +275,7 @@ internal object PiezasKichizo {
             "Se dice que la embajada de Ryūkyū viene a la ciudad, con su música y sus ropas de colores.",
         ),
         "fuego" to listOf(
-            "Se habla del incendio que se comió el callejón, y de quién lo empezó, que nadie sabe y todos dicen.",
+            "Se habla de los incendios, que en Edo vienen como las estaciones, y de quién los empieza, que nadie sabe y todos dicen.",
             "En el barrio se dice que este año el viento ha sido malo, y que los incendios lo saben.",
         ),
         "calendario" to listOf(

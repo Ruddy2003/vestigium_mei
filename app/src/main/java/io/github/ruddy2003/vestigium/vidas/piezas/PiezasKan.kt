@@ -260,12 +260,12 @@ internal object PiezasKan {
             "Se dice que Venus salió por la mañana, y que son días de peligro para los señores.",
         ),
         "embajada" to listOf(
-            "Se habla de Yaxchilan, que tendrá un señor nuevo después de muchos años sin él.",
+            "Se habla de Yaxchilan, que estuvo muchos años sin señor, y del que sube ahora.",
             "Se dice que en el oeste hay ciudades en guerra, y que el humo se ve desde los cerros.",
         ),
         "guerra" to listOf(
-            "Se habla de los cautivos que trajeron los guerreros, y de lo que se hará con ellos.",
-            "Se dice que las lluvias llegaron tarde, y que el maíz nació ralo.",
+            "Se habla de la guerra con la ciudad vecina, de los guerreros y de los cautivos.",
+            "Se dice que este año las lluvias se harán esperar.",
         ),
         "venus" to listOf(
             "Se habla de Venus, que sale por la mañana, y de lo que dicen los almanaques.",

@@ -263,11 +263,11 @@ internal object PiezasAta {
             "Las cosechas han sido buenas, y la gente anda de buen humor.",
         ),
         "humo" to listOf(
-            "Desde que el monte empezó a echar humo, la gente anda inquieta.",
+            "Se habla del monte grande, que a veces echa humo, y la gente lo mira de reojo.",
             "Se dice que el monte está enojado, aunque nadie sabe con quién.",
         ),
         "ceniza" to listOf(
-            "La ceniza del monte estropeó parte del trigo, y se nota en los cuencos.",
+            "Se habla del monte y de lo que puede echar encima de los campos.",
             "La gente mira el cielo más de lo normal, por si vuelve a caer algo.",
         ),
     )

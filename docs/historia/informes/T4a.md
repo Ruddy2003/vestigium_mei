@@ -110,7 +110,7 @@ Reescribí esos textos para que valgan a cualquiera de sus horas, como los de De
   - un anochecer en la enfermería que contaba «treinta y dos, treinta y tres» días, y que sale cualquier noche de las siete semanas;
   - el día de la fiesta del fin del ayuno, Zaynab seguía en el telar: ahora el taller está cerrado los tres días.
 - **Al repasar los textos antes de probarlos** corregí: dos textos de todos los días que nombraban a Heinrich antes de que llegara; uno que decía lo que «vivió» Gerhard estando vivo; las doce lecturas de los maitines de Navidad (había puesto nueve); el escudo templario (blanco con la cruz roja, no blanco y negro, que era el estandarte); el comendador, que en la temporada 5 es otro; una lupa y un sereno que no existían en la Córdoba del 970; y un detalle de la muerte del maestre que no comprobé.
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android:** la corrida 219 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `d49c08b`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que no se pudo comprobar
