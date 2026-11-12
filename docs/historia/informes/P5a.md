@@ -4,6 +4,8 @@ Fecha: 12 nov 2026. Rama: `claude/gallant-goldberg-bsc3pm`, encima de P4b (en el
 
 ## Qué trae
 
+**El autor aprobó el gato el 12 nov 2026,** después de tres revisiones (ver «Las revisiones del 12 nov 2026», abajo).
+
 El gato que vivirá dentro del cuadro de Hoy. Ya no es una tira de imágenes, como el de pixel: es un esqueleto que se dibuja con código, se porta igual que el de pixel y recibe la luz de la escena en la que está.
 
 | Archivo | Qué tiene |
