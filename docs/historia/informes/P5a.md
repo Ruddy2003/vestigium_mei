@@ -190,6 +190,9 @@ Estas corridas son las de la primera versión del gato (`d084b69`). Las de la re
 
 **Después de la primera revisión** (`2fe89c8`): la corrida 270 de capturas (`superficies = cuadro,gatoCuadro`, con los tres temas y `solo = true`) **terminó bien**, con 45 imágenes y sin fallas. Las de las escenas son idénticas a las aprobadas.
 
-**Después de la segunda revisión** (el gato inspirado en las referencias del autor):
+**Después de la segunda revisión** (el gato inspirado en las referencias del autor, `73851b6`):
 
-_Pendiente: se llena al terminar las corridas._
+- **Compilación de Android:** la corrida 235 de `apk.yml`, sin publicar, **terminó bien**.
+- **Capturas:** la corrida 271 (`superficies = gatoCuadro`, con los tres temas y `solo = true`) **terminó bien**, con 6 imágenes y sin fallas. Revisé la hoja de poses y el gato en Helénico: **se ve igual que en el arnés.**
+- **Corridas de capturas usadas en P5a:** 3, contra las 2 que preveía el plan. La segunda y la tercera son de las dos revisiones.
+- Con `solo`, la rama `capturas` queda solo con las 6 imágenes del gato hasta la siguiente corrida completa.

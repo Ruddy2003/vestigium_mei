@@ -483,7 +483,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P3b | claude-opus-5-5 | medium | Texto con el tono ya aprobado | 0 | hecho 11 nov 2026 (`docs/historia/informes/P3b.md`) |
 | P4a | claude-fable-5-2 | high | Motor de escena, biblioteca de paisaje y primer paisaje con código | 2 | hecho 11 nov 2026 (`docs/historia/informes/P4a.md`) |
 | P4b | claude-fable-5-2 | high | Paisajes dibujados con código | 2 | hecho 11 nov 2026 (`docs/historia/informes/P4b.md`); **los dos cuadros aprobados por el autor el 12 nov 2026** |
-| P5a | claude-fable-5-2 | **xhigh** | Un esqueleto animado que comparten 32 temas: estados, capas, rendimiento. Un fallo se paga 32 veces y Paparazzi no ve el movimiento | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5a.md`); **falta que el autor vea el gato** |
+| P5a | claude-fable-5-2 | **xhigh** | Un esqueleto animado que comparten 32 temas: estados, capas, rendimiento. Un fallo se paga 32 veces y Paparazzi no ve el movimiento | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5a.md`); revisado dos veces con el autor ese día; **falta su visto bueno al gato rehecho** |
 | P5b | claude-fable-5-2 | high | Se apoya en el esqueleto ya resuelto. Los gestos se ajustan después de probarlos en el teléfono | 2 | pendiente |
 | P6 | claude-fable-5-2 | high | Integración en Hoy, medidas y esquema | 2 | pendiente |
 | H1 | claude-opus-5-5 | medium | Red, caché y pantalla con patrones que ya existen | 1 | pendiente |
