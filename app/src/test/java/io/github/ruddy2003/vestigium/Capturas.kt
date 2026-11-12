@@ -44,6 +44,8 @@ import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.TemaVestigium
 import io.github.ruddy2003.vestigium.ui.Tonos
 import androidx.compose.ui.geometry.Offset
+import io.github.ruddy2003.vestigium.ui.escenas.gato
+import androidx.compose.ui.graphics.drawscope.scale as escalar
 import androidx.compose.ui.geometry.Size
 import io.github.ruddy2003.vestigium.ui.barraGrafica
 import io.github.ruddy2003.vestigium.ui.ejeGrafica
@@ -2146,6 +2148,57 @@ class Capturas {
                 }
             }
         }
+
+    /** La hoja de poses del gato del cuadro: sus 13 animaciones, cuadro por cuadro, con la luz de media mañana. */
+    private fun hojaDePosesGato(tema: TemaId, oscuro: Boolean, nombre: String, pelaje: io.github.ruddy2003.vestigium.ui.escenas.Pelaje) =
+        captura(tema, oscuro, alto = 3900, nombre = nombre) {
+            val luces = io.github.ruddy2003.vestigium.ui.escenas.paisaje.lucesDe(io.github.ruddy2003.vestigium.vidas.luzDe(10.0, io.github.ruddy2003.vestigium.vidas.RegimenLuz.SEIS_FRANJAS), io.github.ruddy2003.vestigium.vidas.Clima.DESPEJADO)
+            val luz = io.github.ruddy2003.vestigium.ui.escenas.LuzGato(io.github.ruddy2003.vestigium.ui.escenas.paisaje.Rayo(luces), luces.noche) { luces.tono(it) }
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                io.github.ruddy2003.vestigium.ui.escenas.AnimGato.entries.filter { it.cuadros > 0 }.forEach { anim ->
+                    val filas = (anim.cuadros + 3) / 4
+                    Text("${anim.name.lowercase().replace('_', ' ')} · ${anim.cuadros} cuadros", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground)
+                    androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().aspectRatio(380f / (62f * filas))) {
+                        val k = size.width / 380f
+                        escalar(k, k, Offset.Zero) {
+                            drawRect(luces.tono(androidx.compose.ui.graphics.Color(0xFFD9CDB4)), Offset.Zero, Size(380f, 62f * filas))
+                            for (f in 0 until filas) drawRect(luces.tono(androidx.compose.ui.graphics.Color(0xFFC2B292)), Offset(0f, 62f * f + 52f), Size(380f, 10f))
+                            for (i in 0 until anim.cuadros) gato(io.github.ruddy2003.vestigium.ui.escenas.Gatuno.poseDe(anim, i), pelaje, luz, Offset(95f * (i % 4) + 47f, 62f * (i / 4) + 56f), 1, 1.3f)
+                        }
+                    }
+                }
+            }
+        }
+
+    /**
+     * Tanda P5a del plan de historia y escenas: el gato del cuadro (CAPTURAS=gatoCuadro; con CAPTURAS_TEMAS, solo esos
+     * temas). Por cada tema con escena, dos imágenes: `…_temaGatoCuadro_<tema>_poses.png`, con sus 13 animaciones cuadro
+     * por cuadro, y `…_temaGatoCuadro_<tema>_escena.png`, con el gato dentro de su escena a las tres horas del día normal
+     * (caminando, sentado y dormido), para ver que toma su luz. El pelaje es el común hasta que cada tema tenga el suyo (P5b).
+     */
+    @Test fun temaGatoCuadro() = porTema("gatoCuadro") { t, o, _ ->
+        val escena = io.github.ruddy2003.vestigium.ui.escenas.escenaDe(t)
+        if (escena != null && o == t.soloOscuro) {
+            val pelaje = io.github.ruddy2003.vestigium.ui.escenas.Pelaje.COMUN
+            hojaDePosesGato(t, o, "${t.id}_poses", pelaje)
+            val vida = escena.vidas.first()
+            val (_, dia, horas) = DIAS_CUADRO[vida].orEmpty().first()
+            val ficha = io.github.ruddy2003.vestigium.vidas.FichaDelDia.de(dia, vida)!!
+            val humor = io.github.ruddy2003.vestigium.ui.Gato.Humor(io.github.ruddy2003.vestigium.ui.Gato.Animo.NORMAL, cansado = false, noche = false)
+            val poses = listOf(Triple(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.CAMINAR, 2, 1), Triple(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.SENTADO, 0, -1), Triple(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.DORMIR, 1, 1))
+            captura(t, o, alto = 140 + horas.size * 900, nombre = "${t.id}_escena") {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    horas.forEachIndexed { i, hora ->
+                        val suelo = escena.anclas(io.github.ruddy2003.vestigium.ui.escenas.Momento(ficha, hora)).first { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }
+                        val (anim, cuadro, dir) = poses[i % poses.size]
+                        val paso = io.github.ruddy2003.vestigium.ui.escenas.PasoGato(anim, cuadro, suelo.x + (suelo.hasta - suelo.x) * (0.3f + 0.2f * i), dir)
+                        Text(rotuloCuadro(ficha, hora) + " · gato: ${anim.name.lowercase()}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground, maxLines = 2)
+                        io.github.ruddy2003.vestigium.ui.escenas.VistaEscena(escena, ficha, hora, Modifier.fillMaxWidth(), MaterialTheme.shapes.medium, animar = false, banderita = io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), humor = humor, pelaje = pelaje, pasoGato = paso)
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Tanda P4a del plan de historia y escenas: el cuadro de cada tema que ya tiene escena (CAPTURAS=cuadro; con

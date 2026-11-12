@@ -42,6 +42,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.planoH
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.planoV
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoDeFoco
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoFijo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.reflejo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.reflejoMojado
@@ -1074,6 +1075,18 @@ internal object EscenaNeon : EscenaVida {
     }
 
     // ---------------------------------------------------------------- El gato
+
+    /**
+     * Al gato lo alumbran los focos del callejón: toma el color de los que tiene cerca, y su sombra la tumba el que
+     * más lo alumbra. Aquí siempre es de noche, así que siempre le brillan los ojos.
+     */
+    override fun luzDelGato(m: Momento, en: Offset): LuzGato {
+        val f = focos(m); val a = Alumbrado(luces(m), f)
+        val manda = elQueManda(tumban(f), en)
+        val rayo = if (manda != null) rayoDeFoco(manda, en, 0.8f, SOMBRA) else rayoFijo(0.4f, 60f, 0f, SOMBRA, 0.3f)
+        val centro = en + Offset(0f, -12f)
+        return LuzGato(rayo, 1f, manda?.color ?: Color(0xFFC8CCE8)) { a.en(centro, it) }
+    }
 
     override fun anclas(m: Momento): List<Ancla> = buildList {
         add(Ancla(TipoAncla.SUELO, 20f, 280f, hasta = 330f))

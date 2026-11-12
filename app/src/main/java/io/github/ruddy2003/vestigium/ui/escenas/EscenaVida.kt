@@ -7,6 +7,7 @@ import io.github.ruddy2003.vestigium.data.OtrasVidas
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Luces
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Rayo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.lucesDe
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.vientoDe
 import io.github.ruddy2003.vestigium.vidas.Azar
@@ -138,6 +139,19 @@ interface EscenaVida {
 
     /** Los sitios de la escena para el gato en este momento (tanda P5). */
     fun anclas(m: Momento): List<Ancla>
+
+    /**
+     * La luz que le llega al gato cuando pisa en [en]: de qué lado viene, qué sombra arroja y cómo tiñe su pelo. Por
+     * omisión, la del sol o la luna de este momento. La cambia la escena que tenga su propia luz (un eclipse, o los
+     * focos de una escena donde siempre es de noche).
+     */
+    fun luzDelGato(m: Momento, en: Offset): LuzGato { val l = m.luces(); return LuzGato(Rayo(l), l.noche) { l.tono(it) } }
+
+    /**
+     * El tamaño del gato en esta escena. Con 1 mide unas 33 unidades de largo sin la cola, que es su tamaño real junto a
+     * las cosas del primer plano; por omisión va algo más grande, para que se le vea bien en un cuadro tan pequeño.
+     */
+    val tallaDelGato: Float get() = 1.3f
 }
 
 /**

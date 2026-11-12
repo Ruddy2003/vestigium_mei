@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.unit.dp
+import io.github.ruddy2003.vestigium.ui.Gato
 import io.github.ruddy2003.vestigium.vidas.FichaDelDia
 
 /** El instante en que queda la parte viva cuando no se anima (animaciones apagadas, ahorro de energía, capturas). */
@@ -46,6 +47,9 @@ private const val PASO_MS = 66L
  *   en pantalla.
  * - **La banderita** «Hoy en la historia» del tema ([banderita]) cuelga dentro, arriba a la izquierda. [lleno], de
  *   0 a 1, la va llenando mientras se mantiene el dedo (lo maneja P6).
+ * - **El gato** va en una tercera capa, encima de las dos, si se da su [humor] (el de `Gato.humor`): camina por el
+ *   suelo de la escena con el [pelaje] de su tema. Sin [animar] queda sentado; [pasoGato] lo fija en un cuadro
+ *   concreto (las capturas). Sin [humor] no hay gato.
  * - **Si una escena falla al dibujar,** el cuadro se queda con lo que llevaba pintado y avisa por [alFallar]: un
  *   adorno no puede tumbar la pantalla de Hoy.
  */
@@ -53,7 +57,7 @@ private const val PASO_MS = 66L
 fun VistaEscena(
     escena: EscenaVida, ficha: FichaDelDia, hora: Double, modifier: Modifier = Modifier, forma: Shape = RectangleShape,
     animar: Boolean = true, relojFijo: Float = RELOJ_QUIETO, banderita: Banderita? = null, lleno: Float = 0f,
-    alFallar: (Throwable) -> Unit = {},
+    alFallar: (Throwable) -> Unit = {}, humor: Gato.Humor? = null, pelaje: Pelaje = Pelaje.COMUN, pasoGato: PasoGato? = null,
 ) {
     // El momento solo cambia (y con él la parte quieta) cada veinte minutos, o cuando el personaje pasa a otro tramo de su día.
     val momento = remember(ficha, (hora * 3).toInt(), ficha.tramo(hora)?.que) { Momento(ficha, hora) }
@@ -74,6 +78,7 @@ fun VistaEscena(
             val instante = if (seMueve) reloj else relojFijo
             aSalvo(alFallar) { lienzo { with(escena) { viva(momento, instante) } } }
         })
+        if (humor != null) CapaGato(escena, momento, humor, pelaje, animar, pasoGato, Modifier.fillMaxSize(), alFallar)
         if (banderita != null) Spacer(
             Modifier.align(Alignment.TopStart).padding(start = 14.dp).size(Banderita.ANCHO.dp, Banderita.ALTO.dp).drawBehind { with(banderita) { dibujar(lleno) } },
         )
@@ -84,7 +89,7 @@ fun VistaEscena(
  * Dibuja [dibujo] y, si lanza una excepción, deja el lienzo como estaba antes de empezar (los recortes y los giros a
  * medio hacer se deshacen) y avisa por [alFallar], en vez de dejar que la excepción cierre la app.
  */
-private inline fun DrawScope.aSalvo(alFallar: (Throwable) -> Unit, dibujo: DrawScope.() -> Unit) {
+internal inline fun DrawScope.aSalvo(alFallar: (Throwable) -> Unit, dibujo: DrawScope.() -> Unit) {
     drawIntoCanvas { tela ->
         val guardados = tela.nativeCanvas.saveCount
         try { dibujo() } catch (e: Exception) { tela.nativeCanvas.restoreToCount(guardados); alFallar(e) }

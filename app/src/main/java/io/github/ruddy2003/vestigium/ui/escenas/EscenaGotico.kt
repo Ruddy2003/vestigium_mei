@@ -1348,6 +1348,9 @@ internal object EscenaGotico : EscenaVida {
 
     // ---------------------------------------------------------------- El gato
 
+    /** Al gato le llega la misma luz que a la escena, con su eclipse. */
+    override fun luzDelGato(m: Momento, en: Offset): LuzGato { val l = luces(m); return LuzGato(Rayo(l), l.noche) { l.tono(it) } }
+
     override fun anclas(m: Momento): List<Ancla> = buildList {
         add(Ancla(TipoAncla.SUELO, 14f, 283f, hasta = 300f))
         add(Ancla(TipoAncla.MIRADOR, 84f, PILA + (BASE - PILA) / 3f))        // encima de la pila de sillares
