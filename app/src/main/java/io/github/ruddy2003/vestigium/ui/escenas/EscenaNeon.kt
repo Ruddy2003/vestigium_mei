@@ -1085,7 +1085,8 @@ internal object EscenaNeon : EscenaVida {
         val manda = elQueManda(tumban(f), en)
         val rayo = if (manda != null) rayoDeFoco(manda, en, 0.8f, SOMBRA) else rayoFijo(0.4f, 60f, 0f, SOMBRA, 0.3f)
         val centro = en + Offset(0f, -12f)
-        return LuzGato(rayo, 1f, manda?.color ?: Color(0xFFC8CCE8)) { a.en(centro, it) }
+        // No del todo: con la luz entera de un letrero el gato cambia de color de un paso a otro y deja de parecer el mismo.
+        return LuzGato(rayo, 1f, manda?.color ?: Color(0xFFC8CCE8)) { lerp(a.l.tono(it), a.en(centro, it), 0.65f) }
     }
 
     override fun anclas(m: Momento): List<Ancla> = buildList {

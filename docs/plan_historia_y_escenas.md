@@ -282,7 +282,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - también sale en la cabecera plegada;
   - se queda todo el día.
 
-**3.4 El gato del cuadro** (`ui/escenas/GatoCuadro.kt`)
+**3.4 El gato del cuadro** (`ui/escenas/GatoCuadro.kt`, `GatoEsqueleto.kt` y `GatoDibujo.kt`; hecho en P5a, ver `docs/historia/informes/P5a.md`)
 
 - **Un esqueleto compartido** con poses por cuadros clave.
   - Las 13 animaciones se escriben una vez.
@@ -293,6 +293,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 - **Con un toque en otro sitio,** mira o va hacia ahí.
 - **Las caricias no se guardan.**
 - **Se queda quieto** con ahorro de energía, sin animaciones o en las capturas.
+- **Recibe la luz de su escena** (`EscenaVida.luzDelGato`) y camina por el tramo de suelo que ella le da, por delante de todo. Va en una tercera capa del cuadro, encima de la parte viva.
 
 **3.5 El cuadro en Hoy** (`ui/escenas/CuadroDelDia.kt`, desde `Dia.kt`)
 
@@ -482,7 +483,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P3b | claude-opus-5-5 | medium | Texto con el tono ya aprobado | 0 | hecho 11 nov 2026 (`docs/historia/informes/P3b.md`) |
 | P4a | claude-fable-5-2 | high | Motor de escena, biblioteca de paisaje y primer paisaje con código | 2 | hecho 11 nov 2026 (`docs/historia/informes/P4a.md`) |
 | P4b | claude-fable-5-2 | high | Paisajes dibujados con código | 2 | hecho 11 nov 2026 (`docs/historia/informes/P4b.md`); **los dos cuadros aprobados por el autor el 12 nov 2026** |
-| P5a | claude-fable-5-2 | **xhigh** | Un esqueleto animado que comparten 32 temas: estados, capas, rendimiento. Un fallo se paga 32 veces y Paparazzi no ve el movimiento | 2 | pendiente |
+| P5a | claude-fable-5-2 | **xhigh** | Un esqueleto animado que comparten 32 temas: estados, capas, rendimiento. Un fallo se paga 32 veces y Paparazzi no ve el movimiento | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5a.md`); **falta que el autor vea el gato** |
 | P5b | claude-fable-5-2 | high | Se apoya en el esqueleto ya resuelto. Los gestos se ajustan después de probarlos en el teléfono | 2 | pendiente |
 | P6 | claude-fable-5-2 | high | Integración en Hoy, medidas y esquema | 2 | pendiente |
 | H1 | claude-opus-5-5 | medium | Red, caché y pantalla con patrones que ya existen | 1 | pendiente |

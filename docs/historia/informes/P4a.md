@@ -254,7 +254,7 @@ sourceSets { main { kotlin.setSrcDirs(listOf("$repo/vidas", "$repo/ui/escenas", 
 dependencies { implementation("org.jetbrains.compose.desktop:desktop-jvm-linux-x64:1.5.12") }
 ```
 
-- En `otras/` van un enlace a `data/OtrasVidas.kt` y una copia de los enums `Epoca` y `TemaId` de `ui/Tema.kt`.
+- En `otras/` van un enlace a `data/OtrasVidas.kt` y una copia de los enums `Epoca` y `TemaId` de `ui/Tema.kt`. Desde P5a, también un `object Gato` con solo `Animo` y `Humor`, porque `ui/Gato.kt` no compila sin Android.
 - El programa dibuja con `ImageComposeScene(ancho, alto, Density(2f)) { VistaEscena(…, animar = false) }` y guarda el PNG.
 - **Ojo:** es un Compose más viejo que el de la app (1.5 frente a 1.7). Lo que compila aquí compila allá, salvo `Path.quadraticTo`, que aquí no existe: en `ui/escenas/` las curvas van con `cubicTo`.
 
