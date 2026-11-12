@@ -12,7 +12,8 @@ import java.time.LocalDate
 /**
  * Los cuentos del grupo 2. Las pruebas generales (forma, largo, repeticiones, certeza) están en [CuentoPrueba] y corren
  * solas sobre todas las piezas registradas; aquí va lo propio de cada historia: que nadie aparezca antes ni después de
- * tiempo y que los estados se noten. Tanda T2a: Kichizō, Mary y José.
+ * tiempo y que los estados se noten. Tanda T2a: Kichizō, Mary y José. Tanda T2b: Rosa, Alguien del mundo y Alguien de
+ * México.
  */
 class CuentoG2Prueba {
     private fun pieza(vida: String) = TodasLasPiezas.de(vida)!!
@@ -126,5 +127,53 @@ class CuentoG2Prueba {
         // Y fuera de esas dos semanas el trabajo es el de siempre.
         val herido = textosDe("hacienda", Parrafo.TRABAJO, "herido")
         normales("hacienda", "2029-07-16", "2029-08-31").forEach { assertFalse(it, cuento("hacienda", it, 10.0).parrafos[Parrafo.TRABAJO.ordinal] in herido) }
+    }
+
+    // ---------- T2b ----------
+
+    @Test fun estanLasPiezasDeLaTandaT2bYLosAlguienNoTienenNombre() {
+        listOf("cdmx1960", "mundo2025", "mexico2025").forEach { v ->
+            assertEquals(v, pieza(v).vida)
+            assertEquals("$v: solo la temporada 1 está escrita", setOf(1), pieza(v).temporadasEscritas)
+            assertEquals(emptyList<String>(), pieza(v).problemas(cal(v)))
+        }
+        assertEquals(Genero.FEMENINO, pieza("cdmx1960").genero)
+        // Una mujer y un hombre, y ninguno se llama «Alguien»: el cuento no usa su nombre.
+        assertEquals(Genero.FEMENINO, pieza("mundo2025").genero); assertEquals(Genero.MASCULINO, pieza("mexico2025").genero)
+        listOf("mundo2025", "mexico2025").forEach { v ->
+            assertTrue("$v usa {nombre}", pieza(v).textos().none { "{nombre}" in it })
+            dias("2027-01-01", "2027-12-31").forEach { d -> assertFalse("$v, $d", quien(v).nombre in cuento(v, d).parrafos.joinToString(" ")) }
+        }
+    }
+
+    @Test fun enElCuentoDeRosaNadieApareceAntesDeTiempo() {
+        val v = "cdmx1960"
+        // Se casa el 17 de junio de la temporada 2 y se muda el 24; Claudia nace el 2 de junio de la 3.
+        normales(v, "2027-01-01", "2028-06-16").forEach { assertFalse("$it: casada antes de la boda", "Arturo, su marido" in todoElDia(v, it)) }
+        normales(v, "2028-06-17", "2031-12-31").forEach { assertFalse("$it: novios después de la boda", "Arturo, su novio" in todoElDia(v, it)) }
+        normales(v, "2028-06-24", "2031-12-31").forEach { assertFalse("$it: sigue en la vecindad", "Doña Carmen le da a Rosa un taco" in todoElDia(v, it)) }
+        normales(v, "2027-01-01", "2029-06-01").forEach { assertFalse("$it: Claudia antes de nacer", "Claudia" in todoElDia(v, it)) }
+        noNombran(v, listOf("Arturo", "Claudia"))
+        vivenElEstado(v, "acapulco", "2028-06-19", "2028-06-23", listOf(1.0, 6.5, 7.5, 10.0, 15.0, 20.0))
+        vivenElEstado(v, "incapacidad", "2029-06-03", "2029-07-27", listOf(7.5, 10.0, 15.0))
+    }
+
+    @Test fun enElCuentoDeAlguienDelMundoNadieApareceAntesDeTiempo() {
+        val v = "mundo2025"
+        // Kabir nace el 28 de mayo de la temporada 3; se mudan el 25 de noviembre de la 3.
+        normales(v, "2027-01-01", "2029-05-27").forEach { assertFalse("$it: Kabir antes de nacer", "Kabir" in todoElDia(v, it)) }
+        normales(v, "2029-11-25", "2031-12-31").forEach { assertFalse("$it: sigue en la azotea", "Sube a la azotea a tender" in todoElDia(v, it)) }
+        noNombran(v, listOf("Kabir"))
+        vivenElEstado(v, "aldea", "2028-07-21", "2028-08-03", listOf(1.0, 7.0, 8.5, 10.0, 13.5, 21.0))
+    }
+
+    @Test fun enElCuentoDeAlguienDeMexicoNadieApareceAntesDeTiempo() {
+        val v = "mexico2025"
+        // Valeria nace el 15 de julio de la temporada 3; se mudan el 1 de marzo de la 3 y el 24 de febrero de la 5.
+        normales(v, "2027-01-01", "2029-07-14").forEach { assertFalse("$it: Valeria antes de nacer", "Valeria" in todoElDia(v, it)) }
+        normales(v, "2029-03-01", "2031-12-31").forEach { assertFalse("$it: en el departamento viejo", "El departamento es chico" in todoElDia(v, it)) }
+        normales(v, "2027-01-01", "2031-02-23").forEach { assertFalse("$it: en el fraccionamiento antes de tiempo", "casa del fraccionamiento todavía" in todoElDia(v, it)) }
+        noNombran(v, listOf("Valeria"))
+        vivenElEstado(v, "playa", "2028-07-21", "2028-07-26", listOf(1.0, 6.5, 7.5, 10.0, 14.5, 21.0))
     }
 }

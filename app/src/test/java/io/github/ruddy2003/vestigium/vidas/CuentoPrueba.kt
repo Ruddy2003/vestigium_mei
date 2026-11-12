@@ -105,7 +105,8 @@ class CuentoPrueba {
         todas.forEach { p ->
             val largos = dias(2027, 2027).flatMap { dia -> listOf(9.0, 19.0).map { cuento(p, dia, it).parrafos.sumOf { x -> x.length } } }
             val medio = largos.average()
-            assertTrue("${p.vida}: el cuento tiene en promedio ${medio.toInt()} letras", medio in 1800.0..2150.0)
+            // El autor aprobó unas 1,950 letras (de 1,800 a 2,150) y el 12 nov 2026 pidió dejar los que se pasen un poco: hasta 2,200.
+            assertTrue("${p.vida}: el cuento tiene en promedio ${medio.toInt()} letras", medio in 1800.0..2200.0)
             assertTrue("${p.vida}: el más corto tiene ${largos.min()} letras", largos.min() >= 1450)
         }
     }
