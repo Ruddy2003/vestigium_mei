@@ -104,7 +104,7 @@ Son los cuentos más grandes hasta ahora, porque cada estado es casi un cuento a
   - en las Galápagos, una lluvia fuerte seguida de «el sol pega como en un horno»;
   - dos frases seguidas con «el sol pega» en el verano del pueblo.
 - **Al repasar los textos antes de probarlos** corregí: unos cosacos en un puesto de guardia de los textos de todos los días, que también salía en Bélgica en 1815; una tortuga gigante a la que el naturalista se subía en un texto de todos los días, cuando subirse a una es un día especial de la temporada 4; que los zapatos de la tropa eran iguales para los dos pies (lo dice ahora el dato de las botas, que en el cuento siguen llamándose botas); la Cruz del Sur «que aprendió a encontrar en el ecuador» en enero, antes de cruzarlo; y una partida de ajedrez con el capitán que no comprobé.
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android:** la corrida 223 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `22ecb88`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que no se pudo comprobar

@@ -1163,6 +1163,149 @@ En 1812 y 1813 Jean-Baptiste está en campaña y su calendario no pone Pascua.
 - **Inventado:** que no se nombre a Darwin, al capitán ni al barco (su ficha dice «un joven naturalista» y «un bergantín»); el muchacho que le ayuda, el cirujano, las cartas de sus hermanas, los escarabajos, las fiebres, las ballenas, la tormenta del estrecho, el volcán, el ornitorrinco y lo que siente.
 - **Los días con su fecha exacta** van como «históricos»; los que la página da sin día (el paso del ecuador, las discusiones sobre los esclavos, la goleta, la reprimenda, las tortugas distintas en cada isla, los pájaros distintos, la visita al astrónomo) van como «aproximados».
 
+## Grupo 6: Albert, Nikos, Lou, Liudmila y Giulia (tanda A6)
+
+Tienen cuadro (tandas S4 y S5). Las páginas se abrieron el 12 nov 2026.
+
+**Las Pascuas calculadas.** La gregoriana de Albert, Lou y Giulia y la ortodoxa de Nikos y de la suegra de Liudmila (la juliana, más trece días) salen de los algoritmos de siempre, y `AnioG6Prueba` las vuelve a calcular. De ellas cuelgan, para Albert, el martes de carnaval (47 días antes), el lunes de Pascua y el lunes de Pentecostés (50 días después).
+
+| Año | Pascua | | Año | Pascua ortodoxa |
+|---|---|---|---|---|
+| 1880 | 28 mar | | 1910 | 1 may |
+| 1881 | 17 abr | | 1911 | 23 abr |
+| 1882 | 9 abr | | 1912 | 7 abr |
+| 1883 | 25 mar | | 1913 | 27 abr |
+| 1884 | 13 abr | | 1914 | 19 abr |
+| 1926 | 4 abr | | 1975 | 4 may |
+| 1927 | 17 abr | | 1976 | 25 abr |
+| 1928 | 8 abr | | 1977 | 10 abr |
+| 1929 | 31 mar | | 1978 | 30 abr |
+| 1930 | 20 abr | | 1979 | 22 abr |
+| 2025 | 20 abr | | | |
+| 2026 | 5 abr | | | |
+| 2027 | 28 mar | | | |
+| 2028 | 16 abr | | | |
+| 2029 | 1 abr | | | |
+
+### Albert, fogonero de locomotora. Una línea del noreste de Inglaterra, de 1880 a 1884
+
+**Lo real y lo inventado**
+
+- **Real:** los días de fiesta de los bancos desde 1871 (el lunes de Pascua, el de Pentecostés, el primer lunes de agosto y el día de las cajas) ([Bank holiday](https://en.wikipedia.org/wiki/Bank_holiday), [Whit Monday](https://en.wikipedia.org/wiki/Whit_Monday), [Boxing Day](https://en.wikipedia.org/wiki/Boxing_Day)); el martes de las tortitas ([Shrove Tuesday](https://en.wikipedia.org/wiki/Shrove_Tuesday)); la gala de los mineros de Durham, desde 1871, el segundo sábado de julio ([Durham Miners' Gala](https://en.wikipedia.org/wiki/Durham_Miners%27_Gala)); la noche de Guy Fawkes ([Guy Fawkes Night](https://en.wikipedia.org/wiki/Guy_Fawkes_Night)); el sindicato de los ferroviarios, de 1871 ([Amalgamated Society of Railway Servants](https://en.wikipedia.org/wiki/Amalgamated_Society_of_Railway_Servants)); los hechos y días que siguen.
+- **Inventado:** Albert, su gente (Hebburn, Ellen, Annie, su madre, Tom), la línea y el depósito (sin nombre), el viaducto nuevo, la máquina nueva, la nevada, la helada, el vagón descarrilado, la quemadura, el examen y el día en que llega cada noticia. Que en las fiestas de los bancos salieran trenes de excursión llenos y que el primero en cruzar la puerta en año nuevo tuviera que ser un hombre moreno viene de memoria **[sin abrir]**.
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | El puente del Tay, 9 ene | Aproximado | Se hundió con un tren el 28 de diciembre de 1879 | [Tay Bridge disaster](https://en.wikipedia.org/wiki/Tay_Bridge_disaster) |
+| 1 | Elecciones, 3 abr | Aproximado | Del 31 de marzo al 27 de abril de 1880 | [1880 United Kingdom general election](https://en.wikipedia.org/wiki/1880_United_Kingdom_general_election) |
+| 1 | La ley de la escuela, 28 ago | Aproximado | Sancionada el 26 de agosto de 1880; obliga a los consejos a dictar normas de asistencia | [Elementary Education Act 1880](https://en.wikipedia.org/wiki/Elementary_Education_Act_1880) |
+| 1 | La ley de los accidentes, 8 sep | Aproximado | Sancionada el 7 de septiembre de 1880 | [Employers' Liability Act 1880](https://en.wikipedia.org/wiki/Employers%27_Liability_Act_1880) |
+| 2 | Matan al zar, 16 mar | Aproximado | El 13 de marzo de 1881 | [Assassination of Alexander II](https://en.wikipedia.org/wiki/Assassination_of_Alexander_II) |
+| 2 | La noche del censo, 3 abr | Histórico | La noche del domingo 3 de abril de 1881 | [1881 United Kingdom census](https://en.wikipedia.org/wiki/1881_United_Kingdom_census) |
+| 2 | Muere Disraeli, 21 abr | Aproximado | Murió el 19 de abril de 1881 | [Benjamin Disraeli](https://en.wikipedia.org/wiki/Benjamin_Disraeli) |
+| 2 | El vendaval, 14 oct | Histórico | La tormenta del 14 de octubre de 1881, que hundió la flota de Eyemouth | [Eyemouth disaster](https://en.wikipedia.org/wiki/Eyemouth_disaster) |
+| 3 | Phoenix Park, 8 may | Aproximado | El 6 de mayo de 1882 | [Phoenix Park Murders](https://en.wikipedia.org/wiki/Phoenix_Park_Murders) |
+| 3 | Alejandría, 13 jul; la victoria de Egipto, 16 sep | Aproximado | La guerra duró de julio a septiembre de 1882 | [Anglo-Egyptian War](https://en.wikipedia.org/wiki/Anglo-Egyptian_War) |
+| 3 | La ley de las casadas, 21 ago | Aproximado | Sancionada el 18 de agosto de 1882 | [Married Women's Property Act 1882](https://en.wikipedia.org/wiki/Married_Women%27s_Property_Act_1882) |
+| 4 | Sunderland, 17 jun | Aproximado | El 16 de junio de 1883 murieron 183 niños de 3 a 14 años en el Victoria Hall | [Victoria Hall disaster](https://en.wikipedia.org/wiki/Victoria_Hall_disaster) |
+| 4 | Los atardeceres rojos, 28 nov | Aproximado | Krakatoa estalló el 27 de agosto de 1883; los atardeceres rojos se vieron en todo el mundo durante meses | [1883 eruption of Krakatoa](https://en.wikipedia.org/wiki/1883_eruption_of_Krakatoa) |
+| 5 | Jartum, 25 mar | Aproximado | El cerco empezó el 13 de marzo de 1884 | [Siege of Khartoum](https://en.wikipedia.org/wiki/Siege_of_Khartoum) |
+| 5 | El temblor, 23 abr | Aproximado | El 22 de abril de 1884, en Colchester | [1884 Colchester earthquake](https://en.wikipedia.org/wiki/1884_Colchester_earthquake) |
+| 5 | Penistone, 17 jul | Aproximado | El 16 de julio de 1884 se partió un eje de la máquina de un expreso; murieron 24 | [Penistone rail crash](https://en.wikipedia.org/wiki/Penistone_rail_crash) |
+| 5 | Greenwich, 24 oct | Aproximado | La conferencia de octubre de 1884; la votación del 22 de octubre | [International Meridian Conference](https://en.wikipedia.org/wiki/International_Meridian_Conference) |
+| 5 | La ley del voto, 8 dic | Aproximado | Sancionada el 6 de diciembre de 1884 | [Representation of the People Act 1884](https://en.wikipedia.org/wiki/Representation_of_the_People_Act_1884) |
+
+### Nikos, buzo esponjero. Tarpon Springs, en el golfo de México, de 1910 a 1914
+
+**Lo real y lo inventado**
+
+- **Real:** los buzos griegos de escafandra en Tarpon Springs desde 1905, sobre todo de Kálymnos, Symi y Halki, y su Epifanía, con la cruz en el agua ([Tarpon Springs, Florida](https://en.wikipedia.org/wiki/Tarpon_Springs,_Florida)); el 25 de marzo de los griegos ([Greek Independence Day](https://en.wikipedia.org/wiki/Greek_Independence_Day)); San Nicolás, el de los marineros, el 6 de diciembre ([Saint Nicholas](https://en.wikipedia.org/wiki/Saint_Nicholas)); el 4 de julio ([Independence Day](https://en.wikipedia.org/wiki/Independence_Day_(United_States))); los hechos y días que siguen.
+- **Inventado:** Nikos, su gente (Manolis, Yannis, su madre, Eleni), el barco, los bancos de esponjas, el tiburón, la bota rota, la calma, la tormenta, el accidente, el barco perdido de Key West y el día en que llega cada noticia. La vuelta a puerto en diciembre, la salida en enero y la venta en la lonja a fines de junio son una forma de contar su año **[Aproximación]**.
+- **El calendario viejo:** que la Iglesia griega de América siguiera en 1910 el calendario juliano, trece días detrás del gregoriano, viene de memoria **[sin abrir]**. Las fiestas fijas de la Iglesia van, por eso, trece días después: la Navidad el 7 de enero, San Basilio el 14, la Epifanía el 19 (hoy Tarpon Springs la celebra el 6), el 25 de marzo el 7 de abril (en 1912 coincide con la Pascua y no va aparte), la Dormición el 28 de agosto y San Nicolás el 19 de diciembre. Todas, «aproximadas».
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Muere Mark Twain, 23 abr | Aproximado | Murió el 21 de abril de 1910, el día después del perihelio del cometa | [Halley's Comet](https://en.wikipedia.org/wiki/Halley%27s_Comet) |
+| 1 | La cola del cometa, 19 may | Histórico | El 19 de mayo de 1910 la Tierra pasó por la cola | [Halley's Comet](https://en.wikipedia.org/wiki/Halley%27s_Comet) |
+| 1 | El huracán, 18 oct | Aproximado | Pasó por Cuba y llegó a Florida el 18 de octubre de 1910 | [1910 Cuba hurricane](https://en.wikipedia.org/wiki/1910_Cuba_hurricane) |
+| 2 | La guerra de Libia, 5 oct | Aproximado | Empezó el 29 de septiembre de 1911 | [Italo-Turkish War](https://en.wikipedia.org/wiki/Italo-Turkish_War) |
+| 3 | El Titanic, 17 abr | Aproximado | Se hundió el 15 de abril de 1912 | [Sinking of the Titanic](https://en.wikipedia.org/wiki/Sinking_of_the_Titanic) |
+| 3 | Rodas y las islas, 28 may | Aproximado | La guarnición turca de Rodas se rindió en mayo de 1912 | [Italo-Turkish War](https://en.wikipedia.org/wiki/Italo-Turkish_War) |
+| 3 | Los Balcanes, 20 oct | Aproximado | La guerra empezó el 8 de octubre de 1912 | [First Balkan War](https://en.wikipedia.org/wiki/First_Balkan_War) |
+| 4 | La paz, 5 jun | Aproximado | Terminó el 30 de mayo de 1913 | [First Balkan War](https://en.wikipedia.org/wiki/First_Balkan_War) |
+| 5 | La guerra en Europa, 3 ago | Aproximado | Austria movilizó contra Serbia para el 28 de julio; Inglaterra entró el 4 de agosto | [July Crisis](https://en.wikipedia.org/wiki/July_Crisis) |
+| 5 | El canal de Panamá, 17 ago | Aproximado | Se inauguró el 15 de agosto de 1914 | [Panama Canal](https://en.wikipedia.org/wiki/Panama_Canal) |
+
+- **La guerra que no acaba para Navidad** (temporada 5, 20 oct) es lo que se decía; va como «aproximado» y sin enlace.
+
+### Lou, pianista de un club de jazz. Harlem, Nueva York, de 1926 a 1930
+
+**Lo real y lo inventado**
+
+- **Real:** las fiestas de alquiler de Harlem ([Rent party](https://en.wikipedia.org/wiki/Rent_party)); el circuito de los teatros negros por el que salen de gira ([Theater Owners Booking Association](https://en.wikipedia.org/wiki/Theater_Owners_Booking_Association)); el desfile de Pascua ([Easter Parade](https://en.wikipedia.org/wiki/Easter_Parade)); el 4 de julio; el día del Trabajo, el primer lunes de septiembre ([Labor Day](https://en.wikipedia.org/wiki/Labor_Day)); Acción de Gracias, que entonces era el último jueves de noviembre ([Thanksgiving](https://en.wikipedia.org/wiki/Thanksgiving_(United_States))); los hechos y días que siguen.
+- **Inventado:** Lou (que en la ficha no dice si es hombre o mujer: la hice Louise, de Baltimore), su gente (Rafe, Sully, Mama Dell, su madre), los clubes, el duelo de pianos, la redada, la gira, el disco, la radio, la inundación, la nevada, las colas de la sopa y el día en que se entera de cada noticia.
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | El Savoy, 12 mar | Histórico | Abrió el 12 de marzo de 1926 | [Savoy Ballroom](https://en.wikipedia.org/wiki/Savoy_Ballroom) |
+| 1 | El canal de la Mancha, 7 ago | Aproximado | Gertrude Ederle lo cruzó el 6 de agosto de 1926 | [Gertrude Ederle](https://en.wikipedia.org/wiki/Gertrude_Ederle) |
+| 1 | Muere Valentino, 24 ago | Aproximado | Murió el 23 de agosto de 1926; lo velaron en la funeraria Campbell | [Rudolph Valentino](https://en.wikipedia.org/wiki/Rudolph_Valentino) |
+| 2 | Lindbergh en París, 21 may | Histórico | Aterrizó en Le Bourget el sábado 21 de mayo de 1927 | [Charles Lindbergh](https://en.wikipedia.org/wiki/Charles_Lindbergh) |
+| 2 | Nueva York lo recibe, 13 jun | Aproximado | La página cuenta su vuelta a Nueva York en junio; el día se eligió | [Charles Lindbergh](https://en.wikipedia.org/wiki/Charles_Lindbergh) |
+| 2 | El jonrón sesenta, 30 sep | Histórico | El 30 de septiembre de 1927 | [Babe Ruth](https://en.wikipedia.org/wiki/Babe_Ruth) |
+| 2 | El cine habla, 6 oct | Histórico | El estreno de El cantor de jazz, el 6 de octubre de 1927 | [The Jazz Singer](https://en.wikipedia.org/wiki/The_Jazz_Singer) |
+| 2 | Florence Mills, 6 nov | Aproximado | Murió el 1 de noviembre de 1927; a su funeral fueron miles | [Florence Mills](https://en.wikipedia.org/wiki/Florence_Mills) |
+| 2 | Ellington en el Cotton Club, 4 dic | Histórico | Su orquesta fue la del club desde el 4 de diciembre de 1927 | [Cotton Club](https://en.wikipedia.org/wiki/Cotton_Club) |
+| 2 | Show Boat, 27 dic | Histórico | Estreno el 27 de diciembre de 1927 | [Show Boat](https://en.wikipedia.org/wiki/Show_Boat_(musical)) |
+| 3 | Gana Hoover, 7 nov | Aproximado | Elecciones del 6 de noviembre de 1928 | [1928 United States presidential election](https://en.wikipedia.org/wiki/1928_United_States_presidential_election) |
+| 3 | El ratón que silba, 18 nov | Histórico | Estreno de Steamboat Willie el 18 de noviembre de 1928 | [Steamboat Willie](https://en.wikipedia.org/wiki/Steamboat_Willie) |
+| 4 | Chicago, 15 feb | Aproximado | El 14 de febrero de 1929 | [Saint Valentine's Day Massacre](https://en.wikipedia.org/wiki/Saint_Valentine%27s_Day_Massacre) |
+| 4 | La canción de Fats Waller, 22 jun | Aproximado | Se estrenó en la revista Connie's Hot Chocolates, en Harlem, en 1929; el día se eligió | [Ain't Misbehavin'](https://en.wikipedia.org/wiki/Ain%27t_Misbehavin%27_(song)) |
+| 4 | El jueves negro, 24 oct; el martes negro, 29 oct | Histórico | | [Wall Street crash of 1929](https://en.wikipedia.org/wiki/Wall_Street_crash_of_1929) |
+| 5 | El Empire State, 17 mar | Histórico | Se empezó a construir el 17 de marzo de 1930 | [Empire State Building](https://en.wikipedia.org/wiki/Empire_State_Building) |
+| 5 | El Chrysler, 27 may | Histórico | Abrió el 27 de mayo de 1930 | [Chrysler Building](https://en.wikipedia.org/wiki/Chrysler_Building) |
+
+- **La Nochevieja como la noche más larga del club** y **los desfiles de Pascua por las avenidas de Harlem** vienen de memoria **[sin abrir]**: la página del desfile habla de la Quinta Avenida.
+
+### Liudmila, obrera textil. Moscú, de 1975 a 1979
+
+**Lo real y lo inventado**
+
+- **Real:** las fiestas soviéticas: el año nuevo, el día del ejército el 23 de febrero ([Defender of the Fatherland Day](https://en.wikipedia.org/wiki/Defender_of_the_Fatherland_Day)), el 8 de marzo ([International Women's Day](https://en.wikipedia.org/wiki/International_Women%27s_Day)), el día de los cosmonautas el 12 de abril ([Cosmonautics Day](https://en.wikipedia.org/wiki/Cosmonautics_Day)), el sábado de trabajo voluntario ([Subbotnik](https://en.wikipedia.org/wiki/Subbotnik)), el 1 de mayo ([International Workers' Day](https://en.wikipedia.org/wiki/International_Workers%27_Day)), el día de la Victoria, día de fiesta desde 1965 ([Victory Day](https://en.wikipedia.org/wiki/Victory_Day_(9_May))), el día de la Revolución el 7 de noviembre ([October Revolution Day](https://en.wikipedia.org/wiki/October_Revolution_Day)) y el de la Constitución, el 7 de octubre desde 1977 ([1977 Soviet Constitution](https://en.wikipedia.org/wiki/1977_Soviet_Constitution)); los hechos y días que siguen.
+- **Inventado:** Liudmila, su gente (Volodia, Lena, Galina Petrovna, Zina), la fábrica (sin nombre), la nevera, las botas, la dacha, las setas, el sanatorio, el piso nuevo, el ascenso, los vaqueros y el día en que se sabe cada noticia. Que antes de 1977 el día de la Constitución fuera el 5 de diciembre, que el sábado de trabajo cayera cerca del 22 de abril (el cumpleaños de Lenin), que los niños entraran en los pioneros el 19 de mayo y que las clases empezaran el 1 de septiembre (la página de ese día dice que su nombre oficial es de 1984) viene de memoria **[sin abrir]**; y también el frío de enero de 1979, casi cuarenta bajo cero, que va sin enlace.
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | «Arlequín», 25 jun | Aproximado | Con ella ganó Pugachova el Orfeo de Oro de 1975 | [Alla Pugacheva](https://en.wikipedia.org/wiki/Alla_Pugacheva) |
+| 1 | Apolo y Soyuz, 17 jul | Histórico | Se acoplaron el 17 de julio de 1975 | [Apollo–Soyuz](https://en.wikipedia.org/wiki/Apollo%E2%80%93Soyuz) |
+| 2 | El congreso, 24 feb | Histórico | Se reunió en Moscú desde el 24 de febrero de 1976 | [25th Congress of the CPSU](https://en.wikipedia.org/wiki/25th_Congress_of_the_Communist_Party_of_the_Soviet_Union) |
+| 3 | La bomba del metro, 10 ene | Aproximado | El 8 de enero de 1977 | [1977 Moscow bombings](https://en.wikipedia.org/wiki/1977_Moscow_bombings) |
+| 3 | Arde el Rossiya, 25 feb | Histórico | El 25 de febrero de 1977 | [Hotel Rossiya](https://en.wikipedia.org/wiki/Hotel_Rossiya) |
+| 3 | Los sesenta años, 5 nov | Aproximado | El 7 de noviembre | [October Revolution Day](https://en.wikipedia.org/wiki/October_Revolution_Day) |
+| 4 | Un checo en el espacio, 3 mar | Aproximado | Remek voló en marzo de 1978, en el primer vuelo de Intercosmos; el día se eligió | [Vladimír Remek](https://en.wikipedia.org/wiki/Vladim%C3%ADr_Remek) |
+| 5 | Viena, 19 jun | Aproximado | Brézhnev y Carter firmaron el 18 de junio de 1979 | [SALT II](https://en.wikipedia.org/wiki/SALT_II) |
+| 5 | Afganistán, 28 dic | Aproximado | La invasión empezó el 25 de diciembre de 1979; el 27 llegaron tropas a Kabul | [Soviet–Afghan War](https://en.wikipedia.org/wiki/Soviet%E2%80%93Afghan_War) |
+
+### Giulia, restauradora de frescos. Roma, de 2025 a 2029
+
+**Lo real y lo inventado**
+
+- **Real:** las fiestas de Roma y de Italia: la Befana ([Befana](https://en.wikipedia.org/wiki/Befana)), el cumpleaños de Roma el 21 de abril ([Natale di Roma](https://en.wikipedia.org/wiki/Natale_di_Roma)), el 25 de abril ([Liberation Day](https://en.wikipedia.org/wiki/Liberation_Day_(Italy))), el 2 de junio ([Festa della Repubblica](https://en.wikipedia.org/wiki/Festa_della_Repubblica), que en 2026 cumple ochenta años desde el referéndum de 1946), San Pedro y San Pablo, patronos de Roma ([Feast of Saints Peter and Paul](https://en.wikipedia.org/wiki/Feast_of_Saints_Peter_and_Paul)), Ferragosto ([Ferragosto](https://en.wikipedia.org/wiki/Ferragosto)) y la Inmaculada, con el papa en la plaza de España desde 1953 ([Feast of the Immaculate Conception](https://en.wikipedia.org/wiki/Feast_of_the_Immaculate_Conception)); los hechos y días que siguen.
+- **Inventado:** Giulia, su gente (Teresa, Samir, su madre, Matteo), la iglesia y su capilla (sin nombre), lo que va apareciendo en el fresco, la grieta, el aguacero, el premio, la boda y el hijo. Que la obra cierre en agosto y Roma se vacíe es una costumbre **[Aproximación]**.
+- **El futuro:** desde 2027 solo hay fiestas que vuelven cada año y cosas programadas: los Juegos de Los Ángeles, del 14 al 30 de julio de 2028 ([2028 Summer Olympics](https://en.wikipedia.org/wiki/2028_Summer_Olympics)) y las elecciones europeas, del 7 al 10 de junio de 2029 ([2029 European Parliament election](https://en.wikipedia.org/wiki/2029_European_Parliament_election)). Las elecciones generales italianas serán a más tardar el 22 de diciembre de 2027 ([Next Italian general election](https://en.wikipedia.org/wiki/Next_Italian_general_election)), pero como no tienen fecha no van en el calendario. Las tandas Y lo corrigen cada año.
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Los peregrinos del jubileo, 13 ene | Aproximado | El jubileo fue del 24 de diciembre de 2024 al 6 de enero de 2026 | [Jubilee 2025](https://en.wikipedia.org/wiki/Jubilee_2025) |
+| 1 | Muere el papa Francisco, 21 abr | Histórico | El 21 de abril de 2025, lunes de Pascua | [Death and funeral of Pope Francis](https://en.wikipedia.org/wiki/Death_and_funeral_of_Pope_Francis) |
+| 1 | El funeral, 26 abr | Histórico | El 26 de abril, en la plaza de San Pedro | [Death and funeral of Pope Francis](https://en.wikipedia.org/wiki/Death_and_funeral_of_Pope_Francis) |
+| 1 | El cónclave, 7 may; León XIV, 8 may | Histórico | El cónclave fue el 7 y el 8 de mayo de 2025 | [2025 papal conclave](https://en.wikipedia.org/wiki/2025_papal_conclave) |
+| 1 | Carlo Acutis, 7 sep | Histórico | Canonizado el 7 de septiembre de 2025 en la plaza de San Pedro | [Carlo Acutis](https://en.wikipedia.org/wiki/Carlo_Acutis) |
+| 2 | Se cierra la Puerta Santa, 6 ene | Histórico | El 6 de enero de 2026, León XIV cerró la de San Pedro | [Jubilee 2025](https://en.wikipedia.org/wiki/Jubilee_2025) |
+| 2 | Los Juegos de invierno, 6 feb | Aproximado | Milán y Cortina, en febrero de 2026 | [2026 Winter Olympics](https://en.wikipedia.org/wiki/2026_Winter_Olympics) |
+
+- **En 2025, el cumpleaños de Roma no va aparte:** cayó el lunes de Pascua, el día en que murió el papa.
+
 ## Lo que no se pudo comprobar
 
 - **Los pasajes de Tucídides** marcados **[sin abrir]** vienen de memoria: la red de la sesión solo dejó abrir Wikipedia. Todos van como «aproximado» y sin enlace, o con el enlace de la página que sí confirma el hecho aunque no el detalle.
@@ -1171,6 +1314,8 @@ En 1812 y 1813 Jean-Baptiste está en campaña y su calendario no pone Pascua.
 - **En el grupo 3**, lo marcado **[sin abrir]** viene de memoria: el día de los votos por el emperador, el de la fiesta de Amenhotep I y el de la fiesta de Min. Y toda la vida de Ama es una reconstrucción.
 - **En el grupo 4**, lo marcado **[sin abrir]** viene de memoria: la sangría de los monjes, el libro de cuaresma del capítulo 48, el año nuevo florentino del 25 de marzo, el carro de Pascua en sábado, el día del rayo en la cúpula y el de la capilla Tornabuoni, las costumbres de Córdoba sin fecha (Yannayr, las almunias, la seda nueva) y las de la estepa (la parición, la esquila, la cacería). Tampoco se sabe si los mongoles de 1220 empezaban el año con los chinos.
 - **En el grupo 5**, lo marcado **[sin abrir]** viene de memoria: el Sena helado en enero de 1789, el pan de la igualdad, el baile del aniversario de la Bastilla, la limpieza del hollín en Japón, San Vicente y San Martín en las viñas de Borgoña. Y el año lunar de Ochiyo usa los términos solares medios sin haber podido abrir la página japonesa del calendario.
+- **En el grupo 6**, lo marcado **[sin abrir]** viene de memoria: el calendario juliano de la Iglesia griega de América en 1910, los trenes de excursión de las fiestas de los bancos, el primer pie del año nuevo en el norte de Inglaterra, el día de la Constitución soviética antes de 1977, el sábado de trabajo cerca del 22 de abril, el día de los pioneros, el frío de enero de 1979 y el desfile de Pascua de Harlem.
+- **Las temporadas 3 a 5 de Giulia son el futuro** al escribir esto (2027 a 2029), como las de Alguien del mundo y Alguien de México.
 - **Las temporadas 3 a 5 de Alguien del mundo y Alguien de México son el futuro** al escribir esto (2027 a 2029). Lo programado puede cambiar: las tandas Y de cada año lo revisan.
 - **Las fechas áticas** son una reconstrucción (ver arriba).
 - **El clima** de cada lugar es una tabla de pesos verosímil, no un registro. **[Aproximación]**
