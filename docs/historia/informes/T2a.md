@@ -74,17 +74,17 @@ Los cuentos de la temporada 1 de los tres primeros personajes del grupo 2, con l
 
 ## Cuánto texto tiene cada uno
 
-| | Lucio (T1b) | Kichizō | Mary | José |
-|---|---|---|---|---|
-| Variantes de los ocho párrafos | 79 | 98 (29 de sus estados) | 85 (13) | 71 (5) |
-| …de ellas, con fecha | 10 | 5 | 11 | 6 |
-| Oraciones de tiempo y de estación | 27 | 29 | 29 | 23 |
-| Objetos del día | 12 | 12 | 12 | 12 |
-| Oraciones de entorno y de mundo | 17 | 18 | 9 | 19 |
-| Días especiales de la temporada 1 | 19 | 19, con 70 párrafos | 16, con 51 | 19, con 76 |
-| **Textos en total** | | **263** | **222** | **237** |
-| Letras en total | | 45,789 | 37,369 | 39,908 |
-| **Cuento medio** (2027, a las 9 y a las 19) | 2,070 | **2,056** | **2,024** | **2,132** |
+| | Kichizō | Mary | José |
+|---|---|---|---|
+| Variantes de los ocho párrafos | 98 (29 de sus estados) | 85 (13) | 71 (5) |
+| …de ellas, con fecha | 5 | 11 | 6 |
+| Oraciones de tiempo y de estación | 29 | 29 | 23 |
+| Objetos del día | 12 | 12 | 12 |
+| Oraciones de entorno y de mundo | 18 | 9 | 19 |
+| Días especiales de la temporada 1 | 19, con 70 párrafos | 16, con 51 | 19, con 76 |
+| **Textos en total** | **263** | **222** | **237** |
+| Letras en total | 45,789 | 37,369 | 39,908 |
+| **Cuento medio** (2027, a las 9 y a las 19) | **2,056** | **2,024** | **2,132** |
 
 - **El largo** queda dentro de lo aprobado (de 1,800 a 2,150 de media). Kichizō salió primero con 2,192: recorté los objetos, la gente y el pueblo hasta 2,056.
 - **Esta tanda llevó unas 123,000 letras.**
@@ -104,7 +104,7 @@ Los cuentos de la temporada 1 de los tres primeros personajes del grupo 2, con l
   - José: con la mano herida no raspa, y fuera de esas dos semanas sí.
 - **Las pruebas nuevas fallan cuando deben:** quité la fecha de Tom y la de Nicolás. Fallaron las dos («Tom antes de nacer», «Nicolás después de irse»), y se restauraron.
 - **Leí nueve cuentos enteros**, tres de cada uno, en días normales, especiales y de estado. Un arreglo salió de ahí: en los estados el párrafo de la gente seguía en casa (la viuda Otake «la de al lado» con el callejón quemado, o Kichizō en la aldea). Ahora la aldea, el templo, Ōyama y la huelga tienen su propia variante de la gente.
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android:** la corrida 213 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `fa8ece0`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que queda para después
