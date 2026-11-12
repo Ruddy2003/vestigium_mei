@@ -242,7 +242,6 @@ private fun DrawScope.cuerpo(p: Pose, pelaje: Pelaje, luz: LuzGato, lat: Float, 
     val baseCola = p.cadera + Offset(-4f * s, -1.4f - 2.2f * abs(co))
     val cuelloA = p.hombro + Offset(0.8f * s, -1f); val cuelloB = p.cabeza + Offset(-1.8f * s, 2f)
     val k = Cabeza(p.cabeza, g.R_CABEZA, p.caraVista, p.morro)
-    val doblez = maxOf(s, 0.12f)
 
     /**
      * Una pata: dónde dobla y dónde pisa. No es un hueso rígido: si el pie queda algo más lejos de lo que da la
@@ -254,8 +253,13 @@ private fun DrawScope.cuerpo(p: Pose, pelaje: Pelaje, luz: LuzGato, lat: Float, 
         val v = pie - raiz; val d = largo(v); val tope = (a + b) * 1.25f
         val f = if (d <= tope) pie else raiz + v / d * tope
         if (largo(f - raiz) >= a + b - 0.05f) return raiz + (f - raiz) * (a / (a + b)) to f
-        val atras = g.articulacion(raiz, f, a, b, false, doblez)
-        return (if (!trasera || atras.y <= -1.4f) atras else g.articulacion(raiz, f, a, b, true, doblez)) to f
+        val atras = g.articulacion(raiz, f, a, b, false)
+        val doblada = if (!trasera || atras.y <= -1.4f) atras else g.articulacion(raiz, f, a, b, true)
+        // De frente o de espaldas el doblez se va hacia el fondo y no se ve: la pata queda recta de la raíz al pie. Y nunca
+        // se hunde en el suelo.
+        val recta = (raiz + f) / 2f
+        val j = recta + (doblada - recta) * s
+        return Offset(j.x, minOf(j.y, -1f)) to f
     }
     val (codoC, manoC) = pataDe(raizDC, p.manoC, g.BRAZO, g.ANTEBRAZO, false)
     val (codoL, manoL) = pataDe(raizDL, p.manoL, g.BRAZO, g.ANTEBRAZO, false)

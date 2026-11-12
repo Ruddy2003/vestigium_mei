@@ -87,6 +87,7 @@ class CoberturaTemas {
         // lo llevan (`sinCuadro`); a los demás les va llegando por tandas, y cada tanda borra los suyos de los pendientes.
         superficie("cuadro_escena") { !io.github.ruddy2003.vestigium.ui.escenas.sinCuadro(it) && io.github.ruddy2003.vestigium.ui.escenas.escenaDe(it) == null }
         superficie("cuadro_banderita") { !io.github.ruddy2003.vestigium.ui.escenas.sinCuadro(it) && io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(it) == null }
+        superficie("cuadro_gato") { !io.github.ruddy2003.vestigium.ui.escenas.sinCuadro(it) && io.github.ruddy2003.vestigium.ui.escenas.pelajeDe(it) == null }
         return h
     }
 
@@ -107,9 +108,9 @@ class CoberturaTemas {
 
         /**
          * Lo que falta hoy, por superficie. Del plan de diseño no falta nada desde el lote 9. Lo que queda es del plan de
-         * historia y escenas: el cuadro de Hoy (la escena y la banderita) de cada tema, que va llegando por tandas.
+         * historia y escenas: el cuadro de Hoy (la escena, la banderita y el pelaje del gato) de cada tema, que va llegando por tandas.
          */
-        val PENDIENTES: Map<String, Set<String>> = mapOf("cuadro_escena" to SIN_CUADRO, "cuadro_banderita" to SIN_CUADRO)
+        val PENDIENTES: Map<String, Set<String>> = mapOf("cuadro_escena" to SIN_CUADRO, "cuadro_banderita" to SIN_CUADRO, "cuadro_gato" to SIN_CUADRO)
 
         /** Despachos que el compilador no vigila, por archivo y tipo. Cada lote baja los suyos. */
         val DESPACHOS: Map<String, Int> = emptyMap()

@@ -48,6 +48,7 @@ class EscenasPrueba {
         TemaId.entries.forEach { t ->
             val escena = escenaDe(t)
             assertEquals("${t.id}: la escena y la banderita van juntas", escena == null, banderitaHistoria(t) == null)
+            assertEquals("${t.id}: la escena y el pelaje de su gato van juntos", escena == null, io.github.ruddy2003.vestigium.ui.escenas.pelajeDe(t) == null)
             if (sinCuadro(t)) assertNull("${t.id} no lleva cuadro", escena)
             if (escena != null) {
                 assertTrue("${t.id}: la escena no dice de quién es", escena.vidas.isNotEmpty())

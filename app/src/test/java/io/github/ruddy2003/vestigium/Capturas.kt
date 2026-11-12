@@ -2167,19 +2167,59 @@ class Capturas {
                         }
                     }
                 }
+                // Las dos acciones propias de su tema, con lo que lleva en las manos.
+                pelaje.especiales.forEach { accion ->
+                    val filas = (accion.cuadros + 3) / 4
+                    Text("${accion.nombre} · ${accion.cuadros} cuadros", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground)
+                    androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().aspectRatio(380f / (72f * filas))) {
+                        val k = size.width / 380f
+                        escalar(k, k, Offset.Zero) {
+                            drawRect(luces.tono(androidx.compose.ui.graphics.Color(0xFFD9CDB4)), Offset.Zero, Size(380f, 72f * filas))
+                            for (f in 0 until filas) drawRect(luces.tono(androidx.compose.ui.graphics.Color(0xFFC2B292)), Offset(0f, 72f * f + 62f), Size(380f, 10f))
+                            for (i in 0 until accion.cuadros) gato(accion.pose(i), pelaje, luz, Offset(95f * (i % 4) + 40f, 72f * (i / 4) + 66f), 1, 1.3f, 0f, accion, i)
+                        }
+                    }
+                }
             }
         }
 
+    /** El cuadro del gato cuando reacciona al ancla [tipo] de la escena en ese momento, o null si la escena no la tiene ahora. */
+    private fun gatoReaccionando(escena: io.github.ruddy2003.vestigium.ui.escenas.EscenaVida, ficha: io.github.ruddy2003.vestigium.vidas.FichaDelDia, hora: Double, tipo: io.github.ruddy2003.vestigium.ui.escenas.TipoAncla): io.github.ruddy2003.vestigium.ui.escenas.PasoGato? {
+        val anclas = escena.anclas(io.github.ruddy2003.vestigium.ui.escenas.Momento(ficha, hora))
+        val suelo = anclas.first { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }
+        val una = anclas.firstOrNull { it.tipo == tipo } ?: return null
+        for (semilla in 1L..40L) {
+            val sim = io.github.ruddy2003.vestigium.ui.escenas.SimulacionGato(io.github.ruddy2003.vestigium.ui.Gato.Humor(io.github.ruddy2003.vestigium.ui.Gato.Animo.NORMAL, cansado = false, noche = false), semilla, suelo.x, suelo.hasta, emptyList(), escena.tallaDelGato)
+            sim.entorno(listOf(una), suelo.y, tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.ABRIGO)
+            var llego = false
+            repeat(4000) {
+                val p = sim.siguiente()
+                when (tipo) {
+                    io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.MIRADOR -> if (p.anim == io.github.ruddy2003.vestigium.ui.escenas.AnimGato.VIGIA) return p
+                    io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.OBJETO -> if (p.anim == io.github.ruddy2003.vestigium.ui.escenas.AnimGato.OLER && p.i == 1) return p
+                    io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.ADORNO -> if (p.anim == io.github.ruddy2003.vestigium.ui.escenas.AnimGato.ARRIBA && p.i == 2) return p
+                    io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.FUEGO, io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.ABRIGO, io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO -> {
+                        if (sim.estado == io.github.ruddy2003.vestigium.ui.escenas.EstadoGato.SENTARSE) llego = true
+                        if (llego && p.anim == io.github.ruddy2003.vestigium.ui.escenas.AnimGato.SENTADO) return p
+                    }
+                }
+            }
+        }
+        return null
+    }
+
     /**
-     * Tanda P5a del plan de historia y escenas: el gato del cuadro (CAPTURAS=gatoCuadro; con CAPTURAS_TEMAS, solo esos
-     * temas). Por cada tema con escena, dos imágenes: `…_temaGatoCuadro_<tema>_poses.png`, con sus 13 animaciones cuadro
-     * por cuadro, y `…_temaGatoCuadro_<tema>_escena.png`, con el gato dentro de su escena a las tres horas del día normal
-     * (caminando, sentado y dormido), para ver que toma su luz. El pelaje es el común hasta que cada tema tenga el suyo (P5b).
+     * Tandas P5a y P5b del plan de historia y escenas: el gato del cuadro (CAPTURAS=gatoCuadro; con CAPTURAS_TEMAS, solo
+     * esos temas). Por cada tema con escena, tres imágenes: `…_temaGatoCuadro_<tema>_poses.png`, con todas sus animaciones
+     * cuadro por cuadro y sus dos acciones propias; `…_temaGatoCuadro_<tema>_escena.png`, con el gato dentro de su escena a
+     * las tres horas del día normal (caminando, sentado y dormido), para ver que toma su luz; y
+     * `…_temaGatoCuadro_<tema>_reacciones.png`, con el gato en el mirador, oliendo el objeto, junto al fuego, mirando el
+     * adorno de una fiesta, guarecido de la lluvia y dejándose acariciar. Cada uno con el pelaje de su tema.
      */
     @Test fun temaGatoCuadro() = porTema("gatoCuadro") { t, o, _ ->
         val escena = io.github.ruddy2003.vestigium.ui.escenas.escenaDe(t)
         if (escena != null && o == t.soloOscuro) {
-            val pelaje = io.github.ruddy2003.vestigium.ui.escenas.Pelaje.COMUN
+            val pelaje = io.github.ruddy2003.vestigium.ui.escenas.pelajeDe(t) ?: io.github.ruddy2003.vestigium.ui.escenas.Pelaje.COMUN
             hojaDePosesGato(t, o, "${t.id}_poses", pelaje)
             val vida = escena.vidas.first()
             val (_, dia, horas) = DIAS_CUADRO[vida].orEmpty().first()
@@ -2195,6 +2235,30 @@ class Capturas {
                         Text(rotuloCuadro(ficha, hora) + " · gato: ${anim.name.lowercase()}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground, maxLines = 2)
                         io.github.ruddy2003.vestigium.ui.escenas.VistaEscena(escena, ficha, hora, Modifier.fillMaxWidth(), MaterialTheme.shapes.medium, animar = false, banderita = io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), humor = humor, pelaje = pelaje, pasoGato = paso)
                     }
+                }
+            }
+            // Las reacciones: cada una en el día y la hora en que la escena le ofrece esa ancla (si no la ofrece nunca en los días de muestra, no sale).
+            val dias = DIAS_CUADRO[vida].orEmpty().map { (_, d, hs) -> io.github.ruddy2003.vestigium.vidas.FichaDelDia.de(d, vida)!! to hs }
+            val A = io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.entries.filter { it != io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }
+            val celdas = A.mapNotNull { tipo ->
+                dias.firstNotNullOfOrNull { (f, hs) ->
+                    // El abrigo, en un día que llueva o nieve; lo demás, en el primero que lo tenga.
+                    if (tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.ABRIGO && !io.github.ruddy2003.vestigium.ui.escenas.mojaAlGato(f.clima)) null
+                    else hs.firstNotNullOfOrNull { h -> gatoReaccionando(escena, f, h, tipo)?.let { Triple(f, h, it) to "gato: ${tipo.name.lowercase()}" } }
+                }
+            }
+            captura(t, o, alto = 140 + (celdas.size + 1) * 900, nombre = "${t.id}_reacciones") {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    celdas.forEach { (donde, rotulo) ->
+                        val (f, h, paso) = donde
+                        Text(rotuloCuadro(f, h) + " · $rotulo", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground, maxLines = 2)
+                        io.github.ruddy2003.vestigium.ui.escenas.VistaEscena(escena, f, h, Modifier.fillMaxWidth(), MaterialTheme.shapes.medium, animar = false, banderita = io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), humor = humor, pelaje = pelaje, pasoGato = paso)
+                    }
+                    // La caricia: sentado, con los ojos cerrados, y el corazón.
+                    val suelo = escena.anclas(io.github.ruddy2003.vestigium.ui.escenas.Momento(ficha, horas.first())).first { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }
+                    Text(rotuloCuadro(ficha, horas.first()) + " · gato: caricia", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground, maxLines = 2)
+                    io.github.ruddy2003.vestigium.ui.escenas.VistaEscena(escena, ficha, horas.first(), Modifier.fillMaxWidth(), MaterialTheme.shapes.medium, animar = false, banderita = io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), humor = humor, pelaje = pelaje,
+                        pasoGato = io.github.ruddy2003.vestigium.ui.escenas.PasoGato(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.MIMO, 2, (suelo.x + suelo.hasta) / 2f, 1), mimoFijo = 0.35f)
                 }
             }
         }
