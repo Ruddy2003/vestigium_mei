@@ -6,6 +6,7 @@ _Creada el 11 nov 2026, al cerrar la tanda P4a. Recoge lo que el autor decidió 
 
 - **La vara de calidad es el cuadro de Helénico** (`ui/escenas/EscenaHeleno.kt`), tal como está en el código.
   - Su imagen de referencia: `docs/diseno/escenas/referencia_heleno.jpg` (5 de mayo de 2027 a las 7:00, las 13:00 y las 21:00, dibujado con el arnés).
+  - **Aprobadas también por el autor** (12 nov 2026), y por eso ejemplos válidos de su tipo: Gótico, otro exterior con sol (`referencia_gotico.jpg`, 10 de mayo de 2027), y Ciudad neón, la escena siempre de noche (`referencia_neon.jpg`: arriba Amaru el 5 de mayo de 2027 a las 7:00, 13:00 y 21:00; abajo Kei el 6 de mayo a las 7:00, 17:00 y 21:00). La vara sigue siendo Helénico.
   - Una escena nueva está terminada cuando, puesta al lado de esa imagen, **no se ve más pobre en ningún punto**: ni más vacía, ni más lisa, ni más plana, ni con las cosas más chicas.
 - **La escena llana (`EscenaPlana.kt`) no es la vara.** Sirve para copiar el orden de las capas y ver cómo se lee el momento. Su dibujo es mucho más simple que el que se pide.
 - **Las reglas de la sección 2 son obligatorias.** Lo que cambia de un tema a otro es cómo se cumplen (sección 5), no si se cumplen.

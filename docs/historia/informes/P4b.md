@@ -6,6 +6,8 @@ Fecha: 11 nov 2026. Rama: `claude/gallant-goldberg-bsc3pm`, encima de P4a (va en
 
 Los otros dos cuadros del piloto, hechos con la guía de arte y con el de Helénico como vara.
 
+**El autor los vio junto al de Helénico y aprobó los dos el 12 nov 2026.** Sus imágenes quedaron como referencia en `docs/diseno/escenas/` (`referencia_gotico.jpg` y `referencia_neon.jpg`).
+
 | Archivo | Qué tiene |
 |---|---|
 | `ui/escenas/EscenaGotico.kt` | La obra de la catedral de Amiens desde el patio de la logia de Pierre |
