@@ -56,7 +56,8 @@ El gato que vivirá dentro del cuadro de Hoy. Ya no es una tira de imágenes, co
 - **No busca ser anatómico.** El autor pidió un gato de dibujo animado clásico, esbelto y de líneas sueltas, y mandó imágenes de referencia. Se tomaron como inspiración de estilo, sin copiar al personaje: **[Diseño propio]**
   - **los ojos** son dos óvalos grandes y claros, sin contorno ni brillos, con la pupila oscura en medio (más grande de noche). Sobre un pelo oscuro son casi blancos, para que resalten; sobre uno claro llevan más color;
   - **las orejas** son grandes, de punta suave, con su rosa dentro;
-  - **las patas** son curvas que se afinan hacia la zarpa: el codo y la rodilla solo las comban, y se estiran hasta una cuarta parte si el pie queda un poco lejos;
+  - **las patas de delante** son curvas que se afinan hacia la zarpa: el codo solo las comba, y se estiran hasta una cuarta parte si el pie queda un poco lejos;
+  - **las de atrás** no salen de debajo del cuerpo: el muslo es una cuña tan ancha como la grupa, que nace de ella y se afina hasta el corvejón, de modo que el borde de atrás baja casi recto desde el trasero hasta el talón;
   - **el cuello** es más largo y el cuerpo más esbelto; la cola, más larga, con la punta en gancho;
   - casi no tiene boca: una nariz pequeña y los bigotes.
 - El cuerpo entero se pinta en una capa aparte, con todas sus partes del mismo color, para que no se noten las juntas.
@@ -138,13 +139,13 @@ El gato que vivirá dentro del cuadro de Hoy. Ya no es una tira de imágenes, co
 - **Barrido:** 173,760 dibujos, 0 fallas.
   - 77,760: todas las posturas con seis pelajes, en las tres escenas, a seis horas, con tres tiempos y mirando a los dos lados.
   - 96,000: el gato suelto en cada escena, con cada ánimo, cansado o no, de día y de noche.
-- **Peso:** 1.6 ms por cuadro del gato en el arnés, a 380 × 285. Se traza 12,5 veces por segundo y no obliga a rehacer la parte quieta de la escena.
+- **Peso:** 1.8 ms por cuadro del gato en el arnés, a 380 × 285. Se traza 12,5 veces por segundo y no obliga a rehacer la parte quieta de la escena.
 - **El movimiento** lo vi en el arnés: dos películas de 26 segundos, una en Helénico y otra en Ciudad neón, hechas con los cuadros que da la simulación.
 - **Compilación de Android y capturas:** ver «Resultado en Actions», abajo.
 
-## Las dos revisiones del 12 nov 2026
+## Las revisiones del 12 nov 2026
 
-El autor vio el gato y pidió revisarlo, dos veces. Lo que cambió:
+El autor vio el gato y pidió revisarlo, tres veces. Lo que cambió:
 
 | Lo que pidió o lo que encontré | Cómo quedó |
 |---|---|
@@ -154,6 +155,7 @@ El autor vio el gato y pidió revisarlo, dos veces. Lo que cambió:
 | «Las orejas, que no sean triángulos súper picudos» | Orejas grandes, de punta suave |
 | «Inspírate en este gato» (un gato negro de dibujo animado clásico) | Más esbelto, de cuello largo, sentado muy erguido con la cola enroscada. Se tomó el estilo, no el personaje: cada tema sigue con su pelaje |
 | «No tiene que ser anatómicamente exacto… para que se vea menos robótico» | Las patas son curvas que se afinan y se estiran un poco, en vez de dos huesos rectos |
+| «Las patas de atrás son palos que salen de su torso y queda el trasero súper salido»: en la referencia hay casi una línea recta del trasero a la pata | El muslo es una cuña que nace de la grupa entera; el borde de atrás baja recto hasta el corvejón |
 | «Ni un gato nuevo ni un gato gordo» | Las 13 animaciones y la forma de portarse no cambiaron |
 | Revisión: en un tramo de suelo muy corto el gato daba vueltas en el sitio sin parar | Si no cabe a caminar, no camina (una prueba lo vigila) |
 | Revisión: al moverse el gato se volvía a trazar la parte viva de la escena | Cada una va en su capa. Las capturas de las escenas salieron idénticas, punto por punto, antes y después |
@@ -196,3 +198,7 @@ Estas corridas son las de la primera versión del gato (`d084b69`). Las de la re
 - **Capturas:** la corrida 271 (`superficies = gatoCuadro`, con los tres temas y `solo = true`) **terminó bien**, con 6 imágenes y sin fallas. Revisé la hoja de poses y el gato en Helénico: **se ve igual que en el arnés.**
 - **Corridas de capturas usadas en P5a:** 3, contra las 2 que preveía el plan. La segunda y la tercera son de las dos revisiones.
 - Con `solo`, la rama `capturas` queda solo con las 6 imágenes del gato hasta la siguiente corrida completa.
+
+**Después de la tercera revisión** (las patas de atrás como una cuña que nace de la grupa):
+
+_Pendiente: se llena al terminar la corrida._

@@ -237,8 +237,8 @@ private fun DrawScope.cuerpo(p: Pose, pelaje: Pelaje, luz: LuzGato, lat: Float, 
     val medio = (p.cadera + p.hombro) / 2f + Offset(0f, -p.lomo - 0.2f)
     val rMedio = 3.9f + 0.3f * p.erizo
     // De dónde nace cada pata: de perfil, casi del mismo sitio las dos de cada par; de frente o de espaldas, una a cada lado.
-    val raizTC = p.cadera + Offset(-0.4f * s - 2.3f * co, 1f); val raizTL = p.cadera + Offset(0.6f * s + 2.3f * co, 1f)
-    val raizDC = p.hombro + Offset(0.5f * s - 2.1f * co, 0f); val raizDL = p.hombro + Offset(1.5f * s + 2.1f * co, 0f)
+    val raizTC = p.cadera + Offset(-2.3f * co, 0f); val raizTL = p.cadera + Offset(1.2f * s + 2.3f * co, 0f)
+    val raizDC = p.hombro + Offset(1.2f * s - 2.1f * co, 0.6f); val raizDL = p.hombro + Offset(2.2f * s + 2.1f * co, 0.6f)
     val baseCola = p.cadera + Offset(-4f * s, -1.4f - 2.2f * abs(co))
     val cuelloA = p.hombro + Offset(0.8f * s, -1f); val cuelloB = p.cabeza + Offset(-1.8f * s, 2f)
     val k = Cabeza(p.cabeza, g.R_CABEZA, p.caraVista, p.morro)
@@ -247,24 +247,40 @@ private fun DrawScope.cuerpo(p: Pose, pelaje: Pelaje, luz: LuzGato, lat: Float, 
     /**
      * Una pata: dónde dobla y dónde pisa. No es un hueso rígido: si el pie queda algo más lejos de lo que da la
      * pata, se estira hasta él (hasta una cuarta parte más), que es lo que evita que parezca un muñeco articulado.
+     * [trasera]: la de atrás dobla hacia atrás, por el corvejón; solo cuando ese doblez quedaría bajo el suelo
+     * (sentado, echado) dobla hacia delante, por la rodilla, y hace el anca.
      */
-    fun pataDe(raiz: Offset, pie: Offset, a: Float, b: Float, adelante: Boolean): Pair<Offset, Offset> {
+    fun pataDe(raiz: Offset, pie: Offset, a: Float, b: Float, trasera: Boolean): Pair<Offset, Offset> {
         val v = pie - raiz; val d = largo(v); val tope = (a + b) * 1.25f
         val f = if (d <= tope) pie else raiz + v / d * tope
-        val j = if (largo(f - raiz) >= a + b - 0.05f) raiz + (f - raiz) * (a / (a + b)) else g.articulacion(raiz, f, a, b, adelante, doblez)
-        return j to f
+        if (largo(f - raiz) >= a + b - 0.05f) return raiz + (f - raiz) * (a / (a + b)) to f
+        val atras = g.articulacion(raiz, f, a, b, false, doblez)
+        return (if (!trasera || atras.y <= -1.4f) atras else g.articulacion(raiz, f, a, b, true, doblez)) to f
     }
     val (codoC, manoC) = pataDe(raizDC, p.manoC, g.BRAZO, g.ANTEBRAZO, false)
     val (codoL, manoL) = pataDe(raizDL, p.manoL, g.BRAZO, g.ANTEBRAZO, false)
     val (rodC, pieC) = pataDe(raizTC, p.pieC, g.MUSLO, g.PIERNA, true)
     val (rodL, pieL) = pataDe(raizTL, p.pieL, g.MUSLO, g.PIERNA, true)
 
-    /** La pata, como una sola curva que se afina hacia la zarpa: el codo o la rodilla solo la comban. */
+    fun zarpa(col: Color, f: Offset) = drawOval(col, Offset(f.x - 1.2f * s - 1.6f * abs(co), f.y - 2.1f), Size(4f * s + 3.2f * abs(co), 2.3f))
+
+    /** La pata de delante, como una sola curva que se afina hacia la zarpa: el codo solo la comba. */
     fun pata(col: Color, raiz: Offset, j: Offset, f: Offset, arriba: Float, abajo: Float) {
         val c = j + (j - (raiz + f) / 2f) * 0.45f                         // la comba, un poco más allá del codo
         for (i in 0..14) { val t = i / 14f; val q = 1f - t; drawCircle(col, (arriba + (abajo - arriba) * sqrt(t)) / 2f, raiz * (q * q) + c * (2f * q * t) + f * (t * t)) }
-        // La zarpa: de perfil, alargada hacia delante; de frente o de espaldas, redonda.
-        drawOval(col, Offset(f.x - 1.2f * s - 1.6f * abs(co), f.y - 2.1f), Size(4f * s + 3.2f * abs(co), 2.3f))
+        zarpa(col, f)
+    }
+
+    /**
+     * La pata de atrás. El muslo no es un palo que sale del cuerpo: es una cuña tan ancha como la grupa, que nace de
+     * ella y se afina hasta el corvejón, de modo que el borde de atrás baja casi recto desde el trasero. De ahí a la
+     * zarpa, fina. [ancho]: el del muslo arriba, respecto a la grupa (de espaldas o de frente, la mitad: son dos).
+     */
+    fun pataTrasera(col: Color, raiz: Offset, j: Offset, f: Offset, ancho: Float) {
+        val arriba = g.R_GRUPA * ancho * (0.52f + 0.48f * s)
+        for (i in 0..10) { val t = i / 10f; drawCircle(col, arriba + (1.45f - arriba) * t, raiz + (j - raiz) * t) }
+        for (i in 1..6) { val t = i / 6f; drawCircle(col, 1.45f + (1.05f - 1.45f) * t, j + (f - j) * t) }
+        zarpa(col, f)
     }
     fun radioCola(t: Float) = (1.55f - 0.5f * t) * (1f + 0.6f * p.erizo)
     // De frente o de espaldas la cola no se ve irse hacia atrás, pero sí ladearse: por eso nunca queda del todo recta.
@@ -297,19 +313,19 @@ private fun DrawScope.cuerpo(p: Pose, pelaje: Pelaje, luz: LuzGato, lat: Float, 
             cabezaLisa(k, p.orejas, manto, lejos, oreja, rosa)
             pata(lejos, raizDL, codoL, manoL, 3.2f, 1.9f); pata(lejos, raizDC, codoC, manoC, 3.2f, 1.9f)
             tronco(manto)
-            pata(if (s > 0.3f) lejos else manto, raizTL, rodL, pieL, 4.6f, 2f)
-            pata(manto, raizTC, rodC, pieC, 4.8f, 2.1f)
+            pataTrasera(if (s > 0.3f) lejos else manto, raizTL, rodL, pieL, 0.94f)
+            pataTrasera(manto, raizTC, rodC, pieC, 0.98f)
             if (manto != lejos) withTransform({ translate(0.6f, 0.5f) }) { cola(lejos) }      // su filo, para que no se funda con el lomo
             cola(manto)
             return
         }
         if (!p.colaDelante) cola(manto)
-        pata(lejos, raizTL, rodL, pieL, 4.6f, 2f)
+        pataTrasera(lejos, raizTL, rodL, pieL, 0.94f)
         // De frente las dos patas de atrás quedan detrás del cuerpo; de perfil, solo la del otro lado.
-        if (deFrente) pata(lejos, raizTC, rodC, pieC, 4.6f, 2f) else pata(lejos, raizDL, codoL, manoL, 3.2f, 1.9f)
+        if (deFrente) pataTrasera(lejos, raizTC, rodC, pieC, 0.94f) else pata(lejos, raizDL, codoL, manoL, 3.2f, 1.9f)
         tronco(manto)
         if (conVientre) vientre()
-        if (deFrente) pata(manto, raizDL, codoL, manoL, 3.4f, 2f) else pata(manto, raizTC, rodC, pieC, 5f, 2.1f)
+        if (deFrente) pata(manto, raizDL, codoL, manoL, 3.4f, 2f) else pataTrasera(manto, raizTC, rodC, pieC, 0.98f)
         pata(manto, raizDC, codoC, manoC, 3.4f, 2f)
         cabezaLisa(k, p.orejas, manto, lejos, oreja, rosa)
         if (p.colaDelante) { if (manto != lejos) withTransform({ translate(0.4f, -0.6f) }) { cola(lejos) }; cola(manto) }

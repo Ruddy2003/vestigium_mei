@@ -47,8 +47,8 @@ enum class AnimGato(val cuadros: Int) {
 data class Pose(
     val cadera: Offset = Offset(-7.2f, -14.4f), val hombro: Offset = Offset(6.6f, -15f), val lomo: Float = 0f,
     val cabeza: Offset = Offset(13f, -22.8f), val morro: Float = 0f,
-    val manoC: Offset = Offset(7.6f, 0f), val manoL: Offset = Offset(9.3f, 0f),
-    val pieC: Offset = Offset(-9.3f, 0f), val pieL: Offset = Offset(-7.4f, 0f),
+    val manoC: Offset = Offset(8.2f, 0f), val manoL: Offset = Offset(9.8f, 0f),
+    val pieC: Offset = Offset(-10.3f, 0f), val pieL: Offset = Offset(-8.5f, 0f),
     val cola0: Float = 0.45f, val cola1: Float = 0.1f, val cola2: Float = 0.75f, val colaDelante: Boolean = false,
     val orejas: Float = 1f, val ojos: Float = 1f, val boca: Float = 0f, val erizo: Float = 0f,
     val giro: Float = 0f, val cara: Float = SIGUE, val lengua: Boolean = false,
@@ -81,8 +81,9 @@ object Gatuno {
     const val R_CABEZA = 6.4f
     const val BRAZO = 5.2f
     const val ANTEBRAZO = 10f
-    const val MUSLO = 6.4f
-    const val PIERNA = 9.4f
+    /** De la cadera al corvejón, y del corvejón al pie. */
+    const val MUSLO = 9.4f
+    const val PIERNA = 5.6f
     const val COLA = 23f
 
     /** Cuánto avanza en un ciclo de ocho pasos a la marcha normal: lo que recorre la simulación en ese tiempo. */
@@ -110,13 +111,13 @@ object Gatuno {
 
     private val AGAZAPADO = Pose(
         cadera = Offset(-7.2f, -13.2f), hombro = Offset(6.4f, -7.4f), cabeza = Offset(13f, -10.6f), morro = 0.1f,
-        manoC = Offset(10.6f, 0f), manoL = Offset(12.2f, 0f), pieC = Offset(-9f, 0f), pieL = Offset(-7.4f, 0f),
+        manoC = Offset(10.6f, 0f), manoL = Offset(12.2f, 0f), pieC = Offset(-10.2f, 0f), pieL = Offset(-8.4f, 0f),
         cola0 = 1.1f, cola1 = 1.5f, cola2 = 1.2f,
     )
 
     private val ERIZADO = Pose(
         cadera = Offset(-5.8f, -15.4f), hombro = Offset(5.4f, -15.2f), lomo = 4.4f, cabeza = Offset(11.4f, -17.2f), morro = 0.25f,
-        manoC = Offset(5.8f, 0f), manoL = Offset(7.4f, 0f), pieC = Offset(-6.6f, 0f), pieL = Offset(-5f, 0f),
+        manoC = Offset(5.8f, 0f), manoL = Offset(7.4f, 0f), pieC = Offset(-8.4f, 0f), pieL = Offset(-6.6f, 0f),
         cola0 = 1.45f, cola1 = 1.6f, cola2 = 1.9f, orejas = -1f, boca = 1f, erizo = 1f,
     )
 
