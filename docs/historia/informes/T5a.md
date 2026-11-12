@@ -110,7 +110,7 @@ Al escribir los cuentos vi cuatro cosas del calendario que harían decir a los c
   - los textos del trabajo de Ochiyo hablaban de los viajeros «que se quedan a dormir» a las 9 de la mañana;
   - el segundo día de Versalles hablaba de la ropa tendida en el barco: ahora tiene su propio párrafo del tiempo.
 - **Al repasar los textos antes de probarlos** corregí: las casas sobre los puentes de París, que se derribaron en 1786–1788; una vieja lavandera que «lavaba a su lado desde hacía veinte años» cuando Marie-Jeanne llegó a París a los quince; el dato de un objeto con `{nombre}`, que ahí no se llena; un deseo de Tanabata que Ochiyo «no sabe escribir» y que en la temporada 3 ya sabría; la Nochebuena puesta el 25 de diciembre; y la escarapela del 20 de julio de 1789, que todavía era azul y roja (el blanco llegó el 27, según la página de la Bastilla).
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android:** la corrida 222 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `acf6532`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que no se pudo comprobar

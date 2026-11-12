@@ -466,12 +466,13 @@ internal object AnioG5 {
     // o se entere esos días es inventado.
     //
     // Claves de escena: guerra, nieve, fuego, marcha, luto, vendimia, fiesta. Arco: compania (cuántos de su compañía
-    // quedan: baja en la retirada de Rusia y en Waterloo). Estados: «moscu» (temporada 1: las cinco semanas en Moscú),
-    // «retirada» (1: de Moscú al Niemen) y «pueblo» (temporadas 3 a 5: en casa).
+    // quedan: baja en la retirada de Rusia y en Waterloo). Estados: «cuartel» (temporada 1: las últimas semanas en el
+    // cuartel, antes de salir hacia el este), «moscu» (1: las cinco semanas en Moscú), «retirada» (1: de Moscú al Niemen),
+    // «hospital» (2: el invierno en un hospital de Prusia) y «pueblo» (temporadas 3 a 5: en casa).
     //
     // Lo que el cuadro tiene que mostrar para contar lo mismo que el cuento: el vivac de la compañía, con menos fuegos según
-    // `compania`; Moscú ardiendo detrás durante «moscu»; la nieve y la columna rota durante «retirada»; y la casa del
-    // pueblo con las viñas durante «pueblo».
+    // `compania`; el patio del cuartel durante «cuartel»; Moscú quemada detrás durante «moscu»; la nieve y la columna rota
+    // durante «retirada»; una sala de catres durante «hospital»; y la casa del pueblo con las viñas durante «pueblo».
 
     private val F_INVASION = "La campaña de Rusia" to "${W}French_invasion_of_Russia"
     private val F_SMOLENSK = "Smolensk" to "${W}Battle_of_Smolensk_(1812)"
@@ -616,7 +617,8 @@ internal object AnioG5 {
         ))),
         objetos = listOf("fusil", "bayoneta", "mochila", "capote", "chaco", "cantimplora", "galleta", "pipa", "carta", "cuchara", "botas", "manta"),
         estados = listOf(
-            Estado("moscu", "moscu", "sale_moscu"), Estado("retirada", "sale_moscu", "niemen_vuelta"),
+            Estado("cuartel", "botas", "sale_cuartel"), Estado("moscu", "moscu", "sale_moscu"), Estado("retirada", "sale_moscu", "niemen_vuelta"),
+            Estado("hospital", "hospital", "regimiento"),
             Estado("pueblo", "vuelve_pueblo", "nochevieja_casa"), Estado("pueblo", "invierno_casa", "se_va"), Estado("pueblo", "vuelve_waterloo", "nochevieja_casa"),
             Estado("pueblo", "anio_en_casa", "nochevieja_casa"),
             // Un estado se acaba el día de su «hasta»; este cubre ese último día del año.
@@ -639,10 +641,11 @@ internal object AnioG5 {
     //
     // Claves de escena: fiesta, tormenta, selva, fósiles, nieve, terremoto, islas. Arco: cajones (cuántos cajones de
     // especímenes lleva: se vacía cuando manda un envío). Estados: «tierra» (sus temporadas largas en tierra: Río, la
-    // pampa, los Andes), «islas» (temporada 4: las Galápagos) y «casa» (temporada 5: de vuelta en Inglaterra).
+    // pampa, los Andes), «enfermo» (temporada 3: el mes en cama en Valparaíso), «islas» (temporada 4: las Galápagos) y
+    // «casa» (temporada 5: de vuelta en Inglaterra).
     //
     // Lo que el cuadro tiene que mostrar para contar lo mismo que el cuento: el bergantín en el mar, con la mesa de
-    // trabajo y los cajones según `cajones`; la selva, la pampa o la montaña durante «tierra»; las islas negras de lava
+    // trabajo y los cajones según `cajones`; la selva, la pampa o la montaña durante «tierra»; un cuarto con una ventana al puerto durante «enfermo»; las islas negras de lava
     // con tortugas durante «islas»; y una casa inglesa con jardín durante «casa».
 
     private val F_BEAGLE = "El viaje del Beagle" to "${W}Second_voyage_of_HMS_Beagle"
@@ -773,6 +776,8 @@ internal object AnioG5 {
         ))),
         objetos = listOf("hamaca", "libreta", "lupa", "red", "frasco", "escopeta", "martillo", "caja", "brujula", "carta", "limon", "galleta"),
         estados = listOf(
+            // El mes enfermo de la temporada 3 cae dentro de «tierra»: va primero para que mande sobre ella.
+            Estado("enfermo", "enfermo", "vuelve_andes"),
             Estado("tierra", "botafogo", "vuelve_bordo"), Estado("tierra", "sale_pampa", "vuelve_pampa"), Estado("tierra", "andes", "vuelve_andes"),
             Estado("tierra", "andes_2", "carta_casa"), Estado("islas", "galapagos", "sale_galapagos"), Estado("casa", "llega_casa", "fin_anio"), Estado("casa", "fin_anio", null),
         ),

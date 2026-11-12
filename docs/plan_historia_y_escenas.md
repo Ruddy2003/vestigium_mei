@@ -502,7 +502,8 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | T4a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T4a.md`) |
 | T4b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T4b.md`) |
 | T5a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T5a.md`) |
-| T5b–T8b | claude-opus-5-5 | medium | Ídem | 0 c/u | pendiente |
+| T5b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T5b.md`) |
+| T6a–T8b | claude-opus-5-5 | medium | Ídem | 0 c/u | pendiente |
 | S1–S7 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código | 2 c/u | pendiente |
 | C1 | claude-opus-5-5 | medium | Revisión y cierre sin dibujo nuevo | 1 | pendiente |
 | Y2028–Y2031 | claude-opus-5-5 | medium | Párrafos especiales con el tono y el calendario ya fijos | 0 c/u | — |

@@ -98,6 +98,8 @@ class AnioG5Prueba {
     @Test fun jeanBaptisteVaDeRusiaASuPueblo() {
         val c = AnioG5.JEAN_BAPTISTE
         listOf(2, 3, 4).forEach { i -> assertEquals("${1812 + i}", pascuaGregoriana(1812 + i), fechas(c, "pascua")[i]) }
+        estadoEntre(c, "cuartel", "2027-01-20", "2027-02-28")
+        estadoEntre(c, "hospital", "2028-01-10", "2028-03-19")
         estadoEntre(c, "moscu", "2027-09-14", "2027-10-18")
         estadoEntre(c, "retirada", "2027-10-19", "2027-12-13")
         estadoEntre(c, "pueblo", "2029-06-20", "2030-04-04")
@@ -114,6 +116,9 @@ class AnioG5Prueba {
             Triple(2, "valparaiso", "07-23"), Triple(3, "terremoto", "02-20"), Triple(3, "concepcion", "03-04"), Triple(3, "galapagos", "09-15"),
             Triple(4, "keeling", "04-01"), Triple(4, "falmouth", "10-02")).forEach { (i, id, f) -> assertEquals(id, f, fechas(c, id)[i]) }
         estadoEntre(c, "tierra", "2027-04-25", "2027-07-04")
+        // El mes enfermo de la temporada 3 manda sobre «tierra», en la que cae.
+        estadoEntre(c, "enfermo", "2029-09-20", "2029-10-26")
+        assertEquals("tierra", ficha(c, "2029-09-19").estado)
         estadoEntre(c, "islas", "2030-09-15", "2030-10-19")
         estadoEntre(c, "casa", "2031-10-05", "2031-12-31", despues = false)
         // Los cajones se vacían con cada envío a Inglaterra.

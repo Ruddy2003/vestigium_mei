@@ -12,7 +12,7 @@ import java.time.LocalDate
 /**
  * Los cuentos del grupo 5. Las pruebas generales (forma, largo, repeticiones, certeza) están en [CuentoPrueba] y corren
  * solas sobre todas las piezas registradas; aquí va lo propio de cada historia: que nadie aparezca antes ni después de
- * tiempo y que los estados se noten. Tanda T5a: Tomás, Ochiyo y Marie-Jeanne.
+ * tiempo y que los estados se noten. Tanda T5a: Tomás, Ochiyo y Marie-Jeanne. Tanda T5b: Jean-Baptiste y el naturalista.
  */
 class CuentoG5Prueba {
     private fun pieza(vida: String) = TodasLasPiezas.de(vida)!!
@@ -144,5 +144,75 @@ class CuentoG5Prueba {
         // Pascua de los cinco años; la Asunción, Todos los Santos y Navidad mientras se celebran (hasta 1792).
         (listOf("2027-04-12", "2028-04-04", "2029-04-24", "2030-04-08", "2031-03-31") + (2027..2030).flatMap { listOf("$it-08-15", "$it-11-01", "$it-12-25") })
             .forEach { descansa(v, it) }
+    }
+
+    // ---------- Tanda T5b ----------
+
+    @Test fun estanLasPiezasDeLaTandaT5b() {
+        listOf("granadero", "naturalista").forEach { v ->
+            assertEquals(v, pieza(v).vida)
+            assertEquals("$v: solo la temporada 1 está escrita", setOf(1), pieza(v).temporadasEscritas)
+            assertEquals(emptyList<String>(), pieza(v).problemas(cal(v)))
+            assertEquals(Genero.MASCULINO, pieza(v).genero)
+        }
+        // El naturalista se llama «Un joven naturalista» en su ficha: su cuento no usa el hueco del nombre.
+        assertTrue(pieza("naturalista").textos().none { "{nombre}" in it })
+        listOf("2027-03-03", "2028-09-09", "2031-11-11").forEach { d -> assertFalse(d, "joven naturalista" in todoElDia("naturalista", d)) }
+    }
+
+    // ---------- Jean-Baptiste ----------
+
+    @Test fun enElCuentoDeJeanBaptisteNadieApareceAntesNiDespuesDeTiempo() {
+        val v = "granadero"
+        // Lucien se queda en la otra orilla del Berezina el 29 de noviembre de la 1; Jean-Baptiste vuelve al pueblo el 20 de junio de la 3.
+        nunca(v, "2027-11-29", "2031-12-31", "Lucien es de su mismo pueblo")
+        nunca(v, "2027-01-01", "2027-11-28", "Lucien se quedó en la otra orilla")
+        nunca(v, "2029-06-20", "2031-12-31", "Tiene que decírselo al herrero")
+        // El capitán Fabre manda hasta el 20 de marzo de la 2; Morel desde entonces, y le enseña a leer desde el 10 de julio.
+        nunca(v, "2028-03-20", "2031-12-31", "El capitán Fabre")
+        normales(v, "2027-01-01", "2028-03-19").forEach { assertFalse("$it: Morel antes de tiempo", nombra(v, it, "Morel")) }
+        nunca(v, "2027-01-01", "2028-07-09", "le enseña a leer")
+        // Margot: la conoce el 10 de agosto de la 3, se prometen el 5 de noviembre de la 4, se casan el 20 de febrero de la 5 y espera desde el 20 de agosto.
+        normales(v, "2027-01-01", "2029-08-09").forEach { assertFalse("$it: Margot antes de tiempo", nombra(v, it, "Margot")) }
+        nunca(v, "2027-01-01", "2030-11-04", "están prometidos"); nunca(v, "2031-02-20", "2031-12-31", "están prometidos")
+        nunca(v, "2027-01-01", "2031-02-19", "Margot, su mujer")
+        nunca(v, "2027-01-01", "2031-08-19", "Margot espera un hijo")
+        noNombran(v, listOf("Lucien", "Morel", "Margot"))
+    }
+
+    @Test fun jeanBaptisteVaDelCuartelARusiaYDeRusiaASuPueblo() {
+        val v = "granadero"
+        val horas = listOf(1.0, 3.75, 8.0, 12.5, 15.0, 20.0)
+        vivenElEstado(v, "cuartel", "2027-01-21", "2027-02-28", horas)
+        vivenElEstado(v, "moscu", "2027-09-19", "2027-10-18", horas); varianEnElEstado(v, "2027-09-19", "2027-10-18", 8.0, 3)
+        vivenElEstado(v, "retirada", "2027-10-20", "2027-12-13", horas); varianEnElEstado(v, "2027-10-20", "2027-12-13", 8.0, 3)
+        vivenElEstado(v, "hospital", "2028-01-11", "2028-03-19", horas); varianEnElEstado(v, "2028-01-11", "2028-03-19", 8.0, 2)
+        vivenElEstado(v, "pueblo", "2029-06-21", "2029-12-30", horas); varianEnElEstado(v, "2029-06-21", "2029-12-30", 8.0, 3)
+        vivenElEstado(v, "pueblo", "2031-01-02", "2031-12-30", horas)
+    }
+
+    // ---------- El naturalista ----------
+
+    @Test fun enElCuentoDelNaturalistaNadieApareceAntesNiDespuesDeTiempo() {
+        val v = "naturalista"
+        // Los fueguinos se quedan en su tierra el 23 de enero de la 2; el muchacho le ayuda desde el 20 de abril de la 2.
+        nunca(v, "2028-01-23", "2031-12-31", "viajan tres fueguinos")
+        nunca(v, "2027-01-01", "2028-04-19", "El muchacho que le ayuda")
+        alguna(v, "2028-04-25", "2028-12-31", "El muchacho que le ayuda")
+        noNombran(v, listOf("Jemmy", "fueguinos", "muchacho"))
+    }
+
+    @Test fun elNaturalistaViveCadaLugarEnTierraYVuelveACasa() {
+        val v = "naturalista"
+        val horas = listOf(1.0, 6.0, 9.0, 13.5, 15.0, 18.5, 20.0)
+        // En tierra, cada lugar con lo suyo: Río, la pampa, los Andes (dos veces) y, en medio, el mes enfermo.
+        listOf("2027-04-26" to "2027-07-04", "2028-08-09" to "2028-11-02", "2029-08-15" to "2029-09-19", "2030-03-15" to "2030-04-22").forEach { (a, b) ->
+            vivenElEstado(v, "tierra", a, b, horas); varianEnElEstado(v, a, b, 9.0, 3)
+        }
+        nunca(v, "2027-04-26", "2027-07-04", "pampa"); nunca(v, "2028-08-09", "2028-11-02", "Botafogo"); nunca(v, "2029-08-15", "2029-09-19", "gauchos")
+        vivenElEstado(v, "enfermo", "2029-09-21", "2029-10-26", horas); varianEnElEstado(v, "2029-09-21", "2029-10-26", 9.0, 2)
+        vivenElEstado(v, "islas", "2030-09-16", "2030-10-19", horas); varianEnElEstado(v, "2030-09-16", "2030-10-19", 9.0, 3)
+        vivenElEstado(v, "casa", "2031-10-06", "2031-12-30", horas); varianEnElEstado(v, "2031-10-06", "2031-12-30", 9.0, 3)
+        nunca(v, "2027-01-01", "2031-10-04", "la casa de su padre")
     }
 }
