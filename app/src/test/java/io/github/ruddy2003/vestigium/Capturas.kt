@@ -2151,7 +2151,8 @@ class Capturas {
 
     /** La hoja de poses del gato del cuadro: sus 13 animaciones, cuadro por cuadro, con la luz de media mañana. */
     private fun hojaDePosesGato(tema: TemaId, oscuro: Boolean, nombre: String, pelaje: io.github.ruddy2003.vestigium.ui.escenas.Pelaje) =
-        captura(tema, oscuro, alto = 3900, nombre = nombre) {
+        // El alto sale de lo que hay que mostrar: cada fila de cuadros mide 62 dp (72 las de las acciones) y cada animación lleva su rótulo.
+        captura(tema, oscuro, alto = (2.75f * (40 + io.github.ruddy2003.vestigium.ui.escenas.AnimGato.entries.filter { it.cuadros > 0 }.sumOf { 30 + 62 * ((it.cuadros + 3) / 4) } + pelaje.especiales.sumOf { 30 + 72 * ((it.cuadros + 3) / 4) })).toInt(), nombre = nombre) {
             val luces = io.github.ruddy2003.vestigium.ui.escenas.paisaje.lucesDe(io.github.ruddy2003.vestigium.vidas.luzDe(10.0, io.github.ruddy2003.vestigium.vidas.RegimenLuz.SEIS_FRANJAS), io.github.ruddy2003.vestigium.vidas.Clima.DESPEJADO)
             val luz = io.github.ruddy2003.vestigium.ui.escenas.LuzGato(io.github.ruddy2003.vestigium.ui.escenas.paisaje.Rayo(luces), luces.noche) { luces.tono(it) }
             Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

@@ -164,6 +164,12 @@ Esto no se puede comprobar aquí: las capturas son imágenes quietas y el arnés
 
 - **Primer envío** (`c8c5055`): la corrida 272 de `capturas.yml` (`superficies = gatoCuadro`, con los tres temas y `solo = true`) **terminó bien**, con 9 imágenes y sin fallas. `despachos.txt` salió vacío y `cobertura.txt` ya trae la superficie `cuadro_gato` con los 29 temas que faltan.
 
-**Después de los arreglos** (el sitio junto al fuego, dónde queda sentado sin animación y cómo se retratan las reacciones):
+**Después de los arreglos** (el sitio junto al fuego, dónde queda sentado sin animación y cómo se retratan las reacciones; `2976529`):
 
-_Pendiente: se llena al terminar las corridas._
+- **Compilación de Android:** la corrida 239 de `apk.yml`, sin publicar, **terminó bien**.
+- **Capturas:** la corrida 273 **terminó bien**, con 9 imágenes y sin fallas. Revisé las reacciones de Helénico y la hoja de poses de Ciudad neón: el gato, su pelaje y su accesorio **se ven igual que en el arnés.**
+  - **La hoja de poses salía recortada:** con las siete animaciones nuevas y las dos acciones ya no cabía en el alto que tenía. Se corrigió (el alto ahora sale de lo que hay que mostrar) y se repitió la corrida: ver abajo.
+
+**La hoja de poses completa:**
+
+_Pendiente: se llena al terminar la corrida._
