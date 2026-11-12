@@ -14,8 +14,8 @@ Cada día especial lleva una de tres certezas:
 
 - **Los sucesos de su vida son siempre inventados.** Cada personaje es una persona promedio de su época, no alguien que existió: su familia, sus amigos y lo que les pasa no vienen de ninguna fuente.
 - **En los personajes de ficción todo es inventado.**
-- **Las fechas son las del calendario de su época:** el juliano para Demeas, Pierre, Lucio, Alice y Citlali, y el juliano proléptico para Ipy. El 3 de agosto de Demeas es el 3 de agosto juliano del 431 a. C. Naa y Ata viven antes de cualquier calendario: sus fechas son de nuestro año.
-- **Todas las páginas son de Wikipedia** (en inglés, en francés o en español) y se abrieron el 11 nov 2026. Los 42 enlaces del piloto y los 70 del grupo 1 se comprobaron uno por uno ese día.
+- **Las fechas son las del calendario de su época:** el juliano para Demeas, Pierre, Lucio, Alice y Citlali, y el juliano proléptico para Ipy. El 3 de agosto de Demeas es el 3 de agosto juliano del 431 a. C. Naa y Ata viven antes de cualquier calendario: sus fechas son de nuestro año. Desde el grupo 2, el gregoriano para Mary, José, Rosa y los dos de 2025; las fiestas de Kichizō, que seguían la luna, van convertidas al gregoriano.
+- **Todas las páginas son de Wikipedia** (en inglés, en francés o en español) y se abrieron el 11 nov 2026. Los 42 enlaces del piloto y los 70 del grupo 1 se comprobaron uno por uno ese día; los 95 del grupo 2 (tanda A2), el 12 nov 2026.
 - Wikipedia resume a los historiadores; no es la fuente original. Donde la fuente original es Tucídides, se dice.
 
 ## Demeas, remero. Atenas, 431 a 427 a. C. (tanda P2)
@@ -421,9 +421,281 @@ Son seis de los doce personajes comunes. No tienen cuadro (decisión 2 del plan)
   - Del 28 de agosto al 19 de octubre de la temporada 1 la familia vive con unos parientes del barrio alto: el estado «fuera». Es inventado.
 - **Las lluvias tardías de 1504** son inventadas. La página de Moctezuma cuenta una gran sequía en 1505, el año siguiente a sus cinco temporadas.
 
+## Grupo 2: Kichizō, Mary, José, Rosa, Alguien del mundo y Alguien de México (tanda A2)
+
+Son los otros seis personajes comunes. Como los del grupo 1, no tienen cuadro: su calendario solo lo lee el cuento. Las páginas se abrieron el 12 nov 2026.
+
+### Kichizō, carpintero. Edo, de 1750 a 1754
+
+**Lo real y lo inventado**
+
+- **Real:**
+  - las fiestas del año de Edo, que siguen el calendario lunisolar;
+  - Yoshimune, el antiguo shōgun, murió el día 20 del quinto mes de Kan'en 4, el 12 de julio de 1751;
+  - el temblor de Takada (Echigo), el 21 de mayo de 1751, con unos 2,100 muertos;
+  - la era Hōreki empezó el día 27 del décimo mes de Kan'en 4;
+  - en Hōreki 2 (1752) llegó una embajada del reino de Ryūkyū;
+  - en 1754 el calendario se corrigió por orden del emperador;
+  - el beriberi de Edo, por comer casi solo arroz blanco, que no daba en el campo.
+- **Inventado:** Kichizō, su gente (Ume, Kinta, Okiku, Genbei, Otake, Sōkichi, Heiji, Sakubei, Shinsuke), los dos incendios, la nevada y todo lo que les pasa. También el día en que pasa la embajada y el día del pregón del calendario.
+
+**Cómo se calcularon las fiestas** **[Aproximación]**
+
+- El año de Edo seguía la luna: cada mes empezaba con la luna nueva y el año nuevo caía entre el 20 de enero y el 20 de febrero. Algunos años tenían un mes repetido.
+- Se calcularon las lunas nuevas de 1749 a 1755 a la hora de Kioto y los términos solares (cada 30° de longitud del sol). Cada mes se numeró por el término que cae en él, y el mes sin término de un año de trece meses es el repetido. Salieron un quinto mes repetido en 1751 y un cuarto mes repetido en 1754.
+- **La prueba:** con ese cálculo, el día 20 del quinto mes repetido de 1751 es el 12 de julio, el día en que la página de Yoshimune pone su muerte.
+- Aun así van como «aproximado»: el calendario oficial de la época (el de Jōkyō) pudo diferir en un día del cálculo de hoy.
+- El setsubun es la víspera del inicio de la primavera (el sol en 315°). En 1753 cae el mismo día que la última noche del año, y esa temporada no lleva setsubun.
+
+| Fiesta | Día del año lunar | 1750 | 1751 | 1752 | 1753 | 1754 | Página |
+|---|---|---|---|---|---|---|---|
+| Susuharai, la limpieza del hollín | 12/13 del año anterior | 20 ene | 10 ene | 29 ene | 16 ene | 6 ene | Sin enlace **[sin abrir]** |
+| Setsubun | Víspera de la primavera | 3 feb | 3 feb | 3 feb | — | 3 feb | [Setsubun](https://en.wikipedia.org/wiki/Setsubun) |
+| La última noche del año | Víspera del 1/1 | 6 feb | 26 ene | 14 feb | 2 feb | 22 ene | [Ōmisoka](https://en.wikipedia.org/wiki/%C5%8Cmisoka) |
+| El año nuevo, 3 días | 1/1 | 7 feb | 27 ene | 15 feb | 3 feb | 23 ene | [Japanese New Year](https://en.wikipedia.org/wiki/Japanese_New_Year) |
+| Taishi-kō, la fiesta de los carpinteros | 1/22 | 28 feb | 17 feb | 7 mar | 24 feb | 13 feb | Sin enlace **[sin abrir]** |
+| Los cerezos de Ueno, 4 días | Fija: 2 abr | | | | | | [Hanami](https://en.wikipedia.org/wiki/Hanami) |
+| El día de las niñas | 3/3 | 9 abr | 29 mar | 16 abr | 6 abr | 26 mar | [Hinamatsuri](https://en.wikipedia.org/wiki/Hinamatsuri) |
+| El día de los niños | 5/5 | 8 jun | 29 may | 16 jun | 6 jun | 25 jun | [Children's Day](https://en.wikipedia.org/wiki/Children%27s_Day_(Japan)) |
+| Los fuegos de Ryōgoku | 5/28 | 1 jul | 21 jun | 9 jul | 29 jun | 18 jul | [Sumidagawa Fireworks Festival](https://en.wikipedia.org/wiki/Sumidagawa_Fireworks_Festival) |
+| La fiesta de Sannō (años pares) | 6/15 | 18 jul | — | 25 jul | — | 3 ago | [Sannō Matsuri](https://en.wikipedia.org/wiki/Sann%C5%8D_Matsuri) |
+| Tanabata | 7/7 | 8 ago | 27 ago | 16 ago | 5 ago | 24 ago | [Tanabata](https://en.wikipedia.org/wiki/Tanabata) |
+| El Bon, 4 días | 7/13 | 14 ago | 2 sep | 22 ago | 11 ago | 30 ago | [Bon Festival](https://en.wikipedia.org/wiki/Bon_Festival) |
+| La luna de otoño | 8/15 | 15 sep | 3 oct | 22 sep | 12 sep | 1 oct | [Tsukimi](https://en.wikipedia.org/wiki/Tsukimi) |
+| La fiesta de Kanda (años nones) | 9/15 | — | 2 nov | — | 11 oct | — | [Kanda Matsuri](https://en.wikipedia.org/wiki/Kanda_Matsuri) |
+
+- Las páginas de Sannō y Kanda dicen que se turnan cada año; la de los fuegos, que son una tradición de Edo con el nombre de «apertura del río en Ryōgoku». Los días del calendario lunar en que caían en Edo (6/15, 9/15 y 5/28) vienen de memoria **[sin abrir]**.
+
+**Los hechos**
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 2 | El temblor de Echigo, 28 may | Aproximado | El temblor fue el 21 de mayo; el día en que llega la noticia a Edo se eligió | [1751 Takada earthquake](https://en.wikipedia.org/wiki/1751_Takada_earthquake) |
+| 2 | Muere Yoshimune, 12 jul | Histórico | Tal cual | [Tokugawa Yoshimune](https://en.wikipedia.org/wiki/Tokugawa_Yoshimune) |
+| 2 | La era Hōreki, 14 dic | Aproximado | Kan'en 4, mes 10, día 27, convertido con el cálculo de arriba. La página dice que el nombre se promulgó después, con fecha atrasada | [Hōreki](https://en.wikipedia.org/wiki/H%C5%8Dreki) |
+| 3 | La embajada de Ryūkyū, 18 dic | Aproximado | La página da solo el año (Hōreki 2) | [Hōreki](https://en.wikipedia.org/wiki/H%C5%8Dreki) |
+| 5 | Se corrige el calendario, 2 dic | Aproximado | La página da el 2 de diciembre de 1754 | [Hōreki](https://en.wikipedia.org/wiki/H%C5%8Dreki) |
+
+- La «enfermedad de Edo» (temporada 3) sale de la página del [beriberi](https://en.wikipedia.org/wiki/Beriberi): en Edo, a fines del siglo XVII, el arroz blanco ya causaba beriberi entre la gente de la ciudad, y no en el campo. Que se cure en la aldea es la consecuencia.
+
+### Mary, hiladora. Manchester, de 1840 a 1844
+
+**Lo real y lo inventado**
+
+- **Real:** el correo de un penique, la boda de la reina, el pabellón de madera de la Liga contra la ley del grano, el censo de 1841, las elecciones, el nacimiento del príncipe, la petición de la Carta, la huelga general de 1842, el cometa de 1843, la estación Victoria, la ley de fábricas de 1844 y la tienda de Rochdale.
+- **Inventado:** Mary, su gente (Thomas, Ann, Jane, Billy, Jem, Tom, Bridget, el capataz Holt), la fábrica sin pedidos de 1841, la caldera de Ancoats, las nieblas y todo lo que les pasa. También cuándo llegan las noticias.
+
+**Lo que vuelve cada año**
+
+- La Pascua gregoriana de 1840 a 1844 está calculada (19 abr, 11 abr, 27 mar, 16 abr y 7 abr). De ella cuelgan el martes de carnaval (47 días antes), el Viernes Santo (2 antes), el lunes de Pentecostés (50 después) y las carreras de Kersal Moor (de 52 a 55 después).
+
+| Día | Fecha | Certeza | Página |
+|---|---|---|---|
+| Año nuevo | 1 ene | Aproximado | Sin enlace |
+| Martes de carnaval | 3 mar, 23 feb, 8 feb, 28 feb, 20 feb | Histórico | [Shrove Tuesday](https://en.wikipedia.org/wiki/Shrove_Tuesday) |
+| Viernes Santo | 17 abr, 9 abr, 25 mar, 14 abr, 5 abr | Histórico | [Good Friday](https://en.wikipedia.org/wiki/Good_Friday) |
+| Lunes de Pentecostés: el desfile de las escuelas dominicales | 8 jun, 31 may, 16 may, 5 jun, 27 may | Histórico | [Whit Monday](https://en.wikipedia.org/wiki/Whit_Monday) |
+| Las carreras de Kersal Moor, 4 días | 10 jun, 2 jun, 18 may, 7 jun, 29 may | Histórico | [Whit Friday](https://en.wikipedia.org/wiki/Whit_Friday) |
+| La noche de Guy Fawkes | 5 nov | Histórico | [Guy Fawkes Night](https://en.wikipedia.org/wiki/Guy_Fawkes_Night) |
+| Navidad | 25 dic | Histórico | [Christmas](https://en.wikipedia.org/wiki/Christmas) |
+
+- La página de Whit Friday cuenta que en Manchester las escuelas dominicales anglicanas desfilaban el lunes de Pentecostés y las católicas el viernes, y que las carreras de Kersal Moor iban de miércoles a sábado de esa semana.
+- Que el Viernes Santo y la Navidad fueran los dos únicos días del año sin fábrica viene de memoria **[sin abrir]**.
+
+**Los hechos**
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | El correo de un penique, 10 ene | Aproximado | La página muestra el aviso del 7 de enero de 1840; el 10 viene de memoria **[sin abrir]** | [Uniform Penny Post](https://en.wikipedia.org/wiki/Uniform_Penny_Post) |
+| 1 | El banquete en el pabellón, 13 ene | Aproximado | El pabellón de madera es de 1840; el día viene de memoria **[sin abrir]** | [Free Trade Hall](https://en.wikipedia.org/wiki/Free_Trade_Hall) |
+| 1 | La boda de la reina, 10 feb | Histórico | Tal cual | [Wedding of Queen Victoria and Prince Albert](https://en.wikipedia.org/wiki/Wedding_of_Queen_Victoria_and_Prince_Albert) |
+| 2 | La noche del censo, 6 jun | Histórico | Tal cual | [1841 United Kingdom census](https://en.wikipedia.org/wiki/1841_United_Kingdom_census) |
+| 2 | Elecciones, 1 jul | Aproximado | Del 29 de junio al 22 de julio; el día se eligió | [1841 United Kingdom general election](https://en.wikipedia.org/wiki/1841_United_Kingdom_general_election) |
+| 2 | Nace el príncipe, 10 nov | Aproximado | Nació el 9; la noticia llega al día siguiente | [Edward VII](https://en.wikipedia.org/wiki/Edward_VII) |
+| 3 | Rechazan la Carta, 4 may | Aproximado | «A principios de mayo de 1842» | [Chartism](https://en.wikipedia.org/wiki/Chartism) |
+| 3 | La huelga llega a Manchester, 13 ago | Histórico | Tal cual | [1842 General Strike](https://en.wikipedia.org/wiki/1842_General_Strike) |
+| 3 | Presos los delegados, 20 ago | Aproximado | «Para el 20 de agosto» ya estaban presos | [1842 General Strike](https://en.wikipedia.org/wiki/1842_General_Strike) |
+| 3 | Se acaba la huelga, 26 sep | Histórico | El día en que volvieron los tejedores de Manchester | [1842 General Strike](https://en.wikipedia.org/wiki/1842_General_Strike) |
+| 4 | El cometa, 20 mar | Aproximado | Brilló en marzo de 1843, sobre todo en el hemisferio sur: en Manchester es una noticia | [Great Comet of 1843](https://en.wikipedia.org/wiki/Great_Comet_of_1843) |
+| 5 | Abre la estación Victoria, 1 ene | Histórico | Tal cual | [Manchester Victoria station](https://en.wikipedia.org/wiki/Manchester_Victoria_station) |
+| 5 | La ley de fábricas, 1 oct | Aproximado | La página da la entrada en vigor el 1 de octubre de 1844 y que extendió a las mujeres el límite de horas | [Factories Act 1844](https://en.wikipedia.org/wiki/Factories_Act_1844) |
+| 5 | La tienda de Rochdale, 28 dic | Aproximado | Abrió el 21 de diciembre de 1844; la noticia llega una semana después | [Rochdale Society of Equitable Pioneers](https://en.wikipedia.org/wiki/Rochdale_Society_of_Equitable_Pioneers) |
+
+- Belle Vue (temporadas 2 y 5) abrió en 1836, según su [página](https://en.wikipedia.org/wiki/Belle_Vue_Zoological_Gardens). Las visitas son inventadas.
+
+### José, peón acasillado. Una hacienda pulquera de los Llanos de Apan, de 1905 a 1909
+
+**Lo real y lo inventado**
+
+- **Real:** las fiestas de la Iglesia y las patrias, la huelga de Cananea, el programa del Partido Liberal (que pedía, entre otras cosas, la jornada de ocho horas y el fin de las deudas de los peones), la huelga de Río Blanco, los temblores de 1907 y 1909, la entrevista de Díaz con Creelman, el partido de Madero y las inundaciones de 1909.
+- **Inventado:** José, su gente (Petra, Chencho, Lupe, Rafael, Cuca, doña Refugio, Nicolás, don Anselmo), la hacienda y su santo patrón, la granizada y todo lo que les pasa. También cuándo llegan las noticias. Las faenas del pegujal (siembra, escarda y pizca) van en fechas elegidas dentro de la temporada de lluvias **[Aproximación]**.
+
+**Lo que vuelve cada año**
+
+- La Pascua de 1905 a 1909 está calculada (23 abr, 15 abr, 31 mar, 19 abr y 11 abr). De ella cuelgan el miércoles de ceniza (46 días antes), el Viernes Santo y el sábado de gloria.
+
+| Día | Fecha | Certeza | Página |
+|---|---|---|---|
+| La Candelaria | 2 feb | Histórico | [Fiesta de la Candelaria](https://es.wikipedia.org/wiki/Fiesta_de_la_Candelaria) |
+| Miércoles de ceniza | 8 mar, 28 feb, 13 feb, 4 mar, 24 feb | Histórico | [Miércoles de Ceniza](https://es.wikipedia.org/wiki/Mi%C3%A9rcoles_de_Ceniza) |
+| Viernes Santo | 21 abr, 13 abr, 29 mar, 17 abr, 9 abr | Histórico | [Viernes Santo](https://es.wikipedia.org/wiki/Viernes_Santo) |
+| La quema de Judas | 22 abr, 14 abr, 30 mar, 18 abr, 10 abr | Histórico | [Quema de Judas](https://es.wikipedia.org/wiki/Quema_de_Judas) |
+| La Santa Cruz | 3 may | Aproximado | [Día de la Cruz](https://es.wikipedia.org/wiki/D%C3%ADa_de_la_Cruz) |
+| San Isidro Labrador | 15 may | Histórico | [Isidro Labrador](https://es.wikipedia.org/wiki/Isidro_Labrador) |
+| El santo de la hacienda | 13 jun | Aproximado | [Antonio de Padua](https://es.wikipedia.org/wiki/Antonio_de_Padua) |
+| Las fiestas patrias, 2 días | 15 sep | Histórico | [Grito de Dolores](https://es.wikipedia.org/wiki/Grito_de_Dolores) |
+| Todos Santos y los fieles difuntos, 2 días | 1 nov | Histórico | [Día de Muertos](https://es.wikipedia.org/wiki/D%C3%ADa_de_Muertos) |
+| La Virgen de Guadalupe | 12 dic | Histórico | [Basílica de Guadalupe](https://es.wikipedia.org/wiki/Bas%C3%ADlica_de_Santa_Mar%C3%ADa_de_Guadalupe) |
+| Las posadas, 9 días | 16 dic | Histórico | [Las Posadas](https://es.wikipedia.org/wiki/Las_Posadas) |
+
+**Los hechos**
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 2 | La huelga de Cananea, 8 jun | Aproximado | Empezó el 1 de junio de 1906; la noticia llega una semana después | [Huelga de Cananea](https://es.wikipedia.org/wiki/Huelga_de_Cananea) |
+| 2 | El papel de los liberales, 12 ago | Aproximado | El programa se publicó el 1 de julio de 1906 y se repartió en México en medio millón de pliegos | [Programa del Partido Liberal Mexicano](https://es.wikipedia.org/wiki/Programa_del_Partido_Liberal_Mexicano) |
+| 3 | Río Blanco, 14 ene | Aproximado | Empezó el 7 de enero de 1907 | [Huelga de Río Blanco](https://es.wikipedia.org/wiki/Huelga_de_R%C3%ADo_Blanco) |
+| 3 | El temblor, 14 abr | Histórico | A las 23:30 del domingo 14 de abril de 1907; afectó el centro y el sur | [Terremoto de Guerrero de 1907](https://es.wikipedia.org/wiki/Terremoto_de_Guerrero_de_1907) |
+| 4 | La entrevista Creelman, 12 mar | Aproximado | Salió en marzo de 1908; en México, en El Imparcial del 3 de marzo | [Entrevista Díaz-Creelman](https://es.wikipedia.org/wiki/Entrevista_D%C3%ADaz-Creelman) |
+| 5 | Madero, 20 jun | Aproximado | En 1909 fundó el Partido Antirreeleccionista; el día se eligió | [Francisco I. Madero](https://es.wikipedia.org/wiki/Francisco_I._Madero) |
+| 5 | El temblor de Acapulco, 30 jul | Histórico | El 30 de julio de 1909, con daños en Acapulco y en la Ciudad de México | [1909](https://es.wikipedia.org/wiki/1909) |
+| 5 | Las inundaciones, 5 sep | Aproximado | El 31 de agosto murieron más de mil personas; la noticia llega días después | [1909](https://es.wikipedia.org/wiki/1909) |
+
+### Rosa, secretaria. Ciudad de México, de 1960 a 1964
+
+**Lo real y lo inventado**
+
+- **Real:** las fiestas de la ciudad y los hechos de la tabla.
+- **Inventado:** Rosa, su gente (doña Carmen, Beto, Chela, Arturo, Claudia, Lupita, el licenciado Ortega), su oficina, su boda, su hija y todo lo que les pasa.
+
+**Lo que vuelve cada año**
+
+- El Viernes Santo sale de la Pascua de 1960 a 1964, calculada: 15 abr, 31 mar, 20 abr, 12 abr y 27 mar.
+
+| Día | Fecha | Certeza | Página |
+|---|---|---|---|
+| Día de Reyes | 6 ene | Histórico | [Día de Reyes](https://es.wikipedia.org/wiki/D%C3%ADa_de_Reyes) |
+| La Candelaria | 2 feb | Histórico | [Fiesta de la Candelaria](https://es.wikipedia.org/wiki/Fiesta_de_la_Candelaria) |
+| El natalicio de Juárez | 21 mar | Histórico | [Benito Juárez](https://es.wikipedia.org/wiki/Benito_Ju%C3%A1rez) |
+| Viernes Santo | Ver arriba | Histórico | [Viernes Santo](https://es.wikipedia.org/wiki/Viernes_Santo) |
+| El Día de las Madres | 10 may | Histórico | [Día de la Madre](https://es.wikipedia.org/wiki/D%C3%ADa_de_la_Madre) |
+| Los aguaceros de la tarde | 15 jun | Aproximado | Sin enlace |
+| Las fiestas patrias, 2 días | 15 sep | Histórico | [Grito de Dolores](https://es.wikipedia.org/wiki/Grito_de_Dolores) |
+| Todos Santos y los fieles difuntos, 2 días | 1 nov | Histórico | [Día de Muertos](https://es.wikipedia.org/wiki/D%C3%ADa_de_Muertos) |
+| El aniversario de la Revolución | 20 nov | Histórico | [Revolución mexicana](https://es.wikipedia.org/wiki/Revoluci%C3%B3n_mexicana) |
+| La Virgen de Guadalupe | 12 dic | Histórico | [Basílica de Guadalupe](https://es.wikipedia.org/wiki/Bas%C3%ADlica_de_Santa_Mar%C3%ADa_de_Guadalupe) |
+| Las posadas, 9 días | 16 dic | Histórico | [Las Posadas](https://es.wikipedia.org/wiki/Las_Posadas) |
+
+- Que el natalicio de Juárez y el 20 de noviembre fueran días sin oficina, y que el 20 de noviembre hubiera desfile deportivo, viene de memoria **[sin abrir]**: las páginas dan las fechas (el 21 de marzo de 1806, el 20 de noviembre de 1910).
+
+**Los hechos**
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Se nacionaliza la luz, 27 sep | Histórico | Tal cual | [Adolfo López Mateos](https://es.wikipedia.org/wiki/Adolfo_L%C3%B3pez_Mateos) |
+| 2 | Bahía de Cochinos, 18 abr | Aproximado | El desembarco fue el 17 de abril de 1961 | [Invasión de bahía de Cochinos](https://es.wikipedia.org/wiki/Invasi%C3%B3n_de_bah%C3%ADa_de_Cochinos) |
+| 3 | México le gana a Checoslovaquia, 7 jun | Histórico | El partido fue el 7 de junio de 1962. Que fuera su primer triunfo en un Mundial viene de memoria **[sin abrir]** | [Copa Mundial de Fútbol de 1962](https://es.wikipedia.org/wiki/Copa_Mundial_de_F%C3%BAtbol_de_1962) |
+| 3 | Kennedy visita la ciudad, 29 jun | Aproximado | Sin enlace **[sin abrir]** | — |
+| 3 | La crisis de los misiles, 22 oct | Histórico | El día del bloqueo | [Crisis de los misiles en Cuba](https://es.wikipedia.org/wiki/Crisis_de_los_misiles_en_Cuba) |
+| 4 | México, sede olímpica, 18 oct | Histórico | Tal cual | [Juegos Olímpicos de México 1968](https://es.wikipedia.org/wiki/Juegos_Ol%C3%ADmpicos_de_M%C3%A9xico_1968) |
+| 4 | Matan a Kennedy, 22 nov | Histórico | Tal cual | [Asesinato de John F. Kennedy](https://es.wikipedia.org/wiki/Asesinato_de_John_F._Kennedy) |
+| 5 | Elecciones, 5 jul | Histórico | Tal cual | [Elecciones federales de México de 1964](https://es.wikipedia.org/wiki/Elecciones_federales_de_M%C3%A9xico_de_1964) |
+| 5 | El Museo de Antropología, 17 sep | Histórico | Tal cual | [Museo Nacional de Antropología](https://es.wikipedia.org/wiki/Museo_Nacional_de_Antropolog%C3%ADa_(M%C3%A9xico)) |
+| 5 | Los Juegos de Tokio, 10 oct | Histórico | Tal cual | [Juegos Olímpicos de Tokio 1964](https://es.wikipedia.org/wiki/Juegos_Ol%C3%ADmpicos_de_Tokio_1964) |
+| 5 | Tlatelolco, 21 nov | Histórico | Tal cual | [Conjunto Urbano Nonoalco Tlatelolco](https://es.wikipedia.org/wiki/Conjunto_Urbano_Nonoalco_Tlatelolco) |
+| 5 | El nuevo presidente, 1 dic | Histórico | Tal cual | [Gustavo Díaz Ordaz](https://es.wikipedia.org/wiki/Gustavo_D%C3%ADaz_Ordaz) |
+
+### Alguien del mundo. Una ciudad del norte de la India, de 2025 a 2029
+
+**Por qué la India.** Su ficha dice «una ciudad de Asia, probablemente». Para darle fiestas y noticias hacía falta un país, y se eligió la India: es el país más poblado del mundo y allí la familia promedio tiene unos dos hijos, como la persona promedio de su ficha (esa cifra, de memoria **[sin abrir]**). **[Diseño propio]**
+
+**Lo real y lo inventado**
+
+- **Real:** las fiestas del año, el Kumbh Mela de 2025, la Champions Trophy y los dos Mundiales de críquet, los cuatro días de guerra con Pakistán, el avión de Ahmedabad y las dos fases del censo.
+- **Programado (el futuro, al escribir esto):** la enumeración del censo (febrero de 2027), los Juegos de Los Ángeles (del 14 al 30 de julio de 2028, con críquet), el paso de Apophis (13 de abril de 2029) y las elecciones generales («para mayo o junio de 2029»). Van como «aproximado».
+- **Inventado:** su familia, su trabajo, su ciudad y todo lo que les pasa.
+
+**Cómo se calcularon las fiestas que siguen la luna** **[Aproximación]**
+
+- Cada fiesta cae en un día lunar (un *tithi*: cada 12° de distancia entre la luna y el sol). Se calculó la distancia a la hora de la India y se buscó el día en que ese *tithi* rige a la hora que manda la costumbre: Diwali, la luna nueva al anochecer; Holi, el día después de la luna llena al anochecer; Raksha Bandhan, la luna llena al amanecer; Dussehra, el décimo día de la luna creciente a media tarde; Chhath, del cuarto al séptimo día de la luna que sigue a Diwali.
+- **Coinciden con lo que dan las páginas:** Diwali 2026, 2027 y 2028 (8 nov, 29 oct, 17 oct), Raksha Bandhan 2025 y 2026 (9 y 28 ago), Dussehra 2026 (20 oct) y Chhath 2026 (del 13 al 16 nov).
+- **No coincide en un caso:** el cálculo da Holi el 3 de marzo de 2026, y se dejó el 4, que es como se celebró, de memoria **[sin abrir]** (ese día hubo eclipse de luna).
+- Makar Sankranti sale de la tabla de su página: el sol entra en Capricornio el 14 de enero, salvo en 2027 (a las 21:09) y 2028 (el 15), que se celebra el 15.
+
+| Fiesta | 2025 | 2026 | 2027 | 2028 | 2029 | Certeza | Página |
+|---|---|---|---|---|---|---|---|
+| Makar Sankranti | 14 ene | 14 ene | 15 ene | 15 ene | 14 ene | Histórico | [Makar Sankranti](https://en.wikipedia.org/wiki/Makar_Sankranti) |
+| El Día de la República | 26 ene | | | | | Histórico | [Republic Day](https://en.wikipedia.org/wiki/Republic_Day_(India)) |
+| Holi | 14 mar | 4 mar | 22 mar | 11 mar | 1 mar | Aproximado | [Holi](https://en.wikipedia.org/wiki/Holi) |
+| Raksha Bandhan | 9 ago | 28 ago | 17 ago | 5 ago | 24 ago | Aproximado | [Raksha Bandhan](https://en.wikipedia.org/wiki/Raksha_Bandhan) |
+| El Día de la Independencia | 15 ago | | | | | Histórico | [Independence Day](https://en.wikipedia.org/wiki/Independence_Day_(India)) |
+| Dussehra | 2 oct | 20 oct | 9 oct | 27 sep | 16 oct | Aproximado | [Vijayadashami](https://en.wikipedia.org/wiki/Vijayadashami) |
+| Diwali | 20 oct | 8 nov | 29 oct | 17 oct | 5 nov | Aproximado | [Diwali](https://en.wikipedia.org/wiki/Diwali) |
+| Chhath, 4 días | 25 oct | 13 nov | 2 nov | 21 oct | 9 nov | Aproximado | [Chhath](https://en.wikipedia.org/wiki/Chhath) |
+| Llega el monzón | 25 jun | | | | | Aproximado | [Monsoon of South Asia](https://en.wikipedia.org/wiki/Monsoon_of_South_Asia) |
+
+- El calor de mayo y la niebla de diciembre van como «aproximado», sin enlace: es el clima de las llanuras del norte de la India.
+
+**Los hechos**
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Empieza el Kumbh Mela, 13 ene | Histórico | Del 13 de enero al 26 de febrero de 2025 | [2025 Prayag Maha Kumbh Mela](https://en.wikipedia.org/wiki/2025_Prayag_Maha_Kumbh_Mela) |
+| 1 | La Champions Trophy, 9 mar | Histórico | La India ganó la final | [2025 ICC Champions Trophy](https://en.wikipedia.org/wiki/2025_ICC_Champions_Trophy) |
+| 1 | La guerra con Pakistán, 7 may, 4 días | Histórico | Empezó el 7 de mayo de 2025 | [Operation Sindoor](https://en.wikipedia.org/wiki/Operation_Sindoor) |
+| 1 | El avión de Ahmedabad, 12 jun | Histórico | Tal cual | [Air India Flight 171](https://en.wikipedia.org/wiki/Air_India_Flight_171) |
+| 1 | El Mundial femenino, 2 nov | Histórico | La India campeona | [2025 Women's Cricket World Cup](https://en.wikipedia.org/wiki/2025_Women%27s_Cricket_World_Cup) |
+| 2 | El Mundial T20, 8 mar | Histórico | La India campeona | [2026 Men's T20 World Cup](https://en.wikipedia.org/wiki/2026_Men%27s_T20_World_Cup) |
+| 2 | El censo anota la casa, 20 may | Aproximado | La lista de casas fue de abril a septiembre de 2026 | [2027 census of India](https://en.wikipedia.org/wiki/2027_census_of_India) |
+| 3 | El censo anota a las personas, 15 feb | Aproximado | Programado del 9 al 28 de febrero de 2027 | [2027 census of India](https://en.wikipedia.org/wiki/2027_census_of_India) |
+| 4 | Los Juegos de Los Ángeles, 14 jul | Aproximado | Programados del 14 al 30 de julio de 2028 | [2028 Summer Olympics](https://en.wikipedia.org/wiki/2028_Summer_Olympics) |
+| 5 | Apophis, 13 abr | Aproximado | Pasará a unos 31,600 km el 13 de abril de 2029 | [99942 Apophis](https://en.wikipedia.org/wiki/99942_Apophis) |
+| 5 | Elecciones generales, 10 may | Aproximado | «Para mayo o junio de 2029»; el día se eligió | [2029 Indian general election](https://en.wikipedia.org/wiki/2029_Indian_general_election) |
+
+### Alguien de México. Una ciudad de México, de 2025 a 2029
+
+**Lo real y lo inventado**
+
+- **Real:** las fiestas del año, los aranceles de Estados Unidos, la elección judicial, la Copa Oro, la explosión de Iztapalapa y la inauguración del Mundial.
+- **Programado:** las elecciones intermedias (6 de junio de 2027), los Juegos de Los Ángeles y el paso de Apophis. Van como «aproximado».
+- **Inventado:** su familia, su trabajo, su ciudad y todo lo que les pasa.
+- El Viernes Santo sale de la Pascua de 2025 a 2029, calculada: 20 abr, 5 abr, 28 mar, 16 abr y 1 abr.
+- **El Buen Fin**, según su página, es cada noviembre en el puente de la Revolución (el tercer lunes). Va del jueves al lunes: 13, 12, 11, 16 y 15 de noviembre. Aproximado.
+- **El simulacro:** la página cuenta el del 19 de septiembre en la Ciudad de México. Que se repita cada año en esa fecha es una suposición **[Aproximación]**.
+
+| Día | Fecha | Certeza | Página |
+|---|---|---|---|
+| Día de Reyes | 6 ene | Histórico | [Día de Reyes](https://es.wikipedia.org/wiki/D%C3%ADa_de_Reyes) |
+| La Candelaria | 2 feb | Histórico | [Fiesta de la Candelaria](https://es.wikipedia.org/wiki/Fiesta_de_la_Candelaria) |
+| Semana Santa (el Viernes Santo) | 18 abr, 3 abr, 26 mar, 14 abr, 30 mar | Histórico | [Viernes Santo](https://es.wikipedia.org/wiki/Viernes_Santo) |
+| El Día del Niño | 30 abr | Histórico | [Día del Niño](https://es.wikipedia.org/wiki/D%C3%ADa_del_Ni%C3%B1o) |
+| El Día de las Madres | 10 may | Histórico | [Día de la Madre](https://es.wikipedia.org/wiki/D%C3%ADa_de_la_Madre) |
+| Las lluvias de la tarde | 10 jun | Aproximado | Sin enlace |
+| La noche del Grito | 15 sep | Histórico | [Grito de Dolores](https://es.wikipedia.org/wiki/Grito_de_Dolores) |
+| El simulacro | 19 sep | Aproximado | [Simulacro de terremoto](https://es.wikipedia.org/wiki/Simulacro_de_terremoto) |
+| Todos Santos y los fieles difuntos, 2 días | 1 nov | Histórico | [Día de Muertos](https://es.wikipedia.org/wiki/D%C3%ADa_de_Muertos) |
+| El Buen Fin, 5 días | Ver arriba | Aproximado | [El Buen Fin](https://es.wikipedia.org/wiki/El_Buen_Fin) |
+| La Virgen de Guadalupe | 12 dic | Histórico | [Basílica de Guadalupe](https://es.wikipedia.org/wiki/Bas%C3%ADlica_de_Santa_Mar%C3%ADa_de_Guadalupe) |
+| Las posadas, 9 días | 16 dic | Histórico | [Las Posadas](https://es.wikipedia.org/wiki/Las_Posadas) |
+
+**Los hechos**
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Los aranceles, 4 mar | Histórico | Entraron en vigor el 4 de marzo de 2025 | [Guerra comercial de 2025](https://es.wikipedia.org/wiki/Guerra_comercial_de_Estados_Unidos_con_Canad%C3%A1_y_M%C3%A9xico_de_2025) |
+| 1 | La elección de jueces, 1 jun | Histórico | Tal cual | [Elecciones judiciales de 2025](https://es.wikipedia.org/wiki/Elecciones_federales_judiciales_extraordinarias_de_M%C3%A9xico_de_2025) |
+| 1 | La Copa Oro, 6 jul | Histórico | México ganó la final 2-1 a Estados Unidos | [2025](https://es.wikipedia.org/wiki/2025) |
+| 1 | La explosión de Iztapalapa, 10 sep | Histórico | Tal cual | [Deflagración de Iztapalapa de 2025](https://es.wikipedia.org/wiki/Deflagraci%C3%B3n_de_Iztapalapa_de_2025) |
+| 2 | La inauguración del Mundial, 11 jun | Histórico | México le ganó a Sudáfrica | [Copa Mundial de Fútbol de 2026](https://es.wikipedia.org/wiki/Copa_Mundial_de_F%C3%BAtbol_de_2026) |
+| 3 | Elecciones intermedias, 6 jun | Aproximado | Programadas para el 6 de junio de 2027 | [Elecciones federales de México de 2027](https://es.wikipedia.org/wiki/Elecciones_federales_de_M%C3%A9xico_de_2027) |
+| 4 | Los Juegos de Los Ángeles, 14 jul | Aproximado | Programados | [Juegos Olímpicos de Los Ángeles 2028](https://es.wikipedia.org/wiki/Juegos_Ol%C3%ADmpicos_de_Los_%C3%81ngeles_2028) |
+| 5 | Apophis, 13 abr | Aproximado | Ver Alguien del mundo | [99942 Apophis](https://en.wikipedia.org/wiki/99942_Apophis) |
+
 ## Lo que no se pudo comprobar
 
 - **Los pasajes de Tucídides** marcados **[sin abrir]** vienen de memoria: la red de la sesión solo dejó abrir Wikipedia. Todos van como «aproximado» y sin enlace, o con el enlace de la página que sí confirma el hecho aunque no el detalle.
 - **En el grupo 1**, lo marcado **[sin abrir]** viene de memoria por la misma razón: la fecha de la inundación de Tenochtitlan (1500) y su causa, la inauguración del foro de Trajano un 1 de enero, la leva de los campesinos egipcios a las obras del rey durante la crecida, y las fechas de las lentejas de Ata y de la siega de Alice.
+- **En el grupo 2**, lo marcado **[sin abrir]** viene de memoria: los días lunares de Sannō, Kanda y los fuegos de Ryōgoku en Edo, la limpieza del hollín y la fiesta de los carpinteros; el día del correo de un penique y del banquete del pabellón; que la fábrica de Mary solo cerrara en Viernes Santo y Navidad; los días sin oficina y el desfile de Rosa; la visita de Kennedy; que el triunfo de 1962 fuera el primero de México en un Mundial, y el Holi de 2026.
+- **Las temporadas 3 a 5 de Alguien del mundo y Alguien de México son el futuro** al escribir esto (2027 a 2029). Lo programado puede cambiar: las tandas Y de cada año lo revisan.
 - **Las fechas áticas** son una reconstrucción (ver arriba).
 - **El clima** de cada lugar es una tabla de pesos verosímil, no un registro. **[Aproximación]**
