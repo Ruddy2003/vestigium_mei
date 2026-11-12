@@ -125,7 +125,7 @@ Los cuentos de la temporada 1 de los tres primeros personajes del grupo 1, con l
   - Una frase del objeto («le enseñó a cuidarlo») no casaba con objetos que se comen, como la miel.
   - Ipy amanecía en el techo en diciembre «cuando hace calor».
   - Tamu y la escalera (ver arriba).
-- **Compilación de Android:** falta correr `apk.yml` sobre la rama.
+- **Compilación de Android:** la corrida 210 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `248d67f`).
 - **Capturas:** 0, como dice el plan. Las pruebas de `vidas/` vuelven a correr en la siguiente corrida de capturas.
 
 ## Lo que no se puede comprobar aquí
