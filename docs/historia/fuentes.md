@@ -402,6 +402,7 @@ Son seis de los doce personajes comunes. No tienen cuadro (decisión 2 del plan)
 | Panquetzaliztli, el levantamiento de banderas | 28 nov | Aproximado | [Panquetzaliztli](https://en.wikipedia.org/wiki/Panquetzaliztli) |
 | Atemoztli, el descenso del agua | 18 dic | Aproximado | [Calendario mexica](https://es.wikipedia.org/wiki/Calendario_mexica) |
 | Siembra y cosecha del maíz en la chinampa | 10 abr y 25 sep | Aproximado | [Chinampa](https://en.wikipedia.org/wiki/Chinampa) |
+| La cosecha que no fue (solo temporada 1) | 25 sep | Aproximado | [Chinampa](https://en.wikipedia.org/wiki/Chinampa) |
 
 **Los hechos**
 
@@ -415,6 +416,9 @@ Son seis de los doce personajes comunes. No tienen cuadro (decisión 2 del plan)
 | 4 | La coronación, 5 jul, 4 días | Aproximado | La piedra de los Cinco Soles da el 15 de julio de 1503 gregoriano, que es el 5 de julio juliano. Ixtlilxóchitl da el 24 de mayo de 1503 y la mayoría de los documentos, 1502 | [Moctezuma II](https://en.wikipedia.org/wiki/Moctezuma_II) |
 | 5 | Salen contra Huexotzinco, 10 nov | Aproximado | A inicios del siglo XVI Huexotzinco era el foco militar de México. El día se eligió | [Moctezuma II](https://en.wikipedia.org/wiki/Moctezuma_II) |
 
+- **Desde T1b (12 nov 2026):**
+  - En la temporada 1 la cosecha cae con la chinampa ahogada, así que lleva otro id (`cosecha_ahogada`).
+  - Del 28 de agosto al 19 de octubre de la temporada 1 la familia vive con unos parientes del barrio alto: el estado «fuera». Es inventado.
 - **Las lluvias tardías de 1504** son inventadas. La página de Moctezuma cuenta una gran sequía en 1505, el año siguiente a sus cinco temporadas.
 
 ## Lo que no se pudo comprobar

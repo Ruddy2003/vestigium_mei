@@ -700,7 +700,9 @@ internal object AnioG1 {
     // «aproximado»: hay otras dos tradiciones.
     //
     // Claves de escena: fiesta, inundacion, obra, luto, partida, seco. Arcos: chinampa (los daños de la inundación y cómo
-    // la rehacen: 1 = ahogada), milpa (el maíz) y lago (sube en las lluvias).
+    // la rehacen: 1 = ahogada), milpa (el maíz) y lago (sube en las lluvias). Estado: «fuera», desde que el agua entra en
+    // la casa (28 de agosto de la temporada 1) hasta que vuelven a rehacer la chinampa (20 de octubre): viven con unos
+    // parientes del barrio alto. En la temporada 1 la cosecha cae con la chinampa ahogada y lleva otro id.
 
     private val F_VEINTENAS = "El calendario mexica y sus dieciocho veintenas" to "https://es.wikipedia.org/wiki/Calendario_mexica"
     private val F_TLACAXIPEHUALIZTLI = "Tlacaxipehualiztli" to "${W}Tlacaxipehualiztli"
@@ -714,8 +716,11 @@ internal object AnioG1 {
     private val F_AHUIZOTL = "Ahuízotl" to "${W}Ahuitzotl"
     private val F_MOCTEZUMA = "Moctezuma II" to "${W}Moctezuma_II"
 
-    /** Las veintenas y las faenas de la chinampa que vuelven cada año. Las fechas son las de Sahagún, en juliano. */
-    private val anioDeLaChinampa: List<DiaEspecial> = listOf(
+    /**
+     * Las veintenas y las faenas de la chinampa que vuelven cada año, en la temporada [t]. Las fechas son las de
+     * Sahagún, en juliano. En la temporada 1 la cosecha cae con la chinampa ahogada: lleva otro id (regla 9).
+     */
+    private fun anioDeLaChinampa(t: Int): List<DiaEspecial> = listOf(
         rito("nemontemi", "01-28", "Los nemontemi: cinco días «en vano» antes del año nuevo", 5, APROXIMADO, F_VEINTENAS),
         fiesta("tlacaxipehualiztli", "03-13", "Termina Tlacaxipehualiztli, la fiesta de Xipe Tótec", certeza = APROXIMADO, fuente = F_TLACAXIPEHUALIZTLI),
         cosecha("siembra", "04-10", "Siembran el maíz en la chinampa, con las plantitas del almácigo", 10, APROXIMADO, F_CHINAMPA),
@@ -724,7 +729,8 @@ internal object AnioG1 {
         fiesta("huey_tecuilhuitl", "07-11", "Huey Tecuílhuitl, la gran fiesta de los señores", certeza = APROXIMADO, fuente = F_HUEY_TECUILHUITL),
         fiesta("xocotl_huetzi", "08-20", "Xócotl Huetzi, la gran fiesta de los muertos: cae el tronco", certeza = APROXIMADO, fuente = F_VEINTENAS),
         fiesta("ochpaniztli", "09-09", "Ochpaniztli: se barren los caminos y las casas", certeza = APROXIMADO, fuente = F_OCHPANIZTLI),
-        cosecha("cosecha", "09-25", "La cosecha del maíz en la chinampa", 15, APROXIMADO, F_CHINAMPA),
+        if (t == 1) cosecha("cosecha_ahogada", "09-25", "La cosecha que no fue: lo poco que se salvó del agua", 15, APROXIMADO, F_CHINAMPA)
+        else cosecha("cosecha", "09-25", "La cosecha del maíz en la chinampa", 15, APROXIMADO, F_CHINAMPA),
         fiesta("panquetzaliztli", "11-28", "Panquetzaliztli: se levantan banderas para Huitzilopochtli", certeza = APROXIMADO, fuente = F_PANQUETZALIZTLI),
         fiesta("atemoztli", "12-18", "Atemoztli, el descenso del agua", certeza = APROXIMADO, fuente = F_VEINTENAS),
     )
@@ -743,7 +749,7 @@ internal object AnioG1 {
         temporadas = listOf(
             TemporadaVida("1500, año 8 Pedernal", "inundacion",
                 "Plantan un ahuejote nuevo. Xocoyotl rema por primera vez. Citlali vende su primera carga de chiles en Tlatelolco. A fines de agosto el agua inunda la ciudad y ahoga la chinampa. La rehacen con lodo y estacas, y en diciembre siembran el primer almácigo.",
-                anioDeLaChinampa + listOf(
+                anioDeLaChinampa(1) + listOf(
                     suceso("ahuejote", "02-14", "Plantan un ahuejote nuevo en la esquina de la chinampa"),
                     suceso("xoco_rema", "03-20", "Xocoyotl rema por primera vez la canoa"),
                     suceso("chiles", "05-25", "Vende en Tlatelolco su primera carga de chiles"),
@@ -753,7 +759,7 @@ internal object AnioG1 {
                 )),
             TemporadaVida("1501, año 9 Casa", "reconstruccion",
                 "Levantan de nuevo los templos y las casas que tumbó el agua. Nace Xóchitl y le ponen nombre en un día de buen signo. Mazatl sale por primera vez con los guerreros del barrio. La primera cosecha de la chinampa nueva. Papan le borda a Xóchitl su primer huipil.",
-                anioDeLaChinampa + listOf(
+                anioDeLaChinampa(2) + listOf(
                     mundo("ciudad_nueva", "02-15", "Levantan de nuevo los templos y las casas que tumbó el agua", 30, APROXIMADO, F_TENOCHTITLAN, "obra"),
                     suceso("nace_xochitl", "06-20", "Nace su hija", cadena = "xochitl"),
                     suceso("nombre_xochitl", "06-24", "Le ponen nombre en un día de buen signo: Xóchitl, «flor»", cadena = "xochitl", escena = "fiesta"),
@@ -763,7 +769,7 @@ internal object AnioG1 {
                 )),
             TemporadaVida("1502, año 10 Conejo", "luto",
                 "Yaotl cambia la canoa vieja por una nueva. Muere el tlatoani Ahuízotl y eligen a Moctezuma, su sobrino. Xóchitl da sus primeros pasos. Xocoyotl atrapa sus primeros acociles. Papan ya no ve bien y deja de bordar.",
-                anioDeLaChinampa + listOf(
+                anioDeLaChinampa(3) + listOf(
                     suceso("canoa_nueva", "01-10", "Yaotl cambia la canoa vieja por una nueva"),
                     mundo("muere_ahuizotl", "03-28", "Muere el tlatoani Ahuízotl", certeza = APROXIMADO, fuente = F_AHUIZOTL, escena = "luto"),
                     mundo("eligen_moctezuma", "04-25", "Eligen tlatoani a Moctezuma, sobrino de Ahuízotl", certeza = APROXIMADO, fuente = F_MOCTEZUMA),
@@ -773,7 +779,7 @@ internal object AnioG1 {
                 )),
             TemporadaVida("1503, año 11 Caña", "guerra",
                 "Siembran flores para vender. Vuelven los guerreros de Nopallan con cautivos y Mazatl trae el primero suyo. Coronan a Moctezuma. Citlali vende sus flores en Tlatelolco. Xocoyotl aprende su primer canto.",
-                anioDeLaChinampa + listOf(
+                anioDeLaChinampa(4) + listOf(
                     suceso("flores", "03-28", "Siembran flores en la orilla de la chinampa, para vender"),
                     guerra("nopallan", "06-15", "Vuelven los guerreros de Nopallan con cautivos para la coronación", certeza = APROXIMADO, fuente = F_MOCTEZUMA, escena = "fiesta"),
                     suceso("cautivo_mazatl", "06-16", "Mazatl trae su primer cautivo, y le dan su manta de guerrero"),
@@ -783,7 +789,7 @@ internal object AnioG1 {
                 )),
             TemporadaVida("1504, año 12 Pedernal", "guerra",
                 "Xocoyotl ayuda a sacar lodo del canal. Mazatl se casa. Xóchitl ayuda a palmear las tortillas. Las lluvias no llegan a tiempo y hay que regar la chinampa a mano. Yaotl cumple su turno en la calzada. Los guerreros salen contra Huexotzinco.",
-                anioDeLaChinampa + listOf(
+                anioDeLaChinampa(5) + listOf(
                     suceso("lodo_canal", "01-12", "Xocoyotl ayuda a sacar lodo del canal para la chinampa"),
                     suceso("boda_mazatl", "02-20", "Se casa su hermano Mazatl", escena = "fiesta"),
                     suceso("tortillas", "04-22", "Xóchitl le ayuda a palmear las tortillas"),
@@ -799,5 +805,6 @@ internal object AnioG1 {
             Arco.cadaAnio("lago", TipoArco.OTRO, "01-15" to 0.45, "05-15" to 0.25, "10-01" to 0.9),
         ),
         objetos = listOf("metate", "comal", "coa", "canoa", "remo", "huipil", "cesta", "flores", "jarro", "malacate", "petate", "tortilla"),
+        estados = listOf(Estado("fuera", "inundacion", "rehacen")),
     )
 }
