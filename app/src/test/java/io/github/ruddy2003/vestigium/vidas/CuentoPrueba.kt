@@ -121,6 +121,18 @@ class CuentoPrueba {
         } }
     }
 
+    @Test fun loQueSeHaceVariasVecesAlDiaNoDiceLaHora() {
+        // El texto del trabajo se elige por lo que se hace, no por la hora: si un personaje come dos veces al día, el mismo
+        // texto puede salir en las dos. No puede decir «cena» ni «desayuno», ni «a mediodía» ni «de madrugada».
+        val horas = Regex("""\b(cena|cenar|cenan|desayun\w*|mediodía|medianoche|madrugada)\b""", RegexOption.IGNORE_CASE)
+        todas.forEach { p ->
+            val veces = quien(p).dia.groupingBy { it.que }.eachCount()
+            p.variantes[Parrafo.TRABAJO].orEmpty().filter { v -> v.hacer != null && (veces[v.hacer] ?: 0) >= 2 }.forEach { v ->
+                assertFalse("${p.vida}, ${v.hacer}: «${v.texto.take(60)}…» dice la hora", horas.containsMatchIn(v.texto))
+            }
+        }
+    }
+
     @Test fun enUnDiaNormalElTituloEsElDelObjeto() {
         todas.forEach { p ->
             val normales = dias(2027, 2027).map { cuento(p, it) }.filter { !it.especial }

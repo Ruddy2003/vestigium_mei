@@ -137,7 +137,7 @@ internal object PiezasMundo {
         v("A esta hora cruza a pie la calle grande, que es una hazaña: no hay semáforo que se respete, y hay que meterse entre las motos con la mano levantada, despacio, sin correr, para que la vean. Lo ha hecho mil veces. No se acostumbra.", hacer = Hacer.CAMINO),
 
         v("A esta hora come lo que trajo en la lonchera de acero de tres pisos: arroz en uno, lentejas en otro, rotis y verdura en el tercero. Come en su escritorio, mirando videos de cocina en el teléfono, que es una manera rara de comer y la de todos.", hacer = Hacer.COMER),
-        v("A esta hora cena con la familia sentados en el suelo, sobre una estera, o en el sofá, frente a la televisión: rotis, dal, una verdura con papa y un poco de arroz. La tele pasa noticias que nadie oye. Anu come con las manos y se mancha hasta las orejas.", hacer = Hacer.COMER),
+        v("A esta hora come con la familia sentados en el suelo, sobre una estera, o en el sofá, frente a la televisión: rotis, dal, una verdura con papa y un poco de arroz. La tele pasa noticias que nadie oye. Anu come con las manos y se mancha hasta las orejas.", hacer = Hacer.COMER),
         v("A esta hora come en un puesto de la calle frente al almacén, con sus compañeras: samosas, chole bhature o un plato de arroz con curry por unas monedas, que paga con el teléfono escaneando un código pegado en el carrito. Hasta el vendedor de samosas cobra así.", hacer = Hacer.COMER),
 
         v("A esta hora barre y trapea los cuartos, recoge la ropa seca de la azotea o del balcón, deja las verduras lavadas para la cena. Lo hace con el teléfono en la oreja, hablando con su madre en la aldea, que le cuenta todo lo que pasó desde ayer, que es nada.", hacer = Hacer.CUIDAR),

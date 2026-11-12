@@ -148,7 +148,7 @@ internal object PiezasKan {
         v("A esta hora acompaña al sacerdote del templo a mirar los almanaques, para saber si el día de mañana es bueno o malo para lo que quiere hacer el señor. {nombre} lee en voz alta los glifos del día. El sacerdote asiente. Mañana es bueno.", hacer = Hacer.REZAR),
 
         v("A esta hora come en la casa de la escritura, con los otros escribas, unos tamales que trae cada uno envueltos en hojas, y chile, y agua. Se come rápido, con los dedos limpios, para no manchar el papel. Uno cuenta un chisme del palacio, y los demás hacen como que no les interesa.", hacer = Hacer.COMER),
-        v("A esta hora cena en casa, sentado en el petate, con Ix Sak y Ch'ok: tortillas, frijoles negros, calabaza y un poco de chile. Hoy hay cacao, porque el señor le mandó un saquito, y Ix Sak lo bate pasándolo de una jícara a otra, desde alto, para que haga espuma.", hacer = Hacer.COMER),
+        v("A esta hora come en casa, sentado en el petate, con Ix Sak y Ch'ok: tortillas, frijoles negros, calabaza y un poco de chile. Hoy hay cacao, porque el señor le mandó un saquito, y Ix Sak lo bate pasándolo de una jícara a otra, desde alto, para que haga espuma.", hacer = Hacer.COMER),
         v("A esta hora come pavo en caldo con chile y masa, porque es día bueno y Ix Sak mató uno. Ch'ok quiere el muslo. El perro de la casa espera los huesos, sin moverse, mirando. {nombre} le da uno. Ix Sak dice que lo malcría.", hacer = Hacer.COMER),
 
         v("A esta hora está en el patio con Ix Sak, que teje en su telar de cintura, atado al tronco del árbol, mientras él le cuenta lo que pintó hoy. Ella le cuenta lo que tejió. Los dos hacen dibujos con las manos, y los dos saben que el de ella tarda más.", hacer = Hacer.GENTE),

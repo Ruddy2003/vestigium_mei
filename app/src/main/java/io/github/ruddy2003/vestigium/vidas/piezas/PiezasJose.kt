@@ -115,7 +115,7 @@ internal object PiezasJose {
 
         v("A esta hora come a la sombra de un maguey grande, en cuclillas, lo que trajo Petra en el itacate: tortillas todavía tibias envueltas en un trapo, frijoles, chile verde machacado y un jarro de pulque. Comparte con el burro las orillas de las tortillas.", hacer = Hacer.COMER),
         v("A esta hora come con los otros tlachiqueros en la orilla del potrero, sentados en las piedras. Cada uno saca lo suyo y se lo enseña a los demás, y casi siempre es lo mismo: tortilla, chile, frijol. Uno trae un pedazo de queso, y se lo miran como si fuera de oro.", hacer = Hacer.COMER),
-        v("A esta hora cena en el cuarto, sentado en el suelo junto al fogón, frijoles con epazote, tortillas recién hechas y nopales. Petra echa las tortillas en el comal una tras otra, y {nombre} se las come tan rápido como ella las hace, hasta que dice que ya.", hacer = Hacer.COMER),
+        v("A esta hora come en el cuarto, sentado en el suelo junto al fogón, frijoles con epazote, tortillas recién hechas y nopales. Petra echa las tortillas en el comal una tras otra, y {nombre} se las come tan rápido como ella las hace, hasta que dice que ya.", hacer = Hacer.COMER),
 
         v("A esta hora está sentado afuera del cuarto con los vecinos de la hilera, en un banco de adobe, con un jarro de pulque que va de mano en mano. Se habla del tiempo, de los magueyes y del administrador, en voz baja, porque las paredes de la hacienda oyen.", hacer = Hacer.GENTE),
         v("A esta hora alguien saca una guitarra en la puerta de un cuarto y toca canciones viejas, de amores y de caballos. Los demás cantan mal, y las mujeres se ríen desde dentro. {nombre} no canta, pero lleva el ritmo con el pie en la tierra.", hacer = Hacer.GENTE),

@@ -150,8 +150,8 @@ internal object PiezasPay {
         v("A esta hora escribe el diario de la obra en un papiro, con letra rápida: el día, el mes, lo que se cavó, lo que se pintó, lo que se gastó, lo que se dijo. Algún día, piensa, alguien leerá esto y sabrá que hoy Khonsu llegó tarde.", hacer = Hacer.TRABAJO),
         v("A esta hora mide con una cuerda de nudos el corredor nuevo que abren los canteros, para ver si va recto y si baja lo que tiene que bajar, como dice el plano. Si se desvía, hay que decírselo al capataz, y al capataz no le gusta que se lo digan.", hacer = Hacer.TRABAJO),
 
-        v("A esta hora come lo primero del día, pan con cebolla y la cerveza espesa, de pie, en la puerta de la casa, mirando el sendero que tiene que subir. Tamit le da además dos dátiles, que es lo dulce del día.", hacer = Hacer.COMER),
-        v("A esta hora es el descanso del mediodía: la cuadrilla sale de la tumba, come pan, pescado seco y cebollas a la sombra de la roca, y se echa una siesta en el suelo, con la cabeza sobre la bolsa. Nadie trabaja con este sol.", hacer = Hacer.COMER),
+        v("A esta hora come pan con cebolla y la cerveza espesa, de pie y con prisa, que en la obra no se espera a nadie. Tamit le metió además dos dátiles en la bolsa, que es lo dulce del día.", hacer = Hacer.COMER),
+        v("A esta hora come pan, pescado seco y cebollas a la sombra de lo que haya, y el que puede se echa un rato en el suelo con la cabeza sobre la bolsa. Con la boca llena nadie habla, y eso, en la cuadrilla, ya es un descanso.", hacer = Hacer.COMER),
         v("A esta hora come con la cuadrilla en el Valle lo que trajo cada uno, y comparten: uno tiene higos, otro un trozo de queso, otro una jarra de cerveza buena. {nombre} pone unos panes de su casa, que Tamit hace con miel cuando puede.", hacer = Hacer.COMER),
 
         v("A esta hora sube por el sendero del cerro, que trepa desde la aldea en zigzag hasta el paso y baja por el otro lado al Valle. Va en fila con la cuadrilla, con la bolsa al hombro, sin hablar, porque la subida corta la respiración.", hacer = Hacer.CAMINO),
