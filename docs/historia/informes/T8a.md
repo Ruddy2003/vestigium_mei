@@ -130,7 +130,7 @@ Cada estado tiene tres mañanas, un texto para cada cosa que hace a lo largo del
   - el paso del Cuervo;
   - que la Fundación de la temporada 2 de la doctora no existe, por la fiebre, así que su texto de fiesta no choca con la cuarentena;
   - que ninguna fiesta que vuelve cae dentro de un estado. La excepción son los postigos de la escriba en la temporada 4, que ya están escritos para eso.
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android:** la corrida 234 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `098f1d1`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que no se pudo comprobar
