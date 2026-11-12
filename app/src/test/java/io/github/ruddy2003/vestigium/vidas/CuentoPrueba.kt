@@ -156,7 +156,9 @@ class CuentoPrueba {
     }
 
     @Test fun unPersonajeSinPiezasNoTieneCuento() {
-        assertNull(Cuento.de("2027-01-01", "paleolitico", 10.0))
+        // Uno sin calendario y, mientras quede alguno, uno con calendario y sin piezas.
+        assertNull(Cuento.de("2027-01-01", "legionario", 10.0))
+        Calendarios.TODOS.firstOrNull { TodasLasPiezas.de(it.vida) == null }?.let { assertNull(Cuento.de("2027-01-01", it.vida, 10.0)) }
         assertNull(Cuento.de("2027-01-01", "no_existe", 10.0))
         todas.forEach { assertNotNull(Cuento.de("2027-01-01", it.vida, 10.0)) }
         assertEquals(cuento(todas.first(), "2028-04-04", 7.0), Cuento.de("2028-04-04", todas.first().vida, 7.0))

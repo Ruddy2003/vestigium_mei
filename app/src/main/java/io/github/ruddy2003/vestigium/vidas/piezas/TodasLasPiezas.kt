@@ -8,7 +8,10 @@ import io.github.ruddy2003.vestigium.vidas.Piezas
  * y todavía no tiene cuento.
  */
 object TodasLasPiezas {
-    val TODAS: List<Piezas> by lazy { listOf(PiezasDemeas.PIEZAS, PiezasPierre.PIEZAS, PiezasKei.PIEZAS, PiezasAmaru.PIEZAS) }
+    val TODAS: List<Piezas> by lazy { listOf(
+        PiezasDemeas.PIEZAS, PiezasPierre.PIEZAS, PiezasKei.PIEZAS, PiezasAmaru.PIEZAS,
+        PiezasNaa.PIEZAS, PiezasAta.PIEZAS, PiezasIpy.PIEZAS,
+    ) }
 
     private val porVida: Map<String, Piezas> by lazy { TODAS.associateBy { it.vida } }
 
