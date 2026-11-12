@@ -147,4 +147,13 @@ El gato que vivirá dentro del cuadro de Hoy. Ya no es una tira de imágenes, co
 
 ## Resultado en Actions
 
-_Pendiente: se llena al terminar las corridas._
+Sobre el commit del gato (`d084b69`).
+
+- **Compilación de Android:** la corrida 230 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, **terminó bien** (no se publicó ningún Release).
+- **Capturas:** la corrida 269 de `capturas.yml` (`superficies = gatoCuadro`, `temas = heleno,gotico,neon`, `solo = true`) **terminó bien**, sin errores de compilación ni pruebas fallidas.
+  - Dejó 6 imágenes en la rama `capturas`: por cada tema, `…_temaGatoCuadro_<tema>_poses.png` y `…_temaGatoCuadro_<tema>_escena.png`.
+  - Revisé la hoja de poses y el gato en Helénico y en Ciudad neón: **se ve igual que en el arnés.** La capa del gato, el dibujo del pelaje y la luz salen con el motor de dibujo de Android.
+  - En esa corrida corrieron también en Actions las 38 pruebas de escenas y del gato.
+- **Corridas de capturas usadas:** 1 de las 2 que preveía el plan. La otra queda para los cambios que pida el autor al ver el gato.
+- Con `solo`, la rama `capturas` queda solo con estas 6 imágenes hasta la siguiente corrida completa.
+- **Después de esas corridas** entró un cambio de una línea (el gato toma la luz de los letreros de Ciudad neón solo en parte). Se compiló y se probó en el arnés, y se volvió a compilar en Actions: ver abajo.
