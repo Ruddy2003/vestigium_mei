@@ -199,6 +199,8 @@ Estas corridas son las de la primera versión del gato (`d084b69`). Las de la re
 - **Corridas de capturas usadas en P5a:** 3, contra las 2 que preveía el plan. La segunda y la tercera son de las dos revisiones.
 - Con `solo`, la rama `capturas` queda solo con las 6 imágenes del gato hasta la siguiente corrida completa.
 
-**Después de la tercera revisión** (las patas de atrás como una cuña que nace de la grupa):
+**Después de la tercera revisión** (las patas de atrás como una cuña que nace de la grupa, `dfd8255`):
 
-_Pendiente: se llena al terminar la corrida._
+- **Compilación de Android:** la corrida 236 de `apk.yml`, sin publicar, **terminó bien**.
+- **Capturas:** no se repitieron. El cambio es solo de forma, con las mismas piezas de dibujo que la corrida 271 ya comprobó en Android. Queda pendiente una corrida final cuando el autor dé el visto bueno al gato.
+- En el arnés: 38 pruebas y el barrido de 173,760 dibujos, sin fallas.
