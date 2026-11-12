@@ -56,15 +56,17 @@ class GatoCuadroPrueba {
     @Test fun todasLasPosturasCabenEnSuSitio() {
         for (a in AnimGato.entries) for (k in 0 until maxOf(a.cuadros, 1)) for (marcha in listOf(0.42f, 0.7f, 1f, 1.15f)) {
             val p = Gatuno.poseDe(a, k, marcha)
+            // La capa en que se pinta va de −42 a 42 a lo ancho y llega a 54 de alto: todo tiene que caber con holgura.
             (huesos(p) + cola(p)).forEach { q ->
                 assertTrue("$a $k: un punto no es un número", q.x.isFinite() && q.y.isFinite())
-                assertTrue("$a $k: se sale a lo ancho (${q.x})", abs(q.x) <= 34f)
-                assertTrue("$a $k: se sale por arriba (${q.y})", q.y >= -40f)
+                assertTrue("$a $k: se sale por arriba (${q.y})", q.y >= -42f)
             }
+            huesos(p).forEach { q -> assertTrue("$a $k: se sale a lo ancho (${q.x})", abs(q.x) <= 30f) }
+            cola(p).forEach { q -> assertTrue("$a $k: la cola se sale a lo ancho (${q.x})", abs(q.x) <= 39f) }
             huesos(p).forEach { q -> assertTrue("$a $k: se hunde en el suelo (${q.y})", q.y <= 0.01f) }
             // La cola puede pedir bajar un poco del suelo cuando la arrastra: el dibujo la deja apoyada.
             cola(p).forEach { q -> assertTrue("$a $k: la cola se hunde mucho en el suelo (${q.y})", q.y <= 3f) }
-            assertTrue("$a $k", p.giro in 0f..1f && p.caraVista in 0f..1f && p.ojos in 0f..1f && p.orejas in -1f..1f && p.erizo in 0f..1f && p.boca in 0f..1f)
+            assertTrue("$a $k", p.giro in -1f..1f && p.caraVista in -1f..1f && p.ojos in 0f..1f && p.orejas in -1f..1f && p.erizo in 0f..1f && p.boca in 0f..1f)
         }
     }
 

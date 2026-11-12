@@ -17,7 +17,7 @@ import kotlin.math.sqrt
 // acciones propias.
 //
 // Las medidas van en las unidades del lienzo de la escena (380 × 285) para un gato de talla 1: de pie mide unas 33 de
-// largo sin la cola y 34 de alto, sentado, hasta la punta de las orejas. El gato mira hacia la derecha (+x) y pisa en y = 0;
+// largo sin la cola y 38 de alto, sentado, hasta la punta de las orejas. El gato mira hacia la derecha (+x) y pisa en y = 0;
 // hacia arriba, y es negativa. Quien dibuja lo voltea si mira a la izquierda.
 
 /** Las animaciones comunes: las mismas 13 del gato de pixel, con los mismos cuadros cada una. */
@@ -39,23 +39,26 @@ enum class AnimGato(val cuadros: Int) {
  *   arriba y π hacia delante. [colaDelante]: la cola pasa por delante del cuerpo (cuando duerme enroscado).
  * - [orejas]: de −1 (gachas, hacia atrás) a 1 (tiesas). [ojos]: de 0 (cerrados) a 1. [boca]: de 0 a 1 (bufa o bosteza).
  * - [erizo]: de 0 a 1, el pelo de punta. [lengua]: se está lamiendo la mano.
- * - [giro]: hacia dónde está vuelto el cuerpo, de 0 (de perfil) a 1 (de frente, mirando a quien lo ve); 0.5 es de
- *   tres cuartos. No estrecha el dibujo: dice desde dónde se le ve, y con eso se pintan las cuatro patas, el pecho y
+ * - [giro]: hacia dónde está vuelto el cuerpo: 0 de perfil, 1 de frente (mirando a quien lo ve) y −1 de espaldas;
+ *   0.5 y −0.5 son de tres cuartos. No estrecha el dibujo: dice desde dónde se le ve, y con eso se pintan las cuatro patas, el pecho y
  *   la cola en su sitio. Las posturas de giro traen ya la cadera, el hombro y los pies donde se ven desde ahí.
- * - [cara]: lo mismo para la cabeza sola, que puede volverse más que el cuerpo. Con −1 sigue al cuerpo.
+ * - [cara]: lo mismo para la cabeza sola, que puede volverse más que el cuerpo. Con [SIGUE] va como el cuerpo.
  */
 data class Pose(
-    val cadera: Offset = Offset(-7.2f, -14.6f), val hombro: Offset = Offset(6.6f, -14.9f), val lomo: Float = 0f,
-    val cabeza: Offset = Offset(13.2f, -21.6f), val morro: Float = 0f,
+    val cadera: Offset = Offset(-7.2f, -14.4f), val hombro: Offset = Offset(6.6f, -15f), val lomo: Float = 0f,
+    val cabeza: Offset = Offset(13f, -22.8f), val morro: Float = 0f,
     val manoC: Offset = Offset(7.6f, 0f), val manoL: Offset = Offset(9.3f, 0f),
     val pieC: Offset = Offset(-9.3f, 0f), val pieL: Offset = Offset(-7.4f, 0f),
     val cola0: Float = 0.45f, val cola1: Float = 0.1f, val cola2: Float = 0.75f, val colaDelante: Boolean = false,
     val orejas: Float = 1f, val ojos: Float = 1f, val boca: Float = 0f, val erizo: Float = 0f,
-    val giro: Float = 0f, val cara: Float = -1f, val lengua: Boolean = false,
+    val giro: Float = 0f, val cara: Float = SIGUE, val lengua: Boolean = false,
 ) {
-    /** Hacia dónde está vuelta la cabeza, de 0 (de perfil) a 1 (de frente). */
-    val caraVista: Float get() = if (cara < 0f) giro else cara
+    /** Hacia dónde está vuelta la cabeza: 0 de perfil, 1 de frente, −1 de espaldas. */
+    val caraVista: Float get() = if (cara < -1.5f) giro else cara
 }
+
+/** El valor de `Pose.cara` que deja la cabeza vuelta como el cuerpo. */
+const val SIGUE = -2f
 
 private fun mz(a: Float, b: Float, t: Float) = a + (b - a) * t
 private fun mz(a: Offset, b: Offset, t: Float) = Offset(mz(a.x, b.x, t), mz(a.y, b.y, t))
@@ -73,28 +76,29 @@ fun mezcla(a: Pose, b: Pose, t: Float): Pose {
 
 /** Las medidas del gato de talla 1 y las posturas de base. */
 object Gatuno {
-    const val R_GRUPA = 5f
-    const val R_PECHO = 4.8f
+    const val R_GRUPA = 4.7f
+    const val R_PECHO = 4.5f
     const val R_CABEZA = 6.4f
     const val BRAZO = 5.2f
     const val ANTEBRAZO = 10f
     const val MUSLO = 6.4f
     const val PIERNA = 9.4f
-    const val COLA = 21f
+    const val COLA = 23f
 
     /** Cuánto avanza en un ciclo de ocho pasos a la marcha normal: lo que recorre la simulación en ese tiempo. */
     const val ZANCADA = 13.3f
 
     /** Lo que ocupa a lo ancho, desde su centro, y a lo alto: para saber si cabe y para tocarlo. */
     const val MEDIO_LARGO = 19f
-    const val ALTO = 34f
+    const val ALTO = 38f
 
     val DE_PIE = Pose()
 
+    /** Sentado, erguido, con las manos juntas y la cola enroscada hacia arriba a su lado. */
     val SENTADO = Pose(
-        cadera = Offset(-4.8f, -5.1f), hombro = Offset(3.4f, -14.9f), cabeza = Offset(6.6f, -24.3f),
-        manoC = Offset(6.1f, 0f), manoL = Offset(7.8f, 0f), pieC = Offset(1f, 0f), pieL = Offset(2.5f, 0f),
-        cola0 = -0.2f, cola1 = 0.05f, cola2 = 0.5f,
+        cadera = Offset(-4.6f, -5f), hombro = Offset(2.6f, -16.4f), cabeza = Offset(4.6f, -26f),
+        manoC = Offset(5f, 0f), manoL = Offset(6.5f, 0f), pieC = Offset(0.8f, 0f), pieL = Offset(2.2f, 0f),
+        cola0 = 0f, cola1 = 0.75f, cola2 = 2.3f,
     )
 
     /** Enroscado, con la cola por delante y la cabeza sobre las manos. */
@@ -139,7 +143,7 @@ object Gatuno {
             cola0 = 0.9f + 0.08f * vaiven, cola1 = 1.3f, cola2 = 1.75f + 0.15f * sin(2f * PI.toFloat() * f),
         )
         return if (!triste) p else p.copy(
-            cabeza = Offset(13.8f, -15.2f + 0.3f * vaiven), morro = 0.35f, orejas = 0.1f, ojos = 0.6f,
+            cabeza = Offset(13.8f, -16f + 0.3f * vaiven), morro = 0.35f, orejas = 0.1f, ojos = 0.6f,
             cola0 = -0.55f, cola1 = -0.25f, cola2 = 0.1f + 0.06f * vaiven,
         )
     }
@@ -153,16 +157,16 @@ object Gatuno {
         AnimGato.CAMINAR_TRISTE -> caminar(Math.floorMod(k, 8), marcha, true)
         // Respira, y mueve la punta de la cola.
         AnimGato.QUIETO -> { val r = sin(PI.toFloat() * k / 2f); DE_PIE.copy(hombro = DE_PIE.hombro + Offset(0f, -0.25f * r), cabeza = DE_PIE.cabeza + Offset(0f, -0.3f * r), cola2 = 0.75f + 0.25f * r, ojos = if (k == 3) 0.15f else 1f) }
-        AnimGato.QUIETO_TRISTE -> { val r = sin(PI.toFloat() * k / 2f); DE_PIE.copy(cabeza = Offset(13.6f, -15.6f - 0.2f * r), morro = 0.35f, orejas = 0.05f, ojos = 0.55f, cola0 = -0.6f, cola1 = -0.3f, cola2 = 0.05f + 0.05f * r) }
-        // Da media vuelta hacia quien lo mira: primero de tres cuartos, con la cabeza ya vuelta; luego de frente.
+        AnimGato.QUIETO_TRISTE -> { val r = sin(PI.toFloat() * k / 2f); DE_PIE.copy(cabeza = Offset(13.6f, -16.4f - 0.2f * r), morro = 0.35f, orejas = 0.05f, ojos = 0.55f, cola0 = -0.6f, cola1 = -0.3f, cola2 = 0.05f + 0.05f * r) }
+        // Da media vuelta dando la espalda: primero de tres cuartos, con la cabeza ya vuelta; luego de espaldas, con la cola en alto.
         AnimGato.GIRAR -> if (Math.floorMod(k, 2) == 0) Pose(
-            cadera = Offset(-4.9f, -14.8f), hombro = Offset(4.6f, -14.7f), cabeza = Offset(9.2f, -21.6f), giro = 0.5f, cara = 0.7f,
-            manoC = Offset(3.2f, 0f), manoL = Offset(6.8f, -0.5f), pieC = Offset(-8.2f, -0.2f), pieL = Offset(-4.4f, -0.7f),
-            cola0 = 0.85f, cola1 = 1.2f, cola2 = 1.5f,
+            cadera = Offset(-4.6f, -14.3f), hombro = Offset(4.8f, -15.2f), cabeza = Offset(8.4f, -23.2f), giro = -0.5f, cara = -0.68f,
+            manoC = Offset(6.9f, -0.7f), manoL = Offset(3.5f, -1.2f), pieC = Offset(-4.2f, 0f), pieL = Offset(-7.8f, -0.5f),
+            cola0 = 0.95f, cola1 = 1.3f, cola2 = 1.7f,
         ) else Pose(
-            cadera = Offset(0.5f, -15.3f), hombro = Offset(0f, -14.5f), cabeza = Offset(0.2f, -21.4f), giro = 1f,
-            manoC = Offset(-2.5f, 0f), manoL = Offset(2.6f, 0f), pieC = Offset(-4f, -0.9f), pieL = Offset(4.2f, -0.9f),
-            cola0 = 1.25f, cola1 = 1.5f, cola2 = 1.9f,
+            cadera = Offset(0f, -14f), hombro = Offset(0.3f, -15.6f), cabeza = Offset(0.4f, -23.4f), giro = -1f,
+            manoC = Offset(2.4f, -1.2f), manoL = Offset(-2.2f, -1.2f), pieC = Offset(3f, 0f), pieL = Offset(-3f, 0f),
+            cola0 = 1.05f, cola1 = 1.45f, cola2 = 2.6f,
         )
         AnimGato.SALTAR -> when (Math.floorMod(k, 6)) {
             0 -> AGAZAPADO.copy(cadera = Offset(-6.8f, -9f), cola0 = 0.4f, cola1 = 0.3f, cola2 = 0.2f)
@@ -184,7 +188,7 @@ object Gatuno {
         AnimGato.ENOJADO -> { val t = Math.floorMod(k, 3) - 1; ERIZADO.copy(cabeza = ERIZADO.cabeza + Offset(0.5f * t, 0f), lomo = 4.4f + 0.5f * t, cola2 = 1.9f + 0.2f * t, boca = if (t == 0) 1f else 0.6f) }
         AnimGato.SENTARSE -> mezcla(DE_PIE, SENTADO, (Math.floorMod(k, 4) + 1) / 4f)
         // Sentado: mueve la punta de la cola y parpadea.
-        AnimGato.SENTADO -> if (Math.floorMod(k, 2) == 0) SENTADO else SENTADO.copy(cola2 = 0.95f, cabeza = SENTADO.cabeza + Offset(0f, -0.2f))
+        AnimGato.SENTADO -> if (Math.floorMod(k, 2) == 0) SENTADO else SENTADO.copy(cola2 = 2.75f, cabeza = SENTADO.cabeza + Offset(0f, -0.2f))
         AnimGato.ECHARSE -> { val t = (Math.floorMod(k, 3) + 1) / 3f; mezcla(SENTADO, ECHADO, t).copy(ojos = if (t < 1f) 0.6f else 0f) }
         // Se lame una mano y se la pasa por la cara.
         AnimGato.ASEARSE -> {
@@ -192,7 +196,7 @@ object Gatuno {
             val sube = listOf(0.3f, 0.8f, 1f, 0.75f, 1f, 0.5f)[q]
             SENTADO.copy(
                 cabeza = SENTADO.cabeza + Offset(0.2f, 1.6f * sube), morro = 0.55f * sube, ojos = if (q >= 2) 0.12f else 0.7f, orejas = 0.7f,
-                manoC = Offset(mz(6.1f, 10.4f, sube), mz(0f, -17.6f - (if (q == 3) 2.2f else 0f), sube)), lengua = q == 2 || q == 4,
+                manoC = Offset(mz(5f, 9.4f, sube), mz(0f, -20.4f - (if (q == 3) 2.2f else 0f), sube)), lengua = q == 2 || q == 4,
             )
         }
         // Dormido: respira despacio.
