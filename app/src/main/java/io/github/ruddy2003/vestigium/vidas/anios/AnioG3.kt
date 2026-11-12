@@ -591,7 +591,7 @@ internal object AnioG3 {
         mundo("tormenta_negra", "03-20", "Una tormenta de arena negra para la caravana un día entero", certeza = APROXIMADO, escena = "polvo", clima = Clima.POLVO),
         DUANWU[t - 1]?.let { fiesta("duanwu", it, "La fiesta del barco dragón en los estanques de Chang'an", certeza = APROXIMADO, fuente = F_DUANWU) },
         QIXI[t - 1]?.let { fiesta("qixi", it, "Qixi: las muchachas de Chang'an le piden habilidad a la tejedora del cielo", certeza = APROXIMADO, fuente = F_QIXI) },
-        ZHONGQIU[t - 1]?.let { fiesta("zhongqiu", it, "La luna de otoño: pasteles redondos y vino en los tejados de Chang'an", certeza = APROXIMADO, fuente = F_ZHONGQIU) },
+        ZHONGQIU[t - 1]?.let { fiesta("zhongqiu", it, "La luna de otoño: se mira la luna con vino en los tejados de Chang'an", certeza = APROXIMADO, fuente = F_ZHONGQIU) },
         if (t == 2 || t == 4) cosecha("vendimia", "09-01", "La vendimia en los viñedos de Samarcanda: vino nuevo", 10, APROXIMADO, F_SOGDIA) else null,
     )
 
@@ -648,8 +648,8 @@ internal object AnioG3 {
                     suceso("farn_novia", "07-15", "Farn se enamora de la hija de Shi Ping"),
                     mundo("crecida_wei", "07-25", "El río Wei crece y el agua entra en el mercado del oeste", certeza = INVENTADO, clima = Clima.LLUVIA),
                     suceso("sale_changan", "09-28", "Sale de Chang'an hacia el oeste; Farn se queda como su agente"),
-                    suceso("kucha", "11-10", "En Kucha oye a los mejores músicos de la ruta"),
-                    mundo("nieve_hexi", "12-01", "Nieva en el corredor del oeste: la caravana se abriga en un fuerte", certeza = INVENTADO, escena = "nieve", clima = Clima.NIEVE),
+                    mundo("nieve_hexi", "10-25", "Nieva en el corredor del oeste: la caravana se abriga en un fuerte", certeza = INVENTADO, escena = "nieve", clima = Clima.NIEVE),
+                    suceso("kucha", "12-20", "En Kucha oye a los mejores músicos de la ruta"),
                 )),
             TemporadaVida("753", "tibet",
                 "Unos bandidos atacan la caravana en el desierto. Llega a Samarcanda en abril, vende la seda fina y recibe carta de Farn. Nace su primer nieto. Llega la noticia de que los chinos le quitaron tierras al Tíbet. En otoño sale otra vez; en Dunhuang enciende otra lámpara.",
@@ -678,7 +678,7 @@ internal object AnioG3 {
                     suceso("boda_farn", "07-10", "Farn se casa con la hija de Shi Ping", escena = "fiesta"),
                     mundo("califa", "08-01", "Llega la noticia: murió el califa as-Saffah", certeza = APROXIMADO, fuente = F_754),
                     suceso("sale_changan", "09-15", "Sale de Chang'an hacia el oeste, sin Farn"),
-                    suceso("kucha", "11-10", "En Kucha oye a los mejores músicos de la ruta"),
+                    suceso("liangzhou", "10-20", "En Liangzhou cena con los sogdianos del corredor, que le preguntan por Farn"),
                     mundo("nieve_hexi", "12-01", "Nieva en el corredor del oeste: la caravana se abriga en un fuerte", certeza = INVENTADO, escena = "nieve", clima = Clima.NIEVE),
                 )),
         ),

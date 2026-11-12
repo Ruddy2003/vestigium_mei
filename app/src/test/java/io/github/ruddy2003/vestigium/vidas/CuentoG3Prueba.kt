@@ -12,7 +12,7 @@ import java.time.LocalDate
 /**
  * Los cuentos del grupo 3. Las pruebas generales (forma, largo, repeticiones, certeza) están en [CuentoPrueba] y corren
  * solas sobre todas las piezas registradas; aquí va lo propio de cada historia: que nadie aparezca antes ni después de
- * tiempo y que los estados se noten. Tanda T3a: Cayo, Pay y Ama.
+ * tiempo y que los estados se noten. Tanda T3a: Cayo, Pay y Ama. Tanda T3b: K'an y Nanai-vandak.
  */
 class CuentoG3Prueba {
     private fun pieza(vida: String) = TodasLasPiezas.de(vida)!!
@@ -141,5 +141,71 @@ class CuentoG3Prueba {
             assertFalse("«a. C.» en «${s.take(60)}…»", "a. C." in s)
             listOf("semana", "semanas", "mes", "meses", "enero", "lunes").forEach { w -> assertFalse("«$w» en «${s.take(60)}…»", palabra(w).containsMatchIn(s)) }
         }
+    }
+
+    // ---------- Tanda T3b ----------
+
+    @Test fun estanLasPiezasDeLaTandaT3b() {
+        listOf("escriba_maya", "mercader_sogdiano").forEach { v ->
+            assertEquals(v, pieza(v).vida)
+            assertEquals("$v: solo la temporada 1 está escrita", setOf(1), pieza(v).temporadasEscritas)
+            assertEquals(emptyList<String>(), pieza(v).problemas(cal(v)))
+            assertEquals(Genero.MASCULINO, pieza(v).genero)
+        }
+    }
+
+    // ---------- K'an ----------
+
+    @Test fun enElCuentoDeKanNadieApareceAntesNiDespuesDeTiempo() {
+        val v = "escriba_maya"
+        // Ix Sak espera desde el 1 de agosto de la temporada 2 y su hija nace el 20 de marzo de la 3.
+        normales(v, "2027-01-01", "2028-07-31").forEach { assertFalse("$it: Ix Sak espera antes de tiempo", "Ix Sak espera" in todoElDia(v, it)) }
+        normales(v, "2027-01-01", "2029-03-19").forEach { assertFalse("$it: la hija antes de nacer", "Su hija" in todoElDia(v, it)) }
+        assertTrue(normales(v, "2029-03-25", "2029-12-31").any { "Su hija" in todoElDia(v, it) })
+        // Su maestro, Ah K'in, muere el 15 de julio de la temporada 3.
+        assertTrue(normales(v, "2027-01-01", "2029-07-14").any { "Ah K'in" in todoElDia(v, it) })
+        normales(v, "2029-07-15", "2031-12-31").forEach { assertFalse("$it: Ah K'in después de morir", "Ah K'in" in todoElDia(v, it)) }
+        // La estela se ve en obra mientras se talla, y después se lee en la plaza.
+        assertTrue(normales(v, "2027-03-01", "2027-12-31").any { "estela nueva" in todoElDia(v, it) || "estela del k'atun" in todoElDia(v, it) })
+        normales(v, "2028-05-04", "2031-12-31").forEach { assertFalse("$it: la estela sigue en obra", "estela nueva" in todoElDia(v, it)) }
+        noNombran(v, listOf("Ah K'in", "hija", "maestro"))
+    }
+
+    @Test fun kanPasaUnMesEnYaxchilan() {
+        val v = "escriba_maya"
+        vivenElEstado(v, "embajada", "2029-04-13", "2029-05-14", listOf(1.0, 5.5, 9.0, 12.5, 14.0, 17.0, 18.5, 20.0))
+        varianEnElEstado(v, "2029-04-13", "2029-05-14", 9.0, 3)
+        val fuera = textosDe(v, Parrafo.MANANA, "embajada")
+        normales(v, "2029-05-15", "2029-06-30").forEach { assertFalse(it, cuento(v, it, 9.0).parrafos[Parrafo.MANANA.ordinal] in fuera) }
+    }
+
+    // ---------- Nanai-vandak ----------
+
+    @Test fun enElCuentoDeNanaiCadaUnoEstaDondeLeToca() {
+        val v = "mercader_sogdiano"
+        // Farn se queda en Samarcanda hasta el 28 de septiembre de la temporada 2; luego viaja con su padre; se casa el 10 de
+        // julio de la 5.
+        normales(v, "2027-01-01", "2028-09-27").forEach { assertFalse("$it: Farn viaja antes de tiempo", "Farn, su hijo, viaja con él" in todoElDia(v, it)) }
+        assertTrue(normales(v, "2028-10-01", "2029-07-14").any { "Farn, su hijo, viaja con él" in todoElDia(v, it) })
+        normales(v, "2027-01-01", "2031-07-09").forEach { assertFalse("$it: Farn casado antes de tiempo", "está casado con la hija de Shi Ping" in todoElDia(v, it)) }
+        // Su hija se casa el 10 de julio de la temporada 2; el nieto nace el 5 de agosto de la 4.
+        normales(v, "2027-01-01", "2028-07-09").forEach { assertFalse("$it: la hija casada antes de tiempo", "está casada" in todoElDia(v, it)) }
+        normales(v, "2027-01-01", "2030-08-04").forEach { assertFalse("$it: el nieto antes de nacer", palabra("nieto").containsMatchIn(todoElDia(v, it))) }
+        assertTrue(normales(v, "2030-08-10", "2031-12-31").any { palabra("nieto").containsMatchIn(todoElDia(v, it)) })
+        noNombran(v, listOf("Farn", "Nanai-dhat", "nieto"))
+    }
+
+    @Test fun nanaiPasaElVeranoEnUnaCiudadYElInviernoEnElCamino() {
+        val v = "mercader_sogdiano"
+        val horas = listOf(1.0, 4.5, 9.0, 13.5, 15.0, 19.0)
+        listOf("2027-04-16" to "2027-09-21", "2029-04-26" to "2029-09-27", "2031-04-21" to "2031-09-14").forEach { (a, b) ->
+            vivenElEstado(v, "changan", a, b, horas); varianEnElEstado(v, a, b, 9.0, 3)
+        }
+        listOf("2028-04-26" to "2028-09-27", "2030-04-29" to "2030-09-24").forEach { (a, b) ->
+            vivenElEstado(v, "samarcanda", a, b, horas); varianEnElEstado(v, a, b, 9.0, 3)
+        }
+        // En el camino no amanece en ninguna de las dos ciudades.
+        val ciudad = textosDe(v, Parrafo.MANANA, "changan") + textosDe(v, Parrafo.MANANA, "samarcanda")
+        (2027..2031).forEach { y -> normales(v, "$y-01-01", "$y-02-28").forEach { assertFalse(it, cuento(v, it, 9.0).parrafos[Parrafo.MANANA.ordinal] in ciudad) } }
     }
 }

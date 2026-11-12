@@ -96,7 +96,7 @@ Los cuentos de la temporada 1 de los tres primeros personajes del grupo 3. En **
   - Cielos que hablaban de «el abrigo» o de «la nieve» y que podían caer en julio en la meseta: los reescribí para que valgan en los dos sitios.
   - Dos textos de Ama decían «su madre dice…» en presente, y su madre muere en la temporada 3: ahora dicen «le enseñó».
   - Dos datos que corregí en lo que yo mismo había escrito: el desfiladero está a dos días de remo de Viminacium, no a medio; y en primavera Sirio no «sube», sino que se pone cada noche más temprano, hasta que reaparece al amanecer con la crecida.
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android:** la corrida 216 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `87dd2da`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que no se pudo comprobar

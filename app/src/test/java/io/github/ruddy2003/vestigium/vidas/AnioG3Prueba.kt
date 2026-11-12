@@ -104,5 +104,7 @@ class AnioG3Prueba {
         }
         assertEquals(listOf(true, false, true, false, true), c.temporadas.map { t -> t.dias.any { it.id == "duanwu" } })
         assertEquals(listOf(false, true, false, true, false), c.temporadas.map { t -> t.dias.any { it.id == "vendimia" } })
+        // Yendo de Chang'an hacia el oeste, el corredor del Hexi viene antes que Kucha.
+        assertTrue(MesDia.indice(c.temporadas[2].dias.first { it.id == "nieve_hexi" }.fecha) < MesDia.indice(c.temporadas[2].dias.first { it.id == "kucha" }.fecha))
     }
 }
