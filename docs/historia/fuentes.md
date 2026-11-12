@@ -1338,6 +1338,10 @@ Todo inventado. Como la astronauta, no tiene cielo ni estaciones; su primer clim
 
 Todo inventado, también las fiestas del pueblo (la Candelaria, San Pedro, la Virgen del Carmen, los difuntos), que son las de muchos pueblos de pescadores pero aquí van como inventadas. Lo raro se insinúa y nunca se explica; no hay criaturas ni nombres de ninguna obra. **[Diseño propio]**
 
+## Grupo 8: la escriba, la doctora, Ruth y Brenna (tanda A8)
+
+Son personajes de ficción, como los del grupo 7: **todo su calendario es inventado**, también las fiestas, y nada lleva enlace. Sus fichas dicen en qué se inspiran (las órdenes de caballeros y el instituto subterráneo de la ficción posapocalíptica, los pueblos que se reconstruyen, un mundo de caminos y minas); de eso solo se toma la idea general. La Orden del Candil y su ciudadela de Peñaseca, el Claustro y sus Semejantes, El Remanso y los pueblos del llano, el Gremio de los Caminos y Torremuda, con su gente y sus fiestas, son de cada historia, sin nombres, lugares, facciones ni criaturas de ninguna obra. **[Diseño propio]**
+
 ## Lo que no se pudo comprobar
 
 - **Los pasajes de Tucídides** marcados **[sin abrir]** vienen de memoria: la red de la sesión solo dejó abrir Wikipedia. Todos van como «aproximado» y sin enlace, o con el enlace de la página que sí confirma el hecho aunque no el detalle.
@@ -1348,6 +1352,7 @@ Todo inventado, también las fiestas del pueblo (la Candelaria, San Pedro, la Vi
 - **En el grupo 5**, lo marcado **[sin abrir]** viene de memoria: el Sena helado en enero de 1789, el pan de la igualdad, el baile del aniversario de la Bastilla, la limpieza del hollín en Japón, San Vicente y San Martín en las viñas de Borgoña. Y el año lunar de Ochiyo usa los términos solares medios sin haber podido abrir la página japonesa del calendario.
 - **En el grupo 6**, lo marcado **[sin abrir]** viene de memoria: el calendario juliano de la Iglesia griega de América en 1910, los trenes de excursión de las fiestas de los bancos, el primer pie del año nuevo en el norte de Inglaterra, el día de la Constitución soviética antes de 1977, el sábado de trabajo cerca del 22 de abril, el día de los pioneros, el frío de enero de 1979 y el desfile de Pascua de Harlem.
 - **En el grupo 7**, lo marcado **[sin abrir]** viene de memoria: la magnitud absoluta del Sol (+4.83). Y el viaje de la astronauta es una cuenta sencilla: velocidad constante de una décima de la luz, sin acelerar ni frenar.
+- **En el grupo 8** no hay nada que comprobar fuera de la sesión: es todo inventado. Que ningún nombre venga de una obra lo revisé de memoria. **[Aproximación]**
 - **Las temporadas 3 a 5 de Giulia son el futuro** al escribir esto (2027 a 2029), como las de Alguien del mundo y Alguien de México.
 - **Las temporadas 3 a 5 de Alguien del mundo y Alguien de México son el futuro** al escribir esto (2027 a 2029). Lo programado puede cambiar: las tandas Y de cada año lo revisan.
 - **Las fechas áticas** son una reconstrucción (ver arriba).

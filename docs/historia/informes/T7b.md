@@ -85,7 +85,7 @@ El pueblo de la residente lee la cisterna cuando está baja y, si no, los tanque
 - **Las pruebas nuevas fallan cuando deben:** les hice cinco sabotajes a la vez (Ezra fuera desde siempre, la Puerta abierta sin sus textos de trabajo, la residente como hombre, Baltasar vivo para siempre, el faro sin sus textos de trabajo); fallaron las cinco pruebas, cada una por lo suyo, y se restauró todo.
 - **Leí doce cuentos enteros**, seis de cada uno. De ahí salió un pensamiento de la residente («qué habrá detrás de la Puerta… lo que le pesa es no saberlo») que seguía con la Puerta ya abierta: ahora tiene fecha y uno para después.
 - **Al repasar los textos antes de probarlos** corregí: una variante de gente repetida, «hace seis años» y «veintidós años» en textos de todos los años, Lina en la fiesta del sol falso (que vuelve cada año), una «cena» en un especial de trabajo; en el archivista, el especial del aceite (cada año) ponía al torrero bebiendo en la taberna, cuando el de la temporada 5 «no baja nunca al pueblo»; unas barcas de 1926 «con los motores parados»; y una errata.
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android:** la corrida 229 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `a6b26c8`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que no se pudo comprobar
