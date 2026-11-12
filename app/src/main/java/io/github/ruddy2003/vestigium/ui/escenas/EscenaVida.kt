@@ -96,7 +96,13 @@ enum class TipoAncla {
     ADORNO,
 }
 
-/** Un sitio de la escena para el gato, en las unidades del lienzo (380 × 285). [hasta] solo cuenta en un [TipoAncla.SUELO]. */
+/**
+ * Un sitio de la escena para el gato, en las unidades del lienzo (380 × 285).
+ * - [TipoAncla.SUELO]: el tramo por el que camina, de [x] a [hasta], a la altura [y].
+ * - [TipoAncla.FUEGO]: [x] es **donde se echa el gato**, a un lado de la lumbre, y [hasta] dónde está la lumbre (para que la mire).
+ * - [TipoAncla.OBJETO] y [TipoAncla.ADORNO]: dónde está la cosa; el gato se pone a su lado o debajo.
+ * - [TipoAncla.MIRADOR]: el sitio alto donde se sienta ([y] es la altura a la que pisa ahí). [TipoAncla.ABRIGO]: donde se guarece.
+ */
 class Ancla(val tipo: TipoAncla, val x: Float, val y: Float, val hasta: Float = x)
 
 /**

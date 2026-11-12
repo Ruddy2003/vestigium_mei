@@ -118,6 +118,8 @@ El gato que vivirá dentro del cuadro de Hoy. Ya no es una tira de imágenes, co
 
 ## Para las tandas que siguen
 
+_P5b ya está hecha: ver `docs/historia/informes/P5b.md`._
+
 - **P5b:**
   - `Pelajes.kt` con `pelajeDe(tema)`, exhaustivo y sin `else`; los pelajes de Helénico, Gótico y Ciudad neón, con su accesorio (`Pelaje.accesorio`) y sus dos acciones (`EspecialGato`);
   - la fila «Cuadro: gato» de `TEMAS.md` y una superficie `cuadro_gato` en `CoberturaTemas`;

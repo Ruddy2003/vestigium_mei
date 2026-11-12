@@ -298,11 +298,13 @@ class SimulacionGato(
 
     private fun irA(xx: Float, ancla: Ancla?) { destino = xx; motivo = ancla; cambiar(EstadoGato.IR) }
 
-    /** Dónde se pone para un ancla: junto al fuego o al objeto (no encima), debajo del adorno, al pie del mirador. */
+    /** Dónde se pone para un ancla: en su sitio junto al fuego, al lado del objeto (no encima), debajo del adorno, al pie del mirador. */
     private fun sitioDe(a: Ancla): Float {
         val tope0 = margen + 2f; val tope1 = ANCHO_LIENZO - margen - 2f
         return when (a.tipo) {
-            TipoAncla.FUEGO, TipoAncla.OBJETO, TipoAncla.MIRADOR -> {
+            // El ancla del fuego ya es el sitio donde se echa (su `hasta` dice dónde está la lumbre).
+            TipoAncla.FUEGO -> a.x.coerceIn(desde + margen, hasta - margen)
+            TipoAncla.OBJETO, TipoAncla.MIRADOR -> {
                 val aparte = if (a.tipo == TipoAncla.MIRADOR) 20f * talla else margen + 8f * talla
                 val izq = a.x - aparte; val der = a.x + aparte
                 val cabeIzq = izq - margen >= desde; val cabeDer = der + margen <= hasta
@@ -346,7 +348,7 @@ class SimulacionGato(
         if (a == null) { cambiar(EstadoGato.ATENTO); return }
         ultimoMotivo = a.tipo; enfriar = (u(7.0, 14.0) / DT).toInt()
         when (a.tipo) {
-            TipoAncla.FUEGO -> { mirarHacia(a.x); calor = true; cambiar(EstadoGato.SENTARSE) }
+            TipoAncla.FUEGO -> { mirarHacia(a.hasta); calor = true; cambiar(EstadoGato.SENTARSE) }
             TipoAncla.OBJETO -> { mirarHacia(a.x); cambiar(EstadoGato.OLER) }
             TipoAncla.ADORNO -> { for (k in 0 until AnimGato.SENTARSE.cuadros) repeat(2) { pon(AnimGato.SENTARSE, k) }; cambiar(EstadoGato.ADORNO) }
             TipoAncla.MIRADOR -> { mirarHacia(a.x); cambiar(EstadoGato.SUBIR) }
@@ -503,8 +505,26 @@ class SimulacionGato(
 fun poseDelPaso(p: PasoGato, pelaje: Pelaje): Pose =
     if (p.anim == AnimGato.ESPECIAL) pelaje.especiales.getOrNull(p.especial)?.pose?.invoke(p.i) ?: Gatuno.SENTADO else Gatuno.poseDe(p.anim, p.i, p.marcha)
 
-/** El gato sentado en medio de su tramo de suelo: lo que se ve cuando no se anima. */
-fun gatoQuieto(suelo: Ancla): PasoGato = PasoGato(AnimGato.SENTADO, 0, (suelo.x + suelo.hasta) / 2f, 1)
+/**
+ * El gato sentado en su tramo de suelo: lo que se ve cuando no se anima. Se pone en medio, salvo que ahí estorbe: con
+ * [anclas], busca el sitio más despejado, lejos del fuego y del objeto del día (para no taparlos ni quedar encima).
+ */
+fun gatoQuieto(suelo: Ancla, anclas: List<Ancla> = emptyList(), talla: Float = 1f): PasoGato {
+    val medio = (suelo.x + suelo.hasta) / 2f
+    val estorbos = anclas.filter { it.tipo == TipoAncla.FUEGO || it.tipo == TipoAncla.OBJETO }.flatMap { listOf(it.x, it.hasta) }
+    val margen = Gatuno.MEDIO_LARGO * talla
+    if (estorbos.isEmpty() || suelo.hasta - suelo.x < 2 * margen + 8f) return PasoGato(AnimGato.SENTADO, 0, medio, 1)
+    val despejado = 2.4f * margen
+    var mejor = medio; var nota = -1f
+    var x = suelo.x + margen
+    while (x <= suelo.hasta - margen) {
+        // Cuánto le queda libre a los lados (hasta lo que basta para no tapar nada); a igualdad, lo más cerca del medio.
+        val n = minOf(estorbos.minOf { abs(it - x) }, despejado) - 0.02f * abs(x - medio)
+        if (n > nota) { nota = n; mejor = x }
+        x += 2f
+    }
+    return PasoGato(AnimGato.SENTADO, 0, mejor, if (estorbos.minByOrNull { abs(it - mejor) }!! >= mejor) 1 else -1)
+}
 
 /** Si llueve o nieva: el gato busca dónde guarecerse. */
 fun mojaAlGato(clima: Clima): Boolean = when (clima) {
@@ -592,13 +612,13 @@ internal fun CapaGato(
     val alDedo = if (!toques) Modifier else Modifier.pointerInput(sim, suelo, talla) {
         detectTapGestures(onTap = { donde ->
             val p = donde / (size.width / 380f)
-            val ahora = fijo ?: paso ?: gatoQuieto(suelo)
+            val ahora = fijo ?: paso ?: gatoQuieto(suelo, anclas, talla)
             if (tocaAlGato(p, ahora, suelo.y, talla)) { sim.acariciar(); caricias++; alAcariciar() } else sim.tocar(p.x)
         })
     }
     // En su propia capa: al moverse el gato no hay que volver a trazar la parte viva de la escena, ni al revés.
     Spacer(modifier.then(alDedo).graphicsLayer().drawBehind {
-        val p = fijo ?: paso ?: gatoQuieto(suelo)
+        val p = fijo ?: paso ?: gatoQuieto(suelo, anclas, talla)
         aSalvo(alFallar) {
             lienzo {
                 val k = talla * p.escala

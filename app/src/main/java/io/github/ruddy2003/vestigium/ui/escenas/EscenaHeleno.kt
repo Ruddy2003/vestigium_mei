@@ -1492,7 +1492,7 @@ internal object EscenaHeleno : EscenaVida {
         add(Ancla(TipoAncla.MIRADOR, 300f, CAP))
         add(Ancla(TipoAncla.OBJETO, 255f, 282f))
         add(Ancla(TipoAncla.ABRIGO, 255f, 279f))                              // debajo del banco
-        if (comiendo(m)) add(Ancla(TipoAncla.FUEGO, 164f, 283f))
+        if (comiendo(m)) add(Ancla(TipoAncla.FUEGO, 150f, 283f, hasta = BRASERO.x))
         if (fiesta(m)) add(Ancla(TipoAncla.ADORNO, 128f, 252f))
     }
 }

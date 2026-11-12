@@ -109,6 +109,7 @@ Sin agua, ver la sección 5: la regla pasa a la superficie más grande que tenga
   4. otra capa, más tenue, con la sombra del follaje recortada sobre cada cosa.
 - **El objeto del día** va en un sitio fijo y bien a la vista, pero no aislado. En Helénico, nueve van sobre el banco; el remo, apoyado; la red y el manto, colgados.
 - **Queda suelo libre para el gato:** un tramo de suelo sin estorbos, de al menos 110 unidades de largo, y un sitio alto (las anclas `SUELO` y `MIRADOR`). El gato mide unas 43 unidades de largo y otras tantas de alto, camina por delante de todo y tapa lo que tiene detrás: conviene que el objeto del día no quede justo en su camino.
+- **Las anclas del gato** (`EscenaVida.anclas`): `SUELO`; `MIRADOR`, un sitio alto donde quepa sentado sin que nada de delante lo tape; `OBJETO`, donde está el objeto del día; `ABRIGO`, donde se guarece; `FUEGO`, solo si está encendido, con `x` donde se echa el gato y `hasta` donde está la lumbre; `ADORNO`, solo en fiesta. Hay que mirar al gato en cada una dentro de la escena.
 - **El gato recibe la luz de la escena.** Con sol no hay que hacer nada. Si la luz es propia (focos, un interior), la escena cambia `luzDelGato`, como hace `EscenaNeon`.
 
 ### Regla 6. Algo cruza las franjas

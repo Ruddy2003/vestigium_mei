@@ -1356,7 +1356,7 @@ internal object EscenaGotico : EscenaVida {
         add(Ancla(TipoAncla.MIRADOR, 84f, PILA + (BASE - PILA) / 3f))        // encima de la pila de sillares
         add(Ancla(TipoAncla.OBJETO, 268f, 283f))
         add(Ancla(TipoAncla.ABRIGO, 362f, 281f))                             // bajo el alero de la logia
-        if (comiendo(m) || conGente(m)) add(Ancla(TipoAncla.FUEGO, HOGAR.x + 20f, 281f))
+        if (comiendo(m) || conGente(m)) add(Ancla(TipoAncla.FUEGO, HOGAR.x + 34f, 281f, hasta = HOGAR.x))
         if (fiesta(m)) add(Ancla(TipoAncla.ADORNO, 258f, ZARZO))
     }
 }

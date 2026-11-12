@@ -184,7 +184,7 @@ class GatoCuadroPrueba {
 
     @Test fun vaAlFuegoHueleElObjetoMiraElAdornoYSeSubeAlMirador() {
         val medio = Gatuno.MEDIO_LARGO * 1.3f
-        val todas = listOf(ancla(TipoAncla.FUEGO, 160f), ancla(TipoAncla.OBJETO, 250f), ancla(TipoAncla.ADORNO, 120f, 250f), ancla(TipoAncla.MIRADOR, 300f, 218f))
+        val todas = listOf(io.github.ruddy2003.vestigium.ui.escenas.Ancla(TipoAncla.FUEGO, 160f, SUELO_Y, hasta = 190f), ancla(TipoAncla.OBJETO, 250f), ancla(TipoAncla.ADORNO, 120f, 250f), ancla(TipoAncla.MIRADOR, 300f, 218f))
         val vistos = (1L..6L).flatMap { s -> val sim = con(NORMAL, s, todas); List(20000) { sim.siguiente() } }
         // Huele el objeto a su lado, no encima.
         val oliendo = vistos.filter { it.anim == AnimGato.OLER }
@@ -200,9 +200,9 @@ class GatoCuadroPrueba {
         arriba.forEach { assertEquals(300f, it.x, 0.01f); assertEquals(218f - SUELO_Y, it.alza, 0.01f); assertEquals(SimulacionGato.ESCALA_MIRADOR, it.escala, 0.001f) }
         assertTrue("Solo está en alto mientras sube, mira o baja", vistos.filter { it.alza != 0f }.all { it.anim == AnimGato.VIGIA || it.anim == AnimGato.SALTAR })
         assertTrue("Nunca bajó del mirador", vistos.indexOfLast { it.anim == AnimGato.VIGIA }.let { u -> vistos.drop(u).any { it.alza == 0f && it.anim == AnimGato.CAMINAR } })
-        // Junto al fuego duerme: buena parte de sus siestas son a su lado.
-        val siestas = vistos.filter { it.anim == AnimGato.DORMIR }
-        assertTrue("Nunca durmió junto al fuego", siestas.any { abs(abs(it.x - 160f) - (medio + 8f * 1.3f)) < 0.6f })
+        // Junto al fuego se echa a dormir, en su sitio y de cara a la lumbre.
+        val siestas = vistos.filter { it.anim == AnimGato.DORMIR && abs(it.x - 160f) < 0.6f }
+        assertTrue("Nunca durmió junto al fuego", siestas.isNotEmpty()); assertTrue("Junto al fuego le da la espalda", siestas.all { it.dir == 1 })
     }
 
     @Test fun sinFuegoNiAdornoNoVaAEllos() {
@@ -322,8 +322,13 @@ class GatoCuadroPrueba {
                 assertTrue("${t.id} $dia $hora: no hay suelo para el gato", suelo != null)
                 assertTrue("${t.id}: el suelo es muy corto para caminar", suelo!!.hasta - suelo.x >= 2 * Gatuno.MEDIO_LARGO * escena.tallaDelGato + 60f)
                 assertTrue("${t.id}: el gato no cabe de alto en el cuadro", suelo.y - Gatuno.ALTO * escena.tallaDelGato > 150f && suelo.y <= 285f)
-                val quieto = gatoQuieto(suelo)
-                assertEquals(AnimGato.SENTADO, quieto.anim); assertEquals((suelo.x + suelo.hasta) / 2f, quieto.x, 0.01f)
+                assertEquals((suelo.x + suelo.hasta) / 2f, gatoQuieto(suelo).x, 0.01f)
+                // Cuando no se anima, queda sentado donde no tape el fuego ni el objeto del día.
+                val anclas = escena.anclas(m)
+                val quieto = gatoQuieto(suelo, anclas, escena.tallaDelGato)
+                assertEquals(AnimGato.SENTADO, quieto.anim)
+                assertTrue("${t.id}: quieto se sale de su tramo", quieto.x - Gatuno.MEDIO_LARGO * escena.tallaDelGato >= suelo.x - 0.01f && quieto.x + Gatuno.MEDIO_LARGO * escena.tallaDelGato <= suelo.hasta + 0.01f)
+                anclas.filter { it.tipo == TipoAncla.FUEGO || it.tipo == TipoAncla.OBJETO }.forEach { a -> assertTrue("${t.id} $dia $hora: quieto tapa ${a.tipo}", abs(quieto.x - a.hasta) >= Gatuno.MEDIO_LARGO * escena.tallaDelGato) }
                 for (x in listOf(suelo.x, quieto.x, suelo.hasta)) {
                     val luz = escena.luzDelGato(m, Offset(x, suelo.y))
                     for (c in listOf(Color(0xFF6E6A70), Color.White, Color.Black, Color(0xFFE08A3C))) assertTrue("${t.id} $dia $hora: un color del gato no es válido", valido(luz.tono(c)))

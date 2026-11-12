@@ -293,6 +293,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 - **Con un toque en otro sitio,** mira o va hacia ahí.
 - **Las caricias no se guardan.**
 - **Se queda quieto** con ahorro de energía, sin animaciones o en las capturas.
+- **Las reacciones, la caricia y los pelajes** de los tres temas del piloto se hicieron en P5b (`Pelajes.kt`; ver `docs/historia/informes/P5b.md`). La vibración de la caricia y la pulsación larga las conecta P6.
 - **Recibe la luz de su escena** (`EscenaVida.luzDelGato`) y camina por el tramo de suelo que ella le da, por delante de todo. Va en una tercera capa del cuadro, encima de la parte viva.
 
 **3.5 El cuadro en Hoy** (`ui/escenas/CuadroDelDia.kt`, desde `Dia.kt`)
@@ -484,7 +485,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P4a | claude-fable-5-2 | high | Motor de escena, biblioteca de paisaje y primer paisaje con código | 2 | hecho 11 nov 2026 (`docs/historia/informes/P4a.md`) |
 | P4b | claude-fable-5-2 | high | Paisajes dibujados con código | 2 | hecho 11 nov 2026 (`docs/historia/informes/P4b.md`); **los dos cuadros aprobados por el autor el 12 nov 2026** |
 | P5a | claude-fable-5-2 | **xhigh** | Un esqueleto animado que comparten 32 temas: estados, capas, rendimiento. Un fallo se paga 32 veces y Paparazzi no ve el movimiento | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5a.md`); revisado tres veces con el autor ese día; **el gato, aprobado por el autor el 12 nov 2026** |
-| P5b | claude-fable-5-2 | high | Se apoya en el esqueleto ya resuelto. Los gestos se ajustan después de probarlos en el teléfono | 2 | pendiente |
+| P5b | claude-fable-5-2 | high | Se apoya en el esqueleto ya resuelto. Los gestos se ajustan después de probarlos en el teléfono | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5b.md`, con la lista de qué probar en el teléfono); **falta que el autor lo vea** |
 | P6 | claude-fable-5-2 | high | Integración en Hoy, medidas y esquema | 2 | pendiente |
 | H1 | claude-opus-5-5 | medium | Red, caché y pantalla con patrones que ya existen | 1 | pendiente |
 | H2 | claude-opus-5-5 | medium | Una regla simple de años | 1 | pendiente |

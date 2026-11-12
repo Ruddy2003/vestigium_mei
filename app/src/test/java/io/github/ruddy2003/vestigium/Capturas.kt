@@ -2191,7 +2191,9 @@ class Capturas {
         for (semilla in 1L..40L) {
             val sim = io.github.ruddy2003.vestigium.ui.escenas.SimulacionGato(io.github.ruddy2003.vestigium.ui.Gato.Humor(io.github.ruddy2003.vestigium.ui.Gato.Animo.NORMAL, cansado = false, noche = false), semilla, suelo.x, suelo.hasta, emptyList(), escena.tallaDelGato)
             sim.entorno(listOf(una), suelo.y, tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.ABRIGO)
-            var llego = false
+            // Junto al fuego o guarecido: sentado justo en su sitio (no en cualquier otro momento en que se siente).
+            val medio = io.github.ruddy2003.vestigium.ui.escenas.Gatuno.MEDIO_LARGO * escena.tallaDelGato
+            val sitio = if (tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.ABRIGO) una.x.coerceIn(medio + 2f, 378f - medio) else una.x.coerceIn(suelo.x + medio, suelo.hasta - medio)
             repeat(4000) {
                 val p = sim.siguiente()
                 when (tipo) {
@@ -2199,8 +2201,7 @@ class Capturas {
                     io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.OBJETO -> if (p.anim == io.github.ruddy2003.vestigium.ui.escenas.AnimGato.OLER && p.i == 1) return p
                     io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.ADORNO -> if (p.anim == io.github.ruddy2003.vestigium.ui.escenas.AnimGato.ARRIBA && p.i == 2) return p
                     io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.FUEGO, io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.ABRIGO, io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO -> {
-                        if (sim.estado == io.github.ruddy2003.vestigium.ui.escenas.EstadoGato.SENTARSE) llego = true
-                        if (llego && p.anim == io.github.ruddy2003.vestigium.ui.escenas.AnimGato.SENTADO) return p
+                        if (p.anim == io.github.ruddy2003.vestigium.ui.escenas.AnimGato.SENTADO && kotlin.math.abs(p.x - sitio) < 1f) return p
                     }
                 }
             }
@@ -2255,10 +2256,11 @@ class Capturas {
                         io.github.ruddy2003.vestigium.ui.escenas.VistaEscena(escena, f, h, Modifier.fillMaxWidth(), MaterialTheme.shapes.medium, animar = false, banderita = io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), humor = humor, pelaje = pelaje, pasoGato = paso)
                     }
                     // La caricia: sentado, con los ojos cerrados, y el corazón.
-                    val suelo = escena.anclas(io.github.ruddy2003.vestigium.ui.escenas.Momento(ficha, horas.first())).first { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }
+                    val anclas = escena.anclas(io.github.ruddy2003.vestigium.ui.escenas.Momento(ficha, horas.first()))
+                    val quieto = io.github.ruddy2003.vestigium.ui.escenas.gatoQuieto(anclas.first { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }, anclas, escena.tallaDelGato)
                     Text(rotuloCuadro(ficha, horas.first()) + " · gato: caricia", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground, maxLines = 2)
                     io.github.ruddy2003.vestigium.ui.escenas.VistaEscena(escena, ficha, horas.first(), Modifier.fillMaxWidth(), MaterialTheme.shapes.medium, animar = false, banderita = io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), humor = humor, pelaje = pelaje,
-                        pasoGato = io.github.ruddy2003.vestigium.ui.escenas.PasoGato(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.MIMO, 2, (suelo.x + suelo.hasta) / 2f, 1), mimoFijo = 0.35f)
+                        pasoGato = io.github.ruddy2003.vestigium.ui.escenas.PasoGato(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.MIMO, 2, quieto.x, quieto.dir), mimoFijo = 0.35f)
                 }
             }
         }
