@@ -15,7 +15,7 @@ Cada día especial lleva una de tres certezas:
 - **Los sucesos de su vida son siempre inventados.** Cada personaje es una persona promedio de su época, no alguien que existió: su familia, sus amigos y lo que les pasa no vienen de ninguna fuente.
 - **En los personajes de ficción todo es inventado.**
 - **Las fechas son las del calendario de su época:** el juliano para Demeas, Pierre, Lucio, Alice y Citlali, y el juliano proléptico para Ipy. El 3 de agosto de Demeas es el 3 de agosto juliano del 431 a. C. Naa y Ata viven antes de cualquier calendario: sus fechas son de nuestro año. Desde el grupo 2, el gregoriano para Mary, José, Rosa y los dos de 2025; las fiestas de Kichizō, que seguían la luna, van convertidas al gregoriano.
-- **Todas las páginas son de Wikipedia** (en inglés, en francés o en español) y se abrieron el 11 nov 2026. Los 42 enlaces del piloto y los 70 del grupo 1 se comprobaron uno por uno ese día; los 95 del grupo 2 (tanda A2), el 12 nov 2026.
+- **Todas las páginas son de Wikipedia** (en inglés, en francés o en español) y se abrieron el 11 nov 2026. Los 42 enlaces del piloto y los 70 del grupo 1 se comprobaron uno por uno ese día; los 95 del grupo 2 (tanda A2) y los 60 del grupo 3 (tanda A3), el 12 nov 2026.
 - Wikipedia resume a los historiadores; no es la fuente original. Donde la fuente original es Tucídides, se dice.
 
 ## Demeas, remero. Atenas, 431 a 427 a. C. (tanda P2)
@@ -691,11 +691,148 @@ Son los otros seis personajes comunes. Como los del grupo 1, no tienen cuadro: s
 | 4 | Los Juegos de Los Ángeles, 14 jul | Aproximado | Programados | [Juegos Olímpicos de Los Ángeles 2028](https://es.wikipedia.org/wiki/Juegos_Ol%C3%ADmpicos_de_Los_%C3%81ngeles_2028) |
 | 5 | Apophis, 13 abr | Aproximado | Ver Alguien del mundo | [99942 Apophis](https://en.wikipedia.org/wiki/99942_Apophis) |
 
+## Grupo 3: Cayo, Pay, Ama, K'an y Nanai-vandak (tanda A3)
+
+Son los primeros personajes de tema que no son del piloto: tienen cuadro (tandas S1 y S2). Las páginas se abrieron el 12 nov 2026.
+
+### Cayo, legionario. Viminacium, en el Danubio, del 110 al 114 d. C.
+
+**Lo real y lo inventado**
+
+- **Real:** la Legión VII Claudia estaba en Viminacium, sobre el Danubio, desde el 58 hasta el siglo IV ([Legio VII Claudia](https://en.wikipedia.org/wiki/Legio_VII_Claudia)). El calendario religioso del ejército sale del *Feriale Duranum*, que es del siglo III pero copia fiestas más viejas. También son reales el foro y la columna de Trajano, la muerte de Marciana, el puente de piedra sobre el Danubio y la guerra contra los partos.
+- **Inventado:** Cayo, su gente (Sabina, Gaia, Atilio, Barbatio, Durio, Fausto), que la muralla se rehaga en piedra esos años, la nevada, el río helado, el ataque de los sármatas, la crecida, los baños y cuándo llegan las noticias.
+
+| Día | Fecha | Certeza | Página |
+|---|---|---|---|
+| Los votos por el emperador | 3 ene | Aproximado | Sin enlace: la parte del *Feriale* que da enero no está en la página **[sin abrir]** |
+| El día en que el emperador subió al trono | 28 ene | Histórico | [Trajan](https://en.wikipedia.org/wiki/Trajan) (Trajano subió al trono el 28 de enero del 98) |
+| Las Quinquatrias, 5 días | 19 mar | Histórico | [Feriale Duranum](https://en.wikipedia.org/wiki/Feriale_Duranum) |
+| El cumpleaños de Roma | 21 abr | Histórico | [Feriale Duranum](https://en.wikipedia.org/wiki/Feriale_Duranum) |
+| Las Rosalias de los estandartes | 10 may | Aproximado | [Rosalia](https://en.wikipedia.org/wiki/Rosalia_(festival)) (el *Feriale* la da con signo de duda) |
+| Las Neptunalias | 23 jul | Histórico | [Feriale Duranum](https://en.wikipedia.org/wiki/Feriale_Duranum) |
+| El cumpleaños del emperador | 18 sep | Histórico | [Trajan](https://en.wikipedia.org/wiki/Trajan) (nació el 18 de septiembre del 53) |
+| El Armilustrium | 19 oct | Histórico | [Armilustrium](https://en.wikipedia.org/wiki/Armilustrium) |
+| Las Saturnales, 7 días | 17 dic | Histórico | [Saturnalia](https://en.wikipedia.org/wiki/Saturnalia) |
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | El foro del emperador, 1 sep | Aproximado | Se construye en el 110; la noticia, el día elegido | [AD 110](https://en.wikipedia.org/wiki/AD_110) |
+| 2 | Un convoy cruzará el puente, 20 ago | Aproximado | El puente de piedra existe desde el 105; el convoy es inventado | [Trajan's Bridge](https://en.wikipedia.org/wiki/Trajan%27s_Bridge) |
+| 3 | Inauguran el foro, 12 ene | Aproximado | Ver Lucio (grupo 1); la noticia llega días después | [Trajan's Forum](https://en.wikipedia.org/wiki/Trajan%27s_Forum) |
+| 3 | Muere Marciana, 10 sep | Aproximado | Murió hacia el 29 de agosto del 112 | [AD 112](https://en.wikipedia.org/wiki/AD_112) |
+| 4 | La columna, 28 may | Aproximado | Se dedicó en el 113 | [Trajan's Column](https://en.wikipedia.org/wiki/Trajan%27s_Column) |
+| 4 | Sale la vejilación, 25 sep; el emperador sale de Roma, 20 nov | Aproximado | La campaña empieza en el 113; los días se eligieron | [Trajan's Parthian campaign](https://en.wikipedia.org/wiki/Trajan%27s_Parthian_campaign) |
+| 5 | Armenia, 15 jul; Mesopotamia, 10 dic | Aproximado | En el 114 | [AD 114](https://en.wikipedia.org/wiki/AD_114) |
+
+### Pay, escriba de la tumba. Deir el-Medina, del 1200 al 1196 a. C.
+
+**Lo real y lo inventado**
+
+- **Real:** la aldea y su cuadrilla ([Deir el-Medina](https://en.wikipedia.org/wiki/Deir_el-Medina): el agua que se sube desde el pozo, las raciones de grano); Seti II reinó del 1203 al 1197 a. C. y su tumba (KV15) acabó con un corredor convertido en cámara; Siptah reinó del 1197 al 1191 y su tumba es la KV47; el canciller Bay fue el «hacedor de reyes»; el obrero Amennakht denunció al capataz Paneb en el papiro Salt 124.
+- **Inventado:** Pay, su gente (Tamit, Huy, Meryt, Tiy, Hay), el escorpión, el aguador enfermo, la visita del visir, el grano que se retrasa, el derrumbe, la lluvia en el desierto y el día de cada noticia.
+
+**Cómo se calcularon las fiestas** **[Aproximación]**
+
+- Las mismas reglas que las de Ipy (grupo 1), cincuenta años después: el calendario civil se corre un día cada cuatro años, así que el año nuevo cae el 19 de junio en 1200, 1199 y 1198 a. C. y el 18 en 1197 y 1196 (trece días antes que el de Ipy en 1250).
+- La Fiesta del Valle va en la luna nueva de II Shemu, calculada con las efemérides de PyEphem a la hora de Tebas. Se comprobó primero que el mismo cálculo da las fechas de Ipy (un día de diferencia como mucho) y el eclipse del 3 de agosto del 431 a. C. de Demeas.
+
+| Fiesta | 1200 | 1199 | 1198 | 1197 | 1196 | Página |
+|---|---|---|---|---|---|---|
+| Amenhotep I, 2 días | 10 ene | | | | | [Amenhotep I](https://en.wikipedia.org/wiki/Amenhotep_I) (el día se eligió **[sin abrir]**) |
+| Min (I Shemu 11) | 24 feb | 24 feb | 24 feb | 24 feb | 23 feb | Sin enlace (el día del mes, de memoria **[sin abrir]**) |
+| Fiesta del Valle, 2 días | 20 mar | 7 abr | 28 mar | 17 mar | 5 abr | [Beautiful Festival of the Valley](https://en.wikipedia.org/wiki/Beautiful_Festival_of_the_Valley) |
+| Los cinco días fuera del año | 14 jun | 14 jun | 14 jun | 13 jun | 13 jun | [Egyptian calendar](https://en.wikipedia.org/wiki/Egyptian_calendar) |
+| Año nuevo (I Akhet 1) | 19 jun | 19 jun | 19 jun | 18 jun | 18 jun | [Egyptian calendar](https://en.wikipedia.org/wiki/Egyptian_calendar) |
+| La crecida que se ve desde los cerros | 25 jul | | | | | [Flooding of the Nile](https://en.wikipedia.org/wiki/Flooding_of_the_Nile) |
+| Opet, 11 días (II Akhet 15) | 2 ago | 2 ago | 2 ago | 1 ago | 1 ago | [Opet Festival](https://en.wikipedia.org/wiki/Opet_Festival) |
+| Joiak, 13 días (IV Akhet 18) | 4 oct | 4 oct | 4 oct | 3 oct | 3 oct | [Khoiak](https://en.wikipedia.org/wiki/Khoiak) |
+| La ración del mes | 28 nov | | | | | [Deir el-Medina](https://en.wikipedia.org/wiki/Deir_el-Medina) |
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 2 | La denuncia contra Paneb, 28 may | Aproximado | El papiro no tiene un día que la página dé | [Paneb](https://en.wikipedia.org/wiki/Paneb) |
+| 3 | Paneb ante el visir, 25 jun | Aproximado | Ídem | [Paneb](https://en.wikipedia.org/wiki/Paneb) |
+| 4 | Muere Seti II, 2 mar | Aproximado | En el 1197 a. C.; el día se eligió | [Seti II](https://en.wikipedia.org/wiki/Seti_II) |
+| 4 | El entierro, 11 may | Aproximado | Setenta días después, como se hacía | [KV15](https://en.wikipedia.org/wiki/KV15) |
+| 4 | Empieza la tumba de Siptah, 25 jun | Aproximado | El día se eligió | [KV47](https://en.wikipedia.org/wiki/KV47) |
+| 5 | El canciller Bay en el Valle, 25 abr | Aproximado | Su visita es inventada; su poder, no | [Bay (chancellor)](https://en.wikipedia.org/wiki/Bay_(chancellor)) |
+
+### Ama, pintora de cuevas. Un valle del suroeste de Europa, hace unos 17,000 años
+
+**Lo real y lo inventado**
+
+- **Real:** el Magdaleniense, «la edad del reno» ([Magdalenian](https://en.wikipedia.org/wiki/Magdalenian)), con Lascaux y Altamira; los renos, los saigas (que en el Pleistoceno llegaban hasta las islas británicas), los salmones que suben a desovar, los mamuts y los leones de las cavernas; el propulsor, las agujas de hueso y las manos sopladas ([Spear-thrower](https://en.wikipedia.org/wiki/Spear-thrower), [Sewing needle](https://en.wikipedia.org/wiki/Sewing_needle), [Hand stencil](https://en.wikipedia.org/wiki/Hand_stencil)).
+- **Por analogía:** las fechas del año (los renos en octubre, los salmones en julio, el campamento de verano en la meseta) son una reconstrucción. **[Aproximación]**
+- **Inventado:** Ama, su gente (Tor, Lin, Yemi, Oko, Duro, Sel), la reunión de los grupos, el león junto al abrigo, el año del hambre, la aurora y el friso.
+
+| Día | Fecha | Certeza | Página |
+|---|---|---|---|
+| El frío más hondo | 1 feb | Inventado | — |
+| Vuelven las aves | 15 mar | Aproximado | Sin enlace |
+| El deshielo | 10 abr | Aproximado | [Last Glacial Maximum](https://en.wikipedia.org/wiki/Last_Glacial_Maximum) |
+| Los saigas | 15 may | Aproximado | [Saiga antelope](https://en.wikipedia.org/wiki/Saiga_antelope) |
+| Suben al campamento de verano | 1 jun | Aproximado | [Magdalenian](https://en.wikipedia.org/wiki/Magdalenian) |
+| Los salmones, 15 días | 20 jul | Aproximado | [Atlantic salmon](https://en.wikipedia.org/wiki/Atlantic_salmon) |
+| Bajan al abrigo | 20 sep | Aproximado | Sin enlace |
+| La caza de los renos, 20 días | 1 oct | Aproximado | [Reindeer](https://en.wikipedia.org/wiki/Reindeer) |
+| Se cose la ropa de invierno | 1 nov | Aproximado | [Sewing needle](https://en.wikipedia.org/wiki/Sewing_needle) |
+| La primera nevada; la noche más larga | 20 nov, 21 dic | Inventado | — |
+| Los mamuts (1); el león (2) | 5 may, 25 ene | Aproximado | [Woolly mammoth](https://en.wikipedia.org/wiki/Woolly_mammoth), [Cave lion](https://en.wikipedia.org/wiki/Cave_lion) |
+
+### K'an, escriba y pintor de códices. Una ciudad maya de las tierras bajas, del 750 al 754
+
+**Lo real y lo inventado**
+
+- **Real:** el haab de 365 días con sus cinco días sin nombre ([Haab'](https://en.wikipedia.org/wiki/Haab%27)), la cuenta larga ([Mesoamerican Long Count calendar](https://en.wikipedia.org/wiki/Mesoamerican_Long_Count_calendar)), las estelas que se levantaban en los fines de periodo ([Maya stelae](https://en.wikipedia.org/wiki/Maya_stelae)), Pájaro Jaguar IV, que reinó en Yaxchilan desde el 752 ([Bird Jaguar IV](https://en.wikipedia.org/wiki/Bird_Jaguar_IV)), el juego de pelota, el dios del maíz, el cacao y las tablas de Venus del Códice de Dresde.
+- **Inventado:** K'an, su gente (Ix Sak, Ch'ok, su hija, el maestro Ah K'in), su ciudad, la embajada, la guerra con la ciudad vecina, el huracán, la sequía y las fechas de las faenas del campo.
+
+**Cómo se calcularon las fechas** **[Aproximación]**
+
+- Cada día del juliano se pasó a la cuenta larga, el tzolk'in y el haab con la correlación GMT (584283), la que usa la página. Comprobación: el día cero (13.0.0.0.0) cae en 4 Ajaw 8 Kumk'u.
+- **Lo que salió:** los cinco días sin nombre empiezan el 25 de enero (24 en 753 y 754) y el año nuevo (0 Pop) es el 30 de enero (29); el fin de tun 9.15.19.0.0 es el 8 de mayo de 750; el fin del k'atun 9.16.0.0.0, el 3 de mayo de 751; el 9.16.1.0.0, el 27 de abril de 752, y los dos siguientes, el 22 de abril de 753 y el 17 de abril de 754.
+- **Pájaro Jaguar IV** subió al trono en el 9.16.1.0.0. La página da el «3 de mayo de 752», que es ese mismo día con otra correlación y en el calendario gregoriano; aquí va el 27 de abril juliano de la GMT. Por eso es «aproximado».
+- **Venus** sale como lucero de la mañana (calculado con PyEphem a la latitud de Yaxchilan) hacia el 18 de enero de 751, el 21 de agosto de 752 y el 31 de marzo de 754: cada 584 días, como en el Códice de Dresde.
+
+### Nanai-vandak, mercader de caravana. Entre Samarcanda y Chang'an, del 750 al 754
+
+**Lo real y lo inventado**
+
+- **Real:** la revolución abasí (747–750), la toma de Tashkent por Gao Xianzhi (750), la batalla de Talas (mayo a septiembre de 751), el primer taller de papel de Samarcanda (751), Abu Muslim y la revuelta de Bujará (750–751), la campaña de Geshu Han contra el Tíbet (753), la muerte del califa as-Saffah (10 de junio de 754), el censo de la capital (754), el general An Lushan, y las fiestas chinas.
+- **Inventado:** Nanai-vandak (el nombre es el de un mercader de las Cartas Antiguas sogdianas, del siglo IV), su gente (Takhsich, Farn, Nanai-dhat, Shi Ping, Tughan), su ruta de cada año, los bandidos, las nevadas, la crecida del Wei y el día de cada noticia.
+
+**Cómo se calcularon las fiestas chinas** **[Aproximación]**
+
+- Como el año de Edo de Kichizō: lunas nuevas y términos solares de 748 a 756 a la hora de Chang'an. Salieron meses repetidos en 749 (cuarto), 752 (tercero) y 754 (octavo).
+- El calendario oficial de los Tang (el Dayan, del 729) pudo diferir en un día del cálculo de hoy.
+
+| Fiesta | 750 | 751 | 752 | 753 | 754 | Página |
+|---|---|---|---|---|---|---|
+| Año nuevo chino, 2 días | 11 feb | 1 feb | 21 ene | 8 feb | 28 ene | [Chinese New Year](https://en.wikipedia.org/wiki/Chinese_New_Year) |
+| Las linternas (1/15) | 25 feb | 15 feb | 4 feb | 22 feb | 11 feb | [Lantern Festival](https://en.wikipedia.org/wiki/Lantern_Festival) |
+| El barco dragón (5/5) | 13 jun | — | 20 jun | — | 31 may | [Dragon Boat Festival](https://en.wikipedia.org/wiki/Dragon_Boat_Festival) |
+| Qixi (7/7) | 13 ago | — | 20 ago | — | 30 jul | [Qixi Festival](https://en.wikipedia.org/wiki/Qixi_Festival) |
+| La luna de otoño (8/15) | 19 sep | — | 26 sep | — | 6 sep | [Mid-Autumn Festival](https://en.wikipedia.org/wiki/Mid-Autumn_Festival) |
+| La vendimia de Samarcanda | — | 1 sep | — | 1 sep | — | [Sogdia](https://en.wikipedia.org/wiki/Sogdia) |
+
+- Las fiestas de Chang'an solo van los años en que pasa el verano allí; la vendimia, los años en que lo pasa en Samarcanda.
+
+| Temporada | Día | Certeza | Qué dice la fuente y qué se eligió | Página |
+|---|---|---|---|---|
+| 1 | Los abasíes, 1 mar | Aproximado | La revolución acaba en julio de 750; la noticia, el día elegido | [Abbasid Revolution](https://en.wikipedia.org/wiki/Abbasid_Revolution) |
+| 1 | Tashkent, 20 jul | Aproximado | En la primavera de 750 | [Gao Xianzhi](https://en.wikipedia.org/wiki/Gao_Xianzhi) |
+| 1 y 4 | Una lámpara en Mogao | Aproximado | Las cuevas de Dunhuang | [Mogao Caves](https://en.wikipedia.org/wiki/Mogao_Caves) |
+| 2 | Abu Muslim, 5 may | Aproximado | Aplastó la revuelta de Bujará en 750/751 | [Abu Muslim](https://en.wikipedia.org/wiki/Abu_Muslim) |
+| 2 | Talas, 15 ago; el papel, 12 sep | Aproximado | Mayo a septiembre de 751; el primer taller de papel, ese año | [Battle of Talas](https://en.wikipedia.org/wiki/Battle_of_Talas), [751](https://en.wikipedia.org/wiki/751) |
+| 4 | El Tíbet, 1 jul | Aproximado | En 753 Geshu Han recupera las nueve curvas del río Amarillo | [Geshu Han](https://en.wikipedia.org/wiki/Geshu_Han) |
+| 5 | El censo, 10 may; el califa, 1 ago | Aproximado | El censo de 754; as-Saffah murió el 10 de junio | [754](https://en.wikipedia.org/wiki/754) |
+| 5 | An Lushan, 15 jun | Aproximado | Se rebela a fines de 755: aquí todavía es un rumor | [An Lushan](https://en.wikipedia.org/wiki/An_Lushan) |
+
 ## Lo que no se pudo comprobar
 
 - **Los pasajes de Tucídides** marcados **[sin abrir]** vienen de memoria: la red de la sesión solo dejó abrir Wikipedia. Todos van como «aproximado» y sin enlace, o con el enlace de la página que sí confirma el hecho aunque no el detalle.
 - **En el grupo 1**, lo marcado **[sin abrir]** viene de memoria por la misma razón: la fecha de la inundación de Tenochtitlan (1500) y su causa, la inauguración del foro de Trajano un 1 de enero, la leva de los campesinos egipcios a las obras del rey durante la crecida, y las fechas de las lentejas de Ata y de la siega de Alice.
 - **En el grupo 2**, lo marcado **[sin abrir]** viene de memoria: los días lunares de Sannō, Kanda y los fuegos de Ryōgoku en Edo, la limpieza del hollín y la fiesta de los carpinteros; el día del correo de un penique y del banquete del pabellón; que la fábrica de Mary solo cerrara en Viernes Santo y Navidad; los días sin oficina y el desfile de Rosa; la visita de Kennedy; que el triunfo de 1962 fuera el primero de México en un Mundial, y el Holi de 2026.
+- **En el grupo 3**, lo marcado **[sin abrir]** viene de memoria: el día de los votos por el emperador, el de la fiesta de Amenhotep I y el de la fiesta de Min. Y toda la vida de Ama es una reconstrucción.
 - **Las temporadas 3 a 5 de Alguien del mundo y Alguien de México son el futuro** al escribir esto (2027 a 2029). Lo programado puede cambiar: las tandas Y de cada año lo revisan.
 - **Las fechas áticas** son una reconstrucción (ver arriba).
 - **El clima** de cada lugar es una tabla de pesos verosímil, no un registro. **[Aproximación]**

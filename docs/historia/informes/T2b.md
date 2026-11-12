@@ -86,5 +86,5 @@ Los cuentos de la temporada 1 de los otros tres personajes del grupo 2. Con esta
   - Alguien de México: Valeria, las tres casas, sus fiestas y la playa.
 - **Las pruebas nuevas fallan cuando deben:** quité la fecha de Kabir y falló («Kabir antes de nacer»); se restauró.
 - **Leí nueve cuentos enteros**, tres de cada uno. Un arreglo salió de ahí: en los estados, el tiempo y el pueblo seguían en la ciudad (en Acapulco, Rosa miraba el cielo «antes de entrar a la oficina»). Ahora Acapulco, la incapacidad, la aldea y la playa tienen su propio tiempo y su propio pueblo.
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android:** la corrida 214 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `c4ac09a`).
 - **Capturas:** 0, como dice el plan.
