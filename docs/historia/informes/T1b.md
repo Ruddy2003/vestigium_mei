@@ -118,7 +118,7 @@ Al escribir su cuento salieron dos problemas del calendario que hice en A1. Los 
   - **Citlali, las personas:** Xóchitl, Papan y Mazatl aparecen a su tiempo.
 - **Comprobé que esas pruebas fallan cuando deben.** Quité a propósito el `hasta` de Edith y el `desde` de una variante de cosecha de Citlali: las dos pruebas fallaron («Edith después de morir», «cosecha lo que da la chinampa con la chinampa ahogada»). Luego lo dejé como estaba.
 - **Leí cuentos enteros** de los tres, en días normales, especiales y con estado. De ahí salió el estado «fuera» de Citlali.
-- **Compilación de Android:** falta correr `apk.yml` sobre la rama.
+- **Compilación de Android:** la corrida 211 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `8b8b992`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que no se puede comprobar aquí
