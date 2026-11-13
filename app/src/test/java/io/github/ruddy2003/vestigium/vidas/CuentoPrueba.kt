@@ -105,7 +105,8 @@ class CuentoPrueba {
         todas.forEach { p ->
             val largos = dias(2027, 2027).flatMap { dia -> listOf(9.0, 19.0).map { cuento(p, dia, it).parrafos.sumOf { x -> x.length } } }
             val medio = largos.average()
-            assertTrue("${p.vida}: el cuento tiene en promedio ${medio.toInt()} letras", medio in 1800.0..2150.0)
+            // El autor aprobó unas 1,950 letras (de 1,800 a 2,150) y el 12 nov 2026 pidió dejar los que se pasen un poco: hasta 2,200.
+            assertTrue("${p.vida}: el cuento tiene en promedio ${medio.toInt()} letras", medio in 1800.0..2200.0)
             assertTrue("${p.vida}: el más corto tiene ${largos.min()} letras", largos.min() >= 1450)
         }
     }
@@ -118,6 +119,18 @@ class CuentoPrueba {
             // De noche duerme: a la 1:00 y a las 8:00 el párrafo del trabajo no dice lo mismo.
             assertNotEquals("$dia: el trabajo no cambia con la hora", horas[0].parrafos[Parrafo.TRABAJO.ordinal], horas[2].parrafos[Parrafo.TRABAJO.ordinal])
         } }
+    }
+
+    @Test fun loQueSeHaceVariasVecesAlDiaNoDiceLaHora() {
+        // El texto del trabajo se elige por lo que se hace, no por la hora: si un personaje come dos veces al día, el mismo
+        // texto puede salir en las dos. No puede decir «cena» ni «desayuno», ni «a mediodía» ni «de madrugada».
+        val horas = Regex("""\b(cena|cenar|cenan|desayun\w*|mediodía|medianoche|madrugada)\b""", RegexOption.IGNORE_CASE)
+        todas.forEach { p ->
+            val veces = quien(p).dia.groupingBy { it.que }.eachCount()
+            p.variantes[Parrafo.TRABAJO].orEmpty().filter { v -> v.hacer != null && (veces[v.hacer] ?: 0) >= 2 }.forEach { v ->
+                assertFalse("${p.vida}, ${v.hacer}: «${v.texto.take(60)}…» dice la hora", horas.containsMatchIn(v.texto))
+            }
+        }
     }
 
     @Test fun enUnDiaNormalElTituloEsElDelObjeto() {
@@ -156,7 +169,9 @@ class CuentoPrueba {
     }
 
     @Test fun unPersonajeSinPiezasNoTieneCuento() {
-        assertNull(Cuento.de("2027-01-01", "paleolitico", 10.0))
+        // Mientras quede alguno: uno sin calendario (el primero de la lista que no tenga) y uno con calendario y sin piezas.
+        (io.github.ruddy2003.vestigium.data.OtrasVidas.BASE + io.github.ruddy2003.vestigium.data.OtrasVidas.DE_TEMAS).firstOrNull { Calendarios.de(it.id) == null }?.let { assertNull(Cuento.de("2027-01-01", it.id, 10.0)) }
+        Calendarios.TODOS.firstOrNull { TodasLasPiezas.de(it.vida) == null }?.let { assertNull(Cuento.de("2027-01-01", it.vida, 10.0)) }
         assertNull(Cuento.de("2027-01-01", "no_existe", 10.0))
         todas.forEach { assertNotNull(Cuento.de("2027-01-01", it.vida, 10.0)) }
         assertEquals(cuento(todas.first(), "2028-04-04", 7.0), Cuento.de("2028-04-04", todas.first().vida, 7.0))

@@ -98,6 +98,7 @@ import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 import kotlin.math.sin
 
 // =====================================================================
@@ -502,7 +503,7 @@ private fun ChipCerteza(c: OtrasVidas.Certeza) {
 private fun formato(m: OtrasVidas.Medida, x: Double): String = when (m.forma) {
     "hora" -> { val h = ((x % 24) + 24) % 24; "%d:%02d".format(h.toInt(), ((h - h.toInt()) * 60).roundToInt().coerceAtMost(59)) }
     "decimal" -> if (x >= 100) "%,d".format(x.roundToInt()) else "%.1f".format(x)
-    else -> when { x >= 1e6 -> "%.1f millones".format(x / 1e6); else -> "%,d".format(x.roundToInt()) }
+    else -> when { x >= 1e12 -> "%,.1f billones".format(x / 1e12); x >= 1e6 -> "%,.1f millones".format(x / 1e6); else -> "%,d".format(x.roundToInt()) }
 } + if (m.unidad.isNotEmpty() && m.forma != "hora") " ${m.unidad}" else ""
 
 
@@ -528,7 +529,7 @@ private fun FilaComparacion(v: OtrasVidas.Vida, m: OtrasVidas.Medida, d: OtrasVi
                 val texto = when {
                     mayor <= 0 -> null
                     menor <= 0 -> if (tuyo > d.v) "Para ${v.nombre}, cero." else "Para ti, cero."
-                    veces != null && veces >= 1.5 -> (if (tuyo > d.v) "Tú: " else "${v.nombre}: ") + (if (veces < 10) "%.1f".format(veces) else "%,d".format(veces.roundToInt())) + " veces más."
+                    veces != null && veces >= 1.5 -> (if (tuyo > d.v) "Tú: " else "${v.nombre}: ") + (if (veces < 10) "%.1f".format(veces) else "%,d".format(veces.roundToLong())) + " veces más."
                     else -> null
                 }
                 texto?.let { Ayuda(it, Modifier.padding(top = 2.dp)) }

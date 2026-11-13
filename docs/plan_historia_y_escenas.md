@@ -563,8 +563,29 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P6 | claude-fable-5-2 | high | Integración en Hoy, medidas y esquema | 2 | hecho 13 nov 2026 (`docs/historia/informes/P6.md`, con la lista de qué probar en el teléfono). Salió en la v243; el autor lo probó ese día y pidió cambios (sin tirón al abrir, sin plegado, el botón del cuento y su pantalla propia), que salieron en la v245. Después pidió sacar el cuento de «Otras vidas». **Falta que confirme en el teléfono que ya no hay tirón** |
 | H1 | claude-opus-5-5 | medium | Red, caché y pantalla con patrones que ya existen | 1 | pendiente |
 | H2 | claude-opus-5-5 | medium | Una regla simple de años | 1 | pendiente |
-| A1–A8 | claude-opus-5-5 | high | Calendarios verosímiles con libertad creativa y el patrón de P2. La continuidad de 5 años pide high | 0 c/u | pendiente |
-| T1a–T8b | claude-opus-5-5 | medium | Variantes de texto con el tono aprobado | 0 c/u | pendiente |
+| A1 | claude-opus-5-5 | high | Calendarios verosímiles con libertad creativa y el patrón de P2. La continuidad de 5 años pide high | 0 | hecho 11 nov 2026 (`docs/historia/informes/A1.md`) |
+| A2 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A2.md`) |
+| A3 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A3.md`) |
+| A4 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A4.md`) |
+| A5 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A5.md`) |
+| A6 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A6.md`) |
+| A7 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A7.md`) |
+| A8 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A8.md`) |
+| T1a | claude-opus-5-5 | medium | Variantes de texto con el tono aprobado | 0 | hecho 12 nov 2026 (`docs/historia/informes/T1a.md`) |
+| T1b | claude-opus-5-5 | medium | Variantes de texto con el tono aprobado | 0 | hecho 12 nov 2026 (`docs/historia/informes/T1b.md`) |
+| T2a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T2a.md`) |
+| T2b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T2b.md`) |
+| T3a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T3a.md`) |
+| T3b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T3b.md`) |
+| T4a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T4a.md`) |
+| T4b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T4b.md`) |
+| T5a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T5a.md`) |
+| T5b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T5b.md`) |
+| T6a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T6a.md`) |
+| T6b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T6b.md`) |
+| T7a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7a.md`) |
+| T7b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7b.md`) |
+| T8a–T8b | claude-opus-5-5 | medium | Ídem | 0 c/u | hechas 12 nov 2026 (`docs/historia/informes/T8a.md`, `T8b.md`) |
 | S1–S7 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código | 2 c/u | pendiente |
 | C1 | claude-opus-5-5 | medium | Revisión y cierre sin dibujo nuevo | 1 | pendiente |
 | Y2028–Y2031 | claude-opus-5-5 | medium | Párrafos especiales con el tono y el calendario ya fijos | 0 c/u | — |
