@@ -129,7 +129,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
    - tienen el paso del día, con estas excepciones:
      - **Ciudad neón:** siempre de noche, en los niveles bajos de la ciudad.
      - **Refugio** y **Laboratorio** (el instituto): solo dos estados, encendido de día y tenue de noche.
-     - **Espacio:** el interior de la nave, con muchos elementos y una ventana pequeña desde la que se ve una galaxia.
+     - **Espacio:** el interior de la nave, con muchos elementos y una ventana desde la que se ve una galaxia. La ventana empezó pequeña; al ver el cuadro (13 nov 2026) el autor la pidió casi del tamaño de la pared, para que se vea bien el exterior.
    - **No se ven personas.** Se ve el entorno según el tema, y el gato.
    - El tramo del día del personaje se nota en el entorno: el fuego a la hora de comer, la puerta abierta, las herramientas.
    - Reaccionan a lo que pasa:
@@ -278,7 +278,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - El comentario de cada calendario (`vidas/anios/`) dice qué tiene que mostrar el cuadro de ese personaje.
 - **Interiores:**
   - **Refugio y Laboratorio:** bajo tierra, con dos estados de luz.
-  - **Espacio:** el interior de la nave rumbo a Alfa Centauri, con consolas, cables, plantas del cultivo de a bordo, compuertas y objetos flotantes o sujetos. Una ventana pequeña, una fracción de la vista, muestra una galaxia.
+  - **Espacio:** el interior de la nave rumbo a Alfa Centauri, con consolas, cables, plantas del cultivo de a bordo, compuertas y objetos flotantes o sujetos. Una ventana muestra una galaxia; desde el 13 nov 2026, a petición del autor, es un ventanal que ocupa casi todo un costado.
 - **Medidas:** 4:3, a todo el ancho, sin marco y con las esquinas del tema.
   - 380 × 285 dp en un teléfono de 412 dp;
   - 328 × 246 dp en uno de 360 dp.
@@ -514,7 +514,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 |---|---|---|---|
 | S1 | Romano; Al-Ándalus | 2 | hecho 13 nov 2026 (`docs/historia/informes/S1.md`); **los dos cuadros, aprobados por el autor el 13 nov 2026** |
 | S2 | Pirata (el mar y el cayo; Nassau como variante; primer cuadro a bordo) | 2 | hecho 13 nov 2026 (`docs/historia/informes/S2.md`); **los dos cuadros, aprobados por el autor el 13 nov 2026**; Nassau, rehecho ese día a petición suya (más hondo, con edificios grandes y la loma con monte) |
-| S3 | Espacio (primer interior con dos luces); Distopía | 2 | hecho 13 nov 2026 (`docs/historia/informes/S3.md`); **falta que el autor los vea junto a Helénico** (Refugio y Laboratorio esperan el visto bueno de Espacio) |
+| S3 | Espacio (primer interior con dos luces); Distopía | 2 | hecho 13 nov 2026 (`docs/historia/informes/S3.md`); **los dos cuadros, aprobados por el autor el 13 nov 2026**, con dos cambios pedidos ese día: la ventana de Espacio, casi del tamaño de la pared, y el pueblo de Distopía, con más lejanía. Con Espacio aprobado, quedan abiertos Refugio y Laboratorio |
 | S4 | Horror cósmico (primer cuadro con niebla); Ciudad verde | 2 | pendiente |
 | S5 | Roma (la capilla y la ciudad de agosto; primer interior con ventana) | 2 | pendiente |
 | S6 | Scriptorium; Renacimiento | 2 | pendiente |
