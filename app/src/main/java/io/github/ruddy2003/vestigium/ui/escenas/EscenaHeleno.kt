@@ -1487,6 +1487,8 @@ internal object EscenaHeleno : EscenaVida {
     /** Al gato le llega la misma luz que a la escena, con su eclipse. */
     override fun luzDelGato(m: Momento, en: Offset): LuzGato { val l = luces(m); return LuzGato(Rayo(l), l.noche) { l.tono(it) } }
 
+    override fun estorbos(m: Momento): List<Float> = listOf(BRASERO.x)
+
     override fun anclas(m: Momento): List<Ancla> = buildList {
         add(Ancla(TipoAncla.SUELO, 18f, 279f, hasta = 330f))
         add(Ancla(TipoAncla.MIRADOR, 300f, CAP))

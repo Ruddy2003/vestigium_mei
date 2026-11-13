@@ -323,9 +323,13 @@ class GatoCuadroPrueba {
                 assertTrue("${t.id}: el suelo es muy corto para caminar", suelo!!.hasta - suelo.x >= 2 * Gatuno.MEDIO_LARGO * escena.tallaDelGato + 60f)
                 assertTrue("${t.id}: el gato no cabe de alto en el cuadro", suelo.y - Gatuno.ALTO * escena.tallaDelGato > 150f && suelo.y <= 285f)
                 assertEquals((suelo.x + suelo.hasta) / 2f, gatoQuieto(suelo).x, 0.01f)
-                // Cuando no se anima, queda sentado donde no tape el fuego ni el objeto del día.
+                // Cuando no se anima, queda sentado donde no tape el fuego ni el objeto del día, ni encima de lo que hay
+                // plantado en el suelo (el brasero o el hogar, también apagados).
                 val anclas = escena.anclas(m)
-                val quieto = gatoQuieto(suelo, anclas, escena.tallaDelGato)
+                val plantado = escena.estorbos(m)
+                val quieto = gatoQuieto(suelo, anclas, escena.tallaDelGato, plantado)
+                plantado.forEach { x -> assertTrue("${t.id} $dia $hora: quieto queda encima de lo plantado en $x", abs(quieto.x - x) >= Gatuno.MEDIO_LARGO * escena.tallaDelGato) }
+                plantado.forEach { x -> assertTrue("${t.id}: lo plantado no está en el suelo del gato", x in suelo.x..suelo.hasta) }
                 assertEquals(AnimGato.SENTADO, quieto.anim)
                 assertTrue("${t.id}: quieto se sale de su tramo", quieto.x - Gatuno.MEDIO_LARGO * escena.tallaDelGato >= suelo.x - 0.01f && quieto.x + Gatuno.MEDIO_LARGO * escena.tallaDelGato <= suelo.hasta + 0.01f)
                 anclas.filter { it.tipo == TipoAncla.FUEGO || it.tipo == TipoAncla.OBJETO }.forEach { a -> assertTrue("${t.id} $dia $hora: quieto tapa ${a.tipo}", abs(quieto.x - a.hasta) >= Gatuno.MEDIO_LARGO * escena.tallaDelGato) }

@@ -507,11 +507,12 @@ fun poseDelPaso(p: PasoGato, pelaje: Pelaje): Pose =
 
 /**
  * El gato sentado en su tramo de suelo: lo que se ve cuando no se anima. Se pone en medio, salvo que ahí estorbe: con
- * [anclas], busca el sitio más despejado, lejos del fuego y del objeto del día (para no taparlos ni quedar encima).
+ * [anclas], busca el sitio más despejado, lejos del fuego y del objeto del día (para no taparlos ni quedar encima), y
+ * lejos de lo que la escena diga que hay plantado en el suelo ([plantado], de `EscenaVida.estorbos`).
  */
-fun gatoQuieto(suelo: Ancla, anclas: List<Ancla> = emptyList(), talla: Float = 1f): PasoGato {
+fun gatoQuieto(suelo: Ancla, anclas: List<Ancla> = emptyList(), talla: Float = 1f, plantado: List<Float> = emptyList()): PasoGato {
     val medio = (suelo.x + suelo.hasta) / 2f
-    val estorbos = anclas.filter { it.tipo == TipoAncla.FUEGO || it.tipo == TipoAncla.OBJETO }.flatMap { listOf(it.x, it.hasta) }
+    val estorbos = anclas.filter { it.tipo == TipoAncla.FUEGO || it.tipo == TipoAncla.OBJETO }.flatMap { listOf(it.x, it.hasta) } + plantado
     val margen = Gatuno.MEDIO_LARGO * talla
     if (estorbos.isEmpty() || suelo.hasta - suelo.x < 2 * margen + 8f) return PasoGato(AnimGato.SENTADO, 0, medio, 1)
     val despejado = 2.4f * margen
@@ -594,6 +595,7 @@ internal fun CapaGato(
     remember(sim, momento.sello) { sim.entorno(anclas, suelo.y, mojaAlGato(momento.ficha.clima)); 0 }
     var paso by remember(sim) { mutableStateOf<PasoGato?>(null) }
     val seMueve = animar && fijo == null
+    val quieto = remember(escena, momento.sello, talla) { gatoQuieto(suelo, anclas, talla, escena.estorbos(momento)) }
     LaunchedEffect(sim, seMueve, pausa) {
         if (!seMueve) { paso = null; return@LaunchedEffect }
         if (pausa) return@LaunchedEffect
@@ -616,14 +618,14 @@ internal fun CapaGato(
     if (dedo != null) {
         val mimar = { sim.acariciar(); caricias++; alAcariciar() }
         SideEffect {
-            dedo.alTocar = { p -> if (tocaAlGato(p, fijo ?: paso ?: gatoQuieto(suelo, anclas, talla), suelo.y, talla)) mimar() else sim.tocar(p.x) }
+            dedo.alTocar = { p -> if (tocaAlGato(p, fijo ?: paso ?: quieto, suelo.y, talla)) mimar() else sim.tocar(p.x) }
             dedo.alMimar = mimar
         }
         DisposableEffect(dedo) { onDispose { dedo.alTocar = null; dedo.alMimar = null } }
     }
     // En su propia capa: al moverse el gato no hay que volver a trazar la parte viva de la escena, ni al revés.
     Spacer(modifier.graphicsLayer().drawBehind {
-        val p = fijo ?: paso ?: gatoQuieto(suelo, anclas, talla)
+        val p = fijo ?: paso ?: quieto
         aSalvo(alFallar) {
             lienzo {
                 val k = talla * p.escala

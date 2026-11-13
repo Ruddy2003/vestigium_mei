@@ -2258,7 +2258,7 @@ class Capturas {
                     }
                     // La caricia: sentado, con los ojos cerrados, y el corazón.
                     val anclas = escena.anclas(io.github.ruddy2003.vestigium.ui.escenas.Momento(ficha, horas.first()))
-                    val quieto = io.github.ruddy2003.vestigium.ui.escenas.gatoQuieto(anclas.first { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }, anclas, escena.tallaDelGato)
+                    val quieto = io.github.ruddy2003.vestigium.ui.escenas.gatoQuieto(anclas.first { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }, anclas, escena.tallaDelGato, escena.estorbos(io.github.ruddy2003.vestigium.ui.escenas.Momento(ficha, horas.first())))
                     Text(rotuloCuadro(ficha, horas.first()) + " · gato: caricia", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground, maxLines = 2)
                     io.github.ruddy2003.vestigium.ui.escenas.VistaEscena(escena, ficha, horas.first(), Modifier.fillMaxWidth(), MaterialTheme.shapes.medium, animar = false, banderita = io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), humor = humor, pelaje = pelaje,
                         pasoGato = io.github.ruddy2003.vestigium.ui.escenas.PasoGato(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.MIMO, 2, quieto.x, quieto.dir), mimoFijo = 0.35f)

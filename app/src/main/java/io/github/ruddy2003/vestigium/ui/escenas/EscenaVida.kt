@@ -148,6 +148,12 @@ interface EscenaVida {
     fun anclas(m: Momento): List<Ancla>
 
     /**
+     * Dónde hay algo plantado en el suelo del gato que no es un ancla (la `x` de un brasero o de un hogar, también
+     * apagados). Cuando el gato no se anima, no se sienta ahí: quedaría encima. Por omisión, nada.
+     */
+    fun estorbos(m: Momento): List<Float> = emptyList()
+
+    /**
      * La luz que le llega al gato cuando pisa en [en]: de qué lado viene, qué sombra arroja y cómo tiñe su pelo. Por
      * omisión, la del sol o la luna de este momento. La cambia la escena que tenga su propia luz (un eclipse, o los
      * focos de una escena donde siempre es de noche).
