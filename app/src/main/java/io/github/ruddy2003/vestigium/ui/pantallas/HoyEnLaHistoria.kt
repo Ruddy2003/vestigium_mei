@@ -168,7 +168,7 @@ private fun ListaDeEventos(r: Efemerides.Resultado, mes: Int, dia: Int, abrir: (
                             modifier = Modifier.clickable(role = Role.Button) { alCuento(id) }.padding(top = 4.dp, bottom = 2.dp))
                     }
                     if (e.enlaces.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 2.dp)) {
-                        e.enlaces.forEach { l ->
+                        e.enlaces.take(Efemerides.ENLACES_POR_EVENTO).forEach { l ->
                             Text(l.titulo, style = MaterialTheme.typography.labelMedium, color = cs.primary, textDecoration = TextDecoration.Underline,
                                 modifier = Modifier.clickable(role = Role.Button) { abrir(l.url) }.padding(vertical = 4.dp))
                         }

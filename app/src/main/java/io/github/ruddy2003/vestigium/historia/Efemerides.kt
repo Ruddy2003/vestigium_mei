@@ -33,23 +33,36 @@ object Efemerides {
     /** Días que vale lo guardado de una fecha; después se vuelve a pedir (el plan dice 30). */
     const val DIAS_VIGENTE = 30L
 
-    /** Cuántos artículos enlazados se guardan por evento (se muestran debajo de su texto). */
+    /** Cuántos artículos enlazados se muestran debajo del texto de cada evento. */
     const val ENLACES_POR_EVENTO = 3
+
+    /**
+     * Cuántos se guardan (tanda H3): más de los que se muestran, porque todos sirven para saber de qué país es el
+     * evento (con Wikidata) y para buscar las palabras de cada personaje en sus títulos.
+     */
+    const val ENLACES_GUARDADOS = 8
 
     const val LICENCIA = "CC BY-SA 4.0"
     const val URL_LICENCIA = "https://creativecommons.org/licenses/by-sa/4.0/deed.es"
 
-    /** Un artículo de Wikipedia que el evento enlaza. */
+    /** Un artículo de Wikipedia que el evento enlaza, con su identificador de Wikidata (`Q96`), si lo trae (tanda H3). */
     @Serializable
-    data class Enlace(val titulo: String, val url: String)
+    data class Enlace(val titulo: String, val url: String, val wikidata: String? = null)
 
     /** Un evento: su año (negativo, antes de Cristo), su texto y los artículos que enlaza. */
     @Serializable
     data class Evento(val anio: Int, val texto: String, val enlaces: List<Enlace> = emptyList())
 
-    /** Lo guardado de una fecha: el día en que se bajó y sus eventos. */
+    /**
+     * Lo guardado de una fecha: el día en que se bajó y sus eventos.
+     *
+     * Tanda H3: [lugares] dice, para cada artículo enlazado (por su identificador de Wikidata), los países, regiones y
+     * lugares a los que pertenece según Wikidata ([Wikidata.lugaresDe]). Queda vacío si no se pudo preguntar; entonces
+     * se usan las palabras de cada personaje. [wikidata] es el día en que se preguntó.
+     */
     @Serializable
-    data class Guardado(val mes: Int, val dia: Int, val bajado: String, val eventos: List<Evento>)
+    data class Guardado(val mes: Int, val dia: Int, val bajado: String, val eventos: List<Evento>,
+                        val lugares: Map<String, List<String>> = emptyMap(), val wikidata: String? = null)
 
     /** Lo que ve la pantalla: los eventos, si salen de lo guardado sin poder renovarlo, y cuándo se bajaron. */
     data class Resultado(val eventos: List<Evento>, val bajado: LocalDate?, val sinConexion: Boolean, val error: String? = null)
@@ -80,7 +93,8 @@ object Efemerides {
      * - El texto se limpia: sin espacios de más y con mayúscula al empezar (Wikipedia los escribe como «en Argentina, …»,
      *   porque en su página van detrás del año).
      * - Se descartan los que no tienen año o texto.
-     * - De cada uno se guardan hasta [ENLACES_POR_EVENTO] artículos, sin repetir, con su dirección de escritorio.
+     * - De cada uno se guardan hasta [ENLACES_GUARDADOS] artículos, sin repetir, con su dirección de escritorio y su
+     *   identificador de Wikidata (la pantalla muestra [ENLACES_POR_EVENTO]).
      */
     fun leer(respuesta: String): List<Evento> {
         val raiz = json.parseToJsonElement(respuesta)
@@ -91,8 +105,8 @@ object Efemerides {
             val enlaces = (e.o("pages") as? JsonArray).orEmpty().mapNotNull { p ->
                 val titulo = p.o("titles").s("normalized") ?: p.s("normalizedtitle") ?: p.s("title")?.replace('_', ' ') ?: return@mapNotNull null
                 val url = p.o("content_urls").o("desktop").s("page") ?: return@mapNotNull null
-                Enlace(titulo, url)
-            }.distinctBy { it.url }.take(ENLACES_POR_EVENTO)
+                Enlace(titulo, url, p.s("wikibase_item")?.takeIf { Wikidata.esId(it) })
+            }.distinctBy { it.url }.take(ENLACES_GUARDADOS)
             Evento(anio, texto, enlaces)
         }.sortedBy { it.anio }
     }

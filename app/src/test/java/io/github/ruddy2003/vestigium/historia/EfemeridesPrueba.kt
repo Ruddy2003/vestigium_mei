@@ -39,9 +39,9 @@ class EfemeridesPrueba {
         val l = Efemerides.leer(muestra)
         assertTrue(l.first { it.anio == 2024 }.enlaces.isEmpty() || l.last().enlaces.isNotEmpty())
         assertEquals(0, l.first { it.texto.startsWith("Se produce una explosión") }.enlaces.size)
-        // El de 619 enlaza cuatro artículos en la muestra: se guardan tres.
+        // El de 619 enlaza cuatro artículos en la muestra: se guardan todos (hasta ENLACES_GUARDADOS; la pantalla muestra tres).
         val sevilla = l.first { it.anio == 619 }
-        assertEquals(Efemerides.ENLACES_POR_EVENTO, sevilla.enlaces.size)
+        assertEquals(4, sevilla.enlaces.size)
         l.flatMap { it.enlaces }.forEach { assertTrue(it.url, it.url.startsWith("https://es.wikipedia.org/wiki/")); assertTrue(it.titulo.isNotBlank()) }
         assertEquals("Atentados de París de noviembre de 2015", l.first { it.anio == 2015 }.enlaces.first().titulo)
     }
