@@ -273,31 +273,31 @@ internal object CosasEspacio {
         }
     }
 
-    /** La columna de algas: un cilindro de vidrio con el caldo verde, que da su poco de luz; las tapas de acero, la llave y las mangueras. */
+    /** El tanque de algas: un cilindro de vidrio con el caldo verde, que da su poco de luz; las tapas de acero, la llave y las mangueras. Es bajo, para no tapar el ventanal. */
     private fun algas(m: Momento, a: Alumbrado): Cosa {
         val pie = Offset(356f, 281f)
-        val vidrio = redondo(342f, 160f, 370f, 272f, 5f); val forma = Path().apply { addPath(vidrio); addRect(Rect(340f, 270f, 372f, 281f)); addRect(Rect(341f, 152f, 371f, 162f)) }
+        val vidrio = redondo(342f, 200f, 370f, 272f, 5f); val forma = Path().apply { addPath(vidrio); addRect(Rect(340f, 270f, 372f, 281f)); addRect(Rect(341f, 192f, 371f, 202f)) }
         return Cosa(forma, pie) {
-            // Las mangueras que suben al techo.
-            drawPath(Path().apply { moveTo(350f, 153f); cubicTo(348f, 110f, 356f, 60f, 350f, -3f) }, a.en(Offset(350f, 90f), C.ALGA, -1f), style = Stroke(1.5f, cap = StrokeCap.Round))
-            drawPath(Path().apply { moveTo(362f, 153f); cubicTo(366f, 120f, 360f, 150f, 372f, 140f) }, a.en(Offset(364f, 140f), C.GOMA, -1f), style = Stroke(1.5f, cap = StrokeCap.Round))
+            // Las mangueras: salen de la tapa y bajan por detrás, hacia la pared.
+            drawPath(Path().apply { moveTo(366f, 196f); cubicTo(376f, 194f, 380f, 206f, 378f, 226f); cubicTo(376f, 244f, 382f, 252f, 384f, 262f) }, a.en(Offset(376f, 220f), C.ALGA, -1f), style = Stroke(1.5f, cap = StrokeCap.Round))
+            drawPath(Path().apply { moveTo(350f, 194f); cubicTo(350f, 187f, 361f, 187f, 362f, 194f) }, a.en(Offset(356f, 190f), C.GOMA, -1f), style = Stroke(1.5f, cap = StrokeCap.Round))
             // El caldo: da luz propia, así que no se apaga de noche.
             val vivo = if (E.aOscuras(m)) 0.25f else 0.62f
-            val claro = lerp(a.en(Offset(350f, 190f), C.ALGA, -1f), lerp(C.ALGA, Color.White, 0.24f), vivo); val hondo = lerp(a.en(Offset(356f, 260f), C.VERDE_OSC), C.VERDE, vivo * 0.6f)
-            drawPath(vidrio, Brush.verticalGradient(listOf(claro, lerp(claro, hondo, 0.5f), hondo), 166f, 272f))
+            val claro = lerp(a.en(Offset(350f, 216f), C.ALGA, -1f), lerp(C.ALGA, Color.White, 0.24f), vivo); val hondo = lerp(a.en(Offset(356f, 260f), C.VERDE_OSC), C.VERDE, vivo * 0.6f)
+            drawPath(vidrio, Brush.verticalGradient(listOf(claro, lerp(claro, hondo, 0.5f), hondo), 206f, 272f))
             clipPath(vidrio) {
-                drawRect(Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.22f), Color.Transparent, C.SOMBRA.copy(alpha = 0.3f)), 342f, 370f), Offset(342f, 160f), Size(28f, 112f))
-                drawRect(a.en(Offset(356f, 162f), lerp(C.CASCO, C.SOMBRA, 0.2f)).copy(alpha = 0.55f), Offset(342f, 160f), Size(28f, 7f)); drawLine(Color.White.copy(alpha = 0.5f), Offset(342f, 167f), Offset(370f, 167f), 0.5f)
-                val az = Azar(Semilla.de("espacio", "algas")); repeat(14) { mancha(Offset(az.entre(344f, 368f), az.entre(172f, 268f)), az.entre(3f, 7f), az.entre(4f, 12f), if (it % 2 == 0) C.VERDE_OSC else Color(0xFFD8F0A0), 0.16f) }
-                drawLine(Color.White.copy(alpha = 0.4f), Offset(345.6f, 172f), Offset(345.6f, 262f), 1f)
-                for (y in listOf(196f, 226f, 256f)) drawLine(Color.White.copy(alpha = 0.3f), Offset(364f, y), Offset(369f, y), 0.5f)
+                drawRect(Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.22f), Color.Transparent, C.SOMBRA.copy(alpha = 0.3f)), 342f, 370f), Offset(342f, 200f), Size(28f, 72f))
+                drawRect(a.en(Offset(356f, 202f), lerp(C.CASCO, C.SOMBRA, 0.2f)).copy(alpha = 0.55f), Offset(342f, 200f), Size(28f, 7f)); drawLine(Color.White.copy(alpha = 0.5f), Offset(342f, 207f), Offset(370f, 207f), 0.5f)
+                val az = Azar(Semilla.de("espacio", "algas")); repeat(11) { mancha(Offset(az.entre(344f, 368f), az.entre(212f, 268f)), az.entre(3f, 7f), az.entre(4f, 10f), if (it % 2 == 0) C.VERDE_OSC else Color(0xFFD8F0A0), 0.16f) }
+                drawLine(Color.White.copy(alpha = 0.4f), Offset(345.6f, 212f), Offset(345.6f, 262f), 1f)
+                for (y in listOf(224f, 242f, 260f)) drawLine(Color.White.copy(alpha = 0.3f), Offset(364f, y), Offset(369f, y), 0.5f)
             }
             drawPath(vidrio, C.GOMA.copy(alpha = 0.5f), style = Stroke(0.6f))
-            val tapa = redondo(340.6f, 152f, 371.4f, 162f, 2f); cuerpo(a, tapa, 340.6f, 371.4f, 157f, C.ACERO)
+            val tapa = redondo(340.6f, 192f, 371.4f, 202f, 2f); cuerpo(a, tapa, 340.6f, 371.4f, 197f, C.ACERO)
             val peana = redondo(339.6f, 269.6f, 372.4f, 281f, 2f); cuerpo(a, peana, 339.6f, 372.4f, 275f, lerp(C.ACERO, C.CASCO_OSC, 0.4f))
             drawCircle(a.en(Offset(348f, 275f), C.NARANJA), 3f, Offset(348f, 275.4f), style = Stroke(1.2f)); drawLine(a.en(Offset(348f, 275f), C.NARANJA), Offset(345f, 275.4f), Offset(351f, 275.4f), 0.8f)
-            for (x in listOf(344f, 368f)) drawCircle(C.GOMA.copy(alpha = 0.7f), 0.8f, Offset(x, 157f))
-            if (!E.aOscuras(m)) mancha(Offset(356f, 216f), 30f, 64f, C.ALGA, 0.05f + 0.1f * (1f - E.programa(m).nivel))
+            for (x in listOf(344f, 368f)) drawCircle(C.GOMA.copy(alpha = 0.7f), 0.8f, Offset(x, 197f))
+            if (!E.aOscuras(m)) mancha(Offset(356f, 236f), 30f, 44f, C.ALGA, 0.05f + 0.1f * (1f - E.programa(m).nivel))
         }
     }
 
@@ -321,8 +321,11 @@ internal object CosasEspacio {
     fun DrawScope.sueltas(m: Momento, a: Alumbrado) {
         // Su rato de ejercicio: las gomas, colgadas de la barra.
         if (E.ejercicio(m) && !E.sinPeso(m)) for (dx in listOf(-3f, 3f)) { val arriba = Offset(164f + dx * 0.4f, 100f); val abajo = Offset(164f + dx * 2.4f, 142f); drawLine(a.en(abajo, C.TELA_AZUL), arriba, abajo, 1.1f, StrokeCap.Round); drawRoundRect(a.en(abajo, C.GOMA), abajo + Offset(-2.6f, 0f), Size(5.2f, 3f), CornerRadius(1f)) }
-        // El aseo: la toalla, en el pasamanos.
-        if (m.hacer == Hacer.CUIDAR) { val o = Offset(322f, 158f); drawPath(poligono(o + Offset(-6f, -3f), o + Offset(6f, -2f), o + Offset(7f, 17f), o + Offset(-5f, 15f)), a.en(o + Offset(0f, 8f), C.TELA_AZUL, -1f)); drawLine(Color.White.copy(alpha = 0.3f), o + Offset(-5f, 11f), o + Offset(6.6f, 13f), 0.8f) }
+        // El aseo: la toalla, echada sobre el canto del poyo.
+        if (m.hacer == Hacer.CUIDAR) {
+            val toalla = poligono(listOf(E.p(274f, 178f, 1.5f), E.p(274f, 178f, 1.63f), E.p(266.6f, 178f, 1.63f), E.p(266.6f, 194f, 1.62f), E.p(266.6f, 192f, 1.5f), E.p(266.6f, 178f, 1.5f)))
+            drawPath(toalla, a.en(Offset(322f, 210f), C.TELA_AZUL, -1f)); drawLine(Color.White.copy(alpha = 0.3f), E.p(266.6f, 189f, 1.5f), E.p(266.6f, 191f, 1.62f), 0.8f)
+        }
         if (E.lamparitas(m)) {
             // La fiesta de las luces: una lámpara pequeña por cada uno que se quedó en la Tierra, por todas partes.
             for ((i, q) in LAMPARITAS.withIndex()) { drawRect(a.en(q, C.ACERO), q + Offset(-1.3f, 0f), Size(2.6f, 1.6f)); drawOval(Color(0xFFFFE8B8), q + Offset(-1.6f, -4f), Size(3.2f, 4.2f)); resplandor(q + Offset(0f, -2f), 8f + (i % 3), 0.5f, Color(0xFFFFC070)) }
@@ -337,7 +340,7 @@ internal object CosasEspacio {
 
     private val LAMPARITAS = listOf(
         Offset(76f, 214.6f), Offset(98f, 214.6f), Offset(130f, 214.6f), Offset(176f, 213f), Offset(204f, 213f), Offset(262f, 213f), Offset(70f, 204f), Offset(176f, 117.4f), Offset(196f, 117.4f), Offset(232f, 117.4f),
-        Offset(190f, 206f), Offset(246f, 206f), Offset(300f, 226f), Offset(322f, 240f), Offset(58f, 268f), Offset(186f, 281f), Offset(310f, 174f), Offset(332f, 170f), Offset(262f, 87f), Offset(275f, 87f),
+        Offset(190f, 206f), Offset(246f, 206f), Offset(300f, 226f), Offset(322f, 240f), Offset(58f, 268f), Offset(186f, 281f), Offset(298f, 187.6f), Offset(331f, 205f), Offset(262f, 87f), Offset(275f, 87f),
     )
 
     /** El temblor de las lamparitas de la fiesta de las luces. */

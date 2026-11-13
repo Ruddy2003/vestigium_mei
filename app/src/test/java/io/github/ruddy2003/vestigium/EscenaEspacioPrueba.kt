@@ -114,7 +114,7 @@ class EscenaEspacioPrueba {
             assertTrue(EscenaEspacio.lamparitas(momento("$anio-12-21"))); assertFalse(EscenaEspacio.lamparitas(momento("$anio-12-22")))
             assertFalse(EscenaEspacio.aOscuras(momento("$anio-04-22", 13.0)))
             val m = momento("$anio-04-22", 22.0)
-            assertTrue(EscenaEspacio.aOscuras(m)); assertEquals(0f, EscenaEspacio.pantallas(m), 0.001f); assertEquals(0f, EscenaEspacio.luzDeCultivo(m), 0.001f); assertTrue(EscenaEspacio.programa(m).guardia <= 0.25f)
+            assertTrue(EscenaEspacio.aOscuras(m)); assertEquals("solo entra la luz del ventanal", 1f, EscenaEspacio.luzDeVentana(m), 0.001f); assertEquals(0f, EscenaEspacio.pantallas(m), 0.001f); assertEquals(0f, EscenaEspacio.luzDeCultivo(m), 0.001f); assertTrue(EscenaEspacio.programa(m).guardia <= 0.25f)
             assertFalse(EscenaEspacio.aOscuras(momento("$anio-04-23", 22.0)))
         }
         for (dia in listOf("2027-02-25", "2027-07-20", "2028-06-18", "2028-07-28", "2028-07-30", "2029-05-10")) assertTrue(dia, EscenaEspacio.alarma(momento(dia)))
@@ -135,6 +135,10 @@ class EscenaEspacioPrueba {
         assertTrue(EscenaEspacio.conGente(momento(dia, 19.4)))
         // Su rato de la ventana, de 21:00 a 22:30: la lámpara de la mesa, encendida.
         assertTrue(EscenaEspacio.enLaVentana(momento(dia, 21.0))); assertTrue(EscenaEspacio.flexo(momento(dia, 21.0))); assertFalse(EscenaEspacio.flexo(momento(dia, 13.0))); assertFalse(EscenaEspacio.flexo(momento(dia, 23.0)))
+        // La luz del ventanal: de día no se nota (mandan las lámparas); de noche, sí; con el último naranja, algo.
+        assertEquals(0f, EscenaEspacio.luzDeVentana(momento(dia, 13.0)), 0.01f); assertTrue(EscenaEspacio.luzDeVentana(momento(dia, 7.0)) < 0.05f)
+        assertTrue(EscenaEspacio.luzDeVentana(momento(dia, 23.0)) >= 0.45f)
+        assertTrue(EscenaEspacio.luzDeVentana(momento(dia, 21.0)) in 0.1f..0.3f)
         // Las lámparas del cultivo descansan de noche.
         assertTrue(EscenaEspacio.luzDeCultivo(momento(dia, 13.0)) > 0.9f); assertTrue(EscenaEspacio.luzDeCultivo(momento(dia, 1.0)) < 0.35f)
     }
@@ -174,6 +178,7 @@ class EscenaEspacioPrueba {
                 for (t in listOf(TipoAncla.OBJETO, TipoAncla.ABRIGO)) assertTrue("$d: $t dentro del suelo", anclas.first { it.tipo == t }.x in suelo.x..suelo.hasta)
                 assertEquals("$d $hora h: hay fuego para el gato si y solo si el calefactor está encendido", EscenaEspacio.calefactor(m), anclas.any { it.tipo == TipoAncla.FUEGO })
                 assertEquals("$d: hay adorno si y solo si es fiesta", m.con("fiesta"), anclas.any { it.tipo == TipoAncla.ADORNO })
+                assertTrue("$d $hora h: la luz del ventanal, de 0 a 1", EscenaEspacio.luzDeVentana(m) in 0f..1f)
                 assertTrue("$d: siempre hay algo que se mueve", EscenaEspacio.seMueve(m))
                 val luz = EscenaEspacio.luzDelGato(m, androidx.compose.ui.geometry.Offset(180f, 281f))
                 assertTrue("$d $hora h: la luz del gato", luz.noche in 0f..1f)

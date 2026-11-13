@@ -67,10 +67,11 @@ internal object ColorEspacio {
  *
  * - **Al fondo:** el mamparo, con la compuerta abierta. Por ella se ve la galería de la granja, que sigue la curva del
  *   anillo y por eso sube hasta perderse por arriba. A su derecha, la pared de consolas y el armario del traje de salida.
- * - **A la derecha:** el costado de proa, acolchado, con la ventana pequeña: por ella se ve una galaxia, que gira
- *   despacio porque el anillo gira. Debajo, la red de carga y el banco.
+ * - **A la derecha:** el costado de proa, que es casi todo un ventanal (el autor lo pidió grande el 13 nov 2026, «para
+ *   que se vea bien el exterior»): las estrellas, la Vía Láctea, una galaxia y la estrella de delante, que giran
+ *   despacio porque el anillo gira. Debajo, el poyo con su manta y su planta, y la red de carga.
  * - **A la izquierda:** las bandejas del cultivo, con sus lámparas rosadas.
- * - **Delante:** la torre de cultivo, el cajón de carga, la mesa con el objeto del día, el taburete y la columna de algas.
+ * - **Delante:** la torre de cultivo, el cajón de carga, la mesa con el objeto del día, el taburete y el tanque de algas.
  * - **Arriba:** el techo, con sus tres lámparas, el conducto del aire y los cables; y la barra que va del suelo al techo.
  *
  * **La luz [Diseño propio]**, que sigue lo que dice el cuento («las luces suben de azul a blanco» y bajan «de blanco a
@@ -85,7 +86,7 @@ internal object ColorEspacio {
  * - **La parada del reactor** ([parada], estado `parada`, diez días de octubre): media luz naranja todo el día, las
  *   pantallas apagadas, las lámparas del cultivo al mínimo y un calefactor encendido.
  * - **Sin peso** ([sinPeso], estado `ingravidez`, tres semanas de la temporada 3): el anillo no gira, las cosas flotan
- *   sujetas a sus cuerdas, los cables no cuelgan y la galaxia de la ventana se queda quieta.
+ *   sujetas a sus cuerdas, los cables no cuelgan y el cielo del ventanal se queda quieto.
  * - **La alarma** (clave `alarma`): las balizas rojas y las pantallas en rojo. **Fuera** (clave `fuera`): el armario
  *   del traje está vacío y en la pantalla grande se ve la cámara del casco. **Fiesta, luto y cosecha**, con lo suyo.
  * - **El viaje** (arco `viaje`): la pantalla de la ruta, con la nave un poco más cerca de la estrella de delante.
@@ -122,9 +123,37 @@ internal object EscenaEspacio : EscenaVida {
     val LAMPARA_IZQ = Offset(66f, 25f)
     val LAMPARA_CEN = Offset(170f, 18f)
     val LAMPARA_DER = Offset(318f, 22f)
-    val VENTANA = Offset(337.6f, 83.4f)
-    const val VENTANA_RX = 12.5f
-    const val VENTANA_RY = 19f
+    // El ventanal del costado de proa, en las medidas de la pared: de V_S0 (junto al mamparo) a V_S1 (ya fuera del
+    // cuadro) de fondo, y de V_ARRIBA a V_ABAJO de alto. El vidrio está V_HUNDIDO más afuera que la pared.
+    const val V_S0 = 1.05f
+    const val V_S1 = 2.04f
+    const val V_ARRIBA = 60f
+    const val V_ABAJO = 164f
+    const val V_HUNDIDO = 8f
+    /** A qué fondo está cada uno de los dos montantes del ventanal. */
+    val MONTANTES = listOf(1.256f, 1.461f)
+    /** El punto del cuadro alrededor del que gira lo de fuera: hacia donde apunta el eje de la nave. */
+    val CIELO = Offset(341f, 104f)
+    /** De dónde sale la luz que entra por el ventanal. */
+    val LUZ_VENTANA = Offset(326f, 140f)
+    /** La segunda baliza, encima del ventanal. */
+    val BALIZA_2 = Offset(335.2f, 26.6f)
+
+    /**
+     * Un contorno del ventanal: su hueco, agrandado [mas] por cada lado, en el plano que está [hundido] más afuera que
+     * la pared (0: el hueco en la pared; [V_HUNDIDO]: el vidrio). Las dos esquinas del fondo van redondeadas; las de
+     * cerca quedan fuera del cuadro.
+     */
+    fun contornoDelVentanal(mas: Float, hundido: Float): Path {
+        val wx = FONDO_D + hundido; val s0 = V_S0 - mas * 0.008f; val a0 = V_ARRIBA - mas; val a1 = V_ABAJO + mas; val r = 9f + mas; val ds = 0.07f + mas * 0.008f
+        fun q(wy: Float, s: Float) = p(wx, wy, s)
+        return Path().apply {
+            val i = q(a0 + r, s0); moveTo(i.x, i.y)
+            val e = q(a0, s0); val g = q(a0, s0 + ds); cubicTo(e.x, e.y, e.x, e.y, g.x, g.y)
+            val h = q(a0, V_S1); lineTo(h.x, h.y); val j = q(a1, V_S1); lineTo(j.x, j.y)
+            val k = q(a1, s0 + ds); lineTo(k.x, k.y); val l = q(a1, s0); val n = q(a1 - r, s0); cubicTo(l.x, l.y, l.x, l.y, n.x, n.y); close()
+        }
+    }
     val BALIZA = Offset(120f, 84f)
     val MESA = Offset(228f, 267f)
     /** Cuánto se agranda la mesa, con todo lo que tiene encima. */
@@ -278,6 +307,20 @@ internal object EscenaEspacio : EscenaVida {
     /** La luz que hay en el punto [en], para los adornos de la biblioteca, que piden unas `Luces` y no un [Alumbrado]. */
     internal fun luzDeAdorno(m: Momento, a: Alumbrado, en: Offset): Luces = luces(m, a.en(en, Color(0xFFE6E6E6)))
 
+    /**
+     * Cuánto se nota la luz que entra por el ventanal, de 0 a 1: de día, nada (mandan las lámparas); al bajar la luz,
+     * algo; de noche, bastante; y la noche de la partida, cuando se apaga todo, es la única luz.
+     */
+    internal fun luzDeVentana(m: Momento): Float { val noche = 1f - programa(m).nivel; return if (aOscuras(m)) 1f else 0.5f * noche * noche }
+
+    /** Cuánta penumbra azul hay en la vertical [x] del cuadro cuando la luz viene de lado (ver [quieta]): la necesita también la parte viva, para los montantes del ventanal. */
+    private fun penumbraDeLado(m: Momento, x: Float): Float {
+        val lado = deLado(m); val cuanta = 0.4f * pleno(programa(m)) * abs(lado)
+        if (cuanta <= 0.01f) return 0f
+        val t = if (lado < 0f) ((x - 172f) / (ANCHO - 172f)).coerceIn(0f, 1f) else (1f - x / 208f).coerceIn(0f, 1f)
+        return cuanta * (if (t < 0.55f) 0.7f * t / 0.55f else 0.7f + 0.3f * (t - 0.55f) / 0.45f)
+    }
+
     /** Los focos de ahora. Los tres primeros son siempre las lámparas del techo (con fuerza 0 si no lucen). */
     internal fun focos(m: Momento): List<Foco> = buildList {
         val g = programa(m); val dia = g.nivel; val noche = 1f - dia
@@ -298,8 +341,8 @@ internal object EscenaEspacio : EscenaVida {
         val cul = luzDeCultivo(m)
         add(Foco(Offset(26f, 150f), C.LUZ_CULTIVO, cul * (0.14f + 0.36f * noche), 62f, 236f))
         add(Foco(Offset(120f, 168f), lerp(C.LUZ_CULTIVO, C.LUZ_BLANCA, 0.4f), cul * (0.1f + 0.34f * noche), 60f, SUELO))
-        if (!aOscuras(m)) add(Foco(Offset(356f, 214f), C.ALGA, 0.1f + 0.3f * noche, 52f, 281f))
-        add(Foco(VENTANA, Color(0xFFBFD0FF), if (aOscuras(m)) 0.62f else 0.12f * noche, if (aOscuras(m)) 150f else 60f, 250f))
+        if (!aOscuras(m)) add(Foco(Offset(356f, 234f), C.ALGA, 0.1f + 0.3f * noche, 52f, 281f))
+        add(Foco(LUZ_VENTANA, Color(0xFFBFD0FF), if (aOscuras(m)) 0.8f else 0.66f * luzDeVentana(m), if (aOscuras(m)) 150f else 84f, 250f))
         if (alarma(m)) add(Foco(BALIZA + Offset(0f, 10f), C.ROJO, 0.5f, 100f, SUELO))
         if (flexo(m)) add(Foco(FLEXO, Color(0xFFFFD9A0), 0.6f, 56f, MESA.y - 30f))
         if (calefactor(m)) add(Foco(CALEFACTOR + Offset(0f, -16f), Color(0xFFFF8A4A), 0.55f, 56f, CALEFACTOR.y - 8f))
@@ -308,7 +351,7 @@ internal object EscenaEspacio : EscenaVida {
     }
 
     /** Los focos que tumban sombras: las tres lámparas del techo, las de emergencia, la pantalla grande, la lámpara de la mesa y el calefactor. */
-    private fun tumban(f: List<Foco>): List<Foco> = f.filterIndexed { i, it -> i !in 3..4 && it.fuerza > 0.16f && it.color != C.GUARDIA && it.color != C.ALGA && (it.p != VENTANA || it.fuerza > 0.5f) && it.p.y < 240f }
+    private fun tumban(f: List<Foco>): List<Foco> = f.filterIndexed { i, it -> i !in 3..4 && it.fuerza > 0.16f && it.color != C.GUARDIA && it.color != C.ALGA && (it.p != LUZ_VENTANA || it.fuerza > 0.5f) && it.p.y < 240f }
 
     private fun esDelTecho(f: Foco) = f.p == LAMPARA_IZQ || f.p == LAMPARA_CEN || f.p == LAMPARA_DER
 
@@ -398,7 +441,7 @@ internal object EscenaEspacio : EscenaVida {
 
     override fun DrawScope.viva(m: Momento, reloj: Float) {
         val l = luces(m)
-        cieloDeLaVentana(m, reloj)
+        cieloDelVentanal(m, reloj)
         val pan = pantallas(m)
         // La pantalla grande: el trazo que barre; las lucecitas de la consola, que laten.
         if (pan > 0.2f && !fuera(m)) {
@@ -410,14 +453,14 @@ internal object EscenaEspacio : EscenaVida {
         if (alarma(m)) {
             val late = 0.5f + 0.5f * sin(reloj * 5f)
             resplandor(BALIZA, 22f + 8f * late, 0.35f + 0.4f * late, C.ROJO)
-            resplandor(Offset(352f, 40f), 16f, 0.3f + 0.3f * (1f - late), C.ROJO)
+            resplandor(BALIZA_2, 16f, 0.3f + 0.3f * (1f - late), C.ROJO)
         }
         // Las burbujas de la columna de algas.
         if (!aOscuras(m)) {
             val az = Azar(Semilla.de("espacio", "burbujas"))
             repeat(9) {
                 val x = 347f + az.entre(0f, 18f); val fase = ((reloj * az.entre(0.12f, 0.24f) + az.real()) % 1f + 1f) % 1f
-                val y = if (sinPeso(m)) 176f + 90f * az.real() + 2f * sin(reloj * 0.6f + it) else 270f - 100f * fase
+                val y = if (sinPeso(m)) 208f + 60f * az.real() + 2f * sin(reloj * 0.6f + it) else 270f - 64f * fase
                 drawCircle(Color.White.copy(alpha = 0.34f), az.entre(0.6f, 1.5f), Offset(x + 1.4f * sin(reloj * 1.3f + it), y), style = Stroke(0.35f))
             }
         }
@@ -436,35 +479,96 @@ internal object EscenaEspacio : EscenaVida {
         }
     }
 
-    /** Lo que se ve por la ventana: el vacío, las estrellas, la banda de la Vía Láctea y una galaxia. Gira despacio con el anillo; sin peso, se queda quieto. */
-    private fun DrawScope.cieloDeLaVentana(m: Momento, reloj: Float) {
-        val vidrio = Path().apply { addOval(Rect(VENTANA.x - VENTANA_RX + 2.2f, VENTANA.y - VENTANA_RY + 2.6f, VENTANA.x + VENTANA_RX - 2.2f, VENTANA.y + VENTANA_RY - 2.6f)) }
+    /** Las estrellas de fuera, por tamaños y matices, en las medidas del cielo (el centro es [CIELO]). Son siempre las mismas: se sortean una vez. */
+    private class Estrellas(val polvo: List<Offset>, val chicas: List<Offset>, val calidas: List<Offset>, val frias: List<Offset>, val grandes: List<Triple<Offset, Float, Color>>)
+
+    /** Hasta dónde llega el cielo que se dibuja, desde [CIELO]: lo justo para cubrir el ventanal en cualquier giro. */
+    private const val RADIO_CIELO = 104f
+    /** La Vía Láctea, en las medidas del cielo antes de girarlo: una banda tendida, a esta distancia por debajo de [CIELO]. */
+    private const val BANDA = 27f
+
+    private val ESTRELLAS: Estrellas by lazy {
+        val az = Azar(Semilla.de("espacio", "cielo"))
+        fun suelta(): Offset { val r = RADIO_CIELO * kotlin.math.sqrt(az.real()); val t = az.entre(0f, 6.2832f); return CIELO + Offset(cos(t) * r, sin(t) * r) }
+        fun deLaBanda(ancho: Float) = CIELO + Offset(az.entre(-RADIO_CIELO, RADIO_CIELO), BANDA + (az.real() + az.real() - 1f) * ancho)
+        val tonos = listOf(Color.White, Color(0xFFFFE2B0), Color(0xFFB8D0FF), Color(0xFFFFC0A8), Color(0xFFDCE8FF))
+        Estrellas(
+            polvo = List(170) { suelta() } + List(190) { deLaBanda(11f) },
+            chicas = List(64) { suelta() } + List(40) { deLaBanda(13f) },
+            calidas = List(24) { suelta() }, frias = List(26) { suelta() },
+            grandes = List(13) { Triple(suelta(), az.entre(0.7f, 1.3f), tonos[it % tonos.size]) },
+        )
+    }
+
+    /**
+     * Lo que se ve por el ventanal: el vacío, las estrellas, la banda de la Vía Láctea con sus nubes oscuras, una galaxia
+     * espiral y la estrella de delante. Gira despacio con el anillo, alrededor de [CIELO]; sin peso, se queda quieto.
+     * Va en la parte viva porque gira; el marco, el hueco y la luz que deja dentro van en la quieta.
+     */
+    private fun DrawScope.cieloDelVentanal(m: Momento, reloj: Float) {
+        val vidrio = contornoDelVentanal(0f, V_HUNDIDO)
         val giro = if (giraElAnillo(m)) reloj * 2.4f + (m.hora * 15.0).toFloat() else 24f
+        val e = ESTRELLAS; val o = CIELO
         clipPath(vidrio) {
-            drawRect(FUERA, VENTANA - Offset(VENTANA_RX, VENTANA_RY), Size(VENTANA_RX * 2f, VENTANA_RY * 2f))
-            rotate(giro, VENTANA) {
-                // La Vía Láctea: una banda de polvo blanco de lado a lado.
-                rotate(-28f, VENTANA) { mancha(VENTANA + Offset(0f, 9f), 34f, 5.4f, Color(0xFFAEB8E0), 0.3f); mancha(VENTANA + Offset(-6f, 10f), 16f, 2.6f, Color(0xFFF0E6D8), 0.26f) }
-                val az = Azar(Semilla.de("espacio", "estrellas"))
-                repeat(46) {
-                    val q = VENTANA + Offset(az.entre(-24f, 24f), az.entre(-24f, 24f)); val k = az.real()
-                    drawCircle(listOf(Color.White, Color(0xFFFFE2B0), Color(0xFFB8D0FF), Color(0xFFFFC0A8))[it % 4].copy(alpha = 0.5f + 0.5f * k), 0.28f + 0.5f * k * k, q)
+            drawRect(FUERA, Offset(296f, 0f), Size(ANCHO - 296f, 200f))
+            rotate(giro, o) {
+                // La Vía Láctea: el resplandor ancho, los cúmulos más claros, el bulbo cálido y, por medio, las nubes oscuras.
+                mancha(o + Offset(0f, BANDA), 118f, 17f, Color(0xFF8E9CD8), 0.26f)
+                for ((x, rx, ry, c) in listOf(Cuatro(-66f, 30f, 8f, Color(0xFFC8D0F0)), Cuatro(-22f, 26f, 7f, Color(0xFFE6E0F0)), Cuatro(30f, 34f, 10f, Color(0xFFF2E2CC)), Cuatro(74f, 24f, 7f, Color(0xFFC8D0F0))))
+                    mancha(o + Offset(x, BANDA + (if (x > 0f) -1.5f else 1.5f)), rx, ry, c, 0.26f)
+                mancha(o + Offset(26f, BANDA - 1f), 15f, 7.5f, Color(0xFFFFD8A8), 0.3f)
+                mancha(o + Offset(-48f, BANDA - 11f), 11f, 7f, Color(0xFFD890C8), 0.14f)            // una nebulosa rosada, encima de la banda
+                val nube = lerp(FUERA, Color(0xFF1A1830), 0.4f)
+                drawPath(Path().apply { moveTo(o.x - 96f, o.y + BANDA + 2f); cubicTo(o.x - 50f, o.y + BANDA - 4f, o.x - 14f, o.y + BANDA + 5f, o.x + 22f, o.y + BANDA); cubicTo(o.x + 50f, o.y + BANDA - 4f, o.x + 70f, o.y + BANDA + 3f, o.x + 100f, o.y + BANDA - 1f) }, nube.copy(alpha = 0.6f), style = Stroke(2.6f, cap = StrokeCap.Round))
+                for ((x, rx, ry) in listOf(Triple(-58f, 15f, 3.4f), Triple(-8f, 11f, 4.2f), Triple(44f, 17f, 3.6f), Triple(12f, 7f, 2.4f))) mancha(o + Offset(x, BANDA + (if (rx > 12f) -1f else 3f)), rx, ry, nube, 0.62f)
+                // Las estrellas: el polvo, las chicas, las de color y las pocas grandes, con su halo.
+                drawPoints(e.polvo, androidx.compose.ui.graphics.PointMode.Points, Color(0xFFC8D4FF).copy(alpha = 0.5f), 0.55f, StrokeCap.Round)
+                drawPoints(e.chicas, androidx.compose.ui.graphics.PointMode.Points, Color.White.copy(alpha = 0.85f), 0.95f, StrokeCap.Round)
+                drawPoints(e.calidas, androidx.compose.ui.graphics.PointMode.Points, Color(0xFFFFD9A0), 1.15f, StrokeCap.Round)
+                drawPoints(e.frias, androidx.compose.ui.graphics.PointMode.Points, Color(0xFFA8C8FF), 1.15f, StrokeCap.Round)
+                for ((q, rad, tono) in e.grandes) { if (rad > 1.1f) { drawLine(tono.copy(alpha = 0.55f), q + Offset(-rad * 3f, 0f), q + Offset(rad * 3f, 0f), 0.4f); drawLine(tono.copy(alpha = 0.55f), q + Offset(0f, -rad * 3f), q + Offset(0f, rad * 3f), 0.4f) }; drawCircle(tono.copy(alpha = 0.3f), rad * 1.6f, q); drawCircle(tono, rad, q) }
+                // La galaxia: el halo, el disco ladeado con sus dos brazos y sus nudos, y el núcleo.
+                val g = o + Offset(-25f, -24f)
+                rotate(-34f, g) {
+                    mancha(g, 19f, 8.4f, Color(0xFF8A9AE8), 0.5f)
+                    mancha(g, 13f, 5f, Color(0xFFD8C8F0), 0.6f)
+                    for (lado in listOf(1f, -1f)) {
+                        drawPath(Path().apply { moveTo(g.x + lado * 2.4f, g.y - lado * 1f); cubicTo(g.x + lado * 8f, g.y - lado * 5.4f, g.x + lado * 15.6f, g.y - lado * 3f, g.x + lado * 17f, g.y + lado * 2.4f) }, Color(0xFFDCE4FF).copy(alpha = 0.6f), style = Stroke(1.4f, cap = StrokeCap.Round))
+                        drawPath(Path().apply { moveTo(g.x - lado * 3f, g.y - lado * 2.2f); cubicTo(g.x - lado * 1f, g.y - lado * 5f, g.x + lado * 7f, g.y - lado * 6.6f, g.x + lado * 11f, g.y - lado * 5.6f) }, Color(0xFFC8D4FF).copy(alpha = 0.4f), style = Stroke(0.9f, cap = StrokeCap.Round))
+                        for ((dx, dy) in listOf(9f to -4.6f, 14.6f to -2.2f, 16.6f to 1f)) drawCircle(Color(0xFFFFD8E8).copy(alpha = 0.8f), 0.6f, g + Offset(lado * dx, lado * dy))
+                    }
+                    mancha(g, 5f, 3f, Color(0xFFFFF0D0), 0.95f); drawCircle(Color.White, 1.2f, g)
                 }
-                // La galaxia: el halo, el disco ladeado con sus dos brazos y el núcleo.
-                val c = VENTANA + Offset(-1.5f, -5f)
-                rotate(-34f, c) {
-                    mancha(c, 11.5f, 5f, Color(0xFF8A9AE8), 0.5f)
-                    mancha(c, 8f, 3f, Color(0xFFD8C8F0), 0.6f)
-                    for (lado in listOf(1f, -1f)) drawPath(Path().apply { moveTo(c.x + lado * 1.6f, c.y - lado * 0.6f); cubicTo(c.x + lado * 5f, c.y - lado * 3f, c.x + lado * 9.6f, c.y - lado * 1.6f, c.x + lado * 10.4f, c.y + lado * 1.4f) }, Color(0xFFDCE4FF).copy(alpha = 0.55f), style = Stroke(0.9f, cap = StrokeCap.Round))
-                    mancha(c, 3f, 1.8f, Color(0xFFFFF0D0), 0.95f); drawCircle(Color.White, 0.8f, c)
-                }
-                // La estrella de delante: cada año un poco más gorda.
+                // La estrella de delante, casi en el eje: cada año un poco más gorda, con sus cuatro puntas.
                 val brillo = ((viaje(m) - 0.34f) / 0.11f).coerceIn(0f, 1f)
-                val e = VENTANA + Offset(5.5f, 9.5f)
-                resplandor(e, 3.4f + 2.4f * brillo, 0.7f, Color(0xFFFFE2A8)); drawCircle(Color(0xFFFFF4D8), 0.7f + 0.5f * brillo, e)
+                val d = o + Offset(8f, -5f); val largo = 5f + 3.4f * brillo
+                resplandor(d, 7f + 4f * brillo, 0.7f, Color(0xFFFFE2A8))
+                drawLine(Color(0xFFFFF0C8).copy(alpha = 0.7f), d + Offset(-largo, 0f), d + Offset(largo, 0f), 0.5f); drawLine(Color(0xFFFFF0C8).copy(alpha = 0.7f), d + Offset(0f, -largo), d + Offset(0f, largo), 0.5f)
+                drawCircle(Color(0xFFFFF8E4), 1.2f + 0.7f * brillo, d)
             }
-            // El reflejo del vidrio grueso.
-            drawPath(Path().apply { moveTo(VENTANA.x - 7f, VENTANA.y - 12f); cubicTo(VENTANA.x - 9.4f, VENTANA.y - 5f, VENTANA.x - 9.4f, VENTANA.y + 3f, VENTANA.x - 7.6f, VENTANA.y + 9f) }, Color.White.copy(alpha = 0.16f), style = Stroke(1.3f, cap = StrokeCap.Round))
+            // Lo de dentro, reflejado en el vidrio: con las lámparas altas, un velo; y siempre, dos brillos al sesgo.
+            val nivel = programa(m).nivel
+            if (nivel > 0.05f) drawRect(Color(0xFFDCE4F4).copy(alpha = 0.07f * nivel), Offset(296f, 0f), Size(ANCHO - 296f, 200f))
+            drawPath(Path().apply { moveTo(318f, 30f); lineTo(330f, 26f); lineTo(312f, 170f); lineTo(303f, 166f); close() }, Color.White.copy(alpha = 0.035f + 0.03f * nivel))
+            drawPath(Path().apply { moveTo(362f, 10f); lineTo(368f, 8f); lineTo(352f, 180f); lineTo(348f, 178f); close() }, Color.White.copy(alpha = 0.03f + 0.025f * nivel))
+        }
+        montantes(m, Alumbrado(luces(m), focos(m)))
+    }
+
+    private class Cuatro(val a: Float, val b: Float, val c: Float, val d: Color) { operator fun component1() = a; operator fun component2() = b; operator fun component3() = c; operator fun component4() = d }
+
+    /**
+     * Los dos montantes del ventanal: finos, de canto hacia quien mira. Los pintan la parte quieta y la viva (la viva
+     * pinta el cielo encima de todo lo que hubiera en el vidrio, y hay que volver a ponerlos).
+     */
+    internal fun DrawScope.montantes(m: Momento, a: Alumbrado) {
+        for (s in MONTANTES) {
+            val cerca = FONDO_D + V_HUNDIDO - 3.4f; val lejos = FONDO_D + V_HUNDIDO
+            val arriba = p(cerca, V_ARRIBA, s); val abajo = p(cerca, V_ABAJO, s)
+            val sombra = penumbraDeLado(m, arriba.x)
+            val canto = Path().apply { moveTo(arriba.x, arriba.y); val q = p(lejos, V_ARRIBA, s); lineTo(q.x, q.y); val r = p(lejos, V_ABAJO, s); lineTo(r.x, r.y); lineTo(abajo.x, abajo.y); close() }
+            drawPath(canto, lerp(a.en(Offset(arriba.x, 110f), lerp(C.CASCO_OSC, C.GOMA, 0.3f)), C.SOMBRA, sombra))
+            drawLine(lerp(a.en(Offset(arriba.x, 110f), lerp(C.ACERO, Color.White, 0.2f), -1f), C.SOMBRA, sombra), arriba, abajo, 0.9f)
         }
     }
 
@@ -489,7 +593,7 @@ internal object EscenaEspacio : EscenaVida {
 
     override fun anclas(m: Momento): List<Ancla> = buildList {
         add(Ancla(TipoAncla.SUELO, 24f, PISO_GATO, hasta = 336f))
-        add(Ancla(TipoAncla.MIRADOR, 104f, 220.6f))                             // encima del cajón de carga
+        add(Ancla(TipoAncla.MIRADOR, 323f, 199f))                               // en el poyo, al pie del ventanal
         add(Ancla(TipoAncla.OBJETO, MESA.x - 8f, PISO_GATO))
         add(Ancla(TipoAncla.ABRIGO, 64f, PISO_GATO))                          // al pie de la torre de cultivo
         if (calefactor(m)) add(Ancla(TipoAncla.FUEGO, CALEFACTOR.x - 36f, PISO_GATO, hasta = CALEFACTOR.x))

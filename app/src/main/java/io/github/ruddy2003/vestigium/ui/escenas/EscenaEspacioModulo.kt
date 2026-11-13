@@ -19,9 +19,10 @@ import io.github.ruddy2003.vestigium.ui.escenas.EscenaEspacio.FONDO_D
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaEspacio.FONDO_I
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaEspacio.SUELO
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaEspacio.TECHO
-import io.github.ruddy2003.vestigium.ui.escenas.EscenaEspacio.VENTANA
-import io.github.ruddy2003.vestigium.ui.escenas.EscenaEspacio.VENTANA_RX
-import io.github.ruddy2003.vestigium.ui.escenas.EscenaEspacio.VENTANA_RY
+import io.github.ruddy2003.vestigium.ui.escenas.EscenaEspacio.V_ABAJO
+import io.github.ruddy2003.vestigium.ui.escenas.EscenaEspacio.V_ARRIBA
+import io.github.ruddy2003.vestigium.ui.escenas.EscenaEspacio.V_HUNDIDO
+import io.github.ruddy2003.vestigium.ui.escenas.EscenaEspacio.V_S0
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaEspacio.fondo
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaEspacio.p
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
@@ -485,70 +486,97 @@ internal object ModuloEspacio {
         }
     }
 
-    // ---------------------------------------------------------------- El costado derecho: la ventana
+    // ---------------------------------------------------------------- El costado derecho: el ventanal
+
+    /** El poyo corrido al pie del ventanal: de qué fondo a qué fondo va, a qué altura tiene la tapa y cuánto sale de la pared. */
+    private const val POYO_0 = 1.16f
+    private const val POYO_1 = 1.7f
+    private const val POYO_ALTO = 178f
+    private const val POYO_SALE = 20f
 
     fun DrawScope.costadoDerecho(m: Momento, a: Alumbrado) {
         val az = Azar(Semilla.de("espacio", "derecha")); val hoy = m.azar("red")
         val filas = listOf(1f, 1.16f, 1.38f, 1.68f, 2.1f)
-        // Arriba, el acolchado, con sus costuras y sus botones; abajo, las placas.
+        // La pared: arriba, una franja acolchada; abajo, las placas. Lo de en medio es casi todo ventanal.
         for (i in 0 until filas.size - 1) {
             val s0 = filas[i]; val s1 = filas[i + 1]
-            for ((y0, y1, tela) in listOf(Triple(TECHO, 100f, true), Triple(100f, 150f, true), Triple(150f, SUELO, false))) {
+            for ((y0, y1, tela) in listOf(Triple(TECHO, V_ARRIBA + 6f, true), Triple(V_ARRIBA + 6f, V_ABAJO - 6f, false), Triple(V_ABAJO - 6f, SUELO, false))) {
                 val q = listOf(p(FONDO_D, y0, s0), p(FONDO_D, y0, s1), p(FONDO_D, y1, s1), p(FONDO_D, y1, s0))
                 placa(a, q, if (tela) lerp(C.TELA, C.CASCO, 0.3f) else lerp(C.CASCO, C.CASCO_OSC, 0.3f), -1f, az, remaches = !tela, desgaste = if (tela) 0.3f else 1f)
-                if (tela) {
-                    val c = centro(q)
-                    drawLine(C.SOMBRA.copy(alpha = 0.16f), entreDos(q[0], q[1], 0.5f), entreDos(q[3], q[2], 0.5f), 0.6f); drawLine(C.SOMBRA.copy(alpha = 0.16f), entreDos(q[0], q[3], 0.5f), entreDos(q[1], q[2], 0.5f), 0.6f)
-                    drawCircle(a.en(c, C.NARANJA, -1f), 0.9f * s0, c); mancha(c + Offset(-1f, 1.4f), 5f * s0, 4f * s0, C.SOMBRA, 0.14f)
-                }
             }
         }
-        ventana(m, a)
-        // Los dibujos de los niños de a bordo, sujetos al acolchado: manchas de color, sin letras. Cada día hay uno distinto arriba.
+        ventanal(m, a)
+        // El pasamanos, naranja, corrido por debajo del ventanal, con sus soportes.
+        val h0 = p(FONDO_D, V_ABAJO + 6f, 1.04f) + Offset(-2.4f, 0f); val h1 = p(FONDO_D, V_ABAJO + 6f, 1.9f) + Offset(-4.6f, 0f)
+        for (k in listOf(0.06f, 0.4f, 0.8f)) { val q = entreDos(h0, h1, k); drawLine(a.en(q, C.ACERO, -1f), q, q + Offset(3f + 2f * k, 1f), 1f + k) }
+        drawLine(C.SOMBRA.copy(alpha = 0.3f), h0 + Offset(1f, 2.4f), h1 + Offset(2f, 4f), 2f); drawLine(a.en(entreDos(h0, h1, 0.5f), C.NARANJA, -1f), h0, h1, 2.4f, StrokeCap.Round); drawLine(Color.White.copy(alpha = 0.35f), h0 + Offset(0f, -0.7f), h1 + Offset(0f, -0.9f), 0.5f)
+        // La red de carga, en el rincón del fondo, con los bultos que guarda hoy.
+        val r0 = 1.045f; val r1 = 1.15f
+        val red = poligono(p(FONDO_D, 174f, r0), p(FONDO_D, 173f, r1), p(FONDO_D, 204f, r1), p(FONDO_D, 203f, r0))
+        clipPath(red) {
+            val n = 2 + hoy.entero(2)
+            for (i in 0 until n) { val c = entreDos(p(FONDO_D, 180f + i * 9f, r0), p(FONDO_D, 179f + i * 10f, r1), hoy.entre(0.3f, 0.7f)); drawOval(a.en(c, listOf(C.TELA_AZUL, C.TELA, C.NARANJA, C.VERDE_OSC)[(i + hoy.entero(4)) % 4], -1f), c + Offset(-6f, -5.4f), Size(12f, 10.8f)) }
+            for (i in -4..12) { drawLine(C.TELA.copy(alpha = 0.5f), p(FONDO_D, 160f + i * 6f, r0), p(FONDO_D, 174f + i * 6f, r1), 0.35f); drawLine(C.TELA.copy(alpha = 0.5f), p(FONDO_D, 174f + i * 6f, r0), p(FONDO_D, 160f + i * 6f, r1), 0.35f) }
+        }
+        drawPath(red, a.en(p(FONDO_D, 188f, 1.1f), C.NARANJA, -1f), style = Stroke(0.8f))
+        poyo(m, a, az)
+        // El aplique de emergencia y la segunda baliza, en la franja de encima del ventanal; y la luz de guardia.
+        aplique(a, p(FONDO_D, 55f, 1.12f) + Offset(-1f, 0f), E.emergencia(m), 0.7f)
+        val baliza = E.BALIZA_2
+        drawRoundRect(a.en(baliza, C.CASCO_OSC, -1f), baliza + Offset(-3f, -5f), Size(6f, 10f), CornerRadius(2f)); drawOval(if (E.alarma(m)) lerp(C.ROJO, Color.White, 0.25f) else a.en(baliza, lerp(C.ROJO, C.GOMA, 0.5f)), baliza + Offset(-4.4f, -3.4f), Size(5f, 6.8f))
+        if (E.alarma(m)) { resplandor(baliza, 40f, 0.5f, C.ROJO); mancha(Offset(340f, 120f), 50f, 90f, C.ROJO, 0.1f) }
+        luzDeGuardia(p(FONDO_D, SUELO - 2f, 1.02f), p(FONDO_D, SUELO - 2f, POYO_0), E.programa(m).guardia)
+    }
+
+    /**
+     * El poyo: un arcón corrido al pie del ventanal, donde se sienta ella en su rato de la ventana (y el gato). En su
+     * frente, los dibujos de los niños de a bordo; encima, una planta en una lata y la manta.
+     */
+    private fun DrawScope.poyo(m: Momento, a: Alumbrado, az: Azar) {
+        val wy = POYO_ALTO; val frente = FONDO_D - POYO_SALE
+        // La cara que mira a quien mira (queda casi tapada por el tanque de algas) y el frente, en tres puertas con su tirador.
+        placa(a, listOf(p(frente, wy, POYO_1), p(FONDO_D, wy, POYO_1), p(FONDO_D, SUELO, POYO_1), p(frente, SUELO, POYO_1)), lerp(C.CASCO, C.CASCO_OSC, 0.5f), 0f, az)
+        val cortes = listOf(POYO_0, 1.31f, 1.48f, POYO_1)
+        for (i in 0..2) {
+            val s0 = cortes[i]; val s1 = cortes[i + 1]
+            placa(a, listOf(p(frente, wy + 3f, s0), p(frente, wy + 3f, s1), p(frente, SUELO, s1), p(frente, SUELO, s0)), lerp(C.CASCO, C.CASCO_OSC, 0.34f), -1f, az)
+            val t = p(frente, wy + 9f, s1 - 0.03f); drawLine(a.en(t, C.NARANJA, -1f), t, p(frente, wy + 17f, s1 - 0.03f), 1.6f, StrokeCap.Round)
+        }
+        drawLine(C.SOMBRA.copy(alpha = 0.34f), p(frente, SUELO, POYO_0) + Offset(-1f, 1f), p(frente, SUELO, POYO_1) + Offset(-1.6f, 1.6f), 2.6f)
+        // Los dibujos de los niños, pegados a su altura: manchas de color, sin letras. Cada día cambian.
         val dibujo = m.azar("dibujos")
-        for ((i, wy) in listOf(106f, 126f, 112f).withIndex()) {
-            val s = 1.05f + i * 0.1f; val o = p(FONDO_D, wy, s); val w = 7.6f * s; val h = 11f * s
-            val hoja = poligono(o, o + Offset(w, -w * 0.5f), o + Offset(w, -w * 0.5f + h), o + Offset(0f, h))
+        for ((i, s) in listOf(1.2f, 1.36f, 1.53f).withIndex()) {
+            val arriba = wy + 8f + (i % 2) * 3f; val ancho = 0.075f; val alto = 13f
+            val q = listOf(p(frente, arriba, s), p(frente, arriba + 1.4f, s + ancho), p(frente, arriba + 1.4f + alto, s + ancho), p(frente, arriba + alto, s))
+            val hoja = poligono(q); val o = q[0]; val w = q[1].x - q[0].x; val h = q[3].y - q[0].y
             drawPath(hoja, a.en(o, lerp(C.TELA, Color.White, 0.4f), -1f))
             clipPath(hoja) {
                 val fondoDib = listOf(C.CIAN, C.TRIGO, C.LUZ_CULTIVO, C.VERDE)[(i + dibujo.entero(4)) % 4]
-                drawRect(a.en(o, fondoDib, -1f).copy(alpha = 0.5f), o + Offset(0f, h * 0.5f), Size(w, h))
-                drawCircle(a.en(o, listOf(C.NARANJA, C.ROJO, C.TRIGO)[(i + dibujo.entero(3)) % 3], -1f), w * 0.22f, o + Offset(w * dibujo.entre(0.3f, 0.7f), h * 0.2f))
-                drawLine(a.en(o, C.TELA_AZUL, -1f), o + Offset(w * 0.2f, h * 0.7f), o + Offset(w * 0.8f, h * dibujo.entre(0.3f, 0.6f)), 0.7f * s)
+                drawRect(a.en(o, fondoDib, -1f).copy(alpha = 0.5f), o + Offset(0f, h * 0.6f), Size(w, h))
+                drawCircle(a.en(o, listOf(C.NARANJA, C.ROJO, C.TRIGO)[(i + dibujo.entero(3)) % 3], -1f), w * 0.2f, o + Offset(w * dibujo.entre(0.3f, 0.7f), h * 0.3f))
+                drawLine(a.en(o, C.TELA_AZUL, -1f), o + Offset(w * 0.2f, h * 0.8f), o + Offset(w * 0.8f, h * dibujo.entre(0.4f, 0.7f)), 0.8f)
             }
-            drawCircle(a.en(o, C.ROJO, -1f), 0.6f * s, o + Offset(w * 0.5f, -w * 0.1f))
+            drawCircle(a.en(o, C.ROJO, -1f), 0.7f, entreDos(q[0], q[1], 0.5f) + Offset(0f, 1f))
         }
-        // El pasamanos, naranja, con sus soportes.
-        val h0 = p(FONDO_D, 152f, 1.04f) + Offset(-2.4f, 0f); val h1 = p(FONDO_D, 152f, 1.9f) + Offset(-4.6f, 0f)
-        for (k in listOf(0.06f, 0.4f, 0.8f)) { val q = entreDos(h0, h1, k); drawLine(a.en(q, C.ACERO, -1f), q, q + Offset(3f + 2f * k, 1f), 1f + k) }
-        drawLine(C.SOMBRA.copy(alpha = 0.3f), h0 + Offset(1f, 2.4f), h1 + Offset(2f, 4f), 2f); drawLine(a.en(entreDos(h0, h1, 0.5f), C.NARANJA, -1f), h0, h1, 2.4f, StrokeCap.Round); drawLine(Color.White.copy(alpha = 0.35f), h0 + Offset(0f, -0.7f), h1 + Offset(0f, -0.9f), 0.5f)
-        // El banco de debajo de la ventana: la tapa, el canto y sus dos escuadras. En su rato de la ventana, el cojín y la manta.
-        val b0 = 1.2f; val b1 = 1.62f; val wy = 178f
-        val tapa = poligono(p(FONDO_D, wy, b0), p(FONDO_D, wy, b1), p(FONDO_D - 20f, wy, b1), p(FONDO_D - 20f, wy, b0))
-        for (s in listOf(b0 + 0.04f, b1 - 0.05f)) drawPath(poligono(p(FONDO_D, wy + 3f, s), p(FONDO_D - 16f, wy + 3f, s), p(FONDO_D, wy + 16f, s)), a.en(p(FONDO_D - 8f, wy + 8f, s), lerp(C.ACERO, C.SOMBRA, 0.3f), -1f))
-        drawPath(tapa, a.en(p(FONDO_D - 10f, wy, 1.4f), lerp(C.CASCO, C.TELA, 0.5f)))
-        val canto = poligono(p(FONDO_D - 20f, wy, b0), p(FONDO_D - 20f, wy, b1), p(FONDO_D - 20f, wy + 3.4f, b1), p(FONDO_D - 20f, wy + 3.4f, b0))
-        drawPath(canto, a.en(p(FONDO_D - 20f, wy + 2f, 1.4f), lerp(C.CASCO_OSC, C.SOMBRA, 0.2f), -1f)); drawPath(tapa, C.GOMA.copy(alpha = 0.5f), style = Stroke(0.5f))
-        // La red de carga, con los bultos que guarda hoy.
-        val r0 = 1.05f; val r1 = 1.2f
-        val red = poligono(p(FONDO_D, 158f, r0), p(FONDO_D, 156f, r1), p(FONDO_D, 204f, r1), p(FONDO_D, 203f, r0))
-        clipPath(red) {
-            val n = 2 + hoy.entero(3)
-            for (i in 0 until n) { val c = entreDos(p(FONDO_D, 170f + i * 9f, r0), p(FONDO_D, 168f + i * 10f, r1), hoy.entre(0.3f, 0.7f)); drawOval(a.en(c, listOf(C.TELA_AZUL, C.TELA, C.NARANJA, C.VERDE_OSC)[(i + hoy.entero(4)) % 4], -1f), c + Offset(-7f, -6f), Size(14f, 12f)) }
-            for (i in -4..12) { drawLine(C.TELA.copy(alpha = 0.5f), p(FONDO_D, 150f + i * 6f, r0), p(FONDO_D, 164f + i * 6f, r1), 0.35f); drawLine(C.TELA.copy(alpha = 0.5f), p(FONDO_D, 164f + i * 6f, r0), p(FONDO_D, 150f + i * 6f, r1), 0.35f) }
-        }
-        drawPath(red, a.en(p(FONDO_D, 180f, 1.12f), C.NARANJA, -1f), style = Stroke(0.8f))
-        // Lo que hay en el banco: una planta en una lata, al fondo, y la manta doblada; en su rato de la ventana, el cojín y la manta echada; el día del luto, un paño negro.
-        val lata = p(FONDO_D - 7f, wy, 1.27f)
-        mataDeHoja(a, lata + Offset(0f, -6.4f), 11f, C.VERDE, Azar(Semilla.de("espacio", "lata")), redonda = true)
+        // La tapa, con su canto.
+        val tapa = poligono(p(FONDO_D, wy, POYO_0), p(FONDO_D, wy, POYO_1), p(frente - 1.4f, wy, POYO_1), p(frente - 1.4f, wy, POYO_0))
+        drawPath(tapa, Brush.horizontalGradient(listOf(a.en(p(frente, wy, POYO_0), lerp(C.CASCO, C.TELA, 0.5f)), a.en(p(FONDO_D - 6f, wy, POYO_1), lerp(C.CASCO, C.TELA, 0.5f))), 284f, 370f))
+        val canto = poligono(p(frente - 1.4f, wy, POYO_0), p(frente - 1.4f, wy, POYO_1), p(frente - 1.4f, wy + 3.2f, POYO_1), p(frente - 1.4f, wy + 3.2f, POYO_0))
+        drawPath(canto, a.en(p(frente, wy + 2f, 1.4f), lerp(C.CASCO_OSC, C.SOMBRA, 0.2f), -1f)); drawPath(tapa, C.GOMA.copy(alpha = 0.5f), style = Stroke(0.5f))
+        // La luz del ventanal, que le da de lleno de noche.
+        val claro = E.luzDeVentana(m)
+        if (claro > 0.02f) clipPath(tapa) { drawRect(Color(0xFFC8D8FF).copy(alpha = 0.3f * claro), Offset(280f, 180f), Size(100f, 40f)) }
+        // Lo que hay encima: una planta en una lata, al fondo, y la manta doblada; en su rato de la ventana, el cojín y la manta echada; el día del luto, un paño negro.
+        val lata = p(FONDO_D - 7f, wy, 1.215f)
+        mataDeHoja(a, lata + Offset(0f, -6.4f), 10f, C.VERDE, Azar(Semilla.de("espacio", "lata")), redonda = true)
         cuerpo(a, redondo(lata.x - 3.2f, lata.y - 7f, lata.x + 3.2f, lata.y, 0.8f), lata.x - 3.2f, lata.x + 3.2f, lata.y - 3f, C.ACERO); drawRect(a.en(lata, C.TRIGO, -1f), Offset(lata.x - 3.2f, lata.y - 5f), Size(6.4f, 2.6f)); drawOval(a.en(lata, lerp(C.VERDE_OSC, C.GOMA, 0.5f)), Offset(lata.x - 3.2f, lata.y - 7.8f), Size(6.4f, 1.8f))
-        val c = p(FONDO_D - 9f, wy, 1.42f)
+        val c = p(FONDO_D - 10f, wy, 1.42f)
         if (E.luto(m)) {
             val negro = Color(0xFF1C1A24)
-            val pano = poligono(listOf(p(FONDO_D - 4f, wy, 1.34f), p(FONDO_D - 4f, wy, 1.52f), p(FONDO_D - 20f, wy, 1.52f), p(FONDO_D - 20f, wy + 19f, 1.5f), p(FONDO_D - 20f, wy + 12f, 1.43f), p(FONDO_D - 20f, wy + 21f, 1.37f), p(FONDO_D - 20f, wy, 1.34f)))
+            val pano = poligono(listOf(p(FONDO_D - 4f, wy, 1.34f), p(FONDO_D - 4f, wy, 1.52f), p(frente - 1.4f, wy, 1.52f), p(frente - 1.4f, wy + 19f, 1.5f), p(frente - 1.4f, wy + 12f, 1.43f), p(frente - 1.4f, wy + 21f, 1.37f), p(frente - 1.4f, wy, 1.34f)))
             drawPath(pano, a.en(c, negro, -1f))
-            drawPath(poligono(p(FONDO_D - 4f, wy, 1.34f), p(FONDO_D - 4f, wy, 1.52f), p(FONDO_D - 20f, wy, 1.52f), p(FONDO_D - 20f, wy, 1.34f)), a.en(c, lerp(negro, C.CASCO_OSC, 0.3f), -1f))
-            drawLine(a.en(c, lerp(negro, C.CASCO_OSC, 0.5f), -1f), p(FONDO_D - 20f, wy + 1f, 1.44f), p(FONDO_D - 20f, wy + 13f, 1.43f), 0.6f)
+            drawPath(poligono(p(FONDO_D - 4f, wy, 1.34f), p(FONDO_D - 4f, wy, 1.52f), p(frente - 1.4f, wy, 1.52f), p(frente - 1.4f, wy, 1.34f)), a.en(c, lerp(negro, C.CASCO_OSC, 0.3f), -1f))
+            drawLine(a.en(c, lerp(negro, C.CASCO_OSC, 0.5f), -1f), p(frente - 1.4f, wy + 1f, 1.44f), p(frente - 1.4f, wy + 13f, 1.43f), 0.6f)
         } else if (E.enLaVentana(m) || E.aOscuras(m)) {
             drawRoundRect(a.en(c, C.TELA_AZUL), c + Offset(-11f, -6.6f), Size(22f, 7f), CornerRadius(3f)); drawLine(Color.White.copy(alpha = 0.25f), c + Offset(-8f, -5.6f), c + Offset(8f, -5.6f), 0.6f)
             drawPath(Path().apply { moveTo(c.x + 8f, c.y - 5f); cubicTo(c.x + 16f, c.y - 6f, c.x + 20f, c.y + 2f, c.x + 17f, c.y + 12f); lineTo(c.x + 9f, c.y + 10f); cubicTo(c.x + 12f, c.y + 2f, c.x + 9f, c.y - 1f, c.x + 6f, c.y - 0.4f); close() }, a.en(c + Offset(12f, 2f), C.NARANJA, -1f))
@@ -559,29 +587,32 @@ internal object ModuloEspacio {
             for ((k, y) in listOf(-2.4f, -5.2f, -7.8f).withIndex()) { drawRoundRect(if (k == 1) vuelta else manta, c + Offset(-11f + k * 0.8f, y - 0.4f), Size(21f - k * 1.4f, 3f), CornerRadius(1.4f)); drawLine(Color.White.copy(alpha = 0.22f), c + Offset(-9f + k, y), c + Offset(8f - k, y), 0.4f) }
             drawRect(a.en(c, C.TELA, -1f), c + Offset(2.4f, -8.2f), Size(2.4f, 8.6f))
         }
-        // El aplique de emergencia, la segunda baliza y la luz de guardia.
-        aplique(a, p(FONDO_D, 64f, 1.1f) + Offset(-1f, 0f), E.emergencia(m), 0.8f)
-        val baliza = Offset(352f, 40f)
-        drawRoundRect(a.en(baliza, C.CASCO_OSC, -1f), baliza + Offset(-3f, -5f), Size(6f, 10f), CornerRadius(2f)); drawOval(if (E.alarma(m)) lerp(C.ROJO, Color.White, 0.25f) else a.en(baliza, lerp(C.ROJO, C.GOMA, 0.5f)), baliza + Offset(-4.4f, -3.4f), Size(5f, 6.8f))
-        if (E.alarma(m)) { resplandor(baliza, 40f, 0.5f, C.ROJO); mancha(Offset(340f, 120f), 50f, 90f, C.ROJO, 0.1f) }
-        luzDeGuardia(p(FONDO_D, SUELO - 2f, 1.02f), p(FONDO_D, SUELO - 2f, 2f), E.programa(m).guardia)
     }
 
-    /** La ventana: pequeña, de vidrio grueso, con su aro atornillado. Lo de fuera se pinta en la parte viva, porque gira. */
-    private fun DrawScope.ventana(m: Momento, a: Alumbrado) {
-        val o = VENTANA
-        fun aro(rx: Float, ry: Float) = Path().apply { addOval(Rect(o.x - rx, o.y - ry, o.x + rx, o.y + ry)) }
-        // La claridad que entra, de noche.
-        val noche = 1f - E.programa(m).nivel
-        if (noche > 0.3f) mancha(o, 34f, 40f, Color(0xFFB0C4FF), 0.1f * noche)
-        drawPath(aro(VENTANA_RX + 4.6f, VENTANA_RY + 5.6f), C.SOMBRA.copy(alpha = 0.3f))
-        drawPath(aro(VENTANA_RX + 3.6f, VENTANA_RY + 4.4f), Brush.horizontalGradient(listOf(a.en(o + Offset(-14f, 0f), C.ACERO, -1f), a.en(o + Offset(14f, 0f), lerp(C.ACERO, C.SOMBRA, 0.35f), 1f)), o.x - 16f, o.x + 16f))
-        drawPath(aro(VENTANA_RX + 3.6f, VENTANA_RY + 4.4f), C.GOMA.copy(alpha = 0.7f), style = Stroke(0.6f))
-        for (i in 0 until 10) { val ang = (2f * PI.toFloat() * i / 10f) + 0.3f; val q = o + Offset(cos(ang) * (VENTANA_RX + 1.9f), sin(ang) * (VENTANA_RY + 2.4f)); drawCircle(C.GOMA.copy(alpha = 0.8f), 0.8f, q); drawCircle(Color.White.copy(alpha = 0.35f), 0.3f, q + Offset(-0.2f, -0.2f)) }
-        drawPath(aro(VENTANA_RX, VENTANA_RY), C.GOMA)
-        drawPath(aro(VENTANA_RX - 2.2f, VENTANA_RY - 2.6f), E.FUERA)
-        // El canto del hueco: el lado que mira a la luz de dentro.
-        drawArc(a.en(o, lerp(C.CASCO_OSC, Color.White, 0.3f), -1f).copy(alpha = 0.8f), 250f, 150f, false, Offset(o.x - VENTANA_RX + 1f, o.y - VENTANA_RY + 1.2f), Size(VENTANA_RX * 2f - 2f, VENTANA_RY * 2f - 2.4f), style = Stroke(1f))
+    /**
+     * El ventanal: ocupa casi todo el costado, con su marco atornillado, el hueco del casco (el dintel, el alféizar y la
+     * jamba del fondo) y dos montantes. Aquí va lo que no se mueve; lo de fuera se pinta en la parte viva, porque gira.
+     */
+    private fun DrawScope.ventanal(m: Momento, a: Alumbrado) {
+        val marco = E.contornoDelVentanal(4.6f, 0f); val hueco = E.contornoDelVentanal(0f, 0f); val vidrio = E.contornoDelVentanal(0f, V_HUNDIDO)
+        fun pared(wy: Float, s: Float) = p(FONDO_D, wy, s)
+        // La luz que entra: de noche, una claridad azulada alrededor.
+        val claro = E.luzDeVentana(m)
+        if (claro > 0.02f) mancha(Offset(322f, 150f), 78f, 96f, Color(0xFFB0C4FF), 0.16f * claro)
+        // El marco, con su lado de luz, su junta y sus tornillos.
+        drawPath(E.contornoDelVentanal(6.4f, 0f), C.SOMBRA.copy(alpha = 0.26f))
+        drawPath(marco, Brush.verticalGradient(listOf(a.en(pared(V_ARRIBA, 1.3f), lerp(C.ACERO, Color.White, 0.16f), -1f), a.en(pared(110f, 1.3f), C.ACERO, -1f), a.en(pared(V_ABAJO, 1.3f), lerp(C.ACERO, C.SOMBRA, 0.2f), -1f)), 20f, 190f))
+        drawPath(marco, C.GOMA.copy(alpha = 0.7f), style = Stroke(0.6f))
+        for (i in 0..9) { val s = fondo(i, 9, V_S0 + 0.05f, 1.96f); for (wy in listOf(V_ARRIBA - 2.4f, V_ABAJO + 2.4f)) { val q = pared(wy, s); drawCircle(C.GOMA.copy(alpha = 0.8f), 0.55f * s, q); drawCircle(Color.White.copy(alpha = 0.35f), 0.22f * s, q + Offset(-0.2f, -0.2f)) } }
+        for (wy in listOf(76f, 94f, 112f, 130f, 148f)) { val q = pared(wy, V_S0 - 0.019f); drawCircle(C.GOMA.copy(alpha = 0.8f), 0.6f, q); drawCircle(Color.White.copy(alpha = 0.35f), 0.24f, q + Offset(-0.2f, -0.2f)) }
+        // El hueco del casco: el dintel, en sombra; la jamba del fondo; y el alféizar, que recibe la luz.
+        drawPath(hueco, Brush.verticalGradient(0f to a.en(pared(V_ARRIBA, 1.3f), lerp(C.CASCO_OSC, C.SOMBRA, 0.5f), -1f), 0.2f to a.en(pared(90f, 1.1f), lerp(C.CASCO_OSC, C.SOMBRA, 0.22f), -1f), 0.8f to a.en(pared(140f, 1.1f), lerp(C.CASCO_OSC, C.CASCO, 0.3f), -1f), 1f to a.en(pared(V_ABAJO, 1.3f), lerp(C.CASCO, Color.White, 0.12f), -1f), startY = 20f, endY = 186f))
+        for (wy in listOf(V_ARRIBA, V_ABAJO)) drawLine(C.GOMA.copy(alpha = 0.45f), pared(wy, V_S0 + 0.02f), p(FONDO_D + V_HUNDIDO, wy, V_S0 + 0.02f), 0.5f)
+        drawPath(hueco, C.GOMA.copy(alpha = 0.6f), style = Stroke(0.6f))
+        // El vidrio (lo de fuera lo pinta la parte viva) con su junta, y los montantes.
+        drawPath(vidrio, E.FUERA)
+        drawPath(vidrio, C.GOMA, style = Stroke(1.2f))
+        with(E) { montantes(m, a) }
     }
 
     // ---------------------------------------------------------------- El suelo
@@ -607,6 +638,12 @@ internal object ModuloEspacio {
             // Las esquinas de cinta naranja que marcan dónde va cada cosa, y las manchas de riego al pie de la torre y de las algas.
             for ((wx, s) in listOf(74f to 1.5f, 128f to 1.5f, 196f to 1.36f, 296f to 1.36f)) { val o = p(wx, SUELO, s); val k = s * 0.8f; drawLine(a.en(o, C.NARANJA).copy(alpha = 0.8f), o, o + Offset(7f * k, 0f), 1.2f * k); drawLine(a.en(o, C.NARANJA).copy(alpha = 0.8f), o, o + Offset(-1.6f * k, 4f * k), 1.2f * k) }
             mancha(Offset(46f, 276f), 30f, 5f, C.VERDE_OSC, 0.2f); mancha(Offset(350f, 280f), 26f, 4f, C.VERDE_OSC, 0.22f); mancha(Offset(120f, 218f), 22f, 4f, C.SOMBRA, 0.14f)
+            // La luz del ventanal en el suelo, al pie del poyo: tres paños, partidos por la sombra de los montantes. De día no se ve.
+            val claro = E.luzDeVentana(m)
+            if (claro > 0.02f) for ((sa, sb) in listOf(1.1f to E.MONTANTES[0] - 0.014f, E.MONTANTES[0] + 0.014f to E.MONTANTES[1] - 0.014f, E.MONTANTES[1] + 0.014f to 1.78f)) {
+                val pano = poligono(p(266f, SUELO, sa + 0.05f), p(266f, SUELO, sb + 0.04f), p(206f, SUELO, sb + 0.2f), p(206f, SUELO, sa + 0.24f))
+                drawPath(pano, Brush.horizontalGradient(listOf(Color(0xFFBFD0FF).copy(alpha = 0.05f * claro), Color(0xFFBFD0FF).copy(alpha = 0.42f * claro)), 250f, 350f))
+            }
             // La sombra al pie de las paredes.
             drawLine(C.SOMBRA.copy(alpha = 0.3f), Offset(FONDO_I, SUELO + 1.4f), Offset(FONDO_D, SUELO + 1.4f), 2.8f)
             drawLine(C.SOMBRA.copy(alpha = 0.26f), Offset(FONDO_I, SUELO) + Offset(1f, 1.4f), p(FONDO_I, SUELO, 1.56f) + Offset(1.4f, 2f), 3f)
@@ -659,7 +696,7 @@ internal object ModuloEspacio {
 
     private val TENDIDOS = listOf(
         Tendido(Offset(-4f, 62f), Offset(164f, 24f), 22f, C.GOMA, 1.8f), Tendido(Offset(50f, -3f), Offset(164f, 30f), 9f, C.NARANJA, 1.1f),
-        Tendido(Offset(164f, 22f), Offset(ANCHO + 4f, 30f), 26f, C.GOMA, 1.6f), Tendido(Offset(164f, 28f), Offset(300f, -3f), 12f, C.TELA, 1f),
+        Tendido(Offset(164f, 22f), Offset(ANCHO + 4f, 6f), 16f, C.GOMA, 1.6f), Tendido(Offset(164f, 28f), Offset(300f, -3f), 12f, C.TELA, 1f),
     )
 
     /** Por dónde va cada cable: con peso cuelga; sin peso hace eses y hasta sube. Lo usan el dibujo y la sombra que dejan en las paredes. */
@@ -684,20 +721,15 @@ internal object ModuloEspacio {
             drawPath(trazo, Color.White.copy(alpha = 0.18f), style = Stroke(grueso * 0.3f, cap = StrokeCap.Round, join = StrokeJoin.Round))
         }
         // Lo que cuelga de los cables: una pinza con un trapo, que cada día está en otro sitio, y las abrazaderas.
-        val pts = cuerda(Offset(164f, 22f), Offset(ANCHO + 4f, 30f), if (flota) -9f else 26f, 18)
+        val pts = cables(m)[2]
         for (i in listOf(4, 13)) drawRect(a.en(pts[i], C.ACERO), pts[i] + Offset(-1.6f, -1.6f), Size(3.2f, 3.2f))
         val pinza = pts[6 + hoy.entero(5)]
         val trapo = listOf(C.TELA, C.NARANJA, C.TELA_AZUL, C.VERDE)[hoy.entero(4)]
         if (!flota) drawPath(poligono(pinza + Offset(-5f, 0f), pinza + Offset(5f, 0.6f), pinza + Offset(4f, 15f), pinza + Offset(-1f, 13f), pinza + Offset(-5.4f, 15.6f)), a.en(pinza + Offset(0f, 8f), trapo))
         else drawPath(poligono(pinza + Offset(-2f, 0f), pinza + Offset(2f, 0f), pinza + Offset(11f, -9f), pinza + Offset(6f, -14f), pinza + Offset(-3f, -11f)), a.en(pinza + Offset(3f, -7f), trapo))
         drawRect(a.en(pinza, C.NARANJA), pinza + Offset(-1f, -1.4f), Size(2f, 3.4f))
-        // La manguera gruesa que baja por la esquina de la derecha, con su boquilla.
-        val manga = Path().apply { moveTo(372f, -3f); cubicTo(378f, 30f, 362f, 52f, 372f, 84f); cubicTo(378f, 104f, 368f, 120f, 374f, 138f) }
-        drawPath(manga, C.SOMBRA.copy(alpha = 0.3f), style = Stroke(5f, cap = StrokeCap.Round)); drawPath(manga, a.en(Offset(372f, 70f), lerp(C.GOMA, C.CASCO_OSC, 0.4f), -1f), style = Stroke(3.6f, cap = StrokeCap.Round))
-        var k = 0f; while (k < 1f) { val q = Offset(372f + 4f * sin(k * 9f), -3f + 141f * k); drawLine(Color.White.copy(alpha = 0.14f), q + Offset(-1.8f, 0f), q + Offset(1.8f, 0.6f), 0.5f); k += 0.045f }
-        drawRoundRect(a.en(Offset(374f, 142f), C.NARANJA, -1f), Offset(371f, 136f), Size(6f, 9f), CornerRadius(1.6f))
         // En las fiestas, una ristra de banderines por delante; el luto, una cinta negra en la barra.
-        if (E.fiesta(m) && !E.lamparitas(m)) { banderines(E.luzDeAdorno(m, a, Offset(100f, 50f)), Offset(44f, 40f), Offset(164f, 36f), 12f, listOf(C.NARANJA, C.TELA, C.CIAN, C.LUZ_CULTIVO), 9f); banderines(E.luzDeAdorno(m, a, Offset(260f, 50f)), Offset(164f, 40f), Offset(352f, 50f), 14f, listOf(C.TELA, C.TRIGO, C.NARANJA, C.CIAN), 9f) }
+        if (E.fiesta(m) && !E.lamparitas(m)) { banderines(E.luzDeAdorno(m, a, Offset(100f, 50f)), Offset(44f, 40f), Offset(164f, 36f), 12f, listOf(C.NARANJA, C.TELA, C.CIAN, C.LUZ_CULTIVO), 9f); banderines(E.luzDeAdorno(m, a, Offset(230f, 46f)), Offset(164f, 40f), Offset(292f, 38f), 11f, listOf(C.TELA, C.TRIGO, C.NARANJA, C.CIAN), 9f) }
         if (E.luto(m)) { drawRect(a.en(Offset(164f, 100f), Color(0xFF1C1A24)), Offset(161f, 138f), Size(6f, 3.4f)); drawPath(poligono(Offset(161.4f, 141f), Offset(165f, 141f), Offset(163.4f, 156f), Offset(159.6f, 154f)), a.en(Offset(162f, 148f), Color(0xFF1C1A24))) }
     }
 }
