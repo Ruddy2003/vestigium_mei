@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -99,6 +98,7 @@ import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 import kotlin.math.sin
 
 // =====================================================================
@@ -292,22 +292,26 @@ private fun anio(a: Int): String = when { a < -9000 -> "${"%,d".format(-a)} a. C
 // =====================================================================
 
 /**
- * [vidaPedida] y [seccion] vienen de la ruta `otras_vidas?vida=<id>&seccion=cuento`: abre con esa vida elegida (si el
- * tema la deja ver) y, con «cuento», baja hasta «Hoy, en su vida».
+ * Aquí no va el cuento del día: se lee en su propia pantalla ([PantallaCuento]), a la que se llega desde el cuadro de Hoy
+ * y desde el botón «Los cuentos de hoy», arriba de esta pantalla.
  */
 @Composable
-fun PantallaOtrasVidas(nav: Nav, vidaPedida: String? = null, seccion: String? = null) {
+fun PantallaOtrasVidas(nav: Nav) {
     val ctx = LocalContext.current
     val sentir = rememberSentir()
     val tema = Estilo.tema.id
     val vidas = remember(tema) { val l = OtrasVidas.visibles(tema); l.filter { it.tema != null } + l.filter { it.tema == null }.sortedBy { it.anio } }
-    var elegida by rememberSaveable(tema) { mutableStateOf(vidaPedida?.takeIf { id -> vidas.any { it.id == id } } ?: vidas.first().id) }
+    var elegida by rememberSaveable(tema) { mutableStateOf(vidas.first().id) }
     val tuyos by produceState(if (TusNumeros.sincrono) runCatching { TusNumeros.calcular(ctx) }.getOrDefault(emptyMap()) else null) {
         if (!TusNumeros.sincrono) value = withContext(Dispatchers.Default) { runCatching { TusNumeros.calcular(ctx) }.getOrDefault(emptyMap()) }
     }
     val v = vidas.firstOrNull { it.id == elegida } ?: vidas.first()
+    val conCuento = remember(tema) { vidasConCuento(tema).size }
     Hoja("Otras vidas", nav.atras, "Personas promedio de otras épocas y lugares: lo que comían, cuánto se movían, cuánto dormían y a cuánta gente veían, junto a ti.") {
         val t = tuyos
+        // ---- Los cuentos de hoy: la entrada a los de todas estas vidas, tengan cuadro en Hoy o no. Abre en la vida elegida.
+        if (conCuento > 0) io.github.ruddy2003.vestigium.ui.escenas.BotonCuento("Los cuentos de hoy", especial = false, alLeer = { nav.ir("cuento?vida=${v.id}") },
+            modifier = Modifier.padding(top = 12.dp), pie = porNumero(conCuento, "un cuento · leer ›", "$conCuento vidas, un cuento cada una · leer ›"))
         // ---- A quién te pareces.
         val numeros = t?.mapValues { it.value.v }.orEmpty()
         val parecidas = remember(numeros, tema) { vidas.mapNotNull { x -> OtrasVidas.distancia(x, numeros)?.let { x to it } }.sortedBy { it.second.first }.take(3) }
@@ -326,34 +330,19 @@ fun PantallaOtrasVidas(nav: Nav, vidaPedida: String? = null, seccion: String? = 
         } else if (t != null) Ayuda("Cuando tengas unos días de pasos, sueño y pantalla registrados, aquí verás a quién te pareces.", Modifier.padding(top = 12.dp))
 
         // ---- La línea del tiempo.
-        Row(Modifier.padding(top = 16.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            vidas.forEach { x ->
-                Column(Modifier.width(76.dp).clip(RoundedCornerShape(10.dp)).clickable { sentir(Sentidos.Evento.ELEGIR); elegida = x.id }.padding(vertical = 4.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally) {
-                    MedallaVida(x, 54.dp, elegida = x.id == v.id)
-                    Text(if (x.tema != null) "tu tema" else anio(x.anio), style = MaterialTheme.typography.labelSmall, color = if (x.tema != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1, modifier = Modifier.padding(top = 3.dp))
-                    Text(x.nombre, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-                }
-            }
-        }
+        LineaDeVidas(vidas, v.id) { elegida = it }
 
-        AnimatedContent(v, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "vida") { x -> Column { DetalleVida(x, t, alCuento = seccion == "cuento" && x.id == vidaPedida) } }
+        AnimatedContent(v, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "vida") { x -> Column { DetalleVida(x, t) } }
         Spacer(Modifier.height(24.dp))
     }
 }
 
 @Composable
-private fun DetalleVida(v: OtrasVidas.Vida, t: Map<String, TusNumeros.Valor>?, alCuento: Boolean = false) {
+private fun DetalleVida(v: OtrasVidas.Vida, t: Map<String, TusNumeros.Valor>?) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
-    // Al llegar con «seccion=cuento», la pantalla baja sola hasta el cuento.
-    val traerCuento = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
-    androidx.compose.runtime.LaunchedEffect(alCuento) { if (alCuento) { kotlinx.coroutines.delay(250); runCatching { traerCuento.bringIntoView() } } }
     // ---- Retrato.
     RetratoVida(v)
-    // ---- El cuento del día (solo los personajes que ya tienen el suyo).
-    HoyEnSuVida(v, modifier = Modifier.bringIntoViewRequester(traerCuento))
     // ---- Su historia.
     SuVida(v)
     // ---- Un día suyo.
@@ -421,16 +410,50 @@ private fun SuVida(v: OtrasVidas.Vida) {
     }
 }
 
+/** La fila de vidas para elegir una: su medalla, «tu tema» o su año, y su nombre. */
+@Composable
+private fun LineaDeVidas(vidas: List<OtrasVidas.Vida>, elegida: String, alElegir: (String) -> Unit) {
+    val sentir = rememberSentir()
+    Row(Modifier.padding(top = 16.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        vidas.forEach { x ->
+            Column(Modifier.width(76.dp).clip(RoundedCornerShape(10.dp)).clickable { sentir(Sentidos.Evento.ELEGIR); alElegir(x.id) }.padding(vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                MedallaVida(x, 54.dp, elegida = x.id == elegida)
+                Text(if (x.tema != null) "tu tema" else anio(x.anio), style = MaterialTheme.typography.labelSmall, color = if (x.tema != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1, modifier = Modifier.padding(top = 3.dp))
+                Text(x.nombre, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+            }
+        }
+    }
+}
+
+/** Las vidas que el tema [tema] deja ver y que ya tienen cuento: primero la del tema, después las doce de todos. */
+internal fun vidasConCuento(tema: String): List<OtrasVidas.Vida> = OtrasVidas.visibles(tema).filter {
+    io.github.ruddy2003.vestigium.vidas.anios.Calendarios.de(it.id) != null && io.github.ruddy2003.vestigium.vidas.piezas.TodasLasPiezas.de(it.id) != null
+}
+
 /**
- * La pantalla del cuento (ruta `cuento?vida=<id>`; se llega desde el botón del cuadro de Hoy): solo el cuento de hoy
- * de ese personaje y quién es (su retrato y «Su vida»). Lo demás de «Otras vidas» (a quién te pareces, «Un día suyo»,
- * «Tú y…», de dónde salen los números) se queda en su pantalla, en la pestaña Vida. No lee ningún dato tuyo.
+ * La pantalla del cuento (ruta `cuento?vida=<id>`; se llega desde el botón del cuadro de Hoy y desde «Los cuentos de
+ * hoy», arriba de «Otras vidas»). Arriba, las vidas que el tema deja ver y tienen cuento, para pasar de una a otra: así
+ * se leen también los cuentos de las que no tienen cuadro. Debajo, solo el cuento de hoy de la elegida y quién es (su
+ * retrato y «Su vida»). Lo demás de «Otras vidas» se queda en su pantalla, en la pestaña Vida. No lee ningún dato tuyo.
+ *
+ * Abre en [vidaId]; si esa vida no tiene cuento, en la primera que lo tenga.
  */
 @Composable
 fun PantallaCuento(nav: Nav, vidaId: String) {
-    val v = remember(vidaId) { OtrasVidas.porId(vidaId) }
+    val tema = Estilo.tema.id
+    val vidas = remember(tema, vidaId) {
+        val l = vidasConCuento(tema)
+        // La pedida entra aunque el tema no la deje ver (el cuadro de Hoy manda): va primero.
+        val pedida = OtrasVidas.porId(vidaId)?.takeIf { p -> l.none { it.id == p.id } && io.github.ruddy2003.vestigium.vidas.anios.Calendarios.de(p.id) != null }
+        listOfNotNull(pedida) + l
+    }
+    var elegida by rememberSaveable(tema, vidaId) { mutableStateOf(vidas.firstOrNull { it.id == vidaId }?.id ?: vidas.firstOrNull()?.id ?: "") }
+    val v = vidas.firstOrNull { it.id == elegida }
     Hoja("El cuento de hoy", nav.atras) {
-        if (v == null) { Ayuda("Ese personaje no existe.", Modifier.padding(top = 12.dp)); return@Hoja }
+        if (v == null) { Ayuda("Todavía no hay cuentos para las vidas de este tema.", Modifier.padding(top = 12.dp)); return@Hoja }
+        if (vidas.size > 1) LineaDeVidas(vidas, v.id) { elegida = it }
         RetratoVida(v, numeros = false)
         HoyEnSuVida(v)
         SuVida(v)
@@ -509,7 +532,7 @@ private fun ChipCerteza(c: OtrasVidas.Certeza) {
 private fun formato(m: OtrasVidas.Medida, x: Double): String = when (m.forma) {
     "hora" -> { val h = ((x % 24) + 24) % 24; "%d:%02d".format(h.toInt(), ((h - h.toInt()) * 60).roundToInt().coerceAtMost(59)) }
     "decimal" -> if (x >= 100) "%,d".format(x.roundToInt()) else "%.1f".format(x)
-    else -> when { x >= 1e6 -> "%.1f millones".format(x / 1e6); else -> "%,d".format(x.roundToInt()) }
+    else -> when { x >= 1e12 -> "%,.1f billones".format(x / 1e12); x >= 1e6 -> "%,.1f millones".format(x / 1e6); else -> "%,d".format(x.roundToInt()) }
 } + if (m.unidad.isNotEmpty() && m.forma != "hora") " ${m.unidad}" else ""
 
 
@@ -535,7 +558,7 @@ private fun FilaComparacion(v: OtrasVidas.Vida, m: OtrasVidas.Medida, d: OtrasVi
                 val texto = when {
                     mayor <= 0 -> null
                     menor <= 0 -> if (tuyo > d.v) "Para ${v.nombre}, cero." else "Para ti, cero."
-                    veces != null && veces >= 1.5 -> (if (tuyo > d.v) "Tú: " else "${v.nombre}: ") + (if (veces < 10) "%.1f".format(veces) else "%,d".format(veces.roundToInt())) + " veces más."
+                    veces != null && veces >= 1.5 -> (if (tuyo > d.v) "Tú: " else "${v.nombre}: ") + (if (veces < 10) "%.1f".format(veces) else "%,d".format(veces.roundToLong())) + " veces más."
                     else -> null
                 }
                 texto?.let { Ayuda(it, Modifier.padding(top = 2.dp)) }

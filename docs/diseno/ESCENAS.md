@@ -1,6 +1,6 @@
 # Guía de arte de las escenas de «Otras vidas»
 
-_Creada el 11 nov 2026, al cerrar la tanda P4a. Recoge lo que el autor decidió ese día sobre el aspecto del cuadro, después de ver el primer paisaje de Helénico y pedir que se rehiciera. **Toda sesión que dibuje o cambie una escena lee esta guía entera antes de empezar** (P4b, S1 a S7 y las S chicas de cada año)._
+_Creada el 11 nov 2026, al cerrar la tanda P4a. Recoge lo que el autor decidió ese día sobre el aspecto del cuadro, después de ver el primer paisaje de Helénico y pedir que se rehiciera. **Toda sesión que dibuje o cambie una escena lee esta guía entera antes de empezar** (P4b, las tandas S y las S chicas de cada año)._
 
 ## 0. Cómo se usa
 
@@ -230,6 +230,8 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 - Las tandas S **no tocan el motor** (`EscenaVida.kt`, `VistaEscena.kt`, `vidas/`).
 
 **Los temas que faltan** (Gótico y Ciudad neón se hicieron en P4b). Dónde vive cada personaje y por dónde empezar. Son sugerencias: la tanda decide después de leer el calendario y el cuento.
+
+**Varios personajes se mudan durante el año** y su tema pide más de un lugar. Cuáles, cuántos días y qué se pinta entero o como variante del cuadro de siempre está en `docs/plan_historia_y_escenas.md`, sección 8.
 
 | Tema | Personaje y lugar | Tipo | Marco posible | Superficie grande |
 |---|---|---|---|---|

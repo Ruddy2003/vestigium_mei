@@ -65,10 +65,10 @@ class AnioPilotoPrueba {
 
     @Test fun loHistoricoLlevaFuenteOSaleDeUnCalculo() {
         todos.forEach { c -> dias(c).filter { it.certeza == CertezaDia.HISTORICO }.forEach { d ->
-            assertTrue("${c.vida}, «${d.id}»: histórico sin fuente", d.fuente != null || d.id in AnioPiloto.CALCULADOS)
+            assertTrue("${c.vida}, «${d.id}»: histórico sin fuente", d.fuente != null || d.id in Calendarios.CALCULADOS)
         } }
         // Y al revés: lo calculado existe y es histórico.
-        AnioPiloto.CALCULADOS.forEach { id -> assertTrue("«$id» no está en ningún calendario", todos.any { c -> dias(c).any { it.id == id && it.certeza == CertezaDia.HISTORICO } }) }
+        Calendarios.CALCULADOS.forEach { id -> assertTrue("«$id» no está en ningún calendario", todos.any { c -> dias(c).any { it.id == id && it.certeza == CertezaDia.HISTORICO } }) }
     }
 
     @Test fun lasFuentesSonDeWikipediaYLosSucesosDeSuVidaSonInventados() {
