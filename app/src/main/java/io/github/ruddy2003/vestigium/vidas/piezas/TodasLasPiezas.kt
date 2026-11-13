@@ -1,0 +1,16 @@
+package io.github.ruddy2003.vestigium.vidas.piezas
+
+import io.github.ruddy2003.vestigium.vidas.Piezas
+
+/**
+ * El registro de las piezas de los cuentos: unas por personaje que ya tiene cuento. Cada tanda de textos suma aquí
+ * las suyas, sin tocar el motor (`vidas/Cuento.kt`). Un personaje con calendario pero sin piezas tiene ficha del día
+ * y todavía no tiene cuento.
+ */
+object TodasLasPiezas {
+    val TODAS: List<Piezas> by lazy { listOf(PiezasDemeas.PIEZAS, PiezasPierre.PIEZAS, PiezasKei.PIEZAS, PiezasAmaru.PIEZAS) }
+
+    private val porVida: Map<String, Piezas> by lazy { TODAS.associateBy { it.vida } }
+
+    fun de(vidaId: String): Piezas? = porVida[vidaId]
+}

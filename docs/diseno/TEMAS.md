@@ -51,6 +51,7 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 | 7 | Limpieza y cierre: sin `else`, sin ramas agrupadas, pruebas sin pendientes, todo en P | hecho 30 oct 2026 (queda el gato, del lote 9) |
 | 8 | Terminal y 13 temas nuevos (de 21 a 34) | hecho: 11 temas el 30 oct 2026; Vapor y Art déco, el 2 nov 2026 |
 | 9 | El gato de cada tema | hecho 2 nov 2026: los 21 originales completos (9a) y los 13 nuevos (9b) |
+| Cuadro de Hoy | La escena, el gato y la banderita de cada tema (plan `docs/plan_historia_y_escenas.md`; aquí, la sección «Historia y escenas») | en curso: Helénico tiene escena y banderita desde la tanda P4a (11 nov 2026); Gótico y Ciudad neón, desde la P4b (11 nov 2026); el gato de los tres, con su pelaje, desde la P5b (12 nov 2026) |
 
 ## Resumen por tema
 
@@ -58,42 +59,42 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 
 | Tema | P | S | C | G | ✗ |
 |---|---|---|---|---|---|
-| ROM | 125 | 0 | 0 | 0 | 0 |
-| URB | 125 | 0 | 0 | 0 | 0 |
+| ROM | 125 | 0 | 0 | 0 | 3 |
+| URB | 125 | 0 | 0 | 0 | 3 |
 | CIB | 123 | 0 | 0 | 0 | 0 |
-| NEO | 123 | 0 | 0 | 0 | 0 |
-| HEL | 125 | 0 | 0 | 0 | 0 |
-| EGI | 125 | 0 | 0 | 0 | 0 |
-| MED | 125 | 0 | 0 | 0 | 0 |
-| TEM | 125 | 0 | 0 | 0 | 0 |
-| DIS | 123 | 0 | 0 | 0 | 0 |
-| REF | 123 | 0 | 0 | 0 | 0 |
-| ORD | 125 | 0 | 0 | 0 | 0 |
-| VAP | 125 | 0 | 0 | 0 | 0 |
-| LAB | 125 | 0 | 0 | 0 | 0 |
-| COL | 125 | 0 | 0 | 0 | 0 |
-| NAP | 123 | 0 | 0 | 0 | 0 |
-| DEC | 123 | 0 | 0 | 0 | 0 |
-| BOT | 125 | 0 | 0 | 0 | 0 |
-| RUI | 125 | 0 | 0 | 0 | 0 |
+| NEO | 126 | 0 | 0 | 0 | 0 |
+| HEL | 128 | 0 | 0 | 0 | 0 |
+| EGI | 125 | 0 | 0 | 0 | 3 |
+| MED | 125 | 0 | 0 | 0 | 3 |
+| TEM | 125 | 0 | 0 | 0 | 3 |
+| DIS | 123 | 0 | 0 | 0 | 3 |
+| REF | 123 | 0 | 0 | 0 | 3 |
+| ORD | 125 | 0 | 0 | 0 | 3 |
+| VAP | 125 | 0 | 0 | 0 | 3 |
+| LAB | 125 | 0 | 0 | 0 | 3 |
+| COL | 125 | 0 | 0 | 0 | 3 |
+| NAP | 123 | 0 | 0 | 0 | 3 |
+| DEC | 123 | 0 | 0 | 0 | 3 |
+| BOT | 125 | 0 | 0 | 0 | 3 |
+| RUI | 125 | 0 | 0 | 0 | 3 |
 | NAV | 123 | 0 | 0 | 0 | 0 |
-| SED | 125 | 0 | 0 | 0 | 0 |
-| EDO | 125 | 0 | 0 | 0 | 0 |
-| GOT | 125 | 0 | 0 | 0 | 0 |
-| ARC | 125 | 0 | 0 | 0 | 0 |
-| ESP | 123 | 0 | 0 | 0 | 0 |
-| ABI | 125 | 0 | 0 | 0 | 0 |
-| AND | 125 | 0 | 0 | 0 | 0 |
-| MES | 125 | 0 | 0 | 0 | 0 |
-| MON | 125 | 0 | 0 | 0 | 0 |
-| REN | 125 | 0 | 0 | 0 | 0 |
-| PIR | 125 | 0 | 0 | 0 | 0 |
-| URS | 125 | 0 | 0 | 0 | 0 |
-| REV | 125 | 0 | 0 | 0 | 0 |
-| ANT | 125 | 0 | 0 | 0 | 0 |
-| CUE | 125 | 0 | 0 | 0 | 0 |
+| SED | 125 | 0 | 0 | 0 | 3 |
+| EDO | 125 | 0 | 0 | 0 | 3 |
+| GOT | 128 | 0 | 0 | 0 | 0 |
+| ARC | 125 | 0 | 0 | 0 | 3 |
+| ESP | 123 | 0 | 0 | 0 | 3 |
+| ABI | 125 | 0 | 0 | 0 | 3 |
+| AND | 125 | 0 | 0 | 0 | 3 |
+| MES | 125 | 0 | 0 | 0 | 3 |
+| MON | 125 | 0 | 0 | 0 | 3 |
+| REN | 125 | 0 | 0 | 0 | 3 |
+| PIR | 125 | 0 | 0 | 0 | 3 |
+| URS | 125 | 0 | 0 | 0 | 3 |
+| REV | 125 | 0 | 0 | 0 | 3 |
+| ANT | 125 | 0 | 0 | 0 | 3 |
+| CUE | 125 | 0 | 0 | 0 | 3 |
 
-Desde el lote 2 ningún tema cae en los respaldos de trofeos, salón, campaña ni libreta.
+Desde el lote 2 ningún tema cae en los respaldos de trofeos, salón, campaña ni libreta. Las ✗ de ahora son del cuadro de Hoy, que va llegando por tandas (sección «Historia y escenas»).
 
 ## Lote 1 · Una sola huella
 
@@ -266,6 +267,16 @@ Lo que la prueba `CoberturaTemas` exige por tema. Los recursos que ya existen sa
 | Los 13 sonidos del tema | `res/raw` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |  |
 | Gato de la banda de Día | `assets/gato/gato.json` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 9: los 21 originales con la rama del gato; los 13 del lote 8 con `herramientas/gato/gato20a.py` a `gato20d.py` (9b). |
 | Otra vida del tema | `data/OtrasVidas.kt` (`DE_TEMAS`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 7: ANT tiene a Brenna, guía de caminos (inventada). Lote 8: Kei pasa de CIB a NEO; CIB tiene a Carmen, operadora, y cada tema nuevo trae su vida. |
+
+## Historia y escenas · El cuadro de Hoy
+
+El cuadro que irá en Hoy en lugar del gato de pixel (plan `docs/plan_historia_y_escenas.md`): el paisaje del personaje de «Otras vidas» de cada tema, su gato dibujado con código y la banderita «Hoy en la historia». Terminal y Navidad no lo llevan (decisión 1 del plan) y siguen con el gato de pixel. Lo vigila `CoberturaTemas` con las superficies `cuadro_escena` y `cuadro_banderita`; se ve con `superficies = cuadro` en `capturas.yml`, que se puede acotar con la entrada `temas` y, para una corrida corta, con `solo`.
+
+| Superficie | Dónde | ROM | URB | CIB | NEO | HEL | EGI | MED | TEM | DIS | REF | ORD | VAP | LAB | COL | NAP | DEC | BOT | RUI | NAV | SED | EDO | GOT | ARC | ESP | ABI | AND | MES | MON | REN | PIR | URS | REV | ANT | CUE | Nota |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Cuadro: escena | `ui/escenas/Escena<Tema>.kt`, `escenaDe` | ✗ | ✗ | · | P | P | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | · | ✗ | ✗ | P | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | P4a (11 nov 2026): HEL, el puerto de Zea desde el patio de Demeas. Siguen GOT y NEO en P4b y los demás en las tandas S1 a S7. Todas usan la biblioteca `ui/escenas/paisaje/`; lo propio de cada una es su composición y lo que lee de la ficha del día. |
+| Cuadro: gato | `ui/escenas/GatoCuadro.kt`, `pelajeDe` | ✗ | ✗ | · | P | P | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | · | ✗ | ✗ | P | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | Tandas P5a y P5b (el esqueleto y los pelajes del piloto) y las tandas S. |
+| Cuadro: banderita | `ui/escenas/Banderitas.kt`, `banderitaHistoria` | ✗ | ✗ | · | P | P | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | · | ✗ | ✗ | P | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | P4a: HEL, una cinta de estela púrpura con greca y sol de Vergina, colgada de su varilla de bronce. Va siempre junto con la escena. |
 
 ## Segunda pasada: detalle (al nivel del Ideario)
 

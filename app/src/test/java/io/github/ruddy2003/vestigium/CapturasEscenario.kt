@@ -46,8 +46,11 @@ import org.junit.Test
  * Todo es inventado. El lienzo es alto a propósito: se mide cuánto ocupa cada pantalla de verdad.
  */
 class CapturasEscenario {
-    @get:Rule
     val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_6, theme = "android:Theme.Material.NoActionBar", showSystemUi = false, useDeviceResolution = true)
+
+    /** Paparazzi, envuelto: en una corrida «solo» estas capturas, que son de siempre, se saltan ([CapturasAPedido]). */
+    @get:Rule
+    val reglas: org.junit.rules.TestRule = CapturasAPedido.regla(paparazzi)
 
     private val navVacia = Nav(ir = {}, atras = {})
 

@@ -10,9 +10,11 @@ App personal de Android (Kotlin + Jetpack Compose) para registrar, a lo largo de
   - `ciencia/`: panel diario y estadística (`Estadistica.kt`, `Dinamicas.kt`, `Analisis.kt`), cuestionarios (`Escalas.kt`).
   - `avisos/`: notificaciones y la tarea periódica de 15 minutos (`Trabajo.kt`).
   - `ui/`: pantallas y componentes.
+    - `ui/escenas/`: el cuadro de «Otras vidas», un paisaje por tema dibujado con código (`Escena<Tema>.kt`), y su biblioteca compartida (`paisaje/`).
 - `app/src/main/assets/vestigium.R`: funciones de R que viajan con cada exportación.
 - `herramientas/`: scripts de Python para generar recursos (íconos, sonidos, arte).
 - `docs/paper/`: el paper metodológico (ver abajo).
+- `docs/diseno/ESCENAS.md`: la guía de arte de las escenas (ver abajo). `docs/plan_historia_y_escenas.md`: el plan de sus tandas.
 - `.github/workflows/`: `apk.yml` compila y publica la APK; `capturas.yml` genera capturas de diseño (Paparazzi) en la rama `capturas`.
 
 ## Compilar y publicar
@@ -33,6 +35,14 @@ App personal de Android (Kotlin + Jetpack Compose) para registrar, a lo largo de
   - se anota en `docs/paper/apendiceD_cambios.md`.
 - **Lo que sí puede cambiar con libertad:** el diseño, los temas, los textos de la interfaz, el acomodo de las pantallas, los análisis y las funciones de R, porque todo eso se puede rehacer a partir de los datos.
 - Si alguien pide algo que rompe la congelación, dilo antes de hacerlo y propón cómo hacerlo sin romper la comparación: un campo nuevo opcional en vez de cambiar uno que ya existe.
+
+## Las escenas de «Otras vidas» (`ui/escenas/`)
+
+- **Antes de dibujar o cambiar una escena, lee entera `docs/diseno/ESCENAS.md`.** Son las decisiones de aspecto que tomó el autor: estilo gouache y diez reglas (luz con dirección y sombras, cielo con vida, paleta corta, agua con profundidad, primer plano grande y con uso, algo que cruce y enmarque, grano, la noche al nivel del día, bordes naturales, lejanía con profundidad).
+- **La vara de calidad es el cuadro de Helénico** (`EscenaHeleno.kt`; su imagen, en `docs/diseno/escenas/referencia_heleno.jpg`). Toda escena nueva se dibuja en el arnés al lado de esa y no puede verse más pobre en ningún punto. Si no alcanza el tiempo, se entregan menos escenas bien hechas, no más escenas peores.
+- **Las reglas se adaptan al tema, no se quitan:** si el tema no tiene cielo, sol o agua, se cumple el propósito de la regla con lo que sí tiene (la guía dice cómo) y se anota en el informe.
+- **No cambies cómo se ve una pieza de `paisaje/` que ya usa una escena aprobada** sin volver a dibujar esas escenas y enseñárselas al autor. Agregar piezas nuevas sí se puede.
+- El autor ve cada escena nueva junto a la de Helénico antes de darla por buena.
 
 ## Privacidad (siempre)
 
