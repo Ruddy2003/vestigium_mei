@@ -75,15 +75,24 @@ fun PantallaHoyEnLaHistoria(nav: Nav) {
         val r = withContext(Dispatchers.IO) { Efemerides.delDia(carpetaHistoria(ctx), hoy, LocalDate.now()) { Red.get(it) } }
         estado = EstadoHistoria.Listo(r)
     }
-    VistaHoyEnLaHistoria(estado, hoy, atras = nav.atras, alReintentar = { intento++ }, alPrivacidad = { nav.ir("privacidad") })
+    // Tanda H2: «en la época de X ›», con las vidas que el tema deja ver y tienen cuento.
+    val tema = io.github.ruddy2003.vestigium.ui.Estilo.tema.id
+    val vidas = remember(tema) { vidasConCuento(tema) }
+    VistaHoyEnLaHistoria(estado, hoy, atras = nav.atras, alReintentar = { intento++ }, alPrivacidad = { nav.ir("privacidad") },
+        epocaDe = { anio -> io.github.ruddy2003.vestigium.vidas.Epocas.vidaDelAnio(anio, vidas, tema)?.let { it.id to it.nombre } },
+        alCuento = { id -> nav.ir("cuento?vida=$id") })
 }
 
 /**
  * La pantalla sin la red: el [estado] ya resuelto (así la sacan las capturas). Los eventos van del más antiguo al más
  * reciente, con fichas para quedarse con una época, y cada uno con los artículos de Wikipedia que enlaza.
+ *
+ * Tanda H2: si [epocaDe] da una vida para el año del evento (su id y su nombre), el evento lleva «en la época de X ›»,
+ * que abre su cuento con [alCuento]. No se copia texto: solo se enlaza.
  */
 @Composable
-fun VistaHoyEnLaHistoria(estado: EstadoHistoria, fecha: LocalDate, atras: (() -> Unit)?, alReintentar: () -> Unit, alPrivacidad: () -> Unit) {
+fun VistaHoyEnLaHistoria(estado: EstadoHistoria, fecha: LocalDate, atras: (() -> Unit)?, alReintentar: () -> Unit, alPrivacidad: () -> Unit,
+                         epocaDe: (Int) -> Pair<String, String>? = { null }, alCuento: (String) -> Unit = {}) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val mes = fecha.monthValue; val dia = fecha.dayOfMonth
@@ -106,7 +115,7 @@ fun VistaHoyEnLaHistoria(estado: EstadoHistoria, fecha: LocalDate, atras: (() ->
                             Modifier.padding(top = 4.dp))
                         BotonTexto(onClick = alReintentar) { Text("volver a intentar", style = MaterialTheme.typography.labelLarge) }
                     }
-                } else ListaDeEventos(r, mes, dia, ::abrir, alReintentar)
+                } else ListaDeEventos(r, mes, dia, ::abrir, alReintentar, epocaDe, alCuento)
             }
         }
         // El pie: de dónde sale y con qué licencia.
@@ -129,7 +138,8 @@ private val EPOCAS = listOf(
 )
 
 @Composable
-private fun ListaDeEventos(r: Efemerides.Resultado, mes: Int, dia: Int, abrir: (String) -> Unit, alReintentar: () -> Unit) {
+private fun ListaDeEventos(r: Efemerides.Resultado, mes: Int, dia: Int, abrir: (String) -> Unit, alReintentar: () -> Unit,
+                           epocaDe: (Int) -> Pair<String, String>?, alCuento: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
     var epoca by rememberSaveable(mes, dia) { mutableStateOf(0) }
     if (r.sinConexion) Tarjeta(Modifier.padding(top = 12.dp)) {
@@ -153,6 +163,10 @@ private fun ListaDeEventos(r: Efemerides.Resultado, mes: Int, dia: Int, abrir: (
                 Text(Efemerides.nombreDelAnio(e.anio), style = MaterialTheme.typography.labelLarge, color = cs.primary, modifier = Modifier.width(64.dp))
                 Column(Modifier.weight(1f)) {
                     Text(e.texto, style = MaterialTheme.typography.bodyMedium)
+                    epocaDe(e.anio)?.let { (id, nombre) ->
+                        Text("en la época de ${enFrase(nombre)} ›", style = MaterialTheme.typography.labelLarge, color = cs.secondary,
+                            modifier = Modifier.clickable(role = Role.Button) { alCuento(id) }.padding(top = 4.dp, bottom = 2.dp))
+                    }
                     if (e.enlaces.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 2.dp)) {
                         e.enlaces.forEach { l ->
                             Text(l.titulo, style = MaterialTheme.typography.labelMedium, color = cs.primary, textDecoration = TextDecoration.Underline,
@@ -164,5 +178,9 @@ private fun ListaDeEventos(r: Efemerides.Resultado, mes: Int, dia: Int, abrir: (
         }
     }
 }
+
+/** «Un joven naturalista» → «un joven naturalista», para que se lea dentro de la frase; los nombres propios quedan igual. */
+internal fun enFrase(nombre: String): String =
+    if (listOf("Un ", "Una ", "El ", "La ").any { nombre.startsWith(it) }) nombre.replaceFirstChar { it.lowercase() } else nombre
 
 private fun porNumeroEventos(n: Int) = if (n == 1) "1 acontecimiento" else "$n acontecimientos"

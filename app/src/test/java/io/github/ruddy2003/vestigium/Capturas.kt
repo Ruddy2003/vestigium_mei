@@ -2136,12 +2136,14 @@ class Capturas {
     }
     private val diaDeMuestra = java.time.LocalDate.of(2026, 11, 13)
 
-    /** «Hoy en la historia» con conexión, en cada tema (CAPTURAS=historia). */
+    /** «Hoy en la historia» con conexión, en cada tema, con «en la época de X ›» (CAPTURAS=historia; tandas H1 y H2). */
     @Test fun temaHistoria() = porTema("historia") { t, o, n ->
         pantalla(t, o, 3600, n) {
             io.github.ruddy2003.vestigium.ui.pantallas.VistaHoyEnLaHistoria(
                 io.github.ruddy2003.vestigium.ui.pantallas.EstadoHistoria.Listo(io.github.ruddy2003.vestigium.historia.Efemerides.Resultado(eventosDeMuestra, diaDeMuestra, sinConexion = false)),
-                diaDeMuestra, atras = {}, alReintentar = {}, alPrivacidad = {})
+                diaDeMuestra, atras = {}, alReintentar = {}, alPrivacidad = {},
+                // Tanda H2: «en la época de X ›» con las vidas del tema (en la muestra, 1918 lleva a José).
+                epocaDe = { anio -> io.github.ruddy2003.vestigium.vidas.Epocas.vidaDelAnio(anio, io.github.ruddy2003.vestigium.ui.pantallas.vidasConCuento(t.id), t.id)?.let { it.id to it.nombre } })
         }
     }
 

@@ -345,9 +345,10 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - el trabajo de 15 minutos baja la fecha de mañana;
   - sin conexión, muestra lo guardado.
 - **Licencia:** «Wikipedia en español, CC BY-SA 4.0», con el enlace a cada artículo.
-- **Enlace a un cuento:** si el año del evento cae en la época de un personaje que el tema deja ver (`epoca`, por omisión `anio ± 30`), lleva «en la época de Demeas ›», que abre su cuento.
+- **Enlace a un cuento** (hecho en H2, `vidas/Epocas.kt`): si el año del evento cae en la época de un personaje que el tema deja ver y tiene cuento (`anio ± 30`), lleva «en la época de Demeas ›», que abre su cuento.
   - No se copia texto.
-  - La astronauta, al ser del futuro, no tiene eventos.
+  - Si caen varios, el de año más cercano; a igual distancia, el del tema.
+  - **Las vidas inventadas no tienen época** (Brenna cuenta los años «de los Caminos»; la astronauta, la residente y la doctora son del futuro), **ni las de hoy** (desde el año 2000: Alguien del mundo, Alguien de México, Giulia), que se llevarían todo lo reciente.
 
 ## 4. Sin redundancia
 
@@ -573,7 +574,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P5b | claude-fable-5-2 | high | Se apoya en el esqueleto ya resuelto. Los gestos se ajustan después de probarlos en el teléfono | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5b.md`, con la lista de qué probar en el teléfono); **aprobado por el autor el 12 nov 2026** |
 | P6 | claude-fable-5-2 | high | Integración en Hoy, medidas y esquema | 2 | hecho 13 nov 2026 (`docs/historia/informes/P6.md`, con la lista de qué probar en el teléfono). Salió en la v243; el autor lo probó ese día y pidió cambios (sin tirón al abrir, sin plegado, el botón del cuento y su pantalla propia), que salieron en la v245. Después pidió sacar el cuento de «Otras vidas». **Falta que confirme en el teléfono que ya no hay tirón** |
 | H1 | claude-opus-5-5 | medium | Red, caché y pantalla con patrones que ya existen | 1 | hecho 13 nov 2026 (`docs/historia/informes/H1.md`) |
-| H2 | claude-opus-5-5 | medium | Una regla simple de años | 1 | pendiente |
+| H2 | claude-opus-5-5 | medium | Una regla simple de años | 1 | hecho 13 nov 2026 (`docs/historia/informes/H2.md`) |
 | A1 | claude-opus-5-5 | high | Calendarios verosímiles con libertad creativa y el patrón de P2. La continuidad de 5 años pide high | 0 | hecho 11 nov 2026 (`docs/historia/informes/A1.md`) |
 | A2 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A2.md`) |
 | A3 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A3.md`) |
