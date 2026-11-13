@@ -489,7 +489,7 @@ object Gato {
     }
 }
 
-private fun ahorroDeEnergia(ctx: Context) = (ctx.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager)?.isPowerSaveMode == true
+internal fun ahorroDeEnergia(ctx: Context) = (ctx.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager)?.isPowerSaveMode == true
 
 /**
  * La banda de 80 dp con el gato. Se anima solo mientras se ve, con las animaciones encendidas y sin ahorro de energía;

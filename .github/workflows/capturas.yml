@@ -11,6 +11,14 @@ on:
         description: "Capturas por tema (lista separada por comas, o «todas»); vacío = solo las de siempre"
         type: string
         default: ""
+      temas:
+        description: "De esas capturas, solo estos temas (ids separados por comas: «heleno,gotico»); vacío = todos"
+        type: string
+        default: ""
+      solo:
+        description: "Solo las capturas pedidas: se saltan las de siempre (corrida corta; la rama capturas queda solo con estas)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -32,6 +40,8 @@ jobs:
       - name: Generar capturas
         env:
           CAPTURAS: ${{ inputs.superficies }}
+          CAPTURAS_TEMAS: ${{ inputs.temas }}
+          CAPTURAS_SOLO: ${{ inputs.solo }}
         run: |
           chmod +x gradlew
           # La memoria libre cada 20 s en el registro: si la máquina se apaga, se ve si fue por falta de memoria.

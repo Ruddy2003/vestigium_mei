@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 23
+const val SCHEMA_V = 24
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -844,8 +844,20 @@ data class Config(
     val modo: String = "sistema",
     /** Emblemas que se mueven, transiciones y barras que crecen. */
     val animaciones: Boolean = true,
-    /** El gato del tema en una banda arriba de Día. */
+    /** El gato del tema arriba de Día: en su cuadro o en su banda, según [gato_estilo]. Apagado, no sale ninguno de los dos. */
     val gato: Boolean = true,
+    /**
+     * Esquema 24 (13 nov 2026): dónde vive el gato. «cuadro»: dentro del paisaje del personaje de «Otras vidas» del tema,
+     * en los temas que ya tienen escena (en los demás sigue el de pixel). «pixel»: siempre la banda del gato de pixel.
+     * Es una preferencia de interfaz: no cambia nada de lo que se registra.
+     */
+    val gato_estilo: String = "cuadro",
+    /**
+     * Esquema 24: «Hoy en la historia» (lo que pasó un día como hoy, de Wikipedia en español). Solo manda el mes y el día.
+     * La pantalla y su interruptor llegan con la tanda H1 del plan de historia y escenas; el ajuste se agregó ya para
+     * que el esquema subiera una sola vez.
+     */
+    val historia_hoy: Boolean = true,
     /** Una capa tenue que se mueve detrás de todo: estrellas, nieve, polvo de vitral, luciérnagas… */
     val fondo_vivo: Boolean = true,
     /** Vibraciones al tocar y al guardar. */
