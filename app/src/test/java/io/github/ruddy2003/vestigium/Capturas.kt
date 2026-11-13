@@ -2763,4 +2763,15 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("calma", "2028-04-29", HORAS_CUADRO),                      // la calma chicha: el mar como un plato y la vela caída
         Triple("costa", "2027-05-04", HORAS_CUADRO),                      // otro horizonte: la costa alta
     ),
+    // El funcionario (Distopía, tanda S3): la plaza de la capital y, dos días, el pueblo de la hermana.
+    "funcionario" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // la plaza, la avenida y el ministerio
+        Triple("desfile", "2027-05-01", listOf(10.0)),                    // colgaduras, banderas y vallas
+        Triple("campana", "2028-04-10", listOf(22.0)),                    // la campaña: el ministerio encendido de noche
+        Triple("apagon", "2027-10-05", listOf(21.4)),                     // sin corriente: velas, la luna y el bidón
+        Triple("cohetes", "2029-10-15", listOf(17.0)),                    // humo sobre el barrio de los obreros
+        Triple("fiesta", "2027-01-01", listOf(21.0)),                     // año nuevo: ristras de bombillas
+        Triple("torre", "2031-05-15", listOf(10.0)),                      // la torre nueva, inaugurada
+        Triple("provincia", "2030-06-28", listOf(19.6)),                  // el pueblo: variante de la misma plaza (decisión 21)
+    ),
 )
