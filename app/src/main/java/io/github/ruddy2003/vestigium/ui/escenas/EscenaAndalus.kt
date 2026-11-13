@@ -1093,7 +1093,7 @@ internal object EscenaAndalus : EscenaVida {
             banderines(l, Offset(ESQUINA + 2f, ALERO + 6f), Offset(338f, 110f), 12f, listOf(CARMESI, SEDA, VIDRIADO, CAL, ANIL), 7f)
         }
         if (luto(m)) {
-            // En al-Ándalus el luto era blanco: un paño sin teñir sobre la tapia.
+            // En la Córdoba omeya el luto era blanco, por oposición al negro de los abasíes (comprobado: informe de S1): un paño sin teñir sobre la tapia.
             pano(l, Offset(186f, CAP + 1f), Offset(234f, CAP + 1f), 30f, Color(0xFFF4F0E6))
         }
         if (sedaNueva(m)) {

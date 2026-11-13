@@ -229,7 +229,7 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 - **Lo que una segunda escena necesite de otra se sube a la biblioteca en vez de copiarlo:** `desconchon`, `hilera` y `casita`, `hojaDeHiguera`, `sombraCorta` siguen siendo privados de `EscenaHeleno.kt` (`Cosa` ya se subió en P4b, a `paisaje/Cosas.kt`). Al subir algo, el cuadro del que sale tiene que quedar idéntico: se comparan las dos imágenes punto por punto.
 - Las tandas S **no tocan el motor** (`EscenaVida.kt`, `VistaEscena.kt`, `vidas/`).
 
-**Los temas que faltan** (Gótico y Ciudad neón se hicieron en P4b; Romano y Al-Ándalus, en S1: `EscenaRomano.kt` y `EscenaAndalus.kt` son otros dos exteriores con sol, pendientes de que el autor los apruebe). Dónde vive cada personaje y por dónde empezar. Son sugerencias: la tanda decide después de leer el calendario y el cuento.
+**Los temas que faltan** (Gótico y Ciudad neón se hicieron en P4b; Romano y Al-Ándalus, en S1: `EscenaRomano.kt` y `EscenaAndalus.kt` son otros dos exteriores con sol, aprobados por el autor el 13 nov 2026; sus imágenes, `referencia_romano.jpg` y `referencia_andalus.jpg`). Dónde vive cada personaje y por dónde empezar. Son sugerencias: la tanda decide después de leer el calendario y el cuento.
 
 **Varios personajes se mudan durante el año** y su tema pide más de un lugar. Cuáles, cuántos días y qué se pinta entero o como variante del cuadro de siempre está en `docs/plan_historia_y_escenas.md`, sección 8.
 
