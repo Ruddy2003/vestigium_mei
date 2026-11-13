@@ -146,14 +146,13 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
     - nunca hay dos gatos a la vez.
 11. **El acomodo:**
     - arriba, en el lugar del gato;
-    - abierto por omisión;
-    - se pliega a una línea de 58 dp;
-    - en proporción 4:3.
+    - en proporción 4:3;
+    - **no se pliega** (cambiado por el autor el 13 nov 2026, al probarlo en el teléfono; antes se plegaba a una línea de 58 dp).
 12. **Sin marco.** Dentro, arriba, va una banderita «Hoy en la historia» con la forma de cada tema.
 13. **Cómo se abre cada cosa:**
     - **«Hoy en la historia»:** mantener presionado el cuadro 700 ms. Con el gato de pixel, no; en Básico, solo desde el buscador.
-    - **El cuento:** «leer ›», en la cabecera.
-    - **Plegar:** el resto de la cabecera.
+    - **El cuento:** un botón ancho debajo del cuadro, del color del tema, con el título del cuento y «leer el cuento» debajo; el botón es todo. Su diseño da a entender que es un cuento (cambiado por el autor el 13 nov 2026; antes era «leer ›» en una cabecera).
+    - **Qué abre el botón:** una pantalla solo del cuento, con el resumen del personaje. Lo demás de «Otras vidas» se queda en la pestaña Vida (13 nov 2026).
 14. **«Hoy en la historia»** viene encendido por omisión y solo manda la fecha.
     - **Ningún dato tuyo se conecta con Wikipedia.**
     - Por eso no hay historia de tus ciudades.
@@ -303,8 +302,12 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - con «Gato del tema» encendido y sin cuadro (otro tema, o `gato_estilo = "pixel"`), el gato de pixel;
   - con «Gato del tema» apagado, ninguno de los dos;
   - nunca los dos a la vez.
-- **La cabecera** (58 dp) es una `Seccion` plegable que se recuerda en `Config.plegadas`. Lleva el título del cuento, la marca, «leer ›» y el glifo para plegar.
-  - El título va en lugar del nombre de la sección, hasta en dos renglones: los de los días especiales llegan a 74 letras.
+- **No se pliega y no lleva cabecera** (decisión del autor del 13 nov 2026, al probar la v243).
+- **El botón del cuento** (`BotonCuento`) va debajo del cuadro: una franja del color principal del tema con el título del cuento (hasta dos renglones; los de los días especiales llegan a 74 letras) y, debajo y más pequeño, «leer el cuento». Todo el botón abre el cuento.
+  - Para que se entienda que es un cuento lleva un libro abierto, un filete como el de una tapa y una cinta de marcapáginas. En un día especial lo dice en el renglón pequeño.
+  - Abre la pantalla del cuento (`PantallaCuento`, ruta `cuento?vida=<id>`): el cuento de hoy, el retrato del personaje y «Su vida». Nada más.
+- **La marca de día especial** va montada sobre el borde de arriba del cuadro, a la derecha.
+- **No da un tirón al abrir Hoy:** el paisaje se pinta fuera del hilo de la pantalla, en una imagen que se recuerda entre una visita y la siguiente; el cuadro de hoy también se calcula en segundo plano. Mientras tanto su sitio queda reservado.
 - **La banderita** va dentro del cuadro, arriba a la izquierda.
 - **La pulsación larga** de 700 ms abre «Hoy en la historia».
   - Mientras se mantiene, la banderita se va llenando.
@@ -316,13 +319,11 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 
 | Estado (412 dp) | Bloque | Te falta hoy | Llenar el día | Tablero |
 |---|---|---|---|---|
-| Hoy (gato) | 90 | 672 | 977 | 1093 |
-| Cuadro abierto | 353 (10 + 48 + 10 + 285) | 935 (↓263) | 1240 (↓263) | 1356 (↓263) |
-| Cuadro plegado | 58 | 640 (↑32) | 945 (↑32) | 1061 (↑32) |
-| Abierto en 360 dp | 314 | ↓224 | ↓224 | ↓224 |
+| Antes (gato de pixel) | 90 | 672 | 977 | 1093 |
+| Con el cuadro | 373 (16 + 285 + 8 + 64) | 955 (↓283) | 1260 (↓283) | 1376 (↓283) |
+| Con el cuadro, en 360 dp | 334 | ↓244 | ↓244 | ↓244 |
 
-- Los 10 dp de más, entre la cabecera y el cuadro, son la separación de toda `Seccion`; ahí va montada la marca de día especial.
-- Con un título de dos renglones la cabecera puede crecer unos dp.
+- Los 64 dp son el botón del cuento con el título en un renglón; con dos renglones crece unos dp.
 
 **3.6 «Hoy en la historia»** (`ui/pantallas/HoyEnLaHistoria.kt`, ruta `historia_hoy`)
 
@@ -345,14 +346,16 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 
 | Pantalla | Muestra | De dónde sale | NO muestra |
 |---|---|---|---|
-| Hoy, el cuadro | Paisaje sin personas, gato, banderita, marca y **título** del cuento | `FichaDelDia`, `escenaDe`, `pelajeDe`, `Gato.humor` | El texto del cuento, eventos, datos o comparación |
+| Hoy, el cuadro | Paisaje sin personas, gato, banderita, marca y el botón con el **título** del cuento | `FichaDelDia`, `escenaDe`, `pelajeDe`, `Gato.humor` | El texto del cuento, eventos, datos o comparación |
 | Hoy en la historia | Eventos reales del día y «en la época de X ›» | Wikipedia y su caché | Cuentos, escenas, nada tuyo |
+| El cuento (desde el botón del cuadro) | El cuento de hoy con sus fuentes, el retrato del personaje y «Su vida» | `Cuento`, `OtrasVidas` | Un día suyo, Tú y X, a quién te pareces, los números |
 | Otras vidas › detalle | «Hoy, en su vida» (cuento y fuentes), retrato, Su vida, Un día suyo, Tú y X, fuentes | `FichaDelDia`, `Cuento`, `OtrasVidas` | La escena, el gato, los eventos |
 | Vida › recuadro, y Tu año | Como hoy | — | El cuento |
 | Ajustes | Estilo del gato y «Hoy en la historia» | `Config` | — |
 
 **Lo que aparece en dos sitios:**
-1. **El título del cuento** sale en la cabecera del cuadro y en la sección «Hoy, en su vida». En Hoy es solo un enlace.
+1. **El título del cuento** sale en el botón del cuadro y en el cuento. En Hoy es solo un enlace.
+   - **El cuento se lee en dos sitios:** en su pantalla propia (desde el botón del cuadro) y en «Otras vidas» › detalle, que no cambió. Es el mismo texto.
 2. **El tramo horario:** el cuento lo usa como contexto, pero no repite el reloj de «Un día suyo».
 3. **«Su vida»:** el cuento no la repite. La edad del retrato se queda fija; la que avanza solo aparece en el cuento.
 4. **Los eventos reales** viven solo en «Hoy en la historia».
@@ -494,7 +497,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P4b | claude-fable-5-2 | high | Paisajes dibujados con código | 2 | hecho 11 nov 2026 (`docs/historia/informes/P4b.md`); **los dos cuadros aprobados por el autor el 12 nov 2026** |
 | P5a | claude-fable-5-2 | **xhigh** | Un esqueleto animado que comparten 32 temas: estados, capas, rendimiento. Un fallo se paga 32 veces y Paparazzi no ve el movimiento | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5a.md`); revisado tres veces con el autor ese día; **el gato, aprobado por el autor el 12 nov 2026** |
 | P5b | claude-fable-5-2 | high | Se apoya en el esqueleto ya resuelto. Los gestos se ajustan después de probarlos en el teléfono | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5b.md`, con la lista de qué probar en el teléfono); **aprobado por el autor el 12 nov 2026** |
-| P6 | claude-fable-5-2 | high | Integración en Hoy, medidas y esquema | 2 | hecho 13 nov 2026 (`docs/historia/informes/P6.md`, con la lista de qué probar en el teléfono); **falta que el autor lo pruebe en el teléfono** |
+| P6 | claude-fable-5-2 | high | Integración en Hoy, medidas y esquema | 2 | hecho 13 nov 2026 (`docs/historia/informes/P6.md`, con la lista de qué probar en el teléfono). Salió en la v243; el autor lo probó ese día y pidió cambios (sin tirón al abrir, sin plegado, el botón del cuento y su pantalla propia), hechos el mismo día: **falta que los pruebe** |
 | H1 | claude-opus-5-5 | medium | Red, caché y pantalla con patrones que ya existen | 1 | pendiente |
 | H2 | claude-opus-5-5 | medium | Una regla simple de años | 1 | pendiente |
 | A1–A8 | claude-opus-5-5 | high | Calendarios verosímiles con libertad creativa y el patrón de P2. La continuidad de 5 años pide high | 0 c/u | pendiente |

@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.escenas
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
@@ -23,9 +25,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.isSpecified
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
@@ -34,11 +40,22 @@ import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import io.github.ruddy2003.vestigium.ui.Gato
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.vidas.FichaDelDia
@@ -65,6 +82,10 @@ const val HOLGURA_DEDO_DP = 8
  *
  * - **La parte quieta** va en su propia capa, guardada como imagen: solo se vuelve a trazar cuando cambia el sello
  *   del momento (otro día, otros veinte minutos, otro tramo del día del personaje) o el tamaño.
+ *   - Trazarla cuesta (unas décimas de segundo). Con [enSegundoPlano] se pinta fuera del hilo de la pantalla, en una
+ *     imagen que se recuerda entre una visita a Hoy y la siguiente: abrir la pestaña no da un tirón. La primera vez
+ *     el cuadro aparece un instante después, sobre el color [fondo]; al cambiar la luz, la imagen anterior se queda
+ *     hasta que la nueva está lista. Sin [enSegundoPlano] (las capturas) se traza ahí mismo, como siempre.
  * - **La parte viva** (gotas, humo, llamas, destellos) va encima, en otra capa, y es lo único que se traza en cada
  *   cuadro, unas 15 veces por segundo. Con [animar] en `false` (animaciones apagadas, ahorro de energía, capturas)
  *   se traza una vez, en el instante [relojFijo], y queda quieta. El reloj se detiene solo mientras la app no está
@@ -93,6 +114,7 @@ fun VistaEscena(
     alFallar: (Throwable) -> Unit = {}, humor: Gato.Humor? = null, pelaje: Pelaje = Pelaje.COMUN, pasoGato: PasoGato? = null,
     toques: Boolean = false, alAcariciar: () -> Unit = {}, mimoFijo: Float = -1f,
     alMantener: (() -> Unit)? = null, pausa: Boolean = false, descripcion: String? = null, acciones: List<Pair<String, () -> Unit>> = emptyList(),
+    enSegundoPlano: Boolean = false, fondo: Color = Color.Transparent,
 ) {
     // El momento solo cambia (y con él la parte quieta) cada veinte minutos, o cuando el personaje pasa a otro tramo de su día.
     val momento = remember(ficha, (hora * 3).toInt(), ficha.tramo(hora)?.que) { Momento(ficha, hora) }
@@ -135,19 +157,66 @@ fun VistaEscena(
             mantener?.let { abrir -> CustomAccessibilityAction("Abrir «Hoy en la historia»") { abrir(); true } },
         ) + acciones.map { (nombre, hacer) -> CustomAccessibilityAction(nombre) { hacer(); true } }
     }
-    Box(modifier.aspectRatio(4f / 3f).clip(forma).then(gestos).then(voz)) {
-        Spacer(Modifier.fillMaxSize().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawBehind {
-            aSalvo(alFallar) { lienzo { with(escena) { quieta(momento) } } }
-        })
-        Spacer(Modifier.fillMaxSize().graphicsLayer().drawBehind {
-            val instante = if (seMueve) reloj else relojFijo
-            aSalvo(alFallar) { lienzo { with(escena) { viva(momento, instante) } } }
-        })
-        if (humor != null) CapaGato(escena, momento, humor, pelaje, animar, pasoGato, Modifier.fillMaxSize(), alFallar, if (toques) dedo else null, alAcariciar, mimoFijo, pausa)
-        if (banderita != null) Spacer(
-            Modifier.align(Alignment.TopStart).padding(start = 14.dp).size(Banderita.ANCHO.dp, Banderita.ALTO.dp).drawBehind { with(banderita) { dibujar(maxOf(lleno, llenando)) } },
-        )
+    // La parte quieta pintada en segundo plano (o null si se traza aquí mismo, o si todavía no está).
+    var medida by remember { mutableStateOf(IntSize.Zero) }
+    val imagen = if (enSegundoPlano) quietaPintada(escena, momento, medida, alFallar) else null
+    val lista = !enSegundoPlano || imagen != null
+    val aparece by animateFloatAsState(if (lista) 1f else 0f, label = "cuadro")
+    Box(modifier.aspectRatio(4f / 3f).clip(forma).background(fondo).onSizeChanged { medida = it }.then(gestos).then(voz)) {
+        if (lista) Box(Modifier.fillMaxSize().graphicsLayer { alpha = aparece }) {
+            if (imagen != null) Spacer(Modifier.fillMaxSize().drawBehind { drawImage(imagen, dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt())) })
+            else Spacer(Modifier.fillMaxSize().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawBehind {
+                aSalvo(alFallar) { lienzo { with(escena) { quieta(momento) } } }
+            })
+            Spacer(Modifier.fillMaxSize().graphicsLayer().drawBehind {
+                val instante = if (seMueve) reloj else relojFijo
+                aSalvo(alFallar) { lienzo { with(escena) { viva(momento, instante) } } }
+            })
+            if (humor != null) CapaGato(escena, momento, humor, pelaje, animar, pasoGato, Modifier.fillMaxSize(), alFallar, if (toques) dedo else null, alAcariciar, mimoFijo, pausa)
+            if (banderita != null) Spacer(
+                Modifier.align(Alignment.TopStart).padding(start = 14.dp).size(Banderita.ANCHO.dp, Banderita.ALTO.dp).drawBehind { with(banderita) { dibujar(maxOf(lleno, llenando)) } },
+            )
+        }
     }
+}
+
+/**
+ * La parte quieta de [escena] en el [momento], como imagen de [medida] pixeles, pintada fuera del hilo de la pantalla.
+ * Devuelve null mientras no hay ninguna (la primera vez); después devuelve siempre la última que hubo, también
+ * mientras se pinta la siguiente. La última imagen se recuerda fuera de la pantalla ([MemoriaQuieta]): al volver a Hoy
+ * sale al instante.
+ */
+@Composable
+private fun quietaPintada(escena: EscenaVida, momento: Momento, medida: IntSize, alFallar: (Throwable) -> Unit): ImageBitmap? {
+    val densidad = LocalDensity.current.density
+    var imagen by remember(escena) { mutableStateOf(MemoriaQuieta.de(escena, momento.sello)) }
+    LaunchedEffect(escena, momento.sello, medida) {
+        if (medida.width <= 0 || medida.height <= 0) return@LaunchedEffect
+        val guardada = MemoriaQuieta.de(escena, momento.sello)
+        if (guardada != null && abs(guardada.width - medida.width) <= 2) { imagen = guardada; return@LaunchedEffect }
+        try {
+            val nueva = withContext(Dispatchers.Default) { pintarQuieta(escena, momento, medida.width, medida.height, densidad) }
+            MemoriaQuieta.guardar(escena, momento.sello, nueva)
+            imagen = nueva
+        } catch (e: CancellationException) { throw e } catch (e: Exception) { alFallar(e) }
+    }
+    return imagen
+}
+
+/** Pinta la parte quieta de [escena] en una imagen de [ancho] × [alto] pixeles. No toca la pantalla: se puede llamar desde cualquier hilo. */
+internal fun pintarQuieta(escena: EscenaVida, momento: Momento, ancho: Int, alto: Int, densidad: Float): ImageBitmap {
+    val imagen = ImageBitmap(ancho, alto)
+    CanvasDrawScope().draw(Density(densidad), LayoutDirection.Ltr, Canvas(imagen), Size(ancho.toFloat(), alto.toFloat())) { lienzo { with(escena) { quieta(momento) } } }
+    imagen.prepareToDraw()
+    return imagen
+}
+
+/** La última parte quieta pintada en segundo plano, para no repetirla cada vez que se abre Hoy. Una sola imagen (unos 3 MB). */
+internal object MemoriaQuieta {
+    @Volatile private var ultima: Triple<EscenaVida, String, ImageBitmap>? = null
+    fun de(escena: EscenaVida, sello: String): ImageBitmap? = ultima?.takeIf { it.first === escena && it.second == sello }?.third
+    fun guardar(escena: EscenaVida, sello: String, imagen: ImageBitmap) { ultima = Triple(escena, sello, imagen) }
+    fun olvidar() { ultima = null }
 }
 
 /**

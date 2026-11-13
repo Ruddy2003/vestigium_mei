@@ -351,28 +351,11 @@ private fun DetalleVida(v: OtrasVidas.Vida, t: Map<String, TusNumeros.Valor>?, a
     val traerCuento = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
     androidx.compose.runtime.LaunchedEffect(alCuento) { if (alCuento) { kotlinx.coroutines.delay(250); runCatching { traerCuento.bringIntoView() } } }
     // ---- Retrato.
-    Surface(Modifier.fillMaxWidth().padding(top = 14.dp), shape = MaterialTheme.shapes.medium, color = cs.surface, border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.5f))) {
-        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            MedallaVida(v, 92.dp, elegida = true)
-            Column(Modifier.padding(start = 14.dp).weight(1f)) {
-                Text(v.nombre, style = MaterialTheme.typography.headlineSmall)
-                Text("${v.rol}, ${porNumero(v.edad, "1 año", "${v.edad} años")}", style = MaterialTheme.typography.bodyMedium)
-                Text("${v.lugar} · ${v.cuando}", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
-                if (v.ficticia) Text("vida de ficción · números inventados", style = MaterialTheme.typography.labelSmall, color = cs.secondary, modifier = Modifier.padding(top = 4.dp))
-            }
-        }
-    }
+    RetratoVida(v)
     // ---- El cuento del día (solo los personajes que ya tienen el suyo).
     HoyEnSuVida(v, modifier = Modifier.bringIntoViewRequester(traerCuento))
     // ---- Su historia.
-    Seccion("Su vida") {
-        Tarjeta {
-            v.historia.forEachIndexed { i, p ->
-                Text(p, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = if (i == 0) 0.dp else 10.dp))
-            }
-            if (v.inspiracion.isNotBlank()) Text(v.inspiracion, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 10.dp))
-        }
-    }
+    SuVida(v)
     // ---- Un día suyo.
     Seccion("Un día suyo") {
         Tarjeta { RelojDia(v, t?.get("dormir")?.v, t?.get("despertar")?.v) }
@@ -403,6 +386,55 @@ private fun DetalleVida(v: OtrasVidas.Vida, t: Map<String, TusNumeros.Valor>?, a
                     modifier = Modifier.padding(top = 8.dp).clickable { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(u))) } })
             }
         }
+    }
+}
+
+/** El retrato de una vida: su medalla, su nombre, su oficio y edad, y dónde y cuándo vivió. */
+@Composable
+private fun RetratoVida(v: OtrasVidas.Vida, numeros: Boolean = true) {
+    val cs = MaterialTheme.colorScheme
+    Surface(Modifier.fillMaxWidth().padding(top = 14.dp), shape = MaterialTheme.shapes.medium, color = cs.surface, border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.5f))) {
+        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            MedallaVida(v, 92.dp, elegida = true)
+            Column(Modifier.padding(start = 14.dp).weight(1f)) {
+                Text(v.nombre, style = MaterialTheme.typography.headlineSmall)
+                Text("${v.rol}, ${porNumero(v.edad, "1 año", "${v.edad} años")}", style = MaterialTheme.typography.bodyMedium)
+                Text("${v.lugar} · ${v.cuando}", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+                // Con [numeros] (en Otras vidas, donde debajo van sus cifras) avisa de que son inventadas; junto al cuento solo dice que es ficción.
+                if (v.ficticia) Text(if (numeros) "vida de ficción · números inventados" else "vida de ficción", style = MaterialTheme.typography.labelSmall, color = cs.secondary, modifier = Modifier.padding(top = 4.dp))
+            }
+        }
+    }
+}
+
+/** «Su vida»: quién es, en unos párrafos. */
+@Composable
+private fun SuVida(v: OtrasVidas.Vida) {
+    val cs = MaterialTheme.colorScheme
+    Seccion("Su vida") {
+        Tarjeta {
+            v.historia.forEachIndexed { i, p ->
+                Text(p, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = if (i == 0) 0.dp else 10.dp))
+            }
+            if (v.inspiracion.isNotBlank()) Text(v.inspiracion, style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 10.dp))
+        }
+    }
+}
+
+/**
+ * La pantalla del cuento (ruta `cuento?vida=<id>`; se llega desde el botón del cuadro de Hoy): solo el cuento de hoy
+ * de ese personaje y quién es (su retrato y «Su vida»). Lo demás de «Otras vidas» (a quién te pareces, «Un día suyo»,
+ * «Tú y…», de dónde salen los números) se queda en su pantalla, en la pestaña Vida. No lee ningún dato tuyo.
+ */
+@Composable
+fun PantallaCuento(nav: Nav, vidaId: String) {
+    val v = remember(vidaId) { OtrasVidas.porId(vidaId) }
+    Hoja("El cuento de hoy", nav.atras) {
+        if (v == null) { Ayuda("Ese personaje no existe.", Modifier.padding(top = 12.dp)); return@Hoja }
+        RetratoVida(v, numeros = false)
+        HoyEnSuVida(v)
+        SuVida(v)
+        androidx.compose.foundation.layout.Spacer(Modifier.height(28.dp))
     }
 }
 

@@ -14,6 +14,8 @@ import io.github.ruddy2003.vestigium.ui.escenas.Momento
 import io.github.ruddy2003.vestigium.ui.escenas.TipoAncla
 import io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria
 import io.github.ruddy2003.vestigium.ui.escenas.cuadroDeHoy
+import io.github.ruddy2003.vestigium.ui.escenas.cuadroEnMemoria
+import io.github.ruddy2003.vestigium.ui.escenas.hayCuadroEnHoy
 import io.github.ruddy2003.vestigium.ui.escenas.escenaDe
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
@@ -232,6 +234,9 @@ class EscenasPrueba {
             // Con el gato de pixel elegido, o con un estilo que no se conoce, no hay cuadro en ningún tema: sale la banda de siempre.
             assertNull("${t.id}: con el gato de pixel no hay cuadro", cuadroDeHoy(t, "2027-03-21", GATO_DE_PIXEL))
             assertNull(cuadroDeHoy(t, "2027-03-21", "otra cosa"))
+            // Lo que Hoy sabe al instante (para reservarle su sitio) coincide con lo que luego resulta.
+            assertEquals("${t.id}: hayCuadroEnHoy", cuadro != null, hayCuadroEnHoy(t))
+            assertEquals(false, hayCuadroEnHoy(t, GATO_DE_PIXEL))
             if (cuadro != null) {
                 assertEquals(t, cuadro.tema)
                 assertEquals("${t.id}: el pelaje es el del tema", pelajeDe(t), cuadro.pelaje)
@@ -240,6 +245,21 @@ class EscenasPrueba {
         }
         assertEquals("cuadro", GATO_EN_CUADRO)
         assertEquals("pixel", GATO_DE_PIXEL)
+    }
+
+    @Test fun elUltimoCuadroSeRecuerdaYNoSeConfundeConOtro() {
+        val uno = cuadroDeHoy(TemaId.HELENO, "2027-03-21")!!
+        // El mismo tema y el mismo día: el mismo cuadro, sin volver a calcularlo.
+        assertTrue(cuadroEnMemoria(TemaId.HELENO, "2027-03-21") === uno)
+        assertTrue(cuadroDeHoy(TemaId.HELENO, "2027-03-21") === uno)
+        // Otro día u otro tema no lo usan.
+        assertNull(cuadroEnMemoria(TemaId.HELENO, "2027-03-22"))
+        assertNull(cuadroEnMemoria(TemaId.GOTICO, "2027-03-21"))
+        // Ni el gato de pixel, aunque el cuadro esté en memoria.
+        assertNull(cuadroDeHoy(TemaId.HELENO, "2027-03-21", GATO_DE_PIXEL))
+        val otro = cuadroDeHoy(TemaId.GOTICO, "2027-03-21")!!
+        assertEquals(TemaId.GOTICO, otro.tema)
+        assertNull("al calcular otro, el anterior se olvida", cuadroEnMemoria(TemaId.HELENO, "2027-03-21"))
     }
 
     @Test fun elCuadroDeHoyCuentaLoMismoQueElCuentoTodosLosDias() {

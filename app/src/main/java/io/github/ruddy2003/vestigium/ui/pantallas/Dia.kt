@@ -256,12 +256,11 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
         if (esHoy && c.semana_corta) { SemanaCorta(d) { abrirNoche() }; return@Hoja }
         // La frase, siempre arriba, justo debajo del estado.
         FraseDelDia(fecha)
-        // Solo hoy: el cuadro del tema, con su gato dentro, o el gato de pixel en su banda. Nunca los dos.
+        // Solo hoy: el cuadro del tema, con su gato dentro y el botón de su cuento, o el gato de pixel en su banda. Nunca los dos.
         if (esHoy) {
             val temaDeHoy = io.github.ruddy2003.vestigium.ui.Estilo.tema
-            val cuadro = remember(hoy, temaDeHoy, c.gato, c.gato_estilo) { if (c.gato) io.github.ruddy2003.vestigium.ui.escenas.cuadroDeHoy(temaDeHoy, hoy, c.gato_estilo) else null }
-            if (cuadro != null) io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(
-                cuadro, hoy, alLeer = { nav.ir("otras_vidas?vida=${cuadro.quien.id}&seccion=cuento") },
+            if (c.gato && io.github.ruddy2003.vestigium.ui.escenas.hayCuadroEnHoy(temaDeHoy, c.gato_estilo)) io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(
+                temaDeHoy, hoy, alLeer = { vida -> nav.ir("cuento?vida=$vida") },
                 // La pulsación larga abre «Hoy en la historia» cuando exista esa pantalla (tanda H1) y esté encendida en Ajustes.
                 alHistoria = if (io.github.ruddy2003.vestigium.ui.escenas.HAY_HISTORIA_HOY && c.historia_hoy) { { nav.ir("historia_hoy") } } else null,
             )
