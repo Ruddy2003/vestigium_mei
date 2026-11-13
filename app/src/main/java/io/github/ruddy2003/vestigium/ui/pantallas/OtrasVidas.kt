@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -292,16 +291,15 @@ private fun anio(a: Int): String = when { a < -9000 -> "${"%,d".format(-a)} a. C
 // =====================================================================
 
 /**
- * [vidaPedida] y [seccion] vienen de la ruta `otras_vidas?vida=<id>&seccion=cuento`: abre con esa vida elegida (si el
- * tema la deja ver) y, con «cuento», baja hasta «Hoy, en su vida».
+ * Aquí no va el cuento del día: se lee en su propia pantalla ([PantallaCuento]), a la que se llega desde el cuadro de Hoy.
  */
 @Composable
-fun PantallaOtrasVidas(nav: Nav, vidaPedida: String? = null, seccion: String? = null) {
+fun PantallaOtrasVidas(nav: Nav) {
     val ctx = LocalContext.current
     val sentir = rememberSentir()
     val tema = Estilo.tema.id
     val vidas = remember(tema) { val l = OtrasVidas.visibles(tema); l.filter { it.tema != null } + l.filter { it.tema == null }.sortedBy { it.anio } }
-    var elegida by rememberSaveable(tema) { mutableStateOf(vidaPedida?.takeIf { id -> vidas.any { it.id == id } } ?: vidas.first().id) }
+    var elegida by rememberSaveable(tema) { mutableStateOf(vidas.first().id) }
     val tuyos by produceState(if (TusNumeros.sincrono) runCatching { TusNumeros.calcular(ctx) }.getOrDefault(emptyMap()) else null) {
         if (!TusNumeros.sincrono) value = withContext(Dispatchers.Default) { runCatching { TusNumeros.calcular(ctx) }.getOrDefault(emptyMap()) }
     }
@@ -338,22 +336,17 @@ fun PantallaOtrasVidas(nav: Nav, vidaPedida: String? = null, seccion: String? = 
             }
         }
 
-        AnimatedContent(v, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "vida") { x -> Column { DetalleVida(x, t, alCuento = seccion == "cuento" && x.id == vidaPedida) } }
+        AnimatedContent(v, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "vida") { x -> Column { DetalleVida(x, t) } }
         Spacer(Modifier.height(24.dp))
     }
 }
 
 @Composable
-private fun DetalleVida(v: OtrasVidas.Vida, t: Map<String, TusNumeros.Valor>?, alCuento: Boolean = false) {
+private fun DetalleVida(v: OtrasVidas.Vida, t: Map<String, TusNumeros.Valor>?) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
-    // Al llegar con «seccion=cuento», la pantalla baja sola hasta el cuento.
-    val traerCuento = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
-    androidx.compose.runtime.LaunchedEffect(alCuento) { if (alCuento) { kotlinx.coroutines.delay(250); runCatching { traerCuento.bringIntoView() } } }
     // ---- Retrato.
     RetratoVida(v)
-    // ---- El cuento del día (solo los personajes que ya tienen el suyo).
-    HoyEnSuVida(v, modifier = Modifier.bringIntoViewRequester(traerCuento))
     // ---- Su historia.
     SuVida(v)
     // ---- Un día suyo.

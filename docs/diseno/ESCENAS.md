@@ -231,6 +231,8 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 
 **Los temas que faltan** (Gótico y Ciudad neón se hicieron en P4b). Dónde vive cada personaje y por dónde empezar. Son sugerencias: la tanda decide después de leer el calendario y el cuento.
 
+**Varios personajes se mudan durante el año** y su tema pide más de un lugar. Cuáles, cuántos días y qué se pinta entero o como variante del cuadro de siempre está en `docs/plan_historia_y_escenas.md`, sección 8.
+
 | Tema | Personaje y lugar | Tipo | Marco posible | Superficie grande |
 |---|---|---|---|---|
 | Romano | Cayo, un campamento en el Danubio | Exterior | El borde de una tienda, un estandarte | El río |

@@ -2114,7 +2114,7 @@ class Capturas {
     /**
      * Tanda P3a del plan de historia y escenas: «Hoy, en su vida», el cuento del día (CAPTURAS=cuento). Cuatro días de
      * Demeas con fecha y hora fijas (uno normal, el primero de una fiesta, el eclipse en el mar y el avance de 2026) y
-     * la pantalla entera de «Otras vidas» en Helénico, para ver dónde queda la sección.
+     * la pantalla del cuento entera en Helénico (desde el 13 nov 2026 el cuento ya no sale dentro de «Otras vidas»).
      */
     @Test fun cuentoDelDia() {
         CapturasAPedido.pedida("cuento")
@@ -2125,7 +2125,7 @@ class Capturas {
                 Column(Modifier.padding(horizontal = 16.dp)) { io.github.ruddy2003.vestigium.ui.pantallas.HoyEnSuVida(demeas, cuando.first, cuando.second) }
             }
         }
-        pantalla(TemaId.HELENO, false, 9400, "cuento_pantalla_claro") { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(navVacia, "remero", "cuento") }
+        pantalla(TemaId.HELENO, false, 6400, "cuento_pantalla_claro") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCuento(navVacia, "remero") }
     }
 
     // ---------------------------------------------------------------- el cuadro de Hoy (plan de historia y escenas)
