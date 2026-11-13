@@ -318,7 +318,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 - **La pulsación larga** de 700 ms abre «Hoy en la historia».
   - Mientras se mantiene, la banderita se va llenando.
   - Se cancela si el dedo se mueve más de 8 dp.
-  - **Hasta la tanda H1 no hay banderita ni pulsación larga** (`HAY_HISTORIA_HOY = false`): la pantalla todavía no existe.
+  - **Desde la tanda H1** (13 nov 2026) hay banderita y pulsación larga (`HAY_HISTORIA_HOY = true`), salvo con el interruptor de Ajustes › Privacidad apagado.
 - **Un solo detector de gestos** para todo el cuadro (`gestosDelCuadro`, en `VistaEscena.kt`): el toque corto va al gato y la pulsación larga, a la historia.
 - **Se detiene mientras no se ve:** al desplazar Hoy hacia abajo, el cuadro deja de trazar.
 - **Accesibilidad:** tres acciones con nombre.
@@ -335,9 +335,10 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 
 - **Cómo se llega:** con la pulsación larga del cuadro y desde el buscador. No tiene recuadro en Vida ni texto en Hoy.
 - **Qué sale del teléfono:** solo el mes y el día (`historia/Efemerides.kt` con `Red.get`).
-- **De dónde salen los eventos:** H1 comprueba primero cuál de estos dos sirve.
-  - (a) `api.wikimedia.org/feed/v1/wikipedia/es/onthisday/events/MM/DD`. **[Sin verificar en español: la red de esta sesión bloquea Wikipedia]**.
-  - (b) La página «10 de noviembre», sección «Acontecimientos», con la API de MediaWiki.
+- **De dónde salen los eventos:** H1 comprobó tres maneras (13 nov 2026).
+  - (a) `api.wikimedia.org/feed/v1/wikipedia/es/onthisday/events/MM/DD`: no se pudo probar, porque la red de la sesión lo bloquea.
+  - (b) La página «13 de noviembre», sección «Acontecimientos», con la API de MediaWiki: contesta «demasiadas peticiones» a direcciones compartidas, y da wikitexto que hay que limpiar.
+  - **(c) `es.wikipedia.org/api/rest_v1/feed/onthisday/events/MM/DD`: la que se usa.** JSON con el año, el texto y los artículos de cada evento; el 13 de noviembre, 98 eventos, del 7 a. C. a 2024, unos 100 KB comprimidos.
 - **Caché:**
   - un archivo por fecha en `filesDir/historia/`, fuera de la base, del respaldo y de la exportación;
   - se renueva a los 30 días;
@@ -571,7 +572,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P5a | claude-fable-5-2 | **xhigh** | Un esqueleto animado que comparten 32 temas: estados, capas, rendimiento. Un fallo se paga 32 veces y Paparazzi no ve el movimiento | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5a.md`); revisado tres veces con el autor ese día; **el gato, aprobado por el autor el 12 nov 2026** |
 | P5b | claude-fable-5-2 | high | Se apoya en el esqueleto ya resuelto. Los gestos se ajustan después de probarlos en el teléfono | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5b.md`, con la lista de qué probar en el teléfono); **aprobado por el autor el 12 nov 2026** |
 | P6 | claude-fable-5-2 | high | Integración en Hoy, medidas y esquema | 2 | hecho 13 nov 2026 (`docs/historia/informes/P6.md`, con la lista de qué probar en el teléfono). Salió en la v243; el autor lo probó ese día y pidió cambios (sin tirón al abrir, sin plegado, el botón del cuento y su pantalla propia), que salieron en la v245. Después pidió sacar el cuento de «Otras vidas». **Falta que confirme en el teléfono que ya no hay tirón** |
-| H1 | claude-opus-5-5 | medium | Red, caché y pantalla con patrones que ya existen | 1 | pendiente |
+| H1 | claude-opus-5-5 | medium | Red, caché y pantalla con patrones que ya existen | 1 | hecho 13 nov 2026 (`docs/historia/informes/H1.md`) |
 | H2 | claude-opus-5-5 | medium | Una regla simple de años | 1 | pendiente |
 | A1 | claude-opus-5-5 | high | Calendarios verosímiles con libertad creativa y el patrón de P2. La continuidad de 5 años pide high | 0 | hecho 11 nov 2026 (`docs/historia/informes/A1.md`) |
 | A2 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A2.md`) |

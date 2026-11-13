@@ -2128,6 +2128,39 @@ class Capturas {
         pantalla(TemaId.HELENO, false, 6400, "cuento_pantalla_claro") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCuento(navVacia, "remero") }
     }
 
+    // ---------------------------------------------------------------- «Hoy en la historia» (tanda H1)
+
+    /** Los eventos de la muestra guardada de Wikipedia (`test/resources/historia/eventos_11_13.json`): la pantalla no se conecta. */
+    private val eventosDeMuestra by lazy {
+        io.github.ruddy2003.vestigium.historia.Efemerides.leer(javaClass.getResource("/historia/eventos_11_13.json")!!.readText())
+    }
+    private val diaDeMuestra = java.time.LocalDate.of(2026, 11, 13)
+
+    /** «Hoy en la historia» con conexión, en cada tema (CAPTURAS=historia). */
+    @Test fun temaHistoria() = porTema("historia") { t, o, n ->
+        pantalla(t, o, 3600, n) {
+            io.github.ruddy2003.vestigium.ui.pantallas.VistaHoyEnLaHistoria(
+                io.github.ruddy2003.vestigium.ui.pantallas.EstadoHistoria.Listo(io.github.ruddy2003.vestigium.historia.Efemerides.Resultado(eventosDeMuestra, diaDeMuestra, sinConexion = false)),
+                diaDeMuestra, atras = {}, alReintentar = {}, alPrivacidad = {})
+        }
+    }
+
+    /** «Hoy en la historia» sin conexión (con lo guardado y sin nada) y con el interruptor apagado (CAPTURAS=historia). */
+    @Test fun historiaSinConexion() {
+        CapturasAPedido.pedida("historia")
+        val viejo = io.github.ruddy2003.vestigium.historia.Efemerides.Resultado(eventosDeMuestra, diaDeMuestra.minusDays(40), sinConexion = true, error = "sin red")
+        val nada = io.github.ruddy2003.vestigium.historia.Efemerides.Resultado(emptyList(), null, sinConexion = true, error = "sin red")
+        listOf(
+            Triple("historia_guardado_claro", io.github.ruddy2003.vestigium.ui.pantallas.EstadoHistoria.Listo(viejo), false),
+            Triple("historia_sin_nada_oscuro", io.github.ruddy2003.vestigium.ui.pantallas.EstadoHistoria.Listo(nada), true),
+            Triple("historia_apagado_claro", io.github.ruddy2003.vestigium.ui.pantallas.EstadoHistoria.Apagado, false),
+        ).forEach { (nombre, estado, oscuro) ->
+            pantalla(TemaId.HELENO, oscuro, 3600, nombre) {
+                io.github.ruddy2003.vestigium.ui.pantallas.VistaHoyEnLaHistoria(estado, diaDeMuestra, atras = {}, alReintentar = {}, alPrivacidad = {})
+            }
+        }
+    }
+
     // ---------------------------------------------------------------- el cuadro de Hoy (plan de historia y escenas)
 
     /** Lo que la ficha dice de un momento, para leerlo encima de su cuadro. */

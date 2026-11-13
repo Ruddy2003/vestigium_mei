@@ -4,7 +4,7 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
-/** Peticiones HTTP mínimas: clima y aire (Open-Meteo), Google Drive, Spotify y las fichas de obras (TMDB, TVmaze, RAWG, Google Books, Open Library, Crossref). */
+/** Peticiones HTTP mínimas: clima y aire (Open-Meteo), Google Drive, Spotify, las fichas de obras (TMDB, TVmaze, RAWG, Google Books, Open Library, Crossref) y «Hoy en la historia» (Wikipedia). */
 object Red {
     const val AGENTE = "VestigiumMei/1.0 (Android; uso personal)"
 
@@ -18,6 +18,7 @@ object Red {
         "TMDB, TVmaze, RAWG, Google Books, Open Library y Crossref" to "solo el título o el DOI que escribes al buscar una obra, según el tipo",
         "Spotify (si lo conectas)" to "tu permiso para leer lo que escuchaste; la app le pide tu historial reciente",
         "Google Drive (si lo activas)" to "tus respaldos completos, cifrados si pones contraseña",
+        "Wikipedia en español (Hoy en la historia)" to "solo el mes y el día de hoy o de mañana, para traer lo que pasó un día como ese",
     )
 
     fun get(url: String, encabezados: Map<String, String> = emptyMap(), tiempo: Int = 20_000): String {

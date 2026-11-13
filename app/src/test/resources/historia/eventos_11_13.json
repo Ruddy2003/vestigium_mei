@@ -1,0 +1,216 @@
+{
+ "_fuente": "Muestra recortada de es.wikipedia.org/api/rest_v1/feed/onthisday/events/11/13, bajada el 13 nov 2026. Texto de Wikipedia en español, CC BY-SA 4.0.",
+ "events": [
+  {
+   "text": "Se produce una explosión y atentado en Brasilia originando tres muertos cerca del Palacio presidencial y la sede del Congreso.El autor del atentado había participado en asalto a la Plaza de los Tres Poderes de Brasilia se produjo el 8 de enero de 2023, cuando partidarios del expresidente Jair Bolsonaro intentaron realizar la toma de la sede de los poderes.",
+   "year": 2024,
+   "pages": []
+  },
+  {
+   "text": "en Argentina, la Cámara Federal de Casación Penal condena a Cristina Fernández.",
+   "year": 2024,
+   "pages": [
+    {
+     "type": "standard",
+     "title": "Argentina",
+     "titles": {
+      "normalized": "Argentina"
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Argentina"
+      },
+      "mobile": {
+       "page": "https://es.wikipedia.org/wiki/Argentina"
+      }
+     },
+     "description": "país de América del Sur"
+    },
+    {
+     "type": "standard",
+     "title": "Casación_penal",
+     "titles": {
+      "normalized": "Casación penal"
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Casaci%C3%B3n_penal"
+      },
+      "mobile": {
+       "page": "https://es.wikipedia.org/wiki/Casaci%C3%B3n_penal"
+      }
+     },
+     "description": ""
+    }
+   ]
+  },
+  {
+   "text": "varios atentados en París (Francia) por parte de la banda terrorista Estado Islámico (ISIS) dejan 137 muertos y 325 heridos.",
+   "year": 2015,
+   "pages": [
+    {
+     "type": "standard",
+     "title": "Atentados_de_París_de_noviembre_de_2015",
+     "titles": {
+      "normalized": "Atentados de París de noviembre de 2015"
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Atentados_de_Par%C3%ADs_de_noviembre_de_2015"
+      },
+      "mobile": {
+       "page": "https://es.wikipedia.org/wiki/Atentados_de_Par%C3%ADs_de_noviembre_de_2015"
+      }
+     },
+     "description": "serie de ataques terroristas de corte yihadista en Francia, Europa"
+    },
+    {
+     "type": "standard",
+     "title": "Estado_Islámico",
+     "titles": {
+      "normalized": "Estado Islámico"
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Estado_Isl%C3%A1mico"
+      },
+      "mobile": {
+       "page": "https://es.wikipedia.org/wiki/Estado_Isl%C3%A1mico"
+      }
+     },
+     "description": "grupo paramilitar yihadista"
+    }
+   ]
+  },
+  {
+   "text": "en todo el norte de China se registra un terremoto que deja 415 víctimas.",
+   "year": -7,
+   "pages": [
+    {
+     "type": "standard",
+     "title": "República_Popular_China",
+     "titles": {
+      "normalized": "República Popular China"
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Rep%C3%BAblica_Popular_China"
+      },
+      "mobile": {
+       "page": "https://es.wikipedia.org/wiki/Rep%C3%BAblica_Popular_China"
+      }
+     },
+     "description": "país de Asia Oriental"
+    }
+   ]
+  },
+  {
+   "text": "en la ciudad de Sevilla (península ibérica) se celebra, bajo el reinado de Sisebuto, el Segundo Concilio de Sevilla, presidido por san Isidoro de Sevilla.",
+   "year": 619,
+   "pages": [
+    {
+     "type": "standard",
+     "title": "Sevilla",
+     "titles": {
+      "normalized": "Sevilla"
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Sevilla"
+      },
+      "mobile": {
+       "page": "https://es.wikipedia.org/wiki/Sevilla"
+      }
+     },
+     "description": "capital de la comunidad autónoma de Andalucía, España"
+    },
+    {
+     "type": "standard",
+     "title": "Sisebuto",
+     "titles": {
+      "normalized": "Sisebuto"
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Sisebuto"
+      },
+      "mobile": {
+       "page": "https://es.wikipedia.org/wiki/Sisebuto"
+      }
+     },
+     "description": "rey de los visigodos"
+    },
+    {
+     "type": "standard",
+     "title": "II_Sínodo_de_Sevilla",
+     "titles": {
+      "normalized": "II Sínodo de Sevilla"
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/II_S%C3%ADnodo_de_Sevilla"
+      },
+      "mobile": {
+       "page": "https://es.wikipedia.org/wiki/II_S%C3%ADnodo_de_Sevilla"
+      }
+     },
+     "description": ""
+    },
+    {
+     "type": "standard",
+     "title": "Isidoro_de_Sevilla",
+     "titles": {
+      "normalized": "Isidoro de Sevilla"
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Isidoro_de_Sevilla"
+      },
+      "mobile": {
+       "page": "https://es.wikipedia.org/wiki/Isidoro_de_Sevilla"
+      }
+     },
+     "description": "polímata, arzobispo y santo católico hispano-romano (c. 560–636)"
+    }
+   ]
+  },
+  {
+   "text": "en el marco de la Primera Guerra Mundial (1914-1918) Hungría y los aliados firman un armisticio.",
+   "year": 1918,
+   "pages": [
+    {
+     "type": "standard",
+     "title": "Primera_Guerra_Mundial",
+     "titles": {
+      "normalized": "Primera Guerra Mundial"
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Primera_Guerra_Mundial"
+      },
+      "mobile": {
+       "page": "https://es.wikipedia.org/wiki/Primera_Guerra_Mundial"
+      }
+     },
+     "description": "conflicto bélico global de 1914 a 1918"
+    },
+    {
+     "type": "standard",
+     "title": "Hungría",
+     "titles": {
+      "normalized": "Hungría"
+     },
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Hungr%C3%ADa"
+      },
+      "mobile": {
+       "page": "https://es.wikipedia.org/wiki/Hungr%C3%ADa"
+      }
+     },
+     "description": "país de Europa Oriental"
+    }
+   ]
+  }
+ ]
+}

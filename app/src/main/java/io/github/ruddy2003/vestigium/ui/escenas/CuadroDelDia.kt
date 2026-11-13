@@ -73,11 +73,11 @@ import kotlin.math.sin
 // en una cabecera sino un botón grande debajo del cuadro, con el título, de color y con aspecto de cuento.
 
 /**
- * Si ya existe la pantalla «Hoy en la historia» (la ruta `historia_hoy`). La crea la tanda H1 del plan, que pone esto
- * en `true`. Hasta entonces el cuadro no lleva la banderita ni atiende la pulsación larga: no se ofrece un gesto que
- * no abre nada. El gesto ya está hecho y probado ([VistaEscena], `alMantener`).
+ * Si ya existe la pantalla «Hoy en la historia» (la ruta `historia_hoy`). La creó la tanda H1 del plan (13 nov 2026),
+ * que puso esto en `true`: desde entonces el cuadro lleva la banderita y atiende la pulsación larga, salvo con el
+ * interruptor de Ajustes › Privacidad apagado (`Config.historia_hoy`). El gesto es el de [VistaEscena], `alMantener`.
  */
-const val HAY_HISTORIA_HOY = false
+const val HAY_HISTORIA_HOY = true
 
 /**
  * El cuadro del día en Hoy: el paisaje con su gato y, debajo, el botón del cuento. No se pliega.
