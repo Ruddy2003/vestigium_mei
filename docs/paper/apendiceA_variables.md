@@ -649,7 +649,7 @@ Cambia lo que se guarda: `SCHEMA_V` = 16, con una colección nueva (`ideas`) y u
 | `quien` | Lista de autores o invitados que lo dicen. No son personas de Tu gente: no cuentan en la red social |
 | `obra_id`, `obra_titulo`, `cita_id` | La obra y la cita de las que salió; `obra_titulo` queda vacío si la obra se borró |
 | `fuente`, `enlace`, `donde` | De dónde salió cuando no hay obra (escrita a mano o al compartir), su enlace y el minuto o la página |
-| `postura` | Cómo la tienes: `convence`, `piensa` (te hace pensar), `duda` o `desacuerdo`; vacío = sin decir |
+| `postura` | Cómo la tienes: `hecho` (hecho comprobado, desde el esquema 25), `convence`, `piensa` (te hace pensar), `duda` o `desacuerdo`; vacío = sin decir |
 | `fijada`, `n_revisiones` | 0/1 si está fijada arriba; cuántas veces la respondiste en «Una idea de antes» |
 | `personas`, `temas` | Las @personas escritas en el texto; los temas del campo «Temas» (desde el esquema 17) y los #temas del texto, sin repetir (listas) |
 

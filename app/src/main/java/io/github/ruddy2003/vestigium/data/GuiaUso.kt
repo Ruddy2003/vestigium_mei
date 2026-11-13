@@ -53,13 +53,13 @@ object GuiaUso {
             "Los modelos son aproximados: cambia la vida media o los días de carga si sabes algo mejor. No es un consejo médico.",
         )),
         Seccion("notas_metas", "Notas y metas", listOf(
-            "Notas: ideas, pensamientos especiales, propósitos y recordatorios, con @ y #. Fija arriba las importantes.",
+            "Notas: pensamientos (lo que piensas de ti o de algo, en el momento), propósitos y recordatorios, con @ y #. Fija arriba las importantes. Lo que aprendiste o se te ocurrió y quieres guardar con tus palabras va al Ideario.",
             "Metas: elige el horizonte y, si puedes, lígala a un hábito o una variable para que el progreso se calcule solo. En diciembre aparece la plantilla de propósitos.",
-        ), listOf("Idea: hablar con @mario de la beca. #maestria")),
+        ), listOf("Recordatorio: hablar con @mario de la beca. #maestria")),
         Seccion("ideario", "Ideario", listOf(
             "Para lo que entendiste de un libro, un video o una plática, y para lo que se te ocurrió: con tus palabras. Las palabras exactas de otro van en las citas de la obra.",
             "Solo el texto es obligatorio. Con #tema la idea entra a su estantería (en el Ideario solo salen los temas escritos en ideas). «Quién lo dice» es para autores e invitados; @persona, para alguien de tu gente.",
-            "No tiene que ser verdad para guardarla: «cómo la tengo» dice si te convence, te hace pensar, la dudas o no estás de acuerdo.",
+            "«Cómo la tengo» dice si es un hecho comprobado (no una opinión: algo que se sabe) o si te convence, te hace pensar, la dudas o no estás de acuerdo. No tiene que ser verdad para guardarla.",
             "Desde YouTube, el navegador o Kindle, «Compartir» → Vestigium abre una idea con el enlace y el título ya puestos. En una cita de una obra, «anotar lo que entendí» la liga a esa cita.",
             "De vez en cuando, el Día te muestra «Una idea de antes» (de hace un mes, seis meses o un año) para ver si sigues pensando igual.",
         ), listOf("El dinero también sirve para coordinar a desconocidos, no solo para intercambiar. #economia")),

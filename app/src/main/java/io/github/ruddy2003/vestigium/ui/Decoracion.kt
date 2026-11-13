@@ -119,7 +119,10 @@ fun Emblema(tema: TemaId = Estilo.tema, tam: Dp = 30.dp, esquema: ColorScheme = 
     // Básico no tiene emblema: no se anima (no hay nada que mover).
     val t: State<Float> = if (animado && !tema.sinDiseno) {
         val inf = rememberInfiniteTransition(label = "emblema")
-        inf.animateFloat(0f, 1f, infiniteRepeatable(tween(periodo(tema), easing = LinearEasing)), label = "t")
+        val a = inf.animateFloat(0f, 1f, infiniteRepeatable(tween(periodo(tema), easing = LinearEasing)), label = "t")
+        // En pasos de unos 30 por segundo, como el fondo vivo (13 nov 2026): el mismo movimiento, la mitad de cuadros.
+        val pasos = (periodo(tema) / 33).coerceAtLeast(1)
+        remember(a, pasos) { androidx.compose.runtime.derivedStateOf { kotlin.math.floor(a.value * pasos) / pasos } }
     } else remember { mutableFloatStateOf(0.3f) }
     val oscuro = esquema.background.luminance() < 0.5f
     // El emblema animado va en su propia capa, para que su movimiento no vuelva a grabar el encabezado entero (y con él,
@@ -3329,6 +3332,8 @@ fun BotonBuscar(modifier: Modifier = Modifier, onClick: () -> Unit) {
 
 object Fiesta {
     var n by mutableIntStateOf(0)
+    /** La última lluvia que ya salió: al volver a la app o rehacerse la pantalla no se repite (como el sello del día). */
+    var visto by mutableIntStateOf(0)
     fun lanzar() { n++ }
 }
 
@@ -3385,11 +3390,10 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
 fun CapaFiesta(fijo: Float? = null) {
     val n = if (fijo != null) 1 else Fiesta.n
     // Básico, sin partículas ni confeti: la lluvia no se lanza (salvo el instante quieto de las capturas).
-    if (n == 0 || (fijo == null && (!Repo.config.animaciones || Estilo.tema.sinDiseno))) return
+    if (n == 0 || (fijo == null && (n == Fiesta.visto || !Repo.config.animaciones || Estilo.tema.sinDiseno))) return
     val progreso = remember(n) { androidx.compose.animation.core.Animatable(fijo ?: 0f) }
-    var activa by remember(n) { mutableStateOf(true) }
-    LaunchedEffect(n) { if (fijo == null) { progreso.animateTo(1f, tween(1600, easing = LinearEasing)); activa = false } }
-    if (!activa) return
+    androidx.compose.runtime.DisposableEffect(n) { onDispose { if (fijo == null && Fiesta.visto < n) Fiesta.visto = n } }
+    LaunchedEffect(n) { if (fijo == null) { progreso.animateTo(1f, tween(1600, easing = LinearEasing)); Fiesta.visto = n } }
     val tema = Estilo.tema
     val e = MaterialTheme.colorScheme
     val tonos = listOf(e.primary, e.secondary, e.tertiary)

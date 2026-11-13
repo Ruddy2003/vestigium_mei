@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -45,6 +46,12 @@ import kotlinx.coroutines.delay
 /** Se lanza al sellar el día en la hoja de la noche. */
 object Sello {
     var n by mutableIntStateOf(0)
+    /**
+     * El último sello que ya se mostró (entero, cortado o cerrado con un toque). Antes solo se recordaba dentro de la capa, y
+     * esa memoria se perdía al volver a la app con el bloqueo puesto o al rehacerse la pantalla: el sello del día salía otra
+     * vez, con su sonido, al abrir la app.
+     */
+    var visto by mutableIntStateOf(0)
     var fecha by mutableStateOf("")
     fun lanzar(f: String) { fecha = f; n++ }
 }
@@ -92,19 +99,65 @@ fun textoSello(tema: TemaId): String = when (tema) {
 @Composable
 fun CapaHuella() {
     val n = Sello.n
-    if (n == 0) return
-    var visible by remember(n) { mutableStateOf(true) }
-    if (!visible) return
+    if (n == 0 || n == Sello.visto) return
     val animar = Repo.config.animaciones
     val prog = remember(n) { Animatable(if (animar) 0f else 1f) }
     val sentir = rememberSentir()
+    // Si la capa sale de la pantalla a medias (bloqueo, pantalla rehecha), ese sello ya cuenta como visto.
+    DisposableEffect(n) { onDispose { if (Sello.visto < n) Sello.visto = n } }
     LaunchedEffect(n) {
         if (animar) prog.animateTo(1f, tween(2600, easing = LinearEasing))
         delay(if (animar) 1500 else 1800)
-        visible = false
+        Sello.visto = n
     }
     LaunchedEffect(n) { delay(if (animar) 1700 else 100); sentir(Sentidos.Evento.LOGRO) }
-    VistaHuella(prog.value, Sello.fecha, Modifier.clickable(remember { MutableInteractionSource() }, null) { visible = false })
+    VistaHuella(prog.value, Sello.fecha, Modifier.clickable(remember { MutableInteractionSource() }, null) { Sello.visto = n })
+}
+
+/** La apertura de la app: sale una vez por arranque del proceso (al abrirla desde cero), no al volver a ella. */
+object Apertura {
+    var vista = false
+}
+
+/**
+ * Al abrir la app desde cero: la huella del tema y «Vestigium Mei» debajo, cerca de un segundo y sin sonido. Se cierra con
+ * un toque. Con las animaciones apagadas sale quieta el mismo rato. No sale con el bloqueo puesto (su pantalla ya lleva la
+ * huella) ni cuando se abre desde un aviso o un acceso directo.
+ */
+@Composable
+fun CapaApertura() {
+    if (Apertura.vista) return
+    var visible by remember { mutableStateOf(true) }
+    if (!visible) return
+    val animar = Repo.config.animaciones
+    val prog = remember { Animatable(if (animar) 0f else 0.6f) }
+    fun cerrar() { Apertura.vista = true; visible = false }
+    DisposableEffect(Unit) { onDispose { Apertura.vista = true } }
+    LaunchedEffect(Unit) {
+        if (animar) prog.animateTo(1f, tween(1200, easing = LinearEasing)) else delay(900)
+        cerrar()
+    }
+    VistaApertura(prog.value, Modifier.clickable(remember { MutableInteractionSource() }, null) { cerrar() })
+}
+
+/**
+ * La apertura en un punto (0 = vacía, 1 = ya se fue). 0–0.4: la huella se revela desde el núcleo; 0.25–0.5: aparece el
+ * nombre; 0.82–1: todo se desvanece y deja ver la app. Separada para verla en las capturas.
+ */
+@Composable
+fun VistaApertura(progreso: Float, modifier: Modifier = Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val tema = Estilo.tema
+    val revela = FastOutSlowInEasing.transform((progreso / 0.4f).coerceIn(0f, 1f))
+    val nombre = ((progreso - 0.25f) / 0.25f).coerceIn(0f, 1f)
+    val salida = 1f - ((progreso - 0.82f) / 0.18f).coerceIn(0f, 1f)
+    Box(modifier.fillMaxSize().graphicsLayer { alpha = salida }.background(cs.background), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            SelloHuella(Modifier.size(220.dp), tema, revela, 1f)
+            Text("Vestigium Mei", style = MaterialTheme.typography.displaySmall, color = cs.onBackground, textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 26.dp).graphicsLayer { alpha = nombre; translationY = (1 - nombre) * 18f })
+        }
+    }
 }
 
 /**

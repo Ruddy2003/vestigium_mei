@@ -18,6 +18,28 @@ class IdearioPrueba {
     private fun idea(id: String, fecha: String, texto: String = "algo", revisiones: List<RevisionIdea> = emptyList(), quien: List<String> = emptyList()) =
         Idea(id, "${fecha}T10:00:00-06:00", fecha, texto, quien = quien, revisiones = revisiones)
 
+    /**
+     * Cada tema dibuja una marca por cada postura (incluido «hecho», del esquema 25). Las marcas van en un `when (id)` con
+     * `else -> {}`, así que el compilador no avisa si a un tema le falta una: lo revisa esta prueba en el texto.
+     */
+    @Test fun cadaTemaDibujaTodasLasPosturas() {
+        val ids = io.github.ruddy2003.vestigium.data.Catalogo.POSTURAS_IDEA.map { it.id }
+        assertEquals("hecho", ids.first())
+        var marcas = 0
+        Pendientes.main("java/io/github/ruddy2003/vestigium/ui/ideario").listFiles { f -> f.name.startsWith("Ideas") }!!.forEach { f ->
+            val s = f.readText()
+            var i = s.indexOf("override fun DrawScope.marcaPostura")
+            while (i >= 0) {
+                val fin = s.indexOf("else -> {}", i)
+                val cuerpo = s.substring(i, fin)
+                ids.forEach { id -> assertTrue("${f.name} (marca en ${s.substring(0, i).lines().size}): falta «$id»", "\"$id\" ->" in cuerpo) }
+                marcas++
+                i = s.indexOf("override fun DrawScope.marcaPostura", fin)
+            }
+        }
+        assertEquals("se esperaba una marca por tema", io.github.ruddy2003.vestigium.ui.TemaId.entries.size, marcas)
+    }
+
     @Test fun estanteriasSoloConTemasDeIdeas() {
         val l = listOf(idea("a", "2026-01-01", "uno #fisica #filosofia"), idea("b", "2026-01-02", "dos #fisica #fisica"), idea("c", "2026-01-03", "sin tema"))
         assertEquals(listOf("fisica" to 2, "filosofia" to 1), Ideario.temas(l))

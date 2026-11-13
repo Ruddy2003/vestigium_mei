@@ -200,7 +200,7 @@ private fun ContenidoReverso(x: Idea, nav: Nav, p: Pagina, cambiar: (Idea) -> Un
             FuenteIdea(x, p) { cambiar(it) }
         }
     }
-    Seccion("Cómo la tengo", "No tiene que ser verdad para guardarla: también caben las que dudas o rechazas.", plegable = true, plegadaPorDefecto = x.postura.isBlank()) {
+    Seccion("Cómo la tengo", "Un hecho comprobado, o tu opinión: también caben las que dudas o rechazas.", plegable = true, plegadaPorDefecto = x.postura.isBlank()) {
         FilaFichas(Catalogo.POSTURAS_IDEA, x.postura.ifBlank { null }) { cambiar(x.copy(postura = it.orEmpty())) }
     }
     Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -390,7 +390,7 @@ fun UnaIdeaDeAntes(hoy: String, nav: Nav) {
     val respondida = Ideario.respondidaHoy(Repo.ideas, hoy)
     if (respondida != null) {
         if (respondida.revisiones.lastOrNull { it.fecha == hoy }?.respuesta != "cambio") return
-        Seccion("Una idea de antes", "Cambiaste de opinión. ¿Cómo la tienes ahora?") {
+        Seccion("Una idea de antes", if (respondida.postura == "hecho") "Ya no es así. ¿Cómo la tienes ahora?" else "Cambiaste de opinión. ¿Cómo la tienes ahora?") {
             Tarjeta {
                 TarjetaIdea(respondida, lineas = 3) { EdicionIdea.abrir(nav, respondida) }
                 FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -401,12 +401,13 @@ fun UnaIdeaDeAntes(hoy: String, nav: Nav) {
         return
     }
     val i = remember(hoy, Repo.ideas) { Ideario.resurgir(Repo.ideas, hoy) } ?: return
-    Seccion("Una idea de antes", "La anotaste ${Ideario.haceCuanto(i.fecha, hoy)}, el ${Fechas.corto(i.fecha)}. ¿Sigues pensando igual?") {
+    val esHecho = i.postura == "hecho"
+    Seccion("Una idea de antes", "La anotaste ${Ideario.haceCuanto(i.fecha, hoy)}, el ${Fechas.corto(i.fecha)}. " + if (esHecho) "¿Sigue siendo así?" else "¿Sigues pensando igual?") {
         Tarjeta {
             BordeCompartimento(Modifier.padding(top = 4.dp))
             TarjetaIdea(i, lineas = 5, modifier = Modifier.padding(horizontal = 10.dp)) { EdicionIdea.abrir(nav, i) }
             FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Catalogo.RESPUESTAS_IDEA.forEach { r -> Ficha(r.nombre, false) { Repo.guardarIdea(i.copy(revisiones = i.revisiones + RevisionIdea(hoy, r.id))) } }
+                (if (esHecho) Catalogo.RESPUESTAS_HECHO else Catalogo.RESPUESTAS_IDEA).forEach { r -> Ficha(r.nombre, false) { Repo.guardarIdea(i.copy(revisiones = i.revisiones + RevisionIdea(hoy, r.id))) } }
             }
             Text("no mostrar esto", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.clickable { Repo.cambiarConfig { it.copy(ideas_resurgir = false) } }.padding(top = 8.dp))

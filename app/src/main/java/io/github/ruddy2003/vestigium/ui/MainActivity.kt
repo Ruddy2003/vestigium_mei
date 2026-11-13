@@ -156,14 +156,20 @@ class MainActivity : FragmentActivity() {
         // intent es el mismo de antes y una idea compartida se volvería a crear.
         if (savedInstanceState == null) pedida = compartido(intent) ?: intent?.getStringExtra(PANTALLA)
         desbloqueado = !Repo.config.bloqueo
+        // La apertura (la huella y el nombre) sale solo al abrir la app desde cero, desde su ícono: con el bloqueo puesto su
+        // pantalla ya lleva la huella, y desde un aviso o un acceso directo se va directo a lo que se pidió.
+        if (Repo.config.bloqueo || pedida != null) Apertura.vista = true
         setContent {
             TemaVestigium {
                 // Al cambiar de tema o de claro a oscuro, el próximo arranque ya sale con el tema nuevo.
                 val temaArranque = Estilo.tema
                 val oscuroArranque = modoOscuro(temaArranque)
                 LaunchedEffect(temaArranque, oscuroArranque) { ArranqueTema.aplicar(this@MainActivity, temaArranque, oscuroArranque) }
-                if (!desbloqueado) Bloqueo { pedirHuella() }
-                else Raiz(pedida, apilar) { pedida = null; apilar = false }
+                androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
+                    if (!desbloqueado) Bloqueo { pedirHuella() }
+                    else Raiz(pedida, apilar) { pedida = null; apilar = false }
+                    CapaApertura()
+                }
             }
         }
         if (!desbloqueado) pedirHuella()
@@ -1898,11 +1904,10 @@ private fun Raiz(pedida: String?, apilar: Boolean, consumir: () -> Unit) {
         bottomBar = { if (pila.lastOrNull() !in setOf("entrada", "sueno", "carta", "hoja_momentos", "cajon_ideas", "ficha_idea", "idea", "social_grafo")) BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
     ) { pad ->
         val esquema = MaterialTheme.colorScheme
-        // En Art déco y Edo el papel tapiz va en su propia capa, guardada como imagen: así no se vuelve a trazar (cientos de
-        // arcos) cada vez que se mueve el fondo vivo o cambia la pantalla.
-        val tapizEnCapa = io.github.ruddy2003.vestigium.ui.animacionLigera(tema)
-        Box(Modifier.padding(pad).fillMaxSize().then(if (tapizEnCapa) Modifier else Modifier.fondoTema(tema, esquema))) {
-            if (tapizEnCapa) Box(Modifier.fillMaxSize().graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }.fondoTema(tema, esquema))
+        // El papel tapiz va en su propia capa, guardada como imagen, en todos los temas (antes solo en Art déco y Edo): así no se
+        // vuelve a trazar (cientos de arcos, ladrillos u hojas) cada vez que se mueve el fondo vivo o cambia la pantalla.
+        Box(Modifier.padding(pad).fillMaxSize()) {
+            Box(Modifier.fillMaxSize().graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }.fondoTema(tema, esquema))
             FondoVivo(tema)
             // Cada tema cambia de pantalla a su manera; hacia adentro y hacia atrás se mueven en sentidos opuestos.
             // Ocupa siempre toda la ventana: si se encogiera junto con la pantalla que entra (las que se abren desde una

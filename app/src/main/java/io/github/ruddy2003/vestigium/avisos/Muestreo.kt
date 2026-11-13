@@ -80,6 +80,7 @@ object Muestreo {
 class MuestreoReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Repo.init(context)
+        io.github.ruddy2003.vestigium.ui.RotacionTema.revisarDesde(context)
         val dia = intent.getStringExtra("dia") ?: return
         val i = intent.getIntExtra("indice", -1).takeIf { it >= 0 } ?: return
         val t = intent.getLongExtra("hora", 0L).takeIf { it > 0 } ?: return

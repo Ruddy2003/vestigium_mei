@@ -258,6 +258,8 @@ class Capturas {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(navVacia)
     }
     @Test fun huellaRefugio() = pantalla(TemaId.REFUGIO, true, 2400) { io.github.ruddy2003.vestigium.ui.VistaHuella(0.45f, "") }
+    @Test fun aperturaRomano() = pantalla(TemaId.ROMANO, false, 2400) { io.github.ruddy2003.vestigium.ui.VistaApertura(0.6f) }
+    @Test fun aperturaGotico() = pantalla(TemaId.GOTICO, true, 2400) { io.github.ruddy2003.vestigium.ui.VistaApertura(0.3f) }
     @Test fun huellaRomano() = pantalla(TemaId.ROMANO, false, 2400) { io.github.ruddy2003.vestigium.ui.VistaHuella(1f, io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) }
 
     /** Los íconos de la barra inferior en cada tema. */
@@ -1960,6 +1962,8 @@ class Capturas {
     // Huella, ícono del lanzador y formas del mapa.
     @Test fun temaHuella() = porTema("huella") { t, o, n ->
         pantalla(t, o, 2400, n) { io.github.ruddy2003.vestigium.ui.VistaHuella(1f, io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) }
+        // La apertura de la app: la huella entera y el nombre, antes de desvanecerse.
+        pantalla(t, o, 2400, n + "_apertura") { io.github.ruddy2003.vestigium.ui.VistaApertura(0.6f) }
     }
     /** El ícono del lanzador (fondo + huella; cuadrado completo y recortado en círculo), el de las notificaciones y los de las pestañas. */
     @Test fun temaIcono() = porTema("icono") { t, o, n -> captura(t, o, 1200, n) {

@@ -299,7 +299,7 @@ object Diccionario {
         "vm_ideas.csv:quien" to "Autores o invitados que lo dicen (lista; no son personas de Tu gente)", "vm_ideas.csv:obra_id" to "Obra de la que salió la idea",
         "vm_ideas.csv:obra_titulo" to "Título de esa obra (vacío si se borró)", "vm_ideas.csv:cita_id" to "Cita de la obra de la que salió la idea",
         "vm_ideas.csv:fuente" to "De dónde salió, escrito a mano o al compartir (video, conversación, sitio…)", "vm_ideas.csv:enlace" to "Enlace de la fuente",
-        "vm_ideas.csv:donde" to "Minuto o página", "vm_ideas.csv:postura" to "Cómo la tienes: convence, piensa (te hace pensar), duda o desacuerdo; vacío = sin decir",
+        "vm_ideas.csv:donde" to "Minuto o página", "vm_ideas.csv:postura" to "Cómo la tienes: hecho (hecho comprobado, desde el esquema 25), convence, piensa (te hace pensar), duda o desacuerdo; vacío = sin decir",
         "vm_ideas.csv:n_revisiones" to "Veces que la respondiste en «Una idea de antes»", "vm_ideas.csv:personas" to "@personas escritas en el texto",
         "vm_ideas.csv:temas" to "Temas de la idea: los del campo «Temas» (desde el esquema 17) y los #temas escritos en el texto", "vm_ideas_revisiones.csv:idea_id" to "Idea que volviste a ver",
         "vm_ideas_revisiones.csv:fecha" to "Día lógico en que respondiste", "vm_ideas_revisiones.csv:respuesta" to "sigue (sigo pensando igual), cambio (ya no) o ignorar (ahora no)",
@@ -479,6 +479,11 @@ object Diccionario {
      * tipos de vínculo nuevos y el día difícil marcado, 10 nov 2026): la v199, la primera publicada después de la 189.
      */
     private const val VERSION_ESQUEMA_23 = 199
+    /**
+     * La versión que trae el esquema 25 («hecho comprobado» en el Ideario, 13 nov 2026). **Estimada** (la siguiente corrida
+     * de la compilación al momento de escribirla): se corrige con el número de la primera versión publicada con el esquema 25.
+     */
+    private const val VERSION_ESQUEMA_25 = 260
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
@@ -705,6 +710,7 @@ object Diccionario {
         "n_registros" to (VERSION_ESQUEMA_23 to "un solo «Cómo estás ahora» por noche: antes cada toque guardaba un registro (D.177)"),
         "vm_mundo.csv:desde" to (VERSION_ESQUEMA_23 to "en los sitios del Patrimonio marcados a mano, el día de la visita si lo dijiste (vacío si no); antes, el día en que lo marcaste (D.178)"),
         "unesco" to (VERSION_ESQUEMA_23 to "un sitio marcado a mano cuenta en el día de la visita, si lo dijiste, no en el día en que lo marcaste (D.178)"),
+        "vm_ideas.csv:postura" to (VERSION_ESQUEMA_25 to "valor nuevo: hecho (hecho comprobado); los demás no cambian (D.192)"),
     )
 
     // Las claves con «*», como patrones; la más larga primero, para que «app_min_*» gane a «app_*».

@@ -109,6 +109,7 @@ class QuickActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         Repo.init(this)
+        RotacionTema.revisarDesde(this)
         val modo = intent.getStringExtra(MODO) ?: M_MENU
         // El enfoque y la siesta viven en su propio reloj a pantalla completa.
         if (modo == M_ENFOQUE || modo == M_SIESTA) { abrirReloj(modo == M_SIESTA); finish(); return }

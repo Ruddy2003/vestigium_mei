@@ -27,8 +27,9 @@ class EsquemaCatorcePrueba {
     // el 21, masturbación e intimidad, episodios, fechas señaladas, varias tomas y la extra del enfoque (ver EsquemaVeintiunoPrueba);
     // el 22, el respaldo blindado (estado del respaldo en Config, fecha en Borrado) y la copia de la foto del día (Dia.foto_archivo);
     // el 23, un solo ánimo de cierre por noche y la fecha de visita de lo marcado a mano en Mundo (SitioMarcado.visita);
-    // el 24, dos preferencias de interfaz en Config: dónde vive el gato (gato_estilo) y «Hoy en la historia» (historia_hoy).
-    @Test fun esquema() = assertEquals(24, SCHEMA_V)
+    // el 24, dos preferencias de interfaz en Config: dónde vive el gato (gato_estilo) y «Hoy en la historia» (historia_hoy);
+    // el 25, un valor nuevo en la postura de las ideas: «hecho» (hecho comprobado).
+    @Test fun esquema() = assertEquals(25, SCHEMA_V)
 
     @Test fun configDeAntesTraeElCuadroYLaHistoriaEncendidos() {
         // Una configuración guardada antes del esquema 24 no trae los dos ajustes nuevos: toman su valor por omisión.

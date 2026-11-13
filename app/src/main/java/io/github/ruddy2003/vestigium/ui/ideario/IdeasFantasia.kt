@@ -251,6 +251,8 @@ object IdeasArcano : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // El lacre del archivo.
+            "hecho" -> selloHecho(LACRE, p.color)
             "convence" -> drawPath(Path().apply { moveTo(c.x - s * 0.36f, c.y); lineTo(c.x - s * 0.08f, c.y + s * 0.3f); lineTo(c.x + s * 0.4f, c.y - s * 0.36f) }, TINTA, style = Stroke(s * 0.13f, cap = StrokeCap.Round))
             // Una espiral: algo que da vueltas y no termina de cerrar.
             "piensa" -> drawPath(Path().apply {
@@ -546,6 +548,8 @@ object IdeasAntiguas : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // Una runa grabada en piedra.
+            "hecho" -> { drawRoundRect(MADERA, Offset(c.x - s * 0.36f, c.y - s * 0.42f), Size(s * 0.72f, s * 0.84f), androidx.compose.ui.geometry.CornerRadius(s * 0.16f)); runa(3, c, s * 0.56f, p.color, s * 0.09f) }
             "convence" -> gema(c, s * 0.42f, ESMERALDA)
             "piensa" -> runa(5, c, s * 0.8f, MADERA, s * 0.1f)
             // Una media luna: la compañía cuenta el tiempo por lunas.

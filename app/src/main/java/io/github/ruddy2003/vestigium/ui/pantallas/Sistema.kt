@@ -299,6 +299,9 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 "A las 5:00, cuando empieza el día, la app se viste con otro tema" + if (c.temas_rotacion.isEmpty()) " (de todos)." else " (de los ${c.temas_rotacion.size} que elegiste).") { v ->
                 cambiar { it.copy(tema_rotar = v, tema_rotado = if (v) io.github.ruddy2003.vestigium.data.Fechas.diaLogico() else it.tema_rotado) }
             }
+            // El mismo ajuste que en la pantalla del fondo: aquí, junto a la rotación, que es cuando más se nota.
+            Interruptor("El fondo del teléfono cambia con el tema", c.fondo_telefono_auto,
+                "Inicio y bloqueo, también cuando el tema cambia solo.") { v -> cambiar { it.copy(fondo_telefono_auto = v) } }
             if (c.tema_rotar) {
                 Etiqueta("Entre cuáles (ninguno marcado = todos)")
                 io.github.ruddy2003.vestigium.ui.RotacionTema.rotables.groupBy { it.epoca }.toSortedMap().forEach { (epoca, temas) ->

@@ -107,7 +107,7 @@ object Pantallas {
         P("habitos", "Hábitos", "Lo que marcas cada noche", "costumbres"),
         P("cartas", "Cartas", "Al futuro y a otras personas", "carta"),
         P("biblioteca_ideas", "Ideario", "Lo que aprendiste o pensaste, con su fuente", "ideas conocimiento aprendí aprendizaje autor libro video podcast fuente reflexión"),
-        P("notas", "Notas", "Ideas, pensamientos, propósitos y recordatorios", "idea pensamiento recordatorio apunte"),
+        P("notas", "Notas", "Pensamientos, propósitos y recordatorios", "idea pensamiento recordatorio apunte"),
         P("metas", "Metas", "Corto, mediano y largo plazo", "objetivos propósitos año nuevo"),
         P("suplementos", "Suplementos", "Creatina y lo que tomes, con su nivel estimado", "creatina vitamina magnesio probióticos omega melatonina"),
         P("laptop", "Laptop", "Minutos por app y sitio (Cold Turkey)", "computadora cold turkey pc apps sitios productivo"),

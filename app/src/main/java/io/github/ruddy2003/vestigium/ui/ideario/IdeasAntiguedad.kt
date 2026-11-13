@@ -320,6 +320,8 @@ object IdeasCueva : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // Cuatro muescas en el hueso: lo contado.
+            "hecho" -> { for (k in -1..1) drawLine(CARBON, Offset(c.x + k * s * 0.2f, c.y - s * 0.34f), Offset(c.x + k * s * 0.2f, c.y + s * 0.34f), s * 0.1f, StrokeCap.Round); drawLine(OCRE, Offset(c.x - s * 0.4f, c.y + s * 0.22f), Offset(c.x + s * 0.4f, c.y - s * 0.22f), s * 0.11f, StrokeCap.Round) }
             // Un punto de ocre con su anillo.
             "convence" -> { drawCircle(OCRE, s * 0.24f, c); drawCircle(OCRE, s * 0.42f, c, style = Stroke(s * 0.1f)) }
             // Tres puntos: lo estás pensando.
@@ -623,6 +625,8 @@ object IdeasRomano : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // El lacre de una tablilla sellada.
+            "hecho" -> selloHecho(LACRE, p.color)
             // Una corona de laurel chica.
             "convence" -> laurel(Offset(c.x, c.y - s * 0.05f), s * 0.36f, LAUREL)
             // Tres interpuntos triangulares, como en las inscripciones.
@@ -932,6 +936,8 @@ object IdeasHeleno : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // Un óstrakon marcado.
+            "hecho" -> selloHecho(TERRA_OSC, p.color, cuadrado = true)
             "convence" -> { drawCircle(BARNIZ, s * 0.2f, c); drawCircle(BARNIZ, s * 0.4f, c, style = Stroke(s * 0.1f)) }
             // Un gancho de greca: lo estás pensando, todavía da vueltas.
             "piensa" -> drawPath(Path().apply {
@@ -1231,6 +1237,11 @@ object IdeasEgipto : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // El pilar djed: lo que se mantiene firme.
+            "hecho" -> {
+                drawRect(LAPIS, Offset(c.x - s * 0.1f, c.y - s * 0.24f), Size(s * 0.2f, s * 0.66f))
+                for (k in 0..3) drawRect(LAPIS, Offset(c.x - s * 0.3f, c.y - s * 0.44f + k * s * 0.1f), Size(s * 0.6f, s * 0.06f))
+            }
             // El ankh: la vida.
             "convence" -> {
                 drawOval(LAPIS, Offset(c.x - s * 0.18f, c.y - s * 0.46f), Size(s * 0.36f, s * 0.4f), style = Stroke(s * 0.1f))
@@ -1483,6 +1494,8 @@ object IdeasMeso : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // La barra y el punto: un número asentado en el códice.
+            "hecho" -> { drawRoundRect(CINABRIO, Offset(c.x - s * 0.4f, c.y + s * 0.06f), Size(s * 0.8f, s * 0.2f), androidx.compose.ui.geometry.CornerRadius(s * 0.06f)); drawCircle(CINABRIO, s * 0.14f, Offset(c.x, c.y - s * 0.22f)) }
             // Una cuenta de jade.
             "convence" -> { drawCircle(JADE, s * 0.38f, c); drawCircle(Color.White.copy(alpha = 0.4f), s * 0.12f, Offset(c.x - s * 0.12f, c.y - s * 0.12f)) }
             // La voluta de la palabra: lo que se dice y se piensa.

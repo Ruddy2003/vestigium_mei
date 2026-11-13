@@ -253,11 +253,11 @@ fun PantallaNotas(nav: Nav) {
     var filtro by remember { mutableStateOf("todas") }
     var editando by remember { mutableStateOf<Nota?>(null) }
     val marcas = rememberMarcas()
-    Hoja("Notas", nav.atras, "Propósitos y recordatorios (y tus notas de antes). Con @persona y #tema, fijar arriba y buscar.") {
+    Hoja("Notas", nav.atras, "Pensamientos, propósitos y recordatorios. Con @persona y #tema.") {
         Tarjeta(Modifier.padding(top = 10.dp)) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                // Las notas nuevas ya no se ofrecen como «idea» ni «pensamiento» (hallazgo 31): las ideas van al Ideario y los
-                // pensamientos, al registro de ánimo. Las notas viejas de esos tipos se conservan, se ven y se filtran abajo.
+                // Las notas nuevas no se ofrecen como «idea»: las ideas van al Ideario (hallazgo 31). «Pensamiento» volvió el 13 nov
+                // 2026 (lo pidió el autor): el registro de ánimo no tiene dónde escribir un pensamiento libre sobre uno mismo.
                 Catalogo.TIPOS_NOTA.filter { it.id in TIPOS_NOTA_NUEVA }.forEach { o -> Ficha(o.nombre, tipo == o.id) { tipo = o.id; BorradorNota.tipo = o.id } }
             }
             Text("¿es una idea? al Ideario →", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
@@ -296,7 +296,7 @@ fun PantallaNotas(nav: Nav) {
 }
 
 /** Los tipos que se ofrecen al escribir una nota nueva. Los demás de [Catalogo.TIPOS_NOTA] siguen existiendo para las notas ya guardadas. */
-private val TIPOS_NOTA_NUEVA = setOf("proposito", "recordatorio")
+private val TIPOS_NOTA_NUEVA = setOf("pensamiento", "proposito", "recordatorio")
 
 /** El borrador de la nota que se está escribiendo, mientras la app siga abierta. No se guarda en ningún lado. */
 private object BorradorNota {

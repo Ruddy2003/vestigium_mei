@@ -112,8 +112,9 @@ private val R4 @Composable get() = MaterialTheme.shapes.small
  * (colonos), sarta de monedas con nudo y borla (seda), meandro de martillos entre costuras de fieltro (mongol)…
  */
 @Composable
-fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)) {
-    when (Estilo.tema) {
+fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f), tema: TemaId = Estilo.tema) {
+    // [tema]: el de la banda; el fondo del teléfono pinta por adelantado el del tema de mañana.
+    when (tema) {
         TemaId.CIBER -> Circuito(modifier)
         TemaId.NEON -> TuboNeon(modifier)
         TemaId.HELENO -> Greca(modifier, color)

@@ -405,8 +405,11 @@ object Catalogo {
     val TIPOS_NOTA = listOf(Opcion("idea", "Idea"), Opcion("pensamiento", "Pensamiento"), Opcion("proposito", "Propósito"), Opcion("recordatorio", "Recordatorio"))
     /** Ideario: de dónde viene la idea, cómo la tienes y qué respondiste al volver a verla. */
     val ORIGENES_IDEA = listOf(Opcion("leido", "Lo leí"), Opcion("visto", "Lo vi o escuché"), Opcion("contado", "Me lo contaron"), Opcion("propia", "Se me ocurrió"))
-    val POSTURAS_IDEA = listOf(Opcion("convence", "Me convence"), Opcion("piensa", "Me hace pensar"), Opcion("duda", "La dudo"), Opcion("desacuerdo", "No estoy de acuerdo"))
+    /** «hecho» (esquema 25): no es una opinión, está comprobado (que los delfines tienen una comunicación social compleja). */
+    val POSTURAS_IDEA = listOf(Opcion("hecho", "Hecho comprobado"), Opcion("convence", "Me convence"), Opcion("piensa", "Me hace pensar"), Opcion("duda", "La dudo"), Opcion("desacuerdo", "No estoy de acuerdo"))
     val RESPUESTAS_IDEA = listOf(Opcion("sigue", "Sigo pensando igual"), Opcion("cambio", "Ya no"), Opcion("ignorar", "Ahora no"))
+    /** Las mismas respuestas, dichas para un hecho comprobado (lo que se guarda es igual: sigue, cambio o ignorar). */
+    val RESPUESTAS_HECHO = listOf(Opcion("sigue", "Sigue siendo así"), Opcion("cambio", "Ya no"), Opcion("ignorar", "Ahora no"))
     val HORIZONTES = listOf(Opcion("corto", "Corto", "hasta 3 meses"), Opcion("mediano", "Mediano", "hasta un año"), Opcion("largo", "Largo", "más de un año"))
     val ESTADOS_META = listOf(Opcion("activa", "Activa"), Opcion("pausada", "Pausada"), Opcion("lograda", "Lograda"), Opcion("abandonada", "Abandonada"))
     val REVISIONES = listOf(Opcion("semanal", "Cada semana"), Opcion("mensual", "Cada mes"), Opcion("fecha", "En una fecha"), Opcion("ninguna", "Sin revisión"))
