@@ -87,7 +87,7 @@ fun PantallaTotales(nav: Nav, buscar: Boolean = false) {
 
     val foco = remember { androidx.compose.ui.focus.FocusRequester() }
     if (buscar) androidx.compose.runtime.LaunchedEffect(Unit) { kotlinx.coroutines.delay(150); runCatching { foco.requestFocus() } }
-    Hoja(if (buscar) "Buscar" else "Totales", nav.atras, "Todo lo acumulado: cuánto, cuántas veces y desde cuándo. Cada fuente empezó en una fecha distinta, así que cada cifra dice desde cuándo cuenta.", latin = if (buscar) "QVAERERE" else "SVMMA OMNIVM") {
+    Hoja(if (buscar) "Buscar" else "Totales", nav.atras, "Cada cifra dice desde cuándo cuenta.", latin = if (buscar) "QVAERERE" else "SVMMA OMNIVM") {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("todo", periodo == "todo") { periodo = "todo" }
             Ficha("este año", periodo == "anio") { periodo = "anio" }

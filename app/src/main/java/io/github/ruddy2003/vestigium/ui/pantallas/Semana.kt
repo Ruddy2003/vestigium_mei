@@ -82,7 +82,7 @@ fun PantallaSemana(nav: Nav) {
     val antes = remember(lunes, Repo.dias.size) { ResumenSemana(dias.take(transcurridos).map { Fechas.sumar(it, -7) }) }
     val oscuro = esOscuro()
 
-    Hoja("Resumen semanal", nav.atras, "Tu semana de un vistazo, comparada con la anterior. Toca un día para abrirlo.") {
+    Hoja("Resumen semanal", nav.atras, "Comparada con la anterior. Toca un día para abrirlo.") {
         Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             BotonSecundario("‹") { lunes = Fechas.sumar(lunes, -7) }
             Text("${Fechas.corto(dias.first())} — ${Fechas.corto(dias.last())}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)

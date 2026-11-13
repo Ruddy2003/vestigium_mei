@@ -272,7 +272,7 @@ fun PantallaSocial(nav: Nav) {
     val animar = Repo.config.animaciones && GrafoSocial.vista == "cielo"
     val fase = if (animar) animacionCielo() else 0f
     var fichaAbierta by remember { mutableStateOf<String?>(null) }
-    Hoja("Social", nav.atras, "Tu gente y cómo se conecta. «Red»: quién conoce a quién. «Cielo»: más cerca del centro, más reciente; más grande, más días mencionada.") {
+    Hoja("Social", nav.atras, "«Red»: quién conoce a quién. «Cielo»: más cerca, más reciente; más grande, más días.") {
         SelectorVista { elegido = null }
         when {
             m == null -> Ayuda("Acomodando a tu gente…", Modifier.padding(top = 12.dp))

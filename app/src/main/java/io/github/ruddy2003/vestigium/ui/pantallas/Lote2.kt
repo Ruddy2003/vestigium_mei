@@ -105,7 +105,7 @@ fun PantallaCoberturaVariables(nav: Nav) {
     var grupo by remember { mutableStateOf("todas") }
     var orden by remember { mutableStateOf("menos") }
     val cs = MaterialTheme.colorScheme
-    Hoja("Cobertura de variables", nav.atras, "Cuántos días tiene cada variable desde su primer dato. Con menos de 30 días, una correlación todavía es pista, no evidencia.") {
+    Hoja("Cobertura de variables", nav.atras, "Días por variable. Con menos de 30, una correlación es pista.") {
         val l = filas
         if (l == null) { Ayuda("Contando…", Modifier.padding(top = 12.dp)); return@Hoja }
         val conDatos = l.filter { it.n > 0 }
@@ -157,7 +157,7 @@ fun PantallaLugarNuevo(nav: Nav) {
     val c = Repo.config
     val pend = Lugares.pendientes()
     var msg by remember { mutableStateOf<String?>(null) }
-    Hoja("Lugares especiales", nav.atras, "Cuando llevas un rato en un sitio nuevo, la app pregunta si es un lugar especial. Así el tiempo en cada tipo de lugar entra en tus análisis.") {
+    Hoja("Lugares especiales", nav.atras, "La app pregunta si un sitio nuevo es especial; así su tiempo entra en tus análisis.") {
         msg?.let { io.github.ruddy2003.vestigium.ui.Aviso(it) }
         val cand = pend.firstOrNull()
         if (cand == null) Vacio("No hay sitios esperando respuesta. Cuando pases ${c.lugar_minutos} minutos en un lugar nuevo, te preguntará.")
@@ -386,7 +386,7 @@ fun PantallaMetas(nav: Nav) {
         value = if (Repo.metas.any { it.medida_tipo == "variable" }) withContext(Dispatchers.Default) { runCatching { Estadistica.panel(dinamicas = false) }.getOrNull() } else emptyMap()
     }
     val hoy = Fechas.diaLogico()
-    Hoja("Metas", nav.atras, "Corto plazo (hasta 3 meses), mediano (hasta un año) y largo. Si la ligas a un hábito o a una variable, el progreso se calcula solo.") {
+    Hoja("Metas", nav.atras, "Si la ligas a un hábito o a una variable, el progreso se calcula solo.") {
         // En diciembre (y los primeros días de enero): los propósitos del año.
         Metas.toPlantilla(hoy)?.let { anio -> PlantillaPropositos(anio) }
         val revisar = Metas.porRevisar(hoy)

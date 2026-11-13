@@ -359,7 +359,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                     BotonSecundario("música del tema") { io.github.ruddy2003.vestigium.ui.Musica.tocar(ctx, io.github.ruddy2003.vestigium.ui.Musica.presentacion(io.github.ruddy2003.vestigium.ui.Estilo.tema), forzar = true) }
                 }
                 Etiqueta("Tonos del teléfono")
-                Ayuda("Tono de llamada y de notificaciones para todo el teléfono, con la música de este tema. Las notificaciones de Vestigium Mei suenan siempre con su propio sonido, distinto de estos, para que sepas que son de la app.")
+                Ayuda("Para todo el teléfono, con la música del tema. Los avisos de la app suenan aparte.")
                 var mensajeTono by remember { mutableStateOf<String?>(null) }
                 val temaAhora = io.github.ruddy2003.vestigium.ui.Estilo.tema
                 androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 6.dp)) {
@@ -472,7 +472,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                     Text(s, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 6.dp))
                     Ayuda(q)
                 }
-                Ayuda("Health Connect, tus fotos, tu ubicación y tu diario se quedan en el teléfono. Solo salen cuando exportas, eliges una carpeta de respaldo o activas Google Drive.",
+                Ayuda("Todo se queda en el teléfono; solo sale si exportas, respaldas en una carpeta o usas Drive.",
                     Modifier.padding(top = 8.dp))
             }
         }
@@ -490,7 +490,7 @@ fun PantallaReportes(nav: Nav) {
         runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)) }
             .onFailure { msg = "Guardado en tu galería (Pictures/VestigiumMei) o en Descargas." }
     }
-    Hoja("Reportes", nav.atras, "Cada lunes llega el de la semana anterior y cada día 1 el del mes anterior. Se guardan en la galería y en Descargas, sin mapas ni direcciones. El de terapia se genera aquí y se comparte.") {
+    Hoja("Reportes", nav.atras, "Cada lunes, el de la semana; cada día 1, el del mes. En la galería y en Descargas, sin mapas ni direcciones.") {
         Seccion("Generar ahora") {
             Tarjeta {
                 val hoy = Fechas.diaLogico()
@@ -661,13 +661,13 @@ fun PantallaDatos(nav: Nav) {
                     }
                 }
                 if (io.github.ruddy2003.vestigium.data.Privado.hayDatos())
-                    Ayuda("Las dos exportaciones llevan tus datos privados sin cifrar (R necesita leerlos). Guárdalas solo en un lugar tuyo y bórralas cuando ya no las uses.", Modifier.padding(top = 8.dp))
+                    Ayuda("Llevan tus datos privados sin cifrar (R necesita leerlos): guárdalas solo en un lugar tuyo.", Modifier.padding(top = 8.dp))
             }
         }
         Seccion("Respaldo completo", "Todo en un archivo, y de vuelta en un toque.") {
             RespaldoCompleto()
         }
-        Seccion("Respaldo automático", "Elige una carpeta del teléfono; cada mañana la app deja ahí el respaldo completo, ya revisado, y los CSV actualizados (o solo el respaldo cifrado, si pusiste contraseña). En la subcarpeta «copias» guarda uno por día (7), por semana (8) y por mes (12), y la base de datos de cada semana. Si eliges una carpeta que sincronizas con la computadora o con la nube, la copia también sobrevive si pierdes el teléfono.") {
+        Seccion("Respaldo automático", "Cada mañana, en una carpeta que elijas.", explica = "Elige una carpeta del teléfono; cada mañana la app deja ahí el respaldo completo, ya revisado, y los CSV actualizados (o solo el respaldo cifrado, si pusiste contraseña). En la subcarpeta «copias» guarda uno por día (7), por semana (8) y por mes (12), y la base de datos de cada semana. Si eliges una carpeta que sincronizas con la computadora o con la nube, la copia también sobrevive si pierdes el teléfono.") {
             Tarjeta {
                 Ayuda(Repo.config.carpeta_respaldo?.let { "Carpeta configurada." } ?: "Sin carpeta.")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
@@ -678,7 +678,7 @@ fun PantallaDatos(nav: Nav) {
                 if (Repo.config.carpeta_respaldo != null) {
                     io.github.ruddy2003.vestigium.ui.comun.Separador(Modifier.padding(vertical = 12.dp))
                     Text("Cápsula del año", style = MaterialTheme.typography.titleSmall)
-                    Ayuda("Todo el año en un archivo que se lee sin la app: las tablas con su diccionario, una base SQLite, el script de R, la foto de cada día y el libro del diario en PDF. Cada enero sale sola la del año que terminó; nunca se borra.")
+                    Ayuda("Todo el año en un archivo que se lee sin la app (tablas, base, R, fotos y el libro del diario). Sale sola cada enero.")
                     val anio = io.github.ruddy2003.vestigium.data.Fechas.diaLogico().take(4)
                     OutlinedButton(enabled = !ocupado, onClick = {
                         tarea {
