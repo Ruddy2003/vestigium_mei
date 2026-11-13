@@ -42,7 +42,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 // =====================================================================
-//  El cuadro en Hoy (plan de historia y escenas, sección 3.5; tanda P6, 12 nov 2026)
+//  El cuadro en Hoy (plan de historia y escenas, sección 3.5; tanda P6, 13 nov 2026)
 // =====================================================================
 //
 // Arriba de Hoy, donde antes iba la banda del gato de pixel: el paisaje del personaje de «Otras vidas» del tema, a la

@@ -847,7 +847,7 @@ data class Config(
     /** El gato del tema arriba de Día: en su cuadro o en su banda, según [gato_estilo]. Apagado, no sale ninguno de los dos. */
     val gato: Boolean = true,
     /**
-     * Esquema 24 (12 nov 2026): dónde vive el gato. «cuadro»: dentro del paisaje del personaje de «Otras vidas» del tema,
+     * Esquema 24 (13 nov 2026): dónde vive el gato. «cuadro»: dentro del paisaje del personaje de «Otras vidas» del tema,
      * en los temas que ya tienen escena (en los demás sigue el de pixel). «pixel»: siempre la banda del gato de pixel.
      * Es una preferencia de interfaz: no cambia nada de lo que se registra.
      */

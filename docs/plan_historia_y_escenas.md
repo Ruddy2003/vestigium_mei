@@ -296,25 +296,33 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 - **Las reacciones, la caricia y los pelajes** de los tres temas del piloto se hicieron en P5b (`Pelajes.kt`; ver `docs/historia/informes/P5b.md`). La vibración de la caricia y la pulsación larga las conecta P6.
 - **Recibe la luz de su escena** (`EscenaVida.luzDelGato`) y camina por el tramo de suelo que ella le da, por delante de todo. Va en una tercera capa del cuadro, encima de la parte viva.
 
-**3.5 El cuadro en Hoy** (`ui/escenas/CuadroDelDia.kt`, desde `Dia.kt`)
+**3.5 El cuadro en Hoy** (`ui/escenas/CuadroDelDia.kt`, desde `Dia.kt`; hecho en P6, ver `docs/historia/informes/P6.md`)
 
 - **Qué sale:**
-  - con `gato_estilo = "cuadro"` y una escena para el tema, el cuadro;
-  - si no, el gato de pixel, si está encendido;
-  - nunca los dos.
+  - con «Gato del tema» encendido (`Config.gato`), `gato_estilo = "cuadro"` y una escena para el tema, el cuadro;
+  - con «Gato del tema» encendido y sin cuadro (otro tema, o `gato_estilo = "pixel"`), el gato de pixel;
+  - con «Gato del tema» apagado, ninguno de los dos;
+  - nunca los dos a la vez.
 - **La cabecera** (58 dp) es una `Seccion` plegable que se recuerda en `Config.plegadas`. Lleva el título del cuento, la marca, «leer ›» y el glifo para plegar.
+  - El título va en lugar del nombre de la sección, hasta en dos renglones: los de los días especiales llegan a 74 letras.
 - **La banderita** va dentro del cuadro, arriba a la izquierda.
 - **La pulsación larga** de 700 ms abre «Hoy en la historia».
   - Mientras se mantiene, la banderita se va llenando.
   - Se cancela si el dedo se mueve más de 8 dp.
+  - **Hasta la tanda H1 no hay banderita ni pulsación larga** (`HAY_HISTORIA_HOY = false`): la pantalla todavía no existe.
+- **Un solo detector de gestos** para todo el cuadro (`gestosDelCuadro`, en `VistaEscena.kt`): el toque corto va al gato y la pulsación larga, a la historia.
+- **Se detiene mientras no se ve:** al desplazar Hoy hacia abajo, el cuadro deja de trazar.
 - **Accesibilidad:** tres acciones con nombre.
 
 | Estado (412 dp) | Bloque | Te falta hoy | Llenar el día | Tablero |
 |---|---|---|---|---|
 | Hoy (gato) | 90 | 672 | 977 | 1093 |
-| Cuadro abierto | 343 (10 + 48 + 285) | 925 (↓253) | 1230 (↓253) | 1346 (↓253) |
+| Cuadro abierto | 353 (10 + 48 + 10 + 285) | 935 (↓263) | 1240 (↓263) | 1356 (↓263) |
 | Cuadro plegado | 58 | 640 (↑32) | 945 (↑32) | 1061 (↑32) |
-| Abierto en 360 dp | 304 | ↓214 | ↓214 | ↓214 |
+| Abierto en 360 dp | 314 | ↓224 | ↓224 | ↓224 |
+
+- Los 10 dp de más, entre la cabecera y el cuadro, son la separación de toda `Seccion`; ahí va montada la marca de día especial.
+- Con un título de dos renglones la cabecera puede crecer unos dp.
 
 **3.6 «Hoy en la historia»** (`ui/pantallas/HoyEnLaHistoria.kt`, ruta `historia_hoy`)
 
@@ -368,7 +376,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - la caché va fuera de la base;
   - las caricias no se guardan;
   - las temporadas son contenido del código.
-- **Lo guardado solo cambia en dos preferencias de `Config`**, `gato_estilo` e `historia_hoy`, que se agregan juntas en P6.
+- **Lo guardado solo cambia en dos preferencias de `Config`**, `gato_estilo` e `historia_hoy`, que se agregaron juntas en P6 (`SCHEMA_V` = 24, Apéndice D.190). El interruptor de `historia_hoy` lo pone H1, con su pantalla.
   - Tienen valor por omisión.
   - `SCHEMA_V` sube a 24.
   - Una fila en el Apéndice D: «solo preferencias de interfaz».
@@ -416,13 +424,13 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P4b | Gótico y Ciudad neón | `EscenaGotico.kt`, `EscenaNeon.kt` | Ídem; con un día en que el cuento cambie lo que se ve (la obra parada, Kei sin bici); **la lista de `docs/diseno/ESCENAS.md` completa y el autor las vio junto a Helénico** (Ciudad neón es la primera siempre de noche: se le enseña antes de terminar) | 2 |
 | P5a | Gato: esqueleto, poses y estados | `ui/escenas/GatoCuadro.kt` | Hoja de poses; pruebas de los estados | 2 |
 | P5b | Reacciones, caricia y pelajes de los 3 temas | `GatoCuadro.kt`, `Pelajes.kt` | Capturas; lista de qué probar en el teléfono | 2 |
-| P6 | El cuadro en Hoy: plegable, marca, gestos, ajustes, `SCHEMA_V` 24, nota del cap. 9 | `CuadroDelDia.kt`, `Dia.kt`, `Sistema.kt`, `data/Modelo.kt`, Apéndice D, `cap09` | Capturas `hoy` y `cuadro`, abiertas, plegadas y con marca | 2 |
+| P6 | El cuadro en Hoy: plegable, marca, gestos, ajustes, `SCHEMA_V` 24, nota del cap. 9 | `CuadroDelDia.kt`, `VistaEscena.kt`, `Dia.kt`, `Sistema.kt`, `Componentes.kt`, `data/Modelo.kt`, Apéndice D, `cap09` | Capturas `hoy` y `cuadro`, abiertas, plegadas y con marca | 2 |
 
 **Hoy en la historia** (puede hacerse después de P1; H2 necesita P3a).
 
 | Tanda | Qué hace | Archivos | Terminada cuando | Capturas |
 |---|---|---|---|---|
-| H1 | Comprobar la API; pantalla, caché, interruptor, `Red.SERVICIOS`, cap. 10 y Apéndice D | `historia/Efemerides.kt`, `HoyEnLaHistoria.kt`, `Red.kt`, `Trabajo.kt`, `Pantallas.kt`, `MainActivity.kt` | Pruebas del lector con una muestra guardada; capturas con y sin conexión | 1 |
+| H1 | Comprobar la API; pantalla, caché, interruptor, `Red.SERVICIOS`, cap. 10 y Apéndice D. **Enciende la banderita y la pulsación larga del cuadro** (`HAY_HISTORIA_HOY = true`, en `CuadroDelDia.kt`) y pone en Ajustes › Privacidad el interruptor de `Config.historia_hoy`, que ya existe desde P6 | `historia/Efemerides.kt`, `HoyEnLaHistoria.kt`, `Red.kt`, `Trabajo.kt`, `Pantallas.kt`, `MainActivity.kt`, `CuadroDelDia.kt`, `Sistema.kt` | Pruebas del lector con una muestra guardada; capturas con y sin conexión | 1 |
 | H2 | Enlace del evento al cuento | La pantalla y `vidas/` | Prueba del rango de épocas; captura | 1 |
 
 **Expansión** (41 personajes, sin tocar el motor).
@@ -485,8 +493,8 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P4a | claude-fable-5-2 | high | Motor de escena, biblioteca de paisaje y primer paisaje con código | 2 | hecho 11 nov 2026 (`docs/historia/informes/P4a.md`) |
 | P4b | claude-fable-5-2 | high | Paisajes dibujados con código | 2 | hecho 11 nov 2026 (`docs/historia/informes/P4b.md`); **los dos cuadros aprobados por el autor el 12 nov 2026** |
 | P5a | claude-fable-5-2 | **xhigh** | Un esqueleto animado que comparten 32 temas: estados, capas, rendimiento. Un fallo se paga 32 veces y Paparazzi no ve el movimiento | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5a.md`); revisado tres veces con el autor ese día; **el gato, aprobado por el autor el 12 nov 2026** |
-| P5b | claude-fable-5-2 | high | Se apoya en el esqueleto ya resuelto. Los gestos se ajustan después de probarlos en el teléfono | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5b.md`, con la lista de qué probar en el teléfono); **falta que el autor lo vea** |
-| P6 | claude-fable-5-2 | high | Integración en Hoy, medidas y esquema | 2 | pendiente |
+| P5b | claude-fable-5-2 | high | Se apoya en el esqueleto ya resuelto. Los gestos se ajustan después de probarlos en el teléfono | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5b.md`, con la lista de qué probar en el teléfono); **aprobado por el autor el 12 nov 2026** |
+| P6 | claude-fable-5-2 | high | Integración en Hoy, medidas y esquema | 2 | hecho 13 nov 2026 (`docs/historia/informes/P6.md`, con la lista de qué probar en el teléfono); **falta que el autor lo pruebe en el teléfono** |
 | H1 | claude-opus-5-5 | medium | Red, caché y pantalla con patrones que ya existen | 1 | pendiente |
 | H2 | claude-opus-5-5 | medium | Una regla simple de años | 1 | pendiente |
 | A1–A8 | claude-opus-5-5 | high | Calendarios verosímiles con libertad creativa y el patrón de P2. La continuidad de 5 años pide high | 0 c/u | pendiente |
@@ -513,10 +521,10 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 - **H1:**
   - cap. 10, § 10.8: Wikipedia entra a la tabla de servicios, que pasa de 5 a 6, y al texto;
   - una fila en el Apéndice D.
-- **P6:**
-  - una fila en el Apéndice D (`SCHEMA_V` 24, solo preferencias);
-  - la versión del esquema en el cap. 2, si la cita;
-  - **una nota en el cap. 9, § 9.7:** el gato y el cuadro reaccionan a tu ánimo y a tu sueño, así que ver tu estado reflejado puede influir en lo que registras (reactividad). **[Diseño propio]**.
+- **P6** (hecho el 13 nov 2026):
+  - una fila en el Apéndice D (D.190: `SCHEMA_V` 24, solo preferencias);
+  - el cap. 2 no cita la versión del esquema al día (remite al Apéndice D), así que no cambió;
+  - **una nota en el cap. 9, § 9.7:** el gato reacciona a tu sueño y a tu ánimo, así que ver tu estado reflejado puede influir en lo que registras después (reactividad). El paisaje no usa nada tuyo. **[Diseño propio]**.
 - **A7:** el paper no describe a la astronauta ni sus números, así que no hay nada que cambiar. Si algún capítulo la cita, se corrige ahí.
 - **Lo demás:** el paper no describe «Otras vidas» ni el gato, así que según `CLAUDE.md` no se escribe un capítulo nuevo. Ninguna figura cambia.
 

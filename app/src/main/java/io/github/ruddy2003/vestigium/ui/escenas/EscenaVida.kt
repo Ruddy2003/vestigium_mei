@@ -254,7 +254,7 @@ fun sinCuadro(tema: TemaId): Boolean = when (tema) {
 }
 
 // =====================================================================
-//  El cuadro de Hoy (plan de historia y escenas, sección 3.5; tanda P6, 12 nov 2026)
+//  El cuadro de Hoy (plan de historia y escenas, sección 3.5; tanda P6, 13 nov 2026)
 // =====================================================================
 
 /** Los dos valores de `Config.gato_estilo`: el gato dentro de su cuadro, o el gato de pixel en su banda. */
