@@ -159,10 +159,11 @@ private const val TITULO_CORTO = 30
  * lámina. Lleva el [titulo] del cuento de hoy y, debajo y más pequeño, «leer el cuento»: el botón es todo, no solo
  * esas palabras. Para que se entienda que es un cuento tiene un libro abierto a la izquierda, un filete por dentro
  * como el de una tapa y una cinta de marcapáginas que cuelga a la derecha. Con [especial], el renglón pequeño lo dice.
- * Sin [alLeer] (mientras el cuadro se prepara) queda apagado y vacío, con su tamaño.
+ * Sin [alLeer] (mientras el cuadro se prepara) queda apagado y vacío, con su tamaño. [pie] cambia el renglón pequeño
+ * (lo usa la entrada «Los cuentos de hoy» de «Otras vidas»).
  */
 @Composable
-internal fun BotonCuento(titulo: String, especial: Boolean, alLeer: (() -> Unit)?, modifier: Modifier = Modifier, de: String = "") {
+internal fun BotonCuento(titulo: String, especial: Boolean, alLeer: (() -> Unit)?, modifier: Modifier = Modifier, de: String = "", pie: String = "leer el cuento ›") {
     val cs = MaterialTheme.colorScheme
     val forma = MaterialTheme.shapes.medium
     val tinta = cs.onPrimary
@@ -183,7 +184,7 @@ internal fun BotonCuento(titulo: String, especial: Boolean, alLeer: (() -> Unit)
             Column(Modifier.padding(start = 12.dp).weight(1f)) {
                 val letra = if (titulo.length > TITULO_CORTO) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium
                 Text(titulo, style = letra, color = tinta, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text((if (especial) "día especial · " else "") + "leer el cuento ›", style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp),
+                Text((if (especial) "día especial · " else "") + pie, style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp),
                     color = tinta.copy(alpha = 0.82f), modifier = Modifier.padding(top = 2.dp))
             }
         }

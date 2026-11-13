@@ -292,7 +292,8 @@ private fun anio(a: Int): String = when { a < -9000 -> "${"%,d".format(-a)} a. C
 // =====================================================================
 
 /**
- * Aquí no va el cuento del día: se lee en su propia pantalla ([PantallaCuento]), a la que se llega desde el cuadro de Hoy.
+ * Aquí no va el cuento del día: se lee en su propia pantalla ([PantallaCuento]), a la que se llega desde el cuadro de Hoy
+ * y desde el botón «Los cuentos de hoy», arriba de esta pantalla.
  */
 @Composable
 fun PantallaOtrasVidas(nav: Nav) {
@@ -305,8 +306,12 @@ fun PantallaOtrasVidas(nav: Nav) {
         if (!TusNumeros.sincrono) value = withContext(Dispatchers.Default) { runCatching { TusNumeros.calcular(ctx) }.getOrDefault(emptyMap()) }
     }
     val v = vidas.firstOrNull { it.id == elegida } ?: vidas.first()
+    val conCuento = remember(tema) { vidasConCuento(tema).size }
     Hoja("Otras vidas", nav.atras, "Personas promedio de otras épocas y lugares: lo que comían, cuánto se movían, cuánto dormían y a cuánta gente veían, junto a ti.") {
         val t = tuyos
+        // ---- Los cuentos de hoy: la entrada a los de todas estas vidas, tengan cuadro en Hoy o no. Abre en la vida elegida.
+        if (conCuento > 0) io.github.ruddy2003.vestigium.ui.escenas.BotonCuento("Los cuentos de hoy", especial = false, alLeer = { nav.ir("cuento?vida=${v.id}") },
+            modifier = Modifier.padding(top = 12.dp), pie = porNumero(conCuento, "un cuento · leer ›", "$conCuento vidas, un cuento cada una · leer ›"))
         // ---- A quién te pareces.
         val numeros = t?.mapValues { it.value.v }.orEmpty()
         val parecidas = remember(numeros, tema) { vidas.mapNotNull { x -> OtrasVidas.distancia(x, numeros)?.let { x to it } }.sortedBy { it.second.first }.take(3) }
@@ -325,17 +330,7 @@ fun PantallaOtrasVidas(nav: Nav) {
         } else if (t != null) Ayuda("Cuando tengas unos días de pasos, sueño y pantalla registrados, aquí verás a quién te pareces.", Modifier.padding(top = 12.dp))
 
         // ---- La línea del tiempo.
-        Row(Modifier.padding(top = 16.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            vidas.forEach { x ->
-                Column(Modifier.width(76.dp).clip(RoundedCornerShape(10.dp)).clickable { sentir(Sentidos.Evento.ELEGIR); elegida = x.id }.padding(vertical = 4.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally) {
-                    MedallaVida(x, 54.dp, elegida = x.id == v.id)
-                    Text(if (x.tema != null) "tu tema" else anio(x.anio), style = MaterialTheme.typography.labelSmall, color = if (x.tema != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1, modifier = Modifier.padding(top = 3.dp))
-                    Text(x.nombre, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-                }
-            }
-        }
+        LineaDeVidas(vidas, v.id) { elegida = it }
 
         AnimatedContent(v, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "vida") { x -> Column { DetalleVida(x, t) } }
         Spacer(Modifier.height(24.dp))
@@ -415,16 +410,50 @@ private fun SuVida(v: OtrasVidas.Vida) {
     }
 }
 
+/** La fila de vidas para elegir una: su medalla, «tu tema» o su año, y su nombre. */
+@Composable
+private fun LineaDeVidas(vidas: List<OtrasVidas.Vida>, elegida: String, alElegir: (String) -> Unit) {
+    val sentir = rememberSentir()
+    Row(Modifier.padding(top = 16.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        vidas.forEach { x ->
+            Column(Modifier.width(76.dp).clip(RoundedCornerShape(10.dp)).clickable { sentir(Sentidos.Evento.ELEGIR); alElegir(x.id) }.padding(vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                MedallaVida(x, 54.dp, elegida = x.id == elegida)
+                Text(if (x.tema != null) "tu tema" else anio(x.anio), style = MaterialTheme.typography.labelSmall, color = if (x.tema != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1, modifier = Modifier.padding(top = 3.dp))
+                Text(x.nombre, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+            }
+        }
+    }
+}
+
+/** Las vidas que el tema [tema] deja ver y que ya tienen cuento: primero la del tema, después las doce de todos. */
+internal fun vidasConCuento(tema: String): List<OtrasVidas.Vida> = OtrasVidas.visibles(tema).filter {
+    io.github.ruddy2003.vestigium.vidas.anios.Calendarios.de(it.id) != null && io.github.ruddy2003.vestigium.vidas.piezas.TodasLasPiezas.de(it.id) != null
+}
+
 /**
- * La pantalla del cuento (ruta `cuento?vida=<id>`; se llega desde el botón del cuadro de Hoy): solo el cuento de hoy
- * de ese personaje y quién es (su retrato y «Su vida»). Lo demás de «Otras vidas» (a quién te pareces, «Un día suyo»,
- * «Tú y…», de dónde salen los números) se queda en su pantalla, en la pestaña Vida. No lee ningún dato tuyo.
+ * La pantalla del cuento (ruta `cuento?vida=<id>`; se llega desde el botón del cuadro de Hoy y desde «Los cuentos de
+ * hoy», arriba de «Otras vidas»). Arriba, las vidas que el tema deja ver y tienen cuento, para pasar de una a otra: así
+ * se leen también los cuentos de las que no tienen cuadro. Debajo, solo el cuento de hoy de la elegida y quién es (su
+ * retrato y «Su vida»). Lo demás de «Otras vidas» se queda en su pantalla, en la pestaña Vida. No lee ningún dato tuyo.
+ *
+ * Abre en [vidaId]; si esa vida no tiene cuento, en la primera que lo tenga.
  */
 @Composable
 fun PantallaCuento(nav: Nav, vidaId: String) {
-    val v = remember(vidaId) { OtrasVidas.porId(vidaId) }
+    val tema = Estilo.tema.id
+    val vidas = remember(tema, vidaId) {
+        val l = vidasConCuento(tema)
+        // La pedida entra aunque el tema no la deje ver (el cuadro de Hoy manda): va primero.
+        val pedida = OtrasVidas.porId(vidaId)?.takeIf { p -> l.none { it.id == p.id } && io.github.ruddy2003.vestigium.vidas.anios.Calendarios.de(p.id) != null }
+        listOfNotNull(pedida) + l
+    }
+    var elegida by rememberSaveable(tema, vidaId) { mutableStateOf(vidas.firstOrNull { it.id == vidaId }?.id ?: vidas.firstOrNull()?.id ?: "") }
+    val v = vidas.firstOrNull { it.id == elegida }
     Hoja("El cuento de hoy", nav.atras) {
-        if (v == null) { Ayuda("Ese personaje no existe.", Modifier.padding(top = 12.dp)); return@Hoja }
+        if (v == null) { Ayuda("Todavía no hay cuentos para las vidas de este tema.", Modifier.padding(top = 12.dp)); return@Hoja }
+        if (vidas.size > 1) LineaDeVidas(vidas, v.id) { elegida = it }
         RetratoVida(v, numeros = false)
         HoyEnSuVida(v)
         SuVida(v)

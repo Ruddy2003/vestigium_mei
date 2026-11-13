@@ -48,35 +48,35 @@ fun pelajeDe(tema: TemaId): Pelaje? = when (tema) {
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> PELAJE_NEON
     TemaId.HELENO -> PELAJE_HELENO
-    TemaId.EGIPTO -> null           // S1
-    TemaId.MEDIEVAL -> null         // S2
-    TemaId.TEMPLARIO -> null        // S2
-    TemaId.DISTOPIA -> null         // S6
-    TemaId.REFUGIO -> null          // S6
-    TemaId.ORDEN -> null            // S7
-    TemaId.VAPOR -> null            // S4
-    TemaId.LABORATORIO -> null      // S7
-    TemaId.COLONOS -> null          // S7
-    TemaId.NAPOLEON -> null         // S4
-    TemaId.DECO -> null             // S5
-    TemaId.BOTANICO -> null         // S4
-    TemaId.RUINAS -> null           // S6
+    TemaId.EGIPTO -> null           // S9
+    TemaId.MEDIEVAL -> null         // S6
+    TemaId.TEMPLARIO -> null        // S11
+    TemaId.DISTOPIA -> null         // S3
+    TemaId.REFUGIO -> null          // S17
+    TemaId.ORDEN -> null            // S18
+    TemaId.VAPOR -> null            // S8
+    TemaId.LABORATORIO -> null      // S17
+    TemaId.COLONOS -> null          // S19
+    TemaId.NAPOLEON -> null         // S14
+    TemaId.DECO -> null             // S15
+    TemaId.BOTANICO -> null         // S13
+    TemaId.RUINAS -> null           // S4
     TemaId.NAVIDAD -> null          // Navidad: sin cuadro
-    TemaId.SEDA -> null             // S2
-    TemaId.EDO -> null              // S3
+    TemaId.SEDA -> null             // S7
+    TemaId.EDO -> null              // S11
     TemaId.GOTICO -> PELAJE_GOTICO
-    TemaId.ARCANO -> null           // S7
-    TemaId.ESPACIO -> null          // S6
-    TemaId.ABISMO -> null           // S5
-    TemaId.ANDALUS -> null          // S2
-    TemaId.MESO -> null             // S1
-    TemaId.MONGOL -> null           // S3
-    TemaId.RENACIMIENTO -> null     // S3
-    TemaId.PIRATA -> null           // S3
-    TemaId.URSS -> null             // S5
-    TemaId.REVOLUCION -> null       // S4
-    TemaId.ANTIGUAS -> null         // S7
-    TemaId.CUEVA -> null            // S1
+    TemaId.ARCANO -> null           // S4
+    TemaId.ESPACIO -> null          // S3
+    TemaId.ABISMO -> null           // S16
+    TemaId.ANDALUS -> null          // S1
+    TemaId.MESO -> null             // S9
+    TemaId.MONGOL -> null           // S12
+    TemaId.RENACIMIENTO -> null     // S6
+    TemaId.PIRATA -> null           // S2
+    TemaId.URSS -> null             // S15
+    TemaId.REVOLUCION -> null       // S8
+    TemaId.ANTIGUAS -> null         // S18
+    TemaId.CUEVA -> null            // S10
     TemaId.BASICO -> null           // Básico: sin cuadro
 }
 

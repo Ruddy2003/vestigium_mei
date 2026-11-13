@@ -13,7 +13,7 @@ import io.github.ruddy2003.vestigium.vidas.TipoArco
  * Bernat (Templario), Zaynab (Al-Ándalus), Bat (Mongol) e Iacopo (Renacimiento). Siguen las reglas de `AnioPiloto.kt`.
  * Qué es real y qué inventado, con cada fuente, está en `docs/historia/fuentes.md`.
  *
- * Como los del grupo 3, estos personajes tienen cuadro (tandas S2 y S3), y el comentario de cada calendario dice qué
+ * Como los del grupo 3, estos personajes tienen cuadro (tandas S), y el comentario de cada calendario dice qué
  * tiene que mostrar para contar lo mismo que el cuento.
  *
  * Lo propio de este grupo:

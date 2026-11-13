@@ -14,7 +14,7 @@ import io.github.ruddy2003.vestigium.vidas.TipoArco
  * (Abismo), Lou (Art déco), Liudmila (Soviético) y Giulia (Roma). Siguen las reglas de `AnioPiloto.kt`. Qué es real y
  * qué inventado, con cada fuente, está en `docs/historia/fuentes.md`.
  *
- * Como los de los grupos 3 a 5, estos personajes tienen cuadro (tandas S4 y S5), y el comentario de cada calendario dice
+ * Como los de los grupos 3 a 5, estos personajes tienen cuadro (tandas S), y el comentario de cada calendario dice
  * qué tiene que mostrar para contar lo mismo que el cuento.
  *
  * Lo propio de este grupo:

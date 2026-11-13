@@ -109,7 +109,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
    - En Ciudad neón, Kei y Amaru se alternan por día.
    - Básico no tiene cuadro.
 2. **Los 12 comunes** tienen cuento, sin escena. En total, 45 personajes con cuento.
-   - **Ojo (13 nov 2026):** el autor sacó el cuento de «Otras vidas», así que hoy solo se llega a un cuento desde el botón del cuadro de Hoy. Los cuentos de los 12 comunes, y los de los temas que todavía no tienen cuadro, están escritos pero no hay por dónde abrirlos. Ver la pregunta 2 de la sección 12.
+   - El autor sacó el cuento de «Otras vidas» el 13 nov 2026. Los cuentos de los 12 comunes, y los de los temas que todavía no tienen cuadro, se abren desde la fila de vidas de la pantalla del cuento (decisión 22).
 3. **Los personajes de ficción** llevan un calendario inventado.
 4. **Libertad histórica:**
    - si existe el dato histórico, se usa;
@@ -169,6 +169,9 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
     - El autor vio el primer cuadro, señaló que de día parecía una ilustración de catálogo y escogió entre tres variantes: se quedó con la de **gouache**.
     - Lo que pidió: luz con dirección y sombras, cielo con vida y algo que enmarque, paleta corta sin azul puro, agua con profundidad y reflejos, un primer plano grande con cosas que se enciman y que no parezcan puestas para la foto, grano fino, la noche al mismo nivel que el día, orillas naturales con su franja gastada por el agua, y un pueblo lejano con profundidad.
     - **Todas las escenas quedan a ese nivel.** Las reglas, cómo se adaptan a cada tema y la lista para comprobarlo están en `docs/diseno/ESCENAS.md`.
+21. **Las estancias cortas no llevan cuadro nuevo** (13 nov 2026). Solo se pinta entero el lugar que vuelve cada año o que suma 8 semanas o más. Lo demás se cuenta sin cambiar de cuadro, como el Pireo sin la nave de Demeas (sección 8).
+22. **Los cuentos sin cuadro se abren desde la pantalla del cuento** (13 nov 2026). Arriba de esa pantalla va la fila de las vidas que el tema deja ver, para pasar de una a otra. Se llega desde el botón del cuadro de Hoy y desde el botón «Los cuentos de hoy», arriba de «Otras vidas».
+23. **El orden de las escenas lo fijó el autor** (13 nov 2026): Romano, Al-Ándalus, Pirata, Espacio, Distopía, Horror cósmico, Ciudad verde, Roma, Scriptorium, Ruta de la Seda, Renacimiento y Revolución francesa. Los demás, como convenga.
 
 ## 3. Diseño
 
@@ -236,7 +239,9 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - que cada día especial tenga su certeza;
   - que se vea la nota «Relato de ficción con base histórica».
 - **Dónde vive:**
-  - en su pantalla propia (`PantallaCuento`, ruta `cuento?vida=<id>`), con sus fuentes al pie; se llega desde el botón del cuadro de Hoy;
+  - en su pantalla propia (`PantallaCuento`, ruta `cuento?vida=<id>`), con sus fuentes al pie;
+  - arriba de esa pantalla, la fila de las vidas que el tema deja ver y tienen cuento (la del tema y las 12 comunes), para pasar de una a otra;
+  - se llega desde el botón del cuadro de Hoy y desde el botón «Los cuentos de hoy», arriba de «Otras vidas»;
   - **ya no sale en «Otras vidas»:** el autor lo quitó de ahí el 13 nov 2026, y con él se fue la ruta `otras_vidas?vida=<id>&seccion=cuento`.
 - **Volumen:** unos 50 párrafos de variantes y unos 70 especiales por personaje en la temporada 1. En las temporadas 2 a 5 solo se escriben los especiales nuevos.
   - **Medido en P3a:** Demeas llevó 89 variantes y 106 párrafos especiales, más 50 oraciones sueltas, porque pasa parte del año en el mar. Un personaje que no cambia de estado necesita unas 60 variantes.
@@ -349,14 +354,14 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 |---|---|---|---|
 | Hoy, el cuadro | Paisaje sin personas, gato, banderita, marca y el botón con el **título** del cuento | `FichaDelDia`, `escenaDe`, `pelajeDe`, `Gato.humor` | El texto del cuento, eventos, datos o comparación |
 | Hoy en la historia | Eventos reales del día y «en la época de X ›» | Wikipedia y su caché | Cuentos, escenas, nada tuyo |
-| El cuento (desde el botón del cuadro) | El cuento de hoy con sus fuentes, el retrato del personaje y «Su vida» | `Cuento`, `OtrasVidas` | Un día suyo, Tú y X, a quién te pareces, los números |
-| Otras vidas › detalle | Retrato, Su vida, Un día suyo, Tú y X, fuentes | `OtrasVidas` | El cuento (desde el 13 nov 2026), la escena, el gato, los eventos |
+| El cuento (desde el botón del cuadro y desde «Otras vidas») | La fila de vidas con cuento, el cuento de hoy con sus fuentes, el retrato del personaje y «Su vida» | `Cuento`, `OtrasVidas` | Un día suyo, Tú y X, a quién te pareces, los números |
+| Otras vidas | Arriba, el botón «Los cuentos de hoy». En el detalle: retrato, Su vida, Un día suyo, Tú y X, fuentes | `OtrasVidas` | El cuento (desde el 13 nov 2026), la escena, el gato, los eventos |
 | Vida › recuadro, y Tu año | Como hoy | — | El cuento |
 | Ajustes | Estilo del gato y «Hoy en la historia» | `Config` | — |
 
 **Lo que aparece en dos sitios:**
 1. **El título del cuento** sale en el botón del cuadro y en el cuento. En Hoy es solo un enlace.
-   - **El cuento se lee en un solo sitio:** su pantalla propia, desde el botón del cuadro. En «Otras vidas» ya no sale (13 nov 2026).
+   - **El cuento se lee en un solo sitio:** su pantalla propia. En «Otras vidas» ya no sale el texto (13 nov 2026); solo el botón que lleva a esa pantalla.
 2. **El tramo horario:** el cuento lo usa como contexto, pero no repite el reloj de «Un día suyo».
 3. **«Su vida»:** el cuento no la repite. La edad del retrato se queda fija; la que avanza solo aparece en el cuento.
 4. **Los eventos reales** viven solo en «Hoy en la historia».
@@ -467,7 +472,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 
 **Por qué se reajustaron.** Las 7 tandas se midieron cuando se pensaba que una escena era combinar piezas de la biblioteca. Lo que se sabe ahora:
 
-1. **Cuánto pesa un cuadro.** Los tres del piloto llevan entre 1,360 y 1,500 renglones de dibujo cada uno (Helénico 1,500; Gótico 1,364; Ciudad neón 1,483 con sus cosas). P4b hizo dos en una tanda y aun así dejó una lista de puntos flojos en cada uno. **Dos cuadros por tanda es la medida.** **[Aproximación]:** sale de una sola tanda; S1a dirá si aguanta.
+1. **Cuánto pesa un cuadro.** Los tres del piloto llevan entre 1,360 y 1,500 renglones de dibujo cada uno (Helénico 1,500; Gótico 1,364; Ciudad neón 1,483 con sus cosas). P4b hizo dos en una tanda y aun así dejó una lista de puntos flojos en cada uno. **Dos cuadros por tanda es la medida.** **[Aproximación]:** sale de una sola tanda; S1 dirá si aguanta.
 2. **Cada tema debe más cosas que en P4b.** Desde P5 y P6, además del paisaje y la banderita: el pelaje del gato, sus anclas, lo plantado en su suelo (`estorbos`), su luz y su talla, las pruebas y el barrido de 2026 a 2032.
 3. **Nueve temas piden más de un lugar ya en la temporada 1.** Los calendarios (tandas A3 a A8) dicen dónde está el personaje cada día, y varios se mudan. Contado día por día con el motor: los 29 temas son **37 cuadros y 5 variantes** en la temporada 1, y unos **24 lugares más** entre las temporadas 2 y 5.
 
@@ -498,41 +503,41 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | Laboratorio | — | La ciudad en ruinas, arriba, 28 días (T5) |
 | Tierras Antiguas | — | Torremuda, 30 días (T3) |
 
-**Qué se pinta entero y qué no** (propuesta; la decide el autor: pregunta 1 de la sección 12).
+**Qué se pinta entero y qué no** (decisión 21, del 13 nov 2026).
 - **Cuadro propio:** el lugar que vuelve cada año o que suma 8 semanas o más. Se dibuja al mismo nivel que el principal.
-- **Variante:** la estancia corta de una sola vez. Se cuenta sin cambiar de cuadro, como el Pireo sin la nave de Demeas: el mismo sitio con lo que falte o lo que cambie (la tienda cerrada, otro fondo detrás del barco, el barco-lavadero vacío).
+- **Variante:** la estancia corta. Se cuenta sin cambiar de cuadro, como el Pireo sin la nave de Demeas: el mismo sitio con lo que falte o lo que cambie (la tienda cerrada, otro fondo detrás del barco, el barco-lavadero vacío).
 - En la temporada 1 quedan como variantes: Nassau, el cuartel, Moscú, el camino de Versalles y el otro pueblo de Ruth.
 
-**Las tandas.** Los grupos S1 a S7 son los mismos de antes (el código los cita así); cada uno se parte en dos o tres.
+**Las tandas,** en el orden que fijó el autor (decisión 23). Las ocho primeras llevan sus doce temas; las demás van como conviene.
 
 | Tanda | Temas | Cuadros | Estado |
 |---|---|---|---|
-| S1a | Romano; Egipto (primer cuadro sin agua) | 2 | pendiente |
-| S1b | Mesoamérica; Prehistoria (el abrigo y la meseta; primer cuadro con luz de fuego) | 3 | pendiente |
-| S2a | Scriptorium (primer interior con ventana); Al-Ándalus | 2 | pendiente |
-| S2b | Templario | 1 | pendiente |
-| S2c | Ruta de la Seda (el camino, con sus tres paisajes, y Chang'an) | 2 | pendiente |
-| S3a | Renacimiento; Japón Edo | 2 | pendiente |
-| S3b | Mongol (el valle de invierno y el campamento de verano) | 2 | pendiente |
-| S3c | Pirata (el mar y el cayo; Nassau como variante; primer cuadro a bordo) | 2 | pendiente |
-| S4a | Revolución francesa (con la helada; Versalles como variante); Vapor victoriano | 2 | pendiente |
-| S4b | Botánico (el bergantín y la selva) | 2 | pendiente |
-| S4c | Napoleónico (el vivac y la retirada; el cuartel y Moscú como variantes; primer cuadro con nieve) | 2 | pendiente |
-| S5a | Art déco; Soviético | 2 | pendiente |
-| S5b | Abismo (el barco y el muelle) | 2 | pendiente |
-| S5c | Roma (la capilla y la ciudad de agosto) | 2 | pendiente |
-| S6a | Espacio (primer interior con dos luces); Refugio | 2 | pendiente |
-| S6b | Ciudad verde; Distopía | 2 | pendiente |
-| S7a | Laboratorio; Orden | 2 | pendiente |
-| S7b | Horror cósmico (primer cuadro con niebla); Tierras Antiguas | 2 | pendiente |
-| S7c | Colonos (el otro pueblo como variante) | 1 | pendiente |
+| S1 | Romano; Al-Ándalus | 2 | pendiente |
+| S2 | Pirata (el mar y el cayo; Nassau como variante; primer cuadro a bordo) | 2 | pendiente |
+| S3 | Espacio (primer interior con dos luces); Distopía | 2 | pendiente |
+| S4 | Horror cósmico (primer cuadro con niebla); Ciudad verde | 2 | pendiente |
+| S5 | Roma (la capilla y la ciudad de agosto; primer interior con ventana) | 2 | pendiente |
+| S6 | Scriptorium; Renacimiento | 2 | pendiente |
+| S7 | Ruta de la Seda (el camino, con sus tres paisajes, y Chang'an; primer cuadro de desierto) | 2 | pendiente |
+| S8 | Revolución francesa (con la helada; Versalles como variante); Vapor victoriano | 2 | pendiente |
+| S9 | Egipto; Mesoamérica | 2 | pendiente |
+| S10 | Prehistoria (el abrigo y la meseta; primer cuadro con luz de fuego) | 2 | pendiente |
+| S11 | Templario; Japón Edo | 2 | pendiente |
+| S12 | Mongol (el valle de invierno y el campamento de verano) | 2 | pendiente |
+| S13 | Botánico (el bergantín y la selva) | 2 | pendiente |
+| S14 | Napoleónico (el vivac y la retirada; el cuartel y Moscú como variantes; primer cuadro con nieve) | 2 | pendiente |
+| S15 | Art déco; Soviético | 2 | pendiente |
+| S16 | Abismo (el barco y el muelle) | 2 | pendiente |
+| S17 | Refugio; Laboratorio | 2 | pendiente |
+| S18 | Orden; Tierras Antiguas | 2 | pendiente |
+| S19 | Colonos (el otro pueblo como variante) | 1 | pendiente |
 
 - **Son 19 tandas:** 37 cuadros y 5 variantes.
-- **El segundo lugar de un tema cuesta algo menos que un tema nuevo:** comparte paleta, piezas, pelaje y banderita. Por eso S1b lleva tres.
-- **S2b y S7c van solas y son las más cortas.** Se pueden hacer juntas en una sesión si la anterior salió holgada.
+- **Un cambio pequeño al orden del autor:** Renacimiento va una tanda antes que la Ruta de la Seda, para dibujarlo junto a Scriptorium (los dos son interiores con ventana) y que la Ruta, que lleva dos cuadros, tenga su tanda.
+- **Estas S no son las de antes.** Las siete primeras del plan (S1 a S7, de 4 o 5 temas) se deshicieron el 13 nov 2026. Los informes de las tandas A y T, que son anteriores, citan esa numeración vieja; los comentarios del código (`escenaDe`, `pelajeDe`, `banderitaHistoria`) ya llevan la nueva.
 - **El primer cuadro de un tipo nuevo** va primero en su tanda y espera el visto bueno del autor antes de seguir (sección 7).
-- **El orden lo pone el autor.** Un tema sin cuadro no se rompe: sigue saliendo el gato de pixel en Hoy. Conviene empezar por los temas que más usa; lo que no llegue al 1 de enero de 2027 llega después sin que se pierda nada.
-- **Antes de S1a:** las tandas A y T están hechas en la rama `ccr-9229e262-lhs8xl`, que todavía no está en `main`. Las escenas leen esos calendarios, así que esa rama se mezcla primero (probado el 13 nov 2026: se mezcla sin conflictos).
+- **Un tema sin cuadro no se rompe:** sigue saliendo el gato de pixel en Hoy, y su cuento se lee desde «Otras vidas». Lo que no llegue al 1 de enero de 2027 llega después sin que se pierda nada.
+- **Las tandas A y T** entraron a `main` el 13 nov 2026, junto con este reajuste: las escenas ya pueden leer sus calendarios.
 - **Dos S a la vez:** se puede, cada una en su rama. Chocan en `escenaDe`, `banderitaHistoria`, `pelajeDe`, `DIAS_CUADRO`, `CoberturaTemas`, `TEMAS.md` y la tabla de arriba; son renglones sueltos y se arreglan al mezclar. Si las dos agregan piezas a `paisaje/`, mejor una después de la otra.
 - **Si una tanda no alcanza,** entrega un cuadro bien hecho y deja el otro para la siguiente; no baja el nivel.
 
@@ -545,7 +550,12 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 - **Y2028 a Y2031: los especiales de cada temporada nueva.**
   - Antes de cada 1 de enero, 8 tandas T con los párrafos especiales de esa temporada para los 45 personajes, de unos 6 personajes cada una.
   - Los calendarios ya están escritos desde las A.
-  - **Las S chicas de cada año** dibujan los lugares que estrena esa temporada (la tabla de lugares, arriba), dos cuadros por tanda: unos 7 lugares antes de 2028, 9 antes de 2029, 5 antes de 2030 y 3 antes de 2031. Si el autor deja las estancias cortas como variantes (pregunta 1 de la sección 12), bajan a 3, 2, 0 y 2.
+  - **Las S chicas de cada año** dibujan los lugares que estrena esa temporada y que piden cuadro propio (decisión 21), dos cuadros por tanda:
+    - antes de 2028: Samarcanda, el hospital y la pampa;
+    - antes de 2029: el pueblo de Jean-Baptiste y el teatro de pueblo de Lou;
+    - antes de 2030: ninguno;
+    - antes de 2031: la casa del naturalista y la sala donde toca Lou.
+  - Las demás estancias de la tabla de lugares van como variantes, en esas mismas tandas.
   - También va en una S chica cualquier estado nuevo de un lugar ya dibujado (la casa reconstruida, la obra terminada).
 
 ## 9. Tabla de estado
@@ -586,11 +596,11 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | T7a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7a.md`) |
 | T7b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7b.md`) |
 | T8a–T8b | claude-opus-5-5 | medium | Ídem | 0 c/u | hechas 12 nov 2026 (`docs/historia/informes/T8a.md`, `T8b.md`) |
-| S1–S7 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código | 2 c/u | pendiente |
+| S1–S19 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código, dos cuadros por tanda | 1 c/u, y 1 de reserva | pendiente (una por una, en la tabla de la sección 8) |
 | C1 | claude-opus-5-5 | medium | Revisión y cierre sin dibujo nuevo | 1 | pendiente |
 | Y2028–Y2031 | claude-opus-5-5 | medium | Párrafos especiales con el tono y el calendario ya fijos | 0 c/u | — |
 
-**Las S se partieron el 13 nov 2026** en 19 tandas (S1a a S7c): su estado, una por una, está en la tabla de la sección 8. Cada una usa 1 corrida y tiene 1 de reserva.
+**Las S se rehicieron el 13 nov 2026** en 19 tandas (S1 a S19): su estado, una por una, está en la tabla de la sección 8. Cada una usa 1 corrida y tiene 1 de reserva.
 
 **Corridas de capturas de la temporada 1:** 13 del piloto + 2 de H + de 19 a 38 de S + 1 de C1 = **de 35 a 54 corridas**. Antes del reajuste de las S eran 30. Son corridas cortas (filtradas por tema, unos 6 minutos). Cada año nuevo pide las de sus S chicas.
 
@@ -628,7 +638,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 - **Gestos y vibración:** los 700 ms, la caricia frente al desplazamiento y el aura encendida no se ven en las capturas.
 - **Medidas en dp:** están calculadas con la letra al 100 %. Con letra más grande, todo baja más.
 - **El nivel de las escenas:** las S se reajustaron el 13 nov 2026 a dos cuadros por tanda (sección 8).
-  - La medida sale de una sola tanda (P4b). Si S1a no alcanza para dos, se vuelve a contar.
+  - La medida sale de una sola tanda (P4b). Si S1 no alcanza para dos, se vuelve a contar.
   - Son 19 tandas, y cada cuadro lo ve el autor junto a Helénico. Puede que no estén todas el 1 de enero de 2027; los temas que falten siguen con el gato de pixel.
   - Cada cuadro pesa al dibujarse (el grano y las capas de sombra). Desde la v245 el paisaje se pinta en segundo plano y se recuerda; falta que el autor confirme en el teléfono que ya no hay tirón.
 - **Continuidad:** un suceso de un año, como una herida o una casa quemada, tiene que seguir al año siguiente. La prueba revisa que los arcos empalmen entre temporadas.
@@ -636,8 +646,4 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 
 ## 12. Preguntas que quedan
 
-Abiertas el 13 nov 2026, al reajustar las S:
-
-1. **Las estancias cortas en otro lugar: ¿cuadro propio o variante?** La propuesta es la de la sección 8: cuadro propio si el lugar vuelve cada año o suma 8 semanas o más; lo demás, una variante del cuadro de siempre, como el Pireo sin la nave. Mientras el autor no diga otra cosa, las S siguen la propuesta. Si prefiere pintar todos los lugares, la temporada 1 sube de 37 a 42 cuadros (dos o tres tandas más) y las S chicas de cada año crecen como dice la sección 8.
-2. **¿Por dónde se abren los cuentos que no tienen cuadro?** Al sacar el cuento de «Otras vidas», los de los 12 comunes y los de los temas sin escena no tienen entrada. Opciones: un renglón «El cuento de hoy ›» en el detalle de cada vida, que abra la pantalla del cuento sin traer el texto; o dejarlos sin entrada hasta que su tema tenga cuadro (los 12 comunes no la tendrían nunca).
-3. **El orden de las S:** qué temas van primero.
+Ninguna. Las tres que se abrieron el 13 nov 2026 al reajustar las S las contestó el autor ese día: decisiones 21, 22 y 23.

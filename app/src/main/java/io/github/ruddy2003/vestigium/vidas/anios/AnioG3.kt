@@ -14,7 +14,7 @@ import io.github.ruddy2003.vestigium.vidas.TipoArco
  * (Prehistoria), K'an (Mesoamérica) y Nanai-vandak (Ruta de la Seda). Siguen las reglas de `AnioPiloto.kt`. Qué es real
  * y qué inventado, con cada fuente, está en `docs/historia/fuentes.md`.
  *
- * A diferencia de los grupos 1 y 2, estos personajes **tienen cuadro**: el de su tema (tandas S1 y S2). Por eso el
+ * A diferencia de los grupos 1 y 2, estos personajes **tienen cuadro**: el de su tema (tandas S). Por eso el
  * comentario de cada calendario dice qué tiene que mostrar el cuadro para contar lo mismo que el cuento.
  *
  * Lo propio de este grupo:
