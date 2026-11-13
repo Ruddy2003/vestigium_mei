@@ -44,6 +44,8 @@ import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.TemaVestigium
 import io.github.ruddy2003.vestigium.ui.Tonos
 import androidx.compose.ui.geometry.Offset
+import io.github.ruddy2003.vestigium.ui.escenas.gato
+import androidx.compose.ui.graphics.drawscope.scale as escalar
 import androidx.compose.ui.geometry.Size
 import io.github.ruddy2003.vestigium.ui.barraGrafica
 import io.github.ruddy2003.vestigium.ui.ejeGrafica
@@ -62,8 +64,11 @@ import org.junit.Test
 
 /** Capturas de una pantalla de muestra en cada tema, para revisar el diseño sin teléfono. */
 class Capturas {
-    @get:Rule
     val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_6, theme = "android:Theme.Material.NoActionBar", showSystemUi = false, useDeviceResolution = true)
+
+    /** Paparazzi, envuelto: en una corrida «solo» las capturas de siempre se saltan antes de prepararlo ([CapturasAPedido]). */
+    @get:Rule
+    val reglas: org.junit.rules.TestRule = CapturasAPedido.regla(paparazzi)
 
     /** Fondo del tema con su textura, como en la app. */
     @Composable
@@ -1919,13 +1924,13 @@ class Capturas {
      * Una superficie en todos los temas, en claro y en oscuro (el que solo existe en oscuro, una vez). Cada imagen se llama
      * `<superficie>_<tema>_<claro|oscuro>`. Son muchas, así que solo corren las superficies que pide la variable CAPTURAS:
      * una lista separada por comas («huella,campana») o «todas». En Actions se pasa con la entrada `superficies` de
-     * capturas.yml; sin ella, estas pruebas se saltan y las capturas de siempre no cambian.
+     * capturas.yml; sin ella, estas pruebas se saltan y las capturas de siempre no cambian. Con CAPTURAS_TEMAS (la
+     * entrada `temas`) solo salen esos temas (ver [CapturasAPedido]).
      */
     // Un alto menor que el ancho (1080) hace que Paparazzi gire la captura: aquí ninguna baja de 1200.
     private fun porTema(superficie: String, captura: (tema: TemaId, oscuro: Boolean, nombre: String) -> Unit) {
-        val pedidas = (System.getenv("CAPTURAS") ?: "").split(',').map { it.trim() }
-        org.junit.Assume.assumeTrue("«$superficie» no está en CAPTURAS", "todas" in pedidas || superficie in pedidas)
-        TemaId.entries.forEach { t ->
+        CapturasAPedido.pedida(superficie)
+        CapturasAPedido.temas().forEach { t ->
             (if (t.soloOscuro) listOf(true) else listOf(false, true)).forEach { o -> captura(t, o, "${t.id}_${if (o) "oscuro" else "claro"}") }
         }
     }
@@ -2112,8 +2117,7 @@ class Capturas {
      * la pantalla entera de «Otras vidas» en Helénico, para ver dónde queda la sección.
      */
     @Test fun cuentoDelDia() {
-        val pedidas = (System.getenv("CAPTURAS") ?: "").split(',').map { it.trim() }
-        org.junit.Assume.assumeTrue("«cuento» no está en CAPTURAS", "todas" in pedidas || "cuento" in pedidas)
+        CapturasAPedido.pedida("cuento")
         val demeas = io.github.ruddy2003.vestigium.data.OtrasVidas.porId("remero")!!
         listOf(Triple("normal_claro", "2027-02-03" to 9.0, false), Triple("fiesta_claro", "2027-03-18" to 11.0, false),
             Triple("eclipse_oscuro", "2027-08-03" to 14.0, true), Triple("avance_oscuro", "2026-11-11" to 20.0, true)).forEach { (nombre, cuando, oscuro) ->
@@ -2123,6 +2127,215 @@ class Capturas {
         }
         pantalla(TemaId.HELENO, false, 9400, "cuento_pantalla_claro") { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(navVacia, "remero", "cuento") }
     }
+
+    // ---------------------------------------------------------------- el cuadro de Hoy (plan de historia y escenas)
+
+    /** Lo que la ficha dice de un momento, para leerlo encima de su cuadro. */
+    private fun rotuloCuadro(ficha: io.github.ruddy2003.vestigium.vidas.FichaDelDia, hora: Double): String {
+        val reloj = "%d:%02d".format(hora.toInt(), Math.round((hora - hora.toInt()) * 60).toInt())
+        val dias = ficha.especiales.joinToString(" + ") { it.dia.titulo }.ifEmpty { "día normal" }
+        return "${ficha.dia} · $reloj · ${ficha.estacion.nombre}, ${ficha.clima.nombre} · objeto: ${ficha.objeto ?: "—"} · estado: ${ficha.estado ?: "—"}\n$dias"
+    }
+
+    /** Una imagen con varios cuadros, uno debajo de otro, cada uno con su rótulo. Sin animación: la parte viva queda en su instante fijo. */
+    private fun cuadros(tema: TemaId, oscuro: Boolean, nombre: String, banderita: io.github.ruddy2003.vestigium.ui.escenas.Banderita?,
+                        celdas: List<Triple<io.github.ruddy2003.vestigium.ui.escenas.EscenaVida, io.github.ruddy2003.vestigium.vidas.FichaDelDia, Double>>) =
+        captura(tema, oscuro, alto = 140 + celdas.size * 900, nombre = nombre) {
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                celdas.forEach { (escena, ficha, hora) ->
+                    Text(rotuloCuadro(ficha, hora), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground, maxLines = 2)
+                    io.github.ruddy2003.vestigium.ui.escenas.VistaEscena(escena, ficha, hora, Modifier.fillMaxWidth(), MaterialTheme.shapes.medium, animar = false, banderita = banderita)
+                }
+            }
+        }
+
+    /** La hoja de poses del gato del cuadro: sus 13 animaciones, cuadro por cuadro, con la luz de media mañana. */
+    private fun hojaDePosesGato(tema: TemaId, oscuro: Boolean, nombre: String, pelaje: io.github.ruddy2003.vestigium.ui.escenas.Pelaje) =
+        // El alto sale de lo que hay que mostrar: cada fila de cuadros mide 62 dp (72 las de las acciones) y cada animación lleva su rótulo.
+        captura(tema, oscuro, alto = (2.75f * (40 + io.github.ruddy2003.vestigium.ui.escenas.AnimGato.entries.filter { it.cuadros > 0 }.sumOf { 30 + 62 * ((it.cuadros + 3) / 4) } + pelaje.especiales.sumOf { 30 + 72 * ((it.cuadros + 3) / 4) })).toInt(), nombre = nombre) {
+            val luces = io.github.ruddy2003.vestigium.ui.escenas.paisaje.lucesDe(io.github.ruddy2003.vestigium.vidas.luzDe(10.0, io.github.ruddy2003.vestigium.vidas.RegimenLuz.SEIS_FRANJAS), io.github.ruddy2003.vestigium.vidas.Clima.DESPEJADO)
+            val luz = io.github.ruddy2003.vestigium.ui.escenas.LuzGato(io.github.ruddy2003.vestigium.ui.escenas.paisaje.Rayo(luces), luces.noche) { luces.tono(it) }
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                io.github.ruddy2003.vestigium.ui.escenas.AnimGato.entries.filter { it.cuadros > 0 }.forEach { anim ->
+                    val filas = (anim.cuadros + 3) / 4
+                    Text("${anim.name.lowercase().replace('_', ' ')} · ${anim.cuadros} cuadros", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground)
+                    androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().aspectRatio(380f / (62f * filas))) {
+                        val k = size.width / 380f
+                        escalar(k, k, Offset.Zero) {
+                            drawRect(luces.tono(androidx.compose.ui.graphics.Color(0xFFD9CDB4)), Offset.Zero, Size(380f, 62f * filas))
+                            for (f in 0 until filas) drawRect(luces.tono(androidx.compose.ui.graphics.Color(0xFFC2B292)), Offset(0f, 62f * f + 52f), Size(380f, 10f))
+                            for (i in 0 until anim.cuadros) gato(io.github.ruddy2003.vestigium.ui.escenas.Gatuno.poseDe(anim, i), pelaje, luz, Offset(95f * (i % 4) + 47f, 62f * (i / 4) + 56f), 1, 1.3f)
+                        }
+                    }
+                }
+                // Las dos acciones propias de su tema, con lo que lleva en las manos.
+                pelaje.especiales.forEach { accion ->
+                    val filas = (accion.cuadros + 3) / 4
+                    Text("${accion.nombre} · ${accion.cuadros} cuadros", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground)
+                    androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().aspectRatio(380f / (72f * filas))) {
+                        val k = size.width / 380f
+                        escalar(k, k, Offset.Zero) {
+                            drawRect(luces.tono(androidx.compose.ui.graphics.Color(0xFFD9CDB4)), Offset.Zero, Size(380f, 72f * filas))
+                            for (f in 0 until filas) drawRect(luces.tono(androidx.compose.ui.graphics.Color(0xFFC2B292)), Offset(0f, 72f * f + 62f), Size(380f, 10f))
+                            for (i in 0 until accion.cuadros) gato(accion.pose(i), pelaje, luz, Offset(95f * (i % 4) + 40f, 72f * (i / 4) + 66f), 1, 1.3f, 0f, accion, i)
+                        }
+                    }
+                }
+            }
+        }
+
+    /** El cuadro del gato cuando reacciona al ancla [tipo] de la escena en ese momento, o null si la escena no la tiene ahora. */
+    private fun gatoReaccionando(escena: io.github.ruddy2003.vestigium.ui.escenas.EscenaVida, ficha: io.github.ruddy2003.vestigium.vidas.FichaDelDia, hora: Double, tipo: io.github.ruddy2003.vestigium.ui.escenas.TipoAncla): io.github.ruddy2003.vestigium.ui.escenas.PasoGato? {
+        val anclas = escena.anclas(io.github.ruddy2003.vestigium.ui.escenas.Momento(ficha, hora))
+        val suelo = anclas.first { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }
+        val una = anclas.firstOrNull { it.tipo == tipo } ?: return null
+        for (semilla in 1L..40L) {
+            val sim = io.github.ruddy2003.vestigium.ui.escenas.SimulacionGato(io.github.ruddy2003.vestigium.ui.Gato.Humor(io.github.ruddy2003.vestigium.ui.Gato.Animo.NORMAL, cansado = false, noche = false), semilla, suelo.x, suelo.hasta, emptyList(), escena.tallaDelGato)
+            sim.entorno(listOf(una), suelo.y, tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.ABRIGO)
+            // Junto al fuego o guarecido: sentado justo en su sitio (no en cualquier otro momento en que se siente).
+            val medio = io.github.ruddy2003.vestigium.ui.escenas.Gatuno.MEDIO_LARGO * escena.tallaDelGato
+            val sitio = if (tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.ABRIGO) una.x.coerceIn(medio + 2f, 378f - medio) else una.x.coerceIn(suelo.x + medio, suelo.hasta - medio)
+            repeat(4000) {
+                val p = sim.siguiente()
+                when (tipo) {
+                    io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.MIRADOR -> if (p.anim == io.github.ruddy2003.vestigium.ui.escenas.AnimGato.VIGIA) return p
+                    io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.OBJETO -> if (p.anim == io.github.ruddy2003.vestigium.ui.escenas.AnimGato.OLER && p.i == 1) return p
+                    io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.ADORNO -> if (p.anim == io.github.ruddy2003.vestigium.ui.escenas.AnimGato.ARRIBA && p.i == 2) return p
+                    io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.FUEGO, io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.ABRIGO, io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO -> {
+                        if (p.anim == io.github.ruddy2003.vestigium.ui.escenas.AnimGato.SENTADO && kotlin.math.abs(p.x - sitio) < 1f) return p
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+    /**
+     * Tandas P5a y P5b del plan de historia y escenas: el gato del cuadro (CAPTURAS=gatoCuadro; con CAPTURAS_TEMAS, solo
+     * esos temas). Por cada tema con escena, tres imágenes: `…_temaGatoCuadro_<tema>_poses.png`, con todas sus animaciones
+     * cuadro por cuadro y sus dos acciones propias; `…_temaGatoCuadro_<tema>_escena.png`, con el gato dentro de su escena a
+     * las tres horas del día normal (caminando, sentado y dormido), para ver que toma su luz; y
+     * `…_temaGatoCuadro_<tema>_reacciones.png`, con el gato en el mirador, oliendo el objeto, junto al fuego, mirando el
+     * adorno de una fiesta, guarecido de la lluvia y dejándose acariciar. Cada uno con el pelaje de su tema.
+     */
+    @Test fun temaGatoCuadro() = porTema("gatoCuadro") { t, o, _ ->
+        val escena = io.github.ruddy2003.vestigium.ui.escenas.escenaDe(t)
+        if (escena != null && o == t.soloOscuro) {
+            val pelaje = io.github.ruddy2003.vestigium.ui.escenas.pelajeDe(t) ?: io.github.ruddy2003.vestigium.ui.escenas.Pelaje.COMUN
+            hojaDePosesGato(t, o, "${t.id}_poses", pelaje)
+            val vida = escena.vidas.first()
+            val (_, dia, horas) = DIAS_CUADRO[vida].orEmpty().first()
+            val ficha = io.github.ruddy2003.vestigium.vidas.FichaDelDia.de(dia, vida)!!
+            val humor = io.github.ruddy2003.vestigium.ui.Gato.Humor(io.github.ruddy2003.vestigium.ui.Gato.Animo.NORMAL, cansado = false, noche = false)
+            val poses = listOf(Triple(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.CAMINAR, 2, 1), Triple(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.SENTADO, 0, -1), Triple(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.DORMIR, 1, 1))
+            captura(t, o, alto = 140 + horas.size * 900, nombre = "${t.id}_escena") {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    horas.forEachIndexed { i, hora ->
+                        val suelo = escena.anclas(io.github.ruddy2003.vestigium.ui.escenas.Momento(ficha, hora)).first { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }
+                        val (anim, cuadro, dir) = poses[i % poses.size]
+                        val paso = io.github.ruddy2003.vestigium.ui.escenas.PasoGato(anim, cuadro, suelo.x + (suelo.hasta - suelo.x) * (0.3f + 0.2f * i), dir)
+                        Text(rotuloCuadro(ficha, hora) + " · gato: ${anim.name.lowercase()}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground, maxLines = 2)
+                        io.github.ruddy2003.vestigium.ui.escenas.VistaEscena(escena, ficha, hora, Modifier.fillMaxWidth(), MaterialTheme.shapes.medium, animar = false, banderita = io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), humor = humor, pelaje = pelaje, pasoGato = paso)
+                    }
+                }
+            }
+            // Las reacciones: cada una en el día y la hora en que la escena le ofrece esa ancla (si no la ofrece nunca en los días de muestra, no sale).
+            val dias = DIAS_CUADRO[vida].orEmpty().map { (_, d, hs) -> io.github.ruddy2003.vestigium.vidas.FichaDelDia.de(d, vida)!! to hs }
+            val A = io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.entries.filter { it != io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }
+            val celdas = A.mapNotNull { tipo ->
+                dias.firstNotNullOfOrNull { (f, hs) ->
+                    // El abrigo, en un día que llueva o nieve; lo demás, en el primero que lo tenga.
+                    if (tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.ABRIGO && !io.github.ruddy2003.vestigium.ui.escenas.mojaAlGato(f.clima)) null
+                    else hs.firstNotNullOfOrNull { h -> gatoReaccionando(escena, f, h, tipo)?.let { Triple(f, h, it) to "gato: ${tipo.name.lowercase()}" } }
+                }
+            }
+            captura(t, o, alto = 140 + (celdas.size + 1) * 900, nombre = "${t.id}_reacciones") {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    celdas.forEach { (donde, rotulo) ->
+                        val (f, h, paso) = donde
+                        Text(rotuloCuadro(f, h) + " · $rotulo", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground, maxLines = 2)
+                        io.github.ruddy2003.vestigium.ui.escenas.VistaEscena(escena, f, h, Modifier.fillMaxWidth(), MaterialTheme.shapes.medium, animar = false, banderita = io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), humor = humor, pelaje = pelaje, pasoGato = paso)
+                    }
+                    // La caricia: sentado, con los ojos cerrados, y el corazón.
+                    val anclas = escena.anclas(io.github.ruddy2003.vestigium.ui.escenas.Momento(ficha, horas.first()))
+                    val quieto = io.github.ruddy2003.vestigium.ui.escenas.gatoQuieto(anclas.first { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }, anclas, escena.tallaDelGato, escena.estorbos(io.github.ruddy2003.vestigium.ui.escenas.Momento(ficha, horas.first())))
+                    Text(rotuloCuadro(ficha, horas.first()) + " · gato: caricia", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onBackground, maxLines = 2)
+                    io.github.ruddy2003.vestigium.ui.escenas.VistaEscena(escena, ficha, horas.first(), Modifier.fillMaxWidth(), MaterialTheme.shapes.medium, animar = false, banderita = io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), humor = humor, pelaje = pelaje,
+                        pasoGato = io.github.ruddy2003.vestigium.ui.escenas.PasoGato(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.MIMO, 2, quieto.x, quieto.dir), mimoFijo = 0.35f)
+                }
+            }
+        }
+    }
+
+    /**
+     * Tanda P4a del plan de historia y escenas: el cuadro de cada tema que ya tiene escena (CAPTURAS=cuadro; con
+     * CAPTURAS_TEMAS=heleno, solo ese). Una imagen por día de muestra ([DIAS_CUADRO]) con el cuadro a tres horas, que
+     * caen en tres luces distintas. La escena es igual en claro y en oscuro, así que sale una vez por tema. Se llaman
+     * `…_temaCuadro_<tema>_<vida>_<día>.png`.
+     */
+    @Test fun temaCuadro() = porTema("cuadro") { t, o, _ ->
+        val escena = io.github.ruddy2003.vestigium.ui.escenas.escenaDe(t)
+        if (escena != null && o == t.soloOscuro) escena.vidas.forEach { vida ->
+            DIAS_CUADRO[vida].orEmpty().forEach { (nombre, dia, horas) ->
+                val ficha = io.github.ruddy2003.vestigium.vidas.FichaDelDia.de(dia, vida)!!
+                cuadros(t, o, "${t.id}_${vida}_$nombre", io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), horas.map { Triple(escena, ficha, it) })
+            }
+        }
+    }
+
+    /**
+     * Tanda P6: el cuadro como sale en Hoy (CAPTURAS=cuadro), con su cabecera, en claro y en oscuro. Cuatro bloques:
+     * abierto en un día normal (sin banderita, como queda hasta que exista «Hoy en la historia»); abierto en el día de
+     * muestra con el título más largo, con la marca de día especial y la banderita; y plegado, con marca y sin ella.
+     * Se llaman `…_temaCuadroEnHoy_<tema>_<modo>_hoy.png`.
+     */
+    @Test fun temaCuadroEnHoy() = porTema("cuadro") { t, o, n ->
+        val escena = io.github.ruddy2003.vestigium.ui.escenas.escenaDe(t)
+        if (escena != null) {
+            val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+            val suyos = DIAS_CUADRO[escena.vidas.first()].orEmpty().mapNotNull { (_, dia, _) -> io.github.ruddy2003.vestigium.ui.escenas.cuadroDeHoy(t, dia) }
+            val normal = suyos.firstOrNull { !it.especial } ?: suyos.first()
+            val especial = suyos.filter { it.especial }.maxByOrNull { it.titulo.length } ?: suyos.last()
+            val humor = io.github.ruddy2003.vestigium.ui.Gato.Humor(io.github.ruddy2003.vestigium.ui.Gato.Animo.NORMAL, cansado = false, noche = false)
+            val plegado = "Cuadro plegado (captura)"
+            v73(t, o, 2900, extra = { c -> c.copy(plegadas = c.plegadas + plegado) }, nombre = "${n}_hoy") {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    val rotulo: @Composable (String) -> Unit = { texto -> Text(texto, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp)) }
+                    rotulo("Abierto · día normal (${normal.ficha.dia}, 13:00) · sin banderita, como sale hasta la tanda H1")
+                    io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(normal, hoy, alLeer = {}, humor = humor, horaFija = 13.0)
+                    rotulo("Abierto · día especial (${especial.ficha.dia}, 18:00), con la marca · con la banderita de «Hoy en la historia»")
+                    io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(especial, hoy, alLeer = {}, alHistoria = {}, humor = humor, horaFija = 18.0)
+                    rotulo("Plegado · día especial, con la marca en la cabecera")
+                    io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(especial, hoy, alLeer = {}, humor = humor, horaFija = 18.0, clave = plegado)
+                    rotulo("Plegado · día normal")
+                    io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(normal, hoy, alLeer = {}, humor = humor, horaFija = 13.0, clave = plegado)
+                }
+            }
+        }
+    }
+
+    /**
+     * La muestra de la biblioteca de paisaje (CAPTURAS=cuadro): la escena llana, que solo usa piezas de la biblioteca,
+     * con los tiempos que el paisaje de un tema quizá no tenga (nieve, niebla, tormenta, polvo) y los cinco techos, uno
+     * por temporada. Las fichas son las de Demeas con el tiempo y la estación cambiados, así que traen también sus
+     * arcos (el campo, los estragos) y sus días especiales. No lleva banderita: no es de ningún tema.
+     */
+    @Test fun cuadroBiblioteca() {
+        CapturasAPedido.pedida("cuadro")
+        val muestras = listOf(
+            Triple("2027-01-15", 13.0, io.github.ruddy2003.vestigium.vidas.Clima.NIEVE to io.github.ruddy2003.vestigium.vidas.Estacion.INVIERNO),
+            Triple("2028-10-15", 8.0, io.github.ruddy2003.vestigium.vidas.Clima.NIEBLA to io.github.ruddy2003.vestigium.vidas.Estacion.OTONO),
+            Triple("2029-07-10", 18.0, io.github.ruddy2003.vestigium.vidas.Clima.TORMENTA to io.github.ruddy2003.vestigium.vidas.Estacion.VERANO),
+            Triple("2030-04-10", 10.0, io.github.ruddy2003.vestigium.vidas.Clima.NUBES to io.github.ruddy2003.vestigium.vidas.Estacion.PRIMAVERA),
+            Triple("2031-08-20", 13.0, io.github.ruddy2003.vestigium.vidas.Clima.POLVO to io.github.ruddy2003.vestigium.vidas.Estacion.SECAS),
+            Triple("2029-06-01", 21.5, io.github.ruddy2003.vestigium.vidas.Clima.DESPEJADO to io.github.ruddy2003.vestigium.vidas.Estacion.LLUVIAS),
+        ).map { (dia, hora, tiempo) ->
+            val ficha = io.github.ruddy2003.vestigium.vidas.FichaDelDia.de(dia, "remero")!!.copy(clima = tiempo.first, estacion = tiempo.second)
+            Triple<io.github.ruddy2003.vestigium.ui.escenas.EscenaVida, io.github.ruddy2003.vestigium.vidas.FichaDelDia, Double>(io.github.ruddy2003.vestigium.ui.escenas.EscenaPlana, ficha, hora)
+        }
+        muestras.chunked(3).forEachIndexed { i, parte -> cuadros(TemaId.HELENO, false, "biblioteca_${i + 1}", null, parte) }
+    }
+
     /** El estilo de gráfica del tema: serie con puntos (uno hueco) y meta, rejilla, ejes, cifras, barras con su carril y una barra horizontal. */
     @Test fun temaEstiloGrafica() = porTema("estiloGrafica") { t, o, n -> captura(t, o, 1400, n) {
         val e = estiloGrafica(t)
@@ -2290,13 +2503,18 @@ class Capturas {
         }
     }
     @Test fun temaDia() = porTema("dia") { t, o, n -> v73(t, o, 4200, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) } }
-    /** Frase, franja y cifras de Hoy; en oscuro la frase va guardada, para ver el corazón relleno. */
+    /**
+     * Frase, franja y cifras de Hoy; en oscuro la frase va guardada, para ver el corazón relleno. En los temas que ya
+     * tienen escena va también el cuadro del día en su sitio, entre la frase y la franja (tanda P6), a las 13:00 de hoy.
+     */
     @Test fun temaHoy() = porTema("hoy") { t, o, n ->
         val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
-        v73(t, o, 2600, extra = { c -> if (o) c.copy(frases_guardadas = listOf(io.github.ruddy2003.vestigium.ui.Frases.del(hoy, t).let { f ->
+        val cuadro = io.github.ruddy2003.vestigium.ui.escenas.cuadroDeHoy(t, hoy)
+        v73(t, o, if (cuadro != null) 3600 else 2600, extra = { c -> if (o) c.copy(frases_guardadas = listOf(io.github.ruddy2003.vestigium.ui.Frases.del(hoy, t).let { f ->
             io.github.ruddy2003.vestigium.data.FraseGuardada(f.texto, f.original, f.autor, t.id, hoy) })) else c }, nombre = n) {
             Column(Modifier.padding(16.dp)) {
                 io.github.ruddy2003.vestigium.ui.pantallas.FraseDelDia(hoy)
+                if (cuadro != null) io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(cuadro, hoy, alLeer = {}, horaFija = 13.0)
                 io.github.ruddy2003.vestigium.ui.pantallas.FranjaDias(hoy, abrir = {}, ponerse = {})
                 io.github.ruddy2003.vestigium.ui.pantallas.Tablero(hoy, max = 4)
             }
@@ -2459,3 +2677,64 @@ object Ejemplo {
     }
 
 }
+
+
+/** Las tres horas de las capturas del cuadro: amanecer, mediodía y noche. */
+private val HORAS_CUADRO = listOf(7.0, 13.0, 21.0)
+
+/**
+ * Los días de muestra de las capturas `cuadro`, por personaje: nombre de la imagen, día lógico y horas. Los pide el
+ * plan de historia y escenas (un día normal, una fiesta, la guerra y un día en que el cuento cambia lo que se ve) y se
+ * agregan los que enseñan algo más de la escena. Cada tanda de escenas agrega los de sus personajes.
+ */
+private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>> = mapOf(
+    // Demeas (Helénico, tanda P4a).
+    "remero" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // primavera: el «Aura» en el agua y la cebada dorada
+        Triple("fiesta", "2027-05-12", HORAS_CUADRO),                     // las Targelias: guirnaldas y, de noche, antorchas
+        Triple("guerra", "2027-06-25", HORAS_CUADRO),                     // la primera invasión: humo en el llano y chozas junto al muro
+        Triple("zarpa", "2027-07-05", HORAS_CUADRO),                      // zarpa la flota: su nave ya no está (decisión 18)
+        Triple("invierno", "2027-02-03", HORAS_CUADRO),                   // lluvia, y el «Aura» en su cobertizo
+        Triple("eclipse", "2027-08-03", listOf(13.0, 14.7, 16.5)),        // antes, en el máximo y después
+        Triple("regreso", "2027-09-18", HORAS_CUADRO),                    // la flota vuelve
+        Triple("luto", "2027-11-22", HORAS_CUADRO),                       // el entierro de los primeros muertos
+        Triple("siega", "2027-05-20", HORAS_CUADRO),                      // las gavillas en los campos
+        Triple("peste", "2028-08-16", HORAS_CUADRO),                      // las Grandes Panateneas en el año de la peste: campos arrasados y piras
+        Triple("antorchas", "2029-06-01", listOf(13.0, 20.5, 22.5)),      // las Bendidias: la carrera de antorchas en el Pireo
+        Triple("higuera", "2031-09-01", HORAS_CUADRO),                    // la higuera, cuatro años después, con sus primeros higos
+    ),
+    // Pierre (Gótico, tanda P4b).
+    "cantero" to listOf(
+        Triple("normal", "2027-05-10", HORAS_CUADRO),                     // la obra en marcha, con la grúa cargada
+        Triple("fiesta", "2030-06-09", HORAS_CUADRO),                     // la boda de Jehanne: guirnaldas y banderines
+        Triple("parada", "2027-09-03", HORAS_CUADRO),                     // se acaba el dinero: sin andamios y los muros tapados con paja (decisión 18)
+        Triple("herido", "2028-05-27", HORAS_CUADRO),                     // cede el andamio: caído, y su piedra tapada con un saco
+        Triple("crecida", "2029-01-21", HORAS_CUADRO),                    // el Somme fuera de cauce, con lluvia
+        Triple("procesion", "2027-05-16", HORAS_CUADRO),                  // pendones en la calle y colgaduras
+        Triple("invierno", "2027-01-20", HORAS_CUADRO),                   // la obra tapada con paja
+        Triple("coro", "2031-10-10", HORAS_CUADRO),                       // la cabecera, a media altura
+        Triple("eclipse", "2028-10-06", listOf(11.4, 12.4, 13.4)),        // el sol tapado a mediodía
+        Triple("hogueras", "2027-06-24", listOf(13.0, 20.5, 22.5)),       // San Juan: la leña de día y las hogueras de noche
+    ),
+    // Amaru (Ciudad neón, tanda P4b). Los días son de los que le tocan a él: se alterna con Kei.
+    "fideos" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // las tres luces del callejón: dormido, la farmacia abierta y el letrero
+        Triple("faroles", "2028-02-13", HORAS_CUADRO),                    // la Noche de los Faroles
+        Triple("apagon", "2028-08-21", HORAS_CUADRO),                     // sin letreros: gas y velas
+        Triple("roto", "2028-11-15", HORAS_CUADRO),                       // el letrero roto con el puesto abierto
+        Triple("marea", "2027-07-22", HORAS_CUADRO),                      // el agua en el suelo y los tablones
+        Triple("velas", "2027-11-01", HORAS_CUADRO),                      // la Noche de los Ausentes
+        Triple("nochevieja", "2027-12-31", HORAS_CUADRO),                 // las ristras de luces
+        Triple("maquinas", "2030-09-02", HORAS_CUADRO),                   // las máquinas en la boca del callejón, las pintadas y el mural
+    ),
+    // Kei (Ciudad neón, tanda P4b). A las 17:00 y no a las 13:00, que es cuando la bici está en el callejón.
+    "repartidora" to listOf(
+        Triple("normal", "2027-05-06", listOf(7.0, 17.0, 21.0)),          // la bici esperando y, a la hora de cenar, enchufada
+        Triple("sinbici", "2028-03-25", listOf(7.0, 17.0, 21.0)),         // después del choque: la bici no está (decisión 18)
+        Triple("soldada", "2028-04-08", listOf(7.0, 17.0, 21.0)),         // vuelve, con el cuadro soldado
+        Triple("huelga", "2029-03-08", listOf(7.0, 17.0, 21.0)),          // pancartas y cintas rojas
+        Triple("toque", "2029-03-18", listOf(7.0, 17.0, 21.0)),           // toque de queda: el puesto cerrado a las 21:00
+        Triple("cadena", "2030-11-10", listOf(7.0, 17.0, 21.0)),          // la cuerda de trapos delante de las máquinas
+        Triple("tribunal", "2031-03-20", listOf(7.0, 17.0, 21.0)),        // la fiesta, con las máquinas todavía ahí
+    ),
+)

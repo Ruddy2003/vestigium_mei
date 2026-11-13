@@ -298,6 +298,20 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 - **Mejorable**: «Día perfecto» y «Remontada» premian valores de la valencia (H-8-6); se quedan por decisión del autor (D.117), con el riesgo descrito en la sección 9.4.3. Las predicciones de enero incluyen el ánimo medio. Las campañas, desde el esquema 13, sí quedan como variable (H-8-7, resuelto).
 - **No se puede evitar**: que ver tus reportes cambie tu conducta. Es, en parte, el propósito de la app.
 
+**Nota: el gato de Hoy te devuelve tu estado (esquema 24, D.190).** Arriba de Hoy vive un gato. Sale en una banda de pixel o, en los temas que ya lo tienen, dentro de un cuadro con el paisaje del personaje de «Otras vidas» del tema (`ui/escenas/CuadroDelDia.kt`; se elige en Ajustes, `Config.gato_estilo`).
+
+- **El paisaje no usa nada tuyo.** Sale de la fecha, la hora y el calendario del personaje (`FichaDelDia`).
+- **El gato sí.** Cómo se porta sale de `Gato.humor(hoy)`, que lee tres cosas de tu día:
+  - **«cansado»**, desde la mañana: si el reloj midió menos de 6 h de sueño o calificaste la calidad del sueño con 2 o menos. Cansado, camina despacio y duerme más;
+  - **el ánimo**, solo cuando el día ya tiene valencia y texto en el diario: con valencia de 6 o más está alegre (salta y juega más); con 2 o menos, triste; con 4 o menos y un momento no privado de hoy con enojo o frustración, enojado;
+  - **la hora:** de 22:00 a 5:00 casi solo duerme.
+- **Por qué importa.** Es una forma de **reactividad** (que ver lo medido cambie lo que mides después; capítulo 3, sección 3.14). Un gato cansado por la mañana puede influir en cómo calificas más tarde tu energía o tu ánimo de ese mismo día.
+- **Qué lo limita.** El ánimo del gato no aparece hasta que el día ya está calificado, así que no puede influir en esa calificación. El cansancio sí aparece antes, pero repite algo que ya viste: tus horas de sueño están en el Tablero de la misma pantalla.
+- **Qué no se sabe.** No se puede medir cuánto influye. No hay un registro de qué días viste al gato, y se decidió no guardarlo: las caricias y los toques tampoco se guardan.
+- **Si algún día se quiere comprobar,** se puede apagar el gato unas semanas (Ajustes › Apariencia) y anotarlo como un experimento (capítulo 8).
+
+**[Diseño propio]**: los umbrales del gato (6 h, calidad 2, valencias 6, 4 y 2) no salen de ningún estudio.
+
 **Recomendación práctica para leer los datos** (no requiere cambiar código): al analizar una variable que también fue meta de una campaña o un logro, mirar si su relación con otras cambia antes y después de empezar a perseguir esa meta.
 
 ---

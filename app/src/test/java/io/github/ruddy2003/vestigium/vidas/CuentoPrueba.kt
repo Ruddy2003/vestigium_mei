@@ -269,4 +269,119 @@ class CuentoPrueba {
         val sinTexto = cuento(demeas, "2029-10-05")
         assertEquals("Muere Pericles", sinTexto.titulo); assertEquals(1, sinTexto.notas.size)
     }
+
+    // ---------- Pierre, Kei y Amaru (tanda P3b) ----------
+
+    private fun pieza(vida: String) = todas.first { it.vida == vida }
+    /** Todo lo que dice el cuento de [vida] ese día, a siete horas distintas (cada una con su párrafo del trabajo). */
+    private fun todoElDia(vida: String, dia: String) = listOf(1.0, 4.5, 10.0, 12.5, 17.5, 19.0, 22.0).flatMap { cuento(pieza(vida), dia, it).parrafos }.joinToString(" ")
+    /** Los días que no son especiales: en ellos solo salen las variantes de todos los días. */
+    private fun normales(vida: String, desde: String, hasta: String) = dias(desde.take(4).toInt(), hasta.take(4).toInt()).filter { it in desde..hasta && !cuento(pieza(vida), it).especial }
+    private fun textosDe(vida: String, lugar: Parrafo, estado: String, nombre: String, genero: Genero) =
+        pieza(vida).variantes.getValue(lugar).filter { it.estado == estado }.map { Cuento.llenar(it.texto, mapOf("nombre" to nombre), genero) }.toSet()
+
+    @Test fun pierreNoTallaHeridoNiSubeAlAndamioFueraDeTiempo() {
+        val pierre = pieza("cantero")
+        fun estado(dia: String) = cuento(pierre, dia).ficha.estado
+        assertNull(estado("2028-05-26")); assertEquals("herido", estado("2028-05-27")); assertEquals("herido", estado("2028-08-24")); assertNull(estado("2028-08-25"))
+        // Herido, el trabajo, la mañana y el sueño son los de ese estado.
+        val trabajo = textosDe("cantero", Parrafo.TRABAJO, "herido", "Pierre", Genero.MASCULINO); val manana = textosDe("cantero", Parrafo.MANANA, "herido", "Pierre", Genero.MASCULINO)
+        normales("cantero", "2028-05-28", "2028-08-24").forEach { dia ->
+            assertTrue("$dia: trabaja herido", cuento(pierre, dia, 9.0).parrafos[Parrafo.TRABAJO.ordinal] in trabajo)
+            assertTrue("$dia: amanece como si nada", cuento(pierre, dia, 9.0).parrafos[Parrafo.MANANA.ordinal] in manana)
+            assertFalse("$dia: duerme como si nada", "con las manos metidas entre las rodillas" in cuento(pierre, dia, 23.0).parrafos[Parrafo.TRABAJO.ordinal])
+        }
+        // Al andamio solo sube de abril a julio: ni con la obra parada ni con los muros tapados.
+        normales("cantero", "2027-01-01", "2031-12-31").filter { it.substring(5, 7).toInt() !in 4..7 }.forEach { dia ->
+            val t = cuento(pierre, dia, 9.0).parrafos[Parrafo.TRABAJO.ordinal]
+            listOf("está en el andamio", "A esta hora sube piedra").forEach { assertFalse("$dia: sube al andamio fuera de tiempo", it in t) }
+        }
+        assertTrue(normales("cantero", "2027-04-01", "2027-07-31").any { "está en el andamio" in cuento(pierre, it, 9.0).parrafos[Parrafo.TRABAJO.ordinal] })
+    }
+
+    @Test fun enElCuentoDePierreNadieApareceAntesNiDespuesDeTiempo() {
+        // Colin entra de aprendiz el 2 de julio de la temporada 1.
+        val aprendiz = listOf("Colin ya es aprendiz", "Colin baja con él", "come con Colin")
+        normales("cantero", "2027-01-01", "2027-07-01").forEach { dia -> aprendiz.forEach { assertFalse("$dia: «$it» antes de tiempo", it in todoElDia("cantero", dia)) } }
+        assertTrue(normales("cantero", "2027-07-03", "2027-12-31").any { dia -> aprendiz.any { it in todoElDia("cantero", dia) } })
+        // Agnès nace el 15 de julio de la temporada 2; Jehanne se casa (y deja la casa) el 9 de junio de la 4.
+        normales("cantero", "2027-01-01", "2028-07-14").forEach { assertFalse("$it: Agnès antes de nacer", "Agnès" in todoElDia("cantero", it)) }
+        assertTrue(normales("cantero", "2028-07-16", "2028-12-31").any { "Agnès" in todoElDia("cantero", it) })
+        normales("cantero", "2030-06-10", "2031-12-31").forEach { assertFalse("$it: Jehanne sigue en casa", "Jehanne" in todoElDia("cantero", it)) }
+        // Gautier pasa el verano de la temporada 3 en la hueste: en los días normales solo sale de octubre a marzo, todos los años.
+        normales("cantero", "2027-01-01", "2031-12-31").filter { it.substring(5, 7).toInt() in 4..9 }.forEach { assertFalse("$it: Gautier en verano", "Gautier" in todoElDia("cantero", it)) }
+        // El dintel de Enguerrand, solo mientras lo talla; maese Thomas, hasta que deja la obra a su hijo.
+        normales("cantero", "2027-01-01", "2031-12-31").filter { it !in "2027-10-02".."2027-11-30" }.forEach { assertFalse("$it: el dintel fuera de tiempo", "dintel de Enguerrand" in todoElDia("cantero", it)) }
+        assertTrue(normales("cantero", "2027-10-03", "2027-11-30").any { "dintel de Enguerrand" in todoElDia("cantero", it) })
+        normales("cantero", "2030-02-04", "2031-12-31").forEach { assertFalse("$it: maese Thomas sigue al frente", "maese Thomas" in todoElDia("cantero", it)) }
+        normales("cantero", "2027-01-01", "2030-02-02").forEach { assertFalse("$it: maese Renaud antes de tiempo", "maese Renaud" in todoElDia("cantero", it)) }
+    }
+
+    @Test fun keiYAmaruSeConocenElMismoDia() {
+        val kei = pieza("repartidora"); val amaru = pieza("fideos")
+        // El 12 de diciembre de la temporada 1 ella cena por primera vez en el puesto y él le sirve el doble caldo.
+        assertEquals("primeros_fideos", cuento(kei, "2027-12-12").ficha.principal!!.dia.id)
+        assertEquals("doble_caldo", cuento(amaru, "2027-12-12").ficha.principal!!.dia.id)
+        assertTrue("doble caldo" in cuento(kei, "2027-12-12").parrafos.joinToString(" ")); assertTrue("doble caldo" in cuento(amaru, "2027-12-12").parrafos.joinToString(" "))
+        // Antes, ninguno sale en el cuento del otro.
+        normales("repartidora", "2027-01-01", "2027-12-11").forEach { dia ->
+            listOf("puesto de fideos del callejón", "El de los fideos").forEach { assertFalse("$dia: Kei ya cena en el puesto", it in todoElDia("repartidora", dia)) }
+        }
+        normales("fideos", "2027-01-01", "2027-12-11").forEach { assertFalse("$it: Amaru ya conoce a la de la bici azul", "bici azul" in todoElDia("fideos", it)) }
+        assertTrue(normales("fideos", "2027-12-13", "2028-12-31").any { "bici azul" in todoElDia("fideos", it) })
+        // Hasta el 5 de diciembre de la temporada 3 no saben cómo se llama el otro.
+        normales("repartidora", "2027-01-01", "2029-12-04").forEach { assertFalse("$it: Kei ya sabe su nombre", "Amaru" in todoElDia("repartidora", it)) }
+        normales("fideos", "2027-01-01", "2029-12-04").forEach { assertFalse("$it: Amaru ya sabe su nombre", "Kei" in todoElDia("fideos", it)) }
+        assertTrue(normales("repartidora", "2029-12-06", "2030-12-31").any { "Amaru" in todoElDia("repartidora", it) })
+        assertTrue(normales("fideos", "2029-12-06", "2030-12-31").any { "Kei" in todoElDia("fideos", it) })
+    }
+
+    @Test fun keiSinBiciNoPedaleaYSinImplanteNoVeAnuncios() {
+        val kei = pieza("repartidora")
+        fun estado(dia: String) = cuento(kei, dia).ficha.estado
+        assertNull(estado("2028-03-21")); assertEquals("sin_bici", estado("2028-03-22")); assertEquals("sin_bici", estado("2028-04-07")); assertNull(estado("2028-04-08"))
+        assertEquals("sin_implante", estado("2029-05-10")); assertEquals("sin_implante", estado("2029-05-12")); assertNull(estado("2029-05-13"))
+        val trabajo = textosDe("repartidora", Parrafo.TRABAJO, "sin_bici", "Kei", Genero.FEMENINO); val vuelta = textosDe("repartidora", Parrafo.ANOCHECER, "sin_bici", "Kei", Genero.FEMENINO)
+        normales("repartidora", "2028-03-23", "2028-04-07").forEach { dia ->
+            assertTrue("$dia: reparte en bici", cuento(kei, dia, 18.0).parrafos[Parrafo.TRABAJO.ordinal] in trabajo)
+            assertTrue("$dia: vuelve pedaleando", cuento(kei, dia, 18.0).parrafos[Parrafo.ANOCHECER.ordinal] in vuelta)
+        }
+        listOf("2029-05-11", "2029-05-12").forEach { dia ->
+            val c = cuento(kei, dia, 18.0)
+            assertTrue(c.parrafos[Parrafo.TRABAJO.ordinal] in textosDe("repartidora", Parrafo.TRABAJO, "sin_implante", "Kei", Genero.FEMENINO))
+            listOf(Parrafo.MANANA, Parrafo.TIEMPO, Parrafo.PUEBLO, Parrafo.OBJETO, Parrafo.ANOCHECER).forEach { lugar ->
+                assertTrue("$dia, ${lugar.nombre}: con el implante encendido", c.parrafos[lugar.ordinal] in textosDe("repartidora", lugar, "sin_implante", "Kei", Genero.FEMENINO) ||
+                    lugar == Parrafo.TIEMPO && "Sin el implante" in c.parrafos[lugar.ordinal] || lugar == Parrafo.OBJETO && "Sin el implante" in c.parrafos[lugar.ordinal])
+            }
+        }
+    }
+
+    @Test fun enLosCuentosDeKeiYAmaruNadieApareceAntesNiDespuesDeTiempo() {
+        // Kei: Río deja los repartos, Dalia cierra el taller, la novata llega, el implante se paga y afuera resulta haber luces.
+        normales("repartidora", "2028-07-08", "2031-12-31").forEach { assertFalse("$it: Río sigue repartiendo", "Río" in todoElDia("repartidora", it)) }
+        normales("repartidora", "2030-10-04", "2031-12-31").forEach { assertFalse("$it: Dalia sigue en su taller", "Dalia" in todoElDia("repartidora", it)) }
+        normales("repartidora", "2027-01-01", "2029-09-08").forEach { assertFalse("$it: la novata antes de tiempo", "novata" in todoElDia("repartidora", it)) }
+        normales("repartidora", "2028-11-06", "2031-12-31").forEach { dia -> listOf("debe del implante", "Le debe al implante").forEach { assertFalse("$dia: todavía debe el implante", it in todoElDia("repartidora", dia)) } }
+        normales("repartidora", "2031-05-26", "2031-12-31").forEach { assertFalse("$it: sigue creyendo que afuera no hay nada", "afuera no hay nada" in todoElDia("repartidora", it)) }
+        // Amaru: la carta de su hermana, el guardia, Sami, la superficie y Celso, que se jubila.
+        normales("fideos", "2027-08-26", "2031-12-31").forEach { assertFalse("$it: sigue sin saber de su hermana", "hace años que no sabe de ella" in todoElDia("fideos", it)) }
+        normales("fideos", "2027-01-01", "2028-04-14").forEach { assertFalse("$it: el guardia antes de tiempo", "Un guardia de Áurea cena" in todoElDia("fideos", it)) }
+        normales("fideos", "2027-01-01", "2029-07-29").forEach { assertFalse("$it: Sami antes de llegar", "Sami" in todoElDia("fideos", it)) }
+        assertTrue(normales("fideos", "2029-07-31", "2029-12-31").any { "Sami" in todoElDia("fideos", it) })
+        normales("fideos", "2031-04-13", "2031-12-31").forEach { assertFalse("$it: sigue sin subir a la superficie", "Hace años que no sube" in todoElDia("fideos", it)) }
+        normales("fideos", "2031-10-09", "2031-12-31").forEach { dia -> listOf("bata blanca", "Celso, el de la farmacia").forEach { assertFalse("$dia: Celso sigue en la farmacia", it in todoElDia("fideos", dia)) } }
+    }
+
+    @Test fun elLetreroApagadoSeVeEnElCuentoDeAmaru() {
+        // Del 12 al 28 de noviembre de la temporada 2 el letrero está apagado: lo dice el arco `letrero`, que también leerá el cuadro.
+        val amaru = pieza("fideos")
+        val apagado = listOf("letrero está apagado", "Con el letrero apagado")
+        dias(2028, 2028).filter { it in "2028-11-12".."2028-11-28" }.forEach { dia ->
+            val c = cuento(amaru, dia, 20.0)
+            assertEquals("$dia: el arco", 1.0, c.ficha.arcos.getValue("letrero"), 0.0)
+            if (!c.especial) assertTrue("$dia: el letrero sigue encendido en el cuento", apagado.any { it in c.parrafos[Parrafo.PUEBLO.ordinal] })
+        }
+        assertFalse(apagado.any { it in cuento(amaru, "2028-11-10", 20.0).parrafos[Parrafo.PUEBLO.ordinal] })
+        assertTrue("Con la pieza del mercado, parpadea a su manera", "parpadea a su manera" in cuento(amaru, "2028-12-05", 20.0).parrafos[Parrafo.PUEBLO.ordinal])
+    }
 }
