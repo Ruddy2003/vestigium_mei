@@ -256,8 +256,17 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
         if (esHoy && c.semana_corta) { SemanaCorta(d) { abrirNoche() }; return@Hoja }
         // La frase, siempre arriba, justo debajo del estado.
         FraseDelDia(fecha)
-        // El gato del tema camina por su banda (solo hoy).
-        if (esHoy) io.github.ruddy2003.vestigium.ui.GatoDelDia(hoy)
+        // Solo hoy: el cuadro del tema, con su gato dentro, o el gato de pixel en su banda. Nunca los dos.
+        if (esHoy) {
+            val temaDeHoy = io.github.ruddy2003.vestigium.ui.Estilo.tema
+            val cuadro = remember(hoy, temaDeHoy, c.gato, c.gato_estilo) { if (c.gato) io.github.ruddy2003.vestigium.ui.escenas.cuadroDeHoy(temaDeHoy, hoy, c.gato_estilo) else null }
+            if (cuadro != null) io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(
+                cuadro, hoy, alLeer = { nav.ir("otras_vidas?vida=${cuadro.quien.id}&seccion=cuento") },
+                // La pulsación larga abre «Hoy en la historia» cuando exista esa pantalla (tanda H1) y esté encendida en Ajustes.
+                alHistoria = if (io.github.ruddy2003.vestigium.ui.escenas.HAY_HISTORIA_HOY && c.historia_hoy) { { nav.ir("historia_hoy") } } else null,
+            )
+            else io.github.ruddy2003.vestigium.ui.GatoDelDia(hoy)
+        }
         // En lugar del personaje: tus últimos días, de un vistazo (N-28). Tocar un día lo abre; hoy abre «Llenar el día».
         if (esHoy) FranjaDias(hoy, abrir = { f -> if (f == hoy) abrirNoche() else { if (sucio) { Repo.guardarDia(d); sucio = false }; Seleccion.abrir(nav, f) } }) { ponerte() }
         if (esHoy) SugerirSemanaCorta(hoy)

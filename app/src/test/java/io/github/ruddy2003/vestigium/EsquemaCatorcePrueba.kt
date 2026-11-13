@@ -26,8 +26,19 @@ class EsquemaCatorcePrueba {
     // supo la salida de cada visita (ver VisitasPrueba); el 20, la hora real en que salió cada aviso de ánimo (AvisosDia.reales);
     // el 21, masturbación e intimidad, episodios, fechas señaladas, varias tomas y la extra del enfoque (ver EsquemaVeintiunoPrueba);
     // el 22, el respaldo blindado (estado del respaldo en Config, fecha en Borrado) y la copia de la foto del día (Dia.foto_archivo);
-    // el 23, un solo ánimo de cierre por noche y la fecha de visita de lo marcado a mano en Mundo (SitioMarcado.visita).
-    @Test fun esquema() = assertEquals(23, SCHEMA_V)
+    // el 23, un solo ánimo de cierre por noche y la fecha de visita de lo marcado a mano en Mundo (SitioMarcado.visita);
+    // el 24, dos preferencias de interfaz en Config: dónde vive el gato (gato_estilo) y «Hoy en la historia» (historia_hoy).
+    @Test fun esquema() = assertEquals(24, SCHEMA_V)
+
+    @Test fun configDeAntesTraeElCuadroYLaHistoriaEncendidos() {
+        // Una configuración guardada antes del esquema 24 no trae los dos ajustes nuevos: toman su valor por omisión.
+        val vieja = JSON.decodeFromString(io.github.ruddy2003.vestigium.data.Config.serializer(), """{"gato":true,"tema":"heleno"}""")
+        assertEquals("cuadro", vieja.gato_estilo)
+        assertEquals(true, vieja.historia_hoy)
+        // Y lo que ya tenía no cambia.
+        assertEquals(true, vieja.gato)
+        assertEquals("heleno", vieja.tema)
+    }
 
     @Test fun sitioMarcadoDeAntesQuedaSinFechaDeVisita() {
         // Una marca de antes del esquema 23 solo trae el día en que se hizo: no cuenta como visita en ningún periodo.

@@ -330,7 +330,18 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             Ayuda("También puedes cambiarlo con el sol o la luna junto al título de cada pantalla.", Modifier.padding(top = 6.dp))
             Tarjeta(Modifier.padding(top = 10.dp)) {
                 Interruptor("El ícono de la app cambia con el tema", c.icono_tema, "La huella toma la textura del tema. Se aplica al salir de la app; en algunos teléfonos el ícono de la pantalla de inicio desaparece y hay que volver a ponerlo desde la lista de apps.") { v -> cambiar { it.copy(icono_tema = v) } }
-                Interruptor("Gato del tema", c.gato, "Un gato en una banda arriba de Día, vestido y pintado según el tema. Si dormiste poco camina despacio y se echa más; con el día ya completo, salta y juega si te fue bien o se encorva si fue pesado.") { v -> cambiar { it.copy(gato = v) } }
+                Interruptor("Gato del tema", c.gato, "Un gato arriba de Hoy, vestido y pintado según el tema. Si dormiste poco camina despacio y se echa más; con el día ya completo, salta y juega si te fue bien o se encorva si fue pesado.") { v -> cambiar { it.copy(gato = v) } }
+                if (c.gato) {
+                    // Dónde vive el gato (esquema 24): en su cuadro, donde el tema ya lo tiene, o siempre en la banda de pixel.
+                    val enCuadro = c.gato_estilo == io.github.ruddy2003.vestigium.ui.escenas.GATO_EN_CUADRO
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 2.dp)) {
+                        Ficha("En su cuadro", enCuadro) { cambiar { it.copy(gato_estilo = io.github.ruddy2003.vestigium.ui.escenas.GATO_EN_CUADRO) } }
+                        Ficha("De pixel", !enCuadro) { cambiar { it.copy(gato_estilo = io.github.ruddy2003.vestigium.ui.escenas.GATO_DE_PIXEL) } }
+                    }
+                    val conCuadro = remember { io.github.ruddy2003.vestigium.ui.TemaId.entries.filter { io.github.ruddy2003.vestigium.ui.escenas.escenaDe(it) != null }.map { it.nombre } }
+                    Ayuda(if (enCuadro) "En su cuadro: arriba de Hoy sale el paisaje del personaje de «Otras vidas» del tema, a la hora que es, con el gato dentro. Tócalo para acariciarlo; el título abre el cuento de hoy y la cabecera lo pliega. Por ahora lo tienen ${conCuadro.joinToString(", ")}; en los demás temas sigue el gato de pixel."
+                        else "De pixel: la banda con el gato de pixel, en todos los temas.", Modifier.padding(top = 6.dp, bottom = 6.dp))
+                }
                 Interruptor("Tus últimos días", c.personaje, "Una franja en Hoy con tus últimos 14 días: el color es el ánimo del día; el alto, cuánto dormiste frente a tu normal; el remate, si lo sellaste. Hoy no se colorea hasta que lo llenas.") { v -> cambiar { it.copy(personaje = v) } }
                 Interruptor("Semana corta", c.semana_corta, "Hoy con lo mínimo: cuatro cifras y tres botones, para las semanas pesadas.") { v -> cambiar { it.copy(semana_corta = v) } }
                 Interruptor("Animaciones", c.animaciones, "Emblemas que se mueven, transiciones entre pantallas, cifras que cuentan, barras que crecen y una pequeña celebración al completar el día.") { v -> cambiar { it.copy(animaciones = v) } }

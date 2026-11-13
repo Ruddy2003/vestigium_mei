@@ -1,9 +1,10 @@
 package io.github.ruddy2003.vestigium.ui.escenas
 
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -20,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import io.github.ruddy2003.vestigium.ui.Gato
 import io.github.ruddy2003.vestigium.vidas.Clima
 import kotlinx.coroutines.delay
@@ -573,14 +573,18 @@ fun DrawScope.mimoDelGato(t: Float, centro: Offset, radio: Float) {
  * detrás de él). Camina por el tramo de suelo que le da la escena ([TipoAncla.SUELO]); si la escena no le da ninguno,
  * no hay gato. Solo se mueve con [animar]; si no, queda sentado. [fijo] dibuja un cuadro concreto (las capturas).
  *
- * Con [toques], responde al dedo: un toque corto sobre él es una caricia (avisa por [alAcariciar], para la
- * vibración, y le sale un corazón); en otro sitio, mira o va hacia ahí. [mimoFijo] pinta el corazón en un instante
- * dado (las capturas). Las caricias no se guardan en ningún sitio.
+ * Con [dedo], responde al dedo: un toque corto sobre él es una caricia (avisa por [alAcariciar], para la
+ * vibración, y le sale un corazón); en otro sitio, mira o va hacia ahí. Los toques no los detecta esta capa: se los
+ * pasa el cuadro ([VistaEscena]), que tiene el único detector. [mimoFijo] pinta el corazón en un instante dado (las
+ * capturas). Las caricias no se guardan en ningún sitio.
+ *
+ * Con [pausa] (el cuadro no se ve) el gato se queda en el cuadro en que iba y sigue desde ahí al volver.
  */
 @Composable
 internal fun CapaGato(
     escena: EscenaVida, momento: Momento, humor: Gato.Humor, pelaje: Pelaje, animar: Boolean, fijo: PasoGato?,
-    modifier: Modifier = Modifier, alFallar: (Throwable) -> Unit = {}, toques: Boolean = false, alAcariciar: () -> Unit = {}, mimoFijo: Float = -1f,
+    modifier: Modifier = Modifier, alFallar: (Throwable) -> Unit = {}, dedo: DedoDelCuadro? = null, alAcariciar: () -> Unit = {}, mimoFijo: Float = -1f,
+    pausa: Boolean = false,
 ) {
     val anclas = remember(escena, momento.sello) { escena.anclas(momento) }
     val suelo = anclas.firstOrNull { it.tipo == TipoAncla.SUELO } ?: return
@@ -588,11 +592,11 @@ internal fun CapaGato(
     val semilla = remember { System.nanoTime() }
     val sim = remember(escena, humor, pelaje, suelo.x, suelo.hasta) { SimulacionGato(humor, semilla, suelo.x, suelo.hasta, pelaje.especiales, talla) }
     remember(sim, momento.sello) { sim.entorno(anclas, suelo.y, mojaAlGato(momento.ficha.clima)); 0 }
-    var paso by remember { mutableStateOf<PasoGato?>(null) }
+    var paso by remember(sim) { mutableStateOf<PasoGato?>(null) }
     val seMueve = animar && fijo == null
-    LaunchedEffect(sim, seMueve) {
-        paso = null
-        if (!seMueve) return@LaunchedEffect
+    LaunchedEffect(sim, seMueve, pausa) {
+        if (!seMueve) { paso = null; return@LaunchedEffect }
+        if (pausa) return@LaunchedEffect
         while (true) {
             withFrameMillis { }          // se detiene mientras la app no está en pantalla
             paso = sim.siguiente()
@@ -609,15 +613,16 @@ internal fun CapaGato(
         while (true) { val t = (withFrameMillis { it } - t0) / 1500f; if (t >= 1f) break; mimo = t }
         mimo = -1f
     }
-    val alDedo = if (!toques) Modifier else Modifier.pointerInput(sim, suelo, talla) {
-        detectTapGestures(onTap = { donde ->
-            val p = donde / (size.width / 380f)
-            val ahora = fijo ?: paso ?: gatoQuieto(suelo, anclas, talla)
-            if (tocaAlGato(p, ahora, suelo.y, talla)) { sim.acariciar(); caricias++; alAcariciar() } else sim.tocar(p.x)
-        })
+    if (dedo != null) {
+        val mimar = { sim.acariciar(); caricias++; alAcariciar() }
+        SideEffect {
+            dedo.alTocar = { p -> if (tocaAlGato(p, fijo ?: paso ?: gatoQuieto(suelo, anclas, talla), suelo.y, talla)) mimar() else sim.tocar(p.x) }
+            dedo.alMimar = mimar
+        }
+        DisposableEffect(dedo) { onDispose { dedo.alTocar = null; dedo.alMimar = null } }
     }
     // En su propia capa: al moverse el gato no hay que volver a trazar la parte viva de la escena, ni al revés.
-    Spacer(modifier.then(alDedo).graphicsLayer().drawBehind {
+    Spacer(modifier.graphicsLayer().drawBehind {
         val p = fijo ?: paso ?: gatoQuieto(suelo, anclas, talla)
         aSalvo(alFallar) {
             lienzo {

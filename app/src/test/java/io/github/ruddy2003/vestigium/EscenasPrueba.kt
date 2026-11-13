@@ -8,16 +8,21 @@ import io.github.ruddy2003.vestigium.ui.escenas.Ancla
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaHeleno
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaHeleno.Nave
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaVida
+import io.github.ruddy2003.vestigium.ui.escenas.GATO_DE_PIXEL
+import io.github.ruddy2003.vestigium.ui.escenas.GATO_EN_CUADRO
 import io.github.ruddy2003.vestigium.ui.escenas.Momento
 import io.github.ruddy2003.vestigium.ui.escenas.TipoAncla
 import io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria
+import io.github.ruddy2003.vestigium.ui.escenas.cuadroDeHoy
 import io.github.ruddy2003.vestigium.ui.escenas.escenaDe
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Luces
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.lucesDe
+import io.github.ruddy2003.vestigium.ui.escenas.pelajeDe
 import io.github.ruddy2003.vestigium.ui.escenas.sinCuadro
 import io.github.ruddy2003.vestigium.vidas.Clima
+import io.github.ruddy2003.vestigium.vidas.Cuento
 import io.github.ruddy2003.vestigium.vidas.FichaDelDia
 import io.github.ruddy2003.vestigium.vidas.RegimenLuz
 import io.github.ruddy2003.vestigium.vidas.luzDe
@@ -216,5 +221,52 @@ class EscenasPrueba {
             anclas.forEach { a -> assertTrue("$dia $hora h: ancla ${a.tipo} fuera del cuadro", a.x in 0f..ANCHO && a.hasta in 0f..ANCHO && a.y in 0f..ALTO) }
             assertEquals("$dia $hora h: el gato solo se arrima al fuego si está encendido", m.hacer == OtrasVidas.Hacer.COMER && m.estado != "mar", anclas.any { it.tipo == TipoAncla.FUEGO })
         }
+    }
+
+    // ---- El cuadro de Hoy (tanda P6).
+
+    @Test fun elCuadroDeHoySaleSoloDondeHayEscenaYConElGatoEnSuCuadro() {
+        for (t in TemaId.entries) {
+            val cuadro = cuadroDeHoy(t, "2027-03-21")
+            assertEquals("${t.id}: hay cuadro en Hoy si y solo si el tema tiene escena", escenaDe(t) != null, cuadro != null)
+            // Con el gato de pixel elegido, o con un estilo que no se conoce, no hay cuadro en ningún tema: sale la banda de siempre.
+            assertNull("${t.id}: con el gato de pixel no hay cuadro", cuadroDeHoy(t, "2027-03-21", GATO_DE_PIXEL))
+            assertNull(cuadroDeHoy(t, "2027-03-21", "otra cosa"))
+            if (cuadro != null) {
+                assertEquals(t, cuadro.tema)
+                assertEquals("${t.id}: el pelaje es el del tema", pelajeDe(t), cuadro.pelaje)
+                assertEquals("${t.id}: la banderita es la del tema", banderitaHistoria(t), cuadro.banderita)
+            }
+        }
+        assertEquals("cuadro", GATO_EN_CUADRO)
+        assertEquals("pixel", GATO_DE_PIXEL)
+    }
+
+    @Test fun elCuadroDeHoyCuentaLoMismoQueElCuentoTodosLosDias() {
+        // Desde el año de prueba hasta el primero en que se repite la temporada 5: ningún día se queda sin cuadro.
+        for (t in TemaId.entries.filter { escenaDe(it) != null }) {
+            val escena = escenaDe(t)!!
+            val leidos = HashSet<String>()
+            var d = LocalDate.parse("2026-11-01")
+            while (d.year <= 2032) {
+                val dia = d.toString()
+                val cuadro = cuadroDeHoy(t, dia)
+                assertNotNull("${t.id} $dia: sin cuadro", cuadro); cuadro!!
+                // El personaje es el que le toca a la escena ese día, y la ficha y el título son los de su cuento.
+                assertEquals("${t.id} $dia", escena.vida(dia), cuadro.quien.id)
+                assertEquals(cuadro.quien.id, cuadro.ficha.vida)
+                assertEquals(dia, cuadro.ficha.dia)
+                assertEquals("${t.id}: el tema de la escena es el del personaje", t.id, cuadro.quien.tema)
+                val cuento = Cuento.de(dia, cuadro.quien.id, 20.0)!!
+                assertEquals("${t.id} $dia: el título de la cabecera es el del cuento, a cualquier hora", cuento.titulo, cuadro.titulo)
+                assertTrue("${t.id} $dia: título vacío", cuadro.titulo.isNotBlank())
+                assertEquals("${t.id} $dia: la marca se enciende justo los días especiales", cuento.especial, cuadro.especial)
+                leidos += cuadro.quien.id
+                d = d.plusDays(1)
+            }
+            assertEquals("${t.id}: salen todos sus personajes", escena.vidas.toSet(), leidos)
+        }
+        // En Ciudad neón, Kei y Amaru se alternan: dos días seguidos nunca son del mismo.
+        assertNotEquals(cuadroDeHoy(TemaId.NEON, "2027-03-21")!!.quien.id, cuadroDeHoy(TemaId.NEON, "2027-03-22")!!.quien.id)
     }
 }

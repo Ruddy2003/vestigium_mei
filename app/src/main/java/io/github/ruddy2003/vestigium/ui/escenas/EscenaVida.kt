@@ -11,6 +11,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Rayo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.lucesDe
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.vientoDe
 import io.github.ruddy2003.vestigium.vidas.Azar
+import io.github.ruddy2003.vestigium.vidas.Cuento
 import io.github.ruddy2003.vestigium.vidas.FichaDelDia
 import io.github.ruddy2003.vestigium.vidas.Luz
 import io.github.ruddy2003.vestigium.vidas.Semilla
@@ -250,4 +251,41 @@ fun sinCuadro(tema: TemaId): Boolean = when (tema) {
     TemaId.ANTIGUAS -> false
     TemaId.CUEVA -> false
     TemaId.BASICO -> true
+}
+
+// =====================================================================
+//  El cuadro de Hoy (plan de historia y escenas, sección 3.5; tanda P6, 12 nov 2026)
+// =====================================================================
+
+/** Los dos valores de `Config.gato_estilo`: el gato dentro de su cuadro, o el gato de pixel en su banda. */
+const val GATO_EN_CUADRO = "cuadro"
+const val GATO_DE_PIXEL = "pixel"
+
+/**
+ * Lo que el cuadro de Hoy muestra un día: la [escena] del [tema], a [quien] le toca (en Ciudad neón se alternan dos),
+ * su [ficha] del día, el [titulo] de su cuento, el [pelaje] del gato y la [banderita] de «Hoy en la historia».
+ * No trae nada tuyo: el ánimo del gato se le da aparte.
+ */
+class CuadroHoy(
+    val tema: TemaId, val escena: EscenaVida, val quien: OtrasVidas.Vida, val ficha: FichaDelDia, val titulo: String,
+    val pelaje: Pelaje, val banderita: Banderita?,
+) {
+    /** Hoy es un día especial en la vida del personaje: enciende la marca. */
+    val especial: Boolean get() = ficha.especial
+}
+
+/**
+ * El cuadro del [tema] para el día lógico [dia] («2027-03-21»), o null si no toca cuadro: el tema no tiene escena
+ * todavía (o no la tendrá), se eligió el gato de pixel ([estilo]) o a su personaje le falta el calendario. Con null,
+ * Hoy sigue con el gato de pixel: nunca salen los dos.
+ */
+fun cuadroDeHoy(tema: TemaId, dia: String, estilo: String = GATO_EN_CUADRO): CuadroHoy? {
+    if (estilo != GATO_EN_CUADRO) return null
+    val escena = escenaDe(tema) ?: return null
+    val vida = escena.vida(dia)
+    val quien = OtrasVidas.porId(vida) ?: return null
+    val ficha = FichaDelDia.de(dia, vida) ?: return null
+    // El título no depende de la hora (la hora solo cambia el párrafo del trabajo).
+    val titulo = Cuento.de(dia, vida, 12.0)?.titulo ?: quien.nombre
+    return CuadroHoy(tema, escena, quien, ficha, titulo, pelajeDe(tema) ?: Pelaje.COMUN, banderitaHistoria(tema))
 }
