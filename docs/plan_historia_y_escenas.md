@@ -513,7 +513,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | Tanda | Temas | Cuadros | Estado |
 |---|---|---|---|
 | S1 | Romano; Al-Ándalus | 2 | hecho 13 nov 2026 (`docs/historia/informes/S1.md`); **los dos cuadros, aprobados por el autor el 13 nov 2026** |
-| S2 | Pirata (el mar y el cayo; Nassau como variante; primer cuadro a bordo) | 2 | hecho 13 nov 2026 (`docs/historia/informes/S2.md`); **falta que el autor lo vea junto a Helénico** |
+| S2 | Pirata (el mar y el cayo; Nassau como variante; primer cuadro a bordo) | 2 | hecho 13 nov 2026 (`docs/historia/informes/S2.md`); **los dos cuadros, aprobados por el autor el 13 nov 2026**; Nassau, rehecho ese día a petición suya (más hondo, con edificios grandes y la loma con monte) |
 | S3 | Espacio (primer interior con dos luces); Distopía | 2 | pendiente |
 | S4 | Horror cósmico (primer cuadro con niebla); Ciudad verde | 2 | pendiente |
 | S5 | Roma (la capilla y la ciudad de agosto; primer interior con ventana) | 2 | pendiente |

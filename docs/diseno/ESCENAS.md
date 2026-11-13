@@ -205,7 +205,7 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
   - Nieve: ventisqueros, huellas, sombras azules largas.
   - Hierba: rachas que la peinan, senderos, matas, cambio de color de lejos a cerca.
   - Empedrado o asfalto: losas, juntas, charcos después de la lluvia con su `reflejoRoto`.
-- **A bordo de un barco** (Pirata, hecho en S2: `EscenaPirata.kt` y sus archivos son el ejemplo; Botánico, Abismo, Revolución con su barco-lavadero). El agua lo rodea todo: es la protagonista. El primer plano es la cubierta y el marco es la jarcia, una vela o un toldo.
+- **A bordo de un barco** (Pirata, hecho en S2 y aprobado por el autor el 13 nov 2026: `EscenaPirata.kt` y sus archivos son el ejemplo; sus imágenes, `referencia_pirata.jpg`, `referencia_pirata_cayo.jpg` y `referencia_pirata_nassau.jpg`; Botánico, Abismo, Revolución con su barco-lavadero). El agua lo rodea todo: es la protagonista. El primer plano es la cubierta y el marco es la jarcia, una vela o un toldo.
 - **Siempre de noche** (Ciudad neón, hecha en P4b: `EscenaNeon.kt` es el ejemplo). `Rayo(luces)` no da sombras de noche, así que la regla 1 se cumple con las luces del lugar, con las piezas de `paisaje/Focos.kt`:
   - la escena arma la lista de focos encendidos en ese momento y con ella un `Alumbrado`; cada cosa le pide su color (`Alumbrado.en`) en vez de pedírselo a `luces.tono`;
   - la sombra de cada cosa la tumba el foco que más la alumbra (`rayoDeFoco`, dentro de una `capaSombra`); para una sola luz que manda, `rayoFijo`;
