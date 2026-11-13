@@ -453,7 +453,7 @@ class Capturas {
         ).mapIndexed { k, t ->
             val f = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -(k * 3L + 1))
             io.github.ruddy2003.vestigium.data.Idea("e$k", f + "T20:00:00-06:00", f, t + " #filosofia", if (k % 2 == 0) "Idea ${k + 1}" else "", if (k % 3 == 0) "propia" else "leido",
-                postura = listOf("convence", "piensa", "duda", "")[k % 4], fijada = k == 1)
+                postura = listOf("convence", "piensa", "hecho", "duda", "")[k % 5], fijada = k == 1)
         }
         Repo.ideasEnMemoria(Repo.ideas + extra)
         io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.cajon = "filosofia"
