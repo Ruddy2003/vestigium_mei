@@ -424,7 +424,7 @@ internal object NassauPirata {
                 val cuelga = largo * 0.26f * (1f - 0.55f * t)
                 drawLine(c, p, p + Offset(cos(a) * cuelga * 0.3f, cuelga), maxOf(0.5f, alto * 0.022f), StrokeCap.Round)
             }
-            drawPath(Path().apply { moveTo(copa.x, copa.y); quadraticBezierTo(codo.x, codo.y, fin.x, fin.y) }, lerp(c, luz, 0.35f), style = Stroke(maxOf(0.45f, alto * 0.02f), cap = StrokeCap.Round))
+            drawPath(Path().apply { moveTo(copa.x, copa.y); quadraticTo(codo.x, codo.y, fin.x, fin.y) }, lerp(c, luz, 0.35f), style = Stroke(maxOf(0.45f, alto * 0.02f), cap = StrokeCap.Round))
         }
         for (k in listOf(-0.5f, 0.3f, -0.05f)) drawCircle(l.tono(Color(0xFF5E4A30), lejos), alto * 0.022f, copa + Offset(k * alto * 0.05f, alto * 0.035f))
     }
