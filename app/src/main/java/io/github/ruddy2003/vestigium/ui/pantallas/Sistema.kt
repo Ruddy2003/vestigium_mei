@@ -453,7 +453,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 }
                 Interruptor("Ubicación de fondo", c.muestreo_ubicacion, "Una muestra cada 15 minutos para el mapa de calor.") { v -> cambiar { it.copy(muestreo_ubicacion = v) } }
                 // Tanda H1 del plan de historia y escenas: el interruptor de `Config.historia_hoy` (esquema 24).
-                Interruptor("Hoy en la historia (Wikipedia)", c.historia_hoy, "Lo que pasó un día como hoy: mantén presionado el cuadro de Hoy o búscalo en el buscador. Solo se manda el mes y el día; como en toda conexión, Wikipedia ve la dirección de tu red. Nada tuyo se cruza con lo que llega. Apagado, no se conecta, borra lo guardado y el cuadro no lleva la banderita.") { v ->
+                Interruptor("Hoy en la historia (Wikipedia)", c.historia_hoy, "Lo que pasó un día como hoy: mantén presionado el cuadro de Hoy o búscalo en el buscador. A Wikipedia solo se manda el mes y el día, y a Wikidata, los identificadores de los artículos que llegan (para saber de qué país es cada uno); como en toda conexión, ven la dirección de tu red. Nada tuyo se cruza con lo que llega. Apagado, no se conecta, borra lo guardado y el cuadro no lleva la banderita.") { v ->
                     cambiar { it.copy(historia_hoy = v) }
                     // Apagado, también se borra lo guardado: no queda nada de Wikipedia en el teléfono.
                     if (!v) kotlin.concurrent.thread(isDaemon = true) { runCatching { io.github.ruddy2003.vestigium.ui.pantallas.carpetaHistoria(ctx).deleteRecursively() } }

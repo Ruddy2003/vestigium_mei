@@ -56,16 +56,20 @@ object Efemerides {
     /**
      * Lo guardado de una fecha: el día en que se bajó y sus eventos.
      *
-     * Tanda H3: [lugares] dice, para cada artículo enlazado (por su identificador de Wikidata), los países, regiones y
-     * lugares a los que pertenece según Wikidata ([Wikidata.lugaresDe]). Queda vacío si no se pudo preguntar; entonces
-     * se usan las palabras de cada personaje. [wikidata] es el día en que se preguntó.
+     * Tanda H3: [paises] dice, para cada artículo enlazado (por su identificador de Wikidata), sus países según
+     * Wikidata ([Wikidata.paisesDe]). [wikidata] es el día en que se preguntó; null si todavía no se pudo, y entonces
+     * «en la época de X ›» usa las palabras de cada personaje. Un archivo de antes de H3 se lee igual, sin países.
      */
     @Serializable
     data class Guardado(val mes: Int, val dia: Int, val bajado: String, val eventos: List<Evento>,
-                        val lugares: Map<String, List<String>> = emptyMap(), val wikidata: String? = null)
+                        val paises: Map<String, List<String>> = emptyMap(), val wikidata: String? = null)
 
-    /** Lo que ve la pantalla: los eventos, si salen de lo guardado sin poder renovarlo, y cuándo se bajaron. */
-    data class Resultado(val eventos: List<Evento>, val bajado: LocalDate?, val sinConexion: Boolean, val error: String? = null)
+    /**
+     * Lo que ve la pantalla: los eventos, si salen de lo guardado sin poder renovarlo, cuándo se bajaron y, si ya se
+     * le preguntó a Wikidata, los países de sus artículos ([conPaises]).
+     */
+    data class Resultado(val eventos: List<Evento>, val bajado: LocalDate?, val sinConexion: Boolean, val error: String? = null,
+                         val paises: Map<String, List<String>> = emptyMap(), val conPaises: Boolean = false)
 
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = false }
 
@@ -154,19 +158,19 @@ object Efemerides {
      */
     fun delDia(carpeta: File, fecha: LocalDate, hoy: LocalDate, pedir: (String) -> String): Resultado {
         val g = guardado(carpeta, fecha.monthValue, fecha.dayOfMonth)
-        if (g != null && vigente(g, hoy)) return Resultado(g.eventos, LocalDate.parse(g.bajado), sinConexion = false)
+        if (g != null && vigente(g, hoy)) return Resultado(g.eventos, LocalDate.parse(g.bajado), sinConexion = false, paises = g.paises, conPaises = g.wikidata != null)
         return try {
             val nuevo = bajarYGuardar(carpeta, fecha.monthValue, fecha.dayOfMonth, hoy, pedir)
             when {
                 nuevo != null -> Resultado(nuevo.eventos, hoy, sinConexion = false)
-                g != null -> Resultado(g.eventos, LocalDate.parse(g.bajado), sinConexion = true, error = "Wikipedia no trajo eventos")
+                g != null -> Resultado(g.eventos, LocalDate.parse(g.bajado), sinConexion = true, error = "Wikipedia no trajo eventos", paises = g.paises, conPaises = g.wikidata != null)
                 else -> Resultado(emptyList(), null, sinConexion = true, error = "Wikipedia no trajo eventos")
             }
         } catch (e: java.util.concurrent.CancellationException) {
             throw e
         } catch (e: Throwable) {
             Resultado(g?.eventos.orEmpty(), g?.let { runCatching { LocalDate.parse(it.bajado) }.getOrNull() }, sinConexion = true,
-                error = e.message?.take(120) ?: e::class.simpleName)
+                error = e.message?.take(120) ?: e::class.simpleName, paises = g?.paises.orEmpty(), conPaises = g?.wikidata != null)
         }
     }
 
@@ -179,8 +183,29 @@ object Efemerides {
         val manana = hoy.plusDays(1)
         val g = guardado(carpeta, manana.monthValue, manana.dayOfMonth)
         val bajo = if (g == null || !vigente(g, hoy)) bajarYGuardar(carpeta, manana.monthValue, manana.dayOfMonth, hoy, pedir) != null else false
+        // Tanda H3: los países de los artículos, de mañana y de hoy (por si hoy se bajó desde la pantalla). Si Wikidata
+        // no contesta, se intenta otra vez mañana; mientras, el enlace usa las palabras.
+        listOf(manana, hoy).forEach { d ->
+            try { completarConWikidata(carpeta, d.monthValue, d.dayOfMonth, hoy, pedir) }
+            catch (e: java.util.concurrent.CancellationException) { throw e }
+            catch (_: Throwable) { }
+        }
         podar(carpeta, hoy)
         return bajo
+    }
+
+    /**
+     * Le pregunta a Wikidata por los países de los artículos de la fecha guardada, si todavía no se hizo, y los guarda
+     * en el mismo archivo ([Guardado.paises]). Solo se mandan identificadores de artículos ([Wikidata.url]). Devuelve
+     * si guardó algo; si Wikidata no contesta, lanza el error y lo guardado queda como estaba.
+     */
+    fun completarConWikidata(carpeta: File, mes: Int, dia: Int, hoy: LocalDate, pedir: (String) -> String): Boolean {
+        val g = guardado(carpeta, mes, dia) ?: return false
+        if (g.wikidata != null) return false
+        val ids = g.eventos.flatMap { e -> e.enlaces.mapNotNull { it.wikidata } }.distinct()
+        val paises = if (ids.isEmpty()) emptyMap() else Wikidata.paisesDe(ids, pedir)
+        guardar(carpeta, g.copy(paises = paises, wikidata = hoy.toString()))
+        return true
     }
 
     /** Borra las fechas guardadas que ya no están vigentes, salvo hoy y mañana (que sirven sin conexión aunque sean viejas). */

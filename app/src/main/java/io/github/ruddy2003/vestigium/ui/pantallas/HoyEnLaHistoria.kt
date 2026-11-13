@@ -75,11 +75,11 @@ fun PantallaHoyEnLaHistoria(nav: Nav) {
         val r = withContext(Dispatchers.IO) { Efemerides.delDia(carpetaHistoria(ctx), hoy, LocalDate.now()) { Red.get(it) } }
         estado = EstadoHistoria.Listo(r)
     }
-    // Tanda H2: «en la época de X ›», con las vidas que el tema deja ver y tienen cuento.
+    // Tandas H2 y H3: «en la época de X ›», con las vidas que el tema deja ver y tienen cuento, solo si pudo afectarle.
     val tema = io.github.ruddy2003.vestigium.ui.Estilo.tema.id
     val vidas = remember(tema) { vidasConCuento(tema) }
     VistaHoyEnLaHistoria(estado, hoy, atras = nav.atras, alReintentar = { intento++ }, alPrivacidad = { nav.ir("privacidad") },
-        epocaDe = { anio -> io.github.ruddy2003.vestigium.vidas.Epocas.vidaDelAnio(anio, vidas, tema)?.let { it.id to it.nombre } },
+        epocaDe = { a -> io.github.ruddy2003.vestigium.vidas.Epocas.vidaDelAcontecimiento(a, vidas, tema)?.first?.let { it.id to it.nombre } },
         alCuento = { id -> nav.ir("cuento?vida=$id") })
 }
 
@@ -87,12 +87,14 @@ fun PantallaHoyEnLaHistoria(nav: Nav) {
  * La pantalla sin la red: el [estado] ya resuelto (así la sacan las capturas). Los eventos van del más antiguo al más
  * reciente, con fichas para quedarse con una época, y cada uno con los artículos de Wikipedia que enlaza.
  *
- * Tanda H2: si [epocaDe] da una vida para el año del evento (su id y su nombre), el evento lleva «en la época de X ›»,
- * que abre su cuento con [alCuento]. No se copia texto: solo se enlaza.
+ * Tandas H2 y H3: si [epocaDe] da una vida para el evento (su id y su nombre), el evento lleva «en la época de X ›»,
+ * que abre su cuento con [alCuento]. No se copia texto: solo se enlaza. El evento le llega como lo lee la regla de
+ * épocas ([acontecimiento]): su año, su texto y sus artículos con sus países, si ya se le preguntó a Wikidata.
  */
 @Composable
 fun VistaHoyEnLaHistoria(estado: EstadoHistoria, fecha: LocalDate, atras: (() -> Unit)?, alReintentar: () -> Unit, alPrivacidad: () -> Unit,
-                         epocaDe: (Int) -> Pair<String, String>? = { null }, alCuento: (String) -> Unit = {}) {
+                         epocaDe: (io.github.ruddy2003.vestigium.vidas.Epocas.Acontecimiento) -> Pair<String, String>? = { null },
+                         alCuento: (String) -> Unit = {}) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val mes = fecha.monthValue; val dia = fecha.dayOfMonth
@@ -124,7 +126,7 @@ fun VistaHoyEnLaHistoria(estado: EstadoHistoria, fecha: LocalDate, atras: (() ->
             modifier = Modifier.padding(top = 18.dp).clickable(role = Role.Button) { abrir(Efemerides.paginaDelDia(mes, dia)) })
         Text("Texto con licencia ${Efemerides.LICENCIA}", style = MaterialTheme.typography.bodySmall, color = cs.primary, textDecoration = TextDecoration.Underline,
             modifier = Modifier.padding(top = 4.dp).clickable(role = Role.Button) { abrir(Efemerides.URL_LICENCIA) })
-        Ayuda("Solo se mandó el mes y el día. Lo que llega se guarda en el teléfono, fuera de tus datos y de tus respaldos.", Modifier.padding(top = 4.dp))
+        Ayuda("A Wikipedia solo se mandó el mes y el día, y a Wikidata, los identificadores de sus artículos. Lo que llega se guarda en el teléfono, fuera de tus datos y de tus respaldos.", Modifier.padding(top = 4.dp))
         Spacer(Modifier.height(28.dp))
     }
 }
@@ -139,7 +141,7 @@ private val EPOCAS = listOf(
 
 @Composable
 private fun ListaDeEventos(r: Efemerides.Resultado, mes: Int, dia: Int, abrir: (String) -> Unit, alReintentar: () -> Unit,
-                           epocaDe: (Int) -> Pair<String, String>?, alCuento: (String) -> Unit) {
+                           epocaDe: (io.github.ruddy2003.vestigium.vidas.Epocas.Acontecimiento) -> Pair<String, String>?, alCuento: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
     var epoca by rememberSaveable(mes, dia) { mutableStateOf(0) }
     if (r.sinConexion) Tarjeta(Modifier.padding(top = 12.dp)) {
@@ -163,7 +165,7 @@ private fun ListaDeEventos(r: Efemerides.Resultado, mes: Int, dia: Int, abrir: (
                 Text(Efemerides.nombreDelAnio(e.anio), style = MaterialTheme.typography.labelLarge, color = cs.primary, modifier = Modifier.width(64.dp))
                 Column(Modifier.weight(1f)) {
                     Text(e.texto, style = MaterialTheme.typography.bodyMedium)
-                    epocaDe(e.anio)?.let { (id, nombre) ->
+                    epocaDe(acontecimiento(e, r))?.let { (id, nombre) ->
                         Text("en la época de ${enFrase(nombre)} ›", style = MaterialTheme.typography.labelLarge, color = cs.secondary,
                             modifier = Modifier.clickable(role = Role.Button) { alCuento(id) }.padding(top = 4.dp, bottom = 2.dp))
                     }
@@ -178,6 +180,13 @@ private fun ListaDeEventos(r: Efemerides.Resultado, mes: Int, dia: Int, abrir: (
         }
     }
 }
+
+/**
+ * El evento de Wikipedia como lo lee la regla de épocas (tanda H3): sus artículos llevan sus países solo si ya se le
+ * preguntó a Wikidata; si no, van sin países y la regla usa las palabras de cada personaje.
+ */
+fun acontecimiento(e: Efemerides.Evento, r: Efemerides.Resultado) = io.github.ruddy2003.vestigium.vidas.Epocas.Acontecimiento(
+    e.anio, e.texto, e.enlaces.map { l -> io.github.ruddy2003.vestigium.vidas.Epocas.Articulo(l.titulo, l.wikidata, if (r.conPaises) l.wikidata?.let { r.paises[it] } else null) })
 
 /** «Un joven naturalista» → «un joven naturalista», para que se lea dentro de la frase; los nombres propios quedan igual. */
 internal fun enFrase(nombre: String): String =

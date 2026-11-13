@@ -115,4 +115,60 @@ class EfemeridesPrueba {
         assertEquals(6, r.eventos.size)
         assertNotNull(Efemerides.guardado(dir, 2, 29))
     }
+
+    // ---------------------------------------------------------------- tanda H3: Wikidata
+
+    private val muestraH3 = javaClass.getResource("/historia/eventos_h3.json")!!.readText()
+    private val wikidataH3 = javaClass.getResource("/historia/wikidata_h3.json")!!.readText()
+    private fun pedirH3(u: String) = if (u.startsWith("https://www.wikidata.org/")) wikidataH3 else muestraH3
+
+    @Test fun cadaEnlaceTraeSuIdentificadorDeWikidata() {
+        val l = Efemerides.leer(muestraH3)
+        val villa = l.first { it.anio == 1923 }
+        assertEquals(listOf("Q655", "Q192278", "Q294931", "Q315066"), villa.enlaces.map { it.wikidata })
+        // Se guardan todos los artículos (hasta ENLACES_GUARDADOS), aunque la pantalla muestre tres.
+        assertEquals(5, l.first { it.anio == 1896 }.enlaces.size)
+        assertTrue(Efemerides.ENLACES_GUARDADOS > Efemerides.ENLACES_POR_EVENTO)
+    }
+
+    @Test fun loGuardadoAntesDeH3SeSigueLeyendo() {
+        val dir = carpeta()
+        java.io.File(dir, "11-13.json").writeText("""{"mes":11,"dia":13,"bajado":"2026-11-13","eventos":[{"anio":1918,"texto":"Un armisticio.","enlaces":[{"titulo":"Hungría","url":"https://es.wikipedia.org/wiki/Hungr%C3%ADa"}]}]}""")
+        val g = Efemerides.guardado(dir, 11, 13)!!
+        assertNull(g.wikidata); assertTrue(g.paises.isEmpty()); assertNull(g.eventos.single().enlaces.single().wikidata)
+        val r = Efemerides.delDia(dir, hoy, hoy) { error("no debe conectarse") }
+        assertFalse(r.conPaises)
+    }
+
+    @Test fun elTrabajoDeLaMananaPreguntaAWikidataYLoGuarda() {
+        val dir = carpeta(); val pedidas = mutableListOf<String>()
+        assertTrue(Efemerides.prepararManana(dir, hoy) { u -> pedidas += u; pedirH3(u) })
+        // Una a Wikipedia (mañana) y una a Wikidata: los 36 artículos caben en un lote.
+        assertEquals(1, pedidas.count { it.startsWith("https://es.wikipedia.org/") })
+        assertEquals(1, pedidas.count { it.startsWith("https://www.wikidata.org/") })
+        val g = Efemerides.guardado(dir, 11, 14)!!
+        assertEquals(hoy.toString(), g.wikidata)
+        assertEquals(listOf("Q96"), g.paises["Q655"])
+        // Lo que ve la pantalla al día siguiente.
+        val r = Efemerides.delDia(dir, hoy.plusDays(1), hoy.plusDays(1)) { error("no debe conectarse") }
+        assertTrue(r.conPaises); assertEquals(listOf("Q30"), r.paises["Q294931"])
+        // Al día siguiente no se vuelve a preguntar.
+        pedidas.clear()
+        Efemerides.prepararManana(dir, hoy) { u -> pedidas += u; pedirH3(u) }
+        assertTrue(pedidas.none { it.startsWith("https://www.wikidata.org/") })
+    }
+
+    @Test fun siWikidataNoContestaNoSeRompeNadaYSeIntentaOtraVez() {
+        val dir = carpeta()
+        val sinWikidata: (String) -> String = { u -> if (u.startsWith("https://www.wikidata.org/")) throw java.io.IOException("HTTP 429") else muestraH3 }
+        assertTrue(Efemerides.prepararManana(dir, hoy, sinWikidata))
+        val g = Efemerides.guardado(dir, 11, 14)!!
+        assertEquals(13, g.eventos.size); assertNull(g.wikidata); assertTrue(g.paises.isEmpty())
+        assertFalse(Efemerides.delDia(dir, hoy.plusDays(1), hoy.plusDays(1)) { error("no") }.conPaises)
+        // A la mañana siguiente, con Wikidata, se completa (la de hoy ya bajada, sin pedir Wikipedia otra vez).
+        val pedidas = mutableListOf<String>()
+        Efemerides.prepararManana(dir, hoy.plusDays(1)) { u -> pedidas += u; pedirH3(u) }
+        assertEquals(hoy.plusDays(1).toString(), Efemerides.guardado(dir, 11, 14)!!.wikidata)
+        assertTrue(pedidas.none { it.endsWith("/11/14") })
+    }
 }

@@ -2136,14 +2136,25 @@ class Capturas {
     }
     private val diaDeMuestra = java.time.LocalDate.of(2026, 11, 13)
 
-    /** «Hoy en la historia» con conexión, en cada tema, con «en la época de X ›» (CAPTURAS=historia; tandas H1 y H2). */
+    /**
+     * Tanda H3: trece acontecimientos de cuatro fechas (`eventos_h3.json`) con lo que Wikidata dijo de sus artículos
+     * (`wikidata_h3.json`), para ver a quién lleva «en la época de X ›». La pantalla dice «13 de noviembre», pero son de
+     * cuatro días: es una muestra.
+     */
+    private val resultadoH3 by lazy {
+        io.github.ruddy2003.vestigium.historia.Efemerides.Resultado(
+            io.github.ruddy2003.vestigium.historia.Efemerides.leer(javaClass.getResource("/historia/eventos_h3.json")!!.readText()), diaDeMuestra, sinConexion = false,
+            paises = io.github.ruddy2003.vestigium.historia.Wikidata.leer(javaClass.getResource("/historia/wikidata_h3.json")!!.readText()), conPaises = true)
+    }
+
+    /** «Hoy en la historia» con conexión, en cada tema, con «en la época de X ›» (CAPTURAS=historia; tandas H1 a H3). */
     @Test fun temaHistoria() = porTema("historia") { t, o, n ->
-        pantalla(t, o, 3600, n) {
+        pantalla(t, o, 4400, n) {
             io.github.ruddy2003.vestigium.ui.pantallas.VistaHoyEnLaHistoria(
-                io.github.ruddy2003.vestigium.ui.pantallas.EstadoHistoria.Listo(io.github.ruddy2003.vestigium.historia.Efemerides.Resultado(eventosDeMuestra, diaDeMuestra, sinConexion = false)),
+                io.github.ruddy2003.vestigium.ui.pantallas.EstadoHistoria.Listo(resultadoH3),
                 diaDeMuestra, atras = {}, alReintentar = {}, alPrivacidad = {},
-                // Tanda H2: «en la época de X ›» con las vidas del tema (en la muestra, 1918 lleva a José).
-                epocaDe = { anio -> io.github.ruddy2003.vestigium.vidas.Epocas.vidaDelAnio(anio, io.github.ruddy2003.vestigium.ui.pantallas.vidasConCuento(t.id), t.id)?.let { it.id to it.nombre } })
+                // Tandas H2 y H3: «en la época de X ›» con las vidas del tema, solo si pudo afectarle.
+                epocaDe = { a -> io.github.ruddy2003.vestigium.vidas.Epocas.vidaDelAcontecimiento(a, io.github.ruddy2003.vestigium.ui.pantallas.vidasConCuento(t.id), t.id)?.first?.let { it.id to it.nombre } })
         }
     }
 
