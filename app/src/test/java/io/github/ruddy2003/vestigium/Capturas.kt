@@ -2774,4 +2774,17 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("torre", "2031-05-15", listOf(10.0)),                      // la torre nueva, inaugurada
         Triple("provincia", "2030-06-28", listOf(19.6)),                  // el pueblo: variante de la misma plaza (decisión 21)
     ),
+    // La astronauta (Espacio, tanda S3): el puesto de la ingeniera en el anillo de la nave. Primer interior con dos luces.
+    "astronauta" to listOf(
+        Triple("normal", "2027-05-06", HORAS_CUADRO),                     // la mañana ámbar, el mediodía blanco y el último naranja
+        Triple("noche", "2027-05-06", listOf(23.0)),                      // las luces de guardia
+        Triple("parada", "2027-10-08", listOf(10.0, 21.4)),               // la parada: media luz de emergencia y el calefactor
+        Triple("sinpeso", "2029-05-20", listOf(10.0, 21.0)),              // el anillo no gira: las cosas flotan
+        Triple("alarma", "2027-02-25", listOf(10.0)),                     // las balizas en rojo
+        Triple("fuera", "2027-05-20", listOf(10.0)),                      // la salida: el armario del traje, vacío
+        Triple("fiesta", "2027-01-01", listOf(19.4)),                     // banderines y guirnalda
+        Triple("luces", "2027-12-21", listOf(21.0)),                      // la noche de las lamparitas
+        Triple("partida", "2027-04-22", listOf(22.0)),                    // la noche de la partida: solo la ventana
+        Triple("cosecha", "2027-08-21", listOf(10.0)),                    // la cosecha: rastrojos y sacos
+    ),
 )
