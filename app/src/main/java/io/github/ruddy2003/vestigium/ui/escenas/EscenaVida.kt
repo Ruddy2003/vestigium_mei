@@ -212,7 +212,7 @@ fun escenaDe(tema: TemaId): EscenaVida? = when (tema) {
     TemaId.MESO -> null             // S9
     TemaId.MONGOL -> null           // S12
     TemaId.RENACIMIENTO -> null     // S6
-    TemaId.PIRATA -> null           // S2
+    TemaId.PIRATA -> EscenaPirata
     TemaId.URSS -> null             // S15
     TemaId.REVOLUCION -> null       // S8
     TemaId.ANTIGUAS -> null         // S18

@@ -2752,4 +2752,15 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("telar", "2029-03-01", HORAS_CUADRO),                      // el telar desnudo
         Triple("hueste", "2028-07-10", HORAS_CUADRO),                     // la hueste cruza el puente
     ),
+    // Tomás (Pirata, tanda S2): a bordo, el cayo de la carena y Nassau.
+    "grumete" to listOf(
+        Triple("normal", "2027-04-27", HORAS_CUADRO),                     // a bordo, en mar abierto, con un cayo a la vista
+        Triple("cayo", "2027-03-16", HORAS_CUADRO),                       // la carena: el balandro tumbado en la arena (decisión 18)
+        Triple("nassau", "2027-07-05", HORAS_CUADRO),                     // fondeado en Nassau: variante del cuadro a bordo (decisión 21)
+        Triple("abordaje", "2027-10-10", HORAS_CUADRO),                   // la presa al costado y humo de cañón
+        Triple("fiesta", "2027-12-25", listOf(13.0, 20.4, 22.0)),         // Navidad a bordo: banderas y faroles
+        Triple("huracan", "2028-09-19", HORAS_CUADRO),                    // el huracán
+        Triple("calma", "2028-04-29", HORAS_CUADRO),                      // la calma chicha: el mar como un plato y la vela caída
+        Triple("costa", "2027-05-04", HORAS_CUADRO),                      // otro horizonte: la costa alta
+    ),
 )

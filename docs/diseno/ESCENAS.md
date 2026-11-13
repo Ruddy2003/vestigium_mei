@@ -205,7 +205,7 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
   - Nieve: ventisqueros, huellas, sombras azules largas.
   - Hierba: rachas que la peinan, senderos, matas, cambio de color de lejos a cerca.
   - Empedrado o asfalto: losas, juntas, charcos después de la lluvia con su `reflejoRoto`.
-- **A bordo de un barco** (Pirata, Botánico, Abismo, Revolución con su barco-lavadero). El agua lo rodea todo: es la protagonista. El primer plano es la cubierta y el marco es la jarcia, una vela o un toldo.
+- **A bordo de un barco** (Pirata, hecho en S2: `EscenaPirata.kt` y sus archivos son el ejemplo; Botánico, Abismo, Revolución con su barco-lavadero). El agua lo rodea todo: es la protagonista. El primer plano es la cubierta y el marco es la jarcia, una vela o un toldo.
 - **Siempre de noche** (Ciudad neón, hecha en P4b: `EscenaNeon.kt` es el ejemplo). `Rayo(luces)` no da sombras de noche, así que la regla 1 se cumple con las luces del lugar, con las piezas de `paisaje/Focos.kt`:
   - la escena arma la lista de focos encendidos en ese momento y con ella un `Alumbrado`; cada cosa le pide su color (`Alumbrado.en`) en vez de pedírselo a `luces.tono`;
   - la sombra de cada cosa la tumba el foco que más la alumbra (`rayoDeFoco`, dentro de una `capaSombra`); para una sola luz que manda, `rayoFijo`;
@@ -243,7 +243,6 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 | Templario | Hermano Bernat, un castillo del Levante | Exterior, sin agua | Una almena, un estandarte | El llano seco |
 | Mongol | Bat, la estepa | Exterior, sin agua | El borde de la yurta | La estepa |
 | Renacimiento | Iacopo, un taller de Florencia | Interior con ventana | El marco de la ventana, un caballete | El suelo del taller; los tejados |
-| Pirata | Tomás, un balandro en el Caribe | A bordo | La jarcia y la vela | El mar |
 | Japón Edo | Ochiyo, una posta del camino real | Exterior | Un alero, una rama de arce o de cerezo | El camino |
 | Revolución francesa | Marie-Jeanne, un barco-lavadero en el Sena | A bordo, en ciudad | La ropa tendida | El río |
 | Napoleónico | Jean-Baptiste, la campaña de Rusia | Exterior; nieve al final | Un abedul, un fusil en pabellón | El llano; la nieve |
