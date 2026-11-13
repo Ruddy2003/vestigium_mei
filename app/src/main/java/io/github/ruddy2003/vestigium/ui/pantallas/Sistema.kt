@@ -323,14 +323,8 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 Ayuda("Mañana te toca: ${manana.nombre}.")
             }
             Etiqueta("Claro u oscuro")
-            val temaActual = io.github.ruddy2003.vestigium.ui.Estilo.tema
-            if (temaActual.soloOscuro) Ayuda("El tema ${temaActual.nombre} solo existe en oscuro.")
-            else Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf("sistema" to "Como el teléfono", "claro" to "Claro", "oscuro" to "Oscuro").forEach { (id, nombre) ->
-                    Ficha(nombre, c.modo == id) { cambiar { it.copy(modo = id) } }
-                }
-            }
-            Ayuda("También puedes cambiarlo con el sol o la luna junto al título de cada pantalla.", Modifier.padding(top = 6.dp))
+            SelectorModo()
+            Ayuda("También está arriba en «Más».", Modifier.padding(top = 6.dp))
             Tarjeta(Modifier.padding(top = 10.dp)) {
                 Interruptor("El ícono de la app cambia con el tema", c.icono_tema, "La huella toma la textura del tema. Se aplica al salir de la app; en algunos teléfonos el ícono de la pantalla de inicio desaparece y hay que volver a ponerlo desde la lista de apps.") { v -> cambiar { it.copy(icono_tema = v) } }
                 Interruptor("Gato del tema", c.gato, "Un gato arriba de Hoy, vestido y pintado según el tema. Si dormiste poco camina despacio y se echa más; con el día ya completo, salta y juega si te fue bien o se encorva si fue pesado.") { v -> cambiar { it.copy(gato = v) } }
@@ -972,6 +966,26 @@ private fun DriveTarjeta(tarea: (suspend () -> String) -> Unit) {
                 msg = "SHA-1 copiada."
             }) { Text("copiar SHA-1", style = MaterialTheme.typography.labelLarge) }
             Ayuda("5. Vuelve aquí y toca «conectar y subir ahora». Google te pedirá elegir tu cuenta y aceptar el permiso para archivos creados por la app.")
+        }
+    }
+}
+
+/**
+ * Claro, oscuro o como el teléfono. Está en Apariencia y arriba en «Más» (13 nov 2026; antes, además, el sol o la luna iba
+ * junto al título de cada pantalla y amontonaba el encabezado). El tema que solo existe en oscuro lo dice.
+ */
+@Composable
+fun SelectorModo(modifier: Modifier = Modifier) {
+    val tema = io.github.ruddy2003.vestigium.ui.Estilo.tema
+    if (tema.soloOscuro) { Ayuda("El tema ${tema.nombre} solo existe en oscuro.", modifier); return }
+    val ctx = LocalContext.current
+    val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf("sistema" to "Como el teléfono", "claro" to "Claro", "oscuro" to "Oscuro").forEach { (id, nombre) ->
+            Ficha(nombre, Repo.config.modo == id) {
+                sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.CAMBIO)
+                Repo.cambiarConfig { it.copy(modo = id) }; runCatching { Widgets.actualizar(ctx) }
+            }
         }
     }
 }

@@ -96,13 +96,21 @@ object GuiaUso {
         )),
     )
 
-    /** Qué sección abre el «?» de cada pantalla (por su título en español). */
+    /**
+     * Qué sección abre el «?» de cada pantalla (por su título en español). El «?» sale en las pantallas de adentro (las que
+     * tienen «volver»); en las pestañas cada sección trae el suyo y la guía entera está arriba en «Más». Cada clave es el
+     * título de una `Hoja` (lo revisa GuiaUsoPrueba).
+     */
     val PANTALLAS: Map<String, String> = mapOf(
-        "Día" to "principios", "Hoy" to "principios", "Privado" to "privado", "Llenar el día" to "noche", "Cómo usar la app" to "principios", "Diario" to "diario", "Momentos" to "animo", "Todos tus registros" to "animo", "Tu gente" to "sustancias_gente",
-        "¿Estuviste o pensaste?" to "diario", "Tus temas" to "diario", "Sustancias" to "sustancias_gente", "Impulsos y recaídas" to "privado",
-        "Lugares" to "lugares", "Lugares especiales" to "lugares", "Suplementos" to "suplementos", "Notas" to "notas_metas", "Metas" to "notas_metas", "Ideario" to "ideario", "Nueva idea" to "ideario", "Una idea" to "ideario",
-        "Laptop" to "laptop", "Red" to "sustancias_gente", "Experimentos personales" to "leerte", "Análisis" to "leerte", "Cobertura de variables" to "leerte",
-        "Constelación" to "sustancias_gente", "Datos" to "errores", "Estado de los datos" to "errores", "Hábitos" to "noche",
+        "Privado" to "privado", "Llenar el día" to "noche", "Diario" to "diario", "Tu gente" to "sustancias_gente", "Social" to "sustancias_gente",
+        "¿Estuviste o pensaste?" to "diario", "Tus temas" to "diario", "Sustancias" to "sustancias_gente",
+        "Lugares" to "lugares", "Lugares especiales" to "lugares", "Suplementos" to "suplementos", "Notas" to "notas_metas", "Metas" to "notas_metas", "Ideario" to "ideario",
+        "Laptop" to "laptop", "Experimentos personales" to "leerte", "Análisis" to "leerte", "Cobertura de variables" to "leerte",
+        "Datos" to "errores", "Estado de los datos" to "errores", "Hábitos" to "noche",
+        // Las pantallas con cifras y relaciones (13 nov 2026): las herramientas de Análisis, los totales y el resumen de la semana.
+        "Tendencia" to "leerte", "Día de la semana" to "leerte", "Todo lo que se mueve con algo" to "leerte", "Modelo múltiple" to "leerte",
+        "Dinámica emocional" to "leerte", "Ritmo de sueño" to "leerte", "Palabras del diario" to "leerte", "Días atípicos" to "leerte",
+        "Totales" to "leerte", "Resumen semanal" to "leerte",
     )
 
     fun de(id: String) = SECCIONES.firstOrNull { it.id == id }

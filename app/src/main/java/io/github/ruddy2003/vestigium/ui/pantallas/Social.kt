@@ -385,7 +385,7 @@ fun RecuadroSocial(nav: Nav) {
     val tema = Estilo.tema
     val pendientes = remember(Repo.dias, Repo.config.personas) { Personas.pendientes().size }
     val n = m?.nodos?.size ?: 0
-    Recuadro("Social", if (n == 0) "Tu gente, quién conoce a quién y tu cielo de personas" else
+    Recuadro("Social", if (n == 0) "Tu gente y cómo se conecta" else
         porNumero(n, "1 persona", "$n personas") + (if (pendientes > 0) " · $pendientes por clasificar" else "") + " · red y cielo", alto = 230.dp, luz = true, onClick = { nav.ir("social") }) {
         // El mueble del tema donde se reúne tu gente (lote E6), y el grafo encima, en el centro.
         val d = io.github.ruddy2003.vestigium.ui.vida.disenoVida(tema)

@@ -65,6 +65,10 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -471,7 +475,7 @@ fun SolVergina(modifier: Modifier = Modifier, color: Color = MaterialTheme.color
 @Composable
 fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: String? = Romano.latin(titulo), modifier: Modifier = Modifier,
             plegable: Boolean = false, plegadaPorDefecto: Boolean = false, autoPlegar: Boolean = false, abrir: Int = 0, resumen: String? = null,
-            content: @Composable () -> Unit) {
+            explica: String? = null, content: @Composable () -> Unit) {
     val (nombre, comentario) = Estilo.seccion(titulo, latin)
     // Las secciones plegables recuerdan si las cerraste (se guarda en tu configuración). Las que empiezan plegadas
     // guardan «+título» cuando las abres. Las de [autoPlegar] se vuelven a plegar al cerrar la app o al cambiar de día.
@@ -490,10 +494,12 @@ fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: S
     val piel = pielDe(tema)
     // La cabecera que se pliega mide al menos 48 dp de alto, lo que pide Android para acertar el toque (hallazgo 12); el
     // margen de arriba se acorta lo mismo que crece la cabecera, para que el título quede donde estaba.
-    Column(modifier.fillMaxWidth().padding(top = if (plegable) 10.dp else 26.dp).entrada(numero ?: 0)) {
+    // Con «?» la cabecera también mide 48 dp (el botón), con el mismo truco del margen.
+    val alta = plegable || explica != null
+    Column(modifier.fillMaxWidth().padding(top = if (alta) 10.dp else 26.dp).entrada(numero ?: 0)) {
         Row(
-            verticalAlignment = if (piel.centrar) Alignment.CenterVertically else Alignment.Bottom,
-            modifier = if (!plegable) Modifier else if (autoPlegar) Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { abiertaAuto = !abiertaAuto } else Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable {
+            verticalAlignment = if (piel.centrar || explica != null) Alignment.CenterVertically else Alignment.Bottom,
+            modifier = if (!plegable) (if (explica != null) Modifier.fillMaxWidth().heightIn(min = 48.dp) else Modifier) else if (autoPlegar) Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { abiertaAuto = !abiertaAuto } else Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable {
                 io.github.ruddy2003.vestigium.data.Repo.cambiarConfig { c ->
                     val clave = if (plegadaPorDefecto) "+$titulo" else titulo
                     val quitar = if (plegadaPorDefecto) !plegada else plegada
@@ -508,6 +514,8 @@ fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: S
             // Los rótulos en bloque (expediente, letrero, cartel) no se estiran a todo el ancho.
             val peso = if (plegable) Modifier.weight(1f, fill = piel.rellena) else Modifier
             TituloSeccion(nombre, tema, peso)
+            // La explicación larga, al tocar (13 nov 2026): antes iba siempre a la vista, debajo del título.
+            if (explica != null) BotonExplica(nombre, explica)
             if (plegable && !piel.rellena) Spacer(Modifier.weight(1f))
             if (plegable) Text(if (plegada) piel.cerrada else piel.abierta, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -699,18 +707,46 @@ fun Opciones(opciones: List<Opcion>, valor: String?, onCambio: (String?) -> Unit
  * en el riel). Toda la fila se toca; para TalkBack es un interruptor.
  */
 @Composable
-fun Interruptor(texto: String, valor: Boolean, detalle: String? = null, onCambio: (Boolean) -> Unit) {
+fun Interruptor(texto: String, valor: Boolean, detalle: String? = null, explica: String? = null, onCambio: (Boolean) -> Unit) {
     val sentir = rememberSentir()
     Row(
         Modifier.fillMaxWidth().toggleable(value = valor, role = Role.Switch) { sentir(Sentidos.Evento.ELEGIR); onCambio(it) }.padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(texto, style = MaterialTheme.typography.bodyLarge)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(texto, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f, fill = false))
+                if (explica != null) BotonExplica(texto, explica)
+            }
             if (detalle != null) Ayuda(detalle)
         }
         Conmutador(checked = valor, onCheckedChange = null)
     }
+}
+
+/**
+ * El «?» chico junto a un título (13 nov 2026): abre la explicación larga en un diálogo con la piel del tema. Es para lo que
+ * enseña algo (cómo leer un resultado, cuándo puede ser azar, qué hace un ajuste); lo que solo repetía el título se quitó.
+ */
+@Composable
+fun BotonExplica(titulo: String, texto: String, modifier: Modifier = Modifier) {
+    var abierto by remember { mutableStateOf(false) }
+    val cs = MaterialTheme.colorScheme
+    Box(
+        modifier.minimumInteractiveComponentSize().clickable(onClickLabel = "Leer la explicación") { abierto = true }
+            .semantics { contentDescription = "Qué es «$titulo»" },
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(Modifier.size(22.dp).border(1.dp, cs.outline, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
+            Text("?", style = MaterialTheme.typography.labelLarge, color = cs.primary, modifier = Modifier.clearAndSetSemantics { })
+        }
+    }
+    if (abierto) Dialogo(
+        onDismissRequest = { abierto = false },
+        confirmButton = { BotonTexto(onClick = { abierto = false }) { Text("entendido", color = cs.primary) } },
+        title = { Text(titulo) },
+        text = { Text(texto, style = MaterialTheme.typography.bodyMedium) },
+    )
 }
 
 @Composable

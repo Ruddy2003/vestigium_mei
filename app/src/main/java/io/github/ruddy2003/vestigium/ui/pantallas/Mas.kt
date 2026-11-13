@@ -59,7 +59,12 @@ fun PantallaMas(nav: Nav) {
     val abrir = remember { androidx.compose.runtime.mutableStateListOf(0, 0, 0, 0) }
     val alcance = androidx.compose.runtime.rememberCoroutineScope()
     Hoja("Más", nav.atras, buscar = { nav.ir("buscar") }) {
-        val indice = listOf("Registros" to 10, "Gente" to 4, "Medir" to 9, "Sistema" to 10)
+        // Arriba, lo que antes iba en el encabezado de cada pantalla (13 nov 2026): claro u oscuro, y la guía.
+        SelectorModo(Modifier.padding(top = 10.dp))
+        Tarjeta(Modifier.padding(top = 10.dp)) {
+            FilaMas("guia_uso", "Guía", "Cómo usar la app y cómo leer tus datos", { nav.ir(it) })
+        }
+        val indice = listOf("Registros" to 10, "Gente" to 4, "Medir" to 9, "Sistema" to 9)
         FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             indice.forEachIndexed { i, (t, n) ->
                 Ficha("${i + 1} $t · $n", false) { abrir[i]++; alcance.launch { kotlinx.coroutines.delay(150); req[i].bringIntoView() } }
@@ -136,9 +141,7 @@ fun PantallaMas(nav: Nav) {
         }
         Seccion("Sistema", numero = 4, plegable = true, abrir = abrir[3], modifier = Modifier.bringIntoViewRequester(req[3])) {
             Tarjeta {
-                // Una sola guía con sus dos partes (antes, dos filas casi iguales al principio y al final).
-                FilaMas("guia_uso", "Guía", "Cómo usar la app y cómo leer tus datos: qué mide cada cosa y por qué", ir)
-                Separador()
+                // La guía está arriba de todo, junto al modo claro u oscuro (13 nov 2026).
                 FilaMas("apariencia", "Apariencia", "Tema, claro u oscuro, ícono, letra, animaciones, tus últimos días, semana corta, vibraciones y sonidos", ir)
                 Separador()
                 FilaMas("avisos", "Avisos y recordatorios", "Avisos de ánimo, horas del diario y del sueño, cuestionarios", ir)

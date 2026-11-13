@@ -72,7 +72,7 @@ object Pantallas {
     val TODAS: List<P> get() = listOfNotNull(
         P("dia", "Hoy", "El día de hoy", "hoy día tablero"),
         P("diario", "Diario", "La pestaña del diario: tus entradas y tu línea de tiempo", "diario entradas pestaña"),
-        P("mas", "Más", "Todo lo demás: registros, gente, medir y sistema", "más menú ajustes configuración tuerca"),
+        P("mas", "Más", "Claro u oscuro, la guía y todo lo demás", "más menú ajustes configuración tuerca claro oscuro modo noche día guía ayuda"),
         P("lugares", "Lugares", "El mapa emocional de tus lugares; renombrar, cambiar el radio o quitar uno", "lugares lugar mapa emocional sitios ubicación corregir radio renombrar"),
         P("mundo", "Mundo", "Los países que conoces", "mundo países viajes"),
         P("rascar", "Mapa para rascar", "Rasca los países que visitaste", "rascar mapa países"),

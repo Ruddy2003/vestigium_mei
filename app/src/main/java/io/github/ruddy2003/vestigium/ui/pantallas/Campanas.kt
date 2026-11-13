@@ -213,7 +213,7 @@ fun RecuadroCampanas(nav: Nav) {
     val hoy = Fechas.diaLogico()
     val c = Campanas.deLaSemana(hoy).firstOrNull()
     val e = c?.let { remember(it, Repo.dias, Repo.salud, Repo.tramos) { Campanas.estado(it, hoy) } }
-    Recuadro("Campañas", if (e == null) "Retos de la semana con su mapa" else "${Campanas.titulo(c.tema.ifBlank { Estilo.tema.id }, c.lunes, c.reto)} · ${e.hechos}/${c.meta}",
+    Recuadro("Campañas", if (e == null) "Retos de la semana" else "${Campanas.titulo(c.tema.ifBlank { Estilo.tema.id }, c.lunes, c.reto)} · ${e.hechos}/${c.meta}",
         alto = 112.dp, onClick = { nav.ir("campanas") }) {
         if (e != null) MapaCampana(e, Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 6.dp), conNombres = false)
         else Text("elige un reto para esta semana", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.align(Alignment.Center))

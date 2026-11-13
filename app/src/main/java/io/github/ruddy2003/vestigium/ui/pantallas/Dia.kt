@@ -182,39 +182,47 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
     Hoja("Día", modifier = deslizar, encabezado = {
         val est = io.github.ruddy2003.vestigium.ui.Estilo
         fun abrirCalendario() { Seleccion.ultimoMes = Fechas.mesDe(fecha); if (sucio) Repo.guardarDia(d); nav.ir("calendario") }
-        Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (apilado) BotonTexto(onClick = nav.atras, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
-                modifier = Modifier.semantics { contentDescription = "Volver" }) {
-                Text("←", style = MaterialTheme.typography.titleLarge)
-            }
-            // «Hoy» cuando es hoy; «Día» en otra fecha (N-23). El nombre del tema y el español en la misma línea (P-1).
-            val (nombreT, espanolT, _) = if (fecha == hoy) est.pantallaEnLinea("Hoy", "HODIE") else est.pantallaEnLinea("Día", "DIES")
-            Text(androidx.compose.ui.text.buildAnnotatedString {
-                if (espanolT != null) withStyle(androidx.compose.ui.text.SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)) { append(nombreT) }
-                else append(nombreT)
-                append(est.sufijoTitulo)
-                if (espanolT != null) withStyle(androidx.compose.ui.text.SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append(" · $espanolT") }
-            }, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
-            io.github.ruddy2003.vestigium.ui.LocalGuia.current?.let { guia -> BotonTexto(onClick = { guia("principios") }) { Text("?", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary) } }
-            io.github.ruddy2003.vestigium.ui.BotonBuscar { nav.ir("buscar") }
-            io.github.ruddy2003.vestigium.ui.BotonAjustes(Modifier.padding(start = 4.dp)) { nav.ir("mas") }
-            io.github.ruddy2003.vestigium.ui.BotonModo()
-            io.github.ruddy2003.vestigium.ui.Emblema(tam = 34.dp, modifier = Modifier.padding(start = 4.dp))
-        }
-        // La fecha grande abre el calendario.
-        // Su tamaño, espaciado, peso, inclinación y el signo que la abre son de cada tema (Estilo.fechaGrande).
+        // «Hoy» cuando es hoy; «Día» en otra fecha (N-23). El nombre del tema y el español en la misma línea (P-1).
+        val (nombreT, espanolT, _) = if (fecha == hoy) est.pantallaEnLinea("Hoy", "HODIE") else est.pantallaEnLinea("Día", "DIES")
+        io.github.ruddy2003.vestigium.ui.Encabezado(io.github.ruddy2003.vestigium.ui.tituloEnLinea(nombreT, espanolT),
+            atras = if (apilado) nav.atras else null, buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }, tamEmblema = 34.dp)
+        // La fecha, entre dos flechas grandes y con el calendario a la vista (13 nov 2026). Antes las flechas eran «‹ ›» de
+        // texto, muy chicas, y el calendario solo se abría tocando la fecha, sin nada que lo dijera. Tocar la fecha lo sigue
+        // abriendo, y deslizar a los lados sigue cambiando de día.
+        // Su tamaño, espaciado, peso e inclinación son de cada tema (Estilo.fechaGrande).
         val ef = est.fechaGrande
         val base = MaterialTheme.typography.titleLarge
-        Text(est.fecha(fecha) + "  " + ef.abre, style = base.copy(
-            fontSize = base.fontSize * ef.escala,
-            lineHeight = if (base.lineHeight.type == androidx.compose.ui.unit.TextUnitType.Unspecified) base.lineHeight else base.lineHeight * ef.escala,
-            letterSpacing = ef.espaciado.sp,
-            fontWeight = ef.peso?.let { androidx.compose.ui.text.font.FontWeight(it) } ?: base.fontWeight,
-            fontStyle = if (ef.cursiva) androidx.compose.ui.text.font.FontStyle.Italic else base.fontStyle,
-        ), color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { abrirCalendario() })
+        Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            io.github.ruddy2003.vestigium.ui.BotonDia(anterior = true) { irA(Fechas.sumar(fecha, -1)) }
+            Text(est.fecha(fecha), style = base.copy(
+                fontSize = base.fontSize * ef.escala,
+                lineHeight = if (base.lineHeight.type == androidx.compose.ui.unit.TextUnitType.Unspecified) base.lineHeight else base.lineHeight * ef.escala,
+                letterSpacing = ef.espaciado.sp,
+                fontWeight = ef.peso?.let { androidx.compose.ui.text.font.FontWeight(it) } ?: base.fontWeight,
+                fontStyle = if (ef.cursiva) androidx.compose.ui.text.font.FontStyle.Italic else base.fontStyle,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            ), color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f).clickable(onClickLabel = "Abrir el calendario") { abrirCalendario() }.padding(horizontal = 4.dp, vertical = 4.dp))
+            io.github.ruddy2003.vestigium.ui.BotonCalendario { abrirCalendario() }
+            io.github.ruddy2003.vestigium.ui.BotonDia(anterior = false) { irA(Fechas.sumar(fecha, 1)) }
+        }
+        // Debajo, en chico: el día, qué tan lejos está, la luna y la racha. «guardado» ya no se dice (siempre se guarda solo);
+        // solo «guardando…» mientras guarda.
+        val r = remember(fecha, Repo.dias.size) { racha(fecha) }
+        // Cada semana completa de racha se celebra (solo al llegar, no al abrir el día).
+        var rachaAntes by remember(fecha) { mutableStateOf<Int?>(null) }
+        LaunchedEffect(r) {
+            val antes = rachaAntes
+            if (antes != null && r > antes && r % 7 == 0 && !io.github.ruddy2003.vestigium.ui.Reanudar.recien()) { io.github.ruddy2003.vestigium.ui.Fiesta.lanzar(); sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO) }
+            rachaAntes = r
+        }
         val fase = Luna.fase(fecha)
-        Text(est.comentario + "${Fechas.titulo(fecha).lowercase()} · ${Fechas.relativo(fecha)} · ${Luna.glifo(fase)}",
-            style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(est.comentario + "${Fechas.titulo(fecha).lowercase()} · ${Fechas.relativo(fecha)} · ${Luna.glifo(fase)}" +
+                (if (r >= 2) " · racha $r" else "") + (if (guardado?.retroactivo == true) " · retroactivo" else "") + (if (sucio) " · guardando…" else ""),
+                style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+            if (fecha != hoy) BotonTexto(onClick = { irA(hoy) }) { Text("ir a hoy", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+        }
         // Si ese día cambió la hora del teléfono (horario de verano o un viaje), se dice: las horas son las locales de cada momento.
         Fechas.cambioDeHora(fecha)?.let { (a, b) ->
             fun utc(x: Double) = "UTC" + (if (x < 0) "−" else "+") + "%.1f".format(kotlin.math.abs(x)).removeSuffix(".0").removeSuffix(",0")
@@ -231,27 +239,6 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
         // El orden es el mismo a cualquier hora; solo en la mañana sube el sueño, si falta (N-16).
         val manana = esHoy && ahora in 5..11
 
-        // Estado del día, con flechas pequeñas (también se cambia de día deslizando a los lados).
-        Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            BotonTexto(onClick = { irA(Fechas.sumar(fecha, -1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
-                modifier = Modifier.semantics { contentDescription = "Día anterior" }) { Text("‹", style = MaterialTheme.typography.titleLarge) }
-            Text("estado = ", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(when { sucio -> "guardando…"; guardado != null -> "guardado"; else -> "vacío" } + (if (guardado?.retroactivo == true) " · retroactivo" else ""),
-                style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-            val r = remember(fecha, Repo.dias.size) { racha(fecha) }
-            // Cada semana completa de racha se celebra (solo al llegar, no al abrir el día).
-            var rachaAntes by remember(fecha) { mutableStateOf<Int?>(null) }
-            LaunchedEffect(r) {
-                val antes = rachaAntes
-                if (antes != null && r > antes && r % 7 == 0 && !io.github.ruddy2003.vestigium.ui.Reanudar.recien()) { io.github.ruddy2003.vestigium.ui.Fiesta.lanzar(); sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO) }
-                rachaAntes = r
-            }
-            if (r >= 2) Text("  ·  racha $r", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.weight(1f))
-            if (!esHoy) BotonTexto(onClick = { irA(hoy) }) { Text("hoy", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
-            BotonTexto(onClick = { irA(Fechas.sumar(fecha, 1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
-                modifier = Modifier.semantics { contentDescription = "Día siguiente" }) { Text("›", style = MaterialTheme.typography.titleLarge) }
-        }
         // Semana corta: solo cuatro cifras y tres botones.
         if (esHoy && c.semana_corta) { SemanaCorta(d) { abrirNoche() }; return@Hoja }
         // La frase, siempre arriba, justo debajo del estado.
@@ -271,7 +258,7 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
         if (esHoy) SugerirSemanaCorta(hoy)
 
         val bloqueSueno: @Composable () -> Unit = {
-        Seccion("Sueño", "Llénalo apenas despiertes. El resto, en la noche.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqSueno), plegable = true) {
+        Seccion("Sueño", "Mejor apenas despiertes.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqSueno), plegable = true) {
                 Tarjeta {
                     io.github.ruddy2003.vestigium.ui.FormularioSueno(fecha, d) { cambiar(it) }
                     val sr = Repo.salud[fecha]
@@ -311,8 +298,8 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
             }
         }
 
-        if (esHoy && ahora < 5) Aviso("Pasa de medianoche: sigues llenando el día $fecha. Los días empiezan a las 5:00.")
-        if (fecha > hoy) Aviso("Este día todavía no llega. Puedes dejar notas; queda guardado cuándo las escribiste.")
+        if (esHoy && ahora < 5) Aviso("Sigues en el día $fecha: el día empieza a las 5:00.")
+        if (fecha > hoy) Aviso("Este día todavía no llega; puedes dejar notas.")
 
         // Lo diario en el primer alto, siempre en el mismo orden (N-16):
         // 1. Lo que falta hoy.
@@ -320,7 +307,8 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
         // 2. Llenar el día.
         TarjetaNoche(d, fecha, c) { abrirNoche() }
         // 3. El tablero, compacto: las primeras cuatro cifras y «ver todo».
-        Seccion("Tablero", "Tus cifras del día y la semana, contra tu promedio de las 4 semanas anteriores. Toca una para corregirla o ver de dónde sale.") {
+        Seccion("Tablero", "Contra tu promedio de 4 semanas.",
+            explica = "Tus cifras del día y de la semana, cada una contra tu promedio de las 4 semanas anteriores. Toca una para corregirla o ver de dónde sale.") {
             Tablero(fecha, max = 4) { id ->
                 when (id) {
                     "sueno" -> editarSueno = true
@@ -346,7 +334,7 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
         if (esHoy) UnaIdeaDeAntes(hoy, nav)
 
         // Lo automático, al fondo.
-        Seccion("Lo que registró el teléfono", "Se llena solo con los sensores que activaste. Nada de esto tienes que escribirlo.", numero = n(), autoPlegar = true,
+        Seccion("Lo que registró el teléfono", "Se llena solo.", numero = n(), autoPlegar = true,
             abrir = abrirTelefono, modifier = Modifier.bringIntoViewRequester(reqTelefono)) {
             Vestigios(fecha, nav)
         }
@@ -785,7 +773,7 @@ private fun Vestigios(fecha: String, nav: Nav) {
         val cartasAbiertas = remember(fecha, Repo.cartas) { Repo.cartas.filter { it.para.isBlank() && it.abierta_el == fecha } }
         if (cartas.isNotEmpty()) { algo = true; ClaveDia("epistulae", cartas.joinToString(" · ") { if (it.para.isBlank()) "sellaste una carta hasta el ${Fechas.corto(it.abrir_en)} ${it.abrir_en.take(4)}" else "carta a @${it.para}" }) }
         cartasAbiertas.forEach { ClaveDia("  aperta", "abriste la carta que te escribiste el ${Fechas.larga(it.escrita)}") }
-        if (!algo) Ayuda("Aún no hay datos automáticos de este día. Activa fuentes en Más → Permisos y sensores.", Modifier.padding(top = 8.dp))
+        if (!algo) Ayuda("Nada todavía. Las fuentes se activan en Más → Permisos y sensores.", Modifier.padding(top = 8.dp))
         Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             BotonSecundario(if (ocupado) "sincronizando…" else "↻ sincronizar", habilitado = !ocupado) {
                 scope.launch { ocupado = true; msg = Sincronizar.todo(ctx); ocupado = false }
@@ -974,7 +962,8 @@ private fun TuDia(fecha: String, nav: Nav, numero: Int, guardarAntes: () -> Unit
         }
     }.sortedBy { it.ms }
     var agregar by remember(fecha) { mutableStateOf(false) }
-    Seccion("Tu día", "La línea de 24 horas y todo lo que anotaste o registró el teléfono en tus lugares, por hora. Toca una fila para corregirla.", numero = numero, plegable = true,
+    Seccion("Tu día", "Toca una fila para corregirla.", numero = numero, plegable = true,
+        explica = "La línea de 24 horas y todo lo que anotaste o registró el teléfono en tus lugares, hora por hora. De 0:00 a las 5:00 del día siguiente; lo sombreado es de noche.",
         resumen = if (filas.isEmpty()) "Nada anotado con hora" else "${filas.size} ${if (filas.size == 1) "registro" else "registros"} con hora") {
         LineaDelTiempo(fecha)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -997,7 +986,7 @@ private fun TuDia(fecha: String, nav: Nav, numero: Int, guardarAntes: () -> Unit
             Text(if (agregar) "＋ agregar a este día ▾" else "＋ agregar a este día…", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         }
         if (agregar) Tarjeta {
-            Ayuda("Con la fecha ya puesta: ${Fechas.titulo(fecha).lowercase()}. Lo que anotes después de ese día queda marcado como anotado tarde.")
+            Ayuda("Con la fecha de ${Fechas.titulo(fecha).lowercase()} ya puesta.")
             FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Ficha("registro de ánimo", false) {
                     guardarAntes()
