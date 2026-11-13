@@ -29,6 +29,9 @@ import io.github.ruddy2003.vestigium.vidas.Variante
  *   de `lauro_lejos`.
  * - El pueblo lee el arco «jardines» (lo que ha crecido en los tanques; vacíos tras el vaciado de la temporada 2).
  * - Los Semejantes se cuentan por lo que hacen y por lo que les pasa, sin sermones.
+ * - La doctora es autista. El cuento no lo dice nunca: se ve en cómo vive. Cuenta y vuelve a contar, repite el mismo
+ *   cuarteto, se pone los auriculares para el ruido, no mira a los ojos, contesta con números, asiente cuando asienten
+ *   los demás. Arriba, el mundo le llega todo a la vez. Las temporadas que faltan tienen que seguir igual.
  * - No repite lo que ya dice «Su vida»: los veinte años sin sol, los pasillos blancos, las luces que imitan el día, el
  *   destello en vez de caminar, la dieta calculada al gramo, las ocho horas de sueño, las sesenta de trabajo, las
  *   trescientas personas, los asistentes que nadie cuenta.
@@ -45,7 +48,7 @@ import io.github.ruddy2003.vestigium.vidas.Variante
  * - El rector Ezequiel Mora hasta `rectora` (3); la rectora Selma Ibarra desde `rectora`.
  * - La decisión del Consejo (`decision`, 4) hasta el acuerdo (`acuerdo`, 5); la mancha verde desde `verde` (4).
  * - Las fiestas y los ritos que vuelven cada año no nombran a Lauro, Tomé, Hilda, Coral, Alba, Neva ni a quien
- *   gobierna el Consejo: dicen «su hijo», «la jefa de los jardines», «el Consejo». Bruno, el ingeniero del destello, sí.
+ *   gobierna el Consejo: dicen «su hijo», «la jefa de los jardines», «el Consejo». Osvaldo, el ingeniero del destello, sí.
  * - Fiestas de guardar (no trabaja): `anio_nuevo`, `fundacion`, `luz_larga`, `noche_larga`.
  */
 internal object PiezasCientifica {
@@ -140,7 +143,7 @@ internal object PiezasCientifica {
     )
 
     private val CIERRE_PUEBLO = listOf(
-        ci("Con el cierre, el Claustro está quieto y rojo: las luces de aviso en todos los pasillos, las compuertas bajadas entre las alas, el destello apagado, con Bruno sentado delante como quien vela a un enfermo. Los vigías van de puerta en puerta con sus listas. Buscan a uno que no está en el censo."),
+        ci("Con el cierre, el Claustro está quieto y rojo: las luces de aviso en todos los pasillos, las compuertas bajadas entre las alas, el destello apagado, con Osvaldo sentado delante como quien vela a un enfermo. Los vigías van de puerta en puerta con sus listas. Buscan a uno que no está en el censo."),
         ci("En Botánica han precintado el estante de las semillas con una cinta amarilla, y en la mesa de Lauro está todo como lo dejó: el cuaderno cerrado, el lápiz paralelo al cuaderno, la regla paralela al lápiz. Nadie se ha sentado ahí. Los vigías lo fotografiaron todo. La doctora no se acerca."),
     )
 
@@ -160,7 +163,7 @@ internal object PiezasCientifica {
 
     private val ARRIBA_TIEMPO = listOf(
         ar("Arriba el tiempo no lo dice ningún panel: lo dice el cielo, que cambia mientras se le mira. La doctora se pasa el día levantando la vista, como una niña. Los vigías se ríen de ella, con la cabeza también levantada."),
-        ar("Aquí arriba el viento trae cosas: polvo, semillas, olor a algo que se quema lejos, de repente un frío. La doctora quiso apuntar en el cuaderno cada cambio. Ha tenido que conformarse con los que la sorprenden. Siguen siendo todos."),
+        ar("Aquí arriba el viento trae cosas sin avisar: polvo, semillas, olor a algo que se quema lejos, de repente un frío. La doctora lleva los auriculares puestos, sin música, para que el mundo no le llegue todo a la vez. Se los quita un rato cada día. Cada día, un rato más."),
         ar("Sobre las ruinas, el cielo es más grande de lo que decían los libros, y se mueve. Cuando pasan nubes, pasan con sus sombras por las piedras, como animales. La doctora no sabe sus nombres. En el Claustro las nubes no tienen nombre, porque no hacen falta."),
     )
 
@@ -246,7 +249,7 @@ internal object PiezasCientifica {
 
         v("A esta hora come en el comedor grande, en la mesa de Botánica, de una bandeja con cuatro huecos: un puré de judías, pan de algas, hojas de los jardines y un cubo de algo que se llama proteína y sabe a eso. Come deprisa, con la tableta al lado. La bandeja vuelve vacía.", hacer = Hacer.COMER),
         v("A esta hora come en el laboratorio, de pie junto a la mesa, porque hay una bandeja que no quiere perder de vista: un tomate de los jardines y un trozo de pan, con las manos oliendo a tierra. Coral dice que comer de pie es de caballos. La doctora dice que los caballos comen hierba. Ella también, casi.", hacer = Hacer.COMER),
-        v("A esta hora come en una esquina del comedor grande, sola, con un libro en la tableta y una taza de hierbas que se le enfría siempre. Lee lo mismo dos veces sin enterarse. Cuando se da cuenta, ya ha comido. No recuerda qué. Era verde.", hacer = Hacer.COMER),
+        v("A esta hora come en una esquina del comedor grande, sola, de espaldas al ruido, con los auriculares puestos sin música y una taza de hierbas que se le enfría siempre. Así el comedor suena lejos. Cuando se da cuenta, ya ha comido. No recuerda qué. Era verde.", hacer = Hacer.COMER),
         v("A esta hora come en el laboratorio, y Lauro, que no come, se sienta enfrente a esperar a que termine, con las manos en las rodillas. Al principio le daba apuro. Ahora le cuenta lo que come, y él lo apunta sin que nadie se lo haya pedido. Tiene una lista. Ella no quiere verla.", hacer = Hacer.COMER, desde = "lauro", hasta = "lauro_se_va"),
 
         v("A esta hora duerme de lado, con una mano bajo la almohada y la otra fuera, como cuando era niña, en su cuarto de Botánica, que huele un poco a tierra porque todo lo que ella toca huele a tierra. Las lámparas están en su azul de noche. Respira hondo.", hacer = Hacer.DORMIR),
@@ -295,7 +298,7 @@ internal object PiezasCientifica {
     )
 
     private val GENTE = listOf(
-        v("Bruno, el ingeniero del destello, es un hombre grande que le habla a la máquina como a un caballo viejo. Ha mandado arriba y abajo a todo el que ha viajado en veinte años. Antes de cada viaje dice lo mismo: «Ojos cerrados y rodillas blandas»."),
+        v("Osvaldo, el ingeniero del destello, es un hombre grande que le habla a la máquina como a un caballo viejo. Ha mandado arriba y abajo a todo el que ha viajado en veinte años. Antes de cada viaje dice lo mismo: «Ojos cerrados y rodillas blandas»."),
         v("Coral, la jefa de los jardines, es su amiga desde que las dos se escondían entre los tanques a comer tomates verdes. Ahora manda sobre todos los tomates del Claustro y se los sigue comiendo verdes. Habla con las plantas. Dice que la doctora también, pero por escrito."),
         v("Los vigías son gente aparte: duermen de día y hablan de las ruinas como de un barrio que conocen. Saben cuántas torres quedan en pie y en cuál anidan los pájaros. Arriba no han estado casi nunca. La doctora sospecha que les da miedo y envidia a partes iguales."),
         v("Los Semejantes llevan una franja gris en la manga, porque sin ella nadie sabría quién es quién. No comen, no se cansan y descansan unas horas cada noche en Mentes. Si alguien les da las gracias, contestan «de nada» tras una pausa muy corta, que se nota si se escucha."),
@@ -303,16 +306,16 @@ internal object PiezasCientifica {
         v("Los de Botánica comen juntos en una punta del comedor grande, hablando de raíces, y los de Medicina, en la otra, hacen como que no los oyen. Es una rivalidad vieja que nadie recuerda cómo empezó. Se mantiene por gusto."),
 
         v("Su asistente es un Semejante viejo que lleva doce años lavándole los tubos y apuntándole los números sin equivocarse nunca. Últimamente se le olvidan cosas. Mentes dice que lo van a cambiar. La doctora no ha preguntado qué hacen con los que cambian.", hasta = "lauro"),
-        v("Lauro, su asistente nuevo, es un Semejante con cara de hombre joven que aprende todo a la primera y lo dobla todo en cuatro. No habla si no le hablan. Cuando le hablan, escucha con la cabeza un poco ladeada. La doctora todavía no sabe si eso lo hace él o se lo hicieron en Mentes.", desde = "lauro", hasta = "pregunta"),
+        v("Lauro, su asistente nuevo, es un Semejante con cara de hombre joven que aprende todo a la primera y lo dobla todo en cuatro. No habla si no le hablan, y no mira a los ojos: mira las manos. A la doctora eso le descansa. Todavía no sabe si lo hace él o se lo hicieron en Mentes.", desde = "lauro", hasta = "pregunta"),
         v("Lauro, su asistente, pregunta. Es raro en un Semejante, y en Mentes no lo saben. Pregunta por qué la grama se inclina hacia la lámpara, por qué Medicina no se sienta con Botánica, por qué su cuarto no tiene ventana, si aquí nadie la tiene. La doctora contesta lo que sabe. Cada vez sabe menos.", desde = "pregunta", hasta = "lauro_se_va"),
         v("Desde que Lauro se fue, nadie dice su nombre en Botánica: se dice «el que se fue», o no se dice nada. En la percha del laboratorio sigue colgada su bata de repuesto, con la franja gris, porque nadie sabe a quién le toca quitarla. A la doctora tampoco le toca. La deja.", desde = "lauro_se_va", hasta = "lauro_lejos"),
         v("A Lauro lo vio arriba, de lejos, entre la gente de Neva, con la bata cortada a la altura de las rodillas y sin la franja gris en la manga. Él la miró. Ella lo miró. Ninguno levantó la mano. En el informe hay una casilla para lo que se ha visto. Ella la dejó en blanco.", desde = "lauro_lejos"),
 
-        v("Hilda, su maestra, tiene ochenta años y el laboratorio de al lado, y sigue llegando cada mañana la primera, con un bastón que no usa y una bolsa de semillas que sí. Fue ella la que le enseñó a mirar raíces. Todavía le corrige las etiquetas. La doctora se deja.", hasta = "hilda_deja"),
+        v("Hilda, su maestra, tiene ochenta años y el laboratorio de al lado, y sigue llegando cada mañana la primera, con un bastón que no usa y una bolsa de semillas que sí. Fue ella la que le enseñó a mirar raíces, y nunca le pidió que la mirara a ella a los ojos. Todavía le corrige las etiquetas.", hasta = "hilda_deja"),
         v("Hilda ya no baja al laboratorio: vive en el ala de los mayores, en un cuarto lleno de macetas, y la doctora le lleva cada semana un brote de lo que sea para que lo mire con la lupa. Hilda lo mira. Dice lo que está mal. Luego pide el siguiente.", desde = "hilda_deja", hasta = "hilda"),
         v("Hilda murió, y sus veinte cuadernos de tapas de tela están en el estante del laboratorio. La doctora abre uno cuando no sabe qué hacer. A veces encuentra la respuesta. Casi siempre encuentra una nota en el margen, con la letra temblona de Hilda, que dice: mira otra vez.", desde = "hilda"),
 
-        v("Tomé está en el último curso de la escuela y todavía no ha dicho qué prueba quiere hacer. Coral apuesta por los jardines. Bruno, por el destello. La doctora no apuesta: lo ha visto mirar a los Semejantes con una atención que no le pone a nada más.", hasta = "tome"),
+        v("Tomé está en el último curso de la escuela y todavía no ha dicho qué prueba quiere hacer. Coral apuesta por los jardines. Osvaldo, por el destello. La doctora no apuesta: lo ha visto mirar a los Semejantes con una atención que no le pone a nada más.", hasta = "tome"),
         v("Tomé estudia para la prueba de Mentes hasta tarde, en unos libros de tapas grises que en casa nadie entiende. Quiere aprender a hacer Semejantes. La doctora le pregunta para qué. Él dice que para entenderlos. Ella no sabe si eso la tranquiliza.", desde = "tome", hasta = "prueba_tome"),
         v("Tomé trabaja en Mentes desde que pasó la prueba, y ha aprendido a no contar lo que hace allí. Llega con olor a metal caliente y una bata que no es la de Botánica. A veces se queda mirando a los Semejantes del comedor como un mecánico mira un motor. A veces, como un amigo.", desde = "prueba_tome", hasta = "tome_arriba"),
         v("Tomé quiere volver arriba, a vivir con la gente de Neva, y se lo ha dicho a su madre de pie en la puerta del laboratorio, como quien avisa de que va a llover. Ella no ha dicho que no. Tampoco que sí. Lo mira ir y venir de Mentes como quien mira algo que ya se está yendo.", desde = "tome_arriba"),
@@ -372,6 +375,7 @@ internal object PiezasCientifica {
         v("{mundo} A veces, con la lupa en la mano, la doctora piensa que lleva toda la vida mirando cosas muy pequeñas para arreglar una muy grande. Piensa que es una manera rara de arreglar el mundo. Piensa que es la única que sabe."),
         v("Piensa en su hijo, que crece en un sitio donde todo está calculado, y en que ella también creció así y no salió mal. Piensa que no salió mal. Lo piensa otra vez, más despacio, para ver si suena igual. Suena casi igual."),
         v("{mundo} La doctora piensa en la gente de arriba, que en los cuentos de la escuela eran sombras con cuchillos. Piensa que en las pantallas nunca los ha visto hacer nada que dé miedo. Piensa que a lo mejor ellos también cuentan cuentos de los de abajo. Seguro que sí.", hasta = "sube"),
+        v("Piensa que de niña, en la escuela, la llamaban rara porque contaba las flechas de los pasillos y se tapaba los oídos en el comedor. Piensa que ahora contar es su oficio, y nadie la llama rara: la llaman doctora. Lo de los oídos sigue igual. Para eso están los auriculares."),
         v("Piensa que lleva media vida midiendo cosas que crecen despacio, y que se le ha pegado: ya no espera que nada cambie de un día para otro. En Botánica es una virtud. Piensa que fuera de Botánica, a lo mejor, es otra cosa. A sus {edad} años, no sabe cuál."),
         v("Piensa en el sol, que vio una vez, a los veintiún años, con su promoción, desde la boca del destello: diez minutos, con unas gafas negras y un vigía mirando el reloj. Piensa que no se acuerda de cómo era. Se acuerda de que lloró. No sabe si fue por la luz.", hasta = "sol"),
         v("Piensa en el sol de arriba, que vio por fin de verdad, sin gafas y sin reloj, y en que no se parece a ninguna lámpara. Piensa que a veces, en el laboratorio, cierra los ojos y lo busca. Piensa que lo encuentra donde lo dejó: detrás de los párpados, caliente.", desde = "sol"),
@@ -451,13 +455,13 @@ internal object PiezasCientifica {
         ),
         "revision_destello" to TextoEspecial(listOf(
             mapOf(
-                Parrafo.MANANA to "Hoy empieza la revisión del destello, dos días en que nadie sube ni baja, y la sala redonda está abierta como un reloj desmontado: placas en el suelo, cables en ovillos, un olor a ozono que se queda en la ropa. Bruno, el ingeniero, va de una pieza a otra con una linterna en la boca.",
-                Parrafo.GENTE to "Esta tarde la doctora baja a la sala del destello a llevarle a Bruno una taza de hierbas, como cada año. Él se la bebe sin mirar, de un trago, con los ojos en un circuito. Le explica cómo funciona. Ella no entiende nada. Asiente. Lo que entiende es que a él le brilla la cara.",
+                Parrafo.MANANA to "Hoy empieza la revisión del destello, dos días en que nadie sube ni baja, y la sala redonda está abierta como un reloj desmontado: placas en el suelo, cables en ovillos, un olor a ozono que se queda en la ropa. Osvaldo, el ingeniero, va de una pieza a otra con una linterna en la boca.",
+                Parrafo.GENTE to "Esta tarde la doctora baja a la sala del destello a llevarle a Osvaldo una taza de hierbas, como cada año. Él se la bebe sin mirar, de un trago, con los ojos en un circuito. Le explica cómo funciona. Ella no entiende nada. Asiente. Lo que entiende es que a él le brilla la cara.",
                 Parrafo.PENSAMIENTO to "La doctora piensa que el destello es lo único del Claustro que lleva a otro sitio, y que dos días al año no lleva a ninguno. Piensa que a todos les da un poco de alivio, aunque nadie lo diga. Piensa que una puerta cerrada da paz. Piensa que no sabe si eso es bueno.",
             ),
             mapOf(
-                Parrafo.MANANA to "Hoy es el segundo día de la revisión del destello, y el Claustro se ha acostumbrado deprisa a estar cerrado: nadie espera a nadie de arriba, nadie prepara un viaje. La sala redonda sigue abierta. Bruno ha dormido en ella. Dice que la máquina se pone nerviosa si la deja sola.",
-                Parrafo.ANOCHECER to "Al bajar las lámparas, en la sala del destello hacen la prueba: un zumbido que sube, un chasquido, un fogonazo azul en el círculo vacío. Bruno levanta el puño. Los que esperaban en la puerta aplauden sin saber muy bien a qué. Mañana se podrá subir otra vez. Nadie tiene que subir mañana.",
+                Parrafo.MANANA to "Hoy es el segundo día de la revisión del destello, y el Claustro se ha acostumbrado deprisa a estar cerrado: nadie espera a nadie de arriba, nadie prepara un viaje. La sala redonda sigue abierta. Osvaldo ha dormido en ella. Dice que la máquina se pone nerviosa si la deja sola.",
+                Parrafo.ANOCHECER to "Al bajar las lámparas, en la sala del destello hacen la prueba: un zumbido que sube, un chasquido, un fogonazo azul en el círculo vacío. Osvaldo levanta el puño. Los que esperaban en la puerta aplauden sin saber muy bien a qué. Mañana se podrá subir otra vez. Nadie tiene que subir mañana.",
             ),
         )),
         "siega" to TextoEspecial(

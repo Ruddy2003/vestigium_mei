@@ -28,11 +28,13 @@ import io.github.ruddy2003.vestigium.vidas.Variante
  *
  * Lo que este cuento tiene que respetar de su calendario (`vidas/anios/AnioG7.kt`):
  * - Lina: con permiso para un hijo desde `lina` (temporada 1); su hijo nace en `hijo_lina` (2).
- * - Ezra: el de los cultivos hasta `ezra` (temporada 2); piden cuarto juntos hasta `cuarto_doble` (3); viven juntos;
- *   fuera con la expedición de `salen` a `vuelven` (4); ella espera un hijo desde `espera` (5).
+ * - Noa: la de los cultivos hasta `noa` (temporada 2); piden cuarto juntas hasta `cuarto_doble` (3); viven juntas;
+ *   fuera con la expedición de `salen` a `vuelven` (4); la residente espera un hijo desde `espera` (5).
+ * - La residente es lesbiana: quiere a Noa. El cuento no lo subraya ni lo nombra; lo cuenta como cuenta lo demás. El hijo
+ *   llega por el permiso y la enfermería del refugio, que deciden todos los nacimientos.
  * - La vieja Dorotea, hasta que muere (`dorotea`, temporada 3). El supervisor nuevo, desde `supervisor` (3).
  * - Encargada del turno de las bombas desde `encargada` (temporada 2).
- * - Las fiestas que vuelven cada año no nombran a Lina, a Ezra ni a Dorotea.
+ * - Las fiestas que vuelven cada año no nombran a Lina, a Noa ni a Dorotea.
  */
 internal object PiezasResidente {
     private fun v(texto: String, estado: String? = null, hacer: Hacer? = null, desde: String? = null, hasta: String? = null, meses: Set<Int>? = null) = Variante(texto, estado, hacer, desde, hasta, meses)
@@ -127,7 +129,7 @@ internal object PiezasResidente {
     )
 
     private val ABIERTO_ANOCHECER = listOf(
-        ab("Al caer la tarde, de verdad, con un sol que baja detrás de las montañas y lo pone todo naranja, la residente se queda en la Puerta con Ezra, viendo cómo se va la luz. Ella dice que es como cuando bajan las luces del refugio. Él dice que no. Que es mucho más despacio."),
+        ab("Al caer la tarde, de verdad, con un sol que baja detrás de las montañas y lo pone todo naranja, la residente se queda en la Puerta con Noa, viendo cómo se va la luz. Dice que es como cuando bajan las luces del refugio. Noa dice que no. Que es mucho más despacio."),
         ab("Anochece fuera, y la residente ve aparecer las estrellas una a una, primero una, luego diez, luego tantas que da miedo. La vieja Dorotea se lo había contado. No se lo había creído del todo. Se queda mirando hasta que tiene frío. Luego entra."),
     )
 
@@ -231,12 +233,12 @@ internal object PiezasResidente {
         v("Lina es su amiga desde que tenían tres años y compartían cuna en la guardería del refugio. Trabaja en los tanques de cultivo y huele siempre a algas. Se lo cuentan todo. Lina quiere tener un hijo antes de los treinta. Ha pedido el permiso tres veces.", hasta = "lina"),
         v("A Lina le han dado por fin el permiso para tener un hijo, y espera, con la barriga cada vez más grande, en el turno de los tanques. La residente le lleva agua de más, a escondidas. Lina dice que si es niña, la llamará como la residente.", desde = "lina", hasta = "hijo_lina"),
         v("Lina tiene un hijo, un niño gordo y serio que nació en la enfermería y que la residente tuvo en brazos la primera. Lina lo lleva atado al pecho en el turno de los tanques. El niño mira las burbujas de las algas sin parpadear.", desde = "hijo_lina"),
-        v("Ezra trabaja en los tanques de cultivo, un muchacho alto y callado con las manos verdes de algas que le regaló una vez un disco que no tenía nadie. Se cruzan en el comedor y se miran de reojo. Lina dice que es evidente. La residente dice que no sabe de qué habla.", hasta = "ezra"),
-        v("Ezra y la residente han pedido juntos un cuarto doble al supervisor, y esperan la respuesta, que tarda, porque los cuartos dobles son pocos. Mientras tanto, se ven en el comedor, en la sala de música, en los pasillos de servicio, donde no hay cámaras.", desde = "ezra", hasta = "cuarto_doble"),
-        v("Ezra y la residente viven en un cuarto doble del pasillo cinco, con una litera ancha, un tocadiscos pequeño y una maceta con una tomatera que Ezra trajo de los tanques. Él se levanta antes, a los tanques. Ella se acuesta después, por las bombas. Se ven en medio.", desde = "cuarto_doble", hasta = "salen"),
-        v("Ezra está fuera, con la expedición, al otro lado de la Puerta, y la residente no sabe si está vivo. Cada mañana va a la Puerta y se queda un momento delante. La radio de la entrada no dice nada. Ella sigue con las bombas. No sabe hacer otra cosa.", desde = "salen", hasta = "vuelven"),
-        v("Ezra volvió de fuera con tierra en las botas, una flor y una tos que tardó semanas en irse. No habla mucho de lo que vio. Por las noches, en el cuarto doble, le cuenta a la residente una cosa cada vez: un árbol, un arroyo, un pájaro. Ella las guarda como piedras.", desde = "vuelven", hasta = "espera"),
-        v("La residente espera un hijo, el primero que nacerá con la Puerta abierta, o eso esperan. Ezra le habla a la barriga de lo que hay fuera, todas las noches, bajito, para que el niño lo sepa antes de verlo. Lina le ha prestado la ropa de su hijo. Su madre teje.", desde = "espera"),
+        v("Noa trabaja en los tanques de cultivo, una muchacha alta y callada con las manos verdes de algas que le regaló una vez un disco que no tenía nadie. Se cruzan en el comedor y se miran de reojo. Lina dice que es evidente. La residente dice que no sabe de qué habla.", hasta = "noa"),
+        v("Noa y la residente han pedido juntas un cuarto doble al supervisor, y esperan la respuesta, que tarda, porque los cuartos dobles son pocos. Mientras tanto, se ven en el comedor, en la sala de música, en los pasillos de servicio, donde no hay cámaras.", desde = "noa", hasta = "cuarto_doble"),
+        v("Noa y la residente viven en un cuarto doble del pasillo cinco, con una litera ancha, un tocadiscos pequeño y una maceta con una tomatera que Noa trajo de los tanques. Noa se levanta antes, a los tanques; la residente se acuesta después, por las bombas. Se ven en medio.", desde = "cuarto_doble", hasta = "salen"),
+        v("Noa está fuera, con la expedición, al otro lado de la Puerta, y la residente no sabe si está viva. Cada mañana va a la Puerta y se queda un momento delante. La radio de la entrada no dice nada. Ella sigue con las bombas. No sabe hacer otra cosa.", desde = "salen", hasta = "vuelven"),
+        v("Noa volvió de fuera con tierra en las botas, una flor y una tos que tardó semanas en irse. No habla mucho de lo que vio. Por las noches, en el cuarto doble, le cuenta a la residente una cosa cada vez: un árbol, un arroyo, un pájaro. Ella las guarda como piedras.", desde = "vuelven", hasta = "espera"),
+        v("La residente espera un hijo, el primero que nacerá con la Puerta abierta, o eso esperan. La doctora, que se encargó de todo en la enfermería, dice que nunca ha visto un embarazo tan tranquilo. Noa le habla a la barriga de lo que hay fuera, todas las noches, bajito. Lina le ha prestado la ropa de su hijo. Su madre teje.", desde = "espera"),
     )
 
     private val OBJETO = listOf(
@@ -385,9 +387,9 @@ internal object PiezasResidente {
             Parrafo.PENSAMIENTO to "La residente piensa que todo el refugio está bebiendo agua marrón por un eje de hierro que alguien hizo hace cien años y que ha aguantado hasta hoy. Piensa en ese alguien. Piensa que hizo un buen trabajo. Piensa que el suyo tendrá que durar otros cien.",
         ),
         "disco" to unDia(
-            Parrafo.MANANA to "Hoy, en el comedor, Ezra, el de los cultivos, se ha acercado a su mesa sin decir nada y le ha dejado delante un disco en una funda de papel. Es uno que no tiene nadie: lo ha encontrado en una caja vieja de los tanques. Luego se ha ido, rojo, a su mesa.",
-            Parrafo.GENTE to "Esta tarde pone el disco de Ezra en el tocadiscos de la sala de música, con los auriculares grandes. Es una mujer que canta con una guitarra, muy bajito, en un idioma que nadie habla en el refugio. Lina se sienta a su lado y la mira escuchar. Dice: ya está. La residente le dice que se calle.",
-            Parrafo.PENSAMIENTO to "La residente piensa que es el primer regalo que le hace alguien que no es de su familia. Piensa en la cara de Ezra al dejarlo en la mesa. Piensa que no sabe qué dice la canción, pero que sabe de qué habla. Pone el disco otra vez.",
+            Parrafo.MANANA to "Hoy, en el comedor, Noa, la de los cultivos, se ha acercado a su mesa sin decir nada y le ha dejado delante un disco en una funda de papel. Es uno que no tiene nadie: lo ha encontrado en una caja vieja de los tanques. Luego se ha ido, roja, a su mesa.",
+            Parrafo.GENTE to "Esta tarde pone el disco de Noa en el tocadiscos de la sala de música, con los auriculares grandes. Es una mujer que canta con una guitarra, muy bajito, en un idioma que nadie habla en el refugio. Lina se sienta a su lado y la mira escuchar. Dice: ya está. La residente le dice que se calle.",
+            Parrafo.PENSAMIENTO to "La residente piensa que es el primer regalo que le hace alguien que no es de su familia. Piensa en la cara de Noa al dejarlo en la mesa. Piensa que no sabe qué dice la canción, pero que sabe de qué habla. Pone el disco otra vez.",
         ),
         "sensor" to unDia(
             Parrafo.MANANA to "Hoy el altavoz ha dado una noticia que no es ninguna fiesta: el sensor de la entrada, el que mide la radiación de fuera, marca menos que nunca. No dice que se pueda salir. Dice que marca menos. En el comedor no se habla de otra cosa.",

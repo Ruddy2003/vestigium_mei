@@ -90,7 +90,7 @@ Cada estado tiene tres mañanas, un texto para cada cosa que hace a lo largo del
 - **Coral:** el permiso en julio de la 2; Alba nace en agosto de la 3 y anda desde marzo de la 4.
 - **Neva:** encerrada de febrero a mayo de la 2, arriba otra vez desde mayo de la 5.
 - **El Consejo:** el rector Mora hasta marzo de la 3; la rectora Ibarra desde entonces; la decisión de guardar la grama y el voto que la comparte.
-- **Las fiestas que vuelven cada año** no nombran a ninguno de ellos: dicen «su hijo», «la jefa de los jardines», «el Consejo». Solo nombran a Bruno, el del destello.
+- **Las fiestas que vuelven cada año** no nombran a ninguno de ellos: dicen «su hijo», «la jefa de los jardines», «el Consejo». Solo nombran a Osvaldo, el del destello.
 
 ## Cuánto texto tiene cada uno
 

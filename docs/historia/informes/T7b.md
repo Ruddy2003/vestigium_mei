@@ -48,9 +48,9 @@ El pueblo de la residente lee la cisterna cuando está baja y, si no, los tanque
 
 **La residente**
 - Lina, con permiso para un hijo desde octubre de la 1 y madre desde julio de la 2.
-- Ezra: le regala un disco; piden cuarto en noviembre de la 2; viven juntos desde mayo de la 3; fuera con la expedición de mayo a julio de la 4; ella espera desde marzo de la 5.
+- Noa: le regala un disco; piden cuarto en noviembre de la 2; viven juntas desde mayo de la 3; fuera con la expedición de mayo a julio de la 4; la residente espera desde marzo de la 5.
 - La vieja Dorotea, hasta diciembre de la 3; el supervisor nuevo, desde noviembre de la 3; la Puerta, abierta desde septiembre de la 5.
-- Las fiestas que vuelven cada año no nombran a Lina, a Ezra ni a Dorotea.
+- Las fiestas que vuelven cada año no nombran a Lina, a Noa ni a Dorotea.
 
 **El archivista**
 - El signo, desde septiembre de la 1; el mapa de la isla, desde octubre de la 2.
@@ -78,11 +78,11 @@ El pueblo de la residente lee la cisterna cuando está baja y, si no, los tanque
 - **Las pruebas generales me pararon tres veces:** los dos cuentos pasaban del largo medio (2,259 y 2,238 letras, con un tope de 2,200), y les quité una frase a los textos más largos; y una variante del faro usaba un hueco de fecha que su función corta no aceptaba (no compilaba).
 - **Las 5 nuevas** (`CuentoG7Prueba`):
   - que estén los dos, sin problemas frente a su calendario, con su género y sin el hueco del nombre;
-  - la residente: Lina, Ezra (el cuarto, la vida juntos, la expedición, el hijo), Dorotea, el supervisor y la Puerta a su tiempo;
+  - la residente: Lina, Noa (el cuarto, la vida juntas, la expedición, el hijo), Dorotea, el supervisor y la Puerta a su tiempo;
   - la residente: el racionamiento, la cuarentena y la Puerta abierta a todas las horas, que varían, y sus cuatro fiestas sin trabajo;
   - el archivista: el signo, el profesor y los dos torreros a su tiempo;
   - el archivista: la fiebre y el faro a todas las horas, que varían, y sus cuatro fiestas sin trabajo.
-- **Las pruebas nuevas fallan cuando deben:** les hice cinco sabotajes a la vez (Ezra fuera desde siempre, la Puerta abierta sin sus textos de trabajo, la residente como hombre, Baltasar vivo para siempre, el faro sin sus textos de trabajo); fallaron las cinco pruebas, cada una por lo suyo, y se restauró todo.
+- **Las pruebas nuevas fallan cuando deben:** les hice cinco sabotajes a la vez (Noa fuera desde siempre, la Puerta abierta sin sus textos de trabajo, la residente como hombre, Baltasar vivo para siempre, el faro sin sus textos de trabajo); fallaron las cinco pruebas, cada una por lo suyo, y se restauró todo.
 - **Leí doce cuentos enteros**, seis de cada uno. De ahí salió un pensamiento de la residente («qué habrá detrás de la Puerta… lo que le pesa es no saberlo») que seguía con la Puerta ya abierta: ahora tiene fecha y uno para después.
 - **Al repasar los textos antes de probarlos** corregí: una variante de gente repetida, «hace seis años» y «veintidós años» en textos de todos los años, Lina en la fiesta del sol falso (que vuelve cada año), una «cena» en un especial de trabajo; en el archivista, el especial del aceite (cada año) ponía al torrero bebiendo en la taberna, cuando el de la temporada 5 «no baja nunca al pueblo»; unas barcas de 1926 «con los motores parados»; y una errata.
 - **Compilación de Android:** la corrida 229 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `a6b26c8`).

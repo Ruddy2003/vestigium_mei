@@ -185,7 +185,7 @@ internal object AnioG8 {
     // destello en la 4 y ella lo ve de lejos, arriba, en la 5. Tomé, su hijo (14 años en la 1), que entra en Mentes en la
     // 2 y sube con ella en la 5. La doctora Hilda, su maestra, que deja el laboratorio en la 1 y muere en la 3. Coral, la
     // jefa de los jardines, su amiga; su hija Alba nace en la 3. Neva, una mujer de arriba a la que bajan en la 2 y que
-    // ella vuelve a encontrar en la 5. Bruno, el ingeniero del destello. El rector Ezequiel Mora, que deja el cargo en la
+    // ella vuelve a encontrar en la 5. Osvaldo, el ingeniero del destello. El rector Ezequiel Mora, que deja el cargo en la
     // 3, y la rectora Selma Ibarra, de la Vigía, que lo sustituye.
     //
     // La historia: la doctora no ha visto el sol desde los veintiún años, cuando subió una sola vez con su promoción. En
@@ -255,12 +255,12 @@ internal object AnioG8 {
                     suceso("coral", "07-26", "A Coral, la jefa de los jardines, le dan permiso de tener un hijo"),
                 )),
             TemporadaVida("2289", "campana",
-                "Muere Hilda, la maestra de la doctora. Lauro pregunta por qué a él no lo cuentan en el censo. Selma Ibarra sustituye al rector. Bruno baja tierra de arriba, y la doctora pasa tres semanas encerrada en la campana de cultivo con su grama. Nace Alba, la hija de Coral. El Consejo vota que los Semejantes sigan sin contar.",
+                "Muere Hilda, la maestra de la doctora. Lauro pregunta por qué a él no lo cuentan en el censo. Selma Ibarra sustituye al rector. Osvaldo baja tierra de arriba, y la doctora pasa tres semanas encerrada en la campana de cultivo con su grama. Nace Alba, la hija de Coral. El Consejo vota que los Semejantes sigan sin contar.",
                 anioDelClaustro() + listOf(
                     suceso("hilda", "01-20", "Muere la doctora Hilda, su maestra, la que le enseñó a mirar raíces", escena = "luto"),
                     suceso("censo_lauro", "02-13", "Lauro le pregunta por qué a él no lo cuentan en el censo"),
                     mundo("rectora", "03-03", "El rector Ezequiel Mora deja el cargo, y el Consejo elige a Selma Ibarra, de la Vigía", certeza = I),
-                    suceso("tierra", "04-12", "Bruno, el del destello, le baja diez sacos de tierra de arriba"),
+                    suceso("tierra", "04-12", "Osvaldo, el del destello, le baja diez sacos de tierra de arriba"),
                     suceso("entra_campana", "05-03", "Se encierra en la campana de cultivo, con tierra y aire de arriba, a probar la grama"),
                     suceso("sale_campana", "05-24", "Sale de la campana: la grama vivió, y ella también, con tres kilos menos"),
                     suceso("alba", "08-30", "Nace Alba, la hija de Coral, en la enfermería de Medicina", escena = "fiesta"),
@@ -314,13 +314,13 @@ internal object AnioG8 {
     //  Ruth, colona. Un pueblo que se reconstruye en un llano arruinado, de 2288 a 2292.
     // =====================================================================
     //
-    // Su gente (toda inventada): Tomás, su compañero, el que mantiene vivo el generador; sale herido de un brazo en el
+    // Su gente (toda inventada): Matías, su compañero, el que mantiene vivo el generador; sale herido de un brazo en el
     // asedio (temporada 3). Nora, su hija (nueve años en la temporada 1), que aprende a leer con las revistas viejas de la
-    // abuela, hace su primera guardia en la 4 y habla por la radio en la 5. Abel, su hijo, que nace en la 3 y camina en la
-    // 4. Agustina, su madre, la que le enseñó a leer, que muere después de la ventisca (temporada 4). Bruno, su hermano
+    // abuela, hace su primera guardia en la 4 y habla por la radio en la 5. Elías, su hijo, que nace en la 3 y camina en la
+    // 4. Agustina, su madre, la que le enseñó a leer, que muere después de la ventisca (temporada 4). Gabino, su hermano
     // menor, que va con ella a ayudar a otros pueblos y en la 4 se queda en Cuatro Molinos; vuelve de visita en la 5 con
     // su mujer y una hija. Marta, la que lleva el pueblo, que nombra a Ruth jefa de las guardias de noche en la 2.
-    // Damián, guardia del portón, que muere en el asedio. Joaquín y Lidia, que llegan del sur con dos hijos en la 2.
+    // Esteban, guardia del portón, que muere en el asedio. Joaquín y Lidia, que llegan del sur con dos hijos en la 2.
     // Celia, la voz de la radio de Los Silos, a la que Ruth solo oye hasta que la conoce en la 5.
     //
     // Su mundo: unas veinte personas en El Remanso, un pueblo junto a un arroyo del llano, con muros de tablas y láminas.
@@ -372,52 +372,52 @@ internal object AnioG8 {
         ),
         temporadas = listOf(
             TemporadaVida("2288", "muros",
-                "Una jauría ronda el muro. Ruth encuentra una caja de cereal de antes de la guerra, todavía dulce. Un tornado tumba los techos de Piedra Blanca, y Ruth va con su hermano Bruno a levantarlos. Nora, su hija, lee sola por primera vez. Se cierra el muro del lado este.",
+                "Una jauría ronda el muro. Ruth encuentra una caja de cereal de antes de la guerra, todavía dulce. Un tornado tumba los techos de Piedra Blanca, y Ruth va con su hermano Gabino a levantarlos. Nora, su hija, lee sola por primera vez. Se cierra el muro del lado este.",
                 anioDelRemanso() + listOf(
                     mundo("jauria", "01-20", "Una jauría de perros salvajes ronda el muro tres noches seguidas", 3, certeza = I, escena = "nieve"),
                     suceso("cereal", "02-25", "Encuentra en la gasolinera vieja una caja de cereal de antes de la guerra, todavía dulce"),
                     mundo("tornado", "05-28", "Un tornado cruza el llano por el norte, y la radio dice que tocó Piedra Blanca", certeza = I, escena = "tormenta", clima = Clima.TORMENTA),
-                    suceso("sale_piedra", "06-01", "Sale con Bruno y dos más hacia Piedra Blanca, a levantar los techos caídos", escena = "camino"),
+                    suceso("sale_piedra", "06-01", "Sale con Gabino y dos más hacia Piedra Blanca, a levantar los techos caídos", escena = "camino"),
                     suceso("vuelve_piedra", "06-16", "Vuelve de Piedra Blanca con un saco de sal en pago"),
                     suceso("nora_lee", "10-20", "Nora lee sola, por primera vez, una página de las revistas de la abuela"),
                     mundo("muro_este", "11-15", "Se cierra el muro por el lado este: ya no queda ningún hueco", certeza = I),
                 )),
             TemporadaVida("2289", "forasteros",
-                "Se ve humo de saqueadores en la carretera vieja. Llegan Joaquín y Lidia con sus dos hijos, y Ruth les abre el portón. Marta nombra a Ruth jefa de las guardias de noche. El granizo tumba la mitad del maíz. Ruth le dice a Tomás que espera un hijo. Se levanta la torre del agua.",
+                "Se ve humo de saqueadores en la carretera vieja. Llegan Joaquín y Lidia con sus dos hijos, y Ruth les abre el portón. Marta nombra a Ruth jefa de las guardias de noche. El granizo tumba la mitad del maíz. Ruth le dice a Matías que espera un hijo. Se levanta la torre del agua.",
                 anioDelRemanso() + listOf(
                     mundo("humo_lejos", "03-25", "Se ve humo de saqueadores en la carretera vieja, y se doblan las guardias", certeza = I, escena = "humo"),
                     suceso("forasteros", "04-28", "Llegan Joaquín y Lidia con sus dos hijos, a pie desde el sur, y ella les abre el portón"),
                     suceso("jefa_guardia", "05-20", "Marta la nombra jefa de las guardias de noche"),
                     mundo("granizo", "07-08", "Una granizada tumba la mitad del maíz en media hora", certeza = I, escena = "tormenta", clima = Clima.TORMENTA),
-                    suceso("espera", "07-30", "Le dice a Tomás que espera un hijo"),
+                    suceso("espera", "07-30", "Le dice a Matías que espera un hijo"),
                     mundo("torre_agua", "10-25", "Se termina la torre del agua: un tanque viejo sobre cuatro postes", certeza = I),
                     suceso("jabon", "12-10", "Lidia le enseña a hacer jabón con ceniza y grasa"),
                 )),
             TemporadaVida("2290", "asedio",
-                "Nace Abel, el hijo de Ruth. Tres extraños miran el pueblo desde la loma. Los saqueadores lo rodean nueve días y queman el muro del este; muere Damián en el portón y Tomás sale herido. La gente de Piedra Blanca oye la radio y viene. Ruth propone rehacer el muro con piedra del arroyo.",
+                "Nace Elías, el hijo de Ruth. Tres extraños miran el pueblo desde la loma. Los saqueadores lo rodean nueve días y queman el muro del este; muere Esteban en el portón y Matías sale herido. La gente de Piedra Blanca oye la radio y viene. Ruth propone rehacer el muro con piedra del arroyo.",
                 anioDelRemanso() + listOf(
-                    suceso("nace_abel", "03-12", "Nace Abel, su hijo, en la casa de las láminas azules", escena = "fiesta"),
+                    suceso("nace_elias", "03-12", "Nace Elías, su hijo, en la casa de las láminas azules", escena = "fiesta"),
                     mundo("extranos", "07-05", "Tres extraños miran el pueblo desde la loma y se van sin bajar", certeza = I),
                     mundo("asedio", "07-28", "Llegan los saqueadores: rodean el pueblo y nadie puede salir", certeza = I, escena = "humo"),
                     mundo("muro_arde", "08-02", "Los saqueadores prenden fuego al muro del lado este", certeza = I, escena = "humo"),
-                    suceso("damian", "08-03", "Muere Damián en la guardia del portón, y a Tomás lo hieren en un brazo", escena = "luto"),
+                    suceso("esteban", "08-03", "Muere Esteban en la guardia del portón, y a Matías lo hieren en un brazo", escena = "luto"),
                     mundo("fin_asedio", "08-06", "Llega la gente de Piedra Blanca, que oyó la radio, y los saqueadores se van", certeza = I),
                     suceso("piedra", "10-15", "Propone rehacer el muro con piedra del arroyo, y el pueblo dice que sí"),
                 )),
             TemporadaVida("2291", "ventisca",
-                "Una ventisca encierra al pueblo más de tres semanas. Muere Agustina, la madre de Ruth. Abel da sus primeros pasos. La radio dice que en Cuatro Molinos murió media gente en el invierno; Ruth va con Bruno a ayudar y vuelve sola, porque él se queda. Nora hace su primera guardia.",
+                "Una ventisca encierra al pueblo más de tres semanas. Muere Agustina, la madre de Ruth. Elías da sus primeros pasos. La radio dice que en Cuatro Molinos murió media gente en el invierno; Ruth va con Gabino a ayudar y vuelve sola, porque él se queda. Nora hace su primera guardia.",
                 anioDelRemanso() + listOf(
                     mundo("ventisca", "01-14", "Empieza una ventisca que tapa los caminos: nadie sale del pueblo", 4, certeza = I, escena = "nieve", clima = Clima.NIEVE),
                     mundo("abren_camino", "02-06", "Se abre por fin un camino en la nieve hasta el arroyo", certeza = I, escena = "nieve"),
                     suceso("muere_madre", "02-20", "Muere su madre, Agustina, la que le enseñó a leer con revistas viejas", escena = "luto"),
-                    suceso("abel_camina", "03-28", "Abel da sus primeros pasos, agarrado a las piedras nuevas del muro"),
+                    suceso("elias_camina", "03-28", "Elías da sus primeros pasos, agarrado a las piedras nuevas del muro"),
                     mundo("molinos", "06-18", "La radio dice que en Cuatro Molinos murió la mitad de la gente en el invierno", certeza = I),
-                    suceso("sale_molinos", "06-25", "Sale con Bruno hacia Cuatro Molinos, a levantar cercas y sembrar frijol", escena = "camino"),
-                    suceso("vuelve_molinos", "07-12", "Vuelve de Cuatro Molinos sin Bruno, que se queda: allí hace falta gente"),
+                    suceso("sale_molinos", "06-25", "Sale con Gabino hacia Cuatro Molinos, a levantar cercas y sembrar frijol", escena = "camino"),
+                    suceso("vuelve_molinos", "07-12", "Vuelve de Cuatro Molinos sin Gabino, que se queda: allí hace falta gente"),
                     suceso("nora_guardia", "10-30", "Nora, de doce años, hace su primera guardia en el muro con ella"),
                 )),
             TemporadaVida("2292", "piedra",
-                "Llegan tres familias de Cuatro Molinos y el pueblo pasa de treinta. Ruth va con Nora a Los Silos a llevar semilla de maíz y conoce en persona a Celia, la voz de la radio. Se pone la última piedra del muro. Nora habla por la radio. Bruno vuelve de visita con su mujer y una hija.",
+                "Llegan tres familias de Cuatro Molinos y el pueblo pasa de treinta. Ruth va con Nora a Los Silos a llevar semilla de maíz y conoce en persona a Celia, la voz de la radio. Se pone la última piedra del muro. Nora habla por la radio. Gabino vuelve de visita con su mujer y una hija.",
                 anioDelRemanso() + listOf(
                     mundo("llegan_nuevos", "04-05", "Llegan tres familias de Cuatro Molinos: ya son más de treinta", certeza = I),
                     suceso("sale_semillas", "05-30", "Sale con Nora hacia Los Silos, a llevar semilla de maíz a un pueblo nuevo", cadena = "semillas", escena = "camino"),
@@ -425,7 +425,7 @@ internal object AnioG8 {
                     suceso("vuelve_semillas", "06-12", "Vuelve a casa con Nora y un disco de canciones viejas para la radio", cadena = "semillas"),
                     mundo("muro_listo", "08-25", "Se pone la última piedra del muro: el pueblo entero queda dentro", certeza = I, escena = "fiesta"),
                     suceso("nora_radio", "09-28", "Nora habla por la radio por primera vez, y Celia la reconoce", cadena = "otono"),
-                    suceso("bruno_visita", "10-25", "Bruno vuelve de visita con su mujer y una niña de meses", cadena = "otono"),
+                    suceso("gabino_visita", "10-25", "Gabino vuelve de visita con su mujer y una niña de meses", cadena = "otono"),
                 )),
         ),
         arcos = listOf(

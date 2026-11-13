@@ -50,7 +50,7 @@ Igual que en T8a:
 
 - **Ruth:**
   - «auxilio» (temporadas 1, 4 y 5): en otro pueblo del llano que pidió ayuda por la radio. Como se repite tres años, sus textos no dicen qué pueblo es ni quién va con ella.
-  - «asedio» (3): nueve días rodeados, sin luz de noche y con el agua contada. Damián no sale, porque muere en medio del asedio.
+  - «asedio» (3): nueve días rodeados, sin luz de noche y con el agua contada. Esteban no sale, porque muere en medio del asedio.
   - «encierro» (4): la ventisca, con los pasillos cavados en la nieve, la casa común y su madre enferma.
 - **Brenna:**
   - «paso_cerrado» (cada invierno): la pala, las raquetas hasta la primera piedra, las runas que enseña a los chicos y los mapas que copia. Vuelve cada año, así que solo nombra a Hilde, la posadera, que está los cinco.
@@ -71,15 +71,15 @@ Igual que en T8a:
 
 **Ruth**
 - **Nora:** aprende a leer hasta octubre de la 1, hace guardia desde octubre de la 4 y habla por la radio desde septiembre de la 5.
-- **Abel:** lo espera desde julio de la 2, nace en marzo de la 3 y camina desde marzo de la 4.
+- **Elías:** lo espera desde julio de la 2, nace en marzo de la 3 y camina desde marzo de la 4.
 - **Agustina,** su madre, hasta febrero de la 4.
-- **Bruno:** en la casa de al lado hasta julio de la 4, en Cuatro Molinos después, y con su mujer y su niña desde octubre de la 5.
-- **Damián,** hasta el asedio. **Tomás,** con el brazo herido desde entonces.
+- **Gabino:** en la casa de al lado hasta julio de la 4, en Cuatro Molinos después, y con su mujer y su niña desde octubre de la 5.
+- **Esteban,** hasta el asedio. **Matías,** con el brazo herido desde entonces.
 - **Joaquín y Lidia,** desde abril de la 2, y el jabón desde diciembre.
 - **Celia,** solo su voz hasta que la conoce en junio de la 5.
 - **Ella misma:** jefa de las guardias de noche desde mayo de la 2.
 - **El muro y la torre:** el hueco del este hasta noviembre de la 1, el fuego, la piedra y la última piedra; la torre del agua desde octubre de la 2.
-- **Las fiestas que vuelven cada año** no nombran a ninguno de ellos: solo a Marta, la que lleva el pueblo, y a Rosendo, el de las gallinas y el aguardiente, que están los cinco años.
+- **Las fiestas que vuelven cada año** no nombran a ninguno de ellos: solo a Marta, la que lleva el pueblo, y a Eusebio, el de las gallinas y el aguardiente, que están los cinco años.
 
 **Brenna**
 - **Tobin:** llega en junio de la 1; la canción, en mayo de la 2; se lo pide en noviembre de la 3; el cuarto alto, en enero de la 4; ella espera desde septiembre de la 4; la niña nace en abril de la 5.
@@ -114,12 +114,12 @@ Igual que en T8a:
 - **Las pruebas generales pasaron a la primera** con los dos borradores.
 - **Las 5 nuevas** (`CuentoG8Prueba`):
   - que estén los dos, sin problemas frente a su calendario, con su género y con su nombre en el cuento;
-  - Ruth: Nora, Abel, Agustina, Bruno, Damián, Tomás, Joaquín y Lidia, Celia, la jefatura de las guardias, la torre y cada etapa del muro a su tiempo;
+  - Ruth: Nora, Elías, Agustina, Gabino, Esteban, Matías, Joaquín y Lidia, Celia, la jefatura de las guardias, la torre y cada etapa del muro a su tiempo;
   - Ruth: el auxilio de los tres años, el asedio y la ventisca a todas las horas, que varían, y sus cinco fiestas sin trabajo;
   - Brenna: Tobin y la niña, Arn y su runa, Neli, Corvin, Bastián, Orla, el pino, el refugio de la Cabra y el mapa a su tiempo;
   - Brenna: dos inviernos con el paso cerrado, la travesía y la crianza a todas las horas, que varían, y sus fiestas sin trabajo, la feria con sus dos días.
 - **Las pruebas nuevas fallan cuando deben.** Hice cinco sabotajes:
-  - Agustina viva hasta que Abel camina;
+  - Agustina viva hasta que Elías camina;
   - una comida del asedio convertida en sueño;
   - la noche más larga de Ruth sin «no trabaja»;
   - Orla nombrada en el recuento, que vuelve cada año;
@@ -131,8 +131,8 @@ Igual que en T8a:
   - que ninguna fiesta que vuelve cae dentro de los estados de Ruth;
   - que las fiestas de Brenna que caen en la crianza valen allí;
   - que las reglas del entorno de Brenna van en el orden justo: la roca entera solo puede salir antes de que se abra la veta;
-  - que la jauría y el cierre del muro, que nombran a Damián, son solo de la temporada 1.
-- **Compilación de Android:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+  - que la jauría y el cierre del muro, que nombran a Esteban, son solo de la temporada 1.
+- **Compilación de Android:** la corrida 237 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `ab22f16`).
 - **Capturas:** 0, como dice el plan.
 
 ## Lo que no se pudo comprobar
@@ -145,3 +145,5 @@ Igual que en T8a:
 ## Lo que sigue
 
 Con T8b terminan las tandas del grupo 8. Antes de la revisión general, el autor lee un resumen de cada personaje y dice si hay que cambiar algo.
+
+Lo que salió de eso y de la revisión está en `docs/historia/informes/Revision_cuentos.md`. Los nombres de este informe ya son los nuevos: Elías, Gabino, Esteban, Matías y Eusebio.

@@ -348,7 +348,7 @@ internal object AnioG7 {
     // =====================================================================
     //
     // Su gente (toda inventada): su madre, cocinera del comedor. Lina, su amiga de siempre, que tiene un hijo en la
-    // temporada 2. Ezra, el de los cultivos, con quien vive desde la 3 y que sale afuera con la expedición de la 4. La
+    // temporada 2. Noa, la de los cultivos, con quien vive desde la 3 y que sale afuera con la expedición de la 4. La
     // vieja Dorotea, que se acuerda de las historias de afuera y muere en la 3. El supervisor, que cambia en la 3.
     //
     // Claves de escena: fiesta, alarma, luto, cielo, cosecha. Arcos: reserva (el agua de la cisterna grande) y cultivo
@@ -380,16 +380,16 @@ internal object AnioG7 {
         luz = RegimenLuz.DOS_ESTADOS,
         temporadas = listOf(
             TemporadaVida("2105", "sensor",
-                "Se rompe la bomba tres y el agua sale marrón. Ezra le regala a la residente un disco que no tiene nadie. El sensor de la entrada marca menos radiación que nunca. A Lina le dan permiso para tener un hijo. La vieja Dorotea le cuenta cómo era la lluvia.",
+                "Se rompe la bomba tres y el agua sale marrón. Noa le regala a la residente un disco que no tiene nadie. El sensor de la entrada marca menos radiación que nunca. A Lina le dan permiso para tener un hijo. La vieja Dorotea le cuenta cómo era la lluvia.",
                 anioDelRefugio() + listOf(
                     mundo("bomba_tres", "02-12", "Se rompe la bomba tres, y el agua sale marrón un día entero", certeza = I, escena = "alarma"),
-                    suceso("disco", "04-25", "Ezra, el de los cultivos, le regala un disco que no tiene nadie"),
+                    suceso("disco", "04-25", "Noa, la de los cultivos, le regala un disco que no tiene nadie"),
                     mundo("sensor", "08-10", "El sensor de la entrada marca menos radiación fuera que nunca", certeza = I),
                     suceso("lina", "10-12", "A Lina le dan permiso para tener un hijo"),
                     suceso("lluvia", "12-02", "La vieja Dorotea le cuenta cómo era la lluvia"),
                 )),
             TemporadaVida("2106", "cisterna",
-                "Se agrieta la cisterna grande y hay cinco semanas de racionamiento. Nombran a la residente encargada del turno de las bombas. Nace el hijo de Lina. Se rompe el tocadiscos del comedor. Ezra le pide que pidan un cuarto doble.",
+                "Se agrieta la cisterna grande y hay cinco semanas de racionamiento. Nombran a la residente encargada del turno de las bombas. Nace el hijo de Lina. Se rompe el tocadiscos del comedor. Noa le pide que pidan un cuarto doble.",
                 anioDelRefugio() + listOf(
                     mundo("grieta", "03-14", "Se agrieta la cisterna grande", certeza = I, escena = "alarma"),
                     mundo("racion", "03-15", "Empieza el racionamiento: dos litros de agua por persona al día", certeza = I),
@@ -397,36 +397,36 @@ internal object AnioG7 {
                     suceso("encargada", "06-30", "La nombran encargada del turno de las bombas"),
                     suceso("hijo_lina", "07-08", "Nace el hijo de Lina, y ella lo tiene en brazos la primera", escena = "fiesta"),
                     mundo("tocadiscos", "09-20", "Se rompe el tocadiscos del comedor, y el refugio se queda sin música", certeza = I),
-                    suceso("ezra", "11-28", "Ezra le pide que pidan juntos un cuarto doble"),
+                    suceso("noa", "11-28", "Noa le pide que pidan juntas un cuarto doble"),
                 )),
             TemporadaVida("2107", "senal",
-                "Una fiebre en el sector B: cierran las compuertas casi un mes. La residente y Ezra se mudan a un cuarto doble. La radio de la entrada capta una señal de fuera. Arregla sola la bomba grande. Cambian al supervisor. Muere la vieja Dorotea.",
+                "Una fiebre en el sector B: cierran las compuertas casi un mes. La residente y Noa se mudan a un cuarto doble. La radio de la entrada capta una señal de fuera. Arregla sola la bomba grande. Cambian al supervisor. Muere la vieja Dorotea.",
                 anioDelRefugio() + listOf(
                     mundo("fiebre", "02-01", "Una fiebre en el sector B: cierran las compuertas", certeza = I, escena = "alarma"),
                     mundo("abre_sector", "02-26", "Se abren otra vez las compuertas del sector B", certeza = I),
-                    suceso("cuarto_doble", "05-02", "Se muda con Ezra a un cuarto doble"),
+                    suceso("cuarto_doble", "05-02", "Se muda con Noa a un cuarto doble"),
                     mundo("senal", "08-30", "La radio de la entrada capta por primera vez una señal de fuera", certeza = I),
                     suceso("bomba_grande", "09-14", "Arregla sola la bomba grande, la que nadie sabía arreglar"),
                     mundo("supervisor", "11-25", "Cambian al supervisor: el nuevo habla de abrir algún día", certeza = I),
                     suceso("dorotea", "12-10", "Muere la vieja Dorotea", escena = "luto"),
                 )),
             TemporadaVida("2108", "expedicion",
-                "La asamblea vota mandar a cinco personas afuera. Eligen a Ezra. Se abre la Puerta un minuto y salen los cinco. Vuelven tres, con tierra en las botas y una flor, y Ezra le da la flor a la residente. Les dan permiso para tener un hijo.",
+                "La asamblea vota mandar a cinco personas afuera. Eligen a Noa. Se abre la Puerta un minuto y salen los cinco. Vuelven tres, con tierra en las botas y una flor, y Noa le da la flor a la residente. Les dan permiso para tener un hijo.",
                 anioDelRefugio() + listOf(
                     mundo("voto", "03-20", "La asamblea vota mandar a cinco personas afuera", certeza = I),
-                    suceso("eligen", "04-02", "Eligen a Ezra para salir afuera"),
+                    suceso("eligen", "04-02", "Eligen a Noa para salir afuera"),
                     mundo("salen", "05-10", "Se abre la Puerta un minuto: salen los cinco", certeza = I, escena = "alarma"),
                     mundo("vuelven", "07-28", "Vuelven tres de los cinco, con tierra en las botas y una flor", certeza = I),
-                    suceso("flor", "07-29", "Ezra le da la flor: la trajo de afuera para ella"),
+                    suceso("flor", "07-29", "Noa le da la flor: la trajo de afuera para ella"),
                     suceso("permiso", "10-12", "Les dan permiso para tener un hijo"),
                 )),
             TemporadaVida("2109", "puerta",
                 "La residente espera un hijo. Empiezan a coser trajes para salir todos. El niño se mueve por primera vez. Eligen un nombre de afuera. Se abre la Puerta para siempre y todos ven el cielo. Llueve, y ella sale a mojarse.",
                 anioDelRefugio() + listOf(
-                    suceso("espera", "03-08", "Le dice a Ezra que espera un hijo", cadena = "hijo"),
+                    suceso("espera", "03-08", "Le dice a Noa que espera un hijo", cadena = "hijo"),
                     mundo("trajes", "06-01", "Empiezan a coser trajes para salir todos", certeza = I),
                     suceso("patada", "06-20", "El niño se mueve por primera vez", cadena = "hijo"),
-                    suceso("nombre", "08-10", "Ezra y ella eligen el nombre: uno de afuera", cadena = "hijo"),
+                    suceso("nombre", "08-10", "Noa y ella eligen el nombre: uno de afuera", cadena = "hijo"),
                     mundo("abre", "09-20", "Se abre la Puerta para siempre: todos ven el cielo por primera vez", certeza = I, escena = "cielo"),
                     mundo("llueve", "10-15", "Llueve, y sale a mojarse", certeza = I, escena = "cielo", clima = Clima.LLUVIA),
                     fiesta("fin_anio", "12-31", "La última noche del año, con la Puerta abierta", certeza = I),

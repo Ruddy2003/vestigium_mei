@@ -34,15 +34,15 @@ import io.github.ruddy2003.vestigium.vidas.Variante
  * Lo que este cuento tiene que respetar de su calendario (`vidas/anios/AnioG8.kt`):
  * - Nora: aprende a leer hasta `nora_lee` (temporada 1); hace guardia desde `nora_guardia` (4); habla por la radio
  *   desde `nora_radio` (5). Los textos sin fecha no dicen su edad.
- * - Abel: Ruth lo espera desde `espera` (temporada 2); nace en `nace_abel` (3); camina desde `abel_camina` (4).
- * - Agustina, su madre, hasta `muere_madre` (temporada 4). Bruno, en el pueblo hasta `vuelve_molinos` (4); en Cuatro
- *   Molinos después; con mujer y niña desde `bruno_visita` (5). Damián, hasta `damian` (3). Tomás, herido de un brazo
- *   desde `damian`: los textos sin fecha no le hacen usar las dos manos. Joaquín y Lidia, desde `forasteros` (2); el
+ * - Elías: Ruth lo espera desde `espera` (temporada 2); nace en `nace_elias` (3); camina desde `elias_camina` (4).
+ * - Agustina, su madre, hasta `muere_madre` (temporada 4). Gabino, en el pueblo hasta `vuelve_molinos` (4); en Cuatro
+ *   Molinos después; con mujer y niña desde `gabino_visita` (5). Esteban, hasta `esteban` (3). Matías, herido de un brazo
+ *   desde `esteban`: los textos sin fecha no le hacen usar las dos manos. Joaquín y Lidia, desde `forasteros` (2); el
  *   jabón, desde `jabon`. Celia, solo su voz hasta `conoce_celia` (5). Marta, siempre.
  * - Ruth es jefa de las guardias de noche desde `jefa_guardia` (temporada 2).
  * - El muro: de tablas hasta `muro_arde` (3), con el hueco del este hasta `muro_este` (1); quemado hasta `piedra` (3);
  *   de piedra que crece hasta `muro_listo` (5); terminado después. La torre del agua, desde `torre_agua` (2).
- * - Las fiestas que vuelven cada año no nombran a Nora, Abel, Agustina, Bruno, Damián, Tomás, Joaquín, Lidia ni Celia,
+ * - Las fiestas que vuelven cada año no nombran a Nora, Elías, Agustina, Gabino, Esteban, Matías, Joaquín, Lidia ni Celia,
  *   ni hablan de la torre, del hueco del este ni de qué está hecho el muro.
  */
 internal object PiezasRuth {
@@ -53,10 +53,10 @@ internal object PiezasRuth {
     private val LENA = setOf(11, 12, 1, 2)
 
     private val MANANA = listOf(
-        v("A {nombre} la despierta el gallo del viejo Rosendo, que canta a oscuras porque nadie le ha explicado la hora. Se levanta sin encender nada, a tientas, y se pone las botas, que dejó junto a la puerta con los cordones abiertos, listas para correr."),
+        v("A {nombre} la despierta el gallo del viejo Eusebio, que canta a oscuras porque nadie le ha explicado la hora. Se levanta sin encender nada, a tientas, y se pone las botas, que dejó junto a la puerta con los cordones abiertos, listas para correr."),
         v("{nombre} se despierta antes de que suene nada, con el oído puesto en el silencio, como todos en el pueblo: si se oye algo raro, se oye mejor a esta hora. No se oye nada. El arroyo, el viento en las láminas, Nora que habla dormida. Se levanta."),
         v("Lo primero que hace {nombre} al levantarse es asomarse a la puerta a oler el aire: a humo, a lluvia, a polvo, a perro mojado. El llano lo cuenta todo por la nariz antes que por los ojos. Hoy huele a lo de siempre. Se da por contenta."),
-        v("{nombre} se despierta con el ronroneo del generador, que Tomás enciende un rato antes del alba para cargar la radio. Desde la cama lo oye toser, arrancar, coger el paso. Mientras suene, el pueblo está vivo. Se levanta y pone agua a calentar."),
+        v("{nombre} se despierta con el ronroneo del generador, que Matías enciende un rato antes del alba para cargar la radio. Desde la cama lo oye toser, arrancar, coger el paso. Mientras suene, el pueblo está vivo. Se levanta y pone agua a calentar."),
         v("{nombre} se despierta con las manos dormidas y el cuerpo lleno de los golpes de ayer: el martillo, la azada, la escalera. Se las frota con la grasa de una lata que guarda junto a la cama. Huele mal. Funciona. Las piernas tardan un poco más."),
         v("Al abrir la puerta, {nombre} cuenta lo que ve, como le enseñaron de niña: el muro, la milpa, el arroyo, las casas, el humo de las cocinas. Todo está. Luego entra a despertar a Nora, que tarda en levantarse lo que tarda el agua en hervir."),
         v("{nombre} se despierta con escarcha por dentro de las láminas de la casa, blanca como sal, y el aliento hecho humo. Mete los pies en las botas de un brinco. El fuego de anoche es ceniza tibia; lo sopla hasta que se acuerda de ser fuego.", meses = INVIERNO),
@@ -75,7 +75,7 @@ internal object PiezasRuth {
         au("A esta hora trabaja en lo que el pueblo ajeno necesita más: levantar lo caído, clavar lo suelto, cargar lo pesado. No conoce las herramientas ni los nombres de nadie. No hace falta. Un martillo es un martillo, y un gracias suena igual en todo el llano.", Hacer.TRABAJO),
         au("A esta hora cava con gente que no conocía, codo con codo, sin hablar mucho. Los de aquí trabajan con la cara de los que han perdido algo. {nombre} no les pregunta qué. Se lo van diciendo igual, poco a poco, entre palada y palada.", Hacer.TRABAJO),
         au("A esta hora come lo que le dan en el pueblo ajeno, que es poco y se da con vergüenza: un caldo flaco, una tortilla, media cebolla. Ella saca del morral un puñado de maíz tostado del Remanso y lo pone en medio. Desaparece. Así se come en el llano.", Hacer.COMER),
-        au("A esta hora duerme en una casa ajena, sobre un suelo de tierra apisonada, con la escopeta al lado como en la suya. Duerme poco. Le falta algo y tarda en saber qué: el ronquido de Tomás al otro lado de la cama. Lo echa de menos. No se lo dirá.", Hacer.DORMIR),
+        au("A esta hora duerme en una casa ajena, sobre un suelo de tierra apisonada, con la escopeta al lado como en la suya. Duerme poco. Le falta algo y tarda en saber qué: el ronquido de Matías al otro lado de la cama. Lo echa de menos. No se lo dirá.", Hacer.DORMIR),
         au("A esta hora está junto al fuego de otro pueblo, oyendo sus historias y contando las del Remanso, que aquí suenan nuevas. Los niños la miran como a una forastera. Uno le pregunta si en su pueblo también hay muro. Ella dice que sí. El niño parece aliviado.", Hacer.GENTE),
     )
 
@@ -94,7 +94,7 @@ internal object PiezasRuth {
 
     private val ASEDIO_MANANA = listOf(
         ase("{nombre} se despierta en el andador del muro, donde se quedó dormida sentada, con la escopeta entre las rodillas. Es de día. Afuera, en el llano, siguen las hogueras de los saqueadores, humeando, en un círculo que no se ha movido. Cuenta los humos. Los de ayer."),
-        ase("A {nombre} la despierta el llanto de Abel, que tiene hambre y no sabe nada de saqueadores. Le da el pecho a oscuras, en el cuarto de atrás, el más lejos del muro. Escucha. Afuera nadie grita. Lo deja dormido junto a Nora y sube a su tramo."),
+        ase("A {nombre} la despierta el llanto de Elías, que tiene hambre y no sabe nada de saqueadores. Le da el pecho a oscuras, en el cuarto de atrás, el más lejos del muro. Escucha. Afuera nadie grita. Lo deja dormido junto a Nora y sube a su tramo."),
         ase("{nombre} se despierta sin haber dormido del todo, con el cuerpo tieso y la boca seca. El pueblo entero ha pasado la noche así, con un ojo en el muro. Bebe medio vaso de agua. El resto se guarda. Nadie sabe cuántos días faltan."),
     )
 
@@ -107,13 +107,13 @@ internal object PiezasRuth {
     )
 
     private val ASEDIO_PUEBLO = listOf(
-        ase("Con los saqueadores afuera, el pueblo es otro: el portón cerrado con cadenas y un carro atravesado, las ventanas tapadas con tablas, los niños y los viejos en la casa común, las gallinas de Rosendo calladas como si supieran. De noche, ni una luz."),
+        ase("Con los saqueadores afuera, el pueblo es otro: el portón cerrado con cadenas y un carro atravesado, las ventanas tapadas con tablas, los niños y los viejos en la casa común, las gallinas de Eusebio calladas como si supieran. De noche, ni una luz."),
         ase("Desde el muro se ven las hogueras de los saqueadores alrededor del pueblo, a tiro largo, entre los coches de la carretera y en la loma. De día casi no se les ve. Se les oye: risas, un motor, alguien que golpea una lata, para que no se olvide que están."),
     )
 
     private val ASEDIO_ANOCHECER = listOf(
         ase("Al caer la tarde no se enciende el generador: un pueblo con luz es un blanco. El Remanso se queda a oscuras con el llano, y en el llano se encienden las hogueras de los de fuera, una a una, como un collar alrededor del cuello. {nombre} sube al muro."),
-        ase("Anochece, y {nombre} recorre el muro a oscuras, tramo por tramo, tocando el hombro de cada guardia para que sepa que no está solo. Nadie habla. Se oyen los grillos y, más allá, voces que no son de aquí. Abajo, Abel llora un momento. Alguien lo calma."),
+        ase("Anochece, y {nombre} recorre el muro a oscuras, tramo por tramo, tocando el hombro de cada guardia para que sepa que no está solo. Nadie habla. Se oyen los grillos y, más allá, voces que no son de aquí. Abajo, Elías llora un momento. Alguien lo calma."),
     )
 
     /** Más de tres semanas tapados por la ventisca, en la temporada 4 (estado «encierro»). */
@@ -126,11 +126,11 @@ internal object PiezasRuth {
     )
 
     private val ENCIERRO_TRABAJO = listOf(
-        en("A esta hora cava pasillos en la nieve entre las casas, que ya le llegan al pecho, para que se pueda ir de una puerta a otra sin perderse. Detrás de ella, Bruno saca la nieve con una cubeta. El viento la vuelve a meter. Cavan otra vez, con más rabia.", Hacer.TRABAJO),
+        en("A esta hora cava pasillos en la nieve entre las casas, que ya le llegan al pecho, para que se pueda ir de una puerta a otra sin perderse. Detrás de ella, Gabino saca la nieve con una cubeta. El viento la vuelve a meter. Cavan otra vez, con más rabia.", Hacer.TRABAJO),
         en("A esta hora cuenta con Marta lo que queda en las trojes, costal por costal, y lo apunta con carbón en la pared: tanto maíz, tanta calabaza, tanta leña. Lo divide entre los días que faltan, que nadie sabe cuántos son. Lo vuelve a dividir, por si se equivocó.", Hacer.TRABAJO),
         en("A esta hora come en la casa común, donde se juntan todos para ahorrar leña: un atole aguado de maíz, el mismo para todos, servido con el mismo cucharón. Los niños piden más. Los mayores dicen que ya comieron. {nombre} también lo dice, aunque no.", Hacer.COMER),
-        en("A esta hora duerme con los suyos en la misma cama, para darse calor: Nora, Abel en medio, Tomás, y ella en la orilla, la del frío. El viento empuja la casa como si quisiera entrar. Se despierta cada vez que cruje. Cruje toda la noche.", Hacer.DORMIR),
-        en("A esta hora está con todo el pueblo alrededor de la estufa de la casa común, oyendo la radio, que llega entre chasquidos: otros pueblos también están tapados. Celia, desde Los Silos, nombra pueblos y pide que contesten. Cuando dice el Remanso, Tomás contesta por todos.", Hacer.GENTE),
+        en("A esta hora duerme con los suyos en la misma cama, para darse calor: Nora, Elías en medio, Matías, y ella en la orilla, la del frío. El viento empuja la casa como si quisiera entrar. Se despierta cada vez que cruje. Cruje toda la noche.", Hacer.DORMIR),
+        en("A esta hora está con todo el pueblo alrededor de la estufa de la casa común, oyendo la radio, que llega entre chasquidos: otros pueblos también están tapados. Celia, desde Los Silos, nombra pueblos y pide que contesten. Cuando dice el Remanso, Matías contesta por todos.", Hacer.GENTE),
     )
 
     private val ENCIERRO_PUEBLO = listOf(
@@ -139,8 +139,8 @@ internal object PiezasRuth {
     )
 
     private val ENCIERRO_ANOCHECER = listOf(
-        en("Al caer la tarde Tomás enciende el generador una hora, solo una, para la radio y la bombilla de la casa común, y el pueblo entero mira esa bombilla como se mira un fuego. Cuando se apaga, se oye un suspiro de todas las bocas a la vez. Luego, el viento."),
-        en("Anochece, aunque casi no se nota, y {nombre} hace la última ronda por los pasillos de nieve con un farol, llamando a cada puerta. Desde dentro contestan: aquí estamos. En la casa de Rosendo contesta una gallina. Se ríe sola en el pasillo helado."),
+        en("Al caer la tarde Matías enciende el generador una hora, solo una, para la radio y la bombilla de la casa común, y el pueblo entero mira esa bombilla como se mira un fuego. Cuando se apaga, se oye un suspiro de todas las bocas a la vez. Luego, el viento."),
+        en("Anochece, aunque casi no se nota, y {nombre} hace la última ronda por los pasillos de nieve con un farol, llamando a cada puerta. Desde dentro contestan: aquí estamos. En la casa de Eusebio contesta una gallina. Se ríe sola en el pasillo helado."),
     )
 
     private val TIEMPO = listOf(
@@ -227,7 +227,7 @@ internal object PiezasRuth {
         v("A esta hora sube piedra del arroyo en una carretilla de una rueda, cuesta arriba, hasta el tramo del muro que se levanta esta semana. Las piedras son redondas y no quieren estarse quietas. Hay que buscarle a cada una su sitio, como a la gente.", hacer = Hacer.TRABAJO, desde = "piedra", hasta = "muro_listo"),
         v("A esta hora escribe en una tabla, con carbón, la lista de las guardias de la noche: quién, a qué hora, en qué tramo. Hay que poner juntos a los que no se duermen con los que sí, y separar a los que hablan. Borra y vuelve a escribir. Es más difícil que clavar.", hacer = Hacer.TRABAJO, desde = "jefa_guardia"),
 
-        v("A esta hora come sentada en una piedra, de una lata abollada que sirve de plato: atole de maíz con un poco de miel de abeja salvaje, que Rosendo saca de un poste hueco con la cara tapada. Raspa el fondo con el dedo. En el llano no se deja nada.", hacer = Hacer.COMER),
+        v("A esta hora come sentada en una piedra, de una lata abollada que sirve de plato: atole de maíz con un poco de miel de abeja salvaje, que Eusebio saca de un poste hueco con la cara tapada. Raspa el fondo con el dedo. En el llano no se deja nada.", hacer = Hacer.COMER),
         v("A esta hora come en la casa común, en la mesa hecha con una puerta, tortillas recién echadas y frijoles con chile seco. Las tortillas las hace el primero que llega al comal. Hoy le tocó a ella, y le salieron gordas. Nadie se queja con la boca llena.", hacer = Hacer.COMER),
         v("A esta hora come calabaza asada con sal, de pie, junto a la lumbre, y un trozo de conejo que sobró. Come deprisa, con las manos, mirando hacia el muro por la puerta abierta. Es costumbre de todo el pueblo: nadie come de espaldas al llano.", hacer = Hacer.COMER),
         v("A esta hora come con Nora en el escalón de la casa, las dos con una tortilla doblada llena de frijoles. Nora le cuenta algo larguísimo y sin final. {nombre} asiente con la boca llena. Cuando Nora le pregunta qué opina, dice que sí. Era la respuesta equivocada.", hacer = Hacer.COMER),
@@ -237,14 +237,14 @@ internal object PiezasRuth {
         v("A esta hora duerme a ratos: el silbido del guardia que cambia de turno, el perro del pueblo que le ladra a algo, el generador que se apaga. Cada ruido la sienta en la cama. Escucha. Nada. Se vuelve a tumbar sin haber abierto del todo los ojos.", hacer = Hacer.DORMIR),
 
         v("A esta hora está en la fogata de la plaza con los demás, con la radio encima de un barril: la voz de Los Silos da las noticias de los pueblos del llano y luego pone canciones de antes. Nadie entiende la mitad de las palabras. Las cantan igual, a gritos.", hacer = Hacer.GENTE),
-        v("A esta hora está junto a la fogata asando lo que haya, mientras los viejos cuentan cosas de antes que cada año son un poco más grandes. Rosendo jura que su abuelo tuvo un coche que hablaba. Nadie le cree. Todos quieren que lo cuente otra vez.", hacer = Hacer.GENTE),
-        v("A esta hora pasa por la fogata un vasito del aguardiente de Rosendo, que quema como el nombre que le pusieron: el diablito. {nombre} da un trago y lo pasa. Alguien saca una armónica oxidada y toca la única canción que sabe. Se la saben todos, de tanto oírla.", hacer = Hacer.GENTE),
+        v("A esta hora está junto a la fogata asando lo que haya, mientras los viejos cuentan cosas de antes que cada año son un poco más grandes. Eusebio jura que su abuelo tuvo un coche que hablaba. Nadie le cree. Todos quieren que lo cuente otra vez.", hacer = Hacer.GENTE),
+        v("A esta hora pasa por la fogata un vasito del aguardiente de Eusebio, que quema como el nombre que le pusieron: el diablito. {nombre} da un trago y lo pasa. Alguien saca una armónica oxidada y toca la única canción que sabe. Se la saben todos, de tanto oírla.", hacer = Hacer.GENTE),
         v("A esta hora está en la fogata escuchando a Nora, que lee en voz alta para los niños una página de las revistas viejas: un anuncio de algo que se llamaba aspiradora. Nadie sabe para qué servía. Nora se lo inventa, muy seria. Los niños se lo creen.", hacer = Hacer.GENTE, desde = "nora_lee"),
     )
 
     private val PUEBLO = listOf(
         v("{entorno} El Remanso son unas casas de láminas alrededor de una plaza de tierra, donde arde la fogata. En medio hay un poste con una campana hecha de una bombona de gas: un golpe, a comer; muchos golpes, a las armas."),
-        v("La casa de la radio es la única con ventana de cristal. En el cuarto de atrás está el generador, que bebe lo que destila Rosendo y lo que se encuentra; en el de delante, la radio, con el micrófono envuelto en un calcetín para que no le entre el polvo. {entorno}"),
+        v("La casa de la radio es la única con ventana de cristal. En el cuarto de atrás está el generador, que bebe lo que destila Eusebio y lo que se encuentra; en el de delante, la radio, con el micrófono envuelto en un calcetín para que no le entre el polvo. {entorno}"),
         v("{entorno} El arroyo corre pegado al lado norte del pueblo, entre sauces bajos, y es la razón de que el pueblo esté aquí: agua que no se acaba en verano. Junto a la orilla están los barriles de los filtros, pintados de blanco, con un letrero: no se bebe sin pasar."),
         v("La milpa está entre las casas y el muro del sur, una tierra negra que se abona con todo lo que el pueblo no se come. En una esquina están las trojes, dos cuartos de adobe sobre patas de piedra, para que no suban los ratones. {entorno}"),
         v("{entorno} Desde el andador del muro se ve la carretera vieja, que cruza el llano de punta a punta, con sus coches oxidados en fila, como si esperaran a que cambie un semáforo. Más allá, la gasolinera sin techo. Más allá, nada: tierra y cielo, cosidos por una raya."),
@@ -278,9 +278,9 @@ internal object PiezasRuth {
 
     private val GENTE = listOf(
         v("Marta es la que lleva el pueblo, aunque nadie la eligió: un día hizo falta alguien que dijera qué hacer, y ella lo dijo, y salió bien. Es bajita, cojea de una pierna y tiene una voz que se oye desde el portón. Cuando se equivoca, lo dice antes que nadie."),
-        v("Tomás, su compañero, es el del generador: lo conoce como se conoce a una mula vieja, sus toses, sus mañas, lo que le gusta. Le habla bajito cuando no quiere arrancar. Si arranca, dice que es por él. Si no, que es por la gasolina, que ya no es lo que era."),
-        v("Nora, su hija, quiere saber todo lo de antes de la guerra: qué era un avión, para qué servía un semáforo, por qué la gente de las revistas sonríe tanto. {nombre} contesta lo que sabe y se inventa el resto. Luego se lo cuenta a Tomás, para que digan lo mismo."),
-        v("El viejo Rosendo es el más viejo del pueblo y el único que tiene gallinas, cinco, cada una con el nombre de una actriz de las revistas. Destila un aguardiente de maíz que sirve para beber, para curar y para el generador, según el día. Él dice que para las tres cosas a la vez."),
+        v("Matías, su compañero, es el del generador: lo conoce como se conoce a una mula vieja, sus toses, sus mañas, lo que le gusta. Le habla bajito cuando no quiere arrancar. Si arranca, dice que es por él. Si no, que es por la gasolina, que ya no es lo que era."),
+        v("Nora, su hija, quiere saber todo lo de antes de la guerra: qué era un avión, para qué servía un semáforo, por qué la gente de las revistas sonríe tanto. {nombre} contesta lo que sabe y se inventa el resto. Luego se lo cuenta a Matías, para que digan lo mismo."),
+        v("El viejo Eusebio es el más viejo del pueblo y el único que tiene gallinas, cinco, cada una con el nombre de una actriz de las revistas. Destila un aguardiente de maíz que sirve para beber, para curar y para el generador, según el día. Él dice que para las tres cosas a la vez."),
         v("Chayo es la que cura, una mujer grande y callada que sabe de hierbas, de huesos y de partos, y que guarda en una caja de galletas las pocas pastillas de antes que quedan en el llano. Nadie sabe ya para qué sirve cada una. Chayo tampoco, pero no lo dice."),
         v("Los niños del pueblo van a la escuela tres mañanas por semana, en la casa común, con una pizarra que es una puerta pintada de negro. Aprenden a contar con frijoles, a leer con lo que hay y a reconocer de lejos un humo que no es de los suyos."),
         v("Nora está aprendiendo a leer con las revistas viejas de la abuela, letra por letra, con el dedo. Se atasca en las palabras largas y se enfada con ellas como si le hubieran hecho algo. {nombre} la deja pelear sola. Así aprendió ella.", hasta = "nora_lee"),
@@ -288,19 +288,19 @@ internal object PiezasRuth {
         v("Nora habla por la radio del Remanso con los otros pueblos, con una voz que pone más grave para parecer mayor. Celia la llama por su nombre. Desde entonces Nora anda por el pueblo con la barbilla un poco más alta, y {nombre} hace como que no lo nota.", desde = "nora_radio"),
         v("Agustina, su madre, vive con ellos, en el rincón más tibio de la casa. Ya no ve bien, pero desgrana maíz más deprisa que nadie y canta las canciones de la radio con letras que se ha inventado. Dice que las suyas son mejores. Algunas, lo son.", hasta = "muere_madre"),
         v("La silla de Agustina sigue en el rincón tibio de la casa, y nadie se sienta en ella. Encima están las revistas viejas, atadas con un cordel. A veces {nombre} canta sin darse cuenta una canción de la radio con la letra equivocada, la de su madre. Y la deja así.", desde = "muere_madre"),
-        v("Bruno, su hermano menor, vive en la casa de al lado y come en la de ella. Es el primero que dice que sí cuando la radio pide ayuda, y el primero que se ríe cuando algo sale mal. {nombre} lo regaña por las dos cosas. Él se ríe también de eso.", hasta = "vuelve_molinos"),
-        v("Bruno se quedó en Cuatro Molinos, porque allí hacía falta gente, y su casa de al lado está vacía, con la puerta atada con alambre. Habla por la radio cada pocas semanas. Dice que está bien, que come, que el frijol creció. {nombre} oye lo que no dice.", desde = "vuelve_molinos", hasta = "bruno_visita"),
-        v("Bruno vive en Cuatro Molinos con su mujer y su niña, que tiene los ojos de Agustina, dice {nombre}, aunque nadie más lo ve. Cuando hablan por la radio, Bruno pone a la niña cerca del micrófono para que la oigan. En el Remanso todos se callan para oírla.", desde = "bruno_visita"),
-        v("Damián guarda el portón desde antes de que hubiera portón: un hombre flaco y alto, con sombrero de paja y una escopeta más vieja que él. Conoce cada sombra del llano. Si dice que algo se mueve, se mueve. Si dice que no, {nombre} duerme tranquila.", hasta = "damian"),
-        v("En el portón hay ahora un banco vacío y un sombrero de paja colgado de un clavo, que nadie quita. Damián guardó esa puerta hasta el último día. Los que hacen ahora su guardia saludan al sombrero al llegar, sin decir nada, y miran el llano como lo miraba él.", desde = "damian"),
-        v("Tomás no ha recuperado del todo el brazo de la herida del asedio: no lo sube por encima del hombro y no aprieta con esa mano. Ha aprendido a arreglar el generador con la otra y con los dientes. Nora le pasa las herramientas. Él dice que ella va más rápido.", desde = "damian"),
+        v("Gabino, su hermano menor, vive en la casa de al lado y come en la de ella. Es el primero que dice que sí cuando la radio pide ayuda, y el primero que se ríe cuando algo sale mal. {nombre} lo regaña por las dos cosas. Él se ríe también de eso.", hasta = "vuelve_molinos"),
+        v("Gabino se quedó en Cuatro Molinos, porque allí hacía falta gente, y su casa de al lado está vacía, con la puerta atada con alambre. Habla por la radio cada pocas semanas. Dice que está bien, que come, que el frijol creció. {nombre} oye lo que no dice.", desde = "vuelve_molinos", hasta = "gabino_visita"),
+        v("Gabino vive en Cuatro Molinos con su mujer y su niña, que tiene los ojos de Agustina, dice {nombre}, aunque nadie más lo ve. Cuando hablan por la radio, Gabino pone a la niña cerca del micrófono para que la oigan. En el Remanso todos se callan para oírla.", desde = "gabino_visita"),
+        v("Esteban guarda el portón desde antes de que hubiera portón: un hombre flaco y alto, con sombrero de paja y una escopeta más vieja que él. Conoce cada sombra del llano. Si dice que algo se mueve, se mueve. Si dice que no, {nombre} duerme tranquila.", hasta = "esteban"),
+        v("En el portón hay ahora un banco vacío y un sombrero de paja colgado de un clavo, que nadie quita. Esteban guardó esa puerta hasta el último día. Los que hacen ahora su guardia saludan al sombrero al llegar, sin decir nada, y miran el llano como lo miraba él.", desde = "esteban"),
+        v("Matías no ha recuperado del todo el brazo de la herida del asedio: no lo sube por encima del hombro y no aprieta con esa mano. Ha aprendido a arreglar el generador con la otra y con los dientes. Nora le pasa las herramientas. Él dice que ella va más rápido.", desde = "esteban"),
         v("Joaquín y Lidia llegaron del sur con dos hijos y una mula, y viven en una casa que dejaron otros. Joaquín sabe de pozos; Lidia, de todo lo demás. Todavía cuentan poco de dónde vienen. Cuando alguien les pregunta, Lidia contesta con otra pregunta.", desde = "forasteros", hasta = "jabon"),
         v("Lidia hace jabón con ceniza y grasa en una olla grande, y desde que le enseñó a {nombre}, el pueblo entero huele distinto los domingos. Joaquín cavó un pozo junto a la milpa que da agua hasta en agosto. Sus dos hijos ya hablan como los del Remanso.", desde = "jabon"),
         v("Celia es la voz de la radio de Los Silos: da las noticias del llano, pone las canciones y contesta a los pueblos que llaman. Nadie del Remanso la ha visto nunca. Cada uno se la imagina a su manera. {nombre} se la imagina alta, con el pelo corto y las manos manchadas de tinta.", hasta = "conoce_celia"),
         v("Celia, la voz de la radio, ya tiene cara para {nombre}: una mujer chiquita, de trenza gris, con una risa que por la radio no se oye entera. Cuando habla por las tardes, {nombre} la ve sentada delante del micrófono con su taza de hierbas. Le sonríe al aparato.", desde = "conoce_celia"),
-        v("{nombre} espera un hijo, y el pueblo entero lo sabe ya: Chayo le palpa la barriga cada semana, Marta le quita las guardias largas y Rosendo le guarda los huevos de sus gallinas. Ella dice que no está enferma. Le hacen caso a medias.", desde = "espera", hasta = "nace_abel"),
-        v("Abel, su hijo, nació en la casa de las láminas azules y duerme en un cajón de fruta forrado con una manta. Tiene un grito que despierta al guardia del portón y unas manos que lo agarran todo. Tomás dice que tiene mejores pulmones que el generador.", desde = "nace_abel", hasta = "abel_camina"),
-        v("Abel ya camina, o corre, que en él es lo mismo: va de casa en casa agarrándose a lo que encuentra, y hay que cerrar la puerta de la milpa con dos vueltas de alambre. Dice palabras que solo entiende Nora. Nora las traduce, y a veces se las inventa.", desde = "abel_camina"),
+        v("{nombre} espera un hijo, y el pueblo entero lo sabe ya: Chayo le palpa la barriga cada semana, Marta le quita las guardias largas y Eusebio le guarda los huevos de sus gallinas. Ella dice que no está enferma. Le hacen caso a medias.", desde = "espera", hasta = "nace_elias"),
+        v("Elías, su hijo, nació en la casa de las láminas azules y duerme en un cajón de fruta forrado con una manta. Tiene un grito que despierta al guardia del portón y unas manos que lo agarran todo. Matías dice que tiene mejores pulmones que el generador.", desde = "nace_elias", hasta = "elias_camina"),
+        v("Elías ya camina, o corre, que en él es lo mismo: va de casa en casa agarrándose a lo que encuentra, y hay que cerrar la puerta de la milpa con dos vueltas de alambre. Dice palabras que solo entiende Nora. Nora las traduce, y a veces se las inventa.", desde = "elias_camina"),
     )
 
     private val OBJETO = listOf(
@@ -346,7 +346,7 @@ internal object PiezasRuth {
         v("A veces, de guardia, mirando el llano vacío, {nombre} se imagina que por la carretera vieja vuelven los coches, todos a la vez, con la gente de las revistas dentro, sonriendo. Se le pasa enseguida. No sabría qué decirles."),
         v("Piensa en Nora, que no ha conocido otra cosa que esto y no lo echa de menos, porque no hay nada que echar de menos. Piensa que a lo mejor es mejor así. Luego piensa que no, que a Nora le tocará algo más que un muro. Que para eso lo levantan."),
         v("{mundo} A sus {edad} años, {nombre} sabe sembrar, disparar, curar una herida, leer el cielo y enderezar un clavo. No sabe qué es un avión, aunque lo ha visto en las revistas. Piensa que aquí no le serviría de nada. Le gustaría verlo igual."),
-        v("Piensa en Abel, que nació con un muro alrededor y no sabrá nunca lo que es dormir sin él. Piensa que eso es lo que le dan: un sitio donde dormir sin escuchar. Piensa que es poco. Piensa que es todo lo que ella no tuvo de niña.", desde = "nace_abel"),
+        v("Piensa en Elías, que nació con un muro alrededor y no sabrá nunca lo que es dormir sin él. Piensa que eso es lo que le dan: un sitio donde dormir sin escuchar. Piensa que es poco. Piensa que es todo lo que ella no tuvo de niña.", desde = "nace_elias"),
     )
 
     private val MUNDOS = mapOf(
@@ -358,9 +358,9 @@ internal object PiezasRuth {
     )
 
     private val ANOCHECER = listOf(
-        v("Al caer la tarde, Tomás enciende el generador y se prenden las tres bombillas del pueblo: la de la plaza, la del portón y la de la casa de la radio. Fuera de su luz, el llano se pone negro de golpe, como si alguien cerrara una puerta. {nombre} cierra la suya."),
+        v("Al caer la tarde, Matías enciende el generador y se prenden las tres bombillas del pueblo: la de la plaza, la del portón y la de la casa de la radio. Fuera de su luz, el llano se pone negro de golpe, como si alguien cerrara una puerta. {nombre} cierra la suya."),
         v("Anochece, y en el muro cambia la guardia: los que bajan se cruzan con los que suben y se dicen, sin pararse, lo que han visto. Hoy, nada. {nombre} oye la palabra desde la plaza y respira. Es la que el pueblo quiere oír cada noche."),
-        v("Al caer la tarde, el cielo del llano se pone de todos los colores a la vez, porque no hay nada que lo tape, y el pueblo se para un momento a mirarlo, con la cuchara o el martillo en la mano. Rosendo dice que es lo único bonito que dejó la guerra."),
+        v("Al caer la tarde, el cielo del llano se pone de todos los colores a la vez, porque no hay nada que lo tape, y el pueblo se para un momento a mirarlo, con la cuchara o el martillo en la mano. Eusebio dice que es lo único bonito que dejó la guerra."),
         v("Anochece, y desde el llano llegan los ruidos de la noche: un coyote, otro que le contesta, el viento en las láminas de los coches de la carretera. {nombre} los conoce todos. Si un día oye uno que no conoce, ese será el que importa."),
         v("La última luz del día se queda un rato en la antena de la casa de la radio, arriba del todo, cuando el pueblo ya está en sombra. {nombre} la mira apagarse. Luego entra en casa, cuenta las cabezas de los suyos y echa la tranca a la puerta."),
         v("Anochece, y la fogata de la plaza se va quedando en brasas mientras la radio, bajita, pone la última canción de la noche, siempre la misma: un hombre que canta que todo saldrá bien. Nadie sabe si se lo cree. Todos se van a dormir después de oírla."),
@@ -434,7 +434,7 @@ internal object PiezasRuth {
         "cosecha" to TextoEspecial(
             listOf(mapOf(
                 Parrafo.MANANA to "Hoy empieza la cosecha, cinco días en que nadie hace otra cosa, salvo la guardia: el pueblo entero entra en la milpa con machetes, costales y canastas, y no sale hasta que la última mazorca esté dentro. Las matas secas suenan como papel al cortarlas.",
-                Parrafo.TRABAJO to "A esta hora tumba matas de maíz con el machete, de un golpe cada una, y otros detrás arrancan las mazorcas y las echan en los costales. El polvo de las hojas se pega a la piel y pica. Nadie se rasca. Si te rascas, dice Rosendo, pica el doble.",
+                Parrafo.TRABAJO to "A esta hora tumba matas de maíz con el machete, de un golpe cada una, y otros detrás arrancan las mazorcas y las echan en los costales. El polvo de las hojas se pega a la piel y pica. Nadie se rasca. Si te rascas, dice Eusebio, pica el doble.",
                 Parrafo.PENSAMIENTO to "{nombre} piensa que en estos cinco días se decide el invierno: lo que entre en las trojes es lo que habrá, ni un grano más. Piensa en los inviernos malos que le contaron, cuando se comieron la semilla. Piensa que eso no pasará este año. Corta otra mata.",
             )),
             sigue = mapOf(
@@ -448,7 +448,7 @@ internal object PiezasRuth {
                     "Al caer la tarde de otro día de cosecha, el pueblo se queda tirado en la plaza, sin fuerzas para encender la fogata. La enciende alguien. Hay atole caliente. Nadie habla mucho: les duelen hasta las palabras.",
                     "Anochece, y en la milpa medio cortada quedan los rastrojos de pie, como gente que espera algo. {nombre} los mira desde el muro. Mañana caerán también. Huele a tierra removida y a hoja seca.",
                     "Al caer la tarde, alguien cuenta en voz alta los costales llenos, y todos escuchan como si fueran noticias de la radio. Son más que ayer. Menos de los que hacen falta. Mañana, más.",
-                    "Anochece sobre la última tarde de cosecha, y la milpa ya no es milpa: es tierra pelada con rastrojos, y el pueblo, de pronto, se ve más grande y más solo. Las trojes, en cambio, están llenas. Alguien saca el aguardiente de Rosendo.",
+                    "Anochece sobre la última tarde de cosecha, y la milpa ya no es milpa: es tierra pelada con rastrojos, y el pueblo, de pronto, se ve más grande y más solo. Las trojes, en cambio, están llenas. Alguien saca el aguardiente de Eusebio.",
                 ),
             ),
         ),
@@ -478,43 +478,43 @@ internal object PiezasRuth {
         // ---------- Los de la temporada 1 ----------
         "jauria" to TextoEspecial(
             listOf(mapOf(
-                Parrafo.MANANA to "Hoy, al amanecer, había huellas de perro en la nieve alrededor de todo el muro, muchas, de muchos tamaños, dando vueltas. Damián, desde el portón, dice que eran más de doce. Anoche se los oyó pasar, y no ladraban. Eso es lo que le preocupa. Los perros que no ladran cazan.",
-                Parrafo.TRABAJO to "A esta hora refuerza con Bruno el hueco del lado este, el del carro volcado, metiendo más alambre de púas y estacas afiladas en la nieve. Si vienen, vendrán por aquí. Bruno hace bromas para que no se note que mira al llano cada poco. Se nota.",
+                Parrafo.MANANA to "Hoy, al amanecer, había huellas de perro en la nieve alrededor de todo el muro, muchas, de muchos tamaños, dando vueltas. Esteban, desde el portón, dice que eran más de doce. Anoche se los oyó pasar, y no ladraban. Eso es lo que le preocupa. Los perros que no ladran cazan.",
+                Parrafo.TRABAJO to "A esta hora refuerza con Gabino el hueco del lado este, el del carro volcado, metiendo más alambre de púas y estacas afiladas en la nieve. Si vienen, vendrán por aquí. Gabino hace bromas para que no se note que mira al llano cada poco. Se nota.",
                 Parrafo.ANOCHECER to "Esta noche nadie duerme del todo. {nombre} está en el muro con la escopeta y un farol, y en el llano, con la luna sobre la nieve, se mueven sombras bajas, en fila, alrededor del pueblo. No se acercan. Dan vueltas. A veces un par de ojos verdes la mira y se apaga.",
                 Parrafo.PENSAMIENTO to "{nombre} piensa que los perros también tienen hambre en invierno, y que antes de la guerra eran de alguien, dormían dentro, tenían nombre. Piensa que el llano los volvió lo que son, igual que a la gente. Eso no le quita las ganas de disparar. Solo se las ordena.",
             )),
             sigue = mapOf(
                 Parrafo.MANANA to listOf(
-                    "Hoy, otra vez, hay huellas alrededor del muro, más cerca que ayer. Una gallina de Rosendo no está. Nadie sabe cómo salió. Rosendo dice que no salió: que algo entró y salió con ella. Marta manda doblar la guardia y que los niños duerman en la casa común.",
-                    "Hoy amanece con la nieve limpia alrededor del muro: ni una huella nueva. Damián dice que se han ido, o que han aprendido a no dejar rastro. El pueblo respira a medias. Esta noche, de todas formas, la guardia seguirá doble.",
+                    "Hoy, otra vez, hay huellas alrededor del muro, más cerca que ayer. Una gallina de Eusebio no está. Nadie sabe cómo salió. Eusebio dice que no salió: que algo entró y salió con ella. Marta manda doblar la guardia y que los niños duerman en la casa común.",
+                    "Hoy amanece con la nieve limpia alrededor del muro: ni una huella nueva. Esteban dice que se han ido, o que han aprendido a no dejar rastro. El pueblo respira a medias. Esta noche, de todas formas, la guardia seguirá doble.",
                 ),
                 Parrafo.ANOCHECER to listOf(
                     "Esta noche los perros se acercan más: se les oye arañar el lado del hueco, gruñir, empujar el carro. {nombre} dispara una vez al aire. Se van. Vuelven. Se van otra vez. Al amanecer, en la nieve, una mancha oscura que nadie quiere mirar de cerca.",
-                    "Esta noche no se oye nada, y es peor. {nombre} y Damián pasan horas en el portón, quietos, escuchando el llano blanco. A la tercera hora, muy lejos, un aullido. Luego otro, más lejos. Damián dice que se van al sur. {nombre} se lo cree a medias.",
+                    "Esta noche no se oye nada, y es peor. {nombre} y Esteban pasan horas en el portón, quietos, escuchando el llano blanco. A la tercera hora, muy lejos, un aullido. Luego otro, más lejos. Esteban dice que se van al sur. {nombre} se lo cree a medias.",
                 ),
             ),
         ),
         "cereal" to unDia(
             Parrafo.MANANA to "Hoy {nombre} ha ido sola a la gasolinera vieja a buscar tornillos y ha vuelto con algo mejor: detrás de una nevera caída, una caja de cartón con el dibujo de un tigre sonriente, sin abrir. Dentro, una bolsa plateada. Dentro de la bolsa, algo que cruje.",
-            Parrafo.TRABAJO to "A esta hora tendría que estar enderezando clavos, pero está en la casa común con la caja encima de la mesa y medio pueblo alrededor. Rosendo la huele. Marta lee las letras de la caja en voz alta, despacio: hay palabras que no conoce nadie. Se decide abrirla delante de todos.",
+            Parrafo.TRABAJO to "A esta hora tendría que estar enderezando clavos, pero está en la casa común con la caja encima de la mesa y medio pueblo alrededor. Eusebio la huele. Marta lee las letras de la caja en voz alta, despacio: hay palabras que no conoce nadie. Se decide abrirla delante de todos.",
             Parrafo.GENTE to "Esta tarde se reparte el cereal: una cucharada para cada uno, en la palma de la mano, los niños primero. Nora se lo come grano a grano para que le dure. Agustina cierra los ojos al masticar y dice que así sabía algo que comió una vez de niña. No se acuerda de qué.",
             Parrafo.PENSAMIENTO to "{nombre} piensa que alguien metió esa caja en una tienda pensando que la compraría alguien el martes. El martes no llegó nunca. Ha tardado mucho en llegar a la boca de alguien, pero ha llegado. Se chupa el azúcar de los dedos. No se lava las manos en todo el día.",
         ),
         "tornado" to unDia(
-            Parrafo.MANANA to "Hoy amanece con un calor pegajoso y un silencio raro: no cantan los pájaros, y el gallo de Rosendo se ha escondido debajo de una carretilla. Los viejos miran al norte. El cielo de ese lado tiene un color de moretón que nadie quiere nombrar.",
+            Parrafo.MANANA to "Hoy amanece con un calor pegajoso y un silencio raro: no cantan los pájaros, y el gallo de Eusebio se ha escondido debajo de una carretilla. Los viejos miran al norte. El cielo de ese lado tiene un color de moretón que nadie quiere nombrar.",
             Parrafo.TRABAJO to "A esta hora el cielo del norte se pone verde, y de él baja una cuerda negra que toca el llano y se mueve. Marta toca la campana. El pueblo entero corre al sótano de la casa común, apretado, a oscuras, mientras afuera el viento arranca láminas y las tira como hojas.",
             Parrafo.GENTE to "Esta tarde, cuando pasa, salen a contar: tres láminas, un pedazo del techo de la casa común, una gallina que nadie encuentra. Nada más. Entonces habla la radio. La voz de Los Silos dice que la cuerda negra tocó Piedra Blanca, que allí no quedó un techo y que piden manos.",
-            Parrafo.PENSAMIENTO to "{nombre} piensa en Piedra Blanca, a dos días de camino, donde estuvo una vez de niña para una boda. Piensa en sus techos rojos, en la gente que bailaba. Piensa que el pacto dice que alguien tiene que ir. Mira a Bruno, que ya la está mirando. Los dos saben quién.",
+            Parrafo.PENSAMIENTO to "{nombre} piensa en Piedra Blanca, a dos días de camino, donde estuvo una vez de niña para una boda. Piensa en sus techos rojos, en la gente que bailaba. Piensa que el pacto dice que alguien tiene que ir. Mira a Gabino, que ya la está mirando. Los dos saben quién.",
         ),
         "sale_piedra" to unDia(
-            Parrafo.MANANA to "Hoy, antes del alba, {nombre} sale hacia Piedra Blanca con Bruno y dos más, con martillos, una bolsa de clavos, maíz tostado y las cantimploras llenas. Nora la abraza en el portón sin decir nada. Agustina le mete en el morral una tortilla de más. Tomás le dice que vuelva.",
-            Parrafo.TRABAJO to "A esta hora camina por la carretera vieja hacia el norte, entre coches oxidados y matorrales, con el sol de frente y el morral cada vez más pesado. Bruno silba. Los otros dos discuten de nada. Cada tanto se paran a mirar el llano en todas direcciones. Nada. Siguen.",
-            Parrafo.ANOCHECER to "Esta noche duermen dentro de un autobús volcado a la orilla de la carretera, con la puerta atrancada y un fuego chico dentro de una lata. Bruno se duerme enseguida. {nombre} hace la primera guardia, mirando por una ventana sin cristal un llano que no es el suyo.",
+            Parrafo.MANANA to "Hoy, antes del alba, {nombre} sale hacia Piedra Blanca con Gabino y dos más, con martillos, una bolsa de clavos, maíz tostado y las cantimploras llenas. Nora la abraza en el portón sin decir nada. Agustina le mete en el morral una tortilla de más. Matías le dice que vuelva.",
+            Parrafo.TRABAJO to "A esta hora camina por la carretera vieja hacia el norte, entre coches oxidados y matorrales, con el sol de frente y el morral cada vez más pesado. Gabino silba. Los otros dos discuten de nada. Cada tanto se paran a mirar el llano en todas direcciones. Nada. Siguen.",
+            Parrafo.ANOCHECER to "Esta noche duermen dentro de un autobús volcado a la orilla de la carretera, con la puerta atrancada y un fuego chico dentro de una lata. Gabino se duerme enseguida. {nombre} hace la primera guardia, mirando por una ventana sin cristal un llano que no es el suyo.",
             Parrafo.PENSAMIENTO to "{nombre} piensa en el Remanso, que a esta hora estará encendiendo la bombilla de la plaza sin ella. Piensa que es la primera noche que duerme fuera desde que nació Nora. Piensa que el pueblo aguantará. Que ella también. Lo piensa varias veces, por si acaso.",
         ),
         "vuelve_piedra" to unDia(
-            Parrafo.MANANA to "Hoy {nombre} vuelve de Piedra Blanca con Bruno y los otros dos, morenos, flacos, con las manos llenas de cortes y un saco de sal a la espalda. Desde lejos ven el humo de las cocinas del Remanso, y luego el muro, y en el muro a Nora, que los ha visto primero.",
-            Parrafo.GENTE to "Esta tarde, en la fogata, cuentan lo de Piedra Blanca: los techos levantados, la gente que lloraba al verlos llegar, el viejo que les dio la sal y les besó las manos. Bruno exagera. {nombre} lo corrige. Nora se queda dormida en sus rodillas antes del final.",
+            Parrafo.MANANA to "Hoy {nombre} vuelve de Piedra Blanca con Gabino y los otros dos, morenos, flacos, con las manos llenas de cortes y un saco de sal a la espalda. Desde lejos ven el humo de las cocinas del Remanso, y luego el muro, y en el muro a Nora, que los ha visto primero.",
+            Parrafo.GENTE to "Esta tarde, en la fogata, cuentan lo de Piedra Blanca: los techos levantados, la gente que lloraba al verlos llegar, el viejo que les dio la sal y les besó las manos. Gabino exagera. {nombre} lo corrige. Nora se queda dormida en sus rodillas antes del final.",
             Parrafo.PENSAMIENTO to "{nombre} piensa que la sal es lo que menos pesaba del viaje. Piensa en las caras de Piedra Blanca cuando vieron llegar a cuatro desconocidos con martillos. Piensa que el día que el Remanso pida ayuda, alguien vendrá así. Tiene que creerlo. Lo cree.",
         ),
         "nora_lee" to unDia(
@@ -523,9 +523,9 @@ internal object PiezasRuth {
             Parrafo.PENSAMIENTO to "{nombre} piensa que su hija ya puede leer cualquier cosa que encuentre en el llano: un letrero, una lata, una carta, un aviso de peligro. Piensa que eso es mejor arma que la escopeta. Piensa que también es una puerta. Y que ya no se podrá cerrar.",
         ),
         "muro_este" to unDia(
-            Parrafo.MANANA to "Hoy se cierra por fin el lado este del muro, el del hueco que llevaba años tapado con un carro volcado. Desde temprano está ahí medio pueblo con las últimas tablas, una puerta de armario y dos láminas de la carretera. Damián vigila sin vigilar: mira cómo trabajan.",
-            Parrafo.TRABAJO to "A esta hora clava la última tabla del lado este, una tabla gris con una flecha pintada que señala hacia algún sitio que ya no existe. La sujeta Bruno. Ella le pone cuatro clavos, porque es la última. El pueblo entero aplaude. No sabe dónde poner el martillo.",
-            Parrafo.ANOCHECER to "Esta noche, por primera vez, el pueblo está cerrado entero, y el carro volcado vuelve a ser un carro, apartado junto a las trojes. Marta ha dicho que esta noche el lado este no necesita guardia. Damián va igual, por costumbre. {nombre} lo acompaña.",
+            Parrafo.MANANA to "Hoy se cierra por fin el lado este del muro, el del hueco que llevaba años tapado con un carro volcado. Desde temprano está ahí medio pueblo con las últimas tablas, una puerta de armario y dos láminas de la carretera. Esteban vigila sin vigilar: mira cómo trabajan.",
+            Parrafo.TRABAJO to "A esta hora clava la última tabla del lado este, una tabla gris con una flecha pintada que señala hacia algún sitio que ya no existe. La sujeta Gabino. Ella le pone cuatro clavos, porque es la última. El pueblo entero aplaude. No sabe dónde poner el martillo.",
+            Parrafo.ANOCHECER to "Esta noche, por primera vez, el pueblo está cerrado entero, y el carro volcado vuelve a ser un carro, apartado junto a las trojes. Marta ha dicho que esta noche el lado este no necesita guardia. Esteban va igual, por costumbre. {nombre} lo acompaña.",
             Parrafo.PENSAMIENTO to "{nombre} piensa que un muro cerrado no es más fuerte que uno abierto, solo más tranquilo. Piensa que hoy el pueblo dormirá de otra manera, sin la mitad del oído puesta en el hueco. Piensa que dormir entero también es algo que se construye. Tabla a tabla.",
         ),
     )

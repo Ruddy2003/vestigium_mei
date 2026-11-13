@@ -168,18 +168,20 @@ class CuentoG7Prueba {
         // Lina: permiso el 12 de octubre de la 1, hijo el 8 de julio de la 2.
         nunca(v, "2027-01-01", "2027-10-11", "A Lina le han dado por fin el permiso"); nunca(v, "2028-07-08", "2031-12-31", "A Lina le han dado por fin el permiso")
         nunca(v, "2027-01-01", "2028-07-07", "Lina tiene un hijo")
-        // Ezra: piden cuarto el 28 de noviembre de la 2; juntos desde el 2 de mayo de la 3; fuera del 10 de mayo al 28 de julio de la 4.
-        nunca(v, "2027-01-01", "2028-11-27", "han pedido juntos un cuarto doble")
+        // Noa: piden cuarto el 28 de noviembre de la 2; juntos desde el 2 de mayo de la 3; fuera del 10 de mayo al 28 de julio de la 4.
+        nunca(v, "2027-01-01", "2028-11-27", "han pedido juntas un cuarto doble")
         nunca(v, "2027-01-01", "2029-05-01", "viven en un cuarto doble")
-        nunca(v, "2027-01-01", "2030-05-09", "Ezra está fuera"); nunca(v, "2030-07-28", "2031-12-31", "Ezra está fuera")
-        alguna(v, "2030-05-15", "2030-07-20", "Ezra está fuera")
+        nunca(v, "2027-01-01", "2030-05-09", "Noa está fuera"); nunca(v, "2030-07-28", "2031-12-31", "Noa está fuera")
+        alguna(v, "2030-05-15", "2030-07-20", "Noa está fuera")
+        // Noa es una mujer: ningún texto la trata de hombre ni queda el nombre de antes.
+        nunca(v, "2027-01-01", "2031-12-31", "Ezra"); nunca(v, "2027-01-01", "2031-12-31", "muchacho alto")
         nunca(v, "2027-01-01", "2031-03-07", "La residente espera un hijo")
         // Dorotea muere el 10 de diciembre de la 3; el supervisor cambia el 25 de noviembre de la 3.
         nunca(v, "2029-12-10", "2031-12-31", "vive en el cuarto del fondo"); nunca(v, "2027-01-01", "2029-12-09", "La vieja Dorotea murió")
         nunca(v, "2027-01-01", "2029-11-24", "El supervisor nuevo")
         // La Puerta, abierta desde el 20 de septiembre de la 5.
         nunca(v, "2027-01-01", "2031-09-19", "abierta al fondo del pasillo, y en que ya sabe")
-        noNombran(v, listOf("Lina", "Ezra", "Dorotea"))
+        noNombran(v, listOf("Lina", "Noa", "Dorotea"))
     }
 
     @Test fun laResidenteRacionaElAguaPasaLaCuarentenaYVeLaPuertaAbierta() {

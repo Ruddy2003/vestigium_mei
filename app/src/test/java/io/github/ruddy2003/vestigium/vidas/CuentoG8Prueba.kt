@@ -183,17 +183,17 @@ class CuentoG8Prueba {
         // Nora: lee sola el 20 de octubre de la 1, hace guardia desde el 30 de octubre de la 4 y habla por la radio desde el 28 de septiembre de la 5.
         nunca(v, "2027-10-20", "2031-12-31", "Nora está aprendiendo a leer"); nunca(v, "2027-01-01", "2027-10-19", "que lee en voz alta para los niños")
         nunca(v, "2027-01-01", "2030-10-29", "Nora ya hace guardia en el muro"); nunca(v, "2027-01-01", "2031-09-27", "Nora habla por la radio del Remanso")
-        // Abel: lo espera desde el 30 de julio de la 2, nace el 12 de marzo de la 3 y camina desde el 28 de marzo de la 4.
-        nadieAntes(v, "Abel", "2029-03-11")
+        // Elías: lo espera desde el 30 de julio de la 2, nace el 12 de marzo de la 3 y camina desde el 28 de marzo de la 4.
+        nadieAntes(v, "Elías", "2029-03-11")
         nunca(v, "2027-01-01", "2028-07-29", "Ruth espera un hijo"); nunca(v, "2029-03-12", "2031-12-31", "Ruth espera un hijo")
-        nunca(v, "2030-03-28", "2031-12-31", "Abel, su hijo, nació"); nunca(v, "2027-01-01", "2030-03-27", "Abel ya camina")
-        // Agustina muere el 20 de febrero de la 4; Bruno se queda en Cuatro Molinos el 12 de julio de la 4 y vuelve de visita el 25 de octubre de la 5.
+        nunca(v, "2030-03-28", "2031-12-31", "Elías, su hijo, nació"); nunca(v, "2027-01-01", "2030-03-27", "Elías ya camina")
+        // Agustina muere el 20 de febrero de la 4; Gabino se queda en Cuatro Molinos el 12 de julio de la 4 y vuelve de visita el 25 de octubre de la 5.
         nunca(v, "2030-02-20", "2031-12-31", "Agustina, su madre, vive con ellos"); nunca(v, "2027-01-01", "2030-02-19", "La silla de Agustina")
-        nunca(v, "2030-07-12", "2031-12-31", "vive en la casa de al lado"); nunca(v, "2027-01-01", "2030-07-11", "Bruno se quedó en Cuatro Molinos")
-        nunca(v, "2027-01-01", "2031-10-24", "Bruno vive en Cuatro Molinos con su mujer")
-        // Damián muere en el portón y Tomás sale herido el 3 de agosto de la 3.
-        nunca(v, "2029-08-03", "2031-12-31", "Damián guarda el portón desde antes"); nunca(v, "2027-01-01", "2029-08-02", "un sombrero de paja colgado de un clavo")
-        nunca(v, "2027-01-01", "2029-08-02", "Tomás no ha recuperado del todo el brazo")
+        nunca(v, "2030-07-12", "2031-12-31", "vive en la casa de al lado"); nunca(v, "2027-01-01", "2030-07-11", "Gabino se quedó en Cuatro Molinos")
+        nunca(v, "2027-01-01", "2031-10-24", "Gabino vive en Cuatro Molinos con su mujer")
+        // Esteban muere en el portón y Matías sale herido el 3 de agosto de la 3.
+        nunca(v, "2029-08-03", "2031-12-31", "Esteban guarda el portón desde antes"); nunca(v, "2027-01-01", "2029-08-02", "un sombrero de paja colgado de un clavo")
+        nunca(v, "2027-01-01", "2029-08-02", "Matías no ha recuperado del todo el brazo")
         // Joaquín y Lidia llegan el 28 de abril de la 2; el jabón, el 10 de diciembre. Celia, en persona desde el 5 de junio de la 5.
         nadieAntes(v, "Joaquín", "2028-04-27"); nadieAntes(v, "Lidia", "2028-04-27")
         nunca(v, "2028-12-10", "2031-12-31", "Joaquín y Lidia llegaron del sur"); nunca(v, "2027-01-01", "2028-12-09", "Lidia hace jabón")
@@ -211,7 +211,7 @@ class CuentoG8Prueba {
         listOf("sube piedra del arroyo", "El muro nuevo se levanta con piedra", "El muro de piedra sube cada semana").forEach { nunca(v, "2027-01-01", "2029-10-14", it) }
         listOf("El muro de piedra rodea ya", "El muro de piedra está terminado").forEach { nunca(v, "2027-01-01", "2031-08-24", it) }
         alguna(v, "2031-09-01", "2031-12-31", "El muro de piedra")
-        noNombran(v, listOf("Nora", "Abel", "Agustina", "Bruno", "Damián", "Tomás", "Joaquín", "Lidia", "Celia"))
+        noNombran(v, listOf("Nora", "Elías", "Agustina", "Gabino", "Esteban", "Matías", "Joaquín", "Lidia", "Celia"))
     }
 
     @Test fun ruthAyudaFueraAguantaElAsedioYLaVentiscaYNoTrabajaEnLasFiestas() {
