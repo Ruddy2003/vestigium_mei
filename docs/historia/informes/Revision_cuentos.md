@@ -93,7 +93,7 @@ Busqué los nombres propios de los 45 cuentos y los comparé entre sí. Encontr�
   - las 8 tandas A y las 16 tandas T tienen su informe y están marcadas como hechas;
   - Tom y Carmen quedan sin cuento, como dice el plan.
 - **Compilaciones de Android anteriores:** T8a, corrida 234; T8b, corrida 237. Las dos terminaron bien.
-- **Compilación de Android de esta revisión:** pendiente; se agrega aquí al terminar la corrida de `apk.yml`.
+- **Compilación de Android de esta revisión:** la corrida 240 de `apk.yml`, lanzada a mano sobre la rama y sin publicar, terminó bien (commit `d26d795`).
 - **Capturas:** 0.
 
 ## Lo que no se pudo comprobar
