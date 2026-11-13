@@ -34,6 +34,14 @@ import io.github.ruddy2003.vestigium.ui.ideario.estrella
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
+import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
+import io.github.ruddy2003.vestigium.ui.muebles.deNoche
+import io.github.ruddy2003.vestigium.ui.muebles.filoMueble
+import io.github.ruddy2003.vestigium.ui.muebles.granoMueble
+import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
+import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
+import io.github.ruddy2003.vestigium.ui.muebles.sombraContacto
+import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -3295,6 +3303,23 @@ object EstanteHeleno : DisenoBiblioteca {
         return r
     }
 
+    /**
+     * El color de los muebles de la pestaña Diario (estante, volúmenes, tapa; piloto de la luz, 13 nov 2026): en modo oscuro,
+     * hacia el azul violeta de la noche del cuadro, no hacia un café casi negro. [t] sigue para la página y lo demás.
+     */
+    private fun tm(c: Color, oscuro: Boolean, noche: Boolean): Color {
+        var r = deNoche(c, oscuro, 0.4f)
+        if (noche) r = mezcla(r, NOCHE, 0.5f)
+        return r
+    }
+
+    /** La libreta en modo oscuro: la penumbra violeta del cuarto, y donde llega la lámpara ([luz]), tibia. */
+    private fun lcm(x: Color, oscuro: Boolean, luz: Float = 0f): Color =
+        if (!oscuro) x else mezcla(deNoche(x, true, 0.62f - 0.4f * luz), LLAMA, 0.14f * luz)
+
+    /** El sobre en modo oscuro: hacia la noche violeta. */
+    private fun ccm(x: Color, oscuro: Boolean): Color = deNoche(x, oscuro, 0.5f)
+
     override val corona = 0.3f
     override val base = 0.1f
     override val lado = 0.07f
@@ -3309,7 +3334,7 @@ object EstanteHeleno : DisenoBiblioteca {
     override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
         val u = density
         val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
+        fun c(x: Color) = tm(x, oscuro, noche)
         // El muro pintado, con las manchas del revoque.
         val cuerpo = Rect(0f, d.corona.bottom, w, d.base.top)
         drawRect(c(MURO), cuerpo.topLeft, cuerpo.size)
@@ -3317,13 +3342,18 @@ object EstanteHeleno : DisenoBiblioteca {
             drawOval(c(MURO_OSC).copy(alpha = 0.35f), Offset(w * azar(j, 61), cuerpo.top + cuerpo.height * azar(j, 62)),
                 Size((14 + 20 * azar(j, 63)) * u, (6 + 8 * azar(j, 64)) * u))
         }
+        // El revoque pintado a mano: pinceladas claras y oscuras que rompen el rojo liso.
+        pinceladas(cuerpo, c(MURO_OSC), 61, 40, u, 0.16f)
+        pinceladas(cuerpo, c(TERRACOTA), 67, 26, u, 0.12f)
         // Cada repisa: la sombra de la tabla de arriba y de las columnas.
         d.repisas.forEach { r ->
-            drawRect(Color.Black.copy(alpha = if (noche) 0.42f else 0.32f), r.topLeft, Size(r.width, 8 * u))
-            drawRect(Color.Black.copy(alpha = 0.15f), Offset(r.left, r.top + 8 * u), Size(r.width, 6 * u))
-            drawRect(Color.Black.copy(alpha = 0.18f), r.topLeft, Size(5 * u, r.height))
-            drawRect(Color.Black.copy(alpha = 0.12f), Offset(r.right - 4 * u, r.top), Size(4 * u, r.height))
+            drawRect(sombraMueble(if (noche) 0.42f else 0.32f), r.topLeft, Size(r.width, 8 * u))
+            drawRect(sombraMueble(0.15f), Offset(r.left, r.top + 8 * u), Size(r.width, 6 * u))
+            drawRect(sombraMueble(0.18f), r.topLeft, Size(5 * u, r.height))
+            drawRect(sombraMueble(0.12f), Offset(r.right - 4 * u, r.top), Size(4 * u, r.height))
         }
+        // La sombra de la columna izquierda en el muro, a su derecha: la luz viene de arriba a la izquierda.
+        drawRect(sombraMueble(0.16f), Offset(d.izquierda.right, d.izquierda.top), Size(d.izquierda.width * 0.45f, d.izquierda.height))
         // Las columnas jónicas de los costados.
         listOf(d.izquierda, d.derecha).forEach { r ->
             val fuste = Rect(r.left + r.width * 0.16f, r.top + r.width * 0.55f, r.right - r.width * 0.16f, r.bottom - r.width * 0.4f)
@@ -3333,7 +3363,7 @@ object EstanteHeleno : DisenoBiblioteca {
                 drawLine(c(MARMOL_OSC), Offset(x, fuste.top), Offset(x, fuste.bottom), 1.4f * u)
                 drawLine(c(MARMOL_LUZ), Offset(x + 1.2f * u, fuste.top), Offset(x + 1.2f * u, fuste.bottom), 0.6f * u)
             }
-            drawRect(Color.Black.copy(alpha = 0.16f), Offset(fuste.right - fuste.width * 0.2f, fuste.top), Size(fuste.width * 0.2f, fuste.height))
+            drawRect(sombraMueble(0.16f), Offset(fuste.right - fuste.width * 0.2f, fuste.top), Size(fuste.width * 0.2f, fuste.height))
             // El capitel: el ábaco, el canal, las dos volutas y los óvulos del equino.
             val capitel = Rect(r.left, r.top, r.right, fuste.top)
             drawRect(c(MARMOL_LUZ), capitel.topLeft, Size(capitel.width, capitel.height * 0.25f))
@@ -3361,6 +3391,8 @@ object EstanteHeleno : DisenoBiblioteca {
         d.tablas.forEach { r ->
             drawRect(c(MARMOL), r.topLeft, r.size)
             drawRect(c(MARMOL_LUZ), r.topLeft, Size(r.width, 2.2f * u))
+            // El canto de arriba toma la luz: crema de día, el filo tibio de la lámpara de noche.
+            drawRect(filoMueble(oscuro, if (oscuro) 0.4f else 0.5f), r.topLeft, Size(r.width, 1.2f * u))
             val oy = r.top + r.height * 0.58f
             var ox = r.left + 4 * u
             while (ox < r.right - 2 * u) {
@@ -3369,12 +3401,12 @@ object EstanteHeleno : DisenoBiblioteca {
                 drawLine(c(MARMOL_SOMBRA), Offset(ox + 3.8f * u, oy - r.height * 0.22f), Offset(ox + 3.8f * u, oy + r.height * 0.22f), 0.8f * u)
                 ox += 7.6f * u
             }
-            drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, r.bottom), Size(r.width, 3.5f * u))
+            drawRect(sombraMueble(0.22f), Offset(r.left, r.bottom), Size(r.width, 3.5f * u))
         }
         // El rótulo de cada mes: una placa de mármol con dos filetes azules.
         d.placas.forEach { p ->
             val r = p.r
-            drawRect(Color.Black.copy(alpha = 0.15f), Offset(r.left + 1.2f * u, r.top + 1.2f * u), r.size)
+            drawRect(sombraMueble(0.15f), Offset(r.left + 1.2f * u, r.top + 1.2f * u), r.size)
             drawRect(c(MARMOL_LUZ), r.topLeft, r.size)
             drawRect(c(MARMOL_SOMBRA), r.topLeft, r.size, style = Stroke(0.8f * u))
             drawLine(c(EGEO), Offset(r.left + 2 * u, r.top + 1.6f * u), Offset(r.right - 2 * u, r.top + 1.6f * u), 0.8f * u)
@@ -3388,16 +3420,19 @@ object EstanteHeleno : DisenoBiblioteca {
         drawRect(c(MARMOL), escalon.topLeft, escalon.size)
         vetas(escalon, c(MARMOL_OSC).copy(alpha = 0.3f), 71, densidad = 0.25f, grosor = 0.6f, ondulacion = 3f)
         drawRect(c(MARMOL_LUZ), escalon.topLeft, Size(escalon.width, 2.4f * u))
-        drawRect(Color.Black.copy(alpha = 0.14f), Offset(escalon.left, escalon.bottom - escalon.height * 0.3f), Size(escalon.width, escalon.height * 0.3f))
+        drawRect(sombraMueble(0.14f), Offset(escalon.left, escalon.bottom - escalon.height * 0.3f), Size(escalon.width, escalon.height * 0.3f))
         var jx = escalon.left + 30 * u
         while (jx < escalon.right) { drawLine(c(MARMOL_SOMBRA), Offset(jx, escalon.top + 2.4f * u), Offset(jx, escalon.bottom), 0.8f * u); jx += 54 * u }
         val piso = escalon.bottom
         drawRect(c(BALDOSA), Offset(0f, piso), Size(w, h - piso))
-        drawRect(Color.Black.copy(alpha = 0.25f), Offset(0f, piso), Size(w, 3 * u))
+        drawRect(sombraMueble(0.25f), Offset(0f, piso), Size(w, 3 * u))
         var bx = 0f
-        while (bx < w) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(bx, piso), Offset(bx, h), 0.8f * u); bx += 24 * u }
+        while (bx < w) { drawLine(sombraMueble(0.22f), Offset(bx, piso), Offset(bx, h), 0.8f * u); bx += 24 * u }
         var by = piso + 10 * u
-        while (by < h) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(0f, by), Offset(w, by), 0.8f * u); by += 12 * u }
+        while (by < h) { drawLine(sombraMueble(0.22f), Offset(0f, by), Offset(w, by), 0.8f * u); by += 12 * u }
+        pinceladas(Rect(0f, piso, w, h), c(MURO_OSC), 73, 12, u, 0.14f)
+        // El grano de papel, al final (regla 7).
+        granoMueble(Rect(0f, 0f, w, h), oscuro)
     }
 
     /** El meandro: un gancho cuadrado por paso, entre dos líneas que lo enmarcan. */
@@ -3424,11 +3459,11 @@ object EstanteHeleno : DisenoBiblioteca {
     /** El entablamento con el meandro, la kylix, la lámpara (encendida de noche) y, de noche, la lechuza. */
     private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
         val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
+        fun c(x: Color) = tm(x, oscuro, noche)
         drawRect(c(MURO), r.topLeft, r.size)
         val cornisa = r.top + r.height * 0.5f
         drawRect(c(MARMOL_LUZ), Offset(r.left, cornisa), Size(r.width, r.height * 0.06f))
-        drawRect(Color.Black.copy(alpha = 0.2f), Offset(r.left, cornisa + r.height * 0.06f), Size(r.width, 1.6f * u))
+        drawRect(sombraMueble(0.2f), Offset(r.left, cornisa + r.height * 0.06f), Size(r.width, 1.6f * u))
         val dientes = cornisa + r.height * 0.06f + 1.6f * u
         val altoDiente = r.height * 0.06f
         drawRect(c(MARMOL_SOMBRA), Offset(r.left, dientes), Size(r.width, altoDiente))
@@ -3445,7 +3480,7 @@ object EstanteHeleno : DisenoBiblioteca {
             drawRect(c(if (j % 2 == 0) MARMOL else MARMOL_LUZ), Offset(arq.left, y0), Size(arq.width, arq.height / 3f))
             drawLine(c(MARMOL_SOMBRA), Offset(arq.left, y0), Offset(arq.right, y0), 0.7f * u)
         }
-        drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, r.bottom - 2 * u), Size(r.width, 2 * u))
+        drawRect(sombraMueble(0.22f), Offset(r.left, r.bottom - 2 * u), Size(r.width, 2 * u))
         // La kylix: el pie, el tallo y la copa de barniz negro con su banda de palmetas rojas.
         val kx = r.left + r.width * 0.3f
         val kw = r.width * 0.16f
@@ -3531,25 +3566,25 @@ object EstanteHeleno : DisenoBiblioteca {
     override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
         val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
+        fun c(x: Color) = tm(x, oscuro, v.noche)
         val base = MADERAS[(v.semilla and 0x7fffffff) % MADERAS.size]
         val madera = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
         drawRoundRect(madera, Offset.Zero, size, CornerRadius(1.2f * u))
-        drawRect(Color.White.copy(alpha = 0.1f), Offset.Zero, Size(w * 0.1f, h))
+        drawRect(luzMueble(0.1f), Offset.Zero, Size(w * 0.1f, h))
         // Las hojas del díptico vistas por el canto derecho: más cuanto más escribiste.
         val hojas = 2 + (v.lleno * 3).toInt()
         val canto = minOf(w * 0.22f, hojas * 2.2f * u)
-        drawRect(Color.Black.copy(alpha = 0.18f), Offset(w - canto, 0f), Size(canto, h))
+        drawRect(sombraMueble(0.18f), Offset(w - canto, 0f), Size(canto, h))
         for (j in 1 until hojas) {
             val x = w - canto + canto * j / hojas
-            drawLine(Color.Black.copy(alpha = 0.35f), Offset(x, 0f), Offset(x, h), 0.6f * u)
+            drawLine(sombraMueble(0.35f), Offset(x, 0f), Offset(x, h), 0.6f * u)
         }
         // La cera oscura, hundida en el marco de madera.
         val cera = Rect(w * 0.16f, h * 0.06f, w - canto - w * 0.06f, h * 0.94f)
         drawRect(c(CERA), cera.topLeft, cera.size)
-        drawRect(Color.Black.copy(alpha = 0.35f), cera.topLeft, Size(cera.width, 2 * u))
-        drawRect(Color.Black.copy(alpha = 0.2f), cera.topLeft, Size(1.6f * u, cera.height))
-        drawRect(Color.White.copy(alpha = 0.08f), Offset(cera.left, cera.bottom - 1.2f * u), Size(cera.width, 1.2f * u))
+        drawRect(sombraMueble(0.35f), cera.topLeft, Size(cera.width, 2 * u))
+        drawRect(sombraMueble(0.2f), cera.topLeft, Size(1.6f * u, cera.height))
+        drawRect(luzMueble(0.08f), Offset(cera.left, cera.bottom - 1.2f * u), Size(cera.width, 1.2f * u))
         // El día y el mes incisos con el estilo.
         textoEn(medidor, v.dia, Rect(cera.left, cera.top + 2 * u, cera.right, cera.top + cera.height * 0.26f), letra, c(INCISO), 15f, peso = FontWeight.SemiBold)
         textoEn(medidor, v.mes, Rect(cera.left + 1 * u, cera.top + cera.height * 0.29f, cera.right - 1 * u, cera.top + cera.height * 0.78f), letra, c(INCISO).copy(alpha = 0.85f), 9f, vertical = true, minimo = 4.5f)
@@ -3571,8 +3606,8 @@ object EstanteHeleno : DisenoBiblioteca {
         // El cordón que pasa por los dos agujeros del canto izquierdo y cuelga con su nudo.
         val hx = w * 0.08f
         val a1 = Offset(hx, h * 0.3f); val a2 = Offset(hx, h * 0.7f)
-        drawCircle(Color.Black.copy(alpha = 0.5f), 1.1f * u, a1)
-        drawCircle(Color.Black.copy(alpha = 0.5f), 1.1f * u, a2)
+        drawCircle(sombraMueble(0.5f), 1.1f * u, a1)
+        drawCircle(sombraMueble(0.5f), 1.1f * u, a2)
         drawLine(c(CORDON), a1, a2, 1f * u)
         drawLine(c(CORDON), a2, Offset(hx + 1.5f * u, h * 0.8f), 1f * u)
         drawCircle(c(CORDON), 1.4f * u, Offset(hx + 1.5f * u, h * 0.8f))
@@ -3595,14 +3630,14 @@ object EstanteHeleno : DisenoBiblioteca {
     private fun DrawScope.hojaPinax(r: Rect, madera: Color, cera: Color, semilla: Int): Rect {
         val u = density
         drawRoundRect(madera, r.topLeft, r.size, CornerRadius(3 * u))
-        vetas(r.deflate(1.5f * u), Color.Black.copy(alpha = 0.2f), semilla, densidad = 0.45f, grosor = 0.7f, ondulacion = 1.6f)
-        bisel(r, Color.White.copy(alpha = 0.16f), Color.Black.copy(alpha = 0.24f), 1.6f * u)
+        vetas(r.deflate(1.5f * u), sombraMueble(0.2f), semilla, densidad = 0.45f, grosor = 0.7f, ondulacion = 1.6f)
+        bisel(r, luzMueble(0.16f), sombraMueble(0.24f), 1.6f * u)
         val dentro = Rect(r.left + r.width * 0.075f, r.top + r.height * 0.1f, r.right - r.width * 0.035f, r.bottom - r.height * 0.1f)
         drawRect(cera, dentro.topLeft, dentro.size)
-        drawRect(Color.Black.copy(alpha = 0.45f), dentro.topLeft, Size(dentro.width, 2.2f * u))
-        drawRect(Color.Black.copy(alpha = 0.28f), dentro.topLeft, Size(2 * u, dentro.height))
-        drawRect(Color.White.copy(alpha = 0.1f), Offset(dentro.left, dentro.bottom - 1.4f * u), Size(dentro.width, 1.4f * u))
-        drawRect(Color.White.copy(alpha = 0.06f), Offset(dentro.right - 1.2f * u, dentro.top), Size(1.2f * u, dentro.height))
+        drawRect(sombraMueble(0.45f), dentro.topLeft, Size(dentro.width, 2.2f * u))
+        drawRect(sombraMueble(0.28f), dentro.topLeft, Size(2 * u, dentro.height))
+        drawRect(luzMueble(0.1f), Offset(dentro.left, dentro.bottom - 1.4f * u), Size(dentro.width, 1.4f * u))
+        drawRect(luzMueble(0.06f), Offset(dentro.right - 1.2f * u, dentro.top), Size(1.2f * u, dentro.height))
         return dentro
     }
 
@@ -3629,20 +3664,20 @@ object EstanteHeleno : DisenoBiblioteca {
     private fun DrawScope.dibujarTapa(e: EstadoTapa, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
         val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, e.noche)
+        fun c(x: Color) = tm(x, oscuro, e.noche)
         val a = e.abierto.coerceIn(0f, 1f)
         val sem = e.semilla and 0x7fffffff
         val madera = c(MADERAS[sem % MADERAS.size])
         val cera = c(CERA)
         // Lo inciso deja ver la cera clara de abajo: se hunde poco, aun de noche, para que la fecha se siga leyendo.
-        val inciso = mezcla(mezcla(INCISO, NOCHE, if (e.noche) 0.18f else 0f), Color.Black, if (oscuro) 0.14f else 0f)
+        val inciso = mezcla(mezcla(INCISO, NOCHE, if (e.noche) 0.18f else 0f), SOMBRA_MUEBLE, if (oscuro) 0.14f else 0f)
         val tabla = Rect(w * 0.03f, h * 0.05f, w * 0.95f, h * 0.91f)
         // Las otras hojas del díptico por el canto de abajo y de la derecha: más cuanto más escribiste.
         val hojas = 1 + ((e.palabras / 800f).coerceIn(0f, 1f) * 3).toInt()
         for (j in hojas downTo 1) {
             val o = Offset(j * 1.7f * u, j * 2.3f * u)
-            drawRoundRect(mezcla(madera, Color.Black, 0.16f + 0.07f * j), tabla.topLeft + o, tabla.size, CornerRadius(3 * u))
-            drawRoundRect(Color.Black.copy(alpha = 0.3f), tabla.topLeft + o, tabla.size, CornerRadius(3 * u), style = Stroke(0.6f * u))
+            drawRoundRect(mezcla(madera, SOMBRA_MUEBLE, 0.16f + 0.07f * j), tabla.topLeft + o, tabla.size, CornerRadius(3 * u))
+            drawRoundRect(sombraMueble(0.3f), tabla.topLeft + o, tabla.size, CornerRadius(3 * u), style = Stroke(0.6f * u))
         }
         // La hoja de dentro (se ve al abrir): la cera llena de renglones incisos.
         if (a > 0.01f) {
@@ -3660,14 +3695,14 @@ object EstanteHeleno : DisenoBiblioteca {
             val dentro = hojaPinax(tabla, madera, cera, sem)
             // El meandro tallado en el marco de arriba, y el estilo de bronce apoyado a su lado.
             meandro(Offset(tabla.left + tabla.width * 0.1f, tabla.top + (dentro.top - tabla.top) / 2), tabla.width * 0.42f, (dentro.top - tabla.top) * 0.45f,
-                mezcla(madera, Color.Black, 0.45f))
+                mezcla(madera, SOMBRA_MUEBLE, 0.45f))
             val ye = tabla.top + (dentro.top - tabla.top) * 0.5f
             val e0 = Offset(tabla.left + tabla.width * 0.58f, ye); val e1 = Offset(tabla.right - tabla.width * 0.05f, ye - 0.6f * u)
-            drawLine(Color.Black.copy(alpha = 0.3f), e0 + Offset(1 * u, 1.5f * u), e1 + Offset(1 * u, 1.5f * u), 2.4f * u, StrokeCap.Round)
+            drawLine(sombraMueble(0.3f), e0 + Offset(1 * u, 1.5f * u), e1 + Offset(1 * u, 1.5f * u), 2.4f * u, StrokeCap.Round)
             drawLine(c(PICO), e0, e1, 2.2f * u, StrokeCap.Round)
             drawPath(Path().apply { moveTo(e0.x, e0.y - 1.1f * u); lineTo(e0.x - 7 * u, e0.y); lineTo(e0.x, e0.y + 1.1f * u); close() }, c(PICO))
             drawRect(c(PICO), Offset(e1.x - 1 * u, e1.y - 2.6f * u), Size(3.6f * u, 5.2f * u))
-            drawLine(Color.White.copy(alpha = 0.35f), e0 + Offset(0f, -0.6f * u), e1 + Offset(-2 * u, -0.6f * u), 0.6f * u)
+            drawLine(luzMueble(0.35f), e0 + Offset(0f, -0.6f * u), e1 + Offset(-2 * u, -0.6f * u), 0.6f * u)
             // La fecha incisa arriba de la cera, con un filete doble debajo.
             val zona = Rect(dentro.left + 6 * u, dentro.top + 3 * u, dentro.right - 6 * u, h * 0.265f)
             val fechas = renglonesFechaAnt(e.fecha, 30)
@@ -3706,11 +3741,11 @@ object EstanteHeleno : DisenoBiblioteca {
             // Los dos agujeros del canto izquierdo, con el cordón que une las hojas.
             val hx = tabla.left + tabla.width * 0.037f
             val a1 = Offset(hx, tabla.top + tabla.height * 0.3f); val a2 = Offset(hx, tabla.top + tabla.height * 0.7f)
-            drawCircle(Color.Black.copy(alpha = 0.55f), 2 * u, a1)
-            drawCircle(Color.Black.copy(alpha = 0.55f), 2 * u, a2)
+            drawCircle(sombraMueble(0.55f), 2 * u, a1)
+            drawCircle(sombraMueble(0.55f), 2 * u, a2)
             drawLine(c(CORDON), a1, a2, 1.6f * u)
             // Al cerrar, el girar de la hoja la oscurece.
-            drawRect(Color.Black.copy(alpha = 0.45f * a), tabla.topLeft, tabla.size)
+            drawRect(sombraMueble(0.45f * a), tabla.topLeft, tabla.size)
         }
         // El cordón cuelga del agujero de abajo, con su nudo.
         val hx = tabla.left + tabla.width * 0.037f
@@ -3930,17 +3965,17 @@ object EstanteHeleno : DisenoBiblioteca {
             close()
         }
         drawPath(pata, madera)
-        drawPath(pata, Color.Black.copy(alpha = 0.3f), style = Stroke(0.8f * u))
+        drawPath(pata, sombraMueble(0.3f), style = Stroke(0.8f * u))
         drawPath(Path().apply { moveTo(x + ancho * 0.1f, arriba + 2 * u); cubicTo(x + ancho * 0.6f, arriba + alto * 0.3f, x + ancho * 0.1f, arriba + alto * 0.55f, x + ancho * 0.12f, abajo - alto * 0.22f) },
-            Color.Black.copy(alpha = 0.22f), style = Stroke(ancho * 0.18f))
+            sombraMueble(0.22f), style = Stroke(ancho * 0.18f))
         for (k in 0 until 3) {
             val dx = x - ancho * 0.36f + hacia * ancho * 0.3f + k * ancho * 0.36f
             drawOval(mezcla(madera, Color.White, 0.12f), Offset(dx - ancho * 0.17f, abajo - ancho * 0.32f), Size(ancho * 0.34f, ancho * 0.36f))
-            drawLine(Color.Black.copy(alpha = 0.35f), Offset(dx + ancho * 0.17f, abajo - ancho * 0.3f), Offset(dx + ancho * 0.17f, abajo), 0.7f * u)
+            drawLine(sombraMueble(0.35f), Offset(dx + ancho * 0.17f, abajo - ancho * 0.3f), Offset(dx + ancho * 0.17f, abajo), 0.7f * u)
         }
         for (k in 0 until 3) {
             val y = arriba + alto * (0.62f + 0.04f * k)
-            drawLine(Color.Black.copy(alpha = 0.25f), Offset(x - ancho * 0.2f, y), Offset(x + ancho * 0.2f, y + 2 * u), 0.7f * u)
+            drawLine(sombraMueble(0.25f), Offset(x - ancho * 0.2f, y), Offset(x + ancho * 0.2f, y + 2 * u), 0.7f * u)
         }
     }
 
@@ -3959,11 +3994,14 @@ object EstanteHeleno : DisenoBiblioteca {
         val a = e.abierto.coerceIn(0f, 1f)
         val gordo = (kotlin.math.sqrt(e.hojas.coerceAtLeast(1).toFloat()) / 14f).coerceIn(0.07f, 1f)
         val s = e.semilla
-        fun c(x: Color, luz: Float = 0f) = lc(x, oscuro, luz)
+        fun c(x: Color, luz: Float = 0f) = lcm(x, oscuro, luz)
         // La pared encalada con su banda de olas azules; abajo, el zócalo rojo y el piso de baldosas.
         val cal = mezcla(MARMOL, TERRACOTA, 0.12f)
         val zocalo = h * 0.6f; val piso = h * 0.88f
         drawRect(c(cal, 0.15f), Offset.Zero, Size(w, zocalo))
+        // La cal pintada a mano: pinceladas que rompen la pared lisa.
+        pinceladas(Rect(0f, h * 0.16f, w, zocalo), c(mezcla(cal, MURO, 0.3f), 0.15f), 91, 22, u, 0.06f)
+        pinceladas(Rect(0f, h * 0.16f, w, zocalo), c(MARMOL_LUZ, 0.15f), 97, 16, u, 0.18f)
         drawRect(c(EGEO, 0.15f), Offset(0f, h * 0.07f), Size(w, 2 * u))
         olaCorrida(Offset(4 * u, h * 0.115f), w - 8 * u, h * 0.05f, c(EGEO, 0.15f))
         drawRect(c(EGEO, 0.15f), Offset(0f, h * 0.155f), Size(w, 1.4f * u))
@@ -3971,8 +4009,8 @@ object EstanteHeleno : DisenoBiblioteca {
         drawRect(c(MURO_OSC, 0.15f), Offset(0f, zocalo), Size(w, 3 * u))
         drawRect(c(BALDOSA, 0.3f), Offset(0f, piso), Size(w, h - piso))
         var bx = -((s and 0xff) % 20) * u
-        while (bx < w) { drawLine(Color.Black.copy(alpha = 0.25f), Offset(bx, piso), Offset(bx - 10 * u, h), 1 * u); bx += 30 * u }
-        drawLine(Color.Black.copy(alpha = 0.25f), Offset(0f, piso + (h - piso) * 0.5f), Offset(w, piso + (h - piso) * 0.5f), 1 * u)
+        while (bx < w) { drawLine(sombraMueble(0.25f), Offset(bx, piso), Offset(bx - 10 * u, h), 1 * u); bx += 30 * u }
+        drawLine(sombraMueble(0.25f), Offset(0f, piso + (h - piso) * 0.5f), Offset(w, piso + (h - piso) * 0.5f), 1 * u)
         // Una corona de olivo colgada de un clavo, a la derecha.
         val corona = Offset(w * 0.86f, h * 0.36f)
         drawCircle(c(PLUMA, 0.15f), 1.6f * u, Offset(corona.x, h * 0.2f))
@@ -3989,21 +4027,21 @@ object EstanteHeleno : DisenoBiblioteca {
         // La mesa: el tablero de madera con su canto moldurado, el faldón y tres patas de león.
         val madera = c(MADERAS[3], 0.5f)
         val maderaLuz = c(MADERAS[2], 0.5f)
-        pataLeon(w * 0.5f, h * 0.68f, piso + 2 * u, w * 0.06f, mezcla(madera, Color.Black, 0.25f), 0f)
+        pataLeon(w * 0.5f, h * 0.68f, piso + 2 * u, w * 0.06f, mezcla(madera, SOMBRA_MUEBLE, 0.25f), 0f)
         pataLeon(w * 0.13f, h * 0.68f, piso + 8 * u, w * 0.075f, madera, -0.6f)
         pataLeon(w * 0.87f, h * 0.68f, piso + 8 * u, w * 0.075f, madera, 0.6f)
         val tablero = Rect(w * 0.03f, h * 0.57f, w * 0.97f, h * 0.635f)
         drawRect(c(MADERAS[0], 0.5f), Offset(tablero.left, h * 0.54f), Size(tablero.width, h * 0.035f))
         drawRect(madera, tablero.topLeft, tablero.size)
-        vetas(tablero, Color.Black.copy(alpha = 0.18f), s + 4, densidad = 0.6f)
+        vetas(tablero, sombraMueble(0.18f), s + 4, densidad = 0.6f)
         drawRect(maderaLuz, tablero.topLeft, Size(tablero.width, 2 * u))
-        drawRect(Color.Black.copy(alpha = 0.25f), Offset(tablero.left, tablero.bottom - 2 * u), Size(tablero.width, 2 * u))
-        drawRect(mezcla(madera, Color.Black, 0.2f), Offset(w * 0.08f, tablero.bottom), Size(w * 0.84f, h * 0.05f))
+        drawRect(sombraMueble(0.25f), Offset(tablero.left, tablero.bottom - 2 * u), Size(tablero.width, 2 * u))
+        drawRect(mezcla(madera, SOMBRA_MUEBLE, 0.2f), Offset(w * 0.08f, tablero.bottom), Size(w * 0.84f, h * 0.05f))
         for (k in 0 until 18) drawCircle(maderaLuz, 1.4f * u, Offset(w * 0.1f + k * w * 0.047f, tablero.bottom + h * 0.025f))
         // La lámpara de barro, a la izquierda, con su asa, su pico y la llama.
         val barro = c(TERRACOTA, 1f)
         val lb = Offset(w * 0.1f, h * 0.535f)
-        drawOval(Color.Black.copy(alpha = 0.25f), Offset(lb.x - 18 * u, lb.y + 2 * u), Size(40 * u, 6 * u))
+        drawOval(sombraMueble(0.25f), Offset(lb.x - 18 * u, lb.y + 2 * u), Size(40 * u, 6 * u))
         drawPath(Path().apply { moveTo(lb.x - 16 * u, lb.y); quadraticTo(lb.x - 16 * u, lb.y - 13 * u, lb.x, lb.y - 13 * u); quadraticTo(lb.x + 12 * u, lb.y - 12 * u, lb.x + 22 * u, lb.y - 6 * u)
             lineTo(lb.x + 25 * u, lb.y - 3 * u); quadraticTo(lb.x + 16 * u, lb.y + 2 * u, lb.x - 16 * u, lb.y); close() }, barro)
         asaLampara(Offset(lb.x - 20 * u, lb.y - 12 * u), 10 * u, c(BARNIZ, 1f))
@@ -4032,14 +4070,14 @@ object EstanteHeleno : DisenoBiblioteca {
         val fondo = h * 0.27f
         val tope = base - grosor - fondo
         val n = (1 + e.hojas / 6).coerceIn(1, 16)
-        drawRect(Color.Black.copy(alpha = 0.28f), Offset(x0 + 5 * u, tope + 6 * u), Size(ancho, fondo + grosor))
+        drawRect(sombraMueble(0.28f), Offset(x0 + 5 * u, tope + 6 * u), Size(ancho, fondo + grosor))
         for (k in 0 until n) {
             val y0 = base - grosor + grosor * k / n
             val m = c(MADERAS[(s + k).and(0x7fffffff) % MADERAS.size], 0.55f)
             drawRect(m, Offset(x0 + (k % 2) * 1.2f * u, y0), Size(ancho - (k % 2) * 1.2f * u, grosor / n + 0.5f))
-            drawLine(Color.Black.copy(alpha = 0.3f), Offset(x0, y0), Offset(x1, y0), 0.6f * u)
+            drawLine(sombraMueble(0.3f), Offset(x0, y0), Offset(x1, y0), 0.6f * u)
         }
-        drawRect(Color.Black.copy(alpha = 0.18f), Offset(x1 - ancho * 0.08f, base - grosor), Size(ancho * 0.08f, grosor))
+        drawRect(sombraMueble(0.18f), Offset(x1 - ancho * 0.08f, base - grosor), Size(ancho * 0.08f, grosor))
         // La primera tablilla (debajo de la tapa): el marco y la cera con los renglones incisos.
         val superficie = Rect(x0, tope, x1, base - grosor)
         drawRect(c(MADERAS[0], 0.55f), superficie.topLeft, superficie.size)
@@ -4059,11 +4097,11 @@ object EstanteHeleno : DisenoBiblioteca {
         val tapa = c(MADERAS[(s and 0x7fffffff) % MADERAS.size], 0.55f)
         val bisagra = Offset(w * 0.5f, tope)
         if (k > 0.02f) {
-            if (k < 0.99f) drawRect(mezcla(tapa, Color.Black, 0.3f), Offset(x0, tope + fondo * k), Size(ancho, 3 * u))
+            if (k < 0.99f) drawRect(mezcla(tapa, SOMBRA_MUEBLE, 0.3f), Offset(x0, tope + fondo * k), Size(ancho, 3 * u))
             withTransform({ scale(1f, k, bisagra) }) {
                 drawRect(tapa, superficie.topLeft, superficie.size)
-                vetas(superficie, Color.Black.copy(alpha = 0.16f), s + 9, densidad = 0.5f)
-                drawRect(Color.White.copy(alpha = 0.1f), superficie.topLeft, Size(ancho, 3 * u))
+                vetas(superficie, sombraMueble(0.16f), s + 9, densidad = 0.5f)
+                drawRect(luzMueble(0.1f), superficie.topLeft, Size(ancho, 3 * u))
                 // El filete de hueso embutido y las rosetas de las esquinas.
                 val filete = superficie.deflate(ancho * 0.045f)
                 drawRect(c(MARMOL_LUZ, 0.55f), filete.topLeft, filete.size, style = Stroke(1.6f * u))
@@ -4074,9 +4112,9 @@ object EstanteHeleno : DisenoBiblioteca {
                 // La plaquita de boj con el nombre y la cuenta.
                 val placa = Rect(filete.left + ancho * 0.07f, filete.top + fondo * 0.15f, filete.right - ancho * 0.07f, filete.bottom - fondo * 0.13f)
                 val boj = c(Color(0xFFE6CF98), 0.75f)
-                drawRect(Color.Black.copy(alpha = 0.3f), Offset(placa.left + 1.5f * u, placa.top + 2 * u), placa.size)
+                drawRect(sombraMueble(0.3f), Offset(placa.left + 1.5f * u, placa.top + 2 * u), placa.size)
                 drawRect(boj, placa.topLeft, placa.size)
-                bisel(placa, Color.White.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.2f), 1.4f * u)
+                bisel(placa, luzMueble(0.35f), sombraMueble(0.2f), 1.4f * u)
                 drawRect(c(EGEO, 0.75f), Offset(placa.left + 4 * u, placa.top + 4 * u), Size(placa.width - 8 * u, placa.height - 8 * u), style = Stroke(0.8f * u))
                 textoEn(medidor, e.nombre, Rect(placa.left + 8 * u, placa.top + placa.height * 0.1f, placa.right - 8 * u, placa.top + placa.height * 0.58f), letra,
                     legibleAnt(boj, c(BARNIZ, 0.4f), MARMOL_LUZ), 17f, peso = FontWeight.Bold, minimo = 7f)
@@ -4086,7 +4124,7 @@ object EstanteHeleno : DisenoBiblioteca {
         } else if (k < -0.02f) {
             // Por dentro: la cera de la tapa, levantada detrás de la bisagra, con unos renglones ya escritos.
             val dentro = Rect(x0, tope - fondo * -k, x1, tope)
-            drawRect(mezcla(tapa, Color.Black, 0.12f), dentro.topLeft, dentro.size)
+            drawRect(mezcla(tapa, SOMBRA_MUEBLE, 0.12f), dentro.topLeft, dentro.size)
             val ceraDentro = Rect(dentro.left + ancho * 0.05f, dentro.top + dentro.height * 0.08f, dentro.right - ancho * 0.05f, dentro.bottom - dentro.height * 0.08f)
             drawRect(c(CERA, 0.55f), ceraDentro.topLeft, ceraDentro.size)
             val paso = 7 * u * -k
@@ -4106,11 +4144,13 @@ object EstanteHeleno : DisenoBiblioteca {
         // El estilo de bronce delante, con su punta y su espátula para borrar.
         val bronce = c(Color(0xFFB98B4A), 0.5f)
         val e0 = Offset(w * 0.24f, tablero.top + h * 0.035f); val e1 = Offset(w * 0.56f, tablero.top + h * 0.02f)
-        drawLine(Color.Black.copy(alpha = 0.25f), e0 + Offset(0f, 3 * u), e1 + Offset(0f, 3 * u), 2.4f * u, StrokeCap.Round)
+        drawLine(sombraMueble(0.25f), e0 + Offset(0f, 3 * u), e1 + Offset(0f, 3 * u), 2.4f * u, StrokeCap.Round)
         drawLine(bronce, e0, e1, 2.2f * u, StrokeCap.Round)
         drawLine(bronce, e1, Offset(e1.x + 10 * u, e1.y - 0.5f * u), 1 * u, StrokeCap.Round)
         drawRoundRect(bronce, Offset(e0.x - 9 * u, e0.y - 3 * u), Size(10 * u, 6 * u), CornerRadius(2 * u))
-        for (j in 0 until 3) drawLine(Color.Black.copy(alpha = 0.35f), Offset(e0.x + (8 + 3 * j) * u, e0.y - 2 * u), Offset(e0.x + (8 + 3 * j) * u, e0.y + 2 * u), 0.7f * u)
+        for (j in 0 until 3) drawLine(sombraMueble(0.35f), Offset(e0.x + (8 + 3 * j) * u, e0.y - 2 * u), Offset(e0.x + (8 + 3 * j) * u, e0.y + 2 * u), 0.7f * u)
+        // El grano de papel, al final (regla 7).
+        granoMueble(Rect(0f, 0f, w, h), oscuro)
     }
 
     /** Un asa: medio aro abierto hacia la derecha, de radio [r] y su centro en [o]. */
@@ -4185,10 +4225,10 @@ object EstanteHeleno : DisenoBiblioteca {
     private fun DrawScope.selloHeleno(c: Offset, r: Float, oscuro: Boolean, semilla: Int) {
         fun k(x: Color) = if (oscuro) mezcla(x, Color(0xFF0F0C0A), 0.3f) else x
         val forma = discoAnt(c, r, semilla, 20, 0.1f)
-        translate(r * 0.07f, r * 0.12f) { drawPath(forma, Color.Black.copy(alpha = 0.3f)) }
+        translate(r * 0.07f, r * 0.12f) { drawPath(forma, sombraMueble(0.3f)) }
         drawPath(forma, k(ARCILLA))
-        drawPath(discoAnt(c, r * 0.86f, semilla + 1, 16, 0.06f), k(mezcla(ARCILLA, Color.Black, 0.25f)).copy(alpha = 0.6f), style = Stroke(r * 0.06f))
-        val hondo = k(mezcla(ARCILLA, Color.Black, 0.42f))
+        drawPath(discoAnt(c, r * 0.86f, semilla + 1, 16, 0.06f), k(mezcla(ARCILLA, SOMBRA_MUEBLE, 0.25f)).copy(alpha = 0.6f), style = Stroke(r * 0.06f))
+        val hondo = k(mezcla(ARCILLA, SOMBRA_MUEBLE, 0.42f))
         for (j in 0 until 16) {
             val a = (j * Math.PI / 8).toFloat()
             val largo = if (j % 2 == 0) 0.66f else 0.46f
@@ -4223,11 +4263,11 @@ object EstanteHeleno : DisenoBiblioteca {
         val W = q.width; val H = q.height; val cx = q.center.x
         val ab = e.abrir.coerceIn(0f, 1f)
         val s = e.semilla
-        fun c(x: Color) = cc(x, oscuro)
+        fun c(x: Color) = ccm(x, oscuro)
         val caja = Rect(q.left + W * 0.04f, q.top + H * 0.05f, q.right - W * 0.04f, q.bottom - H * 0.05f)
         val rad = CornerRadius(H * 0.07f)
         // La funda: sombra, cuero de atrás.
-        drawRoundRect(Color.Black.copy(alpha = 0.28f), caja.topLeft + Offset(2.5f * u, 4 * u), caja.size, rad)
+        drawRoundRect(sombraMueble(0.28f), caja.topLeft + Offset(2.5f * u, 4 * u), caja.size, rad)
         drawRoundRect(c(CUERO_OSC), caja.topLeft, caja.size, rad)
         val boca = caja.top + H * 0.12f
         if (ab > 0f) drawRect(c(Color(0xFF1E120A)).copy(alpha = ab), Offset(caja.left + 4 * u, caja.top + 2 * u), Size(caja.width - 8 * u, boca - caja.top))
@@ -4259,7 +4299,7 @@ object EstanteHeleno : DisenoBiblioteca {
         // La etiqueta de papiro cosida al frente, con a quién va y las fechas.
         val etiqueta = Rect(caja.left + W * 0.07f, q.top + H * 0.6f, caja.right - W * 0.07f, caja.bottom - H * 0.06f)
         val papiro = c(PAPIRO)
-        drawRect(Color.Black.copy(alpha = 0.25f), etiqueta.topLeft + Offset(1.2f * u, 1.6f * u), etiqueta.size)
+        drawRect(sombraMueble(0.25f), etiqueta.topLeft + Offset(1.2f * u, 1.6f * u), etiqueta.size)
         drawRect(papiro, etiqueta.topLeft, etiqueta.size)
         clipRect(etiqueta.left, etiqueta.top, etiqueta.right, etiqueta.bottom) {
             var y = etiqueta.top + 2 * u
@@ -4278,7 +4318,7 @@ object EstanteHeleno : DisenoBiblioteca {
         listOf(caja.left + W * 0.04f, caja.right - W * 0.04f).forEach { x -> drawCircle(c(Color(0xFFC9A04A)), 2 * u, Offset(x, caja.bottom - H * 0.07f)) }
         // La solapa cerrada (o levantándose): el cuero con el meandro grabado en la orilla y una ramita de olivo.
         if (kk >= 0f) {
-            drawPath(solapa(), Color.Black.copy(alpha = 0.22f), style = Stroke(3 * u))
+            drawPath(solapa(), sombraMueble(0.22f), style = Stroke(3 * u))
             drawPath(solapa(), c(CUERO_LUZ))
             clipPath(solapa()) {
                 for (j in 0 until 12) drawCircle(c(CUERO_OSC).copy(alpha = 0.22f), (0.6f + 1.2f * azar(s, j + 50)) * u, Offset(caja.left + caja.width * azar(s, j + 60), caja.top + (bordeY - caja.top) * azar(s, j + 70)))
@@ -4300,7 +4340,7 @@ object EstanteHeleno : DisenoBiblioteca {
             val y = cS.y + rS * dy
             val av = ((e.cordon - i * 0.4f) / 0.6f).coerceIn(0f, 1f)
             val ruta = listOf(Offset(caja.left - W * 0.01f, y + 1.5f * u), Offset(cx, y), Offset(caja.right + W * 0.01f, y - 1.5f * u))
-            trazoParcialAnt(ruta.map { it + Offset(0f, 1.2f * u) }, av, Color.Black.copy(alpha = 0.3f), 2.2f * u)
+            trazoParcialAnt(ruta.map { it + Offset(0f, 1.2f * u) }, av, sombraMueble(0.3f), 2.2f * u)
             trazoParcialAnt(ruta, av, c(HILO), 1.8f * u)
         }
         selloCartaAnt(cS, rS, e.brillo, e.romper.coerceIn(0f, 1f), e.escalaSello, e.alfaSello, LLAMA) { selloHeleno(cS, rS, oscuro, s) }
