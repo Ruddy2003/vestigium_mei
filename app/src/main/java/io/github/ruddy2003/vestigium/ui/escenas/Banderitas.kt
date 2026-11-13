@@ -44,7 +44,7 @@ interface Banderita {
  * va siempre junto con su escena ([escenaDe]).
  */
 fun banderitaHistoria(tema: TemaId): Banderita? = when (tema) {
-    TemaId.ROMANO -> null           // S1
+    TemaId.ROMANO -> BanderitaRomano
     TemaId.URBE -> null             // S5
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> BanderitaNeon
@@ -69,7 +69,7 @@ fun banderitaHistoria(tema: TemaId): Banderita? = when (tema) {
     TemaId.ARCANO -> null           // S4
     TemaId.ESPACIO -> null          // S3
     TemaId.ABISMO -> null           // S16
-    TemaId.ANDALUS -> null          // S1
+    TemaId.ANDALUS -> BanderitaAndalus
     TemaId.MESO -> null             // S9
     TemaId.MONGOL -> null           // S12
     TemaId.RENACIMIENTO -> null     // S6

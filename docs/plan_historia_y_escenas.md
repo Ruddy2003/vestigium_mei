@@ -472,7 +472,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 
 **Por qué se reajustaron.** Las 7 tandas se midieron cuando se pensaba que una escena era combinar piezas de la biblioteca. Lo que se sabe ahora:
 
-1. **Cuánto pesa un cuadro.** Los tres del piloto llevan entre 1,360 y 1,500 renglones de dibujo cada uno (Helénico 1,500; Gótico 1,364; Ciudad neón 1,483 con sus cosas). P4b hizo dos en una tanda y aun así dejó una lista de puntos flojos en cada uno. **Dos cuadros por tanda es la medida.** **[Aproximación]:** sale de una sola tanda; S1 dirá si aguanta.
+1. **Cuánto pesa un cuadro.** Los tres del piloto llevan entre 1,360 y 1,500 renglones de dibujo cada uno (Helénico 1,500; Gótico 1,364; Ciudad neón 1,483 con sus cosas). P4b hizo dos en una tanda y aun así dejó una lista de puntos flojos en cada uno. **Dos cuadros por tanda es la medida.** **[Aproximación]:** salió de una sola tanda (P4b); S1 la confirmó con Romano y Al-Ándalus, dibujados a la vez.
 2. **Cada tema debe más cosas que en P4b.** Desde P5 y P6, además del paisaje y la banderita: el pelaje del gato, sus anclas, lo plantado en su suelo (`estorbos`), su luz y su talla, las pruebas y el barrido de 2026 a 2032.
 3. **Nueve temas piden más de un lugar ya en la temporada 1.** Los calendarios (tandas A3 a A8) dicen dónde está el personaje cada día, y varios se mudan. Contado día por día con el motor: los 29 temas son **37 cuadros y 5 variantes** en la temporada 1, y unos **24 lugares más** entre las temporadas 2 y 5.
 
@@ -512,7 +512,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 
 | Tanda | Temas | Cuadros | Estado |
 |---|---|---|---|
-| S1 | Romano; Al-Ándalus | 2 | pendiente |
+| S1 | Romano; Al-Ándalus | 2 | hecho 13 nov 2026 (`docs/historia/informes/S1.md`); **falta que el autor los vea junto a Helénico** |
 | S2 | Pirata (el mar y el cayo; Nassau como variante; primer cuadro a bordo) | 2 | pendiente |
 | S3 | Espacio (primer interior con dos luces); Distopía | 2 | pendiente |
 | S4 | Horror cósmico (primer cuadro con niebla); Ciudad verde | 2 | pendiente |
@@ -596,7 +596,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | T7a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7a.md`) |
 | T7b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7b.md`) |
 | T8a–T8b | claude-opus-5-5 | medium | Ídem | 0 c/u | hechas 12 nov 2026 (`docs/historia/informes/T8a.md`, `T8b.md`) |
-| S1–S19 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código, dos cuadros por tanda | 1 c/u, y 1 de reserva | pendiente (una por una, en la tabla de la sección 8) |
+| S1–S19 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código, dos cuadros por tanda | 1 c/u, y 1 de reserva | S1 hecha el 13 nov 2026; las demás, pendientes (una por una, en la tabla de la sección 8) |
 | C1 | claude-opus-5-5 | medium | Revisión y cierre sin dibujo nuevo | 1 | pendiente |
 | Y2028–Y2031 | claude-opus-5-5 | medium | Párrafos especiales con el tono y el calendario ya fijos | 0 c/u | — |
 
@@ -638,7 +638,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 - **Gestos y vibración:** los 700 ms, la caricia frente al desplazamiento y el aura encendida no se ven en las capturas.
 - **Medidas en dp:** están calculadas con la letra al 100 %. Con letra más grande, todo baja más.
 - **El nivel de las escenas:** las S se reajustaron el 13 nov 2026 a dos cuadros por tanda (sección 8).
-  - La medida sale de una sola tanda (P4b). Si S1 no alcanza para dos, se vuelve a contar.
+  - La medida salió de P4b y S1 la confirmó. Las tandas con un tipo nuevo de cuadro (a bordo, interior, niebla) pueden pedir más vueltas.
   - Son 19 tandas, y cada cuadro lo ve el autor junto a Helénico. Puede que no estén todas el 1 de enero de 2027; los temas que falten siguen con el gato de pixel.
   - Cada cuadro pesa al dibujarse (el grano y las capas de sombra). Desde la v245 el paisaje se pinta en segundo plano y se recuerda; falta que el autor confirme en el teléfono que ya no hay tirón.
 - **Continuidad:** un suceso de un año, como una herida o una casa quemada, tiene que seguir al año siguiente. La prueba revisa que los arcos empalmen entre temporadas.

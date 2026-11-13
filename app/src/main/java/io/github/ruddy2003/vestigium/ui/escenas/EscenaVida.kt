@@ -183,7 +183,7 @@ inline fun DrawScope.lienzo(dibujo: DrawScope.() -> Unit) {
  * (Helénico en P4a; Gótico y Ciudad neón en P4b) y después las tandas S.
  */
 fun escenaDe(tema: TemaId): EscenaVida? = when (tema) {
-    TemaId.ROMANO -> null           // S1
+    TemaId.ROMANO -> EscenaRomano
     TemaId.URBE -> null             // S5
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> EscenaNeon
@@ -208,7 +208,7 @@ fun escenaDe(tema: TemaId): EscenaVida? = when (tema) {
     TemaId.ARCANO -> null           // S4
     TemaId.ESPACIO -> null          // S3
     TemaId.ABISMO -> null           // S16
-    TemaId.ANDALUS -> null          // S1
+    TemaId.ANDALUS -> EscenaAndalus
     TemaId.MESO -> null             // S9
     TemaId.MONGOL -> null           // S12
     TemaId.RENACIMIENTO -> null     // S6

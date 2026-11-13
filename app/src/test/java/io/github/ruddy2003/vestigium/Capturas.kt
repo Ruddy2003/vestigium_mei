@@ -2736,4 +2736,20 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("cadena", "2030-11-10", listOf(7.0, 17.0, 21.0)),          // la cuerda de trapos delante de las máquinas
         Triple("tribunal", "2031-03-20", listOf(7.0, 17.0, 21.0)),        // la fiesta, con las máquinas todavía ahí
     ),
+    // Cayo (Romano, tanda S1).
+    "legionario" to listOf(
+        Triple("normal", "2027-05-06", HORAS_CUADRO),                     // primavera: la empalizada, con el primer tramo en obra
+        Triple("rosas", "2027-05-10", HORAS_CUADRO),                      // las Rosalias: guirnaldas y el vexilo adornado; de noche, antorchas
+        Triple("camino", "2028-06-20", HORAS_CUADRO),                     // está en el camino del desfiladero: su puesto, vacío (decisiones 18 y 21)
+        Triple("helado", "2028-01-18", HORAS_CUADRO),                     // los sármatas: el río helado y humo en la otra orilla
+        Triple("piedra", "2029-11-12", listOf(8.0, 13.0, 21.0)),          // la muralla y la torre, ya de piedra
+    ),
+    // Zaynab (Al-Ándalus, tanda S1).
+    "cordobesa" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // primavera: azahar, la tela carmesí a medias
+        Triple("fiesta", "2027-05-12", listOf(10.0, 16.0, 21.0)),         // la boda de Juliana: colgaduras, guirnalda y banderines
+        Triple("ramadan", "2027-07-20", listOf(13.0, 20.0, 22.0)),        // Ramadán: el anafe apagado de día; de noche, la mesa puesta y las lámparas (decisión 18)
+        Triple("telar", "2029-03-01", HORAS_CUADRO),                      // el telar desnudo
+        Triple("hueste", "2028-07-10", HORAS_CUADRO),                     // la hueste cruza el puente
+    ),
 )

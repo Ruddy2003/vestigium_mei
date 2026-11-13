@@ -229,20 +229,18 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 - **Lo que una segunda escena necesite de otra se sube a la biblioteca en vez de copiarlo:** `desconchon`, `hilera` y `casita`, `hojaDeHiguera`, `sombraCorta` siguen siendo privados de `EscenaHeleno.kt` (`Cosa` ya se subió en P4b, a `paisaje/Cosas.kt`). Al subir algo, el cuadro del que sale tiene que quedar idéntico: se comparan las dos imágenes punto por punto.
 - Las tandas S **no tocan el motor** (`EscenaVida.kt`, `VistaEscena.kt`, `vidas/`).
 
-**Los temas que faltan** (Gótico y Ciudad neón se hicieron en P4b). Dónde vive cada personaje y por dónde empezar. Son sugerencias: la tanda decide después de leer el calendario y el cuento.
+**Los temas que faltan** (Gótico y Ciudad neón se hicieron en P4b; Romano y Al-Ándalus, en S1: `EscenaRomano.kt` y `EscenaAndalus.kt` son otros dos exteriores con sol, pendientes de que el autor los apruebe). Dónde vive cada personaje y por dónde empezar. Son sugerencias: la tanda decide después de leer el calendario y el cuento.
 
 **Varios personajes se mudan durante el año** y su tema pide más de un lugar. Cuáles, cuántos días y qué se pinta entero o como variante del cuadro de siempre está en `docs/plan_historia_y_escenas.md`, sección 8.
 
 | Tema | Personaje y lugar | Tipo | Marco posible | Superficie grande |
 |---|---|---|---|---|
-| Romano | Cayo, un campamento en el Danubio | Exterior | El borde de una tienda, un estandarte | El río |
 | Egipto | Pay, Deir el-Medina | Exterior, sin agua | Un toldo de estera, una palmera | La ladera de piedra y arena |
 | Prehistoria | Ama, un valle del suroeste de Europa | Exterior y fuego | La boca de la cueva | El valle con su río |
 | Mesoamérica | K'an, una ciudad maya | Exterior | Una ceiba, un alero de palma | La plaza estucada |
 | Ruta de la Seda | Nanai-vandak, entre Samarcanda y Chang'an | Exterior, sin agua | El borde de una tienda, la carga de un camello | El desierto o la estepa |
 | Scriptorium | Hermano Odo, una abadía | Interior con ventana, o claustro | Un arco del claustro | El suelo de losas; el huerto |
 | Templario | Hermano Bernat, un castillo del Levante | Exterior, sin agua | Una almena, un estandarte | El llano seco |
-| Al-Ándalus | Zaynab, Córdoba | Patio | Un arco, un naranjo | El patio con su alberca |
 | Mongol | Bat, la estepa | Exterior, sin agua | El borde de la yurta | La estepa |
 | Renacimiento | Iacopo, un taller de Florencia | Interior con ventana | El marco de la ventana, un caballete | El suelo del taller; los tejados |
 | Pirata | Tomás, un balandro en el Caribe | A bordo | La jarcia y la vela | El mar |
