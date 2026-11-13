@@ -470,11 +470,8 @@ fun SolVergina(modifier: Modifier = Modifier, color: Color = MaterialTheme.color
 @Composable
 fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: String? = Romano.latin(titulo), modifier: Modifier = Modifier,
             plegable: Boolean = false, plegadaPorDefecto: Boolean = false, autoPlegar: Boolean = false, abrir: Int = 0, resumen: String? = null,
-            cabecera: (@Composable androidx.compose.foundation.layout.RowScope.(plegada: Boolean) -> Unit)? = null,
             content: @Composable () -> Unit) {
-    // Con [cabecera], la sección pinta eso en lugar de su título (el cuadro de Hoy pone ahí el título del cuento, que cambia
-    // cada día, y «leer ›»); [titulo] queda solo como la clave fija con la que se recuerda si está plegada.
-    val (nombre, comentario) = if (cabecera != null) titulo to null else Estilo.seccion(titulo, latin)
+    val (nombre, comentario) = Estilo.seccion(titulo, latin)
     // Las secciones plegables recuerdan si las cerraste (se guarda en tu configuración). Las que empiezan plegadas
     // guardan «+título» cuando las abres. Las de [autoPlegar] se vuelven a plegar al cerrar la app o al cambiar de día.
     val plegadas = io.github.ruddy2003.vestigium.data.Repo.config.plegadas
@@ -494,7 +491,7 @@ fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: S
     // margen de arriba se acorta lo mismo que crece la cabecera, para que el título quede donde estaba.
     Column(modifier.fillMaxWidth().padding(top = if (plegable) 10.dp else 26.dp).entrada(numero ?: 0)) {
         Row(
-            verticalAlignment = if (piel.centrar || cabecera != null) Alignment.CenterVertically else Alignment.Bottom,
+            verticalAlignment = if (piel.centrar) Alignment.CenterVertically else Alignment.Bottom,
             modifier = if (!plegable) Modifier else if (autoPlegar) Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { abiertaAuto = !abiertaAuto } else Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable {
                 io.github.ruddy2003.vestigium.data.Repo.cambiarConfig { c ->
                     val clave = if (plegadaPorDefecto) "+$titulo" else titulo
@@ -503,8 +500,6 @@ fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: S
                 }
             },
         ) {
-            if (cabecera != null) cabecera(plegada)
-            else {
             if (numero != null) {
                 Text(Estilo.numeral(numero), style = MaterialTheme.typography.titleLarge, color = piel.numeral.color())
                 Text(piel.sep, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.outline)
@@ -513,7 +508,6 @@ fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: S
             val peso = if (plegable) Modifier.weight(1f, fill = piel.rellena) else Modifier
             TituloSeccion(nombre, tema, peso)
             if (plegable && !piel.rellena) Spacer(Modifier.weight(1f))
-            }
             if (plegable) Text(if (plegada) piel.cerrada else piel.abierta, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (comentario != null) Text(comentario, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 1.dp))

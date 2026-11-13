@@ -339,7 +339,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                         Ficha("De pixel", !enCuadro) { cambiar { it.copy(gato_estilo = io.github.ruddy2003.vestigium.ui.escenas.GATO_DE_PIXEL) } }
                     }
                     val conCuadro = remember { io.github.ruddy2003.vestigium.ui.TemaId.entries.filter { io.github.ruddy2003.vestigium.ui.escenas.escenaDe(it) != null }.map { it.nombre } }
-                    Ayuda(if (enCuadro) "En su cuadro: arriba de Hoy sale el paisaje del personaje de «Otras vidas» del tema, a la hora que es, con el gato dentro. Toca al gato para acariciarlo; «leer ›» abre el cuento de hoy y el resto de la cabecera lo pliega. Por ahora lo tienen ${conCuadro.joinToString(", ")}; en los demás temas sigue el gato de pixel."
+                    Ayuda(if (enCuadro) "En su cuadro: arriba de Hoy sale el paisaje del personaje de «Otras vidas» del tema, a la hora que es, con el gato dentro. Toca al gato para acariciarlo; el botón de debajo abre el cuento de hoy. Por ahora lo tienen ${conCuadro.joinToString(", ")}; en los demás temas sigue el gato de pixel."
                         else "De pixel: la banda con el gato de pixel, en todos los temas.", Modifier.padding(top = 6.dp, bottom = 6.dp))
                 }
                 Interruptor("Tus últimos días", c.personaje, "Una franja en Hoy con tus últimos 14 días: el color es el ánimo del día; el alto, cuánto dormiste frente a tu normal; el remate, si lo sellaste. Hoy no se colorea hasta que lo llenas.") { v -> cambiar { it.copy(personaje = v) } }

@@ -287,11 +287,25 @@ class CuadroHoy(
  */
 fun cuadroDeHoy(tema: TemaId, dia: String, estilo: String = GATO_EN_CUADRO): CuadroHoy? {
     if (estilo != GATO_EN_CUADRO) return null
+    cuadroEnMemoria(tema, dia)?.let { return it }
     val escena = escenaDe(tema) ?: return null
     val vida = escena.vida(dia)
     val quien = OtrasVidas.porId(vida) ?: return null
     val ficha = FichaDelDia.de(dia, vida) ?: return null
     // El título no depende de la hora (la hora solo cambia el párrafo del trabajo).
     val titulo = Cuento.de(dia, vida, 12.0)?.titulo ?: quien.nombre
-    return CuadroHoy(tema, escena, quien, ficha, titulo, pelajeDe(tema) ?: Pelaje.COMUN, banderitaHistoria(tema))
+    return CuadroHoy(tema, escena, quien, ficha, titulo, pelajeDe(tema) ?: Pelaje.COMUN, banderitaHistoria(tema)).also { ultimoCuadro = it }
 }
+
+/** El último cuadro calculado: Hoy lo pide cada vez que se abre, y casi siempre es el mismo. */
+@Volatile private var ultimoCuadro: CuadroHoy? = null
+
+/** El cuadro del [tema] para el día [dia] si ya está calculado; si no, null (y entonces hay que pedirlo con [cuadroDeHoy], que tarda un poco la primera vez). */
+fun cuadroEnMemoria(tema: TemaId, dia: String): CuadroHoy? = ultimoCuadro?.takeIf { it.tema == tema && it.ficha.dia == dia }
+
+/**
+ * Si a Hoy le toca cuadro con este [tema] y este [estilo] de gato, sin calcular nada: se sabe al instante, para
+ * reservarle su sitio mientras el cuadro se prepara. Si luego resulta que no lo hay ([cuadroDeHoy] da null: al
+ * personaje le falta el calendario), Hoy pone el gato de pixel.
+ */
+fun hayCuadroEnHoy(tema: TemaId, estilo: String = GATO_EN_CUADRO): Boolean = estilo == GATO_EN_CUADRO && escenaDe(tema) != null

@@ -2284,10 +2284,11 @@ class Capturas {
     }
 
     /**
-     * Tanda P6: el cuadro como sale en Hoy (CAPTURAS=cuadro), con su cabecera, en claro y en oscuro. Cuatro bloques:
-     * abierto en un día normal (sin banderita, como queda hasta que exista «Hoy en la historia»); abierto en el día de
-     * muestra con el título más largo, con la marca de día especial y la banderita; y plegado, con marca y sin ella.
-     * Se llaman `…_temaCuadroEnHoy_<tema>_<modo>_hoy.png`.
+     * Tanda P6: el cuadro como sale en Hoy (CAPTURAS=cuadro), con el botón de su cuento debajo, en claro y en oscuro.
+     * Tres bloques: un día normal (sin banderita, como queda hasta que exista «Hoy en la historia»); el día de muestra
+     * con el título más largo, con la marca de día especial y la banderita; y el sitio reservado mientras el cuadro se
+     * prepara. Se llama `…_temaCuadroEnHoy_<tema>_<modo>_hoy.png`. La segunda imagen, `…_cuento.png`, es la pantalla
+     * que abre el botón: el cuento de hoy con el retrato del personaje y «Su vida».
      */
     @Test fun temaCuadroEnHoy() = porTema("cuadro") { t, o, n ->
         val escena = io.github.ruddy2003.vestigium.ui.escenas.escenaDe(t)
@@ -2297,20 +2298,18 @@ class Capturas {
             val normal = suyos.firstOrNull { !it.especial } ?: suyos.first()
             val especial = suyos.filter { it.especial }.maxByOrNull { it.titulo.length } ?: suyos.last()
             val humor = io.github.ruddy2003.vestigium.ui.Gato.Humor(io.github.ruddy2003.vestigium.ui.Gato.Animo.NORMAL, cansado = false, noche = false)
-            val plegado = "Cuadro plegado (captura)"
-            v73(t, o, 2900, extra = { c -> c.copy(plegadas = c.plegadas + plegado) }, nombre = "${n}_hoy") {
+            v73(t, o, 3400, nombre = "${n}_hoy") {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                     val rotulo: @Composable (String) -> Unit = { texto -> Text(texto, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp)) }
-                    rotulo("Abierto · día normal (${normal.ficha.dia}, 13:00) · sin banderita, como sale hasta la tanda H1")
-                    io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(normal, hoy, alLeer = {}, humor = humor, horaFija = 13.0)
-                    rotulo("Abierto · día especial (${especial.ficha.dia}, 18:00), con la marca · con la banderita de «Hoy en la historia»")
-                    io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(especial, hoy, alLeer = {}, alHistoria = {}, humor = humor, horaFija = 18.0)
-                    rotulo("Plegado · día especial, con la marca en la cabecera")
-                    io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(especial, hoy, alLeer = {}, humor = humor, horaFija = 18.0, clave = plegado)
-                    rotulo("Plegado · día normal")
-                    io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(normal, hoy, alLeer = {}, humor = humor, horaFija = 13.0, clave = plegado)
+                    rotulo("Día normal (${normal.ficha.dia}, 13:00) · sin banderita, como sale hasta la tanda H1")
+                    io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(t, hoy, alLeer = {}, cuadro = normal, humor = humor, horaFija = 13.0)
+                    rotulo("Día especial (${especial.ficha.dia}, 18:00), con la marca · con la banderita de «Hoy en la historia»")
+                    io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(t, hoy, alLeer = {}, alHistoria = {}, cuadro = especial, humor = humor, horaFija = 18.0)
+                    rotulo("El botón mientras el cuadro se prepara (un instante, la primera vez que se abre Hoy)")
+                    io.github.ruddy2003.vestigium.ui.escenas.BotonCuento("", especial = false, alLeer = null, modifier = Modifier.padding(top = 8.dp))
                 }
             }
+            v73(t, o, 4600, nombre = "${n}_cuento") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCuento(navVacia, escena.vida(hoy)) }
         }
     }
 
@@ -2514,7 +2513,7 @@ class Capturas {
             io.github.ruddy2003.vestigium.data.FraseGuardada(f.texto, f.original, f.autor, t.id, hoy) })) else c }, nombre = n) {
             Column(Modifier.padding(16.dp)) {
                 io.github.ruddy2003.vestigium.ui.pantallas.FraseDelDia(hoy)
-                if (cuadro != null) io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(cuadro, hoy, alLeer = {}, horaFija = 13.0)
+                if (cuadro != null) io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(t, hoy, alLeer = {}, cuadro = cuadro, horaFija = 13.0)
                 io.github.ruddy2003.vestigium.ui.pantallas.FranjaDias(hoy, abrir = {}, ponerse = {})
                 io.github.ruddy2003.vestigium.ui.pantallas.Tablero(hoy, max = 4)
             }
