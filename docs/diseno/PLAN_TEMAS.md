@@ -774,6 +774,445 @@ Todos heredan las 13 animaciones comunes y la reacción al ánimo. Lo propio de 
 
 **Prueba:** `CoberturaTemas` comprueba que `gato.json` tenga `<id>_c` y `<id>_o` (solo `_o` si es `soloOscuro`) con sus 2 acciones especiales.
 
+## Lote 10: cinco temas nuevos (de 34 a 39), en fichas
+
+**Estado (14 nov 2026): solo fichas.** Las decisiones las tomó el autor el 14 nov 2026, pregunta por pregunta. Todavía no se programa nada.
+- **Orden:** primera tanda, Frente exterior. Segunda tanda: Arcontes, Galia, Art nouveau y Psicodelia.
+- **Cuadros de «Otras vidas»:** van después, en la fila de escenas, detrás de S9 a S19 (`docs/plan_historia_y_escenas.md`). Cada tema sale completo pero sin cuadro, en la lista `SIN_CUADRO`.
+- **Lo que necesita cada tema:** todo lo de 8c (Kotlin, `res/`, `assets/`, `herramientas/` y pruebas), su gato (9b y 9c) y su otra vida (8d).
+- **Peso:** cinco temas suman unos 5 a 7.5 MB a la APK (ver 8e).
+
+### 10a. Reglas que valen para los cinco
+
+- **Claro y oscuro son el mismo tema.** El oscuro es el mismo mundo y el mismo lugar, de noche o con menos luz. No cambia de concepto: nada de «claro = la capital, oscuro = el bar». Esto es distinto de lo que hacen Abismo y Refugio, cuyo concepto sí cambia con el modo.
+- **Creencias reales, nada inventado** (Arcontes y Galia):
+  - Todo lo que el tema afirma como creencia sale de un texto antiguo, de una inscripción o de la arqueología, con su cita en la tabla de fuentes de su ficha.
+  - Lo que es solo una forma de mostrarlo en la app (un dibujo, cómo se cuenta la fecha) se anota como **recurso**, nunca como creencia.
+  - Las frases citan su texto («Evangelio de Tomás, dicho 3») y se traducen aquí, porque las traducciones modernas tienen derechos. Se pueden usar traducciones de dominio público, como la Reina-Valera de 1909 para los evangelios canónicos.
+- **Sin nombres con derechos (principio 5).** Frente exterior toma el género (ciencia ficción retro de los 70, espionaje, resistencia), no la saga que lo inspira (ver su ficha).
+- **Lo marcado «a comprobar»** se comprueba con fuentes al programar el tema. Si no se sostiene, se quita o se cambia, y se anota.
+- **Las cinco otras vidas son ficticias** (`ficticia = true`, datos con certeza `i` o `r`) y llevan su `inspiracion`.
+- **Fuentes tipográficas:** solo OFL o Apache, recortadas (principio 6). Ninguna repite las de `res/font/`. Las de las fichas son candidatas.
+- **Legibilidad (principio 7):** el francés va solo. El inglés, el hebreo, el arameo, el copto y el galo escrito con letras griegas llevan su español al lado en el reporte del día.
+
+### 10b. Las cinco de un vistazo
+
+| id · nombre | Época | Concepto y paleta (el mismo mundo en claro y oscuro) | Fecha y números | Emblema · libreta · campaña | Se distingue de |
+|---|---|---|---|---|---|
+| `frente` · Frente exterior | Futuro | Una red clandestina contra un régimen, en una galaxia con estética de 1975: consolas curvas color hueso, pantallas redondas de radar, palancas, pilotos ámbar. De día, hueso, pizarra, ámbar y rojo de botón; de noche, lo mismo en penumbra, con el verde pálido de las pantallas | Nombre en clave del día, ventana de transmisión y la hora doble (la de la capital y la local); números en pantalla de segmentos ámbar | Chispa de tres trazos en un círculo roto · cartucho de datos · rutas de salto de mundo en mundo | DIS (el Estado frente al espía), ESP, CIB, NEO, REF, LAB y ORD |
+| `arcontes` · Arcontes | Fantasía | Galilea en el siglo I, vivida por un iniciado gnóstico que cree el mito: el Demiurgo, los siete arcontes, Sofía y el Pleroma. De día, caliza, lino, ocre y el lago; de noche, la misma Galilea con el cielo de las esferas, la lámpara de aceite y luz por las grietas. Tono inquietante | El cielo del día de los 365 de Basílides, el planeta del día y la fecha hebrea; números con letras hebreas | Abraxas dentro del ouroboros · la jarra sellada con el códice · el ascenso del alma por las siete esferas | ROM, ARC, EGI, HEL, GOT, MED, ANT y ESP |
+| `galia` · Galia | Antigüedad | La Galia del 52 a. C., mitad bosque sagrado y mitad levantamiento contra Roma. De día, verde de roble, ocre, oro de torques y humo; de noche, el mismo bosque con luna, hogueras y, al fondo, las del campamento romano | «Noche N» (los galos contaban por noches), meses de Coligny con su marca de bueno o no bueno, y ordinales galos | El caballo de las monedas galas · tablillas de cera con letras griegas · el levantamiento de Cenabum a Alesia | ROM (el otro lado), ANT, RUI, BOT, TEM y CUE |
+| `nouveau` · Art nouveau | Siglos XIX a XXI | París hacia 1900: hierro, vidrio y luz eléctrica que parecen plantas; metro, invernaderos, vitrales de casa, carteles. De día, crema, salvia, malva, iris y oro pálido; de noche, la misma París con la luz eléctrica nueva, lámparas de colores y el verde de los cafés | La flor del día y su significado (lenguaje de las flores); la hora de París; cifras de hierro forjado | Libélula o iris en un marco de línea de látigo · cuaderno de dibujo · las estaciones de la primera línea del metro | DEC, BOT, GOT, VAP y `psicodelia` |
+| `psicodelia` · Psicodelia | Siglos XIX a XXI | San Francisco en 1967, urbana: casas pintadas, tiendas de discos, salas de baile, carteles que se derriten. De día, la calle con los colores de cartel; de noche, la misma ciudad con luz negra y luces líquidas. Movimiento contenido | El día como disco: lado A, lado B y la hora como pista; letra burbuja | Flor que vibra en colores complementarios · periódico clandestino del barrio · de la calle Haight al festival de Monterey | NEO, `nouveau`, REF, URS, REV y DEC |
+
+### 10c. Frente exterior (`frente`), primera tanda
+
+**Concepto.** Una red clandestina lucha contra un régimen que gobierna una galaxia. Es ciencia ficción retro de los 70: todo es analógico y pesado, con consolas curvas color hueso, pantallas redondas con trazos de radar, palancas de baquelita, pilotos ámbar y cartuchos de datos. El régimen se llama, por ahora, **el Directorio** (se puede cambiar). Los mundos son una capital de mármol blanco con cúpula de bronce, un puerto industrial de ladrillo, una mina, una estación de radar y un bar subterráneo. Se vive desde un **agente de la resistencia**, no desde el régimen.
+
+**Inspiración y límites.** Lo inspiran *Andor* (la serie de Star Wars) y las imágenes de diseño de producción que mandó el autor.
+- **Se toma el género:** retrofuturismo de los 70, espionaje, resistencia, mundos ocupados.
+- **No se toma nada de la saga:** sus nombres (de planetas, personajes, el Imperio o la Rebelión como nombres propios), la insignia rebelde, el engrane imperial, las naves triangulares, los cazas de alas hexagonales, los soldados de armadura blanca, su alfabeto inventado ni su música.
+
+**Claro y oscuro.**
+- **Claro:** hueso de consola, gris pizarra, blanco mármol, ámbar de piloto y rojo de botón.
+- **Oscuro:** los mismos lugares de noche. Pizarra profundo y azul petróleo, consolas en penumbra, pilotos ámbar y el verde pálido de las pantallas de radar.
+
+**Fecha y números.**
+- **Nombre en clave del día** («Operación Garza»), sacado de una lista propia de palabras y siempre el mismo para la misma fecha.
+- **Ventana de transmisión** («ventana 21:40»).
+- **Hora doble:** la de la capital y la del mundo donde estás.
+- **Números:** en pantalla de segmentos ámbar.
+- **Prohibido:** «JORNADA · AÑO», que es de Distopía. `UnicidadTemas` dirá si algo más choca.
+
+**Voz.** Seca y operativa: «Despacho recibido», «Transmisión cerrada», «Sin novedad en la red».
+
+**Superficies.**
+- **Emblema:** una chispa de tres trazos dentro de un círculo roto, por la célula y la señal.
+- **Libreta:** un cartucho de datos.
+- **Cartas:** transmisiones cifradas con el sello de la célula.
+- **Libros:** dosieres con la foto engrapada.
+- **Campaña:** un mapa estelar con rutas de salto, de mundo en mundo. Cada etapa es una misión con su nombre en clave.
+- **Trofeos (9):** parche de misión, llave de cifrado, microfilm, auricular, credencial falsa, cartucho de datos, radio de maleta, carta estelar e insignia de la red.
+- **Fondo vivo:** un barrido de radar lento sobre trazos. De noche, el mismo barrido con menos luz y una antena que parpadea.
+- **Sonido:** relés, pitidos de consola, teletipo y sintetizador analógico de los 70; música tensa y propia.
+- **Fuente:** Michroma (OFL, a confirmar) para los títulos, por su aire de ciencia ficción de los 70. Orbitron ya es de Espacio.
+- **Muebles del Diario** (cuando les toque, con la receta de `MUEBLES.md`): consola curva color hueso, silla giratoria y pantalla redonda, como en las referencias del autor.
+
+**Gato.**
+- **Pelaje y material:** gris pizarra, en pintura de concepto de los 70 (gouache sobre cartón, con grano).
+- **Accesorio:** chaqueta de vuelo y auricular.
+- **Fondo:** el puerto de ladrillo con una nave patrulla de forma propia en el cielo; de noche, el mismo puerto con reflectores.
+- **Lo que se mueve:** humo, el reflector y las luces de la nave.
+- **Acciones:** esconde un microfilm en el collar · se agacha cuando pasa el reflector de una patrulla.
+
+**Otra vida** (`agente_red`, ficticia, certeza `i`).
+- **Quién:** un ladrón de piezas al que la red recluta, de 32 años, en el puerto industrial de un mundo minero. El nombre es inventado y no debe parecerse al de ningún personaje de la saga.
+- **Agenda (`dia`):**
+  - 2–9 dormir «en un cuarto alquilado sobre el taller»
+  - 9–10 comer
+  - 10–15 trabajo «desarmar naves en el desguace»
+  - 15–16 camino «por el mercado, mirando si lo siguen»
+  - 16–19 trabajo «llevar piezas y recados»
+  - 19–20 comer
+  - 20–22 gente «el bar donde se pasan los mensajes»
+  - 22–23 camino
+  - 23–2 trabajo «la ventana de transmisión y la misión de la noche»
+- **`inspiracion`:** «Inspirado en *Andor*, de Star Wars: un ladrón al que recluta una red clandestina. El mundo, los nombres y la gente son inventados.» Hay precedente: la vida de Distopía dice «Inspirado en el mundo de 1984, de George Orwell».
+
+**Cuadro (para la fila de escenas).** Dos opciones:
+- el puerto de ladrillo con tropas formadas y una nave enorme de forma propia (un bloque o un anillo, nunca un triángulo);
+- la plaza blanca de la capital con su cúpula de bronce, o la sala de radar con su ventanal.
+
+**Se distingue de:**
+- **Distopía:** es el expediente del Estado, en gris y rojo de cartel. Este es el lado del espía, en hueso, ámbar y petróleo, y entre planetas.
+- **Espacio:** allí el espacio es ciencia de observatorio; aquí es territorio ocupado.
+- **Terminal:** allí todo es código cian sobre negro; aquí la consola es un mueble de los 70.
+- **Ciudad neón:** allí la ciudad satura; aquí la luz es escasa y está escondida.
+- **Refugio:** los 50 atómicos y optimistas, frente a los 70 sin optimismo.
+- **Laboratorio:** aquí el blanco es del régimen, no de la ciencia.
+- **Orden:** caballeros que guardan la técnica, frente a espías que la roban.
+
+### 10d. Arcontes (`arcontes`)
+
+**Concepto.** Galilea hacia el año 30, vivida por un iniciado que cree el mito gnóstico como verdad:
+- el mundo visible es una cárcel hecha por un dios menor, **Yaldabaoth**, el Demiurgo;
+- siete **arcontes** con caras de animal guardan las esferas del cielo;
+- **Sofía** perdió la luz;
+- la luz verdadera está en el **Pleroma**;
+- cada persona lleva dentro una chispa que quiere volver.
+
+Junto al mito están las creencias del siglo I: **los Vigilantes** de Enoc, **Belial** y los hijos de las tinieblas de Qumrán, los demonios del Testamento de Salomón y Abraxas. **Jesús es el Salvador** que bajó del Pleroma.
+
+**Decisión del autor sobre la época.** El gnosticismo como sistema está documentado desde el siglo II, y sus textos son de los siglos II a IV. El autor eligió **poner esas creencias en la Galilea del siglo I**, como un escenario primigenio. Es un anacronismo a propósito y se anota en la `inspiracion` de la vida. Las creencias son reales; lo único que se cambia es el lugar y el momento.
+
+**Tono:** inquietante. Los arcontes y los demonios se intuyen (siluetas entre nubes y estrellas, sombras) y nunca se ven enteros.
+
+**Claro y oscuro.**
+- **Claro:** Galilea de día, con caliza, lino, ocre, el lago y un dorado excesivo, el del mundo visible.
+- **Oscuro:** la misma Galilea de noche, en azul negro de cielo antiguo, con los círculos de las esferas (**recurso**: se dibujan como el diagrama de los ofitas), la lámpara de aceite y una luz blanca y violeta por las grietas.
+
+**Fecha y números.**
+- **El cielo del día:** «cielo 212 de 365». Según Ireneo, Basílides enseñaba que hay 365 cielos y que por eso el año tiene 365 días (*Contra las herejías* 1.24; a comprobar la cita).
+- **El planeta del día:** la semana planetaria antigua es real. Orígenes cuenta que los ofitas unían planetas y arcontes (por ejemplo, Saturno con el de cara de león; *Contra Celso* 6.31, a comprobar). Si la lista completa no está en las fuentes, solo se muestra el planeta.
+- **La fecha hebrea:** a comprobar si `android.icu.util.HebrewCalendar` sirve con el `minSdk` de la app.
+- **Números:** con letras hebreas que valen números.
+- **Títulos:** en arameo o hebreo, y en copto, con su español al lado.
+
+**Voz.** Afirma como verdad solo lo que dicen los textos:
+- las tres clases de personas de los valentinianos (de pura materia, de alma y de espíritu: **hílico**, **psíquico** y **pneumático**) pueden servir de niveles;
+- las frases son citas de los textos.
+
+**Jesús.** Lo decidió el autor:
+- **En el cuadro:** algunos días, una figura de luz de espaldas. Lo decide la fecha, así que ese día siempre es el mismo.
+- **En la frase del día:** a veces, un dicho suyo con su cita (Evangelio de Tomás, evangelios canónicos).
+- **En la historia de la otra vida.**
+- **Nunca se le ve de frente.** Los textos lo apoyan: el Salvador que cambia de forma en el Evangelio de Judas y en los Hechos de Juan, y cuyo cuerpo solo parecía cuerpo.
+
+**Superficies.**
+- **Emblema:** Abraxas como en las gemas antiguas (cabeza de gallo, piernas de serpiente), dentro del ouroboros.
+- **Libreta:** la jarra sellada con el códice.
+- **Cartas:** cartas entre comunidades escondidas.
+- **Libros:** los textos reales: Evangelio de Tomás, de Felipe, de María y de Judas, Apócrifo de Juan, Libro de Enoc.
+- **Campaña:** el ascenso del alma por las siete esferas hasta la Ogdóada. Cada etapa tiene su arconte y su contraseña, de las oraciones ofitas que copia Orígenes (*Contra Celso* 6.31, a comprobar), en traducción propia.
+- **Trofeos (9):** amuletos grabados, el anillo de Salomón, la lámpara de aceite, las contraseñas, un sello, la jarra, el códice…
+- **Fondo vivo:** de día, polvo dorado en la luz; de noche, los círculos que giran despacio y una sombra que cruza.
+- **Sonido:** lira, crótalos y salmodia grave; un zumbido bajo para los arcontes y una nota limpia y alta para el Pleroma.
+- **Fuente:** Noto Sans Coptic y Noto Serif Hebrew (OFL), más una latina de inscripción, a escoger.
+
+**Gato.**
+- **Pelaje y material:** negro con ojos de luz, en pintura a la encáustica, como los retratos de El Fayum.
+- **Accesorio:** un amuleto de Abraxas al cuello.
+- **Fondo:** el lago de Galilea con barcas; de noche, el mismo lago con las estrellas y una grieta de luz.
+- **Acciones:** rasga el velo con la pata y por un momento se ve la luz detrás (**recurso**) · eriza el lomo ante una sombra que no se ve.
+
+**Otra vida** (`iniciado`, ficticia, certeza `r`).
+- **Quién:** un salador de pescado de Magdala, de 28 años, hacia el año 30. Su nombre será uno común en la Galilea de entonces, por ejemplo Eleazar, evitando los de los apóstoles.
+- **Su historia, según el autor:**
+  - es contemporáneo de Jesús y lo conoce;
+  - con el tiempo lo sigue, pero no es discípulo;
+  - su historia sigue los hechos de la vida de Jesús y continúa después de su muerte, cuando lo persiguen;
+  - todo tiene que ser históricamente plausible;
+  - lee los hechos desde su fe gnóstica.
+- **Hechos que puede cruzar:**
+  - la predicación junto al lago;
+  - la Pascua en Jerusalén y la crucifixión bajo Poncio Pilato (hacia el año 30 o el 33), que él lee como el Salvador que deja un cuerpo que solo parecía;
+  - después, la muerte de Esteban y la persecución de Saulo (Hechos 7–9);
+  - Simón de Samaria (Hechos 8), que la tradición posterior tiene por el primer gnóstico;
+  - la ejecución de Santiago bajo Agripa I (Hechos 12, hacia el año 44).
+- **Agenda (`dia`):**
+  - 21–5 dormir
+  - 5–6 rezar «la oración del alba»
+  - 6–7 comer
+  - 7–12 trabajo «salar y secar el pescado de la noche»
+  - 12–13 comer
+  - 13–17 trabajo «cargar ánforas para las caravanas»
+  - 17–18 camino «a la orilla, a escuchar al maestro»
+  - 18–19 comer
+  - 19–21 gente «la reunión escondida de los que saben»
+- **`inspiracion`:** «Persona inventada. Los hechos siguen los evangelios y lo que la historia da por probable. Sus creencias son las de los textos gnósticos de los siglos II a IV, puestas a propósito en el siglo I.»
+- **Pregunta abierta:** hoy una vida tiene 3 párrafos fijos de `historia`. Si el autor quiere que la historia avance con los días, por capítulos, eso es una función nueva y se decide aparte.
+
+**Cuadro (para la fila).**
+- El lago de Galilea al atardecer, con la figura de luz algunos días.
+- Una cueva de noche, con la lámpara, el códice y la grieta de luz.
+
+**Se distingue de:**
+- **Romano:** el Imperio visible, frente a lo que se esconde debajo.
+- **Horror cósmico:** 1926 y signos inventados, frente a mito antiguo real; aquí el iniciado sí entiende y tiene contraseñas.
+- **Egipto:** faraónico, frente a lo cristiano y gnóstico.
+- **Helénico:** los títulos no van en griego.
+- **Gótico y Scriptorium:** la fe oficial, frente a la secreta.
+- **Tierras Antiguas:** fantasía inventada, frente a mito religioso.
+- **Espacio:** allí el cielo se observa; aquí es una cárcel.
+
+**Fuentes** (citas exactas a comprobar al programar):
+
+| Fuente | Para qué |
+|---|---|
+| Apócrifo de Juan (Nag Hammadi II,1, III,1, IV,1 y Papiro de Berlín 8502) | Yaldabaoth, los arcontes y sus caras, Sofía, Barbelo |
+| Evangelio de Tomás (Nag Hammadi II,2) | Dichos de Jesús |
+| Evangelio de Felipe (Nag Hammadi II,3) | Frases, libros |
+| Evangelio de María (Papiro de Berlín 8502) | El ascenso del alma ante las potencias |
+| Evangelio de Judas (Códice Tchacos) | El Salvador que se aparece como niño; Judas el que entiende |
+| Primer Apocalipsis de Santiago (Nag Hammadi V,3 y Códice Tchacos) | Las respuestas del alma a los guardianes |
+| Pistis Sofía (Códice Askew) | La tiniebla exterior como un dragón que se muerde la cola |
+| Ireneo, *Contra las herejías* 1.1–1.8 y 1.24 | Valentinianos (hílicos, psíquicos, pneumáticos); Basílides y los 365 cielos. Es una fuente enemiga |
+| Orígenes, *Contra Celso* 6.24–6.38 | El diagrama de los ofitas con Leviatán, los siete arcontes y sus contraseñas. Fuente enemiga |
+| Hechos de Juan | El Salvador que cambia de forma |
+| 1 Enoc 6–16 | Los Vigilantes del monte Hermón |
+| Regla de la guerra (Qumrán, 1QM) | Hijos de la luz contra hijos de las tinieblas, Belial |
+| Testamento de Salomón | Demonios con nombre, el anillo |
+| Gemas de Abraxas, papiros mágicos griegos | El emblema, los amuletos |
+| Reina-Valera 1909 | Dichos canónicos en español de dominio público |
+
+### 10e. Galia (`galia`)
+
+**Concepto.** La Galia del 52 a. C., el año del levantamiento de Vercingétorix. Es **mitad y mitad**:
+- el bosque sagrado y los druidas en la vida diaria;
+- la guerra en la campaña, los trofeos y los avisos.
+
+Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los guerreros no temen la muerte.
+
+**Advertencia sobre las fuentes.** Los druidas no escribían su religión. Lo que sabemos viene de:
+- **autores griegos y romanos**, varios enemigos (César escribió con propaganda);
+- **la arqueología**;
+- **inscripciones galas**.
+
+**No se usan:**
+- los mitos irlandeses y galeses (escritos mil años después y en otras tierras);
+- el druidismo romántico moderno;
+- el ogham, que es irlandés y del siglo IV d. C.
+
+**Claro y oscuro.**
+- **Claro:** el bosque y el oppidum de día, con verde de roble, ocre, oro de torques y humo de las casas.
+- **Oscuro:** el mismo bosque de noche, con luna, hogueras y, en el horizonte, las hogueras del campamento romano.
+
+**Fecha y números.**
+- **«Noche N»:** César dice que los galos cuentan el tiempo por noches porque descienden del dios de la noche (*Guerra de las Galias* 6.18).
+- **Meses del calendario de Coligny** (Samonios, Giamonios…), cada uno marcado **mat** (bueno) o **anmat** (no bueno). El calendario es del siglo II d. C.: es un desfase pequeño y se anota.
+- **Números con los ordinales galos de las cuentas de La Graufesenque** (*cintux*, *allos*, *tritos*, *petuar*…; a comprobar la lista).
+- **Palabras galas con letras griegas,** como escribían los galos (César 1.29). Hay que vigilar que no se parezca a Helénico.
+
+**Superficies.**
+- **Emblema:** el caballo de las monedas galas.
+- **Libreta:** tablillas de cera escritas con letras griegas. Lo sagrado no se escribe (César 6.14).
+- **Cartas:** mensajes de oppidum en oppidum.
+- **Avisos:** **el grito que corre de campo en campo**. César cuenta que la noticia de Cenabum llegó así a los arvernos antes del anochecer (7.3).
+- **Campaña:** el levantamiento, en este orden:
+  1. Cenabum (el inicio);
+  2. Gergovia (Vercingétorix toma el mando);
+  3. Avárico (el cerco perdido);
+  4. Gergovia (la victoria gala);
+  5. Bibracte (la asamblea de toda la Galia lo confirma);
+  6. Alesia.
+
+  **Termina en Alesia, con la entrega de Vercingétorix como victoria de honra** (decisión del autor; César 7.89; Plutarco y Floro narran la escena).
+- **Trofeos (9):** torques, la moneda del caballo, el carnyx (la trompeta de guerra con cabeza de jabalí, como las de Tintignac), la hoz de oro, el caldero, el estandarte del jabalí, el huevo de serpiente, el casco y la espada.
+- **Fondo vivo:** hojas y niebla en el robledal; de noche, el humo y la luz de las hogueras.
+- **Sonido:** el carnyx para los logros, la lira de los bardos (Diodoro 5.31), el viento en el bosque y el golpe de la herrería.
+- **Fuente:** a escoger (OFL), con aire de inscripción en bronce. No debe repetir la de Templario ni la de Romano.
+
+**Gato.**
+- **Pelaje y material:** gato montés europeo, en repujado de plata como el caldero de Gundestrup.
+- **Accesorio:** un torques.
+- **Fondo:** el oppidum en la colina con niebla de mañana; de noche, el mismo con hogueras y el cerco romano al fondo.
+- **Acciones:** se esconde entre el muérdago de un roble · le bufa a un casco romano tirado en el río.
+
+**Otra vida** (`aprendiz_druida`, ficticia, certeza `r`).
+- **Quién:** un joven arverno de 19 años, aprendiz de los druidas, que deja el bosque para seguir el levantamiento. Su nombre se escoge entre los atestiguados en inscripciones galas, sin usar el de ningún personaje histórico.
+- **Historia (3 párrafos):** el bosque y los versos de memoria; el levantamiento y Gergovia; Alesia y la entrega.
+- **Agenda (`dia`):**
+  - 21–5 dormir «junto al fuego de la casa grande»
+  - 5–6 cuidar «el ganado»
+  - 6–7 comer
+  - 7–11 rezar «aprender de memoria los versos de los druidas»
+  - 11–12 comer
+  - 12–16 trabajo «armas y caballos con los guerreros»
+  - 16–18 camino «llevar mensajes de oppidum en oppidum»
+  - 18–19 comer
+  - 19–21 gente «el banquete y los bardos»
+- **`inspiracion`:** «Persona inventada. Su formación sigue lo que César cuenta de los druidas, y su guerra, el levantamiento del 52 a. C.; las cifras son reconstrucciones.»
+
+**Cuadro (para la fila).**
+- El oppidum en la colina con niebla de mañana.
+- El manantial sagrado con sus ofrendas de madera.
+- Alesia de noche, con las dos líneas del cerco iluminadas.
+
+**Se distingue de:**
+- **Romano:** es el otro lado del mismo siglo.
+- **Tierras Antiguas:** fantasía con runas inventadas, frente a religión real y una guerra con fecha.
+- **Ciudad verde y Botánico:** allí el bosque es ruina o ciencia; aquí es templo.
+- **Templario:** guerra de fortaleza medieval, frente a guerra desde el bosque en la Edad del Hierro.
+- **Prehistoria:** la cueva, frente a la Edad del Hierro.
+
+**Fuentes** (citas exactas a comprobar al programar):
+
+| Fuente | Para qué |
+|---|---|
+| César, *Guerra de las Galias* 1.29, 6.13–6.18 y libro 7 | Escritura con letras griegas; druidas, asamblea de los carnutos, el alma que no muere, la cuenta por noches; el levantamiento completo |
+| Plinio, *Historia natural* 16.249–16.251 y 29.52 | El muérdago, la hoz de oro, el sexto día de la luna, los toros blancos; el huevo de serpiente |
+| Lucano, *Farsalia* 1.444–1.462 | Teutates, Esus y Taranis; la muerte como «la mitad de una larga vida» |
+| Diodoro Sículo 5.28–5.31; Estrabón 4.4 | Bardos, banquetes, cabezas de los enemigos |
+| Calendario de Coligny | Meses, mat y anmat |
+| Grafitos de La Graufesenque | Ordinales galos |
+| Caldero de Gundestrup, pilar de los barqueros de París, inscripciones | Cernunnos, Epona, Sucellus, Belenus, Lugus |
+| Santuario de las fuentes del Sena; Entremont y Roquepertuse; Tintignac | Ofrendas de madera a Sequana; culto a las cabezas; carnyx |
+
+### 10f. Art nouveau (`nouveau`)
+
+**Concepto.** París hacia 1900, cuando el hierro, el vidrio y la luz eléctrica aprendieron a parecer plantas. Entradas de metro, invernaderos, vitrales de casa, carteles litográficos, cafés y la Exposición Universal de 1900.
+
+**Claro y oscuro.**
+- **Claro:** crema, verde salvia, malva, iris violeta y oro pálido, con luz difusa a través del vidrio.
+- **Oscuro:** la misma París de noche, con la luz eléctrica (la gran novedad de la Exposición), lámparas de vidrio de colores, faroles del metro y el verde de los cafés.
+
+**Fecha y números.**
+- **La página de almanaque con la flor del día y su significado,** del lenguaje de las flores del siglo XIX (por ejemplo, *Le Langage des fleurs*, de Charlotte de la Tour, 1819; a comprobar).
+- **La hora de París,** que fue la hora legal de Francia de 1891 a 1911 (a comprobar).
+- **Cifras** de hierro forjado, con curvas.
+- **Títulos en francés,** que van solos según el principio 7.
+
+**Superficies.**
+- **Emblema:** una libélula o un iris dentro de un marco de línea de látigo.
+- **Libreta:** un cuaderno de dibujo de taller.
+- **Cartas:** tarjetas postales ilustradas.
+- **Libros:** revistas ilustradas encuadernadas.
+- **Campaña:** las estaciones de la primera línea del metro, abierta durante la Exposición de 1900 (a comprobar la fecha y la lista); cada estación es una etapa.
+- **Trofeos (9):** un jarrón de vidrio, un broche de libélula, una lámpara de vitral, un abanico, un pavo real, una entrada de metro, un cartel, un peine de carey y un frasco de perfume.
+- **Fondo vivo:** tallos que crecen despacio por los bordes; de noche, lo mismo con las lámparas que se encienden.
+- **Sonido:** vals, piano de salón, cajita de música y campanillas de cristal.
+- **Fuente:** a escoger, una de cartel de 1900 (OFL). No Poiret One, que es de Art déco.
+
+**Gato.**
+- **Pelaje y material:** atigrado crema, en litografía de cartel (contorno curvo, colores planos y suaves).
+- **Accesorio:** un lazo de seda.
+- **Fondo:** un invernadero de hierro y vidrio; de noche, el mismo con lámparas.
+- **Acciones:** persigue una libélula · se enrosca dibujando la línea de látigo.
+
+**Otra vida** (`litografa`, ficticia, certeza `r`).
+- **Quién:** una aprendiz de 19 años en un taller de litografía que imprime carteles, en París, en 1900.
+- **Agenda (`dia`):**
+  - 23–6 dormir
+  - 6–7 comer
+  - 7–7.5 camino
+  - 7.5–12 trabajo «pasar las piedras de cada color por la prensa»
+  - 12–13 comer
+  - 13–19 trabajo
+  - 19–19.5 camino «en el metro nuevo»
+  - 19.5–21 cuidar
+  - 21–23 gente «un café-concierto de Montmartre»
+- **Horas de trabajo:** la jornada de 11 horas encaja con la ley de 1900 para los talleres con mujeres y menores (a comprobar).
+- **`inspiracion`:** «Inspirada en los talleres de litografía que imprimían los carteles de París hacia 1900.»
+
+**Cuadro (para la fila).**
+- La entrada de metro bajo la lluvia, con sus faroles.
+- Un invernadero de hierro y vidrio, con la luz que se filtra.
+
+**Se distingue de:**
+- **Art déco:** geometría, máquina y años 20, frente a curva, planta y 1900.
+- **Botánico:** la lámina científica, frente a la planta como adorno.
+- **Gótico:** el vitral de catedral, frente al vitral de casa.
+- **Vapor victoriano:** hierro de fábrica, frente a hierro decorativo.
+- **Psicodelia:** toma sus letras, pero las hace vibrar; aquí la curva es tranquila.
+
+### 10g. Psicodelia (`psicodelia`)
+
+**Concepto.** San Francisco en 1967, el verano del amor, vivido en la ciudad: casas victorianas pintadas de colores, departamentos compartidos, tiendas de discos, salas de baile con shows de luces líquidas, radio FM de noche y carteles con letras que se derriten. **Movimiento contenido:** el fondo vivo respira, y el caleidoscopio y las letras que se derriten salen solo en momentos (al guardar, en los logros). El resto se lee tranquilo.
+
+**Una regla propia.** La app lleva un seguimiento privado de impulsos y recaídas. Las drogas aparecen solo como cultura y estética (el viaje visual, los carteles, la música) y **nunca tocan los registros**: ni chistes, ni «mal viaje» cuando se rompe una racha.
+
+**Claro y oscuro.**
+- **Claro:** la calle de día, con las casas pintadas, los colores saturados de los carteles de 1967 y el teñido anudado.
+- **Oscuro:** la misma ciudad de noche: la sala de baile con luz negra (magenta, verde limón y violeta fluorescentes sobre negro) y las luces líquidas. Hay que separarlo de Ciudad neón, que también usa magenta: aquí las formas son orgánicas y blandas, nunca letreros.
+
+**Fecha y números.**
+- **El día como disco:** lado A de mañana, lado B de noche, y la hora como pista.
+- **Letra burbuja** que ondula.
+- **Textos en inglés de la época,** con su español al lado en el reporte del día.
+
+**Superficies.**
+- **Emblema:** una flor que vibra en colores complementarios. El símbolo de la paz es de dominio público, si se quiere.
+- **Libreta:** el periódico clandestino del barrio.
+- **Cartas:** postales con calcomanías.
+- **Campaña:** de la calle Haight al festival de Monterey (junio de 1967), pasando por el parque, una sala de baile y la radio FM. Lugares reales, sin marcas.
+- **Trofeos (9):** un vinilo, una lámpara de lava, botones de solapa, una guitarra, una camioneta pintada, un cartel, incienso, una flor y una cinta para la frente.
+- **Fondo vivo:** luces líquidas que se mezclan y respiran, más tenues de día.
+- **Sonido:** guitarra con distorsión, sitar, órgano, eco de cinta y pandero. La música es propia, sin citar canciones.
+- **Fuente:** candidata Shrikhand o Monoton (OFL, a confirmar), con letra de los carteles de la época.
+
+**Gato.**
+- **Pelaje y material:** atigrado naranja, en serigrafía de colores fluorescentes.
+- **Accesorio:** gafas redondas y una cinta en la frente.
+- **Fondo:** una calle de casas pintadas; de noche, la misma calle con ventanas de luz negra.
+- **Acciones:** se queda hipnotizado por una lámpara de lava · persigue las burbujas del show de luces.
+
+**Otra vida** (`cartelista`, ficticia, certeza `r`).
+- **Quién:** un dibujante de carteles de conciertos, de 24 años, en San Francisco en 1967.
+- **Agenda (`dia`):**
+  - 4–12 dormir
+  - 12–13 comer
+  - 13–18 trabajo «dibujar el cartel de la semana»
+  - 18–19 comer «en la cocina del departamento compartido»
+  - 19–20 camino
+  - 20–2 gente «el baile y el show de luces»
+  - 2–4 libre «música en el departamento»
+- **`inspiracion`:** «Inspirado en los dibujantes de carteles de las salas de baile de San Francisco en 1966 y 1967.»
+
+**Cuadro (para la fila).**
+- Una calle de casas pintadas al atardecer.
+- Una sala de baile con las luces líquidas proyectadas.
+
+**Se distingue de:**
+- **Ciudad neón:** ciencia ficción y letreros, frente a formas orgánicas.
+- **Art nouveau:** la misma curva, pero tranquila, frente a esta, que vibra.
+- **Refugio:** el optimismo de los 50, frente a la contracultura de fines de los 60.
+- **Soviético y Revolución francesa:** cartel de Estado o de revolución, frente a cartel de concierto.
+- **Art déco:** el cabaret de los 20.
+
+### 10h. Lo que falta decidir o comprobar
+
+- **Frente exterior:**
+  - el nombre del régimen («el Directorio» es provisional);
+  - la lista de nombres en clave;
+  - el nombre del agente.
+- **Arcontes:**
+  - si la historia del iniciado avanza con los días, que sería una función nueva;
+  - la lista de arcontes por planeta;
+  - si `HebrewCalendar` sirve con el `minSdk`.
+- **Galia:**
+  - la lista de ordinales de La Graufesenque;
+  - el nombre del aprendiz;
+  - que las letras griegas no lo acerquen a Helénico.
+- **Art nouveau:**
+  - el diccionario de flores;
+  - la hora de París;
+  - las estaciones de la primera línea del metro;
+  - la ley de 1900.
+- **Para los cinco:**
+  - las fuentes tipográficas definitivas;
+  - que `UnicidadTemas` no encuentre choques.
+- **Épocas:** con estos cinco, Fantasía pasa de 2 a 3, Antigüedad de 5 a 6, siglos XIX a XXI de 9 a 11 y Futuro de 8 a 9.
+
 ## Archivos principales
 
 - **Kotlin** (`app/src/main/java/io/github/ruddy2003/vestigium/`):
