@@ -519,7 +519,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | S5 | Roma (la capilla y la ciudad de agosto; primer interior con ventana) | 2 | hecho 14 nov 2026 (`docs/historia/informes/S5.md`); **la capilla, aprobada por el autor el 14 nov 2026** sin cambios (quedan abiertos Scriptorium y Renacimiento); la azotea de agosto, con tres cambios pedidos ese día: árboles menos simples, la noche menos apagada y fachadas menos lisas |
 | S6 | Scriptorium; Renacimiento | 2 | hecho 14 nov 2026 (`docs/historia/informes/S6.md`); **falta que el autor los vea junto a Helénico** |
 | S7 | Ruta de la Seda (el camino, con sus tres paisajes, y Chang'an; primer cuadro de desierto) | 2 | hecho 14 nov 2026 (`docs/historia/informes/S7.md`); **falta que el autor los vea junto a Helénico**; Samarcanda sigue sin cuadro propio |
-| S8 | Revolución francesa (con la helada; Versalles como variante); Vapor victoriano | 2 | pendiente |
+| S8 | Revolución francesa (con la helada; Versalles como variante); Vapor victoriano | 2 | hecho 14 nov 2026 (`docs/historia/informes/S8.md`); **falta que el autor los vea junto a Helénico** |
 | S9 | Egipto; Mesoamérica | 2 | pendiente |
 | S10 | Prehistoria (el abrigo y la meseta; primer cuadro con luz de fuego) | 2 | pendiente |
 | S11 | Templario; Japón Edo | 2 | pendiente |
@@ -596,7 +596,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | T7a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7a.md`) |
 | T7b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7b.md`) |
 | T8a–T8b | claude-opus-5-5 | medium | Ídem | 0 c/u | hechas 12 nov 2026 (`docs/historia/informes/T8a.md`, `T8b.md`) |
-| S1–S19 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código, dos cuadros por tanda | 1 c/u, y 1 de reserva | S1, S2 y S3 hechas y aprobadas el 13 nov 2026; S4 y S5, hechas el 14 nov 2026 y aprobadas ese día (la azotea de Roma, con cambios); S6 y S7, hechas el 14 nov 2026, esperan al autor; las demás, pendientes (una por una, en la tabla de la sección 8) |
+| S1–S19 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código, dos cuadros por tanda | 1 c/u, y 1 de reserva | S1, S2 y S3 hechas y aprobadas el 13 nov 2026; S4 y S5, hechas el 14 nov 2026 y aprobadas ese día (la azotea de Roma, con cambios); S6, S7 y S8, hechas el 14 nov 2026, esperan al autor; las demás, pendientes (una por una, en la tabla de la sección 8) |
 | C1 | claude-opus-5-5 | medium | Revisión y cierre sin dibujo nuevo | 1 | pendiente |
 | Y2028–Y2031 | claude-opus-5-5 | medium | Párrafos especiales con el tono y el calendario ya fijos | 0 c/u | — |
 

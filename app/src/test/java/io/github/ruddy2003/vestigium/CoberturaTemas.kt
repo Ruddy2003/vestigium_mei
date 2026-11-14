@@ -103,8 +103,8 @@ class CoberturaTemas {
         /** Los del lote 6: error, cambio, la tecla del diario y el rascado de la lámina. */
         val SONIDOS_LOTE6 = listOf("s_<id>_error", "s_<id>_cambio", "s_tecla_<id>", "s_rascar_<id>")
 
-        /** Los 17 temas que todavía no tienen su cuadro de Hoy: Helénico lo tiene desde la tanda P4a; Gótico y Ciudad neón, desde la P4b; Romano y Al-Ándalus, desde la S1; Pirata, desde la S2; Espacio y Distopía, desde la S3; Horror cósmico y Ciudad verde, desde la S4; Roma, desde la S5; Scriptorium, desde la S6; Renacimiento, desde la S6; Ruta de la Seda, desde la S7; Revolución francesa, desde la S8; siguen las demás tandas S. */
-        private val SIN_CUADRO = setOf("egipto", "templario", "refugio", "orden", "vapor", "laboratorio", "colonos", "napoleon", "deco", "botanico", "edo", "abismo", "meso", "mongol", "urss", "antiguas", "cueva")
+        /** Los 16 temas que todavía no tienen su cuadro de Hoy: Helénico lo tiene desde la tanda P4a; Gótico y Ciudad neón, desde la P4b; Romano y Al-Ándalus, desde la S1; Pirata, desde la S2; Espacio y Distopía, desde la S3; Horror cósmico y Ciudad verde, desde la S4; Roma, desde la S5; Scriptorium, desde la S6; Renacimiento, desde la S6; Ruta de la Seda, desde la S7; Revolución francesa, desde la S8; Vapor victoriano, desde la S8; siguen las demás tandas S. */
+        private val SIN_CUADRO = setOf("egipto", "templario", "refugio", "orden", "laboratorio", "colonos", "napoleon", "deco", "botanico", "edo", "abismo", "meso", "mongol", "urss", "antiguas", "cueva")
 
         /**
          * Lo que falta hoy, por superficie. Del plan de diseño no falta nada desde el lote 9. Lo que queda es del plan de

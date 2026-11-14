@@ -205,7 +205,7 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
   - Nieve: ventisqueros, huellas, sombras azules largas.
   - Hierba: rachas que la peinan, senderos, matas, cambio de color de lejos a cerca.
   - Empedrado o asfalto: losas, juntas, charcos después de la lluvia con su `reflejoRoto`.
-- **A bordo de un barco** (Pirata, hecho en S2 y aprobado por el autor el 13 nov 2026: `EscenaPirata.kt` y sus archivos son el ejemplo; sus imágenes, `referencia_pirata.jpg`, `referencia_pirata_cayo.jpg` y `referencia_pirata_nassau.jpg`; Botánico, Abismo, Revolución con su barco-lavadero). El agua lo rodea todo: es la protagonista. El primer plano es la cubierta y el marco es la jarcia, una vela o un toldo.
+- **A bordo de un barco** (Pirata, hecho en S2 y aprobado por el autor el 13 nov 2026: `EscenaPirata.kt` y sus archivos son el ejemplo; sus imágenes, `referencia_pirata.jpg`, `referencia_pirata_cayo.jpg` y `referencia_pirata_nassau.jpg`; Revolución francesa con su barco-lavadero, hecho en S8 a falta de que el autor lo vea: `EscenaRevolucion.kt` y sus archivos; Botánico, Abismo). El agua lo rodea todo: es la protagonista. El primer plano es la cubierta y el marco es la jarcia, una vela o un toldo.
 - **Siempre de noche** (Ciudad neón, hecha en P4b: `EscenaNeon.kt` es el ejemplo). `Rayo(luces)` no da sombras de noche, así que la regla 1 se cumple con las luces del lugar, con las piezas de `paisaje/Focos.kt`:
   - la escena arma la lista de focos encendidos en ese momento y con ella un `Alumbrado`; cada cosa le pide su color (`Alumbrado.en`) en vez de pedírselo a `luces.tono`;
   - la sombra de cada cosa la tumba el foco que más la alumbra (`rayoDeFoco`, dentro de una `capaSombra`); para una sola luz que manda, `rayoFijo`;
@@ -244,10 +244,8 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 | Templario | Hermano Bernat, un castillo del Levante | Exterior, sin agua | Una almena, un estandarte | El llano seco |
 | Mongol | Bat, la estepa | Exterior, sin agua | El borde de la yurta | La estepa |
 | Japón Edo | Ochiyo, una posta del camino real | Exterior | Un alero, una rama de arce o de cerezo | El camino |
-| Revolución francesa | Marie-Jeanne, un barco-lavadero en el Sena | A bordo, en ciudad | La ropa tendida | El río |
 | Napoleónico | Jean-Baptiste, la campaña de Rusia | Exterior; nieve al final | Un abedul, un fusil en pabellón | El llano; la nieve |
 | Botánico | El naturalista, un bergantín | A bordo | La jarcia | El mar |
-| Vapor victoriano | Albert, una línea del norte de Inglaterra | Exterior, con humo | Una marquesina, una señal | Las vías |
 | Abismo | Nikos, un barco esponjero | A bordo | El pescante, un toldo | El mar |
 | Art déco | Lou, Nueva York | Ciudad, de noche tiene mucho que decir | Una escalera de incendios, un rótulo | La calle o la azotea |
 | Soviético | Liudmila, Moscú | Ciudad con nieve | El marco de una ventana, un abedul | El patio entre bloques |

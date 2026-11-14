@@ -2897,4 +2897,21 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("razon", "2031-11-10", listOf(13.0)),                      // la fiesta de la Razón
         Triple("navidad", "2027-12-25", listOf(21.0)),                    // la Navidad
     ),
+    // Albert (Vapor victoriano, tanda S8): el depósito de locomotoras, con su máquina, el semáforo y el valle con el viaducto que se va construyendo.
+    "fogonero" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // el patio, la máquina verde y el valle todavía sin viaducto
+        Triple("vieja", "2027-01-20", listOf(10.0)),                      // la máquina vieja, antes del 2 de febrero
+        Triple("gala", "2027-07-10", listOf(10.0)),                       // la excursión de la gala: banderines y estandartes
+        Triple("guy_fawkes", "2027-11-05", listOf(21.0)),                 // hogueras y cohetes
+        Triple("nevada", "2027-12-08", listOf(21.0)),                     // la noche de la nevada: la vía vacía (decisión 18)
+        Triple("arco", "2028-08-20", listOf(13.0)),                       // el primer arco del viaducto, cerrado
+        Triple("vendaval", "2028-10-14", listOf(13.0)),                   // el vendaval
+        Triple("navidad", "2028-12-25", listOf(17.0)),                    // coronas y banderines
+        Triple("baja", "2029-06-30", listOf(10.0)),                       // variante: está de baja y su arca tiene candado (decisión 21)
+        Triple("helada", "2030-01-20", listOf(8.0)),                      // carámbanos y el brasero
+        Triple("primer_tren", "2030-06-01", listOf(10.0)),                // su máquina cruza el viaducto terminado
+        Triple("viaducto", "2030-09-10", HORAS_CUADRO),                   // el viaducto terminado, a las tres horas
+        Triple("krakatoa", "2030-12-05", listOf(19.34)),                  // el atardecer rojo
+        Triple("maquinista", "2031-10-06", listOf(10.0)),                 // ya es maquinista: la aceitera y la chaqueta de otro fogonero
+    ),
 )
