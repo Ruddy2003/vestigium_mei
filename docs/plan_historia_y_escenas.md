@@ -520,7 +520,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | S6 | Scriptorium; Renacimiento | 2 | hecho 14 nov 2026 (`docs/historia/informes/S6.md`); **los dos cuadros, aprobados por el autor el 14 nov 2026** («Quedó increíble») |
 | S7 | Ruta de la Seda (el camino, con sus tres paisajes, y Chang'an; primer cuadro de desierto) | 2 | hecho 14 nov 2026 (`docs/historia/informes/S7.md`); **los dos cuadros, aprobados por el autor el 14 nov 2026** («Quedó increíble»); Samarcanda sigue sin cuadro propio |
 | S8 | Revolución francesa (con la helada; Versalles como variante); Vapor victoriano | 2 | hecho 14 nov 2026 (`docs/historia/informes/S8.md`); **los dos cuadros, aprobados por el autor el 14 nov 2026** («Quedó increíble») |
-| S9 | Egipto; Mesoamérica | 2 | en curso (14 nov 2026): Mesoamérica, integrada; Egipto, en su tercera vuelta |
+| S9 | Egipto; Mesoamérica | 2 | hecho el 14 nov 2026 (`docs/historia/informes/S9.md`); falta que el autor los vea |
 | S10 | Prehistoria (el abrigo y la meseta; primer cuadro con luz de fuego) | 2 | pendiente |
 | S11 | Templario; Japón Edo | 2 | pendiente |
 | S12 | Mongol (el valle de invierno y el campamento de verano) | 2 | pendiente |
@@ -596,7 +596,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | T7a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7a.md`) |
 | T7b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7b.md`) |
 | T8a–T8b | claude-opus-5-5 | medium | Ídem | 0 c/u | hechas 12 nov 2026 (`docs/historia/informes/T8a.md`, `T8b.md`) |
-| S1–S19 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código, dos cuadros por tanda | 1 c/u, y 1 de reserva | S1, S2 y S3 hechas y aprobadas el 13 nov 2026; S4 y S5, hechas el 14 nov 2026 y aprobadas ese día (la azotea de Roma, con cambios); S6, S7 y S8, hechas y aprobadas el 14 nov 2026; las demás, pendientes (una por una, en la tabla de la sección 8) |
+| S1–S19 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código, dos cuadros por tanda | 1 c/u, y 1 de reserva | S1, S2 y S3 hechas y aprobadas el 13 nov 2026; S4 y S5, hechas el 14 nov 2026 y aprobadas ese día (la azotea de Roma, con cambios); S6, S7 y S8, hechas y aprobadas el 14 nov 2026; S9, hecha ese día, falta que el autor la vea; las demás, pendientes (una por una, en la tabla de la sección 8) |
 | C1 | claude-opus-5-5 | medium | Revisión y cierre sin dibujo nuevo | 1 | pendiente |
 | Y2028–Y2031 | claude-opus-5-5 | medium | Párrafos especiales con el tono y el calendario ya fijos | 0 c/u | — |
 
