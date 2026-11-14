@@ -84,6 +84,8 @@ private enum class BarridoTema {
     GRADAS,
     /** Vapor victoriano: una bocanada de vapor que se hincha desde el toque. */
     BOCANADA,
+    /** Frente exterior: la pantalla redonda del radar que se enciende desde el toque, con sus anillos de distancia por delante. */
+    RADAR,
 }
 
 /**
@@ -120,7 +122,9 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.TEMPLARIO -> MatizMovimiento(BarridoTema.CRUZ, 820, CubicBezierEasing(0.55f, 0f, 0.3f, 1f), 0f, -12f, 1.02f, 420, 55, FastOutSlowInEasing, 1.15f, 0.95f, 1600f)
     // El ojo que se abre; los expedientes entran de lado y el sello cae seco.
     TemaId.DISTOPIA -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
-    TemaId.FRENTE -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
+    // La pantalla del radar que se enciende desde el toque; las secciones bajan un poco y asientan como la imagen de un
+    // tubo que se estabiliza, y los botones hacen clic seco, como un interruptor de palanca.
+    TemaId.FRENTE -> MatizMovimiento(BarridoTema.RADAR, 760, CubicBezierEasing(0.4f, 0f, 0.2f, 1f), 0f, -10f, 1f, 360, 50, LinearOutSlowInEasing, 1.25f, 0.85f, 2200f)
     // Escotilla octogonal que gira al abrirse; resortes de caricatura.
     TemaId.REFUGIO -> MatizMovimiento(BarridoTema.ESCOTILLA, 780, CubicBezierEasing(0.7f, 0f, 0.3f, 1f), 0f, 22f, 1f, 380, 50, FastOutSlowInEasing, 1f, 0.4f, 900f)
     // Engrane que gira; acero pesado.
@@ -251,6 +255,11 @@ internal enum class VivoTema(val periodo: Int) {
     TZOLKIN(260000),
     /** Vapor victoriano: el hollín de las chimeneas y, de noche, el gas de alumbrado. */
     HOLLIN(20000),
+    /**
+     * Frente exterior: el barrido lento de una pantalla de radar sobre su retícula, con los ecos que deja al pasar; de noche,
+     * el mismo barrido con menos luz y la antena de la estación, con su luz roja que parpadea.
+     */
+    RADAR(24000),
     /** Básico: nada se mueve detrás (no se dibuja ni se anima). */
     NINGUNO(60000),
 }
@@ -266,7 +275,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.MEDIEVAL -> VivoTema.RAYO_ORO         // un rayo de luz con polvo de oro suspendido
     TemaId.TEMPLARIO -> VivoTema.ANTORCHAS        // la muralla almenada con antorchas que tiemblan y sueltan pavesas
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
-    TemaId.FRENTE -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
+    TemaId.FRENTE -> VivoTema.RADAR            // el barrido lento del radar; de noche, además, la antena que parpadea
     TemaId.REFUGIO -> VivoTema.VAPOR             // vapor que sube, de día y de noche
     TemaId.ORDEN -> VivoTema.FRAGUA              // chispas de fragua en parábola
     TemaId.VAPOR -> VivoTema.HOLLIN              // copos de hollín que caen girando; de noche, el halo del gas de alumbrado
@@ -393,6 +402,9 @@ private fun DrawScope.resplandorVivo(color: Color, centro: Offset, radio: Float,
     withTransform({ translate(centro.x, centro.y); scale(radio, radio, Offset.Zero) }) { drawCircle(b, 1f, Offset.Zero, alpha = a) }
 }
 
+/** La estela del barrido del radar, una por color: transparente casi toda la vuelta y encendida en el último cuarto de vuelta. */
+private val PINCELES_RADAR = HashMap<Long, Brush>()
+
 /**
  * Dibuja un instante [t] (0 a 1, una vuelta del [VivoTema.periodo]) del fondo vivo. Los movimientos dan vueltas enteras
  * por periodo, así el ciclo vuelve a empezar sin salto. [fuerza] multiplica la opacidad (el teléfono, sin nada encima, va más visible).
@@ -511,6 +523,65 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 val xi = (0.16f + 0.36f * s) * w; val xd = (0.42f + 0.56f * s) * w
                 val brillo = 0.45f + 0.55f * senoVuelta(t * 9 + m.fase * 5).coerceAtLeast(0f)
                 drawCircle(al(oro, (if (oscuro) 0.55f else 0.4f) * brillo), 1.1f * u * m.tam, Offset(xi + (xd - xi) * l, s * h))
+            }
+        }
+        VivoTema.RADAR -> {
+            // La pantalla del radar: anillos de distancia, la cruz, la escala de grados en el tercer anillo, la estela del
+            // barrido (dos vueltas por periodo) con su línea de frente y los ecos, que se encienden cuando la línea pasa
+            // sobre ellos y se apagan a lo largo de la vuelta.
+            val trazoRadar = if (oscuro) Color(0xFF9FD8A8) else e.tertiary
+            val c = Offset(w * 0.5f, h * 0.44f)
+            val radio = maxOf(w, h) * 0.62f
+            val anillo = 92f * u
+            val reticula = al(trazoRadar, if (oscuro) 0.05f else 0.06f)
+            var rr = anillo
+            while (rr < radio) { drawCircle(reticula, rr, c, style = Stroke(0.8f * u)); rr += anillo }
+            drawLine(reticula, Offset(c.x - radio, c.y), Offset(c.x + radio, c.y), 0.8f * u)
+            drawLine(reticula, Offset(c.x, c.y - radio), Offset(c.x, c.y + radio), 0.8f * u)
+            for (i in 0 until 72) {
+                val a = i * PI / 36; val largo = (if (i % 6 == 0) 9f else 4f) * u; val r0 = anillo * 3
+                drawLine(reticula, Offset(c.x + (r0 * cos(a)).toFloat(), c.y + (r0 * sin(a)).toFloat()),
+                    Offset(c.x + ((r0 + largo) * cos(a)).toFloat(), c.y + ((r0 + largo) * sin(a)).toFloat()), 0.8f * u)
+            }
+            val giro = fraccionVivo(t * 2f) * 360f
+            val base = trazoRadar.copy(alpha = 1f)
+            val estela = PINCELES_RADAR.getOrPut(base.value.toLong()) {
+                Brush.sweepGradient(0f to Color.Transparent, 0.74f to Color.Transparent, 1f to base, center = Offset.Zero)
+            }
+            withTransform({ translate(c.x, c.y); rotate(giro, Offset.Zero) }) {
+                drawCircle(estela, radio, Offset.Zero, alpha = ((if (oscuro) 0.07f else 0.075f) * fuerza).coerceIn(0f, 1f))
+                drawLine(al(trazoRadar, if (oscuro) 0.16f else 0.14f), Offset.Zero, Offset(radio, 0f), 1.2f * u)
+            }
+            motas.take(12).forEach { m ->
+                val ang = m.x * 360f
+                val dist = (0.12f + 0.8f * m.y) * radio
+                val p = Offset(c.x + dist * cos(Math.toRadians(ang.toDouble())).toFloat(), c.y + dist * sin(Math.toRadians(ang.toDouble())).toFloat())
+                val pasado = fraccionVivo((giro - ang) / 360f)
+                val luz = (1f - pasado).let { it * it * it }
+                if (luz > 0.02f) {
+                    resplandorVivo(trazoRadar, p, 9f * u * m.tam, (if (oscuro) 0.22f else 0.16f) * luz * fuerza)
+                    drawCircle(al(trazoRadar, (if (oscuro) 0.45f else 0.4f) * luz), 1.8f * u * m.tam, p)
+                }
+            }
+            if (oscuro) {
+                // La antena de la estación, abajo a la derecha: torre de celosía con su dipolo y la luz roja de aviso.
+                val sil = al(Color(0xFFE7E1D4), 0.06f)
+                val pie = h * 1.0f; val x0 = w * 0.86f; val alto = 150f * u; val ancho = 22f * u
+                val cima = Offset(x0, pie - alto)
+                drawLine(sil, Offset(x0 - ancho / 2, pie), cima, 1.4f * u)
+                drawLine(sil, Offset(x0 + ancho / 2, pie), cima, 1.4f * u)
+                for (k in 1..6) {
+                    val f0 = 1f - (k - 1) / 7f; val f1 = 1f - k / 7f
+                    val y0 = pie - alto * (1f - f0); val y1 = pie - alto * (1f - f1)
+                    drawLine(sil, Offset(x0 - ancho / 2 * f0, y0), Offset(x0 + ancho / 2 * f1, y1), 0.9f * u)
+                    drawLine(sil, Offset(x0 - ancho / 2 * f1, y1), Offset(x0 + ancho / 2 * f1, y1), 0.9f * u)
+                }
+                drawLine(sil, Offset(x0 - 14f * u, cima.y + 10f * u), Offset(x0 + 14f * u, cima.y + 10f * u), 1.2f * u)
+                drawLine(sil, cima, Offset(x0, cima.y - 12f * u), 1.2f * u)
+                val luzRoja = Offset(x0, cima.y - 13f * u)
+                val enciende = if (fraccionVivo(t * 12f) < 0.14f) 1f else 0.15f
+                resplandorVivo(Color(0xFFD9372B), luzRoja, 16f * u, 0.35f * enciende * fuerza)
+                drawCircle(al(Color(0xFFFF5A48), 0.85f * enciende), 1.8f * u, luzRoja)
             }
         }
         VivoTema.CENIZA -> motas.take(24).forEach { m ->
@@ -1399,6 +1470,19 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
         BarridoTema.ABANICO -> {
             if (p >= 0.995f) ruta.addRect(Rect(0f, 0f, w, h))
             else if (p > 0f) { ruta.moveTo(c.x, c.y); ruta.arcTo(Rect(c, r0 * 1.05f), -90f, 360f * p, false); ruta.close() }
+        }
+        BarridoTema.RADAR -> {
+            // La pantalla redonda y, por delante, dos anillos de distancia con las cuatro marcas de rumbo entre ellos. Con
+            // pares e impares, el hueco entre el disco y los anillos queda con el tema de antes.
+            ruta.fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
+            ruta.addOval(Rect(c, r * 1.02f))
+            ruta.addOval(Rect(c, r * 1.34f)); ruta.addOval(Rect(c, r * 1.28f))
+            ruta.addOval(Rect(c, r * 1.64f)); ruta.addOval(Rect(c, r * 1.6f))
+            val g = 2.5f * u
+            listOf(Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f), Offset(0f, -1f)).forEach { d ->
+                val a = c + d * (r * 1.38f); val b = c + d * (r * 1.56f)
+                ruta.addRect(Rect(minOf(a.x, b.x) - g, minOf(a.y, b.y) - g, maxOf(a.x, b.x) + g, maxOf(a.y, b.y) + g))
+            }
         }
         BarridoTema.SELLO -> {
             // El sello hanko que se estampa: un cuadrado de esquinas redondeadas que crece desde el toque.

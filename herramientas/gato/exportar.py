@@ -25,9 +25,11 @@ import gato9 as g9        # noqa: E402
 import gato17 as g17      # noqa: E402
 import importlib          # noqa: E402
 
-# Lo que sigue a gato18, si existe: gato19 (9a, los gatos que ya había) y gato20* (9b, los gatos de los temas nuevos,
-# uno o varios archivos). Cada uno cambia o agrega lo suyo a la cadena al importarse.
-for _m in ["gato19"] + sorted(p.stem for p in Path(__file__).parent.glob("gato20*.py")):
+# Lo que sigue a gato18, si existe: gato19 (9a, los gatos que ya había), gato20* (9b, los gatos de los temas nuevos,
+# uno o varios archivos) y gato21* (lote 10, los cinco temas que siguen). Cada uno cambia o agrega lo suyo a la cadena
+# al importarse.
+_aqui = Path(__file__).parent
+for _m in ["gato19"] + sorted(p.stem for p in _aqui.glob("gato20*.py")) + sorted(p.stem for p in _aqui.glob("gato21*.py")):
     if (Path(__file__).parent / f"{_m}.py").exists():
         importlib.import_module(_m)
 

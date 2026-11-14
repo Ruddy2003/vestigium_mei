@@ -119,7 +119,7 @@ import kotlin.math.sqrt
 // =====================================================================
 
 /** En qué se escribe el diario en cada tema (lo usan las cartas para su papelería; el dibujo de cada objeto va por tema). */
-enum class Soporte { ROLLO, LIBRO, SOBRE, CARPETA, PANTALLA }
+enum class Soporte { ROLLO, LIBRO, SOBRE, CARPETA, PANTALLA, DOSIER }
 
 fun soporte(t: TemaId): Soporte = when (t) {
     TemaId.ROMANO -> Soporte.ROLLO
@@ -152,7 +152,7 @@ fun soporte(t: TemaId): Soporte = when (t) {
     TemaId.DECO -> Soporte.SOBRE
     TemaId.NAVIDAD -> Soporte.SOBRE
     TemaId.DISTOPIA -> Soporte.CARPETA
-    TemaId.FRENTE -> Soporte.CARPETA
+    TemaId.FRENTE -> Soporte.DOSIER      // el dosier de la red, con la foto engrapada
     TemaId.CIBER -> Soporte.PANTALLA
     TemaId.NEON -> Soporte.PANTALLA
     TemaId.REFUGIO -> Soporte.PANTALLA

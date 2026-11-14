@@ -596,6 +596,8 @@ PAL_N = dict(
     nave_v=hx("F2D9A0"), farol=hx("2A2D2E"),
 )
 VENTANA_N = hx("F0A04B")
+# Los reflectores de la noche: cuántas posiciones tiene cada barrido en el bucle, largo y apertura del haz.
+HACES = dict(estados_cielo=16, estados_nave=32, largo_cielo=240, ancho_cielo=0.06, ancho_nave=0.12)
 
 
 def anillo(d, cx, cy, rx, ry, ang, cols, frente):
@@ -717,8 +719,8 @@ def fondo_frente(t):
         estrellas(im, 41, 70, 0, 34, [hx("5E6E70"), hx("8A9894"), hx("C9CFC6")])
     else:
         luz(im, 24, 6, 40, hx("F4ECDA"), 0.5, 4, ry=18)          # el sol, tapado por la calima, arriba a la izquierda
-    vetas(im, 3, 16, 3, 44, P["veta"], 0.4 if not o else 0.5)
-    vetas(im, 9, 8, 6, 40, P["veta2"], 0.25, largo=(12, 40))
+    vetas(im, 3, 18, 3, 44, P["veta"], 0.6 if not o else 0.5)
+    vetas(im, 9, 10, 6, 40, P["veta2"], 0.4, largo=(12, 40))
     pcx, pcy, pr = 362, 17, 15
     p1, p2, p3, p4 = P["planeta"]
     for y in range(pcy - pr, pcy + pr + 1):
@@ -739,6 +741,7 @@ def fondo_frente(t):
                 if (x - mx) ** 2 + (y - my) ** 2 <= mr * mr and math.hypot(x - pcx, y - pcy) < pr - 1:
                     px[x, y] = esc(px[x, y], 0.94 if not o else 0.85)
     vetas(im, 17, 4, pcy - 4, pcy + 8, P["veta"], 0.45, x0=330, x1=400, largo=(20, 50))   # la calima cruza el planeta
+    solo_cielo = np.asarray(im).copy()                              # para saber después qué quedó como cielo
     # --- La nave patrulla.
     nx0, ny0 = 170, 7
     luces_nave = nave(im, nx0, ny0, P, o)
@@ -914,13 +917,14 @@ def fondo_frente(t):
         luz(im, soldadura[0] - 8, 50, 10, hx("4E6A70"), 0.2, 3)                  # una luz de trabajo en el desguace
     else:
         luz(im, 248, dy0 - 3, 4, hx("FFE7B8"), 0.4, 2)
+    es_cielo = ((np.asarray(im) == solo_cielo).all(2) & (np.arange(H)[:, None] < 52)).astype(np.float32)
     granular(im, 31, 0.035 if not o else 0.05, 0.14)
     big = subir(im)
     # ------------------------------------------------------------------
     # Lo que se mueve.
     # ------------------------------------------------------------------
     humo_c = ((hx("8C8A84"), hx("A3A19A"), hx("B9B6AD"), hx("C9C5BA"), hx("D8D3C6")) if not o else
-              (hx("2C3033"), hx("343A3D"), hx("3C4346"), hx("454C4F"), hx("4E5558")))
+              (hx("33383B"), hx("3E4447"), hx("4A5053"), hx("555B5E"), hx("6A6460")))
     vapor_c = ((hx("D9D6CE"), hx("E2DED5"), hx("EAE6DD"), hx("F2EEE5")) if not o else
                (hx("3A4245"), hx("424A4D"), hx("4A5255"), hx("566064")))
     # El radar de la torre gira (de día); el reflector de la torre barre el cielo (de noche).
@@ -961,12 +965,7 @@ def fondo_frente(t):
             focos[clave] = capa.resize((W * ESC, H * ESC), Image.NEAREST)
         return focos[clave]
 
-    if o:
-        ref = np.asarray(Image.new("RGB", (W, H)))
-        cielo_ref = Image.new("RGB", (W, H)); degradado(cielo_ref, 0, 54, P["cielo"])
-        es_cielo = ((np.abs(np.asarray(im).astype(int) - np.asarray(cielo_ref).astype(int)).sum(2) < 60) &
-                    (np.arange(H)[:, None] < 52)).astype(np.float32)
-    TORRE, NAVE_Q = 16, 32
+    TORRE, NAVE_Q = HACES["estados_cielo"], HACES["estados_nave"]
     foco_nave = [l for l in luces_nave if l[2] == "foco"][0]
 
     def vivo(img, tick, delante):
@@ -975,21 +974,21 @@ def fondo_frente(t):
         if o:                                                   # los reflectores
             base = img.convert("RGBA")
             q = int(tk * TORRE / BUCLE) % TORRE
-            ang = math.radians(-112 + 42 * math.sin(2 * math.pi * q / TORRE))
-            base = Image.alpha_composite(base, capa_haz(("t", q), REF[0], REF[1], ang, 170, 0.07, es_cielo))
+            ang = math.radians(-153 + 23 * math.sin(2 * math.pi * q / TORRE))
+            base = Image.alpha_composite(base, capa_haz(("t", q), REF[0], REF[1], ang, HACES["largo_cielo"], HACES["ancho_cielo"], es_cielo))
             q2 = int(tk * NAVE_Q / BUCLE) % NAVE_Q
             gx_ = 150 + 118 * math.sin(2 * math.pi * q2 / NAVE_Q)
             fx_, fy_ = foco_nave[0], foco_nave[1]
             ang2 = math.atan2(71 - fy_, gx_ - fx_)
             largo = math.hypot(gx_ - fx_, 71 - fy_)
-            base = Image.alpha_composite(base, capa_haz(("n", q2), fx_, fy_, ang2, largo + 2, 0.12, None, (gx_, 71, 15, 4)))
+            base = Image.alpha_composite(base, capa_haz(("n", q2), fx_, fy_, ang2, largo + 2, HACES["ancho_nave"], None, (gx_, 71, 15, 4)))
             img.paste(base.convert("RGB"))
         dd = ImageDraw.Draw(img)
         if not o:
             img.paste(radar[(tk // 5) % 8], ((tx - 6) * ESC, 0))
         # Humo de la chimenea y vapor del respiradero.
-        bocanadas(dd, tk, sx + 0.5, 4, humo_c, 0, n=6, vida=40, alto=14, deriva=26, r1=4.6)
-        bocanadas(dd, tk, vx + 0.5, 16, vapor_c, 3, n=4, vida=32, alto=9, deriva=12, r0=0.8, r1=2.6)
+        bocanadas(dd, tk, sx + 0.5, 4, humo_c, 0, n=10, vida=40, alto=13, deriva=30, r0=1.6, r1=5.2)
+        bocanadas(dd, tk, vx + 0.5, 17, vapor_c, 3, n=7, vida=32, alto=9, deriva=14, r0=1.0, r1=3.2)
         if o and (tk // 3) % 4:                                 # la llama de la antorcha de gas, en la boca
             cuad(dd, sx - 0.5, 4 + ((tk // 3) % 2) * 0.4, hx("F0A04B"), 2, 1)
             cuad(dd, sx, 3.4, hx("FFE0A8"), 1, 1)

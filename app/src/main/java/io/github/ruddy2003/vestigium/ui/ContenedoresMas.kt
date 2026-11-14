@@ -258,9 +258,9 @@ object ContenedoresMas {
                 drawLine(verde.copy(alpha = 0.08f), Offset(c.x, c.y - rr), Offset(c.x, c.y + rr), 0.6f * d)
                 var y = 96 * d; var k = 1
                 while (y < size.height - 12 * d) {
-                    drawLine(tinta.copy(alpha = 0.1f), Offset(margen - 6 * d, y), Offset(size.width - 12 * d, y), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.8f * d, 2.6f * d)))
+                    drawLine(tinta.copy(alpha = 0.1f), Offset(margen - 2 * d, y), Offset(size.width - 12 * d, y), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.8f * d, 2.6f * d)))
                     drawLine(ambar.copy(alpha = 0.6f), Offset(cinta.left, y - 4 * d), Offset(cinta.right, y - 4 * d), 1 * d)
-                    if (k % 4 == 0) with(TrofeosMas) { mono(Frente.contador(k), cinta.left - 3 * d, y - 2 * d, 6 * d, tinta.copy(alpha = 0.4f), android.graphics.Paint.Align.RIGHT) }
+                    if (k % 4 == 0) with(TrofeosMas) { mono(Frente.contador(k), cinta.right + 2 * d, y - 2 * d, 5.5f * d, tinta.copy(alpha = 0.4f)) }
                     y += maxOf(renglon, 1f); k++
                 }
             }

@@ -255,7 +255,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.MEDIEVAL -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 7.dp, bottomStart = 1.dp)
     TemaId.TEMPLARIO -> CutCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 5.dp, bottomStart = 5.dp)
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.FRENTE -> RectangleShape
+    TemaId.FRENTE -> RoundedCornerShape(topStart = 2.dp, topEnd = 10.dp, bottomEnd = 10.dp, bottomStart = 2.dp)   // la tecla curva de la consola
     TemaId.REFUGIO -> RoundedCornerShape(7.dp)
     TemaId.ORDEN -> CutCornerShape(topEnd = 8.dp)
     TemaId.VAPOR -> RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
@@ -385,13 +385,21 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 figuraTema(tema, tinta, pc, 2.6f * s, Color.White)
             }
         }
+        // Tecla de consola: el piloto apagado arriba a la derecha y la placa grabada al pie; hoy, el piloto ámbar encendido con
+        // su halo. El día sellado lleva una pantallita de radar con su barrido y un eco.
         TemaId.FRENTE -> {
-            contorno(if (hoy) acento else linea, if (hoy) 1.6f else 0.9f)
-            drawRect(if (hoy) acento else linea, Offset(w * 0.55f, 0f), Size(w * 0.45f, 2.6f * s))
-            if (sellado) rotate(-14f, pc) {
-                val tinta = Color(0xFFB3261E)
-                drawRect(tinta, Offset(pc.x - 5.5f * s, pc.y - 3.6f * s), Size(11f * s, 7.2f * s), style = Stroke(s))
-                figuraTema(tema, tinta, pc, 2.6f * s, Color.White)
+            if (hoy) { contorno(acento.copy(alpha = 0.3f), 2.6f); contorno(acento, 1.2f) } else contorno(linea, 0.7f)
+            drawLine(linea.copy(alpha = 0.45f), Offset(3f * s, h - 2.6f * s), Offset(w * 0.6f, h - 2.6f * s), 0.6f * s)
+            val piloto = Offset(w - 5f * s, 5f * s)
+            if (hoy) { drawCircle(Color(0xFFF2A33A).copy(alpha = 0.3f), 3.4f * s, piloto); drawCircle(Color(0xFFF2A33A), 1.6f * s, piloto) }
+            else drawCircle(linea.copy(alpha = 0.5f), 1.3f * s, piloto, style = Stroke(0.5f * s))
+            if (sellado) {
+                val verde = Color(0xFF9FD8A8)
+                drawCircle(Color(0xFF0F1A16), 5.2f * s, pc)
+                drawCircle(verde.copy(alpha = 0.7f), 4.6f * s, pc, style = Stroke(0.5f * s))
+                drawCircle(verde.copy(alpha = 0.35f), 2.4f * s, pc, style = Stroke(0.4f * s))
+                drawLine(verde, pc, pc + Offset(3.3f * s, -3.3f * s), 0.6f * s)
+                drawCircle(verde, 0.8f * s, pc + Offset(-1.8f * s, 1.4f * s))
             }
         }
         // Mampara del refugio: esquinas redondas y remaches; hoy, el fósforo encendido.

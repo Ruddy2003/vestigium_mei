@@ -56,6 +56,7 @@ import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.grecaEscalonada
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.TrofeosTema
+import io.github.ruddy2003.vestigium.ui.TrazosFrente
 import io.github.ruddy2003.vestigium.ui.esOscuro
 import io.github.ruddy2003.vestigium.ui.signoEgipcio
 import kotlin.math.PI
@@ -354,10 +355,13 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             drawPath(ojo, Color.White.copy(alpha = 0.92f)); drawPath(ojo, Color(0xFF2B2B2B), style = Stroke(s * 0.1f))
             drawCircle(Color(0xFFD32F2F), s * 0.3f, o)
         }
+        // El eco en la pantalla de radar: el punto verde, el anillo que se abre y las cuatro marcas de la mira.
         TemaId.FRENTE -> {
-            val ojo = Path().apply { moveTo(o.x - s, o.y); quadraticTo(o.x, o.y - s * 0.9f, o.x + s, o.y); quadraticTo(o.x, o.y + s * 0.9f, o.x - s, o.y); close() }
-            drawPath(ojo, Color.White.copy(alpha = 0.92f)); drawPath(ojo, Color(0xFF2B2B2B), style = Stroke(s * 0.1f))
-            drawCircle(Color(0xFFD32F2F), s * 0.3f, o)
+            val col = TrazosFrente.RADAR
+            drawCircle(col.copy(alpha = 0.25f), s * 0.6f, o)
+            drawCircle(col, s * 0.8f, o, style = Stroke(s * 0.08f))
+            for (k in 0 until 4) { val a = k * PI / 2; val dir = Offset(cos(a).toFloat(), sin(a).toFloat()); drawLine(col, o + dir * (s * 0.95f), o + dir * (s * 1.25f), s * 0.1f) }
+            drawCircle(Color(0xFFF2FFF4), s * 0.22f, o)
         }
         TemaId.REFUGIO -> {
             val col = Color(0xFFFFF59D)
@@ -502,7 +506,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.MEDIEVAL -> Color(0xFFD8C08E)
     TemaId.TEMPLARIO -> Color(0xFFCDBB97)
     TemaId.DISTOPIA -> Color(0xFF8E9296)
-    TemaId.FRENTE -> Color(0xFF8E9296)
+    TemaId.FRENTE -> Color(0xFFC4BBA8)          // el hueso de las consolas
     TemaId.REFUGIO -> Color(0xFF9CC9C1)
     TemaId.ORDEN -> Color(0xFF6F7882)
     TemaId.VAPOR -> Color(0xFF8C4A34)
@@ -608,15 +612,27 @@ internal fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
                 y += ph
             }
         }
+        // La pared de la sala de mando: paneles de consola de esquinas muy redondas, cada uno con su fila de interruptores
+        // de palanca, sus pilotos y, en uno de cada tres, una pantalla redonda con su retícula.
         TemaId.FRENTE -> {
-            val pw = w / 3; val ph = 70 * d; var y = 0f
+            val pw = w / 3; val ph = 96 * d; var y = 0f; var fila = 0
             while (y < h) {
                 for (k in 0 until 3) {
-                    drawRect(v, Offset(k * pw + 2 * d, y + 2 * d), Size(pw - 4 * d, ph - 4 * d), style = Stroke(d))
-                    listOf(Offset(k * pw + 7 * d, y + 7 * d), Offset((k + 1) * pw - 7 * d, y + 7 * d), Offset(k * pw + 7 * d, y + ph - 7 * d), Offset((k + 1) * pw - 7 * d, y + ph - 7 * d))
-                        .forEach { drawCircle(v, 1.6f * d, it) }
+                    val x0 = k * pw + 3 * d; val y0 = y + 3 * d; val ancho = pw - 6 * d; val alto = ph - 6 * d
+                    drawRoundRect(v, Offset(x0, y0), Size(ancho, alto), CornerRadius(13 * d), style = Stroke(d))
+                    var x = x0 + 12 * d; var j = 0
+                    while (x < x0 + ancho - 10 * d) {
+                        drawCircle(v, 1.8f * d, Offset(x, y0 + 14 * d))
+                        drawLine(v, Offset(x, y0 + 14 * d), Offset(x + (if ((j + k + fila) % 3 == 0) 1.5f else -1.5f) * d, y0 + 8 * d), 1.4f * d, StrokeCap.Round)
+                        x += 10 * d; j++
+                    }
+                    if ((k + fila) % 3 == 1) with(TrazosFrente) { reticula(Offset(x0 + ancho / 2, y0 + alto * 0.6f), minOf(ancho, alto) * 0.26f, v, d * 0.8f, 3) }
+                    else {
+                        listOf(0.3f, 0.5f, 0.7f).forEachIndexed { i, fx -> drawCircle(if (i == (fila + k) % 3) a else v, 2.4f * d, Offset(x0 + ancho * fx, y0 + alto * 0.55f)) }
+                        drawLine(v, Offset(x0 + 12 * d, y0 + alto * 0.78f), Offset(x0 + ancho - 12 * d, y0 + alto * 0.78f), 3 * d)
+                    }
                 }
-                y += ph
+                y += ph; fila++
             }
         }
         TemaId.REFUGIO -> {
@@ -915,13 +931,18 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
                 x += 110 * d
             }
         }
+        // El canto de la consola: el tablero hueso con su borde curvo y, debajo, la franja de acero con los interruptores de
+        // palanca y un piloto cada tanto (el ámbar sigue encendido de noche).
         TemaId.FRENTE -> {
-            tabla(m(Color(0xFF7D8287)))
-            drawRect(m(Color(0xFFB71C1C)), Offset(0f, h * 0.78f), Size(w, h * 0.12f))
-            var x = 24 * d
-            while (x < w - 30 * d) {
-                drawRect(m(Color(0xFFEDEDE6)), Offset(x, h * 0.18f), Size(26 * d, h * 0.45f)); drawRect(m(Color(0xFF3A3D40)), Offset(x, h * 0.18f), Size(26 * d, h * 0.45f), style = Stroke(d))
-                x += 110 * d
+            val hueso = m(TrazosFrente.HUESO); val acero = m(TrazosFrente.PIZARRA); val cromo = m(TrazosFrente.CROMO)
+            drawRoundRect(Brush.verticalGradient(listOf(lerp(hueso, Color.White, 0.3f), hueso, lerp(hueso, Color.Black, 0.28f)), 0f, h * 0.5f), Offset.Zero, Size(w, h * 0.5f), CornerRadius(h * 0.25f))
+            drawRect(acero, Offset(0f, h * 0.5f), Size(w, h * 0.5f))
+            drawLine(lerp(acero, Color.White, 0.25f), Offset(0f, h * 0.53f), Offset(w, h * 0.53f), 0.6f * d)
+            var x = 10 * d; var k = 0
+            while (x < w - 6 * d) {
+                if (k % 5 == 2) { val c = Offset(x, h * 0.76f); drawCircle(cromo, 2.2f * d, c); drawCircle(if (k % 10 == 2) TrazosFrente.PILOTO_AMBAR else m(Color(0xFF6B4A22)), 1.5f * d, c) }
+                else { drawCircle(cromo, 1.4f * d, Offset(x, h * 0.8f)); drawLine(m(TrazosFrente.BAQUELITA), Offset(x, h * 0.8f), Offset(x + (if (k % 3 == 0) 1.2f else -1.2f) * d, h * 0.6f), 1.3f * d, StrokeCap.Round) }
+                x += 9 * d; k++
             }
         }
         TemaId.REFUGIO -> {
@@ -1182,11 +1203,15 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             drawPath(Path().apply { moveTo(0f, h); lineTo(0f, 0f); lineTo(w * 0.4f, 0f); lineTo(w * 0.4f + t, t); lineTo(w, t); lineTo(w, h); close() }, borde, style = fino)
             drawLine(Color(0xFFB71C1C).copy(alpha = 0.5f * f), Offset(0f, h - 2 * d), Offset(w, h - 2 * d), 2 * d)
         }
+        // La plaquita rotulada de una consola: el marco redondeado, dos tornillos de ranura arriba y, entre ellos, el
+        // piloto ámbar que se enciende cuando ya lo lograste.
         TemaId.FRENTE -> {
-            val t = 6 * d
-            drawRect(fondo, Offset(0f, t), Size(w, h - t)); drawRect(fondo, Offset.Zero, Size(w * 0.4f, t))
-            drawPath(Path().apply { moveTo(0f, h); lineTo(0f, 0f); lineTo(w * 0.4f, 0f); lineTo(w * 0.4f + t, t); lineTo(w, t); lineTo(w, h); close() }, borde, style = fino)
-            drawLine(Color(0xFFB71C1C).copy(alpha = 0.5f * f), Offset(0f, h - 2 * d), Offset(w, h - 2 * d), 2 * d)
+            val r = CornerRadius(minOf(9 * d, h * 0.3f))
+            drawRoundRect(fondo, Offset.Zero, size, r); drawRoundRect(borde, Offset(0.7f * d, 0.7f * d), Size(w - 1.4f * d, h - 1.4f * d), r, style = Stroke(1.4f * d))
+            listOf(6 * d, w - 6 * d).forEach { x -> val c = Offset(x, 6 * d); drawCircle(borde, 1.7f * d, c); drawLine(tinta.copy(alpha = 0.5f * f), Offset(c.x - 1.1f * d, c.y + 0.6f * d), Offset(c.x + 1.1f * d, c.y - 0.6f * d), 0.6f * d) }
+            val p = Offset(w / 2, 3.2f * d)
+            if (hecho) drawCircle(Brush.radialGradient(listOf(TrazosFrente.PILOTO_AMBAR.copy(alpha = 0.5f), Color.Transparent), p, 6 * d), 6 * d, p)
+            drawCircle(if (hecho) TrazosFrente.PILOTO_AMBAR else borde, 1.8f * d, p)
         }
         TemaId.REFUGIO -> {
             drawRoundRect(fondo, Offset.Zero, size, CornerRadius(12 * d)); drawRoundRect(ac, Offset.Zero, size, CornerRadius(12 * d), style = Stroke(1.5f * d))

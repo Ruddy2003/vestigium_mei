@@ -108,7 +108,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.MEDIEVAL -> R.font.gotica_semibold       // la gótica del copista, en su corte más claro
     TemaId.TEMPLARIO -> R.font.regla_bold           // la letra de la regla, negrita: cifras firmes
     TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
-    TemaId.FRENTE -> R.font.oswald_bold           // números de expediente, estrechos y negros
+    TemaId.FRENTE -> R.font.chivo_mono_medium     // las cifras grabadas de la consola, como en un contador de segmentos
     TemaId.REFUGIO -> R.font.plex_mono_semibold     // la máquina del refugio: mono, gruesa
     TemaId.ORDEN -> R.font.saira_stencil            // estarcido
     TemaId.VAPOR -> R.font.caldera_titulo           // «fat face» de cartel
@@ -148,7 +148,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.MEDIEVAL -> "Liber vestigii mei"
     TemaId.TEMPLARIO -> "Pauperes commilitones · Vestigium Mei"
     TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
-    TemaId.FRENTE -> "EXPEDIENTE · VESTIGIUM MEI"
+    TemaId.FRENTE -> "VESTIGIUM MEI · CÉLULA K-7 · CANAL CIFRADO"
     TemaId.REFUGIO -> "REFUGIO · BITÁCORA VESTIGIUM-MEI"
     TemaId.ORDEN -> "ARCHIVUM ORDINIS · VESTIGIUM MEI"
     TemaId.VAPOR -> "Memoria de la Compañía de Vapor Vestigium Mei"
@@ -366,15 +366,41 @@ object Reportes {
                     y += 54f
                 }
                 TemaId.FRENTE -> {
-                    // La barra del expediente se abre en el centro para el ojo que lo mira todo.
-                    val yc = yy + 16f
-                    val barra = L.relleno(L.primario)
-                    c.drawRect(M, yc - 4f, cx - 70f, yc + 4f, barra); c.drawRect(cx + 70f, yc - 4f, W - M, yc + 4f, barra)
-                    val ojo = Path().apply { moveTo(cx - 54f, yc); quadTo(cx, yc - 34f, cx + 54f, yc); quadTo(cx, yc + 34f, cx - 54f, yc); close() }
-                    c.drawPath(ojo, L.relleno(L.superficie2))
-                    c.drawPath(ojo, L.trazo(L.tinta, 3f))
-                    c.drawCircle(cx, yc, 10f, barra); c.drawCircle(cx, yc, 4f, L.relleno(L.tinta))
-                    y += 54f
+                    // El panel de la consola: a cada lado, una regleta curva con sus interruptores de palanca y sus pilotos; al
+                    // centro, la pantalla redonda del radar en su bisel, con la retícula, el barrido y dos ecos.
+                    val yc = yy + 32f
+                    val panel = L.relleno(L.mezcla(L.superficie2, L.tinta, 0.08))
+                    val borde = L.trazo(L.linea, 1.4f)
+                    val palanca = L.trazo(L.tenue, 2.4f)
+                    for (izquierda in listOf(true, false)) {
+                        val x0 = if (izquierda) M else cx + 42f; val x1 = if (izquierda) cx - 42f else W - M
+                        val r = RectF(x0, yc - 10f, x1, yc + 10f)
+                        c.drawRoundRect(r, 10f, 10f, panel); c.drawRoundRect(r, 10f, 10f, borde)
+                        var x = x0 + 18f; var k = 0
+                        while (x < x1 - 12f) {
+                            if (k % 4 == 3) {
+                                val luz = if (k % 8 == 3) L.primario else L.error
+                                c.drawCircle(x, yc, 6f, L.relleno(L.mezcla(luz, L.superficie2, 0.7))); c.drawCircle(x, yc, 3.4f, L.relleno(luz))
+                            } else {
+                                c.drawCircle(x, yc + 4f, 3.2f, L.relleno(L.tinta))
+                                c.drawLine(x, yc + 4f, x + (if (k % 2 == 0) 2.6f else -2.6f), yc - 6f, palanca)
+                            }
+                            x += 18f; k++
+                        }
+                    }
+                    val rr = 26f
+                    val pantalla = 0xFF0F1A16.toInt(); val radar = 0xFF9FD8A8.toInt()
+                    c.drawCircle(cx, yc, rr + 6f, L.relleno(L.mezcla(L.linea, L.tinta, 0.3)))
+                    c.drawCircle(cx, yc, rr, L.relleno(pantalla))
+                    val reticula = L.trazo(L.mezcla(radar, pantalla, 0.6), 1f)
+                    c.drawCircle(cx, yc, rr * 0.64f, reticula); c.drawCircle(cx, yc, rr * 0.3f, reticula)
+                    c.drawLine(cx - rr, yc, cx + rr, yc, reticula); c.drawLine(cx, yc - rr, cx, yc + rr, reticula)
+                    c.drawArc(RectF(cx - rr, yc - rr, cx + rr, yc + rr), -105f, 45f, true, L.relleno(L.mezcla(radar, pantalla, 0.78)))
+                    val a = Math.toRadians(-60.0)
+                    c.drawLine(cx, yc, cx + (rr * kotlin.math.cos(a)).toFloat(), yc + (rr * kotlin.math.sin(a)).toFloat(), L.trazo(radar, 1.8f))
+                    c.drawCircle(cx + 7f, yc - 14f, 2.4f, L.relleno(radar))
+                    c.drawCircle(cx - 13f, yc + 8f, 1.8f, L.relleno(L.mezcla(radar, pantalla, 0.45)))
+                    y += 74f
                 }
                 TemaId.REFUGIO -> {
                     // Optimismo atómico: el átomo al centro de una línea discontinua, como las marcas del pasillo del refugio.

@@ -31,9 +31,10 @@ object NombresNuevos {
         TemaId.DISTOPIA to mapOf("La cinta" to "REGISTRO HORARIO", "Constelación" to "RED DE CONTACTOS", "Hall de logros" to "SALA DE CONDECORACIONES", "Campañas" to "PLANES DE CUMPLIMIENTO",
             "Impulsos y recaídas" to "INFRACCIONES PRIVADAS", "Estado de los datos" to "ESTADO DE LA VIGILANCIA", "Enfoque y siestas" to "PRODUCTIVIDAD Y DESCANSO", "Ver tu vida" to "INFORMES VISUALES",
             "Tus atajos" to "ACCESOS AUTORIZADOS", "Logro conseguido" to "CONDECORACIÓN OTORGADA", "Este día hace un año" to "ARCHIVO: HACE UN AÑO", "Elegir campaña" to "ASIGNAR PLAN", "Campañas anteriores" to "PLANES CERRADOS"),
-        TemaId.FRENTE to mapOf("La cinta" to "REGISTRO HORARIO", "Constelación" to "RED DE CONTACTOS", "Hall de logros" to "SALA DE CONDECORACIONES", "Campañas" to "PLANES DE CUMPLIMIENTO",
-            "Impulsos y recaídas" to "INFRACCIONES PRIVADAS", "Estado de los datos" to "ESTADO DE LA VIGILANCIA", "Enfoque y siestas" to "PRODUCTIVIDAD Y DESCANSO", "Ver tu vida" to "INFORMES VISUALES",
-            "Tus atajos" to "ACCESOS AUTORIZADOS", "Logro conseguido" to "CONDECORACIÓN OTORGADA", "Este día hace un año" to "ARCHIVO: HACE UN AÑO", "Elegir campaña" to "ASIGNAR PLAN", "Campañas anteriores" to "PLANES CERRADOS"),
+        // Frente exterior: la tira del teletipo, la célula, las rutas de salto y la sala donde se cuelgan los parches.
+        TemaId.FRENTE to mapOf("La cinta" to "TIRA DEL TELETIPO", "Constelación" to "MAPA DE LA CÉLULA", "Hall de logros" to "LA SALA DE LOS PARCHES", "Campañas" to "RUTAS DE SALTO",
+            "Impulsos y recaídas" to "CANAL RESERVADO", "Estado de los datos" to "ESTADO DEL EQUIPO", "Enfoque y siestas" to "TURNOS DE CONSOLA Y CABEZADAS", "Ver tu vida" to "VISTAS DE RECONOCIMIENTO",
+            "Tus atajos" to "RUTAS CORTAS DE LA RED", "Logro conseguido" to "PARCHE COSIDO", "Este día hace un año" to "HACE UN AÑO, EN LA RED", "Elegir campaña" to "TRAZAR RUTA", "Campañas anteriores" to "RUTAS CUMPLIDAS"),
         TemaId.REFUGIO to mapOf("La cinta" to "BITÁCORA HORARIA", "Constelación" to "RED DE RESIDENTES", "Hall de logros" to "VITRINA DEL REFUGIO", "Campañas" to "EXPEDICIONES",
             "Impulsos y recaídas" to "REGISTRO PRIVADO", "Estado de los datos" to "DIAGNÓSTICO DE SISTEMAS", "Enfoque y siestas" to "TURNOS Y DESCANSO", "Ver tu vida" to "VISUALIZACIONES",
             "Tus atajos" to "ACCESOS RÁPIDOS", "Logro conseguido" to "INSIGNIA OBTENIDA", "Este día hace un año" to "HACE UN AÑO", "Elegir campaña" to "ELEGIR EXPEDICIÓN", "Campañas anteriores" to "EXPEDICIONES PASADAS"),

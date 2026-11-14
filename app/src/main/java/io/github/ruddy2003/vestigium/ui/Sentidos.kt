@@ -117,12 +117,14 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
             Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
         }
+        // Relés de consola que cierran con su rebote, el chasquido de un interruptor de palanca y el contactor grande.
         TemaId.FRENTE -> when (e) {
-            Evento.TOQUE -> listOf(g(CLICK, 1f)); Evento.PASAR -> listOf(g(CLICK, 0.6f))
-            Evento.GUARDAR -> listOf(g(THUD, 1f), g(CLICK, 1f, 70))
-            Evento.ELEGIR -> listOf(g(CLICK, 0.45f)); Evento.ABRIR -> listOf(g(CLICK, 0.8f), g(THUD, 0.6f, 50))
-            Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
-            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
+            Evento.TOQUE -> listOf(g(CLICK, 0.82f), g(TICK, 0.28f, 14)); Evento.PASAR -> listOf(g(CLICK, 0.46f), g(CLICK, 0.38f, 32), g(CLICK, 0.31f, 32))
+            Evento.GUARDAR -> listOf(g(SUBE, 0.36f), g(CLICK, 0.95f, 8), g(TICK_GRAVE, 0.52f, 26))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.48f), g(CLICK, 0.74f, 22)); Evento.ABRIR -> listOf(g(CLICK, 0.62f), g(TICK, 0.26f, 12), g(SUBE_LENTO, 0.34f, 30))
+            Evento.CAMBIO -> listOf(g(TICK_GRAVE, 0.62f), g(CLICK, 0.92f, 18), g(TICK, 0.22f, 11))
+            Evento.ERROR -> listOf(g(CLICK, 0.78f), g(CLICK, 0.77f, 28), g(CLICK, 0.76f, 28), g(CLICK, 0.75f, 28), g(BAJA, 0.46f, 40))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(TICK, 0.5f), g(TICK, 0.52f, 36), g(CLICK, 0.7f, 36), g(CLICK, 0.88f, 60), g(THUD, 0.72f, 24))
         }
         // Relé y contador Geiger.
         TemaId.REFUGIO -> when (e) {
@@ -490,7 +492,8 @@ object Sentidos {
         TemaId.TEMPLARIO -> Afinacion(st(-5, -2, 0, 5), st(-7, 0, 5, 7), pasarRuido = true, elegirRuido = false)
         // Do menor; la máquina de escribir, un semitono abajo y un tono arriba.
         TemaId.DISTOPIA -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
-        TemaId.FRENTE -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
+        // Fa menor con la séptima mayor (Fa, La bemol, Do, Mi): el pitido de la consola; el teletipo de pasar es ruido.
+        TemaId.FRENTE -> Afinacion(st(-5, 0, 3, 7, 11), st(-8, -7, -4, 0), pasarRuido = true, elegirRuido = false)
         // Fa pentatónico; el relé sube por tonos enteros.
         TemaId.REFUGIO -> Afinacion(st(0, 2, 4), null, pasarRuido = true, elegirRuido = true)
         // Sol menor; el servo baja a la cuarta.
@@ -630,7 +633,7 @@ object Sentidos {
         TemaId.MEDIEVAL -> pasadas(TICK_GRAVE, 0.5f, 70, 3)   // pan de oro
         TemaId.TEMPLARIO -> pasadas(CLICK, 0.65f, 50, 4)   // hierro de cota de malla
         TemaId.DISTOPIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
-        TemaId.FRENTE -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
+        TemaId.FRENTE -> pasadas(CLICK, 0.56f, 44, 4)   // chapa esmaltada de consola
         TemaId.REFUGIO -> pasadas(TICK, 0.8f, 35, 4)   // chapa galvanizada
         TemaId.ORDEN -> pasadas(CLICK, 0.8f, 45, 3)   // acero pavonado
         TemaId.VAPOR -> pasadas(CLICK, 0.66f, 38, 4)   // latón remachado

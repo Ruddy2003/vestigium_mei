@@ -213,12 +213,15 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
             drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
         }
+        // La insignia de solapa de la red: el disco con el emblema (la chispa en el círculo roto) en relieve y, debajo, la
+        // barrita de la célula con sus dos muescas.
         TemaId.FRENTE -> {
-            val hex = figPoligono(c, r * 0.97f, 6)
-            forma(hex)
-            clipPath(hex) { drawRect(if (hecho) Color(0xFFB3261E).copy(alpha = 0.85f) else borde.copy(alpha = 0.25f), Offset(0f, c.y + r * 0.5f), Size(size.width, r * 0.2f)) }
-            drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
-            drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
+            forma(Path().apply { addRoundRect(RoundRect(c.x - r * 0.5f, c.y + r * 0.62f, c.x + r * 0.5f, c.y + r * 0.98f, CornerRadius(r * 0.12f))) })
+            val e = c + Offset(0f, -r * 0.12f)
+            forma(disco(e, r * 0.84f))
+            drawCircle(sombra, r * 0.72f, e, style = Stroke(r * 0.03f))
+            with(io.github.ruddy2003.vestigium.ui.TrazosFrente) { emblemaRed(e + Offset(r * 0.03f, r * 0.03f), r * 0.42f, sombra, r * 0.09f); emblemaRed(e, r * 0.42f, luz, r * 0.09f) }
+            listOf(-0.2f, 0.2f).forEach { f -> drawRect(sombra, Offset(c.x + f * r - r * 0.04f, c.y + r * 0.7f), Size(r * 0.08f, r * 0.2f)) }
         }
         // Botón atómico: el disco entre tres órbitas.
         TemaId.REFUGIO -> {

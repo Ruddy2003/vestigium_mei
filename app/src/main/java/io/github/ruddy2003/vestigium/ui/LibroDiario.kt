@@ -1256,21 +1256,25 @@ object LibroDiario {
                 cv.drawRect(A - 130f, 36f, A - 34f, 54f, Paint(fino).apply { color = tinta; alpha = 160 })
             }
             TemaId.FRENTE -> {
-                // El papel continuo del teleimpresor: las tiras de agujeros de arrastre a los dos lados, su línea de picado, las
-                // franjas pálidas de lectura y el emblema de la célula en seco arriba a la derecha.
-                val franja = Paint(relleno).apply { color = tinta; alpha = 10 }
-                var yy = 22f; while (yy < B - 22f) { cv.drawRect(34f, yy, A - 34f, minOf(yy + 36f, B - 22f), franja); yy += 72f }
-                val agujero = Paint(trazo).apply { color = tinta; strokeWidth = 0.7f; alpha = 110 }
-                val picado = Paint(fino).apply { color = tinta; alpha = 80; pathEffect = android.graphics.DashPathEffect(floatArrayOf(2f, 3f), 0f) }
-                listOf(14f, A - 14f).forEach { x -> var y = 20f; while (y < B - 12f) { cv.drawCircle(x, y, 3.2f, agujero); y += 18f } }
-                listOf(30f, A - 30f).forEach { x -> cv.drawLine(x, 12f, x, B - 12f, picado) }
-                cv.drawLine(34f, B / 2, A - 34f, B / 2, Paint(picado).apply { alpha = 50 })
-                val sello = Paint(trazo).apply { strokeWidth = 1.4f; alpha = 70; strokeCap = Paint.Cap.ROUND }
-                val ex = A - 62f; val ey = 58f
-                cv.drawArc(ex - 14f, ey - 14f, ex + 14f, ey + 14f, -20f, 300f, false, sello)
-                listOf(-74.0 to 17f, -50.0 to 21f, -26.0 to 17f).forEach { (g, l) ->
-                    val a = Math.toRadians(g)
-                    cv.drawLine(ex + 2f * cos(a).toFloat(), ey + 2f * sin(a).toFloat(), ex + l * cos(a).toFloat(), ey + l * sin(a).toFloat(), sello)
+                // El papel continuo del teleimpresor ya trae sus agujeros de arrastre, el picado y el emblema en seco: encima va el
+                // formulario de la transmisión, con su recuadro fino, la cinta perforada de la cabecera (los agujeros del código)
+                // y la cruz de la retícula en cada esquina.
+                val recuadro = Paint(trazo).apply { color = tinta; strokeWidth = 0.7f; alpha = 120 }
+                cv.drawRect(40f, 26f, A - 40f, B - 26f, recuadro)
+                val y0 = 36f; val agujero = Paint(relleno).apply { color = tinta; alpha = 120 }
+                val canto = Paint(fino).apply { color = tinta; alpha = 110 }
+                cv.drawLine(46f, y0 - 5f, A * 0.62f, y0 - 5f, canto); cv.drawLine(46f, y0 + 5f, A * 0.62f, y0 + 5f, canto)
+                var x = 50f; var k = 0
+                while (x < A * 0.62f - 3f) {
+                    cv.drawCircle(x, y0, 0.6f, agujero)
+                    val bits = Math.floorMod(k * k * 5 + k * 11 + 3, 4)
+                    if ((bits and 1) != 0) cv.drawCircle(x, y0 - 2.6f, 1.1f, relleno)
+                    if ((bits and 2) != 0) cv.drawCircle(x, y0 + 2.6f, 1.1f, relleno)
+                    x += 3.6f; k++
+                }
+                val cruz = Paint(trazo).apply { color = tinta; strokeWidth = 0.8f; alpha = 160 }
+                listOf(48f to 48f, A - 48f to 48f, 48f to B - 48f, A - 48f to B - 48f).forEach { (cxx, cyy) ->
+                    cv.drawLine(cxx - 6f, cyy, cxx + 6f, cyy, cruz); cv.drawLine(cxx, cyy - 6f, cxx, cyy + 6f, cruz); cv.drawCircle(cxx, cyy, 3.2f, cruz)
                 }
             }
             TemaId.REFUGIO -> {
