@@ -35,7 +35,6 @@ import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
 import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
-import io.github.ruddy2003.vestigium.ui.muebles.deNoche
 import io.github.ruddy2003.vestigium.ui.muebles.filoMueble
 import io.github.ruddy2003.vestigium.ui.muebles.granoMueble
 import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
@@ -3303,22 +3302,25 @@ object EstanteHeleno : DisenoBiblioteca {
         return r
     }
 
+    /** La penumbra de los muebles del Diario: tan honda como la de siempre, apenas fría (piloto de la luz, 14 nov 2026). */
+    private val NOCHE_FRIA = Color(0xFF100E16)
+
     /**
-     * El color de los muebles de la pestaña Diario (estante, volúmenes, tapa; piloto de la luz, 13 nov 2026): en modo oscuro,
-     * hacia el azul violeta de la noche del cuadro, no hacia un café casi negro. [t] sigue para la página y lo demás.
+     * El color de los muebles de la pestaña Diario (estante, volúmenes, tapa; piloto de la luz): en modo oscuro, la misma
+     * penumbra de antes, un poco más fría. [t] sigue para la página y lo demás.
      */
     private fun tm(c: Color, oscuro: Boolean, noche: Boolean): Color {
-        var r = deNoche(c, oscuro, 0.4f)
+        var r = if (oscuro) mezcla(c, NOCHE_FRIA, 0.36f) else c
         if (noche) r = mezcla(r, NOCHE, 0.5f)
         return r
     }
 
-    /** La libreta en modo oscuro: la penumbra violeta del cuarto, y donde llega la lámpara ([luz]), tibia. */
+    /** La libreta en modo oscuro: la penumbra del cuarto, apenas fría, y donde llega la lámpara ([luz]), tibia. */
     private fun lcm(x: Color, oscuro: Boolean, luz: Float = 0f): Color =
-        if (!oscuro) x else mezcla(deNoche(x, true, 0.62f - 0.4f * luz), LLAMA, 0.14f * luz)
+        if (!oscuro) x else mezcla(mezcla(x, NOCHE_FRIA, 0.7f - 0.42f * luz), LLAMA, 0.12f * luz)
 
-    /** El sobre en modo oscuro: hacia la noche violeta. */
-    private fun ccm(x: Color, oscuro: Boolean): Color = deNoche(x, oscuro, 0.5f)
+    /** El sobre en modo oscuro: la penumbra de antes, apenas fría. */
+    private fun ccm(x: Color, oscuro: Boolean): Color = if (oscuro) mezcla(x, NOCHE_FRIA, 0.55f) else x
 
     override val corona = 0.3f
     override val base = 0.1f
@@ -3343,8 +3345,8 @@ object EstanteHeleno : DisenoBiblioteca {
                 Size((14 + 20 * azar(j, 63)) * u, (6 + 8 * azar(j, 64)) * u))
         }
         // El revoque pintado a mano: pinceladas claras y oscuras que rompen el rojo liso.
-        pinceladas(cuerpo, c(MURO_OSC), 61, 40, u, 0.16f)
-        pinceladas(cuerpo, c(TERRACOTA), 67, 26, u, 0.12f)
+        pinceladas(cuerpo, c(MURO_OSC), 61, 40, u, 0.09f)
+        pinceladas(cuerpo, c(TERRACOTA), 67, 26, u, 0.07f)
         // Cada repisa: la sombra de la tabla de arriba y de las columnas.
         d.repisas.forEach { r ->
             drawRect(sombraMueble(if (noche) 0.42f else 0.32f), r.topLeft, Size(r.width, 8 * u))
@@ -3430,7 +3432,7 @@ object EstanteHeleno : DisenoBiblioteca {
         while (bx < w) { drawLine(sombraMueble(0.22f), Offset(bx, piso), Offset(bx, h), 0.8f * u); bx += 24 * u }
         var by = piso + 10 * u
         while (by < h) { drawLine(sombraMueble(0.22f), Offset(0f, by), Offset(w, by), 0.8f * u); by += 12 * u }
-        pinceladas(Rect(0f, piso, w, h), c(MURO_OSC), 73, 12, u, 0.14f)
+        pinceladas(Rect(0f, piso, w, h), c(MURO_OSC), 73, 12, u, 0.08f)
         // El grano de papel, al final (regla 7).
         granoMueble(Rect(0f, 0f, w, h), oscuro)
     }
@@ -4000,8 +4002,8 @@ object EstanteHeleno : DisenoBiblioteca {
         val zocalo = h * 0.6f; val piso = h * 0.88f
         drawRect(c(cal, 0.15f), Offset.Zero, Size(w, zocalo))
         // La cal pintada a mano: pinceladas que rompen la pared lisa.
-        pinceladas(Rect(0f, h * 0.16f, w, zocalo), c(mezcla(cal, MURO, 0.3f), 0.15f), 91, 22, u, 0.06f)
-        pinceladas(Rect(0f, h * 0.16f, w, zocalo), c(MARMOL_LUZ, 0.15f), 97, 16, u, 0.18f)
+        pinceladas(Rect(0f, h * 0.16f, w, zocalo), c(mezcla(cal, MURO, 0.3f), 0.15f), 91, 22, u, 0.04f)
+        pinceladas(Rect(0f, h * 0.16f, w, zocalo), c(MARMOL_LUZ, 0.15f), 97, 16, u, 0.1f)
         drawRect(c(EGEO, 0.15f), Offset(0f, h * 0.07f), Size(w, 2 * u))
         olaCorrida(Offset(4 * u, h * 0.115f), w - 8 * u, h * 0.05f, c(EGEO, 0.15f))
         drawRect(c(EGEO, 0.15f), Offset(0f, h * 0.155f), Size(w, 1.4f * u))

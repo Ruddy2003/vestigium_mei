@@ -28,11 +28,11 @@ import androidx.compose.ui.unit.LayoutDirection
  */
 
 /** La sombra de los muebles: violeta hondo. Con alfa, sobre cualquier color, oscurece hacia frío en lugar de ensuciar. */
-val SOMBRA_MUEBLE = Color(0xFF231B3A)
+val SOMBRA_MUEBLE = Color(0xFF2A2436)
 /** La luz que da en lo que mira a la ventana: crema cálida. */
 val LUZ_MUEBLE = Color(0xFFFFF1D2)
 /** El aire de un interior de noche: azul violeta. */
-val NOCHE_MUEBLE = Color(0xFF221D3A)
+val NOCHE_MUEBLE = Color(0xFF1F1C2A)
 /** El filo que deja la lámpara en lo que mira hacia ella, de noche. */
 val FILO_MUEBLE = Color(0xFFFFC56E)
 
@@ -46,7 +46,7 @@ fun luzMueble(a: Float): Color = LUZ_MUEBLE.copy(alpha = a.coerceIn(0f, 1f))
 fun filoMueble(oscuro: Boolean, a: Float): Color = (if (oscuro) FILO_MUEBLE else LUZ_MUEBLE).copy(alpha = a.coerceIn(0f, 1f))
 
 /** Lo que multiplica cada color en una noche normal: el aire azul violeta del cuarto. */
-private val AIRE_NOCHE = Color(0xFF75719F)
+private val AIRE_NOCHE = Color(0xFF9B97AB)
 
 /**
  * Un color en el modo oscuro: **multiplicado** por el aire azul violeta de la noche, como en los cuadros, y un poco hacia
@@ -57,7 +57,7 @@ fun deNoche(c: Color, oscuro: Boolean, k: Float = 0.42f): Color {
     if (!oscuro) return c
     val f = (k / 0.42f).coerceIn(0f, 1.6f)
     val m = lerp(Color.White, AIRE_NOCHE, (0.85f * f).coerceIn(0f, 1f))
-    return lerp(Color(c.red * m.red, c.green * m.green, c.blue * m.blue, c.alpha), NOCHE_MUEBLE.copy(alpha = c.alpha), (0.12f * f).coerceIn(0f, 1f))
+    return lerp(Color(c.red * m.red, c.green * m.green, c.blue * m.blue, c.alpha), NOCHE_MUEBLE.copy(alpha = c.alpha), (0.06f * f).coerceIn(0f, 1f))
 }
 
 /** Un número de 0 a 1, siempre el mismo para la misma [semilla] y [k]. */
@@ -109,7 +109,7 @@ private val BALDOSA_GRANO: ImageBitmap by lazy {
  */
 fun DrawScope.granoMueble(r: Rect, oscuro: Boolean, fuerza: Float = 1f) {
     val b = BALDOSA_GRANO
-    val a = ((if (oscuro) 0.22f else 0.28f) * fuerza).coerceIn(0f, 1f)
+    val a = ((if (oscuro) 0.12f else 0.16f) * fuerza).coerceIn(0f, 1f)
     clipRect(r.left, r.top, r.right, r.bottom) {
         var y = r.top
         while (y < r.bottom) {

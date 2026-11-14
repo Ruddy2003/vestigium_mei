@@ -1,6 +1,5 @@
 package io.github.ruddy2003.vestigium.ui.vida
 
-import io.github.ruddy2003.vestigium.ui.muebles.deNoche
 import io.github.ruddy2003.vestigium.ui.muebles.granoMueble
 import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
 import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
@@ -86,8 +85,8 @@ internal object VidaHeleno : DisenoVida {
 
     /** El material de noche: el mismo, en penumbra. */
     private fun n(c: Color, oscuro: Boolean): Color = if (oscuro) mez(c, NOCHE, 0.58f) else c
-    /** El tablero de notas (piloto de la luz, 13 nov 2026): de noche, hacia el azul violeta del cuadro. [n] sigue para los muebles de Vida. */
-    private fun nm(c: Color, oscuro: Boolean): Color = deNoche(c, oscuro, 0.5f)
+    /** El tablero de notas (piloto de la luz): de noche, la penumbra de siempre, apenas fría. [n] sigue para los muebles de Vida. */
+    private fun nm(c: Color, oscuro: Boolean): Color = if (oscuro) mez(c, Color(0xFF12101A), 0.58f) else c
 
     /** El fondo sólido de un nicho: el [material] llevado a la luminancia de la tarjeta. */
     private fun nicho(e: EstadoMueble, oscuro: Boolean, material: Color): Color =

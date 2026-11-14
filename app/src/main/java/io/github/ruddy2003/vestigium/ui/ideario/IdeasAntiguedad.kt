@@ -26,7 +26,6 @@ import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.pantallas.simboloCalificacion
 import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
 import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
-import io.github.ruddy2003.vestigium.ui.muebles.deNoche
 import io.github.ruddy2003.vestigium.ui.muebles.granoMueble
 import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
@@ -681,8 +680,8 @@ object IdeasHeleno : DisenoIdeas {
     private val GUIJARRO = Color(0xFFE9E1CF)
 
     private fun t(c: Color, oscuro: Boolean) = if (oscuro) mezcla(c, Color.Black, 0.32f) else c
-    /** El mueble y sus ánforas (piloto de la luz, 13 nov 2026): de noche, hacia el azul violeta del cuadro. [t] sigue para lo de adentro. */
-    private fun tm(c: Color, oscuro: Boolean) = deNoche(c, oscuro, 0.36f)
+    /** El mueble y sus ánforas (piloto de la luz): de noche, la penumbra de siempre, apenas fría. [t] sigue para lo de adentro. */
+    private fun tm(c: Color, oscuro: Boolean) = if (oscuro) mezcla(c, Color(0xFF0D0C12), 0.32f) else c
 
     override val cols = 3
     override val proporcion = 0.62f
@@ -698,8 +697,8 @@ object IdeasHeleno : DisenoIdeas {
         // El muro: ocre con una franja azul del Egeo abajo y otra púrpura fina.
         drawRect(Brush.verticalGradient(listOf(tm(mezcla(MURO, SOMBRA_MUEBLE, 0.12f), oscuro), tm(MURO, oscuro)), alto0, alto1), Offset(0f, alto0), Size(w, alto1 - alto0))
         // El revoque pintado a mano: pinceladas, no manchas con degradado (eran 50 por dibujo).
-        pinceladas(Rect(0f, alto0, w, alto1), tm(mezcla(MURO, SOMBRA_MUEBLE, 0.35f), oscuro), 51, 46, u, 0.14f)
-        pinceladas(Rect(0f, alto0, w, alto1), tm(mezcla(MURO, LUZ_MUEBLE, 0.4f), oscuro), 57, 24, u, 0.12f)
+        pinceladas(Rect(0f, alto0, w, alto1), tm(mezcla(MURO, SOMBRA_MUEBLE, 0.35f), oscuro), 51, 46, u, 0.08f)
+        pinceladas(Rect(0f, alto0, w, alto1), tm(mezcla(MURO, LUZ_MUEBLE, 0.4f), oscuro), 57, 24, u, 0.07f)
         drawRect(tm(EGEO, oscuro), Offset(0f, alto1 - 14 * u), Size(w, 14 * u))
         drawRect(tm(PURPURA, oscuro), Offset(0f, alto1 - 17 * u), Size(w, 3 * u))
         // Las tablas donde descansan las ánforas, bajo cada fila.
