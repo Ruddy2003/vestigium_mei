@@ -2863,4 +2863,22 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("nieve", "2028-12-10", listOf(10.0)),                      // la nevada, sin leña
         Triple("guerra", "2031-11-17", listOf(12.0)),                     // las contraventanas casi cerradas
     ),
+    // Nanai-vandak (Ruta de la Seda, tanda S7): el camino, con sus tres paisajes, y Chang'an. Primer cuadro de desierto.
+    "mercader_sogdiano" to listOf(
+        Triple("normal", "2027-12-20", HORAS_CUADRO),                     // el camino en el desierto: en marcha, el alto de mediodía y la noche
+        Triple("changan", "2027-06-10", HORAS_CUADRO),                    // Chang'an: el mercado del oeste, cerrado, abierto y de noche (decisión 18)
+        Triple("paso", "2028-02-10", listOf(10.0)),                       // la montaña: el paso
+        Triple("valle", "2028-03-25", listOf(13.0)),                      // la montaña: el valle de Sogdiana, con los albaricoqueros en flor
+        Triple("loess", "2029-04-10", listOf(13.0)),                      // las colinas de loess, con las casas cavadas
+        Triple("corredor", "2029-02-20", listOf(17.0)),                   // el corredor del oeste: el fuerte y las torres de señales
+        Triple("samarcanda", "2028-06-10", listOf(13.0)),                 // a las puertas de Samarcanda (sin cuadro propio todavía)
+        Triple("fiesta", "2027-02-11", listOf(19.0)),                     // el año nuevo en un caravasar
+        Triple("linternas", "2027-02-25", listOf(21.0)),                  // la fiesta de las linternas
+        Triple("polvo", "2027-03-20", listOf(13.0)),                      // la tormenta de arena negra
+        Triple("nieve", "2027-12-15", listOf(10.0)),                      // la nieve en el paso
+        Triple("mogao", "2027-11-20", listOf(19.6)),                      // las cuevas de Dunhuang
+        Triple("crecida", "2029-07-25", listOf(13.0)),                    // el Wei en el mercado
+        Triple("luna", "2027-09-19", listOf(21.4)),                       // la luna de otoño
+        Triple("boda", "2031-07-10", listOf(19.0)),                       // la boda de Farn
+    ),
 )

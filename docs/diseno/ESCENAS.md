@@ -200,7 +200,7 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 - **Exterior con sol** (casi todos los temas). Se aplica todo tal cual.
   - Cambian la paleta local, la flora, las casas y **el marco**, que tiene que ser de ese lugar: una parra, un alero, un toldo, un arco, una palmera, una vela con su jarcia, el borde de una tienda, una viga, una rama.
   - El cielo de `HITOS` es de todos y **no se retoca para un tema:** cambiaría Helénico. Si el lugar pide otro cielo (polvo del desierto, gris del norte, un cielo que no es de la Tierra), la escena tiñe las `Luces` que le da el momento en una función propia, como hace Helénico con su eclipse (`luces(m)`).
-- **Sin agua** (desierto, estepa, montaña, ciudad). No se inventa un río para cumplir la regla 4.
+- **Sin agua** (desierto, estepa, montaña, ciudad). No se inventa un río para cumplir la regla 4. El primer cuadro de desierto es el camino de la Ruta de la Seda (S7, a falta de que el autor lo vea): `EscenaSedaPaisajes.kt` y `EscenaSedaCampamento.kt`.
   - Arena: dunas con su cara de luz y su cara de sombra, rizos del viento, piedras con su sombra.
   - Nieve: ventisqueros, huellas, sombras azules largas.
   - Hierba: rachas que la peinan, senderos, matas, cambio de color de lejos a cerca.
@@ -241,7 +241,6 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 | Egipto | Pay, Deir el-Medina | Exterior, sin agua | Un toldo de estera, una palmera | La ladera de piedra y arena |
 | Prehistoria | Ama, un valle del suroeste de Europa | Exterior y fuego | La boca de la cueva | El valle con su río |
 | Mesoamérica | K'an, una ciudad maya | Exterior | Una ceiba, un alero de palma | La plaza estucada |
-| Ruta de la Seda | Nanai-vandak, entre Samarcanda y Chang'an | Exterior, sin agua | El borde de una tienda, la carga de un camello | El desierto o la estepa |
 | Templario | Hermano Bernat, un castillo del Levante | Exterior, sin agua | Una almena, un estandarte | El llano seco |
 | Mongol | Bat, la estepa | Exterior, sin agua | El borde de la yurta | La estepa |
 | Japón Edo | Ochiyo, una posta del camino real | Exterior | Un alero, una rama de arce o de cerezo | El camino |
