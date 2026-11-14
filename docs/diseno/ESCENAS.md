@@ -220,9 +220,9 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
   - La parte de arriba es el techo o la pared del fondo: tuberías, paneles, cables, estantes. En Espacio, además, el ventanal del costado con la galaxia (el autor lo pidió grande, casi del tamaño de la pared).
   - Lo que cambia con el día: qué está encendido, qué hay sobre la mesa, cómo va el cultivo.
   - Para que tres horas den tres cuadros, en Espacio las lámparas del techo se turnan (`programa`): por la mañana manda la de un lado, cálida; a mediodía, la del centro, blanca; por la tarde, la del otro lado, que acaba naranja; de noche quedan las de guardia. **[Diseño propio]**: las sombras de esas lámparas se tumban de lado y hacia el fondo, como las del sol de Helénico, para que se vean; no es la sombra real de una lámpara de techo.
-- **Interiores con ventana o puerta** (un taller, un scriptorium, una oficina, un club). La luz del sol entra por el hueco y cae en el suelo y en la pared como una mancha que se mueve con la hora: es la sombra arrojada al revés. Por el hueco se ve el cielo de `cielo` y `nubes`.
+- **Interiores con ventana o puerta** (la capilla de Roma, hecha en S5, es el primero: `EscenaUrbe.kt` y sus archivos son el ejemplo, y falta que el autor lo vea; un taller, un scriptorium, una oficina, un club). La luz del sol entra por el hueco y cae en el suelo y en la pared como una mancha que se mueve con la hora: es la sombra arrojada al revés. Por el hueco se ve el cielo de `cielo` y `nubes`.
 - **Luz de fuego** (Prehistoria, un campamento, una posada de noche). De noche la hoguera es el sol de la escena: lo cercano a ella, cálido por ese lado y oscuro por el otro.
-- **Mal tiempo frecuente** (niebla, lluvia, nieve). Con el cielo cubierto no hay sombras arrojadas. Para que no quede plano: suelo mojado más oscuro y con reflejos, luces encendidas antes, capas de bruma entre los planos (`estrato`, `tiempoQuieto`).
+- **Mal tiempo frecuente** (niebla, lluvia, nieve; Horror cósmico, hecho en S4, es el primero con niebla: `EscenaArcano.kt` y sus archivos son el ejemplo, y falta que el autor lo vea). Con el cielo cubierto no hay sombras arrojadas. Para que no quede plano: suelo mojado más oscuro y con reflejos, luces encendidas antes, capas de bruma entre los planos (`estrato`, `tiempoQuieto`). En Horror cósmico la niebla no es un velo encima del cuadro: va **por capas entre los planos** (el horizonte, la punta, el muelle, el pueblo), con cuatro niveles, y con ella se encienden antes el faro, las farolas y las lámparas.
 - **Ficción con colores propios** (Distopía, hecho en S3 y aprobado por el autor el 13 nov 2026: `EscenaDistopia.kt` y sus archivos son el ejemplo; sus imágenes, `referencia_distopia.jpg` y `referencia_distopia_pueblo.jpg`; Horror cósmico, Orden, Tierras Antiguas). La paleta puede alejarse mucho de la de Helénico, pero conserva su forma: un color que domina, otro que lo acompaña, la luz de un matiz y la sombra del contrario.
 
 **Si la biblioteca no alcanza** (una luz fija para interiores, un suelo mojado, una bóveda), la tanda que lo necesita lo agrega a `paisaje/`, con estas condiciones:
@@ -252,10 +252,7 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 | Abismo | Nikos, un barco esponjero | A bordo | El pescante, un toldo | El mar |
 | Art déco | Lou, Nueva York | Ciudad, de noche tiene mucho que decir | Una escalera de incendios, un rótulo | La calle o la azotea |
 | Soviético | Liudmila, Moscú | Ciudad con nieve | El marco de una ventana, un abedul | El patio entre bloques |
-| Roma | Giulia, restauradora en Roma | Ciudad | Un andamio, un pino | Los tejados |
-| Ciudad verde | La semillera, una ciudad que el bosque recuperó | Exterior | Una rama, una viga rota con hiedra | La calle cubierta de verde |
 | Refugio | La residente, un refugio bajo tierra | Interior con dos luces | Tuberías | El piso y los tanques |
-| Horror cósmico | El archivista, un pueblo de pescadores en la niebla | Exterior con niebla | Una farola, una red tendida | El mar y el muelle |
 | Orden | La escriba, una ciudadela en el páramo | Exterior | Una almena, un pendón | El páramo |
 | Laboratorio | La doctora, un laboratorio subterráneo | Interior con dos luces | Conductos y lámparas | El piso y las mesas |
 | Colonos | Ruth, un pueblo que se reconstruye | Exterior | Un porche, un árbol joven | El campo y el camino |
