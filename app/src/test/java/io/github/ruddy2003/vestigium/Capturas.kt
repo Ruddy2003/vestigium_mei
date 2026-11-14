@@ -2914,4 +2914,20 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("krakatoa", "2030-12-05", listOf(19.34)),                  // el atardecer rojo
         Triple("maquinista", "2031-10-06", listOf(10.0)),                 // ya es maquinista: la aceitera y la chaqueta de otro fogonero
     ),
+    // K'an (Mesoamérica, tanda S9): el patio de su casa bajo la ceiba, con el códice en el banco, y la plaza con el templo, el palacio, la estela que se talla y se levanta, y la milpa en la ladera.
+    "escriba_maya" to listOf(
+        Triple("normal", "2027-09-10", HORAS_CUADRO),                     // el patio, la estela en su andamio, la milpa alta; bruma, sol y noche con luciérnagas
+        Triple("sin_estela", "2027-01-15", listOf(10.0)),                 // el sitio marcado; secas, la ceiba aún con hoja
+        Triple("piedra", "2027-03-05", listOf(10.0)),                     // la piedra tumbada; la ceiba pelada y con frutos
+        Triple("juego", "2027-03-10", listOf(13.0)),                      // el juego de pelota con sus banderas
+        Triple("wayeb", "2027-01-26", listOf(13.0, 21.0)),                // los días sin nombre: nada encendido
+        Triple("fin_katun", "2028-05-03", listOf(10.0)),                  // la estela levantada, copal y estandartes (decisión 18)
+        Triple("huracan", "2028-09-05", listOf(13.0)),                    // la tormenta; desde ese día, la milpa tumbada
+        Triple("embajada", "2029-04-20", listOf(10.0, 20.4)),             // variante: la casa sin él (decisión 21)
+        Triple("luto", "2029-07-15", listOf(10.0)),                       // el códice tapado y el incensario
+        Triple("guerra", "2029-11-20", listOf(17.0)),                     // escudos en el palacio y humo al oeste
+        Triple("quema", "2030-04-06", listOf(17.0)),                      // la milpa arde: humo y sol rojo
+        Triple("elotes", "2030-08-15", listOf(19.4)),                     // fiesta al anochecer: antorchas y guirnaldas
+        Triple("cosecha", "2030-10-28", listOf(10.0)),                    // la cosecha a medias y la estela ya de siempre
+    ),
 )

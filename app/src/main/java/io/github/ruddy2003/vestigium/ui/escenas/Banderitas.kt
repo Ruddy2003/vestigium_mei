@@ -70,7 +70,7 @@ fun banderitaHistoria(tema: TemaId): Banderita? = when (tema) {
     TemaId.ESPACIO -> BanderitaEspacio
     TemaId.ABISMO -> null           // S16
     TemaId.ANDALUS -> BanderitaAndalus
-    TemaId.MESO -> null             // S9
+    TemaId.MESO -> BanderitaMeso
     TemaId.MONGOL -> null           // S12
     TemaId.RENACIMIENTO -> BanderitaRenacimiento
     TemaId.PIRATA -> BanderitaPirata
