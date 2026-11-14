@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.data.Repo
@@ -368,6 +369,28 @@ private fun fraccionVivo(x: Float): Float = x - floor(x)
 private fun senoVuelta(x: Float): Float = sin(2 * PI * x).toFloat()
 private fun cosenoVuelta(x: Float): Float = cos(2 * PI * x).toFloat()
 
+/** El pincel del volcado de Terminal: uno solo, no uno nuevo en cada cuadro (el fondo se dibuja siempre en el hilo de la pantalla). */
+private val PINCEL_VOLCADO = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { typeface = android.graphics.Typeface.MONOSPACE }
+/** Las 256 parejas hexadecimales («00» a «FF»), hechas una vez: antes se armaba un texto nuevo por cada par y cada cuadro. */
+private val PARES_HEX = Array(256) { "0123456789ABCDEF"[it / 16].toString() + "0123456789ABCDEF"[it % 16] }
+/** Los pinceles de [resplandorVivo], uno por color. */
+private val PINCELES_RESPLANDOR = object : LinkedHashMap<Long, Brush>(16, 0.75f, true) {
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, Brush>?) = size > 64
+}
+
+/**
+ * Un resplandor redondo, del [color] a transparente, igual que `drawCircle(Brush.radialGradient(...))` pero sin crear un
+ * pincel nuevo en cada cuadro: el pincel, de radio 1, se guarda por color y se lleva al tamaño al dibujar. [alfa] es la
+ * opacidad del centro.
+ */
+private fun DrawScope.resplandorVivo(color: Color, centro: Offset, radio: Float, alfa: Float) {
+    val a = alfa.coerceIn(0f, 1f)
+    if (radio <= 0f || a <= 0f) return
+    val c = color.copy(alpha = 1f)
+    val b = PINCELES_RESPLANDOR.getOrPut(c.value.toLong()) { Brush.radialGradient(listOf(c, Color.Transparent), center = Offset.Zero, radius = 1f) }
+    withTransform({ translate(centro.x, centro.y); scale(radio, radio, Offset.Zero) }) { drawCircle(b, 1f, Offset.Zero, alpha = a) }
+}
+
 /**
  * Dibuja un instante [t] (0 a 1, una vuelta del [VivoTema.periodo]) del fondo vivo. Los movimientos dan vueltas enteras
  * por periodo, así el ciclo vuelve a empezar sin salto. [fuerza] multiplica la opacidad (el teléfono, sin nada encima, va más visible).
@@ -388,7 +411,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             val a = (1f - vida) * (0.65f + 0.35f * senoVuelta(t * 23 + m.fase * 7))
             val brasa = if (oscuro) Color(0xFFF2A541) else e.tertiary
             val r = 7f * u * m.tam
-            drawCircle(Brush.radialGradient(listOf(al(brasa, 0.30f * a), Color.Transparent), center = Offset(x, y), radius = r), r, Offset(x, y))
+            resplandorVivo(brasa, Offset(x, y), r, (0.30f * a) * fuerza)
             drawCircle(al(if (oscuro) Color(0xFFFFE2A8) else brasa, (if (oscuro) 0.6f else 0.35f) * a), 1.1f * u * m.tam, Offset(x, y))
         }
         VivoTema.STORNI -> {
@@ -423,8 +446,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             // Un volcado de memoria: columnas de pares hexadecimales alineadas a la rejilla de la consola, que bajan; la
             // cabeza va más brillante y la cola se apaga. Los dígitos cambian con la memoria que pasa.
             val paso = 22f * u; val alto = 11f * u
-            val hex = "0123456789ABCDEF"
-            val pincel = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { typeface = android.graphics.Typeface.MONOSPACE; textSize = 9f * u }
+            val pincel = PINCEL_VOLCADO.apply { textSize = 9f * u }
             val lienzo = drawContext.canvas.nativeCanvas
             motas.take(24).forEach { m ->
                 val k = vueltas(m)
@@ -435,7 +457,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                     val y = cabeza - j * alto
                     if (y < -alto || y > h + alto) continue
                     val semilla = (m.fase * 997).toInt() + j * 7 + (t * k * 12).toInt()
-                    val texto = "" + hex[semilla and 15] + hex[(semilla * 5 + 3) and 15]
+                    val texto = PARES_HEX[(semilla and 15) * 16 + ((semilla * 5 + 3) and 15)]
                     pincel.color = al(e.primary, (if (j == 0) 0.42f else 0.2f * (1f - j.toFloat() / largo))).toArgb()
                     lienzo.drawText(texto, x, y, pincel)
                 }
@@ -522,7 +544,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 val x = (m.x + 0.05f * senoVuelta(vida * 1.5f + m.fase)) * w
                 val r = (16f + 46f * vida) * u * m.tam
                 val a = senoVuelta(vida * 0.5f) * (if (oscuro) 0.07f else 0.05f)
-                drawCircle(Brush.radialGradient(listOf(al(vaho, a), Color.Transparent), center = Offset(x, y), radius = r), r, Offset(x, y))
+                resplandorVivo(vaho, Offset(x, y), r, (a) * fuerza)
             }
             // De noche, además, el barrido de la pantalla de fósforo (solo en el Refugio).
             if (oscuro) drawRect(al(e.primary, 0.035f), Offset(0f, fraccionVivo(t * 3) * h), Size(w, 26f * u))
@@ -546,7 +568,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             // halo amarillo de dos faroles de gas que tiembla arriba.
             if (oscuro) listOf(0.12f, 0.88f).forEachIndexed { i, fx ->
                 val c = Offset(w * fx, h * 0.07f); val r = 130f * u * (1f + 0.05f * senoVuelta(t * 11 + i * 0.37f))
-                drawCircle(Brush.radialGradient(listOf(al(Color(0xFFF2C46A), 0.09f), Color.Transparent), center = c, radius = r), r, c)
+                resplandorVivo(Color(0xFFF2C46A), c, r, (0.09f) * fuerza)
             }
             val copo = if (oscuro) Color(0xFFB09F82) else Color(0xFF231B14)
             motas.take(30).forEach { m ->
@@ -658,7 +680,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             val y = (m.y + 0.03f * cosenoVuelta(t * (k + 1) + m.fase)) * h
             val a = senoVuelta(t * 2 * k + m.fase).coerceAtLeast(0f)
             if (a > 0.01f) {
-                drawCircle(Brush.radialGradient(listOf(al(Color(0xFFD8F07A), 0.45f * a), Color.Transparent), center = Offset(x, y), radius = 9f * u), 9f * u, Offset(x, y))
+                resplandorVivo(Color(0xFFD8F07A), Offset(x, y), 9f * u, (0.45f * a) * fuerza)
                 drawCircle(al(Color(0xFFF2FFB0), 0.8f * a), 1.4f * u, Offset(x, y))
             }
         }
@@ -747,7 +769,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 val tiembla = 0.85f + 0.15f * senoVuelta(t * (7 + i) + i * 0.3f)
                 drawLine(muro, Offset(tx, ty), Offset(tx, base - 14f * u), 2.4f * u)
                 val rr = 34f * u * tiembla; val cl = Offset(tx, ty - 6f * u)
-                drawCircle(Brush.radialGradient(listOf(al(fuego, (if (oscuro) 0.16f else 0.07f) * tiembla), Color.Transparent), center = cl, radius = rr), rr, cl)
+                resplandorVivo(fuego, cl, rr, ((if (oscuro) 0.16f else 0.07f) * tiembla) * fuerza)
                 val alto = 12f * u * tiembla; val ancho = 4.2f * u; val ladeo = 2f * u * senoVuelta(t * (5 + i) + 0.2f * i)
                 drawPath(Path().apply {
                     moveTo(tx - ancho, ty); quadraticTo(tx - ancho, ty - alto * 0.6f, tx + ladeo, ty - alto); quadraticTo(tx + ancho, ty - alto * 0.6f, tx + ancho, ty); close()
@@ -794,7 +816,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             val x = (fraccionVivo(m.x + t) * 1.2f - 0.1f) * w; val y = (m.y + 0.03f * senoVuelta(t + m.fase)) * h
             val col = listOf(e.secondary, if (oscuro) e.tertiary else e.primary, Color(0xFF2E8B57), Color(0xFFE2B34A))[m.tono % 4]
             val r = 46f * u * m.tam
-            drawCircle(Brush.radialGradient(listOf(al(col, if (oscuro) 0.12f else 0.09f), Color.Transparent), center = Offset(x, y), radius = r), r, Offset(x, y))
+            resplandorVivo(col, Offset(x, y), r, (if (oscuro) 0.12f else 0.09f) * fuerza)
         }
         VivoTema.NIEBLA -> {
             // Bancos de niebla que cruzan despacio, unos más rápido que otros, y el haz del faro que va y viene dos veces por vuelta.
@@ -863,7 +885,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                     val r = 11f * u * m.tam
                     val ancho = r * (1.1f - 0.25f * late); val alto = r * (0.7f + 0.2f * late)
                     val luz = when (m.tono) { 0 -> e.primary; 1 -> e.secondary; else -> e.tertiary }
-                    drawCircle(Brush.radialGradient(listOf(al(luz, 0.14f), Color.Transparent), center = Offset(x, y), radius = r * 2.6f), r * 2.6f, Offset(x, y))
+                    resplandorVivo(luz, Offset(x, y), r * 2.6f, (0.14f) * fuerza)
                     val campana = Path().apply {
                         moveTo(x - ancho, y); cubicTo(x - ancho, y - alto * 1.3f, x + ancho, y - alto * 1.3f, x + ancho, y)
                         quadraticTo(x, y - alto * 0.25f, x - ancho, y); close()
@@ -1031,7 +1053,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 val x = w * 0.12f + 26f * u * senoVuelta(vida * 1.5f + m.fase) * vida
                 val y = h * 0.98f - vida * h * 0.42f
                 val rr = (8f + 26f * vida) * u * m.tam
-                drawCircle(Brush.radialGradient(listOf(al(e.onBackground, (1f - vida) * (if (oscuro) 0.08f else 0.06f)), Color.Transparent), center = Offset(x, y), radius = rr), rr, Offset(x, y))
+                resplandorVivo(e.onBackground, Offset(x, y), rr, ((1f - vida) * (if (oscuro) 0.08f else 0.06f)) * fuerza)
             }
         }
         VivoTema.MANOS -> {
@@ -1102,63 +1124,14 @@ fun FondoVivo(tema: TemaId = Estilo.tema, fijo: Float? = null) {
     val tipo = vivoTema(tema, oscuro)
     if (tipo == VivoTema.NINGUNO) return
     val motas = remember(tema) { motasVivo(tema) }
-    if (fijo == null && animacionLigera(tema)) {
-        // Art déco y Edo: el fondo va en su propia capa y el tiempo se lee al dibujar, unas 30 veces por segundo. Antes cada
-        // cuadro (60 por segundo) recomponía el fondo y obligaba a redibujar lo que tiene detrás: el papel tapiz de abanicos
-        // o de olas (cientos de arcos) y la pantalla entera.
-        val anim = rememberInfiniteTransition(label = "fondo").animateFloat(0f, 1f, infiniteRepeatable(tween(tipo.periodo, easing = LinearEasing)), label = "t")
-        val pasos = (tipo.periodo / 33).coerceAtLeast(1)
-        val t by remember(anim, pasos) { androidx.compose.runtime.derivedStateOf { floor(anim.value * pasos) / pasos } }
-        Canvas(Modifier.fillMaxSize().graphicsLayer()) { pintarVivoTema(tipo, t, oscuro, e, motas) }
-        return
-    }
     if (fijo != null) { Canvas(Modifier.fillMaxSize()) { pintarVivoTema(tipo, fijo, oscuro, e, motas) }; return }
-    // Los demás temas siguen a 60 cuadros por segundo, pero el tiempo se lee al dibujar y el fondo va en su propia capa
-    // (10 nov 2026): cada cuadro ya no recompone esta función ni obliga a volver a grabar lo que comparte capa con ella.
+    // Todos los temas (13 nov 2026, antes solo Art déco y Edo): el fondo va en su propia capa y el tiempo se lee al dibujar,
+    // en pasos de unos 30 por segundo. Así cada cuadro no recompone esta función ni obliga a redibujar lo que tiene detrás
+    // (el papel tapiz y la pantalla), y se dibuja la mitad de veces que a 60. El movimiento es el mismo, un poco menos fluido.
     val anim = rememberInfiniteTransition(label = "fondo").animateFloat(0f, 1f, infiniteRepeatable(tween(tipo.periodo, easing = LinearEasing)), label = "t")
-    Canvas(Modifier.fillMaxSize().graphicsLayer()) { pintarVivoTema(tipo, anim.value, oscuro, e, motas) }
-}
-
-/**
- * Temas con animaciones aligeradas (decisión del autor del 5 nov 2026: solo Art déco y Edo): su fondo vivo, su papel tapiz
- * y su emblema van en capas propias, para que lo que se mueve no obligue a redibujar lo demás.
- */
-fun animacionLigera(t: TemaId): Boolean = when (t) {
-    TemaId.ROMANO -> false
-    TemaId.URBE -> false
-    TemaId.CIBER -> false
-    TemaId.NEON -> false
-    TemaId.HELENO -> false
-    TemaId.EGIPTO -> false
-    TemaId.MEDIEVAL -> false
-    TemaId.TEMPLARIO -> false
-    TemaId.DISTOPIA -> false
-    TemaId.REFUGIO -> false
-    TemaId.ORDEN -> false
-    TemaId.VAPOR -> false
-    TemaId.LABORATORIO -> false
-    TemaId.COLONOS -> false
-    TemaId.NAPOLEON -> false
-    TemaId.DECO -> true
-    TemaId.BOTANICO -> false
-    TemaId.RUINAS -> false
-    TemaId.NAVIDAD -> false
-    TemaId.SEDA -> false
-    TemaId.EDO -> true
-    TemaId.GOTICO -> false
-    TemaId.ARCANO -> false
-    TemaId.ESPACIO -> false
-    TemaId.ABISMO -> false
-    TemaId.ANDALUS -> false
-    TemaId.MESO -> false
-    TemaId.MONGOL -> false
-    TemaId.RENACIMIENTO -> false
-    TemaId.PIRATA -> false
-    TemaId.URSS -> false
-    TemaId.REVOLUCION -> false
-    TemaId.ANTIGUAS -> false
-    TemaId.CUEVA -> false
-    TemaId.BASICO -> false
+    val pasos = (tipo.periodo / 33).coerceAtLeast(1)
+    val t by remember(anim, pasos) { androidx.compose.runtime.derivedStateOf { floor(anim.value * pasos) / pasos } }
+    Canvas(Modifier.fillMaxSize().graphicsLayer()) { pintarVivoTema(tipo, t, oscuro, e, motas) }
 }
 
 // =====================================================================

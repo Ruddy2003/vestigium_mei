@@ -99,8 +99,7 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
     }
 
     Tarjeta {
-        Ayuda("Un solo archivo con todo: diario, sueños, cartas, momentos, cuestionarios, ajustes, Conocerte, el mapa, las ubicaciones, " +
-            "el catálogo de fotos con lugar (solo hora y coordenadas) y las portadas. Si pierdes o cambias de teléfono, instala la app y restáuralo aquí.")
+        Ayuda("Un solo archivo con todo. Si pierdes o cambias de teléfono, instala la app y restáuralo aquí.")
         val bloqueado = !cifra && io.github.ruddy2003.vestigium.data.Privado.hayDatos()
         if (!soloRestaurar && bloqueado) Aviso("Tu respaldo lleva datos privados: para que salga del teléfono (a la carpeta, a Drive o al compartirlo) necesita contraseña. Actívala abajo, en «Cifrar con contraseña».")
         if (!soloRestaurar) BotonPrincipal(if (cifra) "Guardar respaldo cifrado" else "Guardar respaldo completo", Modifier.fillMaxWidth().padding(top = 10.dp), habilitado = !ocupado && !bloqueado) {
@@ -118,7 +117,7 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
             confirmarRestaurar = { soloVerificar = false; drive() }
         }
         Separador(Modifier.padding(vertical = 12.dp))
-        Ayuda("¿Tus respaldos sirven? Revísalo de vez en cuando: se abre el archivo completo (descifrado si lleva contraseña) y se cuenta lo que trae, sin cambiar nada de aquí.")
+        Ayuda("Abre el respaldo completo y cuenta lo que trae, sin cambiar nada.")
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BotonSecundario("Verificar un archivo", Modifier.weight(1f), habilitado = !ocupado) { archivoVerificar.launch(arrayOf("*/*")) }
             BotonSecundario("Verificar Drive", Modifier.weight(1f), habilitado = !ocupado) { soloVerificar = true; drive() }

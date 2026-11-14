@@ -287,7 +287,7 @@ internal fun Recuadro(titulo: String, detalle: String, modifier: Modifier = Modi
 @Composable
 fun RecuadroMapas(nav: Nav) {
     val r = rememberResumen("todo")
-    val detalle = r?.let { "${porNumero(it.paises.size, "1 país", "${it.paises.size} países")} · ${porNumero(it.ciudades.size, "1 ciudad", "${it.ciudades.size} ciudades")} · ${porNumero(it.sitios.size, "1 sitio", "${it.sitios.size} sitios")} del Patrimonio Mundial" } ?: "Mundo, mapa para rascar, Patrimonio Mundial y tus lugares"
+    val detalle = r?.let { "${porNumero(it.paises.size, "1 país", "${it.paises.size} países")} · ${porNumero(it.ciudades.size, "1 ciudad", "${it.ciudades.size} ciudades")} · ${porNumero(it.sitios.size, "1 sitio", "${it.sitios.size} sitios")} del Patrimonio Mundial" } ?: "Tus países, ciudades y lugares"
     // La mesa de mapas del tema (lote E6) y el mapa para rascar encima.
     val cs = MaterialTheme.colorScheme
     val d = io.github.ruddy2003.vestigium.ui.vida.disenoVida(Estilo.tema)
@@ -306,7 +306,7 @@ fun RecuadroObras(nav: Nav) {
     val vistas = Repo.obras.filter { it.titulo.isNotBlank() && (it.estado == "terminado" || it.estado == "en_curso") }
         .sortedByDescending { it.fin ?: it.dias.maxOrNull() ?: it.agregado }
     val terminadas = Repo.obras.count { it.estado == "terminado" }
-    Recuadro("Obras", if (Repo.obras.isEmpty()) "Libros, películas, series y juegos, con su portada y tu calificación" else
+    Recuadro("Obras", if (Repo.obras.isEmpty()) "Lo que lees, ves y juegas" else
         "$terminadas vistas o leídas · ${Repo.obras.count { it.estado == "en_curso" }} en curso", alto = 168.dp, onClick = { nav.ir("obras") }) {
         val d = io.github.ruddy2003.vestigium.ui.biblioteca.disenoBiblioteca(Estilo.tema)
         val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
@@ -475,7 +475,7 @@ fun PantallaObras(nav: Nav) {
             else -> l.sortedByDescending { it.fin ?: it.dias.maxOrNull() ?: it.inicio ?: it.agregado }
         }
     }
-    Hoja("Obras", nav.atras, "Lo que has visto, leído y jugado, con su portada y tu calificación. Toca una para ver su ficha, tus notas y tus citas.") {
+    Hoja("Obras", nav.atras, "Toca una para ver su ficha, tus notas y tus citas.") {
         PestanasObras("obras", nav)
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BotonPrincipal("+ añadir", Modifier.weight(1f)) {

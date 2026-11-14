@@ -39,7 +39,7 @@ object CapturasAPedido {
     fun solo(valor: String? = System.getenv("CAPTURAS_SOLO")): Boolean = (valor ?: "").trim().lowercase() in setOf("true", "1", "si", "sí")
 
     /** Las capturas a pedido que no se llaman `tema<Superficie>`. */
-    private val CON_NOMBRE = setOf("cuentoDelDia", "cuadroBiblioteca")
+    private val CON_NOMBRE = setOf("cuentoDelDia", "cuadroBiblioteca", "historiaSinConexion")
     private val POR_TEMA = Regex("tema[A-Z].*")
 
     /**

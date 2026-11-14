@@ -105,7 +105,7 @@ fun PantallaCoberturaVariables(nav: Nav) {
     var grupo by remember { mutableStateOf("todas") }
     var orden by remember { mutableStateOf("menos") }
     val cs = MaterialTheme.colorScheme
-    Hoja("Cobertura de variables", nav.atras, "Cuántos días tiene cada variable desde su primer dato. Con menos de 30 días, una correlación todavía es pista, no evidencia.") {
+    Hoja("Cobertura de variables", nav.atras, "Días por variable. Con menos de 30, una correlación es pista.") {
         val l = filas
         if (l == null) { Ayuda("Contando…", Modifier.padding(top = 12.dp)); return@Hoja }
         val conDatos = l.filter { it.n > 0 }
@@ -157,7 +157,7 @@ fun PantallaLugarNuevo(nav: Nav) {
     val c = Repo.config
     val pend = Lugares.pendientes()
     var msg by remember { mutableStateOf<String?>(null) }
-    Hoja("Lugares especiales", nav.atras, "Cuando llevas un rato en un sitio nuevo, la app pregunta si es un lugar especial. Así el tiempo en cada tipo de lugar entra en tus análisis.") {
+    Hoja("Lugares especiales", nav.atras, "La app pregunta si un sitio nuevo es especial; así su tiempo entra en tus análisis.") {
         msg?.let { io.github.ruddy2003.vestigium.ui.Aviso(it) }
         val cand = pend.firstOrNull()
         if (cand == null) Vacio("No hay sitios esperando respuesta. Cuando pases ${c.lugar_minutos} minutos en un lugar nuevo, te preguntará.")
@@ -253,11 +253,11 @@ fun PantallaNotas(nav: Nav) {
     var filtro by remember { mutableStateOf("todas") }
     var editando by remember { mutableStateOf<Nota?>(null) }
     val marcas = rememberMarcas()
-    Hoja("Notas", nav.atras, "Propósitos y recordatorios (y tus notas de antes). Con @persona y #tema, fijar arriba y buscar.") {
+    Hoja("Notas", nav.atras, "Pensamientos, propósitos y recordatorios. Con @persona y #tema.") {
         Tarjeta(Modifier.padding(top = 10.dp)) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                // Las notas nuevas ya no se ofrecen como «idea» ni «pensamiento» (hallazgo 31): las ideas van al Ideario y los
-                // pensamientos, al registro de ánimo. Las notas viejas de esos tipos se conservan, se ven y se filtran abajo.
+                // Las notas nuevas no se ofrecen como «idea»: las ideas van al Ideario (hallazgo 31). «Pensamiento» volvió el 13 nov
+                // 2026 (lo pidió el autor): el registro de ánimo no tiene dónde escribir un pensamiento libre sobre uno mismo.
                 Catalogo.TIPOS_NOTA.filter { it.id in TIPOS_NOTA_NUEVA }.forEach { o -> Ficha(o.nombre, tipo == o.id) { tipo = o.id; BorradorNota.tipo = o.id } }
             }
             Text("¿es una idea? al Ideario →", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
@@ -296,7 +296,7 @@ fun PantallaNotas(nav: Nav) {
 }
 
 /** Los tipos que se ofrecen al escribir una nota nueva. Los demás de [Catalogo.TIPOS_NOTA] siguen existiendo para las notas ya guardadas. */
-private val TIPOS_NOTA_NUEVA = setOf("proposito", "recordatorio")
+private val TIPOS_NOTA_NUEVA = setOf("pensamiento", "proposito", "recordatorio")
 
 /** El borrador de la nota que se está escribiendo, mientras la app siga abierta. No se guarda en ningún lado. */
 private object BorradorNota {
@@ -386,7 +386,7 @@ fun PantallaMetas(nav: Nav) {
         value = if (Repo.metas.any { it.medida_tipo == "variable" }) withContext(Dispatchers.Default) { runCatching { Estadistica.panel(dinamicas = false) }.getOrNull() } else emptyMap()
     }
     val hoy = Fechas.diaLogico()
-    Hoja("Metas", nav.atras, "Corto plazo (hasta 3 meses), mediano (hasta un año) y largo. Si la ligas a un hábito o a una variable, el progreso se calcula solo.") {
+    Hoja("Metas", nav.atras, "Si la ligas a un hábito o a una variable, el progreso se calcula solo.") {
         // En diciembre (y los primeros días de enero): los propósitos del año.
         Metas.toPlantilla(hoy)?.let { anio -> PlantillaPropositos(anio) }
         val revisar = Metas.porRevisar(hoy)

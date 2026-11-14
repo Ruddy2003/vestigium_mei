@@ -69,7 +69,7 @@ fun PantallaTusTemas(nav: Nav) {
     var aviso by remember { mutableStateOf<String?>(null) }
     fun hecho(texto: String, antes: TusTemas.Antes) { aviso = null; Deshacer.ofrecer(texto) { TusTemas.restaurar(antes) } }
 
-    Hoja("Tus temas", nav.atras, "Cada #tema con los días en que aparece. Un mismo tema escrito de dos formas cuenta como dos en los análisis: aquí los juntas.") {
+    Hoja("Tus temas", nav.atras, "Cada #tema con sus días. Si escribiste uno de dos formas, júntalas aquí.") {
         aviso?.let { Ayuda(it, Modifier.padding(top = 8.dp)) }
         if (calculo == null) { Ayuda("Contando tus #temas…", Modifier.padding(top = 8.dp)); return@Hoja }
         calculo?.error?.let { Ayuda("No pude contar tus #temas ($it). Tus textos no se tocaron.", Modifier.padding(top = 8.dp)) }
@@ -180,7 +180,7 @@ fun PantallaPresencias(nav: Nav) {
     var listos by remember { mutableStateOf(emptySet<String>()) }
     val pendientes = lista.filter { it.fecha !in listos }
     var cuantos by remember { mutableIntStateOf(20) }
-    Hoja("¿Estuviste o pensaste?", nav.atras, "Ver a alguien no es lo mismo que pensar en esa persona. Toca cada nombre para cambiar entre «estuve con», «pensé en» y «mensajes». Lo que no cambies se queda como «estuve con».") {
+    Hoja("¿Estuviste o pensaste?", nav.atras, "Toca cada nombre: «estuve con», «pensé en» o «mensajes».") {
         Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("por revisar", !todos) { todos = false; listos = emptySet() }
             Ficha("todos los días", todos) { todos = true; listos = emptySet() }

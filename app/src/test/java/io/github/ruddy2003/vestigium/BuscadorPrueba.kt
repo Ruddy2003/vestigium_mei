@@ -27,5 +27,7 @@ class BuscadorPrueba {
 
     @Test fun ideario() = assertTrue(buscar("aprendí video").any { it.ruta == "biblioteca_ideas" })
 
+    @Test fun hoyEnLaHistoria() = assertTrue(buscar("efemerides").any { it.ruta == "historia_hoy" } && buscar("historia hoy").any { it.ruta == "historia_hoy" })
+
     @Test fun unaLetraNoBusca() = assertTrue(buscar("a").isEmpty())
 }

@@ -261,7 +261,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
     }
     val titulo = when (parte) { "avisos" -> "Avisos y recordatorios"; "privacidad" -> "Privacidad"; else -> "Apariencia" }
     Hoja(titulo, nav.atras) {
-        if (parte == "apariencia") Seccion("Tema", "Cambia colores, letras, adornos y cómo se nombran las cosas. Tus datos no cambian; los widgets también toman los colores del tema.") {
+        if (parte == "apariencia") Seccion("Tema", "Tus datos no cambian.", explica = "Cambia colores, letras, adornos y cómo se nombran las cosas. Tus datos no cambian; los widgets también toman los colores del tema.") {
             // Los temas por época, en una cuadrícula de tres por fila.
             val vista = androidx.compose.ui.platform.LocalView.current
             val centros = remember { HashMap<String, androidx.compose.ui.geometry.Offset>() }
@@ -299,6 +299,9 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 "A las 5:00, cuando empieza el día, la app se viste con otro tema" + if (c.temas_rotacion.isEmpty()) " (de todos)." else " (de los ${c.temas_rotacion.size} que elegiste).") { v ->
                 cambiar { it.copy(tema_rotar = v, tema_rotado = if (v) io.github.ruddy2003.vestigium.data.Fechas.diaLogico() else it.tema_rotado) }
             }
+            // El mismo ajuste que en la pantalla del fondo: aquí, junto a la rotación, que es cuando más se nota.
+            Interruptor("El fondo del teléfono cambia con el tema", c.fondo_telefono_auto,
+                "Inicio y bloqueo, también cuando el tema cambia solo.") { v -> cambiar { it.copy(fondo_telefono_auto = v) } }
             if (c.tema_rotar) {
                 Etiqueta("Entre cuáles (ninguno marcado = todos)")
                 io.github.ruddy2003.vestigium.ui.RotacionTema.rotables.groupBy { it.epoca }.toSortedMap().forEach { (epoca, temas) ->
@@ -320,17 +323,11 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 Ayuda("Mañana te toca: ${manana.nombre}.")
             }
             Etiqueta("Claro u oscuro")
-            val temaActual = io.github.ruddy2003.vestigium.ui.Estilo.tema
-            if (temaActual.soloOscuro) Ayuda("El tema ${temaActual.nombre} solo existe en oscuro.")
-            else Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf("sistema" to "Como el teléfono", "claro" to "Claro", "oscuro" to "Oscuro").forEach { (id, nombre) ->
-                    Ficha(nombre, c.modo == id) { cambiar { it.copy(modo = id) } }
-                }
-            }
-            Ayuda("También puedes cambiarlo con el sol o la luna junto al título de cada pantalla.", Modifier.padding(top = 6.dp))
+            SelectorModo()
+            Ayuda("También está arriba en «Más».", Modifier.padding(top = 6.dp))
             Tarjeta(Modifier.padding(top = 10.dp)) {
-                Interruptor("El ícono de la app cambia con el tema", c.icono_tema, "La huella toma la textura del tema. Se aplica al salir de la app; en algunos teléfonos el ícono de la pantalla de inicio desaparece y hay que volver a ponerlo desde la lista de apps.") { v -> cambiar { it.copy(icono_tema = v) } }
-                Interruptor("Gato del tema", c.gato, "Un gato arriba de Hoy, vestido y pintado según el tema. Si dormiste poco camina despacio y se echa más; con el día ya completo, salta y juega si te fue bien o se encorva si fue pesado.") { v -> cambiar { it.copy(gato = v) } }
+                Interruptor("El ícono de la app cambia con el tema", c.icono_tema, "Se aplica al salir de la app.", explica = "La huella toma la textura del tema. Se aplica al salir de la app; en algunos teléfonos el ícono de la pantalla de inicio desaparece y hay que volver a ponerlo desde la lista de apps.") { v -> cambiar { it.copy(icono_tema = v) } }
+                Interruptor("Gato del tema", c.gato, "Arriba de Hoy, según cómo va tu día.", explica = "Un gato arriba de Hoy, vestido y pintado según el tema. Si dormiste poco camina despacio y se echa más; con el día ya completo, salta y juega si te fue bien o se encorva si fue pesado.") { v -> cambiar { it.copy(gato = v) } }
                 if (c.gato) {
                     // Dónde vive el gato (esquema 24): en su cuadro, donde el tema ya lo tiene, o siempre en la banda de pixel.
                     val enCuadro = c.gato_estilo == io.github.ruddy2003.vestigium.ui.escenas.GATO_EN_CUADRO
@@ -339,15 +336,15 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                         Ficha("De pixel", !enCuadro) { cambiar { it.copy(gato_estilo = io.github.ruddy2003.vestigium.ui.escenas.GATO_DE_PIXEL) } }
                     }
                     val conCuadro = remember { io.github.ruddy2003.vestigium.ui.TemaId.entries.filter { io.github.ruddy2003.vestigium.ui.escenas.escenaDe(it) != null }.map { it.nombre } }
-                    Ayuda(if (enCuadro) "En su cuadro: arriba de Hoy sale el paisaje del personaje de «Otras vidas» del tema, a la hora que es, con el gato dentro. Toca al gato para acariciarlo; el botón de debajo abre el cuento de hoy. Por ahora lo tienen ${conCuadro.joinToString(", ")}; en los demás temas sigue el gato de pixel."
+                    Ayuda(if (enCuadro) "En su cuadro: arriba de Hoy sale el paisaje del personaje de «Otras vidas» del tema, a la hora que es, con el gato dentro. Toca al gato para acariciarlo; el botón de debajo abre el cuento de hoy.${if (c.historia_hoy) " Mantén presionado el cuadro para ver «Hoy en la historia»." else ""} Por ahora lo tienen ${conCuadro.joinToString(", ")}; en los demás temas sigue el gato de pixel."
                         else "De pixel: la banda con el gato de pixel, en todos los temas.", Modifier.padding(top = 6.dp, bottom = 6.dp))
                 }
-                Interruptor("Tus últimos días", c.personaje, "Una franja en Hoy con tus últimos 14 días: el color es el ánimo del día; el alto, cuánto dormiste frente a tu normal; el remate, si lo sellaste. Hoy no se colorea hasta que lo llenas.") { v -> cambiar { it.copy(personaje = v) } }
+                Interruptor("Tus últimos días", c.personaje, "Una franja en Hoy con tus últimos 14 días.", explica = "Una franja en Hoy con tus últimos 14 días: el color es el ánimo del día; el alto, cuánto dormiste frente a tu normal; el remate, si lo sellaste. Hoy no se colorea hasta que lo llenas.") { v -> cambiar { it.copy(personaje = v) } }
                 Interruptor("Semana corta", c.semana_corta, "Hoy con lo mínimo: cuatro cifras y tres botones, para las semanas pesadas.") { v -> cambiar { it.copy(semana_corta = v) } }
-                Interruptor("Animaciones", c.animaciones, "Emblemas que se mueven, transiciones entre pantallas, cifras que cuentan, barras que crecen y una pequeña celebración al completar el día.") { v -> cambiar { it.copy(animaciones = v) } }
-                if (c.animaciones) Interruptor("Fondo vivo", c.fondo_vivo, "Algo se mueve muy despacio detrás de todo: estrellas que titilan, luz de vitral, luciérnagas, nieve, nubes de la estepa, reflejos de agua. Gasta un poco más de batería.") { v -> cambiar { it.copy(fondo_vivo = v) } }
+                Interruptor("Animaciones", c.animaciones, "Movimiento al cambiar de pantalla y al celebrar.", explica = "Emblemas que se mueven, transiciones entre pantallas, cifras que cuentan, barras que crecen y una pequeña celebración al completar el día.") { v -> cambiar { it.copy(animaciones = v) } }
+                if (c.animaciones) Interruptor("Fondo vivo", c.fondo_vivo, "Algo se mueve despacio detrás de todo.", explica = "Algo se mueve muy despacio detrás de todo: estrellas que titilan, luz de vitral, luciérnagas, nieve, nubes de la estepa, reflejos de agua. Gasta un poco más de batería.") { v -> cambiar { it.copy(fondo_vivo = v) } }
                 Interruptor("Vibraciones", c.vibracion, "Cada tema vibra distinto: cincel, sello de cera, máquina de escribir, relé, armadura, madera…") { v -> cambiar { it.copy(vibracion = v) } }
-                Interruptor("Sonidos", c.sonidos, "Sonidos del tema al tocar, elegir, pasar de pantalla, abrir el diario, guardar y completar el día. Cambian un poco cada vez. No suenan con el teléfono en silencio o en vibración.") { v ->
+                Interruptor("Sonidos", c.sonidos, "Al tocar, guardar y completar el día.", explica = "Sonidos del tema al tocar, elegir, pasar de pantalla, abrir el diario, guardar y completar el día. Cambian un poco cada vez. No suenan con el teléfono en silencio o en vibración.") { v ->
                     cambiar { it.copy(sonidos = v) }
                     if (v) io.github.ruddy2003.vestigium.ui.Sentidos.preparar(ctx)
                 }
@@ -362,7 +359,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                     BotonSecundario("música del tema") { io.github.ruddy2003.vestigium.ui.Musica.tocar(ctx, io.github.ruddy2003.vestigium.ui.Musica.presentacion(io.github.ruddy2003.vestigium.ui.Estilo.tema), forzar = true) }
                 }
                 Etiqueta("Tonos del teléfono")
-                Ayuda("Tono de llamada y de notificaciones para todo el teléfono, con la música de este tema. Las notificaciones de Vestigium Mei suenan siempre con su propio sonido, distinto de estos, para que sepas que son de la app.")
+                Ayuda("Para todo el teléfono, con la música del tema. Los avisos de la app suenan aparte.")
                 var mensajeTono by remember { mutableStateOf<String?>(null) }
                 val temaAhora = io.github.ruddy2003.vestigium.ui.Estilo.tema
                 androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 6.dp)) {
@@ -383,10 +380,10 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 Interruptor("Modo nocturno cálido", c.nocturno, "De 22:00 a 5:00 la pantalla se entibia y baja un poco el brillo, para escribir el diario sin despabilarte.") { v -> cambiar { it.copy(nocturno = v) } }
             }
         }
-        if (parte == "avisos") Seccion("Sonido de las notificaciones", "Cada tema suena a su manera, siempre grave y solemne: campanas, órgano, coros, synthwave. " +
-            "Los avisos de ánimo usan un sonido corto; el diario, los sueños, las cartas y los cuestionarios, uno más largo.") {
+        if (parte == "avisos") Seccion("Sonido de las notificaciones", "Cada tema suena a su manera.",
+            explica = "Cada tema suena a su manera, siempre grave y solemne: campanas, órgano, coros, synthwave. Los avisos de ánimo usan un sonido corto; el diario, los sueños, las cartas y los cuestionarios, uno más largo.") {
             Tarjeta {
-                Interruptor("Usar el sonido del tema", c.sonido_avisos, "Si lo apagas, suenan con el sonido normal del teléfono. Si silencias un tipo de aviso en los ajustes de Android, sigue en silencio aunque cambies de tema.") { v ->
+                Interruptor("Usar el sonido del tema", c.sonido_avisos, "Si lo apagas, suena el del teléfono.", explica = "Si lo apagas, suenan con el sonido normal del teléfono. Si silencias un tipo de aviso en los ajustes de Android, sigue en silencio aunque cambies de tema.") { v ->
                     cambiar { it.copy(sonido_avisos = v) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
@@ -405,7 +402,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 Ayuda("Suenan al volumen de notificaciones y no suenan con el teléfono en silencio, vibración o No molestar.", Modifier.padding(top = 4.dp))
             }
         }
-        if (parte == "avisos") Seccion("Avisos de ánimo durante el día", "Horas aleatorias dentro de la ventana, separadas entre sí. Lo aleatorio evita que solo registres los momentos predecibles.") {
+        if (parte == "avisos") Seccion("Avisos de ánimo durante el día", "Horas al azar dentro de la ventana.", explica = "Horas aleatorias dentro de la ventana, separadas entre sí. Lo aleatorio evita que solo registres los momentos predecibles.") {
             Tarjeta {
                 Interruptor("Avisos activos", c.avisos) { v -> cambiar { it.copy(avisos = v) } }
                 Etiqueta("Avisos por día: ${c.muestreos_por_dia}")
@@ -428,7 +425,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             Tarjeta {
                 Etiqueta("Aviso el día que toca: ${c.escalas_hora}:00")
                 Deslizador(value = c.escalas_hora.toFloat(), onValueChange = { v -> cambiar { it.copy(escalas_hora = v.toInt()) } }, valueRange = 8f..22f, steps = 13)
-                Interruptor("Insistir si me atraso", c.escalas_insistir, "Con 1 a 3 días de atraso avisa dos veces al día (12:00 y tu hora); con 4 o más, tres veces (10:00, 15:00 y 20:00) hasta que respondas.") { v ->
+                Interruptor("Insistir si me atraso", c.escalas_insistir, "Más avisos mientras más atraso.", explica = "Con 1 a 3 días de atraso avisa dos veces al día (12:00 y tu hora); con 4 o más, tres veces (10:00, 15:00 y 20:00) hasta que respondas.") { v ->
                     cambiar { it.copy(escalas_insistir = v) }
                 }
             }
@@ -437,7 +434,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             Tarjeta {
                 Interruptor("Bloquear con huella", c.bloqueo, "Pide tu huella o PIN al abrir la app. Los widgets y botones rápidos siguen funcionando sin desbloquear.") { v -> cambiar { it.copy(bloqueo = v) } }
                 Interruptor("Modo discreto", c.discreto, "Los widgets y reportes muestran letras en vez de nombres de emociones.") { v -> cambiar { it.copy(discreto = v) } }
-                Interruptor("Seguimiento privado", c.seguimiento_privado, "Agrega a la pantalla Privado la intensidad del impulso, las recaídas con hora y lugar, la libido y los detonantes. Lo privado (también los medicamentos) solo se ve en esa pantalla; sí va en tu exportación para R.") { v -> cambiar { it.copy(seguimiento_privado = v) } }
+                Interruptor("Seguimiento privado", c.seguimiento_privado, "Solo se ve en la pantalla Privado.", explica = "Agrega a la pantalla Privado la intensidad del impulso, las recaídas con hora y lugar, la libido y los detonantes. Lo privado (también los medicamentos) solo se ve en esa pantalla; sí va en tu exportación para R.") { v -> cambiar { it.copy(seguimiento_privado = v) } }
                 if (c.seguimiento_privado) {
                     Etiqueta("Hábito que una recaída deja en 0")
                     val auto = io.github.ruddy2003.vestigium.data.Recaidas.habito(c.copy(habito_recaida = null))
@@ -452,9 +449,15 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                     BotonTexto(onClick = { nav.ir("recaidas") }) { Text("abrir Privado →", style = MaterialTheme.typography.labelLarge) }
                 }
                 Interruptor("Ubicación de fondo", c.muestreo_ubicacion, "Una muestra cada 15 minutos para el mapa de calor.") { v -> cambiar { it.copy(muestreo_ubicacion = v) } }
+                // Tanda H1 del plan de historia y escenas: el interruptor de `Config.historia_hoy` (esquema 24).
+                Interruptor("Hoy en la historia (Wikipedia)", c.historia_hoy, "Lo que pasó un día como hoy: mantén presionado el cuadro de Hoy o búscalo en el buscador. A Wikipedia solo se manda el mes y el día, y a Wikidata, los identificadores de los artículos que llegan (para saber de qué país es cada uno); como en toda conexión, ven la dirección de tu red. Nada tuyo se cruza con lo que llega. Apagado, no se conecta, borra lo guardado y el cuadro no lleva la banderita.") { v ->
+                    cambiar { it.copy(historia_hoy = v) }
+                    // Apagado, también se borra lo guardado: no queda nada de Wikipedia en el teléfono.
+                    if (!v) kotlin.concurrent.thread(isDaemon = true) { runCatching { io.github.ruddy2003.vestigium.ui.pantallas.carpetaHistoria(ctx).deleteRecursively() } }
+                }
             }
         }
-        if (parte == "privacidad") Seccion("Sustancias en pantalla", "Son un dato normal. Ocultar una la quita de la cinta, la libreta, Vida y Día; sigue en los análisis y en la exportación a R.") {
+        if (parte == "privacidad") Seccion("Sustancias en pantalla", "Ocultar una no la quita de los análisis.", explica = "Son un dato normal. Ocultar una la quita de la cinta, la libreta, Vida y Día; sigue en los análisis y en la exportación a R.") {
             Tarjeta {
                 io.github.ruddy2003.vestigium.data.Catalogo.SUSTANCIAS.forEach { x ->
                     val oculta = x.id in c.sustancias_ocultas
@@ -475,7 +478,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                     Text(s, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 6.dp))
                     Ayuda(q)
                 }
-                Ayuda("Health Connect, tus fotos, tu ubicación y tu diario se quedan en el teléfono. Solo salen cuando exportas, eliges una carpeta de respaldo o activas Google Drive.",
+                Ayuda("Todo se queda en el teléfono; solo sale si exportas, respaldas en una carpeta o usas Drive.",
                     Modifier.padding(top = 8.dp))
             }
         }
@@ -493,7 +496,7 @@ fun PantallaReportes(nav: Nav) {
         runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)) }
             .onFailure { msg = "Guardado en tu galería (Pictures/VestigiumMei) o en Descargas." }
     }
-    Hoja("Reportes", nav.atras, "Cada lunes llega el de la semana anterior y cada día 1 el del mes anterior. Se guardan en la galería y en Descargas, sin mapas ni direcciones. El de terapia se genera aquí y se comparte.") {
+    Hoja("Reportes", nav.atras, "Cada lunes, el de la semana; cada día 1, el del mes. En la galería y en Descargas, sin mapas ni direcciones.") {
         Seccion("Generar ahora") {
             Tarjeta {
                 val hoy = Fechas.diaLogico()
@@ -664,13 +667,13 @@ fun PantallaDatos(nav: Nav) {
                     }
                 }
                 if (io.github.ruddy2003.vestigium.data.Privado.hayDatos())
-                    Ayuda("Las dos exportaciones llevan tus datos privados sin cifrar (R necesita leerlos). Guárdalas solo en un lugar tuyo y bórralas cuando ya no las uses.", Modifier.padding(top = 8.dp))
+                    Ayuda("Llevan tus datos privados sin cifrar (R necesita leerlos): guárdalas solo en un lugar tuyo.", Modifier.padding(top = 8.dp))
             }
         }
         Seccion("Respaldo completo", "Todo en un archivo, y de vuelta en un toque.") {
             RespaldoCompleto()
         }
-        Seccion("Respaldo automático", "Elige una carpeta del teléfono; cada mañana la app deja ahí el respaldo completo, ya revisado, y los CSV actualizados (o solo el respaldo cifrado, si pusiste contraseña). En la subcarpeta «copias» guarda uno por día (7), por semana (8) y por mes (12), y la base de datos de cada semana. Si eliges una carpeta que sincronizas con la computadora o con la nube, la copia también sobrevive si pierdes el teléfono.") {
+        Seccion("Respaldo automático", "Cada mañana, en una carpeta que elijas.", explica = "Elige una carpeta del teléfono; cada mañana la app deja ahí el respaldo completo, ya revisado, y los CSV actualizados (o solo el respaldo cifrado, si pusiste contraseña). En la subcarpeta «copias» guarda uno por día (7), por semana (8) y por mes (12), y la base de datos de cada semana. Si eliges una carpeta que sincronizas con la computadora o con la nube, la copia también sobrevive si pierdes el teléfono.") {
             Tarjeta {
                 Ayuda(Repo.config.carpeta_respaldo?.let { "Carpeta configurada." } ?: "Sin carpeta.")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
@@ -681,7 +684,7 @@ fun PantallaDatos(nav: Nav) {
                 if (Repo.config.carpeta_respaldo != null) {
                     io.github.ruddy2003.vestigium.ui.comun.Separador(Modifier.padding(vertical = 12.dp))
                     Text("Cápsula del año", style = MaterialTheme.typography.titleSmall)
-                    Ayuda("Todo el año en un archivo que se lee sin la app: las tablas con su diccionario, una base SQLite, el script de R, la foto de cada día y el libro del diario en PDF. Cada enero sale sola la del año que terminó; nunca se borra.")
+                    Ayuda("Todo el año en un archivo que se lee sin la app (tablas, base, R, fotos y el libro del diario). Sale sola cada enero.")
                     val anio = io.github.ruddy2003.vestigium.data.Fechas.diaLogico().take(4)
                     OutlinedButton(enabled = !ocupado, onClick = {
                         tarea {
@@ -699,7 +702,7 @@ fun PantallaDatos(nav: Nav) {
                 }
             }
         }
-        Seccion("Google Drive", "Cada mañana reemplaza el respaldo completo y tus CSV en la carpeta «Vestigium Mei» de tu Drive, y cada semana guarda una copia fechada (se conservan las últimas 12). Con contraseña, solo sube el respaldo cifrado. La app solo puede ver lo que ella misma sube.") {
+        Seccion("Google Drive", "Cada mañana, en tu Drive.", explica = "Cada mañana reemplaza el respaldo completo y tus CSV en la carpeta «Vestigium Mei» de tu Drive, y cada semana guarda una copia fechada (se conservan las últimas 12). Con contraseña, solo sube el respaldo cifrado. La app solo puede ver lo que ella misma sube.") {
             DriveTarjeta { tarea(it) }
         }
         Seccion("Spotify en vivo", "Conexión directa con tu cuenta: lo que escuchas en cualquier aparato (compu, bocina, coche), con artista, álbum y si venía de una playlist.", latin = "MVSICA") {
@@ -969,6 +972,26 @@ private fun DriveTarjeta(tarea: (suspend () -> String) -> Unit) {
                 msg = "SHA-1 copiada."
             }) { Text("copiar SHA-1", style = MaterialTheme.typography.labelLarge) }
             Ayuda("5. Vuelve aquí y toca «conectar y subir ahora». Google te pedirá elegir tu cuenta y aceptar el permiso para archivos creados por la app.")
+        }
+    }
+}
+
+/**
+ * Claro, oscuro o como el teléfono. Está en Apariencia y arriba en «Más» (13 nov 2026; antes, además, el sol o la luna iba
+ * junto al título de cada pantalla y amontonaba el encabezado). El tema que solo existe en oscuro lo dice.
+ */
+@Composable
+fun SelectorModo(modifier: Modifier = Modifier) {
+    val tema = io.github.ruddy2003.vestigium.ui.Estilo.tema
+    if (tema.soloOscuro) { Ayuda("El tema ${tema.nombre} solo existe en oscuro.", modifier); return }
+    val ctx = LocalContext.current
+    val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf("sistema" to "Como el teléfono", "claro" to "Claro", "oscuro" to "Oscuro").forEach { (id, nombre) ->
+            Ficha(nombre, Repo.config.modo == id) {
+                sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.CAMBIO)
+                Repo.cambiarConfig { it.copy(modo = id) }; runCatching { Widgets.actualizar(ctx) }
+            }
         }
     }
 }

@@ -200,12 +200,12 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 - **Exterior con sol** (casi todos los temas). Se aplica todo tal cual.
   - Cambian la paleta local, la flora, las casas y **el marco**, que tiene que ser de ese lugar: una parra, un alero, un toldo, un arco, una palmera, una vela con su jarcia, el borde de una tienda, una viga, una rama.
   - El cielo de `HITOS` es de todos y **no se retoca para un tema:** cambiaría Helénico. Si el lugar pide otro cielo (polvo del desierto, gris del norte, un cielo que no es de la Tierra), la escena tiñe las `Luces` que le da el momento en una función propia, como hace Helénico con su eclipse (`luces(m)`).
-- **Sin agua** (desierto, estepa, montaña, ciudad). No se inventa un río para cumplir la regla 4.
+- **Sin agua** (desierto, estepa, montaña, ciudad). No se inventa un río para cumplir la regla 4. El primer cuadro de desierto es el camino de la Ruta de la Seda (S7, aprobado por el autor el 14 nov 2026): `EscenaSedaPaisajes.kt` y `EscenaSedaCampamento.kt`; sus imágenes, `referencia_seda.jpg` y `referencia_seda_changan.jpg`. De ciudad con humo, Vapor victoriano (S8, aprobado ese día): `EscenaVapor.kt` y sus archivos, y `referencia_vapor.jpg`.
   - Arena: dunas con su cara de luz y su cara de sombra, rizos del viento, piedras con su sombra.
   - Nieve: ventisqueros, huellas, sombras azules largas.
   - Hierba: rachas que la peinan, senderos, matas, cambio de color de lejos a cerca.
   - Empedrado o asfalto: losas, juntas, charcos después de la lluvia con su `reflejoRoto`.
-- **A bordo de un barco** (Pirata, Botánico, Abismo, Revolución con su barco-lavadero). El agua lo rodea todo: es la protagonista. El primer plano es la cubierta y el marco es la jarcia, una vela o un toldo.
+- **A bordo de un barco** (Pirata, hecho en S2 y aprobado por el autor el 13 nov 2026: `EscenaPirata.kt` y sus archivos son el ejemplo; sus imágenes, `referencia_pirata.jpg`, `referencia_pirata_cayo.jpg` y `referencia_pirata_nassau.jpg`; Revolución francesa con su barco-lavadero, hecho en S8 y aprobado por el autor el 14 nov 2026: `EscenaRevolucion.kt` y sus archivos, y `referencia_revolucion.jpg`; Botánico, Abismo). El agua lo rodea todo: es la protagonista. El primer plano es la cubierta y el marco es la jarcia, una vela o un toldo.
 - **Siempre de noche** (Ciudad neón, hecha en P4b: `EscenaNeon.kt` es el ejemplo). `Rayo(luces)` no da sombras de noche, así que la regla 1 se cumple con las luces del lugar, con las piezas de `paisaje/Focos.kt`:
   - la escena arma la lista de focos encendidos en ese momento y con ella un `Alumbrado`; cada cosa le pide su color (`Alumbrado.en`) en vez de pedírselo a `luces.tono`;
   - la sombra de cada cosa la tumba el foco que más la alumbra (`rayoDeFoco`, dentro de una `capaSombra`); para una sola luz que manda, `rayoFijo`;
@@ -214,52 +214,42 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
   - la paleta corta son dos o tres colores de luz sobre un fondo azul violeta oscuro;
   - el «cielo» es la franja entre los edificios: bruma, cables, ventanas que se encienden y se apagan según la hora;
   - lo que el día le da a los demás temas (que el cuadro cambie con la hora) aquí lo dan los letreros, las ventanas y la lluvia. Hay que decidirlo y probarlo: tres horas distintas tienen que dar tres cuadros distintos.
-- **Interiores con dos luces** (Refugio, Laboratorio, Espacio). No hay cielo ni tiempo.
+- **Interiores con dos luces** (Espacio, hecho en S3 y aprobado por el autor el 13 nov 2026: `EscenaEspacio.kt` y sus archivos son el ejemplo; su imagen, `referencia_espacio.jpg`; Refugio, Laboratorio). No hay cielo ni tiempo.
   - Con la luz encendida, `Rayo(luces)` da una sombra fija, como de mediodía. No sirve: la luz tiene que venir de las lámparas que se ven en el cuadro, con `Foco`, `Alumbrado` y `rayoDeFoco` (`paisaje/Focos.kt`), como en Ciudad neón.
   - Con la luz tenue no da ninguna: la forma la dan las luces de guardia, las pantallas y lo que brille.
-  - La parte de arriba es el techo o la pared del fondo: tuberías, paneles, cables, estantes. En Espacio, la ventana pequeña con la galaxia.
+  - La parte de arriba es el techo o la pared del fondo: tuberías, paneles, cables, estantes. En Espacio, además, el ventanal del costado con la galaxia (el autor lo pidió grande, casi del tamaño de la pared).
   - Lo que cambia con el día: qué está encendido, qué hay sobre la mesa, cómo va el cultivo.
-- **Interiores con ventana o puerta** (un taller, un scriptorium, una oficina, un club). La luz del sol entra por el hueco y cae en el suelo y en la pared como una mancha que se mueve con la hora: es la sombra arrojada al revés. Por el hueco se ve el cielo de `cielo` y `nubes`.
+  - Para que tres horas den tres cuadros, en Espacio las lámparas del techo se turnan (`programa`): por la mañana manda la de un lado, cálida; a mediodía, la del centro, blanca; por la tarde, la del otro lado, que acaba naranja; de noche quedan las de guardia. **[Diseño propio]**: las sombras de esas lámparas se tumban de lado y hacia el fondo, como las del sol de Helénico, para que se vean; no es la sombra real de una lámpara de techo.
+- **Interiores con ventana o puerta** (la capilla de Roma, hecha en S5 y aprobada por el autor el 14 nov 2026, es el primero: `EscenaUrbeCapilla.kt`, `EscenaUrbeFresco.kt` y `EscenaUrbeObra.kt` son el ejemplo; su imagen, `referencia_urbe_capilla.jpg` (la de la azotea de agosto, `referencia_urbe_azotea.jpg`); Scriptorium y Renacimiento, hechos en S6 con la pieza `Estancia` y aprobados por el autor el 14 nov 2026: `EscenaMedieval.kt`, `EscenaRenacimiento.kt` y sus archivos, y sus imágenes, `referencia_medieval.jpg` y `referencia_renacimiento.jpg`; una oficina, un club). La luz del sol entra por el hueco y cae en el suelo y en la pared como una mancha que se mueve con la hora: es la sombra arrojada al revés. Por el hueco se ve el cielo de `cielo` y `nubes`.
+  - **La pieza es `paisaje/Estancia.kt`** (S6): `Estancia`, la caja en perspectiva con un punto de fuga; `solQueEntra(luces)`, el sol o la luna que entra a esa hora; `manchaDeSol` y `hazDeSol`, la mancha en el suelo y las paredes y el haz en el aire con su polvo. Sale de la capilla de Roma y da sus mismos puntos (`EstanciaPrueba.kt` lo comprueba). **La capilla lleva todavía su versión por dentro:** se pasa a la pieza cuando haya que tocarla, comparando su imagen punto por punto.
+  - **[Aproximación]** aprobada con la capilla: el hueco da al mismo cielo que pinta `Luces`; por la mañana la mancha cruza la estancia y sube por la pared de enfrente, a mediodía cae junto al hueco y por la tarde se tiende hacia quien mira. No es el recorrido real del sol por una ventana con una orientación dada.
 - **Luz de fuego** (Prehistoria, un campamento, una posada de noche). De noche la hoguera es el sol de la escena: lo cercano a ella, cálido por ese lado y oscuro por el otro.
-- **Mal tiempo frecuente** (niebla, lluvia, nieve). Con el cielo cubierto no hay sombras arrojadas. Para que no quede plano: suelo mojado más oscuro y con reflejos, luces encendidas antes, capas de bruma entre los planos (`estrato`, `tiempoQuieto`).
-- **Ficción con colores propios** (Horror cósmico, Distopía, Orden, Tierras Antiguas). La paleta puede alejarse mucho de la de Helénico, pero conserva su forma: un color que domina, otro que lo acompaña, la luz de un matiz y la sombra del contrario.
+- **Mal tiempo frecuente** (niebla, lluvia, nieve; Horror cósmico, hecho en S4 y aprobado por el autor el 14 nov 2026, es el primero con niebla: `EscenaArcano.kt` y sus archivos son el ejemplo; su imagen, `referencia_arcano.jpg`). Con el cielo cubierto no hay sombras arrojadas. Para que no quede plano: suelo mojado más oscuro y con reflejos, luces encendidas antes, capas de bruma entre los planos (`estrato`, `tiempoQuieto`). En Horror cósmico la niebla no es un velo encima del cuadro: va **por capas entre los planos** (el horizonte, la punta, el muelle, el pueblo), con cuatro niveles, y con ella se encienden antes el faro, las farolas y las lámparas.
+- **Ficción con colores propios** (Distopía, hecho en S3 y aprobado por el autor el 13 nov 2026: `EscenaDistopia.kt` y sus archivos son el ejemplo; sus imágenes, `referencia_distopia.jpg` y `referencia_distopia_pueblo.jpg`; Horror cósmico, Orden, Tierras Antiguas). La paleta puede alejarse mucho de la de Helénico, pero conserva su forma: un color que domina, otro que lo acompaña, la luz de un matiz y la sombra del contrario.
 
 **Si la biblioteca no alcanza** (una luz fija para interiores, un suelo mojado, una bóveda), la tanda que lo necesita lo agrega a `paisaje/`, con estas condiciones:
 - **Agregar piezas, sí. Cambiar cómo se ve una que ya existe, no,** salvo que mejore todas las escenas hechas. En ese caso se vuelven a dibujar las hojas de las escenas ya aprobadas, se comparan con su referencia y se le enseñan al autor.
 - **Lo que una segunda escena necesite de otra se sube a la biblioteca en vez de copiarlo:** `desconchon`, `hilera` y `casita`, `hojaDeHiguera`, `sombraCorta` siguen siendo privados de `EscenaHeleno.kt` (`Cosa` ya se subió en P4b, a `paisaje/Cosas.kt`). Al subir algo, el cuadro del que sale tiene que quedar idéntico: se comparan las dos imágenes punto por punto.
 - Las tandas S **no tocan el motor** (`EscenaVida.kt`, `VistaEscena.kt`, `vidas/`).
 
-**Los temas que faltan** (Gótico y Ciudad neón se hicieron en P4b). Dónde vive cada personaje y por dónde empezar. Son sugerencias: la tanda decide después de leer el calendario y el cuento.
+**Los temas que faltan** (Ciudad verde se hizo en S4 y el autor la aprobó el 14 nov 2026: `EscenaRuinas.kt` y sus archivos, y su imagen, `referencia_ruinas.jpg`; Gótico y Ciudad neón se hicieron en P4b; Romano y Al-Ándalus, en S1: `EscenaRomano.kt` y `EscenaAndalus.kt` son otros dos exteriores con sol, aprobados por el autor el 13 nov 2026; sus imágenes, `referencia_romano.jpg` y `referencia_andalus.jpg`). Dónde vive cada personaje y por dónde empezar. Son sugerencias: la tanda decide después de leer el calendario y el cuento.
 
 **Varios personajes se mudan durante el año** y su tema pide más de un lugar. Cuáles, cuántos días y qué se pinta entero o como variante del cuadro de siempre está en `docs/plan_historia_y_escenas.md`, sección 8.
 
 | Tema | Personaje y lugar | Tipo | Marco posible | Superficie grande |
 |---|---|---|---|---|
-| Romano | Cayo, un campamento en el Danubio | Exterior | El borde de una tienda, un estandarte | El río |
 | Egipto | Pay, Deir el-Medina | Exterior, sin agua | Un toldo de estera, una palmera | La ladera de piedra y arena |
 | Prehistoria | Ama, un valle del suroeste de Europa | Exterior y fuego | La boca de la cueva | El valle con su río |
 | Mesoamérica | K'an, una ciudad maya | Exterior | Una ceiba, un alero de palma | La plaza estucada |
-| Ruta de la Seda | Nanai-vandak, entre Samarcanda y Chang'an | Exterior, sin agua | El borde de una tienda, la carga de un camello | El desierto o la estepa |
-| Scriptorium | Hermano Odo, una abadía | Interior con ventana, o claustro | Un arco del claustro | El suelo de losas; el huerto |
 | Templario | Hermano Bernat, un castillo del Levante | Exterior, sin agua | Una almena, un estandarte | El llano seco |
-| Al-Ándalus | Zaynab, Córdoba | Patio | Un arco, un naranjo | El patio con su alberca |
 | Mongol | Bat, la estepa | Exterior, sin agua | El borde de la yurta | La estepa |
-| Renacimiento | Iacopo, un taller de Florencia | Interior con ventana | El marco de la ventana, un caballete | El suelo del taller; los tejados |
-| Pirata | Tomás, un balandro en el Caribe | A bordo | La jarcia y la vela | El mar |
 | Japón Edo | Ochiyo, una posta del camino real | Exterior | Un alero, una rama de arce o de cerezo | El camino |
-| Revolución francesa | Marie-Jeanne, un barco-lavadero en el Sena | A bordo, en ciudad | La ropa tendida | El río |
 | Napoleónico | Jean-Baptiste, la campaña de Rusia | Exterior; nieve al final | Un abedul, un fusil en pabellón | El llano; la nieve |
 | Botánico | El naturalista, un bergantín | A bordo | La jarcia | El mar |
-| Vapor victoriano | Albert, una línea del norte de Inglaterra | Exterior, con humo | Una marquesina, una señal | Las vías |
 | Abismo | Nikos, un barco esponjero | A bordo | El pescante, un toldo | El mar |
 | Art déco | Lou, Nueva York | Ciudad, de noche tiene mucho que decir | Una escalera de incendios, un rótulo | La calle o la azotea |
 | Soviético | Liudmila, Moscú | Ciudad con nieve | El marco de una ventana, un abedul | El patio entre bloques |
-| Roma | Giulia, restauradora en Roma | Ciudad | Un andamio, un pino | Los tejados |
-| Espacio | La astronauta, la nave | Interior con dos luces | Cables y una compuerta | La pared de consolas |
-| Ciudad verde | La semillera, una ciudad que el bosque recuperó | Exterior | Una rama, una viga rota con hiedra | La calle cubierta de verde |
-| Distopía | El funcionario, la capital | Ciudad | Un altavoz, un cartel sin texto | La plaza |
 | Refugio | La residente, un refugio bajo tierra | Interior con dos luces | Tuberías | El piso y los tanques |
-| Horror cósmico | El archivista, un pueblo de pescadores en la niebla | Exterior con niebla | Una farola, una red tendida | El mar y el muelle |
 | Orden | La escriba, una ciudadela en el páramo | Exterior | Una almena, un pendón | El páramo |
 | Laboratorio | La doctora, un laboratorio subterráneo | Interior con dos luces | Conductos y lámparas | El piso y las mesas |
 | Colonos | Ruth, un pueblo que se reconstruye | Exterior | Un porche, un árbol joven | El campo y el camino |

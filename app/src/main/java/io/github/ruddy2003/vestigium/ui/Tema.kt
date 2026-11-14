@@ -606,6 +606,13 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
 }
 
 /** ¿Va en oscuro? Lo decide el botón de la app (claro, oscuro o como el teléfono); Terminal y Ciudad neón siempre son oscuros. */
+/** Lo mismo que [modoOscuro], fuera de Compose: el arranque, el fondo vivo, el pulso y los avisos. */
+fun modoOscuroDe(ctx: android.content.Context, tema: TemaId = Estilo.tema): Boolean = tema.soloOscuro || when (Repo.config.modo) {
+    "claro" -> false
+    "oscuro" -> true
+    else -> (ctx.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
+}
+
 @Composable
 fun modoOscuro(tema: TemaId = Estilo.tema): Boolean = tema.soloOscuro || when (Repo.config.modo) {
     "claro" -> false

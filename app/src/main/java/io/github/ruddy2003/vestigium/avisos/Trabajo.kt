@@ -125,6 +125,10 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         // Si la base no se pudo abrir bien, lo que hay en memoria está incompleto: sincronizar o respaldar así pisaría datos
         // buenos con otros vacíos. No se hace nada hasta que se arregle (el aviso está en «Estado de los datos»).
         Repo.errorAlAbrir?.let { Bitacora.anotar(ctx, "abrir la base", it); return Result.success() }
+        // El tema del día va antes que todo lo demás: los avisos de este pulso ya salen con él. Antes rotaba al final, y el
+        // primer pulso después de las 5:00 avisaba con el tema de ayer. Lo de fuera de la app (widget, ícono, accesos y fondo
+        // del teléfono) se pone al día aquí aunque el tema lo haya cambiado una alarma o la app.
+        anotando("tema del día") { io.github.ruddy2003.vestigium.ui.RotacionTema.revisar(); io.github.ruddy2003.vestigium.ui.RotacionTema.propagar(ctx) }
         intentar { Repo.registrarZona() }
         // Una sola vez: la fuerza de referencia de los entrenos que ya estaban (H-7-14).
         intentar {
@@ -168,8 +172,6 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         anotando("tareas del día") { diario(ctx) }
         // Por si la alarma del enfoque se perdió (reinicio del teléfono): avisa de la meta si no se avisó y la vuelve a programar.
         intentar { io.github.ruddy2003.vestigium.data.Enfoque.avanzar(ctx) }
-        // El tema del día (si pediste que cambie solo): también el widget y el ícono.
-        intentar { if (io.github.ruddy2003.vestigium.ui.RotacionTema.revisar()) { io.github.ruddy2003.vestigium.widget.Widgets.actualizar(ctx); io.github.ruddy2003.vestigium.ui.IconoApp.aplicar(ctx); io.github.ruddy2003.vestigium.ui.AccesosDirectos.publicar(ctx) } }
         return Result.success()
     }
 
@@ -322,6 +324,12 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             paso(s, "agenda") { Agenda.sincronizar(ctx) }
             paso(s, "comunicacion") { io.github.ruddy2003.vestigium.sensores.Comunicacion.sincronizar(ctx, 3) }
             paso(s, "entorno") { Entorno.sincronizar(ctx) }
+            // «Hoy en la historia» (tanda H1): deja lista la fecha de mañana, para verla aunque no haya conexión. Solo manda el
+            // mes y el día; con el interruptor apagado no se conecta.
+            paso(s, "historia_hoy") {
+                if (Repo.config.historia_hoy) io.github.ruddy2003.vestigium.historia.Efemerides.prepararManana(
+                    io.github.ruddy2003.vestigium.ui.pantallas.carpetaHistoria(ctx), java.time.LocalDate.now()) { io.github.ruddy2003.vestigium.data.Red.get(it) }
+            }
             // Las fotos del día que todavía no tienen su copia dentro de la app, antes del respaldo para que viajen en él.
             paso(s, "fotos_dia") { io.github.ruddy2003.vestigium.data.FotoDelDia.completarPendientes(ctx) }
             paso(s, "respaldo") {

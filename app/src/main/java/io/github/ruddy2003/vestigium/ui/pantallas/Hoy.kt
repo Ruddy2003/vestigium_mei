@@ -858,7 +858,7 @@ fun Tablero(fecha: String, max: Int? = null, tocar: (String) -> Unit = {}) {
         Text(if (editando) "listo" else "editar tablero", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     if (editando) Tarjeta {
-        Ayuda("Elige qué cifras ver y en qué orden. Se comparan con el promedio de tus 4 semanas anteriores.")
+        Ayuda("Elige qué cifras ver y en qué orden.")
         val orden = elegidas + METRICAS.map { it.id }.filter { it !in elegidas }
         orden.forEach { id ->
             val m = METRICAS.first { it.id == id }
@@ -1034,7 +1034,7 @@ fun LineaDelTiempo(fecha: String) {
     if (gastos.isNotEmpty()) pistas += Pista("gastos", marcas = gastos.mapNotNull { g ->
         runCatching { Fechas.millisDe(java.time.LocalDateTime.of(Fechas.parse(g.fecha), LocalTime.parse(g.hora.take(5)))) to rojo }.getOrNull()
     })
-    if (pistas.isEmpty()) { Ayuda("Todavía no hay nada con hora en este día."); return }
+    if (pistas.isEmpty()) { Ayuda("Nada con hora todavía."); return }
 
     val e = Repo.entorno[fecha]
     fun hm(s: String?) = s?.let { runCatching { LocalTime.parse(it.takeLast(5)) }.getOrNull() }
@@ -1115,7 +1115,6 @@ fun LineaDelTiempo(fecha: String) {
             if (ahora in ini..fin) { val xa = x(ahora); lineaMeta(eg, Offset(xa, 0f), Offset(xa, h * pistas.size), sec, 2f) }
         }
     }
-    Ayuda("De 0:00 a las 5:00 del día siguiente. Lo sombreado es de noche.", Modifier.padding(top = 4.dp))
 }
 
 /**

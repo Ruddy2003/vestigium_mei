@@ -491,7 +491,7 @@ fun PantallaLogros(nav: Nav) {
             Logros.marcarVistos(n)
         }
     }
-    Hoja("Logros", nav.atras, "Tu sala de trofeos: escribir, moverte, viajar, leer, ser constante. Toca uno para ver lo que lograste o cuánto te falta. Los de constancia piden la mayoría de los días, no una racha perfecta.") {
+    Hoja("Logros", nav.atras, "Toca uno para ver lo que lograste o cuánto falta. Los de constancia piden la mayoría de los días, no una racha perfecta.") {
         val l = todos
         if (l == null) { Vacio("Contando…"); return@Hoja }
         val hechos = l.filter { it.hecho }

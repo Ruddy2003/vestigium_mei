@@ -119,6 +119,7 @@ object Recordatorios {
 class RecordatorioReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Repo.init(context)
+        io.github.ruddy2003.vestigium.ui.RotacionTema.revisarDesde(context)
         when (intent.getStringExtra(Recordatorios.ACCION)) {
             Recordatorios.MANANA -> {
                 val manana = Fechas.sumar(Fechas.hoyCalendario(), 1)

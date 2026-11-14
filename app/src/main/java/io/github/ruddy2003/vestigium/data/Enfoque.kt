@@ -404,6 +404,7 @@ class EnfoqueReceiver : BroadcastReceiver() {
     }
     override fun onReceive(context: Context, intent: Intent) {
         Repo.init(context)
+        io.github.ruddy2003.vestigium.ui.RotacionTema.revisarDesde(context)
         when (intent.action) {
             AVANZAR -> Enfoque.avanzar(context)
             PAUSAR -> Enfoque.pausar(context)

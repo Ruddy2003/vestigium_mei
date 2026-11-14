@@ -1,7 +1,6 @@
 package io.github.ruddy2003.vestigium.ui
 
 import android.app.Activity
-import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import androidx.compose.ui.graphics.toArgb
@@ -57,11 +56,7 @@ object ArranqueTema {
     }
 
     /** ¿Va en oscuro? Lo mismo que [modoOscuro], pero fuera de Compose (antes de dibujar el primer cuadro). */
-    fun oscuro(a: Activity, t: TemaId): Boolean = t.soloOscuro || when (Repo.config.modo) {
-        "claro" -> false
-        "oscuro" -> true
-        else -> (a.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-    }
+    fun oscuro(a: Activity, t: TemaId): Boolean = modoOscuroDe(a, t)
 
     /**
      * Pone el fondo del tema en la ventana (para que entre el arranque y el primer cuadro no asome el neutro) y deja

@@ -183,38 +183,38 @@ inline fun DrawScope.lienzo(dibujo: DrawScope.() -> Unit) {
  * (Helénico en P4a; Gótico y Ciudad neón en P4b) y después las tandas S.
  */
 fun escenaDe(tema: TemaId): EscenaVida? = when (tema) {
-    TemaId.ROMANO -> null           // S1
-    TemaId.URBE -> null             // S5
+    TemaId.ROMANO -> EscenaRomano
+    TemaId.URBE -> EscenaUrbe
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> EscenaNeon
     TemaId.HELENO -> EscenaHeleno
     TemaId.EGIPTO -> null           // S9
-    TemaId.MEDIEVAL -> null         // S6
+    TemaId.MEDIEVAL -> EscenaMedieval
     TemaId.TEMPLARIO -> null        // S11
-    TemaId.DISTOPIA -> null         // S3
+    TemaId.DISTOPIA -> EscenaDistopia
     TemaId.REFUGIO -> null          // S17
     TemaId.ORDEN -> null            // S18
-    TemaId.VAPOR -> null            // S8
+    TemaId.VAPOR -> EscenaVapor
     TemaId.LABORATORIO -> null      // S17
     TemaId.COLONOS -> null          // S19
     TemaId.NAPOLEON -> null         // S14
     TemaId.DECO -> null             // S15
     TemaId.BOTANICO -> null         // S13
-    TemaId.RUINAS -> null           // S4
+    TemaId.RUINAS -> EscenaRuinas
     TemaId.NAVIDAD -> null          // Navidad: sin cuadro
-    TemaId.SEDA -> null             // S7
+    TemaId.SEDA -> EscenaSeda
     TemaId.EDO -> null              // S11
     TemaId.GOTICO -> EscenaGotico
-    TemaId.ARCANO -> null           // S4
-    TemaId.ESPACIO -> null          // S3
+    TemaId.ARCANO -> EscenaArcano
+    TemaId.ESPACIO -> EscenaEspacio
     TemaId.ABISMO -> null           // S16
-    TemaId.ANDALUS -> null          // S1
+    TemaId.ANDALUS -> EscenaAndalus
     TemaId.MESO -> null             // S9
     TemaId.MONGOL -> null           // S12
-    TemaId.RENACIMIENTO -> null     // S6
-    TemaId.PIRATA -> null           // S2
+    TemaId.RENACIMIENTO -> EscenaRenacimiento
+    TemaId.PIRATA -> EscenaPirata
     TemaId.URSS -> null             // S15
-    TemaId.REVOLUCION -> null       // S8
+    TemaId.REVOLUCION -> EscenaRevolucion
     TemaId.ANTIGUAS -> null         // S18
     TemaId.CUEVA -> null            // S10
     TemaId.BASICO -> null           // Básico: sin cuadro

@@ -13,6 +13,9 @@ class App : Application() {
         // sin esto, un error al abrir la base la dejaba cerrándose una y otra vez, sin poder ni exportar.
         runCatching { Repo.init(this) }
         io.github.ruddy2003.vestigium.data.Mundo.app = this
+        // El tema del día antes que los canales: si el proceso arranca por una alarma de aviso después de las 5:00, el aviso
+        // ya sale con el tema de hoy (con su voz y su sonido).
+        runCatching { io.github.ruddy2003.vestigium.ui.RotacionTema.revisar() }
         Avisos.crearCanales(this)
         Programador.asegurar(this)
         // Solo si cambiaron los lugares o pasó un día: el proceso arranca muy seguido (pulsos, widgets, geocercas).

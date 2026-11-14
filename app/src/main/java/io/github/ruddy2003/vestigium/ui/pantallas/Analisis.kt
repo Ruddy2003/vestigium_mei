@@ -80,6 +80,21 @@ object Herramienta {
     var sinTendencia by mutableStateOf(true)
 }
 
+/**
+ * Lo que explica cómo leer cada herramienta, en su «?» (13 nov 2026; antes iba siempre a la vista debajo del resultado).
+ * Las cifras y umbrales son los del cálculo; no cambió ninguno.
+ */
+private val EXPLICA_H = mapOf(
+    "tendencia" to "Cada punto es un día. Las líneas son medias móviles de 7 y de 30 días: el promedio de cada día con los anteriores, que deja ver hacia dónde va sin el ruido de cada día. Las cifras comparan tus últimos 30 días con los 30 anteriores; si el intervalo de 95% del cambio incluye el cero, podría ser variación normal.",
+    "semana" to "La barra es el promedio en cada día de la semana y la raya, su intervalo de 95%; un día con menos de 5 datos no sale. Son pistas: ninguna herramienta prueba causas; para eso están los experimentos personales y los modelos en R.",
+    "factores" to "La barra es el intervalo de 95%; si cruza la línea del centro, podría ser azar. Cuenta que los días seguidos se parecen: no cada día es una prueba nueva. Que dos cosas vayan juntas no prueba que una cause la otra.",
+    "modelo" to "β estandarizado: cuántas desviaciones estándar cambia el objetivo por cada desviación estándar del predictor, manteniendo los demás fijos. ±0.1 es pequeño, ±0.3 moderado, ±0.5 grande. Ningún modelo prueba causas: para eso están los experimentos personales y los modelos en R.",
+    "dinamica" to "La DE mide qué tanto cambia tu ánimo en general; el MSSD, qué tan bruscos son los saltos de un día al siguiente; la inercia (de −1 a 1), qué tanto el ánimo de hoy arrastra al de mañana. Una inercia alta se ha asociado con más dificultad para salir de los días malos (Kuppens et al., 2010).",
+    "ritmo" to "Con las noches de las últimas 8 semanas. Barras de color fuerte: noches antes de un día laboral; de otro color: antes de un día libre (sábado, domingo y, si tu país es México, los festivos). El jet lag social es la diferencia del punto medio del sueño entre ambos (Wittmann et al., 2006); más de 1 hora se ha asociado con peor ánimo y salud.",
+    "palabras" to "La cifra es cuánto más alta (o baja) es tu valencia en los días que usas esa palabra, frente a tu promedio. Solo entran las palabras que aparecen en al menos 5 días con valencia.",
+    "atipicos" to "Se compara cada día con tu mediana; se marcan los que están a más de 3 desviaciones robustas.",
+)
+
 val HERRAMIENTAS = listOf(
     Triple("tendencia", "Tendencia", "Cómo cambia algo con el tiempo, con medias móviles"),
     Triple("semana", "Día de la semana", "Si una variable cambia según el día"),
@@ -111,13 +126,13 @@ fun PantallaAnalisis(nav: Nav) {
     val info = HERRAMIENTAS.first { it.first == h }
 
     // Cada herramienta con su nombre (N-23).
-    Hoja(info.second, nav.atras, subtitulo = "Pistas para entenderte. Ninguna prueba causas: para eso están los experimentos personales y los modelos en R.", latin = LATIN_H[h] ?: "ANALYSIS") {
+    Hoja(info.second, nav.atras, latin = LATIN_H[h] ?: "ANALYSIS") {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             HERRAMIENTAS.forEach { (id, n, _) -> Ficha(n, id == h) { Herramienta.actual = id } }
         }
         val p = panel
         if (p == null) { Ayuda("Calculando…", Modifier.padding(top = 12.dp)); return@Hoja }
-        Seccion(info.second, info.third, latin = LATIN_H[h]) {
+        Seccion(info.second, info.third, latin = LATIN_H[h], explica = EXPLICA_H[h]) {
             when (h) {
                 "tendencia" -> Tendencia(p, vars) { eligiendo = it }
                 "semana" -> Semana(p, vars) { eligiendo = it }
@@ -293,7 +308,6 @@ private fun Factores(panel: Map<String, Map<String, Double?>>, vars: List<Variab
             }
         }
     }
-    Ayuda("La barra es el intervalo de 95%; si cruza la línea del centro, podría ser azar. Cuenta que los días seguidos se parecen: no cada día es una prueba nueva. Que dos cosas vayan juntas no prueba que una cause la otra.", Modifier.padding(top = 6.dp))
 }
 
 // ---------------- Modelo ----------------
@@ -332,7 +346,6 @@ private fun ModeloUI(panel: Map<String, Map<String, Double?>>, vars: List<Variab
             }
         }
     }
-    Ayuda("β estandarizado: cuántas desviaciones estándar cambia el objetivo por cada desviación estándar del predictor, manteniendo los demás fijos. ±0.1 es pequeño, ±0.3 moderado, ±0.5 grande.", Modifier.padding(top = 6.dp))
 }
 
 // ---------------- Dinámica ----------------
@@ -353,8 +366,6 @@ private fun Dinamica() {
         Clave("racha dura", "${porNumero(d.rachaDificil, "1 día seguido", "${d.rachaDificil} días seguidos")} con 3 o menos")
         d.dentroDelDia?.let { Clave("intradía", "DE de %.2f entre avisos de un mismo día".format(it)) }
     }
-    Ayuda("La DE mide qué tanto cambia tu ánimo en general; el MSSD, qué tan bruscos son los saltos de un día al siguiente; la inercia (de −1 a 1), qué tanto el ánimo de hoy arrastra al de mañana. " +
-        "Una inercia alta se ha asociado con más dificultad para salir de los días malos (Kuppens et al., 2010).", Modifier.padding(top = 6.dp))
     if (d.meses.size >= 2) {
         Etiqueta("Por mes")
         Tarjeta {
@@ -378,7 +389,6 @@ private fun Ritmo() {
         "teléfono" -> Aviso("Sin datos del reloj en las últimas 8 semanas: las noches se aproximan con el último uso del teléfono y el primero del día siguiente.")
         "mezcla" -> Aviso("Solo ${r.nochesReloj} ${if (r.nochesReloj == 1) "noche" else "noches"} del reloj en las últimas 8 semanas: las demás se aproximan con el último uso del teléfono y el primero del día siguiente.")
     }
-    Ayuda("Con las noches de las últimas 8 semanas.", Modifier.padding(top = 4.dp))
     Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Cifra(hora(r.dormirMedio), "te duermes", Modifier.weight(1f)); Cifra(hora(r.despertarMedio), "despiertas", Modifier.weight(1f))
         Cifra(r.jetLag?.let { "%.1f h".format(it) } ?: "—", "jet lag social", Modifier.weight(1f))
@@ -405,7 +415,7 @@ private fun Ritmo() {
         }
         ejeGrafica(eg, Offset(0f, size.height - 24f), Offset(size.width, size.height - 24f), guia)
     }
-    Ayuda("Barras de color fuerte: noches antes de un día laboral; de otro color: antes de un día libre (sábado, domingo${if (mexico) " o festivo" else ""}). El jet lag social es la diferencia del punto medio del sueño entre ambos (Wittmann et al., 2006); más de 1 hora se ha asociado con peor ánimo y salud.", Modifier.padding(top = 6.dp))
+    Ayuda("Color fuerte: antes de un día laboral; el otro, antes de un día libre.", Modifier.padding(top = 6.dp))
 }
 
 // ---------------- Palabras ----------------
@@ -428,7 +438,6 @@ private fun Palabras() {
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f + 0.5f * n / max))
         }
     }
-    Ayuda("La cifra es cuánto más alta (o baja) es tu valencia en los días que usas esa palabra, frente a tu promedio.", Modifier.padding(top = 6.dp))
 }
 
 // ---------------- Atípicos ----------------
@@ -445,5 +454,5 @@ private fun Atipicos(panel: Map<String, Map<String, Double?>>, vars: List<Variab
             }
         }
     }
-    Ayuda("Se compara cada día con tu mediana; se marcan los que están a más de 3 desviaciones robustas. Toca uno para abrirlo y ver qué pasó.", Modifier.padding(top = 6.dp))
+    Ayuda("Toca uno para abrirlo y ver qué pasó.", Modifier.padding(top = 6.dp))
 }
