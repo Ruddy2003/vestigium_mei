@@ -2833,4 +2833,19 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("altar", "2031-05-06", listOf(10.0)),                      // la pared del altar limpia y sin andamio
         Triple("abierta", "2031-11-20", listOf(10.0)),                    // la capilla terminada
     ),
+    // El hermano Odo (Scriptorium, tanda S6): el scriptorium de la abadía, con el libro que copia, la ventana del Rin y la del claustro.
+    "copista" to listOf(
+        Triple("normal", "2027-05-12", HORAS_CUADRO),                     // el scriptorium: la mancha de sol que se mueve y, de noche, el libro tapado
+        Triple("maitines", "2027-05-12", listOf(2.5)),                    // los maitines: la iglesia encendida, vista desde la sala a oscuras
+        Triple("candelaria", "2027-02-02", listOf(7.0)),                  // la procesión de las velas por el claustro
+        Triple("pascua", "2027-04-16", listOf(10.0)),                     // Pascua: no se copia, y hay ramas
+        Triple("vendimia", "2027-09-27", listOf(10.0)),                   // la vendimia en las viñas, sobre el Rin
+        Triple("luto", "2028-02-08", listOf(10.0)),                       // el luto
+        Triple("lorsch", "2028-06-20", listOf(10.0)),                     // variante: Odo está de viaje y su pupitre queda vacío (decisión 21)
+        Triple("rayo", "2029-07-28", listOf(17.0)),                       // el rayo en el campanario
+        Triple("tejado", "2029-10-10", listOf(10.0)),                     // el tejado quemado y el primer tomo terminado
+        Triple("helada", "2030-01-15", listOf(10.0)),                     // la helada: nieve en el claustro
+        Triple("fin", "2030-06-29", listOf(10.0)),                        // el fin de la Biblia
+        Triple("libro_nuevo", "2031-11-20", listOf(10.0)),                // el libro nuevo
+    ),
 )
