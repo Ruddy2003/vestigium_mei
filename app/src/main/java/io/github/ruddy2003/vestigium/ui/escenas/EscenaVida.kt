@@ -184,7 +184,7 @@ inline fun DrawScope.lienzo(dibujo: DrawScope.() -> Unit) {
  */
 fun escenaDe(tema: TemaId): EscenaVida? = when (tema) {
     TemaId.ROMANO -> EscenaRomano
-    TemaId.URBE -> null             // S5
+    TemaId.URBE -> EscenaUrbe
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> EscenaNeon
     TemaId.HELENO -> EscenaHeleno

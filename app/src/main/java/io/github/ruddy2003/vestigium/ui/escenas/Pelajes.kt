@@ -44,7 +44,7 @@ import kotlin.math.sqrt
  */
 fun pelajeDe(tema: TemaId): Pelaje? = when (tema) {
     TemaId.ROMANO -> PELAJE_ROMANO
-    TemaId.URBE -> null             // S5
+    TemaId.URBE -> PELAJE_URBE
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> PELAJE_NEON
     TemaId.HELENO -> PELAJE_HELENO

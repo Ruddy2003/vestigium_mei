@@ -2819,4 +2819,18 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("incendio", "2029-08-29", listOf(13.0)),                   // arde el parque del norte y el humo tapa el sol
         Triple("puente", "2030-06-20", listOf(13.0)),                     // el puente viejo, terminado
     ),
+    // Giulia (Roma, tanda S5): la capilla de los frescos y, en agosto, la azotea de su casa. Primer interior con ventana.
+    "restauradora" to listOf(
+        Triple("normal", "2027-05-06", HORAS_CUADRO),                     // la capilla: la mancha de sol en la pared, en el suelo y las velas
+        Triple("trabajo", "2027-05-06", listOf(10.0)),                    // los focos de obra encendidos
+        Triple("agosto", "2027-08-10", HORAS_CUADRO),                     // la obra cierra y Roma se vacía: la azotea (decisión 18)
+        Triple("ferragosto", "2027-08-15", listOf(13.0, 22.0)),           // banderines, sandía y fuegos
+        Triple("luto", "2027-04-21", listOf(12.0)),                       // el crespón
+        Triple("humo", "2027-05-08", listOf(19.0)),                       // el humo blanco, lejos, por la ventana
+        Triple("aguacero", "2027-10-15", listOf(11.0)),                   // la obra sin luz
+        Triple("navidad", "2027-12-25", listOf(18.4)),                    // el belén y las flores
+        Triple("boveda", "2029-05-06", listOf(10.0)),                     // la bóveda limpia y la luneta
+        Triple("altar", "2031-05-06", listOf(10.0)),                      // la pared del altar limpia y sin andamio
+        Triple("abierta", "2031-11-20", listOf(10.0)),                    // la capilla terminada
+    ),
 )

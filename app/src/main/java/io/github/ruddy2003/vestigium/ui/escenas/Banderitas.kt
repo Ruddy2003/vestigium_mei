@@ -45,7 +45,7 @@ interface Banderita {
  */
 fun banderitaHistoria(tema: TemaId): Banderita? = when (tema) {
     TemaId.ROMANO -> BanderitaRomano
-    TemaId.URBE -> null             // S5
+    TemaId.URBE -> BanderitaUrbe
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> BanderitaNeon
     TemaId.HELENO -> BanderitaHeleno
