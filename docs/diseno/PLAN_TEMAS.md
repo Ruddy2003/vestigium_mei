@@ -791,7 +791,9 @@ Todos heredan las 13 animaciones comunes y la reacción al ánimo. Lo propio de 
   - Las frases citan su texto («Evangelio de Tomás, dicho 3») y se traducen aquí, porque las traducciones modernas tienen derechos. Se pueden usar traducciones de dominio público, como la Reina-Valera de 1909 para los evangelios canónicos.
 - **Sin nombres con derechos (principio 5).** Frente exterior toma el género (ciencia ficción retro de los 70, espionaje, resistencia), no la saga que lo inspira (ver su ficha).
 - **Lo marcado «a comprobar»** se comprueba con fuentes al programar el tema. Si no se sostiene, se quita o se cambia, y se anota.
-- **Las cinco otras vidas son ficticias** (`ficticia = true`, datos con certeza `i` o `r`) y llevan su `inspiracion`.
+- **Las cinco otras vidas son personas inventadas** y llevan su `inspiracion`, pero no todas son «ficticias» en el sentido del código. Se sigue la regla de `OtrasVidas`:
+  - `ficticia = true` es solo para un **mundo inventado** (como Kei o el funcionario de Distopía): sus datos van con certeza `i` y su calendario es todo inventado (`Calendario.problemas`). Aquí, solo Frente exterior.
+  - Una **persona inventada en un mundo real** (como el hermano Bernat o K'an) va con `ficticia = false`, datos con certeza `r` y una `inspiracion` que empieza con «Persona inventada». Su calendario puede tener días históricos y aproximados con su fuente. Así van Arcontes, Galia, Art nouveau y Psicodelia.
 - **Fuentes tipográficas:** solo OFL o Apache, recortadas (principio 6). Ninguna repite las de `res/font/`. Las de las fichas son candidatas.
 - **Legibilidad (principio 7):** el francés va solo. El inglés, el hebreo, el arameo, el copto y el galo escrito con letras griegas llevan su español al lado en el reporte del día.
 
@@ -845,7 +847,7 @@ Todos heredan las 13 animaciones comunes y la reacción al ánimo. Lo propio de 
 - **Lo que se mueve:** humo, el reflector y las luces de la nave.
 - **Acciones:** esconde un microfilm en el collar · se agacha cuando pasa el reflector de una patrulla.
 
-**Otra vida** (`agente_red`, ficticia, certeza `i`).
+**Otra vida** (`agente_red`, `ficticia = true`, certeza `i`).
 - **Quién:** un ladrón de piezas al que la red recluta, de 32 años, en el puerto industrial de un mundo minero. El nombre es inventado y no debe parecerse al de ningún personaje de la saga.
 - **Agenda (`dia`):**
   - 2–9 dormir «en un cuarto alquilado sobre el taller»
@@ -925,7 +927,7 @@ Junto al mito están las creencias del siglo I: **los Vigilantes** de Enoc, **Be
 - **Fondo:** el lago de Galilea con barcas; de noche, el mismo lago con las estrellas y una grieta de luz.
 - **Acciones:** rasga el velo con la pata y por un momento se ve la luz detrás (**recurso**) · eriza el lomo ante una sombra que no se ve.
 
-**Otra vida** (`iniciado`, ficticia, certeza `r`).
+**Otra vida** (`iniciado`, persona inventada en un mundo real, `ficticia = false`, certeza `r`).
 - **Quién:** un salador de pescado de Magdala, de 28 años, hacia el año 30. Su nombre será uno común en la Galilea de entonces, por ejemplo Eleazar, evitando los de los apóstoles.
 - **Su historia, según el autor:**
   - es contemporáneo de Jesús y lo conoce;
@@ -950,7 +952,47 @@ Junto al mito están las creencias del siglo I: **los Vigilantes** de Enoc, **Be
   - 18–19 comer
   - 19–21 gente «la reunión escondida de los que saben»
 - **`inspiracion`:** «Persona inventada. Los hechos siguen los evangelios y lo que la historia da por probable. Sus creencias son las de los textos gnósticos de los siglos II a IV, puestas a propósito en el siglo I.»
-- **Pregunta abierta:** hoy una vida tiene 3 párrafos fijos de `historia`. Si el autor quiere que la historia avance con los días, por capítulos, eso es una función nueva y se decide aparte.
+- **La historia avanza con eventos especiales** (pedido del autor el 14 nov 2026). Ver «La historia del iniciado» abajo.
+
+**La historia del iniciado: los eventos especiales.** El autor pidió que Arcontes tenga **más eventos especiales que hagan avanzar la historia, ligados a la vida de Jesús**. No hace falta una función nueva: el motor de «Otras vidas» ya lo hace (`docs/plan_historia_y_escenas.md`, sección 3).
+- **Cómo se hace con el motor:**
+  - cada año real es una temporada (2027 a 2031);
+  - cada temporada tiene sus días especiales (`DiaEspecial`), con 3 o 4 párrafos del cuento escritos para ese día;
+  - los estados (`Estado`) cambian el cuento y el cuadro por días o semanas;
+  - la marca de día especial sale sobre el cuadro.
+- **Lo propio de Arcontes:**
+  - **Más días especiales:** unos 35 a 40 por temporada, el doble que los demás personajes (unos 20). Cerca de la mitad cuentan la vida de Jesús (temporadas 1 a 3) o lo que vino después (4 y 5). Los demás son las fiestas judías (Pésaj, Shavuot, Sucot, Yom Kipur, Janucá, Purim), el trabajo del salado, su vida y las reuniones de su círculo.
+  - **Se escriben las cinco temporadas** con sus párrafos especiales, no solo la 1, porque la historia no se repite: avanza.
+  - **El cuadro lo cuenta también** (decisión 18 del plan de historia): los días en que Jesús aparece llevan la clave de escena `figura_luz`, la figura de luz de espaldas. Su viaje a Jerusalén en Pésaj y en Sucot es un estado (`jerusalen`), y la huida de la temporada 5 es otro (`huida`).
+- **Las fechas:**
+  - año base 28 d. C.: la temporada 1 es el año 28 y la 5, el 32;
+  - el año 28 es el «año quince de Tiberio» en que empieza a predicar Juan el Bautista (Lucas 3:1);
+  - la crucifixión va el **viernes 14 de nisán del año 30**, el 7 de abril juliano, la fecha que más aceptan los historiadores (la otra propuesta fuerte es el 3 de abril del 33);
+  - las fiestas judías se calculan con la luna nueva de cada año y van como «aproximado» (como el calendario de Zaynab), porque el mes empezaba cuando se veía la luna;
+  - lo que los evangelios no fechan va como «aproximado», con su cita.
+- **Su gente:**
+  - inventada: su familia y su maestro salador;
+  - reales que cruza: Juan el Bautista, María de Magdala (su vecina; en los textos gnósticos es la que más entiende), Pedro y Simón de Samaria.
+  - Siguiendo la regla del cuadro (sin personas), ninguno se dibuja; solo la figura de luz.
+
+| Temporada | Año | Lo que pasa (los textos, entre paréntesis) | Cómo lo lee el iniciado (creencias reales, con su fuente) |
+|---|---|---|---|
+| 1 | 28 d. C. | Juan bautiza en el Jordán (Lucas 3; Josefo, *Antigüedades* 18.116–119). El bautismo de Jesús (Marcos 1:9–11). Jesús llama a los pescadores de Cafarnaúm, a una hora de Magdala (Marcos 1:16–20). Las curaciones de Cafarnaúm (Marcos 1:21–34). La primera Pascua en Jerusalén y los mercaderes del Templo (Juan 2:13–16) | En el bautismo, el Cristo de lo alto bajó sobre Jesús como una paloma (la creencia de Cerinto, según Ireneo, *Contra las herejías* 1.26.1). Juan es «el mayor de los nacidos de mujer», pero del mundo de abajo (Evangelio de Tomás 46) |
+| 2 | 29 d. C. | El sermón a la orilla. La tempestad calmada (Marcos 4:35–41). María de Magdala sigue a Jesús (Lucas 8:2). Herodes Antipas mata a Juan (Marcos 6:17–29; Josefo). Los panes, cerca de la Pascua (Juan 6:4–13). Jesús camina sobre el agua (Marcos 6:45–52). La transfiguración (Marcos 9:2–8). Sucot en Jerusalén (Juan 7) y Janucá (Juan 10:22) | El cuerpo del Salvador solo parecía un cuerpo, y por eso no se hunde. La transfiguración es la luz del Pleroma vista un momento. Días con `figura_luz` |
+| 3 | 30 d. C. | La entrada en Jerusalén (Marcos 11:1–11). La última cena. **La crucifixión, el viernes 14 de nisán (7 de abril)**. El sepulcro vacío y María de Magdala (Juan 20:1–18). Pentecostés, cincuenta días después (Hechos 2) | Quien sufre en la cruz no es el Salvador: Basílides decía que crucificaron a Simón de Cirene (Ireneo 1.24.4), y el Apocalipsis de Pedro de Nag Hammadi ve al Salvador vivo, riendo encima de la cruz. Después se le aparece como luz, niño y anciano, como al Juan del Apócrifo de Juan |
+| 4 | 31 d. C. | La comunidad de Jerusalén (Hechos 2:42–47). Pedro y Juan, presos (Hechos 4). Los apóstoles, azotados; el consejo de Gamaliel (Hechos 5). Los siete helenistas (Hechos 6). En Roma cae Sejano (18 de octubre del 31), y la noticia llega a Judea | Choca con el grupo de Pedro, como María en el Evangelio de María. Su círculo se esconde |
+| 5 | 32 d. C. | Esteban, apedreado (Hechos 7; la fecha es aproximada). La persecución de Saulo y la dispersión (Hechos 8:1–3). Huye a Samaria, donde predican Felipe y **Simón**, «el poder de Dios llamado Grande» (Hechos 8:5–24) | Conoce a Simón y a Helena, en quien Simón veía el primer pensamiento de Dios caído al mundo (Ireneo 1.23.2). La tradición posterior hace de Simón el padre de los gnósticos |
+
+- **A comprobar en la tanda de su calendario:**
+  - cada cita;
+  - las fechas calculadas de las fiestas de los años 28 a 32;
+  - la fecha de la crucifixión y su día de la semana;
+  - la de Sejano;
+  - si Magdala es la Tariquea de Josefo, el pueblo del pescado salado (se discute; va como «aproximado»).
+- **Cuidado al escribir:**
+  - Jesús nunca se describe de frente;
+  - sus palabras son citas (Reina-Valera 1909, de dominio público, o traducción propia del Evangelio de Tomás);
+  - la lectura gnóstica es la del personaje, no la del cuento: el cuento la cuenta como lo que él cree.
 
 **Cuadro (para la fila).**
 - El lago de Galilea al atardecer, con la figura de luz algunos días.
@@ -1038,7 +1080,7 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
 - **Fondo:** el oppidum en la colina con niebla de mañana; de noche, el mismo con hogueras y el cerco romano al fondo.
 - **Acciones:** se esconde entre el muérdago de un roble · le bufa a un casco romano tirado en el río.
 
-**Otra vida** (`aprendiz_druida`, ficticia, certeza `r`).
+**Otra vida** (`aprendiz_druida`, persona inventada en un mundo real, `ficticia = false`, certeza `r`).
 - **Quién:** un joven arverno de 19 años, aprendiz de los druidas, que deja el bosque para seguir el levantamiento. Su nombre se escoge entre los atestiguados en inscripciones galas, sin usar el de ningún personaje histórico.
 - **Historia (3 párrafos):** el bosque y los versos de memoria; el levantamiento y Gergovia; Alesia y la entrega.
 - **Agenda (`dia`):**
@@ -1109,7 +1151,7 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
 - **Fondo:** un invernadero de hierro y vidrio; de noche, el mismo con lámparas.
 - **Acciones:** persigue una libélula · se enrosca dibujando la línea de látigo.
 
-**Otra vida** (`litografa`, ficticia, certeza `r`).
+**Otra vida** (`litografa`, persona inventada en un mundo real, `ficticia = false`, certeza `r`).
 - **Quién:** una aprendiz de 19 años en un taller de litografía que imprime carteles, en París, en 1900.
 - **Agenda (`dia`):**
   - 23–6 dormir
@@ -1166,7 +1208,7 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
 - **Fondo:** una calle de casas pintadas; de noche, la misma calle con ventanas de luz negra.
 - **Acciones:** se queda hipnotizado por una lámpara de lava · persigue las burbujas del show de luces.
 
-**Otra vida** (`cartelista`, ficticia, certeza `r`).
+**Otra vida** (`cartelista`, persona inventada en un mundo real, `ficticia = false`, certeza `r`).
 - **Quién:** un dibujante de carteles de conciertos, de 24 años, en San Francisco en 1967.
 - **Agenda (`dia`):**
   - 4–12 dormir
@@ -1196,7 +1238,7 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
   - la lista de nombres en clave;
   - el nombre del agente.
 - **Arcontes:**
-  - si la historia del iniciado avanza con los días, que sería una función nueva;
+  - los eventos especiales de su historia, con sus fechas calculadas y sus citas (ver «La historia del iniciado»);
   - la lista de arcontes por planeta;
   - si `HebrewCalendar` sirve con el `minSdk`.
 - **Galia:**
