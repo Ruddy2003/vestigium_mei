@@ -3012,4 +3012,20 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("telar", "2030-10-25", listOf(13.0)),                      // el telar de Tamit
         Triple("lluvia", "2031-11-20", listOf(13.0)),                     // la lluvia en el desierto: el agua por las barrancas, los charcos
     ),
+    // Ama (Prehistoria, tanda S10): dos cuadros, el abrigo de roca con su hogar y el friso que va pintando, y el campamento de verano en la meseta.
+    "pintora_cueva" to listOf(
+        Triple("abrigo", "2029-11-05", HORAS_CUADRO),                     // el abrigo en otoño: mancha de sol larga, sol alto, fuego que manda
+        Triple("meseta", "2027-07-10", HORAS_CUADRO),                     // el campamento de verano en la meseta (decisión 21: vuelve cada año)
+        Triple("nieve", "2028-01-15", listOf(13.0, 21.0)),                // todo nevado y el río helado
+        Triple("deshielo", "2028-04-15", listOf(13.0)),                   // el río crecido con placas sueltas
+        Triple("caza", "2028-10-05", listOf(13.0)),                       // los renos en el vado, la carne puesta a secar
+        Triple("fuego", "2028-12-21", listOf(20.0)),                      // la noche más larga: fuego grande
+        Triple("luto", "2029-02-10", listOf(17.0)),                       // el túmulo con su lámpara
+        Triple("reunion", "2029-07-02", listOf(13.0, 21.4)),              // las tiendas de los otros grupos y sus fuegos
+        Triple("aurora", "2031-01-20", listOf(22.0)),                     // la aurora por la boca del abrigo
+        Triple("friso_mitad", "2029-11-10", listOf(17.0)),                // tres figuras, los puntos y la cuarta empezada
+        Triple("friso_fin", "2031-10-28", listOf(19.0)),                  // las seis figuras, la hilera de lámparas y el fuego grande (decisión 18)
+        Triple("salmones", "2028-07-25", listOf(13.0)),                   // el pescado en el secadero
+        Triple("mamuts", "2027-05-05", listOf(10.0)),                     // los mamuts en el llano de enfrente
+    ),
 )
