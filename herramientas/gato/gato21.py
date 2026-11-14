@@ -871,6 +871,9 @@ def fondo_frente(t):
         d.line([x1 - 4, 34, x1 - 4, 62], fill=P["acero"][2])    # escalera
         for y in range(36, 62, 2): d.point((x1 - 3, y), fill=P["acero"][2])
     d.line([334, 50, 338, 50], fill=P["hueso"][2]); d.line([361, 46, 364, 46], fill=P["hueso"][2])
+    REF = (377, 31)                                              # el reflector de vigilancia, sobre el tanque
+    d.rectangle([REF[0] - 2, REF[1], REF[0] + 2, REF[1] + 3], fill=P["acero"][1]); d.line([REF[0] - 2, REF[1], REF[0] + 2, REF[1]], fill=P["acero_l"])
+    d.point(REF, fill=hx("FFF0C8") if o else P["acero"][2])
     # --- Sombras arrojadas en la plataforma (la luz viene de arriba a la izquierda: caen a la derecha).
     if not o:
         for (x0, x1, largo) in ((34, 38, 22), (124, 128, 22), (139, 146, 26), (156, 334, 10), (338, 389, 12), (6, 28, 8), (398, 401, 16)):
@@ -972,8 +975,8 @@ def fondo_frente(t):
         if o:                                                   # los reflectores
             base = img.convert("RGBA")
             q = int(tk * TORRE / BUCLE) % TORRE
-            ang = math.radians(-128 + 46 * math.sin(2 * math.pi * q / TORRE))
-            base = Image.alpha_composite(base, capa_haz(("t", q), tx + 0.5, 3, ang, 150, 0.075, es_cielo))
+            ang = math.radians(-112 + 42 * math.sin(2 * math.pi * q / TORRE))
+            base = Image.alpha_composite(base, capa_haz(("t", q), REF[0], REF[1], ang, 170, 0.07, es_cielo))
             q2 = int(tk * NAVE_Q / BUCLE) % NAVE_Q
             gx_ = 150 + 118 * math.sin(2 * math.pi * q2 / NAVE_Q)
             fx_, fy_ = foco_nave[0], foco_nave[1]

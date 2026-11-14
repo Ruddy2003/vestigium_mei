@@ -67,10 +67,11 @@ object Widgets {
             0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
             intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
             0xFF222527.toInt(), 0xFFFFFFFF.toInt())
+        // La consola de noche, con las luces bajas: pilotos ámbar, rótulos color hueso y, en el ánimo, del rojo de botón al verde de radar.
         TemaId.FRENTE -> Colores(R.drawable.widget_fondo_frente, R.drawable.widget_boton_frente, R.drawable.widget_boton_activo_frente, R.drawable.widget_boton_ambar_frente,
-            0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
-            intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
-            0xFF222527.toInt(), 0xFFFFFFFF.toInt())
+            0xFFF0A04B.toInt(), 0xFFE7E1D4.toInt(), 0xFFA8A49A.toInt(), 0xFF3A4249.toInt(),
+            intArrayOf(0xFFFF7A6E.toInt(), 0xFFF79C90.toInt(), 0xFFEFBFB2.toInt(), 0xFFE7E1D4.toInt(), 0xFFCAD8C1.toInt(), 0xFFACD0AD.toInt(), 0xFF8FC79A.toInt()),
+            0xFF252B30.toInt(), 0xFF2A1600.toInt())
         TemaId.REFUGIO -> Colores(R.drawable.widget_fondo_refugio, R.drawable.widget_boton_refugio, R.drawable.widget_boton_activo_refugio, R.drawable.widget_boton_ambar_refugio,
             0xFF3DFF7F.toInt(), 0xFF9CF5B0.toInt(), 0xFF55B872.toInt(), 0xFF1C3A24.toInt(),
             intArrayOf(0xFFFFB23F.toInt(), 0xFFE0B04A.toInt(), 0xFFB8C060.toInt(), 0xFF9CF5B0.toInt(), 0xFF7CF098.toInt(), 0xFF5CF88A.toInt(), 0xFF3DFF7F.toInt()),
@@ -214,7 +215,7 @@ object Widgets {
         TemaId.MEDIEVAL -> "Agora" to "Scriptura"
         TemaId.TEMPLARIO -> "Vigilia" to "Al rol"
         TemaId.DISTOPIA -> "CONTROL" to "FORMULARIO"
-        TemaId.FRENTE -> "CONTROL" to "FORMULARIO"
+        TemaId.FRENTE -> "SEÑAL" to "TELETIPO"
         TemaId.REFUGIO -> "CHEQUEO" to "ENTRADA"
         TemaId.ORDEN -> "RELEVO" to "ACTA"
         TemaId.VAPOR -> "A todo vapor" to "Al cuaderno"
@@ -258,7 +259,7 @@ object Widgets {
             TemaId.MEDIEVAL -> R.font.gotica_regular to 1.1f
             TemaId.TEMPLARIO -> R.font.cruzada_titulo to 1.0f
             TemaId.DISTOPIA -> R.font.oswald_medium to 1.05f
-            TemaId.FRENTE -> R.font.oswald_medium to 1.05f
+            TemaId.FRENTE -> R.font.chivo_mono_medium to 1.0f       // las cifras de la consola, no la letra ancha de los títulos
             TemaId.REFUGIO -> R.font.vt323 to 1.35f
             TemaId.ORDEN -> R.font.saira_stencil to 1.0f
             TemaId.VAPOR -> R.font.caldera_titulo to 0.96f
