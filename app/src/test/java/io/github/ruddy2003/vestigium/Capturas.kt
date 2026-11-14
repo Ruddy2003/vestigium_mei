@@ -2804,4 +2804,19 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("mar_rojo", "2031-06-20", listOf(7.0)),                    // el mar de color de óxido
         Triple("final", "2031-11-20", listOf(13.0)),                      // el archivo terminado: ninguna caja por abrir
     ),
+    // La recolectora (Ciudad verde, tanda S4): la azotea con su huerto y, desde ella, la ciudad que el bosque recuperó.
+    "semillera" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // la azotea, la avenida de los cerezos y el río
+        Triple("torre", "2027-04-08", listOf(13.0)),                      // la torre de cristal, todavía en pie, y los cerezos en flor
+        Triple("torre_caida", "2027-04-14", listOf(13.0)),                // la torre recién caída
+        Triple("rayo", "2027-07-10", listOf(7.0)),                        // el rayo quema el edificio de enfrente
+        Triple("verano", "2027-07-20", listOf(13.0)),                     // el huerto lleno y el edificio ya quemado
+        Triple("otono", "2027-10-20", listOf(17.0)),                      // el otoño
+        Triple("nieve", "2027-01-25", listOf(10.0)),                      // la nieve y los lobos
+        Triple("cosecha", "2027-09-06", listOf(13.0)),                    // la cosecha grande de las azoteas
+        Triple("noche_larga", "2027-12-21", listOf(21.0)),                // la fogata de la noche más larga
+        Triple("expedicion", "2028-07-05", listOf(13.0)),                 // variante: ella está de viaje (decisión 21)
+        Triple("incendio", "2029-08-29", listOf(13.0)),                   // arde el parque del norte y el humo tapa el sol
+        Triple("puente", "2030-06-20", listOf(13.0)),                     // el puente viejo, terminado
+    ),
 )
