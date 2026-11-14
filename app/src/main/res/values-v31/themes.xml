@@ -97,10 +97,20 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_distopia</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_distopia</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Frente" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_frente</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_frente</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_frente</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Distopia.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_distopia_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_distopia_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_distopia</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Frente.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_frente_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_frente_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_frente</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Refugio" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_refugio</item>

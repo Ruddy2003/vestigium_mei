@@ -477,6 +477,46 @@ def hacer_abismo():
         P['abismo'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: seno(f, d) * env(int(d * SR), 0.002, d * 0.55, 3), [18, 14, 22], 0.22, 0.8, 1.6))
         ARGS['abismo'] = (T, pz, ac, mel, kw)
 
+def hacer_frente():
+    # --- Frente exterior: Fa menor, un tema de espionaje tenso a 100 negras por minuto (melodía propia), con el color de
+    # la séptima mayor (Fa menor con Mi) y la novena menor del acorde de Do. Todo es un sintetizador analógico de los
+    # setenta: la melodía en sierras con filtro resonante, un arpegio lento que se abre y cierra, y un bajo de secuenciador
+    # que late en corcheas sobre un colchón de quintas. De fondo, el golpe sordo del bombo analógico, relés en el pulso
+    # débil, el teletipo que entra al empezar y el pitido de la consola al cerrar la transmisión. Con su propio azar.
+    with A.azar_propio('musica_frente'):
+        T = -4; pz = 0.6
+        ac = compases([0, 3, 7, 11], [-4, 0, 3, 7], [-5, -1, 2, 8], [0, 3, 7, 14])
+        mel = frase(0, "0:0.5 0:0.5 11:1.5 7:0.5 8:1 | 7:2 3:1 5:1 | 8:1.5 7:0.5 2:1 -1:1 | 0:3 r:1")
+        lead = lambda f, d: analogico(f, d, (500, 2600, 1300), 0.03, 0.25, 2.6, 0.012, 0.8, 0.4, 0.1, 0.004)
+        arp = lambda f, d: analogico(f, d, (300, 2200, 500), 0.006, 0.14, 3.2, 0.004, 0.0, 0.22, 0.1)
+        def bajo(f, d):
+            """El secuenciador: ocho corcheas por compás (raíz, octava y quinta), cada una con su filtro que se abre y se
+            cierra y con acentos; debajo, un colchón de quinta, una octava arriba, que entra despacio."""
+            paso = d / 8
+            pulsos = [(i * paso, analogico(f * 2 ** (s / 12), paso * 0.9, (180, 1300 * a, 220), 0.004, 0.06, 3.4, 0.003, 0.0, 0.1, 0.03), 0.9 * a)
+                      for i, (s, a) in enumerate(zip((0, 0, 12, 0, 0, 12, 0, 7), (1.0, 0.6, 0.8, 0.6, 0.9, 0.6, 0.8, 0.7)))]
+            colchon = [(0, analogico(f * 2 * 2 ** (s / 12), d, (200, 1100, 800), d * 0.5, d * 0.5, 1.4, 0.3, 1.0, 1.0, min(0.4, d * 0.2), 0.006), 0.22) for s in (0, 7)]
+            return mezclar(*pulsos, *colchon)
+        def ritmo(acordes, cierre=True):
+            """El bombo analógico en el uno y en el «y» del tres, relés en el dos y el cuatro, el teletipo que entra al empezar;
+            con [cierre], dos pitidos de la consola y el relé que corta el canal al final."""
+            out = [(0, teletipo(8, 12), 0.16)]
+            for (b, _, d) in acordes:
+                out += [(b, tambor(hz(T - 24), 0.3, 0.08), 0.4), (b + 2.5, tambor(hz(T - 24), 0.25, 0.08), 0.28),
+                        (b + 1, rele(0.8, hz(T + 36)), 0.3), (b + 3, rele(0.8, hz(T + 36)), 0.3)]
+            if cierre:
+                fin = acordes[-1][0]
+                out += [(fin + 2, consola(hz(T + 24), 0.07), 0.12), (fin + 2.25, consola(hz(T + 24), 0.07), 0.12), (fin + 3.5, rele(1.0, hz(T + 36)), 0.35)]
+            return out
+        kw = dict(inst_mel=lead, inst_ac=arp, arpegio=True, bajo=bajo, perc=ritmo(ac), g_mel=0.38, g_ac=0.42, g_bajo=0.4,
+                  oct_mel=0, oct_ac=-12, legato=0.92, cola=1.8, rev=0.3)
+        # La llamada solo toma los dos primeros compases y el cierre: su ritmo se arma con esos mismos acordes.
+        kw_llamada = dict(kw, perc=ritmo([c for c in ac if c[0] < 8] + [(8, ac[-1][1], 4)]))
+        bip = lambda f, d: mezclar((0, consola(f, d), 0.7), (0, analogico(f / 2, 0.6, (300, 2000, 400), 0.005, 0.12, 3.0, 0.003, 0.0, 0.2, 0.1), 0.35))
+        P['frente'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw_llamada), notificacion(T, bip, [12, 23, 19], 0.13, 0.12, 1.2))
+        # En «Tu año» la música sube un tono dos vueltas: sin los pitidos del cierre, que no subirían con ella.
+        ARGS['frente'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
+
 def hacer_egipto():
     # --- Egipto: Mi con la segunda menor (escala propia), arpa arpegiada, flauta de caña, tambor de marco y sistro, con una
     # melodía propia de ocho compases. Con su propio azar, para no mover el de los temas que van después.
@@ -667,6 +707,7 @@ if __name__ == '__main__':
     hacer_arcano()
     hacer_enriquecidos()
     hacer_abismo()
+    hacer_frente()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     # Con un tercer argumento («presentacion,anual», por ejemplo) solo se escriben esas piezas.
     piezas = sys.argv[3].split(',') if len(sys.argv) > 3 else None

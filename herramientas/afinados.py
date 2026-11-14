@@ -169,6 +169,66 @@ def fuelle(f, d, ataque=0.05):
     x = filtro(x, 'bajo', 3200) + 0.03 * filtro(ruido(d), 'banda', (800, 3000))
     return x * np.minimum(1, t / ataque) * np.minimum(1, np.maximum(0, d - t) / 0.12)
 def guitarra(f, d=1.2, brillo=0.32): return pluck(f, d, brillo, 0.996)
+def sierra_limpia(f, d, fase=0.0):
+    """Sierra sin el «aliasing» de la sierra ingenua (polyBLEP): redondea cada salto. [f] es una nota o una curva de notas."""
+    n = int(d * SR)
+    dt = np.full(n, float(f)) / SR if np.ndim(f) == 0 else np.asarray(f, dtype=np.float64)[:n] / SR
+    p = (fase + np.cumsum(dt) - dt) % 1.0
+    y = 2 * p - 1
+    a = p < dt; x = p[a] / dt[a]; y[a] -= x + x - x * x - 1
+    b = p > 1 - dt; x = (p[b] - 1) / dt[b]; y[b] -= x * x + x + x + 1
+    return y
+def paso_bajo_movil(x, cortes, reso=1.3, bloque=32):
+    """Filtro paso bajo de 24 dB por octava (dos biquads, uno con resonancia [reso]) cuyo corte sigue la curva [cortes]."""
+    y = np.zeros(len(x)); zi = np.zeros((2, 2))
+    for i in range(0, len(x), bloque):
+        w = 2 * np.pi * min(max(float(cortes[i]), 30.0), SR * 0.45) / SR; c = np.cos(w); s = np.sin(w)
+        filas = []
+        for q in (reso, 0.54):
+            al = s / (2 * q); a0 = 1 + al
+            filas.append([(1 - c) / 2 / a0, (1 - c) / a0, (1 - c) / 2 / a0, 1.0, -2 * c / a0, (1 - al) / a0])
+        y[i:i + bloque], zi = sosfilt(np.array(filas), x[i:i + bloque], zi=zi)
+    return y
+def analogico(f, d, corte=(250, 2600, 700), t_pico=0.01, caida=0.25, reso=2.2, ataque=0.006, sosten=1.0, decae=0.3, suelta=0.06,
+              desafina=0.005, cae=0.0):
+    """Sintetizador analógico de los años setenta: dos sierras apenas desafinadas que derivan un poco, por un filtro resonante
+    de 24 dB cuyo corte sube de corte[0] a corte[1] en [t_pico] s y vuelve a corte[2] con la constante [caida]. El volumen
+    baja a [sosten] con la constante [decae]; [cae] son los semitonos que la nota se hunde de principio a fin."""
+    t = t_(d)
+    fb = f * (1 + 0.0018 * np.sin(2 * np.pi * 0.35 * t + rng.uniform(0, 2 * np.pi))) * 2 ** (-cae * t / d / 12)
+    x = 0.55 * sierra_limpia(fb, d) + 0.45 * sierra_limpia(fb * (1 + desafina), d, 0.37)
+    c0, c1, c2 = corte
+    sube = c0 * (c1 / c0) ** np.minimum(1, t / max(t_pico, 1e-3))
+    baja = c2 + (c1 - c2) * np.exp(-np.maximum(0, t - t_pico) / max(caida, 1e-3))
+    x = paso_bajo_movil(x, np.where(t < t_pico, sube, baja), reso)
+    return x * np.minimum(1, t / max(ataque, 1e-4)) * (sosten + (1 - sosten) * np.exp(-t / max(decae, 1e-4))) * np.minimum(1, np.maximum(0, d - t) / max(suelta, 1e-4))
+def consola(f, d=0.06, ancho=0.35, cae=0.0):
+    """Pitido de consola de los setenta: un pulso estrecho por un altavoz pequeño, con la nota que se asienta al encender y
+    una compuerta (prende y apaga de golpe, no se apaga sola). [cae]: semitonos que se hunde, como cuando falla la corriente."""
+    t = t_(d)
+    fb = f * (1 + 0.02 * np.exp(-t / 0.005)) * 2 ** (-cae * t / d / 12)
+    x = filtro(sierra_limpia(fb, d) - sierra_limpia(fb, d, ancho), 'banda', (350, min(4000, f * 4)))
+    return x * np.minimum(1, t / 0.002) * np.minimum(1, np.maximum(0, d - t) / 0.006)
+def rele(fuerza=1.0, resorte=2650):
+    """Un relé que cierra: el contacto, el golpe de la armadura, el resorte que suena un instante (en [resorte] Hz) y dos rebotes."""
+    golpe = filtro(ruido(0.025), 'banda', (220, 1500)) * env(int(0.025 * SR), 0.0005, 0.008, 4)
+    return mezclar((0, clic(0.004, (2500, 8500)), 0.8 * fuerza), (0.0008, golpe, 0.9 * fuerza),
+                   (0.001, seno(resorte, 0.03) * env(int(0.03 * SR), 0.0005, 0.012, 4), 0.12 * fuerza),
+                   (0.0065, clic(0.003, (1800, 6000)), 0.35 * fuerza), (0.011, clic(0.0025, (1800, 6000)), 0.15 * fuerza))
+def teletipo(letras=6, cps=10, motor=None):
+    """El teletipo que imprime [letras] letras a [cps] por segundo: el tipo que pega, el carro y el selector que cascabelea.
+    Con [motor] (una frecuencia), debajo zumba el motor."""
+    partes = []
+    for i in range(letras):
+        s = max(0.0, i / cps + rng.uniform(-0.006, 0.006)); g = rng.uniform(0.7, 1.0)
+        partes += [(s, clic(0.005, (1800, 7500)), 0.9 * g),
+                   (s + 0.002, filtro(ruido(0.03), 'banda', (300, 1600)) * env(int(0.03 * SR), 0.001, 0.012, 4), 0.8 * g),
+                   (s + 0.035, filtro(ruido(0.04), 'banda', (3000, 8000)) * env(int(0.04 * SR), 0.004, 0.02, 3), 0.12)]
+    if motor:
+        dm = letras / cps + 0.1; t = t_(dm)
+        m = filtro(sierra_limpia(motor, dm) + 0.5 * np.sin(4 * np.pi * motor * t), 'bajo', 600)
+        partes.append((0, m * np.minimum(1, t / 0.04) * np.minimum(1, (dm - t) / 0.06), 0.18))
+    return mezclar(*partes)
 def acorde(inst, notas, d, g=1.0, arpegio=0.0, **kw):
     return mezclar(*[(i * arpegio, inst(hz(n), d, **kw), g / len(notas) ** 0.5) for i, n in enumerate(notas)])
 def melodia(inst, notas, paso, d, g=0.5, **kw):
@@ -1258,6 +1318,57 @@ def cueva():
                tecla=mezclar((0, trazo((450, 2000), 0.06, 9, 0.04), 1), (0, filtro(ruido(0.015), 'bajo', 600) * env(int(0.015 * SR), 0.001, 0.008), 0.4)),
                rascar=rascado((700, 3800), laja(T + 12, 0.5), aspereza=40))
 
+def frente():
+    # Fa menor con la séptima mayor (Fa, La bemol, Do, Mi): la red clandestina, en una ciencia ficción de los setenta hecha
+    # a mano. Relés que cierran, el pitido corto de la consola (un pulso estrecho por un altavoz pequeño), el teletipo con
+    # su motor afinado en Fa, el chasquido del interruptor de baquelita y un sintetizador analógico de sierras con filtro
+    # resonante que se abre y se cierra. Ni senos limpios (Espacio), ni blips cuadrados (Terminal), ni sierras quietas
+    # (Ciudad neón, Laboratorio).
+    T = -4   # Fa4
+    interruptor = lambda: mezclar((0, clic(0.003, (3000, 9500)), 1.0), (0.0006, filtro(ruido(0.03), 'banda', (140, 800)) * env(int(0.03 * SR), 0.0005, 0.012, 4), 0.9),
+                                  (0.005, clic(0.005, (900, 3200)), 0.35))
+    rel = lambda g=1.0: rele(g, hz(T + 36))
+    pit = lambda n, d=0.07, **kw: consola(hz(n), d, **kw)
+    # El sintetizador: pulsado (el filtro se abre de golpe y se cierra) y en colchón (el filtro se abre despacio).
+    pulsado = lambda f, d, brillo=3000: analogico(f, d, (300, brillo, 650), 0.008, 0.16, 3.0, 0.004, 0.0, 0.28, 0.08)
+    colchon = lambda f, d, brillo=1700: analogico(f, d, (220, brillo, brillo * 0.6), d * 0.45, d * 0.4, 1.8, 0.09, 1.0, 1.0, min(0.5, d * 0.4), 0.006)
+    motor = hz(T - 24)
+    with azar_propio('frente_base'):
+        S['frente'] = dict(
+            toque=mezclar((0, pit(T + 12, 0.055), 0.85), (0, clic(0.003, (3500, 9000)), 0.15)),
+            elegir=mezclar((0, interruptor(), 0.7), (0.014, pit(T + 19, 0.06), 0.6)),
+            pasar=teletipo(3, 13, motor),
+            abrir=mezclar(*[(0.045 * i, rel(1 - 0.2 * i), 0.7) for i in range(3)],
+                          (0.1, acorde(lambda f, d: analogico(f, d, (160, 2600, 900), 0.32, 0.25, 3.0, 0.03, 1.0, 0.3, 0.14), [T - 12, T - 5], 0.55), 0.55),
+                          (0.52, pit(T + 19, 0.07), 0.3)),
+            guardar=mezclar((0, rel(), 0.8), (0.03, analogico(hz(T - 24), 0.3, (120, 900, 140), 0.008, 0.08, 2.0, 0.004, 0.0, 0.12, 0.05), 0.5),
+                            (0.03, pit(T + 7, 0.06), 0.55), (0.12, pit(T + 12, 0.13), 0.55)),
+            logro=reverb(mezclar(*[(0.13 * i, pulsado(hz(T + n), 0.5), 0.42) for i, n in enumerate([-12, -9, -5, -1, 0, 3, 7])],
+                                 (0.9, acorde(colchon, [T - 12, T - 5, T, T + 2, T + 3], 1.3), 0.55), (0.9, pulsado(hz(T - 24), 0.6, 900), 0.4),
+                                 (0.9, rel(), 0.35), (1.5, pit(T + 24, 0.07), 0.18), (1.62, pit(T + 24, 0.07), 0.18)), 1.4, 0.26),
+            tema=reverb(mezclar((0, interruptor(), 0.4), (0.06, rel(), 0.4), (0.1, acorde(colchon, [T - 12, T - 9, T - 5, T - 1], 1.15, brillo=2400), 0.6),
+                                (0.1, pulsado(hz(T - 24), 0.7, 1100), 0.45), (0.62, pit(T + 24, 0.07), 0.25), (0.72, pit(T + 19, 0.11), 0.25)), 1.2, 0.24),
+            aviso=reverb(mezclar((0, teletipo(7, 11, motor), 0.7), (0.75, colchon(hz(T - 12), 1.2), 0.35), (0.75, colchon(hz(T - 5), 1.2), 0.25),
+                                 (0.78, pit(T + 19, 0.09), 0.4), (0.9, pit(T + 19, 0.09), 0.4), (1.04, pit(T + 24, 0.24), 0.4)), 1.4, 0.26),
+            solemne=reverb(mezclar(*[(0.95 * i, acorde(colchon, [T - 12 + a for a in ch], 1.6 if i == 4 else 1.05), 0.5)
+                                     for i, ch in enumerate([[0, 3, 7, 11], [-4, 0, 3, 7], [1, 5, 8, 12], [-5, -1, 2, 8], [0, 3, 7, 12]])],
+                                   *[(0.95 * i, pulsado(hz(T - 24 + r), 0.9, 700), 0.4) for i, r in enumerate([0, -4, 1, -5, 0])],
+                                   *[(0.95 * i + 0.24 * k, pulsado(hz(T + ch[k]), 0.45, 2400), 0.16)
+                                     for i, ch in enumerate([[0, 3, 7, 11], [-4, 0, 3, 7], [1, 5, 8, 12], [-5, -1, 2, 8]]) for k in range(4)],
+                                   (0, rel(), 0.4), (4.4, pit(T + 24, 0.08), 0.2), (4.55, pit(T + 24, 0.08), 0.2)), 2.4, 0.34))
+
+    # Error: el pitido que cae a la sensible y se hunde al fallar la corriente, el relé que zumba y el sintetizador que se
+    # cierra. Cambio: el interruptor y el piloto que sube una cuarta. Tecla: el teclado del teletipo (el tipo, el carro y el
+    # selector). Rascar: la chapa esmaltada color hueso de la consola, con su eco de metal.
+    with azar_propio('frente'):
+        nuevos('frente',
+               error=mezclar((0, pit(T + 12, 0.08), 0.5), (0.1, pit(T + 11, 0.32, cae=1.5), 0.5), (0.1, mezclar(*[(k / 34, rel(0.6), 1.0) for k in range(5)]), 0.45),
+                             (0.1, analogico(hz(T - 13), 0.35, (1400, 1400, 120), 0.001, 0.1, 2.5, 0.004, 0.0, 0.2, 0.06, cae=2.0), 0.35)),
+               cambio=mezclar((0, interruptor(), 0.8), (0.025, pit(T + 15, 0.05), 0.5), (0.085, pit(T + 20, 0.07), 0.5)),
+               tecla=mezclar((0, clic(0.005, (1600, 6500)), 1), (0.0012, filtro(ruido(0.02), 'banda', (280, 1300)) * env(int(0.02 * SR), 0.0006, 0.007, 4), 0.6),
+                             (0.009, clic(0.0035, (2400, 7500)), 0.3)),
+               rascar=rascado((1100, 5200), mezclar((0, campana(hz(T + 24), 0.5, 1.41, 1.2, 6), 1.0), (0.02, pit(T + 24, 0.05), 0.2)), aspereza=75))
+
 # ------------------------------------------------------------------ el aviso de los lugares especiales
 
 def lugar():
@@ -1304,6 +1415,7 @@ if __name__ == '__main__':
         revolucion,
         antiguas,
         cueva,
+        frente,
     )
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 and sys.argv[2] != 'todos' else None
     claves = sys.argv[3].split(',') if len(sys.argv) > 3 else None

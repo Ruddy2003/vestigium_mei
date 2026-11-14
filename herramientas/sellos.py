@@ -899,6 +899,141 @@ def vapor(tam):
     base.alpha_composite(capa)
     guardar(fondo, base, 'vapor')
 
+# ------------------------------------------------------------------ Frente exterior
+def frente(tam):
+    """La pantalla redonda de radar de una consola de los 70. Por fuera, el bisel de la consola, color hueso, moldeado y
+    con su piel de naranja, la escala de rumbos grabada, cuatro tornillos y, abajo, un piloto ámbar encendido, uno rojo y
+    la perilla de baquelita. Por dentro, el vidrio verde oscuro con la retícula, los anillos de distancia, unos ecos y el
+    barrido que deja su estela. La huella es el eco que el barrido acaba de pintar: verde pálido de fósforo, casi blanco
+    donde pasó la línea y apagándose hacia atrás."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    cx = cy = tam / 2
+    dx, dy = xx - cx, yy - cy
+    rr = np.sqrt(dx ** 2 + dy ** 2) / (tam / 2)
+    ang = np.arctan2(dy, dx)
+    R_VIDRIO = 0.87                                  # radio del vidrio, en fracción del radio del sello
+    BARRIDO = math.radians(-38)                       # la línea de barrido, arriba a la derecha; gira en el sentido del reloj
+    atras = (BARRIDO - ang) % (2 * math.pi)           # cuánto hace que pasó la línea por cada ángulo
+    estela = np.exp(-atras / 0.9)
+
+    # --- El bisel: hueso de consola, moldeado (luz arriba a la izquierda), con piel de naranja y desgaste.
+    hueso = mezcla(col('#E6DFD0'), col('#CFC6B4'), ruido(tam, tam / 14, 401) * 0.7)
+    hueso = hueso * (0.965 + 0.05 * ruido(tam, 1.2, 402)[..., None] + 0.02 * ruido(tam, 0.5, 403)[..., None])
+    hueso = mezcla(hueso, col('#B9B0A0'), np.clip((ruido(tam, tam / 25, 404) - 0.62) * 2.5, 0, 1) * 0.35)
+    t_bisel = np.clip((rr - R_VIDRIO) / (1 - R_VIDRIO), 0, 1)
+    perfil = np.sin(t_bisel * math.pi)                # el lomo del bisel
+    luz = (-(dx + dy) / (rr * tam / 2 + 1e-3) / math.sqrt(2))   # 1 arriba a la izquierda, -1 abajo a la derecha
+    hueso = hueso * (0.97 + 0.16 * luz[..., None] * (0.35 + 0.65 * perfil[..., None]) + 0.05 * perfil[..., None])
+    # El labio interior: una sombra que cae sobre el vidrio del lado de la luz y un filo claro del otro.
+    hueso = mezcla(hueso, col('#8C8474'), np.clip(1 - (rr - R_VIDRIO) / 0.018, 0, 1) * 0.55)
+    hueso = mezcla(hueso, col('#5C564C'), np.clip((rr - 0.985) * 70, 0, 1) * 0.8)
+
+    # --- El vidrio: verde casi negro, más claro en el centro, con un poco de grano de fósforo.
+    vidrio = mezcla(col('#18291F'), col('#0B140F'), np.clip(rr / R_VIDRIO, 0, 1) ** 1.6)
+    vidrio = vidrio * (0.94 + 0.1 * ruido(tam, 0.6, 405)[..., None])
+    vidrio = mezcla(vidrio, col('#2F6B45'), np.clip(np.exp(-atras / 0.75) * 0.7 * (rr < R_VIDRIO), 0, 1) * np.clip(rr / R_VIDRIO * 1.6, 0, 1))
+    # Sombra del bisel sobre el vidrio, más ancha abajo a la derecha (la luz viene de arriba a la izquierda).
+    borde_sombra = np.clip(1 - (R_VIDRIO - rr) / (0.06 + 0.04 * np.clip(-luz, 0, 1)), 0, 1) ** 2
+    vidrio = mezcla(vidrio, col('#030605'), borde_sombra * 0.75)
+    dentro = (rr < R_VIDRIO).astype(np.float32)
+    dentro = np.asarray(Image.fromarray((dentro * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8)), np.float32) / 255
+    base = mezcla(hueso, vidrio, dentro)
+    fondo = a_img(base).convert('RGBA')
+
+    # --- Lo que se dibuja con líneas, al triple y reducido.
+    k = 3; S = tam * k; c3 = S / 2
+    capa = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(capa, 'RGBA')
+    rv = R_VIDRIO * S / 2
+    verde = (159, 216, 168)
+    def P(a, r): return (c3 + r * math.cos(a), c3 + r * math.sin(a))
+    # La retícula: anillos de distancia, la cruz y las diagonales punteadas.
+    for f in (0.25, 0.5, 0.75):
+        d.ellipse([c3 - rv * f, c3 - rv * f, c3 + rv * f, c3 + rv * f], outline=verde + (46,), width=2 * k // 2 + 1)
+    for a in (0, math.pi / 2):
+        d.line([P(a, rv * 0.97), P(a + math.pi, rv * 0.97)], fill=verde + (40,), width=k)
+    for a in (math.pi / 4, 3 * math.pi / 4, 5 * math.pi / 4, 7 * math.pi / 4):
+        for s in np.arange(0.06, 0.95, 0.045):
+            d.line([P(a, rv * s), P(a, rv * (s + 0.018))], fill=verde + (30,), width=k)
+    # La escala de rumbos por dentro del vidrio: cada 5°, más larga cada 30°.
+    for i in range(72):
+        a = math.radians(i * 5); l = rv * (0.06 if i % 6 == 0 else 0.03)
+        d.line([P(a, rv * 0.985), P(a, rv * 0.985 - l)], fill=verde + (120 if i % 6 == 0 else 70,), width=k * (2 if i % 6 == 0 else 1))
+    # La línea de barrido, con un leve halo.
+    for w, al in ((10, 30), (5, 70), (2, 230)):
+        d.line([P(BARRIDO, rv * 0.02), P(BARRIDO, rv * 0.975)], fill=(214, 248, 218, al), width=w * k // 2)
+    # Ecos sueltos: más vivos los que el barrido acaba de tocar.
+    r_ = np.random.default_rng(406)
+    for _ in range(9):
+        a = r_.random() * 2 * math.pi; dist = rv * (0.3 + r_.random() * 0.62)
+        viva = math.exp(-((BARRIDO - a) % (2 * math.pi)) / 1.1)
+        s = (2.2 + r_.random() * 2.5) * k
+        x, y = P(a, dist)
+        d.ellipse([x - s * 2.6, y - s * 2.6, x + s * 2.6, y + s * 2.6], fill=verde + (int(30 + 50 * viva),))
+        d.ellipse([x - s, y - s, x + s, y + s], fill=(200, 245, 205, int(90 + 160 * viva)))
+    # Los grabados del bisel: escala de rumbos cada 10° (larga cada 30°) y triángulos en los cuatro rumbos principales.
+    r_esc = S / 2 * 0.912
+    for i in range(36):
+        a = math.radians(i * 10 - 90); l = S / 2 * (0.032 if i % 3 == 0 else 0.016)
+        d.line([P(a, r_esc - l / 2), P(a, r_esc + l / 2)], fill=(70, 64, 55, 225), width=k * (3 if i % 3 == 0 else 2))
+    for i in range(4):
+        a = math.radians(i * 90 - 90); q = S / 2 * 0.018
+        x, y = P(a, S / 2 * 0.962)
+        u, v = math.cos(a), math.sin(a)
+        d.polygon([(x - u * q, y - v * q), (x + u * q - v * q, y + v * q + u * q), (x + u * q + v * q, y + v * q - u * q)], fill=(78, 72, 62, 210))
+    # Cuatro tornillos de cabeza ranurada, en las diagonales.
+    for i in range(4):
+        a = math.radians(45 + i * 90 + 12); x, y = P(a, S / 2 * 0.937); s = S / 2 * 0.022
+        d.ellipse([x - s, y - s, x + s, y + s], fill=(170, 164, 152, 255), outline=(96, 90, 80, 255), width=k)
+        d.ellipse([x - s * 0.8, y - s * 0.8, x + s * 0.2, y + s * 0.2], fill=(236, 232, 222, 120))
+        g = math.radians(30 + i * 47)
+        d.line([(x - s * 0.75 * math.cos(g), y - s * 0.75 * math.sin(g)), (x + s * 0.75 * math.cos(g), y + s * 0.75 * math.sin(g))], fill=(70, 64, 56, 255), width=int(k * 2.2))
+    fondo.alpha_composite(capa.resize((tam, tam), Image.LANCZOS))
+
+    # --- Pilotos y perilla, abajo, sobre el bisel: el ámbar encendido (con su resplandor), el rojo apagado a medias, la perilla.
+    k = 3; capa = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(capa, 'RGBA')
+    resplandor = Image.new('RGBA', (S, S), (0, 0, 0, 0)); dr = ImageDraw.Draw(resplandor, 'RGBA')
+    for grados, luz_c, viva in ((118, (242, 163, 58), 1.0), (130, (217, 55, 43), 0.75)):
+        x, y = P(math.radians(grados), S / 2 * 0.936); s = S / 2 * 0.031
+        dr.ellipse([x - s * 2.4, y - s * 2.4, x + s * 2.4, y + s * 2.4], fill=luz_c + (int(110 * viva),))
+        d.ellipse([x - s * 1.25, y - s * 1.25, x + s * 1.25, y + s * 1.25], fill=(185, 182, 174, 255), outline=(110, 104, 94, 255), width=k)
+        d.ellipse([x - s, y - s, x + s, y + s], fill=(42, 38, 34, 255))
+        d.ellipse([x - s * 0.78, y - s * 0.78, x + s * 0.78, y + s * 0.78], fill=tuple(int(v * (0.6 + 0.4 * viva)) for v in luz_c) + (255,))
+        d.ellipse([x - s * 0.42, y - s * 0.42, x + s * 0.42, y + s * 0.42], fill=tuple(min(255, int(v * 1.25 + 30)) for v in luz_c) + (int(200 * viva),))
+        d.ellipse([x - s * 0.55, y - s * 0.6, x - s * 0.1, y - s * 0.2], fill=(255, 250, 235, 170))
+    x, y = P(math.radians(72), S / 2 * 0.936); s = S / 2 * 0.038
+    d.ellipse([x - s * 1.12 + k * 3, y - s * 1.12 + k * 4, x + s * 1.12 + k * 3, y + s * 1.12 + k * 4], fill=(40, 34, 28, 110))
+    for i in range(24):                                # la perilla estriada de baquelita
+        a = 2 * math.pi * i / 24
+        d.polygon([(x + s * math.cos(a - 0.1), y + s * math.sin(a - 0.1)), (x + s * 1.1 * math.cos(a), y + s * 1.1 * math.sin(a)),
+                   (x + s * math.cos(a + 0.1), y + s * math.sin(a + 0.1))], fill=(42, 38, 34, 255))
+    d.ellipse([x - s, y - s, x + s, y + s], fill=(42, 38, 34, 255))
+    d.ellipse([x - s * 0.72, y - s * 0.72, x + s * 0.72, y + s * 0.72], fill=(58, 52, 46, 255))
+    d.ellipse([x - s * 0.62, y - s * 0.66, x + s * 0.05, y - s * 0.05], fill=(120, 112, 100, 70))
+    g = math.radians(-120)
+    d.line([(x + s * 0.2 * math.cos(g), y + s * 0.2 * math.sin(g)), (x + s * 0.68 * math.cos(g), y + s * 0.68 * math.sin(g))], fill=(236, 230, 216, 230), width=int(k * 2.4))
+    fondo.alpha_composite(resplandor.filter(ImageFilter.GaussianBlur(S * 0.012)).resize((tam, tam), Image.LANCZOS))
+    fondo.alpha_composite(capa.resize((tam, tam), Image.LANCZOS))
+    # Un reflejo de la sala en el vidrio, arriba a la izquierda: una media luna clara y muy tenue.
+    refl = np.clip(1 - np.abs(np.sqrt((xx - cx + tam * 0.06) ** 2 + (yy - cy + tam * 0.07) ** 2) / (tam / 2) - 0.66) / 0.1, 0, 1)
+    refl = refl * np.clip(-np.sin(ang + math.radians(45)) * 1.3 - 0.35, 0, 1) * (rr < R_VIDRIO - 0.02)
+    arr = np.asarray(fondo.convert('RGB'), np.float32)
+    arr = mezcla(arr, col('#E8F2EA'), desenfocar(refl.astype(np.float32), 6) * 0.13)
+    fondo = a_img(arr)
+
+    # --- La huella: el eco en fósforo. Casi blanca donde acaba de pasar la línea, verde pálido y más tenue hacia atrás.
+    viva = np.exp(-atras / 1.6)
+    fosforo = mezcla(col('#5FA66F'), col('#9FD8A8'), np.clip(0.35 + viva, 0, 1))
+    fosforo = mezcla(fosforo, col('#EAFBEA'), np.clip(np.exp(-atras / 0.35) * 0.85, 0, 1))
+    grano = ruido(tam, 0.7, 407)
+    nucleo = np.clip((desenfocar(m, 2.2) - 0.55) / 0.45, 0, 1)
+    rgb = fosforo * (0.88 + 0.16 * nucleo[..., None]) * (0.95 + 0.1 * grano[..., None])
+    alfa = m * np.clip(0.55 + 0.45 * viva + 0.06 * (grano - 0.5), 0, 1)
+    capa = a_rgba(rgb, alfa)
+    halo = a_rgba(np.zeros((tam, tam, 3)) + col('#7FD08F'), np.clip(desenfocar(m, 7) * 1.25, 0, 1) * (1 - m) * (0.18 + 0.6 * viva))
+    halo.alpha_composite(capa)
+    guardar(fondo, halo, 'frente')
+
 # ------------------------------------------------------------------ Tierras Antiguas
 def runas_pil(d, x, y, ancho, alto, n, color, grosor, semilla):
     """Signos inventados (trazos rectos y ángulos), como en TrofeosMas.runas."""
@@ -1314,6 +1449,7 @@ SIETE = [
     'cueva',
     'templario',
     'vapor',
+    'frente',
 ]
 ORDEN = [
     'romano',
@@ -1325,6 +1461,7 @@ ORDEN = [
     'medieval',
     'templario',
     'distopia',
+    'frente',
     'refugio',
     'orden',
     'vapor',

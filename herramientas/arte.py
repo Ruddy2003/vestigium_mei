@@ -3,6 +3,7 @@ El papel de página de cada tema (`papel_<id>.jpg`, 720 × 1280) y los ayudantes
 Los papeles de Romano, Scriptorium, Seda y Revolución vienen de rasters viejos, guardados una vez en `fuentes/`.
 Los sellos de huella están en sellos.py y los íconos en iconos.py.
 Uso: python3 arte.py ../app/src/main/res/drawable-nodpi
+     python3 arte.py ../app/src/main/res/drawable-nodpi frente     solo el papel de ese tema (o de varios, con comas)
 """
 import math, sys, os, shutil
 import numpy as np
@@ -507,8 +508,61 @@ def papel_vapor():
     a = a * (0.97 + 0.05 * ruido_rect(W, H, 0.8, 156)[..., None])
     a_img(a).save(os.path.join(OUT, 'papel_vapor.jpg'), quality=86)
 
+def papel_frente():
+    """Frente exterior: un despacho cifrado sacado del teleimpresor de la célula. Papel continuo color hueso, con las
+    franjas verdes muy pálidas del papel de impresora de los 70, las dos tiras de agujeros de arrastre y su perforado,
+    el doblez del medio (el despacho viajó doblado en un bolsillo), el desgaste de los bordes y, arriba a la derecha, el
+    emblema de la célula en seco, sin tinta: la chispa de tres trazos en el círculo roto."""
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    a = mezcla(col('#F1ECE1'), col('#E3DDCF'), ruido_rect(W, H, 50, 161) * 0.7)
+    # Las franjas verdes del papel continuo: dos renglones de cada color, con el borde apenas suavizado.
+    franja = 0.5 + 0.5 * np.tanh(np.sin(yy / 64 * math.pi) * 8)
+    a = mezcla(a, col('#D3DFCE'), franja * 0.17)
+    # Las tiras de arrastre: un agujero cada media pulgada y la línea perforada que las separa.
+    margen = 30
+    for xc in (margen / 2, W - margen / 2):
+        for yc in np.arange(16, H, 32):
+            d = np.sqrt((xx - xc) ** 2 + (yy - yc) ** 2)
+            a = mezcla(a, col('#BDB5A5'), np.clip(1 - np.abs(d - 5.6) / 1.1, 0, 1) * 0.55)
+            a = mezcla(a, col('#D9D2C3'), np.clip(1 - d / 5.4, 0, 1) * 0.9)
+    for xp in (margen, W - margen):
+        a = mezcla(a, col('#A79F90'), ((np.abs(xx - xp) < 0.9) & ((yy % 6) < 3)).astype(np.float32) * 0.45)
+    a = mezcla(a, col('#F1ECE1'), ((xx < margen) | (xx > W - margen)).astype(np.float32) * 0.5 * franja)
+    # El doblez: una línea de sombra con su filo de luz y una pendiente suave a cada lado.
+    yd = H * 0.5 + 6 * np.sin(xx / W * math.pi * 1.3)
+    s = yy - yd
+    a = a * (1 - 0.05 * np.exp(-(s / 1.4) ** 2) + 0.03 * np.exp(-((s - 2.5) / 1.6) ** 2) - 0.018 * np.tanh(s / 40) * np.exp(-np.abs(s) / 120))[..., None]
+    # El desgaste: bordes un poco más oscuros y sucios, y una mancha de dedo con grasa de máquina abajo a la derecha.
+    borde = np.sqrt(((xx - W / 2) / (W / 2)) ** 6 + ((yy - H / 2) / (H / 2)) ** 6) ** (1 / 6) + ruido_rect(W, H, 14, 162) * 0.08
+    a = mezcla(a, col('#B9AF9C'), np.clip((borde - 0.9) * 4, 0, 1) * 0.4)
+    dedo = np.sqrt(((xx - W * 0.83) / 1.3) ** 2 + (yy - H * 0.91) ** 2)
+    a = mezcla(a, col('#8E8676'), np.clip(1 - dedo / 26, 0, 1) * (0.4 + 0.6 * ruido_rect(W, H, 2.5, 163)) * 0.22)
+    # El emblema en seco: el círculo roto y la chispa, en relieve (luz arriba a la izquierda).
+    sx, sy, sr = W * 0.8, H * 0.085, W * 0.07
+    d = np.sqrt((xx - sx) ** 2 + (yy - sy) ** 2)
+    ang = np.arctan2(yy - sy, xx - sx)
+    hueco = np.abs((ang + 0.95 + math.pi) % (2 * math.pi) - math.pi) < 0.32
+    figura = ((np.abs(d - sr) < 3.2) & ~hueco).astype(np.float32)
+    ox, oy = sx + (sr - 14) * math.cos(-0.95), sy + (sr - 14) * math.sin(-0.95)
+    for da, l0, l1 in ((0, 13, 40), (-0.62, 15, 34), (0.62, 15, 34)):
+        u = -0.95 + da
+        # Distancia a cada trazo de la chispa (un segmento).
+        px, py = xx - ox, yy - oy
+        t_ = np.clip(px * math.cos(u) + py * math.sin(u), l0, l1)
+        dseg = np.sqrt((px - t_ * math.cos(u)) ** 2 + (py - t_ * math.sin(u)) ** 2)
+        figura = np.maximum(figura, (dseg < 2.4).astype(np.float32))
+    gy, gx = np.gradient(np.asarray(Image.fromarray((figura * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.6)), np.float32) / 255)
+    a = a * (1 + np.clip(-(gx + gy) * 3.5, -0.08, 0.08))[..., None]
+    a = a * (0.97 + 0.05 * ruido_rect(W, H, 0.8, 164)[..., None])
+    a_img(a).save(os.path.join(OUT, 'papel_frente.jpg'), quality=86)
+
 if __name__ == '__main__':
     OUT = sys.argv[1]
+    if len(sys.argv) > 2:
+        # Solo los temas pedidos (python3 arte.py <carpeta> frente,vapor): los demás papeles quedan como están.
+        for t in sys.argv[2].split(','): globals()['papel_' + t]()
+        print('papeles listos:', sys.argv[2]); sys.exit()
     papeles()
     papel_ruinas()
     papel_antiguas()
@@ -526,4 +580,5 @@ if __name__ == '__main__':
     papel_urbe()
     papel_edo()
     papel_vapor()
+    papel_frente()
     print('papeles listos')

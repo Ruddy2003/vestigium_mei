@@ -6,6 +6,7 @@ adaptativo (66 %). Cada tema añade solo tres cosas (lote 1 del plan de diseño)
 2. la tinta de la huella en el color del tema, con un acabado discreto (dorado, tinta ferrogálica, fósforo…);
 3. un anillo fino con el motivo del tema en miniatura, siempre del mismo grosor y radio.
 Uso: python3 iconos.py ../app/src/main/res/drawable-nodpi [hoja.png]
+     python3 iconos.py ../app/src/main/res/drawable-nodpi --temas frente,vapor    solo esos (sin logo_mono ni hoja)
 """
 import math, sys, os
 import numpy as np
@@ -97,6 +98,18 @@ def hollin_plano(sem):   # Vapor victoriano: papel de patente con nubes de holl�
     motas = np.asarray(Image.fromarray(((ruido(sem + 5, 1, 0) > 2.6) * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(3)), np.float32) / 255 * -0.9
     regla = ((np.abs(X - 40) < 1) | (np.abs(X - 46) < 0.8) | (np.abs(Y - 40) < 1) | (np.abs(Y - 46) < 0.8)) * -0.6
     return nubes + motas + regla + ruido(sem + 2, 0.25, 2)
+
+def consola(sem):        # Frente exterior: el panel de una consola de los 70, color hueso, con la piel de naranja de la pintura
+    # al horno, el desgaste de las manos en manchas grandes, las juntas de los paneles arriba y abajo y sus tornillos.
+    piel = ruido(sem, 0.55, 1.4) + ruido(sem + 1, 0.3, 0.5)
+    uso = np.clip(ruido(sem + 2, 1.0, 34), -2, 0.6) * 0.75
+    junta = np.zeros((TAM, TAM), np.float32)
+    for y0 in (TAM * 0.135, TAM * 0.865):
+        junta += (np.abs(Y - y0) < 1.1) * -1.6 + (np.abs(Y - y0 - 2.2) < 0.9) * 0.9
+    for x0, y0 in ((TAM * 0.2, TAM * 0.09), (TAM * 0.8, TAM * 0.09), (TAM * 0.2, TAM * 0.91), (TAM * 0.8, TAM * 0.91)):
+        d = np.sqrt((X - x0) ** 2 + (Y - y0) ** 2)
+        junta += (d < 5.5) * -0.9 + (np.abs(d - 5.5) < 0.9) * -1.2 + ((np.abs(X - x0) < 0.8) & (d < 4.5)) * -1.4
+    return piel + uso + junta
 
 def cuadricula(sem):     # Laboratorio: papel de laboratorio cuadriculado
     fino = ((X % 18 < 1) | (Y % 18 < 1)) * -0.6
@@ -332,6 +345,34 @@ def _engrane_manometro(d, c, n=16):   # Vapor victoriano: dientes de engrane por
         g = math.radians(300)
         d.line([(x, y), (x + r * 0.55 * math.cos(g), y + r * 0.55 * math.sin(g))], fill=(156, 61, 36, 255), width=int(K * 2))
 
+def _canal(d, c, hueco=0.5, centro=-0.95):   # Frente exterior: el canal, un círculo roto; por el hueco se escapa la chispa
+    # de tres trazos. Por dentro, la escala de rumbos de una pantalla de radar, y abajo a la izquierda, dos pilotos.
+    caja = [(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K]
+    a0, a1 = centro + hueco / 2, centro - hueco / 2 + 2 * math.pi
+    d.arc(caja, math.degrees(a0), math.degrees(a1), fill=c, width=int(GROSOR * K))
+    for a in (a0, a1):                       # los cabos del canal, redondos
+        x, y = _pos(a); r = GROSOR * K / 2
+        d.ellipse([x - r, y - r, x + r, y + r], fill=c)
+    for i in range(36):                      # rumbos cada 10°, los de 30° más largos, solo donde hay canal
+        a = 2 * math.pi * i / 36
+        if abs((a - centro + math.pi) % (2 * math.pi) - math.pi) < hueco / 2 + 0.12: continue
+        l = 7.5 if i % 3 == 0 else 4.0
+        d.line([_pos(a, RADIO - 1.5), _pos(a, RADIO - 1.5 - l)], fill=c, width=int(K * (1.9 if i % 3 == 0 else 1.3)))
+    # La chispa: tres trazos que se abren hacia fuera desde el hueco del canal, el del centro más largo.
+    ox, oy = _pos(centro, RADIO - 9)
+    for da, l0, l1, g in ((0, 8.0, 24.0, 1.45), (-0.58, 9.5, 21.0, 1.3), (0.58, 9.5, 21.0, 1.3)):
+        u = centro + da
+        p0 = (ox + l0 * K * math.cos(u), oy + l0 * K * math.sin(u)); p1 = (ox + l1 * K * math.cos(u), oy + l1 * K * math.sin(u))
+        d.line([p0, p1], fill=c, width=int(GROSOR * K * g))
+        for (x, y) in (p0, p1):
+            r = GROSOR * K * g / 2; d.ellipse([x - r, y - r, x + r, y + r], fill=c)
+    # Dos pilotos sobre el canal, en su aro de baquelita: el ámbar encendido y el rojo.
+    for a, luz in ((math.radians(127), (242, 163, 58, 255)), (math.radians(143), (217, 55, 43, 255))):
+        x, y = _pos(a); r = 6.2 * K
+        d.ellipse([x - r, y - r, x + r, y + r], fill=(42, 38, 34, 255))
+        r2 = 4.3 * K; d.ellipse([x - r2, y - r2, x + r2, y + r2], fill=luz)
+        r3 = 1.3 * K; d.ellipse([x - r2 * 0.45 - r3, y - r2 * 0.45 - r3, x - r2 * 0.45 + r3, y - r2 * 0.45 + r3], fill=(255, 248, 230, 190))
+
 def _cuerda(d, c, n=56):              # cuerda trenzada
     for i in range(n):
         a = 2 * math.pi * i / n
@@ -498,6 +539,7 @@ TEMAS = {
     'medieval':     (vitela,        '#E8E2D6', '#33261A',   9, 6, 'ferrogalica', _cuadrifolios),
     'templario':    (lino,          '#EDE6D6', '#9A1A1F',   8, 5, 'esmalte',     _cruces_patadas),
     'distopia':     (papel,         '#EFE9DA', '#1A1A1A',  10, 6, 'tinta',       _marcas),
+    'frente':       (consola,       '#E4DED1', '#B85C0F',  10, 4, 'piloto',      _canal),
     'refugio':      (hormigon,      '#1B1C1A', '#9BE8AE',   8, 5, 'fosforo',     _dientes),
     'orden':        (acero,         '#16171A', '#C2A15E',   9, 5, 'dorado',      _remaches),
     'vapor':        (hollin_plano,  '#E6D9BD', '#7A4E12',  10, 5, 'dorado',      _engrane_manometro),
@@ -541,7 +583,7 @@ def anillo(tema, color):
         _tricolor(d, [(31, 42, 110, 235), (245, 245, 245, 235), (178, 34, 52, 235)])
         d.ellipse(caja, outline=c, width=int(GROSOR * K * 0.5))
         return capa.resize((TAM, TAM), Image.LANCZOS)
-    if motivo is not _rayas:
+    if motivo not in (_rayas, _canal):
         d.ellipse(caja, outline=c, width=int(GROSOR * K))
     if motivo is _monedas: _monedas(d, c, (0, 0, 0, 0))
     else: motivo(d, c, **VARIANTES.get(tema, {}))
@@ -576,6 +618,15 @@ def hacer(tema, salida):
         gy, gx = np.gradient(b)
         col = col * (1 + np.clip((gx + gy) * -5, -0.25, 0.25))[..., None]
     capa = Image.fromarray(np.dstack([np.clip(col, 0, 255), alfa * 255]).astype(np.uint8), 'RGBA')
+    if acabado == 'piloto':
+        # El cristal ámbar de un piloto encendido: el centro de cada cresta más claro, como luz que pasa, y un halo cálido.
+        b = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.8)), np.float32) / 255
+        nucleo = np.clip((b - 0.62) / 0.38, 0, 1) ** 1.5 * 0.55
+        luz = col * (1 - nucleo[..., None]) + rgb('#F2A33A')[None, None, :] * nucleo[..., None]
+        capa = Image.fromarray(np.dstack([np.clip(luz, 0, 255), alfa * 255]).astype(np.uint8), 'RGBA')
+        g = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(4)), np.float32) / 255
+        halo = Image.fromarray(np.dstack([np.broadcast_to(rgb('#E8862A'), (TAM, TAM, 3)), np.clip(g * 0.18, 0, 1) * 255]).astype(np.uint8), 'RGBA')
+        halo.alpha_composite(capa); capa = halo
     if acabado == 'fosforo':
         # Resplandor de pantalla alrededor de las crestas.
         g = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(5)), np.float32) / 255
@@ -618,8 +669,15 @@ def muestra(salida, archivo, cel=160):
     hoja_de_contacto(imagenes, archivo, cel=cel, mascaras=[c.crop(caja)] * len(imagenes))
 
 if __name__ == '__main__':
-    salida = sys.argv[1]
+    args = sys.argv[1:]
+    salida = args[0]
+    if '--temas' in args:
+        # Solo los temas pedidos: los demás íconos y logo_mono quedan como están.
+        pedidos = args[args.index('--temas') + 1].split(',')
+        for t in pedidos: hacer(t, salida)
+        print('listo', ', '.join(pedidos))
+        sys.exit()
     for t in TEMAS: hacer(t, salida)
     mono(salida)
-    if len(sys.argv) > 2: muestra(salida, sys.argv[2])
+    if len(args) > 1: muestra(salida, args[1])
     print('listo', len(TEMAS))
