@@ -49,7 +49,7 @@ fun banderitaHistoria(tema: TemaId): Banderita? = when (tema) {
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> BanderitaNeon
     TemaId.HELENO -> BanderitaHeleno
-    TemaId.EGIPTO -> null           // S9
+    TemaId.EGIPTO -> BanderitaEgipto
     TemaId.MEDIEVAL -> BanderitaMedieval
     TemaId.TEMPLARIO -> null        // S11
     TemaId.DISTOPIA -> BanderitaDistopia

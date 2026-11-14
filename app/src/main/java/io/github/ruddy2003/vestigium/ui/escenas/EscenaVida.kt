@@ -188,7 +188,7 @@ fun escenaDe(tema: TemaId): EscenaVida? = when (tema) {
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> EscenaNeon
     TemaId.HELENO -> EscenaHeleno
-    TemaId.EGIPTO -> null           // S9
+    TemaId.EGIPTO -> EscenaEgipto
     TemaId.MEDIEVAL -> EscenaMedieval
     TemaId.TEMPLARIO -> null        // S11
     TemaId.DISTOPIA -> EscenaDistopia

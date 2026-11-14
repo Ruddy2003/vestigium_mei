@@ -2930,4 +2930,25 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("elotes", "2030-08-15", listOf(19.4)),                     // fiesta al anochecer: antorchas y guirnaldas
         Triple("cosecha", "2030-10-28", listOf(10.0)),                    // la cosecha a medias y la estela ya de siempre
     ),
+    // Pay (Egipto, tanda S9): la azotea de su casa en la aldea de los obreros, con la montaña, la tumba del rey que avanza y el valle del Nilo, que cambia con la crecida.
+    "escriba_tumba" to listOf(
+        Triple("normal", "2027-05-06", HORAS_CUADRO),                     // un día corriente y despejado: las tres luces; de noche, las esteras tendidas
+        Triple("crecida", "2027-09-15", listOf(13.0)),                    // el valle hecho un lago, los pueblos como islas, los racimos de la palmera
+        Triple("verde", "2027-12-20", listOf(13.0)),                      // el valle verde de la siembra
+        Triple("espiga", "2027-04-01", listOf(13.0)),                     // el valle dorado de la cosecha
+        Triple("fiesta_valle", "2027-03-20", listOf(13.0, 21.0)),         // guirnaldas, la barca de Amón en el río, flores y lámparas en las capillas
+        Triple("amenhotep", "2027-01-10", listOf(13.0)),                  // las andas en la ladera
+        Triple("polvo", "2027-05-10", listOf(13.0)),                      // el viento del desierto: el toldo enrollado
+        Triple("opet", "2027-08-02", listOf(21.0)),                       // las luces de la otra orilla
+        Triple("joiak", "2027-10-04", listOf(21.0)),                      // las lámparas de las capillas
+        Triple("racion", "2027-11-28", listOf(19.0)),                     // los cuatro sacos y la medida; la lumbre y el senet
+        Triple("luto", "2029-02-05", listOf(13.0)),                       // la banda blanca; la capilla nueva de Tiy
+        Triple("paso", "2030-04-01", listOf(7.0, 21.0)),                  // variante: la cuadrilla duerme en el paso (decisión 21)
+        Triple("entierro", "2030-05-11", listOf(13.0)),                   // el trineo del rey; sin andamio
+        Triple("sellada", "2030-05-20", listOf(13.0)),                    // la boca tapiada (decisión 18)
+        Triple("tumba_nueva", "2030-06-25", listOf(13.0)),                // la boca nueva, recién cortada
+        Triple("tumba_nueva_crece", "2031-12-30", listOf(13.0)),          // la boca nueva, año y medio después
+        Triple("telar", "2030-10-25", listOf(13.0)),                      // el telar de Tamit
+        Triple("lluvia", "2031-11-20", listOf(13.0)),                     // la lluvia en el desierto: el agua por las barrancas, los charcos
+    ),
 )
