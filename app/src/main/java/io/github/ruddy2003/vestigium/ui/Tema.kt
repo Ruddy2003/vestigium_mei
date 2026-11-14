@@ -140,6 +140,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     REVOLUCION("revolucion", "Revolución francesa", "Papel de cartel, tinta y la escarapela azul, blanca y roja. Cuadernos de quejas, el árbol de la libertad y el calendario republicano.", Epoca.EDAD_MODERNA),
     ANTIGUAS("antiguas", "Tierras Antiguas", "Salones de piedra, runas inventadas, mapas y gemas. Una compañía que cruza aldeas, bosques, montañas y minas, contando el tiempo por lunas.", Epoca.FANTASIA),
     CUEVA("cueva", "Prehistoria", "Ocre, carbón y caliza: manos en negativo y bisontes en la pared de una cueva. Las lunas se cuentan desde el primer registro y los números son muescas en un hueso.", Epoca.ANTIGUEDAD),
+    FRENTE("frente", "Frente exterior", "Una red clandestina contra el Directorio, entre mundos ocupados: consolas color hueso, pantallas de radar y pilotos ámbar de los años setenta. Cada día es una operación con su nombre en clave y su ventana de transmisión.", Epoca.FUTURO),
     /**
      * Básico: sin diseño, a propósito, para probar la app de forma más fluida. Material 3 limpio: grises con un acento azul
      * ([PaletaBasica]), la letra del sistema, esquinas estándar, nombres y fechas en español normal, sin emblema, sin fondo
@@ -452,6 +453,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.MEDIEVAL -> if (oscuro) medievalOscuro else medievalClaro
     TemaId.TEMPLARIO -> if (oscuro) templarioOscuro else templarioClaro
     TemaId.DISTOPIA -> if (oscuro) distopiaOscuro else distopiaClaro
+    TemaId.FRENTE -> if (oscuro) frenteOscuro else frenteClaro
     TemaId.REFUGIO -> if (oscuro) refugioOscuro else refugioClaro
     TemaId.ORDEN -> if (oscuro) ordenOscuro else ordenClaro
     TemaId.VAPOR -> if (oscuro) vaporOscuro else vaporClaro
@@ -490,6 +492,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.MEDIEVAL -> tipoMedieval
     TemaId.TEMPLARIO -> tipoTemplario
     TemaId.DISTOPIA -> tipoDistopia
+    TemaId.FRENTE -> tipoFrente
     TemaId.REFUGIO -> if (oscuro) tipoRefugioOscuro else tipoRefugioClaro
     TemaId.ORDEN -> tipoOrden
     TemaId.VAPOR -> tipoVapor
@@ -534,6 +537,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.MEDIEVAL -> 66f to 0.5f      // gótica
     TemaId.TEMPLARIO -> 60f to 1.2f      // letra de estandarte (MedievalSharp)
     TemaId.DISTOPIA -> 70f to 1f        // Oswald, angosta
+    TemaId.FRENTE -> 46f to 1f        // Michroma, muy ancha: más chica, como la cifra de un panel
     TemaId.REFUGIO -> 74f to 0f         // VT323, de píxeles
     TemaId.ORDEN -> 60f to 1.5f         // estarcido
     TemaId.VAPOR -> 58f to 0.4f         // Caldera (Abril Fatface), «fat face» de cartel, ancha y de contraste alto
@@ -577,6 +581,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.MEDIEVAL -> Esquinas(3, Esquina.REDONDA)
     TemaId.TEMPLARIO -> Esquinas(5, Esquina.CORTADA)       // el sillar tallado de la muralla
     TemaId.DISTOPIA -> Esquinas(4, Esquina.CORTADA)        // la carpeta del expediente
+    TemaId.FRENTE -> Esquinas(13, Esquina.REDONDA)       // la curva grande de las consolas de la sala de control
     TemaId.REFUGIO -> Esquinas(10, Esquina.REDONDA)
     TemaId.ORDEN -> Esquinas(6, Esquina.CORTADA)           // placa de acero
     TemaId.VAPOR -> Esquinas(9, Esquina.ARCO)              // la placa de nombre de una locomotora, de remate curvo
@@ -823,6 +828,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> "Del día"
         TemaId.TEMPLARIO -> "Guardia"
         TemaId.DISTOPIA -> "PARTE"
+        TemaId.FRENTE -> "ENLACE"
         TemaId.REFUGIO -> "DIARIO"
         TemaId.ORDEN -> "CAMPO"
         TemaId.VAPOR -> "Salida"
@@ -860,6 +866,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> "xvij de otubre"
         TemaId.TEMPLARIO -> "iv oct. · juliano"
         TemaId.DISTOPIA -> "EXP. 0290"
+        TemaId.FRENTE -> "K-7 · 21:40"
         TemaId.REFUGIO -> "DÍA 290"
         TemaId.ORDEN -> "17 OCT 26"
         TemaId.VAPOR -> "tren n.º 290 · 2.32 t."
@@ -899,6 +906,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> 16 to 16
         TemaId.TEMPLARIO -> 22 to 10
         TemaId.DISTOPIA -> 20 to 12
+        TemaId.FRENTE -> 16 to 16
         TemaId.REFUGIO -> 16 to 16
         TemaId.ORDEN -> 16 to 16
         TemaId.VAPOR -> 22 to 10
@@ -937,6 +945,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> 10
         TemaId.TEMPLARIO -> 12
         TemaId.DISTOPIA -> 10
+        TemaId.FRENTE -> 10
         TemaId.REFUGIO -> 12
         TemaId.ORDEN -> 12
         TemaId.VAPOR -> 11
@@ -1034,6 +1043,9 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
         val p = s.height * 0.08f; val a = s.width * 0.42f
         moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(s.width, p); lineTo(s.width, s.height); lineTo(0f, s.height); close()
     }
+    // El panel de una consola curva: esquinas muy redondas arriba y el frente que se inclina hacia quien lo usa
+    // (abajo, las esquinas más chicas, como el borde del tablero).
+    TemaId.FRENTE -> RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp, bottomEnd = 10.dp, bottomStart = 10.dp)
     // Pantalla de tubo, muy redonda.
     TemaId.REFUGIO -> RoundedCornerShape(18.dp)
     // Compuerta de esquinas cortadas.
@@ -1227,6 +1239,14 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         }
         // Ficha de archivo apaisada.
         TemaId.DISTOPIA -> drawRect(c, Offset(0f, h * 0.2f), Size(w, h * 0.6f))
+        // La pantalla redonda de radar, con su retícula y el barrido.
+        TemaId.FRENTE -> {
+            drawCircle(c, r * 0.92f)
+            drawCircle(fondo.copy(alpha = 0.5f), r * 0.56f, style = fino)
+            drawLine(fondo.copy(alpha = 0.5f), Offset(cx - r * 0.8f, cy), Offset(cx + r * 0.8f, cy), w * 0.05f)
+            drawLine(fondo.copy(alpha = 0.5f), Offset(cx, cy - r * 0.8f), Offset(cx, cy + r * 0.8f), w * 0.05f)
+            drawLine(fondo, Offset(cx, cy), Offset(cx + r * 0.62f, cy - r * 0.5f), w * 0.09f, cap = StrokeCap.Round)
+        }
         // Botón de consola.
         TemaId.REFUGIO -> drawRoundRect(c, cornerRadius = CornerRadius(w * 0.3f))
         // Tuerca.

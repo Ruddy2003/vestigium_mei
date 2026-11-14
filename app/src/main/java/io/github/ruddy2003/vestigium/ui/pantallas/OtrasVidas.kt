@@ -670,6 +670,14 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(1.4f * d))
             }
         }
+        TemaId.FRENTE -> {
+            drawRect(color.copy(alpha = 0.4f), Offset(0.5f * d, 0.5f * d), Size(w - d, h - d), style = Stroke(d))
+            if (fw > 0f) {
+                drawRect(color.copy(alpha = 0.35f), Offset.Zero, Size(fw, h))
+                clipRect(right = fw) { var x = -h; while (x < fw) { drawLine(color, Offset(x, h), Offset(x + h, 0f), 1.6f * d); x += 3.2f * d } }
+                drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(1.4f * d))
+            }
+        }
         // Medidor de esfera alargada, con sus décimos y el brillo del vidrio.
         TemaId.REFUGIO -> {
             drawRoundRect(pista, Offset.Zero, size, CornerRadius(h / 2))
@@ -1066,6 +1074,12 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
         }
         // El ojo que vigila y las marcas gruesas.
         TemaId.DISTOPIA -> {
+            val l = rc * 0.7f
+            drawPath(Path().apply { moveTo(c.x - l, c.y); quadraticTo(c.x, c.y - l * 0.9f, c.x + l, c.y); quadraticTo(c.x, c.y + l * 0.9f, c.x - l, c.y); close() }, tinta.copy(alpha = 0.5f), style = Stroke(1.5f * d))
+            drawCircle(tinta.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.5f * d)); drawCircle(cs.primary, rc * 0.1f, c)
+            marcas(24, 4f * d, 2.2f * d, tinta.copy(alpha = 0.6f))
+        }
+        TemaId.FRENTE -> {
             val l = rc * 0.7f
             drawPath(Path().apply { moveTo(c.x - l, c.y); quadraticTo(c.x, c.y - l * 0.9f, c.x + l, c.y); quadraticTo(c.x, c.y + l * 0.9f, c.x - l, c.y); close() }, tinta.copy(alpha = 0.5f), style = Stroke(1.5f * d))
             drawCircle(tinta.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.5f * d)); drawCircle(cs.primary, rc * 0.1f, c)

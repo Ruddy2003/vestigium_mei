@@ -108,6 +108,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.MEDIEVAL -> R.font.gotica_semibold       // la gótica del copista, en su corte más claro
     TemaId.TEMPLARIO -> R.font.regla_bold           // la letra de la regla, negrita: cifras firmes
     TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
+    TemaId.FRENTE -> R.font.oswald_bold           // números de expediente, estrechos y negros
     TemaId.REFUGIO -> R.font.plex_mono_semibold     // la máquina del refugio: mono, gruesa
     TemaId.ORDEN -> R.font.saira_stencil            // estarcido
     TemaId.VAPOR -> R.font.caldera_titulo           // «fat face» de cartel
@@ -147,6 +148,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.MEDIEVAL -> "Liber vestigii mei"
     TemaId.TEMPLARIO -> "Pauperes commilitones · Vestigium Mei"
     TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
+    TemaId.FRENTE -> "EXPEDIENTE · VESTIGIUM MEI"
     TemaId.REFUGIO -> "REFUGIO · BITÁCORA VESTIGIUM-MEI"
     TemaId.ORDEN -> "ARCHIVUM ORDINIS · VESTIGIUM MEI"
     TemaId.VAPOR -> "Memoria de la Compañía de Vapor Vestigium Mei"
@@ -353,6 +355,17 @@ object Reportes {
                     y += 58f
                 }
                 TemaId.DISTOPIA -> {
+                    // La barra del expediente se abre en el centro para el ojo que lo mira todo.
+                    val yc = yy + 16f
+                    val barra = L.relleno(L.primario)
+                    c.drawRect(M, yc - 4f, cx - 70f, yc + 4f, barra); c.drawRect(cx + 70f, yc - 4f, W - M, yc + 4f, barra)
+                    val ojo = Path().apply { moveTo(cx - 54f, yc); quadTo(cx, yc - 34f, cx + 54f, yc); quadTo(cx, yc + 34f, cx - 54f, yc); close() }
+                    c.drawPath(ojo, L.relleno(L.superficie2))
+                    c.drawPath(ojo, L.trazo(L.tinta, 3f))
+                    c.drawCircle(cx, yc, 10f, barra); c.drawCircle(cx, yc, 4f, L.relleno(L.tinta))
+                    y += 54f
+                }
+                TemaId.FRENTE -> {
                     // La barra del expediente se abre en el centro para el ojo que lo mira todo.
                     val yc = yy + 16f
                     val barra = L.relleno(L.primario)

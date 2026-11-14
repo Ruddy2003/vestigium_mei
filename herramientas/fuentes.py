@@ -5,7 +5,8 @@ Baja cada fuente de Google Fonts (repositorio google/fonts, todas con la SIL Ope
 estáticas de las fuentes variables, las recorta al alfabeto latino (y al cirílico en las de los temas soviético y mongol)
 y las guarda en app/src/main/res/font/. Las que reservan su nombre en la licencia se renombran, como pide la OFL.
 
-Uso:  pip install fonttools  &&  python3 herramientas/fuentes.py [carpeta_de_descargas]
+Uso:  pip install fonttools  &&  python3 herramientas/fuentes.py [carpeta_de_descargas] [--solo salida1,salida2]
+      Con --solo se hacen solo esas salidas (las de un tema nuevo) y las demás no se tocan.
 """
 import io
 import os
@@ -139,6 +140,12 @@ FUENTES = [
     ("uncialantiqua/UncialAntiqua-Regular.ttf", None, "camino_titulo", "Camino Vestigium", LATINO),
     ("playfairdisplay/PlayfairDisplay[wght].ttf", {"wght": 400}, "convencion_titulo", "Convencion Vestigium", LATINO),
     ("playfairdisplay/PlayfairDisplay[wght].ttf", {"wght": 700}, "convencion_negrita", "Convencion Vestigium", LATINO),
+    # FRE: Frente exterior (lote 10). Títulos en Michroma, la ancha de la ciencia ficción de los años 70; texto en Chivo,
+    # grotesca firme; rótulos y cifras en Chivo Mono, como lo grabado en una consola
+    ("michroma/Michroma-Regular.ttf", None, "michroma_titulo", None, LATINO),
+    ("chivo/Chivo[wght].ttf", {"wght": 400}, "chivo_regular", None, LATINO),
+    ("chivo/Chivo[wght].ttf", {"wght": 600}, "chivo_semibold", None, LATINO),
+    ("chivomono/ChivoMono[wght].ttf", {"wght": 500}, "chivo_mono_medium", None, LATINO),
 ]
 
 
@@ -363,10 +370,17 @@ def hacer(origen, ejes, salida, nombre, letras, cache):
 
 
 if __name__ == "__main__":
-    cache = sys.argv[1] if len(sys.argv) > 1 else os.path.join(RAIZ, "build", "fuentes")
+    args = [a for a in sys.argv[1:] if not a.startswith("--solo")]
+    solo = next((a.split("=", 1)[1] if "=" in a else sys.argv[sys.argv.index(a) + 1] for a in sys.argv[1:] if a.startswith("--solo")), None)
+    if solo and solo in args:
+        args.remove(solo)
+    solo = set(solo.split(",")) if solo else None
+    cache = args[0] if args else os.path.join(RAIZ, "build", "fuentes")
     os.makedirs(cache, exist_ok=True)
     total = 0
     for origen, ejes, salida, nombre, letras in FUENTES:
+        if solo is not None and salida not in solo:
+            continue
         n = hacer(origen, ejes, salida, nombre, letras, cache)
         total += n
         print(f"{salida:22s} {n // 1024:4d} KB")

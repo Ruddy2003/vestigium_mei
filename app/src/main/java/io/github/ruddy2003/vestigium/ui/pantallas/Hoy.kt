@@ -455,6 +455,20 @@ fun FraseDelDia(fecha: String) {
                 }
             }
         }
+        TemaId.FRENTE -> Surface(color = cs.onBackground, shape = RectangleShape, modifier = arriba) {
+            Row(Modifier.height(IntrinsicSize.Min)) {
+                Box(Modifier.width(8.dp).fillMaxHeight().background(cs.primary))
+                Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                    Text(rotulo, style = ty.labelMedium, color = cs.primary)
+                    f.original?.let { Text(it, style = ty.bodySmall, fontStyle = FontStyle.Italic, color = cs.background.copy(alpha = 0.72f)) }
+                    Text(f.texto.uppercase(), style = ty.titleLarge, color = cs.background, modifier = Modifier.padding(vertical = 2.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("— ${f.autor}", style = ty.labelSmall, color = cs.background.copy(alpha = 0.7f), modifier = Modifier.weight(1f))
+                        CorazonFrase(f, cs.primary, fecha = fecha)
+                    }
+                }
+            }
+        }
         // Tarjeta redonda de los cincuenta con el rótulo en una banda de color.
         TemaId.REFUGIO -> Surface(shape = RoundedCornerShape(12.dp), color = cs.surface, border = BorderStroke(2.dp, cs.primary), modifier = arriba) {
             Column {
@@ -956,6 +970,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.MEDIEVAL -> base.copy(fontFamily = Letra.garamond, fontWeight = FontWeight.SemiBold, fontSize = 23.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum, tnum")
         TemaId.TEMPLARIO -> c(LetraExtra.regla, FontWeight.Bold, 22f, 0.3f, "lnum, tnum")
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
+        TemaId.FRENTE -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
         TemaId.REFUGIO -> c(LetraExtra.vt323, FontWeight.Normal, 30f, 0.4f)
         TemaId.ORDEN -> c(LetraExtra.estarcido, FontWeight.Normal, 23f, 1.2f)
         TemaId.VAPOR -> c(LetraExtra.caldera, FontWeight.Normal, 24f, 0.4f, "lnum")
@@ -1245,6 +1260,12 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                         }
                         // Fichas perforadas: esquina cortada y una hilera de agujeros.
                         TemaId.DISTOPIA -> {
+                            val k = minOf(w * 0.35f, barH * 0.2f)
+                            pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w - k, top); lineTo(w, top + k); lineTo(w, h); close() })
+                            var y = top + k + 4 * u
+                            while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
+                        }
+                        TemaId.FRENTE -> {
                             val k = minOf(w * 0.35f, barH * 0.2f)
                             pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w - k, top); lineTo(w, top + k); lineTo(w, h); close() })
                             var y = top + k + 4 * u

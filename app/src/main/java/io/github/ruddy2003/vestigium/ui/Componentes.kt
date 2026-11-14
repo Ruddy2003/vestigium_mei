@@ -126,6 +126,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.MEDIEVAL -> Zarcillo(modifier)
         TemaId.TEMPLARIO -> Adarve(modifier)
         TemaId.DISTOPIA -> BandaExpediente(modifier)
+        TemaId.FRENTE -> BandaExpediente(modifier)
         TemaId.REFUGIO -> Destellos(modifier)
         TemaId.ORDEN -> Galones(modifier)
         TemaId.VAPOR -> BandaVia(modifier)
@@ -1095,6 +1096,10 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "⚠", igual = "| ", nulo = "SIN DATO", elegido = "☒", riel = RolColor.TINTA, quitar = "✖", listaVacia = "[ EXPEDIENTE VACÍO ]", flecha = "►",
         sufijo = ":", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.NINGUNO,
         guiones = floatArrayOf(2.5f, 1f), tamBoton = 14, letraBoton = null, borde = RolColor.TINTA, grosor = 2f)
+    TemaId.FRENTE -> PielComponentes(sep = " ▪ ", cerrada = "▶", abierta = "▼", numeral = RolColor.TINTA, centrar = true, rellena = false,
+        aviso = "⚠", igual = "| ", nulo = "SIN DATO", elegido = "☒", riel = RolColor.TINTA, quitar = "✖", listaVacia = "[ EXPEDIENTE VACÍO ]", flecha = "►",
+        sufijo = ":", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.NINGUNO,
+        guiones = floatArrayOf(2.5f, 1f), tamBoton = 14, letraBoton = null, borde = RolColor.TINTA, grosor = 2f)
     TemaId.REFUGIO -> PielComponentes(sep = " : ", cerrada = "▷", abierta = "▽", numeral = RolColor.PRIMARIO, centrar = true, rellena = false,
         aviso = "⚛", igual = ": ", nulo = "---", elegido = "✔", riel = RolColor.PRIMARIO, quitar = "⊗", listaVacia = "< VACÍO >", flecha = "▻",
         sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 0.8f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.BARRA,
@@ -1253,6 +1258,7 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             }.padding(bottom = 5.dp))
         // Rótulo de expediente: blanco sobre negro.
         TemaId.DISTOPIA -> Text(nombre, style = estilo, color = e.background, modifier = peso.background(e.onBackground).padding(horizontal = 6.dp, vertical = 1.dp))
+        TemaId.FRENTE -> Text(nombre, style = estilo, color = e.background, modifier = peso.background(e.onBackground).padding(horizontal = 6.dp, vertical = 1.dp))
         // Letrero de pasillo del refugio: una cápsula con borde.
         TemaId.REFUGIO -> Text(nombre, style = estilo, color = e.primary, modifier = peso.border(1.5.dp, e.primary, RoundedCornerShape(50)).padding(horizontal = 12.dp, vertical = 1.dp))
         // Placa de latón con su tramo carmesí debajo.
@@ -1415,6 +1421,7 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         moveTo(0f, 0f); lineTo(w, 0f); lineTo(w - h * 0.22f, h / 2); lineTo(w, h); lineTo(0f, h); close()
     }
     TemaId.DISTOPIA -> RectangleShape
+    TemaId.FRENTE -> RectangleShape
     TemaId.REFUGIO -> RoundedCornerShape(50)
     TemaId.ORDEN -> CutCornerShape(6.dp)
     TemaId.VAPOR -> RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomEnd = 3.dp, bottomStart = 3.dp)
@@ -1524,6 +1531,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.MEDIEVAL -> "pluma y tintero · $es"
         TemaId.TEMPLARIO -> "rol de la casa · $es"
         TemaId.DISTOPIA -> "FORMULARIO 7-B · ${es.uppercase()}"
+        TemaId.FRENTE -> "FORMULARIO 7-B · ${es.uppercase()}"
         TemaId.REFUGIO -> "BITÁCORA DEL REFUGIO > $es"
         TemaId.ORDEN -> "CRÓNICA DE LA ORDEN · ${es.uppercase()}"
         TemaId.VAPOR -> "Plano n.º ${(base.hashCode() and 0xffff) % 900 + 100} · $es"
@@ -1647,6 +1655,13 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             drawPath(cruzPatada(Offset(i + u * 0.95f, i + u * 0.95f), u * 0.5f), e.primary.copy(alpha = 0.75f))
         }
         TemaId.DISTOPIA -> {
+            // Un clip de expediente que asoma por arriba y un sello rojo abajo a la derecha.
+            val x = i + u * 1.2f
+            drawRoundRect(e.onSurface.copy(alpha = 0.7f), Offset(x, -u * 0.6f), Size(u * 0.9f, u * 2.8f), CornerRadius(u * 0.45f), style = Stroke(fino * 1.3f))
+            drawLine(e.onSurface.copy(alpha = 0.7f), Offset(x + u * 0.45f, -u * 0.2f), Offset(x + u * 0.45f, u * 1.6f), fino * 1.1f)
+            drawRect(e.primary.copy(alpha = 0.8f), Offset(w - i - u * 1.1f, h - i - u * 1.1f), Size(u * 1.1f, u * 1.1f), style = Stroke(fino * 1.6f))
+        }
+        TemaId.FRENTE -> {
             // Un clip de expediente que asoma por arriba y un sello rojo abajo a la derecha.
             val x = i + u * 1.2f
             drawRoundRect(e.onSurface.copy(alpha = 0.7f), Offset(x, -u * 0.6f), Size(u * 0.9f, u * 2.8f), CornerRadius(u * 0.45f), style = Stroke(fino * 1.3f))
@@ -1841,6 +1856,7 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
         TemaId.MEDIEVAL -> drawCircle(c, d * 0.8f, Offset(w / 2, d * 1.4f))
         TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(w / 2, d * 1.6f), d * 1.2f), c)
         TemaId.DISTOPIA -> drawRect(c, Offset.Zero, Size(w, d))
+        TemaId.FRENTE -> drawRect(c, Offset.Zero, Size(w, d))
         TemaId.REFUGIO -> drawCircle(c, d * 0.9f, Offset(w / 2, h - d * 1.6f), style = Stroke(d * 0.5f))
         TemaId.ORDEN -> drawPath(Path().apply { moveTo(w / 2 - d * 1.5f, h - d * 0.6f); lineTo(w / 2, h - d * 1.8f); lineTo(w / 2 + d * 1.5f, h - d * 0.6f) }, c, style = Stroke(d * 0.55f))
         // La aguja de un manómetro que sube desde la esquina de abajo.
@@ -1960,6 +1976,10 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         TemaId.TEMPLARIO -> { drawPath(cruzPatada(Offset(m * 3f, h / 2), m * 1.2f), c); var x = m * 6f; while (x < w - h * 0.4f) { drawCircle(c, fino * 1.1f, Offset(x, h - m), style = Stroke(fino * 0.6f)); x += maxOf(m * 1.4f, 1f) } }
         // Doble recuadro de sello de goma.
         TemaId.DISTOPIA -> {
+            drawRect(c, Offset(m * 0.7f, m * 0.7f), Size(w - m * 1.4f, h - m * 1.4f), style = Stroke(fino))
+            drawRect(c, Offset(m * 1.4f, m * 1.4f), Size(w - m * 2.8f, h - m * 2.8f), style = Stroke(fino * 0.6f))
+        }
+        TemaId.FRENTE -> {
             drawRect(c, Offset(m * 0.7f, m * 0.7f), Size(w - m * 1.4f, h - m * 1.4f), style = Stroke(fino))
             drawRect(c, Offset(m * 1.4f, m * 1.4f), Size(w - m * 2.8f, h - m * 2.8f), style = Stroke(fino * 0.6f))
         }
@@ -2149,6 +2169,12 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawCircle(l, f(0.07f), Offset(f(0.1f), f(0.9f)))
         }
         TemaId.DISTOPIA -> {
+            // Sello de goma.
+            drawCircle(l, f(0.16f), Offset(f(0.5f), f(0.2f)))
+            drawRect(l, Offset(f(0.44f), f(0.3f)), Size(f(0.12f), f(0.3f)))
+            drawRect(a, Offset(f(0.14f), f(0.6f)), Size(f(0.72f), f(0.28f)))
+        }
+        TemaId.FRENTE -> {
             // Sello de goma.
             drawCircle(l, f(0.16f), Offset(f(0.5f), f(0.2f)))
             drawRect(l, Offset(f(0.44f), f(0.3f)), Size(f(0.12f), f(0.3f)))

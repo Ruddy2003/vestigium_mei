@@ -166,6 +166,10 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
             drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
         }
+        TemaId.FRENTE -> {
+            drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
+            drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
+        }
         // El átomo: núcleo y tres órbitas.
         TemaId.REFUGIO -> {
             for (a in listOf(0f, 60f, 120f)) rotate(a, c) { drawOval(color, Offset(c.x - r, c.y - r * 0.34f), Size(r * 2, r * 0.68f), style = Stroke(r * 0.13f)) }

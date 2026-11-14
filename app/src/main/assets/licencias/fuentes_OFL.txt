@@ -34,6 +34,8 @@ Barlow (recortada) — Copyright 2017 The Barlow Project Authors (https://github
 Saira (instancias estáticas, recortadas) — Copyright 2020 The Saira Project Authors (https://github.com/Omnibus-Type/Saira)
 Caldera Vestigium — versión reducida y renombrada de Abril Fatface: Copyright (c) 2011, TypeTogether (www.type-together.com), with Reserved Font Names "Abril" and "Abril Fatface"
 Bitter (instancias estáticas, recortadas) — Copyright 2011 The Bitter Project Authors (https://github.com/solmatas/BitterPro)
+Michroma (recortada) — Copyright 2011 The Michroma Project Authors (https://github.com/googlefonts/Michroma-font)
+Chivo y Chivo Mono (instancias estáticas, recortadas) — Copyright 2019 The Chivo Project Authors (https://github.com/Omnibus-Type/Chivo)
 Old Standard TT (recortada) — Copyright 2011 The Old Standard Project Authors (amkryukov@gmail.com)
 Poiret One (recortada) — Copyright 2011 The Poiret One Project Authors (https://github.com/alexeiva/poiretone)
 Pasaje Vestigium — instancias estáticas, reducidas y renombradas de Josefin Sans: Copyright 2010 The Josefin Sans Project Authors (https://github.com/ThomasJockin/JosefinSansFont-master), with Reserved Font Name "Josefin Sans".

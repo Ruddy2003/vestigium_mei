@@ -53,6 +53,7 @@ fun archivoIdeas(t: TemaId): ArchivoIdeas = when (t) {
     TemaId.RUINAS -> ArchivoIdeas("lata", "latas", "nota", "notas", true, "la estantería rescatada")
     TemaId.NAVIDAD -> ArchivoIdeas("caja de galletas", "cajas de galletas", "tarjeta de felicitación", "tarjetas de felicitación", true, "la alacena de la cocina")
     TemaId.DISTOPIA -> ArchivoIdeas("gaveta", "gavetas", "expediente", "expedientes", true, "el archivo del ministerio")
+    TemaId.FRENTE -> ArchivoIdeas("gaveta", "gavetas", "expediente", "expedientes", true, "el archivo del ministerio")
     TemaId.REFUGIO -> ArchivoIdeas("cartucho", "cartuchos", "registro", "registros", false, "el armario de cartuchos")
     TemaId.CIBER -> ArchivoIdeas("directorio", "directorios", "archivo", "archivos", false, "la terminal")
     TemaId.NEON -> ArchivoIdeas("riel", "rieles", "ticket", "tickets", false, "la barra del puesto")

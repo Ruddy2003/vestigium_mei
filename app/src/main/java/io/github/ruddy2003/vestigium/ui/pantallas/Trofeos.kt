@@ -354,6 +354,11 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             drawPath(ojo, Color.White.copy(alpha = 0.92f)); drawPath(ojo, Color(0xFF2B2B2B), style = Stroke(s * 0.1f))
             drawCircle(Color(0xFFD32F2F), s * 0.3f, o)
         }
+        TemaId.FRENTE -> {
+            val ojo = Path().apply { moveTo(o.x - s, o.y); quadraticTo(o.x, o.y - s * 0.9f, o.x + s, o.y); quadraticTo(o.x, o.y + s * 0.9f, o.x - s, o.y); close() }
+            drawPath(ojo, Color.White.copy(alpha = 0.92f)); drawPath(ojo, Color(0xFF2B2B2B), style = Stroke(s * 0.1f))
+            drawCircle(Color(0xFFD32F2F), s * 0.3f, o)
+        }
         TemaId.REFUGIO -> {
             val col = Color(0xFFFFF59D)
             listOf(-60f, 0f, 60f).forEach { g -> rotate(g, o) { drawOval(col, Offset(o.x - s, o.y - s * 0.35f), Size(s * 2, s * 0.7f), style = Stroke(s * 0.1f)) } }
@@ -497,6 +502,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.MEDIEVAL -> Color(0xFFD8C08E)
     TemaId.TEMPLARIO -> Color(0xFFCDBB97)
     TemaId.DISTOPIA -> Color(0xFF8E9296)
+    TemaId.FRENTE -> Color(0xFF8E9296)
     TemaId.REFUGIO -> Color(0xFF9CC9C1)
     TemaId.ORDEN -> Color(0xFF6F7882)
     TemaId.VAPOR -> Color(0xFF8C4A34)
@@ -592,6 +598,17 @@ internal fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
             drawRect(Color(0xFFB0191F).copy(alpha = 0.1f), Offset(0f, h * 0.36f), Size(w, 6 * d))
         }
         TemaId.DISTOPIA -> {
+            val pw = w / 3; val ph = 70 * d; var y = 0f
+            while (y < h) {
+                for (k in 0 until 3) {
+                    drawRect(v, Offset(k * pw + 2 * d, y + 2 * d), Size(pw - 4 * d, ph - 4 * d), style = Stroke(d))
+                    listOf(Offset(k * pw + 7 * d, y + 7 * d), Offset((k + 1) * pw - 7 * d, y + 7 * d), Offset(k * pw + 7 * d, y + ph - 7 * d), Offset((k + 1) * pw - 7 * d, y + ph - 7 * d))
+                        .forEach { drawCircle(v, 1.6f * d, it) }
+                }
+                y += ph
+            }
+        }
+        TemaId.FRENTE -> {
             val pw = w / 3; val ph = 70 * d; var y = 0f
             while (y < h) {
                 for (k in 0 until 3) {
@@ -898,6 +915,15 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
                 x += 110 * d
             }
         }
+        TemaId.FRENTE -> {
+            tabla(m(Color(0xFF7D8287)))
+            drawRect(m(Color(0xFFB71C1C)), Offset(0f, h * 0.78f), Size(w, h * 0.12f))
+            var x = 24 * d
+            while (x < w - 30 * d) {
+                drawRect(m(Color(0xFFEDEDE6)), Offset(x, h * 0.18f), Size(26 * d, h * 0.45f)); drawRect(m(Color(0xFF3A3D40)), Offset(x, h * 0.18f), Size(26 * d, h * 0.45f), style = Stroke(d))
+                x += 110 * d
+            }
+        }
         TemaId.REFUGIO -> {
             drawRoundRect(m(Color(0xFFE9DDBF)), Offset.Zero, Size(w, h * 0.8f), CornerRadius(h * 0.4f))
             drawRect(Brush.verticalGradient(listOf(Color.White, m(Color(0xFFA8B0B5)), Color.White), h * 0.45f, h * 0.7f), Offset(h * 0.4f, h * 0.45f), Size(w - h * 0.8f, h * 0.25f))
@@ -1151,6 +1177,12 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             listOf(Offset(4 * d, 4 * d), Offset(w - 4 * d, 4 * d)).forEach { drawCircle(borde, 1.4f * d, it) }
         }
         TemaId.DISTOPIA -> {
+            val t = 6 * d
+            drawRect(fondo, Offset(0f, t), Size(w, h - t)); drawRect(fondo, Offset.Zero, Size(w * 0.4f, t))
+            drawPath(Path().apply { moveTo(0f, h); lineTo(0f, 0f); lineTo(w * 0.4f, 0f); lineTo(w * 0.4f + t, t); lineTo(w, t); lineTo(w, h); close() }, borde, style = fino)
+            drawLine(Color(0xFFB71C1C).copy(alpha = 0.5f * f), Offset(0f, h - 2 * d), Offset(w, h - 2 * d), 2 * d)
+        }
+        TemaId.FRENTE -> {
             val t = 6 * d
             drawRect(fondo, Offset(0f, t), Size(w, h - t)); drawRect(fondo, Offset.Zero, Size(w * 0.4f, t))
             drawPath(Path().apply { moveTo(0f, h); lineTo(0f, 0f); lineTo(w * 0.4f, 0f); lineTo(w * 0.4f + t, t); lineTo(w, t); lineTo(w, h); close() }, borde, style = fino)

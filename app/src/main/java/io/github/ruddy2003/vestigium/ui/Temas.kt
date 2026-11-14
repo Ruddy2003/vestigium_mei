@@ -241,6 +241,14 @@ object Temas {
         "09-27" to "Champollion", "11-04" to "Tutankamón")
     private val MARCAS_DISTOPIA = mapOf("01-01" to "CENSO", "04-15" to "DECLARACIÓN", "05-01" to "CUOTA", "07-01" to "INVENTARIO",
         "10-01" to "PLAN", "11-15" to "REVISIÓN", "12-31" to "CIERRE")
+
+    /**
+     * Frente exterior: los días de la red, todos inventados. El cambio de claves de año nuevo; la noche más corta y la más
+     * larga (la que menos y la que más oscuridad da para transmitir); y los aniversarios de la propia red: el primer enlace,
+     * el apagón del puerto, la fuga de la cárcel de la luna y el día de los caídos.
+     */
+    private val MARCAS_FRENTE = mapOf("01-01" to "CAMBIO DE CLAVES", "03-17" to "PRIMER ENLACE", "05-09" to "EL APAGÓN",
+        "06-21" to "NOCHE CORTA", "08-30" to "LA FUGA", "11-02" to "LOS CAÍDOS", "12-21" to "NOCHE LARGA")
     private val MARCAS_REFUGIO = mapOf("01-15" to "FILTROS", "04-01" to "SIMULACRO", "06-01" to "INVENTARIO", "07-16" to "TRINITY",
         "10-23" to "SIMULACRO", "12-02" to "REACTOR")
     private val MARCAS_ORDEN = mapOf("01-15" to "JURAMENTO", "03-01" to "LEVA", "04-23" to "S. JORGE", "06-15" to "TORNEO",
@@ -317,6 +325,7 @@ object Temas {
             TemaId.MEDIEVAL -> FIESTAS[md]
             TemaId.TEMPLARIO -> Temas.mdJuliano(fecha)?.let { MARCAS_TEMPLARIO[it] }
             TemaId.DISTOPIA -> MARCAS_DISTOPIA[md]
+            TemaId.FRENTE -> MARCAS_FRENTE[md]
             TemaId.REFUGIO -> MARCAS_REFUGIO[md]
             TemaId.ORDEN -> MARCAS_ORDEN[md]
             TemaId.VAPOR -> MARCAS_VAPOR[md]
@@ -499,6 +508,7 @@ object Temas {
         TemaId.MEDIEVAL -> MEDIEVAL[titulo]
         TemaId.TEMPLARIO -> TEMPLARIO[titulo]
         TemaId.DISTOPIA -> DISTOPIA[titulo]
+        TemaId.FRENTE -> FRENTE[titulo]
         TemaId.REFUGIO -> REFUGIO[titulo]
         TemaId.ORDEN -> ORDEN[titulo]
         // El Vapor victoriano tiene todo su diccionario en `NombresVapor` (ver [NombresCompletos]).
@@ -540,6 +550,7 @@ object Temas {
             TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
             TemaId.TEMPLARIO -> mapOf("animo" to "Ánimo del freire", "momento" to "Crónica de la casa", "gasto" to "Tesorería", "sueno" to "Reposo", "habitos" to "La regla", "hoy" to "Guardia", "cifra" to "Recuento", "foto" to "Desde la torre", "enfoque" to "Instrucción")
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
+            TemaId.FRENTE -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
             TemaId.REFUGIO -> mapOf("animo" to "ESTADO", "momento" to "SUCESO", "gasto" to "SUMINISTROS", "sueno" to "DESCANSO", "habitos" to "PROTOCOLOS", "hoy" to "BITÁCORA", "cifra" to "LECTURA", "foto" to "FOTO", "enfoque" to "TURNO")
             TemaId.ORDEN -> mapOf("animo" to "MORAL", "momento" to "BITÁCORA", "gasto" to "INTENDENCIA", "sueno" to "DESCANSO", "habitos" to "DISCIPLINA", "hoy" to "PARTE", "cifra" to "CIFRA", "foto" to "IMAGEN", "enfoque" to "VIGILIA")
             TemaId.VAPOR -> mapOf("animo" to "Presión", "momento" to "Asiento", "gasto" to "Libro mayor", "sueno" to "Caldera en reposo", "habitos" to "Mantenimiento", "hoy" to "Salida", "cifra" to "Lectura", "foto" to "Daguerrotipo", "enfoque" to "Plena marcha")
@@ -637,6 +648,29 @@ object Temas {
         "Cifras" to "CIFRAS OFICIALES", "Fotos del día" to "EVIDENCIA FOTOGRÁFICA", "Medicamentos" to "SUMINISTRO MÉDICO",
         "Seguimiento privado" to "EXPEDIENTE RESERVADO", "Momentos de la semana" to "INCIDENCIAS DE LA SEMANA", "Momentos de este día" to "INCIDENCIAS DEL DÍA",
         "Lo mejor y lo peor" to "MÉRITOS Y FALTAS", "Personas, temas e hitos" to "PERSONAS DE INTERÉS", "Respaldo automático" to "COPIA DE SEGURIDAD",
+    )
+
+    /** Frente exterior: la red clandestina habla en clave de radio y de operación, sin palabras de la saga que lo inspira. */
+    private val FRENTE = mapOf(
+        "Mundo" to "MUNDOS RECORRIDOS", "Patrimonio Mundial" to "SITIOS PROTEGIDOS", "Mapa para rascar" to "CARTA DE MUNDOS", "Ciudades visitadas" to "PUERTOS TOCADOS",
+        "Biblioteca de sueños" to "SUEÑOS CIFRADOS", "Cartas" to "TRANSMISIONES", "Escribir una carta" to "CIFRAR UN MENSAJE", "Carta" to "MENSAJE", "Conocerte" to "FICHA DEL AGENTE", "Brújula política" to "POSICIÓN POLÍTICA", "Mapas" to "CARTAS ESTELARES", "Salud" to "PARTE MÉDICO", "Tus apps" to "EQUIPOS EN USO", "Otras vidas" to "VIDAS DE OTROS FRENTES", "Logros" to "INSIGNIAS DE MISIÓN", "Tu año en historias" to "INFORME DEL CICLO", "Anoche" to "LA NOCHE PASADA", "Selladas" to "CIFRADAS", "Listas para abrir" to "LISTAS PARA DESCIFRAR", "A otras personas" to "A OTROS AGENTES", "Del pasado" to "DESCIFRADAS",
+        "Hoy" to "OPERACIÓN DE HOY", "Línea de tiempo" to "REGISTRO DE OPERACIONES", "Ahora mismo estoy…" to "POSICIÓN ACTUAL…",
+        "Entender" to "DESCIFRAR", "Registros especiales" to "REGISTROS RESERVADOS", "Apariencia" to "CAMUFLAJE", "Avisos y recordatorios" to "SEÑALES Y ALERTAS",
+        "Llenar el día" to "INFORME DE LA NOCHE", "Biblioteca del diario" to "ARCHIVO DE DESPACHOS", "Entrada" to "DESPACHO",
+        "Día" to "OPERACIÓN", "Momentos" to "AVISTAMIENTOS", "Gastos" to "FONDOS DE LA RED", "Explorar" to "RECONOCIMIENTO", "Más" to "CUARTEL",
+        "Hábitos" to "RUTINAS DE CAMPO", "Cartas al futuro" to "MENSAJES DIFERIDOS", "Experimentos personales" to "PRUEBAS DE CAMPO",
+        "Cómo leer tus datos" to "MANUAL DE CLAVES", "Guía científica" to "MANUAL DE CLAVES", "Cuestionarios" to "CUESTIONARIOS DE CONTROL", "Prueba de reacción" to "REFLEJOS DE PILOTO", "Lugares" to "POSICIONES",
+        "Datos" to "BANCO DE DATOS", "Permisos y sensores" to "SENSORES Y PERMISOS", "Ajustes" to "CALIBRACIÓN", "Reportes" to "INFORMES DE CAMPO",
+        "Bienvenido" to "INGRESO A LA RED", "Calendario" to "CALENDARIO DE OPERACIONES", "Obras" to "MATERIAL INTERCEPTADO", "Tu año" to "BALANCE DEL CICLO",
+        "Privacidad" to "SECRETO", "Sueño" to "REPOSO", "Contexto" to "SITUACIÓN", "Hitos" to "HECHOS CLAVE",
+        "Ánimo y cuerpo" to "MORAL Y CUERPO", "Diario" to "DESPACHOS", "Predicción" to "PRONÓSTICO DE CAMPO", "Este día hace un año" to "HACE UN CICLO",
+        "Lo que registró el teléfono" to "LO QUE CAPTARON LOS SENSORES", "Registrar" to "TRANSMITIR", "Las relaciones más marcadas" to "ENLACES MÁS FUERTES",
+        "Mapa" to "CARTA", "Mapa emocional" to "CARTA DE LA MORAL", "Tablero" to "CONSOLA", "Tu día" to "CICLO DE 24 H", "Tu día en 24 horas" to "CICLO DE 24 H",
+        "Te falta hoy" to "PENDIENTE DE TRANSMITIR", "Datos que faltan" to "SEÑALES PERDIDAS", "Tema" to "CAMUFLAJE", "Recordatorios" to "ALERTAS",
+        "Resumen semanal" to "SÍNTESIS SEMANAL", "Totales" to "RECUENTO", "Gimnasio" to "ENTRENAMIENTO", "Buscar" to "RASTREO",
+        "Cifras" to "LECTURAS", "Fotos del día" to "FOTOS DE RECONOCIMIENTO", "Medicamentos" to "BOTIQUÍN",
+        "Seguimiento privado" to "SEGUIMIENTO RESERVADO", "Momentos de la semana" to "AVISTAMIENTOS DE LA SEMANA", "Momentos de este día" to "AVISTAMIENTOS DEL DÍA",
+        "Lo mejor y lo peor" to "ACIERTOS Y BAJAS", "Personas, temas e hitos" to "CONTACTOS, ASUNTOS Y HECHOS", "Respaldo automático" to "COPIA EN EL ESCONDITE",
     )
 
     private val REFUGIO = mapOf(

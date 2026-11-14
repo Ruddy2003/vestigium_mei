@@ -287,6 +287,48 @@ object Frases {
         f("La visibilité est un piège.", "La visibilidad es una trampa.", "Michel Foucault, Vigilar y castigar, 1975"),
     )
 
+    /**
+     * Frente exterior: la resistencia, la libertad y el valor de seguir, dichos por gente que los vivió (resistentes, presos,
+     * pilotos, disidentes). Ninguna repite las de Distopía, que hablan del Estado que vigila; estas hablan de quien resiste.
+     */
+    val FRENTE = listOf(
+        f("Quoi qu'il arrive, la flamme de la résistance française ne doit pas s'éteindre et ne s'éteindra pas.",
+            "Pase lo que pase, la llama de la resistencia no debe apagarse y no se apagará.", "Charles de Gaulle, llamamiento del 18 de junio de 1940"),
+        f("Je me révolte, donc nous sommes.", "Me rebelo, luego somos.", "Albert Camus, El hombre rebelde, 1951"),
+        f("Il faut imaginer Sisyphe heureux.", "Hay que imaginarse a Sísifo feliz.", "Albert Camus, El mito de Sísifo, 1942"),
+        f("Wir schweigen nicht, wir sind Euer böses Gewissen; die Weiße Rose läßt Euch keine Ruhe!",
+            "No callamos: somos su mala conciencia. ¡La Rosa Blanca no los dejará en paz!", "La Rosa Blanca, cuarta hoja volante, 1942"),
+        f("Et par le pouvoir d'un mot / Je recommence ma vie / Je suis né pour te connaître / Pour te nommer / Liberté.",
+            "Y por el poder de una palabra vuelvo a empezar mi vida: nací para conocerte, para nombrarte, libertad.", "Paul Éluard, «Liberté», 1942, lanzado desde el aire sobre Francia"),
+        f("Injustice anywhere is a threat to justice everywhere.", "La injusticia en cualquier parte es una amenaza para la justicia en todas partes.",
+            "Martin Luther King Jr., carta desde la cárcel de Birmingham, 1963"),
+        f(null, "La esperanza no es lo mismo que el optimismo. No es la convicción de que algo saldrá bien, sino la certeza de que algo tiene sentido, salga como salga.",
+            "Václav Havel, Interrogatorio a distancia, 1986"),
+        f(null, "Que la mentira lo cubra todo y lo domine todo, pero no a través de mí.", "Alexandr Solzhenitsyn, «Vivir sin mentira», 1974"),
+        f("L'attention est la forme la plus rare et la plus pure de la générosité.", "La atención es la forma más rara y más pura de la generosidad.",
+            "Simone Weil, carta a Joë Bousquet, 1942"),
+        f("Être homme, c'est précisément être responsable.", "Ser hombre es, precisamente, ser responsable.", "Antoine de Saint-Exupéry, Tierra de hombres, 1939"),
+        f("Unglücklich das Land, das Helden nötig hat.", "Desdichada la tierra que necesita héroes.", "Bertolt Brecht, Vida de Galileo, 1939"),
+        f("Niemand hat das Recht zu gehorchen.", "Nadie tiene derecho a obedecer.", "Hannah Arendt, entrevista con Joachim Fest, 1964"),
+        f("If liberty means anything at all, it means the right to tell people what they do not want to hear.",
+            "Si la libertad significa algo, es el derecho a decirle a la gente lo que no quiere oír.", "George Orwell, «La libertad de prensa», 1945"),
+        f("We live in capitalism. Its power seems inescapable. So did the divine right of kings.",
+            "Vivimos en el capitalismo. Su poder parece ineludible. También lo parecía el derecho divino de los reyes.", "Ursula K. Le Guin, discurso al recibir la medalla del National Book Award, 2014"),
+        f("All we have to decide is what to do with the time that is given us.", "Lo único que podemos decidir es qué hacer con el tiempo que se nos ha dado.",
+            "J. R. R. Tolkien, La Comunidad del Anillo, 1954"),
+        f("On résiste à l'invasion des armées ; on ne résiste pas à l'invasion des idées.", "Se resiste a la invasión de los ejércitos; no se resiste a la invasión de las ideas.",
+            "Victor Hugo, Historia de un crimen, 1877"),
+        f("Freiheit ist immer Freiheit der Andersdenkenden.", "La libertad es siempre la libertad del que piensa distinto.", "Rosa Luxemburgo, La revolución rusa, 1918"),
+        f("If there is no struggle there is no progress.", "Si no hay lucha, no hay progreso.", "Frederick Douglass, discurso de Canandaigua, 1857"),
+        f("Under a government which imprisons any unjustly, the true place for a just man is also a prison.",
+            "Bajo un gobierno que encarcela a alguien injustamente, el verdadero lugar de un hombre justo es también la cárcel.", "Henry David Thoreau, La desobediencia civil, 1849"),
+        f("Nicht das Beliebige, sondern das Rechte tun und wagen, nicht im Möglichen schweben, das Wirkliche tapfer ergreifen.",
+            "No hacer lo que se antoja, sino atreverse a lo justo; no flotar en lo posible, sino tomar lo real con valor.", "Dietrich Bonhoeffer, «Estaciones en el camino a la libertad», 1944"),
+        f(null, "Todo se le puede quitar a un ser humano, menos una cosa: la última de las libertades, elegir su actitud ante cualquier circunstancia.",
+            "Viktor Frankl, El hombre en busca de sentido, 1946"),
+        f("The only tired I was, was tired of giving in.", "Del único cansancio que estaba cansada era de ceder.", "Rosa Parks, Mi historia, 1992"),
+    )
+
     val REFUGIO = listOf(
         f("Keep calm and carry on.", "Mantén la calma y sigue adelante.", "Cartel del Ministerio de Información británico, 1939"),
         f("The only thing we have to fear is fear itself.", "A lo único que debemos temer es al miedo mismo.", "Franklin D. Roosevelt, 1933"),
@@ -1057,6 +1099,7 @@ object Frases {
         TemaId.MEDIEVAL -> MEDIEVAL
         TemaId.TEMPLARIO -> TEMPLARIO
         TemaId.DISTOPIA -> DISTOPIA
+        TemaId.FRENTE -> FRENTE
         TemaId.REFUGIO -> REFUGIO
         TemaId.ORDEN -> ORDEN
         TemaId.VAPOR -> VAPOR
@@ -1110,6 +1153,7 @@ object Frases {
         TemaId.MEDIEVAL -> "Sentencia del día"
         TemaId.TEMPLARIO -> "Lectura del refectorio"
         TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"
+        TemaId.FRENTE -> "CONSIGNA DEL DÍA"
         TemaId.REFUGIO -> "MENSAJE DEL DÍA"
         TemaId.ORDEN -> "ORDEN DEL DÍA"
         TemaId.VAPOR -> "Sentencia del horario"

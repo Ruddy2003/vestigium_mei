@@ -84,6 +84,7 @@ object Musica {
         TemaId.MEDIEVAL -> R.raw.s_medieval_presentacion
         TemaId.TEMPLARIO -> R.raw.s_templario_presentacion
         TemaId.DISTOPIA -> R.raw.s_distopia_presentacion
+        TemaId.FRENTE -> R.raw.s_frente_presentacion
         TemaId.REFUGIO -> R.raw.s_refugio_presentacion
         TemaId.ORDEN -> R.raw.s_orden_presentacion
         TemaId.VAPOR -> R.raw.s_vapor_presentacion
@@ -122,6 +123,7 @@ object Musica {
         TemaId.MEDIEVAL -> R.raw.s_medieval_anual
         TemaId.TEMPLARIO -> R.raw.s_templario_anual
         TemaId.DISTOPIA -> R.raw.s_distopia_anual
+        TemaId.FRENTE -> R.raw.s_frente_anual
         TemaId.REFUGIO -> R.raw.s_refugio_anual
         TemaId.ORDEN -> R.raw.s_orden_anual
         TemaId.VAPOR -> R.raw.s_vapor_anual
@@ -159,6 +161,7 @@ object Musica {
         TemaId.MEDIEVAL -> R.raw.t_medieval_llamada
         TemaId.TEMPLARIO -> R.raw.t_templario_llamada
         TemaId.DISTOPIA -> R.raw.t_distopia_llamada
+        TemaId.FRENTE -> R.raw.t_frente_llamada
         TemaId.REFUGIO -> R.raw.t_refugio_llamada
         TemaId.ORDEN -> R.raw.t_orden_llamada
         TemaId.VAPOR -> R.raw.t_vapor_llamada
@@ -196,6 +199,7 @@ object Musica {
         TemaId.MEDIEVAL -> R.raw.t_medieval_notificacion
         TemaId.TEMPLARIO -> R.raw.t_templario_notificacion
         TemaId.DISTOPIA -> R.raw.t_distopia_notificacion
+        TemaId.FRENTE -> R.raw.t_frente_notificacion
         TemaId.REFUGIO -> R.raw.t_refugio_notificacion
         TemaId.ORDEN -> R.raw.t_orden_notificacion
         TemaId.VAPOR -> R.raw.t_vapor_notificacion
@@ -474,6 +478,20 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
     }
     // Expediente: carpeta con su pestaña, código de archivo y un sello rojo torcido al pie.
     TemaId.DISTOPIA -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "EXP. " + t.nombre.uppercase(), "TOQUE PARA ACUSAR RECIBO",
+        comillas = "“" to "”", emblema = 88.dp, arriba = 52.dp, abajo = 70.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.onSurface.copy(alpha = 0.55f)
+        drawPath(Path().apply { moveTo(0f, u * 18); lineTo(u * 10, 0f); lineTo(u * 110, 0f); lineTo(u * 120, u * 18) }, c, style = Stroke(u * 1.3f))
+        drawRect(c, Offset(0f, u * 18), Size(w, h - u * 18), style = Stroke(u * 1.3f))
+        for (i in 0 until 14) drawRect(c, Offset(w - u * 84 + i * u * 5, u * 26), Size(u * (if (i % 3 == 0) 2.4f else 1.2f), u * 14))
+        val centro = Offset(w - u * 62, h - u * 36)
+        rotate(-12f, centro) {
+            drawRect(e.primary.copy(alpha = 0.7f), Offset(centro.x - u * 46, centro.y - u * 17), Size(u * 92, u * 34), style = Stroke(u * 2.2f))
+            drawRect(e.primary.copy(alpha = 0.5f), Offset(centro.x - u * 41, centro.y - u * 12), Size(u * 82, u * 24), style = Stroke(u))
+            drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
+        }
+    }
+    TemaId.FRENTE -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "EXP. " + t.nombre.uppercase(), "TOQUE PARA ACUSAR RECIBO",
         comillas = "“" to "”", emblema = 88.dp, arriba = 52.dp, abajo = 70.dp) { e ->
         val u = 1.dp.toPx(); val w = size.width; val h = size.height
         val c = e.onSurface.copy(alpha = 0.55f)

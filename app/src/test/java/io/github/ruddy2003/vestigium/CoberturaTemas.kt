@@ -110,7 +110,10 @@ class CoberturaTemas {
          * Lo que falta hoy, por superficie. Del plan de diseño no falta nada desde el lote 9. Lo que queda es del plan de
          * historia y escenas: el cuadro de Hoy (la escena, la banderita y el pelaje del gato) de cada tema, que va llegando por tandas.
          */
-        val PENDIENTES: Map<String, Set<String>> = mapOf("cuadro_escena" to SIN_CUADRO, "cuadro_banderita" to SIN_CUADRO, "cuadro_gato" to SIN_CUADRO)
+        val PENDIENTES: Map<String, Set<String>> = mapOf("cuadro_escena" to SIN_CUADRO + SIN_CUADRO_LOTE10, "cuadro_banderita" to SIN_CUADRO + SIN_CUADRO_LOTE10, "cuadro_gato" to SIN_CUADRO + SIN_CUADRO_LOTE10)
+
+        /** Los temas nuevos del lote 10 (`docs/diseno/PLAN_TEMAS.md`): sus cuadros van después de la tanda S19. */
+        private val SIN_CUADRO_LOTE10 = setOf("frente")
 
         /** Despachos que el compilador no vigila, por archivo y tipo. Cada lote baja los suyos. */
         val DESPACHOS: Map<String, Int> = emptyMap()

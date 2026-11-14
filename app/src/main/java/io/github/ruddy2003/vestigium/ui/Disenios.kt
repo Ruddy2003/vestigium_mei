@@ -19,6 +19,10 @@ import io.github.ruddy2003.vestigium.R
 object LetraExtra {
     val gotica = FontFamily(Font(R.font.gotica_regular, FontWeight.Normal), Font(R.font.gotica_semibold, FontWeight.SemiBold))
     val oswald = FontFamily(Font(R.font.oswald_medium, FontWeight.Medium), Font(R.font.oswald_bold, FontWeight.Bold))
+    /** Frente exterior: Michroma para los títulos, Chivo para leer y Chivo Mono para rótulos y cifras. */
+    val michroma = FontFamily(Font(R.font.michroma_titulo, FontWeight.Normal))
+    val chivo = FontFamily(Font(R.font.chivo_regular, FontWeight.Normal), Font(R.font.chivo_semibold, FontWeight.SemiBold))
+    val chivoMono = FontFamily(Font(R.font.chivo_mono_medium, FontWeight.Medium), Font(R.font.chivo_mono_medium, FontWeight.Normal))
     val vt323 = FontFamily(Font(R.font.vt323, FontWeight.Normal))
     val estarcido = FontFamily(Font(R.font.saira_stencil, FontWeight.Normal))
     val jost = FontFamily(Font(R.font.jost_regular, FontWeight.Normal), Font(R.font.jost_medium, FontWeight.Medium), Font(R.font.jost_semibold, FontWeight.SemiBold))
@@ -197,6 +201,18 @@ internal val distopiaClaro = esquema(false, 0xFFDEDBD2, 0xFFECE9E1, 0xFFCFCBC0, 
 internal val distopiaOscuro = esquema(true, 0xFF0F1011, 0xFF17191A, 0xFF222527, 0xFF34383B, 0xFFE8E6E0, 0xFFA8A8A1,
     0xFFE0262F, 0xFFFFFFFF, 0xFF3A1012, 0xFFF2E0DF, 0xFF9FB0BA, 0xFF24313A, 0xFFB7B37A, 0xFFFF6B6B)
 internal val tipoDistopia = tipografia(LetraExtra.oswald, FontWeight.Bold, 1.05f, 1.4f, LetraExtra.barlow, 1.02f, LetraExtra.barlow, 1.04f)
+
+// ---------------------------------------------------------------------
+//  Frente exterior: la sala de control de una red clandestina, en la ciencia ficción de los años 70. Hueso de consola,
+//  pizarra, ámbar de piloto y el verde de la pantalla de radar. De noche, la misma sala con las luces bajas.
+//  (docs/diseno/temas/frente.md)
+// ---------------------------------------------------------------------
+internal val frenteClaro = esquema(false, 0xFFE4DED1, 0xFFF0EBE0, 0xFFD4CCBC, 0xFFA69E8E, 0xFF23252A, 0xFF5A5D63,
+    0xFFB85C0F, 0xFFFFF8EE, 0xFFF4DDBF, 0xFF2B1A08, 0xFF3E4C57, 0xFFCBD3D8, 0xFF4F7A5A, 0xFFA8201A)
+internal val frenteOscuro = esquema(true, 0xFF121518, 0xFF1A1F23, 0xFF252B30, 0xFF3A4249, 0xFFE7E1D4, 0xFFA8A49A,
+    0xFFF0A04B, 0xFF2A1600, 0xFF4A2C0C, 0xFFFBE3C4, 0xFF9FB4C0, 0xFF23323B, 0xFF8FC79A, 0xFFFF7A6E)
+/** Títulos en Michroma, ancha y en mayúsculas: se achica un poco y se abre poco, porque ya es ancha. */
+internal val tipoFrente = tipografia(LetraExtra.michroma, FontWeight.Normal, 0.86f, 0.6f, LetraExtra.chivo, 1.0f, LetraExtra.chivoMono, 0.98f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Refugio: optimismo atómico de los cincuenta de día; pantalla de fósforo verde de noche.
@@ -450,6 +466,8 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFFC9473B, 0xFF2A2016, 0xFF8DA5E0, 0xFFD5A84A) else listOf(0xFF9E1B1B, 0xFFE5D6B4, 0xFF1F3F8F, 0xFFA97C1E)
     TemaId.TEMPLARIO -> if (oscuro) listOf(0xFFD0453A, 0xFF262219, 0xFF9AA8B4, 0xFFDAAE68) else listOf(0xFFA8181E, 0xFFE2D6BC, 0xFF46525D, 0xFFA2763A)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFFE0262F, 0xFF2A2C2E, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFFB3121B, 0xFFCFCBC0, 0xFF2E3B44, 0xFFB3121B)
+    // Del verde de la pantalla de radar al ámbar del piloto, sobre el panel; fuerte, el ámbar encendido.
+    TemaId.FRENTE -> if (oscuro) listOf(0xFF8FC79A, 0xFF252B30, 0xFFF0A04B, 0xFFF2A33A) else listOf(0xFF4F7A5A, 0xFFD4CCBC, 0xFFB85C0F, 0xFFB85C0F)
     TemaId.REFUGIO -> if (oscuro) listOf(0xFFFFB23F, 0xFF112016, 0xFF3DFF7F, 0xFF3DFF7F) else listOf(0xFFD9572B, 0xFFE6DAB8, 0xFF1C6E6A, 0xFF1C6E6A)
     TemaId.ORDEN -> if (oscuro) listOf(0xFFD0333B, 0xFF262A30, 0xFF8FB3C8, 0xFFD6B25A) else listOf(0xFF9E1B22, 0xFFD3D7DC, 0xFF2F4858, 0xFF7E6219)
     // Del ladrillo (bajo) al cardenillo (alto), pasando por el papel de plano o el hollín; fuerte, el latón.
@@ -490,6 +508,7 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFF8DA5E0, 0xFFD5A84A, 0xFFC9473B) else listOf(0xFF1F3F8F, 0xFFA97C1E, 0xFF9E1B1B)
     TemaId.TEMPLARIO -> if (oscuro) listOf(0xFF9AA8B4, 0xFFDAAE68, 0xFFE2453B) else listOf(0xFF46525D, 0xFFB98A45, 0xFFB0191F)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFF6D7377, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFF6D7377, 0xFF2E3B44, 0xFFB3121B)
+    TemaId.FRENTE -> if (oscuro) listOf(0xFF5E8A68, 0xFFF0A04B, 0xFFFF7A6E) else listOf(0xFF4F7A5A, 0xFFB85C0F, 0xFFA8201A)   // radar, piloto ámbar, botón rojo
     TemaId.REFUGIO -> if (oscuro) listOf(0xFF1E8A45, 0xFF3DFF7F, 0xFFFFB23F) else listOf(0xFF1C6E6A, 0xFFB98A15, 0xFFD9572B)
     TemaId.ORDEN -> if (oscuro) listOf(0xFF8FB3C8, 0xFFD6B25A, 0xFFD0333B) else listOf(0xFF2F4858, 0xFF7E6219, 0xFF9E1B22)
     // Como una caldera que se calienta: cardenillo frío, latón tibio, ladrillo al rojo.

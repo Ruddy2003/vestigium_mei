@@ -261,6 +261,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.TEMPLARIO -> BloqueoMarco(TextosBloqueo("La puerta de la encomienda", "☩ El rastrillo está echado: solo un hermano de la casa lo levanta.", "Levantar el rastrillo"), arriba = 18, reintentar = reintentar) { cs -> bloqueoRastrillo(cs) }
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
             listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
+        TemaId.FRENTE -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
+            listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
         TemaId.REFUGIO -> BloqueoMarco(TextosBloqueo("VESTIGIUM MEI", "[ esclusa sellada ] identifíquese, residente", "ABRIR ESCLUSA"), arriba = 6, reintentar = reintentar) { cs -> bloqueoMampara(cs) }
         TemaId.ORDEN -> BloqueoMarco(TextosBloqueo("ARCHIVO DE LA ORDEN", "— acceso reservado a hermanos acreditados —", "PRESENTAR CREDENCIAL"), arriba = 14, reintentar = reintentar) { cs -> bloqueoCompuerta(cs) }
         // La puerta de la caja fuerte de la compañía: remate en arco, bisagras, remaches y el dial de la combinación arriba.
@@ -1041,6 +1043,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> false
+    TemaId.FRENTE -> false
     TemaId.REFUGIO -> true
     TemaId.ORDEN -> true
     TemaId.VAPOR -> true
@@ -1080,6 +1083,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> true
+    TemaId.FRENTE -> true
     TemaId.REFUGIO -> true
     TemaId.ORDEN -> true
     TemaId.VAPOR -> true
@@ -1183,6 +1187,10 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
         }
         // Sello de goma, doble filete y un poco torcido.
         TemaId.DISTOPIA -> girar(-5f, Offset(cx, cy)) {
+            drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
+            drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
+        }
+        TemaId.FRENTE -> girar(-5f, Offset(cx, cy)) {
             drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
             drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
         }
@@ -1436,6 +1444,10 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
             drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
         }
+        TemaId.FRENTE -> girar(-4f, Offset(cx, cy)) {
+            drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
+            drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
+        }
         // Botón de consola de refugio, con bisel claro arriba.
         TemaId.REFUGIO -> {
             drawRoundRect(c, Offset(2 * u, 7 * u), Size(w - 4 * u, h - 14 * u), CornerRadius(12 * u))
@@ -1646,6 +1658,7 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         }
         // Barra gruesa de cartel.
         TemaId.DISTOPIA -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
+        TemaId.FRENTE -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
         // Filete grueso con remaches.
         TemaId.REFUGIO -> { filete(1 * u, 1.4f * u); var x = 24 * u; while (x < w) { drawCircle(acento, 1.3f * u, Offset(x, 2.6f * u)); x += 48 * u } }
         // Franja de aviso: rayas oblicuas.
@@ -2070,6 +2083,7 @@ private fun origenTransicion(tema: TemaId, atras: Boolean): Alignment = when (te
     TemaId.MEDIEVAL -> Alignment.TopStart
     TemaId.TEMPLARIO -> Alignment.TopStart
     TemaId.DISTOPIA -> Alignment.TopStart
+    TemaId.FRENTE -> Alignment.TopStart
     TemaId.REFUGIO -> Alignment.TopStart
     TemaId.ORDEN -> Alignment.TopStart
     TemaId.VAPOR -> Alignment.TopStart
@@ -2137,6 +2151,7 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
             (scaleOut(t(240), targetScale = 0.97f) + fadeOut(t(200)))
         // Cajón de archivo: cae de golpe desde arriba.
         TemaId.DISTOPIA -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
+        TemaId.FRENTE -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
         // Pantalla de tubo que se enciende desde una línea horizontal en el centro.
         TemaId.REFUGIO -> (expandVertically(t(260), expandFrom = Alignment.CenterVertically) { it / 14 } + fadeIn(t(200))) togetherWith fadeOut(t(120))
         // Persiana de acero: baja desde arriba, seca; la anterior sube un poco al irse.

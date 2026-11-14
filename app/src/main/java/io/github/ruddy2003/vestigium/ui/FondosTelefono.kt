@@ -217,6 +217,7 @@ object FondosTelefono {
         TemaId.MEDIEVAL -> "Liber vestigii mei"
         TemaId.TEMPLARIO -> "Non nobis, Domine · Vestigium"
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"
+        TemaId.FRENTE -> "EXPEDIENTE PERSONAL"
         TemaId.REFUGIO -> "VESTIGIUM-MEI OS"
         TemaId.ORDEN -> "ORDO · VESTIGII"
         TemaId.VAPOR -> "Compañía de Vapor y Patentes Vestigium"
@@ -412,6 +413,17 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 }
             }
             TemaId.DISTOPIA -> {
+                // Carpeta de expediente: línea gruesa, dos perforaciones, una franja de «clasificado» y marcas de corte.
+                caja(0f, col, 2f * u)
+                listOf(cy - 40 * u, cy + 40 * u).forEach { y -> drawCircle(tenue, 5 * u, Offset(izq + 16 * u, y), style = Stroke(1.2f * u)) }
+                clipRect(izq, arr, der, aba) { drawLine(e.primary.copy(alpha = 0.3f), Offset(der - 46 * u, arr), Offset(der, arr + 46 * u), 8 * u) }
+                esquinas.forEach { c ->
+                    val sx = if (c.x < size.width / 2) -1f else 1f; val sy = if (c.y < size.height / 2) -1f else 1f
+                    drawLine(tenue, c + Offset(sx * 4 * u, 0f), c + Offset(sx * 14 * u, 0f), 1f * u)
+                    drawLine(tenue, c + Offset(0f, sy * 4 * u), c + Offset(0f, sy * 14 * u), 1f * u)
+                }
+            }
+            TemaId.FRENTE -> {
                 // Carpeta de expediente: línea gruesa, dos perforaciones, una franja de «clasificado» y marcas de corte.
                 caja(0f, col, 2f * u)
                 listOf(cy - 40 * u, cy + 40 * u).forEach { y -> drawCircle(tenue, 5 * u, Offset(izq + 16 * u, y), style = Stroke(1.2f * u)) }
@@ -995,6 +1007,7 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.MEDIEVAL -> R.drawable.logo_medieval
     TemaId.TEMPLARIO -> R.drawable.logo_templario
     TemaId.DISTOPIA -> R.drawable.logo_distopia
+    TemaId.FRENTE -> R.drawable.logo_frente
     TemaId.REFUGIO -> R.drawable.logo_refugio
     TemaId.ORDEN -> R.drawable.logo_orden
     TemaId.VAPOR -> R.drawable.logo_vapor

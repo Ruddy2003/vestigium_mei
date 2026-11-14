@@ -117,6 +117,13 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
             Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
         }
+        TemaId.FRENTE -> when (e) {
+            Evento.TOQUE -> listOf(g(CLICK, 1f)); Evento.PASAR -> listOf(g(CLICK, 0.6f))
+            Evento.GUARDAR -> listOf(g(THUD, 1f), g(CLICK, 1f, 70))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.45f)); Evento.ABRIR -> listOf(g(CLICK, 0.8f), g(THUD, 0.6f, 50))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
+        }
         // Relé y contador Geiger.
         TemaId.REFUGIO -> when (e) {
             Evento.TOQUE -> listOf(g(TICK, 0.9f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.7f))
@@ -395,6 +402,7 @@ object Sentidos {
         TemaId.MEDIEVAL -> intArrayOf(R.raw.s_medieval_toque, R.raw.s_medieval_guardar, R.raw.s_medieval_logro, R.raw.s_medieval_pasar, R.raw.s_medieval_elegir, R.raw.s_medieval_abrir, R.raw.s_medieval_tema, R.raw.s_medieval_error, R.raw.s_medieval_cambio, R.raw.s_tecla_medieval, R.raw.s_rascar_medieval)
         TemaId.TEMPLARIO -> intArrayOf(R.raw.s_templario_toque, R.raw.s_templario_guardar, R.raw.s_templario_logro, R.raw.s_templario_pasar, R.raw.s_templario_elegir, R.raw.s_templario_abrir, R.raw.s_templario_tema, R.raw.s_templario_error, R.raw.s_templario_cambio, R.raw.s_tecla_templario, R.raw.s_rascar_templario)
         TemaId.DISTOPIA -> intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro, R.raw.s_distopia_pasar, R.raw.s_distopia_elegir, R.raw.s_distopia_abrir, R.raw.s_distopia_tema, R.raw.s_distopia_error, R.raw.s_distopia_cambio, R.raw.s_tecla_distopia, R.raw.s_rascar_distopia)
+        TemaId.FRENTE -> intArrayOf(R.raw.s_frente_toque, R.raw.s_frente_guardar, R.raw.s_frente_logro, R.raw.s_frente_pasar, R.raw.s_frente_elegir, R.raw.s_frente_abrir, R.raw.s_frente_tema, R.raw.s_frente_error, R.raw.s_frente_cambio, R.raw.s_tecla_frente, R.raw.s_rascar_frente)
         TemaId.REFUGIO -> intArrayOf(R.raw.s_refugio_toque, R.raw.s_refugio_guardar, R.raw.s_refugio_logro, R.raw.s_refugio_pasar, R.raw.s_refugio_elegir, R.raw.s_refugio_abrir, R.raw.s_refugio_tema, R.raw.s_refugio_error, R.raw.s_refugio_cambio, R.raw.s_tecla_refugio, R.raw.s_rascar_refugio)
         TemaId.ORDEN -> intArrayOf(R.raw.s_orden_toque, R.raw.s_orden_guardar, R.raw.s_orden_logro, R.raw.s_orden_pasar, R.raw.s_orden_elegir, R.raw.s_orden_abrir, R.raw.s_orden_tema, R.raw.s_orden_error, R.raw.s_orden_cambio, R.raw.s_tecla_orden, R.raw.s_rascar_orden)
         TemaId.VAPOR -> intArrayOf(R.raw.s_vapor_toque, R.raw.s_vapor_guardar, R.raw.s_vapor_logro, R.raw.s_vapor_pasar, R.raw.s_vapor_elegir, R.raw.s_vapor_abrir, R.raw.s_vapor_tema, R.raw.s_vapor_error, R.raw.s_vapor_cambio, R.raw.s_tecla_vapor, R.raw.s_rascar_vapor)
@@ -482,6 +490,7 @@ object Sentidos {
         TemaId.TEMPLARIO -> Afinacion(st(-5, -2, 0, 5), st(-7, 0, 5, 7), pasarRuido = true, elegirRuido = false)
         // Do menor; la máquina de escribir, un semitono abajo y un tono arriba.
         TemaId.DISTOPIA -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
+        TemaId.FRENTE -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
         // Fa pentatónico; el relé sube por tonos enteros.
         TemaId.REFUGIO -> Afinacion(st(0, 2, 4), null, pasarRuido = true, elegirRuido = true)
         // Sol menor; el servo baja a la cuarta.
@@ -621,6 +630,7 @@ object Sentidos {
         TemaId.MEDIEVAL -> pasadas(TICK_GRAVE, 0.5f, 70, 3)   // pan de oro
         TemaId.TEMPLARIO -> pasadas(CLICK, 0.65f, 50, 4)   // hierro de cota de malla
         TemaId.DISTOPIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
+        TemaId.FRENTE -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
         TemaId.REFUGIO -> pasadas(TICK, 0.8f, 35, 4)   // chapa galvanizada
         TemaId.ORDEN -> pasadas(CLICK, 0.8f, 45, 3)   // acero pavonado
         TemaId.VAPOR -> pasadas(CLICK, 0.66f, 38, 4)   // latón remachado

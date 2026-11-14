@@ -118,6 +118,7 @@ fun disenoVida(t: TemaId): DisenoVida = when (t) {
     TemaId.MEDIEVAL -> VidaMedieval
     TemaId.TEMPLARIO -> VidaTemplario
     TemaId.DISTOPIA -> VidaDistopia
+    TemaId.FRENTE -> VidaFrente
     TemaId.REFUGIO -> VidaRefugio
     TemaId.ORDEN -> VidaOrden
     TemaId.VAPOR -> VidaVapor

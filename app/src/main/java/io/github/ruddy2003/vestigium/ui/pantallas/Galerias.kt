@@ -136,6 +136,10 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
     }
+    TemaId.FRENTE -> {
+        val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
+        mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
+    }
     TemaId.REFUGIO -> menos(estrella(c, r, 20, 0.84f), circulo(c, r * 0.5f)).let { mas(it, circulo(c, r * 0.32f)) }
     // La cruz de malta de los caballeros: cuatro brazos que se abren y terminan en dos puntas.
     TemaId.ORDEN -> (0 until 4).map { k ->

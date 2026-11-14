@@ -153,6 +153,7 @@ object LibroDiario {
         TemaId.MEDIEVAL -> Fuentes(R.font.gotica_regular, R.font.cardo_regular)
         TemaId.TEMPLARIO -> Fuentes(R.font.cruzada_titulo, R.font.regla_regular)
         TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
+        TemaId.FRENTE -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
         TemaId.REFUGIO -> Fuentes(R.font.vt323, R.font.courier_regular)
         TemaId.ORDEN -> Fuentes(R.font.saira_stencil, R.font.saira_regular)
         TemaId.VAPOR -> Fuentes(R.font.caldera_titulo, R.font.bitter_regular)
@@ -242,6 +243,7 @@ object LibroDiario {
             TemaId.TEMPLARIO -> "h1{text-align:center;letter-spacing:.08em}article{border-top:4px solid $s;border-bottom:1px solid $p;padding-top:10px}.fecha{letter-spacing:.06em}" +
                 ".fecha::before{content:'\\2629  ';color:$p}" + capitular("2.6em", p)
             TemaId.DISTOPIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
+            TemaId.FRENTE -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
             TemaId.REFUGIO -> "article{border:1px solid $p;border-radius:14px;padding:18px;margin-bottom:18px}.nota::first-letter{background:$p;color:$b;font-size:1.6em;padding:0 3px;margin-right:2px}"
             TemaId.ORDEN -> "article{border-top:3px solid $p;outline:1px solid $v;outline-offset:6px;margin:18px 0;padding:18px}.fecha{text-transform:uppercase;letter-spacing:.1em}" + capitular("2.6em", p)
             // La lámina del plano: cuadrícula tenue, filete doble arriba y la fecha con el «⊙» del manómetro.
@@ -775,6 +777,7 @@ object LibroDiario {
             TemaId.MEDIEVAL -> Medidas(12.5f, aire)
             TemaId.TEMPLARIO -> Medidas(12f, if (carta) 1.5f else 1.44f)
             TemaId.DISTOPIA -> Medidas(11f, aire)
+            TemaId.FRENTE -> Medidas(11f, aire)
             TemaId.REFUGIO -> Medidas(11f, 1.35f)
             TemaId.ORDEN -> Medidas(11f, aire)
             TemaId.VAPOR -> Medidas(11.5f, aire)
@@ -830,6 +833,7 @@ object LibroDiario {
         TemaId.TEMPLARIO -> Inicial(R.font.cruzada_titulo, 1.3f, palabra = true, mayusculas = true)
         // La primera palabra en mayúsculas sobre la franja roja del formulario.
         TemaId.DISTOPIA -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
+        TemaId.FRENTE -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
         // Una letra grande de fósforo en video inverso.
         TemaId.REFUGIO -> Inicial(R.font.vt323, 1.9f, invertida = true)
         // La letra de estarcido.
@@ -975,6 +979,11 @@ object LibroDiario {
                 }, relleno)
             }
             TemaId.DISTOPIA -> {
+                // La barra negra del formulario y la línea roja de debajo.
+                cv.drawLine(x0, y - 1.5f, x1, y - 1.5f, Paint(linea).apply { color = tinta; strokeWidth = 2.4f })
+                cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
+            }
+            TemaId.FRENTE -> {
                 // La barra negra del formulario y la línea roja de debajo.
                 cv.drawLine(x0, y - 1.5f, x1, y - 1.5f, Paint(linea).apply { color = tinta; strokeWidth = 2.4f })
                 cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
@@ -1216,6 +1225,12 @@ object LibroDiario {
                 listOf(22f to 22f, A - 22f to 22f, 22f to B - 22f, A - 22f to B - 22f).forEach { (x, yy) -> cv.drawCircle(x, yy, 3.2f, Paint(relleno).apply { color = 0xFF4A5560.toInt() }) }
             }
             TemaId.DISTOPIA -> {
+                // Marco negro, la franja roja de arriba y la casilla del folio.
+                rect(22f, Paint(trazo).apply { color = tinta; strokeWidth = 1.6f; alpha = 220 })
+                cv.drawRect(22f, 22f, A - 22f, 30f, Paint(relleno).apply { alpha = 220 })
+                cv.drawRect(A - 130f, 36f, A - 34f, 54f, Paint(fino).apply { color = tinta; alpha = 160 })
+            }
+            TemaId.FRENTE -> {
                 // Marco negro, la franja roja de arriba y la casilla del folio.
                 rect(22f, Paint(trazo).apply { color = tinta; strokeWidth = 1.6f; alpha = 220 })
                 cv.drawRect(22f, 22f, A - 22f, 30f, Paint(relleno).apply { alpha = 220 })

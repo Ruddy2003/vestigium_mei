@@ -197,6 +197,11 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
             circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
         }, 1.4f)
+        TemaId.FRENTE -> pinta(Path().apply {
+            fillType = PathFillType.EvenOdd
+            moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
+            circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
+        }, 1.4f)
         // Estrella atómica de los cincuenta: rayos largos y cortos alternados.
         TemaId.REFUGIO -> pinta(Path().apply {
             for (i in 0 until 16) {

@@ -159,6 +159,7 @@ object Marcas {
                 else Aspecto(s, s, Forma.CALDERON, cursiva = true)
             TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
+            TemaId.FRENTE -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
             // La @persona, en la cinta de la rotuladora con las letras en relieve; el #tema, en la línea de órdenes de la terminal.
             TemaId.REFUGIO -> if (persona) Aspecto(cs.onPrimary, p, Forma.ROTULADORA, negrita = true) else Aspecto(s, s, Forma.PROMPT)
             TemaId.ORDEN -> if (persona) Aspecto(p, p, Forma.PLACA, negrita = true) else Aspecto(t, t, Forma.DOBLE)

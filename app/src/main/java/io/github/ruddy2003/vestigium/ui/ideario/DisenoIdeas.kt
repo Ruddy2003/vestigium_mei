@@ -120,6 +120,7 @@ fun disenoIdeas(t: TemaId): DisenoIdeas = when (t) {
     TemaId.MEDIEVAL -> IdeasMedieval
     TemaId.TEMPLARIO -> IdeasTemplario
     TemaId.DISTOPIA -> IdeasDistopia
+    TemaId.FRENTE -> IdeasFrente
     TemaId.REFUGIO -> IdeasRefugio
     TemaId.ORDEN -> IdeasOrden
     TemaId.VAPOR -> IdeasVapor

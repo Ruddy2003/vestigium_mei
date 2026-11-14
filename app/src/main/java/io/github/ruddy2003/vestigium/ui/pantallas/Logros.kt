@@ -213,6 +213,13 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
             drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
         }
+        TemaId.FRENTE -> {
+            val hex = figPoligono(c, r * 0.97f, 6)
+            forma(hex)
+            clipPath(hex) { drawRect(if (hecho) Color(0xFFB3261E).copy(alpha = 0.85f) else borde.copy(alpha = 0.25f), Offset(0f, c.y + r * 0.5f), Size(size.width, r * 0.2f)) }
+            drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
+            drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
+        }
         // Botón atómico: el disco entre tres órbitas.
         TemaId.REFUGIO -> {
             for (a in listOf(0f, 60f, 120f)) rotate(a, c) { drawOval(sombra, Offset(c.x - r * 0.98f, c.y - r * 0.3f), Size(r * 1.96f, r * 0.6f), style = Stroke(r * 0.05f)) }

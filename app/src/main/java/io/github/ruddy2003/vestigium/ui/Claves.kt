@@ -191,6 +191,15 @@ internal object Claves {
         "imagines" to "evidencia", "iter" to "trayecto", "orbis" to "territorio", "themata" to "asuntos", "memorabilia" to "hechos",
     )
 
+    /** Jerga del ministerio. Lo que no está aquí queda en el español común. */
+    /** Frente exterior: la jerga de la radio y del campo. */
+    val FRENTE: Map<String, String> = mapOf(
+        "somnus" to "reposo", "animus" to "moral", "svmptvs" to "fondos", "cor" to "pulso", "loca" to "posiciones",
+        "personae" to "contactos", "consuetudo" to "rutinas", "palmae" to "insignias", "telephonum" to "terminal", "telephon" to "terminal",
+        "iudicium" to "evaluación", "epistulae" to "transmisiones", "reditus" to "ingresos", "momenta" to "avistamientos",
+        "imagines" to "fotos de reconocimiento", "iter" to "ruta", "orbis" to "mundos", "themata" to "frentes", "memorabilia" to "hechos clave",
+    )
+
     /** Jerga del refugio. Lo que no está aquí queda en el español común. */
     val REFUGIO: Map<String, String> = mapOf(
         "somnus" to "ciclo_sueño", "animus" to "estado", "svmptvs" to "suministros", "aer" to "calidad_aire", "caelum" to "exterior",

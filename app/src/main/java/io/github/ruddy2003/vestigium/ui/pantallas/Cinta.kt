@@ -99,6 +99,7 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.TEMPLARIO -> PielCinta(2.5f, true, RellenoCinta.FILETE, floatArrayOf(2f, 4f), StrokeCap.Square)
     // Sello rayado del expediente.
     TemaId.DISTOPIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
+    TemaId.FRENTE -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
     // Indicador en segmentos.
     TemaId.REFUGIO -> PielCinta(6f, false, RellenoCinta.SEGMENTOS, floatArrayOf(3f, 3f), StrokeCap.Round)
     // Placa de acero en chaflán.

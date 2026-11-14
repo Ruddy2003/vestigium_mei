@@ -145,6 +145,21 @@ object Textos {
         "widget_discreto_momento" to "DECLARAR",
     )
 
+    private val FRENTE: Map<String, String> = mapOf(
+        "pestana_dia" to "ENLACE",
+        "pestana_diario" to "DESPACHOS",
+        "pestana_registrar" to "TRANSMITIR",
+        "pestana_vida" to "CUARTEL",
+        "pestana_entender" to "DESCIFRAR",
+        "escala_vacia" to "SIN LECTURA · TOCA O DESLIZA",
+        "lista_anadir" to "+ AGREGAR AL CANAL",
+        "palabras" to "%d PALABRAS TRANSMITIDAS",
+        "widget_animo" to "¿CÓMO ESTÁ LA MORAL?",
+        "widget_momento" to "REPORTE: AHORA SIENTO…",
+        "widget_discreto_animo" to "MORAL",
+        "widget_discreto_momento" to "REPORTE",
+    )
+
     private val REFUGIO: Map<String, String> = mapOf(
         "pestana_dia" to "BITÁCORA",
         "pestana_diario" to "CUADERNO",
@@ -546,6 +561,7 @@ object Textos {
         TemaId.MEDIEVAL -> MEDIEVAL
         TemaId.TEMPLARIO -> TEMPLARIO
         TemaId.DISTOPIA -> DISTOPIA
+        TemaId.FRENTE -> FRENTE
         TemaId.REFUGIO -> REFUGIO
         TemaId.ORDEN -> ORDEN
         TemaId.VAPOR -> VAPOR

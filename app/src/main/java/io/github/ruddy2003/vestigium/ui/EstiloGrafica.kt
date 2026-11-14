@@ -254,6 +254,8 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Expediente: el ojo, trazo grueso, renglones de registro en bandas, eje duro con marcas y barras rectas.
     TemaId.DISTOPIA -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
         Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
+    TemaId.FRENTE -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
+        Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
     // Refugio: la mira «+» de la pantalla, trazo con resplandor, cruces de retícula y barras de esquinas suaves.
     TemaId.REFUGIO -> EstiloGrafica(FormaPunto.CRUZ, 2f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.HALO, listOf(3f, 3f),
         Rejilla.CRUCES, 0.55f, Eje.MARCAS, FormaBarra.REDONDA, R.font.vt323, FontWeight.Normal, null, 0.02f, 1.35f)

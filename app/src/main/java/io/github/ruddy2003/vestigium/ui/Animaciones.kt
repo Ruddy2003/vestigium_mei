@@ -120,6 +120,7 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.TEMPLARIO -> MatizMovimiento(BarridoTema.CRUZ, 820, CubicBezierEasing(0.55f, 0f, 0.3f, 1f), 0f, -12f, 1.02f, 420, 55, FastOutSlowInEasing, 1.15f, 0.95f, 1600f)
     // El ojo que se abre; los expedientes entran de lado y el sello cae seco.
     TemaId.DISTOPIA -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
+    TemaId.FRENTE -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
     // Escotilla octogonal que gira al abrirse; resortes de caricatura.
     TemaId.REFUGIO -> MatizMovimiento(BarridoTema.ESCOTILLA, 780, CubicBezierEasing(0.7f, 0f, 0.3f, 1f), 0f, 22f, 1f, 380, 50, FastOutSlowInEasing, 1f, 0.4f, 900f)
     // Engrane que gira; acero pesado.
@@ -265,6 +266,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.MEDIEVAL -> VivoTema.RAYO_ORO         // un rayo de luz con polvo de oro suspendido
     TemaId.TEMPLARIO -> VivoTema.ANTORCHAS        // la muralla almenada con antorchas que tiemblan y sueltan pavesas
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
+    TemaId.FRENTE -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
     TemaId.REFUGIO -> VivoTema.VAPOR             // vapor que sube, de día y de noche
     TemaId.ORDEN -> VivoTema.FRAGUA              // chispas de fragua en parábola
     TemaId.VAPOR -> VivoTema.HOLLIN              // copos de hollín que caen girando; de noche, el halo del gas de alumbrado
