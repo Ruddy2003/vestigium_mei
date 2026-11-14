@@ -2848,4 +2848,19 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("fin", "2030-06-29", listOf(10.0)),                        // el fin de la Biblia
         Triple("libro_nuevo", "2031-11-20", listOf(10.0)),                // el libro nuevo
     ),
+    // Iacopo (Renacimiento, tanda S6): el taller del maestro en Florencia, con la ventana a la cúpula y las tablas que se van pintando.
+    "aprendiz" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // el taller: la mancha de sol que se mueve y, de noche, la lámpara
+        Triple("noche", "2027-05-05", listOf(23.4)),                      // la luna, el rescoldo y el jergón
+        Triple("campo", "2029-07-10", listOf(10.0)),                      // variante: el taller sin él (decisión 21)
+        Triple("tabla", "2030-10-20", listOf(10.0)),                      // su primera tabla, a medio pintar
+        Triple("firma", "2031-05-25", listOf(10.0)),                      // su tabla, firmada
+        Triple("luto", "2031-02-01", listOf(10.0)),                       // la tabla del maestro, tapada y con crespón
+        Triple("visitacion", "2028-05-28", listOf(10.0)),                 // la tabla del maestro, acabada
+        Triple("pascua", "2027-04-11", listOf(10.0)),                     // el carro de fuego
+        Triple("mayo", "2027-05-01", listOf(10.0)),                       // las ramas en flor
+        Triple("san_juan", "2027-06-24", listOf(21.4)),                   // las luminarias de San Juan
+        Triple("nieve", "2028-12-10", listOf(10.0)),                      // la nevada, sin leña
+        Triple("guerra", "2031-11-17", listOf(12.0)),                     // las contraventanas casi cerradas
+    ),
 )
