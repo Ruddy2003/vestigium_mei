@@ -324,6 +324,12 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             paso(s, "agenda") { Agenda.sincronizar(ctx) }
             paso(s, "comunicacion") { io.github.ruddy2003.vestigium.sensores.Comunicacion.sincronizar(ctx, 3) }
             paso(s, "entorno") { Entorno.sincronizar(ctx) }
+            // «Hoy en la historia» (tanda H1): deja lista la fecha de mañana, para verla aunque no haya conexión. Solo manda el
+            // mes y el día; con el interruptor apagado no se conecta.
+            paso(s, "historia_hoy") {
+                if (Repo.config.historia_hoy) io.github.ruddy2003.vestigium.historia.Efemerides.prepararManana(
+                    io.github.ruddy2003.vestigium.ui.pantallas.carpetaHistoria(ctx), java.time.LocalDate.now()) { io.github.ruddy2003.vestigium.data.Red.get(it) }
+            }
             // Las fotos del día que todavía no tienen su copia dentro de la app, antes del respaldo para que viajen en él.
             paso(s, "fotos_dia") { io.github.ruddy2003.vestigium.data.FotoDelDia.completarPendientes(ctx) }
             paso(s, "respaldo") {

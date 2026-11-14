@@ -122,6 +122,7 @@ object Pantallas {
         P("mapa", "Mapa", "Tus lugares y rutas", "lugares calor"),
         P("obras", "Obras", "Libros, películas, series y juegos", "biblioteca libros películas series juegos"),
         P("otras_vidas", "Otras vidas", "Personas de la historia a tu edad", "historia"),
+        P("historia_hoy", "Hoy en la historia", "Lo que pasó un día como hoy, de Wikipedia", "efemérides wikipedia historia día como hoy acontecimientos pasó"),
         P("salud", "Salud", "Tus datos frente a la OMS", "oms imc pasos sueño"),
         P("tus_apps", "Tus apps", "YouTube, música, comida, Kindle, WhatsApp", "youtube spotify música whatsapp kindle"),
         P("escalas", "Cuestionarios", "Bienestar, estrés, soledad, personalidad", "who5 pss ucla tipi"),

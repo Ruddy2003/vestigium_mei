@@ -336,7 +336,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                         Ficha("De pixel", !enCuadro) { cambiar { it.copy(gato_estilo = io.github.ruddy2003.vestigium.ui.escenas.GATO_DE_PIXEL) } }
                     }
                     val conCuadro = remember { io.github.ruddy2003.vestigium.ui.TemaId.entries.filter { io.github.ruddy2003.vestigium.ui.escenas.escenaDe(it) != null }.map { it.nombre } }
-                    Ayuda(if (enCuadro) "En su cuadro: arriba de Hoy sale el paisaje del personaje de «Otras vidas» del tema, a la hora que es, con el gato dentro. Toca al gato para acariciarlo; el botón de debajo abre el cuento de hoy. Por ahora lo tienen ${conCuadro.joinToString(", ")}; en los demás temas sigue el gato de pixel."
+                    Ayuda(if (enCuadro) "En su cuadro: arriba de Hoy sale el paisaje del personaje de «Otras vidas» del tema, a la hora que es, con el gato dentro. Toca al gato para acariciarlo; el botón de debajo abre el cuento de hoy.${if (c.historia_hoy) " Mantén presionado el cuadro para ver «Hoy en la historia»." else ""} Por ahora lo tienen ${conCuadro.joinToString(", ")}; en los demás temas sigue el gato de pixel."
                         else "De pixel: la banda con el gato de pixel, en todos los temas.", Modifier.padding(top = 6.dp, bottom = 6.dp))
                 }
                 Interruptor("Tus últimos días", c.personaje, "Una franja en Hoy con tus últimos 14 días.", explica = "Una franja en Hoy con tus últimos 14 días: el color es el ánimo del día; el alto, cuánto dormiste frente a tu normal; el remate, si lo sellaste. Hoy no se colorea hasta que lo llenas.") { v -> cambiar { it.copy(personaje = v) } }
@@ -449,6 +449,12 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                     BotonTexto(onClick = { nav.ir("recaidas") }) { Text("abrir Privado →", style = MaterialTheme.typography.labelLarge) }
                 }
                 Interruptor("Ubicación de fondo", c.muestreo_ubicacion, "Una muestra cada 15 minutos para el mapa de calor.") { v -> cambiar { it.copy(muestreo_ubicacion = v) } }
+                // Tanda H1 del plan de historia y escenas: el interruptor de `Config.historia_hoy` (esquema 24).
+                Interruptor("Hoy en la historia (Wikipedia)", c.historia_hoy, "Lo que pasó un día como hoy: mantén presionado el cuadro de Hoy o búscalo en el buscador. A Wikipedia solo se manda el mes y el día, y a Wikidata, los identificadores de los artículos que llegan (para saber de qué país es cada uno); como en toda conexión, ven la dirección de tu red. Nada tuyo se cruza con lo que llega. Apagado, no se conecta, borra lo guardado y el cuadro no lleva la banderita.") { v ->
+                    cambiar { it.copy(historia_hoy = v) }
+                    // Apagado, también se borra lo guardado: no queda nada de Wikipedia en el teléfono.
+                    if (!v) kotlin.concurrent.thread(isDaemon = true) { runCatching { io.github.ruddy2003.vestigium.ui.pantallas.carpetaHistoria(ctx).deleteRecursively() } }
+                }
             }
         }
         if (parte == "privacidad") Seccion("Sustancias en pantalla", "Ocultar una no la quita de los análisis.", explica = "Son un dato normal. Ocultar una la quita de la cinta, la libreta, Vida y Día; sigue en los análisis y en la exportación a R.") {

@@ -318,7 +318,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 - **La pulsación larga** de 700 ms abre «Hoy en la historia».
   - Mientras se mantiene, la banderita se va llenando.
   - Se cancela si el dedo se mueve más de 8 dp.
-  - **Hasta la tanda H1 no hay banderita ni pulsación larga** (`HAY_HISTORIA_HOY = false`): la pantalla todavía no existe.
+  - **Desde la tanda H1** (13 nov 2026) hay banderita y pulsación larga (`HAY_HISTORIA_HOY = true`), salvo con el interruptor de Ajustes › Privacidad apagado.
 - **Un solo detector de gestos** para todo el cuadro (`gestosDelCuadro`, en `VistaEscena.kt`): el toque corto va al gato y la pulsación larga, a la historia.
 - **Se detiene mientras no se ve:** al desplazar Hoy hacia abajo, el cuadro deja de trazar.
 - **Accesibilidad:** tres acciones con nombre.
@@ -334,19 +334,25 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 **3.6 «Hoy en la historia»** (`ui/pantallas/HoyEnLaHistoria.kt`, ruta `historia_hoy`)
 
 - **Cómo se llega:** con la pulsación larga del cuadro y desde el buscador. No tiene recuadro en Vida ni texto en Hoy.
-- **Qué sale del teléfono:** solo el mes y el día (`historia/Efemerides.kt` con `Red.get`).
-- **De dónde salen los eventos:** H1 comprueba primero cuál de estos dos sirve.
-  - (a) `api.wikimedia.org/feed/v1/wikipedia/es/onthisday/events/MM/DD`. **[Sin verificar en español: la red de esta sesión bloquea Wikipedia]**.
-  - (b) La página «10 de noviembre», sección «Acontecimientos», con la API de MediaWiki.
+- **Qué sale del teléfono:** a Wikipedia, solo el mes y el día (`historia/Efemerides.kt` con `Red.get`); a Wikidata (desde H3), solo los identificadores de los artículos que llegan (`historia/Wikidata.kt`).
+- **De dónde salen los eventos:** H1 comprobó tres maneras (13 nov 2026).
+  - (a) `api.wikimedia.org/feed/v1/wikipedia/es/onthisday/events/MM/DD`: no se pudo probar, porque la red de la sesión lo bloquea.
+  - (b) La página «13 de noviembre», sección «Acontecimientos», con la API de MediaWiki: contesta «demasiadas peticiones» a direcciones compartidas, y da wikitexto que hay que limpiar.
+  - **(c) `es.wikipedia.org/api/rest_v1/feed/onthisday/events/MM/DD`: la que se usa.** JSON con el año, el texto y los artículos de cada evento; el 13 de noviembre, 98 eventos, del 7 a. C. a 2024, unos 100 KB comprimidos.
 - **Caché:**
   - un archivo por fecha en `filesDir/historia/`, fuera de la base, del respaldo y de la exportación;
   - se renueva a los 30 días;
-  - el trabajo de 15 minutos baja la fecha de mañana;
+  - el trabajo de 15 minutos baja la fecha de mañana y, desde H3, le pregunta a Wikidata de qué país es cada artículo (de mañana y de hoy), en lotes de 50, y lo guarda en el mismo archivo;
   - sin conexión, muestra lo guardado.
 - **Licencia:** «Wikipedia en español, CC BY-SA 4.0», con el enlace a cada artículo.
-- **Enlace a un cuento:** si el año del evento cae en la época de un personaje que el tema deja ver (`epoca`, por omisión `anio ± 30`), lleva «en la época de Demeas ›», que abre su cuento.
+- **Enlace a un cuento** (hecho en H2 y afinado en H3, `vidas/Epocas.kt`): «en la época de Demeas ›», que abre su cuento, solo con lo que pudo afectar al personaje. Un acontecimiento lleva a un personaje que el tema deja ver y tiene cuento si cae en su época (`anio ± 30`) y además:
+  - **(a) Wikidata dice que es de su lugar:** su lugar (`vidas/EpocasLugares.kt`, identificadores de Wikidata) está en al menos la mitad de los artículos que dicen de dónde son, o en uno si el texto nombra el lugar. Un artículo con más de 3 países no dice nada (el Mar del Norte), y la nacionalidad de una persona solo cuenta si es una (P17, P495 y P27);
+  - **(b) si Wikidata no dice nada** (no contestó, o ningún artículo dice país), el texto o los títulos nombran una palabra de su lugar, sin acentos y sin las excepciones («Nuevo México» no es México);
+  - **(c) es mundial y lo vivió:** las dos guerras mundiales, la Gran Depresión, la gripe de 1918, la peste negra, la COVID-19 o el Apolo 11, dentro de sus fechas, entre su nacimiento y el final de su temporada 5.
+  - Si cumplen varios, el de más artículos de su lugar; luego el de año más cercano; luego el del tema.
   - No se copia texto.
-  - La astronauta, al ser del futuro, no tiene eventos.
+  - **Las vidas inventadas no tienen época** (Brenna cuenta los años «de los Caminos»; la astronauta, la residente y la doctora son del futuro), **ni las de hoy** (desde el año 2000: Alguien del mundo, Alguien de México, Giulia), que se llevarían todo lo reciente.
+  - **Cuánto sale** (H3, con cuatro fechas enteras, 436 acontecimientos): en las vidas de todos los temas, 269 enlaces con H2, 15 con la regla nueva; en Art déco, 38; en Soviético, 26.
 
 ## 4. Sin redundancia
 
@@ -441,6 +447,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 |---|---|---|---|---|
 | H1 | Comprobar la API; pantalla, caché, interruptor, `Red.SERVICIOS`, cap. 10 y Apéndice D. **Enciende la banderita y la pulsación larga del cuadro** (`HAY_HISTORIA_HOY = true`, en `CuadroDelDia.kt`) y pone en Ajustes › Privacidad el interruptor de `Config.historia_hoy`, que ya existe desde P6 | `historia/Efemerides.kt`, `HoyEnLaHistoria.kt`, `Red.kt`, `Trabajo.kt`, `Pantallas.kt`, `MainActivity.kt`, `CuadroDelDia.kt`, `Sistema.kt` | Pruebas del lector con una muestra guardada; capturas con y sin conexión | 1 |
 | H2 | Enlace del evento al cuento | La pantalla y `vidas/` | Prueba del rango de épocas; captura | 1 |
+| H3 | El enlace solo con lo que pudo afectar al personaje: su lugar (con Wikidata y palabras de respaldo) y lo mundial | `historia/Wikidata.kt`, `historia/Efemerides.kt`, `vidas/Epocas.kt`, `vidas/EpocasLugares.kt`, la pantalla, `Red.SERVICIOS`, cap. 10 y Apéndice D | Medición con cuatro fechas; pruebas con muestras de Wikipedia y Wikidata; captura | 1 |
 
 **Expansión** (41 personajes, sin tocar el motor).
 
@@ -571,8 +578,9 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | P5a | claude-fable-5-2 | **xhigh** | Un esqueleto animado que comparten 32 temas: estados, capas, rendimiento. Un fallo se paga 32 veces y Paparazzi no ve el movimiento | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5a.md`); revisado tres veces con el autor ese día; **el gato, aprobado por el autor el 12 nov 2026** |
 | P5b | claude-fable-5-2 | high | Se apoya en el esqueleto ya resuelto. Los gestos se ajustan después de probarlos en el teléfono | 2 | hecho 12 nov 2026 (`docs/historia/informes/P5b.md`, con la lista de qué probar en el teléfono); **aprobado por el autor el 12 nov 2026** |
 | P6 | claude-fable-5-2 | high | Integración en Hoy, medidas y esquema | 2 | hecho 13 nov 2026 (`docs/historia/informes/P6.md`, con la lista de qué probar en el teléfono). Salió en la v243; el autor lo probó ese día y pidió cambios (sin tirón al abrir, sin plegado, el botón del cuento y su pantalla propia), que salieron en la v245. Después pidió sacar el cuento de «Otras vidas». **Falta que confirme en el teléfono que ya no hay tirón** |
-| H1 | claude-opus-5-5 | medium | Red, caché y pantalla con patrones que ya existen | 1 | pendiente |
-| H2 | claude-opus-5-5 | medium | Una regla simple de años | 1 | pendiente |
+| H1 | claude-opus-5-5 | medium | Red, caché y pantalla con patrones que ya existen | 1 | hecho 13 nov 2026 (`docs/historia/informes/H1.md`) |
+| H2 | claude-opus-5-5 | medium | Una regla simple de años | 1 | hecho 13 nov 2026 (`docs/historia/informes/H2.md`) |
+| H3 | Como H2 | medium | Medir antes de decidir; una regla de lugar con respaldo | 1 | hecho 13 nov 2026 (`docs/historia/informes/H3.md`) |
 | A1 | claude-opus-5-5 | high | Calendarios verosímiles con libertad creativa y el patrón de P2. La continuidad de 5 años pide high | 0 | hecho 11 nov 2026 (`docs/historia/informes/A1.md`) |
 | A2 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A2.md`) |
 | A3 | claude-opus-5-5 | high | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/A3.md`) |

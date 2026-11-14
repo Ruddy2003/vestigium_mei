@@ -2143,6 +2143,52 @@ class Capturas {
         pantalla(TemaId.HELENO, false, 6400, "cuento_pantalla_claro") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCuento(navVacia, "remero") }
     }
 
+    // ---------------------------------------------------------------- «Hoy en la historia» (tanda H1)
+
+    /** Los eventos de la muestra guardada de Wikipedia (`test/resources/historia/eventos_11_13.json`): la pantalla no se conecta. */
+    private val eventosDeMuestra by lazy {
+        io.github.ruddy2003.vestigium.historia.Efemerides.leer(javaClass.getResource("/historia/eventos_11_13.json")!!.readText())
+    }
+    private val diaDeMuestra = java.time.LocalDate.of(2026, 11, 13)
+
+    /**
+     * Tanda H3: trece acontecimientos de cuatro fechas (`eventos_h3.json`) con lo que Wikidata dijo de sus artículos
+     * (`wikidata_h3.json`), para ver a quién lleva «en la época de X ›». La pantalla dice «13 de noviembre», pero son de
+     * cuatro días: es una muestra.
+     */
+    private val resultadoH3 by lazy {
+        io.github.ruddy2003.vestigium.historia.Efemerides.Resultado(
+            io.github.ruddy2003.vestigium.historia.Efemerides.leer(javaClass.getResource("/historia/eventos_h3.json")!!.readText()), diaDeMuestra, sinConexion = false,
+            paises = io.github.ruddy2003.vestigium.historia.Wikidata.leer(javaClass.getResource("/historia/wikidata_h3.json")!!.readText()), conPaises = true)
+    }
+
+    /** «Hoy en la historia» con conexión, en cada tema, con «en la época de X ›» (CAPTURAS=historia; tandas H1 a H3). */
+    @Test fun temaHistoria() = porTema("historia") { t, o, n ->
+        pantalla(t, o, 4400, n) {
+            io.github.ruddy2003.vestigium.ui.pantallas.VistaHoyEnLaHistoria(
+                io.github.ruddy2003.vestigium.ui.pantallas.EstadoHistoria.Listo(resultadoH3),
+                diaDeMuestra, atras = {}, alReintentar = {}, alPrivacidad = {},
+                // Tandas H2 y H3: «en la época de X ›» con las vidas del tema, solo si pudo afectarle.
+                epocaDe = { a -> io.github.ruddy2003.vestigium.vidas.Epocas.vidaDelAcontecimiento(a, io.github.ruddy2003.vestigium.ui.pantallas.vidasConCuento(t.id), t.id)?.first?.let { it.id to it.nombre } })
+        }
+    }
+
+    /** «Hoy en la historia» sin conexión (con lo guardado y sin nada) y con el interruptor apagado (CAPTURAS=historia). */
+    @Test fun historiaSinConexion() {
+        CapturasAPedido.pedida("historia")
+        val viejo = io.github.ruddy2003.vestigium.historia.Efemerides.Resultado(eventosDeMuestra, diaDeMuestra.minusDays(40), sinConexion = true, error = "sin red")
+        val nada = io.github.ruddy2003.vestigium.historia.Efemerides.Resultado(emptyList(), null, sinConexion = true, error = "sin red")
+        listOf(
+            Triple("historia_guardado_claro", io.github.ruddy2003.vestigium.ui.pantallas.EstadoHistoria.Listo(viejo), false),
+            Triple("historia_sin_nada_oscuro", io.github.ruddy2003.vestigium.ui.pantallas.EstadoHistoria.Listo(nada), true),
+            Triple("historia_apagado_claro", io.github.ruddy2003.vestigium.ui.pantallas.EstadoHistoria.Apagado, false),
+        ).forEach { (nombre, estado, oscuro) ->
+            pantalla(TemaId.HELENO, oscuro, 3600, nombre) {
+                io.github.ruddy2003.vestigium.ui.pantallas.VistaHoyEnLaHistoria(estado, diaDeMuestra, atras = {}, alReintentar = {}, alPrivacidad = {})
+            }
+        }
+    }
+
     // ---------------------------------------------------------------- el cuadro de Hoy (plan de historia y escenas)
 
     /** Lo que la ficha dice de un momento, para leerlo encima de su cuadro. */

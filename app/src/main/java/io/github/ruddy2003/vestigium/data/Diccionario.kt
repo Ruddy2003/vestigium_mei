@@ -710,7 +710,7 @@ object Diccionario {
         "n_registros" to (VERSION_ESQUEMA_23 to "un solo «Cómo estás ahora» por noche: antes cada toque guardaba un registro (D.177)"),
         "vm_mundo.csv:desde" to (VERSION_ESQUEMA_23 to "en los sitios del Patrimonio marcados a mano, el día de la visita si lo dijiste (vacío si no); antes, el día en que lo marcaste (D.178)"),
         "unesco" to (VERSION_ESQUEMA_23 to "un sitio marcado a mano cuenta en el día de la visita, si lo dijiste, no en el día en que lo marcaste (D.178)"),
-        "vm_ideas.csv:postura" to (VERSION_ESQUEMA_25 to "valor nuevo: hecho (hecho comprobado); los demás no cambian (D.192)"),
+        "vm_ideas.csv:postura" to (VERSION_ESQUEMA_25 to "valor nuevo: hecho (hecho comprobado); los demás no cambian (D.193)"),
     )
 
     // Las claves con «*», como patrones; la más larga primero, para que «app_min_*» gane a «app_*».

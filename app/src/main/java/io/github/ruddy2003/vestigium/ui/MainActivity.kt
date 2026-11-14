@@ -1955,6 +1955,7 @@ private fun Raiz(pedida: String?, apilar: Boolean, consumir: () -> Unit) {
                     "salud" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSalud(nav)
                     "tus_apps" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTusApps(nav)
                     "otras_vidas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(nav)
+                    "historia_hoy" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaHoyEnLaHistoria(nav)
                     "logros" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(nav)
                     "tu_anio" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTuAnio(nav)
                     "carta" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCarta(nav)
