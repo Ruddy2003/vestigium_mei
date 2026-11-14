@@ -214,7 +214,7 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
   - la paleta corta son dos o tres colores de luz sobre un fondo azul violeta oscuro;
   - el «cielo» es la franja entre los edificios: bruma, cables, ventanas que se encienden y se apagan según la hora;
   - lo que el día le da a los demás temas (que el cuadro cambie con la hora) aquí lo dan los letreros, las ventanas y la lluvia. Hay que decidirlo y probarlo: tres horas distintas tienen que dar tres cuadros distintos.
-- **Interiores con dos luces** (Espacio, hecho en S3 y aprobado por el autor el 13 nov 2026: `EscenaEspacio.kt` y sus archivos son el ejemplo; Refugio, Laboratorio). No hay cielo ni tiempo.
+- **Interiores con dos luces** (Espacio, hecho en S3 y aprobado por el autor el 13 nov 2026: `EscenaEspacio.kt` y sus archivos son el ejemplo; su imagen, `referencia_espacio.jpg`; Refugio, Laboratorio). No hay cielo ni tiempo.
   - Con la luz encendida, `Rayo(luces)` da una sombra fija, como de mediodía. No sirve: la luz tiene que venir de las lámparas que se ven en el cuadro, con `Foco`, `Alumbrado` y `rayoDeFoco` (`paisaje/Focos.kt`), como en Ciudad neón.
   - Con la luz tenue no da ninguna: la forma la dan las luces de guardia, las pantallas y lo que brille.
   - La parte de arriba es el techo o la pared del fondo: tuberías, paneles, cables, estantes. En Espacio, además, el ventanal del costado con la galaxia (el autor lo pidió grande, casi del tamaño de la pared).
@@ -223,7 +223,7 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 - **Interiores con ventana o puerta** (un taller, un scriptorium, una oficina, un club). La luz del sol entra por el hueco y cae en el suelo y en la pared como una mancha que se mueve con la hora: es la sombra arrojada al revés. Por el hueco se ve el cielo de `cielo` y `nubes`.
 - **Luz de fuego** (Prehistoria, un campamento, una posada de noche). De noche la hoguera es el sol de la escena: lo cercano a ella, cálido por ese lado y oscuro por el otro.
 - **Mal tiempo frecuente** (niebla, lluvia, nieve). Con el cielo cubierto no hay sombras arrojadas. Para que no quede plano: suelo mojado más oscuro y con reflejos, luces encendidas antes, capas de bruma entre los planos (`estrato`, `tiempoQuieto`).
-- **Ficción con colores propios** (Distopía, hecho en S3 y aprobado por el autor el 13 nov 2026: `EscenaDistopia.kt` y sus archivos son el ejemplo; Horror cósmico, Orden, Tierras Antiguas). La paleta puede alejarse mucho de la de Helénico, pero conserva su forma: un color que domina, otro que lo acompaña, la luz de un matiz y la sombra del contrario.
+- **Ficción con colores propios** (Distopía, hecho en S3 y aprobado por el autor el 13 nov 2026: `EscenaDistopia.kt` y sus archivos son el ejemplo; sus imágenes, `referencia_distopia.jpg` y `referencia_distopia_pueblo.jpg`; Horror cósmico, Orden, Tierras Antiguas). La paleta puede alejarse mucho de la de Helénico, pero conserva su forma: un color que domina, otro que lo acompaña, la luz de un matiz y la sombra del contrario.
 
 **Si la biblioteca no alcanza** (una luz fija para interiores, un suelo mojado, una bóveda), la tanda que lo necesita lo agrega a `paisaje/`, con estas condiciones:
 - **Agregar piezas, sí. Cambiar cómo se ve una que ya existe, no,** salvo que mejore todas las escenas hechas. En ese caso se vuelven a dibujar las hojas de las escenas ya aprobadas, se comparan con su referencia y se le enseñan al autor.
