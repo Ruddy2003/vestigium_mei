@@ -480,10 +480,10 @@ object Diccionario {
      */
     private const val VERSION_ESQUEMA_23 = 199
     /**
-     * La versión que trae el esquema 25 («hecho comprobado» en el Ideario, 13 nov 2026). **Estimada** (la siguiente corrida
-     * de la compilación al momento de escribirla): se corrige con el número de la primera versión publicada con el esquema 25.
+     * La versión que trae el esquema 25 («hecho comprobado» en el Ideario, 13 nov 2026): la v270, la primera publicada
+     * después de la 248 (la última con el esquema 24).
      */
-    private const val VERSION_ESQUEMA_25 = 260
+    private const val VERSION_ESQUEMA_25 = 270
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
