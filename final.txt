@@ -1,0 +1,80 @@
+EpocasPrueba > sinWikidataCuentanLasPalabras STARTED
+
+EpocasPrueba > lasVidasInventadasYLasDeHoyNoTienenEpoca STARTED
+
+FichaPrueba > sinCalendarioNoHayFicha STARTED
+
+FichaPrueba > todasLasVidasTienenTramoATodaHora STARTED
+
+FichaPrueba > unaFiestaCruzaElFinDeAnio STARTED
+
+FichaPrueba > laFichaNoDependeDeLaHora STARTED
+
+FichaPrueba > elSorteoNoSeSaleDelAnio STARTED
+
+FichaPrueba > losArcosAvanzanEnLineaRecta STARTED
+
+FichaPrueba > elCalendarioDePruebaEstaBien STARTED
+
+FichaPrueba > ningunParrafoSeRepiteDosDiasSeguidos STARTED
+
+FichaPrueba > elClimaDeUnDiaEspecialManda STARTED
+
+FichaPrueba > siempreDeNocheYDosEstados STARTED
+
+FichaPrueba > diasEspecialesConSuDuracion STARTED
+
+FichaPrueba > losCalendariosRegistradosEstanBien STARTED
+
+FichaPrueba > anioHistoricoAntesDeCristo STARTED
+
+FichaPrueba > estacionDelLugar STARTED
+
+FichaPrueba > seisFranjas STARTED
+
+FichaPrueba > elAzarNoCambiaEntreVersiones STARTED
+
+FichaPrueba > cuandoCoincidenDosMandaElMasCorto STARTED
+
+FichaPrueba > conLasCombinacionesJustasTampocoSeRepite STARTED
+
+FichaPrueba > desde2032LosSucesosSeSorteanDeNuevo STARTED
+
+FichaPrueba > fechasMesDia STARTED
+
+FichaPrueba > ningunaCombinacionSeRepiteEnDosAniosSeguidos STARTED
+
+FichaPrueba > elObjetoDelDia STARTED
+
+FichaPrueba > bisiesto STARTED
+
+FichaPrueba > temporadaSeisOMasRepiteLaQuinta STARTED
+
+FichaPrueba > elAvanceYLaRepeticionUsanSuTemporada STARTED
+
+FichaPrueba > elAnioCambiaConElDiaLogico STARTED
+
+FichaPrueba > hasta2031NadaSeMueve STARTED
+
+FichaPrueba > laFichaEsDeterminista STARTED
+
+FichaPrueba > avanceDe2026 STARTED
+
+FichaPrueba > elClimaSigueLaTablaDelMes STARTED
+
+FichaPrueba > losArcosEmpalmanEntreTemporadas STARTED
+
+FichaPrueba > temporadaDeCadaAnio STARTED
+
+FichaPrueba > laBarajaReparteParejo STARTED
+
+FichaPrueba > laRevisionEncuentraCadaError STARTED
+
+FichaPrueba > losSaltosCambianDeGolpe STARTED
+See the Paparazzi report at: file:///home/runner/work/vestigium_mei/vestigium_mei/app/build/reports/paparazzi/debug/index.html
+
+> Task :app:recordPaparazziDebug
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1794682673502.json
+
+BUILD SUCCESSFUL in 4m 45s
+24 actionable tasks: 7 executed, 17 up-to-date

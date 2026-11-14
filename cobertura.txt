@@ -1,0 +1,5 @@
+mapOf(
+    "cuadro_banderita" to setOf("templario", "refugio", "orden", "laboratorio", "colonos", "napoleon", "deco", "botanico", "edo", "abismo", "mongol", "urss", "antiguas"),
+    "cuadro_escena" to setOf("templario", "refugio", "orden", "laboratorio", "colonos", "napoleon", "deco", "botanico", "edo", "abismo", "mongol", "urss", "antiguas"),
+    "cuadro_gato" to setOf("templario", "refugio", "orden", "laboratorio", "colonos", "napoleon", "deco", "botanico", "edo", "abismo", "mongol", "urss", "antiguas"),
+)
