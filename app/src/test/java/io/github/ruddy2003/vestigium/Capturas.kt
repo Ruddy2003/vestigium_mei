@@ -2787,4 +2787,21 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("partida", "2027-04-22", listOf(22.0)),                    // la noche de la partida: solo la ventana
         Triple("cosecha", "2027-08-21", listOf(10.0)),                    // la cosecha: rastrojos y sacos
     ),
+    // El archivista (Horror cósmico, tanda S4): la galería del archivo, con la bahía, el muelle y el faro. Primer cuadro con niebla.
+    "archivista" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // la galería, la bahía y el faro, despejado
+        Triple("niebla", "2027-11-21", HORAS_CUADRO),                     // la niebla cerrada, por capas
+        Triple("candelaria", "2027-02-02", listOf(21.0)),                 // una vela en cada ventana que da al mar
+        Triple("bendicion", "2028-05-01", listOf(11.0)),                  // la bendición de las barcas
+        Triple("san_pedro", "2028-06-29", listOf(21.4)),                  // la procesión por el muelle
+        Triple("carmen", "2027-07-16", listOf(13.0)),                     // la Virgen en barca por la bahía
+        Triple("marea", "2027-08-23", listOf(23.0)),                      // la noche de la marea más baja
+        Triple("difuntos", "2027-11-02", listOf(19.6)),                   // el pueblo en el cementerio de las rocas
+        Triple("ballena", "2029-05-21", listOf(10.0)),                    // lo que el mar trae
+        Triple("temporal", "2029-10-01", listOf(13.0)),                   // el temporal que rompe el muelle
+        Triple("fiebre", "2029-03-12", listOf(21.0)),                     // variante: el archivo cerrado y luz en la posada (decisión 21)
+        Triple("faro", "2030-02-01", listOf(21.0)),                       // variante: él cuida el faro (decisión 21)
+        Triple("mar_rojo", "2031-06-20", listOf(7.0)),                    // el mar de color de óxido
+        Triple("final", "2031-11-20", listOf(13.0)),                      // el archivo terminado: ninguna caja por abrir
+    ),
 )
