@@ -47,6 +47,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.lineTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cubicTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoDeFoco
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoFijo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.reflejoRoto
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
@@ -139,10 +140,12 @@ internal object PatioTemplario {
             }
         }
         // De noche, cada cosa tumba la sombra de la luz que más la alumbra.
-        if (a != null) for (k in cosas) {
-            val f = focos.maxByOrNull { val dx = it.p.x - k.pie.x; val dy = it.p.y - k.pie.y; it.fuerza / (1f + (dx * dx + dy * dy) / (it.alcance * it.alcance)) } ?: continue
-            val rf = rayoDeFoco(f, k.pie, 0.55f * f.fuerza, C.SOMBRA)
-            capaSombra(rf) { c -> sombraArrojada(rf, k.forma, k.pie, c, BASE, ADARVE) }
+        // De noche, cada cosa tumba la sombra de la luz que más la alumbra: todas en una sola capa.
+        if (a != null) capaSombra(rayoFijo(1f, 30f, 0.5f, C.SOMBRA)) { c ->
+            for (k in cosas) {
+                val f = focos.maxByOrNull { val dx = it.p.x - k.pie.x; val dy = it.p.y - k.pie.y; it.fuerza / (1f + (dx * dx + dy * dy) / (it.alcance * it.alcance)) } ?: continue
+                sombraArrojada(rayoDeFoco(f, k.pie, 0.55f * f.fuerza, C.SOMBRA), k.forma, k.pie, c, BASE, ADARVE)
+            }
         }
         cosas.forEach { it.pintar(this) }
         // La copa de la higuera también da sombra sobre las cosas que tiene debajo.

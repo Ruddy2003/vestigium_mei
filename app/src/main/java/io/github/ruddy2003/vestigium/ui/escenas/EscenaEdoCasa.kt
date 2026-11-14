@@ -38,6 +38,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mult
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoDeFoco
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoFijo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombraArrojada
@@ -106,11 +107,12 @@ internal object CasaDeTeEdo {
         capaSombra(r) { c ->
             cosas.forEach { sombraArrojada(r, it.forma, it.pie, c, ORILLA, ORILLA - 1f) }
         }
-        if (a != null) for (k in cosas) {
-            val f = focos.maxByOrNull { val dx = it.p.x - k.pie.x; val dy = it.p.y - k.pie.y; it.fuerza / (1f + (dx * dx + dy * dy) / (it.alcance * it.alcance)) } ?: continue
-            if (f.p.y < CAMINO) continue
-            val rf = rayoDeFoco(f, k.pie, 0.5f * f.fuerza, C.SOMBRA)
-            capaSombra(rf) { c -> sombraArrojada(rf, k.forma, k.pie, c, ORILLA, ORILLA - 1f) }
+        // De noche, cada cosa tumba la sombra del farol o del fogón: todas en una sola capa.
+        if (a != null) capaSombra(rayoFijo(1f, 30f, 0.5f, C.SOMBRA)) { c ->
+            for (k in cosas) {
+                val f = focos.filter { it.p.y >= CAMINO || it.p == FAROL }.maxByOrNull { val dx = it.p.x - k.pie.x; val dy = it.p.y - k.pie.y; it.fuerza / (1f + (dx * dx + dy * dy) / (it.alcance * it.alcance)) } ?: continue
+                sombraArrojada(rayoDeFoco(f, k.pie, 0.5f * f.fuerza, C.SOMBRA), k.forma, k.pie, c, ORILLA, ORILLA - 1f)
+            }
         }
         cosas.forEach { it.pintar(this) }
         sombraDelAlero(m, l, r)
