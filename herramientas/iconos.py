@@ -350,25 +350,25 @@ def _canal(d, c, hueco=0.52, centro=-0.95):   # Frente exterior: el emblema del 
     # rumbos de 30° de una pantalla de radar, y abajo a la izquierda, dos pilotos.
     caja = [(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K]
     a0, a1 = centro + hueco / 2, centro - hueco / 2 + 2 * math.pi
-    d.arc(caja, math.degrees(a0), math.degrees(a1), fill=c, width=int(GROSOR * K * 1.15))
+    d.arc(caja, math.degrees(a0), math.degrees(a1), fill=c, width=int(GROSOR * K * 1.35))
     for fin, sentido in ((a0, -1), (a1, 1)):     # los cabos: engruesan hacia el corte y acaban redondos
         tramo = 0.34
         pts_fuera, pts_dentro = [], []
         for k in range(25):
             s = k / 24
             a = fin - sentido * tramo * (1 - s)
-            w = GROSOR / 2 * (1.15 + 1.75 * s ** 1.6)
+            w = GROSOR / 2 * (1.35 + 1.75 * s ** 1.6)
             pts_fuera.append(_pos(a, RADIO + w)); pts_dentro.append(_pos(a, RADIO - w))
         d.polygon(pts_fuera + pts_dentro[::-1], fill=c)
-        x, y = _pos(fin); r = GROSOR / 2 * 2.9 * K
+        x, y = _pos(fin); r = GROSOR / 2 * 3.1 * K
         d.ellipse([x - r, y - r, x + r, y + r], fill=c)
     for i in range(12):                      # rumbos cada 30°, solo donde hay canal
         a = 2 * math.pi * i / 12
         if abs((a - centro + math.pi) % (2 * math.pi) - math.pi) < hueco / 2 + 0.4: continue
         d.line([_pos(a, RADIO - 2), _pos(a, RADIO - 8)], fill=c, width=int(K * 1.7))
     # La chispa: tres trazos gruesos que se abren hacia fuera desde el hueco, el del centro más largo.
-    ox, oy = _pos(centro, RADIO - 7)
-    for da, l0, l1, g in ((0, 4.5, 21.5, 2.5), (-0.62, 6.0, 18.0, 2.2), (0.62, 6.0, 18.0, 2.2)):
+    ox, oy = _pos(centro, RADIO - 24)        # el foco de la chispa queda dentro del canal; los trazos nacen ya separados
+    for da, l0, l1, g in ((0, 13.0, 38.5, 3.0), (-0.52, 16.0, 35.0, 2.7), (0.52, 16.0, 35.0, 2.7)):
         u = centro + da
         p0 = (ox + l0 * K * math.cos(u), oy + l0 * K * math.sin(u)); p1 = (ox + l1 * K * math.cos(u), oy + l1 * K * math.sin(u))
         d.line([p0, p1], fill=c, width=int(GROSOR * K * g))

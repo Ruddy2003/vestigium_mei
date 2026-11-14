@@ -132,7 +132,8 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.TEMPLARIO -> Papeleria(Color(0xFFF1ECE0), Color(0xFFB9AE97), Color(0xFFFFFCF4), Color(0xFFB0191F), Color(0xFF7A2A16), Color(0xFF8A7650), Color(0xFF201E1B))
     // Sobre de manila de oficina, con su hilo y botones, y la tinta roja del sello de goma.
     TemaId.DISTOPIA -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
-    TemaId.FRENTE -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
+    // La funda de la transmisión: cartón hueso de consola forrado de acero, el sello ámbar de la célula y la correa de baquelita.
+    TemaId.FRENTE -> Papeleria(Color(0xFFCFC7B5), Color(0xFF9D9584), Color(0xFFE6E0D2), Color(0xFF3E4C57), Color(0xFFE8902C), Color(0xFF2A2622), Color(0xFF23252A))
     // Crema del optimismo atómico, forro verde azulado, la estampa amarilla y la banda naranja.
     TemaId.REFUGIO -> Papeleria(Color(0xFFF1E8CF), Color(0xFFB8AC88), Color(0xFFFFF8E6), Color(0xFF1C6E6A), Color(0xFFE8B83A), Color(0xFFD9572B), Color(0xFF1F2A2A))
     // Papel gris acero, forro carmesí, la placa de latón y la cinta carmesí.
@@ -382,11 +383,28 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
             rotuloSello("ARCHIVADO", c.x, c.y + r * 0.13f, r * 0.36f, k(base.copy(alpha = 0.85f)))
         }
-        TemaId.FRENTE -> rotate(-14f, c) {
-            // El sello de goma del Ministerio: tinta en dos marcos y la palabra, un poco torcido.
-            drawRect(k(base.copy(alpha = 0.85f)), Offset(c.x - r * 1.25f, c.y - r * 0.6f), Size(r * 2.5f, r * 1.2f), style = Stroke(r * 0.1f))
-            drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
-            rotuloSello("ARCHIVADO", c.x, c.y + r * 0.13f, r * 0.36f, k(base.copy(alpha = 0.85f)))
+        TemaId.FRENTE -> {
+            // El sello de la célula: una oblea de precinto con el bisel graduado de una perilla de consola, el emblema troquelado
+            // (la chispa de tres trazos que se escapa por el hueco del círculo roto) y, debajo, la célula.
+            drawCircle(sombra, r * 0.98f, c + Offset(r * 0.05f, r * 0.08f))
+            drawCircle(col, r * 0.98f, c)
+            drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.3f * a), Color.Transparent), center = c - Offset(r * 0.35f, r * 0.4f), radius = r), r * 0.98f, c)
+            drawCircle(hondo, r * 0.98f, c, style = Stroke(r * 0.05f))
+            for (j in 0 until 36) {
+                val ang = j * PI / 18; val dentro = if (j % 6 == 0) 0.72f else 0.8f
+                drawLine(hondo, Offset(c.x + (r * 0.9f * cos(ang)).toFloat(), c.y + (r * 0.9f * sin(ang)).toFloat()),
+                    Offset(c.x + (r * dentro * cos(ang)).toFloat(), c.y + (r * dentro * sin(ang)).toFloat()), r * 0.035f)
+            }
+            drawCircle(hondo, r * 0.66f, c, style = Stroke(r * 0.035f))
+            val ce = Offset(c.x, c.y - r * 0.1f); val rr = r * 0.34f
+            drawArc(hondo, -20f, 300f, false, Offset(ce.x - rr, ce.y - rr), Size(rr * 2, rr * 2), style = Stroke(r * 0.09f, cap = StrokeCap.Round))
+            listOf(-74.0 to 1.05f, -50.0 to 1.3f, -26.0 to 1.05f).forEach { (g, l) ->
+                val ang = Math.toRadians(g)
+                drawLine(hondo, Offset(ce.x + (rr * 0.12f * cos(ang)).toFloat(), ce.y + (rr * 0.12f * sin(ang)).toFloat()),
+                    Offset(ce.x + (rr * l * cos(ang)).toFloat(), ce.y + (rr * l * sin(ang)).toFloat()), r * 0.08f, StrokeCap.Round)
+            }
+            drawCircle(claro, r * 0.05f, ce)
+            rotuloSello("K-7", c.x, c.y + r * 0.52f, r * 0.2f, hondo)
         }
         TemaId.REFUGIO -> {
             // La estampa del optimismo atómico: un sol dentado amarillo con el átomo y su núcleo naranja.
@@ -799,8 +817,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Hermano que serás yo:", "Escribe tu misiva, hermano…", "Misiva para %s, sellada por la casa", "Ningún hermano la abrirá antes de tiempo.", "Toca para tomar la pluma…")
     TemaId.DISTOPIA -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
         "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
-    TemaId.FRENTE -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
-        "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
+    TemaId.FRENTE -> VozCarta("VENTANA ABIERTA: DESCÍFRALA", "Cifrada con la clave de la célula", "PARA EL AGENTE QUE SERÁS EL %s", "AGENTE · %s", "PARA EL AGENTE QUE SERÁS",
+        "Agente, si lees esto, la red sigue en pie:", "Cifra tu mensaje para el contacto…", "Transmisión para %s cifrada y en cola", "La clave no se libera antes de su ventana.", "TOCA PARA ABRIR EL CANAL")
     TemaId.REFUGIO -> VozCarta("¡Lista para abrir!", "Sellada en la bóveda", "Para el residente del %s", "Residente de %s", "Para el residente del mañana",
         "¡Hola, yo del mañana!…", "Escribe tu mensaje al vecino…", "Mensaje para %s en la bóveda", "La bóveda no se abre antes de tiempo.", "Toca para escribir con optimismo…")
     TemaId.ORDEN -> VozCarta("SELLO LEVANTADO: ABRIR", "Remachada", "AL CUSTODIO DEL %s", "CUSTODIO DE %s", "AL CUSTODIO QUE VENDRÁ",

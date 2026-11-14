@@ -81,7 +81,7 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.MEDIEVAL -> 5000
     TemaId.TEMPLARIO -> 4400
     TemaId.DISTOPIA -> 7000
-    TemaId.FRENTE -> 7000
+    TemaId.FRENTE -> 5600                      // dos destellos de la chispa y tres ondas que se escapan por la rotura
     TemaId.REFUGIO -> 3200
     TemaId.ORDEN -> 2600
     TemaId.VAPOR -> 3200          // el engrane da una doceava de vuelta por ciclo; la aguja tiembla tres veces
@@ -147,7 +147,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.MEDIEVAL -> roseton(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.TEMPLARIO -> escudoTemplario(c, r, e.primary, e.secondary, e.tertiary, if (oscuro) Color(0xFFEEE7D8) else Color.White, t)
         TemaId.DISTOPIA -> ojo(c, r, e.onBackground, e.primary, e.background, t)
-        TemaId.FRENTE -> ojo(c, r, e.onBackground, e.primary, e.background, t)
+        TemaId.FRENTE -> chispaCanal(c, r, e.primary, e.onBackground, e.tertiary, e.background, t, oscuro)
         TemaId.REFUGIO -> atomo(c, r, e.primary, e.secondary, t)
         TemaId.ORDEN -> escudo(c, r, e.primary, e.secondary, t)
         TemaId.VAPOR -> engraneManometro(c, r, e.primary, lerp(e.primary, e.onBackground, 0.35f), if (oscuro) Color(0xFFEADCC0) else e.surface, Color(0xFF231B14), e.tertiary, t)
@@ -1204,6 +1204,54 @@ private fun DrawScope.ojo(c: Offset, r: Float, tinta: Color, rojo: Color, fondo:
         drawCircle(Color.White.copy(alpha = 0.7f), r * 0.04f, ec + Offset(mira + r * 0.06f, -r * 0.06f))
     }
     drawPath(almendra, tinta, style = Stroke(r * 0.07f))
+}
+
+/**
+ * Frente exterior: una chispa de tres trazos dentro de un círculo roto. El círculo es el canal, con su escala grabada y
+ * dos pilotos (rojo y ámbar) engastados en el aro; está roto arriba a la derecha, y por la rotura se escapan las ondas
+ * de la señal. La chispa da dos destellos por vuelta, como una transmisión corta, y el piloto rojo parpadea.
+ */
+private fun DrawScope.chispaCanal(c: Offset, r: Float, canal: Color, chispa: Color, senal: Color, fondo: Color, t: Float, oscuro: Boolean) {
+    val radio = r * 0.8f
+    val hueco = -50f; val abre = 56f
+    val caja = Offset(c.x - radio, c.y - radio); val lado = Size(radio * 2, radio * 2)
+    // La escala grabada por fuera del aro, salvo en la rotura.
+    for (i in 0 until 24) {
+        val g = i * 15.0
+        val dist = abs(((g - hueco + 540.0) % 360.0) - 180.0)
+        if (dist < abre / 2 + 6) continue
+        val a = rad(g)
+        drawLine(canal.copy(alpha = 0.55f), c.mas(r * 0.93f, a), c.mas(r * (if (i % 2 == 0) 1f else 0.97f), a), r * 0.035f)
+    }
+    // El aro y su bisel de dentro.
+    drawArc(canal, hueco + abre / 2, 360f - abre, false, caja, lado, style = Stroke(r * 0.11f, cap = StrokeCap.Round))
+    val ri = radio * 0.84f
+    drawArc(canal.copy(alpha = 0.4f), hueco + abre / 2 + 6f, 360f - abre - 12f, false, Offset(c.x - ri, c.y - ri), Size(ri * 2, ri * 2), style = Stroke(r * 0.03f))
+    // Las ondas de la señal: nacen junto a la chispa y salen por la rotura, apagándose.
+    for (k in 0 until 3) {
+        val f = ((t * 2f + k / 3f) % 1f)
+        val ro = r * (0.46f + 0.56f * f)
+        val al = (sin(PI * f).toFloat() * (if (oscuro) 0.9f else 0.75f)).coerceIn(0f, 1f)
+        drawArc(senal.copy(alpha = al), hueco - 20f, 40f, false, Offset(c.x - ro, c.y - ro), Size(ro * 2, ro * 2), style = Stroke(r * 0.06f, cap = StrokeCap.Round))
+    }
+    // La chispa: tres trazos en zigzag, que destella dos veces seguidas por vuelta.
+    fun pulso(t0: Float) = (1f - abs(t - t0) / 0.03f).coerceIn(0f, 1f)
+    val destello = maxOf(pulso(0.08f), pulso(0.16f))
+    if (destello > 0f) drawCircle(Brush.radialGradient(listOf(canal.copy(alpha = 0.45f * destello), Color.Transparent), center = c, radius = r * 0.62f), r * 0.62f, c)
+    val rayo = Path().apply {
+        moveTo(c.x + r * 0.17f, c.y - r * 0.46f); lineTo(c.x - r * 0.13f, c.y + r * 0.03f)
+        lineTo(c.x + r * 0.13f, c.y - r * 0.03f); lineTo(c.x - r * 0.17f, c.y + r * 0.46f)
+    }
+    drawPath(rayo, lerp(chispa, canal, destello), style = Stroke(r * 0.12f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    // Los dos pilotos engastados en el aro, abajo a la izquierda: el rojo parpadea, el ámbar queda fijo.
+    listOf(128.0 to Color(0xFFD9372B), 152.0 to Color(0xFFF2A33A)).forEachIndexed { i, (g, luz) ->
+        val p = c.mas(radio, rad(g))
+        val encendido = if (i == 0) (if ((t * 4f) % 1f < 0.55f) 1f else 0.3f) else 1f
+        drawCircle(fondo, r * 0.13f, p)
+        if (oscuro && encendido > 0.5f) drawCircle(Brush.radialGradient(listOf(luz.copy(alpha = 0.5f), Color.Transparent), center = p, radius = r * 0.2f), r * 0.2f, p)
+        drawCircle(lerp(fondo, luz, encendido), r * 0.08f, p)
+        drawCircle(canal, r * 0.1f, p, style = Stroke(r * 0.03f))
+    }
 }
 
 /**

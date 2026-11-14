@@ -656,19 +656,36 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
                 drawLine(parpado, q, q + d * (6 * u / l), 1.5f * u)
             }
         }
+        // La perilla de sintonía de la consola: la falda de baquelita moleteada con su filo de cromo y la raya de hueso que
+        // gira con el bloque; por dentro, el aro de pilotos ámbar que se encienden uno a uno, roto arriba, donde espera el
+        // piloto rojo que se prende al cerrar la transmisión.
         TemaId.FRENTE -> {
-            arco(pista, 0f, 1f, r, g)
-            arco(color, 0f, p, r, g)
-            for (k in 0 until 72) { val f = k / 72f; drawLine(e.background.copy(alpha = 0.35f), en(f, r - g / 2), en(f, r + g / 2), if (k % 6 == 0) 2 * u else 0.8f * u) }
-            val parpado = e.onBackground.copy(alpha = 0.7f)
-            val p0 = Offset(c.x - R, c.y); val p1 = Offset(c.x, c.y - R * 1.85f); val p2 = Offset(c.x + R, c.y)
-            drawPath(Path().apply { moveTo(p0.x, p0.y); quadraticTo(p1.x, p1.y, p2.x, p2.y); quadraticTo(c.x, c.y + R * 1.85f, p0.x, p0.y); close() }, parpado, style = Stroke(2.2f * u))
-            for (k in -3..3) {
-                val s = 0.5f + k * 0.09f
-                val q = Offset((1 - s) * (1 - s) * p0.x + 2 * (1 - s) * s * p1.x + s * s * p2.x, (1 - s) * (1 - s) * p0.y + 2 * (1 - s) * s * p1.y + s * s * p2.y)
-                val d = q - c; val l = d.getDistance().coerceAtLeast(1f)
-                drawLine(parpado, q, q + d * (6 * u / l), 1.5f * u)
+            val noche = e.background.luminance() < 0.5f
+            val baquelita = if (noche) Color(0xFF34302B) else Color(0xFF2A2622)
+            val cromo = Color(0xFFB9B6AE)
+            val rf = r + g * 0.45f
+            drawCircle(baquelita.copy(alpha = if (noche) 0.95f else 0.88f), rf, c, style = Stroke(g * 0.9f))
+            for (k in 0 until 60) { val f = k / 60f; drawLine(Color.Black.copy(alpha = 0.32f), en(f, rf + g * 0.05f), en(f, rf + g * 0.42f), 1.1f * u) }
+            arco(Color.White.copy(alpha = if (noche) 0.07f else 0.12f), 0.83f, 1.05f, rf - g * 0.2f, 2 * u)
+            drawCircle(cromo.copy(alpha = 0.75f), rf - g * 0.45f, c, style = Stroke(1.3f * u))
+            drawCircle(cromo.copy(alpha = 0.35f), R - 0.6f * u, c, style = Stroke(0.8f * u))
+            drawLine(Color(0xFFE7E1D4), en(p, rf - g * 0.3f), en(p, rf + g * 0.4f), 2.6f * u, StrokeCap.Round)
+            val n = 20; val rl = r - 7 * u
+            for (k in 0 until n) {
+                val f = 0.05f + 0.9f * k / (n - 1); val q = en(f, rl)
+                if (p > 0f && f <= p) {
+                    drawCircle(color.copy(alpha = if (noche) 0.3f else 0.2f), 6.5f * u, q)
+                    drawCircle(color, 3.2f * u, q)
+                    drawCircle(Color.White.copy(alpha = 0.6f), 1.1f * u, Offset(q.x - u, q.y - u))
+                } else {
+                    drawCircle(pista, 3.2f * u, q)
+                    drawCircle(tenue.copy(alpha = 0.35f), 3.2f * u, q, style = Stroke(0.8f * u))
+                }
             }
+            val rojo = en(0f, rl)
+            if (p >= 1f) drawCircle(Color(0xFFD9372B).copy(alpha = 0.3f), 7 * u, rojo)
+            drawCircle(if (p >= 1f) Color(0xFFD9372B) else Color(0xFFD9372B).copy(alpha = 0.3f), 3.6f * u, rojo)
+            drawCircle(cromo.copy(alpha = 0.6f), 4.6f * u, rojo, style = Stroke(u))
         }
         // Medidor de aguja de tres cuartos de vuelta, con la zona roja al final y la aguja corta en la orilla.
         TemaId.REFUGIO -> {
@@ -1202,9 +1219,12 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             addRect(Rect(x, y, x + w, y + h))
             if (w > h) { addOval(Rect(Offset(x + h * 0.45f, y + h / 2), h * 0.18f)); fillType = PathFillType.EvenOdd }
         }
+        // El cartucho de datos: la esquina de arriba cortada, la muesca de protección abajo y, si cabe, la ventana de la etiqueta.
         TemaId.FRENTE -> {
-            addRect(Rect(x, y, x + w, y + h))
-            if (w > h) { addOval(Rect(Offset(x + h * 0.45f, y + h / 2), h * 0.18f)); fillType = PathFillType.EvenOdd }
+            val k = minOf(h * 0.35f, w / 3); val nw = minOf(h * 0.5f, w * 0.15f); val nd = h * 0.25f; val n0 = x + minOf(h * 0.4f, w * 0.15f)
+            moveTo(x, y); lineTo(x + w - k, y); lineTo(x + w, y + k); lineTo(x + w, y + h)
+            lineTo(n0 + nw, y + h); lineTo(n0 + nw, y + h - nd); lineTo(n0, y + h - nd); lineTo(n0, y + h); lineTo(x, y + h); close()
+            if (w > h * 2.4f) { addRect(Rect(x + h * 0.4f, y + h * 0.22f, x + minOf(w * 0.6f, w - h * 0.8f), y + h * 0.56f)); fillType = PathFillType.EvenOdd }
         }
         TemaId.REFUGIO -> addRoundRect(RoundRect(x, y, x + w, y + h, CornerRadius(minOf(h, w) / 2)))
         TemaId.ORDEN -> {
