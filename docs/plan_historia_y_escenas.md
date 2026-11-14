@@ -520,7 +520,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | S6 | Scriptorium; Renacimiento | 2 | hecho 14 nov 2026 (`docs/historia/informes/S6.md`); **los dos cuadros, aprobados por el autor el 14 nov 2026** («Quedó increíble») |
 | S7 | Ruta de la Seda (el camino, con sus tres paisajes, y Chang'an; primer cuadro de desierto) | 2 | hecho 14 nov 2026 (`docs/historia/informes/S7.md`); **los dos cuadros, aprobados por el autor el 14 nov 2026** («Quedó increíble»); Samarcanda sigue sin cuadro propio |
 | S8 | Revolución francesa (con la helada; Versalles como variante); Vapor victoriano | 2 | hecho 14 nov 2026 (`docs/historia/informes/S8.md`); **los dos cuadros, aprobados por el autor el 14 nov 2026** («Quedó increíble») |
-| S9 | Egipto; Mesoamérica | 2 | pendiente |
+| S9 | Egipto; Mesoamérica | 2 | en curso (14 nov 2026): Mesoamérica, integrada; Egipto, en su tercera vuelta |
 | S10 | Prehistoria (el abrigo y la meseta; primer cuadro con luz de fuego) | 2 | pendiente |
 | S11 | Templario; Japón Edo | 2 | pendiente |
 | S12 | Mongol (el valle de invierno y el campamento de verano) | 2 | pendiente |

@@ -197,7 +197,7 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 
 **Por tipo de escena:**
 
-- **Exterior con sol** (casi todos los temas). Se aplica todo tal cual.
+- **Exterior con sol** (casi todos los temas). Se aplica todo tal cual. Un ejemplo de selva y ciudad de piedra es Mesoamérica (S9): `EscenaMeso.kt` y sus archivos; su imagen, `referencia_meso.jpg`.
   - Cambian la paleta local, la flora, las casas y **el marco**, que tiene que ser de ese lugar: una parra, un alero, un toldo, un arco, una palmera, una vela con su jarcia, el borde de una tienda, una viga, una rama.
   - El cielo de `HITOS` es de todos y **no se retoca para un tema:** cambiaría Helénico. Si el lugar pide otro cielo (polvo del desierto, gris del norte, un cielo que no es de la Tierra), la escena tiñe las `Luces` que le da el momento en una función propia, como hace Helénico con su eclipse (`luces(m)`).
 - **Sin agua** (desierto, estepa, montaña, ciudad). No se inventa un río para cumplir la regla 4. El primer cuadro de desierto es el camino de la Ruta de la Seda (S7, aprobado por el autor el 14 nov 2026): `EscenaSedaPaisajes.kt` y `EscenaSedaCampamento.kt`; sus imágenes, `referencia_seda.jpg` y `referencia_seda_changan.jpg`. De ciudad con humo, Vapor victoriano (S8, aprobado ese día): `EscenaVapor.kt` y sus archivos, y `referencia_vapor.jpg`.
@@ -240,7 +240,6 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 |---|---|---|---|---|
 | Egipto | Pay, Deir el-Medina | Exterior, sin agua | Un toldo de estera, una palmera | La ladera de piedra y arena |
 | Prehistoria | Ama, un valle del suroeste de Europa | Exterior y fuego | La boca de la cueva | El valle con su río |
-| Mesoamérica | K'an, una ciudad maya | Exterior | Una ceiba, un alero de palma | La plaza estucada |
 | Templario | Hermano Bernat, un castillo del Levante | Exterior, sin agua | Una almena, un estandarte | El llano seco |
 | Mongol | Bat, la estepa | Exterior, sin agua | El borde de la yurta | La estepa |
 | Japón Edo | Ochiyo, una posta del camino real | Exterior | Un alero, una rama de arce o de cerezo | El camino |
