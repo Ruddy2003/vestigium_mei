@@ -19,6 +19,8 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Luces
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Rayo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.agua
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.arbol
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.hojaDe
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.astros
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cielo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva
@@ -41,8 +43,7 @@ import kotlin.math.sin
 
 /**
  * Lo lejano del cuadro de Japón Edo: el cielo, el Fuji con su nieve, los montes de delante con sus bancos de bruma, el
- * llano de arrozales con el río del vado y sus pueblos, la fila de pinos del camino, y un cerezo junto a un santuario
- * pequeño. De atrás adelante, cada plano con menos bruma que el de detrás.
+ * llano de arrozales con el río del vado y sus pueblos, la fila de pinos del camino, y un cerezo junto al jizō. De atrás adelante, cada plano con menos bruma que el de detrás.
  */
 internal object LejosEdo {
     private val C = ColorEdo
@@ -263,7 +264,24 @@ internal object LejosEdo {
     private fun DrawScope.pinos(m: Momento, l: Luces, p: Pincel) {
         val az = Azar(Semilla.de("edo", "pinos"))
         val sitios = listOf(Triple(222f, 178f, 18f), Triple(206f, 184f, 26f), Triple(184f, 192f, 40f), Triple(150f, CAMINO + 1f, 72f), Triple(96f, CAMINO + 2f, 96f))
+        cerezo(m, l, p, Offset(42f, CAMINO + 1f), az)
         for ((x, pie, alto) in sitios) pino(m, l, p, Offset(x, pie), alto, (0.4f - alto / 300f).coerceIn(0.04f, 0.36f), az)
+    }
+
+    /**
+     * El cerezo del borde del camino, junto al jizō: en flor del 1 al 15 de abril, verde en verano, rojizo en otoño y
+     * pelado en invierno.
+     */
+    private fun DrawScope.cerezo(m: Momento, l: Luces, p: Pincel, pie: Offset, az: Azar) {
+        val est = m.ficha.estacion
+        val hoja = when {
+            EscenaEdo.cerezoEnFlor(m) -> C.CEREZO
+            EscenaEdo.mes(m) in 10..11 -> lerp(C.BERMELLON, C.ORO, 0.4f)
+            else -> hojaDe(est)?.let { lerp(it, C.PINO, 0.3f) }
+        }
+        sombraCorta(p.r, pie, 14f, 50f)
+        arbol(l, pie, 58f, est, 0.08f, Azar(Semilla.de("edo", "cerezo")), hoja = hoja, tronco = Color(0xFF5A4038))
+        if (EscenaEdo.cerezoEnFlor(m)) repeat(40) { val q = pie + Offset(az.entre(-22f, 22f), -az.entre(26f, 52f)); drawCircle(l.tono(lerp(C.CEREZO, Color.White, 0.5f)), az.entre(0.8f, 1.6f), q) }
     }
 
     /** Un pino negro japonés: el tronco torcido y los pisos de agujas, como nubes tendidas. */

@@ -58,7 +58,7 @@ internal object ColorEdo {
  *   bruma; el llano con los arrozales, el río y su vado, los pueblos y la fila de pinos del camino.
  * - **En medio:** el camino real, de tierra apisonada, y al otro lado las casas de la posta, de dos pisos, con sus
  *   celosías, sus cortinas y sus faroles; la casa grande de los señores (el honjin) y la torre de vigía de los fuegos.
- *   A la izquierda, un cerezo junto a un santuario pequeño.
+ *   A la izquierda, un cerezo junto al jizō del camino.
  * - **Delante:** el alero de la casa de té con su farol y las ristras de sandalias, los dos postes, el fogón con la
  *   tetera grande de hierro, la tinaja del agua, los sacos de arroz, y el banco largo con su fieltro rojo, la bandeja del
  *   té y el objeto del día.
