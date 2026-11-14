@@ -7,6 +7,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
@@ -15,6 +16,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -55,8 +57,8 @@ object TrofeosMas {
             "Cultura" to "Flauta de hueso", "Gente" to "Collar de conchas", "Constancia" to "Hueso con muescas", "Curiosos" to "Bifaz de sílex", "Tuyos" to "Mano en negativo"),
         TemaId.DISTOPIA to mapOf("Diario" to "Expediente sellado", "Mundo" to "Pase de control", "Cuerpo" to "Insignia numerada", "Mente" to "Tarjeta perforada",
             "Cultura" to "Documento censurado", "Gente" to "Credencial", "Constancia" to "Sello de goma", "Curiosos" to "Cámara de vigilancia", "Tuyos" to "Altavoz"),
-        TemaId.FRENTE to mapOf("Diario" to "Expediente sellado", "Mundo" to "Pase de control", "Cuerpo" to "Insignia numerada", "Mente" to "Tarjeta perforada",
-            "Cultura" to "Documento censurado", "Gente" to "Credencial", "Constancia" to "Sello de goma", "Curiosos" to "Cámara de vigilancia", "Tuyos" to "Altavoz"),
+        TemaId.FRENTE to mapOf("Diario" to "Parche del cartucho", "Mundo" to "Parche de la carta estelar", "Cuerpo" to "Parche del pulso", "Mente" to "Parche de la llave de cifrado",
+            "Cultura" to "Parche del microfilm", "Gente" to "Parche del auricular", "Constancia" to "Insignia de la célula", "Curiosos" to "Parche de la credencial falsa", "Tuyos" to "Parche de la radio de maleta"),
         TemaId.CIBER to mapOf("Diario" to "Registro del sistema", "Mundo" to "Mapa de la red", "Cuerpo" to "Monitor de pulso", "Mente" to "Árbol de directorios",
             "Cultura" to "Disquete", "Gente" to "Canal de charla", "Constancia" to "Tiempo en línea", "Curiosos" to "Laberinto ASCII", "Tuyos" to "Llave de raíz"),
         TemaId.NEON to mapOf("Diario" to "Letrero del puesto", "Mundo" to "Globo de neón", "Cuerpo" to "Corazón de neón", "Mente" to "Ojo que parpadea",
@@ -1462,106 +1464,246 @@ object TrofeosMas {
         }
     }
 
+    /**
+     * Frente exterior: cada trofeo es un parche de misión bordado de la red, de sarga con el borde sobrehilado en el hilo
+     * del metal del nivel y el motivo en puntada de satén, sujeto con dos pinzas de cromo a su peana de baquelita.
+     */
     internal fun DrawScope.frente(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
-        val carton = p.c(Color(0xFFD8C08A)); val papel = p.c(Color(0xFFF2EFE6)); val tinta = p.c(Color(0xFF141414))
-        val rojo = p.c(Color(0xFFC8102E)); val gris = p.c(Color(0xFF55585C)); val acero = p.c(Color(0xFF8A8D91))
-        fun lineas(x0: Float, y0: Float, x1: Float, n: Int, paso: Float, col: Color = gris) { for (k in 0 until n) drawLine(col, p.o(x0, y0 + k * paso), p.o(x1 - (if (k % 3 == 2) 0.12f else 0f), y0 + k * paso), lw * 0.45f) }
+        val hueso = p.c(TrazosFrente.HUESO); val pizarra = p.c(TrazosFrente.PIZARRA); val ambar = p.c(TrazosFrente.PILOTO_AMBAR)
+        val quemado = p.c(Color(0xFFB85C0F)); val baquelita = p.c(TrazosFrente.BAQUELITA); val cromo = p.c(TrazosFrente.CROMO)
+        val radar = p.c(TrazosFrente.RADAR); val pantalla = p.c(TrazosFrente.PANTALLA); val rojo = p.c(TrazosFrente.PILOTO_ROJO)
+        val marmol = p.c(TrazosFrente.MARMOL); val bronce = p.c(TrazosFrente.BRONCE)
+        /** Puntada de satén: la figura rellena y, si ya se logró, los hilos paralelos que la cubren, inclinados [giro] grados. */
+        fun saten(forma: Path, col: Color, giro: Float = 35f) {
+            drawPath(forma, col)
+            if (p.hecho) clipPath(forma) {
+                val b = forma.getBounds(); val d = b.width + b.height
+                rotate(giro, b.center) { var x = b.center.x - d; while (x < b.center.x + d) { drawLine(lerp(col, Color.Black, 0.25f).copy(alpha = 0.45f), Offset(x, b.center.y - d), Offset(x, b.center.y + d), lw * 0.16f); x += lw * 0.5f } }
+            }
+        }
+        /** Una línea bordada en satén (un trazo grueso con sus hilos cruzados). */
+        fun hilo(a: Offset, b: Offset, col: Color, g: Float = lw * 1.2f) {
+            drawLine(col, a, b, g, StrokeCap.Round)
+            if (p.hecho) drawLine(lerp(col, Color.Black, 0.3f).copy(alpha = 0.5f), a, b, g, StrokeCap.Butt, PathEffect.dashPathEffect(floatArrayOf(lw * 0.14f, lw * 0.42f)))
+        }
+        /** El pespunte: puntadas sueltas de hilo, como la costura que une el parche a la chaqueta. */
+        fun pespunte(forma: Path, col: Color) { if (p.hecho) drawPath(forma, col.copy(alpha = 0.7f), style = Stroke(lw * 0.35f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(lw * 0.9f, lw * 0.7f)))) }
+        /** El parche: la sombra, la tela de sarga con su diagonal, el pespunte de adentro y el sobrehilado del borde en el hilo del nivel. */
+        fun parche(forma: Path, tela: Color, costura: Color = hueso) {
+            val b = forma.getBounds()
+            if (p.hecho) drawPath(Path().apply { addPath(forma, Offset(lw * 0.7f, lw * 1.1f)) }, Color.Black.copy(alpha = 0.22f))
+            drawPath(forma, tela)
+            if (p.hecho) clipPath(forma) {
+                val d = b.width + b.height
+                rotate(-45f, b.center) { var x = b.center.x - d; while (x < b.center.x + d) { drawLine(Color.Black.copy(alpha = 0.1f), Offset(x, b.center.y - d), Offset(x, b.center.y + d), lw * 0.22f); x += lw * 0.75f } }
+                drawPath(forma, Color.White.copy(alpha = 0.06f), style = Stroke(lw * 7f))
+            }
+            val esc = 1f - lw * 5f / maxOf(b.width, b.height)
+            scale(esc, esc, b.center) { pespunte(forma, costura) }
+            drawPath(forma, p.metal(b.left / p.w, b.right / p.w), style = Stroke(lw * 2.6f))
+            if (p.hecho) drawPath(forma, p.linea.copy(alpha = 0.5f), style = Stroke(lw * 2.6f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(lw * 0.28f, lw * 0.46f))))
+        }
+        /** Letras bordadas, en la letra de las etiquetas de consola. */
+        fun rotulo(t: String, cx: Float, base: Float, tam: Float, col: Color) { if (p.hecho) mono(t, p.x(cx), p.y(base), p.w * tam, col, android.graphics.Paint.Align.CENTER, true) }
+        /** La peana: el bloque de baquelita con su filete de cromo y las dos pinzas que muerden el borde del parche. */
+        fun peana(yPinza: Float) {
+            caja(p, 0.3f, 0.72f, 0.7f, 0.77f, SolidColor(baquelita))
+            caja(p, 0.3f, 0.72f, 0.7f, 0.732f, SolidColor(cromo))
+            listOf(0.38f, 0.62f).forEach { x ->
+                caja(p, x - 0.02f, yPinza, x + 0.02f, 0.725f, SolidColor(cromo))
+                if (p.hecho) drawLine(Color.White.copy(alpha = 0.5f), p.o(x - 0.012f, yPinza + 0.008f), p.o(x - 0.012f, 0.72f), lw * 0.3f)
+            }
+        }
         when (cat) {
             "Diario" -> {
-                // El expediente: carpeta de cartón con pestaña, hojas que asoman y el sello rojo de «archivado».
-                caja(p, 0.2f, 0.18f, 0.8f, 0.72f, SolidColor(lerp(carton, Color.Black, 0.12f)))
-                caja(p, 0.22f, 0.14f, 0.78f, 0.68f, SolidColor(papel))
-                drawPath(Path().apply { moveTo(p.x(0.18f), p.y(0.24f)); lineTo(p.x(0.42f), p.y(0.24f)); lineTo(p.x(0.46f), p.y(0.2f)); lineTo(p.x(0.82f), p.y(0.2f)); lineTo(p.x(0.82f), p.y(0.74f)); lineTo(p.x(0.18f), p.y(0.74f)); close() }, SolidColor(carton))
-                drawRect(p.metal(0.2f, 0.8f), Offset(p.x(0.18f), p.y(0.2f)), Size(p.x(0.64f), p.y(0.54f)), style = Stroke(lw * 0.7f))
-                if (p.hecho) { lineas(0.26f, 0.32f, 0.6f, 3, 0.05f, tinta.copy(alpha = 0.55f)); texto("Nº 0417", p, 0.36f, 0.62f, 0.07f, tinta) }
-                drawCircle(rojo, p.w * 0.11f, p.o(0.66f, 0.56f), style = Stroke(lw * 1.2f))
-                drawLine(rojo, p.o(0.58f, 0.6f), p.o(0.74f, 0.52f), lw * 1.1f)
+                // El parche del cartucho: el cartucho de datos (la libreta de la red) con su etiqueta ámbar, la muesca de
+                // la esquina y la ventanilla de los dos carretes, bajo el número de la célula.
+                val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(p.r(0.12f, 0.14f, 0.88f, 0.68f), androidx.compose.ui.geometry.CornerRadius(p.w * 0.1f))) }
+                parche(forma, pizarra)
+                val cart = Path().apply { moveTo(p.x(0.28f), p.y(0.26f)); lineTo(p.x(0.64f), p.y(0.26f)); lineTo(p.x(0.72f), p.y(0.31f)); lineTo(p.x(0.72f), p.y(0.58f)); lineTo(p.x(0.28f), p.y(0.58f)); close() }
+                saten(cart, hueso, 80f)
+                saten(Path().apply { addRect(p.r(0.32f, 0.3f, 0.6f, 0.4f)) }, ambar, 10f)
+                if (p.hecho) for (k in 0 until 2) drawLine(quemado, p.o(0.35f, 0.335f + k * 0.035f), p.o(if (k == 1) 0.5f else 0.57f, 0.335f + k * 0.035f), lw * 0.45f)
+                saten(Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(p.r(0.34f, 0.45f, 0.66f, 0.54f), androidx.compose.ui.geometry.CornerRadius(p.w * 0.02f))) }, baquelita, 0f)
+                listOf(0.42f, 0.58f).forEach { x -> drawCircle(cromo, p.w * 0.032f, p.o(x, 0.495f)); drawCircle(baquelita, p.w * 0.012f, p.o(x, 0.495f)) }
+                hilo(p.o(0.44f, 0.475f), p.o(0.56f, 0.475f), radar, lw * 0.5f)
+                rotulo("K-7", 0.5f, 0.235f, 0.065f, ambar)
+                rotulo("CART 04", 0.5f, 0.645f, 0.05f, hueso)
+                peana(0.64f)
             }
             "Mundo" -> {
-                // El pase de control: tarjeta con franja roja, código de barras y el sello de la zona.
-                caja(p, 0.16f, 0.2f, 0.84f, 0.66f, SolidColor(papel))
-                caja(p, 0.16f, 0.2f, 0.84f, 0.3f, SolidColor(rojo))
-                if (p.hecho) texto("ZONA 3", p, 0.5f, 0.25f, 0.075f, Color(0xFFF2EFE6))
-                val barras = listOf(2, 1, 3, 1, 1, 2, 3, 1, 2, 1, 1, 3, 2, 1, 2)
-                var x = 0.22f
-                barras.forEach { b -> val ww = b * 0.009f; caja(p, x, 0.38f, x + ww, 0.58f, SolidColor(tinta)); x += ww + 0.012f }
-                drawCircle(gris, p.w * 0.08f, p.o(0.72f, 0.48f), style = Stroke(lw * 0.9f))
-                estrella(p.o(0.72f, 0.48f), p.w * 0.04f, p.w * 0.018f, 5, SolidColor(gris))
-                drawRect(p.metal(0.16f, 0.84f), Offset(p.x(0.16f), p.y(0.2f)), Size(p.x(0.68f), p.y(0.46f)), style = Stroke(lw * 0.8f))
+                // El parche de la carta estelar: el cielo bordado con su retícula, las estrellas en punto de cruz y la ruta de
+                // salto punteada en ámbar, de mundo en mundo, hasta el anillo de llegada.
+                val c = p.o(0.5f, 0.4f); val r = p.w * 0.34f
+                val forma = Path().apply { addOval(Rect(c, r)) }
+                parche(forma, pantalla, radar)
+                clipPath(Path().apply { addOval(Rect(c, r * 0.88f)) }) {
+                    if (p.hecho) with(TrazosFrente) { reticula(c, r * 0.88f, radar.copy(alpha = 0.35f), lw * 0.35f, 3) }
+                    val az = java.util.Random(77)
+                    if (p.hecho) repeat(16) {
+                        val e = Offset(c.x + (az.nextFloat() - 0.5f) * r * 1.6f, c.y + (az.nextFloat() - 0.5f) * r * 1.6f); val s = lw * (0.5f + az.nextFloat() * 0.5f)
+                        drawLine(hueso, Offset(e.x - s, e.y - s), Offset(e.x + s, e.y + s), lw * 0.3f); drawLine(hueso, Offset(e.x - s, e.y + s), Offset(e.x + s, e.y - s), lw * 0.3f)
+                    }
+                    val paradas = listOf(Offset(c.x - r * 0.62f, c.y + r * 0.34f), Offset(c.x - r * 0.2f, c.y + r * 0.46f), Offset(c.x + r * 0.08f, c.y - r * 0.06f), Offset(c.x + r * 0.5f, c.y - r * 0.4f))
+                    drawCircle(quemado, r * 0.2f, Offset(c.x - r * 0.42f, c.y - r * 0.36f))
+                    if (p.hecho) drawArc(hueso.copy(alpha = 0.6f), 200f, 90f, false, Offset(c.x - r * 0.56f, c.y - r * 0.5f), Size(r * 0.28f, r * 0.28f), style = Stroke(lw * 0.4f))
+                    rotate(-14f, Offset(c.x - r * 0.42f, c.y - r * 0.36f)) { drawOval(hueso, Offset(c.x - r * 0.72f, c.y - r * 0.42f), Size(r * 0.6f, r * 0.12f), style = Stroke(lw * 0.5f)) }
+                    with(TrazosFrente) { rutaSalto(paradas, ambar, lw * 1.1f, lw * 0.9f) }
+                    drawCircle(ambar, lw * 2.2f, paradas.last(), style = Stroke(lw * 0.6f))
+                    paradas.dropLast(1).forEach { drawCircle(hueso, lw * 0.7f, it) }
+                }
+                rotulo("RUTA 3", 0.5f, 0.635f, 0.045f, radar)
+                peana(0.66f)
             }
             "Cuerpo" -> {
-                // La insignia numerada: placa con muescas en las esquinas, el número grande y dos remaches.
-                val placa = Path().apply { val a = 0.06f; moveTo(p.x(0.2f + a), p.y(0.16f)); lineTo(p.x(0.8f - a), p.y(0.16f)); lineTo(p.x(0.8f), p.y(0.16f + a)); lineTo(p.x(0.8f), p.y(0.68f - a))
-                    lineTo(p.x(0.8f - a), p.y(0.68f)); lineTo(p.x(0.2f + a), p.y(0.68f)); lineTo(p.x(0.2f), p.y(0.68f - a)); lineTo(p.x(0.2f), p.y(0.16f + a)); close() }
-                drawPath(placa, p.metal(0.2f, 0.8f))
-                drawPath(placa, p.linea, style = Stroke(lw * 0.7f))
-                texto("7", p, 0.5f, 0.38f, 0.26f, p.c(Color(0xFF1F1F1F)))
-                caja(p, 0.28f, 0.56f, 0.72f, 0.6f, SolidColor(rojo))
-                listOf(0.27f, 0.73f).forEach { xx -> drawCircle(p.linea, p.w * 0.018f, p.o(xx, 0.24f)) }
+                // El parche del pulso: el escudo de hueso con la pantalla redonda en su bisel de cromo y el latido trazado en verde de radar.
+                val forma = Path().apply {
+                    moveTo(p.x(0.16f), p.y(0.12f)); lineTo(p.x(0.84f), p.y(0.12f)); lineTo(p.x(0.84f), p.y(0.42f))
+                    cubicTo(p.x(0.84f), p.y(0.56f), p.x(0.66f), p.y(0.64f), p.x(0.5f), p.y(0.7f))
+                    cubicTo(p.x(0.34f), p.y(0.64f), p.x(0.16f), p.y(0.56f), p.x(0.16f), p.y(0.42f)); close()
+                }
+                parche(forma, hueso, pizarra)
+                val c = p.o(0.5f, 0.38f); val r = p.w * 0.2f
+                saten(Path().apply { addOval(Rect(c, r * 1.16f)) }, cromo, 0f)
+                saten(Path().apply { addOval(Rect(c, r)) }, pantalla, 90f)
+                if (p.hecho) with(TrazosFrente) { reticula(c, r, radar.copy(alpha = 0.3f), lw * 0.3f, 2) }
+                val latido = Path().apply {
+                    moveTo(c.x - r * 0.9f, c.y); lineTo(c.x - r * 0.38f, c.y); lineTo(c.x - r * 0.24f, c.y - r * 0.18f); lineTo(c.x - r * 0.1f, c.y + r * 0.12f)
+                    lineTo(c.x + r * 0.04f, c.y - r * 0.66f); lineTo(c.x + r * 0.2f, c.y + r * 0.42f); lineTo(c.x + r * 0.32f, c.y); lineTo(c.x + r * 0.9f, c.y)
+                }
+                if (p.hecho) drawPath(latido, radar.copy(alpha = 0.3f), style = Stroke(lw * 1.8f, join = StrokeJoin.Round))
+                drawPath(latido, radar, style = Stroke(lw * 0.7f, join = StrokeJoin.Round))
+                listOf(-1f, 1f).forEach { s -> drawCircle(rojo, lw * 0.9f, Offset(c.x + s * r * 1.5f, c.y - r * 0.9f)) }
+                rotulo("072", 0.5f, 0.6f, 0.06f, pizarra)
+                peana(0.63f)
             }
             "Mente" -> {
-                // La tarjeta perforada: esquina cortada, columnas de números y los agujeros de las respuestas.
-                val tarjeta = Path().apply { moveTo(p.x(0.22f), p.y(0.14f)); lineTo(p.x(0.84f), p.y(0.14f)); lineTo(p.x(0.84f), p.y(0.7f)); lineTo(p.x(0.16f), p.y(0.7f)); lineTo(p.x(0.16f), p.y(0.22f)); close() }
-                drawPath(tarjeta, SolidColor(carton))
-                val az = java.util.Random(41)
-                for (col in 0 until 10) for (fila in 0 until 8) {
-                    val cx = 0.22f + col * 0.06f; val cy = 0.22f + fila * 0.06f
-                    if (az.nextInt(5) == 0) caja(p, cx - 0.012f, cy - 0.016f, cx + 0.012f, cy + 0.016f, SolidColor(if (p.hecho) Color(0xFF2A2A2A) else p.sombra))
-                    else if (p.hecho) drawCircle(gris.copy(alpha = 0.35f), p.w * 0.004f, p.o(cx, cy))
+                // El parche de la llave de cifrado: el rombo ámbar con el rotor de la llave (su anillo de muescas y su eje)
+                // y el paletón que abre el canal.
+                val forma = Path().apply { moveTo(p.x(0.5f), p.y(0.06f)); lineTo(p.x(0.88f), p.y(0.39f)); lineTo(p.x(0.5f), p.y(0.72f)); lineTo(p.x(0.12f), p.y(0.39f)); close() }
+                parche(forma, quemado)
+                val c = p.o(0.42f, 0.33f); val r = p.w * 0.14f
+                saten(Path().apply { addOval(Rect(c, r)) }, hueso, 60f)
+                if (p.hecho) for (k in 0 until 20) { val a = Math.toRadians(k * 18.0); drawLine(baquelita, Offset(c.x + (r * 0.98f * cos(a)).toFloat(), c.y + (r * 0.98f * sin(a)).toFloat()), Offset(c.x + (r * (if (k % 5 == 0) 0.72f else 0.84f) * cos(a)).toFloat(), c.y + (r * (if (k % 5 == 0) 0.72f else 0.84f) * sin(a)).toFloat()), lw * 0.35f) }
+                drawCircle(baquelita, r * 0.42f, c); drawCircle(cromo, r * 0.18f, c)
+                val varilla = Path().apply { moveTo(c.x + r * 0.9f, c.y + r * 0.6f); lineTo(p.x(0.7f), p.y(0.5f)) }
+                drawPath(varilla, hueso, style = Stroke(lw * 1.8f, cap = StrokeCap.Butt))
+                rotate(38f, p.o(0.7f, 0.5f)) {
+                    saten(Path().apply { addRect(Rect(p.x(0.66f), p.y(0.5f), p.x(0.7f), p.y(0.56f))) }, hueso, 0f)
+                    saten(Path().apply { addRect(Rect(p.x(0.62f), p.y(0.535f), p.x(0.66f), p.y(0.56f))) }, hueso, 0f)
                 }
-                drawPath(tarjeta, p.metal(0.16f, 0.84f), style = Stroke(lw * 0.8f))
+                drawCircle(ambar, lw * 1.1f, p.o(0.5f, 0.16f))
+                rotulo("CLAVE", 0.5f, 0.625f, 0.042f, hueso)
+                peana(0.6f)
             }
             "Cultura" -> {
-                // El documento censurado: hoja con renglones y barras negras encima.
-                caja(p, 0.22f, 0.08f, 0.78f, 0.72f, SolidColor(papel))
-                if (p.hecho) lineas(0.27f, 0.2f, 0.73f, 9, 0.055f)
-                listOf(Triple(0.3f, 0.25f, 0.66f), Triple(0.27f, 0.36f, 0.5f), Triple(0.45f, 0.47f, 0.73f), Triple(0.27f, 0.58f, 0.6f)).forEach { (x0, y, x1) -> caja(p, x0, y - 0.018f, x1, y + 0.018f, SolidColor(tinta)) }
-                drawRect(p.metal(0.22f, 0.78f), Offset(p.x(0.22f), p.y(0.08f)), Size(p.x(0.56f), p.y(0.64f)), style = Stroke(lw * 0.8f))
-                if (p.hecho) texto("CLASIFICADO", p, 0.5f, 0.13f, 0.055f, rojo)
+                // El parche del microfilm: la tira de película que cruza en diagonal con sus perforaciones y sus fotogramas,
+                // y el carrete del que sale.
+                val forma = Path().apply { val a = 0.07f; moveTo(p.x(0.1f + a), p.y(0.16f)); lineTo(p.x(0.9f - a), p.y(0.16f)); lineTo(p.x(0.9f), p.y(0.16f + a)); lineTo(p.x(0.9f), p.y(0.66f - a))
+                    lineTo(p.x(0.9f - a), p.y(0.66f)); lineTo(p.x(0.1f + a), p.y(0.66f)); lineTo(p.x(0.1f), p.y(0.66f - a)); lineTo(p.x(0.1f), p.y(0.16f + a)); close() }
+                parche(forma, baquelita, cromo)
+                val rc = p.o(0.3f, 0.52f)
+                clipPath(forma) {
+                    rotate(-24f, p.o(0.56f, 0.38f)) {
+                        val tira = Path().apply { addRect(Rect(p.x(0.3f), p.y(0.31f), p.x(0.96f), p.y(0.45f))) }
+                        saten(tira, ambar, 0f)
+                        for (k in 0 until 4) {
+                            val x0 = 0.36f + k * 0.15f
+                            saten(Path().apply { addRect(Rect(p.x(x0), p.y(0.335f), p.x(x0 + 0.12f), p.y(0.425f))) }, if (k == 1) hueso else lerp(ambar, Color.Black, 0.5f), 90f)
+                        }
+                        if (p.hecho) for (k in 0 until 14) listOf(0.318f, 0.432f).forEach { y -> drawRect(baquelita, Offset(p.x(0.33f + k * 0.045f), p.y(y)), Size(p.x(0.022f), p.y(0.012f))) }
+                    }
+                }
+                drawCircle(cromo, p.w * 0.13f, rc); drawCircle(baquelita, p.w * 0.105f, rc)
+                saten(Path().apply { addOval(Rect(rc, p.w * 0.085f)) }, ambar, 20f)
+                listOf(0f, 120f, 240f).forEach { g -> val a = Math.toRadians(g.toDouble() - 90); drawCircle(baquelita, p.w * 0.022f, Offset(rc.x + (p.w * 0.05f * cos(a)).toFloat(), rc.y + (p.w * 0.05f * sin(a)).toFloat())) }
+                drawCircle(cromo, p.w * 0.018f, rc)
+                rotulo("MF-12", 0.68f, 0.62f, 0.045f, cromo)
+                peana(0.62f)
             }
             "Gente" -> {
-                // La credencial: tarjeta colgada de su cinta, con foto vacía (solo el marco), huella y número.
-                drawLine(rojo, p.o(0.42f, 0.02f), p.o(0.48f, 0.16f), lw * 1.4f); drawLine(rojo, p.o(0.58f, 0.02f), p.o(0.52f, 0.16f), lw * 1.4f)
-                caja(p, 0.45f, 0.14f, 0.55f, 0.2f)
-                caja(p, 0.2f, 0.2f, 0.8f, 0.7f, SolidColor(papel))
-                caja(p, 0.26f, 0.28f, 0.48f, 0.54f, SolidColor(p.c(Color(0xFFCFCBC0))))
-                if (p.hecho) {
-                    for (k in 0 until 5) drawArc(gris, 200f, 140f, false, Offset(p.x(0.6f - k * 0.015f), p.y(0.3f - k * 0.012f)), Size(p.x(0.1f + k * 0.03f), p.y(0.1f + k * 0.03f)), style = Stroke(lw * 0.4f))
-                    lineas(0.26f, 0.6f, 0.74f, 2, 0.05f, tinta.copy(alpha = 0.6f))
+                // El parche del auricular: el arco de pizarra con el auricular de radio (la diadema, los dos audífonos y el
+                // micrófono) y las ondas de la voz que llega a cada lado.
+                val forma = Path().apply { moveTo(p.x(0.16f), p.y(0.68f)); lineTo(p.x(0.16f), p.y(0.36f)); arcTo(Rect(p.x(0.16f), p.y(0.36f) - p.x(0.34f), p.x(0.84f), p.y(0.36f) + p.x(0.34f)), 180f, 180f, false); lineTo(p.x(0.84f), p.y(0.68f)); close() }
+                parche(forma, pizarra)
+                val c = p.o(0.5f, 0.38f); val r = p.w * 0.19f
+                drawArc(hueso, 190f, 160f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(lw * 2.4f, cap = StrokeCap.Round))
+                if (p.hecho) drawArc(lerp(hueso, Color.Black, 0.3f), 190f, 160f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(lw * 2.4f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(lw * 0.14f, lw * 0.4f))))
+                listOf(-1f, 1f).forEach { s ->
+                    val o = Offset(c.x + s * r, c.y + r * 0.1f)
+                    saten(Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(o.x - r * 0.26f, o.y - r * 0.36f, o.x + r * 0.26f, o.y + r * 0.36f), androidx.compose.ui.geometry.CornerRadius(r * 0.2f))) }, baquelita, 90f)
+                    drawOval(cromo, Offset(o.x - r * 0.14f, o.y - r * 0.22f), Size(r * 0.28f, r * 0.44f), style = Stroke(lw * 0.5f))
+                    for (k in 1..2) drawArc(ambar.copy(alpha = 1f - k * 0.3f), if (s < 0) 150f else -30f, 60f, false, Offset(o.x - r * (0.3f + k * 0.26f), o.y - r * (0.3f + k * 0.26f)), Size(r * (0.6f + k * 0.52f), r * (0.6f + k * 0.52f)), style = Stroke(lw * 0.7f, cap = StrokeCap.Round))
                 }
-                drawRect(p.metal(0.2f, 0.8f), Offset(p.x(0.2f), p.y(0.2f)), Size(p.x(0.6f), p.y(0.5f)), style = Stroke(lw * 0.9f))
+                val boca = Path().apply { moveTo(c.x - r, c.y + r * 0.4f); quadraticTo(c.x - r * 0.9f, c.y + r * 1.1f, c.x - r * 0.1f, c.y + r * 1.05f) }
+                drawPath(boca, cromo, style = Stroke(lw * 0.8f, cap = StrokeCap.Round))
+                drawCircle(baquelita, lw * 1.6f, Offset(c.x - r * 0.1f, c.y + r * 1.05f)); drawCircle(rojo, lw * 0.6f, Offset(c.x - r * 0.1f, c.y + r * 1.05f))
+                rotulo("CANAL 9", 0.5f, 0.655f, 0.045f, hueso)
+                peana(0.64f)
             }
             "Constancia" -> {
-                // El sello de goma: mango, cuerpo de metal y la huella roja del sello debajo.
-                drawCircle(p.c(Color(0xFF3A2A1E)), p.w * 0.09f, p.o(0.5f, 0.14f))
-                caja(p, 0.46f, 0.2f, 0.54f, 0.36f, SolidColor(p.c(Color(0xFF3A2A1E))))
-                caja(p, 0.3f, 0.36f, 0.7f, 0.46f)
-                caja(p, 0.32f, 0.46f, 0.68f, 0.5f, SolidColor(tinta))
-                drawRect(rojo, Offset(p.x(0.24f), p.y(0.56f)), Size(p.x(0.52f), p.y(0.16f)), style = Stroke(lw * 1.2f))
-                if (p.hecho) texto("APROBADO", p, 0.5f, 0.64f, 0.065f, rojo)
+                // La insignia de la célula: el emblema de la red (la chispa en el círculo roto) bordado en el disco de hueso,
+                // y debajo la lengüeta con un galón por cada nivel de servicio.
+                val c = p.o(0.5f, 0.3f); val r = p.w * 0.27f
+                val lengua = Path().apply { moveTo(p.x(0.3f), p.y(0.42f)); lineTo(p.x(0.7f), p.y(0.42f)); lineTo(p.x(0.7f), p.y(0.66f)); lineTo(p.x(0.5f), p.y(0.71f)); lineTo(p.x(0.3f), p.y(0.66f)); close() }
+                parche(lengua, pizarra)
+                val galones = if (p.hecho) p.nivel.coerceIn(1, 4) else 3
+                for (k in 0 until galones) {
+                    val y = 0.56f + k * 0.032f
+                    drawPath(Path().apply { moveTo(p.x(0.36f), p.y(y)); lineTo(p.x(0.5f), p.y(y + 0.03f)); lineTo(p.x(0.64f), p.y(y)) }, ambar, style = Stroke(lw * 1.3f, join = StrokeJoin.Miter))
+                }
+                parche(Path().apply { addOval(Rect(c, r)) }, hueso, pizarra)
+                if (p.hecho) drawCircle(pizarra.copy(alpha = 0.25f), r * 0.78f, c, style = Stroke(lw * 0.4f))
+                with(TrazosFrente) { emblemaRed(c, r * 0.56f, if (p.hecho) quemado else p.sombra, lw * 1.5f) }
+                if (p.hecho) drawPath(Path().apply { addOval(Rect(c, r * 0.56f)) }, lerp(quemado, Color.Black, 0.3f).copy(alpha = 0.4f), style = Stroke(lw * 1.5f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(lw * 0.14f, lw * 0.4f))))
+                peana(0.67f)
             }
             "Curiosos" -> {
-                // La cámara de vigilancia: brazo de pared, cuerpo y lente con su luz roja.
-                caja(p, 0.74f, 0.16f, 0.82f, 0.42f, SolidColor(gris))
-                drawLine(gris, p.o(0.78f, 0.28f), p.o(0.62f, 0.34f), lw * 1.6f)
-                val cuerpo = Path().apply { moveTo(p.x(0.18f), p.y(0.3f)); lineTo(p.x(0.64f), p.y(0.24f)); lineTo(p.x(0.66f), p.y(0.42f)); lineTo(p.x(0.2f), p.y(0.5f)); close() }
-                drawPath(cuerpo, p.metal(0.18f, 0.66f))
-                drawPath(cuerpo, p.linea, style = Stroke(lw * 0.6f))
-                drawCircle(tinta, p.w * 0.07f, p.o(0.2f, 0.4f)); drawCircle(p.c(Color(0xFF2E4A6E)), p.w * 0.04f, p.o(0.2f, 0.4f))
-                drawCircle(rojo, p.w * 0.018f, p.o(0.58f, 0.3f))
-                if (p.hecho) drawCircle(Brush.radialGradient(listOf(Color(0xFFC8102E).copy(alpha = 0.45f), Color.Transparent), p.o(0.58f, 0.3f), p.w * 0.06f), p.w * 0.06f, p.o(0.58f, 0.3f))
+                // El parche de la credencial falsa: la tarjeta de mármol y bronce del Directorio, con su foto en blanco, el
+                // código y la franja tachada, y encima el sello ámbar de la red que la convierte en otra.
+                val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(p.r(0.18f, 0.08f, 0.82f, 0.7f), androidx.compose.ui.geometry.CornerRadius(p.w * 0.05f))) }
+                parche(forma, cromo, baquelita)
+                saten(Path().apply { addRect(p.r(0.27f, 0.17f, 0.73f, 0.56f)) }, marmol, 0f)
+                saten(Path().apply { addRect(p.r(0.27f, 0.17f, 0.73f, 0.23f)) }, bronce, 90f)
+                saten(Path().apply { addRect(p.r(0.32f, 0.27f, 0.48f, 0.43f)) }, lerp(marmol, Color.Black, 0.18f), 45f)
+                if (p.hecho) {
+                    drawLine(bronce.copy(alpha = 0.6f), p.o(0.32f, 0.27f), p.o(0.48f, 0.43f), lw * 0.3f); drawLine(bronce.copy(alpha = 0.6f), p.o(0.48f, 0.27f), p.o(0.32f, 0.43f), lw * 0.3f)
+                    for (k in 0 until 3) drawLine(pizarra.copy(alpha = 0.7f), p.o(0.52f, 0.3f + k * 0.045f), p.o(if (k == 2) 0.62f else 0.69f, 0.3f + k * 0.045f), lw * 0.45f)
+                    val barras = listOf(2, 1, 1, 3, 1, 2, 1, 1, 2, 3, 1, 1, 2)
+                    var x = 0.32f; barras.forEach { b -> val ww = b * 0.007f; drawRect(baquelita, p.o(x, 0.47f), Size(p.x(ww), p.y(0.05f))); x += ww + 0.01f }
+                }
+                hilo(p.o(0.25f, 0.53f), p.o(0.75f, 0.19f), rojo, lw * 0.9f)
+                val s = p.o(0.64f, 0.5f)
+                rotate(-14f, s) {
+                    drawCircle(ambar, p.w * 0.1f, s, style = Stroke(lw * 1.1f))
+                    with(TrazosFrente) { emblemaRed(s, p.w * 0.055f, ambar, lw * 0.8f) }
+                }
+                rotulo("VÁLIDO", 0.42f, 0.645f, 0.05f, baquelita)
+                peana(0.66f)
             }
             else -> {
-                // El altavoz de la plaza: bocina de metal en su poste, con las ondas del anuncio.
-                caja(p, 0.47f, 0.4f, 0.53f, 0.76f, SolidColor(gris))
-                val bocina = Path().apply { moveTo(p.x(0.36f), p.y(0.3f)); lineTo(p.x(0.36f), p.y(0.42f)); lineTo(p.x(0.74f), p.y(0.56f)); lineTo(p.x(0.74f), p.y(0.16f)); close() }
-                drawPath(bocina, p.metal(0.36f, 0.74f))
-                drawPath(bocina, p.linea, style = Stroke(lw * 0.6f))
-                caja(p, 0.3f, 0.3f, 0.36f, 0.42f, SolidColor(acero))
-                if (p.hecho) listOf(0.1f, 0.16f, 0.22f).forEachIndexed { k, r ->
-                    drawArc(rojo.copy(alpha = 0.8f - k * 0.2f), -40f, 80f, false, Offset(p.x(0.74f) - p.w * r, p.y(0.36f) - p.w * r), Size(p.w * r * 2, p.w * r * 2), style = Stroke(lw * 0.8f))
+                // El parche de la radio de maleta: la maleta de baquelita abierta con su dial redondo, las perillas, la
+                // manija y la antena de látigo con la punta encendida, que transmite.
+                val forma = Path().apply { moveTo(p.x(0.14f), p.y(0.16f)); lineTo(p.x(0.86f), p.y(0.16f)); lineTo(p.x(0.8f), p.y(0.68f)); lineTo(p.x(0.2f), p.y(0.68f)); close() }
+                parche(forma, p.c(Color(0xFFD4CCBC)), pizarra)
+                saten(Path().apply { addRect(p.r(0.26f, 0.24f, 0.74f, 0.32f)) }, lerp(baquelita, Color.White, 0.18f), 90f)
+                saten(Path().apply { addRect(p.r(0.24f, 0.32f, 0.76f, 0.6f)) }, baquelita, 90f)
+                drawPath(Path().apply { moveTo(p.x(0.43f), p.y(0.32f)); lineTo(p.x(0.43f), p.y(0.29f)); lineTo(p.x(0.57f), p.y(0.29f)); lineTo(p.x(0.57f), p.y(0.32f)) }, cromo, style = Stroke(lw * 0.8f))
+                val dial = p.o(0.39f, 0.46f); val rd = p.w * 0.08f
+                saten(Path().apply { addOval(Rect(dial, rd)) }, pantalla, 0f)
+                if (p.hecho) {
+                    with(TrazosFrente) { reticula(dial, rd, radar.copy(alpha = 0.6f), lw * 0.3f, 2) }
+                    drawLine(ambar, dial, Offset(dial.x + rd * 0.7f, dial.y - rd * 0.5f), lw * 0.5f)
                 }
+                drawCircle(cromo, rd * 1.1f, dial, style = Stroke(lw * 0.5f))
+                listOf(0.58f, 0.68f).forEach { x -> drawCircle(cromo, p.w * 0.032f, p.o(x, 0.42f)); drawCircle(baquelita, p.w * 0.016f, p.o(x, 0.42f)) }
+                listOf(0.56f, 0.62f, 0.68f).forEach { x -> with(TrazosFrente) { piloto(p.o(x, 0.53f), p.w * 0.011f, if (x == 0.62f) rojo else ambar, p.hecho) } }
+                hilo(p.o(0.72f, 0.33f), p.o(0.8f, 0.06f), cromo, lw * 0.6f)
+                drawCircle(rojo, lw * 1f, p.o(0.8f, 0.06f))
+                if (p.hecho) for (k in 1..2) drawArc(ambar.copy(alpha = 0.9f - k * 0.3f), -150f, 120f, false, Offset(p.x(0.8f) - p.w * 0.04f * k, p.y(0.06f) - p.w * 0.04f * k), Size(p.w * 0.08f * k, p.w * 0.08f * k), style = Stroke(lw * 0.5f))
+                rotulo("TX 21", 0.5f, 0.655f, 0.045f, pizarra)
+                peana(0.64f)
             }
         }
     }

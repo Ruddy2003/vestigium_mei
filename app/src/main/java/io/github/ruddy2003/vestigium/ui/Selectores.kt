@@ -274,7 +274,12 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     }
     // Casilla de formulario.
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.FRENTE -> RectangleShape
+    // La tecla de la consola, con el canto de arriba combado.
+    TemaId.FRENTE -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val r = minOf(w, h) * 0.2f; val b = h * 0.06f; val q = r * 0.5f
+        moveTo(0f, r + b); quadraticTo(0f, b, r, b); quadraticTo(w / 2, -b, w - r, b); quadraticTo(w, b, w, r + b)
+        lineTo(w, h - q); quadraticTo(w, h, w - q, h); lineTo(q, h); quadraticTo(0f, h, 0f, h - q); close()
+    }
     // Píldora de luz de tablero.
     TemaId.REFUGIO -> RoundedCornerShape(50)
     // Placa ochavada.
@@ -402,7 +407,8 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         // La cruz patada calada en el escudo.
         TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(s.width / 2, s.height * 0.42f), minOf(s.width, s.height) * 0.26f), fondo.copy(alpha = 0.55f))
         TemaId.DISTOPIA -> {}
-        TemaId.FRENTE -> {}
+        // La ranura grabada del rótulo, arriba de la tecla.
+        TemaId.FRENTE -> drawLine(fondo.copy(alpha = 0.45f), Offset(s.width * 0.28f, s.height * 0.24f), Offset(s.width * 0.72f, s.height * 0.24f), minOf(s.width, s.height) * 0.07f, StrokeCap.Round)
         TemaId.REFUGIO -> {}
         TemaId.ORDEN -> {}
         // Dos remaches abajo, como en la placa.

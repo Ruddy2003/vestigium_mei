@@ -1001,10 +1001,9 @@ object LibroDiario {
                 while (x < x1 - 1f) {
                     if (abs(x - cx) > 13f) {
                         cv.drawCircle(x, y, 0.55f, tenue)
-                        val bits = Math.floorMod(k * 37 + 11, 7) + 1
-                        if (bits and 1 != 0) cv.drawCircle(x, y - 2.2f, 0.95f, relleno)
-                        if (bits and 2 != 0) cv.drawCircle(x, y + 2.2f, 0.95f, relleno)
-                        if (bits and 4 != 0 && k % 2 == 0) cv.drawCircle(x, y - 2.2f, 0.95f, relleno)
+                        val bits = Math.floorMod(k * k * 7 + k * 13 + 5, 4)
+                        if ((bits and 1) != 0) cv.drawCircle(x, y - 2.2f, 0.95f, relleno)
+                        if ((bits and 2) != 0) cv.drawCircle(x, y + 2.2f, 0.95f, relleno)
                     }
                     x += 3.2f; k++
                 }

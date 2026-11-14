@@ -59,6 +59,8 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     VUELO("Bitácora de vuelo", "órbita"),
     INMERSION("Bitácora del batiscafo", "inmersión"),
     TETRAD("Cuaderno escolar", "hoja"),
+    /** Frente exterior: el cartucho de datos de la célula, un bloque de baquelita con su etiqueta y su muesca. */
+    CARTUCHO("Cartucho de datos", "bloque"),
     /** Básico: una libreta lisa, sin dibujo propio (el papel es la superficie del esquema). */
     SIMPLE("Libreta de momentos", "página"),
 }
@@ -90,7 +92,7 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.CUEVA -> Contenedor.BOLSA
     TemaId.BASICO -> Contenedor.SIMPLE
     TemaId.DISTOPIA -> Contenedor.EXPEDIENTE
-    TemaId.FRENTE -> Contenedor.EXPEDIENTE
+    TemaId.FRENTE -> Contenedor.CARTUCHO
     TemaId.CIBER -> Contenedor.CONSOLA
     TemaId.NEON -> Contenedor.TICKETS
     TemaId.REFUGIO -> Contenedor.CARPETA
@@ -154,6 +156,7 @@ object Contenedores {
         Contenedor.SUPERVIVIENTE -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.TICKETS -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.PATENTES -> ContenedoresMas.papel(c, cs, oscuro)
+        Contenedor.CARTUCHO -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.SIMPLE -> cs.surface
     }
 
@@ -346,6 +349,7 @@ object Contenedores {
             Contenedor.SUPERVIVIENTE -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.TICKETS -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.PATENTES -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
+            Contenedor.CARTUCHO -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.SIMPLE -> {}   // la hoja lisa
         }
     }
@@ -439,6 +443,7 @@ object Contenedores {
             Contenedor.SUPERVIVIENTE -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.TICKETS -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.PATENTES -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
+            Contenedor.CARTUCHO -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.SIMPLE -> {}   // sin encuadernación
         }
     }

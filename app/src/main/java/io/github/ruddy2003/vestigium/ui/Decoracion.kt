@@ -2854,7 +2854,13 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.TEMPLARIO -> poligonoBoton(0.12f to 1f, 0.12f to 0.04f, 0.3f to 0.04f, 0.3f to 0.2f, 0.41f to 0.2f, 0.41f to 0.04f, 0.59f to 0.04f,
         0.59f to 0.2f, 0.7f to 0.2f, 0.7f to 0.04f, 0.88f to 0.04f, 0.88f to 1f)
     TemaId.DISTOPIA -> poligonoBoton(0.04f to 0.12f, 0.4f to 0.12f, 0.48f to 0.24f, 0.96f to 0.24f, 0.96f to 0.92f, 0.04f to 0.92f)
-    TemaId.FRENTE -> poligonoBoton(0.04f to 0.12f, 0.4f to 0.12f, 0.48f to 0.24f, 0.96f to 0.24f, 0.96f to 0.92f, 0.04f to 0.92f)
+    // El frente de la consola curva: la tapa arqueada arriba y los costados que se cierran hacia el pie redondeado.
+    TemaId.FRENTE -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(0.04f * w, 0.32f * h); quadraticTo(0.5f * w, -0.1f * h, 0.96f * w, 0.32f * h)
+        lineTo(0.89f * w, 0.84f * h); quadraticTo(0.87f * w, 0.97f * h, 0.76f * w, 0.97f * h)
+        lineTo(0.24f * w, 0.97f * h); quadraticTo(0.13f * w, 0.97f * h, 0.11f * w, 0.84f * h); close()
+    }
     TemaId.REFUGIO -> RoundedCornerShape(30)
     TemaId.ORDEN -> GenericShape { s, _ ->
         moveTo(0.1f * s.width, 0.06f * s.height); lineTo(0.9f * s.width, 0.06f * s.height); lineTo(0.9f * s.width, 0.5f * s.height)
@@ -2965,7 +2971,7 @@ private fun textoMas(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Ítem"
     TemaId.TEMPLARIO -> "Armería"
     TemaId.DISTOPIA -> "Anexo"
-    TemaId.FRENTE -> "Anexo"
+    TemaId.FRENTE -> "Consola"
     TemaId.REFUGIO -> "Menú"
     TemaId.ORDEN -> "Taller"
     TemaId.VAPOR -> "Depósito"
@@ -3060,8 +3066,10 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             // Sol tachado por el censor.
             TemaId.DISTOPIA -> { drawCircle(color, r * 0.62f, c); listOf(-0.3f, 0f, 0.3f).forEach { dy -> drawRect(fondo, Offset(c.x - r, c.y + r * dy - r * 0.05f), Size(r * 2, r * 0.1f)) }
                 drawCircle(color, r * 0.9f, c, style = Stroke(r * 0.08f)) }
-            TemaId.FRENTE -> { drawCircle(color, r * 0.62f, c); listOf(-0.3f, 0f, 0.3f).forEach { dy -> drawRect(fondo, Offset(c.x - r, c.y + r * dy - r * 0.05f), Size(r * 2, r * 0.1f)) }
-                drawCircle(color, r * 0.9f, c, style = Stroke(r * 0.08f)) }
+            // El piloto ámbar encendido: la lámpara, su bisel de cromo partido por cuatro tornillos y ocho destellos cortos.
+            TemaId.FRENTE -> { drawCircle(color, r * 0.36f, c); drawCircle(fondo, r * 0.12f, c + Offset(-r * 0.12f, -r * 0.12f))
+                for (k in 0 until 4) drawArc(color, 45f * (2 * k) + 12f, 66f, false, Offset(c.x - r * 0.56f, c.y - r * 0.56f), Size(r * 1.12f, r * 1.12f), style = Stroke(r * 0.1f))
+                for (i in 0 until 8) { val a = rad(45.0 * i + 22.5); drawLine(color, c.mas(r * 0.74f, a), c.mas(r * 0.96f, a), r * 0.1f, StrokeCap.Round) } }
             // Destello atómico de ocho puntas.
             TemaId.REFUGIO -> { for (i in 0 until 8) espina(rad(45.0 * i + 22.5), 0.2f, if (i % 2 == 0) 0.98f else 0.66f, 0.4f); drawCircle(color, r * 0.26f, c) }
             // Engrane.
@@ -3181,7 +3189,12 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
                 drawRect(color, Offset(c.x - r * 0.9f, c.y + r * 0.8f), Size(r * 1.8f, r * 0.16f)) }
             // Luna tras los barrotes.
             TemaId.DISTOPIA -> { luna(); listOf(-0.45f, 0f, 0.45f).forEach { dx -> drawLine(color, Offset(c.x + r * dx, c.y - r * 0.95f), Offset(c.x + r * dx, c.y + r * 0.95f), r * 0.08f) } }
-            TemaId.FRENTE -> { luna(); listOf(-0.45f, 0f, 0.45f).forEach { dx -> drawLine(color, Offset(c.x + r * dx, c.y - r * 0.95f), Offset(c.x + r * dx, c.y + r * 0.95f), r * 0.08f) } }
+            // La luna dentro del canal roto, y por la rotura se asoma una chispa.
+            TemaId.FRENTE -> { luna(0.5f, 0.26f, -0.2f)
+                drawArc(color, -22f, 304f, false, Offset(c.x - r * 0.9f, c.y - r * 0.9f), Size(r * 1.8f, r * 1.8f), style = Stroke(r * 0.09f, cap = StrokeCap.Round))
+                val q = c.mas(r * 0.9f, rad(-50.0))
+                drawPath(Path().apply { moveTo(q.x + r * 0.08f, q.y - r * 0.2f); lineTo(q.x - r * 0.06f, q.y + r * 0.01f); lineTo(q.x + r * 0.06f, q.y - r * 0.01f); lineTo(q.x - r * 0.08f, q.y + r * 0.2f) },
+                    color, style = Stroke(r * 0.07f, cap = StrokeCap.Round, join = StrokeJoin.Round)) }
             // Luna con una órbita de átomo.
             TemaId.REFUGIO -> { luna(0.62f, 0.3f, -0.24f); rotate(-30f, c) { drawOval(color, Offset(c.x - r * 0.95f, c.y - r * 0.32f), Size(r * 1.9f, r * 0.64f), style = Stroke(r * 0.06f)) } }
             // Luna remachada.
@@ -3307,8 +3320,13 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
         // Cruz de mira en el cristal.
         TemaId.DISTOPIA -> { lente(); mango()
             drawLine(color, Offset(c.x - lr * 0.6f, c.y), Offset(c.x + lr * 0.6f, c.y), r * 0.05f); drawLine(color, Offset(c.x, c.y - lr * 0.6f), Offset(c.x, c.y + lr * 0.6f), r * 0.05f) }
-        TemaId.FRENTE -> { lente(); mango()
-            drawLine(color, Offset(c.x - lr * 0.6f, c.y), Offset(c.x + lr * 0.6f, c.y), r * 0.05f); drawLine(color, Offset(c.x, c.y - lr * 0.6f), Offset(c.x, c.y + lr * 0.6f), r * 0.05f) }
+        // La pantalla de radar por cristal, con su barrido y un eco; el mango es de baquelita, con su anillo de cromo.
+        TemaId.FRENTE -> { lente()
+            drawArc(color.copy(alpha = 0.55f), -105f, 60f, true, Offset(c.x - lr * 0.78f, c.y - lr * 0.78f), Size(lr * 1.56f, lr * 1.56f))
+            drawLine(color, c, c.mas(lr * 0.78f, rad(-45.0)), r * 0.04f); drawCircle(color, r * 0.03f, c)
+            drawCircle(color, r * 0.035f, c.mas(lr * 0.5f, rad(160.0)))
+            mango(0.92f, 0.15f, 0.66f)
+            drawLine(color, Offset(r * 0.66f, r * 0.8f), Offset(r * 0.8f, r * 0.66f), r * 0.05f) }
         // Mango con dos aros y un brillo en el cristal.
         TemaId.REFUGIO -> { lente(); mango(); listOf(0.74f, 0.83f).forEach { k -> val p = Offset(r * k, r * k); drawLine(color, p + Offset(-r * 0.08f, r * 0.08f), p + Offset(r * 0.08f, -r * 0.08f), r * 0.05f) }
             drawCircle(color, r * 0.05f, c + Offset(-lr * 0.35f, -lr * 0.35f)) }
@@ -3515,7 +3533,7 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> false
     TemaId.TEMPLARIO -> false
     TemaId.DISTOPIA -> false
-    TemaId.FRENTE -> false
+    TemaId.FRENTE -> false           // la cinta perforada y sus confetis caen del teletipo
     TemaId.REFUGIO -> false
     TemaId.ORDEN -> false
     TemaId.VAPOR -> true                        // bocanadas de vapor y engranes que suben
@@ -3630,9 +3648,20 @@ fun CapaFiesta(fijo: Float? = null) {
                     TemaId.DISTOPIA -> { drawRect(col, Offset(pos.x - s * 0.7f, pos.y - s * 0.45f), Size(s * 1.4f, s * 0.9f))
                         drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y - s * 0.15f), Offset(pos.x + s * 0.5f, pos.y - s * 0.15f), s * 0.1f)
                         drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y + s * 0.15f), Offset(pos.x + s * 0.2f, pos.y + s * 0.15f), s * 0.1f) }
-                    TemaId.FRENTE -> { drawRect(col, Offset(pos.x - s * 0.7f, pos.y - s * 0.45f), Size(s * 1.4f, s * 0.9f))
-                        drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y - s * 0.15f), Offset(pos.x + s * 0.5f, pos.y - s * 0.15f), s * 0.1f)
-                        drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y + s * 0.15f), Offset(pos.x + s * 0.2f, pos.y + s * 0.15f), s * 0.1f) }
+                    // Del teletipo: tramos de cinta perforada de colores, los confetis redondos del perforador y alguna
+                    // chispa de tres trazos en verde de radar.
+                    TemaId.FRENTE -> when (p.tono) {
+                        0 -> { drawRect(col, Offset(pos.x - s * 1.1f, pos.y - s * 0.32f), Size(s * 2.2f, s * 0.64f))
+                            for (k in 0 until 5) {
+                                val x = pos.x - s * 0.88f + k * s * 0.44f
+                                drawCircle(e.background.copy(alpha = a), s * 0.09f, Offset(x, pos.y - s * 0.12f))
+                                if (k % 2 == 0) drawCircle(e.background.copy(alpha = a), s * 0.09f, Offset(x, pos.y + s * 0.16f))
+                                drawCircle(e.background.copy(alpha = a * 0.7f), s * 0.04f, Offset(x + s * 0.22f, pos.y + s * 0.02f))
+                            } }
+                        1 -> drawCircle(oro.copy(alpha = a), s * 0.26f, pos)
+                        else -> drawPath(Path().apply { moveTo(pos.x + s * 0.3f, pos.y - s * 0.75f); lineTo(pos.x - s * 0.2f, pos.y + s * 0.05f); lineTo(pos.x + s * 0.2f, pos.y - s * 0.05f); lineTo(pos.x - s * 0.3f, pos.y + s * 0.75f) },
+                            e.tertiary.copy(alpha = a), style = Stroke(s * 0.2f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                    }
                     // Galones de la Orden.
                     TemaId.ORDEN -> drawPath(Path().apply { moveTo(pos.x - s, pos.y - s * 0.3f); lineTo(pos.x, pos.y + s * 0.4f); lineTo(pos.x + s, pos.y - s * 0.3f) },
                         col, style = Stroke(s * 0.3f, join = StrokeJoin.Miter))

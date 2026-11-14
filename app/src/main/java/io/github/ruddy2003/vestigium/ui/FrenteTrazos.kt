@@ -41,7 +41,7 @@ object TrazosFrente {
      * El emblema de la red: la chispa de tres trazos dentro del círculo roto. El hueco del círculo queda arriba a la
      * derecha y por él sale una pizca de la chispa: es la señal que se escapa del canal.
      */
-    fun DrawScope.chispa(c: Offset, r: Float, color: Color, grosor: Float) {
+    fun DrawScope.emblemaRed(c: Offset, r: Float, color: Color, grosor: Float) {
         drawArc(color, -20f, 300f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(grosor, cap = StrokeCap.Butt))
         val s = r * 0.6f
         val rayo = Path().apply {

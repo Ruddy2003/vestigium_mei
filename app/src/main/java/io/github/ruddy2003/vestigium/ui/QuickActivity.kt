@@ -1208,7 +1208,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.MEDIEVAL -> 10.dp
     TemaId.TEMPLARIO -> 9.dp
     TemaId.DISTOPIA -> 12.dp
-    TemaId.FRENTE -> 12.dp
+    TemaId.FRENTE -> 11.dp
     TemaId.REFUGIO -> 6.dp
     TemaId.ORDEN -> 6.dp
     TemaId.VAPOR -> 7.dp
@@ -1290,9 +1290,12 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         val p = 12 * u; val a = w * 0.38f
         moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
     }
+    // La consola curva: las esquinas grandes del mueble y, al centro, la caperuza de los instrumentos que se levanta.
     TemaId.FRENTE -> formaDp { w, h, u ->
-        val p = 12 * u; val a = w * 0.38f
-        moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+        val f = 11 * u; val r = 13 * u; val s = 16 * u; val a = w * 0.3f; val b = w * 0.7f
+        moveTo(0f, h); lineTo(0f, f + r); quadraticTo(0f, f, r, f); lineTo(a - s, f)
+        cubicTo(a - s * 0.4f, f, a - s * 0.5f, 0f, a, 0f); lineTo(b, 0f); cubicTo(b + s * 0.5f, 0f, b + s * 0.4f, f, b + s, f)
+        lineTo(w - r, f); quadraticTo(w, f, w, f + r); lineTo(w, h); close()
     }
     // Pantalla de tubo, de esquinas muy redondas.
     TemaId.REFUGIO -> formaDp { w, h, u ->
@@ -1492,7 +1495,12 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     // El escudete: recto arriba y redondeado abajo.
     TemaId.TEMPLARIO -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 14.dp, bottomStart = 14.dp)
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.FRENTE -> RectangleShape
+    // La tecla de baquelita: el canto de arriba combado como la cara de la consola, esquinas grandes arriba y cortas abajo.
+    TemaId.FRENTE -> formaDp { w, h, u ->
+        val r = minOf(10 * u, h / 2); val b = minOf(3 * u, h * 0.15f); val q = minOf(4 * u, h / 4)
+        moveTo(0f, r + b); quadraticTo(0f, b, r, b); quadraticTo(w / 2, -b, w - r, b); quadraticTo(w, b, w, r + b)
+        lineTo(w, h - q); quadraticTo(w, h, w - q, h); lineTo(q, h); quadraticTo(0f, h, 0f, h - q); close()
+    }
     TemaId.REFUGIO -> RoundedCornerShape(18.dp)
     TemaId.ORDEN -> CutCornerShape(8.dp)
     TemaId.VAPOR -> RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp, bottomEnd = 2.dp, bottomStart = 2.dp)

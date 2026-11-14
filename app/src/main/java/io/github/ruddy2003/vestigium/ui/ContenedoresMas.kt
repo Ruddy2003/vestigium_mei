@@ -53,6 +53,8 @@ object ContenedoresMas {
             Contenedor.TECNICO -> Color(0xFFEDEDE8)
             // El papel de oficio, crema, de las memorias que se presentaban en la oficina de patentes.
             Contenedor.PATENTES -> Color(0xFFF1E7CF)
+            // La hoja de lectura del cartucho: el hueso de la consola, que de noche queda en la penumbra pizarra de la sala.
+            Contenedor.CARTUCHO -> Color(0xFFEDE8DC)
             Contenedor.CUADERNO -> Color(0xFFFBFCFD)
             Contenedor.VUELO -> Color(0xFFF4F6FA)
             // Papel sintético impermeable, gris verdoso, de las bitácoras que se mojan.
@@ -234,6 +236,33 @@ object ContenedoresMas {
                 drawRect(linea.copy(alpha = 0.3f), r.topLeft, r.size, style = Stroke(1f * d))
                 drawLine(linea.copy(alpha = 0.3f), Offset(r.left, r.top + r.height / 2), Offset(r.right, r.top + r.height / 2), 0.8f * d)
                 drawLine(linea.copy(alpha = 0.3f), Offset(r.left + r.width * 0.6f, r.top), Offset(r.left + r.width * 0.6f, r.bottom), 0.8f * d)
+            }
+            Contenedor.CARTUCHO -> {
+                // La lectura del cartucho: la cabecera con la célula y la pista, la franja ámbar del piloto, a la izquierda la
+                // cinta magnética que pasa por la cabeza lectora (una marca por bloque y el contador de cuatro cifras cada
+                // cuatro), renglones de puntos como los de la impresora de la consola y, al fondo, la retícula del radar.
+                val ambar = if (oscuro) Color(0xFFF0A04B) else Color(0xFFB85C0F)
+                val verde = if (oscuro) Color(0xFF9FD8A8) else Color(0xFF4F7A5A)
+                drawRect(ambar.copy(alpha = 0.55f), Offset(0f, 0f), Size(size.width, 3 * d))
+                with(TrofeosMas) {
+                    mono("CARTUCHO K-7 · LECTURA", margen, 30 * d, 8 * d, tinta.copy(alpha = 0.55f))
+                    mono("PISTA A", size.width - 12 * d, 30 * d, 8 * d, ambar.copy(alpha = 0.75f), android.graphics.Paint.Align.RIGHT, negrita = true)
+                }
+                drawLine(tinta.copy(alpha = 0.25f), Offset(margen, 38 * d), Offset(size.width - 12 * d, 38 * d), 0.8f * d)
+                val cinta = Rect(margen - 30 * d, 0f, margen - 20 * d, size.height)
+                drawRect(Color(0xFF4A3A2C).copy(alpha = if (oscuro) 0.5f else 0.28f), cinta.topLeft, cinta.size)
+                drawLine(Color.White.copy(alpha = if (oscuro) 0.08f else 0.25f), Offset(cinta.left + 2 * d, 0f), Offset(cinta.left + 2 * d, size.height), 0.6f * d)
+                val c = Offset(size.width - 70 * d, size.height - 80 * d); val rr = 54 * d
+                listOf(1f, 0.66f, 0.33f).forEach { f -> drawCircle(verde.copy(alpha = if (oscuro) 0.1f else 0.08f), rr * f, c, style = Stroke(0.8f * d)) }
+                drawLine(verde.copy(alpha = 0.08f), Offset(c.x - rr, c.y), Offset(c.x + rr, c.y), 0.6f * d)
+                drawLine(verde.copy(alpha = 0.08f), Offset(c.x, c.y - rr), Offset(c.x, c.y + rr), 0.6f * d)
+                var y = 96 * d; var k = 1
+                while (y < size.height - 12 * d) {
+                    drawLine(tinta.copy(alpha = 0.1f), Offset(margen - 6 * d, y), Offset(size.width - 12 * d, y), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.8f * d, 2.6f * d)))
+                    drawLine(ambar.copy(alpha = 0.6f), Offset(cinta.left, y - 4 * d), Offset(cinta.right, y - 4 * d), 1 * d)
+                    if (k % 4 == 0) with(TrofeosMas) { mono(Frente.contador(k), cinta.left - 3 * d, y - 2 * d, 6 * d, tinta.copy(alpha = 0.4f), android.graphics.Paint.Align.RIGHT) }
+                    y += maxOf(renglon, 1f); k++
+                }
             }
             Contenedor.PATENTES -> {
                 // La memoria descriptiva de una patente: renglones de tinta sepia, el margen doble de ladrillo, el sello
@@ -459,6 +488,19 @@ object ContenedoresMas {
                 var y = 0f; var k = 0
                 while (y < size.height) { drawRoundRect(if (k % 2 == 0) acero else lerp(acero, Color.Black, 0.2f), Offset(10 * d, y), Size(12 * d, 18 * d), CornerRadius(3 * d)); y += 18 * d; k++ }
                 drawLine(lerp(acero, Color.White, 0.3f), Offset(16 * d, 0f), Offset(16 * d, size.height), 1f * d)
+            }
+            Contenedor.CARTUCHO -> {
+                // El canto de la carcasa del cartucho: baquelita con la muesca de lectura, la pestaña ámbar que protege contra
+                // escritura y las estrías de agarre abajo.
+                val baquelita = if (oscuro) Color(0xFF1C1A17) else Color(0xFF2A2622)
+                drawRoundRect(baquelita, Offset(4 * d, 0f), Size(22 * d, size.height), CornerRadius(4 * d))
+                drawLine(Color.White.copy(alpha = if (oscuro) 0.08f else 0.16f), Offset(6 * d, 4 * d), Offset(6 * d, size.height - 4 * d), 1 * d)
+                val muesca = size.height * 0.16f
+                drawRect(papel(c, cs, oscuro), Offset(16 * d, muesca), Size(10 * d, 26 * d))
+                drawRect(Color.Black.copy(alpha = 0.35f), Offset(16 * d, muesca), Size(1.4f * d, 26 * d))
+                drawRoundRect(Color(0xFFF2A33A).copy(alpha = if (oscuro) 0.75f else 1f), Offset(9 * d, muesca + 40 * d), Size(8 * d, 12 * d), CornerRadius(1.5f * d))
+                var y = size.height - 60 * d
+                while (y < size.height - 8 * d) { drawLine(Color.Black.copy(alpha = 0.45f), Offset(8 * d, y), Offset(24 * d, y), 1.2f * d); y += 5 * d }
             }
             Contenedor.PATENTES -> {
                 // El lomo de tela color ladrillo con tres bandas de latón y la costura que asoma entre ellas.

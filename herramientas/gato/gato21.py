@@ -598,45 +598,49 @@ PAL_N = dict(
 VENTANA_N = hx("F0A04B")
 
 
+def anillo(d, cx, cy, rx, ry, ang, cols, frente):
+    """Un anillo visto de sesgo (elipse inclinada `ang` grados), en tres filas de pixeles: la de afuera con la luz
+    arriba, la de en medio y la de adentro en sombra. Solo la mitad de adelante (frente=True) o la de atrás."""
+    a = math.radians(ang); ca, sa = math.cos(a), math.sin(a)
+    for t in np.linspace(0, 2 * math.pi, 360):
+        if (math.cos(t) < 0) != frente:
+            continue
+        for k, dr in enumerate((0.0, 1.0, 2.0)):
+            x, y = (rx - dr) * math.cos(t), (ry - dr) * math.sin(t)
+            col = cols[0] if (k == 0 and math.sin(t) < 0.2) else cols[min(2, k + (0 if frente else 1))]
+            d.point((round(cx + x * ca - y * sa), round(cy + x * sa + y * ca)), fill=col)
+
+
 def nave(im, x0, y0, P, o):
     """La nave patrulla del Directorio: un bloque largo de mármol con chaflanes, el puente arriba adelante, la fila
-    de ventanillas, las toberas atrás y el anillo de bronce que lo ciñe. Devuelve sus luces (x, y, tipo)."""
+    de ventanillas, las toberas atrás y el anillo de bronce que lo ciñe, visto de sesgo. Devuelve sus luces."""
     d = ImageDraw.Draw(im)
     claro, medio, sombra, borde = P["nave"]
     b1, b2, b3 = P["bronce"]
-    L_ = 82
-    rx, ry, rcx, rcy = 4, 11, x0 + 30, y0 + 4.5
-    # El anillo: la mitad de atrás va detrás del casco.
-    d.ellipse([rcx - rx, rcy - ry, rcx + rx, rcy + ry], outline=b2, width=2)
-    d.arc([rcx - rx, rcy - ry, rcx + rx, rcy + ry], 100, 260, fill=b3, width=2)
-    # Toberas.
-    for k, yy in enumerate((y0 + 1, y0 + 4, y0 + 7)):
+    L_, A_ = 84, 11
+    rcx, rcy, rx, ry, ang = x0 + 30, y0 + A_ / 2, 6, 10.5, 12
+    anillo(d, rcx, rcy, rx, ry, ang, (b1, b2, b3), False)          # la mitad de atrás, detrás del casco
+    for yy in (y0 + 2, y0 + 5, y0 + 8):                              # toberas
         d.rectangle([x0 - 3, yy, x0, yy + 1], fill=borde)
-    # El casco: bloque con chaflanes; cara de arriba con luz, de abajo en sombra.
-    casco = [(x0 + 3, y0), (x0 + L_ - 5, y0), (x0 + L_, y0 + 3), (x0 + L_, y0 + 6), (x0 + L_ - 3, y0 + 9), (x0 + 2, y0 + 9), (x0, y0 + 7), (x0, y0 + 2)]
+    casco = [(x0 + 3, y0), (x0 + L_ - 6, y0), (x0 + L_, y0 + 4), (x0 + L_, y0 + 7), (x0 + L_ - 4, y0 + A_), (x0 + 2, y0 + A_), (x0, y0 + A_ - 2), (x0, y0 + 2)]
     d.polygon(casco, fill=medio)
-    d.polygon([(x0 + 3, y0), (x0 + L_ - 5, y0), (x0 + L_ - 3, y0 + 2), (x0 + 1, y0 + 2)], fill=claro)
-    d.polygon([(x0, y0 + 7), (x0 + L_, y0 + 6), (x0 + L_ - 3, y0 + 9), (x0 + 2, y0 + 9)], fill=sombra)
-    d.line([x0 + 2, y0 + 9, x0 + L_ - 3, y0 + 9], fill=borde)
-    for xx in range(x0 + 8, x0 + L_ - 6, 9):                     # juntas de las placas
-        d.line([xx, y0 + 3, xx, y0 + 6], fill=sombra)
-    luces = []
-    for xx in range(x0 + 40, x0 + L_ - 8, 4):                    # ventanillas
-        d.point((xx, y0 + 4), fill=P["nave_v"] if (not o or (xx // 4) % 3) else P["nave"][3])
-    d.line([x0 + 36, y0 + 6, x0 + L_ - 4, y0 + 6], fill=b2)      # el filete de bronce del régimen
-    # El puente: un bloque más chico arriba, adelante, con su ventanal.
-    d.rectangle([x0 + 58, y0 - 3, x0 + 72, y0], fill=medio)
-    d.line([x0 + 58, y0 - 3, x0 + 71, y0 - 3], fill=claro)
-    d.line([x0 + 61, y0 - 2, x0 + 70, y0 - 2], fill=P["nave_v"] if o else P["vidrio"])
-    d.line([x0 + 64, y0 - 6, x0 + 64, y0 - 4], fill=borde)       # antena
-    luces.append((x0 + 64, y0 - 7, "rojo"))
-    # La mitad de adelante del anillo, encima del casco, con su luz y su sombra.
-    d.arc([rcx - rx, rcy - ry, rcx + rx, rcy + ry], 90, 270, fill=b2, width=2)
-    d.arc([rcx - rx, rcy - ry, rcx + rx, rcy + ry], 150, 230, fill=b1, width=1)
-    d.rectangle([rcx - 2, y0 - 1, rcx + 1, y0 + 10], fill=b2)    # el collar donde el anillo toca el casco
-    d.line([rcx - 2, y0 - 1, rcx - 2, y0 + 10], fill=b1)
-    luces += [(rcx, rcy - ry, "ambar"), (rcx, rcy + ry, "ambar"), (x0 + L_ - 1, y0 + 4, "rojo"), (x0 - 3, y0 + 4, "blanco"),
-              (x0 + 48, y0 + 10, "foco")]
+    d.polygon([(x0 + 3, y0), (x0 + L_ - 6, y0), (x0 + L_ - 4, y0 + 2), (x0 + 1, y0 + 2)], fill=claro)
+    d.polygon([(x0, y0 + A_ - 3), (x0 + L_, y0 + A_ - 4), (x0 + L_ - 4, y0 + A_), (x0 + 2, y0 + A_)], fill=sombra)
+    d.line([x0 + 2, y0 + A_, x0 + L_ - 4, y0 + A_], fill=borde)
+    d.line([x0 + L_ - 6, y0, x0 + L_, y0 + 4], fill=claro)          # el chaflán de proa, con luz
+    for xx in range(x0 + 7, x0 + L_ - 6, 8):                        # juntas de las placas
+        d.line([xx, y0 + 3, xx, y0 + A_ - 4], fill=sombra)
+    for xx in range(x0 + 40, x0 + L_ - 8, 3):                       # ventanillas
+        d.point((xx, y0 + 5), fill=P["nave_v"] if (not o or (xx // 3) % 4) else P["nave"][3])
+    d.line([x0 + 4, y0 + 7, x0 + L_ - 4, y0 + 7], fill=b2)          # el filete de bronce del régimen
+    d.rectangle([x0 + 56, y0 - 3, x0 + 72, y0], fill=medio)         # el puente, con su ventanal
+    d.line([x0 + 56, y0 - 3, x0 + 71, y0 - 3], fill=claro)
+    d.line([x0 + 59, y0 - 2, x0 + 70, y0 - 2], fill=P["nave_v"] if o else P["vidrio"])
+    d.line([x0 + 63, y0 - 7, x0 + 63, y0 - 4], fill=borde)          # antena
+    d.rectangle([x0 + 44, y0 + A_ + 1, x0 + 50, y0 + A_ + 2], fill=borde)   # la góndola del reflector
+    anillo(d, rcx, rcy, rx, ry, ang, (b1, b2, b3), True)            # la mitad de adelante, encima del casco
+    luces = [(x0 + 63, y0 - 8, "rojo"), (rcx - 2.7, rcy - ry + 0.6, "ambar"), (rcx + 2.7, rcy + ry - 0.6, "ambar"),
+             (x0 + L_ - 1, y0 + 5, "rojo"), (x0 - 3, y0 + 5, "blanco"), (x0 + 47, y0 + A_ + 3, "foco")]
     return luces
 
 
@@ -736,7 +740,7 @@ def fondo_frente(t):
                     px[x, y] = esc(px[x, y], 0.94 if not o else 0.85)
     vetas(im, 17, 4, pcy - 4, pcy + 8, P["veta"], 0.45, x0=330, x1=400, largo=(20, 50))   # la calima cruza el planeta
     # --- La nave patrulla.
-    nx0, ny0 = 172, 12
+    nx0, ny0 = 170, 7
     luces_nave = nave(im, nx0, ny0, P, o)
     # --- Lejos: dos filas de siluetas industriales (torres, grúas, chimeneas), con su lado de luz.
     rnd = random.Random(8)
@@ -853,7 +857,7 @@ def fondo_frente(t):
     cilindro(im, sx - 4, sx + 5, 8, atop - 2, P["hueso"], P["anillo"], 6)
     d.rectangle([sx - 5, 6, sx + 6, 8], fill=P["acero"][1])
     for y in (10, 11): d.line([sx - 4, y, sx + 4, y], fill=P["rojo"] if not o else hx("7A2A22"))
-    vx = 190
+    vx = 322
     d.rectangle([vx - 2, 19, vx + 3, 24], fill=P["acero"][1]); d.line([vx - 3, 18, vx + 4, 18], fill=P["acero"][2])
     # --- Los tanques.
     for (x0, x1) in ((338, 361), (364, 389)):
