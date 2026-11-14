@@ -44,38 +44,38 @@ interface Banderita {
  * va siempre junto con su escena ([escenaDe]).
  */
 fun banderitaHistoria(tema: TemaId): Banderita? = when (tema) {
-    TemaId.ROMANO -> null           // S1
-    TemaId.URBE -> null             // S5
+    TemaId.ROMANO -> BanderitaRomano
+    TemaId.URBE -> BanderitaUrbe
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> BanderitaNeon
     TemaId.HELENO -> BanderitaHeleno
     TemaId.EGIPTO -> null           // S9
-    TemaId.MEDIEVAL -> null         // S6
+    TemaId.MEDIEVAL -> BanderitaMedieval
     TemaId.TEMPLARIO -> null        // S11
-    TemaId.DISTOPIA -> null         // S3
+    TemaId.DISTOPIA -> BanderitaDistopia
     TemaId.REFUGIO -> null          // S17
     TemaId.ORDEN -> null            // S18
-    TemaId.VAPOR -> null            // S8
+    TemaId.VAPOR -> BanderitaVapor
     TemaId.LABORATORIO -> null      // S17
     TemaId.COLONOS -> null          // S19
     TemaId.NAPOLEON -> null         // S14
     TemaId.DECO -> null             // S15
     TemaId.BOTANICO -> null         // S13
-    TemaId.RUINAS -> null           // S4
+    TemaId.RUINAS -> BanderitaRuinas
     TemaId.NAVIDAD -> null          // Navidad: sin cuadro
-    TemaId.SEDA -> null             // S7
+    TemaId.SEDA -> BanderitaSeda
     TemaId.EDO -> null              // S11
     TemaId.GOTICO -> BanderitaGotico
-    TemaId.ARCANO -> null           // S4
-    TemaId.ESPACIO -> null          // S3
+    TemaId.ARCANO -> BanderitaArcano
+    TemaId.ESPACIO -> BanderitaEspacio
     TemaId.ABISMO -> null           // S16
-    TemaId.ANDALUS -> null          // S1
+    TemaId.ANDALUS -> BanderitaAndalus
     TemaId.MESO -> null             // S9
     TemaId.MONGOL -> null           // S12
-    TemaId.RENACIMIENTO -> null     // S6
-    TemaId.PIRATA -> null           // S2
+    TemaId.RENACIMIENTO -> BanderitaRenacimiento
+    TemaId.PIRATA -> BanderitaPirata
     TemaId.URSS -> null             // S15
-    TemaId.REVOLUCION -> null       // S8
+    TemaId.REVOLUCION -> BanderitaRevolucion
     TemaId.ANTIGUAS -> null         // S18
     TemaId.CUEVA -> null            // S10
     TemaId.BASICO -> null           // Básico: sin cuadro

@@ -129,7 +129,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
    - tienen el paso del día, con estas excepciones:
      - **Ciudad neón:** siempre de noche, en los niveles bajos de la ciudad.
      - **Refugio** y **Laboratorio** (el instituto): solo dos estados, encendido de día y tenue de noche.
-     - **Espacio:** el interior de la nave, con muchos elementos y una ventana pequeña desde la que se ve una galaxia.
+     - **Espacio:** el interior de la nave, con muchos elementos y una ventana desde la que se ve una galaxia. La ventana empezó pequeña; al ver el cuadro (13 nov 2026) el autor la pidió casi del tamaño de la pared, para que se vea bien el exterior.
    - **No se ven personas.** Se ve el entorno según el tema, y el gato.
    - El tramo del día del personaje se nota en el entorno: el fuego a la hora de comer, la puerta abierta, las herramientas.
    - Reaccionan a lo que pasa:
@@ -278,7 +278,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
   - El comentario de cada calendario (`vidas/anios/`) dice qué tiene que mostrar el cuadro de ese personaje.
 - **Interiores:**
   - **Refugio y Laboratorio:** bajo tierra, con dos estados de luz.
-  - **Espacio:** el interior de la nave rumbo a Alfa Centauri, con consolas, cables, plantas del cultivo de a bordo, compuertas y objetos flotantes o sujetos. Una ventana pequeña, una fracción de la vista, muestra una galaxia.
+  - **Espacio:** el interior de la nave rumbo a Alfa Centauri, con consolas, cables, plantas del cultivo de a bordo, compuertas y objetos flotantes o sujetos. Una ventana muestra una galaxia; desde el 13 nov 2026, a petición del autor, es un ventanal que ocupa casi todo un costado.
 - **Medidas:** 4:3, a todo el ancho, sin marco y con las esquinas del tema.
   - 380 × 285 dp en un teléfono de 412 dp;
   - 328 × 246 dp en uno de 360 dp.
@@ -472,7 +472,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 
 **Por qué se reajustaron.** Las 7 tandas se midieron cuando se pensaba que una escena era combinar piezas de la biblioteca. Lo que se sabe ahora:
 
-1. **Cuánto pesa un cuadro.** Los tres del piloto llevan entre 1,360 y 1,500 renglones de dibujo cada uno (Helénico 1,500; Gótico 1,364; Ciudad neón 1,483 con sus cosas). P4b hizo dos en una tanda y aun así dejó una lista de puntos flojos en cada uno. **Dos cuadros por tanda es la medida.** **[Aproximación]:** sale de una sola tanda; S1 dirá si aguanta.
+1. **Cuánto pesa un cuadro.** Los tres del piloto llevan entre 1,360 y 1,500 renglones de dibujo cada uno (Helénico 1,500; Gótico 1,364; Ciudad neón 1,483 con sus cosas). P4b hizo dos en una tanda y aun así dejó una lista de puntos flojos en cada uno. **Dos cuadros por tanda es la medida.** **[Aproximación]:** salió de una sola tanda (P4b); S1 la confirmó con Romano y Al-Ándalus, dibujados a la vez.
 2. **Cada tema debe más cosas que en P4b.** Desde P5 y P6, además del paisaje y la banderita: el pelaje del gato, sus anclas, lo plantado en su suelo (`estorbos`), su luz y su talla, las pruebas y el barrido de 2026 a 2032.
 3. **Nueve temas piden más de un lugar ya en la temporada 1.** Los calendarios (tandas A3 a A8) dicen dónde está el personaje cada día, y varios se mudan. Contado día por día con el motor: los 29 temas son **37 cuadros y 5 variantes** en la temporada 1, y unos **24 lugares más** entre las temporadas 2 y 5.
 
@@ -512,14 +512,14 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 
 | Tanda | Temas | Cuadros | Estado |
 |---|---|---|---|
-| S1 | Romano; Al-Ándalus | 2 | pendiente |
-| S2 | Pirata (el mar y el cayo; Nassau como variante; primer cuadro a bordo) | 2 | pendiente |
-| S3 | Espacio (primer interior con dos luces); Distopía | 2 | pendiente |
-| S4 | Horror cósmico (primer cuadro con niebla); Ciudad verde | 2 | pendiente |
-| S5 | Roma (la capilla y la ciudad de agosto; primer interior con ventana) | 2 | pendiente |
-| S6 | Scriptorium; Renacimiento | 2 | pendiente |
-| S7 | Ruta de la Seda (el camino, con sus tres paisajes, y Chang'an; primer cuadro de desierto) | 2 | pendiente |
-| S8 | Revolución francesa (con la helada; Versalles como variante); Vapor victoriano | 2 | pendiente |
+| S1 | Romano; Al-Ándalus | 2 | hecho 13 nov 2026 (`docs/historia/informes/S1.md`); **los dos cuadros, aprobados por el autor el 13 nov 2026** |
+| S2 | Pirata (el mar y el cayo; Nassau como variante; primer cuadro a bordo) | 2 | hecho 13 nov 2026 (`docs/historia/informes/S2.md`); **los dos cuadros, aprobados por el autor el 13 nov 2026**; Nassau, rehecho ese día a petición suya (más hondo, con edificios grandes y la loma con monte) |
+| S3 | Espacio (primer interior con dos luces); Distopía | 2 | hecho 13 nov 2026 (`docs/historia/informes/S3.md`); **los dos cuadros, aprobados por el autor el 13 nov 2026**, con dos cambios pedidos ese día y aprobados también («Quedó muy bien»): la ventana de Espacio, casi del tamaño de la pared, y el pueblo de Distopía, con más lejanía. Con Espacio aprobado, quedan abiertos Refugio y Laboratorio |
+| S4 | Horror cósmico (primer cuadro con niebla); Ciudad verde | 2 | hecho 14 nov 2026 (`docs/historia/informes/S4.md`); **los dos cuadros, aprobados por el autor el 14 nov 2026** («Horror cósmico está perfecto») |
+| S5 | Roma (la capilla y la ciudad de agosto; primer interior con ventana) | 2 | hecho 14 nov 2026 (`docs/historia/informes/S5.md`); **la capilla, aprobada por el autor el 14 nov 2026** sin cambios (quedan abiertos Scriptorium y Renacimiento); la azotea de agosto, rehecha ese día a petición suya (árboles menos simples, la noche menos apagada y fachadas menos lisas) y aprobada después |
+| S6 | Scriptorium; Renacimiento | 2 | hecho 14 nov 2026 (`docs/historia/informes/S6.md`); **los dos cuadros, aprobados por el autor el 14 nov 2026** («Quedó increíble») |
+| S7 | Ruta de la Seda (el camino, con sus tres paisajes, y Chang'an; primer cuadro de desierto) | 2 | hecho 14 nov 2026 (`docs/historia/informes/S7.md`); **los dos cuadros, aprobados por el autor el 14 nov 2026** («Quedó increíble»); Samarcanda sigue sin cuadro propio |
+| S8 | Revolución francesa (con la helada; Versalles como variante); Vapor victoriano | 2 | hecho 14 nov 2026 (`docs/historia/informes/S8.md`); **los dos cuadros, aprobados por el autor el 14 nov 2026** («Quedó increíble») |
 | S9 | Egipto; Mesoamérica | 2 | pendiente |
 | S10 | Prehistoria (el abrigo y la meseta; primer cuadro con luz de fuego) | 2 | pendiente |
 | S11 | Templario; Japón Edo | 2 | pendiente |
@@ -596,7 +596,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | T7a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7a.md`) |
 | T7b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7b.md`) |
 | T8a–T8b | claude-opus-5-5 | medium | Ídem | 0 c/u | hechas 12 nov 2026 (`docs/historia/informes/T8a.md`, `T8b.md`) |
-| S1–S19 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código, dos cuadros por tanda | 1 c/u, y 1 de reserva | pendiente (una por una, en la tabla de la sección 8) |
+| S1–S19 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código, dos cuadros por tanda | 1 c/u, y 1 de reserva | S1, S2 y S3 hechas y aprobadas el 13 nov 2026; S4 y S5, hechas el 14 nov 2026 y aprobadas ese día (la azotea de Roma, con cambios); S6, S7 y S8, hechas y aprobadas el 14 nov 2026; las demás, pendientes (una por una, en la tabla de la sección 8) |
 | C1 | claude-opus-5-5 | medium | Revisión y cierre sin dibujo nuevo | 1 | pendiente |
 | Y2028–Y2031 | claude-opus-5-5 | medium | Párrafos especiales con el tono y el calendario ya fijos | 0 c/u | — |
 
@@ -638,7 +638,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 - **Gestos y vibración:** los 700 ms, la caricia frente al desplazamiento y el aura encendida no se ven en las capturas.
 - **Medidas en dp:** están calculadas con la letra al 100 %. Con letra más grande, todo baja más.
 - **El nivel de las escenas:** las S se reajustaron el 13 nov 2026 a dos cuadros por tanda (sección 8).
-  - La medida sale de una sola tanda (P4b). Si S1 no alcanza para dos, se vuelve a contar.
+  - La medida salió de P4b y S1 la confirmó. Las tandas con un tipo nuevo de cuadro (a bordo, interior, niebla) pueden pedir más vueltas.
   - Son 19 tandas, y cada cuadro lo ve el autor junto a Helénico. Puede que no estén todas el 1 de enero de 2027; los temas que falten siguen con el gato de pixel.
   - Cada cuadro pesa al dibujarse (el grano y las capas de sombra). Desde la v245 el paisaje se pinta en segundo plano y se recuerda; falta que el autor confirme en el teléfono que ya no hay tirón.
 - **Continuidad:** un suceso de un año, como una herida o una casa quemada, tiene que seguir al año siguiente. La prueba revisa que los arcos empalmen entre temporadas.

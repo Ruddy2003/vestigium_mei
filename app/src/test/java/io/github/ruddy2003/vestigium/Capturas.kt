@@ -2751,4 +2751,182 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("cadena", "2030-11-10", listOf(7.0, 17.0, 21.0)),          // la cuerda de trapos delante de las máquinas
         Triple("tribunal", "2031-03-20", listOf(7.0, 17.0, 21.0)),        // la fiesta, con las máquinas todavía ahí
     ),
+    // Cayo (Romano, tanda S1).
+    "legionario" to listOf(
+        Triple("normal", "2027-05-06", HORAS_CUADRO),                     // primavera: la empalizada, con el primer tramo en obra
+        Triple("rosas", "2027-05-10", HORAS_CUADRO),                      // las Rosalias: guirnaldas y el vexilo adornado; de noche, antorchas
+        Triple("camino", "2028-06-20", HORAS_CUADRO),                     // está en el camino del desfiladero: su puesto, vacío (decisiones 18 y 21)
+        Triple("helado", "2028-01-18", HORAS_CUADRO),                     // los sármatas: el río helado y humo en la otra orilla
+        Triple("piedra", "2029-11-12", listOf(8.0, 13.0, 21.0)),          // la muralla y la torre, ya de piedra
+    ),
+    // Zaynab (Al-Ándalus, tanda S1).
+    "cordobesa" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // primavera: azahar, la tela carmesí a medias
+        Triple("fiesta", "2027-05-12", listOf(10.0, 16.0, 21.0)),         // la boda de Juliana: colgaduras, guirnalda y banderines
+        Triple("ramadan", "2027-07-20", listOf(13.0, 20.0, 22.0)),        // Ramadán: el anafe apagado de día; de noche, la mesa puesta y las lámparas (decisión 18)
+        Triple("telar", "2029-03-01", HORAS_CUADRO),                      // el telar desnudo
+        Triple("hueste", "2028-07-10", HORAS_CUADRO),                     // la hueste cruza el puente
+    ),
+    // Tomás (Pirata, tanda S2): a bordo, el cayo de la carena y Nassau.
+    "grumete" to listOf(
+        Triple("normal", "2027-04-27", HORAS_CUADRO),                     // a bordo, en mar abierto, con un cayo a la vista
+        Triple("cayo", "2027-03-16", HORAS_CUADRO),                       // la carena: el balandro tumbado en la arena (decisión 18)
+        Triple("nassau", "2027-07-05", HORAS_CUADRO),                     // fondeado en Nassau: variante del cuadro a bordo (decisión 21)
+        Triple("abordaje", "2027-10-10", HORAS_CUADRO),                   // la presa al costado y humo de cañón
+        Triple("fiesta", "2027-12-25", listOf(13.0, 20.4, 22.0)),         // Navidad a bordo: banderas y faroles
+        Triple("huracan", "2028-09-19", HORAS_CUADRO),                    // el huracán
+        Triple("calma", "2028-04-29", HORAS_CUADRO),                      // la calma chicha: el mar como un plato y la vela caída
+        Triple("costa", "2027-05-04", HORAS_CUADRO),                      // otro horizonte: la costa alta
+    ),
+    // El funcionario (Distopía, tanda S3): la plaza de la capital y, dos días, el pueblo de la hermana.
+    "funcionario" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // la plaza, la avenida y el ministerio
+        Triple("desfile", "2027-05-01", listOf(10.0)),                    // colgaduras, banderas y vallas
+        Triple("campana", "2028-04-10", listOf(22.0)),                    // la campaña: el ministerio encendido de noche
+        Triple("apagon", "2027-10-05", listOf(21.4)),                     // sin corriente: velas, la luna y el bidón
+        Triple("cohetes", "2029-10-15", listOf(17.0)),                    // humo sobre el barrio de los obreros
+        Triple("fiesta", "2027-01-01", listOf(21.0)),                     // año nuevo: ristras de bombillas
+        Triple("torre", "2031-05-15", listOf(10.0)),                      // la torre nueva, inaugurada
+        Triple("provincia", "2030-06-28", listOf(19.6)),                  // el pueblo: variante de la misma plaza (decisión 21)
+    ),
+    // La astronauta (Espacio, tanda S3): el puesto de la ingeniera en el anillo de la nave. Primer interior con dos luces.
+    "astronauta" to listOf(
+        Triple("normal", "2027-05-06", HORAS_CUADRO),                     // la mañana ámbar, el mediodía blanco y el último naranja
+        Triple("noche", "2027-05-06", listOf(23.0)),                      // las luces de guardia
+        Triple("parada", "2027-10-08", listOf(10.0, 21.4)),               // la parada: media luz de emergencia y el calefactor
+        Triple("sinpeso", "2029-05-20", listOf(10.0, 21.0)),              // el anillo no gira: las cosas flotan
+        Triple("alarma", "2027-02-25", listOf(10.0)),                     // las balizas en rojo
+        Triple("fuera", "2027-05-20", listOf(10.0)),                      // la salida: el armario del traje, vacío
+        Triple("fiesta", "2027-01-01", listOf(19.4)),                     // banderines y guirnalda
+        Triple("luces", "2027-12-21", listOf(21.0)),                      // la noche de las lamparitas
+        Triple("partida", "2027-04-22", listOf(22.0)),                    // la noche de la partida: solo la ventana
+        Triple("cosecha", "2027-08-21", listOf(10.0)),                    // la cosecha: rastrojos y sacos
+    ),
+    // El archivista (Horror cósmico, tanda S4): la galería del archivo, con la bahía, el muelle y el faro. Primer cuadro con niebla.
+    "archivista" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // la galería, la bahía y el faro, despejado
+        Triple("niebla", "2027-11-21", HORAS_CUADRO),                     // la niebla cerrada, por capas
+        Triple("candelaria", "2027-02-02", listOf(21.0)),                 // una vela en cada ventana que da al mar
+        Triple("bendicion", "2028-05-01", listOf(11.0)),                  // la bendición de las barcas
+        Triple("san_pedro", "2028-06-29", listOf(21.4)),                  // la procesión por el muelle
+        Triple("carmen", "2027-07-16", listOf(13.0)),                     // la Virgen en barca por la bahía
+        Triple("marea", "2027-08-23", listOf(23.0)),                      // la noche de la marea más baja
+        Triple("difuntos", "2027-11-02", listOf(19.6)),                   // el pueblo en el cementerio de las rocas
+        Triple("ballena", "2029-05-21", listOf(10.0)),                    // lo que el mar trae
+        Triple("temporal", "2029-10-01", listOf(13.0)),                   // el temporal que rompe el muelle
+        Triple("fiebre", "2029-03-12", listOf(21.0)),                     // variante: el archivo cerrado y luz en la posada (decisión 21)
+        Triple("faro", "2030-02-01", listOf(21.0)),                       // variante: él cuida el faro (decisión 21)
+        Triple("mar_rojo", "2031-06-20", listOf(7.0)),                    // el mar de color de óxido
+        Triple("final", "2031-11-20", listOf(13.0)),                      // el archivo terminado: ninguna caja por abrir
+    ),
+    // La recolectora (Ciudad verde, tanda S4): la azotea con su huerto y, desde ella, la ciudad que el bosque recuperó.
+    "semillera" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // la azotea, la avenida de los cerezos y el río
+        Triple("torre", "2027-04-08", listOf(13.0)),                      // la torre de cristal, todavía en pie, y los cerezos en flor
+        Triple("torre_caida", "2027-04-14", listOf(13.0)),                // la torre recién caída
+        Triple("rayo", "2027-07-10", listOf(7.0)),                        // el rayo quema el edificio de enfrente
+        Triple("verano", "2027-07-20", listOf(13.0)),                     // el huerto lleno y el edificio ya quemado
+        Triple("otono", "2027-10-20", listOf(17.0)),                      // el otoño
+        Triple("nieve", "2027-01-25", listOf(10.0)),                      // la nieve y los lobos
+        Triple("cosecha", "2027-09-06", listOf(13.0)),                    // la cosecha grande de las azoteas
+        Triple("noche_larga", "2027-12-21", listOf(21.0)),                // la fogata de la noche más larga
+        Triple("expedicion", "2028-07-05", listOf(13.0)),                 // variante: ella está de viaje (decisión 21)
+        Triple("incendio", "2029-08-29", listOf(13.0)),                   // arde el parque del norte y el humo tapa el sol
+        Triple("puente", "2030-06-20", listOf(13.0)),                     // el puente viejo, terminado
+    ),
+    // Giulia (Roma, tanda S5): la capilla de los frescos y, en agosto, la azotea de su casa. Primer interior con ventana.
+    "restauradora" to listOf(
+        Triple("normal", "2027-05-06", HORAS_CUADRO),                     // la capilla: la mancha de sol en la pared, en el suelo y las velas
+        Triple("trabajo", "2027-05-06", listOf(10.0)),                    // los focos de obra encendidos
+        Triple("agosto", "2027-08-10", HORAS_CUADRO),                     // la obra cierra y Roma se vacía: la azotea (decisión 18)
+        Triple("ferragosto", "2027-08-15", listOf(13.0, 22.0)),           // banderines, sandía y fuegos
+        Triple("luto", "2027-04-21", listOf(12.0)),                       // el crespón
+        Triple("humo", "2027-05-08", listOf(19.0)),                       // el humo blanco, lejos, por la ventana
+        Triple("aguacero", "2027-10-15", listOf(11.0)),                   // la obra sin luz
+        Triple("navidad", "2027-12-25", listOf(18.4)),                    // el belén y las flores
+        Triple("boveda", "2029-05-06", listOf(10.0)),                     // la bóveda limpia y la luneta
+        Triple("altar", "2031-05-06", listOf(10.0)),                      // la pared del altar limpia y sin andamio
+        Triple("abierta", "2031-11-20", listOf(10.0)),                    // la capilla terminada
+    ),
+    // El hermano Odo (Scriptorium, tanda S6): el scriptorium de la abadía, con el libro que copia, la ventana del Rin y la del claustro.
+    "copista" to listOf(
+        Triple("normal", "2027-05-12", HORAS_CUADRO),                     // el scriptorium: la mancha de sol que se mueve y, de noche, el libro tapado
+        Triple("maitines", "2027-05-12", listOf(2.5)),                    // los maitines: la iglesia encendida, vista desde la sala a oscuras
+        Triple("candelaria", "2027-02-02", listOf(7.0)),                  // la procesión de las velas por el claustro
+        Triple("pascua", "2027-04-16", listOf(10.0)),                     // Pascua: no se copia, y hay ramas
+        Triple("vendimia", "2027-09-27", listOf(10.0)),                   // la vendimia en las viñas, sobre el Rin
+        Triple("luto", "2028-02-08", listOf(10.0)),                       // el luto
+        Triple("lorsch", "2028-06-20", listOf(10.0)),                     // variante: Odo está de viaje y su pupitre queda vacío (decisión 21)
+        Triple("rayo", "2029-07-28", listOf(17.0)),                       // el rayo en el campanario
+        Triple("tejado", "2029-10-10", listOf(10.0)),                     // el tejado quemado y el primer tomo terminado
+        Triple("helada", "2030-01-15", listOf(10.0)),                     // la helada: nieve en el claustro
+        Triple("fin", "2030-06-29", listOf(10.0)),                        // el fin de la Biblia
+        Triple("libro_nuevo", "2031-11-20", listOf(10.0)),                // el libro nuevo
+    ),
+    // Iacopo (Renacimiento, tanda S6): el taller del maestro en Florencia, con la ventana a la cúpula y las tablas que se van pintando.
+    "aprendiz" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // el taller: la mancha de sol que se mueve y, de noche, la lámpara
+        Triple("noche", "2027-05-05", listOf(23.4)),                      // la luna, el rescoldo y el jergón
+        Triple("campo", "2029-07-10", listOf(10.0)),                      // variante: el taller sin él (decisión 21)
+        Triple("tabla", "2030-10-20", listOf(10.0)),                      // su primera tabla, a medio pintar
+        Triple("firma", "2031-05-25", listOf(10.0)),                      // su tabla, firmada
+        Triple("luto", "2031-02-01", listOf(10.0)),                       // la tabla del maestro, tapada y con crespón
+        Triple("visitacion", "2028-05-28", listOf(10.0)),                 // la tabla del maestro, acabada
+        Triple("pascua", "2027-04-11", listOf(10.0)),                     // el carro de fuego
+        Triple("mayo", "2027-05-01", listOf(10.0)),                       // las ramas en flor
+        Triple("san_juan", "2027-06-24", listOf(21.4)),                   // las luminarias de San Juan
+        Triple("nieve", "2028-12-10", listOf(10.0)),                      // la nevada, sin leña
+        Triple("guerra", "2031-11-17", listOf(12.0)),                     // las contraventanas casi cerradas
+    ),
+    // Nanai-vandak (Ruta de la Seda, tanda S7): el camino, con sus tres paisajes, y Chang'an. Primer cuadro de desierto.
+    "mercader_sogdiano" to listOf(
+        Triple("normal", "2027-12-20", HORAS_CUADRO),                     // el camino en el desierto: en marcha, el alto de mediodía y la noche
+        Triple("changan", "2027-06-10", HORAS_CUADRO),                    // Chang'an: el mercado del oeste, cerrado, abierto y de noche (decisión 18)
+        Triple("paso", "2028-02-10", listOf(10.0)),                       // la montaña: el paso
+        Triple("valle", "2028-03-25", listOf(13.0)),                      // la montaña: el valle de Sogdiana, con los albaricoqueros en flor
+        Triple("loess", "2029-04-10", listOf(13.0)),                      // las colinas de loess, con las casas cavadas
+        Triple("corredor", "2029-02-20", listOf(17.0)),                   // el corredor del oeste: el fuerte y las torres de señales
+        Triple("samarcanda", "2028-06-10", listOf(13.0)),                 // a las puertas de Samarcanda (sin cuadro propio todavía)
+        Triple("fiesta", "2027-02-11", listOf(19.0)),                     // el año nuevo en un caravasar
+        Triple("linternas", "2027-02-25", listOf(21.0)),                  // la fiesta de las linternas
+        Triple("polvo", "2027-03-20", listOf(13.0)),                      // la tormenta de arena negra
+        Triple("nieve", "2027-12-15", listOf(10.0)),                      // la nieve en el paso
+        Triple("mogao", "2027-11-20", listOf(19.6)),                      // las cuevas de Dunhuang
+        Triple("crecida", "2029-07-25", listOf(13.0)),                    // el Wei en el mercado
+        Triple("luna", "2027-09-19", listOf(21.4)),                       // la luna de otoño
+        Triple("boda", "2031-07-10", listOf(19.0)),                       // la boda de Farn
+    ),
+    // Marie-Jeanne (Revolución francesa, tanda S8): la popa del barco-lavadero en el Sena, con la Cité, Notre-Dame y el puente enfrente.
+    "lavandera" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // el barco-lavadero, el río y la Cité
+        Triple("helada", "2027-01-10", HORAS_CUADRO),                     // la helada: el Sena de hielo y el barco preso, sin lavar (decisión 18)
+        Triple("marcha", "2027-10-05", listOf(13.0)),                     // variante: el barco vacío el día de la marcha a Versalles (decisión 21)
+        Triple("colada", "2027-03-21", listOf(13.0)),                     // la gran colada de primavera
+        Triple("pascua", "2027-04-12", listOf(11.0)),                     // Pascua: las campanas y el barco cerrado
+        Triple("san_juan", "2027-06-23", listOf(22.0)),                   // la hoguera de San Juan
+        Triple("bastilla", "2027-07-14", listOf(17.0)),                   // el día de la Bastilla
+        Triple("federacion", "2028-07-14", listOf(13.0)),                 // la fiesta de la Federación
+        Triple("luto", "2029-04-04", listOf(13.0)),                       // el luto
+        Triple("rey", "2031-01-21", listOf(11.0)),                        // el día del rey: postigos cerrados y el río vacío
+        Triple("crecida", "2031-02-25", listOf(13.0)),                    // la crecida
+        Triple("razon", "2031-11-10", listOf(13.0)),                      // la fiesta de la Razón
+        Triple("navidad", "2027-12-25", listOf(21.0)),                    // la Navidad
+    ),
+    // Albert (Vapor victoriano, tanda S8): el depósito de locomotoras, con su máquina, el semáforo y el valle con el viaducto que se va construyendo.
+    "fogonero" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // el patio, la máquina verde y el valle todavía sin viaducto
+        Triple("vieja", "2027-01-20", listOf(10.0)),                      // la máquina vieja, antes del 2 de febrero
+        Triple("gala", "2027-07-10", listOf(10.0)),                       // la excursión de la gala: banderines y estandartes
+        Triple("guy_fawkes", "2027-11-05", listOf(21.0)),                 // hogueras y cohetes
+        Triple("nevada", "2027-12-08", listOf(21.0)),                     // la noche de la nevada: la vía vacía (decisión 18)
+        Triple("arco", "2028-08-20", listOf(13.0)),                       // el primer arco del viaducto, cerrado
+        Triple("vendaval", "2028-10-14", listOf(13.0)),                   // el vendaval
+        Triple("navidad", "2028-12-25", listOf(17.0)),                    // coronas y banderines
+        Triple("baja", "2029-06-30", listOf(10.0)),                       // variante: está de baja y su arca tiene candado (decisión 21)
+        Triple("helada", "2030-01-20", listOf(8.0)),                      // carámbanos y el brasero
+        Triple("primer_tren", "2030-06-01", listOf(10.0)),                // su máquina cruza el viaducto terminado
+        Triple("viaducto", "2030-09-10", HORAS_CUADRO),                   // el viaducto terminado, a las tres horas
+        Triple("krakatoa", "2030-12-05", listOf(19.34)),                  // el atardecer rojo
+        Triple("maquinista", "2031-10-06", listOf(10.0)),                 // ya es maquinista: la aceitera y la chaqueta de otro fogonero
+    ),
 )

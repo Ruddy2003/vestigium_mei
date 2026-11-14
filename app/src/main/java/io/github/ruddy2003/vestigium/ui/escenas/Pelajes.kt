@@ -43,38 +43,38 @@ import kotlin.math.sqrt
  * llega: va siempre junto con su escena ([escenaDe]).
  */
 fun pelajeDe(tema: TemaId): Pelaje? = when (tema) {
-    TemaId.ROMANO -> null           // S1
-    TemaId.URBE -> null             // S5
+    TemaId.ROMANO -> PELAJE_ROMANO
+    TemaId.URBE -> PELAJE_URBE
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> PELAJE_NEON
     TemaId.HELENO -> PELAJE_HELENO
     TemaId.EGIPTO -> null           // S9
-    TemaId.MEDIEVAL -> null         // S6
+    TemaId.MEDIEVAL -> PELAJE_MEDIEVAL
     TemaId.TEMPLARIO -> null        // S11
-    TemaId.DISTOPIA -> null         // S3
+    TemaId.DISTOPIA -> PELAJE_DISTOPIA
     TemaId.REFUGIO -> null          // S17
     TemaId.ORDEN -> null            // S18
-    TemaId.VAPOR -> null            // S8
+    TemaId.VAPOR -> PELAJE_VAPOR
     TemaId.LABORATORIO -> null      // S17
     TemaId.COLONOS -> null          // S19
     TemaId.NAPOLEON -> null         // S14
     TemaId.DECO -> null             // S15
     TemaId.BOTANICO -> null         // S13
-    TemaId.RUINAS -> null           // S4
+    TemaId.RUINAS -> PELAJE_RUINAS
     TemaId.NAVIDAD -> null          // Navidad: sin cuadro
-    TemaId.SEDA -> null             // S7
+    TemaId.SEDA -> PELAJE_SEDA
     TemaId.EDO -> null              // S11
     TemaId.GOTICO -> PELAJE_GOTICO
-    TemaId.ARCANO -> null           // S4
-    TemaId.ESPACIO -> null          // S3
+    TemaId.ARCANO -> PELAJE_ARCANO
+    TemaId.ESPACIO -> PELAJE_ESPACIO
     TemaId.ABISMO -> null           // S16
-    TemaId.ANDALUS -> null          // S1
+    TemaId.ANDALUS -> PELAJE_ANDALUS
     TemaId.MESO -> null             // S9
     TemaId.MONGOL -> null           // S12
-    TemaId.RENACIMIENTO -> null     // S6
-    TemaId.PIRATA -> null           // S2
+    TemaId.RENACIMIENTO -> PELAJE_RENACIMIENTO
+    TemaId.PIRATA -> PELAJE_PIRATA
     TemaId.URSS -> null             // S15
-    TemaId.REVOLUCION -> null       // S8
+    TemaId.REVOLUCION -> PELAJE_REVOLUCION
     TemaId.ANTIGUAS -> null         // S18
     TemaId.CUEVA -> null            // S10
     TemaId.BASICO -> null           // Básico: sin cuadro
@@ -258,6 +258,109 @@ private val PELAJE_HELENO = Pelaje(
     manto = H_MANTO, claro = Color(0xFFF8F4EA), marca = Color(0xFF94703E), dibujo = DibujoPelaje.BICOLOR, ojos = Color(0xFF2A78B4),
     nariz = Color(0xFFE0A0A0), accesorio = clamide,
     especiales = listOf(EspecialGato("toca la lira", true, 4, ::poseLira, lira), EspecialGato("alza la antorcha", true, 4, ::poseAntorcha, antorcha)),
+)
+
+// =====================================================================
+//  Romano: color de arena, de pecho claro y ojos verdes, con el sago rojo del legionario
+// =====================================================================
+
+private val R_ROJO = Color(0xFFA8382A)
+private val R_ROJO_LUZ = Color(0xFFCB5C46)
+private val R_ROJO_SOMBRA = Color(0xFF6E2620)
+private val R_BRONCE = Color(0xFFB07A3A)
+private val R_HIERRO = Color(0xFF8A8C96)
+private val R_MADERA = Color(0xFF8A6238)
+
+/**
+ * El sago: la capa corta de lana roja de los soldados, echada sobre los hombros y el lomo y prendida con una fíbula
+ * redonda de bronce. De espaldas se le ve caer por el lomo; de frente, asomar a los dos lados del pecho. Sale del
+ * gato de pixel del tema, que lleva la misma capa (el casco se queda en el banco del cuadro).
+ */
+private val sagoDelGato: DrawScope.(PuntosGato, LuzGato) -> Unit = { p, luz ->
+    val k = Tronco(p)
+    val tela = luz.tono(R_ROJO); val clara = luz.tono(R_ROJO_LUZ); val honda = luz.tono(R_ROJO_SOMBRA); val bronce = luz.tono(R_BRONCE)
+    debajoDeLaCabeza(k) {
+        when {
+            k.deEspaldas -> {
+                val x = (p.hombro.x + p.cadera.x) / 2f
+                val y0 = p.hombro.y - Gatuno.R_PECHO - 0.5f; val y1 = p.hombro.y + maxOf(1.6f, (p.cadera.y - p.hombro.y) * 0.7f)
+                val forma = redonda(listOf(Offset(x - 4.6f, y0), Offset(x + 4.6f, y0), Offset(x + 5.8f, y1), Offset(x + 1.6f, y1 + 1.6f), Offset(x - 2.4f, y1 + 0.6f), Offset(x - 5.8f, y1)))
+                drawPath(forma, tela)
+                clipPath(forma) { drawRect(clara, Offset(x - 6f, y0 - 1f), Size(12f, (y1 - y0) * 0.4f + 1f)); drawLine(honda, Offset(x + 1.4f, y0 + 2f), Offset(x + 0.6f, y1 + 2f), 0.6f) }
+                drawPath(trazo(listOf(Offset(x - 5.4f, y1 - 0.4f), Offset(x - 2.2f, y1 + 0.4f), Offset(x + 1.6f, y1 + 1.2f), Offset(x + 5.4f, y1 - 0.4f))), honda, style = Stroke(0.8f, cap = StrokeCap.Round))
+            }
+            k.deFrente -> {
+                for (lado in listOf(-1f, 1f)) {
+                    val x = p.hombro.x + 3.9f * lado
+                    val forma = redonda(listOf(Offset(x - 1.6f * lado, p.hombro.y - 3.6f), Offset(x + 2f * lado, p.hombro.y - 2.6f), Offset(x + 2.4f * lado, p.hombro.y + 5f), Offset(x - 0.8f * lado, p.hombro.y + 5.6f)))
+                    drawPath(forma, if (lado < 0f) tela else honda)
+                    drawLine(honda, Offset(x + 2.3f * lado, p.hombro.y + 4.8f), Offset(x - 0.7f * lado, p.hombro.y + 5.4f), 0.7f, StrokeCap.Round)
+                }
+                drawCircle(bronce, 1.3f, Offset(p.hombro.x + 3.2f, p.hombro.y - 1.6f)); drawCircle(luz.tono(Color(0xFFF2D9A0)), 0.45f, Offset(p.hombro.x + 2.9f, p.hombro.y - 1.9f))
+            }
+            else -> {
+                // De perfil o de tres cuartos: del medio del lomo a los hombros, y por delante hasta el pecho, donde cae en pico.
+                val nuca = p.cuello + k.nuca * 3.3f; val gorja = p.cuello - k.nuca * 2.9f
+                val broche = k.en(1f, 0.6f) + k.dir * 2.6f
+                val caida = listOf(k.en(1f, 0.05f) + k.dir * 4f, k.en(0.92f, -0.86f), k.en(0.76f, -0.5f), k.en(0.6f, -0.92f), k.en(0.42f, -0.3f), k.en(0.28f, 0.5f))
+                val forma = redonda(listOf(k.en(0.28f, 1.1f), k.en(0.66f, 1.16f), k.en(1f, 1.12f), nuca, gorja) + caida)
+                drawPath(forma, tela)
+                clipPath(forma) {
+                    drawPath(redonda(listOf(k.en(0.22f, 1.3f), k.en(0.66f, 1.4f), k.en(1.02f, 1.3f), nuca + k.nuca * 1.2f, k.en(1f, 0.5f), k.en(0.62f, 0.42f), k.en(0.3f, 0.6f))), clara)
+                    drawPath(trazo(listOf(k.en(0.96f, 0.9f), k.en(0.86f, 0.2f), k.en(0.8f, -0.5f))), honda, style = Stroke(0.6f, cap = StrokeCap.Round))
+                    drawPath(trazo(listOf(k.en(0.6f, 0.8f), k.en(0.56f, 0.1f), k.en(0.58f, -0.7f))), honda, style = Stroke(0.5f, cap = StrokeCap.Round))
+                }
+                drawPath(trazo(caida), honda, style = Stroke(0.8f, cap = StrokeCap.Round))
+                drawCircle(bronce, 1.35f, broche); drawCircle(luz.tono(Color(0xFFF2D9A0)), 0.5f, broche + Offset(-0.3f, -0.3f))
+            }
+        }
+    }
+}
+
+private fun poseGuardia(c: Int): Pose {
+    val q = Math.floorMod(c, 6)
+    return Gatuno.SENTADO.copy(
+        cabeza = Offset(4.4f, -26f), morro = listOf(0.1f, 0.1f, -0.2f, -0.2f, 0.1f, 0.4f)[q], ojos = if (q == 4) 0.2f else 1f, orejas = 1f,
+        manoC = Offset(10.4f, -15.4f), cola2 = listOf(2.3f, 2.4f, 2.5f, 2.4f, 2.3f, 2.2f)[q],
+    )
+}
+
+/** La jabalina de la guardia: la tiene de pie, cogida con una mano; el hierro le pasa por encima de las orejas. */
+private val jabalina: DrawScope.(PuntosGato, LuzGato, Int) -> Unit = { p, luz, _ ->
+    val x = p.manoC.x + 0.6f
+    drawLine(luz.tono(R_MADERA), Offset(x, 0f), Offset(x, -24f), 1.3f, StrokeCap.Round)
+    drawRect(luz.tono(R_BRONCE), Offset(x - 1.1f, -27f), Size(2.2f, 3.2f))
+    drawLine(luz.tono(R_HIERRO), Offset(x, -27f), Offset(x, -39f), 0.7f)
+    drawPath(Path().apply { moveTo(x - 1.1f, -39f); lineTo(x + 1.1f, -39f); lineTo(x, -42.6f); close() }, luz.tono(lerp(R_HIERRO, Color.White, 0.3f)))
+    drawCircle(luz.tono(Color(0xFFF4EBD6)), 1.5f, p.manoC + Offset(0.5f, -0.4f))
+}
+
+private fun poseDados(c: Int): Pose {
+    val q = Math.floorMod(c, 6)
+    return Gatuno.SENTADO.copy(
+        cabeza = Offset(5.6f, -24.6f + 0.4f * (q % 2)), morro = listOf(0.5f, 0.56f, 0.6f, 0.56f, 0.5f, 0.44f)[q], orejas = 0.95f,
+        manoC = listOf(Offset(9f, -3f), Offset(11.4f, -6f), Offset(13.4f, -2.4f), Offset(11.4f, -0.6f), Offset(9f, -1f), Gatuno.SENTADO.manoC)[q],
+        cola2 = listOf(2.3f, 2.6f, 2.9f, 2.6f, 2.3f, 2f)[q],
+    )
+}
+
+/** Los dados de hueso: uno quieto y otro que salta cuando le da con la mano. */
+private val dados: DrawScope.(PuntosGato, LuzGato, Int) -> Unit = { _, luz, c ->
+    val q = Math.floorMod(c, 6)
+    val hueso = luz.tono(Color(0xFFF2EAD8)); val punto = luz.tono(Color(0xFF2E241C)); val canto = luz.tono(Color(0xFFC8BCA2))
+    fun dado(o: Offset, giro: Float) {
+        val forma = Path().apply { moveTo(o + Offset(-1.5f, -1.4f - giro)); lineTo(o + Offset(1.5f, -1.4f + giro)); lineTo(o + Offset(1.5f, 1.4f + giro)); lineTo(o + Offset(-1.5f, 1.4f - giro)); close() }
+        drawPath(forma, hueso); drawLine(canto, o + Offset(-1.5f, 1.4f - giro), o + Offset(1.5f, 1.4f + giro), 0.5f)
+        drawCircle(punto, 0.3f, o + Offset(-0.6f, -0.5f)); drawCircle(punto, 0.3f, o + Offset(0.6f, 0.5f))
+    }
+    dado(Offset(18.4f, -1.5f), 0f)
+    dado(Offset(14.6f, -1.5f) + listOf(Offset(0f, 0f), Offset(0f, 0f), Offset(1.2f, -3.4f), Offset(2.4f, -4.6f), Offset(3.4f, -2f), Offset(4f, 0f))[q], listOf(0f, 0f, 0.5f, -0.4f, 0.3f, 0f)[q])
+}
+
+private val PELAJE_ROMANO = Pelaje(
+    manto = Color(0xFFD6BA84), claro = Color(0xFFF4EBD6), marca = Color(0xFFB08C52), dibujo = DibujoPelaje.BICOLOR, ojos = Color(0xFF3E9A84),
+    nariz = Color(0xFFDC9A98), accesorio = sagoDelGato,
+    especiales = listOf(EspecialGato("monta guardia con la jabalina", true, 6, ::poseGuardia, jabalina), EspecialGato("juega a los dados", true, 6, ::poseDados, dados)),
 )
 
 // =====================================================================
