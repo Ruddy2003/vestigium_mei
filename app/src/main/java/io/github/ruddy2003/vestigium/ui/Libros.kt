@@ -206,7 +206,8 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.DECO -> Materia(c(0xFFF3EAD4), c(0xFFC9B48A), c(0xFFFBF6EA), c(0xFFB8952E), c(0xFF1F6B57), c(0xFFF6F0E1), c(0xFF16130E), extra = c(0xFFB5523B))
     TemaId.NAVIDAD -> Materia(c(0xFFB71C1C), c(0xFF7A1010), c(0xFFD84343), c(0xFFC9A227), c(0xFF1B5E20), c(0xFFFBF6EC), c(0xFF1E2A22), extra = c(0xFFFF5252), textoCuerpo = c(0xFFFBF6EC))
     TemaId.DISTOPIA -> Materia(c(0xFFD8C08A), c(0xFFA88F58), c(0xFFE8D4A4), c(0xFFC8102E), c(0xFF141414), c(0xFFF2EFE6), c(0xFF141414))
-    TemaId.FRENTE -> Materia(c(0xFFD8C08A), c(0xFFA88F58), c(0xFFE8D4A4), c(0xFFC8102E), c(0xFF141414), c(0xFFF2EFE6), c(0xFF141414))
+    // El dosier de la red: carpeta de lona acero, rótulo ámbar, grapa de cromo gastado, hojas de teletipo y el sello rojo de la célula.
+    TemaId.FRENTE -> Materia(c(0xFF3E4C57), c(0xFF25303A), c(0xFF5B6B77), c(0xFFF2A33A), c(0xFFB9B6AE), c(0xFFF0EBE0), c(0xFF23252A), extra = c(0xFFD9372B), textoCuerpo = c(0xFFE7E1D4))
     TemaId.CIBER -> Materia(c(0xFF0A1416), c(0xFF030708), c(0xFF132529), c(0xFF00E5FF), c(0xFF2C8C99), c(0xFF030708), c(0xFFBDEFF5), extra = c(0xFFC8FBFF))
     TemaId.NEON -> Materia(c(0xFF1C1324), c(0xFF0C0811), c(0xFF33223E), c(0xFFFF3D9A), c(0xFFFFB238), c(0xFF0C0811), c(0xFFF4E7F0), extra = c(0xFF8CFF5A))
     TemaId.REFUGIO -> Materia(c(0xFFC9C2A6), c(0xFF8E886F), c(0xFFE2DCC4), c(0xFF3DFF7F), c(0xFF2F8F4E), c(0xFF031A0B), c(0xFF7CF098))
@@ -258,7 +259,8 @@ private fun nocheDe(t: TemaId): NocheTema = when (t) {
     TemaId.TEMPLARIO -> NocheTema(c(0xFF0F1117), c(0xFFF0A040), 0.62f, 0.8f, c(0xFFEEE7D8))
     // Apagón bajo el reflector.
     TemaId.DISTOPIA -> NocheTema(c(0xFF15171A), c(0xFFD8DEE4), 0.74f, 0.88f, c(0xFFDDE2E6))
-    TemaId.FRENTE -> NocheTema(c(0xFF15171A), c(0xFFD8DEE4), 0.74f, 0.88f, c(0xFFDDE2E6))
+    // La sala de radar de noche: pizarra con petróleo y el verde pálido de las pantallas.
+    TemaId.FRENTE -> NocheTema(c(0xFF0F171A), c(0xFF9FD8A8), 0.7f, 0.86f, c(0xFFDCE8D6))
     TemaId.REFUGIO -> NocheTema(c(0xFF1A1003), c(0xFFFFB23F), 0.7f, 0.85f, c(0xFFFFC870))
     // Brasas de la forja.
     TemaId.ORDEN -> NocheTema(c(0xFF14181D), c(0xFFE8743A), 0.66f, 0.82f, c(0xFFF3C9A8))
@@ -337,7 +339,8 @@ fun materiaNoche(t: TemaId): Materia {
         TemaId.MEDIEVAL -> materiaTenida(m, n)
         TemaId.TEMPLARIO -> materiaTenida(m, n)
         TemaId.DISTOPIA -> materiaTenida(m, n)
-        TemaId.FRENTE -> materiaTenida(m, n)
+        // El dosier en la penumbra de la consola: la lona casi negra, el rótulo ámbar encendido y la grapa con el verde de la pantalla.
+        TemaId.FRENTE -> Materia(c(0xFF1C252B), c(0xFF0E1418), c(0xFF2E3A42), c(0xFFF0A04B), c(0xFF9FD8A8), c(0xFF1A2226), c(0xFFDCE8D6), extra = c(0xFFFF7A6E), textoCuerpo = c(0xFFDCE8D6))
         TemaId.ORDEN -> materiaTenida(m, n)
         TemaId.VAPOR -> materiaTenida(m, n)
         TemaId.LABORATORIO -> materiaTenida(m, n)
@@ -385,7 +388,8 @@ fun paginaNoche(t: TemaId): Pagina {
         TemaId.MEDIEVAL -> paginaTenida(p, n)
         TemaId.TEMPLARIO -> paginaTenida(p, n)
         TemaId.DISTOPIA -> paginaTenida(p, n)
-        TemaId.FRENTE -> paginaTenida(p, n)
+        // La hoja de teletipo bajo el resplandor verde del radar, con el ámbar de los pilotos.
+        TemaId.FRENTE -> Pagina(p.fondo, c(0xFF172024), c(0xFFDCE8D6), c(0xFF7E9488), c(0xFFF0A04B), c(0xFF9FD8A8), p.texto, p.tam, p.interlinea, true, p.rayas, p.capitular)
         TemaId.ORDEN -> paginaTenida(p, n)
         TemaId.VAPOR -> paginaTenida(p, n)
         TemaId.LABORATORIO -> paginaTenida(p, n)
@@ -423,7 +427,7 @@ fun rotuloSueno(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Visión de la noche"
     TemaId.TEMPLARIO -> "Lo soñado en la vigilia"
     TemaId.DISTOPIA -> "INFORME DE ACTIVIDAD ONÍRICA"
-    TemaId.FRENTE -> "INFORME DE ACTIVIDAD ONÍRICA"
+    TemaId.FRENTE -> "ESCUCHA NOCTURNA · SUEÑO INTERCEPTADO"
     TemaId.REFUGIO -> "REGISTRO ONÍRICO · TERMINAL 03"
     TemaId.ORDEN -> "PARTE NOCTURNO"
     TemaId.VAPOR -> "Sueños del turno de noche"
@@ -463,7 +467,7 @@ fun colofonSueno(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Y en esto desperté."
     TemaId.TEMPLARIO -> "Y tocaron a maitines."
     TemaId.DISTOPIA -> "FIN DEL INFORME NOCTURNO"
-    TemaId.FRENTE -> "FIN DEL INFORME NOCTURNO"
+    TemaId.FRENTE -> "CORTE DE ESCUCHA · AMANECE"
     TemaId.REFUGIO -> "FIN DEL REGISTRO"
     TemaId.ORDEN -> "TOQUE DE DIANA"
     TemaId.VAPOR -> "— silba el tren del alba —"
@@ -584,7 +588,17 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
             TemaId.MEDIEVAL -> asterisco(o, r * 1.7f, col, 6, 0.36f * u)
             TemaId.TEMPLARIO -> drawPath(cruzPatada(o, r * 1.8f), col)
             TemaId.DISTOPIA -> drawCircle(col.copy(alpha = col.alpha * 0.45f), r * 0.8f, o)
-            TemaId.FRENTE -> drawCircle(col.copy(alpha = col.alpha * 0.45f), r * 0.8f, o)
+            // Ecos en la pantalla de radar: puntos, y de vez en cuando un contacto encerrado en las cuatro esquinas de la mira.
+            TemaId.FRENTE -> {
+                drawCircle(col, r * 0.7f, o)
+                if (i % 6 == 0) {
+                    val l = r * 2.6f; val k = l * 0.45f; val g = 0.3f * u
+                    for (sx in listOf(-1f, 1f)) for (sy in listOf(-1f, 1f)) {
+                        val e = o + Offset(sx * l, sy * l)
+                        drawLine(col, e, e - Offset(sx * k, 0f), g); drawLine(col, e, e - Offset(0f, sy * k), g)
+                    }
+                }
+            }
             TemaId.REFUGIO -> { val p = r * 0.8f; drawRect(col, Offset(o.x - p / 2, o.y - p * 1.5f), Size(p, p * 3)); drawRect(col, Offset(o.x - p * 1.5f, o.y - p / 2), Size(p * 3, p)) }
             TemaId.ORDEN -> { drawLine(col, o - Offset(r * 2.4f, 0f), o + Offset(r * 2.4f, 0f), 0.4f * u); drawLine(col, o - Offset(0f, r * 2.4f), o + Offset(0f, r * 2.4f), 0.4f * u); drawCircle(col, r * 0.7f, o) }
             // Con tanto hollín apenas se ven estrellas: son chispas de la chimenea que suben, con su halo.
@@ -697,9 +711,18 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
             drawCircle(luna.copy(alpha = 0.75f), r, ce)
             if (!sola) drawPath(Path().apply { moveTo(ce.x - r * 2.2f, ce.y + r * 2.6f); lineTo(ce.x - r * 0.2f, ce.y - r * 1.4f); lineTo(ce.x + r * 0.8f, ce.y - r * 1.2f); close() }, luna.copy(alpha = 0.16f))
         }
+        // La luna del mundo ocupado, con sus cráteres y un arco de alcance del radar; al lado, la torre de antena con su piloto rojo.
         TemaId.FRENTE -> {
-            drawCircle(luna.copy(alpha = 0.75f), r, ce)
-            if (!sola) drawPath(Path().apply { moveTo(ce.x - r * 2.2f, ce.y + r * 2.6f); lineTo(ce.x - r * 0.2f, ce.y - r * 1.4f); lineTo(ce.x + r * 0.8f, ce.y - r * 1.2f); close() }, luna.copy(alpha = 0.16f))
+            drawCircle(luna.copy(alpha = 0.12f), r * 1.4f, ce); drawCircle(luna, r * 0.85f, ce)
+            drawCircle(n.cielo.copy(alpha = 0.16f), r * 0.2f, ce + Offset(-r * 0.3f, -r * 0.2f)); drawCircle(n.cielo.copy(alpha = 0.12f), r * 0.13f, ce + Offset(r * 0.28f, r * 0.32f))
+            drawArc(n.luz.copy(alpha = 0.35f), 200f, 110f, false, Offset(ce.x - r * 1.6f, ce.y - r * 1.6f), Size(r * 3.2f, r * 3.2f), style = Stroke(0.4f * u))
+            if (!sola) {
+                val x = ce.x - r * 2.6f; val pie = ce.y + r * 2.4f; val tope = ce.y - r * 0.5f; val torre = luna.copy(alpha = 0.55f)
+                drawLine(torre, Offset(x - r * 0.35f, pie), Offset(x, tope), 0.44f * u); drawLine(torre, Offset(x + r * 0.35f, pie), Offset(x, tope), 0.44f * u)
+                for (k in 1..4) { val f = k / 5f; val y = pie + (tope - pie) * f; val a = r * 0.35f * (1f - f); drawLine(torre, Offset(x - a, y), Offset(x + a, y), 0.32f * u) }
+                drawLine(torre, Offset(x, tope), Offset(x, tope - r * 0.5f), 0.4f * u)
+                drawCircle(Color(0xFFD9372B).copy(alpha = 0.25f), r * 0.32f, Offset(x, tope - r * 0.55f)); drawCircle(Color(0xFFD9372B), r * 0.1f, Offset(x, tope - r * 0.55f))
+            }
         }
         // Luna de fósforo: un círculo hecho de líneas de barrido.
         TemaId.REFUGIO -> {
@@ -909,7 +932,7 @@ fun textoGuardar(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "rubricar"
     TemaId.TEMPLARIO -> "inscribir en el rol"
     TemaId.DISTOPIA -> "ARCHIVAR"
-    TemaId.FRENTE -> "ARCHIVAR"
+    TemaId.FRENTE -> "CIFRAR Y ENVIAR"
     TemaId.REFUGIO -> "GUARDAR"
     TemaId.ORDEN -> "REGISTRAR"
     TemaId.VAPOR -> "Asentar en el registro"
@@ -949,7 +972,7 @@ fun colofon(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Aquí se acaba el folio."
     TemaId.TEMPLARIO -> "Non nobis, Domine: aquí acaba la jornada."
     TemaId.DISTOPIA -> "FIN DE LA DECLARACIÓN"
-    TemaId.FRENTE -> "FIN DE LA DECLARACIÓN"
+    TemaId.FRENTE -> "TRANSMISIÓN CERRADA · QUEMA ESTA HOJA"
     TemaId.REFUGIO -> "FIN DE LA ENTRADA"
     TemaId.ORDEN -> "FIN DEL PARTE"
     TemaId.VAPOR -> "— fin de la memoria descriptiva —"
@@ -989,7 +1012,7 @@ private fun pistaDia(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "toca para abrir el códice"
     TemaId.TEMPLARIO -> "toca para abrir la regla"
     TemaId.DISTOPIA -> "TOCA PARA ABRIR EL EXPEDIENTE"
-    TemaId.FRENTE -> "TOCA PARA ABRIR EL EXPEDIENTE"
+    TemaId.FRENTE -> "TOCA PARA QUITAR LA GRAPA Y ABRIR EL DOSIER"
     TemaId.REFUGIO -> "> TOCA PARA ABRIR LA BITÁCORA_"
     TemaId.ORDEN -> "toca para abrir el libro de partes"
     TemaId.VAPOR -> "toca para abrir el registro de patentes"
@@ -1029,7 +1052,7 @@ private fun pistaNoche(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "toca para asentar la visión de la noche"
     TemaId.TEMPLARIO -> "toca para inscribir lo soñado en la vigilia"
     TemaId.DISTOPIA -> "TOCA PARA DECLARAR LO SOÑADO"
-    TemaId.FRENTE -> "TOCA PARA DECLARAR LO SOÑADO"
+    TemaId.FRENTE -> "TOCA PARA PASAR LO SOÑADO AL CANAL"
     TemaId.REFUGIO -> "> TOCA PARA REGISTRAR EL SUEÑO_"
     TemaId.ORDEN -> "toca para dar el parte nocturno"
     TemaId.VAPOR -> "toca para anotar los sueños del turno de noche"
@@ -1069,7 +1092,7 @@ private fun textoVacio(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Folio en blanco: nada se asentó este día."
     TemaId.TEMPLARIO -> "Guardia sin parte: nada se inscribió esta jornada."
     TemaId.DISTOPIA -> "SIN DECLARACIÓN REGISTRADA PARA ESTA JORNADA."
-    TemaId.FRENTE -> "SIN DECLARACIÓN REGISTRADA PARA ESTA JORNADA."
+    TemaId.FRENTE -> "SIN NOVEDAD EN LA RED: ESE DÍA NO SALIÓ NINGÚN DESPACHO."
     TemaId.REFUGIO -> "SIN ENTRADAS EN LA BITÁCORA PARA ESTE DÍA."
     TemaId.ORDEN -> "Sin parte para esta jornada."
     TemaId.VAPOR -> "Ninguna patente registrada en esta jornada."
@@ -1109,7 +1132,7 @@ private fun textoSinSueno(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Ninguna visión se asentó esa noche."
     TemaId.TEMPLARIO -> "Ningún sueño se inscribió en esa vigilia."
     TemaId.DISTOPIA -> "SIN ACTIVIDAD ONÍRICA DECLARADA."
-    TemaId.FRENTE -> "SIN ACTIVIDAD ONÍRICA DECLARADA."
+    TemaId.FRENTE -> "CANAL MUDO: ESA NOCHE NO ENTRÓ NINGÚN SUEÑO."
     TemaId.REFUGIO -> "SIN REGISTRO ONÍRICO ESA NOCHE."
     TemaId.ORDEN -> "Sin parte nocturno."
     TemaId.VAPOR -> "Esa noche la caldera durmió sin sueños."
@@ -1149,7 +1172,7 @@ private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
     TemaId.MEDIEVAL -> "Lo bueno del día — " to "Lo amargo del día — "
     TemaId.TEMPLARIO -> "Lo ganado en la jornada — " to "Lo perdido en la jornada — "
     TemaId.DISTOPIA -> "MÉRITO — " to "FALTA — "
-    TemaId.FRENTE -> "MÉRITO — " to "FALTA — "
+    TemaId.FRENTE -> "CANAL LIMPIO — " to "INTERFERENCIA — "
     TemaId.REFUGIO -> "LO MEJOR > " to "LO PEOR > "
     TemaId.ORDEN -> "Acierto — " to "Baja — "
     TemaId.VAPOR -> "A todo vapor — " to "Avería — "
@@ -1189,7 +1212,7 @@ private fun pistaEscribir(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Asiéntese aquí lo acontecido en este día…"
     TemaId.TEMPLARIO -> "Inscribe, hermano, lo que pasó en esta guardia…"
     TemaId.DISTOPIA -> "DECLARE LAS ACTIVIDADES DE LA JORNADA."
-    TemaId.FRENTE -> "DECLARE LAS ACTIVIDADES DE LA JORNADA."
+    TemaId.FRENTE -> "DESPACHO DEL DÍA: QUÉ VISTE, CON QUIÉN, DÓNDE. SÉ BREVE."
     TemaId.REFUGIO -> "> REGISTRE LA ENTRADA DEL DÍA_"
     TemaId.ORDEN -> "Redacte el parte de la jornada."
     TemaId.VAPOR -> "Memoria descriptiva de la jornada:"
@@ -1229,7 +1252,7 @@ private fun pistaSonar(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Asiéntese la visión de la noche…"
     TemaId.TEMPLARIO -> "Inscribe lo que soñaste entre vigilia y vigilia…"
     TemaId.DISTOPIA -> "DECLARE LA ACTIVIDAD ONÍRICA."
-    TemaId.FRENTE -> "DECLARE LA ACTIVIDAD ONÍRICA."
+    TemaId.FRENTE -> "ESCUCHA NOCTURNA: ¿QUÉ SOÑASTE? ANÓTALO ANTES DEL ALBA."
     TemaId.REFUGIO -> "> REGISTRE EL SUEÑO_"
     TemaId.ORDEN -> "Parte nocturno: ¿qué soñó?"
     TemaId.VAPOR -> "Lo que soñaste junto a la caldera…"
@@ -1399,7 +1422,8 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.NAVIDAD -> Pagina(R.drawable.papel_navidad, c(0xFFFBF6EC), c(0xFF1E2A22), c(0xFF5E6B62), c(0xFFB71C1C), c(0xFF1B5E20), LetraExtra.italianno, 27f, 32f, false, Rayas.NADA, LetraExtra.cinzelDeco)
     // La declaración, tecleada.
     TemaId.DISTOPIA -> Pagina(R.drawable.papel_distopia, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.terminal, 15.5f, 24f, false, Rayas.RENGLONES)
-    TemaId.FRENTE -> Pagina(R.drawable.papel_frente, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.terminal, 15.5f, 24f, false, Rayas.RENGLONES)
+    // La hoja de despacho en papel continuo de teletipo, mecanografiada en la letra de la consola; la capitular, en la de los rótulos.
+    TemaId.FRENTE -> Pagina(R.drawable.papel_frente, c(0xFFE6E1D5), c(0xFF23252A), c(0xFF5A5D63), c(0xFFB85C0F), c(0xFFA8201A), LetraExtra.chivoMono, 15f, 25f, false, Rayas.NADA, LetraExtra.michroma)
     TemaId.CIBER -> Pagina(R.drawable.papel_ciber, c(0xFF030708), c(0xFFBDEFF5), c(0xFF3E7880), c(0xFF00E5FF), c(0xFF5FC4D2), Letra.codigo, 15f, 23f, true, Rayas.NUMEROS)
     // El reverso de un ticket térmico bajo la luz del letrero: oscuro, con la tinta clara y el corte en ámbar.
     TemaId.NEON -> Pagina(R.drawable.papel_neon, c(0xFF120C17), c(0xFFF4E7F0), c(0xFF8E7488), c(0xFFFF3D9A), c(0xFFFFB238), Letra.letrero, 16f, 24f, true, Rayas.RENGLONES)
@@ -1490,7 +1514,7 @@ private fun rotuloPagina(t: TemaId, fecha: String): String {
         TemaId.MEDIEVAL -> "Aquí comiença el folio ${Temas.copista(nDia)}"
         TemaId.TEMPLARIO -> "Parte de la jornada ${Temas.puntos(nDia)}"
         TemaId.DISTOPIA -> "EXPEDIENTE Nº %04d · DECLARACIÓN DIARIA".format((fecha.hashCode() and 0x7fffffff) % 10000)
-        TemaId.FRENTE -> "EXPEDIENTE Nº %04d · DECLARACIÓN DIARIA".format((fecha.hashCode() and 0x7fffffff) % 10000)
+        TemaId.FRENTE -> "DESPACHO CIFRADO Nº ${Frente.contador(nDia)}" + (dia?.let { " · VENTANA ${Frente.ventana(it)}" } ?: "")
         TemaId.REFUGIO -> "BITÁCORA PERSONAL · TERMINAL 03"
         TemaId.ORDEN -> "PARTE DE LA ORDEN · Nº %03d".format(nDia)
         TemaId.VAPOR -> "Patente n.º %d · memoria descriptiva".format(1000 + nDia)

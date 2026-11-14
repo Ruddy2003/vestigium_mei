@@ -345,33 +345,41 @@ def _engrane_manometro(d, c, n=16):   # Vapor victoriano: dientes de engrane por
         g = math.radians(300)
         d.line([(x, y), (x + r * 0.55 * math.cos(g), y + r * 0.55 * math.sin(g))], fill=(156, 61, 36, 255), width=int(K * 2))
 
-def _canal(d, c, hueco=0.5, centro=-0.95):   # Frente exterior: el canal, un círculo roto; por el hueco se escapa la chispa
-    # de tres trazos. Por dentro, la escala de rumbos de una pantalla de radar, y abajo a la izquierda, dos pilotos.
+def _canal(d, c, hueco=0.52, centro=-0.95):   # Frente exterior: el emblema del tema, el canal (un círculo roto) y la chispa
+    # de tres trazos que se escapa por el hueco. El aro engruesa hacia el corte para que se lea roto; por dentro, solo los
+    # rumbos de 30° de una pantalla de radar, y abajo a la izquierda, dos pilotos.
     caja = [(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K]
     a0, a1 = centro + hueco / 2, centro - hueco / 2 + 2 * math.pi
-    d.arc(caja, math.degrees(a0), math.degrees(a1), fill=c, width=int(GROSOR * K))
-    for a in (a0, a1):                       # los cabos del canal, redondos
-        x, y = _pos(a); r = GROSOR * K / 2
+    d.arc(caja, math.degrees(a0), math.degrees(a1), fill=c, width=int(GROSOR * K * 1.15))
+    for fin, sentido in ((a0, -1), (a1, 1)):     # los cabos: engruesan hacia el corte y acaban redondos
+        tramo = 0.34
+        pts_fuera, pts_dentro = [], []
+        for k in range(25):
+            s = k / 24
+            a = fin - sentido * tramo * (1 - s)
+            w = GROSOR / 2 * (1.15 + 1.75 * s ** 1.6)
+            pts_fuera.append(_pos(a, RADIO + w)); pts_dentro.append(_pos(a, RADIO - w))
+        d.polygon(pts_fuera + pts_dentro[::-1], fill=c)
+        x, y = _pos(fin); r = GROSOR / 2 * 2.9 * K
         d.ellipse([x - r, y - r, x + r, y + r], fill=c)
-    for i in range(36):                      # rumbos cada 10°, los de 30° más largos, solo donde hay canal
-        a = 2 * math.pi * i / 36
-        if abs((a - centro + math.pi) % (2 * math.pi) - math.pi) < hueco / 2 + 0.12: continue
-        l = 7.5 if i % 3 == 0 else 4.0
-        d.line([_pos(a, RADIO - 1.5), _pos(a, RADIO - 1.5 - l)], fill=c, width=int(K * (1.9 if i % 3 == 0 else 1.3)))
-    # La chispa: tres trazos que se abren hacia fuera desde el hueco del canal, el del centro más largo.
-    ox, oy = _pos(centro, RADIO - 9)
-    for da, l0, l1, g in ((0, 8.0, 24.0, 1.45), (-0.58, 9.5, 21.0, 1.3), (0.58, 9.5, 21.0, 1.3)):
+    for i in range(12):                      # rumbos cada 30°, solo donde hay canal
+        a = 2 * math.pi * i / 12
+        if abs((a - centro + math.pi) % (2 * math.pi) - math.pi) < hueco / 2 + 0.4: continue
+        d.line([_pos(a, RADIO - 2), _pos(a, RADIO - 8)], fill=c, width=int(K * 1.7))
+    # La chispa: tres trazos gruesos que se abren hacia fuera desde el hueco, el del centro más largo.
+    ox, oy = _pos(centro, RADIO - 7)
+    for da, l0, l1, g in ((0, 4.5, 21.5, 2.5), (-0.62, 6.0, 18.0, 2.2), (0.62, 6.0, 18.0, 2.2)):
         u = centro + da
         p0 = (ox + l0 * K * math.cos(u), oy + l0 * K * math.sin(u)); p1 = (ox + l1 * K * math.cos(u), oy + l1 * K * math.sin(u))
         d.line([p0, p1], fill=c, width=int(GROSOR * K * g))
         for (x, y) in (p0, p1):
             r = GROSOR * K * g / 2; d.ellipse([x - r, y - r, x + r, y + r], fill=c)
     # Dos pilotos sobre el canal, en su aro de baquelita: el ámbar encendido y el rojo.
-    for a, luz in ((math.radians(127), (242, 163, 58, 255)), (math.radians(143), (217, 55, 43, 255))):
-        x, y = _pos(a); r = 6.2 * K
+    for a, luz in ((math.radians(124), (242, 163, 58, 255)), (math.radians(146), (217, 55, 43, 255))):
+        x, y = _pos(a); r = 8.4 * K
         d.ellipse([x - r, y - r, x + r, y + r], fill=(42, 38, 34, 255))
-        r2 = 4.3 * K; d.ellipse([x - r2, y - r2, x + r2, y + r2], fill=luz)
-        r3 = 1.3 * K; d.ellipse([x - r2 * 0.45 - r3, y - r2 * 0.45 - r3, x - r2 * 0.45 + r3, y - r2 * 0.45 + r3], fill=(255, 248, 230, 190))
+        r2 = 6.0 * K; d.ellipse([x - r2, y - r2, x + r2, y + r2], fill=luz)
+        r3 = 1.8 * K; d.ellipse([x - r2 * 0.42 - r3, y - r2 * 0.42 - r3, x - r2 * 0.42 + r3, y - r2 * 0.42 + r3], fill=(255, 248, 230, 200))
 
 def _cuerda(d, c, n=56):              # cuerda trenzada
     for i in range(n):
