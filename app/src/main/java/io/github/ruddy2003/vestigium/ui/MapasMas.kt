@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
@@ -94,7 +95,9 @@ object MapasMas {
         TemaId.BASICO -> listOf(Offset(0.08f, 0.8f), Offset(0.22f, 0.66f), Offset(0.36f, 0.7f), Offset(0.5f, 0.5f), Offset(0.64f, 0.4f), Offset(0.78f, 0.44f), Offset(0.92f, 0.24f))
         // Los puntos de control: piso por piso, de la ventanilla de abajo al Ministerio en lo alto.
         TemaId.DISTOPIA -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
-        TemaId.FRENTE -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
+        // La ruta de salto de la célula en la carta estelar, de mundo en mundo: Hollín (el puerto de ladrillo, abajo a la
+        // izquierda), Escoria, Vigía, Luna Ocre, El Anillo, Cantera y Albar, la capital del Directorio, arriba a la derecha.
+        TemaId.FRENTE -> listOf(Offset(0.08f, 0.8f), Offset(0.22f, 0.54f), Offset(0.36f, 0.76f), Offset(0.5f, 0.42f), Offset(0.63f, 0.66f), Offset(0.77f, 0.4f), Offset(0.9f, 0.18f))
         // La traza de la red: saltos de servidor en servidor, de la máquina propia a la raíz.
         TemaId.CIBER -> listOf(Offset(0.07f, 0.52f), Offset(0.2f, 0.28f), Offset(0.34f, 0.6f), Offset(0.48f, 0.36f), Offset(0.62f, 0.7f), Offset(0.77f, 0.4f), Offset(0.93f, 0.6f))
         // La bajada: un nivel más hondo en cada parada, de arriba a la izquierda hasta el fondo a la derecha.
@@ -289,14 +292,52 @@ object MapasMas {
                 drawRect(Color(0xFFC8102E).copy(alpha = 0.6f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.02f))
             }
             TemaId.FRENTE -> {
-                // Pisos de un edificio de oficinas en corte, con sus ventanillas; a la derecha, la torre del Ministerio.
-                val linea = cs.onSurface.copy(alpha = if (oscuro) 0.18f else 0.14f)
-                for (k in 1 until 6) { val y = h * k / 6f; drawLine(linea, Offset(0f, y), Offset(w * 0.8f, y), 1f * d) }
-                val az = java.util.Random(17)
-                for (k in 0 until 6) for (j in 0 until 10) if (az.nextInt(3) > 0) drawRect(linea, Offset(w * (0.03f + j * 0.075f), h * (k / 6f + 0.04f)), Size(w * 0.035f, h * 0.07f))
-                drawRect(cs.onSurface.copy(alpha = if (oscuro) 0.22f else 0.16f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.96f))
-                for (k in 0 until 9) drawRect(Color(0xFFC8102E).copy(alpha = 0.25f + 0.5f * avance), Offset(w * 0.86f, h * (0.12f + k * 0.09f)), Size(w * 0.06f, h * 0.03f))
-                drawRect(Color(0xFFC8102E).copy(alpha = 0.6f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.02f))
+                // La carta estelar impresa: la cuadrícula de sectores con sus rótulos y sus marcas de borde, las estrellas en
+                // punto y en cruz, la nebulosa en punteado, los anillos de alcance del radar de Vigía, el gigante de El Anillo
+                // y, arriba a la derecha, el espacio del Directorio rayado en rojo alrededor de Albar. Desde Hollín sale la
+                // señal de la célula, que llega más lejos con cada día cumplido. De noche es la misma carta bajo la luz verde
+                // de la consola.
+                val trazo = if (oscuro) TrazosFrente.RADAR else Color(0xFF23252A)
+                val linea = trazo.copy(alpha = if (oscuro) 0.13f else 0.11f)
+                val ambar = if (oscuro) TrazosFrente.PILOTO_AMBAR else Color(0xFFB85C0F)
+                drawRect((if (oscuro) TrazosFrente.PANTALLA else Color(0xFFE8E0CC)).copy(alpha = if (oscuro) 0.55f else 0.35f), Offset.Zero, size)
+                for (k in 1 until 8) drawLine(linea, Offset(w * k / 8f, 0f), Offset(w * k / 8f, h), 0.7f * d)
+                for (k in 1 until 4) drawLine(linea, Offset(0f, h * k / 4f), Offset(w, h * k / 4f), 0.7f * d)
+                for (k in 0..32) { val x = w * k / 32f; val l = (if (k % 4 == 0) 4f else 2f) * d; drawLine(linea, Offset(x, 0f), Offset(x, l), 0.7f * d); drawLine(linea, Offset(x, h), Offset(x, h - l), 0.7f * d) }
+                with(TrofeosMas) { for (i in 0 until 8) for (j in 0 until 4) if ((i + j) % 3 == 0) mono("${'A' + i}${j + 1}", w * i / 8f + 2.5f * d, h * j / 4f + 8 * d, 6 * d, trazo.copy(alpha = 0.22f)) }
+                val az = java.util.Random(31)
+                repeat(if (oscuro) 80 else 60) { drawCircle(trazo.copy(alpha = 0.15f + 0.3f * az.nextFloat()), (0.4f + 0.8f * az.nextFloat()) * d, Offset(az.nextFloat() * w, az.nextFloat() * h)) }
+                repeat(9) {
+                    val o = Offset(az.nextFloat() * w, az.nextFloat() * h); val l = (1.6f + az.nextFloat() * 1.6f) * d
+                    drawLine(trazo.copy(alpha = 0.4f), Offset(o.x - l, o.y), Offset(o.x + l, o.y), 0.6f * d); drawLine(trazo.copy(alpha = 0.4f), Offset(o.x, o.y - l), Offset(o.x, o.y + l), 0.6f * d)
+                }
+                val neb = Offset(w * 0.4f, h * 0.18f)
+                repeat(150) { val a = az.nextDouble() * 2 * PI; val rr = kotlin.math.sqrt(az.nextFloat()); drawCircle(trazo.copy(alpha = 0.14f), 0.6f * d, Offset(neb.x + (cos(a) * rr * w * 0.11f).toFloat(), neb.y + (sin(a) * rr * h * 0.15f).toFloat())) }
+                drawOval(trazo.copy(alpha = 0.18f), Offset(neb.x - w * 0.12f, neb.y - h * 0.17f), Size(w * 0.24f, h * 0.34f), style = Stroke(0.6f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.5f * d, 2.5f * d))))
+                val vigia = Offset(w * 0.36f, h * 0.76f)
+                listOf(16f, 27f, 38f).forEach { rr -> drawCircle(TrazosFrente.RADAR.copy(alpha = if (oscuro) 0.3f else 0.4f), rr * d, vigia, style = Stroke(0.7f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 3 * d)))) }
+                val anillo = Offset(w * 0.63f, h * 0.66f)
+                drawCircle(trazo.copy(alpha = 0.07f), 15 * d, anillo)
+                drawOval(trazo.copy(alpha = 0.22f), Offset(anillo.x - 27 * d, anillo.y - 6 * d), Size(54 * d, 12 * d), style = Stroke(0.8f * d))
+                val albar = Offset(w * 0.9f, h * 0.18f); val zona = w * 0.14f
+                val rojo = TrazosFrente.PILOTO_ROJO
+                clipPath(Path().apply { addOval(Rect(albar, zona)) }) {
+                    var x = albar.x - zona * 2; while (x < albar.x + zona) { drawLine(rojo.copy(alpha = if (oscuro) 0.16f else 0.13f), Offset(x, albar.y + zona), Offset(x + zona * 2, albar.y - zona), 0.8f * d); x += 5 * d }
+                }
+                drawCircle(rojo.copy(alpha = 0.45f), zona, albar, style = Stroke(0.9f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * d, 2 * d, 1.5f * d, 2 * d))))
+                drawLine(rojo.copy(alpha = 0.3f), Offset(albar.x - zona * 1.9f, 0f), Offset(albar.x - zona * 0.75f, albar.y + zona * 0.45f), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * d, 3 * d)))
+                with(TrofeosMas) { mono("DIRECTORIO", albar.x - zona * 0.2f, albar.y + zona + 8 * d, 6 * d, rojo.copy(alpha = 0.5f), android.graphics.Paint.Align.CENTER) }
+                val hollin = Offset(w * 0.08f, h * 0.8f)
+                for (k in 0 until 4) {
+                    val rr = w * (0.08f + 0.22f * k)
+                    if (rr <= w * (0.1f + 0.85f * avance)) drawArc(ambar.copy(alpha = 0.32f - k * 0.05f), -80f, 70f, false, Offset(hollin.x - rr, hollin.y - rr), Size(2 * rr, 2 * rr), style = Stroke(1 * d, cap = StrokeCap.Round))
+                }
+                listOf(Offset(5 * d, 5 * d), Offset(w - 5 * d, 5 * d), Offset(5 * d, h - 5 * d), Offset(w - 5 * d, h - 5 * d)).forEach { o ->
+                    drawCircle(linea, 2.4f * d, o, style = Stroke(0.6f * d)); drawLine(linea, Offset(o.x - 4 * d, o.y), Offset(o.x + 4 * d, o.y), 0.6f * d); drawLine(linea, Offset(o.x, o.y - 4 * d), Offset(o.x, o.y + 4 * d), 0.6f * d)
+                }
+                val esc = Offset(w * 0.03f, h * 0.95f)
+                for (k in 0 until 3) drawRect(if (k % 2 == 0) trazo.copy(alpha = 0.3f) else linea, Offset(esc.x + k * 14 * d, esc.y - 2 * d), Size(14 * d, 2 * d))
+                with(TrofeosMas) { mono("3 SALTOS", esc.x + 46 * d, esc.y, 6 * d, trazo.copy(alpha = 0.3f)) }
             }
             TemaId.CIBER -> {
                 // La red a oscuras: rejilla de puntos, servidores sueltos unidos por enlaces tenues y un volcado en hexadecimal a la derecha.
@@ -780,7 +821,17 @@ object MapasMas {
             TemaId.BASICO -> drawPath(p, cs.primary.copy(alpha = 0.8f), style = Stroke(2.4f * d, cap = StrokeCap.Round))
             // La línea roja del trámite, como cinta de señalización.
             TemaId.DISTOPIA -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
-            TemaId.FRENTE -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
+            // La ruta de salto impresa en la carta: la franja tenue del corredor, los puntos ámbar del trazado y, cada tanto,
+            // el ángulo del vector de salto que dice hacia dónde se va.
+            TemaId.FRENTE -> {
+                val ambar = if (cs.background.luminance() < 0.5f) TrazosFrente.PILOTO_AMBAR else Color(0xFFB85C0F)
+                drawPath(p, ambar.copy(alpha = 0.14f), style = Stroke(6 * d))
+                drawPath(p, ambar, style = Stroke(1.9f * d, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.1f * d, 4.4f * d))))
+                aLoLargo(p, 36 * d, 18 * d) { o, t ->
+                    val n = Offset(-t.y, t.x)
+                    listOf(1f, -1f).forEach { s -> drawLine(ambar, Offset(o.x - t.x * 3.2f * d + n.x * s * 2.6f * d, o.y - t.y * 3.2f * d + n.y * s * 2.6f * d), Offset(o.x + t.x * 0.8f * d, o.y + t.y * 0.8f * d), 1.1f * d, StrokeCap.Round) }
+                }
+            }
             // El enlace de la traza: la línea cian y los paquetes que viajan de nodo en nodo.
             TemaId.CIBER -> {
                 val cian = Color(0xFF00E5FF)
@@ -932,7 +983,23 @@ object MapasMas {
             }
             // Una ventanilla de control: caseta cuadrada con su número.
             TemaId.DISTOPIA -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
-            TemaId.FRENTE -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
+            // Cada parada es un mundo impreso en la carta, con su lado de noche y la mira de llegada alrededor; la meta es Albar,
+            // la capital del Directorio, en mármol con su anillo de bronce.
+            TemaId.FRENTE -> {
+                val trazo = cs.onSurface.copy(alpha = 0.6f)
+                if (meta) {
+                    drawCircle(TrazosFrente.MARMOL, r * 0.95f, c)
+                    drawArc(Color.Black.copy(alpha = 0.18f), -50f, 180f, true, Offset(c.x - r * 0.95f, c.y - r * 0.95f), Size(r * 1.9f, r * 1.9f))
+                    drawOval(TrazosFrente.BRONCE, Offset(c.x - r * 1.6f, c.y - r * 0.36f), Size(r * 3.2f, r * 0.72f), style = Stroke(1.4f * d))
+                    drawCircle(TrazosFrente.BRONCE, r * 0.95f, c, style = Stroke(0.7f * d))
+                } else {
+                    drawCircle(col, r * 0.78f, c)
+                    drawArc(Color.Black.copy(alpha = 0.3f), -50f, 180f, true, Offset(c.x - r * 0.78f, c.y - r * 0.78f), Size(r * 1.56f, r * 1.56f))
+                }
+                val rm = r * (if (meta) 1.9f else 1.4f)
+                drawCircle(trazo, rm, c, style = Stroke(0.7f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 2 * d))))
+                for (k in 0 until 4) { val a = k * PI / 2; drawLine(trazo, Offset(c.x + (rm * 0.8f * cos(a)).toFloat(), c.y + (rm * 0.8f * sin(a)).toFloat()), Offset(c.x + (rm * 1.25f * cos(a)).toFloat(), c.y + (rm * 1.25f * sin(a)).toFloat()), 0.8f * d) }
+            }
             // Un servidor: caja negra con su filo, dos ranuras y la luz.
             TemaId.CIBER -> {
                 drawRect(Color(0xFF05070B), Offset(c.x - r, c.y - r * 0.8f), Size(2 * r, 1.6f * r))
