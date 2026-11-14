@@ -515,8 +515,8 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | S1 | Romano; Al-Ándalus | 2 | hecho 13 nov 2026 (`docs/historia/informes/S1.md`); **los dos cuadros, aprobados por el autor el 13 nov 2026** |
 | S2 | Pirata (el mar y el cayo; Nassau como variante; primer cuadro a bordo) | 2 | hecho 13 nov 2026 (`docs/historia/informes/S2.md`); **los dos cuadros, aprobados por el autor el 13 nov 2026**; Nassau, rehecho ese día a petición suya (más hondo, con edificios grandes y la loma con monte) |
 | S3 | Espacio (primer interior con dos luces); Distopía | 2 | hecho 13 nov 2026 (`docs/historia/informes/S3.md`); **los dos cuadros, aprobados por el autor el 13 nov 2026**, con dos cambios pedidos ese día y aprobados también («Quedó muy bien»): la ventana de Espacio, casi del tamaño de la pared, y el pueblo de Distopía, con más lejanía. Con Espacio aprobado, quedan abiertos Refugio y Laboratorio |
-| S4 | Horror cósmico (primer cuadro con niebla); Ciudad verde | 2 | hecho 14 nov 2026 (`docs/historia/informes/S4.md`); **falta que el autor los vea junto a Helénico** |
-| S5 | Roma (la capilla y la ciudad de agosto; primer interior con ventana) | 2 | hecho 14 nov 2026 (`docs/historia/informes/S5.md`); **falta que el autor los vea junto a Helénico** (Scriptorium y Renacimiento esperan el visto bueno de la capilla) |
+| S4 | Horror cósmico (primer cuadro con niebla); Ciudad verde | 2 | hecho 14 nov 2026 (`docs/historia/informes/S4.md`); **los dos cuadros, aprobados por el autor el 14 nov 2026** («Horror cósmico está perfecto») |
+| S5 | Roma (la capilla y la ciudad de agosto; primer interior con ventana) | 2 | hecho 14 nov 2026 (`docs/historia/informes/S5.md`); **la capilla, aprobada por el autor el 14 nov 2026** sin cambios (quedan abiertos Scriptorium y Renacimiento); la azotea de agosto, con tres cambios pedidos ese día: árboles menos simples, la noche menos apagada y fachadas menos lisas |
 | S6 | Scriptorium; Renacimiento | 2 | pendiente |
 | S7 | Ruta de la Seda (el camino, con sus tres paisajes, y Chang'an; primer cuadro de desierto) | 2 | pendiente |
 | S8 | Revolución francesa (con la helada; Versalles como variante); Vapor victoriano | 2 | pendiente |
@@ -596,7 +596,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | T7a | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7a.md`) |
 | T7b | claude-opus-5-5 | medium | Ídem | 0 | hecho 12 nov 2026 (`docs/historia/informes/T7b.md`) |
 | T8a–T8b | claude-opus-5-5 | medium | Ídem | 0 c/u | hechas 12 nov 2026 (`docs/historia/informes/T8a.md`, `T8b.md`) |
-| S1–S19 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código, dos cuadros por tanda | 1 c/u, y 1 de reserva | S1, S2 y S3 hechas y aprobadas el 13 nov 2026; S4 y S5, hechas el 14 nov 2026, esperan al autor; las demás, pendientes (una por una, en la tabla de la sección 8) |
+| S1–S19 | claude-fable-5-2 | high | Paisajes, gato y banderita dibujados con código, dos cuadros por tanda | 1 c/u, y 1 de reserva | S1, S2 y S3 hechas y aprobadas el 13 nov 2026; S4 y S5, hechas el 14 nov 2026 y aprobadas ese día (la azotea de Roma, con cambios); las demás, pendientes (una por una, en la tabla de la sección 8) |
 | C1 | claude-opus-5-5 | medium | Revisión y cierre sin dibujo nuevo | 1 | pendiente |
 | Y2028–Y2031 | claude-opus-5-5 | medium | Párrafos especiales con el tono y el calendario ya fijos | 0 c/u | — |
 
