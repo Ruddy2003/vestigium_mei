@@ -197,7 +197,7 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 
 **Por tipo de escena:**
 
-- **Exterior con sol** (casi todos los temas). Se aplica todo tal cual. Un ejemplo de selva y ciudad de piedra es Mesoamérica (S9): `EscenaMeso.kt` y sus archivos; su imagen, `referencia_meso.jpg`.
+- **Exterior con sol** (casi todos los temas). Se aplica todo tal cual. Un ejemplo de selva y ciudad de piedra es Mesoamérica (S9): `EscenaMeso.kt` y sus archivos; su imagen, `referencia_meso.jpg`. De patio de castillo con el paisaje lejos, por encima del muro, Templario (S11): `EscenaTemplario.kt` y sus archivos; su imagen, `referencia_templario.jpg`. Visto desde debajo de un alero, con el alero y dos postes de marco, Japón Edo (S11): `EscenaEdo.kt` y sus archivos; su imagen, `referencia_edo.jpg`. **Falta que el autor apruebe los dos.**
   - Cambian la paleta local, la flora, las casas y **el marco**, que tiene que ser de ese lugar: una parra, un alero, un toldo, un arco, una palmera, una vela con su jarcia, el borde de una tienda, una viga, una rama.
   - El cielo de `HITOS` es de todos y **no se retoca para un tema:** cambiaría Helénico. Si el lugar pide otro cielo (polvo del desierto, gris del norte, un cielo que no es de la Tierra), la escena tiñe las `Luces` que le da el momento en una función propia, como hace Helénico con su eclipse (`luces(m)`).
 - **Sin agua** (desierto, estepa, montaña, ciudad). No se inventa un río para cumplir la regla 4. El primer cuadro de desierto es el camino de la Ruta de la Seda (S7, aprobado por el autor el 14 nov 2026): `EscenaSedaPaisajes.kt` y `EscenaSedaCampamento.kt`; sus imágenes, `referencia_seda.jpg` y `referencia_seda_changan.jpg`. De ciudad con humo, Vapor victoriano (S8, aprobado ese día): `EscenaVapor.kt` y sus archivos, y `referencia_vapor.jpg`. De aldea en el desierto con el río lejos, Egipto (S9): `EscenaEgipto.kt` y sus archivos, y `referencia_egipto.jpg`; ahí la regla 4 la cumplen el Nilo lejano, que cambia con la crecida, y el piso de barro de la azotea.
@@ -232,7 +232,8 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 
 **Si la biblioteca no alcanza** (una luz fija para interiores, un suelo mojado, una bóveda), la tanda que lo necesita lo agrega a `paisaje/`, con estas condiciones:
 - **Agregar piezas, sí. Cambiar cómo se ve una que ya existe, no,** salvo que mejore todas las escenas hechas. En ese caso se vuelven a dibujar las hojas de las escenas ya aprobadas, se comparan con su referencia y se le enseñan al autor.
-- **Lo que una segunda escena necesite de otra se sube a la biblioteca en vez de copiarlo:** `desconchon`, `hilera` y `casita`, `hojaDeHiguera`, `sombraCorta` siguen siendo privados de `EscenaHeleno.kt` (`Cosa` ya se subió en P4b, a `paisaje/Cosas.kt`). Al subir algo, el cuadro del que sale tiene que quedar idéntico: se comparan las dos imágenes punto por punto.
+- **Lo que una segunda escena necesite de otra se sube a la biblioteca en vez de copiarlo:** `desconchon`, `hilera` y `casita` siguen siendo privados de `EscenaHeleno.kt` (`Cosa` ya se subió en P4b, a `paisaje/Cosas.kt`; `hojaDeHiguera`, en S11, a `paisaje/Hojas.kt`, con Helénico idéntico punto por punto). Al subir algo, el cuadro del que sale tiene que quedar idéntico: se comparan las dos imágenes punto por punto.
+  - **Piezas nuevas de S11:** `Pincel` (`paisaje/Pincel.kt`), el color de las caras de una cosa con el sol y, de noche, con una lumbre cercana, que ya repetían a mano Distopía, Revolución francesa, Vapor victoriano y Egipto (esas escenas no se tocaron); y `sombraCorta` (`paisaje/SombraCorta.kt`), la sombra corta de algo lejano, la misma idea que la privada de Helénico, que sigue como estaba.
 - Las tandas S **no tocan el motor** (`EscenaVida.kt`, `VistaEscena.kt`, `vidas/`).
 
 **Los temas que faltan** (Ciudad verde se hizo en S4 y el autor la aprobó el 14 nov 2026: `EscenaRuinas.kt` y sus archivos, y su imagen, `referencia_ruinas.jpg`; Gótico y Ciudad neón se hicieron en P4b; Romano y Al-Ándalus, en S1: `EscenaRomano.kt` y `EscenaAndalus.kt` son otros dos exteriores con sol, aprobados por el autor el 13 nov 2026; sus imágenes, `referencia_romano.jpg` y `referencia_andalus.jpg`). Dónde vive cada personaje y por dónde empezar. Son sugerencias: la tanda decide después de leer el calendario y el cuento.
@@ -241,9 +242,7 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 
 | Tema | Personaje y lugar | Tipo | Marco posible | Superficie grande |
 |---|---|---|---|---|
-| Templario | Hermano Bernat, un castillo del Levante | Exterior, sin agua | Una almena, un estandarte | El llano seco |
 | Mongol | Bat, la estepa | Exterior, sin agua | El borde de la yurta | La estepa |
-| Japón Edo | Ochiyo, una posta del camino real | Exterior | Un alero, una rama de arce o de cerezo | El camino |
 | Napoleónico | Jean-Baptiste, la campaña de Rusia | Exterior; nieve al final | Un abedul, un fusil en pabellón | El llano; la nieve |
 | Botánico | El naturalista, un bergantín | A bordo | La jarcia | El mar |
 | Abismo | Nikos, un barco esponjero | A bordo | El pescante, un toldo | El mar |

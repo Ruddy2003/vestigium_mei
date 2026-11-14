@@ -49,6 +49,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.grano
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.guirnalda
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.hierbaDe
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.hojaDe
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.hojaDeHiguera
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.humo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.lineTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.llama
@@ -1077,13 +1078,6 @@ internal object EscenaHeleno : EscenaVida {
             drawOval(cuerda, Offset(c.x - w / 2f, c.y - 10f + i * 0.5f), Size(w, h), style = Stroke(1.5f))
         }
         drawPath(Path().apply { moveTo(c.x + 4f, c.y + 8f); cubicTo(c.x + 7f, c.y + 12f, c.x + 3f, c.y + 14f, c.x + 5f, c.y + 17f) }, cuerda, style = Stroke(1.4f, cap = StrokeCap.Round))
-    }
-
-    /** Una hoja de higuera: ancha, de cinco lóbulos. */
-    private fun hojaDeHiguera(c: Offset, rad: Float, giro: Float): Path {
-        val radios = listOf(1f, 0.6f, 0.95f, 0.55f, 0.8f, 0.3f, 0.8f, 0.55f, 0.95f, 0.6f)
-        val pts = radios.mapIndexed { i, k -> val a = giro + i / 10f * 6.283f; c + Offset(sin(a), -cos(a)) * (rad * k) }
-        return curva(pts + pts.first()).apply { close() }
     }
 
     /**

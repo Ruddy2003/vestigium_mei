@@ -3028,4 +3028,35 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("salmones", "2028-07-25", listOf(13.0)),                   // el pescado en el secadero
         Triple("mamuts", "2027-05-05", listOf(10.0)),                     // los mamuts en el llano de enfrente
     ),
+    // Bernat (Templario, tanda S11): el patio del castillo de Safed, con la capilla, la cisterna, la higuera, la torre del sur que se levanta y el lago de Galilea abajo.
+    "sargento" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // un día corriente: la torre es un muñón con su grúa de rueda
+        Triple("mansura", "2027-02-26", listOf(13.0)),                    // el luto: el estandarte a media asta y el paño negro en la puerta
+        Triple("pascua", "2027-03-27", listOf(10.0)),                     // las campanas: la campana a vuelo, palomas y gallardetes
+        Triple("siega", "2027-05-12", listOf(10.0)),                      // la siega: los campos a medio segar con sus gavillas
+        Triple("brasero", "2027-12-20", listOf(20.0)),                    // una noche de invierno: la higuera pelada y el brasero
+        Triple("nieve", "2028-01-20", listOf(10.0, 21.0)),                // la nevada: el patio, las almenas y el Hermón blancos
+        Triple("ataque", "2028-06-12", listOf(10.0)),                     // el armero sin lanzas, el campo que arde y el fuego de aviso (decisión 18)
+        Triple("herido", "2028-07-01", listOf(10.0)),                     // variante: la muleta y las vendas de la enfermería (decisión 21)
+        Triple("temblor", "2029-01-28", listOf(10.0)),                    // los sillares caídos y la grieta de la capilla
+        Triple("acre", "2029-09-20", listOf(10.0)),                       // variante: su escudo falta del armero (decisión 21)
+        Triple("fin_torre", "2030-07-10", listOf(13.0, 21.0)),            // la torre terminada con su cruz y su guirnalda; de noche, el fuego de guardia
+        Triple("jamsin", "2030-05-28", listOf(13.0)),                     // el viento del desierto: el lago no se ve
+        Triple("muro_este", "2031-04-20", listOf(17.0)),                  // los andamios en el muro del este
+    ),
+    // Ochiyo (Japón Edo, tanda S11): la casa de té a la entrada de la posta, con el camino real, las casas de enfrente, los arrozales y el Fuji.
+    "posadera" to listOf(
+        Triple("normal", "2027-09-05", HORAS_CUADRO),                     // un día corriente: los arrozales dorados
+        Triple("okage", "2027-05-05", listOf(13.0, 21.0)),                // los peregrinos de Ise: sandalias rotas, la mesa de los ricos y, de noche, la fila de faroles (decisión 18)
+        Triple("procesion", "2027-05-10", listOf(10.0)),                  // la procesión de un daimio: conos de arena, cubos, cortinas y postigos cerrados
+        Triple("tanabata", "2027-08-24", listOf(13.0)),                   // el bambú con los papeles de colores
+        Triple("bon", "2027-08-30", listOf(20.0)),                        // los faroles de Bon
+        Triple("tsukimi", "2027-10-01", listOf(19.0)),                    // la luna de otoño: los dulces y las espigas en el banco
+        Triple("invierno", "2028-01-05", listOf(10.0)),                   // el Fuji blanco hasta media ladera y el arrozal seco
+        Triple("ola", "2028-05-01", listOf(13.0)),                        // la estampa del Fuji con la ola, clavada en el poste; el arrozal plantado
+        Triple("rio_cerrado", "2028-09-08", listOf(13.0)),                // las lluvias: el río crecido y el vado cerrado
+        Triple("nieve_fuji", "2029-10-10", listOf(10.0)),                 // la nieve temprana en el Fuji
+        Triple("mijo", "2030-12-20", listOf(13.0)),                       // el hambre de Tenpō: un saco de arroz y el de mijo
+        Triple("boda", "2031-11-08", listOf(19.0)),                       // la boda: los barriles de sake y la cortina roja y blanca
+    ),
 )

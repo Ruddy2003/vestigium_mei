@@ -190,7 +190,7 @@ fun escenaDe(tema: TemaId): EscenaVida? = when (tema) {
     TemaId.HELENO -> EscenaHeleno
     TemaId.EGIPTO -> EscenaEgipto
     TemaId.MEDIEVAL -> EscenaMedieval
-    TemaId.TEMPLARIO -> null        // S11
+    TemaId.TEMPLARIO -> EscenaTemplario
     TemaId.DISTOPIA -> EscenaDistopia
     TemaId.REFUGIO -> null          // S17
     TemaId.ORDEN -> null            // S18
@@ -203,7 +203,7 @@ fun escenaDe(tema: TemaId): EscenaVida? = when (tema) {
     TemaId.RUINAS -> EscenaRuinas
     TemaId.NAVIDAD -> null          // Navidad: sin cuadro
     TemaId.SEDA -> EscenaSeda
-    TemaId.EDO -> null              // S11
+    TemaId.EDO -> EscenaEdo
     TemaId.GOTICO -> EscenaGotico
     TemaId.ARCANO -> EscenaArcano
     TemaId.ESPACIO -> EscenaEspacio

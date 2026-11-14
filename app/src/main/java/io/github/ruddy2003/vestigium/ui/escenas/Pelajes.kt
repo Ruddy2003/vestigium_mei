@@ -50,7 +50,7 @@ fun pelajeDe(tema: TemaId): Pelaje? = when (tema) {
     TemaId.HELENO -> PELAJE_HELENO
     TemaId.EGIPTO -> PELAJE_EGIPTO
     TemaId.MEDIEVAL -> PELAJE_MEDIEVAL
-    TemaId.TEMPLARIO -> null        // S11
+    TemaId.TEMPLARIO -> PELAJE_TEMPLARIO
     TemaId.DISTOPIA -> PELAJE_DISTOPIA
     TemaId.REFUGIO -> null          // S17
     TemaId.ORDEN -> null            // S18
@@ -63,7 +63,7 @@ fun pelajeDe(tema: TemaId): Pelaje? = when (tema) {
     TemaId.RUINAS -> PELAJE_RUINAS
     TemaId.NAVIDAD -> null          // Navidad: sin cuadro
     TemaId.SEDA -> PELAJE_SEDA
-    TemaId.EDO -> null              // S11
+    TemaId.EDO -> PELAJE_EDO
     TemaId.GOTICO -> PELAJE_GOTICO
     TemaId.ARCANO -> PELAJE_ARCANO
     TemaId.ESPACIO -> PELAJE_ESPACIO
