@@ -5,7 +5,6 @@ import android.app.WallpaperManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Paint
@@ -102,11 +101,13 @@ object FondosTelefono {
         true
     }.getOrDefault(false)
 
-    /** Tamaño real de la pantalla (con las barras del sistema), en píxeles. */
-    private fun pantalla(ctx: Context): android.graphics.Point {
-        val wmg = ctx.getSystemService(android.view.WindowManager::class.java)
-        val r = wmg.maximumWindowMetrics.bounds
-        return android.graphics.Point(r.width(), r.height())
+    /** Tamaño real de la pantalla (con las barras del sistema), en píxeles. Desde el pulso no hay ventana: se usa la del sistema. */
+    private fun pantalla(ctx: Context): android.graphics.Point = runCatching {
+        val r = ctx.getSystemService(android.view.WindowManager::class.java).maximumWindowMetrics.bounds
+        android.graphics.Point(r.width(), r.height())
+    }.getOrElse {
+        val m = android.content.res.Resources.getSystem().displayMetrics
+        android.graphics.Point(m.widthPixels, m.heightPixels)
     }
 
     /**
@@ -154,6 +155,56 @@ object FondosTelefono {
     private fun prefs(ctx: Context) = ctx.getSharedPreferences("fondos", Context.MODE_PRIVATE)
     fun ultimo(ctx: Context): String? = prefs(ctx).getString("ultimo", null)
     fun marcarUltimo(ctx: Context, clave: String) { prefs(ctx).edit().putString("ultimo", clave).apply() }
+
+    /** «romano/false»: el tema y si va en oscuro, la clave de un fondo. */
+    fun clave(t: TemaId, oscuro: Boolean) = "${t.id}/$oscuro"
+
+    /**
+     * Los fondos que conviene tener pintados en archivo: el del tema de hoy en sus dos modos y, si el tema cambia solo cada
+     * día, el de mañana (su tema ya se sabe: [RotacionTema.deDia] siempre da el mismo). Así el pulso de las 5:00 puede
+     * ponerlo aunque la app esté cerrada. El que se ve ahora va primero.
+     */
+    fun necesarios(ctx: Context): List<Pair<TemaId, Boolean>> {
+        val c = Repo.config
+        val hoy = Estilo.tema
+        val ahora = modoOscuroDe(ctx, hoy)
+        fun modos(t: TemaId, primero: Boolean) = if (t.soloOscuro) listOf(t to true) else listOf(t to primero, t to !primero)
+        val l = modos(hoy, ahora).toMutableList()
+        if (c.tema_rotar) {
+            val manana = RotacionTema.deDia(io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), 1), hoy.id, c)
+            l += modos(manana, ahora)
+        }
+        return l.distinct()
+    }
+
+    /** Los dos archivos (inicio y bloqueo) de un fondo ya pintados. */
+    fun pintado(ctx: Context, t: TemaId, oscuro: Boolean): Boolean =
+        archivo(ctx, t, oscuro, "inicio").exists() && archivo(ctx, t, oscuro, "bloqueo").exists()
+
+    /** Borra los fondos pintados que ya no hacen falta (de otros días, otros temas o versiones viejas): ocupaban cientos de MB. */
+    fun limpiar(ctx: Context, quedan: List<Pair<TemaId, Boolean>>) = runCatching {
+        val guardar = quedan.flatMap { (t, o) -> listOf("inicio", "bloqueo").map { archivo(ctx, t, o, it).name } }.toSet()
+        File(ctx.filesDir, "fondos").listFiles()?.forEach { f -> if (f.name !in guardar) f.delete() }
+    }
+
+    /**
+     * Sin abrir la app: si pediste que el fondo fijo cambie con el tema, pone el del tema de hoy desde su archivo, ya pintado
+     * con la app abierta. Lo llama el pulso de 15 minutos (también cuando el teléfono pasa a claro u oscuro). Con el fondo
+     * vivo puesto no hace nada: ese ya cambia solo, y ponerle encima uno fijo lo quitaría. true si cambió el fondo.
+     */
+    fun alDia(ctx: Context): Boolean {
+        val c = Repo.config
+        if (!c.fondo_telefono_auto || Repo.errorAlAbrir != null || vivoActivo(ctx)) return false
+        val t = Estilo.tema
+        val o = modoOscuroDe(ctx, t)
+        val k = clave(t, o)
+        if (ultimo(ctx) == k || !pintado(ctx, t, o)) return false
+        val bi = runCatching { BitmapFactory.decodeFile(archivo(ctx, t, o, "inicio").absolutePath) }.getOrNull()
+        val bb = runCatching { BitmapFactory.decodeFile(archivo(ctx, t, o, "bloqueo").absolutePath) }.getOrNull()
+        if ((bi == null && bb == null) || !poner(ctx, bi, bb, c.fondo_telefono_donde)) return false
+        marcarUltimo(ctx, k)
+        return true
+    }
 
     /** Lo que lleva escrito el fondo bajo el emblema: el nombre de la app en la voz de cada tema. */
     fun marca(t: TemaId): String = when (t) {
@@ -222,7 +273,7 @@ fun FondoTelefonoVista(tema: TemaId, oscuro: Boolean, modifier: Modifier = Modif
                 Emblema(tema, 176.dp, e, animado = false)
                 Text(FondosTelefono.marca(tema), style = MaterialTheme.typography.titleLarge.copy(letterSpacing = 3.sp), color = e.primary, textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 22.dp))
-                Meandro(Modifier.width(210.dp).padding(top = 10.dp))
+                Meandro(Modifier.width(210.dp).padding(top = 10.dp), tema = tema)
             }
         }
     }
@@ -779,41 +830,64 @@ fun PantallaFondoTelefono(nav: Nav) {
                         FondosTelefono.elegirVivo(ctx)
                     }
                 }
-                Interruptor("Cambiar el fondo fijo al cambiar de tema", Repo.config.fondo_telefono_auto, "Cuando elijas otro tema en la app, tus fondos de inicio y bloqueo cambian también.") { v -> Repo.cambiarConfig { it.copy(fondo_telefono_auto = v) } }
+                Interruptor("El fondo del teléfono cambia con el tema", Repo.config.fondo_telefono_auto, "Inicio y bloqueo, también cuando el tema cambia solo.") { v -> Repo.cambiarConfig { it.copy(fondo_telefono_auto = v) } }
             }
         }
     }
 }
 
 /**
- * Detrás de todo, sin verse: cuando cambias de tema prepara las imágenes del fondo nuevo para el fondo vivo
- * y, si lo pediste, cambia también los fondos fijos.
+ * Detrás de todo, sin verse: con el fondo vivo puesto o con «el fondo cambia con el tema» encendido, deja pintados en
+ * archivo los fondos de hoy y de mañana (ver [FondosTelefono.necesarios]), uno por uno, y pone el fijo de hoy si hace
+ * falta. Antes solo pintaba el del tema de ahora, exigía haber puesto un fondo a mano alguna vez y no reintentaba si
+ * fallaba; y como el tema de cada día cambia a las 5:00 con la app cerrada, el fondo se quedaba con el de ayer.
  */
 @Composable
 fun CapturaFondoTelefono() {
     val ctx = LocalContext.current
     val tema = Estilo.tema
-    val oscuro = modoOscuro(tema)
-    val auto = Repo.config.fondo_telefono_auto
-    val vivo = remember(tema, oscuro) { FondosTelefono.vivoActivo(ctx) }
-    val clave = "${tema.id}/$oscuro"
-    val falta = remember(tema, oscuro, auto, vivo) {
-        (vivo && !FondosTelefono.archivo(ctx, tema, oscuro, "inicio").exists()) || (auto && FondosTelefono.ultimo(ctx) != null && FondosTelefono.ultimo(ctx) != clave)
+    val oscuroAhora = modoOscuro(tema)
+    val c = Repo.config
+    val auto = c.fondo_telefono_auto
+    val vivo = remember(tema, oscuroAhora) { FondosTelefono.vivoActivo(ctx) }
+    if (!auto && !vivo) return
+    // Lo que falta pintar, en orden; se vuelve a mirar al cambiar el tema, el modo o la rotación.
+    val pendientes = remember(tema, oscuroAhora, c.tema_rotar, c.temas_rotacion, auto, vivo) {
+        androidx.compose.runtime.mutableStateListOf<Pair<TemaId, Boolean>>().apply {
+            addAll(FondosTelefono.necesarios(ctx).filterNot { (t, o) -> FondosTelefono.pintado(ctx, t, o) })
+        }
     }
-    if (!falta) return
+    val claveHoy = FondosTelefono.clave(tema, oscuroAhora)
+    var intentos by remember(claveHoy, auto) { mutableStateOf(0) }
+    val actual = pendientes.firstOrNull()
+    if (actual == null) {
+        // Todo pintado: poner el fijo de hoy si toca (con reintentos) y borrar lo que sobra.
+        LaunchedEffect(claveHoy, auto, intentos) {
+            withContext(Dispatchers.IO) { FondosTelefono.limpiar(ctx, FondosTelefono.necesarios(ctx)) }
+            if (!auto || FondosTelefono.ultimo(ctx) == claveHoy || intentos >= 3) return@LaunchedEffect
+            val ok = withContext(Dispatchers.IO) { FondosTelefono.alDia(ctx) }
+            if (!ok && !FondosTelefono.vivoActivo(ctx)) { delay(5_000L * (intentos + 1)); intentos++ }
+        }
+        return
+    }
+    val (t, o) = actual
     val capaInicio = rememberGraphicsLayer()
     val capaBloqueo = rememberGraphicsLayer()
-    var hecho by remember(clave) { mutableStateOf(false) }
-    if (hecho) return
-    Box(Modifier.fillMaxSize()) { DosFondos(tema, oscuro, null, capaInicio, capaBloqueo) }
-    LaunchedEffect(clave) {
-        delay(600)
-        val bi = foto(capaInicio); val bb = foto(capaBloqueo)
-        withContext(Dispatchers.IO) {
-            runCatching { bi?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "inicio") }; bb?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "bloqueo") } }
-            if (auto && FondosTelefono.poner(ctx, bi, bb, Repo.config.fondo_telefono_donde)) FondosTelefono.marcarUltimo(ctx, clave)
+    Box(Modifier.fillMaxSize()) { DosFondos(t, o, null, capaInicio, capaBloqueo) }
+    LaunchedEffect(t, o) {
+        var hecho = false
+        for (vez in 0 until 3) {
+            delay(600L + 900L * vez)
+            val bi = foto(capaInicio); val bb = foto(capaBloqueo)
+            if (bi != null && bb != null) {
+                hecho = withContext(Dispatchers.IO) {
+                    runCatching { FondosTelefono.guardar(ctx, bi, t, o, "inicio"); FondosTelefono.guardar(ctx, bb, t, o, "bloqueo"); true }.getOrDefault(false)
+                }
+                if (hecho) break
+            }
         }
-        hecho = true
+        // Aunque no haya salido, se pasa al siguiente: no se insiste en este hasta que algo cambie.
+        pendientes.remove(actual)
     }
 }
 
@@ -843,17 +917,15 @@ class FondoVivoServicio : WallpaperService() {
         override fun onVisibilityChanged(v: Boolean) {
             visible = v
             mano.removeCallbacks(dibujar)
-            if (v) cuadro()
+            // Al mirarlo, el tema de hoy: si la rotación tocaba y nada la había hecho, cambia al primer vistazo.
+            if (v) { RotacionTema.revisarDesde(applicationContext); cuadro() }
         }
         override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) { super.onSurfaceChanged(holder, format, width, height); claveBase = ""; cuadro() }
         override fun onSurfaceDestroyed(holder: SurfaceHolder) { visible = false; mano.removeCallbacks(dibujar); super.onSurfaceDestroyed(holder) }
         override fun onDestroy() { mano.removeCallbacks(dibujar); super.onDestroy() }
 
         private fun tema(): TemaId = Estilo.tema
-        private fun oscuro(t: TemaId): Boolean = t.soloOscuro || when (Repo.config.modo) {
-            "claro" -> false; "oscuro" -> true
-            else -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        }
+        private fun oscuro(t: TemaId): Boolean = modoOscuroDe(applicationContext, t)
 
         /** En la pantalla de bloqueo (Android 14+ lo dice) va el completo; en inicio, el limpio. */
         private fun variante(): String = runCatching {

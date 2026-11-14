@@ -53,13 +53,13 @@ object GuiaUso {
             "Los modelos son aproximados: cambia la vida media o los días de carga si sabes algo mejor. No es un consejo médico.",
         )),
         Seccion("notas_metas", "Notas y metas", listOf(
-            "Notas: ideas, pensamientos especiales, propósitos y recordatorios, con @ y #. Fija arriba las importantes.",
+            "Notas: pensamientos (lo que piensas de ti o de algo, en el momento), propósitos y recordatorios, con @ y #. Fija arriba las importantes. Lo que aprendiste o se te ocurrió y quieres guardar con tus palabras va al Ideario.",
             "Metas: elige el horizonte y, si puedes, lígala a un hábito o una variable para que el progreso se calcule solo. En diciembre aparece la plantilla de propósitos.",
-        ), listOf("Idea: hablar con @mario de la beca. #maestria")),
+        ), listOf("Recordatorio: hablar con @mario de la beca. #maestria")),
         Seccion("ideario", "Ideario", listOf(
             "Para lo que entendiste de un libro, un video o una plática, y para lo que se te ocurrió: con tus palabras. Las palabras exactas de otro van en las citas de la obra.",
             "Solo el texto es obligatorio. Con #tema la idea entra a su estantería (en el Ideario solo salen los temas escritos en ideas). «Quién lo dice» es para autores e invitados; @persona, para alguien de tu gente.",
-            "No tiene que ser verdad para guardarla: «cómo la tengo» dice si te convence, te hace pensar, la dudas o no estás de acuerdo.",
+            "«Cómo la tengo» dice si es un hecho comprobado (no una opinión: algo que se sabe) o si te convence, te hace pensar, la dudas o no estás de acuerdo. No tiene que ser verdad para guardarla.",
             "Desde YouTube, el navegador o Kindle, «Compartir» → Vestigium abre una idea con el enlace y el título ya puestos. En una cita de una obra, «anotar lo que entendí» la liga a esa cita.",
             "De vez en cuando, el Día te muestra «Una idea de antes» (de hace un mes, seis meses o un año) para ver si sigues pensando igual.",
         ), listOf("El dinero también sirve para coordinar a desconocidos, no solo para intercambiar. #economia")),
@@ -96,13 +96,21 @@ object GuiaUso {
         )),
     )
 
-    /** Qué sección abre el «?» de cada pantalla (por su título en español). */
+    /**
+     * Qué sección abre el «?» de cada pantalla (por su título en español). El «?» sale en las pantallas de adentro (las que
+     * tienen «volver»); en las pestañas cada sección trae el suyo y la guía entera está arriba en «Más». Cada clave es el
+     * título de una `Hoja` (lo revisa GuiaUsoPrueba).
+     */
     val PANTALLAS: Map<String, String> = mapOf(
-        "Día" to "principios", "Hoy" to "principios", "Privado" to "privado", "Llenar el día" to "noche", "Cómo usar la app" to "principios", "Diario" to "diario", "Momentos" to "animo", "Todos tus registros" to "animo", "Tu gente" to "sustancias_gente",
-        "¿Estuviste o pensaste?" to "diario", "Tus temas" to "diario", "Sustancias" to "sustancias_gente", "Impulsos y recaídas" to "privado",
-        "Lugares" to "lugares", "Lugares especiales" to "lugares", "Suplementos" to "suplementos", "Notas" to "notas_metas", "Metas" to "notas_metas", "Ideario" to "ideario", "Nueva idea" to "ideario", "Una idea" to "ideario",
-        "Laptop" to "laptop", "Red" to "sustancias_gente", "Experimentos personales" to "leerte", "Análisis" to "leerte", "Cobertura de variables" to "leerte",
-        "Constelación" to "sustancias_gente", "Datos" to "errores", "Estado de los datos" to "errores", "Hábitos" to "noche",
+        "Privado" to "privado", "Llenar el día" to "noche", "Diario" to "diario", "Tu gente" to "sustancias_gente", "Social" to "sustancias_gente",
+        "¿Estuviste o pensaste?" to "diario", "Tus temas" to "diario", "Sustancias" to "sustancias_gente",
+        "Lugares" to "lugares", "Lugares especiales" to "lugares", "Suplementos" to "suplementos", "Notas" to "notas_metas", "Metas" to "notas_metas", "Ideario" to "ideario",
+        "Laptop" to "laptop", "Experimentos personales" to "leerte", "Análisis" to "leerte", "Cobertura de variables" to "leerte",
+        "Datos" to "errores", "Estado de los datos" to "errores", "Hábitos" to "noche",
+        // Las pantallas con cifras y relaciones (13 nov 2026): las herramientas de Análisis, los totales y el resumen de la semana.
+        "Tendencia" to "leerte", "Día de la semana" to "leerte", "Todo lo que se mueve con algo" to "leerte", "Modelo múltiple" to "leerte",
+        "Dinámica emocional" to "leerte", "Ritmo de sueño" to "leerte", "Palabras del diario" to "leerte", "Días atípicos" to "leerte",
+        "Totales" to "leerte", "Resumen semanal" to "leerte",
     )
 
     fun de(id: String) = SECCIONES.firstOrNull { it.id == id }

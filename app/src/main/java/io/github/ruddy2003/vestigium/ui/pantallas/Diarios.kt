@@ -131,7 +131,7 @@ fun PantallaDiario(nav: Nav) {
         BotonAnimo(Modifier.padding(top = 14.dp)) { rapido(io.github.ruddy2003.vestigium.ui.QuickActivity.M_ANIMO) }
         // El diario de hoy, como objeto del tema: al tocarlo se abre a pantalla completa.
         val hoy = Fechas.diaLogico()
-        Seccion("Hoy", "Toca para escribir. Se guarda mientras escribes.") {
+        Seccion("Hoy", "Se guarda mientras escribes.") {
             io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 14.dp), luz = true) {
                 io.github.ruddy2003.vestigium.ui.ObjetoDiario(hoy, Repo.dias[hoy]?.nota.orEmpty()) { escribiendo = hoy }
             }
@@ -146,7 +146,7 @@ fun PantallaDiario(nav: Nav) {
         }
         val hojas = remember(Repo.momentos, Repo.consumos) { diasConMomentos() }
         Seccion("Libreta de momentos", if (hojas.isEmpty()) null else "${hojas.size} ${if (hojas.size == 1) "hoja" else "hojas"}, una por día") {
-            if (hojas.isEmpty()) Vacio("Toca «¿Cómo estás ahora?» y aquí se irá llenando, una hoja por día.")
+            if (hojas.isEmpty()) Vacio("Se llena con «¿Cómo estás ahora?», una hoja por día.")
             else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth().padding(top = 4.dp)) {
                 LibretaCerrada(hojas.size, hojas.lastOrNull(), Modifier.fillMaxWidth()) { Seleccion.momentos = hojas.first(); nav.ir("hoja_momentos") }
             }
@@ -155,7 +155,7 @@ fun PantallaDiario(nav: Nav) {
         }
         val suenos = remember(Repo.dias) { LibroDiario.suenos().take(9) }
         Seccion("Biblioteca de sueños", if (suenos.isEmpty()) null else "${Repo.dias.values.count { it.sueno_texto.isNotBlank() }} sueños escritos") {
-            if (suenos.isEmpty()) Vacio("Cuando escribas un sueño, aparece aquí, en el estante de noche.")
+            if (suenos.isEmpty()) Vacio("Tus sueños irán aquí.")
             else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), fondo = false) {
                 io.github.ruddy2003.vestigium.ui.CieloNoche(relleno = 0.dp) { io.github.ruddy2003.vestigium.ui.EstanteDiario(suenos, noche = true) { f -> Seleccion.sueno = f; nav.ir("sueno") } }
             }
@@ -170,9 +170,9 @@ fun PantallaDiario(nav: Nav) {
             }
         }
         // Las notas, con su propio mueble (9 nov 2026; antes solo estaban en Más).
-        Seccion("Notas", if (Repo.notas.isEmpty()) "Ideas sueltas, pensamientos, propósitos y recordatorios." else
+        Seccion("Notas", if (Repo.notas.isEmpty()) "Pensamientos, propósitos y recordatorios." else
             "${porNumero(Repo.notas.size, "1 nota", "${Repo.notas.size} notas")} · ${Repo.notas.count { it.fijada }} fijadas") {
-            if (Repo.notas.isEmpty()) Vacio("Una idea suelta, un pensamiento, un propósito o un recordatorio: van a tu tablero.")
+            if (Repo.notas.isEmpty()) Vacio("Un pensamiento, un propósito o un recordatorio: van a tu tablero.")
             else io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(10.dp)) { io.github.ruddy2003.vestigium.ui.vida.TableroDeNotas(Repo.notas) { nav.ir("notas") } }
             Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BotonSecundario("entrar a las notas →", Modifier.weight(1f)) { nav.ir("notas") }
@@ -191,7 +191,7 @@ fun PantallaDiario(nav: Nav) {
             }
         }
         // La línea de tiempo y la exportación empiezan plegadas, y se vuelven a plegar al cerrar la app o al cambiar de día.
-        Seccion("Línea de tiempo", "Entradas, momentos y sueños, día por día, con buscador y filtros.", autoPlegar = true) { Column {
+        Seccion("Línea de tiempo", "Día por día, con buscador.", autoPlegar = true) { Column {
         Text("${porNumero(visiblesM.size, "1 registro", "${visiblesM.size} registros")} de ánimo y momentos", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         io.github.ruddy2003.vestigium.ui.biblioteca.CampoTema(busca, { busca = it; mostrar = 30 }, "buscar en tu diario, @personas, #temas", Modifier.padding(top = 8.dp))
         FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -219,8 +219,8 @@ fun PantallaDiario(nav: Nav) {
         if (visibles.size > mostrar) BotonSecundario("ver ${porNumero(minOf(30, visibles.size - mostrar), "1 día", "${minOf(30, visibles.size - mostrar)} días")} más", Modifier.padding(top = 8.dp)) { mostrar += 30 }
         } }
 
-        Seccion("Exportar", porNumero(entradas.size, "La entrada", "Las ${entradas.size} entradas") + " de lo que estás viendo. El PDF y el HTML llevan el diseño del tema; el de Obsidian es una nota por día con sus datos.",
-            autoPlegar = true) {
+        Seccion("Exportar", porNumero(entradas.size, "La entrada", "Las ${entradas.size} entradas") + " de lo que estás viendo.",
+            autoPlegar = true, explica = "El PDF y el HTML llevan el diseño del tema; el de Obsidian es una nota por día con sus datos.") {
             // El libro: un periodo, con portada e índice del tema, una página por día con su foto y sus datos, y el resumen de cada mes.
             var libro by remember { mutableStateOf(false) }
             BotonPrincipal("Libro del diario (PDF)…", Modifier.fillMaxWidth().padding(bottom = 10.dp), habilitado = Repo.dias.isNotEmpty()) { libro = true }
@@ -248,7 +248,7 @@ fun BotonAnimo(modifier: Modifier = Modifier, onClick: () -> Unit) {
         Column(Modifier.padding(horizontal = 18.dp, vertical = 14.dp)) {
             Text("¿Cómo estás ahora?", style = MaterialTheme.typography.titleLarge, color = cs.onPrimary)
             Text(ultimo?.let { "último: ${Fechas.horaDe(it.ts)} · ${io.github.ruddy2003.vestigium.data.Catalogo.titulo(it, Repo.config.discreto)}" }
-                ?: "ánimo, sentimientos, pensamiento · y si tomaste o fumaste algo",
+                ?: "ánimo, sentimientos y lo que tomaste",
                 style = MaterialTheme.typography.labelMedium, color = cs.onPrimary.copy(alpha = 0.85f), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
@@ -375,7 +375,7 @@ private fun DialogoLibro(cerrar: () -> Unit) {
         title = { Text("Libro del diario", style = MaterialTheme.typography.titleLarge) },
         text = {
             Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
-                Ayuda("Portada e índice con el diseño del tema, una página por día con su texto, su foto y sus datos (ánimo, sueño, pasos, clima, lugares, personas, gasto, fechas señaladas) y, al final de cada mes, su resumen. Nunca lleva el seguimiento privado.")
+                Ayuda("Portada, una página por día con su foto y sus datos, y el resumen de cada mes. Nunca lleva lo privado.")
                 FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     opciones.forEach { (t, r) -> Ficha(t, desde == r.first && hasta == r.second) { desde = r.first; hasta = r.second } }
                 }

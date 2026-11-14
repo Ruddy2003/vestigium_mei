@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 24
+const val SCHEMA_V = 25
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -479,7 +479,7 @@ data class Idea(
     val fuente: String = "",
     val enlace: String = "",
     val donde: String = "",
-    /** Cómo la tienes: convence, piensa, duda o desacuerdo (ver [Catalogo.POSTURAS_IDEA]). */
+    /** Cómo la tienes: hecho (desde el esquema 25), convence, piensa, duda o desacuerdo (ver [Catalogo.POSTURAS_IDEA]). */
     val postura: String = "",
     /** Cada vez que la volviste a ver en «Una idea de antes» y qué respondiste. */
     val revisiones: List<RevisionIdea> = emptyList(),

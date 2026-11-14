@@ -1,5 +1,8 @@
 package io.github.ruddy2003.vestigium.ui.vida
 
+import io.github.ruddy2003.vestigium.ui.muebles.granoMueble
+import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
+import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -82,6 +85,8 @@ internal object VidaHeleno : DisenoVida {
 
     /** El material de noche: el mismo, en penumbra. */
     private fun n(c: Color, oscuro: Boolean): Color = if (oscuro) mez(c, NOCHE, 0.58f) else c
+    /** El tablero de notas (piloto de la luz): de noche, la penumbra de siempre, apenas fría. [n] sigue para los muebles de Vida. */
+    private fun nm(c: Color, oscuro: Boolean): Color = if (oscuro) mez(c, Color(0xFF12101A), 0.58f) else c
 
     /** El fondo sólido de un nicho: el [material] llevado a la luminancia de la tarjeta. */
     private fun nicho(e: EstadoMueble, oscuro: Boolean, material: Color): Color =
@@ -930,28 +935,28 @@ internal object VidaHeleno : DisenoVida {
         val o = oscuro
         val a = area(MuebleVida.NOTAS)
         val ni = Rect(w * a.left, h * a.top, w * a.right, h * a.bottom)
-        val mad = n(NOGAL, o); val madL = n(NOGAL_LUZ, o); val madO = n(NOGAL_OSC, o)
+        val mad = nm(NOGAL, o); val madL = nm(NOGAL_LUZ, o); val madO = nm(NOGAL_OSC, o)
         val marcoTop = h * 0.075f
         val repisa = ni.bottom + 1.6f * u
 
         // El frontón bajo, con el sol de Vergina, y las acroteras.
         val fr = Path().apply { moveTo(w * 0.2f, marcoTop + 0.2f * u); lineTo(w / 2, h * 0.012f); lineTo(w * 0.8f, marcoTop + 0.2f * u); close() }
         drawPath(fr, vert(Rect(0f, 0f, 0f, marcoTop), madL, madO))
-        drawPath(Path().apply { moveTo(w * 0.26f, marcoTop); lineTo(w / 2, h * 0.028f); lineTo(w * 0.74f, marcoTop); close() }, n(EGEO, o))
-        solVergina(Offset(w / 2, marcoTop - (marcoTop - h * 0.028f) * 0.42f), (marcoTop - h * 0.028f) * 0.36f, n(ORO, o))
-        listOf(Offset(w * 0.2f, marcoTop), Offset(w * 0.8f, marcoTop)).forEach { palmeta(it, marcoTop * 0.55f, n(ORO, o)) }
+        drawPath(Path().apply { moveTo(w * 0.26f, marcoTop); lineTo(w / 2, h * 0.028f); lineTo(w * 0.74f, marcoTop); close() }, nm(EGEO, o))
+        solVergina(Offset(w / 2, marcoTop - (marcoTop - h * 0.028f) * 0.42f), (marcoTop - h * 0.028f) * 0.36f, nm(ORO, o))
+        listOf(Offset(w * 0.2f, marcoTop), Offset(w * 0.8f, marcoTop)).forEach { palmeta(it, marcoTop * 0.55f, nm(ORO, o)) }
 
         // El marco de nogal: travesaño superior con greca, largueros y travesaño inferior.
         val marco = Rect(w * 0.012f, marcoTop, w * 0.988f, repisa)
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(marco.left + 0.8f * u, marco.top + 1.4f * u), marco.size)
+        drawRect(sombraMueble(0.3f), Offset(marco.left + 0.8f * u, marco.top + 1.4f * u), marco.size)
         rect(marco, Brush.linearGradient(listOf(madL, mad, madO), marco.topLeft, marco.bottomRight))
         vetas(Rect(marco.left, marco.top, marco.right, ni.top), madO.copy(alpha = 0.5f), e.semilla, p)
         vetas(Rect(marco.left, ni.top, ni.left, ni.bottom), madO.copy(alpha = 0.5f), e.semilla + 1, p, vertical = true)
         vetas(Rect(ni.right, ni.top, marco.right, ni.bottom), madO.copy(alpha = 0.5f), e.semilla + 2, p, vertical = true)
         val banda = Rect(w * 0.16f, marco.top + (ni.top - marco.top) * 0.22f, w * 0.84f, ni.top - (ni.top - marco.top) * 0.3f)
-        rect(banda, n(BARNIZ, o))
-        greca(banda.deflate(banda.height * 0.12f), n(TERRACOTA, o), banda.height * 0.1f)
-        drawRect(n(ORO, o), banda.topLeft, banda.size, style = Stroke(p * 0.5f))
+        rect(banda, nm(BARNIZ, o))
+        greca(banda.deflate(banda.height * 0.12f), nm(TERRACOTA, o), banda.height * 0.1f)
+        drawRect(nm(ORO, o), banda.topLeft, banda.size, style = Stroke(p * 0.5f))
         // La moldura interior (un bisel) y el leukoma: el tablón blanqueado.
         val bis = ni.inflate(1.4f * u)
         rect(bis, Brush.linearGradient(listOf(madO, madL), bis.topLeft, bis.bottomRight))
@@ -959,37 +964,39 @@ internal object VidaHeleno : DisenoVida {
         val rnd = Random(e.semilla.toLong() * 17 + 3)
         repeat(26) { val y0 = ni.top + ni.height * rnd.nextFloat(); val x0 = ni.left + ni.width * rnd.nextFloat() * 0.8f
             drawLine((if (o) Color.White else Color(0xFF8A7A5A)).copy(alpha = if (o) 0.018f else 0.03f), Offset(x0, y0), Offset(x0 + ni.width * (0.15f + 0.3f * rnd.nextFloat()), y0 + (rnd.nextFloat() - 0.5f) * 3f * u), (1.5f + 3f * rnd.nextFloat()) * u, StrokeCap.Round) }
-        rect(Rect(ni.left, ni.top, ni.right, ni.top + 3f * u), Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.12f), Color.Transparent), ni.top, ni.top + 3f * u))
-        rect(Rect(ni.left, ni.top, ni.left + 2f * u, ni.bottom), Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.1f), Color.Transparent), ni.left, ni.left + 2f * u))
+        rect(Rect(ni.left, ni.top, ni.right, ni.top + 3f * u), Brush.verticalGradient(listOf(sombraMueble(0.12f), Color.Transparent), ni.top, ni.top + 3f * u))
+        rect(Rect(ni.left, ni.top, ni.left + 2f * u, ni.bottom), Brush.horizontalGradient(listOf(sombraMueble(0.1f), Color.Transparent), ni.left, ni.left + 2f * u))
         // Las cantoneras de bronce, con remaches, en las cuatro esquinas.
         val ca = 6f * u
         listOf(Triple(marco.left, marco.top, 1f to 1f), Triple(marco.right, marco.top, -1f to 1f), Triple(marco.left, marco.bottom, 1f to -1f), Triple(marco.right, marco.bottom, -1f to -1f)).forEach { (x, y, s) ->
             val (sx, sy) = s
             val esq = Path().apply { moveTo(x, y); lineTo(x + sx * ca, y); lineTo(x + sx * ca, y + sy * ca * 0.35f); lineTo(x + sx * ca * 0.35f, y + sy * ca * 0.35f); lineTo(x + sx * ca * 0.35f, y + sy * ca); lineTo(x, y + sy * ca); close() }
-            drawPath(esq, Brush.linearGradient(listOf(n(BRONCE_LUZ, o), n(BRONCE, o), n(BRONCE_OSC, o)), Offset(x, y), Offset(x + sx * ca, y + sy * ca)))
+            drawPath(esq, Brush.linearGradient(listOf(nm(BRONCE_LUZ, o), nm(BRONCE, o), nm(BRONCE_OSC, o)), Offset(x, y), Offset(x + sx * ca, y + sy * ca)))
             listOf(Offset(x + sx * ca * 0.72f, y + sy * ca * 0.18f), Offset(x + sx * ca * 0.18f, y + sy * ca * 0.72f), Offset(x + sx * ca * 0.18f, y + sy * ca * 0.18f)).forEach { r ->
-                drawCircle(n(BRONCE_OSC, o), 0.6f * u, r); drawCircle(n(BRONCE_LUZ, o), 0.25f * u, Offset(r.x - 0.15f * u, r.y - 0.15f * u))
+                drawCircle(nm(BRONCE_OSC, o), 0.6f * u, r); drawCircle(nm(BRONCE_LUZ, o), 0.25f * u, Offset(r.x - 0.15f * u, r.y - 0.15f * u))
             }
         }
 
         // La repisa moldurada con sus dos consolas; encima, el estilo, la esponja y la lucerna.
         val rep = Rect(0f, repisa, w, repisa + 3.2f * u)
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(rep.left, rep.bottom), Size(rep.width, 1.4f * u))
-        rect(rep, vert(rep, n(MARMOL_LUZ, o), n(MARMOL, o), n(MARMOL_SOMBRA, o)))
-        drawLine(n(MARMOL_SOMBRA, o), Offset(0f, rep.top + rep.height * 0.4f), Offset(w, rep.top + rep.height * 0.4f), p * 0.5f)
+        drawRect(sombraMueble(0.3f), Offset(rep.left, rep.bottom), Size(rep.width, 1.4f * u))
+        rect(rep, vert(rep, nm(MARMOL_LUZ, o), nm(MARMOL, o), nm(MARMOL_SOMBRA, o)))
+        drawLine(nm(MARMOL_SOMBRA, o), Offset(0f, rep.top + rep.height * 0.4f), Offset(w, rep.top + rep.height * 0.4f), p * 0.5f)
         listOf(w * 0.14f, w * 0.86f).forEach { x ->
             val con = Path().apply { moveTo(x - 2.6f * u, rep.bottom); lineTo(x + 2.6f * u, rep.bottom); quadraticTo(x + 2.4f * u, h * 0.97f, x, h * 0.99f); quadraticTo(x - 2.4f * u, h * 0.97f, x - 2.6f * u, rep.bottom); close() }
-            drawPath(con, Brush.horizontalGradient(listOf(n(MARMOL_SOMBRA, o), n(MARMOL_LUZ, o), n(MARMOL_OSC, o)), x - 2.6f * u, x + 2.6f * u))
-            drawCircle(n(MARMOL_SOMBRA, o), 1.1f * u, Offset(x, rep.bottom + 2.4f * u), style = Stroke(p * 0.6f))
+            drawPath(con, Brush.horizontalGradient(listOf(nm(MARMOL_SOMBRA, o), nm(MARMOL_LUZ, o), nm(MARMOL_OSC, o)), x - 2.6f * u, x + 2.6f * u))
+            drawCircle(nm(MARMOL_SOMBRA, o), 1.1f * u, Offset(x, rep.bottom + 2.4f * u), style = Stroke(p * 0.6f))
         }
         // El estilo de bronce y la esponja, a la izquierda; la lucerna a la derecha.
-        drawLine(n(BRONCE_OSC, o), Offset(w * 0.3f, repisa - 0.4f * u), Offset(w * 0.44f, repisa - 1.2f * u), p * 1.4f, StrokeCap.Round)
-        drawCircle(n(BRONCE, o), p * 1.1f, Offset(w * 0.3f, repisa - 0.4f * u))
-        drawOval(Brush.radialGradient(listOf(n(Color(0xFFD9B66A), o), n(Color(0xFF9A7432), o)), Offset(w * 0.22f, repisa - 1.6f * u), 3f * u), Offset(w * 0.2f, repisa - 2.8f * u), Size(4.4f * u, 2.8f * u))
+        drawLine(nm(BRONCE_OSC, o), Offset(w * 0.3f, repisa - 0.4f * u), Offset(w * 0.44f, repisa - 1.2f * u), p * 1.4f, StrokeCap.Round)
+        drawCircle(nm(BRONCE, o), p * 1.1f, Offset(w * 0.3f, repisa - 0.4f * u))
+        drawOval(Brush.radialGradient(listOf(nm(Color(0xFFD9B66A), o), nm(Color(0xFF9A7432), o)), Offset(w * 0.22f, repisa - 1.6f * u), 3f * u), Offset(w * 0.2f, repisa - 2.8f * u), Size(4.4f * u, 2.8f * u))
         val lx = w * 0.7f
-        drawOval(Brush.verticalGradient(listOf(n(TERRA_LUZ, o), n(TERRA_OSC, o)), repisa - 2.8f * u, repisa), Offset(lx - 3f * u, repisa - 2.6f * u), Size(6f * u, 2.6f * u))
-        drawPath(Path().apply { moveTo(lx + 2f * u, repisa - 2.2f * u); lineTo(lx + 4.4f * u, repisa - 1.8f * u); lineTo(lx + 4.4f * u, repisa - 0.9f * u); lineTo(lx + 2f * u, repisa - 0.6f * u); close() }, n(TERRA_OSC, o))
+        drawOval(Brush.verticalGradient(listOf(nm(TERRA_LUZ, o), nm(TERRA_OSC, o)), repisa - 2.8f * u, repisa), Offset(lx - 3f * u, repisa - 2.6f * u), Size(6f * u, 2.6f * u))
+        drawPath(Path().apply { moveTo(lx + 2f * u, repisa - 2.2f * u); lineTo(lx + 4.4f * u, repisa - 1.8f * u); lineTo(lx + 4.4f * u, repisa - 0.9f * u); lineTo(lx + 2f * u, repisa - 0.6f * u); close() }, nm(TERRA_OSC, o))
         llama(Offset(lx + 4.3f * u, repisa - 2.4f * u), 1f * u, o)
+        // El grano de papel, al final (regla 7).
+        granoMueble(Rect(0f, 0f, w, h), o)
     }
 
     override fun DrawScope.notaTablero(e: EstadoNota, oscuro: Boolean) {
@@ -998,7 +1005,7 @@ internal object VidaHeleno : DisenoVida {
         val o = oscuro
         val semilla = e.indice * 131 + e.tipo.length * 7
         val forma = tiesto(r.deflate(1.5f * un), semilla, 0.05f)
-        translate(1.2f * un, 2.2f * un) { drawPath(forma, Color.Black.copy(alpha = 0.32f)) }
+        translate(1.2f * un, 2.2f * un) { drawPath(forma, sombraMueble(0.32f)) }
         val barro = if (o) BARRO_OSCURO else BARRO_CLARO
         drawPath(forma, Brush.linearGradient(listOf(mez(barro, Color.White, 0.14f), barro, mez(barro, Color.Black, 0.1f)), r.topLeft, r.bottomRight))
         clipPath(forma) {
@@ -1046,7 +1053,7 @@ internal object VidaHeleno : DisenoVida {
         // Fijada: un clavo de bronce en la banda de barniz, con su sombra.
         if (e.fijada) {
             val cl = Offset(r.center.x, r.top + r.height * 0.06f)
-            drawCircle(Color.Black.copy(alpha = 0.35f), 3.2f * un, Offset(cl.x + 0.8f * un, cl.y + 1.2f * un))
+            drawCircle(sombraMueble(0.35f), 3.2f * un, Offset(cl.x + 0.8f * un, cl.y + 1.2f * un))
             drawCircle(Brush.radialGradient(listOf(BRONCE_LUZ, BRONCE, BRONCE_OSC), Offset(cl.x - un, cl.y - un), 4f * un), 3f * un, cl)
             roseta(cl, 1.8f * un, BRONCE_OSC.copy(alpha = 0.6f), BRONCE_LUZ, 6)
         }

@@ -95,7 +95,7 @@ fun PantallaSuplementos(nav: Nav) {
     // Cuándo la tomaste: null = ahora. «ayer» o «otra fecha u hora…» para lo que olvidaste anotar (N-07).
     var cuando by remember { mutableStateOf<java.time.LocalDateTime?>(null) }
     val ctx = androidx.compose.ui.platform.LocalContext.current
-    Hoja("Suplementos", nav.atras, "Lo que tomas, en un toque. La app estima cuánto queda en tu cuerpo con un modelo simple; no es una medición ni un consejo médico.") {
+    Hoja("Suplementos", nav.atras, "Lo que tomas. El nivel es una estimación, no una medición ni un consejo médico.") {
         val activos = Suplementos.activos(c)
         if (activos.isEmpty()) Vacio("No tienes suplementos activos. Agrega uno abajo.")
         val dia = cuando?.let { Fechas.diaLogicoDeMillis(it.aMillis()) } ?: hoy
@@ -316,7 +316,7 @@ fun PantallaLaptop(nav: Nav) {
         if (uris.isNotEmpty()) scope.launch { msg = withContext(Dispatchers.IO) { runCatching { ColdTurkey.importar(ctx, uris) }.getOrElse { "Algo falló: ${it.message}" } } }
     }
     val cs = MaterialTheme.colorScheme
-    Hoja("Laptop", nav.atras, "Lo que mide Cold Turkey en tu computadora: minutos por app y por sitio. Importa los dos CSV (apps y sitios); reimportar un día lo reemplaza.") {
+    Hoja("Laptop", nav.atras, "Minutos por app y por sitio, de Cold Turkey.") {
         msg?.let { Aviso(it) }
         BotonPrincipal("Importar de Cold Turkey (.csv)", Modifier.fillMaxWidth().padding(top = 10.dp)) { abrir.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "*/*")) }
         Ayuda("En Cold Turkey: Statistics → elige el periodo → Export. Sale un CSV de apps y otro de sitios; puedes elegir los dos a la vez.", Modifier.padding(top = 6.dp))
@@ -447,7 +447,7 @@ fun PantallaExperimentos(nav: Nav) {
     var sentido by remember { mutableStateOf<Int?>(null) }
     var umbral by remember { mutableStateOf("") }
     Hoja("Experimentos personales", nav.atras,
-        "Escribes la pregunta y lo que crees que pasará antes de empezar (queda sellado con la hora). La app decide qué semanas haces la acción y, al final, compara.") {
+        "Sellas la pregunta y tu predicción; la app sortea las semanas y al final compara.") {
         // El panel se arma en segundo plano, como en Análisis: así las variables que dependen de MacroFactor valen lo mismo aquí
         // que en las demás pantallas (P-21). La clave son los propios datos, no solo cuántos días hay.
         // En las capturas (sincrono) se calcula de una vez, como en Logros y Cobertura.

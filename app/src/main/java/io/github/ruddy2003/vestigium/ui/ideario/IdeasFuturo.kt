@@ -233,6 +233,7 @@ object IdeasNeon : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            "hecho" -> selloHecho(AMBAR, p.color)
             "convence" -> { drawPath(corazon(c, s * 0.9f), MAGENTA.copy(alpha = 0.3f), style = Stroke(s * 0.2f)); drawPath(corazon(c, s * 0.9f), MAGENTA, style = Stroke(s * 0.08f)) }
             // Unos palillos.
             "piensa" -> {
@@ -442,6 +443,8 @@ object IdeasDistopia : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // El sello lleno: verificado.
+            "hecho" -> selloHecho(ROJO, p.color)
             // El sello de «aprobado».
             "convence" -> {
                 drawCircle(ROJO, s * 0.42f, c, style = Stroke(s * 0.08f))
@@ -631,6 +634,7 @@ object IdeasRefugio : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            "hecho" -> selloHecho(FOSFORO, p.color)
             "convence" -> {
                 drawCircle(FOSFORO, s * 0.42f, c, style = Stroke(s * 0.08f))
                 drawPath(Path().apply { moveTo(c.x - s * 0.2f, c.y); lineTo(c.x - s * 0.04f, c.y + s * 0.16f); lineTo(c.x + s * 0.22f, c.y - s * 0.16f) }, FOSFORO, style = Stroke(s * 0.1f))
@@ -866,6 +870,7 @@ object IdeasOrden : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            "hecho" -> selloHecho(LATON, p.color, cuadrado = true)
             "convence" -> { drawPath(engrane(c, s * 0.46f, 8), LATON); drawCircle(ACERO, s * 0.16f, c) }
             "piensa" -> {
                 drawLine(TEXTO, Offset(c.x, c.y - s * 0.36f), Offset(c.x - s * 0.26f, c.y + s * 0.42f), s * 0.08f, StrokeCap.Round)
@@ -1078,6 +1083,8 @@ object IdeasLaboratorio : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // Resultado reproducido.
+            "hecho" -> selloHecho(CIAN, p.color, cuadrado = true)
             "convence" -> matraz(Offset(c.x, c.y + s * 0.44f), s * 0.88f, CIAN)
             // Una molécula: tres átomos enlazados.
             "piensa" -> {
@@ -1298,6 +1305,7 @@ object IdeasColonos : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            "hecho" -> selloHecho(MARINO, p.color)
             // Un martillo.
             "convence" -> {
                 drawLine(PINO_OSC, Offset(c.x - s * 0.3f, c.y + s * 0.4f), Offset(c.x + s * 0.12f, c.y - s * 0.12f), s * 0.12f, StrokeCap.Round)
@@ -1547,6 +1555,7 @@ object IdeasRuinas : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            "hecho" -> selloHecho(OXIDO, p.color)
             // Un brote con sus dos hojas.
             "convence" -> {
                 drawLine(HIEDRA, Offset(c.x, c.y + s * 0.44f), Offset(c.x, c.y - s * 0.06f), s * 0.07f, StrokeCap.Round)
@@ -1751,6 +1760,7 @@ object IdeasEspacio : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            "hecho" -> selloHecho(AZUL, p.color)
             "convence" -> drawPath(estrella(c, s * 0.48f, 5, 0.42f), NARANJA)
             // Una órbita con su satélite.
             "piensa" -> {

@@ -27,7 +27,9 @@ object Avisos {
     const val CANAL_ESCALAS = "escalas"
     const val CANAL_REPORTES = "reportes"
     /** Lugares especiales: canal propio con su sonido (se cambia en los ajustes de Android). */
-    const val CANAL_LUGARES = "lugares_especiales"
+    const val CANAL_LUGARES = "lugares_especiales_2"
+    /** El canal de lugares de antes, con el sonido guardado por número: se reemplaza por [CANAL_LUGARES]. */
+    private const val CANAL_LUGARES_V1 = "lugares_especiales"
     /** Importaciones, metas y notas de recordatorio. */
     const val CANAL_RECORDATORIOS = "recordatorios"
     const val ID_IMPORTAR = 2020
@@ -119,36 +121,115 @@ object Avisos {
         }
     }
 
+    /**
+     * El nombre del archivo de sonido (en `res/raw`) de un canal según el tema, o null (sonido del teléfono). Es el mismo que
+     * [sonido], por nombre: los canales lo guardan por nombre (ver [uriSonido]).
+     */
+    internal fun nombreSonido(base: String, tema: String): String? {
+        val t = temaDe(tema)
+        if (sonidosDe(t) == null) return null
+        return when (base) {
+            CANAL_ANIMO, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> "n_${t.id}_aviso"
+            CANAL_DIARIO, CANAL_ESCALAS -> "n_${t.id}_solemne"
+            else -> null
+        }
+    }
+
+    /** Para oír un sonido ahora mismo (la prueba de sonido de Ajustes). */
     fun uriSonido(ctx: Context, res: Int): Uri = Uri.parse("android.resource://${ctx.packageName}/$res")
 
     /**
-     * Android no deja cambiar el sonido de un canal ya creado, así que hay un canal por tema («animo_medieval»…).
-     * Al cambiar de tema se crea el nuevo copiando lo que hayas decidido en el anterior (silencio, importancia, vibración)
-     * y se borra el viejo. Lo usa también el aviso de fin de bloque del enfoque («enfoque_aviso_<tema>»).
+     * El sonido de un canal, **por nombre** («…/raw/n_romano_aviso»). Antes iba por número de recurso, y ese número cambia
+     * de una versión a otra cuando se agregan o quitan sonidos: un canal creado con una versión vieja terminaba sonando con
+     * el archivo de otro tema.
      */
+    fun uriSonido(ctx: Context, nombre: String): Uri = Uri.parse("android.resource://${ctx.packageName}/raw/$nombre")
+
+    /** Un sonido que puso la app (por número o por nombre), no uno que eligió la persona en los ajustes de Android. */
+    private fun esNuestro(ctx: Context, u: Uri?): Boolean = u != null && u.toString().startsWith("android.resource://${ctx.packageName}/")
+
+    /** El principio del id de los canales de [base] con [clave] (el tema, o «sistema»): «animo_medieval_». */
+    internal fun prefijoCanal(base: String, clave: String) = base + "_" + clave + "_"
+
+    /**
+     * Un id que nunca se usó: el prefijo y la hora en base 36. Android **resucita** un canal borrado, con su sonido y ajustes
+     * de entonces, si se vuelve a crear con el mismo id; al volver a un tema de días antes (lo normal con la rotación) salía
+     * el canal viejo con su sonido viejo. Va la hora y no un contador porque un contador vuelve a 1 al borrar los datos.
+     */
+    internal fun idCanalNuevo(base: String, clave: String, ahora: Long) = prefijoCanal(base, clave) + java.lang.Long.toString(ahora, 36)
+
+    /** De [ids], el canal vigente de [base] con [clave]: el más nuevo con ese prefijo, o null. */
+    internal fun canalVigente(ids: Collection<String>, base: String, clave: String): String? {
+        val pre = prefijoCanal(base, clave)
+        return ids.filter { it.startsWith(pre) }.maxByOrNull { runCatching { it.removePrefix(pre).toLong(36) }.getOrDefault(0L) }
+    }
+
+    /** De [ids], los canales de la familia de [base] que sobran (todos menos [vigente]). «enfoque» no es de «enfoque_aviso». */
+    internal fun canalesQueSobran(ids: Collection<String>, base: String, vigente: String): List<String> =
+        ids.filter { (it == base || it.startsWith(base + "_")) && it != vigente }
+
+    /** Lo que le queda a un aviso antes de borrarse solo: null si no tiene plazo; 0 o menos si ya venció. */
+    internal fun plazoRestante(timeoutAfter: Long, postTime: Long, ahora: Long): Long? = if (timeoutAfter <= 0L) null else timeoutAfter - (ahora - postTime)
+
+    /**
+     * Pasa los avisos que siguen en la cortina de los canales [viejos] al [nuevo], en silencio y con el plazo que les quedaba.
+     * Borrar un canal borra sus avisos: al cambiar de tema se perdía, por ejemplo, el del diario de la noche.
+     */
+    private fun mudarAvisos(ctx: Context, nm: NotificationManager, viejos: Collection<String>, nuevo: String) {
+        if (viejos.isEmpty()) return
+        val ahora = System.currentTimeMillis()
+        runCatching { nm.activeNotifications }.getOrNull()?.forEach { sbn ->
+            val n = sbn.notification
+            if (n.channelId !in viejos) return@forEach
+            val plazo = plazoRestante(n.timeoutAfter, sbn.postTime, ahora)
+            if (plazo != null && plazo <= 0L) { runCatching { nm.cancel(sbn.tag, sbn.id) }; return@forEach }
+            runCatching {
+                val b = android.app.Notification.Builder.recoverBuilder(ctx, n).setChannelId(nuevo).setOnlyAlertOnce(true)
+                if (plazo != null) b.setTimeoutAfter(plazo)
+                nm.notify(sbn.tag, sbn.id, b.build())
+            }
+        }
+    }
+
+    private val atributosSonido: android.media.AudioAttributes get() = android.media.AudioAttributes.Builder()
+        .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION).setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
+
+    /**
+     * El canal de [base] para el tema de hoy. Android no deja cambiar el sonido de un canal ya creado, así que hay uno por
+     * tema («animo_medieval_<serie>»). Al cambiar de tema se crea uno nuevo, con id que nunca se usó, copiando lo que hayas
+     * decidido en el anterior (silencio, importancia, vibración); se le pasan los avisos que seguían en la cortina y se
+     * borran los viejos. Lo usa también el aviso de fin de bloque del enfoque («enfoque_aviso_<tema>_<serie>»).
+     */
+    @Synchronized
     fun canal(ctx: Context, base: String): String {
         if (base == CANAL_REPORTES) return base
         val nm = ctx.getSystemService(NotificationManager::class.java)
+        // Red de seguridad: el tema de hoy, aunque quien avisa no lo haya revisado.
+        runCatching { io.github.ruddy2003.vestigium.ui.RotacionTema.revisar() }
+        val ids = runCatching { nm.notificationChannels.map { it.id } }.getOrDefault(emptyList())
+        // Con la base sin abrir bien, la configuración en memoria es la de fábrica: no se crea ni se borra nada.
+        if (io.github.ruddy2003.vestigium.data.Repo.errorAlAbrir != null)
+            return ids.filter { it == base || it.startsWith(base + "_") }.maxOrNull() ?: base
         val c = runCatching { io.github.ruddy2003.vestigium.data.Repo.config }.getOrNull()
         val propio = c?.sonido_avisos ?: true
         val tema = c?.tema ?: "romano"
-        val id = base + "_" + if (propio) tema else "sistema"
-        if (nm.getNotificationChannel(id) != null) return id
-        val viejos = nm.notificationChannels.filter { it.id == base || it.id.startsWith(base + "_") }
-        val previo = viejos.firstOrNull()
+        val clave = if (propio) tema else "sistema"
+        canalVigente(ids, base, clave)?.let { return it }
+        val viejos = canalesQueSobran(ids, base, "")
+        val previo = viejos.firstNotNullOfOrNull { nm.getNotificationChannel(it) }
+        val id = idCanalNuevo(base, clave, System.currentTimeMillis())
         val ch = NotificationChannel(id, nombreCanal(base), previo?.importance ?: importancia(base)).apply {
             description = descripcionCanal(base)
-            val atributos = android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION)
-                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
             when {
                 previo != null && previo.sound == null -> setSound(null, null)          // lo habías silenciado: sigue en silencio
-                propio -> sonido(base, tema)?.let { setSound(uriSonido(ctx, it), atributos) }
+                propio -> nombreSonido(base, tema)?.let { setSound(uriSonido(ctx, it), atributosSonido) }
             }
             if (previo != null) { enableVibration(previo.shouldVibrate()); setShowBadge(previo.canShowBadge()) }
             else if (base == io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO) enableVibration(true)
         }
         nm.createNotificationChannel(ch)
-        viejos.forEach { nm.deleteNotificationChannel(it.id) }
+        mudarAvisos(ctx, nm, viejos, id)
+        viejos.forEach { runCatching { nm.deleteNotificationChannel(it) } }
         return id
     }
 
@@ -158,12 +239,21 @@ object Avisos {
         nm.createNotificationChannel(NotificationChannel(CANAL_RECORDATORIOS, "Importaciones y metas", NotificationManager.IMPORTANCE_DEFAULT).apply {
             description = "Un aviso por semana con lo que toca importar, y las metas y notas que toca revisar"
         })
-        if (nm.getNotificationChannel(CANAL_LUGARES) == null) nm.createNotificationChannel(NotificationChannel(CANAL_LUGARES, "Lugares especiales", NotificationManager.IMPORTANCE_DEFAULT).apply {
-            description = "«¿Es un lugar especial?» cuando llevas un rato en un sitio nuevo"
-            val atributos = android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION)
-                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
-            setSound(uriSonido(ctx, R.raw.n_lugar), atributos)
-        })
+        if (nm.getNotificationChannel(CANAL_LUGARES) == null && io.github.ruddy2003.vestigium.data.Repo.errorAlAbrir == null) {
+            // El canal de antes guardaba su sonido por número (ver [uriSonido]); este lo guarda por nombre. Se copia lo que
+            // decidiste en el anterior, incluido un sonido que hayas elegido tú en los ajustes de Android.
+            val viejo = nm.getNotificationChannel(CANAL_LUGARES_V1)
+            nm.createNotificationChannel(NotificationChannel(CANAL_LUGARES, "Lugares especiales", viejo?.importance ?: NotificationManager.IMPORTANCE_DEFAULT).apply {
+                description = "«¿Es un lugar especial?» cuando llevas un rato en un sitio nuevo"
+                when {
+                    viejo != null && viejo.sound == null -> setSound(null, null)
+                    viejo != null && !esNuestro(ctx, viejo.sound) -> setSound(viejo.sound, atributosSonido)
+                    else -> setSound(uriSonido(ctx, "n_lugar"), atributosSonido)
+                }
+                if (viejo != null) { enableVibration(viejo.shouldVibrate()); setShowBadge(viejo.canShowBadge()) }
+            })
+            if (viejo != null) { mudarAvisos(ctx, nm, listOf(CANAL_LUGARES_V1), CANAL_LUGARES); runCatching { nm.deleteNotificationChannel(CANAL_LUGARES_V1) } }
+        }
         listOf(CANAL_ANIMO, CANAL_DIARIO, CANAL_ESCALAS, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO).forEach { runCatching { canal(ctx, it) } }
     }
 

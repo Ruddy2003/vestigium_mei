@@ -1,0 +1,527 @@
+{
+ "_fuente": "Muestra recortada de es.wikipedia.org/api/rest_v1/feed/onthisday/events/MM/DD (13 de noviembre, 3 de febrero, 20 de julio y 16 de septiembre), bajada el 13 nov 2026. Texto de Wikipedia en español, CC BY-SA 4.0.",
+ "events": [
+  {
+   "text": "en la ciudad de Parral, en el estado de Chihuahua (México) muere asesinado a tiros el general Pancho Villa (45). El rey de la prensa estadounidense, William Randolph Hearst sobornó con 5000 dólares (94 000 dólares de 2025) al dictador mexicano Plutarco Elías Calles para recibir en su oficina la cabeza de Villa como trofeo.",
+   "year": 1923,
+   "pages": [
+    {
+     "title": "Chihuahua",
+     "titles": {
+      "normalized": "Chihuahua"
+     },
+     "wikibase_item": "Q655",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Chihuahua"
+      }
+     }
+    },
+    {
+     "title": "Pancho_Villa",
+     "titles": {
+      "normalized": "Pancho Villa"
+     },
+     "wikibase_item": "Q192278",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Pancho_Villa"
+      }
+     }
+    },
+    {
+     "title": "William_Randolph_Hearst",
+     "titles": {
+      "normalized": "William Randolph Hearst"
+     },
+     "wikibase_item": "Q294931",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/William_Randolph_Hearst"
+      }
+     }
+    },
+    {
+     "title": "Plutarco_Elías_Calles",
+     "titles": {
+      "normalized": "Plutarco Elías Calles"
+     },
+     "wikibase_item": "Q315066",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Plutarco_El%C3%ADas_Calles"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "en Monterrey, México, se inaugura el teatro María Tereza Montoya.",
+   "year": 1957,
+   "pages": [
+    {
+     "title": "Monterrey",
+     "titles": {
+      "normalized": "Monterrey"
+     },
+     "wikibase_item": "Q81033",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Monterrey"
+      }
+     }
+    },
+    {
+     "title": "México",
+     "titles": {
+      "normalized": "México"
+     },
+     "wikibase_item": "Q96",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/M%C3%A9xico"
+      }
+     }
+    },
+    {
+     "title": "María_Tereza_Montoya",
+     "titles": {
+      "normalized": "María Tereza Montoya"
+     },
+     "wikibase_item": "Q6004718",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Mar%C3%ADa_Tereza_Montoya"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "de Tenochtitlán (México) sale el conquistador español Pedro de Alvarado, lugarteniente de Hernán Cortés; le acompañan soldados e indios tlaxcaltecas rumbo a Guatemala.",
+   "year": 1523,
+   "pages": [
+    {
+     "title": "México-Tenochtitlan",
+     "titles": {
+      "normalized": "México-Tenochtitlan"
+     },
+     "wikibase_item": "Q13695",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/M%C3%A9xico-Tenochtitlan"
+      }
+     }
+    },
+    {
+     "title": "Pedro_de_Alvarado",
+     "titles": {
+      "normalized": "Pedro de Alvarado"
+     },
+     "wikibase_item": "Q210900",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Pedro_de_Alvarado"
+      }
+     }
+    },
+    {
+     "title": "Hernán_Cortés",
+     "titles": {
+      "normalized": "Hernán Cortés"
+     },
+     "wikibase_item": "Q7326",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Hern%C3%A1n_Cort%C3%A9s"
+      }
+     }
+    },
+    {
+     "title": "Guatemala",
+     "titles": {
+      "normalized": "Guatemala"
+     },
+     "wikibase_item": "Q774",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Guatemala"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "Eduardo I de Inglaterra asedia y captura el Castillo de Stirling, el último bastión rebelde de las guerras de Independencia de Escocia.",
+   "year": 1304,
+   "pages": [
+    {
+     "title": "Eduardo_I_de_Inglaterra",
+     "titles": {
+      "normalized": "Eduardo I de Inglaterra"
+     },
+     "wikibase_item": "Q57798",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Eduardo_I_de_Inglaterra"
+      }
+     }
+    },
+    {
+     "title": "Castillo_de_Stirling",
+     "titles": {
+      "normalized": "Castillo de Stirling"
+     },
+     "wikibase_item": "Q756268",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Castillo_de_Stirling"
+      }
+     }
+    },
+    {
+     "title": "Guerras_de_independencia_de_Escocia",
+     "titles": {
+      "normalized": "Guerras de independencia de Escocia"
+     },
+     "wikibase_item": "Q1368240",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Guerras_de_independencia_de_Escocia"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "en la costa alemana del mar del Norte mueren ahogadas unas 800 personas debido a una marejada ciclónica.",
+   "year": 1825,
+   "pages": [
+    {
+     "title": "Mar_del_Norte",
+     "titles": {
+      "normalized": "Mar del Norte"
+     },
+     "wikibase_item": "Q1693",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Mar_del_Norte"
+      }
+     }
+    },
+    {
+     "title": "Marejada_ciclónica",
+     "titles": {
+      "normalized": "Marejada ciclónica"
+     },
+     "wikibase_item": "Q121742",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Marejada_cicl%C3%B3nica"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "en la ciudad de Chicago (Estados Unidos) el patriota cubano José Martí escribe la crónica Un drama terrible, que resume el juicio espurio y la ejecución de los obreros anarquistas (que generará la celebración mundial del Día del Trabajador).",
+   "year": 1887,
+   "pages": [
+    {
+     "title": "Chicago",
+     "titles": {
+      "normalized": "Chicago"
+     },
+     "wikibase_item": "Q1297",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Chicago"
+      }
+     }
+    },
+    {
+     "title": "José_Martí",
+     "titles": {
+      "normalized": "José Martí"
+     },
+     "wikibase_item": "Q103285",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Jos%C3%A9_Mart%C3%AD"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "En la provincia de Pinar del Río (Cuba) ―en el marco de la Guerra Necesaria (1895-1898)―, las fuerzas mambisas por órdenes de Antonio Maceo hostilizan a las columnas españolas que acampan cerca de Río Hondo.",
+   "year": 1896,
+   "pages": [
+    {
+     "title": "Provincia_de_Pinar_del_Río",
+     "titles": {
+      "normalized": "Provincia de Pinar del Río"
+     },
+     "wikibase_item": "Q115497",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Provincia_de_Pinar_del_R%C3%ADo"
+      }
+     }
+    },
+    {
+     "title": "Guerra_de_Independencia_cubana",
+     "titles": {
+      "normalized": "Guerra de Independencia cubana"
+     },
+     "wikibase_item": "Q1514908",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Guerra_de_Independencia_cubana"
+      }
+     }
+    },
+    {
+     "title": "Mambises",
+     "titles": {
+      "normalized": "Mambises"
+     },
+     "wikibase_item": "Q177996",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Mambises"
+      }
+     }
+    },
+    {
+     "title": "Antonio_Maceo",
+     "titles": {
+      "normalized": "Antonio Maceo"
+     },
+     "wikibase_item": "Q554264",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Antonio_Maceo"
+      }
+     }
+    },
+    {
+     "title": "Río_Hondo",
+     "titles": {
+      "normalized": "Río Hondo"
+     },
+     "wikibase_item": "Q1494095",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/R%C3%ADo_Hondo"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "cerca de la isla de Guadalcanal ―en el marco de la Segunda Guerra Mundial (1939-1945)― buques estadounidenses y japoneses se enfrentan en un intenso combate naval de superficie (batalla naval de Guadalcanal).",
+   "year": 1942,
+   "pages": [
+    {
+     "title": "Isla_de_Guadalcanal",
+     "titles": {
+      "normalized": "Isla de Guadalcanal"
+     },
+     "wikibase_item": "Q192767",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Isla_de_Guadalcanal"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "en Bélgica, el parlamento autoriza el regreso del rey Leopoldo III. Abdicará el 16 de julio de 1951 debido a su actitud durante la invasión de los alemanes nazis a Bélgica en el marco de la Segunda Guerra Mundial (1939‑1945).",
+   "year": 1950,
+   "pages": [
+    {
+     "title": "Leopoldo_III_de_Bélgica",
+     "titles": {
+      "normalized": "Leopoldo III de Bélgica"
+     },
+     "wikibase_item": "Q12973",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Leopoldo_III_de_B%C3%A9lgica"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "en Detroit (Estados Unidos) la empresa Ford Motor Company produce su primer automóvil.",
+   "year": 1903,
+   "pages": [
+    {
+     "title": "Ford_Motor_Company",
+     "titles": {
+      "normalized": "Ford Motor Company"
+     },
+     "wikibase_item": "Q44294",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Ford_Motor_Company"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "se crea la Universidad de Colima, fundada por el presidente Lázaro Cárdenas",
+   "year": 1940,
+   "pages": [
+    {
+     "title": "Universidad_de_Colima",
+     "titles": {
+      "normalized": "Universidad de Colima"
+     },
+     "wikibase_item": "Q2495731",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Universidad_de_Colima"
+      }
+     }
+    },
+    {
+     "title": "Lázaro_Cárdenas",
+     "titles": {
+      "normalized": "Lázaro Cárdenas"
+     },
+     "wikibase_item": "Q296718",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/L%C3%A1zaro_C%C3%A1rdenas"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "en el Mar de la Tranquilidad de la Luna, el módulo lunar Águila, de la misión espacial Apolo 11, se posa en la Luna a las 20:17:40 (hora internacional UTC). Cinco horas y media más tarde, Neil Armstrong y Buzz Aldrin serían los primeros seres humanos en pisar la superficie lunar.",
+   "year": 1969,
+   "pages": [
+    {
+     "title": "Mare_Tranquillitatis",
+     "titles": {
+      "normalized": "Mare Tranquillitatis"
+     },
+     "wikibase_item": "Q320936",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Mare_Tranquillitatis"
+      }
+     }
+    },
+    {
+     "title": "Apolo_11",
+     "titles": {
+      "normalized": "Apolo 11"
+     },
+     "wikibase_item": "Q43653",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Apolo_11"
+      }
+     }
+    },
+    {
+     "title": "Neil_Armstrong",
+     "titles": {
+      "normalized": "Neil Armstrong"
+     },
+     "wikibase_item": "Q1615",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Neil_Armstrong"
+      }
+     }
+    },
+    {
+     "title": "Buzz_Aldrin",
+     "titles": {
+      "normalized": "Buzz Aldrin"
+     },
+     "wikibase_item": "Q2252",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Buzz_Aldrin"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "en el pueblo de Dolores (México), el cura Miguel Hidalgo convoca a una lucha armada en contra de la dominación española, en un acto conocido como el Grito de Dolores y el cual da inicio a la Guerra de Independencia de México.",
+   "year": 1810,
+   "pages": [
+    {
+     "title": "Dolores_Hidalgo",
+     "titles": {
+      "normalized": "Dolores Hidalgo"
+     },
+     "wikibase_item": "Q17487868",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Dolores_Hidalgo"
+      }
+     }
+    },
+    {
+     "title": "México",
+     "titles": {
+      "normalized": "México"
+     },
+     "wikibase_item": "Q96",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/M%C3%A9xico"
+      }
+     }
+    },
+    {
+     "title": "Miguel_Hidalgo_y_Costilla",
+     "titles": {
+      "normalized": "Miguel Hidalgo y Costilla"
+     },
+     "wikibase_item": "Q55636",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Miguel_Hidalgo_y_Costilla"
+      }
+     }
+    },
+    {
+     "title": "Grito_de_Dolores",
+     "titles": {
+      "normalized": "Grito de Dolores"
+     },
+     "wikibase_item": "Q1145411",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Grito_de_Dolores"
+      }
+     }
+    },
+    {
+     "title": "Independencia_de_México",
+     "titles": {
+      "normalized": "Independencia de México"
+     },
+     "wikibase_item": "Q68750",
+     "content_urls": {
+      "desktop": {
+       "page": "https://es.wikipedia.org/wiki/Independencia_de_M%C3%A9xico"
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -85,6 +85,7 @@ class EnfoqueActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         Repo.init(this)
+        RotacionTema.revisarDesde(this)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (Build.VERSION.SDK_INT >= 27) setShowWhenLocked(true)
         WindowCompat.getInsetsController(window, window.decorView).apply {

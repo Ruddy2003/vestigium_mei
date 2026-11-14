@@ -119,7 +119,10 @@ fun Emblema(tema: TemaId = Estilo.tema, tam: Dp = 30.dp, esquema: ColorScheme = 
     // Básico no tiene emblema: no se anima (no hay nada que mover).
     val t: State<Float> = if (animado && !tema.sinDiseno) {
         val inf = rememberInfiniteTransition(label = "emblema")
-        inf.animateFloat(0f, 1f, infiniteRepeatable(tween(periodo(tema), easing = LinearEasing)), label = "t")
+        val a = inf.animateFloat(0f, 1f, infiniteRepeatable(tween(periodo(tema), easing = LinearEasing)), label = "t")
+        // En pasos de unos 30 por segundo, como el fondo vivo (13 nov 2026): el mismo movimiento, la mitad de cuadros.
+        val pasos = (periodo(tema) / 33).coerceAtLeast(1)
+        remember(a, pasos) { androidx.compose.runtime.derivedStateOf { kotlin.math.floor(a.value * pasos) / pasos } }
     } else remember { mutableFloatStateOf(0.3f) }
     val oscuro = esquema.background.luminance() < 0.5f
     // El emblema animado va en su propia capa, para que su movimiento no vuelva a grabar el encabezado entero (y con él,
@@ -3323,12 +3326,68 @@ fun BotonBuscar(modifier: Modifier = Modifier, onClick: () -> Unit) {
     }
 }
 
+/**
+ * Ir al día anterior o al siguiente (13 nov 2026): la flecha de las filas del tema, en el mismo marco que buscar, con
+ * 48 dp para el dedo. Antes eran «‹» y «›» de texto, muy chicos.
+ */
+@Composable
+fun BotonDia(anterior: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val tema = Estilo.tema
+    val borde = MaterialTheme.colorScheme.outline
+    val sentir = rememberSentir()
+    val forma = remember(tema) { formaBoton(tema) }
+    val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(tema)
+    val oscuro = esOscuro()
+    Box(
+        modifier.minimumInteractiveComponentSize().size(40.dp).clip(forma).border(1.dp, borde, forma).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }
+            .semantics { contentDescription = if (anterior) "Día anterior" else "Día siguiente" },
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.size(20.dp)) {
+            if (anterior) withTransform({ scale(-1f, 1f) }) { with(d) { flechaFila(oscuro) } } else with(d) { flechaFila(oscuro) }
+        }
+    }
+}
+
+/**
+ * El calendario, a la vista junto a la fecha de Hoy (13 nov 2026): antes solo se abría tocando la fecha, sin nada que lo
+ * dijera. Una hoja de calendario con la figura del tema (la del sello del día en el calendario), en el marco de los botones.
+ */
+@Composable
+fun BotonCalendario(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val tema = Estilo.tema
+    val color = MaterialTheme.colorScheme.primary
+    val fondo = MaterialTheme.colorScheme.background
+    val borde = MaterialTheme.colorScheme.outline
+    val sentir = rememberSentir()
+    val forma = remember(tema) { formaBoton(tema) }
+    Box(
+        modifier.minimumInteractiveComponentSize().size(40.dp).clip(forma).border(1.dp, borde, forma).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }
+            .semantics { contentDescription = "Abrir el calendario" },
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.size(22.dp)) { hojaCalendario(tema, color, fondo) }
+    }
+}
+
+/** Una hoja de calendario: el marco, la franja de arriba con sus dos anillas y, al centro, la figura del tema. */
+private fun DrawScope.hojaCalendario(tema: TemaId, color: Color, fondo: Color) {
+    val w = size.width; val h = size.height; val g = w * 0.08f
+    val arriba = h * 0.14f
+    drawRoundRect(color, Offset(g / 2, arriba), Size(w - g, h - arriba - g / 2), CornerRadius(w * 0.12f), style = Stroke(g))
+    drawRect(color, Offset(g / 2, arriba), Size(w - g, h * 0.18f))
+    listOf(0.3f, 0.7f).forEach { fx -> drawLine(color, Offset(w * fx, g), Offset(w * fx, arriba + h * 0.1f), g * 1.3f, StrokeCap.Round) }
+    figuraTema(tema, color, Offset(w / 2, h * 0.64f), w * 0.19f, fondo)
+}
+
 // =====================================================================
 //  Celebración: cuando se completa el día o la racha llega a una semana
 // =====================================================================
 
 object Fiesta {
     var n by mutableIntStateOf(0)
+    /** La última lluvia que ya salió: al volver a la app o rehacerse la pantalla no se repite (como el sello del día). */
+    var visto by mutableIntStateOf(0)
     fun lanzar() { n++ }
 }
 
@@ -3385,11 +3444,10 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
 fun CapaFiesta(fijo: Float? = null) {
     val n = if (fijo != null) 1 else Fiesta.n
     // Básico, sin partículas ni confeti: la lluvia no se lanza (salvo el instante quieto de las capturas).
-    if (n == 0 || (fijo == null && (!Repo.config.animaciones || Estilo.tema.sinDiseno))) return
+    if (n == 0 || (fijo == null && (n == Fiesta.visto || !Repo.config.animaciones || Estilo.tema.sinDiseno))) return
     val progreso = remember(n) { androidx.compose.animation.core.Animatable(fijo ?: 0f) }
-    var activa by remember(n) { mutableStateOf(true) }
-    LaunchedEffect(n) { if (fijo == null) { progreso.animateTo(1f, tween(1600, easing = LinearEasing)); activa = false } }
-    if (!activa) return
+    androidx.compose.runtime.DisposableEffect(n) { onDispose { if (fijo == null && Fiesta.visto < n) Fiesta.visto = n } }
+    LaunchedEffect(n) { if (fijo == null) { progreso.animateTo(1f, tween(1600, easing = LinearEasing)); Fiesta.visto = n } }
     val tema = Estilo.tema
     val e = MaterialTheme.colorScheme
     val tonos = listOf(e.primary, e.secondary, e.tertiary)

@@ -329,6 +329,8 @@ object IdeasEdo : DisenoIdeas {
         val u = density
         val s = size.minDimension; val c = center
         when (id) {
+            // Un sello redondo de tinta sumi.
+            "hecho" -> { drawCircle(SUMI, s * 0.42f, c); drawCircle(WASHI, s * 0.26f, c, style = Stroke(s * 0.07f)) }
             // El sello: un cuadrado bermellón con su marco blanco adentro.
             "convence" -> { drawRect(BERMELLON, Offset(c.x - s * 0.42f, c.y - s * 0.42f), Size(s * 0.84f, s * 0.84f)); drawRect(WASHI, Offset(c.x - s * 0.24f, c.y - s * 0.24f), Size(s * 0.48f, s * 0.48f), style = Stroke(0.8f * u)) }
             // Un círculo añil con un punto: lo estás pensando.
@@ -623,6 +625,7 @@ object IdeasRenacimiento : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            "hecho" -> selloHecho(SANGUINA, p.color)
             "convence" -> drawPath(Path().apply { moveTo(c.x - s * 0.36f, c.y); lineTo(c.x - s * 0.08f, c.y + s * 0.3f); lineTo(c.x + s * 0.4f, c.y - s * 0.36f) }, SANGUINA, style = Stroke(s * 0.13f, cap = StrokeCap.Round))
             // Un compás de puntas.
             "piensa" -> {
@@ -903,6 +906,8 @@ object IdeasPirata : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // Una moneda de a ocho.
+            "hecho" -> selloHecho(TINTA, p.color)
             // Un ancla.
             "convence" -> {
                 drawCircle(TINTA, s * 0.1f, Offset(c.x, c.y - s * 0.36f), style = Stroke(s * 0.07f))
@@ -1169,6 +1174,8 @@ object IdeasRevolucion : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // La escarapela.
+            "hecho" -> { drawCircle(AZUL, s * 0.44f, c); drawCircle(BLANCO, s * 0.3f, c); drawCircle(ROJO, s * 0.16f, c) }
             // Las tres franjas: azul, blanco y rojo.
             "convence" -> {
                 listOf(AZUL, BLANCO, ROJO).forEachIndexed { i, col -> drawRect(col, Offset(c.x - s * 0.39f + i * s * 0.26f, c.y - s * 0.3f), Size(s * 0.26f, s * 0.6f)) }

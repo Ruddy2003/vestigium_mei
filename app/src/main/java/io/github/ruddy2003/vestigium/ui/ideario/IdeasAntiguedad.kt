@@ -24,6 +24,13 @@ import io.github.ruddy2003.vestigium.ui.LetraExtra
 import io.github.ruddy2003.vestigium.ui.Pagina
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.pantallas.simboloCalificacion
+import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
+import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
+import io.github.ruddy2003.vestigium.ui.muebles.granoMueble
+import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
+import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
+import io.github.ruddy2003.vestigium.ui.muebles.sombraContacto
+import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -320,6 +327,8 @@ object IdeasCueva : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // Cuatro muescas en el hueso: lo contado.
+            "hecho" -> { for (k in -1..1) drawLine(CARBON, Offset(c.x + k * s * 0.2f, c.y - s * 0.34f), Offset(c.x + k * s * 0.2f, c.y + s * 0.34f), s * 0.1f, StrokeCap.Round); drawLine(OCRE, Offset(c.x - s * 0.4f, c.y + s * 0.22f), Offset(c.x + s * 0.4f, c.y - s * 0.22f), s * 0.11f, StrokeCap.Round) }
             // Un punto de ocre con su anillo.
             "convence" -> { drawCircle(OCRE, s * 0.24f, c); drawCircle(OCRE, s * 0.42f, c, style = Stroke(s * 0.1f)) }
             // Tres puntos: lo estás pensando.
@@ -623,6 +632,8 @@ object IdeasRomano : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // El lacre de una tablilla sellada.
+            "hecho" -> selloHecho(LACRE, p.color)
             // Una corona de laurel chica.
             "convence" -> laurel(Offset(c.x, c.y - s * 0.05f), s * 0.36f, LAUREL)
             // Tres interpuntos triangulares, como en las inscripciones.
@@ -669,6 +680,8 @@ object IdeasHeleno : DisenoIdeas {
     private val GUIJARRO = Color(0xFFE9E1CF)
 
     private fun t(c: Color, oscuro: Boolean) = if (oscuro) mezcla(c, Color.Black, 0.32f) else c
+    /** El mueble y sus ánforas (piloto de la luz): de noche, la penumbra de siempre, apenas fría. [t] sigue para lo de adentro. */
+    private fun tm(c: Color, oscuro: Boolean) = if (oscuro) mezcla(c, Color(0xFF0D0C12), 0.32f) else c
 
     override val cols = 3
     override val proporcion = 0.62f
@@ -682,14 +695,16 @@ object IdeasHeleno : DisenoIdeas {
         val w = size.width
         val alto0 = d.corona.bottom; val alto1 = d.base.top
         // El muro: ocre con una franja azul del Egeo abajo y otra púrpura fina.
-        drawRect(Brush.verticalGradient(listOf(t(mezcla(MURO, Color.Black, 0.12f), oscuro), t(MURO, oscuro)), alto0, alto1), Offset(0f, alto0), Size(w, alto1 - alto0))
-        for (k in 0 until 50) mancha(Offset(w * azar(51, k), alto0 + (alto1 - alto0) * azar(52, k)), (6f + 16f * azar(53, k)) * u, Color.Black.copy(alpha = 0.05f))
-        drawRect(t(EGEO, oscuro), Offset(0f, alto1 - 14 * u), Size(w, 14 * u))
-        drawRect(t(PURPURA, oscuro), Offset(0f, alto1 - 17 * u), Size(w, 3 * u))
+        drawRect(Brush.verticalGradient(listOf(tm(mezcla(MURO, SOMBRA_MUEBLE, 0.12f), oscuro), tm(MURO, oscuro)), alto0, alto1), Offset(0f, alto0), Size(w, alto1 - alto0))
+        // El revoque pintado a mano: pinceladas, no manchas con degradado (eran 50 por dibujo).
+        pinceladas(Rect(0f, alto0, w, alto1), tm(mezcla(MURO, SOMBRA_MUEBLE, 0.35f), oscuro), 51, 46, u, 0.08f)
+        pinceladas(Rect(0f, alto0, w, alto1), tm(mezcla(MURO, LUZ_MUEBLE, 0.4f), oscuro), 57, 24, u, 0.07f)
+        drawRect(tm(EGEO, oscuro), Offset(0f, alto1 - 14 * u), Size(w, 14 * u))
+        drawRect(tm(PURPURA, oscuro), Offset(0f, alto1 - 17 * u), Size(w, 3 * u))
         // Las tablas donde descansan las ánforas, bajo cada fila.
         d.filas.dropLast(1).forEach { f ->
-            drawRect(Color.Black.copy(alpha = 0.25f), Offset(0f, f.bottom + 4 * u), Size(w, 3 * u))
-            drawRect(Brush.verticalGradient(listOf(t(mezcla(TABLA, Color.White, 0.15f), oscuro), t(TABLA, oscuro)), f.bottom, f.bottom + 5 * u), Offset(0f, f.bottom), Size(w, 5 * u))
+            drawRect(sombraMueble(0.25f), Offset(0f, f.bottom + 4 * u), Size(w, 3 * u))
+            drawRect(Brush.verticalGradient(listOf(tm(mezcla(TABLA, LUZ_MUEBLE, 0.15f), oscuro), tm(TABLA, oscuro)), f.bottom, f.bottom + 5 * u), Offset(0f, f.bottom), Size(w, 5 * u))
         }
         // Las columnas: a los lados y entre cada par de ánforas.
         val fila0 = d.huecos.take(cols)
@@ -697,62 +712,68 @@ object IdeasHeleno : DisenoIdeas {
         fila0.zipWithNext().forEach { (a, b) -> xs += (a.right + b.left) / 2 }
         xs += (fila0.last().right + w) / 2
         val cw = d.separacion * 0.62f
+        // La sombra de cada columna en el muro, a su derecha: la luz viene de arriba a la izquierda.
+        xs.forEach { x -> drawRect(sombraMueble(0.14f), Offset(x + cw / 2, alto0), Size(cw * 0.55f, alto1 - alto0 - 17 * u)) }
         xs.forEach { x -> columna(x, cw, alto0, alto1, oscuro) }
         // El entablamento: arquitrabe, friso de triglifos y metopas, cornisa y antefijas.
         val ch = d.corona.height
         val arq = Rect(0f, d.corona.bottom - ch * 0.26f, w, d.corona.bottom)
-        drawRect(Brush.verticalGradient(listOf(t(MARMOL, oscuro), t(MARMOL_OSC, oscuro)), arq.top, arq.bottom), arq.topLeft, arq.size)
-        drawLine(t(MARMOL_SOMBRA, oscuro), Offset(0f, arq.top + arq.height * 0.25f), Offset(w, arq.top + arq.height * 0.25f), 0.8f * u)
+        drawRect(Brush.verticalGradient(listOf(tm(MARMOL, oscuro), tm(MARMOL_OSC, oscuro)), arq.top, arq.bottom), arq.topLeft, arq.size)
+        drawLine(tm(MARMOL_SOMBRA, oscuro), Offset(0f, arq.top + arq.height * 0.25f), Offset(w, arq.top + arq.height * 0.25f), 0.8f * u)
         val friso = Rect(0f, arq.top - ch * 0.34f, w, arq.top)
-        drawRect(t(MARMOL, oscuro), friso.topLeft, friso.size)
+        drawRect(tm(MARMOL, oscuro), friso.topLeft, friso.size)
         val n = 9
         for (k in 0 until n) {
             val x = w * k / n
             val tr = Rect(x + w / n * 0.05f, friso.top + 2 * u, x + w / n * 0.38f, friso.bottom - 1 * u)
-            drawRect(t(Color(0xFF263646), oscuro), tr.topLeft, tr.size)
-            for (g in 1..2) drawLine(Color.Black.copy(alpha = 0.5f), Offset(tr.left + tr.width * g / 3, tr.top + 2 * u), Offset(tr.left + tr.width * g / 3, tr.bottom), 1.4f * u)
+            drawRect(tm(Color(0xFF263646), oscuro), tr.topLeft, tr.size)
+            for (g in 1..2) drawLine(sombraMueble(0.5f), Offset(tr.left + tr.width * g / 3, tr.top + 2 * u), Offset(tr.left + tr.width * g / 3, tr.bottom), 1.4f * u)
             // En la metopa, un disco de terracota.
-            drawCircle(t(TERRACOTA, oscuro).copy(alpha = 0.8f), friso.height * 0.22f, Offset(x + w / n * 0.7f, friso.center.y))
+            drawCircle(tm(TERRACOTA, oscuro).copy(alpha = 0.8f), friso.height * 0.22f, Offset(x + w / n * 0.7f, friso.center.y))
         }
         val cornisa = Rect(-4 * u, friso.top - ch * 0.14f, w + 4 * u, friso.top)
-        drawRect(Color.Black.copy(alpha = 0.25f), Offset(0f, cornisa.bottom), Size(w, 2.5f * u))
-        drawRect(Brush.verticalGradient(listOf(t(MARMOL, oscuro), t(MARMOL_SOMBRA, oscuro)), cornisa.top, cornisa.bottom), cornisa.topLeft, cornisa.size)
+        drawRect(sombraMueble(0.25f), Offset(0f, cornisa.bottom), Size(w, 2.5f * u))
+        drawRect(Brush.verticalGradient(listOf(tm(MARMOL, oscuro), tm(MARMOL_SOMBRA, oscuro)), cornisa.top, cornisa.bottom), cornisa.topLeft, cornisa.size)
         // La greca pintada en la cornisa.
-        greca(Rect(0f, cornisa.top + 1.5f * u, w, cornisa.bottom - 1.5f * u), t(TERRACOTA, oscuro), u)
+        greca(Rect(0f, cornisa.top + 1.5f * u, w, cornisa.bottom - 1.5f * u), tm(TERRACOTA, oscuro), u)
         // Antefijas: palmetas de terracota sobre el borde.
         val ant = (w / (26 * u)).toInt()
         for (k in 0 until ant) {
             val o = Offset(w * (k + 0.5f) / ant, cornisa.top)
             for (j in -2..2) {
                 val a = Math.toRadians(-90.0 + j * 26.0)
-                drawLine(t(TERRACOTA, oscuro), o, Offset(o.x + ch * 0.14f * kotlin.math.cos(a).toFloat(), o.y + ch * 0.14f * kotlin.math.sin(a).toFloat()), 1.6f * u, StrokeCap.Round)
+                drawLine(tm(TERRACOTA, oscuro), o, Offset(o.x + ch * 0.14f * kotlin.math.cos(a).toFloat(), o.y + ch * 0.14f * kotlin.math.sin(a).toFloat()), 1.6f * u, StrokeCap.Round)
             }
         }
         // El estilóbato: tres escalones de mármol.
         for (k in 0 until 3) {
             val y = d.base.top + d.base.height * k / 3f
             val r = Rect(-k * 6 * u, y, w + k * 6 * u, y + d.base.height / 3f)
-            drawRect(Brush.verticalGradient(listOf(t(MARMOL, oscuro), t(MARMOL_OSC, oscuro)), r.top, r.bottom), r.topLeft, r.size)
-            drawLine(t(MARMOL_SOMBRA, oscuro), Offset(r.left, r.bottom), Offset(r.right, r.bottom), 1f * u)
-            drawLine(Color.White.copy(alpha = 0.5f), Offset(r.left, r.top + 0.5f * u), Offset(r.right, r.top + 0.5f * u), 0.8f * u)
+            drawRect(Brush.verticalGradient(listOf(tm(MARMOL, oscuro), tm(MARMOL_OSC, oscuro)), r.top, r.bottom), r.topLeft, r.size)
+            drawLine(tm(MARMOL_SOMBRA, oscuro), Offset(r.left, r.bottom), Offset(r.right, r.bottom), 1f * u)
+            drawLine(luzMueble(0.5f), Offset(r.left, r.top + 0.5f * u), Offset(r.right, r.top + 0.5f * u), 0.8f * u)
         }
         if (d.mas > 0) placa.let { pl ->
             val r = Rect(d.base.left + d.base.width * pl.left, d.base.top + d.base.height * pl.top, d.base.left + d.base.width * pl.right, d.base.top + d.base.height * pl.bottom)
-            drawRect(t(MARMOL_OSC, oscuro), r.topLeft, r.size)
-            drawRect(t(MARMOL_SOMBRA, oscuro), r.topLeft, r.size, style = Stroke(0.8f * u))
+            drawRect(tm(MARMOL_OSC, oscuro), r.topLeft, r.size)
+            drawRect(tm(MARMOL_SOMBRA, oscuro), r.topLeft, r.size, style = Stroke(0.8f * u))
         }
+        // El grano de papel, al final (regla 7).
+        granoMueble(Rect(0f, 0f, w, size.height), oscuro)
     }
 
     /** Una columna dórica: el fuste acanalado de mármol, el equino y el ábaco. */
     private fun DrawScope.columna(x: Float, cw: Float, y0: Float, y1: Float, oscuro: Boolean) {
         val u = density
         val capitel = cw * 0.5f
-        drawRect(Brush.horizontalGradient(listOf(t(MARMOL_SOMBRA, oscuro), t(MARMOL, oscuro), t(MARMOL_OSC, oscuro), t(MARMOL_SOMBRA, oscuro)), x - cw / 2, x + cw / 2),
-            Offset(x - cw / 2, y0 + capitel), Size(cw, y1 - y0 - capitel))
-        for (k in 1 until 5) drawLine(t(MARMOL_SOMBRA, oscuro).copy(alpha = 0.6f), Offset(x - cw / 2 + cw * k / 5, y0 + capitel), Offset(x - cw / 2 + cw * k / 5, y1), 0.7f * u)
-        drawPath(Path().apply { moveTo(x - cw / 2, y0 + capitel); lineTo(x - cw * 0.8f, y0 + capitel * 0.35f); lineTo(x + cw * 0.8f, y0 + capitel * 0.35f); lineTo(x + cw / 2, y0 + capitel); close() }, t(MARMOL_OSC, oscuro))
-        drawRect(t(MARMOL, oscuro), Offset(x - cw * 0.9f, y0), Size(cw * 1.8f, capitel * 0.35f))
-        drawLine(t(MARMOL_SOMBRA, oscuro), Offset(x - cw * 0.9f, y0 + capitel * 0.35f), Offset(x + cw * 0.9f, y0 + capitel * 0.35f), 0.8f * u)
+        // El fuste por planos: la cara de la luz, crema; la de la sombra, a la derecha, con su color.
+        drawRect(tm(MARMOL, oscuro), Offset(x - cw / 2, y0 + capitel), Size(cw, y1 - y0 - capitel))
+        drawRect(luzMueble(if (oscuro) 0.08f else 0.4f), Offset(x - cw / 2, y0 + capitel), Size(cw * 0.32f, y1 - y0 - capitel))
+        drawRect(sombraMueble(0.26f), Offset(x + cw * 0.12f, y0 + capitel), Size(cw * 0.38f, y1 - y0 - capitel))
+        for (k in 1 until 5) drawLine(tm(MARMOL_SOMBRA, oscuro).copy(alpha = 0.6f), Offset(x - cw / 2 + cw * k / 5, y0 + capitel), Offset(x - cw / 2 + cw * k / 5, y1), 0.7f * u)
+        drawPath(Path().apply { moveTo(x - cw / 2, y0 + capitel); lineTo(x - cw * 0.8f, y0 + capitel * 0.35f); lineTo(x + cw * 0.8f, y0 + capitel * 0.35f); lineTo(x + cw / 2, y0 + capitel); close() }, tm(MARMOL_OSC, oscuro))
+        drawRect(tm(MARMOL, oscuro), Offset(x - cw * 0.9f, y0), Size(cw * 1.8f, capitel * 0.35f))
+        drawLine(tm(MARMOL_SOMBRA, oscuro), Offset(x - cw * 0.9f, y0 + capitel * 0.35f), Offset(x + cw * 0.9f, y0 + capitel * 0.35f), 0.8f * u)
     }
 
     /** Una greca (meandro) que corre a lo largo de [r]. */
@@ -803,45 +824,47 @@ object IdeasHeleno : DisenoIdeas {
         if (c.vacio) {
             // Un lugar libre: un kílix (la copa de beber) sobre la tabla.
             val y = h * 0.93f
-            drawPath(Path().apply { moveTo(w * 0.25f, y - h * 0.08f); quadraticTo(w * 0.5f, y + h * 0.02f, w * 0.75f, y - h * 0.08f); close() }, t(TERRACOTA, oscuro))
-            drawLine(t(BARNIZ, oscuro), Offset(w * 0.25f, y - h * 0.08f), Offset(w * 0.75f, y - h * 0.08f), 2 * u)
-            drawRect(t(TERRA_OSC, oscuro), Offset(w * 0.47f, y - h * 0.03f), Size(w * 0.06f, h * 0.04f))
-            drawOval(t(TERRA_OSC, oscuro), Offset(w * 0.4f, y), Size(w * 0.2f, h * 0.02f))
+            drawPath(Path().apply { moveTo(w * 0.25f, y - h * 0.08f); quadraticTo(w * 0.5f, y + h * 0.02f, w * 0.75f, y - h * 0.08f); close() }, tm(TERRACOTA, oscuro))
+            drawLine(tm(BARNIZ, oscuro), Offset(w * 0.25f, y - h * 0.08f), Offset(w * 0.75f, y - h * 0.08f), 2 * u)
+            drawRect(tm(TERRA_OSC, oscuro), Offset(w * 0.47f, y - h * 0.03f), Size(w * 0.06f, h * 0.04f))
+            drawOval(tm(TERRA_OSC, oscuro), Offset(w * 0.4f, y), Size(w * 0.2f, h * 0.02f))
             return
         }
         // Los óstraka amontonados al pie, más cuanto más llena.
         val k = c.n.coerceIn(0, 6)
         for (i in 0 until k) tiesto(Offset(w * (0.18f + 0.64f * azar(c.semilla, i + 30)), h * (0.93f + 0.04f * azar(c.semilla, i + 40))), w * 0.09f, c.semilla + i,
-            t(mezcla(TERRACOTA, TERRA_LUZ, azar(c.semilla, i)), oscuro))
+            tm(mezcla(TERRACOTA, TERRA_LUZ, azar(c.semilla, i)), oscuro))
         // El aro donde se para.
-        drawOval(t(Color(0xFF5E4630), oscuro), Offset(w * 0.36f, h * 0.88f), Size(w * 0.28f, h * 0.05f), style = Stroke(2.2f * u))
+        sombraContacto(Offset(w * 0.56f, h * 0.915f), w * 0.5f, h * 0.06f, 0.3f)
+        drawOval(tm(Color(0xFF5E4630), oscuro), Offset(w * 0.36f, h * 0.88f), Size(w * 0.28f, h * 0.05f), style = Stroke(2.2f * u))
         val forma = anfora(w, h)
-        drawPath(forma, Brush.horizontalGradient(listOf(t(TERRA_OSC, oscuro), t(TERRACOTA, oscuro), t(TERRA_LUZ, oscuro), t(TERRACOTA, oscuro), t(TERRA_OSC, oscuro)), w * 0.1f, w * 0.9f))
+        // El cuerpo por luz: claro del lado de la ventana, la sombra del otro lado tirando a violeta, no a negro.
+        drawPath(forma, Brush.horizontalGradient(listOf(tm(TERRACOTA, oscuro), tm(TERRA_LUZ, oscuro), tm(TERRACOTA, oscuro), tm(mezcla(TERRA_OSC, SOMBRA_MUEBLE, 0.25f), oscuro)), w * 0.12f, w * 0.88f))
         clipPath(forma) {
             // Barniz negro: el cuello, una banda bajo el hombro y el pie; la greca en el hombro, sobre terracota.
-            drawRect(t(BARNIZ, oscuro), Offset(0f, 0f), Size(w, h * 0.21f))
-            greca(Rect(0f, h * 0.27f, w, h * 0.33f), t(BARNIZ, oscuro), u)
-            drawRect(t(BARNIZ, oscuro), Offset(0f, h * 0.38f), Size(w, h * 0.025f))
-            drawRect(t(BARNIZ, oscuro), Offset(0f, h * 0.71f), Size(w, h * 0.3f))
+            drawRect(tm(BARNIZ, oscuro), Offset(0f, 0f), Size(w, h * 0.21f))
+            greca(Rect(0f, h * 0.27f, w, h * 0.33f), tm(BARNIZ, oscuro), u)
+            drawRect(tm(BARNIZ, oscuro), Offset(0f, h * 0.38f), Size(w, h * 0.025f))
+            drawRect(tm(BARNIZ, oscuro), Offset(0f, h * 0.71f), Size(w, h * 0.3f))
             // Lengüetas en la base del barniz.
-            for (j in 0 until 7) drawLine(t(TERRACOTA, oscuro), Offset(w * (0.2f + 0.1f * j), h * 0.71f), Offset(w * (0.2f + 0.1f * j), h * 0.76f), 1.4f * u)
-            drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color.White.copy(alpha = 0.18f), Color.Transparent), w * 0.4f, w * 0.62f), Offset(w * 0.4f, 0f), Size(w * 0.22f, h))
+            for (j in 0 until 7) drawLine(tm(TERRACOTA, oscuro), Offset(w * (0.2f + 0.1f * j), h * 0.71f), Offset(w * (0.2f + 0.1f * j), h * 0.76f), 1.4f * u)
+            drawRect(Brush.horizontalGradient(listOf(Color.Transparent, luzMueble(0.22f), Color.Transparent), w * 0.28f, w * 0.44f), Offset(w * 0.28f, 0f), Size(w * 0.16f, h))
         }
         // La boca, con su labio.
-        drawOval(t(TERRA_OSC, oscuro), Offset(w * 0.36f, h * 0.045f), Size(w * 0.28f, h * 0.03f))
+        drawOval(tm(TERRA_OSC, oscuro), Offset(w * 0.36f, h * 0.045f), Size(w * 0.28f, h * 0.03f))
         drawOval(Color(0xFF120C08), Offset(w * 0.4f, h * 0.05f), Size(w * 0.2f, h * 0.018f))
         // Las asas, del cuello al hombro.
         listOf(-1f, 1f).forEach { s ->
             val asa = Path().apply { moveTo(w / 2 + s * w * 0.1f, h * 0.1f); cubicTo(w / 2 + s * w * 0.42f, h * 0.08f, w / 2 + s * w * 0.42f, h * 0.24f, w / 2 + s * w * 0.3f, h * 0.3f) }
-            drawPath(asa, t(TERRA_OSC, oscuro), style = Stroke(3.2f * u, cap = StrokeCap.Round))
-            drawPath(asa, t(TERRA_LUZ, oscuro).copy(alpha = 0.6f), style = Stroke(1f * u, cap = StrokeCap.Round))
+            drawPath(asa, tm(TERRA_OSC, oscuro), style = Stroke(3.2f * u, cap = StrokeCap.Round))
+            drawPath(asa, tm(TERRA_LUZ, oscuro).copy(alpha = 0.6f), style = Stroke(1f * u, cap = StrokeCap.Round))
         }
         // Al abrirse, los óstraka asoman por la boca.
-        if (ab > 0f) for (i in 0 until 3) tiesto(Offset(w * (0.42f + 0.08f * i), h * (0.05f - 0.08f * ab) + i * 2 * u), w * 0.07f, c.semilla + 50 + i, t(TERRA_LUZ, oscuro))
+        if (ab > 0f) for (i in 0 until 3) tiesto(Offset(w * (0.42f + 0.08f * i), h * (0.05f - 0.08f * ab) + i * 2 * u), w * 0.07f, c.semilla + 50 + i, tm(TERRA_LUZ, oscuro))
         // El panel del vientre donde va el nombre, enmarcado con un filete de barniz.
         val r = Rect(w * rotulo.left, h * rotulo.top, w * rotulo.right, h * rotulo.bottom)
-        drawLine(t(BARNIZ, oscuro), Offset(r.left, r.top), Offset(r.right, r.top), 1f * u)
-        drawLine(t(BARNIZ, oscuro), Offset(r.left, r.bottom), Offset(r.right, r.bottom), 1f * u)
+        drawLine(tm(BARNIZ, oscuro), Offset(r.left, r.top), Offset(r.right, r.top), 1f * u)
+        drawLine(tm(BARNIZ, oscuro), Offset(r.left, r.bottom), Offset(r.right, r.bottom), 1f * u)
     }
 
     override val rotulo = Rect(0.16f, 0.43f, 0.84f, 0.66f)
@@ -932,6 +955,8 @@ object IdeasHeleno : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // Un óstrakon marcado.
+            "hecho" -> selloHecho(TERRA_OSC, p.color, cuadrado = true)
             "convence" -> { drawCircle(BARNIZ, s * 0.2f, c); drawCircle(BARNIZ, s * 0.4f, c, style = Stroke(s * 0.1f)) }
             // Un gancho de greca: lo estás pensando, todavía da vueltas.
             "piensa" -> drawPath(Path().apply {
@@ -1231,6 +1256,11 @@ object IdeasEgipto : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // El pilar djed: lo que se mantiene firme.
+            "hecho" -> {
+                drawRect(LAPIS, Offset(c.x - s * 0.1f, c.y - s * 0.24f), Size(s * 0.2f, s * 0.66f))
+                for (k in 0..3) drawRect(LAPIS, Offset(c.x - s * 0.3f, c.y - s * 0.44f + k * s * 0.1f), Size(s * 0.6f, s * 0.06f))
+            }
             // El ankh: la vida.
             "convence" -> {
                 drawOval(LAPIS, Offset(c.x - s * 0.18f, c.y - s * 0.46f), Size(s * 0.36f, s * 0.4f), style = Stroke(s * 0.1f))
@@ -1483,6 +1513,8 @@ object IdeasMeso : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // La barra y el punto: un número asentado en el códice.
+            "hecho" -> { drawRoundRect(CINABRIO, Offset(c.x - s * 0.4f, c.y + s * 0.06f), Size(s * 0.8f, s * 0.2f), androidx.compose.ui.geometry.CornerRadius(s * 0.06f)); drawCircle(CINABRIO, s * 0.14f, Offset(c.x, c.y - s * 0.22f)) }
             // Una cuenta de jade.
             "convence" -> { drawCircle(JADE, s * 0.38f, c); drawCircle(Color.White.copy(alpha = 0.4f), s * 0.12f, Offset(c.x - s * 0.12f, c.y - s * 0.12f)) }
             // La voluta de la palabra: lo que se dice y se piensa.

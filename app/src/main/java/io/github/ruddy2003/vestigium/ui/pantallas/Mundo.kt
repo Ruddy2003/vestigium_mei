@@ -829,7 +829,7 @@ fun PantallaMundo(nav: Nav) {
     val total = rememberResumen("todo")
     val sitios = remember { Mundo.sitios(ctx) }
 
-    Hoja("Mundo", nav.atras, "Ciudades y países donde has estado, sacados de tus ubicaciones y de los que añadas a mano. Todo se calcula en el teléfono, sin internet.") {
+    Hoja("Mundo", nav.atras, "Donde has estado, de tus ubicaciones y de lo que añadas. Sin internet.") {
         val t = total
         if (t == null) { Ayuda("Calculando dónde has estado…", Modifier.padding(top = 12.dp)); return@Hoja }
         val paises = t.paises.mapNotNull { Mundo.pais(ctx, it.clave) }
@@ -915,7 +915,7 @@ fun PantallaMundo(nav: Nav) {
             }
         }
 
-        Seccion("Lugares de tus fotos", "Casi todas las fotos de la cámara guardan dónde y cuándo se tomaron. Con eso se llenan tus viajes de antes de usar la app. De cada foto se guarda solo el lugar y la hora; la imagen nunca se copia.", numero = 4, plegable = true) {
+        Seccion("Lugares de tus fotos", "Con la fecha y el lugar de tus fotos se llenan tus viajes de antes. La imagen nunca se copia.", numero = 4, plegable = true) {
             FotosConLugar()
         }
 
@@ -1219,7 +1219,7 @@ fun PantallaRascar(nav: Nav) {
         Surface(Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface, tonalElevation = 2.dp) {
             Column(Modifier.padding(16.dp)) {
                 if (p == null) {
-                    Ayuda("Toca un país para verlo y rascarlo. Los que salen de tus ubicaciones necesitan al menos media hora ahí, para que no cuenten los que solo sobrevolaste. Dos toques: todo el mundo.")
+                    Ayuda("Toca un país para verlo y rascarlo; dos toques, todo el mundo. Cuenta con media hora ahí, como mínimo.")
                     val mios = r?.paises.orEmpty().mapNotNull { Mundo.pais(ctx, it.clave) }
                     if (mios.isNotEmpty()) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         mios.forEach { m -> Ficha("${m.bandera} ${m.nombre}", false) { elegido = m; centrar(m, max(zoom, 3f)) } }

@@ -112,8 +112,7 @@ fun PantallaExplorar(nav: Nav) {
     // Por semana, la ficha de una variable es por día: la pareja tocada se abre abajo, en «Cruzar dos variables», por semanas (H-9-40).
     var abrirCruce by remember { mutableStateOf(0) }
 
-    Hoja("Análisis", subtitulo = "Qué se mueve con qué: relaciones, herramientas y experimentos. Para modelos completos, exporta y abre vestigium.R.",
-        buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
+    Hoja("Análisis", buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
         // Arriba, tu vida vista desde lejos (9 nov 2026, antes en Vida): la semana, el mes, el año y el dinero.
         Seccion("Tu vida vista desde lejos") { VidaDesdeLejos(nav) }
         // Luego los resultados (N-19): tus experimentos y las relaciones más marcadas.
@@ -121,42 +120,48 @@ fun PantallaExplorar(nav: Nav) {
             Tarjetita("Experimentos personales", "${Repo.experimentos.count { io.github.ruddy2003.vestigium.data.Experimentos.enCurso(it) }}", "en curso · prueba algo y mide si sirve", "experimentos"),
         )) { nav.ir(it) }
         val nDias = Repo.dias.size
-        Ayuda("${porNumero(nDias, "1 día", "$nDias días")} con diario · ${Repo.momentos.count { it.tipo != "muestreo" && !it.privado }} registros propios · ${Repo.momentos.count { it.tipo == "muestreo" }} avisos respondidos. " +
-            // 90 días bastan para una relación moderada en una pareja que ya sospechabas; al revisar todas a la vez, solo para las fuertes (P-28).
-            if (nDias >= 90) "Con 90 días o más ya se puede detectar una relación moderada en una pareja concreta; en esta lista, que revisa todas a la vez, solo las fuertes." else "${porNumero(90 - nDias, "Falta 1 día", "Faltan ${90 - nDias} días")} para tener potencia suficiente; antes de eso, todo es pista, no evidencia.",
-            Modifier.padding(top = 10.dp))
+        // Una línea con lo que hay; lo que explica cuánto alcanza para creerle va en el «?» de las relaciones (13 nov 2026).
+        Ayuda("${porNumero(nDias, "1 día", "$nDias días")} · ${Repo.momentos.count { it.tipo != "muestreo" && !it.privado }} registros · ${Repo.momentos.count { it.tipo == "muestreo" }} avisos" +
+            if (nDias < 90) " · ${porNumero(90 - nDias, "falta 1 día", "faltan ${90 - nDias} días")} para 90" else "", Modifier.padding(top = 10.dp))
         Row(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("por día", !porSemana) { porSemana = false }
             Ficha("por semana", porSemana) { porSemana = true }
         }
-        Ayuda(if (porSemana) "Cada semana es el promedio de sus días (en lo que es sí/no, la proporción de días). Sirve para lo que pasa pocas veces." else
-            "Cada día contra cada día. ${vars.size} variables: tus personas, temas, lugares, apps, categorías de gasto, artistas, obras, ciudades, nutrientes, cuestionarios y etapas de vida, además de lo de siempre.",
-            Modifier.padding(top = 4.dp))
 
-        Seccion("Las relaciones más marcadas") {
+        val m = (if (porSemana) semanales else mejores)?.get(sinTendencia)
+        val explicaRelaciones = buildString {
+            append("Cada recuadro es una pareja de cosas que suben o bajan juntas en tus ")
+            append(if (porSemana) "semanas: cada semana es el promedio de sus días (en lo que es sí/no, la proporción de días); sirve para lo que pasa pocas veces. "
+                else "días, cada día contra cada día. ")
+            append("Entran ${vars.size} variables: tus personas, temas, lugares, apps, categorías de gasto, artistas, obras, ciudades, nutrientes, cuestionarios y etapas de vida, además de lo de siempre. ")
+            append("Más gruesa la unión, más fuerte la relación; punteada, podría ser azar. ")
+            append("Al revisar tantas parejas a la vez, algunas salen por puro azar: eso se corrige, y «se sostienen» son las que quedan después. ")
+            // 90 días bastan para una relación moderada en una pareja que ya sospechabas; al revisar todas a la vez, solo para las fuertes (P-28).
+            append("Con 90 días o más ya se puede detectar una relación moderada en una pareja concreta; en esta lista, que revisa todas a la vez, solo las fuertes. Antes de los 90, todo es pista, no evidencia. ")
+            if (m != null && m.lentas.isNotEmpty()) append("Sin tendencia no entran ${m.lentas.joinToString(", ") { "«" + it.nombre.lowercase() + "»" }}: casi solo cambian con las semanas. ")
+            // Las etapas, cuestionarios y la brújula son escalones: casi siempre caen aquí (H-5-14).
+            if (m != null && m.lentas.any { it.id.startsWith("vida_") || it.id.startsWith("pol_") || it.id.startsWith("esc_") })
+                append("Las etapas de vida, los cuestionarios y la brújula cambian a saltos: para ellas mira «Antes y después», abajo, o apaga «Quitar tendencias» sabiendo que así las tendencias se cuelan. ")
+            append("Dos cosas que se mueven juntas no prueban que una cause la otra: para eso están los experimentos. Para modelos completos, exporta y abre vestigium.R.")
+        }
+        Seccion("Las relaciones más marcadas", explica = explicaRelaciones) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 FOCOS.forEach { (id, n) -> Ficha(n, foco == id) { foco = id } }
             }
-            Interruptor("Quitar tendencias", sinTendencia, "Compara cada día con sus ~3 semanas alrededor. Así, dos cosas que solo cambiaron con el tiempo (los días se acortan mientras bajas de peso) dejan de parecer relacionadas. " +
+            Interruptor("Quitar tendencias", sinTendencia, "Cada día contra sus ~3 semanas alrededor.",
+                explica = "Compara cada día con sus ~3 semanas alrededor. Así, dos cosas que solo cambiaron con el tiempo (los días se acortan mientras bajas de peso) dejan de parecer relacionadas. " +
                 "No quita el ritmo de la semana: dos cosas que cambian juntas el fin de semana siguen saliendo juntas (en R, vm_relaciones(sin_semana = TRUE) lo quita).") { sinTendencia = it }
-            Interruptor("Mostrar también las obvias", verObvias, "Pares de la misma fuente o calculados uno del otro: calorías y proteína, eventos y minutos de agenda, pasos y minutos a pie.") { verObvias = it }
-            val m = (if (porSemana) semanales else mejores)?.get(sinTendencia)
+            Interruptor("Mostrar también las obvias", verObvias, "Calorías y proteína, pasos y minutos a pie…",
+                explica = "Pares de la misma fuente o calculados uno del otro: calorías y proteína, eventos y minutos de agenda, pasos y minutos a pie.") { verObvias = it }
             if (m == null) Ayuda("Calculando…")
             else if (m.lista.isEmpty()) Vacio("Aparecerán cuando tengas al menos 14 días con datos en común.")
             else {
                 val lista = remember(m, verObvias, foco) { m.lista.filter { (verObvias || !it.obvia) && enFoco(foco, it) } }
                 val q = { c: Correlacion -> if (verObvias) c.qConObvias else c.q }
                 val firmes = m.lista.count { (verObvias || !it.obvia) && q(it) < 0.10 }
-                Ayuda(buildString {
-                    append("Revisé ${if (verObvias) m.lista.size else m.probadas} combinaciones")
-                    if (!verObvias && m.obvias > 0) append(" (dejé fuera ${m.obvias} obvias)")
-                    append(". Al revisar tantas, algunas salen por puro azar; ya corregido eso, $firmes se sostienen. ")
-                    if (m.lentas.isNotEmpty()) append("Sin tendencia no entran ${m.lentas.joinToString(", ") { "«" + it.nombre.lowercase() + "»" }}: casi solo cambian con las semanas. ")
-                    // Las etapas, cuestionarios y la brújula son escalones: casi siempre caen aquí (H-5-14).
-                    if (m.lentas.any { it.id.startsWith("vida_") || it.id.startsWith("pol_") || it.id.startsWith("esc_") })
-                        append("Las etapas de vida, los cuestionarios y la brújula cambian a saltos: para ellas mira «Antes y después», abajo, o apaga «Quitar tendencias» sabiendo que así las tendencias se cuelan. ")
-                    if (firmes == 0) append("Con pocos días es normal que nada se sostenga; las de abajo son pistas, no hallazgos.")
-                })
+                // Lo que explica el número (el azar, las que no entran, las etapas) está en el «?» de la sección.
+                Ayuda("Revisé ${if (verObvias) m.lista.size else m.probadas} combinaciones" + (if (!verObvias && m.obvias > 0) " (sin ${m.obvias} obvias)" else "") +
+                    "; $firmes se sostienen." + if (firmes == 0) " Las de abajo son pistas, no hallazgos." else "")
                 val grupos = remember(lista) { agrupar(lista, 15) }
                 if (lista.isEmpty()) Vacio("Nada en este filtro todavía.")
                 else {
@@ -166,7 +171,7 @@ fun PantallaExplorar(nav: Nav) {
                         Text("● suben juntas", style = MaterialTheme.typography.labelSmall, color = io.github.ruddy2003.vestigium.ui.Tonos.ingreso(oscuro))
                         Text("● una sube, la otra baja", style = MaterialTheme.typography.labelSmall, color = io.github.ruddy2003.vestigium.ui.Tonos.gasto(oscuro))
                     }
-                    Ayuda("Más gruesa la unión, más fuerte la relación; punteada, podría ser azar.", Modifier.padding(bottom = 8.dp))
+                    androidx.compose.foundation.layout.Spacer(Modifier.padding(bottom = 8.dp))
                     var todas by remember { mutableStateOf(false) }
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         (if (todas) grupos else grupos.take(5)).forEach { (c, parecidas) ->
@@ -195,13 +200,16 @@ fun PantallaExplorar(nav: Nav) {
             }
         }
 
-        Seccion("Herramientas", "Análisis más finos de tus datos.", latin = "INSTRVMENTA") {
+        Seccion("Herramientas", latin = "INSTRVMENTA") {
             androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 HERRAMIENTAS.forEach { (id, n, _) -> Ficha(n, false) { Herramienta.actual = id; nav.ir("analisis") } }
             }
         }
 
-        Seccion("Cruzar dos variables", plegable = true, abrir = abrirCruce) {
+        Seccion("Cruzar dos variables", plegable = true, abrir = abrirCruce,
+            explica = "Pearson r dice si las dos suben o bajan juntas en línea recta, de −1 a 1; Spearman ρ, si suben o bajan juntas aunque no sea en línea recta. " +
+                "«r sin tendencia» es la misma relación quitando lo que solo cambió con el tiempo. El intervalo de 95% es el rango de relaciones compatibles con tus datos: si incluye el cero, podría ser azar. " +
+                "Hacen falta al menos 3 días con ambos datos para dibujar algo, y unos 30 para empezar a creerle. Dos cosas que se mueven juntas no prueban que una cause la otra: para eso están los experimentos.") {
             Tarjeta {
                 val nx = vars.firstOrNull { it.id == x }?.nombre ?: x
                 val ny = vars.firstOrNull { it.id == y }?.nombre ?: y
@@ -227,7 +235,7 @@ fun PantallaExplorar(nav: Nav) {
                 }
                 val ps = cruce.ps
                 if (x == y && !desfase) Ayuda("Elige dos variables distintas.")
-                else if (ps.size < 3) Vacio("Hay ${ps.size} ${if (porSemana) "semanas" else "días"} con ambos datos. Hacen falta al menos 3 para dibujar algo, y unos 30 para empezar a creerle.")
+                else if (ps.size < 3) Vacio("${ps.size} ${if (porSemana) "semanas" else "días"} con ambos datos; hacen falta al menos 3.")
                 else {
                     val r = cruce.r; val rho = cruce.rho; val ic = cruce.ic; val nEf = cruce.nEf; val rSin = cruce.rSin
                     Dispersion(ps, nx, ny)
@@ -244,19 +252,18 @@ fun PantallaExplorar(nav: Nav) {
                         if (nEf != null && nEf < ps.size * 0.8) append("Como cada ${if (porSemana) "semana" else "día"} se parece al anterior, cuentan como unos ${nEf.toInt()} independientes. ")
                         if (rSin != null && abs(rSin - r) >= 0.2) append("Sin tendencia la relación es ${"%+.2f".format(rSin)}: parte de lo que se ve es que las dos cambiaron con el tiempo. ")
                         if (ps.size < 30) append("Solo son ${ps.size} ${if (porSemana) "semanas" else "días"}: tómalo como pista.")
-                        append(" Recuerda que dos cosas que se mueven juntas no prueban que una cause la otra; para eso están los experimentos.")
                     }
                     Text(txt, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 10.dp))
                 }
             }
         }
 
-        Seccion("Cobertura", "Últimas 16 semanas. Más intenso = mejor valencia. Hueco = sin registro.", plegable = true) {
+        Seccion("Cobertura", "Últimas 16 semanas.", plegable = true, explica = "Cada cuadro es un día de las últimas 16 semanas. Más intenso, mejor valencia; un hueco, un día sin registro.") {
             Tarjeta { Cobertura() }
             BotonTexto(onClick = { nav.ir("cobertura") }) { Text("cobertura de cada variable: ¿ya hay 30 días? ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }
 
-        Seccion("¿Qué tan bien te conoces?", "Tu predicción de cada noche contra lo que pasó al día siguiente.", plegable = true) {
+        Seccion("¿Qué tan bien te conoces?", "Tu predicción de la noche contra el día siguiente.", plegable = true) {
             val pares = Repo.dias.values.mapNotNull { d -> val p = d.prediccion_manana ?: return@mapNotNull null; val real = Repo.dias[Fechas.sumar(d.fecha, 1)]?.valencia ?: return@mapNotNull null; p to real }
             if (pares.size < 5) Vacio("Llevas ${porNumero(pares.size, "1 predicción", "${pares.size} predicciones")} con resultado. Con 5 o más aparece tu calibración.")
             else Tarjeta {
@@ -269,7 +276,8 @@ fun PantallaExplorar(nav: Nav) {
             }
         }
 
-        Seccion("A qué hora aparecen tus emociones", "Lo que sentías en cada registro de ánimo, por hora del día (las seis más frecuentes).", plegable = true) {
+        Seccion("A qué hora aparecen tus emociones", "Las seis más frecuentes, por hora.", plegable = true,
+            explica = "Lo que sentías en cada registro de ánimo, por hora del día: las seis emociones que más anotaste. Cada barra es una hora, de izquierda a derecha de 0:00 a 23:00.") {
             val regs = Repo.momentos.filter { Catalogo.esRegistro(it) }
             val conteo = regs.flatMap { Catalogo.emocionesDe(it) }.filter { it != Catalogo.OTRO && it != Catalogo.NO_SE }.groupingBy { it }.eachCount()
             val top = conteo.entries.sortedByDescending { it.value }.take(6).map { it.key }
@@ -283,7 +291,6 @@ fun PantallaExplorar(nav: Nav) {
                         Horas(porHora)
                     }
                 }
-                Ayuda("De izquierda a derecha: de 0:00 a 23:00.", Modifier.padding(top = 6.dp))
             }
         }
 
@@ -489,7 +496,8 @@ private fun EtapasDeVida(panel: Map<String, Map<String, Double?>>) {
     if (cambios.isEmpty() || panel.isEmpty()) return
     val claves = listOf("valencia" to "ánimo", "sueno_horas" to "sueño (h)", "pantalla_min" to "pantalla (min)", "pasos" to "pasos",
         "gasto_total" to "gasto", "personas" to "personas mencionadas", "palabras" to "palabras escritas")
-    Seccion("Antes y después", "Cada cambio que guardaste en «Conocerte»: los 60 días anteriores contra los 60 siguientes. Muchas cosas cambian a la vez; tómalo como una pista.", plegable = true) {
+    Seccion("Antes y después", "60 días antes y 60 después de cada cambio.", plegable = true,
+        explica = "Cada cambio que guardaste en «Conocerte»: los 60 días anteriores contra los 60 siguientes. Muchas cosas cambian a la vez; tómalo como una pista.") {
         cambios.forEach { (fecha, lista) ->
             Tarjeta(Modifier.padding(bottom = 8.dp)) {
                 Text("${Fechas.corto(fecha)} ${fecha.take(4)} · ${lista.joinToString(", ") { it.campo }}", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
@@ -518,9 +526,10 @@ private fun fmtCorto(v: Double) = if (kotlin.math.abs(v) >= 100) "%,.0f".format(
 private fun ConQuien() {
     val mu = Repo.momentos.filter { it.esAnimo && it.valencia != null && it.con_quien.isNotEmpty() }
     if (mu.isEmpty()) return
-    Seccion("Ánimo según con quién estás", "Promedio de la valencia en los avisos de ánimo, según con quién dijiste que estabas.", plegable = true) {
+    Seccion("Ánimo según con quién estás", "Tu ánimo en los avisos, según la compañía.", plegable = true,
+        explica = "Promedio de la valencia en los avisos de ánimo, según con quién dijiste que estabas. La raya es tu promedio general. Con 10 avisos con compañía o más empieza a verse algo; con 30, ya es una pista. Cuidado: con quién estás también depende de la hora y el lugar.") {
         Tarjeta {
-            if (mu.size < 10) Ayuda("Llevas ${porNumero(mu.size, "1 aviso", "${mu.size} avisos")} con compañía. Con 10 o más empieza a verse algo; con 30, ya es una pista.")
+            if (mu.size < 10) Ayuda("${porNumero(mu.size, "1 aviso", "${mu.size} avisos")} con compañía; con 10 empieza a verse algo.")
             val general = mu.mapNotNull { it.valencia }.average()
             val cs = MaterialTheme.colorScheme
             val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
@@ -541,7 +550,7 @@ private fun ConQuien() {
                     Text("%.1f · %d".format(m, l.size), style = cifras, modifier = Modifier.weight(0.2f).padding(start = 8.dp))
                 }
             }
-            Ayuda("La raya es tu promedio general (%.1f). Cuidado: con quién estás también depende de la hora y el lugar.".format(general), Modifier.padding(top = 6.dp))
+            Ayuda("La raya es tu promedio general (%.1f).".format(general), Modifier.padding(top = 6.dp))
         }
     }
 }

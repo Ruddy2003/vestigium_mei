@@ -90,7 +90,7 @@ fun VidaDesdeLejos(nav: Nav) {
  */
 @Composable
 fun PantallaVida(nav: Nav) {
-    Hoja("Vida", subtitulo = "Tu gente, tu año, tus logros, tus mapas, tus obras y tus otras vidas.", buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
+    Hoja("Vida", buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
         Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             RecuadroSocial(nav)
             // Lo de esta semana, arriba (N-20).

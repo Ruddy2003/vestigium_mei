@@ -77,6 +77,7 @@ class MosaicoSuplemento : TileService() {
 
     override fun onClick() {
         super.onClick()
+        runCatching { io.github.ruddy2003.vestigium.data.Repo.init(this); io.github.ruddy2003.vestigium.ui.RotacionTema.revisarDesde(this) }
         val l = runCatching {
             val todos = tomables()
             val faltan = io.github.ruddy2003.vestigium.data.Suplementos.registrarFaltantes()

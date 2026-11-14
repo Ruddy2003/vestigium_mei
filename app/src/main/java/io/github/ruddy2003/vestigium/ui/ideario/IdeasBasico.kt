@@ -112,6 +112,7 @@ object IdeasBasico : DisenoIdeas {
         val s = size.minDimension; val c = center
         val trazo = Stroke(s * 0.12f, cap = StrokeCap.Round, join = StrokeJoin.Round)
         when (id) {
+            "hecho" -> selloHecho(p.acento, p.color)
             "convence" -> drawPath(Path().apply { moveTo(c.x - s * 0.32f, c.y); lineTo(c.x - s * 0.08f, c.y + s * 0.24f); lineTo(c.x + s * 0.34f, c.y - s * 0.26f) }, p.acento, style = trazo)
             "piensa" -> for (k in -1..1) drawCircle(p.acento, s * 0.08f, Offset(c.x + k * s * 0.28f, c.y))
             "duda" -> drawCircle(p.tenue, s * 0.3f, c, style = Stroke(s * 0.1f))

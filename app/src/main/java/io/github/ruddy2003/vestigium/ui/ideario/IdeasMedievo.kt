@@ -46,6 +46,17 @@ internal fun DrawScope.circuloDuda(color: Color) {
     drawCircle(color, s * 0.32f, center, style = Stroke(s * 0.11f))
 }
 
+/**
+ * «Hecho comprobado»: un sello lleno de [color] con la palomita recortada en [hueco] (el papel). Más fuerte que «me
+ * convence»: no es una opinión, está comprobado. [cuadrado]: sello cuadrado en lugar de redondo.
+ */
+internal fun DrawScope.selloHecho(color: Color, hueco: Color, cuadrado: Boolean = false) {
+    val s = size.minDimension; val c = center
+    if (cuadrado) drawRect(color, Offset(c.x - s * 0.38f, c.y - s * 0.38f), Size(s * 0.76f, s * 0.76f)) else drawCircle(color, s * 0.42f, c)
+    drawPath(Path().apply { moveTo(c.x - s * 0.2f, c.y + s * 0.01f); lineTo(c.x - s * 0.05f, c.y + s * 0.16f); lineTo(c.x + s * 0.22f, c.y - s * 0.15f) },
+        hueco, style = Stroke(s * 0.1f, cap = StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+}
+
 /** Escuadras de metal en las cuatro esquinas de un interior, sin salirse de sus paredes de grosor [pl]. */
 internal fun DrawScope.escuadrasPared(w: Float, h: Float, pl: Float, largo: Float, color: Color) {
     listOf(0f to 0f, w to 0f, 0f to h, w to h).forEach { (x, y) ->
@@ -313,6 +324,8 @@ object IdeasMedieval : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // El sello pendiente del documento.
+            "hecho" -> selloHecho(LAPIS, p.color)
             // El calderón rojo (¶) de los rubricadores.
             "convence" -> {
                 drawCircle(BERMELLON, s * 0.19f, Offset(c.x - s * 0.1f, c.y - s * 0.16f))
@@ -606,6 +619,11 @@ object IdeasTemplario : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // El escudo rojo con su palomita.
+            "hecho" -> {
+                drawPath(escudo(c, s * 0.7f, s * 0.86f), ROJO)
+                drawPath(Path().apply { moveTo(c.x - s * 0.18f, c.y - s * 0.02f); lineTo(c.x - s * 0.04f, c.y + s * 0.13f); lineTo(c.x + s * 0.2f, c.y - s * 0.16f) }, BLANCO, style = Stroke(s * 0.09f, cap = StrokeCap.Round))
+            }
             "convence" -> drawPath(cruzPatada(c, s * 0.44f), ROJO)
             // El baucent: el escudo partido, negro arriba y blanco abajo.
             "piensa" -> {
@@ -888,6 +906,8 @@ object IdeasSeda : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // El sello de cinabrio, cuadrado.
+            "hecho" -> { drawRect(LACA, Offset(c.x - s * 0.38f, c.y - s * 0.38f), Size(s * 0.76f, s * 0.76f)); drawRect(p.color, Offset(c.x - s * 0.24f, c.y - s * 0.24f), Size(s * 0.48f, s * 0.48f), style = Stroke(s * 0.06f)) }
             // Un disco bi de jade.
             "convence" -> { drawCircle(Color(0xFF3E8A62), s * 0.32f, c, style = Stroke(s * 0.22f)); drawCircle(Color.White.copy(alpha = 0.35f), s * 0.36f, c, style = Stroke(s * 0.04f)) }
             // Una nube en voluta (ruyi).
@@ -1170,6 +1190,7 @@ object IdeasGotico : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            "hecho" -> selloHecho(AZUL, ORO)
             "convence" -> florDeLis(c, s * 0.92f, ORO)
             "piensa" -> cuadrifolio(c, s * 0.48f, AZUL)
             "duda" -> circuloDuda(p.tenue)
@@ -1430,6 +1451,7 @@ object IdeasAndalus : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            "hecho" -> selloHecho(TERRACOTA, p.color)
             "convence" -> drawPath(estrella(c, s * 0.46f, 8, 0.7f), VERDE)
             // Dos aros entrelazados.
             "piensa" -> {
@@ -1690,6 +1712,8 @@ object IdeasMongol : DisenoIdeas {
     override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
         when (id) {
+            // La tamga: el sello.
+            "hecho" -> selloHecho(ROJO, p.color, cuadrado = true)
             // El sol sobre la luna creciente.
             "convence" -> {
                 drawCircle(ORO, s * 0.16f, Offset(c.x, c.y - s * 0.24f))
