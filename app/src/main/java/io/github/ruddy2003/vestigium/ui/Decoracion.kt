@@ -66,6 +66,7 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 private fun rad(g: Double) = Math.toRadians(g).toFloat()
 private fun Offset.mas(r: Float, ang: Float) = Offset(x + r * cos(ang), y + r * sin(ang))
@@ -2050,18 +2051,57 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             }
         }
         TemaId.FRENTE -> {
-            color2 = esquema.onBackground.copy(alpha = if (oscuro) 0.06f else 0.07f)
-            val p = 13.dp.toPx(); var y = 0f; var fila = 0
-            while (y < h * 0.45f) {
-                var x = if (fila % 2 == 0) 0f else p / 2
-                while (x < w) {
-                    val k = ((x / w) * (1f - y / (h * 0.45f))).coerceIn(0f, 1f)
-                    val rr = p * 0.32f * k
-                    if (rr > 0.25.dp.toPx()) puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
-                    x += p
+            // El mapa estelar impreso de la célula: las cruces de registro de la cuadrícula, una raya gruesa cada cuatro
+            // casillas, el polvo de estrellas (las de catálogo con su anillo), los mundos con su marca y, en ámbar, las
+            // rutas de salto punteadas de uno a otro; abajo a la izquierda, la regla de la escala.
+            color = esquema.onBackground.copy(alpha = 0.05f)
+            color2 = esquema.onBackground.copy(alpha = if (oscuro) 0.09f else 0.07f)
+            color3 = esquema.primary.copy(alpha = if (oscuro) 0.11f else 0.09f)
+            grosor = 0.55f
+            val u = 1.dp.toPx(); val p = 48 * u; val cruz = 2.5f * u
+            var gy = p; var fila = 1
+            while (gy < h) {
+                var gx = p; var col = 1
+                while (gx < w) {
+                    trazo.moveTo(gx - cruz, gy); trazo.lineTo(gx + cruz, gy); trazo.moveTo(gx, gy - cruz); trazo.lineTo(gx, gy + cruz)
+                    if (fila == 1 && col % 4 == 0) { trazo.moveTo(gx, 0f); trazo.lineTo(gx, h) }
+                    gx += p; col++
                 }
-                y += p * 0.87f; fila++
+                if (fila % 4 == 0) { trazo.moveTo(0f, gy); trazo.lineTo(w, gy) }
+                gy += p; fila++
             }
+            val azar = java.util.Random(1977)
+            repeat(((w * h) / 3600f).toInt().coerceAtMost(420)) {
+                val x = azar.nextFloat() * w; val y = azar.nextFloat() * h
+                val g = azar.nextFloat(); val rr = (if (g > 0.96f) 1.1f else if (g > 0.8f) 0.6f else 0.3f) * u
+                puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
+                if (g > 0.96f) trazo.addOval(Rect(x - 3.2f * u, y - 3.2f * u, x + 3.2f * u, y + 3.2f * u))
+            }
+            // Los mundos: un disco hueco con su marca de rumbo; las rutas, a trazos de 3 dp, saltan de uno al siguiente.
+            val mundos = List(((w * h) / 120000f).toInt().coerceIn(3, 9)) { Offset((0.08f + azar.nextFloat() * 0.84f) * w, (0.06f + azar.nextFloat() * 0.88f) * h) }
+                .sortedBy { it.y }
+            mundos.forEachIndexed { i, m ->
+                val rr = (4.5f + azar.nextFloat() * 2.5f) * u
+                trazo2.addOval(Rect(m.x - rr, m.y - rr, m.x + rr, m.y + rr))
+                puntos.addOval(Rect(m.x - 1.4f * u, m.y - 1.4f * u, m.x + 1.4f * u, m.y + 1.4f * u))
+                trazo2.moveTo(m.x + rr + 2 * u, m.y - rr - 2 * u); trazo2.lineTo(m.x + rr + 9 * u, m.y - rr - 9 * u); trazo2.lineTo(m.x + rr + 20 * u, m.y - rr - 9 * u)
+                if (i > 0) {
+                    val a = mundos[i - 1]; val dx = m.x - a.x; val dy = m.y - a.y
+                    val largo = sqrt(dx * dx + dy * dy); val rec = rr + 4 * u
+                    if (largo > rec * 2 + 8 * u) {
+                        val ux = dx / largo; val uy = dy / largo
+                        var d = rec
+                        while (d < largo - rec) {
+                            val f = minOf(d + 3 * u, largo - rec)
+                            trazo2.moveTo(a.x + ux * d, a.y + uy * d); trazo2.lineTo(a.x + ux * f, a.y + uy * f)
+                            d += 7 * u
+                        }
+                    }
+                }
+            }
+            val ry = h - 22 * u; val rx = 16 * u
+            trazo.moveTo(rx, ry); trazo.lineTo(rx + 96 * u, ry)
+            for (k in 0..8) { val x = rx + k * 12 * u; val alto = if (k % 4 == 0) 6 * u else 3 * u; trazo.moveTo(x, ry); trazo.lineTo(x, ry - alto) }
         }
         TemaId.REFUGIO -> if (oscuro) {
             color = esquema.primary.copy(alpha = 0.035f); grosor = 0.4f

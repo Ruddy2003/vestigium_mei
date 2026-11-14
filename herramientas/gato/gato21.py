@@ -404,13 +404,13 @@ def o_microfilm(L, a):
     cierra con un destello."""
     k = a["k"]; px, py = a["pata"]; cx, cy = a["caps"]
     if k in (0, 1, 2):
-        x, y = px + 0.6, py - 1.6
-        L.capsula("f_U", [(x - 0.4, y + 0.8), (x + 3.4, y - 1.2)], 1.6)
-        for u in (0.3, 0.75):
-            xx, yy = x - 0.4 + 3.8 * u, y + 0.8 - 2.0 * u
-            rect(L, "f_V", xx - 0.45, yy - 0.45, xx + 0.45, yy + 0.45)
+        x, y = px + 0.8, py - 1.8
+        L.capsula("f_U", [(x - 0.4, y + 0.8), (x + 3.6, y - 1.4)], 2.5)
+        for u in (0.2, 0.55, 0.9):
+            xx, yy = x - 0.4 + 4.0 * u, y + 0.8 - 2.2 * u
+            rect(L, "f_V", xx - 0.3, yy - 0.3, xx + 0.3, yy + 0.3)
     elif k == 3:
-        L.capsula("f_U", [(cx + 0.2, cy - 1.0), (cx + 1.6, cy - 2.6)], 1.4)                  # entra en la cápsula
+        L.capsula("f_U", [(cx + 0.2, cy - 1.0), (cx + 1.6, cy - 2.6)], 2.0)                  # entra en la cápsula
         rect(L, "f_V", cx + 0.9, cy - 2.4, cx + 1.7, cy - 1.6)
         L.poligono("f_X", [(cx - 1.2, cy - 1.6), (cx + 0.2, cy - 3.6), (cx + 1.0, cy - 3.2), (cx - 0.4, cy - 1.2)])   # la tapa abierta
     elif k in (4, 5):

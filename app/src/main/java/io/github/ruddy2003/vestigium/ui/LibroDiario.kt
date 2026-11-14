@@ -153,7 +153,8 @@ object LibroDiario {
         TemaId.MEDIEVAL -> Fuentes(R.font.gotica_regular, R.font.cardo_regular)
         TemaId.TEMPLARIO -> Fuentes(R.font.cruzada_titulo, R.font.regla_regular)
         TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
-        TemaId.FRENTE -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
+        // Los rótulos anchos de la consola y la hoja de despacho mecanografiada.
+        TemaId.FRENTE -> Fuentes(R.font.michroma_titulo, R.font.chivo_mono_medium)
         TemaId.REFUGIO -> Fuentes(R.font.vt323, R.font.courier_regular)
         TemaId.ORDEN -> Fuentes(R.font.saira_stencil, R.font.saira_regular)
         TemaId.VAPOR -> Fuentes(R.font.caldera_titulo, R.font.bitter_regular)
@@ -243,7 +244,12 @@ object LibroDiario {
             TemaId.TEMPLARIO -> "h1{text-align:center;letter-spacing:.08em}article{border-top:4px solid $s;border-bottom:1px solid $p;padding-top:10px}.fecha{letter-spacing:.06em}" +
                 ".fecha::before{content:'\\2629  ';color:$p}" + capitular("2.6em", p)
             TemaId.DISTOPIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
-            TemaId.FRENTE -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
+            // Cada día en su tramo de papel continuo de teletipo: las tiras de agujeros de arrastre a los lados, las franjas pálidas,
+            // la cruz de la retícula antes de la fecha y la casilla de «cifrado» en los datos.
+            TemaId.FRENTE -> "h1{letter-spacing:.14em;font-size:1.5em}article{border-top:2px solid $p;border-bottom:1px dashed $v;padding:16px 30px 20px;margin-bottom:16px;" +
+                "background:radial-gradient(circle,${v}66 3px,transparent 3.6px) left 6px top 6px/12px 18px repeat-y,radial-gradient(circle,${v}66 3px,transparent 3.6px) right 6px top 6px/12px 18px repeat-y," +
+                "repeating-linear-gradient(180deg,${s}14 0 36px,transparent 36px 72px)}.fecha{font-size:1.1em;letter-spacing:.1em;text-transform:uppercase}.fecha::before{content:'+ ';color:$p}" +
+                ".meta{border:1px solid $p;color:$p;display:inline-block;padding:0 6px;letter-spacing:.04em}.meta::before{content:'CIFRADO · '}" + capitular("2.2em", p)
             TemaId.REFUGIO -> "article{border:1px solid $p;border-radius:14px;padding:18px;margin-bottom:18px}.nota::first-letter{background:$p;color:$b;font-size:1.6em;padding:0 3px;margin-right:2px}"
             TemaId.ORDEN -> "article{border-top:3px solid $p;outline:1px solid $v;outline-offset:6px;margin:18px 0;padding:18px}.fecha{text-transform:uppercase;letter-spacing:.1em}" + capitular("2.6em", p)
             // La lámina del plano: cuadrícula tenue, filete doble arriba y la fecha con el «⊙» del manómetro.
@@ -777,7 +783,7 @@ object LibroDiario {
             TemaId.MEDIEVAL -> Medidas(12.5f, aire)
             TemaId.TEMPLARIO -> Medidas(12f, if (carta) 1.5f else 1.44f)
             TemaId.DISTOPIA -> Medidas(11f, aire)
-            TemaId.FRENTE -> Medidas(11f, aire)
+            TemaId.FRENTE -> Medidas(if (carta) 10.8f else 10.2f, if (carta) 1.55f else 1.5f)
             TemaId.REFUGIO -> Medidas(11f, 1.35f)
             TemaId.ORDEN -> Medidas(11f, aire)
             TemaId.VAPOR -> Medidas(11.5f, aire)
@@ -833,7 +839,8 @@ object LibroDiario {
         TemaId.TEMPLARIO -> Inicial(R.font.cruzada_titulo, 1.3f, palabra = true, mayusculas = true)
         // La primera palabra en mayúsculas sobre la franja roja del formulario.
         TemaId.DISTOPIA -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
-        TemaId.FRENTE -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
+        // La primera letra en los rótulos anchos de la consola, en ámbar de piloto (como la capitular de la hoja en la app).
+        TemaId.FRENTE -> Inicial(R.font.michroma_titulo, 1.9f, mayusculas = true)
         // Una letra grande de fósforo en video inverso.
         TemaId.REFUGIO -> Inicial(R.font.vt323, 1.9f, invertida = true)
         // La letra de estarcido.
@@ -984,9 +991,28 @@ object LibroDiario {
                 cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
             }
             TemaId.FRENTE -> {
-                // La barra negra del formulario y la línea roja de debajo.
-                cv.drawLine(x0, y - 1.5f, x1, y - 1.5f, Paint(linea).apply { color = tinta; strokeWidth = 2.4f })
-                cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
+                // La cinta perforada del teletipo, con su fila de arrastre y los agujeros del mensaje; al centro, el emblema de la
+                // célula: la chispa de tres trazos que se escapa por el hueco del círculo roto.
+                val borde = Paint(linea).apply { strokeWidth = 0.5f; alpha = 150 }
+                cv.drawLine(x0, y - 4f, cx - 11f, y - 4f, borde); cv.drawLine(cx + 11f, y - 4f, x1, y - 4f, borde)
+                cv.drawLine(x0, y + 4f, cx - 11f, y + 4f, borde); cv.drawLine(cx + 11f, y + 4f, x1, y + 4f, borde)
+                val tenue = Paint(relleno).apply { alpha = 120 }
+                var x = x0 + 2f; var k = 0
+                while (x < x1 - 1f) {
+                    if (abs(x - cx) > 13f) {
+                        cv.drawCircle(x, y, 0.55f, tenue)
+                        val bits = Math.floorMod(k * 37 + 11, 7) + 1
+                        if (bits and 1 != 0) cv.drawCircle(x, y - 2.2f, 0.95f, relleno)
+                        if (bits and 2 != 0) cv.drawCircle(x, y + 2.2f, 0.95f, relleno)
+                        if (bits and 4 != 0 && k % 2 == 0) cv.drawCircle(x, y - 2.2f, 0.95f, relleno)
+                    }
+                    x += 3.2f; k++
+                }
+                cv.drawArc(cx - 5f, y - 5f, cx + 5f, y + 5f, -20f, 300f, false, Paint(trazo).apply { strokeWidth = 1.1f; strokeCap = Paint.Cap.ROUND })
+                listOf(-74.0 to 6f, -50.0 to 7.6f, -26.0 to 6f).forEach { (g, l) ->
+                    val a = Math.toRadians(g)
+                    cv.drawLine(cx + 0.8f * cos(a).toFloat(), y + 0.8f * sin(a).toFloat(), cx + l * cos(a).toFloat(), y + l * sin(a).toFloat(), Paint(linea).apply { strokeWidth = 1f; strokeCap = Paint.Cap.ROUND })
+                }
             }
             TemaId.REFUGIO -> {
                 // Una fila de puntos y el átomo al centro.
@@ -1231,10 +1257,22 @@ object LibroDiario {
                 cv.drawRect(A - 130f, 36f, A - 34f, 54f, Paint(fino).apply { color = tinta; alpha = 160 })
             }
             TemaId.FRENTE -> {
-                // Marco negro, la franja roja de arriba y la casilla del folio.
-                rect(22f, Paint(trazo).apply { color = tinta; strokeWidth = 1.6f; alpha = 220 })
-                cv.drawRect(22f, 22f, A - 22f, 30f, Paint(relleno).apply { alpha = 220 })
-                cv.drawRect(A - 130f, 36f, A - 34f, 54f, Paint(fino).apply { color = tinta; alpha = 160 })
+                // El papel continuo del teleimpresor: las tiras de agujeros de arrastre a los dos lados, su línea de picado, las
+                // franjas pálidas de lectura y el emblema de la célula en seco arriba a la derecha.
+                val franja = Paint(relleno).apply { color = tinta; alpha = 10 }
+                var yy = 22f; while (yy < B - 22f) { cv.drawRect(34f, yy, A - 34f, minOf(yy + 36f, B - 22f), franja); yy += 72f }
+                val agujero = Paint(trazo).apply { color = tinta; strokeWidth = 0.7f; alpha = 110 }
+                val picado = Paint(fino).apply { color = tinta; alpha = 80; pathEffect = android.graphics.DashPathEffect(floatArrayOf(2f, 3f), 0f) }
+                listOf(14f, A - 14f).forEach { x -> var y = 20f; while (y < B - 12f) { cv.drawCircle(x, y, 3.2f, agujero); y += 18f } }
+                listOf(30f, A - 30f).forEach { x -> cv.drawLine(x, 12f, x, B - 12f, picado) }
+                cv.drawLine(34f, B / 2, A - 34f, B / 2, Paint(picado).apply { alpha = 50 })
+                val sello = Paint(trazo).apply { strokeWidth = 1.4f; alpha = 70; strokeCap = Paint.Cap.ROUND }
+                val ex = A - 62f; val ey = 58f
+                cv.drawArc(ex - 14f, ey - 14f, ex + 14f, ey + 14f, -20f, 300f, false, sello)
+                listOf(-74.0 to 17f, -50.0 to 21f, -26.0 to 17f).forEach { (g, l) ->
+                    val a = Math.toRadians(g)
+                    cv.drawLine(ex + 2f * cos(a).toFloat(), ey + 2f * sin(a).toFloat(), ex + l * cos(a).toFloat(), ey + l * sin(a).toFloat(), sello)
+                }
             }
             TemaId.REFUGIO -> {
                 // Esquinas redondas, como el cristal de una pantalla.
