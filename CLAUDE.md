@@ -43,6 +43,7 @@ App personal de Android (Kotlin + Jetpack Compose) para registrar, a lo largo de
 - **Las reglas se adaptan al tema, no se quitan:** si el tema no tiene cielo, sol o agua, se cumple el propósito de la regla con lo que sí tiene (la guía dice cómo) y se anota en el informe.
 - **No cambies cómo se ve una pieza de `paisaje/` que ya usa una escena aprobada** sin volver a dibujar esas escenas y enseñárselas al autor. Agregar piezas nuevas sí se puede.
 - El autor ve cada escena nueva junto a la de Helénico antes de darla por buena.
+- **Los muebles de la pestaña Diario** se mejoran con la receta de `docs/diseno/MUEBLES.md` (piloto aprobado en Helénico, versión sutil): mismo mueble, misma forma, solo luz, sombra con color y textura. Los demás temas van después de las escenas.
 
 ## Privacidad (siempre)
 

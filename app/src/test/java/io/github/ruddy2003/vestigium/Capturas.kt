@@ -2026,6 +2026,17 @@ class Capturas {
         v73(t, o, 9600, nombre = n + "_vida_diario") { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
         v73(t, o, 3000, nombre = n + "_vida_mapas") { mundoEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMapas(navVacia) }
     }
+    /**
+     * Los muebles del Diario junto a la vara (piloto de la luz, 14 nov 2026): el cuadro de Helénico a la hora del modo (13 h en
+     * claro, 21 h en oscuro) y la pestaña Diario del tema, con todos sus muebles. Se revisan uno al lado del otro.
+     */
+    @Test fun temaDiarioVara() = porTema("diarioVara") { t, o, n ->
+        val vara = io.github.ruddy2003.vestigium.ui.escenas.escenaDe(TemaId.HELENO)!!
+        val vida = vara.vidas.first()
+        val ficha = io.github.ruddy2003.vestigium.vidas.FichaDelDia.de(DIAS_CUADRO[vida]!!.first().second, vida)!!
+        cuadros(TemaId.HELENO, o, n + "_vara", null, listOf(Triple(vara, ficha, if (o) 21.0 else 13.0)))
+        v73(t, o, 9600, nombre = n + "_diario") { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
+    }
     @Test fun temaConstelacion() = porTema("constelacion") { t, o, n -> v67(t, o, 3000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "cielo"; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(navVacia) } }
     /** Las medallas de logro (los cuatro niveles y una a medias) y las de las otras vidas. */
     @Test fun temaMedalla() = porTema("medalla") { t, o, n -> captura(t, o, 1200, n) {
