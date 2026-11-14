@@ -478,7 +478,8 @@ internal object AgostoUrbe {
 
     // ---------------------------------------------------------------- El gato
 
-    fun estorbos(m: Momento): List<Float> = listOf(100f, 144f, 172f, 314f, 362f)
+    /** Lo plantado en el tramo por donde camina el gato (de 70 a 340). La tinaja de la derecha queda fuera de ese tramo y no cuenta. */
+    fun estorbos(m: Momento): List<Float> = listOf(100f, 144f, 172f, 314f)
 
     fun anclas(m: Momento): List<Ancla> = buildList {
         add(Ancla(TipoAncla.SUELO, 70f, PISO_GATO, hasta = 340f))
