@@ -158,7 +158,7 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.MEDIEVAL -> listOf("en tinta", "en minio", "en pan de oro", "códice purpúreo")
     TemaId.TEMPLARIO -> listOf("hermano sargento", "freire caballero", "comendador", "maestre del Temple")
     TemaId.DISTOPIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
-    TemaId.FRENTE -> listOf("clase C", "clase B", "clase A", "alto secreto")
+    TemaId.FRENTE -> listOf("señal débil", "señal clara", "canal seguro", "la red entera te oye")
     TemaId.REFUGIO -> listOf("residente", "jefe de turno", "jefe de sector", "director del refugio")
     TemaId.ORDEN -> listOf("escudero", "caballero", "paladín", "gran maestre")
     TemaId.VAPOR -> listOf("mención del jurado", "medalla de plata de la Exposición", "gran medalla de oro", "miembro de la Real Sociedad")
@@ -382,18 +382,29 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             drawCircle(cs.primary.copy(alpha = 0.12f), m * 0.36f, c, style = Stroke(1.5f * u))
         }
         TemaId.FRENTE -> {
-            // Dos reflectores que barren desde abajo y un ojo que lo vigila todo.
-            val haz = cs.onBackground
-            listOf(Offset(0f, size.height) to 1.0, Offset(size.width, size.height) to -1.0).forEach { (o, lado) ->
-                val a = Math.toRadians((if (lado > 0) -60.0 else -120.0) + lado * 22.0 * sin(Math.toRadians(giro * 4.0)))
-                val l = lejos * 1.3f
-                val p1 = Offset(o.x + (l * cos(a - 0.12)).toFloat(), o.y + (l * sin(a - 0.12)).toFloat())
-                val p2 = Offset(o.x + (l * cos(a + 0.12)).toFloat(), o.y + (l * sin(a + 0.12)).toFloat())
-                drawPath(Path().apply { moveTo(o.x, o.y); lineTo(p1.x, p1.y); lineTo(p2.x, p2.y); close() }, Brush.radialGradient(listOf(haz.copy(alpha = 0.10f), Color.Transparent), o, l))
+            // El parche de misión bordado sobre la pantalla de radar: los anillos de distancia y la cruz, el barrido que da
+            // dos vueltas mientras el motivo da una, la orla de puntadas del parche, rota arriba a la derecha como el canal
+            // del emblema, y las ondas de la señal que se escapan por la rotura.
+            val radar = if (oscuro) Color(0xFF9FD8A8) else cs.tertiary
+            listOf(0.2f, 0.3f, 0.4f).forEach { k -> drawCircle(radar.copy(alpha = 0.13f), m * k, c, style = Stroke(1.2f * u)) }
+            drawLine(radar.copy(alpha = 0.1f), Offset(c.x - m * 0.42f, c.y), Offset(c.x + m * 0.42f, c.y), 1f * u)
+            drawLine(radar.copy(alpha = 0.1f), Offset(c.x, c.y - m * 0.42f), Offset(c.x, c.y + m * 0.42f), 1f * u)
+            rotate(giro * 2f, c) {
+                drawCircle(Brush.sweepGradient(0f to Color.Transparent, 0.78f to Color.Transparent, 1f to radar.copy(alpha = if (oscuro) 0.2f else 0.16f), center = c), m * 0.42f, c)
+                drawLine(radar.copy(alpha = 0.3f), c, Offset(c.x + m * 0.42f, c.y), 1.4f * u)
             }
-            val a = m * 0.62f; val k = m * 0.8f
-            drawPath(Path().apply { moveTo(c.x - a, c.y); quadraticTo(c.x, c.y - k, c.x + a, c.y); quadraticTo(c.x, c.y + k, c.x - a, c.y); close() }, cs.primary.copy(alpha = 0.16f), style = Stroke(2f * u))
-            drawCircle(cs.primary.copy(alpha = 0.12f), m * 0.36f, c, style = Stroke(1.5f * u))
+            val hueco = -50.0
+            for (i in 0 until 96) {
+                val g = i * 3.75
+                if (abs(((g - hueco + 540.0) % 360.0) - 180.0) < 16.0) continue
+                val a = Math.toRadians(g)
+                drawLine(cs.primary.copy(alpha = if (oscuro) 0.22f else 0.18f), pt(m * 0.44f, a + 0.02), pt(m * 0.49f, a - 0.02), 2f * u, StrokeCap.Round)
+            }
+            for (k in 0 until 3) {
+                val f = (giro / 360f * 6f + k / 3f) % 1f
+                val r = m * (0.4f + 0.18f * f)
+                drawArc(radar.copy(alpha = 0.3f * sin(PI * f).toFloat()), hueco.toFloat() - 14f, 28f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(2.2f * u, cap = StrokeCap.Round))
+            }
         }
         TemaId.REFUGIO -> {
             // Un átomo: tres órbitas con su electrón y el núcleo, el emblema del optimismo atómico.

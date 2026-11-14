@@ -130,6 +130,10 @@ object Marcas {
         ABEJA,
         /** Imperio: una rama de laurel bajo la palabra, con las hojas por pares y la baya al final. */
         LAUREL,
+        /** Frente exterior: la pantalla de fósforo de la consola, con su bisel, sus líneas de barrido y el piloto ámbar delante. */
+        PANTALLA,
+        /** Frente exterior: la traza del osciloscopio bajo la palabra, plana hasta que da el pulso de un eco. */
+        TRAZA,
     }
 
     /** Cómo se ve una marca: color de la letra, el trazo detrás y si va en negrita o cursiva. */
@@ -159,7 +163,9 @@ object Marcas {
                 else Aspecto(s, s, Forma.CALDERON, cursiva = true)
             TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
-            TemaId.FRENTE -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
+            // La @persona, como un indicativo en la pantalla de fósforo (verde de radar sobre el vidrio oscuro); el #tema, sobre la
+            // traza del osciloscopio que da su eco al final.
+            TemaId.FRENTE -> if (persona) Aspecto(Color(0xFF9FD8A8), Color(0xFF0F1A16), Forma.PANTALLA, negrita = true) else Aspecto(t, t, Forma.TRAZA)
             // La @persona, en la cinta de la rotuladora con las letras en relieve; el #tema, en la línea de órdenes de la terminal.
             TemaId.REFUGIO -> if (persona) Aspecto(cs.onPrimary, p, Forma.ROTULADORA, negrita = true) else Aspecto(s, s, Forma.PROMPT)
             TemaId.ORDEN -> if (persona) Aspecto(p, p, Forma.PLACA, negrita = true) else Aspecto(t, t, Forma.DOBLE)
@@ -220,6 +226,8 @@ object Marcas {
         Forma.CALDERON, Forma.PROMPT -> c.copy(alpha = 0.12f)
         Forma.ROTULADORA -> c
         Forma.ABEJA -> c.copy(alpha = 0.14f)
+        Forma.PANTALLA -> c
+        Forma.TRAZA -> Color.Unspecified
     }
 
     /** En un campo de texto, las formas que van debajo de la palabra se quedan en un subrayado. */
@@ -239,6 +247,8 @@ object Marcas {
         Forma.VIA -> true
         Forma.RUBRICA, Forma.CINCEL, Forma.CUADRIFOLIO, Forma.LAUREL -> true
         Forma.CALDERON, Forma.ROTULADORA, Forma.PROMPT, Forma.ABEJA -> false
+        Forma.PANTALLA -> false
+        Forma.TRAZA -> true
     }
 
     /** El estilo de letra de la marca. Con [conFondo], lo que no se puede dibujar (en un campo de texto) va como fondo de la letra. */
@@ -637,6 +647,27 @@ object Marcas {
                 }
                 drawCircle(c.copy(alpha = 0.9f), 0.9f * u, Offset(rr.right + 1.4f * u, y - 0.9f * u))
                 drawCircle(c.copy(alpha = 0.9f), 0.9f * u, Offset(rr.right + 1.8f * u, y + 1f * u))
+            }
+            Forma.PANTALLA -> {
+                // El vidrio oscuro con su bisel de cromo, tres líneas de barrido tenues y, delante, el piloto ámbar con su halo.
+                val t = rr.top + h * 0.06f; val b = rr.bottom - h * 0.04f; val iz = rr.left - 3 * u; val de = rr.right + 3 * u
+                drawRoundRect(c, Offset(iz, t), Size(de - iz, b - t), CornerRadius(2.4f * u, 2.4f * u))
+                drawRoundRect(Color(0xFFB9B6AE).copy(alpha = 0.75f), Offset(iz, t), Size(de - iz, b - t), CornerRadius(2.4f * u, 2.4f * u), style = Stroke(0.8f * u))
+                var y = t + 2f * u; var n = 0
+                while (y < b - 1f * u && n < 30) { drawLine(Color(0xFF9FD8A8).copy(alpha = 0.07f), Offset(iz + 1.5f * u, y), Offset(de - 1.5f * u, y), 0.6f * u); y += 2.2f * u; n++ }
+                val luz = Offset(iz - 3.4f * u, (t + b) / 2)
+                drawCircle(Color(0xFFF2A33A).copy(alpha = 0.25f), 2.6f * u, luz)
+                drawCircle(Color(0xFFF2A33A), 1.3f * u, luz)
+            }
+            Forma.TRAZA -> {
+                // La traza: plana bajo la palabra, un pulso de eco (sube, baja hondo y vuelve) cerca del final y un punto donde termina.
+                val y = baja - 0.4f * u; val x0 = rr.left; val x1 = rr.right + 2 * u; val pico = x0 + (x1 - x0) * 0.78f; val a = minOf(2.6f * u, h * 0.22f)
+                val p = Path().apply {
+                    moveTo(x0, y); lineTo(pico - 2.4f * u, y); lineTo(pico - 1.2f * u, y - a); lineTo(pico + 0.2f * u, y + a * 0.9f)
+                    lineTo(pico + 1.4f * u, y - a * 0.35f); lineTo(pico + 2.4f * u, y); lineTo(x1, y)
+                }
+                drawPath(p, c.copy(alpha = 0.9f), style = Stroke(1f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawCircle(c, 1.1f * u, Offset(x1, y))
             }
         }
     }

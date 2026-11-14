@@ -252,16 +252,21 @@ def pintar_gouache(g, t, cel):
     letra = np.array([[v for v in fila] for fila in g], "<U1").repeat(s, 0).repeat(s, 1)
     pin = pinceladas(N * s, 21)[:filas * s]
     tex = np.isin(letra, list("PSLWDTAYBFCRI"))
-    a[..., :3] *= np.where(tex, 1 + 0.06 * pin, 1.0)[..., None]
-    out = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA").resize((N * cel, filas * cel), Image.LANCZOS)
+    a[..., :3] *= np.where(tex, 1 + PINTURA["pincel"] * pin, 1.0)[..., None]
+    out = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), "RGBA").resize((N * cel, filas * cel), PINTURA["filtro"])
+    if not PINTURA["grano"]:
+        return out
     o = np.asarray(out).astype(np.float32)
     # Grano del cartón: puntos sueltos un poco más claros u oscuros (dos niveles, para que el atlas pese poco).
     rng = np.random.default_rng(5)
     gr = rng.random(o.shape[:2])
-    o[..., :3] *= np.where(gr < 0.09, 0.94, np.where(gr > 0.93, 1.05, 1.0))[..., None]
+    d_ = PINTURA["grano"]
+    o[..., :3] *= np.where(gr < d_ / 2, 0.95, np.where(gr > 1 - d_ / 2, 1.04, 1.0))[..., None]
     return Image.fromarray(np.clip(o, 0, 255).astype(np.uint8), "RGBA")
 
 
+# Cuánto se nota cada cosa (el grano y el pincel cuestan peso en el atlas).
+PINTURA = dict(grano=0.16, pincel=0.06, filtro=Image.LANCZOS)
 _pintar_prev = g8.pintar
 
 

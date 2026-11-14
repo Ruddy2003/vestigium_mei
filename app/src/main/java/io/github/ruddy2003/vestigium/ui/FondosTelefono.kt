@@ -40,6 +40,7 @@ import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -217,7 +218,7 @@ object FondosTelefono {
         TemaId.MEDIEVAL -> "Liber vestigii mei"
         TemaId.TEMPLARIO -> "Non nobis, Domine · Vestigium"
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"
-        TemaId.FRENTE -> "EXPEDIENTE PERSONAL"
+        TemaId.FRENTE -> "CÉLULA V-7 · VESTIGIUM"
         TemaId.REFUGIO -> "VESTIGIUM-MEI OS"
         TemaId.ORDEN -> "ORDO · VESTIGII"
         TemaId.VAPOR -> "Compañía de Vapor y Patentes Vestigium"
@@ -424,14 +425,39 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 }
             }
             TemaId.FRENTE -> {
-                // Carpeta de expediente: línea gruesa, dos perforaciones, una franja de «clasificado» y marcas de corte.
-                caja(0f, col, 2f * u)
-                listOf(cy - 40 * u, cy + 40 * u).forEach { y -> drawCircle(tenue, 5 * u, Offset(izq + 16 * u, y), style = Stroke(1.2f * u)) }
-                clipRect(izq, arr, der, aba) { drawLine(e.primary.copy(alpha = 0.3f), Offset(der - 46 * u, arr), Offset(der, arr + 46 * u), 8 * u) }
+                // El bisel de la pantalla grande de la consola: doble marco de esquinas redondas, un tornillo en cada esquina,
+                // la escala grabada por la izquierda, la perilla de sintonía a la derecha, la placa del rótulo arriba y, abajo,
+                // la fila de interruptores de palanca con sus dos pilotos.
+                drawRoundRect(col, Offset(izq, arr), Size(der - izq, aba - arr), CornerRadius(30 * u), style = Stroke(2.2f * u))
+                drawRoundRect(tenue, Offset(izq + 7 * u, arr + 7 * u), Size(der - izq - 14 * u, aba - arr - 14 * u), CornerRadius(24 * u), style = Stroke(0.8f * u))
                 esquinas.forEach { c ->
-                    val sx = if (c.x < size.width / 2) -1f else 1f; val sy = if (c.y < size.height / 2) -1f else 1f
-                    drawLine(tenue, c + Offset(sx * 4 * u, 0f), c + Offset(sx * 14 * u, 0f), 1f * u)
-                    drawLine(tenue, c + Offset(0f, sy * 4 * u), c + Offset(0f, sy * 14 * u), 1f * u)
+                    val t = haciaDentro(c, 17 * u)
+                    drawCircle(tenue, 4 * u, t, style = Stroke(1.1f * u))
+                    drawLine(tenue, t + Offset(-2.6f * u, 1.5f * u), t + Offset(2.6f * u, -1.5f * u), 1.1f * u)
+                }
+                var y = arr + 64 * u; var k = 0
+                while (y < aba - 64 * u) { drawLine(tenue, Offset(izq + 12 * u, y), Offset(izq + (if (k % 5 == 0) 22 else 17) * u, y), 1f * u); y += 12 * u; k++ }
+                val perilla = Offset(der - 26 * u, cy)
+                for (n in 0..10) {
+                    val a = Math.toRadians(150.0 + n * 24.0)
+                    drawLine(tenue, perilla + Offset((17 * u * cos(a)).toFloat(), (17 * u * sin(a)).toFloat()), perilla + Offset((21 * u * cos(a)).toFloat(), (21 * u * sin(a)).toFloat()), 1f * u)
+                }
+                drawCircle(col, 12 * u, perilla, style = Stroke(1.6f * u))
+                drawLine(col, perilla, perilla + Offset((9 * u * cos(Math.toRadians(-40.0))).toFloat(), (9 * u * sin(Math.toRadians(-40.0))).toFloat()), 2 * u, StrokeCap.Round)
+                drawRoundRect(tenue, Offset(cx - 58 * u, arr + 16 * u), Size(116 * u, 16 * u), CornerRadius(3 * u), style = Stroke(1f * u))
+                listOf(cx - 50 * u, cx + 50 * u).forEach { x -> drawCircle(tenue, 1.6f * u, Offset(x, arr + 24 * u)) }
+                val fila = aba - 26 * u
+                for (n in -3..3) {
+                    val x = cx + n * 22 * u
+                    if (n == -1 || n == 2) {
+                        val luz = if (n == -1) Color(0xFFF2A33A) else Color(0xFFD9372B)
+                        drawCircle(luz.copy(alpha = 0.55f), 3.6f * u, Offset(x, fila))
+                        drawCircle(tenue, 5.2f * u, Offset(x, fila), style = Stroke(1.2f * u))
+                    } else {
+                        drawRoundRect(tenue, Offset(x - 2.8f * u, fila - 5 * u), Size(5.6f * u, 10 * u), CornerRadius(2.4f * u))
+                        val punta = Offset(x, fila + (if (n % 2 == 0) -11f else 11f) * u)
+                        drawLine(col, Offset(x, fila), punta, 1.6f * u, StrokeCap.Round); drawCircle(col, 2 * u, punta)
+                    }
                 }
             }
             TemaId.REFUGIO -> {
