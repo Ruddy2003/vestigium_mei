@@ -2881,4 +2881,20 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("luna", "2027-09-19", listOf(21.4)),                       // la luna de otoño
         Triple("boda", "2031-07-10", listOf(19.0)),                       // la boda de Farn
     ),
+    // Marie-Jeanne (Revolución francesa, tanda S8): la popa del barco-lavadero en el Sena, con la Cité, Notre-Dame y el puente enfrente.
+    "lavandera" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // el barco-lavadero, el río y la Cité
+        Triple("helada", "2027-01-10", HORAS_CUADRO),                     // la helada: el Sena de hielo y el barco preso, sin lavar (decisión 18)
+        Triple("marcha", "2027-10-05", listOf(13.0)),                     // variante: el barco vacío el día de la marcha a Versalles (decisión 21)
+        Triple("colada", "2027-03-21", listOf(13.0)),                     // la gran colada de primavera
+        Triple("pascua", "2027-04-12", listOf(11.0)),                     // Pascua: las campanas y el barco cerrado
+        Triple("san_juan", "2027-06-23", listOf(22.0)),                   // la hoguera de San Juan
+        Triple("bastilla", "2027-07-14", listOf(17.0)),                   // el día de la Bastilla
+        Triple("federacion", "2028-07-14", listOf(13.0)),                 // la fiesta de la Federación
+        Triple("luto", "2029-04-04", listOf(13.0)),                       // el luto
+        Triple("rey", "2031-01-21", listOf(11.0)),                        // el día del rey: postigos cerrados y el río vacío
+        Triple("crecida", "2031-02-25", listOf(13.0)),                    // la crecida
+        Triple("razon", "2031-11-10", listOf(13.0)),                      // la fiesta de la Razón
+        Triple("navidad", "2027-12-25", listOf(21.0)),                    // la Navidad
+    ),
 )
