@@ -148,7 +148,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.MEDIEVAL -> "Liber vestigii mei"
     TemaId.TEMPLARIO -> "Pauperes commilitones · Vestigium Mei"
     TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
-    TemaId.FRENTE -> "VESTIGIUM MEI · CÉLULA K-7 · CANAL CIFRADO"
+    TemaId.FRENTE -> "VESTIGIUM MEI · CÉLULA K-7"
     TemaId.REFUGIO -> "REFUGIO · BITÁCORA VESTIGIUM-MEI"
     TemaId.ORDEN -> "ARCHIVUM ORDINIS · VESTIGIUM MEI"
     TemaId.VAPOR -> "Memoria de la Compañía de Vapor Vestigium Mei"
