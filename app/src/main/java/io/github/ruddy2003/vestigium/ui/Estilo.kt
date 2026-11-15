@@ -31,7 +31,7 @@ object Estilo {
         TemaId.MEDIEVAL -> "¶ "
         TemaId.TEMPLARIO -> "☩ "
         TemaId.DISTOPIA -> "▪ "
-        TemaId.ARCONTES -> "⁘ "        // los cuatro puntos de los papiros griegos
+        TemaId.ARCONTES -> "◌ "        // un círculo de puntos: una de las esferas del cielo
         TemaId.FRENTE -> "+ "          // la cruz de la retícula del radar
         TemaId.REFUGIO -> "> "
         TemaId.ORDEN -> "‡ "
@@ -122,7 +122,7 @@ object Estilo {
             TemaId.EGIPTO -> if (igual) null else "☥ $t"
             TemaId.DISTOPIA -> if (pantalla) "EXPEDIENTE Nº %04d · %s".format(folio(titulo, 1000, 9000), t) else if (igual) null else "▪ $t"
             // Cada pantalla es uno de los 365 cielos de Basílides, siempre el mismo: «Cielo 212 · Momentos».
-            TemaId.ARCONTES -> if (pantalla) "Cielo %d · %s".format(folio(titulo, 1, 365), t) else if (igual) null else "⁘ $t"
+            TemaId.ARCONTES -> if (pantalla) "Cielo %d · %s".format(folio(titulo, 1, 365), t) else if (igual) null else "◌ $t"
             // Cada pantalla es un canal de la red, siempre el mismo: «canal 07 · momentos».
             TemaId.FRENTE -> if (pantalla) "CANAL %02d · %s".format(folio(titulo, 1, 99), t) else if (igual) null else "+ $t"
             TemaId.LABORATORIO -> if (pantalla) "protocolo VM-%03d · %s".format(folio(titulo, 100, 900), t) else if (igual) null else "· $t"
