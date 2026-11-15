@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.SelvaBotanico.pc
@@ -89,9 +90,9 @@ internal object LuzSelva {
 
     /** La luz de la penumbra: la de fuera, más baja y más verde y azul cuanto más fuerte es el sol (de noche, igual). */
     fun penumbra(l: Luces, directa: Float): Luces {
-        val k = 1f - 0.32f * directa * (1f - l.noche)
+        val k = 1f - 0.42f * directa * (1f - l.noche)
         val a = l.ambiente
-        val amb = Color((a.red * k * (1f - 0.1f * directa)).coerceIn(0f, 1f), (a.green * k).coerceIn(0f, 1f), (a.blue * k * (1f + 0.05f * directa)).coerceIn(0f, 1f))
+        val amb = Color((a.red * k * (1f - 0.16f * directa)).coerceIn(0f, 1f), (a.green * k * (1f - 0.02f * directa)).coerceIn(0f, 1f), (a.blue * k * (1f + 0.04f * directa)).coerceIn(0f, 1f))
         return Luces(l.alto, l.medio, l.bajo, amb, lerp(l.bruma, Color(0xFF6A8478), 0.3f), l.brumaFuerza, l.solX, l.solAltura, l.solColor, l.solFuerza, l.lunaX, l.lunaAltura, l.estrellas, l.noche, l.nublado, 0f)
     }
 
@@ -172,12 +173,12 @@ internal object LuzSelva {
      * el del sol; en la penumbra, el verde y azulado. De noche, junto a la lámpara, con su calor por el lado que la mira
      * (como en Renacimiento); lo demás queda del lado de la luna.
      */
-    fun pincelEn(luz: Luz, en: Offset, alumbrado: Float): Pincel {
+    fun pincelEn(luz: Luz, en: Offset, alumbrado: Float, alcance: Float = 85f): Pincel {
         val f = luz.lampara
         if (f > 0.05f && luz.l.noche > 0.25f) {
-            val d = (CercaSelva.LAMPARA - en).getDistance(); val calor = f / (1f + (d / 85f) * (d / 85f))
+            val d = (CercaSelva.LAMPARA - en).getDistance(); val calor = f / (1f + (d / alcance) * (d / alcance))
             if (calor > 0.06f) {
-                val rr = rayoDeFoco(Foco(CercaSelva.LAMPARA, C.LUMBRE, 1f, 85f, suelo = en.y), en, 0.45f, C.SOMBRA)
+                val rr = rayoDeFoco(Foco(CercaSelva.LAMPARA, C.LUMBRE, 1f, alcance, suelo = en.y), en, 0.45f, C.SOMBRA)
                 return Pincel(if (alumbrado > 0.5f) luz.l else luz.lSombra, rr, calor.coerceIn(0f, 0.92f), C.LUMBRE)
             }
         }
@@ -214,15 +215,19 @@ internal object LuzSelva {
         if (luz.directa < 0.15f || luz.deLuna) return
         val k = luz.directa * (0.45f + 0.8f * luz.bruma)
         val az = Azar(Semilla.de("botanico", "haces"))
+        // Solo se ven bajo las hojas: en el claro del cielo no hay aire en penumbra que los recorte.
+        clipPath(poligono(listOf(Offset(0f, 0f), Offset(258f, 0f), Offset(258f, 165f), Offset(ANCHO, 165f), Offset(ANCHO, ALTO), Offset(0f, ALTO)))) {
         for (q in puntos) {
             if (alumbrado(luz, q.x, q.y, q.z) < 0.5f) continue
-            val arriba = V3(q.x - luz.sol.sx * 3.2f, q.y + 3.2f, q.z - luz.sol.sz * 3.2f)
+            val sube = 2.2f
+            val arriba = V3(q.x - luz.sol.sx * sube, q.y + sube, (q.z - luz.sol.sz * sube).coerceAtLeast(2.2f))
             val a = pc(arriba); val b = pc(q)
             val w0 = 0.12f * SelvaBotanico.k(arriba.z.coerceAtLeast(0.6f)); val w1 = 0.2f * SelvaBotanico.k(q.z)
             val d = b - a; val l = d.getDistance().coerceAtLeast(1f); val n = Offset(-d.y / l, d.x / l)
             val haz = poligono(a - n * w0, a + n * w0, b + n * w1, b - n * w1)
             drawPath(haz, Brush.linearGradient(listOf(Color.Transparent, luz.color.copy(alpha = (0.09f * k).coerceIn(0f, 1f)), luz.color.copy(alpha = (0.05f * k).coerceIn(0f, 1f))), a, b), blendMode = BlendMode.Plus)
             repeat(10) { val u = az.real(); val v = az.entre(-1f, 1f); drawCircle(luz.color.copy(alpha = (0.55f * k * az.real()).coerceIn(0f, 1f)), az.entre(0.3f, 0.65f), a + d * u + n * (v * (w0 + (w1 - w0) * u))) }
+        }
         }
     }
 

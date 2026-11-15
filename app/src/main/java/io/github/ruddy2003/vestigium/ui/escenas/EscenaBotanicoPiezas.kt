@@ -1388,7 +1388,9 @@ internal object PiezasBotanico {
         fun nervio(s: Float): Offset { val q = base + d * s; return q + n * (curva * 4f * s * (1f - s)) }
         fun tangente(s: Float): Offset { val a = nervio((s - 0.02f).coerceAtLeast(0f)); val b = nervio((s + 0.02f).coerceAtMost(1f)); val dd = b - a; return dd / dd.getDistance().coerceAtLeast(0.001f) }
         fun anchoEn(s: Float): Float = ancho * 0.5f * (sin(PI.toFloat() * s.coerceIn(0f, 1f)).pow(0.5f)) * (if (s < 0.1f) s / 0.1f else 1f) * (1f - 0.18f * s * s)
-        val hoja = lerp(C.HOJA, C.SELVA, 0.12f + 0.22f * az.real())
+        // Cada hoja con su verde: las nuevas más claras y amarillas, las viejas más hondas y azuladas.
+        val edad = az.real()
+        val hoja = when { edad < 0.22f -> lerp(C.HOJA, C.HOJA_LUZ, 0.28f); edad > 0.8f -> lerp(C.SELVA, C.ESCARABAJO, 0.3f); else -> lerp(C.HOJA, C.SELVA, 0.12f + 0.3f * az.real()) }
         val verdeSeco = lerp(C.ARENA, C.CUERO, 0.45f)
         val cl = contraluz.coerceIn(0f, 1f)
         // La luz que pasa a través de la lámina: verde amarillo, y más pálida en el centro de cada tira.
@@ -1399,14 +1401,14 @@ internal object PiezasBotanico {
             val canto = (0.5f + 0.5f * lado * vuelta).coerceIn(0.18f, 1f)
             val tl = (t + lado * vuelta * 0.5f).coerceIn(-1f, 1f)
             val propio = p.por(if (lado * vuelta < -0.2f) lerp(hoja, C.ESCARABAJO, 0.25f) else hoja, tl, lejos)
-            val k = cl * (0.45f + 0.55f * canto)
-            val color = lerp(propio, translucida, 0.9f * k)
+            val k = cl * (0.6f + 0.4f * canto)
+            val color = lerp(propio, translucida, k)
             // Los rasgones: de dónde a dónde va cada tira entre dos cortes.
             val cortes = ArrayList<Float>(); var s = 0.12f + az.entre(0f, 0.1f)
             while (s < 0.9f) { if (az.real() < rasgado) cortes += s; s += az.entre(0.07f, 0.17f) }
             val bordes = listOf(0.02f) + cortes + listOf(0.995f)
             for (i in 0 until bordes.size - 1) {
-                val s0 = bordes[i]; val s1 = bordes[i + 1]; val hueco = if (i > 0) 0.007f else 0f; val hueco1 = if (i < bordes.size - 2) 0.007f else 0f
+                val s0 = bordes[i]; val s1 = bordes[i + 1]; val hueco = if (i > 0) 0.013f else 0f; val hueco1 = if (i < bordes.size - 2) 0.013f else 0f
                 // La tira cuelga un poco, tanto más cuanto más larga y suelta.
                 val cae = Offset(0f, (s1 - s0) * largo * 0.05f * (if (i > 0 && i < bordes.size - 2) 1f else 0.3f))
                 val pasos = 7
@@ -1418,11 +1420,11 @@ internal object PiezasBotanico {
                 clipPath(tira) {
                     // A contraluz, la lámina se enciende más hacia el borde de cada tira y el nervio queda oscuro.
                     if (k > 0.05f) drawPath(Path().apply { val pts = (0..pasos).map { j -> val ss = s0 + (s1 - s0) * j / pasos; val tg = tangente(ss); nervio(ss) + Offset(-tg.y, tg.x) * (lado * anchoEn(ss) * canto * 0.6f) }; moveTo(pts[0]); for (q in pts.drop(1)) lineTo(q) },
-                        lerp(translucida, Color.White, 0.3f).copy(alpha = 0.35f * k), style = Stroke(ancho * 0.16f * canto, cap = StrokeCap.Round))
+                        lerp(translucida, Color(0xFFFFF4C0), 0.4f).copy(alpha = (0.4f * k).coerceIn(0f, 1f)), style = Stroke(ancho * 0.2f * canto, cap = StrokeCap.Round), blendMode = BlendMode.Plus)
                     // Las venas, paralelas, del nervio al borde, inclinadas hacia la punta.
                     var v = s0
                     while (v < s1) { val tg = tangente(v); val nn = Offset(-tg.y, tg.x); val a = nervio(v); val w = anchoEn(v) * canto
-                        drawLine((if (k > 0.2f) vena else p.sombra(hoja, lejos)).copy(alpha = 0.12f + 0.3f * k), a, a + nn * (lado * w) + tg * (w * 0.35f), if (k > 0.2f) 0.4f else 0.3f); v += 0.02f }
+                        drawLine((if (k > 0.2f) vena else p.sombra(hoja, lejos)).copy(alpha = (0.12f + 0.4f * k).coerceIn(0f, 1f)), a, a + nn * (lado * w) + tg * (w * 0.35f), if (k > 0.2f) 0.45f else 0.3f); v += 0.02f }
                     // El brillo del haz, a lo largo, del lado del sol (de frente; a contraluz no se ve).
                     if (lado * vuelta >= -0.2f && k < 0.5f) drawPath(Path().apply { val pts = (0..6).map { j -> val ss = s0 + (s1 - s0) * j / 6f; val tg = tangente(ss); nervio(ss) + Offset(-tg.y, tg.x) * (lado * anchoEn(ss) * canto * 0.45f) }; moveTo(pts[0]); for (q in pts.drop(1)) lineTo(q) },
                         p.luz(lerp(hoja, C.ARENA, 0.3f), lejos).copy(alpha = 0.3f * p.r.dia * (1f - 2f * k)), style = Stroke(ancho * 0.08f, cap = StrokeCap.Round))
@@ -1772,42 +1774,45 @@ internal object PiezasBotanico {
      * partida en lóbulos hondos que dejan ver lo de detrás; lustrosa, con el brillo a lo largo de cada lóbulo y el nervio
      * claro. [t]: la luz que le da; [contraluz]: el sol por detrás.
      */
-    fun DrawScope.filodendro(p: Pincel, base: Offset, punta: Offset, ancho: Float, t: Float, az: Azar, lejos: Float = 0f, contraluz: Float = 0f, lobulos: Int = 7) {
-        val d = punta - base; val largo = d.getDistance().coerceAtLeast(0.01f); val u = d / largo; val n = Offset(-u.y, u.x)
-        val verde = lerp(C.SELVA, C.HOJA, 0.28f + 0.15f * az.real())
+    fun DrawScope.filodendro(p: Pincel, base: Offset, punta: Offset, ancho: Float, t: Float, az: Azar, lejos: Float = 0f, contraluz: Float = 0f, lobulos: Int = 7, escorzo: Float = 1f) {
+        val d = punta - base; val largo = d.getDistance().coerceAtLeast(0.01f); val u = d / largo; val n0 = Offset(-u.y, u.x)
+        // Con [escorzo] menor que 1 la hoja se ve de lado: el ancho se aplasta.
+        val n = n0 * escorzo.coerceIn(0.25f, 1f)
+        val verde = lerp(C.SELVA, C.HOJA, 0.25f + 0.18f * az.real())
         val translucida = p.l.tono(lerp(C.HOJA_LUZ, C.LATON, 0.15f), lejos)
-        // La mitad del ancho del corazón entero, alrededor del nervio, en cada punto del nervio.
-        fun nucleo(s: Float): Float = ancho * 0.17f * sin(PI.toFloat() * (0.08f + 0.86f * s.coerceIn(0f, 1f))).pow(0.6f)
+        // La mitad del ancho del corazón entero (la parte sin partir), en cada punto del nervio.
+        fun nucleo(s: Float): Float = ancho * 0.1f * sin(PI.toFloat() * (0.06f + 0.9f * s.coerceIn(0f, 1f))).pow(0.6f)
         fun color(tl: Float): Color = lerp(p.por(verde, tl.coerceIn(-1f, 1f), lejos), translucida, 0.75f * contraluz)
-        // Los lóbulos: anchos y ondulados, salen del corazón; hacia atrás junto al pecíolo, de lado en medio, hacia la punta al final.
+        // Los lóbulos: largos y en punta, anchos en su arranque, con hendiduras hondas entre ellos por las que se ve lo de
+        // detrás; hacia atrás junto al pecíolo, de lado en medio, hacia la punta al final.
         for (lado in listOf(-1f, 1f)) {
-            val tl = t + lado * 0.2f
+            val tl = t + lado * 0.22f * escorzo
             for (i in 0 until lobulos) {
                 val s = (i + 0.5f) / lobulos
-                val q = base + d * (0.88f * s) + n * (lado * nucleo(s) * 0.75f)
-                val ang = -0.6f + 1.4f * s + az.entre(-0.08f, 0.08f)
-                val dir = (n * (lado * cos(ang)) + u * sin(ang)).let { it / it.getDistance().coerceAtLeast(0.001f) }
-                val len = (ancho * 0.5f * sin(PI.toFloat() * (0.16f + 0.74f * s)).pow(0.65f) - nucleo(s) * 0.6f).coerceAtLeast(ancho * 0.08f) * az.entre(0.88f, 1.06f)
-                val w = len * 0.3f + ancho * 0.03f
-                val tip = q + dir * len + Offset(0f, len * 0.07f)
+                val q = base + d * (0.9f * s) + n * (lado * nucleo(s) * 0.8f)
+                val ang = -0.75f + 1.55f * s + az.entre(-0.1f, 0.1f)
+                val dir0 = n * (lado * cos(ang)) + u * sin(ang); val dir = dir0 / dir0.getDistance().coerceAtLeast(0.001f)
+                val len = (ancho * 0.5f * sin(PI.toFloat() * (0.14f + 0.76f * s)).pow(0.6f) * az.entre(0.86f, 1.08f)) * (0.55f + 0.45f * dir0.getDistance())
+                val w = len * 0.17f + ancho * 0.022f
+                val tip = q + dir * len + Offset(0f, len * 0.1f)
                 val perp = Offset(-dir.y, dir.x)
+                // El borde del lóbulo ondula: un diente a cada lado en los más largos.
                 val lob = Path().apply {
-                    moveTo(q - u * w); cubicTo(q + dir * (len * 0.4f) - perp * (w * 1.15f), tip - dir * (len * 0.25f) - perp * (w * 0.95f), tip - perp * (w * 0.25f))
-                    cubicTo(tip + dir * (len * 0.06f), tip + dir * (len * 0.06f) + perp * (w * 0.3f), tip + perp * (w * 0.3f))
-                    cubicTo(tip - dir * (len * 0.25f) + perp * (w * 0.95f), q + dir * (len * 0.4f) + perp * (w * 1.15f), q + u * w); close()
+                    moveTo(q - u * w); cubicTo(q + dir * (len * 0.35f) - perp * (w * 1.05f), tip - dir * (len * 0.35f) - perp * (w * 0.9f), tip)
+                    cubicTo(tip - dir * (len * 0.35f) + perp * (w * 0.8f), q + dir * (len * 0.35f) + perp * (w * 1.1f), q + u * w); close()
                 }
-                drawPath(lob, color(tl - 0.15f * (i % 2)))
-                clipPath(lob) { drawPath(lob, p.sombra(verde, lejos).copy(alpha = 0.3f), style = Stroke(max(0.4f, w * 0.3f))) }
-                // El nervio del lóbulo y el brillo del charol a su lado.
-                drawLine(p.luz(lerp(verde, C.HOJA_LUZ, 0.5f), lejos).copy(alpha = 0.7f), q, tip - dir * (len * 0.1f), max(0.3f, w * 0.08f))
-                if (contraluz < 0.5f) drawLine(p.luz(Color.White, lejos).copy(alpha = 0.2f * p.r.dia), q + dir * (len * 0.25f) + perp * (w * 0.4f), tip - dir * (len * 0.3f) + perp * (w * 0.3f), max(0.4f, w * 0.22f), StrokeCap.Round)
+                drawPath(lob, color(tl - 0.18f * (i % 2)))
+                clipPath(lob) { drawPath(lob, p.sombra(verde, lejos).copy(alpha = 0.28f), style = Stroke(max(0.4f, w * 0.35f))) }
+                // El nervio del lóbulo y el brillo del charol a un lado.
+                drawLine(p.luz(lerp(verde, C.HOJA_LUZ, 0.5f), lejos).copy(alpha = 0.7f), q, tip - dir * (len * 0.12f), max(0.3f, w * 0.1f))
+                if (contraluz < 0.5f) drawLine(p.luz(Color.White, lejos).copy(alpha = 0.22f * p.r.dia), q + dir * (len * 0.2f) + perp * (w * 0.4f), tip - dir * (len * 0.35f) + perp * (w * 0.25f), max(0.4f, w * 0.25f), StrokeCap.Round)
             }
         }
         // El corazón: la lámina entera alrededor del nervio, encima del arranque de los lóbulos.
         val izq = (0..10).map { i -> val s = i / 10f; base + d * (0.92f * s) - n * nucleo(s) }; val der = (0..10).map { i -> val s = i / 10f; base + d * (0.92f * s) + n * nucleo(s) }
         drawPath(poligono(izq + listOf(punta) + der.reversed()), color(t))
         // El nervio central, claro y grueso.
-        drawLine(p.luz(lerp(verde, C.HOJA_LUZ, 0.45f), lejos), base, base + d * 0.9f, max(0.5f, ancho * 0.03f), StrokeCap.Round)
+        drawLine(p.luz(lerp(verde, C.HOJA_LUZ, 0.45f), lejos), base, base + d * 0.9f, max(0.5f, ancho * 0.028f), StrokeCap.Round)
     }
 
     // =================================================================

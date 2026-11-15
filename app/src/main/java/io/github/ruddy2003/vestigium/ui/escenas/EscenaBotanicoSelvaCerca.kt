@@ -52,7 +52,7 @@ internal object CercaSelva {
 
     // ---------------------------------------------------------------- La mesa
 
-    val SITIO_MESA: Sitio = S.sitio(-1.3f, 3.25f, 0.3f)
+    val SITIO_MESA: Sitio = S.sitio(-1.15f, 2.98f, 0.25f)
     val MESA = PiezasBotanico.Mesa(SITIO_MESA, Semilla.de("botanico", "mesa", "selva"), PiezasBotanico.TipoMesa.GALERIA, ancho = 1.15f, fondo = 0.6f, alto = 0.78f)
 
     /** Un punto de la tapa de la mesa en ([u], [v]) (de −1 a 1 a lo ancho y a lo hondo), en metros. */
@@ -62,17 +62,18 @@ internal object CercaSelva {
     val CENTRO_MESA: V3 = enLaMesa(0f, 0f)
 
     /** La llama de la lámpara de la mesa, arrimada a la punta de junto al poste. */
-    val LAMPARA: Offset = enLaMesa(0.7f, 0.5f).let { pc(it.x, it.y + 0.3f, it.z) }
+    val LAMPARA: Offset = enLaMesa(0.84f, 0.52f).let { pc(it.x, it.y + 0.3f, it.z) }
 
     /** Lo que se pone en la mesa: el soporte del objeto del día (en el centro de delante, despejado). */
-    val SOPORTE: Offset get() = pc(enLaMesa(0.18f, -0.35f))
+    val SOPORTE: Offset get() = pc(enLaMesa(0.28f, -0.45f))
 
     // ---------------------------------------------------------------- Los cajones, junto al poste
 
     private fun cajones(m: Momento): List<PiezasBotanico.Cajon> {
         val n = S.cajonesEnLaGaleria(m); val abiertos = S.cajonesAbiertos(m)
         // Dónde va cada uno: el primero en el suelo junto al poste; el segundo encima; los demás, al lado y detrás.
-        val sitios = listOf(Triple(-0.12f, 4.6f, 0), Triple(-0.12f, 4.6f, 1), Triple(0.62f, 5.05f, 0), Triple(-0.02f, 5.35f, 0), Triple(0.62f, 5.05f, 1))
+        // Bajos, para que se vea por encima el pie del árbol grande: uno junto al poste, los otros detrás, y alguno encima.
+        val sitios = listOf(Triple(-0.12f, 4.55f, 0), Triple(-0.6f, 5.1f, 0), Triple(0.42f, 5.15f, 0), Triple(0.42f, 5.15f, 1), Triple(-0.6f, 5.1f, 1))
         return (0 until n).map { i -> val (x, z, piso) = sitios[i]
             PiezasBotanico.Cajon(S.sitio(x, z, -0.22f + 0.1f * i), Semilla.de("botanico", "cajon selva", i), ancho = 0.66f, alto = 0.4f, fondo = 0.46f, base = piso * 0.4f, desgaste = 0.55f, trincado = false, marca = !abiertos || i > 0) }
     }
@@ -104,18 +105,25 @@ internal object CercaSelva {
         // La maceta del helecho, la de la bromelia y el plantón con su cepellón.
         add(Cosa3(3.6f, sombraRedonda(0.15f, 3.6f, 0.2f, 0.65f, sol)) { macetaConHelecho(m, luz, 0.15f, 3.6f) })
         add(Cosa3(3.45f, sombraRedonda(1.15f, 3.45f, 0.16f, 0.55f, sol)) { macetaConBromelia(m, luz, 1.15f, 3.45f) })
-        add(Cosa3(3.38f, null) { planton(m, luz) })
+        // El plantón recién traído (el día de la mudanza todavía no: ese día el sitio es de los libros).
+        if (!EscenaBotanico.botafogo(m)) add(Cosa3(3.38f, null) { planton(m, luz) })
         // Los filodendros que entran por los bordes: el de la esquina de la derecha, en el jardín, y el de abajo a la izquierda.
-        add(Cosa3(3.15f, null) { filodendros(m, luz, Offset(2.12f, 3.25f), S.sueloEn(2.12f, 3.25f), 0.95f, Semilla.de("botanico", "filodendro derecha"), true) })
-        add(Cosa3(2.7f, null) { filodendros(m, luz, Offset(-0.95f, 2.72f), 0f, 0.7f, Semilla.de("botanico", "filodendro izquierda"), false) })
+        add(Cosa3(3.15f, null) { filodendros(m, luz, Offset(2.4f, 3.1f), S.sueloEn(2.4f, 3.1f), 0.9f, Semilla.de("botanico", "filodendro derecha"), true) })
+        add(Cosa3(2.5f, null) { filodendros(m, luz, Offset(-1.75f, 2.5f), 0f, 0.62f, Semilla.de("botanico", "filodendro izquierda"), false) })
         // El día de la mudanza: los libros mojados, abiertos al sol sobre las tablas, y los papeles.
-        if (EscenaBotanico.librosAlSol(m)) for ((i, q) in LIBROS.withIndex()) add(Cosa3(q.z, null) { libroAbierto(luz, q, i) })
+        if (EscenaBotanico.librosAlSol(m)) {
+            for ((i, q) in LIBROS.withIndex()) add(Cosa3(q.z, null) { libroAbierto(luz, q, i) })
+            for ((i, q) in PAPELES.withIndex()) add(Cosa3(q.z + 0.01f, null) { papelAlSol(luz, q, i) })
+        }
         // El día de los escarabajos: el paraguas abierto al revés, con lo que cayó dentro.
         if (S.paraguasAlReves(m)) add(Cosa3(4.45f, null) { paraguas(luz, V3(0.15f, 0f, 4.45f)) })
     }
 
     /** Dónde se secan los libros el día de la mudanza: sobre las tablas, donde da el sol de la tarde. */
-    private val LIBROS = listOf(V3(0.35f, 0f, 4.1f), V3(0.95f, 0f, 3.75f), V3(-0.2f, 0f, 3.9f), V3(0.6f, 0f, 3.35f), V3(1.15f, 0f, 4.4f))
+    private val LIBROS = listOf(V3(-0.32f, 0f, 3.42f), V3(0.5f, 0f, 3.3f), V3(1.0f, 0f, 3.72f), V3(-0.58f, 0f, 4.05f), V3(0.95f, 0f, 3.25f))
+
+    /** Y los papeles sueltos, extendidos con una piedra encima para que no se los lleve el aire. */
+    private val PAPELES = listOf(V3(0.25f, 0f, 3.18f), V3(-0.72f, 0f, 3.62f), V3(0.72f, 0f, 3.58f))
 
     /** La sombra en las tablas de un cuerpo redondo de [radio] y [alto] metros que pisa en ([x], [z]). */
     private fun sombraRedonda(x: Float, z: Float, radio: Float, alto: Float, sol: Sol3): Path {
@@ -130,7 +138,7 @@ internal object CercaSelva {
 
     fun DrawScope.cerca(m: Momento, luz: LuzSelva.Luz, cosas: List<Cosa3>) {
         // La sombra de contacto bajo cada cosa (lo que no ve el cielo), sin capa: un óvalo que multiplica.
-        for ((x, z, r) in listOf(Triple(-1.3f, 3.25f, 0.62f), Triple(1.15f, 5.15f, 0.34f), Triple(0.7f, 3.95f, 0.42f), Triple(0.15f, 3.6f, 0.24f), Triple(1.15f, 3.45f, 0.2f), Triple(-0.12f, 4.6f, 0.4f))) {
+        for ((x, z, r) in listOf(Triple(-1.15f, 2.98f, 0.6f), Triple(1.15f, 5.15f, 0.34f), Triple(0.7f, 3.95f, 0.42f), Triple(0.15f, 3.6f, 0.24f), Triple(1.15f, 3.45f, 0.2f), Triple(-0.12f, 4.55f, 0.4f))) {
             val c = pc(x, 0f, z); val e = k(z)
             drawOval(LuzSelva.SOMBRA_VERDE.copy(alpha = 0.32f), Offset(c.x - r * e, c.y - r * e * 0.22f), Size(2f * r * e, r * e * 0.44f), blendMode = BlendMode.Multiply)
         }
@@ -141,44 +149,39 @@ internal object CercaSelva {
 
     private fun DrawScope.mesa(m: Momento, luz: LuzSelva.Luz) {
         val sol = luz.sol; val estado = EscenaBotanico.mesaDeLaGaleria(m)
-        val p = pin(luz, CENTRO_MESA.x, CENTRO_MESA.y, CENTRO_MESA.z)
-        with(PiezasBotanico) { mesa(MESA, p, sol) }
-        // El sol en la tapa: la mancha con la sombra de lo que hay encima.
+        // La mesa, en la penumbra del alero; el sol que llega a su tapa se le suma encima (con la sombra de lo que hay).
+        with(PiezasBotanico) { mesa(MESA, LuzSelva.pincelEn(luz, pc(CENTRO_MESA), 0f), sol) }
         val tapa = poligono(listOf(enLaMesa(-1f, -1f), enLaMesa(1f, -1f), enLaMesa(1f, 1f), enLaMesa(-1f, 1f)).map { pc(it) })
         val alto = MESA.alto
         val enMesa = { x: Float, z: Float, g: Float -> S.sitio(SITIO_MESA.mx(x * MESA.ancho / 2f, z * MESA.fondo / 2f), SITIO_MESA.mz(x * MESA.ancho / 2f, z * MESA.fondo / 2f), g) }
-        val pr = PiezasBotanico.Prensa(enMesa(-0.66f, 0.15f, 0.42f), Semilla.de("botanico", "prensa selva"), ancho = 0.38f, fondo = 0.27f, grueso = 0.11f, base = alto)
-        val sombras = listOf(PiezasBotanico.sombraDePrensa(pr, sol)) + listOf(0.24f to 0.6f, 0.05f to 0.72f, 0.42f to 0.66f).map { (u, v) -> val s = enMesa(u, v, 0f); sombraDe(s, sol, (0 until 8).flatMap { i -> val a = (2 * PI * i / 8).toFloat(); listOf(V3(0.045f * cos(a), alto, 0.045f * sin(a)), V3(0.04f * cos(a), alto + 0.2f, 0.04f * sin(a))) }, alto) } +
-            listOf(sombraDe(enMesa(0.7f, 0.5f, 0f), sol, (0 until 8).flatMap { i -> val a = (2 * PI * i / 8).toFloat(); listOf(V3(0.06f * cos(a), alto, 0.06f * sin(a)), V3(0.05f * cos(a), alto + 0.42f, 0.05f * sin(a))) }, alto),
-                sombraDe(enMesa(-0.2f, 0.62f, 0f), sol, esquinas(-0.17f, 0.17f, alto, alto + 0.3f, -0.03f, 0.03f), alto))
-        with(LuzSelva) { luzEnPlano(luz, tapa, alto, sombras, 0.95f) }
+        val pr = PiezasBotanico.Prensa(enMesa(0.66f, -0.38f, 0.12f), Semilla.de("botanico", "prensa selva"), ancho = 0.32f, fondo = 0.24f, grueso = 0.1f, base = alto)
+        val frascos = listOf(0.3f to 0.66f, 0.45f to 0.78f, 0.58f to 0.62f)
+        fun cilindro(u: Float, v: Float, r: Float, h: Float): Path = sombraDe(enMesa(u, v, 0f), sol, (0 until 8).flatMap { i -> val a = (2 * PI * i / 8).toFloat(); listOf(V3(r * cos(a), alto, r * sin(a)), V3(r * 0.9f * cos(a), alto + h, r * 0.9f * sin(a))) }, alto)
+        val sombras = listOf(PiezasBotanico.sombraDePrensa(pr, sol), cilindro(0.84f, 0.52f, 0.06f, 0.42f), sombraDe(enMesa(-0.07f, 0.66f, 0f), sol, esquinas(-0.15f, 0.15f, alto, alto + 0.3f, -0.03f, 0.03f), alto)) + frascos.map { (u, v) -> cilindro(u, v, 0.045f, 0.21f) }
+        with(LuzSelva) { luzEnPlano(luz, tapa, alto, sombras, 0.9f) }
+        val sMesa = LuzSelva.alumbrado(luz, CENTRO_MESA.x, alto + 0.05f, CENTRO_MESA.z)
+        val p = pin(luz, CENTRO_MESA.x, alto + 0.15f, CENTRO_MESA.z)
         val az = Azar(Semilla.de("botanico", "mesa selva", "cosas"))
+        // Las hojas que invaden la mesa: el helecho de la maceta del rincón del fondo, que cuelga sobre la tapa.
+        helechoColgante(luz, enLaMesa(-0.62f, 0.78f), 0.55f, Azar(Semilla.de("botanico", "helecho mesa")))
         with(PiezasBotanico) {
             // La caja de insectos: la bandeja abierta y la tapa levantada detrás, de pie, con sus mariposas a la vista.
-            val b0 = enLaMesa(-0.5f, 0.1f); val b1 = enLaMesa(0.08f, 0.1f); val b2 = enLaMesa(0.08f, 0.62f); val b3 = enLaMesa(-0.5f, 0.62f)
-            val sMesa = LuzSelva.alumbrado(luz, CENTRO_MESA.x, alto + 0.05f, CENTRO_MESA.z)
+            val b0 = enLaMesa(-0.34f, 0.12f); val b1 = enLaMesa(0.2f, 0.12f); val b2 = enLaMesa(0.2f, 0.62f); val b3 = enLaMesa(-0.34f, 0.62f)
             cajaDeInsectos(p, listOf(b0, b1, b2, b3).map { pc(it) }, Offset(0f, 1.4f), 0.3f, Azar(Semilla.de("botanico", "insectos bandeja")), 0f, sMesa)
             val tapaCaja = listOf(b3, b2, b2 + V3(0f, 0.3f, 0.07f), b3 + V3(0f, 0.3f, 0.07f)).map { pc(it) }
-            cajaDeInsectos(p, tapaCaja, Offset(1.2f, 0.6f), 0.2f, Azar(Semilla.de("botanico", "insectos tapa")), 0f, sMesa)
-            // La lámina en su atril: el pinzón a lápiz y aguada, inclinado hacia quien mira.
-            val a0 = enLaMesa(-0.95f, -0.25f); val a1 = enLaMesa(-0.55f, -0.25f)
-            val lam = listOf(a0 + V3(0f, 0.01f, 0f), a1 + V3(0f, 0.01f, 0f), a1 + V3(0f, 0.27f, 0.12f), a0 + V3(0f, 0.27f, 0.12f)).map { pc(it) }
-            drawLine(p.sombra(C.MADERA_OSC), pc(a0 + V3(0.18f, 0f, 0.16f)), pc(a0 + V3(0.18f, 0.24f, 0.11f)), 1.2f)
-            lamina(p, lam, 0.25f + 0.4f * sMesa, Azar(Semilla.de("botanico", "lamina selva")))
-            // La prensa, en la punta del fondo.
-            prensa(pr, p, sol)
+            cajaDeInsectos(p, tapaCaja, Offset(1.2f, 0.6f), 0.2f + 0.3f * sMesa, Azar(Semilla.de("botanico", "insectos tapa")), 0f, sMesa)
+            // Los frascos, cada uno con su bicho en alcohol.
+            for ((i, uv) in frascos.withIndex()) { val q = enLaMesa(uv.first, uv.second); frasco(p, pc(q), 0.21f * k(q.z), i) }
             // El herbario abierto delante, o los escarabajos del día en filas sobre un papel.
-            val h0 = enLaMesa(-0.35f, -0.92f); val h1 = enLaMesa(0.15f, -0.92f); val h2 = enLaMesa(0.15f, -0.25f); val h3 = enLaMesa(-0.35f, -0.25f)
+            val h0 = enLaMesa(-0.46f, -0.95f); val h1 = enLaMesa(0.06f, -0.95f); val h2 = enLaMesa(0.06f, -0.22f); val h3 = enLaMesa(-0.46f, -0.22f)
             if (S.escarabajosEnLaMesa(m)) escarabajosEnFila(p, listOf(h0, h1, h2, h3).map { pc(it) }, az)
             else if (estado != EscenaBotanico.Mesa.RECOGIDA) hojaDeHerbario(p, listOf(h0, h1, h2, h3).map { pc(it) }, 2, 0.3f, Azar(Semilla.de("botanico", "herbario mesa")), 0f, sMesa)
-            // Los frascos, cada uno con su bicho en alcohol.
-            for ((i, uv) in listOf(0.24f to 0.6f, 0.05f to 0.72f, 0.42f to 0.66f).withIndex()) { val q = enLaMesa(uv.first, uv.second); frasco(p, pc(q), 0.21f * k(q.z), i) }
-            // El objeto del día, en el centro de delante.
+            // La prensa, en la punta de delante, junto al poste.
+            prensa(pr, p, sol)
+            // El objeto del día, entre el herbario y la prensa.
             with(ObjetosBotanico) { sobreElSoporte(m, p, SOPORTE, 1f) }
         }
         lampara(m, luz)
-        // Las hojas que invaden la mesa: el helecho de la maceta del rincón cuelga sobre la punta del fondo.
-        helechoColgante(luz, enLaMesa(-1.05f, 0.7f), 0.55f, Azar(Semilla.de("botanico", "helecho mesa")))
     }
 
     /** Los escarabajos del día, en filas sobre un papel, con las pinzas al lado: verdes de metal, bronce y negros. */
@@ -199,7 +202,7 @@ internal object CercaSelva {
 
     /** La lámpara de la mesa: de latón, con su depósito y el tubo de vidrio; encendida, la llama y su luz en la mesa. */
     private fun DrawScope.lampara(m: Momento, luz: LuzSelva.Luz) {
-        val b = enLaMesa(0.7f, 0.5f); val pie = pc(b); val e = k(b.z); val f = luz.lampara
+        val b = enLaMesa(0.84f, 0.52f); val pie = pc(b); val e = k(b.z); val f = luz.lampara
         val p = pin(luz, b.x, b.y + 0.2f, b.z)
         if (f > 0.05f) {
             // Su luz en la tapa de la mesa: un charco cálido alrededor del pie.
@@ -300,6 +303,13 @@ internal object CercaSelva {
         val x = c.s.mx(0f, 0f); val z = c.s.mz(0f, 0f)
         val p = pin(luz, x, c.y1, z)
         with(PiezasBotanico) { cajon(c, p, luz.sol) }
+        // En el frente de los dos cajones de junto al poste, clavadas: una lámina (el pinzón) y una hoja de herbario.
+        if (i < 2 && c.base < 0.01f && !(S.cajonesAbiertos(m) && i == 0)) with(PiezasBotanico) {
+            val z0 = c.z0 - 0.008f; val y0 = c.y0 + 0.05f; val y1 = c.y1 - 0.04f
+            val q = listOf(c.s.p(-0.27f, y0, z0), c.s.p(0.05f, y0, z0), c.s.p(0.05f, y1, z0), c.s.p(-0.27f, y1, z0))
+            if (i == 0) lamina(p, q, 0.25f, Azar(Semilla.de("botanico", "lamina cajon"))) else hojaDeHerbario(p, q, 1, 0.25f, Azar(Semilla.de("botanico", "herbario cajon")))
+            drawCircle(p.sombra(C.HIERRO), 0.6f, q[3] + Offset(1.6f, 1.6f)); drawCircle(p.sombra(C.HIERRO), 0.6f, q[2] + Offset(-1.6f, 1.6f))
+        }
         val arriba = cajones(m).none { it !== c && abs(it.s.mx(0f, 0f) - x) < 0.05f && abs(it.s.mz(0f, 0f) - z) < 0.05f && it.y0 > c.y0 }
         if (!arriba) return
         val az = Azar(Semilla.de("botanico", "encima", i))
@@ -356,7 +366,9 @@ internal object CercaSelva {
         drawPath(Path().apply { moveTo(c + Offset(e * 0.12f, -e * 0.02f)); cubicTo(c + Offset(e * 0.35f, -e * 0.1f), fin + Offset(-e * 0.2f, 0f), fin) }, p.medio(lerp(C.CUERO, C.HOJA, 0.4f)), style = Stroke(max(0.6f, e * 0.018f), cap = StrokeCap.Round))
         for (j in 0..5) { val t = 0.25f + j * 0.13f; val q = c + (fin - c) * t + Offset(0f, -e * 0.05f * sin(t * 3f)); val s = if (j % 2 == 0) 1f else -1f
             val punta = q + Offset(e * 0.12f, s * e * 0.1f - e * 0.04f)
-            with(PiezasBotanico) { filodendro(p, q, punta, e * 0.12f, if (s < 0f) 0.3f else -0.2f, az, 0f, 0f, lobulos = 2) } }
+            val n = Offset(-(punta - q).y, (punta - q).x) * 0.32f
+            drawPath(Path().apply { moveTo(q); cubicTo(q + (punta - q) * 0.3f + n, punta - (punta - q) * 0.2f + n * 0.5f, punta); cubicTo(punta - (punta - q) * 0.2f - n * 0.5f, q + (punta - q) * 0.3f - n, q); close() }, p.por(lerp(C.HOJA, C.SELVA, 0.3f + 0.1f * (j % 2)), if (s < 0f) 0.3f else -0.25f))
+            drawLine(p.luz(lerp(C.HOJA, C.HOJA_LUZ, 0.4f)).copy(alpha = 0.6f), q, punta, 0.4f) }
     }
 
     /** Los filodendros que entran por un borde: unas hojas grandes y partidas en pecíolos largos que salen de [pie] (en metros). */
@@ -364,7 +376,7 @@ internal object CercaSelva {
         val az = Azar(semilla); val z = pie.y; val e = k(z)
         val base = pc(pie.x, suelo, z)
         val p = pin(luz, pie.x, suelo + 0.8f, z)
-        val dirs = if (derecha) listOf(-2.3f, -1.85f, -2.75f, -1.5f) else listOf(-0.95f, -1.4f, -0.55f)
+        val dirs = if (derecha) listOf(-2.25f, -1.8f, -2.75f) else listOf(-1.15f, -0.6f)
         for ((i, a) in dirs.withIndex()) {
             val largo = tam * e * az.entre(0.75f, 1.05f)
             val codo = base + Offset(cos(a) * largo * 0.6f, sin(a) * largo * 0.85f)
@@ -372,7 +384,7 @@ internal object CercaSelva {
             val b = a + az.entre(-0.3f, 0.3f) + (if (derecha) -0.2f else 0.2f)
             val punta = codo + Offset(cos(b) * largo * 0.7f, sin(b) * largo * 0.25f + largo * 0.32f)
             val al = LuzSelva.alumbrado(luz, pie.x + cos(a) * 0.6f, suelo + 0.9f, z)
-            with(PiezasBotanico) { filodendro(if (al > 0.5f) luz.p else p, codo, punta, largo * 0.95f, (0.1f + 0.3f * al).coerceIn(-1f, 1f), az, 0f, BovedaSelva.contraluz(luz, codo) * 0.5f, lobulos = 6 + i % 2) }
+            with(PiezasBotanico) { filodendro(if (al > 0.5f) luz.p else p, codo, punta, largo * 0.95f, (0.1f + 0.3f * al).coerceIn(-1f, 1f), az, 0f, BovedaSelva.contraluz(luz, codo) * 0.5f, lobulos = 6 + i % 2, escorzo = az.entre(0.5f, 1f)) }
         }
     }
 
@@ -381,7 +393,7 @@ internal object CercaSelva {
     /** Un libro abierto secándose al sol: las tapas de cuero, las hojas onduladas por el agua, abierto bocabajo o hacia arriba. */
     private fun DrawScope.libroAbierto(luz: LuzSelva.Luz, q: V3, i: Int) {
         val az = Azar(Semilla.de("botanico", "libro", i)); val p = pin(luz, q.x, 0.05f, q.z)
-        val s = S.sitio(q.x, q.z, az.entre(-0.6f, 0.6f)); val w = az.entre(0.13f, 0.18f); val d = w * 1.3f
+        val s = S.sitio(q.x, q.z, az.entre(-0.6f, 0.6f)); val w = az.entre(0.15f, 0.2f); val d = w * 1.3f
         val tapa = lerp(lerp(C.CUERO, C.TEJA, az.real() * 0.5f), C.ESCARABAJO, if (i % 3 == 2) 0.6f else 0f)
         if (i % 2 == 0) {
             // Abierto hacia arriba: las dos tapas planas y las hojas en abanico, onduladas.
@@ -397,7 +409,25 @@ internal object CercaSelva {
             for (lado in listOf(-1f, 1f)) drawPath(poligono(listOf(V3(0f, w * 0.5f, -d / 2f), V3(lado * w * 0.85f, 0f, -d / 2f), V3(lado * w * 0.85f, 0f, d / 2f), V3(0f, w * 0.5f, d / 2f)).map { s.p(it) }), p.por(tapa, if (lado > 0f == p.solALaDerecha) 0.5f else -0.4f))
             drawLine(p.luz(lerp(tapa, C.LATON, 0.4f)), s.p(lomo + V3(0f, 0f, -d / 2f)), s.p(lomo + V3(0f, 0f, d / 2f)), 0.9f)
             drawPath(poligono(listOf(V3(-w * 0.8f, 0.004f, -d / 2f), V3(0f, w * 0.46f, -d / 2f), V3(w * 0.8f, 0.004f, -d / 2f)).map { s.p(it) }), p.por(C.PAPEL, 0.2f))
+            // Las hojas hinchadas por el agua asoman por el canto, onduladas.
+            for (j in 0..4) drawLine(p.sombra(C.PAPEL).copy(alpha = 0.5f), s.p(-w * 0.75f + j * w * 0.37f, 0.01f, -d / 2f), s.p(0f, w * 0.42f, -d / 2f), 0.4f)
         }
+    }
+
+    /** Un papel suelto secándose: algo abarquillado, con sus renglones y el cerco del agua, y una piedra encima. */
+    private fun DrawScope.papelAlSol(luz: LuzSelva.Luz, q: V3, i: Int) {
+        val az = Azar(Semilla.de("botanico", "papel", i)); val p = pin(luz, q.x, 0.02f, q.z)
+        val s = S.sitio(q.x, q.z, az.entre(-0.7f, 0.7f)); val w = 0.11f; val d = 0.15f
+        val esquinas = listOf(V3(-w, az.entre(0f, 0.02f), -d), V3(w, az.entre(0.01f, 0.03f), -d), V3(w, az.entre(0f, 0.015f), d), V3(-w, az.entre(0.01f, 0.03f), d))
+        val forma = poligono(esquinas.map { s.p(it) })
+        drawPath(forma, p.arriba(lerp(C.PAPEL, C.LONA, 0.4f)))
+        clipPath(forma) {
+            for (j in 0..7) { val z = -d * 0.8f + j * d * 0.22f; drawLine(p.medio(lerp(C.BREA, C.CUERO, 0.3f)).copy(alpha = 0.4f), s.p(-w * 0.8f, 0.012f, z), s.p(w * az.entre(0.3f, 0.8f), 0.012f, z), 0.35f) }
+            mancha(s.p(az.entre(-w, w) * 0.5f, 0.01f, az.entre(-d, d) * 0.5f), 4f, 2f, p.medio(lerp(C.PAPEL, C.CUERO, 0.5f)), 0.35f)
+        }
+        drawPath(forma, p.sombra(C.PAPEL).copy(alpha = 0.4f), style = Stroke(0.4f))
+        val c = s.p(az.entre(-0.4f, 0.4f) * w, 0.03f, az.entre(-0.4f, 0.4f) * d); val e = k(q.z) * 0.035f
+        drawOval(Brush.horizontalGradient(listOf(p.sombra(C.ROCA), p.luz(C.ROCA)), c.x - e, c.x + e), Offset(c.x - e, c.y - e * 0.6f), Size(e * 2f, e * 1.1f))
     }
 
     /** El paraguas negro abierto al revés, con las ramitas, las hojas y los escarabajos que cayeron dentro. */

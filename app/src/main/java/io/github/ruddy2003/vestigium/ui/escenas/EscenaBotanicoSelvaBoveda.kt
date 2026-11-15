@@ -1,7 +1,11 @@
 package io.github.ruddy2003.vestigium.ui.escenas
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.SelvaBotanico.k
 import io.github.ruddy2003.vestigium.ui.escenas.SelvaBotanico.pc
@@ -70,7 +74,8 @@ internal object BovedaSelva {
             V3(0.75f, 3.25f, 4.85f), V3(-0.25f, 3.65f, 4.75f), V3(-1.25f, 3.5f, 5.05f), V3(1.05f, 2.45f, 5.7f),
             V3(-2.75f, 3.05f, 5.7f), V3(-0.45f, 2.35f, 4.45f), V3(-2.15f, 1.95f, 7.7f), V3(0.2f, 3.9f, 6.2f),
         ), 0) + mata(ESQUINA_CIMA, listOf(
-            V3(-0.35f, 2.5f, 3.95f), V3(0.35f, 3.05f, 3.25f), V3(1.25f, 2.55f, 4.35f), V3(0.9f, 3.5f, 2.45f), V3(1.8f, 3.7f, 3.4f),
+            // (ninguna baja por delante de la luna ni del sol, que salen por el claro de la derecha)
+            V3(-0.35f, 2.5f, 3.95f), V3(0.35f, 3.05f, 3.25f), V3(1.0f, 2.95f, 4.2f), V3(0.9f, 3.5f, 2.45f), V3(1.8f, 3.7f, 3.4f),
             // Las que se tienden por encima de quien mira (fuera del cuadro, por arriba): dan la luz rota en las tablas de delante.
             V3(0.55f, 3.15f, 1.55f), V3(1.3f, 3.0f, 1.15f), V3(-0.45f, 2.95f, 2.2f), V3(0.15f, 3.45f, 1.95f), V3(-1.1f, 3.1f, 2.7f),
             // Las bajas del otro lado de la mata (fuera del cuadro, a la derecha): con el sol bajo tienden su sombra por el tablado.
@@ -116,13 +121,21 @@ internal object BovedaSelva {
         val d = t - b; val l = d.getDistance().coerceAtLeast(0.01f); val n = Offset(-d.y / l, d.x / l)
         val curva = ((mid - (b + t) * 0.5f).let { it.x * n.x + it.y * n.y })
         val zm = h.medio.z
-        val pin = LuzSelva.pincelEn(luz, mid, LuzSelva.alumbrado(luz, h.medio.x, h.medio.y + 0.4f, h.medio.z))
+        val pin = LuzSelva.pincelEn(luz, mid, LuzSelva.alumbrado(luz, h.medio.x, h.medio.y + 0.4f, h.medio.z), alcance = 150f)
         // El pecíolo, de la cima de la mata a la hoja.
         val desde = pc(h.desde)
         drawLine(pin.medio(lerp(C.HOJA, C.ARENA, 0.2f)), desde, b, (0.05f * k(h.desde.z)).coerceAtLeast(0.6f))
         val cl = contraluz(luz, mid)
+        // A contraluz la luz que pasa por la lámina es la del sol, no la de la penumbra.
+        val pinH = if (cl > 0.3f) luz.p else pin
         with(PiezasBotanico) {
-            hojaDePlatano(pin, b, t, h.ancho * k(zm), curva, h.vuelta, h.rasgado, h.seca, (-0.15f + 0.5f * cl).coerceIn(-1f, 1f), az, 0f, cl)
+            hojaDePlatano(pinH, b, t, h.ancho * k(zm), curva, h.vuelta, h.rasgado, h.seca, (-0.15f + 0.5f * cl).coerceIn(-1f, 1f), az, 0f, cl)
+        }
+        // Mojada, la hoja brilla: dos filos de luz a lo largo de la lámina, y la gota que cuelga de la punta.
+        if (SelvaBotanico.mojado(m)) {
+            val brillo = lerp(luz.l.alto, Color.White, 0.5f).copy(alpha = 0.35f); val w = h.ancho * k(zm) * 0.25f
+            for (s in listOf(-1f, 1f)) drawPath(Path().apply { moveTo(b + n * (s * w * 0.3f)); cubicTo(b + d * 0.3f + n * (s * w + curva * 0.6f), b + d * 0.7f + n * (s * w * 0.9f + curva * 0.6f), t + n * (s * w * 0.2f)) }, brillo, style = Stroke(0.6f, cap = StrokeCap.Round))
+            drawCircle(lerp(luz.l.alto, Color.White, 0.4f).copy(alpha = 0.7f), 0.9f, t + Offset(0f, 1.2f))
         }
     }
 

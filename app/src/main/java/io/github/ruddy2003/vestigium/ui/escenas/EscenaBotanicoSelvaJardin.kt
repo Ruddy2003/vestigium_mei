@@ -31,6 +31,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.reflejoRoto
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombra
 import io.github.ruddy2003.vestigium.vidas.Azar
+import io.github.ruddy2003.vestigium.vidas.Clima
 import io.github.ruddy2003.vestigium.vidas.Semilla
 import kotlin.math.PI
 import kotlin.math.abs
@@ -74,11 +75,17 @@ internal object JardinSelva {
         // El árbol grande, con sus lianas y sus bromelias y orquídeas en las horquillas.
         arbol(m, luz)
         with(PiezasBotanico) {
-            // Los helechos arborescentes, de tronco oscuro y fronda en estrella.
-            for ((i, t) in listOf(Triple(-2.15f, 12.5f, 4.3f), Triple(2.95f, 13.5f, 3.7f), Triple(-0.95f, 9.2f, 3.1f)).withIndex()) {
+            // Los helechos arborescentes, de tronco oscuro y fronda en estrella (los dos de detrás, antes de la bruma).
+            for ((i, t) in listOf(Triple(-2.15f, 12.5f, 4.3f), Triple(2.95f, 13.5f, 3.7f)).withIndex()) {
                 val (x, z, h) = t; val pie = pc(x, sueloEn(x, z), z)
                 helechoArborescente(pinJardin(luz, x, h, z), pie, h * k(z), Azar(Semilla.de("botanico", "helecho jardin", i)), 0.08f, contraluz = BovedaSelva.contraluz(luz, pie + Offset(0f, -h * k(z))))
             }
+        }
+        // La bruma se queda entre los planos: entre el árbol grande y lo de delante.
+        brumaEntre(m, luz, 120f, 178f, 1f)
+        with(PiezasBotanico) {
+            run { val x = -2.9f; val z = 8.4f; val h = 3.1f; val pie = pc(x, sueloEn(x, z), z)
+                helechoArborescente(pinJardin(luz, x, h, z), pie, h * k(z), Azar(Semilla.de("botanico", "helecho jardin", 2)), 0.06f, contraluz = BovedaSelva.contraluz(luz, pie + Offset(0f, -h * k(z)))) }
             // El naranjo con fruta, a la izquierda.
             run { val x = -3.25f; val z = 10f; naranjo(pinJardin(luz, x, 2f, z), pc(x, sueloEn(x, z), z), 3.3f * k(z), 2.7f * k(z), Azar(Semilla.de("botanico", "naranjo jardin")), 0.08f, frutos = 18) }
             // El macizo de plátanos con su racimo, a la derecha del sendero.
@@ -87,17 +94,32 @@ internal object JardinSelva {
                 platano(pinJardin(luz, x, h * 0.7f, z), pie, h * k(z), Azar(Semilla.de("botanico", "platano jardin", i)), 0.08f, racimo = i == 0, hojas = 8, contraluz = BovedaSelva.contraluz(luz, pie + Offset(0f, -h * k(z) * 0.7f)))
             }
             // Las heliconias, en matas a la orilla del tablado y del arroyo.
-            for ((i, t) in listOf(Triple(-2.35f, 8.3f, 1.7f), Triple(-0.65f, 7.3f, 1.6f), Triple(0.75f, 7.9f, 1.5f), Triple(1.75f, 6.7f, 1.4f), Triple(3.3f, 7.0f, 1.6f)).withIndex()) {
+            for ((i, t) in listOf(Triple(-2.35f, 8.3f, 1.7f), Triple(-1.45f, 7.6f, 1.6f), Triple(0.75f, 7.9f, 1.5f), Triple(1.75f, 6.7f, 1.4f), Triple(3.3f, 7.0f, 1.6f)).withIndex()) {
                 val (x, z, h) = t; val pie = pc(x, sueloEn(x, z), z)
                 heliconia(pinJardin(luz, x, h, z), pie, h * k(z), Azar(Semilla.de("botanico", "heliconia", i)), 0.04f, contraluz = BovedaSelva.contraluz(luz, pie + Offset(0f, -h * k(z))) * 0.7f, flores = 2 + i % 2, cuelga = i % 2 == 1)
             }
         }
+        // Otra capa de bruma, más tenue, entre el jardín y el tablado.
+        brumaEntre(m, luz, 168f, 215f, 0.55f)
         // El plátano junto a la mesa: el falso tronco y la cima (sus hojas son la bóveda).
         platanoDeLaMesa(m, luz)
         // Lo que se ve en el aire del jardín: los rayos que bajan entre las hojas.
         clipPath(poligono(listOf(Offset(-10f, 0f), Offset(196f, 0f), Offset(250f, 60f), Offset(268f, 110f), Offset(268f, 230f), Offset(-10f, 230f)))) {
             with(LejosSelva) { rayos(luz, Rect(40f, 10f, 250f, 210f), 4, Semilla.de("botanico", "rayos jardin", m.ficha.dia), 0.7f) }
         }
+    }
+
+    /**
+     * Un banco de bruma entre dos planos del jardín, de [y0] a [y1]: con niebla, espeso (la niebla va por capas, como en
+     * Horror cósmico, no como un velo encima de todo); con lluvia, menos; con buen tiempo, solo la de la mañana.
+     */
+    private fun DrawScope.brumaEntre(m: Momento, luz: LuzSelva.Luz, y0: Float, y1: Float, cuanta: Float) {
+        val tiempo = when (m.ficha.clima) { Clima.NIEBLA -> 1f; Clima.LLUVIA, Clima.TORMENTA -> 0.5f; Clima.NIEVE -> 0.45f; else -> 0.35f * luz.bruma }
+        val k = (tiempo * cuanta).coerceIn(0f, 1f); if (k < 0.02f) return
+        val c = lerp(luz.l.bruma, Color.White, 0.25f)
+        drawRect(Brush.verticalGradient(listOf(c.copy(alpha = 0f), c.copy(alpha = 0.5f * k), c.copy(alpha = 0.75f * k), c.copy(alpha = 0f)), y0 - 50f, y1 + 10f), Offset(0f, y0 - 50f), Size(ANCHO, y1 - y0 + 60f))
+        val az = Azar(Semilla.de("botanico", "bruma entre", y0))
+        repeat(6) { mancha(Offset(az.entre(-20f, ANCHO + 20f), az.entre(y0, y1)), az.entre(60f, 140f), az.entre(6f, 14f), c, 0.6f * k) }
     }
 
     /** El pincel de lo que está en el jardín: al sol o a la sombra del árbol y de las hojas. */
@@ -109,7 +131,7 @@ internal object JardinSelva {
         val l = luz.l; val p = luz.p
         // La linde de la selva al pie de la montaña: monte bajo oscuro, con hojas grandes en su borde.
         val linde = (0..20).map { val x = -12f + 286f * it / 20f; Offset(x, 140f + 6f * sin(it * 1.7f) + 4f * sin(it * 0.6f) + (if (x > 230f) (x - 230f) * 0.35f else 0f)) }
-        drawPath(curva(linde, 190f), Brush.verticalGradient(listOf(l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.4f), 0.22f), l.tono(lerp(C.SELVA_OSC, C.BREA, 0.15f), 0.15f)), 135f, 190f))
+        drawPath(curva(linde, 190f), Brush.verticalGradient(listOf(l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.6f), 0.2f), l.tono(lerp(C.SELVA_OSC, C.BREA, 0.3f), 0.12f)), 135f, 190f))
         val dabsO = ArrayList<Offset>(); val dabsC = ArrayList<Offset>()
         repeat(260) { val x = az.entre(-10f, 275f); val y = az.entre(136f, 175f); dabsO += Offset(x, y); if (az.real() < 0.5f) dabsC += Offset(x + 1f, y - 1.4f) }
         drawPoints(dabsO, PointMode.Points, l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.35f), 0.2f), 3.2f, StrokeCap.Round)
@@ -121,12 +143,18 @@ internal object JardinSelva {
         clipPath(tierra) {
             // La orilla de la playa: la arena se mete entre la hierba.
             drawPath(poligono(seca + listOf(Offset(ANCHO + 10f, 200f), Offset(262f, 196f))), Brush.verticalGradient(listOf(l.tono(lerp(C.ARENA, C.HOJA, 0.25f), 0.12f), Color.Transparent), 165f, 200f))
-            val o = ArrayList<Offset>(); val c = ArrayList<Offset>()
-            // Helechos bajos, musgo y hojarasca: matas en manchas, más grandes cuanto más cerca.
-            repeat(300) { val x = az.entre(-10f, ANCHO); val y = 160f + (ALTO - 160f) * az.real() * az.real(); val e = 1.6f + (y - 150f) * 0.05f
-                o += Offset(x, y); repeat(2) { c += Offset(x + az.entre(-e, e), y - e * az.entre(0.2f, 0.8f)) } }
-            drawPoints(o, PointMode.Points, l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.45f), 0.1f), 3.4f, StrokeCap.Round)
-            drawPoints(c, PointMode.Points, p.medio(lerp(C.SELVA, C.HOJA, 0.4f), 0.08f), 2f, StrokeCap.Round)
+            // El musgo y la hojarasca: manchas blandas, verdes y pardas.
+            repeat(40) { val q = V3(az.entre(-4f, 5f), 0f, az.entre(5.5f, 22f)); val c = pc(q.x, sueloEn(q.x, q.z), q.z); val e = k(q.z)
+                mancha(c, e * az.entre(0.4f, 1.1f), e * az.entre(0.08f, 0.2f), if (it % 3 == 0) l.tono(lerp(C.CUERO, C.SELVA_OSC, 0.4f), 0.1f) else l.tono(lerp(C.SELVA, C.HOJA, 0.35f), 0.1f), 0.35f) }
+            // Los helechos bajos: matas de frondas cortas que se abren en abanico, más grandes cuanto más cerca.
+            val oscuras = ArrayList<Offset>(); val claras = ArrayList<Offset>()
+            repeat(150) {
+                val q = V3(az.entre(-4.5f, 5.5f), 0f, 5.6f + 16f * az.real() * az.real()); val c = pc(q.x, sueloEn(q.x, q.z), q.z); val e = k(q.z) * az.entre(0.35f, 0.6f)
+                repeat(7) { j -> val a = -PI.toFloat() / 2f + (j - 3) * 0.42f + az.entre(-0.15f, 0.15f); val fin = c + Offset(cos(a) * e, sin(a) * e * 0.75f + e * 0.25f * abs(cos(a)))
+                    (if (cos(a) * (if (p.solALaDerecha) 1f else -1f) > 0.1f) claras else oscuras).apply { add(c); add(fin) } }
+            }
+            drawPoints(oscuras, PointMode.Lines, l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.25f), 0.08f), 1.3f, StrokeCap.Round)
+            drawPoints(claras, PointMode.Lines, p.medio(lerp(C.HOJA, C.HOJA_LUZ, 0.2f), 0.08f), 1.1f, StrokeCap.Round)
             // El sendero de arena, con sus piedras pasaderas.
             val camino = SENDERO.map { pc(it) }
             val ancho = SENDERO.map { 0.62f * k(it.z) }
@@ -161,32 +189,43 @@ internal object JardinSelva {
     private fun DrawScope.arroyo(m: Momento, luz: LuzSelva.Luz, az: Azar) {
         val l = luz.l; val p = luz.p
         val crecido = SelvaBotanico.arroyoCrecido(m)
-        val ancho = if (crecido) 1.35f else 0.95f
-        val eje = ARROYO.map { pc(it) }; val w = ARROYO.map { ancho * k(it.z) * 0.5f }
-        val izq = eje.mapIndexed { i, q -> q + Offset(-w[i], -w[i] * 0.12f) }; val der = eje.mapIndexed { i, q -> q + Offset(w[i], w[i] * 0.12f) }
-        // El cauce: la orilla de tierra en sombra, un poco más ancha que el agua.
-        drawPath(poligono(izq.map { it + Offset(-2f, 0f) } + der.map { it + Offset(2f, 1f) }.reversed()), p.sombra(lerp(C.MADERA_OSC, C.SELVA_OSC, 0.4f), 0.1f))
+        val ancho = if (crecido) 1.35f else 1.0f
+        // El eje, con más puntos, y las dos orillas, cada una con sus entrantes y salientes (nada de curva lisa).
+        val puntos = (0 until ARROYO.size - 1).flatMap { i -> (0 until 4).map { j -> ARROYO[i] + (ARROYO[i + 1] - ARROYO[i]) * (j / 4f) } } + ARROYO.last()
+        val eje = puntos.map { pc(it) }; val w = puntos.mapIndexed { i, it -> ancho * k(it.z) * 0.5f * (1f + 0.14f * sin(i * 1.9f) + 0.08f * sin(i * 4.3f)) }
+        val izq = eje.mapIndexed { i, q -> q + Offset(-w[i] * (1f + 0.16f * sin(i * 2.3f + 1f)), -w[i] * 0.16f) }; val der = eje.mapIndexed { i, q -> q + Offset(w[i] * (1f + 0.16f * cos(i * 1.7f)), w[i] * 0.16f) }
+        // El cauce: la orilla de tierra mojada, en sombra, un poco más ancha que el agua (la franja de paso).
+        drawPath(poligono(izq.mapIndexed { i, q -> q + Offset(-2f - w[i] * 0.25f, 0f) } + der.mapIndexed { i, q -> q + Offset(2f + w[i] * 0.25f, 1f) }.reversed()), p.sombra(lerp(C.MADERA_OSC, C.SELVA_OSC, 0.35f), 0.1f))
         val agua = poligono(izq + der.reversed())
-        val cielo = lerp(l.medio, l.alto, 0.4f)
-        drawPath(agua, Brush.verticalGradient(listOf(l.tono(lerp(C.SELVA_OSC, C.MAR, 0.3f), 0.2f), lerp(l.tono(lerp(C.MAR, C.SELVA, 0.4f)), cielo, 0.35f), l.tono(lerp(C.ORILLA, C.SELVA, 0.3f))), 120f, 285f))
+        val cielo = lerp(l.medio, l.alto, 0.35f)
+        val hondo = l.tono(lerp(C.SELVA_OSC, C.MAR_HONDO, 0.45f)); val claro = l.tono(lerp(C.MAR, C.ORILLA, 0.35f))
+        drawPath(agua, Brush.verticalGradient(listOf(hondo, lerp(hondo, claro, 0.35f), lerp(hondo, claro, 0.62f)), 125f, 300f))
         clipPath(agua) {
-            // El reflejo del follaje de la orilla y del cielo: trazos tendidos que se rompen.
-            reflejoRoto(150f, 300f, 150f, 120f, l.tono(C.SELVA_OSC).copy(alpha = 0.6f), 0.4f, az, 1.2f)
+            // Lo que se refleja: el cielo del claro en vetas largas que siguen la corriente, y la orilla oscura de cada lado.
+            val vetasC = ArrayList<Offset>(); val vetasO = ArrayList<Offset>()
+            for (i in 0 until eje.size - 1) { val a = eje[i]; val b = eje[i + 1]; val d = b - a; val dl = d.getDistance().coerceAtLeast(1f)
+                repeat(3) { val t = az.real(); val c = a + d * t; val ww = w[i] + (w[i + 1] - w[i]) * t; val off = az.entre(-0.85f, 0.85f) * ww; val q = c + Offset(off, off * 0.16f); val l2 = dl * az.entre(0.25f, 0.7f)
+                    (if (abs(off) > ww * 0.55f) vetasO else vetasC).apply { add(q); add(q + d / dl * l2) } } }
+            drawPoints(vetasO, PointMode.Lines, l.tono(C.SELVA_OSC).copy(alpha = 0.5f), 1.6f, StrokeCap.Round)
+            drawPoints(vetasC, PointMode.Lines, lerp(cielo, Color.White, 0.2f).copy(alpha = 0.45f), 1.1f, StrokeCap.Round)
+            // Los rizos de la corriente, de través, y el brillo del sol si le da.
             val rizos = ArrayList<Offset>(); val turbia = if (crecido) lerp(C.ARENA, C.CUERO, 0.4f) else C.LONA
-            for (i in 0 until eje.size - 1) { val a = eje[i]; val b = eje[i + 1]; repeat(18) { val t = az.real(); val q = a + (b - a) * t + Offset(az.entre(-1f, 1f) * (w[i] + (w[i + 1] - w[i]) * t), 0f); val e = 1.5f + q.y * 0.02f
-                rizos += q; rizos += q + Offset(e * az.entre(1f, 2.5f), 0.2f) } }
-            drawPoints(rizos, PointMode.Lines, l.tono(lerp(turbia, Color.White, 0.3f)).copy(alpha = 0.55f), 0.6f, StrokeCap.Round)
-            if (crecido) drawPath(agua, l.tono(lerp(C.ARENA, C.CUERO, 0.45f)).copy(alpha = 0.35f))
-            // La luz del cielo en el agua, donde da el sol.
-            if (luz.directa > 0.2f) drawPath(agua, luz.color.copy(alpha = 0.12f * luz.directa), blendMode = BlendMode.Plus)
+            for (i in 0 until eje.size - 1) { val a = eje[i]; val b = eje[i + 1]; repeat(4) { val t = az.real(); val q = a + (b - a) * t + Offset(az.entre(-0.8f, 0.8f) * (w[i] + (w[i + 1] - w[i]) * t), 0f); val e = 1.2f + (q.y - 120f) * 0.025f
+                rizos += q; rizos += q + Offset(e * az.entre(0.8f, 1.8f), -e * az.entre(0.4f, 0.9f)) } }
+            drawPoints(rizos, PointMode.Lines, l.tono(lerp(turbia, Color.White, 0.35f)).copy(alpha = 0.6f), 0.6f, StrokeCap.Round)
+            if (crecido) drawPath(agua, l.tono(lerp(C.ARENA, C.CUERO, 0.45f)).copy(alpha = 0.38f))
+            if (luz.directa > 0.2f) drawPath(agua, luz.color.copy(alpha = 0.1f * luz.directa), blendMode = BlendMode.Plus)
         }
+        // La orilla: el borde del agua, claro donde le da la luz.
+        drawPath(curva(izq), lerp(cielo, Color.White, 0.3f).copy(alpha = 0.4f), style = Stroke(0.6f))
         // Las piedras de las orillas y del cauce, con musgo arriba, y la espuma de los saltos.
         val pz = Azar(Semilla.de("botanico", "piedras arroyo"))
-        for (i in 1 until ARROYO.size - 1) for (j in 0..2) {
-            val a = ARROYO[i]; val lado = if (j == 0) -1f else if (j == 1) 1f else pz.entre(-0.5f, 0.5f)
-            val q = V3(a.x + lado * ancho * 0.55f + pz.entre(-0.15f, 0.15f), a.y + 0.05f, a.z + pz.entre(-0.8f, 0.8f)); val c = pc(q); val e = k(q.z) * pz.entre(0.22f, 0.4f)
+        val esp = lerp(l.tono(C.LONA), Color.White, 0.3f)
+        for (i in 1 until ARROYO.size) for (j in 0..3) {
+            val a = ARROYO[i]; val lado = when (j) { 0 -> -1f; 1 -> 1f; else -> pz.entre(-0.6f, 0.6f) }
+            val q = V3(a.x + lado * ancho * 0.55f + pz.entre(-0.15f, 0.15f), a.y + 0.05f, a.z + pz.entre(-0.9f, 0.9f)); val c = pc(q); val e = k(q.z) * pz.entre(0.18f, 0.36f)
+            if (j >= 2) repeat(5) { drawOval(esp.copy(alpha = if (crecido) 0.85f else 0.6f), Offset(c.x - e * 1.2f + pz.entre(0f, e * 1.4f), c.y - e * 0.05f + pz.entre(-1f, 1.5f)), Size(e * pz.entre(0.4f, 1f), e * 0.16f)) }
             piedra(p, c, e, pz, 0.08f)
-            if (j == 2) { val esp = lerp(l.tono(C.LONA), Color.White, 0.3f); repeat(4) { drawOval(esp.copy(alpha = if (crecido) 0.85f else 0.6f), Offset(c.x - e * 0.9f + pz.entre(0f, e), c.y - e * 0.1f + pz.entre(-1f, 1f)), Size(e * pz.entre(0.4f, 0.9f), e * 0.18f)) } }
         }
     }
 
@@ -207,6 +246,14 @@ internal object JardinSelva {
         val p = luz.sombra
         val az = Azar(Semilla.de("botanico", "arbol grande"))
         val horquillas = with(PiezasBotanico) { arbolDeRaices(p, pie, 1.5f * e, pie.y + 20f, az, 0.06f) }
+        // La liana que abraza el tronco, los helechos y las bromelias que viven en él, y las motas de sol que se cuelan.
+        with(PiezasBotanico) {
+            val sube = (0..14).map { i -> val t = i / 14f; pie + Offset(sin(t * 9f) * 0.75f * e * (1f - 0.2f * t), -t * pie.y * 0.95f) }
+            liana(p, sube, 1.3f, az, 0.06f)
+            for ((i, t) in listOf(0.32f, 0.5f, 0.66f).withIndex()) { val q = pie + Offset((if (i % 2 == 0) -0.55f else 0.6f) * e, -t * pie.y); bromelia(p, q, e * az.entre(0.6f, 0.9f), az, 0.06f, flor = i == 1) }
+        }
+        if (luz.directa > 0.2f && !luz.deLuna) { val lado = if (luz.r.lat >= 0f) 1f else -1f
+            repeat(7) { val q = pie + Offset(lado * az.entre(0.05f, 0.6f) * e, -az.entre(0.1f, 0.85f) * pie.y); mancha(q, e * az.entre(0.12f, 0.28f), e * az.entre(0.2f, 0.4f), luz.color, 0.35f * luz.directa) } }
         // Las lianas que cuelgan de las ramas, en lazos que cruzan por arriba hacia la casa.
         with(PiezasBotanico) {
             val ramas = horquillas
@@ -215,8 +262,7 @@ internal object JardinSelva {
                 else liana(p, listOf(h, Offset((h.x + 95f) * 0.5f, h.y + 55f), Offset(95f, 30f)), 1.6f, az, 0.05f)
             }
             // Las bromelias y las orquídeas en las horquillas.
-            for ((i, h) in ramas.withIndex()) { bromelia(p, h, e * az.entre(0.7f, 1.1f), az, 0.05f, flor = i % 2 == 0)
-                if (i % 2 == 1) { val f = h + Offset(az.entre(-4f, 4f), -e * 0.3f); val lila = lerp(C.SOMBRA, C.LONA, 0.38f); repeat(3) { drawCircle(p.por(lila, 0.3f, 0.05f), max(0.8f, e * 0.08f), f + Offset(it * e * 0.12f, -it * e * 0.05f)) } } }
+            for ((i, h) in ramas.withIndex()) bromelia(p, h, e * az.entre(0.7f, 1.1f), az, 0.05f, flor = i % 2 == 0)
         }
     }
 

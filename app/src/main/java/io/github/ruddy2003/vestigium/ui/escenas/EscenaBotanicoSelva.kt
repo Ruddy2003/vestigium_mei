@@ -58,7 +58,7 @@ internal object SelvaBotanico {
     // ---------------------------------------------------------------- La casa: el tablado, el poste y la esquina del alero
 
     const val TABLADO_X0 = -4f
-    const val TABLADO_X1 = 2.05f
+    const val TABLADO_X1 = 1.45f
     const val TABLADO_Z0 = 1f
     const val TABLADO_Z1 = 5.3f
 
@@ -86,7 +86,7 @@ internal object SelvaBotanico {
 
     const val PISO_GATO = 276f
     const val GATO_DESDE = 112f
-    const val GATO_HASTA = 302f
+    const val GATO_HASTA = 288f
 
     /** Los cajones de la galería: pocos (el arco va de 0.25 a 0.40), contra el poste, con plantas encima. */
     fun cajonesEnLaGaleria(m: Momento): Int = EscenaBotanico.cuantosCajones(m).coerceIn(1, 5)

@@ -79,11 +79,17 @@ internal object GaleriaSelva {
             // Con lluvia, el tablado mojado: más oscuro junto al jardín y con charcos que reflejan.
             if (S.mojado(m) && m.ficha.clima != Clima.NIEBLA) {
                 drawPath(tablado, Brush.horizontalGradient(listOf(Color.Transparent, p.sombra(C.MADERA_OSC).copy(alpha = 0.4f)), pc(-1f, 0f, 4f).x, pc(1.4f, 0f, 4f).x))
-                for ((cx, cz, r) in listOf(Triple(0.9f, 4.3f, 0.35f), Triple(0.2f, 3.3f, 0.25f), Triple(1.2f, 3.4f, 0.2f))) {
+                // Los charcos, de borde roto, en las tablas que se hunden: el cielo gris y las hojas de encima reflejados.
+                for ((cx, cz, r) in listOf(Triple(0.9f, 4.3f, 0.38f), Triple(0.35f, 3.3f, 0.28f), Triple(1.15f, 3.45f, 0.2f))) {
+                    val charco = poligono((0 until 14).map { j -> val a = (2 * PI * j / 14).toFloat(); val rr = r * (0.75f + 0.35f * az.real()); pc(cx + cos(a) * rr, 0f, cz + sin(a) * rr * 0.7f) })
                     val c = pc(cx, 0f, cz); val e = k(cz)
-                    val charco = Path().apply { addOval(androidx.compose.ui.geometry.Rect(c.x - r * e, c.y - r * e * 0.2f, c.x + r * e, c.y + r * e * 0.2f)) }
-                    drawPath(charco, lerp(luz.l.medio, luz.l.alto, 0.4f).copy(alpha = 0.35f))
-                    clipPath(charco) { reflejoRoto(c.x - r * e * 0.3f, c.x + r * e * 0.2f, c.y - r * e * 0.2f, r * e * 0.4f, p.sombra(C.SELVA), 0.5f, az, 0.7f) }
+                    drawPath(charco, lerp(lerp(luz.l.medio, luz.l.alto, 0.5f), p.sombra(C.MADERA_OSC), 0.35f).copy(alpha = 0.6f))
+                    clipPath(charco) {
+                        // Las hojas de la bóveda, oscuras, del revés; y el filo claro del cielo.
+                        reflejoRoto(c.x - r * e * 0.6f, c.x + r * e * 0.1f, c.y - r * e * 0.25f, r * e * 0.5f, p.sombra(lerp(C.SELVA, C.HOJA, 0.3f)), 0.6f, az, 0.7f)
+                        reflejoRoto(c.x + r * e * 0.2f, c.x + r * e * 0.8f, c.y - r * e * 0.25f, r * e * 0.4f, lerp(luz.l.alto, Color.White, 0.3f), 0.35f, az, 0.6f)
+                    }
+                    drawPath(charco, lerp(luz.l.alto, Color.White, 0.4f).copy(alpha = 0.3f), style = Stroke(0.5f))
                 }
             }
         }
