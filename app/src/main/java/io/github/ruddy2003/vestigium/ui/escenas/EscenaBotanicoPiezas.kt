@@ -1379,90 +1379,118 @@ internal object PiezasBotanico {
      * Una hoja de plátano, de [base] a [punta] (en el lienzo), de [ancho] unidades en lo más ancho; el nervio se curva
      * [curva] unidades a su izquierda (negativo, a su derecha). [vuelta], de −1 a 1: cuánto se ve de canto cada mitad
      * (la hoja se dobla por el nervio). [rasgado], de 0 a 1: cuántos rasgones la parten, del borde hasta el nervio. [seca],
-     * de 0 a 1: el borde seco y pardo de las hojas viejas. [t]: la luz que le da (de −1 a 1).
+     * de 0 a 1: el borde seco y pardo de las hojas viejas. [t]: la luz que le da (de −1 a 1). [contraluz], de 0 a 1:
+     * cuánto sol le pasa por detrás; a contraluz la lámina se vuelve translúcida, verde amarillo encendido, con las venas
+     * paralelas y el nervio oscuros, y lo que la tapa por detrás (otra hoja) se adivina más oscuro.
      */
-    fun DrawScope.hojaDePlatano(p: Pincel, base: Offset, punta: Offset, ancho: Float, curva: Float, vuelta: Float, rasgado: Float, seca: Float, t: Float, az: Azar, lejos: Float = 0f) {
+    fun DrawScope.hojaDePlatano(p: Pincel, base: Offset, punta: Offset, ancho: Float, curva: Float, vuelta: Float, rasgado: Float, seca: Float, t: Float, az: Azar, lejos: Float = 0f, contraluz: Float = 0f) {
         val d = punta - base; val largo = d.getDistance().coerceAtLeast(0.01f); val u = d / largo; val n = Offset(-u.y, u.x)
         fun nervio(s: Float): Offset { val q = base + d * s; return q + n * (curva * 4f * s * (1f - s)) }
         fun tangente(s: Float): Offset { val a = nervio((s - 0.02f).coerceAtLeast(0f)); val b = nervio((s + 0.02f).coerceAtMost(1f)); val dd = b - a; return dd / dd.getDistance().coerceAtLeast(0.001f) }
-        fun anchoEn(s: Float): Float = ancho * 0.5f * (sin(PI.toFloat() * s.coerceIn(0f, 1f)).pow(0.55f)) * (if (s < 0.08f) s / 0.08f else 1f)
-        val hoja = lerp(C.HOJA, C.SELVA, 0.15f + 0.2f * az.real())
+        fun anchoEn(s: Float): Float = ancho * 0.5f * (sin(PI.toFloat() * s.coerceIn(0f, 1f)).pow(0.5f)) * (if (s < 0.1f) s / 0.1f else 1f) * (1f - 0.18f * s * s)
+        val hoja = lerp(C.HOJA, C.SELVA, 0.12f + 0.22f * az.real())
         val verdeSeco = lerp(C.ARENA, C.CUERO, 0.45f)
+        val cl = contraluz.coerceIn(0f, 1f)
+        // La luz que pasa a través de la lámina: verde amarillo, y más pálida en el centro de cada tira.
+        val translucida = p.l.tono(lerp(C.HOJA_LUZ, C.LATON, 0.18f), lejos)
+        val vena = p.l.tono(lerp(hoja, C.SELVA_OSC, 0.35f), lejos)
         for (lado in listOf(-1f, 1f)) {
             // Cada mitad se ve más o menos de canto según la vuelta; la que da la espalda, más oscura y azulada.
             val canto = (0.5f + 0.5f * lado * vuelta).coerceIn(0.18f, 1f)
             val tl = (t + lado * vuelta * 0.5f).coerceIn(-1f, 1f)
-            val color = p.por(if (lado * vuelta < -0.2f) lerp(hoja, C.ESCARABAJO, 0.25f) else hoja, tl, lejos)
+            val propio = p.por(if (lado * vuelta < -0.2f) lerp(hoja, C.ESCARABAJO, 0.25f) else hoja, tl, lejos)
+            val k = cl * (0.45f + 0.55f * canto)
+            val color = lerp(propio, translucida, 0.9f * k)
             // Los rasgones: de dónde a dónde va cada tira entre dos cortes.
-            val cortes = ArrayList<Float>(); var s = 0.1f + az.entre(0f, 0.1f)
-            while (s < 0.92f) { if (az.real() < rasgado) cortes += s; s += az.entre(0.08f, 0.18f) }
+            val cortes = ArrayList<Float>(); var s = 0.12f + az.entre(0f, 0.1f)
+            while (s < 0.9f) { if (az.real() < rasgado) cortes += s; s += az.entre(0.07f, 0.17f) }
             val bordes = listOf(0.02f) + cortes + listOf(0.995f)
             for (i in 0 until bordes.size - 1) {
-                val s0 = bordes[i]; val s1 = bordes[i + 1]; val hueco = if (i > 0) 0.006f else 0f; val hueco1 = if (i < bordes.size - 2) 0.006f else 0f
+                val s0 = bordes[i]; val s1 = bordes[i + 1]; val hueco = if (i > 0) 0.007f else 0f; val hueco1 = if (i < bordes.size - 2) 0.007f else 0f
                 // La tira cuelga un poco, tanto más cuanto más larga y suelta.
-                val cae = Offset(0f, (s1 - s0) * largo * 0.04f * (if (i > 0 && i < bordes.size - 2) 1f else 0.3f))
-                val pasos = 6
-                val dentro = (0..pasos).map { k -> nervio(s0 + (s1 - s0) * k / pasos) }
-                val fuera = (0..pasos).map { k -> val ss = s0 + hueco + (s1 - hueco1 - s0 - hueco) * k / pasos; val tg = tangente(ss); val nn = Offset(-tg.y, tg.x); nervio(ss) + nn * (lado * anchoEn(ss) * canto) + cae * (k / pasos.toFloat()) * lado.coerceAtLeast(0.3f) }
+                val cae = Offset(0f, (s1 - s0) * largo * 0.05f * (if (i > 0 && i < bordes.size - 2) 1f else 0.3f))
+                val pasos = 7
+                val dentro = (0..pasos).map { j -> nervio(s0 + (s1 - s0) * j / pasos) }
+                val fuera = (0..pasos).map { j -> val ss = s0 + hueco + (s1 - hueco1 - s0 - hueco) * j / pasos; val tg = tangente(ss); val nn = Offset(-tg.y, tg.x)
+                    nervio(ss) + nn * (lado * anchoEn(ss) * canto * (1f - 0.06f * sin(j * 1.9f + i))) + cae * (j / pasos.toFloat()) * lado.coerceAtLeast(0.3f) }
                 val tira = poligono(dentro + fuera.reversed())
                 drawPath(tira, color)
                 clipPath(tira) {
+                    // A contraluz, la lámina se enciende más hacia el borde de cada tira y el nervio queda oscuro.
+                    if (k > 0.05f) drawPath(Path().apply { val pts = (0..pasos).map { j -> val ss = s0 + (s1 - s0) * j / pasos; val tg = tangente(ss); nervio(ss) + Offset(-tg.y, tg.x) * (lado * anchoEn(ss) * canto * 0.6f) }; moveTo(pts[0]); for (q in pts.drop(1)) lineTo(q) },
+                        lerp(translucida, Color.White, 0.3f).copy(alpha = 0.35f * k), style = Stroke(ancho * 0.16f * canto, cap = StrokeCap.Round))
                     // Las venas, paralelas, del nervio al borde, inclinadas hacia la punta.
                     var v = s0
-                    while (v < s1) { val tg = tangente(v); val nn = Offset(-tg.y, tg.x); val a = nervio(v); val w = anchoEn(v) * canto; drawLine(p.sombra(hoja, lejos).copy(alpha = 0.13f), a, a + nn * (lado * w) + tg * (w * 0.35f), 0.3f); v += 0.022f }
-                    // El brillo del haz, a lo largo, del lado del sol.
-                    if (lado * vuelta >= -0.2f) drawPath(Path().apply { val pts = (0..6).map { k -> val ss = s0 + (s1 - s0) * k / 6f; val tg = tangente(ss); nervio(ss) + Offset(-tg.y, tg.x) * (lado * anchoEn(ss) * canto * 0.45f) }; moveTo(pts[0]); for (q in pts.drop(1)) lineTo(q) }, p.luz(lerp(hoja, C.ARENA, 0.3f), lejos).copy(alpha = 0.3f * p.r.dia), style = Stroke(ancho * 0.08f, cap = StrokeCap.Round))
+                    while (v < s1) { val tg = tangente(v); val nn = Offset(-tg.y, tg.x); val a = nervio(v); val w = anchoEn(v) * canto
+                        drawLine((if (k > 0.2f) vena else p.sombra(hoja, lejos)).copy(alpha = 0.12f + 0.3f * k), a, a + nn * (lado * w) + tg * (w * 0.35f), if (k > 0.2f) 0.4f else 0.3f); v += 0.02f }
+                    // El brillo del haz, a lo largo, del lado del sol (de frente; a contraluz no se ve).
+                    if (lado * vuelta >= -0.2f && k < 0.5f) drawPath(Path().apply { val pts = (0..6).map { j -> val ss = s0 + (s1 - s0) * j / 6f; val tg = tangente(ss); nervio(ss) + Offset(-tg.y, tg.x) * (lado * anchoEn(ss) * canto * 0.45f) }; moveTo(pts[0]); for (q in pts.drop(1)) lineTo(q) },
+                        p.luz(lerp(hoja, C.ARENA, 0.3f), lejos).copy(alpha = 0.3f * p.r.dia * (1f - 2f * k)), style = Stroke(ancho * 0.08f, cap = StrokeCap.Round))
                     // El borde seco, pardo, en las hojas viejas.
-                    if (seca > 0.02f) drawPath(Path().apply { moveTo(fuera[0]); for (q in fuera.drop(1)) lineTo(q) }, p.por(verdeSeco, tl - 0.2f, lejos), style = Stroke(ancho * 0.12f * seca * az.entre(0.5f, 1.3f)))
+                    if (seca > 0.02f) drawPath(Path().apply { moveTo(fuera[0]); for (q in fuera.drop(1)) lineTo(q) }, lerp(p.por(verdeSeco, tl - 0.2f, lejos), p.l.tono(lerp(C.LATON, C.ARENA, 0.3f), lejos), 0.6f * k), style = Stroke(ancho * 0.12f * seca * az.entre(0.5f, 1.3f)))
                 }
             }
         }
-        // El nervio, claro y grueso, con su sombra.
+        // El nervio, grueso, con su sombra; a contraluz, una raya oscura con el filo claro.
         val nerv = (0..12).map { nervio(it / 12f) }
-        drawPath(Path().apply { moveTo(nerv[0]); for (q in nerv.drop(1)) lineTo(q) }, p.sombra(lerp(C.HOJA, C.SELVA, 0.4f), lejos), style = Stroke(ancho * 0.07f, cap = StrokeCap.Round))
-        drawPath(Path().apply { moveTo(nerv[0]); for (q in nerv.drop(1).dropLast(3)) lineTo(q) }, p.luz(C.HOJA_LUZ, lejos), style = Stroke(ancho * 0.035f, cap = StrokeCap.Round))
+        drawPath(Path().apply { moveTo(nerv[0]); for (q in nerv.drop(1)) lineTo(q) }, lerp(p.sombra(lerp(C.HOJA, C.SELVA, 0.4f), lejos), vena, cl), style = Stroke(ancho * 0.07f, cap = StrokeCap.Round))
+        drawPath(Path().apply { moveTo(nerv[0]); for (q in nerv.drop(1).dropLast(3)) lineTo(q) }, lerp(p.luz(C.HOJA_LUZ, lejos), translucida, cl), style = Stroke(ancho * 0.03f, cap = StrokeCap.Round))
     }
 
     /**
      * Una mata de plátano, con el [pie] en el suelo y [alto] unidades hasta la cima de las hojas: el falso tronco de
      * vainas, con las viejas secas colgando, y las hojas grandes, cada una con su ángulo, alguna partida y caída. Con
-     * [racimo], el racimo verde colgando y su bellota morada.
+     * [racimo], el racimo verde colgando y su bellota morada. [contraluz]: el sol que pasa por las hojas altas.
      */
-    fun DrawScope.platano(p: Pincel, pie: Offset, alto: Float, az: Azar, lejos: Float = 0f, racimo: Boolean = false, hojas: Int = 7) {
-        val cima = pie + Offset(az.entre(-0.06f, 0.06f) * alto, -alto * 0.52f)
-        val g0 = alto * 0.07f; val g1 = alto * 0.045f
+    fun DrawScope.platano(p: Pincel, pie: Offset, alto: Float, az: Azar, lejos: Float = 0f, racimo: Boolean = false, hojas: Int = 7, contraluz: Float = 0f) {
+        val cima = pie + Offset(az.entre(-0.06f, 0.06f) * alto, -alto * 0.5f)
+        val g0 = alto * 0.065f; val g1 = alto * 0.04f
         val lado = if (p.solALaDerecha) 1f else -1f
-        val tronco = poligono(pie + Offset(-g0, 0f), pie + Offset(g0, 0f), cima + Offset(g1, 0f), cima + Offset(-g1, 0f))
-        drawPath(tronco, Brush.horizontalGradient(listOf(p.sombra(lerp(C.HOJA, C.CUERO, 0.3f), lejos), p.medio(lerp(C.HOJA, C.ARENA, 0.2f), lejos), p.luz(lerp(C.HOJA, C.ARENA, 0.3f), lejos)), pie.x - lado * g0, pie.x + lado * g0))
+        val tronco = poligono(listOf(pie + Offset(-g0, 0f), pie + Offset(g0, 0f), pie + Offset(g0 * 0.92f, -alto * 0.08f), cima + Offset(g1, 0f), cima + Offset(-g1, 0f), pie + Offset(-g0 * 0.95f, -alto * 0.06f)))
+        drawPath(tronco, Brush.horizontalGradient(listOf(p.sombra(lerp(C.HOJA, C.CUERO, 0.25f), lejos), p.medio(lerp(C.HOJA, C.ARENA, 0.25f), lejos), p.luz(lerp(C.HOJA, C.ARENA, 0.35f), lejos)), pie.x - lado * g0, pie.x + lado * g0))
         clipPath(tronco) {
-            // Las vainas: bandas que suben en espiral, y las manchas pardas.
-            for (k in 0..6) { val y = pie.y - (pie.y - cima.y) * k / 7f; drawLine(p.sombra(lerp(C.HOJA, C.BREA, 0.4f), lejos).copy(alpha = 0.4f), Offset(pie.x - g0, y), Offset(pie.x + g0, y - g0 * 1.6f), max(0.4f, alto * 0.006f)) }
-            repeat(5) { mancha(pie + Offset(az.entre(-g0, g0), -az.entre(0f, alto * 0.45f)), g0 * 0.4f, g0 * 0.8f, p.medio(C.CUERO, lejos), 0.3f) }
+            // Las vainas: bandas que suben en espiral, unas más verdes y otras pardas y rotas; las manchas oscuras.
+            for (k in 0..7) { val y = pie.y - (pie.y - cima.y) * k / 8f
+                drawPath(Path().apply { moveTo(Offset(pie.x - g0 * 1.2f, y)); cubicTo(Offset(pie.x - g0 * 0.3f, y - g0 * 0.6f), Offset(pie.x + g0 * 0.4f, y - g0 * 1.1f), Offset(pie.x + g0 * 1.2f, y - g0 * 2f)) },
+                    p.sombra(lerp(C.HOJA, C.BREA, 0.4f), lejos).copy(alpha = 0.45f), style = Stroke(max(0.4f, alto * 0.007f))) }
+            repeat(6) { mancha(pie + Offset(az.entre(-g0, g0), -az.entre(0f, alto * 0.45f)), g0 * 0.4f, g0 * 0.9f, p.medio(lerp(C.CUERO, C.BREA, 0.3f), lejos), 0.35f) }
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.sombra(C.MADERA_OSC, lejos).copy(alpha = 0.6f)), pie.y - alto * 0.12f, pie.y), Offset(pie.x - g0 * 1.5f, pie.y - alto * 0.12f), Size(g0 * 3f, alto * 0.12f))
         }
         // Las hojas viejas, secas, colgando pegadas al tronco.
-        repeat(2) { val a = cima + Offset(az.entre(-g1, g1), alto * az.entre(0.05f, 0.15f)); hojaDePlatano(p, a, a + Offset(az.entre(-0.1f, 0.1f) * alto, alto * 0.3f), alto * 0.07f, alto * 0.02f, 0.6f, 0.9f, 1f, -0.3f, az, lejos) }
-        // Las hojas vivas: abiertas en abanico; las de atrás primero.
-        val angulos = (0 until hojas).map { -PI.toFloat() / 2f + az.entre(-1.4f, 1.4f) }.sortedBy { abs(it + PI.toFloat() / 2f) }.reversed()
+        repeat(3) { val a = cima + Offset(az.entre(-g1, g1), alto * az.entre(0.02f, 0.14f)); hojaDePlatano(p, a, a + Offset(az.entre(-0.12f, 0.12f) * alto, alto * az.entre(0.22f, 0.32f)), alto * 0.06f, alto * 0.02f, 0.7f, 0.9f, 1f, -0.3f, az, lejos) }
+        // Las hojas vivas: abiertas en abanico, las de atrás primero; las más altas son las más nuevas, tiesas y claras.
+        val angulos = (0 until hojas).map { -PI.toFloat() / 2f + az.entre(-1.45f, 1.45f) }.sortedBy { abs(it + PI.toFloat() / 2f) }.reversed()
         for ((i, a) in angulos.withIndex()) {
             val largo = alto * az.entre(0.42f, 0.6f)
-            val cae = (a + PI.toFloat() / 2f).let { abs(it) } * 0.5f
+            val abre = abs(a + PI.toFloat() / 2f)
+            val cae = abre * 0.55f
             val punta = cima + Offset(cos(a) * largo, sin(a) * largo * 0.7f + largo * cae)
-            val rota = az.real() < 0.2f
+            val alta = abre < 0.6f
+            val rota = az.real() < 0.18f
             if (rota) {
                 // Una hoja partida: el pecíolo doblado y la hoja colgando.
                 val codo = cima + Offset(cos(a) * largo * 0.25f, sin(a) * largo * 0.2f)
                 drawLine(p.medio(lerp(C.HOJA, C.ARENA, 0.2f), lejos), cima, codo, alto * 0.016f)
-                hojaDePlatano(p, codo, codo + Offset(cos(a) * largo * 0.15f, largo * 0.6f), alto * 0.16f, largo * 0.05f, az.entre(-0.6f, 0.6f), 0.8f, 0.6f, -0.2f, az, lejos)
+                hojaDePlatano(p, codo, codo + Offset(cos(a) * largo * 0.15f, largo * 0.6f), alto * 0.16f, largo * 0.05f, az.entre(-0.6f, 0.6f), 0.8f, 0.6f, -0.2f, az, lejos, contraluz * 0.4f)
             } else {
                 drawLine(p.medio(lerp(C.HOJA, C.ARENA, 0.25f), lejos), cima, cima + (punta - cima) * 0.12f, alto * 0.016f)
-                hojaDePlatano(p, cima + (punta - cima) * 0.1f, punta, alto * az.entre(0.17f, 0.23f), largo * az.entre(-0.12f, 0.12f), az.entre(-0.7f, 0.7f), az.entre(0.3f, 0.85f), if (i < 2) 0.6f else 0.1f, (0.2f + 0.4f * cos(a) * lado).coerceIn(-1f, 1f), az, lejos)
+                hojaDePlatano(p, cima + (punta - cima) * 0.1f, punta, alto * az.entre(0.17f, 0.23f), largo * az.entre(-0.12f, 0.12f), az.entre(-0.7f, 0.7f), az.entre(0.3f, 0.85f), if (i < 2) 0.6f else 0.1f,
+                    (0.2f + 0.4f * cos(a) * lado).coerceIn(-1f, 1f), az, lejos, contraluz * (if (alta) 1f else 0.55f))
             }
         }
         if (racimo) {
-            val a = cima + Offset(lado * alto * 0.04f, alto * 0.02f); val b = a + Offset(lado * alto * 0.08f, alto * 0.22f)
+            val a = cima + Offset(lado * alto * 0.04f, alto * 0.02f); val b = a + Offset(lado * alto * 0.08f, alto * 0.24f)
             drawPath(Path().apply { moveTo(a); cubicTo(a + Offset(lado * alto * 0.08f, -alto * 0.02f), b + Offset(0f, -alto * 0.12f), b) }, p.medio(lerp(C.HOJA, C.CUERO, 0.3f), lejos), style = Stroke(alto * 0.012f))
-            for (k in 0..4) { val q = a + (b - a) * (0.2f + k * 0.15f); for (j in -2..2) drawOval(p.por(lerp(C.HOJA, C.ARENA, 0.15f), if (j * lado > 0) 0.4f else -0.3f, lejos), Offset(q.x + j * alto * 0.012f - alto * 0.008f, q.y - alto * 0.02f), Size(alto * 0.016f, alto * 0.036f)) }
-            drawOval(p.por(lerp(C.TEJA, C.ESCARABAJO, 0.45f), 0.1f, lejos), Offset(b.x - alto * 0.018f, b.y), Size(alto * 0.036f, alto * 0.06f))
+            // Las manos de plátanos verdes, de arriba abajo cada vez más chicas, con su lado de luz.
+            for (k in 0..5) { val q = a + (b - a) * (0.15f + k * 0.13f); val w = 1f - k * 0.1f
+                for (j in -2..2) { val c = Offset(q.x + j * alto * 0.013f * w, q.y - alto * 0.02f)
+                    drawPath(Path().apply { moveTo(c + Offset(0f, alto * 0.03f)); cubicTo(c + Offset(-alto * 0.012f, alto * 0.01f), c + Offset(-alto * 0.008f, -alto * 0.02f), c + Offset(j * alto * 0.004f, -alto * 0.032f)); cubicTo(c + Offset(alto * 0.006f, -alto * 0.02f), c + Offset(alto * 0.01f, alto * 0.01f), c + Offset(0f, alto * 0.03f)); close() },
+                        p.por(lerp(C.HOJA, C.ARENA, 0.2f), if (j * lado > 0) 0.4f else -0.3f, lejos)) } }
+            // La bellota morada, colgando de su tallo.
+            val bel = b + Offset(lado * alto * 0.01f, alto * 0.06f)
+            drawLine(p.medio(lerp(C.HOJA, C.CUERO, 0.3f), lejos), b, bel, alto * 0.008f)
+            drawPath(Path().apply { moveTo(bel + Offset(0f, -alto * 0.015f)); cubicTo(bel + Offset(alto * 0.025f, 0f), bel + Offset(alto * 0.018f, alto * 0.06f), bel + Offset(0f, alto * 0.08f)); cubicTo(bel + Offset(-alto * 0.018f, alto * 0.06f), bel + Offset(-alto * 0.025f, 0f), bel + Offset(0f, -alto * 0.015f)); close() },
+                Brush.horizontalGradient(listOf(p.sombra(lerp(C.TEJA, C.SOMBRA, 0.55f), lejos), p.luz(lerp(C.TEJA, C.SOMBRA, 0.45f), lejos)), bel.x - lado * alto * 0.02f, bel.x + lado * alto * 0.02f))
         }
     }
 
@@ -1473,33 +1501,40 @@ internal object PiezasBotanico {
     /**
      * Una palmera con el [pie] en el suelo y la copa a [alto] unidades, el tronco vencido [inclina] unidades a un lado:
      * el tronco anillado y curvo, con su lado de luz; la copa de pencas, cada una con sus folíolos colgando, las de
-     * atrás más oscuras; las viejas, secas y caídas bajo la copa; con [cocos], el racimo.
+     * atrás más oscuras; las viejas, secas y caídas bajo la copa; con [cocos], el racimo. [contraluz]: las pencas
+     * con el sol detrás se encienden.
      */
-    fun DrawScope.palmera(p: Pincel, pie: Offset, alto: Float, inclina: Float, az: Azar, lejos: Float = 0f, cocos: Boolean = false, pencas: Int = 11) {
+    fun DrawScope.palmera(p: Pincel, pie: Offset, alto: Float, inclina: Float, az: Azar, lejos: Float = 0f, cocos: Boolean = false, pencas: Int = 11, contraluz: Float = 0f, secas: Int = 3) {
         val cima = pie + Offset(inclina, -alto)
         val c1 = pie + Offset(inclina * 0.1f, -alto * 0.4f); val c2 = cima + Offset(-inclina * 0.25f, alto * 0.25f)
         fun eje(t: Float): Offset { val m = 1f - t; return pie * (m * m * m) + c1 * (3f * m * m * t) + c2 * (3f * m * t * t) + cima * (t * t * t) }
-        val g0 = alto * 0.04f; val g1 = alto * 0.028f
+        val g0 = alto * 0.032f; val g1 = alto * 0.022f
         val lado = if (p.solALaDerecha) 1f else -1f
         val tronco = poligono((0..10).map { eje(it / 10f) + Offset(-(g0 + (g1 - g0) * it / 10f), 0f) } + (10 downTo 0).map { eje(it / 10f) + Offset(g0 + (g1 - g0) * it / 10f, 0f) })
-        drawPath(tronco, p.medio(lerp(C.ROCA, C.MADERA, 0.35f), lejos))
+        drawPath(tronco, p.medio(lerp(C.ROCA, C.ARENA, 0.2f), lejos))
         clipPath(tronco) {
-            for (k in 0..10) { val q = eje(k / 10f); drawLine(p.luz(lerp(C.ROCA, C.ARENA, 0.4f), lejos).copy(alpha = 0.7f), q + Offset(lado * g0 * 0.1f, 0f), q + Offset(lado * g0 * 1.1f, 0f), max(0.5f, g0 * 0.6f)) }
-            for (k in 0..24) { val q = eje(k / 24f); drawLine(p.sombra(C.MADERA_OSC, lejos).copy(alpha = 0.6f), q + Offset(-g0 * 1.2f, 0f), q + Offset(g0 * 1.2f, -g0 * 0.2f), max(0.3f, g0 * 0.12f)) }
-            for (k in 0..10) { val q = eje(k / 10f); drawLine(p.sombra(C.ROCA, lejos).copy(alpha = 0.5f), q + Offset(-lado * g0 * 1.1f, 0f), q + Offset(-lado * g0 * 0.4f, 0f), max(0.4f, g0 * 0.6f)) }
+            // El lado de luz y el de sombra, y los anillos que dejan las pencas caídas.
+            for (k in 0..10) { val q = eje(k / 10f); drawLine(p.luz(lerp(C.ROCA, C.ARENA, 0.45f), lejos).copy(alpha = 0.7f), q + Offset(lado * g0 * 0.1f, 0f), q + Offset(lado * g0 * 1.1f, 0f), max(0.5f, g0 * 0.7f)) }
+            for (k in 0..10) { val q = eje(k / 10f); drawLine(p.sombra(C.ROCA, lejos).copy(alpha = 0.55f), q + Offset(-lado * g0 * 1.1f, 0f), q + Offset(-lado * g0 * 0.35f, 0f), max(0.4f, g0 * 0.7f)) }
+            for (k in 0..30) { val q = eje(k / 30f); drawLine(p.sombra(C.MADERA_OSC, lejos).copy(alpha = 0.5f), q + Offset(-g0 * 1.2f, 0f), q + Offset(g0 * 1.2f, -g0 * 0.25f), max(0.3f, g0 * 0.14f)) }
+            // El verde del musgo que sube del pie por el lado húmedo.
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.medio(lerp(C.SELVA, C.HOJA, 0.3f), lejos).copy(alpha = 0.5f)), pie.y - alto * 0.2f, pie.y), Offset(pie.x - g0 * 2f, pie.y - alto * 0.2f), Size(g0 * 2f, alto * 0.2f))
         }
-        // Las pencas secas, colgando pegadas al tronco bajo la copa.
-        repeat(3) { val a = PI.toFloat() / 2f + az.entre(-0.5f, 0.5f); penca(p, cima, a, alto * 0.24f, 0.9f, p.medio(lerp(C.ARENA, C.CUERO, 0.4f), lejos), p.sombra(C.CUERO, lejos), az, lejos) }
+        // El capitel verde bajo la copa (el palmito), y las pencas secas colgando.
+        drawPath(poligono(cima + Offset(-g1 * 1.2f, 0f), cima + Offset(g1 * 1.2f, 0f), cima + Offset(g1, alto * 0.08f), cima + Offset(-g1, alto * 0.08f)), p.por(lerp(C.HOJA, C.SELVA, 0.3f), lado * 0.3f, lejos))
+        repeat(secas) { val a = PI.toFloat() / 2f + az.entre(-0.5f, 0.5f); penca(p, cima, a, alto * 0.22f, 0.9f, p.medio(lerp(C.ARENA, C.CUERO, 0.4f), lejos), p.sombra(C.CUERO, lejos), az, lejos) }
         if (cocos) for (k in 0..4) { val q = cima + Offset(az.entre(-1f, 1f) * alto * 0.03f, alto * az.entre(0.01f, 0.05f)); drawCircle(p.por(lerp(C.HOJA, C.CUERO, 0.5f), if (k % 2 == 0) 0.3f else -0.4f, lejos), alto * 0.022f, q) }
         // Las pencas vivas: primero las de atrás (hacia arriba y oscuras), luego las de los lados, luego las que caen hacia delante.
-        val angulos = (0 until pencas).map { -PI.toFloat() / 2f + (it - pencas / 2f) * (2.9f / pencas) + az.entre(-0.12f, 0.12f) }
+        val angulos = (0 until pencas).map { -PI.toFloat() / 2f + (it - pencas / 2f) * (3f / pencas) + az.entre(-0.12f, 0.12f) }
+        val brillo = p.l.tono(lerp(C.HOJA_LUZ, C.LATON, 0.15f), lejos)
         for ((i, a) in angulos.sortedBy { abs(it + PI.toFloat() / 2f) }.withIndex()) {
             val atras = i < pencas / 3
             val verde = if (atras) lerp(C.SELVA, C.BREA, 0.15f) else lerp(C.SELVA, C.HOJA, 0.35f + 0.25f * az.real())
             val tl = (cos(a) * lado * 0.6f + 0.2f).coerceIn(-1f, 1f)
-            penca(p, cima, a, alto * az.entre(0.3f, 0.4f), az.entre(0.3f, 0.7f), p.por(verde, if (atras) -0.4f else tl, lejos), p.sombra(verde, lejos), az, lejos)
+            val cl = contraluz * (if (atras) 0.5f else 1f)
+            penca(p, cima, a, alto * az.entre(0.3f, 0.42f), az.entre(0.3f, 0.75f), lerp(p.por(verde, if (atras) -0.4f else tl, lejos), brillo, 0.7f * cl), lerp(p.sombra(verde, lejos), p.l.tono(lerp(C.HOJA, C.SELVA, 0.3f), lejos), 0.6f * cl), az, lejos)
         }
-        drawCircle(p.sombra(C.SELVA, lejos), max(0.8f, alto * 0.025f), cima)
+        drawCircle(p.sombra(C.SELVA, lejos), max(0.8f, alto * 0.022f), cima)
     }
 
     /** Una penca de palmera que sale de [c] hacia [ang], de [largo] unidades, y se vence [cae] (de 0 a 1): el raquis y los folíolos que cuelgan. */
@@ -1507,15 +1542,19 @@ internal object PiezasBotanico {
         val fin = c + Offset(cos(ang) * largo, sin(ang) * largo * 0.6f + largo * cae * 0.7f)
         val ctrl = c + Offset(cos(ang) * largo * 0.6f, sin(ang) * largo * 0.7f - largo * 0.12f)
         fun en(t: Float): Offset { val m = 1f - t; return c * (m * m) + ctrl * (2f * m * t) + fin * (t * t) }
-        val g = max(0.35f, largo * 0.018f)
-        for (k in 2..20) {
-            val t = k / 20f; val q = en(t); val dd = en((t + 0.05f).coerceAtMost(1f)) - en(t - 0.05f); val tg = dd / dd.getDistance().coerceAtLeast(0.01f); val n = Offset(-tg.y, tg.x)
-            val l = largo * 0.2f * (1f - t * 0.6f) * az.entre(0.8f, 1.15f)
+        val g = max(0.35f, largo * 0.016f)
+        // Los folíolos: dos filas que cuelgan del raquis, los de un lado al sol y los del otro en su sombra.
+        val luz = ArrayList<Offset>(80); val som = ArrayList<Offset>(80)
+        for (k in 2..24) {
+            val t = k / 24f; val q = en(t); val dd = en((t + 0.04f).coerceAtMost(1f)) - en(t - 0.04f); val tg = dd / dd.getDistance().coerceAtLeast(0.01f); val n = Offset(-tg.y, tg.x)
+            val l = largo * 0.21f * (1f - t * 0.6f) * az.entre(0.8f, 1.15f)
             for (s in listOf(-1f, 1f)) {
-                val punta = q + n * (s * l * 0.55f) + tg * (l * 0.45f) + Offset(0f, l * (0.45f + 0.4f * cae))
-                drawLine(if (s > 0f) color else oscuro, q, punta, g * 1.3f, StrokeCap.Round)
+                val punta = q + n * (s * l * 0.5f) + tg * (l * 0.42f) + Offset(0f, l * (0.45f + 0.45f * cae))
+                if (s > 0f) { luz += q; luz += punta } else { som += q; som += punta }
             }
         }
+        drawPoints(som, PointMode.Lines, oscuro, g * 1.3f, StrokeCap.Round)
+        drawPoints(luz, PointMode.Lines, color, g * 1.3f, StrokeCap.Round)
         drawPath(Path().apply { moveTo(c); cubicTo(ctrl, ctrl, fin) }, lerp(color, oscuro, 0.4f), style = Stroke(g, cap = StrokeCap.Round))
     }
 
@@ -1524,32 +1563,47 @@ internal object PiezasBotanico {
     // =================================================================
 
     /**
-     * Un helecho arborescente con el [pie] en el suelo y [alto] unidades hasta la corona: el tronco fibroso con las
-     * cicatrices de las frondas viejas, la corona de frondas arqueadas (cada una con sus pinnas, que la hacen de encaje,
-     * más claras a contraluz) y los cayados que se desenrollan en el centro.
+     * Un helecho arborescente con el [pie] en el suelo y [alto] unidades hasta la corona: el tronco oscuro y fibroso, más
+     * grueso abajo por el manto de raíces, con los muñones de las frondas viejas arriba; la corona de frondas arqueadas
+     * en estrella (cada una con sus pinnas, que la hacen de encaje, más claras a contraluz) y los cayados que se
+     * desenrollan en el centro.
      */
-    fun DrawScope.helechoArborescente(p: Pincel, pie: Offset, alto: Float, az: Azar, lejos: Float = 0f, frondas: Int = 10) {
+    fun DrawScope.helechoArborescente(p: Pincel, pie: Offset, alto: Float, az: Azar, lejos: Float = 0f, frondas: Int = 11, contraluz: Float = 0f) {
         val corona = pie + Offset(az.entre(-0.05f, 0.05f) * alto, -alto)
-        val g0 = alto * 0.06f; val g1 = alto * 0.045f
+        val g0 = alto * 0.075f; val g1 = alto * 0.04f
         val lado = if (p.solALaDerecha) 1f else -1f
-        val tronco = poligono(pie + Offset(-g0, 0f), pie + Offset(g0, 0f), corona + Offset(g1, 0f), corona + Offset(-g1, 0f))
-        drawPath(tronco, Brush.horizontalGradient(listOf(p.sombra(C.BREA, lejos), p.medio(lerp(C.MADERA_OSC, C.SELVA, 0.2f), lejos), p.luz(lerp(C.MADERA, C.SELVA, 0.3f), lejos)), pie.x - lado * g0, pie.x + lado * g0))
+        fun borde(t: Float, s: Float): Offset { val q = pie + (corona - pie) * t; val g = g0 + (g1 - g0) * t.pow(0.5f); return q + Offset(s * g * (1f + 0.06f * sin(t * 23f + s)), 0f) }
+        val tronco = poligono((0..12).map { borde(it / 12f, -1f) } + (12 downTo 0).map { borde(it / 12f, 1f) })
+        val fibra = lerp(C.MADERA_OSC, C.BREA, 0.35f)
+        drawPath(tronco, Brush.horizontalGradient(listOf(p.sombra(fibra, lejos), p.medio(lerp(fibra, C.SELVA, 0.15f), lejos), p.luz(lerp(C.MADERA, C.SELVA, 0.25f), lejos)), pie.x - lado * g0, pie.x + lado * g0))
         clipPath(tronco) {
-            // Las cicatrices en rombo de las frondas que cayeron, y las raíces fibrosas del pie.
-            var y = pie.y - g0; var fila = 0
-            while (y > corona.y) { for (k in -1..1) { val x = pie.x + (k + (fila % 2) * 0.5f) * g0 * 0.9f + (corona.x - pie.x) * (pie.y - y) / alto; drawOval(p.sombra(C.BREA, lejos).copy(alpha = 0.55f), Offset(x - g0 * 0.25f, y - g0 * 0.2f), Size(g0 * 0.5f, g0 * 0.4f)) }; y -= g0 * 0.65f; fila++ }
-            drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.sombra(C.MADERA_OSC, lejos).copy(alpha = 0.7f)), pie.y - alto * 0.25f, pie.y), Offset(pie.x - g0 * 1.5f, pie.y - alto * 0.25f), Size(g0 * 3f, alto * 0.25f))
+            // Las fibras de las raíces, en trazos largos que bajan torcidos, más juntas y oscuras abajo.
+            val trazos = ArrayList<Offset>(120)
+            repeat(26) { val x = az.entre(-1f, 1f); val t0 = az.entre(0f, 0.7f); val t1 = (t0 + az.entre(0.15f, 0.4f)).coerceAtMost(1f)
+                trazos += borde(t0, x) ; trazos += borde(t1, x + az.entre(-0.2f, 0.2f)) }
+            drawPoints(trazos, PointMode.Lines, p.sombra(C.BREA, lejos).copy(alpha = 0.55f), max(0.35f, g0 * 0.09f), StrokeCap.Round)
+            // Las cicatrices de las frondas caídas: escamas sueltas, sin orden de rejilla, cada vez más arriba más marcadas.
+            repeat(18) { val t = az.entre(0.35f, 0.98f); val q = borde(t, az.entre(-0.8f, 0.8f)); val w = (g0 + (g1 - g0) * t) * az.entre(0.35f, 0.6f)
+                drawPath(Path().apply { moveTo(q + Offset(-w, 0f)); cubicTo(q + Offset(-w * 0.5f, w * 0.7f), q + Offset(w * 0.5f, w * 0.7f), q + Offset(w, 0f)); cubicTo(q + Offset(w * 0.4f, w * 0.3f), q + Offset(-w * 0.4f, w * 0.3f), q + Offset(-w, 0f)); close() },
+                    p.sombra(C.BREA, lejos).copy(alpha = 0.5f)) }
+            // El musgo que lo cubre del lado húmedo, y los pelos pardos junto a la corona.
+            repeat(7) { mancha(borde(az.entre(0.05f, 0.7f), -lado * az.entre(0.3f, 0.9f)), g0 * 0.5f, g0 * 1.2f, p.medio(lerp(C.SELVA, C.HOJA, 0.4f), lejos), 0.35f) }
+            drawRect(Brush.verticalGradient(listOf(p.medio(lerp(C.CUERO, C.ARENA, 0.2f), lejos).copy(alpha = 0.6f), Color.Transparent), corona.y, corona.y + alto * 0.12f), Offset(corona.x - g0 * 2f, corona.y), Size(g0 * 4f, alto * 0.12f))
         }
-        // Las frondas, las de atrás primero: arqueadas hacia fuera y abajo.
+        // Los muñones de las frondas viejas, apuntando abajo bajo la corona.
+        repeat(6) { val q = corona + Offset(az.entre(-g1, g1), alto * az.entre(0.02f, 0.1f)); drawLine(p.sombra(lerp(C.CUERO, C.BREA, 0.3f), lejos), q, q + Offset(az.entre(-1f, 1f) * g1 * 2f, alto * az.entre(0.04f, 0.08f)), max(0.4f, g1 * 0.4f), StrokeCap.Round) }
+        // Las frondas, las de atrás primero: arqueadas hacia fuera y abajo, en estrella.
         val angulos = (0 until frondas).map { (2 * PI * it / frondas).toFloat() + az.entre(-0.2f, 0.2f) }.sortedBy { sin(it) }
+        val brillo = p.l.tono(lerp(C.HOJA_LUZ, C.LATON, 0.12f), lejos)
         for (a in angulos) {
             val hacia = sin(a)                                                  // −1: hacia el fondo; 1: hacia quien mira
-            val largo = alto * az.entre(0.45f, 0.62f) * (0.75f + 0.25f * abs(cos(a)))
-            val fin = corona + Offset(cos(a) * largo, largo * (0.15f + 0.3f * hacia.coerceAtLeast(0f)) - largo * 0.15f * (1f - abs(cos(a))))
+            val largo = alto * az.entre(0.5f, 0.68f) * (0.75f + 0.25f * abs(cos(a)))
+            val fin = corona + Offset(cos(a) * largo, largo * (0.15f + 0.35f * hacia.coerceAtLeast(0f)) - largo * 0.12f * (1f - abs(cos(a))))
             val ctrl = corona + Offset(cos(a) * largo * 0.45f, -largo * (0.35f - 0.2f * hacia))
-            val verde = lerp(C.HOJA, C.SELVA, if (hacia < 0f) 0.65f else 0.25f)
+            val verde = lerp(C.HOJA, C.SELVA, if (hacia < 0f) 0.62f else 0.22f)
             val tl = if (hacia < 0f) -0.3f else (0.2f + 0.5f * cos(a) * lado).coerceIn(-1f, 1f)
-            fronda(p, corona, ctrl, fin, largo, p.por(verde, tl, lejos), p.por(verde, tl - 0.6f, lejos), az, lejos)
+            val cl = contraluz * (if (hacia < 0f) 1f else 0.6f)
+            fronda(p, corona, ctrl, fin, largo, lerp(p.por(verde, tl, lejos), brillo, 0.72f * cl), lerp(p.por(verde, tl - 0.6f, lejos), p.l.tono(lerp(C.HOJA, C.SELVA, 0.25f), lejos), 0.6f * cl), az, lejos)
         }
         // Los cayados: espirales tiernas en el centro.
         for (k in 0..2) { val q = corona + Offset((k - 1) * alto * 0.03f, -alto * 0.04f); val r = alto * 0.02f; drawArc(p.por(lerp(C.HOJA, C.ARENA, 0.3f), 0.5f, lejos), 0f, 300f, false, q - Offset(r, r), Size(r * 2f, r * 2f), style = Stroke(max(0.4f, alto * 0.008f))); drawLine(p.medio(C.HOJA, lejos), q + Offset(r, 0f), q + Offset(r * 0.6f, alto * 0.05f), max(0.4f, alto * 0.008f)) }
@@ -1606,51 +1660,427 @@ internal object PiezasBotanico {
 
     /**
      * Un naranjo con el [pie] en el suelo, de [alto] unidades y [ancho] de copa: el tronco corto y retorcido con sus
-     * ramas, la copa en masas (oscura dentro, nunca una bola), las hojas lustrosas en racimos que siguen las ramas, con
-     * las claras solo en el fleco del lado del sol, y las naranjas, unas al sol y otras en la sombra; con [caidas],
-     * alguna en el suelo.
+     * ramas, la copa en masas (honda dentro, nunca una bola ni un agujero negro), las hojas lustrosas en racimos que
+     * siguen las ramas, con las claras solo en el fleco del lado del sol, y las naranjas, unas al sol y otras en la
+     * sombra; con [caidas], alguna en el suelo.
      */
     fun DrawScope.naranjo(p: Pincel, pie: Offset, alto: Float, ancho: Float, az: Azar, lejos: Float = 0f, frutos: Int = 14, caidas: Boolean = true) {
         val lado = if (p.solALaDerecha) 1f else -1f
-        val cruz = pie + Offset(az.entre(-0.05f, 0.05f) * ancho, -alto * 0.3f)
-        val corteza = lerp(C.ROCA, C.MADERA_OSC, 0.5f)
-        drawPath(poligono(pie + Offset(-alto * 0.045f, 0f), pie + Offset(alto * 0.045f, 0f), cruz + Offset(alto * 0.03f, 0f), cruz + Offset(-alto * 0.03f, 0f)), Brush.horizontalGradient(listOf(p.sombra(corteza, lejos), p.luz(corteza, lejos)), pie.x - lado * alto * 0.05f, pie.x + lado * alto * 0.05f))
-        // Las masas de la copa: siete u ocho, de borde irregular, en una cúpula algo achatada; las de abajo, más oscuras.
+        val cruz = pie + Offset(az.entre(-0.05f, 0.05f) * ancho, -alto * 0.32f)
+        val corteza = lerp(C.ROCA, C.MADERA_OSC, 0.45f)
+        drawPath(poligono(pie + Offset(-alto * 0.045f, 0f), pie + Offset(alto * 0.045f, 0f), cruz + Offset(alto * 0.028f, 0f), cruz + Offset(-alto * 0.028f, 0f)), Brush.horizontalGradient(listOf(p.sombra(corteza, lejos), p.luz(corteza, lejos)), pie.x - lado * alto * 0.05f, pie.x + lado * alto * 0.05f))
+        // Las masas de la copa: siete u ocho, de borde irregular, en una cúpula algo achatada; las de abajo, más hondas.
         val centro = pie + Offset(0f, -alto * 0.62f)
         class Masa(val c: Offset, val rx: Float, val ry: Float, val alta: Float)
         val masas = (0 until 8).map { i -> val a = (2 * PI * i / 8).toFloat() + az.entre(-0.3f, 0.3f); val r = az.entre(0.45f, 0.75f)
             val c = centro + Offset(cos(a) * ancho * 0.36f * r, sin(a) * alto * 0.26f * r); Masa(c, ancho * az.entre(0.2f, 0.3f), alto * az.entre(0.16f, 0.24f), (-sin(a) * 0.5f + 0.5f)) } + listOf(Masa(centro + Offset(0f, -alto * 0.08f), ancho * 0.3f, alto * 0.24f, 0.8f))
         // Las ramas, que asoman entre las masas.
         for (ms in masas.take(8)) drawLine(p.sombra(corteza, lejos), cruz, ms.c + Offset(0f, ms.ry * 0.3f), max(0.4f, alto * 0.02f), StrokeCap.Round)
-        val oscuro = p.sombra(lerp(C.SELVA_OSC, C.ESCARABAJO, 0.2f), lejos); val cuerpo = p.medio(C.SELVA, lejos); val claro = p.luz(lerp(C.SELVA, C.HOJA, 0.5f), lejos); val brillo = p.luz(lerp(C.HOJA, C.ARENA, 0.35f), lejos)
+        val hondo = p.sombra(lerp(C.SELVA, C.SELVA_OSC, 0.5f), lejos); val oscuro = p.sombra(lerp(C.SELVA, C.ESCARABAJO, 0.2f), lejos); val cuerpo = p.medio(lerp(C.SELVA, C.HOJA, 0.15f), lejos)
+        val claro = p.luz(lerp(C.SELVA, C.HOJA, 0.55f), lejos); val brillo = p.luz(lerp(C.HOJA, C.ARENA, 0.4f), lejos)
         val hoja = max(0.6f, alto * 0.034f)
         for (ms in masas.sortedBy { it.alta }) {
             val cuantas = (ms.rx * ms.ry / (hoja * hoja) * 4.2f).toInt().coerceIn(30, 320)
-            // El fondo de la masa: oscuro, de borde quebrado.
+            // El fondo de la masa: hondo, de borde quebrado, con el lado de luz ya algo más claro.
             val borde = (0 until 12).map { j -> val a = (2 * PI * j / 12).toFloat(); val k = az.entre(0.82f, 1.1f); ms.c + Offset(cos(a) * ms.rx * k, sin(a) * ms.ry * k) }
-            drawPath(curva(borde + borde.first()).apply { close() }, oscuro)
+            drawPath(curva(borde + borde.first()).apply { close() }, Brush.linearGradient(listOf(hondo, oscuro), ms.c + Offset(-lado * ms.rx, ms.ry), ms.c + Offset(lado * ms.rx, -ms.ry)))
             // Las hojas: pequeñas, en racimos que salen del centro de la masa hacia fuera; las del lado del sol y de
             // arriba, claras; las de abajo, oscuras; el brillo del charol solo en el fleco del sol.
+            val porColor = arrayOf(ArrayList<Offset>(), ArrayList<Offset>(), ArrayList<Offset>(), ArrayList<Offset>())
             for (k in 0 until cuantas) {
                 val a = az.entre(0f, 6.28f); val r = sqrt(az.real()) * 1.02f
                 val q = ms.c + Offset(cos(a) * ms.rx * r, sin(a) * ms.ry * r)
                 val sol = (cos(a) * lado * 0.6f - sin(a) * 0.6f) * r + (ms.alta - 0.5f) * 0.6f
-                val col = when { sol > 0.55f && r > 0.7f -> brillo; sol > 0.15f -> claro; sol > -0.35f -> cuerpo; else -> oscuro }
+                val i = when { sol > 0.55f && r > 0.7f -> 3; sol > 0.15f -> 2; sol > -0.35f -> 1; else -> 0 }
                 val g = a + az.entre(-0.7f, 0.7f); val d = Offset(cos(g), sin(g)) * (hoja * az.entre(0.8f, 1.2f))
-                drawPath(poligono(q - d, q + Offset(-d.y, d.x) * 0.4f, q + d, q - Offset(-d.y, d.x) * 0.4f), col)
+                porColor[i] += q - d; porColor[i] += q + d
             }
+            for ((i, col) in listOf(oscuro, cuerpo, claro, brillo).withIndex()) drawPoints(porColor[i], PointMode.Lines, col, hoja * 0.75f, StrokeCap.Round)
         }
-        // Las naranjas: con su luz, su sombra y un brillo; las de dentro, más oscuras.
+        // Las naranjas: con su luz, su sombra y un brillo; las de dentro, más apagadas, y alguna hoja delante.
         repeat(frutos) {
             val ms = masas[az.entero(masas.size)]; val a = az.entre(0f, 6.28f); val r = az.entre(0.35f, 0.95f)
-            val q = ms.c + Offset(cos(a) * ms.rx * r, sin(a) * ms.ry * r * 0.85f); val rr = max(0.8f, alto * 0.032f)
+            val q = ms.c + Offset(cos(a) * ms.rx * r, sin(a) * ms.ry * r * 0.85f); val rr = max(0.8f, alto * 0.03f)
             val alSol = cos(a) * lado > -0.1f && r > 0.55f
             drawCircle(Brush.radialGradient(listOf(p.luz(lerp(C.NARANJA, C.ARENA, 0.25f), lejos), p.medio(C.NARANJA, lejos), p.sombra(C.NARANJA, lejos)), q + Offset(lado * rr * 0.35f, -rr * 0.35f), rr * 1.4f), rr, q)
-            if (!alSol) drawCircle(oscuro.copy(alpha = 0.4f), rr, q)
+            if (!alSol) drawCircle(hondo.copy(alpha = 0.3f), rr, q)
             if (alSol && rr > 1.4f) drawCircle(p.luz(Color.White, lejos).copy(alpha = 0.5f), rr * 0.25f, q + Offset(lado * rr * 0.35f, -rr * 0.35f))
-            // Una hoja que la tapa un poco.
-            if (rr > 1.6f && az.real() > 0.6f) { val c0 = q + Offset(-lado * rr * 0.7f, -rr * 0.6f); val d = Offset(-lado * 0.6f, -1f) * hoja; drawPath(poligono(c0 - d, c0 + Offset(-d.y, d.x) * 0.4f, c0 + d, c0 - Offset(-d.y, d.x) * 0.4f), cuerpo) }
+            if (rr > 1.6f && az.real() > 0.6f) { val c0 = q + Offset(-lado * rr * 0.8f, -rr * 0.9f); drawLine(cuerpo, c0, c0 + Offset(lado * rr * 0.9f, -rr * 0.4f), hoja * 0.75f, StrokeCap.Round) }
         }
         if (caidas) repeat(3) { val q = pie + Offset(az.entre(-ancho * 0.4f, ancho * 0.4f), az.entre(-1f, 2f)); val rr = max(0.7f, alto * 0.03f); drawCircle(p.medio(lerp(C.NARANJA, C.CUERO, 0.3f), lejos), rr, q + Offset(0f, -rr)) }
+    }
+
+    // =================================================================
+    //  La selva: la heliconia
+    // =================================================================
+
+    /**
+     * Una mata de heliconias con el [pie] en el suelo y [alto] unidades: tallos con sus hojas de remo (como las del
+     * plátano, más chicas y tiesas) y las flores de brácteas en zigzag, rojas con la punta verde amarilla: erguidas o,
+     * con [cuelga], colgando. [contraluz]: las hojas con el sol detrás se encienden.
+     */
+    fun DrawScope.heliconia(p: Pincel, pie: Offset, alto: Float, az: Azar, lejos: Float = 0f, contraluz: Float = 0f, flores: Int = 3, cuelga: Boolean = false) {
+        val lado = if (p.solALaDerecha) 1f else -1f
+        val tallos = 4 + az.entero(3)
+        val angulos = (0 until tallos).map { i -> -PI.toFloat() / 2f + (i - (tallos - 1) / 2f) * 0.3f + az.entre(-0.15f, 0.15f) }.sortedBy { abs(it + PI.toFloat() / 2f) }.reversed()
+        val puntas = ArrayList<Offset>()
+        for ((i, a) in angulos.withIndex()) {
+            val largo = alto * az.entre(0.7f, 1f)
+            val base = pie + Offset((az.real() - 0.5f) * alto * 0.12f, 0f)
+            val codo = base + Offset(cos(a) * largo * 0.42f, sin(a) * largo * 0.48f)
+            drawLine(p.medio(lerp(C.HOJA, C.SELVA, 0.35f), lejos), base, codo, max(0.4f, alto * 0.016f))
+            val b = a + az.entre(-0.35f, 0.35f)
+            val punta = codo + Offset(cos(b) * largo * 0.6f, sin(b) * largo * 0.42f + largo * 0.12f)
+            hojaDePlatano(p, codo, punta, largo * 0.22f, largo * az.entre(-0.07f, 0.07f), az.entre(-0.5f, 0.5f), az.entre(0.02f, 0.25f), if (i == 0) 0.4f else 0.05f, (0.2f + 0.4f * cos(a) * lado).coerceIn(-1f, 1f), az, lejos, contraluz)
+            puntas += codo
+        }
+        // Las flores, que salen entre las hojas, a distintas alturas.
+        repeat(flores) { i ->
+            val a = pie + Offset((i - (flores - 1) / 2f) * alto * 0.18f + az.entre(-0.05f, 0.05f) * alto, -alto * az.entre(0.35f, 0.6f))
+            val tallo = pie + Offset((a.x - pie.x) * 0.3f, 0f)
+            drawLine(p.medio(lerp(C.HOJA, C.SELVA, 0.3f), lejos), tallo, a, max(0.4f, alto * 0.012f))
+            val b = if (cuelga) a + Offset(az.entre(-0.06f, 0.06f) * alto, alto * az.entre(0.28f, 0.38f)) else a + Offset(az.entre(-0.08f, 0.08f) * alto, -alto * az.entre(0.22f, 0.32f))
+            bracteas(p, a, b, alto * 0.075f, az, lejos)
+        }
+    }
+
+    /** Una espiga de heliconia de [a] a [b]: el raquis en zigzag y las brácteas en barquito, alternas, rojas con la punta verde amarilla. */
+    private fun DrawScope.bracteas(p: Pincel, a: Offset, b: Offset, tam: Float, az: Azar, lejos: Float) {
+        val n = 6 + az.entero(4)
+        val d = b - a; val l = d.getDistance().coerceAtLeast(0.01f); val u = d / l; val nn = Offset(-u.y, u.x)
+        val lado = if (p.solALaDerecha) 1f else -1f
+        val rojo = lerp(C.TEJA, C.NARANJA, 0.18f)
+        drawLine(p.medio(lerp(C.TEJA, C.HOJA, 0.4f), lejos), a, b, max(0.4f, tam * 0.12f))
+        for (i in 0 until n) {
+            val t = (i + 0.5f) / n; val q = a + d * t; val s = if (i % 2 == 0) 1f else -1f
+            val w = tam * (1f - 0.5f * t)
+            val atras = q - u * (l / n * 0.5f)
+            val punta = q + nn * (s * w * 1.1f) + u * (w * 0.55f)
+            val cuerpo = Path().apply { moveTo(atras); cubicTo(atras + nn * (s * w * 0.9f), punta - u * (w * 0.6f), punta); cubicTo(punta - nn * (s * w * 0.3f), q + u * (l / n * 0.2f), q + u * (l / n * 0.45f)); close() }
+            drawPath(cuerpo, p.por(rojo, if (s * lado > 0f) 0.45f else -0.25f, lejos))
+            drawLine(p.luz(lerp(C.LATON, C.HOJA, 0.35f), lejos), punta - (punta - q) * 0.22f, punta, max(0.4f, w * 0.22f), StrokeCap.Round)
+            drawLine(p.luz(lerp(rojo, C.ARENA, 0.3f), lejos).copy(alpha = 0.6f), atras + nn * (s * w * 0.15f), punta - (punta - q) * 0.3f, max(0.3f, w * 0.08f))
+        }
+    }
+
+    // =================================================================
+    //  La selva: la hoja de filodendro
+    // =================================================================
+
+    /**
+     * Una hoja de filodendro (el guaimbê de la selva de Río) del pecíolo, en [base], a la [punta]: ancha, en corazón,
+     * partida en lóbulos hondos que dejan ver lo de detrás; lustrosa, con el brillo a lo largo de cada lóbulo y el nervio
+     * claro. [t]: la luz que le da; [contraluz]: el sol por detrás.
+     */
+    fun DrawScope.filodendro(p: Pincel, base: Offset, punta: Offset, ancho: Float, t: Float, az: Azar, lejos: Float = 0f, contraluz: Float = 0f, lobulos: Int = 7) {
+        val d = punta - base; val largo = d.getDistance().coerceAtLeast(0.01f); val u = d / largo; val n = Offset(-u.y, u.x)
+        val verde = lerp(C.SELVA, C.HOJA, 0.28f + 0.15f * az.real())
+        val translucida = p.l.tono(lerp(C.HOJA_LUZ, C.LATON, 0.15f), lejos)
+        // La mitad del ancho del corazón entero, alrededor del nervio, en cada punto del nervio.
+        fun nucleo(s: Float): Float = ancho * 0.17f * sin(PI.toFloat() * (0.08f + 0.86f * s.coerceIn(0f, 1f))).pow(0.6f)
+        fun color(tl: Float): Color = lerp(p.por(verde, tl.coerceIn(-1f, 1f), lejos), translucida, 0.75f * contraluz)
+        // Los lóbulos: anchos y ondulados, salen del corazón; hacia atrás junto al pecíolo, de lado en medio, hacia la punta al final.
+        for (lado in listOf(-1f, 1f)) {
+            val tl = t + lado * 0.2f
+            for (i in 0 until lobulos) {
+                val s = (i + 0.5f) / lobulos
+                val q = base + d * (0.88f * s) + n * (lado * nucleo(s) * 0.75f)
+                val ang = -0.6f + 1.4f * s + az.entre(-0.08f, 0.08f)
+                val dir = (n * (lado * cos(ang)) + u * sin(ang)).let { it / it.getDistance().coerceAtLeast(0.001f) }
+                val len = (ancho * 0.5f * sin(PI.toFloat() * (0.16f + 0.74f * s)).pow(0.65f) - nucleo(s) * 0.6f).coerceAtLeast(ancho * 0.08f) * az.entre(0.88f, 1.06f)
+                val w = len * 0.3f + ancho * 0.03f
+                val tip = q + dir * len + Offset(0f, len * 0.07f)
+                val perp = Offset(-dir.y, dir.x)
+                val lob = Path().apply {
+                    moveTo(q - u * w); cubicTo(q + dir * (len * 0.4f) - perp * (w * 1.15f), tip - dir * (len * 0.25f) - perp * (w * 0.95f), tip - perp * (w * 0.25f))
+                    cubicTo(tip + dir * (len * 0.06f), tip + dir * (len * 0.06f) + perp * (w * 0.3f), tip + perp * (w * 0.3f))
+                    cubicTo(tip - dir * (len * 0.25f) + perp * (w * 0.95f), q + dir * (len * 0.4f) + perp * (w * 1.15f), q + u * w); close()
+                }
+                drawPath(lob, color(tl - 0.15f * (i % 2)))
+                clipPath(lob) { drawPath(lob, p.sombra(verde, lejos).copy(alpha = 0.3f), style = Stroke(max(0.4f, w * 0.3f))) }
+                // El nervio del lóbulo y el brillo del charol a su lado.
+                drawLine(p.luz(lerp(verde, C.HOJA_LUZ, 0.5f), lejos).copy(alpha = 0.7f), q, tip - dir * (len * 0.1f), max(0.3f, w * 0.08f))
+                if (contraluz < 0.5f) drawLine(p.luz(Color.White, lejos).copy(alpha = 0.2f * p.r.dia), q + dir * (len * 0.25f) + perp * (w * 0.4f), tip - dir * (len * 0.3f) + perp * (w * 0.3f), max(0.4f, w * 0.22f), StrokeCap.Round)
+            }
+        }
+        // El corazón: la lámina entera alrededor del nervio, encima del arranque de los lóbulos.
+        val izq = (0..10).map { i -> val s = i / 10f; base + d * (0.92f * s) - n * nucleo(s) }; val der = (0..10).map { i -> val s = i / 10f; base + d * (0.92f * s) + n * nucleo(s) }
+        drawPath(poligono(izq + listOf(punta) + der.reversed()), color(t))
+        // El nervio central, claro y grueso.
+        drawLine(p.luz(lerp(verde, C.HOJA_LUZ, 0.45f), lejos), base, base + d * 0.9f, max(0.5f, ancho * 0.03f), StrokeCap.Round)
+    }
+
+    // =================================================================
+    //  La selva: la bromelia
+    // =================================================================
+
+    /**
+     * Una bromelia con el [pie] (el centro de la roseta) en [pie] y [ancho] unidades: la roseta de hojas tiesas y
+     * acanaladas, algunas rayadas o teñidas de rojo, que se abren en copa; con [flor], la vara de brácteas rojas que sale
+     * del centro (o el corazón encendido). Va en el suelo, en una maceta o atada a una rama.
+     */
+    fun DrawScope.bromelia(p: Pincel, pie: Offset, ancho: Float, az: Azar, lejos: Float = 0f, flor: Boolean = true, contraluz: Float = 0f) {
+        val lado = if (p.solALaDerecha) 1f else -1f
+        val n = 11 + az.entero(5)
+        val tinte = az.real()
+        val angulos = (0 until n).map { -PI.toFloat() / 2f + (it - (n - 1) / 2f) * (3.1f / n) + az.entre(-0.08f, 0.08f) }.sortedBy { abs(it + PI.toFloat() / 2f) }
+        val traseras = angulos.take(n / 2); val delanteras = angulos.drop(n / 2).reversed()
+        fun hoja(a: Float, delante: Boolean) {
+            val largo = ancho * az.entre(0.45f, 0.6f) * (if (delante) 0.8f else 1f)
+            val cae = abs(a + PI.toFloat() / 2f) * 0.35f
+            val fin = pie + Offset(cos(a) * largo, sin(a) * largo * 0.8f + largo * cae + (if (delante) largo * 0.15f else 0f))
+            val ctrl = pie + Offset(cos(a) * largo * 0.4f, sin(a) * largo * 0.6f)
+            val w = ancho * 0.07f
+            val dd = fin - pie; val nn = Offset(-dd.y, dd.x) / dd.getDistance().coerceAtLeast(0.01f)
+            val forma = Path().apply { moveTo(pie - nn * w); cubicTo(ctrl - nn * (w * 0.9f), fin - dd * 0.15f - nn * (w * 0.3f), fin); cubicTo(fin - dd * 0.15f + nn * (w * 0.3f), ctrl + nn * (w * 0.9f), pie + nn * w); close() }
+            val verde = if (az.real() < 0.3f + 0.4f * tinte) lerp(C.HOJA, C.TEJA, 0.35f) else lerp(C.SELVA, C.HOJA, 0.45f)
+            val tl = (cos(a) * lado * 0.6f + if (delante) 0.1f else -0.3f).coerceIn(-1f, 1f)
+            drawPath(forma, lerp(p.por(verde, tl, lejos), p.l.tono(lerp(C.HOJA_LUZ, C.TEJA, 0.15f), lejos), 0.6f * contraluz))
+            drawPath(Path().apply { moveTo(pie); cubicTo(ctrl, fin - dd * 0.15f, fin) }, p.luz(lerp(verde, C.ARENA, 0.4f), lejos).copy(alpha = 0.5f), style = Stroke(max(0.3f, w * 0.25f)))
+            // Las rayas de través de las hojas pintadas.
+            if (tinte > 0.6f) for (j in 1..4) { val q = pie + (fin - pie) * (j / 5f); drawLine(p.medio(lerp(C.LONA, C.HOJA, 0.4f), lejos).copy(alpha = 0.4f), q - nn * (w * 0.6f), q + nn * (w * 0.6f), max(0.3f, w * 0.18f)) }
+        }
+        for (a in traseras) hoja(a, false)
+        if (flor) {
+            if (tinte < 0.45f) {
+                // La vara con sus brácteas rosadas y las florecillas azules (como la Aechmea).
+                val alto = ancho * 0.75f; val tope = pie + Offset(az.entre(-0.05f, 0.05f) * ancho, -alto)
+                drawLine(p.medio(lerp(C.TEJA, C.LONA, 0.3f), lejos), pie, tope, max(0.4f, ancho * 0.035f))
+                for (j in 0..9) { val q = pie + (tope - pie) * (0.45f + j * 0.06f); val s = if (j % 2 == 0) 1f else -1f
+                    drawPath(poligono(q, q + Offset(s * ancho * 0.08f * (1f - j * 0.06f), -ancho * 0.05f), q + Offset(0f, -ancho * 0.06f)), p.por(lerp(C.TEJA, C.LONA, 0.35f), s * lado * 0.4f, lejos))
+                    if (j % 3 == 1) drawCircle(p.medio(lerp(C.SOMBRA, C.MAR, 0.3f), lejos), max(0.4f, ancho * 0.015f), q + Offset(s * ancho * 0.07f, -ancho * 0.05f)) }
+            } else {
+                // El corazón de la roseta, rojo encendido.
+                drawOval(p.por(lerp(C.TEJA, C.NARANJA, 0.1f), 0.3f, lejos), Offset(pie.x - ancho * 0.16f, pie.y - ancho * 0.1f), Size(ancho * 0.32f, ancho * 0.16f))
+            }
+        }
+        for (a in delanteras) hoja(a, true)
+    }
+
+    // =================================================================
+    //  La selva: la orquídea en su cesto colgado
+    // =================================================================
+
+    /**
+     * Una orquídea en un cesto de palos colgado del [gancho] por tres cordeles; el cesto queda [cuelga] unidades más
+     * abajo y mide [tam]: los palos cruzados, el musgo y la fibra que asoman, las raíces grises que caen por fuera, las
+     * hojas gruesas y, con [flores], las flores lilas de labelo encendido (como las catleyas de la selva de Río).
+     */
+    fun DrawScope.orquideaEnCesto(p: Pincel, gancho: Offset, cuelga: Float, tam: Float, az: Azar, lejos: Float = 0f, flores: Int = 3, contraluz: Float = 0f) {
+        val lado = if (p.solALaDerecha) 1f else -1f
+        val c = gancho + Offset(0f, cuelga)
+        val w = tam * 0.5f; val h = tam * 0.42f
+        // Los cordeles, del gancho a las esquinas del cesto.
+        for (dx in listOf(-w, -w * 0.2f, w)) drawLine(p.sombra(C.CANAMO, lejos), gancho, c + Offset(dx, -h * 0.5f + (if (dx > -w * 0.5f && dx < w * 0.5f) -h * 0.15f else 0f)), max(0.3f, tam * 0.012f))
+        // Las raíces que salen por debajo, grises con la punta verde.
+        repeat(7) { val a = c + Offset(az.entre(-w, w) * 0.8f, h * 0.45f); val b = a + Offset(az.entre(-0.3f, 0.3f) * tam, tam * az.entre(0.3f, 0.8f))
+            drawPath(Path().apply { moveTo(a); cubicTo(a + Offset(0f, (b.y - a.y) * 0.4f), b + Offset((a.x - b.x) * 0.5f, -(b.y - a.y) * 0.2f), b) }, p.medio(lerp(C.LONA, C.ROCA, 0.4f), lejos), style = Stroke(max(0.3f, tam * 0.025f), cap = StrokeCap.Round))
+            drawCircle(p.medio(C.HOJA, lejos), max(0.3f, tam * 0.015f), b) }
+        // Las hojas: gruesas, arqueadas, oscuras y con su brillo.
+        repeat(5) { i -> val a = -PI.toFloat() / 2f + (i - 2) * 0.45f + az.entre(-0.15f, 0.15f); val largo = tam * az.entre(0.7f, 1.1f)
+            val base = c + Offset((i - 2) * w * 0.25f, -h * 0.3f); val fin = base + Offset(cos(a) * largo, sin(a) * largo * 0.7f + largo * 0.3f * abs(cos(a)))
+            val ctrl = base + Offset(cos(a) * largo * 0.4f, sin(a) * largo * 0.8f); val dd = fin - base; val nn = Offset(-dd.y, dd.x) / dd.getDistance().coerceAtLeast(0.01f); val g = tam * 0.06f
+            drawPath(Path().apply { moveTo(base - nn * g); cubicTo(ctrl - nn * g, fin - dd * 0.1f - nn * (g * 0.4f), fin); cubicTo(fin - dd * 0.1f + nn * (g * 0.4f), ctrl + nn * g, base + nn * g); close() },
+                lerp(p.por(lerp(C.SELVA, C.HOJA, 0.3f), cos(a) * lado * 0.5f, lejos), p.l.tono(C.HOJA_LUZ, lejos), 0.55f * contraluz)) }
+        // El cesto: palos cruzados en pisos, con la fibra y el musgo asomando entre ellos.
+        val musgo = p.medio(lerp(C.SELVA, C.HOJA, 0.4f), lejos)
+        drawRect(musgo, Offset(c.x - w * 0.9f, c.y - h * 0.5f), Size(w * 1.8f, h))
+        for (k in 0..3) { val y = c.y - h * 0.5f + h * k / 3.2f; val ww = w * (1f - 0.04f * k)
+            drawLine(p.por(lerp(C.MADERA, C.CANAMO, 0.3f), if (k % 2 == 0) 0.3f else -0.2f, lejos), Offset(c.x - ww, y), Offset(c.x + ww, y + 0.3f), max(0.5f, tam * 0.07f), StrokeCap.Round)
+            drawCircle(p.sombra(C.MADERA_OSC, lejos), max(0.3f, tam * 0.035f), Offset(c.x - ww, y)); drawCircle(p.sombra(C.MADERA_OSC, lejos), max(0.3f, tam * 0.035f), Offset(c.x + ww, y + 0.3f)) }
+        repeat(6) { mancha(c + Offset(az.entre(-w, w), az.entre(-h, h) * 0.5f), tam * 0.08f, tam * 0.05f, musgo, 0.6f) }
+        // Las flores: tres pétalos y dos sépalos lilas, y el labelo rizado, más oscuro, con la garganta amarilla.
+        val lila = lerp(C.SOMBRA, C.LONA, 0.38f); val labelo = lerp(C.TEJA, C.SOMBRA, 0.5f)
+        repeat(flores) { i ->
+            val f = c + Offset((i - (flores - 1) / 2f) * w * 0.9f + az.entre(-0.1f, 0.1f) * w, -h * 0.6f - tam * az.entre(0.25f, 0.55f)); val r = tam * 0.2f
+            drawLine(p.medio(C.HOJA, lejos), c + Offset(0f, -h * 0.4f), f, max(0.3f, tam * 0.02f))
+            for (j in 0 until 5) { val a = -PI.toFloat() / 2f + j * 2f * PI.toFloat() / 5f; val q = f + Offset(cos(a), sin(a)) * (r * 0.6f)
+                drawOval(p.por(lila, (cos(a) * lado * 0.5f + 0.2f), lejos), Offset(q.x - r * 0.4f, q.y - r * 0.28f), Size(r * 0.8f, r * 0.56f)) }
+            drawOval(p.por(labelo, 0.1f, lejos), Offset(f.x - r * 0.42f, f.y - r * 0.05f), Size(r * 0.84f, r * 0.62f))
+            drawCircle(p.luz(C.LATON, lejos), r * 0.14f, f + Offset(0f, r * 0.08f))
+        }
+    }
+
+    // =================================================================
+    //  La selva: el árbol de raíces tabulares
+    // =================================================================
+
+    /**
+     * Un árbol enorme de la selva, con el [pie] en el suelo, [ancho] unidades de tronco y [alto] hasta donde se sale del
+     * cuadro: el tronco claro y recto, con su lado de luz, manchas de liquen, regueros y musgo del lado de la sombra; al
+     * pie, las raíces tabulares que se abren como paredes, cada una con su cara de luz y su cara de sombra; arriba, las
+     * primeras ramas. Devuelve las horquillas (donde van las bromelias y las orquídeas, y de donde cuelgan las lianas).
+     */
+    fun DrawScope.arbolDeRaices(p: Pincel, pie: Offset, ancho: Float, alto: Float, az: Azar, lejos: Float = 0f): List<Offset> {
+        val lado = if (p.solALaDerecha) 1f else -1f
+        val inclina = az.entre(-0.04f, 0.04f) * alto
+        fun eje(t: Float): Offset = pie + Offset(inclina * t * t, -alto * t)
+        fun g(t: Float): Float = ancho * 0.5f * (1f - 0.2f * t) * (1f + 0.45f * (1f - t * 7f).coerceAtLeast(0f).pow(2f))
+        val corteza = lerp(lerp(C.ROCA, C.MADERA_OSC, 0.3f), C.LONA, 0.1f)
+        // Las raíces de atrás: solo asoma su lomo por encima del suelo.
+        val raices = listOf(-1.25f to -0.18f, 1.2f to -0.15f, -0.85f to 0.32f, 0.7f to 0.42f, -0.15f to 0.55f).map { (dx, dz) -> Triple(dx + az.entre(-0.1f, 0.1f), dz, az.entre(0.8f, 1.2f)) }
+        fun raiz(dx: Float, dz: Float, k: Float) {
+            val alto0 = ancho * 0.95f * k
+            val punta = pie + Offset(dx * ancho * 0.95f * k, dz * ancho * 0.35f)
+            val raizEnTronco = pie + Offset(dx.coerceIn(-0.5f, 0.5f) * ancho * 0.6f, -alto0)
+            val forma = Path().apply { moveTo(raizEnTronco); cubicTo(raizEnTronco + Offset(dx * ancho * 0.2f, alto0 * 0.6f), punta + Offset(-dx * ancho * 0.6f, -ancho * 0.25f), punta); lineTo(pie + Offset(dx.coerceIn(-0.4f, 0.4f) * ancho * 0.6f, dz * ancho * 0.2f)); close() }
+            val cara = (dx * lado).coerceIn(-1f, 1f)
+            drawPath(forma, p.por(corteza, cara * 0.6f - 0.1f, lejos))
+            clipPath(forma) {
+                drawPath(Path().apply { moveTo(raizEnTronco); cubicTo(raizEnTronco + Offset(dx * ancho * 0.2f, alto0 * 0.6f), punta + Offset(-dx * ancho * 0.6f, -ancho * 0.25f), punta) }, p.luz(corteza, lejos).copy(alpha = 0.6f * p.r.dia), style = Stroke(max(0.5f, ancho * 0.08f)))
+                drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.medio(lerp(C.SELVA, C.HOJA, 0.3f), lejos).copy(alpha = 0.55f)), pie.y - alto0 * 0.5f, pie.y + ancho), Offset(min(pie.x, punta.x) - ancho, pie.y - alto0), Size(abs(punta.x - pie.x) + ancho * 2f, alto0 + ancho))
+            }
+        }
+        for ((dx, dz, k) in raices.filter { it.second < 0f }) raiz(dx, dz, k)
+        // El tronco.
+        val tronco = poligono((0..14).map { eje(it / 14f) + Offset(-g(it / 14f), 0f) } + (14 downTo 0).map { eje(it / 14f) + Offset(g(it / 14f), 0f) })
+        drawPath(tronco, Brush.horizontalGradient(listOf(p.sombra(corteza, lejos), p.medio(corteza, lejos), p.luz(corteza, lejos), p.medio(corteza, lejos)), pie.x - lado * ancho * 0.6f, pie.x + lado * ancho * 0.6f))
+        clipPath(tronco) {
+            // Los regueros y las grietas a lo largo.
+            val vetas = ArrayList<Offset>(80)
+            repeat(22) { val x = az.entre(-1f, 1f); val t0 = az.entre(0f, 0.9f); val t1 = (t0 + az.entre(0.05f, 0.25f)).coerceAtMost(1f); vetas += eje(t0) + Offset(x * g(t0), 0f); vetas += eje(t1) + Offset(x * g(t1) + az.entre(-1f, 1f), 0f) }
+            drawPoints(vetas, PointMode.Lines, p.sombra(lerp(corteza, C.BREA, 0.3f), lejos).copy(alpha = 0.45f), max(0.35f, ancho * 0.03f), StrokeCap.Round)
+            // El liquen: manchas pálidas y verdosas, y el musgo del lado de la sombra.
+            repeat(16) { val t = az.entre(0.05f, 0.95f); val q = eje(t) + Offset(az.entre(-0.8f, 0.8f) * g(t), 0f); mancha(q, ancho * az.entre(0.08f, 0.2f), ancho * az.entre(0.06f, 0.14f), if (it % 3 == 0) p.medio(lerp(C.HOJA_LUZ, C.LONA, 0.5f), lejos) else p.luz(lerp(C.LONA, C.ARENA, 0.3f), lejos), 0.45f) }
+            repeat(10) { val t = az.entre(0f, 0.8f); mancha(eje(t) + Offset(-lado * g(t) * az.entre(0.4f, 0.9f), 0f), ancho * 0.18f, ancho * 0.4f, p.medio(lerp(C.SELVA, C.HOJA, 0.35f), lejos), 0.5f) }
+        }
+        // Las raíces de delante, que se abren hacia quien mira.
+        for ((dx, dz, k) in raices.filter { it.second >= 0f }) raiz(dx, dz, k)
+        // Las primeras ramas, gruesas, que salen hacia los lados y se pierden arriba; sus horquillas.
+        val horquillas = ArrayList<Offset>()
+        for ((i, s) in listOf(-1f, 1f, -1f).withIndex()) {
+            val t = 0.62f + i * 0.13f + az.entre(-0.03f, 0.03f); val a = eje(t) + Offset(s * g(t) * 0.6f, 0f)
+            val b = a + Offset(s * ancho * az.entre(1.8f, 2.8f), -ancho * az.entre(1.2f, 2f)); val c = b + Offset(s * ancho * az.entre(0.8f, 1.6f), -ancho * az.entre(1.4f, 2.4f))
+            val grueso = ancho * (0.35f - 0.06f * i)
+            drawPath(Path().apply { moveTo(a); cubicTo(a + (b - a) * 0.5f + Offset(0f, ancho * 0.2f), b, c) }, p.medio(corteza, lejos), style = Stroke(grueso, cap = StrokeCap.Round))
+            drawPath(Path().apply { moveTo(a); cubicTo(a + (b - a) * 0.5f + Offset(0f, ancho * 0.2f), b, c) }, p.luz(corteza, lejos).copy(alpha = 0.5f * p.r.dia), style = Stroke(grueso * 0.3f, cap = StrokeCap.Round))
+            horquillas += a + (b - a) * 0.15f; horquillas += b
+        }
+        return horquillas
+    }
+
+    // =================================================================
+    //  La colección viva: la maceta, la tina y la caja de vidrio
+    // =================================================================
+
+    /**
+     * Una maceta de barro con el [pie] (el centro del fondo) en el lienzo, de [ancho] × [alto] unidades, vista desde
+     * arriba un poco: el cuerpo que se estrecha abajo, con su lado de luz, el borde grueso, la tierra; el salitre
+     * blanco, el musgo del pie y algún desconchón. Devuelve el centro de la tierra (donde va la planta).
+     */
+    fun DrawScope.maceta(p: Pincel, pie: Offset, ancho: Float, alto: Float, az: Azar, lejos: Float = 0f, vista: Float = 0.22f): Offset {
+        val lado = if (p.solALaDerecha) 1f else -1f
+        val w = ancho / 2f; val wb = w * 0.72f; val borde = alto * 0.16f
+        val barro = lerp(C.TEJA, C.ARENA, 0.15f + 0.15f * az.real())
+        val cuerpo = Path().apply { moveTo(pie + Offset(-wb, 0f)); cubicTo(pie + Offset(-wb, wb * vista), pie + Offset(wb, wb * vista), pie + Offset(wb, 0f)); lineTo(pie + Offset(w * 0.94f, -alto + borde)); lineTo(pie + Offset(-w * 0.94f, -alto + borde)); close() }
+        drawPath(cuerpo, Brush.horizontalGradient(listOf(p.sombra(barro, lejos), p.medio(barro, lejos), p.luz(barro, lejos), p.medio(barro, lejos)), pie.x - lado * w, pie.x + lado * w))
+        clipPath(cuerpo) {
+            // El salitre que sube del agua de riego, el musgo del pie y la sombra del borde.
+            mancha(pie + Offset(az.entre(-0.4f, 0.4f) * w, -alto * 0.35f), w * 0.6f, alto * 0.18f, p.medio(lerp(C.LONA, C.ARENA, 0.3f), lejos), 0.4f)
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.medio(lerp(C.SELVA, C.HOJA, 0.3f), lejos).copy(alpha = 0.5f)), pie.y - alto * 0.25f, pie.y + 2f), Offset(pie.x - w, pie.y - alto * 0.25f), Size(ancho, alto * 0.3f))
+            drawRect(p.sombra(barro, lejos).copy(alpha = 0.45f), Offset(pie.x - w, pie.y - alto + borde), Size(ancho, alto * 0.08f))
+        }
+        // El borde, con su canto de luz, y la tierra húmeda dentro.
+        val arriba = pie + Offset(0f, -alto + borde * 0.5f)
+        drawRect(Brush.horizontalGradient(listOf(p.sombra(barro, lejos), p.luz(lerp(barro, C.ARENA, 0.2f), lejos)), arriba.x - lado * w, arriba.x + lado * w), Offset(arriba.x - w, arriba.y - borde * 0.5f), Size(ancho, borde))
+        drawOval(p.luz(lerp(barro, C.ARENA, 0.25f), lejos), Offset(arriba.x - w, arriba.y - borde * 0.5f - w * vista), Size(ancho, w * vista * 2f))
+        drawOval(p.sombra(lerp(C.MADERA_OSC, C.BREA, 0.4f), lejos), Offset(arriba.x - w * 0.86f, arriba.y - borde * 0.5f - w * vista * 0.8f), Size(w * 1.72f, w * vista * 1.6f))
+        if (az.real() > 0.5f) drawPath(poligono(arriba + Offset(lado * w * 0.3f, -borde * 0.5f), arriba + Offset(lado * w * 0.55f, -borde * 0.5f), arriba + Offset(lado * w * 0.45f, borde * 0.4f)), p.medio(lerp(barro, C.ARENA, 0.4f), lejos))
+        return arriba + Offset(0f, -borde * 0.5f)
+    }
+
+    /** Una tina de media barrica, como la [maceta]: duelas de madera gastada, dos aros de hierro con su óxido y la tierra. Devuelve el centro de la tierra. */
+    fun DrawScope.tina(p: Pincel, pie: Offset, ancho: Float, alto: Float, az: Azar, lejos: Float = 0f, vista: Float = 0.22f): Offset {
+        val lado = if (p.solALaDerecha) 1f else -1f
+        val w = ancho / 2f; val wb = w * 0.88f
+        val madera = lerp(C.MADERA, C.ROCA, 0.25f)
+        val cuerpo = Path().apply { moveTo(pie + Offset(-wb, 0f)); cubicTo(pie + Offset(-wb, wb * vista), pie + Offset(wb, wb * vista), pie + Offset(wb, 0f)); cubicTo(pie + Offset(w * 1.04f, -alto * 0.5f), pie + Offset(w * 1.02f, -alto * 0.8f), pie + Offset(w, -alto)); lineTo(pie + Offset(-w, -alto)); cubicTo(pie + Offset(-w * 1.02f, -alto * 0.8f), pie + Offset(-w * 1.04f, -alto * 0.5f), pie + Offset(-wb, 0f)); close() }
+        drawPath(cuerpo, Brush.horizontalGradient(listOf(p.sombra(madera, lejos), p.medio(madera, lejos), p.luz(madera, lejos), p.medio(madera, lejos)), pie.x - lado * w, pie.x + lado * w))
+        clipPath(cuerpo) {
+            // Las duelas, curvas, cada una con su tono; los aros de hierro con su filo de luz y su chorrera de óxido.
+            for (k in -4..4) { val x = pie.x + k * w * 0.23f; drawLine(p.sombra(lerp(madera, C.BREA, 0.3f), lejos).copy(alpha = 0.6f), Offset(x * 0.98f + pie.x * 0.02f, pie.y + 2f), Offset(x, pie.y - alto), max(0.3f, ancho * 0.012f)) }
+            for (y in listOf(0.22f, 0.78f)) { val yy = pie.y - alto * y; drawRect(p.sombra(C.HIERRO, lejos), Offset(pie.x - w * 1.1f, yy - alto * 0.05f), Size(ancho * 1.1f, alto * 0.1f)); drawLine(p.luz(C.HIERRO, lejos).copy(alpha = 0.6f), Offset(pie.x - w, yy - alto * 0.05f), Offset(pie.x + w, yy - alto * 0.05f), max(0.3f, alto * 0.02f))
+                repeat(3) { val x = pie.x + az.entre(-0.8f, 0.8f) * w; drawLine(p.medio(lerp(C.CUERO, C.NARANJA, 0.2f), lejos).copy(alpha = 0.5f), Offset(x, yy + alto * 0.05f), Offset(x, yy + alto * az.entre(0.1f, 0.25f)), max(0.3f, ancho * 0.02f)) } }
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.medio(lerp(C.SELVA, C.HOJA, 0.3f), lejos).copy(alpha = 0.45f)), pie.y - alto * 0.2f, pie.y + 2f), Offset(pie.x - w * 1.1f, pie.y - alto * 0.2f), Size(ancho * 1.1f, alto * 0.25f))
+        }
+        val arriba = pie + Offset(0f, -alto)
+        drawOval(p.luz(lerp(madera, C.ARENA, 0.25f), lejos), Offset(arriba.x - w, arriba.y - w * vista), Size(ancho, w * vista * 2f))
+        drawOval(p.sombra(lerp(C.MADERA_OSC, C.BREA, 0.4f), lejos), Offset(arriba.x - w * 0.9f, arriba.y - w * vista * 0.85f), Size(w * 1.8f, w * vista * 1.7f))
+        return arriba
+    }
+
+    /**
+     * Una caja de vidrio para plantas (un invernadero portátil, de los que viajaban en cubierta con plantas vivas), en
+     * [s]: el cajón de madera de abajo con la tierra, y encima la casita de vidrio de dos aguas, con su armazón de
+     * madera y latón. Dentro, brotes de helecho y plantitas; el vidrio, empañado abajo, con sus gotas y el reflejo del
+     * cielo. Medidas en metros; [base] es la altura donde se apoya (la tapa de un cajón).
+     */
+    class CajaDeVidrio(val s: Sitio, val semilla: Long, val ancho: Float = 0.64f, val fondo: Float = 0.4f, val zocalo: Float = 0.17f, val alto: Float = 0.3f, val cumbre: Float = 0.17f, val base: Float = 0f) {
+        val tope: Float get() = base + zocalo + alto + cumbre
+    }
+
+    fun sombraDeCajaDeVidrio(c: CajaDeVidrio, sol: Sol3): Path { val w = c.ancho / 2f; val d = c.fondo / 2f
+        return sombraDe(c.s, sol, esquinas(-w, w, c.base, c.base + c.zocalo + c.alto, -d, d) + listOf(V3(-w, c.tope, 0f), V3(w, c.tope, 0f)), c.base) }
+
+    fun DrawScope.cajaDeVidrio(c: CajaDeVidrio, p: Pincel, sol: Sol3, brillo: Float = 0f) {
+        val s = c.s; val az = Azar(c.semilla); val e = s.escala(0f, 0f)
+        val w = c.ancho / 2f; val d = c.fondo / 2f; val y0 = c.base + c.zocalo; val y1 = y0 + c.alto; val yc = c.tope
+        val madera = lerp(C.MADERA, C.CAOBA, 0.4f)
+        val vidrio = p.l.tono(lerp(C.LONA, C.MAR, 0.25f))
+        // Las caras de vidrio: las cuatro paredes y las dos aguas del tejado (con los dos piñones).
+        val paredes = carasDeCaja(-w, w, y0, y1, -d, d).filter { it.n.y == 0f }
+        val aguaDelante = Cara3(listOf(V3(-w, y1, -d), V3(w, y1, -d), V3(w, yc, 0f), V3(-w, yc, 0f)), V3(0f, d, -c.cumbre))
+        val aguaDetras = Cara3(listOf(V3(w, y1, d), V3(-w, y1, d), V3(-w, yc, 0f), V3(w, yc, 0f)), V3(0f, d, c.cumbre))
+        val pinones = listOf(listOf(V3(-w, y1, -d), V3(-w, y1, d), V3(-w, yc, 0f)) to V3(-1f, 0f, 0f), listOf(V3(w, y1, d), V3(w, y1, -d), V3(w, yc, 0f)) to V3(1f, 0f, 0f))
+        // 1. Lo de detrás, visto a través del vidrio: las caras que no miran a los ojos, más apagadas.
+        for (cara in (paredes + listOf(aguaDelante, aguaDetras)).filter { !s.seVe(it.centro, it.n) }) {
+            drawPath(forma(s, cara), vidrio.copy(alpha = 0.18f))
+            for (i in 0..3) { val q = cara.q[i]; val r = cara.q[(i + 1) % 4]; drawLine(p.sombra(madera).copy(alpha = 0.6f), s.p(q), s.p(r), (0.012f * e).coerceIn(0.3f, 1.4f)) }
+        }
+        // 2. La tierra y las plantitas de dentro: frondas de helecho que se desenrollan, hojitas, un brote alto.
+        val tierra = poligono(listOf(V3(-w, y0, -d), V3(w, y0, -d), V3(w, y0, d), V3(-w, y0, d)).map { s.p(it) })
+        drawPath(tierra, p.arriba(lerp(C.MADERA_OSC, C.BREA, 0.3f)))
+        val brotes = (0 until 9).map { V3(az.entre(-w, w) * 0.85f, y0, az.entre(-d, d) * 0.8f) }.sortedByDescending { s.hondo(it) }
+        for ((i, b) in brotes.withIndex()) {
+            val pie = s.p(b); val alto = (c.alto * az.entre(0.35f, 0.85f)) * s.escala(b.x, b.z)
+            when (i % 3) {
+                0 -> for (j in 0..4) { val a = -PI.toFloat() / 2f + (j - 2) * 0.5f; val fin = pie + Offset(cos(a) * alto * 0.6f, sin(a) * alto); drawLine(p.medio(lerp(C.HOJA, C.SELVA, 0.3f)), pie, fin, max(0.3f, alto * 0.03f))
+                    for (q in 1..5) { val r = pie + (fin - pie) * (q / 6f); drawLine(p.luz(lerp(C.HOJA, C.HOJA_LUZ, 0.3f)), r, r + Offset(alto * 0.06f, -alto * 0.02f), max(0.3f, alto * 0.025f)); drawLine(p.medio(C.HOJA), r, r + Offset(-alto * 0.06f, -alto * 0.02f), max(0.3f, alto * 0.025f)) } }
+                1 -> { drawLine(p.medio(C.HOJA), pie, pie + Offset(0f, -alto), max(0.3f, alto * 0.03f)); for (j in 0..2) { val q = pie + Offset(0f, -alto * (0.4f + j * 0.25f)); val sgn = if (j % 2 == 0) 1f else -1f; drawOval(p.por(lerp(C.HOJA, C.SELVA, 0.2f), sgn * 0.4f), Offset(q.x + (if (sgn > 0f) 0f else -alto * 0.22f), q.y - alto * 0.06f), Size(alto * 0.22f, alto * 0.12f)) } }
+                else -> { val r = alto * 0.12f; drawArc(p.luz(lerp(C.HOJA, C.ARENA, 0.3f)), 0f, 290f, false, pie + Offset(-r, -alto * 0.7f - r), Size(r * 2f, r * 2f), style = Stroke(max(0.3f, alto * 0.04f))); drawLine(p.medio(C.HOJA), pie, pie + Offset(r, -alto * 0.7f), max(0.3f, alto * 0.04f)) }
+            }
+        }
+        // 3. El cajón de abajo: tablas con su lado de luz, las esquinas de latón.
+        for (cara in visibles(s, carasDeCaja(-w * 1.04f, w * 1.04f, c.base, y0, -d * 1.06f, d * 1.06f)).filter { !it.arriba }) {
+            val f = forma(s, cara); val t = luzDe(s, sol, cara)
+            drawPath(f, p.por(madera, t))
+            clipPath(f) { linea(s, cara, 0f, 0.5f, 1f, 0.5f, p.sombra(C.BREA).copy(alpha = 0.5f), (0.008f * e).coerceIn(0.3f, 1f)); repeat(3) { val v = az.entre(0.1f, 0.9f); linea(s, cara, 0f, v, 1f, v, p.sombra(madera).copy(alpha = 0.25f), (0.004f * e).coerceIn(0.25f, 0.6f)) } }
+            for (u in listOf(0.02f, 0.98f)) drawLine(p.luz(C.LATON), s.p(cara.en(u, 0f)), s.p(cara.en(u, 1f)), (0.02f * e).coerceIn(0.4f, 2f))
+        }
+        // 4. El vidrio de delante: el tinte del cielo, el vaho y las gotas abajo, el reflejo en diagonal, y el armazón.
+        val delante = (paredes + listOf(aguaDelante, aguaDetras)).filter { s.seVe(it.centro, it.n) }
+        for (cara in delante) {
+            val f = forma(s, cara); val t = luzDe(s, sol, cara)
+            drawPath(f, vidrio.copy(alpha = 0.16f + 0.1f * (t.coerceAtLeast(0f))))
+            clipPath(f) {
+                if (!cara.arriba && cara.n.y == 0f) {
+                    drawPath(poligono(listOf(cara.en(0f, 0f), cara.en(1f, 0f), cara.en(1f, 0.35f), cara.en(0f, 0.25f)).map { s.p(it) }), p.l.tono(C.LONA).copy(alpha = 0.22f))
+                    drawPoints((0 until 30).map { s.p(cara.en(az.real(), az.real() * az.real() * 0.6f)) }, PointMode.Points, p.luz(Color.White).copy(alpha = 0.6f), (0.006f * e).coerceIn(0.4f, 1.2f), StrokeCap.Round)
+                }
+                drawPath(poligono(listOf(cara.en(0.15f, 0f), cara.en(0.32f, 0f), cara.en(0.62f, 1f), cara.en(0.45f, 1f)).map { s.p(it) }), Color.White.copy(alpha = (0.1f + 0.25f * brillo + 0.12f * t.coerceAtLeast(0f)).coerceIn(0f, 1f)), blendMode = BlendMode.Plus)
+            }
+        }
+        for ((pts, n) in pinones) if (s.seVe((pts[0] + pts[1] + pts[2]) * (1f / 3f), n)) {
+            val f = poligono(pts.map { s.p(it) }); drawPath(f, vidrio.copy(alpha = 0.18f))
+            for (i in 0..2) drawLine(p.por(madera, luzDe(s, sol, Cara3(listOf(pts[0], pts[1], pts[2], pts[2]), n))), s.p(pts[i]), s.p(pts[(i + 1) % 3]), (0.016f * e).coerceIn(0.4f, 1.8f))
+        }
+        // El armazón: los montantes de las esquinas, el travesaño de en medio, la cumbrera y su remate.
+        val g = (0.016f * e).coerceIn(0.4f, 1.8f)
+        for (x in listOf(-w, w)) for (z in listOf(-d, d)) if (s.seVe(V3(x, y0, z), V3(x, 0f, z))) drawLine(p.por(madera, (x * if (p.solALaDerecha) 1f else -1f) * 2f), s.p(x, y0, z), s.p(x, y1, z), g)
+        for (z in listOf(-d, d)) { drawLine(p.medio(madera), s.p(-w, y1, z), s.p(w, y1, z), g); drawLine(p.medio(madera), s.p(-w, y0, z), s.p(w, y0, z), g) }
+        drawLine(p.medio(madera), s.p(0f, y0, -d), s.p(0f, y1, -d), g * 0.7f)
+        drawLine(p.medio(madera), s.p(-w, y1, -d), s.p(-w, yc, 0f), g); drawLine(p.medio(madera), s.p(w, y1, -d), s.p(w, yc, 0f), g)
+        drawLine(p.luz(C.LATON), s.p(-w, yc, 0f), s.p(w, yc, 0f), g * 1.3f)
+        drawCircle(p.luz(C.LATON), g * 1.4f, s.p(0f, yc + 0.02f, 0f))
     }
 }
