@@ -838,14 +838,14 @@ Todos heredan las 13 animaciones comunes y la reacción al ánimo. Lo propio de 
 - **Fondo vivo:** un barrido de radar lento sobre trazos. De noche, el mismo barrido con menos luz y una antena que parpadea.
 - **Sonido:** relés, pitidos de consola, teletipo y sintetizador analógico de los 70; música tensa y propia.
 - **Fuente:** Michroma (OFL, a confirmar) para los títulos, por su aire de ciencia ficción de los 70. Orbitron ya es de Espacio.
-- **Muebles del Diario** (cuando les toque, con la receta de `MUEBLES.md`): consola curva color hueso, silla giratoria y pantalla redonda, como en las referencias del autor.
+- **Muebles del Diario** (cuando les toque, con la receta de `MUEBLES.md`): la base escondida en ruinas, como los de la pestaña Vida (ver la guía del tema).
 
 **Gato.**
 - **Pelaje y material:** gris pizarra, en pintura de concepto de los 70 (gouache sobre cartón, con grano).
 - **Accesorio:** chaqueta de vuelo y auricular.
-- **Fondo:** el puerto de ladrillo con una nave patrulla de forma propia en el cielo; de noche, el mismo puerto con reflectores.
-- **Lo que se mueve:** humo, el reflector y las luces de la nave.
-- **Acciones:** esconde un microfilm en el collar · se agacha cuando pasa el reflector de una patrulla.
+- **Fondo:** el interior de la base escondida en ruinas (15 nov 2026; antes era el puerto de ladrillo): muro de sillares con raíces, dos paneles de vidrio grabado, consolas oscuras, la consola blanca curva, lámparas de cúpula y la franja de peligro; de noche, la misma base en penumbra verdosa.
+- **Lo que se mueve:** el pulso de luz por el vidrio, los pilotos, el barrido del radar, el texto de las pantallas de tubo, raíces que mece la ventilación y el haz del escáner que entra por la rendija.
+- **Acciones:** esconde un microfilm en el collar · se agacha cuando el escáner de una patrulla entra por la rendija del techo.
 
 **Otra vida** (`agente_red`, `ficticia = true`, certeza `i`).
 - **Quién:** un ladrón de piezas al que la red recluta, de 32 años, en el puerto industrial de un mundo minero. El nombre es inventado y no debe parecerse al de ningún personaje de la saga.

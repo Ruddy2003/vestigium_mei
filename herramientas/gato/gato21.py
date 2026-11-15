@@ -4,20 +4,23 @@ Lote 10: los gatos de los cinco temas nuevos. Primera tanda: Frente exterior.
 - Frente exterior (`frente`): gato gris pizarra pintado como un cuadro de concepto de los años 70 (gouache sobre cartón:
   manchas de color opaco con la huella del pincel, luz cálida que entra por arriba y rebote frío abajo, grano del
   cartón). Chaqueta de vuelo de cuero con cuello de borrego, puños y cintura de punto y un parche en la manga; en la
-  oreja, un auricular de baquelita con su micrófono y un piloto ámbar. En el collar, la cápsula donde esconde el
-  microfilm. Fondo: el puerto industrial de ladrillo (el desguace con su grúa, la torre de vigía, el almacén de bóvedas,
-  los tanques) y en el cielo la nave patrulla del Directorio, un bloque largo con un anillo (nunca un triángulo); de
-  noche, el mismo puerto con las ventanas encendidas y los reflectores que barren, el de la torre y el de la nave. Lo
-  que se mueve: el humo, el reflector y las luces de la nave. Esconde un microfilm en el collar y se agacha cuando
-  pasa el reflector de una patrulla.
+  oreja, un auricular de baquelita con su micrófono y un piloto rojo. En el collar, la cápsula donde esconde el
+  microfilm. Fondo: la base escondida en ruinas (muro de sillares con raíces que cuelgan, losa con humedad y una
+  rendija, tubos de cobre, paneles de vidrio grabado con trazos turquesa iluminados por el canto, consolas oscuras con
+  pilotos y la pantalla redonda del radar, la consola blanca curva con sus molduras, lámparas de cúpula, cajas de
+  equipo, cables por el piso y la franja de peligro); de noche, la misma base en penumbra verdosa, con el vidrio, los
+  pilotos y las lámparas encendidos. Lo que se mueve: el pulso de luz que corre por el vidrio, los pilotos, el radar,
+  el texto de las pantallas, las raíces que mece la ventilación y, una vez por bucle, el escáner de una patrulla que
+  entra por la rendija. Esconde un microfilm en el collar y se agacha cuando el escáner entra por la rendija del techo.
 
 Los otros cuatro temas del lote 10 (`arcontes`, `galia`, `nouveau`, `psicodelia`) se agregan igual: su rama en
 `tema_mio`, sus colores en `colores_obj`, sus dos acciones en `ESP_MIOS`, su fondo en `FONDOS_MIOS` (y `ETIQ`, `NOCHE`)
 y su nombre en `MIOS`; o en un archivo `gato21b.py` que importe este y registre los suyos de la misma forma.
 
-Colores de la guía del tema (docs/diseno/temas/frente.md): hueso, pizarra, ámbar de piloto, rojo de botón, el verde del
-radar y el mármol con bronce del Directorio. Importa la cadena (gato18, gato19 y los gato20*) y agrega sus temas sin
-tocar los demás.
+Colores de la guía del tema (docs/diseno/temas/frente.md, «La base escondida en ruinas», y `TrazosFrente` en
+ui/FrenteTrazos.kt): piedra verdosa, consola blanca y oscura, el turquesa del vidrio, el cobre, y el ámbar, el óxido y el
+rojo de los pilotos como lo único cálido. Se toma la estética, no los diseños de ninguna película.
+Importa la cadena (gato18, gato19 y los gato20*) y agrega sus temas sin tocar los demás.
 
 Uso: python3 gato21.py hoja|fondos|bandas [tema…]   (lo deja en salida/, que no se sube)
 """
@@ -28,7 +31,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).parent))
 import gato18 as g18      # noqa: E402,F401  (carga toda la cadena)
@@ -226,7 +229,7 @@ def pintar_gouache(g, t, cel):
     """Gouache sobre cartón. Cada celda es una mancha opaca; encima: la luz cálida que entra por arriba (el filo de
     arriba del cuerpo se aclara en dos pasos), el rebote frío de abajo, la huella del pincel plano (tres niveles,
     inclinada) y el grano del cartón. El contorno es pizarra oscura, no negro, y a ratos el pincel seco deja ver el
-    cartón. Lo que es luz (el piloto, el reflector, los brillos) no lleva textura."""
+    cartón. Lo que es luz (el piloto, el haz del escáner, los brillos) no lleva textura."""
     col = t["col"]
     claro = set("PSLWDTAYBFCMZRI")
     filas = len(g)
@@ -289,10 +292,10 @@ def colores_obj(nombre, oscuro, j):
     """U, V, X, Q de cada animación propia, de día y de noche."""
     c = {
         ("frente", 0): dict(U=hx("D08C3A"), V=hx("3A2E26"), X=CROMO, Q=hx("FFF6DC")),  # microfilm ámbar, cuadros, tapa, destello
-        ("frente", 1): dict(U=hx("3A2E26"), V=AMBAR_C, X=CROMO, Q=hx("FFF4D2")),        # el haz del reflector
+        ("frente", 1): dict(U=hx("3A2E26"), V=AMBAR_C, X=CROMO, Q=hx("E4FFF4")),        # el haz del escáner
     }[(nombre, j)]
     if oscuro and nombre == "frente" and j == 1:
-        c["Q"] = hx("F4E6B4")
+        c["Q"] = hx("BFF5E0")
     return c
 
 
@@ -312,8 +315,8 @@ for _n in MIOS:
 
 def tema_mio(nombre, oscuro):
     if nombre == "frente":
-        # frente (guía): hueso E4DED1 / pizarra 23252A, ámbar B85C0F / F2A33A, rojo D9372B, radar 9FD8A8, baquelita 2A2622,
-        # cromo B9B6AE · oscuro: 121518, E7E1D4, F0A04B
+        # frente (guía, «la base escondida en ruinas»): hormigón DADBD2 / tinta 1E2523, borde 979B91, óxido B5561C,
+        # vidrio 8FF0D2 · oscuro: 0E1614, DCE5DF, 33433E. Del gato: ámbar F2A33A, rojo D9372B, baquelita 2A2622, cromo B9B6AE
         P = hx("6E7780")
         cuero, cuero2 = hx("8F5229"), hx("5E3318")
         col = g8.pelaje(P, PIZARRA, S=hx("525A63"), L=hx("A7AEB3"), W=hx("646D76"), D=hx("4C535B"), T=hx("5A626B"),
@@ -322,15 +325,15 @@ def tema_mio(nombre, oscuro):
         col["F"] = hx("33302D")                 # punto de puños y cintura
         col["I"] = AMBAR_C                      # el parche de misión
         col["H"] = hx("FBF4E4")
-        t = g8.T(col, HUESO if not oscuro else hx("121518"), PIZARRA if not oscuro else hx("E7E1D4"),
-                 hx("A69E8E") if not oscuro else hx("3A4249"), "ninguno", "gouache", ("vuelo", "auricular"),
-                 luz=hx("FFEFD2"), k_luz=0.34, rebote=hx("8FA4AA"), k_reb=0.2, carton=hx("A8906A"))
-        t["sombra_col"], t["sombra_a"] = (52, 44, 40), 62
+        t = g8.T(col, hx("DADBD2") if not oscuro else hx("0E1614"), hx("1E2523") if not oscuro else hx("DCE5DF"),
+                 hx("979B91") if not oscuro else hx("33433E"), "ninguno", "gouache", ("vuelo", "auricular"),
+                 luz=hx("FBF6E4"), k_luz=0.34, rebote=hx("8FB5A8"), k_reb=0.2, carton=hx("A8906A"))
+        t["sombra_col"], t["sombra_a"] = (34, 44, 40), 62
         if oscuro:
-            nc = g9.de_noche(col, hx("1E3540"), 0.12)
+            nc = g9.de_noche(col, hx("1E3A32"), 0.12)          # la penumbra verdosa de la base
             nc.update(O=hx("FF5A4A"), I=hx("E39A3C"), F=hx("26282A"), Y=hx("C9C2B2"))
             t["col"] = nc
-            t.update(luz=hx("F0A04B"), k_luz=0.28, rebote=hx("4E8A80"), k_reb=0.24, carton=hx("5A4C3A"))
+            t.update(luz=hx("F4E6C4"), k_luz=0.26, rebote=hx("4FA88C"), k_reb=0.26, carton=hx("4A4C3A"))
             t["sombra_col"], t["sombra_a"] = (0, 0, 0), 72
     else:
         raise ValueError(nombre)
@@ -359,7 +362,7 @@ for _n in MIOS:
         g9.NUEVOS.append(_n)
 
 # =====================================================================
-#  Las dos acciones: esconde el microfilm en el collar · se agacha cuando pasa el reflector
+#  Las dos acciones: esconde el microfilm en el collar · se agacha cuando el escáner entra por la rendija del techo
 # =====================================================================
 brazo, rect = g17.brazo, g17.rect
 
@@ -382,7 +385,7 @@ AGAZAPADO = g8.pose(H=(21.5, 50.2), rh=7.0, C=(37.5, 51.2), rc=7.4, cab=(46.6, 4
                     fn=[(40.5, 53.6), (44.4, 55.6), (47.0, 58.0), (49.4, SUELO)], ff=[(37.2, 54.0), (41.0, 56.0), (43.4, 58.2), (45.8, SUELO)],
                     hn=[(21.5, 52.6), (26.6, 56.0), (20.6, 58.4), (23.4, SUELO)], hf=[(24.0, 52.6), (29.0, 56.0), (23.0, 58.4), (25.8, SUELO)],
                     cola=[(14.6, 51.2), (10.2, 53.6), (6.6, 56.4), (4.2, 58.2), (3.0, 59.0), (2.2, 59.4)], colaw=[3.8, 4.0, 4.0, 3.8, 3.4, 3.0])
-# (cuánto se agacha, dónde cae el haz en el suelo). El haz entra por detrás y pasa por encima.
+# (cuánto se agacha, dónde cae el haz en el suelo). El haz del escáner entra por detrás y pasa por encima.
 REFL = [(0.0, -9.0), (0.6, 5.0), (1.0, 18.0), (1.0, 30.0), (1.0, 42.0), (1.0, 55.0), (0.55, 74.0), (0.12, 96.0)]
 
 
@@ -425,16 +428,16 @@ def o_microfilm(L, a):
         L.capsula("f_Q", [(x, y - r), (x, y + r)], 0.55)
 
 
-def o_reflector(L, a):
-    """El haz del reflector de la patrulla, que baja desde arriba (detrás) y pasa por encima del gato. Va tramado,
-    como luz: sobre el gato deja puntos claros, y en el suelo, la mancha de luz."""
+def o_escaner(L, a):
+    """El barrido del escáner de una patrulla, que entra por una rendija del techo: angosto arriba, se abre hacia el
+    piso y pasa por encima del gato. Va tramado, como luz: sobre el gato deja filas claras, y en el piso, la mancha."""
     bx, gy = a["obj"]
-    sx, sy = bx - 16.0, -6.0
+    sx, sy = bx - 8.0, -2.0
     vistos = set()
     for r in range(0, 61):
         f = (r - sy) / (gy - sy)
         xc = sx + (bx - sx) * f
-        w = 1.6 + 6.2 * f
+        w = 0.7 + 6.4 * f
         for c in range(int(xc - w) - 1, int(xc + w) + 2):
             if not (0 <= c < N): continue
             d = abs(c + 0.5 - xc) / w
@@ -452,7 +455,7 @@ def o_reflector(L, a):
 
 ESP_MIOS = {
     "frente": [("microfilm", o_microfilm, "esconde un microfilm en el collar"),
-               ("agacharse", o_reflector, "se agacha cuando pasa el reflector de una patrulla")],
+               ("agacharse", o_escaner, "se agacha cuando el escáner de una patrulla entra por la rendija del techo")],
 }
 ESCALA_MIA = {("frente", 0): 1.35}
 g17.ESP.update(ESP_MIOS)
@@ -479,7 +482,7 @@ def punto(px, x, y, col):
 
 
 def granular(im, semilla, fuerza=0.045, densidad=0.16, y0=0, y1=H, x0=0, x1=W):
-    """El grano del cartón en el fondo: pixeles sueltos un poco más claros u oscuros (a 1 pixel por dp)."""
+    """El grano en el fondo: pixeles sueltos un poco más claros u oscuros (a 1 pixel por dp)."""
     px = im.load(); rnd = random.Random(semilla)
     for y in range(y0, y1):
         for x in range(x0, x1):
@@ -490,555 +493,477 @@ def granular(im, semilla, fuerza=0.045, densidad=0.16, y0=0, y1=H, x0=0, x1=W):
                 px[x, y] = esc(px[x, y], 1 + fuerza)
 
 
-def vetas(im, semilla, n, y0, y1, col, k=0.35, x0=0, x1=W, largo=(18, 70)):
-    """Pinceladas largas y horizontales de calima en el cielo (bordes deshilachados)."""
+def humedad(im, semilla, n, y0, y1, col, k=0.3, x0=0, x1=W, r=(3, 9)):
+    """Manchas de humedad: borrones de borde tramado (más fuertes al centro), un poco más largos que altos."""
     px = im.load(); rnd = random.Random(semilla)
     for _ in range(n):
-        y = rnd.randint(y0, y1); x = rnd.randint(x0 - 20, x1); l = rnd.randint(*largo)
-        for j in range(l):
-            borde = min(j, l - j)
-            if borde < 5 and rnd.random() > borde / 5: continue
-            xx = x + j
-            if x0 <= xx < x1:
-                px[xx, y] = mezcla(px[xx, y], col, k)
-                if j % 3 and rnd.random() < 0.4 and 0 <= y + 1 < H:
-                    px[xx, y + 1] = mezcla(px[xx, y + 1], col, k * 0.5)
+        cx, cy = rnd.uniform(x0, x1), rnd.uniform(y0, y1)
+        rx = rnd.uniform(*r); ry = rx * rnd.uniform(0.35, 0.7)
+        for y in range(int(cy - ry), int(cy + ry) + 1):
+            for x in range(int(cx - rx), int(cx + rx) + 1):
+                if not (x0 <= x < x1 and y0 <= y < y1 and 0 <= x < W and 0 <= y < H): continue
+                dd = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2
+                if dd < 1 and tramar(1 - dd ** 0.7, x, y):
+                    px[x, y] = mezcla(px[x, y], col, k)
 
 
-def cilindro(im, x0, x1, y0, y1, tonos, bandas=None, cada=7):
-    """Cuerpo cilíndrico con la luz por la izquierda: tonos de claro a oscuro por columnas, con anillos."""
-    px = im.load(); w = x1 - x0; n = len(tonos)
-    perfil_ = [0.5, 0.15, 0.0, 0.05, 0.2, 0.35, 0.5, 0.62, 0.74, 0.85, 0.95, 1.0]
-    for i in range(w):
-        f = perfil_[min(len(perfil_) - 1, int(i / w * len(perfil_)))]
-        col = tonos[min(n - 1, int(f * n))]
-        for y in range(y0, y1):
-            punto(px, x0 + i, y, col)
-        if bandas:
-            for y in range(y0 + 3, y1, cada):
-                punto(px, x0 + i, y, bandas[min(len(bandas) - 1, int(f * len(bandas)))])
-
-
-def ladrillo(im, x0, y0, x1, y1, pal, semilla=0, luz_x=None):
-    """Muro de ladrillo de 1 dp por hilada (pixel art): ladrillos de 4 dp, juntas, ladrillos sueltos más oscuros o
-    quemados, y la mancha de hollín que baja desde arriba."""
+def sillares(im, x0, y0, x1, y1, P, semilla=0):
+    """Muro de sillares viejos: hiladas de altura desigual, bloques de largo distinto y esquinas gastadas; cada bloque
+    con su tono, el filo de arriba con luz, la junta honda y la sombra de abajo; desconchones y musgo en las juntas."""
     px = im.load(); rnd = random.Random(semilla)
-    base, oscuro, junta, quemado = pal
-    for y in range(int(y0), int(y1)):
-        fila = y - int(y0)
-        for x in range(int(x0), int(x1)):
-            if not (0 <= x < W and 0 <= y < H): continue
-            if fila % 2 == 1:
-                col = junta if rnd.random() < 0.7 else base
-            elif (x + (fila // 2) * 2) % 4 == 0:
-                col = junta
-            else:
-                q = ((x + (fila // 2) * 2) // 4 * 7 + fila * 5) % 13
-                col = quemado if q == 0 else (oscuro if q in (3, 8) else base)
-            px[x, y] = col
+    tonos, junta, luz_, sombra, musgo = P["piedra"], P["junta"], P["piedra_luz"], P["piedra_sombra"], P["musgo"]
+    y = y0
+    while y < y1:
+        alto = rnd.choice((5, 6, 6, 7, 8))
+        x = x0 - rnd.randint(0, 10)
+        while x < x1:
+            largo = rnd.randint(9, 19)
+            tono = rnd.choice(tonos)
+            for yy in range(y, min(y + alto, y1)):
+                for xx in range(max(x, x0), min(x + largo, x1)):
+                    fy, fx = yy - y, xx - x
+                    borde = fy == 0 or fx == 0 or fy == alto - 1 or fx == largo - 1
+                    esquina = (fy in (0, alto - 1)) and (fx in (0, largo - 1))
+                    if borde and (esquina or fy == alto - 1 or fx == 0):
+                        col = junta
+                    elif fy == 0 or (fy == 1 and fx in (1, largo - 2)):
+                        col = luz_                                   # el filo de arriba recibe la luz de las lámparas
+                    elif fy == alto - 2 or fx == largo - 2:
+                        col = sombra
+                    else:
+                        col = tono
+                    punto(px, xx, yy, col)
+            if rnd.random() < 0.35:                                   # desconchón
+                cx, cy = x + rnd.randint(2, max(2, largo - 3)), y + rnd.randint(1, max(1, alto - 2))
+                punto(px, cx, cy, sombra); punto(px, cx + 1, cy, sombra); punto(px, cx, cy - 1, luz_)
+            if rnd.random() < 0.3:                                    # musgo en la junta de abajo
+                for k in range(rnd.randint(2, 6)):
+                    punto(px, x + 2 + k, y + alto - 1 - (k % 2), musgo)
+            x += largo
+        y += alto
 
 
-def chorreo(im, x, y0, largo, col, k=0.3):
-    """Manchas que chorrean por la pared (hollín u óxido), más claras abajo."""
-    px = im.load()
-    for j in range(largo):
-        f = k * (1 - j / largo)
-        for dx in (0, 1) if j < largo * 0.6 else (0,):
-            punto(px, x + dx, y0 + j, mezcla(px[x + dx, y0 + j] if 0 <= x + dx < W and 0 <= y0 + j < H else col, col, f))
+def raiz(d, pts, col, luz_=None, ancho=1):
+    """Una raíz colgante: polilínea irregular, más gruesa arriba, con su filo de luz a la izquierda."""
+    for i, ((xa, ya), (xb, yb)) in enumerate(zip(pts, pts[1:])):
+        w = ancho if i < len(pts) * 0.45 else 1
+        d.line([xa, ya, xb, yb], fill=col, width=w)
+        if luz_ is not None and i % 2 == 0:
+            d.point((xa - 1, ya), fill=luz_)
 
 
-def bocanadas(d, tk, x, y, cols, semilla, n=5, vida=40, alto=24, deriva=16, r0=1.2, r1=4.2):
-    """Humo en bocanadas: nace chico y oscuro en la boca, sube, crece, se corre con el viento y se aclara. Cada
-    bocanada lleva su lado de luz (arriba a la izquierda). Se repite cada `vida` cuadros (divide a BUCLE)."""
-    for k in range(n):
-        f = ((tk + k * vida / n + semilla * 7) % vida) / vida
-        r = r0 + (r1 - r0) * f
-        cx, cy = x + deriva * f ** 1.4 + math.sin(f * 5 + semilla) * 1.2, y - alto * f
-        col = cols[min(len(cols) - 2, int(f * (len(cols) - 1)))]
-        caja = lambda dx_, dy_, rr: [round((cx + dx_ - rr) * ESC), round((cy + dy_ - rr * 0.8) * ESC),
-                                     round((cx + dx_ + rr) * ESC), round((cy + dy_ + rr * 0.8) * ESC)]
-        d.ellipse(caja(0, 0, r), fill=col)
-        if r > 2:
-            d.ellipse(caja(-r * 0.25, -r * 0.25, r * 0.55), fill=cols[-1] if f < 0.6 else col)
+def camino_raiz(x, y, largo, semilla, deriva=0.0):
+    """Puntos de una raíz que baja serpenteando desde (x, y)."""
+    rnd = random.Random(semilla); pts = [(x, y)]
+    for k in range(largo):
+        x += rnd.choice((-1, 0, 0, 1)) * 0.6 + deriva
+        y += 1.6
+        pts.append((x, y))
+    return pts
+
+
+def vidrio_grabado(im, x0, y0, x1, y1, P, trazos, semilla=0):
+    """Panel de vidrio grabado: se ve el muro detrás, teñido de verde; los trazos grabados brillan en turquesa con su
+    halo, y el canto de abajo, por donde entra la luz, brilla más. Encima el riel oscuro; abajo la base con su rejilla.
+    Devuelve los trazos como polilíneas (para el pulso de luz)."""
+    px = im.load(); d = ImageDraw.Draw(im)
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            k = P["vidrio_k"] + 0.12 * ((y - y0) / (y1 - y0))
+            px[x, y] = mezcla(px[x, y], P["vidrio"], k)
+    mascara = Image.new("L", (W, H), 0); dm = ImageDraw.Draw(mascara)
+    polis = []
+    for t_ in trazos:
+        pts = [(min(x1 - 1, max(x0, x)), min(y1 - 1, max(y0, y))) for x, y in t_]
+        dm.line(pts, fill=255)
+        polis.append(pts)
+    halo = mascara.filter(ImageFilter.MaxFilter(3))
+    m, h_ = np.asarray(mascara), np.asarray(halo)
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            if m[y, x]:
+                px[x, y] = P["trazo"]
+            elif h_[y, x]:
+                px[x, y] = mezcla(px[x, y], P["trazo"], P["halo"])
+    rnd = random.Random(semilla)
+    for _ in range(3):                                           # reflejos en diagonal
+        x = rnd.randint(x0 + 4, x1 - 14)
+        for j in range(10):
+            if (j + x) % 3: punto(px, x + j, y0 + 4 + j * 2, mezcla(px[min(W - 1, x + j), min(H - 1, y0 + 4 + j * 2)], P["reflejo"], 0.25))
+    d.line([x0, y1 - 1, x1 - 1, y1 - 1], fill=P["canto"])      # el canto iluminado
+    d.line([x1 - 1, y0, x1 - 1, y1 - 1], fill=mezcla(P["vidrio"], P["trazo"], 0.5))
+    d.rectangle([x0 - 2, y0 - 3, x1 + 1, y0 - 1], fill=P["oscura"][1])          # riel
+    d.line([x0 - 2, y0 - 3, x1 + 1, y0 - 3], fill=P["oscura"][0])
+    d.ellipse([x1, y0 - 3, x1 + 2, y0 - 1], fill=P["oscura"][0])
+    d.rectangle([x0 - 2, y1, x1 + 1, 63], fill=P["oscura"][1])                 # base
+    d.line([x0 - 2, y1, x1 + 1, y1], fill=P["oscura"][0])
+    for xb in range(x0 + 6, x1 - 6, 26):
+        d.line([xb, y1 + 1, xb, 63], fill=P["oscura"][2])
+    gx = (x0 + x1) // 2 - 9                                                     # rejilla de ventilación
+    d.rectangle([gx, y1 + 3, gx + 18, y1 + 6], fill=P["oscura"][2])
+    for xx in range(gx + 1, gx + 18, 2): d.line([xx, y1 + 4, xx, y1 + 5], fill=P["rejilla"])
+    return polis
+
+
+def largo_poli(pts):
+    out = [0.0]
+    for (xa, ya), (xb, yb) in zip(pts, pts[1:]):
+        out.append(out[-1] + math.hypot(xb - xa, yb - ya))
+    return out
+
+
+def en_poli(pts, acum, s):
+    """El punto que está a la distancia s a lo largo de la polilínea."""
+    s %= acum[-1] or 1
+    for i in range(len(pts) - 1):
+        if acum[i + 1] >= s:
+            f = (s - acum[i]) / max(1e-6, acum[i + 1] - acum[i])
+            return pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f
+    return pts[-1]
+
+
+def arco(cx, cy, r, a0, a1, n=40, ry=None):
+    ry = ry or r
+    return [(cx + r * math.cos(math.radians(a0 + (a1 - a0) * k / n)), cy + ry * math.sin(math.radians(a0 + (a1 - a0) * k / n))) for k in range(n + 1)]
+
+
+def espiral(cx, cy, r0, r1, vueltas, n=120):
+    return [(cx + (r0 + (r1 - r0) * k / n) * math.cos(2 * math.pi * vueltas * k / n),
+             cy + (r0 + (r1 - r0) * k / n) * math.sin(2 * math.pi * vueltas * k / n) * 0.95) for k in range(n + 1)]
+
+
+def consola_oscura(im, x0, y0, x1, y1, P, semilla=0):
+    """Gabinete de consola oscura: frente biselado, una pantalla de tubo con texto, filas de botones cuadrados y
+    pilotos. Devuelve (pilotos, pantalla) para animarlos."""
+    d = ImageDraw.Draw(im); rnd = random.Random(semilla)
+    o1, o2, o3 = P["oscura"]
+    d.rectangle([x0, y0, x1, y1], fill=o2)
+    d.line([x0, y0, x1, y0], fill=o1); d.line([x0, y0, x0, y1], fill=o1); d.line([x1, y0, x1, y1], fill=o3)
+    pilotos = []
+    # Pantalla de tubo.
+    sx0, sy0 = x0 + 3, y0 + 3
+    sw, sh = min(14, x1 - x0 - 6), 9
+    d.rounded_rectangle([sx0 - 1, sy0 - 1, sx0 + sw + 1, sy0 + sh + 1], radius=2, fill=o3)
+    d.rounded_rectangle([sx0, sy0, sx0 + sw, sy0 + sh], radius=2, fill=P["pantalla"])
+    pantalla = (sx0 + 2, sy0 + 2, sw - 4, sh - 3)
+    # Botones y pilotos.
+    y = sy0 + sh + 4
+    while y < y1 - 3:
+        for x in range(x0 + 3, x1 - 2, 3):
+            q = rnd.random()
+            col = P["boton"][int(q * len(P["boton"]))]
+            d.rectangle([x, y, x + 1, y + 1], fill=col)
+        y += 4
+        if rnd.random() < 0.5 and y < y1 - 3:
+            for x in range(x0 + 3, x1 - 2, 4):
+                pilotos.append((x, y, rnd.choice((P["piloto_r"], P["piloto_a"], P["trazo"])), rnd.choice((8, 10, 16, 20)), rnd.randint(0, 19)))
+                punto(im.load(), x, y, o3)
+            y += 3
+    return pilotos, pantalla
+
+
+def lampara(im, x, y, P, alto=10):
+    """Lámpara de cúpula blanca sobre su pie; ilumina el muro y el piso a su alrededor."""
+    d = ImageDraw.Draw(im)
+    d.rectangle([x - 1, y + 4, x, y + alto], fill=P["oscura"][1]); d.line([x - 1, y + 4, x - 1, y + alto], fill=P["oscura"][0])
+    d.rectangle([x - 3, y + alto, x + 2, y + alto + 1], fill=P["oscura"][1])
+    d.pieslice([x - 5, y - 1, x + 4, y + 8], 180, 360, fill=P["cupula"][0])
+    d.line([x - 5, y + 3, x + 4, y + 3], fill=P["cupula"][1])
+    d.point((x - 3, y + 1), fill=P["cupula"][2])
+    return (x, y + 4)
+
+
+def consola_blanca(im, x0, x1, ytop, P):
+    """La consola blanca curva: un mostrador redondo anillado, visto un poco desde arriba. Arriba, el borde del anillo
+    (una elipse con su hueco en sombra y el tablero de pilotos); abajo, las molduras redondas apiladas que se curvan con
+    el cuerpo, cada una con su luz arriba y su sombra abajo, más oscuras del lado lejos de la luz."""
+    px = im.load(); d = ImageDraw.Draw(im)
+    b1, b2, b3, b4 = P["blanca"]
+    cx, rx = (x0 + x1) / 2, (x1 - x0) / 2
+    ry = 4.0
+    # El cuerpo: molduras que siguen la curva del frente (bajan al centro).
+    for x in range(x0, x1 + 1):
+        u = (x - cx) / rx
+        if abs(u) > 1: continue
+        caida = ry * math.sqrt(max(0.0, 1 - u * u))
+        lado = max(0.0, u) ** 1.5 * 0.55 + max(0.0, -u - 0.85) * 1.5     # el borde derecho y la punta izquierda, en sombra
+        y = ytop + caida
+        for k, alto in enumerate((3, 3, 3, 3, 4)):
+            for j in range(alto):
+                yy = int(round(y + j))
+                if yy > 63: break
+                col = b1 if j == 0 else (b2 if j < alto - 1 else b3)
+                punto(px, x, yy, mezcla(col, b4, min(0.8, lado)))
+            y += alto
+        for yy in range(int(round(y)), 64):
+            punto(px, x, yy, b4)
+    # El borde del anillo, arriba, con el hueco del centro en sombra.
+    d.ellipse([x0, ytop - ry, x1, ytop + ry], fill=b1)
+    d.ellipse([x0 + 7, ytop - ry + 1.4, x1 - 7, ytop + ry - 1.4], fill=b3)
+    d.ellipse([x0 + 10, ytop - ry + 2.2, x1 - 10, ytop + ry - 1.6], fill=b4)
+    d.arc([x0, ytop - ry, x1, ytop + ry], 200, 340, fill=P["blanca_luz"])
+    d.arc([x0, ytop - ry, x1, ytop + ry], 10, 170, fill=b2)
+    # El tablero de pilotos sobre el borde de adelante.
+    tx0, tx1 = int(cx - 26), int(cx + 26)
+    pilotos = [(x, int(ytop + ry - 0.5), P["piloto_a"] if (x // 5) % 3 else P["trazo"], 16, x % 13) for x in range(tx0, tx1, 5)]
+    for (x, y, _, _, _) in pilotos:
+        punto(px, x, y, P["oscura"][1])
+    return pilotos
+
+
+def cajas(im, x0, ybase, P, pila, semilla=0):
+    """Cajas de equipo apiladas: verde casi negro, con bisagras, pestillos de cromo y una etiqueta ámbar."""
+    d = ImageDraw.Draw(im); rnd = random.Random(semilla)
+    y = ybase
+    for (w, h, dx) in pila:
+        x = x0 + dx
+        d.rectangle([x, y - h, x + w, y], fill=P["caja"][1])
+        d.line([x, y - h, x + w, y - h], fill=P["caja"][0]); d.line([x + w, y - h, x + w, y], fill=P["caja"][2])
+        d.line([x, y - h + 2, x + w, y - h + 2], fill=P["caja"][2])
+        for xx in (x + 2, x + w - 3): d.rectangle([xx, y - h + 1, xx + 1, y - h + 3], fill=P["cromo"])
+        if rnd.random() < 0.7:
+            ex = x + rnd.randint(3, max(3, w - 7)); d.rectangle([ex, y - h // 2, ex + 4, y - h // 2 + 1], fill=P["etiqueta"])
+        y -= h
+
+
+def cable(d, pts, col, luz_):
+    """Un cable grueso que serpentea por el piso, con su brillo arriba."""
+    c = g8.catmull(pts, 10)
+    for (xa, ya), (xb, yb) in zip(c, c[1:]):
+        d.line([xa, ya, xb, yb], fill=col, width=2)
+    for (xa, ya) in c[::3]:
+        d.point((round(xa), round(ya) - 1), fill=luz_)
 
 
 PAL_D = dict(
-    cielo=[hx("B7BCB6"), hx("C6C8BF"), hx("D3D2C6"), hx("DFDACA"), hx("E8DFC9"), hx("ECDDBC")],
-    veta=hx("F1EADA"), veta2=hx("ABB0AB"),
-    planeta=(hx("E7E4DA"), hx("D8D7CF"), hx("C9CBC6"), hx("BFC2BE")),
-    lejos=(hx("B2B2AA"), hx("C2C0B5"), hx("A3A49F")), lejos2=(hx("9EA09D"), hx("B0B0A9"), hx("8E918F")),
-    acero=(hx("7E858A"), hx("5E666C"), hx("444B51")), acero_l=hx("A6ACAD"),
-    casco=(hx("D7CDB6"), hx("BFB49B"), hx("9A8F78"), hx("6E6656")), oxido=hx("9C5E38"), interior=hx("3E3833"),
-    ladr=(hx("8E4B35"), hx("7A3F2D"), hx("A9846F"), hx("5E3426")), ladr_s=(hx("6E3A2A"), hx("5E3224"), hx("86624F"), hx("4A281E")),
-    boveda=(hx("D3CBB8"), hx("BDB4A0"), hx("9C9482"), hx("7C7566")),
-    hueso=(hx("DCD4C2"), hx("C4BBA7"), hx("A79E8B"), hx("8A8272")),
-    tanque=(hx("DAD2BF"), hx("C8BFAB"), hx("B0A792"), hx("958C78"), hx("7A7262")), anillo=(hx("A39A86"), hx("8A8270"), hx("6E6656")),
-    vidrio=hx("3C4A50"), vidrio_b=hx("8FA3A6"), puerta=(hx("6B6E6C"), hx("575A59")),
-    peligro=(AMBAR_C, hx("2A2622")), piloto=AMBAR_C, rojo=ROJO, radar=hx("9FD8A8"), pantalla=hx("0F1A16"),
-    contenedor=(hx("B98A44"), hx("9E7034"), hx("7E5626"), hx("5E3E1A")),
-    suelo=(hx("C9C1AE"), hx("BCB4A1"), hx("ADA591"), hx("9A927F")), junta=hx("A39B88"), mancha=hx("8F887A"),
-    sombra_suelo=hx("A49C8B"),
-    nave=(hx("F3F1EC"), hx("DDD9D0"), hx("C3C0B9"), hx("A9A7A4")), bronce=(hx("C29C62"), hx("9A7442"), hx("6E5230")),
-    nave_v=hx("5A6066"), farol=hx("4A4E50"),
+    losa=(hx("B9BBB0"), hx("A6A99D"), hx("8E9286")), mancha=hx("7E8576"),
+    piedra=(hx("9A9D91"), hx("8C8F84"), hx("A3A598"), hx("858A7E")), junta=hx("5E6660"), piedra_luz=hx("B6B8AB"),
+    piedra_sombra=hx("6E746A"), musgo=hx("5E6B45"), raiz=hx("4A4636"), raiz_luz=hx("6E6950"),
+    cobre=(hx("C9956A"), hx("8A6A4C"), hx("5C4532")),
+    vidrio=hx("1F5A4E"), vidrio_k=0.74, trazo=hx("8FF0D2"), halo=0.3, canto=hx("C8FFF0"), reflejo=hx("E8F4EE"),
+    oscura=(hx("3A4A44"), hx("1E2A26"), hx("141C19")), rejilla=hx("6E7C76"), pantalla=hx("0F1A16"), texto=hx("9FD8A8"),
+    boton=(hx("E6E5DD"), hx("F2A33A"), hx("3E8C76"), hx("4A5A54"), hx("4A5A54"), hx("D9372B")),
+    piloto_r=hx("D9372B"), piloto_a=hx("F2A33A"),
+    blanca=(hx("F2F1EA"), hx("E6E5DD"), hx("C3C4BA"), hx("A3A69B")), blanca_luz=hx("FFFFFA"),
+    cupula=(hx("F4F2EA"), hx("C9CAC0"), hx("FFFFFF")), luz_lampara=hx("FBF6E4"),
+    caja=(hx("3E4C46"), hx("26322D"), hx("18201D")), cromo=hx("B9B6AE"), etiqueta=hx("D9A62B"),
+    piso=(hx("C3C5BA"), hx("B7BAAE"), hx("ABAEA2")), piso_junta=hx("9A9E92"), cable=hx("1E2523"), cable_luz=hx("4E5A55"),
+    peligro=(hx("D9A62B"), hx("1E2523")), sombra=hx("8E9388"), rendija=hx("3B4440"), escaner=hx("DDFBEF"),
 )
 PAL_N = dict(
-    cielo=[hx("0C1013"), hx("10161A"), hx("141D22"), hx("19252B"), hx("1F2E34"), hx("25363B")],
-    veta=hx("2C3E44"), veta2=hx("0E1316"),
-    planeta=(hx("CBD0C6"), hx("A9B0A9"), hx("2A363B"), hx("202C31")),
-    lejos=(hx("1B2529"), hx("223035"), hx("172024")), lejos2=(hx("161E22"), hx("1D282C"), hx("12191C")),
-    acero=(hx("3A4146"), hx("2A3034"), hx("1C2125")), acero_l=hx("56605F"),
-    casco=(hx("5E5A50"), hx("4A463E"), hx("36332D"), hx("24221F")), oxido=hx("4E3020"), interior=hx("141210"),
-    ladr=(hx("4A2A20"), hx("3E231B"), hx("2E2420"), hx("2C1812")), ladr_s=(hx("3A2019"), hx("301A14"), hx("261E1A"), hx("22130E")),
-    boveda=(hx("4C4B46"), hx("3C3B37"), hx("2E2D2A"), hx("22221F")),
-    hueso=(hx("595650"), hx("46443F"), hx("36352F"), hx("282723")),
-    tanque=(hx("54534D"), hx("46453F"), hx("3A3934"), hx("2E2D29"), hx("23221F")), anillo=(hx("34332E"), hx("2A2925"), hx("201F1C")),
-    vidrio=hx("141C1F"), vidrio_b=hx("2E3E42"), puerta=(hx("2A2C2B"), hx("202221")),
-    peligro=(hx("A86E24"), hx("1A1715")), piloto=AMBAR_C, rojo=hx("FF5A4A"), radar=hx("9FD8A8"), pantalla=hx("0F1A16"),
-    contenedor=(hx("5E4628"), hx("4C381F"), hx("3A2A17"), hx("2A1E10")),
-    suelo=(hx("2E3234"), hx("2A2E30"), hx("26292B"), hx("212426")), junta=hx("1C1F21"), mancha=hx("1A1C1D"),
-    sombra_suelo=hx("1E2123"),
-    nave=(hx("9BA09B"), hx("6A706E"), hx("454B4C"), hx("2C3234")), bronce=(hx("8E7448"), hx("6A5434"), hx("44361F")),
-    nave_v=hx("F2D9A0"), farol=hx("2A2D2E"),
+    losa=(hx("1E2724"), hx("19211E"), hx("141B18")), mancha=hx("101614"),
+    piedra=(hx("26302C"), hx("222B27"), hx("2A3430"), hx("1F2824")), junta=hx("121916"), piedra_luz=hx("34403B"),
+    piedra_sombra=hx("18201D"), musgo=hx("2C3624"), raiz=hx("2A2A20"), raiz_luz=hx("3A3A2C"),
+    cobre=(hx("7A5A3E"), hx("4E3C2C"), hx("30251B")),
+    vidrio=hx("123A33"), vidrio_k=0.78, trazo=hx("8FF0D2"), halo=0.4, canto=hx("D4FFF2"), reflejo=hx("4E8A7C"),
+    oscura=(hx("26332E"), hx("121A17"), hx("0B110F")), rejilla=hx("3A4A44"), pantalla=hx("0F1A16"), texto=hx("9FD8A8"),
+    boton=(hx("8A918A"), hx("F2A33A"), hx("6FD1B4"), hx("2A3530"), hx("2A3530"), hx("FF5A4A")),
+    piloto_r=hx("FF5A4A"), piloto_a=hx("F2A33A"),
+    blanca=(hx("8E968F"), hx("737B74"), hx("545C56"), hx("363E39")), blanca_luz=hx("B8D2C6"),
+    cupula=(hx("FBF6E6"), hx("D8D2BE"), hx("FFFFFF")), luz_lampara=hx("F4E6C4"),
+    caja=(hx("26322D"), hx("161E1B"), hx("0D1311")), cromo=hx("7C7A72"), etiqueta=hx("8A6E24"),
+    piso=(hx("1C2421"), hx("19201E"), hx("161D1A")), piso_junta=hx("111714"), cable=hx("0A0E0D"), cable_luz=hx("26302C"),
+    peligro=(hx("8A6E24"), hx("101614")), sombra=hx("0F1513"), rendija=hx("0A0F0D"), escaner=hx("BFF5E0"),
 )
-VENTANA_N = hx("F0A04B")
-# Los reflectores de la noche: cuántas posiciones tiene cada barrido en el bucle, largo y apertura del haz.
-HACES = dict(estados_cielo=16, estados_nave=24, largo_cielo=240, ancho_cielo=0.06, ancho_nave=0.1, nave=(0.05, 0.6), cielo=(0.55, 0.98))
-
-
-def anillo(d, cx, cy, rx, ry, ang, cols, frente):
-    """Un anillo visto de sesgo (elipse inclinada `ang` grados), en tres filas de pixeles: la de afuera con la luz
-    arriba, la de en medio y la de adentro en sombra. Solo la mitad de adelante (frente=True) o la de atrás."""
-    a = math.radians(ang); ca, sa = math.cos(a), math.sin(a)
-    for t in np.linspace(0, 2 * math.pi, 360):
-        if (math.cos(t) < 0) != frente:
-            continue
-        for k, dr in enumerate((0.0, 1.0, 2.0)):
-            x, y = (rx - dr) * math.cos(t), (ry - dr) * math.sin(t)
-            col = cols[0] if (k == 0 and math.sin(t) < 0.2) else cols[min(2, k + (0 if frente else 1))]
-            d.point((round(cx + x * ca - y * sa), round(cy + x * sa + y * ca)), fill=col)
-
-
-def nave(im, x0, y0, P, o):
-    """La nave patrulla del Directorio: un bloque largo de mármol con chaflanes, el puente arriba adelante, la fila
-    de ventanillas, las toberas atrás y el anillo de bronce que lo ciñe, visto de sesgo. Devuelve sus luces."""
-    d = ImageDraw.Draw(im)
-    claro, medio, sombra, borde = P["nave"]
-    b1, b2, b3 = P["bronce"]
-    L_, A_ = 84, 11
-    rcx, rcy, rx, ry, ang = x0 + 30, y0 + A_ / 2, 6, 10.5, 12
-    anillo(d, rcx, rcy, rx, ry, ang, (b1, b2, b3), False)          # la mitad de atrás, detrás del casco
-    for yy in (y0 + 2, y0 + 5, y0 + 8):                              # toberas
-        d.rectangle([x0 - 3, yy, x0, yy + 1], fill=borde)
-    casco = [(x0 + 3, y0), (x0 + L_ - 6, y0), (x0 + L_, y0 + 4), (x0 + L_, y0 + 7), (x0 + L_ - 4, y0 + A_), (x0 + 2, y0 + A_), (x0, y0 + A_ - 2), (x0, y0 + 2)]
-    d.polygon(casco, fill=medio)
-    d.polygon([(x0 + 3, y0), (x0 + L_ - 6, y0), (x0 + L_ - 4, y0 + 2), (x0 + 1, y0 + 2)], fill=claro)
-    d.polygon([(x0, y0 + A_ - 3), (x0 + L_, y0 + A_ - 4), (x0 + L_ - 4, y0 + A_), (x0 + 2, y0 + A_)], fill=sombra)
-    d.line([x0 + 2, y0 + A_, x0 + L_ - 4, y0 + A_], fill=borde)
-    d.line([x0 + L_ - 6, y0, x0 + L_, y0 + 4], fill=claro)          # el chaflán de proa, con luz
-    for xx in range(x0 + 7, x0 + L_ - 6, 8):                        # juntas de las placas
-        d.line([xx, y0 + 3, xx, y0 + A_ - 4], fill=sombra)
-    for xx in range(x0 + 40, x0 + L_ - 8, 3):                       # ventanillas
-        d.point((xx, y0 + 5), fill=P["nave_v"] if (not o or (xx // 3) % 4) else P["nave"][3])
-    d.line([x0 + 4, y0 + 7, x0 + L_ - 4, y0 + 7], fill=b2)          # el filete de bronce del régimen
-    d.rectangle([x0 + 56, y0 - 3, x0 + 72, y0], fill=medio)         # el puente, con su ventanal
-    d.line([x0 + 56, y0 - 3, x0 + 71, y0 - 3], fill=claro)
-    d.line([x0 + 59, y0 - 2, x0 + 70, y0 - 2], fill=P["nave_v"] if o else P["vidrio"])
-    d.line([x0 + 63, y0 - 7, x0 + 63, y0 - 4], fill=borde)          # antena
-    d.rectangle([x0 + 44, y0 + A_ + 1, x0 + 50, y0 + A_ + 2], fill=borde)   # la góndola del reflector
-    anillo(d, rcx, rcy, rx, ry, ang, (b1, b2, b3), True)            # la mitad de adelante, encima del casco
-    luces = [(x0 + 63, y0 - 8, "rojo"), (rcx - 2.7, rcy - ry + 0.6, "ambar"), (rcx + 2.7, rcy + ry - 0.6, "ambar"),
-             (x0 + L_ - 1, y0 + 5, "rojo"), (x0 - 3, y0 + 5, "blanco"), (x0 + 47, y0 + A_ + 3, "foco")]
-    return luces
-
-
-def grua(im, x0, x1, top, base, P):
-    """El pórtico del desguace: dos patas de celosía y la viga de arriba, con su carro y el cable."""
-    d = ImageDraw.Draw(im)
-    a1, a2, a3 = P["acero"]
-    for x in (x0, x1 - 4):
-        d.rectangle([x, top, x + 3, base], fill=a2)
-        d.line([x, top, x, base], fill=P["acero_l"])
-        d.line([x + 3, top, x + 3, base], fill=a3)
-        for y in range(top + 4, base - 2, 6):                    # celosía
-            d.line([x + 1, y, x + 2, y + 3], fill=a3)
-    d.rectangle([x0 - 2, top - 4, x1 + 2, top], fill=a2)
-    d.line([x0 - 2, top - 4, x1 + 2, top - 4], fill=P["acero_l"])
-    d.line([x0 - 2, top, x1 + 2, top], fill=a3)
-    for x in range(x0, x1, 5):
-        d.line([x, top - 3, x + 4, top - 1], fill=a3)
-    d.rectangle([x1 - 2, top - 8, x1 + 6, top - 4], fill=a1)      # la cabina del gruista
-    d.point((x1 + 4, top - 7), fill=P["vidrio_b"])
-    return (x0 + (x1 - x0) * 0.58, top)
-
-
-def casco_desguace(im, x0, y0, x1, y1, P, o):
-    """El carguero que desarman: casco de placas hueso con óxido, la proa redonda a la derecha, una parte sin placas
-    donde se ven las cuadernas, sobre sus picaderos."""
-    d = ImageDraw.Draw(im); px = im.load()
-    c1, c2, c3, c4 = P["casco"]
-    h = y1 - y0
-    for x in range(x0, x1):
-        f = (x - x0) / (x1 - x0)
-        nariz = max(0.0, (f - 0.82) / 0.18)
-        arriba = y0 + round(h * 0.5 * nariz ** 2)
-        abajo = y1 - round(h * 0.35 * nariz ** 1.5)
-        for y in range(arriba, abajo):
-            v = (y - y0) / h
-            col = c1 if v < 0.18 else (c2 if v < 0.55 else (c3 if v < 0.85 else c4))
-            punto(px, x, y, col)
-    for y in range(y0 + 4, y1 - 2, 4):                           # juntas de las placas
-        for x in range(x0, int(x0 + (x1 - x0) * 0.86)):
-            if (x * 3 + y) % 11: punto(px, x, y, c3 if y < y0 + h * 0.55 else c4)
-    rnd = random.Random(4)
-    for _ in range(26):                                          # óxido
-        x, y = rnd.randint(x0 + 2, x1 - 12), rnd.randint(y0 + 2, y1 - 3)
-        d.rectangle([x, y, x + rnd.randint(0, 2), y + rnd.randint(0, 3)], fill=P["oxido"])
-    hx0, hx1 = x0 + 28, x0 + 50                                   # sin placas: interior y cuadernas
-    d.rectangle([hx0, y0 + 2, hx1, y1 - 3], fill=P["interior"])
-    for x in range(hx0 + 1, hx1, 3):
-        d.line([x, y0 + 2, x, y1 - 3], fill=c3)
-        punto(px, x, y0 + 2, c1)
-    d.line([hx0, y0 + h // 2, hx1, y0 + h // 2], fill=c4)
-    d.line([x0, y0, x1 - 8, y0], fill=c1)
-    for x in (x0 + 8, x0 + 30, x0 + 56, x0 + 70):               # picaderos
-        d.rectangle([x, y1, x + 5, y1 + 3], fill=P["acero"][2])
-    for x in range(x0 + 4, x0 + 20, 3):                          # andamio
-        d.line([x, y0 - 6, x, y1], fill=P["acero"][1]) if x % 2 else None
-    d.line([x0 + 4, y0 - 6, x0 + 20, y0 - 6], fill=P["acero"][1]); d.line([x0 + 4, y0 + 6, x0 + 20, y0 + 6], fill=P["acero"][1])
-    return (hx1 + 1, y0 + 9)
+# El barrido del escáner que entra por la rendija del techo: cuándo pasa (fracción del bucle) y en cuántas posiciones.
+ESCANER = dict(desde=0.62, hasta=0.86, estados=12)
 
 
 def fondo_frente(t):
-    """Frente exterior. De día: el puerto industrial bajo un cielo de calima color hueso con un planeta pálido; a la
-    izquierda el desguace (el pórtico y el carguero sin placas), la torre de vigía, el almacén de ladrillo con bóvedas
-    y su chimenea de escape, los tanques y la plataforma de concreto con su raya de peligro; en el cielo, la nave
-    patrulla del Directorio. De noche: el mismo puerto en penumbra, ventanas ámbar, faroles, la pantalla verde de la
-    torre, el reflector de la torre que barre el cielo y el de la nave que barre la plataforma."""
+    """Frente exterior: la base escondida en ruinas. Muro de sillares viejos con raíces que cuelgan, la losa del techo
+    con manchas de humedad y una rendija, los tubos de cobre, dos paneles de vidrio grabado con trazos turquesa
+    iluminados por el canto, consolas oscuras con su pantalla de tubo, botones y pilotos, la pantalla redonda del radar,
+    la consola blanca curva con sus molduras, lámparas de cúpula, cajas de equipo, cables gruesos por el piso y la franja
+    de peligro. De día, la base con las lámparas encendidas; de noche, la misma base en penumbra verdosa, alumbrada por
+    el vidrio, los pilotos y las lámparas. Lo que se mueve: el pulso de luz que corre por los trazos del vidrio, los
+    pilotos, el barrido del radar, el texto de las pantallas, las raíces que mece el aire de la ventilación y, una vez
+    por bucle, el barrido de un escáner que entra por la rendija del techo."""
     o = t["oscuro"]
     P = PAL_N if o else PAL_D
-    im, d = lienzo(P["cielo"][-1])
-    degradado(im, 0, 54, P["cielo"])
+    im, d = lienzo(P["piedra"][1])
     px = im.load()
-    # --- Cielo con vida: calima en pinceladas, el planeta, (de noche) estrellas.
-    if o:
-        estrellas(im, 41, 70, 0, 34, [hx("5E6E70"), hx("8A9894"), hx("C9CFC6")])
-    else:
-        luz(im, 24, 6, 40, hx("F4ECDA"), 0.5, 4, ry=18)          # el sol, tapado por la calima, arriba a la izquierda
-    vetas(im, 3, 18, 3, 44, P["veta"], 0.6 if not o else 0.5)
-    vetas(im, 9, 10, 6, 40, P["veta2"], 0.4, largo=(12, 40))
-    pcx, pcy, pr = 362, 17, 15
-    p1, p2, p3, p4 = P["planeta"]
-    for y in range(pcy - pr, pcy + pr + 1):
-        for x in range(pcx - pr, pcx + pr + 1):
-            dd = math.hypot(x - pcx, y - pcy) / pr
-            if dd > 1: continue
-            lado = (x - pcx + 0.35 * (y - pcy)) / pr               # la luz entra por la izquierda
-            f = (lado + 1) / 2
-            i = 0 if f < 0.32 else (1 if f < 0.55 else (2 if f < 0.78 else 3))
-            if 0 < i < 3 and tramar((f * 4) % 1, x, y): i += 1
-            col = (p1, p2, p3, p4)[min(3, i)]
-            if not o:
-                col = mezcla(col, px[x, y], 0.35)
-            px[x, y] = col
-    for (mx, my, mr) in ((356, 12, 3), (365, 22, 2), (352, 21, 2), (370, 10, 1)):   # mares
-        for y in range(my - mr, my + mr + 1):
-            for x in range(mx - mr, mx + mr + 1):
-                if (x - mx) ** 2 + (y - my) ** 2 <= mr * mr and math.hypot(x - pcx, y - pcy) < pr - 1:
-                    px[x, y] = esc(px[x, y], 0.94 if not o else 0.85)
-    vetas(im, 17, 4, pcy - 4, pcy + 8, P["veta"], 0.45, x0=330, x1=400, largo=(20, 50))   # la calima cruza el planeta
-    solo_cielo = np.asarray(im).copy()                              # para saber después qué quedó como cielo
-    # --- La nave patrulla.
-    nx0, ny0 = 170, 7
-    luces_nave = nave(im, nx0, ny0, P, o)
-    # --- Lejos: dos filas de siluetas industriales (torres, grúas, chimeneas), con su lado de luz.
-    rnd = random.Random(8)
-    for fila, (base, pal, alto) in enumerate(((50, P["lejos"], (6, 16)), (55, P["lejos2"], (3, 10)))):
-        x = -rnd.randint(0, 8)
-        while x < W:
-            w_ = rnd.randint(8, 20); h_ = rnd.randint(*alto)
-            d.rectangle([x, base - h_, x + w_, base + 6], fill=pal[0])
-            d.line([x, base - h_, x, base + 6], fill=pal[1])
-            d.line([x + w_, base - h_, x + w_, base + 6], fill=pal[2])
-            q = rnd.random()
-            if q < 0.3:                                          # chimenea fina
-                cx_ = x + rnd.randint(2, w_ - 2); d.rectangle([cx_, base - h_ - rnd.randint(6, 14), cx_ + 1, base - h_], fill=pal[0])
-            elif q < 0.45 and fila == 0:                         # grúa lejana
-                d.line([x + 3, base - h_, x + 3, base - h_ - 14], fill=pal[2]); d.line([x - 6, base - h_ - 13, x + 16, base - h_ - 13], fill=pal[2])
-            elif q < 0.6:                                        # tanque redondo
-                d.ellipse([x + 2, base - h_ - 4, x + w_ - 2, base - h_ + 4], fill=pal[0])
-            if o and rnd.random() < 0.5:
-                d.point((x + rnd.randint(1, max(1, w_ - 1)), base - rnd.randint(1, max(1, h_ - 1))), fill=hx("C08040"))
-            x += w_ + rnd.randint(0, 6)
-    # --- Plataforma (primero, para que las cosas de pie le echen sombra encima).
-    s1, s2, s3, s4 = P["suelo"]
-    for y in range(62, H):
+    # --- El muro de sillares (todo el fondo, de la losa al piso).
+    sillares(im, 0, 8, W, 63, P, semilla=5)
+    humedad(im, 3, 22, 10, 60, P["piedra_sombra"], 0.45, r=(4, 12))
+    # --- La losa del techo con manchas de humedad y la rendija.
+    for y in range(0, 8):
         for x in range(W):
-            v = (y - 62) / (H - 62)
-            col = s1 if v > 0.55 else (s2 if v > 0.2 else s3)
-            px[x, y] = col
-    rnd = random.Random(12)
-    for _ in range(46):                                          # manchas de aceite y desgaste
-        x, y = rnd.randrange(W), rnd.randrange(64, H)
-        w_ = rnd.randint(2, 7)
-        d.ellipse([x - w_, y - 1, x + w_, y + 1], fill=P["mancha"] if rnd.random() < 0.3 else s4)
-    for y in (66, 71, 77):                                       # juntas de las losas, en perspectiva
-        d.line([0, y, W, y], fill=P["junta"])
-    for k in range(-12, 24):
-        xb = 206 + (k - 6) * 30
-        xt = 206 + (xb - 206) * 0.28
-        d.line([xt, 62, xb, H], fill=P["junta"])
-    for x in range(0, W, 9):                                     # la raya de peligro, gastada
-        for j in range(5):
-            if (x * 7 + j * 3) % 13 != 0:
-                punto(px, x + j, 68, P["peligro"][0])
-                if j % 2: punto(px, x + j, 69, P["peligro"][0])
-    d.line([0, 62, W, 62], fill=P["acero"][2])                   # el bordillo de la plataforma
-    d.line([0, 63, W, 63], fill=P["acero"][1])
-    # --- El desguace: el pórtico y el carguero.
-    soldadura = casco_desguace(im, 40, 36, 124, 58, P, o)
-    gancho = grua(im, 34, 128, 14, 62, P)
-    gx, gy = gancho
-    d.rectangle([gx - 3, gy, gx + 3, gy + 2], fill=P["acero"][1])
-    d.line([gx, gy + 2, gx, 30], fill=P["acero"][2])             # el cable con una placa colgando
-    d.rectangle([gx - 5, 30, gx + 5, 33], fill=P["casco"][1]); d.line([gx - 5, 33, gx + 5, 33], fill=P["casco"][3])
-    # --- La torre de vigía.
-    tx = 142
-    cilindro(im, tx - 3, tx + 4, 13, 62, P["hueso"], P["anillo"], 9)
-    d.rectangle([tx - 7, 6, tx + 8, 13], fill=P["hueso"][1])
-    d.line([tx - 7, 6, tx + 8, 6], fill=P["hueso"][0]); d.line([tx - 7, 6, tx - 7, 13], fill=P["hueso"][0])
-    d.line([tx + 8, 6, tx + 8, 13], fill=P["hueso"][3]); d.line([tx - 7, 13, tx + 8, 13], fill=P["hueso"][3])
-    d.rectangle([tx - 5, 8, tx + 6, 10], fill=P["pantalla"] if o else P["vidrio"])
+            px[x, y] = P["losa"][0] if y < 5 else (P["losa"][1] if y < 7 else P["losa"][2])
+    humedad(im, 8, 30, 0, 8, P["mancha"], 0.5, r=(3, 10))
+    d.line([0, 7, W, 7], fill=P["losa"][2])
+    RENDIJA = 262
+    rnd = random.Random(2)
+    y_, x_ = 0, RENDIJA
+    grieta = []
+    while y_ < 8:                                               # la grieta zigzaguea por la losa
+        grieta.append((x_, y_)); y_ += 1; x_ += rnd.choice((-1, 0, 1))
+    for (x, y) in grieta:
+        punto(px, x, y, P["rendija"]); punto(px, x + 1, y, P["rendija"])
+    # --- Tubos de cobre bajo la losa (con codos y bridas), que bajan por la pilastra derecha.
+    c1, c2, c3 = P["cobre"]
+    for (yt, xa, xb) in ((9, 40, 300), (12, 60, 304)):
+        d.line([xa, yt, xb, yt], fill=c2); d.line([xa, yt - 1, xb, yt - 1], fill=c1); d.line([xa, yt + 1, xb, yt + 1], fill=c3)
+        for xf in range(xa + 18, xb - 4, 36):
+            d.rectangle([xf, yt - 2, xf + 1, yt + 2], fill=c3); d.point((xf, yt - 2), fill=c1)
+    for (xt, yt) in ((300, 9), (304, 12)):
+        d.line([xt + 3, yt, xt + 3, 62], fill=c2); d.line([xt + 2, yt, xt + 2, 62], fill=c1); d.line([xt + 4, yt, xt + 4, 62], fill=c3)
+    # --- Raíces que cuelgan de la losa (las que se mecen se dibujan en cada cuadro).
+    raices_quietas = [(6, 26, 1), (16, 18, 21), (28, 34, 22), (58, 14, 2), (94, 24, 3), (122, 30, 4), (132, 12, 23), (164, 8, 24), (198, 12, 5), (212, 18, 25), (286, 20, 6), (296, 10, 26), (336, 26, 7), (352, 14, 27), (392, 34, 8), (400, 22, 28), (408, 16, 9)]
+    for (x, l, s) in raices_quietas:
+        raiz(d, camino_raiz(x, 7, l, s), P["raiz"], P["raiz_luz"], 2)
+        if l > 18:
+            raiz(d, camino_raiz(x + 1, 7 + l * 0.6, l // 3, s + 40, 0.3), P["raiz"])
+    meciendo = [(146, 22, 11), (232, 16, 12), (372, 19, 13)]
+    # --- Paneles de vidrio grabado.
+    trazos1 = ([[(44, 14), (44, 54)], [(70, 14), (70, 54)], [(108, 14), (108, 54)]] +
+               [[(36, 52 - k * 14), (120, 30 - k * 14)] for k in range(3)] + [[(36, 24), (120, 50)]] +
+               [arco(122, 62, 50, 196, 262, 30), arco(30, 70, 62, 292, 336, 30)])
+    polis1 = vidrio_grabado(im, 36, 14, 121, 54, P, trazos1, 1)
+    trazos2 = ([[(312 + k * 5, 15), (312 + k * 5, 54)] for k in range(0, 13, 2)] + [espiral(332, 38, 2, 14, 2.6)] +
+               [arco(340, 34, 22, 140, 380, 50), [(312, 54), (368, 18)]])
+    polis2 = vidrio_grabado(im, 312, 15, 369, 54, P, trazos2, 2)
+    pulsos = [(p_, largo_poli(p_)) for p_ in polis1 + polis2 if len(p_) > 1]
+    for (x, l, s_) in ((50, 9, 31), (88, 13, 32), (116, 7, 33), (322, 11, 34), (360, 8, 35)):     # raíces sobre el riel
+        raiz(d, camino_raiz(x, 8, l, s_), P["raiz"], P["raiz_luz"], 2)
+    for x in range(0, W, 3):                                      # musgo donde la losa toca el muro
+        if (x * 7) % 11 < 4: punto(px, x, 8 + (x % 2), P["musgo"])
+    # --- Consolas oscuras (con la pantalla redonda del radar en la primera).
+    pil_a, pant_a = consola_oscura(im, 136, 24, 168, 62, P, 3)
+    pil_b, pant_b = consola_oscura(im, 170, 34, 196, 62, P, 4)
+    rx, ry_, rr = 152, 30, 6                                     # radar sobre la primera consola
+    d.rectangle([rx - 9, ry_ - 8, rx + 9, ry_ + 8], fill=P["oscura"][1])
+    d.ellipse([rx - rr - 1, ry_ - rr - 1, rx + rr + 1, ry_ + rr + 1], fill=P["cromo"] if not o else P["oscura"][0])
+    d.ellipse([rx - rr, ry_ - rr, rx + rr, ry_ + rr], fill=P["pantalla"])
+    d.ellipse([rx - rr // 2, ry_ - rr // 2, rx + rr // 2, ry_ + rr // 2], outline=hx("1F3A2C"))
+    d.line([rx - rr, ry_, rx + rr, ry_], fill=hx("1F3A2C")); d.line([rx, ry_ - rr, rx, ry_ + rr], fill=hx("1F3A2C"))
+    # Pantallas de tubo de las consolas, encima de lo que dibujó consola_oscura (la primera queda bajo el radar).
+    pant_a = (139, 44, 10, 4)
+    d.rectangle([137, 42, 151, 49], fill=P["oscura"][2]); d.rectangle([138, 43, 150, 48], fill=P["pantalla"])
+    # --- La consola blanca curva.
+    pil_c = consola_blanca(im, 202, 296, 42, P)
+    # --- Lámparas de cúpula.
+    lamparas = [lampara(im, 126, 34, P, 28), lampara(im, 302, 26, P, 36), lampara(im, 380, 36, P, 26)]
+    # --- Cajas de equipo apiladas (a la izquierda y a la derecha).
+    cajas(im, 2, 62, P, [(24, 8, 0), (20, 7, 2), (14, 6, 6)], 1)
+    cajas(im, 388, 62, P, [(22, 8, 0), (18, 7, 2), (12, 6, 5)], 2)
+    # --- El piso: losas de hormigón con manchas, la franja de peligro y los cables gruesos.
+    p1, p2, p3 = P["piso"]
+    for y in range(63, H):
+        for x in range(W):
+            v = (y - 63) / (H - 63)
+            px[x, y] = p3 if v < 0.15 else (p2 if v < 0.5 else p1)
+    humedad(im, 21, 24, 64, H, P["mancha"], 0.35, r=(5, 16))
+    for y in (68, 74):
+        d.line([0, y, W, y], fill=P["piso_junta"])
+    for k in range(-10, 22):
+        xb = 206 + (k - 6) * 34; xt = 206 + (xb - 206) * 0.4
+        d.line([xt, 63, xb, H], fill=P["piso_junta"])
+    for x in range(0, W):                                       # la franja de peligro al pie de la base, gastada
+        for y in (64, 65):
+            if (x * 5 + y * 3) % 17 == 0: continue
+            punto(px, x, y, P["peligro"][0] if ((x + y) // 3) % 2 == 0 else P["peligro"][1])
+    d.line([0, 63, W, 63], fill=P["oscura"][2])
+    # Sombras de lo que está de pie, sobre el piso (la luz viene de arriba, de las lámparas).
+    for (xa, xb) in ((2, 27), (36, 121), (136, 196), (200, 298), (312, 369), (372, 394)):
+        for y in (66, 67):
+            for x in range(xa + 2, xb - 1):
+                if tramar(0.55 if y == 66 else 0.3, x, y): px[x, y] = mezcla(px[x, y], P["sombra"], 0.6)
+    cable(d, [(140, 62), (150, 69), (180, 71), (226, 69), (260, 72), (300, 70)], P["cable"], P["cable_luz"])
+    cable(d, [(172, 62), (168, 66), (120, 73), (70, 70), (30, 76), (0, 75)], P["cable"], P["cable_luz"])
+    cable(d, [(330, 62), (336, 67), (360, 70), (412, 68)], P["cable"], P["cable_luz"])
+    # --- La luz: las lámparas iluminan el muro y el piso; de noche, el vidrio alumbra de verde lo que tiene cerca.
+    for (lx, ly) in lamparas:
+        luz(im, lx, ly, 18 if not o else 22, P["luz_lampara"], 0.22 if not o else 0.3, 4, ry=14)
+        luz(im, lx, 66, 16, P["luz_lampara"], 0.18 if not o else 0.22, 3, ry=4)
     if o:
-        for xx in range(tx - 4, tx + 6, 3): d.point((xx, 9), fill=P["radar"])
-        luz(im, tx + 0.5, 9, 9, hx("4E8A60"), 0.25, 3, ry=5)
-    else:
-        d.point((tx - 4, 8), fill=P["vidrio_b"])
-    d.line([tx, 6, tx, 1], fill=P["acero"][2])                    # antena
-    # --- El almacén de ladrillo con bóvedas de cañón.
-    ax0, ax1, atop = 156, 334, 31
-    ladrillo(im, ax0, atop, ax1, 62, P["ladr"], 3)
-    for x in range(ax1 - 22, ax1):                               # el lado de la sombra (la luz viene de la izquierda)
-        for y in range(atop, 62):
-            px[x, y] = mezcla(px[x, y], P["ladr_s"][0], 0.55)
-    bahias = [(ax0, ax0 + 59), (ax0 + 59, ax0 + 118), (ax0 + 118, ax1)]
-    b1_, b2_, b3_, b4_ = P["boveda"]
-    for (bx0, bx1) in bahias:
-        cx_, hw = (bx0 + bx1) / 2, (bx1 - bx0) / 2
-        for x in range(bx0, bx1 + 1):
-            u = (x - cx_) / hw
-            h_ = 8 * math.sqrt(max(0.0, 1 - u * u))
-            for y in range(int(atop - h_), atop + 1):
-                col = b1_ if u < -0.35 else (b2_ if u < 0.25 else (b3_ if u < 0.7 else b4_))
-                if (x - bx0) % 4 == 0: col = mezcla(col, b4_, 0.5)      # costillas
-                punto(px, x, y, col)
-            punto(px, x, int(atop - h_), b1_ if u < 0.3 else b2_)
-        d.line([bx0, atop, bx1, atop], fill=b4_)
-    d.line([ax0, atop + 1, ax1, atop + 1], fill=P["ladr"][3])
-    ventanas = []
-    for k, x in enumerate(range(ax0 + 9, ax1 - 6, 13)):          # ojos de buey
-        if 226 <= x <= 268: continue
-        y = 39
-        d.ellipse([x - 3, y - 3, x + 3, y + 3], fill=P["hueso"][1])
-        d.ellipse([x - 2, y - 2, x + 2, y + 2], fill=P["vidrio"])
-        ventanas.append((x, y))
-        if not o:
-            d.point((x - 1, y - 1), fill=P["vidrio_b"])
-        chorreo(im, x, y + 4, 9 + (k * 5) % 7, P["ladr"][3], 0.4)
-    # El portón del hangar, con su marco de peligro y la lámpara.
-    dx0, dx1, dy0 = 230, 266, 42
-    d.rectangle([dx0 - 2, dy0 - 2, dx1 + 2, 62], fill=P["peligro"][1])
-    for y in range(dy0 - 2, 62):
-        for x in (dx0 - 2, dx0 - 1, dx1 + 1, dx1 + 2):
-            if (y // 2) % 2: punto(px, x, y, P["peligro"][0])
-    for x in range(dx0 - 2, dx1 + 3):
-        if ((x + 1) // 2) % 2: punto(px, x, dy0 - 2, P["peligro"][0])
-    for y in range(dy0, 62):
-        d.line([dx0, y, dx1, y], fill=P["puerta"][0] if y % 3 else P["puerta"][1])
-    d.rectangle([dx0 + 3, 56, dx0 + 14, 62], fill=P["interior"])             # el portón, un poco abierto
-    d.rectangle([246, dy0 - 6, 250, dy0 - 4], fill=P["farol"])
-    # Tubos por la pared.
-    d.line([ax0, 57, dx0 - 3, 57], fill=P["hueso"][1]); d.line([ax0, 58, dx0 - 3, 58], fill=P["hueso"][3])
-    for x in range(ax0 + 6, dx0 - 3, 14): d.rectangle([x, 56, x + 1, 59], fill=P["hueso"][2])
-    d.line([dx1 + 6, 34, dx1 + 6, 62], fill=P["hueso"][1]); d.line([dx1 + 7, 34, dx1 + 7, 62], fill=P["hueso"][3])
-    # La chimenea de escape (cilindro con anillos) y un respiradero.
-    sx = 300
-    cilindro(im, sx - 4, sx + 5, 8, atop - 2, P["hueso"], P["anillo"], 6)
-    d.rectangle([sx - 5, 6, sx + 6, 8], fill=P["acero"][1])
-    for y in (10, 11): d.line([sx - 4, y, sx + 4, y], fill=P["rojo"] if not o else hx("7A2A22"))
-    vx = 322
-    d.rectangle([vx - 2, 19, vx + 3, 24], fill=P["acero"][1]); d.line([vx - 3, 18, vx + 4, 18], fill=P["acero"][2])
-    # --- Los tanques.
-    for (x0, x1) in ((338, 361), (364, 389)):
-        cilindro(im, x0, x1, 38, 62, P["tanque"], P["anillo"], 7)
-        cx_ = (x0 + x1) / 2
-        for x in range(x0, x1):
-            u = (x - cx_) / ((x1 - x0) / 2)
-            h_ = 4 * math.sqrt(max(0.0, 1 - u * u))
-            for y in range(int(38 - h_), 38):
-                punto(px, x, y, P["tanque"][0] if u < -0.2 else (P["tanque"][2] if u < 0.5 else P["tanque"][4]))
-        d.line([x1 - 4, 34, x1 - 4, 62], fill=P["acero"][2])    # escalera
-        for y in range(36, 62, 2): d.point((x1 - 3, y), fill=P["acero"][2])
-    d.line([334, 50, 338, 50], fill=P["hueso"][2]); d.line([361, 46, 364, 46], fill=P["hueso"][2])
-    REF = (377, 31)                                              # el reflector de vigilancia, sobre el tanque
-    d.rectangle([REF[0] - 2, REF[1], REF[0] + 2, REF[1] + 3], fill=P["acero"][1]); d.line([REF[0] - 2, REF[1], REF[0] + 2, REF[1]], fill=P["acero_l"])
-    d.point(REF, fill=hx("FFF0C8") if o else P["acero"][2])
-    # --- Sombras arrojadas en la plataforma (la luz viene de arriba a la izquierda: caen a la derecha).
-    if not o:
-        for (x0, x1, largo) in ((34, 38, 22), (124, 128, 22), (139, 146, 26), (156, 334, 10), (338, 389, 12), (6, 28, 8), (398, 401, 16)):
-            for y in range(63, 67):
-                k_ = (y - 62) / 4
-                for x in range(x0 + round(largo * k_ * 0.5), x1 + round(largo * k_)):
-                    if 0 <= x < W: px[x, y] = mezcla(px[x, y], P["sombra_suelo"], 0.6)
-    # --- Primer plano: a la izquierda el contenedor; a la derecha el farol con sus barriles.
-    c1, c2, c3, c4 = P["contenedor"]
-    d.rectangle([0, 42, 27, 62], fill=c2)
-    for x in range(0, 27, 2): d.line([x, 43, x, 61], fill=c3)
-    d.line([0, 42, 27, 42], fill=c1); d.line([27, 42, 27, 62], fill=c4); d.line([0, 62, 27, 62], fill=c4)
-    for x in (4, 12): d.line([x, 44, x, 60], fill=c4); d.line([x + 1, 44, x + 1, 60], fill=c1)
-    chorreo(im, 18, 43, 12, P["oxido"], 0.5); chorreo(im, 7, 43, 8, P["oxido"], 0.45)
-    d.rectangle([2, 34, 16, 42], fill=P["hueso"][1]); d.line([2, 34, 16, 34], fill=P["hueso"][0]); d.line([16, 34, 16, 42], fill=P["hueso"][3])
-    d.rectangle([5, 37, 12, 39], fill=P["peligro"][1]); d.line([6, 38, 11, 38], fill=P["peligro"][0])       # cartucho estampado
-    fx = 399
-    d.rectangle([fx, 22, fx + 1, 64], fill=P["farol"]); d.line([fx, 22, fx, 64], fill=P["acero_l"] if not o else P["acero"][1])
-    d.rectangle([fx - 4, 20, fx + 2, 22], fill=P["farol"])
-    lampara = (fx - 2, 23)
-    d.rectangle([fx - 3, 23, fx, 24], fill=P["hueso"][1] if not o else hx("FFD9A0"))
-    for (bx, by) in ((402, 56), (406, 58)):
-        d.rectangle([bx, by, bx + 5, 64], fill=P["acero"][1]); d.line([bx, by, bx, 64], fill=P["acero_l"])
-        d.line([bx, by + 2, bx + 5, by + 2], fill=P["acero"][2]); d.line([bx, by + 5, bx + 5, by + 5], fill=P["acero"][2])
-    # --- La noche: lo encendido alumbra lo que tiene cerca.
-    prendidas = []
-    if o:
-        for j, (x, y) in enumerate(ventanas):
-            if j % 3 != 1:
-                d.ellipse([x - 2, y - 2, x + 2, y + 2], fill=VENTANA_N); d.point((x - 1, y - 1), fill=hx("FFE0A8"))
-                luz(im, x, y, 6, VENTANA_N, 0.18, 3)
-                prendidas.append((x, y))
-        luz(im, 248, dy0 - 3, 14, VENTANA_N, 0.3, 4, ry=9)                      # la lámpara del portón
-        d.rectangle([246, dy0 - 4, 250, dy0 - 4], fill=hx("FFD9A0"))
-        luz(im, dx0 + 8, 60, 12, VENTANA_N, 0.25, 3, ry=4)                       # la luz que sale por el portón
-        for (lx, ly, r, ry) in ((lampara[0], lampara[1] + 2, 16, 12), (lampara[0], 70, 26, 7), (248, 67, 22, 5)):
-            luz(im, lx, ly, r, VENTANA_N, 0.28, 4, ry=ry)
-        luz(im, soldadura[0] - 8, 50, 10, hx("4E6A70"), 0.2, 3)                  # una luz de trabajo en el desguace
-    else:
-        luz(im, 248, dy0 - 3, 4, hx("FFE7B8"), 0.4, 2)
-    es_cielo = ((np.asarray(im) == solo_cielo).all(2) & (np.arange(H)[:, None] < 52)).astype(np.float32)
+        for (x0, x1) in ((36, 121), (312, 369)):
+            luz(im, (x0 + x1) / 2, 40, (x1 - x0) * 0.8, hx("2E7A66"), 0.22, 4, ry=34)
+            luz(im, (x0 + x1) / 2, 66, (x1 - x0) * 0.7, hx("3E9A80"), 0.3, 3, ry=5)
+        luz(im, 249, 44, 40, hx("2E5A50"), 0.18, 3, ry=8)          # el tablero de la consola blanca
+    # Las cúpulas encendidas se repintan encima del halo.
+    for (lx, ly) in lamparas:
+        d.pieslice([lx - 5, ly - 5, lx + 4, ly + 4], 180, 360, fill=P["cupula"][0])
+        d.line([lx - 5, ly - 1, lx + 4, ly - 1], fill=P["cupula"][2] if o else P["cupula"][1])
     granular(im, 31, 0.035 if not o else 0.05, 0.14)
     big = subir(im)
     # ------------------------------------------------------------------
     # Lo que se mueve.
     # ------------------------------------------------------------------
-    humo_c = ((hx("8C8A84"), hx("A3A19A"), hx("B9B6AD"), hx("C9C5BA"), hx("D8D3C6")) if not o else
-              (hx("33383B"), hx("3E4447"), hx("4A5053"), hx("555B5E"), hx("6A6460")))
-    vapor_c = ((hx("D9D6CE"), hx("E2DED5"), hx("EAE6DD"), hx("F2EEE5")) if not o else
-               (hx("3A4245"), hx("424A4D"), hx("4A5255"), hx("566064")))
-    # El radar de la torre gira (de día); el reflector de la torre barre el cielo (de noche).
-    radar = []
-    for q in range(8):
-        h_ = im.copy(); dd = ImageDraw.Draw(h_)
-        a = 2 * math.pi * q / 8
-        w_ = round(4 * math.cos(a))
-        dd.line([tx, 1, tx, 4], fill=P["acero"][2])
-        if w_ >= 0:
-            dd.rectangle([tx - w_ - 1, 0, tx + w_, 2], fill=P["hueso"][0] if not o else P["hueso"][1])
-        else:
-            dd.rectangle([tx + w_, 0, tx - w_ - 1, 2], fill=P["hueso"][2] if not o else P["hueso"][3])
-        radar.append(subir(h_).crop(((tx - 6) * ESC, 0, (tx + 7) * ESC, 5 * ESC)))
-    focos = {}
+    pilotos = pil_a + pil_b + pil_c
+    rnd = random.Random(17)
+    textos = [[rnd.randint(2, 9) for _ in range(12)] for _ in range(2)]
+    escaner = {}
 
-    def capa_haz(clave, x, y, ang, largo, ancho, mascara, piso=None):
-        """El haz, pintado a 1 pixel por dp en tres niveles de luz, como el resto del fondo."""
-        if clave not in focos:
-            m = np.zeros((H, W), np.float32)
-            yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
-            vx, vy = xx - x, yy - y
-            ux, uy = math.cos(ang), math.sin(ang)
-            a_ = vx * ux + vy * uy
-            b_ = np.abs(-vx * uy + vy * ux)
-            w = 0.6 + a_ * ancho
-            dentro = (a_ > 0) & (a_ < largo) & (b_ < w)
-            m[dentro] = np.where(b_[dentro] < w[dentro] * 0.45, 2, 1)
-            if piso is not None:
-                gx_, gy_, rx_, ry_ = piso
-                charco = ((xx - gx_) / rx_) ** 2 + ((yy - gy_) / ry_) ** 2 < 1
-                m[charco] = np.maximum(m[charco], np.where(((xx - gx_) / rx_) ** 2 + ((yy - gy_) / ry_) ** 2 < 0.35, 3, 2)[charco])
-            if mascara is not None:
-                m *= mascara
-            alfa = np.array([0, 40, 70, 96], np.uint8)[m.astype(int)]
-            capa = Image.new("RGBA", (W, H), hx("F4E6B4") + (0,))
-            capa.putalpha(Image.fromarray(alfa))
-            focos[clave] = capa.resize((W * ESC, H * ESC), Image.NEAREST)
-        return focos[clave]
-
-    TORRE, NAVE_Q = HACES["estados_cielo"], HACES["estados_nave"]
-    foco_nave = [l for l in luces_nave if l[2] == "foco"][0]
+    def capa_escaner(q):
+        """El haz del escáner que entra por la rendija: estrecho arriba, se abre hacia el piso; tres niveles de luz."""
+        if q not in escaner:
+            gx_ = RENDIJA - 30 + 66 * q / (ESCANER["estados"] - 1)
+            m = np.zeros((H, W), np.uint8)
+            for y in range(8, 72):
+                f = (y - 7) / 64
+                xc = RENDIJA + (gx_ - RENDIJA) * f
+                w = 0.8 + 6.0 * f
+                for x in range(int(xc - w) - 1, int(xc + w) + 2):
+                    if 0 <= x < W:
+                        dd = abs(x + 0.5 - xc) / w
+                        if dd < 1: m[y, x] = 2 if dd < 0.45 else 1
+            for y in range(66, 74):                             # la mancha en el piso
+                for x in range(int(gx_ - 10), int(gx_ + 11)):
+                    if 0 <= x < W and ((x - gx_) / 10) ** 2 + ((y - 70) / 3.4) ** 2 < 1: m[y, x] = max(m[y, x], 3 if abs(x - gx_) < 5 else 2)
+            alfa = np.array([0, 34, 62, 90], np.uint8)[m]
+            capa = Image.new("RGBA", (W, H), P["escaner"] + (0,)); capa.putalpha(Image.fromarray(alfa))
+            escaner[q] = capa.resize((W * ESC, H * ESC), Image.NEAREST)
+        return escaner[q]
 
     def vivo(img, tick, delante):
         if delante: return
         tk = tick % BUCLE
-        if o:                                                   # los reflectores
-            base = img.convert("RGBA")
-            # Se turnan (y en el cuadro 0, el del fondo quieto, los dos están apagados): primero la nave barre el puerto
-            # de un lado a otro y apaga el foco; luego el reflector del tanque barre el cielo.
-            f_ = tk / BUCLE
-            c0, c1 = HACES["cielo"]
-            if c0 <= f_ < c1:
-                q = int((f_ - c0) / (c1 - c0) * TORRE)
-                ang = math.radians(-176 + 44 * q / (TORRE - 1))
-                base = Image.alpha_composite(base, capa_haz(("t", q), REF[0], REF[1], ang, HACES["largo_cielo"], HACES["ancho_cielo"], es_cielo))
-            n0, n1 = HACES["nave"]
-            u = (f_ - n0) / (n1 - n0)
-            if 0 <= u < 1:
-                q2 = int(u * NAVE_Q)
-                gx_ = 26 + 270 * q2 / (NAVE_Q - 1)
-                fx_, fy_ = foco_nave[0], foco_nave[1]
-                ang2 = math.atan2(71 - fy_, gx_ - fx_)
-                largo = math.hypot(gx_ - fx_, 71 - fy_)
-                base = Image.alpha_composite(base, capa_haz(("n", q2), fx_, fy_, ang2, largo + 2, HACES["ancho_nave"], None, (gx_, 71, 13, 3.6)))
-            img.paste(base.convert("RGB"))
+        f_ = tk / BUCLE
+        if ESCANER["desde"] <= f_ < ESCANER["hasta"]:           # una vez por bucle pasa el escáner de la patrulla
+            q = int((f_ - ESCANER["desde"]) / (ESCANER["hasta"] - ESCANER["desde"]) * ESCANER["estados"])
+            img.paste(Image.alpha_composite(img.convert("RGBA"), capa_escaner(q)).convert("RGB"))
         dd = ImageDraw.Draw(img)
-        if not o:
-            img.paste(radar[(tk // 5) % 8], ((tx - 6) * ESC, 0))
-        # Humo de la chimenea y vapor del respiradero.
-        bocanadas(dd, tk, sx + 0.5, 4, humo_c, 0, n=10, vida=40, alto=13, deriva=30, r0=1.6, r1=5.2)
-        bocanadas(dd, tk, vx + 0.5, 17, vapor_c, 3, n=7, vida=32, alto=9, deriva=14, r0=1.0, r1=3.2)
-        if o and (tk // 4) % 4:                                 # la llama de la antorcha de gas, en la boca
-            cuad(dd, sx - 0.5, 4 + ((tk // 4) % 2) * 0.4, hx("F0A04B"), 2, 1)
-            cuad(dd, sx, 3.4, hx("FFE0A8"), 1, 1)
-        # Las luces de la nave.
-        for j, (lx, ly, tipo) in enumerate(luces_nave):
-            if tipo == "rojo" and (tk // 10 + j) % 2 == 0:
-                cuad(dd, lx - 0.5, ly - 0.5, P["rojo"], 1, 1)
-            elif tipo == "ambar" and (tk // 5 + j) % 4 != 0:
-                cuad(dd, lx - 0.5, ly - 0.5, AMBAR_C, 1, 1)
-            elif tipo == "blanco" and tk % 20 < 3:
-                cuad(dd, lx - 1, ly - 0.5, hx("FFFFFF"), 2, 1)
-            elif tipo == "foco":
-                encendido = o and HACES["nave"][0] <= tk / BUCLE < HACES["nave"][1]
-                cuad(dd, lx - 1, ly - 0.5, hx("FFF0C8") if encendido else P["nave"][3], 2, 1)
-        # Los pilotos de la torre.
-        if (tk // 8) % 2 == 0:
-            cuad(dd, tx - 0.5, 0, P["rojo"], 1, 1)
-        # La chispa de la soldadura en el desguace (de día y de noche).
-        sx_, sy_ = soldadura
-        if (tk // 2) % 8 < 5:
-            rnd_ = random.Random(tk // 2)
-            cuad(dd, sx_, sy_, hx("FFF4C8"), 1, 1)
-            for _ in range(3):
-                cuad(dd, sx_ + rnd_.uniform(-2.5, 2.5), sy_ + rnd_.uniform(0.5, 4), hx("F2A33A") if rnd_.random() < 0.6 else hx("FFF4C8"), 1, 1)
-            if o:
-                cuad(dd, sx_ - 1, sy_ - 1, hx("8FB8C0"), 3, 3); cuad(dd, sx_, sy_, hx("FFFFFF"), 1, 1)
-        if o:                                                   # una ventana que se apaga y se prende
-            x_, y_ = prendidas[2]
-            if (tk // 40) % 2:
-                cuad(dd, x_ - 2, y_ - 2, P["vidrio"], 5, 5)
+        if ESCANER["desde"] <= f_ < ESCANER["hasta"]:
+            cuad(dd, RENDIJA, 6, P["escaner"], 2, 2)
+        # El pulso de luz que corre por cada trazo del vidrio (una o dos vueltas exactas por bucle).
+        for j, (pts, acum) in enumerate(pulsos):
+            vueltas = 1 + (j % 2)
+            s = (tk / BUCLE * vueltas + j * 0.37) % 1 * acum[-1]
+            for k_, col in ((0, hx("FFFFFF")), (1.5, P["canto"]), (3, P["trazo"])):
+                x, y = en_poli(pts, acum, s - k_)
+                cuad(dd, round(x), round(y), col, 1, 1)
+        # Pilotos.
+        for (x, y, col, per, ph) in pilotos:
+            if ((tk + ph) // per) % 2 == 0:
+                cuad(dd, x, y, col, 1, 1)
+        # El barrido del radar: dos vueltas por bucle, con su estela y un eco que se enciende al pasar.
+        for k_, col in ((0, P["texto"]), (1, hx("4E8A60")), (2, hx("2C5A40"))):
+            a = 2 * math.pi * (tk / BUCLE * 2) - k_ * 0.35
+            for r in range(1, rr):
+                cuad(dd, rx + 0.5 + r * math.cos(a) - 0.5, ry_ + 0.5 + r * math.sin(a) - 0.5, col, 1, 1)
+        if (tk // 10) % 8 in (2, 3):
+            cuad(dd, rx + 3, ry_ - 2, hx("D9FFE0"), 1, 1)
+        # Texto que corre en las pantallas de tubo.
+        for i_, (x0, y0, w, h) in enumerate((pant_a, pant_b)):
+            for fila in range(min(h, 3)):
+                n = textos[i_][(fila + tk // 20) % len(textos[i_])]
+                cuad(dd, x0, y0 + fila * 1, P["texto"] if fila < 2 else hx("4E8A60"), min(w, n), 0.66)
+        # Raíces que mece el aire de la ventilación.
+        for (x, l, s) in meciendo:
+            pts = camino_raiz(x, 7, l, s)
+            mec = math.sin(2 * math.pi * (tk / BUCLE * 2) + s)
+            pts = [(px_ + mec * 1.6 * ((py_ - 7) / (l * 1.6)) ** 1.5, py_) for px_, py_ in pts]
+            for (xa, ya), (xb, yb) in zip(pts, pts[1:]):
+                cuad(dd, round(xb), round(yb), P["raiz"], 1, 1)
+            for (xa, ya) in pts[:len(pts) // 2]:
+                cuad(dd, round(xa) + 1, round(ya), P["raiz"], 1, 1)
     ANIM[("frente", o)] = [vivo]
     return big
 
 
 FONDOS_MIOS = {"frente": fondo_frente}
-ETIQ = {"frente": "Frente exterior · el puerto de ladrillo y la patrulla"}
-NOCHE = {"frente": "los reflectores que barren"}
+ETIQ = {"frente": "Frente exterior · la base escondida en ruinas"}
+NOCHE = {"frente": "la base en penumbra, con el vidrio y las lámparas encendidos"}
 
 
 def registrar():
