@@ -137,8 +137,8 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     // El anuario de la ciudad: tu año, con el año de la fundación al lado, como en las placas.
     TemaId.URBE -> "IL TUO ANNO A ROMA · $anio · AUC ${io.github.ruddy2003.vestigium.ui.Romano.de(io.github.ruddy2003.vestigium.ui.Urbe.auc(anio))}"
     TemaId.DISTOPIA -> "INFORME ANUAL DEL CIUDADANO · $anio"
-    // El balance que la célula manda cifrado al cerrar el ciclo, con su clave de célula.
-    TemaId.FRENTE -> "BALANCE DE LA CÉLULA K-7 · CICLO $anio"
+    // El parte anual que la célula manda cifrado al cerrar el año.
+    TemaId.FRENTE -> "PARTE ANUAL DE LA CÉLULA K-7 · $anio"
     TemaId.CIBER -> "> cat year_$anio.log"
     TemaId.NEON -> "LOS LETREROS DE $anio"
     TemaId.BOTANICO -> "Catálogo de especímenes · $anio"

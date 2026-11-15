@@ -494,7 +494,7 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
     // La pantalla redonda de la sala de mando: el emblema en el centro de la retícula, con el barrido verde que gira, el
     // bisel de esquinas de consola alrededor de todo, la fila de pilotos al pie (dos ámbar encendidos y el rojo) y los
     // interruptores de palanca a los lados.
-    TemaId.FRENTE -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre.uppercase(), "TOCA PARA ABRIR EL CANAL",
+    TemaId.FRENTE -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre.uppercase(), "TOCA PARA ENTRAR EN LA SALA",
         comillas = "‹ " to " ›", emblema = 120.dp, arriba = 46.dp, abajo = 58.dp) { e ->
         val u = 1.dp.toPx(); val w = size.width; val h = size.height
         val c = e.secondary.copy(alpha = 0.6f)
