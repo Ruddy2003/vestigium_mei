@@ -1147,15 +1147,17 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
 
 ### 10f. Art nouveau (`nouveau`)
 
+**Fuentes comprobadas** (16 nov 2026): `docs/diseno/temas/fuentes_nouveau.md`, con 20 correcciones, ya puestas aquí.
+
 **Concepto.** París hacia 1900, cuando el hierro, el vidrio y la luz eléctrica aprendieron a parecer plantas. Entradas de metro, invernaderos, vitrales de casa, carteles litográficos, cafés y la Exposición Universal de 1900.
 
 **Claro y oscuro.**
 - **Claro:** crema, verde salvia, malva, iris violeta y oro pálido, con luz difusa a través del vidrio.
-- **Oscuro:** la misma París de noche, con la luz eléctrica (la gran novedad de la Exposición), lámparas de vidrio de colores, faroles del metro y el verde de los cafés.
+- **Oscuro:** la misma París de noche, con la luz eléctrica (el gran escaparate de la Exposición, con el Palacio de la Electricidad; ya se usaba desde hacía unos veinte años), lámparas de vidrio de colores, faroles del metro (desde 1901) y el verde de los cafés.
 
 **Fecha y números.**
-- **La página de almanaque con la flor del día y su significado,** del lenguaje de las flores del siglo XIX (por ejemplo, *Le Langage des fleurs*, de Charlotte de la Tour, 1819; a comprobar).
-- **La hora de París,** que fue la hora legal de Francia de 1891 a 1911 (a comprobar).
+- **La página de almanaque con la flor del día y su significado,** de *Le Langage des fleurs* (1819), firmado «Charlotte de La Tour» (seudónimo; se atribuye a Louise Cortambert o a Louis-Aimé Martin).
+- **La hora de París,** hora legal de Francia por la ley del 14 de marzo de 1891, hasta la ley del 9 de marzo de 1911 (que la retrasa 9 min 21 s).
 - **Cifras** de hierro forjado, con curvas.
 - **Títulos en francés,** que van solos según el principio 7.
 
@@ -1164,8 +1166,8 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
 - **Libreta:** un cuaderno de dibujo de taller.
 - **Cartas:** tarjetas postales ilustradas.
 - **Libros:** revistas ilustradas encuadernadas.
-- **Campaña:** las estaciones de la primera línea del metro, abierta durante la Exposición de 1900 (a comprobar la fecha y la lista); cada estación es una etapa.
-- **Trofeos (9):** un jarrón de vidrio, un broche de libélula, una lámpara de vitral, un abanico, un pavo real, una entrada de metro, un cartel, un peine de carey y un frasco de perfume.
+- **Campaña:** las estaciones de la línea 1 del metro, abierta el 19 de julio de 1900, durante la Exposición (lista en `fuentes_nouveau.md`); cada etapa, una estación.
+- **Trofeos (9):** un jarrón de vidrio de Nancy, la joya de libélula (como el adorno de corpiño «Femme-libellule» de Lalique), una lámpara de vidrio de colores (Daum, de Nancy; las de Tiffany son de Nueva York), un abanico, un pavo real, una entrada de metro, un cartel, un peine de carey y un frasco de perfume (los de Lalique para Coty son de 1908–1910).
 - **Fondo vivo:** tallos que crecen despacio por los bordes; de noche, lo mismo con las lámparas que se encienden.
 - **Sonido:** vals, piano de salón, cajita de música y campanillas de cristal.
 - **Fuente:** a escoger, una de cartel de 1900 (OFL). No Poiret One, que es de Art déco.
@@ -1187,12 +1189,12 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
   - 13–19 trabajo
   - 19–19.5 camino «en el metro nuevo»
   - 19.5–21 cuidar
-  - 21–23 gente «un café-concierto de Montmartre»
-- **Horas de trabajo:** la jornada de 11 horas encaja con la ley de 1900 para los talleres con mujeres y menores (a comprobar).
+  - 21–23 gente «un café-concierto de Montmartre» (La Cigale o el Divan japonais; Le Chat Noir cerró en 1897)
+- **Horas de trabajo:** la agenda suma 10 h 30, por debajo de las 11 horas de la ley Millerand del 30 de marzo de 1900 para los talleres con mujeres y menores (10 h 30 desde 1902, 10 h desde 1904). El metro solo sirve desde el 19 de julio de 1900 y cerca de la línea 1; a Montmartre llegó en 1902–1903.
 - **`inspiracion`:** «Inspirada en los talleres de litografía que imprimían los carteles de París hacia 1900.»
 
 **Cuadro (para la fila).**
-- La entrada de metro bajo la lluvia, con sus faroles.
+- La entrada de metro de Guimard (hierro fundido) bajo la lluvia, con sus faroles (desde 1901: en el verano de 1900 solo estaban las barandillas).
 - Un invernadero de hierro y vidrio, con la luz que se filtra.
 
 **Se distingue de:**
