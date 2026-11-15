@@ -24,7 +24,7 @@ object LetraExtra {
     val chivo = FontFamily(Font(R.font.chivo_regular, FontWeight.Normal), Font(R.font.chivo_semibold, FontWeight.SemiBold))
     val chivoMono = FontFamily(Font(R.font.chivo_mono_medium, FontWeight.Medium), Font(R.font.chivo_mono_medium, FontWeight.Normal))
     /** Arcontes: Caudex (como «Códice Vestigium») para títulos y rótulos y Literata para leer; las dos con hebreo y copto dentro. */
-    val codice = FontFamily(Font(R.font.codice_regular, FontWeight.Normal), Font(R.font.codice_bold, FontWeight.Bold))
+    val caudex = FontFamily(Font(R.font.codice_regular, FontWeight.Normal), Font(R.font.codice_bold, FontWeight.Bold))
     val literata = FontFamily(Font(R.font.literata_regular, FontWeight.Normal), Font(R.font.literata_semibold, FontWeight.SemiBold))
     val vt323 = FontFamily(Font(R.font.vt323, FontWeight.Normal))
     val estarcido = FontFamily(Font(R.font.saira_stencil, FontWeight.Normal))
@@ -227,7 +227,7 @@ internal val arcontesClaro = esquema(false, 0xFFEEE3C6, 0xFFF7F0DD, 0xFFE3D4AF, 
 internal val arcontesOscuro = esquema(true, 0xFF0B0D1C, 0xFF13162A, 0xFF1C2038, 0xFF343A5A, 0xFFECE4CF, 0xFFA09CB0,
     0xFFE9B04F, 0xFF2B1A00, 0xFF4A3410, 0xFFFBE6BE, 0xFF86BBCB, 0xFF1B3542, 0xFFC4B0FF, 0xFFFF8A7A)
 /** Títulos en Caudex (renombrada «Códice Vestigium»), la letra de los códices; texto en Literata; rótulos en Caudex. */
-internal val tipoArcontes = tipografia(LetraExtra.codice, FontWeight.Bold, 1.0f, 0.3f, LetraExtra.literata, 1.0f, LetraExtra.codice, 1.0f, cifrasAlineadas = true)
+internal val tipoArcontes = tipografia(LetraExtra.caudex, FontWeight.Bold, 1.0f, 0.3f, LetraExtra.literata, 1.0f, LetraExtra.caudex, 1.0f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Refugio: optimismo atómico de los cincuenta de día; pantalla de fósforo verde de noche.
