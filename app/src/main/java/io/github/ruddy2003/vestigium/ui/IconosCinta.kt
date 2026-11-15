@@ -167,6 +167,10 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
             drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
         }
+        TemaId.GALIA -> {
+            drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
+            drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
+        }
         // La lámpara de aceite de barro, llena, con el agujero de llenar calado y la llama sobre el pico.
         TemaId.ARCONTES -> {
             drawPath(Path().apply {

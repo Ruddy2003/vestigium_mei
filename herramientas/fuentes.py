@@ -26,6 +26,8 @@ LATINO = "U+0000-024F,U+0259,U+02B0-02FF,U+0300-036F,U+1D00-1DBF,U+1E00-1EFF,U+2
 # vocales largas de las transcripciones) y las pocas letras con punto debajo de las transcripciones del hebreo
 # (ḥ ṣ ṭ), sin el resto de la tabla vietnamita ni el latín extendido B.
 LATINO_CORTO = "U+0000-017F,U+0259,U+02B0-02FF,U+0300-036F,U+1E24-1E25,U+1E62-1E63,U+1E6C-1E6D,U+2000-206F,U+2070-209F,U+20A0-20CF,U+2100-214F,U+2190-21FF,U+2200-22FF,U+25A0-25FF,U+FB00-FB06"
+# El griego entero (Galia escribe palabras galas con letras griegas, como las inscripciones galo-griegas).
+GRIEGO = "U+0370-03FF"
 CIRILICO = LATINO + ",U+0400-052F,U+1C80-1C8F,U+2DE0-2DFF,U+A640-A69F"
 # Japón Edo: solo los kanji, kana y signos que usa el tema (las fuentes japonesas completas pesan varios megas).
 KANJI_EDO = ("※、。々〆「」『』〔〕あいえおかがきぎくけこさしじすずせそただちつづてでとどなにのはひびふまみむめもやゆよらりるれわをんコマ・一七万世中也予事五人代令会体作使便元光入八兵具出分"
@@ -156,6 +158,11 @@ FUENTES = [
     ("caudex/Caudex-Regular.ttf", None, "codice_regular", "Codice Vestigium", LATINO_CORTO),
     ("literata/Literata[opsz,wght].ttf", {"wght": 400, "opsz": 12}, "literata_regular", None, LATINO_CORTO),
     ("literata/Literata[opsz,wght].ttf", {"wght": 600, "opsz": 12}, "literata_semibold", None, LATINO_CORTO),
+    # GAL: Galia (lote 10). Títulos y texto en Piazzolla, serifa afilada como letra grabada; rótulos en Ysabeau. Las tres
+    # con el griego (para las palabras galas escritas con letras griegas) y la sigma de luna (ver CON_SIGMA_LUNA)
+    ("piazzolla/Piazzolla[opsz,wght].ttf", {"wght": 800, "opsz": 30}, "piazzolla_titulo", None, LATINO_CORTO + "," + GRIEGO),
+    ("piazzolla/Piazzolla[opsz,wght].ttf", {"wght": 400, "opsz": 14}, "piazzolla_regular", None, LATINO_CORTO + "," + GRIEGO),
+    ("ysabeau/Ysabeau[wght].ttf", {"wght": 600}, "ysabeau_semibold", None, LATINO_CORTO + "," + GRIEGO),
 ]
 
 
@@ -205,6 +212,18 @@ COPTO = "notosanscoptic/NotoSansCoptic-Regular.ttf"
 RANGOS_HEBREO = list(range(0x05D0, 0x05EB)) + [0x05F3, 0x05F4]
 RANGOS_COPTO = list(range(0x2C80, 0x2CF4)) + list(range(0x2CF9, 0x2D00)) + list(range(0x03E2, 0x03F0))
 SIGNOS_ARCONTES = [ord(c) for c in "◌⁘∴∵∷※⁂▪▫▹◃"]
+# Las salidas a las que les falta la sigma de luna (Ϲ ϲ, U+03F9 y U+03F2), la de las inscripciones galo-griegas: se les
+# da la forma de su propia «C» y «c» latina, que es la misma letra.
+CON_SIGMA_LUNA = {"piazzolla_titulo", "piazzolla_regular", "ysabeau_semibold"}
+
+
+def anadir_sigma_luna(f):
+    """Apunta Ϲ y ϲ al mismo glifo que C y c (si la fuente no los trae)."""
+    cm = f.getBestCmap()
+    extra = {cp: cm[ord(lat)] for cp, lat in ((0x03F9, "C"), (0x03F2, "c")) if cp not in cm and ord(lat) in cm}
+    for t in f["cmap"].tables:
+        if t.isUnicode():
+            t.cmap.update(extra)
 
 
 def altura_mayus(f):
@@ -443,6 +462,8 @@ def hacer(origen, ejes, salida, nombre, letras, cache):
         anadir_mayas(f, cache)
     if salida in CON_ADORNOS:
         anadir_adornos(f)
+    if salida in CON_SIGMA_LUNA:
+        anadir_sigma_luna(f)
     if salida in CON_HEBREO_COPTO:
         peso = CON_HEBREO_COPTO[salida]
         anadir_escritura(f, HEBREO, RANGOS_HEBREO, {"wght": peso, "wdth": 100}, cache, "heb")

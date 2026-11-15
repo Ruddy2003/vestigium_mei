@@ -243,6 +243,15 @@ object Temas {
         "10-01" to "PLAN", "11-15" to "REVISIÓN", "12-31" to "CIERRE")
 
     /**
+     * Galia: el comienzo del año de Coligny tal como lo pone el tema (Samonios = noviembre, recurso) con sus «tres noches
+     * de Samonios», que el bronce marca (TRINOX SAMONI); y dos días del 52 a. C., aproximados: la muerte de Clodio en Roma
+     * (18 de enero, en el calendario romano de entonces), que los galos vieron como la ocasión, y la entrega en Alesia
+     * (hacia el 27 de septiembre, según Brunaux). Ver `docs/diseno/temas/fuentes_galia.md`.
+     */
+    private val MARCAS_GALIA = mapOf("11-01" to "Samonios", "11-17" to "Tres noches de Samonios", "01-18" to "Muere Clodio",
+        "09-27" to "La entrega en Alesia")
+
+    /**
      * Arcontes: solo fechas fijas reales. La noche del bautismo, que los basilidianos velaban leyendo (Clemente de
      * Alejandría, *Stromata* 1.21: el 11 o el 15 de tybi, el 6 o el 10 de enero); y los dos equinoccios y los dos
      * solsticios, que el libro astronómico de Enoc sigue por las puertas por donde sale el sol (1 Enoc 72; el versículo,
@@ -334,6 +343,7 @@ object Temas {
             TemaId.MEDIEVAL -> FIESTAS[md]
             TemaId.TEMPLARIO -> Temas.mdJuliano(fecha)?.let { MARCAS_TEMPLARIO[it] }
             TemaId.DISTOPIA -> MARCAS_DISTOPIA[md]
+            TemaId.GALIA -> MARCAS_GALIA[md]
             TemaId.ARCONTES -> MARCAS_ARCONTES[md]
             TemaId.FRENTE -> MARCAS_FRENTE[md]
             TemaId.REFUGIO -> MARCAS_REFUGIO[md]
@@ -518,6 +528,7 @@ object Temas {
         TemaId.MEDIEVAL -> MEDIEVAL[titulo]
         TemaId.TEMPLARIO -> TEMPLARIO[titulo]
         TemaId.DISTOPIA -> DISTOPIA[titulo]
+        TemaId.GALIA -> GALIA[titulo]
         TemaId.ARCONTES -> ARCONTES[titulo]
         TemaId.FRENTE -> FRENTE[titulo]
         TemaId.REFUGIO -> REFUGIO[titulo]
@@ -561,6 +572,7 @@ object Temas {
             TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
             TemaId.TEMPLARIO -> mapOf("animo" to "Ánimo del freire", "momento" to "Crónica de la casa", "gasto" to "Tesorería", "sueno" to "Reposo", "habitos" to "La regla", "hoy" to "Guardia", "cifra" to "Recuento", "foto" to "Desde la torre", "enfoque" to "Instrucción")
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
+            TemaId.GALIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
             // Arcontes: el alma, los destellos, las monedas, el sueño del cuerpo, las prácticas, el día en Magdala, la cuenta, lo visible y la lámpara.
             TemaId.ARCONTES -> mapOf("animo" to "El alma", "momento" to "Destellos", "gasto" to "Las monedas", "sueno" to "Sueño del cuerpo", "habitos" to "Las prácticas", "hoy" to "Hoy, en Magdala", "cifra" to "La cuenta", "foto" to "Lo visible", "enfoque" to "Junto a la lámpara")
             TemaId.FRENTE -> mapOf("animo" to "MORAL", "momento" to "REPORTE", "gasto" to "FONDOS", "sueno" to "CALIDAD DEL REPOSO", "habitos" to "RUTINAS DE CAMPO", "hoy" to "ENLACE", "cifra" to "CONTADOR", "foto" to "FOTO DE RECONOCIMIENTO", "enfoque" to "TURNO DE CONSOLA")
@@ -661,6 +673,29 @@ object Temas {
         "Cifras" to "CIFRAS OFICIALES", "Fotos del día" to "EVIDENCIA FOTOGRÁFICA", "Medicamentos" to "SUMINISTRO MÉDICO",
         "Seguimiento privado" to "EXPEDIENTE RESERVADO", "Momentos de la semana" to "INCIDENCIAS DE LA SEMANA", "Momentos de este día" to "INCIDENCIAS DEL DÍA",
         "Lo mejor y lo peor" to "MÉRITOS Y FALTAS", "Personas, temas e hitos" to "PERSONAS DE INTERÉS", "Respaldo automático" to "COPIA DE SEGURIDAD",
+    )
+
+    /** Galia: la voz del oppidum arverno y del bosque, de la asamblea y del grito que corre de campo en campo. */
+    private val GALIA = mapOf(
+        "Mundo" to "Las tierras de la Galia y más allá", "Patrimonio Mundial" to "Lugares que guardan a sus muertos", "Mapa para rascar" to "Las tierras que has pisado", "Ciudades visitadas" to "Oppida de tu camino",
+        "Biblioteca de sueños" to "Lo que trae la noche", "Cartas" to "Mensajes de oppidum en oppidum", "Escribir una carta" to "Mandar un mensajero", "Carta" to "Mensaje", "Conocerte" to "Quién eres junto al fuego", "Brújula política" to "En la asamblea", "Mapas" to "Mapas del país", "Salud" to "El cuerpo del guerrero", "Tus apps" to "Lo que te roba las horas", "Otras vidas" to "Otras almas", "Logros" to "Torques ganados", "Tu año en historias" to "El año que cantan los bardos", "Anoche" to "La noche que pasó", "Selladas" to "Guardadas para otra noche", "Listas para abrir" to "Ya se pueden leer", "A otras personas" to "A los tuyos", "Del pasado" to "Las que trajo el tiempo",
+        "Hoy" to "La noche y el día de hoy", "Línea de tiempo" to "Las noches en fila", "Ahora mismo estoy…" to "En este momento…",
+        "Entender" to "Leer las señales", "Registros especiales" to "Lo que se cuenta aparte", "Apariencia" to "El manto", "Avisos y recordatorios" to "El grito que corre",
+        "Llenar el día" to "Contar el día junto al fuego", "Biblioteca del diario" to "Las tablillas del diario", "Entrada" to "Tablilla",
+        "Día" to "La jornada", "Momentos" to "Chispas de la hoguera", "Gastos" to "Las monedas del caballo", "Explorar" to "Salir al bosque", "Más" to "La casa grande",
+        "Hábitos" to "Lo de cada día", "Cartas al futuro" to "Mensajes para otra luna", "Experimentos personales" to "Pruebas de valor",
+        "Cómo leer tus datos" to "Cómo leer lo que cuentas", "Guía científica" to "Cómo leer lo que cuentas", "Cuestionarios" to "Las preguntas de los druidas", "Prueba de reacción" to "La prueba del jinete", "Lugares" to "Lugares de paso",
+        "Datos" to "Lo que se ha contado", "Permisos y sensores" to "Lo que oye el teléfono", "Ajustes" to "La fragua", "Reportes" to "Relatos para la asamblea",
+        "Bienvenido" to "Entra en la casa grande", "Calendario" to "Las noches y las lunas", "Obras" to "Cantos y relatos", "Tu año" to "La vuelta de las lunas",
+        "Privacidad" to "Lo que no se escribe", "Sueño" to "El descanso del guerrero", "Contexto" to "Lo que rodea la jornada", "Hitos" to "Piedras del camino",
+        "Ánimo y cuerpo" to "Ánimo y brazo", "Diario" to "Las tablillas", "Predicción" to "Lo que se ve venir", "Este día hace un año" to "Esta noche hace un año",
+        "Lo que registró el teléfono" to "Lo que contó el teléfono", "Registrar" to "Contar", "Las relaciones más marcadas" to "Los lazos de sangre y de juramento",
+        "Mapa" to "Mapa de tus caminos", "Mapa emocional" to "Mapa del ánimo", "Tablero" to "El hogar", "Tu día" to "Las horas de la jornada", "Tu día en 24 horas" to "Las horas de la jornada",
+        "Te falta hoy" to "Lo que falta contar", "Datos que faltan" to "Tablillas en blanco", "Tema" to "El manto", "Recordatorios" to "Lo que no se olvida",
+        "Resumen semanal" to "Siete noches", "Totales" to "La cuenta de la tribu", "Gimnasio" to "La práctica de las armas", "Buscar" to "Seguir el rastro",
+        "Cifras" to "Las cuentas", "Fotos del día" to "Lo que vieron tus ojos", "Medicamentos" to "Hierbas y remedios",
+        "Seguimiento privado" to "Lo que se guarda en silencio", "Momentos de la semana" to "Chispas de la semana", "Momentos de este día" to "Chispas de esta jornada",
+        "Lo mejor y lo peor" to "Lo que se canta y lo que se calla", "Personas, temas e hitos" to "Gente, asuntos y piedras del camino", "Respaldo automático" to "Copia en el escondite del bosque",
     )
 
     /** Arcontes: la voz baja de un círculo escondido de Galilea, con la lámpara, el códice, la jarra y los 365 cielos. */

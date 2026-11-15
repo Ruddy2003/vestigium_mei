@@ -81,6 +81,7 @@ fun banderitaHistoria(tema: TemaId): Banderita? = when (tema) {
     TemaId.BASICO -> null           // Básico: sin cuadro
     TemaId.FRENTE -> null           // lote 10: su cuadro va después de S19
     TemaId.ARCONTES -> null         // lote 10: su cuadro va después de S19
+    TemaId.GALIA -> null            // lote 10: su cuadro va después de S19
 }
 
 /** Pone el lienzo de la banderita en sus 26 × 40 unidades, sea cual sea la densidad de la pantalla. */

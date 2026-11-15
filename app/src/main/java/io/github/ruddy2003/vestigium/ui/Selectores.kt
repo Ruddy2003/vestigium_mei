@@ -274,6 +274,7 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     }
     // Casilla de formulario.
     TemaId.DISTOPIA -> RectangleShape
+    TemaId.GALIA -> RectangleShape
     // La gema grabada de los amuletos: un óvalo, más alto que ancho.
     TemaId.ARCONTES -> GenericShape { s, _ ->
         val alto = s.height * 0.96f; val ancho = minOf(s.width * 0.9f, alto * 0.84f)
@@ -412,6 +413,7 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         // La cruz patada calada en el escudo.
         TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(s.width / 2, s.height * 0.42f), minOf(s.width, s.height) * 0.26f), fondo.copy(alpha = 0.55f))
         TemaId.DISTOPIA -> {}
+        TemaId.GALIA -> {}
         // El bisel de la gema y, grabada al centro, la serpiente que se muerde la cola.
         TemaId.ARCONTES -> {
             val alto = s.height * 0.96f; val ancho = minOf(s.width * 0.9f, alto * 0.84f); val l = minOf(ancho, alto)

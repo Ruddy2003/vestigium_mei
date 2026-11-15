@@ -51,6 +51,7 @@ object Avisos {
         TemaId.MEDIEVAL -> R.raw.n_medieval_aviso to R.raw.n_medieval_solemne
         TemaId.TEMPLARIO -> R.raw.n_templario_aviso to R.raw.n_templario_solemne
         TemaId.DISTOPIA -> R.raw.n_distopia_aviso to R.raw.n_distopia_solemne
+        TemaId.GALIA -> R.raw.n_galia_aviso to R.raw.n_galia_solemne
         TemaId.ARCONTES -> R.raw.n_arcontes_aviso to R.raw.n_arcontes_solemne
         TemaId.FRENTE -> R.raw.n_frente_aviso to R.raw.n_frente_solemne
         TemaId.REFUGIO -> R.raw.n_refugio_aviso to R.raw.n_refugio_solemne
@@ -336,6 +337,13 @@ object Avisos {
             "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
             "CONDECORACIÓN", "condecoraciones nuevas",
             "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
+        TemaId.GALIA -> Voz("DECLARE SU ESTADO ACTUAL", "Dos toques obligatorios: agrado y energía.",
+            "REPORTE ONÍRICO PENDIENTE", "Declare lo soñado antes de levantarse. El recuerdo caduca en minutos.",
+            "DECLARACIÓN NOCTURNA", "Complete el parte del día. En jornada difícil se acepta un solo número.",
+            "Jornada difícil: un número", "INTERROGATORIO PENDIENTE:",
+            "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
+            "CONDECORACIÓN", "condecoraciones nuevas",
+            "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
         // Arcontes: la voz baja del círculo de Magdala; la lámpara de la noche, el códice, la jarra sellada y los amuletos.
         TemaId.ARCONTES -> Voz("¿Cómo está tu alma en esta hora?", "Dos toques, en voz baja: cuánto agrado sientes y cuánta energía te queda.",
             "Lo que viste mientras dormía el cuerpo", "Escríbelo antes de levantarte: lo que se ve de noche se va con la primera luz.",
@@ -551,6 +559,7 @@ object Avisos {
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste", "Explicit: llegaste a la meta")
         TemaId.TEMPLARIO -> VozEnfoque("Alto en la marcha", "Desciñe la espada y bebe agua del aljibe.", "Se acabó el alto: a la silla", "Toca a maitines: hora de levantarse", "Non nobis: guardia cumplida", "Llegaste al castillo: meta cumplida")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
+        TemaId.GALIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
         TemaId.ARCONTES -> VozEnfoque("Baja la mecha: descanso", "Deja el códice, sal a la orilla y bebe agua de la jarra.", "Sube la mecha: de vuelta al códice", "Clarea sobre el lago: hora de despertar", "Hoja terminada: cierra el códice", "Una esfera más: llegaste a la meta")
         TemaId.FRENTE -> VozEnfoque("SILENCIO DE RADIO", "Suelta los mandos. Agua y estira la espalda.", "SE REABRE EL CANAL", "SE ENCIENDE LA CONSOLA: HORA DE DESPERTAR", "TRANSMISIÓN CERRADA: TERMINASTE", "EN POSICIÓN: LLEGASTE A LA META")
         TemaId.REFUGIO -> VozEnfoque("DESCANSO DE TURNO", "Levántate, bebe agua filtrada.", "FIN DEL DESCANSO", "HORA DE DESPERTAR, RESIDENTE", "TURNO COMPLETADO", "META DE TURNO ALCANZADA")

@@ -456,6 +456,20 @@ fun FraseDelDia(fecha: String) {
                 }
             }
         }
+        TemaId.GALIA -> Surface(color = cs.onBackground, shape = RectangleShape, modifier = arriba) {
+            Row(Modifier.height(IntrinsicSize.Min)) {
+                Box(Modifier.width(8.dp).fillMaxHeight().background(cs.primary))
+                Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                    Text(rotulo, style = ty.labelMedium, color = cs.primary)
+                    f.original?.let { Text(it, style = ty.bodySmall, fontStyle = FontStyle.Italic, color = cs.background.copy(alpha = 0.72f)) }
+                    Text(f.texto.uppercase(), style = ty.titleLarge, color = cs.background, modifier = Modifier.padding(vertical = 2.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("— ${f.autor}", style = ty.labelSmall, color = cs.background.copy(alpha = 0.7f), modifier = Modifier.weight(1f))
+                        CorazonFrase(f, cs.primary, fecha = fecha)
+                    }
+                }
+            }
+        }
         // La hoja del códice: el papiro con sus fibras, el lomo de cuero cosido a la izquierda, un renglón arriba y otro abajo
         // y, en la esquina, una grieta finísima por donde entra la luz. La frase va entre comillas; el rótulo, con los tres puntos.
         TemaId.ARCONTES -> Box(arriba.drawBehind {
@@ -987,6 +1001,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.MEDIEVAL -> base.copy(fontFamily = Letra.garamond, fontWeight = FontWeight.SemiBold, fontSize = 23.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum, tnum")
         TemaId.TEMPLARIO -> c(LetraExtra.regla, FontWeight.Bold, 22f, 0.3f, "lnum, tnum")
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
+        TemaId.GALIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
         TemaId.ARCONTES -> c(LetraExtra.caudex, FontWeight.Bold, 23f, 0.4f)   // las cifras de la letra de los códices
         TemaId.FRENTE -> c(LetraExtra.chivoMono, FontWeight.Medium, 23f, 1.4f, "tnum")   // las cifras del contador de la consola
         TemaId.REFUGIO -> c(LetraExtra.vt323, FontWeight.Normal, 30f, 0.4f)
@@ -1278,6 +1293,12 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                         }
                         // Fichas perforadas: esquina cortada y una hilera de agujeros.
                         TemaId.DISTOPIA -> {
+                            val k = minOf(w * 0.35f, barH * 0.2f)
+                            pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w - k, top); lineTo(w, top + k); lineTo(w, h); close() })
+                            var y = top + k + 4 * u
+                            while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
+                        }
+                        TemaId.GALIA -> {
                             val k = minOf(w * 0.35f, barH * 0.2f)
                             pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w - k, top); lineTo(w, top + k); lineTo(w, h); close() })
                             var y = top + k + 4 * u

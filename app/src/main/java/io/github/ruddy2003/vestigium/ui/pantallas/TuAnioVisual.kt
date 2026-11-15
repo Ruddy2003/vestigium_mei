@@ -208,6 +208,12 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawRect(Color(0xFFC8102E), Offset(x0, y0 + h * 0.7f), Size(w, h * 0.14f))
             drawRect(Color(0xFFF2EFE6), Offset(x0 + w * 0.55f, y0 + h * 0.22f), Size(w * 0.3f, h * 0.3f))
         }
+        TemaId.GALIA -> {
+            drawRect(lerp(Color(0xFFD8C08A), c, 0.25f), o, s)
+            drawRect(lerp(Color(0xFFD8C08A), c, 0.25f), Offset(x0 + w * 0.1f, y0 - h * 0.18f), Size(w * 0.3f, h * 0.2f))
+            drawRect(Color(0xFFC8102E), Offset(x0, y0 + h * 0.7f), Size(w, h * 0.14f))
+            drawRect(Color(0xFFF2EFE6), Offset(x0 + w * 0.55f, y0 + h * 0.22f), Size(w * 0.3f, h * 0.3f))
+        }
         // El códice de cuero tumbado en la pila: las hojas de papiro asomando por el canto, la tapa en el color del libro, la
         // solapa en punta doblada encima y la correa que le da la vuelta.
         TemaId.ARCONTES -> {
@@ -743,6 +749,11 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             drawRect(borde, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r), style = fino)
             drawRect(borde, Offset(x - r * 0.86f, y - r * 0.71f), Size(1.72f * r, 1.42f * r), style = fino)
         }
+        TemaId.GALIA -> {
+            drawRect(relleno, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r))
+            drawRect(borde, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r), style = fino)
+            drawRect(borde, Offset(x - r * 0.86f, y - r * 0.71f), Size(1.72f * r, 1.42f * r), style = fino)
+        }
         // Un nicho en arco tallado en la caliza, como los de las lámparas, con su repisa abajo.
         TemaId.ARCONTES -> {
             lleno(Path().apply {
@@ -1098,6 +1109,26 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
             else -> return false
         }
         TemaId.DISTOPIA -> when (forma) {
+            // El ojo que vigila.
+            "alfiler" -> {
+                drawPath(Path().apply { moveTo(x - r, y); quadraticTo(x, y - r * 0.9f, x + r, y); quadraticTo(x, y + r * 0.9f, x - r, y); close() }, col)
+                drawCircle(fondo, r * 0.4f, c); drawCircle(col, r * 0.2f, c)
+            }
+            // Expediente con pestaña y franja roja.
+            "sobre" -> {
+                drawRect(col, Offset(x - r, y - r * 0.5f), Size(2 * r, r * 1.2f))
+                drawRect(col, Offset(x - r, y - r * 0.75f), Size(r * 0.8f, r * 0.3f))
+                drawRect(Color(0xFFC8102E), Offset(x - r, y + r * 0.35f), Size(2 * r, r * 0.2f))
+            }
+            // Lata de ración.
+            "taza" -> {
+                drawRect(col, Offset(x - r * 0.55f, y - r * 0.75f), Size(r * 1.1f, r * 1.5f))
+                listOf(-0.5f, 0.5f).forEach { f -> drawLine(fondo, Offset(x - r * 0.55f, y + f * r), Offset(x + r * 0.55f, y + f * r), 0.7f * d) }
+                drawRect(fondo, Offset(x - r * 0.38f, y - r * 0.2f), Size(r * 0.76f, r * 0.4f))
+            }
+            else -> return false
+        }
+        TemaId.GALIA -> when (forma) {
             // El ojo que vigila.
             "alfiler" -> {
                 drawPath(Path().apply { moveTo(x - r, y); quadraticTo(x, y - r * 0.9f, x + r, y); quadraticTo(x, y + r * 0.9f, x - r, y); close() }, col)

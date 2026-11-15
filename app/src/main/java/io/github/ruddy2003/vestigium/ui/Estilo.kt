@@ -31,6 +31,7 @@ object Estilo {
         TemaId.MEDIEVAL -> "¶ "
         TemaId.TEMPLARIO -> "☩ "
         TemaId.DISTOPIA -> "▪ "
+        TemaId.GALIA -> "› "
         TemaId.ARCONTES -> "◌ "        // un círculo de puntos: una de las esferas del cielo
         TemaId.FRENTE -> "+ "          // la cruz de la retícula del radar
         TemaId.REFUGIO -> "> "
@@ -75,6 +76,7 @@ object Estilo {
         TemaId.MEDIEVAL -> false       // gótica de libro
         TemaId.TEMPLARIO -> false       // letra de estandarte, en minúsculas
         TemaId.DISTOPIA -> true        // cartel
+        TemaId.GALIA -> false       // letra de libro, con mayúsculas y minúsculas
         TemaId.ARCONTES -> false       // la letra de los códices, con mayúsculas y minúsculas
         TemaId.FRENTE -> true          // rótulo grabado en la consola
         TemaId.REFUGIO -> true         // pantalla de fósforo
@@ -121,6 +123,7 @@ object Estilo {
             TemaId.HELENO -> null
             TemaId.EGIPTO -> if (igual) null else "☥ $t"
             TemaId.DISTOPIA -> if (pantalla) "EXPEDIENTE Nº %04d · %s".format(folio(titulo, 1000, 9000), t) else if (igual) null else "▪ $t"
+            TemaId.GALIA -> if (igual) null else "› $t"
             // Cada pantalla es uno de los 365 cielos de Basílides, siempre el mismo: «Cielo 212 · Momentos».
             TemaId.ARCONTES -> if (pantalla) "Cielo %d · %s".format(folio(titulo, 1, 365), t) else if (igual) null else "◌ $t"
             // Cada pantalla es un canal de la red, siempre el mismo: «canal 07 · momentos».
@@ -175,6 +178,7 @@ object Estilo {
             TemaId.MEDIEVAL -> propio(titulo, true)
             TemaId.TEMPLARIO -> propio(titulo, true)
             TemaId.DISTOPIA -> propio(titulo, true)
+            TemaId.GALIA -> propio(titulo, true)
             TemaId.ARCONTES -> propio(titulo, true)
             TemaId.FRENTE -> propio(titulo, true)
             TemaId.REFUGIO -> propio(titulo, true)
@@ -215,6 +219,7 @@ object Estilo {
     /** ¿El comentario de la pantalla dice algo más que el nombre en español? (el número de expediente, el protocolo). */
     private val comentarioConFolio: Boolean get() = when (tema) {
         TemaId.DISTOPIA -> true
+        TemaId.GALIA -> false
         TemaId.ARCONTES -> true
         TemaId.FRENTE -> true
         TemaId.LABORATORIO -> true
@@ -289,6 +294,7 @@ object Estilo {
             TemaId.MEDIEVAL -> propio(titulo, false)
             TemaId.TEMPLARIO -> propio(titulo, false)
             TemaId.DISTOPIA -> propio(titulo, false)
+            TemaId.GALIA -> propio(titulo, false)
             TemaId.ARCONTES -> propio(titulo, false)
             TemaId.FRENTE -> propio(titulo, false)
             TemaId.REFUGIO -> propio(titulo, false)
@@ -333,6 +339,8 @@ object Estilo {
         // Romanos en mayúscula entre puntos, como en las cartas del siglo XII: «·XVII·».
         TemaId.TEMPLARIO -> Temas.puntos(n)
         TemaId.DISTOPIA -> if (n < 100) "Nº%02d".format(n) else "Nº$n"
+        // Los ordinales galos de La Graufesenque del 1 al 10; por encima, romanos (ver [Galia.numero]).
+        TemaId.GALIA -> Galia.numero(n)
         // Con letras hebreas que valen números: «כ״ג» (ver [Arcontes.numero]).
         TemaId.ARCONTES -> Arcontes.numero(n)
         // El contador mecánico de la consola, siempre de cuatro cifras: «0017».
@@ -404,6 +412,8 @@ object Estilo {
                 (if (iso == Fechas.diaLogico()) Temas.vigilia(java.time.LocalTime.now().hour)?.let { " · $it" } ?: "" else "")
         }.getOrDefault(iso)
         TemaId.DISTOPIA -> runCatching { val d = Fechas.parse(iso); "JORNADA %03d · AÑO %d".format(d.dayOfYear, d.year) }.getOrDefault(iso)
+        // La noche del año y el mes de Coligny con su marca: «Noche 290 · Cantlos ANM» (ver [Galia]).
+        TemaId.GALIA -> Galia.fecha(iso)
         // El cielo del día, su planeta y la fecha hebrea: «Cielo 290 · Saturno · 6 de jeshván» (ver [Arcontes]).
         TemaId.ARCONTES -> Arcontes.fecha(iso)
         // La operación del día, con su nombre en clave: «OPERACIÓN GARZA · 14.11.2026» (ver [Frente]).
@@ -500,6 +510,8 @@ object Estilo {
             TemaId.MEDIEVAL -> Temas.MESES_MEDIEVALES[i]
             TemaId.TEMPLARIO -> MESES_LARGOS[i] + " juliano" + (anio?.let { " · " + Temas.puntos(it) } ?: "")
             TemaId.DISTOPIA -> "MES %02d".format(n) + (anio?.let { " · $it" } ?: "")
+            // El mes de Coligny con su marca (recurso: Samonios es noviembre; ver [Galia]).
+            TemaId.GALIA -> Galia.mes(n).let { "${it.nombre} ${it.marca}" } + (anio?.let { " · $it" } ?: "")
             // Los meses por su número, como en la Biblia hebrea («el mes séptimo»). Recurso: aquí se cuentan desde enero.
             TemaId.ARCONTES -> "Mes " + ORDINALES_MES[(n - 1).coerceIn(0, 11)] + (anio?.let { " · $it" } ?: "")
             // El mes es un ciclo de la red: «CICLO 10 · 2026».
@@ -575,6 +587,7 @@ object Estilo {
         TemaId.TEMPLARIO -> listOf("Luns", "Mars", "Mecr", "Jues", "Venr", "Same", "Diem")
         // Las letras de los formularios oficiales (con la X del miércoles).
         TemaId.DISTOPIA -> listOf("L", "M", "X", "J", "V", "S", "D")
+        TemaId.GALIA -> listOf("Lun.", "Mar.", "Mié.", "Jue.", "Vie.", "Sáb.", "Dom.")
         // Los días de la semana judía, que se cuentan desde el domingo (א׳) hasta el sábado (ש׳, el sábado).
         TemaId.ARCONTES -> listOf("ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳", "א׳")
         // Los rótulos de la consola, de dos letras.
@@ -630,6 +643,7 @@ object Estilo {
         TemaId.MEDIEVAL -> listOf("ij", "iij", "iv", "v", "vj", "Sb", "Dm")
         TemaId.TEMPLARIO -> listOf("Lu", "Ma", "Me", "Ju", "Ve", "Sa", "Di")
         TemaId.DISTOPIA -> semana
+        TemaId.GALIA -> semana
         TemaId.ARCONTES -> semana
         // Una letra entre corchetes, como la tecla de la consola que pone el día.
         TemaId.FRENTE -> listOf("[L]", "[M]", "[X]", "[J]", "[V]", "[S]", "[D]")
@@ -675,6 +689,7 @@ object Estilo {
         TemaId.MEDIEVAL -> "${porNumero(n, "1 día seguido", "$n días seguidos")} en el libro"
         TemaId.TEMPLARIO -> "$n jornadas de guardia en la muralla"
         TemaId.DISTOPIA -> "CONTINUIDAD ACREDITADA: $n DÍAS"
+        TemaId.GALIA -> "${porNumero(n, "Una noche", "$n noches")} sin que se apague la hoguera"
         TemaId.ARCONTES -> "${porNumero(n, "Un día", "$n días")} sin que se apague la lámpara"
         TemaId.FRENTE -> "ENLACE SIN CORTES: $n DÍAS"
         TemaId.REFUGIO -> "DÍAS SIN INCIDENTES: $n"
@@ -716,6 +731,7 @@ object Estilo {
         TemaId.MEDIEVAL -> "← tornar"
         TemaId.TEMPLARIO -> "← volver grupas"
         TemaId.DISTOPIA -> "◄ RETROCEDER"
+        TemaId.GALIA -> "‹ de vuelta al oppidum"
         TemaId.ARCONTES -> "← de regreso"
         TemaId.FRENTE -> "‹ REPLEGARSE"
         TemaId.REFUGIO -> "< SALIR"
@@ -755,6 +771,7 @@ object Estilo {
         TemaId.MEDIEVAL -> "¶ "
         TemaId.TEMPLARIO -> "✚ "
         TemaId.DISTOPIA -> "▪ "
+        TemaId.GALIA -> "– "
         TemaId.ARCONTES -> "⁘ "
         TemaId.FRENTE -> "× "          // la marca de lo ya cifrado
         TemaId.REFUGIO -> "> "
@@ -799,6 +816,7 @@ object Estilo {
         TemaId.MEDIEVAL -> ""
         TemaId.TEMPLARIO -> ""
         TemaId.DISTOPIA -> ""
+        TemaId.GALIA -> ""
         TemaId.ARCONTES -> ""
         TemaId.FRENTE -> ""
         TemaId.REFUGIO -> ""
@@ -843,6 +861,7 @@ object Estilo {
         TemaId.MEDIEVAL -> EstiloFecha(1.1f, 0.3f)
         TemaId.TEMPLARIO -> EstiloFecha(1.08f, 1.0f, abre = "☩")
         TemaId.DISTOPIA -> EstiloFecha(1.12f, 1.6f, peso = 700, abre = "▼")
+        TemaId.GALIA -> EstiloFecha(1.06f, 0.5f, peso = 800, abre = "›")
         TemaId.ARCONTES -> EstiloFecha(1.06f, 0.4f, peso = 700, abre = "⁘")
         // Michroma es ancha y de un solo peso: más chica y poco abierta.
         TemaId.FRENTE -> EstiloFecha(0.86f, 0.8f, abre = "+")
@@ -899,6 +918,7 @@ object Estilo {
             TemaId.MEDIEVAL -> Claves.CASTELLANO_ANTIGUO[k]
             TemaId.TEMPLARIO -> Claves.ANCIEN_FRANCES[k]
             TemaId.DISTOPIA -> es(Claves.DISTOPIA)?.uppercase()
+            TemaId.GALIA -> es(Claves.GALIA)
             TemaId.ARCONTES -> es(Claves.ARCONTES)
             TemaId.FRENTE -> es(Claves.FRENTE)?.uppercase()
             TemaId.REFUGIO -> es(Claves.REFUGIO)

@@ -133,6 +133,7 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.TEMPLARIO -> Papeleria(Color(0xFFF1ECE0), Color(0xFFB9AE97), Color(0xFFFFFCF4), Color(0xFFB0191F), Color(0xFF7A2A16), Color(0xFF8A7650), Color(0xFF201E1B))
     // Sobre de manila de oficina, con su hilo y botones, y la tinta roja del sello de goma.
     TemaId.DISTOPIA -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
+    TemaId.GALIA -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
     // La carta entre comunidades escondidas: papiro doblado en paquete, por dentro la tinta de lo escrito, la bula de barro
     // cocido claro con el ouroboros y el cordel de pelo de cabra.
     TemaId.ARCONTES -> Papeleria(Color(0xFFE6D8B4), Color(0xFFAE9A6E), Color(0xFFF4EAD0), Color(0xFFCDB98C), Color(0xFFB9774A), Color(0xFF3B3026), Color(0xFF1E1A2B))
@@ -382,6 +383,12 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             }, claro)
         }
         TemaId.DISTOPIA -> rotate(-14f, c) {
+            // El sello de goma del Ministerio: tinta en dos marcos y la palabra, un poco torcido.
+            drawRect(k(base.copy(alpha = 0.85f)), Offset(c.x - r * 1.25f, c.y - r * 0.6f), Size(r * 2.5f, r * 1.2f), style = Stroke(r * 0.1f))
+            drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
+            rotuloSello("ARCHIVADO", c.x, c.y + r * 0.13f, r * 0.36f, k(base.copy(alpha = 0.85f)))
+        }
+        TemaId.GALIA -> rotate(-14f, c) {
             // El sello de goma del Ministerio: tinta en dos marcos y la palabra, un poco torcido.
             drawRect(k(base.copy(alpha = 0.85f)), Offset(c.x - r * 1.25f, c.y - r * 0.6f), Size(r * 2.5f, r * 1.2f), style = Stroke(r * 0.1f))
             drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
@@ -828,6 +835,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
     TemaId.TEMPLARIO -> VozCarta("Ya puede romperse el sello", "Sellada con el sello de la casa", "Al freire que seré el %s", "Al freire de %s", "Al freire que vendrá",
         "Hermano que serás yo:", "Escribe tu misiva, hermano…", "Misiva para %s, sellada por la casa", "Ningún hermano la abrirá antes de tiempo.", "Toca para tomar la pluma…")
     TemaId.DISTOPIA -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
+        "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
+    TemaId.GALIA -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
         "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
     TemaId.ARCONTES -> VozCarta("Ya puedes romper el barro: ábrela", "Atada y sellada con barro", "Para el iniciado que seré el %s", "Iniciado de %s", "Para el iniciado que seré",
         "Al que seré, de parte del que soy:", "Escribe para la otra comunidad…", "Carta para %s, atada y escondida", "El barro no se rompe antes de su día.",

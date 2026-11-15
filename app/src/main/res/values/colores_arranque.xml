@@ -19,6 +19,8 @@
     <color name="arranque_templario_oscuro">#12110E</color>
     <color name="arranque_distopia">#DEDBD2</color>
     <color name="arranque_distopia_oscuro">#0F1011</color>
+    <color name="arranque_galia">#E6DFC6</color>
+    <color name="arranque_galia_oscuro">#0F1410</color>
     <color name="arranque_arcontes">#EEE3C6</color>
     <color name="arranque_arcontes_oscuro">#0B0D1C</color>
     <color name="arranque_frente">#DADBD2</color>

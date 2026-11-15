@@ -117,6 +117,13 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
             Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
         }
+        TemaId.GALIA -> when (e) {
+            Evento.TOQUE -> listOf(g(CLICK, 1f)); Evento.PASAR -> listOf(g(CLICK, 0.6f))
+            Evento.GUARDAR -> listOf(g(THUD, 1f), g(CLICK, 1f, 70))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.45f)); Evento.ABRIR -> listOf(g(CLICK, 0.8f), g(THUD, 0.6f, 50))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
+        }
         // La cuerda del kinnor que se pulsa con la púa, los crótalos, la tapa de barro de la jarra y el zumbido de abajo.
         TemaId.ARCONTES -> when (e) {
             Evento.TOQUE -> listOf(g(TICK, 0.7f), g(TICK_GRAVE, 0.22f, 18)); Evento.PASAR -> listOf(g(TICK, 0.3f), g(TICK, 0.24f, 48))
@@ -413,6 +420,7 @@ object Sentidos {
         TemaId.MEDIEVAL -> intArrayOf(R.raw.s_medieval_toque, R.raw.s_medieval_guardar, R.raw.s_medieval_logro, R.raw.s_medieval_pasar, R.raw.s_medieval_elegir, R.raw.s_medieval_abrir, R.raw.s_medieval_tema, R.raw.s_medieval_error, R.raw.s_medieval_cambio, R.raw.s_tecla_medieval, R.raw.s_rascar_medieval)
         TemaId.TEMPLARIO -> intArrayOf(R.raw.s_templario_toque, R.raw.s_templario_guardar, R.raw.s_templario_logro, R.raw.s_templario_pasar, R.raw.s_templario_elegir, R.raw.s_templario_abrir, R.raw.s_templario_tema, R.raw.s_templario_error, R.raw.s_templario_cambio, R.raw.s_tecla_templario, R.raw.s_rascar_templario)
         TemaId.DISTOPIA -> intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro, R.raw.s_distopia_pasar, R.raw.s_distopia_elegir, R.raw.s_distopia_abrir, R.raw.s_distopia_tema, R.raw.s_distopia_error, R.raw.s_distopia_cambio, R.raw.s_tecla_distopia, R.raw.s_rascar_distopia)
+        TemaId.GALIA -> intArrayOf(R.raw.s_galia_toque, R.raw.s_galia_guardar, R.raw.s_galia_logro, R.raw.s_galia_pasar, R.raw.s_galia_elegir, R.raw.s_galia_abrir, R.raw.s_galia_tema, R.raw.s_galia_error, R.raw.s_galia_cambio, R.raw.s_tecla_galia, R.raw.s_rascar_galia)
         TemaId.ARCONTES -> intArrayOf(R.raw.s_arcontes_toque, R.raw.s_arcontes_guardar, R.raw.s_arcontes_logro, R.raw.s_arcontes_pasar, R.raw.s_arcontes_elegir, R.raw.s_arcontes_abrir, R.raw.s_arcontes_tema, R.raw.s_arcontes_error, R.raw.s_arcontes_cambio, R.raw.s_tecla_arcontes, R.raw.s_rascar_arcontes)
         TemaId.FRENTE -> intArrayOf(R.raw.s_frente_toque, R.raw.s_frente_guardar, R.raw.s_frente_logro, R.raw.s_frente_pasar, R.raw.s_frente_elegir, R.raw.s_frente_abrir, R.raw.s_frente_tema, R.raw.s_frente_error, R.raw.s_frente_cambio, R.raw.s_tecla_frente, R.raw.s_rascar_frente)
         TemaId.REFUGIO -> intArrayOf(R.raw.s_refugio_toque, R.raw.s_refugio_guardar, R.raw.s_refugio_logro, R.raw.s_refugio_pasar, R.raw.s_refugio_elegir, R.raw.s_refugio_abrir, R.raw.s_refugio_tema, R.raw.s_refugio_error, R.raw.s_refugio_cambio, R.raw.s_tecla_refugio, R.raw.s_rascar_refugio)
@@ -502,6 +510,7 @@ object Sentidos {
         TemaId.TEMPLARIO -> Afinacion(st(-5, -2, 0, 5), st(-7, 0, 5, 7), pasarRuido = true, elegirRuido = false)
         // Do menor; la máquina de escribir, un semitono abajo y un tono arriba.
         TemaId.DISTOPIA -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
+        TemaId.GALIA -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
         // La bemol mixolidio con la sexta menor: el kinnor con púa; el velo de lino de pasar es ruido, elegir es el crótalo.
         TemaId.ARCONTES -> Afinacion(st(-2, 0, 4, 7, 8), st(-5, -2, 0, 4), pasarRuido = true, elegirRuido = false)
         // Fa menor con la séptima mayor (Fa, La bemol, Do, Mi): el pitido de la consola; el teletipo de pasar es ruido.
@@ -645,6 +654,7 @@ object Sentidos {
         TemaId.MEDIEVAL -> pasadas(TICK_GRAVE, 0.5f, 70, 3)   // pan de oro
         TemaId.TEMPLARIO -> pasadas(CLICK, 0.65f, 50, 4)   // hierro de cota de malla
         TemaId.DISTOPIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
+        TemaId.GALIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
         TemaId.ARCONTES -> pasadas(TICK_GRAVE, 0.44f, 58, 3)   // la moneda de bronce de Herodes Antipas
         TemaId.FRENTE -> pasadas(CLICK, 0.56f, 44, 4)   // chapa esmaltada de consola
         TemaId.REFUGIO -> pasadas(TICK, 0.8f, 35, 4)   // chapa galvanizada

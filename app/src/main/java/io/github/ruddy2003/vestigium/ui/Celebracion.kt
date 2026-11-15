@@ -158,6 +158,7 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.MEDIEVAL -> listOf("en tinta", "en minio", "en pan de oro", "códice purpúreo")
     TemaId.TEMPLARIO -> listOf("hermano sargento", "freire caballero", "comendador", "maestre del Temple")
     TemaId.DISTOPIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
+    TemaId.GALIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
     // Las tres clases de personas de los valentinianos, según Ireneo (Contra las herejías 1.7.5), y la Ogdóada, adonde sube el alma.
     TemaId.ARCONTES -> listOf("de materia (hílico)", "de alma (psíquico)", "de espíritu (pneumático)", "en la Ogdóada")
     TemaId.FRENTE -> listOf("señal débil", "señal clara", "canal seguro", "la red entera te oye")
@@ -370,6 +371,20 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             }
         }
         TemaId.DISTOPIA -> {
+            // Dos reflectores que barren desde abajo y un ojo que lo vigila todo.
+            val haz = cs.onBackground
+            listOf(Offset(0f, size.height) to 1.0, Offset(size.width, size.height) to -1.0).forEach { (o, lado) ->
+                val a = Math.toRadians((if (lado > 0) -60.0 else -120.0) + lado * 22.0 * sin(Math.toRadians(giro * 4.0)))
+                val l = lejos * 1.3f
+                val p1 = Offset(o.x + (l * cos(a - 0.12)).toFloat(), o.y + (l * sin(a - 0.12)).toFloat())
+                val p2 = Offset(o.x + (l * cos(a + 0.12)).toFloat(), o.y + (l * sin(a + 0.12)).toFloat())
+                drawPath(Path().apply { moveTo(o.x, o.y); lineTo(p1.x, p1.y); lineTo(p2.x, p2.y); close() }, Brush.radialGradient(listOf(haz.copy(alpha = 0.10f), Color.Transparent), o, l))
+            }
+            val a = m * 0.62f; val k = m * 0.8f
+            drawPath(Path().apply { moveTo(c.x - a, c.y); quadraticTo(c.x, c.y - k, c.x + a, c.y); quadraticTo(c.x, c.y + k, c.x - a, c.y); close() }, cs.primary.copy(alpha = 0.16f), style = Stroke(2f * u))
+            drawCircle(cs.primary.copy(alpha = 0.12f), m * 0.36f, c, style = Stroke(1.5f * u))
+        }
+        TemaId.GALIA -> {
             // Dos reflectores que barren desde abajo y un ojo que lo vigila todo.
             val haz = cs.onBackground
             listOf(Offset(0f, size.height) to 1.0, Offset(size.width, size.height) to -1.0).forEach { (o, lado) ->

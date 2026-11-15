@@ -153,6 +153,7 @@ object LibroDiario {
         TemaId.MEDIEVAL -> Fuentes(R.font.gotica_regular, R.font.cardo_regular)
         TemaId.TEMPLARIO -> Fuentes(R.font.cruzada_titulo, R.font.regla_regular)
         TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
+        TemaId.GALIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
         // Caudex, la letra de los códices, para los títulos, y Literata para leer (las dos con las letras hebreas y coptas).
         TemaId.ARCONTES -> Fuentes(R.font.codice_bold, R.font.literata_regular)
         // Los rótulos anchos de la consola y la hoja de despacho mecanografiada.
@@ -246,6 +247,7 @@ object LibroDiario {
             TemaId.TEMPLARIO -> "h1{text-align:center;letter-spacing:.08em}article{border-top:4px solid $s;border-bottom:1px solid $p;padding-top:10px}.fecha{letter-spacing:.06em}" +
                 ".fecha::before{content:'\\2629  ';color:$p}" + capitular("2.6em", p)
             TemaId.DISTOPIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
+            TemaId.GALIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
             // Cada día como un tratado del códice: una fila de diplés que apuntan al centro sobre la entrada, los cuatro puntos
             // antes de la fecha, los datos en cursiva tenue y la capitular de Caudex en ocre.
             TemaId.ARCONTES -> "h1{text-align:center;letter-spacing:.03em}article{border-top:0;padding-top:4px}" +
@@ -790,6 +792,7 @@ object LibroDiario {
             TemaId.MEDIEVAL -> Medidas(12.5f, aire)
             TemaId.TEMPLARIO -> Medidas(12f, if (carta) 1.5f else 1.44f)
             TemaId.DISTOPIA -> Medidas(11f, aire)
+            TemaId.GALIA -> Medidas(11f, aire)
             TemaId.ARCONTES -> Medidas(if (carta) 12.2f else 11.6f, aire + 0.02f)
             TemaId.FRENTE -> Medidas(if (carta) 10.8f else 10.2f, if (carta) 1.55f else 1.5f)
             TemaId.REFUGIO -> Medidas(11f, 1.35f)
@@ -847,6 +850,7 @@ object LibroDiario {
         TemaId.TEMPLARIO -> Inicial(R.font.cruzada_titulo, 1.3f, palabra = true, mayusculas = true)
         // La primera palabra en mayúsculas sobre la franja roja del formulario.
         TemaId.DISTOPIA -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
+        TemaId.GALIA -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
         // Los cuatro puntos con que los copistas abrían un párrafo y la primera letra en Caudex, grande y en ocre.
         TemaId.ARCONTES -> Inicial(R.font.codice_bold, 2.3f, prefijo = "⁘ ")
         // La primera letra en los rótulos anchos de la consola, en ámbar de piloto (como la capitular de la hoja en la app).
@@ -996,6 +1000,11 @@ object LibroDiario {
                 }, relleno)
             }
             TemaId.DISTOPIA -> {
+                // La barra negra del formulario y la línea roja de debajo.
+                cv.drawLine(x0, y - 1.5f, x1, y - 1.5f, Paint(linea).apply { color = tinta; strokeWidth = 2.4f })
+                cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
+            }
+            TemaId.GALIA -> {
                 // La barra negra del formulario y la línea roja de debajo.
                 cv.drawLine(x0, y - 1.5f, x1, y - 1.5f, Paint(linea).apply { color = tinta; strokeWidth = 2.4f })
                 cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
@@ -1278,6 +1287,12 @@ object LibroDiario {
                 listOf(22f to 22f, A - 22f to 22f, 22f to B - 22f, A - 22f to B - 22f).forEach { (x, yy) -> cv.drawCircle(x, yy, 3.2f, Paint(relleno).apply { color = 0xFF4A5560.toInt() }) }
             }
             TemaId.DISTOPIA -> {
+                // Marco negro, la franja roja de arriba y la casilla del folio.
+                rect(22f, Paint(trazo).apply { color = tinta; strokeWidth = 1.6f; alpha = 220 })
+                cv.drawRect(22f, 22f, A - 22f, 30f, Paint(relleno).apply { alpha = 220 })
+                cv.drawRect(A - 130f, 36f, A - 34f, 54f, Paint(fino).apply { color = tinta; alpha = 160 })
+            }
+            TemaId.GALIA -> {
                 // Marco negro, la franja roja de arriba y la casilla del folio.
                 rect(22f, Paint(trazo).apply { color = tinta; strokeWidth = 1.6f; alpha = 220 })
                 cv.drawRect(22f, 22f, A - 22f, 30f, Paint(relleno).apply { alpha = 220 })

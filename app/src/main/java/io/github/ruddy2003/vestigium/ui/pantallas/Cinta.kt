@@ -99,6 +99,7 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.TEMPLARIO -> PielCinta(2.5f, true, RellenoCinta.FILETE, floatArrayOf(2f, 4f), StrokeCap.Square)
     // Sello rayado del expediente.
     TemaId.DISTOPIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
+    TemaId.GALIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
     // Tiras de papiro: las fibras a lo largo, alguna de través, y las horas en raya y punto, como el renglón del copista.
     TemaId.ARCONTES -> PielCinta(4f, false, RellenoCinta.PAPIRO, floatArrayOf(6f, 2f, 0.1f, 2f), StrokeCap.Round)
     // La cinta perforada del teletipo: tramos de esquinas redondas con la fila de arrastre al centro y los agujeros del

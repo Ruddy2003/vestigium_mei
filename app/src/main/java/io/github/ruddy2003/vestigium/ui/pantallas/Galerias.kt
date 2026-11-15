@@ -136,6 +136,10 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
     }
+    TemaId.GALIA -> {
+        val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
+        mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
+    }
     // La lámpara de aceite de barro, de lado: el cuerpo bajo con la ranura de llenar, el pico y la llama encendida; cada
     // calificación enciende una.
     TemaId.ARCONTES -> {

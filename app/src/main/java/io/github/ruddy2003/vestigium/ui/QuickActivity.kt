@@ -1208,6 +1208,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.MEDIEVAL -> 10.dp
     TemaId.TEMPLARIO -> 9.dp
     TemaId.DISTOPIA -> 12.dp
+    TemaId.GALIA -> 12.dp
     TemaId.ARCONTES -> 7.dp
     TemaId.FRENTE -> 11.dp
     TemaId.REFUGIO -> 6.dp
@@ -1288,6 +1289,10 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
     }
     // Carpeta de expediente con su pestaña a la izquierda.
     TemaId.DISTOPIA -> formaDp { w, h, u ->
+        val p = 12 * u; val a = w * 0.38f
+        moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+    }
+    TemaId.GALIA -> formaDp { w, h, u ->
         val p = 12 * u; val a = w * 0.38f
         moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
     }
@@ -1505,6 +1510,7 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     // El escudete: recto arriba y redondeado abajo.
     TemaId.TEMPLARIO -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 14.dp, bottomStart = 14.dp)
     TemaId.DISTOPIA -> RectangleShape
+    TemaId.GALIA -> RectangleShape
     // La tapa de cuero del códice: el lomo redondeado a la izquierda y la solapa que asoma a la derecha, a media altura.
     TemaId.ARCONTES -> formaDp { w, h, u ->
         val d = minOf(7 * u, w * 0.08f); val r = minOf(3 * u, h / 4)

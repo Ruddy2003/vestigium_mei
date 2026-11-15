@@ -192,6 +192,14 @@ internal object Claves {
     )
 
     /** Jerga del ministerio. Lo que no está aquí queda en el español común. */
+    val GALIA: Map<String, String> = mapOf(
+        "somnus" to "descanso", "animus" to "ánimo", "svmptvs" to "monedas", "cor" to "pulso de guerrero", "loca" to "parajes",
+        "personae" to "los de tu tribu", "consuetudo" to "costumbres", "palmae" to "torques", "telephonum" to "lo que roba horas", "telephon" to "lo que roba horas",
+        "iudicium" to "juicio", "epistulae" to "mensajes", "reditus" to "botín", "momenta" to "chispas",
+        "imagines" to "lo que viste", "iter" to "camino", "orbis" to "las tierras", "themata" to "asuntos", "memorabilia" to "hazañas",
+    )
+
+    /** Jerga del ministerio. Lo que no está aquí queda en el español común. */
     val ARCONTES: Map<String, String> = mapOf(
         "somnus" to "sueño del cuerpo", "animus" to "alma", "svmptvs" to "monedas", "cor" to "latido", "loca" to "lugares",
         "personae" to "los tuyos", "consuetudo" to "prácticas", "palmae" to "amuletos", "telephonum" to "lo que distrae", "telephon" to "lo que distrae",

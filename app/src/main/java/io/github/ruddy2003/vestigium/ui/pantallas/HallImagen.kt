@@ -116,6 +116,7 @@ object HallImagen {
         TemaId.MEDIEVAL -> "Liber vestigiorum meorum" to "Explicit liber · Deo gratias"
         TemaId.TEMPLARIO -> "Domus Templi · Vestigium Mei" to "Non nobis, Domine, sed nomini tuo da gloriam"
         TemaId.DISTOPIA -> "EXPEDIENTE 07-118 · VESTIGIUM MEI" to "DOCUMENTO REVISADO · ARCHÍVESE"
+        TemaId.GALIA -> "EXPEDIENTE 07-118 · VESTIGIUM MEI" to "DOCUMENTO REVISADO · ARCHÍVESE"
         // Lo que el iniciado guarda en la jarra, y lo que se dice en voz baja al cerrarla.
         TemaId.ARCONTES -> "Lo guardado en la jarra · Vestigium Mei" to "Lo de abajo no lo sabe"
         TemaId.FRENTE -> "CÉLULA K-7 · SALA DE MANDO · VESTIGIUM MEI" to "Transmisión cerrada · quema esta copia"

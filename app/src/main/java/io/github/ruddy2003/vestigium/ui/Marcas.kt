@@ -169,6 +169,7 @@ object Marcas {
                 else Aspecto(s, s, Forma.CALDERON, cursiva = true)
             TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
+            TemaId.GALIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
             // La @persona, grabada en su amuleto de jaspe; el #tema, sobre la raja de luz violeta de la grieta.
             TemaId.ARCONTES -> if (persona) Aspecto(TrazosArcontes.LINO, TrazosArcontes.JASPE_VERDE, Forma.GEMA, negrita = true) else Aspecto(t, t, Forma.RAJA)
             // La @persona, como un indicativo en la pantalla de fósforo (verde de radar sobre el vidrio oscuro); el #tema, sobre la

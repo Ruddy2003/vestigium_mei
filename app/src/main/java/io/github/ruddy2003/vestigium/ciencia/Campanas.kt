@@ -151,6 +151,7 @@ object Campanas {
         TemaId.MEDIEVAL -> listOf("Peregrinación a Compostela", "La copia del códice", "El camino de los monasterios", "La feria de Champaña")
         TemaId.TEMPLARIO -> listOf("La marcha de las atalayas", "Relevo en Montalbar", "La escolta de los peregrinos", "Cabalgada al Pozo del Halcón")
         TemaId.DISTOPIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
+        TemaId.GALIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
         // El ascenso del alma por las siete esferas hasta la Ogdóada, la octava, por encima de ellas.
         TemaId.ARCONTES -> listOf("El ascenso hasta la Ogdóada", "Por las siete esferas", "La chispa que vuelve a lo alto", "Más allá de la séptima esfera")
         TemaId.FRENTE -> listOf("RUTA DE SALTO K-7", "SIETE SALTOS SIN RASTRO", "EL CARTUCHO HASTA ALBAR", "CORREDOR DE LAS MINAS")
@@ -194,6 +195,7 @@ object Campanas {
         // De fortaleza en fortaleza por una frontera inventada, de la costa al castillo de las montañas.
         TemaId.TEMPLARIO -> listOf("Encomienda de la costa", "Atalaya del Alba", "Torre de la Sed", "Pozo del Halcón", "Vado de las Piedras Rojas", "Peña del Cuervo", "Castillo de Montalbar")
         TemaId.DISTOPIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
+        TemaId.GALIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
         // Las siete esferas de los planetas en el orden antiguo, desde la Tierra hacia arriba; pasar la de Saturno es llegar a
         // la Ogdóada. Solo los planetas: qué arconte guarda cada una no está comprobado (`fuentes_arcontes.md`, corrección 16).
         // Las siete esferas, de abajo arriba; Marte va con su nombre griego antiguo, Pyróeis («el ardiente»), porque «Marte» ya es etapa de Espacio.
