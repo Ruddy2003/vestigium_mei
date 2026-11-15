@@ -178,7 +178,7 @@ internal object VidaPsicodelia : DisenoVida {
     /** El color de noche: multiplicado por el aire violeta y hundido en el negro violeta de la luz negra; de día, tal cual. */
     private fun n(c: Color, o: Boolean): Color {
         if (!o) return c
-        return mez(Color(c.red * AIRE.red, c.green * AIRE.green, c.blue * AIRE.blue, c.alpha), SALA.copy(alpha = c.alpha), 0.6f)
+        return mez(Color(c.red * AIRE.red, c.green * AIRE.green, c.blue * AIRE.blue, c.alpha), SALA.copy(alpha = c.alpha), 0.68f)
     }
 
     /** El color de noche junto a la lámpara de cera: [f] (0 a 1) es cuánto le llega su luz naranja. De día, tal cual. */
@@ -629,7 +629,7 @@ internal object VidaPsicodelia : DisenoVida {
         huellaCartel(Rect(w * 0.84f, h * 0.43f, w * 0.95f, h * 0.6f), o, u)
         // De noche, el violeta del tubo de luz negra que baña la pared, y el naranja de la lámpara de cera.
         if (o) {
-            halo(Offset(w * 0.5f, h * 0.1f), w * 0.55f, FVIOLETA, 0.75f, 24)
+            halo(Offset(w * 0.5f, h * 0.1f), w * 0.55f, FVIOLETA, 0.55f, 24)
             halo(lampC, w * 0.2f, CERA_LUZ, 0.55f)
         }
         cornisa(Rect(0f, 0f, w, h * 0.032f), o, u)
@@ -1312,7 +1312,7 @@ internal object VidaPsicodelia : DisenoVida {
 
         // La pared, el zócalo y la duela con sus gotas de tinta.
         pared(Rect(0f, 0f, w, suelo), o, u, e.semilla + 4)
-        if (o) halo(Offset(w * 0.3f, -h * 0.1f), w * 0.75f, FVIOLETA, 0.7f, 22)
+        if (o) halo(Offset(w * 0.3f, -h * 0.1f), w * 0.75f, FVIOLETA, 0.5f, 22)
         zocalo(Rect(0f, suelo - h * 0.08f, w, suelo), o, u)
         duela(Rect(0f, suelo, w, h), o, u, e.semilla, tinta = true)
 
@@ -1648,7 +1648,7 @@ internal object VidaPsicodelia : DisenoVida {
         // La pared, el zócalo y la duela; de noche, el violeta del tubo desde arriba.
         pared(Rect(0f, 0f, w, suelo), o, u, e.semilla + 8)
         huellaCartel(Rect(w * 0.6f, h * 0.02f, w * 0.7f, h * 0.18f), o, u)
-        if (o) halo(Offset(w * 0.45f, -h * 0.2f), w * 0.7f, FVIOLETA, 0.75f, 22)
+        if (o) halo(Offset(w * 0.45f, -h * 0.2f), w * 0.7f, FVIOLETA, 0.5f, 22)
         zocalo(Rect(0f, suelo - h * 0.09f, w, suelo), o, u)
         duela(Rect(0f, suelo, w, h), o, u, e.semilla + 2)
 
@@ -2183,7 +2183,7 @@ internal object VidaPsicodelia : DisenoVida {
 
         // La pared, con el violeta del tubo de noche.
         pared(Rect(0f, 0f, w, h), o, u, e.semilla + 12)
-        if (o) halo(Offset(w * 0.5f, -h * 0.15f), w * 0.7f, FVIOLETA, 0.7f, 22)
+        if (o) halo(Offset(w * 0.5f, -h * 0.15f), w * 0.7f, FVIOLETA, 0.5f, 22)
 
         // El marco de pino pintado a mano.
         sombraEnPared(marco, 2.2f * u, if (o) 0.45f else 0.28f, 0.6f * u)
