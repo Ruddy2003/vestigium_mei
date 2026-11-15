@@ -88,11 +88,11 @@ private fun cajaFrente(ancho: Float, x: Float, arriba: Float, abajo: Float, tope
  * reposo, arriba con el foco) y el piloto a la derecha. De noche es la misma sala con las luces bajas.
  */
 object ComunFrente : DisenoComun {
-    private val BAQUELITA = Color(0xFF2A2622)
-    private val PANTALLA = Color(0xFF0F1A16)
-    private val TRAZO = Color(0xFF9FD8A8)
-    private val ROJO = Color(0xFFD9372B)
-    private val AMBAR = Color(0xFFF2A33A)
+    private val BAQUELITA = TrazosFrente.BAQUELITA
+    private val PANTALLA = TrazosFrente.PANTALLA
+    private val TRAZO = TrazosFrente.RADAR
+    private val ROJO = TrazosFrente.PILOTO_ROJO
+    private val AMBAR = TrazosFrente.PILOTO_AMBAR
     /** La letra en relieve de la cinta de rotular: hueso sobre la cinta negra. */
     private val LETRA_CINTA = Color(0xFFEFE8D8)
 

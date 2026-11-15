@@ -80,7 +80,7 @@ object IdeasFrente : DisenoIdeas {
     private val COLORES_LATA = listOf(CROMO, Color(0xFFC9A15A), Color(0xFF8E3A2C), Color(0xFF6E7F72), Color(0xFF9A978F))
 
     /** De noche, todo lo que no alumbra queda en la penumbra de la sala. */
-    private fun t(c: Color, oscuro: Boolean) = if (oscuro) mezcla(c, NOCHE, 0.5f) else c
+    private fun t(c: Color, oscuro: Boolean) = if (oscuro) mezcla(c, NOCHE, 0.6f) else c
 
     override val cols = 2
     override val proporcion = 1.65f
@@ -411,7 +411,7 @@ object IdeasFrente : DisenoIdeas {
         // La pantalla redonda de radar en su caja de chapa, con el bisel de cromo, la retícula, el barrido y los ecos.
         val pc = Offset(w / 2, panel.center.y)
         val rr = panel.height * 0.46f
-        if (oscuro) mancha(pc, rr * 2.8f, RADAR.copy(alpha = 0.16f))
+        if (oscuro) mancha(pc, rr * 3.2f, RADAR.copy(alpha = 0.3f))
         val caja = Rect(pc.x - rr * 1.2f, pc.y - rr * 1.2f, pc.x + rr * 1.2f, pc.y + rr * 1.2f)
         sombraSuave(caja, rr * 0.38f, 5 * u, 0.32f)
         drawRoundRect(Brush.verticalGradient(listOf(tn(HUESO_LUZ), tn(HUESO), tn(HUESO_OSC)), caja.top, caja.bottom), caja.topLeft, caja.size, CornerRadius(rr * 0.38f))
@@ -444,7 +444,7 @@ object IdeasFrente : DisenoIdeas {
             palanca(Offset(x, panel.center.y - panel.height * 0.02f), panel.height * 0.17f, arribas[k], oscuro)
             val luz = luces[k]
             val lp = Offset(x, panel.bottom - panel.height * 0.16f)
-            if (oscuro && luz != null) mancha(lp, 8 * u, luz.copy(alpha = 0.35f))
+            if (oscuro && luz != null) mancha(lp, 10 * u, luz.copy(alpha = 0.45f))
             with(TrazosFrente) { piloto(lp, 1.6f * u, luz ?: AMBAR, luz != null) }
         }
         // El contador de cuatro cifras, el altavoz de la radio y los dos botones.
@@ -601,7 +601,7 @@ object IdeasFrente : DisenoIdeas {
         // El piloto (ámbar si guarda algo, rojo si es lo sin clasificar) y su tornillo, y la rejilla de mentira a la derecha.
         val luz: Color? = if (c.vacio) null else if (c.sinTema) ROJO else if (c.n > 0) AMBAR else null
         val pl = Offset(w * 0.085f, h * 0.73f)
-        if (oscuro && luz != null) mancha(pl, 11 * u, luz.copy(alpha = 0.35f))
+        if (oscuro && luz != null) mancha(pl, 14 * u, luz.copy(alpha = 0.45f))
         with(TrazosFrente) { piloto(pl, 2.4f * u, luz ?: AMBAR, luz != null) }
         tornillo(Offset(w * 0.085f, h * 0.89f), 1.6f * u, 40f + 90f * azar(c.semilla, 3), oscuro)
         for (j in 0 until 3) {
@@ -778,6 +778,11 @@ object IdeasFrente : DisenoIdeas {
         // La copia en papel del fotograma: se oscurece un poco hacia los bordes y lleva el marco fino de la imagen.
         drawRect(Brush.radialGradient(listOf(Color.Transparent, PIZARRA.copy(alpha = 0.08f)), Offset(w / 2, h / 2), maxOf(w, h) * 0.75f))
         drawRect(p.tinta.copy(alpha = 0.14f), Offset(3 * u * g, banda + 2.5f * u * g), Size(w - 6 * u * g, h - 2 * banda - 5 * u * g), style = Stroke(0.6f * u))
+        // Las rayas finas que deja la película al correr por el proyector.
+        for (k in 0 until 2) {
+            val x = w * (0.15f + 0.7f * azar(semilla, k + 40))
+            drawLine(p.tinta.copy(alpha = 0.05f), Offset(x, banda), Offset(x + 2 * u * (azar(semilla, k + 50) - 0.5f), h - banda), 0.6f * u)
+        }
         // Las dos orillas de la película, con sus perforaciones (arriba dejan lugar a lo impreso en la orilla).
         listOf(0f, h - banda).forEachIndexed { i, y ->
             drawRect(PELICULA, Offset(0f, y), Size(w, banda))
