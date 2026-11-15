@@ -442,6 +442,98 @@ def resoplido(d=0.45):
 def lejos(x, k=1.0):
     """Lo mismo, oído a [k] campos de distancia: sin los agudos y con más aire alrededor."""
     return reverb(filtro(x, 'bajo', 3800 / (1 + k)), 1.1 + 0.3 * k, min(0.6, 0.25 + 0.15 * k), 2600)
+def piano_salon(f, d=1.2, fuerza=0.6, apagar=None):
+    """El piano de salón de 1900: el macillo de fieltro golpea tres cuerdas (dos en el grave medio, una en el bajo) que
+    nunca están afinadas igual, así que la nota late despacio. Cada cuerda da sus parciales un poco más altos que los
+    armónicos (la rigidez del acero: f·k·√(1 + B·k²), con B que crece hacia el agudo) y le faltan los que caen en el
+    octavo de la cuerda, donde pega el macillo. Cada parcial se apaga en dos tiempos (el golpe y el sonido que queda),
+    los agudos antes que los graves; con más [fuerza], más brillo. Debajo, el golpe del macillo y la tabla armónica que
+    responde. [apagar]: el segundo en que el apagador vuelve a la cuerda (sin él, la nota sigue con el pedal). Ni la
+    cuerda pulsada del piano «stride» de Art déco ni el laúd: aquí hay macillo, cuerdas que laten y apagador."""
+    t = t_(d); n = len(t)
+    B = max(1.5e-4, 3.5e-4 * (f / 261.6) ** 0.9)
+    cuerdas = (0.0,) if f < 110 else (-0.7, 0.8) if f < 220 else (-0.9, 0.15, 1.0)
+    base = 1.7 * (261.6 / f) ** 0.5
+    corte = 1100 + 3800 * fuerza * (f / 261.6) ** 0.25
+    x = np.zeros(n)
+    for k in range(1, 41):
+        fk = f * k * np.sqrt(1 + B * k * k)
+        if fk > min(SR * 0.45, 9500): break
+        a = abs(np.sin(np.pi * k / 8 + 0.04)) / k ** (1.15 - 0.45 * fuerza) / (1 + (fk / corte) ** 2)
+        if a < 1e-4: continue
+        t1 = min(4.0, max(0.12, base / (1 + fk / 1500)))
+        caida = 0.72 * np.exp(-t / t1) + 0.28 * np.exp(-t / (4.5 * t1))
+        for c in cuerdas:
+            x += a * caida * np.sin(2 * np.pi * fk * 2 ** (c * (1 + 0.15 * k / 10) / 1200) * t + rng.uniform(-0.15, 0.15)) / len(cuerdas)
+    x *= np.minimum(1, t / 0.0012)
+    macillo = filtro(ruido(0.012), 'bajo', 900 + 1800 * fuerza) * env(int(0.012 * SR), 0.0005, 0.004, 4)
+    golpe = np.zeros(int(0.12 * SR)); golpe[:len(macillo)] = macillo
+    tabla = 0.6 * resonador(golpe, 140, 60) + 0.4 * resonador(golpe, 330, 110) + 0.15 * golpe
+    x = mezclar((0, x, 1.0), (0, tabla / (np.abs(tabla).max() + 1e-9), 0.05 + 0.08 * fuerza))[:n]
+    if apagar is not None: x *= np.where(t < apagar, 1.0, np.exp(-(t - apagar) / 0.07))
+    # Al final, el pedal que se levanta despacio: la nota se apaga en una curva suave, no de golpe.
+    return 0.35 * (0.45 + 0.55 * fuerza) * x * np.sin(0.5 * np.pi * np.minimum(1, np.maximum(0, d - t) / min(0.6, 0.35 * d))) ** 2
+def peine(f, d=1.1, fuerza=1.0, cae=0.0):
+    """La cajita de música de cilindro: una púa del cilindro levanta una lámina del peine de acero y la suelta. La lámina
+    es una viga empotrada en un extremo, así que sus parciales no son armónicos (1, 6.27, 17.55): suena a metal fino,
+    no a campana. Cada nota tiene dos láminas casi iguales que laten muy despacio, la púa da un tic al soltarla y la
+    caja de madera le da cuerpo. Ni la cajita de Navidad (de parciales armónicos) ni la celesta. [cae]: semitonos que
+    la nota se hunde al sonar, como cuando a la cajita se le acaba la cuerda."""
+    t = t_(d)
+    tau = min(2.2, max(0.35, 1.3 * (523.0 / f) ** 0.6))
+    fb = f * 2 ** (-cae * np.minimum(1, t / max(d, 1e-3)) ** 0.7 / 12)
+    fase = 2 * np.pi * np.cumsum(fb) / SR
+    x = np.zeros(len(t))
+    for r, a, c in ((1.0, 1.0, 1.0 / tau), (6.267, 0.2 * fuerza, 9.0), (17.55, 0.06 * fuerza, 26.0)):
+        if f * r >= SR * 0.45: continue
+        x += a * (0.75 * np.sin(r * fase) + 0.25 * np.sin(r * fase * 1.0018 + 0.6)) * np.exp(-t * c)
+    x *= np.minimum(1, t / 0.0015)
+    x = x + 0.35 * resonador(x, 480, 160) + 0.2 * resonador(x, 1250, 260)
+    pua = clic(0.003, (3500, 9500))
+    return 0.4 * mezclar((0, x * np.minimum(1, np.maximum(0, d - t) / min(0.3, 0.3 * d)) ** 2, 1.0), (0, pua, 0.18 * fuerza))
+def cristal(f, d=1.6, fuerza=0.7):
+    """Una campanilla de cristal (un colgante de la lámpara, una copa fina): el vidrio suena casi puro y largo; sus
+    modos de copa (1, 2.61, 4.85) son débiles y cada uno es doble, porque ningún cristal es redondo del todo, así que
+    la nota tiembla despacio (unas dos veces por segundo). Al empezar, el «tin» del golpe, muy agudo y muy breve. Ni
+    el crótalo de bronce de Arcontes (parciales fuertes y choque de discos) ni las campanas de Navidad."""
+    t = t_(d)
+    tau = min(2.4, max(0.5, 1.4 * (900.0 / f) ** 0.5))
+    x = np.zeros(len(t))
+    for r, a, c, sep in ((1.0, 1.0, 1.0 / tau, 1.9), (2.61, 0.14 * (0.5 + fuerza), 3.2, 3.1), (4.85, 0.05 * (0.4 + fuerza), 7.0, 4.3)):
+        fr = f * r
+        if fr >= SR * 0.45: continue
+        x += a * (0.55 * np.sin(2 * np.pi * fr * t) + 0.45 * np.sin(2 * np.pi * (fr + sep) * t + 0.9)) * np.exp(-t * c)
+    if f * 7.9 < SR * 0.45: x += 0.08 * fuerza * np.sin(2 * np.pi * f * 7.9 * t) * np.exp(-t * 90)
+    x *= np.minimum(1, t / 0.0008)
+    tin = filtro(clic(0.0025, (5500, 10500)), 'alto', 5000)
+    return 0.42 * mezclar((0, x * np.minimum(1, np.maximum(0, d - t) / min(0.35, 0.3 * d)) ** 2, 1.0), (0, tin, 0.25 * fuerza))
+def prensa(fuerza=1.0, rueda=0.22):
+    """La prensa de litografía a mano: el carro con la piedra rueda bajo el «râteau» (la regla de madera forrada de cuero
+    que aprieta el pliego), con el roce del cuero en el tímpano, y al final el golpe sordo del carro contra el tope y el
+    bastidor de hierro que retumba apenas. [rueda]: lo que tarda el carro en pasar (0 para el golpe solo)."""
+    partes = []
+    if rueda > 0:
+        t = t_(rueda); s = np.minimum(1, t / (0.4 * rueda)) ** 1.5
+        rumor = filtro(ruido(rueda), 'banda', (140, 900)) * (0.6 + 0.4 * np.abs(filtro(ruido(rueda), 'bajo', 40)))
+        cuero = filtro(ruido(rueda), 'banda', (900, 3200)) * 0.35
+        partes.append((0, (rumor + cuero) * s, 0.5 * fuerza))
+    e = np.zeros(int(0.35 * SR))
+    g = filtro(ruido(0.02), 'bajo', 700) * env(int(0.02 * SR), 0.0008, 0.007, 4); e[:len(g)] = g
+    golpe = resonador(e, 95, 30) + 0.8 * resonador(e, 210, 55) + 0.45 * resonador(e, 470, 120)
+    golpe = filtro(golpe / (np.abs(golpe).max() + 1e-9), 'alto', 120)
+    partes += [(rueda, golpe, 0.9 * fuerza), (rueda, filtro(clic(0.006, (400, 2200)), 'bajo', 2400), 0.35 * fuerza)]
+    return mezclar(*partes)
+def pliego(d=0.3, tinta=1.0):
+    """El pliego que se despega de la piedra entintada: el papel que roza y, a medida que se levanta, la tinta grasa
+    que suelta el papel en chasquidos diminutos, cada vez más ralos."""
+    t = t_(d); n = len(t)
+    roce = filtro(ruido(d), 'banda', (700, 5200)) * np.sin(np.pi * t / d) ** 1.2 * (0.6 + 0.4 * np.abs(filtro(ruido(d), 'bajo', 25)))
+    x = 0.55 * roce
+    for _ in range(int(40 * d * tinta)):
+        u = rng.uniform(0, 1) ** 1.6; k = int(u * (n - 200))
+        c = clic(0.0015, (1800, 8000)) * rng.uniform(0.3, 1.0) * (1 - 0.6 * u)
+        x[k:k + len(c)] += c
+    return x * np.minimum(1, np.maximum(0, d - t) / 0.02)
 def acorde(inst, notas, d, g=1.0, arpegio=0.0, **kw):
     return mezclar(*[(i * arpegio, inst(hz(n), d, **kw), g / len(notas) ** 0.5) for i, n in enumerate(notas)])
 def melodia(inst, notas, paso, d, g=0.5, **kw):
@@ -1700,6 +1792,99 @@ def galia():
                tecla=mezclar((0, trazo((650, 3000), 0.05, 5, 0.03), 1), (0, tablilla / (np.abs(tablilla).max() + 1e-9), 0.25)),
                rascar=rascado((1300, 5800), estatero, aspereza=60))
 
+def nouveau():
+    # Mi bemol mayor con la séptima mayor y la novena (Mi bemol, Sol, Si bemol, Re, Fa): el color de los salones de 1900,
+    # el acorde de séptima mayor que se queda sin resolver, y la cadencia plagal con el cuarto grado menor (La bemol menor
+    # con sexta) que suspira antes de volver a casa. París hacia 1900, desde un taller de litografía: el piano de salón
+    # (macillo de fieltro y tres cuerdas que laten), la cajita de música de cilindro con su peine de acero, las campanillas
+    # de cristal de la lámpara, el pliego que se despega de la piedra entintada y el golpe sordo de la prensa a mano. Ni
+    # la sexta y la novena del jazz ni el piano pulsado (Art déco), ni la cajita armónica y los cascabeles (Navidad), ni
+    # el silbato y el latón (Vapor victoriano), ni corneta y tambor (Napoleónico, Revolución), ni laúd (Renacimiento), ni
+    # guitarra y grillos (Botánico), ni el crótalo de bronce (Arcontes).
+    T = -6   # Mi bemol 4
+    pia = lambda n, d=1.2, fuerza=0.6, apagar=None: piano_salon(hz(n), d, fuerza, apagar)
+    caja = lambda n, d=1.0, fuerza=1.0, cae=0.0: peine(hz(n), d, fuerza, cae)
+    cri = lambda n, d=1.6, fuerza=0.7: cristal(hz(n), d, fuerza)
+    def rodado(notas, d=1.6, paso=0.035, fuerza=0.55):
+        """Un acorde de piano rodado de abajo arriba, con el pedal puesto."""
+        return mezclar(*[(paso * i, pia(n, d - paso * i, fuerza), 0.5) for i, n in enumerate(notas)])
+    def interruptor():
+        """El interruptor de llave de 1900: la llave de latón que gira y encaja en la base de porcelana."""
+        return mezclar((0, clic(0.003, (2200, 8000)), 0.8), (0.0008, filtro(ruido(0.018), 'banda', (500, 2600)) * env(int(0.018 * SR), 0.0006, 0.006, 4), 0.7),
+                       (0.012, clic(0.002, (3000, 8500)), 0.25))
+    def cuerda(clics=5, cps=11):
+        """La llave que da cuerda a la cajita de música: el trinquete que salta diente a diente, dentro de la caja de madera."""
+        partes = []
+        for i in range(clics):
+            e = np.concatenate([clic(0.0025, (2500, 8000)), np.zeros(int(0.03 * SR))])
+            caja_m = resonador(e, 900, 140)
+            partes += [(i / cps + rng.uniform(-0.004, 0.004), e, 0.6), (i / cps, caja_m / (np.abs(caja_m).max() + 1e-9), 0.25)]
+        return mezclar(*partes)
+    with azar_propio('nouveau_base'):
+        S['nouveau'] = dict(
+            # El toque: un colgante de cristal de la lámpara.
+            toque=cri(T + 12, 0.34, 0.6) * np.exp(-t_(0.34) * 6),
+            # Elegir: una sola lámina de la cajita de música.
+            elegir=caja(T + 19, 0.32, 0.9) * np.exp(-t_(0.32) / 0.09),
+            # Pasar: el pliego que se despega de la piedra.
+            pasar=pliego(0.3),
+            # Abrir: un acorde de piano rodado (Mi bemol con séptima mayor y novena) y el cristal arriba.
+            abrir=mezclar((0, rodado([T - 12, T - 5, T + 2, T + 4, T + 11], 1.25, 0.04, 0.5), 1.0), (0.2, cri(T + 26, 1.0, 0.5), 0.3)),
+            # Guardar: la prensa baja sobre el pliego, y el piano da la quinta y la tónica.
+            guardar=mezclar((0, domar(prensa(1.0, 0.16), 0.35), 0.75), (0.2, pia(T + 7, 0.6, 0.5, apagar=0.45), 0.5), (0.31, pia(T + 12, 0.55, 0.55), 0.55)),
+            # El logro: un barrido de piano de salón por el acorde, un poco teatral, que cae en el acorde con pedal; un compás
+            # de vals por debajo (el «um» en el uno, el «pa-pa» en el dos y el tres), las campanillas de cristal que bajan y
+            # la cajita que contesta arriba.
+            logro=reverb(mezclar(
+                *[(0.052 * i, pia(T - 12 + n, 0.5, 0.45 + 0.03 * i, apagar=0.3), 0.36) for i, n in enumerate([0, 7, 11, 14, 16, 19, 23, 26, 28, 31])],
+                (0.56, rodado([T - 24, T - 12, T - 5, T + 4, T + 11, T + 14], 2.9, 0.025, 0.6), 0.9), (0.56, pia(T + 23, 2.7, 0.65), 0.35),
+                (0.98, acorde(lambda f, d: piano_salon(f, d, 0.35, 0.26), [T - 1, T + 4, T + 7], 0.5), 0.35),
+                (1.4, acorde(lambda f, d: piano_salon(f, d, 0.32, 0.26), [T - 1, T + 4, T + 7], 0.5), 0.3),
+                *[(0.62 + 0.16 * i, cri(T + n, 1.8, 0.7), 0.26) for i, n in enumerate([31, 26, 23, 19])],
+                (1.55, caja(T + 26, 1.2), 0.22), (1.7, caja(T + 31, 1.2), 0.18)), 1.6, 0.28),
+            # El tema: se le da cuerda a la cajita y suena la vuelta del vals (Re, Fa, Mi bemol); el cristal cierra.
+            tema=reverb(mezclar((0, cuerda(4, 13), 0.35),
+                                (0.36, caja(T + 23, 1.0), 0.5), (0.36 + 0.32 * 2, caja(T + 26, 0.8), 0.45), (0.36 + 0.32 * 3, caja(T + 24, 1.1), 0.5),
+                                (0.36, pia(T - 12, 1.3, 0.35), 0.3), (0.36 + 0.32 * 3, rodado([T - 12, T - 5, T - 1, T + 4], 1.1, 0.03, 0.35), 0.35),
+                                (0.36 + 0.32 * 3, cri(T + 31, 1.1, 0.5), 0.2)), 1.1, 0.24),
+            # El aviso: las campanillas de cristal bajan en un compás de vals sobre el piano (Si bemol con novena: el «um» y
+            # el «pa-pa») y se posan en la tónica con la séptima mayor.
+            aviso=reverb(mezclar(
+                (0, pia(T - 17, 1.2, 0.5, apagar=0.36), 0.42), (0.42, acorde(lambda f, d: piano_salon(f, d, 0.35, 0.3), [T - 1, T + 5, T + 9], 0.5), 0.3),
+                (0.84, acorde(lambda f, d: piano_salon(f, d, 0.32, 0.3), [T - 1, T + 5, T + 9], 0.5), 0.26),
+                *[(0.42 * i, cri(T + n, 1.6, 0.7), 0.4) for i, n in enumerate([19, 14, 11])],
+                (1.26, rodado([T - 24, T - 12, T - 5, T + 4, T + 11], 2.3, 0.03, 0.5), 0.75), (1.26, cri(T + 12, 2.2, 0.75), 0.45),
+                (1.5, caja(T + 26, 1.2, 0.8), 0.16)), 1.4, 0.26),
+            # Lo solemne: un vals lento de piano (Mi bemol con séptima mayor, Do menor con novena, La bemol menor con sexta y
+            # vuelta a casa), con el «um-pa-pa» y la melodía, que se posa en la quinta; las campanillas cierran y la cajita,
+            # lejos, repite la última vuelta.
+            solemne=reverb(mezclar(*(lambda pz: [
+                *[(3 * pz * i, pia(T + b, 3 * pz + 0.4, 0.5, apagar=3 * pz * 0.9), 0.4) for i, b in enumerate([-12, -15, -19])],
+                *[(3 * pz * i + pz * k, acorde(lambda f, d: piano_salon(f, d, 0.32, pz * 0.8), [T - 12 + a for a in ch], pz * 1.2), 0.26 - 0.03 * (k - 1))
+                  for i, ch in enumerate([[4, 7, 11], [0, 4, 9], [5, 8, 14]]) for k in (1, 2)],
+                *[(pz * b, pia(T + n, (dd * pz + 0.6) if b < 9 else 3.6, 0.55, apagar=None if b >= 9 else dd * pz + 0.1), 0.5)
+                  for b, n, dd in [(0, 14, 2), (2, 12, 1), (3, 11, 2), (5, 7, 1), (6, 8, 2), (8, 5, 1), (9, 7, 3)]],
+                (9 * pz, rodado([T - 24, T - 12, T - 5, T + 4, T + 11, T + 14], 3.6, 0.04, 0.5), 0.7),
+                *[(9 * pz + 0.35 + 0.22 * i, cri(T + n, 1.8, 0.6), 0.25) for i, n in enumerate([26, 23, 19])],
+                *[(9 * pz + 0.9 + 0.8 * pz * b, lejos(caja(T + 24 + n, 0.9, 0.8), 0.7), 0.3) for b, n in [(0, 2), (2, 0), (3, -1), (5, -5)]]])(0.56)), 2.0, 0.32))
+
+    # Error: la cajita a la que se le acaba la cuerda (la nota que se arrastra medio tono abajo y se hunde) sobre el piano
+    # apagado en el grave. Cambio: el interruptor de llave y la lámpara que se enciende: dos cristales, de la quinta a la
+    # octava. Tecla: el lápiz graso de litógrafo sobre la piedra graneada (sale a saltitos, por el grano). Rascar: una
+    # moneda de plata de un franco (de 1900; cuál, [sin verificar]: no está en fuentes_nouveau.md), que suena clara.
+    with azar_propio('nouveau'):
+        t = t_(0.7); fp = hz(T + 33)
+        plata = sum(a * np.sin(2 * np.pi * fp * r * t) * np.exp(-t * c) for r, a, c in ((1.0, 1.0, 4.0), (1.73, 0.35, 6.0), (2.33, 0.3, 8.0), (3.91, 0.12, 14.0))
+                    if fp * r < SR * 0.45) * np.minimum(1, t / 0.001)
+        grano = lambda: mezclar((0, trazo((700, 3400), 0.045, 4, 0.028), 1.0),
+                                *[(rng.uniform(0.002, 0.038), clic(0.0012, (1500, 5500)), rng.uniform(0.15, 0.4)) for _ in range(6)])
+        nuevos('nouveau',
+               error=mezclar((0, caja(T + 19, 0.2, 0.9), 0.5), (0.15, caja(T + 18, 0.45, 0.7, cae=0.8) * np.exp(-t_(0.45) / 0.2), 0.55),
+                             (0.13, pia(T - 18, 0.4, 0.35, apagar=0.16), 0.55)),
+               cambio=mezclar((0, interruptor(), 0.3), (0.03, cri(T + 19, 0.4, 0.55) * np.exp(-t_(0.4) * 5), 0.45), (0.11, cri(T + 24, 0.45, 0.55) * np.exp(-t_(0.45) * 4), 0.45)),
+               tecla=grano(),
+               rascar=rascado((1400, 6400), plata, aspereza=85, pasadas=((0.0, 0.27), (0.32, 0.27), (0.65, 0.29))))
+
 # ------------------------------------------------------------------ el aviso de los lugares especiales
 
 def lugar():
@@ -1749,6 +1934,7 @@ if __name__ == '__main__':
         frente,
         arcontes,
         galia,
+        nouveau,
     )
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 and sys.argv[2] != 'todos' else None
     claves = sys.argv[3].split(',') if len(sys.argv) > 3 else None
