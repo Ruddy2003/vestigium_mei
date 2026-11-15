@@ -93,11 +93,13 @@ internal object CosasDeco {
         }
         // ---- El piano de Lou y su taburete.
         val estado = PiezasDeco.EstadoPiano(
-            partitura = !prov, lampara = if (prov) 0f else v.enc.piano, metronomo = fase == Fase.ENSAYO && m.ficha.objeto != "metronomo",
+            partitura = !prov && m.ficha.objeto != "partitura", lampara = if (prov) 0f else v.enc.piano, metronomo = fase == Fase.ENSAYO && m.ficha.objeto != "metronomo",
             funda = prov, luto = EscenaDeco.luto(m) && !prov, flores = (EscenaDeco.luto(m) || EscenaDeco.boda(m)) && !prov,
             quemaduras = 2 + 2 * m.ficha.temporada, panuelo = fase == Fase.ABIERTO && m.ficha.objeto != "panuelo",
         )
-        lista += PiezasDeco.piano(v, PIANO, estado)
+        // El día del objeto «piano», el ramo encima (`ObjetosDeco.enElPiano`).
+        val piano = PiezasDeco.piano(v, PIANO, estado)
+        lista += Cosa3(piano.hondo, piano.esqueleto) { piano.pintar(this); with(ObjetosDeco) { enElPiano(v, PIANO, funda = prov) } }
         lista += Cosa3(TABURETE.z, listOf(V3(TABURETE.x - 0.2f, 0f, TABURETE.z - 0.2f), V3(TABURETE.x + 0.2f, 0f, TABURETE.z + 0.2f), V3(TABURETE.x, 0.52f, TABURETE.z))) { taburete(v) }
         // ---- Las mesas de la fila, con sus sillas.
         val n = EscenaDeco.mesas(m); val puestas = EscenaDeco.puestas(m); val arriba = EscenaDeco.sillasArriba(m); val cerrado = EscenaDeco.cerrado(m)
@@ -118,6 +120,8 @@ internal object CosasDeco {
                 with(PiezasDeco) { silla(v, o, 0.6f + k * 1.9f, false, abrigo = if (k != 1) lerp(C.PANO, C.CORAL, 0.2f * k) else null) } }
         // ---- La mesa cercana (cortada por el borde de abajo), con el objeto del día, y la silla con el abrigo.
         lista += mesaCercana(v)
+        // El objeto grande del día, en el suelo al pie de la mesa cercana (detrás de ella: la mesa y la silla lo tapan donde toca).
+        ObjetosDeco.grande(m, v.pincel(CamDeco.p(PIE_GRANDE)), CamDeco.p(PIE_GRANDE), CamDeco.p(APOYO_GRANDE), CamDeco.k(PIE_GRANDE.z) / 120f)?.let { g -> lista += Cosa3(PIE_GRANDE.z, emptyList()) { g.pintar(this) } }
         if (!prov) lista += Cosa3(SILLA_ABRIGO.z, listOf(V3(SILLA_ABRIGO.x - 0.2f, 0f, SILLA_ABRIGO.z - 0.2f), V3(SILLA_ABRIGO.x + 0.2f, 0f, SILLA_ABRIGO.z + 0.2f), V3(SILLA_ABRIGO.x, 0.95f, SILLA_ABRIGO.z + 0.2f))) {
             with(PiezasDeco) { silla(v, SILLA_ABRIGO, 1.15f, false, abrigo = if (fase == Fase.ABIERTO || fase == Fase.ENSAYO || fase == Fase.PREPARA) abrigoDeLou(m) else null) } }
         // ---- El perchero al pie de la escalera, las cajas de gaseosa en el rincón cercano, el cubo de la mañana.
@@ -183,11 +187,10 @@ internal object CosasDeco {
         val esq = listOf(V3(c.x - 0.35f, 0f, c.z - 0.35f), V3(c.x + 0.35f, 0f, c.z - 0.35f), V3(c.x - 0.35f, 0f, c.z + 0.35f), V3(c.x + 0.35f, 0f, c.z + 0.35f), V3(c.x, PiezasDeco.MESA_ALTO, c.z))
         return Cosa3(c.z - 0.3f, esq) {
             with(PiezasDeco) { mesita(v, mesa) }
-            // El vaso de agua de verdad y el sombrero de iglesia de su madre.
-            if (EscenaDeco.madre(m)) with(PiezasDeco) { taza(v, V3(c.x - 0.12f, PiezasDeco.MESA_ALTO, c.z - 0.05f), vaso = true); sombrero(v, V3(c.x + 0.05f, PiezasDeco.MESA_ALTO, c.z + 0.12f), 0f, lerp(C.PANO, C.JADE, 0.5f), cloche = true) }
-            // El objeto del día, sobre la mesa (los chicos); los grandes van aparte, al pie de la mesa.
+            // El vaso de agua de verdad y el sombrero de iglesia de su madre (si el objeto es el cloché de Lou, solo el suyo: no se ven dos).
+            if (EscenaDeco.madre(m)) with(PiezasDeco) { taza(v, V3(c.x - 0.12f, PiezasDeco.MESA_ALTO, c.z - 0.05f), vaso = true); if (m.ficha.objeto != "sombrero") sombrero(v, V3(c.x + 0.05f, PiezasDeco.MESA_ALTO, c.z + 0.12f), 0f, lerp(C.PANO, C.JADE, 0.5f), cloche = true) }
+            // El objeto del día, sobre la mesa (los chicos); los grandes van aparte, al pie de la mesa (en `cosas`).
             if (!ObjetosDeco.esGrande(m)) with(ObjetosDeco) { sobreElSoporte(m, v.pincel(CamDeco.p(SOBRE)), CamDeco.p(SOBRE), CamDeco.k(SOBRE.z) / 120f) }
-            ObjetosDeco.grande(m, v.pincel(CamDeco.p(PIE_GRANDE)), CamDeco.p(PIE_GRANDE), CamDeco.p(APOYO_GRANDE), CamDeco.k(PIE_GRANDE.z) / 120f)?.let { g -> g.pintar(this) }
         }
     }
 
