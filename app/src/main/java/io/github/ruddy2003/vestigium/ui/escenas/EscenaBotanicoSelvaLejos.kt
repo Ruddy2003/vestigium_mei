@@ -79,9 +79,13 @@ internal object LejosSelva {
         monte(l, orilla, H + 1.5f, lerp(C.SELVA, Color(0xFF7A90A8), 0.62f), 0.86f)
         for (i in 0..9) { val x = 296f + i * 8.5f + az.entre(-2f, 2f); val y = H - 0.6f + az.entre(-0.4f, 0.3f); drawRect(l.tono(lerp(C.CAL, C.ARENA, 0.2f), 0.75f), Offset(x, y - 1.2f), Size(az.entre(1.5f, 3f), 1.4f))
             if (l.noche > 0.5f && az.real() > 0.4f) drawCircle(C.LUMBRE.copy(alpha = 0.7f * l.noche), 0.5f, Offset(x + 1f, y - 0.5f)) }
-        // El morro de al lado y el Pan de Azúcar: granito casi vertical, con su falda de selva.
-        morro(p, Offset(326f, H + 1f), 26f, 17f, 0.72f, az)
-        morro(p, Offset(SelvaBotanico.PAN_DE_AZUCAR.x, H + 1f), 42f, H + 1f - SelvaBotanico.PAN_DE_AZUCAR.y, 0.64f, az)
+        // Los morros de detrás, del otro lado de la boca de la bahía: pálidos y azules, con la bruma a sus pies.
+        val tras = listOf(Offset(300f, H + 1f), Offset(318f, 108f), Offset(334f, 104f), Offset(350f, 99f), Offset(366f, 97.5f), Offset(380f, 101f), Offset(392f, 104f))
+        monte(l, tras, H + 1.5f, lerp(C.SELVA, Color(0xFF8098B4), 0.7f), 0.92f)
+        mancha(Offset(352f, H - 2f), 46f, 4f, lerp(l.bruma, l.tono(Color.White), 0.4f), 0.6f)
+        // El morro de al lado (la Urca) y el Pan de Azúcar: granito con su cara de luz y su cara de sombra.
+        morro(p, Offset(326f, H + 1f), 28f, 17f, 0.66f, az)
+        panDeAzucar(p, Offset(SelvaBotanico.PAN_DE_AZUCAR.x, H + 1f), 48f, H + 1f - SelvaBotanico.PAN_DE_AZUCAR.y, 0.5f, az)
         // La bahía: quieta como un espejo, con lo que tiene encima reflejado, hasta la playa.
         val zona = Rect(236f, H, ANCHO, 176f)
         val contorno = poligono(listOf(Offset(236f, H), Offset(ANCHO, H), Offset(ANCHO, 176f)) + PLAYA.reversed())
@@ -89,9 +93,9 @@ internal object LejosSelva {
         agua(l, zona, Azar(Semilla.de("botanico", "agua", m.ficha.dia)), propio = lerp(C.MAR, C.ORILLA, 0.12f), viento = viento, contorno = contorno, hondo = C.MAR_HONDO, orilla = C.ORILLA)
         clipPath(contorno) {
             val ref = Azar(Semilla.de("botanico", "reflejos"))
-            // «Como un espejo»: el reflejo largo del Pan de Azúcar y del morro, y el de la otra orilla.
+            // «Como un espejo»: el Pan de Azúcar del revés, con sus dos caras y sus chorreras, roto por las ondas.
             val k = 1f - 0.6f * viento
-            reflejoRoto(SelvaBotanico.PAN_DE_AZUCAR.x - 20f, SelvaBotanico.PAN_DE_AZUCAR.x + 20f, H + 1.2f, (H + 1f - SelvaBotanico.PAN_DE_AZUCAR.y) * 0.8f, l.tono(lerp(C.ROCA, C.SELVA, 0.35f), 0.55f), 0.55f * k, ref, 0.8f)
+            reflejoDelPan(p, Offset(SelvaBotanico.PAN_DE_AZUCAR.x, H + 1f), 48f, H + 1f - SelvaBotanico.PAN_DE_AZUCAR.y, 0.5f, k)
             reflejoRoto(314f, 338f, H + 1.2f, 14f, l.tono(lerp(C.ROCA, C.SELVA, 0.4f), 0.6f), 0.5f * k, ref, 0.7f)
             reflejoRoto(236f, ANCHO, H + 1f, 6f, l.tono(lerp(C.SELVA, Color(0xFF7A90A8), 0.5f), 0.7f), 0.35f * k, ref, 0.7f)
             // La montaña también se refleja donde baja al agua.
@@ -117,19 +121,88 @@ internal object LejosSelva {
         drawOval(luz.r.color.copy(alpha = 0.3f * luz.r.fuerza), Offset(c.x - 9f, c.y + 1.4f), Size(18f, 2f), blendMode = BlendMode.Multiply)
     }
 
-    /** Un morro de granito de Río: casi vertical y liso, con regueros oscuros y una falda de selva rizada. */
+    /** El morro de al lado (la Urca): redondo y bajo, cubierto de selva, con lajas de granito que asoman. */
     private fun DrawScope.morro(p: Pincel, pie: Offset, ancho: Float, alto: Float, lejos: Float, az: Azar) {
-        val l = p.l; val cx = pie.x; val base = pie.y
-        val pts = listOf(Offset(cx - ancho / 2f, base), Offset(cx - ancho * 0.44f, base - alto * 0.4f), Offset(cx - ancho * 0.32f, base - alto * 0.86f), Offset(cx - ancho * 0.1f, base - alto),
-            Offset(cx + ancho * 0.12f, base - alto * 0.97f), Offset(cx + ancho * 0.3f, base - alto * 0.72f), Offset(cx + ancho * 0.42f, base - alto * 0.3f), Offset(cx + ancho / 2f, base))
-        val forma = curva(pts, base + 1f); val roca = lerp(C.ROCA, C.TEJA, 0.12f); val lado = if (p.solALaDerecha) 1f else -1f
-        drawPath(forma, Brush.horizontalGradient(listOf(l.tono(lerp(roca, Color(0xFF4A4C7A), 0.35f), lejos), l.tono(roca, lejos), l.tono(lerp(roca, Color(0xFFFFE8C0), 0.4f * p.r.dia), lejos)), cx - lado * ancho / 2f, cx + lado * ancho / 2f))
+        val l = p.l; val cx = pie.x; val base = pie.y; val lado = if (p.solALaDerecha) 1f else -1f
+        val pts = listOf(Offset(cx - ancho / 2f, base), Offset(cx - ancho * 0.4f, base - alto * 0.5f), Offset(cx - ancho * 0.22f, base - alto * 0.88f), Offset(cx - ancho * 0.02f, base - alto),
+            Offset(cx + ancho * 0.18f, base - alto * 0.94f), Offset(cx + ancho * 0.36f, base - alto * 0.62f), Offset(cx + ancho / 2f, base))
+        val forma = curva(pts, base + 1f)
+        val verde = lerp(C.SELVA, C.HOJA, 0.12f)
+        drawPath(forma, Brush.horizontalGradient(listOf(l.tono(lerp(verde, Color(0xFF4A4C7A), 0.35f), lejos), l.tono(verde, lejos), l.tono(lerp(verde, C.HOJA_LUZ, 0.3f * p.r.dia), lejos)), cx - lado * ancho / 2f, cx + lado * ancho / 2f))
         clipPath(forma) {
-            repeat(12) { val x = cx + az.entre(-0.42f, 0.42f) * ancho; drawLine(l.tono(lerp(roca, C.BREA, 0.4f), lejos).copy(alpha = 0.35f), Offset(x, base - alto * az.entre(0.55f, 0.97f)), Offset(x + az.entre(-1f, 1f), base - alto * 0.1f), az.entre(0.4f, 1.2f)) }
-            val falda = (0..16).map { val x = cx - ancho / 2f + ancho * it / 16f; Offset(x, base - alto * (0.12f + 0.14f * az.real() + 0.08f * sin(it * 1.3f))) }
-            drawPath(curva(falda, base + 2f), l.tono(lerp(C.SELVA, C.HOJA, 0.15f), lejos))
-            if (l.noche > 0.6f && l.nublado < 0.5f) drawRect(Brush.horizontalGradient(listOf(EscenaBotanico.LUZ_DE_LUNA.copy(alpha = 0.3f * l.noche), Color.Transparent), cx + ancho / 2f, cx), Offset(cx - ancho / 2f, base - alto), Size(ancho, alto))
+            // Las lajas de granito: una cara lisa y pálida del lado del mar, con su chorrera.
+            val roca = lerp(C.ROCA, C.TEJA, 0.1f)
+            val laja = curva(listOf(Offset(cx + ancho * 0.05f, base - alto * 0.95f), Offset(cx + ancho * 0.2f, base - alto * 0.8f), Offset(cx + ancho * 0.3f, base - alto * 0.45f), Offset(cx + ancho * 0.12f, base - alto * 0.4f), Offset(cx, base - alto * 0.7f), Offset(cx + ancho * 0.05f, base - alto * 0.95f)))
+            drawPath(laja, l.tono(lerp(roca, if (lado > 0f) Color(0xFFFFE6C4) else Color(0xFF4A4C7A), 0.3f), lejos))
+            drawLine(l.tono(lerp(roca, C.BREA, 0.4f), lejos).copy(alpha = 0.4f), Offset(cx + ancho * 0.14f, base - alto * 0.85f), Offset(cx + ancho * 0.18f, base - alto * 0.45f), 0.8f)
+            // El rizo de las copas, en puntos, con su lado de luz.
+            val copas = ArrayList<Offset>(); val luces = ArrayList<Offset>()
+            repeat(40) { val x = cx + az.entre(-0.5f, 0.5f) * ancho; val y = base - alto * az.entre(0f, 0.9f); copas += Offset(x, y); if (az.real() < 0.5f) luces += Offset(x + lado * 0.8f, y - 0.8f) }
+            drawPoints(copas, PointMode.Points, l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.4f), lejos), 2.6f, StrokeCap.Round)
+            drawPoints(luces, PointMode.Points, l.tono(lerp(C.HOJA, C.HOJA_LUZ, 0.3f), lejos).copy(alpha = 0.3f + 0.5f * p.r.dia), 1.4f, StrokeCap.Round)
+            if (l.noche > 0.6f && l.nublado < 0.5f) drawRect(Brush.horizontalGradient(listOf(EscenaBotanico.LUZ_DE_LUNA.copy(alpha = 0.25f * l.noche), Color.Transparent), cx + ancho / 2f, cx), Offset(cx - ancho / 2f, base - alto), Size(ancho, alto))
         }
+    }
+
+    /** El contorno del Pan de Azúcar (de izquierda a derecha, en fracciones de su ancho y su alto): el hombro con su repisa a la izquierda, la cara casi vertical del mar a la derecha. **[Aproximación]**. */
+    private val PAN = listOf(-0.5f to 0f, -0.47f to 0.1f, -0.42f to 0.26f, -0.36f to 0.38f, -0.29f to 0.44f, -0.22f to 0.48f, -0.18f to 0.6f, -0.14f to 0.76f, -0.08f to 0.91f, 0f to 0.99f, 0.07f to 1f, 0.15f to 0.95f, 0.23f to 0.82f, 0.3f to 0.62f, 0.35f to 0.4f, 0.4f to 0.2f, 0.45f to 0.07f, 0.5f to 0f)
+
+    /**
+     * El Pan de Azúcar: un domo de granito, con la cara que mira al sol cálida y clara y la otra azulada, y el paso
+     * entre las dos redondo (es un domo, no un recorte); las chorreras oscuras que bajan siguiendo la curva de la roca;
+     * el filo de luz del lado del sol; la selva en su pie y en la repisa del hombro. De noche, la luna platea su cara.
+     */
+    private fun DrawScope.panDeAzucar(p: Pincel, pie: Offset, ancho: Float, alto: Float, lejos: Float, az: Azar) {
+        val l = p.l; val cx = pie.x; val base = pie.y; val lado = if (p.solALaDerecha) 1f else -1f
+        fun en(u: Float, v: Float) = Offset(cx + u * ancho, base - v * alto)
+        val silueta = curva(PAN.map { (u, v) -> en(u, v) }, base + 1f)
+        val roca = lerp(C.ROCA, C.TEJA, 0.14f)
+        val luna = l.noche > 0.6f && l.nublado < 0.5f
+        val claro = l.tono(lerp(roca, if (luna) EscenaBotanico.LUZ_DE_LUNA else Color(0xFFFFE4C0), (if (luna) 0.35f else 0.42f * p.r.dia + 0.08f)), lejos)
+        val oscuro = l.tono(lerp(roca, Color(0xFF46487A), 0.48f), lejos)
+        val medio = lerp(claro, oscuro, 0.5f)
+        drawPath(silueta, Brush.verticalGradient(listOf(oscuro, lerp(oscuro, l.tono(C.SELVA_OSC, lejos), 0.25f)), base - alto, base))
+        clipPath(silueta) {
+            // La cara de luz: del paso de sombra (curvo, más hacia la sombra abajo, donde el domo se ensancha) al filo.
+            val paso = (0..8).map { i -> val v = 1.02f - i * 0.13f; en(-lado * (0.02f + 0.12f * (1f - v.coerceIn(0f, 1f))) + lado * 0.04f * sin(v * 5f), v) }
+            val cara = poligono(paso + listOf(en(lado * 0.8f, -0.1f), en(lado * 0.8f, 1.1f)))
+            drawPath(cara, Brush.horizontalGradient(listOf(medio, claro, lerp(claro, Color.White, 0.08f)), cx - lado * 0.05f * ancho, cx + lado * 0.45f * ancho))
+            // El filo entre las dos caras, blando.
+            drawPath(curva(paso), lerp(medio, oscuro, 0.3f).copy(alpha = 0.45f), style = Stroke(2.2f, cap = StrokeCap.Round))
+            // Las chorreras: rayas oscuras que bajan por la roca, abriéndose con la curva del domo, más marcadas en medio.
+            val chorros = ArrayList<Offset>()
+            repeat(16) { val u0 = az.entre(-0.34f, 0.36f); val v0 = az.entre(0.55f, 0.97f); val v1 = az.entre(0.12f, 0.42f)
+                val pts = (0..4).map { j -> val v = v0 + (v1 - v0) * j / 4f; en(u0 * (1f + 0.35f * (v0 - v)) + az.entre(-0.008f, 0.008f), v) }
+                for (j in 0 until 4) { chorros += pts[j]; chorros += pts[j + 1] } }
+            drawPoints(chorros, PointMode.Lines, l.tono(lerp(roca, C.BREA, 0.55f), lejos).copy(alpha = 0.4f), 0.9f, StrokeCap.Round)
+            val finos = ArrayList<Offset>()
+            repeat(12) { val u0 = az.entre(-0.3f, 0.3f); val v0 = az.entre(0.7f, 0.95f); finos += en(u0, v0); finos += en(u0 * 1.25f, v0 - az.entre(0.25f, 0.5f)) }
+            drawPoints(finos, PointMode.Lines, l.tono(lerp(roca, C.BREA, 0.4f), lejos).copy(alpha = 0.3f), 0.5f, StrokeCap.Round)
+            // La selva en la repisa del hombro y en el pie, que sube más por las vaguadas.
+            val selva = l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.25f), lejos); val selvaLuz = l.tono(lerp(C.HOJA, C.HOJA_LUZ, 0.25f), lejos).copy(alpha = 0.3f + 0.5f * p.r.dia)
+            val repisa = (0..8).map { i -> val u = -0.5f + 0.34f * i / 8f; en(u, 0.4f + 0.09f * sin(i * 1.1f) + 0.04f * az.real() + (u + 0.5f) * 0.25f) }
+            drawPath(curva(repisa + listOf(en(-0.12f, 0.5f), en(-0.1f, 0.38f)), null).apply { lineTo(en(-0.5f, 0.2f).x, en(-0.5f, 0.2f).y); close() }, selva)
+            val falda = (0..14).map { i -> val u = -0.5f + i / 14f; en(u, 0.1f + 0.08f * az.real() + (if (i % 4 == 1) 0.08f else 0f)) }
+            drawPath(curva(falda, base + 2f), selva)
+            val motas = ArrayList<Offset>(); repeat(26) { val i = az.entero(falda.size); motas += falda[i] + Offset(az.entre(-2f, 2f), az.entre(0f, 2f)) }
+            repeat(10) { val i = az.entero(repisa.size); motas += repisa[i] + Offset(az.entre(-1.5f, 1.5f), az.entre(0f, 1.5f)) }
+            drawPoints(motas, PointMode.Points, selvaLuz, 1.8f, StrokeCap.Round)
+        }
+        // El filo de luz del lado del sol, por el canto.
+        drawPath(curva(PAN.filter { (u, _) -> u * lado > 0.02f }.map { (u, v) -> en(u, v) }), lerp(claro, Color.White, 0.25f).copy(alpha = 0.5f * (0.3f + 0.7f * p.r.dia)), style = Stroke(0.7f, cap = StrokeCap.Round))
+    }
+
+    /** El reflejo del Pan de Azúcar en el agua quieta: la silueta del revés, más honda y azul, con sus dos caras, rota por las ondas. */
+    private fun DrawScope.reflejoDelPan(p: Pincel, pie: Offset, ancho: Float, alto: Float, lejos: Float, quieta: Float) {
+        val l = p.l; val cx = pie.x; val base = pie.y + 0.4f; val lado = if (p.solALaDerecha) 1f else -1f
+        fun en(u: Float, v: Float) = Offset(cx + u * ancho, base + v * alto * 0.85f)
+        val forma = curva(PAN.map { (u, v) -> en(u, v) }, base - 1f)
+        val roca = lerp(C.ROCA, C.TEJA, 0.14f); val agua = l.tono(lerp(C.MAR, C.MAR_HONDO, 0.4f))
+        val claro = lerp(l.tono(lerp(roca, Color(0xFFFFE4C0), 0.3f * p.r.dia), lejos), agua, 0.35f); val oscuro = lerp(l.tono(lerp(roca, Color(0xFF46487A), 0.5f), lejos), agua, 0.35f)
+        drawPath(forma, Brush.horizontalGradient(listOf(oscuro, oscuro, claro), cx - lado * ancho * 0.5f, cx + lado * ancho * 0.4f), alpha = (0.75f * quieta).coerceIn(0f, 1f))
+        // Las ondas que lo rompen: rayas del color del agua, más juntas hacia abajo.
+        clipPath(forma) { var y = base + 1.2f; var i = 0
+            while (y < base + alto) { drawLine(lerp(agua, l.alto, 0.25f).copy(alpha = 0.55f), Offset(cx - ancho * 0.6f, y), Offset(cx + ancho * 0.6f, y + 0.2f), 0.5f + 0.02f * (y - base)); y += 2.4f - 0.012f * (y - base) * (if (i % 2 == 0) 1f else 0.5f); i++ } }
     }
 
     // ================================================================ La montaña
@@ -140,25 +213,25 @@ internal object LejosSelva {
         // La montaña baja al agua por la derecha: su pie sigue la orilla de la bahía, con sus peñas y su espuma.
         val pie = listOf(Offset(298f, 121.5f), Offset(287f, 125f), Offset(279f, 131f), Offset(270f, 136f), Offset(264f, 146f), Offset(257f, 158f), Offset(250f, 176f), Offset(-14f, 176f))
         val forma = curva(CRESTA).apply { for (q in pie) lineTo(q.x, q.y); close() }
-        drawPath(forma, Brush.verticalGradient(listOf(l.tono(lerp(C.SELVA, Color(0xFF6A8098), 0.3f), 0.42f), l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.4f), 0.22f)), -30f, 160f))
+        drawPath(forma, Brush.verticalGradient(listOf(l.tono(lerp(lerp(C.SELVA, C.SELVA_OSC, 0.3f), Color(0xFF6A8098), 0.32f), 0.5f), l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.35f), 0.36f)), -30f, 160f))
         clipPath(forma) {
             // El primer plano de la montaña, el más lejano: copas chicas en lote que siguen la ladera, y el granito.
-            loteDeCopas(l, r, az, -14f, 300f, -40f, 120f, 2.4f, 0.42f) { x -> crestaEn(x) }
+            loteDeCopas(l, r, az, -14f, 300f, -40f, 120f, 2.6f, 0.62f) { x -> crestaEn(x) }
             granito(luz, az)
             bruma(luz, 70f, 10f, 0.8f, az)
             // El segundo plano: un espolón que baja de la izquierda, con árboles más grandes que sobresalen.
             val espolon = perfil(Azar(Semilla.de("botanico", "espolon")), -14f, 268f, 118f, 46f, 0.5f, 26).map { Offset(it.x, it.y + (it.x / 268f) * 10f) }
-            monte(l, espolon, 175f, lerp(C.SELVA, Color(0xFF6A8098), 0.25f), 0.38f)
-            clipPath(curva(espolon, 175f)) { loteDeCopas(l, r, az, -14f, 270f, 70f, 140f, 3.4f, 0.38f) { x -> espolon.minByOrNull { abs(it.x - x) }!!.y } }
-            for (x in listOf(30f, 98f, 150f, 214f)) emergente(l, r, Offset(x + az.entre(-8f, 8f), espolon.minByOrNull { abs(it.x - x) }!!.y + 6f), az.entre(6f, 9f), 0.36f, az)
+            monte(l, espolon, 175f, lerp(C.SELVA, Color(0xFF6A8098), 0.3f), 0.54f)
+            clipPath(curva(espolon, 175f)) { loteDeCopas(l, r, az, -14f, 270f, 70f, 140f, 3.6f, 0.52f) { x -> espolon.minByOrNull { abs(it.x - x) }!!.y } }
+            for (x in listOf(30f, 98f, 150f, 214f)) emergente(l, r, Offset(x + az.entre(-8f, 8f), espolon.minByOrNull { abs(it.x - x) }!!.y + 6f), az.entre(6f, 9f), 0.5f, az)
             bruma(luz, 118f, 9f, 0.7f, az)
             // El tercero, al pie: la ladera cercana, con copas grandes, palmeras y algún árbol en flor.
             val ladera = perfil(Azar(Semilla.de("botanico", "ladera")), -14f, 262f, 148f, 30f, 0.45f, 22).map { Offset(it.x, it.y + (it.x / 262f) * 6f) }
-            monte(l, ladera, 175f, lerp(C.SELVA, C.SELVA_OSC, 0.15f), 0.2f)
-            clipPath(curva(ladera, 175f)) { loteDeCopas(l, r, az, -14f, 266f, 100f, 170f, 5.2f, 0.2f) { x -> ladera.minByOrNull { abs(it.x - x) }!!.y } }
-            for (x in listOf(12f, 66f, 124f, 186f, 238f)) emergente(l, r, Offset(x + az.entre(-10f, 10f), ladera.minByOrNull { abs(it.x - x) }!!.y + 8f), az.entre(9f, 13f), 0.18f, az)
-            for (x in listOf(48f, 112f, 168f, 226f)) embauba(l, r, Offset(x + az.entre(-8f, 8f), ladera.minByOrNull { abs(it.x - x) }!!.y + 14f), az.entre(10f, 15f), 0.2f, az)
-            for (x in listOf(84f, 140f, 200f, 250f)) palmaLejana(l, r, Offset(x + az.entre(-6f, 6f), ladera.minByOrNull { abs(it.x - x) }!!.y + 16f), az.entre(18f, 26f), 0.18f, az)
+            monte(l, ladera, 175f, lerp(C.SELVA, Color(0xFF6A8098), 0.12f), 0.4f)
+            clipPath(curva(ladera, 175f)) { loteDeCopas(l, r, az, -14f, 266f, 100f, 170f, 5.4f, 0.38f) { x -> ladera.minByOrNull { abs(it.x - x) }!!.y } }
+            for (x in listOf(12f, 66f, 124f, 186f, 238f)) emergente(l, r, Offset(x + az.entre(-10f, 10f), ladera.minByOrNull { abs(it.x - x) }!!.y + 8f), az.entre(9f, 13f), 0.36f, az)
+            for (x in listOf(48f, 112f, 168f, 226f)) embauba(l, r, Offset(x + az.entre(-8f, 8f), ladera.minByOrNull { abs(it.x - x) }!!.y + 14f), az.entre(10f, 15f), 0.36f, az)
+            for (x in listOf(84f, 140f, 200f, 250f)) palmaLejana(l, r, Offset(x + az.entre(-6f, 6f), ladera.minByOrNull { abs(it.x - x) }!!.y + 16f), az.entre(18f, 26f), 0.36f, az)
             bruma(luz, 150f, 8f, 0.6f, az)
             // Los rayos de sol que bajan entre las copas y encienden lo que tocan.
             rayos(luz, Rect(-10f, -20f, 300f, 175f), 7, Semilla.de("botanico", "rayos montana", m.ficha.dia), 1f)
@@ -190,7 +263,7 @@ internal object LejosSelva {
         val cHondo = l.tono(mult(lerp(C.SELVA, C.SELVA_OSC, 0.75f), r.color, 0.55f), lejos); val cCuerpo = l.tono(lerp(C.SELVA, C.HOJA, 0.12f), lejos)
         val cMedio = l.tono(lerp(C.SELVA, C.HOJA, 0.38f), lejos); val cClaro = l.tono(lerp(C.HOJA, C.HOJA_LUZ, 0.4f), lejos).copy(alpha = 0.8f * dia)
         // Se siembran por bandas, de la cresta hacia abajo: así cada copa tapa un poco la de detrás, como en una ladera.
-        val bandas = 7; val n = ((x1 - x0) * (y1 - y0) / (tam * tam) * 0.42f).toInt().coerceAtMost(2400)
+        val bandas = 7; val n = ((x1 - x0) * (y1 - y0) / (tam * tam) * 0.42f).toInt().coerceAtMost(1900)
         for (b in 0 until bandas) {
             val hondo = ArrayList<Offset>(); val cuerpo = ArrayList<Offset>(); val medio = ArrayList<Offset>(); val claro = ArrayList<Offset>(); val flor = ArrayList<Offset>(); val flor2 = ArrayList<Offset>()
             val f0 = b / bandas.toFloat(); val f1 = (b + 1) / bandas.toFloat()
@@ -262,15 +335,15 @@ internal object LejosSelva {
         val roca = lerp(C.ROCA, C.TEJA, 0.1f)
         // La pared: lisa, casi vertical, con su lado de luz y la selva que se agarra a sus repisas.
         val pared = curva(listOf(Offset(198f, 62f), Offset(197f, 40f), Offset(203f, 22f), Offset(211f, 16f), Offset(219f, 18f), Offset(227f, 28f), Offset(232f, 46f), Offset(235f, 64f)), 70f)
-        drawPath(pared, Brush.horizontalGradient(listOf(l.tono(lerp(roca, Color(0xFF4A4C7A), 0.4f), 0.38f), l.tono(lerp(roca, C.SELVA_OSC, 0.15f), 0.38f), l.tono(lerp(roca, Color(0xFFFFE8C0), 0.3f * r.dia), 0.38f)), 216f - lado * 20f, 216f + lado * 20f))
+        drawPath(pared, Brush.horizontalGradient(listOf(l.tono(lerp(roca, Color(0xFF4A4C7A), 0.4f), 0.55f), l.tono(lerp(roca, C.SELVA_OSC, 0.15f), 0.55f), l.tono(lerp(roca, Color(0xFFFFE8C0), 0.3f * r.dia), 0.55f)), 216f - lado * 20f, 216f + lado * 20f))
         clipPath(pared) {
-            repeat(14) { val x = az.entre(197f, 235f); drawLine(l.tono(lerp(roca, C.BREA, 0.5f), 0.38f).copy(alpha = 0.45f), Offset(x, az.entre(18f, 40f)), Offset(x + az.entre(-1.5f, 1.5f), az.entre(46f, 70f)), az.entre(0.5f, 1.4f)) }
+            repeat(14) { val x = az.entre(197f, 235f); drawLine(l.tono(lerp(roca, C.BREA, 0.5f), 0.55f).copy(alpha = 0.45f), Offset(x, az.entre(18f, 40f)), Offset(x + az.entre(-1.5f, 1.5f), az.entre(46f, 70f)), az.entre(0.5f, 1.4f)) }
             // La selva que se agarra a las repisas de la pared: matas sueltas, más en las grietas y al pie.
             val matas = ArrayList<Offset>(); val luces = ArrayList<Offset>()
             for (j in 0..5) { val y0 = 26f + j * 8f + az.entre(-2f, 2f); var x = 197f + az.entre(0f, 6f)
                 while (x < 236f) { val largo = az.entre(2f, 7f); if (az.real() < 0.55f) { matas += Offset(x, y0 + (x - 197f) * 0.06f); matas += Offset(x + largo, y0 + (x + largo - 197f) * 0.06f + az.entre(-0.6f, 0.6f)); if (az.real() < 0.6f) { luces += Offset(x + 0.5f, y0 + (x - 197f) * 0.06f - 1f); luces += Offset(x + largo * 0.6f, y0 + (x - 197f) * 0.06f - 1.2f) } }; x += largo + az.entre(1f, 5f) } }
-            drawPoints(matas, PointMode.Lines, l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.3f), 0.38f), 2.4f, StrokeCap.Round)
-            drawPoints(luces, PointMode.Lines, l.tono(lerp(C.HOJA, C.HOJA_LUZ, 0.3f), 0.38f).copy(alpha = 0.7f), 1.1f, StrokeCap.Round)
+            drawPoints(matas, PointMode.Lines, l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.3f), 0.55f), 2.4f, StrokeCap.Round)
+            drawPoints(luces, PointMode.Lines, l.tono(lerp(C.HOJA, C.HOJA_LUZ, 0.3f), 0.55f).copy(alpha = 0.7f), 1.1f, StrokeCap.Round)
         }
         // La cascada: un hilo blanco que salta de la quebrada, con su nube de agua al pie.
         val crecida = if (SelvaBotanico.arroyoCrecido(luz.m)) 1.6f else 1f

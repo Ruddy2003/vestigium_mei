@@ -50,8 +50,24 @@ import kotlin.math.sin
 internal object JardinSelva {
     private val C = ColorBotanico
 
-    /** El árbol grande: dónde pisa, en metros. */
-    val ARBOL = V3(-0.35f, sueloEn(-0.35f, 13.5f), 13.5f)
+    /** El árbol grande: dónde pisa, en metros. Más atrás que lo demás del jardín, para que se vea entero, de las raíces a la bóveda. */
+    val ARBOL = V3(-0.55f, sueloEn(-0.55f, 16.5f), 16.5f)
+
+    /** El helecho arborescente: a la derecha, contra el claro de la bahía, donde su estrella de frondas se recorta. */
+    val HELECHO = V3(3.35f, sueloEn(3.35f, 10.6f), 10.6f)
+    const val ALTO_HELECHO = 3.9f
+
+    /** El macizo de plátanos, entre el árbol y el helecho: la mata de atrás y la del racimo, delante. */
+    private val PLATANOS = listOf(Triple(V3(2.35f, sueloEn(2.35f, 13.6f), 13.6f), 3.5f, false), Triple(V3(1.55f, sueloEn(1.55f, 12.2f), 12.2f), 4.1f, true))
+
+    /** Las matas de heliconias: pocas y grandes, para que se lean sus flores. */
+    private val HELICONIAS = listOf(Triple(-1.5f, 7.4f, 1.8f), Triple(2.55f, 8.1f, 1.9f), Triple(3.45f, 6.9f, 1.7f))
+
+    /** Lo que es selva en el lienzo (no la bahía): hasta la ladera que baja al agua y la playa. */
+    private val SOLO_SELVA: Path = poligono(listOf(Offset(-10f, -10f), Offset(236f, -10f), Offset(262f, 70f), Offset(300f, 121f), Offset(262f, 148f), Offset(258f, 200f), Offset(-10f, 200f)))
+
+    /** El naranjo, a la izquierda, detrás de la mesa. */
+    private val NARANJO = V3(-3.3f, sueloEn(-3.3f, 10.5f), 10.5f)
 
     /** El arroyo: su eje, de arriba (lejos, a la izquierda) abajo (cerca, a la derecha), en metros, con el agua a su altura. */
     val ARROYO = listOf(V3(-3.8f, 1.1f, 38f), V3(-2.2f, 0.7f, 28f), V3(-0.6f, 0.25f, 20f), V3(0.9f, -0.12f, 14f), V3(1.6f, -0.45f, 10f), V3(2.0f, -0.66f, 7.5f), V3(2.25f, -0.8f, 5.6f), V3(2.6f, -0.92f, 4.1f), V3(3.0f, -1.0f, 3.0f))
@@ -59,69 +75,79 @@ internal object JardinSelva {
     /** El sendero, por la orilla de la izquierda del arroyo: de la esquina del tablado hacia el árbol grande. */
     val SENDERO = listOf(V3(1.3f, -0.4f, 5.6f), V3(1.05f, -0.38f, 7.4f), V3(0.65f, -0.25f, 9.8f), V3(0.25f, -0.1f, 12.2f), V3(0.5f, 0.05f, 15f))
 
+    /**
+     * El jardín, ordenado por profundidad con el valor y la bruma (como la niebla de Horror cósmico y la vegetación de
+     * Ciudad verde): lo lejano (la linde y las palmeras finas), pálido y azulado tras un velo húmedo; lo de en medio (el
+     * árbol grande), más claro, con otro velo detrás; lo cercano (los plátanos, el helecho, el naranjo y las heliconias),
+     * oscuro y saturado. Pocas plantas y enteras, para que cada una se reconozca a tamaño de teléfono.
+     */
     fun DrawScope.jardin(m: Momento, luz: LuzSelva.Luz) {
-        val l = luz.l; val p = luz.p; val az = Azar(Semilla.de("botanico", "jardin"))
+        val p = luz.p; val az = Azar(Semilla.de("botanico", "jardin"))
         suelo(m, luz, az)
-        // Las palmeras de tronco fino que suben de la linde y se salen por arriba, entre la bóveda.
+        // Las palmeras de tronco fino que suben de la linde, ya pálidas.
         with(PiezasBotanico) {
-            for ((x, z, inc) in listOf(Triple(1.35f, 22f, 0.04f), Triple(-1.5f, 26f, -0.03f), Triple(2.55f, 30f, 0.02f))) {
+            for ((x, z, inc) in listOf(Triple(1.0f, 24f, 0.04f), Triple(-2.6f, 27f, -0.03f))) {
                 val pie = pc(x, sueloEn(x, z), z); val alto = 15f * k(z)
                 val cima = pie + Offset(inc * alto, -alto)
-                drawPath(Path().apply { moveTo(pie); cubicTo(pie + Offset(0f, -alto * 0.4f), cima + Offset(-inc * alto * 0.6f, alto * 0.3f), cima) }, p.medio(lerp(C.ROCA, C.ARENA, 0.25f), 0.3f), style = Stroke(max(0.8f, 0.2f * k(z))))
-                drawPath(Path().apply { moveTo(pie + Offset(0.5f, 0f)); cubicTo(pie + Offset(0.5f, -alto * 0.4f), cima + Offset(-inc * alto * 0.6f + 0.5f, alto * 0.3f), cima + Offset(0.5f, 0f)) }, p.luz(lerp(C.ROCA, C.ARENA, 0.4f), 0.3f).copy(alpha = 0.5f * luz.r.dia), style = Stroke(max(0.4f, 0.07f * k(z))))
+                drawPath(Path().apply { moveTo(pie); cubicTo(pie + Offset(0f, -alto * 0.4f), cima + Offset(-inc * alto * 0.6f, alto * 0.3f), cima) }, p.medio(lerp(C.ROCA, C.ARENA, 0.25f), 0.55f), style = Stroke(max(0.8f, 0.2f * k(z))))
             }
         }
         arroyo(m, luz, az)
-        // El árbol grande, con sus lianas y sus bromelias y orquídeas en las horquillas.
+        // El velo húmedo entre lo lejano y lo de en medio: la montaña y la linde se van al azul pálido.
+        velo(m, luz, 58f, 160f, 0.8f, 0.36f)
+        // El árbol grande, con sus lianas y sus bromelias y orquídeas en las horquillas: más claro que lo de delante.
         arbol(m, luz)
+        // Otro velo, más tenue, entre el árbol y lo de delante.
+        velo(m, luz, 96f, 172f, 0.4f, 0.15f)
         with(PiezasBotanico) {
-            // Los helechos arborescentes, de tronco oscuro y fronda en estrella (los dos de detrás, antes de la bruma).
-            for ((i, t) in listOf(Triple(-2.15f, 12.5f, 4.3f), Triple(2.95f, 13.5f, 3.7f)).withIndex()) {
-                val (x, z, h) = t; val pie = pc(x, sueloEn(x, z), z)
-                helechoArborescente(pinJardin(luz, x, h, z), pie, h * k(z), Azar(Semilla.de("botanico", "helecho jardin", i)), 0.08f, contraluz = BovedaSelva.contraluz(luz, pie + Offset(0f, -h * k(z))))
+            // El macizo de plátanos, la mata de atrás primero; la del racimo, de cara.
+            for ((i, t) in PLATANOS.withIndex()) {
+                val (q, h, racimo) = t; val pie = pc(q); val (pin, cl) = pinYHaz(luz, q.x, h * 0.6f, q.z)
+                platano(pin, pie, h * k(q.z), Azar(Semilla.de("botanico", "platano jardin", i + 4)), 0.1f, racimo = racimo, hojas = 7, contraluz = maxOf(cl, BovedaSelva.contraluz(luz, pie + Offset(0f, -h * k(q.z) * 0.7f))))
             }
+            // El helecho arborescente, con su estrella de frondas contra el claro.
+            run { val pie = pc(HELECHO); val (pin, cl) = pinYHaz(luz, HELECHO.x, ALTO_HELECHO, HELECHO.z)
+                helechoArborescente(pin, pie, ALTO_HELECHO * k(HELECHO.z), Azar(Semilla.de("botanico", "helecho jardin", 7)), 0.03f, frondas = 13, contraluz = maxOf(cl, BovedaSelva.contraluz(luz, pie + Offset(0f, -ALTO_HELECHO * k(HELECHO.z))))) }
+            // El naranjo con fruta, a la izquierda.
+            run { val q = NARANJO; val (pin, _) = pinYHaz(luz, q.x, 2f, q.z); naranjo(pin, pc(q), 3.3f * k(q.z), 2.7f * k(q.z), Azar(Semilla.de("botanico", "naranjo jardin")), 0.03f, frutos = 16) }
         }
-        // La bruma se queda entre los planos: entre el árbol grande y lo de delante.
-        brumaEntre(m, luz, 120f, 178f, 1f)
         // El monte bajo de cerca, a las dos orillas del arroyo: helechos, hojas de corazón y piedras con musgo.
         monteBajo(m, luz)
         with(PiezasBotanico) {
-            run { val x = -2.9f; val z = 8.4f; val h = 3.1f; val pie = pc(x, sueloEn(x, z), z)
-                helechoArborescente(pinJardin(luz, x, h, z), pie, h * k(z), Azar(Semilla.de("botanico", "helecho jardin", 2)), 0.06f, contraluz = BovedaSelva.contraluz(luz, pie + Offset(0f, -h * k(z)))) }
-            // El naranjo con fruta, a la izquierda.
-            run { val x = -3.25f; val z = 10f; naranjo(pinJardin(luz, x, 2f, z), pc(x, sueloEn(x, z), z), 3.3f * k(z), 2.7f * k(z), Azar(Semilla.de("botanico", "naranjo jardin")), 0.08f, frutos = 18) }
-            // El macizo de plátanos con su racimo, a la derecha del sendero.
-            for ((i, t) in listOf(Triple(2.75f, 9.3f, 4.6f), Triple(3.5f, 10.4f, 3.6f)).withIndex()) {
-                val (x, z, h) = t; val pie = pc(x, sueloEn(x, z), z)
-                platano(pinJardin(luz, x, h * 0.7f, z), pie, h * k(z), Azar(Semilla.de("botanico", "platano jardin", i)), 0.08f, racimo = i == 0, hojas = 8, contraluz = BovedaSelva.contraluz(luz, pie + Offset(0f, -h * k(z) * 0.7f)))
-            }
-            // Las heliconias, en matas a la orilla del tablado y del arroyo.
-            for ((i, t) in listOf(Triple(-2.35f, 8.3f, 1.7f), Triple(-1.45f, 7.6f, 1.6f), Triple(0.75f, 7.9f, 1.5f), Triple(1.75f, 6.7f, 1.4f), Triple(3.3f, 7.0f, 1.6f)).withIndex()) {
-                val (x, z, h) = t; val pie = pc(x, sueloEn(x, z), z)
-                heliconia(pinJardin(luz, x, h, z), pie, h * k(z), Azar(Semilla.de("botanico", "heliconia", i)), 0.04f, contraluz = BovedaSelva.contraluz(luz, pie + Offset(0f, -h * k(z))) * 0.7f, flores = 2 + i % 2, cuelga = i % 2 == 1)
+            // Las heliconias, en matas grandes a la orilla del tablado y del arroyo.
+            for ((i, t) in HELICONIAS.withIndex()) {
+                val (x, z, h) = t; val pie = pc(x, sueloEn(x, z), z); val (pin, cl) = pinYHaz(luz, x, h, z)
+                heliconia(pin, pie, h * k(z), Azar(Semilla.de("botanico", "heliconia", i + 3)), 0f, contraluz = maxOf(cl, BovedaSelva.contraluz(luz, pie + Offset(0f, -h * k(z))) * 0.7f), flores = 3, cuelga = i == 1)
             }
         }
-        // Otra capa de bruma, más tenue, entre el jardín y el tablado.
-        brumaEntre(m, luz, 168f, 215f, 0.55f)
         // El plátano junto a la mesa: el falso tronco y la cima (sus hojas son la bóveda).
         platanoDeLaMesa(m, luz)
-        // Lo que se ve en el aire del jardín: los rayos que bajan entre las hojas.
-        clipPath(poligono(listOf(Offset(-10f, 0f), Offset(196f, 0f), Offset(250f, 60f), Offset(268f, 110f), Offset(268f, 230f), Offset(-10f, 230f)))) {
-            with(LejosSelva) { rayos(luz, Rect(40f, 10f, 250f, 210f), 4, Semilla.de("botanico", "rayos jardin", m.ficha.dia), 0.7f) }
-        }
     }
 
     /**
-     * Un banco de bruma entre dos planos del jardín, de [y0] a [y1]: con niebla, espeso (la niebla va por capas, como en
-     * Horror cósmico, no como un velo encima de todo); con lluvia, menos; con buen tiempo, solo la de la mañana.
+     * El pincel de lo que está en el jardín en ([x], [h], [z]) y cuánto lo enciende un haz: si un haz le da, el pincel
+     * del sol y el contraluz (las hojas casi amarillas).
      */
-    private fun DrawScope.brumaEntre(m: Momento, luz: LuzSelva.Luz, y0: Float, y1: Float, cuanta: Float) {
-        val tiempo = when (m.ficha.clima) { Clima.NIEBLA -> 1f; Clima.LLUVIA, Clima.TORMENTA -> 0.5f; Clima.NIEVE -> 0.45f; else -> 0.35f * luz.bruma }
+    private fun pinYHaz(luz: LuzSelva.Luz, x: Float, h: Float, z: Float): Pair<Pincel, Float> {
+        val hz = LuzSelva.enHaz(luz, pc(x, h, z))
+        return if (hz > 0.25f) luz.p to (0.45f + 0.55f * hz) * luz.directa else pinJardin(luz, x, h, z) to 0f
+    }
+
+    /**
+     * Un velo húmedo entre dos planos del jardín, de [y0] a [y1]: lo de detrás queda más pálido y azulado. Siempre hay
+     * algo (la humedad de la selva), [base]; más con la bruma de la mañana, y espeso con niebla (la niebla va por capas,
+     * como en Horror cósmico, no como un velo encima de todo).
+     */
+    private fun DrawScope.velo(m: Momento, luz: LuzSelva.Luz, y0: Float, y1: Float, cuanta: Float, base: Float) {
+        val tiempo = when (m.ficha.clima) { Clima.NIEBLA -> 1f; Clima.LLUVIA, Clima.TORMENTA -> 0.7f; Clima.NIEVE -> 0.6f; else -> base + 0.35f * luz.bruma }
         val k = (tiempo * cuanta).coerceIn(0f, 1f); if (k < 0.02f) return
-        val c = lerp(luz.l.bruma, Color.White, 0.25f)
-        drawRect(Brush.verticalGradient(listOf(c.copy(alpha = 0f), c.copy(alpha = 0.5f * k), c.copy(alpha = 0.75f * k), c.copy(alpha = 0f)), y0 - 50f, y1 + 10f), Offset(0f, y0 - 50f), Size(ANCHO, y1 - y0 + 60f))
-        val az = Azar(Semilla.de("botanico", "bruma entre", y0))
-        repeat(6) { mancha(Offset(az.entre(-20f, ANCHO + 20f), az.entre(y0, y1)), az.entre(60f, 140f), az.entre(6f, 14f), c, 0.6f * k) }
+        val c = luz.l.tono(lerp(lerp(luz.l.bruma, Color(0xFFDCE8EC), 0.45f), luz.l.alto, 0.15f)).let { lerp(it, luz.l.bruma, luz.l.noche * 0.6f) }
+        // Solo sobre la selva: la bahía, al aire libre, queda limpia.
+        clipPath(SOLO_SELVA) {
+            drawRect(Brush.verticalGradient(listOf(c.copy(alpha = 0f), c.copy(alpha = 0.45f * k), c.copy(alpha = 0.65f * k), c.copy(alpha = 0f)), y0 - 30f, y1), Offset(0f, y0 - 30f), Size(ANCHO, y1 - y0 + 30f))
+            val az = Azar(Semilla.de("botanico", "bruma entre", y0))
+            repeat(4) { mancha(Offset(az.entre(-20f, 300f), az.entre(y0 + 10f, y1 - 10f)), az.entre(70f, 140f), az.entre(6f, 12f), c, 0.55f * k) }
+        }
     }
 
     /**
@@ -135,7 +161,7 @@ internal object JardinSelva {
         // Al sol, el suelo del jardín se enciende a manchas (lo que dejan pasar los plátanos); a la sombra, se ahonda.
         if (luz.directa > 0.2f && !luz.deLuna) repeat(12) { val z = 3.6f + 6f * az.real(); val x = 2.7f + az.entre(0f, 2.6f); val c = pc(x, sueloEn(x, z), z); val e = k(z)
             mancha(c, e * az.entre(0.4f, 0.9f), e * az.entre(0.1f, 0.22f), lerp(luz.color, C.HOJA_LUZ, 0.5f), 0.22f * luz.directa) }
-        repeat(30) { val z = 3.4f + 6.5f * az.real(); val x = 2.7f + az.entre(0f, 2.6f) + (z - 3.4f) * 0.15f; sitios += Triple(V3(x, sueloEn(x, z), z), az.entero(3), az.entre(0.45f, 0.85f)) }
+        repeat(18) { val z = 4.6f + 5.5f * az.real(); val x = 2.7f + az.entre(0f, 2.6f) + (z - 3.4f) * 0.15f; sitios += Triple(V3(x, sueloEn(x, z), z), az.entero(3), az.entre(0.45f, 0.85f)) }
         repeat(5) { val z = 5.6f + 2.5f * az.real(); val x = az.entre(1.5f, 1.85f); sitios += Triple(V3(x, sueloEn(x, z), z), 0, az.entre(0.35f, 0.5f)) }
         for ((q, tipo, tam) in sitios.sortedByDescending { it.first.z }) {
             val c = pc(q); val e = k(q.z) * tam; val p = pinJardin(luz, q.x, q.y + 0.4f, q.z)
@@ -165,7 +191,7 @@ internal object JardinSelva {
             }
         }
         // Las piedras con musgo entre las matas.
-        repeat(7) { val z = 3.6f + 5f * az.real(); val x = 2.9f + az.entre(0f, 1.6f); piedra(luz.p, pc(x, sueloEn(x, z), z), k(z) * az.entre(0.12f, 0.22f), az, 0.05f) }
+        repeat(5) { val z = 4.4f + 4f * az.real(); val x = 2.9f + az.entre(0f, 1.6f); piedra(luz.p, pc(x, sueloEn(x, z), z), k(z) * az.entre(0.12f, 0.22f), az, 0.05f) }
     }
 
     /** El pincel de lo que está en el jardín: al sol o a la sombra del árbol y de las hojas. */
@@ -210,7 +236,7 @@ internal object JardinSelva {
         }
         // Las sombras del jardín: las del árbol grande, los plátanos y los helechos, tumbadas con el sol.
         capaSombra(luz.r, 0.85f) { col ->
-            for ((x, z, alto, radio) in listOf(Cuatro(ARBOL.x, ARBOL.z, 9f, 1.4f), Cuatro(2.75f, 9.3f, 4.6f, 1.6f), Cuatro(-2.15f, 12.5f, 4.3f, 1.5f), Cuatro(2.95f, 13.5f, 3.7f, 1.3f), Cuatro(-3.25f, 10f, 3.3f, 1.3f), Cuatro(-1.6f, 6.8f, 3.5f, 1.4f)))
+            for ((x, z, alto, radio) in listOf(Cuatro(ARBOL.x, ARBOL.z, 9f, 1.6f), Cuatro(1.55f, 12.2f, 4.1f, 1.6f), Cuatro(2.35f, 13.6f, 3.5f, 1.4f), Cuatro(HELECHO.x, HELECHO.z, ALTO_HELECHO, 1.5f), Cuatro(NARANJO.x, NARANJO.z, 3.3f, 1.3f), Cuatro(-1.6f, 6.8f, 3.5f, 1.4f)))
                 sombra(sombraEnElSuelo(luz, V3(x, sueloEn(x, z), z), alto, radio), col)
         }
     }
@@ -291,29 +317,38 @@ internal object JardinSelva {
 
     // ---------------------------------------------------------------- El árbol grande
 
+    /**
+     * El árbol grande, el gran vertical natural del cuadro: el tronco claro y entero, de las raíces tabulares (que se
+     * abren por encima de lo que hay en el tablado) a la bóveda, con una liana que lo abraza, las bromelias de sus
+     * horquillas y las lianas que cuelgan de sus ramas. Queda en el plano de en medio: más claro que lo de delante, con
+     * el velo húmedo detrás; a la sombra de su propia copa, salvo donde lo cruza un haz, que lo enciende a franjas.
+     */
     private fun DrawScope.arbol(m: Momento, luz: LuzSelva.Luz) {
         val pie = pc(ARBOL); val e = k(ARBOL.z)
-        // El tronco queda a la sombra de su propia copa (que se sale por arriba): solo lo tocan los rayos que bajan.
-        val p = luz.sombra
+        val p = if (luz.deLuna || luz.directa < 0.15f) luz.sombra else luz.p; val lejos = 0.14f
         val az = Azar(Semilla.de("botanico", "arbol grande"))
-        val horquillas = with(PiezasBotanico) { arbolDeRaices(p, pie, 1.5f * e, pie.y + 20f, az, 0.06f) }
-        // La liana que abraza el tronco, los helechos y las bromelias que viven en él, y las motas de sol que se cuelan.
+        val ancho = 2.0f * e
+        val horquillas = with(PiezasBotanico) { arbolDeRaices(p, pie, ancho, pie.y + 20f, az, lejos) }
         with(PiezasBotanico) {
-            val sube = (0..14).map { i -> val t = i / 14f; pie + Offset(sin(t * 9f) * 0.75f * e * (1f - 0.2f * t), -t * pie.y * 0.95f) }
-            liana(p, sube, 1.3f, az, 0.06f)
-            for ((i, t) in listOf(0.32f, 0.5f, 0.66f).withIndex()) { val q = pie + Offset((if (i % 2 == 0) -0.55f else 0.6f) * e, -t * pie.y); bromelia(p, q, e * az.entre(0.6f, 0.9f), az, 0.06f, flor = i == 1) }
+            // La liana que abraza el tronco y las bromelias que viven en él.
+            val sube = (0..14).map { i -> val t = i / 14f; pie + Offset(sin(t * 7f + 1f) * 0.42f * ancho * (1f - 0.2f * t), -t * pie.y * 0.95f) }
+            liana(p, sube, 1.4f, az, lejos)
+            for ((i, t) in listOf(0.38f, 0.62f).withIndex()) { val q = pie + Offset((if (i % 2 == 0) -0.4f else 0.42f) * ancho, -t * pie.y); bromelia(p, q, e * az.entre(0.7f, 0.95f), az, lejos, flor = i == 1) }
         }
+        // Las motas de sol que se cuelan por su copa, del lado de la luz, y las franjas que encienden los haces.
         if (luz.directa > 0.2f && !luz.deLuna) { val lado = if (luz.r.lat >= 0f) 1f else -1f
-            repeat(7) { val q = pie + Offset(lado * az.entre(0.05f, 0.6f) * e, -az.entre(0.1f, 0.85f) * pie.y); mancha(q, e * az.entre(0.12f, 0.28f), e * az.entre(0.2f, 0.4f), luz.color, 0.35f * luz.directa) } }
-        // Las lianas que cuelgan de las ramas, en lazos que cruzan por arriba hacia la casa.
-        with(PiezasBotanico) {
-            val ramas = horquillas
-            for ((i, h) in ramas.withIndex()) {
-                if (i % 2 == 0) { val fin = Offset(h.x + az.entre(-40f, 40f), h.y + az.entre(60f, 110f)); liana(p, listOf(h, h + Offset(az.entre(-6f, 6f), 30f), fin + Offset(0f, -12f), fin), 1.4f, az, 0.05f) }
-                else liana(p, listOf(h, Offset((h.x + 95f) * 0.5f, h.y + 55f), Offset(95f, 30f)), 1.6f, az, 0.05f)
+            with(LuzSelva) {
+                repeat(5) { val q = pie + Offset(lado * az.entre(0.05f, 0.4f) * ancho, -az.entre(0.15f, 0.85f) * pie.y); brillo(q, ancho * az.entre(0.08f, 0.16f), ancho * az.entre(0.12f, 0.22f), luz.color, 0.35f * luz.directa) }
+                for (j in 0..12) { val q = pie + Offset(0f, -pie.y * j / 12f); val h = LuzSelva.enHaz(luz, q); if (h > 0.2f) brillo(q, ancho * 0.45f, ancho * 0.35f, lerp(luz.color, C.LATON, 0.2f), 0.4f * h * luz.directa) }
             }
-            // Las bromelias y las orquídeas en las horquillas.
-            for ((i, h) in ramas.withIndex()) bromelia(p, h, e * az.entre(0.7f, 1.1f), az, 0.05f, flor = i % 2 == 0)
+        }
+        // Las lianas que cuelgan de las ramas (una en lazo que cruza por arriba hacia la casa) y las bromelias de las horquillas.
+        with(PiezasBotanico) {
+            for ((i, h) in horquillas.withIndex()) {
+                if (i == 1) liana(p, listOf(h, Offset((h.x + 95f) * 0.5f, h.y + 50f), Offset(95f, 30f)), 1.5f, az, lejos)
+                else if (i % 2 == 0) { val fin = Offset(h.x + az.entre(-25f, 25f), h.y + az.entre(55f, 95f)); liana(p, listOf(h, h + Offset(az.entre(-6f, 6f), 30f), fin + Offset(0f, -12f), fin), 1.2f, az, lejos, hojas = false) }
+            }
+            for ((i, h) in horquillas.withIndex()) if (i % 2 == 1 || i == 0) bromelia(p, h, e * az.entre(0.8f, 1.15f), az, lejos, flor = i % 2 == 0)
         }
     }
 

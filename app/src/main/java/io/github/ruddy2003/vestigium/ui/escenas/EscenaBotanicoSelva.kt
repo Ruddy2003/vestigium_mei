@@ -141,19 +141,16 @@ internal object SelvaBotanico {
         val luz = LuzSelva.Luz(m)
         with(LejosSelva) { lejos(m, luz); veloDeLoLejano(m, luz) }
         with(JardinSelva) { jardin(m, luz) }
+        with(LuzSelva) { rayosEntreCopas(luz) }
         val cosas = CercaSelva.cosas(m, luz)
         with(GaleriaSelva) { tablado(m, luz, cosas) }
         with(BovedaSelva) { bovedaDeDetras(m, luz) }
         with(GaleriaSelva) { alero(m, luz) }
         with(CercaSelva) { cerca(m, luz, cosas) }
-        with(LuzSelva) { haces(luz, HACES) }
         with(BovedaSelva) { boveda(m, luz) }
         with(LuzSelva) { remate(m, luz) }
         grano(Azar(Semilla.de("botanico", "grano", "selva")), 0.6f + 0.4f * luz.r.dia)
     }
-
-    /** Dónde caen los haces de luz que se ven en el aire (si les da el sol): sobre las tablas, entre las macetas. */
-    private val HACES = listOf(V3(0.25f, 0f, 4.35f), V3(0.95f, 0f, 3.75f), V3(-0.35f, 0f, 3.95f), V3(1.2f, 0f, 4.85f), V3(-1.0f, 0f, 4.6f))
 
     fun DrawScope.vivo(m: Momento, reloj: Float) { with(LuzSelva) { vivo(m, reloj) } }
 
