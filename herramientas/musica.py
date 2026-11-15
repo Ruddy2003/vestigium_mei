@@ -556,6 +556,49 @@ def hacer_arcontes():
         # En «Tu año» la música sube un tono dos vueltas: sin el zumbido ni la nota del Pleroma, que no subirían con ella.
         ARGS['arcontes'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
 
+def hacer_galia():
+    # --- Galia: Do sostenido eolio (el menor natural, sin sensible), una canción de bardo a unas 108 negras por minuto
+    # (melodía propia). La lira de los bardos (Diodoro 5.31), pulsada con la yema, canta la melodía con sus cuerdas al aire
+    # que resuenan solas; otra lira, más grave, pulsa la quinta al aire con el pulgar en el uno, en el tres y en el «y» del
+    # cuatro, que empuja al compás siguiente. Debajo murmura la asamblea (varias voces de hombre, ninguna igual) por la raíz
+    # de cada acorde: la tónica, la séptima menor y la sexta menor, que bajan por tonos (Do#, Si, La) y vuelven a casa por
+    # la séptima, sin sensible (Si–Do#). El ritmo es de madera y de hierro: la lanza en el escudo en el uno, el martillo en
+    # el yunque en el tres y un toque suave en el cuatro; al cierre, la asamblea golpea las armas y suena el carnyx (Diodoro
+    # 5.30). Sin gaitas, arpas ni flautas, sin tambores ni el dórico de la música «celta» de hoy. Con su propio azar.
+    with A.azar_propio('musica_galia'):
+        T = -8; pz = 0.555
+        ac = compases([0, 7, 12], [-2, 2, 5], [-4, 0, 3], [0, 7, 12])
+        mel = frase(0, "0:1 3:0.5 5:0.5 7:2 | 10:1.5 7:0.5 5:1 2:1 | 3:1 7:1 8:1.5 7:0.5 | 5:1 2:0.5 -2:0.5 0:2")
+        al_aire = (hz(T - 12), hz(T - 17))
+        canta = lambda f, d: domar(lira_bardo(f, max(d, 0.9) + 0.3, 0.4, 0.997, al_aire=al_aire, halo=0.15), 0.3)
+        def pulsa(f, d):
+            """El pulgar en las cuerdas graves: en el uno, más suave en el tres y apenas en el «y» del cuatro."""
+            una = lambda g, dd: domar(lira_bardo(f, dd, 0.3, 0.996, al_aire=al_aire, halo=0.1), 0.3) * g
+            return mezclar((0, una(1.0, min(d * 0.6, 1.4)), 1.0), (d / 2, una(0.6, min(d * 0.45, 1.2)), 1.0), (d * 7 / 8, una(0.35, d / 8 + 0.4), 1.0))
+        def murmullo(f, d):
+            """La asamblea: cinco voces de hombre en la raíz del acorde, que se dan la mano con las del compás siguiente."""
+            return domar(asamblea(f, d + 0.2, 'o', 5), 0.4)
+        def ritmo(acordes, cierre=True):
+            """La lanza en el escudo en el uno, el martillo en el yunque (en la tónica) en el tres y un toque suave en el cuatro;
+            con [cierre], la asamblea golpea las armas y el carnyx brama sobre el último compás. Los golpes van domados (ver
+            [domar]): sin el chasquido de más, la música suena al mismo volumen que la de los otros temas."""
+            out = []
+            for i, (b, _, _) in enumerate(acordes):
+                out += [(b, domar(escudo(1.0, 0.3), 0.3), 0.32 if i % 2 == 0 else 0.26), (b + 2, domar(yunque(hz(T + 12), 0.7, 0.8), 0.3), 0.22), (b + 3, yunque(hz(T + 12), 0.5, 0.4), 0.09)]
+            if cierre:
+                fin = acordes[-1][0]
+                out += [(fin - 0.5, choque_armas(1.0, 12, 0.9), 0.3), (fin, carnyx(hz(T - 12), 4 * pz + 1.0, sube=3.0, crece=0.5, bramido=0.35), 0.24)]
+            return out
+        kw = dict(inst_mel=canta, inst_ac=pulsa, bajo=murmullo, perc=ritmo(ac), g_mel=0.5, g_ac=0.32, g_bajo=0.5,
+                  oct_mel=12, oct_ac=-12, oct_bajo=-12, legato=1.0, cola=2.0, rev=0.3)
+        # La llamada solo toma los dos primeros compases y el cierre: su ritmo se arma con esos mismos acordes.
+        kw_llamada = dict(kw, perc=ritmo([c for c in ac if c[0] < 8] + [(8, ac[-1][1], 4)]))
+        lira = lambda f, d: lira_bardo(f, d, 0.45, 0.996, al_aire=al_aire)
+        notif = mezclar((0, yunque(hz(T + 12), 0.6, 0.5), 0.2), (0.05, notificacion(T, lira, [7, 10, 12], 0.13, 1.1, 1.3), 1.0))
+        P['galia'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw_llamada), notif)
+        # En «Tu año» la música sube un tono dos vueltas: sin el carnyx ni el choque de las armas, que no subirían con ella.
+        ARGS['galia'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
+
 def hacer_egipto():
     # --- Egipto: Mi con la segunda menor (escala propia), arpa arpegiada, flauta de caña, tambor de marco y sistro, con una
     # melodía propia de ocho compases. Con su propio azar, para no mover el de los temas que van después.
@@ -748,6 +791,7 @@ if __name__ == '__main__':
     hacer_abismo()
     hacer_frente()
     hacer_arcontes()
+    hacer_galia()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     # Con un tercer argumento («presentacion,anual», por ejemplo) solo se escriben esas piezas.
     piezas = sys.argv[3].split(',') if len(sys.argv) > 3 else None

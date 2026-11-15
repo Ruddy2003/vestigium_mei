@@ -302,6 +302,146 @@ def pleroma(f, d=2.0, ataque=0.12):
     t = t_(d)
     x = np.sin(2 * np.pi * f * t) + 0.05 * np.sin(4 * np.pi * f * t) * np.exp(-t * 3)
     return 0.3 * x * np.minimum(1, t / ataque) * np.exp(-t * 1.6 / d) * np.minimum(1, np.maximum(0, d - t) / 0.3)
+def simpatia(x, f, g=0.996):
+    """Una cuerda al aire que resuena sola cuando otra suena: un lazo de [f] Hz (con el promedio de dos muestras que le
+    apaga los agudos, como a una cuerda) excitado por [x]. Solo le llegan los armónicos de [x] que caen en los suyos. El
+    retraso es de P + ½ muestras; como P es mayor que 2, cada tramo de P muestras se calcula de una vez con el anterior."""
+    P = max(2, int(round(SR / f - 0.5)))
+    y = np.zeros(len(x) + P + 1)
+    for s in range(0, len(x), P):
+        e = min(s + P, len(x)); i = s + P + 1; m = e - s
+        y[i:i + m] = x[s:e] + 0.5 * g * (y[i - P:i - P + m] + y[i - P - 1:i - P - 1 + m])
+    return y[P + 1:]
+def lira_bardo(f, d=1.0, brillo=0.35, decae=0.9965, al_aire=None, halo=0.18, apagar=None):
+    """La lira de los bardos (Diodoro 5.31: «instrumentos parecidos a liras»): grande, de tripa y pulsada con la yema del
+    dedo, no con púa (sin el golpe seco del kinnor: solo el roce blando de la yema), cerca de un quinto de la cuerda (le
+    faltan el quinto armónico y sus múltiplos: suena hueca). Su caja honda le da un color oscuro (dos resonancias graves y
+    anchas) y las cuerdas [al_aire] (frecuencias) resuenan solas por simpatía detrás de cada nota que comparte sus
+    armónicos: el [halo]. Ni la lira seca de Helénico ni el kinnor de Arcontes. [apagar]: el segundo en que la palma la calla."""
+    x = pluck(f, d, brillo, decae)
+    k = max(1, int(round(SR / f * 0.2)))
+    x[k:] -= 0.8 * x[:-k]
+    t = t_(d)
+    x = x + 0.5 * resonador(x, 205, 110) + 0.3 * resonador(x, 455, 190)
+    if al_aire:
+        h = sum(simpatia(x, fa) for fa in al_aire)
+        x = x + halo * h * np.sqrt(np.mean(x ** 2)) / (np.sqrt(np.mean(h ** 2)) + 1e-12)
+    yema = filtro(ruido(0.012), 'bajo', 700) * env(int(0.012 * SR), 0.002, 0.004, 4)
+    x[:len(yema)] += 0.25 * brillo * yema * np.abs(x).max()
+    if apagar is not None: x *= np.where(t < apagar, 1.0, np.exp(-(t - apagar) / 0.035))
+    return filtro(x, 'alto', min(70.0, f * 0.5)) * np.minimum(1, np.maximum(0, d - t) / 0.03)
+def carnyx(f, d, sube=2.5, crece=0.5, bramido=0.3, brillo=1.0, cae=0.0, suelo=330.0):
+    """El carnyx: la trompeta de guerra de bronce, de casi dos metros, que se toca derecha, con la boca en cabeza de jabalí
+    por encima de la gente (Diodoro 5.30: trompetas que «al sonar hacen un ruido horrible»; las de Tintignac). Es un tubo
+    largo de labio: la nota entra desde abajo ([sube] semitonos) y se asienta; el bronce se abre (más armónicos y la onda
+    más empinada) a medida que crece el soplo ([crece]: qué parte de la nota tarda en llegar al todo); la cabeza de jabalí
+    le da una resonancia hueca y otra nasal, y el [bramido] es el temblor áspero (unas 27 veces por segundo) que la hace
+    rugir. Ni la corneta quieta de Romano ni el olifante de Templario ni el cuerno de Tierras Antiguas. [cae]: semitonos
+    que se hunde al final, cuando se acaba el aire. Por debajo de [suelo] Hz se aligera: el altavoz del teléfono no da esa
+    fundamental y solo le quitaría volumen a lo que sí se oye (el bramido se oye por sus armónicos)."""
+    t = t_(d); n = len(t)
+    tr = filtro(rng.standard_normal(n), 'bajo', 6); tr /= np.abs(tr).max() + 1e-9
+    caida = cae * np.clip((t - 0.4 * d) / (0.6 * d), 0, 1) ** 1.5
+    fb = f * 2 ** ((-sube * np.exp(-t / 0.07) - caida) / 12) * (1 + 0.004 * tr)
+    soplo = np.minimum(1, t / 0.035) * (0.5 + 0.5 * np.minimum(1, t / max(crece * d, 1e-3)) ** 1.2)
+    x = paso_bajo_movil(sierra_limpia(fb, d), f * (2.2 + 9.0 * brillo * soplo ** 1.5), 1.3)
+    x = np.tanh(1.6 * x * (0.5 + soplo)) / np.tanh(2.4)
+    boca = x + 0.9 * resonador(x, 720, 180) + 0.5 * resonador(x, 1650, 260)
+    ruge = 1 - bramido * soplo * (0.5 + 0.5 * np.sin(2 * np.pi * 27 * t + 2 * np.sin(2 * np.pi * 3.1 * t)))
+    aire = 0.05 * filtro(ruido(d), 'banda', (1200, 5000)) * np.exp(-t / 0.05)
+    return 0.4 * (filtro(boca, 'alto', max(f * 0.7, suelo)) * ruge * soplo + aire) * np.minimum(1, np.maximum(0, d - t) / 0.1)
+VOCALES_GALIA = {   # formantes (centro, ancho, ganancia) de una voz de hombre que habla fuerte, al aire libre
+    'a': ((700, 90, 1.0), (1180, 110, 0.6), (2550, 170, 0.25), (3350, 250, 0.1)),
+    'o': ((480, 80, 1.0), (820, 100, 0.55), (2500, 160, 0.14)),
+    'm': ((260, 60, 1.0), (1100, 160, 0.08), (2300, 220, 0.03)),
+}
+def voz_hombre(f, d, vocales=('o', 'a'), cambia=0.15, pasos=((0.0, 0),), cae=0.0, esfuerzo=0.5, aliento=0.03, h=0.0, temblor=0.005):
+    """Una voz de hombre, sin vibrato (no canta: llama, o murmura con otros): el pulso de la glotis por los formantes de la
+    boca, que pasa de la primera vocal a la segunda en [cambia] s. [pasos]: (segundo, semitonos) por donde va la voz, con
+    el deslizamiento de una voz real; [cae]: semitonos que se le cae al final, al quedarse sin aire; [esfuerzo]: más fuerte,
+    más brillante; [h]: la «h» aspirada con que empieza un grito."""
+    t = t_(d); n = len(t)
+    sem = np.zeros(n)
+    for s, v in pasos: sem[int(s * SR):] = v
+    sem = sosfiltfilt(butter(1, 9 / (SR / 2), output='sos'), np.concatenate([np.full(SR // 4, sem[0]), sem]))[SR // 4:]
+    tr = filtro(rng.standard_normal(n), 'bajo', 7); tr /= np.abs(tr).max() + 1e-9
+    caida = cae * np.clip((t - (d - 0.3)) / 0.3, 0, 1) ** 2
+    fb = f * 2 ** ((sem - caida) / 12) * (1 + temblor * tr)
+    voz = np.minimum(1, np.maximum(0, t - 0.6 * h * 0.06) / 0.04)
+    src = filtro(sierra_limpia(fb, d), 'bajo', 700 + 2600 * esfuerzo, 1) * voz + (aliento + h * np.exp(-t / 0.05)) * filtro(ruido(d), 'banda', (600, 5000))
+    def boca(v):
+        y = sum(g * resonador(src, F, B) for F, B, g in VOCALES_GALIA[v])
+        return y / (np.sqrt(np.mean(y ** 2)) + 1e-12)
+    w = 0.5 - 0.5 * np.cos(np.pi * np.minimum(1, t / max(cambia, 1e-3)))
+    x = filtro(boca(vocales[0]) * (1 - w) + boca(vocales[-1]) * w, 'alto', 120)
+    return 0.08 * x * np.minimum(1, t / 0.03) * np.minimum(1, np.maximum(0, d - t) / 0.15)
+def asamblea(f, d, vocal='o', voces=4, esfuerzo=0.3):
+    """La asamblea que murmura a la vez: [voces] hombres en la misma nota, ninguno afinado igual ni entrando a la vez,
+    que empiezan con la boca cerrada y la abren despacio."""
+    partes = []
+    for _ in range(voces):
+        r = rng.uniform(0, 0.12)
+        partes.append((r, voz_hombre(f * 2 ** (rng.uniform(-12, 12) / 1200), max(0.2, d - r), ('m', vocal), rng.uniform(0.3, 0.55),
+                                     esfuerzo=esfuerzo, aliento=0.02, temblor=0.007), 1 / np.sqrt(voces)))
+    return mezclar(*partes)
+def escudo(fuerza=1.0, hierro=0.4):
+    """Una lanza que golpea un escudo: la tabla de madera que retumba (tres modos graves de la tabla, cada escudo con los
+    suyos), el chasquido de la madera y el umbo de hierro que suena un instante."""
+    d = 0.3; e = np.zeros(int(d * SR))
+    g = filtro(ruido(0.008), 'banda', (120, 3000)) * env(int(0.008 * SR), 0.0003, 0.003, 4); e[:len(g)] = g
+    f1 = rng.uniform(175, 215); f2 = f1 * rng.uniform(2.1, 2.5)
+    tabla = resonador(e, f1, 14) + 0.6 * resonador(e, f2, 30) + 0.25 * resonador(e, f2 * 1.9, 60)
+    tabla /= np.abs(tabla).max() + 1e-9
+    fu = rng.uniform(1100, 1400); t = t_(0.2)
+    umbo = sum(a * np.sin(2 * np.pi * fu * r * t) * np.exp(-t * c) for r, a, c in ((1.0, 1.0, 14), (1.59, 0.6, 20), (2.37, 0.35, 30)))
+    return fuerza * mezclar((0, tabla, 1.0), (0, clic(0.006, (700, 3200)), 0.5), (0.001, umbo * np.minimum(1, t / 0.0008), 0.3 * hierro))
+def choque_armas(d=0.8, golpes=12, fuerza=1.0):
+    """La asamblea que aprueba golpeando las armas contra los escudos, cada uno a su tiempo."""
+    ts = np.sort(rng.uniform(0, d, golpes)) ** 1.15
+    return mezclar(*[(s, escudo(rng.uniform(0.45, 1.0) * fuerza, rng.uniform(0.2, 0.9)), 0.5) for s in ts])
+def yunque(f, d=0.8, fuerza=1.0):
+    """El yunque de la fragua: el martillo que pega (el golpe seco de hierro contra hierro) y el yunque que canta en [f],
+    con sus modos de bloque de hierro (no armónicos: 1, 2.32, 4.25, 6.63). Más [fuerza], más golpe y más brillo."""
+    t = t_(d)
+    canto = sum(a * np.sin(2 * np.pi * f * r * t + 0.7 * i) * np.exp(-t * c * (1.3 - 0.3 * fuerza))
+                for i, (r, a, c) in enumerate(((1.0, 1.0, 2.6), (2.32, 0.5, 4.5), (4.25, 0.28 * fuerza, 8.0), (6.63, 0.14 * fuerza, 13.0))) if f * r < SR * 0.45)
+    martillo = filtro(ruido(0.02), 'banda', (400, 1800)) * env(int(0.02 * SR), 0.0005, 0.006, 4)
+    return 0.6 * mezclar((0, canto * np.minimum(1, t / 0.0008) * np.minimum(1, np.maximum(0, d - t) / 0.05), 0.5),
+                         (0, clic(0.003, (2500, 9000)), 0.6 * fuerza), (0, martillo, 0.3 * fuerza))
+def hierro_al_rojo(f):
+    """El martillazo sobre el hierro al rojo: un golpe sordo (el hierro caliente se aplasta y no suena) y el yunque, debajo,
+    apagado."""
+    thud = filtro(ruido(0.07), 'banda', (90, 1200)) * env(int(0.07 * SR), 0.0008, 0.022, 4)
+    bajo = seno(95, 0.12) * env(int(0.12 * SR), 0.001, 0.04, 4)
+    canto = yunque(f, 0.4, 0.4) * np.exp(-t_(0.4) * 9)
+    return mezclar((0, thud, 0.9), (0, bajo, 0.5), (0.001, canto, 0.35))
+def fuego(d, chispas=14, llama=0.5):
+    """El fuego del hogar que crepita: el rumor grave de la llama, que respira, y chispas sueltas (la madera que estalla)."""
+    t = t_(d)
+    resp = np.abs(filtro(rng.standard_normal(len(t)), 'bajo', 3)); resp /= resp.max() + 1e-9
+    x = llama * filtro(ruido(d), 'bajo', 320) * (0.5 + 0.5 * resp) * 0.4
+    for _ in range(int(chispas * d)):
+        dc = rng.uniform(0.002, 0.007); k = int(rng.uniform(0, max(0.01, d - dc)) * SR)
+        c = filtro(ruido(dc), 'banda', (rng.uniform(900, 2000), rng.uniform(3500, 7500))) * env(int(dc * SR), 0.0007, dc * 0.4, 5)
+        x[k:k + len(c)] += c * rng.exponential(0.5)
+    return x * np.minimum(1, t / 0.08) * np.minimum(1, np.maximum(0, d - t) / 0.12)
+def robles(d, hojas=1.0):
+    """El viento que pasa entre los robles: la ráfaga grave en los troncos y las hojas que tiemblan arriba, a sacudidas."""
+    t = t_(d); s = np.sin(np.pi * t / d) ** 1.5
+    lento = np.abs(filtro(rng.standard_normal(len(t)), 'bajo', 4)); lento /= lento.max() + 1e-9
+    tiembla = np.abs(filtro(rng.standard_normal(len(t)), 'bajo', 70)); tiembla /= tiembla.max() + 1e-9
+    viento = filtro(ruido(d), 'banda', (180, 900)) * (0.6 + 0.4 * lento)
+    arriba = filtro(ruido(d), 'banda', (1800, 7000)) * tiembla ** 1.5
+    return (0.6 * viento + 0.5 * hojas * arriba) * s
+def resoplido(d=0.45):
+    """El caballo que resopla: el aire por los ollares y el aleteo de los labios (unos 19 golpes por segundo), que se apaga."""
+    t = t_(d)
+    x = filtro(ruido(d), 'banda', (250, 2600)); x = 0.3 * x + 0.7 * resonador(x, 420, 150) + 0.5 * resonador(x, 1100, 250)
+    aleteo = 0.45 + 0.55 * np.sin(2 * np.pi * 19 * t * (1 - 0.25 * t / d) + 0.5) ** 2
+    return x * aleteo * np.minimum(1, t / 0.02) * np.exp(-t / (0.35 * d)) * np.minimum(1, np.maximum(0, d - t) / 0.05)
+def lejos(x, k=1.0):
+    """Lo mismo, oído a [k] campos de distancia: sin los agudos y con más aire alrededor."""
+    return reverb(filtro(x, 'bajo', 3800 / (1 + k)), 1.1 + 0.3 * k, min(0.6, 0.25 + 0.15 * k), 2600)
 def acorde(inst, notas, d, g=1.0, arpegio=0.0, **kw):
     return mezclar(*[(i * arpegio, inst(hz(n), d, **kw), g / len(notas) ** 0.5) for i, n in enumerate(notas)])
 def melodia(inst, notas, paso, d, g=0.5, **kw):
@@ -1500,6 +1640,65 @@ def arcontes():
                tecla=mezclar((0, trazo((900, 4200), 0.045, 6, 0.03), 1), *[(0.011 * k, clic(0.002, (2500, 7000)), 0.25 - 0.06 * k) for k in range(3)]),
                rascar=rascado((750, 4300), 3.0 * crot(T + 31, 0.8), aspereza=45, pasadas=((0.0, 0.26), (0.31, 0.3), (0.66, 0.28))))
 
+def galia():
+    # Do sostenido eolio, el menor natural (Do#, Re#, Mi, Fa#, Sol#, La, Si): sin sensible, la séptima menor sube a la
+    # tónica (Si–Do#) y la sexta menor (La) le da su sombra. La Galia del 52 a. C., desde un oppidum arverno: el carnyx de
+    # bronce con su bramido para los logros (Diodoro 5.30), la lira de los bardos pulsada con la yema y con sus cuerdas al
+    # aire que resuenan solas (Diodoro 5.31), el yunque y el martillo de la fragua, las lanzas contra los escudos de madera,
+    # el viento entre los robles, el fuego del hogar, el caballo y las voces de hombre: el grito que corre de campo en campo
+    # (César 7.3) y la asamblea. Nada de gaitas, arpas irlandesas ni flautas «celtas»: ni el dórico ni el mixolidio que las
+    # evocan (Tierras Antiguas, Templario), ni la lira seca en pentatónica (Helénico), ni el kinnor con púa (Arcontes), ni
+    # la corneta quieta (Romano), ni tambores (Romano, Templario, Prehistoria) ni cascos de caballo (Mongol).
+    T = -8   # Do sostenido 4
+    al_aire = (hz(T - 12), hz(T - 17))   # las cuerdas graves de la lira que resuenan solas: Do#3 y Sol#2
+    lir = lambda n, d=1.0, b=0.35, **kw: lira_bardo(hz(n), d, b, al_aire=al_aire, **kw)
+    rueda = lambda notas, d=1.2, paso=0.05, b=0.35: mezclar(*[(paso * i, lir(n, d, b), 0.5) for i, n in enumerate(notas)])
+    cx = lambda n, d, **kw: carnyx(hz(n), d, **kw)
+    yun = lambda n, d=0.8, fuerza=1.0: yunque(hz(n), d, fuerza)
+    def grito(n, d=0.8):
+        """Un hombre que llama a los del campo de al lado: «¡ho-a!», de la quinta de abajo a la tónica, y la voz que se le cae al final."""
+        return filtro(voz_hombre(hz(n), d, ('o', 'a'), 0.18, ((0.0, -5), (0.14, 0)), cae=3.0, esfuerzo=0.85, aliento=0.05, h=0.5), 'alto', 200)
+    with azar_propio('galia_base'):
+        S['galia'] = dict(
+            toque=lir(T + 12, 0.3, 0.45),
+            elegir=mezclar((0, lir(T + 7, 0.3, 0.4, apagar=0.07), 1.0), (0.07, clic(0.006, (500, 2200)), 0.12)),
+            pasar=robles(0.32),
+            abrir=rueda([T - 12, T - 5, T, T + 3, T + 7], 1.1),
+            guardar=mezclar((0, hierro_al_rojo(hz(T + 12)), 0.8), (0.16, yun(T + 12, 0.7, 0.7), 0.55), (0.3, yun(T + 19, 0.55, 0.45), 0.35)),
+            # El logro: la asamblea golpea las armas y el carnyx sube por sus armónicos (Do#, Sol#, Do#) hasta el bramido.
+            logro=reverb(mezclar((0, choque_armas(0.7, 10), 0.55),
+                                 (0.15, cx(T - 12, 0.42, sube=3.0, crece=0.3), 0.5), (0.55, cx(T - 5, 0.42, sube=2.0, crece=0.3), 0.5),
+                                 (0.95, cx(T, 1.7, sube=2.5, crece=0.55, bramido=0.38), 0.55), (0.95, escudo(1.0, 0.8), 0.6),
+                                 (1.0, rueda([T - 12, T - 5, T, T + 3, T + 7, T + 12], 1.5, 0.045), 0.35)), 1.8, 0.3),
+            # El tema: el caballo resopla, pasa el viento por los robles, suena un carnyx a lo lejos y responde la lira.
+            tema=reverb(mezclar((0, resoplido(0.5), 0.35), (0.1, robles(1.5, 0.8), 0.22), (0.3, lejos(cx(T - 12, 1.1, crece=0.5), 0.6), 0.5),
+                                (0.75, rueda([T, T + 3, T + 7], 1.2, 0.07), 0.55)), 1.4, 0.28),
+            # El aviso: el grito que corre de campo en campo (César 7.3): uno llama cerca y otros, cada vez más lejos, lo pasan.
+            aviso=reverb(mezclar((0, rueda([T - 5, T + 7], 1.0, 0.04), 0.3), (0.1, grito(T, 0.85), 0.7),
+                                 (0.75, lejos(grito(T, 0.8), 1.0), 0.45), (1.4, lejos(grito(T, 0.8), 2.0), 0.28)), 1.3, 0.24),
+            # Lo solemne: la asamblea alrededor del hogar murmura la tónica y la quinta, el bardo canta con la lira y, al
+            # final, la asamblea aprueba golpeando las armas (como cuenta César que hacían) y un carnyx responde a lo lejos.
+            solemne=reverb(mezclar(
+                (0, asamblea(hz(T - 12), 7.2, 'o', 5), 0.4), (0.3, asamblea(hz(T - 5), 6.6, 'o', 4), 0.24), (0, fuego(7.6, 5), 0.1),
+                *[(0.5 + 0.48 * i, domar(lir(T + n, 1.3 if i < 8 else 2.4, 0.4)), 0.5) for i, n in enumerate([7, 8, 7, 3, 5, 3, 2, -2, 0])],
+                *[(0.5 + 0.48 * i, domar(rueda([T + a for a in ch], 1.8, 0.06, 0.3)), 0.4) for i, ch in ((0, [-12, -5, 0]), (3, [-16, -12, -9]), (6, [-14, -10, -7]), (8, [-12, -5, 0, 3]))],
+                (5.3, choque_armas(0.9, 12, 0.9), 0.4), (5.4, lejos(cx(T - 12, 1.8, crece=0.6), 1.2), 0.4)), 2.4, 0.34))
+
+    # Error: la lanza que da sordo en el escudo y el carnyx que se ahoga medio tono abajo y se hunde al quedarse sin aire.
+    # Cambio: el martillo que toca dos veces el yunque, de la quinta a la octava. Tecla: el estilo que escribe letras griegas
+    # en la tablilla (que fuera de cera es un recurso) y el marco de madera. Rascar: un estátero arverno del caballo, de oro
+    # con plata y cobre, que suena más claro que el oro puro.
+    with azar_propio('galia'):
+        tablilla = resonador(np.concatenate([clic(0.004, (300, 2500)), np.zeros(int(0.04 * SR))]), 520, 60)
+        t = t_(0.6); fe = hz(T + 31)
+        estatero = sum(a * np.sin(2 * np.pi * fe * r * t) * np.exp(-t * c) for r, a, c in ((1.0, 1.0, 5.0), (2.31, 0.45, 8.0), (3.93, 0.2, 13.0))) * np.minimum(1, t / 0.001)
+        nuevos('galia',
+               error=mezclar((0, escudo(0.9, 0.1), 0.5), (0.03, cx(T, 0.13, sube=1.0, crece=0.2), 0.4),
+                             (0.15, cx(T - 1, 0.42, sube=0.0, crece=0.15, cae=1.5, bramido=0.45, brillo=0.6) * np.exp(-t_(0.42) / 0.16), 0.55)),
+               cambio=mezclar((0, yun(T + 19, 0.3, 0.5), 0.6), (0.085, yun(T + 24, 0.35, 0.6), 0.6)),
+               tecla=mezclar((0, trazo((650, 3000), 0.05, 5, 0.03), 1), (0, tablilla / (np.abs(tablilla).max() + 1e-9), 0.25)),
+               rascar=rascado((1300, 5800), estatero, aspereza=60))
+
 # ------------------------------------------------------------------ el aviso de los lugares especiales
 
 def lugar():
@@ -1548,6 +1747,7 @@ if __name__ == '__main__':
         cueva,
         frente,
         arcontes,
+        galia,
     )
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 and sys.argv[2] != 'todos' else None
     claves = sys.argv[3].split(',') if len(sys.argv) > 3 else None

@@ -314,8 +314,9 @@ object Frases {
     /**
      * Arcontes: dichos que el iniciado tendría por suyos. Los de Nag Hammadi, el papiro de Berlín e Hipólito se traducen
      * aquí (no hay traducción al español de dominio público); el sentido de cada pasaje se comprobó en las páginas
-     * citadas en `docs/diseno/temas/fuentes_arcontes.md`. Los de los evangelios canónicos, traducidos aquí del griego
-     * mientras no se copie el texto exacto de la Reina-Valera 1909.
+     * citadas en `docs/diseno/temas/fuentes_arcontes.md`. Los de los evangelios canónicos van con el texto exacto de la
+     * Reina-Valera 1909, copiado de Wikisource (sección 14 de ese archivo, con su ortografía de 1909); en Juan 18:36 y
+     * Mateo 6:22 se toma solo el principio del versículo, y el punto final cierra lo que allí sigue con dos puntos.
      */
     val ARCONTES = listOf(
         f(null, "Estas son las palabras escondidas que dijo Jesús, el que vive, y que escribió Dídimo Judas Tomás.", "Evangelio de Tomás, prólogo (Nag Hammadi II,2; traducción propia)"),
@@ -335,12 +336,12 @@ object Frases {
         f(null, "Donde está el entendimiento, allí está el tesoro.", "Evangelio de María (papiro de Berlín 8502; traducción propia)"),
         f(null, "Dichosa tú, que no vacilaste al verme.", "Evangelio de María (traducción propia)"),
         f(null, "La enseñanza del Salvador, y la revelación de los misterios y de lo que está escondido en el silencio.", "Apócrifo de Juan, primeras palabras (traducción propia)"),
-        f(null, "La luz brilla en la tiniebla, y la tiniebla no la venció.", "Juan 1:5 (traducción propia del griego)"),
-        f(null, "Conocerán la verdad, y la verdad los hará libres.", "Juan 8:32 (traducción propia del griego)"),
-        f(null, "Mi reino no es de este mundo.", "Juan 18:36 (traducción propia del griego)"),
-        f(null, "No hay nada escondido que no haya de ser manifestado.", "Marcos 4:22 (traducción propia del griego)"),
-        f(null, "La lámpara del cuerpo es el ojo.", "Mateo 6:22 (traducción propia del griego)"),
-        f(null, "Busquen, y hallarán; llamen, y se les abrirá.", "Mateo 7:7 (traducción propia del griego)"),
+        f(null, "Y la luz en las tinieblas resplandece; mas las tinieblas no la comprendieron.", "Juan 1:5 (Reina-Valera 1909)"),
+        f(null, "Y conoceréis la verdad, y la verdad os libertará.", "Juan 8:32 (Reina-Valera 1909)"),
+        f(null, "Mi reino no es de este mundo.", "Juan 18:36 (Reina-Valera 1909)"),
+        f(null, "Porque no hay nada oculto que no haya de ser manifestado, ni secreto que no haya de descubrirse.", "Marcos 4:22 (Reina-Valera 1909)"),
+        f(null, "La lámpara del cuerpo es el ojo.", "Mateo 6:22 (Reina-Valera 1909)"),
+        f(null, "Pedid, y se os dará; buscad, y hallaréis; llamad, y se os abrirá.", "Mateo 7:7 (Reina-Valera 1909)"),
     )
 
     /**

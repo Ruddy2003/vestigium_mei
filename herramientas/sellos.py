@@ -26,7 +26,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 from arte import ruido, ruido_rect, col, mezcla, a_img, a_rgba, relieve
 import maestra
-from iconos import cinta, ouroboros, nube, tallado
+from iconos import cinta, ouroboros, nube, tallado, suavizar, oro_relieve
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 FUENTES = os.path.join(AQUI, 'fuentes')
@@ -1205,6 +1205,221 @@ def arcontes(tam):
     guardar(fondo, tallado(m, '#D9D6BE', 513, suave=1.9), 'arcontes')
 
 
+# ------------------------------------------------------------------ Galia
+def caballo(d, x0, y0, u, c, hueco, giro=0.0):
+    """El caballo de los estáteros galos, al galope hacia la izquierda: el cuerpo liso como una almendra, el cuello alto y
+    arqueado con la crin de perlas, la cabeza pequeña con el ojo grande, el hombro y la grupa como dos glóbulos, las patas
+    finas con la rodilla en bolita y el casco en media luna, y la cola que se abre en hebras con su perla al final."""
+    cg, sg = math.cos(giro), math.sin(giro)
+    def P(x, y): return (x0 + (x * cg - y * sg) * u, y0 + (x * sg + y * cg) * u)
+    def circ(x, y, r, f=c):
+        X, Y = P(x, y); d.ellipse([X - r * u, Y - r * u, X + r * u, Y + r * u], fill=f)
+    def trazo(pts, w0, w1, f=c, bolas=True):
+        q = [P(*p) for p in pts]
+        cinta(d, q, w0 * u, w1 * u, f)
+        if bolas:
+            for (X, Y), w in ((q[0], w0), (q[-1], w1)):
+                r = w * u / 2; d.ellipse([X - r, Y - r, X + r, Y + r], fill=f)
+    # El cuerpo: lomo, grupa, nalga, vientre y pecho.
+    cuerpo = (bezier((-30, -4), (-26, -16), (-14, -15), (2, -12))[:-1] + bezier((2, -12), (14, -10), (22, -17), (32, -13))[:-1]
+              + bezier((32, -13), (40, -10), (41, 4), (33, 9))[:-1] + bezier((33, 9), (24, 15), (8, 15), (-6, 14))[:-1]
+              + bezier((-6, 14), (-18, 14), (-28, 12), (-33, 4))[:-1] + bezier((-33, 4), (-34, 0), (-32, -2), (-30, -4)))
+    d.polygon([P(*p) for p in cuerpo], fill=c)
+    # El cuello, ancho en la cruz, alto y arqueado hacia la cabeza.
+    cuello = (bezier((-12, -14), (-16, -30), (-26, -42), (-38, -45))[:-1] + bezier((-38, -45), (-43, -44), (-47, -38), (-47, -30))[:-1]
+              + bezier((-47, -30), (-44, -18), (-38, -8), (-33, 3)))
+    d.polygon([P(*p) for p in cuello], fill=c)
+    # La cabeza, inclinada: la frente, el hueso de la nariz que baja, el belfo romo y la quijada.
+    cabeza = (bezier((-37, -46), (-45, -48), (-52, -42), (-56, -34))[:-1] + bezier((-56, -34), (-59, -28), (-63, -24), (-61, -19))[:-1]
+              + bezier((-61, -19), (-59, -15), (-53, -16), (-50, -19))[:-1] + bezier((-50, -19), (-46, -22), (-44, -26), (-44, -32)))
+    d.polygon([P(*p) for p in cabeza], fill=c)
+    d.polygon([P(-41, -43), P(-38.5, -50), P(-36.5, -54), P(-34.5, -50), P(-33, -44)], fill=c)        # oreja
+    # El ojo grande, en anillo, y la boca.
+    X, Y = P(-49, -35); r = 3.8 * u; d.ellipse([X - r, Y - r, X + r, Y + r], fill=hueco)
+    circ(-49, -35, 2.3)
+    d.line([P(-62, -20), P(-56, -20)], fill=hueco, width=max(1, int(0.9 * u)))
+    # La crin: perlas a lo largo del cuello, por fuera.
+    for i, (x, y) in enumerate(bezier((-14, -19), (-17, -32), (-25, -42), (-34, -47), 6)):
+        circ(x - 1.8, y - 2.0, 3.0 - i * 0.2)
+    # El hombro y la grupa, glóbulos marcados con un surco en media luna (por detrás y por debajo).
+    for gx, gy, gr, a0, a1 in ((-21, 1, 8.0, -20, 200), (22, -1, 9.6, -40, 160)):
+        X, Y = P(gx, gy); r = gr * u
+        d.arc([X - r, Y - r, X + r, Y + r], a0 + math.degrees(giro), a1 + math.degrees(giro), fill=hueco, width=max(1, int(1.1 * u)))
+    # Las patas: las de delante estiradas hacia delante, las de atrás hacia atrás; rodillas en bolita y cascos.
+    patas = [
+        ([(-28, 8), (-38, 13), (-46, 18)], [(-46, 18), (-54, 16), (-60, 11)], (-61, 10)),   # mano de este lado, estirada
+        ([(-20, 11), (-24, 20), (-30, 26)], [(-30, 26), (-26, 32), (-22, 37)], (-21, 38)),  # mano de allá, doblada
+        ([(28, 6), (36, 14), (40, 21)], [(40, 21), (48, 27), (56, 31)], (57, 31)),            # pata de este lado, atrás
+        ([(17, 12), (21, 21), (20, 27)], [(20, 27), (15, 32), (11, 38)], (10, 39)),           # pata de allá, recogida
+    ]
+    for arriba, abajo, casco in patas:
+        trazo(arriba, 6.5, 4.2, bolas=False)
+        trazo(abajo, 3.6, 2.8, bolas=False)
+        circ(*arriba[-1], 3.4)                                                # la rodilla
+        X, Y = P(*casco); r = 3.0 * u
+        d.ellipse([X - r, Y - r, X + r, Y + r], fill=c)                       # el casco
+    # La cola: tres hebras que salen de la grupa, suben y se abren hacia atrás, cada una con su perla.
+    for k, (c1, c2, fin) in enumerate((((42, -25), (52, -30), (57, -23)), ((46, -19), (55, -19), (58, -11)), ((43, -11), (50, -5), (53, 1)))):
+        pts = bezier((35, -11), c1, c2, fin, 20)
+        trazo(pts, 3.4 - k * 0.3, 1.8, bolas=False)
+        circ(*fin, 2.4)
+
+
+def rueda(d, x0, y0, u, r, c, hueco, radios=4, giro=0.3):
+    """La rueda (la «rouelle»): llanta, cubo y radios; lo que queda del carro de Filipo en las monedas galas."""
+    def P(a, rr): return (x0 + rr * u * math.cos(a), y0 + rr * u * math.sin(a))
+    X, Y = x0, y0
+    d.ellipse([X - r * u, Y - r * u, X + r * u, Y + r * u], fill=c)
+    ri = r * 0.68
+    d.ellipse([X - ri * u, Y - ri * u, X + ri * u, Y + ri * u], fill=hueco)
+    for k in range(radios):
+        a = giro + k * math.pi / radios * 2
+        d.line([P(a, 0), P(a, ri + 0.5)], fill=c, width=int(r * 0.24 * u))
+    rc = r * 0.3; d.ellipse([X - rc * u, Y - rc * u, X + rc * u, Y + rc * u], fill=c)
+    rh = r * 0.1; d.ellipse([X - rh * u, Y - rh * u, X + rh * u, Y + rh * u], fill=hueco)
+
+
+def lira(d, x0, y0, u, c, hueco, giro=0.0):
+    """La lira de los bardos (Diodoro 5.31), como sale en algunas monedas galas: la caja redonda abajo, los dos brazos que
+    se abren y vuelven a cerrarse con un botón en la punta, el travesaño arriba y cuatro cuerdas."""
+    cg, sg = math.cos(giro), math.sin(giro)
+    def P(x, y): return (x0 + (x * cg - y * sg) * u, y0 + (x * sg + y * cg) * u)
+    def circ(x, y, r, f=c):
+        X, Y = P(x, y); d.ellipse([X - r * u, Y - r * u, X + r * u, Y + r * u], fill=f)
+    caja = bezier((-17, 14), (-19, 34), (19, 34), (17, 14), 30) + bezier((17, 14), (10, 10), (-10, 10), (-17, 14), 20)
+    d.polygon([P(*p) for p in caja], fill=c)
+    d.arc([*P(-11, 15), *P(11, 29)], 20, 160, fill=hueco, width=max(1, int(1.0 * u)))
+    for lado in (-1, 1):
+        pts = bezier((lado * 13, 16), (lado * 30, 2), (lado * 26, -30), (lado * 12, -40), 40)
+        cinta(d, [P(*p) for p in pts], 7.5 * u, 4.2 * u, c)
+        circ(lado * 12.5, -41.5, 3.6)
+    d.line([P(-20, -31), P(20, -31)], fill=c, width=int(4.2 * u))
+    for lado in (-1, 1): circ(lado * 21, -31, 2.6)
+    for k in range(4):
+        x = -7.5 + k * 5
+        d.line([P(x, -29), P(x * 0.85, 13)], fill=c, width=max(1, int(1.5 * u)))
+
+
+def esse(d, x0, y0, u, w, c, giro=0.0):
+    """La «S» tumbada de las monedas galas: un trazo en S que engruesa en el medio, con una perla en cada punta."""
+    cg, sg = math.cos(giro), math.sin(giro)
+    def P(x, y): return (x0 + (x * cg - y * sg) * u, y0 + (x * sg + y * cg) * u)
+    pts = bezier((-16, 4), (-14, -12), (2, -8), (0, 0), 20)[:-1] + bezier((0, 0), (-2, 8), (14, 12), (16, -4), 20)
+    q = [P(*p) for p in pts]
+    n = len(q)
+    izq, der = [], []
+    for i, (x, y) in enumerate(q):
+        a = q[max(i - 1, 0)]; b = q[min(i + 1, n - 1)]
+        dx, dy = b[0] - a[0], b[1] - a[1]; l = math.hypot(dx, dy) or 1
+        ww = w * u * (0.55 + 0.45 * math.sin(math.pi * i / (n - 1))) / 2
+        izq.append((x - dy / l * ww, y + dx / l * ww)); der.append((x + dy / l * ww, y - dx / l * ww))
+    d.polygon(izq + der[::-1], fill=c)
+    for (x, y) in (q[0], q[-1]):
+        r = w * u * 0.62; d.ellipse([x - r, y - r, x + r, y + r], fill=c)
+
+
+def astro(d, x0, y0, u, c, n=6, r=7.0, rp=2.3):
+    """El «astro» de las monedas: una perla en el centro y un corro de perlas alrededor."""
+    d.ellipse([x0 - rp * 1.25 * u, y0 - rp * 1.25 * u, x0 + rp * 1.25 * u, y0 + rp * 1.25 * u], fill=c)
+    for k in range(n):
+        a = k * 2 * math.pi / n - math.pi / 2
+        x, y = x0 + r * u * math.cos(a), y0 + r * u * math.sin(a)
+        d.ellipse([x - rp * u, y - rp * u, x + rp * u, y + rp * u], fill=c)
+
+
+# El electro de las monedas de Vercingétorix (oro con plata): más pálido y frío que el oro de los torques.
+ELECTRO = [(0.0, '#22150A'), (0.22, '#553810'), (0.42, '#8E671E'), (0.57, '#B88E34'), (0.7, '#D2AC4E'), (0.83, '#E7CB7A'),
+           (0.93, '#F6E6AE'), (1.0, '#FFF8DE')]
+
+
+def galia(tam):
+    """Galia: un estátero arverno de electro (oro pálido, con plata: las monedas de Vercingétorix tienen «environ 40 %
+    d'or») sobre un cuero curtido. El cospel, batido a mano, no es del todo redondo y tiene el canto redondeado; la gráfila
+    de perlas corre por dentro. En el campo, en relieve, como en el reverso de esas monedas: a la izquierda el caballo al
+    galope, con la crin de perlas, la perla sobre el lomo y debajo la rueda (lo que quedó del carro de Filipo de Macedonia,
+    que copiaban); a la derecha la lira de los bardos (Diodoro 5.31), la «S» tumbada y el astro de perlas. En los huecos,
+    la pátina rojiza del oro; en lo alto, el brillo del roce. La huella va acuñada en el centro, en el mismo metal, con su
+    sombra corta (la luz viene de arriba a la izquierda)."""
+    k = 2; S = tam * k; c = S / 2
+    yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
+    dx, dy = xx - c, yy - c
+    rr = np.sqrt(dx ** 2 + dy ** 2) / c
+    ang = np.arctan2(dy, dx)
+    # --- El cospel: el contorno irregular y el canto redondeado; un leve abombado.
+    rf = 0.95 + 0.011 * np.sin(3 * ang + 0.7) + 0.007 * np.sin(7 * ang + 2.1) + 0.004 * np.sin(13 * ang + 0.3)
+    dentro_px = (rf - rr) * c
+    moneda = np.clip(dentro_px / (1.0 * k) + 0.5, 0, 1)
+    # El reverso de los estáteros galos es cóncavo: el campo baja hacia el centro como un cuenco poco hondo.
+    alto_cospel = np.clip(dentro_px / (19 * k), 0, 1) ** 0.5 - 0.3 * np.clip(1 - (rr / 0.93) ** 2, 0, 1) ** 1.5
+    # --- Lo que va en relieve (sin la huella), dibujado a la escala del lienzo.
+    g = Image.new('L', (S, S), 0); d = ImageDraw.Draw(g)
+    rg = np.random.default_rng(611)
+    caballo(d, 108 * k, 292 * k, 1.3 * k, 255, 0, giro=-0.12)
+    rueda(d, 140 * k, 466 * k, 1.0 * k, 21, 255, 0)
+    d.ellipse([(130 - 6) * k, (204 - 6) * k, (130 + 6) * k, (204 + 6) * k], fill=255)        # la perla sobre el lomo
+    lira(d, 614 * k, 352 * k, 1.55 * k, 255, 0)
+    esse(d, 598 * k, 204 * k, 1.5 * k, 5.0, 255, giro=-0.35)
+    astro(d, 596 * k, 512 * k, 1.5 * k, 255)
+    figuras = np.asarray(g, np.float32) / 255
+    cerca = suavizar(figuras, 4 * k) > 0.04
+    n = 62
+    for i in range(n):                                       # la gráfila: perlas desparejas, alguna mal acuñada; donde
+        a = 2 * math.pi * i / n + 0.02                       # pasa una figura, la figura se come la perla
+        rb = 0.882 * c + rg.normal(0, 0.6 * k); rp = (0.0185 + rg.normal(0, 0.0012)) * c
+        x, y = c + rb * math.cos(a), c + rb * math.sin(a)
+        if cerca[min(S - 1, int(y)), min(S - 1, int(x))]: continue
+        d.ellipse([x - rp, y - rp, x + rp, y + rp], fill=int(255 * (0.55 if rg.random() < 0.12 else 1.0)))
+    rel = np.asarray(g, np.float32) / 255
+    rel = rel * moneda
+    alto_rel = (suavizar(rel, 1.6 * k) * 0.3 + suavizar(rel, 3.2 * k) * 0.5 + suavizar(rel, 9 * k) * 0.35) * (0.3 + 0.7 * rel)
+    # --- El campo: rayas finas de uso, golpecitos y un grano muy fino.
+    marcas = Image.new('L', (S, S), 0); dm = ImageDraw.Draw(marcas)
+    for _ in range(70):
+        x, y = rg.random() * S, rg.random() * S; a = rg.random() * math.pi; l = (6 + rg.random() * 40) * k
+        dm.line([(x, y), (x + l * math.cos(a), y + l * math.sin(a))], fill=int(60 + rg.random() * 120), width=1)
+    for _ in range(40):
+        x, y = rg.random() * S, rg.random() * S; r_ = (1 + rg.random() * 3) * k
+        dm.ellipse([x - r_, y - r_, x + r_, y + r_], fill=int(80 + rg.random() * 120))
+    golpes = suavizar(np.asarray(marcas, np.float32) / 255, 0.7 * k)
+    alto = alto_cospel * 0.9 + alto_rel * 0.8 - golpes * 0.025 + suavizar(rg.standard_normal((S, S)).astype(np.float32), 1.2 * k) * 0.006
+    alto = alto * np.clip(moneda * 1.2, 0, 1)
+    color = oro_relieve(suavizar(alto, 0.5 * k), 24.0 * k, 612, tonos=ELECTRO, grano=0.02, ambiente=0.75, plano=0.42)
+    # El roce: lo más alto del relieve, pulido por las manos, más claro.
+    color = mezcla(color, col('#F0D684'), np.clip(alto_rel * 1.6 - 0.45, 0, 1) * 0.3)
+    # El campo no es parejo: tonos más cálidos y más fríos en manchas grandes, y la luz que cae hacia abajo a la derecha.
+    color = color * (0.94 + 0.1 * nube(616, 3, S)[..., None] + 0.04 * nube(617, 9, S)[..., None])
+    color = color * (1.06 - 0.16 * np.clip((dx + dy) / (2 * c) + 0.5, 0, 1))[..., None]
+    # La pátina: rojiza en los huecos junto al relieve y por dentro del canto; el campo, un poco más mate que lo alto.
+    hueco = np.clip(suavizar(rel, 5 * k) * 1.5 - rel * 1.2, 0, 1)
+    color = mezcla(color, col('#6B3A16'), hueco * 0.42)
+    color = mezcla(color, col('#6B3A16'), np.clip(1 - dentro_px / (34 * k), 0, 1) * np.clip(dentro_px / (6 * k), 0, 1) * 0.18)
+    color = color * (0.93 + 0.07 * np.clip(alto_rel * 2, 0, 1))[..., None]
+    color = mezcla(color, col('#8C4A22'), np.clip(nube(618, 5, S) * 1.6 - 0.2, 0, 1) * 0.16 * (1 - np.clip(alto_rel * 3, 0, 1)))
+    # --- El cuero de fuera: pardo oscuro, con su flor (el grano) y la sombra de la moneda.
+    cuero = col('#2B1D13')[None, None, :] * (0.9 + 0.12 * nube(613, 6, S)[..., None] + 0.06 * nube(614, 40, S)[..., None])
+    flor = suavizar(rg.standard_normal((S, S)).astype(np.float32), 1.6 * k)
+    cuero = cuero * (1 + 0.5 * np.clip(flor, -0.2, 0.2)[..., None])
+    sombra = suavizar(np.roll(np.roll(moneda, 6 * k, 0), 4 * k, 1), 7 * k)
+    cuero = cuero * (1 - 0.55 * sombra)[..., None]
+    fondo = mezcla(cuero, color, moneda)
+    fondo = a_img(fondo).resize((tam, tam), Image.LANCZOS)
+    # --- La huella, acuñada: el mismo metal, más pulida en lo alto, con la pátina y la sombra alrededor.
+    m = mascara_sello(S)
+    alto_h = suavizar(m, 4.6 * k) * (0.25 + 0.75 * m)
+    alto_h = alto_h / max(1e-3, float(alto_h.max()))        # cada cresta, un hilo redondo y no una tira plana
+    color_h = oro_relieve(suavizar(alto_cospel * 0.9 + alto_h * 0.8, 0.5 * k), 24.0 * k, 615, tonos=ELECTRO, grano=0.02, ambiente=0.75, plano=0.42)
+    color_h = mezcla(color_h, col('#F0D684'), np.clip(alto_h * 1.6 - 0.6, 0, 1) * 0.3)
+    color_h = color_h * (0.94 + 0.1 * nube(616, 3, S)[..., None] + 0.04 * nube(617, 9, S)[..., None])
+    color_h = color_h * (1.06 - 0.16 * np.clip((dx + dy) / (2 * c) + 0.5, 0, 1))[..., None]
+    capa = a_rgba(color_h, m)
+    halo = np.clip(suavizar(m, 4 * k) * 1.5 - m, 0, 1)
+    sombra_h = np.clip(suavizar(np.roll(np.roll(m, 3 * k, 0), 2 * k, 1), 2.4 * k) - m, 0, 1)
+    base = a_rgba(np.zeros((S, S, 3)) + col('#4A2A0E'), np.clip(halo * 0.22 + sombra_h * 0.5, 0, 1))
+    base.alpha_composite(capa)
+    huella = base.convert('RGBa').resize((tam, tam), Image.LANCZOS).convert('RGBA')
+    guardar(fondo, huella, 'galia')
+
+
 # ------------------------------------------------------------------ Tierras Antiguas
 def runas_pil(d, x, y, ancho, alto, n, color, grosor, semilla):
     """Signos inventados (trazos rectos y ángulos), como en TrofeosMas.runas."""
@@ -1622,6 +1837,7 @@ SIETE = [
     'vapor',
     'frente',
     'arcontes',
+    'galia',
 ]
 ORDEN = [
     'romano',
@@ -1633,6 +1849,7 @@ ORDEN = [
     'medieval',
     'templario',
     'distopia',
+    'galia',
     'arcontes',
     'frente',
     'refugio',

@@ -302,3 +302,129 @@ Lo que queda por comprobar cuando la red de la sesión deje abrir los textos com
 - **Copto de los rótulos** (`Libros.kt`, `Reportes.kt`, `Tema.kt`): ϫⲱⲱⲙⲉ «libro», ⲡⲉϩⲟⲟⲩ «el día», ⲣⲁⲥⲟⲩ «sueño», ⲁⲓⲛⲉϩⲥⲉ «desperté». Coinciden con el sahídico que conocemos; falta comprobarlos en un diccionario (Crum).
 - **Las frases del día** (`ui/Frases.kt`, `ARCONTES`) son traducción propia del sentido comprobado en Wikipedia; cuando se pueda, cotejar con el texto copto, griego o la Reina-Valera. **Hecho el 15 nov 2026 para las seis de los evangelios canónicos** (Juan 1:5, 8:32, 18:36; Marcos 4:22; Mateo 6:22, 7:7): ahora van con el texto exacto de la RV1909 (sección 14). Las de Nag Hammadi, el papiro de Berlín e Hipólito siguen en traducción propia, sin cotejar.
 - **Marcas del calendario:** el versículo de 1 Enoc 72 sobre los solsticios y equinoccios.
+
+## 14. El texto de la Reina-Valera 1909 (15 nov 2026)
+
+Copiado de Wikisource en español ([Biblia Reina-Valera 1909](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909); sobre la edición y el dominio público, sección 3), **letra por letra**, con la ortografía de la página («á», «fué», «dió», «vió», «Jerusalem», mayúsculas como «Judíos» o «Galileos»). Cada versículo se sacó de la página de su capítulo con un programa que separa los versículos por su número (la marca `Plantilla:Vers` de la página), y se comprobó que cada capítulo tiene el número de versículos de siempre (contado de memoria). **Comprobado**: todas las páginas abrieron. No se cotejó con otra edición impresa (Gutenberg y archive.org no abren) **[sin verificar]**.
+
+**Cómo se usa.** «Sin comillas» quiere decir que el cuento lo cuenta o lo dice en estilo indirecto, con la cita al lado, o que no lo usa. En el cuento de Eleazar, solo 15 frases cortas van tal cual, entre comillas españolas y con su cita al lado: «Consumado es» (Juan 19:30). Se eligieron las que quedan naturales y breves. Las demás siguen en estilo indirecto, por una de tres razones: el versículo es largo o es narración; la frase de 1909 suena hoy a errata («á», «fué»: Marcos 12:17, Hechos 5:29, Isaías 53:7, Juan 7:37); o dice «Jehová», que la voz del tema no usa (Levítico 16). La prueba `CuentoG9Prueba.jesusNuncaDeFrenteYSusPalabrasConSuCita` guarda una copia de los 15 versículos y comprueba que cada frase entre comillas esté en el suyo, letra por letra. Las seis frases del día de los evangelios canónicos (`ui/Frases.kt`, `ARCONTES`) van también con este texto, con el autor «Juan 1:5 (Reina-Valera 1909)».
+
+**Lo que cambia frente al griego crítico.** Hechos 8:10 dice «la gran virtud de Dios» (corrección 19), y «virtud» significa allí «poder»: el cuento lo dice al lado. Juan 1:5 dice «no la comprendieron» (no «no la venció»), y Marcos 4:22 dice «oculto», no «escondido»: la frase del día cambia con el texto.
+
+
+**Temporada 1**
+
+| Pasaje | Texto de la Reina-Valera 1909, tal cual | En la app | Página |
+|---|---|---|---|
+| Lucas 3:1 | Y en el año quince del imperio de Tiberio César, siendo gobernador de Judea Poncio Pilato, y Herodes tetrarca de Galilea, y su hermano Felipe tetrarca de Iturea y de la provincia de Traconite, y Lisanias tetrarca de Abilinia, | Sin comillas | [Lucas 3](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lucas/3) |
+| Lucas 3:2 | Siendo sumos sacerdotes Anás y Caifás, vino palabra del Señor sobre Juan, hijo de Zacarías, en el desierto. | Sin comillas | [Lucas 3](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lucas/3) |
+| Lucas 3:3 | Y él vino por toda la tierra al rededor del Jordán predicando el bautismo del arrepentimiento para la remisión de pecados; | Sin comillas | [Lucas 3](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lucas/3) |
+| Marcos 1:7 | Y predicaba, diciendo: Viene tras mí el que es más poderoso que yo, al cual no soy digno de desatar encorvado la correa de sus zapatos. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:8 | Yo á la verdad os he bautizado con agua; mas él os bautizará con Espíritu Santo. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:9 | Y aconteció en aquellos días, que Jesús vino de Nazaret de Galilea, y fué bautizado por Juan en el Jordán. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:10 | Y luego, subiendo del agua, vió abrirse los cielos, y al Espíritu como paloma, que descendía sobre él. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:11 | Y hubo una voz de los cielos que decía: Tú eres mi Hijo amado; en ti tomo contentamiento. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:12 | Y luego el Espíritu le impele al desierto. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:13 | Y estuvo allí en el desierto cuarenta días, y era tentado de Satanás; y estaba con las fieras; y los ángeles le servían. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:14 | Mas después que Juan fué encarcelado, Jesús vino á Galilea predicando el evangelio del reino de Dios, | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:15 | Y diciendo: El tiempo es cumplido, y el reino de Dios está cerca: arrepentíos, y creed al evangelio. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:16 | Y pasando junto á la mar de Galilea, vió á Simón, y á Andrés su hermano, que echaban la red en la mar; porque eran pescadores. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:17 | Y les dijo Jesús: Venid en pos de mí, y haré que seáis pescadores de hombres. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:18 | Y luego, dejadas sus redes, le siguieron. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:19 | Y pasando de allí un poco más adelante, vió á Jacobo, hijo de Zebedeo, y á Juan su hermano, también ellos en el navío, que aderezaban las redes. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:20 | Y luego los llamó: y dejando á su padre Zebedeo en el barco con los jornaleros, fueron en pos de él. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:24 | Diciendo: ¡Ah! ¿qué tienes con nosotros, Jesús Nazareno? ¿Has venido á destruirnos? Sé quién eres, el Santo de Dios. | **Tal cual** en el cuento (`cafarnaum_28`) | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:38 | Y les dice: Vamos á los lugares vecinos, para que predique también allí; porque para esto he venido. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:40 | Y un leproso vino á él, rogándole; é hincada la rodilla, le dice: Si quieres, puedes limpiarme. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:41 | Y Jesús, teniendo misericordia de él, extendió su mano, y le tocó, y le dice: Quiero, sé limpio. | **Tal cual** en el cuento (`lo_ve_28`) | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 1:42 | Y así que hubo él hablado, la lepra se fué luego de aquél, y fué limpio. | Sin comillas | [Marcos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/1) |
+| Marcos 6:17 | Porque el mismo Herodes había enviado, y prendido á Juan, y le había aprisionado en la cárcel á causa de Herodías, mujer de Felipe su hermano; pues la había tomado por mujer. | Sin comillas | [Marcos 6](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/6) |
+| Marcos 6:18 | Porque Juan decía á Herodes: No te es lícito tener la mujer de tu hermano. | **Tal cual** en el cuento (`carcel_juan_28`) | [Marcos 6](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/6) |
+| Lucas 8:2 | Y algunas mujeres que habían sido curadas de malos espíritus y de enfermedades: María, que se llamaba Magdalena, de la cual habían salido siete demonios, | Sin comillas | [Lucas 8](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lucas/8) |
+| Lucas 8:3 | Y Juana, mujer de Chuza, procurador de Herodes, y Susana, y otras muchas que le servían de sus haciendas. | Sin comillas | [Lucas 8](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lucas/8) |
+| Levítico 16:2 | Y Jehová dijo á Moisés: Di á Aarón tu hermano, que no en todo tiempo entre en el santuario del velo adentro, delante de la cubierta que está sobre el arca, para que no muera: porque yo apareceré en la nube sobre la cubierta. | Sin comillas | [Levítico 16](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lev%C3%ADtico/16) |
+| Levítico 16:4 | La túnica santa de lino se vestirá, y sobre su carne tendrá pañetes de lino, y ceñiráse el cinto de lino; y con la mitra de lino se cubrirá: son las santas vestiduras: con ellas, después de lavar su carne con agua, se ha de vestir. | Sin comillas | [Levítico 16](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lev%C3%ADtico/16) |
+| Levítico 16:8 | Y echará suertes Aarón sobre los dos machos de cabrío; la una suerte por Jehová, y la otra suerte por Azazel. | Sin comillas | [Levítico 16](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lev%C3%ADtico/16) |
+| Levítico 16:9 | Y hará allegar Aarón el macho cabrío sobre el cual cayere la suerte por Jehová, y ofrecerálo en expiación. | Sin comillas | [Levítico 16](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lev%C3%ADtico/16) |
+| Levítico 16:10 | Mas el macho cabrío, sobre el cual cayere la suerte por Azazel, lo presentará vivo delante de Jehová, para hacer la reconciliación sobre él, para enviarlo á Azazel al desierto. | Sin comillas | [Levítico 16](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lev%C3%ADtico/16) |
+| Levítico 16:21 | Y pondrá Aarón ambas manos suyas sobre la cabeza del macho cabrío vivo, y confesará sobre él todas las iniquidades de los hijos de Israel, y todas sus rebeliones, y todos sus pecados, poniéndolos así sobre la cabeza del macho cabrío, y lo enviará al desierto por mano de un hombre destinado para esto. | Sin comillas | [Levítico 16](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lev%C3%ADtico/16) |
+| Levítico 16:22 | Y aquel macho cabrío llevará sobre sí todas las iniquidades de ellos á tierra inhabitada: y dejará ir el macho cabrío por el desierto. | Sin comillas | [Levítico 16](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lev%C3%ADtico/16) |
+| Levítico 16:29 | Y esto tendréis por estatuto perpetuo: En el mes séptimo, á los diez del mes, afligiréis vuestras almas, y ninguna obra haréis, ni el natural ni el extranjero que peregrina entre vosotros: | Sin comillas | [Levítico 16](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lev%C3%ADtico/16) |
+| Levítico 16:30 | Porque en este día se os reconciliará para limpiaros; y seréis limpios de todos vuestros pecados delante de Jehová. | Sin comillas | [Levítico 16](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lev%C3%ADtico/16) |
+
+**Temporada 2**
+
+| Pasaje | Texto de la Reina-Valera 1909, tal cual | En la app | Página |
+|---|---|---|---|
+| Marcos 4:39 | Y levantándose, increpó al viento, y dijo á la mar: Calla, enmudece. Y cesó el viento, y fué hecha grande bonanza. | **Tal cual** en el cuento (`tempestad_29`) | [Marcos 4](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/4) |
+| Marcos 4:40 | Y á ellos dijo: ¿Por qué estáis así amedrentados? ¿Cómo no tenéis fe? | Sin comillas | [Marcos 4](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/4) |
+| Marcos 4:41 | Y temieron con gran temor, y decían el uno al otro. ¿Quién es éste, que aun el viento y la mar le obedecen? | Sin comillas | [Marcos 4](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/4) |
+| Marcos 5:41 | Y tomando la mano de la muchacha, le dice: Talitha cumi; que es, si lo interpretares: Muchacha, á ti digo, levántate. | Sin comillas | [Marcos 5](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/5) |
+| Marcos 6:50 | Porque todos le veían, y se turbaron. Mas luego habló con ellos, y les dijo: Alentaos; yo soy, no temáis. | Sin comillas | [Marcos 6](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/6) |
+| Marcos 8:29 | Entonces él les dice: Y vosotros, ¿quién decís que soy yo? Y respondiendo Pedro, le dice: Tú eres el Cristo. | Sin comillas | [Marcos 8](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/8) |
+| Marcos 8:30 | Y les apercibió que no hablasen de él á ninguno. | Sin comillas | [Marcos 8](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/8) |
+| Marcos 8:31 | Y comenzó á enseñarles, que convenía que el Hijo del hombre padeciese mucho, y ser reprobado de los ancianos, y de los príncipes de los sacerdotes, y de los escribas, y ser muerto, y resucitar después de tres días. | Sin comillas | [Marcos 8](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/8) |
+| Marcos 8:32 | Y claramente decía esta palabra. Entonces Pedro le tomó, y le comenzó á reprender. | Sin comillas | [Marcos 8](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/8) |
+| Marcos 8:33 | Y él, volviéndose y mirando á sus discípulos, riñó á Pedro, diciendo: Apártate de mí, Satanás; porque no sabes las cosas que son de Dios, sino las que son de los hombres. | Sin comillas | [Marcos 8](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/8) |
+| Mateo 11:3 | Diciendo: ¿Eres tú aquél que había de venir, ó esperaremos á otro? | Sin comillas | [Mateo 11](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Mateo/11) |
+| Mateo 11:4 | Y respondiendo Jesús, les dijo: Id, y haced saber á Juan las cosas que oís y veis: | Sin comillas | [Mateo 11](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Mateo/11) |
+| Mateo 11:5 | Los ciegos ven, y los cojos andan; los leprosos son limpiados, y los sordos oyen; los muertos son resucitados, y á los pobres es anunciado el evangelio. | Sin comillas | [Mateo 11](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Mateo/11) |
+| Mateo 11:6 | Y bienaventurado es el que no fuere escandalizado en mí. | Sin comillas | [Mateo 11](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Mateo/11) |
+| Mateo 11:7 | E idos ellos, comenzó Jesús á decir de Juan á las gentes: ¿Qué salisteis á ver al desierto? ¿una caña que es meneada del viento? | Sin comillas | [Mateo 11](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Mateo/11) |
+| Juan 6:63 | El espíritu es el que da vida; la carne nada aprovecha: las palabras que yo os he hablado, son espíritu y son vida. | **Tal cual** en el cuento (`pan_vida_29`) | [Juan 6](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Juan/6) |
+| Juan 7:34 | Me buscaréis, y no me hallaréis; y donde yo estaré, vosotros no podréis venir. | **Tal cual** en el cuento (`ensena_29`) | [Juan 7](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Juan/7) |
+| Juan 7:37 | Mas en el postrer día grande de la fiesta, Jesús se ponía en pie y clamaba, diciendo: Si alguno tiene sed, venga á mí y beba. | Sin comillas | [Juan 7](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Juan/7) |
+| Juan 7:38 | El que cree en mí, como dice la Escritura, ríos de agua viva correrán de su vientre. | Sin comillas | [Juan 7](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Juan/7) |
+| Juan 10:34 | Respondióles Jesús: ¿No está escrito en vuestra ley: Yo dije, Dioses sois? | **Tal cual** en el cuento (`dedicacion_29`) | [Juan 10](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Juan/10) |
+
+**Temporada 3**
+
+| Pasaje | Texto de la Reina-Valera 1909, tal cual | En la app | Página |
+|---|---|---|---|
+| Juan 19:30 | Y como Jesús tomó el vinagre, dijo: Consumado es. Y habiendo inclinado la cabeza, dió el espíritu. | **Tal cual** en el cuento (`cruz_30`) | [Juan 19](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Juan/19) |
+| Juan 20:17 | Dícele Jesús: No me toques: porque aun no he subido á mi Padre: mas ve á mis hermanos, y diles: Subo á mi Padre y á vuestro Padre, á mi Dios y á vuestro Dios. | **Tal cual** en el cuento (`sepulcro_30`) | [Juan 20](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Juan/20) |
+| Juan 21:12 | Díceles Jesús: Venid, comed. Y ninguno de los discípulos osaba preguntarle: ¿Tú, quién eres? sabiendo que era el Señor. | **Tal cual** en el cuento (`orilla_30`) | [Juan 21](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Juan/21) |
+| Marcos 11:17 | Y les enseñaba diciendo: ¿No está escrito que mi casa, casa de oración será llamada por todas las gentes? Mas vosotros la habéis hecho cueva de ladrones. | Sin comillas | [Marcos 11](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/11) |
+| Marcos 12:17 | Y respondiendo Jesús, les dijo: Dad lo que es de César á César; y lo que es de Dios, á Dios. Y se maravillaron de ello. | Sin comillas | [Marcos 12](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/12) |
+| Lucas 19:40 | Y él respondiendo, les dijo: Os digo que si éstos callaren, las piedras clamarán. | Sin comillas | [Lucas 19](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Lucas/19) |
+| Hechos 1:11 | Los cuales también les dijeron: Varones Galileos, ¿qué estáis mirando al cielo? este mismo Jesús que ha sido tomado desde vosotros arriba en el cielo, así vendrá como le habéis visto ir al cielo. | **Tal cual** en el cuento (`cuarenta_30`) | [Hechos 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/1) |
+| Hechos 2:17 | Y será en los postreros días, dice Dios, Derramaré de mi Espíritu sobre toda carne, Y vuestros hijos y vuestras hijas profetizarán; Y vuestros mancebos verán visiones, Y vuestros viejos soñarán sueños: | Sin comillas | [Hechos 2](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/2) |
+
+**Temporada 4**
+
+| Pasaje | Texto de la Reina-Valera 1909, tal cual | En la app | Página |
+|---|---|---|---|
+| Hechos 3:6 | Y Pedro dijo: Ni tengo plata ni oro; mas lo que tengo te doy: en el nombre de Jesucristo de Nazaret, levántate y anda. | **Tal cual** en el cuento (`cojo_31`) | [Hechos 3](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/3) |
+| Hechos 4:19 | Entonces Pedro y Juan, respondiendo, les dijeron: Juzgad si es justo delante de Dios obedecer antes á vosotros que á Dios: | Sin comillas | [Hechos 4](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/4) |
+| Hechos 4:20 | Porque no podemos dejar de decir lo que hemos visto y oído. | **Tal cual** en el cuento (`consejo_31`) | [Hechos 4](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/4) |
+| Hechos 5:29 | Y respondiendo Pedro y los apóstoles, dijeron: Es menester obedecer á Dios antes que á los hombres. | Sin comillas | [Hechos 5](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/5) |
+| Hechos 5:38 | Y ahora os digo: Dejaos de estos hombres, y dejadlos; porque si este consejo ó esta obra es de los hombres, se desvanecerá: | Sin comillas | [Hechos 5](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/5) |
+| Hechos 5:39 | Mas si es de Dios, no la podréis deshacer; no seáis tal vez hallados resistiendo á Dios. | Sin comillas | [Hechos 5](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/5) |
+| Ester 4:14 | Porque si absolutamente callares en este tiempo, respiro y libertación tendrán los Judíos de otra parte; mas tú y la casa de tu padre pereceréis. ¿Y quién sabe si para esta hora te han hecho llegar al reino? | Sin comillas | [Esther 4](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Esther/4) |
+
+**Temporada 5**
+
+| Pasaje | Texto de la Reina-Valera 1909, tal cual | En la app | Página |
+|---|---|---|---|
+| Hechos 7:48 | Si bien el Altísimo no habita en templos hechos de mano; como el profeta dice: | Sin comillas | [Hechos 7](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/7) |
+| Hechos 7:56 | Y dijo: He aquí, veo los cielos abiertos, y al Hijo del hombre que está á la diestra de Dios. | Sin comillas | [Hechos 7](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/7) |
+| Hechos 7:60 | Y puesto de rodillas, clamó á gran voz: Señor, no les imputes este pecado. Y habiendo dicho esto, durmió. | **Tal cual** en el cuento (`esteban_32`) | [Hechos 7](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/7) |
+| Hechos 8:10 | Al cual oían todos atentamente desde el más pequeño hasta el más grande, diciendo: Este es la gran virtud de Dios. | **Tal cual** en el cuento (`simon_32`; la variante de lo que piensa, desde `simon_32`, sigue en indirecto: «el gran poder de Dios») | [Hechos 8](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/8) |
+| Hechos 8:20 | Entonces Pedro le dijo: Tu dinero perezca contigo, que piensas que el don de Dios se gane por dinero. | Sin comillas | [Hechos 8](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/8) |
+| Hechos 8:30 | Y acudiendo Felipe, le oyó que leía el profeta Isaías, y dijo: Mas ¿entiendes lo que lees? | Sin comillas | [Hechos 8](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/8) |
+| Hechos 8:31 | Y él dijo: ¿Y cómo podré, si alguno no me enseñare? Y rogó á Felipe que subiese, y se sentase con él. | Sin comillas | [Hechos 8](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/8) |
+| Hechos 9:2 | Y demandó de él letras para Damasco á las sinagogas, para que si hallase algunos hombres ó mujeres de esta secta, los trajese presos á Jerusalem. | Sin comillas | [Hechos 9](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Hechos/9) |
+| Isaías 53:7 | Angustiado él, y afligido, no abrió su boca: como cordero fué llevado al matadero; y como oveja delante de sus trasquiladores, enmudeció, y no abrió su boca. | Sin comillas | [Isaías 53](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Isa%C3%ADas/53) |
+| Génesis 28:12 | Y soñó, y he aquí una escala que estaba apoyada en tierra, y su cabeza tocaba en el cielo: y he aquí ángeles de Dios que subían y descendían por ella. | Sin comillas | [Génesis 28](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/G%C3%A9nesis/28) |
+
+**Frases del día y otros datos**
+
+| Pasaje | Texto de la Reina-Valera 1909, tal cual | En la app | Página |
+|---|---|---|---|
+| Juan 1:5 | Y la luz en las tinieblas resplandece; mas las tinieblas no la comprendieron. | Frase del día (entera) | [Juan 1](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Juan/1) |
+| Juan 8:32 | Y conoceréis la verdad, y la verdad os libertará. | Frase del día (entera) | [Juan 8](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Juan/8) |
+| Juan 18:36 | Respondió Jesús: Mi reino no es de este mundo: si de este mundo fuera mi reino, mis servidores pelearían para que yo no fuera entregado á los Judíos: ahora, pues, mi reino no es de aquí. | Frase del día (solo «Mi reino no es de este mundo») | [Juan 18](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Juan/18) |
+| Marcos 4:22 | Porque no hay nada oculto que no haya de ser manifestado, ni secreto que no haya de descubrirse. | Frase del día (entera) | [Marcos 4](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Marcos/4) |
+| Mateo 6:22 | La lámpara del cuerpo es el ojo: así que, si tu ojo fuere sincero, todo tu cuerpo será luminoso: | Frase del día (solo «La lámpara del cuerpo es el ojo») | [Mateo 6](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Mateo/6) |
+| Mateo 7:7 | Pedid, y se os dará; buscad, y hallaréis; llamad, y se os abrirá. | Frase del día (entera) | [Mateo 7](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Mateo/7) |
+| Mateo 15:39 | Entonces, despedidas las gentes, subió en el barco: y vino á los términos de Magdalá. | Dato del cuento: la lectura «Magdalá» (sección 13) | [Mateo 15](https://es.wikisource.org/wiki/Biblia_Reina-Valera_1909/Mateo/15) |

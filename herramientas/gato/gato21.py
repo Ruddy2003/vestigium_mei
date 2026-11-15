@@ -59,7 +59,7 @@ from gato9 import W, H, lienzo, degradado, luz, estrellas, cuad, subir, tramar  
 AQUI = Path(__file__).parent / "salida"   # hojas, bandas y GIF de revisión (no van al repositorio)
 AQUI.mkdir(exist_ok=True)
 N, SS, SUELO = g8.N, g8.SS, g8.SUELO
-MIOS = ("frente", "arcontes")
+MIOS = ("frente", "arcontes", "galia")
 BUCLE = 160      # cuadros en que se repite todo lo que se mueve en estos fondos (12,8 s)
 ANIM = g9.ANIM
 
@@ -236,6 +236,154 @@ def collar_abraxas(L, C, cab, acc):
 
 
 g8.collar = collar_abraxas
+g8._spr.clear(); g8._rej.clear()
+
+# ---------------------------------------------------------------------
+#  Galia: el torques de oro, un collar rígido y grueso, torcido como una cuerda y abierto por delante, con sus dos
+#  remates de «tope» en la garganta (como los que llevan los bustos del caldero de Gundestrup). La torsión y el brillo
+#  los pone el pintor del repujado.
+# ---------------------------------------------------------------------
+g8.CON_COLLAR = tuple(g8.CON_COLLAR) + ("torques",)
+_collar_tor = g8.collar
+
+
+def collar_torques(L, C, cab, acc):
+    if acc != "torques":
+        return _collar_tor(L, C, cab, acc)
+    a, b, px, py = g8._cuello(C, cab)
+    m = (a[0] + (b[0] - a[0]) * 0.5, a[1] + (b[1] - a[1]) * 0.5)
+    e1, e2 = (m[0] - 4.7 * px, m[1] - 4.7 * py), (m[0] + 4.7 * px, m[1] + 4.7 * py)
+    L.capsula("collar", [e1, e2], 2.2)
+    j = max((e1, e2), key=lambda q: q[0] + q[1])          # la garganta: ahí se abre
+    ux, uy = (b[0] - a[0]), (b[1] - a[1]); n = math.hypot(ux, uy) or 1; ux, uy = ux / n, uy / n
+    s = 1 if (j is e2) else -1
+    L.elipse("joya", j[0] + s * 0.7 * px - 0.5 * ux, j[1] + s * 0.7 * py - 0.5 * uy, 1.75, 1.75)   # el remate cercano
+    L.elipse("joya", j[0] + s * 0.2 * px + 1.9 * ux, j[1] + s * 0.2 * py + 1.9 * uy, 1.25, 1.25)   # el otro, asoma
+
+
+g8.collar = collar_torques
+
+# ---------------------------------------------------------------------
+#  Galia: el pelaje del gato montés europeo. Raya negra del lomo que acaba en la raíz de la cola, rayas finas y enteras en
+#  los flancos, barras en las patas, cuatro rayas en la frente y la nuca y una en la mejilla; la cola gruesa, del mismo
+#  ancho hasta el final, con anillos negros bien separados y la punta negra y roma. Para ponerlas en su lugar se guarda la
+#  pose de cada cuadro (o qué vuelta es).
+# ---------------------------------------------------------------------
+_pose_gal = {}
+_dib_gal, _giro_gal = g8.dibujar, g8.dibujar_giro
+GIRO_COLA = {1: [(32, 50), (32.4, 44), (33.2, 38), (35.4, 32.5), (38.2, 30.5), (40, 32)],       # las de gato8.dibujar_giro
+             0: [(23, 45), (19, 40.5), (17.5, 34), (18.5, 28), (21.5, 25.5), (23.6, 27.2)]}
+
+
+def cola_gruesa(w):
+    """La cola del montés: más gruesa y sin afinarse al final (la punta roma)."""
+    k = 1.22 if max(w) < 6 else 1.08
+    out = [x * k for x in w]
+    out[-1] = max(out[-1], out[-2] * 0.97); out[-2] = max(out[-2], out[-3] * 0.98)
+    return out
+
+
+def dibujar_gal(ps, acc):
+    if acc[0] == "torques":
+        ps = dict(ps, colaw=cola_gruesa(ps["colaw"]))
+    _pose_gal["ps"], _pose_gal["giro"] = ps, None
+    return _dib_gal(ps, acc)
+
+
+def dibujar_giro_gal(i, acc):
+    _pose_gal["ps"], _pose_gal["giro"] = None, i
+    if acc[0] != "torques":
+        return _giro_gal(i, acc)
+    antes = g8.ANCHO_COLA
+    g8.ANCHO_COLA = cola_gruesa(antes)
+    try:
+        return _giro_gal(i, acc)
+    finally:
+        g8.ANCHO_COLA = antes
+
+
+g8.dibujar, g8.dibujar_giro = dibujar_gal, dibujar_giro_gal
+_acabar_gal = g8.acabar
+COLA_ANILLOS = ((0.5, 0.56), (0.635, 0.695), (0.77, 0.825))      # a lo largo de la cola (0 = raíz, 1 = punta)
+COLA_PUNTA = 0.905
+
+
+def _rayas_montes(out, ch, parte):
+    ps, giro = _pose_gal.get("ps"), _pose_gal.get("giro")
+    cola = g8.catmull(ps["cola"]) if ps is not None else (g8.catmull(GIRO_COLA[giro]) if giro in GIRO_COLA else None)
+    if cola is not None:
+        C_ = np.array(cola, np.float32)
+    for r in range(N):
+        for c in range(N):
+            p_ = parte[r][c]
+            if out[r][c] not in "PSW" or p_ not in ("cola", "colafrente"):
+                continue
+            d2 = (C_[:, 0] - (c + 0.5)) ** 2 + (C_[:, 1] - (r + 0.5)) ** 2
+            u = int(np.argmin(d2)) / (len(C_) - 1)
+            if u >= COLA_PUNTA or any(a <= u < b for a, b in COLA_ANILLOS):
+                out[r][c] = "F"
+    if ps is None:
+        if giro == 1:                                                    # de espaldas: la raya del lomo y la nuca
+            for r in range(N):
+                for c in range(N):
+                    if out[r][c] == "P" and ((parte[r][c] == "cuerpo" and 31 <= c <= 32 and r >= 33) or
+                                             (parte[r][c] == "cabeza" and c in (30, 33) and 21 <= r <= 27)):
+                        out[r][c] = "W"
+        return
+    Hh, C, cab = ps["H"], ps["C"], ps["cab"]
+    dx, dy = C[0] - Hh[0], C[1] - Hh[1]; largo = math.hypot(dx, dy) or 1
+    ux, uy = dx / largo, dy / largo
+    nx, ny = uy, -ux                                                     # hacia el lomo
+    if ny > 0:
+        nx, ny = -nx, -ny
+    # La raya del lomo: las dos primeras celdas del cuerpo desde arriba, entre la cadera y la cruz.
+    x0, x1 = min(Hh[0], C[0]) - ps["rh"] * 0.2, max(Hh[0], C[0]) + 1.0
+    for c in range(N):
+        if not (x0 <= c + 0.5 <= x1):
+            continue
+        hondo = 0
+        for r in range(N):
+            if parte[r][c] == "cuerpo" and out[r][c] in "PSL":
+                hondo += 1
+                if hondo <= 2 and out[r][c] == "P":
+                    out[r][c] = "W"
+                if hondo >= 2:
+                    break
+            elif hondo:
+                break
+    a = math.radians(ps["inc"]); ca, sa = math.cos(a), math.sin(a)
+    for r in range(N):
+        for c in range(N):
+            if out[r][c] != "P":
+                continue
+            p_ = parte[r][c]
+            x, y = c + 0.5, r + 0.5
+            if p_ == "cuerpo":
+                s_ = (x - Hh[0]) * ux + (y - Hh[1]) * uy
+                v_ = (x - Hh[0]) * nx + (y - Hh[1]) * ny
+                if -3.0 < s_ < largo + 2.5 and v_ > -3.6 and (s_ + 0.7 * math.sin(v_ * 0.8) + 0.6) % 3.7 < 0.85:
+                    out[r][c] = "W"
+            elif p_ == "pierna" and r % 4 == 1 and r < SUELO - 4:
+                out[r][c] = "W"
+            elif p_ == "cabeza":
+                lx = (x - cab[0]) * ca + (y - cab[1]) * sa
+                ly = -(x - cab[0]) * sa + (y - cab[1]) * ca
+                if -6.5 < ly < -2.4 and any(abs(lx - k) < 0.55 for k in (-0.3, -2.3, -4.3)):
+                    out[r][c] = "W"
+                elif 1.0 < ly < 1.9 and -4.6 < lx < 0.4:
+                    out[r][c] = "W"
+
+
+def acabar_gal(ch, parte, estilo):
+    if estilo[0] != "montes":
+        return _acabar_gal(ch, parte, estilo)
+    out = _acabar_gal(ch, parte, ("ninguno",) + tuple(estilo[1:]))
+    out = [f[:] for f in out]
+    _rayas_montes(out, ch, parte)
+    return out
+
+
+g8.acabar = acabar_gal
 g8._spr.clear(); g8._rej.clear()
 
 # =====================================================================
@@ -501,6 +649,135 @@ def pintar_encaustica(g, t, cel):
     return Image.fromarray(out, "RGBA")
 
 
+# =====================================================================
+#  Material: repujado de plata (Galia), a la manera del caldero de Gundestrup (recurso del dibujo: el caldero se halló
+#  en Dinamarca y su técnica es tracia). La lámina se empuja desde atrás: el cuerpo es una almohada de metal, las rayas
+#  son surcos cincelados y el pelo del lomo lleva el punteado del punzón; la panza, pulida. Lo pardo del montés es plata
+#  con un baño de oro gastado; las rayas y la punta de la cola, plata ennegrecida (la pátina se queda en lo hondo).
+# =====================================================================
+def _rampa(cols, tono):
+    """Índice de una rampa de colores (lista de RGB) para cada tono en 0..1."""
+    r = np.array(cols, np.float32)
+    i = np.clip((tono * len(cols)).astype(np.int32), 0, len(cols) - 1)
+    return r[i], i
+
+
+def pintar_repujado(g, t, cel):
+    """Repujado de plata. El relieve sale de la silueta desenfocada (la almohada de la lámina), con las patas lejanas más
+    hundidas, los surcos de las rayas y las uniones; con él se sacan las normales. El metal se pinta con una rampa corta:
+    luz de la dirección del tema, el reflejo del cielo arriba y del suelo abajo, la pátina oscura en lo hondo y destellos
+    duros. Encima, el punteado del punzón en el pelo pardo (un hoyo oscuro con su filo de luz abajo a la derecha) y la
+    torsión del torques. Los ojos son de vidrio embutido. De noche, la luna deja un filo frío arriba y la hoguera uno
+    cálido abajo. Los objetos de las acciones van en su color con su volumen."""
+    col = t["col"]
+    s = cel
+    A = np.array([list(f) for f in g])
+    L = A.repeat(s, 0).repeat(s, 1)
+    h, w = L.shape
+    hay = L != "."
+    obj = np.isin(L, list("UVXQ"))
+    metal = hay & ~obj
+    # --- El relieve.
+    peso = np.where(metal, 1.0, 0.0).astype(np.float32)
+    peso[L == "D"] = 0.5
+    peso[L == "K"] = 0.55
+    hm = _difuso(peso, 2.0 * s) * 1.0
+    surco = np.isin(L, ["W", "F"]).astype(np.float32)
+    hm -= 0.07 * _difuso(surco, 0.5 * s)
+    hm -= 0.08 * _difuso((L == "S").astype(np.float32), 0.6 * s)
+    hm += 0.1 * _difuso(np.isin(L, ["C", "G"]).astype(np.float32), 0.6 * s)          # el torques sobresale
+    gy, gx = np.gradient(hm)
+    k_ = 7.0 * s
+    nx, ny, nz = -gx * k_, -gy * k_, np.ones_like(hm)
+    nn = np.sqrt(nx * nx + ny * ny + nz * nz)
+    nx, ny, nz = nx / nn, ny / nn, nz / nn
+    lv = np.array(t["rep_luz"], np.float32); lv /= np.linalg.norm(lv)
+    dif = np.clip(nx * lv[0] + ny * lv[1] + nz * lv[2], 0, 1)
+    hv = lv + np.array([0, 0, 1.0], np.float32); hv /= np.linalg.norm(hv)
+    esp = np.clip(nx * hv[0] + ny * hv[1] + nz * hv[2], 0, 1) ** t["rep_exp"]
+    env = np.clip(0.5 - 0.62 * ny, 0, 1)                                  # mira arriba: refleja el cielo
+    cav = np.clip((_difuso(np.clip(hm, 0, 1), 1.3 * s) - hm) * 5.5, 0, 1)   # lo hondo, donde se queda la pátina
+    tono = t.get("rep_base", 0.17) + 0.55 * dif + 0.3 * env - 0.42 * cav
+    base = {"P": 0.0, "S": -0.1, "T": -0.02, "D": -0.2, "L": 0.12, "W": -0.26, "F": -0.2}
+    for v, b in base.items():
+        tono[L == v] += b
+    rgb = np.zeros((h, w, 3), np.float32)
+    # --- El pelo pardo: plata con el oro gastado; el punteado del punzón.
+    pardo = np.isin(L, list("PSTDW"))
+    yy, xx = np.mgrid[0:h, 0:w]
+    hoyo = pardo & (yy % 4 == 1) & ((xx + 2 * ((yy // 4) % 2)) % 4 == 1) & ~np.isin(L, ["W"])
+    hoyo &= _corrido(pardo, -1, -1) & _corrido(pardo, 1, 1)
+    filo = _corrido(hoyo, 1, 1) & pardo
+    tono = np.where(hoyo, tono - 0.24, tono)
+    tono = np.where(filo, tono + 0.12, tono)
+    c_, i_ = _rampa(t["rep_pardo"], tono)
+    rgb[pardo] = c_[pardo]
+    pl = L == "L"
+    c_, _ = _rampa(t["rep_plata"], tono)
+    rgb[pl] = c_[pl]
+    ng = np.isin(L, ["F", "W"])
+    c_, _ = _rampa(t["rep_negro"], tono + 0.15)
+    rgb[ng] = c_[ng]
+    # --- Destellos duros: el metal pulido devuelve la luz entera en un punto.
+    pulido = np.isin(L, list("PSTLDF"))
+    d1 = pulido & (esp > t["rep_umbral"][0])
+    d2 = pulido & (esp > t["rep_umbral"][1]) & ~hoyo
+    rgb[d1] = np.maximum(rgb[d1], np.array(t["rep_plata"][-1], np.float32) * 0.97)
+    rgb[d2] = t["rep_destello"]
+    # --- El torques: oro torcido (franjas en diagonal) con su luz arriba; los remates, lisos y brillantes.
+    oro = np.array(t["rep_oro"], np.float32)
+    cm = L == "C"
+    tor = ((xx + yy) // 2) % 3
+    io = np.clip((dif * 3.2 + env * 1.2 - 1.2).astype(np.int32) + np.where(tor == 0, -1, np.where(tor == 1, 1, 0)), 0, len(oro) - 1)
+    rgb[cm] = oro[io[cm]]
+    gm = L == "G"
+    ig = np.clip((dif * 3.4 + env * 1.4 - 1.0).astype(np.int32), 0, len(oro) - 1)
+    rgb[gm] = oro[ig[gm]]
+    rgb[gm & (esp > 0.5)] = oro[-1]
+    # --- Ojos de vidrio embutido; nariz y orejas por dentro de cobre; el resto de letras, en su color.
+    for v in ("E", "N", "R", "H"):
+        m = L == v
+        if not m.any():
+            continue
+        cc = np.array(col[v], np.float32)
+        f = np.where(dif[m] > 0.62, 1.12, np.where(dif[m] < 0.4, 0.8, 1.0))
+        rgb[m] = np.clip(cc * f[:, None], 0, 255) if v != "H" else cc
+    # --- El contorno: la pátina negra del borde de la lámina; donde da la luz, el filo del metal asoma.
+    km = L == "K"
+    rgb[km] = t["rep_tinta"]
+    borde_luz = km & (dif > 0.8) & (env > 0.62)
+    rgb[borde_luz] = t["rep_tinta_luz"]
+    # --- Los objetos de las acciones: su color con su volumen (tres tonos y un brillo).
+    if obj.any():
+        ob = _difuso(obj.astype(np.float32), 1.0 * s)
+        oy, ox = np.gradient(ob)
+        on = np.sqrt((ox * 6 * s) ** 2 + (oy * 6 * s) ** 2 + 1)
+        d_o = np.clip((-ox * 6 * s * lv[0] - oy * 6 * s * lv[1] + lv[2]) / on, 0, 1)
+        for v in "UVX":
+            m = L == v
+            if not m.any():
+                continue
+            cc = np.array(col[v], np.float32)
+            f = np.where(d_o[m] > 0.82, 1.22, np.where(d_o[m] > 0.62, 1.08, np.where(d_o[m] < 0.42, 0.74, 0.92)))
+            rgb[m] = np.clip(cc * f[:, None], 0, 255)
+        rgb[L == "Q"] = col["Q"]
+    # --- De noche: el filo frío de la luna (arriba) y el cálido de la hoguera (abajo, del otro lado).
+    if t.get("rep_filos"):
+        B = _difuso(metal.astype(np.float32), 1.6 * s)
+        by, bx = np.gradient(B)
+        on_ = np.sqrt(bx * bx + by * by) + 1e-6
+        dentro_ = metal & ~km
+        anillo = dentro_ & ~(np.asarray(Image.fromarray(dentro_.astype(np.uint8) * 255).filter(ImageFilter.MinFilter(s + 2))) > 0)
+        anillo &= ~np.isin(L, list("EHNCG"))
+        for (dx_, dy_), c1, c2, u1, u2 in t["rep_filos"]:
+            cara = (-bx / on_) * dx_ + (-by / on_) * dy_
+            rgb[anillo & (cara > u1) & (on_ > 0.004)] = c1
+            rgb[anillo & (cara > u2) & (on_ > 0.008)] = c2
+    alfa = np.where(hay, 255, 0).astype(np.uint8)
+    out = np.dstack([np.clip(rgb, 0, 255).astype(np.uint8), alfa])
+    return Image.fromarray(out, "RGBA")
+
+
 _pintar_prev = g8.pintar
 
 
@@ -509,6 +786,8 @@ def pintar(g, t, cel, oscuro=False):
         return pintar_gouache(g, t, cel)
     if t["material"] == "encaustica":
         return pintar_encaustica(g, t, cel)
+    if t["material"] == "repujado":
+        return pintar_repujado(g, t, cel)
     return _pintar_prev(g, t, cel, oscuro)
 
 
@@ -530,7 +809,12 @@ def colores_obj(nombre, oscuro, j):
         ("frente", 1): dict(U=hx("3A2E26"), V=AMBAR_C, X=CROMO, Q=hx("E4FFF4")),        # el haz del escáner
         ("arcontes", 0): dict(U=GRIETA_H, V=GRIETA_H, X=GRIETA_H, Q=GRIETA),          # la luz detrás del velo
         ("arcontes", 1): dict(U=SOMBRA_A, V=SOMBRA_A, X=SOMBRA_A, Q=SOMBRA_A),        # la sombra que pasa
+        ("galia", 0): dict(U=hx("4E6B2E"), V=hx("6B4B2A"), X=hx("9DB560"), Q=hx("F2EEDC")),   # roble, rama, muérdago, bayas
+        ("galia", 1): dict(U=hx("9A6A3A"), V=hx("4F7A78"), X=hx("A33A2A"), Q=hx("E2ECE0")),   # casco de bronce, río, crin
     }[(nombre, j)]
+    if oscuro and nombre == "galia":
+        c = [dict(U=hx("24331C"), V=hx("3A2C1C"), X=hx("5E7444"), Q=hx("C9CDB8")),
+             dict(U=hx("6E4E2E"), V=hx("1C2C2A"), X=hx("6E2C22"), Q=hx("B8C9B4"))][j]
     if oscuro and nombre == "frente" and j == 1:
         c["Q"] = hx("BFF5E0")
     if oscuro and nombre == "arcontes" and j == 1:
@@ -598,6 +882,36 @@ def tema_mio(nombre, oscuro):
                      enc_halo_ojo=0.75, enc_halo_col=GRIETA_H, enc_grieta_halo=GRIETA_H, enc_sombra_a=0.7,
                      enc_sombra_filo=hx("2A2244"),
                      enc_filo=(hx("44397A"), hx("8F7BDC")), enc_filo_dir=(0.42, -0.91))
+            t["sombra_col"], t["sombra_a"] = (0, 0, 0), 80
+    elif nombre == "galia":
+        # galia (guía): barro y paja E6DFC6 / tinta 20251A, borde A89A6E · oscuro: el robledal 0F1410, E6E1CF, 3A4636.
+        # El gato: montés pardo atigrado en repujado de plata (el pardo, plata con oro gastado; las rayas, plata
+        # ennegrecida), con el torques de oro (C9962B, brillo F0D27A) y los ojos de vidrio verde amarillo.
+        P = hx("857057")
+        col = g8.pelaje(P, hx("15110D"), S=hx("645441"), L=hx("B6BABD"), W=hx("2E2720"), D=hx("473C2F"), T=hx("645441"),
+                        E=hx("BFC24E"), N=hx("B0704E"), R=hx("A06A50"), C=hx("C9962B"), G=hx("F0D27A"))
+        col["F"] = hx("1A1714")
+        t = g8.T(col, hx("E6DFC6") if not oscuro else hx("0F1410"), hx("20251A") if not oscuro else hx("E6E1CF"),
+                 hx("A89A6E") if not oscuro else hx("3A4636"), "montes", "repujado", ("torques", None))
+        if not oscuro:
+            t.update(rep_pardo=[hx(c) for c in ("1B1714", "2E2720", "473C2F", "645441", "857057", "A88F70", "CDB792", "EDE0C0")],
+                     rep_plata=[hx(c) for c in ("1E1F20", "323436", "4C4F51", "6D7072", "919496", "B7B9B9", "DADBD8", "F4F4EF")],
+                     rep_negro=[hx(c) for c in ("0F0D0C", "1A1714", "27221E", "3A332C")],
+                     rep_oro=[hx(c) for c in ("4A3410", "7E590C", "A97A1E", "C9962B", "E2B54A", "F0D27A", "FFF0BE")],
+                     rep_destello=hx("FFFFF6"), rep_tinta=hx("15110D"), rep_tinta_luz=hx("5E5345"),
+                     rep_luz=(-0.5, -0.75, 0.45), rep_exp=28, rep_umbral=(0.6, 0.86), rep_filos=None)
+            t["sombra_col"], t["sombra_a"] = (62, 52, 34), 62
+        else:
+            t["col"] = dict(col, E=hx("D8D45A"), N=hx("6E4632"), R=hx("5E4232"))
+            t.update(rep_pardo=[hx(c) for c in ("0B0D0B", "151815", "20241E", "2E322A", "42453A", "5B5D4E", "7D7D69", "A9A88E")],
+                     rep_plata=[hx(c) for c in ("0B0E0E", "161B1B", "232A29", "343C3A", "4A5350", "66706B", "8D9790", "BAC4BA")],
+                     rep_negro=[hx(c) for c in ("060706", "0D0F0D", "151814", "1F231D")],
+                     rep_oro=[hx(c) for c in ("2E2008", "4A3410", "6E4E14", "946A1E", "B88A30", "D9AE55", "F2D58E")],
+                     rep_destello=hx("E9E6D6"), rep_tinta=hx("050605"), rep_tinta_luz=hx("3A4636"),
+                     rep_luz=(0.4, -0.8, 0.45), rep_exp=28, rep_umbral=(0.62, 0.88),
+                     rep_base=0.22,
+                     rep_filos=[((0.45, -0.9), hx("5E6E58"), hx("A9C795"), 0.5, 0.82),
+                                ((-0.85, 0.5), hx("5E3A1E"), hx("C9803A"), 0.72, 0.93)])
             t["sombra_col"], t["sombra_a"] = (0, 0, 0), 80
     else:
         raise ValueError(nombre)
@@ -802,11 +1116,173 @@ def o_sombra(L, a):
 g17.ACCIONES.update(rasgar=(rasgar, 8, "sentado"), erizar_sombra=(erizar_sombra, 8, "quieto"))
 g17.ESCALA.update(rasgar=1.0, erizar_sombra=1.0)
 
+
+# --- Galia: se esconde entre el muérdago de un roble (una rama de roble caída con su mata de muérdago) · le bufa a un
+#     casco romano tirado en el río. Las letras de los objetos se pintan en este orden: U, V, X, Q (lo último, encima).
+MATA = (54.6, 50.6, 8.8, 7.9)          # la mata de muérdago: centro y radios
+
+# Cada hoja de la mata: (ángulo, distancia al centro en fracción del radio, largo, giro). Fijas, para que la mata no hierva.
+_rm = random.Random(52)
+HOJAS_MATA = []
+for _j in range(40):
+    _a = _rm.uniform(0, 2 * math.pi)
+    HOJAS_MATA.append((_a, _rm.uniform(0.25, 1.0) ** 0.6, _rm.uniform(2.0, 3.0), _rm.uniform(-0.5, 0.5)))
+BAYAS_MATA = [(_rm.uniform(-0.75, 0.75), _rm.uniform(-0.7, 0.75)) for _ in range(11)]
+COLA_ARRIBA = [(19.0, 48.4), (15.6, 43.6), (14.2, 38.0), (15.0, 33.0), (17.4, 30.0), (20.0, 30.2)]
+
+
+def muerdago(k):
+    """Mira la mata, se agacha, mete la cabeza (la grupa y la cola se quedan fuera), asoma por arriba con los ojos y
+    las orejas, mira a un lado, cierra los ojos a gusto (se cae una baya) y sale con una ramita en la cabeza."""
+    if k == 0:
+        p = g8.respirar(g8.DE_PIE, 1, 4)
+        p.update(inc=16, orejas=0.0, ojo="abierto")
+    elif k == 1:
+        p = g8.mover(g8.interp(g8.DE_PIE, AGAZAPADO, 0.7), 1.2, 0)
+        p.update(inc=8, orejas=0.25, ojo="abierto")
+    elif k in (2, 3):
+        p = g8.mover(AGAZAPADO, 5.0, 0)
+        s_ = 1 if k == 2 else -1
+        p["cola"] = [(x + s_ * 1.4 * (i / 5) ** 1.5, y) for i, (x, y) in enumerate(COLA_ARRIBA)]
+        p["colaw"] = [3.8, 4.0, 4.0, 3.8, 3.6, 3.4]
+        p.update(inc=14, orejas=0.4)
+    else:
+        p = g8.mover(AGAZAPADO, 5.0, 0)
+        p["cola"] = [(x + (0.8 if k == 5 else -0.4) * (i / 5) ** 1.5, y + 0.6) for i, (x, y) in enumerate(COLA_ARRIBA)]
+        p["colaw"] = [3.8, 4.0, 4.0, 3.8, 3.6, 3.4]
+        p.update(cab=(53.4, 40.8), inc={4: -4, 5: 6, 6: -2, 7: 0}[k], orejas=0.15,
+                 ojo={4: "abierto", 5: "medio", 6: "cerrado"}.get(k, "abierto"))
+        if k == 7:
+            p = g8.mover(g8.respirar(g8.DE_PIE, 3, 4), 1.0, 0)
+            p.update(inc=-6, orejas=0.0, ojo="medio")
+    return p, dict(obj=(MATA[0], MATA[1]), k=k, cab=p["cab"], inc=p["inc"])
+
+
+def _hoja_roble(L, capa, x, y, ang, largo=3.4, ancho=1.5):
+    """Hoja de roble: un óvalo con tres pares de lóbulos redondos y su pecíolo."""
+    ca, sa = math.cos(ang), math.sin(ang)
+    P_ = lambda u, v: (x + u * ca - v * sa, y + u * sa + v * ca)
+    L.elipse(capa, *P_(0, 0), largo, ancho * 0.75, math.degrees(ang))
+    for u in (-0.55, 0.05, 0.6):
+        for v in (-1, 1):
+            L.elipse(capa, *P_(u * largo, v * ancho * 0.72), ancho * 0.55, ancho * 0.5)
+    L.capsula(capa, [P_(-largo, 0), P_(-largo - 1.0, 0)], 0.5)
+
+
+def o_muerdago(L, a):
+    """La rama de roble caída en el suelo, con sus hojas lobuladas, y en ella la mata redonda de muérdago (hojas largas
+    de dos en dos y bayas blancas). Se sacude cuando el gato se mete; en el último cuadro le queda una ramita en la cabeza."""
+    k = a["k"]
+    cx, cy, rx, ry = MATA
+    sac = {2: 0.7, 3: -0.7, 4: 0.35, 5: -0.25, 6: 0.0}.get(k, 0.0)
+    # Hojas del roble (U), detrás; la rama (V).
+    for (x, y, an) in ((41.5, 56.2, 3.6), (44.6, 54.4, 4.2), (61.6, 44.6, 5.3), (63.2, 49.8, 0.2), (60.6, 57.0, 0.6)):
+        _hoja_roble(L, "f_U", x + sac * 0.4, y, an, 2.6, 1.3)
+    L.capsula("f_V", [(38.4, 59.4), (46.0, 57.6), (55.0, 55.4), (63.6, 53.0)], 1.7)
+    L.capsula("f_V", [(55.0, 55.4), (60.0, 50.0), (62.4, 46.4)], 1.0)
+    L.capsula("f_V", [(46.0, 57.6), (43.6, 55.2)], 0.8)
+    # La mata de muérdago: el fondo de la bola, en sombra (U), y encima sus hojas oblongas y gruesas (X).
+    ojo_ = g8.rot(a["cab"][0], a["cab"][1], 2.4, -0.7, math.radians(a["inc"])) if k in (4, 5, 6) else None
+    L.elipse("f_U", cx + sac * 0.5, cy, rx * 0.86, ry * 0.86)
+    for (an, d, lg, gi) in HOJAS_MATA:
+        hx_, hy_ = cx + math.cos(an) * d * rx + sac * d, cy + math.sin(an) * d * ry
+        if ojo_ is not None and math.hypot(hx_ - ojo_[0], (hy_ - ojo_[1]) * 1.3) < 2.6:
+            continue                                                       # por ahí asoman los ojos
+        u = an + gi
+        L.capsula("f_X", [(hx_ - math.cos(u) * lg / 2, hy_ - math.sin(u) * lg / 2), (hx_ + math.cos(u) * lg / 2, hy_ + math.sin(u) * lg / 2)], 1.6)
+    for (bx, by) in BAYAS_MATA:
+        L.elipse("f_Q", cx + bx * rx + sac * 0.6, cy + by * ry, 0.62, 0.62)
+    if k in (4, 5, 6, 7):                                                  # la ramita en la cabeza
+        hx0, hy0 = a["cab"]
+        ia = math.radians(a["inc"])
+        P_ = lambda u, v: g8.rot(hx0, hy0, u, v, ia)
+        L.capsula("f_X", [P_(-1.6, -5.6), P_(-4.4, -7.6)], 1.2)
+        L.capsula("f_X", [P_(-1.4, -5.4), P_(0.8, -8.0)], 1.2)
+        L.elipse("f_Q", *P_(-1.6, -6.4), 0.62, 0.62)
+    if k == 6:                                                             # se cae una baya
+        L.elipse("f_Q", cx - 4.0, cy + ry + 0.6, 0.6, 0.6)
+
+
+CASCO = (54.8, 57.2)                    # el casco tirado en el río: centro de la calota
+
+
+def bufar_casco(k):
+    """Ve el casco en el agua, lo huele, se echa atrás y se eriza: lomo arqueado, cola esponjada, orejas aplastadas y
+    bufa con la boca abierta; luego se le pasa y voltea la cabeza, digno."""
+    if k == 0:
+        p = g8.respirar(g8.DE_PIE, 0, 4)
+        p.update(inc=18, orejas=0.1)
+    elif k == 1:
+        p = dict(g8.DE_PIE)
+        p.update(cab=(49.6, 41.6), inc=32, ojo="medio", orejas=0.0)
+        p["cola"] = [(x + 0.6 * (i / 5) ** 1.5, y) for i, (x, y) in enumerate(g8.DE_PIE["cola"])]
+    elif k == 2:
+        p = g8.mover(g8.interp(g8.DE_PIE, g8.ANIMS["enojado"][0], 0.65), -1.4, 0)
+        p.update(orejas=0.9, ojo="abierto", inc=4, lengua=False)
+    elif k in (3, 4, 5):
+        p = g8.mover(dict(g8.ANIMS["enojado"][(k - 3) % 3]), -1.4, 0)
+        p.update(orejas=1.0, lengua=True, ojo="abierto", inc=12 + (k == 4) * 3)
+    elif k == 6:
+        p = g8.mover(g8.interp(g8.DE_PIE, g8.ANIMS["enojado"][1], 0.45), -0.8, 0)
+        p.update(orejas=0.7, ojo="medio", inc=10, lengua=False)
+    else:
+        p = g8.respirar(g8.DE_PIE, 1, 4)
+        p.update(inc=-16, orejas=0.3, ojo="cerrado")
+        p["cola"] = [(x + 1.2 * (i / 5) ** 2, y - 1.2 * (i / 5)) for i, (x, y) in enumerate(g8.DE_PIE["cola"])]
+    return p, dict(obj=CASCO, k=k, cab=p["cab"], inc=p["inc"], bufa=k in (3, 4, 5))
+
+
+def o_casco(L, a):
+    """Un casco romano de bronce (de calota redonda con su botón de remate y el cubrenuca, como los que llevaban las
+    legiones de César), tirado de lado en el agua de la orilla, con la crin roja empapada; las ondas se abren a su
+    alrededor. Cuando el gato bufa, unas rayitas le salen de la boca."""
+    k = a["k"]
+    cx, cy = CASCO
+    sube = {2: -0.5, 3: -0.2, 4: 0.3, 5: 0.0}.get(k, 0.0)                 # se mece cuando el gato salta atrás
+    cy += sube
+    ang = math.radians(14)
+    P_ = lambda u, v: g8.rot(cx, cy, u, v, ang)
+    cupula = [P_(7.0 * math.cos(math.radians(q)), 6.6 * math.sin(math.radians(q))) for q in range(180, 361, 10)]
+    # La crin roja de caballo en el botón: un penacho empapado, ancho, que se abre y cae hacia atrás (va debajo de la
+    # calota en el dibujo, así que se pinta con la X después del agua; su pie lo tapa la calota).
+    L.poligono("f_U", cupula + [P_(7.0, 1.4), P_(-7.0, 1.4)])            # la calota, con la boca hacia abajo
+    L.poligono("f_U", [P_(-6.0, -0.8), P_(-10.6, 0.4), P_(-10.4, 2.6), P_(-6.0, 2.0)])  # el cubrenuca, hacia atrás
+    L.poligono("f_U", [P_(3.2, 0.6), P_(6.4, 0.6), P_(6.0, 6.0), P_(3.6, 5.4)])       # la carrillera
+    L.capsula("f_K", [P_(-10.0, 1.2), P_(-6.2, 1.0), P_(0.0, 1.2), P_(6.8, 1.0)], 0.6)  # el filo del borde
+    L.capsula("f_K", [P_(3.2, 1.8), P_(3.6, 5.0)], 0.45)                  # la bisagra de la carrillera
+    # El agua (encima de lo que se hunde): la orilla del río.
+    L.elipse("f_V", 53.6, 60.6, 12.2, 3.0)
+    L.poligono("f_V", [(41.6, 61.0), (43.4, 59.2), (50.0, 58.6), (50.0, 61.4)])
+    L.poligono("f_X", [P_(1.6, -6.0), P_(-1.0, -9.4), P_(-4.6, -10.6), P_(-8.4, -9.4), P_(-10.8, -6.4), P_(-11.4, -2.6),
+                       P_(-8.6, -2.6), P_(-7.4, -5.0), P_(-4.4, -6.6), P_(-0.6, -5.8)])
+    for (u, v) in ((-2.6, -10.8), (-6.4, -10.6), (-9.6, -8.6), (-11.8, -4.8)):
+        L.capsula("f_X", [P_(u * 0.85, v * 0.85), P_(u, v)], 1.1)
+    L.elipse("f_U", *P_(0.4, -6.6), 1.4, 1.2, 14)                          # el botón del remate
+    # Ondas: arcos que se abren alrededor del casco (más grandes cuando se mece).
+    r = 1.0 + (k % 4) * 0.9 + (1.2 if k in (2, 3) else 0)
+    for (x0, x1, y) in ((cx - 10.6 - r * 0.6, cx - 8.0 - r * 0.6, 59.6), (cx + 5.0 + r * 0.3, cx + 7.4 + r * 0.5, 60.6), (44.0 + (k % 2), 47.6 + (k % 2), 61.6)):
+        L.capsula("f_Q", [(x0, y), (x1, y)], 0.6)
+    if k in (1, 4):
+        L.elipse("f_Q", cx - 2.4, 59.1, 0.5, 0.5)
+    if a["bufa"]:                                                          # el bufido
+        hx0, hy0 = a["cab"]
+        ia = math.radians(a["inc"])
+        bx, by = g8.rot(hx0, hy0, 7.4, 3.6, ia)
+        for j, dy_ in enumerate((-1.6, 0.0, 1.6)):
+            l0 = 0.8 + 0.4 * ((k + j) % 2)
+            L.capsula("f_K", [(bx + l0, by + dy_ * 0.8), (bx + l0 + 2.4, by + dy_ * 1.4)], 0.62)
+
+
+g17.ACCIONES.update(muerdago=(muerdago, 8, "quieto"), bufar_casco=(bufar_casco, 8, "quieto"))
+g17.ESCALA.update(muerdago=1.0, bufar_casco=1.0)
+
 ESP_MIOS = {
     "frente": [("microfilm", o_microfilm, "esconde un microfilm en el collar"),
                ("agacharse", o_escaner, "se agacha cuando el escáner de una patrulla entra por la rendija del techo")],
     "arcontes": [("rasgar", o_velo, "rasga el velo con la pata y por un momento se ve la luz de detrás"),
                  ("erizar_sombra", o_sombra, "eriza el lomo ante una sombra que no se ve")],
+    "galia": [("muerdago", o_muerdago, "se esconde entre el muérdago de un roble"),
+              ("bufar_casco", o_casco, "le bufa a un casco romano tirado en el río")],
 }
 ESCALA_MIA = {("frente", 0): 1.35}
 g17.ESP.update(ESP_MIOS)
