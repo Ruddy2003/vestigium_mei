@@ -86,11 +86,13 @@ class EspecialGato(val nombre: String, val sentado: Boolean, val cuadros: Int, v
  *
  * - [manto]: el color del cuerpo. [claro]: el del vientre y el hocico. [marca]: el de las rayas, las manchas o las puntas.
  * - [collar]: un collar de ese color, o ninguno. [accesorio]: lo que lleve puesto, dibujado encima.
+ * - [filo]: un filete de ese color por el canto de arriba y del lado de la luz (el oro de la laca del gato de Art
+ *   déco), o ninguno. Lo deja un poco más fiel a su color que el resto, porque es metal que devuelve la luz.
  */
 class Pelaje(
     val manto: Color, val claro: Color, val marca: Color, val dibujo: DibujoPelaje, val ojos: Color,
     val nariz: Color = Color(0xFFDC9A98), val collar: Color? = null, val especiales: List<EspecialGato> = emptyList(),
-    val accesorio: (DrawScope.(PuntosGato, LuzGato) -> Unit)? = null,
+    val accesorio: (DrawScope.(PuntosGato, LuzGato) -> Unit)? = null, val filo: Color? = null,
 ) {
     companion object {
         /** El gato de los temas que todavía no tienen el suyo: gris atigrado, de ojos verdes. */
@@ -340,6 +342,7 @@ private fun DrawScope.cuerpo(p: Pose, pelaje: Pelaje, luz: LuzGato, lat: Float, 
         tela.saveLayer(zona, Paint())
         // 1. Todas las partes, del color del manto: lo de atrás, un poco más oscuro. Antes, la misma silueta en oscuro.
         withTransform({ translate(if (lat >= 0f) -0.5f else 0.5f, 0.55f) }) { silueta(borde, borde, borde, null, false) }
+        pelaje.filo?.let { f -> val oro = lerp(luz.tono(f), f, 0.55f); withTransform({ translate(if (lat >= 0f) 0.6f else -0.6f, -0.7f) }) { silueta(oro, oro, oro, null, false) } }
         silueta(mantoPropio, lejosPropio, orejaPropia, luz.tono(ROSA), true)
 
         // 2. El dibujo del pelaje, solo donde ya hay gato. El hocico claro lo llevan todos menos el de puntas.
