@@ -117,12 +117,14 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
             Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
         }
+        // La cuerda del sitar con su zumbido, la aguja en el disco, el órgano, la guitarra con distorsión y el pandero.
         TemaId.PSICODELIA -> when (e) {
-            Evento.TOQUE -> listOf(g(CLICK, 1f)); Evento.PASAR -> listOf(g(CLICK, 0.6f))
-            Evento.GUARDAR -> listOf(g(THUD, 1f), g(CLICK, 1f, 70))
-            Evento.ELEGIR -> listOf(g(CLICK, 0.45f)); Evento.ABRIR -> listOf(g(CLICK, 0.8f), g(THUD, 0.6f, 50))
-            Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
-            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
+            Evento.TOQUE -> listOf(g(TICK, 0.62f), g(TICK, 0.14f, 24), g(TICK, 0.1f, 24)); Evento.PASAR -> listOf(g(SUBE_LENTO, 0.18f), g(TICK_GRAVE, 0.3f, 190))
+            Evento.GUARDAR -> listOf(g(THUD, 0.6f), g(CLICK, 0.4f, 100), g(CLICK, 0.62f, 200), g(TICK, 0.2f, 190), g(TICK, 0.12f, 190))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.42f), g(TICK_GRAVE, 0.18f, 140)); Evento.ABRIR -> listOf(g(TICK, 0.36f), g(TICK, 0.4f, 40), g(TICK, 0.44f, 40), g(CLICK, 0.5f, 40), g(TICK, 0.2f, 120))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.7f), g(TICK, 0.32f, 30), g(TICK, 0.4f, 100))
+            Evento.ERROR -> listOf(g(CLICK, 0.46f), g(BAJA, 0.56f, 40), g(BAJA, 0.3f, 160))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.62f), g(THUD, 0.62f, 190), g(THUD, 0.92f, 190), g(TICK, 0.36f, 190), g(TICK, 0.3f, 190), g(TICK, 0.24f, 190), g(TICK, 0.18f, 190))
         }
         // El colgante de cristal de la lámpara, la lámina de la cajita de música, el golpe de la prensa y el vals.
         TemaId.NOUVEAU -> when (e) {
@@ -530,9 +532,10 @@ object Sentidos {
         TemaId.TEMPLARIO -> Afinacion(st(-5, -2, 0, 5), st(-7, 0, 5, 7), pasarRuido = true, elegirRuido = false)
         // Do menor; la máquina de escribir, un semitono abajo y un tono arriba.
         TemaId.DISTOPIA -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
-        TemaId.PSICODELIA -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
-        // Mi bemol mayor con la séptima mayor y la novena: la campanilla de cristal; el pliego de pasar es ruido, elegir es la lámina de la cajita.
-        TemaId.NOUVEAU -> Afinacion(st(-5, 0, 4, 7, 11, 14), st(-7, -5, 0, 4), pasarRuido = true, elegirRuido = false)
+        // La mixolidio: el sitar; la funda del disco de pasar es ruido, elegir es una tecla del órgano de transistores.
+        TemaId.PSICODELIA -> Afinacion(st(-2, 0, 2, 4, 7, 10), st(-7, -5, -2, 0), pasarRuido = true, elegirRuido = false)
+        // Mi bemol mayor con la novena (abajo, para no pasar del doble de velocidad) y la séptima mayor: la campanilla de cristal; el pliego de pasar es ruido, elegir es la lámina de la cajita.
+        TemaId.NOUVEAU -> Afinacion(st(-5, 0, 2, 4, 7, 11), st(-7, -5, 0, 4), pasarRuido = true, elegirRuido = false)
         // Do# eolio sin sensible: la lira de los bardos; pasar es el viento en los robles, elegir una cuerda apagada con la palma.
         TemaId.GALIA -> Afinacion(st(-4, -2, 0, 3, 7), st(-7, -5, 0, 3), pasarRuido = true, elegirRuido = false)
         // La bemol mixolidio con la sexta menor: el kinnor con púa; el velo de lino de pasar es ruido, elegir es el crótalo.
@@ -678,7 +681,7 @@ object Sentidos {
         TemaId.MEDIEVAL -> pasadas(TICK_GRAVE, 0.5f, 70, 3)   // pan de oro
         TemaId.TEMPLARIO -> pasadas(CLICK, 0.65f, 50, 4)   // hierro de cota de malla
         TemaId.DISTOPIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
-        TemaId.PSICODELIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
+        TemaId.PSICODELIA -> pasadas(TICK, 0.57f, 42, 5)   // una moneda de diez centavos
         TemaId.NOUVEAU -> pasadas(TICK, 0.53f, 48, 4)   // un franco de plata
         TemaId.GALIA -> pasadas(TICK, 0.48f, 66, 4)   // el estátero de oro arverno
         TemaId.ARCONTES -> pasadas(TICK_GRAVE, 0.44f, 58, 3)   // la moneda de bronce de Herodes Antipas
