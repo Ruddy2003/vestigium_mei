@@ -437,18 +437,36 @@ internal object RetiradaCamino {
     /** Lo abandonado que se ve hoy: más cuanto más avanza la retirada. */
     fun fila(v: VistaNapoleon): List<Abandonada> = if (v.vivac) emptyList() else FILA.take(RetiradaNapoleon.abandonadas(v.m)).filter { v.tramo != Tramo.BEREZINA || it.z < RetiradaLejos.ORILLA_ACA - 2f }
 
-    /** Los fuegos de la compañía a lo largo del camino (y de los otros grupos, lejos), en el llano y en la franja del bosque. */
+    /**
+     * Los dos huecos del lienzo donde puede arder un fuego de lejos: entre el bosque de la izquierda y el asta, en la
+     * orilla de enfrente del camino; y en el llano de la derecha, pero ahí solo muy lejos, en el horizonte, y junto al
+     * borde, a la derecha de lo más alto del objeto del día (la horquilla del capote, la boca del fusil). Su llama va en la parte viva, encima
+     * de todo: en otro sitio quedaría delante de lo alto del primer plano (la carroza y el pino, el asta, el pabellón, la
+     * columna del fuego del alto con su marmita, el objeto del día) y parecería que arde en ello.
+     */
+    private val HUECO_IZQ = 164f..198f
+    private val HUECO_DER = 365f..380f
+
+    /** Lo hondo de cada fuego de la compañía a lo largo del camino (los pares, a la izquierda; los nones, en el horizonte). */
+    private val HONDO_FUEGOS = listOf(58f, 250f, 72f, 310f, 90f)
+
+    /** Un punto del suelo a [z] metros que cae en la columna [x] del lienzo. */
+    private fun enLaColumna(x: Float, z: Float) = w((x - 190f) * z / 560f, z)
+
+    /** Los fuegos de la compañía a lo largo del camino, en el llano de la derecha y en la orilla de enfrente. */
     fun fuegosDelCamino(v: VistaNapoleon): List<Offset> {
         val n = RetiradaNapoleon.fuegosDelCamino(v.m); val az = Azar(Semilla.de("napoleon", "fuegos"))
-        // En el llano de la derecha y en la orilla de enfrente del camino, pero nunca detrás de la carroza ni del pino (su
-        // llama, que va en la parte viva, quedaría encima de ellos).
-        return (0 until 5).map { i -> val z = 16f * kotlin.math.exp(i * 0.36f + az.entre(0f, 0.2f)); val x = if (i % 2 == 0 || z < 30f) bordeDer(z) + az.entre(1.5f, 5f) else bordeIzq(z) + az.entre(0.1f, 0.5f); w(x, z) }.take(n)
+        return HONDO_FUEGOS.mapIndexed { i, z0 ->
+            val z = z0 * az.entre(1f, 1.1f)
+            val hueco = if (i % 2 == 0) HUECO_IZQ else HUECO_DER
+            enLaColumna(az.entre(hueco.start, hueco.endInclusive), z)
+        }.take(n)
     }
 
-    /** Los fuegos de los otros grupos, lejos en el llano. */
+    /** Los fuegos de los otros grupos, en el horizonte del llano de la derecha. */
     fun fuegosAjenos(v: VistaNapoleon): List<Offset> {
         val az = Azar(Semilla.de("napoleon", "ajenos"))
-        return (0 until RetiradaNapoleon.fuegosAjenos(v.m)).map { i -> val z = 70f + i * 26f + az.entre(0f, 20f); w(bordeDer(z) + az.entre(3f, 26f), z) }
+        return (0 until RetiradaNapoleon.fuegosAjenos(v.m)).map { i -> val z = 230f + i * 45f + az.entre(0f, 30f); enLaColumna(az.entre(HUECO_DER.start, ANCHO + 6f), z) }
     }
 
     /** Lo que tumba sombra en el plano medio: el cañón, el armón, lo abandonado. */

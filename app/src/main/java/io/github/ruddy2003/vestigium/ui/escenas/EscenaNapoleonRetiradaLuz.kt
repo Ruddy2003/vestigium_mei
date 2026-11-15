@@ -76,6 +76,12 @@ internal object RetiradaLuz {
      */
     fun lumbre(fuego: Float, l: Luces, cubierto: Float): Float = fuego * (0.12f + 1.12f * maxOf(l.noche, 0.8f * cubierto * (1f - l.noche)))
 
+    /**
+     * Cuánto más platea la luna las cosas que la nieve (la carroza, los pinos, el pabellón): lo bastante para que lo de
+     * fuera del círculo del fuego se lea de noche, con su lado de luna frío y claro.
+     */
+    const val LUNA_EN_LAS_COSAS = 1.35f
+
     /** La luz de la luna, de 0 (de día, sin luna o con el cielo cubierto) a 1. */
     fun luna(l: Luces): Float = if (l.lunaAltura <= 0.05f) 0f else ((l.noche - 0.5f) / 0.3f).coerceIn(0f, 1f) * ((0.6f - l.nublado) / 0.3f).coerceIn(0f, 1f)
 
@@ -138,7 +144,7 @@ internal object RetiradaLuz {
     private fun DrawScope.plata(v: VistaNapoleon, suelo: Path) {
         val k = v.luna * (0.35f + 0.65f * v.nieve); if (k <= 0.02f) return
         val derecha = v.l.lunaX > 0.5f
-        val cerca = LUNA.copy(alpha = (0.2f * k).coerceIn(0f, 1f)); val lejos = LUNA.copy(alpha = (0.07f * k).coerceIn(0f, 1f))
+        val cerca = LUNA.copy(alpha = (0.3f * k).coerceIn(0f, 1f)); val lejos = LUNA.copy(alpha = (0.13f * k).coerceIn(0f, 1f))
         drawPath(suelo, Brush.horizontalGradient(0f to (if (derecha) lejos else cerca), 1f to (if (derecha) cerca else lejos), startX = 0f, endX = ANCHO), blendMode = BlendMode.Plus)
     }
 
@@ -196,7 +202,7 @@ internal object RetiradaLuz {
     fun DrawScope.noche(v: VistaNapoleon) {
         val n = v.l.noche; if (n <= 0.3f) return
         val f = RetiradaCerca.LUZ_DEL_FUEGO
-        val hondo = lerp(Color.White, Color(0xFF6A6CA8), 0.5f * (n - 0.3f) / 0.7f)
+        val hondo = lerp(Color.White, Color(0xFF6A6CA8), 0.4f * (n - 0.3f) / 0.7f)
         drawRect(Brush.radialGradient(0f to Color.White, 0.45f to Color.White, 1f to hondo, center = f, radius = 330f), Offset.Zero, Size(ANCHO, ALTO), blendMode = BlendMode.Multiply)
     }
 

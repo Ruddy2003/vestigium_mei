@@ -44,7 +44,7 @@ internal class VistaNapoleon(val m: Momento, val vivac: Boolean = false) {
     val rLuna: Rayo? = RetiradaLuz.rayoDeLuna(l)
     /** Las sombras del bosque sobre la nieve, con las franjas de sol (o de luna) entre los troncos. */
     val franjas: List<RetiradaLuz.Franja> = RetiradaLuz.franjas(this)
-    val a: Alumbre = Alumbre(p, sol, RetiradaCerca.LUZ_DEL_FUEGO, lumbre, 150f, luna, rLuna?.let { Sol3(it) })
+    val a: Alumbre = Alumbre(p, sol, RetiradaCerca.LUZ_DEL_FUEGO, lumbre, 150f, luna * RetiradaLuz.LUNA_EN_LAS_COSAS, rLuna?.let { Sol3(it) })
 
     /** El alumbre de algo que pisa en [pie]: a la sombra si cae en una franja de sombra del bosque. */
     fun en(pie: Offset): Alumbre = a.aLaSombra(RetiradaLuz.sombraEn(franjas, pie))
@@ -172,7 +172,7 @@ internal object RetiradaNapoleon {
     fun anclas(m: Momento): List<Ancla> = buildList {
         add(Ancla(TipoAncla.SUELO, 112f, PISO_GATO, hasta = 318f))
         add(Ancla(TipoAncla.MIRADOR, RetiradaCerca.MIRADOR.x, RetiradaCerca.MIRADOR.y))       // en el costado de arriba de la carroza
-        add(Ancla(TipoAncla.OBJETO, RetiradaCerca.SOPORTE.x, PISO_GATO))
+        add(Ancla(TipoAncla.OBJETO, RetiradaCerca.GATO_MIRA_EL_OBJETO, PISO_GATO))         // el objeto está a la derecha del fuego
         add(Ancla(TipoAncla.ABRIGO, 150f, PISO_GATO))                                         // junto al cofre, al abrigo de su tapa
         if (EscenaNapoleon.fuego(m) >= 0.45f) add(Ancla(TipoAncla.FUEGO, RetiradaCerca.FUEGO.x - 38f, PISO_GATO, hasta = RetiradaCerca.FUEGO.x))
     }

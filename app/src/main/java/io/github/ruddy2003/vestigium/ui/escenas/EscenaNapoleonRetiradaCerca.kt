@@ -27,7 +27,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.marmita
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.mochila
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.pabellon
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.pino
-import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.ramas
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.ruedaSuelta
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.tambor
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.tienda
@@ -45,16 +44,20 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
+import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.sin
 
 /**
  * El primer plano de la retirada:
  * - **El alto, a la derecha**: el fuego de ruedas y tablas sobre la nieve derretida y negra; la marmita en sus
  *   horquillas; el fusil con la carne en la bayoneta; los fusiles en pabellón, con el chacó colgado y las cartucheras
- *   (el vertical que cruza las franjas, regla 6); las mochilas con la manta enrollada, los capotes, el tambor cortado
- *   por el borde; el asta del águila envuelta en trapos, apoyada en el pabellón, en diagonal (la otra que cruza). De
- *   noche, las ramas y las mantas de dormir. Lo que está o no a cada hora lo dicen [EscenaNapoleon.pabellon],
- *   [EscenaNapoleon.marmita], [EscenaNapoleon.carneEnLaBayoneta] y [EscenaNapoleon.camas].
+ *   (el vertical que cruza las franjas, regla 6), y a su izquierda, plantada sola, el asta del águila envuelta en trapos
+ *   (la otra vertical; no lo toca, para que el pabellón se lea limpio). A la derecha del fuego y un poco más cerca, el
+ *   objeto del día: el chico sobre la mochila de pie, con un capote viejo en el suelo; el grande, de pie en ese mismo
+ *   sitio (esos días no está la mochila). El tambor, cortado por el borde. De madrugada, la cama de ramas de abeto con
+ *   la manta echada. Lo que está o no a cada hora lo dicen [EscenaNapoleon.pabellon], [EscenaNapoleon.marmita],
+ *   [EscenaNapoleon.carneEnLaBayoneta] y [EscenaNapoleon.camas].
  * - **Lo abandonado, en el centro**: el cofre abierto con el candelabro, las telas y el cuadro del santo; el espejo roto
  *   que devuelve el cielo; la rueda suelta de la carroza, echada y cortada por el borde de abajo.
  * - **El marco, a la izquierda y arriba**: la carroza rota volcada, con la rueda que cruza el cielo, al pie del pino
@@ -74,9 +77,8 @@ internal object RetiradaCerca {
      */
     private val S_FUEGO = PiezasNapoleon.sitio(MIRADA, FUEGO, 0.2f)
     private val S_PABELLON = PiezasNapoleon.sitio(MIRADA, Offset(250f, 220f), 0.35f)
-    private val S_SOPORTE = PiezasNapoleon.sitio(MIRADA, Offset(214f, 236f), -0.55f)
-    private val S_MOCHILA3 = PiezasNapoleon.sitio(MIRADA, Offset(346f, 226f), -0.25f)
-    private val S_TAMBOR = PiezasNapoleon.sitio(MIRADA, Offset(362f, 292f), 0.75f)
+    private val S_SOPORTE = PiezasNapoleon.sitio(MIRADA, Offset(350f, 243f), -0.25f)
+    private val S_TAMBOR = PiezasNapoleon.sitio(MIRADA, Offset(374f, 306f), 0.75f)
     private val S_COFRE = PiezasNapoleon.sitio(MIRADA, Offset(134f, 248f), -0.5f)
     private val S_ESPEJO = PiezasNapoleon.sitio(MIRADA, Offset(182f, 256f), -0.45f)
     private val S_RUEDA = PiezasNapoleon.sitio(MIRADA, Offset(6f, 302f), 0f)
@@ -86,8 +88,15 @@ internal object RetiradaCerca {
     /** El pino grande: su pie, cortado por el borde de la izquierda. */
     val PIE_DEL_PINO = Offset(9f, 214f)
 
-    /** Donde se apoya el objeto del día: encima de la mochila de pie, junto al pabellón. */
+    /**
+     * Donde se apoya el objeto chico del día: encima de la mochila de pie, a la derecha del fuego y un poco más cerca que
+     * él (delante de sus horquillas), que la alumbra de lado sin taparla: las llamas, la marmita y el fusil de la carne
+     * quedan a su izquierda, y cabe entero el más ancho (la bayoneta con su vaina) sin salirse por el borde.
+     */
     val SOPORTE: Offset get() = S_SOPORTE.pie
+
+    /** Donde se sienta el gato a mirar el objeto del día: el borde de su suelo más cercano a él. */
+    const val GATO_MIRA_EL_OBJETO = 306f
     val ESPEJO: Offset get() = S_ESPEJO.pie
 
     /** El pabellón de los fusiles. */
@@ -99,9 +108,25 @@ internal object RetiradaCerca {
     /** El sitio alto del gato: en el costado de arriba de la carroza, lejos de la portezuela. */
     val MIRADOR: Offset get() = carrozaDe(0f).let { c -> c.s.p(c.t(V3(c.w, 1.75f, 0.8f))).let { Offset(it.x.coerceIn(12f, 360f), it.y.coerceIn(30f, 260f)) } }
 
-    /** El pie y la punta del asta del águila: apoyada en el cruce de las bayonetas del pabellón. */
-    private val PIE_ASTA = Offset(318f, 258f)
-    private fun puntaAsta(): Offset { val apice = S_PABELLON.p(PABELLON.apice); val d = apice - PIE_ASTA; return PIE_ASTA + d * 1.36f }
+    /**
+     * El pie y la punta del asta del águila: plantada sola en la nieve a la izquierda del pabellón, entre él y el espejo,
+     * apenas inclinada hacia él pero sin tocarlo (a dos palmos de sus fusiles a todo lo alto): el pabellón se lee limpio.
+     */
+    private val PIE_ASTA = Offset(212f, 240f)
+    private val PUNTA_ASTA = Offset(222f, 84f)
+    private val GRUESO_ASTA = 0.034f * (PIE_ASTA.y - MIRADA.horizonte) / PiezasNapoleon.OJO
+
+    /**
+     * Donde pisa el objeto grande del día y hacia dónde se recuesta: en el sitio de la mochila del soporte (esos días no
+     * está), a la derecha del fuego y un poco más cerca, donde la lumbre lo alumbra de lado y nada lo tapa (ni las llamas,
+     * ni el fusil de la carne, ni el pabellón); lejos del suelo del gato. Su escala es la de las cosas a esa distancia.
+     */
+    val PIE_GRANDE = Offset(353f, 252f)
+    private val APOYO_GRANDE = Offset(338f, 140f)
+    private val ESCALA_GRANDE = (PIE_GRANDE.y - MIRADA.horizonte) / PiezasNapoleon.OJO / ObjetosNapoleon.METRO
+
+    /** La cama de dormir, en la nieve delante del fuego: sus ejes van a lo largo (x, hacia el fuego: los pies) y a lo ancho (z). */
+    private val S_CAMA = PiezasNapoleon.sitio(MIRADA, Offset(266f, 261f), 0.6f)
 
     /** El fusil de la carne, que sale del pabellón y se inclina sobre el fuego. */
     private val FUSIL_CULATA = V3(-0.95f, 0f, -0.4f)
@@ -117,11 +142,10 @@ internal object RetiradaCerca {
         else add(RetiradaLuz.Sombra(S_TIENDA.pie, siluetaCaja(S_TIENDA, 1.4f, 2.6f)))
         if (EscenaNapoleon.pabellon(v.m)) add(RetiradaLuz.Sombra(S_PABELLON.pie, PiezasNapoleon.siluetaDePabellon(PABELLON) { S_PABELLON.p(it) }))
         if (!v.vivac) add(RetiradaLuz.Sombra(S_COFRE.pie, siluetaCaja(S_COFRE, 0.45f, 0.62f)))
-        add(RetiradaLuz.Sombra(S_SOPORTE.pie, siluetaCaja(S_SOPORTE, 0.22f, 0.46f)))
-        add(RetiradaLuz.Sombra(S_MOCHILA3.pie, siluetaCaja(S_MOCHILA3, 0.22f, 0.46f)))
+        if (!ObjetosNapoleon.esGrande(v.m)) add(RetiradaLuz.Sombra(S_SOPORTE.pie, siluetaCaja(S_SOPORTE, 0.22f, 0.46f)))
         add(RetiradaLuz.Sombra(S_TAMBOR.pie, siluetaCaja(S_TAMBOR, 0.3f, 0.42f)))
         if (!v.vivac) add(RetiradaLuz.Sombra(S_ESPEJO.pie, siluetaCaja(S_ESPEJO, 0.26f, 0.7f)))
-        if (EscenaNapoleon.pabellon(v.m)) { val pa = puntaAsta(); add(RetiradaLuz.Sombra(PIE_ASTA, poligono(PIE_ASTA + Offset(-ts, 0f), PIE_ASTA + Offset(ts, 0f), pa + Offset(ts * 2f, 0f), pa + Offset(-ts * 2f, 0f)))) }
+        if (EscenaNapoleon.pabellon(v.m)) { val pa = PUNTA_ASTA; add(RetiradaLuz.Sombra(PIE_ASTA, poligono(PIE_ASTA + Offset(-ts, 0f), PIE_ASTA + Offset(ts, 0f), pa + Offset(ts * 2f, 0f), pa + Offset(-ts * 2f, 0f)))) }
         if (EscenaNapoleon.marmita(v.m) == Marmita.AL_FUEGO) add(RetiradaLuz.Sombra(FUEGO, siluetaCaja(S_FUEGO, 0.55f, 0.95f)))
     }
 
@@ -140,7 +164,11 @@ internal object RetiradaCerca {
         // El tronco del pino grande (las ramas van en el marco).
         cosas += parte(PIE_DEL_PINO.y) { troncoDelPino(v) }
         // La carroza volcada (en el vivac, la tienda de oficial).
-        if (RetiradaNapoleon.carroza(m)) cosas += parte(S_CARROZA.pie.y) { carroza(carrozaDe(nieve), v.en(S_CARROZA.pie)) }
+        if (RetiradaNapoleon.carroza(m)) cosas += parte(S_CARROZA.pie.y) {
+            val c = carrozaDe(nieve)
+            carroza(c, v.en(S_CARROZA.pie))
+            plataDeLuna(v, PiezasNapoleon.siluetaDeCarroza(c), 0f, 150f, 0.16f)
+        }
         else cosas += parte(S_TIENDA.pie.y) { tienda(S_TIENDA, v.en(S_TIENDA.pie), if (v.noche > 0.4f && fase != Fase.MARCHA) 1f else 0f, nieve) }
         // El fuego, con las horquillas y la marmita.
         cosas += parte(FUEGO.y) {
@@ -157,27 +185,31 @@ internal object RetiradaCerca {
         if (EscenaNapoleon.carneEnLaBayoneta(m)) cosas += parte(FUEGO.y + 12f) { fusil(S_FUEGO, v.en(FUEGO), FUSIL_CULATA, FUSIL_BOCA, true, 0.1f, 0f, nieve, carne = true) }
         // Las mochilas y los capotes: de marcha queda una, con un capote viejo (lo que no se pudo cargar).
         val conGente = fase != Fase.MARCHA
-        cosas += parte(S_SOPORTE.pie.y) {
-            val a = v.en(S_SOPORTE.pie)
-            val (_, sobre) = mochila(S_SOPORTE, a, 41L, false, C.CAPOTE, 0f, nieve)
-            with(ObjetosNapoleon) { sobreElSoporte(m, v.p.con(a.calor(sobre)), sobre, 1.1f) }
+        // La mochila de pie con el objeto chico encima, y un capote viejo en el suelo, a la derecha del fuego: los días del
+        // objeto grande, ese sitio es suyo.
+        if (!ObjetosNapoleon.esGrande(m)) {
+            cosas += parte(S_SOPORTE.pie.y) {
+                val a = v.en(S_SOPORTE.pie)
+                val (_, sobre) = mochila(S_SOPORTE, a, 41L, false, C.CAPOTE, 0f, nieve)
+                with(ObjetosNapoleon) { sobreElSoporte(m, v.p.con(a.calor(sobre)), sobre, 1.1f) }
+            }
+            cosas += parte(258f) { val q = Offset(332f, 259f); capote(v.en(q), q, 30f, 10f, Azar(51L), false, 0f, nieve) }
         }
-        cosas += parte(S_MOCHILA3.pie.y) { mochila(S_MOCHILA3, v.en(S_MOCHILA3.pie), 43L, false, lerp(C.CAPOTE, C.AZUL, 0.2f), 0f, nieve) }
-        cosas += parte(242f) { val q = Offset(338f, 242f); capote(v.en(q), q, 40f, 13f, Azar(51L), false, 0f, nieve) }
-        // Las ramas y las mantas de dormir, alrededor del fuego (entre el fuego y el suelo del gato).
-        if (EscenaNapoleon.camas(m)) cosas += parte(256f) {
-            val q = Offset(250f, 256f); ramas(v.en(q), q, 64f, 14f, Azar(53L))
-            capote(v.en(q), q + Offset(6f, -2f), 40f, 10f, Azar(54L), true, 0f, nieve * 0.5f)
-            val q2 = Offset(334f, 260f); ramas(v.en(q2), q2, 54f, 12f, Azar(55L)); capote(v.en(q2), q2 + Offset(-4f, -1f), 36f, 10f, Azar(56L), false, 0f, nieve * 0.5f)
-        }
+        // La cama de ramas de abeto con la manta encima, delante del fuego (entre él y el suelo del gato), mientras duermen.
+        if (EscenaNapoleon.camas(m)) cosas += parte(S_CAMA.pie.y) { cama(v) }
         // El tambor, tumbado en la esquina de abajo y cortado por el borde.
         cosas += parte(S_TAMBOR.pie.y) { tambor(S_TAMBOR, v.en(S_TAMBOR.pie), true, 0f, nieve) }
-        // El asta del águila, apoyada en el pabellón: está mientras está la compañía (de marcha, va con ella).
+        // El asta del águila, plantada en la nieve: está mientras está la compañía (de marcha, va con ella).
         if (EscenaNapoleon.pabellon(m)) cosas += parte(PIE_ASTA.y) {
-            aguila(v.en(PIE_ASTA), PIE_ASTA, puntaAsta(), 0.034f * S_SOPORTE.k, EscenaNapoleon.aguilaEnvuelta(m), EscenaNapoleon.luto(m), Azar(57L), 0f, nieve)
+            val a = v.en(PIE_ASTA)
+            mancha(PIE_ASTA + Offset(0f, 0.5f), GRUESO_ASTA * 3f, GRUESO_ASTA * 0.9f, v.p.sombra(C.NIEVE_SOMBRA), 0.7f)
+            aguila(a, PIE_ASTA, PUNTA_ASTA, GRUESO_ASTA, EscenaNapoleon.aguilaEnvuelta(m), EscenaNapoleon.luto(m), Azar(57L), 0f, nieve)
+            // El labio de nieve que le tapa el regatón: está hundida, no posada.
+            if (nieve > 0.3f) mancha(PIE_ASTA + Offset(0f, 0.6f), GRUESO_ASTA * 2.2f, GRUESO_ASTA * 0.8f, a.arriba(C.NIEVE, PIE_ASTA), 0.9f)
         }
-        // El objeto grande del día, apoyado en el pabellón (o en la mochila).
-        ObjetosNapoleon.grande(m, v.p.con(v.a.calor(Offset(270f, 240f))), Offset(270f, 242f), Offset(258f, 168f), 1.05f)?.let { g -> cosas += parte(g.pie.y) { g.pintar(this) } }
+        // El objeto grande del día, de pie a la derecha del fuego (pinta él mismo su sombra y su hoyo en la nieve).
+        val enElGrande = PIE_GRANDE + Offset(0f, -40f)
+        ObjetosNapoleon.grande(m, v.p.con(v.a.calor(enElGrande)), PIE_GRANDE, APOYO_GRANDE, ESCALA_GRANDE)?.let { g -> cosas += parte(g.pie.y) { g.pintar(this) } }
         // Lo abandonado del centro (en la retirada).
         if (!v.vivac) {
             cosas += parte(S_COFRE.pie.y) { cofre(S_COFRE, v.en(S_COFRE.pie), 1f, 0f, nieve) }
@@ -206,6 +238,123 @@ internal object RetiradaCerca {
     // ---------------------------------------------------------------- El pino grande
 
     private val AZ_PINO = Semilla.de("napoleon", "pino", "grande")
+
+    /**
+     * La cama de dormir junto al fuego, tendida en la nieve en perspectiva (en metros, en los ejes de [S_CAMA]; los pies,
+     * hacia el fuego): una capa de ramas de abeto cortadas, planas, con el tallo hacia el medio y la punta abierta hacia
+     * fuera, unas sobre otras, cada una con su forma de pluma (ancha en medio, aguda en la punta) y sus brotes en espiga;
+     * encima, la manta de lana echada hacia los pies, como la deja quien se acaba de levantar: con el embozo vuelto, que
+     * enseña el revés, y el canto que cae del lado de quien mira. Las ramas de la cabecera quedan a la vista.
+     */
+    private fun DrawScope.cama(v: VistaNapoleon) {
+        val s = S_CAMA; val a = v.en(s.pie); val p = v.p
+        val az = Azar(Semilla.de("napoleon", "cama"))
+        fun q(x: Float, z: Float, y: Float = 0f) = s.p(x, y, z)
+        // La nieve hundida bajo la cama.
+        mancha(q(0f, 0f), 0.75f * s.escala(0f, 0f), 0.2f * s.escala(0f, 0f), p.sombra(C.NIEVE_SOMBRA), 0.5f)
+        // ---- Las ramas: doce, en dos capas; las de abajo, largas y abiertas hacia las puntas y los lados.
+        for (i in 0 until 12) {
+            val arriba = i >= 7
+            val haciaLosPies = i % 2 == 1
+            val sg = if (haciaLosPies) 1f else -1f
+            val bx = sg * az.entre(-0.08f, 0.12f) + (if (arriba) -0.2f else 0f)
+            val bz = az.entre(-0.22f, 0.22f) * (if (arriba) 0.6f else 1f)
+            val ang = (if (haciaLosPies) 0f else PI.toFloat()) + sg * bz * 1.4f + az.entre(-0.25f, 0.25f)
+            val largo = (if (haciaLosPies) az.entre(0.45f, 0.58f) else az.entre(0.42f, 0.52f)) * (if (arriba) 0.75f else 1f)
+            val ancho = az.entre(0.13f, 0.17f)
+            val y = 0.02f + i * 0.006f
+            val dx = cos(ang); val dz = sin(ang)
+            fun ex(t: Float) = bx + dx * largo * t
+            fun ez(t: Float) = bz + dz * largo * t
+            fun w(t: Float) = ancho * sin(PI.toFloat() * (0.1f + 0.9f * t)) * (1f - 0.3f * t)
+            val n = 14
+            val izq = ArrayList<Offset>(); val der = ArrayList<Offset>()
+            for (j in 0..n) {
+                val t = j / n.toFloat(); val ww = w(t) * (if (j % 2 == 0) 1f else 0.7f)
+                izq += q(ex(t) - dz * ww, ez(t) + dx * ww, y); der += q(ex(t) + dz * ww, ez(t) - dx * ww, y)
+            }
+            val forma = poligono(izq + der.reversed())
+            val en = q(ex(0.5f), ez(0.5f))
+            drawPath(forma, a.arriba(lerp(C.PINO_OSC, C.PINO, 0.3f + 0.15f * (i % 3)), en))
+            clipPath(forma) {
+                // Los brotes, en espiga hacia la punta, alternando el verde de dentro y el claro de las puntas.
+                for (j in 1 until n) {
+                    val t = j / n.toFloat(); val t2 = (t + 0.1f).coerceAtMost(1f); val ww = w(t2) * 1.05f
+                    val col = a.arriba(if (j % 3 == 0) C.PINO_LUZ else lerp(C.PINO, C.PINO_LUZ, 0.35f), en)
+                    val c = q(ex(t), ez(t), y)
+                    drawLine(col, c, q(ex(t2) - dz * ww, ez(t2) + dx * ww, y), 1f, StrokeCap.Round)
+                    drawLine(col, c, q(ex(t2) + dz * ww, ez(t2) - dx * ww, y), 1f, StrokeCap.Round)
+                }
+            }
+            // El tallo, con el corte claro en la base; en la punta, la nieve que traía.
+            drawLine(a.arriba(C.MADERA, en), q(ex(0f), ez(0f), y), q(ex(0.8f), ez(0.8f), y), 1f, StrokeCap.Round)
+            drawCircle(a.arriba(C.HOJA, en), 0.8f, q(ex(0f), ez(0f), y))
+            if (v.nieve > 0.4f) for (j in 0 until 3) {
+                val t = az.entre(0.7f, 0.95f); val o = az.entre(-0.6f, 0.6f) * w(t)
+                drawCircle(a.arriba(C.NIEVE, en).copy(alpha = 0.8f), az.entre(0.35f, 0.6f), q(ex(t) - dz * o, ez(t) + dx * o, y + 0.01f))
+            }
+        }
+        // ---- La manta, echada hacia los pies.
+        val lana = lerp(C.CAPOTE, C.MADERA, 0.18f)
+        val dentro = lerp(lana, C.LONA, 0.35f)
+        // Más estrecha y más corta que las ramas: asoman sus puntas por los lados y por los pies. La tela no está tiesa:
+        // su borde sube donde se apoya en una rama y cae entre dos, y hacia los pies se amontona.
+        val xb = -0.08f; val x1 = 0.48f; val zw = 0.24f; val h = 0.08f
+        val borde = (0..6).map { j -> val z = -zw + 2f * zw * j / 6f; V3(xb + az.entre(-0.03f, 0.03f) + 0.05f * sin(z * 6f), h + az.entre(-0.005f, 0.02f), z) }
+        val lejos = (1..5).map { j -> V3(xb + (x1 - xb) * j / 6f, az.entre(0.03f, 0.1f), zw + az.entre(-0.04f, 0.04f)) }
+        val pies = (0..4).map { j -> V3(x1 + az.entre(-0.05f, 0.03f), az.entre(0.03f, 0.1f), zw - 2f * zw * j / 4f) }
+        val cerca = (5 downTo 1).map { j -> V3(xb + (x1 - xb) * j / 6f, az.entre(0.015f, 0.09f), -zw - az.entre(-0.03f, 0.04f)) }
+        fun en(w: V3) = q(w.x, w.z, w.y)
+        // El canto que cae del lado de quien mira, hasta la nieve: alto donde la tela está levantada, nada donde toca.
+        val canto = listOf(borde.first()) + cerca.reversed() + listOf(pies.last())
+        val nDelante = s.normal(Vec.unidad(V3(0f, 0.2f, -1f)))
+        drawPath(suave(canto.map { en(it) } + canto.reversed().map { q(it.x, it.z - 0.035f, 0.012f) }), a.cara(lana, nDelante, q(0.2f, -zw)))
+        val manta = suave((borde + lejos + pies + cerca).map { en(it) })
+        drawPath(manta, a.arriba(lana, q(0.25f, 0f)))
+        clipPath(manta) {
+            // Las arrugas: lomos claros y senos oscuros, blandos; y el bulto de los pies, donde se amontona.
+            for ((x, z, claro) in listOf(Triple(0.12f, -0.1f, true), Triple(0.22f, 0.04f, false), Triple(0.3f, 0.15f, true), Triple(0.08f, 0.16f, false), Triple(0.34f, -0.06f, false))) {
+                val c = q(x, z, h)
+                mancha(c, 0.16f * s.escala(x, z), 0.06f * s.escala(x, z), if (claro) a.cara(lana, s.normal(Vec.unidad(V3(0.3f, 1f, -0.4f))), c) else p.sombra(lana), 0.75f)
+            }
+            val bulto = q(x1 - 0.08f, 0.02f, h + 0.03f)
+            mancha(bulto, 0.14f * s.escala(x1, 0f), 0.07f * s.escala(x1, 0f), a.cara(dentro, s.normal(Vec.unidad(V3(-0.2f, 1f, -0.5f))), bulto), 0.8f)
+            if (EscenaNapoleon.helada(v.m)) for (j in 0 until 16) drawCircle(a.arriba(C.NIEVE, q(0.3f, 0f)).copy(alpha = 0.55f), 0.5f, q(az.entre(xb, x1), az.entre(-zw, zw), h))
+        }
+        // El embozo vuelto: una franja del revés, más clara, tendida sobre la manta junto al borde; y la raya oscura del
+        // doblez, que es la sombra del borde sobre las ramas.
+        val ancho = 0.09f
+        val embozo = suave(borde.map { q(it.x, it.z, it.y + 0.012f) } + borde.reversed().map { q(it.x + ancho + 0.02f * sin(it.z * 9f), it.z, it.y + 0.012f) })
+        drawPath(embozo, a.arriba(dentro, q(xb, 0f)))
+        val pliegue = Path().apply { val b0 = en(borde[0]); moveTo(b0.x, b0.y); for (j in 1 until borde.size) { val b = en(borde[j]); lineTo(b.x, b.y) } }
+        drawPath(pliegue, p.sombra(lana).copy(alpha = 0.8f), style = Stroke(1.1f, cap = StrokeCap.Round))
+    }
+
+    /**
+     * La plata de la luna sobre una cosa grande que queda lejos del fuego (la carroza): un lavado frío y claro sobre su
+     * [forma], de [x0] a [x1], más fuerte del lado de la luna, para que de noche se lea fuera del círculo del fuego.
+     */
+    private fun DrawScope.plataDeLuna(v: VistaNapoleon, forma: Path, x0: Float, x1: Float, fuerza: Float) {
+        val k = (fuerza * v.luna).coerceIn(0f, 1f); if (k <= 0.01f) return
+        val haciaLaLuna = v.l.lunaX > 0.5f
+        val fuerte = RetiradaLuz.LUNA.copy(alpha = k); val flojo = RetiradaLuz.LUNA.copy(alpha = k * 0.3f)
+        clipPath(forma) {
+            drawRect(Brush.horizontalGradient(if (haciaLaLuna) listOf(flojo, fuerte) else listOf(fuerte, flojo), x0, x1), Offset(x0, 0f), Size(x1 - x0, ALTO), blendMode = BlendMode.Plus)
+        }
+    }
+
+    /** Un contorno cerrado y blando que pasa cerca de los [puntos] (curvas por los puntos medios, sin esquinas). */
+    private fun suave(puntos: List<Offset>): Path = Path().apply {
+        val n = puntos.size
+        fun medio(i: Int) = (puntos[i % n] + puntos[(i + 1) % n]) / 2f
+        val m0 = medio(0); moveTo(m0.x, m0.y)
+        for (i in 1..n) {
+            val desde = medio(i - 1); val c = puntos[i % n]; val hasta = medio(i)
+            val c1 = desde + (c - desde) * (2f / 3f); val c2 = hasta + (c - hasta) * (2f / 3f)
+            cubicTo(c1.x, c1.y, c2.x, c2.y, hasta.x, hasta.y)
+        }
+        close()
+    }
 
     /** El tronco del pino grande, con su corteza, su lado de luz, la nieve pegada del lado del viento y los muñones de las ramas muertas. */
     private fun DrawScope.troncoDelPino(v: VistaNapoleon) {
