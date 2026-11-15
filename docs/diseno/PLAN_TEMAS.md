@@ -805,7 +805,7 @@ Todos heredan las 13 animaciones comunes y la reacción al ánimo. Lo propio de 
 | `arcontes` · Arcontes | Fantasía | Galilea en el siglo I, vivida por un iniciado gnóstico que cree el mito: el Demiurgo, los siete arcontes, Sofía y el Pleroma. De día, caliza, lino, ocre y el lago; de noche, la misma Galilea con el cielo de las esferas, la lámpara de aceite y luz por las grietas. Tono inquietante | El cielo del día de los 365 de Basílides, el planeta del día y la fecha hebrea; números con letras hebreas | Abraxas dentro del ouroboros · la jarra sellada con el códice · el ascenso del alma por las siete esferas | ROM, ARC, EGI, HEL, GOT, MED, ANT y ESP |
 | `galia` · Galia | Antigüedad | La Galia del 52 a. C., mitad bosque sagrado y mitad levantamiento contra Roma. De día, verde de roble, ocre, oro de torques y humo; de noche, el mismo bosque con luna, hogueras y, al fondo, las del campamento romano | «Noche N» (los galos contaban por noches), meses de Coligny con su marca de bueno o no bueno, y ordinales galos | El caballo de las monedas galas · tablillas de cera con letras griegas · el levantamiento de Cenabum a Alesia | ROM (el otro lado), ANT, RUI, BOT, TEM y CUE |
 | `nouveau` · Art nouveau | Siglos XIX a XXI | París hacia 1900: hierro, vidrio y luz eléctrica que parecen plantas; metro, invernaderos, vitrales de casa, carteles. De día, crema, salvia, malva, iris y oro pálido; de noche, la misma París con la luz eléctrica nueva, lámparas de colores y el verde de los cafés | La flor del día y su significado (lenguaje de las flores); la hora de París; cifras de hierro forjado | Libélula o iris en un marco de línea de látigo · cuaderno de dibujo · las estaciones de la primera línea del metro | DEC, BOT, GOT, VAP y `psicodelia` |
-| `psicodelia` · Psicodelia | Siglos XIX a XXI | San Francisco en 1967, urbana: casas pintadas, tiendas de discos, salas de baile, carteles que se derriten. De día, la calle con los colores de cartel; de noche, la misma ciudad con luz negra y luces líquidas. Movimiento contenido | El día como disco: lado A, lado B y la hora como pista; letra burbuja | Flor que vibra en colores complementarios · periódico clandestino del barrio · de la calle Haight al festival de Monterey | NEO, `nouveau`, REF, URS, REV y DEC |
+| `psicodelia` · Psicodelia | Siglos XIX a XXI | San Francisco en 1967, urbana: casas pintadas, tiendas de discos, salas de baile, carteles que se derriten. De día, la calle con los colores de cartel; de noche, la misma ciudad con luz negra y luces líquidas. Movimiento contenido | El día como disco: lado A, lado B y la hora como pista; letra burbuja | Flor que vibra en colores complementarios · periódico alternativo del barrio · de la calle Haight al festival de Monterey | NEO, `nouveau`, REF, URS, REV y DEC |
 
 ### 10c. Frente exterior (`frente`), primera tanda
 
@@ -1208,49 +1208,59 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
 
 ### 10g. Psicodelia (`psicodelia`)
 
-**Concepto.** San Francisco en 1967, el verano del amor, vivido en la ciudad: casas victorianas pintadas de colores, departamentos compartidos, tiendas de discos, salas de baile con shows de luces líquidas, radio FM de noche y carteles con letras que se derriten. **Movimiento contenido:** el fondo vivo respira, y el caleidoscopio y las letras que se derriten salen solo en momentos (al guardar, en los logros). El resto se lee tranquilo.
+**Fuentes comprobadas** (15 nov 2026): `docs/diseno/temas/fuentes_psicodelia.md`, con la cronología de 1967, la campaña con sus lugares, 33 frases de dominio público y 23 correcciones, ya puestas aquí.
 
-**Una regla propia.** La app lleva un seguimiento privado de impulsos y recaídas. Las drogas aparecen solo como cultura y estética (el viaje visual, los carteles, la música) y **nunca tocan los registros**: ni chistes, ni «mal viaje» cuando se rompe una racha.
+**Concepto.** San Francisco en 1967, el verano del amor, vivido en la ciudad: casas victorianas (casi todas grises o desteñidas, con alguna pintada de colores fuertes: la moda empezó en 1963 y las calles enteras de colores son de los 70), departamentos compartidos, tiendas de carteles y de discos (las de discos, recurso), salas de baile con shows de luces líquidas, radio FM de noche y carteles con letras que se derriten. **Movimiento contenido:** el fondo vivo respira, y el caleidoscopio y las letras que se derriten salen solo en momentos (al guardar, en los logros). El resto se lee tranquilo.
+
+**Una regla propia.** La app lleva un seguimiento privado de impulsos y recaídas. Las drogas no aparecen: solo la cultura y lo visual (las luces, los carteles, la música), y **nunca tocan los registros**: ni chistes, ni «mal viaje» cuando se rompe una racha. El nombre «Psicodelia» se queda (es el del estilo artístico), pero la app no lo explica. Lo que hay que dejar fuera está en la sección 9 de las fuentes (el lema del Be-In, el autobús de Kesey, la primera tienda del Haight, el «acid rock»).
 
 **Claro y oscuro.**
-- **Claro:** la calle de día, con las casas pintadas, los colores saturados de los carteles de 1967 y el teñido anudado.
+- **Claro:** la calle de día en verano, con niebla de mañana y sol de tarde (el verano de San Francisco es fresco y con niebla; el mes más cálido es septiembre), las casas victorianas con alguna pintada, los colores saturados de los carteles de 1967 y, como detalle, el teñido anudado (que en 1967 se veía menos que después).
 - **Oscuro:** la misma ciudad de noche: la sala de baile con luz negra (magenta, verde limón y violeta fluorescentes sobre negro) y las luces líquidas. Hay que separarlo de Ciudad neón, que también usa magenta: aquí las formas son orgánicas y blandas, nunca letreros.
 
 **Fecha y números.**
 - **El día como disco:** lado A de mañana, lado B de noche, y la hora como pista.
 - **Letra burbuja** que ondula.
-- **Textos en inglés de la época,** con su español al lado en el reporte del día.
+- **Textos en inglés que se leían en la época,** de dominio público (Blake, Whitman, Thoreau, Emerson, Gibran y traducciones viejas del *Tao Te Ching*, la *Gita*, Kabir y Rumi; los de 1967 tienen derechos), con su español al lado en el reporte del día. Las 33 frases, en la sección 10 de las fuentes.
 
 **Superficies.**
-- **Emblema:** una flor que vibra en colores complementarios. El símbolo de la paz es de dominio público, si se quiere.
-- **Libreta:** el periódico clandestino del barrio.
+- **Emblema:** una flor que vibra en colores complementarios (la vibración, de Moscoso, que la aprendió de Albers). El símbolo de la paz es de dominio público, si se quiere: Holtom, 21 de febrero de 1958, nunca registrado; mejor en la versión de una línea de Ken Garland.
+- **Libreta:** el periódico alternativo del barrio (*underground* no es «clandestino»: el *San Francisco Oracle* se vendía en la calle y tenía oficina abierta las 24 horas en el 1371 de Haight), con nombre inventado y su tinta de arcoíris de tintero partido.
 - **Cartas:** postales con calcomanías.
-- **Campaña:** de la calle Haight al festival de Monterey (junio de 1967), pasando por el parque, una sala de baile y la radio FM. Lugares reales, sin marcas.
-- **Trofeos (9):** un vinilo, una lámpara de lava, botones de solapa, una guitarra, una camioneta pintada, un cartel, incienso, una flor y una cinta para la frente.
+- **Campaña:** de la calle Haight al festival de Monterey (16 a 18 de junio de 1967). Lugares reales; las salas y la radio, por su calle o su frecuencia, porque «The Fillmore», «Avalon Ballroom» y «Family Dog» son nombres de negocio. Siete etapas, por fecha:
+  1. Haight y Ashbury.
+  2. Los Polo Fields del Golden Gate Park (el Be-In, 14 de enero; solo poetas y bandas).
+  3. La sala de la calle Sutter (el Avalon, 1268 de Sutter; un baile con fecha: 29 de enero, 2 dólares).
+  4. La FM del 106.9 (KMPX: la noche del 12 de febrero, de medianoche a las 6; de tiempo completo desde el 6 de agosto).
+  5. El 1371 de Haight (la oficina del periódico).
+  6. El Panhandle (la comida gratis de los Diggers, cada día a las cuatro).
+  7. Monterey (el recinto ferial, 16 a 18 de junio; de 3 a 6.50 dólares).
+  - Si se quiere cerrar el año: Buena Vista Park, el entierro de mentira del hippie (6 de octubre).
+- **Trofeos (9):** un vinilo, una lámpara de cera (la de lava ya se vendía en EE. UU. desde 1965, pero su nombre y su forma son marca: otra silueta), botones de solapa, una guitarra, una camioneta de reparto pintada a mano (sin marca ni referencia a Kesey), un cartel, incienso (recurso: no se comprobó; si no, una campanilla de templo), una flor y una cinta para la frente.
 - **Fondo vivo:** luces líquidas que se mezclan y respiran, más tenues de día.
-- **Sonido:** guitarra con distorsión, sitar, órgano, eco de cinta y pandero. La música es propia, sin citar canciones.
-- **Fuente:** candidata Shrikhand o Monoton (OFL, a confirmar), con letra de los carteles de la época.
+- **Sonido:** guitarra con distorsión (pedal desde 1962), sitar (en el pop desde 1965; Ravi Shankar en Monterey), órgano de transistores (desde 1962), eco de cinta (desde 1959) y pandero, con nombres genéricos (Echoplex, Vox o Farfisa son marcas). La música es propia, sin citar canciones.
+- **Fuente:** Shrikhand (OFL comprobada; renombrada, como hace el repo). Monoton, descartada: tiene el nombre reservado y sus líneas paralelas la acercan a Ciudad neón y Art déco. Ninguna es la letra de los carteles: esa venía de las letras de bloque de Alfred Roller (Secesión de Viena, 1897; dominio público), y los títulos grandes se pueden dibujar a su modo.
 
 **Gato.**
-- **Pelaje y material:** atigrado naranja, en serigrafía de colores fluorescentes.
+- **Pelaje y material:** atigrado naranja, en tinta fluorescente de imprenta (los carteles de Family Dog se imprimían con tintas fluorescentes; la serigrafía es recurso).
 - **Accesorio:** gafas redondas y una cinta en la frente.
-- **Fondo:** una calle de casas pintadas; de noche, la misma calle con ventanas de luz negra.
-- **Acciones:** se queda hipnotizado por una lámpara de lava · persigue las burbujas del show de luces.
+- **Fondo:** una calle de casas victorianas con alguna pintada; de noche, la misma calle con ventanas de luz negra.
+- **Acciones:** se queda hipnotizado por una lámpara de cera · persigue las burbujas del show de luces (las gotas de aceite y tinta entre dos vidrios del retroproyector).
 
 **Otra vida** (`cartelista`, persona inventada en un mundo real, `ficticia = false`, certeza `r`).
-- **Quién:** un dibujante de carteles de conciertos, de 24 años, en San Francisco en 1967.
+- **Quién:** un dibujante de carteles de conciertos, de 24 años, en San Francisco en 1967 (verosímil: los cinco grandes tenían entre 22 y 31). Nombre por decidir: David, Richard, Thomas, Ronald o Michael (de los diez más comunes de 1943, [Aproximación]); no Wes, Rick, Stanley, Alton ni Victor.
 - **Agenda (`dia`):**
   - 4–12 dormir
   - 12–13 comer
   - 13–18 trabajo «dibujar el cartel de la semana»
   - 18–19 comer «en la cocina del departamento compartido»
   - 19–20 camino
-  - 20–2 gente «el baile y el show de luces»
+  - 20–2 gente «el baile y el show de luces» (empezaban a las 20 o 21 h y pasaban de la medianoche; la hora de cierre, sin comprobar. El Avalon abría de jueves a sábado: el día de la agenda es uno de esos, y la historia lo dice)
   - 2–4 libre «música en el departamento»
-- **`inspiracion`:** «Inspirado en los dibujantes de carteles de las salas de baile de San Francisco en 1966 y 1967.»
+- **`inspiracion`:** «Persona inventada. Inspirado en los dibujantes de carteles de las salas de baile de San Francisco en 1966 y 1967; las cifras son reconstrucciones.» (empieza con «Persona inventada», como pide 10a)
 
 **Cuadro (para la fila).**
-- Una calle de casas pintadas al atardecer.
+- Una calle de casas victorianas al atardecer, con la niebla entrando y una o dos casas pintadas entre las grises.
 - Una sala de baile con las luces líquidas proyectadas.
 
 **Se distingue de:**
@@ -1279,6 +1289,11 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
   - la hora de París;
   - las estaciones de la primera línea del metro;
   - la ley de 1900.
+- **Psicodelia:**
+  - el nombre del cartelista;
+  - si los nombres de las salas, la radio y el festival son marcas registradas;
+  - la hora de cierre de los bailes en 1967;
+  - lo que quedó sin verificar en `fuentes_psicodelia.md` (sección 13).
 - **Para los cinco:**
   - las fuentes tipográficas definitivas;
   - que `UnicidadTemas` no encuentre choques.
