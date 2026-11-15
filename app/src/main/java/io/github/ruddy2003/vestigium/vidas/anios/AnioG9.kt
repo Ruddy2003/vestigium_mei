@@ -464,7 +464,7 @@ internal object AnioG9 {
                     rito("baja_pesaj_30", "04-15", "Baja de Jerusalén con los de Galilea, que no hablan de otra cosa", 4, INV, escena = "camino"),
                     rito("vuelve_pesaj_30", "04-19", "Vuelve a Magdala, y el secadero le parece de otro", certeza = INV),
                     mundo("orilla_30", "04-28", "Al amanecer, desde el secadero, ve a un hombre de pie en la orilla, y nadie sabe quién es", certeza = A, fuente = F_JUAN_21, escena = "figura_luz"),
-                    suceso("circulo_30", "05-05", "La primera reunión del círculo después de Jerusalén: nadie sabe qué decir"),
+                    suceso("circulo_30", "05-05", "La noche en que el círculo por fin habla de Jerusalén: nadie sabe qué decir"),
                     mundo("cuarenta_30", "05-18", "Dicen los de Pedro que en el monte de los Olivos lo vieron subir, y una nube lo tapó", certeza = A, fuente = F_HECHOS_1),
                     rito("sube_shavuot_30", "05-22", "Sube otra vez a Jerusalén, para Shavuot", 4, INV, escena = "camino"),
                     fiesta("shavuot_30", "05-28", "Shavuot: los de Galilea hablan, y cada forastero los oye en su lengua", certeza = A, fuente = F_PENTECOSTES),

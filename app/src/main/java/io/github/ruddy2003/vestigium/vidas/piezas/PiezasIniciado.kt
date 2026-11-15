@@ -110,7 +110,7 @@ internal object PiezasIniciado {
     )
 
     private val JER_TIEMPO = listOf(
-        je("{cielo} Lejos del lago el aire huele distinto, y {nombre} lo nota al despertar, antes de acordarse de dónde está."),
+        je("{cielo} Lejos del lago el aire huele distinto: a polvo, a piedra caliente, a humo de otros fuegos. {nombre} lo nota en cuanto deja atrás la orilla."),
         je("Lejos de casa, {nombre} mira el cielo como si fuera el de otro sitio. {cielo} {de_estacion}"),
     )
 
