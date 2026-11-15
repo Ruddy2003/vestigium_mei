@@ -3,6 +3,7 @@ package io.github.ruddy2003.vestigium.ui.escenas
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PointMode
@@ -34,6 +35,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.BarcoBotanico.estribor
 import io.github.ruddy2003.vestigium.ui.escenas.BarcoBotanico.k
 import io.github.ruddy2003.vestigium.ui.escenas.BarcoBotanico.pc
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.capaSombra
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cubicTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva
@@ -129,6 +131,12 @@ internal object CubiertaBarco {
                 repeat(14) { val z = az.entre(2.8f, 9f); val q = pc(-1.2f + 0.5f * sin(z * 2f), 0f, z); drawOval(p.sombra(lerp(C.NIEVE, C.TECA, 0.4f)).copy(alpha = 0.4f), Offset(q.x - k(z) * 0.06f, q.y - k(z) * 0.02f), Size(k(z) * 0.12f, k(z) * 0.04f)) }
             }
             if (EscenaBotanico.escarcha(m) && nieve < 0.02f) drawPath(forma, Brush.verticalGradient(listOf(p.luz(C.NIEVE).copy(alpha = 0.12f), p.luz(C.NIEVE).copy(alpha = 0.32f)), H, ALTO))
+            // De noche, la luna platea la cubierta (húmeda de relente) donde le da: la capa de sombras de encima le recorta la reja
+            // de los obenques, la botavara y lo demás.
+            if (v.luna > 0.05f) {
+                val lx = v.l.lunaX * ANCHO
+                drawPath(forma, Brush.radialGradient(listOf(EscenaBotanico.LUZ_DE_LUNA.copy(alpha = (0.6f * v.luna).coerceIn(0f, 1f)), EscenaBotanico.LUZ_DE_LUNA.copy(alpha = (0.26f * v.luna).coerceIn(0f, 1f)), Color.Transparent), Offset(150f + (lx - 150f) * 0.3f, H + 45f), 210f), blendMode = BlendMode.Plus)
+            }
         }
     }
 
@@ -302,13 +310,18 @@ internal object CubiertaBarco {
                 // La amurada de estribor echa la suya (más oscura que la de la lona).
                 for (lado in listOf(true, false)) BarcoBotanico.sombraDeLaAmurada(sol, lado)?.let { q -> enLienzo(q)?.let { sombra(it, c) } }
                 // La reja de la jarcia: cada obenque, brandal y estay deja su raya.
-                for ((a0, b0) in VelasBarco.sombraDeLaJarcia(sol)) {
+                for ((a0, b0) in VelasBarco.sombraDeLaJarcia(sol, v.m)) {
                     var a = a0; var b = b0
                     if (a.y < POPA && b.y < POPA) continue
                     if (a.y < POPA) a = a + (b - a) * ((POPA - a.y) / (b.y - a.y))
                     if (b.y < POPA) b = b + (a - b) * ((POPA - b.y) / (a.y - b.y))
                     val z = ((a.y + b.y) / 2f).coerceIn(2f, 30f)
-                    drawLine(c, pc(a.x, 0f, a.y), pc(b.x, 0f, b.y), (k(z) * 0.035f).coerceIn(0.5f, 3f), StrokeCap.Round)
+                    drawLine(c, pc(a.x, 0f, a.y), pc(b.x, 0f, b.y), (k(z) * 0.05f).coerceIn(0.6f, 3.4f), StrokeCap.Round)
+                }
+                // La botavara, gruesa, con la sombra de la vela aferrada si va aferrada.
+                VelasBarco.botavaraEnMetros(v.m).let { (a3, b3) ->
+                    val n = 12; val pts = (0..n).map { val t3 = it / n.toFloat(); BarcoBotanico.alSuelo(sol, a3 + (b3 - a3) * t3) }.filter { it.y > POPA }
+                    for (i in 0 until pts.size - 1) drawLine(c, pc(pts[i].x, 0f, pts[i].y), pc(pts[i + 1].x, 0f, pts[i + 1].y), (k(pts[i].y) * (if (v.velas == EscenaBotanico.Velas.AFERRADAS) 0.5f else 0.2f)).coerceIn(1f, 30f), StrokeCap.Round)
                 }
                 // Lo de crujía y el taller.
                 for (s in sombrasDeCrujia(v)) sombra(s, c)
@@ -368,7 +381,7 @@ internal object CubiertaBarco {
             palo(mayor, pm, sm)
             val (pk, sk) = v.pincel(estribor(Z_CANON) - 1.12f, Z_CANON, 0.5f)
             canon(canon(v), pk, sk)
-            val (pc0, sc0) = v.pincel(EJE, 8.6f, 0.5f)
+            val (pc0, sc0) = v.pincel(-1.4f, BarcoBotanico.Z_CLARABOYA, 0.5f)
             claraboya(claraboya(v), pc0, sc0)
             // Los obenques de estribor del palo mayor, por delante de todo lo de crujía: suben de la mesa de guarnición.
             obenques(mayor, p, 3.7f, 1.25f, 15.6f, -1.4f, 1.4f, 5, v.nieve, 0f)

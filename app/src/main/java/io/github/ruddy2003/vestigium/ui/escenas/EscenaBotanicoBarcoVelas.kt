@@ -138,7 +138,29 @@ internal object VelasBarco {
         listOf(V3(EJE, 0f, PALO_MAYOR) to V3(EJE, 23f, PALO_MAYOR), V3(EJE, 16f, PALO_MAYOR + 0.2f) to V3(EJE, 1.6f, TRINQUETE - 0.6f))
 
     /** La sombra de la jarcia en la cubierta, en metros (x, z) de punta a punta, para la capa de sombras. */
-    fun sombraDeLaJarcia(sol: Sol3): List<Pair<Offset, Offset>> = jarcia().map { (a, b) -> BarcoBotanico.alSuelo(sol, a) to BarcoBotanico.alSuelo(sol, b) }
+    fun sombraDeLaJarcia(sol: Sol3, m: Momento): List<Pair<Offset, Offset>> {
+        val vel = EscenaBotanico.velas(m)
+        // Con las velas largas, además, la braza, la escota de la mayor (con sus tres guarnes) y el amantillo, que bajan cerca de quien mira.
+        val mas = if (vel == Velas.AFERRADAS) emptyList() else {
+            val caida = vel == Velas.CAIDAS; val may = mayorDe(caida); val (_, fin) = botavara(caida)
+            val motonB = V3(estribor(5.6f) + 0.05f, 3.4f, 5.6f); val regala = V3(estribor(3.75f) - 0.05f, REGALA + 0.04f, 3.75f)
+            listOf(may.c + V3(0.4f, 0f, 0f) to motonB, motonB to V3(estribor(4.4f) - 0.05f, 0.9f, 4.4f), fin to V3(EJE, 15.6f, PALO_MAYOR - 0.2f)) +
+                (-1..1).map { d -> may.b + V3(d * 0.08f, 0f, 0f) to regala + V3(d * 0.08f, 0f, 0f) }
+        }
+        return (jarcia() + flechastes() + mas).map { (a, b) -> BarcoBotanico.alSuelo(sol, a) to BarcoBotanico.alSuelo(sol, b) }
+    }
+
+    /** Los flechastes de los obenques mayores (la escala de cabo de obenque a obenque), en la parte baja: su sombra hace la reja. */
+    private fun flechastes(): List<Pair<V3, V3>> = buildList {
+        for (lado in listOf(true, false)) {
+            val ob = obenquesMayor(lado)
+            var t = 0.06f
+            while (t < 0.42f) { for (i in 0 until ob.size - 1) { val (a0, b0) = ob[i]; val (a1, b1) = ob[i + 1]; add(a0 + (b0 - a0) * t to a1 + (b1 - a1) * t) }; t += 0.035f }
+        }
+    }
+
+    /** La botavara, de punta a punta, en metros (para su sombra en la cubierta). */
+    fun botavaraEnMetros(m: Momento): Pair<V3, V3> { val vel = EscenaBotanico.velas(m); return if (vel == Velas.AFERRADAS) V3(EJE, 3.25f, PALO_MAYOR - 0.4f) to V3(EJE + 0.05f, 3.6f, 1.6f) else botavara(vel == Velas.CAIDAS) }
 
     // ---------------------------------------------------------------- La lona
 

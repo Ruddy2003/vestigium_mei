@@ -19,6 +19,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.EscenaBotanico.Costa
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Luces
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.agua
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.astros
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cielo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cubicTo
@@ -79,6 +80,7 @@ internal object MundoBarco {
         pajaros(v)
         costa(v)
         mar(v)
+        if (EscenaBotanico.puerto(v.m)) with(PuertoBarco) { puerto(v) }
         if (v.m.ficha.clima == Clima.NIEBLA) nieblaLejos(v)
     }
 
@@ -213,6 +215,9 @@ internal object MundoBarco {
         }
     }
 
+    /** Un cerro con su manto (para el puerto de cerca): seco, monte bajo; si no, selva o bosque. */
+    internal fun DrawScope.cerroDe(v: Vista, cresta: List<Offset>, base: Float, propio: Color, lejos: Float, az: Azar, seco: Boolean) = cerro(v, cresta, base, propio, lejos, az, if (seco) Manto.SECO else Manto.SELVA)
+
     /** La altura de una cresta en [x] (interpolada). */
     private fun alto(cresta: List<Offset>, x: Float): Float {
         for (i in 0 until cresta.size - 1) { val a = cresta[i]; val b = cresta[i + 1]; if (x >= a.x && x <= b.x) return a.y + (b.y - a.y) * ((x - a.x) / (b.x - a.x).coerceAtLeast(0.001f)) }
@@ -340,18 +345,6 @@ internal object MundoBarco {
         cerro(v, sinTaparAstros(perfil(Azar(Semilla.de("botanico", "lomas tropical", az.entero(1000))), 140f, 262f, H + 1f, 16f * k, 0.35f, 22, isla = true)), H + 2f, lerp(C.SELVA, C.HOJA, 0.3f), 0.5f, az, Manto.SELVA)
         morro(v, az.entre(346f, 366f), az.entre(26f, 34f) * k, az.entre(34f, 46f) * k, az.entre(-3f, 3f), 0.5f, az)
         cerro(v, perfil(Azar(Semilla.de("botanico", "punta tropical", az.entero(1000))), 318f, ANCHO + 20f, H + 1f, 10f * k, 0.3f, 14), H + 2f, lerp(C.SELVA, C.HOJA, 0.35f), 0.42f, az, Manto.SELVA)
-        if (EscenaBotanico.puerto(v.m)) {
-            // «Una ciudad de iglesias sobre una colina verde»: el pueblo blanco que sube por la loma, y las barcas.
-            val x0 = az.entre(222f, 232f); val x1 = 262f
-            val colina = listOf(Offset(x0 - 14f, H + 1f), Offset(x0 - 4f, H - 7f * k), Offset(x0 + 10f, H - 12f * k), Offset(x0 + 22f, H - 13f * k), Offset(x1 - 4f, H - 8f * k), Offset(x1 + 6f, H - 2f), Offset(x1 + 10f, H + 1f))
-            cerro(v, colina, H + 2f, lerp(C.SELVA, C.HOJA, 0.4f), 0.46f, az, Manto.SELVA)
-            pueblo(v, x0, x1 - 2f, H + 0.2f, 3.4f * k, 0.46f, az)
-            // El fuerte de la punta, bajo y blanco, con sus cañoneras.
-            val fx = az.entre(182f, 196f)
-            drawRect(l.tono(C.CAL, 0.48f), Offset(fx, H - 3.2f * k), Size(14f * k, 3.4f * k)); drawRect(l.tono(mult(C.CAL, Color(0xFF8688C6), 0.5f), 0.48f), Offset(if (v.p.solALaDerecha) fx else fx + 10f * k, H - 3.2f * k), Size(4f * k, 3.4f * k))
-            for (i in 0..3) drawRect(l.tono(C.BREA, 0.48f), Offset(fx + (2f + 3f * i) * k, H - 2.2f * k), Size(0.8f * k, 0.6f * k))
-            barcas(v, 210f, 330f, H + 1f, if (fondeado) 5 else 2, az)
-        }
         palmeras(v, 150f, 250f, H + 0.2f, az, 0.5f, 4)
         orilla(v, 140f, ANCHO, H + 1f, az, C.ROCA, true)
         // Por babor, lejos, otra punta de tierra.
@@ -424,7 +417,6 @@ internal object MundoBarco {
             drawPath(Path().apply { moveTo(x0, H - 2.6f * k); for (i in 0..14) lineTo(Offset(x0 + (x1 - x0) * i / 14f, H - 2.6f * k + az.entre(-0.3f, 0.3f))); for (i in 14 downTo 0) lineTo(Offset(x0 + (x1 - x0) * i / 14f, H - 1.6f * k + az.entre(-0.3f, 0.3f))); close() }, l.tono(C.LONA, 0.52f))
             repeat(14) { val x = az.entre(x0, x1); drawLine(l.tono(C.BREA, 0.5f).copy(alpha = 0.5f), Offset(x, H - 4.5f * k), Offset(x + 0.4f, H), 0.5f) }
         }
-        if (EscenaBotanico.puerto(v.m)) { pueblo(v, x0 + 6f, x0 + 46f, H - 4.5f * k, 2.8f * k, 0.5f, az); barcas(v, x0, x1, H + 1f, 3, az) }
         if (!verde) palmeras(v, x0, x1, H - 4f * k, az, 0.5f, 2) else palmeras(v, 140f, 258f, H, az, 0.5f, 4)
         orilla(v, x0 - 10f, ANCHO, H + 1f, az, lava, verde)
     }
@@ -446,7 +438,6 @@ internal object MundoBarco {
             for (j in 0..3) drawPath(curva(arriba.map { Offset(it.x, it.y + (H - it.y) * (0.25f + 0.2f * j) + az.entre(-0.2f, 0.2f)) }), l.tono(lerp(C.ARENA, C.CUERO, 0.55f), 0.52f).copy(alpha = 0.55f), style = Stroke(0.5f))
             repeat(16) { val x = az.entre(116f, ANCHO); drawLine(l.tono(mult(C.ARENA, Color(0xFF6A68A8), 0.6f), 0.52f).copy(alpha = 0.5f), Offset(x, H - alto * 0.7f), Offset(x + az.entre(-1f, 1f), H), az.entre(0.8f, 2f)) }
         }
-        if (EscenaBotanico.puerto(v.m)) { pueblo(v, az.entre(176f, 196f), az.entre(236f, 256f), H - alto * 0.7f, 2.6f * k, 0.55f, az); barcas(v, 170f, 320f, H + 1f, 3, az) }
         orilla(v, 116f, ANCHO, H + 1f, az, lerp(C.ARENA, C.CUERO, 0.3f), true)
     }
 
@@ -489,7 +480,6 @@ internal object MundoBarco {
         bruma(v, 100f, ANCHO, H + 1f, 12f)
         val cerros = sinTaparAstros(perfil(Azar(Semilla.de("botanico", "cerros secos", az.entero(1000))), 120f, ANCHO + 20f, H + 1f, 20f * k, 0.5f, 28))
         cerro(v, cerros, H + 2f, lerp(C.ARENA, C.CUERO, 0.42f), 0.55f, az, Manto.SECO)
-        if (EscenaBotanico.puerto(v.m)) { pueblo(v, az.entre(166f, 186f), az.entre(232f, 252f), H - 1f, 2.9f * k, 0.52f, az, ruinas = EscenaBotanico.ruinas(v.m)); barcas(v, 160f, 330f, H + 1f, 4, az) }
         if (EscenaBotanico.terremoto(v.m)) {
             // El terremoto: los cerros se desmoronan en derrumbes claros y el polvo sube en nubes pardas sobre la costa.
             val tz = v.m.azar("terremoto")
@@ -535,7 +525,6 @@ internal object MundoBarco {
             mancha(Offset(x0 + 52f, H - 37f), 18f, 4f, l.tono(Color.White, 0.4f), 0.5f)
         }
         cerro(v, sinTaparAstros(perfil(Azar(Semilla.de("botanico", "colinas cerca", az.entero(1000))), 126f, ANCHO + 20f, H + 1f, 15f * k, 0.3f, 28)), H + 2f, verde, 0.55f, az, if (pardo) Manto.SECO else Manto.BOSQUE)
-        if (EscenaBotanico.puerto(v.m)) { pueblo(v, az.entre(214f, 230f), az.entre(250f, 258f), H, 2.7f * k, 0.52f, az); barcas(v, 190f, 330f, H + 1f, 3, az) }
         orilla(v, 126f, ANCHO, H + 1f, az, C.ROCA, true)
     }
 
@@ -555,11 +544,11 @@ internal object MundoBarco {
             drawRect(l.tono(lerp(C.ROCA, C.LONA, 0.28f), 0.54f), Offset(116f, H - 4.5f * k), Size(ANCHO, 6f))
             repeat(20) { val xx = az.entre(116f, ANCHO); drawLine(l.tono(mult(C.ROCA, Color(0xFF6A68A8), 0.6f), 0.54f).copy(alpha = 0.6f), Offset(xx, H - 4.5f * k), Offset(xx + az.entre(-1f, 1f), H + 1f), az.entre(0.6f, 1.6f)) }
         }
-        pueblo(v, az.entre(166f, 186f), az.entre(230f, 248f), H - 4f * k, 2.6f * k, 0.55f, az, gris = true)
+        if (!EscenaBotanico.puerto(v.m)) pueblo(v, az.entre(166f, 186f), az.entre(230f, 248f), H - 4f * k, 2.6f * k, 0.55f, az, gris = true)
         val cx = az.entre(346f, 362f)
         drawRect(l.tono(lerp(C.ROCA, C.LONA, 0.35f), 0.55f), Offset(cx, H - 17f * k), Size(8f, 6f)); drawRect(l.tono(lerp(C.ROCA, C.LONA, 0.25f), 0.55f), Offset(cx + 2f, H - 20f * k), Size(4f, 3f))
         drawRect(l.tono(mult(C.ROCA, Color(0xFF6A68A8), 0.5f), 0.55f), Offset(if (v.p.solALaDerecha) cx else cx + 5f, H - 17f * k), Size(3f, 6f))
-        barcas(v, 180f, 330f, H + 1f, 4, az)
+        if (!EscenaBotanico.puerto(v.m)) barcas(v, 180f, 330f, H + 1f, 4, az)
         orilla(v, 116f, ANCHO, H + 1f, az, C.ROCA, false)
     }
 
@@ -578,42 +567,48 @@ internal object MundoBarco {
         val (propio, hondo, orilla) = aguaDe(costa)
         val marea = EscenaBotanico.marejada(m); val tormenta = EscenaBotanico.tormenta(m); val calma = EscenaBotanico.calma(m)
         val zona = Rect(-80f, H, ANCHO + 80f, ALTO + 40f)
-        val lejosC = lerp(l.tono(hondo, 0.2f), l.bajo, 0.22f); val medioC = lerp(l.tono(propio), l.medio, 0.1f); val cercaC = lerp(l.tono(lerp(propio, orilla, 0.5f)), l.alto, 0.08f)
-        drawRect(Brush.verticalGradient(0f to lerp(lejosC, l.bajo, 0.6f), 0.012f to lerp(lejosC, l.bajo, 0.25f), 0.05f to lejosC, 0.2f to lerp(lejosC, medioC, 0.55f), 0.5f to medioC, 1f to cercaC, startY = zona.top, endY = zona.bottom), zona.topLeft, zona.size)
-        val az = m.azar("mar")
-        // Las rachas del viento (más oscuras, rizadas) y las calmas (más claras, que reflejan el cielo), tendidas.
-        repeat(9) { val pr = az.real(); val y = yDelAgua(18f + 900f * pr * pr * pr); mancha(Offset(az.entre(-40f, ANCHO + 40f), y), az.entre(40f, 150f) * (0.4f + (y - H) / 60f), 1f + (y - H) * 0.05f, l.tono(hondo), 0.22f + 0.1f * marea) }
-        repeat(7) { val pr = az.real(); val y = yDelAgua(18f + 900f * pr * pr * pr); mancha(Offset(az.entre(-40f, ANCHO + 40f), y), az.entre(40f, 160f) * (0.4f + (y - H) / 60f), 0.8f + (y - H) * 0.04f, lerp(l.bajo, Color.White, 0.2f), if (calma) 0.4f else 0.16f) }
+        // El agua de la biblioteca (la de Helénico y Pirata): el degradado de hondo a claro, las rachas y las calmas, y los
+        // rizos, más largos y curvos cuanto más cerca; con el color de las aguas del tramo y el viento del día.
+        agua(l, zona, m.azar("mar"), propio = propio, viento = if (calma) 0f else (0.3f + 0.7f * marea).coerceAtMost(1f), hondo = hondo, orilla = orilla)
+        val az = m.azar("mar de fondo")
+        nubesEnElAgua(v, az)
         costaEnElAgua(v, hondo)
-        // La mar de fondo: filas de lomos que se agrandan al acercarse, cada uno con su cara de sombra y su cresta de luz.
-        val oscuro = lerp(l.tono(hondo), Color(0xFF0C2238), 0.3f); val claro = lerp(l.tono(orilla), lerp(Color.White, l.solColor, 0.3f), 0.35f)
-        val alza = if (calma) 0.15f else 0.45f + 1.2f * marea
-        var d = 15f; var fila = 0
-        while (d < 1600f) {
-            val y = yDelAgua(d); val esc = (BarcoBotanico.F * 4.2f / d) / 40f              // 1 a unos 20 m
-            var x = -60f + az.entre(0f, 40f) * esc
+        // La mar de fondo: filas de lomos que se agrandan al acercarse, cada uno con su seno de sombra, su espalda que copia el
+        // cielo y su cresta de luz; con viento, los borreguillos rompen en blanco y dejan su reguero.
+        val oscuro = lerp(l.tono(hondo), Color(0xFF0C2238), 0.35f); val claro = lerp(l.tono(orilla), lerp(Color.White, l.solColor, 0.3f), 0.45f)
+        val cielo = lerp(l.medio, Color.White, 0.2f)
+        val alza = if (calma) 0.12f else 0.55f + 1.25f * marea
+        var d = 13f
+        while (d < 1800f) {
+            val y = yDelAgua(d); val esc = (BarcoBotanico.F * 4.2f / d) / 40f                 // 1 a unos 30 m
+            var x = -70f + az.entre(0f, 50f) * esc.coerceAtMost(1f)
             while (x < ANCHO + 40f) {
-                val w = (30f + 90f * esc) * az.entre(0.6f, 1.5f); val alto = (0.5f + 5f * esc) * alza * az.entre(0.6f, 1.2f); val yy = y + az.entre(-1f, 1f) * esc * 2f
-                if (az.real() > 0.18f) {
-                    drawPath(Path().apply { moveTo(x, yy); cubicTo(x + w * 0.3f, yy - alto, x + w * 0.62f, yy - alto * 1.1f, x + w, yy); cubicTo(x + w * 0.7f, yy + alto * 0.7f, x + w * 0.3f, yy + alto * 0.7f, x, yy); close() }, oscuro.copy(alpha = (0.12f + 0.12f * marea) * (0.6f + 0.4f * esc.coerceAtMost(1f))))
-                    drawPath(Path().apply { moveTo(x + w * 0.1f, yy - alto * 0.3f); cubicTo(x + w * 0.33f, yy - alto * 1.0f, x + w * 0.6f, yy - alto * 1.08f, x + w * 0.9f, yy - alto * 0.24f) }, claro.copy(alpha = (0.16f + 0.2f * marea) * (1f - 0.55f * l.noche)), style = Stroke((0.4f + 1.1f * esc).coerceAtMost(2.2f), cap = StrokeCap.Round))
-                    // Los borreguillos: la cresta que rompe en blanco cuando sopla.
-                    if (marea > 0.42f && az.real() < 0.25f + 0.5f * (marea - 0.42f)) {
-                        val cx = x + w * az.entre(0.35f, 0.62f); val bw = w * az.entre(0.12f, 0.22f)
-                        drawPath(Path().apply { moveTo(cx - bw, yy - alto * 0.75f); cubicTo(cx - bw * 0.4f, yy - alto * 1.5f, cx + bw * 0.3f, yy - alto * 1.4f, cx + bw, yy - alto * 0.7f); cubicTo(cx + bw * 0.3f, yy - alto * 0.5f, cx - bw * 0.4f, yy - alto * 0.5f, cx - bw, yy - alto * 0.75f); close() }, l.tono(Color.White).copy(alpha = 0.75f * (1f - 0.5f * l.noche)))
-                        drawLine(l.tono(Color.White).copy(alpha = 0.3f), Offset(cx - bw * 1.5f, yy - alto * 0.3f), Offset(cx + bw * 1.2f, yy - alto * 0.25f), (0.4f + 0.5f * esc).coerceAtMost(1.4f), StrokeCap.Round)
+                val w = (34f + 110f * esc) * az.entre(0.6f, 1.5f); val alto = (0.6f + 5.5f * esc) * alza * az.entre(0.6f, 1.25f); val yy = y + az.entre(-1f, 1f) * esc * 2.5f
+                if (az.real() > 0.12f) {
+                    val k = esc.coerceAtMost(1.4f)
+                    // El seno, en sombra, debajo de la cresta.
+                    drawPath(Path().apply { moveTo(x, yy); cubicTo(x + w * 0.3f, yy - alto, x + w * 0.62f, yy - alto * 1.1f, x + w, yy); cubicTo(x + w * 0.7f, yy + alto * 0.9f, x + w * 0.3f, yy + alto * 0.9f, x, yy); close() }, oscuro.copy(alpha = (0.2f + 0.2f * marea) * (0.55f + 0.45f * k.coerceAtMost(1f))))
+                    // La espalda del lomo, que devuelve el cielo.
+                    drawPath(Path().apply { moveTo(x + w * 0.12f, yy - alto * 0.45f); cubicTo(x + w * 0.34f, yy - alto * 1.25f, x + w * 0.62f, yy - alto * 1.3f, x + w * 0.88f, yy - alto * 0.4f); cubicTo(x + w * 0.62f, yy - alto * 0.9f, x + w * 0.36f, yy - alto * 0.9f, x + w * 0.12f, yy - alto * 0.45f); close() }, cielo.copy(alpha = 0.16f * (1f - 0.5f * l.noche)))
+                    // La cresta, de luz.
+                    drawPath(Path().apply { moveTo(x + w * 0.1f, yy - alto * 0.32f); cubicTo(x + w * 0.33f, yy - alto * 1.02f, x + w * 0.6f, yy - alto * 1.1f, x + w * 0.9f, yy - alto * 0.26f) }, claro.copy(alpha = (0.28f + 0.26f * marea) * (1f - 0.5f * l.noche)), style = Stroke((0.5f + 1.6f * k).coerceAtMost(2.8f), cap = StrokeCap.Round))
+                    if (marea > 0.38f && az.real() < 0.22f + 0.6f * (marea - 0.38f)) {
+                        val cx = x + w * az.entre(0.35f, 0.62f); val bw = w * az.entre(0.1f, 0.2f)
+                        drawPath(Path().apply { moveTo(cx - bw, yy - alto * 0.75f); cubicTo(cx - bw * 0.4f, yy - alto * 1.6f, cx + bw * 0.3f, yy - alto * 1.5f, cx + bw, yy - alto * 0.7f); cubicTo(cx + bw * 0.3f, yy - alto * 0.45f, cx - bw * 0.4f, yy - alto * 0.45f, cx - bw, yy - alto * 0.75f); close() }, l.tono(Color.White).copy(alpha = 0.85f * (1f - 0.5f * l.noche)))
+                        // El reguero de espuma que deja en la espalda.
+                        repeat(3) { j -> drawLine(l.tono(Color.White).copy(alpha = (0.4f - 0.1f * j) * (1f - 0.5f * l.noche)), Offset(cx - bw * (1.2f + 0.6f * j), yy - alto * (0.4f - 0.15f * j)), Offset(cx + bw * (1f - 0.3f * j), yy - alto * (0.35f - 0.15f * j)), (0.5f + 0.7f * k).coerceAtMost(1.8f), StrokeCap.Round) }
                     }
                 }
-                x += w * az.entre(0.9f, 1.4f)
+                x += w * az.entre(0.85f, 1.35f)
             }
-            d *= 1.32f; fila++
+            d *= 1.28f
         }
-        // Los rizos cortos entre los lomos.
-        repeat(320) {
-            val pr = az.real(); val y = yDelAgua(14f + 1400f * pr * pr * pr); val esc = ((y - H) / 40f).coerceIn(0.05f, 2.5f)
-            val largo = (1.5f + 9f * esc) * az.entre(0.5f, 1.3f); val x = az.entre(-20f, ANCHO + 20f)
-            val c = (if (az.real() > 0.5f) lerp(l.bajo, Color.White, 0.3f) else oscuro).copy(alpha = (0.1f + 0.15f * az.real()) * (1f + 0.5f * marea))
-            drawPath(Path().apply { moveTo(x, y); cubicTo(x + largo * 0.3f, y - 0.6f * esc, x + largo * 0.7f, y - 0.6f * esc, x + largo, y + 0.2f) }, c, style = Stroke(0.45f + 0.5f * esc.coerceAtMost(1.5f), cap = StrokeCap.Round))
+        // Los rizos de cerca, gruesos para que se lean: cada uno, su sombra debajo y su filo de luz encima.
+        repeat(130) {
+            val pr = az.real(); val y = yDelAgua(12f + 140f * pr * pr); val k = ((y - H) / 40f).coerceIn(0.2f, 2.5f)
+            val largo = (3f + 9f * k) * az.entre(0.6f, 1.3f); val x = az.entre(140f, ANCHO + 10f)
+            drawPath(Path().apply { moveTo(x, y); cubicTo(x + largo * 0.3f, y + 0.9f * k, x + largo * 0.7f, y + 0.9f * k, x + largo, y) }, oscuro.copy(alpha = 0.22f + 0.1f * marea), style = Stroke(0.5f + 0.6f * k, cap = StrokeCap.Round))
+            drawPath(Path().apply { moveTo(x + largo * 0.15f, y - 0.6f * k); cubicTo(x + largo * 0.35f, y - 1.4f * k, x + largo * 0.65f, y - 1.4f * k, x + largo * 0.85f, y - 0.6f * k) }, lerp(cielo, Color.White, 0.3f).copy(alpha = (0.3f + 0.1f * marea) * (1f - 0.5f * l.noche)), style = Stroke(0.4f + 0.45f * k, cap = StrokeCap.Round))
         }
         if (tormenta) olasGrandes(v, hondo, orilla)
         if (calma) {
@@ -624,7 +619,7 @@ internal object MundoBarco {
         estela(l, zona, m.azar("estela"))
         calleDeLuz(v)
         // La sombra del barco en el agua de estribor, cuando el sol viene de babor: una franja más honda junto al costado.
-        if (v.r.fuerza > 0.05f && v.sol.sx > 0.05f) {
+        if (v.r.fuerza > 0.05f && v.sol.sx > 0.05f && v.r.dia > 0.5f) {
             val pts = (0..20).map { val z = 2f + 24f * it / 20f; BarcoBotanico.pc(BarcoBotanico.estribor(z) + v.sol.sx * 2.8f, -2.6f, z + v.sol.sz * 2.8f) }
             val pegada = (0..20).map { val z = 2f + 24f * it / 20f; BarcoBotanico.pc(BarcoBotanico.estribor(z), -2.6f, z) }
             drawPath(poligono(pegada + pts.reversed()), Color(0xFF14304A).copy(alpha = 0.3f * v.r.fuerza), blendMode = BlendMode.Multiply)
@@ -633,25 +628,45 @@ internal object MundoBarco {
     }
 
     /**
-     * La calle de luz del sol bajo (o de la luna) en el agua: trazos tendidos bajo el astro, estrechos y apretados junto al
-     * horizonte y más abiertos y sueltos hacia quien mira, cálidos al alba y a la tarde, de plata con la luna.
+     * El cielo en el agua: bajo cada claro del horizonte, el agua lejana copia las nubes en manchas tendidas y rotas, más
+     * largas cuanto más quieta está (fondeado, la calma).
+     */
+    private fun DrawScope.nubesEnElAgua(v: Vista, az: Azar) {
+        val l = v.l; if (EscenaBotanico.tormenta(v.m)) return
+        val quieta = if (EscenaBotanico.calma(v.m)) 1f else if (EscenaBotanico.fondeado(v.m)) 0.7f else 0.4f
+        val nz = v.m.azar("nubes en el agua")
+        val blanco = lerp(l.tono(Color.White), l.bajo, 0.35f)
+        repeat(6) {
+            val x = nz.entre(-20f, ANCHO); val w = nz.entre(24f, 70f)
+            reflejoRoto(x, x + w, H + nz.entre(2f, 8f), 6f + 22f * quieta, blanco, (0.18f + 0.18f * quieta) * (1f - 0.6f * l.noche), nz, 1f)
+        }
+        az.real()
+    }
+
+    /**
+     * La calle de luz del sol (o de la luna) en el agua: trazos tendidos bajo el astro, estrechos y apretados junto al
+     * horizonte y más abiertos y sueltos hacia quien mira, cálidos al alba y a la tarde, de plata con la luna; con el sol
+     * alto, un campo ancho de chispas.
      */
     private fun DrawScope.calleDeLuz(v: Vista) {
         val l = v.l
-        val conSol = l.solAltura > -0.05f && l.solAltura < 0.75f && l.solFuerza > 0.3f && l.noche < 0.6f
+        val conSol = l.solAltura > -0.05f && l.solFuerza > 0.3f && l.noche < 0.6f
         val conLuna = !conSol && v.luna > 0.08f
         if (!conSol && !conLuna) return
         val x0 = (if (conSol) l.solX else l.lunaX) * ANCHO
-        val color = if (conSol) lerp(Color(0xFFFFF0C8), l.solColor, 0.45f) else EscenaBotanico.LUZ_DE_LUNA
-        val fuerza = if (conSol) l.solFuerza * (1f - 0.8f * ((l.solAltura - 0.2f) / 0.55f).coerceIn(0f, 1f)) else 1.6f * v.luna
+        val bajo = if (conSol) (1f - l.solAltura / 0.9f).coerceIn(0f, 1f) else 0.6f
+        val color = if (conSol) lerp(Color(0xFFFFF4D2), l.solColor, 0.4f) else EscenaBotanico.LUZ_DE_LUNA
+        val fuerza = if (conSol) l.solFuerza * (0.45f + 0.55f * bajo) else 1.8f * v.luna
         val az = Azar(Semilla.de(v.m.ficha.semilla, "calle de luz"))
-        repeat(150) {
-            val pr = az.real(); val y = H + 1f + 110f * pr * pr
-            val ancho = 6f + 70f * pr
+        // El resplandor de la calle, junto al horizonte.
+        mancha(Offset(x0, H + 4f), 30f + 50f * (1f - bajo), 4f, color, (0.4f * fuerza).coerceIn(0f, 1f))
+        repeat(260) {
+            val pr = az.real(); val y = H + 1f + 120f * pr * pr
+            val ancho = (4f + 60f * pr) * (1f + 2.2f * (1f - bajo))
             val u = (az.real() + az.real() - 1f)
             val x = x0 + u * ancho
-            val largo = (1.5f + 9f * pr) * az.entre(0.5f, 1.3f)
-            drawLine(color.copy(alpha = (0.7f * fuerza * (1f - 0.7f * kotlin.math.abs(u)) * az.entre(0.4f, 1f)).coerceIn(0f, 1f)), Offset(x - largo / 2f, y), Offset(x + largo / 2f, y), 0.5f + 0.8f * pr, StrokeCap.Round, blendMode = BlendMode.Screen)
+            val largo = (2f + 12f * pr) * az.entre(0.5f, 1.3f)
+            drawLine(color.copy(alpha = (0.9f * fuerza * (1f - 0.6f * kotlin.math.abs(u)) * az.entre(0.35f, 1f)).coerceIn(0f, 1f)), Offset(x - largo / 2f, y), Offset(x + largo / 2f, y), 0.6f + 1.2f * pr, StrokeCap.Round, blendMode = BlendMode.Screen)
         }
     }
 

@@ -60,8 +60,72 @@ internal object TallerBarco {
     private val SITIO_FRASCOS = sitio(0.3f, 3.0f, -0.25f)
     private val SITIO_BALDE = sitio(0.62f, 2.65f, 0f)
 
+    private const val RADIO_CUBA = 0.22f
+    private const val ALTO_CUBA = 0.8f
+
+    /**
+     * La cuba del agua dulce, abierta: las duelas, cada una de su tono, con su veta, sus golpes y el verdín de abajo; los
+     * aros de hierro con su óxido y sus chorreras; el borde mojado; el agua dentro, que copia el cielo; el cazo de latón
+     * colgado del canto, y el cerco de agua en la cubierta.
+     */
+    private fun DrawScope.cubaDeAgua(v: Vista, p: Pincel, sol: Sol3) {
+        val s = SITIO_CUBA; val e = s.escala(0f, 0f); val r = RADIO_CUBA; val h = ALTO_CUBA; val az = Azar(Semilla.de("botanico", "cuba propia"))
+        fun panza(y: Float) = r * (1f + 0.09f * sin(PI_F * y / h))
+        // El cerco de agua en la cubierta.
+        mancha(s.p(0f, 0f, -0.05f), r * e * 1.5f, r * e * 0.35f, lerp(v.l.medio, C.MADERA_OSC, 0.5f), 0.35f)
+        val n = 22; val ys = (0..6).map { it / 6f }
+        val vistas = (0 until n).filter { i -> val a = (2 * PI_F * (i + 0.5f) / n); s.seVe(V3(r * cos(a), h * 0.5f, r * sin(a)), V3(cos(a), 0f, sin(a))) }
+        for (i in vistas.sortedByDescending { val a = (2 * PI_F * (it + 0.5f) / n); s.hondo(V3(r * cos(a), 0f, r * sin(a))) }) {
+            val a0 = 2 * PI_F * i / n; val a1 = 2 * PI_F * (i + 1) / n; val am = (a0 + a1) / 2f
+            val pts = ys.map { y -> s.p(panza(y * h) * cos(a0), y * h, panza(y * h) * sin(a0)) } + ys.reversed().map { y -> s.p(panza(y * h) * cos(a1), y * h, panza(y * h) * sin(a1)) }
+            val duela = lerp(C.MADERA, listOf(C.ARENA, C.MADERA_OSC, C.CUERO, C.TECA)[az.entero(4)], az.entre(0.05f, 0.28f))
+            val t = sol.t(s.normal(V3(cos(am), 0f, sin(am))))
+            val f = poligono(pts)
+            drawPath(f, p.por(duela, t))
+            clipPath(f) {
+                // La veta: rayas largas a lo alto de la duela; los golpes, claros; el verdín y lo mojado de abajo.
+                repeat(3) { val u = az.entre(0.2f, 0.8f); val aa = a0 + (a1 - a0) * u; drawLine(p.sombra(duela).copy(alpha = 0.35f), s.p(panza(0f) * cos(aa), 0.04f, panza(0f) * sin(aa)), s.p(panza(h) * cos(aa + az.entre(-0.02f, 0.02f)), h * 0.96f, panza(h) * sin(aa)), (e * 0.004f).coerceIn(0.3f, 0.8f)) }
+                if (az.real() > 0.5f) { val y = az.entre(0.25f, 0.8f) * h; drawLine(p.luz(lerp(duela, C.LONA, 0.4f)).copy(alpha = 0.55f), s.p(panza(y) * cos(am - 0.04f), y, panza(y) * sin(am - 0.04f)), s.p(panza(y) * cos(am + 0.05f), y - 0.02f, panza(y) * sin(am + 0.05f)), (e * 0.006f).coerceIn(0.3f, 1f), StrokeCap.Round) }
+                drawPath(poligono(listOf(s.p(panza(0f) * cos(a0), 0f, panza(0f) * sin(a0)), s.p(panza(0f) * cos(a1), 0f, panza(0f) * sin(a1)), s.p(panza(0.14f * h) * cos(a1), 0.14f * h, panza(0.14f * h) * sin(a1)), s.p(panza(0.12f * h) * cos(a0), 0.12f * h, panza(0.12f * h) * sin(a0)))), p.sombra(lerp(C.MADERA, C.SELVA, 0.45f)).copy(alpha = 0.55f))
+            }
+            drawPath(Path().apply { moveTo(pts[0]); for (q in pts.subList(1, ys.size)) lineTo(q) }, p.sombra(C.BREA).copy(alpha = 0.4f), style = Stroke((e * 0.005f).coerceIn(0.35f, 0.9f)))
+        }
+        // Los aros de hierro, con su filo de luz y el óxido que chorrea por las duelas.
+        val orden = vistas.sorted()
+        for (y in listOf(0.08f, 0.28f, 0.72f, 0.93f)) {
+            if (orden.isEmpty()) continue
+            val pts = (orden + listOf(orden.last() + 1)).map { j -> val a = 2 * PI_F * j / n; s.p(panza(y * h) * 1.02f * cos(a), y * h, panza(y * h) * 1.02f * sin(a)) }
+            drawPath(Path().apply { moveTo(pts[0]); for (q in pts.drop(1)) lineTo(q) }, p.sombra(C.HIERRO), style = Stroke((e * 0.028f).coerceIn(0.6f, 3.4f)))
+            drawPath(Path().apply { moveTo(pts[0] + Offset(0f, -0.5f)); for (q in pts.drop(1)) lineTo(q + Offset(0f, -0.5f)) }, p.luz(C.HIERRO).copy(alpha = 0.45f), style = Stroke((e * 0.008f).coerceIn(0.3f, 1f)))
+            repeat(4) { val q = pts[az.entero(pts.size)]; drawLine(p.medio(C.CUERO).copy(alpha = 0.5f), q, q + Offset(az.entre(-0.3f, 0.3f), e * az.entre(0.03f, 0.1f)), (e * 0.009f).coerceIn(0.4f, 1.4f), StrokeCap.Round) }
+        }
+        // La boca: el canto de las duelas, mojado, y el agua dentro, con el cielo y un brillo.
+        val boca = (0..24).map { j -> val a = 2 * PI_F * j / 24; s.p(r * 1.06f * cos(a), h, r * 1.06f * sin(a)) }
+        drawPath(poligono(boca), p.arriba(lerp(C.MADERA, C.MADERA_OSC, 0.3f)))
+        // Por dentro, las duelas del fondo en sombra; el agua, un palmo más abajo, deja ver esa pared.
+        val dentro = (0..24).map { j -> val a = 2 * PI_F * j / 24; s.p(r * 0.95f * cos(a), h - 0.005f, r * 0.95f * sin(a)) }
+        drawPath(poligono(dentro), p.sombra(lerp(C.MADERA_OSC, C.BREA, 0.3f)))
+        val agua = (0..24).map { j -> val a = 2 * PI_F * j / 24; s.p(r * 0.93f * cos(a), h - 0.14f, r * 0.93f * sin(a)) }
+        clipPath(poligono(dentro)) {
+            drawPath(poligono(agua), Brush.verticalGradient(listOf(lerp(v.l.tono(lerp(C.MAR_HONDO, C.BREA, 0.3f)), v.l.medio, 0.3f), v.l.tono(lerp(C.MAR_HONDO, C.BREA, 0.5f))), agua.minOf { it.y }, agua.maxOf { it.y }))
+            for (k in 0 until 8) { val a = PI_F + PI_F * (k + 0.5f) / 8f; drawLine(p.sombra(C.BREA).copy(alpha = 0.4f), s.p(r * 0.95f * cos(a), h, r * 0.95f * sin(a)), s.p(r * 0.93f * cos(a), h - 0.14f, r * 0.93f * sin(a)), 0.5f) }
+        }
+        val c = s.p(0.03f, h - 0.14f, 0.04f)
+        mancha(c, r * e * 0.5f, r * e * 0.08f, lerp(v.l.bajo, Color.White, 0.4f), 0.5f * (1f - 0.6f * v.l.noche))
+        if (v.lu.farol > 0.05f) mancha(c, r * e * 0.3f, r * e * 0.06f, C.LUMBRE, 0.6f * v.lu.farol)
+        if (v.nieve > 0.02f) drawPath(poligono(agua), p.luz(C.NIEVE).copy(alpha = 0.7f * v.nieve))
+        // El cazo de latón, colgado del canto por su mango.
+        val m0 = s.p(-r * 0.9f, h + 0.02f, -r * 0.4f); val m1 = s.p(-r * 1.5f, h - 0.1f, -r * 0.75f)
+        drawLine(p.medio(C.MADERA), m0, s.p(r * 0.3f, h + 0.06f, r * 0.1f), (e * 0.02f).coerceAtLeast(0.6f), StrokeCap.Round)
+        val cz = m1; val rc = e * 0.06f
+        drawOval(Brush.horizontalGradient(listOf(p.sombra(C.LATON), p.luz(C.LATON), p.medio(C.LATON)), cz.x - rc, cz.x + rc), Offset(cz.x - rc, cz.y - rc * 0.7f), Size(rc * 2f, rc * 1.4f))
+        drawLine(p.medio(C.LATON), m0, cz + Offset(rc * 0.6f, -rc * 0.5f), (e * 0.012f).coerceAtLeast(0.5f))
+    }
+
+    private const val PI_F = 3.1415927f
+
     private fun frascos() = PiezasBotanico.CajaDeFrascos(SITIO_FRASCOS, Semilla.de("botanico", "frascos"))
-    private fun cuba(v: Vista) = PiezasBotanico.Cuba(SITIO_CUBA, Semilla.de("botanico", "cuba"), radio = 0.25f, alto = 0.9f, nieve = v.nieve)
+    private fun cuba(v: Vista) = PiezasBotanico.Cuba(SITIO_CUBA, Semilla.de("botanico", "cuba"), radio = RADIO_CUBA, alto = ALTO_CUBA, nieve = v.nieve)
 
     /** Los cajones de hoy, trincados contra la amurada: los de abajo primero, de popa a proa. */
     private fun cajones(v: Vista): List<PiezasBotanico.Cajon> = (0 until BarcoBotanico.cajonesEnCubierta(v.m)).map { i -> val h = HUECOS[i]
@@ -82,7 +146,7 @@ internal object TallerBarco {
     fun cuerpos(v: Vista): List<List<V3>> = buildList {
         fun caja(s: Sitio, x0: Float, x1: Float, y0: Float, y1: Float, z0: Float, z1: Float) = esquinas(x0, x1, y0, y1, z0, z1).map { V3(s.mx(it.x, it.z), it.y, s.mz(it.x, it.z)) }
         for (c in cajones(v)) add(caja(c.s, c.x0, c.x1, c.y0, c.y1, c.z0, c.z1))
-        add(caja(SITIO_CUBA, -0.25f, 0.25f, 0f, 0.9f, -0.25f, 0.25f))
+        add(caja(SITIO_CUBA, -RADIO_CUBA, RADIO_CUBA, 0f, ALTO_CUBA, -RADIO_CUBA, RADIO_CUBA))
         add(caja(SITIO_BALDE, -0.16f, 0.16f, 0f, 0.3f, -0.16f, 0.16f))
     }
 
@@ -122,14 +186,14 @@ internal object TallerBarco {
             val (pcj, scj) = v.pincel(c.s.mx(0f, 0f), c.s.mz(0f, 0f), c.base + 0.3f); with(PiezasBotanico) { cajon(c, pcj, scj) } }
         // El balde y el lampazo del baldeo; la cuba del agua, en la esquina.
         cosas += parte(SITIO_BALDE.pie.y) { balde(v) }
-        cosas += parte(pc(0.9f, 0f, 5.6f).y) { lampazo(v) }
+        cosas += parte(pc(0.9f, 0f, 6.6f).y) { lampazo(v) }
         val cu = cuba(v)
         cosas += parte(ALTO + 60f) {
-            val (pq, sq) = v.pincel(1.15f, 2.05f, 0.8f); with(PiezasBotanico) { cuba(cu, pq, sq) }
+            val (pq, sq) = v.pincel(1.15f, 2.05f, 0.8f); cubaDeAgua(v, pq, sq)
             // La trinca: dos vueltas de cabo que la abrazan por delante y van a las argollas de la amurada.
-            val s = SITIO_CUBA; val g = (s.escala(0f, 0f) * 0.022f).coerceIn(0.8f, 3f)
-            for (h in listOf(0.34f, 0.7f)) {
-                val vuelta = (0..12).map { i -> val a = (Math.PI + Math.PI * i / 12.0).toFloat(); s.p(0.262f * cos(a), h + 0.012f * sin(a * 3f), 0.262f * sin(a)) }
+            val s = SITIO_CUBA; val g = (s.escala(0f, 0f) * 0.02f).coerceIn(0.8f, 3f)
+            for (h in listOf(0.3f, 0.62f)) {
+                val vuelta = (0..12).map { i -> val a = (Math.PI + Math.PI * i / 12.0).toFloat(); s.p((RADIO_CUBA + 0.015f) * cos(a), h + 0.012f * sin(a * 3f), (RADIO_CUBA + 0.015f) * sin(a)) }
                 drawPath(Path().apply { moveTo(vuelta[0]); for (q in vuelta.drop(1)) lineTo(q) }, pq.sombra(C.CANAMO), style = Stroke(g, cap = StrokeCap.Round))
                 drawPath(Path().apply { moveTo(vuelta[0] + Offset(0f, -g * 0.3f)); for (q in vuelta.drop(1)) lineTo(q + Offset(0f, -g * 0.3f)) }, pq.luz(C.CANAMO).copy(alpha = 0.6f), style = Stroke(g * 0.4f, cap = StrokeCap.Round))
             }
@@ -291,8 +355,8 @@ internal object TallerBarco {
 
     /** El lampazo del baldeo, recostado en la amurada detrás de los cajones, con sus filásticas mojadas en el suelo. */
     private fun DrawScope.lampazo(v: Vista) {
-        val (p, _) = v.pincel(0.9f, 5.6f, 0.5f); val e = k(5.6f)
-        val cab = pc(0.9f, 0f, 5.6f); val tope = pc(estribor(5.15f) - 0.04f, REGALA + 0.16f, 5.15f)
+        val (p, _) = v.pincel(0.9f, 6.6f, 0.5f); val e = k(6.6f)
+        val cab = pc(0.9f, 0f, 6.6f); val tope = pc(estribor(6.15f) - 0.04f, REGALA + 0.16f, 6.15f)
         drawLine(p.sombra(C.MADERA), cab + Offset(0f, -e * 0.08f), tope, e * 0.035f, StrokeCap.Round); drawLine(p.luz(lerp(C.MADERA, C.ARENA, 0.4f)), cab + Offset(-e * 0.006f, -e * 0.08f), tope + Offset(-e * 0.006f, 0f), e * 0.012f, StrokeCap.Round)
         repeat(16) { val a = -2.6f + it * 0.14f; drawLine((if (it % 2 == 0) p.medio(lerp(C.CANAMO, C.LONA, 0.3f)) else p.sombra(C.CANAMO)), cab + Offset(0f, -e * 0.08f), cab + Offset(cos(a) * e * 0.2f, -e * 0.02f + sin(a).coerceAtLeast(-0.3f) * e * 0.05f + e * 0.04f), (e * 0.012f).coerceAtLeast(0.5f), StrokeCap.Round) }
         mancha(cab + Offset(0f, e * 0.02f), e * 0.28f, e * 0.06f, lerp(v.l.medio, Color.White, 0.1f), 0.25f * (1f - 0.6f * v.l.noche))
@@ -316,11 +380,15 @@ internal object TallerBarco {
 
     /** El farol de popa, sobre la regala de la aleta: de latón, con sus vidrios; de noche alumbra la amurada, los cajones y el agua. */
     private fun DrawScope.farol(v: Vista) {
-        val p = v.p; val q = FAROL; val e = k(3.3f); val f = v.lu.farol
-        val base = pc(1.66f, REGALA + 0.02f, 3.3f); val codo = base + Offset(0f, -(base.y - q.y) - e * 0.22f)
-        drawLine(p.sombra(C.HIERRO), base, codo, (e * 0.03f).coerceAtLeast(0.6f)); drawLine(p.sombra(C.HIERRO), codo, codo + Offset(-e * 0.1f, 0f), (e * 0.025f).coerceAtLeast(0.5f))
-        drawLine(p.luz(C.HIERRO).copy(alpha = 0.5f), base + Offset(-0.4f, 0f), codo + Offset(-0.4f, 0f), (e * 0.01f).coerceAtLeast(0.3f))
-        with(PiezasBotanico) { farol(p, q + Offset(-e * 0.1f, 0f), e * 0.3f, f) }
-        if (f > 0.05f) resplandor(q + Offset(-e * 0.3f, e * 0.4f), e * 1.4f, 0.25f * f, C.LUMBRE)
+        val (p, _) = v.pincel(1.3f, BarcoBotanico.Z_FAROL, 1f); val e = k(BarcoBotanico.Z_FAROL); val f = v.lu.farol
+        // El pescante: una escuadra de hierro clavada en la regala, que sale hacia dentro, con su tornapunta; el farol cuelga de su gancho.
+        val z = BarcoBotanico.Z_FAROL
+        val pie = pc(estribor(z) - 0.03f, REGALA + 0.02f, z); val punta = pc(1.2f, REGALA + 0.12f, z); val tirante = pc(estribor(z) - 0.03f, REGALA - 0.22f, z)
+        drawLine(p.sombra(C.HIERRO), pie, punta, (e * 0.03f).coerceAtLeast(0.7f), StrokeCap.Round); drawLine(p.sombra(C.HIERRO), tirante, pie + (punta - pie) * 0.55f, (e * 0.022f).coerceAtLeast(0.5f))
+        drawLine(p.luz(C.HIERRO).copy(alpha = 0.55f), pie + Offset(0f, -0.4f), punta + Offset(0f, -0.4f), (e * 0.01f).coerceAtLeast(0.3f))
+        val q = FAROL; val alto = e * 0.32f
+        drawLine(p.sombra(C.HIERRO), punta, q + Offset(0f, -alto * 0.62f), (e * 0.012f).coerceAtLeast(0.4f))
+        with(PiezasBotanico) { farol(p, q, alto, f) }
+        if (f > 0.05f) resplandor(q, e * 1.6f, 0.3f * f, C.LUMBRE)
     }
 }

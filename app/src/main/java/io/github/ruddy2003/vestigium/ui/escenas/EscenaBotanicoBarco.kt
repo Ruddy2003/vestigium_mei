@@ -105,7 +105,8 @@ internal object BarcoBotanico {
 
     val SITIO_TIMON = sitio(EJE, 4.4f, 0.32f)
     val SITIO_BITACORA = sitio(-1.45f, 5.6f, 0.3f)
-    val SITIO_CLARABOYA = sitio(EJE + 0.05f, 8.6f, 0.06f)
+    const val Z_CLARABOYA = 9.6f
+    val SITIO_CLARABOYA = sitio(-1.4f, Z_CLARABOYA, 0.06f)
     /** El cañón, arrimado a su porta de estribor, con la boca hacia ella. */
     const val Z_CANON = 9.1f
     val SITIO_CANON = sitio(estribor(Z_CANON) - 1.12f, Z_CANON, 0f)
@@ -122,8 +123,12 @@ internal object BarcoBotanico {
     /** La cuba del agua, en la esquina de la aleta, trincada a la amurada: cortada por los bordes de abajo y de la derecha. */
     val SITIO_CUBA = sitio(1.15f, 2.05f, 0f)
 
-    /** El farol de popa, sobre la regala de la aleta de estribor. */
-    val FAROL: Offset get() = pc(1.66f, 1.42f, 3.3f)
+    /**
+     * El farol de la aleta, colgado de un pescante corto de hierro en la regala de estribor, por dentro, delante de los
+     * cajones: alumbra la amurada, los cajones y la cubierta, y queda por debajo del horizonte **[Diseño propio]**.
+     */
+    const val Z_FAROL = 5.5f
+    val FAROL: Offset get() = pc(1.2f, 0.84f, Z_FAROL)
 
     /** El suelo del gato: la cubierta de delante, de la rueda a los cajones (pisa más acá que todo lo plantado). */
     const val PISO_GATO = 277f
@@ -172,7 +177,7 @@ internal object BarcoBotanico {
     // ---------------------------------------------------------------- La luz del sol en cubierta
 
     /** Lo más larga que es una sombra: por cada metro de alto, a lo sumo este tanto de largo (a las 7:00, 1.3 m). */
-    const val COT_MAX = 1.3f
+    const val COT_MAX = 1.9f
     /** Lo menos de lado que entra la luz: así la sombra de las velas se ve tumbarse a babor o a estribor. */
     const val LAT_MIN = 0.62f
 
@@ -185,7 +190,9 @@ internal object BarcoBotanico {
         val r = EscenaBotanico.rayo(l)
         val lat = if (abs(r.lat) < LAT_MIN) (if (r.lat < 0f) -LAT_MIN else LAT_MIN) else r.lat
         val cot = r.cot.coerceIn(0.45f, COT_MAX)
-        return Rayo(r.dia, lat, cot, 1f / cot, -lat * cot, -0.33f * (1.3f - 0.6f * abs(lat)) * cot, r.fuerza, r.color, r.contraste)
+        // De noche, la luna de alta mar, sin nada que la apague, tumba sombras que se leen.
+        val fuerza = if (r.dia < 0.05f) (r.fuerza * 2.3f).coerceAtMost(0.62f) else r.fuerza
+        return Rayo(r.dia, lat, cot, 1f / cot, -lat * cot, -0.33f * (1.3f - 0.6f * abs(lat)) * cot, fuerza, r.color, r.contraste)
     }
 
     /** Dónde cae en la cubierta (en metros: x, z) la sombra del punto [a] (x, h, z). */
