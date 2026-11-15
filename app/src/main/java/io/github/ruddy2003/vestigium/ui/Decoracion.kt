@@ -2057,7 +2057,7 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             // piedras, se tuercen y sueltan alguna rama fina.
             color = esquema.onBackground.copy(alpha = if (oscuro) 0.06f else 0.05f)
             color2 = esquema.tertiary.copy(alpha = if (oscuro) 0.06f else 0.05f)
-            color3 = esquema.onBackground.copy(alpha = if (oscuro) 0.09f else 0.07f)
+            color3 = esquema.onBackground.copy(alpha = if (oscuro) 0.12f else 0.09f)
             grosor = 0.6f
             val u = 1.dp.toPx(); val alto = 38 * u
             val azar = java.util.Random(1977)
