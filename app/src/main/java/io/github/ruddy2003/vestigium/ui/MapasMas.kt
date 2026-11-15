@@ -96,10 +96,11 @@ object MapasMas {
         TemaId.BASICO -> listOf(Offset(0.08f, 0.8f), Offset(0.22f, 0.66f), Offset(0.36f, 0.7f), Offset(0.5f, 0.5f), Offset(0.64f, 0.4f), Offset(0.78f, 0.44f), Offset(0.92f, 0.24f))
         // Los puntos de control: piso por piso, de la ventanilla de abajo al Ministerio en lo alto.
         TemaId.DISTOPIA -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
-        // El levantamiento del 52 a. C., sobre la Galia (el norte arriba): Cenabum, donde empieza; el campo de los arvernos,
-        // donde Vercingétorix junta a los suyos y vuelve a Gergovia; Avárico, el cerco perdido; Gergovia, la victoria;
-        // Bibracte, la asamblea; la batalla de los jinetes, y Alesia.
-        TemaId.GALIA -> geo(listOf(1.91 to 47.9, 2.85 to 45.95, 2.4 to 47.08, 3.12 to 45.71, 4.03 to 46.92, 5.0 to 47.45, 4.5 to 47.54), 0.9, 5.6, 45.3, 48.3)
+        // El levantamiento del 52 a. C., sobre la Galia (el norte arriba), con las etapas de `Campanas`: Cenabum, donde corre el
+        // grito; Gergovia, donde Vercingétorix toma el mando; Avárico, el cerco perdido; Gergovia otra vez, la victoria, en la
+        // ladera del sur, frente a los campamentos de César; Bibracte, la asamblea; el cerco de Alesia, sobre su línea de
+        // dentro, y la entrega con honra, en el oppidum.
+        TemaId.GALIA -> geo(listOf(1.91 to 47.9, 3.12 to 45.76, 2.4 to 47.08, 3.36 to 45.62, 4.03 to 46.92, 4.32 to 47.53, 4.5 to 47.54), 0.9, 5.6, 45.3, 48.3)
         // El ascenso del alma: cada parada cae en su esfera, de la Luna (la más cercana a la tierra, abajo a la izquierda) a
         // Saturno, en zigzag hacia la derecha, donde está la Ogdóada. [fondoMas] dibuja los círculos por estos mismos puntos.
         TemaId.ARCONTES -> listOf(Offset(0.17f, 0.78f), Offset(0.28f, 0.42f), Offset(0.4f, 0.72f), Offset(0.52f, 0.34f), Offset(0.64f, 0.66f), Offset(0.77f, 0.3f), Offset(0.9f, 0.5f))
@@ -361,7 +362,7 @@ object MapasMas {
                 }
                 // Roma, lejos y en rojo: los campamentos de las legiones (Agedinco, Avárico, Gergovia) y su luz de noche.
                 val roma = TrazosGalia.ROMA.copy(alpha = if (oscuro) 0.85f else 0.65f)
-                listOf(g(3.28, 48.2), pts[2] + Offset(9 * d, 6 * d), pts[3] + Offset(10 * d, 7 * d), pts[3] + Offset(-12 * d, 9 * d)).forEach { c ->
+                listOf(g(3.28, 48.2), pts[2] + Offset(9 * d, 6 * d), g(3.42, 45.5), g(3.2, 45.55)).forEach { c ->
                     if (oscuro) drawCircle(Brush.radialGradient(listOf(Color(0xFFE58A5C).copy(alpha = 0.45f), Color.Transparent), c, 8 * d), 8 * d, c)
                     drawRect(roma, Offset(c.x - 3 * d, c.y - 3 * d), Size(6 * d, 6 * d), style = Stroke(1 * d))
                     drawLine(roma, Offset(c.x, c.y - 3 * d), Offset(c.x, c.y + 3 * d), 0.6f * d); drawLine(roma, Offset(c.x - 3 * d, c.y), Offset(c.x + 3 * d, c.y), 0.6f * d)

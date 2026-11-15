@@ -3876,7 +3876,7 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
  * soles de Vergina (HEL), gotas de tinta y de rúbrica (MED), tiras de expediente (DIS), átomos (REF), galones (ORD),
  * burbujas (LAB), brasas que suben (COL), abejas (NAP), escarabajos (BOT), copos (NAV), monedas (SED), esquirlas de
  * vitral (GOT), destellos (ESP), estrellas de lazo (AND), flechas (MON), marcas de compás (REN), estrellas rojas (URS),
- * escarapelas (REV) y gemas (ANT).
+ * escarapelas (REV), gemas (ANT) y hojas de roble, estáteros y muérdago (GAL).
  * [fijo]: un instante quieto de la lluvia (entre 0 y 1), para las capturas de diseño.
  */
 @Composable

@@ -456,19 +456,25 @@ fun FraseDelDia(fecha: String) {
                 }
             }
         }
-        TemaId.GALIA -> Surface(color = cs.onBackground, shape = RectangleShape, modifier = arriba) {
-            Row(Modifier.height(IntrinsicSize.Min)) {
-                Box(Modifier.width(8.dp).fillMaxHeight().background(cs.primary))
-                Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                    Text(rotulo, style = ty.labelMedium, color = cs.primary)
-                    f.original?.let { Text(it, style = ty.bodySmall, fontStyle = FontStyle.Italic, color = cs.background.copy(alpha = 0.72f)) }
-                    Text(f.texto.uppercase(), style = ty.titleLarge, color = cs.background, modifier = Modifier.padding(vertical = 2.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("— ${f.autor}", style = ty.labelSmall, color = cs.background.copy(alpha = 0.7f), modifier = Modifier.weight(1f))
-                        CorazonFrase(f, cs.primary, fecha = fecha)
-                    }
-                }
+        // La tablilla de cera en su marco de roble: las vetas del marco, la cera de abeja clara donde va la cita, el cordel que
+        // la ata por el agujero de la izquierda y una hoja de roble en la esquina.
+        TemaId.GALIA -> Box(arriba.drawBehind {
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height; val b = 6 * u
+            val roble = androidx.compose.ui.graphics.lerp(Color(0xFF8A6A44), cs.surfaceVariant, 0.3f)
+            drawRoundRect(roble, Offset.Zero, size, CornerRadius(3 * u))
+            listOf(0.35f, 0.7f).forEach { f ->
+                drawLine(Color.Black.copy(alpha = 0.14f), Offset(4 * u, b * f), Offset(w - 4 * u, b * f + 0.6f * u), 0.6f * u)
+                drawLine(Color.Black.copy(alpha = 0.14f), Offset(4 * u, h - b * f), Offset(w - 4 * u, h - b * f - 0.6f * u), 0.6f * u)
             }
+            val cera = androidx.compose.ui.graphics.lerp(cs.surface, Color(0xFFD8C48A), if (cs.surface.red + cs.surface.green + cs.surface.blue < 1.5f) 0.08f else 0.22f)
+            drawRect(cera, Offset(b, b), Size(w - 2 * b, h - 2 * b))
+            drawRect(Color.Black.copy(alpha = 0.16f), Offset(b, b), Size(w - 2 * b, 1.5f * u))
+            drawRect(Color.Black.copy(alpha = 0.1f), Offset(b, b), Size(1.5f * u, h - 2 * b))
+            drawCircle(Color.Black.copy(alpha = 0.55f), 1.4f * u, Offset(b / 2, h / 2))
+            drawPath(Path().apply { moveTo(b / 2, h / 2); quadraticTo(b * 0.05f, h * 0.68f, b * 0.6f, minOf(h - 2 * u, h / 2 + 26 * u)) }, Color(0xFFCDB98E), style = Stroke(1.1f * u, cap = StrokeCap.Round))
+            with(io.github.ruddy2003.vestigium.ui.TrazosGalia) { hojaRoble(Offset(w - 13 * u, 9 * u), 17 * u, 62f, cs.primary.copy(alpha = 0.85f), roble) }
+        }.padding(horizontal = 18.dp, vertical = 16.dp)) {
+            CuerpoFrase(f, fecha, rotulo, "«", "»")
         }
         // La hoja del códice: el papiro con sus fibras, el lomo de cuero cosido a la izquierda, un renglón arriba y otro abajo
         // y, en la esquina, una grieta finísima por donde entra la luz. La frase va entre comillas; el rótulo, con los tres puntos.
@@ -1001,7 +1007,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.MEDIEVAL -> base.copy(fontFamily = Letra.garamond, fontWeight = FontWeight.SemiBold, fontSize = 23.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum, tnum")
         TemaId.TEMPLARIO -> c(LetraExtra.regla, FontWeight.Bold, 22f, 0.3f, "lnum, tnum")
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
-        TemaId.GALIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
+        TemaId.GALIA -> c(LetraExtra.ysabeau, FontWeight.SemiBold, 23f, 0.5f, "lnum")   // las cifras humanistas de los rótulos
         TemaId.ARCONTES -> c(LetraExtra.caudex, FontWeight.Bold, 23f, 0.4f)   // las cifras de la letra de los códices
         TemaId.FRENTE -> c(LetraExtra.chivoMono, FontWeight.Medium, 23f, 1.4f, "tnum")   // las cifras del contador de la consola
         TemaId.REFUGIO -> c(LetraExtra.vt323, FontWeight.Normal, 30f, 0.4f)
@@ -1298,11 +1304,20 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             var y = top + k + 4 * u
                             while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
                         }
+                        // Las estacas de la empalizada del oppidum: cada día, un tronco aguzado arriba, con la corteza en vetas y su
+                        // atadura de mimbre; el remate, en el oro de los torques.
                         TemaId.GALIA -> {
-                            val k = minOf(w * 0.35f, barH * 0.2f)
-                            pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w - k, top); lineTo(w, top + k); lineTo(w, h); close() })
-                            var y = top + k + 4 * u
-                            while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
+                            val punta = minOf(w * 0.7f, barH * 0.25f); val ex = w * 0.14f; val ew = w * 0.72f
+                            pinta(Path().apply { moveTo(ex, h); lineTo(ex, top + punta); lineTo(w / 2, top); lineTo(ex + ew, top + punta); lineTo(ex + ew, h); close() })
+                            if (color != null) {
+                                listOf(0.3f, 0.64f).forEach { f -> drawLine(Color.Black.copy(alpha = 0.18f), Offset(ex + ew * f, top + punta + 3 * u), Offset(ex + ew * f, h - 2 * u), 0.8f * u) }
+                                if (barH > punta + 16 * u) {
+                                    val ya = top + punta + 6 * u
+                                    drawLine(Color.Black.copy(alpha = 0.35f), Offset(ex - 1 * u, ya), Offset(ex + ew + 1 * u, ya + 1.5f * u), 1.4f * u)
+                                    drawLine(Color.Black.copy(alpha = 0.35f), Offset(ex - 1 * u, ya + 3 * u), Offset(ex + ew + 1 * u, ya + 4.5f * u), 1.4f * u)
+                                }
+                            }
+                            sello = cs.secondary
                         }
                         // Jarras de barro, una por día, más altas cuanto más dormiste: el cuerpo, el hombro con su franja pintada,
                         // el cuello y el borde de la tapa; el sello de arriba, en el violeta de la grieta.

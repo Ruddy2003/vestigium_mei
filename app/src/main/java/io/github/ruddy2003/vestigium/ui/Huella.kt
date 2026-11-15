@@ -67,7 +67,7 @@ fun textoSello(tema: TemaId): String = when (tema) {
     TemaId.MEDIEVAL -> "Sellado y asentado"
     TemaId.TEMPLARIO -> "Guardia rendida y sellada"
     TemaId.DISTOPIA -> "DECLARACIÓN ARCHIVADA"
-    TemaId.GALIA -> "DECLARACIÓN ARCHIVADA"
+    TemaId.GALIA -> "Acuñada en el estátero"          // la huella del día, en el oro de la moneda arverna
     TemaId.ARCONTES -> "Sellado en la jarra"
     TemaId.FRENTE -> "ECO CAPTADO · CANAL CERRADO"
     TemaId.REFUGIO -> "BITÁCORA GUARDADA"

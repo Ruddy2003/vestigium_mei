@@ -288,9 +288,9 @@ object TrazosGalia {
      * rodilla en bolita y el casco redondo, y la cola que se abre en tres hebras con su perla. Es el mismo dibujo del sello
      * (`herramientas/sellos.py`, `caballo`). [c] es el centro de la figura y [largo], su ancho de la nariz a la cola; mira
      * a la izquierda (a la derecha con [mira] = 1). Con [hueco], el ojo, la boca y los surcos del hombro y la grupa se
-     * recortan en ese color; sin él, solo la silueta.
+     * recortan en ese color; sin él, solo la silueta. [recio] engruesa las patas y la cola (para los íconos pequeños).
      */
-    fun DrawScope.caballo(c: Offset, largo: Float, color: Color, hueco: Color? = null, mira: Float = -1f) {
+    fun DrawScope.caballo(c: Offset, largo: Float, color: Color, hueco: Color? = null, mira: Float = -1f, recio: Float = 1f) {
         val u = largo / 121f
         // El centro de la figura queda en (-2.5, -7.5) de las unidades del sello.
         fun q(x: Float, y: Float) = Offset(c.x - mira * (x + 2.5f) * u, c.y + (y + 7.5f) * u)
@@ -325,16 +325,16 @@ object TrazosGalia {
         )
         for ((arriba, abajo) in patas) {
             fun suave(pts: List<Offset>) = bezier(pts[0], pts[0] + (pts[1] - pts[0]) * 0.66f, pts[2] + (pts[1] - pts[2]) * 0.66f, pts[2], 8).map { q(it.x, it.y) }
-            drawPath(cinta(suave(arriba)) { f -> (6.5f - 2.3f * f) * u }, color)
-            drawPath(cinta(suave(abajo)) { f -> (3.6f - 0.8f * f) * u }, color)
-            drawCircle(color, 3.4f * u, q(arriba.last().x, arriba.last().y))        // la rodilla
-            drawCircle(color, 3.0f * u, q(abajo.last().x, abajo.last().y))          // el casco
+            drawPath(cinta(suave(arriba)) { f -> (6.5f - 2.3f * f) * u * recio }, color)
+            drawPath(cinta(suave(abajo)) { f -> (3.6f - 0.8f * f) * u * recio }, color)
+            drawCircle(color, 3.4f * u * recio, q(arriba.last().x, arriba.last().y))        // la rodilla
+            drawCircle(color, 3.0f * u * recio, q(abajo.last().x, abajo.last().y))          // el casco
         }
         // La cola: tres hebras que salen de la grupa, suben y se abren hacia atrás, cada una con su perla.
         listOf(Triple(o(42f, -25f), o(52f, -30f), o(57f, -23f)), Triple(o(46f, -19f), o(55f, -19f), o(58f, -11f)), Triple(o(43f, -11f), o(50f, -5f), o(53f, 1f)))
             .forEachIndexed { k, (c1, c2, fin) ->
-                drawPath(cinta(b(o(35f, -11f), c1, c2, fin, 14)) { f -> (3.4f - k * 0.3f - (1.6f - k * 0.3f) * f) * u }, color)
-                drawCircle(color, 2.4f * u, q(fin.x, fin.y))
+                drawPath(cinta(b(o(35f, -11f), c1, c2, fin, 14)) { f -> (3.4f - k * 0.3f - (1.6f - k * 0.3f) * f) * u * recio }, color)
+                drawCircle(color, 2.4f * u * recio, q(fin.x, fin.y))
             }
         if (hueco != null) {
             // El ojo grande en anillo, la boca y los surcos en media luna del hombro y de la grupa.

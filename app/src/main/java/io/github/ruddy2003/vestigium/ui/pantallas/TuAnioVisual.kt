@@ -208,11 +208,16 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawRect(Color(0xFFC8102E), Offset(x0, y0 + h * 0.7f), Size(w, h * 0.14f))
             drawRect(Color(0xFFF2EFE6), Offset(x0 + w * 0.55f, y0 + h * 0.22f), Size(w * 0.3f, h * 0.3f))
         }
+        // Las tablillas de cera atadas, tumbadas en la pila: tres marcos de roble teñidos del color del libro, uno sobre otro,
+        // con la correa que los cruza.
         TemaId.GALIA -> {
-            drawRect(lerp(Color(0xFFD8C08A), c, 0.25f), o, s)
-            drawRect(lerp(Color(0xFFD8C08A), c, 0.25f), Offset(x0 + w * 0.1f, y0 - h * 0.18f), Size(w * 0.3f, h * 0.2f))
-            drawRect(Color(0xFFC8102E), Offset(x0, y0 + h * 0.7f), Size(w, h * 0.14f))
-            drawRect(Color(0xFFF2EFE6), Offset(x0 + w * 0.55f, y0 + h * 0.22f), Size(w * 0.3f, h * 0.3f))
+            val roble = lerp(Color(0xFF8A6A44), c, 0.55f)
+            for (k in 0 until 3) {
+                val yy = y0 + k * h / 3
+                drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(lerp(roble, Color.White, 0.22f), roble, lerp(roble, Color.Black, 0.3f)), yy, yy + h / 3), Offset(x0, yy), Size(w, h / 3 - 0.6f * d))
+            }
+            drawRect(lerp(Color(0xFF4A3A28), c, 0.2f), Offset(x0 + w * 0.68f, y0 - 0.5f * d), Size(w * 0.09f, h + d))
+            drawRect(oscuro, o, s, style = Stroke(0.6f * d))
         }
         // El códice de cuero tumbado en la pila: las hojas de papiro asomando por el canto, la tapa en el color del libro, la
         // solapa en punta doblada encima y la correa que le da la vuelta.
@@ -749,10 +754,11 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             drawRect(borde, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r), style = fino)
             drawRect(borde, Offset(x - r * 0.86f, y - r * 0.71f), Size(1.72f * r, 1.42f * r), style = fino)
         }
+        // La rodaja de roble: la corteza alrededor y los anillos del tronco.
         TemaId.GALIA -> {
-            drawRect(relleno, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r))
-            drawRect(borde, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r), style = fino)
-            drawRect(borde, Offset(x - r * 0.86f, y - r * 0.71f), Size(1.72f * r, 1.42f * r), style = fino)
+            lleno(Path().apply { addOval(androidx.compose.ui.geometry.Rect(x - r, y - r * 0.92f, x + r, y + r * 0.92f)) })
+            drawOval(borde, Offset(x - r, y - r * 0.92f), Size(2 * r, r * 1.84f), style = Stroke(2.2f * d))
+            for (k in 1..3) { val f = 1f - k * 0.22f; drawOval(borde.copy(alpha = 0.25f), Offset(x - r * f + r * 0.04f * k, y - r * 0.92f * f), Size(2 * r * f, r * 1.84f * f), style = fino) }
         }
         // Un nicho en arco tallado en la caliza, como los de las lámparas, con su repisa abajo.
         TemaId.ARCONTES -> {
@@ -1129,22 +1135,30 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
             else -> return false
         }
         TemaId.GALIA -> when (forma) {
-            // El ojo que vigila.
+            // La fíbula de La Tène: el resorte enrollado, el arco, el pie vuelto con su botón y la aguja.
             "alfiler" -> {
-                drawPath(Path().apply { moveTo(x - r, y); quadraticTo(x, y - r * 0.9f, x + r, y); quadraticTo(x, y + r * 0.9f, x - r, y); close() }, col)
-                drawCircle(fondo, r * 0.4f, c); drawCircle(col, r * 0.2f, c)
+                drawPath(Path().apply { moveTo(x - r * 0.75f, y + r * 0.25f); quadraticTo(x - r * 0.1f, y - r * 0.95f, x + r * 0.7f, y + r * 0.15f); quadraticTo(x + r * 0.85f, y - r * 0.3f, x + r * 0.42f, y - r * 0.33f) },
+                    col, style = Stroke(1.5f * d, cap = StrokeCap.Round))
+                drawLine(col, Offset(x - r * 0.75f, y + r * 0.38f), Offset(x + r * 0.72f, y + r * 0.38f), 1f * d, StrokeCap.Round)
+                for (k in 0 until 3) drawCircle(col, r * 0.11f, Offset(x - r * 0.95f + k * r * 0.11f, y + r * 0.3f), style = Stroke(0.9f * d))
+                drawCircle(col, r * 0.12f, Offset(x + r * 0.38f, y - r * 0.33f))
             }
-            // Expediente con pestaña y franja roja.
+            // El mensaje de oppidum en oppidum: las dos tablillas cerradas, atadas en cruz, con su botón de cera.
             "sobre" -> {
-                drawRect(col, Offset(x - r, y - r * 0.5f), Size(2 * r, r * 1.2f))
-                drawRect(col, Offset(x - r, y - r * 0.75f), Size(r * 0.8f, r * 0.3f))
-                drawRect(Color(0xFFC8102E), Offset(x - r, y + r * 0.35f), Size(2 * r, r * 0.2f))
+                drawRect(col, Offset(x - r, y - r * 0.62f), Size(2 * r, r * 1.24f))
+                drawLine(fondo, Offset(x, y - r * 0.62f), Offset(x, y + r * 0.62f), 1f * d); drawLine(fondo, Offset(x - r, y), Offset(x + r, y), 1f * d)
+                drawCircle(fondo, r * 0.26f, c); drawCircle(col, r * 0.14f, c)
             }
-            // Lata de ración.
+            // El cuerno de beber del banquete, con la boca y los aros de metal.
             "taza" -> {
-                drawRect(col, Offset(x - r * 0.55f, y - r * 0.75f), Size(r * 1.1f, r * 1.5f))
-                listOf(-0.5f, 0.5f).forEach { f -> drawLine(fondo, Offset(x - r * 0.55f, y + f * r), Offset(x + r * 0.55f, y + f * r), 0.7f * d) }
-                drawRect(fondo, Offset(x - r * 0.38f, y - r * 0.2f), Size(r * 0.76f, r * 0.4f))
+                drawPath(Path().apply {
+                    moveTo(x + r * 0.7f, y - r * 0.8f); lineTo(x + r * 0.98f, y - r * 0.4f)
+                    quadraticTo(x + r * 0.25f, y + r * 0.62f, x - r * 0.92f, y + r * 0.58f)
+                    quadraticTo(x + r * 0.02f, y + r * 0.25f, x + r * 0.7f, y - r * 0.8f); close()
+                }, col)
+                drawLine(fondo, Offset(x + r * 0.5f, y - r * 0.52f), Offset(x + r * 0.74f, y - r * 0.14f), 0.9f * d)
+                drawLine(fondo, Offset(x + r * 0.1f, y - r * 0.08f), Offset(x + r * 0.32f, y + r * 0.2f), 0.9f * d)
+                drawCircle(col, r * 0.1f, Offset(x - r * 0.92f, y + r * 0.58f))
             }
             else -> return false
         }

@@ -499,18 +499,41 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
         }
     }
-    TemaId.GALIA -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "EXP. " + t.nombre.uppercase(), "TOQUE PARA ACUSAR RECIBO",
-        comillas = "“" to "”", emblema = 88.dp, arriba = 52.dp, abajo = 70.dp) { e ->
+    // La puerta de la casa grande: los dos postes de roble con su corteza, el dintel con la onda de La Tène tallada y el torques
+    // colgado en medio, el umbral de tierra y una hoguera al pie de cada poste. Primero la frase, como la diría el bardo.
+    TemaId.GALIA -> DisenoPresentacion(OrdenPresentacion.FRASE_ARRIBA, false, t.nombre, "Toca, y que corra el grito",
+        emblema = 116.dp, arriba = 76.dp, abajo = 78.dp) { e ->
         val u = 1.dp.toPx(); val w = size.width; val h = size.height
-        val c = e.onSurface.copy(alpha = 0.55f)
-        drawPath(Path().apply { moveTo(0f, u * 18); lineTo(u * 10, 0f); lineTo(u * 110, 0f); lineTo(u * 120, u * 18) }, c, style = Stroke(u * 1.3f))
-        drawRect(c, Offset(0f, u * 18), Size(w, h - u * 18), style = Stroke(u * 1.3f))
-        for (i in 0 until 14) drawRect(c, Offset(w - u * 84 + i * u * 5, u * 26), Size(u * (if (i % 3 == 0) 2.4f else 1.2f), u * 14))
-        val centro = Offset(w - u * 62, h - u * 36)
-        rotate(-12f, centro) {
-            drawRect(e.primary.copy(alpha = 0.7f), Offset(centro.x - u * 46, centro.y - u * 17), Size(u * 92, u * 34), style = Stroke(u * 2.2f))
-            drawRect(e.primary.copy(alpha = 0.5f), Offset(centro.x - u * 41, centro.y - u * 12), Size(u * 82, u * 24), style = Stroke(u))
-            drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
+        val madera = androidx.compose.ui.graphics.lerp(TrazosGalia.MADERA, e.surface, 0.2f)
+        val linea = e.onSurface.copy(alpha = 0.35f)
+        // Los postes.
+        listOf(u * 4, w - u * 16).forEach { x ->
+            drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(androidx.compose.ui.graphics.lerp(madera, Color.White, 0.15f), madera, androidx.compose.ui.graphics.lerp(madera, Color.Black, 0.35f)), x, x + u * 12), Offset(x, u * 22), Size(u * 12, h - u * 28))
+            var y = u * 30; var k = 0
+            while (y < h - u * 10) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(x + u * (3 + (k % 3) * 3), y), Offset(x + u * (3.5f + (k % 3) * 3), y + u * 16), u * 0.8f); y += u * 11; k++ }
+        }
+        // El dintel, con la onda tallada.
+        drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.lerp(madera, Color.White, 0.18f), madera, androidx.compose.ui.graphics.lerp(madera, Color.Black, 0.3f)), u * 8, u * 24), Offset(0f, u * 8), Size(w, u * 16))
+        val onda = Path().apply {
+            var x = u * 20; moveTo(x, u * 16)
+            while (x < w - u * 30) { cubicTo(x + u * 4, u * 11, x + u * 8, u * 11, x + u * 9, u * 16); cubicTo(x + u * 10, u * 21, x + u * 14, u * 21, x + u * 18, u * 16); x += u * 18 }
+        }
+        drawPath(onda, Color.Black.copy(alpha = 0.35f), style = Stroke(u * 1.2f, cap = StrokeCap.Round))
+        drawPath(Path().apply { addPath(onda, Offset(-u * 0.6f, -u * 0.6f)) }, Color.White.copy(alpha = 0.2f), style = Stroke(u * 0.8f, cap = StrokeCap.Round))
+        // El torques colgado del dintel.
+        drawLine(linea, Offset(w / 2, u * 24), Offset(w / 2, u * 30), u)
+        with(TrazosGalia) { torques(Offset(w / 2, u * 42), u * 12, u * 3.4f) }
+        // Las hojas de roble en los postes.
+        with(TrazosGalia) {
+            hojaRoble(Offset(u * 22, u * 36), u * 18, 140f, e.primary.copy(alpha = 0.7f), madera)
+            hojaRoble(Offset(w - u * 26, u * 36), u * 18, -140f, e.primary.copy(alpha = 0.7f), madera)
+        }
+        // El umbral y las hogueras.
+        drawLine(linea, Offset(0f, h - u * 6), Offset(w, h - u * 6), u * 1.4f)
+        drawLine(linea.copy(alpha = 0.18f), Offset(u * 4, h - u * 2), Offset(w - u * 4, h - u * 2), u * 0.8f)
+        with(TrazosGalia) {
+            hoguera(Offset(u * 36, h - u * 8), u * 22, 0.9f)
+            hoguera(Offset(w - u * 40, h - u * 8), u * 22, 1f)
         }
     }
     // La entrada de la sala escondida: el arco rebajado tallado en la caliza, con su dovela clave y el doble filo; dentro

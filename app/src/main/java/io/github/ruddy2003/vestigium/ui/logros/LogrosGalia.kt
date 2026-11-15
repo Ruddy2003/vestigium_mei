@@ -378,21 +378,11 @@ object LogrosGalia : DisenoLogros {
         val pelo = if (oscuro) Color(0xFF8A6A48) else Color(0xFF5E4026)
         val crin = if (oscuro) Color(0xFF3A2A1A) else Color(0xFF2E2014)
         val pie = e.punto.y - 1f * u - s * 4f * u
-        val c = Offset(e.punto.x, pie - 9f * u)
+        val c = Offset(e.punto.x, pie - 10f * u)
         rotate(-14f * s, Offset(c.x - 5 * u, pie)) {
             fun q(x: Float, y: Float) = Offset(c.x + x * u, c.y + y * u)
-            // Las patas.
-            listOf(Triple(-6f, -7.5f, 0f), Triple(-4f, -3.5f, 0f), Triple(4f, 5f, 0f), Triple(6f, 9f, -3f)).forEachIndexed { i, (x0, x1, dy) ->
-                val col = if (i % 2 == 0) crin else pelo
-                drawLine(col, q(x0, 2f), q(x1, 8.5f + dy), 1.5f * u, StrokeCap.Round)
-            }
-            // El cuerpo, el cuello, la cabeza y la cola.
-            drawOval(pelo, Offset(c.x - 8.5f * u, c.y - 2.5f * u), Size(17f * u, 6.5f * u))
-            drawLine(pelo, q(5.5f, 0f), q(9f, -6f), 3.2f * u, StrokeCap.Round)
-            drawLine(pelo, q(9f, -6.5f), q(12.5f, -4.5f), 2.4f * u, StrokeCap.Round)
-            drawLine(crin, q(8f, -7.5f), q(7.6f, -9.5f), 0.9f * u, StrokeCap.Round)
-            drawLine(crin, q(5f, -1.5f), q(8f, -7f), 1.1f * u, StrokeCap.Round)
-            drawPath(Path().apply { moveTo(q(-8f, -1f).x, q(-8f, -1f).y); quadraticTo(q(-12f, -2f).x, q(-12f, -2f).y, q(-11f, 4f).x, q(-11f, 4f).y) }, crin, style = Stroke(1.3f * u, cap = StrokeCap.Round))
+            // El caballo al galope, el de las monedas, mirando hacia donde va.
+            with(TrazosGalia) { caballo(c, 27f * u, pelo, crin, mira = 1f, recio = 1.5f) }
             // El manto a cuadros que ondea, el jinete y la lanza.
             val manto = Path().apply { moveTo(q(-0.5f, -9f).x, q(-0.5f, -9f).y); quadraticTo(q(-6f, -8f).x, q(-6f, -8f).y, q(-9f, -4f - 2f * s).x, q(-9f, -4f - 2f * s).y); lineTo(q(-1f, -3f).x, q(-1f, -3f).y); close() }
             drawPath(manto, TrazosGalia.LANA_ROJA)

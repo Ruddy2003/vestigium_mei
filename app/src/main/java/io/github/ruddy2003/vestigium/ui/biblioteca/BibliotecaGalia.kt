@@ -321,7 +321,7 @@ object EstanteGalia : DisenoBiblioteca {
      * La pared de zarzo y barro dentro de [r]: el barro [barro] con las marcas de las manos que lo apretaron y, donde se cayó,
      * el zarzo de varas entretejidas en las estacas. [fuerza] baja el dibujo (para la pared en sombra).
      */
-    private fun DrawScope.zarzo(r: Rect, barro: Color, semilla: Int, fuerza: Float = 1f) {
+    private fun DrawScope.zarzo(r: Rect, barro: Color, semilla: Int, fuerza: Float = 1f, caidos: Float = 1f) {
         val u = density
         if (r.width <= 0f || r.height <= 0f) return
         drawRect(barro, r.topLeft, r.size)
@@ -343,34 +343,45 @@ object EstanteGalia : DisenoBiblioteca {
             drawArc(claro.copy(alpha = 0.14f * fuerza), 200f, 120f, false, o, Size(s, s * 0.5f), style = Stroke(0.7f * u))
             drawArc(oscuro.copy(alpha = 0.12f * fuerza), 200f, 120f, false, o + Offset(0f, 1f * u), Size(s, s * 0.5f), style = Stroke(0.6f * u))
         }
-        // Donde se cayó el barro: el zarzo de debajo.
-        val huecos = (r.width * r.height / (u * u * 4200f)).toInt().coerceIn(1, 7)
+        // Donde se cayó el barro: el zarzo de debajo, las estacas y las varas que pasan una por delante y otra por detrás.
+        val huecos = (r.width * r.height * caidos / (u * u * 7000f)).toInt().coerceIn(1, 5)
         for (k in 0 until huecos) {
-            val c = Offset(r.left + r.width * (0.1f + 0.8f * azar(semilla + 8, k)), r.top + r.height * (0.15f + 0.7f * azar(semilla + 9, k)))
-            val s = (9f + 9f * azar(semilla + 10, k)) * u
-            val q = Rect(c.x - s, c.y - s * 0.55f, c.x + s, c.y + s * 0.55f)
-            val hueco = contornoIrregular(q, semilla + 11 + k, 22, 0.2f)
+            val c = Offset(r.left + r.width * (0.1f + 0.8f * azar(semilla + 8, k)), r.top + r.height * (0.18f + 0.64f * azar(semilla + 9, k)))
+            val s = (13f + 9f * azar(semilla + 10, k)) * u
+            val q = Rect(c.x - s, c.y - s * 0.6f, c.x + s, c.y + s * 0.6f)
+            val hueco = contornoIrregular(q, semilla + 11 + k, 26, 0.22f)
+            // El labio del barro: lo que queda alrededor del hueco, más claro abajo, donde le da la luz.
+            translate(0.8f * u, 1.2f * u) { drawPath(hueco, claro.copy(alpha = 0.45f * fuerza), style = Stroke(2.4f * u)) }
             clipPath(hueco) {
-                drawRect(mezcla(ZARZO, Color.Black, 0.55f), q.topLeft, q.size)
-                // Las estacas, de arriba abajo, y las varas que pasan por delante y por detrás.
-                val paso = 7f * u
-                var x = q.left + paso * azar(semilla + 12, k)
-                while (x < q.right) { drawLine(mezcla(ZARZO, Color.Black, 0.3f), Offset(x, q.top), Offset(x, q.bottom), 1.8f * u); x += paso }
-                var y = q.top + 1f * u; var j = 0
-                while (y < q.bottom) {
-                    var xx = q.left - paso * (j % 2) * 0.5f; var i = 0
-                    while (xx < q.right) {
+                drawRect(mezcla(ZARZO, Color.Black, 0.72f), q.topLeft, q.size)
+                val paso = 8f * u
+                val x0 = q.left + paso * azar(semilla + 12, k) - paso
+                var x = x0
+                while (x < q.right + paso) {
+                    drawLine(mezcla(ZARZO, Color.Black, 0.15f), Offset(x, q.top), Offset(x, q.bottom), 2.6f * u)
+                    drawLine(mezcla(ZARZO, Color.White, 0.2f).copy(alpha = 0.5f), Offset(x - 0.7f * u, q.top), Offset(x - 0.7f * u, q.bottom), 0.5f * u)
+                    x += paso
+                }
+                var y = q.top + 1.5f * u; var j = 0
+                while (y < q.bottom + 2 * u) {
+                    var xx = x0; var i = 0
+                    while (xx < q.right + paso) {
                         val delante = (i + j) % 2 == 0
-                        drawLine(if (delante) ZARZO else mezcla(ZARZO, Color.Black, 0.4f), Offset(xx, y), Offset(xx + paso, y + 0.3f * u), 2.2f * u, StrokeCap.Round)
-                        if (delante) drawLine(mezcla(ZARZO, Color.White, 0.25f).copy(alpha = 0.5f), Offset(xx + 1 * u, y - 0.6f * u), Offset(xx + paso - 1 * u, y - 0.4f * u), 0.5f * u)
+                        val curva = Path().apply { moveTo(xx, y); quadraticTo(xx + paso / 2, y + (if (delante) -0.9f else 0.9f) * u, xx + paso, y) }
+                        if (delante) {
+                            drawPath(curva, Color.Black.copy(alpha = 0.45f), style = Stroke(2.2f * u, cap = StrokeCap.Round))
+                            drawPath(curva, mezcla(ZARZO, PAJA, 0.25f), style = Stroke(1.8f * u, cap = StrokeCap.Round))
+                            drawPath(curva, Color.White.copy(alpha = 0.25f), style = Stroke(0.5f * u, cap = StrokeCap.Round))
+                        } else drawPath(curva, mezcla(ZARZO, Color.Black, 0.35f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
                         xx += paso; i++
                     }
-                    y += 2.6f * u; j++
+                    y += 2.8f * u; j++
                 }
-                drawRect(Color.Black.copy(alpha = 0.22f * fuerza), q.topLeft, q.size)
+                // La sombra que echa el canto del barro sobre el zarzo.
+                drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.6f), Color.Transparent), q.top, q.top + q.height * 0.55f), q.topLeft, q.size)
+                drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.35f), Color.Transparent), q.left, q.left + q.width * 0.3f), q.topLeft, q.size)
             }
-            translate(0.6f * u, 0.9f * u) { drawPath(hueco, claro.copy(alpha = 0.35f * fuerza), style = Stroke(0.9f * u)) }
-            drawPath(hueco, oscuro.copy(alpha = 0.6f), style = Stroke(0.7f * u))
+            drawPath(hueco, oscuro.copy(alpha = 0.7f), style = Stroke(0.8f * u))
         }
     }
 
@@ -486,16 +497,17 @@ object EstanteGalia : DisenoBiblioteca {
         fun hojaEn(o: Offset, a: Double, l: Float) {
             val q = punta(o, a, l)
             val m = punta(o, a, l * 0.5f)
-            val n = Offset(cos(a).toFloat(), -sin(a).toFloat()) * (l * 0.2f)
+            val n = Offset(cos(a).toFloat(), -sin(a).toFloat()) * (l * 0.3f)
             val p = Path().apply { moveTo(o.x, o.y); quadraticTo(m.x + n.x, m.y + n.y, q.x, q.y); quadraticTo(m.x - n.x, m.y - n.y, o.x, o.y); close() }
             drawPath(p, hoja)
-            drawLine(mezcla(hoja, Color.Black, 0.25f).copy(alpha = 0.5f), o, punta(o, a, l * 0.8f), maxOf(0.3f * u, l * 0.03f))
+            drawPath(p, mezcla(hoja, Color.Black, 0.35f).copy(alpha = 0.5f), style = Stroke(maxOf(0.35f * u, l * 0.025f)))
+            drawLine(mezcla(hoja, Color.White, 0.3f).copy(alpha = 0.5f), punta(o, a, l * 0.1f), punta(o, a, l * 0.75f), maxOf(0.3f * u, l * 0.03f))
         }
         fun rama(o: Offset, a: Double, l: Float, nivel: Int) {
             val f = punta(o, a, l)
             drawLine(tallo, o, f, maxOf(0.6f * u, l * 0.09f), StrokeCap.Round)
             if (nivel == 0) {
-                hojaEn(f, a - 0.4, l * 1.05f); hojaEn(f, a + 0.4, l * 1.05f)
+                hojaEn(f, a - 0.45, l * 1.25f); hojaEn(f, a + 0.45, l * 1.25f)
                 bayas.add(f)
             } else {
                 rama(f, a - 0.55, l * 0.8f, nivel - 1); rama(f, a + 0.55, l * 0.8f, nivel - 1)
@@ -503,11 +515,16 @@ object EstanteGalia : DisenoBiblioteca {
             }
         }
         val a0 = Math.toRadians(angulo.toDouble())
-        rama(c, a0, largo * 0.32f, 2)
-        bayas.forEach { b ->
-            drawCircle(Color.Black.copy(alpha = 0.18f), largo * 0.04f, b + Offset(largo * 0.008f, largo * 0.012f))
-            drawCircle(baya, largo * 0.038f, b)
-            drawCircle(Color.White.copy(alpha = 0.6f), largo * 0.013f, b - Offset(largo * 0.012f, largo * 0.012f))
+        rama(c, a0, largo * 0.3f, 2)
+        val rb = largo * 0.028f
+        bayas.forEachIndexed { i, b ->
+            listOf(Offset(0f, 0f), Offset(rb * 1.7f, rb * 0.5f), Offset(-rb * 1.2f, rb * 1.3f)).take(1 + i % 3).forEach { d ->
+                val o = b + d
+                drawCircle(Color.Black.copy(alpha = 0.25f), rb * 1.1f, o + Offset(rb * 0.25f, rb * 0.35f))
+                drawCircle(baya, rb, o)
+                drawCircle(mezcla(baya, Color.Black, 0.3f), rb, o, style = Stroke(maxOf(0.3f * u, rb * 0.18f)))
+                drawCircle(Color.White.copy(alpha = 0.7f), rb * 0.35f, o - Offset(rb * 0.3f, rb * 0.3f))
+            }
         }
     }
 
@@ -664,22 +681,17 @@ object EstanteGalia : DisenoBiblioteca {
         listOf(-1f, 1f).forEach { s -> drawCircle(mezcla(metal, Color.Black, 0.3f), a * 0.07f, Offset(c.x + s * a * 0.5f, c.y + a * 0.05f), style = Stroke(1.1f * u)) }
     }
 
-    /** El humo que sube de [desde] hasta [hasta]: velos que ondulan y se abren al subir. */
+    /** El humo que sube de [desde] hasta [hasta]: bocanadas que se abren, se ladean y se desvanecen al subir. */
     private fun DrawScope.humo(desde: Offset, hasta: Float, ancho: Float, color: Color, semilla: Int) {
-        val u = density
         val alto = desde.y - hasta
         if (alto <= 0f) return
-        for (k in 0 until 4) {
-            val p = Path()
-            val s = if (k % 2 == 0) 1f else -1f
-            p.moveTo(desde.x + (k - 1.5f) * 2 * u, desde.y)
-            val pasos = 6
-            for (i in 1..pasos) {
-                val f = i / pasos.toFloat()
-                val x = desde.x + s * ancho * f * (0.3f + 0.4f * azar(semilla + k, i)) * sin(f * 5f + k).toFloat()
-                p.lineTo(x, desde.y - alto * f)
-            }
-            drawPath(p, color.copy(alpha = color.alpha * (0.5f - 0.1f * k)), style = Stroke((6f + 6f * k) * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        val n = 16
+        for (i in 0 until n) {
+            val f = i / (n - 1).toFloat()
+            val x = desde.x + ancho * 0.6f * sin(f * 4.2f + semilla).toFloat() * f + ancho * 0.3f * (azar(semilla, i) - 0.5f)
+            val y = desde.y - alto * f
+            val r = ancho * (0.25f + 0.85f * f)
+            mancha(Offset(x, y), r, color.copy(alpha = color.alpha * (1f - f * 0.75f) * (0.55f + 0.45f * azar(semilla + 1, i))))
         }
     }
 
@@ -828,44 +840,80 @@ object EstanteGalia : DisenoBiblioteca {
         }
     }
 
-    /** La piel de lobo tendida en el suelo, dentro de [r]: el contorno irregular, el pelo en mechones y la cabeza a un lado. */
+    /** La piel de lobo tendida en el suelo, dentro de [r]: la cabeza con las orejas a la izquierda, las cuatro patas abiertas, la cola y el pelo en mechones. */
     private fun DrawScope.piel(r: Rect, color: Color, semilla: Int) {
         val u = density
-        val forma = contornoIrregular(r, semilla, 30, 0.18f)
-        translate(1 * u, 1.5f * u) { drawPath(forma, Color.Black.copy(alpha = 0.3f)) }
-        drawPath(forma, Brush.radialGradient(listOf(mezcla(color, Color.White, 0.15f), color, mezcla(color, Color.Black, 0.3f)), center = r.center, radius = r.width * 0.6f))
-        clipPath(forma) {
-            for (k in 0 until 90) {
-                val o = Offset(r.left + r.width * azar(semilla, k), r.top + r.height * azar(semilla + 1, k))
-                drawLine((if (k % 3 == 0) Color.White else Color.Black).copy(alpha = 0.16f), o, o + Offset(2.5f * u, 1.5f * u * (azar(semilla + 2, k) - 0.3f)), 0.6f * u, StrokeCap.Round)
-            }
-            drawLine(mezcla(color, Color.Black, 0.4f).copy(alpha = 0.5f), Offset(r.left + r.width * 0.15f, r.center.y), Offset(r.right - r.width * 0.12f, r.center.y), 2.6f * u, StrokeCap.Round)
+        val a = r.width; val b = r.height; val cy = r.center.y; val cx = r.center.x
+        val forma = Path().apply {
+            moveTo(r.left, cy)
+            lineTo(r.left + a * 0.07f, cy - b * 0.16f)
+            lineTo(r.left + a * 0.09f, cy - b * 0.4f)
+            lineTo(r.left + a * 0.13f, cy - b * 0.22f)
+            lineTo(r.left + a * 0.18f, cy - b * 0.28f)
+            lineTo(r.left + a * 0.25f, cy - b * 0.3f)
+            lineTo(r.left + a * 0.29f, r.top)
+            lineTo(r.left + a * 0.35f, cy - b * 0.28f)
+            quadraticTo(cx, cy - b * 0.4f, r.right - a * 0.3f, cy - b * 0.3f)
+            lineTo(r.right - a * 0.25f, r.top + b * 0.02f)
+            lineTo(r.right - a * 0.19f, cy - b * 0.25f)
+            quadraticTo(r.right - a * 0.07f, cy - b * 0.1f, r.right, cy + b * 0.02f)
+            quadraticTo(r.right - a * 0.09f, cy + b * 0.06f, r.right - a * 0.17f, cy + b * 0.2f)
+            lineTo(r.right - a * 0.21f, r.bottom)
+            lineTo(r.right - a * 0.29f, cy + b * 0.28f)
+            quadraticTo(cx, cy + b * 0.4f, r.left + a * 0.37f, cy + b * 0.28f)
+            lineTo(r.left + a * 0.31f, r.bottom - b * 0.02f)
+            lineTo(r.left + a * 0.25f, cy + b * 0.26f)
+            lineTo(r.left + a * 0.13f, cy + b * 0.18f)
+            close()
         }
+        translate(1 * u, 1.5f * u) { drawPath(forma, Color.Black.copy(alpha = 0.32f)) }
+        drawPath(forma, Brush.radialGradient(listOf(mezcla(color, Color.White, 0.18f), color, mezcla(color, Color.Black, 0.3f)), center = Offset(cx - a * 0.1f, cy - b * 0.1f), radius = a * 0.6f))
+        clipPath(forma) {
+            for (k in 0 until 140) {
+                val o = Offset(r.left + a * azar(semilla, k), r.top + b * azar(semilla + 1, k))
+                val haciaFuera = if (o.y < cy) -1f else 1f
+                drawLine((if (k % 3 == 0) mezcla(color, Color.White, 0.45f) else Color.Black).copy(alpha = 0.22f), o, o + Offset(1.4f * u, 2.4f * u * haciaFuera), 0.6f * u, StrokeCap.Round)
+            }
+            drawLine(mezcla(color, Color.Black, 0.45f).copy(alpha = 0.55f), Offset(r.left + a * 0.14f, cy), Offset(r.right - a * 0.12f, cy + b * 0.02f), 3 * u, StrokeCap.Round)
+        }
+        drawPath(forma, mezcla(color, Color.Black, 0.4f).copy(alpha = 0.6f), style = Stroke(0.6f * u))
     }
 
-    /** La cesta de mimbre parada en [pie], de ancho [ancho] y alto [alto]: el tejido, el borde trenzado y las manzanas dentro. */
+    /** La cesta de mimbre parada en [pie], de ancho [ancho] y alto [alto]: el tejido de varas, el borde trenzado y, si hay, las manzanas dentro. */
     private fun DrawScope.cesta(pie: Offset, ancho: Float, alto: Float, mimbre: Color, dentro: Color?) {
         val u = density
         val forma = Path().apply {
             moveTo(pie.x - ancho * 0.4f, pie.y); lineTo(pie.x - ancho * 0.5f, pie.y - alto); lineTo(pie.x + ancho * 0.5f, pie.y - alto); lineTo(pie.x + ancho * 0.4f, pie.y); close()
         }
-        drawOval(Color.Black.copy(alpha = 0.3f), Offset(pie.x - ancho * 0.48f, pie.y - 2 * u), Size(ancho * 0.96f, 4 * u))
+        drawOval(Color.Black.copy(alpha = 0.32f), Offset(pie.x - ancho * 0.5f, pie.y - 2.5f * u), Size(ancho, 5 * u))
         if (dentro != null) for (k in 0 until 3) {
             val c = Offset(pie.x + ancho * (-0.24f + 0.24f * k), pie.y - alto - ancho * 0.06f + (if (k == 1) -ancho * 0.05f else 0f))
             drawCircle(dentro, ancho * 0.13f, c)
             drawCircle(Color.White.copy(alpha = 0.25f), ancho * 0.04f, c - Offset(ancho * 0.04f, ancho * 0.04f))
         }
-        drawPath(forma, Brush.horizontalGradient(listOf(mezcla(mimbre, Color.Black, 0.2f), mezcla(mimbre, Color.White, 0.12f), mezcla(mimbre, Color.Black, 0.35f)), pie.x - ancho / 2, pie.x + ancho / 2))
+        drawPath(forma, mezcla(mimbre, Color.Black, 0.55f))
         clipPath(forma) {
-            var y = pie.y - alto + 2 * u; var j = 0
-            while (y < pie.y) {
-                var x = pie.x - ancho * 0.5f + (j % 2) * 2.5f * u
-                while (x < pie.x + ancho * 0.5f) { drawOval(Color.Black.copy(alpha = 0.18f), Offset(x, y - 1 * u), Size(4 * u, 2.2f * u), style = Stroke(0.5f * u)); x += 5 * u }
-                y += 2.6f * u; j++
+            val fila = 3.4f * u
+            val paso = 5.5f * u
+            var y = pie.y - alto + 3 * u; var j = 0
+            while (y < pie.y + fila) {
+                var x = pie.x - ancho * 0.55f + (j % 2) * paso / 2
+                while (x < pie.x + ancho * 0.55f) {
+                    drawOval(mezcla(mimbre, Color.Black, 0.12f), Offset(x, y - fila * 0.5f), Size(paso * 0.92f, fila * 0.9f))
+                    drawOval(Color.White.copy(alpha = 0.2f), Offset(x + paso * 0.15f, y - fila * 0.42f), Size(paso * 0.6f, fila * 0.3f))
+                    x += paso
+                }
+                y += fila; j++
             }
+            drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.3f), Color.White.copy(alpha = 0.08f), Color.Transparent, Color.Black.copy(alpha = 0.4f)), pie.x - ancho / 2, pie.x + ancho / 2),
+                Offset(pie.x - ancho / 2, pie.y - alto), Size(ancho, alto))
         }
-        drawLine(mezcla(mimbre, Color.Black, 0.3f), Offset(pie.x - ancho * 0.52f, pie.y - alto), Offset(pie.x + ancho * 0.52f, pie.y - alto), 2.4f * u, StrokeCap.Round)
-        drawLine(mezcla(mimbre, Color.White, 0.25f), Offset(pie.x - ancho * 0.5f, pie.y - alto - 0.6f * u), Offset(pie.x + ancho * 0.5f, pie.y - alto - 0.6f * u), 0.6f * u)
+        // El borde trenzado.
+        val y0 = pie.y - alto
+        drawLine(Color.Black.copy(alpha = 0.35f), Offset(pie.x - ancho * 0.53f, y0 + 1.4f * u), Offset(pie.x + ancho * 0.53f, y0 + 1.4f * u), 3.6f * u, StrokeCap.Round)
+        drawLine(mezcla(mimbre, Color.Black, 0.1f), Offset(pie.x - ancho * 0.53f, y0), Offset(pie.x + ancho * 0.53f, y0), 3.4f * u, StrokeCap.Round)
+        var x = pie.x - ancho * 0.52f
+        while (x < pie.x + ancho * 0.52f) { drawLine(mezcla(mimbre, Color.White, 0.25f), Offset(x, y0 + 1.4f * u), Offset(x + 2 * u, y0 - 1.4f * u), 1f * u, StrokeCap.Round); x += 2.6f * u }
     }
 
     // =================================================================
@@ -894,7 +942,7 @@ object EstanteGalia : DisenoBiblioteca {
         val lumbre = oscuro || noche
         val teas = mutableListOf<Offset>()
         // La pared del fondo, de zarzo y barro, de arriba abajo, y los dos postes de roble que sostienen la casa.
-        zarzo(Rect(d.izquierda.right, d.corona.bottom, d.derecha.left, h - d.base.height), c(BARRO_SOMBRA), 31, 0.8f)
+        zarzo(Rect(d.izquierda.right, d.corona.bottom, d.derecha.left, h - d.base.height), c(mezcla(BARRO_SOMBRA, Color(0xFF5E4A2E), 0.3f)), 31, 0.8f)
         // Cada repisa: la pared en sombra bajo la tabla de arriba y, en la punta de la derecha, lo que se guarda en la casa.
         d.repisas.forEachIndexed { k, r ->
             clipRect(r.left, r.top, r.right, r.bottom) {
@@ -1015,18 +1063,30 @@ object EstanteGalia : DisenoBiblioteca {
                 drawLine(Color.White.copy(alpha = if (lumbre) 0.05f else 0.14f), cumbre + Offset(-1.2f * u, 0f), Offset(x - 1.2f * u, yViga), 0.8f * u)
             }
             // El hollín de tantos inviernos, más negro arriba.
-            drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = if (lumbre) 0.6f else 0.5f), Color.Black.copy(alpha = 0.08f)), r.top, yViga), techo.topLeft, techo.size)
+            drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = if (lumbre) 0.66f else 0.6f), Color.Black.copy(alpha = 0.12f)), r.top, yViga), techo.topLeft, techo.size)
+            // El humo que se queda bajo la paja, sobre el hogar.
+            mancha(Offset(cx, r.top + hh * 0.12f), (der - izq) * 0.3f, (if (lumbre) mezcla(HUMO, NOCHE, 0.6f) else HUMO).copy(alpha = 0.22f))
         }
         // La pared del fondo.
         val pared = Rect(izq, yViga + gViga, der, r.bottom)
         clipRect(pared.left, pared.top, pared.right, pared.bottom) {
-            zarzo(pared, luz(BARRO, oscuro, noche, 0.4f), 113, 0.9f)
-            drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.4f), Color.Transparent), pared.top, pared.top + 18 * u), pared.topLeft, Size(pared.width, 18 * u))
+            zarzo(pared, luz(mezcla(BARRO_SOMBRA, Color(0xFF6A5434), 0.3f), oscuro, noche, 0.2f), 113, 0.9f, 0.35f)
+            drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.5f), Color.Transparent), pared.top, pared.top + 26 * u), pared.topLeft, Size(pared.width, 26 * u))
+            // De día, la luz de la puerta entra en diagonal por la izquierda y la pared se va a la sombra hacia la derecha.
+            if (!lumbre) {
+                drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent, Color.Black.copy(alpha = 0.22f)), pared.left, pared.right), pared.topLeft, pared.size)
+                val haz = Path().apply {
+                    moveTo(pared.left, pared.top); lineTo(pared.left + pared.width * 0.22f, pared.top)
+                    lineTo(pared.left + pared.width * 0.46f, pared.bottom); lineTo(pared.left, pared.bottom); close()
+                }
+                drawPath(haz, Brush.linearGradient(listOf(Color(0xFFFFF0C8).copy(alpha = 0.32f), Color(0xFFFFE2A0).copy(alpha = 0.12f)), Offset(pared.left, pared.top), Offset(pared.left + pared.width * 0.4f, pared.bottom)))
+            }
+            mancha(Offset(cx, r.bottom), pared.width * 0.4f, FUEGO_HALO.copy(alpha = if (lumbre) 0.18f else 0.34f))
         }
         val fuego = Offset(cx, r.bottom - 6 * u)
-        val ancho = minOf((der - izq) * 0.11f, 30 * u)
+        val ancho = minOf((der - izq) * 0.13f, 36 * u)
         // El humo que sube del caldero hasta la paja.
-        humo(Offset(cx, fuego.y - ancho * 1.8f), r.top + hh * 0.05f, ancho * 0.9f, if (lumbre) mezcla(HUMO, NOCHE, 0.55f).copy(alpha = 0.35f) else HUMO.copy(alpha = 0.32f), 7)
+        humo(Offset(cx, fuego.y - ancho * 1.6f), r.top + hh * 0.02f, ancho * 1.1f, if (lumbre) mezcla(HUMO, NOCHE, 0.5f).copy(alpha = 0.3f) else mezcla(HUMO, Color.White, 0.2f).copy(alpha = 0.3f), 7)
         // El escudo y la espada, colgados a la izquierda.
         val altoPared = pared.height
         val escR = Rect(izq + (cx - izq) * 0.3f, pared.top + altoPared * 0.12f, izq + (cx - izq) * 0.3f + altoPared * 0.42f, pared.top + altoPared * 0.88f)
@@ -1036,7 +1096,7 @@ object EstanteGalia : DisenoBiblioteca {
         manto(Offset(cx + (der - cx) * 0.62f, pared.top + altoPared * 0.1f), (der - cx) * 0.36f, altoPared * 0.8f, oscuro, noche, 0.45f)
         val mu = Offset(cx + (der - cx) * 0.3f, yViga + gViga)
         cordel(mu, mu + Offset(0f, altoPared * 0.18f), c(LINO), 0.9f * u)
-        muerdago(mu + Offset(0f, altoPared * 0.18f), altoPared * 0.42f, 0f, luz(MUERDAGO, oscuro, noche, 0.55f), luz(BAYA, oscuro, noche, 0.6f))
+        muerdago(mu + Offset(0f, altoPared * 0.16f), altoPared * 0.56f, 0f, luz(MUERDAGO, oscuro, noche, 0.55f), luz(BAYA, oscuro, noche, 0.6f))
         // La viga tirante, de poste a poste.
         val viga = Rect(r.left, yViga, r.right, yViga + gViga)
         drawRect(Color.Black.copy(alpha = 0.4f), Offset(viga.left, viga.bottom), Size(viga.width, 4 * u))
@@ -1044,7 +1104,7 @@ object EstanteGalia : DisenoBiblioteca {
         drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = if (lumbre) 0.05f else 0.2f), Color.Transparent, Color.Black.copy(alpha = 0.3f)), viga.top, viga.bottom), viga.topLeft, viga.size)
         // El hogar, el caldero sobre el fuego y la cadena que baja de la viga.
         hogar(fuego, ancho, if (lumbre) 1f else 0.55f, oscuro, noche)
-        val boca = Offset(cx, fuego.y - ancho * 1.25f)
+        val boca = Offset(cx, fuego.y - ancho * 1.08f)
         val cadena = luz(HIERRO, oscuro, noche, 0.6f)
         var y = viga.bottom; var k = 0
         while (y < boca.y - ancho * 0.1f) {
@@ -1111,7 +1171,7 @@ object EstanteGalia : DisenoBiblioteca {
         val gal = numeroGalo(v.dia)
         val corte = if (gal.isEmpty()) 1f else 0.64f
         textoEn(medidor, v.dia, Rect(r.left, r.top, r.right, r.top + r.height * corte), TITULO, tinta(oscuro), 15f, peso = GRUESO, minimo = 7f)
-        if (gal.isNotEmpty()) textoEn(medidor, gal, Rect(r.left + 0.5f * u, r.top + r.height * 0.6f, r.right - 0.5f * u, r.bottom), ROTULO, oro(oscuro), 7.5f, peso = FontWeight.SemiBold, minimo = 4f)
+        if (gal.isNotEmpty()) textoEn(medidor, gal, Rect(r.left + 0.5f * u, r.top + r.height * 0.6f, r.right - 0.5f * u, r.bottom), ROTULO, oro(oscuro), 7.5f, peso = FontWeight.SemiBold, minimo = 3.4f)
         if (v.noche) {
             val l = Offset(r.right - 3.4f * u, r.top + 3.4f * u)
             drawCircle(tinta(oscuro).copy(alpha = 0.7f), 1.7f * u, l)
@@ -1197,7 +1257,7 @@ object EstanteGalia : DisenoBiblioteca {
         val y2 = minOf(y1 + frente.height * 0.24f, frente.bottom - 18 * u)
         if (y2 - y1 > 10 * u) rotate(90f, Offset(frente.center.x, (y1 + y2) / 2)) {
             val l = (y2 - y1) / 2
-            ondaGrabada(frente.center.x - l, frente.center.x + l, (y1 + y2) / 2, minOf(w * 0.34f, 7 * u), hondo, labio, 0.8f * u)
+            ondaGrabada(frente.center.x - l, frente.center.x + l, (y1 + y2) / 2, minOf(w * 0.44f, 10 * u), hondo, labio, 0.9f * u)
         }
         val mes = Rect(frente.left + w * 0.2f, y2 + 3 * u, frente.right - w * 0.2f, frente.bottom - 4 * u)
         if (mes.height > 14 * u) grabado(medidor, mesCorto(v.mes), mes, ROTULO, hondo, labio, 7f, peso = FontWeight.SemiBold, vertical = true, minimo = 4f)
@@ -1295,7 +1355,7 @@ object EstanteGalia : DisenoBiblioteca {
         val marco = c(mezcla(TABLA, VETA, 0.12f))
         val fondo = cera(oscuro, e.noche, 0.55f)
         // La sombra sobre la mesa y los cantos de las otras tablillas.
-        drawRoundRect(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.25f), Offset(cuerpo.left + 3 * u, cuerpo.top + 5 * u), cuerpo.size, CornerRadius(rad))
+        drawRoundRect(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.25f), Offset(cara.left + 3 * u, cara.top + 5 * u), cara.size, CornerRadius(rad))
         for (j in 3 downTo 1) {
             val col = c(mezcla(TABLA, VETA, 0.15f + 0.1f * j))
             drawRoundRect(col, Offset(cara.left + j * 1.1f * u, cara.top + j * 1.4f * u), cara.size, CornerRadius(rad))
@@ -1312,7 +1372,7 @@ object EstanteGalia : DisenoBiblioteca {
             // La fecha del tema, arriba, y la onda que la subraya.
             enDos(medidor, e.fecha, Rect(q.left + 8 * u, q.top + 3 * u, xs - 16 * u, h * 0.255f), TITULO, tinta(oscuro), 14f, peso = GRUESO, k = 0.72f, color2 = oro(oscuro))
             val yd = h * 0.285f
-            onda(q.left + 8 * u, xs - 16 * u, yd, 5 * u, c(oro(oscuro)).copy(alpha = 0.8f), 0.8f * u)
+            onda(q.left + 8 * u, xs - 16 * u, yd, 7 * u, oro(oscuro).copy(alpha = 0.85f), 1f * u)
             // De noche, la media luna rayada en la cera, junto a la fecha.
             if (e.noche) {
                 val l = Offset(xs - 22 * u, q.top + 12 * u)
@@ -1324,11 +1384,15 @@ object EstanteGalia : DisenoBiblioteca {
             aIzquierda(medidor, palabras, Rect(q.left + 8 * u, h * 0.76f, xs - 16 * u, h * 0.86f), ROTULO, tenue(oscuro), 10f, peso = FontWeight.SemiBold, minimo = 6f)
             // El estátero metido en la cera, abajo a la derecha.
             moneda(Offset(xs + (q.right - xs) * 0.5f + 2 * u, q.bottom - 14 * u), 9.5f * u, oscuro)
-            // Las correas de las bisagras, a la izquierda.
+            // Las bisagras, a la izquierda: un tiento de cuero que pasa por dos agujeros y da la vuelta al canto.
             listOf(0.27f, 0.73f).forEach { f ->
                 val y = cara.top + cara.height * f
-                drawCircle(Color.Black.copy(alpha = 0.5f), 1.6f * u, Offset(x0 + 5 * u, y))
-                correa(Offset(cuerpo.left - 1 * u, y), Offset(x0 + 5 * u, y), c(CORREA), 3.2f * u)
+                val a1 = Offset(x0 + 5.5f * u, y - 4 * u); val a2 = Offset(x0 + 5.5f * u, y + 4 * u)
+                listOf(a1, a2).forEach { o -> drawCircle(Color.Black.copy(alpha = 0.55f), 1.7f * u, o) }
+                val lazo = Path().apply { moveTo(a1.x, a1.y); quadraticTo(x0 - 7 * u, y - 6 * u, x0 - 7 * u, y); quadraticTo(x0 - 7 * u, y + 6 * u, a2.x, a2.y) }
+                drawPath(lazo, Color.Black.copy(alpha = 0.3f), style = Stroke(2.8f * u, cap = StrokeCap.Round))
+                drawPath(lazo, c(CORREA), style = Stroke(2.2f * u, cap = StrokeCap.Round))
+                drawPath(lazo, mezcla(c(CORREA), Color.White, 0.3f).copy(alpha = 0.5f), style = Stroke(0.5f * u, cap = StrokeCap.Round))
             }
             if (aTapa > 0f) drawRoundRect(Color.Black.copy(alpha = 0.45f * (1f - co)), cara.topLeft, cara.size, CornerRadius(rad))
         }
@@ -1345,8 +1409,8 @@ object EstanteGalia : DisenoBiblioteca {
                     drawLine(mezcla(cuero, Color.White, 0.3f).copy(alpha = 0.5f * alfa), Offset(xc + s * u, cuerpo.top - 2 * u), Offset(xc + s * u + 0.6f * u, cuerpo.bottom + 2 * u), 0.5f * u,
                         pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * u, 2 * u), 0f))
                 }
-                val fc = Offset(xc - 13 * u, cuerpo.center.y + 2 * u)
-                withTransform({ translate(0f, 0f) }) { fibula(fc, 26 * u, c(BRONCE).copy(alpha = alfa), aSol) }
+                val fc = Offset(xc - 14 * u, cuerpo.center.y + 12 * u)
+                rotate(-32f, fc) { fibula(fc, 34 * u, c(BRONCE).copy(alpha = alfa), aSol) }
             }
         }
         // De noche, el fuego alumbra la tablilla desde la esquina de arriba.
@@ -1433,7 +1497,7 @@ object EstanteGalia : DisenoBiblioteca {
             for (i in 0 until 4) drawLine(tinta.copy(alpha = 0.16f), Offset(x + i * 2.2f * u, y), Offset(x + i * 2.2f * u, y + 9 * u), 0.8f * u, StrokeCap.Round)
             drawLine(tinta.copy(alpha = 0.16f), Offset(x - 1.2f * u, y + 8 * u), Offset(x + 8 * u, y + 1 * u), 0.8f * u, StrokeCap.Round)
         }
-        hoja(Offset(w / 2, h * 0.52f), w * 0.42f, 18f, tinta.copy(alpha = 0.03f), tinta.copy(alpha = 0.02f))
+        caballoGalia(Offset(w / 2, h * 0.52f), w * 0.3f, tinta.copy(alpha = 0.028f))
         onda(w * 0.16f, w * 0.84f, h - 46 * u, 5 * u, p.acento.copy(alpha = 0.32f), 0.8f * u, hueco = 14 * u)
         torq(Offset(w / 2, h - 46 * u), 6 * u, 1.6f * u, p.acento.copy(alpha = 0.55f), p.acento.copy(alpha = 0.25f))
         // En modo oscuro, la tablilla a la luz del fuego: alumbra desde abajo a la izquierda, donde está el hogar.
@@ -1550,21 +1614,25 @@ object EstanteGalia : DisenoBiblioteca {
         val alzar = ((a - 0.25f) / 0.75f).coerceIn(0f, 1f)
         val banco = h * 0.8f
         // La pared y el poste.
-        zarzo(Rect(0f, 0f, w, banco), luz(BARRO, oscuro, false, 0.3f), 231)
+        zarzo(Rect(0f, 0f, w, banco), luz(mezcla(BARRO, BARRO_SOMBRA, 0.6f), oscuro, false, 0.3f), 231, 1f, 0.6f)
+        drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.25f), Color.Transparent), 0f, banco * 0.3f), Offset.Zero, Size(w, banco * 0.3f))
         val poste = Rect(0f, 0f, w * 0.06f, banco)
         madera(poste, luz(MADERA, oscuro, false, 0.3f), 233, vertical = true, nudos = 2)
         drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.3f), Color.Transparent, Color.Black.copy(alpha = 0.4f)), poste.left, poste.right), poste.topLeft, poste.size)
         // El banco de roble, con su canto y las patas, y el suelo de tierra.
         drawRect(c(Color(0xFF4E4030)), Offset(0f, banco), Size(w, h - banco))
-        listOf(w * 0.1f, w * 0.88f).forEach { x -> madera(Rect(x, banco + 10 * u, x + 10 * u, h), luz(TABLA, oscuro, false, 0.3f), 235, vertical = true, nudos = 0) }
-        val tabla = Rect(w * 0.03f, banco, w * 0.97f, banco + 11 * u)
+        listOf(w * 0.12f, w * 0.86f).forEach { x ->
+            madera(Rect(x, banco + 14 * u, x + 8 * u, h), luz(TABLA, oscuro, false, 0.25f), 235, vertical = true, nudos = 0)
+            drawRect(Color.Black.copy(alpha = 0.3f), Offset(x + 6 * u, banco + 14 * u), Size(2 * u, h - banco - 14 * u))
+        }
+        val tabla = Rect(w * 0.03f, banco, w * 0.97f, banco + 14 * u)
         drawRect(Color.Black.copy(alpha = 0.35f), Offset(tabla.left, tabla.bottom), Size(tabla.width, 4 * u))
         madera(tabla, luz(TABLA, oscuro, false, 0.4f), 237, nudos = 2)
         drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = if (oscuro) 0.06f else 0.22f), Color.Transparent, Color.Black.copy(alpha = 0.3f)), tabla.top, tabla.bottom), tabla.topLeft, tabla.size)
         // El estuche.
         val jc = w * 0.34f
         val cw = minOf(w * 0.3f, h * 0.44f)
-        val ch = h * 0.56f
+        val ch = h * 0.5f
         val pie = banco + 2 * u
         val caja = Rect(jc - cw / 2, pie - ch, jc + cw / 2, pie)
         val g = (5f + 1.5f * sqrt(e.hojas.coerceAtLeast(0).toFloat())).coerceIn(5f, 22f) * u
@@ -1582,38 +1650,6 @@ object EstanteGalia : DisenoBiblioteca {
         drawPath(costado, Color.Black.copy(alpha = 0.3f), style = Stroke(0.6f * u))
         val boca = Path().apply { moveTo(caja.left, caja.top); lineTo(caja.right, caja.top); lineTo(caja.right + g, caja.top - g * 0.5f); lineTo(caja.left + g, caja.top - g * 0.5f); close() }
         drawPath(boca, mezcla(cuero, Color.Black, 0.6f))
-        // Las tablillas que suben al abrirse: la de atrás, lisa con su muérdago; las de delante, escritas.
-        if (alzar > 0f) {
-            val subir = ch * 0.5f * alzar
-            for (k in 2 downTo 0) {
-                val dx = g * 0.5f * (k / 2f) + k * 2 * u
-                val r = Rect(caja.left + cw * 0.08f + dx, caja.top - subir - g * 0.25f * k / 2f - k * 4 * u, caja.right - cw * 0.08f + dx, caja.top + ch * 0.6f)
-                val q = tablilla(r, j(mezcla(TABLA, VETA, 0.1f * k)), cera(oscuro, false, 0.5f), e.semilla + k, 4 * u, 0.3f)
-                if (k == 2) muerdago(Offset(q.center.x, q.top + 3 * u), q.width * 0.55f, 0f, j(MUERDAGO), j(BAYA))
-                else renglones(Rect(q.left + 3 * u, q.top + 2 * u, q.right - 3 * u, q.top + subir * 0.8f), tinta(oscuro).copy(alpha = 0.4f), e.semilla + k, 6 * u, 0.9f * u)
-            }
-        }
-        // La cara del estuche: el cuero con su grano, el filete tallado y la falera de bronce.
-        val forma = Path().apply { addRoundRect(RoundRect(caja, CornerRadius(3 * u))) }
-        drawPath(forma, Brush.horizontalGradient(listOf(mezcla(cuero, Color.White, 0.12f), cuero, mezcla(cuero, Color.Black, 0.25f)), caja.left, caja.right))
-        clipPath(forma) {
-            for (k in 0 until 220) drawCircle((if (k % 3 == 0) Color.White else Color.Black).copy(alpha = 0.06f + 0.05f * azar(e.semilla, k)), (0.3f + 0.5f * azar(e.semilla + 1, k)) * u,
-                Offset(caja.left + cw * azar(e.semilla + 2, k), caja.top + ch * azar(e.semilla + 3, k)))
-        }
-        val hondo = mezcla(cuero, Color.Black, 0.45f)
-        val labio = mezcla(cuero, Color.White, 0.25f).copy(alpha = 0.5f)
-        listOf(4f, 7f).forEach { e0 ->
-            val q = caja.deflate(e0 * u)
-            drawRoundRect(labio, q.topLeft + Offset(0.5f * u, 0.5f * u), q.size, CornerRadius(2 * u), style = Stroke(0.5f * u))
-            drawRoundRect(hondo, q.topLeft, q.size, CornerRadius(2 * u), style = Stroke(0.7f * u))
-        }
-        ondaGrabada(caja.left + 12 * u, caja.right - 12 * u, caja.bottom - 14 * u, 5 * u, hondo, labio, 0.8f * u)
-        val fa = Offset(jc, caja.top + ch * 0.62f)
-        val fr = minOf(cw * 0.17f, 15 * u)
-        drawCircle(Color.Black.copy(alpha = 0.3f), fr, fa + Offset(1 * u, 1.6f * u))
-        drawCircle(Brush.radialGradient(listOf(mezcla(BRONCE, ORO_BRILLO, 0.4f), j(BRONCE), mezcla(j(BRONCE), Color.Black, 0.4f)), center = fa - Offset(fr * 0.35f, fr * 0.35f), radius = fr * 1.5f), fr, fa)
-        drawCircle(mezcla(j(BRONCE), Color.Black, 0.4f), fr * 0.8f, fa, style = Stroke(0.6f * u))
-        rueda(fa, fr * 0.55f, mezcla(j(BRONCE), Color.Black, 0.35f))
         // La solapa: cuelga sobre la cara; al abrirse, gira hacia arriba y se ve por dentro, de gamuza.
         val bis = caja.top
         val largo = ch * 0.36f
@@ -1635,7 +1671,50 @@ object EstanteGalia : DisenoBiblioteca {
             // La presilla del pasador, en la punta.
             drawRoundRect(mezcla(cuero, Color.Black, 0.3f), Offset(jc - 3 * u, bis + largo * 0.9f), Size(6 * u, largo * 0.22f), CornerRadius(2 * u))
         }
-        solapa(bis, romper) { tapaSolapa(it) }
+        if (romper >= 0.5f) solapa(bis, romper) { tapaSolapa(it) }
+        // Las tablillas que suben al abrirse: la de atrás, lisa con su muérdago; las de delante, escritas.
+        if (alzar > 0f) {
+            val subir = ch * 0.28f * alzar
+            for (k in 2 downTo 0) {
+                val dx = g * 0.5f * (k / 2f) + k * 2 * u
+                val r = Rect(caja.left + cw * 0.08f + dx, caja.top - subir - g * 0.25f * k / 2f - k * 16 * u * alzar, caja.right - cw * 0.08f + dx, caja.top + ch * 0.6f)
+                val q = tablilla(r, j(mezcla(TABLA, VETA, 0.1f * k)), cera(oscuro, false, 0.5f), e.semilla + k, 4 * u, 0.3f)
+                if (k == 2) muerdago(Offset(q.left + 6 * u, q.top + 7 * u), minOf(q.width * 0.55f, 36 * u), 90f, j(MUERDAGO), j(BAYA))
+                else renglones(Rect(q.left + 3 * u, q.top + 2 * u, q.right - 3 * u, q.top + subir * 0.8f), tinta(oscuro).copy(alpha = 0.4f), e.semilla + k, 6 * u, 0.9f * u)
+            }
+        }
+        // La cara del estuche: el cuero con su grano, el filete tallado y la falera de bronce.
+        val forma = Path().apply { addRoundRect(RoundRect(caja, CornerRadius(3 * u))) }
+        drawPath(forma, Brush.horizontalGradient(listOf(mezcla(cuero, Color.White, 0.12f), cuero, mezcla(cuero, Color.Black, 0.25f)), caja.left, caja.right))
+        clipPath(forma) {
+            for (k in 0 until 220) drawCircle((if (k % 3 == 0) Color.White else Color.Black).copy(alpha = 0.06f + 0.05f * azar(e.semilla, k)), (0.3f + 0.5f * azar(e.semilla + 1, k)) * u,
+                Offset(caja.left + cw * azar(e.semilla + 2, k), caja.top + ch * azar(e.semilla + 3, k)))
+        }
+        val hondo = mezcla(cuero, Color.Black, 0.45f)
+        val labio = mezcla(cuero, Color.White, 0.25f).copy(alpha = 0.5f)
+        listOf(4f, 7f).forEach { e0 ->
+            val q = caja.deflate(e0 * u)
+            drawRoundRect(labio, q.topLeft + Offset(0.5f * u, 0.5f * u), q.size, CornerRadius(2 * u), style = Stroke(0.5f * u))
+            drawRoundRect(hondo, q.topLeft, q.size, CornerRadius(2 * u), style = Stroke(0.7f * u))
+        }
+        ondaGrabada(caja.left + 12 * u, caja.right - 12 * u, caja.bottom - 15 * u, 5 * u, hondo, labio, 0.8f * u)
+        // Las costuras de los costados y los remaches de bronce de las esquinas de abajo.
+        listOf(caja.left + 2 * u, caja.right - 2 * u).forEach { x ->
+            drawLine(mezcla(cuero, Color(0xFFF2E2C0), 0.45f).copy(alpha = 0.6f), Offset(x, caja.top + 4 * u), Offset(x, caja.bottom - 4 * u), 0.7f * u,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.4f * u, 2 * u), 0f))
+        }
+        listOf(caja.left + 10 * u, caja.right - 10 * u).forEach { x ->
+            drawCircle(Color.Black.copy(alpha = 0.3f), 2 * u, Offset(x + 0.5f * u, caja.bottom - 6.5f * u))
+            drawCircle(j(BRONCE), 1.8f * u, Offset(x, caja.bottom - 7 * u))
+            drawCircle(Color.White.copy(alpha = 0.35f), 0.6f * u, Offset(x - 0.5f * u, caja.bottom - 7.5f * u))
+        }
+        val fa = Offset(jc, caja.top + ch * 0.62f)
+        val fr = minOf(cw * 0.2f, 18 * u)
+        drawCircle(Color.Black.copy(alpha = 0.3f), fr, fa + Offset(1 * u, 1.6f * u))
+        drawCircle(Brush.radialGradient(listOf(mezcla(BRONCE, ORO_BRILLO, 0.4f), j(BRONCE), mezcla(j(BRONCE), Color.Black, 0.4f)), center = fa - Offset(fr * 0.35f, fr * 0.35f), radius = fr * 1.5f), fr, fa)
+        drawCircle(mezcla(j(BRONCE), Color.Black, 0.4f), fr * 0.8f, fa, style = Stroke(0.6f * u))
+        rueda(fa, fr * 0.55f, mezcla(j(BRONCE), Color.Black, 0.35f))
+        if (romper < 0.5f) solapa(bis, romper) { tapaSolapa(it) }
         // El pasador de hueso que cierra la solapa: sale al abrir.
         val alfaP = (1f - romper * 1.4f).coerceIn(0f, 1f)
         if (alfaP > 0f) {
@@ -1660,7 +1739,8 @@ object EstanteGalia : DisenoBiblioteca {
         drawLine(Color.Black.copy(alpha = 0.3f), es + Offset(1 * u, 1.5f * u), es + Offset(w * 0.2f + 1 * u, -2 * u), 2.2f * u, StrokeCap.Round)
         drawLine(j(Color(0xFFE6DCC4)), es, es + Offset(w * 0.2f, -3 * u), 2 * u, StrokeCap.Round)
         drawPath(Path().apply { moveTo(es.x - 1 * u, es.y - 2.4f * u); lineTo(es.x - 6 * u, es.y - 1.6f * u); lineTo(es.x - 6 * u, es.y + 1.8f * u); lineTo(es.x - 1 * u, es.y + 2.2f * u); close() }, j(Color(0xFFD8CCB0)))
-        hoja(Offset(w * 0.88f, banco + 4 * u), 16 * u, 70f, j(mezcla(ROBLE, PAJA, 0.4f)), j(ROBLE_SOMBRA))
+        hoja(Offset(w * 0.6f, banco + 5 * u), 14 * u, 70f, j(mezcla(ROBLE, PAJA, 0.4f)), j(ROBLE_SOMBRA))
+        cesta(Offset(w * 0.88f, banco + 3 * u), 38 * u, 26 * u, j(Color(0xFFB08A50)), j(Color(0xFF9A3A22)))
         // La luz: de día, la que entra por la puerta, de la derecha; de noche, el fuego del hogar, desde la izquierda.
         if (!oscuro) {
             val rayo = Path().apply { moveTo(w * 0.78f, 0f); lineTo(w * 1.02f, 0f); lineTo(w * 0.78f, banco); lineTo(w * 0.36f, banco); close() }
@@ -1746,7 +1826,7 @@ object EstanteGalia : DisenoBiblioteca {
         // De noche, el cuero a oscuras que alcanza el fuego.
         val piel = if (oscuro) luz(Color(0xFF9A7048), true, false, 0.5f) else Color(0xFF9A7048)
         val pielOsc = mezcla(piel, Color.Black, 0.3f)
-        val lana = c(LANAS[0])
+        val lana = luz(LANAS[0], oscuro, false, 0.55f)
         val ro = minOf(w, h) * 0.13f
         val pc = Offset(s.center.x, borde)
         val pr = Rect(pc.x - ro * 1.15f, pc.y - ro * 1.15f, pc.x + ro * 1.15f, pc.y + ro * 1.15f)
@@ -1864,7 +1944,7 @@ object EstanteGalia : DisenoBiblioteca {
         val w = size.width; val h = size.height
         fun c(x: Color) = t(x, oscuro, false)
         val suelo = h - 12 * u
-        zarzo(Rect(0f, 0f, w, suelo), luz(BARRO, oscuro, false, 0.3f), 251)
+        zarzo(Rect(0f, 0f, w, suelo), luz(mezcla(BARRO, BARRO_SOMBRA, 0.4f), oscuro, false, 0.3f), 251, 1f, 0.35f)
         drawRect(c(Color(0xFF4E4030)), Offset(0f, suelo), Size(w, h - suelo))
         drawRect(Color.Black.copy(alpha = 0.3f), Offset(0f, suelo), Size(w, 2 * u))
         val viga = Rect(0f, 0f, w, 10 * u)
@@ -1893,13 +1973,15 @@ object EstanteGalia : DisenoBiblioteca {
         val anchoB = (w - 32 * u) / 3f
         grupos.forEach { (nombre, cuantas, tipo) ->
             val bx = 12 * u + tipo * (anchoB + 4 * u)
-            val cesto = Rect(bx + anchoB * 0.06f, h * 0.56f, bx + anchoB * 0.94f, suelo)
+            val cesto = Rect(bx + anchoB * 0.12f, h * 0.66f, bx + anchoB * 0.88f, suelo)
+            val altoCesta = cesto.height * 0.78f
+            val borde = cesto.bottom - altoCesta
             // Lo que asoma de la cesta: las tablillas paradas, cada una un poco distinta.
             val vis = cuantas.coerceAtMost(7)
             for (jj in 0 until vis) {
-                val gx = cesto.left + 4 * u + (cesto.width - 16 * u) * (jj / 6f)
-                val alto = (20f + 10f * azar(tipo * 13 + 5, jj)) * u
-                val r = Rect(gx, cesto.top - alto + 6 * u, gx + 12 * u, cesto.top + 10 * u)
+                val gx = cesto.left + 2 * u + (cesto.width - 20 * u) * (jj / 6f)
+                val alto = (26f + 12f * azar(tipo * 13 + 5, jj)) * u
+                val r = Rect(gx, borde - alto + 8 * u, gx + 15 * u, borde + 10 * u)
                 rotate(-6f + 12f * azar(tipo * 7 + 1, jj), Offset(r.center.x, r.bottom)) {
                     when (tipo) {
                         0 -> {
@@ -1911,7 +1993,7 @@ object EstanteGalia : DisenoBiblioteca {
                         1 -> {
                             drawRoundRect(luz(Color(0xFF9A7048), oscuro, false, 0.4f), r.topLeft, r.size, CornerRadius(1.5f * u))
                             drawRoundRect(Color.Black.copy(alpha = 0.35f), r.topLeft, r.size, CornerRadius(1.5f * u), style = Stroke(0.5f * u))
-                            drawLine(c(LANAS[0]), Offset(r.left - 0.5f * u, r.top + 7 * u), Offset(r.right + 0.5f * u, r.top + 7 * u), 1.2f * u)
+                            drawLine(luz(LANAS[0], oscuro, false, 0.5f), Offset(r.left - 0.5f * u, r.top + 7 * u), Offset(r.right + 0.5f * u, r.top + 7 * u), 1.2f * u)
                             selloGalia(Offset(r.center.x, r.top + 7 * u), 2.8f * u, luz(Color(0xFF8E5E3C), oscuro, false, 0.4f), 1f, jj + 7)
                         }
                         else -> {
@@ -1921,14 +2003,14 @@ object EstanteGalia : DisenoBiblioteca {
                     }
                 }
             }
-            cesta(Offset(cesto.center.x, cesto.bottom), cesto.width, cesto.height * 0.72f, c(Color(0xFFB08A50)), null)
-            if (tipo == 0 && cuantas > 0) mancha(Offset(cesto.center.x, cesto.top), cesto.width * 0.6f, FUEGO_HALO.copy(alpha = 0.2f))
-            if (cuantas > 7) textoEn(medidor, "+${cuantas - 7}", Rect(cesto.left, cesto.bottom - cesto.height * 0.5f, cesto.right, cesto.bottom - 4 * u), TITULO,
+            cesta(Offset(cesto.center.x, cesto.bottom), cesto.width, altoCesta, luz(Color(0xFFB08A50), oscuro, false, 0.3f), null)
+            if (tipo == 0 && cuantas > 0) mancha(Offset(cesto.center.x, borde), cesto.width * 0.6f, FUEGO_HALO.copy(alpha = 0.22f))
+            if (cuantas > 7) textoEn(medidor, "+${cuantas - 7}", Rect(cesto.left, borde + altoCesta * 0.3f, cesto.right, cesto.bottom - 4 * u), TITULO,
                 if (oscuro) FUEGO else Color(0xFFFFF2D6), 13f, peso = GRUESO)
-            if (cuantas == 0) hoja(Offset(cesto.center.x, cesto.bottom - cesto.height * 0.72f - 3 * u), 16 * u, 80f, c(mezcla(ROBLE, PAJA, 0.4f)), c(ROBLE_SOMBRA))
-            // La tablillita de la cesta, atada a su borde.
+            if (cuantas == 0) hoja(Offset(cesto.center.x, borde - 3 * u), 16 * u, 80f, c(mezcla(ROBLE, PAJA, 0.4f)), c(ROBLE_SOMBRA))
+            // La tablillita de la cesta, colgada de la viga sobre su cesta.
             val ti = Rect(bx + anchoB * 0.12f, 50 * u, bx + anchoB * 0.88f, 68 * u)
-            correa(Offset(ti.center.x, ti.bottom), Offset(ti.center.x, cesto.top + cesto.height * 0.3f), c(CORREA), 1.2f * u, 0.15f)
+            listOf(ti.left + 6 * u, ti.right - 6 * u).forEach { x -> drawLine(c(CORREA), Offset(x, viga.bottom), Offset(x, ti.top + 2 * u), 1f * u) }
             val qt = tablilla(ti, luz(TABLA_LUZ, oscuro, false, 0.4f), cera(oscuro, false, 0.4f), 261 + tipo, 2.5f * u, 0.3f)
             textoEn(medidor, "$nombre · $cuantas", Rect(qt.left + 2 * u, qt.top, qt.right - 2 * u, qt.bottom), TITULO, tinta(oscuro), 9.5f, peso = GRUESO, minimo = 5f)
         }
@@ -2062,7 +2144,7 @@ object EstanteGalia : DisenoBiblioteca {
         val w = size.width; val h = size.height
         fun c(x: Color) = t(x, oscuro, false)
         val y0 = h - 24 * u
-        zarzo(Rect(0f, 0f, w, y0), luz(BARRO, oscuro, false, 0.3f), 301)
+        zarzo(Rect(0f, 0f, w, y0), luz(mezcla(BARRO, BARRO_SOMBRA, 0.4f), oscuro, false, 0.3f), 301, 1f, 0.5f)
         val viga = Rect(0f, 0f, w, 9 * u)
         drawRect(Color.Black.copy(alpha = 0.35f), Offset(0f, viga.bottom), Size(w, 3 * u))
         madera(viga, luz(MADERA, oscuro, false, 0.3f), 303, nudos = 2)
@@ -2191,7 +2273,7 @@ object EstanteGalia : DisenoBiblioteca {
                     drawLine(tinta.copy(alpha = 0.03f), Offset(q.left + q.width * 0.1f, y), Offset(q.right - q.width * (0.1f + 0.3f * azar(e.semilla, k)), y), 1.4f * u)
                 }
                 if (oscuro) mancha(Offset(0f, 0f), w * 0.6f, FUEGO_HALO.copy(alpha = 0.1f))
-                if (h > cab + 40 * u) hoja(Offset(w - 46 * u, h - 30 * u), 52 * u, 30f, tinta.copy(alpha = 0.05f), tinta.copy(alpha = 0.03f))
+                if (h > cab + 40 * u) caballoGalia(Offset(w - 44 * u, h - 30 * u), 26 * u, mezcla(fondo, tinta, 0.07f))
             }
         }
         drawPath(forma, Color.Black.copy(alpha = 0.25f), style = Stroke(1f * u))

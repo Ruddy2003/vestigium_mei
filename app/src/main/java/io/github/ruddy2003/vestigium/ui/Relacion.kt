@@ -96,7 +96,8 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     // El escudo: recto arriba y redondo abajo.
     TemaId.TEMPLARIO -> MarcoRecuadro(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 16.dp), 12.dp)
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
-    TemaId.GALIA -> MarcoRecuadro(RectangleShape, 12.dp)
+    // La hoja de roble de las esquinas del tema: dos esquinas muy redondas en diagonal y dos casi rectas.
+    TemaId.GALIA -> MarcoRecuadro(RoundedCornerShape(topStart = 16.dp, topEnd = 3.dp, bottomEnd = 16.dp, bottomStart = 3.dp), 12.dp)
     // El nicho tallado en la caliza: recto a los lados y cerrado arriba por un arco rebajado.
     TemaId.ARCONTES -> MarcoRecuadro(androidx.compose.foundation.shape.GenericShape { s, _ ->
         val a = minOf(s.height * 0.14f, s.width * 0.1f)
@@ -297,14 +298,18 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 x += 12 * u
             }
         }
+        // La cuerda torcida de un torques: dos hebras de oro que se enroscan una en otra (más gruesa la cuerda cuanto más
+        // fuerte el lazo) y, en cada punta, el disco del tampón.
         TemaId.GALIA -> {
-            drawLine(col, Offset(0f, y), Offset(w, y), grosor * 0.7f + 0.6f * u, pathEffect = punteado)
-            val b = 2.5f * u + grosor * 0.35f
-            var x = 9 * u
-            while (x < w - 6 * u) {
-                drawLine(col, Offset(x - b, y - b), Offset(x + b, y + b), 1.1f * u); drawLine(col, Offset(x - b, y + b), Offset(x + b, y - b), 1.1f * u)
-                x += 12 * u
+            val m = 7 * u; val amp = 0.8f * u + grosor * 0.32f; val paso = 7 * u + grosor
+            for (fase in listOf(0f, PI.toFloat())) {
+                val hebra = Path().apply {
+                    moveTo(m, y + amp * sin(fase)); var x = m
+                    while (x <= w - m) { lineTo(x, y + amp * sin(2 * PI.toFloat() * (x - m) / paso + fase)); x += 1.2f * u }
+                }
+                drawPath(hebra, col, style = Stroke(0.9f * u + grosor * 0.28f, cap = StrokeCap.Round, pathEffect = punteado))
             }
+            listOf(m - 2 * u, w - m - 1 * u).forEach { px -> drawOval(col, Offset(px - 1.5f * u, y - amp - 2.4f * u), Size(3 * u + grosor * 0.15f, 2 * amp + 4.8f * u)) }
         }
         // La red de pesca del lago: una franja de mallas anudadas, más alta cuanto más fuerte el lazo, y un plomo en cada punta.
         TemaId.ARCONTES -> {

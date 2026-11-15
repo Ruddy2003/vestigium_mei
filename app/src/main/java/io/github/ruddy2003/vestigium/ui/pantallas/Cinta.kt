@@ -71,7 +71,7 @@ private class Cosa(val pista: Int, val a: Long, val b: Long?, val color: Color, 
 private class PistaCinta(val nombre: String, val icono: String)
 
 /** Lo que se pinta dentro de un bloque de la cinta. */
-private enum class RellenoCinta { LISO, FILETE, RAYAS, DIAGONAL, PUNTOS, CONTORNO, DEGRADADO, SEGMENTOS, PUNTADA, PERFORADA, PAPIRO }
+private enum class RellenoCinta { LISO, FILETE, RAYAS, DIAGONAL, PUNTOS, CONTORNO, DEGRADADO, SEGMENTOS, PUNTADA, PERFORADA, PAPIRO, CUADROS }
 
 /**
  * Cómo se ve la cinta en cada tema: la esquina de los bloques ([radio] en dp; [cortado], en chaflán), lo que llevan dentro,
@@ -99,7 +99,8 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.TEMPLARIO -> PielCinta(2.5f, true, RellenoCinta.FILETE, floatArrayOf(2f, 4f), StrokeCap.Square)
     // Sello rayado del expediente.
     TemaId.DISTOPIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
-    TemaId.GALIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
+    // La lana a cuadros de los mantos, con las horas menores en puntadas de hilo.
+    TemaId.GALIA -> PielCinta(3f, false, RellenoCinta.CUADROS, floatArrayOf(5f, 1.5f, 1.5f, 1.5f), StrokeCap.Round)
     // Tiras de papiro: las fibras a lo largo, alguna de través, y las horas en raya y punto, como el renglón del copista.
     TemaId.ARCONTES -> PielCinta(4f, false, RellenoCinta.PAPIRO, floatArrayOf(6f, 2f, 0.1f, 2f), StrokeCap.Round)
     // La cinta perforada del teletipo: tramos de esquinas redondas con la fila de arrastre al centro y los agujeros del
@@ -204,6 +205,13 @@ private fun DrawScope.bloqueCinta(p: PielCinta, color: Color, a: Offset, t: Size
                 while (y < abajo) { drawLine(if (k % 3 == 1) oscuro.copy(alpha = 0.14f) else claro.copy(alpha = 0.22f), Offset(a.x, y), Offset(der, y), 0.6f * d); y += (1.6f + (k * 7 % 3) * 0.6f) * d; k++ }
                 var x = a.x + 5f * d
                 while (x < der) { drawLine(oscuro.copy(alpha = 0.12f), Offset(x, a.y), Offset(x, abajo), 0.8f * d); x += 23f * d }
+            }
+            RellenoCinta.CUADROS -> {
+                // Los cuadros de la lana: bandas anchas que se cruzan, más oscuras donde se montan, y el hilo fino entre ellas.
+                var x = a.x + 2f * d
+                while (x < der) { drawRect(oscuro.copy(alpha = 0.16f), Offset(x, a.y), Size(4f * d, t.height)); drawLine(claro.copy(alpha = 0.4f), Offset(x + 6.5f * d, a.y), Offset(x + 6.5f * d, abajo), 0.6f * d); x += 11f * d }
+                var y = a.y + 2f * d
+                while (y < abajo) { drawRect(oscuro.copy(alpha = 0.16f), Offset(a.x, y), Size(t.width, 4f * d)); drawLine(claro.copy(alpha = 0.4f), Offset(a.x, y + 6.5f * d), Offset(der, y + 6.5f * d), 0.6f * d); y += 11f * d }
             }
         }
     }

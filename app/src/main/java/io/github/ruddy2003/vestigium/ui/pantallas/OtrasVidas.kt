@@ -670,12 +670,20 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(1.4f * d))
             }
         }
+        // La faja de lana a cuadros, tejida: la pista es la urdimbre clara y lo lleno, la lana del color con sus cuadros cruzados
+        // y los flecos al final.
         TemaId.GALIA -> {
-            drawRect(color.copy(alpha = 0.4f), Offset(0.5f * d, 0.5f * d), Size(w - d, h - d), style = Stroke(d))
+            drawRect(pista, Offset.Zero, size)
+            var xp = 2f * d; while (xp < w) { drawLine(color.copy(alpha = 0.12f), Offset(xp, 0f), Offset(xp, h), 0.6f * d); xp += 3f * d }
             if (fw > 0f) {
-                drawRect(color.copy(alpha = 0.35f), Offset.Zero, Size(fw, h))
-                clipRect(right = fw) { var x = -h; while (x < fw) { drawLine(color, Offset(x, h), Offset(x + h, 0f), 1.6f * d); x += 3.2f * d } }
-                drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(1.4f * d))
+                drawRect(color, Offset.Zero, Size(fw, h))
+                clipRect(right = fw) {
+                    var x = 2f * d
+                    while (x < fw) { drawRect(oscuro, Offset(x, 0f), Size(3f * d, h)); drawLine(claro, Offset(x + 5f * d, 0f), Offset(x + 5f * d, h), 0.6f * d); x += 9f * d }
+                    drawRect(oscuro, Offset(0f, h * 0.35f), Size(fw, h * 0.3f))
+                    drawLine(claro, Offset(0f, h * 0.2f), Offset(fw, h * 0.2f), 0.6f * d); drawLine(claro, Offset(0f, h * 0.8f), Offset(fw, h * 0.8f), 0.6f * d)
+                }
+                if (fw > 4f * d) { var y = 1f * d; while (y < h) { drawLine(color, Offset(fw, y), Offset(fw + 2.5f * d, y + 0.5f * d), 0.8f * d, StrokeCap.Round); y += 2f * d } }
             }
         }
         // El ascenso por las siete esferas: el hilo fino del camino con los siete aros, uno por esfera; lo recorrido, en el
@@ -1102,11 +1110,18 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawCircle(tinta.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.5f * d)); drawCircle(cs.primary, rc * 0.1f, c)
             marcas(24, 4f * d, 2.2f * d, tinta.copy(alpha = 0.6f))
         }
+        // La noche antes que el día (César 6.18): la mitad de la noche, de las 18 a las 6, en una banda más oscura con la luna
+        // arriba, y en el centro la rueda votiva; la hoguera del banquete a las 20.
         TemaId.GALIA -> {
-            val l = rc * 0.7f
-            drawPath(Path().apply { moveTo(c.x - l, c.y); quadraticTo(c.x, c.y - l * 0.9f, c.x + l, c.y); quadraticTo(c.x, c.y + l * 0.9f, c.x - l, c.y); close() }, tinta.copy(alpha = 0.5f), style = Stroke(1.5f * d))
-            drawCircle(tinta.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.5f * d)); drawCircle(cs.primary, rc * 0.1f, c)
-            marcas(24, 4f * d, 2.2f * d, tinta.copy(alpha = 0.6f))
+            drawArc(tinta.copy(alpha = 0.08f), 180f, 180f, true, Offset(c.x - rc, c.y - rc), Size(rc * 2, rc * 2))
+            drawCircle(linea.copy(alpha = 0.55f), rc * 0.36f, c, style = Stroke(1.6f * d))
+            for (k in 0 until 6) drawLine(linea.copy(alpha = 0.45f), polarFig(c, rc * 0.08f, k * 60f), polarFig(c, rc * 0.36f, k * 60f), 0.9f * d)
+            drawCircle(cs.primary, rc * 0.08f, c)
+            val lu = polarFig(c, rc * 0.68f, -90f)
+            drawCircle(io.github.ruddy2003.vestigium.ui.TrazosGalia.LUNA.copy(alpha = 0.9f), rc * 0.1f, lu)
+            drawCircle(tinta.copy(alpha = 0.4f), rc * 0.1f, lu, style = Stroke(0.7f * d))
+            with(io.github.ruddy2003.vestigium.ui.TrazosGalia) { hoguera(polarFig(c, ro + 7f * d, 20 * 15f - 90f), 7f * d, 0.8f) }
+            marcas(24, 2.5f * d, 0.9f * d, linea)
         }
         // Las siete esferas al centro, con la tierra en medio, y en el canto las horas; las de la noche, partidas en las
         // cuatro vigilias de Marcos 13:35 (la tarde, la medianoche, el canto del gallo y la mañana), cada una con su llamita en

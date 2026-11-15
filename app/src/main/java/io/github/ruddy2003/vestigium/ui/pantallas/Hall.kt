@@ -319,32 +319,6 @@ object PiezasLogro {
         drawContext.canvas.nativeCanvas.drawText(s, c.x, c.y + r * 0.32f, p)
     }
 
-    /**
-     * El caballo de las monedas galas, mirando a la derecha: el cuerpo en barril con el anca y la espalda redondas, el cuello y
-     * la cabeza en trazos, las patas con sus cascos en bolita, la crin de perlas, la cola en curva, la perla sobre el lomo y la
-     * rueda bajo la panza. [s] es el largo del cuerpo y [g] el grueso del trazo.
-     */
-    private fun DrawScope.caballoGalo(c: Offset, s: Float, color: Color, g: Float) {
-        fun q(x: Float, y: Float) = Offset(c.x + x * s, c.y + y * s)
-        listOf(floatArrayOf(-0.3f, 0.06f, -0.4f, 0.22f, -0.42f, 0.42f), floatArrayOf(-0.22f, 0.08f, -0.16f, 0.24f, -0.2f, 0.42f),
-            floatArrayOf(0.18f, 0.08f, 0.14f, 0.26f, 0.12f, 0.42f), floatArrayOf(0.27f, 0.06f, 0.44f, 0.18f, 0.42f, 0.34f)).forEach { k ->
-            drawPath(Path().apply { moveTo(q(k[0], k[1]).x, q(k[0], k[1]).y); lineTo(q(k[2], k[3]).x, q(k[2], k[3]).y); lineTo(q(k[4], k[5]).x, q(k[4], k[5]).y) },
-                color, style = Stroke(g, cap = StrokeCap.Round, join = StrokeJoin.Round))
-            drawCircle(color, g * 0.85f, q(k[4], k[5]))
-        }
-        drawOval(color, Offset(c.x - 0.43f * s, c.y - 0.13f * s), Size(0.8f * s, 0.25f * s))
-        drawCircle(color, 0.15f * s, q(-0.29f, -0.01f)); drawCircle(color, 0.13f * s, q(0.24f, -0.02f))
-        drawLine(color, q(0.27f, -0.06f), q(0.44f, -0.36f), g * 2.6f, StrokeCap.Round)
-        drawLine(color, q(0.43f, -0.39f), q(0.64f, -0.27f), g * 1.9f, StrokeCap.Round)
-        drawLine(color, q(0.42f, -0.42f), q(0.39f, -0.54f), g * 0.9f, StrokeCap.Round)
-        for (k in 0 until 4) drawCircle(color, g * 0.7f, q(0.19f + k * 0.055f, -0.17f - k * 0.085f))
-        drawPath(Path().apply { moveTo(q(-0.42f, -0.06f).x, q(-0.42f, -0.06f).y); quadraticTo(q(-0.66f, -0.34f).x, q(-0.66f, -0.34f).y, q(-0.64f, 0.12f).x, q(-0.64f, 0.12f).y) },
-            color, style = Stroke(g * 0.9f, cap = StrokeCap.Round))
-        drawCircle(color, g * 1.1f, q(-0.02f, -0.32f))
-        drawCircle(color, 0.1f * s, q(0f, 0.36f), style = Stroke(g * 0.7f))
-        for (k in 0 until 4) { val a = k * PI / 4; drawLine(color, q(0.1f * cos(a).toFloat(), 0.36f + 0.1f * sin(a).toFloat()), q(-0.1f * cos(a).toFloat(), 0.36f - 0.1f * sin(a).toFloat()), g * 0.5f) }
-    }
-
     // ---------------------------------------------------------------- borde de la medalla
 
     /**
@@ -1716,11 +1690,11 @@ object PiezasLogro {
                 letra("Nº 07", Offset(c.x, c.y + 2 * u), 7 * u, tinta)
                 drawLine(tinta, Offset(c.x - 10 * u, c.y + 10 * u), Offset(c.x + 10 * u, c.y + 10 * u), 1 * u)
             }
-            // El estátero arverno: el cospel desparejo, el canto de perlas corrido y el caballo con su perla y su rueda.
+            // El estátero arverno: el cospel desparejo, el canto de perlas corrido y el caballo al galope.
             TemaId.GALIA -> {
                 forma(irregular(20, 0.05f))
                 for (i in 0 until 18) drawCircle(tinta, 0.7f * u, en(PI * 0.2 + i * PI * 1.1 / 17, 0.86f))
-                caballoGalo(Offset(c.x, c.y - 2 * u), 22 * u, tinta, 1.1f * u)
+                with(TrazosGalia) { caballo(Offset(c.x, c.y), 29 * u, tinta, mira = 1f, recio = 1.3f) }
             }
             // La moneda de bronce de Herodes Antipas, acuñada en Tiberíades: el cospel algo desparejo, la gráfila de puntos que
             // se sale por un lado y la caña del lago, sin figuras.

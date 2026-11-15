@@ -263,7 +263,8 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     }, 7.dp, 0.dp, true, 1.4.dp)
     // Hoja de expediente: recta y con borde grueso.
     TemaId.DISTOPIA -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
-    TemaId.GALIA -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
+    // La tablilla en su marco de roble, con las esquinas de hoja del tema: dos muy redondas en diagonal y dos casi rectas.
+    TemaId.GALIA -> PielDialogo(RoundedCornerShape(topStart = 22.dp, topEnd = 5.dp, bottomEnd = 22.dp, bottomStart = 5.dp), 0.dp, 0.dp, false, 1.4.dp)
     // La hoja de papiro de un códice: los lados rectos y los cantos de arriba y de abajo rotos, cada uno a su manera.
     TemaId.ARCONTES -> PielDialogo(FormaDp { w, h, d ->
         val a = 3.5f * d; val paso = 7 * d
@@ -504,17 +505,18 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             }
         }
         TemaId.GALIA -> {
-            // Dos perforaciones de archivador y un sello de goma ladeado abajo a la izquierda.
-            listOf(0.3f, 0.7f).forEach { fy ->
-                drawCircle(e.onSurface.copy(alpha = 0.18f), 3.5f * d, Offset(11 * d, h * fy))
-                drawCircle(e.onSurface.copy(alpha = 0.5f), 3.5f * d, Offset(11 * d, h * fy), style = Stroke(d))
-            }
-            val o = Offset(14 * d, h - 34 * d)
-            rotate(-8f, Offset(o.x + 26 * d, o.y + 10 * d)) {
-                drawRect(e.primary.copy(alpha = 0.55f), o, Size(52 * d, 20 * d), style = Stroke(1.6f * d))
-                drawRect(e.primary.copy(alpha = 0.55f), Offset(o.x + 3 * d, o.y + 3 * d), Size(46 * d, 14 * d), style = Stroke(0.7f * d))
-                drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 8 * d), Offset(o.x + 40 * d, o.y + 8 * d), 2 * d)
-                drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 13 * d), Offset(o.x + 30 * d, o.y + 13 * d), 2 * d)
+            // El marco de roble de la tablilla, por dentro; arriba a la derecha, la «S» de las monedas; abajo a la izquierda,
+            // dos hojas de roble con su bellota.
+            val linea = e.primary.copy(alpha = 0.28f)
+            drawRoundRect(linea, Offset(6 * d, 6 * d), Size(w - 12 * d, h - 12 * d), CornerRadius(16 * d), style = Stroke(0.8f * d))
+            with(TrazosGalia) {
+                esse(Offset(w - 24 * d, 18 * d), 18 * d, 2.4f * d, e.secondary.copy(alpha = 0.7f))
+                val hoja = e.primary.copy(alpha = 0.4f)
+                hojaRoble(Offset(20 * d, h - 22 * d), 18 * d, -40f, hoja, e.surface.copy(alpha = 0.5f))
+                hojaRoble(Offset(30 * d, h - 16 * d), 15 * d, 25f, hoja, e.surface.copy(alpha = 0.5f))
+                val b = Offset(26 * d, h - 27 * d)
+                drawOval(e.secondary.copy(alpha = 0.55f), Offset(b.x - 2.6f * d, b.y - 3.6f * d), Size(5.2f * d, 7.2f * d))
+                drawArc(e.secondary.copy(alpha = 0.8f), 180f, 180f, true, Offset(b.x - 3.2f * d, b.y - 5.2f * d), Size(6.4f * d, 5.2f * d))
             }
         }
         TemaId.ARCONTES -> {
@@ -883,8 +885,12 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             drawRect(e.primary, Offset(0f, cy + 2 * d), Size(w * 0.4f, 1.2f * d))
         }
         TemaId.GALIA -> {
-            drawRect(e.onSurface, Offset(0f, cy - 3 * d), Size(w, 3 * d))
-            drawRect(e.primary, Offset(0f, cy + 2 * d), Size(w * 0.4f, 1.2f * d))
+            // Una raya de oro a cada lado, con su perla en la punta, y en medio un torques pequeño.
+            val oro = e.secondary.copy(alpha = 0.6f)
+            drawLine(oro, Offset(4 * d, cy), Offset(w / 2 - 12 * d, cy), d); drawLine(oro, Offset(w / 2 + 12 * d, cy), Offset(w - 4 * d, cy), d)
+            drawCircle(oro, 1.8f * d, Offset(3 * d, cy)); drawCircle(oro, 1.8f * d, Offset(w - 3 * d, cy))
+            drawArc(e.primary.copy(alpha = 0.8f), 117f, 306f, false, Offset(w / 2 - 7 * d, cy - 7 * d), Size(14 * d, 14 * d), style = Stroke(1.6f * d, cap = StrokeCap.Round))
+            listOf(117.0, 63.0).forEach { g -> val a = Math.toRadians(g); drawCircle(e.primary.copy(alpha = 0.8f), 1.6f * d, Offset(w / 2 + 7 * d * cos(a).toFloat(), cy + 7 * d * sin(a).toFloat())) }
         }
         TemaId.ARCONTES -> {
             // Un hilo que se enciende hacia el centro, donde está la chispa entre dos esferas.
@@ -1295,9 +1301,15 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             for (k in 1 until 10) drawLine(e.onSurface.copy(alpha = 0.5f), Offset(w * k / 10f, cy - g / 2), Offset(w * k / 10f, cy + g / 2), maxOf(g * 0.12f, 0.6f * d))
         }
         TemaId.GALIA -> {
-            if (x > 0f) drawRect(activo, Offset(0f, cy - g / 2), Size(x, g))
-            drawRect(inactivo, Offset(0f, cy - g / 2), Size(w, g), style = Stroke(maxOf(g * 0.15f, 0.8f * d)))
-            for (k in 1 until 10) drawLine(e.onSurface.copy(alpha = 0.5f), Offset(w * k / 10f, cy - g / 2), Offset(w * k / 10f, cy + g / 2), maxOf(g * 0.12f, 0.6f * d))
+            // Lo que falta, una hebra fina; lo recorrido, la cuerda de oro de un torques, con los surcos de la torsión, que
+            // acaba en el disco del tampón.
+            linea(inactivo, x, w, maxOf(g * 0.24f, 0.7f * d), cap = StrokeCap.Round)
+            if (x > 0f) {
+                drawLine(activo, Offset(0f, cy), Offset(x, cy), g * 0.75f, cap = StrokeCap.Round)
+                val paso = maxOf(g * 1.1f, 3f * d); var px = paso * 0.5f
+                while (px < x - paso * 0.5f) { drawLine(e.surface.copy(alpha = 0.45f), Offset(px - g * 0.2f, cy + g * 0.3f), Offset(px + g * 0.2f, cy - g * 0.3f), maxOf(g * 0.12f, 0.5f * d)); px += paso }
+                drawOval(activo, Offset(x - g * 0.3f, cy - g * 0.75f), Size(g * 0.6f, g * 1.5f))
+            }
         }
         TemaId.ARCONTES -> {
             // El hilo que sube por las siete esferas: lo recorrido, una barra de luz con su halo; las esferas que ya pasó, llenas.
@@ -1605,8 +1617,10 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             drawLine(color, c, Offset(c.x, c.y + r * 0.95f), r * 0.16f)
         }
         TemaId.GALIA -> {
-            drawPath(Path().apply { moveTo(c.x - r * 0.7f, c.y - r * 0.9f); lineTo(c.x + r * 0.7f, c.y - r * 0.9f); lineTo(c.x, c.y + r * 0.1f); close() }, color)
-            drawLine(color, c, Offset(c.x, c.y + r * 0.95f), r * 0.16f)
+            // Un estátero: la moneda con su gráfila de perlas y la perla grande en el centro.
+            drawCircle(color, r * 0.92f, c)
+            for (k in 0 until 10) { val a = k * PI / 5; drawCircle(hueco.copy(alpha = 0.55f), r * 0.08f, Offset(c.x + r * 0.66f * cos(a).toFloat(), c.y + r * 0.66f * sin(a).toFloat())) }
+            drawCircle(hueco.copy(alpha = 0.6f), r * 0.2f, c)
         }
         TemaId.ARCONTES -> {
             // La llama de la lámpara, con su corazón claro.
