@@ -601,6 +601,70 @@ def hacer_galia():
         # En «Tu año» la música sube un tono dos vueltas: sin el carnyx ni el choque de las armas, que no subirían con ella.
         ARGS['galia'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
 
+def hacer_nouveau():
+    # --- Art nouveau: Mi bemol mayor, un vals lento de salón en 3/4 a unas 136 negras por minuto (melodía propia: no cita
+    # ningún vals). El piano de salón lo toca todo, como en una casa de 1900: la mano izquierda hace el «um» del bajo en
+    # octavas en el uno y el «pa-pa» del acorde en el dos y el tres; la derecha canta, apenas después del bajo, como tocan
+    # los pianistas de salón. La armonía es la de 1900, no la de los años veinte: el acorde de séptima mayor que no
+    # resuelve (Mi bemol con Re), Do menor con novena, Fa menor con novena, Si bemol con novena, Sol menor con séptima y
+    # La bemol con séptima mayor, que se vuelve La bemol menor con sexta (el cuarto grado menor, que suspira) y llega a casa
+    # por la cadencia plagal, sin dominante, en Mi bemol con séptima mayor y novena. Las campanillas de cristal de la lámpara
+    # abren la primera y la quinta vuelta; en la segunda mitad, la cajita de música (el peine de acero) contesta la
+    # melodía una octava arriba, y al final las campanillas bajan sobre el último acorde mientras a la cajita se le acaba
+    # la cuerda. Ni el charlestón ni el piano pulsado de Art déco, ni la cajita armónica de Navidad. Con su propio azar.
+    with A.azar_propio('musica_nouveau'):
+        T = -6; pz = 0.44
+        ac = [(3 * i, c, 3) for i, c in enumerate([[0, 4, 7, 11], [-3, 0, 4, 7, 11], [2, 5, 9, 12, 16], [-5, -1, 2, 5, 9],
+                                                    [4, 7, 11, 14], [5, 9, 12, 16], [5, 8, 12, 14]])] + [(21, [0, 4, 7, 11, 14], 6)]
+        mel = frase(0, "11:2 14:1 | 12:1.5 11:0.5 7:1 | 9:2 12:1 | 9:1.5 7:0.5 5:1 | 7:1 11:1 14:1 | 19:2 16:1 | 17:1 20:1 14:1 | 16:3")
+        largo_ac = 3.5 * pz   # un acorde que dura más que un compás es el último: se toca rodado y con pedal
+        def canta(f, d):
+            """La mano derecha: entra 12 ms después del bajo y liga con el pedal. Domada apenas (ver [domar]): sin el golpe
+            de más del macillo, la música suena al volumen de la de los otros temas sin recortar nada."""
+            return np.concatenate([np.zeros(int(0.012 * SR)), domar(piano_salon(f, max(d, 0.5) + 0.3, 0.62), 0.5, 2.0)])
+        def papa(f, d):
+            """El «pa-pa» de la mano izquierda: el acorde, corto, en el dos y el tres (el tres un poco más suave). En el
+            último acorde, rodado de abajo arriba y con pedal."""
+            if d > largo_ac:
+                tarde = 0.03 * max(0.0, 12 * np.log2(f / hz(T - 24))) / 12
+                return mezclar((tarde, piano_salon(f, d * 0.75, 0.5), 1.0))
+            b = d / 3
+            return mezclar((b, piano_salon(f, b * 1.1, 0.4, apagar=b * 0.72), 1.0), (2 * b, piano_salon(f, b * 1.1, 0.34, apagar=b * 0.72), 1.0))
+        def um(f, d):
+            """El «um» del bajo en octavas en el uno, sostenido con el pedal hasta el tres; en el último acorde, largo."""
+            if d > largo_ac:
+                return domar(mezclar((0, piano_salon(f, d * 0.8, 0.55), 0.8), (0, piano_salon(f * 2, d * 0.8, 0.5), 0.6)), 0.5, 2.0)
+            return domar(mezclar((0, piano_salon(f, d * 0.8, 0.55, apagar=d * 0.66), 0.8), (0.004, piano_salon(f * 2, d * 0.8, 0.5, apagar=d * 0.66), 0.6)), 0.5, 2.0)
+        def ritmo(acordes, melodia, cierre=True):
+            """Las campanillas de cristal en el uno de la primera y la quinta vuelta; la cajita que contesta la melodía de
+            la segunda mitad una octava arriba; con [cierre], las campanillas que bajan sobre el último acorde y la cajita
+            que se queda sin cuerda (sus dos últimas notas se arrastran)."""
+            fin = acordes[-1][0]
+            out = [(0, cristal(hz(T + 23), 2.2, 0.7), 0.2)]
+            if len(acordes) > 5: out.append((acordes[4][0], cristal(hz(T + 26), 2.0, 0.6), 0.16))
+            mitad = acordes[len(acordes) // 2][0]
+            out += [(b + 0.5, peine(hz(T + 12 + n), 1.0, 0.8), 0.11) for b, n, _ in melodia if mitad <= b < fin]
+            if cierre:
+                out += [(fin + 0.5 + 0.45 * i, cristal(hz(T + n), 2.4, 0.65), 0.2) for i, n in enumerate([31, 26, 23, 19])]
+                out += [(fin + 2.6, peine(hz(T + 26), 1.2, 0.8, cae=0.3), 0.12), (fin + 3.9, peine(hz(T + 23), 1.4, 0.7, cae=0.7), 0.1)]
+            return out
+        kw = dict(inst_mel=canta, inst_ac=papa, bajo=um, perc=ritmo(ac, mel), g_mel=0.5, g_ac=0.3, g_bajo=0.3,
+                  oct_mel=0, oct_ac=-12, oct_bajo=-24, legato=1.0, cola=1.8, rev=0.28)
+        # La llamada: la primera frase (tres compases) y el cierre (los tres últimos), un poco más viva, dos veces, con un
+        # compás de respiro entre una y otra (en 3/4: la [llamada] común es de compases de cuatro).
+        pr = pz * 0.85
+        ac_ll = ac[:3] + [(9 + b - 15, c, d) for b, c, d in ac[5:]]
+        mel_ll = [x for x in mel if x[0] < 9] + [(9 + b - 15, n, d) for b, n, d in mel if b >= 15]
+        una = obra(T, pr, ac_ll, mel_ll, **dict(kw, perc=ritmo(ac_ll, mel_ll)))
+        llam = mezclar((0, una, 1), (21 * pr, una, 1))
+        # La notificación: un acorde de piano rodado (la tónica con la séptima mayor) y tres campanillas que suben.
+        notif = reverb(mezclar(*[(0.03 * i, piano_salon(hz(T + n), 1.3, 0.45), 0.22) for i, n in enumerate([-12, -5, -1, 4])],
+                               *[(0.06 + 0.13 * i, cristal(hz(T + n), 1.1, 0.75), 0.55) for i, n in enumerate([19, 23, 26])]), 1.0, 0.25)
+        P['nouveau'] = (obra(T, pz, ac, mel, **kw), llam, notif)
+        # En «Tu año» la música sube un tono dos vueltas: sin la cajita ni las campanillas del cierre, que no subirían con
+        # ella; queda la campanilla del principio de cada vuelta, sobre la tónica.
+        ARGS['nouveau'] = (T, pz, ac, mel, dict(kw, perc=[(0, cristal(hz(T + 23), 2.2, 0.7), 0.16)]))
+
 def hacer_egipto():
     # --- Egipto: Mi con la segunda menor (escala propia), arpa arpegiada, flauta de caña, tambor de marco y sistro, con una
     # melodía propia de ocho compases. Con su propio azar, para no mover el de los temas que van después.
@@ -794,6 +858,7 @@ if __name__ == '__main__':
     hacer_frente()
     hacer_arcontes()
     hacer_galia()
+    hacer_nouveau()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     # Con un tercer argumento («presentacion,anual», por ejemplo) solo se escriben esas piezas.
     piezas = sys.argv[3].split(',') if len(sys.argv) > 3 else None

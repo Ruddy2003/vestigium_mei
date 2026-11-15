@@ -493,7 +493,7 @@ def peine(f, d=1.1, fuerza=1.0, cae=0.0):
     return 0.4 * mezclar((0, x * np.minimum(1, np.maximum(0, d - t) / min(0.3, 0.3 * d)) ** 2, 1.0), (0, pua, 0.18 * fuerza))
 def cristal(f, d=1.6, fuerza=0.7):
     """Una campanilla de cristal (un colgante de la lámpara, una copa fina): el vidrio suena casi puro y largo; sus
-    modos de copa (1, 2.61, 4.85) son débiles y cada uno es doble, porque ningún cristal es redondo del todo, así que
+    modos de copa (aproximados: 1, 2.61, 4.85) son débiles y cada uno es doble, porque ningún cristal es redondo del todo, así que
     la nota tiembla despacio (unas dos veces por segundo). Al empezar, el «tin» del golpe, muy agudo y muy breve. Ni
     el crótalo de bronce de Arcontes (parciales fuertes y choque de discos) ni las campanas de Navidad."""
     t = t_(d)
@@ -1810,8 +1810,8 @@ def nouveau():
         return mezclar(*[(paso * i, pia(n, d - paso * i, fuerza), 0.5) for i, n in enumerate(notas)])
     def interruptor():
         """El interruptor de llave de 1900: la llave de latón que gira y encaja en la base de porcelana."""
-        return mezclar((0, clic(0.003, (2200, 8000)), 0.8), (0.0008, filtro(ruido(0.018), 'banda', (500, 2600)) * env(int(0.018 * SR), 0.0006, 0.006, 4), 0.7),
-                       (0.012, clic(0.002, (3000, 8500)), 0.25))
+        return mezclar((0, filtro(clic(0.004, (1800, 6500)), 'bajo', 6000), 0.6), (0.0008, filtro(ruido(0.018), 'banda', (500, 2600)) * env(int(0.018 * SR), 0.0006, 0.006, 4), 0.7),
+                       (0.012, clic(0.002, (3000, 8500)), 0.2))
     def cuerda(clics=5, cps=11):
         """La llave que da cuerda a la cajita de música: el trinquete que salta diente a diente, dentro de la caja de madera."""
         partes = []
