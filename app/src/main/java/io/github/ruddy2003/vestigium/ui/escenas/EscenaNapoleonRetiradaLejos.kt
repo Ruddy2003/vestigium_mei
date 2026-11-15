@@ -165,15 +165,23 @@ internal object RetiradaLejos {
     // ---------------------------------------------------------------- El Berezina
 
     /** La orilla de acá y la de allá del Berezina, en metros de profundidad. */
-    const val ORILLA_ACA = 21f
-    const val ORILLA_ALLA = 40f
+    const val ORILLA_ACA = 15f
+    const val ORILLA_ALLA = 42f
 
     /** El río del Berezina, como forma. */
     fun rio(): Path {
         val az = Azar(Semilla.de("napoleon", "berezina"))
-        val aca = (0..14).map { i -> val x = -20f + 420f * i / 14f; Offset(x, w(0f, ORILLA_ACA).y + az.entre(-1.2f, 1.2f)) }
-        val alla = (0..14).map { i -> val x = -20f + 420f * i / 14f; Offset(x, w(0f, ORILLA_ALLA).y + az.entre(-0.6f, 0.6f)) }
-        return poligono(alla + aca.reversed())
+        return poligono(ORILLA_DE_ALLA + ORILLA_DE_ACA.reversed())
+    }
+
+    /** Las dos orillas del Berezina, puestas a mano: entrantes, salientes y lenguas de hielo pegadas a la de acá. */
+    private val ORILLA_DE_ACA: List<Offset> by lazy {
+        val az = Azar(Semilla.de("napoleon", "berezina", "aca"))
+        (0..22).map { i -> val x = -20f + 420f * i / 22f; Offset(x, w(0f, ORILLA_ACA).y + az.entre(-4.5f, 2.5f) + 3f * sin(i * 0.9f)) }
+    }
+    private val ORILLA_DE_ALLA: List<Offset> by lazy {
+        val az = Azar(Semilla.de("napoleon", "berezina", "alla"))
+        (0..18).map { i -> val x = -20f + 420f * i / 18f; Offset(x, w(0f, ORILLA_ALLA).y + az.entre(-1f, 1f)) }
     }
 
     /**
@@ -196,12 +204,19 @@ internal object RetiradaLejos {
             }
             // Las fogatas reflejadas en el agua, de noche.
             if (EscenaNapoleon.fuegosLejos(v.m)) for (q in fogatas()) drawLine(C.LUMBRE.copy(alpha = 0.45f * v.noche), Offset(q.x, y1 - 1f), Offset(q.x + 0.5f, y0 + 2f), 1.2f, blendMode = BlendMode.Plus)
+            // Las rachas del agua que corre entre el hielo, y el reflejo oscuro de los puentes.
+            repeat(30) { val z = az.entre(ORILLA_ACA, ORILLA_ALLA); val q = w(az.entre(-25f, 35f), z); val kk = k(z); drawLine(lerp(l.bajo, Color.White, 0.2f).copy(alpha = 0.25f), q, q + Offset(az.entre(0.8f, 2.5f) * kk, 0f), (0.05f * kk).coerceIn(0.3f, 1.5f), StrokeCap.Round) }
         }
+        // La orilla de acá: el labio de nieve que cuelga sobre el agua, con su canto azul y su sombra en el agua.
+        val labio = ORILLA_DE_ACA
+        drawPath(curva(labio.map { it + Offset(0f, 2.2f) }), lerp(p.medio(lerp(C.AZUL, C.CENIZA, 0.7f), 0.1f), C.CENIZA, 0.3f), style = Stroke(3.2f, cap = StrokeCap.Round))
+        drawPath(TrazosValle.cerrada(labio.map { it + Offset(0f, -1.5f) } + labio.reversed().map { it + Offset(0f, 5f) }), p.arriba(if (v.nieve > 0.3f) C.NIEVE else lerp(C.BARRO, C.HOJA, 0.4f), 0.15f))
+        drawPath(curva(labio.map { it + Offset(0f, 0.6f) }), v.a.plano(C.NIEVE_SOMBRA, labio[5], 0f, 0.15f), style = Stroke(1.4f, cap = StrokeCap.Round))
         // Los dos puentes de caballetes, del camino a la otra orilla, con sus patas en el agua.
-        for (x0 in listOf(-1.7f, 3.6f)) {
+        for (x0 in listOf(-1.5f, 2.4f)) {
             // De lejos a cerca: los caballetes (patas en A metidas en el agua) y el tablero de tablas encima, que se va al fondo.
             val zs = generateSequence(ORILLA_ALLA + 0.5f) { it - 2.6f }.takeWhile { it >= ORILLA_ACA - 1.5f }.toList()
-            fun borde(dx: Float, z: Float) = w(x0 + RUMBO * z + dx, z) + Offset(0f, -1.0f * k(z))
+            fun borde(dx: Float, z: Float) = w(x0 + RUMBO * z + dx * 0.8f, z) + Offset(0f, -1.0f * k(z))
             for (z in zs) {
                 val kk = k(z); val x = x0 + RUMBO * z; val lejos = z / 140f
                 for (dx in listOf(-1.3f, 1.3f)) {
@@ -222,7 +237,12 @@ internal object RetiradaLejos {
     }
 
     /** Las fogatas de la orilla de acá del Berezina. */
-    fun fogatas(): List<Offset> { val az = Azar(Semilla.de("napoleon", "fogatas")); return (0 until 8).map { val z = az.entre(14f, ORILLA_ACA - 1f); w(az.entre(0.4f, 14f) + RUMBO * z, z) } }
+    fun fogatas(): List<Offset> {
+        val az = Azar(Semilla.de("napoleon", "fogatas"))
+        val aca = (0 until 2).map { val z = az.entre(13.2f, ORILLA_ACA - 0.6f); w(az.entre(3.4f, 5.6f) + RUMBO * z, z) }
+        val alla = (0 until 7).map { val z = az.entre(ORILLA_ALLA + 2f, 80f); w(az.entre(-9f, 12f) + RUMBO * z, z) }
+        return aca + alla
+    }
 
     // ---------------------------------------------------------------- Lo que se mueve
 
@@ -245,7 +265,7 @@ internal object RetiradaLejos {
         // Las fogatas del Berezina.
         if (v.tramo == Tramo.BEREZINA) for ((i, q) in fogatas().withIndex()) {
             val kk = k(RetiradaCamino.zEn(q.y))
-            if (EscenaNapoleon.fuegosLejos(v.m) || v.cubierto > 0.4f) { resplandor(q, 2.6f * kk, 0.3f + 0.6f * v.noche); llama(q, 0.8f * kk, reloj, i + 80) }
+            if (EscenaNapoleon.fuegosLejos(v.m) || v.cubierto > 0.4f) { resplandor(q, 1.4f * kk, 0.2f + 0.45f * v.noche); llama(q, 0.38f * kk, reloj, i + 80) }
             humo(l, q, 7f * kk, 0.7f * kk, reloj, v.m.viento, 0.3f, 0.5f, i + 80, 4, 0.3f)
         }
     }

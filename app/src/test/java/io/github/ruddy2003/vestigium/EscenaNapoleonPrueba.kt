@@ -174,7 +174,7 @@ class EscenaNapoleonPrueba {
                 assertEquals("$d $h", fase == Fase.SUENO, EscenaNapoleon.camas(m))
                 if (EscenaNapoleon.carneEnLaBayoneta(m)) assertTrue("$d $h", EscenaNapoleon.lugar(m) == Lugar.RETIRADA && (fase == Fase.ALTO || fase == Fase.VIVAC))
                 assertTrue("$d $h", EscenaNapoleon.huellas(m) in 0f..1f)
-                assertEquals("$d $h", h >= 17.0 || h < 6.0, EscenaNapoleon.fuegosLejos(m))
+                assertEquals("$d $h", h >= 17.0 || h < 6.0 || (EscenaNapoleon.malTiempo(m) && h >= 15.5), EscenaNapoleon.fuegosLejos(m))
             }
         }
         // Las tres horas de las capturas dan tres cuadros distintos: de marcha por la mañana (rescoldo), de marcha por la

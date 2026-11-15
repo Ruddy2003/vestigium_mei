@@ -44,7 +44,7 @@ internal class VistaNapoleon(val m: Momento, val vivac: Boolean = false) {
     val rLuna: Rayo? = RetiradaLuz.rayoDeLuna(l)
     /** Las sombras del bosque sobre la nieve, con las franjas de sol (o de luna) entre los troncos. */
     val franjas: List<RetiradaLuz.Franja> = RetiradaLuz.franjas(this)
-    val a: Alumbre = Alumbre(p, sol, RetiradaCerca.LUZ_DEL_FUEGO, lumbre, 108f, luna, rLuna?.let { Sol3(it) })
+    val a: Alumbre = Alumbre(p, sol, RetiradaCerca.LUZ_DEL_FUEGO, lumbre, 150f, luna, rLuna?.let { Sol3(it) })
 
     /** El alumbre de algo que pisa en [pie]: a la sombra si cae en una franja de sombra del bosque. */
     fun en(pie: Offset): Alumbre = a.aLaSombra(RetiradaLuz.sombraEn(franjas, pie))
@@ -127,11 +127,11 @@ internal object RetiradaNapoleon {
         with(RetiradaLuz) { velo(v, 0.45f, 96f, 150f) }
         with(RetiradaCamino) { bosque(v) }
         with(RetiradaLejos) { berezina(v) }
-        with(RetiradaLuz) { velo(v, 0.35f, 120f, 176f) }
+        with(RetiradaLuz) { velo(v, 0.22f, 120f, 168f) }
         with(RetiradaCamino) { abandonado(v) }
-        with(RetiradaLuz) { velo(v, 0.22f, 150f, 210f); lucesDelSuelo(v) }
+        with(RetiradaLuz) { lucesDelSuelo(v) }
         with(RetiradaCerca) { primerPlano(v); marco(v) }
-        with(RetiradaLuz) { noche(v) }
+        with(RetiradaLuz) { noche(v); cercaOscura(v) }
         // El velo del tiempo: la lluvia, de la biblioteca; la nieve y la niebla van por capas ([RetiradaLuz.velo]), para
         // que su borde no corte el pino ni la carroza.
         when (m.ficha.clima) {

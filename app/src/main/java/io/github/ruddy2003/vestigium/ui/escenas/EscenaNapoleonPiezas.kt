@@ -249,9 +249,14 @@ internal object PiezasNapoleon {
         val en = s.p(centro)
         val hierro = a.plano(C.HIERRO, en, 0f, lejos)
         val hierroLuz = a.cara(C.HIERRO, V3(0f, 1f, 0f), en, lejos)
-        // La llanta por detrás y por su canto (el grueso de la rueda).
-        drawPath(TrazosValle.cerrada(fueraAtras), mult(hierro, C.SOMBRA, 0.35f))
+        // La llanta por detrás (un aro, no un disco: entre los rayos se ve lo de detrás) y su canto, con el brillo arriba.
+        val dentroAtras = (0 until n).map { s.p(anillo(cb, b, r * 0.86f, 2f * PI.toFloat() * it / n)) }
+        val aroAtras = Path().apply { addPath(TrazosValle.cerrada(fueraAtras)); addPath(TrazosValle.cerrada(dentroAtras.reversed())) }
+        aroAtras.fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
+        drawPath(aroAtras, mult(hierro, C.SOMBRA, 0.35f))
         for (i in 0 until n) { val j = (i + 1) % n; drawPath(poligono(fuera[i], fuera[j], fueraAtras[j], fueraAtras[i]), if (fuera[i].y < en.y) hierroLuz else mult(hierro, C.SOMBRA, 0.3f)) }
+        val arriba = fuera.withIndex().filter { it.value.y < en.y - (fuera.maxOf { q -> q.y } - en.y) * 0.4f }.map { it.value }.sortedBy { it.x }
+        if (arriba.size >= 3) drawPath(curva(arriba), lerp(hierroLuz, Color.White, 0.25f).copy(alpha = 0.7f), style = Stroke((r * 0.025f * s.escala(centro.x, centro.z)).coerceIn(0.3f, 1.4f), cap = StrokeCap.Round))
         // Las pinas de madera y la llanta, de frente: un aro.
         val aro = Path().apply { addPath(TrazosValle.cerrada(fuera)); addPath(TrazosValle.cerrada(dentro.reversed())) }
         aro.fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
@@ -304,10 +309,12 @@ internal object PiezasNapoleon {
     // =================================================================
 
     /**
-     * Un fusil de [culata] (el talón, en el suelo o donde se apoye) a [boca], con la bayoneta puesta si [bayoneta]: la
-     * culata ancha y la caña de nogal, el cañón de hierro, las abrazaderas, la llave, el portafusil de ante blanco que
-     * cuelga y la hoja de tres filos. Medidas de un fusil de infantería (1.52 m sin la bayoneta, 0.46 la hoja)
-     * **[Aproximación]**. [colgando]: cuánto cuelga el portafusil, en metros. Devuelve la silueta.
+     * Un fusil de [culata] (el talón, en el suelo o donde se apoye) a [boca], con la bayoneta calada si [bayoneta]: la
+     * culata de nogal con su lomo y su garganta, la caña que llega casi a la boca, el cañón de hierro con su brillo, la
+     * baqueta, las tres abrazaderas (la de la boca, de latón), la llave con el pie de gato y el rastrillo, el guardamonte
+     * de latón, el portafusil de ante blanco que cuelga con su hebilla y la hoja de tres filos con su cubo y su codo.
+     * Medidas de un fusil de infantería (1.52 m sin la bayoneta, 0.46 la hoja) **[Aproximación]**. [colgando]: cuánto
+     * cuelga el portafusil, en metros. De noche, el filo del fuego en el metal. Devuelve la silueta.
      */
     fun DrawScope.fusil(
         s: Sitio, a: Alumbre, culata: V3, boca: V3, bayoneta: Boolean = true, colgando: Float = 0.16f, lejos: Float = 0f,
@@ -316,70 +323,72 @@ internal object PiezasNapoleon {
         val ejeV = boca - culata; val largo = Vec.largo(ejeV); val e = Vec.unidad(ejeV)
         fun en(t: Float): V3 = culata + e * (largo * t)
         val k = s.escala(culata.x, culata.z)
-        // El costado que mira a quien mira, para el ancho en el lienzo.
+        // Los dos bordes del fusil en el lienzo a la altura [t], con el ancho [m] (metros); el primero es el de abajo.
         fun ancho(t: Float, m: Float): Pair<Offset, Offset> {
-            val p = s.p(en(t)); val q = s.p(en((t + 0.02f).coerceAtMost(1f)) ); val d = (q - p).let { if (it.getDistance() < 0.001f) Offset(0f, -1f) else it / it.getDistance() }
-            val nn = Offset(-d.y, d.x); val kk = s.escala(en(t).x, en(t).z)
+            val p = s.p(en(t)); val q = s.p(en((t + 0.02f).coerceAtMost(1f))); val d = (q - p).let { if (it.getDistance() < 0.001f) Offset(0f, -1f) else it / it.getDistance() }
+            var nn = Offset(-d.y, d.x); if (nn.y < 0f) nn = -nn
+            val kk = s.escala(en(t).x, en(t).z)
             return (p + nn * (m * kk * 0.5f)) to (p - nn * (m * kk * 0.5f))
         }
-        fun tira(t0: Float, t1: Float, m0: Float, m1: Float): Path {
-            val a0 = ancho(t0, m0); val a1 = ancho(t1, m1)
-            return poligono(a0.first, a1.first, a1.second, a0.second)
-        }
+        val nogal = lerp(C.MADERA, C.CUERO, 0.38f)
         val medio = s.p(en(0.5f))
-        val luzIzq = a.plano(C.MADERA, medio, -0.9f, lejos); val luzDer = a.plano(C.MADERA, medio, 0.9f, lejos)
-        val centro = a.plano(C.MADERA, medio, 0f, lejos)
-        // El portafusil, detrás, colgando en curva entre la abrazadera de arriba y el guardamonte.
-        val p0 = s.p(en(0.27f)); val p1 = s.p(en(0.7f))
-        val caida = colgando * k
-        val correa = combada(p0, p1, caida, 12)
-        drawPath(curva(correa), a.plano(C.CORREA, (p0 + p1) / 2f, 0f, lejos), style = Stroke((0.032f * k).coerceIn(0.4f, 3f), cap = StrokeCap.Round))
-        // La caña, de la culata a la boca: la culata ancha, la garganta y la caña, que llega casi a la boca.
-        val culataF = tira(0f, 0.3f, 0.15f, 0.058f); val cana = tira(0.28f, 0.92f, 0.056f, 0.042f)
-        drawPath(culataF, centro); drawPath(cana, centro)
-        // El lado de luz y el de sombra, como un cuerpo redondo: dos tiras finas a cada lado.
-        for ((t0, t1, m0, m1) in listOf(Quad4(0f, 0.3f, 0.15f, 0.058f), Quad4(0.28f, 0.92f, 0.056f, 0.042f))) {
-            val izq0 = ancho(t0, m0).first; val izq1 = ancho(t1, m1).first; val der0 = ancho(t0, m0).second; val der1 = ancho(t1, m1).second
-            drawPath(poligono(izq0, izq1, izq1 + (der1 - izq1) * 0.38f, izq0 + (der0 - izq0) * 0.38f), luzIzq)
-            drawPath(poligono(der0, der1, der1 + (izq1 - der1) * 0.3f, der0 + (izq0 - der0) * 0.3f), luzDer)
-        }
-        // La veta del nogal.
-        drawLine(mult(centro, C.SOMBRA, 0.25f), s.p(en(0.04f)), s.p(en(0.26f)), (0.008f * k).coerceIn(0.25f, 0.8f))
-        // El talón de latón de la culata.
-        val talon = ancho(0f, 0.13f)
-        drawLine(a.plano(C.LATON, talon.first, 0f, lejos), talon.first, talon.second, (0.02f * k).coerceIn(0.4f, 2f))
-        // El cañón de hierro, por encima de la caña y solo hasta la boca.
-        val canon = tira(0.3f, 1f, 0.024f, 0.021f)
+        val lado = if (a.p.solALaDerecha) 1f else -1f
+        val oscuro = a.plano(nogal, medio, -lado, lejos); val claro = a.plano(nogal, medio, lado, lejos, 0.5f); val centro = a.plano(nogal, medio, 0f, lejos)
+        // El perfil de la caña: la culata con el lomo que sube a la garganta, el talón y la punta; luego la caña.
+        val perfil = listOf(0f to 0.155f, 0.06f to 0.15f, 0.16f to 0.12f, 0.24f to 0.07f, 0.29f to 0.05f, 0.34f to 0.058f, 0.5f to 0.052f, 0.7f to 0.046f, 0.9f to 0.04f)
+        val bordes = perfil.map { (t, m) -> ancho(t, m) }
+        // El portafusil, detrás, colgando en curva entre la abrazadera de en medio y el guardamonte, con su hebilla.
+        val p0 = bordes[3].first; val p1 = ancho(0.6f, 0.05f).first
+        val correa = combada(p0, p1, colgando * k, 12)
+        drawPath(curva(correa), a.plano(lerp(C.CORREA, C.CENIZA, 0.15f), (p0 + p1) / 2f, -lado, lejos), style = Stroke((0.04f * k).coerceIn(0.5f, 3.6f), cap = StrokeCap.Round))
+        drawPath(curva(correa.map { it + Offset(0f, -0.006f * k) }), a.plano(C.CORREA, (p0 + p1) / 2f, lado, lejos, 0.6f), style = Stroke((0.018f * k).coerceIn(0.3f, 1.6f), cap = StrokeCap.Round))
+        val hebilla = correa[8]; drawRect(a.plano(C.LATON, hebilla, 0f, lejos), hebilla - Offset(0.012f * k, 0.012f * k), Size(0.024f * k, 0.024f * k), style = Stroke((0.006f * k).coerceAtLeast(0.25f)))
+        // La caña entera, con su lado de sombra abajo y su filo de luz arriba (cuerpo redondo).
+        val cana = poligono(bordes.map { it.first } + bordes.reversed().map { it.second })
+        drawPath(cana, centro)
+        drawPath(poligono(bordes.map { it.first } + bordes.reversed().map { it.first + (it.second - it.first) * 0.35f }), oscuro)
+        drawPath(poligono(bordes.map { it.second + (it.first - it.second) * 0.22f } + bordes.reversed().map { it.second }), claro)
+        // La veta del nogal en la culata y el talón de latón.
+        for (j in 0 until 3) drawLine(mult(centro, C.SOMBRA, 0.3f), s.p(en(0.02f + j * 0.02f)), s.p(en(0.2f + j * 0.02f)), (0.006f * k).coerceIn(0.2f, 0.7f))
+        drawLine(a.plano(C.LATON, bordes[0].first, lado, lejos), bordes[0].first, bordes[0].second, (0.022f * k).coerceIn(0.4f, 2.2f))
+        // El cañón de hierro, por encima de la caña, la baqueta por debajo, y su brillo (de noche, el filo del fuego).
+        val canon = poligono(ancho(0.3f, 0.026f).second, ancho(1f, 0.022f).second, ancho(1f, 0.0f).second, ancho(0.3f, 0.0f).second)
         drawPath(canon, a.plano(C.HIERRO, s.p(en(0.7f)), 0f, lejos))
-        val brillo = ancho(0.6f, 0.024f).first
-        drawLine(lerp(a.plano(C.HIERRO, brillo, if (a.p.solALaDerecha) 0.9f else -0.9f, lejos), a.deFuego(C.PLATA), (a.calor(brillo) * 0.6f).coerceIn(0f, 0.8f)), s.p(en(0.36f)), s.p(en(0.99f)), (0.008f * k).coerceIn(0.25f, 1f))
-        // La llave y las abrazaderas.
-        val llave = s.p(en(0.33f))
-        drawCircle(a.plano(C.HIERRO, llave, 0f, lejos), (0.028f * k).coerceIn(0.4f, 3f), llave)
-        drawLine(a.plano(C.HIERRO, llave, 0f, lejos), llave, s.p(en(0.36f)) + Offset(0f, -0.03f * k), (0.012f * k).coerceIn(0.3f, 1.2f))
-        for (t in listOf(0.52f, 0.7f, 0.88f)) { val q = ancho(t, 0.054f); drawLine(a.plano(if (t == 0.88f) C.LATON else C.HIERRO, q.first, 0f, lejos), q.first, q.second, (0.014f * k).coerceIn(0.3f, 1.6f)) }
-        val forma = Path().apply { addPath(culataF); addPath(cana); addPath(canon) }
+        drawLine(a.plano(C.HIERRO, s.p(en(0.7f)), -lado, lejos), ancho(0.4f, 0.06f).first, ancho(0.97f, 0.05f).first, (0.008f * k).coerceIn(0.25f, 0.8f))
+        val br0 = ancho(0.36f, 0.02f).second; val br1 = ancho(0.99f, 0.017f).second; val calor = a.calor(s.p(en(0.7f)))
+        drawLine(lerp(a.plano(lerp(C.HIERRO, C.PLATA, 0.5f), br0, lado, lejos, 0.6f), a.deFuego(C.PLATA), (calor * 1.1f).coerceIn(0f, 0.92f)), br0, br1, (0.009f * k * (1f + calor)).coerceIn(0.3f, 1.4f), StrokeCap.Round)
+        // La llave: la platina, el pie de gato con su piedra y el rastrillo; el guardamonte de latón, debajo.
+        val pl0 = ancho(0.3f, 0.03f).second; val pl1 = ancho(0.36f, 0.03f).second
+        drawLine(a.plano(C.HIERRO, pl0, lado, lejos), pl0, pl1, (0.026f * k).coerceIn(0.4f, 2.6f), StrokeCap.Round)
+        val gato = ancho(0.31f, 0.09f).second; drawLine(a.plano(C.HIERRO, gato, lado, lejos), pl0, gato, (0.012f * k).coerceIn(0.3f, 1.2f), StrokeCap.Round)
+        drawCircle(a.plano(lerp(C.HIERRO, C.PLATA, 0.4f), gato, lado, lejos), (0.009f * k).coerceAtLeast(0.3f), gato)
+        val g0 = ancho(0.3f, 0.07f).first; val g1 = ancho(0.38f, 0.07f).first; val gm = ancho(0.34f, 0.13f).first
+        drawPath(curva(listOf(g0, gm, g1)), a.plano(C.LATON, gm, lado, lejos), style = Stroke((0.01f * k).coerceIn(0.3f, 1.1f), cap = StrokeCap.Round))
+        // Las abrazaderas.
+        for ((t, latón) in listOf(0.52f to false, 0.7f to false, 0.88f to true)) { val q = ancho(t, 0.058f); drawLine(a.plano(if (latón) C.LATON else C.HIERRO, q.second, lado, lejos), q.first, q.second, (0.016f * k).coerceIn(0.35f, 1.8f)) }
+        val forma = Path().apply { addPath(cana); addPath(canon) }
         if (bayoneta) {
-            // El cubo y el codo de la bayoneta, y la hoja de tres filos, que sigue al cañón.
-            val b0 = en(1f); val b1 = boca + e * 0.46f
+            // El cubo y el codo de la bayoneta, y la hoja de tres filos, al lado del cañón.
+            val b0 = en(1f) + e * -0.02f; val b1 = boca + e * 0.44f
             val c0 = s.p(b0); val c1 = s.p(b1); val d = c1 - c0; val ln = d.getDistance().coerceAtLeast(0.01f); val nn = Offset(-d.y, d.x) / ln
-            val g = (0.022f * k).coerceIn(0.35f, 2.6f)
-            val hoja = poligono(c0 + nn * g, c1, c0 - nn * g * 0.4f)
-            drawPath(hoja, a.plano(C.PLATA, (c0 + c1) / 2f, -0.4f, lejos))
-            drawLine(a.plano(lerp(C.PLATA, Color.White, 0.3f), c0, 0.9f, lejos), c0 + nn * g * 0.3f, c1, (g * 0.35f).coerceAtLeast(0.25f))
-            drawCircle(a.plano(C.HIERRO, c0, 0f, lejos), g * 0.8f, c0)
+            val g = (0.024f * k).coerceIn(0.4f, 2.8f)
+            drawLine(a.plano(C.HIERRO, c0, 0f, lejos), c0 - d / ln * (0.07f * k), c0, g * 1.4f, StrokeCap.Butt)
+            val h0 = c0 + nn * g * 0.9f
+            val hoja = poligono(h0, c1, h0 - nn * g * 1.1f)
+            drawPath(hoja, a.plano(C.PLATA, (h0 + c1) / 2f, -lado, lejos))
+            drawPath(poligono(h0, c1, h0 - nn * g * 0.45f), lerp(a.plano(C.PLATA, (h0 + c1) / 2f, lado, lejos, 0.6f), a.deFuego(C.PLATA), (calor * 1.1f).coerceIn(0f, 0.9f)))
+            drawLine(mult(a.plano(C.PLATA, c1, 0f, lejos), C.SOMBRA, 0.5f), h0 - nn * g * 1.1f, c1, (g * 0.18f).coerceAtLeast(0.2f))
             forma.addPath(hoja)
             if (carne) {
                 // Un trozo de carne ensartado en la punta, tostado por el fuego.
-                val q = c0 + d * 0.72f
+                val q = h0 + (c1 - h0) * 0.62f
                 drawOval(a.plano(lerp(C.ROJO, C.CUERO, 0.55f), q, 0f, lejos), Offset(q.x - g * 2.2f, q.y - g * 1.6f), Size(g * 4.4f, g * 3.2f))
                 drawOval(a.plano(lerp(C.ROJO, C.CENIZA, 0.7f), q, 0f, lejos), Offset(q.x - g * 2f, q.y), Size(g * 4f, g * 1.4f))
             }
         }
         if (nieve > 0.1f) {
-            // Un poco de nieve en el lomo de la culata y en el talón.
-            val q = ancho(0.15f, 0.12f)
-            drawLine(a.arriba(C.NIEVE, q.first, lejos), q.first, ancho(0.05f, 0.13f).first, (0.02f * k * nieve).coerceIn(0.3f, 2f), StrokeCap.Round)
+            // Un poco de nieve en el lomo de la culata.
+            drawLine(a.arriba(C.NIEVE, bordes[1].second, lejos), bordes[0].second, bordes[2].second, (0.022f * k * nieve).coerceIn(0.3f, 2.2f), StrokeCap.Round)
         }
         return forma
     }
@@ -530,25 +539,55 @@ internal object PiezasNapoleon {
         val az = Azar(manchas)
         val w = 0.19f; val h = if (tumbada) 0.15f else 0.32f; val d = if (tumbada) 0.17f else 0.075f
         val caras = caja(s, a, -w, w, 0f, h, -d, d, C.PIEL, lejos, arriba = if (tumbada) C.PIEL else lerp(C.PIEL, C.CUERO, 0.3f))
-        // Las manchas blancas de la piel y el pelo, en las caras que se ven.
+        // La piel de becerro con su pelo: manchas de color crema que no son pegotes (se funden con el pelo pardo en su
+        // borde), el pelo peinado hacia abajo en cada cara, la tapa que cae por delante con su canto cosido y la sombra de
+        // abajo de cada cara.
+        val crema = lerp(C.LONA, C.PIEL, 0.22f)
         for ((k3, f) in caras) {
             clipPath(f) {
-                val c = centroDe(k3.q.map { s.p(it) })
-                repeat(3) { val u = az.entre(0.1f, 0.9f); val v = az.entre(0.1f, 0.9f); val q = s.p(k3.en(u, v)); val r = az.entre(0.05f, 0.09f) * s.k
-                    drawPath(TrazosValle.blando(q, r, r * 0.7f, az, 7, 0.3f), a.cara(lerp(C.CORREA, C.NIEVE, 0.4f), s.normal(k3.n), c, lejos)) }
-                val pelo = a.cara(lerp(C.PIEL, C.CUERO, 0.4f), s.normal(k3.n), c, lejos).copy(alpha = 0.5f)
-                repeat(30) { val q = s.p(k3.en(az.real(), az.real())); drawLine(pelo, q, q + Offset(az.entre(-0.6f, 0.6f), az.entre(0.6f, 1.6f)), 0.35f) }
+                val c = centroDe(k3.q.map { s.p(it) }); val nw = s.normal(k3.n)
+                repeat(2) {
+                    val q = s.p(k3.en(az.entre(0.15f, 0.85f), az.entre(0.25f, 0.85f))); val r = az.entre(0.06f, 0.1f) * s.k
+                    val mancha = TrazosValle.borron(q, r, r * az.entre(0.55f, 0.9f), az, 11, 0.35f, 0.9f)
+                    drawPath(mancha, a.cara(crema, nw, c, lejos).copy(alpha = 0.85f))
+                    drawPath(mancha, a.cara(lerp(crema, C.PIEL, 0.5f), nw, c, lejos).copy(alpha = 0.5f), style = Stroke((0.012f * s.k).coerceIn(0.3f, 1.2f)))
+                }
+                // El pelo: trazos cortos, todos hacia abajo y un poco de lado, de los dos colores, que cruzan los bordes.
+                val pelo = a.cara(lerp(C.PIEL, C.CUERO, 0.45f), nw, c, lejos); val peloClaro = a.cara(lerp(crema, C.PIEL, 0.3f), nw, c, lejos)
+                repeat(46) { val q = s.p(k3.en(az.real(), az.real())); val l = az.entre(0.5f, 1.4f) * (s.k / 60f).coerceIn(0.6f, 1.6f)
+                    drawLine((if (az.real() < 0.6f) pelo else peloClaro).copy(alpha = 0.6f), q, q + Offset(l * 0.3f, l), 0.4f, StrokeCap.Round) }
+                if (!k3.arriba) drawRect(Brush.verticalGradient(listOf(Color.Transparent, mult(a.cara(C.PIEL, nw, c, lejos), C.SOMBRA, 0.6f).copy(alpha = 0.6f)), s.p(k3.en(0.5f, 0.35f)).y, s.p(k3.en(0.5f, 0f)).y), Offset(-10f, s.p(k3.en(0.5f, 0.35f)).y), Size(ANCHO + 20f, 0.2f * s.k + 4f))
             }
         }
-        // La manta enrollada encima, a lo largo, con sus dos correas.
-        val rr = 0.07f; val cy = h + rr * 0.85f
-        val sil = cilindro(s, a, V3(-w - 0.04f, cy, if (tumbada) -0.02f else 0f), V3(1f, 0f, 0f), rr, rr, 2f * w + 0.08f, rollo, lerp(rollo, C.CENIZA, 0.15f), 14, lejos)
-        // Las vueltas de la manta, en la tapa del rollo que se ve.
-        val ladoVisto = if (s.seVe(V3(w + 0.04f, cy, 0f), V3(1f, 0f, 0f))) w + 0.041f else -w - 0.041f
-        for (r in listOf(0.045f, 0.025f)) drawPath(TrazosValle.cerrada(circulo(s, V3(ladoVisto, cy, 0f), V3(1f, 0f, 0f), r, 12)), mult(a.plano(rollo, s.p(V3(ladoVisto, cy, 0f)), 0f, lejos), C.SOMBRA, 0.4f), style = Stroke((0.006f * s.k).coerceIn(0.2f, 0.8f)))
-        for (x in listOf(-w * 0.55f, w * 0.55f)) {
-            val arco = (0..10).map { i -> val t = PI.toFloat() * (-0.15f + 1.3f * i / 10f); s.p(V3(x, cy + rr * 1.04f * sin(t), rr * 1.04f * cos(t) * (if (tumbada) 1f else 1f))) }
-            drawPath(curva(arco), a.plano(C.CORREA, arco[5], 0f, lejos), style = Stroke((0.022f * s.k).coerceIn(0.35f, 2.2f)))
+        // La tapa de cuero que cae por delante, con su canto cosido.
+        if (!tumbada && s.seVe(V3(0f, h * 0.7f, -d), V3(0f, 0f, -1f))) {
+            val tapa = listOf(V3(-w, h, -d - 0.004f), V3(w, h, -d - 0.004f), V3(w * 0.97f, h * 0.55f, -d - 0.006f), V3(-w * 0.97f, h * 0.55f, -d - 0.006f)).map { s.p(it) }
+            drawPath(poligono(tapa), a.cara(lerp(C.PIEL, C.CUERO, 0.2f), s.normal(V3(0f, 0.2f, -1f)), centroDe(tapa), lejos).copy(alpha = 0.45f))
+            for (i in 0..12) { val q = tapa[3] + (tapa[2] - tapa[3]) * (i / 12f) + Offset(0f, -0.008f * s.k); drawCircle(a.plano(C.CORREA, q, 0f, lejos), (0.004f * s.k).coerceAtLeast(0.2f), q) }
+            drawLine(mult(a.plano(C.PIEL, tapa[3], 0f, lejos), C.SOMBRA, 0.6f), tapa[3], tapa[2], (0.01f * s.k).coerceIn(0.25f, 1f))
+        }
+        // La manta enrollada encima, a lo largo: paño blando, más gordo entre las correas y apretado en ellas, con sus
+        // arrugas y, en la punta que se ve, las vueltas en espiral.
+        val rr = 0.068f; val cy = h + rr * 0.85f; val largo = 2f * w + 0.1f; val x0 = -w - 0.05f; val zc = if (tumbada) -0.02f else 0f
+        val radios = listOf(0.93f, 1.06f, 0.88f, 1.08f, 1.02f, 0.88f, 1.04f, 0.94f)
+        val tramos = radios.size - 1
+        val sil = Path()
+        for (i in 0 until tramos) {
+            val xa = x0 + largo * i / tramos
+            sil.addPath(cilindro(s, a, V3(xa, cy, zc), V3(1f, 0f, 0f), rr * radios[i], rr * radios[i + 1], largo / tramos, rollo, lerp(rollo, C.CENIZA, 0.15f), 14, lejos, lerp(rollo, C.CENIZA, 0.15f)))
+        }
+        // Las arrugas del paño, de través.
+        repeat(6) { i -> val x = x0 + largo * (0.1f + 0.8f * az.real()); val q0 = s.p(V3(x, cy + rr * 0.95f, zc - rr * 0.2f)); val q1 = s.p(V3(x + 0.025f, cy + rr * 0.2f, zc - rr * 0.98f))
+            drawLine(mult(a.plano(rollo, q0, 0f, lejos), C.SOMBRA, 0.4f).copy(alpha = 0.7f), q0, q1, (0.006f * s.k).coerceIn(0.2f, 0.8f), StrokeCap.Round) }
+        // La punta que se ve: la espiral de las vueltas, del borde hacia dentro.
+        val ladoVisto = if (s.seVe(V3(x0 + largo, cy, zc), V3(1f, 0f, 0f))) x0 + largo + 0.002f else x0 - 0.002f
+        val espiral = (0..40).map { i -> val t = i / 40f; val ang = t * 2f * PI.toFloat() * 2.4f; val r = rr * 0.9f * (1f - 0.85f * t); s.p(V3(ladoVisto, cy + r * sin(ang), zc + r * cos(ang))) }
+        drawPath(curva(espiral), mult(a.plano(rollo, espiral[0], 0f, lejos), C.SOMBRA, 0.55f), style = Stroke((0.007f * s.k).coerceIn(0.25f, 0.9f), cap = StrokeCap.Round))
+        // Las dos correas que la atan, apretando el paño, con su hebilla.
+        for (x in listOf(x0 + largo * 2f / tramos, x0 + largo * 5f / tramos)) {
+            val arco = (0..10).map { i -> val t = PI.toFloat() * (-0.15f + 1.3f * i / 10f); s.p(V3(x, cy + rr * 0.93f * sin(t), zc + rr * 0.93f * cos(t))) }
+            drawPath(curva(arco), a.plano(C.CORREA, arco[5], 0f, lejos), style = Stroke((0.024f * s.k).coerceIn(0.35f, 2.4f)))
+            drawRect(a.plano(C.LATON, arco[3], 0f, lejos), arco[3] - Offset(0.01f * s.k, 0.008f * s.k), Size(0.02f * s.k, 0.016f * s.k))
         }
         // Las correas de los hombros, por delante, y la hebilla.
         if (!tumbada) for (x in listOf(-w * 0.55f, w * 0.55f)) {
@@ -556,7 +595,7 @@ internal object PiezasNapoleon {
             drawPath(curva(combada(p0, p1, 0.02f * s.k, 6)), a.plano(C.CORREA, p0, 0f, lejos), style = Stroke((0.024f * s.k).coerceIn(0.35f, 2f)))
             drawCircle(a.plano(C.LATON, p0, 0f, lejos), (0.012f * s.k).coerceAtLeast(0.3f), p0 + Offset(0f, 0.04f * s.k))
         }
-        if (nieve > 0.15f) nieveEncima(a, (0..8).map { i -> s.p(V3(-w - 0.04f + (2f * w + 0.08f) * i / 8f, cy + rr, 0f)) }, (0.03f * s.k * nieve).coerceAtMost(3f), az, lejos)
+        if (nieve > 0.15f) nieveEncima(a, (0..8).map { i -> s.p(V3(x0 + largo * i / 8f, cy + rr, zc)) }, (0.03f * s.k * nieve).coerceAtMost(3f), az, lejos)
         val todos = esquinas(-w, w, 0f, h + 2f * rr, -d, d).map { s.p(it) }
         return poligono(envolvente(todos)) to s.p(V3(0f, cy + rr, 0f))
     }
@@ -919,36 +958,60 @@ internal object PiezasNapoleon {
     }
 
     /**
-     * Un espejo ovalado de marco dorado, tirado en la nieve y un poco alzado por un lado, roto: el marco con su moldura
-     * (la luz arriba, la sombra en el canto de abajo y sus hojas talladas) y el cristal, que devuelve el cielo
-     * ([cieloAlto] y [cieloBajo]) y una rama oscura del pino, con las grietas en estrella y un trozo que falta.
+     * Un espejo ovalado de marco dorado y tallado, de pie, apoyado contra el costado del cofre y un poco echado hacia
+     * atrás: el marco con su moldura (la luz arriba, la sombra en el canto, las hojas talladas y el copete de arriba) y la
+     * luna rota en tres trozos, cada uno con su reflejo (el cielo de [cieloAlto] a [cieloBajo], la rama del pino con su
+     * nieve, el bosque), separados por las grietas, y el hueco del que falta, por donde se ve la tabla de detrás.
      */
-    fun DrawScope.espejo(s: Sitio, a: Alumbre, cieloAlto: Color, cieloBajo: Color, lejos: Float = 0f) {
-        val k = s.k; val rx = 0.3f; val rz = 0.21f
-        val n = Vec.unidad(V3(-0.12f, 0.8f, -0.58f))
-        fun q(ang: Float, r: Float): V3 { val x = rx * r * cos(ang); val z = rz * r * sin(ang); return V3(x, 0.03f + 0.7f * (z + rz) + 0.08f * x, z) }
-        val fuera = (0 until 28).map { s.p(q(2f * PI.toFloat() * it / 28, 1f)) }
-        val dentro = (0 until 28).map { s.p(q(2f * PI.toFloat() * it / 28, 0.8f)) }
-        val c = centroDe(fuera)
-        // El canto del marco, de grueso, por debajo.
-        drawPath(TrazosValle.cerrada(fuera.map { it + Offset(0f, 0.035f * k) }), mult(a.cara(C.ORO, s.normal(n), c, lejos), C.SOMBRA, 0.55f))
-        drawPath(TrazosValle.cerrada(fuera), a.cara(C.ORO, s.normal(n), c, lejos))
-        // La moldura: la luz en el lado de arriba y las hojas talladas.
-        drawPath(curva(fuera.subList(15, 27)), lerp(a.cara(C.ORO, s.normal(n), c, lejos), Color.White, 0.3f), style = Stroke((0.012f * k).coerceIn(0.3f, 1.4f), cap = StrokeCap.Round))
-        for (i in 0 until 14) { val p = fuera[i * 2] + (dentro[i * 2] - fuera[i * 2]) * 0.5f; drawCircle(mult(a.cara(C.ORO, s.normal(n), c, lejos), C.SOMBRA, 0.3f), (0.012f * k).coerceAtLeast(0.3f), p) }
+    fun DrawScope.espejo(s: Sitio, a: Alumbre, cieloAlto: Color, cieloBajo: Color, lejos: Float = 0f, nieve: Float = 0f) {
+        val k = s.k; val rx = 0.22f; val ry = 0.32f; val echado = 0.28f
+        val arribaE = V3(0f, cos(echado), sin(echado)); val n = Vec.unidad(V3(0f, sin(echado), -cos(echado)))
+        val c0 = V3(0f, ry * cos(echado) + 0.03f, ry * sin(echado))
+        fun q(ang: Float, r: Float): V3 = c0 + V3(rx * r * cos(ang), 0f, 0f) + arribaE * (ry * r * sin(ang))
+        val fuera = (0 until 30).map { s.p(q(2f * PI.toFloat() * it / 30, 1f)) }
+        val dentro = (0 until 30).map { s.p(q(2f * PI.toFloat() * it / 30, 0.8f)) }
+        val c = s.p(c0); val nw = s.normal(n)
+        val oro = a.cara(C.ORO, nw, c, lejos)
+        // El canto del marco (su grueso) y el marco.
+        drawPath(TrazosValle.cerrada(fuera.map { it + Offset(0.02f * k, 0.01f * k) }), mult(oro, C.SOMBRA, 0.6f))
+        drawPath(TrazosValle.cerrada(fuera), oro)
+        // La moldura: la luz en lo alto, la sombra abajo, y las hojas talladas alrededor.
+        drawPath(curva((0..12).map { s.p(q(PI.toFloat() * (0.15f + 0.7f * it / 12f), 0.95f)) }), lerp(oro, Color.White, 0.35f), style = Stroke((0.014f * k).coerceIn(0.3f, 1.6f), cap = StrokeCap.Round))
+        drawPath(curva((0..12).map { s.p(q(PI.toFloat() * (1.15f + 0.7f * it / 12f), 0.9f)) }), mult(oro, C.SOMBRA, 0.45f), style = Stroke((0.016f * k).coerceIn(0.3f, 1.6f), cap = StrokeCap.Round))
+        for (i in 0 until 15) { val p = s.p(q(2f * PI.toFloat() * i / 15, 0.9f)); drawCircle(mult(oro, C.SOMBRA, 0.25f), (0.012f * k).coerceAtLeast(0.3f), p); drawCircle(lerp(oro, Color.White, 0.2f), (0.006f * k).coerceAtLeast(0.2f), p + Offset(-0.004f * k, -0.004f * k)) }
+        // El copete de arriba: una concha tallada.
+        val cop = s.p(q(PI.toFloat() / 2f, 1.08f))
+        drawPath(poligono(listOf(cop + Offset(-0.07f * k, 0.03f * k), cop + Offset(-0.04f * k, -0.04f * k), cop + Offset(0f, -0.06f * k), cop + Offset(0.04f * k, -0.04f * k), cop + Offset(0.07f * k, 0.03f * k))), oro)
+        for (j in -2..2) drawLine(mult(oro, C.SOMBRA, 0.35f), cop + Offset(0f, 0.02f * k), cop + Offset(j * 0.025f * k, -0.045f * k), (0.006f * k).coerceAtLeast(0.2f))
+        // La luna rota en tres trozos, cada uno con su reflejo.
         val vf = TrazosValle.cerrada(dentro)
-        drawPath(vf, Brush.verticalGradient(listOf(cieloBajo, cieloAlto), dentro.minOf { it.y }, dentro.maxOf { it.y }))
+        val g = s.p(q(-0.3f, 0.25f))                                                              // donde se rompió
+        val bordeIzq = s.p(q(PI.toFloat() * 0.9f, 0.82f)); val bordeArr = s.p(q(PI.toFloat() * 0.45f, 0.82f)); val bordeDer = s.p(q(-0.25f * PI.toFloat(), 0.82f))
+        val y0 = dentro.minOf { it.y }; val y1 = dentro.maxOf { it.y }
         clipPath(vf) {
-            // La rama del pino que se refleja, oscura, y su nieve.
-            val r0 = c + Offset(-0.32f * k, -0.04f * k); val r1 = c + Offset(0.1f * k, 0.06f * k)
-            drawLine(lerp(cieloAlto, C.PINO_OSC, 0.75f), r0, r1, (0.05f * k).coerceAtLeast(0.8f), StrokeCap.Round)
-            drawLine(lerp(cieloAlto, C.NIEVE, 0.6f), r0 + Offset(0f, 0.02f * k), r1 + Offset(0f, 0.02f * k), (0.015f * k).coerceAtLeast(0.3f), StrokeCap.Round)
-            // Las grietas en estrella, el trozo que falta (se ve la tabla de detrás) y un brillo.
-            val g = c + Offset(0.06f * k, -0.01f * k); val gr = lerp(cieloAlto, Color.White, 0.6f)
-            for (i in 0 until 7) { val ang = i * 0.9f + 0.3f; drawLine(gr, g, g + Offset(cos(ang), sin(ang) * 0.4f) * (0.28f * k), (0.006f * k).coerceAtLeast(0.25f)) }
-            drawPath(poligono(g, g + Offset(0.13f * k, -0.03f * k), g + Offset(0.1f * k, 0.045f * k)), a.cara(lerp(C.MADERA, C.CENIZA, 0.3f), s.normal(n), g, lejos))
-            drawLine(Color.White.copy(alpha = 0.55f), dentro[18], dentro[4], (0.014f * k).coerceAtLeast(0.3f))
+            // El cielo, de arriba abajo (el espejo, echado atrás, devuelve lo alto).
+            drawRect(Brush.verticalGradient(listOf(cieloAlto, lerp(cieloAlto, cieloBajo, 0.7f)), y0, y1), Offset(c.x - rx * k * 1.2f, y0), Size(rx * k * 2.4f, y1 - y0))
+            // El trozo de la izquierda devuelve el bosque, oscuro, con su nieve.
+            val tIzq = poligono(listOf(g, bordeIzq + Offset(-0.1f * k, 0f), bordeIzq + Offset(-0.1f * k, 0.5f * k), g + Offset(-0.05f * k, 0.5f * k)))
+            drawPath(tIzq, lerp(cieloBajo, C.PINO_OSC, 0.62f))
+            clipPath(tIzq) { repeat(5) { j -> val p = g + Offset(-0.05f * k - j * 0.035f * k, -0.02f * k + j * 0.04f * k); drawLine(lerp(cieloBajo, C.NIEVE, 0.6f), p, p + Offset(-0.06f * k, 0.01f * k), (0.012f * k).coerceAtLeast(0.3f), StrokeCap.Round) } }
+            // El de arriba devuelve la rama del pino grande.
+            val rama0 = bordeArr + Offset(-0.12f * k, 0.04f * k); val rama1 = g + Offset(0.06f * k, -0.03f * k)
+            drawLine(lerp(cieloAlto, C.PINO_OSC, 0.75f), rama0, rama1, (0.03f * k).coerceAtLeast(0.6f), StrokeCap.Round)
+            drawLine(lerp(cieloAlto, C.NIEVE, 0.55f), rama0 + Offset(0f, -0.015f * k), rama1 + Offset(0f, -0.015f * k), (0.012f * k).coerceAtLeast(0.3f), StrokeCap.Round)
+            // El trozo que falta, abajo a la derecha: la tabla de detrás, de madera vieja.
+            val falta = poligono(g, bordeDer, bordeDer + Offset(0.06f * k, 0.12f * k), g + Offset(0.05f * k, 0.14f * k))
+            drawPath(falta, a.cara(lerp(C.MADERA, C.CENIZA, 0.35f), nw, g, lejos))
+            for (j in 0 until 3) drawLine(mult(a.cara(C.MADERA, nw, g, lejos), C.SOMBRA, 0.4f), g + Offset(0.02f * k, 0.03f * k + j * 0.035f * k), bordeDer + Offset(0f, 0.03f * k + j * 0.035f * k), (0.006f * k).coerceAtLeast(0.2f))
+            // Las grietas, claras, y un brillo largo.
+            val grieta = lerp(cieloAlto, Color.White, 0.65f)
+            for (p in listOf(bordeIzq, bordeArr, bordeDer, s.p(q(-0.7f * PI.toFloat(), 0.82f)))) drawLine(grieta, g, p, (0.007f * k).coerceAtLeast(0.25f))
+            drawLine(Color.White.copy(alpha = 0.45f), s.p(q(0.75f * PI.toFloat(), 0.7f)), s.p(q(0.05f * PI.toFloat(), 0.6f)), (0.016f * k).coerceAtLeast(0.3f), StrokeCap.Round)
+            // De noche devuelve el fuego: una mancha cálida en la luna, del lado del fuego.
+            val calor = a.calor(c)
+            if (calor > 0.05f) mancha(s.p(q(-0.15f * PI.toFloat(), 0.45f)), rx * k * 0.5f, ry * k * 0.35f, C.LUMBRE, (0.5f * calor).coerceAtMost(0.6f))
         }
+        if (nieve > 0.2f) nieveEncima(a, (0..8).map { s.p(q(PI.toFloat() * (0.15f + 0.7f * it / 8f), 1.02f)) }.sortedBy { it.x }, (0.025f * k * nieve).coerceAtMost(3f), Azar(Semilla.de("napoleon", "espejo")), lejos)
     }
 
     // =================================================================
@@ -1076,63 +1139,78 @@ internal object PiezasNapoleon {
     }
 
     /**
-     * Una rama de pino de primer plano, de [desde] hacia [sg] (−1 izquierda, 1 derecha): la rama misma, que sube un poco y
-     * cae por el peso, y colgando de ella las ramillas en abanico, una tras otra, cada una con su masa oscura, sus agujas
-     * (más claras en el borde del lado del sol) y su almohada de nieve encima, con el canto azul debajo y el filo de luz
-     * arriba. Entre ramilla y ramilla se ve lo de detrás.
+     * Una rama de abeto de primer plano, de [desde] hacia [sg] (−1 izquierda, 1 derecha), como cuelgan en el norte: la
+     * rama madre, que sale casi tendida y cae por el peso hacia la punta; de ella, a un lado y a otro, las ramillas que
+     * cuelgan en cortina; en cada ramilla, las agujas en haces (abanicos cortos de trazos, oscuros dentro y claros en el
+     * borde del lado del sol); y la nieve posada a lo largo de la rama madre y en el arranque de las ramillas, con su
+     * canto encendido arriba y su sombra azul debajo. Entre ramilla y ramilla se ve lo de detrás.
      */
     fun DrawScope.ramaGrande(a: Alumbre, desde: Offset, sg: Float, largo: Float, grueso: Float, caida: Float, nieve: Float, az: Azar, lejos: Float, lado: Float) {
-        val punta = desde + Offset(sg * largo, largo * caida * az.entre(0.8f, 1.15f))
-        val c1 = desde + Offset(sg * largo * 0.35f, -grueso * 0.35f); val c2 = desde + Offset(sg * largo * 0.72f, largo * caida * 0.3f)
+        val punta = desde + Offset(sg * largo, largo * caida * az.entre(0.85f, 1.2f))
+        val c1 = desde + Offset(sg * largo * 0.38f, -grueso * 0.2f); val c2 = desde + Offset(sg * largo * 0.74f, largo * caida * 0.42f)
         fun eje(t: Float): Offset { val u = 1f - t; return desde * (u * u * u) + c1 * (3f * u * u * t) + c2 * (3f * u * t * t) + punta * (t * t * t) }
         val enLuz = sg * lado > 0f
-        val oscuro = a.plano(lerp(C.PINO_OSC, C.PINO, 0.45f), punta, 0f, lejos, -0.2f)
-        val medio = a.plano(C.PINO, punta, sg * 0.3f, lejos, 0.2f)
-        val claro = a.plano(C.PINO_LUZ, punta, sg, lejos, 0.5f)
-        // La rama, que se ve entre las ramillas cerca del tronco.
-        drawPath(Path().apply { moveTo(desde); cubicTo(c1, c2, punta) }, a.plano(lerp(C.MADERA_OSC, C.CENIZA, 0.2f), desde, sg, lejos), style = Stroke((grueso * 0.16f).coerceAtLeast(0.8f), cap = StrokeCap.Round))
-        val n = (largo / (grueso * 0.55f)).toInt().coerceIn(5, 16)
-        for (i in 0 until n) {
-            val t0 = 0.12f + 0.88f * i / n; val t1 = (0.12f + 0.88f * (i + 1.25f) / n).coerceAtMost(1.02f)
-            val p0 = eje(t0); val p1 = eje(t1.coerceAtMost(1f)); val pm = (p0 + p1) / 2f
-            if (i % 4 == 3 && az.real() < 0.6f) continue                                   // un hueco entre ramillas
-            val cuelga = grueso * (0.4f + 0.5f * sin(PI.toFloat() * (t0 * 0.85f + 0.15f))) * az.entre(0.7f, 1.2f)
-            val vuelo = sg * grueso * 0.18f * az.entre(0f, 1f)
-            // La ramilla: un abanico que cuelga del eje, de borde festoneado.
-            val bajo = (0..6).map { j -> val u = j / 6f; val q = p0 + (p1 - p0) * u; q + Offset(vuelo * u, cuelga * (0.45f + 0.55f * sin(PI.toFloat() * u)) * az.entre(0.82f, 1.12f)) }
-            val forma = Path().apply { moveTo(p0 + Offset(0f, -grueso * 0.06f)); cubicTo(p0 + (p1 - p0) * 0.3f + Offset(0f, -grueso * 0.14f), p0 + (p1 - p0) * 0.7f + Offset(0f, -grueso * 0.12f), p1 + Offset(0f, -grueso * 0.04f)); for (q in bajo.reversed()) lineTo(q); close() }
-            drawPath(forma, oscuro)
-            // Las agujas: trazos cortos que salen hacia abajo y hacia fuera, más claros en el borde y del lado del sol.
-            val agujas = (6 + (p1 - p0).getDistance() / 1.6f).toInt().coerceAtMost(26)
-            for (j in 0 until agujas) {
-                val u = az.real(); val base = p0 + (p1 - p0) * u + Offset(0f, cuelga * az.entre(0.05f, 0.75f) * sin(PI.toFloat() * u.coerceIn(0.1f, 0.9f)))
-                val ang = az.entre(-0.2f, 1.35f); val l = grueso * az.entre(0.1f, 0.3f)
-                val borde = az.real() < 0.45f
-                drawLine(if (borde && enLuz) claro else if (borde) medio else lerp(oscuro, medio, 0.4f), base, base + Offset(sg * l * kotlin.math.cos(ang), l * kotlin.math.sin(ang)), (grueso * 0.035f).coerceIn(0.35f, 1.2f), StrokeCap.Round)
-            }
-            // Las puntas de luz de la ramilla, del lado del sol.
-            if (enLuz) for (q in bajo.filterIndexed { j, _ -> j % 2 == 1 }) drawLine(claro, q + Offset(-sg * 1f, -grueso * 0.08f), q + Offset(sg * grueso * 0.05f, grueso * 0.06f), (grueso * 0.04f).coerceIn(0.35f, 1.3f), StrokeCap.Round)
+        val hondo = a.plano(lerp(C.PINO_OSC, C.CENIZA, 0.25f), punta, 0f, lejos, -0.3f)
+        val oscuro = a.plano(C.PINO_OSC, punta, sg * 0.2f, lejos, -0.1f)
+        val medio = a.plano(C.PINO, punta, sg * 0.4f, lejos, 0.3f)
+        val claro = a.plano(lerp(C.PINO_LUZ, C.HOJA, 0.15f), punta, if (enLuz) sg else 0f, lejos, 0.7f)
+        val madera = a.plano(lerp(C.MADERA_OSC, C.CENIZA, 0.25f), desde, sg, lejos)
+        // Las ramillas que cuelgan de la rama madre, en cortina, de lejos (detrás) a cerca.
+        val n = (largo / (grueso * 0.42f)).toInt().coerceIn(6, 22)
+        val ramillas = (0 until n).map { i ->
+            val t = 0.1f + 0.88f * (i + az.entre(-0.3f, 0.3f)) / n
+            val base = eje(t.coerceIn(0.05f, 0.98f))
+            val cuelga = grueso * az.entre(0.7f, 1.35f) * (0.55f + 0.6f * sin(PI.toFloat() * (0.2f + 0.8f * t)))
+            val vuelo = sg * grueso * az.entre(0.05f, 0.4f)
+            Triple(base, base + Offset(vuelo, cuelga), t)
         }
-        // La nieve posada a lo largo de la rama: una capa seguida, gruesa en medio y fina en la punta, con bultos donde
-        // se juntan las ramillas, el canto de abajo azul y el filo de arriba encendido. No cubre toda la rama: deja
-        // huecos donde el viento la sacudió.
+        // La masa de detrás: lo hondo de la rama, que asoma entre las ramillas (con huecos).
+        for ((b, f, t) in ramillas) if (az.real() < 0.55f) drawLine(hondo.copy(alpha = 0.85f), b, b + (f - b) * 0.7f, grueso * 0.32f * (1.1f - 0.5f * t), StrokeCap.Round)
+        // La rama madre.
+        drawPath(Path().apply { moveTo(desde); cubicTo(c1, c2, punta) }, madera, style = Stroke((grueso * 0.13f).coerceAtLeast(0.8f), cap = StrokeCap.Round))
+        for ((b, f, t) in ramillas) {
+            // La ramilla, fina, que cuelga y se curva hacia fuera.
+            val m = (b + f) / 2f + Offset(sg * grueso * 0.08f, 0f)
+            drawPath(curva(listOf(b, m, f)), madera.copy(alpha = 0.9f), style = Stroke((grueso * 0.035f).coerceAtLeast(0.4f), cap = StrokeCap.Round))
+            // Las agujas en haces a lo largo de la ramilla: cada haz, un abanico de trazos cortos hacia abajo y afuera.
+            val haces = 4 + (grueso / 9f).toInt().coerceAtMost(5)
+            for (j in 0 until haces) {
+                val u = (j + 0.5f) / haces; val q = b + (f - b) * u + Offset(sg * grueso * 0.05f * sin(PI.toFloat() * u), 0f)
+                val lg = grueso * az.entre(0.13f, 0.22f) * (1.15f - 0.4f * u)
+                val borde = u > 0.6f || az.real() < 0.25f
+                val col = if (borde && enLuz) claro else if (borde) medio else oscuro
+                for (h in -2..2) {
+                    val ang = PI.toFloat() / 2f + h * 0.45f + sg * 0.25f + az.entre(-0.12f, 0.12f)
+                    drawLine(col, q, q + Offset(kotlin.math.cos(ang) * lg, kotlin.math.sin(ang) * lg * 0.9f), (grueso * 0.028f).coerceIn(0.35f, 1.2f), StrokeCap.Round)
+                }
+            }
+            // La punta clara de la ramilla.
+            drawLine(if (enLuz) claro else medio, f, f + Offset(sg * grueso * 0.04f, grueso * 0.08f), (grueso * 0.03f).coerceIn(0.35f, 1.2f), StrokeCap.Round)
+        }
+        // La nieve: una capa seguida a lo largo de la rama madre (con huecos donde el viento la sacudió) y copetes en el
+        // arranque de las ramillas; el canto de arriba encendido, la sombra azul debajo.
         if (nieve > 0.05f) {
-            val tramos = listOf(0.08f to az.entre(0.38f, 0.55f), az.entre(0.6f, 0.68f) to az.entre(0.86f, 0.97f))
+            val tramos = listOf(0.05f to az.entre(0.36f, 0.52f), az.entre(0.58f, 0.66f) to az.entre(0.84f, 0.96f))
             for ((ta, tb) in tramos) {
-                val pasos = 12
+                val pasos = 14
                 val arriba = ArrayList<Offset>(); val abajo = ArrayList<Offset>()
                 for (j in 0..pasos) {
                     val t = ta + (tb - ta) * j / pasos; val q = eje(t)
-                    val forma = sin(PI.toFloat() * j / pasos).coerceAtLeast(0.12f)
-                    val g = grueso * (0.1f + 0.24f * nieve) * forma * (0.75f + 0.5f * sin(t * 23f + sg * 3f).let { it * it })
-                    arriba += q + Offset(0f, -g - grueso * 0.04f)
-                    abajo += q + Offset(sg * 0.5f, g * 0.28f + grueso * 0.05f * sin(t * 37f))
+                    val forma = sin(PI.toFloat() * j / pasos).coerceAtLeast(0.1f)
+                    val g = grueso * (0.08f + 0.2f * nieve) * forma * (0.7f + 0.6f * sin(t * 19f + sg * 2f).let { it * it })
+                    arriba += q + Offset(0f, -g - grueso * 0.03f)
+                    abajo += q + Offset(0f, g * 0.3f + grueso * 0.05f + grueso * 0.04f * sin(t * 41f))
                 }
                 val capa = TrazosValle.cerrada(arriba + abajo.reversed())
                 val pm = eje((ta + tb) / 2f)
                 drawPath(capa, a.cara(C.NIEVE, Vec.unidad(V3(sg * 0.15f, 0.8f, -0.5f)), pm, lejos))
-                drawPath(curva(abajo), a.cara(C.NIEVE_SOMBRA, V3(0f, -0.4f, -0.9f), pm, lejos), style = Stroke((grueso * 0.07f).coerceIn(0.5f, 2.4f), cap = StrokeCap.Round))
-                drawPath(curva(arriba.subList(2, arriba.size - 2)), a.arriba(lerp(C.NIEVE, Color.White, 0.45f), pm, lejos), style = Stroke((grueso * 0.045f).coerceIn(0.35f, 1.6f), cap = StrokeCap.Round))
+                drawPath(curva(abajo), a.cara(C.NIEVE_SOMBRA, V3(0f, -0.4f, -0.9f), pm, lejos), style = Stroke((grueso * 0.06f).coerceIn(0.5f, 2.2f), cap = StrokeCap.Round))
+                drawPath(curva(arriba.subList(2, arriba.size - 2)), a.arriba(lerp(C.NIEVE, Color.White, 0.45f), pm, lejos), style = Stroke((grueso * 0.035f).coerceIn(0.35f, 1.4f), cap = StrokeCap.Round))
+            }
+            for ((b, f, t) in ramillas) if (az.real() < 0.35f * nieve + 0.1f) {
+                val q = b + (f - b) * 0.2f; val g = grueso * (0.05f + 0.08f * nieve)
+                drawOval(a.cara(C.NIEVE, Vec.unidad(V3(0f, 0.8f, -0.5f)), q, lejos), Offset(q.x - g * 1.4f, q.y - g), Size(g * 2.8f, g * 1.3f))
+                drawLine(a.cara(C.NIEVE_SOMBRA, V3(0f, -0.4f, -0.9f), q, lejos), q + Offset(-g * 1.2f, g * 0.3f), q + Offset(g * 1.2f, g * 0.3f), (g * 0.25f).coerceAtLeast(0.3f), StrokeCap.Round)
             }
         }
     }
@@ -1167,6 +1245,15 @@ internal object PiezasNapoleon {
         }
         // La copa: una masa oscura de fondo y, encima, las masas tendidas en pisos, de base plana, que se enciman,
         // unidas por ramas que salen del tronco.
+        // Lejos, la copa es una sola nube irregular, con su lado de luz y su nieve (sin pisos que parezcan platos).
+        if (detalle < 0.45f) {
+            val c = Offset(pie.x + inclina * 0.25f, (copa + top) / 2f)
+            val nube = TrazosValle.borron(c, ancho * 0.5f, (copa - top) * 0.48f, az, 13, 0.3f, 0.7f)
+            drawPath(nube, a.plano(C.PINO_OSC, c, 0f, lejos, 0f))
+            clipPath(nube) { mancha(c + Offset(lado * ancho * 0.2f, -(copa - top) * 0.15f), ancho * 0.35f, (copa - top) * 0.3f, a.plano(C.PINO, c, lado, lejos, 0.5f), 0.6f)
+                if (nieve > 0.15f) repeat(4) { val q = c + Offset(az.entre(-0.35f, 0.35f) * ancho, az.entre(-0.4f, 0.2f) * (copa - top)); mancha(q, ancho * 0.18f, (copa - top) * 0.05f, a.arriba(C.NIEVE, q, lejos), 0.8f * nieve) } }
+            return
+        }
         val masas = (4 + (detalle * 3f).toInt()).coerceIn(4, 7)
         val oscuro = a.plano(C.PINO_OSC, cima, 0f, lejos, 0f)
         val fondo = Offset(pie.x + inclina * (1f - (COPA_ALBAR + 1f) / 2f) + az.entre(-0.1f, 0.1f) * ancho, (copa + top) / 2f)
@@ -1227,20 +1314,18 @@ internal object PiezasNapoleon {
             drawPath(curva(listOf(desde + (medio - desde) * 0.5f, medio, medio + (punta - medio) * 0.7f)), a.plano(C.PINO, medio, sg, lejos, 0.7f), style = Stroke((grueso * 0.14f).coerceIn(0.3f, 1.6f), cap = StrokeCap.Round))
         }
         // La nieve posada encima, siguiendo el lomo; más gruesa en medio, y su canto de abajo azul.
-        if (nieve > 0.05f && az.real() > 0.3f) {
-            val g = grueso * (0.06f + 0.24f * nieve) * az.entre(0.5f, 1.2f)
-            val p0 = desde + (medio - desde) * az.entre(0.2f, 0.7f); val p1 = medio + (punta - medio) * az.entre(-0.2f, 0.25f); val p2 = medio + (punta - medio) * az.entre(0.4f, 0.95f)
-            val sube = Offset(0f, -g)
-            val capa = Path().apply {
-                moveTo(p0); cubicTo(p0 + sube * 0.8f, p1 + sube * 1.1f + Offset(-sg * largo * 0.1f, 0f), p1 + sube); cubicTo(p1 + sube * 0.9f + Offset(sg * largo * 0.15f, 0f), p2 + sube * 0.4f, p2)
-                cubicTo(p2 + Offset(0f, g * 0.5f), p1 + Offset(sg * largo * 0.1f, g * 0.55f), p1 + Offset(0f, g * 0.35f)); cubicTo(p1 + Offset(-sg * largo * 0.12f, g * 0.4f), p0 + Offset(0f, g * 0.3f), p0); close()
-            }
-            drawPath(capa, a.cara(C.NIEVE, Vec.unidad(V3(sg * 0.2f, 0.75f, -0.5f)), p1, lejos))
-            if (detalle > 0.3f) {
-                drawPath(Path().apply { moveTo(p2); cubicTo(p2 + Offset(0f, g * 0.5f), p1 + Offset(sg * largo * 0.1f, g * 0.55f), p1 + Offset(0f, g * 0.35f)); cubicTo(p1 + Offset(-sg * largo * 0.12f, g * 0.4f), p0 + Offset(0f, g * 0.3f), p0) },
-                    a.cara(C.NIEVE_SOMBRA, V3(0f, -0.5f, -0.8f), p1, lejos), style = Stroke((g * 0.35f).coerceIn(0.3f, 2.4f), cap = StrokeCap.Round))
-                drawPath(Path().apply { moveTo(p0); cubicTo(p0 + sube * 0.8f, p1 + sube * 1.1f + Offset(-sg * largo * 0.1f, 0f), p1 + sube) },
-                    a.arriba(lerp(C.NIEVE, Color.White, 0.4f), p1, lejos), style = Stroke((g * 0.22f).coerceIn(0.25f, 1.6f), cap = StrokeCap.Round))
+        if (nieve > 0.05f && az.real() > 0.28f) {
+            // Uno a tres terrones de nieve posados a lo largo del lomo, de base plana y lomo blando, cada uno de su tamaño
+            // (no una media luna que se repite en cada piso), con su canto azul debajo.
+            val terrones = 1 + az.entero(3)
+            for (j in 0 until terrones) {
+                val t = az.entre(0.15f, 0.85f)
+                val q = if (t < 0.5f) desde + (medio - desde) * (t * 2f) else medio + (punta - medio) * ((t - 0.5f) * 2f)
+                val g = grueso * (0.05f + 0.2f * nieve) * az.entre(0.5f, 1.25f)
+                val rx = largo * az.entre(0.12f, 0.28f)
+                val terron = TrazosValle.blando(q + Offset(0f, -g * 0.55f), rx, g, az, 8, 0.22f, 0.35f)
+                drawPath(terron, a.cara(C.NIEVE, Vec.unidad(V3(sg * 0.2f, 0.8f, -0.5f)), q, lejos))
+                if (detalle > 0.3f) drawLine(a.cara(C.NIEVE_SOMBRA, V3(0f, -0.5f, -0.8f), q, lejos), q + Offset(-rx * 0.8f, g * 0.15f), q + Offset(rx * 0.8f, g * 0.2f), (g * 0.3f).coerceIn(0.3f, 2f), StrokeCap.Round)
             }
         }
     }
@@ -1393,10 +1478,22 @@ internal object PiezasNapoleon {
 
     private fun centroDe3(q: List<V3>): V3 = V3(q.sumOf { it.x.toDouble() }.toFloat() / q.size, q.sumOf { it.y.toDouble() }.toFloat() / q.size, q.sumOf { it.z.toDouble() }.toFloat() / q.size)
 
-    /** La rueda que se le cayó a la carroza, echada en la nieve y cortada por el borde: la pina, los rayos rotos, el cubo. */
+    /**
+     * La rueda que se le cayó a la carroza, medio hundida en la nieve y recostada (de canto, sobre su cubo), cortada por
+     * el borde: la llanta de hierro con su brillo, las pinas, los rayos en escorzo (alguno roto), el cubo y la nieve
+     * posada en lo alto de la llanta y amontonada al pie.
+     */
     fun DrawScope.ruedaSuelta(s: Sitio, a: Alumbre, nieve: Float, lejos: Float = 0f): Path {
-        val sil = rueda(s, a, V3(0f, 0.08f, 0f), 0.62f, Vec.unidad(V3(0.12f, 1f, -0.2f)), 0.09f, 12, 3, C.MADERA, lejos, 0.2f, nieve)
-        if (nieve > 0.2f) { val q = s.p(V3(-0.2f, 0.1f, -0.3f)); mancha(q, 0.4f * s.k, 0.06f * s.k, a.arriba(C.NIEVE, q, lejos), 0.85f * nieve) }
+        val r = 0.62f
+        val eje = Vec.unidad(V3(0.55f, 0.55f, -0.62f))
+        val centro = V3(0f, r * 0.62f, 0f)
+        val sil = rueda(s, a, centro, r, eje, 0.09f, 12, 2, C.MADERA, lejos, 0.5f, nieve)
+        // La nieve amontonada contra el pie de la rueda, que la hunde.
+        if (nieve > 0.15f) {
+            val pie = (0..8).map { i -> s.p(V3(-0.7f + 1.4f * i / 8f, 0.06f + 0.1f * nieve * sin(i * 1.3f).let { it * it }, -0.25f)) }
+            drawPath(TrazosValle.cerrada(pie + pie.reversed().map { it + Offset(0f, 0.25f * s.k) }), a.arriba(C.NIEVE, pie[4], lejos))
+            drawPath(curva(pie), a.arriba(lerp(C.NIEVE, Color.White, 0.35f), pie[4], lejos), style = Stroke((0.02f * s.k).coerceIn(0.4f, 2f), cap = StrokeCap.Round))
+        }
         return sil
     }
 

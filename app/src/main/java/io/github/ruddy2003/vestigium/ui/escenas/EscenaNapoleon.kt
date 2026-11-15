@@ -341,9 +341,13 @@ internal object EscenaNapoleon : EscenaVida {
 
     /**
      * Si los fuegos de lejos están encendidos (los de los otros grupos, y los del ejército en el vivac): al caer la tarde
-     * y de noche, de 17:00 a 6:00 («cada grupo busca un sitio para el fuego»). De día, solo su humo.
+     * y de noche, de 17:00 a 6:00 («cada grupo busca un sitio para el fuego»), y desde las 15:30 si hace mal tiempo. De
+     * día, solo su humo.
      */
-    internal fun fuegosLejos(m: Momento): Boolean = m.hora >= 17.0 || m.hora < 6.0
+    internal fun fuegosLejos(m: Momento): Boolean = m.hora >= 17.0 || m.hora < 6.0 || (malTiempo(m) && m.hora >= 15.5)
+
+    /** Si nieva, hay niebla o llueve: entonces los fuegos se encienden antes («el fuego se enciende antes y manda»). */
+    internal fun malTiempo(m: Momento): Boolean = m.ficha.clima == Clima.NIEVE || m.ficha.clima == Clima.NIEBLA || m.ficha.clima == Clima.LLUVIA || m.ficha.clima == Clima.TORMENTA
 
     // ---------------------------------------------------------------- Los días señalados
 
