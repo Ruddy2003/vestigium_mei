@@ -255,6 +255,10 @@ internal object AnioG9 {
     // - Algunos hechos los ve sin saber qué son: en `luz_monte_29` ve una luz en lo alto de un monte, la noche de la
     //   transfiguración (Marcos 9:2–8, que no dice qué monte), y no sabrá lo que fue hasta que alguien se lo cuente.
     // - Sus viajes van por el valle del Jordán (cuatro días de camino), salvo los de la temporada 5, por Samaria (tres).
+    // - La huida (temporada 5) sale de Jerusalén la noche del viernes 6 de junio, después del entierro de Esteban, y llega
+    //   a la ciudad de Samaria el lunes 9 (unos dos días a pie, con un día escondidos cerca de Siquem). Los tres días del
+    //   camino son especiales (`dispersion_32`, `saulo_casas_32` y `samaria_32`), sin días normales en medio, porque las
+    //   variantes de «huida» del cuento son las de la ciudad.
     //
     // Claves de escena: fiesta, lamparas (las luces de Janucá), sucot (las cabañas de ramas), luto, tormenta, humo,
     // secadero (los cañizos llenos de pescado abierto), cosecha, grieta (las noches del círculo en que se abre la luz),
@@ -528,7 +532,7 @@ internal object AnioG9 {
                     mundo("tormenta_32", "01-20", "Llueve una semana entera y el lago se come la orilla del secadero", certeza = INV, escena = "tormenta", clima = Clima.LLUVIA),
                     suceso("debora_32", "01-29", "Débora se pierde en la orilla, y la encuentran dormida entre las redes"),
                     suceso("llave_32", "02-10", "Ismael le da a guardar la llave del arca de las hojas"),
-                    mundo("nieve_hermon_32", "02-24", "Nieva hasta la mitad del Hermón, y desde Magdala se ve como un muro blanco", certeza = INV),
+                    mundo("nieve_hermon_32", "02-24", "Nieva hasta la mitad del Hermón, y desde Magdala se ve como un muro blanco", certeza = INV, clima = Clima.DESPEJADO),
                     fiesta("purim_32", "03-15", "Purim, en el segundo mes de adar: se lee el rollo de Ester", certeza = A, fuente = F_PURIM),
                     rito("sube_pesaj_32", "04-05", "Sube a Jerusalén para Pésaj por el camino de Samaria", 3, INV, escena = "camino"),
                     mundo("libertos_32", "04-10", "Oye a Esteban discutir con los de la sinagoga de los libertos", certeza = A, fuente = F_HECHOS_6),
@@ -540,9 +544,9 @@ internal object AnioG9 {
                     fiesta("shavuot_32", "06-03", "Shavuot en Jerusalén: el trigo nuevo y los dos panes en el Templo", certeza = A, fuente = F_SHAVUOT),
                     mundo("esteban_32", "06-05", "Apedrean a Esteban fuera de la ciudad; un joven, Saulo, guarda los mantos", certeza = A, fuente = F_ESTEBAN, escena = "luto"),
                     rito("entierro_esteban_32", "06-06", "Unos hombres piadosos entierran a Esteban y lloran por él", certeza = A, fuente = F_HECHOS_8, escena = "luto"),
-                    mundo("dispersion_32", "06-07", "Empieza la persecución: los del Nazareno huyen de Jerusalén", certeza = A, fuente = F_HECHOS_8, escena = "huida"),
-                    mundo("saulo_casas_32", "06-09", "Llega la noticia: Saulo entra en las casas y se lleva presos a hombres y mujeres", certeza = A, fuente = F_HECHOS_8),
-                    mundo("samaria_32", "06-11", "Llega a la ciudad de Samaria con otros que huyen, y no se atreve a volver a casa", certeza = INV),
+                    mundo("dispersion_32", "06-07", "Empieza la persecución: los del Nazareno huyen de Jerusalén", certeza = A, fuente = F_HECHOS_8, escena = "huida", clima = Clima.DESPEJADO),
+                    mundo("saulo_casas_32", "06-08", "Llega la noticia: Saulo entra en las casas y se lleva presos a hombres y mujeres", certeza = A, fuente = F_HECHOS_8),
+                    mundo("samaria_32", "06-09", "Llega a la ciudad de Samaria con otros que huyen, y no se atreve a volver a casa", certeza = INV),
                     mundo("felipe_32", "06-25", "En la ciudad de Samaria predica Felipe, uno de los siete, y la gente lo sigue", certeza = A, fuente = F_FELIPE),
                     mundo("simon_32", "07-06", "Oye hablar de Simón, al que los de Samaria llaman el gran poder de Dios", certeza = A, fuente = F_SIMON),
                     mundo("bautizo_simon_32", "07-20", "Simón se hace bautizar por Felipe, y ya no se separa de él", certeza = A, fuente = F_SIMON),
