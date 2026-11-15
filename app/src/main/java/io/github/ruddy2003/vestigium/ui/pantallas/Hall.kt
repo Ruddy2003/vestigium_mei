@@ -80,6 +80,7 @@ import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.TrazosArcontes
 import io.github.ruddy2003.vestigium.ui.TrazosFrente
+import io.github.ruddy2003.vestigium.ui.TrazosGalia
 import io.github.ruddy2003.vestigium.ui.Vacio
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -102,7 +103,7 @@ private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.MEDIEVAL -> Color(0xFF7A5C2E)
     TemaId.TEMPLARIO -> Color(0xFF5E6870)
     TemaId.DISTOPIA -> Color(0xFF5D6670)
-    TemaId.GALIA -> Color(0xFF5D6670)
+    TemaId.GALIA -> Color(0xFF3E5F24)          // el verde del roble
     TemaId.ARCONTES -> Color(0xFF5A3B8F)          // el violeta de la grieta
     TemaId.FRENTE -> Color(0xFFC77A1E)          // el ámbar de los pilotos
     TemaId.REFUGIO -> Color(0xFF3FA7A0)
@@ -220,7 +221,8 @@ object PiezasLogro {
         // Trazo de forja: firme, de esquinas vivas y doble, como el ribete de un escudo; el material, lino blanco.
         TemaId.TEMPLARIO -> Trazo(u, 1.4f, StrokeCap.Square, StrokeJoin.Miter, null, 0f, true, Color(0xFFF1ECE0))
         TemaId.DISTOPIA -> Trazo(u, 1.1f, StrokeCap.Butt, StrokeJoin.Miter, floatArrayOf(5f, 1.6f), 0f, false, Color(0xFFD9D9D4))
-        TemaId.GALIA -> Trazo(u, 1.1f, StrokeCap.Butt, StrokeJoin.Miter, floatArrayOf(5f, 1.6f), 0f, false, Color(0xFFD9D9D4))
+        // El punzón de hueso sobre la tablilla: trazo firme que se corta en tramos cortos, de puntas redondas; el material, la cera clara.
+        TemaId.GALIA -> Trazo(u, 1.15f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(6f, 1.1f, 2.4f, 1.1f), 0.7f, false, Color(0xFFE8DDB8))
         // El buril del que graba gemas: trazo largo con un punto, de puntas redondas y esquinas apenas romas, sobre lino.
         TemaId.ARCONTES -> Trazo(u, 1f, StrokeCap.Round, StrokeJoin.Bevel, floatArrayOf(11f, 0.9f, 0.01f, 0.9f), 0.5f, false, Color(0xFFEFE6D0))
         // El plóter de una carta estelar: raya larga y punto, puntas redondas y esquinas apenas romas, sobre el hueso de la consola.
@@ -317,6 +319,32 @@ object PiezasLogro {
         drawContext.canvas.nativeCanvas.drawText(s, c.x, c.y + r * 0.32f, p)
     }
 
+    /**
+     * El caballo de las monedas galas, mirando a la derecha: el cuerpo en barril con el anca y la espalda redondas, el cuello y
+     * la cabeza en trazos, las patas con sus cascos en bolita, la crin de perlas, la cola en curva, la perla sobre el lomo y la
+     * rueda bajo la panza. [s] es el largo del cuerpo y [g] el grueso del trazo.
+     */
+    private fun DrawScope.caballoGalo(c: Offset, s: Float, color: Color, g: Float) {
+        fun q(x: Float, y: Float) = Offset(c.x + x * s, c.y + y * s)
+        listOf(floatArrayOf(-0.3f, 0.06f, -0.4f, 0.22f, -0.42f, 0.42f), floatArrayOf(-0.22f, 0.08f, -0.16f, 0.24f, -0.2f, 0.42f),
+            floatArrayOf(0.18f, 0.08f, 0.14f, 0.26f, 0.12f, 0.42f), floatArrayOf(0.27f, 0.06f, 0.44f, 0.18f, 0.42f, 0.34f)).forEach { k ->
+            drawPath(Path().apply { moveTo(q(k[0], k[1]).x, q(k[0], k[1]).y); lineTo(q(k[2], k[3]).x, q(k[2], k[3]).y); lineTo(q(k[4], k[5]).x, q(k[4], k[5]).y) },
+                color, style = Stroke(g, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            drawCircle(color, g * 0.85f, q(k[4], k[5]))
+        }
+        drawOval(color, Offset(c.x - 0.43f * s, c.y - 0.13f * s), Size(0.8f * s, 0.25f * s))
+        drawCircle(color, 0.15f * s, q(-0.29f, -0.01f)); drawCircle(color, 0.13f * s, q(0.24f, -0.02f))
+        drawLine(color, q(0.27f, -0.06f), q(0.44f, -0.36f), g * 2.6f, StrokeCap.Round)
+        drawLine(color, q(0.43f, -0.39f), q(0.64f, -0.27f), g * 1.9f, StrokeCap.Round)
+        drawLine(color, q(0.42f, -0.42f), q(0.39f, -0.54f), g * 0.9f, StrokeCap.Round)
+        for (k in 0 until 4) drawCircle(color, g * 0.7f, q(0.19f + k * 0.055f, -0.17f - k * 0.085f))
+        drawPath(Path().apply { moveTo(q(-0.42f, -0.06f).x, q(-0.42f, -0.06f).y); quadraticTo(q(-0.66f, -0.34f).x, q(-0.66f, -0.34f).y, q(-0.64f, 0.12f).x, q(-0.64f, 0.12f).y) },
+            color, style = Stroke(g * 0.9f, cap = StrokeCap.Round))
+        drawCircle(color, g * 1.1f, q(-0.02f, -0.32f))
+        drawCircle(color, 0.1f * s, q(0f, 0.36f), style = Stroke(g * 0.7f))
+        for (k in 0 until 4) { val a = k * PI / 4; drawLine(color, q(0.1f * cos(a).toFloat(), 0.36f + 0.1f * sin(a).toFloat()), q(-0.1f * cos(a).toFloat(), 0.36f - 0.1f * sin(a).toFloat()), g * 0.5f) }
+    }
+
     // ---------------------------------------------------------------- borde de la medalla
 
     /**
@@ -349,9 +377,10 @@ object PiezasLogro {
                 drawCircle(t, r * 0.9f, c, style = Stroke(1.2f * u)); drawCircle(t, r * 0.84f, c, style = Stroke(0.8f * u))
                 for (i in 0 until 4) { val a = PI / 4 + i * PI / 2; val p = en(a, 0.87f); rotate(grados(a), p) { drawRect(tinta.copy(alpha = 0.6f), Offset(p.x - 3 * u, p.y - 1.5f * u), Size(6 * u, 3 * u)) } }
             }
+            // El torques que rodea la medalla, con sus dos remates abajo.
             TemaId.GALIA -> {
-                drawCircle(t, r * 0.9f, c, style = Stroke(1.2f * u)); drawCircle(t, r * 0.84f, c, style = Stroke(0.8f * u))
-                for (i in 0 until 4) { val a = PI / 4 + i * PI / 2; val p = en(a, 0.87f); rotate(grados(a), p) { drawRect(tinta.copy(alpha = 0.6f), Offset(p.x - 3 * u, p.y - 1.5f * u), Size(6 * u, 3 * u)) } }
+                if (hecho) with(TrazosGalia) { torques(c, r * 0.87f, 3.4f * u, m, lerp(metal, Color.White, 0.55f)) }
+                else drawArc(m, 113f, 314f, false, Offset(c.x - r * 0.87f, c.y - r * 0.87f), Size(r * 1.74f, r * 1.74f), style = Stroke(3.4f * u, cap = StrokeCap.Round))
             }
             // El ouroboros: la serpiente que se muerde la cola rodea la medalla, con sus escamas grabadas.
             TemaId.ARCONTES -> with(TrazosArcontes) { ouroboros(c, r * 0.87f, 6.4f * u, m, -60f, if (hecho) tinta.copy(alpha = 0.45f) else null) }
@@ -485,7 +514,14 @@ object PiezasLogro {
             // El parapeto liso con la cruz patada alzada en medio.
             TemaId.TEMPLARIO -> { drawRect(tinta, Offset(x, y - 1.6f * u), Size(an, 1.6f * u)); drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(cx, y - 4.4f * u), 3f * u), tinta) }
             TemaId.DISTOPIA -> { drawLine(tinta, Offset(cx, y), Offset(cx, y - 3 * u), 0.8f * u); drawRect(tinta, Offset(cx - an * 0.4f, y - 6 * u), Size(an * 0.8f, 3 * u)) }
-            TemaId.GALIA -> { drawLine(tinta, Offset(cx, y), Offset(cx, y - 3 * u), 0.8f * u); drawRect(tinta, Offset(cx - an * 0.4f, y - 6 * u), Size(an * 0.8f, 3 * u)) }
+            // El tejado de paja, empinado, con el alero grueso y las varas del caballete que se cruzan arriba.
+            TemaId.GALIA -> {
+                val alto = minOf(an * 0.9f, 9 * u)
+                drawPath(Path().apply { moveTo(x - 1.2f * u, y); lineTo(cx, y - alto); lineTo(x + an + 1.2f * u, y); close() }, tinta)
+                drawLine(tinta, Offset(cx - 2.2f * u, y - alto - 2.2f * u), Offset(cx + 1f * u, y - alto + 1f * u), 0.8f * u)
+                drawLine(tinta, Offset(cx + 2.2f * u, y - alto - 2.2f * u), Offset(cx - 1f * u, y - alto + 1f * u), 0.8f * u)
+                drawLine(tinta, Offset(x - 1.6f * u, y + 0.4f * u), Offset(x + an + 1.6f * u, y + 0.4f * u), 1.2f * u)
+            }
             // La azotea de barro de las casas de Galilea, con su pretil y el rodillo de piedra con que se apisona.
             TemaId.ARCONTES -> {
                 drawRect(tinta, Offset(x - 0.8f * u, y - 1.4f * u), Size(an + 1.6f * u, 1.4f * u))
@@ -628,7 +664,14 @@ object PiezasLogro {
             // El escudo de la casa con la cruz patada.
             TemaId.TEMPLARIO -> { traza(Path().apply { moveTo(c.x - 13 * u, c.y - 15 * u); lineTo(c.x + 13 * u, c.y - 15 * u); quadraticTo(c.x + 14 * u, c.y + 5 * u, c.x, c.y + 17 * u); quadraticTo(c.x - 14 * u, c.y + 5 * u, c.x - 13 * u, c.y - 15 * u); close() }); traza(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(c.x, c.y - 2 * u), 9 * u)) }
             TemaId.DISTOPIA -> rotate(-6f, c) { traza(caja(c.x - 28 * u, c.y - 20 * u, c.x + 28 * u, c.y + 20 * u, 2 * u)); drawRect(tinto, Offset(c.x - 25 * u, c.y - 17 * u), Size(50 * u, 34 * u), style = Stroke(0.8f * u)) }
-            TemaId.GALIA -> rotate(-6f, c) { traza(caja(c.x - 28 * u, c.y - 20 * u, c.x + 28 * u, c.y + 20 * u, 2 * u)); drawRect(tinto, Offset(c.x - 25 * u, c.y - 17 * u), Size(50 * u, 34 * u), style = Stroke(0.8f * u)) }
+            // El sello en forma de torques: el aro abierto abajo, con sus dos remates.
+            TemaId.GALIA -> {
+                traza(Path().apply { arcTo(Rect(c.x - 27 * u, c.y - 26 * u, c.x + 27 * u, c.y + 26 * u), 115f, 310f, true) })
+                listOf(115f, 425f).forEach { g ->
+                    val a = Math.toRadians(g.toDouble()); val o = Offset(c.x + 27 * u * cos(a).toFloat(), c.y + 26 * u * sin(a).toFloat())
+                    drawCircle(tinto, 3.2f * u, o, style = Stroke(1.4f * u)); drawCircle(tinto, 1f * u, o)
+                }
+            }
             // La bula de barro: el terrón aplastado, de borde desparejo, con el cordel que lo atraviesa y sale por los dos lados.
             TemaId.ARCONTES -> {
                 traza(Path().apply {
@@ -957,12 +1000,21 @@ object PiezasLogro {
                 drawCircle(tinta, 1.6f * u, o)
                 for (k in 0 until 3) for (j in 0 until 6 - k * 2) drawRect(hueco, Offset(c.x - (22 - k * 6) * u + j * 7 * u, base - (k + 1) * 9 * u + 3 * u), Size(2 * u, 4 * u))
             }
+            // La puerta del oppidum en su muralla gala: el paramento de piedra con las cabezas de las vigas, la empalizada
+            // encima, el paso de la puerta y la torre de madera con su tejado.
             TemaId.GALIA -> {
-                for (k in 0 until 4) { val an = (52 - k * 12) * u; drawRect(tinta, Offset(c.x - an / 2, base - (k + 1) * 9 * u), Size(an, 9 * u)) }
-                val o = Offset(c.x, base - 31.5f * u)
-                drawPath(Path().apply { moveTo(o.x - 5 * u, o.y); quadraticTo(o.x, o.y - 4.5f * u, o.x + 5 * u, o.y); quadraticTo(o.x, o.y + 4.5f * u, o.x - 5 * u, o.y); close() }, hueco)
-                drawCircle(tinta, 1.6f * u, o)
-                for (k in 0 until 3) for (j in 0 until 6 - k * 2) drawRect(hueco, Offset(c.x - (22 - k * 6) * u + j * 7 * u, base - (k + 1) * 9 * u + 3 * u), Size(2 * u, 4 * u))
+                drawRect(tinta, Offset(c.x - 28 * u, base - 22 * u), Size(56 * u, 22 * u))
+                drawRect(hueco, Offset(c.x - 6 * u, base - 15 * u), Size(12 * u, 15 * u))
+                for (f in 0 until 3) for (k in 0 until 7) {
+                    val xx = c.x - 25 * u + k * 8 * u + (f % 2) * 4 * u
+                    if (kotlin.math.abs(xx + 1.1f * u - c.x) > 8.5f * u) drawRect(hueco, Offset(xx, base - 19 * u + f * 6 * u), Size(2.2f * u, 2.2f * u))
+                }
+                for (k in 0 until 9) listOf(-1f, 1f).forEach { s -> drawRect(tinta, Offset(c.x + s * (12 + k * 2f) * u - 0.6f * u, base - 25.5f * u), Size(1.2f * u, 3.5f * u)) }
+                listOf(-8f, 8f).forEach { dx -> raya(tz, tinta, Offset(c.x + dx * u, base - 22 * u), Offset(c.x + dx * u, base - 35 * u), 1.6f * u) }
+                drawRect(tinta, Offset(c.x - 10 * u, base - 30 * u), Size(20 * u, 2 * u))
+                for (k in 0 until 6) drawRect(tinta, Offset(c.x - 9.5f * u + k * 3.6f * u, base - 34 * u), Size(1.6f * u, 4 * u))
+                drawPath(Path().apply { moveTo(c.x - 12 * u, base - 34 * u); lineTo(c.x, base - 43 * u); lineTo(c.x + 12 * u, base - 34 * u); close() }, tinta)
+                suelo()
             }
             // El Templo de Jerusalén como lo rehízo Herodes: la explanada en gradas, la fachada alta y cuadrada con la gran
             // puerta sin hojas, la vid de oro encima de la puerta, las púas doradas del tejado y los pórticos a los lados.
@@ -1321,14 +1373,25 @@ object PiezasLogro {
                 drawCircle(tinta, 3 * u, o)
                 for (k in 0 until 3) drawLine(claro, Offset(c.x - 8 * u, c.y + 8 * u + k * 4 * u), Offset(c.x + 8 * u, c.y + 8 * u + k * 4 * u), 1.2f * u)
             }
+            // El carnyx alzado sobre la gente: el tubo largo con sus juntas y la cabeza de jabalí, con la boca abierta, la oreja
+            // y la cresta, que mira al frente.
             TemaId.GALIA -> {
-                raya(tz, tinta, Offset(c.x - 16 * u, c.y - 28 * u), Offset(c.x + 16 * u, c.y - 28 * u), 2 * u)
-                listOf(-14f, 14f).forEach { dx -> drawLine(tinta, Offset(c.x + dx * u, c.y - 28 * u), Offset(c.x + dx * u * 0.85f, c.y - 24 * u), 0.8f * u) }
-                pano(caja(c.x - 12 * u, c.y - 24 * u, c.x + 12 * u, c.y + 24 * u))
-                val o = Offset(c.x, c.y - 6 * u)
-                drawPath(Path().apply { moveTo(o.x - 9 * u, o.y); quadraticTo(o.x, o.y - 8 * u, o.x + 9 * u, o.y); quadraticTo(o.x, o.y + 8 * u, o.x - 9 * u, o.y); close() }, claro)
-                drawCircle(tinta, 3 * u, o)
-                for (k in 0 until 3) drawLine(claro, Offset(c.x - 8 * u, c.y + 8 * u + k * 4 * u), Offset(c.x + 8 * u, c.y + 8 * u + k * 4 * u), 1.2f * u)
+                drawPath(Path().apply { moveTo(c.x - 4 * u, c.y - 8 * u); lineTo(c.x - 4 * u, c.y + 20 * u); quadraticTo(c.x - 4 * u, c.y + 27 * u, c.x + 4 * u, c.y + 27 * u) },
+                    tinta, style = Stroke(2.6f * u * tz.grosor, cap = StrokeCap.Round))
+                listOf(-2f, 6f, 14f).forEach { dy -> drawRect(tinta, Offset(c.x - 6 * u, c.y + dy * u), Size(4 * u, 1.4f * u)) }
+                val cabeza = Path().apply {
+                    moveTo(c.x - 7 * u, c.y - 6 * u); lineTo(c.x - 7 * u, c.y - 13 * u); quadraticTo(c.x - 6 * u, c.y - 22 * u, c.x + 2 * u, c.y - 22 * u)
+                    lineTo(c.x + 18 * u, c.y - 19 * u); lineTo(c.x + 18 * u, c.y - 15 * u); lineTo(c.x + 6 * u, c.y - 14 * u)
+                    lineTo(c.x + 16 * u, c.y - 10 * u); lineTo(c.x + 15 * u, c.y - 8 * u); quadraticTo(c.x + 4 * u, c.y - 6 * u, c.x - 2 * u, c.y - 6 * u); close()
+                }
+                pano(cabeza)
+                pano(Path().apply { moveTo(c.x - 1 * u, c.y - 21 * u); lineTo(c.x - 6 * u, c.y - 29 * u); lineTo(c.x + 4 * u, c.y - 21.5f * u); close() })
+                drawPath(Path().apply {
+                    moveTo(c.x - 7 * u, c.y - 7 * u)
+                    for (k in 0 until 5) { lineTo(c.x - 11 * u + k * 1f * u, c.y - (10 + k * 3f) * u); lineTo(c.x - 7 * u + k * 1.2f * u, c.y - (11 + k * 3f) * u) }
+                }, tinta, style = Stroke(1 * u, join = StrokeJoin.Round))
+                drawCircle(tinta, 1.2f * u, Offset(c.x + 3 * u, c.y - 17.5f * u))
+                drawLine(claro, Offset(c.x + 11 * u, c.y - 13.5f * u), Offset(c.x + 12.5f * u, c.y - 17 * u), 1 * u, StrokeCap.Round)
             }
             // El velo de lino colgado de su caña, con las siete esferas bordadas y, abajo, la rasgadura por donde asoma la luz.
             TemaId.ARCONTES -> {
@@ -1653,11 +1716,11 @@ object PiezasLogro {
                 letra("Nº 07", Offset(c.x, c.y + 2 * u), 7 * u, tinta)
                 drawLine(tinta, Offset(c.x - 10 * u, c.y + 10 * u), Offset(c.x + 10 * u, c.y + 10 * u), 1 * u)
             }
+            // El estátero arverno: el cospel desparejo, el canto de perlas corrido y el caballo con su perla y su rueda.
             TemaId.GALIA -> {
-                forma(caja(c.x - 16 * u, c.y - 16 * u, c.x + 16 * u, c.y + 16 * u, 4 * u))
-                drawCircle(claro, 3 * u, Offset(c.x, c.y - 10 * u)); drawCircle(tinta, 3 * u, Offset(c.x, c.y - 10 * u), style = Stroke(0.8f * u))
-                letra("Nº 07", Offset(c.x, c.y + 2 * u), 7 * u, tinta)
-                drawLine(tinta, Offset(c.x - 10 * u, c.y + 10 * u), Offset(c.x + 10 * u, c.y + 10 * u), 1 * u)
+                forma(irregular(20, 0.05f))
+                for (i in 0 until 18) drawCircle(tinta, 0.7f * u, en(PI * 0.2 + i * PI * 1.1 / 17, 0.86f))
+                caballoGalo(Offset(c.x, c.y - 2 * u), 22 * u, tinta, 1.1f * u)
             }
             // La moneda de bronce de Herodes Antipas, acuñada en Tiberíades: el cospel algo desparejo, la gráfila de puntos que
             // se sale por un lado y la caña del lago, sin figuras.
@@ -1948,15 +2011,17 @@ object PiezasLogro {
                 }
                 for (k in 0 until 2) fina(tz, tinta, Offset(c.x - 16 * u, c.y - 5 * u + k * 4 * u), Offset(c.x + 4 * u, c.y - 5 * u + k * 4 * u), 0.8f * u)
             }
+            // Las tablillas de cera atadas con su correa: el marco de roble, la cera con letras griegas rayadas (como escribían
+            // los galos, César 1.29) y el punzón de hueso.
             TemaId.GALIA -> {
-                drawRect(papel, Offset(c.x - 19 * u, c.y - 17 * u), Size(36 * u, 34 * u))
-                val carpeta = Path().apply { moveTo(c.x - 22 * u, c.y - 14 * u); lineTo(c.x - 8 * u, c.y - 14 * u); lineTo(c.x - 5 * u, c.y - 10 * u); lineTo(c.x + 22 * u, c.y - 10 * u); lineTo(c.x + 22 * u, c.y + 20 * u); lineTo(c.x - 22 * u, c.y + 20 * u); close() }
-                drawPath(carpeta, tono.copy(alpha = 0.75f)); contorno(tz, carpeta, tinta, 1 * u)
-                rotate(-14f, Offset(c.x + 4 * u, c.y + 6 * u)) {
-                    drawRect(Color(0xFFB71C1C), Offset(c.x - 10 * u, c.y + 1 * u), Size(28 * u, 9 * u), style = Stroke(1.4f * u))
-                    drawLine(Color(0xFFB71C1C), Offset(c.x - 7 * u, c.y + 5.5f * u), Offset(c.x + 15 * u, c.y + 5.5f * u), 1.6f * u)
-                }
-                for (k in 0 until 2) fina(tz, tinta, Offset(c.x - 16 * u, c.y - 5 * u + k * 4 * u), Offset(c.x + 4 * u, c.y - 5 * u + k * 4 * u), 0.8f * u)
+                tapa(c.x - 20 * u, c.y - 13 * u, c.x + 24 * u, c.y + 21 * u, lerp(tono, tinta, 0.3f), 1.5f * u)
+                tapa(c.x - 24 * u, c.y - 18 * u, c.x + 20 * u, c.y + 16 * u, tono, 1.5f * u)
+                drawRect(tinta.copy(alpha = 0.78f), Offset(c.x - 20 * u, c.y - 14 * u), Size(36 * u, 26 * u))
+                letra("ΔΕΔΕ", Offset(c.x - 4 * u, c.y - 7 * u), 7 * u, papel, false)
+                listOf(1f, 6f).forEach { dy -> fina(tz, papel.copy(alpha = 0.7f), Offset(c.x - 16 * u, c.y + dy * u), Offset(c.x + (if (dy > 3f) 2f else 10f) * u, c.y + dy * u), 0.8f * u) }
+                raya(tz, tinta, Offset(c.x + 12 * u, c.y - 20 * u), Offset(c.x + 12 * u, c.y + 22 * u), 1.4f * u)
+                raya(tz, tinta, Offset(c.x - 27 * u, c.y + 25 * u), Offset(c.x - 6 * u, c.y + 4 * u), 1.6f * u)
+                drawCircle(tinta, 1.6f * u, Offset(c.x - 27 * u, c.y + 25 * u))
             }
             // El códice de cuero de Nag Hammadi: las hojas de papiro asomando por el canto, la tapa con la solapa en punta
             // doblada encima y la correa que le da la vuelta y cuelga con su cuenta.
@@ -2262,11 +2327,19 @@ object PiezasLogro {
                 drawRect(tinta, Offset(c.x - 16 * u, c.y - 2 * u), Size(20 * u, 4 * u))
                 drawCircle(Color(0xFFB71C1C), 5 * u, Offset(c.x + 15 * u, c.y - 7 * u), style = Stroke(1.2f * u)); drawLine(Color(0xFFB71C1C), Offset(c.x + 11 * u, c.y - 7 * u), Offset(c.x + 19 * u, c.y - 7 * u), 1 * u)
             }
+            // El mensaje de oppidum en oppidum: las dos tablillas cerradas, cara con cara, atadas en cruz con el cordel y selladas
+            // con un botón de cera roja.
             TemaId.GALIA -> {
-                hoja(c.x - 24 * u, c.y - 15 * u, c.x + 24 * u, c.y + 15 * u)
-                drawRect(tinta.copy(alpha = 0.4f), Offset(c.x - 18 * u, c.y - 6 * u), Size(24 * u, 12 * u), style = Stroke(0.8f * u))
-                drawRect(tinta, Offset(c.x - 16 * u, c.y - 2 * u), Size(20 * u, 4 * u))
-                drawCircle(Color(0xFFB71C1C), 5 * u, Offset(c.x + 15 * u, c.y - 7 * u), style = Stroke(1.2f * u)); drawLine(Color(0xFFB71C1C), Offset(c.x + 11 * u, c.y - 7 * u), Offset(c.x + 19 * u, c.y - 7 * u), 1 * u)
+                hoja(c.x - 22 * u, c.y - 14 * u, c.x + 22 * u, c.y + 14 * u, tono, 1.5f * u)
+                drawRect(tinta.copy(alpha = 0.25f), Offset(c.x - 22 * u, c.y + 10.5f * u), Size(44 * u, 3.5f * u))
+                fina(tz, tinta.copy(alpha = 0.45f), Offset(c.x - 19 * u, c.y - 11 * u), Offset(c.x + 19 * u, c.y - 11 * u), 0.6f * u)
+                val cordel = Color(0xFFD9C79A)
+                drawLine(cordel, Offset(c.x, c.y - 15 * u), Offset(c.x, c.y + 15 * u), 1.6f * u)
+                drawLine(cordel, Offset(c.x - 23 * u, c.y), Offset(c.x + 23 * u, c.y), 1.6f * u)
+                drawLine(cordel, Offset(c.x + 3 * u, c.y + 3 * u), Offset(c.x + 8 * u, c.y + 16 * u), 1.2f * u, StrokeCap.Round)
+                drawLine(cordel, Offset(c.x + 2 * u, c.y + 4 * u), Offset(c.x + 3 * u, c.y + 17 * u), 1.2f * u, StrokeCap.Round)
+                drawCircle(Color(0xFF8E3B2A), 5 * u, c); drawCircle(tinta, 5 * u, c, style = Stroke(0.8f * u))
+                drawCircle(tinta.copy(alpha = 0.55f), 2.2f * u, c, style = Stroke(0.7f * u))
             }
             // La carta entre comunidades escondidas: la hoja de papiro doblada en tira, con sus fibras a lo largo, el renglón de
             // a quién va, el cordel atado dos veces y el terrón de barro que la sella.

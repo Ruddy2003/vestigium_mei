@@ -158,7 +158,8 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.MEDIEVAL -> listOf("en tinta", "en minio", "en pan de oro", "códice purpúreo")
     TemaId.TEMPLARIO -> listOf("hermano sargento", "freire caballero", "comendador", "maestre del Temple")
     TemaId.DISTOPIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
-    TemaId.GALIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
+    // Los torques que se ganan, del metal más humilde al oro; y lo más alto, que los bardos lo canten (Diodoro 5.31).
+    TemaId.GALIA -> listOf("torques de bronce", "torques de plata", "torques de oro", "lo cantan los bardos")
     // Las tres clases de personas de los valentinianos, según Ireneo (Contra las herejías 1.7.5), y la Ogdóada, adonde sube el alma.
     TemaId.ARCONTES -> listOf("de materia (hílico)", "de alma (psíquico)", "de espíritu (pneumático)", "en la Ogdóada")
     TemaId.FRENTE -> listOf("señal débil", "señal clara", "canal seguro", "la red entera te oye")
@@ -384,19 +385,34 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             drawPath(Path().apply { moveTo(c.x - a, c.y); quadraticTo(c.x, c.y - k, c.x + a, c.y); quadraticTo(c.x, c.y + k, c.x - a, c.y); close() }, cs.primary.copy(alpha = 0.16f), style = Stroke(2f * u))
             drawCircle(cs.primary.copy(alpha = 0.12f), m * 0.36f, c, style = Stroke(1.5f * u))
         }
-        TemaId.GALIA -> {
-            // Dos reflectores que barren desde abajo y un ojo que lo vigila todo.
-            val haz = cs.onBackground
-            listOf(Offset(0f, size.height) to 1.0, Offset(size.width, size.height) to -1.0).forEach { (o, lado) ->
-                val a = Math.toRadians((if (lado > 0) -60.0 else -120.0) + lado * 22.0 * sin(Math.toRadians(giro * 4.0)))
-                val l = lejos * 1.3f
-                val p1 = Offset(o.x + (l * cos(a - 0.12)).toFloat(), o.y + (l * sin(a - 0.12)).toFloat())
-                val p2 = Offset(o.x + (l * cos(a + 0.12)).toFloat(), o.y + (l * sin(a + 0.12)).toFloat())
-                drawPath(Path().apply { moveTo(o.x, o.y); lineTo(p1.x, p1.y); lineTo(p2.x, p2.y); close() }, Brush.radialGradient(listOf(haz.copy(alpha = 0.10f), Color.Transparent), o, l))
+        TemaId.GALIA -> with(TrazosGalia) {
+            // El torques que se gana: en el centro, la luz de la hoguera; alrededor, una corona de hojas de roble que gira
+            // despacio; por fuera, el torques de oro; y debajo, junto al hueco del torques, dos carnyx de pie que se miran y
+            // braman, con las ondas del bramido que suben desde la boca del jabalí.
+            val fondo = cs.background
+            fun mezcla(c: Color, k: Float) = androidx.compose.ui.graphics.lerp(fondo, c, k)
+            drawCircle(Brush.radialGradient(listOf(FUEGO.copy(alpha = if (oscuro) 0.26f else 0.16f), Color.Transparent), c, m * 0.36f), m * 0.36f, c)
+            val hoja = mezcla(if (oscuro) cs.secondary else ROBLE, if (oscuro) 0.3f else 0.24f)
+            rotate(giro / 14f, c) {
+                for (k in 0 until 14) {
+                    val a = Math.toRadians(k * 360.0 / 14)
+                    hojaRoble(pt(m * 0.37f, a), m * 0.085f, (k * 360f / 14) + 90f + 25f, hoja, mezcla(ROBLE_SOMBRA, if (oscuro) 0.3f else 0.3f))
+                }
             }
-            val a = m * 0.62f; val k = m * 0.8f
-            drawPath(Path().apply { moveTo(c.x - a, c.y); quadraticTo(c.x, c.y - k, c.x + a, c.y); quadraticTo(c.x, c.y + k, c.x - a, c.y); close() }, cs.primary.copy(alpha = 0.16f), style = Stroke(2f * u))
-            drawCircle(cs.primary.copy(alpha = 0.12f), m * 0.36f, c, style = Stroke(1.5f * u))
+            torques(c, m * 0.46f, m * 0.028f, mezcla(ORO, if (oscuro) 0.5f else 0.55f), mezcla(ORO_BRILLO, if (oscuro) 0.55f else 0.6f))
+            val bronce = mezcla(BRONCE, if (oscuro) 0.45f else 0.4f)
+            for (lado in listOf(-1f, 1f)) {
+                val alto = m * 0.5f; val uu = alto / 100f
+                val pie = Offset(c.x - lado * m * 0.33f, c.y + m * 0.98f)
+                carnyx(pie, alto, bronce, null, lado)
+                val boca = Offset(pie.x + lado * 41f * uu, pie.y - 86f * uu)
+                val hacia = -90f + lado * 35f
+                for (k in 0 until 3) {
+                    val f = (giro / 360f * 8f + k / 3f) % 1f
+                    val r = (4f + 34f * f) * u
+                    drawArc(bronce.copy(alpha = 0.7f * sin(PI * f).toFloat()), hacia - 28f, 56f, false, Offset(boca.x - r, boca.y - r), Size(2 * r, 2 * r), style = Stroke(1.6f * u, cap = StrokeCap.Round))
+                }
+            }
         }
         TemaId.ARCONTES -> {
             // El alma que sube: en el centro, la luz blanca y violeta de lo alto; alrededor, las siete esferas, cada una con su

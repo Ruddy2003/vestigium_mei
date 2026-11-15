@@ -58,6 +58,7 @@ import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.TrofeosTema
 import io.github.ruddy2003.vestigium.ui.TrazosArcontes
 import io.github.ruddy2003.vestigium.ui.TrazosFrente
+import io.github.ruddy2003.vestigium.ui.TrazosGalia
 import io.github.ruddy2003.vestigium.ui.esOscuro
 import io.github.ruddy2003.vestigium.ui.signoEgipcio
 import kotlin.math.PI
@@ -356,10 +357,11 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             drawPath(ojo, Color.White.copy(alpha = 0.92f)); drawPath(ojo, Color(0xFF2B2B2B), style = Stroke(s * 0.1f))
             drawCircle(Color(0xFFD32F2F), s * 0.3f, o)
         }
+        // La chispa que salta de la hoguera: la lengua de fuego con su halo.
         TemaId.GALIA -> {
-            val ojo = Path().apply { moveTo(o.x - s, o.y); quadraticTo(o.x, o.y - s * 0.9f, o.x + s, o.y); quadraticTo(o.x, o.y + s * 0.9f, o.x - s, o.y); close() }
-            drawPath(ojo, Color.White.copy(alpha = 0.92f)); drawPath(ojo, Color(0xFF2B2B2B), style = Stroke(s * 0.1f))
-            drawCircle(Color(0xFFD32F2F), s * 0.3f, o)
+            drawCircle(Brush.radialGradient(listOf(TrazosGalia.FUEGO_HALO.copy(alpha = 0.55f), Color.Transparent), o, s * 1.4f), s * 1.4f, o)
+            drawPath(Path().apply { moveTo(o.x, o.y - s * 0.95f); quadraticTo(o.x + s * 0.5f, o.y - s * 0.05f, o.x, o.y + s * 0.45f); quadraticTo(o.x - s * 0.5f, o.y - s * 0.05f, o.x, o.y - s * 0.95f); close() }, TrazosGalia.FUEGO)
+            drawCircle(TrazosGalia.FUEGO_HALO, s * 0.16f, Offset(o.x, o.y + s * 0.12f))
         }
         // Una grieta de luz pequeñita, blanca con su halo violeta, que se abre en el aire junto a la pieza.
         TemaId.ARCONTES -> {
@@ -517,7 +519,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.MEDIEVAL -> Color(0xFFD8C08E)
     TemaId.TEMPLARIO -> Color(0xFFCDBB97)
     TemaId.DISTOPIA -> Color(0xFF8E9296)
-    TemaId.GALIA -> Color(0xFF8E9296)
+    TemaId.GALIA -> Color(0xFFBFA676)          // el barro de las paredes de la casa grande
     TemaId.ARCONTES -> Color(0xFFCBB98F)          // la caliza tallada de la sala escondida
     TemaId.FRENTE -> Color(0xFF8C8F84)          // la piedra de las ruinas que esconden la base
     TemaId.REFUGIO -> Color(0xFF9CC9C1)
@@ -626,15 +628,23 @@ internal fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
             }
         }
         TemaId.GALIA -> {
-            val pw = w / 3; val ph = 70 * d; var y = 0f
+            // El zarzo de la pared, que asoma donde se cayó el barro: las estacas y, a trechos, las varas tejidas que pasan
+            // por delante y por detrás; de trecho en trecho, una hoja de roble que entró con el viento.
+            val paso = 26 * d
+            var x = paso / 2
+            while (x < w) { drawLine(tinta.copy(alpha = 0.045f), Offset(x, 0f), Offset(x, h), 2.2f * d); x += paso }
+            val az = java.util.Random(23)
+            var y = 6 * d; var fila = 0
             while (y < h) {
-                for (k in 0 until 3) {
-                    drawRect(v, Offset(k * pw + 2 * d, y + 2 * d), Size(pw - 4 * d, ph - 4 * d), style = Stroke(d))
-                    listOf(Offset(k * pw + 7 * d, y + 7 * d), Offset((k + 1) * pw - 7 * d, y + 7 * d), Offset(k * pw + 7 * d, y + ph - 7 * d), Offset((k + 1) * pw - 7 * d, y + ph - 7 * d))
-                        .forEach { drawCircle(v, 1.6f * d, it) }
+                var xx = if (fila % 2 == 0) paso / 2 else -paso / 2; var arriba = fila % 2 == 0
+                while (xx < w) {
+                    if (az.nextFloat() < 0.22f) drawPath(Path().apply { moveTo(xx, y); quadraticTo(xx + paso / 2, y + (if (arriba) -2.4f else 2.4f) * d, xx + paso, y) }, tinta.copy(alpha = 0.05f), style = Stroke(1.5f * d, cap = StrokeCap.Round))
+                    xx += paso; arriba = !arriba
                 }
-                y += ph
+                y += 7 * d; fila++
             }
+            var k = 0; var hy = 60 * d
+            while (hy < h) { with(TrazosGalia) { hojaRoble(Offset(if (k % 2 == 0) w * 0.12f else w * 0.88f, hy), 14 * d, if (k % 2 == 0) -30f else 25f, a, a) }; hy += 170 * d; k++ }
         }
         // La sala escondida del círculo, tallada en la caliza: las hiladas de golpes del pico, los nichos en arco donde se
         // ponen las lámparas (con el hollín encima) y, arriba, una grieta finísima por donde se filtra la luz.
@@ -989,13 +999,20 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             }
         }
         TemaId.GALIA -> {
-            tabla(m(Color(0xFF7D8287)))
-            drawRect(m(Color(0xFFB71C1C)), Offset(0f, h * 0.78f), Size(w, h * 0.12f))
-            var x = 24 * d
-            while (x < w - 30 * d) {
-                drawRect(m(Color(0xFFEDEDE6)), Offset(x, h * 0.18f), Size(26 * d, h * 0.45f)); drawRect(m(Color(0xFF3A3D40)), Offset(x, h * 0.18f), Size(26 * d, h * 0.45f), style = Stroke(d))
-                x += 110 * d
-            }
+            // La viga de roble labrada a azuela: la cara de arriba clara, el frente con las conchas de la azuela y los clavos de
+            // hierro, y abajo la corteza que quedó.
+            val c = m(Color(0xFF8A6A44))
+            tabla(c, 0f, h * 0.7f)
+            drawLine(lerp(c, Color.White, 0.35f), Offset(0f, 0.6f * d), Offset(w, 0.6f * d), 1.2f * d)
+            val az = java.util.Random(52)
+            var x = 2 * d
+            while (x < w) { val l = (6f + az.nextFloat() * 4f) * d; drawArc(lerp(c, Color.Black, 0.35f).copy(alpha = 0.6f), 200f, 140f, false, Offset(x, h * 0.25f), Size(l, h * 0.25f), style = Stroke(0.7f * d)); x += l + 1.5f * d }
+            val corteza = m(Color(0xFF4A3A28))
+            drawRect(Brush.verticalGradient(listOf(corteza, lerp(corteza, Color.Black, 0.35f)), h * 0.7f, h), Offset(0f, h * 0.7f), Size(w, h * 0.3f))
+            x = 3 * d
+            while (x < w) { drawLine(Color.Black.copy(alpha = 0.3f), Offset(x, h * 0.72f), Offset(x + 1.5f * d, h), 0.7f * d); x += (4f + az.nextFloat() * 3f) * d }
+            x = 20 * d
+            while (x < w) { drawCircle(m(Color(0xFF3A3C3E)), 1.2f * d, Offset(x, h * 0.42f)); x += 60 * d }
         }
         // La repisa tallada en la misma roca: el canto de caliza con la arista clara, las marcas del cincel en el frente y,
         // debajo, la roca sin desbastar en sombra.
@@ -1293,10 +1310,15 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             drawLine(Color(0xFFB71C1C).copy(alpha = 0.5f * f), Offset(0f, h - 2 * d), Offset(w, h - 2 * d), 2 * d)
         }
         TemaId.GALIA -> {
-            val t = 6 * d
-            drawRect(fondo, Offset(0f, t), Size(w, h - t)); drawRect(fondo, Offset.Zero, Size(w * 0.4f, t))
-            drawPath(Path().apply { moveTo(0f, h); lineTo(0f, 0f); lineTo(w * 0.4f, 0f); lineTo(w * 0.4f + t, t); lineTo(w, t); lineTo(w, h); close() }, borde, style = fino)
-            drawLine(Color(0xFFB71C1C).copy(alpha = 0.5f * f), Offset(0f, h - 2 * d), Offset(w, h - 2 * d), 2 * d)
+            // La tablilla de cera en su marco: el borde de madera, la cera un poco más oscura, el agujero del cordel arriba y el
+            // rasguño del punzón abajo.
+            val m = 4 * d
+            drawRoundRect(tinta.copy(alpha = 0.06f * f), Offset.Zero, size, CornerRadius(2 * d))
+            drawRect(tinta.copy(alpha = 0.03f * f), Offset(m, m), Size(w - 2 * m, h - 2 * m))
+            drawRoundRect(borde, Offset.Zero, size, CornerRadius(2 * d), style = fino)
+            drawRect(borde.copy(alpha = borde.alpha * 0.6f), Offset(m, m), Size(w - 2 * m, h - 2 * m), style = fino)
+            drawCircle(borde, 1.3f * d, Offset(w / 2, m / 2), style = Stroke(0.8f * d))
+            drawLine(ac, Offset(w - m - 16 * d, h - m - 2.5f * d), Offset(w - m - 4 * d, h - m - 3.5f * d), d, StrokeCap.Round)
         }
         // El sillybos, la etiqueta de papiro que colgaba del rollo: la lengüeta arriba con su agujero para el cordel y las
         // fibras del papiro a lo largo.

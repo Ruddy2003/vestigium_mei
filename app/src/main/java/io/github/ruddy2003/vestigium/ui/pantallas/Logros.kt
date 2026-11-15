@@ -213,12 +213,20 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
             drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
         }
+        // La falera de los arneses: el disco con su anillo de perlas, la onda corrida repujada y los cuatro clavos.
         TemaId.GALIA -> {
-            val hex = figPoligono(c, r * 0.97f, 6)
-            forma(hex)
-            clipPath(hex) { drawRect(if (hecho) Color(0xFFB3261E).copy(alpha = 0.85f) else borde.copy(alpha = 0.25f), Offset(0f, c.y + r * 0.5f), Size(size.width, r * 0.2f)) }
-            drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
-            drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
+            forma(disco(c, r * 0.95f))
+            for (k in 0 until 20) { val a = k * kotlin.math.PI / 10; drawCircle(sombra, r * 0.04f, Offset(c.x + r * 0.84f * kotlin.math.cos(a).toFloat(), c.y + r * 0.84f * kotlin.math.sin(a).toFloat())) }
+            drawPath(Path().apply {
+                for (k in 0..72) {
+                    val a = k * 2 * kotlin.math.PI / 72; val rr = r * (0.68f + 0.05f * kotlin.math.sin(a * 8).toFloat())
+                    val x = c.x + rr * kotlin.math.cos(a).toFloat(); val y = c.y + rr * kotlin.math.sin(a).toFloat()
+                    if (k == 0) moveTo(x, y) else lineTo(x, y)
+                }
+                close()
+            }, luz, style = Stroke(r * 0.04f))
+            drawCircle(sombra, r * 0.58f, c, style = Stroke(g * 0.6f))
+            listOf(45.0, 135.0, 225.0, 315.0).forEach { gr -> val a = Math.toRadians(gr); drawCircle(sombra, r * 0.06f, Offset(c.x + r * 0.84f * kotlin.math.cos(a).toFloat(), c.y + r * 0.84f * kotlin.math.sin(a).toFloat())) }
         }
         // El amuleto colgante: el disco de jaspe engastado en su bisel, con la argolla arriba, la serpiente que se muerde la
         // cola grabada alrededor y un punto de luz en medio.

@@ -469,6 +469,13 @@ object TrazosGalia {
         val brillo = ORO_BRILLO
         val g = r * (if (pequeno) 0.17f else 0.11f)
         val ra = r - g * 1.25f
+        if (!pequeno) {
+            // El fondo: una rodaja de roble oscuro dentro del aro, con su veta y la sombra del aro por dentro.
+            val cf = Offset(c.x, c.y - g * 0.3f); val rf = ra - g * 0.3f
+            drawCircle(Brush.radialGradient(listOf(Color(0xFF4A3420), Color(0xFF2A1B0E)), cf + Offset(-rf * 0.3f, -rf * 0.35f), rf * 1.5f), rf, cf)
+            for (k in 1..5) drawCircle(Color(0xFF1E130A).copy(alpha = 0.35f), rf * (0.18f * k + (k % 2) * 0.03f), cf + Offset(rf * 0.12f, rf * 0.08f), style = Stroke(max(rf * 0.008f, 0.5f)))
+            drawCircle(Color.Black.copy(alpha = 0.35f), rf, cf, style = Stroke(rf * 0.05f))
+        }
         torques(Offset(c.x, c.y - g * 0.3f), ra, g, oro, brillo)
         // El brillo que corre por el aro: una mancha clara que da la vuelta una vez por ciclo.
         val ang = Math.toRadians((112.0 + t * 316.0)).toFloat()

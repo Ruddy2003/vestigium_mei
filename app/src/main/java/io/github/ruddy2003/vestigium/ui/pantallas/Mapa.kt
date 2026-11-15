@@ -63,6 +63,7 @@ import io.github.ruddy2003.vestigium.ui.esOscuro
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.TrazosArcontes
 import io.github.ruddy2003.vestigium.ui.TrazosFrente
+import io.github.ruddy2003.vestigium.ui.TrazosGalia
 import io.github.ruddy2003.vestigium.ui.numeralMaya
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.Dispatchers
@@ -112,8 +113,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Distopía: gris de expediente, sin color.
         TemaId.DISTOPIA -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
             else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
-        TemaId.GALIA -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
-            else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
+        // Galia: de día, el pasto y la paja al sol, con el verde del roble; de noche, el mismo campo bajo la luna, verde negro.
+        TemaId.GALIA -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.72f, 0.6f, 2f, 6f, 2f)) }
+            else { m.setSaturation(0.35f); m.postConcat(tinte(0.98f, 0.98f, 0.86f, 4f, 6f, -4f)) }
         // Arcontes: de día, el plano en caliza al sol, con un poco del azul del lago; de noche, el mismo plano bajo el cielo
         // antiguo, azul negro con un tinte violeta.
         TemaId.ARCONTES -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.62f, 0.84f, 2f, 3f, 16f)) }
@@ -277,7 +279,8 @@ internal object Formas {
             TemaId.TEMPLARIO -> figura(x, y, r, -0.82f, -0.9f, 0.82f, -0.9f, 0.8f, -0.1f, 0.58f, 0.5f, 0f, 1.05f, -0.58f, 0.5f, -0.8f, -0.1f)
             // El ojo que todo lo ve.
             TemaId.DISTOPIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
-            TemaId.GALIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
+            // El escudo largo de los galos, de tablas, con los cantos redondos.
+            TemaId.GALIA -> { p.reset(); p.addRoundRect(x - r * 0.62f, y - r * 1.15f, x + r * 0.62f, y + r * 1.15f, r * 0.55f, r * 0.62f, horario) }
             // El ouroboros: el aro de la serpiente con la cabeza que muerde la cola, arriba a la derecha.
             TemaId.ARCONTES -> {
                 p.reset(); p.addCircle(x, y, r, horario); p.addCircle(x, y, r * 0.58f, antihorario)
@@ -372,7 +375,7 @@ internal object Formas {
             TemaId.TEMPLARIO -> { raya(c, x, y, r, 0f, -0.65f, 0f, 0.55f, d); raya(c, x, y, r, -0.52f, -0.15f, 0.52f, -0.15f, d)
                 raya(c, x, y, r, -0.62f, -0.75f, 0.62f, -0.75f, d) }   // la cruz del escudo y su jefe
             TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
-            TemaId.GALIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
+            TemaId.GALIA -> { raya(c, x, y, r, 0f, -0.95f, 0f, 0.95f, d); c.drawOval(x - r * 0.26f, y - r * 0.36f, x + r * 0.26f, y + r * 0.36f, d) }   // la espina y el umbo
             TemaId.ARCONTES -> { c.drawCircle(x + r * 0.72f, y - r * 0.92f, r * 0.1f, d); c.drawCircle(x, y, r * 0.2f, d) }   // el ojo de la serpiente y la chispa del centro
             // La célula en el centro y la chispa: tres trazos que salen de ella por el hueco del aro, arriba a la derecha.
             TemaId.FRENTE -> { c.drawCircle(x, y, r * 0.14f, d); raya(c, x, y, r, 0.13f, -0.32f, 0.47f, -1.16f, d); raya(c, x, y, r, 0.23f, -0.27f, 0.93f, -1.11f, d); raya(c, x, y, r, 0.3f, -0.19f, 1.06f, -0.66f, d) }
@@ -893,15 +896,26 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
             }
         }
         TemaId.GALIA -> {
-            filete(5 * u, tinta.copy(alpha = 0.45f), 1 * u)
-            drawCircle(acento, 3.5f * u, Offset(16 * u, 16 * u))
-            drawRect(tinta.copy(alpha = 0.6f), Offset(23 * u, 14 * u), Size(18 * u, 4 * u))
-            var x = 10 * u; var i = 0
-            while (x < w - 10 * u) {
-                val l = if (i % 5 == 0) 6 * u else 3 * u
-                drawLine(tinta.copy(alpha = 0.5f), Offset(x, h - 5 * u), Offset(x, h - 5 * u - l), 1 * u)
-                x += 6 * u; i++
+            // El marco tallado en la viga: dos filetes con la onda corrida de La Tène entre ellos, arriba y abajo; en las esquinas,
+            // dos hojas de roble con su bellota, y abajo a la izquierda, el torques.
+            filete(4 * u, tinta.copy(alpha = 0.5f), 1.2f * u); filete(10 * u, tinta.copy(alpha = 0.3f), 0.8f * u)
+            listOf(7 * u, h - 7 * u).forEach { y ->
+                val onda = Path().apply {
+                    var x = 14 * u; moveTo(x, y)
+                    while (x < w - 26 * u) { cubicTo(x + 3 * u, y - 2.6f * u, x + 6 * u, y - 2.6f * u, x + 7 * u, y); cubicTo(x + 8 * u, y + 2.6f * u, x + 11 * u, y + 2.6f * u, x + 14 * u, y); x += 14 * u }
+                }
+                drawPath(onda, tinta.copy(alpha = 0.35f), style = Stroke(0.9f * u, cap = androidx.compose.ui.graphics.StrokeCap.Round))
             }
+            esquinas(7 * u) { o, sx, sy ->
+                val g = Math.toDegrees(kotlin.math.atan2(sx.toDouble(), (-sy).toDouble())).toFloat()
+                with(TrazosGalia) {
+                    hojaRoble(Offset(o.x + sx * 9 * u, o.y + sy * 4 * u), 13 * u, g + 35f, acento.copy(alpha = 0.7f), tinta.copy(alpha = 0.4f))
+                    hojaRoble(Offset(o.x + sx * 4 * u, o.y + sy * 9 * u), 13 * u, g - 35f, acento.copy(alpha = 0.7f), tinta.copy(alpha = 0.4f))
+                }
+                drawOval(tinta.copy(alpha = 0.55f), Offset(o.x - 2.2f * u, o.y - 1.2f * u), Size(4.4f * u, 5 * u))
+                drawArc(tinta.copy(alpha = 0.75f), 180f, 180f, true, Offset(o.x - 2.8f * u, o.y - 2.6f * u), Size(5.6f * u, 4.6f * u))
+            }
+            with(TrazosGalia) { torques(Offset(24 * u, h - 22 * u), 9f * u, 2.6f * u) }
         }
         // La hoja del códice: el doble filete de tinta con las esquinas en arco de nicho, los siete círculos que asoman en la
         // esquina de arriba, la lámpara encendida abajo a la izquierda y, en el canto derecho, una grieta de luz finísima.
@@ -1280,10 +1294,16 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
         }
         TemaId.GALIA -> {
-            punta(n, r * 0.98f, r * 0.1f, acento)
-            val ojo = Path().apply { moveTo(c.x - r * 0.8f, c.y); quadraticTo(c.x, c.y - r * 0.75f, c.x + r * 0.8f, c.y); quadraticTo(c.x, c.y + r * 0.75f, c.x - r * 0.8f, c.y); close() }
-            drawPath(ojo, fondo); drawPath(ojo, tenue, style = Stroke(1.4f * u))
-            drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
+            // La rueda votiva de bronce (como las que se ofrecían en los santuarios): el aro, los ocho rayos y el cubo, con las perlas
+            // por fuera; el norte, la punta de una lanza en hoja de laurel.
+            for (k in 0 until 16) drawCircle(tenue.copy(alpha = 0.6f), r * 0.035f, c + rumbo(k * 22.5) * (r * 0.93f))
+            anillo(r * 0.8f, tenue, 2.4f * u)
+            for (k in 0 until 8) drawLine(tenue.copy(alpha = if (k % 2 == 0) 0.85f else 0.45f), c + rumbo(k * 45.0) * (r * 0.18f), c + rumbo(k * 45.0) * (r * 0.8f), (if (k % 2 == 0) 1.6f else 0.9f) * u)
+            val q = c + rumbo(n) * (r * 1.02f); val b = c + rumbo(n) * (r * 0.38f); val l1 = c + rumbo(n) * (r * 0.62f) + rumbo(n + 90.0) * (r * 0.13f); val l2 = c + rumbo(n) * (r * 0.62f) + rumbo(n - 90.0) * (r * 0.13f)
+            drawPath(Path().apply { moveTo(q.x, q.y); quadraticTo(l1.x, l1.y, b.x, b.y); quadraticTo(l2.x, l2.y, q.x, q.y); close() }, acento)
+            drawLine(tinta.copy(alpha = 0.5f), c + rumbo(n) * (r * 0.62f), b, 0.7f * u)
+            drawLine(tinta.copy(alpha = 0.5f), c, c + rumbo(n + 180.0) * (r * 0.55f), 1.2f * u, androidx.compose.ui.graphics.StrokeCap.Round)
+            drawCircle(secundario, r * 0.16f, c); drawCircle(tinta.copy(alpha = 0.7f), r * 0.16f, c, style = Stroke(0.8f * u))
         }
         // El ouroboros con las siete esferas adentro: la serpiente que se muerde la cola rodea los círculos de los
         // planetas, con la tierra al centro y la aguja del norte, fina, que sale hacia la luz.

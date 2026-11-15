@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -95,7 +96,10 @@ object MapasMas {
         TemaId.BASICO -> listOf(Offset(0.08f, 0.8f), Offset(0.22f, 0.66f), Offset(0.36f, 0.7f), Offset(0.5f, 0.5f), Offset(0.64f, 0.4f), Offset(0.78f, 0.44f), Offset(0.92f, 0.24f))
         // Los puntos de control: piso por piso, de la ventanilla de abajo al Ministerio en lo alto.
         TemaId.DISTOPIA -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
-        TemaId.GALIA -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
+        // El levantamiento del 52 a. C., sobre la Galia (el norte arriba): Cenabum, donde empieza; el campo de los arvernos,
+        // donde Vercingétorix junta a los suyos y vuelve a Gergovia; Avárico, el cerco perdido; Gergovia, la victoria;
+        // Bibracte, la asamblea; la batalla de los jinetes, y Alesia.
+        TemaId.GALIA -> geo(listOf(1.91 to 47.9, 2.85 to 45.95, 2.4 to 47.08, 3.12 to 45.71, 4.03 to 46.92, 5.0 to 47.45, 4.5 to 47.54), 0.9, 5.6, 45.3, 48.3)
         // El ascenso del alma: cada parada cae en su esfera, de la Luna (la más cercana a la tierra, abajo a la izquierda) a
         // Saturno, en zigzag hacia la derecha, donde está la Ogdóada. [fondoMas] dibuja los círculos por estos mismos puntos.
         TemaId.ARCONTES -> listOf(Offset(0.17f, 0.78f), Offset(0.28f, 0.42f), Offset(0.4f, 0.72f), Offset(0.52f, 0.34f), Offset(0.64f, 0.66f), Offset(0.77f, 0.3f), Offset(0.9f, 0.5f))
@@ -296,14 +300,87 @@ object MapasMas {
                 drawRect(Color(0xFFC8102E).copy(alpha = 0.6f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.02f))
             }
             TemaId.GALIA -> {
-                // Pisos de un edificio de oficinas en corte, con sus ventanillas; a la derecha, la torre del Ministerio.
-                val linea = cs.onSurface.copy(alpha = if (oscuro) 0.18f else 0.14f)
-                for (k in 1 until 6) { val y = h * k / 6f; drawLine(linea, Offset(0f, y), Offset(w * 0.8f, y), 1f * d) }
-                val az = java.util.Random(17)
-                for (k in 0 until 6) for (j in 0 until 10) if (az.nextInt(3) > 0) drawRect(linea, Offset(w * (0.03f + j * 0.075f), h * (k / 6f + 0.04f)), Size(w * 0.035f, h * 0.07f))
-                drawRect(cs.onSurface.copy(alpha = if (oscuro) 0.22f else 0.16f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.96f))
-                for (k in 0 until 9) drawRect(Color(0xFFC8102E).copy(alpha = 0.25f + 0.5f * avance), Offset(w * 0.86f, h * (0.12f + k * 0.09f)), Size(w * 0.06f, h * 0.03f))
-                drawRect(Color(0xFFC8102E).copy(alpha = 0.6f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.02f))
+                // La Galia del levantamiento, vista desde arriba (con la misma proyección que [puntos]): el Loira, que baja del
+                // macizo y se vuelve al oeste en Cenabum; el Allier, que pasa al pie de Gergovia; el Cher, el Sena que nace junto a
+                // Alesia y el Saona; los volcanes de los arvernos, los montes del Morvan alrededor de Bibracte y los robledales.
+                // Roma está lejos, en rojo: el campamento de invierno de las legiones en Agedinco, los de Avárico y Gergovia y, en
+                // Alesia, el doble cerco. Las paradas ya pasadas echan humo de día y arden de noche, bajo la luna.
+                fun g(lon: Double, lat: Double) = Offset(w * (0.07f + 0.86f * ((lon - 0.9) / 4.7).toFloat()), h * (0.92f - 0.84f * ((lat - 45.3) / 3.0).toFloat()))
+                fun rio(vararg p: Pair<Double, Double>): Path = Path().apply {
+                    val q = p.map { g(it.first, it.second) }
+                    moveTo(q[0].x, q[0].y)
+                    for (i in 1 until q.size) { val a = q[i - 1]; val b = q[i]; quadraticTo(a.x + (b.x - a.x) * 0.5f + (b.y - a.y) * 0.18f, a.y + (b.y - a.y) * 0.5f - (b.x - a.x) * 0.18f, b.x, b.y) }
+                }
+                val pts = puntos(tema).map { Offset(it.x * w, it.y * h) }
+                val az = java.util.Random(52)
+                val roble = if (oscuro) TrazosGalia.ROBLE_SOMBRA.copy(alpha = 0.95f) else TrazosGalia.ROBLE.copy(alpha = 0.5f)
+                val linea = if (oscuro) TrazosGalia.LUNA.copy(alpha = 0.32f) else cs.onSurface.copy(alpha = 0.32f)
+                // La tierra: de día, el pasto y el barro al sol; de noche, el mismo campo bajo la luna.
+                if (oscuro) drawRect(Brush.verticalGradient(listOf(Color(0xFF0B110C).copy(alpha = 0.8f), Color(0xFF16201A).copy(alpha = 0.6f)), 0f, h), Offset.Zero, size)
+                else drawRect(Brush.verticalGradient(listOf(Color(0xFFDCD8B0).copy(alpha = 0.35f), Color(0xFFE6DCB8).copy(alpha = 0.2f)), 0f, h), Offset.Zero, size)
+                // Los ríos.
+                val rioCol = if (oscuro) Color(0xFF8FA7B3).copy(alpha = 0.5f) else Color(0xFF4F7FA0).copy(alpha = 0.42f)
+                listOf(
+                    rio(4.2 to 44.9, 4.0 to 45.6, 3.6 to 46.5, 3.16 to 46.99, 2.9 to 47.45, 1.91 to 47.9, 1.3 to 47.55, 0.5 to 47.38) to 1.8f,
+                    rio(3.5 to 44.9, 3.3 to 45.55, 3.35 to 46.2, 3.25 to 46.6, 3.12 to 46.98) to 1.3f,
+                    rio(2.6 to 45.9, 2.45 to 46.6, 2.15 to 47.15, 1.6 to 47.3, 0.7 to 47.3) to 1.1f,
+                    rio(4.72 to 47.49, 4.45 to 47.85, 4.0 to 48.15, 3.3 to 48.45) to 1.3f,
+                    rio(6.0 to 48.1, 5.6 to 47.6, 5.05 to 47.05, 4.88 to 46.5, 4.85 to 45.2) to 1.6f,
+                ).forEach { (p, ancho) ->
+                    drawPath(p, rioCol, style = Stroke(ancho * d, cap = StrokeCap.Round))
+                    if (oscuro) drawPath(p, TrazosGalia.LUNA.copy(alpha = 0.18f), style = Stroke(ancho * 0.4f * d, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 9 * d))))
+                }
+                // Los volcanes de los arvernos, al oeste de Gergovia, y los montes redondos del Morvan y del Auxois.
+                val monteCol = if (oscuro) Color(0xFF5A5E4A).copy(alpha = 0.7f) else Color(0xFF8A7650).copy(alpha = 0.45f)
+                listOf(2.7 to 45.62, 2.86 to 45.82, 2.78 to 46.0, 2.95 to 45.48).forEach { (lo, la) ->
+                    val c = g(lo, la); val s = 6 * d
+                    drawPath(Path().apply { moveTo(c.x - s, c.y); lineTo(c.x - s * 0.25f, c.y - s * 0.9f); lineTo(c.x + s * 0.25f, c.y - s * 0.9f); lineTo(c.x + s, c.y) }, monteCol, style = Stroke(1.1f * d, join = StrokeJoin.Round))
+                    drawLine(monteCol, Offset(c.x - s * 0.22f, c.y - s * 0.95f), Offset(c.x + s * 0.22f, c.y - s * 0.95f), 1.6f * d)
+                }
+                listOf(3.85 to 47.18, 4.2 to 47.2, 3.95 to 46.72, 4.35 to 46.98, 4.85 to 47.65).forEach { (lo, la) ->
+                    val c = g(lo, la); drawArc(monteCol, 190f, 160f, false, Offset(c.x - 7 * d, c.y - 4 * d), Size(14 * d, 8 * d), style = Stroke(1.1f * d))
+                }
+                // Los robledales: copas redondas en grupos (el de los carnutos, al norte de Cenabum; la Sologne; los bosques del
+                // este y del Morvan).
+                listOf(Triple(1.5, 48.15, 7), Triple(2.3, 48.05, 5), Triple(1.8, 47.5, 6), Triple(3.6, 47.6, 5), Triple(5.3, 47.9, 6), Triple(4.6, 46.6, 5), Triple(2.2, 46.3, 5), Triple(3.9, 45.5, 4), Triple(1.2, 46.6, 5)).forEach { (lo, la, n) ->
+                    val c0 = g(lo, la)
+                    repeat(n) {
+                        val c = c0 + Offset((az.nextFloat() - 0.5f) * 26 * d, (az.nextFloat() - 0.5f) * 10 * d)
+                        val r = (2.4f + az.nextFloat() * 1.4f) * d
+                        drawLine(roble, Offset(c.x, c.y + r * 0.6f), Offset(c.x, c.y + r * 1.6f), 0.8f * d)
+                        drawCircle(roble, r, c)
+                        if (!oscuro) drawCircle(Color.White.copy(alpha = 0.18f), r * 0.45f, c - Offset(r * 0.3f, r * 0.3f))
+                    }
+                }
+                // De noche: la luna y alguna estrella.
+                if (oscuro) {
+                    repeat(26) { drawCircle(TrazosGalia.LUNA.copy(alpha = 0.15f + 0.35f * az.nextFloat()), (0.4f + 0.6f * az.nextFloat()) * d, Offset(az.nextFloat() * w, az.nextFloat() * h * 0.45f)) }
+                    val lu = Offset(w * 0.95f, h * 0.14f)
+                    drawCircle(Brush.radialGradient(listOf(TrazosGalia.LUNA.copy(alpha = 0.25f), Color.Transparent), lu, 22 * d), 22 * d, lu)
+                    drawCircle(TrazosGalia.LUNA, 7 * d, lu)
+                }
+                // Roma, lejos y en rojo: los campamentos de las legiones (Agedinco, Avárico, Gergovia) y su luz de noche.
+                val roma = TrazosGalia.ROMA.copy(alpha = if (oscuro) 0.85f else 0.65f)
+                listOf(g(3.28, 48.2), pts[2] + Offset(9 * d, 6 * d), pts[3] + Offset(10 * d, 7 * d), pts[3] + Offset(-12 * d, 9 * d)).forEach { c ->
+                    if (oscuro) drawCircle(Brush.radialGradient(listOf(Color(0xFFE58A5C).copy(alpha = 0.45f), Color.Transparent), c, 8 * d), 8 * d, c)
+                    drawRect(roma, Offset(c.x - 3 * d, c.y - 3 * d), Size(6 * d, 6 * d), style = Stroke(1 * d))
+                    drawLine(roma, Offset(c.x, c.y - 3 * d), Offset(c.x, c.y + 3 * d), 0.6f * d); drawLine(roma, Offset(c.x - 3 * d, c.y), Offset(c.x + 3 * d, c.y), 0.6f * d)
+                }
+                // El doble cerco de Alesia: la línea de dentro y la de fuera, con sus torres.
+                val al = pts[6]
+                listOf(13f, 19f).forEachIndexed { k, rr ->
+                    drawCircle(roma, rr * d, al, style = Stroke((if (k == 0) 1.2f else 1f) * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 1.6f * d))))
+                    for (i in 0 until (if (k == 0) 10 else 14)) { val a = 2 * PI * i / (if (k == 0) 10 else 14); drawCircle(roma, 0.9f * d, Offset(al.x + rr * d * cos(a).toFloat(), al.y + rr * d * sin(a).toFloat())) }
+                }
+                if (oscuro) drawCircle(Brush.radialGradient(listOf(Color(0xFFE58A5C).copy(alpha = 0.25f), Color.Transparent), al, 26 * d), 26 * d, al)
+                // Las paradas ya pasadas: el humo de sus casas de día y su hoguera de noche.
+                val pasadas = (avance * 7f + 0.01f).toInt().coerceAtMost(7)
+                for (i in 0 until pasadas) {
+                    val q = pts[i] + Offset(6 * d, -6 * d)
+                    if (oscuro) with(TrazosGalia) { hoguera(q, 5f * d, 0.6f + 0.1f * (i % 3)) }
+                    else drawPath(Path().apply { moveTo(q.x, q.y); quadraticTo(q.x - 3 * d, q.y - 5 * d, q.x + 1 * d, q.y - 9 * d); quadraticTo(q.x + 4 * d, q.y - 13 * d, q.x, q.y - 16 * d) }, TrazosGalia.HUMO.copy(alpha = 0.7f), style = Stroke(2 * d, cap = StrokeCap.Round))
+                }
+                drawRect(linea.copy(alpha = linea.alpha * 0.5f), Offset(2 * d, 2 * d), Size(w - 4 * d, h - 4 * d), style = Stroke(0.6f * d))
             }
             TemaId.ARCONTES -> {
                 // El ascenso del alma por las siete esferas, dibujado como el diagrama de los ofitas (recurso): abajo a la
@@ -902,7 +979,21 @@ object MapasMas {
             TemaId.BASICO -> drawPath(p, cs.primary.copy(alpha = 0.8f), style = Stroke(2.4f * d, cap = StrokeCap.Round))
             // La línea roja del trámite, como cinta de señalización.
             TemaId.DISTOPIA -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
-            TemaId.GALIA -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
+            // El camino de tierra por donde corre el grito: la huella ancha del barro y, a trechos, las pisadas de los caballos.
+            TemaId.GALIA -> {
+                val oscuro = cs.background.luminance() < 0.5f
+                val tierra = if (oscuro) Color(0xFFB89A62) else Color(0xFF7A5E38)
+                drawPath(p, tierra.copy(alpha = if (oscuro) 0.22f else 0.2f), style = Stroke(5 * d, cap = StrokeCap.Round))
+                drawPath(p, tierra.copy(alpha = 0.75f), style = Stroke(1.1f * d, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5 * d, 3 * d))))
+                aLoLargo(p, 30 * d, 15 * d) { o, t ->
+                    val n = Offset(-t.y, t.x)
+                    listOf(-1f, 1f).forEach { s ->
+                        val c = o + n * (s * 1.8f * d) + t * (s * 1.2f * d)
+                        val ang = Math.toDegrees(kotlin.math.atan2(t.y.toDouble(), t.x.toDouble())).toFloat()
+                        drawArc(tierra.copy(alpha = 0.9f), ang + 90f, 180f, false, Offset(c.x - 1.3f * d, c.y - 1.3f * d), Size(2.6f * d, 2.6f * d), style = Stroke(0.8f * d))
+                    }
+                }
+            }
             // El camino del alma: un hilo de luz de la grieta, blanco violeta de noche y violeta de día, con su halo y una
             // chispa a trechos.
             TemaId.ARCONTES -> {
@@ -1074,7 +1165,18 @@ object MapasMas {
             }
             // Una ventanilla de control: caseta cuadrada con su número.
             TemaId.DISTOPIA -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
-            TemaId.GALIA -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
+            // El oppidum de cada parada visto desde arriba: la meseta con su muralla en anillo y las estacas de la empalizada; en
+            // la meta, más grande, con el torques encima.
+            TemaId.GALIA -> {
+                val oscuro = cs.background.luminance() < 0.5f
+                val tinta = if (oscuro) TrazosGalia.LUNA.copy(alpha = 0.8f) else cs.onSurface.copy(alpha = 0.7f)
+                drawCircle(Color.Black.copy(alpha = if (oscuro) 0.4f else 0.15f), r * 0.95f, c + Offset(0.8f * d, 1.2f * d))
+                drawCircle(col, r * 0.82f, c)
+                drawCircle(tinta, r * 0.82f, c, style = Stroke(1.1f * d))
+                for (k in 0 until 14) { val a = 2 * PI * k / 14; drawLine(tinta, Offset(c.x + r * 0.82f * cos(a).toFloat(), c.y + r * 0.82f * sin(a).toFloat()), Offset(c.x + r * 1.08f * cos(a).toFloat(), c.y + r * 1.08f * sin(a).toFloat()), 0.8f * d) }
+                drawPath(Path().apply { moveTo(c.x - r * 0.38f, c.y + r * 0.2f); lineTo(c.x, c.y - r * 0.32f); lineTo(c.x + r * 0.38f, c.y + r * 0.2f); close() }, tinta.copy(alpha = 0.75f))
+                if (meta) with(TrazosGalia) { torques(Offset(c.x, c.y - r * 1.75f), r * 0.55f, r * 0.18f) }
+            }
             // Cada parada es la puerta de una esfera: el disco con el aro de su círculo, abierto arriba; la meta es la
             // Ogdóada, con su halo y los ocho puntos de luz alrededor.
             TemaId.ARCONTES -> {

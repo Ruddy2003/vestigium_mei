@@ -19,6 +19,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
@@ -140,6 +141,10 @@ object Marcas {
         GEMA,
         /** Arcontes: una raja de luz bajo la palabra, con su halo, que se quiebra apenas y suelta una rama al final. */
         RAJA,
+        /** Galia: la palabra acuñada en un estátero de oro, una pastilla con su brillo arriba y la gráfila de perlas. */
+        ESTATER,
+        /** Galia: un torques que abraza la palabra por debajo: la cuerda de oro torcida que sube a los lados y acaba en sus discos. */
+        TORQUES,
     }
 
     /** Cómo se ve una marca: color de la letra, el trazo detrás y si va en negrita o cursiva. */
@@ -169,7 +174,9 @@ object Marcas {
                 else Aspecto(s, s, Forma.CALDERON, cursiva = true)
             TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
-            TemaId.GALIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
+            // La @persona, acuñada en un estátero de oro; el #tema, abrazado por un torques (de oro de día, de fuego de noche).
+            TemaId.GALIA -> if (persona) Aspecto(Color(0xFF2E1F06), TrazosGalia.ORO, Forma.ESTATER, negrita = true)
+                else (if (cs.background.luminance() < 0.5f) p else s).let { Aspecto(it, it, Forma.TORQUES) }
             // La @persona, grabada en su amuleto de jaspe; el #tema, sobre la raja de luz violeta de la grieta.
             TemaId.ARCONTES -> if (persona) Aspecto(TrazosArcontes.LINO, TrazosArcontes.JASPE_VERDE, Forma.GEMA, negrita = true) else Aspecto(t, t, Forma.RAJA)
             // La @persona, como un indicativo en la pantalla de fósforo (verde de radar sobre el vidrio oscuro); el #tema, sobre la
@@ -239,6 +246,8 @@ object Marcas {
         Forma.TRAZA -> Color.Unspecified
         Forma.GEMA -> c
         Forma.RAJA -> Color.Unspecified
+        Forma.ESTATER -> c
+        Forma.TORQUES -> Color.Unspecified
     }
 
     /** En un campo de texto, las formas que van debajo de la palabra se quedan en un subrayado. */
@@ -262,6 +271,8 @@ object Marcas {
         Forma.TRAZA -> true
         Forma.GEMA -> false
         Forma.RAJA -> true
+        Forma.ESTATER -> false
+        Forma.TORQUES -> true
     }
 
     /** El estilo de letra de la marca. Con [conFondo], lo que no se puede dibujar (en un campo de texto) va como fondo de la letra. */
@@ -680,6 +691,28 @@ object Marcas {
                 drawPath(raja, c.copy(alpha = 0.18f), style = Stroke(3.6f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
                 drawPath(raja, c.copy(alpha = 0.9f), style = Stroke(1f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
                 drawLine(c.copy(alpha = 0.7f), Offset(rr.right - 4 * u, y), Offset(rr.right - 1 * u, y + 2.2f * u), 0.7f * u, StrokeCap.Round)
+            }
+            Forma.ESTATER -> {
+                // El estátero: la pastilla de oro con la luz arriba, la gráfila de perlas por dentro del canto y el canto en sombra.
+                val t = rr.top + h * 0.04f; val b = rr.bottom - h * 0.02f; val iz = rr.left - 5 * u; val de = rr.right + 5 * u
+                val radio = CornerRadius((b - t) / 2, (b - t) / 2)
+                drawRoundRect(Brush.verticalGradient(listOf(lerp(c, Color.White, 0.38f), c, lerp(c, Color.Black, 0.22f)), t, b), Offset(iz, t), Size(de - iz, b - t), radio)
+                val perla = lerp(c, Color.Black, 0.38f).copy(alpha = 0.55f)
+                var x = iz + (b - t) * 0.45f; var k = 0
+                while (x < de - (b - t) * 0.45f && k < 300) {
+                    drawCircle(perla, 0.55f * u, Offset(x, t + 1.7f * u)); drawCircle(perla, 0.55f * u, Offset(x, b - 1.7f * u))
+                    x += 2.6f * u; k++
+                }
+                drawRoundRect(lerp(c, Color.Black, 0.42f), Offset(iz, t), Size(de - iz, b - t), radio, style = Stroke(0.9f * u))
+            }
+            Forma.TORQUES -> {
+                // La cuerda de oro bajo la palabra, que sube por los lados, con los surcos de la torsión y un disco en cada punta.
+                val y = baja - 0.2f * u; val x0 = rr.left - 2f * u; val x1 = rr.right + 2f * u; val sube = minOf(h * 0.42f, 6f * u)
+                val p = Path().apply { moveTo(x0, y - sube); quadraticTo(x0, y, x0 + sube, y); lineTo(x1 - sube, y); quadraticTo(x1, y, x1, y - sube) }
+                drawPath(p, c.copy(alpha = 0.9f), style = Stroke(1.7f * u, cap = StrokeCap.Round))
+                var x = x0 + sube; var k = 0
+                while (x < x1 - sube && k < 300) { drawLine(lerp(c, Color.White, 0.5f).copy(alpha = 0.8f), Offset(x, y + 0.75f * u), Offset(x + 1f * u, y - 0.75f * u), 0.5f * u); x += 2.2f * u; k++ }
+                drawCircle(c, 1.4f * u, Offset(x0, y - sube)); drawCircle(c, 1.4f * u, Offset(x1, y - sube))
             }
             Forma.PANTALLA -> {
                 // El vidrio oscuro con su bisel de cromo, tres líneas de barrido tenues y, delante, el piloto ámbar con su halo.

@@ -219,7 +219,7 @@ object FondosTelefono {
         TemaId.MEDIEVAL -> "Liber vestigii mei"
         TemaId.TEMPLARIO -> "Non nobis, Domine · Vestigium"
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"
-        TemaId.GALIA -> "EXPEDIENTE PERSONAL"
+        TemaId.GALIA -> "Vestigium · noche a noche"     // los galos cuentan por noches (César 6.18)
         TemaId.ARCONTES -> "Códice de Magdala · Vestigium"
         TemaId.FRENTE -> "CÉLULA K-7 · VESTIGIUM"
         TemaId.REFUGIO -> "VESTIGIUM-MEI OS"
@@ -321,6 +321,55 @@ private fun DrawScope.marcoArcontes(e: androidx.compose.material3.ColorScheme, i
     with(TrazosArcontes) { lampara(Offset(cx - 2 * u, repisa - 8 * u), 50 * u, if (claro) TrazosArcontes.BARRO_CLARO else lerp(TrazosArcontes.BARRO, e.background, 0.25f)) }
     // De noche, la grieta por el lado derecho.
     if (!claro) with(TrazosArcontes) { grieta(Offset(der - 3 * u, aba - (aba - arr) * 0.42f), Offset(der - 34 * u, aba - (aba - arr) * 0.3f), 0.9f * u, 0.6f, 11) }
+}
+
+/**
+ * Galia: la puerta de la casa grande del oppidum. Dos postes de roble con su veta y sus clavijas, el dintel que los cruza
+ * con la gráfila de perlas tallada y la «S» de las monedas en cada punta, y el umbral abajo. Del dintel cuelga una rama de
+ * muérdago; abajo, en la esquina, asoman hojas de roble. De noche, en el umbral arde la hoguera y su luz sube por los postes.
+ */
+private fun DrawScope.marcoGalia(e: androidx.compose.material3.ColorScheme, izq: Float, der: Float, arr: Float, aba: Float, col: Color, tenue: Color, claro: Boolean) {
+    val u = 1.dp.toPx(); val cx = (izq + der) / 2
+    val poste = 14 * u; val dintel = 18 * u
+    if (!claro) drawRect(Brush.radialGradient(listOf(TrazosGalia.FUEGO.copy(alpha = 0.16f), Color.Transparent), Offset(cx, aba), (aba - arr) * 0.6f))
+    // Los postes, con su veta que ondula y las clavijas arriba y abajo.
+    listOf(izq, der - poste).forEachIndexed { k, x ->
+        drawRect(col, Offset(x, arr + dintel), Size(poste, aba - arr - dintel), style = Stroke(1.4f * u))
+        for (v in 1..2) {
+            val vx = x + poste * v / 3f
+            val veta = Path().apply {
+                moveTo(vx, arr + dintel + 4 * u); var y = arr + dintel + 4 * u
+                while (y < aba - 14 * u) { y += 8 * u; lineTo(vx + 1.1f * u * sin(y / (31 * u) + k * 2f + v).toFloat(), y) }
+            }
+            drawPath(veta, tenue, style = Stroke(0.7f * u))
+        }
+        listOf(arr + dintel + 9 * u, aba - 20 * u).forEach { y -> drawCircle(col, 2.2f * u, Offset(x + poste / 2, y)) }
+    }
+    // El dintel, que sobresale de los postes, con la gráfila de perlas y una «S» en cada punta.
+    val iz = izq - 8 * u; val de = der + 8 * u
+    drawRect(col, Offset(iz, arr), Size(de - iz, dintel), style = Stroke(1.6f * u))
+    drawLine(tenue, Offset(iz + 4 * u, arr + 4 * u), Offset(de - 4 * u, arr + 4 * u), 0.7f * u)
+    drawLine(tenue, Offset(iz + 4 * u, arr + dintel - 4 * u), Offset(de - 4 * u, arr + dintel - 4 * u), 0.7f * u)
+    var x = iz + 30 * u
+    while (x < de - 30 * u) { drawCircle(tenue, 1.4f * u, Offset(x, arr + dintel / 2)); x += 7 * u }
+    with(TrazosGalia) {
+        esse(Offset(iz + 15 * u, arr + dintel / 2), 18 * u, 2.6f * u, col)
+        esse(Offset(de - 15 * u, arr + dintel / 2), 18 * u, 2.6f * u, col, 180f)
+    }
+    // El umbral.
+    drawRect(col, Offset(izq - 4 * u, aba), Size(der - izq + 8 * u, 7 * u), style = Stroke(1.4f * u))
+    // La rama de muérdago que cuelga del dintel.
+    with(TrazosGalia) {
+        val hoja = lerp(MUERDAGO, e.background, if (claro) 0.35f else 0.45f)
+        drawLine(tenue, Offset(izq + poste + 34 * u, arr + dintel), Offset(izq + poste + 34 * u, arr + dintel + 14 * u), 0.8f * u)
+        muerdago(Offset(izq + poste + 34 * u, arr + dintel + 26 * u), 30 * u, 180f, hoja, lerp(BAYA, e.background, 0.2f))
+        // Las hojas de roble en la esquina de abajo a la derecha.
+        val roble = lerp(if (claro) ROBLE else e.secondary, e.background, 0.45f)
+        listOf(Triple(-24f, -18f, -30f), Triple(-10f, -30f, 10f), Triple(-38f, -8f, -70f)).forEach { (dx, dy, g) ->
+            hojaRoble(Offset(der - poste + dx * u, aba + dy * u), 22 * u, g, roble, lerp(ROBLE_SOMBRA, e.background, 0.4f))
+        }
+        if (!claro) hoguera(Offset(cx, aba - 2 * u), 40 * u, 0.6f)
+    }
 }
 
 /** Una estrella pequeña de [puntas] puntas, para adornar los marcos. */
@@ -466,17 +515,7 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     drawLine(tenue, c + Offset(0f, sy * 4 * u), c + Offset(0f, sy * 14 * u), 1f * u)
                 }
             }
-            TemaId.GALIA -> {
-                // Carpeta de expediente: línea gruesa, dos perforaciones, una franja de «clasificado» y marcas de corte.
-                caja(0f, col, 2f * u)
-                listOf(cy - 40 * u, cy + 40 * u).forEach { y -> drawCircle(tenue, 5 * u, Offset(izq + 16 * u, y), style = Stroke(1.2f * u)) }
-                clipRect(izq, arr, der, aba) { drawLine(e.primary.copy(alpha = 0.3f), Offset(der - 46 * u, arr), Offset(der, arr + 46 * u), 8 * u) }
-                esquinas.forEach { c ->
-                    val sx = if (c.x < size.width / 2) -1f else 1f; val sy = if (c.y < size.height / 2) -1f else 1f
-                    drawLine(tenue, c + Offset(sx * 4 * u, 0f), c + Offset(sx * 14 * u, 0f), 1f * u)
-                    drawLine(tenue, c + Offset(0f, sy * 4 * u), c + Offset(0f, sy * 14 * u), 1f * u)
-                }
-            }
+            TemaId.GALIA -> marcoGalia(e, izq, der, arr, aba, col, tenue, claro)
             TemaId.ARCONTES -> marcoArcontes(e, izq, der, arr, aba, col, tenue, claro)
             TemaId.FRENTE -> {
                 // El bisel de la pantalla grande de la consola: doble marco de esquinas redondas, un tornillo en cada esquina,

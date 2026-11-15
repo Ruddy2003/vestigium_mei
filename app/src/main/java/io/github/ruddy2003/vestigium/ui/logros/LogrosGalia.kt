@@ -40,7 +40,7 @@ object LogrosGalia : DisenoLogros {
     private val ROBLE_OSCURO = Color(0xFF5A4128)
     private val ROBLE_LUZ = Color(0xFFB8956A)
     private val CORTEZA = Color(0xFF4A3A28)
-    private val CERA = Color(0xFF3B2C1E)
+    private val CERA = Color(0xFF4E3B28)
     private val BARRO = TrazosGalia.BARRO
     private val PAJA = TrazosGalia.PAJA
     private val NOCHE = Color(0xFF0F1410)
@@ -231,7 +231,8 @@ object LogrosGalia : DisenoLogros {
     private fun DrawScope.escenaCasa(g: GeoCasa, e: EstadoSalon, oscuro: Boolean) {
         val w = g.w; val h = g.h; val u = g.u
         fun m(c: Color, k: Float) = mezcla(e.fondo, c, k)
-        // La pared de zarzo y barro: las estacas, las varas tejidas que asoman donde se cayó el barro y las grietas.
+        // La pared de zarzo y barro: el barro alisado, las estacas, las varas tejidas que asoman donde se cayó el barro y las grietas.
+        drawRect(m(BARRO, if (oscuro) 0.1f else 0.16f), Offset.Zero, Size(w, h))
         var x = 18f * u; var k = 0
         while (x < w && k < 200) {
             drawLine(m(ROBLE_OSCURO, if (oscuro) 0.16f else 0.1f), Offset(x, g.techo), Offset(x, g.suelo), 2f * u)
@@ -277,9 +278,9 @@ object LogrosGalia : DisenoLogros {
         for (i in 0..g.n) {
             val cx = g.borde(i)
             val poste = Rect(cx - g.poste, g.techo, cx + g.poste, g.suelo)
-            drawRect(Brush.horizontalGradient(listOf(m(ROBLE_LABRADO, if (oscuro) 0.32f else 0.4f), m(CORTEZA, if (oscuro) 0.42f else 0.45f)), poste.left, poste.right), poste.topLeft, poste.size)
+            drawRect(Brush.horizontalGradient(listOf(m(ROBLE_LABRADO, if (oscuro) 0.34f else 0.5f), m(CORTEZA, if (oscuro) 0.46f else 0.6f)), poste.left, poste.right), poste.topLeft, poste.size)
             var yv = g.techo + 6 * u; var kk = 0
-            while (yv < g.suelo && kk < 400) { val xx = poste.left + azar(e.semilla + i, kk) * poste.width; drawLine(m(Color.Black, 0.12f), Offset(xx, yv), Offset(xx + (azar(e.semilla, kk) - 0.5f) * 2 * u, yv + 14 * u), 0.7f * u); yv += 7 * u; kk++ }
+            while (yv < g.suelo && kk < 400) { val xx = poste.left + azar(e.semilla + i, kk) * poste.width; drawLine(Color.Black.copy(alpha = if (oscuro) 0.16f else 0.1f), Offset(xx, yv), Offset(xx + (azar(e.semilla, kk) - 0.5f) * 2 * u, yv + 14 * u), 0.7f * u); yv += 7 * u; kk++ }
             var yc = g.techo + g.modulo * 0.3f; var kc = 0
             while (yc < g.suelo - 50 * u && kc < 20) {
                 val px = cx.coerceIn(14f * u, w - 14f * u)
@@ -318,8 +319,8 @@ object LogrosGalia : DisenoLogros {
         repeat(30) { i -> drawCircle(m(Color(0xFF4A3A28), 0.2f), (0.6f + azar(e.semilla, 900 + i)) * u, Offset(azar(e.semilla, 950 + i) * w, g.suelo + 3 * u + azar(e.semilla, 990 + i) * (g.piso - 5 * u))) }
         val hx = w / 2; val hy = g.suelo + g.piso * 0.62f
         if (oscuro) drawCircle(Brush.radialGradient(listOf(HALO.copy(alpha = 0.35f), Color.Transparent), Offset(hx, hy - 10 * u), 90 * u), 90 * u, Offset(hx, hy - 10 * u))
-        drawPath(Path().apply { moveTo(hx, hy - 18 * u); quadraticTo(hx - 8 * u, hy - 40 * u, hx + 3 * u, hy - 60 * u); quadraticTo(hx + 12 * u, hy - 80 * u, hx + 2 * u, hy - 100 * u) },
-            m(TrazosGalia.HUMO, if (oscuro) 0.18f else 0.3f), style = Stroke(5 * u, cap = StrokeCap.Round))
+        drawPath(Path().apply { moveTo(hx, hy - 16 * u); quadraticTo(hx - 7 * u, hy - 26 * u, hx + 2 * u, hy - 36 * u) },
+            TrazosGalia.HUMO.copy(alpha = if (oscuro) 0.14f else 0.3f), style = Stroke(4 * u, cap = StrokeCap.Round))
         for (k in 0 until 9) { val a = PI * k / 8; drawOval(m(PIEDRA, if (oscuro) 0.45f else 0.6f), Offset(hx - 18 * u * cos(a).toFloat() - 3 * u, hy - 1.5f * u), Size(6 * u, 4 * u)) }
         with(TrazosGalia) { hoguera(Offset(hx, hy), 20f * u, if (oscuro) 1f else 0.85f, m(TrazosGalia.MADERA, 0.8f)) }
         // El caldero colgado de su cadena sobre el fuego, a un lado para no tapar la llama.
