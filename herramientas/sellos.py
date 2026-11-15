@@ -1383,7 +1383,7 @@ def galia(tam):
     golpes = suavizar(np.asarray(marcas, np.float32) / 255, 0.7 * k)
     alto = alto_cospel * 0.9 + alto_rel * 0.8 - golpes * 0.025 + suavizar(rg.standard_normal((S, S)).astype(np.float32), 1.2 * k) * 0.006
     alto = alto * np.clip(moneda * 1.2, 0, 1)
-    color = oro_relieve(suavizar(alto, 0.5 * k), 24.0 * k, 612, tonos=ELECTRO, grano=0.02, ambiente=0.75, plano=0.42)
+    color = oro_relieve(suavizar(alto, 0.5 * k), 24.0 * k, 612, tonos=ELECTRO, grano=0.02, ambiente=0.75, plano=0.34)
     # El roce: lo más alto del relieve, pulido por las manos, más claro.
     color = mezcla(color, col('#F0D684'), np.clip(alto_rel * 1.6 - 0.45, 0, 1) * 0.3)
     # El campo no es parejo: tonos más cálidos y más fríos en manchas grandes, y la luz que cae hacia abajo a la derecha.
@@ -1394,7 +1394,10 @@ def galia(tam):
     color = mezcla(color, col('#6B3A16'), hueco * 0.42)
     color = mezcla(color, col('#6B3A16'), np.clip(1 - dentro_px / (34 * k), 0, 1) * np.clip(dentro_px / (6 * k), 0, 1) * 0.18)
     color = color * (0.93 + 0.07 * np.clip(alto_rel * 2, 0, 1))[..., None]
-    color = mezcla(color, col('#8C4A22'), np.clip(nube(618, 5, S) * 1.6 - 0.2, 0, 1) * 0.16 * (1 - np.clip(alto_rel * 3, 0, 1)))
+    # El campo, con la pátina de siglos: más pardo y apagado que lo alto, con manchas rojizas.
+    campo = 1 - np.clip(alto_rel * 3, 0, 1)
+    color = mezcla(color, col('#6E4A16'), campo * 0.22)
+    color = mezcla(color, col('#8C4A22'), np.clip(nube(618, 5, S) * 1.6 - 0.2, 0, 1) * 0.18 * campo)
     # --- El cuero de fuera: pardo oscuro, con su flor (el grano) y la sombra de la moneda.
     cuero = col('#2B1D13')[None, None, :] * (0.9 + 0.12 * nube(613, 6, S)[..., None] + 0.06 * nube(614, 40, S)[..., None])
     flor = suavizar(rg.standard_normal((S, S)).astype(np.float32), 1.6 * k)
@@ -1407,7 +1410,7 @@ def galia(tam):
     m = mascara_sello(S)
     alto_h = suavizar(m, 4.6 * k) * (0.25 + 0.75 * m)
     alto_h = alto_h / max(1e-3, float(alto_h.max()))        # cada cresta, un hilo redondo y no una tira plana
-    color_h = oro_relieve(suavizar(alto_cospel * 0.9 + alto_h * 0.8, 0.5 * k), 24.0 * k, 615, tonos=ELECTRO, grano=0.02, ambiente=0.75, plano=0.42)
+    color_h = oro_relieve(suavizar(alto_cospel * 0.9 + alto_h * 0.8, 0.5 * k), 24.0 * k, 615, tonos=ELECTRO, grano=0.02, ambiente=0.75, plano=0.56)
     color_h = mezcla(color_h, col('#F0D684'), np.clip(alto_h * 1.6 - 0.6, 0, 1) * 0.3)
     color_h = color_h * (0.94 + 0.1 * nube(616, 3, S)[..., None] + 0.04 * nube(617, 9, S)[..., None])
     color_h = color_h * (1.06 - 0.16 * np.clip((dx + dy) / (2 * c) + 0.5, 0, 1))[..., None]
