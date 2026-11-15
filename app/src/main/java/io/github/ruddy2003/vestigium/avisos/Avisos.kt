@@ -338,13 +338,15 @@ object Avisos {
             "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
             "CONDECORACIÓN", "condecoraciones nuevas",
             "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
-        TemaId.NOUVEAU -> Voz("DECLARE SU ESTADO ACTUAL", "Dos toques obligatorios: agrado y energía.",
-            "REPORTE ONÍRICO PENDIENTE", "Declare lo soñado antes de levantarse. El recuerdo caduca en minutos.",
-            "DECLARACIÓN NOCTURNA", "Complete el parte del día. En jornada difícil se acepta un solo número.",
-            "Jornada difícil: un número", "INTERROGATORIO PENDIENTE:",
-            "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
-            "CONDECORACIÓN", "condecoraciones nuevas",
-            "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
+        // Art nouveau: la campanilla de cristal del taller, la piedra litográfica que se moja antes de entintar, las vitrinas
+        // que se encienden de noche, la postal ilustrada, las medallas de la Exposición y el cartel recién salido de la prensa.
+        TemaId.NOUVEAU -> Voz("Suena la campanilla de cristal: ¿cómo estás ahora?", "Dos toques, como dos golpes de pincel: cuánto agrado y cuánta energía.",
+            "Croquis de la noche · ¿qué soñaste?", "Dibújalo con palabras antes de levantarte: el sueño se seca como el agua sobre la piedra.",
+            "Se encienden las vitrinas: ¿cómo fue tu día?", "Pasa el día a la página del carnet. Si fue gris, basta con un número.",
+            "Día gris: un número", "Las preguntas del almanaque, hoy:",
+            "Llegó una postal de tu yo de antes", "Es el día que elegiste para leerla. Toca para darle la vuelta.",
+            "Medalla de la Exposición", "medallas de la Exposición",
+            "Tu %d ya salió de la prensa", "Un año entero en carteles, recién impresos: lo que más hiciste, lo único, lo curioso. Toca para leerlo.")
         // Galia: el grito que corre de campo en campo (César 7.3: lo de Cenabum, al amanecer, lo sabían antes de acabar la
         // primera guardia de la noche a 160 millas); la hoguera de la casa grande, el mensajero, los torques y los bardos.
         TemaId.GALIA -> Voz("Corre el grito: ¿cómo anda tu ánimo?", "Pasa de campo en campo hasta llegar a ti. Dos toques: cuánto agrado y cuánta energía.",
@@ -569,7 +571,9 @@ object Avisos {
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste", "Explicit: llegaste a la meta")
         TemaId.TEMPLARIO -> VozEnfoque("Alto en la marcha", "Desciñe la espada y bebe agua del aljibe.", "Se acabó el alto: a la silla", "Toca a maitines: hora de levantarse", "Non nobis: guardia cumplida", "Llegaste al castillo: meta cumplida")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
-        TemaId.NOUVEAU -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
+        // Art nouveau: el respiro en la terraza del café, la mesa de dibujo, la luz del tragaluz, la piedra entintada y el iris
+        // que se abre en la esfera del reloj.
+        TemaId.NOUVEAU -> VozEnfoque("Un respiro en la terraza", "Deja el lápiz, sal a la calle un momento y bebe un vaso de agua.", "De vuelta a la mesa de dibujo", "Entra la luz por el tragaluz: hora de despertar", "La piedra está entintada: terminaste", "Se abre el iris: llegaste a la meta")
         // Galia: el alto a la sombra del roble, los versos que se aprenden de memoria (César 6.14), la noche que va antes del
         // día (6.18) y el carnyx que suena al llegar.
         TemaId.GALIA -> VozEnfoque("Alto a la sombra del roble", "Suelta la tablilla, estira las piernas y bebe agua del manantial.", "Se acabó el alto: de vuelta a los versos", "Tras la noche viene el día: hora de despertar", "Ya lo sabes de memoria: terminaste", "Suena el carnyx: llegaste a la meta")

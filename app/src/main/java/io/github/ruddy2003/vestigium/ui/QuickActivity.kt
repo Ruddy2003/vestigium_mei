@@ -1208,7 +1208,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.MEDIEVAL -> 10.dp
     TemaId.TEMPLARIO -> 9.dp
     TemaId.DISTOPIA -> 12.dp
-    TemaId.NOUVEAU -> 12.dp
+    TemaId.NOUVEAU -> 16.dp
     TemaId.GALIA -> 16.dp
     TemaId.ARCONTES -> 7.dp
     TemaId.FRENTE -> 11.dp
@@ -1293,9 +1293,19 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         val p = 12 * u; val a = w * 0.38f
         moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
     }
+    // El arco de un cartel de 1900: sube al centro en la curva larga de la línea de látigo y, en cada pie, el ojo del rizo
+    // donde se enrosca.
     TemaId.NOUVEAU -> formaDp { w, h, u ->
-        val p = 12 * u; val a = w * 0.38f
-        moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+        val p = 16 * u; val ojo = 4f * u; val a = w * 0.3f; val b = w * 0.7f
+        moveTo(0f, h); lineTo(0f, p)
+        lineTo(a - 2 * ojo, p)
+        // El rizo: el borde se enrosca en un ojo pequeño y sube en la curva larga del látigo.
+        arcTo(Rect(Offset(a - ojo, p), ojo), 180f, 180f, false)
+        cubicTo(a + w * 0.06f, p, a + w * 0.04f, 0f, a + w * 0.14f, 0f)
+        lineTo(b - w * 0.14f, 0f)
+        cubicTo(b - w * 0.04f, 0f, b - w * 0.06f, p, b, p)
+        arcTo(Rect(Offset(b + ojo, p), ojo), 180f, 180f, false)
+        lineTo(w, p); lineTo(w, h); close()
     }
     // La meseta del oppidum: el borde sube en loma por los dos lados y arriba, en lo llano, la empalizada de estacas.
     TemaId.GALIA -> formaDp { w, h, u ->
@@ -1526,7 +1536,16 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     // El escudete: recto arriba y redondeado abajo.
     TemaId.TEMPLARIO -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 14.dp, bottomStart = 14.dp)
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.NOUVEAU -> RectangleShape
+    // El frasco de perfume: los hombros se estrechan en una S hacia el tapón, esquinas suaves abajo.
+    TemaId.NOUVEAU -> formaDp { w, h, u ->
+        val d = minOf(7 * u, w * 0.1f); val m = h * 0.5f; val r = minOf(4 * u, h / 4)
+        moveTo(0f, h - r); lineTo(0f, m)
+        cubicTo(0f, m * 0.45f, d, m * 0.55f, d, r * 0.6f)
+        quadraticTo(d, 0f, d + r, 0f)
+        lineTo(w - d - r, 0f); quadraticTo(w - d, 0f, w - d, r * 0.6f)
+        cubicTo(w - d, m * 0.55f, w, m * 0.45f, w, m)
+        lineTo(w, h - r); quadraticTo(w, h, w - r, h); lineTo(r, h); quadraticTo(0f, h, 0f, h - r); close()
+    }
     // La hoja del roble, como las esquinas del tema: dos esquinas opuestas redondas y, en las otras dos, la escotadura de
     // entre dos lóbulos.
     TemaId.GALIA -> formaDp { w, h, u ->

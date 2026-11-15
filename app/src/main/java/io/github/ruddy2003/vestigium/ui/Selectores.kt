@@ -274,7 +274,14 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     }
     // Casilla de formulario.
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.NOUVEAU -> RectangleShape
+    // Un vidrio de vitral de casa: el cuadro con los cuatro lados combados hacia dentro y las esquinas apenas redondas.
+    TemaId.NOUVEAU -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val k = minOf(w, h) * 0.09f; val r = minOf(w, h) * 0.08f
+        moveTo(r, 0f); quadraticTo(w / 2, k, w - r, 0f); quadraticTo(w, 0f, w, r)
+        quadraticTo(w - k, h / 2, w, h - r); quadraticTo(w, h, w - r, h)
+        quadraticTo(w / 2, h - k, r, h); quadraticTo(0f, h, 0f, h - r)
+        quadraticTo(k, h / 2, 0f, r); quadraticTo(0f, 0f, r, 0f); close()
+    }
     // La moneda gala: el cospel redondo y desparejo de un estátero, apenas más ancho que alto.
     TemaId.GALIA -> GenericShape { s, _ ->
         val w = s.width; val h = s.height; val cx = w / 2; val cy = h / 2
@@ -430,7 +437,13 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         // La cruz patada calada en el escudo.
         TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(s.width / 2, s.height * 0.42f), minOf(s.width, s.height) * 0.26f), fondo.copy(alpha = 0.55f))
         TemaId.DISTOPIA -> {}
-        TemaId.NOUVEAU -> {}
+        // Un tallo grabado en el vidrio, que sube en curva y se enrosca en su rizo.
+        TemaId.NOUVEAU -> {
+            val l = minOf(s.width, s.height)
+            val tallo = androidx.compose.ui.graphics.Path().apply { moveTo(s.width * 0.26f, s.height * 0.8f); quadraticTo(s.width * 0.68f, s.height * 0.74f, s.width * 0.6f, s.height * 0.4f) }
+            drawPath(tallo, fondo.copy(alpha = 0.4f), style = Stroke(l * 0.045f, cap = StrokeCap.Round))
+            drawCircle(fondo.copy(alpha = 0.4f), l * 0.07f, Offset(s.width * 0.53f, s.height * 0.37f), style = Stroke(l * 0.04f))
+        }
         // La gráfila de perlas del borde de la moneda y la perla del centro, apenas grabadas.
         TemaId.GALIA -> {
             val l = minOf(s.width, s.height); val c = Offset(s.width / 2, s.height / 2)

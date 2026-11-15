@@ -57,7 +57,7 @@ import kotlin.math.sin
 
 /**
  * El «corazón» de la frase del día, con la forma de cada tema (laurel, corazón de píxeles, sol de Vergina, cuadrifolio,
- * ojo, muérdago, lámpara de aceite, estrella atómica, escudo, anillo de benceno, casa, abeja, hoja, copo, moneda, flor de lis, destello, estrella de
+ * ojo, flor de iris, muérdago, lámpara de aceite, estrella atómica, escudo, anillo de benceno, casa, abeja, hoja, copo, moneda, flor de lis, destello, estrella de
  * ocho puntas, yurta, corazón con trazos de construcción, estrella roja, escarapela, gema): late al tocarlo y suelta una
  * chispa de puntos cuando se guarda. Guardada, va rellena; sin guardar, solo el contorno.
  */
@@ -197,11 +197,16 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
             circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
         }, 1.4f)
-        TemaId.NOUVEAU -> pinta(Path().apply {
-            fillType = PathFillType.EvenOdd
-            moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
-            circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
-        }, 1.4f)
+        // La flor de iris: tres pétalos que suben y dos que caen, sobre su tallo; guardada, con las venas de los que caen.
+        TemaId.NOUVEAU -> {
+            drawLine(if (lleno) color else color.copy(alpha = 0.7f), p(12f, 13f), p(12.6f, 22.5f), 1.4f * u, StrokeCap.Round)
+            pinta(Path().also { c ->
+                hoja(c, p(12f, 13f), p(12f, 1.8f), 1.7f)
+                hoja(c, p(12f, 12.4f), p(6.6f, 3.6f), 1.35f); hoja(c, p(12f, 12.4f), p(17.4f, 3.6f), 1.35f)
+                hoja(c, p(12f, 12.6f), p(2.6f, 16.6f), 1.6f); hoja(c, p(12f, 12.6f), p(21.4f, 16.6f), 1.6f)
+            }, 1.2f)
+            if (lleno) listOf(4.6f to 15.9f, 19.4f to 15.9f).forEach { (x, y) -> drawLine(Color.White.copy(alpha = 0.55f), p(12f, 12.8f), p(x, y), 0.9f * u, StrokeCap.Round) }
+        }
         // El muérdago que se corta del roble (Plinio 16.249–251): el tallo que se ahorquilla, un par de hojas largas y romas
         // en cada punta y las tres bayas entre las dos ramas; guardada, rellena, con el brillo de las bayas.
         TemaId.GALIA -> {

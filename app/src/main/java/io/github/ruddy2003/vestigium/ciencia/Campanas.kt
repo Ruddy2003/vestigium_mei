@@ -151,7 +151,10 @@ object Campanas {
         TemaId.MEDIEVAL -> listOf("Peregrinación a Compostela", "La copia del códice", "El camino de los monasterios", "La feria de Champaña")
         TemaId.TEMPLARIO -> listOf("La marcha de las atalayas", "Relevo en Montalbar", "La escolta de los peregrinos", "Cabalgada al Pozo del Halcón")
         TemaId.DISTOPIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
-        TemaId.NOUVEAU -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
+        // La primera línea del metro de París, la «ligne A», abierta al público el 19 de julio de 1900 a la una de la tarde,
+        // durante la Exposición, de Porte Maillot a Porte de Vincennes; la segunda clase costaba 15 céntimos, fuera cual fuera
+        // el trayecto (`docs/diseno/temas/fuentes_nouveau.md`, sección 5).
+        TemaId.NOUVEAU -> listOf("La ligne A du Métropolitain", "De Porte Maillot a Porte de Vincennes", "El 19 de julio, a la una", "Quince céntimos, en segunda")
         // El levantamiento del 52 a. C. (César, libro 7): de Cenabum a Alesia, la libertad común que Vercingétorix dice
         // defender (7.89) y el juramento de los carnutos sobre los estandartes reunidos (7.2).
         TemaId.GALIA -> listOf("El año del levantamiento", "De Cenabum a Alesia", "Por la libertad común", "El juramento sobre los estandartes")
@@ -198,7 +201,9 @@ object Campanas {
         // De fortaleza en fortaleza por una frontera inventada, de la costa al castillo de las montañas.
         TemaId.TEMPLARIO -> listOf("Encomienda de la costa", "Atalaya del Alba", "Torre de la Sed", "Pozo del Halcón", "Vado de las Piedras Rojas", "Peña del Cuervo", "Castillo de Montalbar")
         TemaId.DISTOPIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
-        TemaId.NOUVEAU -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
+        // Siete de las ocho estaciones de la línea 1 que abrieron el primer día, el 19 de julio de 1900, de oeste a este y con
+        // su nombre de entonces (`fuentes_nouveau.md`, sección 5; la octava, Nation, queda entre las dos últimas).
+        TemaId.NOUVEAU -> listOf("Porte Maillot", "Champs-Élysées", "Palais-Royal", "Hôtel de Ville", "Bastille", "Gare de Lyon", "Porte de Vincennes")
         // El levantamiento del 52 a. C. en su orden (`docs/diseno/temas/fuentes_galia.md`, sección 3): el grito de Cenabum
         // (7.3); Gergovia, donde Vercingétorix vuelve y lo proclaman rey (7.4); el cerco perdido de Avárico (7.15–7.28); la
         // victoria gala de Gergovia (7.45–7.51); la asamblea de Bibracte que lo confirma (7.63); el cerco de Alesia (7.69–7.74)

@@ -583,7 +583,9 @@ object Temas {
             TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
             TemaId.TEMPLARIO -> mapOf("animo" to "Ánimo del freire", "momento" to "Crónica de la casa", "gasto" to "Tesorería", "sueno" to "Reposo", "habitos" to "La regla", "hoy" to "Guardia", "cifra" to "Recuento", "foto" to "Desde la torre", "enfoque" to "Instrucción")
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
-            TemaId.NOUVEAU -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
+            // Art nouveau: el ánimo en color, los bocetos, el bolsillo, el sueño bajo el tragaluz del taller, lo de cada mañana, la
+            // página del almanaque, el folio de la revista, la placa fotográfica y la mesa de dibujo.
+            TemaId.NOUVEAU -> mapOf("animo" to "Tu ánimo, en color", "momento" to "Bocetos", "gasto" to "Del bolsillo", "sueno" to "Bajo el tragaluz", "habitos" to "Lo de cada mañana", "hoy" to "La página de hoy", "cifra" to "El folio", "foto" to "La placa", "enfoque" to "A la mesa de dibujo")
             // Galia: el ánimo, las chispas de la hoguera, las monedas del caballo, el sueño bajo el manto, lo de cada día, el oppidum, la cuenta,
             // lo que viste y los versos de memoria.
             TemaId.GALIA -> mapOf("animo" to "El ánimo de hoy", "momento" to "Chispas", "gasto" to "Monedas del caballo", "sueno" to "Bajo el manto", "habitos" to "Lo de cada día", "hoy" to "En el oppidum", "cifra" to "Tu cuenta", "foto" to "Lo que viste", "enfoque" to "De memoria")

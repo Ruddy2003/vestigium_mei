@@ -656,18 +656,78 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
                 drawLine(parpado, q, q + d * (6 * u / l), 1.5f * u)
             }
         }
+        // El tallo que da la vuelta: se enrosca al aro de fundición de una entrada de metro, echa hojas conforme pasa el
+        // bloque y lo sujetan cuatro ataduras de oro; delante vuela la libélula. Arriba espera el capullo de iris, que florece
+        // al cerrar la vuelta, y la libélula se posa a su lado.
         TemaId.NOUVEAU -> {
-            arco(pista, 0f, 1f, r, g)
-            arco(color, 0f, p, r, g)
-            for (k in 0 until 72) { val f = k / 72f; drawLine(e.background.copy(alpha = 0.35f), en(f, r - g / 2), en(f, r + g / 2), if (k % 6 == 0) 2 * u else 0.8f * u) }
-            val parpado = e.onBackground.copy(alpha = 0.7f)
-            val p0 = Offset(c.x - R, c.y); val p1 = Offset(c.x, c.y - R * 1.85f); val p2 = Offset(c.x + R, c.y)
-            drawPath(Path().apply { moveTo(p0.x, p0.y); quadraticTo(p1.x, p1.y, p2.x, p2.y); quadraticTo(c.x, c.y + R * 1.85f, p0.x, p0.y); close() }, parpado, style = Stroke(2.2f * u))
-            for (k in -3..3) {
-                val s = 0.5f + k * 0.09f
-                val q = Offset((1 - s) * (1 - s) * p0.x + 2 * (1 - s) * s * p1.x + s * s * p2.x, (1 - s) * (1 - s) * p0.y + 2 * (1 - s) * s * p1.y + s * s * p2.y)
-                val d = q - c; val l = d.getDistance().coerceAtLeast(1f)
-                drawLine(parpado, q, q + d * (6 * u / l), 1.5f * u)
+            val noche = e.background.luminance() < 0.5f
+            val sombra = androidx.compose.ui.graphics.lerp(color, e.background, if (noche) 0.45f else 0.35f)
+            val hierro = if (noche) androidx.compose.ui.graphics.lerp(TrazosNouveau.HIERRO, Color.White, 0.18f) else TrazosNouveau.HIERRO
+            val oro = if (noche) TrazosNouveau.ORO else e.tertiary
+            // El aro de fundición que sostiene el tallo: dos filetes, el de fuera más firme.
+            val aro = r + g * 0.2f
+            drawCircle(hierro.copy(alpha = if (noche) 0.7f else 0.45f), aro, c, style = Stroke(2.2f * u))
+            drawCircle(hierro.copy(alpha = if (noche) 0.3f else 0.18f), r - g * 0.75f, c, style = Stroke(0.8f * u))
+            // El tallo: ondula despacio alrededor del aro; lo que falta, apenas marcado.
+            fun radio(f: Float) = aro + sin(f * 2 * Math.PI.toFloat() * 9) * g * 0.38f
+            val todo = List(241) { i -> en(i / 240f, radio(i / 240f)) }
+            drawPath(Path().apply { todo.forEachIndexed { i, q -> if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) } }, pista, style = Stroke(1.4f * u))
+            // Las hojas, alternas por fuera y por dentro: sale cada una cuando el tallo pasa por ella; las que faltan, una yema.
+            val n = 18
+            for (k in 0 until n) {
+                val f = (k + 0.5f) / n
+                val base = en(f, radio(f))
+                val crece = ((p - f) / 0.035f).coerceIn(0f, 1f)
+                if (crece <= 0f) { drawCircle(pista, 1.8f * u, base); continue }
+                val s = if (k % 2 == 0) 1f else -1f
+                val a = Math.toRadians(f * 360.0 - 90.0)
+                val fuera = Offset(cos(a).toFloat(), sin(a).toFloat()); val avance = Offset(-sin(a).toFloat(), cos(a).toFloat())
+                val l = 17 * u * crece
+                val punta = base + avance * (l * 0.8f) + fuera * (s * l * 0.55f)
+                drawPath(with(TrazosNouveau) { hojaLanza(base, punta, l * 0.4f, 0.16f * s) }, if (s > 0) color else sombra)
+            }
+            if (p > 0f) {
+                val m = maxOf(2, (240 * p).toInt() + 1)
+                val pts = todo.subList(0, minOf(m, todo.size))
+                val grueso = 3.8f * u
+                with(TrazosNouveau) {
+                    drawPath(cinta(pts) { t -> grueso * (0.35f + 0.65f * ((1f - t) * pts.size / 14f).coerceIn(0f, 1f)) }, color)
+                    // El brillo del tallo, del lado de la luz.
+                    drawPath(cinta(pts.map { Offset(it.x - 0.5f * u, it.y - 0.6f * u) }) { t -> grueso * 0.28f * ((1f - t) * pts.size / 20f).coerceIn(0f, 1f) },
+                        androidx.compose.ui.graphics.lerp(color, Color.White, 0.4f).copy(alpha = 0.5f))
+                }
+            }
+            // Las cuatro ataduras de oro que sujetan el tallo al aro, a cada cuarto.
+            for (k in 0 until 4) {
+                val q = en(k / 4f, aro)
+                drawCircle(if (k / 4f <= p && p > 0f) oro else pista, 3.2f * u, q)
+                drawCircle(e.background, 1.2f * u, q)
+            }
+            // Arriba, el capullo de iris que espera; al cerrar la vuelta, florece.
+            val cima = en(0f, aro)
+            val flor = if (noche) androidx.compose.ui.graphics.lerp(TrazosNouveau.IRIS, Color.White, 0.3f) else TrazosNouveau.IRIS
+            with(TrazosNouveau) {
+                if (p >= 1f) {
+                    val fc = Offset(cima.x, cima.y - 7 * u)
+                    listOf(-0.5f, 0.5f, 0f).forEach { ang ->
+                        val q = Offset(fc.x + sin(ang) * 14 * u, fc.y - cos(ang) * 14 * u * (if (ang == 0f) 1.1f else 0.85f))
+                        drawPath(petalo(fc, q, 10.5f * u), if (ang == 0f) androidx.compose.ui.graphics.lerp(flor, Color.White, 0.25f) else flor)
+                    }
+                    listOf(-1.15f, 1.15f).forEach { ang ->
+                        val q = Offset(fc.x + sin(ang) * 15 * u, fc.y - cos(ang) * 15 * u + 4 * u)
+                        drawPath(petalo(Offset(fc.x, fc.y + u), q, 11.5f * u), androidx.compose.ui.graphics.lerp(flor, Color.Black, 0.22f))
+                        drawLine(TrazosNouveau.IRIS_LENGUA, Offset(fc.x, fc.y + u), Offset(fc.x + (q.x - fc.x) * 0.4f, fc.y + u + (q.y - fc.y - u) * 0.4f), 1.6f * u, StrokeCap.Round)
+                    }
+                    drawCircle(androidx.compose.ui.graphics.lerp(flor, Color.Black, 0.45f), 2.2f * u, fc)
+                } else {
+                    drawPath(petalo(Offset(cima.x, cima.y + 2 * u), Offset(cima.x + 1.5f * u, cima.y - 12 * u), 7.5f * u), flor.copy(alpha = if (p > 0f) 0.85f else 0.5f))
+                    drawPath(hojaLanza(Offset(cima.x, cima.y + 2 * u), Offset(cima.x - 6 * u, cima.y - 7 * u), 4 * u, -0.2f), sombra)
+                }
+                // La libélula vuela delante del tallo; al terminar, se posa junto a la flor.
+                val alas = if (noche) TrazosNouveau.NACAR.copy(alpha = 0.9f) else TrazosNouveau.NACAR
+                val contorno = if (noche) null else TrazosNouveau.PLUMA.copy(alpha = 0.45f)
+                if (p >= 1f) libelula(en(0.075f, aro + g * 0.3f), 23 * u, 60f, 0.2f, ala = alas, contorno = contorno)
+                else libelula(en(p + 0.03f, aro - 2 * u), 25 * u, p * 360f + 90f, 0.6f, ala = alas, contorno = contorno)
             }
         }
         // El torques de oro, abierto abajo: el aro sin luz se va dorando del primer remate al segundo conforme pasa el
@@ -1310,9 +1370,22 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             addRect(Rect(x, y, x + w, y + h))
             if (w > h) { addOval(Rect(Offset(x + h * 0.45f, y + h / 2), h * 0.18f)); fillType = PathFillType.EvenOdd }
         }
+        // Un tramo de tallo: el borde de arriba ondula despacio y dos esquinas opuestas se redondean, como las del tema.
         TemaId.NOUVEAU -> {
-            addRect(Rect(x, y, x + w, y + h))
-            if (w > h) { addOval(Rect(Offset(x + h * 0.45f, y + h / 2), h * 0.18f)); fillType = PathFillType.EvenOdd }
+            val rr = minOf(h / 2, w / 2)
+            val a = h * 0.14f
+            moveTo(x, y + h); lineTo(x, y + rr)
+            quadraticTo(x, y, x + rr, y)
+            // El borde de arriba ondula como un tallo, una onda cada tres alturas.
+            val paso = maxOf(h * 3f, 6f * u)
+            var xx = x + rr
+            while (xx < x + w - 1f) {
+                val sig = minOf(xx + paso / 2, x + w)
+                quadraticTo((xx + sig) / 2, y + (if (((xx - x - rr) / (paso / 2)).toInt() % 2 == 0) -a else a), sig, y)
+                xx = sig
+            }
+            lineTo(x + w, y + h - rr); quadraticTo(x + w, y + h, x + w - rr, y + h)
+            close()
         }
         // Un tramo de torques: la barra torcida, con los surcos de la torsión arriba y abajo, entre dos remates de disco;
         // las piezas muy cortas quedan en una moneda.
