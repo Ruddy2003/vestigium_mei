@@ -653,6 +653,154 @@ def papel_arcontes():
     a = a * (0.985 + 0.02 * ruido_rect(W, H, 0.8, 186)[..., None])
     a_img(a).save(os.path.join(OUT, 'papel_arcontes.jpg'), quality=86)
 
+def papel_galia():
+    """Galia: una tablilla de madera encerada (recurso: César no dice en qué escribían los galos), clara. Es una sola tabla
+    de roble, con la veta a lo largo, vaciada por dentro y con el borde en alto, como las tablillas que se conservan; en
+    el hueco, la cera de abeja sin teñir, color miel pálida, alisada con la paleta del estilo: barridas en arco, suaves,
+    con su rebordecito, el rastro casi borrado de renglones escritos y vueltos a alisar, poros y alguna mota de polvo o
+    de hollín. El borde de madera tiene el canto gastado y oscurecido por las manos, algún golpe y, a la izquierda, los
+    dos agujeros por donde pasa la correa de cuero que une las tablillas. La luz viene de arriba a la izquierda: el borde
+    de arriba y el de la izquierda echan sombra sobre la cera; las paredes del hueco de abajo y de la derecha brillan."""
+    W, H = 720, 1280
+    r = np.random.default_rng(191)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    def estirado(semilla, sx, sy):
+        """Ruido de 0 a 1 estirado sx veces a lo ancho y sy a lo alto."""
+        n = np.random.default_rng(semilla).random((max(2, H // sy), max(2, W // sx))).astype(np.float32)
+        return np.asarray(Image.fromarray(n, 'F').resize((W, H), Image.BICUBIC), np.float32)
+    def emboss(campo, s=1.2):
+        """Lo que se ve de un campo de alturas con la luz de arriba a la izquierda (−1 a 1 aprox.)."""
+        b = np.asarray(Image.fromarray(np.clip(campo * 255, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(s)), np.float32) / 255
+        gy, gx = np.gradient(b)
+        return -(gx + gy)
+    # --- La cera: el color de base, con manchas grandes más mieladas y otras más pálidas.
+    a = mezcla(col('#F0E7CF'), col('#E2D1A6'), ruido_rect(W, H, 70, 192) * 0.85)
+    a = mezcla(a, col('#F2EBD6'), np.clip((ruido_rect(W, H, 36, 193) - 0.55) * 2.5, 0, 1) * 0.4)
+    a = mezcla(a, col('#D2BF90'), np.clip((ruido_rect(W, H, 50, 206) - 0.7) * 3, 0, 1) * 0.25)
+    # Las barridas de la paleta: arcos anchos (la mano gira desde el codo), cada uno con un rebordecito de cera en el
+    # borde de fuera; dentro, la cera queda más lisa y un poco más brillante.
+    alto = np.zeros((H, W), np.float32)
+    capa = Image.new('L', (W, H), 0); filos = Image.new('L', (W, H), 0)
+    dc, df = ImageDraw.Draw(capa), ImageDraw.Draw(filos)
+    for _ in range(34):
+        cx_, cy_ = r.uniform(-300, W + 300), r.uniform(-200, H + 200)
+        rad = r.uniform(380, 900); a0 = r.uniform(0, 2 * math.pi); arco = r.uniform(0.25, 0.6); ancho = r.uniform(30, 64)
+        angs = np.linspace(a0, a0 + arco, 40)
+        fuera = [(cx_ + (rad + ancho / 2) * math.cos(t), cy_ + (rad + ancho / 2) * math.sin(t)) for t in angs]
+        dentro = [(cx_ + (rad - ancho / 2) * math.cos(t), cy_ + (rad - ancho / 2) * math.sin(t)) for t in angs]
+        dc.polygon(fuera + dentro[::-1], fill=int(r.uniform(60, 140)))
+        df.line(fuera, fill=int(r.uniform(120, 220)), width=3)
+        for _ in range(int(ancho / 7)):                                   # las estrías finas que deja el filo de la paleta
+            rr_ = rad + r.uniform(-ancho / 2, ancho / 2); t0 = r.uniform(0, arco * 0.4); t1 = r.uniform(arco * 0.6, arco)
+            df.line([(cx_ + rr_ * math.cos(a0 + t), cy_ + rr_ * math.sin(a0 + t)) for t in np.linspace(t0, t1, 30)],
+                    fill=int(r.uniform(25, 60)), width=1)
+    lisa = np.asarray(capa.filter(ImageFilter.GaussianBlur(9)), np.float32) / 255
+    filo = np.asarray(filos.filter(ImageFilter.GaussianBlur(1.3)), np.float32) / 255
+    a = a * (1 + lisa * 0.035)[..., None]
+    a = a * (1 + emboss(filo * 0.5, 1.4) * 0.7)[..., None]
+    # El rastro de lo que se escribió y se borró: renglones de trazos cortos, hundidos y casi alisados.
+    rastro = Image.new('L', (W, H), 0); d = ImageDraw.Draw(rastro)
+    for y in np.arange(150, H - 120, 46):
+        x = 80 + r.uniform(0, 30)
+        while x < W - 90:
+            if r.random() < 0.12: x += r.uniform(14, 30); continue          # el hueco entre palabras
+            h_ = r.uniform(12, 18); tipo = r.integers(0, 4)
+            if tipo == 0: d.line([(x, y), (x + r.uniform(-2, 3), y - h_)], fill=255, width=2)
+            elif tipo == 1: d.line([(x, y), (x + 6, y - h_), (x + 12, y)], fill=255, width=2)
+            elif tipo == 2: d.arc([x, y - h_, x + 11, y], r.uniform(0, 90), r.uniform(240, 330), fill=255, width=2)
+            else: d.line([(x, y - h_ / 2), (x + 10, y - h_ / 2)], fill=255, width=2)
+            x += r.uniform(12, 18)
+    rastro = np.asarray(rastro, np.float32) / 255
+    queda = np.clip(ruido_rect(W, H, 40, 194) * 2.4 - 1.05, 0, 1) * (1 - lisa * 0.7)  # casi todo alisado; queda a ratos
+    a = a * (1 - emboss(rastro * queda, 1.2) * 0.7)[..., None]          # hundido: la sombra cae al revés que en lo alto
+    a = mezcla(a, col('#C8B583'), np.asarray(Image.fromarray((rastro * queda * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.4)), np.float32)[..., None] / 255 * 0.07)
+    # Poros y un brillo suave de la cera hacia arriba a la izquierda.
+    poro = np.clip((ruido_rect(W, H, 1.0, 195) - 0.82) * 5, 0, 1)
+    a = mezcla(a, col('#C6B48A'), poro * 0.18)
+    brillo = np.clip(1 - np.sqrt(((xx - W * 0.25) / W) ** 2 + ((yy - H * 0.2) / H) ** 2) / 0.75, 0, 1) ** 2
+    a = a * (1 + 0.035 * brillo - 0.03 * (1 - brillo))[..., None]
+    # El lustre de la cera: una franja ancha y muy suave de brillo en diagonal, donde se refleja la ventana.
+    lustre = np.exp(-(((xx * 0.8 + yy * 0.45) - H * 0.42) / 150) ** 2) * (0.6 + 0.4 * ruido_rect(W, H, 30, 210))
+    a = mezcla(a, col('#FBF5E4'), lustre * 0.16)
+    img = a_img(a); d = ImageDraw.Draw(img, 'RGBA')
+    for _ in range(70):                                                  # motas de polvo y de hollín, desparejas
+        x, y = r.random() * W, r.random() * H; s_ = 0.6 + r.random() ** 3 * 1.4
+        pts = [(x + s_ * math.cos(t) * r.uniform(0.6, 1.3), y + s_ * math.sin(t) * r.uniform(0.6, 1.3)) for t in np.linspace(0, 2 * math.pi, 7)]
+        d.polygon(pts, fill=(64, 50, 32, int(50 + r.random() * 100)))
+    for _ in range(12):                                                  # alguna fibra o pelo pegado a la cera
+        x, y = r.random() * W, r.random() * H; ang = r.random() * math.pi; l = r.uniform(8, 22)
+        d.line([(x + l * t * math.cos(ang) + 2 * math.sin(t * 5), y + l * t * math.sin(ang)) for t in np.linspace(0, 1, 6)],
+               fill=(90, 72, 48, 70), width=1)
+    a = np.asarray(img, np.float32)
+    a = a * (0.985 + 0.025 * ruido_rect(W, H, 0.7, 196)[..., None])
+    # --- La tabla de roble: veta vertical, a lo largo, con anillos desparejos, poros, radios y manchas de uso.
+    MX, MY = 40, 48                                       # el borde en alto (a los lados, arriba y abajo)
+    dl, dr_, dt, db = xx, W - 1 - xx, yy, H - 1 - yy
+    u = xx + 9 * np.sin(yy / 300 + 0.4) + (ruido_rect(W, H, 40, 198) - 0.5) * 14
+    bordes = np.cumsum(r.uniform(5, 19, 120)) - 40
+    k_ = np.searchsorted(bordes, u)
+    b0 = bordes[np.clip(k_ - 1, 0, len(bordes) - 1)]; b1 = bordes[np.clip(k_, 0, len(bordes) - 1)]
+    f = np.clip((u - b0) / np.maximum(b1 - b0, 1e-3), 0, 1)
+    tardio = np.clip((f - 0.55) / 0.3, 0, 1) ** 1.4 * np.clip((1 - f) / 0.12, 0, 1) * r.uniform(0.4, 1, len(bordes) + 1)[k_]
+    fibra = estirado(200, 1, 50) * 0.6 + estirado(201, 1, 16) * 0.4
+    madera = mezcla(col('#BB9A68'), col('#987447'), np.clip(fibra * 0.7 + ruido_rect(W, H, 50, 202) * 0.3, 0, 1))
+    madera = mezcla(madera, col('#A57E4C'), np.clip((ruido_rect(W, H, 30, 211) - 0.5) * 2, 0, 1) * 0.5)
+    madera = mezcla(madera, col('#735532'), tardio * 0.45)
+    poros = np.clip((estirado(207, 1, 9) - 0.7) * 4, 0, 1) * (1 - tardio)
+    madera = mezcla(madera, col('#6A5236'), poros * 0.35)
+    radios = np.clip((estirado(203, 2, 24) - 0.8) * 5, 0, 1)
+    madera = mezcla(madera, col('#C9B089'), radios * 0.45)
+    # El borde en alto es redondeado: más claro en la cara que mira a la luz.
+    fuera = np.minimum(np.minimum(dl, dr_), np.minimum(dt, db))
+    ancho_b = np.where(np.minimum(dl, dr_) < np.minimum(dt, db), MX, MY).astype(np.float32)
+    t_ = np.clip(fuera / ancho_b, 0, 1)
+    perfil = np.where(dl == fuera, 1, 0) + np.where(dt == fuera, 1, 0) - np.where(dr_ == fuera, 1, 0) - np.where(db == fuera, 1, 0)
+    madera = madera * (1 + 0.07 * np.cos(t_ * math.pi) * perfil.astype(np.float32))[..., None]
+    # El canto gastado y oscuro de manos, algún golpe y la mugre en el borde de fuera.
+    madera = mezcla(madera, col('#4E3820'), np.clip(1 - fuera / 10, 0, 1) ** 1.3 * 0.55)
+    madera = mezcla(madera, col('#5C4428'), np.clip((ruido_rect(W, H, 12, 208) - 0.62) * 3, 0, 1) * np.clip(1 - fuera / 30, 0, 1) * 0.35)
+    golpes = Image.new('L', (W, H), 0); dg = ImageDraw.Draw(golpes)
+    for _ in range(9):
+        lado = r.integers(0, 4)
+        if lado == 0: x, y = r.uniform(4, MX - 6), r.uniform(60, H - 60)
+        elif lado == 1: x, y = W - r.uniform(4, MX - 6), r.uniform(60, H - 60)
+        elif lado == 2: x, y = r.uniform(60, W - 60), r.uniform(4, MY - 6)
+        else: x, y = r.uniform(60, W - 60), H - r.uniform(4, MY - 6)
+        l = r.uniform(3, 9); ang = r.random() * math.pi
+        dg.line([(x, y), (x + l * math.cos(ang), y + l * math.sin(ang))], fill=255, width=2)
+    golpes = np.asarray(golpes, np.float32) / 255
+    madera = madera * (1 - emboss(golpes, 0.9) * 2.0)[..., None]
+    madera = mezcla(madera, col('#5A4026'), np.asarray(Image.fromarray((golpes * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8)), np.float32)[..., None] / 255 * 0.4)
+    # Una raja corta a lo largo de la veta, arriba, que sale del canto.
+    xr = W * 0.62 + 2 * np.sin(yy / 9)
+    raja = np.exp(-((xx - xr) / 0.9) ** 2) * (yy < 30) * np.clip(1 - yy / 30, 0, 1) ** 0.4
+    madera = mezcla(madera, col('#2E2012'), raja * 0.8)
+    madera = madera * (0.97 + 0.05 * ruido_rect(W, H, 0.8, 205)[..., None])
+    # Los dos agujeros de la correa, en el borde de la izquierda, y la correa de cuero que pasa de uno al canto.
+    for yc in (H * 0.3, H * 0.7):
+        dd = np.sqrt((xx - MX * 0.5) ** 2 + (yy - yc) ** 2)
+        madera = mezcla(madera, col('#4A3420'), np.clip(1 - (dd - 7.0) / 1.8, 0, 1) * 0.7)
+        madera = mezcla(madera, col('#1A1108'), np.clip(1 - (dd - 5.2) / 1.2, 0, 1))
+        cuero = (np.abs(yy - yc - 0.06 * (MX * 0.5 - xx)) < 3.0) & (xx < MX * 0.5 - 2)
+        cuero = np.asarray(Image.fromarray((cuero * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.7)), np.float32) / 255
+        madera = mezcla(madera, col('#6B3E22') * (0.9 + 0.2 * ruido_rect(W, H, 1.2, 209)[..., None]), cuero)
+        madera = mezcla(madera, col('#3A2212'), np.clip(1 - np.abs(np.abs(yy - yc - 0.06 * (MX * 0.5 - xx)) - 3.0) / 0.8, 0, 1) * (xx < MX * 0.5 - 2) * 0.5)
+    # --- El hueco: la cera queda abajo; las paredes y las sombras dicen de dónde viene la luz.
+    din = np.minimum(np.minimum(dl - MX, dr_ - MX), np.minimum(dt - MY, db - MY))    # > 0 dentro de la cera
+    dentro = (din > 0).astype(np.float32)
+    sombra_arriba = np.clip(1 - (dt - MY) / 18, 0, 1) ** 1.8
+    sombra_izq = np.clip(1 - (dl - MX) / 15, 0, 1) ** 1.8
+    a = mezcla(a, col('#6E5634'), np.maximum(sombra_arriba, sombra_izq) * 0.4 * dentro)
+    a = mezcla(a, col('#FFF7E2'), np.maximum(np.clip(1 - (db - MY) / 6, 0, 1), np.clip(1 - (dr_ - MX) / 6, 0, 1)) * 0.25 * dentro)
+    # Las paredes del hueco: oscuras arriba y a la izquierda (miran lejos de la luz), claras abajo y a la derecha.
+    pared = np.clip(1 - np.abs(din + 1.2) / 2.0, 0, 1)
+    pared_luz = ((db - MY <= np.minimum(dt - MY, np.minimum(dl - MX, dr_ - MX))) | (dr_ - MX <= np.minimum(dt - MY, dl - MX))).astype(np.float32)
+    madera = mezcla(madera, col('#3A2A16'), pared * (1 - pared_luz) * 0.7)
+    madera = mezcla(madera, col('#D9C29A'), pared * pared_luz * 0.55)
+    marco = np.clip(-din / 1.0 + 0.5, 0, 1)
+    a = mezcla(a, madera, marco)
+    a_img(a).save(os.path.join(OUT, 'papel_galia.jpg'), quality=86)
+
 if __name__ == '__main__':
     OUT = sys.argv[1]
     if len(sys.argv) > 2:
@@ -678,4 +826,5 @@ if __name__ == '__main__':
     papel_vapor()
     papel_frente()
     papel_arcontes()
+    papel_galia()
     print('papeles listos')

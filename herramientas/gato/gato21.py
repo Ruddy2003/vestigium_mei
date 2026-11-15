@@ -814,7 +814,7 @@ def colores_obj(nombre, oscuro, j):
     }[(nombre, j)]
     if oscuro and nombre == "galia":
         c = [dict(U=hx("24331C"), V=hx("3A2C1C"), X=hx("5E7444"), Q=hx("C9CDB8")),
-             dict(U=hx("6E4E2E"), V=hx("1C2C2A"), X=hx("6E2C22"), Q=hx("B8C9B4"))][j]
+             dict(U=hx("6E4E2E"), V=hx("263A36"), X=hx("6E2C22"), Q=hx("B8C9B4"))][j]
     if oscuro and nombre == "frente" and j == 1:
         c["Q"] = hx("BFF5E0")
     if oscuro and nombre == "arcontes" and j == 1:
@@ -1119,12 +1119,12 @@ g17.ESCALA.update(rasgar=1.0, erizar_sombra=1.0)
 
 # --- Galia: se esconde entre el muérdago de un roble (una rama de roble caída con su mata de muérdago) · le bufa a un
 #     casco romano tirado en el río. Las letras de los objetos se pintan en este orden: U, V, X, Q (lo último, encima).
-MATA = (54.6, 50.6, 8.8, 7.9)          # la mata de muérdago: centro y radios
+MATA = (54.0, 49.8, 9.8, 8.8)          # la mata de muérdago: centro y radios
 
 # Cada hoja de la mata: (ángulo, distancia al centro en fracción del radio, largo, giro). Fijas, para que la mata no hierva.
 _rm = random.Random(52)
 HOJAS_MATA = []
-for _j in range(40):
+for _j in range(48):
     _a = _rm.uniform(0, 2 * math.pi)
     HOJAS_MATA.append((_a, _rm.uniform(0.25, 1.0) ** 0.6, _rm.uniform(2.0, 3.0), _rm.uniform(-0.5, 0.5)))
 BAYAS_MATA = [(_rm.uniform(-0.75, 0.75), _rm.uniform(-0.7, 0.75)) for _ in range(11)]
@@ -1234,7 +1234,7 @@ def bufar_casco(k):
 
 def o_casco(L, a):
     """Un casco romano de bronce (de calota redonda con su botón de remate y el cubrenuca, como los que llevaban las
-    legiones de César), tirado de lado en el agua de la orilla, con la crin roja empapada; las ondas se abren a su
+    legiones de César) con su cresta de crin roja, tirado en el agua de la orilla; las ondas se abren a su
     alrededor. Cuando el gato bufa, unas rayitas le salen de la boca."""
     k = a["k"]
     cx, cy = CASCO
@@ -1243,8 +1243,6 @@ def o_casco(L, a):
     ang = math.radians(14)
     P_ = lambda u, v: g8.rot(cx, cy, u, v, ang)
     cupula = [P_(7.0 * math.cos(math.radians(q)), 6.6 * math.sin(math.radians(q))) for q in range(180, 361, 10)]
-    # La crin roja de caballo en el botón: un penacho empapado, ancho, que se abre y cae hacia atrás (va debajo de la
-    # calota en el dibujo, así que se pinta con la X después del agua; su pie lo tapa la calota).
     L.poligono("f_U", cupula + [P_(7.0, 1.4), P_(-7.0, 1.4)])            # la calota, con la boca hacia abajo
     L.poligono("f_U", [P_(-6.0, -0.8), P_(-10.6, 0.4), P_(-10.4, 2.6), P_(-6.0, 2.0)])  # el cubrenuca, hacia atrás
     L.poligono("f_U", [P_(3.2, 0.6), P_(6.4, 0.6), P_(6.0, 6.0), P_(3.6, 5.4)])       # la carrillera
@@ -1253,10 +1251,11 @@ def o_casco(L, a):
     # El agua (encima de lo que se hunde): la orilla del río.
     L.elipse("f_V", 53.6, 60.6, 12.2, 3.0)
     L.poligono("f_V", [(41.6, 61.0), (43.4, 59.2), (50.0, 58.6), (50.0, 61.4)])
-    L.poligono("f_X", [P_(1.6, -6.0), P_(-1.0, -9.4), P_(-4.6, -10.6), P_(-8.4, -9.4), P_(-10.8, -6.4), P_(-11.4, -2.6),
-                       P_(-8.6, -2.6), P_(-7.4, -5.0), P_(-4.4, -6.6), P_(-0.6, -5.8)])
-    for (u, v) in ((-2.6, -10.8), (-6.4, -10.6), (-9.6, -8.6), (-11.8, -4.8)):
-        L.capsula("f_X", [P_(u * 0.85, v * 0.85), P_(u, v)], 1.1)
+    # La cresta de crin roja, en abanico sobre la calota (aunque esté tirado, se reconoce de lejos), con sus cerdas.
+    arco_ = lambda r, q: P_(r * math.cos(math.radians(q)), -6.0 + r * 0.72 * math.sin(math.radians(q)))
+    L.poligono("f_X", [arco_(9.0, q) for q in range(204, 337, 8)] + [P_(0.0, -5.6)])
+    for q in (228, 254, 286, 312):
+        L.capsula("f_K", [arco_(4.4, q), arco_(7.8, q)], 0.4)
     L.elipse("f_U", *P_(0.4, -6.6), 1.4, 1.2, 14)                          # el botón del remate
     # Ondas: arcos que se abren alrededor del casco (más grandes cuando se mece).
     r = 1.0 + (k % 4) * 0.9 + (1.2 if k in (2, 3) else 0)
@@ -2516,13 +2515,13 @@ GAL_RIO = 50              # donde empieza el río, al pie de la colina
 PAL_GAL_D = dict(
     cielo=(hx("BCCFCB"), hx("C9D6CB"), hx("D8DDCA"), hx("E6E1C6"), hx("EEE2BE")),
     sol=hx("FFF8E4"), sol_halo=hx("F6E6B8"), nube=(hx("F6F1E2"), hx("E4E1D2"), hx("C9CABB")), nube_sol=hx("F8E4AE"),
-    puy=(hx("B4BCAD"), hx("A6AF9F"), hx("C3C8B6")), llano=(hx("A9B08A"), hx("9DA57E"), hx("B9B48A")),
+    puy=(hx("9DA99F"), hx("8C998F"), hx("B3BCAE")), llano=(hx("A9B08A"), hx("9DA57E"), hx("B9B48A")),
     colina=(hx("98A464"), hx("7F8D52"), hx("67753F"), hx("525F33")), campo=(hx("C9B47A"), hx("B8A46A"), hx("A8955C")),
     seto=hx("4E5C30"), senda=(hx("CDB585"), hx("B49C6C")),
-    piedra=(hx("B9AE8C"), hx("ACA17E"), hx("C6BC9A"), hx("A09574")), junta=hx("7C7256"), piedra_luz=hx("D6CDAE"),
+    piedra=(hx("ABA180"), hx("9D9373"), hx("B6AC8A"), hx("928A6A")), junta=hx("6E654C"), piedra_luz=hx("C8BF9C"),
     viga=(hx("4A3822"), hx("6B5232")), tierra=(hx("8E9A5C"), hx("737F48")), estaca=(hx("8A6A42"), hx("6B4B2A"), hx("4E361E")),
     paja=(hx("E2CE92"), hx("D0B97A"), hx("B89A62"), hx("8E7444")), muro_casa=(hx("E2D4AA"), hx("C9B98A")),
-    hueco=(hx("3E3226"), hx("2A2119")), humo=(hx("C9C4B6"), hx("B9B4A6")), niebla=hx("E2E5DD"),
+    hueco=(hx("3E3226"), hx("2A2119")), humo=(hx("ACA798"), hx("9E9A8C")), niebla=hx("E2E5DD"),
     rio=(hx("C4D2C8"), hx("AFC3BB"), hx("93ADA6"), hx("7A9890"), hx("67877F")), rio_luz=hx("E9EFE6"), rio_osc=hx("5A7870"),
     reflejo=hx("7F8C5E"), orilla=(hx("8A8456"), hx("6E6C44")), junco=(hx("9DA45E"), hx("7A8446"), hx("B9B07A")),
     copa=(hx("A6B86A"), hx("7A9248"), hx("4E6B2E"), hx("2E4219"), hx("223214")), copa_lejos=(hx("8C9C6A"), hx("74865A"), hx("62744C")),
@@ -2550,7 +2549,7 @@ PAL_GAL_N = dict(
     reflejo=hx("1A2418"), orilla=(hx("1E2618"), hx("161D12")), junco=(hx("2E3A24"), hx("222C1A"), hx("3E4A30")),
     copa=(hx("3A4E2E"), hx("26361E"), hx("1A2614"), hx("12190E"), hx("0C120A")), copa_lejos=(hx("1C2619"), hx("172015"), hx("131A11")),
     tronco=(hx("3A3626"), hx("2A271C"), hx("1E1C14"), hx("14120D")), musgo=hx("2A3420"),
-    muerdago=(hx("4E5E36"), hx("3E4C2A"), hx("2E3A20")), baya=hx("B8BCA6"),
+    muerdago=(hx("34422A"), hx("2A3622"), hx("1F2A19")), baya=hx("7E8672"),
     hierba=(hx("2E3A22"), hx("26301C"), hx("1E2717"), hx("172012")), camino=(hx("3E3E2E"), hx("363628"), hx("2E2E22"), hx("26261C")),
     hoja_caida=(hx("3E3220"), hx("30261A")), guijarro=(hx("4A4E40"), hx("363A2E"), hx("222620")), sombra=hx("12160E"),
     valla=(hx("3A3222"), hx("2C2619"), hx("1E1A12")), bronce=(hx("C9904A"), hx("8A5E30"), hx("5E3E20"), hx("3A2614")),
@@ -2599,7 +2598,7 @@ def masa_hojas(im, blobs, P, o, semilla, tonos="copa", luna_filo=True, huecos=0.
         cerca = np.abs(sh[..., None] - np.array(cortes)[None, None, :]).min(2) < 0.06
         idx = np.where(cerca & (d4[yy.astype(int) % 4, xx.astype(int) % 4] > 0.5), np.minimum(idx + 1, 4), idx)
     else:
-        idx = np.where(sh > 0.55, 0, np.where(sh > 0.3, 1, np.where(sh > -0.35, 2, 3)))
+        idx = np.where(sh > 0.85, 0, np.where(sh > 0.55, 1, np.where(sh > -0.3, 2, 3)))
         if not luna_filo:
             idx = np.maximum(idx, 2)
     idx = np.minimum(idx, len(T_) - 1)
@@ -2631,31 +2630,33 @@ def roble_grande(im, P, o):
     rama(d, [(28, 22), (60, 20), (92, 22), (118, 19)], 3, t3, t2)
     rama(d, [(24, 18), (14, 8), (8, 0)], 4, t3, t2)
     rama(d, [(84, 9), (96, 3), (102, 0)], 2, t3)
-    # El tronco: se ensancha abajo; la luz de la izquierda; grietas verticales de la corteza.
-    for y in range(14, 76):
-        u = (y - 14) / 62
-        cx = 27 + 1.5 * math.sin(y * 0.11)
-        hw = 4.0 + 1.6 * u + (3.2 * (u - 0.82) / 0.18 if u > 0.82 else 0)
+    # El tronco: se ensancha abajo en contrafuertes; la luz de la izquierda; la corteza en costillas verticales con sus
+    # grietas; el musgo del lado de la sombra.
+    for y in range(12, 77):
+        u = (y - 12) / 64
+        cx = 27 + 1.6 * math.sin(y * 0.09)
+        hw = 4.4 + 1.8 * u + (4.0 * ((u - 0.8) / 0.2) ** 1.6 if u > 0.8 else 0)
         for x in range(int(cx - hw), int(cx + hw) + 1):
             f = (x - (cx - hw)) / (2 * hw + 0.01)
-            col = t1 if f < 0.22 else (t2 if f < 0.55 else (t3 if f < 0.85 else t4))
-            if o:
-                col = t3 if f < 0.75 else t4
+            costilla = math.sin((x - cx) * 1.55 + 0.6 * math.sin(y * 0.35 + x * 0.2))
+            if not o:
+                col = t1 if f < 0.2 else (t2 if f < 0.52 else (t3 if f < 0.84 else t4))
+                if costilla > 0.55 and f < 0.75: col = t1 if f < 0.45 else t2
+                elif costilla < -0.6: col = t3 if f < 0.4 else t4
+                if f > 0.62 and y > 34 and (math.sin(y * 0.7 + x) > 0.2 or f > 0.85) and costilla > -0.6:
+                    col = P["musgo"] if (x + y) % 2 else mezcla(P["musgo"], t3, 0.4)
+            else:
+                col = t3 if f < 0.7 else t4
+                if costilla < -0.6: col = t4
                 if f > 0.86 and y < 60: col = P["copa"][1]                      # filo de luna
-            if (x * 3 + int(y * 0.35)) % 5 == 0 and 0.12 < f < 0.9:
-                col = t4 if not o else P["tronco"][3]                               # grieta de la corteza
-            elif (x * 3 + int(y * 0.35)) % 5 == 1 and f < 0.5 and not o:
-                col = t1
-            if not o and f > 0.7 and (y * 7 + x) % 3 == 0 and y > 40:
-                col = P["musgo"]
             pon(px, x, y, col)
     # Raíces.
     for (x0, x1, y1) in ((20, 6, 76), (34, 50, 77), (24, 16, 78), (31, 40, 79)):
         rama(d, [(x0, 70), ((x0 + x1) / 2, (70 + y1) / 2 + 1), (x1, y1)], 3, t3 if not o else t4, t2 if not o else None)
     # La copa: bultos a lo largo de las ramas.
-    blobs = [(10, 4, 11), (26, 2, 10), (42, 6, 9), (58, 4, 8), (72, 7, 7), (88, 4, 7), (104, 2, 6), (122, 5, 5),
-             (36, 14, 6), (56, 15, 5), (78, 18, 5), (100, 19, 5), (116, 16, 4), (4, 14, 7), (16, 15, 6), (134, 2, 4)]
-    masa_hojas(im, blobs, P, o, 3)
+    blobs = [(6, 2, 17), (28, -2, 16), (50, 4, 13), (72, 2, 12), (94, 6, 11), (116, 2, 9), (134, 0, 6),
+             (14, 15, 10), (40, 15, 8), (64, 14, 7), (106, 15, 5), (2, 22, 6)]
+    masa_hojas(im, blobs, P, o, 3, huecos=0.14)
     # La mata de muérdago colgada de la rama: bola de hojas amarillentas y bayas blancas.
     mx, my = 94, 13
     for y in range(my - 4, my + 5):
@@ -2679,7 +2680,7 @@ def roble_derecho(im, P, o):
             pon(px, x, y, (t2 if f < 0.35 else (t3 if f < 0.8 else t4)) if not o else (t4 if f > 0.3 else P["copa"][2]))
     rama(d, [(404, 14), (390, 8), (372, 6), (360, 2)], 3, t3)
     rama(d, [(406, 26), (396, 22), (386, 23)], 2, t3)
-    masa_hojas(im, [(398, 2, 8), (380, 4, 7), (364, 2, 5), (410, 12, 6), (392, 20, 4)], P, o, 9)
+    masa_hojas(im, [(400, 0, 13), (378, 3, 10), (360, 0, 6), (412, 15, 9), (392, 19, 6)], P, o, 9, huecos=0.1)
     for (x0, x1) in ((398, 392), (408, 414)):
         rama(d, [(x0 + 4, 62), ((x0 + x1) / 2 + 2, 65), (x1, 67)], 2, t3 if not o else t4)
 
@@ -2734,53 +2735,60 @@ def nube_galia(px, x0, y0, w, P, semilla, o):
 
 
 def lejania_galia(im, P, o):
-    """Los puys en la bruma (conos y cúpulas volcánicas, la tierra de los arvernos) y el llano a la derecha."""
+    """Los puys en la bruma (conos y cúpulas volcánicas, la tierra de los arvernos), con la ladera que da al sol más
+    clara, y el llano a la derecha: franjas de prados y campos, setos con árboles sueltos, más pálidos cuanto más lejos."""
     px = im.load()
-    conos = [(330, 30, 20, 9), (362, 32, 14, 6), (392, 29, 22, 10), (150, 31, 18, 8), (176, 33, 12, 5), (282, 33, 16, 5)]
+    conos = [(332, 31, 18, 13), (360, 33, 12, 8), (392, 30, 21, 15), (150, 31, 18, 10), (176, 33, 12, 6), (282, 33, 16, 7)]
     for (cx, base, w, alto) in conos:
         for x in range(cx - w, cx + w + 1):
             u = (x - cx) / w
-            top = base + 8 - alto * (1 - u * u) ** 0.7 - 8 * 0 if abs(u) <= 1 else None
-            top = base - alto * (1 - u * u) ** 0.8 + 6
+            top = base - alto * (1 - u * u) ** (1.3 if cx != 332 else 0.6) + 6
             for y in range(int(top), 44):
-                col = P["puy"][2] if (u < -0.15 and not o) or (u > 0.2 and o and y - top < 1.5) else (P["puy"][0] if y - top < 2.5 else P["puy"][1])
-                if o and not (u > 0.2 and y - top < 1.5):
-                    col = P["puy"][0]
+                if not o:
+                    col = P["puy"][2] if u < -0.1 else (P["puy"][0] if u < 0.45 else P["puy"][1])
+                    if y - top > 4: col = mezcla(col, P["llano"][2], 0.3)
+                else:
+                    col = P["puy"][2] if (u > 0.2 and y - top < 1.5) else P["puy"][0]
                 pon(px, x, y, col)
-    # Un cráter mordido en el cono grande (como el del Pariou).
-    for x in range(388, 397):
-        pon(px, x, int(29 - 10 + 6 + 0.6 * abs(x - 392)), P["puy"][1])
-    # El llano: franjas de prados y campos, más claras lejos.
-    for y in range(36, 50):
+    for x in range(390, 399):                                          # un cráter mordido (como el del Pariou)
+        pon(px, x, int(22 + 0.5 * abs(x - 394)), P["puy"][1])
+    # El llano.
+    for y in range(37, 50):
         for x in range(300, W):
-            v = (y - 36) / 14
-            col = P["llano"][2] if v < 0.2 else (P["llano"][0] if v < 0.6 else P["llano"][1])
-            if not o and (int(x * 0.35 + y * 1.3) % 9 == 0):
-                col = P["campo"][1]
+            v = (y - 37) / 13
+            franja = int((y + 0.04 * x) / 2.2)
+            c_ = hash((franja, int((x + franja * 13) / (18 + franja % 4 * 6)))) % 6
+            if not o:
+                col = (P["llano"][2], P["llano"][0], P["campo"][0], P["llano"][1], P["llano"][0], P["campo"][1])[c_]
+                col = mezcla(col, P["puy"][0], max(0.0, 0.5 - v * 0.6))           # la bruma de lejos
+            else:
+                col = P["llano"][c_ % 3]
             px[x, y] = col
-    for y in range(37, 50, 3):                                         # setos entre los campos
-        for x in range(300, W):
-            if (x + y * 3) % 7 < 3: pon(px, x, y, P["seto"], 0.35 if not o else 0.6)
+    rnd = random.Random(61)
+    for (y, xa, xb) in ((40, 300, 352), (44, 300, 412), (47, 320, 412)):     # setos con árboles sueltos
+        for x in range(xa, xb):
+            if (x * 7 + y) % 5 < 3: pon(px, x, y, P["seto"], 0.35 if not o else 0.6)
+            if rnd.random() < 0.06:
+                pon(px, x, y - 1, P["seto"], 0.6 if not o else 0.8); pon(px, x + 1, y - 1, P["seto"], 0.45 if not o else 0.8)
+                pon(px, x, y - 2, P["copa_lejos"][1] if not o else P["seto"], 0.6)
 
 
 def campamento_romano(im, P, o):
-    """El campamento romano, lejos en el llano: el rectángulo del foso y la empalizada, y las tiendas en hileras (de
-    noche, sus hogueras en fila). Solo es Roma: su rojo y el gris del hierro."""
+    """El campamento romano, lejos en el llano: el terraplén de delante y las tiendas de cuero en hileras (de noche
+    solo se ven sus hogueras en fila). Solo es Roma: su rojo y el gris del hierro."""
     px = im.load()
-    x0, x1, y0, y1 = 352, 398, 39, 44
+    if o:
+        return
+    x0, x1 = 354, 398
     for x in range(x0, x1 + 1):
-        pon(px, x, y0, P["roma"][2], 0.7 if not o else 0.5); pon(px, x, y1, P["roma"][2], 0.7 if not o else 0.5)
-    for y in range(y0, y1 + 1):
-        pon(px, x0, y, P["roma"][2], 0.7 if not o else 0.5); pon(px, x1, y, P["roma"][2], 0.7 if not o else 0.5)
-    if not o:
-        for y in (41, 43):
-            for x in range(x0 + 3, x1 - 2, 3):
-                if x in (374, 375, 376): continue
-                pon(px, x, y - 1, P["roma"][1]); pon(px, x + 1, y - 1, P["roma"][2])
-        pon(px, 375, 40, P["roma"][0]); pon(px, 375, 39, P["roma"][0])        # la tienda del jefe
-        # La línea del cerco que sale del campamento hacia la colina.
-        for x in range(300, x0):
-            if x % 3 == 0: pon(px, x, 45 + (x0 - x) // 26, P["roma"][2], 0.4)
+        pon(px, x, 43, P["roma"][2], 0.55); pon(px, x, 44, P["seto"], 0.45)
+    for y, dx in ((40, 0), (42, 1)):
+        for x in range(x0 + 2 + dx, x1 - 1, 3):
+            if hash((x, y)) % 6 == 0: continue
+            pon(px, x, y, P["roma"][1]); pon(px, x + 1, y, P["roma"][2])
+    pon(px, 376, 39, P["roma"][0]); pon(px, 376, 38, P["hierro"][1], 0.6)     # el estandarte junto a la tienda del jefe
+    for x in range(300, x0, 2):                                           # el cerco que sale hacia la colina
+        pon(px, x, 45 + (x0 - x) // 26, P["roma"][2], 0.3)
 
 
 def colina_galia(im, P, o):
@@ -2791,40 +2799,56 @@ def colina_galia(im, P, o):
     for x in range(W):
         if x < 150:
             y = 60.0
-        elif x < 192:
-            u = (x - 150) / 42
-            y = 52 - 25.5 * (1 - (1 - u) ** 2.2)
-        elif x < 304:
-            y = 26.5 + 0.6 * math.sin(x / 13.0)
+        elif x < 186:
+            u = (x - 150) / 36
+            y = 52 - 26.5 * (1 - (1 - u) ** 2.2)
+        elif x < 306:
+            y = 25.5 + 0.6 * math.sin(x / 13.0)
         elif x < 350:
-            u = (x - 304) / 46
-            y = 27 + 25 * u ** 1.6
+            u = (x - 306) / 44
+            y = 26 + 26 * u ** 1.5
         else:
             y = 60.0
         perfil_.append(y)
+    suave = [sum(perfil_[min(W - 1, max(0, x + k))] for k in range(-4, 5)) / 9 for x in range(W)]
     for x in range(148, 352):
         top = perfil_[x]
-        pend = perfil_[min(W - 1, x + 2)] - perfil_[max(0, x - 2)]
+        pend = (suave[min(W - 1, x + 3)] - suave[max(0, x - 3)]) / 6
         for y in range(int(top), 56):
             prof = y - top
+            luz_ = -pend * 1.4 - 0.04 * max(0, prof - 6)
+            banda = int((prof + 0.6 * math.sin(x / 9.0)) / 3.6)
+            trozo = int((x + banda * 7) / (13 + banda % 3 * 4))
+            campo = hash((banda, trozo, 7)) % 7
+            ladera = prof > 1 and (x < 186 or x > 306)
+            seto_ = ladera and campo % 2 == 0 and int((prof + 0.6 * math.sin(x / 9.0)) * 10) % 36 < 4 and x % 2 == 0
             if not o:
-                col = P["colina"][0] if pend < -0.6 else (P["colina"][2] if pend > 0.6 else P["colina"][1])
-                if prof > 9: col = mezcla(col, P["colina"][3], 0.25)
+                i_ = 0 if luz_ > 0.55 else (1 if luz_ > -0.25 else (2 if luz_ > -0.9 else 3))
+                if abs(luz_ - (0.55, -0.25, -0.9)[min(i_, 2)]) < 0.12 and tramar(0.5, x, y) and i_ < 3: i_ += 1
+                col = P["colina"][i_]
+                if ladera and campo in (0, 3):
+                    col = P["campo"][min(2, (campo == 3) + (i_ >= 2))]
+                elif ladera and campo == 5:
+                    col = P["colina"][max(0, i_ - 1)]
+                if seto_:
+                    col = P["seto"]
             else:
-                col = P["colina"][1] if prof > 0 else (P["colina"][0] if pend > -0.2 else P["colina"][1])
+                col = P["colina"][0] if (prof == 0 and pend > -0.1) else (P["colina"][1] if luz_ > -0.6 else P["colina"][2])
+                if ladera and campo in (0, 3) and prof > 2:
+                    col = P["campo"][0]
+                if seto_:
+                    col = P["seto"]
             px[x, y] = col
-    # Campos y setos en las laderas (parcelas en diagonal) y la zanja al pie de la muralla.
-    for x in range(150, 350):
-        for y in range(int(perfil_[x]) + 3, 52):
-            q = int(x * 0.5 - y * 1.2) // 7
-            if q % 3 == 0 and (x < 188 or x > 308):
-                pon(px, x, y, P["campo"][(q // 3) % 3] if not o else P["campo"][0])
-            if (int(x * 0.5 - y * 1.2)) % 7 == 0:
-                pon(px, x, y, P["seto"], 0.5 if not o else 0.7)
-    for x in range(192, 304):
-        pon(px, x, 28 + (x % 3 == 0), P["colina"][3], 0.5)
+    # Árboles sueltos y matas en las laderas: una copita con su lado al sol y su sombra a la derecha.
+    for (x, dp_) in ((156, 3), (163, 6), (171, 2), (176, 9), (168, 13), (159, 16), (312, 4), (322, 8), (330, 3), (338, 12), (316, 15), (344, 6)):
+        y = int(perfil_[x]) + dp_
+        for (dx, dy, k) in ((0, 0, 1), (1, 0, 2), (-1, 0, 1), (0, -1, 0), (1, -1, 1), (0, 1, 2), (1, 1, 3)):
+            pon(px, x + dx, y + dy, P["copa"][k] if not o else P["copa"][min(4, k + 2)])
+        pon(px, x + 2, y + 1, P["colina"][3], 0.5)
+    for x in range(186, 306):
+        pon(px, x, 27 + (x % 3 == 0), P["colina"][3], 0.5)
     # El camino que sube a la puerta.
-    camino = [(176, 51), (196, 46), (184, 40), (214, 35), (236, 30), (244, 28)]
+    camino = [(172, 52), (198, 47), (182, 40), (212, 34), (236, 29.5), (244, 27.5)]
     c = g8.catmull(camino, 8)
     for (x, y) in c:
         pon(px, x, y, P["senda"][0]); pon(px, x + 1, y, P["senda"][1])
@@ -2836,7 +2860,7 @@ def murus_gallicus(im, P, o):
     armazón de madera clavada que lleva por dentro), el terraplén de tierra detrás con su parapeto de estacas y el paso
     de ronda; la puerta con sus muros que se meten hacia dentro y la torre de madera encima."""
     px = im.load(); d = ImageDraw.Draw(im)
-    x0, x1, yt, yb = 192, 304, 19, 28
+    x0, x1, yt, yb = 186, 306, 18, 27
     rnd = random.Random(4)
     # Frente de piedra: hiladas irregulares.
     y = yt
@@ -2854,7 +2878,7 @@ def murus_gallicus(im, P, o):
             x += largo
         y += alto
     # Las cabezas de las vigas (madera): en hileras, a tresbolillo; con su sombra abajo.
-    for k, yy in enumerate((21, 25)):
+    for k, yy in enumerate((20, 24)):
         for xx in range(x0 + 3 + (k * 3), x1 - 2, 6):
             if 236 <= xx <= 252: continue
             pon(px, xx, yy, P["viga"][1]); pon(px, xx + 1, yy, P["viga"][0]); pon(px, xx, yy + 1, P["viga"][0])
@@ -2880,47 +2904,51 @@ def murus_gallicus(im, P, o):
         d.line([xx, yt + 4, xx, yb - 1], fill=P["estaca"][1])
     # La torre de la puerta: postes, la plataforma, el antepecho de tablas y el tejado de paja.
     for xx in (236, 252):
-        d.line([xx, 6, xx, yt + 1], fill=P["estaca"][1]); d.line([xx + 1, 6, xx + 1, yt + 1], fill=P["estaca"][2])
-    d.rectangle([235, 11, 253, 16], fill=P["estaca"][1])
+        d.line([xx, 5, xx, yt + 1], fill=P["estaca"][1]); d.line([xx + 1, 5, xx + 1, yt + 1], fill=P["estaca"][2])
+    d.rectangle([235, 10, 253, 15], fill=P["estaca"][1])
     for xx in range(236, 253, 2):
-        d.line([xx, 11, xx, 16], fill=P["estaca"][0] if not o else P["estaca"][1])
-    d.line([235, 16, 253, 16], fill=P["estaca"][2]); d.line([235, 11, 253, 11], fill=P["estaca"][0])
-    for yy in range(3, 11):                                                # tejado de paja a cuatro aguas
-        w = (yy - 3) * 1.6 + 2
+        d.line([xx, 10, xx, 15], fill=P["estaca"][0] if not o else P["estaca"][1])
+    d.line([235, 15, 253, 15], fill=P["estaca"][2]); d.line([235, 10, 253, 10], fill=P["estaca"][0])
+    for yy in range(2, 10):                                                # tejado de paja a cuatro aguas
+        w = (yy - 2) * 1.6 + 2
         for xx in range(int(244 - w), int(244 + w) + 1):
             f = (xx - (244 - w)) / (2 * w + 0.01)
             col = P["paja"][0] if f < 0.35 else (P["paja"][1] if f < 0.7 else P["paja"][2])
-            if yy == 10: col = P["paja"][3]
+            if yy == 9: col = P["paja"][3]
             pon(px, xx, yy, col)
     for (fx, fy) in ((222, yt - 4), (281, yt - 4)):                         # los centinelas en el paso de ronda
         pon(px, fx, fy, P["figura"][0]); pon(px, fx, fy + 1, P["figura"][1]); pon(px, fx, fy + 2, P["figura"][0])
         for yy in range(fy - 3, fy + 3):
             pon(px, fx + 1, yy, P["hierro"][1] if not o else P["figura"][0])
-    pon(px, 244, 9 - 1, P["figura"][0])
+    pon(px, 244, 7, P["figura"][0])
 
 
 def casas_galia(im, P, o):
     """Las casas del oppidum detrás de la muralla: techos de paja de dos y cuatro aguas que asoman, uno grande (la casa
     grande del jefe), con el filo del caballete. Devuelve de dónde sale el humo de cada una."""
     px = im.load()
-    casas = [(200, 10, 8), (214, 12, 9), (228, 9, 8), (262, 8, 10), (281, 5, 13), (298, 11, 7), (206, 14, 6), (274, 13, 6)]
+    casas = [(197, 6, 9, 3), (213, 7, 8, 4), (228, 5, 8, 3), (263, 4, 9, 4), (283, 1, 12, 6), (300, 7, 6, 2), (205, 9, 6, 2),
+             (274, 8, 6, 2)]
     humos = []
-    for (cx, top, w) in sorted(casas, key=lambda c: c[1]):
-        base = 16
+    for (cx, top, w, cumbre) in sorted(casas, key=lambda c: c[1]):
+        base = 15
         for y in range(top, base):
             u = (y - top) / max(1, base - top)
-            hw = 1.5 + w * u ** 0.8
-            for x in range(int(cx - hw), int(cx + hw) + 1):
+            hw = cumbre + (w - cumbre) * u ** 0.85
+            for x in range(int(round(cx - hw)), int(round(cx + hw)) + 1):
                 f = (x - (cx - hw)) / (2 * hw + 0.01)
-                col = P["paja"][0] if f < 0.3 else (P["paja"][1] if f < 0.62 else (P["paja"][2] if f < 0.9 else P["paja"][3]))
+                lado = x - cx < -cumbre * (1 - u) - 0.5                     # el faldón de la punta, que da al sol
+                col = P["paja"][0] if lado else (P["paja"][1] if f < 0.75 else P["paja"][2])
+                if f > 0.9: col = P["paja"][3]
                 if o:
-                    col = P["paja"][1] if f > 0.7 and u < 0.5 else P["paja"][2]
-                if (x * 2 + y) % 5 == 0 and not o:
-                    col = P["paja"][min(3, (0 if f < 0.3 else 2) + 1)]          # las hiladas de la paja
+                    col = P["paja"][2] if not (f > 0.75 and u < 0.6) else P["paja"][1]
+                elif (x * 2 + y * 3) % 7 == 0:
+                    col = P["paja"][min(3, (0 if lado else 1) + 1)]           # las hiladas de la paja
                 pon(px, x, y, col)
-        for x in range(int(cx - 1), int(cx + 2)):
-            pon(px, x, top, P["paja"][3])                                       # el caballete
-        humos.append((cx + 1, top - 1))
+        for x in range(int(cx - cumbre), int(cx + cumbre) + 1):
+            pon(px, x, top, P["paja"][3])                                   # el caballete
+        pon(px, int(cx - cumbre) - 1, top + 1, P["paja"][2])
+        humos.append((int(cx) + 1, top - 1))
     return humos
 
 
@@ -2930,27 +2958,24 @@ def rio_galia(im, P, o, perfil_):
     px = im.load()
     arriba = [GAL_RIO + 0.8 * math.sin(x / 31.0) + 0.5 * math.sin(x / 9.0) for x in range(W)]
     abajo = [56.4 + 1.2 * math.sin(x / 27.0 + 1.0) + 0.6 * math.sin(x / 7.7) for x in range(W)]
-    for x in range(120, W):
+    for x in range(0, W):
         y0, y1 = int(arriba[x]), int(abajo[x])
         for y in range(y0, y1 + 1):
             v = (y - y0) / max(1, y1 - y0)
-            col = P["rio"][min(4, int(v * 5))]
-            if tramar((v * 5) % 1, x, y) and int(v * 5) < 4:
-                col = P["rio"][min(4, int(v * 5) + 1)]
-            px[x, y] = col
+            px[x, y] = P["rio"][min(4, int(v * 4.6))]
         # el reflejo de la colina (invertida y quebrada)
         if 150 <= x < 350 and not o:
             alto_r = max(0, (56 - perfil_[x]) * 0.18)
             for y in range(y0 + 1, min(y1, int(y0 + 1 + alto_r))):
-                if tramar(0.55, x, y): px[x, y] = mezcla(px[x, y], P["reflejo"], 0.45)
+                px[x, y] = mezcla(px[x, y], P["reflejo"], 0.3)
         pon(px, x, y0, P["orilla"][0]); pon(px, x, y0 - 1, P["orilla"][1], 0.6)
     rnd = random.Random(29)
-    for _ in range(160):                                                   # ondas
+    for _ in range(70):                                                    # ondas
         x = rnd.randrange(124, W); y0, y1 = arriba[x], abajo[x]
         y = int(y0 + 1 + rnd.random() * (y1 - y0 - 1))
         col = P["rio_luz"] if rnd.random() < 0.5 else P["rio_osc"]
         for k in range(rnd.randint(1, 3)):
-            pon(px, x + k, y, col, 0.55 if not o else 0.4)
+            pon(px, x + k, y, col, 0.4 if not o else 0.35)
     for x in range(124, W, 2):                                             # juncos de la otra orilla
         if (x * 7) % 11 < 5:
             h_ = 1 + (x * 3) % 3
@@ -2962,13 +2987,13 @@ def rio_galia(im, P, o, perfil_):
 def bosque_galia(im, P, o):
     """El robledal a la izquierda, detrás del roble grande: copas lejos en la bruma y más cerca, más oscuras, hasta la
     orilla del río."""
-    lejos = [(40 + 18 * k + (k % 3) * 4, 30 + (k % 2) * 3, 10 + (k % 3) * 2) for k in range(8)]
+    lejos = [(-4 + 17 * k + (k % 3) * 4, 33 + (k % 2) * 3 - (k % 3), 12 + (k % 3) * 2) for k in range(11)] + [(176, 44, 8)]
     masa_hojas(im, lejos, P, o, 11, "copa_lejos", luna_filo=False)
-    cerca = [(36 + 16 * k + (k % 2) * 5, 42 + (k % 3) * 2, 9 + (k % 2) * 2) for k in range(9)] + [(152, 50, 8), (166, 54, 6)]
+    cerca = [(4 + 15 * k + (k % 2) * 5, 45 + (k % 3) * 2, 10 + (k % 2) * 2) for k in range(11)] + [(160, 52, 9), (176, 56, 6)]
     masa_hojas(im, cerca, P, o, 12)
     # troncos entre las copas
     px = im.load()
-    for (x, y0) in ((52, 46), (84, 47), (118, 48), (146, 54)):
+    for (x, y0) in ((8, 47), (52, 46), (84, 47), (118, 48), (146, 54)):
         for y in range(y0, 60):
             pon(px, x, y, P["tronco"][2] if not o else P["tronco"][3]); pon(px, x + 1, y, P["tronco"][3])
 
@@ -3026,8 +3051,13 @@ def valla_galia(im, P, o):
         y_top = 56 + int(1.5 * math.sin((x - x0) / 12.0))
         for y in range(y_top, 64):
             fila = (y - y_top) // 2
-            col = P["valla"][0] if ((x + fila * 3) // 3) % 2 == (fila % 2) else P["valla"][1]
-            if (y - y_top) % 2 == 1: col = P["valla"][2] if (x + fila) % 4 == 0 else col
+            delante = ((x - x0) // 9 + fila) % 2 == 0                        # la vara pasa por delante o por detrás del poste
+            u = ((x - x0) % 9) / 9
+            arco = abs(u - 0.5) < 0.38
+            if (y - y_top) % 2 == 0:
+                col = P["valla"][0] if (delante and arco) else P["valla"][1]
+            else:
+                col = P["valla"][1] if (delante and arco) else P["valla"][2]
             pon(px, x, y, col)
     for x in range(x0, x1 + 1, 9):
         for y in range(53, 65):
@@ -3044,17 +3074,21 @@ def hoguera_caldero(im, P, o):
     for (xa, xb) in ((69, 74), (83, 78)):
         d.line([xa, fy + 1, xb, 55], fill=P["hierro"][1])
     d.line([76, 54, 76, 59], fill=P["hierro"][2])
-    # el caldero
+    # el caldero de bronce: ancho y bajo, con el borde vuelto, las dos argollas y el verdín
     cx, cy = 76, 62
-    for y in range(cy - 3, cy + 4):
-        hw = 4.6 * math.sqrt(max(0, 1 - ((y - cy - 0.5) / 4.0) ** 2)) + (0.6 if y == cy - 3 else 0)
-        for x in range(int(cx - hw), int(cx + hw) + 1):
+    for y in range(cy - 2, cy + 4):
+        v = (y - (cy - 2)) / 6
+        hw = 5.0 * math.sqrt(max(0.0, 1 - v ** 2.2)) + 0.2
+        for x in range(int(round(cx - hw)), int(round(cx + hw)) + 1):
             f = (x - (cx - hw)) / (2 * hw + 0.01)
-            col = P["bronce"][0] if f < 0.25 else (P["bronce"][1] if f < 0.55 else (P["bronce"][2] if f < 0.85 else P["bronce"][3]))
-            if y == cy - 3: col = P["bronce"][3]
-            if (x + y) % 5 == 0 and f > 0.5 and not o: col = P["verdin"]
+            col = P["bronce"][1] if f < 0.25 else (P["bronce"][2] if f < 0.7 else P["bronce"][3])
+            if f < 0.12 and v < 0.6 and not o: col = P["bronce"][0]
+            if (x * 2 + y) % 7 == 0 and f > 0.45 and not o: col = P["verdin"]
             pon(px, x, y, col)
-    d.line([cx - 4, cy - 4, cx, 58], fill=P["hierro"][1]); d.line([cx + 4, cy - 4, cx, 58], fill=P["hierro"][1])
+    d.line([cx - 6, cy - 3, cx + 6, cy - 3], fill=P["bronce"][0] if not o else P["bronce"][2])
+    d.line([cx - 5, cy - 2, cx + 5, cy - 2], fill=P["bronce"][3])
+    pon(px, cx - 6, cy - 1, P["hierro"][1]); pon(px, cx + 6, cy - 1, P["hierro"][1])
+    d.line([cx - 6, cy - 3, cx, 57], fill=P["hierro"][1]); d.line([cx + 6, cy - 3, cx, 57], fill=P["hierro"][1])
     # el cerco de piedras y los leños
     for k, x in enumerate(range(fx - 7, fx + 8, 2)):
         pon(px, x, fy + (k % 2), P["guijarro"][1]); pon(px, x + 1, fy + (k % 2), P["guijarro"][2])
@@ -3090,40 +3124,52 @@ def fondo_galia(t):
     humos = casas_galia(im, P, o)
     murus_gallicus(im, P, o)
     # La niebla de la mañana al pie de la colina (de noche, la luna la blanquea apenas).
-    for y in range(36, 50):
+    for y in range(34, 52):
         for x in range(120, W):
-            k_ = (1 - abs(y - 44) / 7.0) * (0.55 + 0.25 * math.sin(x / 19.0) + 0.15 * math.sin(x / 7.0 + y))
-            if k_ > 0 and tramar(k_ * 0.9, x, y):
-                px[x, y] = mezcla(px[x, y], P["niebla"], 0.55 if not o else 0.35)
+            yc = 44 + 2.2 * math.sin(x / 37.0) + 1.0 * math.sin(x / 13.0 + 1)
+            grueso = 5.5 + 2.0 * math.sin(x / 29.0 + 2)
+            k_ = (1 - abs(y - yc) / grueso) * (0.6 + 0.25 * math.sin(x / 19.0) + 0.15 * math.sin(x / 7.0 + y * 0.5)) * (0.4 if x > 346 else 1.0)
+            if k_ > 0.05:
+                px[x, y] = mezcla(px[x, y], P["niebla"], round(min(1, k_) * 4) / 4 * (0.6 if not o else 0.4))
     arriba, abajo = rio_galia(im, P, o, perfil_)
     bosque_galia(im, P, o)
     for y in range(44, 52):                                                # la niebla entre los troncos del robledal
         for x in range(30, 170):
             k_ = (1 - abs(y - 48) / 4.5) * (0.5 + 0.3 * math.sin(x / 11.0))
-            if k_ > 0 and tramar(k_ * 0.7, x, y):
-                px[x, y] = mezcla(px[x, y], P["niebla"], 0.45 if not o else 0.3)
+            if k_ > 0.05:
+                px[x, y] = mezcla(px[x, y], P["niebla"], round(min(1, k_) * 4) / 4 * (0.5 if not o else 0.32))
     borde, camino_y = suelo_galia(im, P, o)
     valla_galia(im, P, o)
     roble_derecho(im, P, o)
+    if not o:                                                              # las sombras largas de la mañana, a la derecha
+        for y in range(70, 78):
+            for x in range(30, 74):
+                f_ = (x - 30) / 44
+                if abs(y - (73.5 + f_ * 1.5)) < 2.2 - f_ * 1.2 and tramar(0.75 - f_ * 0.45, x, y):
+                    px[x, y] = mezcla(px[x, y], P["sombra"], 0.55)
+        for x in range(372, 412):
+            for y in range(65, 69):
+                if tramar(0.45 - (x - 372) / 100, x, y): px[x, y] = mezcla(px[x, y], P["sombra"], 0.5)
     fuego = hoguera_caldero(im, P, o)
     roble_grande(im, P, o)
-    hogueras = [(206, 12), (290, 12), (262, 13)]                           # en el paso de ronda (y la de la torre)
+    hogueras = [(204, 11), (292, 11), (262, 12)]                           # en el paso de ronda (y la de la torre)
     if o:
         # Las hogueras del oppidum: su halo sobre la muralla y los techos; la puerta, encendida por dentro.
         for (hx_, hy_) in hogueras:
             luz(im, hx_, hy_, 16, P["llama_halo"], 0.22, 4, ry=8)
-        luz(im, 244, 24, 8, P["llama"][1], 0.4, 3, ry=5)
-        luz(im, 244, 14, 12, P["llama_halo"], 0.18, 3, ry=6)
+        luz(im, 244, 23, 8, P["llama"][1], 0.4, 3, ry=5)
+        luz(im, 244, 13, 12, P["llama_halo"], 0.18, 3, ry=6)
         # El cerco romano: su resplandor en el llano.
-        luz(im, 375, 42, 34, P["roma"][0], 0.12, 4, ry=5)
+        luz(im, 375, 42, 30, P["roma"][0], 0.08, 3, ry=4)
         # El fuego del camino: alumbra el roble, el caldero y el suelo.
-        luz(im, fuego[0], fuego[1], 40, P["llama_halo"], 0.2, 6, ry=16)
+        luz(im, fuego[0], fuego[1], 40, P["llama_halo"], 0.15, 6, ry=16)
         luz(im, fuego[0], fuego[1] + 4, 26, P["llama"][1], 0.16, 4, ry=6)
         for y in range(30, 76):                                            # el lado del tronco que da al fuego
             cx = 27 + 1.5 * math.sin(y * 0.11)
             hw = 4.0 + 1.6 * (y - 14) / 62
-            for x in range(int(cx + hw * 0.3), int(cx + hw) + 1):
-                if tramar(0.75 - abs(y - 62) / 40, x, y): pon(px, x, y, P["llama"][2], 0.35)
+            k_ = round(max(0.0, 0.75 - abs(y - 64) / 26) * 3) / 3 * 0.4
+            for x in range(int(cx + hw * 0.45), int(cx + hw) + 1):
+                if k_ > 0: pon(px, x, y, P["llama"][2], k_ * (0.6 if x < cx + hw * 0.75 else 1.0))
     # --- Lo que se mueve: se dibuja en cada cuadro sobre la base, y el grano va al final.
     estatico = im.copy()
     pe = estatico.load()
@@ -3137,28 +3183,31 @@ def fondo_galia(t):
         x = rnd.randrange(124, W); y = rnd.randint(int(arriba[x]) + 2, int(abajo[x]) - 1)
         if es_rio(x, y) and es_rio(x + 1, y):
             destellos.append((x, y, rnd.choice((10, 16, 20, 32)), rnd.randrange(40)))
-    humos_ = [h_ for h_ in humos if h_[0] in (214, 262, 281, 228)] + [(fuego[0] - 1, 57)]
+    humos_ = [h_ for h_ in humos if h_[0] in (214, 264, 284, 229)] + [(fuego[0] - 1, 57)]
     # Las hojas que caen del roble: (x de salida, y de salida, ciclos por bucle, fase, deriva).
     caen = [(70, 20, 1, 0.0, 14), (104, 22, 1, 0.45, 10), (40, 24, 2, 0.2, 9), (380, 12, 1, 0.7, -8)]
     # Jirones de niebla que pasan despacio: (x, y, largo, desfase).
     jirones = [(140, 45, 22, 0.0), (300, 43, 26, 0.5), (60, 49, 18, 0.25)]
-    roma_ = [(x, y) for y in (40, 42) for x in range(355, 397, 3) if not (373 <= x <= 377)] + \
+    roma_ = [(x + (hash((x, y)) % 3) - 1, y) for y in (40, 42) for x in range(356, 396, 4)
+             if not (373 <= x <= 377) and hash((x, y, 1)) % 5] + [(375, 41)] + \
             [(x, 45 + (352 - x) // 26) for x in range(304, 352, 6)]
 
     def humo_(f, x0, y0, tk, j, alto=15):
+        """Un hilo de humo: bocanadas que suben, se ensanchan, se tuercen con el viento y se deshacen."""
         p_ = f.load()
-        for k in range(7):
-            ff = ((tk / (BUCLE / 2)) + k / 7 + j * 0.17) % 1.0
+        for k in range(6):
+            ff = ((tk / (BUCLE / 2)) + k / 6 + j * 0.17) % 1.0
             y = y0 - ff * alto
-            x = x0 + ff * 7 + 1.1 * math.sin(ff * 6 + j)
-            ancho = 1 + int(ff * 2.6)
-            for dx in range(ancho):
-                for dy in range(1 + (ff > 0.4)):
-                    xx, yy = int(x + dx - ancho / 2), int(y + dy)
-                    if 0 <= xx < W and 0 <= yy < H and tramar(0.9 - ff * 0.75, xx, yy):
-                        base_ = P["humo"][0] if ff < 0.5 else P["humo"][1]
-                        if o and ff < 0.25: base_ = mezcla(base_, P["llama"][2], 0.35)
-                        p_[xx, yy] = mezcla(p_[xx, yy], base_, 0.75 - ff * 0.45)
+            x = x0 + ff * ff * 11 + 0.9 * math.sin(ff * 5 + j)
+            r = 0.7 + ff * 2.0
+            a_ = (0.8 if not o else 0.55) * (1 - ff) ** 0.6
+            for yy in range(int(y - r), int(y + r) + 1):
+                for xx in range(int(x - r - 0.5), int(x + r + 1)):
+                    dd = ((xx + 0.5 - x) / (r + 0.3)) ** 2 + ((yy + 0.5 - y) / (r * 0.8 + 0.3)) ** 2
+                    if dd < 1 and 0 <= xx < W and 0 <= yy < H:
+                        base_ = P["humo"][0] if (xx + 0.5 - x) + (yy + 0.5 - y) < 0 else P["humo"][1]
+                        if o and ff < 0.3: base_ = mezcla(base_, P["llama"][2], 0.4)
+                        p_[xx, yy] = mezcla(p_[xx, yy], base_, round(a_ * (1 - dd * 0.5) * 4) / 4)
 
     def mover(f, tk):
         p_ = f.load()
@@ -3172,13 +3221,14 @@ def fondo_galia(t):
             a_ = math.sin(math.pi * ff)
             x = x0 + 26 * ff
             for xx in range(int(x), int(x + largo)):
-                for yy in (y0, y0 + 1):
-                    u = (xx - x) / largo
-                    if 0 <= xx < W and tramar(a_ * math.sin(math.pi * u) * (0.8 if yy == y0 else 0.5), xx, yy):
-                        p_[xx, yy] = mezcla(p_[xx, yy], P["niebla"], 0.6 if not o else 0.4)
+                for yy, kk in ((y0 - 1, 0.45), (y0, 1.0), (y0 + 1, 0.6)):
+                    u = min(1.0, max(0.0, (xx - x) / largo))
+                    k_ = round(a_ * math.sin(math.pi * u) ** 0.8 * kk * 3) / 3 * (0.55 if not o else 0.4)
+                    if 0 <= xx < W and k_ > 0:
+                        p_[xx, yy] = mezcla(p_[xx, yy], P["niebla"], k_)
         # El humo de las casas y del fuego.
         for j, (x0, y0) in enumerate(humos_):
-            humo_(f, x0, y0, tk, j, 14 if j < len(humos_) - 1 else 11)
+            humo_(f, x0, y0, tk, j, 11)
         # Las hojas que caen, balanceándose.
         for (x0, y0, ciclos, ph, deriva) in caen:
             ff = (tk / BUCLE * ciclos + ph) % 1.0
@@ -3208,7 +3258,7 @@ def fondo_galia(t):
                 h_ = 1 + rnd2.randint(0, 2) - abs(k)
                 for jj in range(max(0, h_)):
                     pon(p_, hx_ + k, hy_ - jj, P["llama"][0] if jj == h_ - 1 else P["llama"][1])
-        pon(p_, 244, 22 + rnd2.randint(0, 1), P["llama"][1])
+        pon(p_, 244, 21 + rnd2.randint(0, 1), P["llama"][1])
         for j, (x, y) in enumerate(roma_):
             v = (tk // 3 + j * 7) % 11
             pon(p_, x, y, P["roma"][1] if v == 0 else (P["roma"][0] if v < 8 else P["roma"][2]))

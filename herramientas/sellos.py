@@ -1266,7 +1266,8 @@ def caballo(d, x0, y0, u, c, hueco, giro=0.0):
 
 
 def rueda(d, x0, y0, u, r, c, hueco, radios=4, giro=0.3):
-    """La rueda (la «rouelle»): llanta, cubo y radios; lo que queda del carro de Filipo en las monedas galas."""
+    """La rueda (la «rouelle»): llanta, cubo y radios. Bajo el caballo de las monedas galas suele leerse como lo que quedó
+    del carro de dos caballos del estátero de Filipo, que copiaban."""
     def P(a, rr): return (x0 + rr * u * math.cos(a), y0 + rr * u * math.sin(a))
     X, Y = x0, y0
     d.ellipse([X - r * u, Y - r * u, X + r * u, Y + r * u], fill=c)
@@ -1280,8 +1281,9 @@ def rueda(d, x0, y0, u, r, c, hueco, radios=4, giro=0.3):
 
 
 def lira(d, x0, y0, u, c, hueco, giro=0.0):
-    """La lira de los bardos (Diodoro 5.31), como sale en algunas monedas galas: la caja redonda abajo, los dos brazos que
-    se abren y vuelven a cerrarse con un botón en la punta, el travesaño arriba y cuatro cuerdas."""
+    """La lira de los bardos (Diodoro 5.31): la caja redonda abajo, los dos brazos que se abren y vuelven a cerrarse con un
+    botón en la punta, el travesaño arriba y cuatro cuerdas. Ponerla en la moneda es recurso de dibujo (que haya liras en
+    monedas galas está sin comprobar)."""
     cg, sg = math.cos(giro), math.sin(giro)
     def P(x, y): return (x0 + (x * cg - y * sg) * u, y0 + (x * sg + y * cg) * u)
     def circ(x, y, r, f=c):
@@ -1335,11 +1337,12 @@ ELECTRO = [(0.0, '#22150A'), (0.22, '#553810'), (0.42, '#8E671E'), (0.57, '#B88E
 def galia(tam):
     """Galia: un estátero arverno de electro (oro pálido, con plata: las monedas de Vercingétorix tienen «environ 40 %
     d'or») sobre un cuero curtido. El cospel, batido a mano, no es del todo redondo y tiene el canto redondeado; la gráfila
-    de perlas corre por dentro. En el campo, en relieve, como en el reverso de esas monedas: a la izquierda el caballo al
-    galope, con la crin de perlas, la perla sobre el lomo y debajo la rueda (lo que quedó del carro de Filipo de Macedonia,
-    que copiaban); a la derecha la lira de los bardos (Diodoro 5.31), la «S» tumbada y el astro de perlas. En los huecos,
-    la pátina rojiza del oro; en lo alto, el brillo del roce. La huella va acuñada en el centro, en el mismo metal, con su
-    sombra corta (la luz viene de arriba a la izquierda)."""
+    de perlas corre por dentro. En el campo, en relieve, como en el reverso de los estáteros galos: a la izquierda el
+    caballo al galope, con la crin de perlas, la perla sobre el lomo y debajo la rueda (los estáteros galos copian el de
+    Filipo de Macedonia, con su carro de dos caballos, que se fue volviendo un solo caballo); a la derecha la lira de los
+    bardos (Diodoro 5.31; en la moneda es recurso), la «S» tumbada y el astro de perlas. En los huecos, la pátina rojiza
+    del oro; en lo alto, el brillo del roce. La huella va acuñada en el centro, en el mismo metal, con su sombra corta (la
+    luz viene de arriba a la izquierda)."""
     k = 2; S = tam * k; c = S / 2
     yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
     dx, dy = xx - c, yy - c
@@ -1354,7 +1357,7 @@ def galia(tam):
     # --- Lo que va en relieve (sin la huella), dibujado a la escala del lienzo.
     g = Image.new('L', (S, S), 0); d = ImageDraw.Draw(g)
     rg = np.random.default_rng(611)
-    caballo(d, 108 * k, 292 * k, 1.3 * k, 255, 0, giro=-0.12)
+    caballo(d, 111 * k, 291 * k, 1.3 * k, 255, 0, giro=-0.13)
     rueda(d, 140 * k, 466 * k, 1.0 * k, 21, 255, 0)
     d.ellipse([(130 - 6) * k, (204 - 6) * k, (130 + 6) * k, (204 + 6) * k], fill=255)        # la perla sobre el lomo
     lira(d, 614 * k, 352 * k, 1.55 * k, 255, 0)

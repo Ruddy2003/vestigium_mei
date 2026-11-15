@@ -568,7 +568,7 @@ def torques(d, cx, cy, radio, w, c, hueco=(0, 0, 0, 0), abre=0.27, paso=None):
         pts_b = [P(0.32 + 1.0 * u, -0.48 - 0.75 * u ** 2.2) for u in np.linspace(0, 1, 14)]
         d.polygon(pts_a + pts_b[::-1], fill=c)
         # el tope: un disco de canto, más alto que la trompeta, con el borde redondeado y una moldura en la cara
-        g0, g1, h_in, h_out = 1.3, 2.1, 1.5, 1.08       # el disco asoma más hacia dentro (por fuera queda el borde del ícono)
+        g0, g1, h_in, h_out = 1.3, 2.1, 1.55, 0.82      # el disco asoma más hacia dentro (por fuera queda el borde del ícono)
         d.polygon([P(g0, -h_in), P(g1, -h_in), P(g1, h_out), P(g0, h_out)], fill=c)
         for g_ in (h_out, -h_in):
             x_, y_ = P((g0 + g1) / 2, g_); r_ = (g1 - g0) / 2 * w
@@ -905,6 +905,8 @@ def hacer(tema, salida):
     if acabado == 'oro':
         # Oro en relieve sobre la madera: el anillo (el torques) y la huella son una sola pieza de orfebre.
         final = oro_icono(tema, sem)
+        # Como el grabado: con 256 colores se ve igual y pesa la cuarta parte.
+        final = final.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
         final.save(os.path.join(salida, f'logo_{tema}.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
         return
     m = mascara()
