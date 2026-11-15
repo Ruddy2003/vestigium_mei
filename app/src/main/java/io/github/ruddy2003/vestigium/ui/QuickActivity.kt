@@ -1208,7 +1208,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.MEDIEVAL -> 10.dp
     TemaId.TEMPLARIO -> 9.dp
     TemaId.DISTOPIA -> 12.dp
-    TemaId.ARCONTES -> 12.dp
+    TemaId.ARCONTES -> 7.dp
     TemaId.FRENTE -> 11.dp
     TemaId.REFUGIO -> 6.dp
     TemaId.ORDEN -> 6.dp
@@ -1291,9 +1291,14 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         val p = 12 * u; val a = w * 0.38f
         moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
     }
+    // La losa de caliza: las esquinas de arriba en el arco pequeño de los nichos y, a la derecha, la grieta fina que baja
+    // desde el borde.
     TemaId.ARCONTES -> formaDp { w, h, u ->
-        val p = 12 * u; val a = w * 0.38f
-        moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+        val r = 14 * u; val gx = w * 0.72f
+        moveTo(0f, h); lineTo(0f, r); quadraticTo(0f, 0f, r, 0f)
+        lineTo(gx - 2.4f * u, 0f); lineTo(gx - 0.5f * u, 4.5f * u); lineTo(gx - 1.5f * u, 8f * u); lineTo(gx + 0.2f * u, 12.5f * u)
+        lineTo(gx + 0.5f * u, 8.4f * u); lineTo(gx + 1.3f * u, 4.8f * u); lineTo(gx + 2.3f * u, 0f)
+        lineTo(w - r, 0f); quadraticTo(w, 0f, w, r); lineTo(w, h); close()
     }
     // La consola curva: las esquinas grandes del mueble y, al centro, la caperuza de los instrumentos que se levanta.
     TemaId.FRENTE -> formaDp { w, h, u ->
@@ -1500,7 +1505,12 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     // El escudete: recto arriba y redondeado abajo.
     TemaId.TEMPLARIO -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 14.dp, bottomStart = 14.dp)
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.ARCONTES -> RectangleShape
+    // La tapa de cuero del códice: el lomo redondeado a la izquierda y la solapa que asoma a la derecha, a media altura.
+    TemaId.ARCONTES -> formaDp { w, h, u ->
+        val d = minOf(7 * u, w * 0.08f); val r = minOf(3 * u, h / 4)
+        moveTo(r, 0f); lineTo(w - d, 0f); lineTo(w - d, h * 0.3f); lineTo(w, h * 0.4f); lineTo(w, h * 0.6f); lineTo(w - d, h * 0.7f); lineTo(w - d, h)
+        lineTo(r, h); quadraticTo(0f, h, 0f, h - r); lineTo(0f, r); quadraticTo(0f, 0f, r, 0f); close()
+    }
     // La tecla de baquelita: el canto de arriba combado como la cara de la consola, esquinas grandes arriba y cortas abajo.
     TemaId.FRENTE -> formaDp { w, h, u ->
         val r = minOf(10 * u, h / 2); val b = minOf(3 * u, h * 0.15f); val q = minOf(4 * u, h / 4)

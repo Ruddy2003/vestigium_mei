@@ -274,7 +274,11 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     }
     // Casilla de formulario.
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.ARCONTES -> RectangleShape
+    // La gema grabada de los amuletos: un óvalo, más alto que ancho.
+    TemaId.ARCONTES -> GenericShape { s, _ ->
+        val alto = s.height * 0.96f; val ancho = minOf(s.width * 0.9f, alto * 0.84f)
+        addOval(Rect(Offset((s.width - ancho) / 2, (s.height - alto) / 2), Size(ancho, alto)))
+    }
     // La tecla de la consola, con el canto de arriba combado.
     TemaId.FRENTE -> GenericShape { s, _ ->
         val w = s.width; val h = s.height; val r = minOf(w, h) * 0.2f; val b = h * 0.06f; val q = r * 0.5f
@@ -408,7 +412,14 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         // La cruz patada calada en el escudo.
         TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(s.width / 2, s.height * 0.42f), minOf(s.width, s.height) * 0.26f), fondo.copy(alpha = 0.55f))
         TemaId.DISTOPIA -> {}
-        TemaId.ARCONTES -> {}
+        // El bisel de la gema y, grabada al centro, la serpiente que se muerde la cola.
+        TemaId.ARCONTES -> {
+            val alto = s.height * 0.96f; val ancho = minOf(s.width * 0.9f, alto * 0.84f); val l = minOf(ancho, alto)
+            drawOval(fondo.copy(alpha = 0.3f), Offset((s.width - ancho * 0.8f) / 2, (s.height - alto * 0.8f) / 2), Size(ancho * 0.8f, alto * 0.8f), style = Stroke(l * 0.035f))
+            val rr = l * 0.17f; val cc = Offset(s.width / 2, s.height / 2); val ac = Math.toRadians(-48.0)
+            drawArc(fondo.copy(alpha = 0.42f), -40f, 310f, false, Offset(cc.x - rr, cc.y - rr), Size(rr * 2, rr * 2), style = Stroke(l * 0.05f))
+            drawCircle(fondo.copy(alpha = 0.42f), l * 0.05f, Offset(cc.x + rr * kotlin.math.cos(ac).toFloat(), cc.y + rr * kotlin.math.sin(ac).toFloat()))
+        }
         // La ranura grabada del rótulo, arriba de la tecla.
         TemaId.FRENTE -> drawLine(fondo.copy(alpha = 0.45f), Offset(s.width * 0.28f, s.height * 0.24f), Offset(s.width * 0.72f, s.height * 0.24f), minOf(s.width, s.height) * 0.07f, StrokeCap.Round)
         TemaId.REFUGIO -> {}

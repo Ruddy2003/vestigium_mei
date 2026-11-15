@@ -57,7 +57,7 @@ import kotlin.math.sin
 
 /**
  * El «corazón» de la frase del día, con la forma de cada tema (laurel, corazón de píxeles, sol de Vergina, cuadrifolio,
- * ojo, estrella atómica, escudo, anillo de benceno, casa, abeja, hoja, copo, moneda, flor de lis, destello, estrella de
+ * ojo, lámpara de aceite, estrella atómica, escudo, anillo de benceno, casa, abeja, hoja, copo, moneda, flor de lis, destello, estrella de
  * ocho puntas, yurta, corazón con trazos de construcción, estrella roja, escarapela, gema): late al tocarlo y suelta una
  * chispa de puntos cuando se guarda. Guardada, va rellena; sin guardar, solo el contorno.
  */
@@ -197,11 +197,26 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
             circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
         }, 1.4f)
-        TemaId.ARCONTES -> pinta(Path().apply {
-            fillType = PathFillType.EvenOdd
-            moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
-            circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
-        }, 1.4f)
+        // La lámpara de aceite de barro, de pico, con el asa a la izquierda; guardada, encendida, con su llama y su halo.
+        TemaId.ARCONTES -> {
+            val col = if (lleno) color else color.copy(alpha = 0.7f)
+            pinta(Path().apply {
+                moveTo(3f * u, 15.6f * u)
+                cubicTo(3f * u, 11.2f * u, 9.6f * u, 10.2f * u, 13.2f * u, 12.4f * u)
+                lineTo(20.4f * u, 12.7f * u)
+                quadraticTo(22.2f * u, 13.5f * u, 20.8f * u, 14.7f * u)
+                lineTo(13.6f * u, 17.1f * u)
+                cubicTo(11f * u, 19.8f * u, 4f * u, 19.8f * u, 3f * u, 15.6f * u)
+                close()
+                // El agujero por donde se echa el aceite.
+                if (lleno) { fillType = PathFillType.EvenOdd; addOval(Rect(p(7.6f, 12.6f), Size(2f * u, 1.6f * u))) }
+            }, 1.4f)
+            drawArc(col, 90f, 180f, false, p(1f, 13f), Size(3.6f * u, 4.4f * u), style = Stroke(1.3f * u, cap = StrokeCap.Round))
+            if (lleno) {
+                drawCircle(color.copy(alpha = 0.18f), 2.8f * u, p(21.2f, 9f))
+                drawPath(Path().apply { moveTo(20.1f * u, 12.2f * u); quadraticTo(19.3f * u, 8.6f * u, 21.5f * u, 4.4f * u); quadraticTo(23.3f * u, 8.8f * u, 22.3f * u, 12.2f * u); close() }, color)
+            } else drawCircle(col, 0.9f * u, p(21.2f, 11.4f))
+        }
         // El emblema de la red: la chispa de tres trazos en el círculo roto; guardada, el aro grueso y la señal que se escapa.
         TemaId.FRENTE -> {
             val col = if (lleno) color else color.copy(alpha = 0.7f)

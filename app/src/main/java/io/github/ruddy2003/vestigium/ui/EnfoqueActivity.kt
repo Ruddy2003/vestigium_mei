@@ -656,18 +656,45 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
                 drawLine(parpado, q, q + d * (6 * u / l), 1.5f * u)
             }
         }
+        // El ouroboros, la serpiente que se muerde la cola: el cuerpo, tenue, se enciende de la cola a la nuca conforme pasa
+        // el bloque y, al cerrar la vuelta, la cabeza muerde la cola. Por dentro, las siete esferas, muy tenues detrás de la
+        // cuenta (las ya cruzadas, en el violeta de la grieta), y la chispa del alma que sube de una a otra.
         TemaId.ARCONTES -> {
-            arco(pista, 0f, 1f, r, g)
-            arco(color, 0f, p, r, g)
-            for (k in 0 until 72) { val f = k / 72f; drawLine(e.background.copy(alpha = 0.35f), en(f, r - g / 2), en(f, r + g / 2), if (k % 6 == 0) 2 * u else 0.8f * u) }
-            val parpado = e.onBackground.copy(alpha = 0.7f)
-            val p0 = Offset(c.x - R, c.y); val p1 = Offset(c.x, c.y - R * 1.85f); val p2 = Offset(c.x + R, c.y)
-            drawPath(Path().apply { moveTo(p0.x, p0.y); quadraticTo(p1.x, p1.y, p2.x, p2.y); quadraticTo(c.x, c.y + R * 1.85f, p0.x, p0.y); close() }, parpado, style = Stroke(2.2f * u))
-            for (k in -3..3) {
-                val s = 0.5f + k * 0.09f
-                val q = Offset((1 - s) * (1 - s) * p0.x + 2 * (1 - s) * s * p1.x + s * s * p2.x, (1 - s) * (1 - s) * p0.y + 2 * (1 - s) * s * p1.y + s * s * p2.y)
-                val d = q - c; val l = d.getDistance().coerceAtLeast(1f)
-                drawLine(parpado, q, q + d * (6 * u / l), 1.5f * u)
+            val noche = e.background.luminance() < 0.5f
+            val grueso = g * 0.62f; val cabeza = -90f; val hueco = 16f; val inicio = cabeza + hueco / 2
+            val esq = Offset(c.x - r, c.y - r); val lado = Size(r * 2, r * 2)
+            val r0 = r * 0.52f; val r6 = r - g * 0.95f
+            fun esfera(k: Int) = r0 + (r6 - r0) * k / 6f
+            for (k in 0 until 7) drawCircle(if (pasado(k, 7)) e.tertiary.copy(alpha = if (noche) 0.3f else 0.24f) else tenue.copy(alpha = 0.12f), esfera(k), c, style = Stroke(0.8f * u))
+            with(TrazosArcontes) { ouroboros(c, r, grueso, tenue.copy(alpha = if (noche) 0.22f else 0.16f), cabeza) }
+            // Lo recorrido, con el mismo grosor que el cuerpo: fino en la cola, grueso en la nuca.
+            val hasta = -90f + p * 360f
+            val pasos = 72
+            for (i in 0 until pasos) {
+                val t0 = i / pasos.toFloat()
+                val a0 = inicio + t0 * (360f - hueco)
+                if (a0 >= hasta) break
+                val barrido = minOf((360f - hueco) / pasos + 0.6f, hasta - a0)
+                drawArc(color, a0, barrido, false, esq, lado, style = Stroke(grueso * (0.35f + 0.65f * t0)))
+            }
+            if (p >= 1f) with(TrazosArcontes) { ouroboros(c, r, grueso, color, cabeza, escamas = e.background.copy(alpha = 0.45f)) }
+            else {
+                // Los anillos del lomo, a lo largo de toda la serpiente.
+                var a = inicio + 12f
+                while (a < inicio + 360f - hueco - 8f) {
+                    val gr = grueso * (0.35f + 0.65f * (a - inicio) / (360f - hueco))
+                    val f = (a + 90f) / 360f
+                    drawLine(e.background.copy(alpha = 0.35f), en(f, r - gr * 0.32f), en(f, r + gr * 0.32f), 0.8f * u)
+                    a += 10f
+                }
+            }
+            val q = en(p, esfera((p * 7).toInt().coerceIn(0, 6)))
+            // De noche, la chispa blanca del tema; de día, en el violeta de la grieta, para que se vea sobre la caliza.
+            if (noche) with(TrazosArcontes) { chispa(q, 5.5f * u) }
+            else {
+                drawCircle(e.tertiary.copy(alpha = 0.16f), 6 * u, q)
+                drawCircle(e.tertiary.copy(alpha = 0.3f), 3.4f * u, q)
+                drawCircle(e.tertiary, 1.7f * u, q)
             }
         }
         // La perilla de sintonía de la consola: la falda de baquelita moleteada con su filo de cromo y la raya de hueso que
@@ -1233,9 +1260,20 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             addRect(Rect(x, y, x + w, y + h))
             if (w > h) { addOval(Rect(Offset(x + h * 0.45f, y + h / 2), h * 0.18f)); fillType = PathFillType.EvenOdd }
         }
+        // Un sillar de caliza con el arco pequeño de los nichos arriba y, en los tramos largos, la grieta fina por donde pasa
+        // la luz.
         TemaId.ARCONTES -> {
-            addRect(Rect(x, y, x + w, y + h))
-            if (w > h) { addOval(Rect(Offset(x + h * 0.45f, y + h / 2), h * 0.18f)); fillType = PathFillType.EvenOdd }
+            val a = minOf(h * 0.45f, w / 2)
+            moveTo(x, y + h); lineTo(x, y + a); quadraticTo(x, y, x + a, y); lineTo(x + w - a, y); quadraticTo(x + w, y, x + w, y + a); lineTo(x + w, y + h); close()
+            if (w > h * 2f) {
+                val gx = x + w * 0.7f; val d = maxOf(0.6f * u, h * 0.04f); val k = h * 0.1f
+                val espina = listOf(0f to 0.14f, 0.6f to 0.36f, -0.4f to 0.56f, 0.3f to 0.74f, -0.1f to 0.88f)
+                val ancho = listOf(0f, 1f, 1.2f, 0.7f, 0f)
+                espina.forEachIndexed { i, (ox, f) -> val px = gx + ox * k + d * ancho[i]; val py = y + h * f; if (i == 0) moveTo(px, py) else lineTo(px, py) }
+                for (i in espina.indices.reversed()) { val (ox, f) = espina[i]; lineTo(gx + ox * k - d * ancho[i], y + h * f) }
+                close()
+                fillType = PathFillType.EvenOdd
+            }
         }
         // El cartucho de datos: la esquina de arriba cortada y, en los tramos largos, la muesca de protección abajo. Sin la
         // ventana de la etiqueta: en la tira, tan baja, el hueco se leía como una letra.

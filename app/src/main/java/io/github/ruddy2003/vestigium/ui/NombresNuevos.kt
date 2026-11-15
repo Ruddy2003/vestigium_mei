@@ -31,9 +31,10 @@ object NombresNuevos {
         TemaId.DISTOPIA to mapOf("La cinta" to "REGISTRO HORARIO", "Constelación" to "RED DE CONTACTOS", "Hall de logros" to "SALA DE CONDECORACIONES", "Campañas" to "PLANES DE CUMPLIMIENTO",
             "Impulsos y recaídas" to "INFRACCIONES PRIVADAS", "Estado de los datos" to "ESTADO DE LA VIGILANCIA", "Enfoque y siestas" to "PRODUCTIVIDAD Y DESCANSO", "Ver tu vida" to "INFORMES VISUALES",
             "Tus atajos" to "ACCESOS AUTORIZADOS", "Logro conseguido" to "CONDECORACIÓN OTORGADA", "Este día hace un año" to "ARCHIVO: HACE UN AÑO", "Elegir campaña" to "ASIGNAR PLAN", "Campañas anteriores" to "PLANES CERRADOS"),
-        TemaId.ARCONTES to mapOf("La cinta" to "REGISTRO HORARIO", "Constelación" to "RED DE CONTACTOS", "Hall de logros" to "SALA DE CONDECORACIONES", "Campañas" to "PLANES DE CUMPLIMIENTO",
-            "Impulsos y recaídas" to "INFRACCIONES PRIVADAS", "Estado de los datos" to "ESTADO DE LA VIGILANCIA", "Enfoque y siestas" to "PRODUCTIVIDAD Y DESCANSO", "Ver tu vida" to "INFORMES VISUALES",
-            "Tus atajos" to "ACCESOS AUTORIZADOS", "Logro conseguido" to "CONDECORACIÓN OTORGADA", "Este día hace un año" to "ARCHIVO: HACE UN AÑO", "Elegir campaña" to "ASIGNAR PLAN", "Campañas anteriores" to "PLANES CERRADOS"),
+        // Arcontes: las horas del alba a la vigilia, las chispas de los tuyos, la hornacina de los amuletos y el ascenso del alma.
+        TemaId.ARCONTES to mapOf("La cinta" to "Las horas, del alba a la vigilia", "Constelación" to "Las chispas que conoces", "Hall de logros" to "La hornacina de los amuletos", "Campañas" to "El ascenso del alma",
+            "Impulsos y recaídas" to "La hoja que no se enseña", "Estado de los datos" to "Qué llega a la jarra", "Enfoque y siestas" to "La lámpara y el reposo", "Ver tu vida" to "Tu vida, vista desde lo alto",
+            "Tus atajos" to "Los senderos cortos", "Logro conseguido" to "Un amuleto nuevo, grabado", "Este día hace un año" to "Este cielo hace un año", "Elegir campaña" to "Elegir el ascenso de la semana", "Campañas anteriores" to "Ascensos de otras semanas"),
         // Frente exterior: la tira del teletipo, la célula, las rutas de salto y la sala donde se cuelgan los parches.
         TemaId.FRENTE to mapOf("La cinta" to "TIRA DEL TELETIPO", "Constelación" to "MAPA DE LA CÉLULA", "Hall de logros" to "SALA DE PARCHES", "Campañas" to "RUTAS DE SALTO",
             "Impulsos y recaídas" to "CANAL RESERVADO", "Estado de los datos" to "ESTADO DEL EQUIPO", "Enfoque y siestas" to "TURNOS DE CONSOLA Y CABEZADAS", "Ver tu vida" to "VISTAS DE RECONOCIMIENTO",

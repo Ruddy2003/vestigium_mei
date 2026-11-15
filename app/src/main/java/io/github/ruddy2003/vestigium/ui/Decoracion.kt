@@ -82,7 +82,7 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.MEDIEVAL -> 5000
     TemaId.TEMPLARIO -> 4400
     TemaId.DISTOPIA -> 7000
-    TemaId.ARCONTES -> 7000
+    TemaId.ARCONTES -> 10500                   // el destello cruza la piedra y las siete estrellas se encienden una tras otra
     TemaId.FRENTE -> 5600                      // dos destellos de la chispa y tres ondas que se escapan por la rotura
     TemaId.REFUGIO -> 3200
     TemaId.ORDEN -> 2600
@@ -149,7 +149,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.MEDIEVAL -> roseton(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.TEMPLARIO -> escudoTemplario(c, r, e.primary, e.secondary, e.tertiary, if (oscuro) Color(0xFFEEE7D8) else Color.White, t)
         TemaId.DISTOPIA -> ojo(c, r, e.onBackground, e.primary, e.background, t)
-        TemaId.ARCONTES -> ojo(c, r, e.onBackground, e.primary, e.background, t)
+        TemaId.ARCONTES -> with(TrazosArcontes) { emblema(c, r, t, e.primary) }
         TemaId.FRENTE -> chispaCanal(c, r, e.primary, e.onBackground, e.tertiary, e.background, t, oscuro)
         TemaId.REFUGIO -> atomo(c, r, e.primary, e.secondary, t)
         TemaId.ORDEN -> escudo(c, r, e.primary, e.secondary, t)
@@ -1905,6 +1905,115 @@ private fun Path.espiralFondo(c: Offset, r: Float, a0: Float, vueltas: Float, s:
 }
 
 /**
+ * Arcontes: la caliza del fondo, en tres trazos. [vetas]: los lechos de la piedra, casi horizontales y de a dos o tres, una
+ * costura dentada (estilolito) y algún fósil diminuto en espiral. [poros]: de día, los poros de la piedra; de noche, el aura de
+ * la grieta. [grieta]: la raja finísima que entra por el borde derecho, se quiebra y suelta una rama, y otra corta abajo.
+ */
+private fun calizaFondo(w: Float, h: Float, u: Float, oscuro: Boolean, vetas: Path, poros: Path, grieta: Path) {
+    val az = java.util.Random(30)
+    // Los lechos.
+    var y = (20 + az.nextFloat() * 40) * u
+    while (y < h) {
+        val n = 1 + az.nextInt(3)
+        val x0 = -10 * u + az.nextFloat() * w * 0.3f
+        val x1 = w * (0.55f + az.nextFloat() * 0.6f)
+        val incl = (az.nextFloat() - 0.5f) * 30 * u
+        for (k in 0 until n) {
+            val dy = k * (3 + az.nextFloat() * 4) * u
+            val a = (1.5f + az.nextFloat() * 3) * u
+            var x = x0 + k * az.nextFloat() * 20 * u
+            val paso = (40 + az.nextFloat() * 30) * u
+            vetas.moveTo(x, y + dy + incl * x / w)
+            var lado = 1f
+            while (x < x1 - k * 15 * u) {
+                val nx = x + paso
+                vetas.quadraticTo(x + paso / 2, y + dy + incl * (x + paso / 2) / w + lado * a, nx, y + dy + incl * nx / w + (az.nextFloat() - 0.5f) * a * 0.6f)
+                x = nx; lado = -lado
+            }
+        }
+        y += (34 + az.nextFloat() * 56) * u
+    }
+    // Una veta larga de calcita que cruza en diagonal, curva (una sola: dos se cruzarían en aspa).
+    run {
+        val ya = h * (0.2f + az.nextFloat() * 0.4f); val yb = ya + h * (0.15f + az.nextFloat() * 0.25f)
+        vetas.moveTo(-4 * u, ya)
+        vetas.cubicTo(w * 0.3f, ya + (az.nextFloat() - 0.5f) * h * 0.1f, w * 0.65f, yb + (az.nextFloat() - 0.5f) * h * 0.1f, w + 4 * u, yb)
+    }
+    // Las costuras dentadas: los dientes de la piedra que se apretó al hacerse.
+    repeat((h / (420 * u)).toInt().coerceIn(1, 3)) {
+        var x = az.nextFloat() * w * 0.5f
+        val fin = x + w * (0.25f + az.nextFloat() * 0.3f)
+        val yy = az.nextFloat() * h
+        vetas.moveTo(x, yy)
+        while (x < fin) {
+            val p = (2.5f + az.nextFloat() * 3.5f) * u
+            val alto = (0.8f + az.nextFloat() * 2.2f) * u * (if (az.nextBoolean()) 1f else -1f)
+            vetas.lineTo(x, yy + alto); vetas.lineTo(x + p * 0.6f, yy + alto); vetas.lineTo(x + p * 0.6f, yy); vetas.lineTo(x + p, yy)
+            x += p
+        }
+    }
+    // Los fósiles diminutos: una espiral de vuelta y media.
+    repeat(((w * h) / (90000f * u * u)).toInt().coerceIn(2, 12)) {
+        val cx = az.nextFloat() * w; val cy = az.nextFloat() * h; val r = (2f + az.nextFloat() * 1.8f) * u; val a0 = az.nextFloat() * 6.28f
+        for (k in 0..18) {
+            val f = k / 18f; val a = a0 + f * 3f * PI.toFloat(); val rr = r * (1f - 0.75f * f)
+            if (k == 0) vetas.moveTo(cx + rr * cos(a), cy + rr * sin(a)) else vetas.lineTo(cx + rr * cos(a), cy + rr * sin(a))
+        }
+    }
+    // Los poros, sueltos y en grumos (solo de día: de noche la piedra apenas se ve).
+    if (!oscuro) repeat(((w * h) / (1100f * u * u)).toInt().coerceIn(40, 1200)) {
+        val x = az.nextFloat() * w; val yy = az.nextFloat() * h
+        val grumo = if (az.nextFloat() < 0.3f) 2 + az.nextInt(3) else 1
+        repeat(grumo) {
+            val px = x + (az.nextFloat() - 0.5f) * 6 * u * (grumo - 1); val py = yy + (az.nextFloat() - 0.5f) * 5 * u * (grumo - 1)
+            val r = (0.35f + az.nextFloat() * az.nextFloat() * az.nextFloat() * 1.3f) * u
+            poros.addOval(Rect(px - r, py - r * 0.8f, px + r, py + r * 0.8f))
+        }
+    }
+    // Las grietas: quebradas, más abiertas donde entran y cada vez más finas; el cuerpo va con los poros (de noche, su aura).
+    fun raja(x0: Float, y0: Float, rumbo: Float, largo: Float, abre: Float, rama: Boolean) {
+        val nudos = ArrayList<Offset>(); var x = x0; var yy = y0; var hecho = 0f; var dir = rumbo
+        nudos.add(Offset(x, yy))
+        while (hecho < largo) {
+            // Un paso corto que se tuerce poco a poco y, de vez en cuando, quiebra de golpe.
+            val p = (2.5f + az.nextFloat() * 4.5f) * u
+            dir += (az.nextFloat() - 0.5f) * (if (az.nextFloat() < 0.12f) 1.6f else 0.55f)
+            dir = dir * 0.8f + rumbo * 0.2f
+            x += cos(dir) * p; yy += sin(dir) * p; hecho += p
+            nudos.add(Offset(x, yy))
+        }
+        grieta.moveTo(nudos[0].x, nudos[0].y)
+        for (k in 1 until nudos.size) grieta.lineTo(nudos[k].x, nudos[k].y)
+        val ancho = if (oscuro) abre * 4f else abre
+        val izq = ArrayList<Offset>(); val der = ArrayList<Offset>()
+        for (k in nudos.indices) {
+            val a = nudos[maxOf(k - 1, 0)]; val b = nudos[minOf(k + 1, nudos.size - 1)]
+            val l = (b - a).getDistance().coerceAtLeast(0.001f)
+            val nx = -(b.y - a.y) / l; val ny = (b.x - a.x) / l
+            val m = ancho * (1f - k / (nudos.size - 1f)) / 2
+            izq.add(Offset(nudos[k].x + nx * m, nudos[k].y + ny * m)); der.add(Offset(nudos[k].x - nx * m, nudos[k].y - ny * m))
+        }
+        poros.moveTo(izq[0].x, izq[0].y)
+        for (k in 1 until izq.size) poros.lineTo(izq[k].x, izq[k].y)
+        for (k in der.indices.reversed()) poros.lineTo(der[k].x, der[k].y)
+        poros.close()
+        if (rama && nudos.size > 6) {
+            val de = nudos[nudos.size * 2 / 5]
+            val lado = if (az.nextBoolean()) 1f else -1f
+            grieta.moveTo(de.x, de.y)
+            var bx = de.x; var by = de.y
+            var d = rumbo + lado * 0.9f
+            repeat(7 + az.nextInt(6)) {
+                d += (az.nextFloat() - 0.5f) * 0.6f; val p = (2.5f + az.nextFloat() * 3.5f) * u
+                bx += cos(d) * p; by += sin(d) * p; grieta.lineTo(bx, by)
+            }
+        }
+    }
+    raja(w + 2 * u, h * (0.3f + az.nextFloat() * 0.12f), PI.toFloat() * 0.9f, w * 0.42f, 1.8f * u, true)
+    raja(w * (0.04f + az.nextFloat() * 0.1f), h + 2 * u, -PI.toFloat() * 0.38f, h * 0.12f, 1.2f * u, false)
+}
+
+/**
  * Una textura muy tenue detrás de todo: vetas de mármol, retícula de terminal, guijarros de Pela, renglones de pergamino,
  * trama de imprenta, papel tapiz atómico o líneas de pantalla antigua, papel milimétrico… Cada tema tiene la suya.
  * Se dibuja una sola vez y se reutiliza.
@@ -2054,18 +2163,14 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             }
         }
         TemaId.ARCONTES -> {
-            color2 = esquema.onBackground.copy(alpha = if (oscuro) 0.06f else 0.07f)
-            val p = 13.dp.toPx(); var y = 0f; var fila = 0
-            while (y < h * 0.45f) {
-                var x = if (fila % 2 == 0) 0f else p / 2
-                while (x < w) {
-                    val k = ((x / w) * (1f - y / (h * 0.45f))).coerceIn(0f, 1f)
-                    val rr = p * 0.32f * k
-                    if (rr > 0.25.dp.toPx()) puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
-                    x += p
-                }
-                y += p * 0.87f; fila++
-            }
+            // La caliza de las casas de Galilea: los lechos de la piedra, que ondulan apenas; alguna costura dentada; los poros
+            // y algún fósil diminuto; y una grieta finísima que entra por el borde. De noche, la misma piedra apenas vista, y
+            // por la grieta, un hilo de la luz blanca y violeta.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.035f else 0.05f)
+            color2 = if (oscuro) esquema.tertiary.copy(alpha = 0.06f) else esquema.onBackground.copy(alpha = 0.07f)
+            color3 = if (oscuro) esquema.tertiary.copy(alpha = 0.3f) else esquema.onBackground.copy(alpha = 0.12f)
+            grosor = 0.6f
+            calizaFondo(w, h, 1.dp.toPx(), oscuro, trazo, puntos, trazo2)
         }
         TemaId.FRENTE -> {
             // El muro de la base: sillares viejos a soga, con las juntas gastadas y alguna esquina desportillada; manchas de
