@@ -252,7 +252,7 @@ internal object PiezasIniciado {
     private val PUEBLO = listOf(
         v("{entorno} Magdala es un pueblo de pescadores con una torre de piedra junto al agua, de la que le viene el nombre. Las casas son de piedra negra y adobe, con patios y azoteas, y todas huelen a pescado: el que se pesca, el que se sala y el que se vende."),
         v("El secadero de Ezequías está en la orilla, al sur del pueblo: un patio grande de tierra con cañizos tendidos sobre palos, tres tinas de salmuera, un cobertizo para las ánforas y un muelle de piedras donde atracan las barcas al amanecer. {entorno}"),
-        v("{entorno} La sinagoga de Magdala está cerca del agua, con bancos de piedra alrededor de la sala y una piedra tallada en el centro, donde se pone el rollo para leer. El sábado la llena el pueblo entero. Los demás días, los viejos se sientan a la puerta."),
+        v("{entorno} La sinagoga de Magdala está cerca del agua, con bancos de piedra alrededor de la sala y, en el centro, una piedra tallada con el candelabro de siete brazos del Templo. El sábado la llena el pueblo entero. Los demás días, los viejos se sientan a la puerta."),
         v("A una hora de camino hacia el sur está Tiberíades, la ciudad que Herodes Antipas levantó en honor de Tiberio, con su palacio y sus columnas. Mucha gente de Magdala no quiere vivir en ella: dicen que la hicieron encima de un cementerio. {entorno}"),
         v("{entorno} Detrás de Magdala se levanta el Arbel, un monte cortado a pico, con cuevas en la pared de roca. Los viejos cuentan que hace más de sesenta años se escondieron allí los enemigos del viejo Herodes, y que él los sacó de las cuevas uno por uno."),
         v("{entorno} En los días claros se ve al norte el Hermón, blanco de nieve casi todo el año, como un hombro que asoma por encima de los montes. Ismael dice que allí bajaron los Vigilantes (1 Enoc 6). {nombre} no lo mira mucho rato."),
@@ -372,7 +372,7 @@ internal object PiezasIniciado {
         v("{mundo} {nombre} piensa en Sofía, la que cayó, y le da pena, como le daría pena una mujer del pueblo que se perdió por querer saber demasiado. Piensa que querer saber no es pecado. Piensa que, si lo es, él también ha caído un poco."),
         v("{nombre} piensa en el de Nazaret y en lo que vio en el Jordán. Ismael dice que el Cristo de arriba bajó sobre un hombre de verdad, como una paloma (Cerinto, según Ireneo, Contra las herejías 1.26). Judit dice que su cuerpo solo parece cuerpo. Él cree las dos cosas, según el día.", desde = "bautismo_28", hasta = "cruz_30"),
         v("{nombre} piensa en el viernes de Jerusalén y no lo puede pensar entero. Ismael dice que el que colgaba del madero no era el Salvador, que el Salvador estaba encima, riéndose (Apocalipsis de Pedro). {nombre} quiere creerlo. Se acuerda del cielo oscuro.", desde = "cruz_30"),
-        v("{nombre} piensa en el hombre que vio en la orilla al amanecer, junto a las brasas, de espaldas, hecho de una luz que no era la del sol. No le vio la cara. Piensa que nadie se la ha visto de verdad, y que por eso cada uno lo cuenta distinto.", desde = "orilla_30"),
+        v("{nombre} piensa en el hombre que vio en la orilla al amanecer, de pie, de espaldas, hecho de una luz que no era la del sol. No le vio la cara. Piensa que nadie se la ha visto de verdad, y que por eso cada uno lo cuenta distinto.", desde = "orilla_30"),
         v("{nombre} piensa en Simón de Samaria, al que llaman el gran poder de Dios (Hechos 8:10). Habla de cosas que se parecen a las del círculo, y eso, en vez de tranquilizarlo, le da miedo. Piensa que no todo el que habla de la luz viene de ella.", desde = "simon_32"),
     )
 
@@ -553,7 +553,7 @@ internal object PiezasIniciado {
         "rosh_28" to unDia(
             Parrafo.MANANA to "Hoy es Rosh Hashaná, el primer día del mes de tishrí, el año nuevo. Desde la sinagoga llega el sonido del cuerno de carnero, largo, luego entrecortado, luego largo otra vez, y en todo Magdala la gente deja lo que tiene en las manos para escucharlo.",
             Parrafo.TRABAJO to "Hoy {nombre} no trabaja: es día de fiesta. Va a la sinagoga con toda la familia, y Shifra, que ya está fuerte, va delante, con su mejor manto. Después se come en casa lo mejor que hay: pescado fresco, pan de trigo, uvas y miel. Mañana empiezan a preparar la subida a Jerusalén.",
-            Parrafo.PENSAMIENTO to "{nombre} piensa que el año empieza hoy y que no empieza nada, que los días son los mismos, uno detrás de otro. Ismael dice que hay trescientos sesenta y cinco cielos, tantos como días tiene el año del sol (Ireneo, Contra las herejías 1.24), y que en cada uno hay un guardián. Hoy, piensa, se pasa una puerta.",
+            Parrafo.PENSAMIENTO to "{nombre} piensa que el año empieza hoy y que no empieza nada, que los días son los mismos, uno detrás de otro. Ismael dice que hay trescientos sesenta y cinco cielos, tantos como días tiene el año del sol (Ireneo, Contra las herejías 1.24; Hipólito, Refutación 7.26), y que en cada uno hay un guardián. Hoy, piensa, se pasa una puerta.",
         ),
         "sube_sucot_28" to TextoEspecial(
             listOf(dia(
@@ -595,7 +595,7 @@ internal object PiezasIniciado {
             )),
             sigue = mapOf(
                 Parrafo.PUEBLO to listOf(
-                    "Por las mañanas se ve bajar a los sacerdotes con un cántaro de oro hasta la fuente de Siloé y subirlo lleno al Templo entre trompetas, para derramar el agua en el altar. Es la fiesta del agua, en la que se pide la lluvia del año. Los peregrinos los siguen por las calles.",
+                    "Por las mañanas se ve bajar a los sacerdotes con un cántaro hasta la fuente de Siloé y subirlo lleno al Templo entre trompetas, para derramar el agua en el altar. Es la fiesta del agua, en la que se pide la lluvia del año. Los peregrinos los siguen por las calles.",
                     "En los días de fiesta las calles de Jerusalén son un mercado: se venden ramos, limones, palomas, vino, tortas y sandalias para los que llegaron descalzos. Los cambistas del Templo no dan abasto. Por todas partes hay soldados de Roma mirando desde los muros.",
                     "En el monte de los Olivos, alrededor de las cabañas de Magdala, acampan peregrinos de Babilonia, de Alejandría y de Cirene, que hablan griego entre ellos y arameo con los demás. Se cambian comida, noticias y consejos. Los de Alejandría hablan de un sabio de su ciudad que explica la Ley como un griego.",
                 ),
@@ -657,7 +657,7 @@ internal object PiezasIniciado {
             dia(
                 Parrafo.MANANA to "Segundo día de camino. Llegan al vado de Juan a media mañana. Hay todavía más gente que en otoño, y entre la gente, los de siempre: los que preguntan, los que gritan, los que lloran. Los discípulos de Juan ordenan la fila de los que quieren bajar al agua.",
                 Parrafo.TRABAJO to "Hoy pasa el día en la orilla oyendo a Juan. Dice que él bautiza con agua, pero que el que viene detrás de él bautizará con el espíritu santo (Marcos 1:8). La gente se pregunta quién es ese que viene. Juan no dice su nombre. Puede que no lo sepa.",
-                Parrafo.PUEBLO to "El vado es un sitio de cañas y de arena, donde el río se puede cruzar con el agua por la cintura. Juan duerme por ahí, dicen, sin casa, y come langostas y miel silvestre (Marcos 1:6). Sus discípulos lo siguen a todas partes y ayunan cuando él ayuna.",
+                Parrafo.PUEBLO to "El vado es un sitio de cañas y de arena, donde el río se puede cruzar con el agua por la cintura. Juan duerme por ahí, dicen, sin casa, y come langostas y miel silvestre (Marcos 1:6). Sus discípulos lo siguen a todas partes y duermen donde él duerme.",
                 Parrafo.ANOCHECER to "Esta noche Tobías le dice que mañana se bautiza. {nombre} le pregunta qué dirá Ismael. Tobías se encoge de hombros: dice que el agua no le puede hacer daño a un barquero. {nombre} se ríe. Luego se queda despierto, mirando las estrellas, que aquí abajo, en el valle, parecen más lejos que nunca.",
             ),
         )),
