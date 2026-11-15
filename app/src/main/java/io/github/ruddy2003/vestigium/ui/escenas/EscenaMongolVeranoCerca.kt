@@ -27,7 +27,8 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.odre
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.sombraDeCarreta
 import io.github.ruddy2003.vestigium.ui.escenas.CampamentoVerano.montonDeLana
 import io.github.ruddy2003.vestigium.ui.escenas.VeranoMongol.DeLaCuerda
-import io.github.ruddy2003.vestigium.ui.escenas.VeranoMongol.Postura
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.Postura
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.parejaMamando
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
@@ -206,12 +207,22 @@ internal object CercaVerano {
     private fun tallaDe(d: DeLaCuerda) = alto(d.t) * (if (d.potro) 0.62f else 1f) * d.talla
 
     /**
-     * Un caballo de la cuerda con su postura. **Pendiente de conectar**: cuando la pieza común tenga su parámetro de postura
-     * (de pie, pastando, mirando atrás, potro echado, potro mamando), se pasa aquí; hoy solo sabe pastar.
+     * Un caballo de la cuerda con su postura (la de la pieza común). La yegua que tiene potro que mama se pinta con él
+     * ([parejaMamando]): ella vuelve la cabeza hacia el potro. De noche, el filo cálido sale del lado de la puerta.
      */
-    private fun DrawScope.caballoDeLaCuerda(p: Pincel, d: DeLaCuerda, cintas: Boolean) {
-        val pie = pieDe(d)
-        caballo(p, pie, tallaDe(d), d.mira, d.pelo, pasta = d.postura == Postura.PASTANDO, potro = d.potro, cintas = cintas && !d.potro || cintas && d.blanco, lejos = (0.12f * d.t))
+    private fun DrawScope.caballoDeLaCuerda(p: Pincel, d: DeLaCuerda, cintas: Boolean, viento: Float, lumbreX: Float) {
+        val pie = pieDe(d); val lejos = 0.12f * d.t
+        val cria = d.cria
+        if (cria != null) parejaMamando(p, pie, tallaDe(d), d.mira, d.pelo, cria, lejos, vuelve = d.postura == Postura.MIRANDO_ATRAS, viento = viento)
+        else caballo(p, pie, tallaDe(d), d.mira, d.pelo, potro = d.potro, cintas = cintas && (!d.potro || d.blanco), lejos = lejos, postura = d.postura, viento = viento, lumbreX = lumbreX)
+    }
+
+    /** La silueta de un caballo de la cuerda (y la de su potro, si mama), para su sombra. */
+    private fun siluetaDe(d: DeLaCuerda): Path {
+        val pie = pieDe(d); val alto = tallaDe(d)
+        val forma = PiezasMongol.siluetaDeCaballo(pie, alto, d.mira, postura = d.postura, potro = d.potro)
+        if (d.cria != null) { val (pp, ap) = PiezasMongol.potroDe(pie, alto, d.mira); forma.addPath(PiezasMongol.siluetaDeCaballo(pp, ap, -d.mira, postura = Postura.MAMANDO, potro = true)) }
+        return forma
     }
 
     fun DrawScope.primerPlano(m: Momento, p: Pincel, sol: Sol3) {
@@ -229,17 +240,18 @@ internal object CercaVerano {
         val negro = EscenaMongol.negroAtado(m); val forastero = V.caballosDeFuera(m) > 0
         val grande = ObjetosMongol.grande(m, p.con(calida(V.PIE_GRANDE)), V.PIE_GRANDE, V.APOYO_GRANDE)
         val (baseCab, _) = pared(bat, V.CABALLETE.x)
-        val silla = V.sillaEnElCaballete(m)
+        val silla = V.sillaEnElCaballete(m); val hayCaballete = V.caballete(m)
+        val lumbreX = puerta.x
 
         // ---- 1. Las sombras en el suelo: la tienda, la carreta, los caballos, el odre, el caballete, el objeto grande, la cuerda con lo colgado.
         capaSombra(sol.r) { c ->
             sombra(PiezasMongol.sombraDeGer(bat, sol), c)
             sombraDeCarreta(carreta, sol, c)
-            for (d in yeguada) { val q = pieDe(d); sombraArrojada(sol.r, PiezasMongol.siluetaDeCaballo(q, tallaDe(d), d.mira, d.postura == Postura.PASTANDO), q, c, 150f, 150f) }
-            if (negro) sombraArrojada(sol.r, PiezasMongol.siluetaDeCaballo(V.NEGRO, 34f, 1f), V.NEGRO, c, 150f, 150f)
+            for (d in yeguada) { val q = pieDe(d); sombraArrojada(sol.r, siluetaDe(d), q, c, 150f, 150f) }
+            if (negro) sombraArrojada(sol.r, PiezasMongol.siluetaDeCaballo(V.NEGRO, 34f, 1f, postura = Postura.DESCANSO), V.NEGRO, c, 150f, 150f)
             if (forastero) sombraArrojada(sol.r, PiezasMongol.siluetaDeCaballo(V.FORASTERO, 33f, -1f), V.FORASTERO, c, 150f, 150f)
             if (EscenaMongol.odre(m)) sombraArrojada(sol.r, PiezasMongol.siluetaDeOdre(V.ODRE, 54f), V.ODRE, c, 150f, 150f)
-            sombraArrojada(sol.r, siluetaDeCaballete(V.CABALLETE, silla), V.CABALLETE, c, 150f, 150f)
+            if (hayCaballete) sombraArrojada(sol.r, siluetaDeCaballete(V.CABALLETE, silla), V.CABALLETE, c, 150f, 150f)
             if (grande != null) sombraArrojada(sol.r, grande.forma, grande.pie, c, 150f, 150f)
             sombraDeLaCuerda(m, sol, c)
         }
@@ -256,11 +268,12 @@ internal object CercaVerano {
         val cosas = ArrayList<Pair<Float, DrawScope.() -> Unit>>()
         // La cuerda de las yeguas: de estaca en estaca, baja, con sus nudos; con la cinta azul de la primera leche.
         cosas += parte(V.FONDO_CUERDA.y - 1f) { cuerdaDeLasYeguas(m, p) }
-        for (d in yeguada) cosas += parte(pieDe(d).y) { caballoDeLaCuerda(p.con(calida(pieDe(d))), d, cintas) }
-        if (negro) cosas += parte(V.NEGRO.y) { caballo(p.con(calida(V.NEGRO)), V.NEGRO, 34f, 1f, PiezasMongol.NEGRO, silla = false, crin = lerp(C.HOLLIN, C.CUERO, 0.1f)) }
+        for (d in yeguada) cosas += parte(pieDe(d).y) { caballoDeLaCuerda(p.con(calida(pieDe(d))), d, cintas, m.viento, lumbreX) }
+        // El Negro, atado de noche junto a la puerta: en descanso, la cabeza baja y una pata doblada, alumbrado por la puerta.
+        if (negro) cosas += parte(V.NEGRO.y) { caballo(p.con(calida(V.NEGRO) + 0.15f * l.noche), V.NEGRO, 34f, 1f, PiezasMongol.NEGRO, postura = Postura.DESCANSO, viento = m.viento, lumbreX = lumbreX) }
         // El caballo de fuera (el del correo, el del que trae las noticias, el de un invitado), ensillado y atado a la carreta.
         if (forastero) cosas += parte(V.FORASTERO.y) {
-            caballo(p.con(calida(V.FORASTERO)), V.FORASTERO, 33f, -1f, PiezasMongol.TORDO, silla = true, cintas = EscenaMongol.fiesta(m) || V.carrera(m))
+            caballo(p.con(calida(V.FORASTERO)), V.FORASTERO, 33f, -1f, PiezasMongol.TORDO, silla = true, cintas = EscenaMongol.fiesta(m) || V.carrera(m), viento = m.viento, lumbreX = lumbreX)
             drawPath(Path().apply { moveTo(V.FORASTERO + Offset(-28f, -24f)); cubicTo(V.FORASTERO + Offset(-32f, -14f), V.FORASTERO + Offset(-38f, -18f), V.FORASTERO + Offset(-42f, -30f)) }, p.medio(C.CRIN), style = Stroke(0.8f))
         }
         // El ordeño del alba y la primera leche: el cubo de cuero lleno junto a la primera yegua; la cuchara de nueve agujeros.
@@ -272,7 +285,7 @@ internal object CercaVerano {
             ger(bat, p, sol)
             usoDeLaPared(p, bat, az, V.hierba(m))
             if (EscenaMongol.colgado(m) != Colgado.NADA) quesoEnElTecho(p, sol, bat, az)
-            arreos(p.con(calida(Offset(292f, 220f))), sol, bat)
+            arreos(p.con(calida(Offset(284f, 220f))), sol, bat)
             if (EscenaMongol.liebre(m)) liebre(p.con(calida(Offset(278f, 200f))), Offset(278f, 186f))
         }
         // Las sombras sobre la pared: la de la silla y la del objeto grande, que se arriman a ella.
@@ -281,7 +294,7 @@ internal object CercaVerano {
             capaSombra(sol.r, 0.85f) { c ->
                 clipPath(PiezasMongol.silueta(bat)) {
                     if (grande != null) sombraArrojada(sol.r, grande.forma, grande.pie, c, suelo, arriba, 200f, ANCHO)
-                    sombraArrojada(sol.r, siluetaDeCaballete(V.CABALLETE, silla), V.CABALLETE, c, baseCab, arriba, 200f, ANCHO)
+                    if (hayCaballete) sombraArrojada(sol.r, siluetaDeCaballete(V.CABALLETE, silla), V.CABALLETE, c, baseCab, arriba, 200f, ANCHO)
                 }
             }
         }
@@ -289,12 +302,13 @@ internal object CercaVerano {
         // El día que llegan, mientras se arma la tienda, los rollos de fieltro esperan en la hierba donde irá el odre.
         if (V.llegada(m) && EscenaMongol.armado(m) < 1f) for ((c, largo) in listOf(Offset(226f, 246f) to 38f, Offset(258f, 252f) to 32f, Offset(240f, 238f) to 30f).sortedBy { it.first.y }) cosas += parte(c.y) { rolloDeFieltro(p, sol, c, largo, 6.4f) }
         if (grande != null) cosas += parte(grande.pie.y) { grande.pintar(this) }
-        cosas += parte(V.CABALLETE.y) { caballete(p.con(calida(V.CABALLETE)), sol, V.CABALLETE, silla) }
-        // El fieltro de sentarse, con el objeto del día encima.
+        if (hayCaballete) cosas += parte(V.CABALLETE.y) { caballete(p.con(calida(V.CABALLETE)), sol, V.CABALLETE, silla) }
+        // El fieltro de sentarse, con el objeto del día encima; los días de objeto grande, la tabla del queso con su cuchara.
         cosas += parte(V.FIELTRO_OBJETO.y) {
             val pp = p.con(calida(V.FIELTRO_OBJETO))
-            fieltroDeSentarse(pp, V.FIELTRO_OBJETO)
-            with(ObjetosMongol) { sobreElSoporte(m, pp, V.FIELTRO_OBJETO + Offset(0f, -1f)) }
+            fieltroDeSentarse(pp, V.FIELTRO_OBJETO, V.hierba(m), Azar(Semilla.de("mongol", "fieltro", "sentarse")))
+            if (ObjetosMongol.esGrande(m) || m.ficha.objeto == null) tablaDeQueso(pp, V.FIELTRO_OBJETO + Offset(2f, -1f))
+            else with(ObjetosMongol) { sobreElSoporte(m, pp, V.FIELTRO_OBJETO + Offset(0f, -1f), 1.35f) }
         }
         if (V.pielParaDormir(m)) cosas += parte(262f) { pielDeOveja(p.con(calida(Offset(250f, 262f))), Offset(250f, 263f), az) }
         if (V.lanaEnElSuelo(m)) cosas += parte(262f) { montonDeLana(p, sol, Offset(132f, 262f), 24f, Azar(Semilla.de("mongol", "lana", "cerca")), 0f); tijeras(p, Offset(128f, 250f)) }
@@ -382,32 +396,93 @@ internal object CercaVerano {
     }
 
     /** El fieltro de sentarse, tendido en la hierba: grueso, con su ribete rojo, el pespunte y una esquina doblada. */
-    private fun DrawScope.fieltroDeSentarse(p: Pincel, c: Offset) {
+    /**
+     * El fieltro de sentarse, tendido en la hierba delante de la puerta: grueso, de fieltro pardo claro acolchado, con el
+     * ribete de fieltro rojo cosido alrededor y su pespunte claro; dentro, el dibujo acolchado de hilo oscuro (un rombo con
+     * cuernos de carnero en las puntas y la greca del martillo por dentro del ribete) **[Aproximación]** a los fieltros de
+     * sentarse acolchados; las arrugas y el rodal gastado del uso; la esquina de delante doblada, que enseña el envés y
+     * el canto; y la hierba que le sube por los bordes.
+     */
+    private fun DrawScope.fieltroDeSentarse(p: Pincel, c: Offset, verde: Color, az: Azar) {
         val s = Sitio(VeranoMongol.MIRADA, c + Offset(0f, 1f), 60f, 0.12f)
-        val w = 0.68f; val d = 0.46f; val alto = 0.035f
-        val esquinas = listOf(V3(-w, alto, -d), V3(w, alto, -d), V3(w, alto, d), V3(-w + 0.2f, alto, d))
-        val pts = esquinas.map { s.p(it) }
-        // La sombra que hace en la hierba y el canto, grueso.
-        drawPath(poligono(esquinas.map { s.p(it.x * 1.04f, 0f, it.z * 1.06f) }), p.sombra(C.TIERRA).copy(alpha = 0.4f))
-        drawPath(poligono(listOf(pts[3], pts[2], s.p(w, 0f, d), s.p(-w + 0.2f, 0f, d))), p.sombra(lerp(C.FIELTRO, C.TIERRA, 0.3f)))
-        val cara = poligono(pts)
-        val tela = lerp(C.FIELTRO, C.ESTEPA, 0.22f)
-        drawPath(cara, Brush.verticalGradient(listOf(p.arriba(tela), p.medio(tela)), pts.minOf { it.y }, pts.maxOf { it.y }))
+        val w = 0.7f; val d = 0.47f; val alto = 0.045f; val doblez = 0.22f; val b = 0.085f
+        fun q(x: Float, z: Float, y: Float = alto) = s.p(x, y, z)
+        val tela = lerp(lerp(C.FIELTRO_VIEJO, C.ESTEPA, 0.25f), C.LANA, 0.2f)
+        val ribete = lerp(C.ROJO, C.CUERO, 0.32f)
+        val hilo = p.sombra(lerp(C.CRIN, C.CUERO, 0.3f)).copy(alpha = 0.7f)
+        // La sombra en la hierba y el canto grueso, de delante y del lado derecho.
+        drawPath(poligono(listOf(q(-w * 1.03f, -d * 1.03f, 0f), q(w * 1.05f, -d * 1.03f, 0f), q(w * 1.06f, d * 1.1f, 0f), q(-w * 1.03f, d * 1.1f, 0f))), p.sombra(C.TIERRA).copy(alpha = 0.5f))
+        drawPath(poligono(listOf(q(-w, d), q(w - doblez, d), q(w - doblez, d, 0f), q(-w, d, 0f))), p.sombra(ribete))
+        drawPath(poligono(listOf(q(w, -d), q(w, d - doblez), q(w, d - doblez, 0f), q(w, -d, 0f))), p.por(ribete, if (p.solALaDerecha) 0.3f else -0.5f))
+        // La cara de arriba: el ribete rojo y, dentro, el campo acolchado.
+        val cara = poligono(listOf(q(-w, -d), q(w, -d), q(w, d - doblez), q(w - doblez, d), q(-w, d)))
+        drawPath(cara, Brush.verticalGradient(listOf(p.arriba(ribete), p.medio(ribete)), q(0f, -d).y, q(0f, d).y))
+        val campo = poligono(listOf(q(-w + b, -d + b), q(w - b, -d + b), q(w - b, d - doblez - b * 0.3f), q(w - doblez - b * 0.3f, d - b), q(-w + b, d - b)))
+        drawPath(campo, Brush.verticalGradient(listOf(p.arriba(tela), p.medio(tela)), q(0f, -d).y, q(0f, d).y))
         clipPath(cara) {
-            // El dibujo de pespunte: una greca por dentro del ribete y un rombo en el centro, de hilo pardo.
-            val hilo = p.sombra(lerp(C.CRIN, C.ROJO, 0.35f)).copy(alpha = 0.55f)
-            drawPath(poligono(listOf(s.p(-w * 0.78f, alto, -d * 0.7f), s.p(w * 0.8f, alto, -d * 0.7f), s.p(w * 0.8f, alto, d * 0.72f), s.p(-w * 0.62f, alto, d * 0.72f))), hilo, style = Stroke(0.5f))
-            drawPath(poligono(listOf(s.p(0f, alto, -d * 0.45f), s.p(w * 0.35f, alto, 0f), s.p(0f, alto, d * 0.45f), s.p(-w * 0.35f, alto, 0f))), hilo, style = Stroke(0.5f))
-            for (k in 0..6) { val x = -w + 2f * w * k / 6f; drawLine(hilo.copy(alpha = 0.25f), s.p(x, alto, -d), s.p(x + 0.05f, alto, d), 0.35f) }
-            // Lo gastado del uso: un rodal más oscuro donde se sienta, y manchas de leche.
-            mancha(s.p(-0.25f, alto, 0.05f), 14f, 4f, p.sombra(tela), 0.25f)
-            mancha(s.p(0.35f, alto, -0.15f), 4f, 1.4f, p.luz(C.FIELTRO), 0.35f)
+            // El pespunte claro que cose el ribete, por dentro.
+            val cosido = ArrayList<Offset>()
+            for (k in 0..40) { val u = k / 40f; cosido += q(-w + b * 0.9f + (2f * w - 2f * b) * u, -d + b * 0.9f); cosido += q(-w + b * 0.9f + (2f * w - 2f * b - doblez) * u, d - b * 0.9f) }
+            for (k in 0..24) { val u = k / 24f; cosido += q(-w + b * 0.9f, -d + b + (2f * d - 2f * b) * u); cosido += q(w - b * 0.9f, -d + b + (2f * d - 2f * b - doblez) * u) }
+            drawPoints(cosido, PointMode.Points, p.luz(lerp(C.FIELTRO, C.ORO, 0.2f)).copy(alpha = 0.8f), 0.7f, StrokeCap.Round)
+            // La greca del martillo, por dentro del ribete, delante y detrás.
+            for (z0 in listOf(-d + b + 0.06f, d - b - 0.06f)) {
+                val greca = Path(); var x = -w + b + 0.06f; var arriba = false; greca.moveTo(q(x, z0))
+                while (x < w - b - 0.08f - (if (z0 > 0f) doblez else 0f)) { val z1 = if (arriba) z0 else z0 + (if (z0 < 0f) 0.05f else -0.05f); greca.lineTo(q(x, z1)); x += 0.06f; greca.lineTo(q(x, z1)); arriba = !arriba }
+                drawPath(greca, hilo, style = Stroke(0.55f))
+            }
+            // El rombo del centro con los cuernos de carnero en sus cuatro puntas.
+            val rombo = listOf(q(0f, -d * 0.48f), q(w * 0.42f, 0f), q(0f, d * 0.42f), q(-w * 0.42f, 0f))
+            drawPath(poligono(rombo), hilo, style = Stroke(0.65f))
+            drawPath(poligono(listOf(q(0f, -d * 0.3f), q(w * 0.26f, 0f), q(0f, d * 0.26f), q(-w * 0.26f, 0f))), hilo.copy(alpha = 0.5f), style = Stroke(0.45f))
+            for ((cx, cz) in listOf(0f to -d * 0.48f, w * 0.42f to 0f, 0f to d * 0.42f, -w * 0.42f to 0f)) for (sentido in listOf(-1f, 1f)) {
+                val espiral = (0..12).map { k -> val a = k * 0.55f; val rr = 0.07f * (1f - k / 15f); q(cx + sentido * (0.07f - cos(a) * rr), cz - sin(a) * rr * 0.9f) }
+                drawPath(Path().apply { moveTo(espiral[0]); for (e in espiral.drop(1)) lineTo(e) }, hilo, style = Stroke(0.5f))
+            }
+            // Las arrugas del fieltro y lo gastado del uso: un rodal donde se sienta, una mancha de leche.
+            for (k in 0 until 3) { val x = -w * 0.6f + k * w * 0.5f + az.entre(-0.1f, 0.1f); mancha(q(x, az.entre(-0.2f, 0.2f)), 9f, 2.2f, p.sombra(tela), 0.22f); mancha(q(x + 0.05f, az.entre(-0.2f, 0.2f)), 7f, 1.4f, p.luz(tela), 0.25f) }
+            mancha(q(-0.3f, 0.08f), 13f, 3.6f, p.sombra(lerp(tela, C.TIERRA, 0.3f)), 0.3f)
+            mancha(q(0.38f, -0.18f), 4f, 1.4f, p.luz(C.FIELTRO), 0.35f)
         }
-        drawPath(cara, p.por(C.ROJO, 0.2f), style = Stroke(1.4f))
-        // La esquina de delante, doblada hacia arriba.
-        val pliegue = poligono(listOf(s.p(w - 0.22f, alto, d), s.p(w, alto, d), s.p(w, alto, d - 0.18f)))
-        drawPath(pliegue, p.sombra(lerp(tela, C.TIERRA, 0.3f)))
-        drawPath(poligono(listOf(s.p(w - 0.22f, alto, d), s.p(w, alto, d - 0.18f), s.p(w - 0.16f, alto + 0.1f, d - 0.08f))), p.luz(tela))
+        drawPath(cara, p.sombra(lerp(ribete, C.HOLLIN, 0.3f)).copy(alpha = 0.6f), style = Stroke(0.5f))
+        // La esquina de delante, doblada hacia arriba: enseña el envés, más gris, y el canto rojo.
+        val punta = q(w - doblez * 0.42f, d - doblez * 0.42f, alto + 0.13f)
+        drawPath(poligono(q(w - doblez, d), q(w, d - doblez), punta), p.por(lerp(tela, C.PIEDRA, 0.35f), if (p.solALaDerecha) 0.5f else -0.2f))
+        drawPath(Path().apply { moveTo(q(w - doblez, d)); lineTo(punta); lineTo(q(w, d - doblez)) }, p.medio(ribete), style = Stroke(1.2f, cap = StrokeCap.Round))
+        drawLine(p.sombra(tela).copy(alpha = 0.6f), q(w - doblez, d), q(w, d - doblez), 0.6f)
+        // La hierba que le sube por los bordes y se le echa encima.
+        val briznas = Path()
+        for (k in 0 until 46) {
+            val u = az.real(); val borde = az.entero(3)
+            val base = when (borde) { 0 -> q(-w + 2f * w * u, -d - 0.01f, 0f); 1 -> q(-w - 0.01f, -d + 2f * d * u, 0f); else -> q(-w + (2f * w - doblez) * u, d + 0.02f, 0f) }
+            val h = az.entre(3f, 7f) * (if (borde == 2) 1.2f else 0.8f); val lado = az.entre(-2f, 2.5f)
+            briznas.moveTo(base); briznas.cubicTo(base + Offset(lado * 0.2f, -h * 0.5f), base + Offset(lado * 0.7f, -h * 0.9f), base + Offset(lado, -h))
+        }
+        drawPath(briznas, p.por(verde, 0.1f), style = Stroke(0.75f, cap = StrokeCap.Round))
+    }
+
+    /**
+     * Lo que hay en el fieltro de sentarse los días en que el objeto del día es de los grandes: la tabla de madera con el
+     * queso seco cortado en trozos y la cuchara de madera **[Diseño propio]**: no es ninguno de los doce objetos.
+     */
+    private fun DrawScope.tablaDeQueso(p: Pincel, c: Offset) {
+        val madera = lerp(C.MADERA, C.CUERO, 0.25f)
+        drawOval(p.sombra(C.TIERRA).copy(alpha = 0.45f), Offset(c.x - 15f, c.y - 1f), Size(32f, 8f))
+        val tabla = poligono(c + Offset(-15f, -4.2f), c + Offset(11f, -5.6f), c + Offset(16f, 1.8f), c + Offset(-11f, 3.8f))
+        drawPath(poligono(c + Offset(-11f, 3.8f), c + Offset(16f, 1.8f), c + Offset(16f, 4f), c + Offset(-11f, 6f)), p.sombra(madera))
+        drawPath(tabla, Brush.horizontalGradient(if (p.solALaDerecha) listOf(p.medio(madera), p.luz(madera)) else listOf(p.luz(madera), p.medio(madera)), c.x - 15f, c.x + 16f))
+        drawPath(tabla, p.luz(lerp(madera, C.FIELTRO, 0.3f)).copy(alpha = 0.6f), style = Stroke(0.6f))
+        for (k in 1..3) drawLine(p.sombra(madera).copy(alpha = 0.4f), c + Offset(-13f + k * 1.2f, -3.4f + k * 1.7f), c + Offset(11f + k * 1.2f, -4.8f + k * 1.6f), 0.35f)
+        val queso = lerp(C.FIELTRO, C.ESTEPA, 0.15f)
+        for (i in 0 until 5) for (j in 0 until 2) {
+            val q = c + Offset(-9f + i * 4.6f + j * 2.2f, -2.2f + j * 2.8f - i * 0.3f); val w = 1.5f
+            drawRect(p.sombra(queso), Offset(q.x - w, q.y - w * 0.4f), Size(w * 2f, w * 1.1f))
+            drawRect(p.luz(queso), Offset(if (p.solALaDerecha) q.x - w * 0.2f else q.x - w, q.y - w * 0.9f), Size(w * 1.2f, w * 0.8f))
+        }
+        // La cuchara, de madera, con el mango hacia quien mira.
+        drawLine(p.medio(C.MADERA_OSC), c + Offset(18f, 3f), c + Offset(30f, 7f), 1.3f, StrokeCap.Round)
+        drawOval(p.por(C.MADERA, 0.3f), Offset(c.x + 14f, c.y), Size(6f, 3.6f))
+        drawOval(p.sombra(C.MADERA_OSC), Offset(c.x + 15f, c.y + 0.6f), Size(4f, 2f))
     }
 
     private const val U_CABALLETE = 0.5f
@@ -473,7 +548,7 @@ internal object CercaVerano {
     /** Lo que cuelga de la pared de la tienda: el ronzal y las riendas en una estaca de la celosía, y la soga de crin enrollada, cada uno con su sombra en el fieltro. */
     private fun DrawScope.arreos(p: Pincel, sol: Sol3, g: Ger) {
         val r = sol.r; val corre = Offset((r.ax * 3f).coerceIn(-5f, 5f), 1.6f)
-        val t1 = angulo(g, 292f); val clavo = g.pared(t1, 1.25f, g.radio + 0.02f)
+        val t1 = angulo(g, 284f); val clavo = g.pared(t1, 1.25f, g.radio + 0.02f)
         // El ronzal: un lazo de crin y cuero con su argolla, y las riendas que caen en curva.
         val ronzal = Path().apply { moveTo(clavo); cubicTo(clavo + Offset(-5f, 6f), clavo + Offset(-4f, 16f), clavo + Offset(1f, 18f)); cubicTo(clavo + Offset(6f, 16f), clavo + Offset(6f, 6f), clavo) }
         val riendas = Path().apply { moveTo(clavo); cubicTo(clavo + Offset(3f, 10f), clavo + Offset(9f, 22f), clavo + Offset(5f, 30f)) }

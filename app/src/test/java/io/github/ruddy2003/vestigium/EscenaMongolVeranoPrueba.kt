@@ -6,7 +6,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.EscenaMongol.Lugar
 import io.github.ruddy2003.vestigium.ui.escenas.Momento
 import io.github.ruddy2003.vestigium.ui.escenas.VeranoMongol
 import io.github.ruddy2003.vestigium.ui.escenas.VeranoMongol.Edad
-import io.github.ruddy2003.vestigium.ui.escenas.VeranoMongol.Postura
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.Postura
 import io.github.ruddy2003.vestigium.vidas.Clima
 import io.github.ruddy2003.vestigium.vidas.FichaDelDia
 import org.junit.Assert.assertEquals
@@ -49,9 +49,12 @@ class EscenaMongolVeranoPrueba {
                 if (VeranoMongol.llegada(m) && EscenaMongol.armado(m) < 1f) { assertTrue("$d $h: el día que llegan no se tiende la cuerda hasta armar", y.isEmpty()); continue }
                 val adultas = y.count { !it.potro }
                 if (EscenaMongol.yeguasEnLaCuerda(m)) assertTrue("$d $h: de día, las yeguas", adultas >= 3) else assertEquals("$d $h: de noche, solo los potros", 0, adultas)
-                assertTrue("$d $h: los potros, siempre", y.any { it.potro })
+                assertTrue("$d $h: los potros, siempre", y.any { it.potro || it.cria != null })
+                assertEquals("$d $h: el potro mama de día, sin tormenta", EscenaMongol.yeguasEnLaCuerda(m) && m.ficha.clima != Clima.TORMENTA, y.any { it.cria != null })
+                assertTrue("$d $h: la que tiene potro vuelve la cabeza hacia él", y.filter { it.cria != null }.all { it.postura == Postura.MIRANDO_ATRAS })
                 if (m.ficha.clima == Clima.TORMENTA) assertTrue("$d $h: con tormenta, juntas y de pie", y.all { it.postura == Postura.DE_PIE })
-                assertEquals("$d $h: el potro blanco", VeranoMongol.potroBlanco(m) != null && (VeranoMongol.potroBlanco(m) != Edad.JOVEN || EscenaMongol.yeguasEnLaCuerda(m)), y.any { it.blanco })
+                else assertTrue("$d $h: un potro echado", y.any { it.potro && it.postura == Postura.ECHADO })
+                assertEquals("$d $h: el potro blanco", VeranoMongol.potroBlanco(m) != null && (VeranoMongol.potroBlanco(m) != Edad.JOVEN || EscenaMongol.yeguasEnLaCuerda(m)), y.any { it.blanco || it.criaBlanca })
                 assertTrue("$d $h: la cuerda va de la estaca al fondo", y.all { it.t in 0f..1f })
             }
         }

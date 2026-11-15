@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.data.OtrasVidas.Hacer
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaMongol.Faena
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.Ger
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.Postura
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Rayo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.astros
@@ -86,11 +87,14 @@ internal object VeranoMongol {
     /** El fieltro de sentarse, tendido en la hierba delante de la puerta: el centro de su cara de arriba (el soporte del objeto del día). */
     val FIELTRO_OBJETO = Offset(190f, 257f)
 
-    /** Donde se apoya el objeto grande del día: pisa delante de la pared de la tienda, a la derecha de la puerta, y se recuesta en ella. */
-    val PIE_GRANDE = Offset(286f, 254f)
-    val APOYO_GRANDE = Offset(294f, 180f)
+    /**
+     * Donde se apoya el objeto grande del día: pisa al pie de la pared de la tienda, a la derecha de la puerta, en el sitio
+     * del caballete (que ese día se retira), y se recuesta en el fieltro, donde deja su sombra.
+     */
+    val PIE_GRANDE = Offset(322f, 243f)
+    val APOYO_GRANDE = Offset(316f, 174f)
 
-    /** La silla de montar en su caballete, arrimada a la pared de la tienda. */
+    /** La silla de montar en su caballete, arrimada a la pared de la tienda (los días de objeto chico). */
     val CABALLETE = Offset(328f, 252f)
 
     /** El montón de argal con el cesto, en la esquina de abajo, cortado por el borde. */
@@ -124,19 +128,24 @@ internal object VeranoMongol {
         else -> Edad.JOVEN
     }
 
-    /** Cómo está un caballo de la cuerda. La pieza común todavía solo sabe «de pie» y «pastando»: las otras se conectan cuando la tenga. */
-    internal enum class Postura { DE_PIE, PASTANDO, MIRA_ATRAS, ECHADO, MAMANDO }
-
-    /** Un caballo de la cuerda larga: [t], dónde está a lo largo de la cuerda (0 la estaca cercana, 1 la del fondo). */
-    internal class DeLaCuerda(val t: Float, val pelo: Color, val mira: Float, val postura: Postura, val potro: Boolean, val talla: Float = 1f, val blanco: Boolean = false)
+    /**
+     * Un caballo de la cuerda larga: [t], dónde está a lo largo de la cuerda (0 la estaca cercana, 1 la del fondo), y su
+     * postura (la de la pieza común). [cria]: el pelo del potro que mama de esta yegua, si mama ([criaBlanca], si es el
+     * potro blanco); la pieza los pinta juntos ([PiezasMongol.parejaMamando]).
+     */
+    internal class DeLaCuerda(
+        val t: Float, val pelo: Color, val mira: Float, val postura: PiezasMongol.Postura, val potro: Boolean, val talla: Float = 1f, val blanco: Boolean = false,
+        val cria: Color? = null, val criaBlanca: Boolean = false,
+    )
 
     /**
      * Las yeguas y los potros de la cuerda larga: «Las yeguas están atadas a la cuerda larga, con sus potros al lado».
-     * Pocas y cada una a su manera: una pasta, otra mira atrás, un potro mama y otro está echado **[Diseño propio]**.
-     * Del alba al anochecer ([EscenaMongol.yeguasEnLaCuerda]); de noche quedan atados solo los potros. El día de la
-     * primera leche están todas; con tormenta, juntas y de grupa al viento, sin pastar («los caballos se juntan»). El
-     * potro blanco mama de la yegua baya el primer verano y después se queda en la cuerda con las demás. El día que llegan
-     * no hay nadie en la cuerda hasta que las tiendas están armadas: en su sitio pacen los bueyes **[Diseño propio]**.
+     * Pocas y cada una a su manera **[Diseño propio]**: la baya vuelve la cabeza hacia su potro, que mama; la torda pasta;
+     * la alazana está de pie; otro potro, echado. Del alba al anochecer ([EscenaMongol.yeguasEnLaCuerda]); de noche quedan
+     * atados solo los potros, de pie o echados. El día de la primera leche están todas; con tormenta, juntas, de pie y de
+     * grupa al viento («los caballos se juntan»), sin pastar ni mamar. El potro blanco mama de la yegua baya el primer
+     * verano y después se queda en la cuerda con las demás. El día que llegan no hay nadie en la cuerda hasta que las
+     * tiendas están armadas: en su sitio pacen los bueyes **[Diseño propio]**.
      */
     internal fun yeguada(m: Momento): List<DeLaCuerda> {
         // El día que llegan, la cuerda no se tiende hasta que las tiendas están armadas.
@@ -144,15 +153,17 @@ internal object VeranoMongol {
         val yeguas = EscenaMongol.yeguasEnLaCuerda(m); val tormenta = m.ficha.clima == Clima.TORMENTA
         val blanco = potroBlanco(m)
         val lista = ArrayList<DeLaCuerda>()
+        val peloCria = if (blanco == Edad.POTRO) PiezasMongol.BLANCO else PiezasMongol.ISABELINO
+        val mama = yeguas && !tormenta
         if (yeguas) {
-            lista += DeLaCuerda(0.08f, PiezasMongol.BAYO, -1f, if (tormenta) Postura.DE_PIE else Postura.DE_PIE, false)
-            lista += DeLaCuerda(0.42f, PiezasMongol.TORDO, if (tormenta) -1f else 1f, if (tormenta) Postura.DE_PIE else Postura.PASTANDO, false)
-            lista += DeLaCuerda(0.74f, PiezasMongol.ALAZAN, -1f, if (tormenta) Postura.DE_PIE else Postura.MIRA_ATRAS, false)
-            if (EscenaMongol.primeraLeche(m)) lista += DeLaCuerda(0.93f, PiezasMongol.ISABELINO, -1f, Postura.DE_PIE, false)
+            lista += DeLaCuerda(0.08f, PiezasMongol.ALAZAN, -1f, Postura.DE_PIE, false)
+            lista += DeLaCuerda(0.4f, PiezasMongol.BAYO, 1f, if (mama) Postura.MIRANDO_ATRAS else Postura.DE_PIE, false, cria = if (mama) peloCria else null, criaBlanca = mama && blanco == Edad.POTRO)
+            lista += DeLaCuerda(0.74f, PiezasMongol.TORDO, if (tormenta) 1f else -1f, if (tormenta) Postura.DE_PIE else Postura.PASTANDO, false)
+            if (EscenaMongol.primeraLeche(m)) lista += DeLaCuerda(0.93f, PiezasMongol.ISABELINO, 1f, Postura.DE_PIE, false)
         }
-        // Los potros: el blanco, junto a su madre el primer verano; los otros, de pie o echados junto a la suya.
-        lista += DeLaCuerda(0.2f, if (blanco == Edad.POTRO) PiezasMongol.BLANCO else PiezasMongol.ISABELINO, 1f, if (yeguas && !tormenta) Postura.MAMANDO else Postura.DE_PIE, true, blanco = blanco == Edad.POTRO)
-        lista += DeLaCuerda(0.56f, PiezasMongol.ALAZAN, -1f, if (tormenta) Postura.DE_PIE else Postura.ECHADO, true)
+        // El potro de la baya, cuando no mama (de noche o con tormenta), atado de pie; el otro, echado (de pie con tormenta).
+        if (!mama) lista += DeLaCuerda(0.22f, peloCria, 1f, Postura.DE_PIE, true, blanco = blanco == Edad.POTRO)
+        lista += DeLaCuerda(0.62f, PiezasMongol.ALAZAN, -1f, if (tormenta) Postura.DE_PIE else Postura.ECHADO, true)
         if (blanco == Edad.ANOJO) lista += DeLaCuerda(0.86f, PiezasMongol.BLANCO, 1f, Postura.DE_PIE, true, 1.25f, blanco = true)
         if (blanco == Edad.JOVEN && yeguas) lista += DeLaCuerda(0.9f, PiezasMongol.BLANCO, 1f, if (tormenta) Postura.DE_PIE else Postura.PASTANDO, false, 0.92f, blanco = true)
         return lista
@@ -202,6 +213,12 @@ internal object VeranoMongol {
 
     /** La silla de montar, en su caballete; el día que la silla es el objeto del día, en el caballete solo queda la manta. */
     internal fun sillaEnElCaballete(m: Momento): Boolean = m.ficha.objeto != "silla"
+
+    /**
+     * Si el caballete está en su sitio, junto a la pared: los días de objeto grande se retira, para que el objeto (que se
+     * arrima a la pared en ese mismo sitio) se lea entero con su sombra en el fieltro **[Diseño propio]**.
+     */
+    internal fun caballete(m: Momento): Boolean = !ObjetosMongol.esGrande(m)
 
     /** De 22 a 5, sin lluvia, Bat duerme «fuera de la tienda, sobre una piel, mirando las estrellas»: la piel tendida junto a la puerta. */
     internal fun pielParaDormir(m: Momento): Boolean = m.hacer == Hacer.DORMIR && !rioTurbio(m)
@@ -272,7 +289,7 @@ internal object VeranoMongol {
     fun estorbos(m: Momento): List<Float> = emptyList()
 
     fun anclas(m: Momento): List<Ancla> = buildList {
-        add(Ancla(TipoAncla.SUELO, 130f, PISO_GATO, hasta = 296f))
+        add(Ancla(TipoAncla.SUELO, 130f, PISO_GATO, hasta = 334f))
         add(Ancla(TipoAncla.MIRADOR, 92f, 198f))                                 // en la plataforma de la carreta
         add(Ancla(TipoAncla.OBJETO, if (ObjetosMongol.esGrande(m)) PIE_GRANDE.x else FIELTRO_OBJETO.x, PISO_GATO))
         add(Ancla(TipoAncla.ABRIGO, 140f, PISO_GATO))                            // a la sombra de la carreta

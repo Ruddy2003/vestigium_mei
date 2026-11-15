@@ -18,7 +18,11 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.caballo
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.carreta
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.ger
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.hogar
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.bovino
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.perro
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.rebano
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.rebanoApretado
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombraArrojada
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.sombraDeCarreta
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.capaSombra
@@ -69,6 +73,13 @@ internal object CampamentoVerano {
 
     private fun lejosDe(y: Float) = (0.06f + (176f - y) / 110f).coerceIn(0.02f, 0.4f)
 
+    /** Los bueyes desuncidos del día que llegan, en el sitio de la cuerda de las yeguas (dónde pisan y hacia dónde miran). */
+    private val BUEYES = listOf(Offset(166f, 216f) to 1f, Offset(196f, 190f) to -1f)
+    private fun altoDeBuey(q: Offset) = 30f + (q.y - 216f) * 0.42f
+
+    /** Donde se echa el perro de noche, junto al fuego del campamento. */
+    private val PERRO_FUEGO = Offset(142f, 186f)
+
     private fun gerDe(m: Momento, u: Puesto, armado: Float, p: Pincel): Ger = Ger(Sitio(MIRADA, u.pie, u.k, u.giro), Semilla.de("mongol", "tienda", u.tienda.name), u.desgaste,
         if (EscenaMongol.madreEnferma(m) && u.tienda == Tienda.MADRE) Puerta.CERRADA else if (EscenaMongol.luto(m)) Puerta.CERRADA else Puerta.ABIERTA,
         EscenaMongol.fuegoDentro(m) * (if (u.tienda == Tienda.CHAMAN) 0.7f else 1f), 0f, armado, lejos = lejosDe(u.pie.y), detalle = u.k > 5f, radio = u.radio)
@@ -95,15 +106,17 @@ internal object CampamentoVerano {
         // Con lluvia, una franja de bruma entre el río y el campamento despega los planos.
         if (VeranoMongol.rioTurbio(m)) { mancha(Offset(170f, 141f), 240f, 5f, lerp(l.bruma, l.medio, 0.4f), 0.5f); mancha(Offset(250f, 116f), 200f, 4f, lerp(l.bruma, l.medio, 0.3f), 0.45f) }
         // Las sombras de las tiendas y de las carretas, en una sola capa.
+        val bueyes = if (llegada && armado < 1f) BUEYES else emptyList()
         capaSombra(sol.r) { c ->
             for ((g, _) in tiendas) sombra(PiezasMongol.sombraDeGer(g, sol), c)
             sombraDeCarreta(otra, sol, c); if (segunda != null) sombraDeCarreta(segunda, sol, c)
+            for ((q, mira) in bueyes) sombraArrojada(sol.r, PiezasMongol.siluetaDeBovino(q, altoDeBuey(q), mira), q, c, 150f, 150f)
         }
 
         // El rebaño de día, junto al río: bebe en la playa y pace en la orilla, en el hueco del pasillo.
         val cerca = EscenaMongol.ovejasCerca(m); val todas = EscenaMongol.ovejas(m)
         val lejanas = (todas * (1f - cerca)).toInt(); val juntas = todas - lejanas
-        rebanoLejano(p, sol, (0 until lejanas).map { val u = az.real(); Offset(146f + 82f * u + az.entre(-6f, 6f), 143.6f + az.entre(0f, 6f) + 2f * u) }.sortedBy { it.y }, az)
+        rebano(p, (0 until lejanas).map { val u = az.real(); Offset(146f + 82f * u + az.entre(-6f, 6f), 143.6f + az.entre(0f, 6f) + 2f * u) }, { y -> 2f + (y - 140f) * 0.17f }, az, { 0.3f }, pastan = 0.75f)
 
         // La semana del fieltro: las piezas nuevas, blancas, tendidas en la orilla, y el rollo con su palo.
         if (VeranoMongol.fieltroTendido(m)) fieltroEnLaHierba(p, sol, az)
@@ -117,7 +130,7 @@ internal object CampamentoVerano {
         }
         cosas += parte(CARRETA_MEDIO.pie.y) { carreta(otra, p.con(calor(CARRETA_MEDIO.pie)), sol) }
         if (segunda != null) cosas += parte(CARRETA_LLEGADA.pie.y) { carreta(segunda, p, sol) }
-        if (llegada && armado < 1f) for ((q, mira) in listOf(Offset(166f, 214f) to 1f, Offset(194f, 190f) to -1f)) cosas += parte(q.y) { buey(p, sol, q, 13f + (q.y - 186f) * 0.35f, mira, az) }
+        for ((q, mira) in bueyes) cosas += parte(q.y) { bovino(p, q, altoDeBuey(q), mira, PiezasMongol.BUEY, yak = false, pasta = mira > 0f, lejos = lejosDe(q.y) * 0.5f) }
         for ((_, pintar) in cosas.sortedBy { it.first }) pintar()
 
         // El fuego del campamento, con su corro de piedras; a la hora de la gente y de comer, los fieltros alrededor.
@@ -126,8 +139,10 @@ internal object CampamentoVerano {
         if (llegada) circuloNegro(p, Offset(150f, 183f))
         if (f > 0.05f) resplandor(fuego + Offset(0f, -3f), 46f, 0.62f * l.noche * f, C.LUMBRE)
 
-        // De noche, las ovejas se juntan junto a las tiendas, entre la otra carreta y la cuerda.
-        rebano(p.con(0.3f * l.noche * f), (0 until juntas).map { Offset(az.entre(60f, 126f), az.entre(176f, 192f)) }, { y -> 4.2f + (y - 176f) * 0.2f }, az, { 0.12f }, pastan = 0.15f)
+        // De noche, las ovejas se juntan apretadas junto a las tiendas, entre la otra carreta y la cuerda; el perro, echado
+        // junto al fuego, vigila.
+        if (juntas > 0) rebanoApretado(p.con(0.3f * l.noche * f), sol, Offset(166f, 177f), 27f, 5.5f, juntas, { y -> 4.6f + (y - 176f) * 0.22f }, az, 0.12f, pastan = 0.15f)
+        if (m.hacer == io.github.ruddy2003.vestigium.data.OtrasVidas.Hacer.GENTE || m.hacer == io.github.ruddy2003.vestigium.data.OtrasVidas.Hacer.DORMIR) perro(p.con(calor(PERRO_FUEGO)), PERRO_FUEGO, 9f, -1f, echado = true, lejos = 0.1f)
 
         // La lana de la esquila: montones grises, blancos y marrones junto a las tiendas.
         if (VeranoMongol.lanaEnElSuelo(m)) for ((q, w) in listOf(Offset(146f, 152f) to 9f, Offset(212f, 151f) to 8f, Offset(160f, 250f) to 14f)) montonDeLana(p, sol, q, w, Azar(Semilla.de("mongol", "lana", q.x.toInt())))
@@ -143,24 +158,6 @@ internal object CampamentoVerano {
             caballo(p.con(calor(q)), q, alto, if (i % 2 == 0) 1f else -1f, pelos[i], pasta = i == 2, silla = true, cintas = EscenaMongol.fiesta(m) || VeranoMongol.carrera(m), lejos = lejosDe(q.y))
         }
         if (fuera > 1) { drawLine(p.medio(C.MADERA_OSC, 0.3f), Offset(222f, 150f), Offset(222f, 142f), 0.6f); drawLine(p.medio(C.CRIN, 0.3f), Offset(222f, 143f), Offset(216f, 141f), 0.3f) }
-    }
-
-    /**
-     * El rebaño lejos, junto al río, a dos o tres unidades de largo: a ese tamaño basta el lomo de lana con su luz arriba,
-     * la cabeza oscura (gacha la mayoría, que pastan) y la sombra corta; pesa mucho menos que la oveja de cerca.
-     */
-    private fun DrawScope.rebanoLejano(p: Pincel, sol: Sol3, sitios: List<Offset>, az: Azar) {
-        val lejos = 0.3f
-        for (q in sitios) {
-            val u = 1.9f + (q.y - 140f) * 0.16f; val d = if (az.entero(3) == 0) 1f else -1f
-            sombraCorta(sol.r, q, u, u * 0.5f)
-            val cabra = az.entero(7) == 0
-            val lana = if (cabra) lerp(C.LANA, C.HOLLIN, 0.5f) else lerp(C.LANA, C.FIELTRO_VIEJO, az.entre(0f, 0.5f))
-            drawOval(Brush.verticalGradient(listOf(p.luz(lana, lejos), p.sombra(lana, lejos)), q.y - u * 0.62f, q.y - u * 0.12f), Offset(q.x - u * 0.45f, q.y - u * 0.62f), Size(u * 0.9f, u * 0.5f))
-            val pasta = az.real() < 0.75f
-            val cabeza = q + Offset(-u * 0.5f * d, if (pasta) -u * 0.18f else -u * 0.5f)
-            drawOval(p.medio(C.CABEZA, lejos), Offset(cabeza.x - u * 0.14f, cabeza.y - u * 0.1f), Size(u * 0.28f, u * 0.2f))
-        }
     }
 
     /** La marca que deja una tienda en la hierba donde se arma: un círculo de hierba aplastada y amarillenta, con la del fuego del centro. */
@@ -203,22 +200,6 @@ internal object CampamentoVerano {
         drawPath(poligono(b + Offset(-2.4f, -5f), b + Offset(2.4f, -5f), b + Offset(2f, 0f), b + Offset(-2f, 0f)), p.por(C.CUERO, if (p.solALaDerecha) 0.3f else -0.2f, 0.1f))
         drawOval(p.luz(C.FIELTRO, 0.1f), Offset(b.x - 2.4f, b.y - 5.6f), Size(4.8f, 1.2f))
         for (dx in listOf(-24f, 6f)) { val q = c + Offset(dx, 7f); drawArc(p.por(C.MADERA, 0.2f, 0.1f), 180f, 180f, true, Offset(q.x - 1.4f, q.y - 1.2f), Size(2.8f, 2.4f)) }
-    }
-
-    /** Un buey de tiro **[Aproximación]**, de lado: el cuerpo pesado y la cruz alta, la cabeza baja con los cuernos, de pelo pardo y blanco. */
-    private fun DrawScope.buey(p: Pincel, sol: Sol3, pie: Offset, alto: Float, mira: Float, az: Azar) {
-        val u = alto / 10f; val d = if (mira >= 0f) 1f else -1f
-        fun q(x: Float, y: Float) = pie + Offset(x * u * d, y * u)
-        sombraCorta(sol.r, pie, alto * 1.2f, alto * 0.6f)
-        val pelo = lerp(C.CUERO, C.HOLLIN, 0.25f); val oscuro = lerp(pelo, C.HOLLIN, 0.4f)
-        for (x in listOf(-5.6f, -4.2f, 3.6f, 5f)) drawLine(p.medio(if (x < -4.5f || x > 4.5f) oscuro else pelo, 0.15f), q(x, -5f), q(x + 0.2f, 0f), 1.1f * u, StrokeCap.Round)
-        val cuerpo = Path().apply { moveTo(q(-7f, -8.6f)); cubicTo(q(-4f, -10.6f), q(2f, -10f), q(5.6f, -9.4f)); cubicTo(q(7.4f, -9f), q(7.8f, -6.2f), q(6.8f, -4.6f)); cubicTo(q(3f, -3.6f), q(-3f, -3.6f), q(-6.6f, -4.4f)); cubicTo(q(-8f, -5.4f), q(-8.2f, -7.6f), q(-7f, -8.6f)); close() }
-        drawPath(cuerpo, Brush.verticalGradient(listOf(p.luz(pelo, 0.15f), p.medio(pelo, 0.15f), p.sombra(oscuro, 0.15f)), q(0f, -10.6f).y, q(0f, -3.6f).y))
-        clipPath(cuerpo) { mancha(q(az.entre(-3f, 3f), -7f), 2.6f * u, 1.6f * u, p.luz(C.FIELTRO, 0.15f), 0.8f) }
-        val cabeza = Path().apply { moveTo(q(6f, -9f)); cubicTo(q(8f, -9.6f), q(9.6f, -8f), q(10.2f, -6f)); cubicTo(q(10.6f, -4.6f), q(9.4f, -4.2f), q(8.6f, -5f)); cubicTo(q(7.6f, -6.4f), q(6.6f, -7f), q(6f, -7.4f)); close() }
-        drawPath(cabeza, p.por(oscuro, if ((d > 0f) == p.solALaDerecha) 0.4f else -0.3f, 0.15f))
-        drawPath(Path().apply { moveTo(q(8.2f, -8.8f)); cubicTo(q(8.6f, -10.6f), q(9.6f, -11f), q(10.4f, -10.6f)) }, p.luz(C.FIELTRO, 0.15f), style = Stroke(0.5f * u, cap = StrokeCap.Round))
-        drawLine(p.medio(oscuro, 0.15f), q(-7.4f, -8f), q(-8.2f, -3.6f), 0.5f * u, StrokeCap.Round)
     }
 
     /** Un montón de lana recién esquilada: vellones apilados de tres colores, con su lado de luz y su sombra. */

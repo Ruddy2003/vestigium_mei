@@ -769,7 +769,35 @@ internal object PiezasMongol {
                 caja(s, p, sol, -0.45f, 0.3f, t0, t0 + 0.12f, -0.6f, 0.4f, lerp(C.FIELTRO, C.TIERRA, 0.15f), lejos)
                 caja(s, p, sol, 0.3f, 0.52f, t0, t0 + 0.26f, 0.5f, 0.75f, madera, lejos)
             }
-            if (c.cuna) caja(s, p, sol, -0.5f, -0.05f, t0 + 0.55f, t0 + 0.8f, 0.0f, 0.8f, lerp(C.ROJO, C.MADERA, 0.4f), lejos) { i, _ -> if (i != 4) drawRect(p.luz(C.ORO, lejos).copy(alpha = 0.5f), Offset(-400f, 0f), Size(1200f, 1200f), blendMode = BlendMode.Overlay) }
+            if (c.cuna) {
+                // La cuna de madera de Saran, atada encima del cofre: la caja pintada de naranja, más baja que el cofre y
+                // gastada, con su greca dorada; el arco de madera de la cabecera, del que cuelga la manta; la manta de
+                // fieltro blanco, abultada, con el ribete azul; y las dos cintas de crin que la atan **[Diseño propio]**.
+                val x0 = -0.52f; val x1 = -0.04f; val y0 = t0 + 0.55f; val y1 = y0 + 0.2f; val z0 = 0.04f; val z1 = 0.86f
+                val pintada = lerp(lerp(C.ROJO, C.ORO, 0.3f), C.MADERA, 0.3f)
+                caja(s, p, sol, x0, x1, y0, y1, z0, z1, pintada, lejos) { i, forma -> if (i != 4) { drawPath(forma, p.luz(C.ORO, lejos).copy(alpha = 0.55f), style = Stroke((0.03f * s.escala(0f, 0.4f)).coerceIn(0.3f, 1.4f))); drawPath(forma, p.sombra(C.MADERA_OSC, lejos).copy(alpha = 0.25f)) } }
+                // La manta, abultada sobre la caja, que asoma por los cantos.
+                val manta = lerp(C.FIELTRO, C.LANA, 0.35f)
+                val cx = (x0 + x1) / 2f; val cz = (z0 + 0.12f + z1) / 2f
+                val borde = (0..15).map { k -> val a = (2 * PI * k / 16).toFloat()
+                    V3(cx + cos(a) * (x1 - x0) * 0.56f, y1 + 0.03f + 0.04f * (0.5f + 0.5f * cos(a * 2f)), cz + sin(a) * (z1 - z0 - 0.12f) * 0.56f) }
+                val forma = poligono(borde.map { s.p(it) })
+                drawPath(forma, p.por(manta, if (p.solALaDerecha) 0.2f else -0.1f, lejos))
+                clipPath(forma) {
+                    // El bulto de la manta, con su luz arriba, y los pliegues que la cruzan.
+                    val lomo = s.p(cx, y1 + 0.14f, cz); drawCircle(p.luz(manta, lejos).copy(alpha = 0.7f), 0.14f * s.escala(cx, cz), lomo)
+                    for (k in -1..1) drawLine(p.sombra(manta, lejos).copy(alpha = 0.7f), s.p(x0, y1 + 0.06f, cz + k * 0.2f), s.p(x1, y1 + 0.08f, cz + k * 0.2f + 0.05f), (0.02f * s.escala(cx, cz)).coerceIn(0.3f, 1f))
+                }
+                drawPath(forma, p.medio(C.AZUL, lejos), style = Stroke((0.03f * s.escala(0f, 0.4f)).coerceIn(0.3f, 1.4f)))
+                // El arco de la cabecera, de madera curvada.
+                val arco = (0..10).map { k -> val a = (PI * k / 10).toFloat(); V3((x0 + x1) / 2f - cos(a) * (x1 - x0) * 0.5f, y1 + sin(a) * 0.26f, z0 + 0.06f) }
+                for (k in 0 until arco.size - 1) palo(s, p, arco[k], arco[k + 1], 0.035f, lerp(C.MADERA, C.ROJO, 0.25f), lejos)
+                // Las dos cintas de crin que atan la cuna a la carga.
+                for (z in listOf(z0 + 0.3f, z1 - 0.18f)) {
+                    val q = listOf(V3(x0 - 0.01f, y0 + 0.05f, z), V3(x0 + 0.04f, y1 + 0.08f, z), V3(x1 - 0.04f, y1 + 0.08f, z), V3(x1 + 0.01f, y0 + 0.05f, z)).map { s.p(it) }
+                    drawPath(Path().apply { moveTo(q[0]); cubicTo(q[1], q[2], q[3]) }, p.sombra(C.CRIN, lejos), style = Stroke((0.02f * s.escala(0f, z)).coerceIn(0.3f, 1f), cap = StrokeCap.Round))
+                }
+            }
         }
         for ((_, pintar) in partes.sortedByDescending { it.first }) pintar()
     }
