@@ -2,6 +2,7 @@ package io.github.ruddy2003.vestigium.vidas.anios
 
 import io.github.ruddy2003.vestigium.vidas.Arco
 import io.github.ruddy2003.vestigium.vidas.Calendario
+import io.github.ruddy2003.vestigium.vidas.Clima
 import io.github.ruddy2003.vestigium.vidas.DiaEspecial
 import io.github.ruddy2003.vestigium.vidas.Estado
 import io.github.ruddy2003.vestigium.vidas.TemporadaVida
@@ -9,8 +10,9 @@ import io.github.ruddy2003.vestigium.vidas.TipoArco
 
 /*
  * Los calendarios del grupo 9: las otras vidas de los temas del lote 10 (`docs/diseno/PLAN_TEMAS.md`, 10a a 10g). Por
- * ahora, la de Frente exterior (10c): Tadeo, el ladrón de piezas al que recluta la red. Siguen las reglas de
- * `AnioPiloto.kt` y el estilo de los de ficción de `AnioG7.kt`.
+ * ahora, la de Frente exterior (10c), Tadeo, el ladrón de piezas al que recluta la red, y la de Arcontes (10d), Eleazar,
+ * el salador de pescado de Magdala. Siguen las reglas de `AnioPiloto.kt`; el de Tadeo, el estilo de los de ficción de
+ * `AnioG7.kt`, y el de Eleazar, el de las personas inventadas en mundos reales (Zaynab y Bernat en `AnioG4.kt`).
  *
  * Lo propio de este grupo:
  *
@@ -18,13 +20,20 @@ import io.github.ruddy2003.vestigium.vidas.TipoArco
  *   Toma el género de *Andor* (espionaje, resistencia, mundos ocupados, ciencia ficción de los años 70 hecha a mano),
  *   no la saga: ni sus planetas, ni su gente, ni sus naves, ni sus soldados, ni sus palabras. El régimen es el
  *   Directorio y la red, el Frente, que trabaja en células con una letra y un número.
- * - Los otros cuatro temas del lote (Arcontes, Galia, Art nouveau y Psicodelia) son personas inventadas en mundos
- *   reales (10a): cuando lleguen, sus calendarios podrán tener días históricos con su fuente.
+ * - **Arcontes es una persona inventada en un mundo real** (10a): `ficticia = false`, y su calendario lleva días
+ *   históricos y aproximados con su fuente, y lo de su vida como inventado. Su historia **avanza**: cada temporada es un
+ *   año de su vida, del 28 al 32 d. C., y nada se repite (por eso cada día lleva su año en el id, también las fiestas,
+ *   que cada año se cuentan de otra manera). Tiene el doble de días especiales que los demás (PLAN_TEMAS, 10d).
+ * - Los otros tres temas del lote (Galia, Art nouveau y Psicodelia) también son personas inventadas en mundos reales:
+ *   cuando lleguen, sus calendarios podrán tener días históricos con su fuente.
  */
 internal object AnioG9 {
-    val TODOS: List<Calendario> by lazy { listOf(AGENTE) }
+    val TODOS: List<Calendario> by lazy { listOf(AGENTE, INICIADO) }
 
-    /** Días «históricos» sin enlace porque su fecha sale de un cálculo: en la ficción no hay ninguno. */
+    /**
+     * Días «históricos» sin enlace porque su fecha sale de un cálculo: en la ficción no hay ninguno, y en el calendario de
+     * Eleazar lo calculado (las fiestas judías y la semana de la Pascua del 30) va como «aproximado», con su enlace.
+     */
     val CALCULADOS = emptySet<String>()
 
     private val I = INVENTADO

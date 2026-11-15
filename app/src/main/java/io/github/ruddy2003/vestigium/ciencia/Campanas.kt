@@ -196,7 +196,8 @@ object Campanas {
         TemaId.DISTOPIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
         // Las siete esferas de los planetas en el orden antiguo, desde la Tierra hacia arriba; pasar la de Saturno es llegar a
         // la Ogdóada. Solo los planetas: qué arconte guarda cada una no está comprobado (`fuentes_arcontes.md`, corrección 16).
-        TemaId.ARCONTES -> listOf("Esfera de la Luna", "Esfera de Mercurio", "Esfera de Venus", "Esfera del Sol", "Esfera de Marte", "Esfera de Júpiter", "Esfera de Saturno")
+        // Las siete esferas, de abajo arriba; Marte va con su nombre griego antiguo, Pyróeis («el ardiente»), porque «Marte» ya es etapa de Espacio.
+        TemaId.ARCONTES -> listOf("La Luna", "Mercurio", "Venus", "El Sol", "Pyróeis, Marte", "Júpiter", "Saturno")
         // Una ruta de salto inventada, de mundo en mundo, del puerto de ladrillo a la capital del Directorio; cada parada es
         // la misión que la célula tiene ahí, con su nombre en clave.
         TemaId.FRENTE -> listOf("HOLLÍN", "ESCORIA", "VIGÍA", "LUNA OCRE", "EL ANILLO", "CANTERA", "ALBAR")
