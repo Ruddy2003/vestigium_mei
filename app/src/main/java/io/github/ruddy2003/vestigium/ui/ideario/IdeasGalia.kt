@@ -222,7 +222,7 @@ object IdeasGalia : DisenoIdeas {
         val clavo = Offset(r.center.x, r.top - oreja * 0.15f)
         val cuerpo = contornoTablilla(r, semilla, 3.4f * u)
         val forma = Path().apply { op(cuerpo, Path().apply { addOval(Rect(Offset(r.center.x, r.top), oreja)) }, PathOperation.Union) }
-        val madera = if (oscuro) mezcla(mezcla(HAYA, NOCHE, 0.3f), TrazosGalia.FUEGO, 0.08f + 0.1f * calor) else HAYA
+        val madera = if (oscuro) mezcla(mezcla(HAYA, NOCHE, 0.2f), TrazosGalia.FUEGO, 0.06f + 0.08f * calor) else HAYA
         translate(1.4f * u, 2.2f * u) { drawPath(forma, sombra(oscuro, if (oscuro) 0.55f else 0.32f)) }
         drawPath(forma, madera)
         clipPath(forma) {
@@ -1193,7 +1193,11 @@ object IdeasGalia : DisenoIdeas {
         drawPath(Path().apply { moveTo(w, 0f); lineTo(w - lado, 0f); lineTo(w - lado, fondoY); lineTo(w, canto); close() }, t(mezcla(BARRO_PARED, LUZ_MUEBLE, 0.1f), fondoY))
         drawRect(Brush.verticalGradient(listOf(sombra(oscuro, if (oscuro) 0.65f else 0.5f), Color.Transparent), 0f, h * 0.26f), Offset.Zero, Size(w, h * 0.26f))
         if (!oscuro) drawPath(Path().apply { moveTo(0f, 0f); lineTo(w * 0.3f, 0f); lineTo(w * 0.1f, fondoY); lineTo(0f, fondoY); close() }, sombra(oscuro, 0.14f))
-        else drawRect(Brush.verticalGradient(listOf(Color.Transparent, TrazosGalia.FUEGO_HALO.copy(alpha = 0.08f)), 0f, fondoY), Offset.Zero, Size(w, fondoY))
+        else {
+            // De noche, la luna entra en diagonal por el frente abierto (fuera de la sombra del poste) y el fuego sube desde abajo.
+            drawPath(Path().apply { moveTo(w * 0.3f, 0f); lineTo(w, 0f); lineTo(w, fondoY); lineTo(w * 0.1f, fondoY); close() }, TrazosGalia.LUNA.copy(alpha = 0.05f))
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, TrazosGalia.FUEGO_HALO.copy(alpha = 0.08f)), 0f, fondoY), Offset.Zero, Size(w, fondoY))
+        }
 
         // La tabla del estante, vista un poco desde arriba, con la junta de dos tablas y unos granos sueltos.
         val tabla = Path().apply { moveTo(lado, fondoY); lineTo(w - lado, fondoY); lineTo(w, canto); lineTo(0f, canto); close() }
@@ -1240,7 +1244,7 @@ object IdeasGalia : DisenoIdeas {
             if (c.sinTema) costal(Offset(cx, pieY), ancho * 0.92f, alto * 1.02f, k, ab, c.semilla, oscuro, cerca(pieY))
             else cesta(Offset(cx, pieY), ancho, alto, k, ab, c.semilla, oscuro, cerca(pieY))
             // Al abrirla, sube un poco de luz de la boca.
-            if (ab > 0f) mancha(Offset(cx, bocaY), ancho * 0.6f, luzMueble(0.3f * ab))
+            if (ab > 0f) mancha(Offset(cx, bocaY), ancho * 0.6f, if (oscuro) TrazosGalia.FUEGO_HALO.copy(alpha = 0.2f * ab) else luzMueble(0.3f * ab))
         }
 
         // La viga del estante, de frente, con la clavija de donde cuelga el rótulo.
@@ -1294,7 +1298,7 @@ object IdeasGalia : DisenoIdeas {
         val fondo = Rect(pl, pa, w - pl, h - pf)
         val centro = Offset(w * 0.5f, h * 0.52f)
         // Lo cerca que está cada punto de la tea que se sostiene encima (de noche).
-        fun cerca(p: Offset) = (1f - (p - centro).getDistance() / (maxOf(w, h) * 0.8f)).coerceIn(0.12f, 1f)
+        fun cerca(p: Offset) = (0.85f - (p - centro).getDistance() / (maxOf(w, h) * 0.8f)).coerceIn(0.1f, 0.85f)
         fun t(col: Color, p: Offset) = luz(col, oscuro, cerca(p))
         // El fondo tejido: las hileras de mimbre de lado a lado, parejas y sin mucho contraste, para que se lea encima.
         val piso = Path().apply { addRect(fondo) }
@@ -1358,7 +1362,7 @@ object IdeasGalia : DisenoIdeas {
         }
         // De noche, solo la tea que se sostiene encima alumbra el fondo; las esquinas se hunden.
         if (oscuro) {
-            mancha(centro, minOf(w, h) * 0.9f, TrazosGalia.FUEGO_HALO.copy(alpha = 0.14f))
+            mancha(centro, minOf(w, h) * 0.9f, TrazosGalia.FUEGO_HALO.copy(alpha = 0.09f))
             drawRect(Brush.radialGradient(listOf(Color.Transparent, NOCHE.copy(alpha = 0.65f)), centro, maxOf(w, h) * 0.7f))
         }
         // Las paredes de mimbre, vistas desde arriba: la de atrás y la de la izquierda en sombra, la de delante y la de la derecha a la luz.
