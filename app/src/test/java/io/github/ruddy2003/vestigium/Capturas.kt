@@ -3059,4 +3059,21 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("mijo", "2030-12-20", listOf(13.0)),                       // el hambre de Tenpō: un saco de arroz y el de mijo
         Triple("boda", "2031-11-08", listOf(19.0)),                       // la boda: los barriles de sake y la cortina roja y blanca
     ),
+    // Bat (Mongol, tanda S12): dos cuadros, el valle de invierno al abrigo del cerro, con el río helado, y el campamento de verano en el llano, junto al río.
+    "pastor_mongol" to listOf(
+        Triple("valle", "2027-01-12", HORAS_CUADRO),                      // un día corriente de invierno: la nieve, el río helado, el ovoo en el cerro y, de noche, la puerta y el Negro atado
+        Triple("verano", "2027-08-01", HORAS_CUADRO),                     // el campamento de verano: la carreta, la cuerda de las yeguas, el odre y el río (decisión 21: vuelve cada año)
+        Triple("mes_blanco", "2027-02-06", listOf(13.0, 19.0)),           // el año nuevo: cintas azules, la puerta entreabierta y la lumbre de fuera a la hora de las visitas
+        Triple("paricion", "2027-04-01", listOf(13.0)),                   // la parición: las madres con sus corderos en el corral (llueve: el gato se guarece)
+        Triple("bujara", "2027-04-20", listOf(10.0)),                     // la guerra: el caballo del correo, ensillado junto a la tienda; el río suelta el hielo
+        Triple("hielo", "2030-02-15", listOf(13.0)),                      // el invierno malo: la costra de hielo, todo blanco y nevando
+        Triple("luto", "2030-03-08", listOf(13.0)),                       // muere la madre: la puerta cerrada y, en vez de su tienda, la tierra quemada
+        Triple("matanza", "2027-11-29", listOf(13.0)),                    // la matanza: la carne en las carretas y la olla grande al fuego
+        Triple("noche_larga", "2027-12-22", listOf(21.0)),                // la noche más larga: todos en la tienda de la madre de Bolad; la de Bat, en brasas
+        Triple("sube_verano", "2027-05-25", listOf(15.0)),                // la mudanza: las tiendas del llano a medio armar, las carretas cargadas
+        Triple("esquila", "2027-06-28", listOf(13.0)),                    // la esquila: la lana colgada de la cuerda y los fardos en la carreta
+        Triple("ovoo", "2027-07-12", listOf(13.0)),                       // el día del ovoo: las cintas azules de la cuerda
+        Triple("fieltro", "2027-09-07", listOf(13.0)),                    // la semana del fieltro: las tiras de fieltro nuevo colgadas
+        Triple("temur", "2031-07-28", listOf(13.0, 21.0)),                // vuelve Temür: su tienda junto a la de Bat, y la fiesta de noche junto al fuego
+    ),
 )
