@@ -145,6 +145,21 @@ object Textos {
         "widget_discreto_momento" to "DECLARAR",
     )
 
+    private val ARCONTES: Map<String, String> = mapOf(
+        "pestana_dia" to "PARTE",
+        "pestana_diario" to "DECLARAR",
+        "pestana_registrar" to "ANOTAR",
+        "pestana_vida" to "EXPEDIENTE",
+        "pestana_entender" to "INFORMES",
+        "escala_vacia" to "SIN DECLARAR · TOQUE O DESLICE",
+        "lista_anadir" to "+ ANEXAR",
+        "palabras" to "%d PALABRAS DECLARADAS",
+        "widget_animo" to "DECLARE SU ESTADO ACTUAL",
+        "widget_momento" to "EL CIUDADANO SIENTE…",
+        "widget_discreto_animo" to "ESTADO",
+        "widget_discreto_momento" to "DECLARAR",
+    )
+
     private val FRENTE: Map<String, String> = mapOf(
         "pestana_dia" to "ENLACE",
         "pestana_diario" to "DESPACHOS",
@@ -561,6 +576,7 @@ object Textos {
         TemaId.MEDIEVAL -> MEDIEVAL
         TemaId.TEMPLARIO -> TEMPLARIO
         TemaId.DISTOPIA -> DISTOPIA
+        TemaId.ARCONTES -> ARCONTES
         TemaId.FRENTE -> FRENTE
         TemaId.REFUGIO -> REFUGIO
         TemaId.ORDEN -> ORDEN

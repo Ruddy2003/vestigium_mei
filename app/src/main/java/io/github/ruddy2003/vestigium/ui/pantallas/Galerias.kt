@@ -136,6 +136,10 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
     }
+    TemaId.ARCONTES -> {
+        val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
+        mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
+    }
     // El emblema de la red: el círculo roto, con su hueco arriba a la derecha, y la chispa adentro.
     TemaId.FRENTE -> {
         val aro = Path().apply { arcTo(Rect(c, r), -20f, 300f, true); arcTo(Rect(c, r * 0.74f), 280f, -300f, false); close() }

@@ -22,6 +22,10 @@ DESTINO = os.path.join(RAIZ, "app", "src", "main", "res", "font")
 GF = "https://raw.githubusercontent.com/google/fonts/main/ofl/"
 
 LATINO = "U+0000-024F,U+0259,U+02B0-02FF,U+0300-036F,U+1D00-1DBF,U+1E00-1EFF,U+2000-206F,U+2070-209F,U+20A0-20CF,U+2100-214F,U+2150-218F,U+2190-21FF,U+2200-22FF,U+2460-24FF,U+25A0-25FF,U+2600-27BF,U+FB00-FB06"
+# Un latino más corto para las letras que pesan mucho (Caudex, Literata): el español, el latín extendido A (con las
+# vocales largas de las transcripciones) y las pocas letras con punto debajo de las transcripciones del hebreo
+# (ḥ ṣ ṭ), sin el resto de la tabla vietnamita ni el latín extendido B.
+LATINO_CORTO = "U+0000-017F,U+0259,U+02B0-02FF,U+0300-036F,U+1E24-1E25,U+1E62-1E63,U+1E6C-1E6D,U+2000-206F,U+2070-209F,U+20A0-20CF,U+2100-214F,U+2190-21FF,U+2200-22FF,U+25A0-25FF,U+FB00-FB06"
 CIRILICO = LATINO + ",U+0400-052F,U+1C80-1C8F,U+2DE0-2DFF,U+A640-A69F"
 # Japón Edo: solo los kanji, kana y signos que usa el tema (las fuentes japonesas completas pesan varios megas).
 KANJI_EDO = ("※、。々〆「」『』〔〕あいえおかがきぎくけこさしじすずせそただちつづてでとどなにのはひびふまみむめもやゆよらりるれわをんコマ・一七万世中也予事五人代令会体作使便元光入八兵具出分"
@@ -146,6 +150,12 @@ FUENTES = [
     ("chivo/Chivo[wght].ttf", {"wght": 400}, "chivo_regular", None, LATINO),
     ("chivo/Chivo[wght].ttf", {"wght": 600}, "chivo_semibold", None, LATINO),
     ("chivomono/ChivoMono[wght].ttf", {"wght": 500}, "chivo_mono_medium", None, LATINO),
+    # ARC: Arcontes (lote 10). Títulos y rótulos en Caudex, la letra de los códices (su licencia reserva el nombre: va
+    # renombrada); texto en Literata. Las cuatro llevan dentro el hebreo y el copto (ver CON_HEBREO_COPTO)
+    ("caudex/Caudex-Bold.ttf", None, "codice_bold", "Codice Vestigium", LATINO_CORTO),
+    ("caudex/Caudex-Regular.ttf", None, "codice_regular", "Codice Vestigium", LATINO_CORTO),
+    ("literata/Literata[opsz,wght].ttf", {"wght": 400, "opsz": 12}, "literata_regular", None, LATINO_CORTO),
+    ("literata/Literata[opsz,wght].ttf", {"wght": 600, "opsz": 12}, "literata_semibold", None, LATINO_CORTO),
 ]
 
 
@@ -182,6 +192,76 @@ def anadir_mayas(f, cache):
     t12 = CmapSubtable.newSubtable(12)
     t12.platformID, t12.platEncID, t12.language, t12.cmap = 3, 10, 0, base
     f["cmap"].tables = [t for t in f["cmap"].tables if not (t.platformID == 3 and t.platEncID == 10)] + [t12]
+    f["maxp"].numGlyphs = len(orden)
+
+
+# Las salidas que llevan, además, las letras hebreas (con el geresh y el gershayim, para escribir números) y las coptas,
+# copiadas de Noto Serif Hebrew y Noto Sans Coptic (OFL). Android trae esas escrituras solo en letra de palo; el tema
+# Arcontes las quiere con su serifa y a la medida de la suya. Se copian ya dibujadas (sin componentes), escaladas a la
+# altura de las mayúsculas de cada fuente, con el peso más cercano.
+CON_HEBREO_COPTO = {"codice_bold": 700, "codice_regular": 400, "literata_regular": 400, "literata_semibold": 600}
+HEBREO = "notoserifhebrew/NotoSerifHebrew[wdth,wght].ttf"
+COPTO = "notosanscoptic/NotoSansCoptic-Regular.ttf"
+RANGOS_HEBREO = list(range(0x05D0, 0x05EB)) + [0x05F3, 0x05F4]
+RANGOS_COPTO = list(range(0x2C80, 0x2CF4)) + list(range(0x2CF9, 0x2D00)) + list(range(0x03E2, 0x03F0))
+
+
+def altura_mayus(f):
+    """La altura de las mayúsculas: la de la tabla OS/2 o, si no la trae, la de la «H»."""
+    os2 = f["OS/2"]
+    if getattr(os2, "sCapHeight", 0):
+        return os2.sCapHeight
+    gs = f.getGlyphSet()
+    from fontTools.pens.boundsPen import BoundsPen
+    b = BoundsPen(gs)
+    gs[f.getBestCmap()[ord("H")]].draw(b)
+    return b.bounds[3]
+
+
+def anadir_escritura(f, origen, puntos, ejes, cache, prefijo):
+    """Copia a [f] los glifos de [puntos] de la fuente [origen] (instanciada en [ejes]), dibujados de nuevo sin componentes
+    y escalados para que su altura de mayúsculas quede igual a la de [f]."""
+    from fontTools.pens.ttGlyphPen import TTGlyphPen
+    from fontTools.pens.transformPen import TransformPen
+    from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
+    m = TTFont(bajar(origen, cache))
+    if ejes and "fvar" in m:
+        validos = {a.axisTag for a in m["fvar"].axes}
+        m = instancer.instantiateVariableFont(m, {k: v for k, v in ejes.items() if k in validos})
+    escala = altura_mayus(f) / altura_mayus(m)
+    gs = m.getGlyphSet()
+    cm = m.getBestCmap()
+    orden = list(f.getGlyphOrder())
+    nuevos = {}
+    for cp in puntos:
+        if cp not in cm:
+            continue
+        origen_g = cm[cp]
+        nombre = "%s%04X" % (prefijo, cp)
+        pen = TTGlyphPen(None)
+        gs[origen_g].draw(TransformPen(pen, (escala, 0, 0, escala, 0, 0)))
+        g = pen.glyph()
+        g.recalcBounds(None)
+        ancho, _ = m["hmtx"][origen_g]
+        orden.append(nombre)
+        f["glyf"][nombre] = g
+        f["hmtx"][nombre] = (round(ancho * escala), getattr(g, "xMin", 0))
+        if "vmtx" in f:  # Literata trae métricas verticales: cada glifo nuevo necesita las suyas
+            f["vmtx"][nombre] = (f["head"].unitsPerEm, 0)
+        nuevos[cp] = nombre
+    f.setGlyphOrder(orden)
+    f["glyf"].glyphOrder = orden
+    base = dict(f.getBestCmap())
+    base.update(nuevos)
+    for t in f["cmap"].tables:
+        if t.isUnicode():
+            if t.format == 4 and any(cp > 0xFFFF for cp in base):
+                continue
+            t.cmap = {cp: n for cp, n in base.items() if t.format != 4 or cp <= 0xFFFF}
+    if not any(t.platformID == 3 and t.platEncID in (1, 10) for t in f["cmap"].tables):
+        t4 = CmapSubtable.newSubtable(4)
+        t4.platformID, t4.platEncID, t4.language, t4.cmap = 3, 1, 0, {cp: n for cp, n in base.items() if cp <= 0xFFFF}
+        f["cmap"].tables.append(t4)
     f["maxp"].numGlyphs = len(orden)
 
 
@@ -361,6 +441,10 @@ def hacer(origen, ejes, salida, nombre, letras, cache):
         anadir_mayas(f, cache)
     if salida in CON_ADORNOS:
         anadir_adornos(f)
+    if salida in CON_HEBREO_COPTO:
+        peso = CON_HEBREO_COPTO[salida]
+        anadir_escritura(f, HEBREO, RANGOS_HEBREO, {"wght": peso, "wdth": 100}, cache, "heb")
+        anadir_escritura(f, COPTO, RANGOS_COPTO, None, cache, "cop")
     if nombre:
         peso = salida.split("_")[-1]
         renombrar(f, nombre, {"regular": "Regular", "titulo": "Regular", "medium": "Medium", "semibold": "SemiBold", "bold": "Bold", "negrita": "Bold"}[peso])

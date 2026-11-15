@@ -255,6 +255,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.MEDIEVAL -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 7.dp, bottomStart = 1.dp)
     TemaId.TEMPLARIO -> CutCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 5.dp, bottomStart = 5.dp)
     TemaId.DISTOPIA -> RectangleShape
+    TemaId.ARCONTES -> RectangleShape
     TemaId.FRENTE -> RoundedCornerShape(topStart = 2.dp, topEnd = 10.dp, bottomEnd = 10.dp, bottomStart = 2.dp)   // la tecla curva de la consola
     TemaId.REFUGIO -> RoundedCornerShape(7.dp)
     TemaId.ORDEN -> CutCornerShape(topEnd = 8.dp)
@@ -377,6 +378,15 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
         }
         // Expediente: borde de ficha y pestaña; el día sellado lleva un timbre de goma torcido.
         TemaId.DISTOPIA -> {
+            contorno(if (hoy) acento else linea, if (hoy) 1.6f else 0.9f)
+            drawRect(if (hoy) acento else linea, Offset(w * 0.55f, 0f), Size(w * 0.45f, 2.6f * s))
+            if (sellado) rotate(-14f, pc) {
+                val tinta = Color(0xFFB3261E)
+                drawRect(tinta, Offset(pc.x - 5.5f * s, pc.y - 3.6f * s), Size(11f * s, 7.2f * s), style = Stroke(s))
+                figuraTema(tema, tinta, pc, 2.6f * s, Color.White)
+            }
+        }
+        TemaId.ARCONTES -> {
             contorno(if (hoy) acento else linea, if (hoy) 1.6f else 0.9f)
             drawRect(if (hoy) acento else linea, Offset(w * 0.55f, 0f), Size(w * 0.45f, 2.6f * s))
             if (sellado) rotate(-14f, pc) {

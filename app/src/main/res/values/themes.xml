@@ -66,6 +66,9 @@
     <style name="Theme.Vestigium.Arranque.Distopia" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_distopia</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Arcontes" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_arcontes</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Frente" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_frente</item>
     </style>

@@ -219,6 +219,7 @@ fun escenaDe(tema: TemaId): EscenaVida? = when (tema) {
     TemaId.CUEVA -> null            // S10
     TemaId.BASICO -> null           // Básico: sin cuadro
     TemaId.FRENTE -> null           // lote 10: su cuadro va después de S19
+    TemaId.ARCONTES -> null         // lote 10: su cuadro va después de S19
 }
 
 /** Los temas que no tendrán cuadro nunca (decisión 1 del plan): los demás que hoy dan null están pendientes. */
@@ -259,6 +260,7 @@ fun sinCuadro(tema: TemaId): Boolean = when (tema) {
     TemaId.CUEVA -> false
     TemaId.BASICO -> true
     TemaId.FRENTE -> false
+    TemaId.ARCONTES -> false
 }
 
 // =====================================================================

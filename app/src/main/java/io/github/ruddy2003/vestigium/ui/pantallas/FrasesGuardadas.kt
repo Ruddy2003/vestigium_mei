@@ -197,6 +197,11 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
             circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
         }, 1.4f)
+        TemaId.ARCONTES -> pinta(Path().apply {
+            fillType = PathFillType.EvenOdd
+            moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
+            circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
+        }, 1.4f)
         // El emblema de la red: la chispa de tres trazos en el círculo roto; guardada, el aro grueso y la señal que se escapa.
         TemaId.FRENTE -> {
             val col = if (lleno) color else color.copy(alpha = 0.7f)

@@ -256,6 +256,8 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Expediente: el ojo, trazo grueso, renglones de registro en bandas, eje duro con marcas y barras rectas.
     TemaId.DISTOPIA -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
         Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
+    TemaId.ARCONTES -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
+        Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
     // Frente exterior: los ecos del radar, la traza de fósforo con su resplandor, la rejilla en raya y punto como el Morse,
     // el eje con sus marcas de consola y las barras del medidor de segmentos; las cifras, en la mono de los rótulos grabados.
     TemaId.FRENTE -> EstiloGrafica(FormaPunto.ECO, 2f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.HALO, listOf(6f, 2f, 1.5f, 2f),

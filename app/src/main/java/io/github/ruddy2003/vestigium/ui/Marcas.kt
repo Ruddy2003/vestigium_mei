@@ -163,6 +163,7 @@ object Marcas {
                 else Aspecto(s, s, Forma.CALDERON, cursiva = true)
             TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
+            TemaId.ARCONTES -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
             // La @persona, como un indicativo en la pantalla de fósforo (verde de radar sobre el vidrio oscuro); el #tema, sobre la
             // traza del osciloscopio que da su eco al final.
             TemaId.FRENTE -> if (persona) Aspecto(Color(0xFF9FD8A8), Color(0xFF0F1A16), Forma.PANTALLA, negrita = true) else Aspecto(t, t, Forma.TRAZA)

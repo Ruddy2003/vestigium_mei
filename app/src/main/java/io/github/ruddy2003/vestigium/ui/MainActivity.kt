@@ -261,6 +261,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.TEMPLARIO -> BloqueoMarco(TextosBloqueo("La puerta de la encomienda", "☩ El rastrillo está echado: solo un hermano de la casa lo levanta.", "Levantar el rastrillo"), arriba = 18, reintentar = reintentar) { cs -> bloqueoRastrillo(cs) }
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
             listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
+        TemaId.ARCONTES -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
+            listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
         // La consola de la célula con el canal cerrado: el sello en la pantalla de radar, el estado de la línea y la llave.
         TemaId.FRENTE -> BloqueoCanal(TextosBloqueo("TRANSMISIÓN CIFRADA", "— Canal cerrado. La célula no abre la frecuencia sin la huella del titular.", "ABRIR EL CANAL",
             listOf("CANAL", "CIFRADO", "VENTANA", "", "OPERADOR", "SIN CONFIRMAR")), reintentar)
@@ -1118,6 +1120,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> false
+    TemaId.ARCONTES -> false
     TemaId.FRENTE -> false            // la retícula que fija el blanco, en trazo
     TemaId.REFUGIO -> true
     TemaId.ORDEN -> true
@@ -1158,6 +1161,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> true
+    TemaId.ARCONTES -> true
     TemaId.FRENTE -> true             // el pulsador ámbar de transmitir, encendido
     TemaId.REFUGIO -> true
     TemaId.ORDEN -> true
@@ -1262,6 +1266,10 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
         }
         // Sello de goma, doble filete y un poco torcido.
         TemaId.DISTOPIA -> girar(-5f, Offset(cx, cy)) {
+            drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
+            drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
+        }
+        TemaId.ARCONTES -> girar(-5f, Offset(cx, cy)) {
             drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
             drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
         }
@@ -1523,6 +1531,10 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
             drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
         }
+        TemaId.ARCONTES -> girar(-4f, Offset(cx, cy)) {
+            drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
+            drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
+        }
         // El pulsador de transmitir: la escala grabada alrededor, el bisel de cromo y el botón ámbar encendido, con su
         // brillo arriba y su sombra abajo.
         TemaId.FRENTE -> {
@@ -1749,6 +1761,7 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         }
         // Barra gruesa de cartel.
         TemaId.DISTOPIA -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
+        TemaId.ARCONTES -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
         // El canto de la consola: el filete, la escala grabada y dos pilotos encendidos a la izquierda.
         TemaId.FRENTE -> {
             filete()
@@ -2180,6 +2193,7 @@ private fun origenTransicion(tema: TemaId, atras: Boolean): Alignment = when (te
     TemaId.MEDIEVAL -> Alignment.TopStart
     TemaId.TEMPLARIO -> Alignment.TopStart
     TemaId.DISTOPIA -> Alignment.TopStart
+    TemaId.ARCONTES -> Alignment.TopStart
     TemaId.FRENTE -> Alignment.TopCenter                                       // la imagen rueda y se asienta en el tubo, desde el centro
     TemaId.REFUGIO -> Alignment.TopStart
     TemaId.ORDEN -> Alignment.TopStart
@@ -2248,6 +2262,7 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
             (scaleOut(t(240), targetScale = 0.97f) + fadeOut(t(200)))
         // Cajón de archivo: cae de golpe desde arriba.
         TemaId.DISTOPIA -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
+        TemaId.ARCONTES -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
         // El monitor de la consola que se sintoniza: la imagen nueva rueda un poco en vertical y se asienta con un temblor,
         // tras un parpadeo de encendido; la de antes se encoge hacia el centro, como un tubo que se apaga.
         TemaId.FRENTE -> {

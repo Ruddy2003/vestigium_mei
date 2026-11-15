@@ -107,7 +107,7 @@ class CoberturaTemas {
         private val SIN_CUADRO = setOf("egipto", "templario", "refugio", "orden", "laboratorio", "colonos", "napoleon", "deco", "botanico", "edo", "abismo", "meso", "mongol", "urss", "antiguas", "cueva")
 
         /** Los temas nuevos del lote 10 (`docs/diseno/PLAN_TEMAS.md`): sus cuadros van después de la tanda S19. */
-        private val SIN_CUADRO_LOTE10 = setOf("frente")
+        private val SIN_CUADRO_LOTE10 = setOf("frente", "arcontes")
 
         /**
          * Lo que falta hoy, por superficie. Del plan de diseño no falta nada desde el lote 9. Lo que queda es del plan de

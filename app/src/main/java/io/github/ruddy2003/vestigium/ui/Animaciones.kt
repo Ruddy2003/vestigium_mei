@@ -122,6 +122,7 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.TEMPLARIO -> MatizMovimiento(BarridoTema.CRUZ, 820, CubicBezierEasing(0.55f, 0f, 0.3f, 1f), 0f, -12f, 1.02f, 420, 55, FastOutSlowInEasing, 1.15f, 0.95f, 1600f)
     // El ojo que se abre; los expedientes entran de lado y el sello cae seco.
     TemaId.DISTOPIA -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
+    TemaId.ARCONTES -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
     // La pantalla del radar que se enciende desde el toque; las secciones bajan un poco y asientan como la imagen de un
     // tubo que se estabiliza, y los botones hacen clic seco, como un interruptor de palanca.
     TemaId.FRENTE -> MatizMovimiento(BarridoTema.RADAR, 760, CubicBezierEasing(0.4f, 0f, 0.2f, 1f), 0f, -10f, 1f, 360, 50, LinearOutSlowInEasing, 1.25f, 0.85f, 2200f)
@@ -275,6 +276,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.MEDIEVAL -> VivoTema.RAYO_ORO         // un rayo de luz con polvo de oro suspendido
     TemaId.TEMPLARIO -> VivoTema.ANTORCHAS        // la muralla almenada con antorchas que tiemblan y sueltan pavesas
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
+    TemaId.ARCONTES -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
     TemaId.FRENTE -> VivoTema.RADAR            // el barrido lento del radar; de noche, además, la antena que parpadea
     TemaId.REFUGIO -> VivoTema.VAPOR             // vapor que sube, de día y de noche
     TemaId.ORDEN -> VivoTema.FRAGUA              // chispas de fragua en parábola

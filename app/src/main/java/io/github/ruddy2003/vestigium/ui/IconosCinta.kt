@@ -167,6 +167,10 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
             drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
         }
+        TemaId.ARCONTES -> {
+            drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
+            drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
+        }
         // El emblema de la red: el aro roto arriba a la derecha, la célula en el centro y los tres trazos que se escapan por el hueco.
         TemaId.FRENTE -> with(TrazosFrente) { emblemaRed(Offset(c.x - r * 0.12f, c.y + r * 0.14f), r * 0.7f, color, r * 0.2f) }
         // El átomo: núcleo y tres órbitas.

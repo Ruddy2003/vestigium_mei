@@ -31,6 +31,9 @@ object NombresNuevos {
         TemaId.DISTOPIA to mapOf("La cinta" to "REGISTRO HORARIO", "Constelación" to "RED DE CONTACTOS", "Hall de logros" to "SALA DE CONDECORACIONES", "Campañas" to "PLANES DE CUMPLIMIENTO",
             "Impulsos y recaídas" to "INFRACCIONES PRIVADAS", "Estado de los datos" to "ESTADO DE LA VIGILANCIA", "Enfoque y siestas" to "PRODUCTIVIDAD Y DESCANSO", "Ver tu vida" to "INFORMES VISUALES",
             "Tus atajos" to "ACCESOS AUTORIZADOS", "Logro conseguido" to "CONDECORACIÓN OTORGADA", "Este día hace un año" to "ARCHIVO: HACE UN AÑO", "Elegir campaña" to "ASIGNAR PLAN", "Campañas anteriores" to "PLANES CERRADOS"),
+        TemaId.ARCONTES to mapOf("La cinta" to "REGISTRO HORARIO", "Constelación" to "RED DE CONTACTOS", "Hall de logros" to "SALA DE CONDECORACIONES", "Campañas" to "PLANES DE CUMPLIMIENTO",
+            "Impulsos y recaídas" to "INFRACCIONES PRIVADAS", "Estado de los datos" to "ESTADO DE LA VIGILANCIA", "Enfoque y siestas" to "PRODUCTIVIDAD Y DESCANSO", "Ver tu vida" to "INFORMES VISUALES",
+            "Tus atajos" to "ACCESOS AUTORIZADOS", "Logro conseguido" to "CONDECORACIÓN OTORGADA", "Este día hace un año" to "ARCHIVO: HACE UN AÑO", "Elegir campaña" to "ASIGNAR PLAN", "Campañas anteriores" to "PLANES CERRADOS"),
         // Frente exterior: la tira del teletipo, la célula, las rutas de salto y la sala donde se cuelgan los parches.
         TemaId.FRENTE to mapOf("La cinta" to "TIRA DEL TELETIPO", "Constelación" to "MAPA DE LA CÉLULA", "Hall de logros" to "SALA DE PARCHES", "Campañas" to "RUTAS DE SALTO",
             "Impulsos y recaídas" to "CANAL RESERVADO", "Estado de los datos" to "ESTADO DEL EQUIPO", "Enfoque y siestas" to "TURNOS DE CONSOLA Y CABEZADAS", "Ver tu vida" to "VISTAS DE RECONOCIMIENTO",

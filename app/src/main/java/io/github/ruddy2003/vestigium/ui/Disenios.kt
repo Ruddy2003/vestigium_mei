@@ -23,6 +23,9 @@ object LetraExtra {
     val michroma = FontFamily(Font(R.font.michroma_titulo, FontWeight.Normal))
     val chivo = FontFamily(Font(R.font.chivo_regular, FontWeight.Normal), Font(R.font.chivo_semibold, FontWeight.SemiBold))
     val chivoMono = FontFamily(Font(R.font.chivo_mono_medium, FontWeight.Medium), Font(R.font.chivo_mono_medium, FontWeight.Normal))
+    /** Arcontes: Caudex (como «Códice Vestigium») para títulos y rótulos y Literata para leer; las dos con hebreo y copto dentro. */
+    val codice = FontFamily(Font(R.font.codice_regular, FontWeight.Normal), Font(R.font.codice_bold, FontWeight.Bold))
+    val literata = FontFamily(Font(R.font.literata_regular, FontWeight.Normal), Font(R.font.literata_semibold, FontWeight.SemiBold))
     val vt323 = FontFamily(Font(R.font.vt323, FontWeight.Normal))
     val estarcido = FontFamily(Font(R.font.saira_stencil, FontWeight.Normal))
     val jost = FontFamily(Font(R.font.jost_regular, FontWeight.Normal), Font(R.font.jost_medium, FontWeight.Medium), Font(R.font.jost_semibold, FontWeight.SemiBold))
@@ -213,6 +216,18 @@ internal val frenteOscuro = esquema(true, 0xFF0E1614, 0xFF15201D, 0xFF1D2A26, 0x
     0xFFEE9A4A, 0xFF2A1300, 0xFF4A2A10, 0xFFFBE2C6, 0xFF86D9C2, 0xFF1E3A33, 0xFF6FD1B4, 0xFFFF7A6E)
 /** Títulos en Michroma, ancha y en mayúsculas: se achica un poco y se abre poco, porque ya es ancha. */
 internal val tipoFrente = tipografia(LetraExtra.michroma, FontWeight.Normal, 0.86f, 0.6f, LetraExtra.chivo, 1.0f, LetraExtra.chivoMono, 0.98f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
+//  Arcontes: Galilea en el siglo I, vista por un iniciado gnóstico. De día, caliza, lino, el oro de más del mundo
+//  visible y el lago; de noche, la misma Galilea bajo el cielo antiguo, con la lámpara y la luz violeta de la grieta.
+//  (docs/diseno/temas/arcontes.md)
+// ---------------------------------------------------------------------
+internal val arcontesClaro = esquema(false, 0xFFEEE3C6, 0xFFF7F0DD, 0xFFE3D4AF, 0xFFBBA673, 0xFF1E1A2B, 0xFF57506A,
+    0xFF87590F, 0xFFFFF8E8, 0xFFF1DDA8, 0xFF2E1E02, 0xFF2B5B6C, 0xFFCCDFE3, 0xFF5A3B8F, 0xFF9E2B25)
+internal val arcontesOscuro = esquema(true, 0xFF0B0D1C, 0xFF13162A, 0xFF1C2038, 0xFF343A5A, 0xFFECE4CF, 0xFFA09CB0,
+    0xFFE9B04F, 0xFF2B1A00, 0xFF4A3410, 0xFFFBE6BE, 0xFF86BBCB, 0xFF1B3542, 0xFFC4B0FF, 0xFFFF8A7A)
+/** Títulos en Caudex (renombrada «Códice Vestigium»), la letra de los códices; texto en Literata; rótulos en Caudex. */
+internal val tipoArcontes = tipografia(LetraExtra.codice, FontWeight.Bold, 1.0f, 0.3f, LetraExtra.literata, 1.0f, LetraExtra.codice, 1.0f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Refugio: optimismo atómico de los cincuenta de día; pantalla de fósforo verde de noche.
@@ -466,6 +481,8 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFFC9473B, 0xFF2A2016, 0xFF8DA5E0, 0xFFD5A84A) else listOf(0xFF9E1B1B, 0xFFE5D6B4, 0xFF1F3F8F, 0xFFA97C1E)
     TemaId.TEMPLARIO -> if (oscuro) listOf(0xFFD0453A, 0xFF262219, 0xFF9AA8B4, 0xFFDAAE68) else listOf(0xFFA8181E, 0xFFE2D6BC, 0xFF46525D, 0xFFA2763A)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFFE0262F, 0xFF2A2C2E, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFFB3121B, 0xFFCFCBC0, 0xFF2E3B44, 0xFFB3121B)
+    // Del azul del lago al oro del mundo visible, sobre la caliza; de noche, del lago bajo la luna a la llama.
+    TemaId.ARCONTES -> if (oscuro) listOf(0xFF86BBCB, 0xFF1C2038, 0xFFE9B04F, 0xFFE9B04F) else listOf(0xFF2B5B6C, 0xFFE3D4AF, 0xFF87590F, 0xFF87590F)
     // Del verde turquesa del vidrio grabado al ámbar de las lámparas, sobre la consola; fuerte, el ámbar encendido.
     TemaId.FRENTE -> if (oscuro) listOf(0xFF6FD1B4, 0xFF1D2A26, 0xFFEE9A4A, 0xFFF2A33A) else listOf(0xFF3E8C76, 0xFFC9CBC1, 0xFFB5561C, 0xFFB5561C)
     TemaId.REFUGIO -> if (oscuro) listOf(0xFFFFB23F, 0xFF112016, 0xFF3DFF7F, 0xFF3DFF7F) else listOf(0xFFD9572B, 0xFFE6DAB8, 0xFF1C6E6A, 0xFF1C6E6A)
@@ -508,6 +525,7 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFF8DA5E0, 0xFFD5A84A, 0xFFC9473B) else listOf(0xFF1F3F8F, 0xFFA97C1E, 0xFF9E1B1B)
     TemaId.TEMPLARIO -> if (oscuro) listOf(0xFF9AA8B4, 0xFFDAAE68, 0xFFE2453B) else listOf(0xFF46525D, 0xFFB98A45, 0xFFB0191F)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFF6D7377, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFF6D7377, 0xFF2E3B44, 0xFFB3121B)
+    TemaId.ARCONTES -> if (oscuro) listOf(0xFF86BBCB, 0xFFE9B04F, 0xFFFF8A7A) else listOf(0xFF2B5B6C, 0xFF87590F, 0xFF8E3A2E)   // lago, ocre, jaspe rojo
     TemaId.FRENTE -> if (oscuro) listOf(0xFF4FA88F, 0xFFEE9A4A, 0xFFFF7A6E) else listOf(0xFF3E8C76, 0xFFB5561C, 0xFFA8201A)   // vidrio, lámpara ámbar, botón rojo
     TemaId.REFUGIO -> if (oscuro) listOf(0xFF1E8A45, 0xFF3DFF7F, 0xFFFFB23F) else listOf(0xFF1C6E6A, 0xFFB98A15, 0xFFD9572B)
     TemaId.ORDEN -> if (oscuro) listOf(0xFF8FB3C8, 0xFFD6B25A, 0xFFD0333B) else listOf(0xFF2F4858, 0xFF7E6219, 0xFF9E1B22)

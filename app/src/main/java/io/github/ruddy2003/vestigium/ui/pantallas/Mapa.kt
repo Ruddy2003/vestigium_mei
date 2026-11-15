@@ -111,6 +111,8 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Distopía: gris de expediente, sin color.
         TemaId.DISTOPIA -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
             else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
+        TemaId.ARCONTES -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
+            else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
         // Frente exterior: de día, el plano impreso sobre el hueso de la consola, casi sin color; de noche, el mismo plano
         // en la pantalla de la sala, con el verde apagado del radar sobre el petróleo.
         TemaId.FRENTE -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.5f, 0.68f, 0.62f, 2f, 8f, 8f)) }
@@ -270,6 +272,7 @@ internal object Formas {
             TemaId.TEMPLARIO -> figura(x, y, r, -0.82f, -0.9f, 0.82f, -0.9f, 0.8f, -0.1f, 0.58f, 0.5f, 0f, 1.05f, -0.58f, 0.5f, -0.8f, -0.1f)
             // El ojo que todo lo ve.
             TemaId.DISTOPIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
+            TemaId.ARCONTES -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
             // El círculo roto del emblema de la red: el aro grueso con su hueco arriba a la derecha.
             TemaId.FRENTE -> {
                 p.reset()
@@ -359,6 +362,7 @@ internal object Formas {
             TemaId.TEMPLARIO -> { raya(c, x, y, r, 0f, -0.65f, 0f, 0.55f, d); raya(c, x, y, r, -0.52f, -0.15f, 0.52f, -0.15f, d)
                 raya(c, x, y, r, -0.62f, -0.75f, 0.62f, -0.75f, d) }   // la cruz del escudo y su jefe
             TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
+            TemaId.ARCONTES -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
             // La célula en el centro y la chispa: tres trazos que salen de ella por el hueco del aro, arriba a la derecha.
             TemaId.FRENTE -> { c.drawCircle(x, y, r * 0.14f, d); raya(c, x, y, r, 0.13f, -0.32f, 0.47f, -1.16f, d); raya(c, x, y, r, 0.23f, -0.27f, 0.93f, -1.11f, d); raya(c, x, y, r, 0.3f, -0.19f, 1.06f, -0.66f, d) }
             TemaId.REFUGIO -> { poligono(x, y, r * 0.55f, 3, 90.0); c.drawPath(p, d) }
@@ -877,6 +881,17 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
                 x += 6 * u; i++
             }
         }
+        TemaId.ARCONTES -> {
+            filete(5 * u, tinta.copy(alpha = 0.45f), 1 * u)
+            drawCircle(acento, 3.5f * u, Offset(16 * u, 16 * u))
+            drawRect(tinta.copy(alpha = 0.6f), Offset(23 * u, 14 * u), Size(18 * u, 4 * u))
+            var x = 10 * u; var i = 0
+            while (x < w - 10 * u) {
+                val l = if (i % 5 == 0) 6 * u else 3 * u
+                drawLine(tinta.copy(alpha = 0.5f), Offset(x, h - 5 * u), Offset(x, h - 5 * u - l), 1 * u)
+                x += 6 * u; i++
+            }
+        }
         // El bisel de la pantalla de la sala de mando: el marco de esquinas muy redondas con su doble filo, un tornillo en
         // cada esquina, la escala en los costados, el piloto ámbar encendido arriba con el rótulo de la carta y, abajo a la
         // derecha, la fila de interruptores de palanca.
@@ -1228,6 +1243,12 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
         }
         // El ojo, con la aguja del norte detrás.
         TemaId.DISTOPIA -> {
+            punta(n, r * 0.98f, r * 0.1f, acento)
+            val ojo = Path().apply { moveTo(c.x - r * 0.8f, c.y); quadraticTo(c.x, c.y - r * 0.75f, c.x + r * 0.8f, c.y); quadraticTo(c.x, c.y + r * 0.75f, c.x - r * 0.8f, c.y); close() }
+            drawPath(ojo, fondo); drawPath(ojo, tenue, style = Stroke(1.4f * u))
+            drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
+        }
+        TemaId.ARCONTES -> {
             punta(n, r * 0.98f, r * 0.1f, acento)
             val ojo = Path().apply { moveTo(c.x - r * 0.8f, c.y); quadraticTo(c.x, c.y - r * 0.75f, c.x + r * 0.8f, c.y); quadraticTo(c.x, c.y + r * 0.75f, c.x - r * 0.8f, c.y); close() }
             drawPath(ojo, fondo); drawPath(ojo, tenue, style = Stroke(1.4f * u))

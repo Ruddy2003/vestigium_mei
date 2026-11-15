@@ -53,6 +53,7 @@ fun archivoIdeas(t: TemaId): ArchivoIdeas = when (t) {
     TemaId.RUINAS -> ArchivoIdeas("lata", "latas", "nota", "notas", true, "la estantería rescatada")
     TemaId.NAVIDAD -> ArchivoIdeas("caja de galletas", "cajas de galletas", "tarjeta de felicitación", "tarjetas de felicitación", true, "la alacena de la cocina")
     TemaId.DISTOPIA -> ArchivoIdeas("gaveta", "gavetas", "expediente", "expedientes", true, "el archivo del ministerio")
+    TemaId.ARCONTES -> ArchivoIdeas("gaveta", "gavetas", "expediente", "expedientes", true, "el archivo del ministerio")
     // Las ideas de la red, fotografiadas en microfilm: cada una un fotograma, guardado en latas detrás de un panel falso.
     TemaId.FRENTE -> ArchivoIdeas("lata de microfilm", "latas de microfilm", "fotograma", "fotogramas", true, "el panel falso de la sala de radar")
     TemaId.REFUGIO -> ArchivoIdeas("cartucho", "cartuchos", "registro", "registros", false, "el armario de cartuchos")

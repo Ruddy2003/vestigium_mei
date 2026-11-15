@@ -151,6 +151,7 @@ object Campanas {
         TemaId.MEDIEVAL -> listOf("Peregrinación a Compostela", "La copia del códice", "El camino de los monasterios", "La feria de Champaña")
         TemaId.TEMPLARIO -> listOf("La marcha de las atalayas", "Relevo en Montalbar", "La escolta de los peregrinos", "Cabalgada al Pozo del Halcón")
         TemaId.DISTOPIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
+        TemaId.ARCONTES -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
         TemaId.FRENTE -> listOf("RUTA DE SALTO K-7", "SIETE SALTOS SIN RASTRO", "EL CARTUCHO HASTA ALBAR", "CORREDOR DE LAS MINAS")
         TemaId.REFUGIO -> listOf("Expedición a la superficie", "Reparar el purificador", "Turno de mantenimiento", "Ruta de suministros")
         TemaId.ORDEN -> listOf("Vigilia del archivo", "Patrulla del páramo", "Recuperar la reliquia", "La forja")
@@ -192,6 +193,7 @@ object Campanas {
         // De fortaleza en fortaleza por una frontera inventada, de la costa al castillo de las montañas.
         TemaId.TEMPLARIO -> listOf("Encomienda de la costa", "Atalaya del Alba", "Torre de la Sed", "Pozo del Halcón", "Vado de las Piedras Rojas", "Peña del Cuervo", "Castillo de Montalbar")
         TemaId.DISTOPIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
+        TemaId.ARCONTES -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
         // Una ruta de salto inventada, de mundo en mundo, del puerto de ladrillo a la capital del Directorio; cada parada es
         // la misión que la célula tiene ahí, con su nombre en clave.
         TemaId.FRENTE -> listOf("HOLLÍN", "ESCORIA", "VIGÍA", "LUNA OCRE", "EL ANILLO", "CANTERA", "ALBAR")

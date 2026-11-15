@@ -1208,6 +1208,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.MEDIEVAL -> 10.dp
     TemaId.TEMPLARIO -> 9.dp
     TemaId.DISTOPIA -> 12.dp
+    TemaId.ARCONTES -> 12.dp
     TemaId.FRENTE -> 11.dp
     TemaId.REFUGIO -> 6.dp
     TemaId.ORDEN -> 6.dp
@@ -1287,6 +1288,10 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
     }
     // Carpeta de expediente con su pestaña a la izquierda.
     TemaId.DISTOPIA -> formaDp { w, h, u ->
+        val p = 12 * u; val a = w * 0.38f
+        moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+    }
+    TemaId.ARCONTES -> formaDp { w, h, u ->
         val p = 12 * u; val a = w * 0.38f
         moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
     }
@@ -1495,6 +1500,7 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     // El escudete: recto arriba y redondeado abajo.
     TemaId.TEMPLARIO -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 14.dp, bottomStart = 14.dp)
     TemaId.DISTOPIA -> RectangleShape
+    TemaId.ARCONTES -> RectangleShape
     // La tecla de baquelita: el canto de arriba combado como la cara de la consola, esquinas grandes arriba y cortas abajo.
     TemaId.FRENTE -> formaDp { w, h, u ->
         val r = minOf(10 * u, h / 2); val b = minOf(3 * u, h * 0.15f); val q = minOf(4 * u, h / 4)

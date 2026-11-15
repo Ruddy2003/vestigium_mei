@@ -274,6 +274,7 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     }
     // Casilla de formulario.
     TemaId.DISTOPIA -> RectangleShape
+    TemaId.ARCONTES -> RectangleShape
     // La tecla de la consola, con el canto de arriba combado.
     TemaId.FRENTE -> GenericShape { s, _ ->
         val w = s.width; val h = s.height; val r = minOf(w, h) * 0.2f; val b = h * 0.06f; val q = r * 0.5f
@@ -407,6 +408,7 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         // La cruz patada calada en el escudo.
         TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(s.width / 2, s.height * 0.42f), minOf(s.width, s.height) * 0.26f), fondo.copy(alpha = 0.55f))
         TemaId.DISTOPIA -> {}
+        TemaId.ARCONTES -> {}
         // La ranura grabada del rótulo, arriba de la tecla.
         TemaId.FRENTE -> drawLine(fondo.copy(alpha = 0.45f), Offset(s.width * 0.28f, s.height * 0.24f), Offset(s.width * 0.72f, s.height * 0.24f), minOf(s.width, s.height) * 0.07f, StrokeCap.Round)
         TemaId.REFUGIO -> {}

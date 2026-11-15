@@ -242,6 +242,9 @@ object Temas {
     private val MARCAS_DISTOPIA = mapOf("01-01" to "CENSO", "04-15" to "DECLARACIÓN", "05-01" to "CUOTA", "07-01" to "INVENTARIO",
         "10-01" to "PLAN", "11-15" to "REVISIÓN", "12-31" to "CIERRE")
 
+    private val MARCAS_ARCONTES = mapOf("01-01" to "CENSO", "04-15" to "DECLARACIÓN", "05-01" to "CUOTA", "07-01" to "INVENTARIO",
+        "10-01" to "PLAN", "11-15" to "REVISIÓN", "12-31" to "CIERRE")
+
     /**
      * Frente exterior: los días de la red, todos inventados. El cambio de claves de año nuevo; la noche más corta y la más
      * larga (la que menos y la que más oscuridad da para transmitir); y los aniversarios de la propia red: el primer enlace,
@@ -325,6 +328,7 @@ object Temas {
             TemaId.MEDIEVAL -> FIESTAS[md]
             TemaId.TEMPLARIO -> Temas.mdJuliano(fecha)?.let { MARCAS_TEMPLARIO[it] }
             TemaId.DISTOPIA -> MARCAS_DISTOPIA[md]
+            TemaId.ARCONTES -> MARCAS_ARCONTES[md]
             TemaId.FRENTE -> MARCAS_FRENTE[md]
             TemaId.REFUGIO -> MARCAS_REFUGIO[md]
             TemaId.ORDEN -> MARCAS_ORDEN[md]
@@ -508,6 +512,7 @@ object Temas {
         TemaId.MEDIEVAL -> MEDIEVAL[titulo]
         TemaId.TEMPLARIO -> TEMPLARIO[titulo]
         TemaId.DISTOPIA -> DISTOPIA[titulo]
+        TemaId.ARCONTES -> ARCONTES[titulo]
         TemaId.FRENTE -> FRENTE[titulo]
         TemaId.REFUGIO -> REFUGIO[titulo]
         TemaId.ORDEN -> ORDEN[titulo]
@@ -550,6 +555,7 @@ object Temas {
             TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
             TemaId.TEMPLARIO -> mapOf("animo" to "Ánimo del freire", "momento" to "Crónica de la casa", "gasto" to "Tesorería", "sueno" to "Reposo", "habitos" to "La regla", "hoy" to "Guardia", "cifra" to "Recuento", "foto" to "Desde la torre", "enfoque" to "Instrucción")
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
+            TemaId.ARCONTES -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
             TemaId.FRENTE -> mapOf("animo" to "MORAL", "momento" to "REPORTE", "gasto" to "FONDOS", "sueno" to "CALIDAD DEL REPOSO", "habitos" to "RUTINAS DE CAMPO", "hoy" to "ENLACE", "cifra" to "CONTADOR", "foto" to "FOTO DE RECONOCIMIENTO", "enfoque" to "TURNO DE CONSOLA")
             TemaId.REFUGIO -> mapOf("animo" to "ESTADO", "momento" to "SUCESO", "gasto" to "SUMINISTROS", "sueno" to "DESCANSO", "habitos" to "PROTOCOLOS", "hoy" to "BITÁCORA", "cifra" to "LECTURA", "foto" to "FOTO", "enfoque" to "TURNO")
             TemaId.ORDEN -> mapOf("animo" to "MORAL", "momento" to "BITÁCORA", "gasto" to "INTENDENCIA", "sueno" to "DESCANSO", "habitos" to "DISCIPLINA", "hoy" to "PARTE", "cifra" to "CIFRA", "foto" to "IMAGEN", "enfoque" to "VIGILIA")
@@ -629,6 +635,28 @@ object Temas {
     )
 
     private val DISTOPIA = mapOf(
+        "Mundo" to "DESPLAZAMIENTOS", "Patrimonio Mundial" to "SITIOS AUTORIZADOS", "Mapa para rascar" to "TERRITORIOS VISITADOS", "Ciudades visitadas" to "JURISDICCIONES",
+        "Biblioteca de sueños" to "ARCHIVO ONÍRICO", "Cartas" to "CORRESPONDENCIA", "Escribir una carta" to "REDACTAR CORRESPONDENCIA", "Carta" to "MISIVA", "Conocerte" to "FICHA DEL CIUDADANO", "Brújula política" to "EVALUACIÓN IDEOLÓGICA", "Mapas" to "CARTOGRAFÍA OFICIAL", "Salud" to "INFORME SANITARIO", "Tus apps" to "MONITOREO DE ACTIVIDAD", "Otras vidas" to "EXPEDIENTES HISTÓRICOS", "Logros" to "CONDECORACIONES", "Tu año en historias" to "INFORME ANUAL DEL CIUDADANO", "Anoche" to "ÚLTIMO TURNO NOCTURNO", "Selladas" to "CLASIFICADAS", "Listas para abrir" to "DESCLASIFICADAS", "A otras personas" to "A OTROS CIUDADANOS", "Del pasado" to "ARCHIVO HISTÓRICO",
+        "Hoy" to "DECLARACIÓN DE HOY", "Línea de tiempo" to "REGISTRO CRONOLÓGICO", "Ahora mismo estoy…" to "ESTADO ACTUAL DEL CIUDADANO",
+        "Entender" to "INTELIGENCIA", "Registros especiales" to "REGISTROS ESPECIALES", "Apariencia" to "APARIENCIA", "Avisos y recordatorios" to "CITACIONES",
+        "Llenar el día" to "DECLARACIÓN NOCTURNA", "Biblioteca del diario" to "ARCHIVO DE DECLARACIONES", "Entrada" to "DECLARACIÓN",
+        "Día" to "PARTE DIARIO", "Momentos" to "INCIDENCIAS", "Gastos" to "RACIONAMIENTO", "Explorar" to "VIGILANCIA", "Más" to "MINISTERIOS",
+        "Hábitos" to "CUOTAS", "Cartas al futuro" to "CORRESPONDENCIA SELLADA", "Experimentos personales" to "PRUEBAS AUTORIZADAS",
+        "Cómo leer tus datos" to "DOCTRINA", "Guía científica" to "DOCTRINA", "Cuestionarios" to "INTERROGATORIOS", "Prueba de reacción" to "PRUEBA DE REFLEJOS", "Lugares" to "ZONAS",
+        "Datos" to "ARCHIVO CENTRAL", "Permisos y sensores" to "SENSORES", "Ajustes" to "DIRECTIVAS", "Reportes" to "INFORMES",
+        "Bienvenido" to "ALTA DE CIUDADANO", "Calendario" to "PLAN", "Obras" to "MATERIAL APROBADO", "Tu año" to "BALANCE ANUAL",
+        "Privacidad" to "CLASIFICADO", "Sueño" to "DESCANSO", "Contexto" to "CIRCUNSTANCIAS", "Hitos" to "HECHOS NOTABLES",
+        "Ánimo y cuerpo" to "ESTADO DEL CIUDADANO", "Diario" to "DECLARACIÓN", "Predicción" to "PRONÓSTICO", "Este día hace un año" to "ANTECEDENTES",
+        "Lo que registró el teléfono" to "VIGILANCIA AUTOMÁTICA", "Registrar" to "DECLARAR", "Las relaciones más marcadas" to "CORRELACIONES",
+        "Mapa" to "ZONIFICACIÓN", "Mapa emocional" to "ZONIFICACIÓN", "Tablero" to "INDICADORES", "Tu día" to "SEGUIMIENTO 24 H", "Tu día en 24 horas" to "SEGUIMIENTO 24 H",
+        "Te falta hoy" to "PENDIENTE DE DECLARAR", "Datos que faltan" to "OMISIONES", "Tema" to "APARIENCIA", "Recordatorios" to "CITACIONES",
+        "Resumen semanal" to "INFORME SEMANAL", "Totales" to "ESTADÍSTICA OFICIAL", "Gimnasio" to "ACONDICIONAMIENTO", "Buscar" to "BÚSQUEDA",
+        "Cifras" to "CIFRAS OFICIALES", "Fotos del día" to "EVIDENCIA FOTOGRÁFICA", "Medicamentos" to "SUMINISTRO MÉDICO",
+        "Seguimiento privado" to "EXPEDIENTE RESERVADO", "Momentos de la semana" to "INCIDENCIAS DE LA SEMANA", "Momentos de este día" to "INCIDENCIAS DEL DÍA",
+        "Lo mejor y lo peor" to "MÉRITOS Y FALTAS", "Personas, temas e hitos" to "PERSONAS DE INTERÉS", "Respaldo automático" to "COPIA DE SEGURIDAD",
+    )
+
+    private val ARCONTES = mapOf(
         "Mundo" to "DESPLAZAMIENTOS", "Patrimonio Mundial" to "SITIOS AUTORIZADOS", "Mapa para rascar" to "TERRITORIOS VISITADOS", "Ciudades visitadas" to "JURISDICCIONES",
         "Biblioteca de sueños" to "ARCHIVO ONÍRICO", "Cartas" to "CORRESPONDENCIA", "Escribir una carta" to "REDACTAR CORRESPONDENCIA", "Carta" to "MISIVA", "Conocerte" to "FICHA DEL CIUDADANO", "Brújula política" to "EVALUACIÓN IDEOLÓGICA", "Mapas" to "CARTOGRAFÍA OFICIAL", "Salud" to "INFORME SANITARIO", "Tus apps" to "MONITOREO DE ACTIVIDAD", "Otras vidas" to "EXPEDIENTES HISTÓRICOS", "Logros" to "CONDECORACIONES", "Tu año en historias" to "INFORME ANUAL DEL CIUDADANO", "Anoche" to "ÚLTIMO TURNO NOCTURNO", "Selladas" to "CLASIFICADAS", "Listas para abrir" to "DESCLASIFICADAS", "A otras personas" to "A OTROS CIUDADANOS", "Del pasado" to "ARCHIVO HISTÓRICO",
         "Hoy" to "DECLARACIÓN DE HOY", "Línea de tiempo" to "REGISTRO CRONOLÓGICO", "Ahora mismo estoy…" to "ESTADO ACTUAL DEL CIUDADANO",

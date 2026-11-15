@@ -96,6 +96,7 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     // El escudo: recto arriba y redondo abajo.
     TemaId.TEMPLARIO -> MarcoRecuadro(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 16.dp), 12.dp)
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
+    TemaId.ARCONTES -> MarcoRecuadro(RectangleShape, 12.dp)
     // La pantalla de la consola, de esquinas muy redondas, como el vidrio de un tubo de los setenta.
     TemaId.FRENTE -> MarcoRecuadro(RoundedCornerShape(22.dp), 11.dp)
     TemaId.REFUGIO -> MarcoRecuadro(RoundedCornerShape(12.dp), 10.dp)
@@ -283,6 +284,15 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
         }
         // Alambre de púas.
         TemaId.DISTOPIA -> {
+            drawLine(col, Offset(0f, y), Offset(w, y), grosor * 0.7f + 0.6f * u, pathEffect = punteado)
+            val b = 2.5f * u + grosor * 0.35f
+            var x = 9 * u
+            while (x < w - 6 * u) {
+                drawLine(col, Offset(x - b, y - b), Offset(x + b, y + b), 1.1f * u); drawLine(col, Offset(x - b, y + b), Offset(x + b, y - b), 1.1f * u)
+                x += 12 * u
+            }
+        }
+        TemaId.ARCONTES -> {
             drawLine(col, Offset(0f, y), Offset(w, y), grosor * 0.7f + 0.6f * u, pathEffect = punteado)
             val b = 2.5f * u + grosor * 0.35f
             var x = 9 * u

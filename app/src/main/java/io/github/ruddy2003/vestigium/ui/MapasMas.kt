@@ -95,6 +95,7 @@ object MapasMas {
         TemaId.BASICO -> listOf(Offset(0.08f, 0.8f), Offset(0.22f, 0.66f), Offset(0.36f, 0.7f), Offset(0.5f, 0.5f), Offset(0.64f, 0.4f), Offset(0.78f, 0.44f), Offset(0.92f, 0.24f))
         // Los puntos de control: piso por piso, de la ventanilla de abajo al Ministerio en lo alto.
         TemaId.DISTOPIA -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
+        TemaId.ARCONTES -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
         // La ruta de salto de la célula en la carta estelar, de mundo en mundo: Hollín (el puerto de ladrillo, abajo a la
         // izquierda), Escoria, Vigía, Luna Ocre, El Anillo, Cantera y Albar, la capital del Directorio, arriba a la derecha.
         TemaId.FRENTE -> listOf(Offset(0.08f, 0.8f), Offset(0.22f, 0.54f), Offset(0.36f, 0.76f), Offset(0.5f, 0.42f), Offset(0.63f, 0.66f), Offset(0.77f, 0.4f), Offset(0.9f, 0.18f))
@@ -282,6 +283,16 @@ object MapasMas {
             }
             TemaId.BASICO -> {}   // sin paisaje: solo la ruta y las paradas
             TemaId.DISTOPIA -> {
+                // Pisos de un edificio de oficinas en corte, con sus ventanillas; a la derecha, la torre del Ministerio.
+                val linea = cs.onSurface.copy(alpha = if (oscuro) 0.18f else 0.14f)
+                for (k in 1 until 6) { val y = h * k / 6f; drawLine(linea, Offset(0f, y), Offset(w * 0.8f, y), 1f * d) }
+                val az = java.util.Random(17)
+                for (k in 0 until 6) for (j in 0 until 10) if (az.nextInt(3) > 0) drawRect(linea, Offset(w * (0.03f + j * 0.075f), h * (k / 6f + 0.04f)), Size(w * 0.035f, h * 0.07f))
+                drawRect(cs.onSurface.copy(alpha = if (oscuro) 0.22f else 0.16f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.96f))
+                for (k in 0 until 9) drawRect(Color(0xFFC8102E).copy(alpha = 0.25f + 0.5f * avance), Offset(w * 0.86f, h * (0.12f + k * 0.09f)), Size(w * 0.06f, h * 0.03f))
+                drawRect(Color(0xFFC8102E).copy(alpha = 0.6f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.02f))
+            }
+            TemaId.ARCONTES -> {
                 // Pisos de un edificio de oficinas en corte, con sus ventanillas; a la derecha, la torre del Ministerio.
                 val linea = cs.onSurface.copy(alpha = if (oscuro) 0.18f else 0.14f)
                 for (k in 1 until 6) { val y = h * k / 6f; drawLine(linea, Offset(0f, y), Offset(w * 0.8f, y), 1f * d) }
@@ -821,6 +832,7 @@ object MapasMas {
             TemaId.BASICO -> drawPath(p, cs.primary.copy(alpha = 0.8f), style = Stroke(2.4f * d, cap = StrokeCap.Round))
             // La línea roja del trámite, como cinta de señalización.
             TemaId.DISTOPIA -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
+            TemaId.ARCONTES -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
             // La ruta de salto impresa en la carta: la franja tenue del corredor, los puntos ámbar del trazado y, cada tanto,
             // el ángulo del vector de salto que dice hacia dónde se va.
             TemaId.FRENTE -> {
@@ -983,6 +995,7 @@ object MapasMas {
             }
             // Una ventanilla de control: caseta cuadrada con su número.
             TemaId.DISTOPIA -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
+            TemaId.ARCONTES -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
             // Cada parada es un mundo impreso en la carta, con su lado de noche y la mira de llegada alrededor; la meta es Albar,
             // la capital del Directorio, en mármol con su anillo de bronce.
             TemaId.FRENTE -> {

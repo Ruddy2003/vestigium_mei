@@ -67,6 +67,10 @@ object Widgets {
             0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
             intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
             0xFF222527.toInt(), 0xFFFFFFFF.toInt())
+        TemaId.ARCONTES -> Colores(R.drawable.widget_fondo_arcontes, R.drawable.widget_boton_arcontes, R.drawable.widget_boton_activo_arcontes, R.drawable.widget_boton_ambar_arcontes,
+            0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
+            intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
+            0xFF222527.toInt(), 0xFFFFFFFF.toInt())
         // La consola de noche, con las luces bajas: pilotos ámbar, rótulos color hueso y, en el ánimo, del rojo de botón al verde de radar.
         TemaId.FRENTE -> Colores(R.drawable.widget_fondo_frente, R.drawable.widget_boton_frente, R.drawable.widget_boton_activo_frente, R.drawable.widget_boton_ambar_frente,
             0xFFF0A04B.toInt(), 0xFFE7E1D4.toInt(), 0xFFA8A49A.toInt(), 0xFF3A4249.toInt(),
@@ -215,6 +219,7 @@ object Widgets {
         TemaId.MEDIEVAL -> "Agora" to "Scriptura"
         TemaId.TEMPLARIO -> "Vigilia" to "Al rol"
         TemaId.DISTOPIA -> "CONTROL" to "FORMULARIO"
+        TemaId.ARCONTES -> "CONTROL" to "FORMULARIO"
         TemaId.FRENTE -> "SEÑAL" to "TELETIPO"
         TemaId.REFUGIO -> "CHEQUEO" to "ENTRADA"
         TemaId.ORDEN -> "RELEVO" to "ACTA"
@@ -259,6 +264,7 @@ object Widgets {
             TemaId.MEDIEVAL -> R.font.gotica_regular to 1.1f
             TemaId.TEMPLARIO -> R.font.cruzada_titulo to 1.0f
             TemaId.DISTOPIA -> R.font.oswald_medium to 1.05f
+            TemaId.ARCONTES -> R.font.oswald_medium to 1.05f
             TemaId.FRENTE -> R.font.chivo_mono_medium to 1.0f       // las cifras de la consola, no la letra ancha de los títulos
             TemaId.REFUGIO -> R.font.vt323 to 1.35f
             TemaId.ORDEN -> R.font.saira_stencil to 1.0f

@@ -97,6 +97,11 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_distopia</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_distopia</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Arcontes" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_arcontes</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_arcontes</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_arcontes</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Frente" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_frente</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_frente</item>

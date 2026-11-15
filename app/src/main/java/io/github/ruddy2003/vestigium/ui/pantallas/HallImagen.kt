@@ -116,6 +116,7 @@ object HallImagen {
         TemaId.MEDIEVAL -> "Liber vestigiorum meorum" to "Explicit liber · Deo gratias"
         TemaId.TEMPLARIO -> "Domus Templi · Vestigium Mei" to "Non nobis, Domine, sed nomini tuo da gloriam"
         TemaId.DISTOPIA -> "EXPEDIENTE 07-118 · VESTIGIUM MEI" to "DOCUMENTO REVISADO · ARCHÍVESE"
+        TemaId.ARCONTES -> "EXPEDIENTE 07-118 · VESTIGIUM MEI" to "DOCUMENTO REVISADO · ARCHÍVESE"
         TemaId.FRENTE -> "CÉLULA K-7 · SALA DE MANDO · VESTIGIUM MEI" to "Transmisión cerrada · quema esta copia"
         TemaId.REFUGIO -> "REFUGIO · REGISTRO DEL RESIDENTE" to "Todo en orden bajo tierra"
         TemaId.ORDEN -> "CODEX ORDINIS · VESTIGIUM MEI" to "AD SCIENTIAM CUSTODIENDAM"

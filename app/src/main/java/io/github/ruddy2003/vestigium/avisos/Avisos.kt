@@ -51,6 +51,7 @@ object Avisos {
         TemaId.MEDIEVAL -> R.raw.n_medieval_aviso to R.raw.n_medieval_solemne
         TemaId.TEMPLARIO -> R.raw.n_templario_aviso to R.raw.n_templario_solemne
         TemaId.DISTOPIA -> R.raw.n_distopia_aviso to R.raw.n_distopia_solemne
+        TemaId.ARCONTES -> R.raw.n_arcontes_aviso to R.raw.n_arcontes_solemne
         TemaId.FRENTE -> R.raw.n_frente_aviso to R.raw.n_frente_solemne
         TemaId.REFUGIO -> R.raw.n_refugio_aviso to R.raw.n_refugio_solemne
         TemaId.ORDEN -> R.raw.n_orden_aviso to R.raw.n_orden_solemne
@@ -335,6 +336,13 @@ object Avisos {
             "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
             "CONDECORACIÓN", "condecoraciones nuevas",
             "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
+        TemaId.ARCONTES -> Voz("DECLARE SU ESTADO ACTUAL", "Dos toques obligatorios: agrado y energía.",
+            "REPORTE ONÍRICO PENDIENTE", "Declare lo soñado antes de levantarse. El recuerdo caduca en minutos.",
+            "DECLARACIÓN NOCTURNA", "Complete el parte del día. En jornada difícil se acepta un solo número.",
+            "Jornada difícil: un número", "INTERROGATORIO PENDIENTE:",
+            "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
+            "CONDECORACIÓN", "condecoraciones nuevas",
+            "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
         TemaId.FRENTE -> Voz("CANAL ABIERTO · ¿CÓMO ESTÁS AHORA?", "Dos toques y cortas: qué tan agradable y cuánta energía.",
             "SEÑAL DE LA NOCHE · ¿QUÉ SOÑASTE?", "Transmítelo antes de levantarte. La señal se pierde en minutos.",
             "SE ABRE LA VENTANA · ¿CÓMO FUE EL DÍA?", "Transmite el día antes de cortar. Si fue malo, basta con un número.",
@@ -542,6 +550,7 @@ object Avisos {
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste", "Explicit: llegaste a la meta")
         TemaId.TEMPLARIO -> VozEnfoque("Alto en la marcha", "Desciñe la espada y bebe agua del aljibe.", "Se acabó el alto: a la silla", "Toca a maitines: hora de levantarse", "Non nobis: guardia cumplida", "Llegaste al castillo: meta cumplida")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
+        TemaId.ARCONTES -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
         TemaId.FRENTE -> VozEnfoque("SILENCIO DE RADIO", "Suelta los mandos. Agua y estira la espalda.", "SE REABRE EL CANAL", "SE ENCIENDE LA CONSOLA: HORA DE DESPERTAR", "TRANSMISIÓN CERRADA: TERMINASTE", "EN POSICIÓN: LLEGASTE A LA META")
         TemaId.REFUGIO -> VozEnfoque("DESCANSO DE TURNO", "Levántate, bebe agua filtrada.", "FIN DEL DESCANSO", "HORA DE DESPERTAR, RESIDENTE", "TURNO COMPLETADO", "META DE TURNO ALCANZADA")
         TemaId.ORDEN -> VozEnfoque("ALTO", "Rompan filas: agua y estiramiento.", "FIN DEL ALTO", "DIANA", "MISIÓN CUMPLIDA", "OBJETIVO ALCANZADO")
