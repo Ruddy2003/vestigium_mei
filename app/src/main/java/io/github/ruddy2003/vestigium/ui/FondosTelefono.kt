@@ -413,7 +413,7 @@ private fun DrawScope.marcoNouveau(e: androidx.compose.material3.ColorScheme, iz
  * Psicodelia: el marco de un cartel de concierto. El borde es blando y ondula, con un filete por dentro; detrás del
  * emblema, el arco de tinta de arcoíris del tintero partido; arriba, en las esquinas, dos margaritas que vibran; abajo,
  * la calle con su hilera de casas victorianas, casi todas grises y una pintada de turquesa. De noche, la misma calle con
- * las ventanas encendidas en luz negra y, en las esquinas de arriba, las luces líquidas.
+ * las ventanas encendidas en luz negra (las luces líquidas ya las pone el fondo vivo).
  */
 private fun DrawScope.marcoPsicodelia(e: androidx.compose.material3.ColorScheme, izq: Float, der: Float, arr: Float, aba: Float, col: Color, tenue: Color, claro: Boolean) {
     val u = 1.dp.toPx(); val cx = (izq + der) / 2
@@ -439,12 +439,7 @@ private fun DrawScope.marcoPsicodelia(e: androidx.compose.material3.ColorScheme,
         val tintas = if (claro) ARCOIRIS.take(5) else ARCOIRIS_NOCHE
         tintas.forEachIndexed { k, t ->
             val r = 106 * u + k * 7 * u
-            drawArc(suave(t, if (claro) 0.42f else 0.5f), 196f, 148f, false, Offset(centro.x - r, centro.y - r), Size(2 * r, 2 * r), style = Stroke(5.4f * u, cap = StrokeCap.Round))
-        }
-        // De noche, las luces líquidas en las esquinas de arriba.
-        if (!claro) {
-            lucesLiquidas(Size(130 * u, 130 * u), 0.15f, listOf(LIMON, FLUOR_MAGENTA), 0.55f, Offset(izq - 30 * u, arr - 20 * u))
-            lucesLiquidas(Size(130 * u, 130 * u), 0.55f, listOf(FLUOR_VIOLETA, FLUOR_NARANJA), 0.55f, Offset(der - 100 * u, arr - 10 * u))
+            drawArc(suave(t, if (claro) 0.42f else 0.62f), 196f, 148f, false, Offset(centro.x - r, centro.y - r), Size(2 * r, 2 * r), style = Stroke(5.4f * u, cap = StrokeCap.Round))
         }
         // La calle: cinco casas victorianas al pie, casi todas grises y una pintada.
         val ancho = (der - izq - 20 * u) / 5f

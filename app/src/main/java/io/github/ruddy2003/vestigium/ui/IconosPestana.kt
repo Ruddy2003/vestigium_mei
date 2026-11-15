@@ -482,7 +482,6 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.DISTOPIA -> { r(2.5f, 5f, 19f, 14f, 1f); r(5f, 8f, 5.5f, 7.5f, 0.3f); ci(7.75f, 10.4f, 1.3f, st = fino); p(st = fino) { m(5.6f, 15.5f); q(7.75f, 11.8f, 9.9f, 15.5f) }
             l(12.5f, 9f, 18.5f, 9f, 1.1f); l(12.5f, 12f, 18.5f, 12f, 1.1f); l(12.5f, 15f, 16f, 15f, 1.1f) }                               // cédula con foto
         TemaId.PSICODELIA -> { ci(12f, 12f, 9f); l(12f, 3f, 12f, 21f); l(12f, 12f, 5.6f, 18.4f); l(12f, 12f, 18.4f, 18.4f) } // el símbolo de la paz
-            l(12.5f, 9f, 18.5f, 9f, 1.1f); l(12.5f, 12f, 18.5f, 12f, 1.1f); l(12.5f, 15f, 16f, 15f, 1.1f) }                               // cédula con foto
         TemaId.NOUVEAU -> { p { m(5f, 21.5f); q(4.2f, 11f, 5.2f, 6f); q(6.2f, 2f, 9.6f, 3.2f) }; p { m(19f, 21.5f); q(19.8f, 11f, 18.8f, 6f); q(17.8f, 2f, 14.4f, 3.2f) }
             ov(8.7f, 3.6f, 2.4f, 3.6f, relleno = true); ov(12.9f, 3.6f, 2.4f, 3.6f, relleno = true)
             r(5.4f, 9.6f, 13.2f, 3.4f, 1.4f); l(3.2f, 21.5f, 6.8f, 21.5f, 1.4f); l(17.2f, 21.5f, 20.8f, 21.5f, 1.4f) } // la entrada de metro: los dos candelabros con sus faroles y el letrero

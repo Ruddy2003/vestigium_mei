@@ -579,7 +579,7 @@ private fun DrawScope.bloqueoSala(cs: ColorScheme) {
     val oscuro = cs.background.luminance() < 0.5f
     with(TrazosPsicodelia) {
         fun suave(c: Color, k: Float) = androidx.compose.ui.graphics.lerp(cs.background, c, k)
-        lucesLiquidas(Size(w * 0.8f, h * 0.7f), 0.35f, if (oscuro) listOf(LIMON, FLUOR_MAGENTA, FLUOR_VIOLETA) else listOf(MAGENTA, NARANJA, AZUL), if (oscuro) 0.4f else 0.25f, Offset(w * 0.1f, h * 0.12f))
+        lucesLiquidas(Size(w * 0.8f, h * 0.7f), 0.35f, if (oscuro) listOf(LIMON, FLUOR_MAGENTA, FLUOR_VIOLETA) else listOf(MAGENTA, NARANJA, AZUL), if (oscuro) 0.75f else 0.5f, Offset(w * 0.1f, h * 0.12f))
         val centro = Offset(cx, h / 2 + 15 * u)
         val tintas = if (oscuro) ARCOIRIS_NOCHE else ARCOIRIS.take(5)
         tintas.forEachIndexed { k, t ->

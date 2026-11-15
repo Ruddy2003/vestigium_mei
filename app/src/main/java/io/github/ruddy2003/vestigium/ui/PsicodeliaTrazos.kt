@@ -175,8 +175,10 @@ object TrazosPsicodelia {
 
     /**
      * Las luces líquidas: [colores] gotas grandes y translúcidas que se mezclan y respiran dentro de [tam], movidas por [fase]
-     * (de 0 a 1; la vuelta cierra sin salto). Cada gota tiene su resplandor, el cuerpo de tinta más vivo hacia el borde,
-     * como el aceite entre dos vidrios, y alguna burbuja dentro. [intensidad] baja el brillo (de día van más tenues).
+     * (de 0 a 1; la vuelta cierra sin salto). Cada gota es blanda de punta a punta, sin ningún canto: un núcleo y unos
+     * lóbulos que giran despacio a su alrededor, cada uno un resplandor que se apaga del todo antes de su borde, así la
+     * mancha cambia de forma como el aceite entre dos vidrios; dentro lleva alguna burbuja. [intensidad] baja el brillo (de
+     * día van más tenues).
      */
     fun DrawScope.lucesLiquidas(tam: Size, fase: Float, colores: List<Color>, intensidad: Float = 1f, origen: Offset = Offset.Zero) {
         val dos = 2f * PI.toFloat()
@@ -184,24 +186,34 @@ object TrazosPsicodelia {
             val t = fase * dos
             val c = Offset(origen.x + tam.width * (0.5f + 0.3f * sin(t + i * 2.1f)), origen.y + tam.height * (0.5f + 0.28f * cos(2f * t + i * 1.7f)))
             val r = min(tam.width, tam.height) * (0.3f + 0.05f * sin(t + i))
-            gotaDeLuz(c, r, fase + i * 0.3f, 3 + i % 2, col, intensidad)
+            gotaBlanda(c, r, t, i, col, intensidad)
         }
     }
 
-    /** Una gota de luz líquida: el resplandor, el cuerpo de tinta (más vivo en el borde), el menisco y una burbuja dentro. */
-    private fun DrawScope.gotaDeLuz(c: Offset, r: Float, fase: Float, lobulos: Int, col: Color, k: Float, modo: BlendMode = BlendMode.SrcOver) {
+    /**
+     * Una gota de luz líquida, blanda de punta a punta: un núcleo y [i] % 2 + 3 lóbulos que giran a su alrededor con [t] (en
+     * radianes), cada uno un resplandor de [col] que se apaga del todo antes de su borde, y una burbuja dentro. [k] es la
+     * opacidad y [modo], cómo se suma a lo de detrás.
+     */
+    private fun DrawScope.gotaBlanda(c: Offset, r: Float, t: Float, i: Int, col: Color, k: Float, modo: BlendMode = BlendMode.SrcOver) {
         if (r <= 0f || k <= 0f) return
-        drawCircle(Brush.radialGradient(listOf(col.copy(alpha = 0.16f * k), col.copy(alpha = 0f)), c, r * 1.55f), r * 1.55f, c, blendMode = modo)
-        val cuerpo = gota(c, r, fase, 0.13f, lobulos, if (r > 60f) 96 else 48)
-        drawPath(cuerpo, Brush.radialGradient(listOf(col.copy(alpha = 0.14f * k), col.copy(alpha = 0.22f * k), col.copy(alpha = 0.4f * k)), c, r * 1.12f), blendMode = modo)
-        drawPath(cuerpo, col.copy(alpha = 0.22f * k), style = Stroke(max(r * 0.018f, 0.8f)), blendMode = modo)
-        val b = Offset(c.x + r * 0.32f * cos(fase * 2f * PI.toFloat() + lobulos), c.y + r * 0.28f * sin(fase * 2f * PI.toFloat() + lobulos))
-        burbuja(b, r * 0.13f, lerp(col, Color.White, 0.4f), k * 0.8f)
+        fun mancha(o: Offset, rr: Float, a: Float) = drawCircle(
+            Brush.radialGradient(0f to col.copy(alpha = a), 0.45f to col.copy(alpha = a * 0.62f), 0.75f to col.copy(alpha = a * 0.22f),
+                1f to col.copy(alpha = 0f), center = o, radius = rr), rr, o, blendMode = modo)
+        mancha(c, r * 1.02f, 0.34f * k)
+        val lobulos = 3 + i % 2
+        for (j in 0 until lobulos) {
+            val a = 2f * PI.toFloat() * j / lobulos + t * (if (i % 2 == 0) 1f else -1f) + i
+            val lejos = r * (0.42f + 0.12f * sin(2f * t + j * 1.9f + i))
+            mancha(Offset(c.x + lejos * cos(a), c.y + lejos * sin(a)), r * (0.62f + 0.08f * cos(t + j)), 0.2f * k)
+        }
+        val b = Offset(c.x + r * 0.3f * cos(t + i), c.y + r * 0.26f * sin(t + i))
+        burbuja(b, r * 0.12f, lerp(col, Color.White, 0.4f), k * 0.7f)
     }
 
     /**
      * El fondo vivo de la sala de baile (de noche) o de la calle (de día): las luces líquidas de un retroproyector, cinco
-     * manchas de aceite y tinta que se cruzan despacio y respiran, y unas burbujas que suben con el calor de la lámpara. De
+     * manchas blandas de aceite y tinta que se cruzan despacio y respiran, y unas burbujas que suben con el calor de la lámpara. De
      * noche, en los colores de la luz negra, que se suman donde se cruzan; de día, en tintas de cartel muy tenues, que se
      * mezclan como en el papel. [t] da la vuelta de 0 a 1 sin salto; [fuerza] multiplica la opacidad.
      */
@@ -210,7 +222,7 @@ object TrazosPsicodelia {
         val dos = 2f * PI.toFloat()
         val colores = if (oscuro) listOf(LIMON, FLUOR_MAGENTA, FLUOR_VIOLETA, FLUOR_NARANJA, FLUOR_MAGENTA)
             else listOf(MAGENTA, NARANJA, VERDE, AZUL, AMARILLO)
-        val k = (if (oscuro) 0.5f else 0.3f) * fuerza
+        val k = (if (oscuro) 0.95f else 0.6f) * fuerza
         val modo = if (oscuro) BlendMode.Screen else BlendMode.Multiply
         // Cada mancha: dónde anda (en fracción del ancho y del alto), cuánto se aleja, su tamaño y su fase. Las vueltas de
         // cada una son enteras, así el ciclo cierra.
@@ -223,7 +235,7 @@ object TrazosPsicodelia {
             val a = (t + f[5]) * dos
             val c = Offset(w * (f[0] + f[2] * sin(a + i)), h * (f[1] + f[3] * cos(2f * a - i * 0.7f)))
             val r = m * f[4] * (0.92f + 0.08f * sin(3f * a + i))
-            gotaDeLuz(c, r, t * (1 + i % 2) + f[5], 3 + i % 2, colores[i], k, modo)
+            gotaBlanda(c, r, (t * (1 + i % 2) + f[5]) * dos, i, colores[i], k, modo)
         }
         // Las burbujas que suben, despacio, con su menisco.
         for (b in 0 until burbujas) {
