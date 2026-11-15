@@ -62,7 +62,7 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     /** Frente exterior: el cartucho de datos de la célula, un bloque de baquelita con su etiqueta y su muesca. */
     CARTUCHO("Cartucho de datos", "bloque"),
     /** Arcontes: la jarra alta de barro, sellada, con el códice de papiro dentro, como la que guardó los de Nag Hammadi. */
-    JARRA("Jarra sellada", "hoja de papiro"),
+    JARRA("Jarra de los destellos", "hoja de papiro"),
     /** Básico: una libreta lisa, sin dibujo propio (el papel es la superficie del esquema). */
     SIMPLE("Libreta de momentos", "página"),
 }

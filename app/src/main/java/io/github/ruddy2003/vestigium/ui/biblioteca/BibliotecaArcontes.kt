@@ -1401,8 +1401,10 @@ object EstanteArcontes : DisenoBiblioteca {
         val borde = bis + h * 0.32f
         val ab = e.abrir.coerceIn(0f, 1f)
         val cerrada = ab < 0.5f
-        val papiro = c(Color(0xFFE6D8B4))
-        val papiroOsc = c(Color(0xFFCDB98C))
+        // El papiro se hunde menos que la cueva, para que lo escrito por fuera se lea también de noche.
+        fun pap(x: Color) = if (oscuro) mezcla(mezcla(x, PENUMBRA, 0.28f), LLAMA, 0.04f) else x
+        val papiro = pap(Color(0xFFE6D8B4))
+        val papiroOsc = pap(Color(0xFFCDB98C))
         val pelo = c(Color(0xFF3B3026))
         val ro = minOf(w, h) * 0.13f
         val pc = Offset(s.center.x, borde)
