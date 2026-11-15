@@ -74,7 +74,7 @@ internal object RetiradaLuz {
      * Lo que alumbra el fuego del alto a lo que tiene cerca, de 0 a algo más de 1: casi nada de día; del todo de noche;
      * antes si está cubierto o nevando («el fuego se enciende antes y manda»).
      */
-    fun lumbre(fuego: Float, l: Luces, cubierto: Float): Float = fuego * (0.12f + 1.12f * maxOf(l.noche, 0.45f * cubierto * (1f - l.noche)))
+    fun lumbre(fuego: Float, l: Luces, cubierto: Float): Float = fuego * (0.12f + 1.12f * maxOf(l.noche, 0.8f * cubierto * (1f - l.noche)))
 
     /** La luz de la luna, de 0 (de día, sin luna o con el cielo cubierto) a 1. */
     fun luna(l: Luces): Float = if (l.lunaAltura <= 0.05f) 0f else ((l.noche - 0.5f) / 0.3f).coerceIn(0f, 1f) * ((0.6f - l.nublado) / 0.3f).coerceIn(0f, 1f)
@@ -175,9 +175,18 @@ internal object RetiradaLuz {
         val k = v.lumbre * (0.3f + 0.7f * v.l.noche)
         if (k > 0.02f) {
             val nieve = lerp(C.BARRO, C.NIEVE, v.nieve)
-            charcoDeLuz(f, RetiradaCerca.FUEGO + Offset(-6f, 4f), 120f * (0.55f + 0.45f * v.fuego), 34f * (0.55f + 0.45f * v.fuego), nieve, 0.7f * (0.3f + 0.7f * v.l.noche))
+            charcoDeLuz(f, RetiradaCerca.FUEGO + Offset(-30f, 6f), 175f * (0.55f + 0.45f * v.fuego), 44f * (0.55f + 0.45f * v.fuego), nieve, 0.6f * (0.3f + 0.7f * v.l.noche))
             charcoDeLuz(f, RetiradaCerca.FUEGO, 50f, 15f, nieve, 0.35f * (0.4f + 0.6f * v.l.noche))
         }
+    }
+
+    /**
+     * Con el cielo cubierto o nevando, de día, lo cercano queda más oscuro que lo de lejos (la nieve que cae y la bruma
+     * aclaran la lejanía; lo de delante conserva su color): así el centro no se lava y los planos se separan.
+     */
+    fun DrawScope.cercaOscura(v: VistaNapoleon) {
+        val k = v.cubierto * (1f - v.l.noche); if (k <= 0.05f) return
+        drawRect(Brush.verticalGradient(0f to Color.White, 0.5f to Color.White, 1f to lerp(Color.White, Color(0xFF9C9EB8), 0.6f * k), startY = H, endY = ALTO), Offset(0f, H), Size(ANCHO, ALTO - H), blendMode = BlendMode.Multiply)
     }
 
     /**

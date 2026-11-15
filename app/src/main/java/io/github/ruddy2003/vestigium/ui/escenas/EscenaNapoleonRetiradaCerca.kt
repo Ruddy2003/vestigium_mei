@@ -1,6 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.escenas
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -38,6 +39,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.humo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.llama
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mult
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
@@ -62,24 +64,27 @@ internal object RetiradaCerca {
     private val C = ColorNapoleon
 
     /** Dónde arde el fuego del alto (su centro, en el suelo) y de dónde sale su luz. */
-    val FUEGO = Offset(306f, 246f)
-    val LUZ_DEL_FUEGO = Offset(306f, 228f)
+    val FUEGO = Offset(296f, 238f)
+    val LUZ_DEL_FUEGO = Offset(296f, 222f)
 
-    /** El sitio de cada cosa. */
+    /**
+     * El sitio de cada cosa, escalonado en hondo (regla 5): en las dos esquinas de abajo, cortadas por el borde, la rueda
+     * suelta y el tambor tumbado; un par de metros más allá, el cofre medio hundido y girado, con el espejo apoyado en su
+     * costado; más allá todavía, el alto alrededor del fuego. Entre unos y otros queda el suelo del gato, libre.
+     */
     private val S_FUEGO = PiezasNapoleon.sitio(MIRADA, FUEGO, 0.2f)
-    private val S_PABELLON = PiezasNapoleon.sitio(MIRADA, Offset(262f, 230f), 0.35f)
-    private val S_SOPORTE = PiezasNapoleon.sitio(MIRADA, Offset(236f, 257f), -0.45f)
-    private val S_MOCHILA2 = PiezasNapoleon.sitio(MIRADA, Offset(214f, 268f), 0.5f)
-    private val S_MOCHILA3 = PiezasNapoleon.sitio(MIRADA, Offset(352f, 236f), -0.2f)
-    private val S_TAMBOR = PiezasNapoleon.sitio(MIRADA, Offset(364f, 270f), 0.4f)
-    private val S_COFRE = PiezasNapoleon.sitio(MIRADA, Offset(150f, 250f), -0.42f)
-    private val S_ESPEJO = PiezasNapoleon.sitio(MIRADA, Offset(194f, 271f), 0.25f)
-    private val S_RUEDA = PiezasNapoleon.sitio(MIRADA, Offset(74f, 292f), 0f)
+    private val S_PABELLON = PiezasNapoleon.sitio(MIRADA, Offset(250f, 220f), 0.35f)
+    private val S_SOPORTE = PiezasNapoleon.sitio(MIRADA, Offset(214f, 236f), -0.55f)
+    private val S_MOCHILA3 = PiezasNapoleon.sitio(MIRADA, Offset(346f, 226f), -0.25f)
+    private val S_TAMBOR = PiezasNapoleon.sitio(MIRADA, Offset(362f, 292f), 0.75f)
+    private val S_COFRE = PiezasNapoleon.sitio(MIRADA, Offset(134f, 248f), -0.5f)
+    private val S_ESPEJO = PiezasNapoleon.sitio(MIRADA, Offset(182f, 256f), -0.45f)
+    private val S_RUEDA = PiezasNapoleon.sitio(MIRADA, Offset(6f, 302f), 0f)
     private val S_CARROZA = PiezasNapoleon.sitio(MIRADA, Offset(22f, 212f), -0.98f)
     private val S_TIENDA = PiezasNapoleon.sitio(MIRADA, Offset(78f, 184f), 0.55f)
 
     /** El pino grande: su pie, cortado por el borde de la izquierda. */
-    val PIE_DEL_PINO = Offset(2f, 214f)
+    val PIE_DEL_PINO = Offset(9f, 214f)
 
     /** Donde se apoya el objeto del día: encima de la mochila de pie, junto al pabellón. */
     val SOPORTE: Offset get() = S_SOPORTE.pie
@@ -95,7 +100,7 @@ internal object RetiradaCerca {
     val MIRADOR: Offset get() = carrozaDe(0f).let { c -> c.s.p(c.t(V3(c.w, 1.75f, 0.8f))).let { Offset(it.x.coerceIn(12f, 360f), it.y.coerceIn(30f, 260f)) } }
 
     /** El pie y la punta del asta del águila: apoyada en el cruce de las bayonetas del pabellón. */
-    private val PIE_ASTA = Offset(330f, 271f)
+    private val PIE_ASTA = Offset(318f, 258f)
     private fun puntaAsta(): Offset { val apice = S_PABELLON.p(PABELLON.apice); val d = apice - PIE_ASTA; return PIE_ASTA + d * 1.36f }
 
     /** El fusil de la carne, que sale del pabellón y se inclina sobre el fuego. */
@@ -114,7 +119,8 @@ internal object RetiradaCerca {
         if (!v.vivac) add(RetiradaLuz.Sombra(S_COFRE.pie, siluetaCaja(S_COFRE, 0.45f, 0.62f)))
         add(RetiradaLuz.Sombra(S_SOPORTE.pie, siluetaCaja(S_SOPORTE, 0.22f, 0.46f)))
         add(RetiradaLuz.Sombra(S_MOCHILA3.pie, siluetaCaja(S_MOCHILA3, 0.22f, 0.46f)))
-        add(RetiradaLuz.Sombra(S_TAMBOR.pie, siluetaCaja(S_TAMBOR, 0.22f, 0.44f)))
+        add(RetiradaLuz.Sombra(S_TAMBOR.pie, siluetaCaja(S_TAMBOR, 0.3f, 0.42f)))
+        if (!v.vivac) add(RetiradaLuz.Sombra(S_ESPEJO.pie, siluetaCaja(S_ESPEJO, 0.26f, 0.7f)))
         if (EscenaNapoleon.pabellon(v.m)) { val pa = puntaAsta(); add(RetiradaLuz.Sombra(PIE_ASTA, poligono(PIE_ASTA + Offset(-ts, 0f), PIE_ASTA + Offset(ts, 0f), pa + Offset(ts * 2f, 0f), pa + Offset(-ts * 2f, 0f)))) }
         if (EscenaNapoleon.marmita(v.m) == Marmita.AL_FUEGO) add(RetiradaLuz.Sombra(FUEGO, siluetaCaja(S_FUEGO, 0.55f, 0.95f)))
     }
@@ -156,28 +162,26 @@ internal object RetiradaCerca {
             val (_, sobre) = mochila(S_SOPORTE, a, 41L, false, C.CAPOTE, 0f, nieve)
             with(ObjetosNapoleon) { sobreElSoporte(m, v.p.con(a.calor(sobre)), sobre, 1.1f) }
         }
-        if (conGente) cosas += parte(S_MOCHILA2.pie.y) { mochila(S_MOCHILA2, v.en(S_MOCHILA2.pie), 42L, true, lerp(C.CAPOTE, C.LONA, 0.4f), 0f, nieve) }
         cosas += parte(S_MOCHILA3.pie.y) { mochila(S_MOCHILA3, v.en(S_MOCHILA3.pie), 43L, false, lerp(C.CAPOTE, C.AZUL, 0.2f), 0f, nieve) }
-        cosas += parte(254f) { val q = Offset(352f, 254f); capote(v.en(q), q, 46f, 15f, Azar(51L), false, 0f, nieve) }
-        if (conGente) cosas += parte(242f) { val q = Offset(222f, 242f); capote(v.en(q), q, 34f, 10f, Azar(52L), true, 0f, nieve) }
-        // Las ramas y las mantas de dormir, alrededor del fuego.
-        if (EscenaNapoleon.camas(m)) cosas += parte(268f) {
-            val q = Offset(268f, 270f); ramas(v.en(q), q, 70f, 16f, Azar(53L))
-            capote(v.en(q), q + Offset(6f, -2f), 42f, 11f, Azar(54L), true, 0f, nieve * 0.5f)
-            val q2 = Offset(338f, 276f); ramas(v.en(q2), q2, 56f, 12f, Azar(55L)); capote(v.en(q2), q2 + Offset(-4f, -1f), 38f, 10f, Azar(56L), false, 0f, nieve * 0.5f)
+        cosas += parte(242f) { val q = Offset(338f, 242f); capote(v.en(q), q, 40f, 13f, Azar(51L), false, 0f, nieve) }
+        // Las ramas y las mantas de dormir, alrededor del fuego (entre el fuego y el suelo del gato).
+        if (EscenaNapoleon.camas(m)) cosas += parte(256f) {
+            val q = Offset(250f, 256f); ramas(v.en(q), q, 64f, 14f, Azar(53L))
+            capote(v.en(q), q + Offset(6f, -2f), 40f, 10f, Azar(54L), true, 0f, nieve * 0.5f)
+            val q2 = Offset(334f, 260f); ramas(v.en(q2), q2, 54f, 12f, Azar(55L)); capote(v.en(q2), q2 + Offset(-4f, -1f), 36f, 10f, Azar(56L), false, 0f, nieve * 0.5f)
         }
-        // El tambor, cortado por el borde.
-        cosas += parte(S_TAMBOR.pie.y) { tambor(S_TAMBOR, v.en(S_TAMBOR.pie), false, 0f, nieve) }
+        // El tambor, tumbado en la esquina de abajo y cortado por el borde.
+        cosas += parte(S_TAMBOR.pie.y) { tambor(S_TAMBOR, v.en(S_TAMBOR.pie), true, 0f, nieve) }
         // El asta del águila, apoyada en el pabellón: está mientras está la compañía (de marcha, va con ella).
         if (EscenaNapoleon.pabellon(m)) cosas += parte(PIE_ASTA.y) {
             aguila(v.en(PIE_ASTA), PIE_ASTA, puntaAsta(), 0.034f * S_SOPORTE.k, EscenaNapoleon.aguilaEnvuelta(m), EscenaNapoleon.luto(m), Azar(57L), 0f, nieve)
         }
         // El objeto grande del día, apoyado en el pabellón (o en la mochila).
-        ObjetosNapoleon.grande(m, v.p.con(v.a.calor(Offset(282f, 250f))), Offset(282f, 252f), Offset(270f, 176f), 1.1f)?.let { g -> cosas += parte(g.pie.y) { g.pintar(this) } }
+        ObjetosNapoleon.grande(m, v.p.con(v.a.calor(Offset(270f, 240f))), Offset(270f, 242f), Offset(258f, 168f), 1.05f)?.let { g -> cosas += parte(g.pie.y) { g.pintar(this) } }
         // Lo abandonado del centro (en la retirada).
         if (!v.vivac) {
-            cosas += parte(S_COFRE.pie.y) { cofre(S_COFRE, v.en(S_COFRE.pie), v.nieve, 0f, nieve) }
-            cosas += parte(S_ESPEJO.pie.y) { espejo(S_ESPEJO, v.en(S_ESPEJO.pie), v.l.alto, v.l.bajo) }
+            cosas += parte(S_COFRE.pie.y) { cofre(S_COFRE, v.en(S_COFRE.pie), 1f, 0f, nieve) }
+            cosas += parte(S_ESPEJO.pie.y) { espejo(S_ESPEJO, v.en(S_ESPEJO.pie), v.l.alto, v.l.bajo, 0f, nieve) }
             cosas += parte(ALTO + 2f) { ruedaSuelta(S_RUEDA, v.en(S_RUEDA.pie), nieve) }
         }
         for ((_, pintar) in cosas.sortedBy { it.first }) pintar()
@@ -207,14 +211,30 @@ internal object RetiradaCerca {
     private fun DrawScope.troncoDelPino(v: VistaNapoleon) {
         val a = v.en(PIE_DEL_PINO); val p = PIE_DEL_PINO
         val tronco = Path().apply { moveTo(p.x - 24f, p.y + 2f); cubicTo(p.x - 18f, p.y - 10f, p.x - 15f, p.y - 60f, p.x - 13f, -10f); lineTo(p.x + 13f, -10f); cubicTo(p.x + 15f, p.y - 60f, p.x + 18f, p.y - 12f, p.x + 26f, p.y + 2f); close() }
-        drawPath(tronco, Brush.horizontalGradient(listOf(a.plano(C.MADERA_OSC, p, -0.9f), a.plano(C.MADERA_OSC, p, 0f), a.plano(lerp(C.MADERA_OSC, C.MADERA, 0.4f), p, 0.9f), a.plano(C.MADERA_OSC, p, 0.4f)), p.x - 24f, p.x + 26f))
+        // El tronco como un cuerpo redondo: la sombra del lado contrario a la luz, la luz que rebota en el canto.
+        val corteza = lerp(C.MADERA_OSC, C.ROJO, 0.12f)
+        val lado = if (a.p.solALaDerecha) 1f else -1f
+        val izq = a.plano(corteza, p, -1f); val der = a.plano(lerp(corteza, C.MADERA, 0.35f), p, 1f, 0f, 0.6f); val mid = a.plano(corteza, p, 0f)
+        drawPath(tronco, Brush.horizontalGradient(0f to (if (lado > 0f) izq else der), 0.25f to mid, 0.7f to (if (lado > 0f) der else izq), 1f to lerp(izq, mid, 0.5f), startX = p.x - 24f, endX = p.x + 26f))
         clipPath(tronco) {
-            // La corteza en placas, con las grietas oscuras.
+            // La corteza en escamas: placas redondeadas, alternadas, cada una con su filo de luz arriba y su grieta oscura
+            // alrededor; más chicas y rojizas arriba, más anchas y grises abajo.
             val az = Azar(AZ_PINO + 1)
-            repeat(70) {
-                val x = az.entre(p.x - 18f, p.x + 20f); val y = az.entre(-10f, p.y); val h = az.entre(8f, 22f)
-                drawLine(a.plano(lerp(C.CENIZA, C.MADERA_OSC, 0.3f), Offset(x, y), 0f), Offset(x, y), Offset(x + az.entre(-1f, 1f), y + h), az.entre(0.6f, 1.4f), StrokeCap.Round)
-                if (az.real() < 0.4f) drawLine(a.plano(C.MADERA, Offset(x, y), 0.9f).copy(alpha = 0.6f), Offset(x + 1.2f, y + 2f), Offset(x + 1.4f, y + h * 0.6f), 0.7f, StrokeCap.Round)
+            var y = -10f
+            while (y < p.y) {
+                val alto = az.entre(9f, 15f) * (0.7f + 0.5f * (y / p.y).coerceIn(0f, 1f))
+                var x = p.x - 22f + az.entre(-3f, 3f)
+                while (x < p.x + 24f) {
+                    val ancho = az.entre(5f, 9f); val c = Offset(x + ancho / 2f, y + alto / 2f + az.entre(-2f, 2f))
+                    val u = ((c.x - (p.x - 18f)) / 40f).coerceIn(0f, 1f); val luz = if (lado > 0f) u else 1f - u
+                    val placa = TrazosValle.blando(c, ancho * 0.48f, alto * 0.46f, az, 8, 0.18f, 0.85f)
+                    val col = lerp(lerp(a.plano(corteza, c, -1f), a.plano(lerp(corteza, C.MADERA, 0.4f), c, 1f, 0f, 0.6f), luz), a.plano(lerp(C.CAPOTE, corteza, 0.5f), c, 0f), (c.y / p.y).coerceIn(0f, 1f) * 0.4f)
+                    drawPath(placa, col)
+                    drawPath(placa, mult(col, C.SOMBRA, 0.55f), style = Stroke(0.9f))
+                    drawLine(lerp(col, Color.White, 0.15f + 0.2f * luz), c + Offset(-ancho * 0.3f, -alto * 0.36f), c + Offset(ancho * 0.25f, -alto * 0.4f), 0.6f, StrokeCap.Round)
+                    x += ancho * az.entre(0.85f, 1.05f)
+                }
+                y += alto * az.entre(0.75f, 0.95f)
             }
             // La nieve pegada en la corteza, del lado del viento, y la resina.
             if (v.nieve > 0.3f) repeat(10) { val y = az.entre(20f, p.y - 10f); mancha(Offset(p.x - 12f, y), 4f, az.entre(5f, 12f), a.plano(C.NIEVE, Offset(p.x - 12f, y), -0.6f), 0.7f * v.nieve) }
@@ -240,16 +260,13 @@ internal object RetiradaCerca {
         val l = v.l; val f = v.fuego; val k = S_FUEGO.k
         if (f > 0.02f) {
             resplandor(LUZ_DEL_FUEGO, (70f + 60f * f) * (0.6f + 0.4f * v.noche), (0.25f + 0.75f * v.noche) * f * (0.92f + 0.08f * sin(reloj * 7f)))
-            if (f >= 0.45f) {
-                for ((dx, h) in listOf(-0.14f to 0.4f, 0.05f to 0.56f, 0.18f to 0.36f, -0.02f to 0.3f)) llama(FUEGO + Offset(dx * k, -0.12f * k), h * k * f * (0.5f + 0.5f * v.noche), reloj, (dx * 100f).toInt() + 3)
-            } else {
-                // El rescoldo: alguna llama chica que asoma y las brasas que laten.
-                // Las brasas que laten entre la ceniza (la ceniza y los palos ya están en la parte quieta).
-                val ab = Azar(Semilla.de("napoleon", "brasas"))
-                repeat(9) { i -> val q = FUEGO + Offset(ab.entre(-0.22f, 0.22f) * k, ab.entre(-0.08f, 0.06f) * k); val a = (0.35f + 0.4f * sin(reloj * 1.4f + i * 2.3f)) * (f / 0.3f).coerceAtMost(1f)
-                    drawCircle(Color(0xFFFF6A22).copy(alpha = a.coerceIn(0f, 1f)), ab.entre(0.012f, 0.026f) * k, q); drawCircle(Color(0xFFFFB050).copy(alpha = (a * 0.12f).coerceIn(0f, 1f)), 0.04f * k, q, blendMode = BlendMode.Plus) }
-                llama(FUEGO + Offset(4f, -0.08f * k), 0.22f * k * (f / 0.3f).coerceAtMost(1f), reloj, 9)
-            }
+            // Las brasas que laten entre la leña y la ceniza (la leña y la ceniza ya están en la parte quieta).
+            val ab = Azar(Semilla.de("napoleon", "brasas"))
+            repeat(11) { i -> val q = FUEGO + Offset(ab.entre(-0.24f, 0.24f) * k, ab.entre(-0.09f, 0.05f) * k); val a = (0.4f + 0.4f * sin(reloj * 1.4f + i * 2.3f)) * (f / 0.3f).coerceAtMost(1f)
+                drawCircle(Color(0xFFFF6A22).copy(alpha = a.coerceIn(0f, 1f)), ab.entre(0.01f, 0.022f) * k, q); drawCircle(Color(0xFFFFB050).copy(alpha = (a * 0.1f).coerceIn(0f, 1f)), 0.035f * k, q, blendMode = BlendMode.Plus) }
+            // Las llamas: lenguas chicas y en capas (naranja fuera, ámbar, núcleo casi blanco), que se mecen cada una a su
+            // ritmo; más altas en medio, donde se cruzan los rayos y las tablas. Con el rescoldo, dos o tres que asoman.
+            llamas(FUEGO + Offset(0f, -0.1f * k), k, f, reloj, v.noche)
             // Las chispas que suben.
             val az = Azar(Semilla.de("napoleon", "chispas"))
             repeat(8) { i ->
@@ -260,8 +277,45 @@ internal object RetiradaCerca {
         // El humo: del fuego o del rescoldo (de día, más a la vista); la ceniza fría ya no echa.
         if (f > 0.02f) humo(l, FUEGO + Offset(0f, -0.4f * k), 120f, 14f, reloj, v.m.viento + 0.15f, 0.22f + 0.3f * (1f - f), 0f, 4, 9, 0.45f + 0.35f * (1f - f))
         if (f > 0.02f) with(RetiradaLuz) { alContraluz(v, FUEGO + Offset(10f, -60f), 26f, 40f, 1f) }
+        // De noche, el humo se tiñe por abajo con la luz del fuego.
+        if (f > 0.3f && v.noche > 0.3f) mancha(LUZ_DEL_FUEGO + Offset(4f, -0.75f * k), 0.22f * k, 0.35f * k, C.LUMBRE, 0.16f * f * v.noche)
         // El vapor de la marmita.
         if (EscenaNapoleon.marmita(v.m) == Marmita.AL_FUEGO) humo(l, FUEGO + Offset(0f, -0.95f * k), 40f, 6f, reloj, v.m.viento, 0f, 0f, 5, 5, 0.4f)
+    }
+
+    /** Una lengua de fuego: la base ancha y redonda, la punta que se mece [vaiven]. */
+    private fun lenguaSuave(pie: Offset, ancho: Float, alto: Float, vaiven: Float): Path = Path().apply {
+        moveTo(pie.x - ancho, pie.y)
+        cubicTo(pie.x - ancho * 0.95f, pie.y - alto * 0.38f, pie.x - ancho * 0.3f + vaiven * 0.5f, pie.y - alto * 0.68f, pie.x + vaiven, pie.y - alto)
+        cubicTo(pie.x + ancho * 0.3f + vaiven * 0.5f, pie.y - alto * 0.6f, pie.x + ancho * 0.95f, pie.y - alto * 0.32f, pie.x + ancho, pie.y)
+        cubicTo(pie.x + ancho * 0.45f, pie.y + ancho * 0.3f, pie.x - ancho * 0.45f, pie.y + ancho * 0.3f, pie.x - ancho, pie.y)
+        close()
+    }
+
+    /**
+     * Las llamas del fuego del alto, en [centro]: de 2 (el rescoldo) a 9 (encendido) lenguas, más chicas de día, cada
+     * una en tres capas con su propio vaivén, y el corazón claro abajo. A partir de la hoguera de Prehistoria y del
+     * brasero de Renacimiento (muchas llamas chicas, no tres grandes).
+     */
+    private fun DrawScope.llamas(centro: Offset, k: Float, f: Float, reloj: Float, noche: Float) {
+        val tam = f.coerceAtMost(1f) * (0.55f + 0.45f * noche)
+        val az = Azar(Semilla.de("napoleon", "llamas"))
+        val n = if (f >= 0.45f) 9 else 3
+        // El corazón del fuego, abajo, casi blanco.
+        drawOval(Color(0xFFFFD27A).copy(alpha = (0.75f * (f / 0.5f).coerceAtMost(1f)).coerceIn(0f, 1f)), centro - Offset(0.2f * k * tam.coerceAtLeast(0.4f), 0.03f * k), Size(0.4f * k * tam.coerceAtLeast(0.4f), 0.06f * k))
+        for (i in 0 until n) {
+            val u = (i + 0.5f) / n - 0.5f + az.entre(-0.04f, 0.04f)
+            val fase = az.entre(0f, 6.28f)
+            val late = 0.78f + 0.22f * sin(reloj * (4.5f + 0.7f * i) + fase)
+            val alto = k * 0.32f * (1f - 1.7f * u * u).coerceAtLeast(0.3f) * tam * late * az.entre(0.65f, 1.1f) * (if (f < 0.45f) 0.6f else 1f)
+            if (alto < 1f) continue
+            val ancho = alto * 0.24f + 0.015f * k
+            val vaiven = alto * 0.2f * sin(reloj * 3.7f + fase) + alto * 0.06f * sin(reloj * 11f + fase * 2f)
+            val p = centro + Offset(u * (if (f < 0.45f) 0.25f else 0.44f) * k, kotlin.math.abs(u) * 0.05f * k)
+            drawPath(lenguaSuave(p, ancho, alto, vaiven), Color(0xFFE0541C).copy(alpha = 0.6f))
+            drawPath(lenguaSuave(p + Offset(0f, 0.005f * k), ancho * 0.66f, alto * 0.74f, vaiven * 0.75f), Color(0xFFFF9A30).copy(alpha = 0.85f))
+            drawPath(lenguaSuave(p + Offset(0f, 0.008f * k), ancho * 0.34f, alto * 0.45f, vaiven * 0.45f), Color(0xFFFFE9AE).copy(alpha = 0.95f))
+        }
     }
 
     /** Lo mismo que [Pabellon], con la nieve de hoy. */

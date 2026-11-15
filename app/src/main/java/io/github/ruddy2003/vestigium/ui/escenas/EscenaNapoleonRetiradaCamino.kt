@@ -194,9 +194,33 @@ internal object RetiradaCamino {
         }
         // El camino.
         camino(v, az)
-        // Las sendas que van del camino a los fuegos del llano, pisadas.
-        val senda = listOf(w(bordeDer(24f) + 0.2f, 24f), w(4f, 30f), w(9f, 36f), w(16f, 44f))
-        drawPath(curva(senda), p.arriba(if (sinNieve) lerp(C.BARRO, C.CENIZA, 0.2f) else C.NIEVE_SUCIA, 0.3f).copy(alpha = 0.6f), style = Stroke(1.2f, cap = StrokeCap.Round))
+        // Las huellas que salen del camino hacia la granja: un rastro de pisadas en la nieve, que se pierde a lo lejos.
+        val senda = listOf(w(bordeDer(12f) + 0.1f, 12f), w(2.6f, 16f), w(4.6f, 21f), w(6.4f, 27f), w(9f, 34f), w(12.5f, 44f), w(16f, 56f))
+        for (i in 0 until 60) {
+            val t = i / 60f; val q = TrazosValle.en(senda, t) + Offset(if (i % 2 == 0) -1f else 1f, 0f) * (1.4f * (1f - t) + 0.3f)
+            val z = zEn(q.y); val kk = k(z)
+            drawOval(p.arriba(if (sinNieve) lerp(C.BARRO, C.CENIZA, 0.3f) else C.NIEVE_SOMBRA, (z / 120f).coerceAtMost(0.8f)).copy(alpha = 0.55f), Offset(q.x - 0.07f * kk, q.y - 0.025f * kk), Size(0.14f * kk, 0.05f * kk))
+        }
+        // La cerca caída junto al camino: estacas torcidas y varas tiradas, medio tapadas.
+        val cerca = listOf(10f, 12.5f, 15.5f, 19f, 23f, 28f)
+        for ((i, z) in cerca.withIndex()) {
+            val q = w(bordeDer(z) + 3.2f + 0.5f * sin(i * 1.7f), z); val kk = k(z); val alto = (0.6f + 0.35f * ((i * 7) % 3)) * kk; val ladeo = (if (i % 2 == 0) 0.25f else -0.4f) * alto
+            val a = v.en(q); val lejos = (z / 120f).coerceAtMost(0.8f)
+            drawLine(a.plano(C.MADERA_GRIS, q, if (p.solALaDerecha) 0.8f else -0.8f, lejos), q, q + Offset(ladeo, -alto), (0.09f * kk).coerceIn(0.5f, 3f), StrokeCap.Round)
+            if (v.nieve > 0.3f) drawLine(a.arriba(C.NIEVE, q, lejos), q + Offset(ladeo * 0.95f, -alto * 0.97f), q + Offset(ladeo, -alto - 0.04f * kk), (0.1f * kk).coerceIn(0.5f, 3f), StrokeCap.Round)
+            if (i > 0 && i % 2 == 1) { val r = w(bordeDer(cerca[i - 1]) + 3.2f, cerca[i - 1]); drawLine(a.plano(C.MADERA_GRIS, q, 0f, lejos), q + Offset(0f, -0.05f * kk), r + Offset(0f, -0.02f * k(cerca[i - 1])), (0.06f * kk).coerceIn(0.4f, 2.2f), StrokeCap.Round) }
+        }
+        // Las matas y los juncos secos que asoman de la nieve, con su sombrita.
+        val am = Azar(Semilla.de("napoleon", "matas"))
+        repeat(34) {
+            val z = 5f * kotlin.math.exp(am.entre(0f, 2.8f)); val derecha = am.real() < 0.72f
+            val x = if (derecha) bordeDer(z) + am.entre(1f, 16f) else pieDelBosque(z) + am.entre(0.5f, 4.5f)
+            val q = w(x, z); val kk = k(z); val lejos = (z / 100f).coerceAtMost(0.8f); val a = v.en(q)
+            if (q.x < -5f || q.x > ANCHO + 5f) return@repeat
+            drawOval(a.plano(C.NIEVE_SOMBRA, q, 0f, lejos).copy(alpha = 0.4f * v.nieve), Offset(q.x - 0.15f * kk, q.y - 0.02f * kk), Size(0.3f * kk, 0.05f * kk))
+            repeat(6) { j -> val h = am.entre(0.15f, 0.45f) * kk; val inc = am.entre(-0.4f, 0.4f) * h
+                drawLine(a.plano(if (j % 2 == 0) C.HOJA else lerp(C.HOJA, C.MADERA_OSC, 0.4f), q, if (inc > 0f) 0.6f else -0.6f, lejos), q + Offset(am.entre(-0.06f, 0.06f) * kk, 0f), q + Offset(inc, -h), (0.012f * kk).coerceIn(0.3f, 1.1f), StrokeCap.Round) }
+        }
         // Los postes del camino, de madera, cada vez más chicos, en la orilla de la derecha.
         for (z in listOf(18f, 34f, 64f, 120f)) {
             val q = w(bordeDer(z) + 0.6f, z); val kk = k(z); val alto = 1.4f * kk
@@ -237,7 +261,7 @@ internal object RetiradaCamino {
     private fun DrawScope.ventisqueros(v: VistaNapoleon, az: Azar) {
         val k0 = ((v.nieve - 0.2f) / 0.6f).coerceIn(0f, 1f)
         val lado = if (v.p.solALaDerecha) 1f else -1f
-        repeat(26) { i ->
+        repeat(38) { i ->
             val z = 4.2f * kotlin.math.exp(az.entre(0f, 3.4f))
             val derecha = i % 3 != 0
             val x = if (derecha) bordeDer(z) + az.entre(1.2f, 18f) else pieDelBosque(z) + az.entre(0.6f, 4.5f)
@@ -249,9 +273,21 @@ internal object RetiradaCamino {
             drawPath(lomo, a.arriba(C.NIEVE, q, lejos).copy(alpha = k0))
             // La cara de sombra, del lado contrario al sol, y la cresta encendida.
             clipPath(lomo) {
-                mancha(q + Offset(-lado * largo * 0.3f, alto * 0.3f), largo * 0.36f, alto * 0.7f, a.plano(C.NIEVE_SOMBRA, q, -lado, lejos), 0.42f * k0)
+                mancha(q + Offset(-lado * largo * 0.3f, alto * 0.35f), largo * 0.4f, alto * 0.65f, a.plano(lerp(C.NIEVE_SOMBRA, C.AZUL, 0.15f), q, -lado, lejos), 0.62f * k0)
                 drawLine(lerp(a.arriba(C.NIEVE, q, lejos), Color.White, 0.5f).copy(alpha = 0.8f * k0 * (0.3f + 0.7f * v.r.dia)), q + Offset(-largo * 0.35f + lado * largo * 0.1f, -alto * 1.1f), q + Offset(largo * 0.35f + lado * largo * 0.1f, -alto * 1.05f), (alto * 0.25f).coerceIn(0.3f, 2.5f), StrokeCap.Round)
             }
+        }
+        // La lejanía del llano, más azul y más honda.
+        drawRect(Brush.verticalGradient(listOf(lerp(C.NIEVE_SOMBRA, C.AZUL, 0.25f).copy(alpha = 0.28f * k0), Color.Transparent), H, H + 32f), Offset(-10f, H - 0.5f), Size(ANCHO + 20f, 33f))
+        // Las rachas que peinan la nieve: trazos largos y curvos, todos a una, claros y su sombra al lado.
+        val ar = Azar(Semilla.de("napoleon", "rachas"))
+        repeat(22) {
+            val z = 5f * kotlin.math.exp(ar.entre(0f, 2.6f)); val x = bordeDer(z) + ar.entre(0.8f, 14f)
+            val q = w(x, z); val kk = k(z); val l = ar.entre(1.5f, 4f) * kk
+            if (q.x > ANCHO + 10f) return@repeat
+            val racha = Path().apply { moveTo(q.x, q.y); cubicTo(q.x + l * 0.3f, q.y - 0.05f * kk, q.x + l * 0.7f, q.y - 0.12f * kk, q.x + l, q.y - 0.1f * kk) }
+            drawPath(racha, v.en(q).plano(C.NIEVE_SOMBRA, q, 0f, (z / 100f).coerceAtMost(0.8f)).copy(alpha = 0.32f * k0), style = Stroke((0.04f * kk).coerceIn(0.35f, 1.8f), cap = StrokeCap.Round))
+            drawPath(racha, v.en(q).arriba(lerp(C.NIEVE, Color.White, 0.4f), q, (z / 100f).coerceAtMost(0.8f)).copy(alpha = 0.45f * k0), style = Stroke((0.02f * kk).coerceIn(0.25f, 1f), cap = StrokeCap.Round))
         }
         // Las estrías del viento en la nieve (sastrugi), finas y tendidas, más de cerca.
         repeat(46) {
