@@ -32,6 +32,7 @@ import io.github.ruddy2003.vestigium.ui.Frente
 import io.github.ruddy2003.vestigium.ui.LetraExtra
 import io.github.ruddy2003.vestigium.ui.Pagina
 import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.TrazosFrente
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.contornoIrregular
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
@@ -123,6 +124,14 @@ object EstanteFrente : DisenoBiblioteca {
         return r
     }
 
+    /** El ámbar de los rótulos: se hunde poco, como un piloto, para que lo grabado encima se siga leyendo. */
+    private fun ambar(oscuro: Boolean, noche: Boolean): Color {
+        var r = PILOTO
+        if (oscuro) r = mezcla(r, SALA, 0.2f)
+        if (noche) r = mezcla(r, NOCHE, 0.24f)
+        return r
+    }
+
     // =================================================================
     //  Ayudantes de dibujo de la sala
     // =================================================================
@@ -191,15 +200,11 @@ object EstanteFrente : DisenoBiblioteca {
     private fun quinta(k: Int, w: Float, arriba: Float, abajo: Float): Rect = Rect(w * k / 5f, arriba, w * (k + 1) / 5f, abajo)
 
     /**
-     * El emblema de la red, para dibujar con trazo: el círculo roto, abierto arriba, y la chispa de tres trazos que sube en
-     * zigzag y se escapa por el hueco (el círculo es el canal; está roto porque la señal se sale).
+     * El emblema de la red, el mismo de todo el tema ([TrazosFrente.emblemaRed]): el círculo roto arriba a la derecha, la
+     * célula en el centro y los tres trazos de la chispa que se abren y se escapan por el hueco.
      */
-    private fun emblemaRed(c: Offset, r: Float): Path = Path().apply {
-        arcTo(Rect(c.x - r, c.y - r, c.x + r, c.y + r), -62f, 304f, true)
-        moveTo(c.x - r * 0.34f, c.y + r * 0.62f)
-        lineTo(c.x + r * 0.14f, c.y + r * 0.02f)
-        lineTo(c.x - r * 0.14f, c.y - r * 0.12f)
-        lineTo(c.x + r * 0.2f, c.y - r * 1.24f)
+    private fun DrawScope.emblema(c: Offset, r: Float, color: Color, grosor: Float) {
+        with(TrazosFrente) { emblemaRed(c, r, color, grosor) }
     }
 
     /** La luna creciente, como figura rellena (para los sellos y las etiquetas de noche). */
@@ -338,7 +343,7 @@ object EstanteFrente : DisenoBiblioteca {
         drawCircle(tinta.copy(alpha = tinta.alpha * 0.7f), r * 0.8f, c, style = Stroke(maxOf(0.5f * u, r * 0.035f)))
         val ce = Offset(c.x, c.y - r * (if (medidor != null && r > 10 * u) 0.14f else 0.02f))
         if (noche) drawPath(luna(ce, r * 0.36f), tinta)
-        else drawPath(emblemaRed(ce, r * 0.4f), tinta, style = Stroke(maxOf(0.7f * u, r * 0.08f), cap = StrokeCap.Round, join = StrokeJoin.Round))
+        else emblema(Offset(ce.x - r * 0.06f, ce.y + r * 0.06f), r * 0.36f, tinta, maxOf(0.6f * u, r * 0.065f))
         if (medidor != null && r > 10 * u)
             textoEn(medidor, "K-7", Rect(c.x - r * 0.5f, c.y + r * 0.36f, c.x + r * 0.5f, c.y + r * 0.72f), MONO, tinta, r / u * 0.3f, minimo = 3f)
         val k = (r / (14 * u)).coerceIn(0.4f, 2f)
@@ -579,7 +584,7 @@ object EstanteFrente : DisenoBiblioteca {
             }
             drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = if (noche) 0.5f else 0.32f), Color.Transparent), r.top, r.top + 16 * u), r.topLeft, Size(r.width, 16 * u))
             if (oscuro || noche) listOf(r.left, r.right).forEach { x ->
-                mancha(Offset(x, r.top + r.height * 0.3f), r.height * 0.75f, PILOTO.copy(alpha = if (noche) 0.17f else 0.1f))
+                mancha(Offset(x, r.top + r.height * 0.3f), r.height * 0.75f, PILOTO.copy(alpha = if (noche) 0.1f else 0.07f))
             }
         }
         // Los costados: montantes de chapa hueso de canto redondo, con su canal y el filete de cromo; en cada nivel, a la
@@ -796,7 +801,7 @@ object EstanteFrente : DisenoBiblioteca {
         // El rótulo ámbar con el día y el ciclo.
         val ro = Rect(w * 0.16f, lomo.top + lomo.height * 0.06f, w * 0.84f, lomo.top + lomo.height * 0.34f)
         drawRect(Color.Black.copy(alpha = 0.25f), ro.topLeft + Offset(0.5f * u, 0.8f * u), ro.size)
-        drawRect(c(PILOTO), ro.topLeft, ro.size)
+        drawRect(ambar(oscuro, v.noche), ro.topLeft, ro.size)
         drawRect(Color.White.copy(alpha = 0.18f), ro.topLeft, Size(ro.width, ro.height * 0.16f))
         textoEn(medidor, v.dia, Rect(ro.left, ro.top + ro.height * 0.06f, ro.right, ro.top + ro.height * 0.66f), MONO, tinta, 14f, peso = FontWeight.Medium, minimo = 7f)
         drawLine(tinta.copy(alpha = 0.5f), Offset(ro.left + 1.5f * u, ro.top + ro.height * 0.67f), Offset(ro.right - 1.5f * u, ro.top + ro.height * 0.67f), 0.5f * u)
@@ -833,7 +838,8 @@ object EstanteFrente : DisenoBiblioteca {
         val cx = w * (0.3f + 0.25f * azar(v.semilla, 21))
         val cinta = Rect(cx, arriba - sale, cx + 6 * u, arriba + 2 * u)
         rotate(-4f + 8f * azar(v.semilla, 22), Offset(cinta.center.x, cinta.bottom)) {
-            cintaPerforada(cinta, hoja, c(PIZARRA).copy(alpha = 0.65f), v.semilla, vertical = true)
+            cintaPerforada(cinta, mezcla(hoja, HUESO_OSC, 0.25f), c(PIZARRA).copy(alpha = 0.7f), v.semilla, vertical = true)
+            drawRect(Color.Black.copy(alpha = 0.3f), cinta.topLeft, cinta.size, style = Stroke(0.5f * u))
             drawRect(mezcla(hoja, Color.Black, 0.12f), Offset(cinta.left, cinta.top), Size(cinta.width, 1.4f * u))
         }
         // El cuerpo de cartón, con el filo de acero de los dos lados.
@@ -897,7 +903,7 @@ object EstanteFrente : DisenoBiblioteca {
         drawRect(Color.Black.copy(alpha = 0.3f), et.topLeft + Offset(0.4f * u, 0.6f * u), et.size)
         drawRect(hoja, et.topLeft, et.size)
         val franja = Rect(et.left, et.top, et.right, et.top + et.height * 0.2f)
-        drawRect(if (v.tono != null) mezcla(PILOTO, v.tono, 0.65f) else c(PILOTO), franja.topLeft, franja.size)
+        drawRect(if (v.tono != null) mezcla(PILOTO, v.tono, 0.65f) else ambar(oscuro, v.noche), franja.topLeft, franja.size)
         if (v.noche) drawPath(luna(franja.center, franja.height * 0.36f), c(PIZARRA))
         else textoEn(medidor, "K-7", franja, MONO, tinta.copy(alpha = 0.85f), 5.5f, minimo = 3f)
         textoEn(medidor, v.dia, Rect(et.left, franja.bottom, et.right, et.top + et.height * 0.62f), MONO, tinta, 13f, peso = FontWeight.Medium, minimo = 6f)
@@ -991,7 +997,7 @@ object EstanteFrente : DisenoBiblioteca {
         val ang = a * 1.45f
         val co = cos(ang); val si = sin(ang)
         if (a > 0.01f) drawRect(Color.Black.copy(alpha = 0.32f * si), Offset(x0 + cara.width * co, cara.top), Size(14 * u * si, cara.height))
-        afin(co, -si * 0.26f, 0f, 1f, x0 - x0 * co, x0 * si * 0.26f) {
+        afin(co, -si * 0.1f, 0f, 1f, x0 - x0 * co, x0 * si * 0.1f) {
             drawRoundRect(Brush.verticalGradient(listOf(mezcla(lona, Color.White, 0.08f), lona, mezcla(lona, Color.Black, 0.18f)), cara.top, cara.bottom), cara.topLeft, cara.size, CornerRadius(6 * u))
             clipRect(cara.left, cara.top, cara.right, cara.bottom) {
                 trama(cara, Color.White.copy(alpha = 0.045f), 1.8f * u)
@@ -1011,7 +1017,7 @@ object EstanteFrente : DisenoBiblioteca {
             // El rótulo ámbar remachado: «DESPACHO» y la operación del día.
             val ro = Rect(w * 0.3f, h * 0.1f, w * 0.935f, h * 0.335f)
             drawRoundRect(Color.Black.copy(alpha = 0.3f), ro.topLeft + Offset(0.8f * u, 1.4f * u), ro.size, CornerRadius(3 * u))
-            drawRoundRect(c(PILOTO), ro.topLeft, ro.size, CornerRadius(3 * u))
+            drawRoundRect(ambar(oscuro, e.noche), ro.topLeft, ro.size, CornerRadius(3 * u))
             drawRoundRect(Color.White.copy(alpha = 0.2f), ro.topLeft, Size(ro.width, ro.height * 0.18f), CornerRadius(3 * u))
             listOf(ro.left + 5 * u, ro.right - 5 * u).forEach { x -> tornillo(Offset(x, ro.center.y), 1.6f * u, c(CROMO)) }
             val dentro = Rect(ro.left + 11 * u, ro.top, ro.right - 11 * u, ro.bottom)
@@ -1031,16 +1037,16 @@ object EstanteFrente : DisenoBiblioteca {
             // Al pie: el emblema con la célula y las palabras en la pantalla de segmentos.
             val pie = h * 0.885f
             val grabado = mezcla(HUESO, lona, if (oscuro) 0.3f else 0.1f)
-            drawPath(emblemaRed(Offset(cara.left + w * 0.05f, pie), 6 * u), c(PILOTO), style = Stroke(1.4f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            emblema(Offset(cara.left + w * 0.048f, pie + 1 * u), 5.5f * u, c(PILOTO), 1.2f * u)
             aIzquierda(medidor, "CÉLULA K-7", Rect(cara.left + w * 0.085f, pie - 6 * u, w * 0.29f, pie + 6 * u), MONO, grabado, 8.5f, espaciado = 0.6f, minimo = 5f)
-            val pa = Rect(w * 0.58f, h * 0.835f, w * 0.75f, h * 0.935f)
+            val pa = Rect(w * 0.55f, h * 0.835f, w * 0.72f, h * 0.935f)
             drawRoundRect(c(BAQUELITA), pa.inflate(1.4f * u).topLeft, pa.inflate(1.4f * u).size, CornerRadius(2.5f * u))
             drawRoundRect(Color(0xFF1A1208), pa.topLeft, pa.size, CornerRadius(2 * u))
             segmentos(if (e.vacio || e.palabras <= 0) "----" else Frente.contador(e.palabras), pa.deflate(2 * u), PILOTO, PILOTO.copy(alpha = 0.08f), halo = oscuro || e.noche)
-            aIzquierda(medidor, palabrasTapa(e.palabras).substringAfter(" "), Rect(w * 0.765f, pie - 6 * u, w * 0.955f, pie + 6 * u), MONO, grabado, 7f, minimo = 4f)
+            aIzquierda(medidor, palabrasTapa(e.palabras).substringAfter(" "), Rect(w * 0.735f, pie - 6 * u, w * 0.925f, pie + 6 * u), MONO, grabado, 7f, minimo = 4f)
             // Las esquineras elásticas que lo tienen cerrado.
             if (a < 0.02f) listOf(cara.top to 1f, cara.bottom to -1f).forEach { (y, s) ->
-                val p1 = Offset(cara.right - 20 * u, y); val p2 = Offset(cara.right, y + s * 20 * u)
+                val p1 = Offset(cara.right - 15 * u, y); val p2 = Offset(cara.right, y + s * 15 * u)
                 drawLine(Color.Black.copy(alpha = 0.3f), p1 + Offset(0f, 1.5f * u), p2 + Offset(0f, 1.5f * u), 4.6f * u)
                 drawLine(c(BAQUELITA), p1, p2, 4f * u)
                 drawLine(Color.White.copy(alpha = 0.12f), p1 + Offset(1f * u, s * 1f * u), p2 + Offset(-1f * u, -s * 1f * u), 0.6f * u)
@@ -1053,7 +1059,7 @@ object EstanteFrente : DisenoBiblioteca {
         drawRect(Color.White.copy(alpha = 0.1f), Offset(lomo.left + lomo.width * 0.3f, lomo.top + 2 * u), Size(lomo.width * 0.2f, lomo.height - 4 * u))
         drawLine(Color.Black.copy(alpha = 0.45f), Offset(x0, cuerpo.top + 2 * u), Offset(x0, cuerpo.bottom - 2 * u), 1.2f * u)
         // De noche, el resplandor verde del radar entra por la esquina.
-        if (e.noche) mancha(Offset(w, 0f), w * 0.45f, RADAR.copy(alpha = 0.14f))
+        if (e.noche) clipPath(Path().apply { addRoundRect(RoundRect(cuerpo, CornerRadius(6 * u))) }) { mancha(Offset(cuerpo.right, cuerpo.top), w * 0.45f, RADAR.copy(alpha = 0.14f)) }
     }
 
     // =================================================================
@@ -1113,7 +1119,7 @@ object EstanteFrente : DisenoBiblioteca {
         }
         // El centro: el rótulo, la operación, la fecha, el detalle y los grupos cifrados.
         val cx0 = col + 9 * u; val cx1 = rc.left - 8 * u
-        aIzquierda(medidor, (if (hora != null) partes[0] else e.rotulo).uppercase(), Rect(cx0, caja.top + 20 * u, cx1, caja.top + 33 * u), MONO, acento, 9f, espaciado = 0.6f, minimo = 5f)
+        aIzquierda(medidor, partes[0].uppercase(), Rect(cx0, caja.top + 20 * u, cx1, caja.top + 33 * u), MONO, acento, 9f, espaciado = 0.6f, minimo = 5f)
         val i = e.fecha.indexOf(" · ")
         val clave = if (i > 0) e.fecha.substring(0, i) else e.fecha
         val resto = if (i > 0) e.fecha.substring(i + 3) else ""
@@ -1164,7 +1170,7 @@ object EstanteFrente : DisenoBiblioteca {
         }
         // El emblema de la red, como marca de agua.
         val ce = Offset(w / 2, h * 0.52f); val re = w * 0.24f
-        drawPath(emblemaRed(ce, re), tinta.copy(alpha = 0.035f), style = Stroke(5 * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        emblema(ce, re, tinta.copy(alpha = 0.035f), 5 * u)
         drawCircle(tinta.copy(alpha = 0.025f), re * 1.3f, ce, style = Stroke(1.5f * u))
         // La tira de cinta perforada al pie.
         cintaPerforada(Rect(38 * u, h - 30 * u, w - 30 * u, h - 21 * u), mezcla(p.color, tinta, 0.05f), tinta.copy(alpha = 0.13f), 23)
@@ -1178,7 +1184,7 @@ object EstanteFrente : DisenoBiblioteca {
             val o = Offset(-w * 0.05f, h * 1.02f)
             val traza = p.detalle
             listOf(0.4f, 0.75f, 1.1f, 1.45f).forEach { f -> drawCircle(traza.copy(alpha = 0.07f), w * f, o, style = Stroke(0.9f * u)) }
-            for (j in 0 until 8) drawArc(traza.copy(alpha = 0.012f), -60f - 5f * (j + 1), 5f * (j + 1), true, Offset(o.x - w * 1.5f, o.y - w * 1.5f), Size(w * 3f, w * 3f))
+            for (j in 0 until 8) drawArc(traza.copy(alpha = 0.006f), -60f - 5f * (j + 1), 5f * (j + 1), true, Offset(o.x - w * 1.5f, o.y - w * 1.5f), Size(w * 3f, w * 3f))
             val a = Math.toRadians(-60.0)
             drawLine(traza.copy(alpha = 0.12f), o, Offset(o.x + cos(a).toFloat() * w * 1.5f, o.y + sin(a).toFloat() * w * 1.5f), 1f * u)
             for (j in 0 until 5) {
@@ -1322,7 +1328,7 @@ object EstanteFrente : DisenoBiblioteca {
                     if (k == 4) drawCircle(f(PILOTO_ROJO), 6 * u, o, style = Stroke(1f * u))
                 }
                 drawRect(f(PIZARRA), mapa.topLeft, Size(mapa.width, mapa.height * 0.12f))
-                textoEn(medidor, "CARTA ESTELAR · SECTOR 9", Rect(mapa.left + 3 * u, mapa.top, mapa.right - 3 * u, mapa.top + mapa.height * 0.12f), MONO, f(PAPEL), 6f, espaciado = 0.6f, minimo = 3.5f)
+                textoEn(medidor, "CARTA ESTELAR · SECTOR 9", Rect(mapa.left + 9 * u, mapa.top, mapa.right - 9 * u, mapa.top + mapa.height * 0.12f), MONO, f(PAPEL), 6f, espaciado = 0.6f, minimo = 3.5f)
             }
             listOf(Offset(mapa.left + 4 * u, mapa.top + 4 * u), Offset(mapa.right - 4 * u, mapa.top + 4 * u)).forEach { o ->
                 drawCircle(Color.Black.copy(alpha = 0.3f), 2.6f * u, o + Offset(0.6f * u, 1f * u))
@@ -1460,7 +1466,7 @@ object EstanteFrente : DisenoBiblioteca {
             drawLine(tinta.copy(alpha = 0.4f), Offset(ti.left + 2 * u, ti.top + ti.height * 0.85f), Offset(ti.right - 5 * u, ti.top + ti.height * 0.85f), 0.6f * u)
         }
         // La tapa, que se levanta sobre la bisagra de atrás.
-        levantar(arriba, tapaY - arriba, angulo, 1.5f, fuera = { sombra ->
+        levantar(arriba, tapaY - arriba, angulo, 1f, fuera = { sombra ->
             val r = Rect(x0, arriba, x1, tapaY)
             val forma = Path().apply { addRoundRect(RoundRect(r, CornerRadius(5 * u))) }
             val muesca = Path().apply { addRect(Rect(x0 + ancho * 0.43f, arriba - 1f, x1 - ancho * 0.43f, arriba + r.height * 0.09f)) }
@@ -1488,7 +1494,7 @@ object EstanteFrente : DisenoBiblioteca {
             drawRect(Color.Black.copy(alpha = 0.3f), et.topLeft + Offset(0.8f * u, 1.2f * u), et.size)
             drawRect(hoja, et.topLeft, et.size)
             val corte = et.top + et.height * 0.46f
-            drawPath(emblemaRed(Offset(et.left + 10 * u, et.top + et.height * 0.24f), 5.5f * u), c(AMBAR), style = Stroke(1.2f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            emblema(Offset(et.left + 9 * u, et.top + et.height * 0.28f), 5f * u, c(AMBAR), 1f * u)
             textoEn(medidor, "CARTUCHO K-7", Rect(et.left + 19 * u, et.top + 2 * u, et.right - 5 * u, corte - 1 * u), TITULO, tinta, 11f, espaciado = 0.8f, minimo = 5f)
             drawLine(c(AMBAR), Offset(et.left + 4 * u, corte), Offset(et.right - 4 * u, corte), 1f * u)
             textoEn(medidor, e.cuenta, Rect(et.left + 4 * u, corte + 1.5f * u, et.right - 4 * u, et.top + et.height * 0.76f), MONO, tinta.copy(alpha = 0.85f), 9f, minimo = 5f)
@@ -1500,6 +1506,12 @@ object EstanteFrente : DisenoBiblioteca {
             drawRoundRect(mezcla(cc, Color.Black, 0.2f), r.topLeft, r.size, CornerRadius(5 * u))
             for (k in 1 until 6) drawLine(Color.White.copy(alpha = 0.06f), Offset(r.left + ancho * k / 6f, r.top + 3 * u), Offset(r.left + ancho * k / 6f, r.bottom - 3 * u), 1.4f * u)
             drawRect(c(Color(0xFF6B6660)), Offset(r.left + ancho * 0.38f, r.top + r.height * 0.1f), Size(ancho * 0.24f, r.height * 0.14f))
+            // La advertencia impresa por dentro de la tapa.
+            val av = Rect(r.left + ancho * 0.22f, r.top + r.height * 0.42f, r.right - ancho * 0.22f, r.top + r.height * 0.72f)
+            drawRect(c(Color(0xFFD8D0BE)), av.topLeft, av.size)
+            drawRect(c(AMBAR), av.topLeft, Size(av.width, av.height * 0.22f))
+            textoEn(medidor, "NO TOCAR LA CINTA", Rect(av.left + 3 * u, av.top + av.height * 0.26f, av.right - 3 * u, av.top + av.height * 0.62f), MONO, c(PIZARRA), 7f, espaciado = 0.6f, minimo = 3.5f)
+            textoEn(medidor, "LEJOS DE IMANES · SOLO CÉLULA K-7", Rect(av.left + 3 * u, av.top + av.height * 0.62f, av.right - 3 * u, av.bottom - 1 * u), MONO, c(TENUE), 5.5f, minimo = 3f)
             if (sombra > 0f) drawRoundRect(Color.Black.copy(alpha = 0.4f * sombra), r.topLeft, r.size, CornerRadius(5 * u))
         })
     }
@@ -1528,7 +1540,7 @@ object EstanteFrente : DisenoBiblioteca {
             textoEn(medidor, e.semana.uppercase(), Rect(w * 0.5f, 6.5f * u, w - 4 * u, 14.5f * u), MONO, mezcla(HUESO, cc, 0.15f), 7.5f, minimo = 4.5f)
             val et = Rect(5 * u, 17 * u, w - 5 * u, h - 12 * u)
             drawRect(hoja, et.topLeft, et.size)
-            drawRect(c(PILOTO), et.topLeft, Size(et.width, 3.2f * u))
+            drawRect(ambar(oscuro, false), et.topLeft, Size(et.width, 3.2f * u))
             textoEn(medidor, e.dia, Rect(et.left, et.top + 3.2f * u, et.right, et.bottom), MONO, PIZARRA, 16f, peso = FontWeight.Medium, minimo = 8f)
             for (j in 0 until 3) drawLine(Color.Black.copy(alpha = 0.55f), Offset(8 * u, h - 9 * u + j * 2 * u), Offset(w - 8 * u, h - 9 * u + j * 2 * u), 0.8f * u)
         }
@@ -1591,7 +1603,7 @@ object EstanteFrente : DisenoBiblioteca {
     /**
      * La funda de la transmisión: cartón hueso de consola forrado de acero, con el filo de acero remachado a la izquierda. La
      * solapa recta, de esquinas redondas, lleva impreso «TRANSMISIÓN CIFRADA» con su filete ámbar; en el cuerpo, la etiqueta a
-     * máquina pegada (a quién va y las fechas) con su «PARA», la tira de cinta perforada del teletipo y el número de la
+     * máquina pegada (a quién va y las fechas) con su casilla de «DESTINO», la tira de cinta perforada del teletipo y el número de la
      * transmisión. El cierre es la correa de baquelita que baja por el canto derecho hasta su hebilla de cromo (al atarse, se
      * va ciñendo; suelta, cuelga de la solapa). El sello es la oblea ámbar de la célula, a caballo sobre el borde de la
      * solapa: brilla cuando la carta ya se puede abrir y se parte al abrirla. Dentro va la hoja del teletipo, con su cinta.
@@ -1690,7 +1702,7 @@ object EstanteFrente : DisenoBiblioteca {
         rotate(-0.7f, et.center) {
             drawRect(Color.Black.copy(alpha = 0.2f), et.topLeft + Offset(0.6f * u, 1f * u), et.size)
             drawRect(etiqueta, et.topLeft, et.size)
-            textoEn(medidor, "PARA", Rect(et.left + 2 * u, et.top + 1 * u, et.left + 22 * u * k, et.top + et.height * 0.3f), MONO, c(AMBAR), 6f * k, espaciado = 0.6f, minimo = 3.5f)
+            textoEn(medidor, "DESTINO", Rect(et.left + 2 * u, et.top + 1 * u, et.left + 30 * u * k, et.top + et.height * 0.3f), MONO, c(AMBAR), 6f * k, espaciado = 0.6f, minimo = 3.5f)
             drawLine(tinta.copy(alpha = 0.18f), Offset(et.left + 3 * u, et.top + et.height * 0.64f), Offset(et.right - 3 * u, et.top + et.height * 0.64f), 0.6f * u)
             textoEn(medidor, e.linea1, Rect(et.left + 3 * u, et.top + et.height * 0.22f, et.right - 3 * u, et.top + et.height * 0.62f), MONO, tinta, 11f, peso = FontWeight.Medium, minimo = 6.5f)
             textoEn(medidor, e.linea2, Rect(et.left + 3 * u, et.top + et.height * 0.64f, et.right - 3 * u, et.bottom - 1 * u), TEXTO, tinta.copy(alpha = 0.85f), 9f, minimo = 5.5f)
@@ -1764,16 +1776,19 @@ object EstanteFrente : DisenoBiblioteca {
         val ranura = Rect(caja.left + caja.width * 0.12f, caja.top + 7 * u, caja.right - caja.width * 0.12f, caja.top + 10 * u)
         drawRoundRect(c(BAQUELITA), ranura.topLeft, ranura.size, CornerRadius(1.5f * u))
         // La cinta que sale por la ranura y cuelga por delante, hacia la izquierda.
-        rotate(-74f, Offset(caja.left + caja.width * 0.18f, ranura.center.y)) {
-            cintaPerforada(Rect(caja.left + caja.width * 0.18f, ranura.center.y - 3 * u, caja.left + caja.width * 0.18f + 64 * u, ranura.center.y + 3 * u), hoja, c(BAQUELITA).copy(alpha = 0.6f), 51)
+        val sale = Offset(caja.left + caja.width * 0.14f, ranura.center.y)
+        rotate(118f, sale) {
+            val tira = Rect(sale.x, sale.y - 3 * u, sale.x + 48 * u, sale.y + 3 * u)
+            cintaPerforada(tira, hoja, c(BAQUELITA).copy(alpha = 0.6f), 51)
+            drawRect(Color.Black.copy(alpha = 0.25f), tira.topLeft, tira.size, style = Stroke(0.5f * u))
         }
-        val placa = Rect(caja.left + caja.width * 0.1f, caja.top + 16 * u, caja.right - caja.width * 0.36f, caja.bottom - 9 * u)
+        val placa = Rect(caja.left + caja.width * 0.1f, caja.top + 16 * u, caja.right - 56 * u, caja.bottom - 9 * u)
         drawRoundRect(c(BAQUELITA), placa.topLeft, placa.size, CornerRadius(3 * u))
         textoEn(medidor, "RECEPCIÓN", Rect(placa.left + 3 * u, placa.top + 1 * u, placa.right - 3 * u, placa.center.y + 1 * u), TITULO, c(HUESO), 8f, espaciado = 1f, minimo = 4.5f)
         textoEn(medidor, "CÉLULA K-7", Rect(placa.left + 3 * u, placa.center.y, placa.right - 3 * u, placa.bottom - 1 * u), MONO, c(HUESO).copy(alpha = 0.8f), 6.5f, minimo = 4f)
-        val pa = Offset(caja.right - caja.width * 0.2f, placa.top + 6 * u)
+        val pa = Offset(caja.right - 30 * u, placa.top + 6 * u)
         piloto(pa, 3.2f * u, PILOTO, listas, c(CROMO), if (oscuro) 1.6f else 1.1f)
-        textoEn(medidor, "CANAL ABIERTO", Rect(pa.x - 26 * u, pa.y + 6 * u, pa.x + 26 * u, pa.y + 14 * u), MONO, c(BAQUELITA).copy(alpha = 0.8f), 5.5f, minimo = 3.5f)
+        textoEn(medidor, "CANAL ABIERTO", Rect(pa.x - 22 * u, pa.y + 6 * u, pa.x + 22 * u, pa.y + 14 * u), MONO, c(BAQUELITA).copy(alpha = 0.8f), 5.5f, minimo = 3.5f)
         rejilla(Rect(w * 0.08f, 14 * u, w * 0.24f, 48 * u), c(HUESO), c(BAQUELITA).copy(alpha = 0.7f))
         // El cable que sube a la antena, con su piloto rojo.
         val ax = w * 0.86f
@@ -1827,7 +1842,7 @@ object EstanteFrente : DisenoBiblioteca {
                 }
             }
             if (cuantas > 8) textoEn(medidor, "+${cuantas - 8}", Rect(hueco.left, hueco.top + 2 * u, hueco.right, hueco.top + 14 * u), MONO, PILOTO, 10f, peso = FontWeight.Medium)
-            if (cuantas == 0) drawPath(emblemaRed(hueco.center, minOf(hueco.width, hueco.height) * 0.18f), c(HUESO).copy(alpha = 0.18f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+            if (cuantas == 0) emblema(hueco.center, minOf(hueco.width, hueco.height) * 0.18f, c(HUESO).copy(alpha = 0.18f), 1.3f * u)
         }
         // ---- El labio de la consola.
         drawRect(Brush.verticalGradient(listOf(c(PANEL), c(HUESO), c(BORDE)), baseY + 2 * u, h), Offset(0f, baseY + 2 * u), Size(w, h - baseY - 2 * u))
@@ -1842,7 +1857,7 @@ object EstanteFrente : DisenoBiblioteca {
 
     /**
      * El emblema de cada biblioteca, como trazo dentro de [r]: 0, el diario (el dosier con su pestaña y la foto); 1, los
-     * momentos (el cartucho con su muesca y su etiqueta); 2, los sueños (la luna); 3, el ideario (la chispa); 4, las cartas
+     * momentos (el cartucho con su muesca y su etiqueta); 2, los sueños (la luna); 3, el ideario (la chispa, sola: la célula y sus tres trazos); 4, las cartas
      * (la antena con sus ondas).
      */
     private fun iconoBiblioteca(k: Int, r: Rect): Path = Path().apply {
@@ -1863,9 +1878,13 @@ object EstanteFrente : DisenoBiblioteca {
             }
             2 -> addPath(luna(Offset(x + w * 0.46f, y + h * 0.54f), minOf(w, h) * 0.4f))
             3 -> {
-                moveTo(x + w * 0.3f, y + h * 0.94f); lineTo(x + w * 0.56f, y + h * 0.52f); lineTo(x + w * 0.4f, y + h * 0.44f); lineTo(x + w * 0.7f, y + h * 0.04f)
-                moveTo(x + w * 0.16f, y + h * 0.36f); lineTo(x + w * 0.28f, y + h * 0.42f)
-                moveTo(x + w * 0.84f, y + h * 0.56f); lineTo(x + w * 0.72f, y + h * 0.6f)
+                val o = Offset(x + w * 0.24f, y + h * 0.8f)
+                addOval(Rect(o.x - w * 0.07f, o.y - w * 0.07f, o.x + w * 0.07f, o.y + w * 0.07f))
+                listOf(-80.0 to 0.72f, -50.0 to 0.9f, -20.0 to 0.72f).forEach { (g, l) ->
+                    val an = Math.toRadians(g)
+                    moveTo(o.x + (w * 0.18f * cos(an)).toFloat(), o.y + (w * 0.18f * sin(an)).toFloat())
+                    lineTo(o.x + (w * l * cos(an)).toFloat(), o.y + (w * l * sin(an)).toFloat())
+                }
             }
             else -> {
                 val c = Offset(x + w * 0.5f, y + h * 0.3f)
@@ -1882,7 +1901,7 @@ object EstanteFrente : DisenoBiblioteca {
     /**
      * Las pestañas son el dial de sintonía del receptor: la caja de consola color hueso con sus esquinas redondas y, detrás
      * del vidrio, la escala impresa con sus marcas de frecuencia, partida en cinco bandas; en cada una, el emblema, el nombre y
-     * la cuenta en segmentos. La aguja roja está sobre la banda elegida, que se ilumina en ámbar; abajo, la fila de pilotos,
+     * la cuenta en segmentos. La aguja roja marca la banda elegida, que se ilumina en ámbar y lleva su raya roja al pie; abajo, la fila de pilotos,
      * encendido el de la banda elegida.
      */
     override fun DrawScope.pestanas(e: EstadoPestanas, medidor: TextMeasurer, oscuro: Boolean) {
@@ -1921,9 +1940,11 @@ object EstanteFrente : DisenoBiblioteca {
             }
             // La aguja roja, sobre la banda elegida.
             val xa = quinta(e.actual.coerceIn(0, 4), w, 0f, h).center.x
-            drawLine(PILOTO_ROJO.copy(alpha = 0.3f), Offset(xa, vi.top), Offset(xa, vi.bottom), 3 * u)
-            drawLine(PILOTO_ROJO, Offset(xa, vi.top), Offset(xa, vi.bottom), 1.2f * u)
+            drawLine(PILOTO_ROJO.copy(alpha = 0.3f), Offset(xa, vi.top), Offset(xa, vi.top + 10 * u), 3 * u)
+            drawLine(PILOTO_ROJO, Offset(xa, vi.top), Offset(xa, vi.top + 10 * u), 1.2f * u)
             drawPath(Path().apply { moveTo(xa - 3.5f * u, vi.top); lineTo(xa + 3.5f * u, vi.top); lineTo(xa, vi.top + 5 * u); close() }, PILOTO_ROJO)
+            val bs = quinta(e.actual.coerceIn(0, 4), w, 0f, h)
+            drawLine(PILOTO_ROJO, Offset(maxOf(bs.left, vi.left) + 6 * u, vi.bottom - 1.5f * u), Offset(minOf(bs.right, vi.right) - 6 * u, vi.bottom - 1.5f * u), 1.2f * u, StrokeCap.Round)
             // El reflejo del vidrio.
             drawPath(Path().apply { moveTo(vi.left + vi.width * 0.12f, vi.top); lineTo(vi.left + vi.width * 0.2f, vi.top); lineTo(vi.left + vi.width * 0.1f, vi.bottom); lineTo(vi.left + vi.width * 0.02f, vi.bottom); close() }, Color.White.copy(alpha = 0.05f))
         }
@@ -1969,8 +1990,7 @@ object EstanteFrente : DisenoBiblioteca {
 
     /**
      * La biblioteca de la célula: la pared de paneles perforados de la sala, con el riel de cromo arriba y sus dos focos que
-     * alumbran las obras, los mazos de cable en los costados y, abajo, el labio de la repisa de chapa hueso con sus pilotos y
-     * la placa grabada.
+     * alumbran las obras, los mazos de cable en los costados y, abajo, el labio de la repisa de chapa hueso con sus pilotos.
      */
     override fun DrawScope.repisaObras(medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
@@ -2002,11 +2022,7 @@ object EstanteFrente : DisenoBiblioteca {
         drawRect(Color.Black.copy(alpha = 0.3f), Offset(0f, y0 - 3 * u), Size(w, 3 * u))
         drawRect(Brush.verticalGradient(listOf(c(PANEL), c(HUESO), c(BORDE)), y0, h), Offset(0f, y0), Size(w, h - y0))
         drawRect(c(CROMO), Offset(0f, y0), Size(w, 1.4f * u))
-        val pl = Rect(w / 2 - 60 * u, y0 + 6 * u, w / 2 + 60 * u, h - 5 * u)
-        if (pl.height > 4 * u) {
-            drawRoundRect(c(BAQUELITA), pl.topLeft, pl.size, CornerRadius(3 * u))
-            textoEn(medidor, "BIBLIOTECA DE LA CÉLULA", pl.deflate(1.5f * u), MONO, c(HUESO), 7f, espaciado = 0.8f, minimo = 4f)
-        }
+        for (k in 0 until 8) drawRect(Color.Black.copy(alpha = 0.06f), Offset(w * (0.06f + 0.12f * k), y0 + 6 * u), Size(w * 0.05f, 1.2f * u))
         listOf(14 * u, 26 * u, w - 26 * u, w - 14 * u).forEachIndexed { k, x -> piloto(Offset(x, (y0 + h) / 2f + 1 * u), 1.8f * u, if (k == 1) RADAR else PILOTO, k != 2, c(CROMO), if (oscuro) 1.2f else 0.7f) }
     }
 
@@ -2048,13 +2064,13 @@ object EstanteFrente : DisenoBiblioteca {
         drawLine(Color.Black.copy(alpha = 0.35f), Offset(w * 0.07f, 0f), Offset(w * 0.07f, h), maxOf(0.6f * u, w * 0.008f))
         if (e.mini) {
             val r = Rect(w * 0.22f, h * 0.3f, w * 0.86f, h * 0.7f)
-            drawRoundRect(c(PILOTO), r.topLeft, r.size, CornerRadius(w * 0.05f))
+            drawRoundRect(ambar(oscuro, false), r.topLeft, r.size, CornerRadius(w * 0.05f))
             textoEn(medidor, e.titulo.trim().take(1).uppercase().ifEmpty { "+" }, r, TITULO, c(BAQUELITA), s * 0.36f, minimo = 5f)
             return
         }
         // El rótulo ámbar con el tipo.
         val ro = Rect(w * 0.14f, h * 0.05f, w * 0.92f, h * 0.14f)
-        drawRoundRect(c(PILOTO), ro.topLeft, ro.size, CornerRadius(w * 0.02f))
+        drawRoundRect(ambar(oscuro, false), ro.topLeft, ro.size, CornerRadius(w * 0.02f))
         textoEn(medidor, e.tipo.uppercase(), ro.deflate(w * 0.02f), MONO, c(BAQUELITA), s * 0.075f, espaciado = s * 0.012f, minimo = 3.5f)
         // La ficha engrapada con el título, el autor y el año.
         val fi = Rect(w * 0.16f, h * 0.2f, w * 0.9f, h * 0.68f)
@@ -2111,7 +2127,7 @@ object EstanteFrente : DisenoBiblioteca {
             var y = cab + 16 * u
             while (y < h - 6 * u) { drawLine(tinta.copy(alpha = 0.07f), Offset(0f, y), Offset(w, y), 0.6f * u); y += 17 * u }
             drawLine(PILOTO.copy(alpha = 0.35f), Offset(8 * u, cab), Offset(8 * u, h), 0.8f * u)
-            if (h > cab + 40 * u) drawPath(emblemaRed(Offset(w - 34 * u, h - 30 * u), 20 * u), tinta.copy(alpha = 0.05f), style = Stroke(3 * u, cap = StrokeCap.Round))
+            if (h > cab + 40 * u) emblema(Offset(w - 38 * u, h - 24 * u), 18 * u, tinta.copy(alpha = 0.05f), 2.6f * u)
         }
         drawLine(if (oscuro) PILOTO else AMBAR, Offset(0f, cab - 1 * u), Offset(w, cab - 1 * u), 1.2f * u)
         drawLine((if (oscuro) PILOTO else AMBAR).copy(alpha = 0.5f), Offset(0f, cab + 1.5f * u), Offset(w, cab + 1.5f * u), 0.6f * u)

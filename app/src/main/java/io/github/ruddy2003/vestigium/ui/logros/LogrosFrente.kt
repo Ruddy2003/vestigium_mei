@@ -173,7 +173,7 @@ object LogrosFrente : DisenoLogros {
      * estela y, si [eco], un contacto recién barrido. De noche, con su resplandor.
      */
     private fun DrawScope.pantallaRadar(c: Offset, r: Float, angulo: Float, oscuro: Boolean, eco: Boolean, grosor: Float) {
-        if (oscuro) drawCircle(TRAZO.copy(alpha = 0.16f), r * 1.9f, c)
+        if (oscuro) drawCircle(Brush.radialGradient(listOf(TRAZO.copy(alpha = 0.22f), Color.Transparent), c, r * 2.2f), r * 2.2f, c)
         drawCircle(t(CROMO, oscuro), r * 1.22f, c)
         drawCircle(t(CROMO_SOMBRA, oscuro), r * 1.22f, c, style = Stroke(grosor))
         drawCircle(PANTALLA, r, c)
@@ -293,10 +293,11 @@ object LogrosFrente : DisenoLogros {
                 val arriba = azar(e.semilla, k + 20) > 0.45f
                 val base = fracP(x, 0.784f)
                 val punta = Offset(base.x, base.y + (if (arriba) -h * 0.012f else h * 0.007f))
-                drawCircle(t(CROMO_SOMBRA, oscuro), h * 0.0045f, base)
-                drawLine(Color.Black.copy(alpha = 0.18f), base + Offset(h * 0.002f, h * 0.002f), punta + Offset(h * 0.003f, h * 0.003f), maxOf(h * 0.004f, 0.5f * u), StrokeCap.Round)
-                drawLine(t(CROMO, oscuro), base, punta, maxOf(h * 0.0035f, 0.5f * u), StrokeCap.Round)
-                drawCircle(t(CROMO_LUZ, oscuro), maxOf(h * 0.003f, 0.4f * u), punta)
+                drawCircle(t(BAQUELITA, oscuro), h * 0.0045f, base)
+                drawLine(Color.Black.copy(alpha = 0.2f), base + Offset(h * 0.002f, h * 0.002f), punta + Offset(h * 0.003f, h * 0.003f), maxOf(h * 0.004f, 0.5f * u), StrokeCap.Round)
+                drawLine(t(CROMO_SOMBRA, oscuro), base, punta, maxOf(h * 0.0038f, 0.5f * u), StrokeCap.Round)
+                drawCircle(t(CROMO, oscuro), maxOf(h * 0.0035f, 0.45f * u), punta)
+                drawCircle(Color.White.copy(alpha = 0.6f), maxOf(h * 0.0012f, 0.25f * u), punta - Offset(h * 0.001f, h * 0.001f))
             }
             piloto(fracP(0.19f, 0.783f), h * 0.005f, TRAZO, true, oscuro)
             piloto(fracP(0.81f, 0.783f), h * 0.005f, AMBAR, azar(e.semilla, 30) > 0.3f, oscuro)
@@ -337,9 +338,9 @@ object LogrosFrente : DisenoLogros {
             val base = fracP(0.22f + k * 0.112f, 0.2f)
             val arriba = azar(e.semilla + 7, k) > 0.5f
             val punta = Offset(base.x, base.y + (if (arriba) -h * 0.13f else h * 0.07f))
-            drawCircle(t(CROMO_SOMBRA, oscuro), h * 0.045f, base)
-            drawLine(t(CROMO, oscuro), base, punta, maxOf(h * 0.035f, 0.5f * u), StrokeCap.Round)
-            drawCircle(t(CROMO_LUZ, oscuro), maxOf(h * 0.03f, 0.4f * u), punta)
+            drawCircle(t(BAQUELITA, oscuro), h * 0.045f, base)
+            drawLine(t(CROMO_SOMBRA, oscuro), base, punta, maxOf(h * 0.035f, 0.5f * u), StrokeCap.Round)
+            drawCircle(t(CROMO, oscuro), maxOf(h * 0.032f, 0.45f * u), punta)
         }
         piloto(fracP(0.12f, 0.17f), h * 0.05f, TRAZO, true, oscuro)
     }
@@ -416,17 +417,17 @@ object LogrosFrente : DisenoLogros {
         val w = g.w; val h = g.h; val u = g.u
         /** El color [c] mezclado con el fondo: [k] = 0 es el fondo, 1 el color tal cual. */
         fun m(c: Color, k: Float) = mezcla(e.fondo, c, k)
-        val hueso = m(HUESO, if (oscuro) 0.26f else 0.62f)
-        val huesoLuz = m(HUESO_LUZ, if (oscuro) 0.3f else 0.75f)
-        val huesoSombra = m(HUESO_SOMBRA, if (oscuro) 0.3f else 0.55f)
-        val cromo = m(CROMO, if (oscuro) 0.32f else 0.55f)
+        val hueso = m(HUESO, if (oscuro) 0.26f else 0.5f)
+        val huesoLuz = m(HUESO_LUZ, if (oscuro) 0.3f else 0.62f)
+        val huesoSombra = m(HUESO_SOMBRA, if (oscuro) 0.3f else 0.45f)
+        val cromo = m(CROMO, if (oscuro) 0.32f else 0.47f)
         val vidrio = m(PANTALLA, if (oscuro) 0.85f else 0.45f)
         val traza = TRAZO.copy(alpha = if (oscuro) 0.75f else 0.5f)
         val ambar = m(AMBAR, if (oscuro) 0.85f else 0.6f)
         val rojo = m(ROJO, if (oscuro) 0.8f else 0.5f)
 
         // El muro de ladrillo trabado, con algún ladrillo más quemado.
-        drawRect(m(LADRILLO, if (oscuro) 0.16f else 0.1f), Offset(0f, g.friso), Size(w, g.suelo - g.friso))
+        drawRect(m(LADRILLO, if (oscuro) 0.16f else 0.08f), Offset(0f, g.friso), Size(w, g.suelo - g.friso))
         val pared = Path(); val quemados = Path()
         val altoL = 10f * u; val largoL = 24f * u
         repetirSala(g.friso, g.suelo, altoL, 200) { k, y ->
@@ -439,7 +440,7 @@ object LogrosFrente : DisenoLogros {
                 x += largoL; j++
             }
         }
-        drawPath(quemados, m(LADRILLO, if (oscuro) 0.26f else 0.18f))
+        drawPath(quemados, m(LADRILLO, if (oscuro) 0.26f else 0.14f))
         drawPath(pared, m(Color(0xFF6E5246), if (oscuro) 0.3f else 0.2f), style = Stroke(0.8f * u))
 
         // El fondo de cada vano: el mapa estelar clavado o el emblema de la red pintado con plantilla, alternados por tramo.
@@ -450,7 +451,8 @@ object LogrosFrente : DisenoLogros {
                 if ((k + i) % 2 == 0) {
                     val mw = minOf(v.width * 0.82f, 130f * u); val mh = mw * 0.66f
                     mapaEstelar(Rect(cx - mw / 2, y0, cx + mw / 2, y0 + mh), -2.5f + 5f * azar(e.semilla + i, k), e.semilla + i * 13 + k,
-                        m(PAPEL, if (oscuro) 0.2f else 0.6f), m(Color(0xFF3E4C57), if (oscuro) 0.32f else 0.26f), rojo, ambar, oscuro)
+                        m(PAPEL, if (oscuro) 0.2f else 0.6f), m(Color(0xFF3E4C57), if (oscuro) 0.32f else 0.26f), m(ROJO, if (oscuro) 0.5f else 0.5f),
+                        m(AMBAR, if (oscuro) 0.5f else 0.6f), oscuro)
                 } else {
                     val r = minOf(v.width * 0.26f, 34f * u)
                     val c = Offset(cx, y0 + r + 14f * u)
@@ -731,7 +733,7 @@ object LogrosFrente : DisenoLogros {
         drawCircle(n(CROMO_SOMBRA, oscuro), 2.1f * u, altavoz)
         listOf(Offset(-0.7f, -0.7f), Offset(0.7f, -0.7f), Offset(-0.7f, 0.7f), Offset(0.7f, 0.7f)).forEach { d -> drawCircle(n(BAQUELITA, oscuro), 0.38f * u, altavoz + d * u) }
         val dial = Rect(m.left + 6.6f * u, m.top + 1.6f * u, m.right - 1.4f * u, m.top + 3.8f * u)
-        if (oscuro) drawRect(AMBAR.copy(alpha = 0.25f), dial.inflate(1.2f * u).topLeft, dial.inflate(1.2f * u).size)
+        if (oscuro) drawRect(AMBAR.copy(alpha = 0.3f), dial.inflate(0.5f * u).topLeft, dial.inflate(0.5f * u).size)
         drawRect(n(AMBAR, oscuro), dial.topLeft, dial.size)
         drawLine(n(BAQUELITA, oscuro), Offset(dial.left + dial.width * 0.62f, dial.top), Offset(dial.left + dial.width * 0.62f, dial.bottom), 0.4f * u)
         val luz = Offset(m.right - 2.4f * u, m.bottom - 2.3f * u)
@@ -861,19 +863,23 @@ object LogrosFrente : DisenoLogros {
         }
     }
 
-    /** La creciente con la boca arriba a la derecha y, si cabe, la patrulla del Directorio recortada contra ella. */
+    /**
+     * La creciente con la boca arriba a la derecha y, si cabe, la patrulla del Directorio que pasa por delante de su lado oscuro:
+     * el bloque largo con el anillo que lo ciñe, recortado contra el fondo.
+     */
     private fun DrawScope.lunaAnio(e: EstadoObjeto) {
         val r = e.radio; val c = e.centro; val u = density
-        drawPath(crecienteFrente(Offset(c.x - r * 0.12f, c.y - r * 0.05f), r * 0.82f, r * 0.46f, -r * 0.2f, 0.8f), e.color)
-        if (r >= 7f * u) rotate(-12f, c) {
-            val y = c.y + r * 0.52f
-            val cuerpo = Rect(c.x - r * 0.8f, y - r * 0.09f, c.x + r * 0.46f, y + r * 0.09f)
-            val anillo = Offset(c.x + r * 0.62f, y)
-            drawRect(e.fondo, cuerpo.inflate(r * 0.07f).topLeft, cuerpo.inflate(r * 0.07f).size)
-            drawCircle(e.fondo, r * 0.24f, anillo, style = Stroke(r * 0.22f))
-            drawRect(e.color, cuerpo.topLeft, cuerpo.size)
-            drawCircle(e.color, r * 0.24f, anillo, style = Stroke(grosorFrente(r, 0.09f)))
-            drawLine(e.color, Offset(cuerpo.right, y), Offset(anillo.x - r * 0.24f, y), grosorFrente(r, 0.08f))
+        drawPath(crecienteFrente(Offset(c.x - r * 0.18f, c.y + r * 0.04f), r * 0.82f, r * 0.46f, -r * 0.2f, 0.8f), e.color)
+        if (r >= 7f * u) rotate(-18f, Offset(c.x + r * 0.3f, c.y - r * 0.1f)) {
+            val y = c.y - r * 0.1f
+            val cuerpo = Rect(c.x - r * 0.25f, y - r * 0.1f, c.x + r * 0.9f, y + r * 0.1f)
+            val anillo = Rect(c.x - r * 0.02f, y - r * 0.3f, c.x + r * 0.16f, y + r * 0.3f)
+            val margen = grosorFrente(r, 0.07f)
+            drawRoundRect(e.fondo, cuerpo.inflate(margen).topLeft, cuerpo.inflate(margen).size, CornerRadius(r * 0.1f + margen))
+            drawOval(e.fondo, anillo.inflate(margen).topLeft, anillo.inflate(margen).size)
+            drawRoundRect(e.color, cuerpo.topLeft, cuerpo.size, CornerRadius(r * 0.1f))
+            drawOval(e.color, anillo.topLeft, anillo.size, style = Stroke(grosorFrente(r, 0.07f)))
+            drawCircle(e.fondo, maxOf(r * 0.035f, 0.4f * u), Offset(cuerpo.right - r * 0.16f, y))
         } else drawCircle(e.color, maxOf(r * 0.08f, 0.6f * u), Offset(c.x + r * 0.55f, c.y - r * 0.5f))
     }
 

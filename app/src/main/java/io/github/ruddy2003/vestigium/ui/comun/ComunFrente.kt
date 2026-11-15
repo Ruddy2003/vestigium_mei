@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -272,7 +273,7 @@ object ComunFrente : DisenoComun {
      */
     private fun DrawScope.caraConsola(r: Rect, radio: Float, oscuro: Boolean, apagada: Boolean = false) {
         val u = density
-        fun c(x: Color) = if (apagada) mezcla(x, if (oscuro) Color(0xFF3A3D40) else Color(0xFFB4B0A8), 0.45f) else x
+        fun c(x: Color) = if (apagada) mezcla(x, if (oscuro) Color(0xFF25282A) else Color(0xFFB4B0A8), 0.45f) else x
         drawRoundRect(c(cara(oscuro)), r.topLeft, r.size, CornerRadius(radio))
         drawRoundRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = if (oscuro) 0.05f else 0.42f), Color.Transparent,
             Color.Black.copy(alpha = if (oscuro) 0.22f else 0.08f)), r.top, r.bottom), r.topLeft, r.size, CornerRadius(radio))
@@ -317,7 +318,7 @@ object ComunFrente : DisenoComun {
         caraConsola(Rect(0f, 0f, w, h), radio, oscuro, apagada = !e.habilitado)
         // La ventanilla hundida donde se escribe.
         val b = 4.2f * u
-        val fondo = hundido(oscuro).let { if (e.habilitado) it else mezcla(it, if (oscuro) Color(0xFF3A3D40) else Color(0xFFB4B0A8), 0.35f) }
+        val fondo = hundido(oscuro).let { if (e.habilitado) it else mezcla(it, if (oscuro) Color(0xFF25282A) else Color(0xFFB4B0A8), 0.35f) }
         val vent = ventanilla(Rect(b, b, w - b, h - b), maxOf(radio - b, 2 * u), fondo, oscuro)
         // El renglón grabado: más marcado con el foco.
         val izq = margenCampoX.toPx(); val der = w - margenCampoX.toPx()
@@ -328,9 +329,9 @@ object ComunFrente : DisenoComun {
         // La palanca del canto izquierdo: abajo en reposo, arriba con el foco.
         val arriba = e.enfocado && e.habilitado
         val yc = if (e.multilinea) minOf(h / 2, 22 * u) else h / 2
-        palanca(Offset(11 * u, yc + (if (arriba) 2.6f else -2.6f) * u), 2.6f * u, Offset(0f, if (arriba) -1f else 1f), oscuro, if (e.habilitado) 1f else 0.5f)
+        palanca(Offset(11 * u, yc + (if (arriba) 3.2f else -3.2f) * u), 3.1f * u, Offset(0f, if (arriba) -1f else 1f), oscuro, if (e.habilitado) 1f else 0.5f)
         // El piloto del canto derecho: ámbar con el foco, rojo con un error.
-        piloto(Offset(w - 11 * u, yc), 2.2f * u, if (e.error) ROJO else AMBAR, (e.enfocado || e.error) && e.habilitado, oscuro)
+        piloto(Offset(w - 11 * u, yc), 2.6f * u, if (e.error) ROJO else AMBAR, (e.enfocado || e.error) && e.habilitado, oscuro)
     }
 
     // ---------------------------------------------------------------- separadores y botones de texto
@@ -394,9 +395,9 @@ object ComunFrente : DisenoComun {
             drawLine(ambar(oscuro), Offset(16 * u, h - 1.2f * u), Offset(w, h - 1.2f * u), 1.2f * u)
         } else ranura(16 * u, w, h - 1.6f * u, oscuro, 0.55f)
         if (e.conDetalle && h > 30 * u) {
-            piloto(Offset(7 * u, h / 2 - 5 * u), 1.7f * u, AMBAR, e.presionado, oscuro)
-            piloto(Offset(7 * u, h / 2 + 5 * u), 1.7f * u, TRAZO, e.presionado, oscuro)
-        } else piloto(Offset(7 * u, h / 2), 1.7f * u, AMBAR, e.presionado, oscuro)
+            piloto(Offset(7.5f * u, h / 2 - 5.5f * u), 2f * u, AMBAR, e.presionado, oscuro)
+            piloto(Offset(7.5f * u, h / 2 + 5.5f * u), 2f * u, TRAZO, e.presionado, oscuro)
+        } else piloto(Offset(7.5f * u, h / 2), 2f * u, AMBAR, e.presionado, oscuro)
     }
 
     /** La perilla de la consola, con su raya índice hacia adelante y las tres marcas de su escala (la del frente, más larga). */
@@ -605,11 +606,11 @@ object ComunFrente : DisenoComun {
         listOf(9 * u, w - 9 * u).forEach { x -> tornillo(Offset(x, h - 1.5f * u), 1 * u, oscuro) }
         drawPath(forma, if (e.destacado) ambar(oscuro) else borde(oscuro), style = Stroke((if (e.destacado) 1.3f else 0.8f) * u))
         // La ranura grabada del canto de arriba, desde la curva hasta los pilotos.
-        ranura(esquina + 4 * u, w - 30 * u, 6 * u, oscuro, 0.4f)
+        ranura(esquina + 4 * u, w - 32 * u, 6.5f * u, oscuro, 0.45f)
         // Los pilotos: rojo, ámbar (encendido si la cifra se aparta de tu normal) y el verde de «en línea».
-        piloto(Offset(w - 23 * u, 6 * u), 1.5f * u, ROJO, false, oscuro)
-        piloto(Offset(w - 16 * u, 6 * u), 1.5f * u, AMBAR, e.destacado, oscuro)
-        piloto(Offset(w - 9 * u, 6 * u), 1.5f * u, TRAZO, true, oscuro)
+        piloto(Offset(w - 25 * u, 6.5f * u), 1.8f * u, ROJO, false, oscuro)
+        piloto(Offset(w - 17 * u, 6.5f * u), 1.8f * u, AMBAR, e.destacado, oscuro)
+        piloto(Offset(w - 9 * u, 6.5f * u), 1.8f * u, TRAZO, true, oscuro)
     }
 
     /** La orden de transmitir de «Te falta hoy» (ver [tarjeta]). */
@@ -623,25 +624,32 @@ object ComunFrente : DisenoComun {
         if (w > 10 * u && h > 10 * u) drawRoundRect(luz.copy(alpha = 0.45f), Offset(4.5f * u, 4.5f * u), Size(w - 9 * u, h - 9 * u), CornerRadius(maxOf(radio - 3.5f * u, 1f)),
             style = Stroke(0.7f * u))
         // El botón de transmisión: el aro de cromo, el botón rojo con su brillo.
-        val c = Offset(w - 15 * u, 15 * u)
-        val r = 3.4f * u
+        val c = Offset(w - 18 * u, 18 * u)
+        val r = 4.2f * u
         drawCircle(Color.Black.copy(alpha = if (oscuro) 0.4f else 0.18f), r * 1.6f, c + Offset(0.6f * u, 0.9f * u))
         drawCircle(cromo(oscuro), r * 1.6f, c)
         drawCircle(cromoSombra(oscuro), r * 1.6f, c, style = Stroke(0.7f * u))
         drawCircle(if (oscuro) mezcla(ROJO, Color.Black, 0.2f) else ROJO, r, c)
         drawCircle(Color.Black.copy(alpha = 0.25f), r, c, style = Stroke(0.6f * u))
         drawCircle(Color.White.copy(alpha = 0.45f), r * 0.36f, Offset(c.x - r * 0.35f, c.y - r * 0.38f))
-        // La tapa de seguridad, de plástico ámbar translúcido, con su bisagra arriba.
+        // La tapa de seguridad, de plástico ámbar translúcido, con su bisagra arriba: levantada mientras falta, cerrada al final.
         val bisagra = c.y - r * 1.75f
-        val ancho = r * 1.7f
-        drawLine(cromoSombra(oscuro), Offset(c.x - ancho, bisagra), Offset(c.x + ancho, bisagra), 1.2f * u, StrokeCap.Round)
-        val tapa = if (e.destacado) Rect(c.x - ancho, bisagra, c.x + ancho, c.y + r * 1.75f) else Rect(c.x - ancho, maxOf(bisagra - 5.5f * u, 1.5f * u), c.x + ancho, bisagra)
-        drawRoundRect(AMBAR.copy(alpha = if (e.destacado) 0.32f else 0.22f), tapa.topLeft, tapa.size, CornerRadius(1.6f * u))
-        drawRoundRect(mezcla(AMBAR, BAQUELITA, 0.35f).copy(alpha = 0.8f), tapa.topLeft, tapa.size, CornerRadius(1.6f * u), style = Stroke(0.7f * u))
-        drawLine(Color.White.copy(alpha = 0.45f), Offset(tapa.left + tapa.width * 0.25f, tapa.bottom - tapa.height * 0.2f),
-            Offset(tapa.left + tapa.width * 0.5f, tapa.top + tapa.height * 0.2f), 0.6f * u, StrokeCap.Round)
+        val ancho = r * 1.75f
+        val tapa = if (e.destacado) Path().apply { addRoundRect(RoundRect(Rect(c.x - ancho, bisagra, c.x + ancho, c.y + r * 1.75f), CornerRadius(1.8f * u))) }
+        else Path().apply {
+            // Levantada, se ve de canto y en escorzo: más angosta arriba.
+            moveTo(c.x - ancho, bisagra); lineTo(c.x + ancho, bisagra); lineTo(c.x + ancho * 0.78f, maxOf(bisagra - 7.5f * u, 1.2f * u))
+            lineTo(c.x - ancho * 0.78f, maxOf(bisagra - 7.5f * u, 1.2f * u)); close()
+        }
+        drawPath(tapa, AMBAR.copy(alpha = if (e.destacado) 0.36f else 0.3f))
+        drawPath(tapa, mezcla(AMBAR, BAQUELITA, 0.4f).copy(alpha = 0.85f), style = Stroke(0.8f * u, join = StrokeJoin.Round))
+        val brillo = if (e.destacado) Offset(c.x - ancho * 0.45f, c.y + r * 0.9f) to Offset(c.x - ancho * 0.05f, bisagra + r * 0.6f)
+        else Offset(c.x - ancho * 0.55f, bisagra - 1.2f * u) to Offset(c.x - ancho * 0.2f, bisagra - 6 * u)
+        drawLine(Color.White.copy(alpha = 0.5f), brillo.first, brillo.second, 0.7f * u, StrokeCap.Round)
+        drawLine(cromoSombra(oscuro), Offset(c.x - ancho - 0.6f * u, bisagra), Offset(c.x + ancho + 0.6f * u, bisagra), 1.4f * u, StrokeCap.Round)
+        drawLine(cromoLuz(oscuro), Offset(c.x - ancho, bisagra - 0.3f * u), Offset(c.x + ancho, bisagra - 0.3f * u), 0.5f * u, StrokeCap.Round)
         // El piloto de la orden: ámbar mientras falta; verde, cerrada.
-        piloto(Offset(c.x - 12 * u, 7.5f * u), 1.5f * u, if (e.destacado) TRAZO else AMBAR, true, oscuro)
+        piloto(Offset(c.x - 15 * u, 8 * u), 1.7f * u, if (e.destacado) TRAZO else AMBAR, true, oscuro)
     }
 
     /** La pantalla grande de radar de la noche (ver [tarjeta]). */
@@ -761,10 +769,10 @@ object ComunFrente : DisenoComun {
         drawLine(Color.White.copy(alpha = 0.1f), Offset(pl.left + 6 * u, pl.top + 0.8f * u), Offset(pl.right - 6 * u, pl.top + 0.8f * u), 0.6f * u)
         listOf(-1f, 1f).forEach { s ->
             val elegida = (s > 0) == e.ingreso
-            drawLine(Color(0xFFEFE8D8).copy(alpha = if (elegida) 0.85f else 0.35f), Offset(pl.center.x + s * 11 * u, pl.center.y - 3.5f * u),
-                Offset(pl.center.x + s * 11 * u, pl.center.y + 3.5f * u), 1 * u, StrokeCap.Round)
+            drawLine(Color(0xFFEFE8D8).copy(alpha = if (elegida) 0.85f else 0.35f), Offset(pl.center.x + s * 12 * u, pl.center.y - 3.5f * u),
+                Offset(pl.center.x + s * 12 * u, pl.center.y + 3.5f * u), 1 * u, StrokeCap.Round)
         }
-        palanca(pl.center + Offset((if (e.ingreso) -1.5f else 1.5f) * u, 0f), 3.2f * u, Offset(if (e.ingreso) 1f else -1f, 0f), oscuro)
+        palanca(pl.center + Offset((if (e.ingreso) -2.2f else 2.2f) * u, 0f), 3.6f * u, Offset(if (e.ingreso) 1f else -1f, 0f), oscuro)
         listOf(false, true).forEach { ingreso ->
             val elegida = e.ingreso == ingreso
             val r = if (ingreso) Rect(pl.right + 5 * u, 7 * u, w - 7 * u, h - 7 * u) else Rect(7 * u, 7 * u, pl.left - 5 * u, h - 7 * u)
@@ -957,7 +965,7 @@ object ComunFrente : DisenoComun {
 
     /**
      * El icono de la cinta en el aro de una pantalla de radar: el aro grueso, las marcas de rumbo hacia adentro en los cuatro
-     * puntos (la de arriba, más larga), las de las diagonales hacia afuera y el piloto de la esquina de arriba a la derecha.
+     * puntos (la de arriba, más gruesa), las de las diagonales hacia afuera y el piloto de la esquina de arriba a la derecha.
      */
     override fun DrawScope.marcoPista(e: EstadoAdorno, oscuro: Boolean) {
         val s = size.minDimension; val g = s * 0.06f
@@ -967,7 +975,7 @@ object ComunFrente : DisenoComun {
             if (k == 1) continue
             val a = Math.toRadians(k * 45.0 - 90.0).toFloat()
             val d = Offset(cos(a), sin(a))
-            if (k % 2 == 0) drawLine(e.primario, c + d * (s * (if (k == 0) 0.29f else 0.32f)), c + d * (s * 0.37f), g * 0.9f)
+            if (k % 2 == 0) drawLine(e.primario, c + d * (s * 0.29f), c + d * (s * 0.38f), g * (if (k == 0) 1.4f else 0.9f))
             else drawLine(e.primario, c + d * (s * 0.45f), c + d * (s * 0.5f), g * 0.8f)
         }
         drawCircle(e.secundario, s * 0.065f, Offset(s * 0.88f, s * 0.12f))
