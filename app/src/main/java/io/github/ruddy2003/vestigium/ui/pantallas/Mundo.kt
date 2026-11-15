@@ -224,6 +224,7 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.TEMPLARIO -> LaminaRascar(0xFF2E3338.toInt(), 0xFF7E868E.toInt(), 0xFFDCE2E6.toInt())
     // Gris de ministerio: chapa sin brillo.
     TemaId.DISTOPIA -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
+    TemaId.NOUVEAU -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
     TemaId.GALIA -> LaminaRascar(0xFF2E2A1C.toInt(), 0xFF9A6A3A.toInt(), 0xFFE2B87E.toInt())   // el bronce del caldero
     // El oro de más del mundo de abajo, el del Demiurgo, con la sombra violeta de lo que hay debajo.
     TemaId.ARCONTES -> LaminaRascar(0xFF3A2A40.toInt(), 0xFFD4A62A.toInt(), 0xFFFFF0B8.toInt())
@@ -413,6 +414,12 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             }, relleno)
         }
         TemaId.DISTOPIA -> tresbolillo { x, y ->
+            // El ojo que todo lo mira.
+            val s = l * 0.15f
+            c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)
+            c.drawCircle(x, y, s * 0.42f, relleno)
+        }
+        TemaId.NOUVEAU -> tresbolillo { x, y ->
             // El ojo que todo lo mira.
             val s = l * 0.15f
             c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)

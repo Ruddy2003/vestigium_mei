@@ -96,6 +96,7 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     // El escudo: recto arriba y redondo abajo.
     TemaId.TEMPLARIO -> MarcoRecuadro(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 16.dp), 12.dp)
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
+    TemaId.NOUVEAU -> MarcoRecuadro(RectangleShape, 12.dp)
     // La hoja de roble de las esquinas del tema: dos esquinas muy redondas en diagonal y dos casi rectas.
     TemaId.GALIA -> MarcoRecuadro(RoundedCornerShape(topStart = 16.dp, topEnd = 3.dp, bottomEnd = 16.dp, bottomStart = 3.dp), 12.dp)
     // El nicho tallado en la caliza: recto a los lados y cerrado arriba por un arco rebajado.
@@ -290,6 +291,15 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
         }
         // Alambre de púas.
         TemaId.DISTOPIA -> {
+            drawLine(col, Offset(0f, y), Offset(w, y), grosor * 0.7f + 0.6f * u, pathEffect = punteado)
+            val b = 2.5f * u + grosor * 0.35f
+            var x = 9 * u
+            while (x < w - 6 * u) {
+                drawLine(col, Offset(x - b, y - b), Offset(x + b, y + b), 1.1f * u); drawLine(col, Offset(x - b, y + b), Offset(x + b, y - b), 1.1f * u)
+                x += 12 * u
+            }
+        }
+        TemaId.NOUVEAU -> {
             drawLine(col, Offset(0f, y), Offset(w, y), grosor * 0.7f + 0.6f * u, pathEffect = punteado)
             val b = 2.5f * u + grosor * 0.35f
             var x = 9 * u

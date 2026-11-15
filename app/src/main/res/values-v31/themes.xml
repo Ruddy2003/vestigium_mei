@@ -97,6 +97,11 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_distopia</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_distopia</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Nouveau" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_nouveau</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_nouveau</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_nouveau</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Galia" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_galia</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_galia</item>
@@ -126,6 +131,11 @@
         <item name="android:windowBackground">@color/arranque_arcontes_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_arcontes_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_arcontes</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Nouveau.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_nouveau_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_nouveau_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_nouveau</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Galia.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_galia_oscuro</item>

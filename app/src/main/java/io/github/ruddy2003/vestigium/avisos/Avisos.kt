@@ -51,6 +51,7 @@ object Avisos {
         TemaId.MEDIEVAL -> R.raw.n_medieval_aviso to R.raw.n_medieval_solemne
         TemaId.TEMPLARIO -> R.raw.n_templario_aviso to R.raw.n_templario_solemne
         TemaId.DISTOPIA -> R.raw.n_distopia_aviso to R.raw.n_distopia_solemne
+        TemaId.NOUVEAU -> R.raw.n_nouveau_aviso to R.raw.n_nouveau_solemne
         TemaId.GALIA -> R.raw.n_galia_aviso to R.raw.n_galia_solemne
         TemaId.ARCONTES -> R.raw.n_arcontes_aviso to R.raw.n_arcontes_solemne
         TemaId.FRENTE -> R.raw.n_frente_aviso to R.raw.n_frente_solemne
@@ -337,6 +338,13 @@ object Avisos {
             "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
             "CONDECORACIÓN", "condecoraciones nuevas",
             "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
+        TemaId.NOUVEAU -> Voz("DECLARE SU ESTADO ACTUAL", "Dos toques obligatorios: agrado y energía.",
+            "REPORTE ONÍRICO PENDIENTE", "Declare lo soñado antes de levantarse. El recuerdo caduca en minutos.",
+            "DECLARACIÓN NOCTURNA", "Complete el parte del día. En jornada difícil se acepta un solo número.",
+            "Jornada difícil: un número", "INTERROGATORIO PENDIENTE:",
+            "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
+            "CONDECORACIÓN", "condecoraciones nuevas",
+            "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
         // Galia: el grito que corre de campo en campo (César 7.3: lo de Cenabum, al amanecer, lo sabían antes de acabar la
         // primera guardia de la noche a 160 millas); la hoguera de la casa grande, el mensajero, los torques y los bardos.
         TemaId.GALIA -> Voz("Corre el grito: ¿cómo anda tu ánimo?", "Pasa de campo en campo hasta llegar a ti. Dos toques: cuánto agrado y cuánta energía.",
@@ -561,6 +569,7 @@ object Avisos {
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste", "Explicit: llegaste a la meta")
         TemaId.TEMPLARIO -> VozEnfoque("Alto en la marcha", "Desciñe la espada y bebe agua del aljibe.", "Se acabó el alto: a la silla", "Toca a maitines: hora de levantarse", "Non nobis: guardia cumplida", "Llegaste al castillo: meta cumplida")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
+        TemaId.NOUVEAU -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
         // Galia: el alto a la sombra del roble, los versos que se aprenden de memoria (César 6.14), la noche que va antes del
         // día (6.18) y el carnyx que suena al llegar.
         TemaId.GALIA -> VozEnfoque("Alto a la sombra del roble", "Suelta la tablilla, estira las piernas y bebe agua del manantial.", "Se acabó el alto: de vuelta a los versos", "Tras la noche viene el día: hora de despertar", "Ya lo sabes de memoria: terminaste", "Suena el carnyx: llegaste a la meta")

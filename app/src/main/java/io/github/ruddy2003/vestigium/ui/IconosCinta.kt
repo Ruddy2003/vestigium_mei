@@ -167,6 +167,10 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
             drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
         }
+        TemaId.NOUVEAU -> {
+            drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
+            drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
+        }
         // Un estátero arverno: la moneda de oro con la gráfila de perlas y el caballo al galope, calados.
         TemaId.GALIA -> {
             drawCircle(color, r, c)

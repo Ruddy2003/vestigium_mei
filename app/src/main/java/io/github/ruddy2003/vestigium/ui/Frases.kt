@@ -287,6 +287,34 @@ object Frases {
         f("La visibilité est un piège.", "La visibilidad es una trampa.", "Michel Foucault, Vigilar y castigar, 1975"),
     )
 
+    val NOUVEAU = listOf(
+        f("Quis custodiet ipsos custodes?", "¿Quién vigilará a los vigilantes?", "Juvenal, Sátira VI"),
+        f("Duas tantum res anxius optat, panem et circenses.", "El pueblo ya solo ansía dos cosas: pan y juegos de circo.", "Juvenal, Sátira X"),
+        f("Ubi solitudinem faciunt, pacem appellant.", "Donde crean un desierto, lo llaman paz.", "Tácito, Agrícola 30"),
+        f("Corruptissima re publica plurimae leges.", "Cuanto más corrupto el Estado, más numerosas las leyes.", "Tácito, Anales III, 27"),
+        f("Finis ergo reipublicae revera libertas est.", "El verdadero fin del Estado es, pues, la libertad.", "Spinoza, Tratado teológico-político XX, 1670"),
+        f("Il n'y a point de plus cruelle tyrannie que celle que l'on exerce à l'ombre des lois et avec les couleurs de la justice.",
+            "No hay tiranía más cruel que la que se ejerce a la sombra de las leyes y con los colores de la justicia.", "Montesquieu, Consideraciones sobre los romanos XIV, 1734"),
+        f("L'homme est né libre, et partout il est dans les fers.", "El hombre nació libre, y en todas partes está encadenado.", "Rousseau, El contrato social I, 1762"),
+        f("Habe Muth, dich deines eigenen Verstandes zu bedienen!", "¡Ten el valor de servirte de tu propio entendimiento!", "Immanuel Kant, ¿Qué es la Ilustración?, 1784"),
+        f("A new mode of obtaining power of mind over mind, in a quantity hitherto without example.",
+            "Un nuevo modo de obtener poder de la mente sobre la mente, en una cantidad sin precedentes.", "Jeremy Bentham, El panóptico, 1791"),
+        f("Those who would give up essential Liberty, to purchase a little temporary Safety, deserve neither Liberty nor Safety.",
+            "Quienes renuncian a la libertad esencial para obtener un poco de seguridad pasajera no merecen ni libertad ni seguridad.", "Benjamin Franklin, 1755"),
+        f("I have sworn upon the altar of God eternal hostility against every form of tyranny over the mind of man.",
+            "He jurado sobre el altar de Dios hostilidad eterna contra toda forma de tiranía sobre la mente humana.", "Thomas Jefferson, carta a Benjamin Rush, 1800"),
+        f("Soyez résolus de ne servir plus, et vous voilà libres.", "Decídanse a no servir más, y serán libres.", "Étienne de La Boétie, Discurso de la servidumbre voluntaria"),
+        f("Il ne brise pas les volontés, mais il les amollit, les plie et les dirige.", "No quiebra las voluntades: las ablanda, las doblega y las dirige.", "Alexis de Tocqueville, La democracia en América II, 1840"),
+        f("Over himself, over his own body and mind, the individual is sovereign.", "Sobre sí mismo, sobre su propio cuerpo y su propia mente, el individuo es soberano.", "John Stuart Mill, Sobre la libertad, 1859"),
+        f("Power tends to corrupt, and absolute power corrupts absolutely.", "El poder tiende a corromper, y el poder absoluto corrompe absolutamente.", "Lord Acton, carta a Mandell Creighton, 1887"),
+        f("The right to be let alone.", "El derecho a que lo dejen a uno en paz.", "Samuel Warren y Louis Brandeis, «The Right to Privacy», 1890"),
+        f("Sunlight is said to be the best of disinfectants.", "Se dice que la luz del sol es el mejor de los desinfectantes.", "Louis Brandeis, 1914"),
+        f(null, "Les juro, señores, que tener demasiada conciencia es una enfermedad, una verdadera enfermedad.", "Fiódor Dostoievski, Memorias del subsuelo, 1864"),
+        f("Ein Käfig ging einen Vogel suchen.", "Una jaula salió a buscar un pájaro.", "Franz Kafka, aforismos de Zürau, 1918"),
+        f(null, "Alguien debió de calumniar a Josef K., porque sin haber hecho nada malo fue detenido una mañana.", "Franz Kafka, El proceso, 1925"),
+        f("La visibilité est un piège.", "La visibilidad es una trampa.", "Michel Foucault, Vigilar y castigar, 1975"),
+    )
+
     /**
      * Galia: lo que los antiguos contaron de los galos. César, en la traducción de José Goya y Muniain (1798; edición de
      * 1919 en Wikisource, de dominio público), copiada tal cual; Plutarco, en la de Antonio Ranz Romanillos; Lucano,
@@ -1161,6 +1189,7 @@ object Frases {
         TemaId.MEDIEVAL -> MEDIEVAL
         TemaId.TEMPLARIO -> TEMPLARIO
         TemaId.DISTOPIA -> DISTOPIA
+        TemaId.NOUVEAU -> NOUVEAU
         TemaId.GALIA -> GALIA
         TemaId.ARCONTES -> ARCONTES
         TemaId.FRENTE -> FRENTE
@@ -1217,6 +1246,7 @@ object Frases {
         TemaId.MEDIEVAL -> "Sentencia del día"
         TemaId.TEMPLARIO -> "Lectura del refectorio"
         TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"
+        TemaId.NOUVEAU -> "CONSIGNA DEL DÍA"
         TemaId.GALIA -> "Lo que contaron de los galos"
         TemaId.ARCONTES -> "Palabras escondidas"
         TemaId.FRENTE -> "PALABRA DE LA RED"

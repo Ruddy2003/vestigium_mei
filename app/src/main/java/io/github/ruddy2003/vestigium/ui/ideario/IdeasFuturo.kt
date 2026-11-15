@@ -468,6 +468,216 @@ object IdeasDistopia : DisenoIdeas {
 }
 
 /**
+ * Distopía: el archivo gris del ministerio. Arriba, el ojo que todo lo ve sobre una banda roja de cartel con sus estrellas, y
+ * una cámara de vigilancia con su luz roja; el archivero de acero gris lleva números de inventario estarcidos y un zócalo con
+ * rejilla. Cada tema es una gaveta con su tarjeta mecanografiada, la cerradura, el tirador y la franja roja de «clasificado»;
+ * los más llenos quedan entreabiertos con sus carpetas de manila. Por dentro, la gaveta de acero con sus rieles para carpetas
+ * colgantes. Las fichas son expedientes en su carpeta de manila con pestaña.
+ */
+object IdeasNouveau : DisenoIdeas {
+    private val GRIS = Color(0xFF6E7378)
+    private val GRIS_LUZ = Color(0xFF9AA0A6)
+    private val GRIS_OSC = Color(0xFF3E4246)
+    private val ROJO = Color(0xFFC8102E)
+    private val NEGRO = Color(0xFF141414)
+    private val MANILA = Color(0xFFD9C48E)
+    private val PAPEL = Color(0xFFECE8DC)
+    private val HORMIGON = Color(0xFFB8B6AE)
+
+    private fun t(c: Color, oscuro: Boolean) = if (oscuro) mezcla(c, Color.Black, 0.3f) else c
+
+    override val cols = 2
+    override val proporcion = 2.2f
+    override val corona = 0.32f
+    override val base = 0.1f
+    override val lado = 0.06f
+    override val hueco = 0.025f
+
+    private const val SALIDA = 0.16f
+
+    /** El ojo: una almendra blanca con su iris y su pupila. */
+    private fun DrawScope.ojo(c: Offset, a: Float, iris: Color, contorno: Color) {
+        val almendra = Path().apply { moveTo(c.x - a, c.y); quadraticTo(c.x, c.y - a * 0.9f, c.x + a, c.y); quadraticTo(c.x, c.y + a * 0.9f, c.x - a, c.y); close() }
+        drawPath(almendra, Color.White)
+        clipPath(almendra) { drawCircle(iris, a * 0.38f, c); drawCircle(NEGRO, a * 0.18f, c) }
+        drawPath(almendra, contorno, style = Stroke(a * 0.08f))
+    }
+
+    override fun DrawScope.mueble(d: Disposicion, oscuro: Boolean) {
+        val u = density
+        val w = size.width
+        val ch = d.corona.height
+        // La pared de hormigón, el ojo que todo lo ve y sus rayos, y la banda roja de cartel con estrellas.
+        drawRect(t(HORMIGON, oscuro), d.corona.topLeft, Size(w, ch))
+        val oc = Offset(w / 2, d.corona.top + ch * 0.32f)
+        for (k in 0 until 24) {
+            val a = k * Math.PI / 12
+            drawLine(t(GRIS_OSC, oscuro).copy(alpha = 0.3f), oc, Offset(oc.x + ch * 0.6f * cos(a).toFloat(), oc.y + ch * 0.6f * sin(a).toFloat()), 1.2f * u)
+        }
+        drawOval(t(GRIS_OSC, oscuro), Offset(oc.x - ch * 0.38f, oc.y - ch * 0.24f), Size(ch * 0.76f, ch * 0.48f))
+        ojo(oc, ch * 0.3f, t(GRIS, oscuro), t(NEGRO, oscuro))
+        val banda = Rect(0f, d.corona.top + ch * 0.66f, w, d.corona.bottom - 6 * u)
+        drawRect(t(ROJO, oscuro), banda.topLeft, banda.size)
+        listOf(0.08f, 0.92f).forEach { f -> drawPath(estrella(Offset(w * f, banda.center.y), banda.height * 0.36f, 5, 0.42f), t(NEGRO, oscuro)) }
+        var x = w * 0.18f
+        while (x < w * 0.82f) { drawRect(t(PAPEL, oscuro), Offset(x, banda.center.y - banda.height * 0.14f), Size(w * 0.035f, banda.height * 0.28f)); x += w * 0.05f }
+        // La cámara de vigilancia en la esquina, con su luz roja.
+        val cam = Offset(w * 0.86f, d.corona.top + ch * 0.18f)
+        drawLine(t(GRIS_OSC, oscuro), Offset(w * 0.96f, cam.y - 6 * u), Offset(cam.x + 8 * u, cam.y), 2.4f * u)
+        rotate(18f, cam) {
+            drawRect(t(GRIS_LUZ, oscuro), Offset(cam.x - 18 * u, cam.y - 6 * u), Size(26 * u, 12 * u))
+            drawRect(t(NEGRO, oscuro), Offset(cam.x - 22 * u, cam.y - 4 * u), Size(5 * u, 8 * u))
+            drawCircle(ROJO, 1.8f * u, Offset(cam.x + 4 * u, cam.y - 3 * u))
+        }
+        // El archivero de acero gris, con los números de inventario estarcidos.
+        val cuerpo = Rect(w * 0.015f, d.corona.bottom - 6 * u, w * 0.985f, d.base.top + d.base.height * 0.5f)
+        drawRect(Brush.horizontalGradient(listOf(t(GRIS_OSC, oscuro), t(GRIS, oscuro), t(GRIS_LUZ, oscuro), t(GRIS, oscuro)), cuerpo.left, cuerpo.right), cuerpo.topLeft, cuerpo.size)
+        d.huecos.forEach { r -> drawRect(Color.Black.copy(alpha = 0.55f), Offset(r.left - 1.4f * u, r.top - 1.4f * u), Size(r.width + 2.8f * u, r.height + 2.8f * u)) }
+        d.filas.forEachIndexed { i, f ->
+            for (j in 0 until 3) drawRect(t(NEGRO, oscuro).copy(alpha = 0.55f), Offset(cuerpo.left + 3 * u, f.top + 6 * u + j * 6 * u), Size(w * 0.025f, 3.5f * u))
+            drawRect(t(NEGRO, oscuro).copy(alpha = 0.55f), Offset(cuerpo.left + 3 * u, f.top + 26 * u), Size(w * 0.012f * (1 + i % 3), 3.5f * u))
+        }
+        // El zócalo con su rejilla.
+        val zoc = Rect(cuerpo.left, cuerpo.bottom, cuerpo.right, d.base.bottom)
+        drawRect(t(GRIS_OSC, oscuro), zoc.topLeft, zoc.size)
+        var gx = zoc.left + 10 * u
+        while (gx < zoc.right - 10 * u) { drawRoundRect(t(NEGRO, oscuro), Offset(gx, zoc.top + zoc.height * 0.3f), Size(3 * u, zoc.height * 0.4f), CornerRadius(1.5f * u)); gx += 7 * u }
+        if (d.mas > 0) placa.let { pl ->
+            val r = d.enBase(pl)
+            drawRect(t(PAPEL, oscuro), r.topLeft, r.size)
+            drawRect(t(NEGRO, oscuro), r.topLeft, r.size, style = Stroke(1.2f * u))
+        }
+    }
+
+    override fun DrawScope.compartimento(c: EstadoCajon, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val ab = c.abierto.coerceIn(0f, 1f)
+        // Las gavetas más llenas quedan entreabiertas y asoman las carpetas de manila, con sus pestañas.
+        val entre = if (c.vacio) 0f else h * (0.03f + 0.018f * c.n.coerceIn(0, 6))
+        val baja = h * SALIDA * ab
+        val arriba = entre + baja
+        if (arriba > 0.5f) {
+            drawRect(Color(0xFF0E1012), Offset.Zero, Size(w, arriba + 2 * u))
+            val k = c.n.coerceIn(0, 7)
+            for (i in 0 until k) {
+                val y0 = arriba * (0.15f + 0.08f * i).coerceAtMost(0.8f)
+                drawRect(t(MANILA, oscuro), Offset(w * 0.06f, y0), Size(w * 0.88f, arriba + 4 * u - y0))
+                drawRect(t(MANILA, oscuro), Offset(w * (0.1f + 0.2f * (i % 4)), y0 - 3 * u), Size(w * 0.14f, 3.5f * u))
+                drawLine(Color.Black.copy(alpha = 0.25f), Offset(w * 0.06f, y0), Offset(w * 0.94f, y0), 0.6f * u)
+            }
+        }
+        // El frente de acero gris, con la franja roja de «clasificado» en la esquina.
+        val e = w * 0.02f * ab
+        val f = Rect(-e, arriba, w + e, h + baja + h * 0.04f * ab)
+        if (ab > 0f) sombraSuave(Rect(f.left, f.bottom - 4 * u, f.right, f.bottom + 2 * u), 2 * u, 8 * u * ab, 0.3f * ab)
+        drawRect(t(GRIS, oscuro), f.topLeft, f.size)
+        bisel(f, Color.White.copy(alpha = 0.2f), Color.Black.copy(alpha = 0.35f), 1.2f * u)
+        if (!c.vacio) clipRect(f.left, f.top, f.right, f.bottom) {
+            rotate(-35f, Offset(f.right - w * 0.08f, f.top + (f.bottom - f.top) * 0.25f)) {
+                drawRect(t(ROJO, oscuro).copy(alpha = 0.8f), Offset(f.right - w * 0.3f, f.top + (f.bottom - f.top) * 0.18f), Size(w * 0.44f, 8 * u))
+            }
+        }
+        // El portaetiquetas con la tarjeta mecanografiada.
+        val r = Rect(w * rotulo.left, h * rotulo.top + baja, w * rotulo.right, h * rotulo.bottom + baja)
+        if (!c.vacio) drawRect(t(PAPEL, oscuro), r.topLeft, r.size)
+        drawRect(t(GRIS_OSC, oscuro), Offset(r.left - 2 * u, r.top - 2 * u), Size(r.width + 4 * u, r.height + 4 * u), style = Stroke(2 * u))
+        // La cerradura y el tirador.
+        val cerr = Offset(w * 0.1f, h * 0.36f + baja)
+        drawCircle(t(GRIS_LUZ, oscuro), 5 * u, cerr)
+        drawRect(t(NEGRO, oscuro), Offset(cerr.x - 0.8f * u, cerr.y - 2.5f * u), Size(1.6f * u, 5 * u))
+        val ty = h * 0.8f + baja
+        drawRoundRect(t(GRIS_OSC, oscuro), Offset(w * 0.38f, ty - 3 * u), Size(w * 0.24f, 6 * u), CornerRadius(3 * u))
+        drawLine(Color.White.copy(alpha = 0.25f), Offset(w * 0.39f, ty - 2 * u), Offset(w * 0.61f, ty - 2 * u), 0.8f * u)
+    }
+
+    override val rotulo = Rect(0.24f, 0.16f, 0.76f, 0.6f)
+    override fun tintaRotulo(oscuro: Boolean) = NEGRO
+    override val letraRotulo: FontFamily = LetraExtra.oswald
+    override val salida = SALIDA
+    override val placa = Rect(0.3f, 0.08f, 0.7f, 0.46f)
+    override fun tintaPlaca(oscuro: Boolean) = NEGRO
+
+    override fun DrawScope.interior(oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        // El fondo de la gaveta de acero, con los rieles de las carpetas colgantes a los lados.
+        drawRect(t(GRIS_OSC, oscuro))
+        for (k in 0 until 40) drawLine(Color.White.copy(alpha = 0.03f), Offset(0f, h * azar(71, k)), Offset(w, h * azar(71, k) + 1 * u), 1f * u)
+        listOf(20 * u, w - 20 * u).forEach { x ->
+            drawLine(t(GRIS_LUZ, oscuro), Offset(x, 0f), Offset(x, h), 3 * u)
+            var y = 30 * u
+            while (y < h) { drawRect(t(GRIS_LUZ, oscuro), Offset(x - 6 * u, y), Size(12 * u, 2.5f * u)); y += 46 * u }
+        }
+        val pl = 12 * u
+        listOf(Rect(0f, 0f, w, pl), Rect(0f, h - pl, w, h), Rect(0f, 0f, pl, h), Rect(w - pl, 0f, w, h)).forEach { r -> drawRect(t(GRIS, oscuro), r.topLeft, r.size) }
+        sombraInterior(Rect(pl, pl, w - pl, h - pl), 18 * u, 0.4f)
+    }
+
+    override fun tintaInterior(oscuro: Boolean) = PAPEL
+    override val pared: Dp = 28.dp
+    override val columnas = 2
+    override val lineas = 5
+
+    /** La carpeta de manila con su pestaña arriba a la izquierda. */
+    override fun forma(semilla: Int): Shape = GenericShape { s, _ ->
+        val t = minOf(s.width, s.height) * 0.08f
+        moveTo(0f, t); lineTo(s.width * 0.06f, t); lineTo(s.width * 0.09f, 0f); lineTo(s.width * 0.42f, 0f); lineTo(s.width * 0.45f, t)
+        lineTo(s.width, t); lineTo(s.width, s.height); lineTo(0f, s.height); close()
+    }
+
+    override fun DrawScope.adornoFicha(p: Pagina, grande: Boolean, semilla: Int) {
+        val u = density
+        val w = size.width; val h = size.height
+        val g = if (grande) 1.6f else 1f
+        val t = minOf(w, h) * 0.08f
+        drawRect(MANILA.copy(alpha = 0.4f))
+        // La etiqueta censurada en la pestaña, el sello rojo tenue y un clip.
+        drawRect(NEGRO.copy(alpha = 0.8f), Offset(w * 0.13f, t * 0.3f), Size(w * 0.24f, t * 0.45f))
+        val sc = Offset(w * 0.78f, h * 0.62f)
+        rotate(-15f, sc) {
+            drawCircle(ROJO.copy(alpha = 0.16f), minOf(w, h) * 0.16f, sc, style = Stroke(2 * u * g))
+            drawCircle(ROJO.copy(alpha = 0.12f), minOf(w, h) * 0.12f, sc, style = Stroke(1 * u * g))
+        }
+        drawRoundRect(GRIS.copy(alpha = 0.8f), Offset(w - 16 * u * g, t - 4 * u * g), Size(6 * u * g, 16 * u * g), CornerRadius(3 * u * g), style = Stroke(1.2f * u * g))
+    }
+
+    override val margenes = MargenesFicha(16.dp, 13.dp, 12.dp, 30.dp, 26.dp, 26.dp)
+    override val proporcionFicha = 0.95f
+    override val anchoGrande = 0.92f
+    override val proporcionGrande = 0.74f
+    override val barra = false
+    override fun altoBarra(grande: Boolean): Dp = 0.dp
+    override val apilado = false
+
+    override fun DrawScope.marcaPostura(id: String, p: Pagina) {
+        val s = size.minDimension; val c = center
+        when (id) {
+            // El sello lleno: verificado.
+            "hecho" -> selloHecho(ROJO, p.color)
+            // El sello de «aprobado».
+            "convence" -> {
+                drawCircle(ROJO, s * 0.42f, c, style = Stroke(s * 0.08f))
+                drawPath(Path().apply { moveTo(c.x - s * 0.22f, c.y); lineTo(c.x - s * 0.05f, c.y + s * 0.17f); lineTo(c.x + s * 0.24f, c.y - s * 0.18f) }, ROJO, style = Stroke(s * 0.1f))
+            }
+            "piensa" -> ojo(c, s * 0.46f, GRIS, NEGRO)
+            "duda" -> circuloDuda(p.tenue)
+            // La barra negra de la censura.
+            "desacuerdo" -> drawRect(NEGRO, Offset(c.x - s * 0.44f, c.y - s * 0.14f), Size(s * 0.88f, s * 0.28f))
+            else -> {}
+        }
+    }
+
+    /** Una grapa. */
+    override fun DrawScope.marcaFijada(p: Pagina) {
+        val s = size.minDimension; val c = center
+        drawPath(Path().apply { moveTo(c.x - s * 0.36f, c.y + s * 0.2f); lineTo(c.x - s * 0.36f, c.y - s * 0.06f); lineTo(c.x + s * 0.36f, c.y - s * 0.06f); lineTo(c.x + s * 0.36f, c.y + s * 0.2f) }, GRIS, style = Stroke(s * 0.1f))
+    }
+
+    override val desorden = 1f
+}
+
+/**
  * Refugio: el armario de cartuchos junto a la terminal. Arriba, la puerta engranada de la bóveda con su aro de franjas de
  * aviso; el armario es de acero verde oliva remachado con sus luces piloto ámbar; abajo, el piso de rejilla. Cada tema es un
  * cartucho de cinta en su ranura, con su ventana de carretes (más cinta cuanto más lleno), la etiqueta y el LED; al abrirlo,

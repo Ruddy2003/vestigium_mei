@@ -75,6 +75,7 @@ object Gato {
         TemaId.MEDIEVAL -> true
         TemaId.TEMPLARIO -> true
         TemaId.DISTOPIA -> true
+        TemaId.NOUVEAU -> true
         TemaId.GALIA -> true
         TemaId.ARCONTES -> true
         TemaId.FRENTE -> true

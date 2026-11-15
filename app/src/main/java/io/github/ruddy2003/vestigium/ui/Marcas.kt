@@ -174,6 +174,7 @@ object Marcas {
                 else Aspecto(s, s, Forma.CALDERON, cursiva = true)
             TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
+            TemaId.NOUVEAU -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
             // La @persona, acuñada en un estátero de oro; el #tema, abrazado por un torques (de oro de día, de fuego de noche).
             TemaId.GALIA -> if (persona) Aspecto(Color(0xFF2E1F06), TrazosGalia.ORO, Forma.ESTATER, negrita = true)
                 else (if (cs.background.luminance() < 0.5f) p else s).let { Aspecto(it, it, Forma.TORQUES) }

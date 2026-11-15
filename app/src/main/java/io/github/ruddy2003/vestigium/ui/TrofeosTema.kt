@@ -108,6 +108,7 @@ object TrofeosTema {
                 caja(p, 0.36f, 0.64f, 0.64f, 0.72f)
             }
             TemaId.DISTOPIA -> with(TrofeosMas) { distopia(categoria, p) }
+            TemaId.NOUVEAU -> with(TrofeosMas) { nouveau(categoria, p) }
             TemaId.GALIA -> with(TrofeosMas) { galia(categoria, p) }
             TemaId.ARCONTES -> with(TrofeosMas) { arcontes(categoria, p) }
             TemaId.FRENTE -> with(TrofeosMas) { frente(categoria, p) }

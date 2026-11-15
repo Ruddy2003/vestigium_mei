@@ -136,6 +136,10 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
     }
+    TemaId.NOUVEAU -> {
+        val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
+        mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
+    }
     // La bellota del roble: el cascabillo arriba, con su rabillo, y el fruto debajo, separados por una raya.
     TemaId.GALIA -> {
         val caja = { y0: Float, y1: Float -> Path().apply { addRect(Rect(c.x - r * 1.2f, c.y + y0 * r, c.x + r * 1.2f, c.y + y1 * r)) } }

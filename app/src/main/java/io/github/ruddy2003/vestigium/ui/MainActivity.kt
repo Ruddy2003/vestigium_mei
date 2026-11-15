@@ -263,6 +263,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.TEMPLARIO -> BloqueoMarco(TextosBloqueo("La puerta de la encomienda", "☩ El rastrillo está echado: solo un hermano de la casa lo levanta.", "Levantar el rastrillo"), arriba = 18, reintentar = reintentar) { cs -> bloqueoRastrillo(cs) }
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
             listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
+        TemaId.NOUVEAU -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
+            listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
         // La puerta de la casa grande, atrancada: el sello dentro del torques, entre ramas de roble, y la noche del año abajo.
         TemaId.GALIA -> BloqueoTorques(TextosBloqueo("La puerta está atrancada", "Lo que no se escribe, se recuerda. La tranca solo la quita la mano de quien vive aquí.",
             "Quitar la tranca"), reintentar)
@@ -1210,6 +1212,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> false
+    TemaId.NOUVEAU -> false
     TemaId.GALIA -> false             // el torques alrededor del ícono, en trazo
     TemaId.ARCONTES -> false          // el nicho de piedra, en trazo
     TemaId.FRENTE -> false            // la retícula que fija el blanco, en trazo
@@ -1252,6 +1255,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> true
+    TemaId.NOUVEAU -> true
     TemaId.GALIA -> true              // el estátero de oro, lleno
     TemaId.ARCONTES -> true           // el amuleto de oro, lleno
     TemaId.FRENTE -> true             // el pulsador ámbar de transmitir, encendido
@@ -1358,6 +1362,10 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
         }
         // Sello de goma, doble filete y un poco torcido.
         TemaId.DISTOPIA -> girar(-5f, Offset(cx, cy)) {
+            drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
+            drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
+        }
+        TemaId.NOUVEAU -> girar(-5f, Offset(cx, cy)) {
             drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
             drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
         }
@@ -1644,6 +1652,10 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
             drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
         }
+        TemaId.NOUVEAU -> girar(-4f, Offset(cx, cy)) {
+            drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
+            drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
+        }
         // El estátero de oro: el cospel batido a mano, no del todo redondo, con su canto en sombra, la gráfila de perlas
         // por dentro y el brillo del roce arriba a la izquierda.
         TemaId.GALIA -> {
@@ -1903,6 +1915,7 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         }
         // Barra gruesa de cartel.
         TemaId.DISTOPIA -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
+        TemaId.NOUVEAU -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
         // El filete y, debajo, la cuerda de oro de un torques, con los surcos de la torsión.
         TemaId.GALIA -> { filete(); drawLine(acento, Offset(0f, 3.2f * u), Offset(w, 3.2f * u), 1.6f * u)
             var x = 0f; while (x < w) { drawLine(cs.surface.copy(alpha = 0.7f), Offset(x, 4f * u), Offset(x + 1.2f * u, 2.4f * u), 0.6f * u); x += 3.2f * u } }
@@ -2340,6 +2353,7 @@ private fun origenTransicion(tema: TemaId, atras: Boolean): Alignment = when (te
     TemaId.MEDIEVAL -> Alignment.TopStart
     TemaId.TEMPLARIO -> Alignment.TopStart
     TemaId.DISTOPIA -> Alignment.TopStart
+    TemaId.NOUVEAU -> Alignment.TopStart
     TemaId.GALIA -> Alignment.TopCenter                                        // la pantalla sale de la niebla desde el centro
     TemaId.ARCONTES -> Alignment.TopCenter                                     // el velo se abre desde el centro
     TemaId.FRENTE -> Alignment.TopCenter                                       // la imagen rueda y se asienta en el tubo, desde el centro
@@ -2410,6 +2424,7 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
             (scaleOut(t(240), targetScale = 0.97f) + fadeOut(t(200)))
         // Cajón de archivo: cae de golpe desde arriba.
         TemaId.DISTOPIA -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
+        TemaId.NOUVEAU -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
         // La niebla del robledal: la pantalla nueva sale de la niebla meciéndose apenas de lado, como una hoja que se asienta,
         // y la de antes se deshace hacia arriba, como el humo.
         TemaId.GALIA -> {

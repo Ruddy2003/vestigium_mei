@@ -67,6 +67,10 @@ object Widgets {
             0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
             intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
             0xFF222527.toInt(), 0xFFFFFFFF.toInt())
+        TemaId.NOUVEAU -> Colores(R.drawable.widget_fondo_nouveau, R.drawable.widget_boton_nouveau, R.drawable.widget_boton_activo_nouveau, R.drawable.widget_boton_ambar_nouveau,
+            0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
+            intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
+            0xFF222527.toInt(), 0xFFFFFFFF.toInt())
         // El robledal de noche: la hoguera, la lana clara a su luz y, en el ánimo, de las brasas al roble bajo la luna.
         TemaId.GALIA -> Colores(R.drawable.widget_fondo_galia, R.drawable.widget_boton_galia, R.drawable.widget_boton_activo_galia, R.drawable.widget_boton_ambar_galia,
             0xFFEBA53F.toInt(), 0xFFE6E1CF.toInt(), 0xFFA2A78F.toInt(), 0xFF3A4636.toInt(),
@@ -225,6 +229,7 @@ object Widgets {
         TemaId.MEDIEVAL -> "Agora" to "Scriptura"
         TemaId.TEMPLARIO -> "Vigilia" to "Al rol"
         TemaId.DISTOPIA -> "CONTROL" to "FORMULARIO"
+        TemaId.NOUVEAU -> "CONTROL" to "FORMULARIO"
         TemaId.GALIA -> "Junto al fuego" to "A la tablilla"
         TemaId.ARCONTES -> "En esta hora" to "Al códice"
         TemaId.FRENTE -> "SEÑAL" to "TELETIPO"
@@ -271,6 +276,7 @@ object Widgets {
             TemaId.MEDIEVAL -> R.font.gotica_regular to 1.1f
             TemaId.TEMPLARIO -> R.font.cruzada_titulo to 1.0f
             TemaId.DISTOPIA -> R.font.oswald_medium to 1.05f
+            TemaId.NOUVEAU -> R.font.oswald_medium to 1.05f
             TemaId.GALIA -> R.font.ysabeau_semibold to 1.02f      // Ysabeau, la de los rótulos
             TemaId.ARCONTES -> R.font.codice_regular to 1.0f       // Caudex, la letra de los códices
             TemaId.FRENTE -> R.font.chivo_mono_medium to 1.0f       // las cifras de la consola, no la letra ancha de los títulos

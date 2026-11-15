@@ -197,6 +197,11 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
             circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
         }, 1.4f)
+        TemaId.NOUVEAU -> pinta(Path().apply {
+            fillType = PathFillType.EvenOdd
+            moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
+            circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
+        }, 1.4f)
         // El muérdago que se corta del roble (Plinio 16.249–251): el tallo que se ahorquilla, un par de hojas largas y romas
         // en cada punta y las tres bayas entre las dos ramas; guardada, rellena, con el brillo de las bayas.
         TemaId.GALIA -> {

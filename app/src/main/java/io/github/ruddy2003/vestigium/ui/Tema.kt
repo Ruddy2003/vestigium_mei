@@ -143,6 +143,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     FRENTE("frente", "Frente exterior", "Una red clandestina contra el Directorio, entre mundos ocupados: consolas color hueso, pantallas de radar y pilotos ámbar de los años setenta. Cada día es una operación con su nombre en clave y su ventana de transmisión.", Epoca.FUTURO),
     ARCONTES("arcontes", "Arcontes", "Galilea en el siglo I, vivida por un iniciado que cree el mito gnóstico: el mundo visible es una cárcel dorada, siete arcontes guardan las esferas y la luz verdadera se asoma por las grietas. Cada día es uno de los 365 cielos de Basílides.", Epoca.FANTASIA),
     GALIA("galia", "Galia", "La Galia del 52 a. C., el año del levantamiento de Vercingétorix: el oppidum en su colina, el robledal sagrado, el oro de los torques y el humo; de noche, las hogueras y, al fondo, las del campamento romano. Los días se cuentan por noches.", Epoca.ANTIGUEDAD),
+    NOUVEAU("nouveau", "Art nouveau", "París hacia 1900, cuando el hierro, el vidrio y la luz eléctrica aprendieron a parecer plantas: papel crema, verde salvia, iris violeta y oro pálido; de noche, los escaparates, las lámparas de vidrio y el verde de los cafés. Cada día trae su flor y lo que significa.", Epoca.CONTEMPORANEA),
     /**
      * Básico: sin diseño, a propósito, para probar la app de forma más fluida. Material 3 limpio: grises con un acento azul
      * ([PaletaBasica]), la letra del sistema, esquinas estándar, nombres y fechas en español normal, sin emblema, sin fondo
@@ -455,6 +456,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.MEDIEVAL -> if (oscuro) medievalOscuro else medievalClaro
     TemaId.TEMPLARIO -> if (oscuro) templarioOscuro else templarioClaro
     TemaId.DISTOPIA -> if (oscuro) distopiaOscuro else distopiaClaro
+    TemaId.NOUVEAU -> if (oscuro) nouveauOscuro else nouveauClaro
     TemaId.GALIA -> if (oscuro) galiaOscuro else galiaClaro
     TemaId.ARCONTES -> if (oscuro) arcontesOscuro else arcontesClaro
     TemaId.FRENTE -> if (oscuro) frenteOscuro else frenteClaro
@@ -496,6 +498,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.MEDIEVAL -> tipoMedieval
     TemaId.TEMPLARIO -> tipoTemplario
     TemaId.DISTOPIA -> tipoDistopia
+    TemaId.NOUVEAU -> tipoNouveau
     TemaId.GALIA -> tipoGalia
     TemaId.ARCONTES -> tipoArcontes
     TemaId.FRENTE -> tipoFrente
@@ -543,6 +546,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.MEDIEVAL -> 66f to 0.5f      // gótica
     TemaId.TEMPLARIO -> 60f to 1.2f      // letra de estandarte (MedievalSharp)
     TemaId.DISTOPIA -> 70f to 1f        // Oswald, angosta
+    TemaId.NOUVEAU -> 62f to 0.4f       // Federant, letra de cartel con curvas de pluma
     TemaId.GALIA -> 60f to 0.5f         // Piazzolla, serifa afilada
     TemaId.ARCONTES -> 60f to 0.5f      // Caudex, la letra de los códices
     TemaId.FRENTE -> 46f to 1f        // Michroma, muy ancha: más chica, como la cifra de un panel
@@ -589,6 +593,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.MEDIEVAL -> Esquinas(3, Esquina.REDONDA)
     TemaId.TEMPLARIO -> Esquinas(5, Esquina.CORTADA)       // el sillar tallado de la muralla
     TemaId.DISTOPIA -> Esquinas(4, Esquina.CORTADA)        // la carpeta del expediente
+    TemaId.NOUVEAU -> Esquinas(14, Esquina.HOJA)           // el marco del cartel, que se curva como un tallo
     TemaId.GALIA -> Esquinas(9, Esquina.HOJA)              // la hoja del roble
     TemaId.ARCONTES -> Esquinas(5, Esquina.ARCO)           // el arco pequeño de los nichos tallados en la caliza
     TemaId.FRENTE -> Esquinas(13, Esquina.REDONDA)       // la curva grande de las consolas de la sala de control
@@ -838,6 +843,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> "Del día"
         TemaId.TEMPLARIO -> "Guardia"
         TemaId.DISTOPIA -> "PARTE"
+        TemaId.NOUVEAU -> "Almanach"
         TemaId.GALIA -> "ΝΕΜΗΤΟΝ"
         TemaId.ARCONTES -> "ⲡⲉϩⲟⲟⲩ"
         TemaId.FRENTE -> "ENLACE"
@@ -878,6 +884,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> "xvij de otubre"
         TemaId.TEMPLARIO -> "iv oct. · juliano"
         TemaId.DISTOPIA -> "EXP. 0290"
+        TemaId.NOUVEAU -> "samedi 17 octobre"
         TemaId.GALIA -> "Noche 290 · Cantlos"
         TemaId.ARCONTES -> "cielo 290 · Saturno"
         TemaId.FRENTE -> "K-7 · 21:40"
@@ -920,6 +927,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> 16 to 16
         TemaId.TEMPLARIO -> 22 to 10
         TemaId.DISTOPIA -> 20 to 12
+        TemaId.NOUVEAU -> 20 to 12
         TemaId.GALIA -> 20 to 12
         TemaId.ARCONTES -> 20 to 12
         TemaId.FRENTE -> 16 to 16
@@ -961,6 +969,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> 10
         TemaId.TEMPLARIO -> 12
         TemaId.DISTOPIA -> 10
+        TemaId.NOUVEAU -> 10
         TemaId.GALIA -> 10
         TemaId.ARCONTES -> 10
         TemaId.FRENTE -> 10
@@ -1060,6 +1069,14 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
     TemaId.DISTOPIA -> GenericShape { s, _ ->
         val p = s.height * 0.08f; val a = s.width * 0.42f
         moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(s.width, p); lineTo(s.width, s.height); lineTo(0f, s.height); close()
+    }
+    // El marco de un cartel de 1900: arriba, dos lóbulos que se juntan en el centro con una curva de látigo.
+    TemaId.NOUVEAU -> GenericShape { s, _ ->
+        val a = s.height * 0.16f; val w = s.width
+        moveTo(0f, s.height); lineTo(0f, a * 0.8f)
+        cubicTo(w * 0.1f, -a * 0.3f, w * 0.4f, -a * 0.2f, w * 0.5f, a * 0.35f)
+        cubicTo(w * 0.6f, -a * 0.2f, w * 0.9f, -a * 0.3f, w, a * 0.8f)
+        lineTo(w, s.height); close()
     }
     // La casa del oppidum: arriba, el tejado alto de paja (en la Galia, las casas eran de planta rectangular).
     TemaId.GALIA -> GenericShape { s, _ ->
@@ -1271,6 +1288,15 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         }
         // Ficha de archivo apaisada.
         TemaId.DISTOPIA -> drawRect(c, Offset(0f, h * 0.2f), Size(w, h * 0.6f))
+        // La libélula: el cuerpo largo y las cuatro alas.
+        TemaId.NOUVEAU -> {
+            drawOval(c.copy(alpha = 0.75f), Offset(cx - r * 0.98f, cy - r * 0.42f), Size(r * 0.9f, r * 0.3f))
+            drawOval(c.copy(alpha = 0.75f), Offset(cx + r * 0.08f, cy - r * 0.42f), Size(r * 0.9f, r * 0.3f))
+            drawOval(c.copy(alpha = 0.6f), Offset(cx - r * 0.82f, cy - r * 0.08f), Size(r * 0.74f, r * 0.26f))
+            drawOval(c.copy(alpha = 0.6f), Offset(cx + r * 0.08f, cy - r * 0.08f), Size(r * 0.74f, r * 0.26f))
+            drawRoundRect(c, Offset(cx - w * 0.045f, cy - r * 0.55f), Size(w * 0.09f, r * 1.5f), CornerRadius(w * 0.045f))
+            drawCircle(c, w * 0.08f, Offset(cx, cy - r * 0.62f))
+        }
         // El torques: el aro abierto de oro con sus dos remates.
         TemaId.GALIA -> {
             drawArc(c, 120f, 300f, false, Offset(cx - r * 0.72f, cy - r * 0.72f), Size(r * 1.44f, r * 1.44f), style = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.13f, cap = StrokeCap.Round))

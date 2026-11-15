@@ -81,6 +81,7 @@ fun pelajeDe(tema: TemaId): Pelaje? = when (tema) {
     TemaId.FRENTE -> null           // lote 10: su cuadro va después de S19
     TemaId.ARCONTES -> null         // lote 10: su cuadro va después de S19
     TemaId.GALIA -> null            // lote 10: su cuadro va después de S19
+    TemaId.NOUVEAU -> null          // lote 10: su cuadro va después de S19
 }
 
 // ---------------------------------------------------------------- Piezas para vestir al gato

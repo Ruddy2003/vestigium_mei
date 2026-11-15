@@ -213,6 +213,13 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
             drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
         }
+        TemaId.NOUVEAU -> {
+            val hex = figPoligono(c, r * 0.97f, 6)
+            forma(hex)
+            clipPath(hex) { drawRect(if (hecho) Color(0xFFB3261E).copy(alpha = 0.85f) else borde.copy(alpha = 0.25f), Offset(0f, c.y + r * 0.5f), Size(size.width, r * 0.2f)) }
+            drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
+            drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
+        }
         // La falera de los arneses: el disco con su anillo de perlas, la onda corrida repujada y los cuatro clavos.
         TemaId.GALIA -> {
             forma(disco(c, r * 0.95f))

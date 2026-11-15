@@ -99,6 +99,7 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.TEMPLARIO -> PielCinta(2.5f, true, RellenoCinta.FILETE, floatArrayOf(2f, 4f), StrokeCap.Square)
     // Sello rayado del expediente.
     TemaId.DISTOPIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
+    TemaId.NOUVEAU -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
     // La lana a cuadros de los mantos, con las horas menores en puntadas de hilo.
     TemaId.GALIA -> PielCinta(3f, false, RellenoCinta.CUADROS, floatArrayOf(5f, 1.5f, 1.5f, 1.5f), StrokeCap.Round)
     // Tiras de papiro: las fibras a lo largo, alguna de través, y las horas en raya y punto, como el renglón del copista.

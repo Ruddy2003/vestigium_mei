@@ -274,6 +274,7 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     }
     // Casilla de formulario.
     TemaId.DISTOPIA -> RectangleShape
+    TemaId.NOUVEAU -> RectangleShape
     // La moneda gala: el cospel redondo y desparejo de un estátero, apenas más ancho que alto.
     TemaId.GALIA -> GenericShape { s, _ ->
         val w = s.width; val h = s.height; val cx = w / 2; val cy = h / 2
@@ -429,6 +430,7 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         // La cruz patada calada en el escudo.
         TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(s.width / 2, s.height * 0.42f), minOf(s.width, s.height) * 0.26f), fondo.copy(alpha = 0.55f))
         TemaId.DISTOPIA -> {}
+        TemaId.NOUVEAU -> {}
         // La gráfila de perlas del borde de la moneda y la perla del centro, apenas grabadas.
         TemaId.GALIA -> {
             val l = minOf(s.width, s.height); val c = Offset(s.width / 2, s.height / 2)

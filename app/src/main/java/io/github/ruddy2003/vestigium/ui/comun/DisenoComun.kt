@@ -218,6 +218,7 @@ fun disenoComun(t: TemaId): DisenoComun = when (t) {
     TemaId.MEDIEVAL -> ComunMedieval
     TemaId.TEMPLARIO -> ComunTemplario
     TemaId.DISTOPIA -> ComunDistopia
+    TemaId.NOUVEAU -> ComunNouveau
     TemaId.GALIA -> ComunGalia
     TemaId.ARCONTES -> ComunArcontes
     TemaId.FRENTE -> ComunFrente

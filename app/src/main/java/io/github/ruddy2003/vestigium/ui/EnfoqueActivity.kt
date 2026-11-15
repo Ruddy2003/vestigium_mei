@@ -656,6 +656,20 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
                 drawLine(parpado, q, q + d * (6 * u / l), 1.5f * u)
             }
         }
+        TemaId.NOUVEAU -> {
+            arco(pista, 0f, 1f, r, g)
+            arco(color, 0f, p, r, g)
+            for (k in 0 until 72) { val f = k / 72f; drawLine(e.background.copy(alpha = 0.35f), en(f, r - g / 2), en(f, r + g / 2), if (k % 6 == 0) 2 * u else 0.8f * u) }
+            val parpado = e.onBackground.copy(alpha = 0.7f)
+            val p0 = Offset(c.x - R, c.y); val p1 = Offset(c.x, c.y - R * 1.85f); val p2 = Offset(c.x + R, c.y)
+            drawPath(Path().apply { moveTo(p0.x, p0.y); quadraticTo(p1.x, p1.y, p2.x, p2.y); quadraticTo(c.x, c.y + R * 1.85f, p0.x, p0.y); close() }, parpado, style = Stroke(2.2f * u))
+            for (k in -3..3) {
+                val s = 0.5f + k * 0.09f
+                val q = Offset((1 - s) * (1 - s) * p0.x + 2 * (1 - s) * s * p1.x + s * s * p2.x, (1 - s) * (1 - s) * p0.y + 2 * (1 - s) * s * p1.y + s * s * p2.y)
+                val d = q - c; val l = d.getDistance().coerceAtLeast(1f)
+                drawLine(parpado, q, q + d * (6 * u / l), 1.5f * u)
+            }
+        }
         // El torques de oro, abierto abajo: el aro sin luz se va dorando del primer remate al segundo conforme pasa el
         // bloque; por dentro, la cuenta en el color del bloque, con la marca que parte en dos los meses de Coligny
         // (ATENOVX) arriba; en el hueco, la hoguera que se aviva. Al cerrar la vuelta se encienden los dos remates.
@@ -1293,6 +1307,10 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             lineTo(xx, if (k % 2 == 0) y else y + a); lineTo(x + w, if (k % 2 == 0) y else y + a); lineTo(x + w, y + h); close()
         }
         TemaId.DISTOPIA -> {
+            addRect(Rect(x, y, x + w, y + h))
+            if (w > h) { addOval(Rect(Offset(x + h * 0.45f, y + h / 2), h * 0.18f)); fillType = PathFillType.EvenOdd }
+        }
+        TemaId.NOUVEAU -> {
             addRect(Rect(x, y, x + w, y + h))
             if (w > h) { addOval(Rect(Offset(x + h * 0.45f, y + h / 2), h * 0.18f)); fillType = PathFillType.EvenOdd }
         }

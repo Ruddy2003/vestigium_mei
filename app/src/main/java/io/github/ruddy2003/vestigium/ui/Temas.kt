@@ -243,6 +243,15 @@ object Temas {
         "10-01" to "PLAN", "11-15" to "REVISIÓN", "12-31" to "CIERRE")
 
     /**
+     * Art nouveau: los días de 1900 que el tema recuerda, todos comprobados en `docs/diseno/temas/fuentes_nouveau.md`: se
+     * abre la Exposición Universal (14 de abril), se abre la primera línea del metro (19 de julio, a la una de la tarde) y
+     * se cierra la Exposición (12 de noviembre); y el 1 de enero, el día de 1895 en que el cartel de *Gismonda* salió a
+     * las calles de París.
+     */
+    private val MARCAS_NOUVEAU = mapOf("01-01" to "Gismonda, en las calles", "04-14" to "Ouverture de l'Exposition", "07-19" to "Le Métropolitain",
+        "11-12" to "Clôture de l'Exposition")
+
+    /**
      * Galia: el comienzo del año de Coligny tal como lo pone el tema (Samonios = noviembre, recurso) con sus «tres noches
      * de Samonios», que el bronce marca (TRINOX SAMONI); y dos días del 52 a. C., aproximados: la muerte de Clodio en Roma
      * (18 de enero, en el calendario romano de entonces), que los galos vieron como la ocasión, y la entrega en Alesia
@@ -343,6 +352,7 @@ object Temas {
             TemaId.MEDIEVAL -> FIESTAS[md]
             TemaId.TEMPLARIO -> Temas.mdJuliano(fecha)?.let { MARCAS_TEMPLARIO[it] }
             TemaId.DISTOPIA -> MARCAS_DISTOPIA[md]
+            TemaId.NOUVEAU -> MARCAS_NOUVEAU[md]
             TemaId.GALIA -> MARCAS_GALIA[md]
             TemaId.ARCONTES -> MARCAS_ARCONTES[md]
             TemaId.FRENTE -> MARCAS_FRENTE[md]
@@ -528,6 +538,7 @@ object Temas {
         TemaId.MEDIEVAL -> MEDIEVAL[titulo]
         TemaId.TEMPLARIO -> TEMPLARIO[titulo]
         TemaId.DISTOPIA -> DISTOPIA[titulo]
+        TemaId.NOUVEAU -> NOUVEAU[titulo]
         TemaId.GALIA -> GALIA[titulo]
         TemaId.ARCONTES -> ARCONTES[titulo]
         TemaId.FRENTE -> FRENTE[titulo]
@@ -572,6 +583,7 @@ object Temas {
             TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
             TemaId.TEMPLARIO -> mapOf("animo" to "Ánimo del freire", "momento" to "Crónica de la casa", "gasto" to "Tesorería", "sueno" to "Reposo", "habitos" to "La regla", "hoy" to "Guardia", "cifra" to "Recuento", "foto" to "Desde la torre", "enfoque" to "Instrucción")
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
+            TemaId.NOUVEAU -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
             // Galia: el ánimo, las chispas de la hoguera, las monedas del caballo, el sueño bajo el manto, lo de cada día, el oppidum, la cuenta,
             // lo que viste y los versos de memoria.
             TemaId.GALIA -> mapOf("animo" to "El ánimo de hoy", "momento" to "Chispas", "gasto" to "Monedas del caballo", "sueno" to "Bajo el manto", "habitos" to "Lo de cada día", "hoy" to "En el oppidum", "cifra" to "Tu cuenta", "foto" to "Lo que viste", "enfoque" to "De memoria")
@@ -675,6 +687,32 @@ object Temas {
         "Cifras" to "CIFRAS OFICIALES", "Fotos del día" to "EVIDENCIA FOTOGRÁFICA", "Medicamentos" to "SUMINISTRO MÉDICO",
         "Seguimiento privado" to "EXPEDIENTE RESERVADO", "Momentos de la semana" to "INCIDENCIAS DE LA SEMANA", "Momentos de este día" to "INCIDENCIAS DEL DÍA",
         "Lo mejor y lo peor" to "MÉRITOS Y FALTAS", "Personas, temas e hitos" to "PERSONAS DE INTERÉS", "Respaldo automático" to "COPIA DE SEGURIDAD",
+    )
+
+    /** Art nouveau: la voz de un taller de litografía de París hacia 1900, con su almanaque de flores, sus postales y sus cafés. */
+    private val NOUVEAU = mapOf(
+        "Mundo" to "El mundo en láminas", "Patrimonio Mundial" to "Pabellones del mundo", "Mapa para rascar" to "El plano que vas iluminando", "Ciudades visitadas" to "Ciudades de tus postales",
+        "Biblioteca de sueños" to "Los sueños, en acuarela", "Cartas" to "Tarjetas postales", "Escribir una carta" to "Escribir una postal", "Carta" to "Postal ilustrada",
+        "Conocerte" to "Tu retrato a la pluma", "Brújula política" to "Lo que se discute en el café", "Mapas" to "Planos y láminas", "Salud" to "El cuerpo, como un tallo",
+        "Tus apps" to "Las vitrinas que te detienen", "Otras vidas" to "Otras siluetas", "Logros" to "Medallas de la Exposición", "Tu año en historias" to "El año en carteles",
+        "Anoche" to "La noche de ayer, bajo las lámparas", "Selladas" to "Cerradas con lacre", "Listas para abrir" to "El lacre ya cede", "A otras personas" to "A quienes quieres",
+        "Del pasado" to "Las que mandó el tiempo", "Hoy" to "La flor de hoy", "Línea de tiempo" to "El tallo de los días", "Ahora mismo estoy…" to "En este momento, en el taller…",
+        "Entender" to "Mirar de cerca", "Registros especiales" to "Láminas aparte", "Apariencia" to "Los colores del cartel", "Avisos y recordatorios" to "Campanillas de cristal",
+        "Llenar el día" to "Llenar la página del día", "Biblioteca del diario" to "Los cuadernos encuadernados", "Entrada" to "Página del cuaderno", "Día" to "La página del almanaque",
+        "Momentos" to "Bocetos", "Gastos" to "Las cuentas del bolsillo", "Explorar" to "Flâner", "Más" to "El taller entero", "Hábitos" to "Lo de cada mañana",
+        "Cartas al futuro" to "Postales para el siglo nuevo", "Experimentos personales" to "Pruebas de taller", "Cómo leer tus datos" to "Cómo leer tus láminas",
+        "Guía científica" to "Lo que dicen los sabios", "Cuestionarios" to "Las preguntas del almanaque", "Prueba de reacción" to "La prueba del pulso firme", "Lugares" to "Rincones de la ciudad",
+        "Datos" to "El archivo del taller", "Permisos y sensores" to "Lo que el teléfono puede ver", "Ajustes" to "Ajustar la prensa", "Reportes" to "Láminas para enseñar",
+        "Bienvenido" to "Bienvenue à l'atelier", "Calendario" to "El almanaque de las flores", "Obras" to "Carteles y libros", "Tu año" to "El año en flor", "Privacidad" to "Lo que queda en el cajón",
+        "Sueño" to "Dormir bajo el tragaluz", "Contexto" to "Lo que rodea la página", "Hitos" to "Fechas grabadas", "Ánimo y cuerpo" to "Ánimo y cuerpo, en color", "Diario" to "Carnet de croquis",
+        "Predicción" to "Lo que viene, en boceto", "Este día hace un año" to "Esta página hace un año", "Lo que registró el teléfono" to "Lo que anotó el teléfono", "Registrar" to "Anotar",
+        "Las relaciones más marcadas" to "Los lazos que más se notan", "Mapa" to "El plano de tus paseos", "Mapa emocional" to "El ánimo por los barrios", "Tablero" to "La mesa de dibujo",
+        "Tu día" to "Las horas del taller", "Tu día en 24 horas" to "Las horas del taller", "Te falta hoy" to "Lo que falta en la página", "Datos que faltan" to "Páginas en blanco",
+        "Tema" to "Los colores del cartel", "Recordatorios" to "Notas en el marco del espejo", "Resumen semanal" to "La semana en una lámina", "Totales" to "La cuenta del taller",
+        "Gimnasio" to "La sala de gimnasia", "Buscar" to "Buscar en los cuadernos", "Cifras" to "Las cifras del almanaque", "Fotos del día" to "Lo que fijó la placa",
+        "Medicamentos" to "Frascos de la farmacia", "Seguimiento privado" to "Lo que se guarda en el cajón con llave", "Momentos de la semana" to "Bocetos de la semana",
+        "Momentos de este día" to "Bocetos de este día", "Lo mejor y lo peor" to "Lo que florece y lo que se marchita", "Personas, temas e hitos" to "Gente, asuntos y fechas grabadas",
+        "Respaldo automático" to "Una copia en otra piedra",
     )
 
     /** Galia: la voz del oppidum arverno y del bosque, de la asamblea y del grito que corre de campo en campo. */

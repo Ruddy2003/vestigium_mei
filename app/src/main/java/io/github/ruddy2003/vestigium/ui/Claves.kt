@@ -191,6 +191,15 @@ internal object Claves {
         "imagines" to "evidencia", "iter" to "trayecto", "orbis" to "territorio", "themata" to "asuntos", "memorabilia" to "hechos",
     )
 
+    /** El taller de litografía de 1900. Lo que no está aquí queda en el español común. */
+    val NOUVEAU: Map<String, String> = mapOf(
+        "somnus" to "sueño bajo el tragaluz", "animus" to "ánimo", "svmptvs" to "gastos del bolsillo", "cor" to "pulso", "loca" to "rincones",
+        "personae" to "gente del taller", "consuetudo" to "costumbres", "palmae" to "medallas", "telephonum" to "las vitrinas del teléfono", "telephon" to "las vitrinas del teléfono",
+        "iudicium" to "juicio", "epistulae" to "postales", "reditus" to "ingresos", "momenta" to "bocetos",
+        "imagines" to "placas", "iter" to "paseo", "orbis" to "el mundo", "themata" to "asuntos", "memorabilia" to "fechas grabadas",
+    )
+
+
     /** Jerga del ministerio. Lo que no está aquí queda en el español común. */
     val GALIA: Map<String, String> = mapOf(
         "somnus" to "sueño junto al fuego", "animus" to "ánimo", "svmptvs" to "monedas", "cor" to "pulso de guerrero", "loca" to "parajes",

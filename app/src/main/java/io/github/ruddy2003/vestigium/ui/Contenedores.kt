@@ -96,6 +96,7 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.CUEVA -> Contenedor.BOLSA
     TemaId.BASICO -> Contenedor.SIMPLE
     TemaId.DISTOPIA -> Contenedor.EXPEDIENTE
+    TemaId.NOUVEAU -> Contenedor.EXPEDIENTE
     TemaId.GALIA -> Contenedor.HAZ
     TemaId.ARCONTES -> Contenedor.JARRA
     TemaId.FRENTE -> Contenedor.CARTUCHO

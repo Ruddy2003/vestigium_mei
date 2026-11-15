@@ -263,6 +263,7 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     }, 7.dp, 0.dp, true, 1.4.dp)
     // Hoja de expediente: recta y con borde grueso.
     TemaId.DISTOPIA -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
+    TemaId.NOUVEAU -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
     // La tablilla en su marco de roble, con las esquinas de hoja del tema: dos muy redondas en diagonal y dos casi rectas.
     TemaId.GALIA -> PielDialogo(RoundedCornerShape(topStart = 22.dp, topEnd = 5.dp, bottomEnd = 22.dp, bottomStart = 5.dp), 0.dp, 0.dp, false, 1.4.dp)
     // La hoja de papiro de un códice: los lados rectos y los cantos de arriba y de abajo rotos, cada uno a su manera.
@@ -491,6 +492,20 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             while (x < w - 14 * d) { drawCircle(e.secondary.copy(alpha = 0.35f), 2.2f * d, Offset(x, h - 9 * d), style = Stroke(0.8f * d)); x += 3.6f * d }
         }
         TemaId.DISTOPIA -> {
+            // Dos perforaciones de archivador y un sello de goma ladeado abajo a la izquierda.
+            listOf(0.3f, 0.7f).forEach { fy ->
+                drawCircle(e.onSurface.copy(alpha = 0.18f), 3.5f * d, Offset(11 * d, h * fy))
+                drawCircle(e.onSurface.copy(alpha = 0.5f), 3.5f * d, Offset(11 * d, h * fy), style = Stroke(d))
+            }
+            val o = Offset(14 * d, h - 34 * d)
+            rotate(-8f, Offset(o.x + 26 * d, o.y + 10 * d)) {
+                drawRect(e.primary.copy(alpha = 0.55f), o, Size(52 * d, 20 * d), style = Stroke(1.6f * d))
+                drawRect(e.primary.copy(alpha = 0.55f), Offset(o.x + 3 * d, o.y + 3 * d), Size(46 * d, 14 * d), style = Stroke(0.7f * d))
+                drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 8 * d), Offset(o.x + 40 * d, o.y + 8 * d), 2 * d)
+                drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 13 * d), Offset(o.x + 30 * d, o.y + 13 * d), 2 * d)
+            }
+        }
+        TemaId.NOUVEAU -> {
             // Dos perforaciones de archivador y un sello de goma ladeado abajo a la izquierda.
             listOf(0.3f, 0.7f).forEach { fy ->
                 drawCircle(e.onSurface.copy(alpha = 0.18f), 3.5f * d, Offset(11 * d, h * fy))
@@ -881,6 +896,10 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
         }
         // Barra negra de formulario con un trazo rojo debajo.
         TemaId.DISTOPIA -> {
+            drawRect(e.onSurface, Offset(0f, cy - 3 * d), Size(w, 3 * d))
+            drawRect(e.primary, Offset(0f, cy + 2 * d), Size(w * 0.4f, 1.2f * d))
+        }
+        TemaId.NOUVEAU -> {
             drawRect(e.onSurface, Offset(0f, cy - 3 * d), Size(w, 3 * d))
             drawRect(e.primary, Offset(0f, cy + 2 * d), Size(w * 0.4f, 1.2f * d))
         }
@@ -1300,6 +1319,11 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             drawRect(inactivo, Offset(0f, cy - g / 2), Size(w, g), style = Stroke(maxOf(g * 0.15f, 0.8f * d)))
             for (k in 1 until 10) drawLine(e.onSurface.copy(alpha = 0.5f), Offset(w * k / 10f, cy - g / 2), Offset(w * k / 10f, cy + g / 2), maxOf(g * 0.12f, 0.6f * d))
         }
+        TemaId.NOUVEAU -> {
+            if (x > 0f) drawRect(activo, Offset(0f, cy - g / 2), Size(x, g))
+            drawRect(inactivo, Offset(0f, cy - g / 2), Size(w, g), style = Stroke(maxOf(g * 0.15f, 0.8f * d)))
+            for (k in 1 until 10) drawLine(e.onSurface.copy(alpha = 0.5f), Offset(w * k / 10f, cy - g / 2), Offset(w * k / 10f, cy + g / 2), maxOf(g * 0.12f, 0.6f * d))
+        }
         TemaId.GALIA -> {
             // Lo que falta, una hebra fina; lo recorrido, la cuerda de oro de un torques, con los surcos de la torsión, que
             // acaba en el disco del tampón.
@@ -1613,6 +1637,10 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
         }
         // Aguja de medidor.
         TemaId.DISTOPIA -> {
+            drawPath(Path().apply { moveTo(c.x - r * 0.7f, c.y - r * 0.9f); lineTo(c.x + r * 0.7f, c.y - r * 0.9f); lineTo(c.x, c.y + r * 0.1f); close() }, color)
+            drawLine(color, c, Offset(c.x, c.y + r * 0.95f), r * 0.16f)
+        }
+        TemaId.NOUVEAU -> {
             drawPath(Path().apply { moveTo(c.x - r * 0.7f, c.y - r * 0.9f); lineTo(c.x + r * 0.7f, c.y - r * 0.9f); lineTo(c.x, c.y + r * 0.1f); close() }, color)
             drawLine(color, c, Offset(c.x, c.y + r * 0.95f), r * 0.16f)
         }

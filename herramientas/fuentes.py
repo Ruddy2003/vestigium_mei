@@ -163,6 +163,13 @@ FUENTES = [
     ("piazzolla/Piazzolla[opsz,wght].ttf", {"wght": 800, "opsz": 30}, "piazzolla_titulo", None, LATINO_CORTO + "," + GRIEGO),
     ("piazzolla/Piazzolla[opsz,wght].ttf", {"wght": 400, "opsz": 14}, "piazzolla_regular", None, LATINO_CORTO + "," + GRIEGO),
     ("ysabeau/Ysabeau[wght].ttf", {"wght": 600}, "ysabeau_semibold", None, LATINO_CORTO + "," + GRIEGO),
+    # NOU: Art nouveau (lote 10). Títulos en Federant (la Feder Antiqua de 1911, letra de cartel), texto en Brygada 1918 y
+    # rótulos y cifras en Della Respira (la Della Robbia de 1902). Federant y Della Respira reservan su nombre: van
+    # renombradas. A las dos les faltan signos que el tema usa: se les copian de Brygada (ver CON_SIGNOS_BRYGADA)
+    ("federant/Federant-Regular.ttf", None, "cartel_titulo", "Cartel Vestigium", LATINO_CORTO),
+    ("brygada1918/Brygada1918[wght].ttf", {"wght": 400}, "brygada_regular", None, LATINO_CORTO),
+    ("brygada1918/Brygada1918[wght].ttf", {"wght": 600}, "brygada_semibold", None, LATINO_CORTO),
+    ("dellarespira/DellaRespira-Regular.ttf", None, "vitrina_regular", "Vitrina Vestigium", LATINO_CORTO),
 ]
 
 
@@ -214,6 +221,10 @@ RANGOS_COPTO = list(range(0x2C80, 0x2CF4)) + list(range(0x2CF9, 0x2D00)) + list(
 SIGNOS_ARCONTES = [ord(c) for c in "◌⁘∴∵∷※⁂▪▫▹◃"]
 # Las salidas a las que les falta la sigma de luna (Ϲ ϲ, U+03F9 y U+03F2), la de las inscripciones galo-griegas: se les
 # da la forma de su propia «C» y «c» latina, que es la misma letra.
+# Art nouveau: los signos que Federant y Della Respira no traen (la comilla y el apóstrofo curvos, los puntos suspensivos
+# y las flechas), copiados de Brygada 1918 con su peso.
+CON_SIGNOS_BRYGADA = {"cartel_titulo": 500, "vitrina_regular": 400}
+SIGNOS_BRYGADA = [ord(c) for c in "’”…←→↑↓"]
 CON_SIGMA_LUNA = {"piazzolla_titulo", "piazzolla_regular", "ysabeau_semibold"}
 
 
@@ -242,6 +253,7 @@ def anadir_escritura(f, origen, puntos, ejes, cache, prefijo, solo_faltan=False)
     """Copia a [f] los glifos de [puntos] de la fuente [origen] (instanciada en [ejes]), dibujados de nuevo sin componentes
     y escalados para que su altura de mayúsculas quede igual a la de [f]."""
     from fontTools.pens.ttGlyphPen import TTGlyphPen
+    from fontTools.pens.recordingPen import DecomposingRecordingPen
     from fontTools.pens.transformPen import TransformPen
     from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
     m = TTFont(bajar(origen, cache))
@@ -260,7 +272,9 @@ def anadir_escritura(f, origen, puntos, ejes, cache, prefijo, solo_faltan=False)
         origen_g = cm[cp]
         nombre = "%s%04X" % (prefijo, cp)
         pen = TTGlyphPen(None)
-        gs[origen_g].draw(TransformPen(pen, (escala, 0, 0, escala, 0, 0)))
+        rec = DecomposingRecordingPen(gs)  # los glifos hechos de componentes (como en Brygada) se copian ya descompuestos
+        gs[origen_g].draw(rec)
+        rec.replay(TransformPen(pen, (escala, 0, 0, escala, 0, 0)))
         g = pen.glyph()
         g.recalcBounds(None)
         ancho, _ = m["hmtx"][origen_g]
@@ -464,6 +478,8 @@ def hacer(origen, ejes, salida, nombre, letras, cache):
         anadir_adornos(f)
     if salida in CON_SIGMA_LUNA:
         anadir_sigma_luna(f)
+    if salida in CON_SIGNOS_BRYGADA:
+        anadir_escritura(f, "brygada1918/Brygada1918[wght].ttf", SIGNOS_BRYGADA, {"wght": CON_SIGNOS_BRYGADA[salida]}, cache, "bry", solo_faltan=True)
     if salida in CON_HEBREO_COPTO:
         peso = CON_HEBREO_COPTO[salida]
         anadir_escritura(f, HEBREO, RANGOS_HEBREO, {"wght": peso, "wdth": 100}, cache, "heb")

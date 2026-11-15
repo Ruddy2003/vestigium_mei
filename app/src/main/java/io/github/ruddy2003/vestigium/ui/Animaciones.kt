@@ -126,6 +126,7 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.TEMPLARIO -> MatizMovimiento(BarridoTema.CRUZ, 820, CubicBezierEasing(0.55f, 0f, 0.3f, 1f), 0f, -12f, 1.02f, 420, 55, FastOutSlowInEasing, 1.15f, 0.95f, 1600f)
     // El ojo que se abre; los expedientes entran de lado y el sello cae seco.
     TemaId.DISTOPIA -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
+    TemaId.NOUVEAU -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
     // El remolino de hojas de roble que se abre desde el toque; las secciones bajan de lado, meciéndose como hojas que
     // caen, y los botones ceden como la madera, con un rebote corto.
     TemaId.GALIA -> MatizMovimiento(BarridoTema.ROBLE, 900, CubicBezierEasing(0.35f, 0f, 0.25f, 1f), -10f, 12f, 0.99f, 500, 65, LinearOutSlowInEasing, 1.05f, 0.6f, 750f)
@@ -299,6 +300,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.MEDIEVAL -> VivoTema.RAYO_ORO         // un rayo de luz con polvo de oro suspendido
     TemaId.TEMPLARIO -> VivoTema.ANTORCHAS        // la muralla almenada con antorchas que tiemblan y sueltan pavesas
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
+    TemaId.NOUVEAU -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
     TemaId.GALIA -> if (oscuro) VivoTema.HOGUERAS else VivoTema.ROBLEDAL   // de día, las hojas y la niebla; de noche, las hogueras
     TemaId.ARCONTES -> if (oscuro) VivoTema.ESFERAS else VivoTema.POLVO_DORADO   // de día, el polvo en el rayo de sol; de noche, las esferas
     TemaId.FRENTE -> VivoTema.RADAR            // el barrido lento del radar; de noche, además, la antena que parpadea
