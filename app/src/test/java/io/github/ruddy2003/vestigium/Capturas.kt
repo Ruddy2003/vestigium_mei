@@ -3092,4 +3092,23 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("botafogo", "2027-04-25", listOf(13.0)),                   // la mudanza a Botafogo: los libros mojados al sol y el bergantín en la bahía
         Triple("escarabajos", "2027-05-20", listOf(13.0)),                // el día de los escarabajos: el paraguas al revés y los escarabajos en la mesa
     ),
+    // Jean-Baptiste (Napoleónico, tanda S14): dos cuadros con una base que no se mueve y un paisaje que cambia con la marcha: la retirada de Rusia, en seis tramos, y el vivac de la compañía, en trece tramos de la campaña.
+    "granadero" to listOf(
+        Triple("retirada", "2027-11-24", HORAS_CUADRO),                   // la retirada en el tramo de la nieve: el cañón abandonado, el alto junto al fuego y, de noche, el fuego contra la luna
+        Triple("vivac", "2027-07-15", HORAS_CUADRO),                      // el vivac en el llano ruso de verano: la tienda, la fila de pabellones, el rancho y, de noche, la compañía entera con sus fuegos
+        Triple("salida", "2027-10-19", listOf(13.0)),                     // la salida de Moscú (tramo 1): la carroza volcada, el botín tirado y las ruinas de Moscú al fondo
+        Triple("maloyaroslavets", "2027-10-24", listOf(13.0, 21.0)),      // tramo 2: la isba quemada y el pueblo que arde
+        Triple("krasnoi", "2027-11-17", listOf(13.0)),                    // tramo 4: el pino tronchado y la batería en la colina
+        Triple("berezina", "2027-11-26", listOf(13.0, 21.0)),             // tramo 5: el río con el hielo suelto, los puentes y las fogatas
+        Triple("final", "2027-12-05", listOf(13.0)),                      // tramo 6, hacia el Niemen: el bosque cerrado y la nieve honda
+        Triple("nevando", "2027-11-06", listOf(13.0)),                    // empieza a nevar y ya no para: la nieve cuaja a lo largo de la mañana
+        Triple("moscu", "2027-09-16", listOf(21.0)),                      // Moscú ardiendo de noche: la tercera luz, roja (variante del vivac)
+        Triple("smolensk", "2027-08-17", listOf(21.0)),                   // Smolensk arde en el horizonte
+        Triple("borodino", "2027-09-07", listOf(13.0)),                   // la batalla: el humo de los cañones
+        Triple("niemen", "2027-06-24", listOf(13.0)),                     // el cruce del Niemen: los puentes de barcas
+        Triple("san_napoleon", "2027-08-15", listOf(13.0, 21.0)),         // la fiesta: la bandera bajo el águila, la corona de laurel y el fuego grande
+        Triple("cuartel", "2027-02-10", listOf(13.0)),                    // el cuartel, provisional: la ciudad con su convento al fondo
+        Triple("hospital", "2028-02-15", listOf(13.0)),                   // el hospital de Prusia, provisional: sin la compañía, la ciudad nevada (decisión 21: tendrá su cuadro)
+        Triple("pueblo", "2029-08-10", listOf(13.0)),                     // el pueblo de Borgoña, provisional: la parra de su puerta y las viñas (decisión 21: tendrá su cuadro)
+    ),
 )

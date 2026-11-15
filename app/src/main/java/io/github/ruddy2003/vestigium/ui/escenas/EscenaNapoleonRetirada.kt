@@ -19,10 +19,9 @@ import io.github.ruddy2003.vestigium.vidas.Semilla
 
 /**
  * Lo que un cuadro de Napoleónico necesita saber de un momento, calculado una vez: la luz, la nieve, el fuego y lo que
- * el cuento pone en el camino. La retirada la arma con lo suyo; el vivac provisional, con [vivac] (sin lo abandonado, sin
- * la carroza y con la tienda de oficial).
+ * el cuento pone en el camino. Es la de la retirada; el vivac tiene la suya (`VistaVivac`).
  */
-internal class VistaNapoleon(val m: Momento, val vivac: Boolean = false) {
+internal class VistaNapoleon(val m: Momento) {
     val l: Luces = EscenaNapoleon.luces(m)
     /** El sol (con la sombra no más larga que tres veces lo alto: ver [RetiradaLuz.rayo]). */
     val r: Rayo = RetiradaLuz.rayo(l)
@@ -120,21 +119,20 @@ internal object RetiradaNapoleon {
         return minOf(n, TramosRetirada.fila(t).size)
     }
 
-    /** El marco de la izquierda de hoy: el del tramo; en el vivac provisional, la tienda de oficial. */
+    /** El marco de la izquierda de hoy: el del tramo. */
     fun marco(m: Momento): TramosRetirada.Marco = TramosRetirada.marco(EscenaNapoleon.tramo(m))
 
     // ---------------------------------------------------------------- El cuadro
 
     fun DrawScope.cuadro(m: Momento) = pintar(VistaNapoleon(m))
 
-    /** Pinta el cuadro con lo que dice [v] (la retirada, o el vivac provisional). */
+    /** Pinta el cuadro de la retirada con lo que dice [v]. */
     fun DrawScope.pintar(v: VistaNapoleon) {
         val m = v.m
         with(RetiradaLejos) { cielo(v); lejos(v) }
-        if (v.vivac) with(VivacNapoleon) { horizonte(v) }
         with(RetiradaLuz) { velo(v, 0.45f, -40f, 112f); velo(v, 0.8f, 74f, 136f) }
         // Las colinas de Krasnoi, más cerca que la bruma de lejos: que se lean también con lluvia o nieve.
-        if (!v.vivac && TramosRetirada.lejania(v.tramo) == TramosRetirada.Lejania.COLINAS) with(RetiradaLejos) { colinas(v) }
+        if (TramosRetirada.lejania(v.tramo) == TramosRetirada.Lejania.COLINAS) with(RetiradaLejos) { colinas(v) }
         with(RetiradaCamino) { suelo(v) }
         with(RetiradaLuz) { sombrasDelSuelo(v) }
         with(RetiradaLejos) { granja(v) }

@@ -39,7 +39,7 @@ internal object TramosRetirada {
      * - [PINO] (el final): el pino grande solo, cargado, con la nieve honda al pie en olas talladas por el viento, dos
      *   abetos jóvenes enterrados hasta media altura, el arco de la rueda de un carro enterrado y una rama rota por el
      *   peso: «la nieve, que le llega a las rodillas».
-     * - [TIENDA]: en el vivac provisional (no es de la retirada), la tienda de oficial al pie del pino grande.
+     * - [TIENDA]: la tienda de oficial al pie del pino grande, para un día sin tramo (fuera de la retirada; hoy no se pinta).
      */
     enum class Marco { CARROZA, CASA, CANON, METRALLA, MADERA, PINO, TIENDA }
 

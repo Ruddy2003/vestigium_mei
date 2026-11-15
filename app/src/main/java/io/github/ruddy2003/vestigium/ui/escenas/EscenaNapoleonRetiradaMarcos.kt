@@ -55,7 +55,7 @@ import kotlin.math.sin
 internal object MarcosRetirada {
     private val C = ColorNapoleon
 
-    fun marcoDe(v: VistaNapoleon): Marco = TramosRetirada.marco(if (v.vivac) null else v.tramo)
+    fun marcoDe(v: VistaNapoleon): Marco = TramosRetirada.marco(v.tramo)
 
     // ---------------------------------------------------------------- Los sitios
 

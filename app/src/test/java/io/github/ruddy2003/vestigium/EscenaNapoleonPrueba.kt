@@ -28,6 +28,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.RetiradaNapoleon
 import io.github.ruddy2003.vestigium.ui.escenas.TipoAncla
 import io.github.ruddy2003.vestigium.ui.escenas.TramosRetirada
 import io.github.ruddy2003.vestigium.ui.escenas.VistaNapoleon
+import io.github.ruddy2003.vestigium.ui.escenas.VivacNapoleon
 import io.github.ruddy2003.vestigium.ui.escenas.gatoQuieto
 import io.github.ruddy2003.vestigium.ui.escenas.lienzo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
@@ -44,7 +45,7 @@ import org.junit.Test
 import java.time.LocalDate
 
 /**
- * Los cuadros de Napoleónico (tanda S14: la retirada, y el vivac todavía provisional) cuentan lo mismo que el cuento de
+ * Los cuadros de Napoleónico (tanda S14: la retirada y el vivac) cuentan lo mismo que el cuento de
  * Jean-Baptiste: dónde está, el tramo de la retirada, la nieve, la compañía y sus fuegos, la fase del día y lo que hay
  * encendido o en uso a cada hora, y los días señalados salen de la ficha del día, y aquí se comparan con su calendario
  * (`AnioG5.kt`, `JEAN_BAPTISTE`) todos los días de 2026 a 2032.
@@ -70,9 +71,11 @@ class EscenaNapoleonPrueba {
                 else -> Lugar.VIVAC
             }
             assertEquals(d.toString(), esperado, EscenaNapoleon.lugar(m))
-            // Solo la retirada tiene cuadro propio; los demás sitios se pintan, por ahora, con el vivac provisional.
+            // La retirada tiene su cuadro; los demás sitios, el del vivac: Moscú como variante suya, y el cuartel, el
+            // hospital y el pueblo de forma provisional, hasta que tengan el suyo.
             assertEquals(d.toString(), if (esperado == Lugar.RETIRADA) Cuadro.RETIRADA else Cuadro.VIVAC, EscenaNapoleon.cuadro(m))
-            assertEquals(d.toString(), esperado != Lugar.RETIRADA && esperado != Lugar.VIVAC, EscenaNapoleon.provisional(m))
+            assertEquals(d.toString(), esperado in setOf(Lugar.CUARTEL, Lugar.HOSPITAL, Lugar.PUEBLO), EscenaNapoleon.provisional(m))
+            assertEquals(d.toString(), EscenaNapoleon.provisional(m), VivacNapoleon.provisional(m))
             if (esperado == Lugar.RETIRADA) { retirada[d.year] = (retirada[d.year] ?: 0) + 1; assertTrue(d.toString(), md(d) >= "10-19" && md(d) <= "12-13") }
         }
         // La retirada: 56 días, del 19 de octubre al 13 de diciembre, en 2026 (el avance) y en 2027; nunca más.

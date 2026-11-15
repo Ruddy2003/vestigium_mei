@@ -127,7 +127,7 @@ internal object RetiradaLejos {
         drawPath(banda, p.medio(C.PINO_OSC, 0.78f))
         if (v.nieve > 0.4f) repeat(40) { val x = az.entre(250f, ANCHO); mancha(Offset(x, H - az.entre(1f, 4f)), 1.4f, 0.4f, p.arriba(C.NIEVE, 0.75f), 0.6f) }
         drawRect(Brush.verticalGradient(listOf(Color.Transparent, l.bruma.copy(alpha = 0.55f)), H - 6f, H + 1f), Offset(0f, H - 6f), Size(ANCHO, 7f))
-        when (TramosRetirada.lejania(if (v.vivac) null else v.tramo)) {
+        when (TramosRetirada.lejania(v.tramo)) {
             TramosRetirada.Lejania.COLINAS -> Unit                           // la colina va después de la bruma ([colinas])
             TramosRetirada.Lejania.BOSQUE -> bosqueDelFondo(v)
             TramosRetirada.Lejania.CAMPOS -> if (TramosRetirada.moscu(v.m)) moscu(v)
@@ -259,7 +259,7 @@ internal object RetiradaLejos {
      * En Krasnoi la tapa la colina y en el final, el bosque: solo queda el bosquecillo.
      */
     fun DrawScope.granja(v: VistaNapoleon) {
-        when (TramosRetirada.lejania(if (v.vivac) null else v.tramo)) {
+        when (TramosRetirada.lejania(v.tramo)) {
             TramosRetirada.Lejania.CAMPOS -> if (TramosRetirada.moscu(v.m)) bosquecillo(v) else caserio(v)
             TramosRetirada.Lejania.QUEMADOS -> { granjaQuemada(v); puebloQuemado(v) }
             TramosRetirada.Lejania.LLANO, TramosRetirada.Lejania.RIO -> granjaQuemada(v)
@@ -448,7 +448,7 @@ internal object RetiradaLejos {
             humo(l, c + Offset(0f, -2f * kk), 70f, 14f, reloj, v.m.viento + 0.3f, 0.7f, 0.3f, 61, 9, 0.85f)
         } else humo(l, HUMO_GRANJA, 46f, 6f, reloj, v.m.viento + 0.25f, 0.45f, 0.4f, 62, 7, 0.55f)
         // El pueblo quemado del camino viejo, que todavía humea; el día de Maloyaroslavets, arde.
-        if (!v.vivac && TramosRetirada.lejania(v.tramo) == TramosRetirada.Lejania.QUEMADOS) for ((i, c) in CASAS_QUEMADAS.withIndex()) {
+        if (TramosRetirada.lejania(v.tramo) == TramosRetirada.Lejania.QUEMADOS) for ((i, c) in CASAS_QUEMADAS.withIndex()) {
             val s = PiezasNapoleon.sitio(MIRADA, w(c.first, c.second), c.third); val q = s.p(0f, 1.2f, 0f)
             if (arde) { resplandor(q, 3f * s.k, 0.25f + 0.55f * v.noche); for (j in 0 until 3) llama(s.p(-1.6f + j * 1.5f, 1.1f + (j % 2) * 0.4f, 0f), (0.45f + (j % 2) * 0.25f) * s.k * (0.6f + 0.4f * v.noche), reloj, 140 + i * 3 + j) }
             if (arde || i % 2 == 0) humo(l, q + Offset(0f, -1.2f * s.k), if (arde) 90f else 34f, (if (arde) 12f else 4f), reloj, v.m.viento + 0.3f, if (arde) 0.75f else 0.5f, 0.35f, 150 + i, if (arde) 9 else 6, if (arde) 0.85f else 0.4f)

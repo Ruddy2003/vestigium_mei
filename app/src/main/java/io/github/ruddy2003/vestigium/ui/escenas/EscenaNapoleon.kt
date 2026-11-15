@@ -66,13 +66,14 @@ internal object ColorNapoleon {
  *    (2026, el avance, y 2027): de pie en la cuneta, mirando camino adelante, hacia el oeste. El camino, largo, entre
  *    bosques negros; lo que el ejército va dejando; y un solo fuego. Es el primer cuadro con la nieve de protagonista.
  *    Se mueve con la marcha, en seis tramos ([tramo]), con una base que no cambia ([TramosRetirada]).
- * 2. **El vivac** ([VivacNapoleon], `EscenaNapoleonVivac.kt`), el resto de la campaña. **Todavía es provisional:** el
- *    alto del camino de la retirada, sin nieve ni lo abandonado, con la tienda de oficial. Lo hará otro agente cuando
- *    el autor vea la retirada.
+ * 2. **El vivac** ([VivacNapoleon], `EscenaNapoleonVivac*.kt`), el resto de la campaña: el alto de la compañía junto
+ *    al camino, con su fuego y sus fusiles en pabellón. También se mueve con la marcha, en trece tramos de la campaña
+ *    (Francia, Alemania, Polonia, el Niemen, el llano de Rusia, Smolensk, Borodino…), con una base que no cambia.
  *
- * **Los demás lugares** (el cuartel, Moscú, el hospital de Prusia y el pueblo de Borgoña) se pintan por ahora con el
- * vivac provisional ([provisional]), como hizo Botánico con sus lugares en tierra. Moscú lleva sus cúpulas en el
- * horizonte y su incendio ([moscu]).
+ * **Los demás lugares:** Moscú se pinta de verdad como variante del vivac, con sus cúpulas en el horizonte y su
+ * incendio ([moscu]). El cuartel, el hospital de Prusia y el pueblo de Borgoña todavía no tienen cuadro: se pintan
+ * con el vivac, con su fondo y sin la compañía ([provisional]), como hizo Botánico con sus lugares en tierra; el
+ * hospital y el pueblo tendrán el suyo en las tandas chicas.
  *
  * Las piezas que usan los dos (los fusiles en pabellón, la mochila, el chacó, el capote, el tambor, la marmita, la
  * hoguera, los carros, la carroza, el cañón, el cofre con el cuadro, el águila, el pino, la casa quemada y la tienda)
@@ -118,10 +119,13 @@ internal object EscenaNapoleon : EscenaVida {
 
     internal fun cuadro(m: Momento): Cuadro = cuadro(lugar(m))
 
-    /** Si hoy está en un sitio que todavía no tiene cuadro (el cuartel, Moscú, el hospital, el pueblo): se pinta el vivac. */
+    /**
+     * Si hoy está en un sitio que todavía no tiene cuadro (el cuartel, el hospital, el pueblo): se pinta, de forma
+     * provisional, con el vivac. Moscú no cuenta: el vivac lo pinta de verdad, como variante suya.
+     */
     internal fun provisional(m: Momento): Boolean = when (lugar(m)) {
-        Lugar.VIVAC, Lugar.RETIRADA -> false
-        Lugar.CUARTEL, Lugar.MOSCU, Lugar.HOSPITAL, Lugar.PUEBLO -> true
+        Lugar.VIVAC, Lugar.RETIRADA, Lugar.MOSCU -> false
+        Lugar.CUARTEL, Lugar.HOSPITAL, Lugar.PUEBLO -> true
     }
 
     // ---------------------------------------------------------------- Cuentas de fechas

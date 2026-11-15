@@ -33,8 +33,8 @@ import kotlin.math.sin
 
 /**
  * Los doce objetos del día de Jean-Baptiste, iguales en los dos cuadros (la retirada y el vivac).
- * Cada cuadro dice dónde: los chicos van sobre su soporte (la mochila de pie del alto, junto al pabellón);
- * los grandes van de pie o apoyados (en los fusiles en pabellón).
+ * Cada cuadro dice dónde: los chicos van sobre su soporte (en la retirada, la mochila de pie del alto; en el vivac, el
+ * tocón de partir leña); los grandes van de pie o apoyados, a la derecha del fuego.
  *
  * - **Grandes** ([GRANDES], de 0.4 a 1.6 m, a [METRO] unidades por metro a escala 1; a la escala 1.1 de la retirada dan
  *   las 81 unidades por metro de las cosas del alto, así que el fusil del día mide lo mismo que los del pabellón):
@@ -51,8 +51,8 @@ import kotlin.math.sin
  *   abierta, y la cuchara de estaño en su escudilla. Van con su sombra corta.
  *
  * De noche, el lado que mira al fuego del alto se enciende con la lumbre del pincel (`calida`) y el otro queda en el azul
- * de la luna. Como el contrato no dice dónde está el fuego, se toma el del alto ([RetiradaCerca.FUEGO]; el vivac
- * provisional lo tiene en el mismo sitio).
+ * de la luna. Como el contrato no dice dónde está el fuego, se toma el del alto ([RetiradaCerca.FUEGO]; el del rancho
+ * del vivac, [VivacCerca.FUEGO], está casi en el mismo sitio).
  *
  * **[Diseño propio]**: la horquilla de secar (el cuento no la nombra; el capote y la manta se secan junto al fuego y así
  * se sostienen también cuando el pabellón no está, de marcha); el trapo de la llave del fusil; la tela de las galletas;

@@ -53,7 +53,7 @@ internal class VistaVivac(val m: Momento) {
     val fondo: VivacNapoleon.Fondo = VivacNapoleon.fondo(m)
     val campo: VivacNapoleon.Campo = VivacNapoleon.campo(m)
     val l: Luces = VivacNapoleon.luces(m)
-    /** El sol, con la sombra no más larga que tres veces lo alto (como en la retirada). */
+    /** El sol del vivac, con la sombra no más larga que 5,5 veces lo alto (ver [VivacLuz.rayo]; en la retirada, tres). */
     val r: Rayo = VivacLuz.rayo(l)
     val sol: Sol3 = Sol3(r)
     val p: Pincel = Pincel(l, r, 0f, ColorNapoleon.LUMBRE)
@@ -112,7 +112,7 @@ internal class VistaVivac(val m: Momento) {
  * el polvo de la columna; de 12:00 a 13:00, el alto de la comida (la marmita al fuego). Desde las 18:00, el vivac
  * encendido, con los fuegos hasta el horizonte. De madrugada, el rescoldo y las camas con sus mantas.
  *
- * **Los lugares que todavía no tienen cuadro** caen aquí ([EscenaNapoleon.provisional]): Moscú se pinta de verdad (el
+ * **Los demás lugares** caen aquí ([EscenaNapoleon.cuadro]): Moscú se pinta de verdad (el
  * vivac fuera de la ciudad, con sus cúpulas al fondo, el incendio y la ciudad quemada); el cuartel, el hospital de Prusia
  * y el pueblo de Borgoña son **provisionales** ([provisional]): la base sin lo que no está (sin la compañía en el
  * hospital y en el pueblo) y, al fondo, su ciudad o su pueblo.
@@ -395,14 +395,6 @@ internal object VivacNapoleon {
         }
         grano(Azar(Semilla.de("napoleon", "grano", "vivac")), 0.6f + 0.4f * v.r.dia)
     }
-
-    /**
-     * Lo que el vivac provisional ponía en el horizonte de la retirada cuando la retirada pintaba el vivac
-     * (`RetiradaNapoleon.pintar` con `vivac = true`). El vivac ya tiene su cuadro y nadie pinta así; se queda vacío para
-     * que la retirada compile sin tocarla (se puede quitar cuando la retirada deje de llamarlo).
-     */
-    @Suppress("UNUSED_PARAMETER")
-    fun DrawScope.horizonte(v: VistaNapoleon) = Unit
 
     // ---------------------------------------------------------------- Lo que se mueve
 
