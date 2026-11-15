@@ -103,10 +103,10 @@ internal object CercaSelva {
         // La tina con la palma joven.
         add(Cosa3(5.15f, sombraRedonda(1.15f, 5.15f, 0.3f, 1.5f, sol)) { tinaConPalma(m, luz, 1.15f, 5.15f) })
         // La maceta del helecho, la de la bromelia y el plantón con su cepellón.
-        add(Cosa3(3.6f, sombraRedonda(0.15f, 3.6f, 0.2f, 0.65f, sol)) { macetaConHelecho(m, luz, 0.15f, 3.6f) })
+        add(Cosa3(3.55f, sombraRedonda(0.38f, 3.55f, 0.2f, 0.65f, sol)) { macetaConHelecho(m, luz, 0.38f, 3.55f) })
         add(Cosa3(3.45f, sombraRedonda(1.15f, 3.45f, 0.16f, 0.55f, sol)) { macetaConBromelia(m, luz, 1.15f, 3.45f) })
         // El plantón recién traído (el día de la mudanza todavía no: ese día el sitio es de los libros).
-        if (!EscenaBotanico.botafogo(m)) add(Cosa3(3.38f, null) { planton(m, luz) })
+        if (!EscenaBotanico.botafogo(m)) add(Cosa3(3.3f, null) { planton(m, luz) })
         // Los filodendros que entran por los bordes: el de la esquina de la derecha, en el jardín, y el de abajo a la izquierda.
         add(Cosa3(3.15f, null) { filodendros(m, luz, Offset(2.4f, 3.1f), S.sueloEn(2.4f, 3.1f), 0.9f, Semilla.de("botanico", "filodendro derecha"), true) })
         add(Cosa3(2.5f, null) { filodendros(m, luz, Offset(-1.75f, 2.5f), 0f, 0.62f, Semilla.de("botanico", "filodendro izquierda"), false) })
@@ -138,7 +138,7 @@ internal object CercaSelva {
 
     fun DrawScope.cerca(m: Momento, luz: LuzSelva.Luz, cosas: List<Cosa3>) {
         // La sombra de contacto bajo cada cosa (lo que no ve el cielo), sin capa: un óvalo que multiplica.
-        for ((x, z, r) in listOf(Triple(-1.15f, 2.98f, 0.6f), Triple(1.15f, 5.15f, 0.34f), Triple(0.7f, 3.95f, 0.42f), Triple(0.15f, 3.6f, 0.24f), Triple(1.15f, 3.45f, 0.2f), Triple(-0.12f, 4.55f, 0.4f))) {
+        for ((x, z, r) in listOf(Triple(-1.15f, 2.98f, 0.6f), Triple(1.15f, 5.15f, 0.34f), Triple(0.7f, 3.95f, 0.42f), Triple(0.38f, 3.55f, 0.24f), Triple(1.15f, 3.45f, 0.2f), Triple(-0.12f, 4.55f, 0.4f))) {
             val c = pc(x, 0f, z); val e = k(z)
             drawOval(LuzSelva.SOMBRA_VERDE.copy(alpha = 0.32f), Offset(c.x - r * e, c.y - r * e * 0.22f), Size(2f * r * e, r * e * 0.44f), blendMode = BlendMode.Multiply)
         }
@@ -179,7 +179,7 @@ internal object CercaSelva {
             // La prensa, en la punta de delante, junto al poste.
             prensa(pr, p, sol)
             // El objeto del día, entre el herbario y la prensa.
-            with(ObjetosBotanico) { sobreElSoporte(m, p, SOPORTE, 1f) }
+            with(ObjetosBotanico) { sobreElSoporte(m, p, SOPORTE, 1.35f) }
         }
         lampara(m, luz)
     }
@@ -280,7 +280,8 @@ internal object CercaSelva {
                 drawLine(p.sombra(C.CANAMO), q + Offset(-4f, 2f), q + Offset(4f, 2.4f), 0.8f) }
         }
         // La red de mariposas, colgada de un clavo por el aro, y la escopeta apoyada: cuando está en casa.
-        if (EscenaBotanico.redYEscopetaEnCasa(m)) {
+        // (el día que la red o la escopeta son el objeto del día, van al pie del poste y no aquí: no se ven dos)
+        if (EscenaBotanico.redYEscopetaEnCasa(m) && m.ficha.objeto != "red" && m.ficha.objeto != "escopeta") {
             val clavo = pc(x + g * 0.3f, 2.05f, z - g); val e = k(z)
             drawCircle(p.sombra(C.HIERRO), 0.8f, clavo)
             val aro = clavo + Offset(e * 0.05f, e * 0.17f)
@@ -300,7 +301,8 @@ internal object CercaSelva {
             drawPath(poligono(cul + Offset(-e * 0.04f, 0f), cul + Offset(e * 0.035f, 0f), cul + (boca - cul) * 0.36f + Offset(e * 0.012f, 0f), cul + (boca - cul) * 0.3f + Offset(-e * 0.02f, 0f)), p.por(C.CUERO, 0.2f))
         }
         // El objeto grande del día, apoyado en el poste por el lado de la luz.
-        ObjetosBotanico.grande(m, p, pc(x + 0.24f, 0f, z - 0.1f), pc(x + g, 1.25f, z - g), 1f)?.let { it.pintar(this) }
+        // A la escala de las cosas de su sitio (unos 77 por metro a esa hondura; el objeto cuenta 60 por metro).
+        ObjetosBotanico.grande(m, p, pc(x + 0.24f, 0f, z - 0.1f), pc(x + g, 1.25f, z - g), k(z - 0.1f) / ObjetosBotanico.METRO)?.let { it.pintar(this) }
     }
 
     // ---------------------------------------------------------------- Los cajones con plantas encima
@@ -339,7 +341,7 @@ internal object CercaSelva {
         with(PiezasBotanico) {
             val tierra = tina(p, pc(x, 0f, z), e * 0.6f, e * 0.42f, az)
             // La palma joven: tres troncos finos de distinta altura, con sus pencas arqueadas.
-            for ((dx, h, inc) in listOf(Triple(-0.08f, 1.15f, -0.12f), Triple(0.06f, 1.4f, 0.1f), Triple(0.12f, 0.85f, 0.22f))) {
+            for ((dx, h, inc) in listOf(Triple(-0.08f, 0.6f, -0.12f), Triple(0.06f, 0.72f, 0.1f), Triple(0.12f, 0.48f, 0.22f))) {
                 palmera(p, tierra + Offset(dx * e, 0f), h * e, inc * e, az, 0f, pencas = 7, contraluz = BovedaSelva.contraluz(luz, tierra + Offset(0f, -h * e)), secas = 0)
             }
         }
@@ -357,7 +359,7 @@ internal object CercaSelva {
 
     /** El plantón recién traído de la selva, tumbado en las tablas: el tallo con sus hojas y el cepellón envuelto en arpillera y atado. */
     private fun DrawScope.planton(m: Momento, luz: LuzSelva.Luz) {
-        val x = -0.18f; val z = 3.42f; val p = pin(luz, x, 0.2f, z); val e = k(z); val az = Azar(Semilla.de("botanico", "planton"))
+        val x = -0.95f; val z = 3.3f; val p = pin(luz, x, 0.2f, z); val e = k(z); val az = Azar(Semilla.de("botanico", "planton"))
         val c = pc(x, 0f, z) + Offset(0f, -e * 0.1f)
         val arpillera = lerp(C.CANAMO, C.ARENA, 0.2f)
         drawOval(Brush.radialGradient(listOf(p.luz(arpillera), p.medio(arpillera), p.sombra(arpillera)), c + Offset(-e * 0.04f, -e * 0.05f), e * 0.16f), Offset(c.x - e * 0.13f, c.y - e * 0.1f), Size(e * 0.26f, e * 0.2f))
@@ -377,22 +379,30 @@ internal object CercaSelva {
             drawLine(p.luz(lerp(C.HOJA, C.HOJA_LUZ, 0.4f)).copy(alpha = 0.6f), q, punta, 0.4f) }
     }
 
-    /** Los filodendros que entran por un borde: unas hojas grandes y partidas en pecíolos largos que salen de [pie] (en metros). */
+    /**
+     * Los filodendros que entran por un borde: hojas grandes y partidas en pecíolos largos que salen de [pie] (en
+     * metros), cada una con su ángulo: una de frente, otra vuelta que enseña el envés, otra detrás, más chica. No pesan:
+     * verdes de charol con su brillo, no una mata oscura.
+     */
     private fun DrawScope.filodendros(m: Momento, luz: LuzSelva.Luz, pie: Offset, suelo: Float, tam: Float, semilla: Long, derecha: Boolean) {
         val az = Azar(semilla); val z = pie.y; val e = k(z)
         val base = pc(pie.x, suelo, z)
         val p = pin(luz, pie.x, suelo + 0.8f, z)
-        val dirs = if (derecha) listOf(-2.25f, -1.8f, -2.75f) else listOf(-1.15f, -0.6f)
-        for ((i, a) in dirs.withIndex()) {
-            val largo = tam * e * az.entre(0.75f, 1.05f)
+        // (dirección del pecíolo, largo relativo, escorzo, si va vuelta)
+        val hojas = if (derecha) listOf(Cuatro(-2.05f, 0.8f, 0.7f, false), Cuatro(-2.55f, 1.0f, 0.95f, false), Cuatro(-1.62f, 0.92f, 0.38f, true), Cuatro(-2.95f, 0.7f, 0.85f, false))
+            else listOf(Cuatro(-1.15f, 0.9f, 0.85f, false), Cuatro(-0.6f, 0.8f, 0.42f, true))
+        for ((a, l0, esc, vuelta) in hojas) {
+            val largo = tam * e * l0
             val codo = base + Offset(cos(a) * largo * 0.6f, sin(a) * largo * 0.85f)
-            drawPath(Path().apply { moveTo(base); cubicTo(base + Offset(cos(a) * largo * 0.2f, sin(a) * largo * 0.5f), codo + Offset(0f, largo * 0.1f), codo) }, p.medio(lerp(C.HOJA, C.SELVA, 0.4f)), style = Stroke(max(0.8f, e * 0.02f), cap = StrokeCap.Round))
-            val b = a + az.entre(-0.3f, 0.3f) + (if (derecha) -0.2f else 0.2f)
-            val punta = codo + Offset(cos(b) * largo * 0.7f, sin(b) * largo * 0.25f + largo * 0.32f)
+            drawPath(Path().apply { moveTo(base); cubicTo(base + Offset(cos(a) * largo * 0.2f, sin(a) * largo * 0.5f), codo + Offset(0f, largo * 0.1f), codo) }, p.medio(lerp(C.HOJA, C.SELVA, 0.35f)), style = Stroke(max(0.8f, e * 0.022f), cap = StrokeCap.Round))
+            val b = a + az.entre(-0.2f, 0.2f) + (if (derecha) -0.25f else 0.25f)
+            val punta = codo + Offset(cos(b) * largo * 0.72f, sin(b) * largo * 0.22f + largo * 0.34f)
             val al = LuzSelva.alumbrado(luz, pie.x + cos(a) * 0.6f, suelo + 0.9f, z)
-            with(PiezasBotanico) { filodendro(if (al > 0.5f) luz.p else p, codo, punta, largo * 0.95f, (0.1f + 0.3f * al).coerceIn(-1f, 1f), az, 0f, BovedaSelva.contraluz(luz, codo) * 0.5f, lobulos = 6 + i % 2, escorzo = az.entre(0.5f, 1f)) }
+            with(PiezasBotanico) { filodendro(if (al > 0.5f) luz.p else p, codo, punta, largo * 0.95f, (0.15f + 0.35f * al + (if (vuelta) 0.25f else 0f)).coerceIn(-1f, 1f), az, 0f, BovedaSelva.contraluz(luz, codo) * 0.5f, lobulos = 6, escorzo = esc, canto = vuelta) }
         }
     }
+
+    private data class Cuatro(val a: Float, val b: Float, val c: Float, val d: Boolean)
 
     // ---------------------------------------------------------------- Los días señalados
 
