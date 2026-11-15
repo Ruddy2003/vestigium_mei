@@ -10,9 +10,10 @@ import io.github.ruddy2003.vestigium.vidas.TipoArco
 
 /*
  * Los calendarios del grupo 9: las otras vidas de los temas del lote 10 (`docs/diseno/PLAN_TEMAS.md`, 10a a 10g). Por
- * ahora, la de Frente exterior (10c), Tadeo, el ladrón de piezas al que recluta la red, y la de Arcontes (10d), Eleazar,
- * el salador de pescado de Magdala. Siguen las reglas de `AnioPiloto.kt`; el de Tadeo, el estilo de los de ficción de
- * `AnioG7.kt`, y el de Eleazar, el de las personas inventadas en mundos reales (Zaynab y Bernat en `AnioG4.kt`).
+ * ahora, la de Frente exterior (10c), Tadeo, el ladrón de piezas al que recluta la red; la de Arcontes (10d), Eleazar,
+ * el salador de pescado de Magdala, y la de Galia (10e), Segomaros, el aprendiz de los druidas de Gergovia. Siguen las
+ * reglas de `AnioPiloto.kt`; el de Tadeo, el estilo de los de ficción de `AnioG7.kt`, y los de Eleazar y Segomaros, el de
+ * las personas inventadas en mundos reales (Zaynab y Bernat en `AnioG4.kt`).
  *
  * Lo propio de este grupo:
  *
@@ -24,11 +25,15 @@ import io.github.ruddy2003.vestigium.vidas.TipoArco
  *   históricos y aproximados con su fuente, y lo de su vida como inventado. Su historia **avanza**: cada temporada es un
  *   año de su vida, del 28 al 32 d. C., y nada se repite (por eso cada día lleva su año en el id, también las fiestas,
  *   que cada año se cuentan de otra manera). Tiene el doble de días especiales que los demás (PLAN_TEMAS, 10d).
- * - Los otros tres temas del lote (Galia, Art nouveau y Psicodelia) también son personas inventadas en mundos reales:
+ * - **Galia también es una persona inventada en un mundo real**, con unos 20 días por temporada, como la mayoría. Su
+ *   historia avanza del 54 al 50 a. C.: la escuela, la Galia inquieta, el levantamiento, las últimas resistencias y la
+ *   Galia conquistada. Lo que vuelve casi cada año (el muérdago, la siembra, la asamblea de los druidas, la siega y
+ *   Samonios) comparte su id y su texto; lo que cambia con la guerra lleva otro id.
+ * - Los otros dos temas del lote (Art nouveau y Psicodelia) también son personas inventadas en mundos reales:
  *   cuando lleguen, sus calendarios podrán tener días históricos con su fuente.
  */
 internal object AnioG9 {
-    val TODOS: List<Calendario> by lazy { listOf(AGENTE, INICIADO) }
+    val TODOS: List<Calendario> by lazy { listOf(AGENTE, INICIADO, APRENDIZ) }
 
     /**
      * Días «históricos» sin enlace porque su fecha sale de un cálculo: en la ficción no hay ninguno, y en el calendario de
@@ -589,6 +594,279 @@ internal object AnioG9 {
             Estado("jerusalen", "sube_pesaj_31", "vuelve_pesaj_31"), Estado("jerusalen", "sube_sucot_31", "vuelve_sucot_31"),
             Estado("jerusalen", "sube_pesaj_32", "vuelve_pesaj_32"), Estado("jerusalen", "sube_shavuot_32", "dispersion_32"),
             Estado("huida", "dispersion_32", "rosh_32"),
+        ),
+    )
+
+    // =====================================================================
+    //  Segomaros, aprendiz de los druidas. Gergovia, el oppidum de los arvernos, del 54 al 50 a. C.
+    // =====================================================================
+    //
+    // La ficha es la de PLAN_TEMAS, 10e («Otra vida»), con las correcciones de `docs/diseno/temas/fuentes_galia.md`
+    // (sección 1). Lo que allí va como «[sin verificar]» no se afirma aquí. Es una persona inventada en un mundo real
+    // (10a): sus días históricos y aproximados llevan su fuente; lo de su vida es inventado.
+    //
+    // Su gente (toda inventada): su padre, un caballero arverno con su gente; su madre; su hermana, más chica, a la que
+    // prometen en la 2, que se casa en la montaña en la 4 y tiene un hijo en la 5. Vebrumaros, el druida viejo que enseña
+    // en el robledal al pie de la meseta (el nombre es el de la dedicatoria galo-griega a Taranis de Orgon, ΟΥΗΒΡΟΥΜΑΡΟΣ;
+    // `fuentes_galia.md`, sección 10). Korisios, el otro aprendiz, que no deja la escuela (el nombre, de la espada grabada
+    // de Port). Esunertos, un guerrero de la gente de su padre que le enseña armas y caballos, y que no vuelve de Alesia (el
+    // nombre es de una inscripción latina de época romana, Esunertus: **[Aproximación]**). La gente real (Vercingétorix,
+    // Gobanición, Lucterio, Epasnacto, Acón, Tasgecio, Commio, César) sale de lejos y como la cuentan las fuentes.
+    //
+    // Las temporadas, del 54 al 50 a. C.:
+    // 1. **54 a. C., la escuela.** Los versos de memoria en el robledal, el muérdago, la asamblea de los druidas en tierra
+    //    de los carnutos (César 6.13; el maestro va y él se queda), la siega corta de un año sin lluvia (5.24), y las
+    //    noticias de fuera: César en Britania, la muerte de Tasgecio entre los carnutos y la legión que los eburones de
+    //    Ambiórix destruyen en su invernada.
+    // 2. **53 a. C., la Galia inquieta.** Las Cortes de Lutecia (6.3), los senones de Acón que piden perdón, el segundo
+    //    puente sobre el Rin, la tierra de los eburones saqueada, y la muerte de Acón en Durocortorum (6.44), de la que se
+    //    quejan los nobles al empezar el 52 (7.1). Lleva sus primeros mensajes; prometen a su hermana.
+    // 3. **52 a. C., el levantamiento.** El grito de Cenabum, Vercingétorix echado de Gergovia y vuelto rey (7.3–7.4); él
+    //    deja la escuela, porque los druidas no van a la guerra (6.14); César en las Cevenas; la tierra quemada y Avárico;
+    //    César al pie de Gergovia y la victoria gala; la asamblea de Bibracte (sin los remos, los lingones ni los tréveros,
+    //    7.63); la batalla de caballería, en la que lo hieren; Alesia, la caballería que sale de noche (Esunertos se lleva
+    //    su yegua), los mandubios, el socorro, la última batalla y la entrega; el regreso de los cautivos arvernos (7.90).
+    // 4. **51 a. C., las últimas resistencias.** El invierno de los carnutos, los belóvacos, Lucterio, el gutuater,
+    //    Uxellodunum (Aulo Hircio, libro 8; comprobado en Wikipedia: «Siege of Uxellodunum» y «Lucterius»), Lucterio
+    //    entregado por el arverno Epasnacto y la paz de Commio. Quiere irse con Lucterio y no se va; decide volver.
+    // 5. **50 a. C., la Galia conquistada.** Vuelve a la escuela y a los versos que no se escriben; Vercingétorix preso
+    //    en Roma; un mercader que quiere los versos escritos; César se lleva legiones hacia Italia («Gallic Wars»).
+    //
+    // Las fechas:
+    // - Van en el calendario juliano proléptico, «MM-DD». **Casi todo es aproximado:** César da estaciones y cuentas de
+    //   días, no fechas; los meses son los de la cronología de `fuentes_galia.md` (sección 3), y el día se eligió dentro.
+    // - **Cenabum, el 23 de enero** del 52, la fecha de Carcopino que da la Wikipedia francesa, con la duda de la
+    //   corrección 17 (César pone el levantamiento después de saberse la muerte de Clodio, el 18 de enero romano). El grito
+    //   llega a la frontera arverna «antes de tres horas de noche» (7.3), antes de acabar la primera guardia, y a Gergovia
+    //   esa misma noche. La victoria de Gergovia va el 20 de mayo (la cronología propone mayo), la batalla de caballería a
+    //   mediados de agosto, el socorro a finales de septiembre y **la entrega el 27 de septiembre** (Brunaux).
+    // - **El muérdago,** el sexto día de la luna (Plinio 16.249–251). La luna nueva se calculó en la sesión (Meeus,
+    //   *Astronomical Algorithms*, cap. 49, con ΔT de unas 3 horas; el día 1 de la luna es el de la conjunción): enero del
+    //   54 (el 11), febrero del 53 (el 30 de enero), enero del 51 (el 7) y enero del 50 (el 26). **El mes lo eligió el
+    //   calendario** (Plinio no lo dice): en invierno, con los robles sin hojas, se ve el muérdago. Va «aproximado».
+    //   En el 52 la luna cae el mismo 23 de enero de Cenabum: ese día no va aparte, lo cuenta el día del grito.
+    // - **Las tres noches de Samonios** (TRINVX SAMONI, en el bronce de Coligny) van del 17 al 19 de noviembre porque el
+    //   tema pone Samonios en noviembre (recurso: `ui/Galia.kt`). Que la fiesta fuera así en el 52 a. C. es una
+    //   reconstrucción **[Aproximación]**: el bronce es de finales del siglo II d. C.
+    // - **La asamblea de los druidas** (6.13): César dice «en cierta estación del año», sin día ni mes; aquí, en mayo.
+    //   Va «aproximado» y sin bosque: César dice «un lugar sagrado» (la página «Carnutes» advierte que lo del bosque de los
+    //   carnutos es moderno).
+    //
+    // Claves de escena: muerdago (el druida en el roble, con la hoz y el manto blanco; sin los toros), nieve, cosecha,
+    // tormenta, samonios (las hogueras de las tres noches), luto, grito (antorchas que corren de noche por la llanura),
+    // rey (estandartes y hogueras en la meseta), humo (granjas que arden lejos), romanos (los campamentos de César en la
+    // llanura, de día; sus hogueras, de noche), victoria, socorro (las colinas de fuera de Alesia llenas de fuegos),
+    // batalla, entrega (las armas en el suelo, delante del campamento) y camino. Nunca personas.
+    //
+    // Arcos: trigo (el trigo de los campos de la llanura: sembrado en otoño, verde en primavera, segado en julio;
+    // **[Aproximación]**), romanos (1 = los campamentos de César al pie de Gergovia, del 5 al 22 de mayo del 52), danos
+    // (las granjas quemadas cuando César cruza las Cevenas, y más cuando llega a Gergovia; se van reconstruyendo hasta el
+    // 50), muralla (la muralla de la meseta, de madera, piedra y tierra, que se refuerza en la primavera del 52) y comercio
+    // (los carros y las ánforas de los mercaderes de Italia en la puerta: los hay hasta Cenabum, ninguno en el 52, y
+    // vuelven en la 4).
+    //
+    // Estados: «campana» (temporada 3: con los jinetes de Vercingétorix, de que se une a que vuelve a Gergovia, y de que
+    // sale hacia Bibracte a que empieza el cerco de Alesia), «alesia» (del cerco a la entrega) y «cautivo» (de la entrega
+    // a que César devuelve a los cautivos arvernos). En la temporada 5, que desde 2032 se repite, los días que no deben
+    // moverse son ritos, fiestas y sucesos del mundo; sus sucesos personales no forman cadenas.
+    //
+    // Lo que el cuadro tiene que mostrar para contar lo mismo que el cuento (el cuadro de Galia va después de la tanda
+    // S19; la ficha del tema, PLAN_TEMAS 10e, pide el oppidum, el manantial y Alesia):
+    // - **Gergovia (lugar principal):** la meseta con su muralla según `muralla`, las casas de paja y el humo, con niebla
+    //   de mañana; abajo, la llanura con el trigo según `trigo`, las granjas quemadas según `danos` y, según `comercio`,
+    //   los carros de los mercaderes en la puerta. Al pie, el robledal de la escuela con el manantial y sus ofrendas de
+    //   madera (de época romana: es recurso del cuadro). Del 5 al 22 de mayo del 52, según `romanos`, los campamentos de
+    //   César en la llanura (de noche, sus hogueras: «Roma, al fondo»).
+    // - **El campamento de la campaña (temporada 3, unas 17 semanas en dos tramos: lugar propio):** tiendas y fuegos
+    //   galos en un bosque, caballos atados, el humo de la tierra quemada en el horizonte (`humo`).
+    // - **Alesia (temporada 3, unas 6 semanas: lugar propio):** el oppidum en su colina entre dos ríos, de noche, con las
+    //   dos líneas del cerco romano iluminadas; con `socorro`, las colinas de fuera llenas de fuegos; con `entrega`, las
+    //   armas en el suelo. Durante «cautivo», el mismo sitio con el cerco abierto y sin los fuegos galos (variante).
+
+    private val F_DRUIDAS = "Los druidas y su asamblea (César 6.13–6.14)" to "${W}Druid"
+    private val F_MUERDAGO = "El rito del roble y el muérdago (Plinio 16.249–251)" to "${W}Ritual_of_oak_and_mistletoe"
+    private val F_COLIGNY = "El calendario de Coligny" to "${W}Coligny_calendar"
+    private val F_CARNUTOS = "Los carnutos" to "${W}Carnutes"
+    private val F_BRITANIA = "Las expediciones de César a Britania" to "${W}Julius_Caesar%27s_invasions_of_Britain"
+    private val F_AMBIORIX = "Ambiórix y los eburones" to "${W}Ambiorix"
+    private val F_LUTECIA = "Lutecia" to "${W}Lutetia"
+    private val F_ACON = "Acón, de los senones" to "https://fr.wikipedia.org/wiki/Acco"
+    private val F_RIN = "Los puentes de César sobre el Rin" to "${W}Caesar%27s_Rhine_bridges"
+    private val F_VERCINGETORIX = "Vercingétorix" to "${W}Vercingetorix"
+    private val F_GUERRE = "La guerra de las Galias (Wikipedia en francés)" to "https://fr.wikipedia.org/wiki/Guerre_des_Gaules"
+    private val F_AVARICO = "El cerco de Avárico" to "https://fr.wikipedia.org/wiki/Si%C3%A8ge_d%27Avaricum"
+    private val F_GERGOVIA = "La batalla de Gergovia" to "${W}Battle_of_Gergovia"
+    private val F_ALESIA = "El cerco de Alesia" to "${W}Battle_of_Alesia"
+    private val F_BELOVACOS = "Los belóvacos" to "${W}Bellovaci"
+    private val F_LUCTERIO = "Lucterio, de los cadurcos" to "${W}Lucterius"
+    private val F_UXELLODUNUM = "El cerco de Uxellodunum" to "${W}Siege_of_Uxellodunum"
+    private val F_COMMIO = "Commio, de los atrébates" to "${W}Commius"
+    private val F_GUERRA = "La guerra de las Galias" to "${W}Gallic_Wars"
+
+    /** Lo que vuelve casi cada año en la escuela y en los campos: los mismos ids, el mismo texto. */
+    private fun muerdago(fecha: String) = rito("muerdago", fecha, "El sexto día de la luna: el druida sube al roble y corta el muérdago con la hoz de oro", certeza = A, fuente = F_MUERDAGO, escena = "muerdago")
+    private fun siembra(fecha: String) = cosecha("siembra", fecha, "La siembra de primavera en los campos de la llanura", 4, INV)
+    private fun parteMaestro(fecha: String) = rito("parte_maestro", fecha, "El maestro sale con otros druidas hacia la asamblea, en tierra de los carnutos", certeza = INV)
+    private fun asamblea(fecha: String) = rito("asamblea", fecha, "Los druidas se reúnen en un lugar sagrado de la tierra de los carnutos", 3, A, F_DRUIDAS)
+    private fun vuelveMaestro(fecha: String) = rito("vuelve_maestro", fecha, "Vuelve el maestro de la asamblea con noticias de toda la Galia", certeza = INV)
+    private fun siega(fecha: String) = cosecha("siega", fecha, "La siega del trigo en los campos de la llanura", 8, INV)
+    private val SAMONIOS = fiesta("samonios", "11-17", "Las tres noches de Samonios", 3, A, F_COLIGNY, escena = "samonios")
+    private fun nieve(fecha: String) = mundo("nieve_escuela", fecha, "Nieva sobre la meseta, y la escuela se hace junto al fuego", certeza = INV, escena = "nieve", clima = Clima.NIEVE)
+    private val ANIVERSARIO_GERGOVIA = rito("aniversario_gergovia", "05-20", "Sube al borde de la meseta, donde los romanos se volvieron atrás", certeza = INV)
+    private val ANIVERSARIO_ALESIA = rito("aniversario_alesia", "09-27", "El día de la entrega: no habla con nadie hasta la noche", certeza = INV)
+
+    val APRENDIZ = Calendario(
+        vida = "aprendiz_druida",
+        estaciones = Calendario.TEMPLADO_NORTE,
+        // La meseta de Gergovia, a unos 700 m, en el Macizo Central: inviernos fríos, con nieve y nieblas en los valles;
+        // primaveras de lluvia; veranos calientes con tormentas por la tarde; otoños de niebla. [Aproximación]
+        clima = listOf(
+            mes(despejado = 5, nubes = 10, lluvia = 4, nieve = 6, niebla = 5, viento = 1), mes(despejado = 5, nubes = 10, lluvia = 5, nieve = 5, niebla = 4, viento = 2),
+            mes(despejado = 7, nubes = 10, lluvia = 7, nieve = 2, niebla = 2, viento = 3), mes(despejado = 8, nubes = 10, lluvia = 9, tormenta = 1, niebla = 1, viento = 2),
+            mes(despejado = 10, nubes = 9, lluvia = 8, tormenta = 3, viento = 1), mes(despejado = 13, nubes = 7, lluvia = 5, tormenta = 4, viento = 1),
+            mes(despejado = 16, nubes = 5, lluvia = 3, tormenta = 5, viento = 1), mes(despejado = 15, nubes = 6, lluvia = 4, tormenta = 5),
+            mes(despejado = 12, nubes = 8, lluvia = 6, tormenta = 2, niebla = 2), mes(despejado = 8, nubes = 9, lluvia = 8, niebla = 5, viento = 2),
+            mes(despejado = 5, nubes = 11, lluvia = 8, nieve = 1, niebla = 6, viento = 2), mes(despejado = 4, nubes = 11, lluvia = 5, nieve = 5, niebla = 6, viento = 1),
+        ),
+        temporadas = listOf(
+            TemporadaVida("54 a. C.", "escuela",
+                "Segomaros aprende versos de memoria en la escuela del robledal, con el viejo Vebrumaros y con Korisios. Ve cortar el muérdago el sexto día de la luna. Su padre le da una yegua. El maestro va a la asamblea de los druidas en tierra de los carnutos y vuelve con noticias. La siega sale corta, porque no llueve. Llegan noticias de César en Britania, de la muerte de Tasgecio entre los carnutos y de la legión que destruyen los eburones de Ambiórix. En diciembre el maestro le dice que empezará los versos de los juicios.",
+                listOf(
+                    muerdago("01-16"),
+                    nieve("02-08"),
+                    suceso("mil_versos", "02-25", "Dice de corrido ante el maestro, sin equivocarse, los versos que le costaron un invierno"),
+                    suceso("yegua", "03-15", "Su padre le da una yegua torda: un caballero, le dice, no va a pie"),
+                    siembra("03-28"),
+                    suceso("celtilo", "04-18", "Un viejo le cuenta junto al fuego cómo mataron a Celtilo por querer ser rey"),
+                    parteMaestro("05-12"),
+                    asamblea("05-24"),
+                    vuelveMaestro("06-06"),
+                    suceso("letras", "06-20", "En el mercado ve a un mercader llevar sus cuentas con letras griegas"),
+                    mundo("tormenta", "07-01", "Una tormenta de verano: un rayo cae en el robledal de la otra ladera", certeza = INV, escena = "tormenta", clima = Clima.TORMENTA),
+                    cosecha("siega_seca", "07-12", "La siega del trigo, corta y rala: este año no ha llovido", 8, A, F_AMBIORIX),
+                    mundo("britania", "08-02", "Dicen los mercaderes que César ha vuelto a cruzar el mar hacia Britania", certeza = A, fuente = F_BRITANIA),
+                    suceso("banquete", "08-22", "En el banquete, un bardo canta las alabanzas de su abuelo y las burlas de un vecino"),
+                    suceso("estrellas", "09-12", "Una noche clara, el maestro le habla de los astros y de lo grande que es la tierra"),
+                    suceso("manto", "10-04", "Su madre termina de tejerle un manto de lana a cuadros para el invierno"),
+                    mundo("tasgecio", "10-20", "Llega la noticia: los carnutos han matado a Tasgecio, el rey que les puso César", certeza = A, fuente = F_CARNUTOS),
+                    SAMONIOS,
+                    mundo("atuatuca", "11-28", "Corre la noticia: los eburones de Ambiórix acaban con una legión y media en su invernada", certeza = A, fuente = F_AMBIORIX),
+                    suceso("versos_juicios", "12-16", "El maestro le dice que en primavera empezará los versos de los juicios"),
+                )),
+            TemporadaVida("53 a. C.", "inquietud",
+                "Bajan los lobos en el invierno. César llama a la Galia a Cortes y las lleva a Lutecia; los senones de Acón piden perdón. Segomaros lleva su primer mensaje a otro oppidum. El maestro vuelve a la asamblea de los carnutos. César echa otro puente sobre el Rin y llama a los galos a saquear la tierra de los eburones. Segomaros ve al maestro juzgar un pleito de lindes. Prometen a su hermana. En otoño, César hace matar a Acón ante la asamblea de la Galia en Durocortorum. En el bosque, un noble joven habla de recobrar la libertad.",
+                listOf(
+                    mundo("lobos", "01-20", "En lo peor del invierno bajan los lobos hasta los rediles de la meseta", certeza = INV, escena = "nieve", clima = Clima.NIEVE),
+                    muerdago("02-04"),
+                    mundo("cortes", "03-18", "César convoca a la Galia en Lutecia: no van los senones, los carnutos ni los tréveros", certeza = A, fuente = F_LUTECIA),
+                    siembra("03-26"),
+                    mundo("senones", "03-30", "Los senones de Acón piden perdón a César y le dan cien rehenes", certeza = A, fuente = F_ACON),
+                    suceso("primer_mensaje", "04-12", "Lleva su primer mensaje, de parte de su padre, a otro oppidum de los arvernos"),
+                    parteMaestro("05-08"),
+                    asamblea("05-20"),
+                    vuelveMaestro("06-02"),
+                    mundo("rin", "06-25", "Dicen que César ha vuelto a echar un puente sobre el Rin", certeza = A, fuente = F_RIN),
+                    siega("07-10"),
+                    suceso("juicio", "07-28", "Ve al maestro juzgar un pleito de lindes entre dos familias"),
+                    guerra("eburones", "08-20", "César llama a los galos a saquear la tierra de los eburones", certeza = A, fuente = F_AMBIORIX),
+                    suceso("promesa", "09-06", "Prometen a su hermana con un joven arverno de la montaña"),
+                    mundo("acon", "10-18", "Llega la noticia de Durocortorum: César ha hecho matar a Acón ante la asamblea de la Galia", certeza = A, fuente = F_ACON, escena = "luto"),
+                    SAMONIOS,
+                    mundo("arenga", "11-30", "En una reunión en el bosque oye a un noble joven hablar de recobrar la libertad", certeza = INV),
+                    suceso("yegua_coja", "12-12", "Su yegua se lastima una mano en el hielo, y la cuida noche y día"),
+                )),
+            TemporadaVida("52 a. C.", "levantamiento",
+                "El grito de Cenabum llega a Gergovia en la noche. Vercingétorix, echado de Gergovia por su tío, vuelve con la gente del campo y lo proclaman rey. Segomaros deja la escuela, porque los druidas no van a la guerra, y se une a los jinetes. César cruza las Cevenas en la nieve. La tierra quemada; Avárico cae. César llega al pie de Gergovia y se va vencido. En Bibracte toda la Galia que acude quiere a Vercingétorix por general. En la batalla de caballería lo hieren. En Alesia, la caballería sale de noche con su yegua; echan a los mandubios; llega el socorro y se pierde. Vercingétorix se entrega. César devuelve los cautivos arvernos. Esunertos no vuelve.",
+                listOf(
+                    guerra("grito", "01-23", "Corre el grito de campo en campo: en Cenabum los carnutos han matado a los romanos", certeza = A, fuente = F_GUERRE, escena = "grito"),
+                    mundo("echado", "02-05", "Vercingétorix llama a las armas, y su tío Gobanición y los nobles lo echan de Gergovia", certeza = A, fuente = F_VERCINGETORIX),
+                    mundo("rey", "02-12", "Vercingétorix vuelve con la gente del campo, echa a los nobles y lo proclaman rey", certeza = A, fuente = F_VERCINGETORIX, escena = "rey"),
+                    suceso("deja_escuela", "02-16", "Deja la escuela del robledal: los druidas no van a la guerra, y él sí"),
+                    guerra("cevenas", "02-24", "César cruza las Cevenas por la nieve y entra en tierra de los arvernos", certeza = A, fuente = F_GUERRE, escena = "humo", clima = Clima.NIEVE),
+                    suceso("se_une", "03-02", "Se une con su yegua a los jinetes de Vercingétorix"),
+                    guerra("tierra_quemada", "03-14", "La tierra quemada: los bitúriges prenden fuego a sus propias ciudades", certeza = A, fuente = F_VERCINGETORIX, escena = "humo"),
+                    guerra("avarico", "03-22", "César pone cerco a Avárico, la ciudad de los bitúriges", certeza = A, fuente = F_AVARICO),
+                    guerra("avarico_cae", "04-14", "Cae Avárico: de toda su gente se salvan unos pocos cientos", certeza = A, fuente = F_AVARICO, escena = "luto"),
+                    suceso("vuelve_gergovia", "04-30", "Vuelve a Gergovia con el ejército: César baja por el Allier"),
+                    guerra("cesar_gergovia", "05-05", "César llega al pie de Gergovia y levanta sus campamentos en la llanura", certeza = A, fuente = F_GERGOVIA, escena = "romanos"),
+                    guerra("victoria", "05-20", "Los romanos suben al asalto de Gergovia y se tienen que volver: la victoria es gala", certeza = A, fuente = F_GERGOVIA, escena = "victoria"),
+                    suceso("a_bibracte", "06-14", "Sale otra vez con los jinetes, hacia Bibracte"),
+                    mundo("bibracte", "06-24", "En la asamblea de Bibracte, todos los que han ido quieren a Vercingétorix por general", certeza = A, fuente = F_VERCINGETORIX),
+                    guerra("caballeria", "08-14", "La batalla de caballería: los jinetes galos se rompen, y a él lo hieren en el brazo", certeza = A, fuente = F_GUERRE),
+                    guerra("alesia", "08-17", "Vercingétorix se encierra en Alesia, y César empieza a cavar alrededor", certeza = A, fuente = F_ALESIA),
+                    guerra("sale_caballeria", "08-25", "De noche sale de Alesia toda la caballería, a pedir ayuda: Esunertos se lleva su yegua", certeza = A, fuente = F_ALESIA),
+                    mundo("mandubios", "09-10", "Echan de Alesia a los mandubios con sus mujeres y sus hijos, y César no los deja pasar", certeza = A, fuente = F_ALESIA),
+                    guerra("socorro", "09-22", "Llega el ejército de socorro de toda la Galia y llena las colinas de fuera", certeza = A, fuente = F_ALESIA, escena = "socorro"),
+                    guerra("ultima_batalla", "09-26", "La última batalla: el socorro ataca las líneas romanas y no las rompe", certeza = A, fuente = F_ALESIA, escena = "batalla"),
+                    guerra("entrega", "09-27", "Vercingétorix se entrega a César, y los galos tiran las armas a sus pies", certeza = A, fuente = F_ALESIA, escena = "entrega"),
+                    mundo("liberados", "10-08", "César devuelve a los arvernos sus cautivos: vuelve a pie a Gergovia", 5, A, F_ALESIA, escena = "camino"),
+                    suceso("esunertos", "10-24", "Sabe que Esunertos cayó en la última batalla, fuera de Alesia"),
+                    fiesta("samonios_52", "11-17", "Las tres noches de Samonios, el año de Alesia", 3, A, F_COLIGNY, escena = "samonios"),
+                    suceso("visita_maestro", "12-12", "Sube al robledal a ver al maestro, y el maestro no le pregunta nada"),
+                )),
+            TemporadaVida("51 a. C.", "resistencia",
+                "Segomaros vive en Gergovia con la marca de la herida en el brazo, lleva mensajes y ya no va a la escuela. César cae en invierno sobre los carnutos. Su padre le da un potro. Su hermana se casa en la montaña. Los belóvacos se levantan; vuelven los mercaderes de Italia. Lucterio, el de los cadurcos, sigue la guerra: él quiere irse y no se va. César hace matar al gutuater de los carnutos. Uxellodunum cae porque le cortan el agua. El arverno Epasnacto entrega a Lucterio a los romanos. El maestro le manda decir que hay sitio para él; Commio hace la paz; él decide volver.",
+                listOf(
+                    rito("muerdago_lejos", "01-12", "El sexto día de la luna: mira desde lejos cómo cortan el muérdago", certeza = A, fuente = F_MUERDAGO, escena = "muerdago"),
+                    guerra("carnutos_invierno", "01-25", "César cae en pleno invierno sobre los carnutos", certeza = A, fuente = F_CARNUTOS),
+                    suceso("potro", "02-20", "Su padre le da un potro bayo que nadie ha montado"),
+                    siembra("03-26"),
+                    suceso("boda", "04-15", "La boda de su hermana, que se va a vivir a la montaña"),
+                    guerra("belovacos", "05-06", "Los belóvacos se levantan contra César, y su jefe Correo muere peleando", certeza = A, fuente = F_BELOVACOS),
+                    ANIVERSARIO_GERGOVIA,
+                    mundo("mercaderes", "06-03", "Vuelven al mercado de Gergovia los mercaderes de Italia, con su vino", certeza = INV),
+                    guerra("lucterio", "06-12", "Lucterio, el de los cadurcos, junta gente para seguir la guerra", certeza = A, fuente = F_LUCTERIO),
+                    suceso("no_va", "06-18", "Quiere irse con Lucterio, y no se va"),
+                    mundo("gutuater", "07-03", "César hace matar al gutuater de los carnutos, al que llama autor de la guerra", certeza = A, fuente = F_CARNUTOS),
+                    siega("07-10"),
+                    guerra("uxellodunum", "07-24", "Los romanos cercan Uxellodunum, el oppidum de los cadurcos", certeza = A, fuente = F_UXELLODUNUM),
+                    guerra("uxellodunum_cae", "08-26", "Uxellodunum se rinde: los romanos le han cortado el agua", certeza = A, fuente = F_UXELLODUNUM, escena = "luto"),
+                    mundo("lucterio_entregado", "09-12", "Epasnacto, un jefe arverno, entrega a Lucterio a los romanos", certeza = A, fuente = F_LUCTERIO),
+                    ANIVERSARIO_ALESIA,
+                    suceso("maestro_llama", "10-20", "El maestro le manda decir que en la escuela todavía hay sitio para él"),
+                    SAMONIOS,
+                    mundo("commio", "12-06", "Dicen que Commio, el de los atrébates, ha hecho la paz con los romanos", certeza = A, fuente = F_COMMIO),
+                    suceso("decide", "12-20", "Decide volver a la escuela del robledal cuando pase el invierno"),
+                )),
+            TemporadaVida("50 a. C.", "conquista",
+                "Segomaros vuelve a la escuela del robledal y a los versos; Korisios va ya muy por delante. Un mercader cuenta que Vercingétorix sigue preso en Roma. El maestro vuelve a la asamblea de los carnutos, la primera de la Galia vencida. En un templo ve la espada que dicen que fue de César. Su hermana tiene un hijo. El maestro le deja decir los versos en un juicio. Un mercader de Italia le ofrece plata por los versos escritos, y él no los escribe. César se lleva legiones hacia Italia: en Roma se prepara otra guerra.",
+                listOf(
+                    rito("vuelve_escuela", "01-10", "Vuelve a la escuela del robledal, a los versos", certeza = INV),
+                    muerdago("01-31"),
+                    suceso("korisios", "02-18", "Korisios ya sabe versos que él todavía no ha empezado"),
+                    mundo("preso", "03-10", "Un mercader dice que Vercingétorix sigue preso en Roma", certeza = A, fuente = F_VERCINGETORIX),
+                    siembra("03-26"),
+                    parteMaestro("05-10"),
+                    ANIVERSARIO_GERGOVIA,
+                    asamblea("05-22"),
+                    vuelveMaestro("06-04"),
+                    suceso("espada", "06-20", "En un templo de los arvernos ve colgada la espada corta que dicen que fue de César"),
+                    siega("07-10"),
+                    suceso("sobrino", "08-14", "Su hermana tiene un hijo en la montaña"),
+                    suceso("juicio_versos", "09-05", "En un juicio, el maestro le deja decir a él los versos de la ley"),
+                    ANIVERSARIO_ALESIA,
+                    suceso("no_escribe", "10-15", "Un mercader de Italia le ofrece plata por los versos escritos, y no los escribe"),
+                    SAMONIOS,
+                    mundo("legiones", "12-02", "Dicen que César saca legiones de la Galia: en Roma se prepara otra guerra", certeza = A, fuente = F_GUERRA),
+                    nieve("12-14"),
+                )),
+        ),
+        arcos = listOf(
+            // El trigo de la llanura: sembrado en otoño, verde en primavera, alto en junio y segado en julio. [Aproximación]
+            Arco.cadaAnio("trigo", TipoArco.CULTIVO, "01-01" to 0.15, "03-25" to 0.25, "06-01" to 0.75, "07-09" to 1.0, "07-10" to 0.0, "10-20" to 0.0, "11-10" to 0.1, "12-31" to 0.15, saltos = setOf("07-10")),
+            // Los campamentos de César al pie de Gergovia: del día en que llega al día en que cruza el Allier hacia los eduos (7.53).
+            Arco("romanos", TipoArco.OTRO, listOf(p(1, "01-01", 0.0), p(3, "05-05", 1.0, salto = true), p(3, "05-23", 0.0, salto = true), p(5, "12-31", 0.0))),
+            // Las granjas quemadas de la llanura: cuando César cruza las Cevenas, y más cuando llega a Gergovia; se rehacen despacio.
+            Arco("danos", TipoArco.DANOS, listOf(p(1, "01-01", 0.0), p(3, "02-24", 0.5, salto = true), p(3, "05-04", 0.45), p(3, "05-05", 0.6, salto = true), p(4, "06-01", 0.3), p(5, "12-31", 0.1))),
+            // La muralla de la meseta, de madera, piedra y tierra: se refuerza en la primavera del 52.
+            Arco("muralla", TipoArco.OBRA, listOf(p(1, "01-01", 0.6), p(3, "03-01", 0.6), p(3, "04-30", 1.0), p(5, "12-31", 1.0))),
+            // Los carros y las ánforas de los mercaderes de Italia en la puerta: se van con Cenabum y vuelven en la 4.
+            Arco("comercio", TipoArco.OTRO, listOf(p(1, "01-01", 0.4), p(3, "01-23", 0.0, salto = true), p(4, "06-03", 0.35, salto = true), p(5, "12-31", 0.6))),
+        ),
+        objetos = listOf("torques", "moneda", "hoz", "tablilla", "espada", "lanza", "escudo", "manto", "fibula", "caldero", "cuerno", "carnyx"),
+        estados = listOf(
+            Estado("campana", "se_une", "vuelve_gergovia"), Estado("campana", "a_bibracte", "alesia"),
+            Estado("alesia", "alesia", "entrega"), Estado("cautivo", "entrega", "liberados"),
         ),
     )
 }

@@ -95,5 +95,12 @@ val LUGARES: Map<String, LugarDeVida> = mapOf(
     // de su época no son de su lugar.
     "iniciado" to LugarDeVida(setOf("Q83241", "Q4880851", "Q1218", "Q126982", "Q1003997", "Q151920", "Q1294629"), // Galilea, Magdala, Jerusalén, Mar de Galilea, Judea (provincia romana), Tiberíades, Samaria
         listOf("Galilea", "Judea", "Jerusalén", "Magdala", "Tiberíades", "Samaria", "Herodes", "Poncio Pilato", "Caifás", "judío", "judíos", "galileo", "galileos")),
+    // Segomaros, el aprendiz de los druidas de Galia (lote 10). Los identificadores salen de Wikidata, por el título de cada
+    // página de Wikipedia (el `wgWikibaseItemId` de la página, 15 nov 2026): Galia, Arvernos y Auvernia en español; Gergovia
+    // y Alesia en inglés, porque en español «Gergovia» es el pueblo de hoy y «Alesia», una desambiguación. Francia va porque
+    // Wikidata pone ahí los sitios de las batallas; Roma no, porque lo de Roma no es de su lugar. La Galia Cisalpina está en
+    // Italia: no cuenta.
+    "aprendiz_druida" to LugarDeVida(setOf("Q38060", "Q382553", "Q55950714", "Q835966", "Q650053", "Q1152", "Q142"), // Galia, Arvernos, Gergovia (el oppidum), Alesia (la ciudad), Bibracte, Auvernia, Francia
+        listOf("Galia", "Vercingétorix", "Gergovia", "Alesia", "Bibracte", "Avárico", "Auvernia", "arvernos", "galos", "galas"), listOf("Galia Cisalpina")),
     // Tom (escribiente) y Carmen (operadora) no tienen cuento, así que no hace falta su lugar.
 )

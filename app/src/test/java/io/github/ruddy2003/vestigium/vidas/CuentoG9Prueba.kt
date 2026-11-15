@@ -12,7 +12,8 @@ import java.time.LocalDate
 
 /**
  * Los cuentos del grupo 9, los de los temas del lote 10: el de Tadeo, el agente de la red de Frente exterior, que es
- * ficción, y el de Eleazar, el iniciado de Arcontes, una persona inventada en la Galilea real (al final). Las pruebas generales (forma, largo, repeticiones, certeza) están en [CuentoPrueba] y corren
+ * ficción; el de Eleazar, el iniciado de Arcontes, una persona inventada en la Galilea real, y el de Segomaros, el aprendiz
+ * de los druidas de Galia, una persona inventada en la Galia real (los dos, al final). Las pruebas generales (forma, largo, repeticiones, certeza) están en [CuentoPrueba] y corren
  * solas sobre todas las piezas registradas; aquí va lo propio de su historia: que nadie aparezca antes ni después de
  * tiempo, que la red no salga antes de que lo recluten y que los estados se noten.
  */
@@ -326,5 +327,143 @@ class CuentoG9Prueba {
         listOf("2027-05-20", "2027-09-09", "2027-09-18", "2027-09-23").forEach { dia -> listOf(9.0, 15.0).forEach { h ->
             assertTrue("$dia, $h h: trabaja en un día de fiesta", noTrabaja.containsMatchIn(cuentoE(dia, h).parrafos[Parrafo.TRABAJO.ordinal]))
         } }
+    }
+
+    // ================================================================= Segomaros, el aprendiz de los druidas de Galia
+
+    private val s = "aprendiz_druida"
+    private val piezaS get() = TodasLasPiezas.de(s)!!
+    private val calS get() = Calendarios.de(s)!!
+    private val segomaros get() = OtrasVidas.porId(s)!!
+    private fun cuentoS(dia: String, hora: Double = 10.0) = Cuento.de(FichaDelDia.de(dia, segomaros, calS), segomaros, calS, piezaS, hora)
+    private val diaEnteroS = HashMap<String, String>()
+    /** Todo lo que dice su cuento ese día, a una hora de cada tramo de «Un día suyo». */
+    private fun todoElDiaS(dia: String) = diaEnteroS.getOrPut(dia) { listOf(2.0, 5.5, 6.5, 9.0, 11.5, 14.0, 17.0, 18.5, 20.0).flatMap { cuentoS(dia, it).parrafos }.joinToString(" ") }
+    private fun normalesS(desde: String, hasta: String) = dias(desde, hasta).filter { !cuentoS(it).especial }
+    private fun nuncaS(desde: String, hasta: String, texto: String) =
+        normalesS(desde, hasta).forEach { assertFalse("$it: «$texto» fuera de tiempo", texto in todoElDiaS(it)) }
+    private fun algunaS(desde: String, hasta: String, texto: String) =
+        assertTrue("«$texto» no sale entre $desde y $hasta", normalesS(desde, hasta).any { texto in todoElDiaS(it) })
+    private fun soloEntreS(desde: String, hasta: String, texto: String) {
+        if (desde > "2027-01-01") nuncaS("2027-01-01", LocalDate.parse(desde).minusDays(1).toString(), texto)
+        if (hasta < "2031-12-31") nuncaS(LocalDate.parse(hasta).plusDays(1).toString(), "2031-12-31", texto)
+        algunaS(desde, hasta, texto)
+    }
+    private fun textosDeS(lugar: Parrafo, estado: String) =
+        piezaS.variantes.getValue(lugar).filter { it.estado == estado }.map { Cuento.llenar(it.texto, mapOf("nombre" to segomaros.nombre), piezaS.genero) }.toSet()
+
+    @Test fun estanLasPiezasDeSegomaros() {
+        assertEquals(s, piezaS.vida)
+        assertEquals("Solo la temporada 1 está escrita", setOf(1), piezaS.temporadasEscritas)
+        assertEquals(emptyList<String>(), piezaS.problemas(calS))
+        assertEquals(Genero.MASCULINO, piezaS.genero)
+        // No es ficción: es una persona inventada en un mundo real.
+        assertEquals(Cuento.NOTA_HISTORICA, cuentoS("2027-04-04").nota)
+        assertTrue(piezaS.textos().count { "{nombre}" in it } > 40)
+        listOf("2027-03-03", "2029-05-10", "2030-09-09", "2031-11-11").forEach { d -> assertTrue(d, "Segomaros" in todoElDiaS(d)) }
+        // Los días especiales de la temporada 1, todos, y solo ellos.
+        assertEquals(calS.temporadas[0].dias.map { it.id }.toSet(), piezaS.especiales.keys)
+    }
+
+    /**
+     * Los pasajes de la traducción de César de José Goya y Muniain (Madrid, 1919; dominio público) de los que el cuento
+     * copia frases tal cual, copiados de Wikisource (es.wikisource.org, «Comentarios de la guerra de las Galias (1919)»,
+     * libros sexto y séptimo) el 15 nov 2026, con su ortografía.
+     */
+    private val GOYA = mapOf(
+        "César 6.14" to "Esméranse, sobre todo, en persuadir la inmortalidad de las almas y su transmigración de unos cuerpos a otros, cuya creencia juzgan ser grandísimo incentivo para el valor, poniendo aparte el temor de la muerte.",
+        "César 7.89" to "Al otro día Vercingetórix, convocada su gente, protesta \"no haber emprendido él esta guerra por sus propios intereses, sino por la defensa de la común libertad; mas ya que es forzoso ceder a la fortuna, él está pronto a que lo sacrifiquen, o dándole, si quieren, la muerte, o entregándolo vivo a los Romanos para satisfacerlos\".",
+    )
+
+    @Test fun loQueVaTalCualEsDeGoyaYLoDemasEnEstiloIndirecto() {
+        // Las frases tal cual van entre comillas españolas, seguidas de su pasaje («…» (César 7.89)), y están letra por letra
+        // en el pasaje de Goya que citan. Nunca comillas inglesas.
+        val conCita = Regex("""«([^«»]+)» \((César [0-9.]+)\)""")
+        var textuales = 0
+        piezaS.textos().forEach { t ->
+            assertFalse("Comillas inglesas en «${t.take(60)}…»", '"' in t || '“' in t || '”' in t)
+            val citas = conCita.findAll(t).toList()
+            assertEquals("Comillas sin su pasaje al lado en «${t.take(60)}…»", t.count { it == '«' }, citas.size)
+            citas.forEach { m ->
+                val (frase, pasaje) = m.destructured
+                val texto = GOYA[pasaje]
+                assertTrue("«$frase» ($pasaje): no está entre los pasajes copiados de Goya", texto != null)
+                assertTrue("«$frase» no está tal cual en $pasaje de Goya", frase in texto!!)
+            }
+            textuales += citas.size
+        }
+        assertTrue("Hay $textuales citas textuales", textuales in 1..6)
+        // Lo de César se cuenta como lo que dice César: el cuento lo nombra cada vez que lo usa.
+        assertTrue(piezaS.textos().count { "César 6." in it || "César 7." in it || "César 5." in it || "(6.1" in it || "(7." in it } >= 15)
+    }
+
+    @Test fun laVozDeGaliaYNadaFueraDeSuTiempo() {
+        // Lo que el tema no dice nunca (`docs/diseno/temas/galia.md`): mitos irlandeses y galeses, dioses de época romana,
+        // druidismo moderno, el druida como mago de cuento y «bárbaro» como palabra propia. Y lo que no había en la Galia
+        // del 52 a. C.: castañas, cristianos, iglesias, nombres de tebeo.
+        val prohibidas = listOf("Cernunnos", "Epona", "Sucellus", "Belenus", "Lugus", "Lug", "Samhain", "Beltane", "Beltaine", "ogham", "Stonehenge", "trisquel",
+            "bárbaro", "bárbaros", "bárbara", "magia", "mago", "mágico", "mágica", "hechizo", "poción", "druidesa", "Tutatis", "castañas", "castaña", "cristiano", "iglesia")
+        piezaS.textos().forEach { t -> prohibidas.forEach { assertFalse("«$it» en «${t.take(60)}…»", Regex("""(?U)\b$it\b""", RegexOption.IGNORE_CASE).containsMatchIn(t)) } }
+        // Los dioses que nombra son los de Lucano y los que César nombra a la romana.
+        val dioses = Regex("""\b(Teutates|Esus|Taranis|Mercurio|Apolo|Marte|Júpiter|Minerva|Dis Pater)\b""")
+        assertTrue(piezaS.textos().any { dioses.containsMatchIn(it) })
+    }
+
+    @Test fun nadieApareceAntesNiDespuesDeTiempoEnElCuentoDeSegomaros() {
+        // Vercingétorix, desde que lo echan de Gergovia; rey hasta la entrega; desde la entrega, el de Alesia.
+        nuncaS("2027-01-01", "2029-02-04", "Vercingétorix")
+        soloEntreS("2029-02-12", "2029-09-26", "el rey, al que ha visto de lejos")
+        soloEntreS("2029-09-27", "2031-12-31", "por la defensa de la común libertad")
+        // La escuela: en el robledal hasta que la deja; solo, con los versos, hasta que vuelve; y otra vez en el robledal.
+        soloEntreS("2027-01-01", "2029-02-15", "sentado en la hojarasca con los otros aprendices")
+        soloEntreS("2029-02-16", "2031-01-09", "Desde que dejó la escuela")
+        soloEntreS("2031-01-10", "2031-12-31", "Repite con ellos versos que ya sabía")
+        // Esunertos: le enseña armas hasta Alesia; después no se sabe de él; desde que se sabe, cayó.
+        soloEntreS("2027-01-01", "2029-08-16", "Le enseña armas y caballos sin piedad")
+        soloEntreS("2029-10-13", "2029-10-23", "De Esunertos no se sabe nada")
+        soloEntreS("2029-10-24", "2031-12-31", "Esunertos cayó en la última batalla")
+        // La herida del brazo, desde la batalla de caballería; el potro, desde que se lo dan.
+        soloEntreS("2029-08-14", "2031-12-31", "La marca es una raya blanca")
+        soloEntreS("2030-02-20", "2031-12-31", "monta su potro")
+        // Su hermana: en casa, prometida, casada en la montaña y con un hijo.
+        soloEntreS("2027-01-01", "2028-09-05", "de lengua rápida")
+        soloEntreS("2028-09-06", "2030-04-14", "A su hermana la han prometido")
+        soloEntreS("2030-04-15", "2031-08-13", "Su hermana vive en la montaña desde la boda")
+        soloEntreS("2031-08-14", "2031-12-31", "Su hermana tiene un hijo")
+        // Los mercaderes de Italia en el mercado: hasta Cenabum, y otra vez desde que vuelven.
+        soloEntreS("2027-01-01", "2029-01-22", "Algunos vienen de Italia")
+        soloEntreS("2030-06-03", "2031-12-31", "El mercado de Gergovia está otra vez lleno")
+        // Los campamentos de César al pie de la meseta, solo mientras están (lo dice el arco `romanos`).
+        soloEntreS("2029-05-05", "2029-05-22", "están los campamentos de César")
+    }
+
+    @Test fun conLosJinetesEnAlesiaYCautivoSeNotaElEstado() {
+        fun viveElEstado(estado: String, desde: String, hasta: String) {
+            val manana = textosDeS(Parrafo.MANANA, estado); val pueblo = textosDeS(Parrafo.PUEBLO, estado)
+            val anochecer = textosDeS(Parrafo.ANOCHECER, estado); val trabajo = textosDeS(Parrafo.TRABAJO, estado); val gente = textosDeS(Parrafo.GENTE, estado)
+            val vistos = normalesS(desde, hasta)
+            assertTrue("$estado: no hay días normales entre $desde y $hasta", vistos.isNotEmpty())
+            vistos.forEach { dia ->
+                assertEquals(dia, estado, cuentoS(dia).ficha.estado)
+                val c = cuentoS(dia, 9.0)
+                assertTrue("$dia: la mañana es la de siempre", c.parrafos[Parrafo.MANANA.ordinal] in manana)
+                assertTrue("$dia: el pueblo es el de siempre", c.parrafos[Parrafo.PUEBLO.ordinal] in pueblo)
+                assertTrue("$dia: la gente es la de siempre", c.parrafos[Parrafo.GENTE.ordinal] in gente)
+                assertTrue("$dia: el anochecer es el de siempre", c.parrafos[Parrafo.ANOCHECER.ordinal] in anochecer)
+                listOf(2.0, 5.5, 6.5, 9.0, 11.5, 14.0, 17.0, 18.5, 20.0).forEach { h -> assertTrue("$dia, $h h: el trabajo es el de siempre", cuentoS(dia, h).parrafos[Parrafo.TRABAJO.ordinal] in trabajo) }
+            }
+        }
+        viveElEstado("campana", "2029-03-02", "2029-04-29"); viveElEstado("campana", "2029-06-14", "2029-08-16")
+        viveElEstado("alesia", "2029-08-17", "2029-09-26"); viveElEstado("cautivo", "2029-09-27", "2029-10-07")
+        // Con los jinetes y en Alesia, la mañana, el trabajo y el anochecer cambian de un día a otro.
+        listOf("2029-03-02" to "2029-04-29", "2029-08-17" to "2029-09-26").forEach { (a, b) ->
+            val n = normalesS(a, b)
+            listOf(Parrafo.MANANA, Parrafo.TRABAJO, Parrafo.ANOCHECER).forEach { lugar ->
+                assertTrue("$a: pocos párrafos distintos en «${lugar.nombre}»", n.map { cuentoS(it, 14.0).parrafos[lugar.ordinal] }.toSet().size >= 2)
+            }
+        }
+        // Y fuera de los estados no sale ninguna de sus variantes.
+        val deEstado = Parrafo.entries.flatMap { l -> listOf("campana", "alesia", "cautivo").flatMap { textosDeS(l, it) } }.toSet()
+        (normalesS("2027-01-01", "2028-12-31") + normalesS("2029-10-13", "2031-12-31")).forEach { d -> cuentoS(d, 9.0).parrafos.forEach { assertFalse("$d: variante de un estado en casa", it in deEstado) } }
     }
 }

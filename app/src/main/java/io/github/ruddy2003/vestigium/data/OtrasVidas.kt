@@ -910,6 +910,34 @@ object OtrasVidas {
                 "alfabetizacion" to r(5, "Muy pocos; las estimaciones son muy discutidas."), "lectura" to r(1, "Oye leer la Ley en la sinagoga; en el círculo, unas pocas hojas copiadas a mano.")),
             fuentes = listOf("Magdala" to "${W}Magdala", "Tariquea, el pueblo del pescado salado (se discute)" to "${W}Tarichaea",
                 "La cronología de Jesús" to "${W}Chronology_of_Jesus", "El gnosticismo" to "${W}Gnosticism", "Los arcontes" to "${W}Archon_(Gnosticism)")),
+        // ------------------------------------------------ lote 10 (docs/diseno/PLAN_TEMAS.md, 10e)
+        // Persona inventada en un mundo real (10a), como Eleazar: no es ficción (`ficticia = false`), sus cifras son
+        // reconstrucciones (`r`) y su calendario lleva días históricos y aproximados con su fuente (`vidas/anios/AnioG9.kt`).
+        // Las citas y la cronología están comprobadas en `docs/diseno/temas/fuentes_galia.md`. Su nombre es el de una
+        // dedicatoria galo-griega de Vaison (ϹΕΓΟΜΑΡΟϹ); no es el de nadie del libro 7 de César.
+        Vida("aprendiz_druida", "Segomaros", "Aprendiz de los druidas", "Gergovia, el oppidum de los arvernos, en la Galia", "54 a. C.", -54, "tema", "galia", edad = 19,
+            inspiracion = "Persona inventada. Su formación sigue lo que César cuenta de los druidas, y su guerra, el levantamiento del 52 a. C.; las cifras son reconstrucciones.",
+            historia = listOf(
+                "Segomaros es arverno, de Gergovia, el oppidum que se alza sobre una meseta en el centro de la Galia, con su muralla de madera, piedra y tierra y sus casas de paja. Su padre es un caballero con su gente. Desde niño, Segomaros aprende con los druidas en el robledal que hay al pie de la meseta: versos y más versos, de memoria, porque lo que enseñan no se escribe, aunque los galos usan letras griegas para las cuentas (César, Guerra de las Galias 6.14). Le enseñan que el alma no muere y pasa a otro cuerpo, y que por eso no hay que temer a la muerte.",
+                "En el invierno del 52 a. C. corre de campo en campo el grito de Cenabum, donde los carnutos han matado a los romanos. Vercingétorix, un noble de Gergovia, llama a la guerra: lo echan, vuelve y lo proclaman rey. Los druidas no van a la guerra (6.14), y Segomaros deja la escuela para irse con los jinetes. En primavera está en Gergovia cuando César sube al asalto y se tiene que volver.",
+                "En el verano lo sigue hasta Alesia, el oppidum de los mandubios, que César rodea con dos líneas de fosos y empalizadas. Desde la muralla ve llegar el ejército de socorro de toda la Galia, y lo ve perderse. Al otro día Vercingétorix se entrega. César cuenta que dijo haber hecho la guerra «por la defensa de la común libertad» (7.89), y Segomaros lo cuenta como lo cuentan los suyos: una victoria de honra. César devuelve a los arvernos sus cautivos, y él vuelve a su tierra y a los versos que no se escriben.",
+            ),
+            dia = listOf(t(21.0, 5.0, Hacer.DORMIR, "junto al fuego de la casa grande"), t(5.0, 6.0, Hacer.CUIDAR, "el ganado"), t(6.0, 7.0, Hacer.COMER),
+                t(7.0, 11.0, Hacer.REZAR, "aprender de memoria los versos de los druidas"), t(11.0, 12.0, Hacer.COMER), t(12.0, 16.0, Hacer.TRABAJO, "armas y caballos con los guerreros"),
+                t(16.0, 18.0, Hacer.CAMINO, "llevar mensajes de oppidum en oppidum"), t(18.0, 19.0, Hacer.COMER), t(19.0, 21.0, Hacer.GENTE, "el banquete y los bardos")),
+            datos = mapOf("pasos" to r(12000, "La escuela del robledal, el ganado y las armas, a pie; los mensajes, a caballo."),
+                "km_anio" to r(4000, "Casi todo a caballo, llevando mensajes; el año de la guerra, mucho más."),
+                "kcal" to r(3000, "Un muchacho que monta, carga y se entrena en armas, con inviernos fríos."), "proteina" to r(95, "Cerdo, vaca y oveja, leche y queso: la arqueología de los oppida da mucho hueso de cerdo."),
+                "azucar" to r(10, "Miel, poca."), "fibra" to r(40, "Pan y gachas de trigo y de cebada, habas y lentejas."), "alcohol" to r(25, "Cerveza de cebada; en los banquetes, a veces, vino de Italia, que es caro."),
+                "sueno" to r(8.0, "Duerme con la noche, junto al fuego."), "dormir" to r(21.0), "trabajo" to r(55, "Los versos, el ganado, las armas y los caballos, y los mensajes."),
+                "aire_libre" to r(9, "La escuela es en el bosque."), "pantalla" to r(0), "notificaciones" to r(5, "El cuerno, los mensajeros y los gritos que corren de campo en campo."),
+                "musica" to r(1.5, "Los bardos en el banquete y los versos dichos en voz alta."), "personas_dia" to r(50, "La casa grande de su padre, la escuela y los guerreros."), "conocidas" to r(1200),
+                "poblacion" to r(5000, "Gergovia, sobre su meseta; la cifra es muy insegura."), "lejos" to r(250, "Alesia, el año de la guerra."),
+                "estatura" to r(168, "Promedio aproximado de los hombres galos de la Edad del Hierro, según sus esqueletos."), "vida" to r(30), "vida_adulto" to r(55), "hijos" to r(5),
+                "alfabetizacion" to r(5, "Los que saben letras griegas para las cuentas son pocos: nobles, mercaderes y druidas."),
+                "lectura" to r(0, "Lo que aprende no se escribe: se dice de memoria (César, Guerra de las Galias 6.14).")),
+            fuentes = listOf("Los druidas" to "${W}Druid", "Los arvernos" to "${W}Arverni", "Vercingétorix" to "${W}Vercingetorix",
+                "La batalla de Gergovia" to "${W}Battle_of_Gergovia", "El cerco de Alesia" to "${W}Battle_of_Alesia", "La guerra de las Galias" to "${W}Gallic_Wars")),
     )
 
     /** Las vidas que se ven con el tema [tema]: las doce de todos y la del tema (primero). */

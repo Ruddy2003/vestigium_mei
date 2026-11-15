@@ -14,7 +14,8 @@ import java.time.LocalDate
 
 /**
  * Los calendarios del grupo 9, los de los temas del lote 10: el de Tadeo, el agente de la red de Frente exterior, que es
- * ficción, y el de Eleazar, el iniciado de Arcontes, una persona inventada en la Galilea real del 28 al 32. Las pruebas
+ * ficción; el de Eleazar, el iniciado de Arcontes, una persona inventada en la Galilea real del 28 al 32, y el de
+ * Segomaros, el aprendiz de los druidas de Galia, una persona inventada en la Galia real del 54 al 50 a. C. Las pruebas
  * generales (forma, certeza, continuidad) están en [AnioPilotoPrueba] y corren solas sobre todo lo registrado en
  * [Calendarios]; aquí va lo propio de cada historia y lo que su cuadro va a leer.
  */
@@ -35,7 +36,7 @@ class AnioG9Prueba {
         generateSequence(LocalDate.of(anio, 1, 1)) { it.plusDays(1) }.takeWhile { it.year == anio }.count { ficha(it.toString()).estado == clave }
 
     @Test fun estaTadeoConSuTemaYEsFiccion() {
-        assertEquals(listOf("agente_red", "iniciado"), AnioG9.TODOS.map { it.vida })
+        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida"), AnioG9.TODOS.map { it.vida })
         assertTrue("No está en el registro", Calendarios.de(c.vida) === c)
         val q = OtrasVidas.porId(c.vida)!!
         assertEquals("frente", q.tema); assertEquals("tema", q.dibujo); assertEquals("Tadeo", q.nombre); assertEquals(32, q.edad)
@@ -288,5 +289,151 @@ class AnioG9Prueba {
         // Los días que cambian lo que se ve.
         assertEquals("camino", fichaE("2027-09-13").escena); assertEquals("sucot", fichaE("2027-09-25").escena); assertEquals("lamparas", fichaE("2027-12-03").escena)
         assertEquals("oscuridad", fichaE("2029-04-07").escena); assertEquals("luto", fichaE("2031-06-05").escena); assertEquals("grieta", fichaE("2027-04-14").escena)
+    }
+
+    // ================================================================= Segomaros, el aprendiz de los druidas de Galia
+
+    private val apr = AnioG9.APRENDIZ
+    private val segomaros get() = OtrasVidas.porId(apr.vida)!!
+    private fun fichaS(dia: String) = FichaDelDia.de(dia, segomaros, apr)
+    private fun fechasS(id: String) = apr.temporadas.map { t -> t.dias.firstOrNull { it.id == id }?.fecha }
+    private fun diaS(id: String) = apr.temporadas.flatMap { it.dias }.first { it.id == id }
+    private fun arcoS(dia: String, id: String) = fichaS(dia).arcos.getValue(id)
+    private fun estadoEntreS(clave: String, desde: String, hasta: String) {
+        val a = LocalDate.parse(desde); val b = LocalDate.parse(hasta)
+        assertTrue("el día antes de $desde", fichaS(a.minusDays(1).toString()).estado != clave)
+        var d = a
+        while (!d.isAfter(b)) { assertEquals("$d", clave, fichaS(d.toString()).estado); d = d.plusDays(1) }
+        assertTrue("el día después de $hasta", fichaS(b.plusDays(1).toString()).estado != clave)
+    }
+    private fun diasEnS(clave: String, anio: Int) =
+        generateSequence(LocalDate.of(anio, 1, 1)) { it.plusDays(1) }.takeWhile { it.year == anio }.count { fichaS(it.toString()).estado == clave }
+
+    @Test fun estaSegomarosConSuTemaYEsUnaPersonaInventada() {
+        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida"), AnioG9.TODOS.map { it.vida })
+        assertTrue("No está en el registro", Calendarios.de(apr.vida) === apr)
+        val q = segomaros
+        assertEquals("galia", q.tema); assertEquals("tema", q.dibujo); assertEquals("Segomaros", q.nombre); assertEquals(19, q.edad); assertEquals(-54, q.anio)
+        assertEquals("Aprendiz de los druidas", q.rol)
+        // No es ficción: es una persona inventada en un mundo real (PLAN_TEMAS, 10a), con sus números reconstruidos.
+        assertFalse(q.ficticia)
+        assertEquals("Persona inventada. Su formación sigue lo que César cuenta de los druidas, y su guerra, el levantamiento del 52 a. C.; las cifras son reconstrucciones.", q.inspiracion)
+        assertEquals(OtrasVidas.MEDIDAS.map { it.id }.toSet(), q.datos.keys)
+        assertTrue(q.datos.values.all { it.c == OtrasVidas.Certeza.RECONSTRUIDO })
+        assertEquals(3, q.historia.size); assertTrue(q.fuentes.isNotEmpty() && q.fuentes.all { it.second.startsWith("https://en.wikipedia.org/wiki/") })
+        // La historia dice que deja la escuela porque los druidas no van a la guerra (fuentes_galia.md, corrección 9).
+        assertTrue(q.historia[1].contains("Los druidas no van a la guerra (6.14)"))
+        assertTrue(q.historia[1].contains("deja la escuela"))
+        // Su agenda es la de la ficha del tema (PLAN_TEMAS, 10e).
+        val f = fichaS("2027-04-04")
+        listOf(23.0 to OtrasVidas.Hacer.DORMIR, 5.5 to OtrasVidas.Hacer.CUIDAR, 6.5 to OtrasVidas.Hacer.COMER, 9.0 to OtrasVidas.Hacer.REZAR, 11.5 to OtrasVidas.Hacer.COMER,
+            14.0 to OtrasVidas.Hacer.TRABAJO, 17.0 to OtrasVidas.Hacer.CAMINO, 18.5 to OtrasVidas.Hacer.COMER, 20.0 to OtrasVidas.Hacer.GENTE).forEach { (h, que) -> assertEquals("$h h", que, f.tramo(h)!!.que) }
+        assertEquals("junto al fuego de la casa grande", f.tramo(2.0)!!.texto); assertEquals("el ganado", f.tramo(5.5)!!.texto)
+        assertEquals("aprender de memoria los versos de los druidas", f.tramo(9.0)!!.texto); assertEquals("armas y caballos con los guerreros", f.tramo(14.0)!!.texto)
+        assertEquals("llevar mensajes de oppidum en oppidum", f.tramo(17.0)!!.texto); assertEquals("el banquete y los bardos", f.tramo(20.0)!!.texto)
+        // Tiene época (el 54 a. C., más o menos treinta) y avanza un año con cada temporada: del 54 al 50 a. C.
+        assertEquals(-84..-24, Epocas.de(q))
+        assertEquals((54 downTo 50).map { "$it a. C." }, apr.temporadas.map { it.cuando })
+        assertEquals(-54, fichaS("2027-03-03").anioHistorico); assertEquals(-52, fichaS("2029-03-03").anioHistorico); assertEquals(-50, fichaS("2031-03-03").anioHistorico)
+        assertEquals(21, fichaS("2029-03-03").edad); assertEquals(23, fichaS("2031-03-03").edad)
+        assertEquals("52 a. C.", fichaS("2029-09-27").cuando)
+    }
+
+    @Test fun unosVeinteDiasPorTemporadaYLaHistoriaAvanza() {
+        assertEquals(listOf("escuela", "inquietud", "levantamiento", "resistencia", "conquista"), apr.temporadas.map { it.mundo })
+        apr.temporadas.forEachIndexed { i, t ->
+            assertTrue("Temporada ${i + 1}: ${t.dias.size} días", t.dias.size in 18..26)
+            assertTrue("Temporada ${i + 1}: pocos días con fuente", t.dias.count { it.fuente != null } >= 5)
+            assertTrue("Temporada ${i + 1}: pocos sucesos de su vida", t.dias.count { it.tipo == TipoDia.SUCESO } >= 4)
+        }
+        // La escuela (1), la Galia inquieta (2), el levantamiento (3), las últimas resistencias (4) y la Galia conquistada (5).
+        assertEquals(listOf("05-24", "05-20", null, null, "05-22"), fechasS("asamblea"))
+        assertEquals(listOf("10-20", null, null, null, null), fechasS("tasgecio"))
+        assertEquals(listOf("11-28", null, null, null, null), fechasS("atuatuca"))
+        assertEquals(listOf(null, "03-18", null, null, null), fechasS("cortes"))
+        assertEquals(listOf(null, "10-18", null, null, null), fechasS("acon"))
+        assertEquals(listOf(null, null, "01-23", null, null), fechasS("grito"))
+        assertEquals(listOf(null, null, "02-16", null, null), fechasS("deja_escuela"))
+        assertEquals(listOf(null, null, "05-20", null, null), fechasS("victoria"))
+        assertEquals(listOf(null, null, "06-24", null, null), fechasS("bibracte"))
+        assertEquals(listOf(null, null, "09-27", null, null), fechasS("entrega"))
+        assertEquals(listOf(null, null, null, "08-26", null), fechasS("uxellodunum_cae"))
+        assertEquals(listOf(null, null, null, "09-12", null), fechasS("lucterio_entregado"))
+        assertEquals(listOf(null, null, null, null, "01-10"), fechasS("vuelve_escuela"))
+        assertEquals(listOf(null, null, null, null, "12-02"), fechasS("legiones"))
+        // Lo que vuelve casi cada año comparte el id; el año de la guerra lleva otro.
+        assertEquals(listOf("11-17", "11-17", null, "11-17", "11-17"), fechasS("samonios"))
+        assertEquals(listOf(null, null, "11-17", null, null), fechasS("samonios_52"))
+        assertEquals(listOf(null, "07-10", null, "07-10", "07-10"), fechasS("siega"))
+        assertEquals(listOf("07-12", null, null, null, null), fechasS("siega_seca"))
+        assertEquals(listOf("03-28", "03-26", null, "03-26", "03-26"), fechasS("siembra"))
+        // El orden del levantamiento (PLAN_TEMAS, 10e): Cenabum, Gergovia, Avárico, la victoria de Gergovia, Bibracte, Alesia.
+        val orden = listOf("grito", "rey", "avarico_cae", "victoria", "bibracte", "alesia", "entrega").map { MesDia.indice(diaS(it).fecha) }
+        assertEquals(orden.sorted(), orden)
+    }
+
+    @Test fun lasFechasSiguenLaCronologiaYLasCorrecciones() {
+        // Casi todo es aproximado: nada va como histórico, porque César da estaciones y no fechas.
+        assertTrue(apr.temporadas.flatMap { it.dias }.none { it.certeza == CertezaDia.HISTORICO })
+        apr.temporadas.flatMap { it.dias }.forEach { d ->
+            if (d.fuente != null) assertEquals(d.id, CertezaDia.APROXIMADO, d.certeza) else assertEquals(d.id, CertezaDia.INVENTADO, d.certeza)
+        }
+        // El muérdago, el sexto día de la luna (Plinio), con la luna nueva calculada: 11 de enero del 54, 30 de enero del 53,
+        // 7 de enero del 51 y 26 de enero del 50. En el 52 cae el mismo día de Cenabum, y no va aparte.
+        assertEquals(listOf("01-16", "02-04", null, null, "01-31"), fechasS("muerdago"))
+        assertEquals(listOf(null, null, null, "01-12", null), fechasS("muerdago_lejos"))
+        // Cenabum: el 23 de enero de Carcopino (Wikipedia en francés), con la duda de la corrección 17; la entrega, el 27 de
+        // septiembre (Brunaux).
+        assertEquals("https://fr.wikipedia.org/wiki/Guerre_des_Gaules", diaS("grito").fuente!!.second)
+        assertEquals("https://en.wikipedia.org/wiki/Battle_of_Alesia", diaS("entrega").fuente!!.second)
+        // Bibracte, sin decir que fue toda la Galia (corrección 4).
+        assertFalse(diaS("bibracte").titulo.contains("toda la Galia"))
+        // Uxellodunum y Lucterio, del libro 8 de Aulo Hircio, comprobados en Wikipedia.
+        assertEquals("https://en.wikipedia.org/wiki/Siege_of_Uxellodunum", diaS("uxellodunum").fuente!!.second)
+        assertEquals("https://en.wikipedia.org/wiki/Lucterius", diaS("lucterio_entregado").fuente!!.second)
+        // Los dioses y lo que el tema no usa nunca (`docs/diseno/temas/galia.md`): ni mitos irlandeses ni galeses, ni dioses
+        // de época romana, ni druidismo moderno, ni «bárbaro».
+        val prohibidas = listOf("Cernunnos", "Epona", "Sucellus", "Belenus", "Lugus", "Samhain", "Beltane", "Beltaine", "ogham", "Stonehenge", "bárbaro", "bárbaros", "magia", "mago", "hechizo", "druidesa")
+        val textos = apr.temporadas.flatMap { t -> listOf(t.cuando, t.resumen) + t.dias.map { it.titulo } } + segomaros.historia + segomaros.dia.map { it.texto } + segomaros.datos.values.map { it.nota }
+        textos.forEach { s -> prohibidas.forEach { assertFalse("«$it» en «${s.take(60)}…»", Regex("""(?U)\b$it\b""", RegexOption.IGNORE_CASE).containsMatchIn(s)) } }
+    }
+
+    @Test fun vaConLosJinetesSeEncierraEnAlesiaYVuelveCautivo() {
+        estadoEntreS("campana", "2029-03-02", "2029-04-29")
+        estadoEntreS("campana", "2029-06-14", "2029-08-16")
+        estadoEntreS("alesia", "2029-08-17", "2029-09-26")
+        estadoEntreS("cautivo", "2029-09-27", "2029-10-07")
+        // En Gergovia durante el cerco de César, y de vuelta en casa después de los días de camino.
+        assertEquals(null, fichaS("2029-05-10").estado); assertEquals(null, fichaS("2029-10-20").estado)
+        assertEquals("camino", fichaS("2029-10-10").escena)
+        // Los otros años, en casa.
+        listOf(2027, 2028, 2030, 2031, 2032).forEach { y -> listOf("campana", "alesia", "cautivo").forEach { assertEquals("$y, $it", 0, diasEnS(it, y)) } }
+        // En la temporada 5, que desde 2032 se repite, lo que no debe moverse no es un suceso, y no hay cadenas.
+        listOf("vuelve_escuela", "aniversario_gergovia", "aniversario_alesia", "parte_maestro", "vuelve_maestro").forEach { assertNotEquals(it, TipoDia.SUCESO, diaS(it).tipo) }
+        assertTrue(apr.temporadas[4].dias.none { it.cadena != null })
+    }
+
+    @Test fun elCuadroDeGaliaPuedeContarLoMismoQueElCuento() {
+        // Los campamentos de César al pie de Gergovia: del 5 al 22 de mayo del 52.
+        assertEquals(0.0, arcoS("2029-05-04", "romanos"), 0.0); assertEquals(1.0, arcoS("2029-05-05", "romanos"), 0.0)
+        assertEquals(1.0, arcoS("2029-05-22", "romanos"), 0.0); assertEquals(0.0, arcoS("2029-05-23", "romanos"), 0.0)
+        assertEquals(0.0, arcoS("2028-05-10", "romanos"), 0.0); assertEquals(0.0, arcoS("2030-05-10", "romanos"), 0.0)
+        // Las granjas quemadas: ninguna hasta las Cevenas, más cuando César llega a Gergovia, y se van rehaciendo.
+        assertEquals(0.0, arcoS("2029-02-23", "danos"), 0.0); assertEquals(0.5, arcoS("2029-02-24", "danos"), 0.0); assertEquals(0.6, arcoS("2029-05-05", "danos"), 1e-9)
+        assertTrue(arcoS("2031-12-31", "danos") < arcoS("2030-01-01", "danos"))
+        // La muralla se refuerza en la primavera del 52 y no vuelve a bajar.
+        val muralla = listOf("2027-06-01", "2029-03-01", "2029-04-01", "2029-04-30", "2031-06-01").map { arcoS(it, "muralla") }
+        assertEquals(muralla.sorted(), muralla); assertEquals(1.0, muralla.last(), 0.0)
+        // Los mercaderes de Italia: hasta Cenabum, ninguno en el 52, y vuelven en el 51.
+        assertEquals(0.4, arcoS("2029-01-22", "comercio"), 0.0); assertEquals(0.0, arcoS("2029-01-23", "comercio"), 0.0)
+        assertEquals(0.0, arcoS("2030-06-02", "comercio"), 0.0); assertEquals(0.35, arcoS("2030-06-03", "comercio"), 1e-9)
+        // El trigo, cada año: alto antes de la siega y segado después.
+        (2027..2031).forEach { y -> assertTrue("$y", arcoS("$y-07-09", "trigo") > 0.95); assertEquals(0.0, arcoS("$y-07-10", "trigo"), 0.0) }
+        // Los días que cambian lo que se ve.
+        assertEquals("muerdago", fichaS("2027-01-16").escena); assertEquals("samonios", fichaS("2027-11-18").escena)
+        assertEquals("grito", fichaS("2029-01-23").escena); assertEquals("romanos", fichaS("2029-05-05").escena)
+        assertEquals("victoria", fichaS("2029-05-20").escena); assertEquals("socorro", fichaS("2029-09-22").escena)
+        assertEquals("entrega", fichaS("2029-09-27").escena); assertEquals("luto", fichaS("2030-08-26").escena)
+        assertEquals(Clima.NIEVE, fichaS("2029-02-24").clima); assertEquals(Clima.TORMENTA, fichaS("2027-07-01").clima)
     }
 }
