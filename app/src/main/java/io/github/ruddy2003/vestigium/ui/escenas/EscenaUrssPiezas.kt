@@ -1000,6 +1000,67 @@ internal object PiezasUrss {
         }
     }
 
+    /** La rejilla de la ventilación, arriba en la pared, con el hollín que ha ido dejando alrededor. */
+    fun DrawScope.rejilla(lz: LuzUrss, x: Float, y: Float) {
+        val a = p(x, y, 0.4f); val b = p(x + 16f, y + 10f, 0.4f)
+        mancha(Offset((a.x + b.x) / 2f, a.y - 2f), 14f, 8f, lz.en(a, lerp(C.TINTA, C.LATON, 0.2f)), 0.16f)
+        drawRect(lz.en(a, lerp(C.ESMALTE, C.PARED, 0.4f)), a, Size(b.x - a.x, b.y - a.y))
+        for (i in 1..5) { val yy = a.y + i * (b.y - a.y) / 6f; drawLine(lz.sombra(a, C.TINTA, 0.5f).copy(alpha = 0.7f), Offset(a.x + 1.2f, yy), Offset(b.x - 1.2f, yy), 0.8f) }
+        drawRect(lz.sombra(a, C.PARED, 0.4f), a, Size(b.x - a.x, b.y - a.y), style = Stroke(0.5f))
+    }
+
+    /**
+     * El escurridor de madera colgado en la pared, con los platos de pie, dos tazas colgadas de sus clavijas y, de día,
+     * el vaso del té boca abajo.
+     */
+    fun DrawScope.escurridor(lz: LuzUrss, x0: Float, y0: Float, conVaso: Boolean) {
+        val x1 = x0 + 34f; val y1 = y0 + 22f
+        caja(lz, x0, x1, y1 - 2f, y1, 0f, 7f, C.MADERA, lerp(C.MADERA, C.PAPEL, 0.2f))
+        drawRect(C.SOMBRA.copy(alpha = 0.25f), p(x0, y1, 0f), Size(p(x1, y1, 0f).x - p(x0, y1, 0f).x, 4f), blendMode = BlendMode.Multiply)
+        // Los platos, de pie y un poco ladeados, con su filete azul.
+        for (i in 0..5) {
+            val c = p(x0 + 5f + i * 3.4f, y1 - 9f, 4f); val r = 8.4f
+            drawOval(lz.en(c, C.ESMALTE), Rect(c.x - 1.6f + i * 0.1f, c.y - r, c.x + 1.6f + i * 0.1f, c.y + r))
+            drawOval(lz.sombra(c, C.AZUL, 0.3f).copy(alpha = 0.6f), Rect(c.x - 1.4f, c.y - r + 0.8f, c.x + 1.4f, c.y + r - 0.8f), style = Stroke(0.4f))
+        }
+        // Los palos del escurridor, delante de los platos.
+        for (i in 0..6) { val q = p(x0 + 3f + i * 3.4f, y1 - 2f, 6.5f); drawLine(lz.frente(q, lerp(C.MADERA, C.PAPEL, 0.25f)), q, q + Offset(0f, -8f), 0.7f) }
+        drawLine(lz.frente(p(x0, y1 - 8f, 6.5f), C.MADERA), p(x0, y1 - 9f, 6.5f), p(x0 + 24f, y1 - 9f, 6.5f), 0.9f)
+        // Las tazas colgadas y el vaso boca abajo.
+        for ((i, col) in listOf(C.ROJO, C.AZUL).withIndex()) {
+            val g = p(x0 + 27f + i * 4f, y0 + 6f, 3f); drawLine(lz.en(g, C.MADERA), g, g + Offset(0f, 2f), 0.6f)
+            val t = Path().apply { moveTo(g.x - 2f, g.y + 2f); lineTo(g.x + 2f, g.y + 2f); lineTo(g.x + 1.6f, g.y + 6.4f); lineTo(g.x - 1.6f, g.y + 6.4f); close() }
+            cuerpo(lz.a, t, g.x - 2f, g.x + 2f, g.y + 4f, lerp(C.ESMALTE, col, 0.25f)); drawCircle(lz.en(g, col), 0.6f, g + Offset(0f, 4.4f))
+        }
+        if (conVaso) { val v = p(x1 - 3f, y1 - 2f, 4f); drawRect(lz.en(v, lerp(C.CROMO, Color.White, 0.3f)).copy(alpha = 0.6f), Offset(v.x - 2f, v.y - 7f), Size(4f, 7f)); drawLine(Color.White.copy(alpha = 0.6f), Offset(v.x - 1f, v.y - 6f), Offset(v.x - 1f, v.y - 1f), 0.5f) }
+    }
+
+    /** La barra de los cacharros sobre los azulejos: el cucharón, la espumadera, el rallador y la sartén colgados de sus ganchos. */
+    fun DrawScope.cacharros(lz: LuzUrss, x0: Float, y: Float) {
+        val x1 = x0 + 50f
+        drawLine(lz.sombra(p(x0, y, 1f), C.CROMO, 0.4f), p(x0, y, 1.6f), p(x1, y, 1.6f), 1f)
+        drawLine(lz.en(p(x0, y, 1f), lerp(C.CROMO, Color.White, 0.3f)), p(x0, y - 0.4f, 1.6f), p(x1, y - 0.4f, 1.6f), 0.4f)
+        // El cucharón.
+        var g = p(x0 + 6f, y, 2f); drawLine(lz.en(g, C.CROMO), g, g + Offset(0f, 16f), 0.9f); drawOval(lz.en(g, lerp(C.CROMO, C.HORMIGON, 0.3f)), Rect(g.x - 3.4f, g.y + 15f, g.x + 3.4f, g.y + 20f))
+        // La espumadera, con sus agujeros.
+        g = p(x0 + 15f, y, 2f); drawLine(lz.en(g, C.CROMO), g, g + Offset(0f, 15f), 0.8f); drawCircle(lz.en(g, C.CROMO), 3.4f, g + Offset(0f, 18f)); for (i in -1..1) for (j in -1..1) drawCircle(lz.sombra(g, C.TINTA, 0.4f), 0.4f, g + Offset(i * 1.4f, 18f + j * 1.4f))
+        // El rallador de cuatro caras.
+        g = p(x0 + 25f, y, 2f); drawLine(lz.en(g, C.CROMO), g, g + Offset(0f, 3f), 0.6f); val r = Path().apply { moveTo(g.x - 1.6f, g.y + 3f); lineTo(g.x + 1.6f, g.y + 3f); lineTo(g.x + 3f, g.y + 15f); lineTo(g.x - 3f, g.y + 15f); close() }
+        cuerpo(lz.a, r, g.x - 3f, g.x + 3f, g.y + 9f, lerp(C.CROMO, C.HORMIGON, 0.2f)); for (i in 0..4) drawLine(lz.sombra(g, C.TINTA, 0.4f).copy(alpha = 0.6f), Offset(g.x - 1.6f, g.y + 6f + i * 1.8f), Offset(g.x + 1.6f, g.y + 6f + i * 1.8f), 0.3f)
+        // La sartén de hierro, colgada del mango.
+        g = p(x0 + 40f, y, 2f); drawLine(lz.en(g, C.TINTA), g, g + Offset(0f, 9f), 1.4f); drawCircle(lz.sombra(g, C.TINTA, 0.3f), 8f, g + Offset(0f, 17f)); drawCircle(lz.en(g, lerp(C.TINTA, C.HORMIGON, 0.25f)), 6.6f, g + Offset(0f, 17f))
+        drawArc(lz.filo.copy(alpha = 0.4f), 200f, 70f, false, g + Offset(-7.4f, 9.6f), Size(14.8f, 14.8f), style = Stroke(0.6f))
+    }
+
+    /** El platillo de leche del gato, en el suelo junto al radiador, con su cerco. */
+    fun DrawScope.platilloDelGato(lz: LuzUrss, x: Float, t: Float) {
+        val c = p(x, CocinaUrss.SUELO, t); val k = K.s(t)
+        drawOval(C.SOMBRA.copy(alpha = 0.3f), Offset(c.x - 6f * k, c.y - 1f * k), Size(13f * k, 3.2f * k), blendMode = BlendMode.Multiply)
+        drawOval(lz.en(c, C.ESMALTE), Rect(c.x - 6f * k, c.y - 2f * k, c.x + 6f * k, c.y + 1.4f * k))
+        drawOval(lz.arriba(c, lerp(C.PAPEL, Color.White, 0.4f)), Rect(c.x - 4.2f * k, c.y - 1.4f * k, c.x + 4.2f * k, c.y + 0.6f * k))
+        drawOval(lz.en(c, C.AZUL).copy(alpha = 0.6f), Rect(c.x - 6f * k, c.y - 2f * k, c.x + 6f * k, c.y + 1.4f * k), style = Stroke(0.5f))
+    }
+
     // @@MAS@@
 }
 

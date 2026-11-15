@@ -270,7 +270,7 @@ internal object EscenaUrss : EscenaVida {
 
     /** La pelusa de los álamos, en junio, que flota y se junta en los rincones; en el barrio nuevo, menos. */
     internal fun pelusa(m: Momento): Float {
-        val k = curvaDelAnio(mesDia(m), listOf("05-30" to 0f, "06-05" to 1f, "06-20" to 1f, "06-28" to 0f))
+        val k = curvaDelAnio(mesDia(m), listOf("06-01" to 0f, "06-06" to 1f, "06-20" to 1f, "06-28" to 0f))
         return k * (if (casaNueva(m)) 0.45f else 1f)
     }
 

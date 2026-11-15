@@ -88,6 +88,9 @@ internal object CosasUrss {
             val avance = (java.time.LocalDate.parse(m.ficha.dia).dayOfYear / 366f).coerceIn(0f, 1f)
             calendario(lz, 50f, 40f, avance, R.fiesta(m) || R.desfile(m))
             espejo(lz, 80f, 28f, R.luto(m))
+            rejilla(lz, 142f, 8f)
+            escurridor(lz, 100f, 24f, !R.te(m))
+            cacharros(lz, 104f, 106f)
             if (R.laCocinaPinta(m, "radio")) radioDeCable(lz, 70f, 66f)
             repisa(lz, Co.FX0 - 4f, Co.FX1 + 2f, 70f, az)
             gancho(lz, R.abrigoColgado(m) && R.laCocinaPinta(m, "abrigo"), R.abrigoColgado(m), R.luto(m))
@@ -162,6 +165,7 @@ internal object CosasUrss {
         with(PiezasUrss) {
             val n = R.cajas(m)
             if (n > 0) cajasDeLaMudanza(lz, n, Azar(Semilla.de("urss", "cajas")))
+            platilloDelGato(lz, 214f, 30f)
             taburete(lz, TAB_X, TAB_T, 34f, 36f)
             // El objeto grande del día: de pie en el linóleo, recostado en el canto de la mesa.
             with(ObjetosUrss) { grande(m, Pincel(lz.l, LuzCocinaUrss.rayoDelSol(lz.sol ?: EscenaUrss.SolDeVentana(1f, 0f, 0f, Color.White), 1f, Co.PIE_GRANDE)), Co.PIE_GRANDE, Co.APOYO_GRANDE, K.s(70f))?.pintar?.invoke(this@delSuelo) }

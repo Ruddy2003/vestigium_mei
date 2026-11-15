@@ -71,8 +71,11 @@ internal object LuzCocinaUrss {
         return mejor
     }
 
-    /** El centro de la mancha: donde cae el rayo que entra por el centro de los cristales de abajo. De ahí rebota su claridad. */
-    internal fun centroDeLaMancha(s: SolDeVentana): Offset = cae((Co.VX0 + Co.VX1) / 2f, (Co.TRAVESANO + Co.VY1) / 2f, s).punto
+    /**
+     * El centro de la mancha que se ve: donde cae el rayo que entra por el centro de la ventana, junto al alféizar (lo que
+     * entra más arriba cae, con el sol bajo, detrás de quien mira). De ahí rebota su claridad.
+     */
+    internal fun centroDeLaMancha(s: SolDeVentana): Offset = cae((Co.VX0 + Co.VX1) / 2f, Co.VY1 - 10f, s).punto
 
     /** Un punto de la ventana llevado por el rayo hasta el plano [plano] (aunque quede fuera de él: luego se recorta). */
     private fun lleva(x: Float, y: Float, s: SolDeVentana, plano: Plano): Offset {
@@ -198,8 +201,8 @@ internal object LuzCocinaUrss {
                 val c = Co.BAJO_LA_LAMPARA + Offset(-6f, -2f)
                 val circulo = Path().apply { addOval(Rect(c.x - rx, c.y - ry, c.x + rx, c.y + ry)) }
                 clipPath(circulo) {
-                    drawRect(alaLampara(lz, C.PAPEL, c, 0.6f * a * k), Offset.Zero, Size(ANCHO, ALTO))
-                    with(PiezasUrss) { dibujoDelHule(Co.MX0, Co.MX1, Co.MT0, Co.MT1, Co.MY) { col, q -> alaLampara(lz, col, q, 0.6f * a * k) } }
+                    drawRect(alaLampara(lz, C.PAPEL, c, 0.85f * a * k), Offset.Zero, Size(ANCHO, ALTO))
+                    with(PiezasUrss) { dibujoDelHule(Co.MX0, Co.MX1, Co.MT0, Co.MT1, Co.MY) { col, q -> alaLampara(lz, col, q, 0.85f * a * k) } }
                 }
             }
             charcoDeLuz(f, Co.BAJO_LA_LAMPARA + Offset(-6f, -2f), 60f, 15f, C.PAPEL, 0.5f)
@@ -218,7 +221,7 @@ internal object LuzCocinaUrss {
             val color = if (s.deLuna) s.color else lerp(s.color, Color(0xFFFFD49A), 0.35f)
             for (c in Co.cristales(R.ventanaAbierta(m))) for (i in c.indices) {
                 val (x0, y0) = c[i]; val (x1, y1) = c[(i + 1) % c.size]
-                drawPath(poligono(K.p(x0, y0, 0f), K.p(x1, y1, 0f), cae(x1, y1, s).punto, cae(x0, y0, s).punto), color.copy(alpha = 0.018f * s.fuerza), blendMode = BlendMode.Plus)
+                drawPath(poligono(K.p(x0, y0, 0f), K.p(x1, y1, 0f), cae(x1, y1, s).punto, cae(x0, y0, s).punto), color.copy(alpha = 0.03f * s.fuerza), blendMode = BlendMode.Plus)
             }
             val az = Azar(Semilla.de("urss", "polvo"))
             repeat(46) {
