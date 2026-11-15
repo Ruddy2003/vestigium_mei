@@ -5120,14 +5120,936 @@ def fondo_nouveau(t):
     return subir(render(0))
 
 
+# ---------------------------------------------------------------------
+#  Psicodelia: una calle de San Francisco en el verano de 1967 (docs/diseno/temas/psicodelia.md, `TrazosPsicodelia`; las
+#  casas, el clima y el transporte, en docs/diseno/temas/fuentes_psicodelia.md, sección 4). Las casas victorianas son casi
+#  todas grises o desteñidas (la moda de pintarlas empezó en 1963; las calles enteras de colores son de los 70): aquí, de
+#  once, dos pintadas (turquesa con molduras rosas y amarillas, y una amarilla). Al fondo, la cuesta con sus casitas en
+#  escalera y los eucaliptos de la cima, en la niebla. El cable que cruza es el del trolebús (en 1967 al Haight se llegaba
+#  en trolebús o autobús; el tranvía de cable no pasaba por ahí) y el del poste de madera, con los carteles pegados.
+#  Se dibuja con tintas planas de cartel: pocos tonos por material, el tramado ordenado y el grano del papel.
+# ---------------------------------------------------------------------
+PS_BASE = 59                  # donde las casas tocan la acera de enfrente
+PS_BORDILLO = 67              # el borde de la acera de adelante (por donde camina el gato)
+PS_POSTE = 24                 # el poste de madera: su borde izquierdo (4 de ancho)
+PS_FAROL = (45, 17)           # la cabeza del farol, colgada del poste
+PS_SOL = (74, 9)              # el sol de la mañana, velado por la niebla (de ahí viene la luz: arriba a la izquierda)
+PS_LUNA = (238, 8)
+PS_CASAS = [   # x, ancho, arriba, paleta, lado del mirador, remate, ventana especial
+    dict(x=-10, w=40, top=26, pal="gris", bay="der", remate="cornisa", esp=None),
+    dict(x=30, w=40, top=24, pal="blanco", bay="izq", remate="fronton", esp="cartel"),
+    dict(x=70, w=38, top=25, pal="acorazado", bay="der", remate="cornisa", esp="flores"),
+    dict(x=108, w=42, top=22, pal="turquesa", bay="izq", remate="fronton", esp="luces"),
+    dict(x=150, w=40, top=26, pal="beige", bay="der", remate="cornisa", esp="periodico"),
+    dict(x=190, w=44, top=24, pal="gris", bay="izq", remate="cornisa", esp="paz"),
+    dict(x=322, w=40, top=23, pal="amarilla", bay="der", remate="fronton", esp="encaje"),
+    dict(x=362, w=38, top=27, pal="blanco", bay="izq", remate="cornisa", esp="flores"),
+    dict(x=400, w=40, top=26, pal="acorazado", bay="der", remate="cornisa", esp=None),
+]
+PS_CRUCE = (234, 322)          # la calle que sube la cuesta, entre las dos filas de casas
+PS_ENCENDIDAS = {1, 2, 4, 6, 7}       # las casas con alguna ventana con luz de noche (además de la luz negra y las luces)
 
-FONDOS_MIOS = {"frente": fondo_frente, "arcontes": fondo_arcontes, "galia": fondo_galia, "nouveau": fondo_nouveau}
+
+def _casa(cuerpo, sombra, moldura, moldura_s, puerta, techo, tabla=None, moldura2=None):
+    return dict(cuerpo=hx(cuerpo), sombra=hx(sombra), moldura=hx(moldura), moldura_s=hx(moldura_s), puerta=hx(puerta),
+                techo=hx(techo), tabla=hx(tabla) if tabla else mezcla(hx(cuerpo), hx(sombra), 0.45),
+                moldura2=hx(moldura2) if moldura2 else hx(moldura))
+
+
+PAL_PSI_D = dict(
+    cielo=[hx(c) for c in ("BFD0DB", "D3DEE4", "E6EBEA", "F4EEE3")],
+    sol=hx("FFF8E8"), sol_halo=hx("F7C99B"),
+    niebla=hx("F1F3F3"), niebla2=hx("F9F8F4"), niebla_s=hx("D7DCDF"),
+    cerro=[hx(c) for c in ("8E9C98", "A1ADA8", "B3BDB8")],
+    cerro_casas=[hx(c) for c in ("C9C4BA", "D9D3C8", "B3B0A9", "E4DED3", "E0C6BE", "BCD4CE", "E8D49E")],
+    cerro_techo=hx("7E8586"), cerro_ventana=hx("7E888C"),
+    eucalipto=[hx(c) for c in ("5E7068", "71837A", "8A9A90")],
+    casas=dict(gris=_casa("A9A49B", "8C877F", "E4DED3", "BDB7AC", "5E6466", "5E5A58"),
+               blanco=_casa("E4DED3", "C2BBAF", "F7F3EB", "D1CABE", "7C6E62", "6A6460"),
+               acorazado=_casa("8F9597", "767C7F", "CDD1CF", "A9AEAE", "4E5052", "55585A"),
+               beige=_casa("CDBFA6", "AE9F87", "EEE6D6", "CFC4B0", "6E5A46", "6A5E52"),
+               turquesa=_casa("2BB3A8", "1F8A82", "F28DB2", "C9668E", "F2C14E", "3E4A5A", moldura2="F2C14E"),
+               amarilla=_casa("F2C14E", "D19E30", "FBF4E2", "DCCDAE", "2E7344", "6A5A40")),
+    vidrio=[hx(c) for c in ("7F8E96", "A9B8BE", "D6E0E2")],
+    acera=[hx(c) for c in ("D8D2C7", "CBC4B8", "BAB3A7", "E6E1D7")], junta=hx("A9A296"),
+    bordillo=hx("ECE8DF"), bordillo_s=hx("9C958A"),
+    asfalto=[hx(c) for c in ("5C595E", "67646A", "727076")],
+    poste=[hx(c) for c in ("4E4038", "65544A", "7D6A5C", "978270")],
+    cable=hx("3E383C"), metal=hx("6E6A6C"), aislador=hx("6FA89A"),
+    farol=hx("8C8A86"), farol_vidrio=hx("E8E4D8"),
+    hojas=[hx(c) for c in ("2E4733", "3E5C3E", "557550", "75925F", "9BB27A")],
+    tronco=[hx(c) for c in ("4E443C", "66594C", "807060")],
+    sombra=hx("6E6478"),
+    papel=hx("EFE7D6"), papel_s=hx("CFC4AE"),
+    tiza=[hx(c) for c in ("F2A9C6", "8FCBEB", "FFE07A", "BDE8A6")],
+    flores=[hx("E0218A"), hx("FF7A1A"), hx("2E7344"), hx("4E8A4A")],
+    cartel=dict(magenta=hx("E0218A"), verde=hx("2FBF71"), naranja=hx("FF7A1A"), azul=hx("2F6BFF"),
+                amarillo=hx("FFD23F"), violeta=hx("7B3FD1"), tinta=hx("2A1C32")),
+    gaviota=[hx("F8F6F0"), hx("A8A9AC"), hx("4A4A4E")],
+)
+PAL_PSI_N = dict(
+    cielo=[hx(c) for c in ("120A1C", "170E24", "1E132D", "281B38")],
+    luna=hx("ECE6F4"), luna_halo=hx("6E5A8E"),
+    niebla=hx("4C3E66"), niebla2=hx("3A2E52"), niebla_s=hx("2A2040"),
+    cerro=[hx(c) for c in ("1D1530", "211836", "261C3C")],
+    cerro_casas=[hx(c) for c in ("2A2240", "30283F", "272038", "342C44", "33263E", "26303A", "3A3230")],
+    cerro_techo=hx("1A1428"), cerro_ventana=hx("FFC870"),
+    eucalipto=[hx(c) for c in ("130D20", "18112A", "1E1630")],
+    casas=dict(gris=_casa("3A3150", "2A243E", "5E5478", "463E60", "1E1830", "181228"),
+               blanco=_casa("4A4262", "352F4C", "726A8C", "5A5274", "241C34", "1A1428"),
+               acorazado=_casa("323050", "25233E", "545276", "403E5E", "1A182C", "161426"),
+               beige=_casa("463C56", "332B42", "6A5E7A", "524862", "221A2E", "1A1424"),
+               turquesa=_casa("1C4A52", "14363E", "8A4C70", "6A3A58", "8A7440", "161A2A", moldura2="8A7440"),
+               amarilla=_casa("5A4A3A", "42362C", "7A6E62", "62584C", "1E3628", "221C1C")),
+    vidrio=[hx(c) for c in ("120C1A", "1A1424", "2A2236")],
+    acera=[hx(c) for c in ("383044", "322A3E", "2B2436", "40384E")], junta=hx("231D2C"),
+    bordillo=hx("4A4258"), bordillo_s=hx("1E1828"),
+    asfalto=[hx(c) for c in ("1A1522", "1F1928", "241E2E")],
+    poste=[hx(c) for c in ("1A1418", "251E22", "33292C", "463A3A")],
+    cable=hx("0A060E"), metal=hx("2E2832"), aislador=hx("3E6A64"),
+    farol=hx("3A3438"), farol_vidrio=hx("FFF1CC"), farol_luz=hx("FFE3AA"), farol_halo=hx("C9A6D8"),
+    hojas=[hx(c) for c in ("0E1016", "141820", "1C2226", "283030", "3A443C")],
+    tronco=[hx(c) for c in ("161216", "201A20", "2C2428")],
+    sombra=hx("07040C"),
+    papel=hx("5E566A"), papel_s=hx("3E3648"),
+    tiza=[hx(c) for c in ("7E5672", "4A6A84", "8A7A4A", "5E7A56")],
+    flores=[hx("7A1E52"), hx("8A4A22"), hx("1E3A28"), hx("2A4A2A")],
+    cartel=dict(magenta=hx("8E1E5E"), verde=hx("1E7448"), naranja=hx("A8521E"), azul=hx("2A46A0"),
+                amarillo=hx("A8902E"), violeta=hx("4E2E86"), tinta=hx("120A1C")),
+    ventana=[hx(c) for c in ("FFE6A6", "FFCB72", "E8964A", "A85E3A")],
+    luz_negra=[hx(c) for c in ("2A1650", "5E3EB0", "AE91FF", "D8CCFF")],
+    fluor=dict(limon=hx("C9F04A"), magenta=hx("FF5CBE"), naranja=hx("FF9F43"), violeta=hx("AE91FF")),
+    liquidas=[(hx("FF5CBE"), hx("FFC2E6")), (hx("FFB347"), hx("FFE6B0")), (hx("9BE05A"), hx("E6FFB0"))],
+)
+
+
+def ps_cerro(x):
+    """La cuesta del fondo: sube de izquierda a derecha, con la loma de los eucaliptos arriba a la derecha."""
+    return 41 - 29 * max(0.0, x / W) ** 1.1 + 1.4 * math.sin(x / 23.0) + 0.8 * math.sin(x / 8.5 + 1.0) - 2.2 * math.exp(-((x - 350) / 40) ** 2)
+
+
+def ps_niebla_banda(im, x0, x1, y, grosor, col, k, semilla, borde=0.5):
+    """Una franja de niebla quieta: el centro mezclado con k, los bordes de arriba y de abajo en tramado que ondula."""
+    px = im.load()
+    rnd = random.Random(semilla)
+    a1, a2, f1, f2 = rnd.uniform(0.6, 1.4), rnd.uniform(0.3, 0.8), rnd.uniform(0.04, 0.09), rnd.uniform(0.11, 0.2)
+    for x in range(max(0, int(x0)), min(W, int(x1))):
+        u = (x - x0) / max(1, x1 - x0)
+        env = math.sin(math.pi * u) ** 0.5
+        g_ = grosor * env * (1 + 0.25 * math.sin(x * f1 * 3 + semilla))
+        arriba_ = y - g_ / 2 + a1 * math.sin(x * f1 + semilla) + a2 * math.sin(x * f2)
+        abajo_ = y + g_ / 2 + 0.5 * math.sin(x * f2 * 0.7 + semilla)
+        for yy in range(int(arriba_) - 1, int(abajo_) + 2):
+            if not 0 <= yy < H:
+                continue
+            d = min(yy - arriba_, abajo_ - yy)
+            if d >= 1.0:
+                px[x, yy] = mezcla(px[x, yy], col, k)
+            elif d > -0.6 and tramar(borde * (d + 0.6) / 1.6, x, yy):
+                px[x, yy] = mezcla(px[x, yy], col, k * 0.7)
+
+
+def ps_cielo(im, P, o):
+    px = im.load()
+    degradado(im, 0, 46, P["cielo"])
+    if not o:
+        sx, sy = PS_SOL
+        luz(im, sx, sy + 4, 70, P["sol_halo"], 0.2, 5, ry=34)
+        luz(im, sx, sy, 22, P["sol_halo"], 0.22, 4, ry=16)
+        luz(im, sx, sy, 9, P["sol"], 0.55, 3)
+        for y in range(sy - 4, sy + 5):
+            for x in range(sx - 4, sx + 5):
+                dd = (x - sx) ** 2 + (y - sy) ** 2
+                if dd <= 17:
+                    px[x, y] = P["sol"] if dd <= 10 or (x - sx) + (y - sy) < 0 else mezcla(P["sol"], P["sol_halo"], 0.3)
+        # La niebla alta que pasa por delante del sol (en franjas) y las capas de niebla del cielo.
+        for (x0, x1, y, g_, k_, s_) in ((30, 132, 10, 2.2, 0.55, 3), (0, 120, 18, 3.4, 0.6, 5), (140, 300, 6, 2.4, 0.45, 7),
+                                        (210, 412, 14, 3.0, 0.5, 9), (96, 236, 24, 3.2, 0.5, 11)):
+            ps_niebla_banda(im, x0, x1, y, g_, P["niebla2"], k_, s_)
+    else:
+        lx, ly = PS_LUNA
+        luz(im, lx, ly + 2, 60, P["luna_halo"], 0.16, 5, ry=30)
+        luz(im, lx, ly, 14, P["luna_halo"], 0.3, 3)
+        for y in range(ly - 3, ly + 4):
+            for x in range(lx - 3, lx + 4):
+                dd = (x - lx) ** 2 + (y - ly) ** 2
+                if dd <= 10:
+                    px[x, y] = P["luna"] if dd <= 5 or (x - lx) < 0 else mezcla(P["luna"], P["luna_halo"], 0.4)
+        rnd = random.Random(31)
+        for _ in range(34):
+            x, y = rnd.randrange(W), rnd.randrange(1, 26)
+            if abs(x - lx) > 12 and not (350 < x and y < 26):
+                px[x, y] = mezcla(px[x, y], P["luna"], rnd.choice((0.35, 0.5, 0.7)))
+        for (x0, x1, y, g_, k_, s_) in ((0, 150, 16, 3.0, 0.35, 5), (160, 330, 9, 2.4, 0.4, 7), (96, 260, 23, 3.2, 0.3, 11),
+                                        (250, 412, 17, 2.6, 0.3, 13)):
+            ps_niebla_banda(im, x0, x1, y, g_, P["niebla"], k_, s_)
+
+
+def ps_cuesta(im, P, o):
+    """La cuesta: la loma con sus casitas en escalera (filas que siguen la pendiente; cada casa, un poco más arriba que la
+    de al lado), los eucaliptos de la cima y la niebla que se queda abajo. Todo lejano, apagado por la niebla."""
+    px = im.load()
+    perfil_ = [ps_cerro(x) for x in range(W)]
+    for x in range(W):
+        top = int(round(perfil_[x]))
+        for y in range(max(0, top), 52):
+            px[x, y] = P["cerro"][0] if y == top else (P["cerro"][1] if y < top + 9 else P["cerro"][2])
+    # Los eucaliptos de la loma: copas altas y deshilachadas, la luz de la izquierda.
+    rnd = random.Random(23)
+    for _ in range(26):
+        cx = rnd.uniform(276, 412)
+        base = ps_cerro(cx) + 1
+        alto_ = rnd.uniform(5, 11) * (0.6 + 0.4 * min(1, (cx - 270) / 60))
+        ancho_ = rnd.uniform(2.0, 3.4)
+        for y in range(int(base - alto_), int(base) + 1):
+            v = (base - y) / alto_
+            w_ = ancho_ * (0.55 + 0.6 * math.sin(math.pi * min(1, v * 1.1)) ** 0.7)
+            for x in range(int(cx - w_), int(cx + w_) + 1):
+                if 0 <= x < W and 0 <= y < H and rnd.random() > 0.12:
+                    lado = (x - cx) / max(0.5, w_)
+                    px[x, y] = P["eucalipto"][2] if lado < -0.35 else (P["eucalipto"][0] if lado > 0.4 else P["eucalipto"][1])
+    # Las casitas: cinco filas paralelas a la pendiente.
+    rnd = random.Random(29)
+    for r in range(5):
+        x = rnd.uniform(-6, 0)
+        while x < W:
+            w_ = rnd.choice((5, 6, 6, 7, 8))
+            xm = x + w_ / 2
+            yb = int(round(ps_cerro(xm) + 4.0 + 4.6 * r))
+            if yb < 52 and not (r == 0 and xm > 300):
+                col_ = rnd.choice(P["cerro_casas"][:4]) if rnd.random() > 0.12 else rnd.choice(P["cerro_casas"][4:])
+                alto_ = rnd.choice((3, 4, 4, 5))
+                k_ = 0.2 + 0.11 * r if not o else 0.0
+                c_ = mezcla(col_, P["niebla"], k_)
+                for yy in range(yb - alto_, yb + 1):
+                    for xx in range(int(x), int(x + w_)):
+                        if 0 <= xx < W and 0 <= yy < H:
+                            px[xx, yy] = c_ if xx < int(x + w_) - 1 else mezcla(c_, P["cerro_techo"], 0.3)
+                if rnd.random() < 0.55:                       # techo de dos aguas
+                    for q in range(int(w_ / 2) + 1):
+                        for xx in (int(x) + q, int(x + w_) - 1 - q):
+                            if 0 <= xx < W and 0 <= yb - alto_ - 1 - min(q, w_ // 2 - q) < H:
+                                pass
+                    for xx in range(int(x), int(x + w_)):
+                        h_ = min(xx - int(x), int(x + w_) - 1 - xx)
+                        for yy in range(yb - alto_ - min(2, h_), yb - alto_):
+                            if 0 <= xx < W and 0 <= yy < H:
+                                px[xx, yy] = mezcla(P["cerro_techo"], P["niebla"], k_)
+                else:
+                    for xx in range(int(x), int(x + w_)):
+                        pon(px, xx, yb - alto_, mezcla(P["cerro_techo"], P["niebla"], k_))
+                for (dx, dy) in ((1, 2), (3, 2), (w_ - 2, 2)):    # ventanitas
+                    if rnd.random() < 0.75:
+                        if o:
+                            if rnd.random() < 0.3:
+                                pon(px, x + dx, yb - alto_ + dy, P["cerro_ventana"] if rnd.random() > 0.15 else hx("AE91FF"), 0.85)
+                        else:
+                            pon(px, x + dx, yb - alto_ + dy, mezcla(P["cerro_ventana"], P["niebla"], k_))
+            x += w_ + rnd.choice((0, 0, 1, 1, 2))
+    # La niebla de la mañana, que se queda en lo bajo de la cuesta (de noche, iluminada por la ciudad).
+    for (x0, x1, y, g_, k_, s_) in ((-20, 230, 41, 6.0, 0.7, 2), (150, 430, 33, 5.0, 0.62, 4), (260, 430, 23, 3.0, 0.45, 6)):
+        ps_niebla_banda(im, x0, x1, y, g_, P["niebla"], k_ * (0.75 if o else 1.0), s_)
+
+
+def ps_cruce(im, P, o):
+    """La calle que sube la cuesta, entre las dos filas: el asfalto que se angosta hacia la cima (y se aclara con la
+    niebla), sus aceras y, a los dos lados, las casas que suben en escalera, cada una más chica y más perdida en la niebla;
+    arriba, los eucaliptos de la loma. Es la vista de San Francisco: una calle que sube recta por el cerro."""
+    px = im.load()
+    x0, x1 = PS_CRUCE
+    xc = (x0 + x1) / 2 + 2
+    yc = ps_cerro(xc) + 1.5
+    yb = 61
+    ancho = lambda t: 25 * max(0.0, 1 - t) ** 1.15 + 2.0 * t
+    rnd = random.Random(73)
+    # Las casas de los lados, de la más lejana a la más cercana.
+    ts = [0.92, 0.85, 0.77, 0.69, 0.6, 0.5, 0.39, 0.27, 0.14, 0.0]
+    for s_ in (-1, 1):
+        for i, t in enumerate(ts):
+            y_ = yb - (yb - yc) * t
+            borde = xc + s_ * (ancho(t) + 2.5 * (1 - t) + 1)
+            fondo_ = (1 - t) * 13 + 2.5
+            alto_ = (1 - t) * 26 + 4
+            col_ = rnd.choice(P["cerro_casas"][:4]) if (i + (s_ > 0)) % 4 else rnd.choice(P["cerro_casas"][4:6])
+            k_ = (0.05 + 0.55 * t * t) if not o else 0.03 + 0.2 * t
+            c_ = mezcla(col_, P["niebla"], k_)
+            c_s = mezcla(c_, P["cerro_techo"], 0.3 if (s_ > 0) else 0.12)
+            xa, xb = (borde - fondo_, borde) if s_ < 0 else (borde, borde + fondo_)
+            for x in range(int(xa), int(xb) + 1):
+                v = (x - xa) / max(1, xb - xa)
+                v = v if s_ < 0 else 1 - v                        # 1 junto a la calle
+                top_ = y_ - alto_ * (0.86 + 0.14 * v) - (1.6 if (x - int(xa)) % 7 < 3 and t < 0.5 else 0)
+                for y in range(int(top_), int(y_) + 1):
+                    if 0 <= x < W and 0 <= y < H:
+                        px[x, y] = c_s if v > 0.82 else c_
+                pon(px, x, top_ - 1, mezcla(P["cerro_techo"], P["niebla"], k_))
+            for fila in range(1, 4):                              # sus ventanas (en escorzo: angostas)
+                yv = y_ - alto_ * (0.24 * fila + 0.06)
+                hv = max(1, int(alto_ * 0.12))
+                enc_ = o and rnd.random() < 0.3
+                for x in range(int(xa) + 1, int(xb), max(2, int(fondo_ / 3))):
+                    if rnd.random() < 0.85:
+                        for yy in range(int(yv), int(yv) + hv):
+                            if o:
+                                if enc_:
+                                    pon(px, x, yy, P["cerro_ventana"], 0.75)
+                            else:
+                                pon(px, x, yy, mezcla(P["vidrio"][0], P["niebla"], k_))
+                            if (s_ > 0) == (x % 2 == 0) and t < 0.5:
+                                pon(px, x + s_ * -1, yy, mezcla(mezcla(c_, (255, 255, 255), 0.3), P["niebla"], k_) if not o else c_s)
+    # La calle: el asfalto y las aceras, que se aclaran con la niebla hacia arriba.
+    for y in range(int(yc), yb + 1):
+        t = (yb - y) / (yb - yc)
+        a_ = ancho(t)
+        k_ = (0.05 + 0.6 * t * t) if not o else 0.05 + 0.25 * t
+        for x in range(int(xc - a_ - 2.5 * (1 - t) - 1), int(xc + a_ + 2.5 * (1 - t) + 2)):
+            if not 0 <= x < W:
+                continue
+            dx_ = abs(x - xc)
+            if dx_ <= a_:
+                c = P["asfalto"][1] if (x + y * 3) % 7 else P["asfalto"][2]
+                if dx_ < 0.6 and y % 4 < 2 and not o:
+                    c = mezcla(c, hx("E8D9A0"), 0.6)
+            else:
+                c = P["acera"][1] if dx_ < a_ + 2.5 * (1 - t) else P["bordillo_s"]
+            px[x, y] = mezcla(c, P["niebla"], k_)
+
+
+def ps_ventana(im, P, o, x, y, w, h, encendida=False, cortina=None):
+    """Una ventana de guillotina con su marco: de día el vidrio refleja la niebla (más oscuro arriba, bajo el guardapolvo)
+    con un brillo; de noche, apagada o con la luz de adentro (y la silueta de la cortina)."""
+    px = im.load()
+    for yy in range(y, y + h):
+        for xx in range(x, x + w):
+            if not (0 <= xx < W and 0 <= yy < H):
+                continue
+            if not o:
+                c = P["vidrio"][0] if yy < y + 2 else P["vidrio"][1]
+                if (xx - x) + (yy - y) * 0.5 in (w - 1.5, w - 1.0) or (xx - x == w - 2 and yy - y == 3):
+                    c = P["vidrio"][2]
+            else:
+                if encendida:
+                    v = (yy - y) / max(1, h - 1)
+                    c = P["ventana"][0] if v > 0.55 else (P["ventana"][1] if v > 0.2 else P["ventana"][2])
+                else:
+                    c = P["vidrio"][0] if yy < y + 2 else P["vidrio"][1]
+            px[xx, yy] = c
+    if cortina == "encaje" or (o and encendida and cortina is None):
+        for yy in range(y, y + h):                      # las cortinas recogidas a los lados
+            pon(px, x, yy, mezcla(px[min(W - 1, max(0, x)), yy] if 0 <= x < W else (0, 0, 0), (250, 246, 236) if not o else P["ventana"][3], 0.6))
+            if yy < y + h // 2 or yy % 2 == 0:
+                pon(px, x + w - 1, yy, (250, 246, 236) if not o else P["ventana"][3], 0.6)
+    mid = y + h // 2                                     # el travesaño de la guillotina
+    for xx in range(x, x + w):
+        pon(px, xx, mid, P["casas_actual"]["moldura"] if not (o and encendida) else mezcla(P["casas_actual"]["moldura"], P["ventana"][3], 0.5))
+
+
+def ps_marco(im, P, x, y, w, h, pal, frontoncito=False):
+    """El marco de moldura de una ventana y su guardapolvo (con la sombra que deja debajo)."""
+    px = im.load()
+    for xx in range(x - 1, x + w + 1):
+        pon(px, xx, y + h, pal["moldura_s"])                       # alféizar
+        pon(px, xx, y - 1, pal["moldura"])
+        pon(px, xx, y - 2, pal["moldura"])
+        pon(px, xx, y + h + 1, pal["sombra"], 0.6)
+    pon(px, x - 2, y - 2, pal["moldura"]); pon(px, x + w + 1, y - 2, pal["moldura"])
+    for yy in range(y, y + h):
+        pon(px, x - 1, yy, pal["moldura"]); pon(px, x + w, yy, pal["moldura_s"])
+    if frontoncito:                                                # un frontoncito encima
+        for q in range(w // 2 + 2):
+            pon(px, x - 1 + q, y - 3 - q // 2, pal["moldura"]); pon(px, x + w - q, y - 3 - q // 2, pal["moldura_s"])
+    for xx in range(x, x + w):
+        pon(px, xx, y, pal["sombra"], 0.55)                        # la sombra del guardapolvo en el vidrio
+
+
+def ps_casa(im, P, o, c, n):
+    """Una casa victoriana de dos pisos sobre el sótano: tablas de madera, el mirador (bay window) de tres caras que
+    sube los dos pisos (la cara de la izquierda con luz, la de la derecha en sombra, y la sombra que deja en la fachada),
+    la puerta con su montante y su tejadillo, la escalera de la entrada con sus barandas, ventanas con guardapolvo y, arriba,
+    la cornisa con sus ménsulas o el frontón con escamas de madera."""
+    px = im.load(); d = ImageDraw.Draw(im)
+    pal = P["casas"][c["pal"]]
+    P["casas_actual"] = pal
+    x0, x1, top = c["x"], c["x"] + c["w"], c["top"]
+    sotano = 50
+    piso1 = top + (sotano - top) // 2
+    alto_v1, alto_v2 = piso1 - top - 6, sotano - piso1 - 3          # las ventanas de arriba y las de abajo
+    # El cuerpo, con las tablas.
+    for y in range(top, PS_BASE):
+        for x in range(max(0, x0), min(W, x1)):
+            px[x, y] = pal["tabla"] if (y - top) % 3 == 2 else pal["cuerpo"]
+    # El sótano: estuco un poco más oscuro, con su moldura y una ventanita o la puerta del garaje.
+    for y in range(sotano, PS_BASE):
+        for x in range(max(0, x0), min(W, x1)):
+            px[x, y] = mezcla(pal["cuerpo"], pal["sombra"], 0.55)
+    for x in range(x0, x1):
+        pon(px, x, sotano, pal["moldura"]); pon(px, x, sotano + 1, pal["sombra"], 0.5)
+    for x in range(x0, x1):                                       # la separación entre casas
+        pass
+    pon_linea = lambda xx: [pon(px, xx, y, pal["sombra"], 0.5) for y in range(top, PS_BASE)]
+    pon_linea(x1 - 1)
+    izq = c["bay"] == "izq"
+    bw = 15
+    bx = x0 + 4 if izq else x1 - 4 - bw
+    dx_p = x1 - 13 if izq else x0 + 6                             # la puerta, del otro lado
+    # El mirador.
+    yb0 = top + 3
+    for y in range(yb0, sotano + 1):
+        for x in range(bx, bx + bw):
+            q = x - bx
+            if q < 3:
+                c_ = mezcla(pal["cuerpo"], (255, 255, 255), 0.18) if not o else mezcla(pal["cuerpo"], pal["moldura"], 0.2)
+            elif q >= bw - 3:
+                c_ = pal["sombra"]
+            else:
+                c_ = pal["cuerpo"]
+            if (y - top) % 3 == 2:
+                c_ = mezcla(c_, pal["sombra"], 0.35)
+            pon(px, x, y, c_)
+        pon(px, bx + 2, y, mezcla(pal["moldura"], pal["cuerpo"], 0.3)); pon(px, bx + bw - 3, y, pal["moldura_s"])
+    for y in range(yb0 + 2, sotano + 2):                           # la sombra que deja el mirador a su derecha
+        for x in range(bx + bw, bx + bw + 2):
+            if x < x1 - 1:
+                pon(px, x, y, pal["sombra"], 0.55)
+    for x in range(bx - 1, bx + bw + 1):                           # la cornisita del mirador y la faja entre pisos
+        pon(px, x, yb0 - 1, pal["moldura"]); pon(px, x, yb0, pal["moldura_s"])
+        pon(px, x, piso1 - 2, pal["moldura2"]); pon(px, x, piso1 - 1, pal["moldura_s"])
+    for x in range(bx, bx + bw, 3):
+        pon(px, x, yb0 + 1, pal["moldura_s"])
+    ventanas = []
+    for (yv, hv) in ((yb0 + 3, alto_v1 + 1), (piso1 + 1, alto_v2)):
+        ventanas.append((bx + 5, yv, 5, hv, "centro"))
+        ventanas.append((bx + 1, yv + 1, 1, hv - 1, "lado"))
+        ventanas.append((bx + bw - 2, yv + 1, 1, hv - 1, "lado"))
+    # La puerta, el tejadillo y la escalera.
+    for y in range(piso1 + 1, sotano):
+        for x in range(dx_p, dx_p + 5):
+            pon(px, x, y, pal["puerta"] if y > piso1 + 2 else (pal["moldura2"] if (x + y) % 2 else mezcla(pal["vidrio"] if "vidrio" in pal else P["vidrio"][1], pal["moldura"], 0.2)))
+    for x in range(dx_p, dx_p + 5):
+        pon(px, x, piso1 + 2, pal["moldura"])
+    pon(px, dx_p + 3, piso1 + 6, pal["moldura2"])                   # el pomo
+    for y in range(piso1 + 1, sotano):
+        pon(px, dx_p - 1, y, pal["moldura"]); pon(px, dx_p + 5, y, pal["moldura_s"])
+    for x in range(dx_p - 2, dx_p + 7):                            # el tejadillo con dos ménsulas
+        pon(px, x, piso1 - 1, pal["moldura"]); pon(px, x, piso1, pal["sombra"], 0.6)
+    pon(px, dx_p - 1, piso1 + 1, pal["moldura_s"]); pon(px, dx_p + 5, piso1 + 1, pal["moldura_s"])
+    for y in range(sotano, PS_BASE):                               # la escalera
+        for x in range(dx_p - 1, dx_p + 6):
+            pon(px, x, y, pal["moldura"] if (y - sotano) % 2 == 0 else mezcla(pal["sombra"], (0, 0, 0), 0.15))
+        pon(px, dx_p - 2, y, pal["moldura2"]); pon(px, dx_p + 6, y, pal["moldura_s"])
+        pon(px, dx_p + 7, y, pal["sombra"], 0.5)
+    for (xx, cc) in ((dx_p - 2, pal["moldura2"]), (dx_p + 6, pal["moldura_s"])):   # los pilares de la baranda
+        pon(px, xx, sotano - 2, cc); pon(px, xx, sotano - 1, cc)
+    # Las ventanas del piso de arriba, encima de la puerta.
+    ventanas.append((dx_p, top + 5, 5, alto_v1, "arriba"))
+    if c["w"] >= 40:
+        ventanas.append((dx_p + (7 if izq else -7), top + 5, 4, alto_v1, "arriba"))
+    if not izq and c["w"] >= 40:
+        pass
+    # Ventanitas del sótano.
+    for xx in (bx + 4, bx + 9):
+        for y in range(sotano + 3, sotano + 6):
+            for x in range(xx, xx + 3):
+                pon(px, x, y, P["vidrio"][0] if not o else P["vidrio"][0])
+    # El remate.
+    if c["remate"] == "cornisa":
+        for x in range(x0 - 1, x1 + 1):
+            pon(px, x, top - 3, pal["moldura"]); pon(px, x, top - 2, pal["moldura"]); pon(px, x, top - 1, pal["moldura_s"])
+            pon(px, x, top, pal["sombra"], 0.7)
+            pon(px, x, top - 4, mezcla(pal["moldura"], pal["techo"], 0.5))
+        for x in range(x0 + 1, x1, 4):                             # las ménsulas
+            pon(px, x, top, pal["moldura_s"]); pon(px, x, top + 1, pal["moldura_s"]); pon(px, x + 1, top + 1, pal["sombra"], 0.5)
+    else:
+        xm = (x0 + x1) / 2
+        alto_ = c["w"] * 0.3
+        for y in range(int(top - alto_), top + 1):
+            v = (top - y) / alto_
+            hw = (1 - v) * (c["w"] / 2 + 1)
+            for x in range(int(xm - hw), int(xm + hw) + 1):
+                if 0 <= x < W and 0 <= y < H:
+                    escama = (y % 2 == 0 and (x + (y // 2) % 2 * 2) % 4 == 0)
+                    px[x, y] = pal["tabla"] if escama else (pal["cuerpo"] if x < xm + 3 else mezcla(pal["cuerpo"], pal["sombra"], 0.4))
+            for s_ in (-1, 1):                                    # el alero en las dos pendientes
+                xe = int(round(xm + s_ * (hw + 0.5)))
+                pon(px, xe, y, pal["techo"]); pon(px, xe - s_, y, pal["techo"])
+                pon(px, xe - 2 * s_, y, pal["moldura"] if s_ < 0 else pal["moldura_s"])
+        for x in range(x0 - 1, x1 + 1):
+            pon(px, x, top, pal["moldura"]); pon(px, x, top + 1, pal["sombra"], 0.6)
+        for y in range(int(top - alto_ * 0.55), int(top - alto_ * 0.55) + 3):   # el ojo de buey del frontón
+            for x in range(int(xm) - 1, int(xm) + 2):
+                pon(px, x, y, P["vidrio"][0])
+        pon(px, int(xm) - 2, int(top - alto_ * 0.55) + 1, pal["moldura"]); pon(px, int(xm) + 2, int(top - alto_ * 0.55) + 1, pal["moldura_s"])
+    # Las ventanas: vidrio, marco y, en algunas casas, lo que hay en ella.
+    luces_ = []
+    for k, (x, y, w, h, tipo) in enumerate(ventanas):
+        enc = o and n in PS_ENCENDIDAS and (k * 7 + n) % 3 != 0 and tipo != "lado"
+        if tipo == "lado":
+            for yy in range(y, y + h):
+                pon(px, x, yy, P["vidrio"][0] if not o else (P["ventana"][2] if enc else P["vidrio"][0]))
+            continue
+        ps_ventana(im, P, o, x, y, w, h, enc, "encaje" if c["esp"] == "encaje" else None)
+        ps_marco(im, P, x, y, w, h, pal, frontoncito=(tipo == "arriba" and c["remate"] == "cornisa"))
+        if enc:
+            luces_.append((x, y, w, h))
+    esp = c["esp"]
+    xa, ya, wa, ha = ventanas[0][:4]                               # la ventana del centro del mirador, arriba
+    if esp == "luces":
+        if not o:                                                  # una tela teñida con nudos, colgada de cortina
+            cx_, cy_ = xa + wa / 2 - 0.5, ya + ha / 2
+            for yy in range(ya, ya + ha):
+                for xx in range(xa, xa + wa):
+                    r_ = math.hypot(xx - cx_, (yy - cy_) * 0.8)
+                    a_ = math.atan2(yy - cy_, xx - cx_)
+                    q = int((r_ * 1.2 + a_ * 1.3) % 4)
+                    pon(px, xx, yy, (P["flores"][0], P["cartel"]["amarillo"], P["cartel"]["azul"], P["cartel"]["naranja"])[q])
+        P.setdefault("_luces_ventanas", []).append((xa, ya, wa, ha))
+    elif esp == "cartel":
+        x, y = ventanas[-1][0], ventanas[-1][1]
+        for yy in range(y + 1, y + 8):
+            for xx in range(x, x + 4):
+                pon(px, xx, yy, P["cartel"]["naranja"] if not o else mezcla(P["cartel"]["naranja"], P["ventana"][1], 0.4))
+        pon(px, x + 1, y + 3, P["cartel"]["azul"]); pon(px, x + 2, y + 3, P["cartel"]["azul"]); pon(px, x + 1, y + 5, P["cartel"]["azul"])
+        pon(px, x + 2, y + 6, P["cartel"]["azul"])
+    elif esp == "paz":
+        x, y, w, h = ventanas[-1][:4]
+        if not o:                                                  # un cartel de una flor pegado en el vidrio
+            for yy in range(y + 1, y + h - 1):
+                for xx in range(x, x + w):
+                    pon(px, xx, yy, P["cartel"]["amarillo"])
+            cx_, cy_ = x + w // 2, y + h // 2
+            for (dx, dy) in ((0, -1), (-1, 0), (1, 0), (0, 1)):
+                pon(px, cx_ + dx, cy_ + dy, P["cartel"]["magenta"])
+            pon(px, cx_, cy_, P["cartel"]["naranja"])
+            for yy in range(cy_ + 2, y + h - 1):
+                pon(px, cx_, yy, P["cartel"]["verde"])
+        else:                                                      # de noche: el mirador con la luz negra
+            P.setdefault("_luz_negra", []).append(ventanas[0][:4])
+    elif esp == "flores":
+        x, y, w, h = ventanas[1][:4] if False else ventanas[3][:4]
+        for xx in range(x - 1, x + w + 1):                         # la jardinera con geranios
+            pon(px, xx, y + h + 1, P["poste"][2] if not o else P["poste"][1])
+            pon(px, xx, y + h, P["flores"][3] if xx % 2 else P["flores"][2])
+            if xx % 2 == 0:
+                pon(px, xx, y + h - 1, P["flores"][0] if xx % 4 else P["flores"][1])
+    elif esp == "periodico":
+        for (xx, cc) in ((dx_p + 4, P["flores"][0]), (dx_p + 5, P["cartel"]["amarillo"]), (dx_p + 6, P["cartel"]["azul"])):
+            pon(px, xx, sotano - 1, cc); pon(px, xx, sotano - 2, P["papel"])
+    return luces_
+
+
+def ps_calle(im, P, o):
+    """La acera de enfrente con su bordillo, el asfalto, el bordillo de este lado y la acera por donde camina el gato
+    (losas con sus juntas, grietas con hierbitas, los dibujos de tiza: una flor y un sol)."""
+    px = im.load()
+    for x in range(W):
+        for y in range(PS_BASE, 62):
+            px[x, y] = P["acera"][3] if y == PS_BASE else P["acera"][1]
+        pon(px, x, 62, P["bordillo_s"])
+        for y in range(63, 66):
+            px[x, y] = P["asfalto"][1] if (x * 7 + y * 3) % 11 else P["asfalto"][2]
+        pon(px, x, 66, P["bordillo_s"])
+        pon(px, x, PS_BORDILLO, P["bordillo"])
+        for y in range(PS_BORDILLO + 1, H):
+            px[x, y] = P["acera"][0] if y < 72 else P["acera"][1]
+    for x in range(0, W, 3):
+        if (x // 3) % 5 == 0:
+            pon(px, x, 61, P["junta"])
+    x0c, x1c = PS_CRUCE                                            # la boca de la calle que sube
+    for x in range(x0c + 8, x1c - 8):
+        for y in range(PS_BASE, 63):
+            px[x, y] = P["asfalto"][1] if (x + y * 3) % 7 else P["asfalto"][2]
+    for (xa, s_) in ((x0c + 8, -1), (x1c - 9, 1)):                  # las esquinas redondeadas del bordillo
+        for y in range(PS_BASE, 63):
+            pon(px, xa, y, P["bordillo"] if s_ < 0 else P["bordillo_s"])
+    for x in range(x0c + 12, x1c - 12, 3):                         # el paso de peatones, gastado
+        for y in range(63, 66):
+            pon(px, x, y, P["bordillo"], 0.55); pon(px, x + 1, y, P["bordillo"], 0.55)
+    rnd = random.Random(41)
+    for xj in range(-6, W + 30, 26):                              # las juntas de las losas, en perspectiva
+        for y in range(PS_BORDILLO + 1, H):
+            x = xj - (y - PS_BORDILLO) * 0.35
+            pon(px, x, y, P["junta"])
+    for x in range(W):
+        pon(px, x, 73, P["junta"], 0.6)
+    for _ in range(420):                                           # el grano del cemento
+        x, y = rnd.randrange(W), rnd.randrange(PS_BORDILLO + 1, H)
+        pon(px, x, y, P["acera"][2] if rnd.random() < 0.6 else P["acera"][3])
+    for (x0, y0, largo) in ((118, 69, 9), (330, 74, 11), (212, 76, 7)):    # grietas con su hierbita
+        x, y = x0, y0
+        for _ in range(largo):
+            pon(px, x, y, P["junta"]); x += 1; y += rnd.choice((-1, 0, 0, 1)); y = max(PS_BORDILLO + 1, min(H - 1, y))
+        pon(px, x0 + 2, y0 - 1, P["hojas"][3] if not o else P["hojas"][2]); pon(px, x0 + 3, y0 - 2, P["hojas"][2])
+    # Los dibujos de tiza.
+    tz = P["tiza"]
+    cx_, cy_ = 166, 75
+    for a_ in range(0, 360, 45):                                   # una flor de cinco... de ocho pétalos
+        for r_ in (2.0, 3.0, 3.6):
+            pon(px, cx_ + r_ * math.cos(math.radians(a_)) * 1.6, cy_ + r_ * math.sin(math.radians(a_)) * 0.75, tz[0], 0.9)
+    for (dx, dy) in ((0, 0), (1, 0), (-1, 0), (0, 1)):
+        pon(px, cx_ + dx, cy_ + dy, tz[2], 0.8)
+    for q in range(10):                                            # el tallo
+        pon(px, cx_ - 2 - q * 0.2, cy_ + 3 + q * 0.35, tz[3], 0.7)
+    sx_, sy_ = 284, 77
+    for a_ in range(0, 360, 20):
+        pon(px, sx_ + 3.2 * math.cos(math.radians(a_)), sy_ + 1.6 * math.sin(math.radians(a_)), tz[1], 0.9)
+    for a_ in range(0, 360, 30):
+        pon(px, sx_ + 5.4 * math.cos(math.radians(a_)), sy_ + 2.5 * math.sin(math.radians(a_)), tz[2], 0.85)
+    # La boca de incendio en la acera de enfrente (blanca, con la tapa azul) y su sombra.
+    hx_ = 292
+    for y in range(55, 61):
+        for x in range(hx_, hx_ + 3):
+            pon(px, x, y, (hx("ECEAE4") if x < hx_ + 2 else hx("BDB9B0")) if not o else (hx("4E4858") if x < hx_ + 2 else hx("3A3446")))
+    for x in range(hx_ - 1, hx_ + 4):
+        pon(px, x, 54, P["cartel"]["azul"])
+    pon(px, hx_ - 1, 57, hx("BDB9B0") if not o else hx("3A3446")); pon(px, hx_ + 3, 57, hx("9C978E") if not o else hx("2E2838"))
+    for x in range(hx_ + 3, hx_ + 6):
+        pon(px, x, 60, P["sombra"], 0.3)
+
+
+def ps_poste(im, P, o):
+    """El poste de madera (adelante a la izquierda) con su cruceta y los aisladores, el brazo del cable del trolebús, el
+    farol y los carteles pegados unos sobre otros (los de abajo, rotos). Los cables cruzan toda la banda."""
+    px = im.load(); d = ImageDraw.Draw(im)
+    x0 = PS_POSTE
+    # Los cables: tres de la cruceta (con su comba) y los dos del trolebús, más abajo y casi derechos.
+    for (y0, comba) in ((3, 3.4), (6, 3.0)):
+        for x in range(W):
+            if x < x0:
+                y = y0 + comba * 0.6 * math.sin(math.pi * (x0 - x) / (x0 + 160))
+            else:
+                y = y0 + comba * math.sin(math.pi * (x - x0) / (W + 140 - x0))
+            pon(px, x, y, P["cable"], 0.6)
+    for yt in (13, 15):
+        for x in range(W):
+            pon(px, x, yt + 0.7 * math.sin(math.pi * ((x + 60) % 206) / 206), P["cable"], 0.75)
+    for x in range(x0 + 4, 64):                                   # el brazo que sostiene los del trolebús
+        pon(px, x, 12, P["metal"])
+    for x in (40, 56):
+        pon(px, x, 13, P["metal"]); pon(px, x, 14, P["metal"])
+    # El poste: madera con la luz de la izquierda, la veta y los peldaños de hierro.
+    for y in range(0, 78):
+        for q in range(4):
+            c = P["poste"][3 - q] if q < 3 else P["poste"][0]
+            if q == 1 and (y * 5 + 3) % 13 < 2:
+                c = P["poste"][1]
+            pon(px, x0 + q, y, c)
+    for y in range(76, 79):
+        for q in range(-1, 5):
+            pon(px, x0 + q, y, P["poste"][0])
+    for y in range(4, 70, 7):
+        pon(px, x0 + 4, y, P["metal"]); pon(px, x0 + 5, y, P["metal"])
+    for x in range(x0 - 10, x0 + 15):                             # la cruceta y los aisladores
+        pon(px, x, 3, P["poste"][1]); pon(px, x, 4, P["poste"][0])
+    for x in (x0 - 8, x0 - 2, x0 + 7, x0 + 13):
+        pon(px, x, 2, P["aislador"]); pon(px, x, 1, mezcla(P["aislador"], (255, 255, 255), 0.4))
+    # El farol: el brazo curvo y la cabeza.
+    fx, fy = PS_FAROL
+    for q in range(fx - x0 - 4):
+        pon(px, x0 + 4 + q, fy - 2 + 3 * (q / (fx - x0)) ** 2 * 0 - (1 if q < 6 else 0), P["metal"])
+    for x in range(fx - 3, fx + 3):
+        pon(px, x, fy - 1, P["farol"]); pon(px, x, fy, P["farol"])
+    for x in range(fx - 2, fx + 2):
+        pon(px, x, fy + 1, P["farol_vidrio"])
+
+
+def ps_carteles(im, P, o, flap=0, tira=0):
+    """Los carteles pegados en el poste, con sus grapas: abajo, restos rotos de los viejos; encima, tres de la semana,
+    con letras de bloque que llenan su forma (ilegibles: no copian ninguno) y colores que vibran. La esquina de uno se
+    levanta con el viento (flap 0 a 3) y una tira rota se mece (tira -1, 0, 1)."""
+    px = im.load()
+    C = P["cartel"]
+    x0 = PS_POSTE
+
+    def rect(xa, ya, xb, yb, col):
+        for y in range(ya, yb):
+            for x in range(xa, xb):
+                pon(px, x, y, col)
+    # Los restos de los viejos (papel desteñido, roto).
+    for (xa, ya, xb, yb) in ((x0 - 3, 27, x0 + 7, 31), (x0 - 2, 60, x0 + 6, 66)):
+        for y in range(ya, yb):
+            for x in range(xa, xb):
+                if (x * 3 + y * 7) % 5 or y < yb - 1:
+                    pon(px, x, y, P["papel"] if (x + y) % 3 else P["papel_s"])
+    for q in range(4):                                             # la tira rota que cuelga
+        pon(px, x0 + 4 + (tira if q > 1 else 0), 66 + q, P["papel"])
+    # 1: magenta con letras verdes y un sol naranja.
+    rect(x0 - 4, 31, x0 + 8, 44, C["magenta"])
+    for (xa, ya, w_, h_) in ((x0 - 3, 32, 3, 3), (x0, 32, 2, 3), (x0 + 3, 32, 4, 3), (x0 - 3, 36, 4, 2), (x0 + 2, 36, 5, 2)):
+        rect(xa, ya, xa + w_, ya + h_, C["verde"])
+        pon(px, xa + w_ - 1, ya + h_ - 1, C["magenta"])
+    for (dx, dy) in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)):
+        pon(px, x0 + 2 + dx, 41 + dy, C["naranja"])
+    for (dx, dy) in ((-2, 0), (2, 0), (0, 2), (0, -2)):
+        pon(px, x0 + 2 + dx, 41 + dy, C["amarillo"])
+    # 2: azul con una flor naranja (la esquina de abajo a la derecha se levanta).
+    rect(x0 - 3, 44, x0 + 7, 55, C["azul"])
+    for (dx, dy) in ((0, -2), (-2, 0), (2, 0), (0, 2), (-1, -1), (1, -1), (-1, 1), (1, 1)):
+        pon(px, x0 + 2 + dx, 48 + dy, C["naranja"])
+    pon(px, x0 + 2, 48, C["amarillo"])
+    for y in range(50, 54):
+        pon(px, x0 + 2, y, C["verde"])
+    rect(x0 - 2, 45, x0 + 6, 46, C["naranja"])
+    # 3: amarillo con ondas violeta que vibran.
+    rect(x0 - 4, 54, x0 + 6, 61, C["amarillo"])
+    for y in range(55, 61, 2):
+        for x in range(x0 - 4, x0 + 6):
+            if (x + int(1.5 * math.sin((x + y) * 0.9))) % 3 == 0:
+                pon(px, x, y, C["violeta"])
+    # La redondez del poste: la orilla derecha de los carteles, más oscura.
+    for y in range(27, 66):
+        for x in (x0 + 5, x0 + 6, x0 + 7):
+            pon(px, x, y, P["sombra"], 0.18 if x == x0 + 5 else 0.3)
+    for (x, y) in ((x0 - 3, 32), (x0 + 6, 32), (x0 - 2, 45), (x0 + 5, 45), (x0 - 3, 55), (x0 + 4, 55)):   # grapas
+        pon(px, x, y, hx("D8D8D8") if not o else hx("6A6670"))
+    # La esquina que se levanta: se ve el revés del papel y debajo, la sombra.
+    if flap:
+        xb, yb = x0 + 6, 54
+        for q in range(flap + 1):
+            for r in range(flap + 1 - q):
+                pon(px, xb - q, yb - r, P["papel"] if (q + r) < flap else P["papel_s"])
+        for q in range(flap + 1):
+            pon(px, xb - q + 1, yb + 1 - (flap - q), P["sombra"], 0.35)
+
+
+def ps_arbol(im, P, o):
+    """El árbol de la calle (a la derecha), que enmarca: el tronco en su cuadro de tierra y la copa que entra por arriba,
+    con la luz de la izquierda y huecos por donde se ve el cielo."""
+    px = im.load()
+    tx = 398
+    for y in range(18, 79):
+        for q in range(5):
+            c = P["tronco"][2] if q == 0 else (P["tronco"][1] if q < 3 else P["tronco"][0])
+            if (y * 3 + q * 5) % 9 == 0:
+                c = P["tronco"][0]
+            pon(px, tx + q + (1 if y < 34 else 0) * (y < 26), y, c)
+    for x in range(tx - 4, tx + 9):
+        pon(px, x, 78, P["tronco"][0]); pon(px, x, 79, mezcla(P["acera"][1], P["tronco"][0], 0.5))
+    for (a, b, cc) in (((tx + 2, 30), (tx - 14, 14), 0), ((tx + 3, 26), (tx + 16, 10), 1)):
+        for q in range(30):
+            u = q / 29
+            pon(px, a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, P["tronco"][0])
+            pon(px, a[0] + (b[0] - a[0]) * u + 1, a[1] + (b[1] - a[1]) * u, P["tronco"][1])
+    rnd = random.Random(61)
+    hojas = P["hojas"]
+    blobs = [(rnd.uniform(352, 418), rnd.uniform(-4, 22), rnd.uniform(4, 8)) for _ in range(16)]
+    for (cx, cy, r) in blobs:
+        for y in range(int(cy - r), int(cy + r) + 1):
+            for x in range(int(cx - r * 1.2), int(cx + r * 1.2) + 1):
+                dd = ((x - cx) / (r * 1.2)) ** 2 + ((y - cy) / r) ** 2
+                if dd < 1 and 0 <= x < W and 0 <= y < H:
+                    if rnd.random() < 0.08 and dd > 0.5:
+                        continue
+                    lado = ((x - cx) / r + (y - cy) / r)
+                    t_ = 4 if lado < -0.9 else (3 if lado < -0.3 else (2 if lado < 0.4 else 1))
+                    if dd > 0.85 and lado > 0.5:
+                        t_ = 0
+                    px[x, y] = hojas[t_ if not o else max(0, t_ - 1)]
+
+
+def fondo_psicodelia(t):
+    """Psicodelia: una calle de San Francisco en el verano de 1967, el mismo lugar de día y de noche. De día: la niebla de
+    la mañana que se levanta, el sol velado arriba a la izquierda (de ahí la luz), la cuesta con sus casitas en escalera y
+    los eucaliptos, la fila de casas victorianas grises y desteñidas con dos pintadas, la calle, el poste con los carteles,
+    los cables y el árbol que enmarca; en la acera, dibujos de tiza. De noche: la misma calle con el farol encendido, las
+    ventanas con luz, una con luz negra (el violeta y, adentro, carteles en verde limón y magenta que brillan) y, en el
+    mirador de la casa turquesa, las luces líquidas que respiran. Lo que se mueve: la niebla (jirones que pasan y se
+    deshacen), los carteles con el viento, una gaviota de día y, de noche, las luces líquidas y dos polillas en el farol."""
+    o = t["oscuro"]
+    P = dict(PAL_PSI_N if o else PAL_PSI_D)
+    im, d = lienzo(P["cielo"][0])
+    px = im.load()
+    ps_cielo(im, P, o)
+    ps_cuesta(im, P, o)
+    ps_cruce(im, P, o)
+    luces_casas = []
+    for n, c in enumerate(PS_CASAS):
+        luces_casas += ps_casa(im, P, o, c, n)
+    ps_calle(im, P, o)
+    # Sombras de día: el poste en la acera (la luz viene de arriba a la izquierda) y el árbol, en manchas.
+    if not o:
+        for y in range(PS_BORDILLO + 1, H):
+            for x in range(PS_POSTE + 4, PS_POSTE + 4 + int((79 - y) * 2.6) + 4):
+                if abs(x - (PS_POSTE + 4 + (79 - y) * 2.6)) < 2.2:
+                    pon(px, x, y, P["sombra"], 0.22)
+        rnd = random.Random(67)
+        for _ in range(26):
+            cx, cy = rnd.uniform(352, 412), rnd.uniform(69, 79)
+            for y in range(int(cy - 1), int(cy + 2)):
+                for x in range(int(cx - 3), int(cx + 4)):
+                    if ((x - cx) / 3.2) ** 2 + ((y - cy) / 1.4) ** 2 < 1:
+                        pon(px, x, y, P["sombra"], 0.18)
+    ps_arbol(im, P, o)
+    ps_poste(im, P, o)
+    if o:
+        # Las ventanas con luz dejan su halo en la niebla de la calle; la luz negra, un halo violeta; el farol, su luz.
+        for (x, y, w_, h_) in luces_casas:
+            luz(im, x + w_ / 2, y + h_ / 2, 7, P["ventana"][2], 0.14, 3, ry=8)
+        for (x, y, w_, h_) in P.get("_luz_negra", []):
+            luz(im, x + w_ / 2, y + h_ / 2, 11, P["luz_negra"][1], 0.3, 4, ry=11)
+            for yy in range(y, y + h_):
+                for xx in range(x, x + w_):
+                    pon(px, xx, yy, P["luz_negra"][1] if yy > y + 1 else P["luz_negra"][0])
+            F = P["fluor"]                                     # los carteles de adentro que brillan
+            for (xx, yy, cc) in ((x, y + 3, F["limon"]), (x + 1, y + 3, F["limon"]), (x, y + 4, F["limon"]), (x + 1, y + 5, F["limon"]),
+                                 (x + 3, y + 2, F["magenta"]), (x + 3, y + 3, F["magenta"]), (x + 2, y + 4, F["naranja"]),
+                                 (x + 3, y + 6, F["magenta"]), (x + 2, y + 7, F["limon"])):
+                pon(px, xx, yy, cc)
+            ps_marco(im, P, x, y, w_, h_, P["casas"]["gris"], frontoncito=False)
+            for yy in range(y + 1, y + h_):                    # las caras del mirador también, más tenues
+                pon(px, x - 4, yy, P["luz_negra"][1]); pon(px, x + w_ + 4, yy, P["luz_negra"][0])
+        for (x, y, w_, h_) in P.get("_luces_ventanas", []):     # el resplandor de las luces líquidas en la fachada
+            luz(im, x + w_ / 2, y + h_ / 2, 12, hx("C85AA8"), 0.24, 4, ry=11)
+        fx, fy = PS_FAROL
+        luz(im, fx, fy + 2, 34, P["farol_halo"], 0.12, 4, ry=26)
+        luz(im, fx, fy + 2, 13, P["farol_luz"], 0.22, 3, ry=11)
+        luz(im, fx - 2, 75, 50, P["farol_luz"], 0.2, 4, ry=6, y1=H)
+        for y in range(0, 78):                                 # el lado del poste que mira al farol
+            pon(px, PS_POSTE + 3, y, mezcla(P["poste"][2], P["farol_luz"], 0.25 if abs(y - fy) < 30 else 0.08))
+        ps_poste(im, P, o)
+        for x in range(fx - 2, fx + 2):
+            pon(px, x, fy + 1, P["farol_vidrio"])
+        pon(px, fx - 1, fy + 2, P["farol_luz"], 0.6); pon(px, fx, fy + 2, P["farol_luz"], 0.6)
+    ps_carteles(im, P, o)
+    if o:
+        fx, fy = PS_FAROL                                      # el farol ilumina el lado derecho de los carteles
+        for y in range(30, 62):
+            for x in range(PS_POSTE + 1, PS_POSTE + 8):
+                pon(px, x, y, P["farol_luz"], 0.12 * max(0, 1 - abs(y - 42) / 28))
+    # --- Lo que se mueve: se dibuja en cada cuadro sobre la base, y el grano va al final.
+    estatico = im.copy()
+    gr = np.ones((H, W), np.float32)
+    q = np.random.default_rng(71).random((H, W))
+    gr[q < 0.06] = 0.955; gr[q > 0.94] = 1.04
+    # Los jirones de niebla: aparecen, pasan despacio a la derecha subiendo un poco y se deshacen. Ninguno se ve en el
+    # cuadro 0 (así la base no lleva ninguno). Su lugar va de pixel en pixel y su fuerza en cuatro pasos.
+    JIRONES = [  # x, y, largo, grosor, de, hasta (fracción del bucle), cuánto avanza
+        (236, 36, 54, 3.8, 0.04, 0.88, 24), (60, 23, 52, 3.0, 0.18, 0.97, 22), (330, 18, 44, 3.0, 0.06, 0.7, 18)]
+
+    def jiron(f, x0, y0, largo, grosor, k):
+        p_ = f.load()
+        col = P["niebla"]
+        for x in range(int(x0), int(x0 + largo)):
+            if not 0 <= x < W:
+                continue
+            u = (x - x0) / largo
+            env = math.sin(math.pi * u) ** 0.8
+            g_ = grosor * env * (1 + 0.3 * math.sin(u * 9 + x0 * 0.1))
+            yc = y0 + 0.8 * math.sin(u * 5.0)
+            for y in range(int(yc - g_ / 2) - 1, int(yc + g_ / 2) + 2):
+                if not 0 <= y < H:
+                    continue
+                dd = 1 - abs(y - yc) / max(0.6, g_ / 2 + 0.5)
+                if dd <= 0:
+                    continue
+                if tramar(min(1.0, dd * 1.3) * k, x, y):
+                    p_[x, y] = mezcla(p_[x, y], col, 0.7 if dd > 0.45 else 0.45)
+
+    def mover(f, tk):
+        u_ = tk / BUCLE
+        for (x0, y0, largo, grosor, de, hasta, avance) in JIRONES:
+            if not de < u_ < hasta:
+                continue
+            v = (u_ - de) / (hasta - de)
+            k = min(1.0, v / 0.25, (1 - v) / 0.25)
+            k = math.ceil(k * 4) / 4                            # cuatro pasos de fuerza
+            jiron(f, x0 + int(avance * v), y0 - int(2 * v), largo, grosor, k)
+        # Los carteles con el viento: la esquina que se levanta y la tira rota, en ráfagas.
+        rafaga = 0.5 + 0.5 * math.sin(fase(tk, k=2) + 0.4)
+        vib = math.sin(fase(tk, k=11)) * rafaga
+        flap = 0 if rafaga < 0.35 else int(round(1 + 2 * max(0.0, vib)))
+        tira = 0 if rafaga < 0.25 else (1 if math.sin(fase(tk, k=8)) > 0.3 else (-1 if math.sin(fase(tk, k=8)) < -0.3 else 0))
+        if flap or tira:
+            ps_carteles(f, P, o, flap, tira)
+            if o:
+                p_ = f.load()
+                for y in range(30, 70):
+                    for x in range(PS_POSTE - 4, PS_POSTE + 8):
+                        if f.getpixel((x, y)) != estatico.getpixel((x, y)):
+                            p_[x, y] = mezcla(p_[x, y], P["farol_luz"], 0.12 * max(0, 1 - abs(y - 42) / 28))
+        p_ = f.load()
+        if not o:
+            # Una gaviota que cruza el cielo de derecha a izquierda, batiendo las alas, una vez por bucle.
+            ff = (tk / BUCLE + 0.35) % 1.0
+            if ff < 0.7:
+                gx = W + 8 - (W + 24) * ff / 0.7
+                gy = 13 + 4 * math.sin(ff * 7) + 2 * math.sin(ff * 19)
+                g = P["gaviota"]
+                ala = (tk // 3) % 3
+                forma = {0: ((-3, -1), (-2, -1), (-1, 0), (1, 0), (2, -1), (3, -1)),
+                         1: ((-3, 0), (-2, 0), (-1, 0), (1, 0), (2, 0), (3, 0)),
+                         2: ((-3, 1), (-2, 0), (-1, 0), (1, 0), (2, 0), (3, 1))}[ala]
+                for (dx, dy) in forma:
+                    pon(p_, gx + dx, gy + dy, g[0] if abs(dx) < 3 else g[1])
+                pon(p_, gx, gy, g[0]); pon(p_, gx - 1, gy + 1, g[1]); pon(p_, gx - 2, gy, g[2])
+            return
+        # De noche: las luces líquidas del mirador (gotas de aceite y tinta que se mezclan y respiran) y dos polillas.
+        for (x, y, w_, h_) in P.get("_luces_ventanas", []):
+            liquidas(p_, x, y, w_, h_, tk, P)
+        fx, fy = PS_FAROL
+        for m in range(2):
+            a_ = fase(tk, k=5 if m == 0 else -4) + m * 2.6
+            mx, my = fx + 6 * math.cos(a_), fy + 5 + 3.2 * math.sin(a_) * (1 + 0.3 * math.sin(2 * a_))
+            pon(p_, mx, my, hx("E9E0D0")); pon(p_, mx + (1 if (tk // 2) % 2 else -1), my, hx("A89E8A"), 0.7)
+
+    def liquidas(p_, x0, y0, w_, h_, tk, P):
+        """Tres gotas (magenta, ámbar y verde) que se mueven despacio dentro del vidrio, se juntan y se separan; donde se
+        tocan, se funden; alrededor, su luz tiñe el fondo violeta. Se repiten exactas cada BUCLE cuadros."""
+        gotas = []
+        for i in range(3):
+            cx = x0 + w_ * (0.5 + 0.34 * math.sin(fase(tk) + i * 2.1))
+            cy = y0 + h_ * (0.5 + 0.36 * math.sin(fase(tk, k=2) + i * 1.4 + 0.5))
+            r = 1.9 + 0.5 * math.sin(fase(tk, k=3) + i * 2.0)
+            gotas.append((cx, cy, r))
+        for yy in range(y0, y0 + h_):
+            for xx in range(x0, x0 + w_):
+                campos = [r * r / ((xx + 0.5 - cx) ** 2 + (yy + 0.5 - cy) ** 2 + 0.25) for (cx, cy, r) in gotas]
+                tot = sum(campos)
+                i = int(np.argmax(campos))
+                base, claro = P["liquidas"][i]
+                if tot > 2.6:
+                    c = claro
+                elif tot > 1.0:
+                    c = base
+                else:
+                    c = mezcla(hx("2A1448"), base, min(0.6, tot * 0.5))
+                pon(p_, xx, yy, c)
+
+    cache = {}
+
+    def render(tk):
+        if tk not in cache:
+            f = estatico.copy()
+            mover(f, tk)
+            a = np.asarray(f, np.float32) * gr[..., None]
+            cache[tk] = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+        return cache[tk]
+
+    mascaras = {}
+
+    def vivo(img, tick, delante):
+        """Pega encima solo lo que cambió respecto del cuadro 0 (así no borra lo que ya haya en la banda)."""
+        if delante:
+            return
+        tk = tick % BUCLE
+        if tk not in mascaras:
+            dif = (np.asarray(render(tk)) != np.asarray(render(0))).any(2)
+            mascaras[tk] = Image.fromarray((dif * 255).astype(np.uint8)).resize((W * ESC, H * ESC), Image.NEAREST) if dif.any() else None
+        if mascaras[tk] is not None:
+            img.paste(subir(render(tk)), (0, 0), mascaras[tk])
+    ANIM[("psicodelia", o)] = [vivo]
+    return subir(render(0))
+
+
+FONDOS_MIOS = {"frente": fondo_frente, "arcontes": fondo_arcontes, "galia": fondo_galia, "nouveau": fondo_nouveau,
+               "psicodelia": fondo_psicodelia}
 ETIQ = {"frente": "Frente exterior · la base escondida en ruinas", "arcontes": "Arcontes · el lago de Galilea en Magdala",
-        "galia": "Galia · el oppidum arverno y su robledal", "nouveau": "Art nouveau · el invernadero de hierro y vidrio"}
+        "galia": "Galia · el oppidum arverno y su robledal", "nouveau": "Art nouveau · el invernadero de hierro y vidrio",
+        "psicodelia": "Psicodelia · una calle de San Francisco en 1967, con la niebla de la mañana"}
 NOCHE = {"frente": "la base en penumbra, con el vidrio y las lámparas encendidos",
          "arcontes": "el mismo lago con las estrellas, la lámpara y una grieta de luz",
          "galia": "el mismo oppidum con sus hogueras y, en el llano, las del cerco romano",
-         "nouveau": "el mismo invernadero con las lámparas de vidrio encendidas y la luna tras el vidrio"}
+         "nouveau": "el mismo invernadero con las lámparas de vidrio encendidas y la luna tras el vidrio",
+         "psicodelia": "la misma calle con el farol, una ventana de luz negra y las luces líquidas en un mirador"}
 
 
 def registrar():
