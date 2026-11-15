@@ -399,7 +399,13 @@ internal object EscenaUrss : EscenaVida {
     internal fun fogon(m: Momento): Boolean = !enElSanatorio(m) && (fase(m) == Fase.MANANA || fase(m) == Fase.VUELTA)
 
     /** El samovar eléctrico, enchufado y echando vapor: por la mañana y a la hora del té de la noche. */
-    internal fun samovar(m: Momento): Boolean = fase(m) == Fase.NOCHE || (fase(m) == Fase.MANANA && !enElSanatorio(m))
+    internal fun samovarEnchufado(m: Momento): Boolean = fase(m) == Fase.NOCHE || (fase(m) == Fase.MANANA && !enElSanatorio(m))
+
+    /**
+     * El vaho del samovar de la mesa (la parte viva lo hace salir de su sitio): no sale el día en que el samovar es el
+     * objeto, porque entonces está delante, en su bandeja, y pinta su vaho él mismo (`ObjetosUrss`).
+     */
+    internal fun samovar(m: Momento): Boolean = samovarEnchufado(m) && laCocinaPinta(m, "samovar")
 
     /**
      * El hervidor todavía caliente, con su hilo de vapor, la media hora después de que ella se va al metro (de 7:00 a
@@ -408,7 +414,7 @@ internal object EscenaUrss : EscenaVida {
     internal fun hervidorCaliente(m: Momento): Boolean = !enElSanatorio(m) && m.hacer == Hacer.CAMINO && m.hora < 8.0
 
     /** El vaso de té en su portavasos, sobre la mesa: con el samovar y a la vuelta; de día, boca abajo en el escurridor. */
-    internal fun te(m: Momento): Boolean = samovar(m) || fase(m) == Fase.VUELTA
+    internal fun te(m: Momento): Boolean = samovarEnchufado(m) || fase(m) == Fase.VUELTA
 
     /** El televisor del cuarto, encendido: «la televisión de la tarde», de 20:00 a 23:00 (en el sanatorio, los de casa). */
     internal fun televisor(m: Momento): Boolean = fase(m) == Fase.NOCHE
@@ -447,11 +453,11 @@ internal object EscenaUrss : EscenaVida {
 
     /**
      * Los objetos del día que son también piezas de la cocina: el samovar de la mesa, el televisor del cuarto, la radio
-     * de la pared, el abrigo del gancho, las botas del radiador y la bolsa del picaporte. El día que uno es el objeto, la
-     * cocina no pinta el suyo si `ObjetosUrss` ya lo dibuja en su sitio ([ObjetosUrss.DIBUJADOS]); mientras el contrato
-     * esté vacío, la cocina pinta el suyo y ese es el objeto del día.
+     * de la pared, el abrigo y el chal del gancho, las botas del radiador y la bolsa del picaporte. El día que uno es el
+     * objeto, la cocina no pinta el suyo si `ObjetosUrss` ya lo dibuja en su sitio ([ObjetosUrss.DIBUJADOS]: los dibuja
+     * todos), para que no salga dos veces.
      */
-    internal val DE_LA_COCINA = setOf("samovar", "televisor", "radio", "abrigo", "botas", "bolsa")
+    internal val DE_LA_COCINA = setOf("samovar", "televisor", "radio", "abrigo", "chal", "botas", "bolsa")
 
     /** Si la cocina pinta hoy su [pieza] (no la pinta si es el objeto del día y el contrato de objetos ya la dibuja). */
     internal fun laCocinaPinta(m: Momento, pieza: String): Boolean = !(m.ficha.objeto == pieza && pieza in ObjetosUrss.DIBUJADOS)
