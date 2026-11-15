@@ -42,10 +42,11 @@ object Galia {
     /** Los ordinales galos de La Graufesenque, del 1 al 10. */
     val ORDINALES = listOf("cintuxos", "allos", "tritios", "petuarios", "pinpetos", "suexos", "sextametos", "oxtumetos", "nametos", "decametos")
 
-    /** Un número: del 1 al 10, su ordinal galo; por encima, en números romanos (hasta 3999); si no, en cifras. */
+    /** Un número: del 1 al 10, su ordinal galo; por encima, en números romanos con su punto, como en las cuentas de los
+     *  alfareros (hasta 3999); si no, en cifras. */
     fun numero(n: Int): String = when (n) {
         in 1..10 -> ORDINALES[n - 1]
-        in 11..3999 -> romano(n)
+        in 11..3999 -> romano(n) + "."
         else -> n.toString()
     }
 

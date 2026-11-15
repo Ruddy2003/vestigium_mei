@@ -309,6 +309,11 @@ object Frases {
         f(null, "Creen que las almas de los hombres no mueren y que, pasado cierto tiempo, vuelven a vivir en otro cuerpo.", "Diodoro Sículo V, 28 (traducción propia)"),
         f(null, "Dicen que el alma no se destruye, ni tampoco el mundo.", "Estrabón IV, 4, 4 (traducción propia)"),
         f(null, "Hay tres clases de hombres a los que veneran: los bardos, los vates y los druidas.", "Estrabón IV, 4, 4 (traducción propia)"),
+        f(null, "A su escuela concurre gran número de jóvenes a instruirse.", "César, Guerra de las Galias 6.13 (trad. Goya), sobre los druidas"),
+        f(null, "Abriéndose camino por seis pies de nieve.", "César, Guerra de las Galias 7.8 (trad. Goya), al cruzar las Cevenas en lo más duro del invierno"),
+        f(null, "Arrojando al suelo la armadura se sentó a los pies de César y se mantuvo inmóvil.", "Plutarco, César 27 (trad. Ranz Romanillos), sobre Vercingétorix en Alesia"),
+        f(null, "Hasta Marte respeta a las Musas.", "Diodoro Sículo V, 31 (traducción propia), sobre los bardos que detienen las batallas"),
+        f(null, "Los bardos componen y cantan himnos; los vates se ocupan de los sacrificios y del estudio de la naturaleza.", "Estrabón IV, 4, 4 (traducción propia)"),
     )
 
     /**

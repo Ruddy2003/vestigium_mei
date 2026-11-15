@@ -22,8 +22,8 @@ class GaliaPrueba {
     @Test fun numeros() {
         assertEquals("cintuxos", Galia.numero(1))
         assertEquals("decametos", Galia.numero(10))
-        assertEquals("XVII", Galia.numero(17))
-        assertEquals("MMXXVI", Galia.numero(2026))
+        assertEquals("XVII.", Galia.numero(17))
+        assertEquals("MMXXVI.", Galia.numero(2026))
         assertEquals("0", Galia.numero(0))
     }
 }

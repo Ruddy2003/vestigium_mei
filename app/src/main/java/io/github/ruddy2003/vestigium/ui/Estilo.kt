@@ -771,7 +771,7 @@ object Estilo {
         TemaId.MEDIEVAL -> "¶ "
         TemaId.TEMPLARIO -> "✚ "
         TemaId.DISTOPIA -> "▪ "
-        TemaId.GALIA -> "– "
+        TemaId.GALIA -> "— "
         TemaId.ARCONTES -> "⁘ "
         TemaId.FRENTE -> "× "          // la marca de lo ya cifrado
         TemaId.REFUGIO -> "> "
