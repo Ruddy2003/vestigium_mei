@@ -153,7 +153,8 @@ object LibroDiario {
         TemaId.MEDIEVAL -> Fuentes(R.font.gotica_regular, R.font.cardo_regular)
         TemaId.TEMPLARIO -> Fuentes(R.font.cruzada_titulo, R.font.regla_regular)
         TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
-        TemaId.NOUVEAU -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
+        // La letra de cartel de curvas de pluma (Federant) para los títulos, y Brygada 1918 para leer.
+        TemaId.NOUVEAU -> Fuentes(R.font.cartel_titulo, R.font.brygada_regular)
         // La Piazzolla gruesa de los títulos, como letra grabada, y la de leer.
         TemaId.GALIA -> Fuentes(R.font.piazzolla_titulo, R.font.piazzolla_regular)
         // Caudex, la letra de los códices, para los títulos, y Literata para leer (las dos con las letras hebreas y coptas).
@@ -249,7 +250,12 @@ object LibroDiario {
             TemaId.TEMPLARIO -> "h1{text-align:center;letter-spacing:.08em}article{border-top:4px solid $s;border-bottom:1px solid $p;padding-top:10px}.fecha{letter-spacing:.06em}" +
                 ".fecha::before{content:'\\2629  ';color:$p}" + capitular("2.6em", p)
             TemaId.DISTOPIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
-            TemaId.NOUVEAU -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
+            // Cada día como una página de la revista ilustrada: el marco fino con las esquinas de arriba muy redondas, como un cartel,
+            // un velo violeta en los márgenes, la fecha en la letra del cartel seguida de la línea de látigo, los datos en tinta
+            // tenue y la capitular de cartel en verde salvia.
+            TemaId.NOUVEAU -> "h1{text-align:center;letter-spacing:.02em;font-weight:400}article{border:1px solid $p;border-radius:28px 28px 3px 3px;padding:18px 22px 20px;margin-bottom:22px;" +
+                "background:linear-gradient(90deg,${s}14,transparent 16%,transparent 84%,${s}14)}.fecha{font-family:T,serif;font-size:1.15em;font-weight:400}" +
+                ".fecha::after{content:' ~';color:$s}.meta{color:$v;letter-spacing:.03em}" + capitular("2.8em", p)
             // Cada día en su tablilla: el marco de roble alrededor de la cera, con su sombra hundida, la onda de La Tène sobre la
             // fecha (arcos que se encadenan), el mes de Coligny en oro viejo y la capitular en la Piazzolla gruesa.
             TemaId.GALIA -> "h1{text-align:center;letter-spacing:.02em}article{border:7px solid #8A6A40;border-radius:4px;background:#EADFC1;color:#20251A;" +
@@ -800,7 +806,7 @@ object LibroDiario {
             TemaId.MEDIEVAL -> Medidas(12.5f, aire)
             TemaId.TEMPLARIO -> Medidas(12f, if (carta) 1.5f else 1.44f)
             TemaId.DISTOPIA -> Medidas(11f, aire)
-            TemaId.NOUVEAU -> Medidas(11f, aire)
+            TemaId.NOUVEAU -> Medidas(if (carta) 12.4f else 11.6f, aire + 0.04f)
             TemaId.GALIA -> Medidas(if (carta) 12.2f else 11.4f, aire + 0.03f)
             TemaId.ARCONTES -> Medidas(if (carta) 12.2f else 11.6f, aire + 0.02f)
             TemaId.FRENTE -> Medidas(if (carta) 10.8f else 10.2f, if (carta) 1.55f else 1.5f)
@@ -859,7 +865,8 @@ object LibroDiario {
         TemaId.TEMPLARIO -> Inicial(R.font.cruzada_titulo, 1.3f, palabra = true, mayusculas = true)
         // La primera palabra en mayúsculas sobre la franja roja del formulario.
         TemaId.DISTOPIA -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
-        TemaId.NOUVEAU -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
+        // La primera letra en la letra de cartel, grande, como la capitular de una revista ilustrada.
+        TemaId.NOUVEAU -> Inicial(R.font.cartel_titulo, 2.7f)
         // La primera letra en la Piazzolla gruesa de los títulos, grande, como tallada en la cera.
         TemaId.GALIA -> Inicial(R.font.piazzolla_titulo, 2.4f)
         // Los cuatro puntos con que los copistas abrían un párrafo y la primera letra en Caudex, grande y en ocre.
@@ -1016,9 +1023,20 @@ object LibroDiario {
                 cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
             }
             TemaId.NOUVEAU -> {
-                // La barra negra del formulario y la línea roja de debajo.
-                cv.drawLine(x0, y - 1.5f, x1, y - 1.5f, Paint(linea).apply { color = tinta; strokeWidth = 2.4f })
-                cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
+                // Dos líneas de látigo que nacen de un capullo al centro, corren hacia las orillas en una S tranquila y se enroscan.
+                val tallo = Paint(trazo).apply { strokeWidth = 0.9f; strokeCap = Paint.Cap.ROUND }
+                listOf(-1f, 1f).forEach { sg ->
+                    val fin = if (sg < 0) x0 + 6f else x1 - 6f
+                    val largo = abs(fin - cx) - 8f
+                    cv.drawPath(ruta {
+                        moveTo(cx + sg * 8f, y)
+                        cubicTo(cx + sg * (8f + largo * 0.3f), y - 4f, cx + sg * (8f + largo * 0.65f), y + 4f, fin, y)
+                        cubicTo(fin + sg * 4f, y - 0.2f, fin + sg * 4f, y - 5f, fin, y - 5f)
+                        cubicTo(fin - sg * 3f, y - 5f, fin - sg * 3f, y - 1.6f, fin - sg * 0.6f, y - 2f)
+                    }, tallo)
+                }
+                listOf(-1f, 1f).forEach { sg -> cv.drawPath(ruta { moveTo(cx, y + 1.5f); quadTo(cx + sg * 5f, y - 0.5f, cx + sg * 6.5f, y - 3.5f); quadTo(cx + sg * 2f, y - 2.5f, cx, y + 1.5f); close() }, relleno) }
+                cv.drawPath(ruta { moveTo(cx, y + 1.5f); quadTo(cx - 2.6f, y - 3f, cx, y - 7f); quadTo(cx + 2.6f, y - 3f, cx, y + 1.5f); close() }, Paint(relleno).apply { color = tinta })
             }
             TemaId.GALIA -> {
                 // La onda de La Tène, que en cada cresta suelta un zarcillo con su botón, y en medio el torques con sus dos remates.
@@ -1328,10 +1346,30 @@ object LibroDiario {
                 cv.drawRect(A - 130f, 36f, A - 34f, 54f, Paint(fino).apply { color = tinta; alpha = 160 })
             }
             TemaId.NOUVEAU -> {
-                // Marco negro, la franja roja de arriba y la casilla del folio.
-                rect(22f, Paint(trazo).apply { color = tinta; strokeWidth = 1.6f; alpha = 220 })
-                cv.drawRect(22f, 22f, A - 22f, 30f, Paint(relleno).apply { alpha = 220 })
-                cv.drawRect(A - 130f, 36f, A - 34f, 54f, Paint(fino).apply { color = tinta; alpha = 160 })
+                // El marco de un cartel: un filete doble con las esquinas de arriba muy redondas; de cada esquina de abajo sube un
+                // tallo que echa dos hojas y se enrosca, y al pie del marco, el capullo con dos hojitas.
+                fun marcoCartel(m: Float, r: Float) = android.graphics.Path().apply {
+                    moveTo(m, B - m); lineTo(m, m + r); quadTo(m, m, m + r, m); lineTo(A - m - r, m); quadTo(A - m, m, A - m, m + r); lineTo(A - m, B - m); close()
+                }
+                cv.drawPath(marcoCartel(22f, 46f), trazo)
+                cv.drawPath(marcoCartel(27f, 41f), fino)
+                val tallo = Paint(trazo).apply { strokeWidth = 1f; strokeCap = Paint.Cap.ROUND }
+                listOf(1f, -1f).forEach { sg ->
+                    val x = if (sg > 0) 34f else A - 34f
+                    cv.drawPath(android.graphics.Path().apply {
+                        moveTo(x, B - 30f); cubicTo(x + sg * 8f, B - 90f, x - sg * 4f, B - 140f, x + sg * 6f, B - 180f)
+                        cubicTo(x + sg * 12f, B - 194f, x + sg * 2f, B - 200f, x + sg * 1f, B - 190f)
+                    }, tallo)
+                    listOf(B - 70f to 1f, B - 120f to -1f).forEach { (yy, lado) ->
+                        val hx = x + sg * 3f
+                        cv.drawPath(android.graphics.Path().apply {
+                            moveTo(hx, yy); quadTo(hx + sg * lado * 10f, yy - 12f, hx + sg * lado * 16f, yy - 18f); quadTo(hx + sg * lado * 4f, yy - 14f, hx, yy); close()
+                        }, Paint(relleno).apply { alpha = 110 })
+                    }
+                }
+                val cxm = A / 2; val ym = B - 22f
+                cv.drawPath(android.graphics.Path().apply { moveTo(cxm, ym + 3f); quadTo(cxm - 4f, ym - 3f, cxm, ym - 10f); quadTo(cxm + 4f, ym - 3f, cxm, ym + 3f); close() }, relleno)
+                listOf(-1f, 1f).forEach { sg -> cv.drawPath(android.graphics.Path().apply { moveTo(cxm, ym + 2f); quadTo(cxm + sg * 8f, ym, cxm + sg * 11f, ym - 5f); quadTo(cxm + sg * 4f, ym - 3f, cxm, ym + 2f); close() }, Paint(relleno).apply { alpha = 120 }) }
             }
             TemaId.GALIA -> {
                 // La tablilla: el marco de roble ancho alrededor de la cera, con su filo hundido; a la izquierda, los agujeros de las

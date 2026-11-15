@@ -53,7 +53,9 @@ fun archivoIdeas(t: TemaId): ArchivoIdeas = when (t) {
     TemaId.RUINAS -> ArchivoIdeas("lata", "latas", "nota", "notas", true, "la estantería rescatada")
     TemaId.NAVIDAD -> ArchivoIdeas("caja de galletas", "cajas de galletas", "tarjeta de felicitación", "tarjetas de felicitación", true, "la alacena de la cocina")
     TemaId.DISTOPIA -> ArchivoIdeas("gaveta", "gavetas", "expediente", "expedientes", true, "el archivo del ministerio")
-    TemaId.NOUVEAU -> ArchivoIdeas("gaveta", "gavetas", "expediente", "expedientes", true, "el archivo del ministerio")
+    // Las ideas, como pruebas de imprenta guardadas en los cajones planos del mueble de láminas del taller de litografía, donde se
+    // guardan los carteles sin doblar.
+    TemaId.NOUVEAU -> ArchivoIdeas("cajón de láminas", "cajones de láminas", "prueba de imprenta", "pruebas de imprenta", false, "el mueble de cajones planos del taller")
     // Las ideas, rayadas en tablillas de haya que se guardan en cestas de mimbre, en el granero sobre pilotes del oppidum (las
     // del diario van en el haz de tablillas de la casa grande).
     TemaId.GALIA -> ArchivoIdeas("cesta de mimbre", "cestas de mimbre", "tablilla de haya", "tablillas de haya", true, "el granero sobre pilotes")

@@ -59,6 +59,8 @@ object ContenedoresMas {
             Contenedor.JARRA -> Color(0xFFEDE2C4)
             // La cera de miel de la tablilla.
             Contenedor.HAZ -> Color(0xFFEADFC1)
+            // El papel de dibujo del carnet de bocetos, crema y de grano grueso.
+            Contenedor.BOCETOS -> Color(0xFFF4EEDE)
             Contenedor.CUADERNO -> Color(0xFFFBFCFD)
             Contenedor.VUELO -> Color(0xFFF4F6FA)
             // Papel sintético impermeable, gris verdoso, de las bitácoras que se mojan.
@@ -312,6 +314,33 @@ object ContenedoresMas {
                 val lisa = Offset(size.width - 46 * d, size.height - 46 * d)
                 drawCircle(Color.White.copy(alpha = if (oscuro) 0.03f else 0.14f), 30 * d, lisa)
                 with(TrazosGalia) { hojaRoble(lisa, 26 * d, 30f, Color(0xFF4E6B2E).copy(alpha = if (oscuro) 0.35f else 0.45f), Color(0xFF2E4219).copy(alpha = 0.4f)) }
+            }
+            Contenedor.BOCETOS -> {
+                // El papel de dibujo: su grano, sin renglones; bajo la cabecera, una raya de lápiz que termina en un rizo de látigo;
+                // en el margen, un punto de lápiz por renglón; abajo a la izquierda, tres toques de acuarela de prueba (violeta,
+                // salvia y ocre) y, abajo a la derecha, un tallo a lápiz con su sombreado.
+                val grafito = if (oscuro) Color(0xFFADA79A) else Color(0xFF5E5A60)
+                val az = java.util.Random(37)
+                repeat(220) { drawCircle(tinta.copy(alpha = 0.03f), (0.4f + 0.8f * az.nextFloat()) * d, Offset(az.nextFloat() * size.width, az.nextFloat() * size.height)) }
+                val y0 = 84 * d
+                val raya = Path().apply {
+                    moveTo(margen - 10 * d, y0)
+                    cubicTo(margen + (size.width - margen) * 0.3f, y0 - 3 * d, margen + (size.width - margen) * 0.6f, y0 + 3 * d, size.width - 30 * d, y0)
+                    cubicTo(size.width - 22 * d, y0 - 1 * d, size.width - 22 * d, y0 - 9 * d, size.width - 28 * d, y0 - 8 * d)
+                    cubicTo(size.width - 32 * d, y0 - 7 * d, size.width - 31 * d, y0 - 3 * d, size.width - 28 * d, y0 - 4 * d)
+                }
+                drawPath(raya, grafito.copy(alpha = 0.4f), style = Stroke(0.8f * d, cap = StrokeCap.Round))
+                var yy = 96 * d
+                while (yy < size.height - 20 * d) { drawCircle(grafito.copy(alpha = 0.25f), 0.9f * d, Offset(margen - 12 * d, yy - renglon * 0.4f)); yy += maxOf(renglon, 1f) }
+                listOf(Color(0xFF6D4C82), Color(0xFF8FA67E), Color(0xFFD9A14A)).forEachIndexed { k, col ->
+                    val o = Offset(margen + (8 + k * 20) * d, size.height - 30 * d - (k % 2) * 4 * d)
+                    drawOval(col.copy(alpha = if (oscuro) 0.22f else 0.3f), Offset(o.x - 9 * d, o.y - 6 * d), Size(18 * d, 12 * d))
+                    drawOval(col.copy(alpha = if (oscuro) 0.3f else 0.4f), Offset(o.x - 9 * d, o.y - 6 * d), Size(18 * d, 12 * d), style = Stroke(0.6f * d))
+                }
+                with(TrazosNouveau) {
+                    tallo(Offset(size.width - 40 * d, size.height - 14 * d), 90 * d, 1f, -1f, 1.2f * d, grafito.copy(alpha = 0.22f), grafito.copy(alpha = 0.2f), grafito.copy(alpha = 0.2f))
+                }
+                for (k in 0 until 7) drawLine(grafito.copy(alpha = 0.12f), Offset(size.width - 30 * d, size.height - 20 * d - k * 4 * d), Offset(size.width - 18 * d, size.height - 30 * d - k * 4 * d), 0.6f * d)
             }
             Contenedor.CARTUCHO -> {
                 // La lectura del cartucho: la cabecera con la célula y la pista, la franja ámbar del piloto, a la izquierda la
@@ -597,6 +626,21 @@ object ContenedoresMas {
                     drawLine(tiento, Offset(12 * d, y + 5 * d), Offset(22 * d, y + 14 * d), 1.6f * d, StrokeCap.Round)
                     drawLine(tiento, Offset(12 * d, y + 5 * d), Offset(19 * d, y + 17 * d), 1.6f * d, StrokeCap.Round)
                 }
+            }
+            Contenedor.BOCETOS -> {
+                // El lomo de tela verde, con la costura de los cuadernillos que asoma, y la cinta de seda malva del registro, que
+                // cae por la orilla y termina en dos puntas.
+                val tela = if (oscuro) Color(0xFF1E2A24) else Color(0xFF3D5A48)
+                drawRect(Brush.horizontalGradient(listOf(lerp(tela, Color.White, 0.12f), tela, lerp(tela, Color.Black, 0.35f)), 4 * d, 20 * d), Offset(4 * d, 0f), Size(16 * d, size.height))
+                var y = 0f; while (y < size.height) { drawLine(Color.Black.copy(alpha = 0.12f), Offset(4 * d, y), Offset(20 * d, y), 0.4f * d); y += 1.6f * d }
+                var yy = 18 * d; while (yy < size.height - 12 * d) { drawLine(Color(0xFFF4EEDE).copy(alpha = if (oscuro) 0.35f else 0.7f), Offset(20 * d, yy), Offset(25 * d, yy), 1.2f * d); yy += 24 * d }
+                drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.22f), Color.Transparent), 20 * d, 36 * d), Offset(20 * d, 0f), Size(16 * d, size.height))
+                val seda = if (oscuro) Color(0xFF6E5470) else Color(0xFFB48AB0)
+                val fin = size.height * 0.36f
+                drawPath(Path().apply {
+                    moveTo(26 * d, 0f); lineTo(31 * d, 0f); cubicTo(32 * d, fin * 0.4f, 29 * d, fin * 0.7f, 31 * d, fin); lineTo(28.5f * d, fin - 4 * d); lineTo(26 * d, fin)
+                    cubicTo(24 * d, fin * 0.7f, 27 * d, fin * 0.4f, 26 * d, 0f); close()
+                }, seda)
             }
             Contenedor.CARTUCHO -> {
                 // El canto de la carcasa del cartucho: baquelita con la muesca de lectura, la pestaña ámbar que protege contra

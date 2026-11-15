@@ -108,7 +108,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.MEDIEVAL -> R.font.gotica_semibold       // la gótica del copista, en su corte más claro
     TemaId.TEMPLARIO -> R.font.regla_bold           // la letra de la regla, negrita: cifras firmes
     TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
-    TemaId.NOUVEAU -> R.font.oswald_bold           // números de expediente, estrechos y negros
+    TemaId.NOUVEAU -> R.font.vitrina_regular       // Della Respira, la de los rótulos y las cifras del tema: altas y finas, de cartel
     TemaId.GALIA -> R.font.ysabeau_semibold       // Ysabeau, la de los rótulos y las cifras del tema, de trazo humanista
     TemaId.ARCONTES -> R.font.codice_bold           // Caudex, la letra de los códices: cifras de pluma, firmes
     TemaId.FRENTE -> R.font.chivo_mono_medium     // las cifras grabadas de la consola, como en un contador de segmentos
@@ -151,7 +151,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.MEDIEVAL -> "Liber vestigii mei"
     TemaId.TEMPLARIO -> "Pauperes commilitones · Vestigium Mei"
     TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
-    TemaId.NOUVEAU -> "EXPEDIENTE · VESTIGIUM MEI"
+    TemaId.NOUVEAU -> "Vestigium Mei · L'Atelier, revue illustrée"
     TemaId.GALIA -> "ΝΕΜΗΤΟΝ, el bosque sagrado · Vestigium Mei"
     TemaId.ARCONTES -> "ϫⲱⲱⲙⲉ · Vestigium Mei · el códice escondido"
     TemaId.FRENTE -> "VESTIGIUM MEI · CÉLULA K-7"
@@ -372,15 +372,53 @@ object Reportes {
                     y += 54f
                 }
                 TemaId.NOUVEAU -> {
-                    // La barra del expediente se abre en el centro para el ojo que lo mira todo.
-                    val yc = yy + 16f
-                    val barra = L.relleno(L.primario)
-                    c.drawRect(M, yc - 4f, cx - 70f, yc + 4f, barra); c.drawRect(cx + 70f, yc - 4f, W - M, yc + 4f, barra)
-                    val ojo = Path().apply { moveTo(cx - 54f, yc); quadTo(cx, yc - 34f, cx + 54f, yc); quadTo(cx, yc + 34f, cx - 54f, yc); close() }
-                    c.drawPath(ojo, L.relleno(L.superficie2))
-                    c.drawPath(ojo, L.trazo(L.tinta, 3f))
-                    c.drawCircle(cx, yc, 10f, barra); c.drawCircle(cx, yc, 4f, L.relleno(L.tinta))
-                    y += 54f
+                    // Dos líneas de látigo que llegan desde las orillas en una S tranquila, echan hojas y se enroscan junto al
+                    // medallón del centro, donde un iris abre sus pétalos entre dos hojas de espada, bajo un filete de oro.
+                    val yc = yy + 30f
+                    val rr = 26f
+                    val tallo = L.trazo(L.primario, 2.2f)
+                    val hoja = L.relleno(L.mezcla(L.primario, L.fondo, 0.15))
+                    for (s0 in listOf(-1f, 1f)) {
+                        val x0 = if (s0 < 0) M else W - M
+                        val x1 = cx + s0 * (rr + 14f)
+                        val p = Path()
+                        p.moveTo(x0, yc + 6f)
+                        p.cubicTo(x0 + (x1 - x0) * 0.35f, yc - 12f, x0 + (x1 - x0) * 0.65f, yc + 14f, x1, yc)
+                        p.cubicTo(x1 - s0 * 8f, yc - 6f, x1 - s0 * 2f, yc - 14f, x1 + s0 * 4f, yc - 10f)
+                        p.cubicTo(x1 + s0 * 8f, yc - 7f, x1 + s0 * 4f, yc - 2f, x1 + s0 * 1f, yc - 4f)
+                        c.drawPath(p, tallo)
+                        for (k in 1..3) {
+                            val f = k / 4f
+                            val hx = x0 + (x1 - x0) * f; val hy = yc + (if (k % 2 == 0) 4f else -4f)
+                            val lado = if (k % 2 == 0) 1f else -1f
+                            val q = Path()
+                            q.moveTo(hx, hy); q.quadTo(hx + s0 * 8f, hy + lado * 10f, hx + s0 * 18f, hy + lado * 12f); q.quadTo(hx + s0 * 6f, hy + lado * 3f, hx, hy); q.close()
+                            c.drawPath(q, hoja)
+                        }
+                    }
+                    c.drawCircle(cx, yc, rr, L.relleno(L.superficie2))
+                    c.drawCircle(cx, yc, rr, L.trazo(L.terciario, 2f))
+                    c.drawCircle(cx, yc, rr - 4f, L.trazo(L.mezcla(L.terciario, L.fondo, 0.4), 0.8f))
+                    val base = yc + rr - 6f
+                    c.drawLine(cx, base, cx, yc - 2f, L.trazo(L.primario, 1.6f))
+                    for (s0 in listOf(-1f, 1f)) {
+                        val q = Path()
+                        q.moveTo(cx, base); q.quadTo(cx + s0 * 4f, yc + 4f, cx + s0 * 12f, yc - 6f); q.quadTo(cx + s0 * 3f, yc + 2f, cx + s0 * 2f, base); q.close()
+                        c.drawPath(q, L.relleno(L.primario))
+                    }
+                    val flor = L.relleno(L.secundario)
+                    val claro = L.relleno(L.mezcla(L.secundario, L.fondo, 0.3))
+                    for ((ang, larg) in listOf(-90.0 to 15f, -140.0 to 12f, -40.0 to 12f, 120.0 to 11f, 60.0 to 11f)) {
+                        val a0 = Math.toRadians(ang)
+                        val px = cx + larg * Math.cos(a0).toFloat(); val py = yc - 6f + larg * Math.sin(a0).toFloat()
+                        val nx = -Math.sin(a0).toFloat() * 4.5f; val ny = Math.cos(a0).toFloat() * 4.5f
+                        val q = Path()
+                        q.moveTo(cx, yc - 6f); q.quadTo(cx + (px - cx) * 0.5f + nx, yc - 6f + (py - yc + 6f) * 0.5f + ny, px, py)
+                        q.quadTo(cx + (px - cx) * 0.5f - nx, yc - 6f + (py - yc + 6f) * 0.5f - ny, cx, yc - 6f); q.close()
+                        c.drawPath(q, if (ang == -90.0) claro else flor)
+                    }
+                    c.drawCircle(cx, yc - 6f, 2.4f, L.relleno(L.terciario))
+                    y += 64f
                 }
                 TemaId.GALIA -> {
                     // La onda de La Tène, que suelta un zarcillo con su botón en cada cresta, corre de orilla a orilla y se abre

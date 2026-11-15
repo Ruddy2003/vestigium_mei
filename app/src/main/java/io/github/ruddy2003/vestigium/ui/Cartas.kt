@@ -87,6 +87,7 @@ import io.github.ruddy2003.vestigium.data.lista
 import io.github.ruddy2003.vestigium.data.sellada
 import io.github.ruddy2003.vestigium.ui.biblioteca.bullaArcontes
 import io.github.ruddy2003.vestigium.ui.biblioteca.selloGalia
+import io.github.ruddy2003.vestigium.ui.biblioteca.vinetaNouveau
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -134,7 +135,9 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.TEMPLARIO -> Papeleria(Color(0xFFF1ECE0), Color(0xFFB9AE97), Color(0xFFFFFCF4), Color(0xFFB0191F), Color(0xFF7A2A16), Color(0xFF8A7650), Color(0xFF201E1B))
     // Sobre de manila de oficina, con su hilo y botones, y la tinta roja del sello de goma.
     TemaId.DISTOPIA -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
-    TemaId.NOUVEAU -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
+    // La tarjeta postal ilustrada: cartulina crema, su sombra y su brillo, el verde salvia del reverso, la viñeta engomada con el
+    // iris violeta, la cinta de seda malva que ata el paquete y la tinta de la prensa.
+    TemaId.NOUVEAU -> Papeleria(Color(0xFFF2E9D2), Color(0xFFC2AE86), Color(0xFFFBF6EA), Color(0xFF5E7A58), Color(0xFF7E5FA6), Color(0xFFB48AB0), Color(0xFF2A2530))
     // El mensaje que corre de oppidum en oppidum: la funda de cuero de la tablilla, por dentro de gamuza, el sello de barro con
     // el caballo de quien lo manda y el cordel de lana roja.
     TemaId.GALIA -> Papeleria(Color(0xFF9A7048), Color(0xFF6E4A2C), Color(0xFFB88A5E), Color(0xFFD8B88E), Color(0xFFA4704A), Color(0xFF8E3B2A), Color(0xFF20251A))
@@ -392,11 +395,12 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
             rotuloSello("ARCHIVADO", c.x, c.y + r * 0.13f, r * 0.36f, k(base.copy(alpha = 0.85f)))
         }
-        TemaId.NOUVEAU -> rotate(-14f, c) {
-            // El sello de goma del Ministerio: tinta en dos marcos y la palabra, un poco torcido.
-            drawRect(k(base.copy(alpha = 0.85f)), Offset(c.x - r * 1.25f, c.y - r * 0.6f), Size(r * 2.5f, r * 1.2f), style = Stroke(r * 0.1f))
-            drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
-            rotuloSello("ARCHIVADO", c.x, c.y + r * 0.13f, r * 0.36f, k(base.copy(alpha = 0.85f)))
+        // La viñeta engomada con el iris, pegada sobre el lazo; debajo, los dos cabos de la cinta de seda malva.
+        TemaId.NOUVEAU -> {
+            val seda = k(Color(0xFFB48AB0))
+            drawLine(seda, Offset(c.x - r * 0.2f, c.y + r * 0.6f), Offset(c.x - r * 0.75f, c.y + r * 1.55f), r * 0.22f, StrokeCap.Butt)
+            drawLine(seda, Offset(c.x + r * 0.2f, c.y + r * 0.6f), Offset(c.x + r * 0.6f, c.y + r * 1.6f), r * 0.22f, StrokeCap.Butt)
+            vinetaNouveau(c, r, Color(0xFFF2E9D2), base, a)
         }
         // El sello de barro sobre el nudo, con la marca de quien lo manda (el caballo de las monedas); debajo, los dos cabos del
         // cordel de lana roja.
@@ -848,8 +852,11 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Hermano que serás yo:", "Escribe tu misiva, hermano…", "Misiva para %s, sellada por la casa", "Ningún hermano la abrirá antes de tiempo.", "Toca para tomar la pluma…")
     TemaId.DISTOPIA -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
         "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
-    TemaId.NOUVEAU -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
-        "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
+    // Las cartas son tarjetas postales ilustradas; las de al futuro, «postales para el siglo nuevo», van atadas con una cinta de
+    // seda y una viñeta engomada.
+    TemaId.NOUVEAU -> VozCarta("Llegó la postal: dale la vuelta", "Atada con una cinta de seda", "Para quien seré el %s", "Quien seré · %s", "Para quien seré en el siglo nuevo",
+        "Querido yo del siglo nuevo:", "Escribe tu postal, con letra pequeña…", "Postal para %s, ya en el buzón de la esquina", "La cinta no se desata antes de su día.",
+        "Toca para escribir al dorso de la postal…")
     // Los galos echaban cartas a la pira para sus muertos, porque creían que el alma vuelve a vivir (Diodoro 5.28): la carta al
     // futuro va para el que uno volverá a ser. Las demás corren de oppidum en oppidum, como el grito (César 7.3).
     TemaId.GALIA -> VozCarta("Llegó el mensajero: rompe el sello", "Atada con lana roja y sellada", "Para el que volveré a ser el %s", "El que volveré a ser · %s", "Para el que volveré a ser",

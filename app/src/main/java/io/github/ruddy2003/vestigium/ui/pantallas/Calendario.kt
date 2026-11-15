@@ -256,7 +256,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.MEDIEVAL -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 7.dp, bottomStart = 1.dp)
     TemaId.TEMPLARIO -> CutCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 5.dp, bottomStart = 5.dp)
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.NOUVEAU -> RectangleShape
+    TemaId.NOUVEAU -> RoundedCornerShape(topStart = 2.dp, topEnd = 14.dp, bottomEnd = 5.dp, bottomStart = 5.dp)   // la hoja del almanaque, como un cartel de esquina redonda
     TemaId.GALIA -> RoundedCornerShape(topStart = 2.dp, topEnd = 5.dp, bottomEnd = 5.dp, bottomStart = 5.dp)   // la tablilla de roble, de esquinas gastadas
     TemaId.ARCONTES -> RoundedCornerShape(topStart = 3.dp, topEnd = 12.dp, bottomEnd = 3.dp, bottomStart = 6.dp)   // un sillar de caliza, gastado
     TemaId.FRENTE -> RoundedCornerShape(topStart = 2.dp, topEnd = 10.dp, bottomEnd = 10.dp, bottomStart = 2.dp)   // la tecla curva de la consola
@@ -295,7 +295,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
  * (ánimo y diario del día, como en la hoja de la noche) pone el sello del día a la derecha, con la figura del tema impresa.
  * Todo va pegado al borde o en el hueco de la derecha, para no tapar el número ni las marcas.
  */
-private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sellado: Boolean, linea: Color, acento: Color, oro: Color, sobre: Color) {
+private fun DrawScope.marcoCelda(tema: TemaId, fecha: String, forma: Shape, hoy: Boolean, sellado: Boolean, linea: Color, acento: Color, oro: Color, sobre: Color) {
     val s = density
     val w = size.width; val h = size.height
     val borde = forma.createOutline(size, layoutDirection, this)
@@ -389,13 +389,39 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 figuraTema(tema, tinta, pc, 2.6f * s, Color.White)
             }
         }
+        // La hoja del almanaque de flores: la fila de agujeros por donde se arranca del taco, arriba, y a la derecha la flor del día
+        // (la de La Tour que le toca, con tantos pétalos y el color que le da su nombre: recurso de dibujo). Hoy, el borde en
+        // acento y un látigo de oro bajo los agujeros; el día sellado lleva el medallón esmaltado en lugar de la flor.
         TemaId.NOUVEAU -> {
-            contorno(if (hoy) acento else linea, if (hoy) 1.6f else 0.9f)
-            drawRect(if (hoy) acento else linea, Offset(w * 0.55f, 0f), Size(w * 0.45f, 2.6f * s))
-            if (sellado) rotate(-14f, pc) {
-                val tinta = Color(0xFFB3261E)
-                drawRect(tinta, Offset(pc.x - 5.5f * s, pc.y - 3.6f * s), Size(11f * s, 7.2f * s), style = Stroke(s))
-                figuraTema(tema, tinta, pc, 2.6f * s, Color.White)
+            contorno(if (hoy) acento else linea, if (hoy) 1.3f else 0.6f)
+            var x = 2.2f * s
+            while (x < w - 2 * s) { drawCircle((if (hoy) acento else linea).copy(alpha = 0.55f), 0.5f * s, Offset(x, 1.3f * s)); x += 2.4f * s }
+            if (hoy) {
+                val l = Offset(w - 12f * s, 3.4f * s)
+                drawPath(Path().apply { moveTo(l.x - 5f * s, l.y); cubicTo(l.x - 1f * s, l.y - 1.2f * s, l.x + 3f * s, l.y + 1.6f * s, l.x + 6f * s, l.y + 0.6f * s); cubicTo(l.x + 8f * s, l.y, l.x + 7.5f * s, l.y + 2.6f * s, l.x + 6.2f * s, l.y + 2.2f * s) },
+                    oro, style = Stroke(0.7f * s))
+            }
+            if (sellado) sello(acento)
+            else {
+                val dia = runCatching { io.github.ruddy2003.vestigium.data.Fechas.parse(fecha) }.getOrNull()
+                if (dia != null) {
+                    val flor = io.github.ruddy2003.vestigium.ui.Nouveau.flor(dia)
+                    val k = Math.floorMod(flor.nombre.hashCode(), 12)
+                    val color = listOf(io.github.ruddy2003.vestigium.ui.TrazosNouveau.IRIS, io.github.ruddy2003.vestigium.ui.TrazosNouveau.MALVA,
+                        io.github.ruddy2003.vestigium.ui.TrazosNouveau.VIDRIO_AMBAR, io.github.ruddy2003.vestigium.ui.TrazosNouveau.ORO_BRILLO)[k % 4]
+                    val hoja = io.github.ruddy2003.vestigium.ui.TrazosNouveau.TALLO_SOMBRA
+                    val pie = Offset(w - 6f * s, h - 3f * s)
+                    val cima = Offset(w - 7f * s, h * 0.42f)
+                    drawLine(hoja, pie, cima, 0.6f * s)
+                    drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.hojaLanza(Offset(pie.x - 0.4f * s, pie.y - 3f * s), Offset(pie.x - 4f * s, pie.y - 7f * s), 1.4f * s, 0.2f), hoja)
+                    val petalos = 3 + k % 3
+                    for (j in 0 until petalos) {
+                        val ang = -kotlin.math.PI / 2 + (j - (petalos - 1) / 2f) * 0.75
+                        val punta = Offset(cima.x + (3.6f * s * kotlin.math.cos(ang)).toFloat(), cima.y + (3.6f * s * kotlin.math.sin(ang)).toFloat())
+                        drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.petalo(cima, punta, 2.6f * s), color)
+                    }
+                    drawCircle(androidx.compose.ui.graphics.lerp(color, Color.Black, 0.35f), 0.7f * s, cima)
+                }
             }
         }
         // Una tablilla: el marco de roble y, por dentro, el filo de la cera; hoy, el marco se dora y lleva arriba a la derecha las
@@ -710,7 +736,7 @@ private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean,
     val cs = MaterialTheme.colorScheme
     Box(
         modifier.aspectRatio(0.78f).clip(forma).background(relleno)
-            .drawWithContent { drawContent(); if (avisos) { val g = 3.dp.toPx(); drawRect(fondo, Offset(g / 2, g / 2), Size(size.width - g, size.height - g), style = Stroke(g)) }; marcoCelda(tema, forma, hoy, sellado, cs.outline, cs.primary, cs.tertiary, cs.onPrimary) }
+            .drawWithContent { drawContent(); if (avisos) { val g = 3.dp.toPx(); drawRect(fondo, Offset(g / 2, g / 2), Size(size.width - g, size.height - g), style = Stroke(g)) }; marcoCelda(tema, fecha, forma, hoy, sellado, cs.outline, cs.primary, cs.tertiary, cs.onPrimary) }
             .clickable(onClick = onClick),
     ) {
         if (conFoto) {

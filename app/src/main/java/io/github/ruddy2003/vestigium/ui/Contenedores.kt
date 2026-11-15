@@ -65,6 +65,8 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     JARRA("Jarra de los destellos", "hoja de papiro"),
     /** Galia: el haz de tablillas enceradas en su estuche de cuero (que fueran de cera es recurso: César no dice el material). */
     HAZ("Haz de tablillas", "tablilla encerada"),
+    /** Art nouveau: el carnet de bocetos del taller de litografía, de tapas de cartón jaspeado, lomo de tela y una cinta de seda. */
+    BOCETOS("Carnet de bocetos", "boceto"),
     /** Básico: una libreta lisa, sin dibujo propio (el papel es la superficie del esquema). */
     SIMPLE("Libreta de momentos", "página"),
 }
@@ -96,7 +98,7 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.CUEVA -> Contenedor.BOLSA
     TemaId.BASICO -> Contenedor.SIMPLE
     TemaId.DISTOPIA -> Contenedor.EXPEDIENTE
-    TemaId.NOUVEAU -> Contenedor.EXPEDIENTE
+    TemaId.NOUVEAU -> Contenedor.BOCETOS
     TemaId.GALIA -> Contenedor.HAZ
     TemaId.ARCONTES -> Contenedor.JARRA
     TemaId.FRENTE -> Contenedor.CARTUCHO
@@ -166,6 +168,7 @@ object Contenedores {
         Contenedor.CARTUCHO -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.JARRA -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.HAZ -> ContenedoresMas.papel(c, cs, oscuro)
+        Contenedor.BOCETOS -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.SIMPLE -> cs.surface
     }
 
@@ -361,6 +364,7 @@ object Contenedores {
             Contenedor.CARTUCHO -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.JARRA -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.HAZ -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
+            Contenedor.BOCETOS -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.SIMPLE -> {}   // la hoja lisa
         }
     }
@@ -457,6 +461,7 @@ object Contenedores {
             Contenedor.CARTUCHO -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.JARRA -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.HAZ -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
+            Contenedor.BOCETOS -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.SIMPLE -> {}   // sin encuadernación
         }
     }
