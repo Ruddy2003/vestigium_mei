@@ -108,7 +108,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.MEDIEVAL -> R.font.gotica_semibold       // la gótica del copista, en su corte más claro
     TemaId.TEMPLARIO -> R.font.regla_bold           // la letra de la regla, negrita: cifras firmes
     TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
-    TemaId.ARCONTES -> R.font.oswald_bold           // números de expediente, estrechos y negros
+    TemaId.ARCONTES -> R.font.codice_bold           // Caudex, la letra de los códices: cifras de pluma, firmes
     TemaId.FRENTE -> R.font.chivo_mono_medium     // las cifras grabadas de la consola, como en un contador de segmentos
     TemaId.REFUGIO -> R.font.plex_mono_semibold     // la máquina del refugio: mono, gruesa
     TemaId.ORDEN -> R.font.saira_stencil            // estarcido
@@ -149,7 +149,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.MEDIEVAL -> "Liber vestigii mei"
     TemaId.TEMPLARIO -> "Pauperes commilitones · Vestigium Mei"
     TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
-    TemaId.ARCONTES -> "EXPEDIENTE · VESTIGIUM MEI"
+    TemaId.ARCONTES -> "ϫⲱⲱⲙⲉ · Vestigium Mei · el códice escondido"
     TemaId.FRENTE -> "VESTIGIUM MEI · CÉLULA K-7"
     TemaId.REFUGIO -> "REFUGIO · BITÁCORA VESTIGIUM-MEI"
     TemaId.ORDEN -> "ARCHIVUM ORDINIS · VESTIGIUM MEI"
@@ -368,15 +368,29 @@ object Reportes {
                     y += 54f
                 }
                 TemaId.ARCONTES -> {
-                    // La barra del expediente se abre en el centro para el ojo que lo mira todo.
-                    val yc = yy + 16f
-                    val barra = L.relleno(L.primario)
-                    c.drawRect(M, yc - 4f, cx - 70f, yc + 4f, barra); c.drawRect(cx + 70f, yc - 4f, W - M, yc + 4f, barra)
-                    val ojo = Path().apply { moveTo(cx - 54f, yc); quadTo(cx, yc - 34f, cx + 54f, yc); quadTo(cx, yc + 34f, cx - 54f, yc); close() }
-                    c.drawPath(ojo, L.relleno(L.superficie2))
-                    c.drawPath(ojo, L.trazo(L.tinta, 3f))
-                    c.drawCircle(cx, yc, 10f, barra); c.drawCircle(cx, yc, 4f, L.relleno(L.tinta))
-                    y += 54f
+                    // Como el título al final de un tratado del códice: dos filas de diplés que apuntan al centro y, en medio, las
+                    // siete esferas dentro del ouroboros, con la chispa en el centro.
+                    val yc = yy + 30f
+                    val rr = 30f
+                    val diple = L.trazo(L.primario, 2f)
+                    listOf(yc - 8f, yc + 8f).forEach { yd ->
+                        var x = M
+                        while (x + 8f <= W - M) {
+                            if (abs(x + 4f - cx) > rr + 16f) {
+                                val p = Path()
+                                if (x + 4f < cx) { p.moveTo(x, yd - 5f); p.lineTo(x + 6f, yd); p.lineTo(x, yd + 5f) } else { p.moveTo(x + 6f, yd - 5f); p.lineTo(x, yd); p.lineTo(x + 6f, yd + 5f) }
+                                c.drawPath(p, diple)
+                            }
+                            x += 12f
+                        }
+                    }
+                    for (k in 0 until 7) c.drawCircle(cx, yc, 6f + k * 3.2f, L.trazo(L.mezcla(L.terciario, L.fondo, 0.15 + 0.08 * k), 1f))
+                    c.drawArc(RectF(cx - rr, yc - rr, cx + rr, yc + rr), -45f, 330f, false, L.trazo(L.primario, 6f))
+                    val cabeza = Path().apply { addOval(RectF(cx + rr * 0.55f, yc - rr * 0.95f, cx + rr * 0.95f, yc - rr * 0.55f), Path.Direction.CW) }
+                    c.drawPath(cabeza, L.relleno(L.primario))
+                    c.drawCircle(cx + rr * 0.78f, yc - rr * 0.8f, 1.6f, L.relleno(L.fondo))
+                    c.drawCircle(cx, yc, 3.4f, L.relleno(L.terciario))
+                    y += 74f
                 }
                 TemaId.FRENTE -> {
                     // El panel de la consola: a cada lado, una regleta curva con sus interruptores de palanca y sus pilotos; al

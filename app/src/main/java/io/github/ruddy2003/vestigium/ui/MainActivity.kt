@@ -264,7 +264,7 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
             listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
         // La jarra sellada: el sello dentro de las siete esferas y del ouroboros, con el cielo del día arriba.
-        TemaId.ARCONTES -> BloqueoEsferas(TextosBloqueo("El códice está sellado", "※ Lo de abajo no lo sabe. Para abrir el códice, da la contraseña.", "Dar la contraseña"), reintentar)
+        TemaId.ARCONTES -> BloqueoEsferas(TextosBloqueo("El códice está sellado", "⁂ Lo de abajo no lo sabe. Para abrir el códice, da la contraseña.", "Dar la contraseña"), reintentar)
         // La consola de la célula con el canal cerrado: el sello en la pantalla de radar, el estado de la línea y la llave.
         TemaId.FRENTE -> BloqueoCanal(TextosBloqueo("TRANSMISIÓN CIFRADA", "— Canal cerrado. La célula no abre la frecuencia sin la huella del titular.", "ABRIR EL CANAL",
             listOf("CANAL", "CIFRADO", "VENTANA", "", "OPERADOR", "SIN CONFIRMAR")), reintentar)
@@ -647,9 +647,8 @@ private fun DrawScope.bloqueoEsferas(cs: ColorScheme) {
     }
     with(TrazosArcontes) {
         ouroboros(c, m * 0.95f, m * 0.07f, cs.primary, -90f, cs.background)
-        if (oscuro) grieta(Offset(c.x + m * 0.12f, c.y + m * 1.0f), Offset(c.x + m * 0.36f, c.y + m * 1.32f), 1.1f * u, 0.8f, 5)
-        else drawPath(Path().apply { moveTo(c.x + m * 0.12f, c.y + m * 1.0f); lineTo(c.x + m * 0.19f, c.y + m * 1.09f); lineTo(c.x + m * 0.17f, c.y + m * 1.16f); lineTo(c.x + m * 0.27f, c.y + m * 1.24f); lineTo(c.x + m * 0.36f, c.y + m * 1.32f) },
-            cs.tertiary.copy(alpha = 0.7f), style = Stroke(1.1f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        // La grieta cruza las esferas abajo a la derecha, entre el sello y el ouroboros.
+        grieta(Offset(c.x + m * 0.32f, c.y + m * 0.5f), Offset(c.x + m * 0.6f, c.y + m * 0.68f), 1.3f * u, if (oscuro) 0.9f else 0.75f, 5)
     }
 }
 

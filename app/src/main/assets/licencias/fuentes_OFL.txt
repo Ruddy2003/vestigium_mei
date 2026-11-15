@@ -37,7 +37,7 @@ Bitter (instancias estáticas, recortadas) — Copyright 2011 The Bitter Project
 Michroma (recortada) — Copyright 2011 The Michroma Project Authors (https://github.com/googlefonts/Michroma-font)
 Chivo y Chivo Mono (instancias estáticas, recortadas) — Copyright 2019 The Chivo Project Authors (https://github.com/Omnibus-Type/Chivo)
 Codice Vestigium — versión reducida y renombrada de Caudex, con letras de Noto Serif Hebrew y Noto Sans Coptic añadidas: Copyright (c) 2011, Hjort Nidudsson (http://caudex.sf.net), with Reserved Font Name Caudex.
-Literata (instancias estáticas, recortadas, con letras de Noto Serif Hebrew y Noto Sans Coptic añadidas) — Copyright 2017 The Literata Project Authors (https://github.com/googlefonts/literata)
+Literata (instancias estáticas, recortadas, con letras de Noto Serif Hebrew y Noto Sans Coptic y algunos signos de Caudex añadidos) — Copyright 2017 The Literata Project Authors (https://github.com/googlefonts/literata)
 Noto Serif Hebrew y Noto Sans Coptic (sus letras hebreas y coptas, dentro de las dos anteriores) — Copyright 2022 The Noto Project Authors (https://github.com/notofonts/hebrew, https://github.com/notofonts/coptic)
 Old Standard TT (recortada) — Copyright 2011 The Old Standard Project Authors (amkryukov@gmail.com)
 Poiret One (recortada) — Copyright 2011 The Poiret One Project Authors (https://github.com/alexeiva/poiretone)

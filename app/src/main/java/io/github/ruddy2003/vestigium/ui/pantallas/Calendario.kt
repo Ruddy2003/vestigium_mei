@@ -255,7 +255,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.MEDIEVAL -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 7.dp, bottomStart = 1.dp)
     TemaId.TEMPLARIO -> CutCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 5.dp, bottomStart = 5.dp)
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.ARCONTES -> RectangleShape
+    TemaId.ARCONTES -> RoundedCornerShape(topStart = 3.dp, topEnd = 12.dp, bottomEnd = 3.dp, bottomStart = 6.dp)   // un sillar de caliza, gastado
     TemaId.FRENTE -> RoundedCornerShape(topStart = 2.dp, topEnd = 10.dp, bottomEnd = 10.dp, bottomStart = 2.dp)   // la tecla curva de la consola
     TemaId.REFUGIO -> RoundedCornerShape(7.dp)
     TemaId.ORDEN -> CutCornerShape(topEnd = 8.dp)
@@ -386,13 +386,20 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 figuraTema(tema, tinta, pc, 2.6f * s, Color.White)
             }
         }
+        // Un sillar de caliza: el borde fino y tres marcas del cincel abajo; hoy, la luz de la lámpara entra por la esquina y
+        // una grieta fina de luz cruza el canto. El día sellado lleva la bula de barro con la figura del tema.
         TemaId.ARCONTES -> {
-            contorno(if (hoy) acento else linea, if (hoy) 1.6f else 0.9f)
-            drawRect(if (hoy) acento else linea, Offset(w * 0.55f, 0f), Size(w * 0.45f, 2.6f * s))
-            if (sellado) rotate(-14f, pc) {
-                val tinta = Color(0xFFB3261E)
-                drawRect(tinta, Offset(pc.x - 5.5f * s, pc.y - 3.6f * s), Size(11f * s, 7.2f * s), style = Stroke(s))
-                figuraTema(tema, tinta, pc, 2.6f * s, Color.White)
+            contorno(if (hoy) acento else linea, if (hoy) 1.3f else 0.6f)
+            for (k in 0 until 3) drawLine(linea.copy(alpha = 0.6f), Offset((3f + k * 1.6f) * s, h - 2f * s), Offset((4.4f + k * 1.6f) * s, h - 5.5f * s), 0.5f * s)
+            if (hoy) {
+                drawCircle(Brush.radialGradient(listOf(Color(0xFFFFD98A).copy(alpha = 0.45f), Color.Transparent), Offset(w, 0f), w * 0.55f), w * 0.55f, Offset(w, 0f))
+                with(io.github.ruddy2003.vestigium.ui.TrazosArcontes) { grieta(Offset(w - 3f * s, 1.5f * s), Offset(w - 5.5f * s, 9f * s), 0.45f * s, 0.9f, 11) }
+            }
+            if (sellado) {
+                val barro = Color(0xFFB9774A)
+                drawPath(figOndulado(pc, 5.4f * s, 9, 0.08f), barro)
+                drawCircle(Color.Black.copy(alpha = 0.25f), 5.4f * s, pc, style = Stroke(0.5f * s))
+                figuraTema(tema, Color(0xFF5E3519), pc, 3.2f * s, barro)
             }
         }
         // Tecla de consola: el piloto apagado arriba a la derecha y la placa grabada al pie; hoy, el piloto ámbar encendido con

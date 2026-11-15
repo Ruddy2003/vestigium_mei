@@ -1193,10 +1193,10 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "⚠", igual = "| ", nulo = "SIN DATO", elegido = "☒", riel = RolColor.TINTA, quitar = "✖", listaVacia = "[ EXPEDIENTE VACÍO ]", flecha = "►",
         sufijo = ":", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.NINGUNO,
         guiones = floatArrayOf(2.5f, 1f), tamBoton = 14, letraBoton = null, borde = RolColor.TINTA, grosor = 2f)
-    // La letra de los códices: el triple punto de los copistas entre número y título, la referencia ※ por elegido, la hoja de
+    // La letra de los códices: el triple punto de los copistas entre número y título, el punto de la lámpara por elegido, la hoja de
     // papiro con sus fibras por renglones, el violeta de la grieta en el interruptor y el recuadro de «vacío» en punto y raya.
     TemaId.ARCONTES -> PielComponentes(sep = "  ∴  ", cerrada = "→", abierta = "↓", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
-        aviso = "⁂", igual = " · ", nulo = "aún en blanco", elegido = "※", riel = RolColor.TERCIARIO, quitar = "×", listaVacia = "( la hoja sigue en blanco )", flecha = "→",
+        aviso = "⁂", igual = " · ", nulo = "aún en blanco", elegido = "•", riel = RolColor.TERCIARIO, quitar = "×", listaVacia = "( la hoja sigue en blanco )", flecha = "→",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.5f, colorPrefijo = RolColor.TERCIARIO, renglones = true, margen = MargenEditor.NINGUNO,
         guiones = floatArrayOf(1f, 2f, 5f, 2f), tamBoton = 15, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1.2f)
     // Rótulos de consola en mayúsculas espaciadas, la cifra en ámbar de piloto, la barra rota del canal entre número y

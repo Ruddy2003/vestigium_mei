@@ -153,7 +153,8 @@ object LibroDiario {
         TemaId.MEDIEVAL -> Fuentes(R.font.gotica_regular, R.font.cardo_regular)
         TemaId.TEMPLARIO -> Fuentes(R.font.cruzada_titulo, R.font.regla_regular)
         TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
-        TemaId.ARCONTES -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
+        // Caudex, la letra de los códices, para los títulos, y Literata para leer (las dos con las letras hebreas y coptas).
+        TemaId.ARCONTES -> Fuentes(R.font.codice_bold, R.font.literata_regular)
         // Los rótulos anchos de la consola y la hoja de despacho mecanografiada.
         TemaId.FRENTE -> Fuentes(R.font.michroma_titulo, R.font.chivo_mono_medium)
         TemaId.REFUGIO -> Fuentes(R.font.vt323, R.font.courier_regular)
@@ -245,7 +246,11 @@ object LibroDiario {
             TemaId.TEMPLARIO -> "h1{text-align:center;letter-spacing:.08em}article{border-top:4px solid $s;border-bottom:1px solid $p;padding-top:10px}.fecha{letter-spacing:.06em}" +
                 ".fecha::before{content:'\\2629  ';color:$p}" + capitular("2.6em", p)
             TemaId.DISTOPIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
-            TemaId.ARCONTES -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
+            // Cada día como un tratado del códice: una fila de diplés que apuntan al centro sobre la entrada, los cuatro puntos
+            // antes de la fecha, los datos en cursiva tenue y la capitular de Caudex en ocre.
+            TemaId.ARCONTES -> "h1{text-align:center;letter-spacing:.03em}article{border-top:0;padding-top:4px}" +
+                "article::before{content:'›››››››››››› · ‹‹‹‹‹‹‹‹‹‹‹‹';display:block;text-align:center;font-family:T,serif;color:$p;letter-spacing:.14em;margin-bottom:10px}" +
+                ".fecha{color:$tinta}.fecha::before{content:'⁘ ';color:$p}.meta{color:$v;font-style:italic}" + capitular("2.7em", p)
             // Cada día en su tramo de papel continuo de teletipo: las tiras de agujeros de arrastre a los lados, las franjas pálidas,
             // la cruz de la retícula antes de la fecha y la casilla de «cifrado» en los datos.
             TemaId.FRENTE -> "h1{letter-spacing:.14em;font-size:1.5em}article{border-top:2px solid $p;border-bottom:1px dashed $v;padding:16px 30px 20px;margin-bottom:16px;" +
@@ -785,7 +790,7 @@ object LibroDiario {
             TemaId.MEDIEVAL -> Medidas(12.5f, aire)
             TemaId.TEMPLARIO -> Medidas(12f, if (carta) 1.5f else 1.44f)
             TemaId.DISTOPIA -> Medidas(11f, aire)
-            TemaId.ARCONTES -> Medidas(11f, aire)
+            TemaId.ARCONTES -> Medidas(if (carta) 12.2f else 11.6f, aire + 0.02f)
             TemaId.FRENTE -> Medidas(if (carta) 10.8f else 10.2f, if (carta) 1.55f else 1.5f)
             TemaId.REFUGIO -> Medidas(11f, 1.35f)
             TemaId.ORDEN -> Medidas(11f, aire)
@@ -842,7 +847,8 @@ object LibroDiario {
         TemaId.TEMPLARIO -> Inicial(R.font.cruzada_titulo, 1.3f, palabra = true, mayusculas = true)
         // La primera palabra en mayúsculas sobre la franja roja del formulario.
         TemaId.DISTOPIA -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
-        TemaId.ARCONTES -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
+        // Los cuatro puntos con que los copistas abrían un párrafo y la primera letra en Caudex, grande y en ocre.
+        TemaId.ARCONTES -> Inicial(R.font.codice_bold, 2.3f, prefijo = "⁘ ")
         // La primera letra en los rótulos anchos de la consola, en ámbar de piloto (como la capitular de la hoja en la app).
         TemaId.FRENTE -> Inicial(R.font.michroma_titulo, 1.9f, mayusculas = true)
         // Una letra grande de fósforo en video inverso.
@@ -995,9 +1001,22 @@ object LibroDiario {
                 cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
             }
             TemaId.ARCONTES -> {
-                // La barra negra del formulario y la línea roja de debajo.
-                cv.drawLine(x0, y - 1.5f, x1, y - 1.5f, Paint(linea).apply { color = tinta; strokeWidth = 2.4f })
-                cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
+                // Las filas de diplés con que se enmarcaban los títulos de los tratados, que apuntan al centro, y en medio el
+                // ouroboros con la chispa.
+                val diple = Paint(trazo).apply { strokeWidth = 0.8f; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
+                var x = x0
+                while (x + 2.4f <= x1) {
+                    if (abs(x + 1.2f - cx) > 12f) {
+                        val haciaDer = x + 1.2f < cx
+                        cv.drawPath(ruta {
+                            if (haciaDer) { moveTo(x, y - 2.4f); lineTo(x + 2.4f, y); lineTo(x, y + 2.4f) } else { moveTo(x + 2.4f, y - 2.4f); lineTo(x, y); lineTo(x + 2.4f, y + 2.4f) }
+                        }, diple)
+                    }
+                    x += 4.4f
+                }
+                cv.drawArc(cx - 6f, y - 6f, cx + 6f, y + 6f, -40f, 320f, false, Paint(trazo).apply { strokeWidth = 1.6f; strokeCap = Paint.Cap.ROUND })
+                cv.drawOval(cx + 2.2f, y - 6.4f, cx + 5.8f, y - 3.4f, relleno)
+                cv.drawCircle(cx, y, 1.2f, relleno)
             }
             TemaId.FRENTE -> {
                 // La cinta perforada del teletipo, con su fila de arrastre y los agujeros del mensaje; al centro, el emblema de la
@@ -1265,10 +1284,20 @@ object LibroDiario {
                 cv.drawRect(A - 130f, 36f, A - 34f, 54f, Paint(fino).apply { color = tinta; alpha = 160 })
             }
             TemaId.ARCONTES -> {
-                // Marco negro, la franja roja de arriba y la casilla del folio.
-                rect(22f, Paint(trazo).apply { color = tinta; strokeWidth = 1.6f; alpha = 220 })
-                cv.drawRect(22f, 22f, A - 22f, 30f, Paint(relleno).apply { alpha = 220 })
-                cv.drawRect(A - 130f, 36f, A - 34f, 54f, Paint(fino).apply { color = tinta; alpha = 160 })
+                // La hoja de papiro del códice: un filete fino, una fila de diplés arriba y otra abajo, y en cada esquina las
+                // siete esferas, pequeñas.
+                rect(24f, fino)
+                val diple = Paint(trazo).apply { strokeWidth = 0.7f; alpha = 140 }
+                listOf(34f, B - 34f).forEach { y ->
+                    var x = 40f
+                    while (x + 3f <= A - 40f) {
+                        val p = android.graphics.Path().apply { if (x < A / 2) { moveTo(x, y - 3f); lineTo(x + 3f, y); lineTo(x, y + 3f) } else { moveTo(x + 3f, y - 3f); lineTo(x, y); lineTo(x + 3f, y + 3f) } }
+                        if (abs(x + 1.5f - A / 2) > 10f) cv.drawPath(p, diple)
+                        x += 5.5f
+                    }
+                    cv.drawCircle(A / 2, y, 1.6f, relleno)
+                }
+                esquinas.forEach { (x, y) -> for (k in 0 until 4) cv.drawCircle(x, y, 2.5f + k * 2.2f, Paint(fino).apply { strokeWidth = 0.5f; alpha = 110 - k * 18 }) }
             }
             TemaId.FRENTE -> {
                 // El papel continuo del teleimpresor ya trae sus agujeros de arrastre, el picado y el emblema en seco: encima va el

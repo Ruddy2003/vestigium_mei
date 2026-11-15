@@ -639,7 +639,7 @@ object EstanteArcontes : DisenoBiblioteca {
                 mancha(sol, lu.width * 1.1f, Color.White.copy(alpha = 0.85f))
                 mancha(sol, lu.width * 0.55f, ORO.copy(alpha = 0.55f))
                 drawCircle(ORO, lu.width * 0.2f, sol)
-                drawCircle(Color(0xFFFFF4D0).copy(alpha = 0.7f), lu.width * 0.13f, sol - Offset(lu.width * 0.03f, lu.width * 0.03f))
+                drawCircle(Color(0xFFFFF4D0).copy(alpha = 0.45f), lu.width * 0.08f, sol - Offset(lu.width * 0.05f, lu.width * 0.05f))
             }
             drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.3f)), lu.right - 4 * u, lu.right), Offset(lu.right - 4 * u, lu.top), Size(4 * u, lu.height))
         }

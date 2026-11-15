@@ -227,11 +227,13 @@ object TrazosArcontes {
                 close()
             }
         }
-        val eje = Path().apply { val p0 = centro(0f); moveTo(p0.x, p0.y); for (k in 1..n) { val p = centro(k / n.toFloat()); lineTo(p.x, p.y) } }
-        // El halo violeta, suave: un trazo ancho y tenue a lo largo y dos husos cada vez más abiertos.
-        drawPath(eje, GRIETA_HALO.copy(alpha = 0.1f * luz), style = Stroke(ancho * 10f, cap = StrokeCap.Round, join = StrokeJoin.Round))
-        drawPath(huso(ancho * 7f), GRIETA_HALO.copy(alpha = 0.16f * luz))
-        drawPath(huso(ancho * 3.6f), GRIETA_HALO.copy(alpha = 0.3f * luz))
+        // El halo violeta, suave: la luz que se derrama por el medio y husos cada vez más abiertos y más tenues.
+        val medio = centro(0.5f); val rh = minOf(largo * 0.32f, ancho * 16f)
+        drawCircle(Brush.radialGradient(listOf(GRIETA_HALO.copy(alpha = 0.16f * luz), GRIETA_HALO.copy(alpha = 0f)), medio, rh), rh, medio)
+        drawPath(huso(ancho * 11f), GRIETA_HALO.copy(alpha = 0.05f * luz))
+        drawPath(huso(ancho * 7.5f), GRIETA_HALO.copy(alpha = 0.07f * luz))
+        drawPath(huso(ancho * 4.8f), GRIETA_HALO.copy(alpha = 0.12f * luz))
+        drawPath(huso(ancho * 2.8f), GRIETA_HALO.copy(alpha = 0.22f * luz))
         // La rendija: blanca, y más clara aún por dentro.
         drawPath(huso(ancho * 1.5f), GRIETA.copy(alpha = luz))
         drawPath(huso(ancho * 0.6f), Color.White.copy(alpha = luz))

@@ -55,6 +55,8 @@ object ContenedoresMas {
             Contenedor.PATENTES -> Color(0xFFF1E7CF)
             // La hoja de lectura del cartucho: el hueso de la consola, que de noche queda en la penumbra pizarra de la sala.
             Contenedor.CARTUCHO -> Color(0xFFEDE8DC)
+            // El papiro de las hojas del códice que se guarda en la jarra.
+            Contenedor.JARRA -> Color(0xFFEDE2C4)
             Contenedor.CUADERNO -> Color(0xFFFBFCFD)
             Contenedor.VUELO -> Color(0xFFF4F6FA)
             // Papel sintético impermeable, gris verdoso, de las bitácoras que se mojan.
@@ -236,6 +238,44 @@ object ContenedoresMas {
                 drawRect(linea.copy(alpha = 0.3f), r.topLeft, r.size, style = Stroke(1f * d))
                 drawLine(linea.copy(alpha = 0.3f), Offset(r.left, r.top + r.height / 2), Offset(r.right, r.top + r.height / 2), 0.8f * d)
                 drawLine(linea.copy(alpha = 0.3f), Offset(r.left + r.width * 0.6f, r.top), Offset(r.left + r.width * 0.6f, r.bottom), 0.8f * d)
+            }
+            Contenedor.JARRA -> {
+                // La hoja de papiro del códice de la jarra: las fibras de sus dos capas, la juntura de dos hojas pegadas, las
+                // filas de diplés que apuntan al centro (bajo la cabecera y al pie, como los que enmarcan los títulos de los
+                // tratados), cuatro puntos en el margen cada cuatro renglones y unos agujeros que se comió el tiempo en la orilla.
+                val fibra = if (oscuro) Color(0xFFD6C49B) else Color(0xFF8E7650)
+                val ocre = if (oscuro) Color(0xFFF0B24A) else Color(0xFF87590F)
+                val az = java.util.Random(23)
+                var y = 2 * d
+                while (y < size.height) { drawLine(fibra.copy(alpha = (if (oscuro) 0.04f else 0.07f) + 0.07f * az.nextFloat()), Offset(size.width * 0.2f * az.nextFloat(), y), Offset(size.width * (1f - 0.2f * az.nextFloat()), y), 0.5f * d); y += (2.5f + 2f * az.nextFloat()) * d }
+                var x = 20 * d
+                while (x < size.width) { drawLine(fibra.copy(alpha = 0.04f), Offset(x, 0f), Offset(x, size.height), 0.7f * d); x += (30f + 40f * az.nextFloat()) * d }
+                val xk = size.width * 0.8f
+                drawRect(fibra.copy(alpha = 0.06f), Offset(xk, 0f), Size(5 * d, size.height))
+                fun diples(yy: Float) {
+                    val cx = (margen - 10 * d + size.width - 12 * d) / 2
+                    var xx = margen - 10 * d
+                    while (xx + 3 * d <= size.width - 12 * d) {
+                        if (kotlin.math.abs(xx + 1.5f * d - cx) > 9 * d) {
+                            val p = Path().apply { if (xx < cx) { moveTo(xx, yy - 3 * d); lineTo(xx + 3 * d, yy); lineTo(xx, yy + 3 * d) } else { moveTo(xx + 3 * d, yy - 3 * d); lineTo(xx, yy); lineTo(xx + 3 * d, yy + 3 * d) } }
+                            drawPath(p, ocre.copy(alpha = 0.55f), style = Stroke(0.7f * d, cap = StrokeCap.Round))
+                        }
+                        xx += 5.5f * d
+                    }
+                    drawCircle(ocre.copy(alpha = 0.7f), 1.5f * d, Offset(cx, yy))
+                }
+                diples(86 * d)
+                if (size.height > 200 * d) diples(size.height - 16 * d)
+                var yy = 96 * d; var k = 0
+                while (yy < size.height - 24 * d) {
+                    if (k % 4 == 0) listOf(0f to -2.2f, 0f to 2.2f, -2.2f to 0f, 2.2f to 0f).forEach { (dx, dy) -> drawCircle(ocre.copy(alpha = 0.5f), 0.9f * d, Offset(margen - 14 * d + dx * d, yy - renglon * 0.35f + dy * d)) }
+                    yy += maxOf(renglon, 1f); k++
+                }
+                listOf(0.3f, 0.62f).forEach { f ->
+                    val o = Offset(size.width - 3 * d, size.height * f)
+                    drawOval(Color.Black.copy(alpha = if (oscuro) 0.4f else 0.12f), Offset(o.x - 4 * d, o.y - 3 * d), Size(8 * d, 6 * d))
+                    drawOval(fibra.copy(alpha = 0.35f), Offset(o.x - 4 * d, o.y - 3 * d), Size(8 * d, 6 * d), style = Stroke(0.6f * d))
+                }
             }
             Contenedor.CARTUCHO -> {
                 // La lectura del cartucho: la cabecera con la célula y la pista, la franja ámbar del piloto, a la izquierda la
@@ -489,6 +529,20 @@ object ContenedoresMas {
                 var y = 0f; var k = 0
                 while (y < size.height) { drawRoundRect(if (k % 2 == 0) acero else lerp(acero, Color.Black, 0.2f), Offset(10 * d, y), Size(12 * d, 18 * d), CornerRadius(3 * d)); y += 18 * d; k++ }
                 drawLine(lerp(acero, Color.White, 0.3f), Offset(16 * d, 0f), Offset(16 * d, size.height), 1f * d)
+            }
+            Contenedor.JARRA -> {
+                // El códice de un solo cuadernillo, como los de Nag Hammadi: la sombra del pliegue, la tira de cuero que forra el
+                // lomo y las tres tiras cortas de cuero que lo cosen, con su nudo.
+                drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.26f), Color.Transparent), 10 * d, 34 * d), Offset(10 * d, 4 * d), Size(24 * d, size.height - 8 * d))
+                val cuero = if (oscuro) Color(0xFF3A2A1C) else Color(0xFF6B4A2E)
+                drawRect(Brush.horizontalGradient(listOf(lerp(cuero, Color.White, 0.1f), cuero, lerp(cuero, Color.Black, 0.3f)), 4 * d, 15 * d), Offset(4 * d, 0f), Size(11 * d, size.height))
+                val correa = if (oscuro) Color(0xFF2E2014) else Color(0xFF4A321E)
+                listOf(0.18f, 0.5f, 0.82f).forEach { f ->
+                    val y = size.height * f
+                    listOf(-3.5f, 3.5f).forEach { dy -> drawLine(correa, Offset(8 * d, y + dy * d), Offset(24 * d, y + dy * d), 2 * d, StrokeCap.Round) }
+                    drawCircle(correa, 3 * d, Offset(24 * d, y))
+                    drawCircle(Color.White.copy(alpha = 0.12f), 1 * d, Offset(23 * d, y - 1 * d))
+                }
             }
             Contenedor.CARTUCHO -> {
                 // El canto de la carcasa del cartucho: baquelita con la muesca de lectura, la pestaña ámbar que protege contra

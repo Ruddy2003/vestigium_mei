@@ -1976,9 +1976,9 @@ private fun calizaFondo(w: Float, h: Float, u: Float, oscuro: Boolean, vetas: Pa
         nudos.add(Offset(x, yy))
         while (hecho < largo) {
             // Un paso corto que se tuerce poco a poco y, de vez en cuando, quiebra de golpe.
-            val p = (2.5f + az.nextFloat() * 4.5f) * u
-            dir += (az.nextFloat() - 0.5f) * (if (az.nextFloat() < 0.12f) 1.6f else 0.55f)
-            dir = dir * 0.8f + rumbo * 0.2f
+            val p = (3f + az.nextFloat() * 4f) * u
+            dir += (az.nextFloat() - 0.5f) * (if (az.nextFloat() < 0.06f) 0.9f else 0.32f)
+            dir = dir * 0.85f + rumbo * 0.15f
             x += cos(dir) * p; yy += sin(dir) * p; hecho += p
             nudos.add(Offset(x, yy))
         }

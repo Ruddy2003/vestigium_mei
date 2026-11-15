@@ -204,6 +204,7 @@ HEBREO = "notoserifhebrew/NotoSerifHebrew[wdth,wght].ttf"
 COPTO = "notosanscoptic/NotoSansCoptic-Regular.ttf"
 RANGOS_HEBREO = list(range(0x05D0, 0x05EB)) + [0x05F3, 0x05F4]
 RANGOS_COPTO = list(range(0x2C80, 0x2CF4)) + list(range(0x2CF9, 0x2D00)) + list(range(0x03E2, 0x03F0))
+SIGNOS_ARCONTES = [ord(c) for c in "◌⁘∴∵∷※⁂▪▫▹◃"]
 
 
 def altura_mayus(f):
@@ -218,7 +219,7 @@ def altura_mayus(f):
     return b.bounds[3]
 
 
-def anadir_escritura(f, origen, puntos, ejes, cache, prefijo):
+def anadir_escritura(f, origen, puntos, ejes, cache, prefijo, solo_faltan=False):
     """Copia a [f] los glifos de [puntos] de la fuente [origen] (instanciada en [ejes]), dibujados de nuevo sin componentes
     y escalados para que su altura de mayúsculas quede igual a la de [f]."""
     from fontTools.pens.ttGlyphPen import TTGlyphPen
@@ -233,8 +234,9 @@ def anadir_escritura(f, origen, puntos, ejes, cache, prefijo):
     cm = m.getBestCmap()
     orden = list(f.getGlyphOrder())
     nuevos = {}
+    ya = f.getBestCmap()
     for cp in puntos:
-        if cp not in cm:
+        if cp not in cm or (solo_faltan and cp in ya):
             continue
         origen_g = cm[cp]
         nombre = "%s%04X" % (prefijo, cp)
@@ -445,6 +447,9 @@ def hacer(origen, ejes, salida, nombre, letras, cache):
         peso = CON_HEBREO_COPTO[salida]
         anadir_escritura(f, HEBREO, RANGOS_HEBREO, {"wght": peso, "wdth": 100}, cache, "heb")
         anadir_escritura(f, COPTO, RANGOS_COPTO, None, cache, "cop")
+        if salida.startswith("literata"):
+            # Los signos que Arcontes usa en sus textos (◌ ⁘ ∴ ∵ ∷ ※ ⁂ ▪ ▫ ▹ ◃) y que Literata no trae: de Caudex.
+            anadir_escritura(f, "caudex/Caudex-Bold.ttf" if peso >= 600 else "caudex/Caudex-Regular.ttf", SIGNOS_ARCONTES, None, cache, "sig", solo_faltan=True)
     if nombre:
         peso = salida.split("_")[-1]
         renombrar(f, nombre, {"regular": "Regular", "titulo": "Regular", "medium": "Medium", "semibold": "SemiBold", "bold": "Bold", "negrita": "Bold"}[peso])

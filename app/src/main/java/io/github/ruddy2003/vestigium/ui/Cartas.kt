@@ -85,6 +85,7 @@ import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.data.alFuturo
 import io.github.ruddy2003.vestigium.data.lista
 import io.github.ruddy2003.vestigium.data.sellada
+import io.github.ruddy2003.vestigium.ui.biblioteca.bullaArcontes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -132,7 +133,9 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.TEMPLARIO -> Papeleria(Color(0xFFF1ECE0), Color(0xFFB9AE97), Color(0xFFFFFCF4), Color(0xFFB0191F), Color(0xFF7A2A16), Color(0xFF8A7650), Color(0xFF201E1B))
     // Sobre de manila de oficina, con su hilo y botones, y la tinta roja del sello de goma.
     TemaId.DISTOPIA -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
-    TemaId.ARCONTES -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
+    // La carta entre comunidades escondidas: papiro doblado en paquete, por dentro la tinta de lo escrito, la bula de barro
+    // cocido claro con el ouroboros y el cordel de pelo de cabra.
+    TemaId.ARCONTES -> Papeleria(Color(0xFFE6D8B4), Color(0xFFAE9A6E), Color(0xFFF4EAD0), Color(0xFFCDB98C), Color(0xFFB9774A), Color(0xFF3B3026), Color(0xFF1E1A2B))
     // La funda de la transmisión: cartón hueso de consola forrado de acero, el sello ámbar de la célula y la correa de baquelita.
     TemaId.FRENTE -> Papeleria(Color(0xFFCFC7B5), Color(0xFF9D9584), Color(0xFFE6E0D2), Color(0xFF3E4C57), Color(0xFFE8902C), Color(0xFF2A2622), Color(0xFF23252A))
     // Crema del optimismo atómico, forro verde azulado, la estampa amarilla y la banda naranja.
@@ -384,11 +387,13 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
             rotuloSello("ARCHIVADO", c.x, c.y + r * 0.13f, r * 0.36f, k(base.copy(alpha = 0.85f)))
         }
-        TemaId.ARCONTES -> rotate(-14f, c) {
-            // El sello de goma del Ministerio: tinta en dos marcos y la palabra, un poco torcido.
-            drawRect(k(base.copy(alpha = 0.85f)), Offset(c.x - r * 1.25f, c.y - r * 0.6f), Size(r * 2.5f, r * 1.2f), style = Stroke(r * 0.1f))
-            drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
-            rotuloSello("ARCHIVADO", c.x, c.y + r * 0.13f, r * 0.36f, k(base.copy(alpha = 0.85f)))
+        // La bula: el disco de barro apretado sobre el cordel, con el ouroboros hundido y la chispa en el centro; debajo, los
+        // dos cabos del cordel de pelo de cabra.
+        TemaId.ARCONTES -> {
+            val pelo = k(Color(0xFF3B3026))
+            drawLine(pelo, Offset(c.x - r * 0.2f, c.y + r * 0.6f), Offset(c.x - r * 0.75f, c.y + r * 1.5f), r * 0.1f, StrokeCap.Round)
+            drawLine(pelo, Offset(c.x + r * 0.2f, c.y + r * 0.6f), Offset(c.x + r * 0.55f, c.y + r * 1.6f), r * 0.1f, StrokeCap.Round)
+            bullaArcontes(c, r, base, a, 5)
         }
         TemaId.FRENTE -> {
             // El sello de la célula: una oblea de precinto con el bisel graduado de una perilla de consola, el emblema troquelado
@@ -824,8 +829,9 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Hermano que serás yo:", "Escribe tu misiva, hermano…", "Misiva para %s, sellada por la casa", "Ningún hermano la abrirá antes de tiempo.", "Toca para tomar la pluma…")
     TemaId.DISTOPIA -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
         "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
-    TemaId.ARCONTES -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
-        "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
+    TemaId.ARCONTES -> VozCarta("Ya puedes romper el barro: ábrela", "Atada y sellada con barro", "Para el iniciado que seré el %s", "Iniciado de %s", "Para el iniciado que seré",
+        "Al que seré, de parte del que soy:", "Escribe para la otra comunidad…", "Carta para %s, atada y escondida", "El barro no se rompe antes de su día.",
+        "Toca para escribir a la luz de la lámpara…")
     TemaId.FRENTE -> VozCarta("VENTANA ABIERTA: DESCÍFRALA", "Cifrada con la clave de la célula", "PARA EL AGENTE QUE SERÁS EL %s", "AGENTE · %s", "PARA EL AGENTE QUE SERÁS",
         "Agente, si lees esto, la red sigue en pie:", "Cifra tu mensaje para el contacto…", "Transmisión para %s cifrada y en cola", "La clave no se libera antes de su ventana.", "TOCA PARA ABRIR EL CANAL")
     TemaId.REFUGIO -> VozCarta("¡Lista para abrir!", "Sellada en la bóveda", "Para el residente del %s", "Residente de %s", "Para el residente del mañana",
