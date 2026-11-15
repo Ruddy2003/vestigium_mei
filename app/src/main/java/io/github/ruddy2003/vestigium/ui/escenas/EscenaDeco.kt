@@ -180,7 +180,7 @@ internal object EscenaDeco : EscenaVida {
 
     /**
      * Cuántas mesas tienen las sillas patas arriba encima: cerrado y en el ensayo, todas menos la cercana («con las sillas
-     * encima de las mesas»); abierto, las que no están puestas («sobran sillas»); recién cerrado, las que ya se recogieron.
+     * encima de las mesas»); abierto y recién cerrado, las que no están puestas («sobran sillas»).
      */
     internal fun sillasArriba(m: Momento): Int {
         val n = mesas(m)
@@ -188,8 +188,7 @@ internal object EscenaDeco : EscenaVida {
         return when (fase(m)) {
             Fase.CERRADO, Fase.ENSAYO -> n - 1
             Fase.PREPARA -> 0
-            Fase.ABIERTO -> n - puestas(m)
-            Fase.DESPUES -> maxOf(n - puestas(m), (n - 1) / 2)
+            Fase.ABIERTO, Fase.DESPUES -> n - puestas(m)
         }
     }
 
@@ -345,10 +344,10 @@ internal object EscenaDeco : EscenaVida {
      */
     internal fun luces(m: Momento): Luces {
         val l = m.luces(); val dia = (1f - l.noche).coerceIn(0f, 1f)
-        val k = 0.62f * dia + 0.17f * (1f - dia) - 0.1f * l.nublado
         // Con el sol dentro, la penumbra es la del rebote cálido de la mancha; sin él, la luz fría y gris que baja de la acera.
         val conSol = sol(m) != null
-        val tinte = lerp(if (conSol) Color(0xFFDCCCF0) else Color(0xFFB4C0EA), Color(0xFF9A98DC), l.noche)
+        val k = (if (conSol) 0.8f else 0.72f) * dia + 0.17f * (1f - dia) - 0.1f * l.nublado
+        val tinte = lerp(if (conSol) Color(0xFFDCCCF0) else Color(0xFFA2B4F2), Color(0xFF9A98DC), l.noche)
         val amb = Color((l.ambiente.red * k * tinte.red).coerceIn(0f, 1f), (l.ambiente.green * k * tinte.green).coerceIn(0f, 1f), (l.ambiente.blue * (k + 0.05f) * tinte.blue).coerceIn(0f, 1f))
         return Luces(
             alto = l.alto, medio = l.medio, bajo = l.bajo, ambiente = amb, bruma = lerp(Color(0xFF2E2438), amb, 0.5f), brumaFuerza = 0.5f,

@@ -137,8 +137,8 @@ internal object SalaDeco {
             for (l in listOf(LAMPARA_FONDO, LAMPARA_BARRA, V3(-2.4f, TECHO, 6.4f))) mancha(p(l.x, TECHO, l.z), 0.9f * CamDeco.k(l.z), 0.25f * CamDeco.k(l.z), lerp(C.LACA, C.CAOBA, 0.3f), 0.35f)
         }
         // Las vigas: la cara de abajo y la que mira a quien mira (la de la derecha, en las de la izquierda del eje).
-        for (x in listOf(-2.75f, -1.75f, -0.75f)) viga(v, x, 0.14f, 0.16f, lerp(C.CAOBA, C.LACA, 0.35f))
-        viga(v, POZO - 0.1f, 0.2f, 0.24f, lerp(C.CAOBA, C.LACA, 0.25f))
+        for (x in listOf(-2.75f, -1.75f, -0.75f)) viga(v, x, 0.14f, 0.16f, lerp(C.CAOBA, C.ROBLE, 0.3f))
+        viga(v, POZO - 0.1f, 0.2f, 0.24f, lerp(C.CAOBA, C.ROBLE, 0.2f))
         // Las vigas que van de pared a pared, por encima de las de arriba: la del fondo, junto a la pared.
         val travesano = forma(IZQ, TECHO - 0.16f, FONDO - 0.15f, POZO, TECHO - 0.16f, FONDO - 0.15f, POZO, TECHO, FONDO - 0.15f, IZQ, TECHO, FONDO - 0.15f)
         drawPath(travesano, v.s(V3(-1.5f, TECHO, FONDO), lerp(C.CAOBA, C.LACA, 0.3f), FRENTE))
@@ -149,8 +149,8 @@ internal object SalaDeco {
     private fun DrawScope.viga(v: VistaDeco, x: Float, ancho: Float, canto: Float, madera: Color) {
         val y = TECHO - canto; val x0 = x - ancho / 2f; val x1 = x + ancho / 2f
         val ladoX = if (x < 0f) x1 else x0; val n = V3(if (x < 0f) 1f else -1f, 0f, 0f)
-        drawPath(forma(ladoX, y, 1.6f, ladoX, y, FONDO, ladoX, TECHO, FONDO, ladoX, TECHO, 1.6f), Brush.verticalGradient(0f to v.s(V3(ladoX, y, 2.6f), madera, n), 1f to v.s(V3(ladoX, y, 7f), madera, n), startY = 0f, endY = 80f))
-        drawPath(forma(x0, y, 1.6f, x1, y, 1.6f, x1, y, FONDO, x0, y, FONDO), Brush.verticalGradient(0f to v.s(V3(x, y, 2.6f), lerp(madera, C.LACA, 0.25f), V3(0f, -1f, 0f)), 1f to v.s(V3(x, y, 7f), lerp(madera, C.LACA, 0.25f), V3(0f, -1f, 0f)), startY = 0f, endY = 80f))
+        drawPath(forma(ladoX, y, 2.2f, ladoX, y, FONDO, ladoX, TECHO, FONDO, ladoX, TECHO, 2.2f), Brush.verticalGradient(0f to v.s(V3(ladoX, y, 2.6f), madera, n), 1f to v.s(V3(ladoX, y, 7f), madera, n), startY = 0f, endY = 80f))
+        drawPath(forma(x0, y, 2.2f, x1, y, 2.2f, x1, y, FONDO, x0, y, FONDO), Brush.verticalGradient(0f to v.s(V3(x, y, 2.6f), lerp(madera, C.LACA, 0.25f), V3(0f, -1f, 0f)), 1f to v.s(V3(x, y, 7f), lerp(madera, C.LACA, 0.25f), V3(0f, -1f, 0f)), startY = 0f, endY = 80f))
         // El canto de abajo coge la luz, y las vetas.
         drawLine(v.s(V3(ladoX, y, 4f), lerp(madera, C.MARFIL, 0.35f), n).copy(alpha = 0.6f), p(ladoX, y, 1.6f), p(ladoX, y, FONDO), 0.6f)
         val az = Azar(Semilla.de("deco", "viga", x))
