@@ -268,7 +268,7 @@ internal object PiezasIniciado {
     private val HUIDA_PUEBLO = listOf(
         hu("La ciudad de Samaria está en lo alto de un monte redondo, con murallas, un templo a César y calles con columnas que mandó hacer el viejo Herodes. Abajo, los valles están llenos de olivos y de eras. No se parece a nada de Galilea."),
         hu("Los de Samaria no suben a Jerusalén: dicen que hay que adorar en su monte, el Gerizim, y miran a los judíos que huyen con lástima y con desconfianza. Les dan trabajo igual. El trabajo no pregunta."),
-        hu("Los que huyeron de Jerusalén viven repartidos por la ciudad, en cuartos alquilados, en patios, en casas de los que les creen. Se reconocen por la calle y no se saludan. Por la noche, sí."),
+        hu("Los que huyeron de Jerusalén viven repartidos por la ciudad, en cuartos alquilados, en patios, en casas de los que les creen. Se reconocen por la calle y no se saludan. Por la noche, sí.", desde = "samaria_32"),
     )
 
     /** Manda la primera regla que se cumple: primero las barcas de la gente que sigue al de Nazaret; si no hay, el secadero. */
