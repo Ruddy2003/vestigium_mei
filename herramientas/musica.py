@@ -665,6 +665,73 @@ def hacer_nouveau():
         # ella; queda la campanilla del principio de cada vuelta, sobre la tónica.
         ARGS['nouveau'] = (T, pz, ac, mel, dict(kw, perc=[(0, cristal(hz(T + 23), 2.2, 0.7), 0.16)]))
 
+def hacer_psicodelia():
+    # --- Psicodelia: La mixolidio (la escala mayor con la séptima menor), en cuatro por cuatro a unas 96 negras por minuto,
+    # como una banda de una sala de baile de San Francisco en 1967 (melodía propia: no cita ninguna canción ni ningún riff).
+    # El sitar canta la melodía, una nota por vez como en una sola cuerda, con las largas que entran deslizándose desde
+    # un semitono abajo, su zumbido, sus cuerdas simpáticas y el eco de cinta en el puntillo de corchea; el órgano portátil
+    # de transistores sostiene los acordes con su vibrato rápido; el bajo eléctrico, con púa, camina por la raíz, la
+    # quinta, la octava y la séptima menor; el pandero se sacude en corcheas y golpea en el dos y el cuatro. La armonía es
+    # la del modo: La, Mi menor (la quinta menor, que solo tiene el mixolidio), Re, y la vuelta a casa de Sol a La (de la
+    # séptima menor a la tónica, sin sensible). Al cierre, la guitarra eléctrica con el pedal de distorsión da el acorde
+    # de quinta de Sol y deja sonar el de La con vibrato y su eco. Ni sintetizadores (Ciudad neón), ni el vibráfono de los
+    # cincuenta (Refugio), ni el charlestón (Art déco), ni el vals (Art nouveau), ni bordón y cítara pentatónica (Ruta de
+    # la Seda), ni metales y timbales (Soviético). Con su propio azar.
+    with A.azar_propio('musica_psicodelia'):
+        T = 0; pz = 0.625
+        ac = [(0, [0, 4, 7], 4), (4, [-5, -2, 2], 4), (8, [-7, -3, 0], 4), (12, [-2, 2, 5], 2), (14, [0, 4, 7, 12], 2)]
+        mel = frase(0, "12:1.5 10:0.5 9:1 4:1 | 7:1 10:0.5 9:0.5 7:2 | 9:1 12:0.5 14:0.5 12:1 9:1 | 10:1 14:1 12:2")
+        taraf = tuple(hz(T + n) for n in (-12, -5, 0, 2, 4, 7, 10, 12))
+        def canta(f, d):
+            """El sitar: cada nota dura hasta la siguiente (el dedo la suelta), mientras las simpáticas siguen; las de un
+            tiempo o más entran desde un semitono abajo. Domado apenas (ver [domar]) y con su eco de cinta."""
+            x = sitar(f, d + 0.9, taraf=taraf, halo=0.22, entra=-1.0 if d >= 0.9 * pz else 0.0, apagar=d + 0.05)
+            return eco_cinta(domar(x, 0.4, 2.5), 0.75 * pz, 0.4, 3, 2600, 0.3)
+        organo = lambda f, d: organo_transistor(f, d + 0.02, brillo=0.85)
+        def cuerda_bajo(f, d):
+            """Una nota del bajo eléctrico con púa: la cuerda gruesa, un poco saturada por el amplificador (así se oye por sus
+            armónicos en un altavoz pequeño), que la mano apaga al terminar."""
+            x = cuerda_viva(f, d + 0.06, 0.3, 0.998, punto=0.2)
+            x = filtro(filtro(np.tanh(1.8 * x / (np.abs(x).max() + 1e-12)), 'bajo', 1600), 'alto', 70)
+            t = np.arange(len(x)) / SR
+            return x * np.minimum(1, np.maximum(0, d + 0.06 - t) / 0.05)
+        def bajo(f, d):
+            """La figura del bajo en cada acorde: la raíz en el uno y en el «y» del dos, la quinta en el tres, la octava y la
+            séptima menor en el cuatro; en los acordes de dos tiempos, la raíz y la quinta."""
+            figura = [(0, 0, 1.5), (1.5, 0, 0.5), (2, 7, 1), (3, 12, 0.5), (3.5, 10, 0.5)] if d >= 3.5 * pz else [(0, 0, 1), (1, 7, 1)]
+            return mezclar(*[(b * pz, cuerda_bajo(f * 2 ** (s / 12), dd * pz * 0.92), 1.0) for b, s, dd in figura])
+        def acor_cierre(notas, d):
+            """El último acorde del órgano, que sigue sonando después del compás y se apaga cerrando el pedal de volumen."""
+            x = acorde(organo, [T - 12 + n for n in notas], d)
+            return x * (1 - np.minimum(1, np.arange(len(x)) / SR / d)) ** 1.5
+        def ritmo(acordes, cierre=True):
+            """El pandero: sacudido en corcheas (más suave en el «y») y golpeado en el dos y el cuatro; con [cierre], la
+            guitarra con el pedal de distorsión golpea el acorde de quinta de Sol en el tiempo anterior al último acorde y
+            deja sonar el de La con vibrato y su eco, el pandero golpea con ella y el órgano sigue con el acorde de La
+            después del compás, hasta apagarse."""
+            fin = acordes[-1][0] + acordes[-1][2]
+            out = []
+            for b in np.arange(0, fin, 0.5):
+                if b % 2 == 1: out.append((b, domar(pandero(1.0, 0, 0.35, 0.5), 0.4), 0.5))
+                else: out.append((b, pandero(0.5, 0.05, 0.25, 0.0), 0.3 if b % 1 == 0 else 0.2))
+            if cierre:
+                ul = acordes[-1][0]
+                cierra = acor_cierre(acordes[-1][1], 3.6)
+                out += [(ul - 1, guitarra_distorsion(hz(T - 14), 0.5, (0, 7, 12), apagar=0.42), 0.2),
+                        (ul, eco_cinta(guitarra_distorsion(hz(T - 12), 3.2, (0, 7, 12), vibrato=(0.25, 1.0)), 0.75 * pz, 0.38, 3, 2600, 0.3), 0.26),
+                        (ul, domar(pandero(1.0, 0, 0.4, 0.6), 0.4), 0.55), (ul + 2, cierra, 0.2)]
+            return out
+        kw = dict(inst_mel=canta, inst_ac=organo, bajo=bajo, perc=ritmo(ac), g_mel=0.62, g_ac=0.3, g_bajo=0.1,
+                  oct_mel=-12, oct_ac=-12, oct_bajo=-24, legato=1.0, cola=1.8, rev=0.26)
+        # La llamada solo toma los dos primeros compases y el cierre: su ritmo se arma con esos mismos acordes.
+        kw_llamada = dict(kw, perc=ritmo([c for c in ac if c[0] < 8] + [(8, ac[-1][1], 4)]))
+        # La notificación: el pandero y tres notas de sitar que suben (Mi, Sol, La), con su eco.
+        sit = lambda f, d: sitar(f, d, taraf=taraf, halo=0.25)
+        notif = mezclar((0, domar(pandero(1.0, 0, 0.35, 0.4), 0.4), 0.22), (0.02, eco_cinta(notificacion(T, sit, [7, 10, 12], 0.13, 1.1, 1.0), 0.27, 0.35, 2, 2600, 0.3), 1.0))
+        P['psicodelia'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw_llamada), notif)
+        # En «Tu año» la música sube un tono dos vueltas: sin la guitarra del cierre, que no subiría con ella.
+        ARGS['psicodelia'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
+
 def hacer_egipto():
     # --- Egipto: Mi con la segunda menor (escala propia), arpa arpegiada, flauta de caña, tambor de marco y sistro, con una
     # melodía propia de ocho compases. Con su propio azar, para no mover el de los temas que van después.
@@ -859,6 +926,7 @@ if __name__ == '__main__':
     hacer_arcontes()
     hacer_galia()
     hacer_nouveau()
+    hacer_psicodelia()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     # Con un tercer argumento («presentacion,anual», por ejemplo) solo se escriben esas piezas.
     piezas = sys.argv[3].split(',') if len(sys.argv) > 3 else None
