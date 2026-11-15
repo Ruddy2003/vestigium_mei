@@ -87,7 +87,8 @@ internal object CosasUrss {
             lampara(lz, p(Co.LX, 26f, Co.LT), p(Co.LX, Co.LY, Co.LT), 58f * K.s(Co.LT), R.lampara(m), R.bombillaDesnuda(m))
             // Lo más cercano, cortado por el borde de abajo: el cubo de las patatas junto a la nevera y los chanclos de la entrada.
             cuboDePatatas(lz, CUBO_X, CUBO_T, Azar(Semilla.de("urss", "patatas")))
-            chanclos(lz, 302f, 74f, R.nieve(m) > 0.3f && R.fase(m) != EscenaUrss.Fase.SOLA)
+            // El día de las botas, sus chanclos van con ellas (`ObjetosUrss`): los de la entrada no se pintan.
+            if (R.laCocinaPinta(m, "botas")) chanclos(lz, 302f, 74f, R.nieve(m) > 0.3f && R.fase(m) != EscenaUrss.Fase.SOLA)
         }
     }
 
@@ -103,7 +104,7 @@ internal object CosasUrss {
             cacharros(lz, 104f, 106f)
             if (R.laCocinaPinta(m, "radio")) radioDeCable(lz, 70f, 66f)
             repisa(lz, Co.FX0 - 4f, Co.FX1 + 2f, 70f, az)
-            gancho(lz, R.abrigoColgado(m) && R.laCocinaPinta(m, "abrigo"), R.abrigoColgado(m), R.luto(m))
+            gancho(lz, R.abrigoColgado(m) && R.laCocinaPinta(m, "abrigo"), R.abrigoColgado(m) && R.laCocinaPinta(m, "chal"), R.luto(m))
         }
     }
 
@@ -159,7 +160,7 @@ internal object CosasUrss {
         if (R.cajas(m) >= 5) { val pc = p(296f, Co.MY, 48f); val kc = K.s(48f); add(Encima(silueta(pc, 30f * kc, 22f * kc), pc) { with(PiezasUrss) { caja(lz, 280f, 314f, Co.MY - 22f, Co.MY, 34f, 58f, lerp(C.MADERA, C.PAPEL, 0.4f), lerp(C.MADERA, C.PAPEL, 0.55f)); cuerda(lz, 280f, 314f, Co.MY - 22f, 34f, 58f) } }) }
         // El objeto del día: los chicos, sobre el hule, en la esquina de delante.
         val so = Co.SOBRE_LA_MESA
-        add(Encima(Path(), so) { with(ObjetosUrss) { sobreElSoporte(m, Pincel(lz.l, LuzCocinaUrss.rayoDelSol(lz.sol ?: EscenaUrss.SolDeVentana(1f, 0f, 0f, Color.White), 1f, so)), so, K.s(60f)) } })
+        add(Encima(ObjetosUrss.silueta(m, so, K.s(60f)), so) { with(ObjetosUrss) { sobreElSoporte(m, Pincel(lz.l, LuzCocinaUrss.rayoDelSol(lz.sol ?: EscenaUrss.SolDeVentana(1f, 0f, 0f, Color.White), 1f, so)), so, K.s(60f)) } })
     }
 
     // ---------------------------------------------------------------- Lo del suelo
