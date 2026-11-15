@@ -1084,8 +1084,6 @@ internal object PiezasUrss {
         drawLine(lz.sombra(a, C.TINTA, 0.3f).copy(alpha = 0.4f), Offset((a.x + b.x) / 2f, (a.y + b.y) / 2f), Offset((c.x + d.x) / 2f, (c.y + d.y) / 2f), 0.5f)
         drawPath(poligono(c, Offset(c.x - 4f, c.y - 2.4f), Offset(c.x - 6f, c.y + 0.4f)), lz.en(c, lerp(C.PAPEL, Color.White, 0.2f)))
     }
-
-    // @@MAS@@
 }
 
 /**
