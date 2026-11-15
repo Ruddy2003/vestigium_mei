@@ -359,7 +359,8 @@ internal object Formas {
             TemaId.TEMPLARIO -> { raya(c, x, y, r, 0f, -0.65f, 0f, 0.55f, d); raya(c, x, y, r, -0.52f, -0.15f, 0.52f, -0.15f, d)
                 raya(c, x, y, r, -0.62f, -0.75f, 0.62f, -0.75f, d) }   // la cruz del escudo y su jefe
             TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
-            TemaId.FRENTE -> { raya(c, x, y, r, 0.16f, -0.42f, -0.2f, 0.05f, d); raya(c, x, y, r, -0.2f, 0.05f, 0.2f, -0.05f, d); raya(c, x, y, r, 0.2f, -0.05f, -0.16f, 0.42f, d) }   // la chispa de tres trazos
+            // La célula en el centro y la chispa: tres trazos que salen de ella por el hueco del aro, arriba a la derecha.
+            TemaId.FRENTE -> { c.drawCircle(x, y, r * 0.14f, d); raya(c, x, y, r, 0.13f, -0.32f, 0.47f, -1.16f, d); raya(c, x, y, r, 0.23f, -0.27f, 0.93f, -1.11f, d); raya(c, x, y, r, 0.3f, -0.19f, 1.06f, -0.66f, d) }
             TemaId.REFUGIO -> { poligono(x, y, r * 0.55f, 3, 90.0); c.drawPath(p, d) }
             TemaId.ORDEN -> { raya(c, x, y, r, 0f, -0.8f, 0f, 0.95f, d); raya(c, x, y, r, -0.72f, -0.25f, 0.72f, -0.25f, d) }   // la cruz del escudo
             TemaId.VAPOR -> { c.drawCircle(x, y, r * 0.5f, d); raya(c, x, y, r, 0f, 0f, 0.32f, -0.3f, d) }   // la esfera del manómetro y su aguja

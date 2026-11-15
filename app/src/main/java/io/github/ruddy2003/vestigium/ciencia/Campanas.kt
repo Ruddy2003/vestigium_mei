@@ -194,7 +194,7 @@ object Campanas {
         TemaId.DISTOPIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
         // Una ruta de salto inventada, de mundo en mundo, del puerto de ladrillo a la capital del Directorio; cada parada es
         // la misión que la célula tiene ahí, con su nombre en clave.
-        TemaId.FRENTE -> listOf("HOLLÍN · TUERCA", "ESCORIA · CANDIL", "VIGÍA · SORDINA", "LUNA OCRE · BRASERO", "EL ANILLO · MÁSCARA", "CANTERA · CENIZA", "ALBAR · CHISPA")
+        TemaId.FRENTE -> listOf("HOLLÍN", "ESCORIA", "VIGÍA", "LUNA OCRE", "EL ANILLO", "CANTERA", "ALBAR")
         TemaId.REFUGIO -> listOf("Dormitorios", "Comedor", "Hidroponía", "Taller", "Purificador", "Esclusa", "Superficie")
         TemaId.ORDEN -> listOf("Campamento", "Puente de hierro", "Cota 214", "Desfiladero", "Trincheras", "Bastión", "Fortaleza")
         // Una línea de ferrocarril inventada, del depósito de locomotoras a la estación terminal.
