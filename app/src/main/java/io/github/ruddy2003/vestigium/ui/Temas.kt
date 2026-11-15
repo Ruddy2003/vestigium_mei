@@ -653,23 +653,23 @@ object Temas {
     /** Frente exterior: la red clandestina habla en clave de radio y de operación, sin palabras de la saga que lo inspira. */
     private val FRENTE = mapOf(
         "Mundo" to "MUNDOS RECORRIDOS", "Patrimonio Mundial" to "SITIOS PROTEGIDOS", "Mapa para rascar" to "CARTA DE MUNDOS", "Ciudades visitadas" to "PUERTOS TOCADOS",
-        "Biblioteca de sueños" to "SUEÑOS CIFRADOS", "Cartas" to "TRANSMISIONES", "Escribir una carta" to "CIFRAR UN MENSAJE", "Carta" to "MENSAJE", "Conocerte" to "FICHA DEL AGENTE", "Brújula política" to "POSICIÓN POLÍTICA", "Mapas" to "CARTAS ESTELARES", "Salud" to "PARTE MÉDICO", "Tus apps" to "EQUIPOS EN USO", "Otras vidas" to "VIDAS DE OTROS FRENTES", "Logros" to "INSIGNIAS DE MISIÓN", "Tu año en historias" to "INFORME DEL AÑO", "Anoche" to "LA NOCHE PASADA", "Selladas" to "CIFRADAS", "Listas para abrir" to "LISTAS PARA DESCIFRAR", "A otras personas" to "A OTROS AGENTES", "Del pasado" to "DESCIFRADAS",
+        "Biblioteca de sueños" to "SUEÑOS CIFRADOS", "Cartas" to "CORREO CIFRADO", "Escribir una carta" to "CIFRAR UN MENSAJE", "Carta" to "MENSAJE", "Conocerte" to "FICHA DEL AGENTE", "Brújula política" to "POSICIÓN POLÍTICA", "Mapas" to "CARTAS ESTELARES", "Salud" to "PARTE MÉDICO", "Tus apps" to "EQUIPOS EN USO", "Otras vidas" to "VIDAS DE OTROS FRENTES", "Logros" to "INSIGNIAS DE MISIÓN", "Tu año en historias" to "INFORME DEL AÑO", "Anoche" to "LA NOCHE PASADA", "Selladas" to "CIFRADAS", "Listas para abrir" to "LISTAS PARA DESCIFRAR", "A otras personas" to "A OTROS AGENTES", "Del pasado" to "DESCIFRADAS",
         "Hoy" to "OPERACIÓN DE HOY", "Línea de tiempo" to "REGISTRO DE OPERACIONES", "Ahora mismo estoy…" to "POSICIÓN ACTUAL…",
         "Entender" to "DESCIFRAR", "Registros especiales" to "REGISTROS RESERVADOS", "Apariencia" to "CAMUFLAJE", "Avisos y recordatorios" to "SEÑALES Y ALERTAS",
         "Llenar el día" to "INFORME DE LA NOCHE", "Biblioteca del diario" to "ARCHIVO DE DESPACHOS", "Entrada" to "DESPACHO",
-        "Día" to "OPERACIÓN", "Momentos" to "AVISTAMIENTOS", "Gastos" to "FONDOS DE LA RED", "Explorar" to "RECONOCIMIENTO", "Más" to "CUARTEL",
+        "Día" to "OPERACIÓN", "Momentos" to "MOMENTOS EN CLAVE", "Gastos" to "FONDOS DE LA RED", "Explorar" to "RECONOCIMIENTO", "Más" to "CUARTEL",
         "Hábitos" to "RUTINAS DE CAMPO", "Cartas al futuro" to "MENSAJES DIFERIDOS", "Experimentos personales" to "PRUEBAS DE CAMPO",
         "Cómo leer tus datos" to "MANUAL DE CLAVES", "Guía científica" to "MANUAL DE CLAVES", "Cuestionarios" to "CUESTIONARIOS DE CONTROL", "Prueba de reacción" to "REFLEJOS DE PILOTO", "Lugares" to "POSICIONES",
         "Datos" to "BANCO DE DATOS", "Permisos y sensores" to "SENSORES Y PERMISOS", "Ajustes" to "CALIBRACIÓN", "Reportes" to "INFORMES DE CAMPO",
         "Bienvenido" to "INGRESO A LA RED", "Calendario" to "CALENDARIO DE OPERACIONES", "Obras" to "MATERIAL INTERCEPTADO", "Tu año" to "BALANCE DEL AÑO",
         "Privacidad" to "SECRETO", "Sueño" to "REPOSO", "Contexto" to "SITUACIÓN", "Hitos" to "HECHOS CLAVE",
-        "Ánimo y cuerpo" to "MORAL Y CUERPO", "Diario" to "DESPACHOS", "Predicción" to "PRONÓSTICO DE CAMPO", "Este día hace un año" to "HACE UN AÑO EN LA RED",
+        "Ánimo y cuerpo" to "MORAL Y CUERPO", "Diario" to "DESPACHOS CIFRADOS", "Predicción" to "PRONÓSTICO DE CAMPO", "Este día hace un año" to "HACE UN AÑO EN LA RED",
         "Lo que registró el teléfono" to "LO QUE CAPTARON LOS SENSORES", "Registrar" to "TRANSMITIR", "Las relaciones más marcadas" to "ENLACES MÁS FUERTES",
         "Mapa" to "CARTA", "Mapa emocional" to "CARTA DE LA MORAL", "Tablero" to "CONSOLA", "Tu día" to "CICLO DE 24 H", "Tu día en 24 horas" to "CICLO DE 24 H",
         "Te falta hoy" to "PENDIENTE DE TRANSMITIR", "Datos que faltan" to "SEÑALES PERDIDAS", "Tema" to "CAMUFLAJE", "Recordatorios" to "ALERTAS",
         "Resumen semanal" to "SÍNTESIS SEMANAL", "Totales" to "RECUENTO", "Gimnasio" to "ENTRENAMIENTO", "Buscar" to "RASTREO",
         "Cifras" to "LECTURAS", "Fotos del día" to "FOTOS DE RECONOCIMIENTO", "Medicamentos" to "BOTIQUÍN",
-        "Seguimiento privado" to "SEGUIMIENTO RESERVADO", "Momentos de la semana" to "AVISTAMIENTOS DE LA SEMANA", "Momentos de este día" to "AVISTAMIENTOS DEL DÍA",
+        "Seguimiento privado" to "SEGUIMIENTO RESERVADO", "Momentos de la semana" to "LA SEMANA EN CLAVE", "Momentos de este día" to "EL DÍA EN CLAVE",
         "Lo mejor y lo peor" to "ACIERTOS Y BAJAS", "Personas, temas e hitos" to "CONTACTOS, ASUNTOS Y HECHOS", "Respaldo automático" to "COPIA EN EL ESCONDITE",
     )
 

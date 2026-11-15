@@ -615,7 +615,8 @@ object Estilo {
         TemaId.MEDIEVAL -> listOf("ij", "iij", "iv", "v", "vj", "Sb", "Dm")
         TemaId.TEMPLARIO -> listOf("Lu", "Ma", "Me", "Ju", "Ve", "Sa", "Di")
         TemaId.DISTOPIA -> semana
-        TemaId.FRENTE -> semana
+        // Una letra y su punto, como la tecla de la consola que pone el día.
+        TemaId.FRENTE -> listOf("L.", "M.", "X.", "J.", "V.", "S.", "D.")
         TemaId.REFUGIO -> semana
         TemaId.ORDEN -> semana.map { it.take(2) }
         TemaId.VAPOR -> listOf("L", "M", "Mi", "J", "V", "S", "D")
