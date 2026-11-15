@@ -932,8 +932,9 @@ internal object AnioG9 {
     // (banderas y, de noche, el resplandor de la Exposición en el cielo), luces (el Palacio de la Electricidad), metro (la
     // entrada recién abierta), faroles (los candelabros recién puestos) y nieve. Nunca personas.
     //
-    // Arcos: metro (la entrada de la estación de Palais-Royal, delante del taller: 0 = la calle sin obras; de 0.15 a 0.5,
-    // las vallas y la tierra de las obras, que van a más; 0.75 = la barandilla de fundición con su pórtico, abierta el 19 de
+    // Arcos: metro (la entrada de la estación de Palais-Royal, delante del taller: 0 = la calle sin obras; de 0.1 a 0.2,
+    // las vallas de las obras al fondo de la calle, desde el 4 de octubre de 1898; de 0.3 a 0.5, las obras en la esquina
+    // del taller, desde `obras_esquina` (octubre de 1899); 0.75 = la barandilla de fundición con su pórtico, abierta el 19 de
     // julio de 1900; 1 = con los candelabros, sus faroles y el letrero «Métropolitain», desde la primavera de 1901),
     // carteles (lo llena que está la valla de enfrente: lo más, durante la Exposición) y hojas (los árboles de la calle:
     // desnudos en invierno, llenos en verano). **[Diseño propio]** el tipo de entrada: de Palais-Royal las fuentes no dicen
@@ -1112,7 +1113,8 @@ internal object AnioG9 {
         arcos = listOf(
             // La entrada de la estación de Palais-Royal, delante del taller: las obras, la barandilla y, desde 1901, los faroles.
             Arco("metro", TipoArco.OBRA, listOf(
-                p(1, "01-01", 0.0), p(1, "10-03", 0.0), p(1, "10-04", 0.15, salto = true), p(3, "07-18", 0.5), p(3, "07-19", 0.75, salto = true),
+                p(1, "01-01", 0.0), p(1, "10-03", 0.0), p(1, "10-04", 0.1, salto = true), p(2, "10-09", 0.2), p(2, "10-10", 0.3, salto = true),
+                p(3, "07-18", 0.5), p(3, "07-19", 0.75, salto = true),
                 p(4, "03-17", 0.75), p(4, "03-18", 1.0, salto = true), p(5, "12-31", 1.0),
             )),
             // La valla de enfrente: cada vez más carteles, y llena durante la Exposición.

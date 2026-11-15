@@ -102,5 +102,10 @@ val LUGARES: Map<String, LugarDeVida> = mapOf(
     // Italia: no cuenta.
     "aprendiz_druida" to LugarDeVida(setOf("Q38060", "Q382553", "Q55950714", "Q835966", "Q650053", "Q1152", "Q142"), // Galia, Arvernos, Gergovia (el oppidum), Alesia (la ciudad), Bibracte, Auvernia, Francia
         listOf("Galia", "Vercingétorix", "Gergovia", "Alesia", "Bibracte", "Avárico", "Auvernia", "arvernos", "galos", "galas"), listOf("Galia Cisalpina")),
+    // Marguerite, la aprendiz de litografía de Art nouveau (lote 10). Los identificadores salen de Wikidata, por el título
+    // de cada página de Wikipedia en español (el `wgWikibaseItemId` de la página, 15 nov 2026). París y Francia son los
+    // mismos de Pierre y de la lavandera; sus épocas no se tocan con la suya (1868 a 1928).
+    "litografa" to LugarDeVida(setOf("Q90", "Q142", "Q70802", "Q50716", "Q753646", "Q186115"), // París, Francia, Tercera República Francesa, Metro de París, Exposición Universal de París (1900), Montmartre
+        listOf("París", "Francia", "Montmartre", "Tercera República", "Metro de París", "parisino", "parisina", "parisinos", "francés", "francesa", "franceses")),
     // Tom (escribiente) y Carmen (operadora) no tienen cuento, así que no hace falta su lugar.
 )

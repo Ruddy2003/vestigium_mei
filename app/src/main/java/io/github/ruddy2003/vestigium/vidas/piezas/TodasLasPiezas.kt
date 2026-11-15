@@ -20,7 +20,7 @@ object TodasLasPiezas {
         PiezasResidente.PIEZAS, PiezasArchivista.PIEZAS,
         PiezasEscriba.PIEZAS, PiezasCientifica.PIEZAS,
         PiezasRuth.PIEZAS, PiezasBrenna.PIEZAS,
-        PiezasTadeo.PIEZAS, PiezasIniciado.PIEZAS, PiezasSegomaros.PIEZAS,
+        PiezasTadeo.PIEZAS, PiezasIniciado.PIEZAS, PiezasSegomaros.PIEZAS, PiezasMarguerite.PIEZAS,
     ) }
 
     private val porVida: Map<String, Piezas> by lazy { TODAS.associateBy { it.vida } }
