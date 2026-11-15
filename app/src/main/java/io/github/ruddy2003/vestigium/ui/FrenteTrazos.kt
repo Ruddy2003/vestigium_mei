@@ -108,6 +108,18 @@ object TrazosFrente {
         if (encendido) drawCircle(Color.White.copy(alpha = 0.55f), r * 0.32f, Offset(c.x - r * 0.3f, c.y - r * 0.32f))
     }
 
+    /**
+     * Un botón cuadrado de consola centrado en [c], de [lado]: el bisel negro, la lente de [color] (encendida o, si no, hundida
+     * hacia [apagado]) y su brillo arriba; con [halo] más de 0, el resplandor de la luz encendida en la penumbra.
+     */
+    fun DrawScope.botonCuadrado(c: Offset, lado: Float, color: Color, encendido: Boolean, apagado: Color = CONSOLA_OSCURA, halo: Float = 0f) {
+        if (encendido && halo > 0f) drawCircle(color.copy(alpha = 0.2f * halo), lado * 1.3f, c)
+        val b = lado * 0.16f
+        drawRect(Color.Black.copy(alpha = 0.6f), Offset(c.x - lado / 2 - b, c.y - lado / 2 - b), Size(lado + 2 * b, lado + 2 * b))
+        drawRect(if (encendido) color else lerp(color, apagado, 0.8f), Offset(c.x - lado / 2, c.y - lado / 2), Size(lado, lado))
+        drawLine(Color.White.copy(alpha = if (encendido) 0.55f else 0.12f), Offset(c.x - lado * 0.32f, c.y - lado * 0.3f), Offset(c.x + lado * 0.12f, c.y - lado * 0.3f), lado * 0.14f)
+    }
+
     /** Una ruta de salto entre estrellas: el trazo punteado y, en cada parada, el anillo de llegada. */
     fun DrawScope.rutaSalto(puntos: List<Offset>, color: Color, grosor: Float, anillo: Float) {
         if (puntos.size < 2) return

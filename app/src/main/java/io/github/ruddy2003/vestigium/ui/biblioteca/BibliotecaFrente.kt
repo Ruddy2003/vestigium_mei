@@ -94,6 +94,25 @@ object EstanteFrente : DisenoBiblioteca {
     /** La sala con las luces bajas (modo oscuro) y el petróleo de la madrugada (de noche). */
     private val SALA = Color(0xFF121518)
     private val NOCHE = Color(0xFF0B1519)
+    /** La penumbra verdosa de la base en modo oscuro y el verde casi negro de la madrugada. */
+    private val PENUMBRA = Color(0xFF0E1614)
+    private val MADRUGADA = Color(0xFF07110D)
+    /** Las ruinas que esconden la base: la piedra (a la luz y en sombra), la raíz, el musgo, el cobre y el hormigón de la losa. */
+    private val PIEDRA = TrazosFrente.PIEDRA
+    private val PIEDRA_SOMBRA = TrazosFrente.PIEDRA_SOMBRA
+    private val RAIZ = TrazosFrente.RAIZ
+    private val MUSGO = TrazosFrente.MUSGO
+    private val COBRE = TrazosFrente.COBRE
+    private val LOSA = Color(0xFFA3A69B)
+    private val HUMEDAD = Color(0xFF34402F)
+    /** La consola oscura, de verde casi negro, y su canto donde le da la luz. */
+    private val CONSOLA = TrazosFrente.CONSOLA_OSCURA
+    private val CONSOLA_LUZ = Color(0xFF34453F)
+    /** El vidrio grabado: el trazo iluminado por el canto y el vidrio mismo (en penumbra y a la luz). */
+    private val VIDRIO = TrazosFrente.VIDRIO
+    private val VIDRIO_LUZ = TrazosFrente.VIDRIO_LUZ
+    private val VIDRIO_TRAZO = TrazosFrente.VIDRIO_TRAZO
+    private val PELIGRO = TrazosFrente.PELIGRO
     /** La lona acero de los dosieres, cada uno de un lote un poco distinto. */
     private val LONAS = listOf(Color(0xFF3E4C57), Color(0xFF46535C), Color(0xFF384650), Color(0xFF4A5753), Color(0xFF424A55))
     /** El cartón hueso de las carpetas de despacho: más o menos gastado. */
@@ -113,6 +132,17 @@ object EstanteFrente : DisenoBiblioteca {
         var r = c
         if (oscuro) r = mezcla(r, SALA, 0.44f)
         if (noche) r = mezcla(r, NOCHE, 0.5f)
+        return r
+    }
+
+    /**
+     * El color del lugar (la piedra, la losa, el piso, las raíces y el vidrio de la base): en modo oscuro, la base en su
+     * penumbra verdosa; de noche, además, el verde casi negro de la madrugada.
+     */
+    private fun lugar(c: Color, oscuro: Boolean, noche: Boolean): Color {
+        var r = c
+        if (oscuro) r = mezcla(r, PENUMBRA, 0.6f)
+        if (noche) r = mezcla(r, MADRUGADA, 0.5f)
         return r
     }
 
@@ -541,6 +571,118 @@ object EstanteFrente : DisenoBiblioteca {
         drawRect(Brush.radialGradient(listOf(tinte.copy(alpha = 0.1f), Color.Transparent), center = luz, radius = radio * 0.55f))
     }
 
+    /** El brillo de las raíces: cálido, de las lámparas, de día; de noche, el filo verde que les deja el vidrio. */
+    private fun raizLuz(oscuro: Boolean, noche: Boolean): Color =
+        if (oscuro || noche) VIDRIO_TRAZO.copy(alpha = if (noche) 0.16f else 0.12f) else Color(0xFFC9BC94).copy(alpha = 0.32f)
+
+    /**
+     * Las raíces que asoman bajo la tabla de arriba de la repisa [r] (la [k]-ésima) y bajan por la piedra: dos o tres, de
+     * largo y grosor desiguales, siempre las mismas en la misma repisa.
+     */
+    private fun DrawScope.raices(r: Rect, k: Int, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val cuantas = 2 + (azar(k * 7 + 3, 1) * 1.99f).toInt()
+        for (j in 0 until cuantas) {
+            val x = r.left + r.width * (0.08f + 0.84f * azar(k * 13 + 5, j))
+            val largo = r.height * (0.3f + 0.55f * azar(k * 13 + 6, j))
+            with(TrazosFrente) { raiz(Offset(x, r.top - 1 * u), largo, (1.2f + 1f * azar(k * 13 + 7, j)) * u, lugar(RAIZ, oscuro, noche), raizLuz(oscuro, noche), k * 11 + j, sombra = 0.35f) }
+        }
+    }
+
+    /**
+     * Un panel de vidrio grabado empotrado en el muro, en [r]: el marco oscuro, el vidrio de tono cercano a la piedra (pálido
+     * de día, verde hondo en la penumbra) con sus trazos y órbitas iluminados por el canto ([estilo] de
+     * [TrazosFrente.trazosVidrio]), la luz que sube del canto de abajo, los reflejos y el filo encendido. En la penumbra
+     * alumbra la piedra de alrededor.
+     */
+    private fun DrawScope.vidrioMuro(r: Rect, oscuro: Boolean, noche: Boolean, semilla: Int, estilo: Int) {
+        val u = density
+        val penumbra = oscuro || noche
+        if (penumbra) mancha(r.center, maxOf(r.width, r.height) * 0.75f, VIDRIO_TRAZO.copy(alpha = if (noche) 0.12f else 0.09f))
+        val marco = r.inflate(2.2f * u)
+        drawRect(Color.Black.copy(alpha = 0.35f), marco.topLeft + Offset(1 * u, 1.6f * u), marco.size)
+        drawRect(lugar(CONSOLA, oscuro, noche), marco.topLeft, marco.size)
+        drawLine(Color.White.copy(alpha = if (penumbra) 0.06f else 0.2f), Offset(marco.left, marco.top + 0.5f * u), Offset(marco.right, marco.top + 0.5f * u), 0.6f * u)
+        drawRect(if (penumbra) lugar(mezcla(VIDRIO, PENUMBRA, if (oscuro) 0.3f else 0f), false, noche) else mezcla(HUESO_OSC, VIDRIO_LUZ, 0.3f), r.topLeft, r.size)
+        clipRect(r.left, r.top, r.right, r.bottom) {
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, VIDRIO_TRAZO.copy(alpha = if (penumbra) 0.2f else 0.25f)), r.bottom - r.height * 0.5f, r.bottom),
+                Offset(r.left, r.bottom - r.height * 0.5f), Size(r.width, r.height * 0.5f))
+            with(TrazosFrente) { trazosVidrio(r, if (penumbra) VIDRIO_TRAZO else mezcla(VIDRIO_LUZ, VIDRIO_TRAZO, 0.35f), 0.6f * u, if (noche) 0.6f else if (oscuro) 0.5f else 0.55f, semilla, estilo) }
+            listOf(0.12f to 0.06f, 0.22f to 0.03f).forEach { (f, a) ->
+                drawLine(Color.White.copy(alpha = if (penumbra) a * 0.6f else a * 2.2f), Offset(r.left + r.width * f, r.bottom), Offset(r.left + r.width * (f + 0.3f), r.top), r.width * 0.05f)
+            }
+        }
+        drawRect(VIDRIO_TRAZO.copy(alpha = if (penumbra) 0.5f else 0.45f), r.topLeft, r.size, style = Stroke(0.5f * u))
+        drawLine(VIDRIO_TRAZO.copy(alpha = if (penumbra) 0.85f else 0.65f), Offset(r.left, r.bottom - 0.4f * u), Offset(r.right, r.bottom - 0.4f * u), 0.9f * u)
+    }
+
+    /**
+     * Una consola oscura en [r]: el cuerpo de verde casi negro, más claro arriba donde le da la luz, con su sombra en el muro,
+     * el filo de luz del canto, la mugre de los años y el contorno.
+     */
+    private fun DrawScope.consolaOscura(r: Rect, radio: Float, oscuro: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        sombraSuave(r, radio, 5 * u, if (oscuro) 0.45f else 0.3f)
+        drawRoundRect(Brush.verticalGradient(listOf(c(CONSOLA_LUZ), c(CONSOLA), c(mezcla(CONSOLA, Color.Black, 0.3f))), r.top, r.bottom), r.topLeft, r.size, CornerRadius(radio))
+        drawLine(Color.White.copy(alpha = if (oscuro) 0.07f else 0.22f), Offset(r.left + radio, r.top + 0.8f * u), Offset(r.right - radio, r.top + 0.8f * u), 0.7f * u)
+        for (k in 0 until 4) {
+            val x = r.left + r.width * azar(r.left.toInt(), k)
+            drawLine(Color.White.copy(alpha = if (oscuro) 0.02f else 0.05f), Offset(x, r.top + r.height * 0.15f), Offset(x + 0.4f * u, r.top + r.height * (0.3f + 0.4f * azar(r.top.toInt(), k))), (1 + 2 * azar(7, k)) * u, StrokeCap.Round)
+        }
+        drawRoundRect(Color.Black.copy(alpha = 0.55f), r.topLeft, r.size, CornerRadius(radio), style = Stroke(0.6f * u))
+    }
+
+    /**
+     * La carta estelar grabada en un panel de vidrio de la base, en [r]: el riel oscuro de arriba con el rótulo grabado, el
+     * vidrio iluminado por el canto con sus trazos, sus estrellas, los mundos unidos por la ruta de salto y el blanco marcado
+     * en rojo; abajo, el pie oscuro. En la penumbra, el vidrio alumbra la piedra de alrededor.
+     */
+    private fun DrawScope.cartaVidrio(r: Rect, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        val riel = Rect(r.left - 2 * u, r.top, r.right + 2 * u, r.top + 9 * u)
+        val pie = Rect(r.left - 3 * u, r.bottom - 6 * u, r.right + 3 * u, r.bottom)
+        val v = Rect(r.left, riel.bottom, r.right, pie.top)
+        if (oscuro) mancha(v.center, v.width * 0.85f, VIDRIO_TRAZO.copy(alpha = 0.1f))
+        drawRect(Color.Black.copy(alpha = 0.25f), v.topLeft + Offset(1.6f * u, 2 * u), v.size)
+        drawRect(if (oscuro) mezcla(VIDRIO, PENUMBRA, 0.2f) else mezcla(HUESO_OSC, VIDRIO_LUZ, 0.28f), v.topLeft, v.size)
+        val trazo = if (oscuro) VIDRIO_TRAZO else mezcla(VIDRIO_LUZ, VIDRIO_TRAZO, 0.3f)
+        clipRect(v.left, v.top, v.right, v.bottom) {
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, VIDRIO_TRAZO.copy(alpha = if (oscuro) 0.2f else 0.25f)), v.bottom - v.height * 0.5f, v.bottom),
+                Offset(v.left, v.bottom - v.height * 0.5f), Size(v.width, v.height * 0.5f))
+            with(TrazosFrente) { trazosVidrio(v, trazo, 0.5f * u, if (oscuro) 0.28f else 0.3f, 23, 0) }
+            for (k in 0 until 34) drawCircle(trazo.copy(alpha = 0.35f + 0.5f * azar(17, k)), (0.4f + 0.6f * azar(19, k)) * u,
+                Offset(v.left + v.width * azar(23, k), v.top + v.height * azar(29, k)))
+            val mundos = (0 until 5).map { k -> Offset(v.left + v.width * (0.12f + 0.19f * k), v.top + v.height * (0.25f + 0.55f * azar(31, k))) }
+            with(TrazosFrente) {
+                rutaSalto(mundos, trazo.copy(alpha = 0.3f), 2.6f * u, 3.2f * u)
+                rutaSalto(mundos, if (oscuro) VIDRIO_TRAZO else mezcla(VIDRIO_LUZ, Color.Black, 0.1f), 1.1f * u, 3.2f * u)
+            }
+            mundos.forEach { o -> drawCircle(if (oscuro) VIDRIO_TRAZO else mezcla(VIDRIO_LUZ, Color.Black, 0.1f), 1.3f * u, o) }
+            val blanco = mundos.last()
+            drawCircle(PILOTO_ROJO.copy(alpha = if (oscuro) 0.25f else 0.15f), 7 * u, blanco)
+            drawCircle(PILOTO_ROJO, 6 * u, blanco, style = Stroke(1f * u))
+            listOf(0.1f to 0.06f, 0.2f to 0.03f).forEach { (fr, a) ->
+                drawLine(Color.White.copy(alpha = if (oscuro) a * 0.6f else a * 2.2f), Offset(v.left + v.width * fr, v.bottom), Offset(v.left + v.width * (fr + 0.3f), v.top), v.width * 0.05f)
+            }
+        }
+        drawRect(VIDRIO_TRAZO.copy(alpha = if (oscuro) 0.5f else 0.45f), v.topLeft, v.size, style = Stroke(0.5f * u))
+        drawLine(VIDRIO_TRAZO.copy(alpha = if (oscuro) 0.85f else 0.65f), Offset(v.left, v.bottom - 0.4f * u), Offset(v.right, v.bottom - 0.4f * u), 0.9f * u)
+        // El riel de arriba, con el rótulo grabado, y el pie oscuro.
+        drawRoundRect(Color.Black.copy(alpha = 0.3f), riel.topLeft + Offset(0.6f * u, 1.2f * u), riel.size, CornerRadius(2 * u))
+        drawRoundRect(Brush.verticalGradient(listOf(c(CONSOLA_LUZ), c(CONSOLA)), riel.top, riel.bottom), riel.topLeft, riel.size, CornerRadius(2 * u))
+        textoEn(medidor, "CARTA ESTELAR · SECTOR 9", riel.deflate(1 * u), MONO, if (oscuro) mezcla(VIDRIO_TRAZO, PENUMBRA, 0.15f) else mezcla(VIDRIO_TRAZO, HUESO, 0.4f), 6f, espaciado = 0.6f, minimo = 3.5f)
+        drawRect(Brush.verticalGradient(listOf(c(CONSOLA_LUZ), c(CONSOLA)), pie.top, pie.bottom), pie.topLeft, pie.size)
+        drawLine(Color.White.copy(alpha = if (oscuro) 0.06f else 0.2f), Offset(pie.left, pie.top + 0.5f * u), Offset(pie.right, pie.top + 0.5f * u), 0.5f * u)
+        val rej = Rect(pie.center.x - pie.width * 0.14f, pie.top + 1.6f * u, pie.center.x + pie.width * 0.14f, pie.bottom - 1.4f * u)
+        drawRect(c(CROMO).copy(alpha = 0.7f), rej.topLeft, rej.size)
+        var x = rej.left + 1 * u
+        while (x < rej.right - 0.6f * u) { drawLine(Color.Black.copy(alpha = 0.6f), Offset(x, rej.top + 0.5f * u), Offset(x, rej.bottom - 0.5f * u), 0.5f * u); x += 1.6f * u }
+    }
+
+    // =================================================================
+    //  El mueble
     // =================================================================
     //  El mueble
     // =================================================================
@@ -564,25 +706,26 @@ object EstanteFrente : DisenoBiblioteca {
         val u = density
         val w = size.width; val h = size.height
         fun c(x: Color) = t(x, oscuro, noche)
-        // El fondo de cada repisa: chapa hueso perforada como los paneles acústicos de la sala, con sus juntas y la sombra de la
-        // tabla de arriba; en la sala a oscuras, los pilotos de los costados tiñen de ámbar las orillas.
-        d.repisas.forEach { r ->
-            drawRect(Brush.verticalGradient(listOf(c(HUESO_OSC), c(HUESO), c(mezcla(HUESO, HUESO_OSC, 0.6f))), r.top, r.bottom), r.topLeft, r.size)
-            val paso = 7 * u
-            val agujeros = ArrayList<Offset>()
-            var y = r.top + paso; var fila = 0
-            while (y < r.bottom - 3 * u) {
-                var x = r.left + (if (fila % 2 == 0) paso * 0.5f else paso)
-                while (x < r.right - 2 * u) { agujeros.add(Offset(x, y)); x += paso }
-                y += paso * 0.86f; fila++
+        fun l(x: Color) = lugar(x, oscuro, noche)
+        // El fondo: el muro de sillares de las ruinas que esconden la base, que se ve por detrás del estante abierto, con su
+        // humedad y su musgo; en cada repisa, la sombra de la tabla de arriba y las raíces que asoman bajo ella y bajan por la
+        // piedra, por detrás de los volúmenes. En la base a oscuras, los pilotos de los costados tiñen de ámbar las orillas.
+        if (d.repisas.isNotEmpty()) {
+            val muro = Rect(d.repisas.first().left, d.repisas.first().top, d.repisas.first().right, d.repisas.last().bottom)
+            with(TrazosFrente) {
+                muroSillares(muro, 15 * u, l(mezcla(PIEDRA, HUESO_OSC, 0.25f)), l(PIEDRA_SOMBRA), HUMEDAD.copy(alpha = if (noche) 0.6f else 0.45f), l(MUSGO), 41,
+                    if (noche) 0.25f else if (oscuro) 0.45f else 0.9f)
             }
-            drawPoints(agujeros, PointMode.Points, c(BORDE).copy(alpha = 0.6f), 1.6f * u, StrokeCap.Round)
-            listOf(0.34f, 0.67f).forEach { f ->
-                val x = r.left + r.width * f
-                drawLine(c(BORDE).copy(alpha = 0.7f), Offset(x, r.top), Offset(x, r.bottom), 1f * u)
-                drawLine(Color.White.copy(alpha = if (noche) 0.05f else 0.2f), Offset(x + 1f * u, r.top), Offset(x + 1f * u, r.bottom), 0.8f * u)
-            }
-            drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = if (noche) 0.5f else 0.32f), Color.Transparent), r.top, r.top + 16 * u), r.topLeft, Size(r.width, 16 * u))
+        }
+        // Un panel de vidrio grabado empotrado en la piedra de cada repisa, a un lado o al otro: se ve donde no hay volúmenes.
+        d.repisas.forEachIndexed { k, r ->
+            val izq = k % 2 == 1
+            val p = Rect(if (izq) r.left + r.width * 0.05f else r.left + r.width * 0.55f, r.top + 22 * u, if (izq) r.left + r.width * 0.45f else r.right - r.width * 0.05f, r.bottom - 8 * u)
+            if (p.height > 30 * u) vidrioMuro(p, oscuro, noche, 17 + k * 5, k % 3)
+        }
+        d.repisas.forEachIndexed { k, r ->
+            drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = if (noche) 0.55f else 0.42f), Color.Transparent), r.top, r.top + 18 * u), r.topLeft, Size(r.width, 18 * u))
+            raices(r, k, oscuro, noche)
             if (oscuro || noche) listOf(r.left, r.right).forEach { x ->
                 mancha(Offset(x, r.top + r.height * 0.3f), r.height * 0.75f, PILOTO.copy(alpha = if (noche) 0.1f else 0.07f))
             }
@@ -653,9 +796,16 @@ object EstanteFrente : DisenoBiblioteca {
             var gx = rj.left + rj.height * 0.6f
             while (gx < rj.right - rj.height * 0.5f) { drawLine(c(BAQUELITA), Offset(gx, rj.top + 1.2f * u), Offset(gx, rj.bottom - 1.2f * u), 1.4f * u, StrokeCap.Round); gx += 3.4f * u }
         }
-        drawRect(c(BAQUELITA), Offset(0f, piso), Size(w, h - piso))
-        for (k in 0 until 8) drawRect(Color.White.copy(alpha = if (noche) 0.02f else 0.04f), Offset(w * (0.05f + 0.125f * k), piso), Size(7 * u, h - piso))
-        drawRect(Color.Black.copy(alpha = 0.4f), Offset(0f, piso), Size(w, 2 * u))
+        // El piso de hormigón, con sus manchas, la franja de peligro al pie del mueble y el cable grueso que cruza.
+        drawRect(Brush.verticalGradient(listOf(l(mezcla(LOSA, Color.Black, 0.25f)), l(LOSA)), piso, h), Offset(0f, piso), Size(w, h - piso))
+        for (k in 0 until 7) drawOval(l(HUMEDAD).copy(alpha = 0.18f + 0.12f * azar(53, k)), Offset(w * azar(57, k), piso + (h - piso) * (0.3f + 0.5f * azar(59, k))),
+            Size((8 + 22 * azar(61, k)) * u, (1.5f + 2f * azar(67, k)) * u))
+        drawRect(Color.Black.copy(alpha = 0.45f), Offset(0f, piso), Size(w, 2 * u))
+        with(TrazosFrente) {
+            franjaPeligro(Rect(0f, piso + 2 * u, w, piso + 6 * u), c(PELIGRO), c(BAQUELITA), 7 * u)
+            cableGrueso(Path().apply { moveTo(-3 * u, h - 3 * u); cubicTo(w * 0.15f, h - 9 * u, w * 0.3f, h + 1 * u, w * 0.46f, h - 5 * u); cubicTo(w * 0.56f, h - 8 * u, w * 0.62f, piso + 8 * u, w * 0.7f, piso + 4 * u) },
+                3.2f * u, c(BAQUELITA), if (noche) 0.3f else if (oscuro) 0.5f else 1f, 0.4f)
+        }
         val rollo = Offset(w * 0.86f, piso + (h - piso) * 0.55f)
         val tira = Rect(w * 0.5f, rollo.y - 2.4f * u, rollo.x, rollo.y + 2.4f * u)
         rotate(-3f, rollo) { cintaPerforada(tira, c(PAPEL), c(BAQUELITA).copy(alpha = 0.7f), 77) }
@@ -674,9 +824,12 @@ object EstanteFrente : DisenoBiblioteca {
         val u = density
         fun c(x: Color) = t(x, oscuro, noche)
         val w = r.width; val hh = r.height
-        // El techo de la sala y el tubo de luz en su caja.
+        // La losa de hormigón del techo, con sus manchas de humedad, y el tubo de luz en su caja.
         val techo = r.top + hh * 0.15f
-        drawRect(c(Color(0xFF2E3338)), r.topLeft, Size(w, techo - r.top))
+        drawRect(Brush.verticalGradient(listOf(lugar(mezcla(LOSA, Color.Black, 0.35f), oscuro, noche), lugar(mezcla(LOSA, Color.Black, 0.15f), oscuro, noche)), r.top, techo), r.topLeft, Size(w, techo - r.top))
+        for (k in 0 until 9) drawOval(lugar(HUMEDAD, oscuro, noche).copy(alpha = 0.25f + 0.2f * azar(71, k)), Offset(r.left + w * azar(73, k), r.top + (techo - r.top) * azar(79, k)),
+            Size((6 + 18 * azar(83, k)) * u, (1.4f + 2.4f * azar(89, k)) * u))
+        drawRect(Color.Black.copy(alpha = 0.35f), Offset(r.left, techo - 1.5f * u), Size(w, 1.5f * u))
         val tubo = Rect(r.left + w * 0.3f, r.top + hh * 0.03f, r.right - w * 0.3f, r.top + hh * 0.11f)
         drawRoundRect(c(HUESO_OSC), tubo.topLeft, tubo.size, CornerRadius(tubo.height / 2))
         val encendido = !noche
@@ -689,6 +842,12 @@ object EstanteFrente : DisenoBiblioteca {
                 drawLine(col, Offset(x + j * 2.6f * u, r.top), Offset(x + j * 2.6f * u, r.bottom), 2.2f * u)
             }
             drawRect(c(CROMO), Offset(x - 1.6f * u, techo + hh * 0.06f), Size(8.8f * u, 3 * u))
+        }
+        // Las raíces que cuelgan de la losa por las orillas, por delante de los mazos.
+        with(TrazosFrente) {
+            listOf(Triple(r.left + w * 0.012f, hh * 0.55f, 1.8f), Triple(r.left + w * 0.06f, hh * 0.3f, 1.2f), Triple(r.right - w * 0.075f, hh * 0.42f, 1.5f)).forEachIndexed { k, (x, l, g) ->
+                raiz(Offset(x, techo - 1 * u), l, g * u, lugar(RAIZ, oscuro, noche), raizLuz(oscuro, noche), 70 + k, sombra = 0.35f)
+            }
         }
         // El frente curvo de la consola: el borde de arriba con las esquinas redondas y el de abajo que se abomba.
         val y0 = techo + hh * 0.04f
@@ -1282,70 +1441,68 @@ object EstanteFrente : DisenoBiblioteca {
         val fondoY = h * 0.42f
         val panelY = h * 0.52f
         val frenteY = h * 0.85f
-        val canto = 12 * u
-        // ---- La pared de paneles perforados, con el techo.
-        drawRect(f(HUESO_OSC), Offset.Zero, Size(w, fondoY))
-        drawRect(f(Color(0xFF2E3338)), Offset.Zero, Size(w, h * 0.035f))
-        val agujeros = ArrayList<Offset>()
-        var py = h * 0.06f; var fila = 0
-        while (py < fondoY - 4 * u) {
-            var px = if (fila % 2 == 0) 4 * u else 8 * u
-            while (px < w) { agujeros.add(Offset(px, py)); px += 8 * u }
-            py += 7 * u; fila++
+        // ---- El muro de sillares de las ruinas, bajo la losa del techo, con el tubo de cobre y la sombra de la losa.
+        // Lo del lugar se hunde en la penumbra verdosa de la base; en oscuro, más lejos de los pilotos, todavía más.
+        fun l(x: Color) = if (oscuro) mezcla(lugar(x, true, false), MADRUGADA, 0.3f) else x
+        val losa = h * 0.045f
+        with(TrazosFrente) {
+            muroSillares(Rect(0f, losa, w, fondoY), 14 * u, l(mezcla(PIEDRA, HUESO_OSC, 0.2f)), l(PIEDRA_SOMBRA), HUMEDAD.copy(alpha = if (oscuro) 0.6f else 0.45f), l(MUSGO),
+                e.semilla + 5, if (oscuro) 0.35f else 0.9f)
         }
-        drawPoints(agujeros, PointMode.Points, f(BORDE).copy(alpha = 0.45f), 1.5f * u, StrokeCap.Round)
-        for (k in 1 until 4) drawLine(f(BORDE), Offset(w * k / 4f, h * 0.035f), Offset(w * k / 4f, fondoY), 1f * u)
-        // La pantalla de radar de la pared.
-        val rc = Offset(w * 0.15f, h * 0.215f)
-        radar(rc, h * 0.115f, 300f, f(HUESO), e.semilla, if (oscuro) 1.7f else 1f)
-        // Los dos relojes: la hora de la capital y la de aquí.
+        drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.3f), Color.Transparent), losa, losa + 16 * u), Offset(0f, losa), Size(w, 16 * u))
+        drawRect(Brush.verticalGradient(listOf(l(mezcla(LOSA, Color.Black, 0.3f)), l(mezcla(LOSA, Color.Black, 0.1f))), 0f, losa), Offset.Zero, Size(w, losa))
+        for (k in 0 until 6) drawOval(l(HUMEDAD).copy(alpha = 0.3f), Offset(w * azar(e.semilla + 91, k), losa * azar(e.semilla + 92, k) * 0.6f),
+            Size((8 + 20 * azar(e.semilla + 93, k)) * u, (1.4f + 2f * azar(e.semilla + 94, k)) * u))
+        drawLine(Color.Black.copy(alpha = 0.45f), Offset(0f, losa), Offset(w, losa), 1 * u)
+        with(TrazosFrente) { tubo(Offset(-2 * u, losa + 2.6f * u), Offset(w + 2 * u, losa + 2.6f * u), 3.4f * u, l(COBRE), if (oscuro) 0.25f else 1f, juntas = 70 * u) }
+        listOf(0.285f, 0.535f, 0.9f).forEach { fx ->
+            val a = Rect(w * fx - 1.1f * u, losa, w * fx + 1.1f * u, losa + 5.4f * u)
+            drawRect(l(CONSOLA), a.topLeft, a.size)
+        }
+        // La torre de consola oscura con la pantalla de radar, y su fila de botones al pie.
+        val torre = Rect(w * 0.03f, losa + 6 * u, w * 0.27f, fondoY + 2 * u)
+        consolaOscura(torre, 6 * u, oscuro)
+        val rc = Offset(torre.center.x, h * 0.215f)
+        radar(rc, h * 0.1f, 300f, f(HUESO), e.semilla, if (oscuro) 1.7f else 1f)
+        for (k in 0 until 5) with(TrazosFrente) {
+            val col = listOf(PILOTO, VIDRIO_TRAZO, PANEL, PILOTO_ROJO, PILOTO)[k]
+            botonCuadrado(Offset(torre.left + torre.width * (0.2f + 0.15f * k), fondoY - 6 * u), 3.4f * u, if (oscuro) col else mezcla(col, Color.White, 0.1f), k != 2, CONSOLA, if (oscuro) 1f else 0f)
+        }
+        // La consola oscura de los dos relojes (la hora de la capital y la de aquí), con su botonera debajo.
+        val tablero = Rect(w * 0.295f, h * 0.075f, w * 0.51f, h * 0.38f)
+        consolaOscura(tablero, 5 * u, oscuro)
+        listOf(tablero.left + 4 * u, tablero.right - 4 * u).forEach { x -> listOf(tablero.top + 4 * u, tablero.bottom - 4 * u).forEach { y -> tornillo(Offset(x, y), 1.1f * u, f(CROMO)) } }
         val capital = 12f * azar(e.semilla, 5)
         listOf(Triple(w * 0.345f, "CAPITAL", 0f), Triple(w * 0.46f, "AQUÍ", 5f)).forEach { (x, nombre, desfase) ->
-            val o = Offset(x, h * 0.14f)
-            reloj(o, 12 * u, (capital + desfase) % 12f, f(PANEL), f(CROMO), f(PIZARRA))
-            val pl = Rect(x - 17 * u, o.y + 17 * u, x + 17 * u, o.y + 26 * u)
-            drawRoundRect(f(BAQUELITA), pl.topLeft, pl.size, CornerRadius(1.5f * u))
-            textoEn(medidor, nombre, pl, MONO, f(HUESO), 6f, espaciado = 0.6f, minimo = 3.5f)
+            val o = Offset(x, h * 0.15f)
+            reloj(o, 12 * u, (capital + desfase) % 12f, c(PANEL), c(CROMO), c(PIZARRA))
+            val pl = Rect(x - 16 * u, o.y + 17 * u, x + 16 * u, o.y + 25 * u)
+            drawRoundRect(Color.Black.copy(alpha = 0.5f), pl.topLeft, pl.size, CornerRadius(1.5f * u))
+            textoEn(medidor, nombre, pl, MONO, c(HUESO), 6f, espaciado = 0.6f, minimo = 3.5f)
         }
-        // La carta estelar impresa, clavada con sus chinchetas.
-        val mapa = Rect(w * 0.56f, h * 0.05f, w * 0.87f, h * 0.36f)
-        rotate(1.4f, mapa.center) {
-            drawRect(Color.Black.copy(alpha = 0.25f), mapa.topLeft + Offset(1.5f * u, 2 * u), mapa.size)
-            drawRect(f(PAPEL), mapa.topLeft, mapa.size)
-            clipRect(mapa.left, mapa.top, mapa.right, mapa.bottom) {
-                for (k in 1 until 6) {
-                    drawLine(f(TENUE).copy(alpha = 0.18f), Offset(mapa.left + mapa.width * k / 6f, mapa.top), Offset(mapa.left + mapa.width * k / 6f, mapa.bottom), 0.5f * u)
-                    drawLine(f(TENUE).copy(alpha = 0.18f), Offset(mapa.left, mapa.top + mapa.height * k / 6f), Offset(mapa.right, mapa.top + mapa.height * k / 6f), 0.5f * u)
-                }
-                for (k in 0 until 40) drawCircle(f(PIZARRA).copy(alpha = 0.2f + 0.45f * azar(17, k)), (0.4f + 0.7f * azar(19, k)) * u,
-                    Offset(mapa.left + mapa.width * azar(23, k), mapa.top + mapa.height * (0.14f + 0.86f * azar(29, k))))
-                val mundos = (0 until 5).map { k -> Offset(mapa.left + mapa.width * (0.12f + 0.19f * k), mapa.top + mapa.height * (0.3f + 0.55f * azar(31, k))) }
-                for (k in 0 until 4) drawLine(f(AMBAR), mundos[k], mundos[k + 1], 1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * u, 2.5f * u)))
-                mundos.forEachIndexed { k, o ->
-                    drawCircle(f(PAPEL), 3.2f * u, o)
-                    drawCircle(f(PIZARRA), 3.2f * u, o, style = Stroke(0.8f * u))
-                    drawCircle(f(PIZARRA), 1.2f * u, o)
-                    if (k == 4) drawCircle(f(PILOTO_ROJO), 6 * u, o, style = Stroke(1f * u))
-                }
-                drawRect(f(PIZARRA), mapa.topLeft, Size(mapa.width, mapa.height * 0.12f))
-                textoEn(medidor, "CARTA ESTELAR · SECTOR 9", Rect(mapa.left + 9 * u, mapa.top, mapa.right - 9 * u, mapa.top + mapa.height * 0.12f), MONO, f(PAPEL), 6f, espaciado = 0.6f, minimo = 3.5f)
-            }
-            listOf(Offset(mapa.left + 4 * u, mapa.top + 4 * u), Offset(mapa.right - 4 * u, mapa.top + 4 * u)).forEach { o ->
-                drawCircle(Color.Black.copy(alpha = 0.3f), 2.6f * u, o + Offset(0.6f * u, 1f * u))
-                drawCircle(f(PILOTO_ROJO), 2.4f * u, o)
-                drawCircle(Color.White.copy(alpha = 0.4f), 0.8f * u, o - Offset(0.7f * u, 0.7f * u))
+        for (fila in 0 until 2) for (k in 0 until 6) with(TrazosFrente) {
+            val col = listOf(PILOTO, VIDRIO_TRAZO, PANEL, PILOTO, PILOTO_ROJO, VIDRIO_TRAZO)[(k + fila * 3) % 6]
+            botonCuadrado(Offset(tablero.left + tablero.width * (0.17f + 0.132f * k), tablero.bottom - (11 - fila * 5.4f) * u), 3.4f * u,
+                if (oscuro) col else mezcla(col, Color.White, 0.1f), azar(e.semilla + fila, k + 20) > 0.3f, CONSOLA, if (oscuro) 1f else 0f)
+        }
+        // La carta estelar grabada en un panel de vidrio, iluminado por el canto: los mundos, la ruta de salto y el blanco.
+        cartaVidrio(Rect(w * 0.55f, h * 0.075f, w * 0.88f, h * 0.38f), medidor, oscuro)
+        // Las raíces que cuelgan de la losa por delante del muro y de los tableros.
+        with(TrazosFrente) {
+            listOf(Triple(0.015f, 0.66f, 2.2f), Triple(0.05f, 0.3f, 1.3f), Triple(0.24f, 0.22f, 1.2f), Triple(0.28f, 0.46f, 1.8f), Triple(0.525f, 0.8f, 2.4f), Triple(0.545f, 0.34f, 1.3f), Triple(0.985f, 0.55f, 2f)).forEachIndexed { k, (fx, fl, g) ->
+                raiz(Offset(w * fx, losa - 1 * u), fondoY * fl, g * u, l(RAIZ), raizLuz(oscuro, false), e.semilla * 3 + k, sombra = 0.35f)
             }
         }
         // Los cascos, colgados de su gancho; el cable baja hasta la consola.
-        val gancho = Offset(w * 0.935f, h * 0.08f)
+        val gancho = Offset(w * 0.935f, h * 0.1f)
         drawLine(f(CROMO), Offset(gancho.x, gancho.y - 4 * u), gancho, 1.8f * u, StrokeCap.Round)
         cascos(Offset(gancho.x, gancho.y + 12 * u), 11 * u, Offset(w * 0.9f, fondoY), f(BAQUELITA), f(CROMO))
 
-        // ---- El panel alto de la consola, con sus palancas, sus pilotos, la frecuencia y la perilla.
+        // ---- El panel alto de la consola oscura, con sus palancas, sus pilotos, la frecuencia y la perilla.
         drawRect(Color.Black.copy(alpha = 0.3f), Offset(0f, fondoY - 3 * u), Size(w, 3 * u))
-        drawRect(Brush.verticalGradient(listOf(c(PANEL), c(HUESO), c(HUESO_OSC)), fondoY, panelY), Offset(0f, fondoY), Size(w, panelY - fondoY))
-        drawLine(Color.White.copy(alpha = if (oscuro) 0.1f else 0.4f), Offset(0f, fondoY + 1 * u), Offset(w, fondoY + 1 * u), 1f * u)
-        drawLine(c(BORDE), Offset(0f, panelY), Offset(w, panelY), 1.2f * u)
+        drawRect(Brush.verticalGradient(listOf(c(CONSOLA_LUZ), c(CONSOLA), c(mezcla(CONSOLA, Color.Black, 0.3f))), fondoY, panelY), Offset(0f, fondoY), Size(w, panelY - fondoY))
+        drawLine(Color.White.copy(alpha = if (oscuro) 0.06f else 0.2f), Offset(0f, fondoY + 1 * u), Offset(w, fondoY + 1 * u), 1f * u)
+        drawLine(Color.Black.copy(alpha = 0.6f), Offset(0f, panelY), Offset(w, panelY), 1.2f * u)
         val my = (fondoY + panelY) / 2f
         perilla(Offset(w * 0.05f, my), (panelY - fondoY) * 0.3f, 30f, c(CROMO), c(BAQUELITA))
         val frec = Rect(w * 0.42f, fondoY + (panelY - fondoY) * 0.2f, w * 0.58f, panelY - (panelY - fondoY) * 0.2f)
@@ -1358,10 +1515,12 @@ object EstanteFrente : DisenoBiblioteca {
             else piloto(Offset(x, my), 2.2f * u, if (k == 5) RADAR else if (k == 7) PILOTO_ROJO else PILOTO, k != 3, c(CROMO), if (oscuro) 1.3f else 0.7f)
         }
 
-        // ---- La mesa curva de la consola, su labio redondo y el frente con sus rejillas.
+        // ---- La mesa de la consola blanca curva, con la lámpara de cúpula al fondo, y su frente de molduras redondas, como
+        // un mostrador anillado; al pie, la franja de peligro del piso.
         val cubierta = Path().apply { moveTo(w * 0.02f, panelY); lineTo(w * 0.98f, panelY); lineTo(w * 1.01f, frenteY); lineTo(-w * 0.01f, frenteY); close() }
         drawRect(c(HUESO_OSC), Offset(0f, frenteY), Size(w, h - frenteY))
         drawPath(cubierta, Brush.verticalGradient(listOf(c(HUESO_OSC), c(HUESO), c(PANEL)), panelY, frenteY))
+        val lampara = Offset(w * 0.885f, panelY + (frenteY - panelY) * 0.3f)
         clipPath(cubierta) {
             for (k in 0 until 30) {
                 val y = panelY + (frenteY - panelY) * azar(71, k)
@@ -1369,14 +1528,23 @@ object EstanteFrente : DisenoBiblioteca {
                 drawLine(Color.Black.copy(alpha = 0.04f + 0.04f * azar(79, k)), Offset(x, y), Offset(x + (10 + 30 * azar(83, k)) * u, y + 0.5f * u), 0.6f * u)
             }
             if (oscuro) mancha(Offset(w * 0.5f, frenteY - (frenteY - panelY) * 0.4f), w * 0.5f, PILOTO.copy(alpha = 0.16f))
+            mancha(Offset(lampara.x, lampara.y + 4 * u), w * 0.22f, Color(0xFFFFF4DE).copy(alpha = if (oscuro) 0.22f else 0.3f))
         }
-        drawRect(Brush.verticalGradient(listOf(c(PANEL), c(HUESO), c(BORDE)), frenteY, frenteY + canto), Offset(0f, frenteY), Size(w, canto))
-        drawRect(c(CROMO), Offset(0f, frenteY), Size(w, 1.4f * u))
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(0f, frenteY + canto), Size(w, 2.5f * u))
-        listOf(0.1f, 0.4f, 0.7f).forEach { fx ->
-            val rj = Rect(w * fx, frenteY + canto + 6 * u, w * (fx + 0.2f), minOf(h - 4 * u, frenteY + canto + 16 * u))
-            if (rj.height > 2 * u) rejilla(rj, c(HUESO_OSC), c(BAQUELITA).copy(alpha = 0.6f))
+        with(TrazosFrente) {
+            drawOval(Color.Black.copy(alpha = 0.25f), Offset(lampara.x - 7 * u, lampara.y - 1 * u), Size(16 * u, 3.4f * u))
+            lamparaCupula(Offset(lampara.x, lampara.y - 20 * u), 8 * u, 20 * u, c(PIZARRA), if (oscuro) mezcla(PANEL, PENUMBRA, 0.15f) else PANEL, if (oscuro) 1f else 0.55f)
         }
+        val moldura = 5.2f * u
+        for (k in 0 until 3) {
+            val y = frenteY + k * moldura
+            drawRect(Brush.verticalGradient(listOf(c(PANEL), c(HUESO), c(mezcla(HUESO_OSC, BORDE, 0.6f))), y, y + moldura), Offset(0f, y), Size(w, moldura))
+            drawLine(Color.White.copy(alpha = if (oscuro) 0.1f else 0.55f), Offset(0f, y + 0.9f * u), Offset(w, y + 0.9f * u), 0.7f * u)
+            drawLine(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.28f), Offset(0f, y + moldura), Offset(w, y + moldura), 0.8f * u)
+        }
+        val bajo = frenteY + 3 * moldura
+        drawRect(Color.Black.copy(alpha = 0.25f), Offset(0f, bajo), Size(w, 2.5f * u))
+        listOf(0.18f, 0.5f, 0.82f).forEach { fx -> drawLine(Color.Black.copy(alpha = 0.18f), Offset(w * fx, bajo + 2.5f * u), Offset(w * fx, h), 0.6f * u) }
+        if (h - bajo > 10 * u) with(TrazosFrente) { franjaPeligro(Rect(0f, h - 5.5f * u, w, h - 1.5f * u), c(PELIGRO), c(BAQUELITA), 7 * u) }
 
         // ---- La libreta de claves de un solo uso, con su lápiz.
         val lc = Offset(w * 0.13f, frenteY - 30 * u)

@@ -506,7 +506,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.MEDIEVAL -> Color(0xFFD8C08E)
     TemaId.TEMPLARIO -> Color(0xFFCDBB97)
     TemaId.DISTOPIA -> Color(0xFF8E9296)
-    TemaId.FRENTE -> Color(0xFFC4BBA8)          // el hueso de las consolas
+    TemaId.FRENTE -> Color(0xFF8C8F84)          // la piedra de las ruinas que esconden la base
     TemaId.REFUGIO -> Color(0xFF9CC9C1)
     TemaId.ORDEN -> Color(0xFF6F7882)
     TemaId.VAPOR -> Color(0xFF8C4A34)
@@ -612,28 +612,30 @@ internal fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
                 y += ph
             }
         }
-        // La pared de la sala de mando: paneles de consola de esquinas muy redondas, cada uno con su fila de interruptores
-        // de palanca, sus pilotos y, en uno de cada tres, una pantalla redonda con su retícula.
+        // La pared de la base escondida en ruinas: el muro de sillares viejos, apenas insinuado (con su humedad y su musgo), y
+        // las raíces que bajan de arriba; de noche, la misma piedra en su penumbra verdosa. Va en una capa traslúcida para que
+        // quede tenue sobre cualquier fondo.
         TemaId.FRENTE -> {
-            val pw = w / 3; val ph = 96 * d; var y = 0f; var fila = 0
-            while (y < h) {
-                for (k in 0 until 3) {
-                    val x0 = k * pw + 3 * d; val y0 = y + 3 * d; val ancho = pw - 6 * d; val alto = ph - 6 * d
-                    drawRoundRect(v, Offset(x0, y0), Size(ancho, alto), CornerRadius(13 * d), style = Stroke(d))
-                    var x = x0 + 12 * d; var j = 0
-                    while (x < x0 + ancho - 10 * d) {
-                        drawCircle(v, 1.8f * d, Offset(x, y0 + 14 * d))
-                        drawLine(v, Offset(x, y0 + 14 * d), Offset(x + (if ((j + k + fila) % 3 == 0) 1.5f else -1.5f) * d, y0 + 8 * d), 1.4f * d, StrokeCap.Round)
-                        x += 10 * d; j++
-                    }
-                    if ((k + fila) % 3 == 1) with(TrazosFrente) { reticula(Offset(x0 + ancho / 2, y0 + alto * 0.6f), minOf(ancho, alto) * 0.26f, v, d * 0.8f, 3) }
-                    else {
-                        listOf(0.3f, 0.5f, 0.7f).forEachIndexed { i, fx -> drawCircle(if (i == (fila + k) % 3) a else v, 2.4f * d, Offset(x0 + ancho * fx, y0 + alto * 0.55f)) }
-                        drawLine(v, Offset(x0 + 12 * d, y0 + alto * 0.78f), Offset(x0 + ancho - 12 * d, y0 + alto * 0.78f), 3 * d)
-                    }
-                }
-                y += ph; fila++
+            val oscuro = tinta.red + tinta.green + tinta.blue > 1.5f
+            val lienzo = drawContext.canvas
+            val capa = androidx.compose.ui.graphics.Paint()
+            capa.alpha = if (oscuro) 0.3f else 0.16f
+            lienzo.saveLayer(Rect(0f, 0f, w, h), capa)
+            with(TrazosFrente) {
+                muroSillares(Rect(0f, 0f, w, h), 22 * d, if (oscuro) lerp(PIEDRA, Color.Black, 0.45f) else PIEDRA, if (oscuro) lerp(PIEDRA_SOMBRA, Color.Black, 0.5f) else PIEDRA_SOMBRA,
+                    Color(0xFF34402F).copy(alpha = 0.5f), MUSGO, 7, if (oscuro) 0.3f else 0.8f)
             }
+            lienzo.restore()
+            capa.alpha = if (oscuro) 0.7f else 0.42f
+            lienzo.saveLayer(Rect(0f, 0f, w, h), capa)
+            with(TrazosFrente) {
+                val color = if (oscuro) lerp(RAIZ, Color.Black, 0.2f) else RAIZ
+                val luz = if (oscuro) VIDRIO_TRAZO.copy(alpha = 0.18f) else Color(0xFFC9BC94).copy(alpha = 0.35f)
+                listOf(0.04f to 0.5f, 0.11f to 0.24f, 0.86f to 0.32f, 0.95f to 0.62f).forEachIndexed { k, (fx, fl) ->
+                    raiz(Offset(w * fx, -2 * d), minOf(h * fl, 260 * d), (1.6f + 0.6f * (k % 2)) * d, color, luz, 31 + k, sombra = 0.25f)
+                }
+            }
+            lienzo.restore()
         }
         TemaId.REFUGIO -> {
             val t = 22 * d; var y = 0f
@@ -931,18 +933,28 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
                 x += 110 * d
             }
         }
-        // El canto de la consola: el tablero hueso con su borde curvo y, debajo, la franja de acero con los interruptores de
-        // palanca y un piloto cada tanto (el ámbar sigue encendido de noche).
+        // El canto de la consola blanca curva de la base, con sus dos molduras redondas, y debajo la franja de la consola
+        // oscura, de verde casi negro, con su fila de botones cuadrados, unos encendidos (el ámbar y el verde del vidrio
+        // siguen encendidos de noche) y otros apagados.
         TemaId.FRENTE -> {
-            val hueso = m(TrazosFrente.HUESO); val acero = m(TrazosFrente.PIZARRA); val cromo = m(TrazosFrente.CROMO)
-            drawRoundRect(Brush.verticalGradient(listOf(lerp(hueso, Color.White, 0.3f), hueso, lerp(hueso, Color.Black, 0.28f)), 0f, h * 0.5f), Offset.Zero, Size(w, h * 0.5f), CornerRadius(h * 0.25f))
-            drawRect(acero, Offset(0f, h * 0.5f), Size(w, h * 0.5f))
-            drawLine(lerp(acero, Color.White, 0.25f), Offset(0f, h * 0.53f), Offset(w, h * 0.53f), 0.6f * d)
-            var x = 10 * d; var k = 0
+            val hueso = m(TrazosFrente.HUESO); val consola = m(TrazosFrente.CONSOLA_OSCURA)
+            val alto = h * 0.56f
+            drawRoundRect(Brush.verticalGradient(listOf(lerp(hueso, Color.White, 0.4f), hueso, lerp(hueso, Color.Black, 0.3f)), 0f, alto), Offset.Zero, Size(w, alto), CornerRadius(alto / 2))
+            listOf(0.36f, 0.68f).forEach { f ->
+                drawLine(Color.Black.copy(alpha = if (oscuro) 0.4f else 0.22f), Offset(alto * 0.4f, alto * f), Offset(w - alto * 0.4f, alto * f), 0.6f * d)
+                drawLine(Color.White.copy(alpha = if (oscuro) 0.1f else 0.5f), Offset(alto * 0.4f, alto * f + 0.7f * d), Offset(w - alto * 0.4f, alto * f + 0.7f * d), 0.5f * d)
+            }
+            drawRect(Brush.verticalGradient(listOf(lerp(consola, Color.White, 0.12f), consola), alto, h), Offset(0f, alto), Size(w, h - alto))
+            drawLine(Color.Black.copy(alpha = 0.5f), Offset(0f, alto), Offset(w, alto), 0.6f * d)
+            val colores = listOf(TrazosFrente.PILOTO_AMBAR, TrazosFrente.VIDRIO_TRAZO, TrazosFrente.HUESO, TrazosFrente.PILOTO_ROJO)
+            val lado = minOf((h - alto) * 0.5f, 3.2f * d); val yc = (alto + h) / 2
+            var x = 9 * d; var k = 0
             while (x < w - 6 * d) {
-                if (k % 5 == 2) { val c = Offset(x, h * 0.76f); drawCircle(cromo, 2.2f * d, c); drawCircle(if (k % 10 == 2) TrazosFrente.PILOTO_AMBAR else m(Color(0xFF6B4A22)), 1.5f * d, c) }
-                else { drawCircle(cromo, 1.4f * d, Offset(x, h * 0.8f)); drawLine(m(TrazosFrente.BAQUELITA), Offset(x, h * 0.8f), Offset(x + (if (k % 3 == 0) 1.2f else -1.2f) * d, h * 0.6f), 1.3f * d, StrokeCap.Round) }
-                x += 9 * d; k++
+                val c = Offset(x, yc)
+                val on = k % 3 != 1
+                val col = colores[(k * 7 / 3) % colores.size]
+                with(TrazosFrente) { botonCuadrado(c, lado, col, on, consola, if (oscuro) 1f else 0f) }
+                x += if (k % 4 == 3) 14 * d else 6 * d; k++
             }
         }
         TemaId.REFUGIO -> {
@@ -1203,11 +1215,23 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             drawPath(Path().apply { moveTo(0f, h); lineTo(0f, 0f); lineTo(w * 0.4f, 0f); lineTo(w * 0.4f + t, t); lineTo(w, t); lineTo(w, h); close() }, borde, style = fino)
             drawLine(Color(0xFFB71C1C).copy(alpha = 0.5f * f), Offset(0f, h - 2 * d), Offset(w, h - 2 * d), 2 * d)
         }
-        // La plaquita rotulada de una consola: el marco redondeado, dos tornillos de ranura arriba y, entre ellos, el
-        // piloto ámbar que se enciende cuando ya lo lograste.
+        // Una plaquita de vidrio grabado de la base, iluminada por el canto: el vidrio de tono cercano a la pared, sus trazos y
+        // sus órbitas apenas encendidos (el texto se lee encima), la luz que sube del canto de abajo, dos tornillos arriba y,
+        // entre ellos, el piloto ámbar que se enciende cuando ya lo lograste.
         TemaId.FRENTE -> {
+            val oscuro = tinta.red + tinta.green + tinta.blue > 1.5f
             val r = CornerRadius(minOf(9 * d, h * 0.3f))
-            drawRoundRect(fondo, Offset.Zero, size, r); drawRoundRect(borde, Offset(0.7f * d, 0.7f * d), Size(w - 1.4f * d, h - 1.4f * d), r, style = Stroke(1.4f * d))
+            val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(0f, 0f, w, h), r)) }
+            val trazo = TrazosFrente.VIDRIO_TRAZO
+            drawPath(forma, if (oscuro) TrazosFrente.VIDRIO.copy(alpha = 0.55f * f) else TrazosFrente.VIDRIO_LUZ.copy(alpha = 0.12f * f))
+            val lienzo = drawContext.canvas
+            lienzo.save(); lienzo.clipPath(forma)
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, trazo.copy(alpha = (if (oscuro) 0.16f else 0.2f) * f)), h * 0.55f, h), Offset(0f, h * 0.55f), Size(w, h * 0.45f))
+            with(TrazosFrente) { trazosVidrio(Rect(0f, 0f, w, h), if (oscuro) trazo else lerp(VIDRIO_LUZ, trazo, 0.2f), 0.5f * d, (if (oscuro) 0.2f else 0.16f) * f, (w / d).toInt(), 2) }
+            drawLine(Color.White.copy(alpha = (if (oscuro) 0.04f else 0.25f) * f), Offset(w * 0.08f, h), Offset(w * 0.3f, 0f), w * 0.04f)
+            lienzo.restore()
+            drawPath(forma, trazo.copy(alpha = (if (oscuro) 0.4f else 0.5f) * f), style = Stroke(1f * d))
+            drawLine(trazo.copy(alpha = (if (oscuro) 0.75f else 0.6f) * f), Offset(r.x * 0.6f, h - 0.6f * d), Offset(w - r.x * 0.6f, h - 0.6f * d), 1.2f * d)
             listOf(6 * d, w - 6 * d).forEach { x -> val c = Offset(x, 6 * d); drawCircle(borde, 1.7f * d, c); drawLine(tinta.copy(alpha = 0.5f * f), Offset(c.x - 1.1f * d, c.y + 0.6f * d), Offset(c.x + 1.1f * d, c.y - 0.6f * d), 0.6f * d) }
             val p = Offset(w / 2, 3.2f * d)
             if (hecho) drawCircle(Brush.radialGradient(listOf(TrazosFrente.PILOTO_AMBAR.copy(alpha = 0.5f), Color.Transparent), p, 6 * d), 6 * d, p)
