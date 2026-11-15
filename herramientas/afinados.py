@@ -229,6 +229,69 @@ def teletipo(letras=6, cps=10, motor=None):
         m = filtro(sierra_limpia(motor, dm) + 0.5 * np.sin(4 * np.pi * motor * t), 'bajo', 600)
         partes.append((0, m * np.minimum(1, t / 0.04) * np.minimum(1, (dm - t) / 0.06), 0.18))
     return mezclar(*partes)
+def resonador(x, f, ancho):
+    """Una resonancia (un formante de la voz, la caja de un instrumento): un polo doble en [f] Hz, de [ancho] Hz, con
+    ganancia 1 en su centro."""
+    r = np.exp(-np.pi * ancho / SR); w = 2 * np.pi * f / SR
+    g = (1 - r) * np.sqrt(1 - 2 * r * np.cos(2 * w) + r * r)
+    return sosfilt(np.array([[g, 0.0, 0.0, 1.0, -2 * r * np.cos(w), r * r]]), x)
+def kinnor(f, d=0.8, brillo=0.5, decae=0.9935):
+    """El kinnor, la lira de mano de Galilea: cuerda de tripa pulsada con púa (el golpe seco de la púa al empezar), que
+    arranca apenas alta y se asienta, y la caja de madera pequeña que le da un color hueco (dos resonancias graves)."""
+    x = pluck(f, d, brillo, decae)
+    t = t_(d)
+    lee = np.minimum(np.cumsum(1 + 0.007 * np.exp(-t / 0.035)) - 1, len(x) - 1)
+    x = np.interp(lee, np.arange(len(x)), x)
+    caja = 0.55 * resonador(x, 290, 90) + 0.35 * resonador(x, 610, 150)
+    pua = clic(0.004, (2200, 7500))
+    # Sin el desplazamiento de la cuerda al soltarla, que el oído no oye y el altavoz no da: un paso alto suave.
+    return filtro(mezclar((0, 0.8 * x + caja, 1.0), (0, pua, 0.35 * brillo)), 'alto', min(60.0, f * 0.5))
+def crotalos(f, d=1.0, apagado=False):
+    """Crótalos (címbalos de dedo): dos discos pequeños de bronce que chocan. Cada disco da sus parciales de placa
+    (no armónicos: 1, 2.71, 5.14, 8.33) y los dos nunca están afinados igual, así que baten despacio. [apagado]: el
+    choque que la mano detiene enseguida."""
+    t = t_(d); k = 3.5 if apagado else 1.0
+    def disco(fd, fase):
+        return sum(a * np.sin(2 * np.pi * fd * r * t + fase * (i + 1)) * np.exp(-t * c * k)
+                   for i, (r, a, c) in enumerate(((1.0, 1.0, 1.5), (2.71, 0.5, 3.0), (5.14, 0.28, 6.0), (8.33, 0.15, 10.0)))
+                   if fd * r < SR * 0.45)
+    x = 0.65 * disco(f, 0.0) + 0.35 * disco(f * 1.0042, 1.3)
+    choque = clic(0.004, (4500, 10000))
+    return 0.3 * mezclar((0, x * np.minimum(1, t / 0.0012) * np.minimum(1, np.maximum(0, d - t) / 0.04), 1.0), (0, choque, 0.5))
+VOCALES = {   # formantes (centro, ancho, ganancia) de una voz grave de hombre
+    'm': ((250, 60, 1.0), (1050, 160, 0.10), (2300, 220, 0.04)),
+    'o': ((430, 70, 1.0), (770, 85, 0.8), (2450, 130, 0.25), (3200, 200, 0.1)),
+    'u': ((320, 60, 1.0), (730, 80, 0.38), (2300, 130, 0.07)),
+}
+def salmodia(f, d, vocal='o', abre=0.3, subida=0.6):
+    """Una sola voz grave de hombre que salmodia en voz baja (no un coro): pulso de la glotis por los formantes de la
+    boca, que empieza cerrada en «m» y se abre a la vocal en [abre] s. La nota entra desde [subida] semitonos abajo,
+    como al cantar a media voz, y se queda recta, sin vibrato, con el temblor leve de una voz real y algo de aliento."""
+    t = t_(d); n = len(t)
+    temblor = filtro(rng.standard_normal(n), 'bajo', 5); temblor /= np.abs(temblor).max() + 1e-9
+    fb = f * 2 ** (-subida * np.exp(-t / 0.06) / 12) * (1 + 0.0035 * temblor)
+    src = filtro(sierra_limpia(fb, d), 'bajo', 1100, 1) + 0.035 * filtro(ruido(d), 'banda', (900, 4200))
+    def boca(v):
+        y = sum(g * resonador(src, F, B) for F, B, g in VOCALES[v])
+        return y / (np.sqrt(np.mean(y ** 2)) + 1e-12)
+    w = 0.5 - 0.5 * np.cos(np.pi * np.minimum(1, t / max(abre, 1e-3)))
+    x = filtro(boca('m') * (1 - w) + boca(vocal) * w, 'alto', 130)   # la fundamental grave sobra en un teléfono: se oye por sus armónicos
+    return 0.075 * x * np.minimum(1, t / 0.09) * np.minimum(1, np.maximum(0, d - t) / 0.2)
+def zumbido_hondo(f, d, cae=0.0, entra=0.35, sale=0.35, abre=(300, 900)):
+    """El zumbido de los arcontes: tres sierras graves que baten entre sí, por un filtro resonante que se abre y se cierra
+    despacio, con un temblor áspero. Se oye por sus armónicos aunque el altavoz no dé la fundamental. [cae]: semitonos que
+    se hunde; [entra] y [sale]: qué parte de la duración tarda en crecer y en apagarse."""
+    t = t_(d)
+    fb = f * 2 ** (-cae * t / d / 12)
+    x = 0.5 * sierra_limpia(fb, d) + 0.4 * sierra_limpia(fb * 1.0085, d, 0.3) + 0.25 * sierra_limpia(fb * 2.003, d, 0.6)
+    x = paso_bajo_movil(x, abre[0] + (abre[1] - abre[0]) * (0.5 - 0.5 * np.cos(2 * np.pi * 0.23 * t)), 2.4)
+    aspero = 0.78 + 0.22 * np.sin(2 * np.pi * 9.1 * t + 0.8 * np.sin(2 * np.pi * 1.3 * t))
+    return 0.35 * x * aspero * np.minimum(1, t / max(entra * d, 1e-3)) ** 1.5 * np.minimum(1, np.maximum(0, d - t) / max(sale * d, 1e-3))
+def pleroma(f, d=2.0, ataque=0.12):
+    """La nota limpia y alta de la luz de arriba: un seno casi puro, sin vibrato ni batido, que entra suave y se queda."""
+    t = t_(d)
+    x = np.sin(2 * np.pi * f * t) + 0.05 * np.sin(4 * np.pi * f * t) * np.exp(-t * 3)
+    return 0.3 * x * np.minimum(1, t / ataque) * np.exp(-t * 1.6 / d) * np.minimum(1, np.maximum(0, d - t) / 0.3)
 def acorde(inst, notas, d, g=1.0, arpegio=0.0, **kw):
     return mezclar(*[(i * arpegio, inst(hz(n), d, **kw), g / len(notas) ** 0.5) for i, n in enumerate(notas)])
 def melodia(inst, notas, paso, d, g=0.5, **kw):
@@ -1369,6 +1432,62 @@ def frente():
                              (0.009, clic(0.0035, (2400, 7500)), 0.3)),
                rascar=rascado((1100, 5200), mezclar((0, campana(hz(T + 24), 0.5, 1.41, 1.2, 6), 1.0), (0.02, pit(T + 24, 0.05), 0.2)), aspereza=75))
 
+def arcontes():
+    # La bemol mixolidio con la sexta menor (La bemol, Si bemol, Do, Re bemol, Mi bemol, Fa bemol, Sol bemol): la tercera
+    # mayor es el dorado del mundo de abajo y la sexta menor, que cae a la quinta, lo que hay debajo. Galilea en el siglo I
+    # vista por un iniciado: el kinnor (lira de mano de tripa, con púa y caja de madera), los crótalos de bronce que baten,
+    # una sola voz grave que salmodia a media voz (no un coro), un zumbido hondo para los arcontes y una nota limpia y alta
+    # para el Pleroma. Ni la lira de dedos en pentatónica mayor (Helénico), ni la segunda menor del arpa (Egipto), ni el
+    # hiyaz del laúd (Al-Ándalus), ni el frigio con tritono (Horror cósmico), ni órgano ni coro (Gótico, Scriptorium).
+    T = -1   # La bemol 4
+    kin = lambda n, d=0.8, b=0.5: kinnor(hz(n), d, b)
+    crot = lambda n=T + 24, d=1.1, apagado=False: crotalos(hz(n), d, apagado)
+    voz = lambda n, d, v='o': salmodia(hz(n), d, v)
+    hondo = lambda d, **kw: zumbido_hondo(hz(T - 36), d, **kw)
+    luz = lambda n, d=2.0: pleroma(hz(n), d)
+    rasgueo = lambda notas, d=1.0, paso=0.03, b=0.45: mezclar(*[(paso * i, kin(n, d, b), 0.5) for i, n in enumerate(notas)])
+    def velo(d=0.3):
+        """El velo de lino que se corre: un roce suave y grave, con un hilo de aire arriba."""
+        t = t_(d); s = np.sin(np.pi * t / d) ** 2
+        tela = np.abs(filtro(ruido(d), 'bajo', 25)); tela /= tela.max() + 1e-9
+        return filtro(ruido(d), 'banda', (380, 2600)) * s * (0.6 + 0.4 * tela) + 0.12 * filtro(ruido(d), 'alto', 5000) * s ** 3
+    def jarra():
+        """La tapa de barro que asienta en la boca de la jarra: el golpe de barro y el hueco de la jarra que responde."""
+        hueco = resonador(filtro(ruido(0.35), 'bajo', 900), hz(T - 12), 18) * env(int(0.35 * SR), 0.002, 0.12, 3)
+        return mezclar((0, clic(0.012, (700, 3200)), 0.8), (0.001, hueco / (np.abs(hueco).max() + 1e-9), 0.6),
+                       (0.002, seno(hz(T - 12), 0.25) * env(int(0.25 * SR), 0.002, 0.08, 3), 0.3))
+    with azar_propio('arcontes_base'):
+        S['arcontes'] = dict(
+            toque=kin(T + 12, 0.28, 0.6),
+            elegir=crot(T + 24, 0.4, apagado=True),
+            pasar=velo(0.3),
+            abrir=mezclar((0, velo(0.22), 0.55), (0.12, rasgueo([T - 12, T - 5, T, T + 4, T + 7], 0.9), 1.0)),
+            guardar=mezclar((0, jarra(), 0.7), (0.06, kin(T + 7, 0.7, 0.45), 0.45), (0.22, kin(T + 12, 0.9, 0.5), 0.45)),
+            logro=reverb(mezclar((0, voz(T - 24, 2.6), 0.4), (0, voz(T - 17, 2.6), 0.22),
+                                 *[(0.11 * i, kin(T + n, 0.9, 0.55), 0.42) for i, n in enumerate([0, 4, 7, 12, 16])],
+                                 (0.6, crot(T + 24, 1.4), 0.12), (0.6, luz(T + 24, 2.6), 0.2), (0.6, luz(T + 36, 2.0), 0.05)), 1.6, 0.3),
+            tema=reverb(mezclar((0, hondo(0.9, entra=0.4, sale=0.6), 0.35), (0.25, crot(T + 24, 1.0), 0.2), (0.3, voz(T - 24, 1.5), 0.45),
+                                *[(0.35 + 0.22 * i, kin(T + n, 0.8 if i < 2 else 1.1, 0.5), 0.45) for i, n in enumerate([12, 8, 7])]), 1.3, 0.28),
+            aviso=reverb(mezclar((0, crot(T + 24, 1.0), 0.28), (0.24, crot(T + 24, 1.2), 0.24), (0.5, voz(T - 24, 2.0), 0.45), (0.5, voz(T - 17, 2.0), 0.25),
+                                 *[(0.5 + 0.2 * i, kin(T + n, 0.7 if i < 4 else 1.2, 0.5), 0.45) for i, n in enumerate([12, 8, 7, 4, 7])]), 1.4, 0.28),
+            solemne=reverb(mezclar(
+                (0, hondo(2.6, entra=0.45, sale=0.5), 0.4),
+                (0.4, voz(T - 24, 6.2, 'u'), 0.35),
+                *[(0.6 + 0.42 * i, voz(T - 12 + n, 0.46 if i < 12 else 1.2), 0.5) for i, n in enumerate([0, 2, 4, 4, 4, 4, 5, 4, 2, 4, 2, 0])],
+                *[(0.6 + 0.42 * i, rasgueo([T - 12 + a for a in ch], 1.6, 0.035, 0.4), 0.5) for i, ch in ((0, [0, 7, 12]), (4, [-4, 0, 4]), (8, [-7, 0, 5]), (11, [0, 4, 7, 12]))],
+                (5.2, crot(T + 24, 1.6), 0.18), (5.2, luz(T + 24, 2.4), 0.25)), 2.4, 0.34))
+
+    # Error: los arcontes: el zumbido hondo que crece de golpe y se hunde un semitono, con dos cuerdas apagadas que bajan
+    # de la sexta menor a la sexta menor grave. Cambio: dos crótalos apagados, de la quinta a la octava. Tecla: la caña con
+    # tinta de hollín sobre el papiro, que salta en sus fibras. Rascar: una moneda de bronce de Herodes Antipas (acuñada en
+    # Tiberíades) sobre la lámina, y un crótalo que queda sonando.
+    with azar_propio('arcontes'):
+        nuevos('arcontes',
+               error=mezclar((0, kin(T + 8, 0.14, 0.2), 0.4), (0.05, hondo(0.5, cae=1.0, entra=0.12, sale=0.6, abre=(450, 1300)), 0.75), (0.15, kin(T - 4, 0.35, 0.15), 0.45)),
+               cambio=mezclar((0, crot(T + 19, 0.3, apagado=True), 0.5), (0.08, crot(T + 24, 0.35, apagado=True), 0.5)),
+               tecla=mezclar((0, trazo((900, 4200), 0.045, 6, 0.03), 1), *[(0.011 * k, clic(0.002, (2500, 7000)), 0.25 - 0.06 * k) for k in range(3)]),
+               rascar=rascado((750, 4300), 3.0 * crot(T + 31, 0.8), aspereza=45, pasadas=((0.0, 0.26), (0.31, 0.3), (0.66, 0.28))))
+
 # ------------------------------------------------------------------ el aviso de los lugares especiales
 
 def lugar():
@@ -1416,6 +1535,7 @@ if __name__ == '__main__':
         antiguas,
         cueva,
         frente,
+        arcontes,
     )
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 and sys.argv[2] != 'todos' else None
     claves = sys.argv[3].split(',') if len(sys.argv) > 3 else None

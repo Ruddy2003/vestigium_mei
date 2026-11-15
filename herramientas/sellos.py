@@ -26,6 +26,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 from arte import ruido, ruido_rect, col, mezcla, a_img, a_rgba, relieve
 import maestra
+from iconos import cinta, ouroboros, nube, tallado
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 FUENTES = os.path.join(AQUI, 'fuentes')
@@ -1033,6 +1034,94 @@ def frente(tam):
     halo = a_rgba(np.zeros((tam, tam, 3)) + col('#7FD08F'), np.clip(desenfocar(m, 7) * 1.25, 0, 1) * (1 - m) * (0.18 + 0.6 * viva))
     halo.alpha_composite(capa)
     guardar(fondo, halo, 'frente')
+
+# ------------------------------------------------------------------ Arcontes
+def bezier(p0, p1, p2, p3, n=40):
+    return [tuple((1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b + 3 * (1 - t) * t ** 2 * c + t ** 3 * e
+                  for a, b, c, e in zip(p0, p1, p2, p3)) for t in (i / n for i in range(n + 1))]
+
+
+def abraxas(d, x0, y0, u, c, hueco):
+    """Abraxas como en las gemas grabadas (siglos II–IV): cabeza de gallo de perfil, torso con coraza y faldellín de tiras,
+    las dos piernas de serpiente que se abren y levantan la cabeza a los lados, el látigo en alto en la mano de fuera y el
+    escudo redondo en la otra. Mira a la derecha. Origen en la cintura; [u] = px por unidad (la figura mide unas 84 de alto
+    y 62 de ancho). [c] es el color del grabado y [hueco] el de los cortes de detalle."""
+    def P(x, y): return (x0 + x * u, y0 + y * u)
+    def circ(x, y, r, f=c):
+        cx, cy = P(x, y); d.ellipse([cx - r * u, cy - r * u, cx + r * u, cy + r * u], fill=f)
+    def linea(pts, w, f=c):
+        q = [P(*p) for p in pts]
+        d.line(q, fill=f, width=max(1, int(w * u)), joint='curve')
+        for (a, b) in (q[0], q[-1]):
+            r = w * u / 2; d.ellipse([a - r, b - r, a + r, b + r], fill=f)
+    # --- Las piernas de serpiente: salen del faldellín, bajan, se abren y suben con la cabeza hacia fuera.
+    for lado in (-1, 1):
+        pts = bezier((lado * 3.5, 4), (lado * 6, 22), (lado * 26, 30), (lado * 27, 12), 60)
+        cinta(d, [P(*p) for p in pts], 6.8 * u, 4.4 * u, c)
+        # escamas: cortes cortos de través
+        for i in range(8, 56, 6):
+            (ax, ay), (bx, by) = pts[i - 1], pts[i + 1]
+            l = math.hypot(bx - ax, by - ay) or 1; nx, ny = -(by - ay) / l, (bx - ax) / l
+            w = 6.8 - 2.4 * i / 60
+            mx, my = pts[i]
+            linea([(mx - nx * w * 0.28 - (bx - ax) / l * 0.6, my - ny * w * 0.28 - (by - ay) / l * 0.6),
+                   (mx + (bx - ax) / l * 0.5, my + (by - ay) / l * 0.5),
+                   (mx + nx * w * 0.28 - (bx - ax) / l * 0.6, my + ny * w * 0.28 - (by - ay) / l * 0.6)], 0.55, hueco)
+        # la cabeza de la serpiente, levantada y mirando hacia fuera, con la boca abierta
+        hx, hy = pts[-1]
+        cab = [(hx - lado * 2.6, hy + 1.0), (hx - lado * 2.8, hy - 2.6), (hx - lado * 0.6, hy - 5.2), (hx + lado * 2.6, hy - 5.4),
+               (hx + lado * 6.4, hy - 4.2), (hx + lado * 4.0, hy - 2.8), (hx + lado * 6.0, hy - 1.4), (hx + lado * 2.0, hy + 0.2)]
+        d.polygon([P(*p) for p in cab], fill=c)
+        circ(hx + lado * 1.4, hy - 3.4, 0.75, hueco)
+        linea([(hx + lado * 7.2, hy - 2.8), (hx + lado * 9.2, hy - 3.6)], 0.5)            # la lengua
+        linea([(hx + lado * 9.2, hy - 3.6), (hx + lado * 10.0, hy - 4.8)], 0.4)
+        linea([(hx + lado * 9.2, hy - 3.6), (hx + lado * 10.2, hy - 2.8)], 0.4)
+    # --- El faldellín de tiras (pteryges) y el torso con la coraza musculada.
+    d.polygon([P(-8.5, -5), P(8.5, -5), P(10.5, 6), P(-10.5, 6)], fill=c)
+    for k in range(-3, 4):
+        linea([(k * 2.7, -3.6), (k * 3.1, 5.2)], 0.55, hueco)
+    d.polygon([P(-12.5, -27), P(12.5, -27), P(10.5, -16), P(7.5, -5), P(-7.5, -5), P(-10.5, -16)], fill=c)
+    linea([(-7.5, -6.4), (7.5, -6.4)], 0.7, hueco)                 # el cinturón
+    d.arc([*P(-8.2, -26), *P(0.6, -16)], 20, 160, fill=hueco, width=max(1, int(0.6 * u)))    # pectorales
+    d.arc([*P(-0.6, -26), *P(8.2, -16)], 20, 160, fill=hueco, width=max(1, int(0.6 * u)))
+    for lado in (-1, 1):                                             # el vientre de la coraza: dos curvas cortas
+        d.arc([*P(lado * 3.0 - 3.6, -14.5), *P(lado * 3.0 + 3.6, -9.5)], 30, 150, fill=hueco, width=max(1, int(0.45 * u)))
+    circ(0, -8.8, 0.6, hueco)
+    # --- El brazo de fuera, levantado, con el látigo (un mango y tres correas que caen hacia fuera).
+    linea([(-11, -25), (-19, -30), (-18.5, -40)], 4.4)
+    circ(-18.5, -41.5, 2.8)
+    linea([(-18.2, -43), (-16.4, -52)], 1.5)
+    for k, (c1, c2, fin) in enumerate((((-20, -57), (-27, -55), (-30, -47)), ((-21, -55), (-29, -50), (-31.5, -39)),
+                                        ((-21, -53), (-27.5, -45), (-29, -31)))):
+        linea(bezier((-16.4, -52), c1, c2, fin, 30), 1.05 - k * 0.12)
+    # --- El brazo del escudo y el escudo redondo, con su borde, su anillo y el umbo.
+    linea([(11, -25), (17, -21), (19, -17)], 4.4)
+    circ(21, -17, 11.2)
+    d.ellipse([*P(21 - 9.2, -17 - 9.2), *P(21 + 9.2, -17 + 9.2)], outline=hueco, width=max(1, int(0.8 * u)))
+    d.ellipse([*P(21 - 5.4, -17 - 5.4), *P(21 + 5.4, -17 + 5.4)], outline=hueco, width=max(1, int(0.6 * u)))
+    circ(21, -17, 2.0, hueco); circ(21, -17, 1.1)
+    # --- El cuello y la cabeza de gallo, de perfil, mirando a la derecha: cresta, pico, barba y ojo.
+    d.polygon([P(-4.2, -26), P(4.4, -26), P(4.0, -33), P(-3.0, -34)], fill=c)
+    circ(0.8, -37.2, 5.6)
+    for (cx, cy, r) in ((4.0, -42.6, 1.9), (1.6, -44.2, 2.2), (-1.2, -44.0, 2.1), (-3.6, -42.2, 1.8)):
+        circ(cx, cy, r)
+    d.polygon([P(4.6, -41.6), P(-4.6, -41.4), P(-2.6, -38.4), P(3.8, -38.4)], fill=c)
+    d.polygon([P(5.2, -39.6), P(11.4, -37.0), P(5.4, -35.2)], fill=c)              # pico
+    d.polygon([P(4.4, -35.4), P(7.0, -35.0), P(6.6, -31.0), P(5.0, -30.4), P(4.0, -32.6)], fill=c)   # barba
+    circ(2.6, -38.4, 1.15, hueco)
+    for k in range(4):                                                               # plumas del cuello, en escamas
+        for j in range(2):
+            cx, cy = -2.6 + k * 2.1 + j * 1.0, -31.6 + j * 2.6
+            d.arc([*P(cx - 1.1, cy - 1.4), *P(cx + 1.1, cy + 1.0)], 20, 160, fill=hueco, width=max(1, int(0.42 * u)))
+
+
+def estrella(d, x, y, r, c, puntas=8, agudo=0.36, giro=0.0):
+    pts = []
+    for k in range(puntas * 2):
+        a = giro - math.pi / 2 + k * math.pi / puntas; rr = r if k % 2 == 0 else r * agudo
+        pts.append((x + rr * math.cos(a), y + rr * math.sin(a)))
+    d.polygon(pts, fill=c)
+
 
 # ------------------------------------------------------------------ Tierras Antiguas
 def runas_pil(d, x, y, ancho, alto, n, color, grosor, semilla):

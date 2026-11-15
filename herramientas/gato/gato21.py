@@ -46,7 +46,7 @@ from gato9 import W, H, lienzo, degradado, luz, estrellas, cuad, subir, tramar  
 AQUI = Path(__file__).parent / "salida"   # hojas, bandas y GIF de revisión (no van al repositorio)
 AQUI.mkdir(exist_ok=True)
 N, SS, SUELO = g8.N, g8.SS, g8.SUELO
-MIOS = ("frente",)
+MIOS = ("frente", "arcontes")
 BUCLE = 160      # cuadros en que se repite todo lo que se mueve en estos fondos (12,8 s)
 ANIM = g9.ANIM
 
@@ -67,6 +67,10 @@ if "manga21" not in _nombres:
     # El borrego es «collar» (rango 4): la chaqueta que lo toca se sombrea, y él no se sombrea contra el pelo.
     g8.CAPAS[i_:i_] = [("punto21", "F", "malla", 0.4), ("borrego21", "Y", "collar", 0.35)]
 g8.RANGO.setdefault("malla", 4.6)
+# Arcontes: la sombra que pasa (acción «eriza el lomo») va debajo de todo el gato. Es «prop» con la letra Q, así que no
+# lleva contorno (el pintor de la encáustica la vuelve una mancha translúcida y le pone el contorno al gato donde la toca).
+if "sombra21" not in [c[0] for c in g8.CAPAS]:
+    g8.CAPAS.insert(0, ("sombra21", "Q", "prop", 0.4))
 
 # =====================================================================
 #  Accesorio: chaqueta de vuelo (cuero, borrego, punto y parche), collar con la cápsula y el auricular
@@ -196,6 +200,29 @@ def sombrero_frente(L, cx, cy, som, desv=0.0):
 
 
 g8.sombrero_lado, g8.sombrero_frente = sombrero_lado, sombrero_frente
+
+# ---------------------------------------------------------------------
+#  Arcontes: un cordón de cuero con el amuleto de Abraxas, una gema chica y ovalada de jaspe verde (el grabado lo pone
+#  el pintor de la encáustica, que sabe dónde quedó la gema en cada cuadro).
+# ---------------------------------------------------------------------
+g8.CON_COLLAR = tuple(g8.CON_COLLAR) + ("abraxas",)
+_collar_abr = g8.collar
+
+
+def collar_abraxas(L, C, cab, acc):
+    if acc != "abraxas":
+        return _collar_abr(L, C, cab, acc)
+    a, b, px, py = g8._cuello(C, cab)
+    m = (a[0] + (b[0] - a[0]) * 0.56, a[1] + (b[1] - a[1]) * 0.56)
+    e1, e2 = (m[0] - 4.4 * px, m[1] - 4.4 * py), (m[0] + 4.4 * px, m[1] + 4.4 * py)
+    L.capsula("collar", [e1, e2], 1.1)
+    j = max((e1, e2), key=lambda q: q[0] + q[1])
+    x, y = j[0] - 0.5 * px, j[1] + 3.0
+    L.capsula("collar", [(j[0] - 0.3 * px, j[1] + 0.4), (x, y - 1.6)], 0.8)          # el lazo que la cuelga
+    L.elipse("joya", x, y, 2.0, 2.6)                                                  # la gema ovalada
+
+
+g8.collar = collar_abraxas
 g8._spr.clear(); g8._rej.clear()
 
 # =====================================================================
@@ -270,12 +297,205 @@ def pintar_gouache(g, t, cel):
 
 # Cuánto se nota cada cosa (el grano y el pincel cuestan peso en el atlas).
 PINTURA = dict(grano=0.12, pincel=0.08, filtro=Image.BOX)
+
+# =====================================================================
+#  Material: encáustica (Arcontes), como los retratos de El Fayum: cera caliente con pigmento, puesta en toques densos
+#  que siguen la forma, con el brillo de la cera donde le da la luz y la tabla cálida que se asoma en las orillas.
+# =====================================================================
+_toques = {}
+
+
+def _corrido(m, dy, dx):
+    """La máscara m corrida (dy, dx) pixeles, sin dar la vuelta por los bordes."""
+    out = np.zeros_like(m)
+    h, w = m.shape
+    out[max(0, dy):h + min(0, dy), max(0, dx):w + min(0, dx)] = m[max(0, -dy):h + min(0, -dy), max(0, -dx):w + min(0, -dx)]
+    return out
+
+
+def _difuso(m, r):
+    """Máscara (bool o 0..1) desenfocada con radio r, en 0..1."""
+    im = Image.fromarray((np.clip(m, 0, 1) * 255).astype(np.uint8))
+    return np.asarray(im.filter(ImageFilter.GaussianBlur(r)), np.float32) / 255
+
+
+def toques_cera(alto, ancho, paso, semilla):
+    """Dónde cae cada toque de cera: fijos en el cuadro (no hierven de un cuadro a otro); solo su dirección sigue la forma.
+    Devuelve x, y, tono (-1 más oscuro, +1 más claro), largo y un giro chico de cada uno."""
+    k = (alto, ancho, paso, semilla)
+    if k not in _toques:
+        rng = np.random.default_rng(semilla)
+        ys, xs = np.mgrid[0:alto:paso, 0:ancho:paso].astype(np.float32)
+        xs += rng.uniform(0, paso, xs.shape); ys += rng.uniform(0, paso, ys.shape)
+        orden = rng.permutation(xs.size)
+        _toques[k] = (xs.ravel()[orden], ys.ravel()[orden], rng.choice([-1, -1, 0, 1, 1], xs.size),
+                      rng.uniform(0.75, 1.25, xs.size), rng.uniform(-0.3, 0.3, xs.size))
+    return _toques[k]
+
+
+def lum(c):
+    return 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2]
+
+
+def pintar_encaustica(g, t, cel):
+    """Encáustica. El pelaje negro se pinta con una rampa corta de la cera (del negro cálido al ocre del brillo) según la
+    luz que le toca: el volumen sale de la silueta desenfocada (como una almohada), la luz viene de arriba a la izquierda
+    (el sol del fondo) y la cera brilla donde la forma la refleja. Encima, los toques del pincel: cortos, densos y a lo
+    largo de la forma. El contorno es negro cálido y a ratos deja ver la tabla. Los ojos son de luz (con su halo); de
+    noche, la luz de la grieta (arriba a la derecha) deja un filo violeta en el lomo. Lo que hace la luz detrás del velo
+    (la letra Q clara) brilla y alumbra al gato; la sombra que pasa (la letra Q oscura) es una mancha translúcida."""
+    col = t["col"]
+    s = cel
+    filas = len(g)
+    A = np.array([list(f) for f in g])
+    q_luz = lum(col["Q"]) > 140
+    qm = A == "Q"
+    if qm.any() and not q_luz:
+        # La sombra no lleva contorno, así que el gato no lo tenía donde la toca: se le pone.
+        cerca = np.zeros_like(qm)
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            cerca |= _corrido(qm, dy, dx)
+        A = np.where(cerca & ~qm & (A != ".") & (A != "K"), "K", A)
+    L = A.repeat(s, 0).repeat(s, 1)
+    h, w = L.shape
+    gato = (L != ".") & (L != "Q")
+    # --- Volumen: normales de la silueta desenfocada.
+    B = _difuso(gato, 2.2 * s)
+    gy, gx = np.gradient(B)
+    k_ = 7.5 * s
+    nx, ny, nz = -gx * k_, -gy * k_, np.ones_like(B)
+    nn = np.sqrt(nx * nx + ny * ny + nz * nz)
+    nx, ny, nz = nx / nn, ny / nn, nz / nn
+    luz_ = np.array(t["enc_luz"], np.float32); luz_ /= np.linalg.norm(luz_)
+    dif = np.clip(nx * luz_[0] + ny * luz_[1] + nz * luz_[2], 0, 1)
+    hh = luz_ + np.array([0, 0, 1.0]); hh /= np.linalg.norm(hh)
+    brillo = np.clip(nx * hh[0] + ny * hh[1] + nz * hh[2], 0, 1) ** 26
+    # --- Toques de cera a lo largo de la forma (perpendiculares a la pendiente del volumen).
+    tq = Image.new("L", (w, h), 0); dt = ImageDraw.Draw(tq)
+    xs, ys, tonos, largos, giros = toques_cera(h, w, max(2, int(1.25 * s)), 77)
+    for x, y, tono, lg, gi in zip(xs, ys, tonos, largos, giros):
+        xi, yi = int(x), int(y)
+        if not (0 <= xi < w and 0 <= yi < h) or not gato[yi, xi]:
+            continue
+        ux, uy = -gy[yi, xi], gx[yi, xi]
+        m = math.hypot(ux, uy)
+        if m < 1e-3:
+            ux, uy = 0.9, 0.42
+        else:
+            ux, uy = ux / m, uy / m
+        ux, uy = ux * math.cos(gi) - uy * math.sin(gi), ux * math.sin(gi) + uy * math.cos(gi)
+        l = 1.15 * s * lg
+        dt.line([x - ux * l, y - uy * l, x + ux * l, y + uy * l], fill=int(tono) + 2, width=max(1, int(0.7 * s)))
+    O = np.asarray(tq, np.float32)
+    O = np.where(O > 0, O - 2, 0)
+    # --- El pelaje: la rampa de la cera.
+    base = {"P": 0.38, "L": 0.45, "W": 0.36, "S": 0.2, "D": 0.23, "T": 0.32, "R": 0.38}
+    pelo = np.isin(L, list(base))
+    tono = np.zeros((h, w), np.float32)
+    for v, b in base.items():
+        tono[L == v] = b
+    lejos = np.isin(L, ["D", "S"])
+    tono += np.where(lejos, 0.22, 0.42) * (dif - 0.55) + 0.06 * O
+    tono += np.where(lejos, 0.15, 0.62) * brillo
+    rampa = np.array(t["enc_rampa"], np.float32)
+    idx = np.digitize(tono, [0.13, 0.25, 0.37, 0.49, 0.61, 0.75, 0.9])
+    rgb = np.zeros((h, w, 3), np.float32)
+    rgb[pelo] = rampa[idx[pelo]]
+    # --- Lo demás: color plano con dos tonos de luz (la cera no deja nada del todo plano).
+    for v in set(np.unique(L)) - set(base) - {".", "Q", "K"}:
+        m = L == v
+        c = np.array(col[v], np.float32)
+        f = np.where(dif[m] > 0.62, 1.12, np.where(dif[m] < 0.4, 0.82, 1.0)) * (1 + 0.04 * O[m])
+        rgb[m] = np.clip(c * f[:, None], 0, 255)
+    # --- Contorno: negro cálido; a ratos se asoma la tabla. De noche, el filo de la grieta.
+    km = L == "K"
+    rgb[km] = t["enc_tinta"]
+    rr, cc = np.mgrid[0:h, 0:w]
+    asoma = km & (((rr // s) * 7 + (cc // s) * 13) % 11 == 0)
+    rgb[asoma] = np.array(mezcla(t["enc_tinta"], t["enc_tabla"], 0.55), np.float32)
+    if t.get("enc_filo"):
+        lf = np.array(t["enc_filo_dir"], np.float32); lf /= np.linalg.norm(lf)
+        ox, oy = -gx, -gy
+        on = np.sqrt(ox * ox + oy * oy) + 1e-6
+        cara = (ox / on) * lf[0] + (oy / on) * lf[1]
+        anillo = gato & ~(np.asarray(Image.fromarray(gato.astype(np.uint8) * 255).filter(ImageFilter.MinFilter(2 * s + 1))) > 0)
+        f1, f2 = t["enc_filo"]
+        rgb[anillo & (cara > 0.62) & (on > 0.004)] = f1
+        rgb[anillo & (cara > 0.86) & (on > 0.008)] = f2
+    alfa = np.where(gato, 255.0, 0.0)
+    # --- El amuleto: jaspe pulido (con su brillo) y el grabado de Abraxas (cabeza, cuerpo, brazos y las dos piernas de
+    #     serpiente), un poco más claro, como se ve una talla en la piedra.
+    gm = A == "G"
+    if gm.sum() >= 6:
+        r0, c0 = np.nonzero(gm)
+        cy, cx = (r0.mean() + 0.5) * s, (c0.mean() + 0.5) * s
+        gp = L == "G"
+        jas = t["enc_jaspe"]
+        rgb[gp] = jas[1]
+        rgb[gp & (dif < 0.45)] = jas[0]
+        rgb[gp & (dif > 0.7)] = jas[2]
+        gr_ = Image.fromarray(np.zeros((h, w), np.uint8)); dg = ImageDraw.Draw(gr_)
+        u = s / 3
+        dg.point([(cx, cy - 3.6 * u)], fill=1)
+        dg.line([cx, cy - 2.6 * u, cx, cy + 1.2 * u], fill=1)
+        dg.line([cx - 1.6 * u, cy - 1.4 * u, cx + 1.6 * u, cy - 1.4 * u], fill=1)
+        dg.line([cx, cy + 1.2 * u, cx - 1.8 * u, cy + 3.4 * u], fill=1)
+        dg.line([cx, cy + 1.2 * u, cx + 1.8 * u, cy + 3.4 * u], fill=1)
+        gra = (np.asarray(gr_) > 0) & gp
+        rgb[gra] = jas[3]
+        bri = gp & (rr == int(cy - 3.4 * u)) & (cc == int(cx - 1.8 * u))
+        rgb[bri] = jas[4]
+    # --- Ojos de luz: el halo sale un poco de la silueta.
+    em = L == "E"
+    if em.any():
+        ho = _difuso(em, 1.2 * s) * t["enc_halo_ojo"]
+        ho = np.round(np.clip(ho * 1.6, 0, 1) * 4) / 4 * t["enc_halo_ojo"]
+        hc = np.array(t["enc_halo_col"], np.float32)
+        fuera = ~gato & (ho > 0.05)
+        dentro_ = gato & ~em & (L != "H") & (L != "K")
+        rgb[dentro_] = rgb[dentro_] * (1 - ho[dentro_, None] * 0.7) + hc * ho[dentro_, None] * 0.7
+        rgb[fuera] = hc
+        alfa = np.where(fuera, np.maximum(alfa, ho * 200), alfa)
+    # --- La luz detrás del velo, o la sombra que pasa.
+    Qp = L == "Q"
+    if Qp.any():
+        qc = np.array(col["Q"], np.float32)
+        if q_luz:
+            b1, b2 = _difuso(Qp, 1.6 * s), _difuso(Qp, 4.5 * s)
+            gl = np.clip(1.5 * b1 + 1.1 * b2, 0, 1)
+            gl = np.round(gl * 6) / 6
+            hal = np.array(t["enc_grieta_halo"], np.float32)
+            gcol = hal[None, None, :] * (1 - b1[..., None]) + qc * b1[..., None]
+            gcol = np.round(gcol / 12) * 12
+            sobre = gato & ~Qp
+            k2 = gl * 0.75
+            rgb[sobre] = rgb[sobre] * (1 - k2[sobre, None]) + gcol[sobre] * k2[sobre, None]
+            fuera = ~gato & ~Qp & (gl > 0.08)
+            rgb[fuera] = gcol[fuera]
+            alfa = np.where(fuera, np.maximum(alfa, gl * 0.85 * 255), alfa)
+            rgb[Qp] = qc
+            alfa = np.where(Qp, 255, alfa)
+        else:
+            b = _difuso(Qp, 1.4 * s)
+            a_ = np.round(np.clip(b * 1.3, 0, 1) * t["enc_sombra_a"] * 5) / 5
+            zona = ~gato & (a_ > 0.02)
+            rgb[zona] = qc
+            if t.get("enc_sombra_filo"):
+                filo = zona & (b > 0.12) & (b < 0.4)
+                rgb[filo] = t["enc_sombra_filo"]
+            alfa = np.where(zona, a_ * 255, alfa)
+    out = np.dstack([np.clip(rgb, 0, 255), np.clip(alfa, 0, 255)]).astype(np.uint8)
+    return Image.fromarray(out, "RGBA")
+
+
 _pintar_prev = g8.pintar
 
 
 def pintar(g, t, cel, oscuro=False):
     if t["material"] == "gouache":
         return pintar_gouache(g, t, cel)
+    if t["material"] == "encaustica":
+        return pintar_encaustica(g, t, cel)
     return _pintar_prev(g, t, cel, oscuro)
 
 
@@ -286,6 +506,8 @@ g8.pintar = pintar
 # =====================================================================
 HUESO, PIZARRA, AMBAR, AMBAR_C, ROJO = hx("E4DED1"), hx("23252A"), hx("B85C0F"), hx("F2A33A"), hx("D9372B")
 BAQUELITA, CROMO = hx("2A2622"), hx("B9B6AE")
+# Arcontes (docs/diseno/temas/arcontes.md, `TrazosArcontes`): la grieta y su halo, la sombra de arconte, el jaspe.
+GRIETA, GRIETA_H, SOMBRA_A = hx("F4F1FF"), hx("9C7BFF"), hx("1A1424")
 
 
 def colores_obj(nombre, oscuro, j):
@@ -293,9 +515,13 @@ def colores_obj(nombre, oscuro, j):
     c = {
         ("frente", 0): dict(U=hx("D08C3A"), V=hx("3A2E26"), X=CROMO, Q=hx("FFF6DC")),  # microfilm ámbar, cuadros, tapa, destello
         ("frente", 1): dict(U=hx("3A2E26"), V=AMBAR_C, X=CROMO, Q=hx("E4FFF4")),        # el haz del escáner
+        ("arcontes", 0): dict(U=GRIETA_H, V=GRIETA_H, X=GRIETA_H, Q=GRIETA),          # la luz detrás del velo
+        ("arcontes", 1): dict(U=SOMBRA_A, V=SOMBRA_A, X=SOMBRA_A, Q=SOMBRA_A),        # la sombra que pasa
     }[(nombre, j)]
     if oscuro and nombre == "frente" and j == 1:
         c["Q"] = hx("BFF5E0")
+    if oscuro and nombre == "arcontes" and j == 1:
+        c = {k: hx("050409") for k in "UVXQ"}
     return c
 
 
@@ -335,6 +561,31 @@ def tema_mio(nombre, oscuro):
             t["col"] = nc
             t.update(luz=hx("F4E6C4"), k_luz=0.26, rebote=hx("4FA88C"), k_reb=0.26, carton=hx("4A4C3A"))
             t["sombra_col"], t["sombra_a"] = (0, 0, 0), 72
+    elif nombre == "arcontes":
+        # arcontes (guía): caliza EEE3C6 / tinta 1E1A2B, borde BBA673 · oscuro: cielo antiguo 0B0D1C, lino ECE4CF, 343A5A.
+        # El gato: negro, pintado a la encáustica; la rampa de la cera va del negro cálido al ocre del brillo (de día) o al
+        # gris violáceo (de noche). Los ojos, de luz: el blanco violeta de la grieta.
+        P = hx("2A2226")
+        col = g8.pelaje(P, hx("0B0709"), S=hx("1C161A"), L=hx("33292C"), W=P, D=hx("1E181C"), T=hx("261F23"),
+                        E=hx("ECE6FF"), N=hx("5E3E44"), R=P, C=hx("4A321E"), G=hx("3E6B4E"), A=hx("4A321E"))
+        t = g8.T(col, hx("EEE3C6") if not oscuro else hx("0B0D1C"), hx("1E1A2B") if not oscuro else hx("ECE4CF"),
+                 hx("BBA673") if not oscuro else hx("343A5A"), "ninguno", "encaustica", ("abraxas", None))
+        if not oscuro:
+            t.update(enc_rampa=[hx(c) for c in ("0F0B0E", "181317", "211B20", "2D2529", "3E3333", "5D4D42", "97805C", "E6D4A2")],
+                     enc_luz=(-0.46, -0.72, 0.52), enc_tinta=hx("0B0709"), enc_tabla=hx("7A5634"),
+                     enc_jaspe=[hx(c) for c in ("2B4C38", "3E6B4E", "57876A", "A9CDB0", "E8F4E6")],
+                     enc_halo_ojo=0.5, enc_halo_col=hx("B9A3FF"), enc_grieta_halo=GRIETA_H, enc_sombra_a=0.26,
+                     enc_sombra_filo=None)
+            t["sombra_col"], t["sombra_a"] = (58, 44, 30), 62
+        else:
+            t["col"] = dict(col, N=hx("4A3540"), C=hx("3A2818"), E=hx("F4F1FF"))
+            t.update(enc_rampa=[hx(c) for c in ("0A0910", "121019", "1B1824", "262230", "342E3E", "4A4256", "766A92", "D2C8F4")],
+                     enc_luz=(-0.46, -0.72, 0.52), enc_tinta=hx("06050A"), enc_tabla=hx("3A2A22"),
+                     enc_jaspe=[hx(c) for c in ("203A2C", "2E5240", "467458", "8DB89A", "D8E8DA")],
+                     enc_halo_ojo=0.75, enc_halo_col=GRIETA_H, enc_grieta_halo=GRIETA_H, enc_sombra_a=0.7,
+                     enc_sombra_filo=hx("2A2244"),
+                     enc_filo=(hx("44397A"), hx("8F7BDC")), enc_filo_dir=(0.42, -0.91))
+            t["sombra_col"], t["sombra_a"] = (0, 0, 0), 80
     else:
         raise ValueError(nombre)
     t["oscuro"] = oscuro
@@ -453,9 +704,96 @@ def o_escaner(L, a):
         rect(L, "f_Q", c, r, c + 1, r + 1)
 
 
+# --- Arcontes: rasga el velo con la pata (y por un momento se ve la luz de detrás; es un recurso del dibujo) · eriza el
+#     lomo ante una sombra que no se ve (pasa por encima, apenas sugerida).
+# (pata, inclinación de la cabeza, ojo, orejas, ancho de la raja). Mira el aire, alza la pata, rasga de arriba abajo, la
+# raja se abre y deja salir la luz, se cierra; el gato se queda mirando el lugar.
+VELO = [(None, -13, "abierto", 0.0, 0.0), ((45.6, 31.6), -17, "abierto", 0.05, 0.0), ((51.4, 38.6), -9, "abierto", 0.15, 0.45),
+        ((48.6, 45.6), -5, "abierto", 0.45, 1.5), (None, -8, "abierto", 0.4, 2.8), (None, -10, "abierto", 0.25, 1.7),
+        (None, -11, "abierto", 0.1, 0.5), (None, -9, "medio", 0.0, 0.0)]
+RAJA = dict(x=55.6, y0=13.5, y1=47.5)
+
+
+def rasgar(k):
+    pata, inc, ojo, orejas, ancho = VELO[k]
+    p = dict(g8.SENTADO)
+    atras = 0.7 if k in (4, 5) else 0.0                      # se echa un poco atrás cuando la luz sale
+    p.update(inc=inc, ojo=ojo, orejas=orejas, cab=(38.8 - atras, 27.2 + 0.3 * atras))
+    if pata:
+        p["fn"] = brazo((36, 43), pata, (1.2, 0.6))
+    s_ = math.sin(2 * math.pi * k / 8)
+    p["cola"] = [(x + (0.9 * s_ if i >= 4 else 0), y) for i, (x, y) in enumerate(g8.SENTADO["cola"])]
+    return p, dict(obj=(RAJA["x"], (RAJA["y0"] + RAJA["y1"]) / 2), pata=pata or (37.0, SUELO), k=k, ancho=ancho)
+
+
+def borde_raja(y):
+    """El filo rasgado de la raja: no es una línea recta, como una tela que se rompe."""
+    return RAJA["x"] + 0.55 * math.sin(y * 1.9) + 0.35 * math.sin(y * 0.63 + 1.0)
+
+
+def o_velo(L, a):
+    """La raja en el aire: fina al rasgar, se abre en forma de huso por donde sale la luz blanca y violeta (el halo lo
+    pone el pintor) y se cierra. Al abrirse del todo suelta unas motas de luz."""
+    k, ancho = a["k"], a["ancho"]
+    if ancho <= 0:
+        return
+    y0, y1 = RAJA["y0"], RAJA["y1"]
+    if k == 2:                                                 # la raya va detrás de la pata
+        y1 = 41.0
+    if k == 6:
+        y0, y1 = y0 + 6, y1 - 7
+    ys = [y0 + (y1 - y0) * q / 24 for q in range(25)]
+    if ancho < 1.0:
+        L.capsula("f_Q", [(borde_raja(y), y) for y in ys], 0.95)
+        return
+    izq, der = [], []
+    for y in ys:
+        u = (y - y0) / (y1 - y0)
+        hw = ancho / 2 * math.sin(math.pi * u) ** 0.65 + 0.3
+        izq.append((borde_raja(y) - hw, y)); der.append((borde_raja(y) + hw * 0.85, y))
+    L.poligono("f_Q", izq + der[::-1])
+    if k in (4, 5):                                            # motas de luz que salen
+        for j, (dx, dy) in enumerate(((-3.6, -6.0), (3.4, -2.4), (-2.6, 5.4), (4.2, 7.6))):
+            sale = 1.0 if k == 4 else 1.7
+            L.elipse("f_Q", RAJA["x"] + dx * sale, 30.5 + dy * sale, 0.5, 0.5)
+
+
+# (cuánto se eriza, dónde va la sombra, inclinación de la cabeza, ojo, orejas, bufa). La sombra entra por delante,
+# alta, pasa por encima del gato y se va por detrás; el gato la sigue con la cabeza, erizado.
+SOMBRA_PASA = [(0.0, 74, -12, "abierto", 0.0, False), (0.55, 60, -20, "abierto", 0.55, False), (1.0, 47, -26, "abierto", 0.95, False),
+               (1.0, 34, -28, "abierto", 0.95, True), (1.0, 21, -20, "abierto", 0.95, True), (1.0, 8, -12, "abierto", 0.9, False),
+               (0.5, -6, -4, "medio", 0.6, False), (0.0, -22, 2, "medio", 0.3, False)]
+
+
+def erizar_sombra(k):
+    f, sx, inc, ojo, orejas, bufa = SOMBRA_PASA[k]
+    p = g8.interp(g8.DE_PIE, g8.ANIMS["enojado"][k % 3], f)
+    p.update(inc=inc, ojo=ojo, orejas=orejas, lengua=bufa, semilla=k)
+    p["cab"] = (p["cab"][0], p["cab"][1] - 1.2 * f)
+    return p, dict(obj=(sx, 7.0), k=k)
+
+
+def o_sombra(L, a):
+    """La sombra que pasa: una mancha larga y baja, con la cabeza adelante (dos puntas, como orejas de animal; nunca
+    entera) y una cola de humo atrás. El pintor la vuelve translúcida."""
+    sx, sy = a["obj"]; k = a["k"]
+    ond = 0.6 * math.sin(k * 1.3)
+    L.elipse("sombra21", sx + 1.0, sy + ond * 0.3, 8.6, 2.9, -4)
+    L.elipse("sombra21", sx - 7.6, sy - 0.6, 3.0, 2.3)                            # la cabeza, adelante
+    L.poligono("sombra21", [(sx - 9.4, sy - 1.8), (sx - 9.0, sy - 5.6), (sx - 7.8, sy - 2.2)])     # una oreja
+    L.poligono("sombra21", [(sx - 7.4, sy - 2.0), (sx - 6.2, sy - 5.2), (sx - 5.6, sy - 1.6)])     # la otra
+    L.poligono("sombra21", [(sx - 10.0, sy - 0.4), (sx - 12.6, sy + 0.6), (sx - 9.6, sy + 1.2)])   # el hocico largo
+    L.capsula("sombra21", [(sx + 8.6, sy + 0.4), (sx + 12.4, sy - 0.8 + ond), (sx + 16.0, sy + 0.6 - ond)], 1.6)  # humo
+
+
+g17.ACCIONES.update(rasgar=(rasgar, 8, "sentado"), erizar_sombra=(erizar_sombra, 8, "quieto"))
+g17.ESCALA.update(rasgar=1.0, erizar_sombra=1.0)
+
 ESP_MIOS = {
     "frente": [("microfilm", o_microfilm, "esconde un microfilm en el collar"),
                ("agacharse", o_escaner, "se agacha cuando el escáner de una patrulla entra por la rendija del techo")],
+    "arcontes": [("rasgar", o_velo, "rasga el velo con la pata y por un momento se ve la luz de detrás"),
+                 ("erizar_sombra", o_sombra, "eriza el lomo ante una sombra que no se ve")],
 }
 ESCALA_MIA = {("frente", 0): 1.35}
 g17.ESP.update(ESP_MIOS)

@@ -111,6 +111,30 @@ def consola(sem):        # Frente exterior: el panel de una consola de los 70, c
         junta += (d < 5.5) * -0.9 + (np.abs(d - 5.5) < 0.9) * -1.2 + ((np.abs(X - x0) < 0.8) & (d < 4.5)) * -1.4
     return piel + uso + junta
 
+def nube(sem, celdas, tam=TAM):
+    """Un campo suave de -1 a 1 aprox.: ruido de [celdas] × [celdas] puntos, ampliado con interpolación bicúbica."""
+    r = np.random.default_rng(sem).random((celdas, celdas)).astype(np.float32)
+    im = Image.fromarray(r, 'F').resize((tam, tam), Image.BICUBIC)
+    a = np.asarray(im, np.float32)
+    return (a - a.mean()) / (a.std() + 1e-6) * 0.5
+
+def heliotropo(sem):     # Arcontes: jaspe verde oscuro de las gemas de Abraxas (heliotropo), con nubes más claras y más oscuras,
+    # alguna veta fina, motas rojas de hierro y el brillo del pulido arriba a la izquierda. Es la única textura en color:
+    # devuelve el desvío en RGB.
+    nubes = nube(sem, 4) * 0.8 + nube(sem + 1, 10) * 0.45 + nube(sem + 2, 26) * 0.22 + ruido(sem + 3, 0.1)
+    # Vetas: líneas finas y quebradas donde un campo cruza el cero (no rayas parejas), solo en algunas zonas.
+    v = nube(sem + 4, 6) + nube(sem + 5, 17) * 0.3
+    vetas = np.exp(-(v / 0.02) ** 2) * np.clip(nube(sem + 6, 5) * 2, 0, 1)
+    # Las motas rojas del heliotropo: chicas, sueltas y agrupadas en una o dos zonas.
+    roja = np.clip((nube(sem + 7, 70) + nube(sem + 8, 150) * 0.5 - 0.78) * 4.0, 0, 1) * np.clip(nube(sem + 9, 4) * 2 + 0.2, 0, 1)
+    brillo = np.clip(1 - np.sqrt((X - TAM * 0.3) ** 2 + (Y - TAM * 0.26) ** 2) / (TAM * 0.62), 0, 1) ** 2
+    caida = np.clip(np.sqrt((X - TAM * 0.5) ** 2 + (Y - TAM * 0.5) ** 2) / (TAM * 0.72), 0, 1) ** 2
+    rgb_ = nubes[..., None] * np.array([9, 14, 11], np.float32)
+    rgb_ += vetas[..., None] * np.array([7, 9, 8], np.float32)
+    rgb_ += roja[..., None] * (rgb('#8E3A2E') - rgb('#2B4636')) * 0.6
+    rgb_ += brillo[..., None] * np.array([14, 19, 16], np.float32) - caida[..., None] * np.array([10, 14, 12], np.float32)
+    return rgb_
+
 def cuadricula(sem):     # Laboratorio: papel de laboratorio cuadriculado
     fino = ((X % 18 < 1) | (Y % 18 < 1)) * -0.6
     grueso = ((X % 90 < 1.5) | (Y % 90 < 1.5)) * -0.6
@@ -381,6 +405,74 @@ def _canal(d, c, hueco=0.52, centro=-0.95):   # Frente exterior: el emblema del 
         r2 = 6.0 * K; d.ellipse([x - r2, y - r2, x + r2, y + r2], fill=luz)
         r3 = 1.8 * K; d.ellipse([x - r2 * 0.42 - r3, y - r2 * 0.42 - r3, x - r2 * 0.42 + r3, y - r2 * 0.42 + r3], fill=(255, 248, 230, 200))
 
+def cinta(d, pts, w0, w1, c):
+    """Un trazo de ancho variable (de w0 a w1, en px del lienzo) a lo largo de los puntos [pts], con los extremos lisos."""
+    n = len(pts); izq, der = [], []
+    for i, (x, y) in enumerate(pts):
+        a = pts[max(i - 1, 0)]; b = pts[min(i + 1, n - 1)]
+        dx, dy = b[0] - a[0], b[1] - a[1]; l = math.hypot(dx, dy) or 1
+        w = (w0 + (w1 - w0) * i / (n - 1)) / 2
+        izq.append((x - dy / l * w, y + dx / l * w)); der.append((x + dy / l * w, y - dx / l * w))
+    d.polygon(izq + der[::-1], fill=c)
+
+
+def ouroboros(d, cx, cy, radio, w_cabeza, w_cola, c, hueco=(0, 0, 0, 0), cabeza=-math.pi / 2, escamas=True):
+    """La serpiente que se muerde la cola, en coordenadas del lienzo: el cuerpo sigue el círculo de [radio] en el sentido
+    del reloj, de la cola (fina, ancho w_cola) al cuello (w_cabeza). La cabeza va de perfil en el ángulo [cabeza], con la
+    mandíbula de arriba por fuera y la de abajo por dentro, abiertas sobre la punta de la cola. [hueco] es el color con
+    que se recortan las escamas, la boca y el ojo (transparente en una capa RGBA, 0 en una máscara)."""
+    L = w_cabeza * 2.5; W = w_cabeza * 1.05
+    cola0 = cabeza + L * 0.62 / radio                 # la punta de la cola, dentro de la boca
+    cuello = cabeza - L * 0.5 / radio + 2 * math.pi   # donde el cuerpo se vuelve cabeza
+    n = 360
+    angs = [cola0 + (cuello - cola0) * i / n for i in range(n + 1)]
+    pts = [(cx + radio * math.cos(a), cy + radio * math.sin(a)) for a in angs]
+    # El cuerpo engruesa rápido al salir de la cola y luego despacio hasta el cuello.
+    anchos = [w_cola + (w_cabeza - w_cola) * (i / n) ** 0.55 for i in range(n + 1)]
+    izq, der = [], []
+    for (x, y), a, w in zip(pts, angs, anchos):
+        nx, ny = math.cos(a), math.sin(a)
+        izq.append((x + nx * w / 2, y + ny * w / 2)); der.append((x - nx * w / 2, y - ny * w / 2))
+    d.polygon(izq + der[::-1], fill=c)
+    r0 = w_cola * 0.5; x0, y0 = pts[0]; d.ellipse([x0 - r0, y0 - r0, x0 + r0, y0 + r0], fill=c)
+    if escamas:
+        # Escamas: dos hileras de cortes en V que avanzan hacia la cabeza, alternadas (dibujo de rombos).
+        paso = max(w_cabeza * 0.62, 1.0)
+        largo = (cuello - cola0) * radio
+        k = 0; t = paso * 2.2
+        while t < largo - paso * 0.8:
+            i = int(t / largo * n); a = angs[i]; w = anchos[i]
+            if w > w_cabeza * 0.42:
+                nx, ny = math.cos(a), math.sin(a); tx, ty = -ny, nx      # tx: hacia la cabeza
+                x, y = pts[i]
+                for fila in ((-0.24, 0.24) if k % 2 == 0 else (0.0,)):
+                    bx, by = x + nx * fila * w, y + ny * fila * w
+                    s = w * 0.2
+                    d.line([(bx + nx * s - tx * s * 0.9, by + ny * s - ty * s * 0.9), (bx + tx * s * 0.35, by + ty * s * 0.35),
+                            (bx - nx * s - tx * s * 0.9, by - ny * s - ty * s * 0.9)], fill=hueco, width=max(1, int(w * 0.075)), joint='curve')
+            t += paso * 0.5; k += 1
+    # La cabeza, en el marco del cuello: t hacia donde avanza, n hacia fuera del círculo.
+    hx, hy = cx + radio * math.cos(cabeza), cy + radio * math.sin(cabeza)
+    tx, ty = -math.sin(cabeza), math.cos(cabeza); nx, ny = math.cos(cabeza), math.sin(cabeza)
+    def Q(f, g): return (hx + tx * f * L + nx * g * W, hy + ty * f * L + ny * g * W)
+    # Cráneo y mandíbula de arriba (por fuera): sube del cuello, se redondea sobre el ojo y baja al hocico.
+    d.polygon([Q(-0.62, 0.5), Q(-0.42, 0.62), Q(-0.1, 0.72), Q(0.2, 0.66), Q(0.5, 0.5), Q(0.78, 0.34), Q(0.9, 0.2),
+               Q(0.86, 0.08), Q(0.3, 0.06), Q(0.02, 0.0), Q(-0.62, -0.1)], fill=c)
+    # Mandíbula de abajo (por dentro), abierta: deja ver la cola entre las dos.
+    d.polygon([Q(-0.62, -0.5), Q(-0.3, -0.62), Q(0.1, -0.58), Q(0.5, -0.42), Q(0.74, -0.3), Q(0.76, -0.2),
+               Q(0.3, -0.24), Q(0.02, -0.12), Q(-0.62, 0.1)], fill=c)
+    # Ojo con su párpado, la comisura de la boca y las escamas grandes de la cabeza.
+    ex, ey = Q(0.08, 0.36); r = W * 0.15
+    d.ellipse([ex - r, ey - r, ex + r, ey + r], fill=hueco)
+    r2 = r * 0.45; d.ellipse([ex - r2 + r * 0.2, ey - r2, ex + r2 + r * 0.2, ey + r2], fill=c)
+    d.line([Q(-0.3, 0.02), Q(0.0, -0.06)], fill=hueco, width=max(1, int(W * 0.09)))
+    d.line([Q(-0.5, 0.28), Q(-0.22, 0.52)], fill=hueco, width=max(1, int(W * 0.07)))
+    d.line([Q(-0.5, -0.28), Q(-0.24, -0.44)], fill=hueco, width=max(1, int(W * 0.07)))
+
+
+def _ouroboros(d, c):                 # Arcontes: el anillo es el ouroboros, la serpiente que se muerde la cola, grabado
+    ouroboros(d, TAM / 2 * K, TAM / 2 * K, RADIO * K, 13.0 * K, 3.4 * K, c)
+
 def _cuerda(d, c, n=56):              # cuerda trenzada
     for i in range(n):
         a = 2 * math.pi * i / n
@@ -536,7 +628,8 @@ def _manos(d, c, n=24):                 # Prehistoria: puntos de ocre de tamaño
 
 # tema: (textura, fondo, tinta, fuerza de la textura en el fondo y en la huella, acabado, motivo)
 # Acabados: 'tinta' (se asienta en el soporte), 'dorado' (brillo metálico leve), 'ferrogalica' (sepia que se aclara
-# donde la pluma tenía menos tinta), 'fosforo' (resplandor de pantalla), 'esmalte' (relieve suave).
+# donde la pluma tenía menos tinta), 'fosforo' (resplandor de pantalla), 'esmalte' (relieve suave), 'grabado' (talla en
+# hueco sobre piedra pulida, con el anillo: la huella y el motivo son un solo grabado).
 TEMAS = {
     'romano':       (travertino,    '#E5E1D9', '#6E5424',  10, 6, 'dorado',      _hojitas),
     'urbe':         (revoque,       '#E7C793', '#7A2E1C',  13, 5, 'tinta',       _cupolas),
@@ -548,6 +641,7 @@ TEMAS = {
     'templario':    (lino,          '#EDE6D6', '#9A1A1F',   8, 5, 'esmalte',     _cruces_patadas),
     'distopia':     (papel,         '#EFE9DA', '#1A1A1A',  10, 6, 'tinta',       _marcas),
     'frente':       (consola,       '#E4DED1', '#B85C0F',  10, 4, 'piloto',      _canal),
+    'arcontes':     (heliotropo,    '#2B4636', '#D9D6BE',   1, 0, 'grabado',     _ouroboros),
     'refugio':      (hormigon,      '#1B1C1A', '#9BE8AE',   8, 5, 'fosforo',     _dientes),
     'orden':        (acero,         '#16171A', '#C2A15E',   9, 5, 'dorado',      _remaches),
     'vapor':        (hollin_plano,  '#E6D9BD', '#7A4E12',  10, 5, 'dorado',      _engrane_manometro),
@@ -591,22 +685,48 @@ def anillo(tema, color):
         _tricolor(d, [(31, 42, 110, 235), (245, 245, 245, 235), (178, 34, 52, 235)])
         d.ellipse(caja, outline=c, width=int(GROSOR * K * 0.5))
         return capa.resize((TAM, TAM), Image.LANCZOS)
-    if motivo not in (_rayas, _canal):
+    if motivo not in (_rayas, _canal, _ouroboros):
         d.ellipse(caja, outline=c, width=int(GROSOR * K))
     if motivo is _monedas: _monedas(d, c, (0, 0, 0, 0))
     else: motivo(d, c, **VARIANTES.get(tema, {}))
     return capa.resize((TAM, TAM), Image.LANCZOS)
 
 
+def tallado(m, tinta, sem, sombra='#0E1A13', suave=1.1):
+    """Un grabado en hueco sobre piedra pulida (máscara [m], 0–1, de cualquier tamaño): el fondo del corte, mate y más
+    claro que la piedra (la piedra cortada se ve blanquecina); la pared de arriba a la izquierda, en sombra, y la de abajo a
+    la derecha, con luz (la luz viene de arriba a la izquierda); y un filo oscuro alrededor, donde el pulido se rompe.
+    [suave] es el ancho de las paredes en px (1.1 a 432; más en lienzos más grandes)."""
+    alto, ancho = m.shape
+    b = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(suave)), np.float32) / 255
+    gy, gx = np.gradient(b)
+    pend = (gx + gy) * suave / 1.1                    # > 0 en la pared de arriba a la izquierda (por dentro del corte)
+    grano = np.random.default_rng(sem + 21).standard_normal((alto, ancho)).astype(np.float32)
+    col = rgb(tinta)[None, None, :] * (0.93 + 0.05 * grano[..., None])
+    col = col * (1 - np.clip(pend * 2.4, 0, 0.55))[..., None]
+    col = col + (np.clip(-pend * 2.0, 0, 0.3) * 60)[..., None]
+    capa = Image.fromarray(np.dstack([np.clip(col, 0, 255), m * 255]).astype(np.uint8), 'RGBA')
+    filo = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(suave * 1.45)), np.float32) / 255
+    base = Image.fromarray(np.dstack([np.broadcast_to(rgb(sombra), (alto, ancho, 3)), np.clip(filo * 1.5, 0, 1) * (1 - m) * 0.55 * 255]).astype(np.uint8), 'RGBA')
+    base.alpha_composite(capa)
+    return base
+
+
 def hacer(tema, salida):
     textura, fondo, tinta, f_fondo, f_huella, acabado, _ = TEMAS[tema]
     sem = sum(map(ord, tema))
     tex = textura(sem)
-    # Fondo: el color con la textura (pocos niveles arriba y abajo).
-    bg = rgb(fondo)[None, None, :] + tex[..., None] * f_fondo
+    # Fondo: el color con la textura (pocos niveles arriba y abajo). Una textura en color (la del jaspe) trae su desvío en RGB.
+    bg = rgb(fondo)[None, None, :] + (tex if tex.ndim == 3 else tex[..., None]) * f_fondo
     Image.fromarray(np.clip(bg, 0, 255).astype(np.uint8)).save(os.path.join(salida, f'logo_fondo_{tema}.jpg'), quality=92)
     # Huella: la forma fija, con la misma textura muy leve y el acabado del tema.
     m = mascara()
+    if acabado == 'grabado':
+        # Talla en hueco sobre la piedra, como las gemas: el anillo y la huella son un solo grabado.
+        anillo_m = np.asarray(anillo(tema, rgb(tinta)), np.float32)[..., 3] / 255
+        final = tallado(np.maximum(m, anillo_m), tinta, sem)
+        final.save(os.path.join(salida, f'logo_{tema}.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
+        return
     t2 = textura(sem + 7)
     base = rgb(tinta)
     col = base[None, None, :] + t2[..., None] * f_huella

@@ -517,6 +517,44 @@ def hacer_frente():
         # En «Tu año» la música sube un tono dos vueltas: sin los pitidos del cierre, que no subirían con ella.
         ARGS['frente'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
 
+def hacer_arcontes():
+    # --- Arcontes: La bemol mixolidio con la sexta menor, quieta, a unas 86 negras por minuto (melodía propia). El kinnor
+    # canta la melodía; otro kinnor, más grave, rasguea despacio dos veces por compás; debajo, una sola voz de hombre
+    # salmodia a media voz el bordón (la tónica y su quinta) y toma aire en cada compás. La armonía no se mueve como una
+    # canción: el acorde de la tónica (el dorado), el cuarto grado menor sobre el bordón (la sombra) y el acorde aumentado
+    # del sexto grado (la grieta), y vuelta a casa. En ese tercer compás crece el zumbido hondo de los arcontes; los
+    # crótalos marcan el principio de cada compás y, al final, entra la nota limpia y alta del Pleroma. Con su propio azar.
+    with A.azar_propio('musica_arcontes'):
+        T = -1; pz = 0.7
+        ac = compases([0, 4, 7], [0, 5, 8], [0, 4, 8], [0, 4, 7, 12])
+        mel = frase(0, "7:2 8:1 7:1 | 5:1.5 4:0.5 5:1 8:1 | 12:2 10:1 8:1 | 7:1 5:0.5 4:0.5 0:2")
+        canta = lambda f, d: kinnor(f, max(d, 0.9), 0.5, 0.9955)
+        def rasguea(f, d):
+            """El kinnor grave: cada cuerda un poco después que la de abajo (la púa baja por ellas), en el uno y, más suave, en el tres."""
+            tarde = 0.004 * max(0.0, 12 * np.log2(f / hz(T - 24)))
+            una = lambda g: kinnor(f, min(d * 0.55, 1.6), 0.4, 0.995) * g
+            return mezclar((tarde, una(1.0), 1.0), (d / 2 + tarde, una(0.55), 1.0))
+        def bordon(f, d):
+            """La voz que salmodia la tónica y la quinta; dura un poco más que el compás y respira entre uno y otro."""
+            return mezclar((0, salmodia(f, d + 0.35, 'o'), 1.0), (0.05, salmodia(f * 2 ** (7 / 12), d + 0.3, 'u'), 0.55))
+        def ritmo(acordes, cierre=True):
+            """Los crótalos al principio de cada compás (más fuertes en los impares); con [cierre], el zumbido de los
+            arcontes que crece bajo el penúltimo compás y la nota del Pleroma con un último crótalo en el tres del último."""
+            out = [(b, crotalos(hz(T + 24), 1.2), 0.2 if i % 2 == 0 else 0.13) for i, (b, _, _) in enumerate(acordes)]
+            if cierre:
+                pen, fin = acordes[-2][0], acordes[-1][0]
+                out += [(pen - 0.5, zumbido_hondo(hz(T - 36), (acordes[-2][2] + 1) * pz, entra=0.6, sale=0.4), 0.6),
+                        (fin + 2, pleroma(hz(T + 24), 3.6, 0.4), 0.25), (fin + 2, crotalos(hz(T + 24), 1.6), 0.18)]
+            return out
+        kw = dict(inst_mel=canta, inst_ac=rasguea, bajo=bordon, perc=ritmo(ac), g_mel=0.5, g_ac=0.3, g_bajo=0.2,
+                  oct_mel=0, oct_ac=-12, oct_bajo=-24, legato=1.0, cola=2.2, rev=0.34)
+        # La llamada solo toma los dos primeros compases y el cierre: su ritmo se arma con esos mismos acordes.
+        kw_llamada = dict(kw, perc=ritmo([c for c in ac if c[0] < 8] + [(8, ac[-1][1], 4)]))
+        notif = mezclar((0, crotalos(hz(T + 24), 1.0), 0.15), (0.06, notificacion(T, lambda f, d: kinnor(f, d, 0.55, 0.995), [12, 8, 7], 0.15, 1.0, 1.3), 1.0))
+        P['arcontes'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw_llamada), notif)
+        # En «Tu año» la música sube un tono dos vueltas: sin el zumbido ni la nota del Pleroma, que no subirían con ella.
+        ARGS['arcontes'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
+
 def hacer_egipto():
     # --- Egipto: Mi con la segunda menor (escala propia), arpa arpegiada, flauta de caña, tambor de marco y sistro, con una
     # melodía propia de ocho compases. Con su propio azar, para no mover el de los temas que van después.
@@ -708,6 +746,7 @@ if __name__ == '__main__':
     hacer_enriquecidos()
     hacer_abismo()
     hacer_frente()
+    hacer_arcontes()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     # Con un tercer argumento («presentacion,anual», por ejemplo) solo se escriben esas piezas.
     piezas = sys.argv[3].split(',') if len(sys.argv) > 3 else None
