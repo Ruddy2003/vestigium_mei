@@ -299,8 +299,38 @@ internal object CercaVerano {
         // ---- 3. La carreta del marco, delante de todo lo de la izquierda.
         carreta(carreta, p.con(calida(Offset(110f, 230f)) * 0.7f), sol)
 
-        // ---- 4. Las matas altas de delante, cortadas por el borde, con flores.
+        // ---- 4. La artesa de los potros, delante de la rueda, cortada por los bordes; luego las matas altas de delante, con flores.
+        artesa(p, sol)
         matasDeDelante(m, p, az)
+    }
+
+    /**
+     * La artesa de madera donde beben los potros atados, delante de la rueda de la carreta, cortada por el borde de la
+     * izquierda y el de abajo **[Diseño propio]**: el cuento lleva las ovejas a beber al río y no dice dónde beben los
+     * potros. El agua devuelve el cielo; la madera, vieja y mojada abajo, tiene sus duelas y sus clavos.
+     */
+    private fun DrawScope.artesa(p: Pincel, sol: Sol3) {
+        val l = p.l
+        val lejos = listOf(Offset(-12f, 266f), Offset(70f, 259f)); val cerca = listOf(Offset(-8f, 278f), Offset(80f, 268.5f))
+        val madera = lerp(C.MADERA, C.TIERRA, 0.35f)
+        // La sombra en la hierba.
+        drawPath(poligono(cerca[0] + Offset(0f, 12f), cerca[1] + Offset(0f, 12f), cerca[1] + Offset(sol.r.ax * 8f + 4f, 14f), cerca[0] + Offset(sol.r.ax * 8f, 16f)), sol.r.color.copy(alpha = 0.7f * sol.r.fuerza))
+        // La cara de dentro de la duela de allá, el agua y el canto de arriba.
+        val boca = poligono(lejos[0], lejos[1], cerca[1], cerca[0])
+        drawPath(boca, p.sombra(lerp(madera, C.HOLLIN, 0.2f)))
+        val agua = poligono(lejos[0] + Offset(2f, 3.4f), lejos[1] + Offset(-3f, 3f), cerca[1] + Offset(-3f, -1.4f), cerca[0] + Offset(2f, -1.2f))
+        drawPath(agua, Brush.verticalGradient(listOf(lerp(l.alto, C.RIO_HONDO, 0.3f), lerp(l.medio, l.bajo, 0.4f)), 262f, 277f))
+        drawLine(lerp(l.bajo, Color.White, 0.5f).copy(alpha = 0.6f * (1f - 0.5f * l.noche)), Offset(18f, 268f), Offset(50f, 265f), 0.8f, StrokeCap.Round)
+        drawPath(poligono(lejos[0], lejos[1], lejos[1] + Offset(0f, 1.6f), lejos[0] + Offset(0f, 1.6f)), p.arriba(madera))
+        // La duela de delante, con su luz, la humedad de abajo y los clavos.
+        val frente = poligono(cerca[0], cerca[1], cerca[1] + Offset(0f, 13f), cerca[0] + Offset(0f, 13f))
+        drawPath(frente, Brush.horizontalGradient(if (p.solALaDerecha) listOf(p.medio(madera), p.luz(madera)) else listOf(p.luz(madera), p.medio(madera)), -8f, 80f))
+        clipPath(frente) {
+            for (k in 1..2) drawLine(p.sombra(madera).copy(alpha = 0.6f), cerca[0] + Offset(0f, k * 4.4f), cerca[1] + Offset(0f, k * 4.4f), 0.5f)
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.sombra(lerp(madera, C.HOLLIN, 0.3f)).copy(alpha = 0.7f)), 276f, 290f), Offset(-10f, 270f), Size(92f, 22f))
+            for (x in listOf(10f, 40f, 70f)) for (k in 0..2) drawCircle(p.medio(C.HOLLIN), 0.5f, Offset(x, cerca[0].y + (cerca[1].y - cerca[0].y) * (x + 8f) / 88f + 2f + k * 4.4f))
+        }
+        drawPath(poligono(cerca[0] + Offset(0f, -0.8f), cerca[1] + Offset(0f, -0.8f), cerca[1] + Offset(0f, 0.8f), cerca[0] + Offset(0f, 0.8f)), p.luz(lerp(madera, C.FIELTRO, 0.2f)))
     }
 
     /** Un rollo de fieltro tendido en la hierba, en tres cuartos: el cuerpo con su luz, la cabeza con la espiral y las cuerdas de crin. */
@@ -482,25 +512,29 @@ internal object CercaVerano {
     }
 
     /**
-     * El queso seco (aaruul) puesto a secar en una tabla sobre el techo de la tienda, al sol, como se hace en verano
-     * **[Diseño propio]**: el cuento dice que se hace queso seco, no dónde se seca.
+     * El queso seco (aaruul) puesto a secar al sol sobre el techo de la tienda, en un paño viejo tendido sobre el
+     * fieltro y sujeto con una piedra **[Diseño propio]**: el cuento dice que se hace queso seco, no dónde se seca.
      */
     private fun DrawScope.quesoEnElTecho(p: Pincel, sol: Sol3, g: Ger, az: Azar) {
-        val t0 = angulo(g, 244f)
+        val t0 = angulo(g, 246f)
         fun techo(t: Float, k: Float): Offset { val r = g.alero + (g.aro - g.alero) * k; val y = g.pared - 0.06f + (g.cumbre - g.pared + 0.06f) * k; return g.s.p(r * sin(t), y + 0.03f, -r * cos(t)) }
-        val a = t0 - 0.06f; val b = t0 + 0.26f; val k0 = 0.2f; val k1 = 0.5f
-        val tabla = poligono(techo(a, k0), techo(b, k0), techo(b, k1), techo(a, k1))
-        drawPath(poligono(techo(a, k0 - 0.03f), techo(b, k0 - 0.03f), techo(b + 0.02f, k1), techo(a + 0.02f, k1)), sol.r.color.copy(alpha = 0.5f * sol.r.fuerza))
-        val canto = poligono(techo(a, k0), techo(b, k0), techo(b, k0) + Offset(0f, 1.2f), techo(a, k0) + Offset(0f, 1.2f))
-        drawPath(canto, p.sombra(lerp(C.MADERA, C.PIEDRA, 0.3f)))
-        drawPath(tabla, p.arriba(lerp(lerp(C.MADERA, C.PIEDRA, 0.4f), C.FIELTRO, 0.35f)))
-        for (i in 1..3) drawLine(p.sombra(C.MADERA).copy(alpha = 0.4f), techo(a, k0 + (k1 - k0) * i / 4f), techo(b, k0 + (k1 - k0) * i / 4f), 0.3f)
-        val queso = lerp(C.FIELTRO, C.ESTEPA, 0.25f)
-        for (i in 0 until 7) for (j in 0 until 3) {
-            val c = techo(a + (b - a) * (i + 0.5f) / 7f + az.entre(-0.006f, 0.006f), k0 + (k1 - k0) * (j + 0.5f) / 3f); val w = 1.5f - 0.2f * j
-            drawRect(p.sombra(queso), Offset(c.x - w, c.y - w * 0.4f), Size(w * 2f, w * 1.1f))
-            drawRect(p.luz(queso), Offset(c.x - w, c.y - w * 0.7f), Size(w * 2f, w * 0.7f))
+        val a = t0 - 0.04f; val b = t0 + 0.3f; val k0 = 0.16f; val k1 = 0.5f
+        // El paño, de borde irregular, que se adapta a la pendiente del techo.
+        val borde = (0..5).map { techo(a + (b - a) * it / 5f, k0 + az.entre(-0.02f, 0.02f)) } + (5 downTo 0).map { techo(a + (b - a) * it / 5f + az.entre(-0.01f, 0.01f), k1 + az.entre(-0.03f, 0.02f)) }
+        val pano = poligono(borde)
+        drawPath(pano, p.arriba(lerp(C.LANA, C.ESTEPA, 0.25f)))
+        drawPath(pano, p.sombra(lerp(C.LANA, C.ESTEPA, 0.4f)).copy(alpha = 0.6f), style = Stroke(0.4f))
+        // Los trozos de queso, sueltos, cada uno con su lado de luz y su sombrita en el paño.
+        val queso = lerp(C.FIELTRO, C.ESTEPA, 0.18f)
+        repeat(30) {
+            val c = techo(az.entre(a + 0.02f, b - 0.02f), az.entre(k0 + 0.04f, k1 - 0.04f)); val w = az.entre(0.9f, 1.5f)
+            drawOval(sol.r.color.copy(alpha = 0.6f * sol.r.fuerza), Offset(c.x - w + sol.r.ax * 0.6f, c.y - w * 0.2f), Size(w * 2.2f, w * 0.9f))
+            drawRect(p.sombra(queso), Offset(c.x - w, c.y - w * 0.5f), Size(w * 2f, w))
+            drawRect(p.luz(queso), Offset(if (p.solALaDerecha) c.x - w * 0.2f else c.x - w, c.y - w * 0.8f), Size(w * 1.2f, w * 0.7f))
         }
+        // La piedra que sujeta el paño.
+        val piedra = techo(b - 0.02f, k1 - 0.02f)
+        drawOval(p.por(C.PIEDRA, -0.3f), Offset(piedra.x - 2.4f, piedra.y - 2f), Size(4.8f, 3f)); drawOval(p.luz(C.PIEDRA), Offset(piedra.x - 1.6f, piedra.y - 2.2f), Size(2.8f, 1.4f))
     }
 
     /** El cubo de cuero de ordeñar, lleno de leche; el día de la primera leche, con la cuchara de nueve agujeros apoyada. */
