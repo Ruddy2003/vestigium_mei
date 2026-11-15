@@ -107,8 +107,8 @@ internal object RetiradaNapoleon {
      */
     fun fuegosDelCamino(m: Momento): Int = (EscenaNapoleon.fuegos(m) - 1).coerceIn(0, 5)
 
-    /** Los fuegos de otros grupos, lejos, en el llano («cada grupo busca un sitio para el fuego»): dos; uno más en el Berezina. */
-    fun fuegosAjenos(m: Momento): Int = if (EscenaNapoleon.tramo(m) == Tramo.BEREZINA) 7 else 2
+    /** Los fuegos de otros grupos, lejos, en el llano («cada grupo busca un sitio para el fuego»): dos; siete en el Berezina; ninguno en el final, que cierra el bosque. */
+    fun fuegosAjenos(m: Momento): Int = when (EscenaNapoleon.tramo(m)) { Tramo.BEREZINA -> 7; Tramo.FINAL -> 0; Tramo.SALIDA, Tramo.MALOYAROSLAVETS, Tramo.NIEVE, Tramo.KRASNOI, null -> 2 }
 
     /**
      * Cuántas cosas abandonadas hay a lo largo del camino, además del marco y de lo del plano medio: de 2 a 9, con
@@ -133,6 +133,8 @@ internal object RetiradaNapoleon {
         with(RetiradaLejos) { cielo(v); lejos(v) }
         if (v.vivac) with(VivacNapoleon) { horizonte(v) }
         with(RetiradaLuz) { velo(v, 0.45f, -40f, 112f); velo(v, 0.8f, 74f, 136f) }
+        // Las colinas de Krasnoi, más cerca que la bruma de lejos: que se lean también con lluvia o nieve.
+        if (!v.vivac && TramosRetirada.lejania(v.tramo) == TramosRetirada.Lejania.COLINAS) with(RetiradaLejos) { colinas(v) }
         with(RetiradaCamino) { suelo(v) }
         with(RetiradaLuz) { sombrasDelSuelo(v) }
         with(RetiradaLejos) { granja(v) }

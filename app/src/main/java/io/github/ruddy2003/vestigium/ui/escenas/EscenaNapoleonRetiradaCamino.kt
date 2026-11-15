@@ -192,8 +192,9 @@ internal object RetiradaCamino {
             val onda = Path().apply { moveTo(x0, y); var x = x0; while (x < ANCHO + 10f) { val dx = az.entre(18f, 44f) * (70f / z).coerceIn(0.4f, 1.5f); cubicTo(x + dx * 0.3f, y - az.entre(0.4f, 1.6f), x + dx * 0.7f, y + az.entre(-0.3f, 0.8f), x + dx, y + az.entre(-0.5f, 0.5f)); x += dx } }
             drawPath(onda, p.arriba(lerp(C.NIEVE_SOMBRA, C.HOJA, if (sinNieve) 0.5f else 0f), 0.6f).copy(alpha = 0.55f), style = Stroke(0.9f + 6f / z * 10f))
         }
-        // El camino.
+        // El camino; en la nieve honda, hundido entre sus dos paredes de nieve.
         camino(v, az)
+        if (TramosRetirada.nieveHonda(v.tramo)) trinchera(v)
         // Las huellas que salen del camino hacia la granja: un rastro de pisadas en la nieve, que se pierde a lo lejos.
         val senda = listOf(w(bordeDer(12f) + 0.1f, 12f), w(2.6f, 16f), w(4.6f, 21f), w(6.4f, 27f), w(9f, 34f), w(12.5f, 44f), w(16f, 56f))
         for (i in 0 until 60) {
@@ -261,11 +262,13 @@ internal object RetiradaCamino {
     private fun DrawScope.ventisqueros(v: VistaNapoleon, az: Azar) {
         val k0 = ((v.nieve - 0.2f) / 0.6f).coerceIn(0f, 1f)
         val lado = if (v.p.solALaDerecha) 1f else -1f
-        repeat(38) { i ->
+        // En la nieve honda, más, más largos y más altos, y desiguales: la superficie entera son olas del viento.
+        val honda = TramosRetirada.nieveHonda(v.tramo)
+        repeat(if (honda) 60 else 38) { i ->
             val z = 4.2f * kotlin.math.exp(az.entre(0f, 3.4f))
             val derecha = i % 3 != 0
             val x = if (derecha) bordeDer(z) + az.entre(1.2f, 18f) else pieDelBosque(z) + az.entre(0.6f, 4.5f)
-            val q = w(x, z); val kk = k(z); val largo = az.entre(1.6f, 4.5f) * kk; val alto = az.entre(0.12f, 0.3f) * kk
+            val q = w(x, z); val kk = k(z); val largo = az.entre(1.6f, 4.5f) * kk * (if (honda) az.entre(1.1f, 1.8f) else 1f); val alto = az.entre(0.12f, 0.3f) * kk * (if (honda) az.entre(1.3f, 2.1f) else 1f)
             if (q.x > ANCHO + largo || q.x < -largo) return@repeat
             val lejos = (z / 100f).coerceAtMost(0.8f)
             val a = v.en(q)
@@ -407,6 +410,52 @@ internal object RetiradaCamino {
             drawPath(forma, v.p.arriba(C.NIEVE, 0.2f))
             drawPath(curva(pie), v.a.plano(C.NIEVE_SOMBRA, pie[3], 0f, 0.2f), style = Stroke(1.2f))
         } else drawPath(curva(pie), v.p.arriba(lerp(C.HOJA, C.BARRO, 0.5f), 0.2f), style = Stroke(2.2f))
+        if (!v.vivac && TramosRetirada.lejania(v.tramo) == TramosRetirada.Lejania.BOSQUE) paredesDelBosque(v)
+    }
+
+    /**
+     * Los abetos que cierran el camino en el último tramo, cerca y altos a los dos lados, como una pared, de lejos a
+     * cerca, cargados de nieve: a la izquierda, delante del bosque de siempre y pegados al camino; a la derecha, al otro
+     * lado del llano, que ya no se ve. Entre las dos paredes queda abierto el cielo de encima del camino, por donde van
+     * el sol bajo de diciembre y la luna (la zona de los astros, que es de la base). **[Aproximación]**: el cuento no dice
+     * qué paisaje cruzan en diciembre.
+     */
+    private val PARED_IZQ: List<Pino> by lazy {
+        val az = Azar(Semilla.de("napoleon", "pared", "izq")); val lista = ArrayList<Pino>()
+        var z = 19f
+        while (z < 72f) {
+            val alto = az.entre(10f, 14f)
+            lista += Pino(bordeIzq(z) - az.entre(1.6f, 3.2f), z, alto, alto * az.entre(0.34f, 0.42f), az.entero(1_000_000).toLong(), false, 0)
+            z *= az.entre(1.12f, 1.26f)
+        }
+        lista
+    }
+    private val PARED_DER: List<Pino> by lazy {
+        val az = Azar(Semilla.de("napoleon", "pared", "der")); val lista = ArrayList<Pino>()
+        var z = 22f
+        while (z < 150f) {
+            val alto = az.entre(12f, 17f); val ancho = alto * az.entre(0.32f, 0.4f)
+            // Su borde de la izquierda no pasa de x = 312: más allá está el cielo de los astros.
+            val sx = 312f + ancho * 0.5f * k(z) + az.entre(0f, 60f)
+            lista += Pino((sx - MIRADA.centro) * z / MIRADA.focal, z, alto, ancho, az.entero(1_000_000).toLong(), false, 0)
+            z *= az.entre(1.12f, 1.28f)
+        }
+        lista
+    }
+
+    private fun DrawScope.paredesDelBosque(v: VistaNapoleon) {
+        for (pn in (PARED_IZQ + PARED_DER).sortedByDescending { it.z }) {
+            val q = pn.pie; val lejos = (pn.z / 200f).coerceIn(0.05f, 0.7f); val det = (pn.k / 24f).coerceIn(0.3f, 1f)
+            if (q.x < -pn.anchoL || q.x > ANCHO + pn.anchoL) continue
+            pino(v.en(q), q, pn.altoL, pn.anchoL, 1f, Azar(pn.semilla), lejos, det, caidaPropia = 0.5f)
+        }
+        // La niebla helada entre los troncos, al pie de las dos paredes: bandas blandas, más espesas abajo.
+        val bruma = lerp(v.l.bruma, C.NIEVE, 0.3f)
+        for ((x0, x1) in listOf(-10f to 205f, 300f to ANCHO + 10f)) {
+            drawRect(Brush.verticalGradient(0f to Color.Transparent, 0.45f to bruma.copy(alpha = 0.3f), 0.7f to bruma.copy(alpha = 0.42f), 1f to Color.Transparent, startY = H - 40f, endY = H + 44f), Offset(x0, H - 40f), Size(x1 - x0, 84f))
+        }
+        val az = Azar(Semilla.de("napoleon", "niebla"))
+        repeat(9) { val x = if (it % 2 == 0) az.entre(10f, 190f) else az.entre(310f, 375f); mancha(Offset(x, H + az.entre(-14f, 18f)), az.entre(18f, 40f), az.entre(3f, 6f), bruma, 0.35f) }
     }
 
     // ---------------------------------------------------------------- Lo abandonado
@@ -470,9 +519,32 @@ internal object RetiradaCamino {
         val n = RetiradaNapoleon.fuegosDelCamino(v.m); val az = Azar(Semilla.de("napoleon", "fuegos"))
         return HONDO_FUEGOS.mapIndexed { i, z0 ->
             val z = z0 * az.entre(1f, 1.1f)
-            val hueco = if (i % 2 == 0) HUECO_IZQ else HUECO_DER
+            // En el último tramo, el bosque cierra la derecha: todos los fuegos, en el hueco de la izquierda.
+            val hueco = if (i % 2 == 0 || v.tramo == Tramo.FINAL) HUECO_IZQ else HUECO_DER
             enLaColumna(az.entre(hueco.start, hueco.endInclusive), z)
         }.take(n)
+    }
+
+    /**
+     * La trinchera de la columna en la nieve honda: el camino va hundido entre dos paredes de nieve cortadas por los que
+     * pasaron, cada una con su cara en sombra hacia el camino, el labio de arriba con su cornisa y su filo encendido, y
+     * el pliegue oscuro al pie. Solo más allá del alto (desde unos dieciséis metros), para no pasar por el suelo del gato.
+     */
+    private fun DrawScope.trinchera(v: VistaNapoleon) {
+        val p = v.p
+        for ((orilla, signo) in listOf(IZQ to 1f, DER to -1f)) {
+            for (i in 0 until orilla.size - 1) {
+                val z0 = ZS[i]; val z1 = ZS[i + 1]; if (z0 < 16f) continue
+                val q0 = orilla[i]; val q1 = orilla[i + 1]
+                val h0 = 0.6f * k(z0); val h1 = 0.6f * k(z1); val f0 = 0.18f * k(z0); val f1 = 0.18f * k(z1)
+                val t0 = q0 + Offset(-signo * f0, -h0); val t1 = q1 + Offset(-signo * f1, -h1)
+                val lejos = (z0 / 120f).coerceAtMost(0.85f)
+                drawPath(poligono(q0, q1, t1, t0), v.en(q0).cara(lerp(C.NIEVE, C.NIEVE_SOMBRA, 0.45f), Vec.unidad(V3(signo, 0.3f, -0.2f)), q0, lejos))
+                drawLine(v.en(q0).cara(lerp(C.NIEVE_SOMBRA, C.AZUL, 0.2f), V3(0f, -0.3f, -1f), q0, lejos), q0, q1, (0.06f * k(z0)).coerceIn(0.4f, 3f), StrokeCap.Round)
+                drawLine(lerp(p.arriba(C.NIEVE, lejos), Color.White, 0.4f).copy(alpha = 0.8f * (0.4f + 0.6f * v.r.dia)), t0, t1, (0.05f * k(z0)).coerceIn(0.4f, 2.4f), StrokeCap.Round)
+                drawLine(v.en(q0).cara(C.NIEVE_SOMBRA, V3(0f, -0.5f, -1f), q0, lejos).copy(alpha = 0.6f), t0 + Offset(0f, 0.06f * k(z0)), t1 + Offset(0f, 0.06f * k(z1)), (0.04f * k(z0)).coerceIn(0.3f, 1.6f), StrokeCap.Round)
+            }
+        }
     }
 
     /** Los fuegos de los otros grupos, en el horizonte del llano de la derecha. */
