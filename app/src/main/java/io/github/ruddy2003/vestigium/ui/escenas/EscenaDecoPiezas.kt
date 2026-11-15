@@ -237,7 +237,7 @@ internal object PiezasDeco {
 
     /** El piano tapado con su funda de lona gris, atada abajo: los días que Lou no está (la gira, sin club). */
     private fun DrawScope.pianoConFunda(v: VistaDeco, f: Marco3) {
-        val L = PIANO_LARGO; val H = PIANO_ALTO; val D = PIANO_FONDO; val lona = lerp(lerp(C.ACERA, C.PANO, 0.35f), C.MARFIL, 0.15f)
+        val L = PIANO_LARGO; val H = PIANO_ALTO; val D = PIANO_FONDO; val lona = lerp(lerp(C.ACERA, C.PANO, 0.5f), C.LADRILLO, 0.12f)
         caja(v, f, -0.03f, L + 0.03f, 0.08f, H + 0.04f, -0.33f, D + 0.02f, lona) { i, forma ->
             clipPath(forma) {
                 // Los pliegues que caen desde las esquinas de arriba y los dobleces de la tela, en sombra y con su filo.

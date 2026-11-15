@@ -447,8 +447,16 @@ internal object SalaDeco {
             // El brillo de la cera: una franja clara hacia el fondo, que devuelve la luz de la escalera y de la barra.
             mancha(p(-0.4f, 0f, 7f), 70f, 9f, v.s(V3(-0.4f, 0.5f, 7f), lerp(C.MARFIL, roble, 0.3f), FRENTE), 0.2f)
             // El agua del día de la inundación: charcos que lo cubren casi todo y devuelven las luces.
-            if (EscenaDeco.inundado(v.m)) { val agua = lerp(C.NOCHE, C.PANO, 0.4f)
-                for (k in 0..5) { val w = V3(az.entre(-2f, 1f), 0f, az.entre(3f, 7.5f)); mancha(p(w.x, 0f, w.z), az.entre(40f, 80f), az.entre(6f, 12f), v.s(w, agua, arriba), 0.55f) } }
+            if (EscenaDeco.inundado(v.m)) {
+                // Una lámina de agua sobre todo el suelo, más honda hacia el fondo, con sus ondas y el brillo de la escalera.
+                val agua = lerp(C.NOCHE, C.PANO, 0.4f)
+                drawPath(forma, Brush.verticalGradient(0f to v.s(V3(0f, 0f, 7.5f), agua, arriba).copy(alpha = 0.7f), 1f to v.s(V3(0f, 0f, 3f), agua, arriba).copy(alpha = 0.35f), startY = 170f, endY = 285f))
+                repeat(40) { val w = V3(az.entre(-3f, 1.5f), 0f, az.entre(2.8f, 7.8f)); val q = p(w.x, 0f, w.z); val k = CamDeco.k(w.z); drawLine(v.s(w, lerp(agua, C.MARFIL, 0.55f), arriba).copy(alpha = 0.45f), q, q + Offset(az.entre(0.2f, 0.6f) * k, 0f), 0.5f, StrokeCap.Round) }
+                mancha(p(1.1f, 0f, 5.6f), 30f, 6f, lerp(v.ext.medio, Color.White, 0.4f), 0.35f)
+            }
+            // Con lluvia, el agua que baja por la escalera: los peldaños de abajo y el suelo de su pie, mojados y brillantes.
+            if (EscenaDeco.lluvia(v.m) && !EscenaDeco.inundado(v.m)) { mancha(p(1.0f, 0f, 5.2f), 34f, 7f, lerp(v.ext.medio, Color.White, 0.35f), 0.32f)
+                repeat(8) { val w = V3(az.entre(0.2f, 1.5f), 0f, az.entre(4.4f, 5.4f)); val q = p(w.x, 0f, w.z); drawLine(Color.White.copy(alpha = 0.22f), q, q + Offset(3f, 0f), 0.6f, StrokeCap.Round) } }
             // Hacia los ojos el suelo se oscurece: queda en la sombra de la mesa cercana y del piano.
             drawRect(Brush.verticalGradient(0f to Color.Transparent, 1f to C.SOMBRA.copy(alpha = 0.32f), startY = 220f, endY = 285f), Offset(0f, 220f), Size(ANCHO, 65f), blendMode = BlendMode.Multiply)
         }
