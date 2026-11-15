@@ -44,15 +44,15 @@ import kotlin.math.sin
  *   izquierda, la puerta que da al lago, con sus jambas de sillares, el dintel de olivo, las barcas y el pescado colgado al
  *   aire; en medio, el velo de lino colgado de su vara (el nicho: el grafo va en el lino); a la derecha, el nicho de la
  *   lámpara, el amuleto en su clavo, la repisa con el jarrito y los cuencos, la red colgada y, en el suelo, la jarra sellada,
- *   el ánfora apoyada en el muro y el cesto de sal. Abajo, la estera con la comida: panes, el cuenco de pescado, la jarra y
+ *   el ánfora apoyada en el muro y el cesto de sal; arriba, por una rendija de la cal, la grieta. Abajo, la estera con la comida: panes, el cuenco de pescado, la jarra y
  *   las copas, y el rayo de sol (de noche, de estrellas) que entra por la puerta.
  * - Mapas: la mesa del salado vista desde arriba: tablones de olivo con su veta y sus nudos, y el lienzo de lino tendido
- *   (el nicho) sujeto en las esquinas con cantos de basalto; a la izquierda, el pescado abierto en su sal, el montón de sal y
- *   la pala; a la derecha, la lámpara vista desde arriba, el tintero con el cálamo, el cuenco de aceitunas, el cuchillo y el
- *   amuleto; por la junta de dos tablones se cuela la luz de la grieta. Abajo, el canto de la mesa, los caballetes y la estera.
- * - Otras vidas: el muro de las hornacinas. Arriba, la viga de olivo con el pescado colgado a secar y la red tendida con sus
- *   flotadores; cinco hornacinas de arco iguales (el nicho) en la caliza, separadas por pilares encalados; abajo, el poyo de
- *   piedra con su estera, la lámpara en una punta y el cesto de sal en la otra.
+ *   (el nicho) sujeto en las esquinas con cantos de basalto; a la izquierda, el cesto de sal con su pala, la artesa con el
+ *   pescado abierto en su cama de sal y el cuchillo; a la derecha, la lámpara vista desde arriba, el tintero con el cálamo,
+ *   el cuenco de aceitunas y el amuleto en su cordel; por la junta de dos tablones se cuela la luz de la grieta. Abajo, el canto de la mesa, los caballetes y la estera.
+ * - Otras vidas: el muro de las hornacinas. Arriba, la viga de olivo con el pescado colgado a secar en dos cordeles y, en
+ *   las puntas, la cuerda de la red enrollada; cinco hornacinas de arco iguales (el nicho) en la caliza, separadas por pilares encalados; abajo, el poyo de
+ *   piedra con su estera, la lámpara en una punta y el cesto de sal en la otra; entre dos hornacinas, la grieta.
  * - Íconos: la fachada del Templo de Jerusalén con su vid de oro y el velo de la puerta, por el que asoma la grieta; una
  *   hoja de papiro ahumada que una prutá de Herodes Antipas, la de la caña, raspa hasta descubrir el lago; y el lago de
  *   Galilea dibujado en papiro con tres bulas de barro unidas por el camino de la orilla.
@@ -386,7 +386,7 @@ internal object VidaArcontes : DisenoVida {
     /** Un cuenco de barro bajo, de frente, con el borde visto un poco desde arriba; devuelve el óvalo de la boca. */
     private fun DrawScope.cuenco(c: Offset, ancho: Float, alto: Float, o: Boolean, u: Float, f: Float = 0f, barro: Color = BARRO_CLARO): Rect {
         val boca = Rect(c.x - ancho / 2, c.y - alto * 0.22f, c.x + ancho / 2, c.y + alto * 0.22f)
-        sombraContacto(Offset(c.x + ancho * 0.08f, c.y + alto), ancho * 0.85f, alto * 0.3f, 0.28f)
+        sombraContacto(Offset(c.x + ancho * 0.08f, c.y + alto * 0.68f), ancho * 0.8f, alto * 0.26f, 0.28f)
         val cuerpo = Path().apply {
             moveTo(boca.left, c.y)
             cubicTo(boca.left + ancho * 0.05f, c.y + alto * 0.8f, boca.right - ancho * 0.05f, c.y + alto * 0.8f, boca.right, c.y)
@@ -394,7 +394,7 @@ internal object VidaArcontes : DisenoVida {
         }
         drawPath(cuerpo, lam(barro, o, f))
         clipPath(cuerpo) { drawRect(sombraMueble(if (o) 0.35f else 0.22f), Offset(c.x + ancho * 0.1f, c.y), Size(ancho, alto)) }
-        drawRect(lam(mez(barro, Color.Black, 0.3f), o, f), Offset(c.x - ancho * 0.18f, c.y + alto * 0.62f), Size(ancho * 0.36f, alto * 0.14f))
+        drawRect(lam(mez(barro, Color.Black, 0.2f), o, f), Offset(c.x - ancho * 0.16f, c.y + alto * 0.5f), Size(ancho * 0.32f, alto * 0.16f))
         drawOval(lam(mez(barro, Color.White, 0.22f), o, f), boca.topLeft, boca.size)
         drawOval(lam(mez(barro, Color.Black, 0.35f), o, f), Offset(boca.left + ancho * 0.07f, boca.top + boca.height * 0.15f), Size(ancho * 0.86f, boca.height * 0.78f))
         return boca
@@ -933,7 +933,9 @@ internal object VidaArcontes : DisenoVida {
         drawOval(n(mez(PAN, Color.Black, 0.2f), o), Offset(c.x - ancho / 2, c.y - alto / 2), Size(ancho, alto))
         drawOval(n(PAN, o), Offset(c.x - ancho / 2, c.y - alto / 2), Size(ancho, alto * 0.82f))
         drawOval(luzMueble(if (o) 0.06f else 0.3f), Offset(c.x - ancho * 0.36f, c.y - alto * 0.42f), Size(ancho * 0.45f, alto * 0.3f))
-        drawLine(n(mez(PAN, Color.Black, 0.35f), o), Offset(c.x - ancho * 0.2f, c.y - alto * 0.1f), Offset(c.x + ancho * 0.22f, c.y - alto * 0.14f), 0.3f * u, StrokeCap.Round)
+        listOf(-0.16f, 0.12f).forEach { dx ->
+            drawLine(n(mez(PAN, Color.Black, 0.3f), o), Offset(c.x + ancho * (dx - 0.05f), c.y - alto * 0.02f), Offset(c.x + ancho * (dx + 0.07f), c.y - alto * 0.3f), 0.28f * u, StrokeCap.Round)
+        }
     }
 
     // ---------------------------------------------------------------- Mapas
