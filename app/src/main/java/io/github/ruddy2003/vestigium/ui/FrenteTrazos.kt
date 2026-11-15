@@ -46,10 +46,10 @@ object TrazosFrente {
         drawArc(color, -20f, 300f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(grosor, cap = StrokeCap.Round))
         // La célula, en el centro, y la chispa: tres trazos que salen de ella y se escapan por el hueco.
         drawCircle(color, grosor * 1.05f, c)
-        listOf(-66.0 to 1.16f, -50.0 to 1.42f, -34.0 to 1.16f).forEach { (g, largo) ->
+        listOf(-68.0 to 1.16f, -50.0 to 1.42f, -32.0 to 1.16f).forEach { (g, largo) ->
             val a = Math.toRadians(g)
-            drawLine(color, Offset(c.x + (r * 0.34f * cos(a)).toFloat(), c.y + (r * 0.34f * sin(a)).toFloat()),
-                Offset(c.x + (r * largo * cos(a)).toFloat(), c.y + (r * largo * sin(a)).toFloat()), grosor * 1.15f, StrokeCap.Round)
+            drawLine(color, Offset(c.x + (r * 0.44f * cos(a)).toFloat(), c.y + (r * 0.44f * sin(a)).toFloat()),
+                Offset(c.x + (r * largo * cos(a)).toFloat(), c.y + (r * largo * sin(a)).toFloat()), grosor, StrokeCap.Round)
         }
     }
 

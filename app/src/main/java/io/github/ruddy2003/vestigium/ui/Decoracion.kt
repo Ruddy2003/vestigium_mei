@@ -1241,9 +1241,9 @@ private fun DrawScope.chispaCanal(c: Offset, r: Float, canal: Color, chispa: Col
     if (destello > 0f) drawCircle(Brush.radialGradient(listOf(canal.copy(alpha = 0.45f * destello), Color.Transparent), center = c, radius = r * 0.62f), r * 0.62f, c)
     val tinta = lerp(chispa, canal, destello)
     drawCircle(tinta, r * 0.1f, c)
-    listOf(-16f to 0.86f, 0f to 1.04f, 16f to 0.86f).forEach { (d, largo) ->
+    listOf(-18f to 0.9f, 0f to 1.08f, 18f to 0.9f).forEach { (d, largo) ->
         val a = rad((hueco + d).toDouble())
-        drawLine(tinta, c.mas(r * 0.24f, a), c.mas(r * largo, a), r * 0.1f, StrokeCap.Round)
+        drawLine(tinta, c.mas(r * 0.4f, a), c.mas(r * largo, a), r * 0.08f, StrokeCap.Round)
     }
     // Los dos pilotos engastados en el aro, abajo a la izquierda: el rojo parpadea, el ámbar queda fijo.
     listOf(128.0 to Color(0xFFD9372B), 152.0 to Color(0xFFF2A33A)).forEachIndexed { i, (g, luz) ->
