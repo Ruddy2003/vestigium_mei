@@ -1,5 +1,5 @@
 """
-Lote 10: los gatos de los cinco temas nuevos. Primera tanda: Frente exterior; segunda tanda: Arcontes.
+Lote 10: los gatos de los cinco temas nuevos. Primera tanda: Frente exterior; segunda tanda: Arcontes y Galia.
 
 - Frente exterior (`frente`): gato gris pizarra pintado como un cuadro de concepto de los años 70 (gouache sobre cartón:
   manchas de color opaco con la huella del pincel, luz cálida que entra por arriba y rebote frío abajo, grano del
@@ -26,13 +26,30 @@ Lote 10: los gatos de los cinco temas nuevos. Primera tanda: Frente exterior; se
   apenas y, una vez por bucle, algo que pasa por el cielo y tapa las estrellas. Rasga el velo con la pata y por un
   momento se ve la luz de detrás (recurso del dibujo) · eriza el lomo ante una sombra que no se ve.
 
-Los otros tres temas del lote 10 (`galia`, `nouveau`, `psicodelia`) se agregan igual: su rama en
+- Galia (`galia`): gato montés europeo (pardo atigrado: raya del lomo, rayas finas en los flancos, barras en las patas,
+  la cola gruesa con anillos negros y la punta negra y roma) dibujado como un repujado de plata a la manera del caldero
+  de Gundestrup (recurso del dibujo: el caldero se halló en Dinamarca y su técnica es tracia): la lámina empujada como
+  una almohada, las rayas cinceladas y ennegrecidas, el punteado del punzón en el pelo, lo pardo con un baño de oro
+  gastado, la panza pulida, la pátina en lo hondo y los destellos duros del metal; los ojos, de vidrio embutido. Al
+  cuello, un torques de oro torcido con sus remates. De noche, la luna deja un filo frío y la hoguera uno cálido. Fondo:
+  el oppidum arverno en su meseta (el murus gallicus con las cabezas de las vigas, el terraplén con su parapeto de
+  estacas, la puerta con su torre de madera, los techos de paja con su humo, el camino que sube, campos y setos en las
+  laderas), los puys en la bruma, la niebla de la mañana al pie de la colina, el río, el robledal, el roble grande que
+  enmarca (con su muérdago), un roble joven a la derecha, el zarzo, el fuego del camino con el caldero de bronce y, lejos
+  en el llano, el campamento romano; de noche, la luna sobre el oppidum, sus hogueras, la puerta encendida, el reflejo de
+  la luna en el río y, en el llano, las hogueras del cerco romano en fila. Lo que se mueve: el humo, la niebla, las hojas
+  que caen, el agua, el fuego y sus chispas, dos cuervos (de día) y las hogueras lejanas que titilan (de noche). Se
+  esconde entre el muérdago (una rama de roble caída con su mata) y le bufa a un casco romano tirado en el río.
+
+Los otros dos temas del lote 10 (`nouveau`, `psicodelia`) se agregan igual: su rama en
 `tema_mio`, sus colores en `colores_obj`, sus dos acciones en `ESP_MIOS`, su fondo en `FONDOS_MIOS` (y `ETIQ`, `NOCHE`)
 y su nombre en `MIOS`; o en un archivo `gato21b.py` que importe este y registre los suyos de la misma forma.
 
 Colores de la guía del tema (docs/diseno/temas/frente.md, «La base escondida en ruinas», y `TrazosFrente` en
 ui/FrenteTrazos.kt): piedra verdosa, consola blanca y oscura, el turquesa del vidrio, el cobre, y el ámbar, el óxido y el
-rojo de los pilotos como lo único cálido. Se toma la estética, no los diseños de ninguna película.
+rojo de los pilotos como lo único cálido. Se toma la estética, no los diseños de ninguna película. Los de Galia salen de
+docs/diseno/temas/galia.md (`TrazosGalia`): roble y muérdago, barro y paja, oro y bronce, humo y niebla; de noche, el
+verde negro, la luna y la hoguera; el rojo de Roma, solo en lo que es de Roma.
 Importa la cadena (gato18, gato19 y los gato20*) y agrega sus temas sin tocar los demás.
 
 Uso: python3 gato21.py hoja|fondos|bandas [tema…]   (lo deja en salida/, que no se sube)
