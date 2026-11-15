@@ -404,7 +404,9 @@ internal object RetiradaCamino {
     /** Los fuegos de la compañía a lo largo del camino (y de los otros grupos, lejos), en el llano y en la franja del bosque. */
     fun fuegosDelCamino(v: VistaNapoleon): List<Offset> {
         val n = RetiradaNapoleon.fuegosDelCamino(v.m); val az = Azar(Semilla.de("napoleon", "fuegos"))
-        return (0 until 5).map { i -> val z = 16f * kotlin.math.exp(i * 0.36f + az.entre(0f, 0.2f)); val x = if (i % 2 == 0) bordeDer(z) + az.entre(1.5f, 5f) else bordeIzq(z) - az.entre(1f, 3f); w(x, z) }.take(n)
+        // En el llano de la derecha y en la orilla de enfrente del camino, pero nunca detrás de la carroza ni del pino (su
+        // llama, que va en la parte viva, quedaría encima de ellos).
+        return (0 until 5).map { i -> val z = 16f * kotlin.math.exp(i * 0.36f + az.entre(0f, 0.2f)); val x = if (i % 2 == 0 || z < 30f) bordeDer(z) + az.entre(1.5f, 5f) else bordeIzq(z) + az.entre(0.1f, 0.5f); w(x, z) }.take(n)
     }
 
     /** Los fuegos de los otros grupos, lejos en el llano. */

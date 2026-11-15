@@ -77,7 +77,7 @@ internal object VivacNapoleon {
         // El incendio: el cielo rojo sobre la ciudad, «rojo como de día».
         if (arde) {
             val k = if (smolensk) 0.7f else EscenaNapoleon.incendio(v.m)
-            drawRect(Brush.verticalGradient(listOf(Color.Transparent, C.LUMBRE.copy(alpha = (0.25f + 0.35f * v.noche) * k)), H - 70f, H + 6f), Offset(220f, H - 70f), Size(ANCHO - 220f, 76f), blendMode = BlendMode.Plus)
+            mancha(Offset(312f, H - 14f), 120f, 46f, C.LUMBRE, (0.3f + 0.35f * v.noche) * k)
             resplandor(Offset(310f, H - 4f), 90f, (0.3f + 0.6f * v.noche) * k)
             repeat(8) { mancha(Offset(az.entre(240f, ANCHO), H - az.entre(10f, 50f)), az.entre(12f, 28f), az.entre(5f, 10f), lerp(v.l.tono(C.CENIZA), C.LUMBRE, 0.25f * v.noche), 0.5f * k) }
         }

@@ -222,7 +222,7 @@ internal object RetiradaLejos {
     }
 
     /** Las fogatas de la orilla de acá del Berezina. */
-    fun fogatas(): List<Offset> { val az = Azar(Semilla.de("napoleon", "fogatas")); return (0 until 8).map { val z = az.entre(14f, ORILLA_ACA - 1f); w(if (az.real() < 0.5f) az.entre(-12f, -4.5f) else az.entre(1.5f, 14f), z) } }
+    fun fogatas(): List<Offset> { val az = Azar(Semilla.de("napoleon", "fogatas")); return (0 until 8).map { val z = az.entre(14f, ORILLA_ACA - 1f); w(az.entre(0.4f, 14f) + RUMBO * z, z) } }
 
     // ---------------------------------------------------------------- Lo que se mueve
 

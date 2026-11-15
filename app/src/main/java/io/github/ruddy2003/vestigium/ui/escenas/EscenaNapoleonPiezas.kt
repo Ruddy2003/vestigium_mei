@@ -840,14 +840,14 @@ internal object PiezasNapoleon {
         repeat(8) { val q = bro + Offset(az.entre(-0.1f, 0.12f) * k, az.entre(-0.02f, 0.12f) * k); drawCircle(a.plano(C.ORO, q, 0.6f, lejos, 0.6f), 0.008f * k, q) }
         // El candelabro de plata, ladeado contra el borde.
         candelabro(s, a, V3(w * 0.55f, h - 0.04f, -d * 0.55f), Vec.unidad(V3(0.75f, 0.85f, -0.45f)), lejos)
-        // El cuadro, apoyado delante, contra el costado del cofre, mirando hacia el fuego y el cielo.
-        cuadroDelSanto(s, a, V3(-w - 0.05f, 0.0f, -d - 0.12f), lejos)
         // La nieve: hunde el pie del cofre y se posa en los cantos.
         if (nieve > 0.1f) {
             val pie = (0..10).map { i -> s.p(V3(-w - 0.15f + (2f * w + 0.3f) * i / 10f, (0.05f + 0.06f * sin(i * 1.7f)) * hundido + 0.02f, -d - 0.05f)) }
             drawPath(curva(pie + listOf(pie.last() + Offset(0f, 0.12f * k), pie.first() + Offset(0f, 0.12f * k))).apply { close() }, a.arriba(C.NIEVE, pie[5], lejos))
-            nieveEncima(a, listOf(s.p(V3(-w, h, -d)), s.p(V3(-w * 0.5f, h, -d)), s.p(V3(-w * 0.1f, h, -d))), 0.018f * k * nieve, az, lejos)
+            nieveEncima(a, listOf(s.p(V3(-w * 0.5f, h, -d)), s.p(V3(-w * 0.1f, h, -d)), s.p(V3(w * 0.3f, h, -d))), 0.018f * k * nieve, az, lejos)
         }
+        // El cuadro, apoyado delante, contra el costado del cofre, mirando hacia el fuego y el cielo (encima de la nieve).
+        cuadroDelSanto(s, a, V3(-w - 0.05f, 0.0f, -d - 0.12f), lejos)
         return poligono(envolvente(esquinas(-w, w, 0f, h + 0.3f, -d, d + 0.12f).map { s.p(it) }))
     }
 
@@ -925,8 +925,8 @@ internal object PiezasNapoleon {
      */
     fun DrawScope.espejo(s: Sitio, a: Alumbre, cieloAlto: Color, cieloBajo: Color, lejos: Float = 0f) {
         val k = s.k; val rx = 0.3f; val rz = 0.21f
-        val n = Vec.unidad(V3(-0.15f, 1f, -0.32f))
-        fun q(ang: Float, r: Float): V3 { val x = rx * r * cos(ang); val z = rz * r * sin(ang); return V3(x, 0.04f + 0.32f * (-z) + 0.15f * x, z) }
+        val n = Vec.unidad(V3(-0.12f, 0.8f, -0.58f))
+        fun q(ang: Float, r: Float): V3 { val x = rx * r * cos(ang); val z = rz * r * sin(ang); return V3(x, 0.03f + 0.7f * (z + rz) + 0.08f * x, z) }
         val fuera = (0 until 28).map { s.p(q(2f * PI.toFloat() * it / 28, 1f)) }
         val dentro = (0 until 28).map { s.p(q(2f * PI.toFloat() * it / 28, 0.8f)) }
         val c = centroDe(fuera)
