@@ -103,7 +103,7 @@ object LogrosGalia : DisenoLogros {
             }
         }
         clipRect(r.left, r.top - lw, r.right, r.bottom + lw) {
-            drawPath(onda, Color.White.copy(alpha = 0.18f), style = Stroke(lw * 1.1f), alpha = 1f)
+            drawPath(onda, Color.White.copy(alpha = 0.18f), style = Stroke(lw * 1.1f))
             drawPath(Path().apply { addPath(onda, Offset(lw * 0.6f, lw * 0.6f)) }, mezcla(c, Color.Black, 0.45f).copy(alpha = 0.7f), style = Stroke(lw * 0.9f))
         }
     }

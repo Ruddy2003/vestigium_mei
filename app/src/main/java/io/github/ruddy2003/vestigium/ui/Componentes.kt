@@ -255,9 +255,9 @@ private fun BandaGalia(modifier: Modifier) {
 
 private fun DrawScope.bandaGalia(oro: Color, hoja: Color) {
     val u = 1.dp.toPx(); val w = size.width; val cy = size.height / 2
-    val a = 2.4f * u
+    val a = 2.6f * u
     val x0 = 4 * u; val x1 = w - 4 * u
-    val n = maxOf(2, ((x1 - x0) / (40 * u)).toInt())
+    val n = maxOf(2, ((x1 - x0) / (36 * u)).toInt())
     val p = (x1 - x0) / n
     fun y(x: Float) = cy + a * sin(2 * PI.toFloat() * (x - x0) / p)
     val onda = Path().apply {
@@ -269,20 +269,20 @@ private fun DrawScope.bandaGalia(oro: Color, hoja: Color) {
         val s = if (k % 2 == 0) 1f else -1f                 // 1: el seno baja; -1: sube
         val xe = x0 + p * (0.25f + 0.5f * k)
         val centro = Offset(xe, cy - s * a * 0.12f)
-        val xa = xe + 0.2f * p
+        val xa = xe + 0.15f * p
         val q0 = Offset(xa, y(xa))
         val r0 = (q0 - centro).getDistance()
         val a0 = kotlin.math.atan2(q0.y - centro.y, q0.x - centro.x)
         val zarcillo = ArrayList<Offset>()
         for (i in 0..28) {
             val t = i / 28f
-            val rr = r0 * (1f - t) + 0.9f * u * t
-            val ang = a0 - s * t * 1.75f * PI.toFloat()
+            val rr = r0 * (1f - t) * (1f - 0.35f * t) + 0.8f * u * t
+            val ang = a0 - s * t * 1.9f * PI.toFloat()
             zarcillo.add(Offset(centro.x + rr * cos(ang), centro.y + rr * sin(ang)))
         }
         drawPath(Path().apply { moveTo(zarcillo[0].x, zarcillo[0].y); for (q in zarcillo.drop(1)) lineTo(q.x, q.y) }, oro, style = Stroke(0.95f * u, cap = StrokeCap.Round))
         // La trompeta donde nace el zarcillo y la perla donde acaba.
-        val xb = xe + 0.3f * p
+        val xb = xe + 0.24f * p
         drawPath(Path().apply { moveTo(q0.x, q0.y); lineTo(xb, y(xb)); lineTo(zarcillo[3].x, zarcillo[3].y); close() }, oro)
         drawCircle(oro, 1.15f * u, zarcillo.last())
         // La hoja en lente, fuera del seno.
